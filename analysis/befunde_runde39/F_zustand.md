@@ -19,6 +19,9 @@ Baum `.claude/worktrees/r39_zustand`, Zweig `r39/zustand`, Basis c71fa144 (maste
   s_wounds[8]) + VRAM-Blit in die Slot-0-Basis (render_pc.c re15_render_pc_wound_blit schreibt in
   s_slot0_base_rgba, also KEINE unversehrte Kopie mehr); Heilung loescht im Original nichts (blood_decals.md).
 
+- 12:55-13:40 Nachbesserung 1 (Abschnitt am Ende): M1 behoben (zustand_r39_pc.c, main.c +2), dabei Absturz 0xC0000374 bei
+  Vollheilung mit Weste gefunden/behoben/geriegelt, H1/H2 erledigt, ctest 3/3 + 39/39.
+
 ## 1. Punkt 1 — volle Heilung = ganze Kleidung
 ### 1.1 Messung vorher (gebauter Stand c71fa144 + Messschiene, Messkopie re15_pc_r39f_stand1.exe)
 Aufbau (F_belege/lauf2.sh): Spielstand per Werkzeug `test_r39_zustand karte` (ROOM1130 Leon / ROOM1131 Elza, Lage
@@ -218,9 +221,10 @@ Neue Riegel (probes/r39_zustand.cmake, GLOB; keine Aenderung an tests/unit/CMake
   den Zaehler, Kommando 0 nullt ihn nicht, Untergrenze HP 1, Gegengift beendet), C EKG (32 Linien Gift = ff 20 ff - 08 01 08
   * i, FINE unveraendert 20 ff 20 Maske 02, Klassifikator Gift vor HP). Ausgabe: ALLE PRUEFUNGEN GRUEN (18 Pruefungen).
   Das Programm ist zugleich das Werkzeug der Echtlauf-Riegel (karte / bild / ekg / hp).
-- `integration_r39_zustand_kleidung` (tests/integration/test_r39_zustand_kleidung.cmake): vier Laeufe der echten exe
-  (Leon ROOM1130 / Elza ROOM1131, mit/ohne Wunden, Spray ueber den Statusschirm): Bild 150 w vs o >= 300 Pixel,
-  Bild 650 w vs o == 0 Pixel, Log-Zeilen Heilung/Spielerhaut.
+- `integration_r39_zustand_kleidung` (tests/integration/test_r39_zustand_kleidung.cmake): sechs Laeufe der echten exe
+  (Leon ROOM1130 / Elza ROOM1131 / Leon mit R.P.D.-Weste = PL01 aus dem Container, seit Nachbesserung 1; je mit/ohne
+  Wunden, Spray ueber den Statusschirm): Bild 150 w vs o >= 300 Pixel, Bild 650 w vs o == 0 Pixel, Log-Zeilen
+  Heilung/Spielerhaut (Weste: HP 105, `[pld] Spielermodell -> PLD/PL01.PLD`, `Container PLD/PL01.PLD`).
 - `integration_r39_zustand_gift` (tests/integration/test_r39_zustand_gift.cmake): Lauf G (HP 100, Gift Bild 300, Statusschirm
   1500, Framedumps 1540-1600): hp-Auswerter (-1 je Takt, erster Takt 330, alle Abstaende 31, >= 30 Takte, letztes
   Spielbild 1499) + ekg-Auswerter (Kasten x26..103/y118..140: magenta > 0, gruen = gelb = rot = 0 in 1540/1560/1580);
@@ -311,8 +315,11 @@ Aenderung: F_belege/build_6_configure.log + build_6.log (`=== LOCAL-BUILD-OK`, e
   an]`, `CONTINUE: resumed in room 1130 (hp=20)`, Spray `Heilung 0x22: HP 105 >= 105 voll -> Wund-Tabelle genullt (hatte
   Wunden), Spielerhaut neu`, `[pl-part] PL01.TIM aus PLD/PL01.PLD geschnitten (+91012, 99872 B)`, `Spielerhaut PL01.TIM neu
   geladen (384x256)` — und dort ENDET das Log (96 Zeilen; die letzten vier Zeilen stehen doppelt), kein weiteres `[walk]`,
-  kein EXIT_AT, **kein fd_000650.ppm, exit 127**; beide Laeufe identisch. Bild 150 w vs o = 1093 Pixel (Wunden auf der Weste
-  sichtbar). Der Prozess stirbt also unmittelbar nach dem free() des Schnittzeigers (das Spiel lief bis Bild 375 normal).
+  kein EXIT_AT, **kein fd_000650.ppm**, exit 127 (bash); beide Laeufe identisch. Bild 150 w vs o = 1093 Pixel (Wunden auf
+  der Weste sichtbar). Dritter Lauf weste_v_w2 ohne Testlast aus PowerShell (Start-Process, gleiche Karte/Umgebung):
+  **ExitCode -1073740940 = 0xC0000374 = STATUS_HEAP_CORRUPTION** nach 23 s, Log endet nach `[walk] F360` + Heilung +
+  `[pl-part] PL01.TIM ... geschnitten` + `Spielerhaut PL01.TIM neu geladen` (kein Ereignisprotokoll-Eintrag, kein eigener
+  Handler in main.c). Der Prozess stirbt also am free() des Schnittzeigers (das Spiel lief bis Bild 375 normal).
 - Aenderung (zustand_r39_pc.c): Lesereihenfolge wie pc_read_pl_part (Teildatei, sonst re15_pld_part(RE15_PLD_TIM) auf dem
   Container, Grenzen geprueft), Upload kopiert (render_pc.c re15_render_pc_upload_tim_slot: eigener RGBA-malloc), danach
   wird NUR der gelesene Puffer freigegeben (Teildatei oder ganzer Container), nie der Schnittzeiger.
@@ -340,5 +347,14 @@ Aenderung: F_belege/build_6_configure.log + build_6.log (`=== LOCAL-BUILD-OK`, e
   PLD-TIM per LoadImage neu in den VRAM-Slot laden (PSX-Build-Luecke, nicht baubar/messbar hier) — Abschnitt 4.
 - H5 Takt-Zaehler ohne Produktions-Reset: RE2 kennt keinen Schreiber; ohne Folge (jeder Gifttreffer setzt 30).
 
-### Tests der Nachbesserung
-- (ctest-Zeilen folgen unten, sobald die Laeufe fertig sind)
+### Tests der Nachbesserung (gezielt, keine volle Suite; nach dem Bau build_6)
+- `ctest --test-dir re15_port/build -R "r39_zustand" --timeout 900 --output-on-failure` ->
+  **`100% tests passed, 0 tests failed out of 3`** (unit_r39_zustand 0.02 s, integration_r39_zustand_kleidung 174.83 s =
+  jetzt sechs Laeufe inkl. Weste/PL01-Container, integration_r39_zustand_gift 98.70 s; F_belege/ctest_r39_zustand_nb1.log).
+  Im Riegel-Laufordner (lauf_c86f5a71_weste_w/_o): `[pld] Spielermodell -> PLD/PL01.PLD`, `Heilung 0x22: HP 105 >= 105 voll`,
+  `Spielerhaut PL01.TIM neu geladen (384x256, Container PLD/PL01.PLD)`, EXIT_AT 700.
+- `ctest --test-dir re15_port/build -R "r38_spinnen|r36_kleidung|unit_item_use|unit_inv_fsm|unit_wound_accumulator|r39_inventar_status|unit_inv_grant|unit_em_status_persist|unit_r36_blut_pin|unit_scd_zone2_pauseflags|r38_zopf|weste|ruestung" --timeout 900 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 39`** (F_belege/ctest_module_nb1.log; = die 35 der Abnahme + unit_weste_effekt,
+  unit_1190_weste, unit_1190_ruestung, integration_weste_load_pin wegen des Westen-/Modellpfads). Kein Flattern, keine
+  Wiederholung noetig. Die von der Abnahme als erfuellt bewerteten Punkte bleiben gruen (gift/kleidung/spinnen/kleidung-r36).
+- Baum nach dem Abschluss-Commit: `git status --porcelain` leer (Index und Arbeitsbaum).
