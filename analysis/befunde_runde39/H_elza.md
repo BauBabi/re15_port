@@ -345,8 +345,17 @@ Gezielte Laeufe (KEINE volle Suite):
 * (A) `ctest --test-dir re15_port/build -R "^unit_(r39_elza|r38_tagebuch|r37_feuerloescher|r36_klettern|elliot|plc_|npc_back|1090|r35_cut|r36_szene|r37_roy|r38_heliport|r34n_d_adaruf|r33_tuer1120|r35_affen|r38_szenenschutz|r38_dining|tor_1170|r30_android|stair_1170|door_1170|irons_neck|sicherung_1150|room1150|map_1090|re2_room1090|re2z_bump)" --timeout 600 --output-on-failure`
   -> **100% tests passed, 0 tests failed out of 129** (Walker-Haken: alle Szenen-/Walker-Riegel der Vorrunden gruen).
 * (B) `ctest --test-dir re15_port/build -R "^integration_r39_elza_(hand|karte|loescher)$" --timeout 1200 --output-on-failure`
-  -> INTEG_ZEILE
-* (C) INTEG_R38_ZEILE
+  -> **100% tests passed, 0 tests failed out of 3** (hand 84 s, karte 51 s, loescher 51 s; Lauf nach dem Walker-Haken).
+* (C) `ctest --test-dir re15_port/build -R "^integration_(r38_tagebuch_lesen|r37_feuerloescher)$" --timeout 1800 --output-on-failure`
+  -> **100% tests passed, 0 tests failed out of 2** (r37_feuerloescher 353 s, r38_tagebuch_lesen 44 s);
+  `ctest --test-dir re15_port/build -R "^integration_r38_tagebuch_(karte|leon)$" --timeout 1200 --output-on-failure`
+  -> **100% tests passed, 0 tests failed out of 2** (karte 23 s, leon 28 s).
+* Riegel-Zeilen (LastTest.log): `ok r39_elza[hand]: F452..F490: 39 Ticks Motion 11 / Kommandowort 4, keiner auf 210/200`;
+  `ok r39_elza[hand]: F491..F521: 30 Bilder Clip 0 rueckwaerts, 0 vorwaerts; ab Cut_chg(6) F521: 8/8 Bilder Clip 5 (105,
+  TURN-Sub-Init @0x800313a4) — die Hand steigt kein zweites Mal`; `ok r39_elza[karte]: Hinweis F504..F687 VOR Plc_motion
+  F702 / Plc_ret F732 / Evt_end F732` (Hinweis-Dauer ist zeitgesteuert, Runde 35 K — Bildnummern je Lauf verschieden,
+  Reihenfolge gleich); `ok r39_elza[loescher]: rot 1024/3072/0: kein Aufstieg (sub bleibt 0 in allen 9 Viereck-Bildern)`,
+  `rot 0: msg 29`.
 
 ## OFFEN
 * Punkt 1: ein Bild Sub 6 (mo=1 = Sub-6-Clip 1) zwischen TURN-Ankunft (F530) und WALK-Start (F532) — Reihenfolge
