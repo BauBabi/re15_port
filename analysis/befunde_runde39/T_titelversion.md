@@ -4,7 +4,8 @@ Baum: `.claude/worktrees/r39_titelversion` (Zweig `r39/titelversion`, Basis 832b
 Nutzer (Nachtrag 14, woertlich): "Eine letzte Ergänzung - bei dieser und zukünftig neuen Versionen passe mir bitte die
 Version im Titelscreen an. Entferne das bestehende. Ich glaube dafür gibt es auch schon ein Skript iregndwo."
 
-Status: fertig 2026-10-19 (alle Punkte gemessen, belegt, gebaut, Riegel gruen).
+Status: fertig 2026-10-19 (alle Punkte gemessen, belegt, gebaut, Riegel gruen). Nachbesserung 1 (Abnahme 0, Mangel M1:
+Auskunft zum vorhandenen Skript) berichtigt Abschnitte 1.3 und 7 - Abschnitt 8.
 
 ## 1. Messung vorher
 
@@ -76,16 +77,47 @@ Nachbarspalten, die zur Nachbar-Glyphe gehoeren, ausgeblendet):
 (dort +-3..5 Stufen: das Original rundet die Ecken etwas weicher). "0" und "2" sind bitgleich mit der bekannten
 5x7-Schrift des HD44780 (A00), "5" weicht in Zeile 3 ab (#...#), "V" ist 7 breit mit Kopfbalken.
 
-### 1.3 Vorhandenes Skript fuer die Titelversion (selbst gesucht)
-- Dieser Baum: `git ls-files` nach Namen (titl/titel/version/stempel) und Inhalt (`TITLEU`, `Sample Ver`, `Ver.20..`):
-  nur die Runde-30-Werkzeuge `analysis/befunde_runde30/titel-blinken_tools/*` (Puls/Blinken des Menues, nicht die
-  Beschriftung). `RE15_REBORN_VERSION_STRING "v0.1.0 Phase 4.1"` (`include/re15_engine.h:24`) wird nirgends benutzt
-  (grep: nur die Definition). git-Historie: kein Commit zur Titelbild-Version vor dieser Runde.
-- Vorgaenger-Ordner `C:/workspace/git/reAi`: enthaelt nur noch `psx_dev/re15_reborn_pc/build/Debug/nul` (1 Datei, kein
-  git) - dort gibt es nichts mehr.
+### 1.3 Vorhandenes Skript fuer die Titelversion (selbst gesucht; berichtigt in Nachbesserung 1, Abschnitt 8)
+- **Im Vorprojekt gab es das Skript.** `C:/workspace/git/reAi/scripts/patch_save_final.py`, das Bau-Skript der gepatchten
+  Disc des Vorprojekts, hat bei jeder Version eine Zeile "v<Version> <Datum>" direkt in `DATA/TITLEU.TIM` der Disc
+  geschrieben, zuletzt **"V1.18 2026.04.24"**. Belege:
+  - in diesem Repo: `analysis/save_system_patched_build.md:59` (ISO-Vergleich der Disc `re15_save_final` gegen
+    `info/Re1.5/PSX`: "`/PSX/DATA/TITLEU.TIM` | 1101 | 153620 | 2118 B — kosmetisch (Titelgrafik), nicht Save"), `:1098`
+    ("Zusaetzlich ist `DATA/TITLEU.TIM` geaendert (kosmetisch)"), `:276` (Skriptpfad
+    `c:/workspace/git/reAi/scripts/patch_save_final.py`), `:888` (Skript-Banner "v1.18", `patch_save_final.py:3`);
+    `RE15_KNOWLEDGE.md:619-620` (8.4 "`scripts/patch_save_final.py` (5355 lines) — main build script"); `CLAUDE.md:68`.
+  - Notizen des Vorprojekts (Claude-Memory des Nutzers, nur gelesen,
+    `C:/Users/mjoedicke/.claude/projects/C--workspace-git-reAi/memory/`):
+    `versioning.md:29` 'Title screen shows "v1.1  2026.03.07"',
+    `:37` (Eintrag v1.2!) 'Title screen shows "v1.1  2026.03.16"', `:79-80` "Version string appears in:
+    docstring (line 3), main() banner, SUCCESS message" / "Script: `scripts/patch_save_final.py`";
+    `feedback_java_reference.md:8` "`scripts/patch_save_final.py` aktualisieren (Patches + Version string)";
+    `manage_phase_b_impl.md:78` 'Version string: "v1.17 2026.03.30"'.
+  - selbst gemessen (Abschnitt 8.3, Werkzeug `re15_port/tools/r39_titelversion/vorprojekt_titel.py`): TITLEU.TIM in
+    `info/Re1.5/re15_save_final.bin` (ISO-Weg: LBA 1101, 153620 B) weicht in 2118 Bytes = 1059 Pixeln ab, bbox
+    x178..283 y11..34; dort steht "V1.18 2026.04.24" statt "Sample" / "Ver.2025.01.25".
+- **Das Skript selbst gibt es nicht mehr.** `C:/workspace/git/reAi` enthaelt nur noch `psx_dev/re15_reborn_pc/build/Debug/nul`
+  (0 Byte, `ls -laR`); `find /c/workspace/git -maxdepth 5 -iname "patch_save_final*"`: nichts; in diesem Repo nie
+  eingecheckt (`git log --all -- '*patch_save_final*'`: leer). Die Java-Referenz der Vorprojekt-Patches
+  `src/main/java/de/re15/patches/PatchReference.java` enthaelt das Stempeln nicht (grep TITLEU/title/stamp: nur
+  "memory card title", Zeile 296). Erhalten ist nur das Ergebnis in der gepatchten Disc.
+- **In diesem Repo (Port) gibt es kein solches Skript.** `git grep -l TITLEU 832b68bd`: 20 Dateien - Skripte darunter nur
+  die Runde-30-Werkzeuge `analysis/befunde_runde30/titel-blinken_tools/*` (Puls/Blinken des Menues, nicht die
+  Beschriftung); sonst Port-Code, der die Datei nur anzeigt (render_pc.c, main.c, asset_selftest_pc.c, re15_gameflow.h),
+  Doku (PORTING_ROADMAP.md, Auftrag/Orchestrator der Runde 39), Binaerdateien/Pakete und
+  `analysis/save_system_patched_build.md` (die Spur zum Vorprojekt-Skript, s. o.). `psx_dev/save/build.py` nennt
+  patch_save_final.py nur als Empfaenger seines save_stub.bin. `RE15_REBORN_VERSION_STRING "v0.1.0 Phase 4.1"`
+  (`include/re15_engine.h:24`) wird nirgends benutzt (grep: nur die Definition).
 - `release/release_alles.sh` bestimmt die Version (hoechster Tag +1 bzw. `--version`) und gab sie bisher nur an
-  `build_android.sh --version` (versionName der APK) und `make_package.sh --version` (Dateinamen) - nicht ans Spiel.
-**Ergebnis: es gab kein Skript dafuer** (dem Nutzer gesagt, Abschnitt 7).
+  `build_android.sh --version` (versionName der APK) und `make_package.sh --version` (Dateinamen) - im Port nicht ans Spiel.
+
+**Ergebnis: Ja, es gab ein Skript - im Vorprojekt (`reAi/scripts/patch_save_final.py`). Es existiert nicht mehr, nur
+seine Ausgabe in `info/Re1.5/re15_save_final.bin`.** Wiederverwenden liess es sich nicht: (1) es ist weg; (2) es schrieb
+die Bilddatei einer gepatchten Disc um (Asset-Patch; der Port laesst TITLEU.TIM bytegleich, Auftrag Nachtrag 14);
+(3) die Version stand dort von Hand im Skript und hinkte hinterher (v1.2 zeigte "v1.1 2026.03.16", `versioning.md:37`;
+die letzte Disc zeigt "V1.18", traegt aber Patches bis v1.24-att2, `save_system_patched_build.md` 4.5). Der Port macht
+dasselbe jetzt beim Laden im Speicher, und die Version kommt automatisch aus dem Release (Abschnitt 3). Die erste Fassung
+dieses Abschnitts sagte "es gab kein Skript dafuer" - das war falsch (Abnahme 0, Mangel M1; Abschnitt 8).
 
 ### 1.4 Titelabzug vorher (gebauter Stand 832b68bd, Fensterskala 1)
 `RE15_NO_INTRO=1 RE15_NOAUDIO=1 SDL_AUDIODRIVER=dummy RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=150
@@ -108,6 +140,9 @@ Damit ist alles hier **NUTZER-VORGABE** (Nachtrag 14), die FORM belegt aus der D
 der Tintenkante 283,60 der alten Zeile, Abstaende 0,72 / 2,74 px). Die ergaenzten Glyphen 3 4 6 7 8 9 d v haben keine
 Vorlage in der Datei: ihre Bitmuster sind **PORT-WAHL** (HD44780 A00, die 5x7-Schrift, aus der "0" und "2" der Zeile
 bitgleich stammen); Raster und Schattierung belegt (3.3, Riegel `unit_r39_titelversion_glyphen`).
+Gegenprobe (Nachbesserung 1, Abschnitt 8.3): der Titel-Stempel des Vorprojekts "V1.18 2026.04.24" enthaelt 4, 6 und 8 -
+alle drei **bitgleich** mit den ergaenzten Formen hier; seine "0" ist bitgleich mit der "0" der alten Zeile. Seine "1"
+und "2" weichen von denen der alten Zeile ab - der Port nutzt die aus TITLEU.TIM ausgeschnittenen (unveraendert).
 
 ## 3. Umsetzung
 
@@ -238,11 +273,29 @@ geloescht; `cmake_minimum_required(VERSION 3.16)` in jedem -P-Skript; keine libm
 - Ein vollstaendiger build_linux_deck.sh-Lauf (mit voller Suite) gehoert zum Release, nicht zur Spur.
 - Integration: neue Quelldatei `engine/src/titelversion_r39.c` (GLOB) -> im Hauptbaum `local_build.sh configure` vor dem
   Bau; RELEASE_NOTES.md (tabu) nennt die Titelbild-Version noch nicht.
+- **Hinweis an den Orchestrator (Nachbesserung 1):** `analysis/befunde_runde39/AUFTRAG.md`, Nachtrag 14, sagt ebenfalls
+  "Ein vorhandenes Skript dafuer gibt es weder hier noch im alten reAi-Repo". Das ist durch Abschnitt 1.3/8 widerlegt
+  (Vorprojekt-Skript `reAi/scripts/patch_save_final.py`, Ergebnis "V1.18 2026.04.24" in `info/Re1.5/re15_save_final.bin`)
+  und sollte dort berichtigt werden. AUFTRAG.md gehoert dem Orchestrator; diese Spur aendert sie nicht.
 
 ## 7. Fuer den Nutzer
-- **"Ich glaube dafuer gibt es auch schon ein Skript irgendwo":** Es gab keins - weder in diesem Repo noch im alten
-  reAi-Ordner (der enthaelt nur noch eine leere Datei). Die Version kam bisher nur in die Paket-Dateinamen und in die APK,
-  nicht ins Spiel. Das ist jetzt eingebaut.
+- **"Ich glaube dafuer gibt es auch schon ein Skript irgendwo":** Ja, da hattest du recht - im Vorprojekt
+  (`C:/workspace/git/reAi`). Dessen Bau-Skript `scripts/patch_save_final.py` hat bei jeder Version eine Zeile
+  "v<Version> <Datum>" direkt in die Titelbild-Datei der gepatchten Disc geschrieben, zuletzt **"V1.18 2026.04.24"**:
+  eine Zeile mit Version und Datum, in einer einfachen 5x7-Pixelschrift (einfarbig grau, ohne Schattierung). Dafuer hat
+  es ein ganzes Rechteck schwarz gemacht und dabei auch ein Stueck der Hintergrundgrafik links daneben geloescht.
+  Das Skript selbst gibt es nicht mehr: der Ordner `C:/workspace/git/reAi` enthaelt nur noch `psx_dev/re15_reborn_pc/build/`.
+  Erhalten ist nur sein Ergebnis, die gepatchte Disc `info/Re1.5/re15_save_final.bin`. In meiner ersten Antwort stand
+  "es gab keins" - das war falsch.
+- **Warum nicht das alte Skript:** Es ist weg, und es hat die Bilddatei einer gepatchten Disc umgeschrieben. Der Port
+  laesst die Original-Datei TITLEU.TIM unveraendert und schreibt die Zeile beim Laden des Titelbilds im Speicher - also
+  dasselbe, nur ohne Datei-Patch. Ausserdem stand die Version im alten Skript von Hand drin und hinkte hinterher: bei v1.2
+  stand noch "v1.1" im Titelbild, und die letzte Disc zeigt "V1.18", obwohl sie schon Patches bis v1.24 enthaelt. Jetzt
+  kommt die Version bei jedem Release automatisch aus dem Release selbst.
+- **Damals und jetzt:** damals "V1.18 2026.04.24" (Version und Datum, 5x7-Schrift), jetzt z. B. **"Ver.0.8.27"** in der
+  Pixelschrift der alten Original-Zeile, rechtsbuendig an deren Stelle. Bild mit allen drei Staenden (oben das Original
+  "Sample" / "Ver.2025.01.25", in der Mitte das Vorprojekt, unten jetzt):
+  `analysis/befunde_runde39/T_belege/titel_vorprojekt_vergleich.png`.
 - **Was du siehst:** Oben rechts im Titelbild stehen "Sample" und "Ver.2025.01.25" nicht mehr. Dort steht jetzt die
   Version in derselben Pixelschrift, rechtsbuendig wie vorher, z. B. **"Ver.0.8.27"** im Release v0.8.27. Logo und "TM"
   bleiben unveraendert. Die Bilddatei TITLEU.TIM wird nicht veraendert - das Spiel schreibt die Zeile beim Laden.
@@ -254,7 +307,8 @@ geloescht; `cmake_minimum_required(VERSION 3.16)` in jedem -P-Skript; keine libm
   Release-Paket ist.
 - **Ziffern 3, 4, 6, 7, 8, 9 und "dev":** die alte Zeile enthielt nur 0, 1, 2 und 5. Die uebrigen Zeichen sind im selben
   Raster und mit derselben Schattierung ergaenzt (Form der klassischen 5x7-Pixelschrift, aus der auch die 0 und die 2
-  der alten Zeile stammen). Vorschau: `analysis/befunde_runde39/T_belege/glyphen_vorschau.png`.
+  der alten Zeile stammen). Die 4, die 6 und die 8 haben genau die Form, die schon der Titel-Stempel des Vorprojekts
+  benutzt hat. Vorschau: `analysis/befunde_runde39/T_belege/glyphen_vorschau.png`.
 - Neue Assets fuer das Paket-Gate: **keine**. Sprachdateien: **keine**. Bedienung: unveraendert.
 - Entscheidungsfragen: keine offenen. (Falls dir eine der neuen Ziffern nicht gefaellt: sag welche - die Form steht
   an einer Stelle, `re15_port/tools/r39_titelversion/glyphen_bauen.py`, ERGAENZT.)
@@ -263,3 +317,92 @@ geloescht; `cmake_minimum_required(VERSION 3.16)` in jedem -P-Skript; keine libm
 Status: in Arbeit (2026-10-19). Abnahmebericht: `analysis/befunde_runde39/T_abnahme_0.md` Abschnitt 4 und 10.
 Mangel M1 (T4, Auskunft an den Nutzer): Abschnitt 1.3 ("Ergebnis: es gab kein Skript dafuer") und Abschnitt 7 ("Es gab
 keins - weder in diesem Repo noch im alten reAi-Ordner ...") sind widerlegt. Abhilfe laut Abnahme: nur Dokument, kein Code.
+Die Punkte T1-T3 (erfuellt) bleiben unberuehrt: kein Spiel-Code, kein Riegel, nichts unter release/ geaendert.
+
+### 8.1 Ursache
+Die erste Suche galt einem Skript IN diesem Repo und im Ordner `C:/workspace/git/reAi`. Der Inhalts-Treffer, der zum
+Vorprojekt-Skript fuehrt, war dabei, wurde aber nicht verfolgt: `git grep -l TITLEU 832b68bd` liefert 20 Dateien,
+darunter `analysis/save_system_patched_build.md` (Zeile 59: TITLEU.TIM in der gepatchten Vorprojekt-Disc um 2118 B
+veraendert; Zeile 276: `c:/workspace/git/reAi/scripts/patch_save_final.py`). Die erste Fassung von 1.3 nannte davon nur
+die Runde-30-Werkzeuge. Weder das Ergebnis des Skripts (die gepatchte Disc `info/Re1.5/re15_save_final.bin`) noch die
+Notizen des Vorprojekts (Claude-Memory `C--workspace-git-reAi`) wurden geprueft; die Angabe im Auftrag (Nachtrag 14:
+"gibt es weder hier noch im alten reAi-Repo") wurde uebernommen statt nachgemessen.
+
+### 8.2 Messung vorher
+Dossier-Stand f6901111 (`git show f6901111:analysis/befunde_runde39/T_titelversion.md | grep -n "kein Skript\|Es gab
+keins\|nur die Runde-30\|nicht ins Spiel"`): Zeile 81 "nur die Runde-30-Werkzeuge" (Inhaltssuche `TITLEU` - unvollstaendig,
+s. 8.1), Zeile 88 "**Ergebnis: es gab kein Skript dafuer** (dem Nutzer gesagt, Abschnitt 7).", Zeilen 243-245 "Es gab
+keins - weder in diesem Repo noch im alten reAi-Ordner (der enthaelt nur noch eine leere Datei). Die Version kam bisher
+nur in die Paket-Dateinamen und in die APK, nicht ins Spiel."
+
+### 8.3 Beleg (selbst gemessen, nicht aus dem Abnahmebericht uebernommen)
+Neues Werkzeug `re15_port/tools/r39_titelversion/vorprojekt_titel.py` (liest nur; eigener ISO9660-Weg
+`/PSX/DATA/TITLEU.TIM` statt der LBA aus dem Bericht; Maske der alten Beschriftung wie 1.1) auf
+`info/Re1.5/re15_save_final.bin` (Hauptbaum, ungetrackt, nur gelesen; `.cue`: `TRACK 01 MODE2/2352`, Datei 215193888 B
+vom 2026-05-18). Ausgabe woertlich (nur Leerzeichen am Zeilenende gekuerzt):
+```
+/PSX/DATA/TITLEU.TIM in re15_save_final.bin: LBA 1101, 153620 B, sha256 4d00f0d7b576f7d47deb6c63e56de40962a77df8f46f4ae4da6178e2896a829b
+Auslieferung shared_assets\PSX\DATA\TITLEU.TIM: sha256 1acd3339ff6b60e8207e89fab87abb547f63bda5b21c043c134d48bd08e445c3; Kopf gleich: True
+verschieden: 2118 Bytes, 1059 Pixel, bbox x178..283 y11..34
+alte Beschriftung (Maske Dossier 1.1): 929 Pixel; im Vorprojekt 0x8000: 859, von der neuen Zeile belegt: 70
+Hintergrundkunst mitgeloescht: 33 Pixel (Werte 1..6), bbox x178..204 y21..34 -> 0x8000
+Rechteck x178..283 y11..34: 2544 Pixel = 0x8000 2357 + neue Zeile 187 + anderes 0
+neue Zeile: 187 Pixel, bbox x189..273 y18..24, Werte ['0x5294'] (RGB 5 bit [(20, 20, 20)])
+    9012345678901234567890123456789012345678901234567890123456789012345678901234567890123
+ 18 #...#..#........#....###.......###...###...###....##.......###.....#.......###.....#.
+ 19 #...#.##.......##...#...#.....#...#.#...#.#...#..#........#...#...##......#...#...##.
+ 20 #...#..#........#...#...#.........#.#..##.....#.#.........#..##..#.#..........#..#.#.
+ 21 .#.#...#........#....###........##..#.#.#...##..####......#.#.#.#..#........##..#..#.
+ 22 .#.#...#........#...#...#......#....##..#..#....#...#.....##..#.#####......#....#####
+ 23 ..#....#...##...#...#...#.....#.....#...#.#.....#...#.##..#...#....#..##..#........#.
+ 24 ..#...###..##..###...###......#####..###..#####..###..##...###.....#..##..#####....#.
+Glyphen (Lesung "V1.18 2026.04.24"), Muster Zeile 18..24:
+  V x189..193  #...# #...# #...# .#.#. .#.#. ..#.. ..#..
+  1 x195..197  .#. ##. .#. .#. .#. .#. ###  alte Zeile '1' anders
+  . x200..201  .. .. .. .. .. ## ##
+  1 x204..206  .#. ##. .#. .#. .#. .#. ###  alte Zeile '1' anders
+  8 x209..213  .###. #...# #...# .###. #...# #...# .###.  Port ERGAENZT '8' BITGLEICH
+  2 x219..223  .###. #...# ....# ..##. .#... #.... #####  alte Zeile '2' anders
+  0 x225..229  .###. #...# #..## #.#.# ##..# #...# .###.  alte Zeile '0' BITGLEICH
+  2 x231..235  .###. #...# ....# ..##. .#... #.... #####  alte Zeile '2' anders
+  6 x237..241  ..##. .#... #.... ####. #...# #...# .###.  Port ERGAENZT '6' BITGLEICH
+  . x243..244  .. .. .. .. .. ## ##
+  0 x247..251  .###. #...# #..## #.#.# ##..# #...# .###.  alte Zeile '0' BITGLEICH
+  4 x253..257  ...#. ..##. .#.#. #..#. ##### ...#. ...#.  Port ERGAENZT '4' BITGLEICH
+  . x259..260  .. .. .. .. .. ## ##
+  2 x263..267  .###. #...# ....# ..##. .#... #.... #####  alte Zeile '2' anders
+  4 x269..273  ...#. ..##. .#.#. #..#. ##### ...#. ...#.  Port ERGAENZT '4' BITGLEICH
+Selbstprobe Lesung (gleiches Zeichen = gleiches Muster): OK
+```
+Daraus:
+- Das Vorprojekt hat das Rechteck x178..283 y11..34 komplett auf `0x8000` gesetzt (2357 Pixel; die alte Beschriftung
+  859 + 70 unter der neuen Zeile = 929) und dabei 33 Pixel der Hintergrund-Ader (Werte 1..6, x178..204 y21..34)
+  mitgeloescht. Der Port loescht nur die 929 Pixel der Maske; die Ader bleibt (1.1, Abnahme 0 Abschnitt 3).
+- Die gestempelte Zeile: 187 Pixel, einfarbig `0x5294` = Grau 20 (5 bit), keine Schattierung, 7 Zeilen y18..24,
+  x189..273; Lesung **"V1.18 2026.04.24"**, Selbstprobe OK (gleiche Zeichen = gleiche Muster: 1 2x, 2 3x, 0 2x, 4 2x, . 3x).
+  "V1.18" passt zum Skript-Banner "v1.18" (`save_system_patched_build.md:888`, `patch_save_final.py:3`).
+- Form: 4, 6, 8 des Vorprojekts sind bitgleich mit den ergaenzten Port-Glyphen (ERGAENZT, glyphen_bauen.py), die "0" mit
+  der "0" der alten Zeile; "1" und "2" weichen von der alten Zeile ab (Port nutzt dort die Original-Ausschnitte).
+- Skript weg / dieses Repo ohne Skript / Vorprojekt-Notizen: Abschnitt 1.3 (Pfade, Zeilen, Befehle selbst ausgefuehrt:
+  `ls -laR /c/workspace/git/reAi`, `find /c/workspace/git -maxdepth 5 -iname "patch_save_final*"`,
+  `git log --all --oneline -- '*patch_save_final*'` (leer, 6 s), `git grep -l TITLEU 832b68bd`, grep in PatchReference.java,
+  Zeilennummern der Memory-Notizen per `grep -n` nachgeprueft).
+- Vergleichsbild `analysis/befunde_runde39/T_belege/titel_vorprojekt_vergleich.png` (x170..300 y4..40, 5x; oben
+  Auslieferung, Mitte Vorprojekt-Disc, unten Port mit "v0.8.27"): Port-Teil erzeugt mit dem neuen Hilfsprogramm
+  `re15_port/tools/r39_titelversion/anwenden_tim.c` (ruft `re15_titelversion_r39_anwenden`, dieselbe Funktion wie die exe
+  ueber `re15_titelversion_r39_bild`; Bau-Befehl im Dateikopf), Ausgabe:
+  `[titel_r39] alte Beschriftung entfernt: 929 Pixel; neu "Ver.0.8.27" (RE15_VERSION "v0.8.27") Spalten 222..283`;
+  dann `vorprojekt_titel.py ... --bild ... --port-tim ... --port-text "Ver.0.8.27"`. Gegenprobe des Port-Teils gegen die
+  Auslieferung: ausserhalb des Kastens x188..295 y4..35 0 abweichende Pixel.
+
+### 8.4 Aenderung
+- Abschnitt 1.3 neu: Vorprojekt-Skript mit Belegen, Skript weg, in diesem Repo keins, Ergebnis berichtigt, Grund gegen
+  Wiederverwendung.
+- Abschnitt 7: erster Punkt berichtigt ("Ja, im Vorprojekt"), dazu "Warum nicht das alte Skript" und "Damals und jetzt"
+  mit dem Vergleichsbild; Ziffern-Punkt um die Gegenprobe 4/6/8 ergaenzt.
+- Abschnitt 2: Gegenprobe der ergaenzten Formen gegen den Vorprojekt-Stempel.
+- Abschnitt 6 OFFEN: Hinweis an den Orchestrator (AUFTRAG.md Nachtrag 14 traegt dieselbe falsche Angabe).
+- Neue Dateien: `re15_port/tools/r39_titelversion/vorprojekt_titel.py`, `re15_port/tools/r39_titelversion/anwenden_tim.c`
+  (Hilfsprogramm, nicht im CMake-Bau: GLOB nur `engine/src/*.c` und `platform/*/src/*.c`),
+  `analysis/befunde_runde39/T_belege/titel_vorprojekt_vergleich.png`.
+- Nicht geaendert: Spiel-Code, Riegel, `release/`, `platform/android/`, `shared_assets/PSX/*`, AUFTRAG.md.
