@@ -122,8 +122,9 @@ Raumnamen DEBUG.BIN (include/debug_jump_table.h, Stage 0): 0x03 LOBBY, 0x04 WEST
 * "einmal in den Flur hinein von 10C1 aus ... wenn man in ROOM 1061 die Etage von unten ueber die Treppe erreicht":
   der Flur ist das Treppenhaus ROOM1061 auf Etage 4 (2F); die Zombies kommen durch die 10C1-Tuer (Etage 4) herein.
   10C1 selbst hat keine Zombies und liegt nicht auf Elzas Weg 1041 -> 1061 -> 1121.
-* "das gleiche nochmal wie bei Leon in den ROOM 1071, falls die Zombies nicht besiegt wurden" = Leons 1070-Schritt:
-  leben in 1071 Zombies (Tot-Bits 0xc6..0xca = 0), Tuerknall, sie erscheinen in ROOM1031 Cut 7 vor der 1071-Tuer.
+* ERSETZT durch Nachtrag 11 (0a/0b): "das gleiche nochmal wie bei Leon im ROOM 1041, falls die Zombies nicht besiegt
+  wurden" = Leons 1040-Rolltor-Schritt in ROOM1041, Bedingung = die Zombies aus 10C1/1061 leben (Orchestrator), beim
+  naechsten Betreten von 1041. (Bis 02:00 gebaut: Leons 1070-Schritt fuer 1071 -> 1031 Cut 7; zurueckgebaut.)
 * "im ROOM 1031 ueber die Absperrung/Das Rollo, so wie bei der cutscene" = Leons Tor-Schritt: die Original-Szene
   1031 sub08 (s. 2.2), Kriecher durch das aufgebrochene Rollo, Cut 12.
 
@@ -174,7 +175,7 @@ Raumnamen DEBUG.BIN (include/debug_jump_table.h, Stage 0): 0x03 LOBBY, 0x04 WEST
 
 ## 4. Messung nachher
 
-### 4.1 Erstlauf der Kette (Lauf k2, exe aus cc66567d + Kartenhinweis-Fix)
+### 4.1 Erstlauf der Kette (Lauf k2, exe aus cc66567d + Kartenhinweis-Fix; STAND VOR NACHTRAG 11 - mit Cut-7-Teil)
 Elza-Spielstand ROOM1041 (-21008,-13134) mit (3,125),(3,193),(3,116) (Intro durch, 1011 besucht), 10E1/1071 nicht
 betreten (alle leben), `RE15_SET_FLAG_AT=9:97@200`. debug.log (gekuerzt):
 ```
@@ -226,18 +227,47 @@ Differenz der Mitschnitte = Bilder 624..665 (42) und 805..846 (42), Differenz-RM
 Bank Satz 0, Folge #1 K ROOM1041 und #5 K ROOM1061). Der Original-Se_on @0x02862 in 1031 laeuft ueber die Raumbank (Folge
 K 2, vom Haken nicht betroffen).
 
+### 4.6 Nach dem Umbau (Nachtrag 11)
+* Kette (Lauf k5, exe nach ea6e4cab): Flanke -> "Umzug: 10E1 lebend 4 -> 1061; (9,95)=1" -> Tuerknall 1041 (Folge #1 K T61 0)
+  -> ROOM1061 (S +4, C 2, T105) -> Knall Satz 1 (K T237 1) -> ROOM1031 (S +3 Kriecher, erstes Bild C 12, T281) -> ROOM1041
+  -> "Rueckkehr beendet, Steuerung frei". Abstaende 1061 Cut 2 wie 4.1 (7062 -> 6245, 6421 -> 4849, 6638 -> 5476,
+  7547 -> 5009); 1031 Cut 12 Kriecher 9790 -> 7561, 10524 -> 5579, 9522 -> 4765, Raum-Zombies hinter dem Rollo
+  12906 -> 8997 .. 15058 -> 9823; Spieler-HP min 100 in beiden Schnitten. Keine Spur mit Bit 128..132; ROOM1071 bleibt
+  unberuehrt (unit kette_*: Tot-Bits 0xc6..0xca = 0 nach der Kette).
+* Durchbruch 1041, echter Weg (Lauf d1): Spielstand ROOM1061 Etage 0 an der Tuer nach 1041 mit (9,95), 10E1-Quellen und
+  1041-Kopien still, vier 1061-Kopien leben; Aktion -> `DOOR FIRE slot=2 ... spawn=(-21008,0,-13134)` -> ROOM1041 ->
+  "Durchbruch 1041: 4 Zombies aus 1061 (nicht besiegt) -> hinter das Rolltor" -> erstes Bild Cut 1 (Folge C T0 1) ->
+  Knall Satz 1 (T2) -> Rolltor faehrt hoch -> "Durchbruch Bild 266: alle durch das Rolltor" -> Szene bis Bild 356 ->
+  "Durchbruch beendet, Steuerung frei (Haltebits geloest)", Elza wieder bei (-21008,0,-13134) Cut 5. Abstaende zur Kamera
+  Cut 1: Kopien 12391 -> 6201, 13004 -> 8316, 13941 -> 6828, 14897 -> 9031; Spieler-HP min 100. Bilder
+  Q_belege/q_1041_durchbruch.png (Bild 20 Rolltor zu, 100 Fuesse unter dem Rolltor, 180-300 die Zombies kommen durch auf
+  die Kamera zu, ab 380 Elza an der 1061-Tuer, Cut 5).
+* Gemessen und behoben: (1) "alle durch" kam im ersten Lauf schon in Bild 1 — die Lebend-Pruefung ueber die HP taugt nicht
+  (Sce_em_set setzt hp 0, die INIT erst im ersten KI-Takt); (2) mit allen Zombies hinter dem Rolltor in der Zaehlung haette
+  erst die Kappe geendet (drei der fuenf Raum-Records liefen VOM Tor weg, Abstand 24186 -> 28413 usw.) -> gezaehlt werden
+  die umgezogenen Kopien (unit durch1041: "alle durch" bei Bild 295 > Rolltor 210, keine Kopie mehr hinter dem Rolltor).
+* CONTINUE in 1041 loest den Durchbruch NICHT aus (der CONTINUE-Weg stellt den Schnitt des Spielstands nach den Installern
+  her, main.c "FE-4"); er bleibt fuer das naechste Betreten durch eine Tuer.
+
 ## 5. Tests
-Neue Riegel (re15_port/tests/unit/probes/r39_elzazombies.cmake):
-* unit_r39_elzazombies_zensus — Quell-Records, Kopie-Bits frei (132 RDTs, 706 Sce_em_set, 176 Bits, 0 Desync), 1031-Zeilen
-  woertlich, sub06/07/09 = ROOM1030, Kameras = RID, Tuer 10C1 -> 1061, Slot/Ereignis/Bank 5 frei.
-* unit_r39_elzazombies_kette_45/_05/_00/_21 — die Kette im Prozess je Ueberlebenden-Fall (4/5, 0/5, 0/0, 2/1): Raumfolge,
-  Schnitte, Zahl der Kopien = lebende, jede Kopie >= 400 naeher, HP 100, Rueckkehr, (9,95), zweite Flanke wirkungslos;
-  kette_45 mit GEGENPROBE (Modul aus = keine Kette).
+Neue Riegel (re15_port/tests/unit/probes/r39_elzazombies.cmake), Stand nach Nachtrag 11:
+* unit_r39_elzazombies_zensus — Quell-Records 10E1, Kopie-Bits frei (132 RDTs, 706 Sce_em_set, 176 Bits, 0 Desync), 1031-
+  Zeilen woertlich, sub06/07/09 = ROOM1030, ROOM1041 = ROOM1040 (sub08 180 B, Schalter-Rechteck @0x01118, Rolltor @0x01190,
+  Limit @0x01218, RID Cut 1), Programm G traegt die 1041-sub08-Zeilen woertlich, Kameras = RID, Tuer 10C1 -> 1061,
+  Slot/Ereignis/Bank-5-Bits 28/29/30 frei.
+* unit_r39_elzazombies_kette_4/_0/_2 — die Kette im Prozess je Ueberlebenden-Fall (4, 0, 2): Raumfolge ohne 1071-Schritt,
+  Schnitte, Zahl der Kopien = lebende, jede Kopie >= 400 naeher, HP 100, Rueckkehr, (9,95), 1071 unberuehrt, 1041-Kopien
+  bis zum Durchbruch still, zweite Flanke wirkungslos; kette_4 mit GEGENPROBE (Modul aus = keine Kette).
 * unit_r39_elzazombies_nach1061 — Westseite, 200 Bilder gehalten, frei auf Etage 4 (kleinster Abstand 4179 >= 4000), kommen
   danach naeher (4179 -> 2670), getoetete Kopie fehlt.
-* unit_r39_elzazombies_nach1031 / _ohne — Nachspawn 1031 mit/ohne (9,95); Laden mit (9,97), ohne (9,97), Leon.
-* integration_r39_elzazombies_kette / _knall / _treppe / _ohne — echte exe (s. 4.1, 4.2, 4.4, 4.5).
-Gezielter Lauf (00:5x): `ctest -R "r39_elzazombies"` -> "100% tests passed, 0 tests failed out of 12".
+* unit_r39_elzazombies_nach1031 — mit (9,95) drei Kriecher und keine Kopie; ohne (9,95) nichts.
+* unit_r39_elzazombies_durch1041 — Tuer 1061 -> 1041 mit 2 lebenden von 3 Kopien (eine in 1061 getoetet): 2 ziehen um,
+  erstes Bild Cut 1, Elza auf Leons Parkplatz, Rolltor hoch ab Bild 210, "alle durch" erst bei Bild 295 und ohne Kopie
+  hinter dem Rolltor, Szene 386 Bilder ohne Raumwechsel, Kopien 12391 -> 5577 / 13941 -> 8860 naeher, HP 100, Elza zurueck
+  am Eintrittspunkt, Riegel los, Haltebits los; naechstes Betreten: kein zweiter Durchbruch, 2 Durchgebrochene erscheinen;
+  Eintritt im Nordteil: nichts; alle 1061-Kopien besiegt: nichts.
+* unit_r39_elzazombies_ohne — Laden mit (9,97), ohne (9,97), Leon 1040/1060 (auch mit (9,95): kein Durchbruch).
+* integration_r39_elzazombies_kette / _knall / _treppe / _durch / _ohne — echte exe (4.2, 4.4, 4.5, 4.6).
 
 ### 5.1 Abschlusslaeufe (Baum 05d03c9f, gebaut 01:5x)
 * ALLE schnellen Tests (Stand b24d8af4 + Ton-Auswerter-Fix; danach nur der Start-Umbau in elzazombies_r39.c, dessen eigene
