@@ -433,3 +433,18 @@ byte-gleich mit dem Integrationsbaum (96b384a7, dort von Hand aufgeloest). Merge
   Port: in ROOM1060 nur tuer1060_1040.c (Runde 35 L, AOT-Slot 2 als Text-Platz bis (9,73)) — keine Ueberschneidung.
 * ROOM1141 sub00 (Elzas Gegenstueck zu Leons 1140): Typ 0x49 (John, Bit 0xff) @0x00B06, Typ 0x27 (Gorillas, Bits
   0xcb/0xcc) @0x00B1A/@0x00B2E/@0x00B54/@0x00B68 — KEIN Zombie-Record. Leons 1140 -> 1130-Schritt hat bei Elza keine Quelle.
+
+### 9.2 Messung vorher (Bau nach dem Merge 5a499b3f, ctest -V; Logs build/r36_szene1150_lauf/lauf_16eb5a45, build/r39_elzazombies_wd_kette)
+* LEON (integration_r36_szene1150 = echter Weg: Spielstand ROOM1130 mit (9,71),(3,94), 10E0 nie betreten -> alle vier
+  Medical-Room-Zombies leben; Tuer -> ROOM1150 -> Szene -> Montage), debug.log:
+  `Umzug: 1140 lebend 5 -> 1130 (9,74)=1; 1070 lebend 5 -> 1030 (9,76)=1` -> `Folge #1 K ROOM1150 T1284 Knall Satz 0` ->
+  `PC loaded room1130` (S +5, C 0) -> `Folge #4 K ROOM1130 T1460 Knall Satz 1` -> `PC loaded room1040` (S +5, C 1) ->
+  `K ROOM1040 T1865 Satz 0` -> `PC loaded room1030` (S +11, C 7; K 2; S +3; C 12) -> `PC loaded room11c0`.
+  KEIN Treppenhaus-Schritt (kein room1060), obwohl in 10E0 vier Zombies leben.
+* ELZA (integration_r39_elzazombies_kette, Spielstand 1041, 1071 nie betreten -> alle fuenf Lobby-Office-Zombies leben,
+  (9,97) bei Bild 200): `Umzug: 10E1 lebend 4 -> 1061; (9,95)=1` -> `K ROOM1041 T61 0` -> room1061 (S 4, C 2) ->
+  `K ROOM1061 T237 1` -> room1031 `S ROOM1031 T281 3`, `C ROOM1031 T281 12` (erstes Bild = das Rollo) -> room1041.
+  KEIN 1071-Schritt (kein Cut 7, keine Kopie der 1071-Zombies), obwohl in 1071 fuenf leben.
+* H1 (unit_r39_elzazombies_durch1041, Zustand nach der Montage OHNE (9,97)): `Durchbruch 1041: 2 Zombies aus 1061 (nicht
+  besiegt) -> hinter das Rolltor` -> Szene laeuft (Knall, `Durchbruch Bild 295: alle durch`). Der Durchbruch prueft (9,97)
+  nicht — er kaeme auch nach Johns Rettung.
