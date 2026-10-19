@@ -153,25 +153,34 @@ Raumnamen DEBUG.BIN (include/debug_jump_table.h, Stage 0): 0x03 LOBBY, 0x04 WEST
 * Parkplatz Cut 2: hinter der Bildebene, Etage 4, kleinster Winkel zur Linie Tuer -> Kamera: (20200,20400), Tiefe -718,
   5,4 Grad; ausserhalb der RVD-Zonen von Cut 2; eine BLK-Zone -> Navigator-Ziel = Spielerlage.
 
-## 3. Umsetzung
+## 3. Umsetzung (Stand nach Nachtrag 11)
 * NEU engine/src/elzazombies_r39.c + include/re15_elzazombies_r39.h (alle Konstanten mit Beleg im Kopf).
-* Haken (je 1-2 Zeilen, "Runde 39 Spur Q"): scd_vm.c (Ereignis 30 in der Ereigniskette, sub01-Sperre im Montage-Schritt,
-  Takt am Kopf des VM-Laufs), scd_room_setup.c (Installer am Ende des Blocks), platform/pc/main.c (CONTINUE-Weg:
-  re15_elzazombies_r39_geladen = Laden ist keine Flanke), tests/unit/test_r36_kartenbits.c (k_port: (9,95)).
+* Haken (je 1-2 Zeilen, "Runde 39 Spur Q"): scd_vm.c (Ereignis 30 in der Ereigniskette, sub01-Sperre im Montage-Schritt
+  und im Durchbruch, Takt am Kopf des VM-Laufs), scd_room_setup.c (Installer am Ende des Blocks, nach Spur K's Zeile),
+  platform/pc/main.c (CONTINUE-Weg: re15_elzazombies_r39_geladen = Laden ist keine Flanke, kein Durchbruch beim Laden),
+  tests/unit/test_r36_kartenbits.c (k_port: (9,95)). master 2963579d (Spur K) in den Zweig gemergt (1a4e20b1; Konflikt
+  scd_room_setup.c: beide Installer-Zeilen behalten, Q am Ende).
 * Kette: Flanke (9,97) 0->1 im Spiel, Elza, (9,95)=0 -> ausstehend; Start sobald frei (re15_cine_active = 0, player_mode
-  != 2, kein Raumwechsel, kein Kartenhinweis angefordert), nicht in 1061/1031 selbst. Start: Umzug (Quell-Bits 1, Kopie-Bits
-  0 bzw. 1 fuer Tote, (9,95)=1), Rueckkehr-Stelle merken, Programm A (Riegel, Sleep 60, Knall, Sleep 45, Tuer).
-  B = 1061 Cut 2 (4 Saetze, Gate entscheidet), C = 1031 (Leons 1030-Programm mit den 1031-Zeilen), D = Rueckkehr.
-* Verhalten in den Schnitten (Leons Bausteine 3/4/5) im eigenen Takt (Leons montage_r38.c bleibt unberuehrt).
-* Nachspawn 1061 (Programm E): die vier Saetze an der Westseite, gehalten (entity+0x9 |= 0x20) solange die Spielerin
-  nicht auf Etage 4 steht (Band = -(y/0x708)); dann frei. Nachspawn 1031 (Programm F) wie Leons k_p_1030_nach.
+  != 2, kein Raumwechsel, kein Kartenhinweis angefordert), nicht in 1061/1031 selbst. Start: Zahl der 10E1-Ueberlebenden,
+  Auftakt-Faden, DANN Umzug (10E1-Quellen 1, 1061-Kopien 0 bzw. 1 fuer Tote, 1041-Kopien 1, Kriecher 0, (9,95)=1),
+  Rueckkehr-Stelle merken. Programme: A Auftakt (Riegel, Sleep 60, Knall, Sleep 45, Tuer); B 1061 Cut 2 (4 Saetze, Gate
+  entscheidet, am Ende Knall Satz 1); C 1031 = Leons Tor-Teil ohne Cut-7-Teil (Bruch bei (4,15)=0, Kriecher, Cut 12,
+  Umparken, Tuer zurueck); D Rueckkehr.
+* DURCHBRUCH 1041 (Programm G, Nachtrag 11): Installer 1041 im Tuer-Weg, Kette AUS, (9,95)=1, mindestens eine 1061-Kopie
+  lebt, Eintritt im Suedteil (z < -360) -> Umzug 1061 -> 1041 (Bits 124..127 -> 1, 128..131 -> 0 fuer die Lebenden),
+  Eintrittspunkt/-schnitt merken, Programm G: Limit 20, Kopien in Leons Aufstell-Gassen, Elza auf Leons Parkplatz, Cut 1,
+  Riegel, Knall Satz 1, Vorlauf 34, Rolltor-Fahrt (ROOM1041 sub08 @0x019DC..@0x01A50) bei (4,5)=0, (4,5)/(4,4)=1, Warten
+  auf (5,30), Sleep 90, Elza zurueck + Schnitt zurueck, Plc_ret, Cut_auto 1, Riegel los. Takt: Einzelstopp hinter der
+  Kamera Cut 1 (Baustein 3), "alle durch" = alle Kopien z < -360 (oder Kappe 1532), am Ende Haltebits los.
+* Verhalten in den Schnitten (Leons Bausteine 3/4) im eigenen Takt (Leons montage_r38.c bleibt unberuehrt).
+* Nachspawns: 1061 (E) die vier Saetze an der Westseite, gehalten (entity+0x9 |= 0x20) solange die Spielerin nicht auf
+  Etage 4 steht und die Treppe nicht zu Ende ist; 1031 (F) die Kriecher; 1041 (H) die Durchgebrochenen in den Gassen.
 * Nachbesserungen aus den Messungen: (1) Kartenhinweis-Bedingung `re15_map_hint_pending() < 0` (-1 = keiner; Lauf k1 blieb
   sonst ausstehend); (2) 1061-Kopien erst frei, wenn die Treppe zu Ende ist (re15_stair_active() = 0, Laeufe t6 -> t7);
-  (3) Umzug und (9,95) erst NACH erfolgreichem Start des Auftakt-Fadens, sonst bleibt der Start ausstehend (kein Umzug
-  ohne Montage, wenn alle Ereignis-Plaetze belegt sind).
+  (3) Umzug und (9,95) erst NACH erfolgreichem Start des Auftakt-Fadens; (4) "alle durch" im Durchbruch nur ueber die
+  Kopien und ohne HP-Pruefung (unit durch1041, 4.6).
 * Mess-Haken (env, kein Spielverhalten): RE15_R39Q_KNALL_STUMM (Form Leons RE15_IT_KNALL_STUMM); Pruefhaken im Header
-  (Spuren, Freigabe, HP, Gegenprobe-Schalter re15_elzazombies_r39_enable).
-
+  (Spuren, Freigabe, HP, Durchbruch-Zahl, Gegenprobe-Schalter re15_elzazombies_r39_enable).
 
 ## 4. Messung nachher
 
@@ -223,9 +232,10 @@ die Rollo-Zombies des Raums. Wie Leons k_p_1030_nach: die Kopien stehen im Gang 
 * Ohne (9,97): keine Kette (Messung vorher 1.1 = Verhalten ohne Flanke; unit _ohne).
 
 ### 4.5 Ton (Laeufe ton_laut / ton_stumm, RE15_AUDIO_CAP_SYNC, Mess-Haken RE15_R39Q_KNALL_STUMM)
-Differenz der Mitschnitte = Bilder 624..665 (42) und 805..846 (42), Differenz-RMS je 6567 = zweimal der Tuerknall (Knall-
-Bank Satz 0, Folge #1 K ROOM1041 und #5 K ROOM1061). Der Original-Se_on @0x02862 in 1031 laeuft ueber die Raumbank (Folge
-K 2, vom Haken nicht betroffen).
+Vor Nachtrag 11: Differenz der Mitschnitte = Bilder 624..665 (42) und 805..846 (42), Differenz-RMS je 6567 = zweimal der
+Tuerknall (Knall-Bank Satz 0, Folge #1 K ROOM1041 und #5 K ROOM1061). NACH dem Umbau (integration_r39_elzazombies_knall,
+Auswertung auswerten_ton): Bilder 624..665 (42) RMS 6567 = Tuerknall Satz 0 (Auftakt 1041) und 806..849 (44) RMS 4657 =
+Knall Satz 1 wie ROOM1030 (Ende 1061, vor dem Rollo-Schritt).
 
 ### 4.6 Nach dem Umbau (Nachtrag 11)
 * Kette (Lauf k5, exe nach ea6e4cab): Flanke -> "Umzug: 10E1 lebend 4 -> 1061; (9,95)=1" -> Tuerknall 1041 (Folge #1 K T61 0)
