@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.16)
 # lang mit der Waffe auf John (Abnahme 2 Lauf R/R2 state.txt F6296..F6306 pst=1 mo=215; gemergter Stand Lauf v_m2 F4086..F4096).
 # Echte exe, echter Weg mit Elza (Debug-Sprung nach ROOM1131, danach nur echte Tueren per RE15_WEGPLAN wie
 # integration_r39_dining1141_d bis zum Riegel der Dachtuer, dann stehen), Browning im Inventar und ausgeruestet; Elza haelt
-# R1 (RE15_INPUT_SCRIPT, Spielbilder 3500..4200) ueber Kampfende und Schnitt hinweg; Kampfende per Messhaken
+# R1 (RE15_INPUT_SCRIPT, Spielbilder 3000..4350) ueber Kampfende und Schnitt hinweg; Kampfende per Messhaken
 # RE15_R38F_GORILLAS_TOT=600 mit eingefrorenen Gorillas (Kill-Flags (7,0xCB)/(7,0xCC), KEINE Schusszahl).
 # Geprueft vom Werkzeug test_r39_dining1141 zielen (debug.log + state.txt):
 #   Vorbedingung: Elza zielt beim Kampfende und haelt R1 bis nach dem Schnitt
@@ -95,18 +95,20 @@ if(NOT AUSWERTEN)
     file(MAKE_DIRECTORY "${_lauf}")
     file(WRITE "${_lauf}/wegplan.txt" "${_plan}")
     set(WORKDIR "${_lauf}")
-    # Szenenende in 1141 ~ Bild 3456 (Lauf v_m2), Messhaken 600 freie Kampfbilder spaeter (F4056), Schnitt ~F4086: R1 von
-    # Bild 3500 an 23,4 s (702 Bilder, bis ~F4202) - das Fenster deckt Kampfende und Schnitt auch bei verschobenem Ablauf.
+    # Szenenende in 1141 bei Bild 3421..3456 (Laeufe v_m2, lauf_a06aff7b, lauf_2e593b55: die Stimmen-Zeilen laufen ohne
+    # RE15_AUDIO_CAP_SYNC nach der Wanduhr), Messhaken 600 freie Kampfbilder spaeter (F4021..F4056), Schnitt 30 Bilder danach:
+    # R1 von Bild 3000 an 45 s (1350 Bilder, bis F4350) - waehrend der Szene wirkungslos (player_mode 2, Kommando 4), danach
+    # zielt Elza; das Fenster deckt Kampfende und Schnitt fuer ein Szenenende zwischen ~2420 und ~3690.
     re15_start_spiel(_rv 1500
         RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1
         RE15_MSG_LOG=1 RE15_EVT_TRACE=1 RE15_STATE_LOG=state.txt RE15_R39J_LOG=r39.txt
         "RE15_WEGPLAN=${_lauf}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt
-        "RE15_EXIT_AT=4210#1141"
+        "RE15_EXIT_AT=4400#1141"
         "RE15_SET_FLAG=3:0x5F,4:0xF0,4:0xF1,4:0xEC,3:0x78" "RE15_GIVE=0x43:1,0x03:15,0x15:50" "RE15_EQUIP=3"
         "RE15_DEBUG_JUMP=1131@gp" "RE15_PLAYER_POS=-1300,-13900,0"
         "RE15_R38F_GORILLAS_TOT=600" "RE15_R38F_GORILLAS_STARR=1"
-        "RE15_INPUT_SCRIPT=M23.4" "RE15_INPUT_SCRIPT_BASIS=spiel" "RE15_INPUT_SCRIPT_START=3500"
-        "RE15_FRAMEDUMP=4040-4130/2:fd_"
+        "RE15_INPUT_SCRIPT=M45" "RE15_INPUT_SCRIPT_BASIS=spiel" "RE15_INPUT_SCRIPT_START=3000"
+        "RE15_FRAMEDUMP=3990-4200/3:fd_"
         "${_exe_kopie}")
     file(REMOVE "${_exe_kopie}")
     message(STATUS "r39_dining1141_zielen: exit=${_rv}, ${_lauf}")
