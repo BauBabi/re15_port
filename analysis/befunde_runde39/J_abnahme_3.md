@@ -20,7 +20,7 @@ neben der Baum-exe, danach geloescht; Werkzeuge aus Abnahme 2 uebernommen und vo
 - Unit der Spur `ctest -R "^unit_r39_dining1141"` -> `100% tests passed, 0 tests failed out of 6`; `test_r39_dining1141 senken`
   direkt: Pistole im Halten "SENKEN ab Bild 1, neutral ab Bild 10 (motion 200)", Messer im Halten dito, Pistole im Rueckstoss
   "SENKEN ab Bild 7, neutral ab Bild 16", Gegenprobe ohne Phase H "Waffe bleibt oben", `senken: 0 Fehler`.
-- (fortlaufend: Laeufe A, P, R2, K ausgewertet; RL, Unit- und Integrationslauf folgen)
+- Laeufe A, P, R2, K, RL, RL2 ausgewertet (Abschnitt 1); Unit 855/855; Integration gezielt (Abschnitt 3).
 
 ## 1. Messlaeufe (echte exe, eigene Kopie je Lauf)
 Gemeinsame Umgebung (`J39abn3/lauf.sh` = Abnahme 2): RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_PSELECT_AUTO(_SWITCH)=1 RE15_MSG_LOG=1
@@ -35,7 +35,8 @@ der Riegel) RE15_DEBUG_JUMP=1131@gp RE15_PLAYER_POS=-1300,-13900,0 RE15_FRAMEDUM
 | P | wie A, RE15_GIVE=0x43:1,0x03:15,0x15:50 (Browning im Inventar, nicht ausgeruestet), FD 1500-6200/5 | rv=0, 335 s, 1131 -> 1141 -> 1171 |
 | R2 | = Abnahme-2-Lauf R2 (M1-Nachstellung): `plan_r.txt`, RE15_GIVE=0x43:1,0x04:99,0x15:60 RE15_EQUIP=4 (P228), RE15_R39_MESS_SPIELER_HP=100, RE15_INPUT_SCRIPT = Schuetze `skript_r.txt` (R1 halten + Feuer) ab Bild 3500, **echter Tod** beider Gorillas (ohne RE15_R38F_GORILLAS_TOT), EXIT 6700#1141, FD 6240-6340/1 | rv=0, 338 s |
 | K | `plan_r.txt`, nur Messer (`[messer] Startinventar Charakter 4: ... Waffe 1`), RE15_R38F_GORILLAS_TOT=600 + _STARR=1, RE15_INPUT_SCRIPT=M45 ab Bild 3000 (R1 ueber Kampfende und Schnitt gehalten), EXIT 4400#1141, FD 3900-4300/2 | rv=0, 261 s |
-| RL | wie K, aber Browning mit 1 Patrone (RE15_GIVE=0x43:1,0x03:1,0x15:50 RE15_EQUIP=3), Skript `M33.3333,MA0.1,M1.5,MA0.1,M10` ab 3000 (Schuss ~F4000, Nachladen ab ~F4048, kurz vor der Sperre = Randfall des Bau-Agenten), FD 4030-4120/1 | siehe 1.8 |
+| RL | wie K, aber Browning mit 1 Patrone (RE15_GIVE=0x43:1,0x03:1,0x15:50 RE15_EQUIP=3), Skript `M33.3333,MA0.1,M1.5,MA0.1,M10` ab 3000 (Schuss F4000, Nachladen ab F4048 = 8 Bilder vor der Sperre: Randfall des Bau-Agenten), EXIT 4300#1141, FD 4030-4120/1 | rv=0, 258 s |
+| RL2 | wie RL, Skript `M33.3333,MA0.1,M1.6667,MA0.1,M10` (Nachladen ab F4053 = 3 Bilder vor der Sperre), EXIT 4250#1141, FD 4040-4110/1 | rv=0, 256 s |
 
 ### 1.1 Punkt 1 — keine Zombie-Geraeusche
 - Lauf A, debug.log Abschnitt 1141 (2112 Zeilen), alle Skript-Toene (`SCD Se_on: bank=`): 18x bank 62 (=0x3E) id 0 (Klopfen),
@@ -115,6 +116,24 @@ der Riegel) RE15_DEBUG_JUMP=1131@gp RE15_PLAYER_POS=-1300,-13900,0 RE15_FRAMEDUM
   F4087/F4088 haelt Elza die Pistole schon fast unten an der Huefte (Ende des Senkens), nicht auf John gerichtet. Die Original-Form
   ROOM11C0 sub03 ersetzt das Kommandowort des Spielers im Schnittbild (@0x1B26 Plc_dest), ENTRIEGELN39 erst 11 Bilder spaeter
   (Form 1141 sub02) - ein solcher Rest reicht deshalb hoechstens bis Plc_dest TURN (+11).
+- **Randfall verschaerft, Lauf RL2** (wie RL, Abzug mit leerem Magazin F4053 = 3 Bilder vor der Sperre; Skript
+  `M33.3333,MA0.1,M1.6667,MA0.1,M10` ab 3000; rv=0, 256 s): Nachladen (ac 13) F4053..F4083, Sperre F4056, F4084 Halten (ac 8, mg 15),
+  F4085..F4093 SENKEN (ac 6), `[scd F4086] Cut_chg(8)` -> **F4086..F4093 = 8 Bilder in Cut 8 mit mo 215**, ab F4094 neutral, F4097 TURN.
+  Bild `J39abn3/rl2_cut8_zoom.png`: **F4087 und F4088 zielt Elza mit ausgestreckten Armen auf Johns Oberkoerper** (Abstand ~1 m),
+  F4089/F4090 Waffe auf Hueft-/Kniehoehe, ab F4091 unten. Das ist derselbe Befund wie M1 der Abnahme 2, nur kuerzer (2 deutliche
+  Bilder statt 11) und an ein enges Zeitfenster gebunden (Nachladebeginn etwa 1..4 Bilder vor der Sperre; ein Rest im Waffen-Clip
+  ohne Zielen bei Beginn bis ~12 Bilder vorher, Lauf RL).
+- **RE-Gegenpruefung der Begruendung "Randfall nach der Original-Form" (Dossier 10.7):** ROOM11C0 sub03 (`scd_dump_room.py`) setzt nach
+  `0x01B18 Cut_chg 29 04` im SELBEN Takt `0x01B1A Work_set 2e 01 00` (Spieler), `0x01B1E/0x01B22 Member_set` und **`0x01B26 Plc_dest
+  40 00 04 00 38 c8 a1 de`**. Der Plc_dest-Handler schreibt das Kommandowort sofort: `dis 0x80041be4`: `80041c00 ori v0,zero,0x4`,
+  **`80041c14 sb v0,4(a1)`** (+0x4 = 4), `80041c18 sb a2,5(a1)`, `80041c1c/20 sb zero,6/7(a1)`; im Spiel-Task laeuft der SCD-Laeufer
+  VOR dem Spieler (`8001cdec jal 0x8003f038`, `8001ce0c jal 0x80031c44`). Im Original endet ein Nachlade-/Senken-Rest also im
+  Schnittbild (Kommando 4 = Plc-Executor 0x80030660); erst die Port-Zusammensetzung (Schnitt wie 11C0, danach Gespraechsbeginn wie
+  1141 sub02 mit Elzas Plc_dest TURN erst nach Sleep 1 + Sleep 10) laesst ihn 11 Bilder in Cut 8 stehen. Die Dossier-Aussagen "nur
+  das Ende des Senkens" und "nach der Original-Form" treffen damit nicht zu - siehe Mangel M1-Rest.
+- **Urteil Punkt 8: teilweise** - Zeilen, Gesten, Heranwinken, Stimmen, Ausreden, Kamera und der Normalfall von M1 (Halten, Rueckstoss,
+  Messer) erfuellt; Rest: beginnt Elza kurz vor der Sperre nachzuladen, steht sie in den ersten Bildern von Cut 8 noch im Waffen-Clip
+  und zielt 2 Bilder lang auf John (Mangel M1-Rest, sehr niedrig, aber reproduzierbar und gegen die zitierte Original-Form).
 
 ### 1.9 Punkt 9 — keine Panik-Musik beim Wechsel 1141 -> 1171
 - Werkzeug des Riegels: `test_r39_dining1141 pegel l_a` -> `ROOM1171 main00 Sce_bgm_control op=1 bei Takt 9981`, `Takte 10011..10036
@@ -162,3 +181,31 @@ Kommando 1, Zielphase). Fix erklaert den Befund: Ursache "player_mode 2 haelt di
 (player_common.c `if (g_scd.player_mode != 2 && !msg_block && !pushing)` vor dem Haken; main.c re15_cine_active = (1,27)||(2,7));
 im Port wird RE15_PAUSE_PAD nur vom Skript gesetzt (`grep RE15_PAUSE_PAD`: game_state.c Set-Handler, Leser game_step_common.c /
 pad_phase_common.c / panel_zeiger_common.c / dining_r39.c) - der Haken greift also nur unter Set(2,7) in ROOM1141 Phase H.
+
+## 3. Tests (gezielt, keine volle Suite im Spurbaum)
+- Unit, alle Riegel der Modul-Ebene (der Diff beruehrt jetzt auch player_common.c = Spieler-/Ziel-FSM, dazu enemy_ai_common.c,
+  enemy_common.c, game_step_common.c, re15_damage.c, scd_vm.c, main.c, audio_pc.c): `ctest --test-dir re15_port/build -R
+  "^(unit_|prop_|probe_)" -j 6 --timeout 600` (05:42:00..05:50:43) -> **"100% tests passed, 0 tests failed out of 855"**.
+- Gegenprobe des neuen Riegel-Werkzeugs: `test_r39_dining1141 zielen` auf den Lauf des Bau-Agenten am Stand VOR dem Fix
+  (scratchpad `j39n3/l_v_m2`, gemergter Stand 0e486aa6) -> "Sperre ab 4086 ... Cut 8: 40 Bilder, davon 11 mit Waffe; Schnittbild pst=1
+  mo=215", **`zielen: 3 Fehler`**; auf meinen Lauf K (nachher) `0 Fehler`. Der Riegel misst also den Befund.
+
+## 4. Vertrag (VERTRAG.md Runde 39)
+- Pfade (`git diff master...HEAD --name-only`): `analysis/befunde_runde39/{AUFTRAG.md (nur Orchestrator-Commits 4d7c7b34, 2f889c9f,
+  18f4306a, f60715a8, b6f25fdf, 363626f4, 3f0ef678 + Merges), J_abnahme_0/1/2.md, J_belege/*.png, J_dining1141.md}` und
+  `re15_port/{engine/src, engine/src/gen, include, platform/pc, platform/pc/src, tests/integration, tests/unit, tests/unit/probes,
+  tools/r39_dining}`. `grep -E "release/|platform/android|shared_assets/PSX|CMakeLists|synchro/"` auf die Liste: **leer**.
+- Bank 9: Bit 94 (k_port[] +1 Zeile, seit Nachtrag 10 nicht mehr gesetzt, reserviert), Bit 95 ungenutzt. Nachrichten-Ids 50..58 (alle in
+  50..59). Port-Bank 0x3E. Keine neuen Ressourcen in Nachbesserung 3.
+- Gemeinsame Dateien, je Haken mit Kommentar "Runde 39 Spur J", auf ROOM1141 begrenzt: scd_vm.c, platform/pc/main.c, dining_r38.c,
+  dining_r38_pc.c, test_r36_kartenbits.c (zugeteilt); ausserhalb der Zuteilung 1.3 (offengelegt, Dossier 10.7): audio_pc.c (+5),
+  enemy_ai_common.c (+7/-2), enemy_common.c (+4), game_step_common.c (+2), re15_damage.c (+8) und NEU **player_common.c** (+10/-1:
+  4 Zeilen Kommentar, 5 Zeilen Code - `extern`, Bedingung `senken39` (player_mode 2, kein Text, Kommando 1, Zielphase, Haken), `pad_bits = 0`,
+  erweiterte Zweig-Bedingung). Klein, gekennzeichnet; wirkt nur in ROOM1141 Phase H (Raum- und Phase-Pruefung in
+  re15_dining_r39_ziel_senken, `s_phase_h` je Raum im Installer zurueckgesetzt, re15_dining_r38_install laeuft fuer jeden Raum).
+- H4 (Abnahme 2) behoben: `tests/integration/r39_dining1141_umgebung.cmake` (`r39j_umgebung_leeren`, Namen aus `cmake -E environment`)
+  in allen vier J-Skripten; mein Integrationslauf mit `env RE15_ABNAHME3_FEIND=1 ctest ...`: `821: -- r39j: 1 RE15_*-Variablen des
+  Aufrufers entfernt: RE15_ABNAHME3_FEIND`, `946: -- r39j: 1 RE15_*-Variablen des Aufrufers entfernt: RE15_ABNAHME3_FEIND` (weitere in 3).
+  Neue Riegel parallel-/Linux-fest: eigene exe-Kopie `re15_pc_r39j_z_<id>` + eigener Laufordner, `cmake_minimum_required(VERSION 3.16)`
+  im -P-Skript, Endung per `get_filename_component(... EXT)` (keine `.exe`-/Backslash-Pfade).
+- **Vertrag gehalten** (Hinweise H2/H3 in Abschnitt 6).
