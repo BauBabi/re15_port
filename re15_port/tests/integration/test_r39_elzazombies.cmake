@@ -124,10 +124,15 @@ function(finde _muster _ab _out)
     endif()
 endfunction()
 
+set(_elza_1041 "1041;-21008;0;-13134;2112;0;3:125;3:193;3:116")
 # (4,0xF0) = 240: Johns Szene in 1021 gelaufen (ROOM1021 sub02 @0x01FE0) - die echte Vorbedingung der Panikphase. Seit
 # Spur P in der Integration (Runde 39) startet damit ihr Ruf RUF1041 beim Betreten von 1041 und setzt (9,97) beim
-# Kartenschluss selbst; ohne (4,0xF0) loescht Spur P ein von aussen gesetztes Bit 97 im selben Bild ("John gerettet").
-set(_elza_1041 "1041;-21008;0;-13134;2112;0;3:125;3:193;3:116;4:240")
+# Kartenschluss selbst (_elza_1041_p: die ECHTE Kette); ohne (4,0xF0) loescht Spur P ein von aussen gesetztes Bit 97 im
+# selben Bild ("John gerettet"). Fuer Laeufe, die bildgleich sein muessen (knall: Differenz zweier Mitschnitte), setzt
+# _flanke_ohne_ruf (4,0xF0) und (9,97) erst im Spiel: kein RUF1041 (beim Eintritt fehlte F0), keine Rettung (F0 steht);
+# der Kartenschirm des Rufs schliesst nach Menue-Schritten, nicht Spielbildern (Lauf 12:52: F514 gegen F515).
+set(_elza_1041_p "${_elza_1041};4:240")
+set(_flanke_ohne_ruf "RE15_SET_FLAG_AT=4:240,9:97@200")
 
 # ------------------------------------------------------------------------------------------------------------------
 if(TEIL STREQUAL "kette")
@@ -135,7 +140,7 @@ if(TEIL STREQUAL "kette")
     # (Lauf 12:29: Bild 432), Spur Q sieht die Flanke und startet die Montage. Ende im ZWEITEN 1041-Besuch: der erste
     # verlaesst 1041 bei Bild ~540, Bild 900 erreicht nur die Rueckkehr (Bildzaehler je Raum). Spielstand: 10E1 und 1071
     # nie betreten = 4 + 5 Zombies leben (Nachtrag 12: 1071-Schritt).
-    lauf(kette "${_elza_1041}" 900 RE15_NOAUDIO=1 "RE15_EXIT_AT=900#1041")
+    lauf(kette "${_elza_1041_p}" 900 RE15_NOAUDIO=1 "RE15_EXIT_AT=900#1041")
     set(_pos 0)
     foreach(_m
             "Flanke (9,97) 0->1 in ROOM1041"
@@ -256,10 +261,11 @@ if(TEIL STREQUAL "kette")
 elseif(TEIL STREQUAL "knall")
     # Ende in ROOM1031 bei Bild 300: beide Knaelle liegen davor (1041, 1061); der 1031-Schritt dauert ~357 Bilder (Lauf k5),
     # Bild 530 erreichte er nach Nachtrag 11 nicht mehr (Tuer zurueck nach 1041 vorher -> kein Ende, Zeitueberschreitung).
-    # Flanke aus dem echten Ruf der Spur P (_elza_1041 mit (4,0xF0)); P-Ton ist in beiden Mitschnitten gleich (Differenz)
-    lauf(laut "${_elza_1041}" 600 RE15_AUDIO_CAP_SYNC=cap.raw "RE15_EXIT_AT=300#1031")
+    # bildgleiche Flanke ohne den Ruf der Spur P (sein Kartenschirm schliesst nach Menue-Schritten, s. _flanke_ohne_ruf)
+    lauf(laut "${_elza_1041}" 600 RE15_AUDIO_CAP_SYNC=cap.raw ${_flanke_ohne_ruf} "RE15_EXIT_AT=300#1031")
     set(_laut "${_dir}/cap.raw")
-    lauf(stumm "${_elza_1041}" 600 RE15_AUDIO_CAP_SYNC=cap.raw RE15_R39Q_KNALL_STUMM=1 "RE15_EXIT_AT=300#1031")
+    lauf(stumm "${_elza_1041}" 600 RE15_AUDIO_CAP_SYNC=cap.raw RE15_R39Q_KNALL_STUMM=1 ${_flanke_ohne_ruf}
+         "RE15_EXIT_AT=300#1031")
     set(_stumm "${_dir}/cap.raw")
     execute_process(COMMAND "${RE15_AUSWERTER}" auswerten_ton "${_laut}" "${_stumm}" TIMEOUT 120
                     RESULT_VARIABLE _rva OUTPUT_VARIABLE _outa)
@@ -395,7 +401,7 @@ elseif(TEIL STREQUAL "ohne")
     else()
         fail("Leon: Montage-Spur im Log (${_p}) oder Raumwechsel (${_pl})")
     endif()
-    lauf(laden "${_elza_1041};9:97" 600 RE15_NOAUDIO=1 "RE15_EXIT_AT=500#1041")
+    lauf(laden "${_elza_1041_p};9:97" 600 RE15_NOAUDIO=1 "RE15_EXIT_AT=500#1041")
     string(FIND "${_dbg}" "Flanke (9,97)" _p)
     string(FIND "${_dbg}" "PC loaded room" _pl)
     if(_p LESS 0 AND _pl LESS 0)
