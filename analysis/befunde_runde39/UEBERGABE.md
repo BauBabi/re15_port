@@ -6,6 +6,13 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 12:08: SPARMODUS (Nutzer: Restguthaben 86 EUR, "Abnahme ausnahmsweise reduzieren"): keine weiteren
+  unabhaengigen Abnahmen. Q Nachbesserung 3 und T titelversion ohne Abnahme in r39/integration (723304bf, 11:48), gezielte
+  Tests 923/923 gruen (11:50-12:04). Spur P Abnahme 1 "teilweise": M1 Softlock (Kanaldeckel 10B1 immer zu, Abstieg vom
+  Dach einseitig), M2 (Tuersaetze reihten eine Stimme ein, gegen Nachtrag 13). Nachbesserung 2 durch den Orchestrator
+  selbst (5f24e2bd): Stimme raus, 10B1-Sperre zurueckgestellt (Nutzerfrage: welche Tuer / wie weiter nach der Szene),
+  Revert 01e7fb4b (r38_wasser elza10b1_tuer wieder aktiv). Merge P -> Integration 3da93d58; 11C0-Zeile der Spur O
+  ebenfalls ohne Stimme (feeabe6c, Nachtrag 13). Bau + gezielte Tests laufen.
 * 2026-10-19 10:49: MASTER 9e94db81 = Spur J (Integration 938/938), Hauptbaum-exe + Smoke gruen. Spur Q Abnahme 2: Mangel 1 (alte
   Leon-Spielstaende nach Irons' Tod bekommen in 1060 Zombies aus dem Nichts - fehlender Merker "Umzug gelaufen"), Mangel 2
   (Ankunft im Treppenhaus von oben: Kopien liegen ~30 Bilder flach, dann Griff am Treppenfuss) + ORCHESTRATOR-ENTSCHEID E1
