@@ -449,3 +449,32 @@ Musikwechsel, kein Raumwechsel), Rest unveraendert.
   Aenderung: Sperre im Raumaufbau + Huelle SZENE10B1. Nachher: n6a/n6b + integration t10b1v/s/n: Text, kein Raumwechsel, nach
   der Szene Steuerung zurueck; Leon 10B0 unveraendert (unit).
 - **Mangel 3 (Merge + Bau + Riegel).** 57e5f920, configure/build LOCAL-BUILD-OK; gezielte Laeufe Abschnitt 8.7.
+
+### 8.8 OFFEN (Nachbesserung 1)
+- Spur Q (elzazombies, parallel) arbeitet laut Nachtrag 11/12 auch in ROOM1041 (Durchbruch durchs Rolltor) und liest Bit 97.
+  Die Tuersperre 1041 -> 1031 greift nur, solange Slot 1 die ausgelieferte Tuer ist (FNV-Anker @0x010B8 + Typ DOOR); setzt Q
+  Slot 1 selbst um, bleibt Qs Fassung. Bei der Integration im gemeinsamen Lauf pruefen (integration_r39_johnruf1041_a und
+  _tuer_t1041).
+- 10B1: Nach der Sherry-Szene steht John am Deckel (Plc_dest sub04 @0x01A84 (-21422,4607)) und bleibt dort, bis Elza den Raum
+  verlaesst; beim naechsten Betreten ist er weg ((3,0x82) = 0, Original-Flags). Der Weg weiter zu ROOM1261/ROOM2001 (John:
+  "Elza, over here!", Aufnahmen room2001/main00..05) fuehrt nicht mehr durch 10B1, sondern ueber den Keller (ROOM11B1 Slot 5
+  bzw. ROOM11D1 Slot 1 -> ROOM1261); (3,0x41) setzt die Szene vor dem Deckel selbst (sub04 @0x01962), ROOM2001 sub00
+  @0x0179A `21 03 41 01` Ck(3,0x41)==1 -> @0x0179E Sce_em_set John. Diesen Umweg habe ich nicht gemessen.
+- Fremder Riegel: siehe 8.7 (integration_r38_wasser, Lauf elza10b1_tuer).
+- Die Sprachdateien fuer die Tuer-Saetze liegen noch nicht; ohne Datei steht im debug.log
+  "[voice] ROOM1041 msg 41: keine Aufnahme ..." und die Zeile bleibt stumm (Riegel halten auch mit Datei).
+
+### 8.9 Fuer den Nutzer (Nachbesserung 1)
+- In der Panikphase (ab Johns Hilferuf in 1041 und dem Musikwechsel, bis John in 1141 gerettet ist) zeigt die Tuer von ROOM1041
+  nach ROOM1031 und die Tuer von ROOM1051 nach ROOM10A1 den Satz "I have to rescue John! He is in danger!" (als Gedanke wie
+  die Sperren in 1141/11C0, ohne "Elza:"), statt Elza durchzulassen. Ab dem Bild, in dem MAIN01 beginnt. Nach Johns Rettung
+  gehen beide Tueren wieder normal.
+- Sprachdateien fuer diesen Satz (werden automatisch gespielt, sobald sie liegen):
+  `synchro/STAGE1/room1041/main41.wav` und `synchro/STAGE1/room1051/main40.wav`.
+- ROOM10B1: "Die Tuer" ist dort der Kanaldeckel in der schmalen Gasse (der zweite Ausgang ist die Leiter zum Dach, die bleibt
+  offen). Der Deckel ist fuer Elza jetzt immer zu: "The lid is firmly closed. / It's impossible for me to open it." (der Text,
+  den Resident Evil 2 an einem Deckel zeigt, der sich nie oeffnen laesst). Das gilt auch in der Szene "John, wait! ... Follow
+  me.": John geht noch zum Deckel, dann kommt dieser Text, danach hast du Elza wieder. Leon (ROOM10B0) ist unveraendert.
+  Folge: der Weg in die Kanaele (ROOM1261 und weiter nach ROOM2001 zu deinen Aufnahmen room2001/main00..05) geht nicht mehr
+  ueber 10B1, sondern nur noch ueber den Keller (Garage 11B1 oder 11D1 -> 1261).
+- Neue Assets fuer das Paket-Gate: keine (Texte und Programm stehen im Code: engine/src/gen/tuersperre_r39.inc).
