@@ -1,0 +1,16 @@
+# Nachbesserung 1, M1 Messung vorher (HEAD 72c76540 = Code 27d587e1, exe re15_port/build/platform/pc/re15_pc.exe 23:19)
+# Karte wie integration_r39_stimmen_11b0 (test_r39_stimmen.cmake:97): probe_r36_elza_karte re15_card.mcr 11c0 -25100 15000 1024 3:0x43 3:0x82 4:0xf3
+# Env wie dort (test_r39_stimmen.cmake:61-63,98), nur RE15_EXIT_AT=300#11c0 statt 30#1260: RE15_NO_INTRO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1 RE15_STATE_LOG=state.log RE15_AUDIO_CAP_SYNC=cap.raw RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0 RE15_FIRE_AOT=0@60#11c0
+# Laufzeit 16 s (01:25:14-01:25:30), exit 0
+## debug.log (gefiltert)
+43:[save] CONTINUE: resumed in room 11c0 (hp=100)
+45:[parkplatz] F0 ROOM11C0 sub01 @0x01824 Evt_exec sub02 -> Programm SZENE (Tuer Slot 0 -> Text msg 40, Gosub sub02)
+61:[fire-aot] slot=0 at F60 (Raum 11C0)
+62:[parkplatz] F60 ROOM11C0 Tuer im Kampf -> msg 40 "I cannot leave Ada alone here with those monsters!" (Stimme main40.wav)
+63:[msgtext] room=11c0 id=40 "I cannot leave Ada alone here with those monsters!"
+100:[flow] EXIT_AT: Bild 300 in Raum 11c0 erreicht -> exit
+## state.log F0/F60/F61/F299
+F0 pad=0000 PL(-25100,15000,rot=928,hp=100) pst=4 ps1=0 ps2=0 mo=105 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 msg(a=0 fsm=0 id=0 q=0) pf=01000000 pm=2 gr=0
+F60 pad=0000 PL(-16072,12478,rot=555,hp=100) pst=4 ps1=0 ps2=0 mo=105 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(a=0 fsm=0 id=0 q=0) pf=01000000 pm=2 gr=0
+F61 pad=0000 PL(-16072,12478,rot=555,hp=100) pst=4 ps1=0 ps2=0 mo=105 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(a=1 fsm=1 id=40 q=0) pf=FFFF0000 pm=2 gr=0
+F299 pad=0000 PL(-16072,12478,rot=555,hp=100) pst=4 ps1=0 ps2=0 mo=105 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(a=1 fsm=1 id=40 q=0) pf=FFFF0000 pm=2 gr=0

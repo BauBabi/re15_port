@@ -1,0 +1,124 @@
+{
+ "_hinweis": "Spur P Nachbesserung 1 fuer Nutzer-Nachtrag 12 (Tuersaetze Panikphase 1041->1031/1051->10A1, Tuer 10B1 immer zu) + Merge master. Baum r39_johnruf1041. Resume nur mit GENAU diesen args.",
+ "welle": [
+  "P"
+ ],
+ "slots": 1,
+ "max_nach": 1,
+ "basis": "b1309110",
+ "modus": {
+  "P": "nachbesserung"
+ },
+ "runde0": {
+  "P": 0
+ },
+ "bau": {
+  "P": {
+   "status": "fertig",
+   "zusammenfassung": "Gemessen: Vorher gab es in 1041 nach der John-Szene weder Ruf noch Satz noch Karte, die Musik war MAIN00, und Bit 97 hatte keine Wirkung (Laeufe v1/v2). John verschwindet mit dem Ende der 1021-Szene: ROOM1021 sub02 @0x01FE0 setzt (4,0xF0)=1, @0x01FD8 loescht (4,0x60), ohne das der Spawn @0x01DF6 nicht mehr kommt. Jeder Weg aus 1021/1011 nach oben fuehrt durch 1041.\nBelegt: Die Szene folgt ROOM1041 sub11 @0x021EA..@0x0223C, 54 B davon bytegleich uebernommen. 'leise' ist RE2 Xa_vol (Verteiler @0x800a74c8[0x5F] -> 0x80058090, Standard 120 @0x80012958/@0x80053038). Werte: 1041 = 50 (ROOM11D0 @0x01F84), 1131 = 100 (ROOM1020 @0x01960). 70 (@0x01F7A) habe ich nach Messung verworfen, weil in 1131 MAIN01 laeuft und der Ruf dagegen kaum hervortrat.\nPanikmusik = Leons MAIN01-Fenster aus Runde 35 K (Eintrag 0xFF01). 1141 ist ausgenommen und behaelt MAIN16 wie Leons 11C0. Die Rettung erkennt der Port an (4,0xF0)=0 und (4,0xF2)=0, also an ROOM1141 sub02 @0x00C18 und sub01 @0x00C0C bzw. dem MAIN16-Stopp @0x00C06. Die Karte nutzt die Form von RE2-Opcode 0x84 @0x800591C4 (Eintrag 1041 -> 1141).\nGebaut: engine/src/johnruf_r39.c mit Header, Programme RUF1041/RUF1131 (generiert) und Bank 9 Bit 97. Opcode 0x5F wirkt nur in diesen Programmen, im RDT bleibt er wirkungslos. Dazu kleine Haken in sechs gemeinsamen Dateien.\nNachher am echten Weg mit Elza: help03/help02 leise mit g 0,418 und 0,420 (Soll 0,417), main40 mit 1,002, Drehung zur Treppe (Gier 923), Karte '3F' mit 1141 markiert (Bild per FB_SHOT), danach MAIN01. Nach dem Laden mitten in der Phase laeuft MAIN01 weiter. In 1131 kommt ein Ruf mit g 0,833. In 1141 unveraendert, bei der Rettung geht Bit 97 auf 0, in 1171 laeuft wieder MAIN32.",
+   "commits": [
+    "9251be13 wip(r39-johnruf1041): Dossier angelegt",
+    "3c360565 wip(r39-johnruf1041): RE-Belege",
+    "2d109eea wip(r39-johnruf1041): Messung vorher",
+    "02469270 wip(r39-johnruf1041): Modul johnruf_r39 + Haken",
+    "a245fb0d wip(r39-johnruf1041): Dossier Umsetzung + Messung n1a/n1b, Unit-Riegel",
+    "4699f778 wip(r39-johnruf1041): 1131 Xa_vol 100, Pegel-Werkzeug + Integrations-Riegel",
+    "dba96053 wip(r39-johnruf1041): Dossier 4.2 Lauf n2",
+    "eb456264 wip(r39-johnruf1041): Dossier OFFEN + Fuer den Nutzer",
+    "1f0d9f5c wip(r39-johnruf1041): Dossier 4.3 Riegel-Laeufe a/b",
+    "3e772251 wip(r39-johnruf1041): unit_r38_tagebuch_karte 6 Eintraege",
+    "7617cafe wip(r39-johnruf1041): Dossier 5 Tests",
+    "20df7045 feat(r39-johnruf1041): Johns Hilferufe ab ROOM1041, Elzas Satz, Karte 1141, Panikmusik bis zur Rettung, lauterer Ruf 1131"
+   ],
+   "suite": "-R \"r39_johnruf1041\" -> \"100% tests passed, 0 tests failed out of 10\"; -R \"^(unit_|prop_|probe_)\" -> \"99% tests passed, 1 tests failed out of 850\" (rot nur unit_r38_tagebuch_karte = Pin auf 5 Hinweis-Eintraege, nachgezogen) und danach -R \"unit_r38_tagebuch\" -> \"100% tests passed, 0 tests failed out of 4\"; -R \"integration_r39_dining1141_d|integration_r38_dining1141|integration_r35_cut10f0|integration_r39_stimmen|integration_r38_elzatoene|integration_r38_tagebuch|integration_r39_elza_karte\" -> \"100% tests passed, 0 tests failed out of 19\"",
+   "offene_punkte": [
+    "Spur J entfernt Elzas Reaktion msg 50 in 1141 in ihrem eigenen Baum. In diesem Baum laeuft sie noch (Lauf n2). Spur P aendert in 1141 nichts; bei der Integration gilt J.",
+    "Spuren Q/R lesen Bank 9 Bit 97 (RE15_R39P_BIT_BANK/RE15_R39P_BIT_PANIK in include/re15_johnruf_r39.h). Startet Q an der steigenden Flanke eine Szene, kann MAIN01 ein Bild vor dieser Szene beginnen. Das im gemeinsamen Integrationslauf ansehen.",
+    "Der lautere Ruf in 1131 kommt einmal je Panikphase und Sitzung (Merker im Speicher). Nach dem Laden eines Spielstands aus der Phase kommt er noch einmal. Ein dauerhafter Merker braeuchte ein zweites Bank-9-Bit, laut VERTRAG hat P nur Bit 97.",
+    "Kleine Haken ausserhalb der VERTRAG-1.3-Liste fuer P: game_step_common.c, map_hint_common.c, main.c, test_r38_tagebuch.c (Tabelle hat jetzt 6 Eintraege). Alle sind mit 'Runde 39 Spur P' kommentiert."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/scd_room_setup.c (Installer am Blockende)",
+    "re15_port/platform/pc/main.c (Boot-/CONTINUE-Weg)",
+    "re15_port/engine/src/scd_vm.c (s_op_table[0x5F] mit PC-Schranke, op_message_on)",
+    "re15_port/engine/src/game_step_common.c (Tick)",
+    "re15_port/platform/pc/src/audio_pc.c (ss_bgm_entry, SEQ_CTL-Sperre, Stimmen-Ordner, CD_VOL + Startzeile)",
+    "re15_port/engine/src/map_hint_common.c (Eintrag ROOM1041 -> ROOM1141)",
+    "re15_port/tests/unit/test_r36_kartenbits.c (k_port[] Bit 97)",
+    "re15_port/tests/unit/test_r38_tagebuch.c (Hinweis-Tabelle 6 Eintraege)"
+   ],
+   "neue_assets": [
+    "keine neue Datei unter shared_assets/ oder synchro/; die Programme liegen in re15_port/engine/src/gen/johnruf_r39_programme.inc (aus re15_port/tools/r39_johnruf/programme_bauen.py)"
+   ],
+   "sprachdateien": [
+    "synchro/STAGE1/room1041/main40.wav (lag schon, Kopie von room1141/main50.wav) = msg 40 'Elza: Oh, no, this is John! / He is in trouble, I have to help him!'",
+    "synchro/STAGE1/room1141/help03.wav + help02.wav ('Please help!') = Rufe in 1041 (leise) und help02 in 1131 (lauter); Zuordnung im Code, Dateien unveraendert",
+    "belegt ohne Text: ROOM1041 Id 53..57 und 59, ROOM1131 Id 53..57 - eigene Aufnahmen unter diesen Nummern wuerden dort nicht gespielt"
+   ]
+  }
+ },
+ "abn": {
+  "P": {
+   "bestanden": false,
+   "suite": "Gezielt, keine volle Suite: -R \"r39_johnruf1041\" 10/10 (integration a 71,09 s, b 282,90 s); Unit-Gruppen der beruehrten Module (scd_/map_/karte/r30_hinweis/r33_karte/r35_/r36_karte/r38_tagebuch/r38+r39_dining1141/r38_elzatoene/r39_stimmen/r39_funk10f1/r39_inventar/synchro/voice/se_voice/xa_/rotor_bgm/r39_johnruf) 182/182; Integration (r35_cut10f0, r39_dining1141_d/_kampf, r38_dining1141_*, r38_elzatoene_*, r38_tagebuch_*, r39_elza_karte, r39_stimmen_*, r39_funk10f1_*) 23/23.",
+   "urteile": [
+    {
+     "punkt": "1a Hilferufe leise in ROOM1041 (=\"1040\"), erstmalig, nachdem John verschwunden ist",
+     "urteil": "erfuellt",
+     "beleg": "Eigener Lauf 'voll' ueber den echten Weg: 1041 (kein Ruf, (4,0xF0)=0) -> Tuer -> 1021, echte Szene (msg 0..8, John: 'Please... I'd like to be alone now...', setzt (4,0xF0) ueber sub02 @0x01FE0) -> Tuer -> 1041: '[johnruf] F2333 ... RUF1041 gestartet', help03 F36 und help02 F98 mit Xa_vol 50 (CD_VOL 6826). Pegel laut Spur-Werkzeug 0,4179 / 0,4201 (Soll 0,4167). Eigenes numpy-Skript: dieselbe Datei in 1041 gegen 1141 = 0,418 bzw. 0,417, also -7,6 dB. RE2-Wert Xa_vol 50 @0x01F84 selbst gelesen (`5f 32 59 00 09 00`)."
+    },
+    {
+     "punkt": "1b Danach Elza: 'Oh, no, this is John! He is in trouble, I have to help him!'",
+     "urteil": "erfuellt",
+     "beleg": "'[msgtext] room=1041 id=40 \"Elza: Oh, no, this is John! He is in trouble, I have to help him!\"' und 'clip loaded: main40.wav' bei Xa_vol 120 (Pegel 1,002), im Ablauf nach help02. Elza hat Gier 923 (Soll 924, Richtung Treppentuer @0x010D8). Bilder abn0/voll/fd_000210.png und fd_000300.png zeigen den Text zweizeilig, 'Elza:' gruen."
+    },
+    {
+     "punkt": "1c Voicefile nach ROOM1041 kopiert",
+     "urteil": "erfuellt",
+     "beleg": "synchro/STAGE1/room1041/main40.wav ist bytegleich mit room1141/main50.wav (sha256 a2a0b166...b531, Kopie 02dc7917) und wird in 1041 gespielt. Unter den von P belegten Ids gibt es keine Nutzer-WAV."
+    },
+    {
+     "punkt": "1d Karte geht auf und markiert ROOM1141",
+     "urteil": "erfuellt",
+     "beleg": "F370: Kartenhinweis Eintrag 5 (ROOM1041 -> ROOM1141) angefordert, nachdem main40 ausgesprochen ist. '[hint] F380 begin' bis F496 'Zeit um', Karte zu bei F510. Der Schirm zeigt 'POLICE STATION 3F' mit blinkender 1141-Kachel (rot bzw. Umriss): fd_000390.png und karte.bmp. Laut re15_map_zones.h:172 liegt 1141 auf Blatt 4 = 3F. RE2-Opcode 0x84 @0x800591C4 selbst disassembliert."
+    },
+    {
+     "punkt": "1e Danach dieselbe panische Musik wie bei Leon nach Irons' Tod",
+     "urteil": "erfuellt",
+     "beleg": "Nach dem Schliessen der Karte (F510): Set(9,97)=1, 'Panik-Musikfenster auf', 'entry=FF01 -> MAIN01'. Geladen wird 'SEQ 7788B, 9 VAGs, tempo=555555us', identisch zu Leons MAIN01-Fenster (meine integration_r35_cut10f0-Laeufe d/e/f2/g; Nutzer Runde 35: 'durchweg MAIN01'). Die Musik laeuft in 1061, 1121 (nach Laden) und 1131 '[unveraendert, laeuft durch]'. 1141 behaelt wie Leons 11C0 die eigene Musik MAIN16."
+    },
+    {
+     "punkt": "1f Beim Flur 1131 das 'please help' noch einmal, etwas lauter",
+     "urteil": "erfuellt",
+     "beleg": "Lauf b: 'ROOM1131 in der Panikphase -> RUF1131', help02 mit Xa_vol 100 (CD_VOL 13652), im ganzen Lauf genau 1 Ruf. Pegel 0,8331 (Soll 0,8333); unabhaengig gegen 1141 gemessen 0,836, also doppelt so laut wie in 1041. Eigene Windows-Spracherkennung: help02 = 'please'/'help', help01 = 'hello please help'. RE2-Wert ROOM1020 @0x01960 `5f 64` selbst gelesen."
+    },
+    {
+     "punkt": "1g In 1141 bleibt alles wie bisher (P-Anteil; das Entfernen von Elzas Reaktion ist Spur J)",
+     "urteil": "erfuellt",
+     "beleg": "In 1141 wie bisher: 'entry=FF56 -> MAIN16', HAEMMERN39 Sce_bgm_control wird angewandt, Rufe mit CD_VOL 16383 (Pegel 1,0007). Alle 1141-Riegel gruen (r39_dining1141_d/_kampf, r38_dining1141_w/z/r/s/l/a/d). P aendert keine 1141-Datei. msg 50 laeuft in DIESEM Baum noch (Lauf b Z. 359). Spur J hat sie in r39/dining1141 entfernt (11d366a9/6c2a0547); git merge-tree P+J ist konfliktfrei. Den Endzustand zeigt erst die Integration."
+    },
+    {
+     "punkt": "2 Panikmusik endet mit Johns Rettung, der Rest bleibt normal",
+     "urteil": "erfuellt",
+     "beleg": "Lauf b: 'Sce_bgm_control slot=0 op=2 capTick=5430' (Original sub01 @0x00C06 `54 00 02 00 00 00`), im selben Bild 'John gerettet ((4,0xF0)=0,(4,0xF2)=0): Bit 97 = 0' und Fenster zu. Danach ROOM1171 'entry=5572 -> MAIN32' (Tabelle), kein FF01 und keine [johnruf]-Zeile mehr. Flags selbst gelesen: @0x00C18 `22 04 f0 00`, @0x00C1C `22 04 f2 01`, @0x00C0C `22 04 f2 00`."
+    },
+    {
+     "punkt": "Gate RE (Stichproben selbst disassembliert)",
+     "urteil": "erfuellt",
+     "beleg": "RE2-Verteiler [0x5F] @0x800a7644 -> 0x80058090 mit `lbu v1,1(v0)`, `sltiu 0x80`, `sw v1,0x5b50(at)`, pc+=2. Standardwert 120 @0x80053014/@0x80053038 und @0x80012958/@0x8001296c. Mischer FUN_80013ac8/FUN_80013b4c. RDT-Bytes RE2 11D0/1020/1060-sub05 und RE1.5 ROOM1041 sub11 (54 B bytegleich), Tuer @0x010D8, Flags 1021/1141. 0 Rate-Signale im Diff, keine Verhaltensschalter per Umgebungsvariable."
+    },
+    {
+     "punkt": "Gate Vertrag und Nebenwirkungen",
+     "urteil": "erfuellt",
+     "beleg": "Nur Bank-9-Bit 97, in k_port eingetragen, unit_r36_kartenbits gruen. Keine verbotenen Pfade, keine Test-CMakeLists. Haken 1-5 Zeilen mit Kommentar. Riegel parallel- und Linux-fest. Leon (unit leon, r35_cut10f0, tagebuch_leon, funk10f1_leon), andere Sprachzeilen (r39_stimmen_*), 0x5F im RDT (= op_unknown pc+1) und die 1041-Schuss-Szene sind unveraendert. Formale Hinweise H4 (Ids 53-57/59 ausserhalb der Zuteilung 'Id 40', ohne Kollision) und H5 (Haken in audio_pc.c, game_step_common.c und map_hint_common.c ausserhalb der 1.3-Liste)."
+    }
+   ],
+   "maengel": [
+    "NUTZER-NACHTRAG 12 Teil 1 (AUFTRAG.md, woertlich): 'beim Musikwechsel, wenn Elza John retten soll, soll beim anklciken der Tuer von ROOM 1041 zu Room 1031 kommen \"I have to rescue John! He is in danger!\". Auch bei der Tuer 1051 zu 10A1.' Umsetzen: in der Elza-Panikphase (Bank 9 Bit 97 gesetzt) zeigt die Tuer ROOM1041 -> ROOM1031 und die Tuer ROOM1051 -> ROOM10A1 statt des Raumwechsels den Text (NUTZER-VORGABE, Sprecher-Form wie Elzas msg 40 'Elza: ...' bzw. Form der Tuersperren 1141/11C0 begruenden) - Port-Ids: ROOM1041 = 41, ROOM1051 = 40 (VERTRAG 1.2; kuenftige Sprachdateien synchro/STAGE1/room1041/main41.wav und room1051/main40.wav - im Dossier 'Fuer den Nutzer' GENAU diese Pfade nennen). Form der Sperre: Spur O parkplatz_r39.c (ROOM11C0, jetzt in master) bzw. 1141 (Runde 38 F); ausserhalb der Panikphase und nach Johns Rettung (Bit 97 = 0) gehen die Tueren normal. Tuer-Slots aus dem RDT belegen (Door_aot_set mit Offsets). Messen am echten Weg mit Elza: in der Phase Text, kein Raumwechsel; ohne Phase Raumwechsel. Riegel unit + integration.",
+    "NUTZER-NACHTRAG 12 Teil 3 (woertlich): 'Ausserdem moechte ich das in Elzas Szenario die Tuer im ROOM 10B1 ausnahmslos IMMER geschlossen ist. auch wenn sie nach Sherry sucht.' Umsetzen: ROOM10B1 (Elza; Szene msg 0..5 'John, wait!' .. 'we can go through the sewer tunnels. Follow me.', msg_sec 0x1AB8) - welche Tuer gemeint ist, im RDT/Weg belegen (die Tuer, die sich bei der Sherry-Suche oeffnet); diese Tuer ist fuer Elza IMMER verschlossen (Sperrtext in der Original-Form des Raums bzw. der RE1.5-Standard-Sperrform, belegen); Leon (ROOM10B0) unveraendert. Messen: Elza an der Tuer in jedem Zustand (vor/nach der Szene, mit Sherry-Such-Flags) kein Raumwechsel. Riegel.",
+    "ORCHESTRATOR (Pflicht zuerst): `git merge master` (master a0d7d749 enthaelt Spuren K heliport1171, G karten, O parkplatz11c0 mit der 11C0-Tuersperre, R hund1121 mit Bit-97-Leser in 1121; Spur Q elzazombies laeuft parallel). Konflikte in gemeinsamen Dateien (scd_room_setup.c / scd_vm.c / main.c: Installer- und include-Zeilen beider Seiten behalten). Danach bauen (configure). Vor dem Abschluss ALLE unit_/prop_/probe_ + integration_r39_johnruf1041* + integration_r39_hund1121 + integration_r39_parkplatz11c0_* gruen."
+   ],
+   "bericht": "Abnahme 0 der Spur P \"johnruf1041\": bestanden. Alle Nutzer-Punkte habe ich selbst an der exe dieses Baums gemessen, und alle Gates halten. Ein Hinweis (H1) muss trotzdem vor den Nutzer.\n\nBericht: C:/workspace/git/reAi_v2/.claude/worktrees/r39_johnruf1041/analysis/befunde_runde39/P_abnahme_0.md (Commit c50b0a03, nur diese Datei, mit Co-Authored-By-Zeile wie die uebrigen Abnahme-Commits).\n\n**Bau:** Gruen, die exe ist neuer als der letzte Code-Commit.\n\n**Tests:** P 10/10, Unit-Gruppen der beruehrten Module 182/182, Integrationsgruppe 23/23 (darunter Leons MAIN01-Fenster, alle 1141-Riegel und die 1041-Schuss-Szene).\n\n**Eigene Messungen:**\n- Ein Lauf ueber den vollstaendigen echten Weg: 1041 -> Tuer -> echte 1021-Szene -> zurueck nach 1041. Damit ist die Kette \"John verschwunden -> Rufe -> Satz -> Karte -> MAIN01\" ohne Flag-Abkuerzung belegt.\n- Pegel mit einem eigenen, vom Lader-Modell der Spur unabhaengigen Skript: 1041 = 0,417, 1131 = 0,836 (Soll 50/120 und 100/120).\n- Elzas MAIN01 laedt dieselbe Sequenz wie Leons Fenster.\n- Eigene Spracherkennung: help02 ist \"Please help!\".\n- RE-Gate: 9 Zitate selbst disassembliert bzw. die Bytes gelesen, alle stimmen.\n\n**Integration:** In diesem Baum spricht Elza den Satz in 1141 noch (msg 50). Spur J hat ihn in ihrem Zweig entfernt, P+J lassen sich konfliktfrei zusammenfuehren. Mit master und mit G/Q/R/O gibt es nur triviale Konflikte an den Blockenden; beide Zeilen behalten.\n\n**H1 (kein Mangel, aber fuer den Nutzer):** Bei offenem Rolladen (der Zustand des eigenen Riegels a) stehen beim Eintritt in 1041 drei lebende Zombies etwa 5000 Einheiten entfernt.\n- Die neue Szene haelt sie nicht an. Ein Zombie laeuft bis neben Elza, waehrend sie ihren Satz spricht.\n- Die Steuerung kommt bei 2534 Einheiten zurueck. Ohne Eingabe folgt der erste Biss nach 80 Bildern (2,7 s).\n- Das Stoehnen ueberdeckt das zweite Wort des leisen \"Please help!\" um 2,4 bis 8 dB.\n- Riegel a raeumt die Gegner mit GEGNERWEG gleich nach der Szene weg und sieht das deshalb nicht.\n- Warum kein Mangel: Die Original-Szene sub11 im selben Raum friert ebenfalls nicht ein, und der Szenenschutz der Runde 38 B verhindert Treffer waehrend der Szene.\n- Original-Form zum Anhalten, falls der Nutzer das will: Member_set(12,0x30)/(12,0x10) wie in ROOM1141 sub02 (@0x00E70 bzw. @0x00E40), selbst gelesen.\n- Belegbilder: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn0/voll/bogen_voll.png und C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn0/a/bogen_a.png\n\n**Weitere Hinweise:**\n- H2: Der 1131-Ruf kommt nach dem Laden aus der Panikphase einmal erneut.\n- H4/H5: formale Vertragsabweichungen (Ids, Haken ausserhalb der 1.3-Liste), ohne Kollision.\n\n**Messdaten:** Laufordner C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn0/l_voll; Riegel-Laeufe C:/workspace/git/reAi_v2/.claude/worktrees/r39_johnruf1041/re15_port/build/r39_johnruf1041_wd/lauf_a_77d47d61 und lauf_b_0f84bdd8."
+  }
+ }
+}

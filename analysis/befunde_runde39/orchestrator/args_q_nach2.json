@@ -1,0 +1,87 @@
+{
+ "_hinweis": "Spur Q Nachbesserung 2 fuer Nutzer-Nachtrag 12 Teil 2 (gleiche Durchbruch-Tueren: Leon + Treppenhaus, Elza + 1071) + Merge master. Baum r39_elzazombies. Resume nur mit GENAU diesen args.",
+ "welle": [
+  "Q"
+ ],
+ "slots": 1,
+ "max_nach": 1,
+ "basis": "02dc7917",
+ "modus": {
+  "Q": "nachbesserung"
+ },
+ "runde0": {
+  "Q": 1
+ },
+ "bau": {
+  "Q": {
+   "status": "fertig",
+   "zusammenfassung": "Nachbesserung 1, Mangel 1 (VERTRAG Abschnitt 2: Riegel erben die Umgebung des Aufrufers) ist behoben. Spielcode und Spiel-Konstanten sind unveraendert, deshalb gibt es keinen Disasm-Beleg; die Belege sind Messungen und Quellzeilen.\nMessung vorher (Bau = Stand der Abnahme): Mit RE15_NOAUDIO=1 RE15_ASSET_DEBUG=1 liefen 4 von 5 Integrationsteilen durch, knall schlug fehl (\"Mitschnitt fehlt\"; im debug.log \"[audio] RE15_NOAUDIO set\", audio_pc.c:1954-1955). Die Zeigerzeile \"[asset] cd[0]\" (asset_root_pc.c:343-344) stand in allen 7 Laeufen der 5 Teile.\nDieselbe Luecke hat der Unit-Riegel: Mit geerbtem RE15_RE2_DMG_MODEL=0 (re15_damage.c:681) verschoben sich in kette_4 die gemessenen Abstaende (Bit 124: 6245 -> 6194; ROOM1031 Bit 0: 8997 -> 9836).\nWindows liest Variablennamen ohne Gross-/Kleinschreibung: re15_scd_trace=1 verlaengerte die Ausgabe von 15 auf 325 Zeilen. Das Muster der Referenz-Riegel prueft nur auf \"RE15_\" in Grossbuchstaben und laesst solche Namen durch.\nAenderung im Integrationsskript: Nach dem include werden alle [Rr][Ee]15_*-Variablen aus cmake -E environment geloescht. Bleibt eine stehen, bricht der Riegel ab. Dazu kommt eine STATUS-Zeile mit den geloeschten Namen.\nAenderung im Unit-Test: umgebung_leeren() ist die erste Anweisung von main() (_putenv bzw. unsetenv). Die Probes-Datei hat nur einen neuen Kopfkommentar.\nNebenbefund: Die Messkopien der exe blieben nach jedem Lauf liegen (5 x 7,6 MB). Sie werden jetzt am Ende per file(REMOVE) entfernt. Gemessen: file(REMOVE) bricht bei einer gesperrten Datei nicht ab.\nMessung nachher: Die Unit-Ausgaben ohne Umgebung sind byte-gleich (8/8). Mit 7 geerbten Varianten in allen 8 Teilen kommt nur die Loeschzeile hinzu (56/56).\nDer Pruefbefehl der Abnahme RE15_NOAUDIO=1 ctest -R ^integration_r39_elzazombies_knall$ laeuft jetzt durch. Die Knall-Werte sind identisch mit der Abnahme: 624..665 RMS 6567 und 806..849 RMS 4657.\nIm Endstand mit geerbter Umgebung (RE15_NOAUDIO=1, re15_asset_debug=1, RE15_RE2_DMG_MODEL=0) sind alle 13 Riegel gruen, die Zeigerzeile fehlt in allen 7 Laeufen, es bleiben 0 Kopien liegen.\nIm Linux-Release-Container (gcc 10.2.1 mit -std=c11 -Werror, cmake 3.28.6) loeschen beide Bloecke RE15_NOAUDIO und re15_klein; eine fremde Variable bleibt erhalten.\nre15_pc.exe ist unveraendert (02:17:18), damit gelten die 117 Gruppentests der Abnahme weiter. Dossier Abschnitt 8.",
+   "commits": [
+    "f358bf1a wip(r39-elzazombies): Dossier 8 Nachbesserung 1 angelegt (Mangel 1: Riegel erben die Umgebung)",
+    "8334db2d wip(r39-elzazombies): Riegel loeschen geerbte RE15_*-Umgebung (jede Schreibweise) vor dem ersten Lauf (Nachbesserung 1, ungebaut)",
+    "da3415f0 wip(r39-elzazombies): Dossier 8.1/8.2 Nachbesserung 1 - Messung vorher/nachher (Umgebung des Aufrufers)",
+    "812183e8 wip(r39-elzazombies): Messkopie am Ende entfernen (Muster test_r39_heliport1171.cmake:93), Dossier 5/6/7",
+    "721d530a fix(r39-elzazombies): Nachbesserung 1 - Riegel erben keine RE15_*-Umgebung des Aufrufers mehr"
+   ],
+   "suite": "Endstand mit Skript 812183e8, ohne Umgebung: ctest --test-dir re15_port/build -R \"r39_elzazombies\" -j 2 -> \"100% tests passed, 0 tests failed out of 13\" (164,08 s). Derselbe Ausdruck mit geerbtem RE15_NOAUDIO=1 re15_asset_debug=1 RE15_RE2_DMG_MODEL=0 (-V) -> \"100% tests passed, 0 tests failed out of 13\". Schnelle Tests, einmal gelaufen mit Skript 8334db2d: -R \"^(unit_|prop_|probe_)|r39_elzazombies\" -j 4 -> \"100% tests passed, 0 tests failed out of 862\" (627,27 s). Pruefbefehl der Abnahme: RE15_NOAUDIO=1 ctest -R \"^integration_r39_elzazombies_knall$\" -> \"100% tests passed, 0 tests failed out of 1\". Keine volle Suite gefahren.",
+   "offene_punkte": [
+    "Fuer den Orchestrator: Laut Abnahme haben 13 von 15 test_r39_*.cmake dieselbe Umgebungsluecke. Zusaetzlich gemessen: Auch das Muster der Referenz-Riegel (nur 'RE15_' in Grossbuchstaben, test_r39_stimmen.cmake:33) laesst auf Windows klein geschriebene Namen durch. Unit-Riegel, die re15_engine linken, erben die Umgebung ebenfalls. Ein gemeinsamer Helfer waere moeglich; in dieser Spur sind nur die eigenen Dateien geaendert.",
+    "Aus dem Bau, fuer die Integration mit Spur P: Die Montage startet bei der steigenden Flanke von (9,97), sobald keine Szene laeuft. Die 1041-Szene von P darf beim Wiedereintritt nicht neu starten. Die Panikmusik von P klingt entweder ueber die Montage-Raeume oder beginnt erst nach der Rueckkehr; das entscheidet P.",
+    "Ereignis 30 und die Bank-5-Bits 28/29/30 sind nur zustandsgebunden belegt. Spur R nutzt Ereignis 30 ebenfalls, aber nur in ROOM1121: kein Wirkungskonflikt, aber ein Textkonflikt in scd_vm.c. Die Zone-7-Tot-Bits 124..131/133/144/145 sind von dieser Spur belegt.",
+    "Entscheidungsfragen aus der Abnahme (keine Maengel): H1, ob der 1041-Durchbruch auch nach Johns Rettung kommen soll (er prueft (9,97) nicht). H3, die Ankunft in 1061 von oben. Laden in 1041 loest den Durchbruch nicht aus, erst das naechste Betreten durch eine Tuer."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/scd_room_setup.c (aus dem Bau, in Nachbesserung 1 nicht geaendert)",
+    "re15_port/engine/src/scd_vm.c (aus dem Bau, in Nachbesserung 1 nicht geaendert)",
+    "re15_port/platform/pc/main.c (aus dem Bau, in Nachbesserung 1 nicht geaendert)",
+    "re15_port/tests/unit/test_r36_kartenbits.c (k_port[] Bit 95, aus dem Bau, in Nachbesserung 1 nicht geaendert)"
+   ],
+   "neue_assets": [],
+   "sprachdateien": []
+  }
+ },
+ "abn": {
+  "Q": {
+   "bestanden": false,
+   "urteile": [
+    {
+     "punkt": "Q1 Durchbruch von 10C1 in den Flur (Treppenhaus 1061, 2F-Absatz), Zahl = in 10E1 am Leben gelassen",
+     "urteil": "erfuellt",
+     "beleg": "Eigene exe-Laeufe mit eigenen Zahlen. 1 Ueberlebender (M1 c_kette1_voll): 'Umzug: 10E1 lebend 1', 'Folge #3 S ROOM1061 T105 1', 'C ROOM1061 T105 2'. 2 Ueberlebende (M2/M3): 'S ROOM1061 T105 2'. 0 Ueberlebende (M8 l_kette0): kein 1061-Schritt, sofort Knall Satz 1 und 1031. Bilder qa1/a_1061.png und a_1061_gross.png: Bild 10 steht der Zombie an der 10C1-Tuer (Schild F2), Bild 170 ist er bis zum Gelaender auf die Kamera zu gegangen. Spur-Zeile: Bit 127 Abstand zur Kamera 7547 -> 4861, HP min 100."
+    },
+    {
+     "punkt": "Q2 Ankunft in 1061 von unten ueber die Treppe: Zombies stehen moeglichst weit weg an der Seite",
+     "urteil": "erfuellt",
+     "beleg": "Echter Weg M2 (d_treppe2_echt): Kette, dann Tuer 1041 -> 1061 ('DOOR FIRE slot=2 ... spawn=(26000,0,25300)'), danach Treppe A und B. 'Kopie Aktor 2 Bit 125 bei (20200,25750)' und 'Aktor 4 Bit 127 bei (20900,25350)'. Freigabe erst 'Spielerin auf Etage 4 bei (25424,24568) -> Kopien frei, kleinster Abstand 4591'. Waehrend Etage 0/2 stehen sie unbewegt. Bild qa1/d_1061.png, Bild 625: Elza rechts an der Tuer, die zwei Zombies links unter dem Fenster."
+    },
+    {
+     "punkt": "Q3 'das gleiche nochmal wie bei Leon' in ROOM1041 (Nachtrag 11), falls nicht besiegt; ROOM1071 bleibt unberuehrt",
+     "urteil": "erfuellt",
+     "beleg": "Lesart der AUFTRAG.md: Rolltor-Durchbruch beim naechsten Betreten von 1041, solange die 1061-Zombies leben. Echter Weg M3 (e_durch2_echt): Kette -> 1061 -> Tuer zurueck -> 'Durchbruch 1041: 2 Zombies aus 1061 (nicht besiegt)', danach C 1, Knall Satz 1, 'Durchbruch Bild 297: alle durch das Rolltor'. Bit 129 13004 -> 5441, Bit 131 14897 -> 8890, HP 100, Steuerung an der Eintrittstuer. Bild qa1/e_1041.png. Knall hoerbar (M6): Differenz der Mitschnitte Bilder 597..635, RMS 4657. Alle besiegt -> nichts (M4 f). Einer lebt -> einer (M4 g). Rolltor schon offen -> sie kommen durch die Oeffnung (M7). In keinem Lauf ein 1071-Schritt."
+    },
+    {
+     "punkt": "Q4 ROOM1031 ueber die Absperrung/das Rollo wie in der Cutscene",
+     "urteil": "erfuellt",
+     "beleg": "M1 b_kette1_1031 und c_kette1_voll: 'Folge #7 S ROOM1031 T281 3', 'C ROOM1031 T281 12'. Der Programmteil traegt die Original-Zeilen ROOM1031 sub08 @0x02858/@0x02862/@0x0286E/@0x0287A (Bytes selbst gelesen). Bild qa1/b_1031.png: aufgebrochenes Rollo, Kriecher kommen darunter durch. Bit 133 9790 -> 7561, Bit 144 10524 -> 5579, Bit 145 9522 -> 4765, HP min 100."
+    },
+    {
+     "punkt": "Q5 Ausloeser steigende Flanke (9,97), Laden ist keine Flanke, Leon unveraendert",
+     "urteil": "erfuellt",
+     "beleg": "Flanke startet die Kette (M1-M3, M8: 'Flanke (9,97) 0->1 in ROOM1041'). Leon (M5 h_leon1060): Spielstand mit (9,95), Flanke, Tuer 1060 -> 1040, keine einzige [elzazombies-r39]-Zeile. Laden in 1041 mit (9,95)/(9,97) (M5 i_laden1041): nichts. integration_r39_elzazombies_ohne gruen."
+    },
+    {
+     "punkt": "N1 Nachbesserung 1: Riegel erben keine RE15_*-Umgebung (VERTRAG Abschnitt 2), Messkopien werden entfernt",
+     "urteil": "erfuellt",
+     "beleg": "Lauf 'env RE15_NOAUDIO=1 re15_kill_at=150 Re15_Re2_Dmg_Model=0 ctest -R r39_elzazombies -j 2 -V' -> 13/13 gruen. Jeder Integrationsteil meldet 'geerbte Umgebung geloescht' mit allen drei Namen, jeder Unit-Teil drei Zeilen 'umgebung: geerbt'. Knall-Werte unveraendert (624..665 RMS 6567, 806..849 RMS 4657). Gegenprobe mit dem alten Riegel aus 1c304b80 und re15_kill_at=150: FAIL 'Spieler-HP waehrend der Szene nicht 100' plus Zeitueberschreitung. Der Block laeuft unter Linux (cmake 3.28.6) und Windows: alle drei Schreibweisen geloescht, eine fremde Variable bleibt. Danach liegen keine Messkopien mehr in build/platform/pc."
+    }
+   ],
+   "maengel": [
+    "NUTZER-NACHTRAG 12 Teil 2 (AUFTRAG.md, woertlich): 'Ausserdem habe ich mich entschlossen eine Angleichung zu machen der hereinbrechenden Zombies. Bei Irons Tod und Johns Hilferuf sollen die Zombies in beiden Szenarien aus den gleichen Tueren brechen. Also bei Leon zusaetzlich das Treppenhaus und bei Elza zusaetzlich ROOM 1071.' Umsetzen: (a) LEON (Szene nach Irons' Tod, engine/src/irons_tod_1150.c Runde 35 L + montage_r38.c Runde 38 O): zusaetzlich der Durchbruch im Treppenhaus = Gegenstueck zu Elzas 10C1 -> Flur 1061 (Leon 10C0 -> 1060; Zahl/Form wie bei Elza bzw. wie Leons uebrige Montage-Schnitte, belegen und begruenden - bei Leon gibt es keinen Medical-Room-Zaehler wie 10E1, Zahl aus Leons Gegenstueck 10E0 analog oder Montage-Form); (b) ELZA: zusaetzlich ROOM1071 = Gegenstueck zu Leons 1070-Durchbruch (Nachtrag 11 hatte 1071 gestrichen und 1041 gesetzt - jetzt 1041 UND 1071). Ergebnis: beide Szenarien brechen aus denselben Tueren (Tabelle Leon/Elza je Raum im Dossier). Messen am echten Weg beider Szenarien (Leon: Irons' Tod -> Montage -> Treppenhaus; Elza: Panikphase -> 1071), Riegel unit + integration; Leons bestehende Montage-Riegel (integration_r38_montage, r36_szene1150, r35_cut1150) muessen gruen bleiben bzw. begruendet nachgezogen werden.",
+    "ORCHESTRATOR (Pflicht zuerst): `git merge master` (master a0d7d749 enthaelt Spuren K, G, O, R; R nutzt Ereignis 30 nur in ROOM1121 - Weiche in scd_vm.c beidseitig behalten). Konflikte beidseitig aufloesen, bauen (configure). Vor dem Abschluss ALLE unit_/prop_/probe_ + integration_r39_elzazombies* + integration_r38_montage + integration_r36_szene1150 + integration_r35_cut1150 + integration_r37_zombieaktiv + integration_r39_hund1121 gruen.",
+    "ORCHESTRATOR-ENTSCHEID zu Hinweis H1 der Abnahme 1 (keine Wahlfrage an den Nutzer): der Rolltor-Durchbruch in ROOM1041 kommt NUR in der Elza-Panikphase (Bank 9 Bit 97 = 1); nach Johns Rettung (Bit 97 = 0) nicht mehr - Nutzer Nachtrag 10: 'Die panische Musik hoert auf, sobald man John gerettet hat. Der Rest bleibt normal.' Bedingung im Code + Riegel (Durchbruch mit Bit 97, kein Durchbruch nach der Rettung)."
+   ],
+   "suite": "Keine volle Suite (Spurbaum). Selbst gefahren: (1) ctest -R \"r39_elzazombies\" -j 2 -V mit feindlicher Umgebung (RE15_NOAUDIO=1 re15_kill_at=150 Re15_Re2_Dmg_Model=0) -> \"100% tests passed, 0 tests failed out of 13\" (04:27-04:30). (2) Gezielte Gruppen der beruehrten Module und Raeume (Regex kartenbits|cut1150|r38_montage|zombieaktiv|gegnerzahl_raum10[34]1|r34n_a_rolltor|r33_speichern|elza_vollstart|r38_elzaintro|r39_elza_|r38_elzatoene|r38_tagebuch|r36_story_elza|^unit_r36_story|r36_elza_|elzaems_elza10c1|unit_montage_fx|szene1150_knall|fenster_knall|unit_elza_zweig|map_speichern_laden|unit_scd) -j 2 unter Fremdlast -> \"100% tests passed, 0 tests failed out of 93\" (1097,92 s). Dazu 14 eigene exe-Messlaeufe (M1-M8) und eine Gegenprobe mit dem alten Riegel.",
+   "bericht": "Abnahme 1 der Spur Q ist BESTANDEN. Bericht: C:/workspace/git/reAi_v2/.claude/worktrees/r39_elzazombies/analysis/befunde_runde39/Q_abnahme_1.md, committet als 160bfb83 \"doc(r39-elzazombies): Abnahme 1\" (nur diese Datei).\n\nGebaut mit local_build.sh: configure exit 0, build exit 0, \"ninja: no work to do\". Seit Abnahme 0 hat sich nur Testcode geaendert, re15_pc.exe ist vom 02:17:18.\n\nAlle Teilpunkte habe ich selbst an der exe gemessen, mit eigenen Ueberlebenden-Zahlen (1, 2 und 0) und ueber die echten Tuer-Wege:\n- Q1: Kette mit 1, 2 und 0 Ueberlebenden. In 1061 Cut 2 erscheinen genau so viele Kopien, wie in 10E1 leben.\n- Q2: Treppe von unten. Die Zombies stehen an der Westseite und werden erst bei der Ankunft (25424,24568) frei, Abstand mindestens 4591.\n- Q3: Rolltor-Durchbruch in 1041 bei 0, 1 und 2 nicht besiegten Zombies, auch bei schon offenem Rolltor. Der Knall ist hoerbar (Ton-Differenz RMS 4657).\n- Q4: Rollo in 1031 Cut 12 mit Kriechern.\n- Q5: Leon und Laden loesen nichts aus.\n\nMangel 1 der Abnahme 0 (Riegel erbten die Umgebung des Aufrufers) ist behoben. Mit feindlicher Umgebung in drei Schreibweisen laufen 13/13 gruen. Der alte Riegel faellt mit derselben klein geschriebenen Variable durch (Gegenprobe). Unter Linux und Windows getestet. Es bleiben keine Messkopien liegen.\n\nRE-Gate: 7 Stichproben selbst disassembliert bzw. die Bytes selbst gelesen, alle zutreffend:\n- PSX.EXE @0x80039fbc (gleiche Zone -> Ziel = Zielpunkt)\n- PSX.EXE @0x8003ed74 und Bank-Tabelle @0x80074664[5] = 0x800b1028\n- PSX.EXE @0x800421c8/@0x800421d0 (Etage = pc[4])\n- PSX.EXE LAB_80040414 (Cut_replace ist ein Tausch)\n- RE2 EMZ0.BIN @0x80100ab8-abc und STAGE1.BIN @0x80100f40-44\n- RDT-Bytes von 10C1, 10E1, 1041 sub08/main00/sub11 und 1031 sub08\n- keine Rate-Signalwoerter im Diff\n\nZensus (selbst gemacht): die Bits 124..131, 133, 144 und 145 sind frei. Vertrag eingehalten: Pfade, Bit 95, kleine Haken, Riegel je Punkt. Die gezielten Gruppentests liefen 93/93 gruen.\n\nKeine Maengel. Hinweise fuer den Orchestrator:\n- H1: Der 1041-Durchbruch prueft (9,97) nicht. Er kommt also auch nach Johns Rettung, solange 1061-Kopien leben. Entscheidungsfrage an den Nutzer.\n- H2: Auf dem ueblichen Panik-Weg kehrt Elza nicht nach 1041 zurueck. Den Rolltor-Durchbruch sieht also nur, wer zurueckgeht. Das entspricht der AUFTRAG-Lesart.\n- H3: Ankunft in 1061 von oben, nicht verlangt.\n- H4: Das Zusammenspiel mit Spur P (frei()-Bedingung, P-Szene beim Wiedereintritt) und der Textkonflikt um Ereignis 30 mit Spur R sind nur im Integrationsbaum pruefbar.\n- H5: Die verdichtete Gosub-Folge in 1031 ist Leons uebernommene PORT-WAHL.\n- H6: Bricht ein Integrationsteil per FATAL_ERROR ab, bleibt dessen Messkopie liegen.\n- H7: Der Umzug passiert vor dem Ereignis-Start; ohne freien Ereignis-Platz zoegen die Kopien ohne Szene um. Praktisch nicht erreichbar.\n\nMessdaten, Bilder und Logs liegen unter C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/qa1 (runs/<lauf>/debug.log; Bildtafeln a_1061.png, b_1031.png, d_1061.png, e_1041.png, k_1041_offen.png; ctest_eigen_feindlich.log, ctest_gruppen.log, alt_riegel/durch_killat.log)."
+  }
+ }
+}

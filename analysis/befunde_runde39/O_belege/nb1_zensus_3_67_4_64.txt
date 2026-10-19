@@ -1,0 +1,8 @@
+# Nachbesserung 1: Zensus aller 240 RDTs (re15_port/shared_assets/PSX/STAGE*/ROOM*.RDT) mit re15_port/tools/scd_dump_room.py, Zeilen mit bank=3 bit=67 oder bank=4 bit=64 (0 Walk-Abbrueche)
+ROOM11B0.RDT   0x011CE (+0026) Ck               21 03 43 01  bank=3 bit=67 val=1
+ROOM11C0.RDT   0x0176C (+0004) Ck               21 04 40 00  bank=4 bit=64 val=0
+ROOM11C0.RDT   0x017D0 (+0068) Ck               21 03 43 00  bank=3 bit=67 val=0
+ROOM11C0.RDT   0x01820 (+0004) Ck               21 04 40 00  bank=4 bit=64 val=0
+ROOM11C0.RDT   0x0182E (+0012) Ck               21 03 43 00  bank=3 bit=67 val=0
+ROOM11C0.RDT   0x0184E (+0000) Set              22 04 40 01  bank=4 bit=64 val=1
+ROOM11C0.RDT   0x01B02 (+0000) Set              22 03 43 01  bank=3 bit=67 val=1

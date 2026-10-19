@@ -70,10 +70,13 @@ set(_b2 besucht:11E0:-24707:-9442 besucht:11F0:250:250 besucht:1200:-20154:-2524
         besucht:1210:-26400:-2200)
 set(_b1 besucht:1190:3174:-11182 besucht:11B0:-26483:-18094 besucht:11D0:-4729:-16018
         besucht:1230:-4729:-16018)
-karte_lauf(A 1230 "1230;-4729;-16018;0;${_b1}" "" 1230 "120;60;175;131" 0)
+# Runde 39 Spur G: B1 ist Schema-Zeichnung - der Gang (synth 4) liegt in (124..158,67..173) statt im Ring rect 0.
+karte_lauf(A 1230 "1230;-4729;-16018;0;${_b1}" "" 1230 "124;67;158;173" 0)
 karte_lauf(B 11F0 "11F0;250;250;0;${_b2}" "" 11F0 "100;101;139;156" 0)
 karte_lauf(C 1200 "1200;-20154;-25245;0;${_b2}" "" 1200 "141;101;172;140" 0)
-karte_lauf(D 1210 "1210;-26400;-2200;0;${_b2}" "" 1210 "187;70;250;149" 30)
+# Runde 39 Spur G: Kasten ab x186 statt x187 - die Nutzer-Vorlage mapB2_correct.png legt die
+# 11E0-Tuer auf die gemeinsame Wand x186 (Flur-Ostwand), vorher stand sie auf x187 daneben.
+karte_lauf(D 1210 "1210;-26400;-2200;0;${_b2}" "" 1210 "186;70;250;149" 30)
 # E: in der Fahrstuhltuer von ROOM1120 (Tuer @0xCB6 r(300,5900,2000,1000)), Blick -z
 # (Yaw 1024 = (cos,-sin) = -z, player_common.c:1292), Aktionstaste -> ROOM1080.
 # flag:4:243 = "Reservestrom an" (ROOM11F0 sub18 @0x016F6 `22 04 f3 01`) - ohne Strom ist der

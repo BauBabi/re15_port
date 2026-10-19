@@ -1,0 +1,37 @@
+    Start 979: integration_r39_hund1121
+Test command: "C:\Program Files\CMake\bin\cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r39_hund1121/re15_port/build/platform/pc/re15_pc.exe" "-DRE15_WERKZEUG=C:/workspace/git/reAi_v2/.claude/worktrees/r39_hund1121/re15_port/build/tests/unit/test_r39_hund1121.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r39_hund1121/re15_port/build/tests/integration/r39_hund1121_wd" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r39_hund1121/re15_port/tests/integration/test_r39_hund1121.cmake"
+Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r39_hund1121/re15_port/build/tests/unit
+Test timeout computed to be: 900
+-- r39_hund1121[A] exit=0 [save] CONTINUE: resumed in room 1121 (hp=100)
+F0 [hund1121] ROOM1121 scharf: Slot 4 Band x 3500..6650 z 4300..6400
+F0 [hund1121] Wand Band 1 Region 0..4 Index 15: gefunden 1 u0 0xFF 0 0
+F143 [hund1121] Ausloeser: Spieler (6020,6207) im Band, Ereignis 30, Verhalten 0x00 0
+F144 [hund1121] Hund Slot 5 gesetzt bei (5400,-1827,12100) RE2-Hirn 1
+F145 [hund1121] RE2: Sub 14 Phase 0 (ROOM21A0 sub07 @0x020FE), Takt 1 0 0
+F146 [hund1121] Freigabe (RE2=1), Takt 2, Hund (5400,-1827,12100)
+F156 [hund1121] Glas: Hund bei (5354,-2427,11030) erreicht die Glasebene z 11200, 13 Splitter
+F158 [hund1121] Wand Band 1 wieder zu (u0 0xFF), Hund z 10472 Radius 500 0 0
+F159 [hund1121] Knall 1: Raumbank-Satz 0x21 (RE2 Se_on 0x02210001), 3 Bilder nach dem Glas 0 0
+F164 [hund1121] Knall 2: Raumbank-Satz 0x21 (RE2 Se_on 0x02210001), 8 Bilder nach dem Glas 0 0
+F188 [hund1121] fertig T44: Hund (5024,2542) Zustand 1 Sub 2
+
+-- r39_hund1121[A]: Ausloeser F143, Freigabe F146, Glas F156, Knall F159/F164
+-- r39_hund1121[B] exit=0 [save] CONTINUE: resumed in room 1121 (hp=100)
+F0 [hund1121] ROOM1121 aus: (9,97)=0 (7,0xAE)=0 0
+
+-- r39_hund1121[A] Mitschnitt: fenster 159..164 spitze 26325 bei 160 median 1708
+fenster 164..169 spitze 29813 bei 167 median 1708
+
+-- r39_hund1121[B] Mitschnitt: fenster 159..164 spitze 5742 bei 161 median 857
+fenster 164..169 spitze 2352 bei 169 median 857
+
+-- r39_hund1121: Bild F146 rechte Scheibe: rechteck 196,80..207,101 verschieden 93
+  linke Scheibe: rechteck 183,84..193,100 verschieden 0
+
+-- r39_hund1121[C] exit=0 [save] CONTINUE: resumed in room 1121 (hp=100)
+F0 [hund1121] ROOM1121 aus: (9,97)=1 (7,0xAE)=1 0
+
+-- r39_hund1121[D] exit=0 [save] CONTINUE: resumed in room 1120 (hp=100)
+
+-- r39_hund1121: OK
+1/1 Test #979: integration_r39_hund1121 .........   Passed   64.66 sec

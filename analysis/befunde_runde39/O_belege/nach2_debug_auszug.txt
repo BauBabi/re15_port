@@ -1,0 +1,8 @@
+1:[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r39_parkplatz11c0/re15_port/build/platform/pc
+2:[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r39_parkplatz11c0/re15_port/shared_assets/PSX
+59:[aot] DOOR FIRE slot=1 rect=(-25480,-28190,hw=1250,hh=1750) target_cut=0 spawn=(-25279,0,17268)
+77:[parkplatz] F6 ROOM11C0 sub01 @0x01824 Evt_exec sub02 -> Programm SZENE (Tuer Slot 0 -> Text msg 40, Gosub sub02)
+79:[evt] F6 room=11c0 Evt_exec sub=2 cond=0x0a -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+209:[evt] F1088 room=11c0 Evt_exec sub=7 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+212:[scd F1102] letterbox closed -> gameplay (player_mode=0)
+245:[parkplatz] F1739 ROOM11C0 Tuer im Kampf -> msg 40 "I cannot leave Ada alone here with those monsters!" (Stimme main40.wav)
