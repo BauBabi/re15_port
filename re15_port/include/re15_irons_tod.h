@@ -43,6 +43,7 @@
 #define RE15_IT_RAUM_1040   0x1040
 #define RE15_IT_RAUM_1030   0x1030
 #define RE15_IT_RAUM_11C0   0x11C0
+#define RE15_IT_RAUM_1060   0x1060   /* Runde 39 Spur Q (Nachtrag 12): Treppenhaus-Schritt, re15_elzazombies_r39.h */
 
 /* Freigabe: (9,71) = 10F0-Szene gesehen (Spur K, VERTRAG §1.1) UND (3,94) = erste Irons-Szene
  * (ROOM1150 sub08 @0x01110 `22 03 5e 01`). Einmal-Riegel (9,73) = Todesszene gesehen; erstes Opcode
@@ -202,6 +203,7 @@
 #define RE15_IT_S1030      4   /* 1030-Programm laeuft, naechster Raum 11C0 */
 #define RE15_IT_S11C0      5   /* 11C0-Programm laeuft, naechster Raum 1150 */
 #define RE15_IT_RUECKKEHR  6   /* 1150: Rueckkehr-Programm laeuft */
+#define RE15_IT_S1060      7   /* Runde 39 Spur Q (Nachtrag 12): 1060-Programm laeuft (nach 1130 bzw. der Szene), naechster Raum 1040 */
 
 /* HAKEN scd_room_setup.c (nach dem Init-Lauf von main00) + main.c (Boot-/CONTINUE-Weg): startet je
  * nach Raum und Zustand die Szene, den Montage-Schritt, die Rueckkehr, die Nachspawns (1130/1030 bei

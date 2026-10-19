@@ -8,8 +8,11 @@
  * steht auf einem Parkplatz hinter der Kamera; der Zielraum startet das naechste Programm nach dem Init-Lauf, der erste
  * Abschnitt (Spawns) laeuft im Raumaufbau vor dem ersten Bild (Form FUN_8003ef6c -> FUN_8003f0a0 @0x8003f018). Kein Asset-
  * Patch: die Programme sind portseitig eingespielter Bytecode aus ORIGINAL-Opcodes, jede Zeile mit Vorbild.
- * Nachtrag 11 (AUFTRAG.md): kein 1071-Schritt; statt dessen der Rolltor-Durchbruch in ROOM1041 = Leons 1040-Schritt, beim
- * naechsten Betreten von 1041, solange die Zombies aus 10C1/1061 leben (Programm G).
+ * Nachtrag 11 (AUFTRAG.md): der Rolltor-Durchbruch in ROOM1041 = Leons 1040-Schritt, beim naechsten Betreten von 1041,
+ * solange die Zombies aus 10C1/1061 leben (Programm G) — seit Nachbesserung 2 nur in der Panikphase ((9,97)=1, H1).
+ * Nachtrag 12 (AUFTRAG.md, "Angleichung ... aus den gleichen Tueren"): Elza bekommt Leons 1070-Schritt dazu (ROOM1031 Cut 7 mit
+ * den Kopien der 1071-Ueberlebenden, Leons Programm-Vorlagen 6/7/19/12 aus irons_tod_1150.c Byte fuer Byte), Leon bekommt Elzas
+ * Treppenhaus-Schritt dazu (ROOM1060 Cut 2 mit den Kopien der 10E0-Ueberlebenden, Programm L; Haken in irons_tod_1150.c).
  */
 #include "re15_elzazombies_r39.h"
 
@@ -80,8 +83,9 @@ extern unsigned g_current_room_id;
 #define DOOR_OFF_CUT       24
 #define DOOR_OFF_ETAGE     25
 /* Raum-Bytes der Tuersaetze (dest_room = Raum-Byte, Variante xxx1 aus dem Elza-Bit, FUN_800396fc @0x800397ec): */
-#define RB_1061            0x06   /* ROOM10C1 @0x00E42 Nutzlast +9 `06` */
+#define RB_1061            0x06   /* ROOM10C1 @0x00E42 Nutzlast +9 `06` (= ROOM10C0 @0x00E42: Leon -> ROOM1060, Elza -> ROOM1061) */
 #define RB_1031            0x03   /* ROOM1041 Tuer Slot 1 @0x010B8 Nutzlast +9 `03` (zur Lobby; Leons OP_DOOR 0x03) */
+#define RB_1040            0x04   /* Leons OP_DOOR 0x04 (irons_tod_1150.c k_p_1130: Tuer -> ROOM1040 Cut 1) */
 
 /* ---- Lagen ROOM1061 (Etage 4) ----------------------------------------------------------------------------------------
  * Freie Flaeche Etage 4 = SCA-Zellen mit floor-Byte 0x43 (ROOM1061 SCA @0x004A0, je Quadrant dieselben 7 Saetze):
@@ -135,16 +139,30 @@ static const re15_r39q_lage_t k_lagen_1041[RE15_R39Q_N_10E1] = {
 
 /* ---- Kopie-Tot-Bits (Zone 7). Zensus aller Sce_em_set in STAGE1-3 (132 RDTs, 176 Bits belegt, Dossier 2.4): frei sind
  * u.a. 100..105, 109..112, 117..119, 124..133, 144, 145; Leons Port-Kopien belegen 40..43, 46..49, 75..79, 83, 84, 90, 91,
- * 95. Gewaehlt: 124..127 (1061), 128..131 (1041, Nachtrag 11), 133, 144, 145 (Kriecher). */
-static const uint8_t k_bits[RE15_R39Q_N_10E1 + RE15_R39Q_N_10E1 + RE15_R39Q_N_KRIECHER] = {
-    124, 125, 126, 127,          /* 1061: Kopien der 10E1-Records 0xe0..0xe3 */
+ * 95. Gewaehlt: 124..127 (1061), 128..131 (1041, Nachtrag 11), 133, 144, 145 (Kriecher).
+ * Nachtrag 12 (Angleichung, PORT-WAHL nach der Regel des Originals fuer Raum-Paare): dieselben Zombies tragen in beiden
+ * Szenarien dasselbe Bit — die ausgelieferten Paare ROOM10E0/10E1 und ROOM1070/1071 sind Datei fuer Datei gleich (cmp -l 0) und
+ * setzen ihre Records mit denselben Tot-Bits (0xe0..0xe3 @0x00D56.., 0xc6..0xca @0x015CA..). Darum: Leons 1060-Kopien = Elzas
+ * 1061-Kopien (124..127), Elzas 1031-Cut-7-Kopien = Leons 1030-Cut-7-Kopien (47,48,49,75,76 = irons_tod_1150.c EM_1070_DURCH;
+ * Elzas Programm C uebernimmt Leons Vorlage 6 woertlich). Leon und Elza teilen nie einen Spielstand; Leons Code wirkt nur in
+ * xxx0-Raeumen, Elzas nur fuer Elza in xxx1-Raeumen. */
+static const uint8_t k_bits[RE15_R39Q_N_10E1 + RE15_R39Q_N_10E1 + RE15_R39Q_N_KRIECHER + RE15_R39Q_N_1071] = {
+    124, 125, 126, 127,          /* 1061 (Elza) / 1060 (Leon): Kopien der 10E1/10E0-Records 0xe0..0xe3 */
     128, 129, 130, 131,          /* 1041: dieselben Zombies nach dem Rolltor-Durchbruch */
     133, 144, 145,               /* 1031 Rollo: Kriecher */
+    47, 48, 49, 75, 76,          /* 1031 Cut 7: Kopien der 1071-Records 0xc6..0xca (= Leons 1030-Cut-7-Kopien) */
 };
 #define BIT_1061(i)   k_bits[(i)]
 #define BIT_1041(i)   k_bits[RE15_R39Q_N_10E1 + (i)]
 #define BIT_KRIECH(i) k_bits[2 * RE15_R39Q_N_10E1 + (i)]
+#define BIT_1071(i)   k_bits[2 * RE15_R39Q_N_10E1 + RE15_R39Q_N_KRIECHER + (i)]
 #define EM_ZONE 7
+/* Leons Programm-Vorlagen (irons_tod_1150.c re15_irons_tod_programm), die Elzas 1031-Cut-7-Teil Byte fuer Byte uebernimmt
+ * (ROOM1031 = ROOM1030 in RID Cut 7, SCA, BLK und sub08 @0x02850.. = @0x02764.., Dossier 2.2): */
+#define LEON_P_1030_TUER   6    /* k_p_1030_tuer: EM_1070_DURCH (Bits 47,48,49,75,76, grid 0x0d) + Abschnitt-Ende + Riegel + Sleep 174 */
+#define LEON_P_1030_TOR    7    /* k_p_1030_tor: Se_on `36 02 0c 00 00 00 cc dd f8 f8 f0 a7` = ROOM1030 @0x02776 = ROOM1031 @0x02862 */
+#define LEON_P_1030_NACH   12   /* k_p_1030_nach_tuer: EM_1070_LISTE (Steher grid 0x00) = Nachspawn */
+#define LEON_P_1030_LUECKE 19   /* k_p_1030_luecke: Sleep 10 (Knall -> Kriecher) */
 
 /* ================================================================================================
  * PROGRAMM A — AUFTAKT im Startraum (Spur P: ROOM1041): Riegel, kurze Pause, Knall des ersten Schritts, Tuer.
@@ -169,15 +187,28 @@ static const uint8_t k_p_1041_em[] = { EM_SATZ(0, 0) };                         
 static const uint8_t k_p_1061_rest[] = {
     OP_ABSCHNITT_ENDE, OP_RIEGEL,
     OP_SLEEP(130),
-    OP_KNALL(RE15_R39Q_SIG_KNALL_1030), OP_SLEEP(45),      /* Knall des Rollo-Schritts (Satz 1), noch auf Cut 2 */
-    OP_DOOR(PARK_1031_X, 0, PARK_1031_Z, 0, RB_1031, RE15_R39Q_CUT_1031_TOR, 0),
+    OP_KNALL(RE15_R39Q_SIG_KNALL_1030), OP_SLEEP(45),      /* Knall des naechsten Schritts, noch auf Cut 2 (Satz: Weiche) */
+    OP_DOOR(PARK_1031_X, 0, PARK_1031_Z, 0, RB_1031, RE15_R39Q_CUT_1031_TOR, 0),   /* Cut 7 oder 12 (Weiche) */
+    OP_AOT_ON,
+    OP_END,
+};
+/* PROGRAMM L — LEON, Treppenhaus-Schritt ROOM1060 Cut 2 (Nachtrag 12): dieselben vier Saetze wie Programm B (ROOM1060 = ROOM1061
+ * Byte fuer Byte; Quellen ROOM10E0 = ROOM10E1), danach wie Leons 1130-Schritt (k_p_1130: 1 + 130 Bilder, Knall des 1040-Schritts
+ * Satz 1 "so wie bei der Cutscene von ROOM 1030", 45 Bilder, Tuer nach ROOM1040 Cut 1 auf Leons Parkplatz
+ * RE15_IT_PARK_1040 (-24950,-14900) Gier 1024 — dieselbe Tuer wie k_p_1130). */
+static const uint8_t k_p_leon_1060_rest[] = {
+    OP_ABSCHNITT_ENDE, OP_RIEGEL,
+    OP_SLEEP(130),
+    OP_KNALL(RE15_R39Q_SIG_KNALL_1030), OP_SLEEP(45),      /* Knall des 1040-Schritts (Satz 1), noch auf Cut 2 */
+    OP_DOOR(RE15_IT_PARK_1040_X, 0, RE15_IT_PARK_1040_Z, 1024, RB_1040, RE15_IT_CUT_1040, 0),
     OP_AOT_ON,
     OP_END,
 };
 
-/* PROGRAMM C — ROOM1031: das Rollo = Leons Tor-Teil OHNE Cut-7-Teil (Leon: "1070 leer" -> der Knall kam am Ende des
- * vorigen Schritts, Bruch + Kriecher im Raumaufbau, das erste Bild zeigt Cut 12), mit den Zeilen von ROOM1031 sub08
- * (= ROOM1030 sub08 Byte fuer Byte, Versatz +0xEC; Dossier 2.2). Nachtrag 11: kein 1071-Schritt. */
+/* PROGRAMM C — ROOM1031: [Cut-7-Teil, nur wenn in 1071 Zombies leben (Nachtrag 12) = Leons Vorlagen 6 + 7 woertlich: die Kopien
+ * vor der 1071-Tuer im Raumaufbau, 175 Bilder, der Original-Knall @0x02862 noch auf Cut 7] + das Rollo = Leons Tor-Teil mit den
+ * Zeilen von ROOM1031 sub08 (= ROOM1030 sub08 Byte fuer Byte, Versatz +0xEC; Dossier 2.2). Ohne 1071-Ueberlebende kam der Knall
+ * am Ende des vorigen Schritts (Satz 1), Bruch + Kriecher laufen im Raumaufbau, das erste Bild zeigt Cut 12 (Leon "1070 leer"). */
 static const uint8_t k_p_1031_kopf[] = {
     0x24, 0x12, LE16(20),                                   /* Save(0x12,20): Gleichzeitig-Limit (Form @0x01E58 `24 12 06 00`) */
 };
@@ -236,8 +267,9 @@ static const uint8_t k_p_rueck[] = {
 /* PROGRAMM E — Nachspawn ROOM1061: die Kopien an der Westseite (k_lagen_nach), Durchbruch-Form wie der Montage-Schritt
  * und wie Leons 1130-Nachspawn (Runde 37 H: grid 0x0d = aktiv). Gehalten vom Takt (entity+0x9 |= 0x20) bis Etage 4. */
 static const uint8_t k_p_nach_ende[] = { OP_END };
-/* PROGRAMM F — Nachspawn ROOM1031 (Leons k_p_1030_nach ohne die 1070-Kopien: Limit 20, Kriecher im Hauptraum). */
-static const uint8_t k_p_1031_nach[] = { 0x24, 0x12, LE16(20), EM_KRIECHER_NACH, OP_END };
+/* PROGRAMM F — Nachspawn ROOM1031 = Leons k_p_1030_nach: Limit 20 (k_p_1031_kopf), die 1071-Kopien in der Steher-Form (Leons
+ * Vorlage 12 = EM_1070_LISTE; tote/nie umgezogene tragen Bit 1) und die Kriecher im Hauptraum. */
+static const uint8_t k_p_1031_nach_tor[] = { EM_KRIECHER_NACH, OP_END };
 
 /* PROGRAMM G — DURCHBRUCH 1041 (Nachtrag 11) = Leons 1040-Schritt (irons_tod_1150.c k_p_1040_*), im Raum selbst:
  *   Raumaufbau: Limit 20 (Leons k_p_1030_kopf-Form; 1041 main00 @0x01218 `24 12 05 00`), die umgezogenen 1061-Kopien hinter
@@ -294,6 +326,10 @@ static int     s_alt = -1;            /* (9,97) im letzten Spielbild (-1 = noch 
 static uint8_t s_prog[768];           /* RAM-Kopie, die die VM ausfuehrt */
 static int     s_prog_len = 0;
 static int     s_n10e1 = 0;           /* Ueberlebende in 10E1 beim Start (Kette) */
+static int     s_n1071 = 0;           /* Ueberlebende in 1071 beim Start (Kette, Nachtrag 12) */
+static int     s_leon_n1060 = 0;      /* Leon: Ueberlebende in 10E0 beim Szenenstart (Weiche 1060, Nachtrag 12) */
+static int     s_1031_knall_off = -1; /* Lage des Original-Se_on @0x02862 im Laufprogramm (Folge 'K' 2), sonst -1 */
+static uint16_t s_halt_raum = 0;      /* Nachspawn: Raum, dessen Kopien bis Etage 4 gehalten werden (1061 Elza / 1060 Leon) */
 static uint16_t s_rueck_raum = 0;
 static int32_t  s_rueck_x = 0, s_rueck_y = 0, s_rueck_z = 0;
 static int16_t  s_rueck_gier = 0;
@@ -308,6 +344,7 @@ static uint8_t  s_d_durch = 0;        /* Durchbruch 1041: (5,30) gesetzt */
 static int     s_takt = 0;
 static uint8_t s_halt_1061 = 0;       /* Nachspawn 1061: Kopien gehalten bis Etage 4 */
 static uint8_t s_halt[RE15_ACTOR_MAX];/* von DIESER Regel angehalten (nur diese gibt frei) */
+static uint8_t s_wartet[RE15_ACTOR_MAX];/* Baustein 5 (1031 vor Cut 12): von dieser Regel angehalten, gibt nur sie frei (Leons s_wartet) */
 static int     s_an = 1;              /* Pruefhaken: 0 = Stand vor Spur Q (Gegenprobe der Riegel) */
 static int     s_hp_kette = 1 << 30;  /* kleinste Spieler-HP ueber die ganze Kette */
 static int32_t s_frei_px = 0, s_frei_pz = 0, s_frei_dmin = -1; static int s_frei_n = 0;   /* Freigabe 1061 */
@@ -347,6 +384,8 @@ static const kamera_t k_kameras[] = {
     { RE15_R39Q_RAUM_1061,  2,  20199,  21273,  24670,  27767 },   /* ROOM1061 @0x000A0 */
     { RE15_R39Q_RAUM_1031, 12, -11790, -15282,  -8640, -26478 },   /* ROOM1031 @0x001E0 */
     { RE15_R39Q_RAUM_1041,  1, -26262, -10692, -25020,  -1818 },   /* ROOM1041 @0x00080 (= ROOM1040, Leons Rolltor-Schnitt) */
+    { RE15_R39Q_RAUM_1031,  7, -26820,  -2574, -15858,  -5040 },   /* ROOM1031 @0x00140 (= ROOM1030 Cut 7, Nachtrag 12) */
+    { RE15_R39Q_RAUM_1060,  2,  20199,  21273,  24670,  27767 },   /* ROOM1060 @0x000A0 (Leon, Datei = ROOM1061, Nachtrag 12) */
 };
 #define N_KAMERAS ((int)(sizeof k_kameras / sizeof k_kameras[0]))
 static const kamera_t *kamera(uint16_t raum, int cut)
@@ -385,6 +424,12 @@ int re15_elzazombies_r39_lebend_10e1(void)
 {
     int k = 0;
     for (int i = 0; i < RE15_R39Q_N_10E1; i++) if (!re15_game_flag_get(EM_ZONE, (uint8_t)(RE15_R39Q_BIT_10E1_0 + i))) k++;
+    return k;
+}
+int re15_elzazombies_r39_lebend_1071(void)
+{
+    int k = 0;
+    for (int i = 0; i < RE15_R39Q_N_1071; i++) if (!re15_game_flag_get(EM_ZONE, (uint8_t)(RE15_R39Q_BIT_1071_0 + i))) k++;
     return k;
 }
 int re15_elzazombies_r39_lebend_1061(void) { return lebend_bits(&BIT_1061(0), RE15_R39Q_N_10E1); }
@@ -459,25 +504,27 @@ static int opcode_len(uint8_t op)
 }
 /* Freie Aktor-Plaetze fuer die Sce_em_set-Saetze in [von, s_prog_len) (Slot = Aktor - 1, scd_vm.c SCRIPT_SLOT_TO_ACTOR);
  * Leons slots_zuweisen. Kein Platz: Slot RE15_ACTOR_MAX-1 -> Aktor RE15_ACTOR_MAX = verworfen. */
-static void slots_zuweisen(int von)
+static void slots_in(uint8_t *p, int von, int len)
 {
     int aktor = 1;
-    for (int o = von; o < s_prog_len; ) {
-        int n = opcode_len(s_prog[o]);
+    for (int o = von; o < len; ) {
+        int n = opcode_len(p[o]);
         if (n <= 0) break;
-        if (s_prog[o] == 0x44) {
+        if (p[o] == 0x44) {
             while (aktor < RE15_ACTOR_MAX && g_actors[aktor].active) aktor++;
-            if (aktor >= RE15_ACTOR_MAX) { s_prog[o + 7] = 0xff; s_prog[o + 1] = (uint8_t)(RE15_ACTOR_MAX - 1); }
-            else { s_prog[o + 1] = (uint8_t)(aktor - 1); aktor++; }
+            if (aktor >= RE15_ACTOR_MAX) { p[o + 7] = 0xff; p[o + 1] = (uint8_t)(RE15_ACTOR_MAX - 1); }
+            else { p[o + 1] = (uint8_t)(aktor - 1); aktor++; }
         }
         o += n;
     }
 }
-/* Den LETZTEN Tuersatz des Programms setzen (Form `3b` + 31 Byte, gefolgt von Aot_on + Evt_end). */
-static void tuer_setzen(int x, int y, int z, int yaw, uint8_t room, uint8_t cut, uint8_t etage)
+static void slots_zuweisen(int von) { slots_in(s_prog, von, s_prog_len); }
+/* Den LETZTEN Tuersatz eines Programms setzen (Form `3b` + 31 Byte, gefolgt von Aot_on + Evt_end) — Elzas und Leons
+ * Programme haben dieselbe Form (irons_tod_1150.c OP_DOOR: Etage-Byte +25 = 0). */
+static void tuer_in(uint8_t *p, int len, int x, int y, int z, int yaw, uint8_t room, uint8_t cut, uint8_t etage)
 {
-    if (s_prog_len < DOOR_LEN + 4) return;
-    uint8_t *d = s_prog + s_prog_len - 4 - DOOR_LEN;
+    if (len < DOOR_LEN + 4) return;
+    uint8_t *d = p + len - 4 - DOOR_LEN;
     if (d[0] != 0x3b) return;
     d[DOOR_OFF_X] = (uint8_t)(x & 0xff);     d[DOOR_OFF_X + 1] = (uint8_t)((x >> 8) & 0xff);
     d[DOOR_OFF_Y] = (uint8_t)(y & 0xff);     d[DOOR_OFF_Y + 1] = (uint8_t)((y >> 8) & 0xff);
@@ -485,12 +532,17 @@ static void tuer_setzen(int x, int y, int z, int yaw, uint8_t room, uint8_t cut,
     d[DOOR_OFF_YAW] = (uint8_t)(yaw & 0xff); d[DOOR_OFF_YAW + 1] = (uint8_t)((yaw >> 8) & 0xff);
     d[DOOR_OFF_ROOM] = room; d[DOOR_OFF_CUT] = cut; d[DOOR_OFF_ETAGE] = etage;
 }
-/* Das Knall-Signal VOR dem Tuersatz (Form `22 05 ss 01` + Sleep 45 + Door + Aot_on + Evt_end = 4 + 4 + 32 + 2 + 2). */
-static void knall_setzen(uint8_t signal)
+static void tuer_setzen(int x, int y, int z, int yaw, uint8_t room, uint8_t cut, uint8_t etage)
 {
-    uint8_t *k = s_prog + s_prog_len - 44;
-    if (s_prog_len >= 44 && k[0] == 0x22 && k[1] == 0x05) k[2] = signal;
+    tuer_in(s_prog, s_prog_len, x, y, z, yaw, room, cut, etage);
 }
+/* Das Knall-Signal VOR dem Tuersatz (Form `22 05 ss 01` + Sleep 45 + Door + Aot_on + Evt_end = 4 + 4 + 32 + 2 + 2). */
+static void knall_in(uint8_t *p, int len, uint8_t signal)
+{
+    uint8_t *k = p + len - 44;
+    if (len >= 44 && k[0] == 0x22 && k[1] == 0x05) k[2] = signal;
+}
+static void knall_setzen(uint8_t signal) { knall_in(s_prog, s_prog_len, signal); }
 /* Einen OP_PARK-Satz ab `o` (16 B) mit Lage/Gier fuellen. */
 static void park_setzen(int o, int32_t x, int32_t y, int32_t z, int16_t yaw)
 {
@@ -502,13 +554,17 @@ static void park_setzen(int o, int32_t x, int32_t y, int32_t z, int16_t yaw)
     p[14] = (uint8_t)(yaw & 0xff); p[15] = (uint8_t)((yaw >> 8) & 0xff);
 }
 
-/* Naechster Schritt nach dem Auftakt: 1061 (Tuerknall), wenn in 10E1 Zombies leben; sonst gleich das Rollo 1031 Cut 12
- * (Knall Satz 1 wie ROOM1030 — Leons 1040-Ende ohne Cut-7-Teil). Nach 1061 immer das Rollo (k_p_1061_rest). */
-static void tuer_nach_auftakt(void)
+/* Naechster Schritt nach dem Auftakt bzw. nach 1061 (Leons Weichen-Form, irons_tod_1150.c programm_bauen): 1061 (Tuerknall),
+ * wenn in 10E1 Zombies leben und 1061 noch nicht dran war; sonst 1031 Cut 7 (Tuerknall), wenn in 1071 Zombies leben (Nachtrag
+ * 12, Leons 1040-Ende mit (9,76)=1); sonst gleich das Rollo 1031 Cut 12 (Knall Satz 1 wie ROOM1030 — Leons "1070 leer"). */
+static void tuer_zum_naechsten(int nach_1061)
 {
-    if (s_n10e1 > 0) {
+    if (!nach_1061 && s_n10e1 > 0) {
         tuer_setzen(PARK_1061_X, RE15_R39Q_Y_1061, PARK_1061_Z, PARK_1061_YAW, RB_1061, RE15_R39Q_CUT_1061,
                     RE15_R39Q_ETAGE_1061);
+        knall_setzen(RE15_R39Q_SIG_KNALL_TUER);
+    } else if (s_n1071 > 0) {
+        tuer_setzen(PARK_1031_X, 0, PARK_1031_Z, 0, RB_1031, RE15_R39Q_CUT_1031_TUER, 0);
         knall_setzen(RE15_R39Q_SIG_KNALL_TUER);
     } else {
         tuer_setzen(PARK_1031_X, 0, PARK_1031_Z, 0, RB_1031, RE15_R39Q_CUT_1031_TOR, 0);
@@ -516,43 +572,66 @@ static void tuer_nach_auftakt(void)
     }
 }
 
-/* Vier Sce_em_set-Saetze (Montage/Nachspawn 1061, Durchbruch/Nachspawn 1041) anhaengen; das Gate @0x80042128-38
- * entscheidet ueber die Kopie-Tot-Bits. */
-static void em_saetze_anhaengen(const uint8_t *vorlage, const uint8_t *bits, const re15_r39q_lage_t *lagen)
+/* Vier Sce_em_set-Saetze (Montage/Nachspawn 1061/1060, Durchbruch/Nachspawn 1041) an p[*len] anhaengen; das Gate
+ * @0x80042128-38 entscheidet ueber die Kopie-Tot-Bits. */
+static int em_saetze_in(uint8_t *p, int *len, int max, const uint8_t *vorlage, const uint8_t *bits, const re15_r39q_lage_t *lagen)
 {
     for (int i = 0; i < RE15_R39Q_N_10E1; i++) {
-        int o = s_prog_len;
-        prog_anhaengen(vorlage, 20);
-        if (s_prog_len != o + 20) return;
-        uint8_t *e = s_prog + o;
+        if (*len + 20 > max) return 0;
+        uint8_t *e = p + *len;
+        memcpy(e, vorlage, 20);
+        *len += 20;
         e[7] = bits[i];
         e[8] = (uint8_t)(lagen[i].x & 0xff);      e[9] = (uint8_t)((lagen[i].x >> 8) & 0xff);
         e[12] = (uint8_t)(lagen[i].z & 0xff);     e[13] = (uint8_t)((lagen[i].z >> 8) & 0xff);
         e[16] = (uint8_t)(lagen[i].gier & 0xff);  e[17] = (uint8_t)((lagen[i].gier >> 8) & 0xff);
     }
+    return 1;
+}
+static void em_saetze_anhaengen(const uint8_t *vorlage, const uint8_t *bits, const re15_r39q_lage_t *lagen)
+{
+    em_saetze_in(s_prog, &s_prog_len, (int)sizeof s_prog, vorlage, bits, lagen);
+}
+/* Eine Vorlage aus Leons irons_tod_1150.c (re15_irons_tod_programm) anhaengen; 0 = fehlt. */
+static int leon_vorlage_anhaengen(int welche)
+{
+    int n = 0;
+    const uint8_t *p = re15_irons_tod_programm(welche, &n);
+    if (!p || n <= 0) return 0;
+    prog_anhaengen(p, n);
+    return n;
 }
 
 /* Das Programm fuer (Raum, Zustand) in s_prog zusammensetzen; 0 = keins. */
 static int programm_bauen(uint16_t room_id)
 {
     s_prog_len = 0;
+    s_1031_knall_off = -1;
     switch (s_zustand) {
     case RE15_R39Q_AUFTAKT:
         if (room_id != s_rueck_raum) return 0;
         prog_anhaengen(k_p_auftakt, (int)sizeof k_p_auftakt);
-        tuer_nach_auftakt();
+        tuer_zum_naechsten(0);
         return 1;
     case RE15_R39Q_S1061:
         if (room_id != RE15_R39Q_RAUM_1061) return 0;
         em_saetze_anhaengen(k_p_1061_em, &BIT_1061(0), k_lagen_montage);
         slots_zuweisen(0);
         prog_anhaengen(k_p_1061_rest, (int)sizeof k_p_1061_rest);
+        tuer_zum_naechsten(1);
         return 1;
     case RE15_R39Q_S1031: {
         if (room_id != RE15_R39Q_RAUM_1031) return 0;
         prog_anhaengen(k_p_1031_kopf, (int)sizeof k_p_1031_kopf);
         int von = s_prog_len;
+        const int tuer = s_n1071 > 0;
+        if (tuer) {                                          /* Nachtrag 12: Leons Cut-7-Teil, dann der Original-Knall auf Cut 7 */
+            if (!leon_vorlage_anhaengen(LEON_P_1030_TUER)) return 0;
+            s_1031_knall_off = s_prog_len;
+            if (!leon_vorlage_anhaengen(LEON_P_1030_TOR)) return 0;
+        }
         if (!re15_game_flag_get(4, 15)) prog_anhaengen(k_p_1031_bruch, (int)sizeof k_p_1031_bruch);
+        if (tuer && !leon_vorlage_anhaengen(LEON_P_1030_LUECKE)) return 0;
         prog_anhaengen(k_p_1031_kriechen, (int)sizeof k_p_1031_kriechen);
         slots_zuweisen(von);
         tuer_setzen(s_rueck_x, s_rueck_y, s_rueck_z, s_rueck_gier, (uint8_t)((s_rueck_raum >> 4) & 0xff), s_rueck_cut,
@@ -577,6 +656,13 @@ static int programm_bauen(uint16_t room_id)
         return 1;
     }
     case RE15_R39Q_AUS:
+        if (!ist_elza()) {                                   /* Leon (Nachtrag 12): nur der Treppenhaus-Nachspawn nach der Szene */
+            if (room_id != RE15_R39Q_RAUM_1060 || !re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)) return 0;
+            em_saetze_anhaengen(k_p_1061_em, &BIT_1061(0), k_lagen_nach);
+            slots_zuweisen(0);
+            prog_anhaengen(k_p_nach_ende, (int)sizeof k_p_nach_ende);
+            return 1;
+        }
         if (!re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE)) return 0;
         if (room_id == RE15_R39Q_RAUM_1061) {
             em_saetze_anhaengen(k_p_1061_em, &BIT_1061(0), k_lagen_nach);
@@ -584,8 +670,10 @@ static int programm_bauen(uint16_t room_id)
             prog_anhaengen(k_p_nach_ende, (int)sizeof k_p_nach_ende);
             return 1;
         }
-        if (room_id == RE15_R39Q_RAUM_1031) {
-            prog_anhaengen(k_p_1031_nach, (int)sizeof k_p_1031_nach);
+        if (room_id == RE15_R39Q_RAUM_1031) {                /* Programm F = Leons k_p_1030_nach (Nachtrag 12: mit den 1071-Kopien) */
+            prog_anhaengen(k_p_1031_kopf, (int)sizeof k_p_1031_kopf);
+            if (!leon_vorlage_anhaengen(LEON_P_1030_NACH)) return 0;
+            prog_anhaengen(k_p_1031_nach_tor, (int)sizeof k_p_1031_nach_tor);
             slots_zuweisen(4);
             return 1;
         }
@@ -605,7 +693,7 @@ static int programm_bauen(uint16_t room_id)
 const uint8_t *re15_elzazombies_r39_ereignis(uint16_t room_id, uint8_t event_id)
 {
     if (event_id != RE15_R39Q_EREIGNIS) return NULL;
-    if (!ist_elza()) return NULL;
+    if (!ist_elza() && !(room_id == RE15_R39Q_RAUM_1060 && s_zustand == RE15_R39Q_AUS)) return NULL;   /* Leon: nur Nachspawn 1060 */
     if (programm_laeuft()) return NULL;
     if (!programm_bauen(room_id)) return NULL;
     return s_prog;
@@ -622,7 +710,8 @@ int re15_elzazombies_r39_sub01_gesperrt(void)
 
 /* Beim Start der Kette: die 10E1-Ueberlebenden "ziehen um" (Leons umzug_vorbereiten): Quell-Record stillgelegt (Tot-Bit
  * 1), Kopie in 1061 scharf (Kopie-Bit 0); schon tote bekommen eine stille Kopie (Kopie-Bit 1). Die 1041-Kopien sind bis
- * zum Durchbruch still (Bit 1). Kriecher scharf. (9,95)=1. ROOM1071 bleibt unberuehrt (Nachtrag 11). */
+ * zum Durchbruch still (Bit 1). Kriecher scharf. (9,95)=1. Nachtrag 12: die 1071-Ueberlebenden ebenso nach 1031 Cut 7 (Leons
+ * Schleife ueber RE15_IT_BIT_1070_0 / k_bits_1030, irons_tod_1150.c umzug_vorbereiten). */
 static void umzug_vorbereiten(void)
 {
     for (int i = 0; i < RE15_R39Q_N_10E1; i++) {
@@ -631,11 +720,57 @@ static void umzug_vorbereiten(void)
         else { re15_game_flag_set(EM_ZONE, q, 1); re15_game_flag_set(EM_ZONE, BIT_1061(i), 0); }
         re15_game_flag_set(EM_ZONE, BIT_1041(i), 1);
     }
+    for (int i = 0; i < RE15_R39Q_N_1071; i++) {
+        const uint8_t q = (uint8_t)(RE15_R39Q_BIT_1071_0 + i);
+        if (re15_game_flag_get(EM_ZONE, q)) re15_game_flag_set(EM_ZONE, BIT_1071(i), 1);
+        else { re15_game_flag_set(EM_ZONE, q, 1); re15_game_flag_set(EM_ZONE, BIT_1071(i), 0); }
+    }
     for (int i = 0; i < RE15_R39Q_N_KRIECHER; i++) re15_game_flag_set(EM_ZONE, BIT_KRIECH(i), 0);
     re15_game_flag_set(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE, 1);
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[elzazombies-r39] Umzug: 10E1 lebend %d -> 1061; (9,95)=1\n", s_n10e1);
+    fprintf(stderr, "[elzazombies-r39] Umzug: 10E1 lebend %d -> 1061; 1071 lebend %d -> 1031 Cut 7; (9,95)=1\n", s_n10e1, s_n1071);
 #endif
+}
+
+/* ---- Leon (Nachtrag 12): Treppenhaus-Schritt in Leons Montage ------------------------------------------------------- */
+/* HAKEN irons_tod_1150.c umzug_vorbereiten (Szenenstart in 1150): die 10E0-Ueberlebenden ziehen nach 1060 um (Quelle 1, Kopie 0;
+ * schon tote: Kopie 1) — dieselbe Form wie Leons 1140/1070-Umzug und Elzas 10E1-Umzug; die Zahl entscheidet die Weiche. */
+void re15_r39q_leon_umzug(void)
+{
+    s_leon_n1060 = 0;
+    if (!s_an || ist_elza()) return;
+    for (int i = 0; i < RE15_R39Q_N_10E1; i++) {
+        const uint8_t q = (uint8_t)(RE15_R39Q_BIT_10E1_0 + i);
+        if (re15_game_flag_get(EM_ZONE, q)) re15_game_flag_set(EM_ZONE, BIT_1061(i), 1);
+        else { re15_game_flag_set(EM_ZONE, q, 1); re15_game_flag_set(EM_ZONE, BIT_1061(i), 0); s_leon_n1060++; }
+    }
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[elzazombies-r39] Leon: Umzug 10E0 lebend %d -> 1060 (Treppenhaus-Schritt %s)\n", s_leon_n1060,
+            s_leon_n1060 > 0 ? "nach 1130 bzw. nach der Szene" : "entfaellt");
+#endif
+}
+int re15_r39q_leon_1060_zahl(void) { return s_an ? s_leon_n1060 : 0; }
+
+/* HAKEN irons_tod_1150.c programm_bauen (Szene bei 1140 leer, 1130-Schritt): letzte Tuer -> ROOM1060 Cut 2 auf den Parkplatz
+ * hinter der Kamera (Etage 4, = Elzas PARK_1061: ROOM1060 = ROOM1061), Knall davor = Tuerknall Satz 0 (die 10C0-Tuer bricht;
+ * Elzas Auftakt vor 1061 ebenso). Ohne 10E0-Ueberlebende bleibt Leons Tuer (1040 / Knall Satz 1) unveraendert. */
+void re15_r39q_leon_tuer(uint8_t *prog, int len)
+{
+    if (re15_r39q_leon_1060_zahl() <= 0 || !prog) return;
+    tuer_in(prog, len, PARK_1061_X, RE15_R39Q_Y_1061, PARK_1061_Z, PARK_1061_YAW, RB_1061, RE15_R39Q_CUT_1061,
+            RE15_R39Q_ETAGE_1061);
+    knall_in(prog, len, RE15_R39Q_SIG_KNALL_TUER);
+}
+
+/* HAKEN irons_tod_1150.c programm_bauen (Zustand RE15_IT_S1060): Programm L in Leons Laufpuffer. */
+int re15_r39q_leon_1060_bauen(uint8_t *prog, int max)
+{
+    int n = 0;
+    if (!prog || !em_saetze_in(prog, &n, max, k_p_1061_em, &BIT_1061(0), k_lagen_montage)) return 0;
+    slots_in(prog, 0, n);
+    if (n + (int)sizeof k_p_leon_1060_rest > max) return 0;
+    memcpy(prog + n, k_p_leon_1060_rest, sizeof k_p_leon_1060_rest);
+    return n + (int)sizeof k_p_leon_1060_rest;
 }
 
 /* Durchbruch 1041: die lebenden 1061-Kopien ziehen nach 1041 um (1061-Bit 1, 1041-Bit 0). */
@@ -676,6 +811,7 @@ static void start_kette(void)
      * und (9,95) wird gesetzt — sonst (alle Ereignis-Plaetze belegt) bliebe ein Umzug ohne Montage stehen. Kein Platz: der
      * Start bleibt ausstehend und wird im naechsten freien Bild wiederholt. */
     s_n10e1 = re15_elzazombies_r39_lebend_10e1();
+    s_n1071 = re15_elzazombies_r39_lebend_1071();          /* Nachtrag 12: Leons (9,76)-Entscheidung, hier aus den Tot-Bits */
     s_zustand = RE15_R39Q_AUFTAKT;
     if (scd_event_fire(RE15_R39Q_EREIGNIS) < 0) {
         s_zustand = RE15_R39Q_AUS;
@@ -697,12 +833,17 @@ static void start_kette(void)
  * @0x80100450 / `andi v0,v0,0x20` @0x80100458 / `bne v0,zero,0x80100658` @0x8010045c; Port RE15_AI_GRID_SKIP).
  * Baustein 4 (nur 1031 Cut 12): Regel von sub06 @0x025B4.. je Index i (Ck(5,i)=0 `21 05 i 00`, Work_set(2,i), Member_cmp
  * member 0x0F == 5 `3e 00 0f 00 05 00` @0x025CC, Gosub sub07 = member 0x10 |= 0x1000 `26 00 05 04 00 10` @0x02844 /
- * `35 10 04` @0x0284A, Set(5,i) `22 05 i 01` @0x025D4). (Baustein 5, das Warten hinter dem Rollo waehrend Cut 7, entfaellt
- * mit dem Cut-7-Teil: der 1031-Schritt zeigt von Anfang an Cut 12.) */
+ * `35 10 04` @0x0284A, Set(5,i) `22 05 i 01` @0x025D4).
+ * Baustein 5 (nur 1031, Nachtrag 12 mit dem Cut-7-Teil wieder noetig): solange nicht Cut 12 zu sehen ist, halten die Zombies
+ * HINTER DEM ROLLO (BLK-Zonen 0 @0x01C20 und 10 @0x01C98 = ROOM1030 @0x01BBC/@0x01C34, Leons RE15_R38_ZONE_HINTER_TOR_A/_B) an;
+ * Form ROOM1141 sub02 `34 0c 30 00` @0x00E70/@0x00E78 vor `29 00` @0x00E80, Freigabe `34 0c 10 00` @0x00F64/@0x00F74 (Leons
+ * montage_r38.c tor_warten, dort GEMESSEN: liefen sie schon waehrend Cut 7, stauten sie sich am Tor und einer kam nie durch). */
 #define WARTE_STEMPEL 5          /* sub06 @0x025CC `3e 00 0f 00 05 00` */
 #define KRIECH_BIT    0x1000u    /* sub07 @0x02844 `26 00 05 04 00 10` */
 #define KRIECH_BANK   5          /* sub06 @0x025D4 `22 05 00 01` */
 #define KRIECH_N      20         /* sub06 prueft die Indizes 0x00 .. 0x13 (wie ROOM1030 sub06 @0x024D4..@0x02734) */
+#define ZONE_HINTER_A 0          /* ROOM1031 BLK @0x01C20 x -13470..-3660 z -32760..-23860 */
+#define ZONE_HINTER_B 10         /* ROOM1031 BLK @0x01C98 x -21290..-13470 z -31360..-26960 */
 
 static int schritt_raum(void)
 {
@@ -710,7 +851,30 @@ static int schritt_raum(void)
     case RE15_R39Q_S1061: return RE15_R39Q_RAUM_1061;
     case RE15_R39Q_S1031: return RE15_R39Q_RAUM_1031;
     case RE15_R39Q_D1041: return RE15_R39Q_RAUM_1041;
-    default:              return -1;
+    default: break;
+    }
+    /* Leon (Nachtrag 12): sein Treppenhaus-Schritt laeuft in Leons Kette (irons_tod_1150.c Zustand RE15_IT_S1060); Verhalten im
+     * Schnitt (Baustein 3) und Messung wie in Elzas 1061-Schritt. */
+    if (!ist_elza() && re15_irons_tod_zustand() == RE15_IT_S1060) return RE15_R39Q_RAUM_1060;
+    return -1;
+}
+
+/* Baustein 5 (s.o.): im 1031-Schritt, solange nicht Cut 12 zu sehen ist. */
+static void rollo_warten(const kamera_t *k)
+{
+    const int tor = (k && k->cut == RE15_R39Q_CUT_1031_TOR);
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        re15_actor_t *a = &g_actors[i];
+        if (!a->active || !a->type || !re15_re2z_owns_type(a->type)) { s_wartet[i] = 0; continue; }
+        if (tor) {
+            if (s_wartet[i]) { a->grid_id = (uint8_t)(a->grid_id & ~RE15_AI_GRID_SKIP); s_wartet[i] = 0; }   /* @0x00F64 */
+            continue;
+        }
+        if (s_wartet[i] || (a->grid_id & RE15_AI_GRID_SKIP)) continue;
+        const uint8_t z = re15_nav_zone_from_pos((int16_t)a->x, (int16_t)a->z);
+        if (z != ZONE_HINTER_A && z != ZONE_HINTER_B) continue;
+        a->grid_id = (uint8_t)(a->grid_id | RE15_AI_GRID_SKIP);                                            /* @0x00E70 */
+        s_wartet[i] = 1;
     }
 }
 
@@ -719,6 +883,7 @@ static void montage_takt(void)
     const int schritt = schritt_raum();
     const kamera_t *k = NULL;
     if (schritt >= 0 && (int)(uint16_t)g_current_room_id == schritt) k = kamera((uint16_t)schritt, (int)g_scd.cam_id);
+    if (schritt == RE15_R39Q_RAUM_1031 && (int)(uint16_t)g_current_room_id == schritt) rollo_warten(k);
     if (k != s_offen) {
         abschnitt_schliessen();
         if (k) { s_offen = k; s_offen_von = s_n_spur; s_bild = 0; s_hp_min = 1 << 30; }
@@ -817,7 +982,8 @@ static void halt_loesen(void)
 static void halten_1061(void)
 {
     if (!s_halt_1061) return;
-    if ((uint16_t)g_current_room_id != RE15_R39Q_RAUM_1061) { s_halt_1061 = 0; return; }
+    /* Elza ROOM1061, Leon ROOM1060 (Nachtrag 12; dieselbe Datei, dieselben Lagen und Bits) */
+    if ((uint16_t)g_current_room_id != s_halt_raum) { s_halt_1061 = 0; return; }
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     /* ERREICHT = auf Etage 4 UND die Treppe ist zu Ende (re15_stair_active = 0: Phase 2 "finalise, commit band, return to
      * normal state", stair_common.c, Handler LAB_80038850). Gemessen (Lauf t5/t6): das Band springt schon MITTEN im
@@ -844,13 +1010,13 @@ static void halten_1061(void)
             if (s_frei_dmin < 0 || d < s_frei_dmin) s_frei_dmin = d;
             s_frei_n++;
 #ifdef RE15_PLATFORM_PC
-            fprintf(stderr, "[elzazombies-r39] ROOM1061: Kopie Aktor %d Bit %d bei (%d,%d), Abstand zur Spielerin %d\n", i,
-                    (int)a->em_flag_id, (int)a->x, (int)a->z, (int)d);
+            fprintf(stderr, "[elzazombies-r39] ROOM%04X: Kopie Aktor %d Bit %d bei (%d,%d), Abstand zur Spielerin %d\n",
+                    (unsigned)g_current_room_id, i, (int)a->em_flag_id, (int)a->x, (int)a->z, (int)d);
 #endif
         }
 #ifdef RE15_PLATFORM_PC
-        fprintf(stderr, "[elzazombies-r39] ROOM1061: Spielerin auf Etage 4 bei (%d,%d) -> Kopien frei, kleinster Abstand %d\n",
-                (int)pl->x, (int)pl->z, (int)s_frei_dmin);
+        fprintf(stderr, "[elzazombies-r39] ROOM%04X: Spielerin auf Etage 4 bei (%d,%d) -> Kopien frei, kleinster Abstand %d\n",
+                (unsigned)g_current_room_id, (int)pl->x, (int)pl->z, (int)s_frei_dmin);
 #endif
     }
 }
@@ -884,6 +1050,16 @@ void re15_elzazombies_r39_tick(void)
         s_folge_gegner = n;
         if (s_folge_cut >= 0 && (int)g_scd.cam_id != s_folge_cut) folge('C', (int)g_scd.cam_id);
         s_folge_cut = (int)g_scd.cam_id;
+        /* der Original-Knall @0x02862 im Cut-7-Teil (Se_on Bank 2, kein Port-Signal; Leons folge_takt fuer @0x02776): gespielt,
+         * sobald der Faden hinter ihm steht */
+        if (s_1031_knall_off >= 0 && (uint16_t)g_current_room_id == RE15_R39Q_RAUM_1031) {
+            for (int s = 0; s < SCD_THREAD_COUNT; s++) {
+                const scd_thread_t *t = &g_scd.threads[s];
+                if (t->active && t->pc > s_prog + s_1031_knall_off && t->pc < s_prog + s_prog_len) {
+                    folge('K', 2); s_1031_knall_off = -1; break;
+                }
+            }
+        }
     }
     if (s_zustand != RE15_R39Q_AUS) {
         /* MESS-HAKEN RE15_R39Q_KNALL_STUMM (kein Spielverhalten, Form Leons RE15_IT_KNALL_STUMM): Signal verbrauchen, aber
@@ -927,7 +1103,7 @@ static void nachspawn(uint16_t room_id)
     if (room_id != RE15_R39Q_RAUM_1061 && room_id != RE15_R39Q_RAUM_1031 && room_id != RE15_R39Q_RAUM_1041) return;
     if (starten(1) < 0) return;
     if (room_id == RE15_R39Q_RAUM_1061) {
-        s_halt_1061 = 1;
+        s_halt_1061 = 1; s_halt_raum = RE15_R39Q_RAUM_1061;
         halten_1061();   /* sofort: vor dem ersten KI-Takt */
         log_q("Nachspawn 1061 (Programm E): Kopien an der Westseite, gehalten bis Etage 4");
     } else if (room_id == RE15_R39Q_RAUM_1031) {
@@ -935,6 +1111,19 @@ static void nachspawn(uint16_t room_id)
     } else {
         log_q("Nachspawn 1041 (Programm H): die Durchgebrochenen hinter dem Rolltor");
     }
+}
+
+/* Leon (Nachtrag 12): spaeteres Betreten von ROOM1060 nach der Szene ((9,73)=1 = Szene gesehen, umzug_vorbereiten lief beim
+ * Szenenstart; Leons Gate der Nachspawns 1030, irons_tod_1150.c): dieselben Kopien wie bei Elza an der Westseite, gehalten bis
+ * Etage 4 (Programm E, ROOM1060 = ROOM1061 Byte fuer Byte). Nicht waehrend Leons Kette (dort ist 1060 ein Montage-Schritt). */
+static void leon_nachspawn(uint16_t room_id)
+{
+    if (!s_an || room_id != RE15_R39Q_RAUM_1060 || re15_irons_tod_zustand() != RE15_IT_AUS) return;
+    if (!re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN) || re15_elzazombies_r39_lebend_1061() == 0) return;
+    if (starten(1) < 0) return;
+    s_halt_1061 = 1; s_halt_raum = RE15_R39Q_RAUM_1060;
+    halten_1061();
+    log_q("Leon: Nachspawn 1060 (Programm E): Kopien an der Westseite, gehalten bis Etage 4");
 }
 
 /* Durchbruch 1041 (Nachtrag 11): beim Betreten von 1041 NACH der Montage ((9,95)=1, Kette AUS — also nicht die Rueckkehr
@@ -950,6 +1139,13 @@ static int durchbruch_1041(uint16_t room_id)
     if (!s_an || room_id != RE15_R39Q_RAUM_1041 || !ist_elza()) return 0;
     if (!re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE)) return 0;
     if (re15_elzazombies_r39_lebend_1061() == 0) return 0;
+    /* ORCHESTRATOR-ENTSCHEID zu H1 der Abnahme 1 (Nutzer Nachtrag 10: "Die panische Musik hoert auf, sobald man John gerettet
+     * hat. Der Rest bleibt normal."): der Durchbruch gehoert zur Panikphase, (9,97) = 1 (VERTRAG 1.1, setzt/loescht Spur P).
+     * Nach Johns Rettung bleiben die 1061-Kopien im Treppenhaus (Nachspawn E), durchs Rolltor bricht keiner mehr. */
+    if (!re15_game_flag_get(RE15_R39Q_PANIK_BANK, RE15_R39Q_PANIK_BIT)) {
+        log_q("Durchbruch 1041 entfaellt: Panikphase vorbei ((9,97)=0)");
+        return 0;
+    }
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     if (pl->z >= RE15_IT_TOR_Z_1040) { log_q("Durchbruch 1041 wartet: Eintritt hinter dem Rolltor (Nordteil)"); return 0; }
     s_ein_x = pl->x; s_ein_y = pl->y; s_ein_z = pl->z; s_ein_gier = pl->rot_y; s_ein_cut = g_scd.cam_id;
@@ -973,7 +1169,8 @@ void re15_elzazombies_r39_install(uint16_t room_id)
 {
     s_halt_1061 = 0;
     memset(s_halt, 0, sizeof s_halt);
-    if (!ist_elza()) { s_zustand = RE15_R39Q_AUS; return; }
+    memset(s_wartet, 0, sizeof s_wartet);
+    if (!ist_elza()) { s_zustand = RE15_R39Q_AUS; leon_nachspawn(room_id); return; }   /* Leon: nur Nachspawn 1060 (Nachtrag 12) */
     if (s_zustand == RE15_R39Q_AUFTAKT && room_id == RE15_R39Q_RAUM_1061 && s_n10e1 > 0) {
         s_zustand = RE15_R39Q_S1061;
         knallbank_laden();
@@ -1033,6 +1230,7 @@ int  re15_elzazombies_r39_durchbruch_zahl(void) { return s_n1041; }
 void re15_elzazombies_r39_reset(void)
 {
     s_zustand = RE15_R39Q_AUS; s_ausstehend = 0; s_alt = -1; s_prog_len = 0; s_n10e1 = 0;
+    s_n1071 = 0; s_leon_n1060 = 0; s_1031_knall_off = -1; s_halt_raum = 0; memset(s_wartet, 0, sizeof s_wartet);
     s_rueck_raum = 0; s_rueck_x = s_rueck_y = s_rueck_z = 0; s_rueck_gier = 0; s_rueck_cut = 0;
     s_ein_x = s_ein_y = s_ein_z = 0; s_ein_gier = 0; s_ein_cut = 0; s_n1041 = 0; s_d_bild = 0; s_d_durch = 0;
     memset(s_d_nord, 0, sizeof s_d_nord);
