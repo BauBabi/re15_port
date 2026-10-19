@@ -35,13 +35,15 @@
  * DURCHBRUCH 1041 (Nachtrag 11): beim NAECHSTEN Betreten von 1041 durch eine Tuer im Suedteil, solange Zombies aus 1061
  * leben UND die Panikphase laeuft ((9,97)=1, Entscheid H1): sie ziehen nach 1041 um und brechen durchs Rolltor (Leons
  * 1040-Schritt, Cut 1), dann Steuerung zurueck.
- * SPAETERES BETRETEN ((9,95)=1): ROOM1061 = die 10E1-Kopien moeglichst weit weg vom Ankunftspunkt der Treppe (Etage 4) an
- * der Westseite, angehalten (entity+0x9 Bit 0x20) bis die Spielerin Etage 4 erreicht; ROOM1031 = die 1071-Kopien + die
+ * SPAETERES BETRETEN ((9,95)=1): ROOM1061 = die 10E1-Kopien moeglichst weit weg vom Ankunftspunkt der Treppe (Etage 4) —
+ * von unten bzw. durch die 10C1-Tuer an der Westseite, von OBEN (Tuer Etage 8, Nachbesserung 3 / E1) an der Ostseite —,
+ * angehalten (entity+0x9 Bit 0x20, erst NACH ihrem INIT-Takt) bis die Spielerin Etage 4 erreicht; ROOM1031 = die 1071-Kopien + die
  * Kriecher (Leons ROOM1030-Nachspawn k_p_1030_nach); ROOM1041 = die Durchgebrochenen hinter dem Rolltor (wie Leons
  * k_p_1040_nach).
  * LEON (Nachtrag 12): in der Montage nach Irons' Tod (irons_tod_1150.c) nach dem 1130-Schritt (bzw. direkt nach der Szene,
  * wenn 1140 leer ist) der Treppenhaus-Schritt ROOM1060 Cut 2 mit den in 10E0 am Leben gelassenen Zombies, dann weiter wie
- * bisher nach 1040. Spaeteres Betreten von 1060 ((9,73)=1): dieselben Kopien an der Westseite, gehalten bis Etage 4.
+ * bisher nach 1040. Spaeteres Betreten von 1060 ((9,73)=1 UND (9,96)=1 = Umzug gelaufen, Nachbesserung 3): dieselben Kopien
+ * wie bei Elza (von unten an der West-, von oben an der Ostseite), gehalten bis Etage 4.
  */
 #ifndef RE15_ELZAZOMBIES_R39_H
 #define RE15_ELZAZOMBIES_R39_H
@@ -58,6 +60,17 @@
  * g_game.flags; eingetragen in tests/unit/test_r36_kartenbits.c k_port[]. */
 #define RE15_R39Q_BANK            9
 #define RE15_R39Q_BIT_MONTAGE     95
+/* Bank 9 Bit 96 = "Leon: Umzug 10E0 -> 1060 gelaufen" (Nachbesserung 3, Mangel 1 der Abnahme 2; ORCHESTRATOR: Merker wie Leons
+ * (9,74)/(9,75)/(9,76) = RE15_IT_BIT_1130/_1040/_1030, die irons_tod_1150.c umzug_vorbereiten beim Szenenstart setzt). Gesetzt
+ * in re15_r39q_leon_umzug (derselbe Szenenstart), gelesen vom Leon-Nachspawn 1060. Ohne ihn unterschied der Nachspawn einen
+ * Spielstand MIT Umzug (Kopie-Bits 124..127 = 0 fuer die Umgezogenen) nicht von einem Spielstand OHNE (v0.8.22..v0.8.26 und
+ * der Stand vor Nachbesserung 3: 124..127 nie gesetzt = 0 = "lebt"): gemessen 4 Zombies aus dem Nichts (Dossier 10.1). Die
+ * Quell-Tot-Bits (7,0xe0..0xe3) unterscheiden "getoetet" nicht von "umgezogen" — dieselbe Lage wie (9,95) bei Elza.
+ * ZENSUS: im Original frei (unit_r36_kartenbits: 85 Original-Bits, 96 nicht darunter — "... 92 98 99 ..."), im Port frei
+ * (k_port[] vor diesem Eintrag ohne 96; Spuren O, P (nur 97), R, J (94), T ohne 96 — Zweige r39/* gelesen). VERTRAG 1.1:
+ * "96 bekommt O, nur wenn kein Original-Flag reicht" — O hat es nicht belegt; Orchestrator-Zuteilung an Q (Nachbesserung 3).
+ * Eingetragen in tests/unit/test_r36_kartenbits.c k_port[]. */
+#define RE15_R39Q_BIT_LEON_1060   96
 
 /* ---- Raeume, Ereignis, Tuer-Slot, Signale -------------------------------------------------------------------------- */
 #define RE15_R39Q_RAUM_1041       0x1041   /* Spur P: Johns Ruf -> Startraum der Montage (gelesen: aktueller Raum) */
@@ -165,14 +178,19 @@ const uint8_t *re15_elzazombies_r39_laufprogramm(int *out_len);
  * ROOM1070/1071 0xc6..0xca, Dateien byte-gleich). Leon und Elza teilen nie einen Spielstand. */
 int  re15_elzazombies_r39_kopiebits(const uint8_t **out);
 int  re15_elzazombies_r39_lebend_1071(void);   /* lebende 1071-Records (Tot-Bits 0xc6..0xca = 0) */
-/* Lagen (Riegel / Messung): Montage-Spawn 1061 (Tuer-Packung), Nachspawn 1061 (Weit-weg-Packung), 1041 (Gassen). */
+/* Lagen (Riegel / Messung): Montage-Spawn 1061 (Tuer-Packung), Nachspawn 1061 (Weit-weg-Packung), 1041 (Gassen),
+ * Nachspawn 1061/1060 bei Ankunft von OBEN (Nachbesserung 3, ORCHESTRATOR-ENTSCHEID E1: Weit-weg-Packung vom Ende der
+ * Treppe A auf Etage 4 = Ostseite an der 10C1/10C0-Tuer). */
 typedef struct { int16_t x, z, gier; } re15_r39q_lage_t;
-int  re15_elzazombies_r39_lagen(int welche /* 0 = Montage 1061, 1 = Nachspawn 1061, 2 = 1041 */, const re15_r39q_lage_t **out);
+int  re15_elzazombies_r39_lagen(int welche /* 0 = Montage 1061, 1 = Nachspawn 1061 (von unten / Tuer 10C1), 2 = 1041,
+                                              3 = Nachspawn 1061/1060 von oben */, const re15_r39q_lage_t **out);
 void re15_elzazombies_r39_park_1061(int32_t *x, int32_t *z);
 /* Rueckkehr-Stelle (Lage/Gier/Schnitt beim Start gemerkt). */
 void re15_elzazombies_r39_rueck(uint16_t *raum, int32_t *x, int32_t *y, int32_t *z, int16_t *gier, uint8_t *cut);
 /* Halten der 1061-Kopien (Nachspawn): 1 = noch gehalten (Spielerin nicht auf Etage 4). */
 int  re15_elzazombies_r39_1061_gehalten(void);
+/* Welche Packung der letzte Nachspawn 1061/1060 nahm: 1 = von oben (Lagen 3), 0 = von unten / Tuer 10C1 (Lagen 1), -1 = keiner. */
+int  re15_elzazombies_r39_nach_oben(void);
 /* Ereignisfolge der Montage (wie Leons re15_irons_tod_folge): 'K' Knall (wert = Satz 0/1, 2 = Original-Se_on ROOM1031
  * @0x02862), 'S' Spawn (wert = Zahl), 'C' Kamera (wert = Cut), 'R' Raum (wert = Raum-Id). */
 typedef struct { char art; uint16_t raum; int takt; int wert; } re15_r39q_folge_t;

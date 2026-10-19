@@ -113,6 +113,20 @@ static const re15_r39q_lage_t k_lagen_montage[RE15_R39Q_N_10E1] = {
 static const re15_r39q_lage_t k_lagen_nach[RE15_R39Q_N_10E1] = {
     { 20200, 26550, 254 }, { 20200, 25750, 157 }, { 21000, 26550, 298 }, { 20900, 25350, 122 },
 };
+/* NACHSPAWN BEI ANKUNFT VON OBEN (Nachbesserung 3, ORCHESTRATOR-ENTSCHEID E1: "moeglichst weit weg an der Seite" fuer JEDE
+ * Ankunftsrichtung). Von oben kommt die Figur durch die Tuer auf Etage 8 (ROOM1120/1121 Tuer Slot 0 @0x00C76 -> Raum 0x06,
+ * Spawn (26000,-14400,25300)), geht Treppe B 8 -> 6 und Treppe A 6 -> 4 (AOT Lauf A x 20200..22600, Dossier 2.2) und erreicht
+ * Etage 4 am NORDENDE von Treppe A: GEMESSEN (20364,25368) (Leon, Laeufe v_leon_oben und Abnahme 2 M9 l7b) bzw. (20432,25368)
+ * (Elza, Abnahme 2 M11) — z 25368 = Treppenende 6 -> 4 (probe_stair_hwtruth_1060.c). Mit DERSELBEN Regel wie k_lagen_nach
+ * (Band-4-Zellen der SCA @0x00584/@0x00590/@0x0059C/@0x005A8/@0x005B4/@0x005C0 um den Gegner-Radius 400 erweitert, 50er-Raster,
+ * Zusammenhangskomponente der Ankunft, gierig der weiteste freie Punkt mit Abstand >= 800; dieselbe Rechnung liefert vom
+ * Ankunftspunkt von unten (25023,24568) genau k_lagen_nach Wert fuer Wert, Gier eingeschlossen — Werkzeug
+ * scratchpad/nb3/tools/packung.py, Dossier 10.2): (26500,26550) 6249, (26500,24500) 6197, (26500,25750) 6148, (25950,25100)
+ * 5592 = die Ostseite an der 10C1/10C0-Tuer. Fuer JEDES x der Treppe A (20200..22600) kommt dieselbe Menge heraus (nur die
+ * Gier aendert sich um wenige 4096tel). Blick zur Ankunft (atan2(-dz,dx) in 4096tel). */
+static const re15_r39q_lage_t k_lagen_nach_oben[RE15_R39Q_N_10E1] = {
+    { 26500, 26550, 1924 }, { 26500, 24500, 2140 }, { 26500, 25750, 2007 }, { 25950, 25100, 2079 },
+};
 /* ROOM1041 = ROOM1040 in RID/SCA/BLK/RVD (Dossier 0b): Leons Aufstell-Gassen hinter dem Rolltor in BLK-Zone 0
  * (irons_tod_1150.c IT_AUF_FALL 0..3: Zone 0 x -27100..-23300, z > 1200, zwei Gassen der Toroeffnung, Gier 1024 = -z =
  * zum Tor; PORT-WAHL Runde 35 L) — hier die Plaetze der umgezogenen 1061-Kopien. */
@@ -347,6 +361,7 @@ static uint8_t s_halt[RE15_ACTOR_MAX];/* von DIESER Regel angehalten (nur diese 
 static uint8_t s_wartet[RE15_ACTOR_MAX];/* Baustein 5 (1031 vor Cut 12): von dieser Regel angehalten, gibt nur sie frei (Leons s_wartet) */
 static int     s_an = 1;              /* Pruefhaken: 0 = Stand vor Spur Q (Gegenprobe der Riegel) */
 static int     s_hp_kette = 1 << 30;  /* kleinste Spieler-HP ueber die ganze Kette */
+static int     s_nach_oben = -1;      /* Nachbesserung 3: Packung des letzten Nachspawns 1061/1060 (1 = von oben, 0 = sonst) */
 static int32_t s_frei_px = 0, s_frei_pz = 0, s_frei_dmin = -1; static int s_frei_n = 0;   /* Freigabe 1061 */
 
 static void log_q(const char *was)
@@ -602,6 +617,17 @@ static int leon_vorlage_anhaengen(int welche)
     return n;
 }
 
+/* Nachspawn 1061/1060: welche Packung (Nachbesserung 3, E1). Gebaut wird im Raumaufbau, die Figur steht da schon am Spawn
+ * der Eintrittstuer (Etage 0 / 4 / 8, ROOM1061 Tueren @0x00D12/@0x00D32/@0x00D52 auf derselben Flaeche, Etagen-Byte); Band =
+ * -(y/0x708) (re15_collision_band_from_y). Ueber Etage 4 (Tuer Etage 8) = von oben -> Ostseite; Etage 0 (Ankunft ueber die
+ * Treppen von unten) und Etage 4 (Tuer 10C1/10C0, Spawn (26000,25300) an der Ostseite) -> Westseite. */
+static const re15_r39q_lage_t *nach_lagen(void)
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    s_nach_oben = re15_collision_band_from_y(pl->y) > RE15_R39Q_ETAGE_1061 ? 1 : 0;
+    return s_nach_oben ? k_lagen_nach_oben : k_lagen_nach;
+}
+
 /* Das Programm fuer (Raum, Zustand) in s_prog zusammensetzen; 0 = keins. */
 static int programm_bauen(uint16_t room_id)
 {
@@ -658,14 +684,15 @@ static int programm_bauen(uint16_t room_id)
     case RE15_R39Q_AUS:
         if (!ist_elza()) {                                   /* Leon (Nachtrag 12): nur der Treppenhaus-Nachspawn nach der Szene */
             if (room_id != RE15_R39Q_RAUM_1060 || !re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)) return 0;
-            em_saetze_anhaengen(k_p_1061_em, &BIT_1061(0), k_lagen_nach);
+            if (!re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060)) return 0;   /* NB3 Mangel 1: Umzug gelaufen */
+            em_saetze_anhaengen(k_p_1061_em, &BIT_1061(0), nach_lagen());
             slots_zuweisen(0);
             prog_anhaengen(k_p_nach_ende, (int)sizeof k_p_nach_ende);
             return 1;
         }
         if (!re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE)) return 0;
         if (room_id == RE15_R39Q_RAUM_1061) {
-            em_saetze_anhaengen(k_p_1061_em, &BIT_1061(0), k_lagen_nach);
+            em_saetze_anhaengen(k_p_1061_em, &BIT_1061(0), nach_lagen());
             slots_zuweisen(0);
             prog_anhaengen(k_p_nach_ende, (int)sizeof k_p_nach_ende);
             return 1;
@@ -744,9 +771,12 @@ void re15_r39q_leon_umzug(void)
         if (re15_game_flag_get(EM_ZONE, q)) re15_game_flag_set(EM_ZONE, BIT_1061(i), 1);
         else { re15_game_flag_set(EM_ZONE, q, 1); re15_game_flag_set(EM_ZONE, BIT_1061(i), 0); s_leon_n1060++; }
     }
+    /* Nachbesserung 3, Mangel 1: Merker "Umzug gelaufen" — ab jetzt beschreiben die Kopie-Bits 124..127 die 10E0-Zombies
+     * (Form Leons (9,74)/(9,75)/(9,76), irons_tod_1150.c umzug_vorbereiten, im selben Szenenstart gesetzt). */
+    re15_game_flag_set(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060, 1);
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[elzazombies-r39] Leon: Umzug 10E0 lebend %d -> 1060 (Treppenhaus-Schritt %s)\n", s_leon_n1060,
-            s_leon_n1060 > 0 ? "nach 1130 bzw. nach der Szene" : "entfaellt");
+    fprintf(stderr, "[elzazombies-r39] Leon: Umzug 10E0 lebend %d -> 1060 (Treppenhaus-Schritt %s); (9,%d)=1\n", s_leon_n1060,
+            s_leon_n1060 > 0 ? "nach 1130 bzw. nach der Szene" : "entfaellt", RE15_R39Q_BIT_LEON_1060);
 #endif
 }
 int re15_r39q_leon_1060_zahl(void) { return s_an ? s_leon_n1060 : 0; }
@@ -983,7 +1013,20 @@ static void halt_loesen(void)
 
 /* Nachspawn ROOM1061: die Kopien stehen gehalten (entity+0x9 |= 0x20, Form ROOM1141 sub02 @0x00E70), bis die Spielerin
  * auf Etage 4 steht (Band = -(y/0x708), re15_collision.c; Ankunft ueber die Treppe von unten: Lauf B, Ende y -7200);
- * dann einmal frei (`34 0c 10 00`-Form @0x00F64), und frei bleiben sie fuer diesen Besuch. */
+ * dann einmal frei (`34 0c 10 00`-Form @0x00F64), und frei bleiben sie fuer diesen Besuch.
+ * NACHBESSERUNG 3 (Mangel 2 der Abnahme 2): gehalten wird erst NACH dem INIT-Takt (state != 0). Das Haltebit ueberspringt im
+ * Original den GANZEN Takt: STAGE1.BIN `lbu v0,9(a0)` @0x80100450 / `andi v0,v0,0x20` @0x80100458 / `bne v0,zero,0x80100658`
+ * @0x8010045c springt nach @0x80100658 — hinter Distanz (SquareRoot0 @0x801004ac), Schwerkraft (`jal 0x8001bd60` @0x80100514),
+ * Steuerung (`jal 0x80039e7c` @0x80100538), den Zustands-Dispatch (`jalr v0` @0x80100588 ueber die Tabelle @0x8011f7b4[entity+0x4],
+ * Eintrag [0] = INIT) und die Folgeaufrufe @0x801005dc..@0x80100650; es bleibt nur der Schwanz `jal 0x8001b064` @0x8010066c
+ * (Schatten, RE15_FUN_CATALOG).
+ * Vor dem ersten Takt gesetzt laeuft der INIT nie: gemessen st=0, hp=0, die Pose bleibt die nie berechnete = STEIF FLACH
+ * LIEGEND (Dossier 10.1, v_leon_oben Bild 460/480). Das Original haelt SICHTBARE Gegner nur, nachdem sie gelaufen sind: ROOM1141
+ * sub02 gibt die Gorillas frei `34 0c 10 00` @0x00E40/@0x00E54 und haelt sie erst nach Sleep 1/10/101 wieder `34 0c 30 00`
+ * @0x00E70/@0x00E78; ab Spawn gehalten (Sce_em_set grid 0x30 @0x00B1A/@0x00B2E) stehen sie nur GEPARKT ausserhalb des Raums
+ * (z 8300/12200, SCA-Raum bis z 1750 @0x005A0/@0x005AC) und werden vor der Freigabe versetzt (Pos_set @0x00E38/@0x00E4C).
+ * Darum: im Spawn-Bild kein Haltebit (der KI-Takt am Ende desselben Bilds macht den INIT: Haltung, HP), ab dem naechsten Bild
+ * gehalten (scd_vm_tick laeuft vor dem KI-Takt, platform/pc/main.c). */
 static void halten_1061(void)
 {
     if (!s_halt_1061) return;
@@ -1000,8 +1043,8 @@ static void halten_1061(void)
         int kopie = 0;
         for (int b = 0; b < RE15_R39Q_N_10E1; b++) if (a->em_flag_id == BIT_1061(b)) kopie = 1;
         if (!a->active || !a->type || !kopie) continue;
-        if (auf_etage) a->grid_id = (uint8_t)(a->grid_id & ~RE15_AI_GRID_SKIP);
-        else           a->grid_id = (uint8_t)(a->grid_id | RE15_AI_GRID_SKIP);
+        if (auf_etage)          a->grid_id = (uint8_t)(a->grid_id & ~RE15_AI_GRID_SKIP);
+        else if (a->state != 0) a->grid_id = (uint8_t)(a->grid_id | RE15_AI_GRID_SKIP);   /* erst nach dem INIT (NB3) */
     }
     if (auf_etage) {
         s_halt_1061 = 0;
@@ -1109,8 +1152,9 @@ static void nachspawn(uint16_t room_id)
     if (starten(1) < 0) return;
     if (room_id == RE15_R39Q_RAUM_1061) {
         s_halt_1061 = 1; s_halt_raum = RE15_R39Q_RAUM_1061;
-        halten_1061();   /* sofort: vor dem ersten KI-Takt */
-        log_q("Nachspawn 1061 (Programm E): Kopien an der Westseite, gehalten bis Etage 4");
+        halten_1061();   /* sofort (Nachbesserung 3: haelt erst nach dem INIT-Takt, s. halten_1061) */
+        log_q(s_nach_oben == 1 ? "Nachspawn 1061 (Programm E): Ankunft von oben, Kopien an der Ostseite, gehalten bis Etage 4"
+                               : "Nachspawn 1061 (Programm E): Kopien an der Westseite, gehalten bis Etage 4");
     } else if (room_id == RE15_R39Q_RAUM_1031) {
         log_q("Nachspawn 1031 (Programm F)");
     } else {
@@ -1125,10 +1169,18 @@ static void leon_nachspawn(uint16_t room_id)
 {
     if (!s_an || room_id != RE15_R39Q_RAUM_1060 || re15_irons_tod_zustand() != RE15_IT_AUS) return;
     if (!re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN) || re15_elzazombies_r39_lebend_1061() == 0) return;
+    /* Nachbesserung 3, Mangel 1 der Abnahme 2: nur wenn der Umzug 10E0 -> 1060 gelaufen ist ((9,96), re15_r39q_leon_umzug).
+     * Spielstaende nach Irons' Tod OHNE diesen Umzug (v0.8.22..v0.8.26: (9,73)=1, Kopie-Bits 124..127 nie gesetzt) bekamen
+     * sonst vier Zombies aus dem Nichts (gemessen, Dossier 10.1); v0.8.26 zeigt dort keinen Gegner (Abnahme 2 M10). */
+    if (!re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060)) {
+        log_q("Leon: kein Nachspawn 1060: Umzug 10E0 -> 1060 nie gelaufen ((9,96)=0, Spielstand vor Spur Q)");
+        return;
+    }
     if (starten(1) < 0) return;
     s_halt_1061 = 1; s_halt_raum = RE15_R39Q_RAUM_1060;
     halten_1061();
-    log_q("Leon: Nachspawn 1060 (Programm E): Kopien an der Westseite, gehalten bis Etage 4");
+    log_q(s_nach_oben == 1 ? "Leon: Nachspawn 1060 (Programm E): Ankunft von oben, Kopien an der Ostseite, gehalten bis Etage 4"
+                           : "Leon: Nachspawn 1060 (Programm E): Kopien an der Westseite, gehalten bis Etage 4");
 }
 
 /* Durchbruch 1041 (Nachtrag 11): beim Betreten von 1041 NACH der Montage ((9,95)=1, Kette AUS — also nicht die Rueckkehr
@@ -1222,9 +1274,10 @@ const uint8_t *re15_elzazombies_r39_laufprogramm(int *out_len) { if (out_len) *o
 int  re15_elzazombies_r39_kopiebits(const uint8_t **out) { if (out) *out = k_bits; return (int)sizeof k_bits; }
 int  re15_elzazombies_r39_lagen(int welche, const re15_r39q_lage_t **out)
 {
-    if (out) *out = welche == 2 ? k_lagen_1041 : welche ? k_lagen_nach : k_lagen_montage;
+    if (out) *out = welche == 3 ? k_lagen_nach_oben : welche == 2 ? k_lagen_1041 : welche ? k_lagen_nach : k_lagen_montage;
     return RE15_R39Q_N_10E1;
 }
+int  re15_elzazombies_r39_nach_oben(void) { return s_nach_oben; }
 void re15_elzazombies_r39_park_1061(int32_t *x, int32_t *z) { if (x) *x = PARK_1061_X; if (z) *z = PARK_1061_Z; }
 void re15_elzazombies_r39_rueck(uint16_t *raum, int32_t *x, int32_t *y, int32_t *z, int16_t *gier, uint8_t *cut)
 {
@@ -1241,7 +1294,7 @@ void re15_elzazombies_r39_reset(void)
     memset(s_d_nord, 0, sizeof s_d_nord);
     s_takt = 0; s_halt_1061 = 0; memset(s_halt, 0, sizeof s_halt);
     s_folge_n = 0; s_folge_gegner = -1; s_folge_cut = -1; s_n_spur = 0; s_offen = NULL;
-    s_hp_kette = 1 << 30; s_frei_px = s_frei_pz = 0; s_frei_dmin = -1; s_frei_n = 0;
+    s_hp_kette = 1 << 30; s_frei_px = s_frei_pz = 0; s_frei_dmin = -1; s_frei_n = 0; s_nach_oben = -1;
 }
 void re15_elzazombies_r39_enable(int an) { s_an = an ? 1 : 0; }
 int  re15_elzazombies_r39_spuren(const re15_r39q_spur_t **out) { if (out) *out = s_spur; return s_n_spur; }
