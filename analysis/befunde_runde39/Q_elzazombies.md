@@ -490,3 +490,49 @@ Leons (k_p_1130: 1 + 130 + 45 Bilder, Tuer nach 1040 Cut 1 auf RE15_IT_PARK_1040
   unit/integration_r36_szene1150 laufen mit 10E0 leer, damit sie ihre Kette 1130/1040/1030/11C0 unveraendert messen
   (Kartenwerkzeug probe_r35_cut1150_karte: neue Option tot10e0); integration_r35_cut1150 und integration_r38_montage laufen
   unveraendert MIT dem neuen Schritt (10E0 im Spielstand nie betreten) und muessen gruen bleiben.
+
+### 9.5 Messung nachher (Bau nach c91734aa; exe-Laeufe = Integrations-Riegel + eigene Framedump-Laeufe scratchpad/nb2/runs)
+**LEON, echter Weg** (integration_r39_elzazombies_leon: Spielstand ROOM1130 vor Irons' Tuer, (9,71),(3,94), 10E0 nie betreten),
+debug.log woertlich (gekuerzt):
+```
+[elzazombies-r39] Leon: Umzug 10E0 lebend 4 -> 1060 (Treppenhaus-Schritt nach 1130 bzw. nach der Szene)
+[irons-tod] Folge #1 K ROOM1150 T1284 Knall Satz 0
+[irons-tod] Folge #2 S ROOM1130 T1328 Spawn + 5 (Raumaufbau, vor dem ersten Bild) ; #3 C ROOM1130 T1328 Kamera Cut 0
+[irons-tod] Folge #4 K ROOM1130 T1460 Knall Satz 0                    <- vorher Satz 1 (1040); jetzt der Tuerknall der 10C0-Tuer
+[room] PC loaded room1060.rdt
+[irons-tod] Folge #5 S ROOM1060 T1504 Spawn + 4 (Raumaufbau, vor dem ersten Bild)
+[irons-tod] Folge #6 C ROOM1060 T1504 Kamera Cut 2 (Raumaufbau, vor dem ersten Bild)
+[irons-tod] ROOM1060 Zustand 7: Montage 1060 (Runde 39 Spur Q, Programm L)
+[irons-tod] Folge #7 K ROOM1060 T1636 Knall Satz 1                    <- der Knall "wie ROOM1030" vor dem Rolltor, wie bisher nach 1130
+[room] PC loaded room1040.rdt ; #8 S ROOM1040 T1680 Spawn + 5 ; #9 C ROOM1040 T1680 Kamera Cut 1 ; Montage 1040 (Programm 2)
+ROOM1060 Cut 2 Bild 176: Bit 124 7062 -> 6245, Bit 125 6421 -> 4849, Bit 126 6638 -> 5476, Bit 127 7547 -> 5009 (Lage (26000,26100)
+                         -> (23153,25318) usw.); Spieler-HP min 100
+[irons-tod] Folge #10 K ROOM1040 T2041 Knall Satz 0 ; room1030: #11 S +11 ; #12 C Cut 7 ; Montage 1030 (Programm 3)
+```
+state.log: erstes Bild des 1060-Besuchs `F1 cam=2` mit 4 Gegnern (Spawn im Raumaufbau), Bild 10 `pf=01000007` (Pad-Sperre).
+Leons 1040-Schritt ist danach UNVERAENDERT: T1680 -> T2041 = 361 Bilder = Messung vorher (T1504 -> T1865 = 361); im Prozess
+(unit leon_4) 405 = 405 Bilder mit und ohne Treppenhaus. Bildtafel Q_belege/q_n2_leon_1060_cut2.png (Lauf leon1060, Framedump
+Bilder 10..170 in ROOM1060): Bild 10 stehen die vier Polizei-Zombies an der 10C0-Tuer (Schild F2), bis Bild 170 gehen sie
+ueber den Absatz zum Gelaender auf die Kamera zu = Elzas 1061-Bild (Abnahme 1, a_1061.png).
+**ELZA, echter Weg** (integration_r39_elzazombies_kette: Spielstand 1041, 10E1 und 1071 nie betreten, (9,97) bei Bild 200):
+```
+[elzazombies-r39] Umzug: 10E1 lebend 4 -> 1061; 1071 lebend 5 -> 1031 Cut 7; (9,95)=1
+Folge #1 K ROOM1041 T61 0 ; room1061: #3 S T105 4 ; #4 C T105 2 ; #5 K ROOM1061 T237 0   <- vorher Satz 1; jetzt Tuerknall (1071-Tuer)
+room1031: #7 S ROOM1031 T281 5 ; #8 C ROOM1031 T281 7 ; #9 K ROOM1031 T457 2 (Original-Se_on @0x02862) ; #10 S T467 3 ; #11 C T489 12
+ROOM1031 Cut 7 Bild 207: Bit 47 8272 -> 4671, Bit 48 6235 -> 1586, Bit 49 4644 -> 1401, Bit 75 7222 -> 2406, Bit 76 5599 -> 729;
+                         Raum-Zombies hinter dem Rollo (Bits 0..5) warten (Baustein 5); Spieler-HP min 100
+room1041: Rueckkehr beendet, Steuerung frei
+```
+Ton (integration knall, Differenz der Mitschnitte): Bilder 624..665 RMS 6567 (Tuerknall Auftakt) und 805..846 RMS 6567 — der
+zweite Knall ist jetzt der Tuerknall (Satz 0) statt des 1030-Knalls (vorher 806..849 RMS 4657 = Satz 1). Bildtafel
+Q_belege/q_n2_elza_1031_cut7.png (Lauf elza1031, Bilder 10..170 in ROOM1031): die fuenf Zombies aus dem Lobby Office im Gang vor
+der 1071-Tuer, sie kommen bis Bild 170 bis dicht vor die Kamera = Leons 1030-Cut-7-Bild.
+**H1**: integration ohne/gerettet (Tuer 1061 -> 1041, vier 1061-Kopien leben, OHNE (9,97)): `ROOM1041: Durchbruch 1041 entfaellt:
+Panikphase vorbei ((9,97)=0)`, kein "Durchbruch 1041 startet", danach `[walk] ... cut=5 ... pl pos=(-21008,0,-13134)` = Elza mit
+Steuerung an der Tuer. Mit (9,97) (integration durch) laeuft der Durchbruch wie in Abnahme 1 (4 durch, HP 100).
+Unit (im Prozess, alle gruen): kette_4/0/2/00 (Elza: 4/5, 0/5 -> Auftakt direkt in 1031 Cut 7, 2/3, 0/0 -> Cut 12), leon_4 (mit
+Gegenprobe Modul aus = alte Kette 1130 -> 1040), leon_2 (1140 leer: Szene -> 1060 -> 1040), leon_0 (10E0 leer: Kette wie
+bisher, Knall vor 1040 Satz 1), leon_nach1060 (Leon betritt 1060 nach der Szene: 2 Kopien Westseite, gehalten 120 Bilder auf
+Etage 0, frei auf Etage 4 mit kleinstem Abstand 4961), durch1041 (H1: (9,97)=0 -> nichts, 200 Bilder; Gegenprobe (9,97)=1 ->
+Durchbruch mit 3), nach1031 (2 von 5 1071-Kopien + 3 Kriecher an Leons Nachspawn-Lagen), zensus (16 Kopie-Bits; Cut-7-Bits =
+Leons Vorlage 6; Raum-Paare byte-gleich; Programm L endet Byte fuer Byte wie Leons k_p_1130; Weiche).
