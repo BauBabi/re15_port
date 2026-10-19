@@ -259,3 +259,6 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
   Orchestrator: Spur Q Nachbesserung 2 (e5500cea) fuehrt den Briefing-Room-Durchbruch 1140 -> 1130 NUR bei Leon; bei Elza
   entfaellt 1141 -> 1131 (ROOM1141 hat keinen Zombie-Record: sub00 @0x00B06 John Typ 0x49, @0x00B1A.. Gorillas Typ 0x27;
   Dossier Q_elzazombies.md Tabelle). Abnahme: in Elzas Panikphase KEIN Durchbruch und kein Zombie-Spawn in ROOM1131.
+- Nachschub (woertlich, nach 09:51): "Nur die Zombies von ROOM 1071 kommen bei Elza noch hinzu."
+  Orchestrator: deckt sich mit Q Nachbesserung 2 (Dossier 9.7): bei Elza ist der einzige neue Durchbruch 1071 -> 1031
+  (so viele, wie in 1071 leben); bei Leon kommt das Treppenhaus 10C0 -> 1060 hinzu.
