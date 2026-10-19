@@ -840,3 +840,49 @@ Werkzeug `j39n3/lauf.sh` (= `J39abn2/lauf.sh` der Abnahme, eigene exe-Kopie `re1
   !pushing)`): die Waffe blieb im letzten Ziel-/Rueckstoss-Bild stehen, gedreht auf John, bis Plc_dest TURN (+0x0438) das
   Kommandowort ersetzte. Kein Regressionsbefund (seit dem Gespraech in Cut 8, b2a2f267, so; die Abnahmen 0/1 fuhren den Schnitt
   nie mit gehaltenem R1).
+- **Lauf v_m2** (schneller Lauf fuer den Riegel, gemergter Stand: Wegplan `plan_r.txt`, P228, Messhaken
+  RE15_R38F_GORILLAS_TOT=600 + _STARR=1, RE15_INPUT_SCRIPT `M8` ab Bild 3950 = R1 halten, EXIT 4210#1141), rv=0, 273 s:
+  Szenenende F3456, Messhaken F4056, `[scd F4086] Cut_chg(8)`; F4086..F4096 `pst=1 mo=215 ac=8 cam=8 pm=2` (Halten, 11 Bilder),
+  F4097 TURN. Werkzeug `test_r39_dining1141 zielen l_v_m2` (Riegel-Auswertung, 10.5): **3 Fehler** (Sperre 0 Bilder vor dem
+  Schnitt, 0 Bilder gesenkt, 11 Bilder Cut 8 mit Waffe, Schnittbild mo 215).
+
+### 10.2 RE-Belege (diese Sitzung selbst disassembliert/gelesen; `re15_disasm.py`, info/Re1.5/PSX.EXE)
+- **Set(2,7) = Pausen-Wort Bit 0x01000000:** Set-Tabelle `read 0x80074664 4` = [0x800aca38, 0x800aca3c, **0x800aca40**,
+  0x800b0ff8] (Zone 2 = g_pauseflags); 0x80000000 >> 7 = 0x01000000 (game_state.c, Set-Handler @0x8003fdd8..@0x8003fe6c).
+- **Pad-Umsetzer FUN_80030444 kappt das virtuelle Held-Wort:** `800304f4 lw v0,-13760(v0)` (g_pauseflags), `800304f8 lui
+  v1,0x100`, `800304fc and`, `80030500 beq v0,zero,0x80030520`, `8003050c lw v0,-14488(v0)` (0x800ac768), `80030514 andi
+  v0,v0,0xf000`, `8003051c sw v0,-14488(at)`. Aufrufer (jal-Suche 0x0C00C111 im ganzen PSX.EXE): 0x80020c88, **0x80029dd8,
+  0x80029e14** (Task-Schleife, vor der Spiel-Task) - das Skript setzt das Bit IN der Spiel-Task (SCD-Laeufer `jal 0x8003f038`
+  @0x8001cdec vor dem Spieler `jal 0x80031c44` @0x8001ce0c): wirksam ab dem naechsten Bild.
+- **Der Spieler-Dispatcher laeuft unter (2,7) weiter:** `80031c54 lw a0,-13760(a0)` (g_pauseflags), `80031c78 bltz
+  a0,0x80031da8` - nur Bit 31 (= Set(2,0)) haelt ihn.
+- **Die Ziel-FSM liest das gekappte Wort und senkt:**
+  - Schusswaffe HOLD: `800331e4 lw v1,-14488(v1)` (0x800ac768), `800331ec andi v0,v1,0x100`, `800331f0 bne v0,zero,
+    0x8003320c`, `800331f8 ori v0,zero,0x3`, `80033200 sh v0,-13734(at)` (aca5a = 3 = SENKEN).
+  - Messer HOLD: `80035128 lw v1,-14488(v1)`, `80035130 andi v0,v1,0x100`, `8003513c ori v0,zero,0x3`, `80035144 sh
+    v0,-13734(at)`.
+  - Rueckstoss: `80033560 lw a0,-14488(a0)`, `80033600 andi v0,a0,0x100` / `80033604 bne`, Schwelle Byte 2 der Waffenzeile
+    `8003362c addiu at,at,16530` (0x80074092 + (w-1)*5) / `8003363c sltu`, `8003364c sh v0,-13734(at)` (aca5a = 3).
+  - Der Port bildet SENKEN bereits ab (player_common.c: HOLD + !R1 @0x80033200 / Messer @0x8003513c, Rueckstoss-Bruch
+    @0x8003364c, Clip 6 rueckwaerts, Ausgang -> motion 200), aber im Skript-Modus (player_mode 2) laeuft der ganze Pad-Zweig
+    nicht.
+- **Original-Form "Szene nach einem Kampf" = ROOM11C0 sub03** (Parkplatz, Leon + Ada, Gorillas Typ 0x27 mit Kill-Flags
+  pc[7] 0x60/0x61, sub00 @0x01784/@0x01798; sub01 @0x01836 Ck(7,0x60) / @0x0183E Ck(7,0x61) -> @0x01842 `04 ff 18 03` Evt_exec
+  sub03). `xxd -s 0x1B02 -l 0x18 ROOM11C0.RDT` (shared_assets == info/Re1.5, `cmp` bytegleich):
+  `22 03 43 01 | 22 01 1b 01 | 22 02 07 01 | 54 00 02 00 00 00 | 09 0a 1e 00 | 29 04` = Set(3,0x43)=1, **Set(1,0x1B)=1
+  @0x01B06, Set(2,7)=1 @0x01B0A**, Sce_bgm_control Stop @0x01B0E, **Sleep 30 @0x01B14, Cut_chg 4 @0x01B18**, danach
+  Member_set x/z + Plc_dest. Balken und Pad-Sperre stehen also 30 Bilder VOR dem Schnitt; in diesen 30 Bildern senkt die
+  Ziel-FSM eine gehobene Waffe. (1141 hat dieselbe Lage: Gorillas 0x27 mit Kill-Flags 0xCB/0xCC, sub01 @0x00BFA/@0x00C02 -> BGM
+  Stop @0x00C06 + (4,0xF2)=0 @0x00C0C; der BGM-Stopp kommt dort schon aus sub01.)
+- **Laengen (PLD/PL04W03.PLW = Elzas Browning, Verzeichnis dir[0] = EDD):** Clips {22,16,52,1,105,30,**10**,23,1,24,1,24,1,
+  **32**}: Clip 6 (Heben/Senken) 10 Bilder, Clip 0x0D (Nachladen) 32 Bilder; PL04W04 gleich, PL04W01 (Messer) Clip 6 = 10.
+  Halten -> neutral in 10 Bildern, Rueckstoss -> SENKEN ab Bild 8 (Schwelle 7 fuer Waffe 3) + 10 = 17 < 30.
+
+### 10.3 Umsetzung (Commit 8649df54)
+| Teil | Aenderung | Datei / Konstante |
+|---|---|---|
+| Form | ENTRIEGELN39 nach `Ck(4,0xF2)`/`Ck(5,0x11)`: Set(1,0x1B)=1, Set(2,7)=1, Sleep 30, DANN Cut_chg 8 (vorher Sleep 30 frei, dann Cut_chg 8 + Sperre im selben Takt). Programm gleich lang (1376 B), nur +0x03FC..+0x0409 umgestellt, alle Anker unveraendert | tools/r39_dining/programme_bauen.py (baue_entriegeln39, nach_dem_kampf), gen/dining_r39_programme.inc; Form ROOM11C0 sub03 @0x01B06/@0x01B0A/@0x01B14/@0x01B18 |
+| Mechanismus | `re15_dining_r39_ziel_senken()` = ROOM1141 Phase H und die Pad-Sperre stand im letzten Spielschritt (Merker am Anfang von re15_dining_r39_tick, der nach dem Spieler-Takt laeuft -> wirksam ab dem naechsten Bild wie @0x80029dd8/@0x80029e14) | engine/src/dining_r39.c, include/re15_dining_r39.h |
+| Haken | re15_player_tick: zielt der Spieler im Kommando 1 (pst 1, Ziel-Phase != NONE), steht kein Text und gilt der Merker, laeuft der Pad-Zweig trotz player_mode 2 mit Pad 0 (= gekapptes Held-Wort: kein Bit 0x100, keine Richtung) -> HOLD/Messer/Rueckstoss -> SENKEN -> neutral. 7 Zeilen (3 Kommentar), Kommentar "Runde 39 Spur J" | engine/src/player_common.c (gemeinsame Datei ausserhalb VERTRAG 1.3, offengelegt; wirkt nur in ROOM1141 Phase H) |
+| H4 | `r39j_umgebung_leeren()`: jede RE15_*-Variable aus `cmake -E environment` wird vor dem Spielstart entfernt | tests/integration/r39_dining1141_umgebung.cmake (neu), eingebunden in test_r39_dining1141.cmake, _kampf.cmake, _zielen.cmake, test_r38_dining1141.cmake |
+| H7 | Kommentar: s_leihe_ok faellt je Raum (leihe_starten parst neu) | engine/src/dining_r39.c re15_dining_r39_install |
