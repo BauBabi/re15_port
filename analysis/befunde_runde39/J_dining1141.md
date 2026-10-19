@@ -886,3 +886,18 @@ Werkzeug `j39n3/lauf.sh` (= `J39abn2/lauf.sh` der Abnahme, eigene exe-Kopie `re1
 | Haken | re15_player_tick: zielt der Spieler im Kommando 1 (pst 1, Ziel-Phase != NONE), steht kein Text und gilt der Merker, laeuft der Pad-Zweig trotz player_mode 2 mit Pad 0 (= gekapptes Held-Wort: kein Bit 0x100, keine Richtung) -> HOLD/Messer/Rueckstoss -> SENKEN -> neutral. 7 Zeilen (3 Kommentar), Kommentar "Runde 39 Spur J" | engine/src/player_common.c (gemeinsame Datei ausserhalb VERTRAG 1.3, offengelegt; wirkt nur in ROOM1141 Phase H) |
 | H4 | `r39j_umgebung_leeren()`: jede RE15_*-Variable aus `cmake -E environment` wird vor dem Spielstart entfernt | tests/integration/r39_dining1141_umgebung.cmake (neu), eingebunden in test_r39_dining1141.cmake, _kampf.cmake, _zielen.cmake, test_r38_dining1141.cmake |
 | H7 | Kommentar: s_leihe_ok faellt je Raum (leihe_starten parst neu) | engine/src/dining_r39.c re15_dining_r39_install |
+
+### 10.4 Messung nachher (Stand 8649df54, echte exe)
+- **Unit `unit_r39_dining1141_senken`** (Engine-Weg re15_game_step, ROOM1141 Phase H, R1 die ganze Zeit gehalten, Cliplaengen
+  aus PL04W03/PL04W01): Pistole im Halten - Setz-Bild noch Phase 2 (Halten), SENKEN ab Bild 1 danach, neutral ab Bild 10
+  (motion 200), bleibt unten; Messer im Halten - gleich (SENKEN ab 1, neutral ab 10); Pistole im Rueckstoss (Schuss, Phase
+  0x12) - SENKEN ab Bild 7 (Rueckstoss-Bruch, Schwelle 7), neutral ab 16; Gegenprobe ROOM1141 ohne Phase H - Waffe bleibt oben
+  (Geltungsbereich). `senken: 0 Fehler`.
+- **Riegel-Lauf `integration_r39_dining1141_zielen`** (lauf_a06aff7b, Passed 254.55 sec; Werkzeug `zielen`): Messhaken F4052,
+  Pad-Sperre ab F4052 (pm 2), F4052 noch Halten (ac 8, Umsetzer-Bild), F4053..F4061 SENKEN (mo 215 ac 6, 9 Bilder), ab F4062
+  neutral (mo 200), `[scd F4082] Cut_chg(8)` = 30 Bilder nach der Sperre, 40 Bilder Cut 8 ohne erhobene Waffe, Schnittbild
+  pst 1 mo 200, F4094 TURN (pst 4). Vorher (v_m2, gleiche Lage): 11 Bilder Cut 8 mit Waffe.
+- Bilder (committet): `J_belege/nb3_m1_vorher_v_m2_F4052-4100.png` (vorher: F4052..F4085 zielt Elza ohne Balken, F4087..F4096
+  in Cut 8 der ausgestreckte Arm mit der Pistole auf John) und `J_belege/nb3_m1_nachher_zielen_F4048-4096.png` (nachher: F4048/
+  F4052 zielt sie, ab F4054 Balken und Senken, ab F4062 steht sie neutral, F4086/F4096 Cut 8 Elza und John einander zugewandt,
+  Arme unten).
