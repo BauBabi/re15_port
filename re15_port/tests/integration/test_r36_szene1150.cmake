@@ -32,7 +32,10 @@ endforeach()
 set(_exe "${_exe_dir}/re15_pc_r36k_haken_${_lauf_id}.exe")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe}")
 
-execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" "1130" nach10f0 ersteszene
+# Runde 39 Spur Q (Nachtrag 12): tot10e0 = alle vier 10E0-Zombies tot -> die Kette dieses Riegels (1130 -> 1040 -> 1030 -> 11C0,
+# Besuchs-Indizes und Knall-Saetze unten) ohne den Treppenhaus-Schritt 1060; den messen integration_r39_elzazombies_leon (exe) und
+# unit_r39_elzazombies_leon_* mit denselben K3-Kriterien.
+execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" "1130" nach10f0 ersteszene tot10e0
                 WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 60 RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
 if(NOT _rvk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")
     message(FATAL_ERROR "r36_szene1150: Kartenwerkzeug exit=${_rvk}\n${_outk}")

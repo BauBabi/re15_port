@@ -29,7 +29,8 @@
  * Programm, das der Installer nach dem Init-Lauf von main00 startet (scd_event_fire(21)). Waehrend
  * eines Montage-Schritts unterbleibt der Reseed des raumeigenen sub01 (FUN_8003f038 @0x8003f064-84),
  * weil ROOM11C0 sub01 @0x01824 `04 0a 18 02` sonst die spaetere Ada-Szene verbrauchen wuerde.
- * Kette: 1150 (Szene) -> [1130 Cut 0, nur wenn in 1140 noch Zombies leben] -> 1040 Cut 1 -> 1030
+ * Kette: 1150 (Szene) -> [1130 Cut 0, nur wenn in 1140 noch Zombies leben] -> [1060 Cut 2, nur wenn in 10E0 noch
+ * Zombies leben — Runde 39 Spur Q, Nachtrag 12, re15_elzazombies_r39.h] -> 1040 Cut 1 -> 1030
  * (Cut 7 nur wenn in 1070 noch Zombies leben; Cut 6 immer) -> 11C0 Cut 13 -> 1150 (Rueckkehr).
  */
 #ifndef RE15_IRONS_TOD_H
@@ -43,6 +44,7 @@
 #define RE15_IT_RAUM_1040   0x1040
 #define RE15_IT_RAUM_1030   0x1030
 #define RE15_IT_RAUM_11C0   0x11C0
+#define RE15_IT_RAUM_1060   0x1060   /* Runde 39 Spur Q (Nachtrag 12): Treppenhaus-Schritt, re15_elzazombies_r39.h */
 
 /* Freigabe: (9,71) = 10F0-Szene gesehen (Spur K, VERTRAG §1.1) UND (3,94) = erste Irons-Szene
  * (ROOM1150 sub08 @0x01110 `22 03 5e 01`). Einmal-Riegel (9,73) = Todesszene gesehen; erstes Opcode
@@ -202,6 +204,7 @@
 #define RE15_IT_S1030      4   /* 1030-Programm laeuft, naechster Raum 11C0 */
 #define RE15_IT_S11C0      5   /* 11C0-Programm laeuft, naechster Raum 1150 */
 #define RE15_IT_RUECKKEHR  6   /* 1150: Rueckkehr-Programm laeuft */
+#define RE15_IT_S1060      7   /* Runde 39 Spur Q (Nachtrag 12): 1060-Programm laeuft (nach 1130 bzw. der Szene), naechster Raum 1040 */
 
 /* HAKEN scd_room_setup.c (nach dem Init-Lauf von main00) + main.c (Boot-/CONTINUE-Weg): startet je
  * nach Raum und Zustand die Szene, den Montage-Schritt, die Rueckkehr, die Nachspawns (1130/1030 bei

@@ -216,7 +216,14 @@ static void teil_knall_re2(void)
 }
 
 /* ---- Teil folge (K3) ----------------------------------------------------------------------------------------- */
-static void szene_flags(void) { re15_game_state_init(); re15_game_flag_set(9, 71, 1); re15_game_flag_set(3, 94, 1); }
+/* Runde 39 Spur Q (Nachtrag 12): 10E0 leer (Tot-Bits 0xe0..0xe3, ROOM10E0 sub00 @0x00D56..) — dieser Riegel misst die Kette
+ * 1130/1040/1030/11C0 der Runde 36; leben in 10E0 Zombies, kommt nach 1130 (bzw. nach der Szene) der Treppenhaus-Schritt 1060
+ * dazu, den die Riegel unit_r39_elzazombies_leon_* / integration_r39_elzazombies_leon mit denselben K3-Kriterien messen. */
+static void szene_flags(void)
+{
+    re15_game_state_init(); re15_game_flag_set(9, 71, 1); re15_game_flag_set(3, 94, 1);
+    for (int i = 0; i < 4; i++) re15_game_flag_set(7, (uint8_t)(0xe0 + i), 1);
+}
 
 static void folge_drucken(void)
 {

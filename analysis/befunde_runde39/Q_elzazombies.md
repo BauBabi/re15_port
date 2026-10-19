@@ -12,6 +12,10 @@ Lesart des Orchestrators (VERBINDLICH): Elza-Raeume = ROOMxxx1; Ausloeser = stei
 Spur P); Montage-Form wie Leon nach Irons' Tod; Gegner-Verhalten RE2-KI wie bisher; Bit 95 nur, wenn kein Original-/Port-
 Flag reicht.
 
+> STAND NACHBESSERUNG 2 (Nutzer-Nachtrag 12, Abschnitt 9): Elza bekommt den 1071-Schritt (1031 Cut 7) WIEDER, zusaetzlich zum
+> 1041-Durchbruch; Leon bekommt den Treppenhaus-Schritt 1060; der 1041-Durchbruch nur mit (9,97). Aussagen wie "ROOM1071 bleibt
+> unberuehrt" in 0a/0b/2.3/3/4.6/5/7 beschreiben den Stand nach Nachtrag 11 und sind durch Abschnitt 9 ersetzt.
+
 ## 0a. NUTZER-NACHTRAG 11 (AUFTRAG.md, vom Orchestrator um 00:24 in diesen Zweig committet: cceb31ef/50e00d74)
 > "Ich korrigiere, die Zombies sollen nicht in ROM 1071 noch durchbrechen, sondern dann noch wie bei leon im ROOM 1041."
 
@@ -401,3 +405,409 @@ Umgebungsvariablen des Aufrufers erben"). Die Urteile Q1..Q5 sind "erfuellt"; de
   Referenz-Riegel (nur `RE15_` in Grossbuchstaben) laesst auf Windows einen klein geschriebenen Namen durch, und
   Unit-Riegel, die re15_engine linken, erben die Umgebung ebenfalls (kein gemeinsamer Helfer in re15_test_support). Eine
   einheitliche Loesung (gemeinsamer Helfer, Schreibweise egal) waere moeglich; hier nur in den eigenen Dateien umgesetzt.
+
+## 9. Nachbesserung 2 (nach Abnahme 1, analysis/befunde_runde39/Q_abnahme_1.md; Nutzer-Nachtrag 12)
+Stand beim Start: HEAD c59d5df5 (Abnahme 1 + Nachtrag-12-Text), Baum sauber. Auftraege:
+* Mangel 1 = NUTZER-NACHTRAG 12 Teil 2 (AUFTRAG.md, woertlich): "Ausserdem habe ich mich entschlossen eine Angleichung zu
+  machen der hereinbrechenden Zombies. Bei Irons Tod und Johns Hilferuf sollen die Zombies in beiden Szenarien aus den
+  gleichen Tueren brechen. Also bei Leon zusaetzlich das Treppenhaus und bei Elza zusaetzlich ROOM 1071."
+* Mangel 2 = Orchestrator: master mergen (Spuren K, G, O, R; Ereignis 30 auch bei R in ROOM1121), Gruppen-Riegel gruen.
+* Mangel 3 = Orchestrator-Entscheid zu H1: der Rolltor-Durchbruch ROOM1041 NUR in der Panikphase ((9,97)=1); nach Johns
+  Rettung ((9,97)=0) nicht mehr (Nutzer Nachtrag 10: "Die panische Musik hoert auf, sobald man John gerettet hat. Der Rest
+  bleibt normal.").
+
+### 9.0 Merge (Mangel 2)
+`git merge master` (02c8291c = a0d7d749 + Verteil-Commit): Konflikte nur in scd_room_setup.c (include + Installer-Zeile),
+scd_vm.c (include + Ereignis-Weiche) und platform/pc/main.c (CONTINUE-Weg). Beidseitig aufgeloest: die master-Zeilen (Spur O
+parkplatz11c0, Spur R hund1121) zuerst, Spur Q am Ende des Blocks. Ereignis 30: R liefert nur in ROOM1121 ein Programm,
+Q nur in 1041/1061/1031 (und neu 1060, s.u.) — beide Weichen bleiben hintereinander. Die drei Dateien sind danach
+byte-gleich mit dem Integrationsbaum (96b384a7, dort von Hand aufgeloest). Merge-Commit 5a499b3f; configure + build ok
+(795/795).
+
+### 9.1 RE-Belege (selbst gemessen, Datei-Bytes der Auslieferung re15_port/shared_assets/PSX = info/Re1.5/PSX)
+* `cmp -l` der Raum-Paare Leon/Elza: ROOM1060 = ROOM1061, ROOM10E0 = ROOM10E1, ROOM10C0 = ROOM10C1, ROOM1070 = ROOM1071 —
+  je 0 abweichende Bytes (sha256 1060/1061 beide 8a20f079...). ROOM1030/1031, 1040/1041, 1140/1141 sind verschieden.
+  => Leons Treppenhaus-Schritt ist Byte fuer Byte Elzas: Quell-Records ROOM10E0 sub00 @0x00D56.. (Typ 0x10, Tot-Bits
+  0xe0..0xe3), Tuer ROOM10C0 @0x00E42 -> Raum 0x06 Cut 2 Etage 4 Spawn (26000,-7200,25300) Gier 2048, Kamera ROOM1060
+  Cut 2 RID @0x000A0, SCA/BLK von 1060 = 1061 (die Lagen aus 2.5 gelten unveraendert).
+  => Elzas 1071-Schritt ist Byte fuer Byte Leons 1070-Quelle: ROOM1071 sub00 @0x015CA.. / Else @0x01632.. (Typen
+  0x10/0x10/0x10/0x11/0x11, Tot-Bits 0xc6..0xca); ROOM1031 Cut 7 = ROOM1030 Cut 7 (RID @0x00140, Dossier 2.2).
+* ROOM1060 SCD (scd_dump_room.py): main00 nur drei Tueren (Slot 0/1/2, Etage 8/4/0) + Treppen-AOTs, sub00/sub01 = Evt_end;
+  kein Sce_em_set, kein Ck/Set Bank 5 -> Ereignis 21 (Leon) und 30 frei, Tuer-Slot 20 frei, Bank-5-Bits 28/29/30 frei.
+  Port: in ROOM1060 nur tuer1060_1040.c (Runde 35 L, AOT-Slot 2 als Text-Platz bis (9,73)) — keine Ueberschneidung.
+* ROOM1141 sub00 (Elzas Gegenstueck zu Leons 1140): Typ 0x49 (John, Bit 0xff) @0x00B06, Typ 0x27 (Gorillas, Bits
+  0xcb/0xcc) @0x00B1A/@0x00B2E/@0x00B54/@0x00B68 — KEIN Zombie-Record. Leons 1140 -> 1130-Schritt hat bei Elza keine Quelle.
+
+### 9.2 Messung vorher (Bau nach dem Merge 5a499b3f, ctest -V; Logs build/r36_szene1150_lauf/lauf_16eb5a45, build/r39_elzazombies_wd_kette)
+* LEON (integration_r36_szene1150 = echter Weg: Spielstand ROOM1130 mit (9,71),(3,94), 10E0 nie betreten -> alle vier
+  Medical-Room-Zombies leben; Tuer -> ROOM1150 -> Szene -> Montage), debug.log:
+  `Umzug: 1140 lebend 5 -> 1130 (9,74)=1; 1070 lebend 5 -> 1030 (9,76)=1` -> `Folge #1 K ROOM1150 T1284 Knall Satz 0` ->
+  `PC loaded room1130` (S +5, C 0) -> `Folge #4 K ROOM1130 T1460 Knall Satz 1` -> `PC loaded room1040` (S +5, C 1) ->
+  `K ROOM1040 T1865 Satz 0` -> `PC loaded room1030` (S +11, C 7; K 2; S +3; C 12) -> `PC loaded room11c0`.
+  KEIN Treppenhaus-Schritt (kein room1060), obwohl in 10E0 vier Zombies leben.
+* ELZA (integration_r39_elzazombies_kette, Spielstand 1041, 1071 nie betreten -> alle fuenf Lobby-Office-Zombies leben,
+  (9,97) bei Bild 200): `Umzug: 10E1 lebend 4 -> 1061; (9,95)=1` -> `K ROOM1041 T61 0` -> room1061 (S 4, C 2) ->
+  `K ROOM1061 T237 1` -> room1031 `S ROOM1031 T281 3`, `C ROOM1031 T281 12` (erstes Bild = das Rollo) -> room1041.
+  KEIN 1071-Schritt (kein Cut 7, keine Kopie der 1071-Zombies), obwohl in 1071 fuenf leben.
+* H1 (unit_r39_elzazombies_durch1041, Zustand nach der Montage OHNE (9,97)): `Durchbruch 1041: 2 Zombies aus 1061 (nicht
+  besiegt) -> hinter das Rolltor` -> Szene laeuft (Knall, `Durchbruch Bild 295: alle durch`). Der Durchbruch prueft (9,97)
+  nicht — er kaeme auch nach Johns Rettung.
+
+### 9.3 RE-Belege der neuen Konstanten (Datei-Bytes selbst gelesen, python struct)
+| Konstante | Wert | Beleg |
+|---|---|---|
+| Quell-Records Leon (10E0) | Typ 0x10 grid 0x06, Tot-Bits 0xe0..0xe3 | ROOM10E0 @0x00D56 `44 01 10 06 00 00 01 e0 04 f7 ..`, @0x00D6A `.. e1`, @0x00D7E `.. e2`, @0x00D92 `.. e3` (Datei = ROOM10E1) |
+| Tuer 10C0 -> Treppenhaus | Raum 0x06, Cut 2, Etage 4, (26000,-7200,25300) Gier 2048 | ROOM10C0 @0x00E42 `3b 00 02 31 00 00 b4 fb 66 21 e8 03 d0 07 90 65 e0 e3 d4 62 00 08 00 06 02 04` (= ROOM10C1) |
+| Kamera Leon 1060 Cut 2 | pos (20199,-12628,21273) target (24670,-7088,27767) | ROOM1060 RID @0x000A0 `00 00 3c 68 e7 4e 00 00 ac ce ff ff 19 53 ..` (Datei = ROOM1061) |
+| Quell-Records Elza (1071) | Typen 0x10/0x10/0x10/0x11/0x11, Tot-Bits 0xc6..0xca | ROOM1071 @0x015CA `44 00 10 88 00 00 00 c6 ..`, @0x015DE `.. c7`, @0x015F2 `.. c8`, @0x01606 `44 03 11 88 .. c9`, @0x0161A `44 04 11 87 .. ca` (Datei = ROOM1070) |
+| Kamera Elza 1031 Cut 7 | pos (-26820,-3114,-2574) target (-15858,-936,-5040) | ROOM1031 RID @0x00140 `00 00 3c 68 3c 97 ff ff d6 f3 ff ff f2 f5 ff ff 0e c2 ff ff 58 fc ff ff 50 ec ff ff` = ROOM1030 @0x00140 (nur der PRI-Zeiger +28 verschieden: 0x1298 / 0x123c) |
+| Original-Knall 1031 Cut 7 | Se_on Bank 2 Satz 0x0c | ROOM1031 sub08 @0x02862 `36 02 0c 00 00 00 cc dd f8 f8 f0 a7` = ROOM1030 sub08 @0x02776 (Leons Vorlage 7) |
+| ROOM1060 frei fuer Leon | Ereignis 21 (Leon) / 30, Slot 20, Bank-5-Bits 28/29/30 | SCD 1060: main00 = 3 Door_aot_set (Slot 0..2) + 8 Aot_set (Slot 3..10) + Slot 16; sub00/sub01 `01 00`; kein Ck/Set |
+| ROOM1040 Tuer -> 1060 (Leons Ankunft von unten) | Raum 0x06 Cut 7 (26000,0,25300) Gier 2048 | ROOM1040 @0x010D8 `3b 02 02 31 .. 90 65 00 00 d4 62 00 08 00 06 07` (= ROOM1041 @0x010D8) |
+| Leons Weiche/Knall | Tuerknall = Signal (5,28) Satz 0; Knall wie 1030 = (5,29) Satz 1 | re15_irons_tod.h RE15_IT_SIG_KNALL_TUER/_1030 (Runde 35/36), unveraendert; Elzas Auftakt nutzt dieselbe Form |
+Was KEIN neuer Wert ist: alle Lagen/Parkplaetze/Zeiten des Treppenhaus-Schritts sind Elzas (Abschnitt 2.5, Runde 39) bzw.
+Leons (k_p_1130: 1 + 130 + 45 Bilder, Tuer nach 1040 Cut 1 auf RE15_IT_PARK_1040); die 1031-Cut-7-Bytes sind Leons Vorlagen
+6/7/19/12 (irons_tod_1150.c), zur Laufzeit ueber re15_irons_tod_programm() uebernommen — der Riegel prueft sie gegen die RDT.
+
+### 9.4 Umsetzung (Nachbesserung 2)
+* KOPIE-BITS (PORT-WAHL nach der Regel des Originals): dieselben Zombies tragen in beiden Szenarien dasselbe Bit, wie die
+  ausgelieferten Raum-Paare ihre Quell-Records (ROOM10E0/10E1 beide 0xe0..0xe3, ROOM1070/1071 beide 0xc6..0xca, Dateien
+  gleich). Leons 1060-Kopien = Elzas 1061-Kopien (124..127); Elzas 1031-Cut-7-Kopien = Leons 1030-Cut-7-Kopien (47,48,49,75,76).
+  Kein neues Bit verbraucht. Leon und Elza teilen nie einen Spielstand; Leons Code wirkt nur in xxx0-Raeumen, Elzas nur fuer
+  Elza in xxx1-Raeumen.
+* ELZA (engine/src/elzazombies_r39.c): Zahl der 1071-Ueberlebenden beim Kettenstart (s_n1071), Umzug wie Leons 1070-Umzug;
+  Weiche tuer_zum_naechsten() = Leons programm_bauen-Weiche (nach dem Auftakt: 1061, sonst 1031 Cut 7, sonst 1031 Cut 12;
+  nach 1061: 1031 Cut 7 mit Tuerknall Satz 0, sonst Cut 12 mit Satz 1); Programm C mit Leons Vorlagen 6 (Kopien + 175 Bilder)
+  + 7 (Original-Knall) + 19 (Luecke 10) vor dem Rollo-Teil; Nachspawn F = Leons k_p_1030_nach (Vorlage 12 + Kriecher);
+  Baustein 5 (Rollo-Zombies warten bis Cut 12, BLK 0/10) mit eigenem Merker; Folge-Eintrag 'K' 2 fuer den Original-Knall.
+* H1 (durchbruch_1041): ohne (9,97) "Durchbruch 1041 entfaellt: Panikphase vorbei ((9,97)=0)" und nichts weiter.
+* LEON (engine/src/elzazombies_r39.c Programm L + 6 Haken in engine/src/irons_tod_1150.c, je mit "Runde 39 Spur Q"):
+  umzug_vorbereiten -> re15_r39q_leon_umzug() (10E0 -> 1060-Kopien, Zahl); programm_bauen Szene (nur bei 1140 leer) und
+  1130-Schritt -> re15_r39q_leon_tuer() (letzte Tuer -> ROOM1060 Cut 2 Etage 4 auf Elzas Parkplatz (20200,-7200,20400),
+  Knall davor Satz 0); neuer Zustand RE15_IT_S1060 = 7 (include/re15_irons_tod.h) mit Programm L (vier Saetze wie Elzas
+  Programm B, Ende Byte fuer Byte wie Leons k_p_1130); install ROOM1060 -> S1060; ROOM1040 nimmt S1060 als Vorgaenger;
+  sub01-Sperre auch in S1060. Verhalten im Schnitt (Einzelstopp hinter der Kamera) + Messung im eigenen Takt (Kamera
+  ROOM1060 Cut 2). Spaeteres Betreten von 1060 nach der Szene ((9,73)=1, Leons Nachspawn-Gate): Elzas Programm E.
+* REIHENFOLGE Leon (PORT-WAHL, begruendet): 1130 (3F) -> 1060 (2F-Absatz) -> 1040/1030 (1F): die Montage geht von Irons'
+  Buero im 3F Stockwerk fuer Stockwerk nach unten zur Lobby; bei Elza steht das Treppenhaus ebenso vor der Lobby.
+* Leons Montage-Riegel nachgezogen (begruendet, 9.6): unit_r35_cut1150_szene (Variante "1140 leer -> direkt 1040") und
+  unit/integration_r36_szene1150 laufen mit 10E0 leer, damit sie ihre Kette 1130/1040/1030/11C0 unveraendert messen
+  (Kartenwerkzeug probe_r35_cut1150_karte: neue Option tot10e0); integration_r35_cut1150 und integration_r38_montage laufen
+  unveraendert MIT dem neuen Schritt (10E0 im Spielstand nie betreten) und muessen gruen bleiben.
+
+### 9.5 Messung nachher (Bau nach c91734aa; exe-Laeufe = Integrations-Riegel + eigene Framedump-Laeufe scratchpad/nb2/runs)
+**LEON, echter Weg** (integration_r39_elzazombies_leon: Spielstand ROOM1130 vor Irons' Tuer, (9,71),(3,94), 10E0 nie betreten),
+debug.log woertlich (gekuerzt):
+```
+[elzazombies-r39] Leon: Umzug 10E0 lebend 4 -> 1060 (Treppenhaus-Schritt nach 1130 bzw. nach der Szene)
+[irons-tod] Folge #1 K ROOM1150 T1284 Knall Satz 0
+[irons-tod] Folge #2 S ROOM1130 T1328 Spawn + 5 (Raumaufbau, vor dem ersten Bild) ; #3 C ROOM1130 T1328 Kamera Cut 0
+[irons-tod] Folge #4 K ROOM1130 T1460 Knall Satz 0                    <- vorher Satz 1 (1040); jetzt der Tuerknall der 10C0-Tuer
+[room] PC loaded room1060.rdt
+[irons-tod] Folge #5 S ROOM1060 T1504 Spawn + 4 (Raumaufbau, vor dem ersten Bild)
+[irons-tod] Folge #6 C ROOM1060 T1504 Kamera Cut 2 (Raumaufbau, vor dem ersten Bild)
+[irons-tod] ROOM1060 Zustand 7: Montage 1060 (Runde 39 Spur Q, Programm L)
+[irons-tod] Folge #7 K ROOM1060 T1636 Knall Satz 1                    <- der Knall "wie ROOM1030" vor dem Rolltor, wie bisher nach 1130
+[room] PC loaded room1040.rdt ; #8 S ROOM1040 T1680 Spawn + 5 ; #9 C ROOM1040 T1680 Kamera Cut 1 ; Montage 1040 (Programm 2)
+ROOM1060 Cut 2 Bild 176: Bit 124 7062 -> 6245, Bit 125 6421 -> 4849, Bit 126 6638 -> 5476, Bit 127 7547 -> 5009 (Lage (26000,26100)
+                         -> (23153,25318) usw.); Spieler-HP min 100
+[irons-tod] Folge #10 K ROOM1040 T2041 Knall Satz 0 ; room1030: #11 S +11 ; #12 C Cut 7 ; Montage 1030 (Programm 3)
+```
+state.log: erstes Bild des 1060-Besuchs `F1 cam=2` mit 4 Gegnern (Spawn im Raumaufbau), Bild 10 `pf=01000007` (Pad-Sperre).
+Leons 1040-Schritt ist danach UNVERAENDERT: T1680 -> T2041 = 361 Bilder = Messung vorher (T1504 -> T1865 = 361); im Prozess
+(unit leon_4) 405 = 405 Bilder mit und ohne Treppenhaus. Bildtafel Q_belege/q_n2_leon_1060_cut2.png (Lauf leon1060, Framedump
+Bilder 10..170 in ROOM1060): Bild 10 stehen die vier Polizei-Zombies an der 10C0-Tuer (Schild F2), bis Bild 170 gehen sie
+ueber den Absatz zum Gelaender auf die Kamera zu = Elzas 1061-Bild (Abnahme 1, a_1061.png).
+**ELZA, echter Weg** (integration_r39_elzazombies_kette: Spielstand 1041, 10E1 und 1071 nie betreten, (9,97) bei Bild 200):
+```
+[elzazombies-r39] Umzug: 10E1 lebend 4 -> 1061; 1071 lebend 5 -> 1031 Cut 7; (9,95)=1
+Folge #1 K ROOM1041 T61 0 ; room1061: #3 S T105 4 ; #4 C T105 2 ; #5 K ROOM1061 T237 0   <- vorher Satz 1; jetzt Tuerknall (1071-Tuer)
+room1031: #7 S ROOM1031 T281 5 ; #8 C ROOM1031 T281 7 ; #9 K ROOM1031 T457 2 (Original-Se_on @0x02862) ; #10 S T467 3 ; #11 C T489 12
+ROOM1031 Cut 7 Bild 207: Bit 47 8272 -> 4671, Bit 48 6235 -> 1586, Bit 49 4644 -> 1401, Bit 75 7222 -> 2406, Bit 76 5599 -> 729;
+                         Raum-Zombies hinter dem Rollo (Bits 0..5) warten (Baustein 5); Spieler-HP min 100
+room1041: Rueckkehr beendet, Steuerung frei
+```
+Ton (integration knall, Differenz der Mitschnitte): Bilder 624..665 RMS 6567 (Tuerknall Auftakt) und 805..846 RMS 6567 — der
+zweite Knall ist jetzt der Tuerknall (Satz 0) statt des 1030-Knalls (vorher 806..849 RMS 4657 = Satz 1). Bildtafel
+Q_belege/q_n2_elza_1031_cut7.png (Lauf elza1031, Bilder 10..170 in ROOM1031): die fuenf Zombies aus dem Lobby Office im Gang vor
+der 1071-Tuer, sie kommen bis Bild 170 bis dicht vor die Kamera = Leons 1030-Cut-7-Bild.
+**H1**: integration ohne/gerettet (Tuer 1061 -> 1041, vier 1061-Kopien leben, OHNE (9,97)): `ROOM1041: Durchbruch 1041 entfaellt:
+Panikphase vorbei ((9,97)=0)`, kein "Durchbruch 1041 startet", danach `[walk] ... cut=5 ... pl pos=(-21008,0,-13134)` = Elza mit
+Steuerung an der Tuer. Mit (9,97) (integration durch) laeuft der Durchbruch wie in Abnahme 1 (4 durch, HP 100).
+Unit (im Prozess, alle gruen): kette_4/0/2/00 (Elza: 4/5, 0/5 -> Auftakt direkt in 1031 Cut 7, 2/3, 0/0 -> Cut 12), leon_4 (mit
+Gegenprobe Modul aus = alte Kette 1130 -> 1040), leon_2 (1140 leer: Szene -> 1060 -> 1040), leon_0 (10E0 leer: Kette wie
+bisher, Knall vor 1040 Satz 1), leon_nach1060 (Leon betritt 1060 nach der Szene: 2 Kopien Westseite, gehalten 120 Bilder auf
+Etage 0, frei auf Etage 4 mit kleinstem Abstand 4961), durch1041 (H1: (9,97)=0 -> nichts, 200 Bilder; Gegenprobe (9,97)=1 ->
+Durchbruch mit 3), nach1031 (2 von 5 1071-Kopien + 3 Kriecher an Leons Nachspawn-Lagen), zensus (16 Kopie-Bits; Cut-7-Bits =
+Leons Vorlage 6; Raum-Paare byte-gleich; Programm L endet Byte fuer Byte wie Leons k_p_1130; Weiche).
+
+### 9.6 Tests (Nachbesserung 2)
+* Neue/geaenderte Riegel (tests/unit/probes/r39_elzazombies.cmake, test_r39_elzazombies.c / .cmake):
+  unit_r39_elzazombies_{zensus, kette_4, kette_0, kette_2, kette_00, nach1061, nach1031, durch1041, ohne, leon_4, leon_2, leon_0,
+  leon_nach1060} (13) und integration_r39_elzazombies_{kette, knall, treppe, durch, ohne, leon} (6). Neu: kette_00, leon_*,
+  integration leon; kette_* mit 1071-Schritt; durch1041 + integration ohne/gerettet = H1; nach1031 mit 1071-Kopien.
+* Leons Riegel begruendet nachgezogen (Abschnitt 9.4): test_r35_cut1150.c (Variante "1140 leer -> direkt 1040" mit 10E0 leer),
+  test_r36_szene1150.c szene_flags (10E0 leer), test_r36_szene1150.cmake (Karte mit tot10e0), probe_r35_cut1150_karte.c (Option
+  tot10e0). integration_r35_cut1150 und integration_r38_montage UNVERAENDERT: sie laufen jetzt mit dem Treppenhaus-Schritt
+  (debug.log Lauf A: "Montage 1060 (Runde 39 Spur Q, Programm L)" ... "Rueckkehr: Programm 5" ... "EXIT_AT: Bild 1500 in Raum
+  1150"; r38: "Bilanz 1040: 5 Zombies, durchs Tor 5 ... HP 100") und sind gruen.
+* GEZIELTER LAUF (Endstand-Code = 9df98991 + Merge 9aadee89 (nur Doku); ein Lauf `-j 4 --timeout 1500`, Regex woertlich:
+  `^(unit_|prop_|probe_)|r39_elzazombies|^integration_r35_cut1150$|^integration_r36_szene1150$|^integration_r38_montage$|^integration_r37_zombieaktiv$|^integration_r38_kleinkram_irons$|^integration_r37_elzaems_leon10c0kraehe$|^integration_r39_hund1121$|^integration_elza_vollstart$|^integration_r38_elzaintro_|^integration_r39_elza_|^integration_r38_elzatoene_|^integration_r37_elzaems_elza10c1kraehe$|^integration_r36_story_elza$|^integration_r36_elza_|^integration_r33_speichern$|^integration_r38_tagebuch_`
+  = alle schnellen Tests + eigene 19 + Leons Montage (r35/r36/r38/r37 zombieaktiv/kleinkram_irons/leon10c0kraehe) + hund1121 +
+  Elza-Gruppen 1031/1041/10C1 + Speichern + Tagebuch):
+  "100% tests passed, 0 tests failed out of 916" (Total Test time (real) = 2009.19 sec), darunter integration_r35_cut1150 (598,69 s),
+  integration_r36_szene1150, integration_r38_montage, integration_r37_zombieaktiv, integration_r39_hund1121, alle sechs
+  integration_r39_elzazombies_*.
+* Danach nur Kopfkommentare von test_r39_elzazombies.c (af066de2) -> Neubau nur dieses Riegels; `ctest -R
+  "^unit_(r39_elzazombies|r35_cut1150|r36_szene1150|r38_montage|r37_zombieaktiv|r36_kartenbits)"` -> "100% tests passed, 0 tests
+  failed out of 41"; `ctest -R "^integration_r39_elzazombies_knall$"` -> "100% tests passed, 0 tests failed out of 1".
+* Nach jedem Lauf liegt in build/platform/pc nur re15_pc.exe (eine Kopie eines abgebrochenen Laufs von Hand entfernt).
+
+### 9.7 Gegenueberstellung: aus welchen Tueren die Zombies brechen (Stand Nachbesserung 2)
+| Tuer / Ort | Leon (Montage nach Irons' Tod) | Elza (Johns Hilferuf, Panikphase (9,97)) |
+|---|---|---|
+| Briefing Room -> 3F-Flur (1140/1141 -> 1130/1131), Cut 0 | ja: so viele, wie in 1140 leben | entfaellt: ROOM1141 hat keinen Zombie-Record (sub00 @0x00B06 John Typ 0x49, @0x00B1A.. Gorillas Typ 0x27) |
+| 2F West Side -> Treppenhaus-Absatz 2F (10C0/10C1 -> 1060/1061), Cut 2 | NEU (Nachtrag 12): so viele, wie in 10E0 leben; nach 1130, vor dem Rolltor | ja: so viele, wie in 10E1 leben; erster Schnitt nach dem Auftakt |
+| Rolltor West Corridor (1040/1041), Cut 1 | ja: in der Montage (5 Raum-Zombies) | ja: beim naechsten Betreten von 1041 in der Panikphase, die im Treppenhaus nicht besiegten (H1: nur mit (9,97)) |
+| Lobby Office -> Lobby (1070/1071 -> 1030/1031), Cut 7 | ja: so viele, wie in 1070 leben | NEU (Nachtrag 12): so viele, wie in 1071 leben (Leons Schritt Byte fuer Byte) |
+| Notfall-Rollo / Tor der Lobby (1030/1031), Cut 12 | ja: Original-Szene sub08, Kriecher | ja: Original-Szene sub08, Kriecher |
+| Parkplatz 11C0, Cut 13 | Ada/Marvin-Szene (keine Zombies) | — (keine Entsprechung) |
+
+### 9.8 Fuer den Nutzer (einfach)
+* Nach Irons' Tod (Leon) und nach Johns Hilferuf (Elza) brechen die Zombies jetzt in beiden Szenarien aus denselben Tueren
+  (Tabelle oben).
+* LEON: In der Montage nach Irons' Tod kommt nach dem Flur vor dem Besprechungsraum ein neuer Schnitt ins Treppenhaus (2. Stock,
+  Schild "F2"): die Zombies, die du im Medical Room (10E0) am Leben gelassen hast, sind durch die Tuer der 2F West Side
+  hereingebrochen und gehen auf die Kamera zu — genau wie bei Elza. Danach geht es wie bisher weiter (Rolltor, Lobby, Parkplatz).
+  Hast du im Medical Room alle getoetet, entfaellt der Schnitt. Kommst du spaeter ins Treppenhaus, stehen sie auf dem Absatz
+  unter dem Fenster und laufen erst los, wenn du oben ankommst (wie bei Elza). [Nachbesserung 3: gilt fuer die Ankunft von unten; von OBEN stehen sie
+  an der Tuer zur 2F West Side und laufen erst los, wenn du unten an der Westtreppe ankommst - 10.8.]
+* ELZA: In der Panik-Montage kommt vor dem Rollo wieder der Schnitt auf die Tuer des Lobby Office (1071): die Zombies, die dort
+  noch leben, stehen davor und gehen auf die Kamera zu — wie bei Leon. Dann bricht wie bisher das Rollo. Spaeter findest du sie
+  in der Lobby.
+* ROLLTOR 1041: Der Durchbruch kommt nur noch waehrend der Panikphase (bis John gerettet ist). Danach bleiben die Zombies aus dem
+  Treppenhaus dort; "der Rest bleibt normal".
+* Den Briefing-Room-Schnitt von Leon gibt es bei Elza nicht: in Elzas Raum 1141 sind nur John und die Gorillas, keine Zombies.
+* Keine neuen Assets, keine Sprachdateien. Schnittlaengen und Knaelle sind Leons Montage (Treppenhaus 176 Bilder = Leons
+  Flur-Schnitt; Lobby-Office-Schnitt 175 Bilder + Original-Knall).
+
+### 9.9 OFFEN (fuer die Integration, keine Luecke im Spurbaum)
+* Spur P (Nachbesserung 1, Nachtrag 12): sperrt in der Panikphase die Tuer 1041 -> 1031 (Text statt Raumwechsel). Die Montage
+  nutzt ihren eigenen Tuersatz (Slot 20, Door_aot_set + Aot_on), nicht Slot 1 — keine Ueberschneidung; im Integrationsbaum mit P
+  zu messen. Der Durchbruch 1041 kommt beim Betreten von 1041 (von 1061, aus der Lobby oder mit dem Aufzug) waehrend (9,97)=1.
+* Die Elza-Montage ist mit dem Lobby-Office-Schnitt ~830 Bilder lang (Auftakt 105 + 1061 176 + 1031 542); P's Panikmusik
+  (Leons Schlussmusik) klingt darueber oder beginnt danach — P's Wahl (wie 6.).
+* Ankunft im Treppenhaus von OBEN (Leon aus 1120, Elza aus 1121): die Kopien stehen an der Westseite nahe dem Ende von Treppe A
+  (wie Abnahme 1 H3) — nicht verlangt.
+
+### 9.10 Je Mangel (Kurzfassung: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher)
+* MANGEL 1 — Nutzer-Nachtrag 12 Teil 2 (Angleichung der Durchbruch-Tueren)
+  - Ursache: neue Nutzer-Vorgabe; Leons Montage hatte kein Treppenhaus, Elzas Kette seit Nachtrag 11 keinen 1071-Schritt.
+  - Vorher (9.2): Leon 1150 -> 1130 -> 1040 -> 1030 -> 11C0, kein room1060 trotz vier lebender 10E0-Zombies; Elza 1041 -> 1061
+    -> 1031 (erstes Bild Cut 12), kein Cut 7 trotz fuenf lebender 1071-Zombies.
+  - Beleg (9.1/9.3): Raum-Paare 1060=1061, 10E0=10E1, 10C0=10C1, 1070=1071 byte-gleich (cmp -l 0); ROOM10E0 @0x00D56.. (0xe0..0xe3),
+    ROOM10C0 @0x00E42 (Raum 0x06, Cut 2, Etage 4), RID ROOM1060 @0x000A0, ROOM1071 @0x015CA.. (0xc6..0xca), RID ROOM1031 @0x00140,
+    ROOM1031 sub08 @0x02862 = ROOM1030 @0x02776; Formen = Leons Montage (irons_tod_1150.c Vorlagen 1/6/7/12/19) und Elzas
+    Programm B/E. NUTZER-VORGABE fuer das Ob; Reihenfolge Leon (3F -> 2F -> 1F) PORT-WAHL, begruendet (9.4).
+  - Aenderung (9.4): Elza Cut-7-Teil + Nachspawn mit Leons Vorlagen; Leon Programm L + 6 Haken in irons_tod_1150.c (je <= 3
+    Zeilen, "Runde 39 Spur Q"); Kopie-Bits nach der Raum-Paar-Regel des Originals geteilt (kein neues Bit).
+  - Nachher (9.5): Leon 1130 -> Tuerknall -> 1060 (+4, Cut 2, Kopien naeher, HP 100) -> Knall Satz 1 -> 1040 (unveraendert 361
+    Bilder) -> 1030; Elza 1061 -> Tuerknall -> 1031 Cut 7 (+5, naeher, HP 100) -> Original-Knall -> Kriecher -> Cut 12 -> 1041.
+    Bildtafeln q_n2_leon_1060_cut2.png, q_n2_elza_1031_cut7.png.
+* MANGEL 2 — master mergen, Gruppen-Riegel gruen
+  - Ursache: master um die Spuren K/G/O/R weiter (Konflikte in drei gemeinsamen Dateien).
+  - Aenderung (9.0): beidseitig aufgeloest (master-Zeilen zuerst, Q am Ende), byte-gleich mit dem Integrationsbaum.
+  - Nachher: Bau ok; Riegel 9.6.
+* MANGEL 3 — H1-Entscheid: Rolltor-Durchbruch 1041 nur in der Panikphase
+  - Ursache: durchbruch_1041 pruefte (9,97) nicht.
+  - Vorher (9.2): unit durch1041 ohne (9,97): "Durchbruch 1041: 2 Zombies aus 1061 (nicht besiegt)" + Szene.
+  - Beleg: Orchestrator-Entscheid (Nutzer Nachtrag 10 "Die panische Musik hoert auf, sobald man John gerettet hat. Der Rest bleibt
+    normal."); (9,97) = Panikphase (VERTRAG 1.1, setzt/loescht Spur P).
+  - Aenderung: `if (!(9,97)) { "Durchbruch 1041 entfaellt: Panikphase vorbei ((9,97)=0)"; return 0; }` in durchbruch_1041.
+  - Nachher: unit durch1041 (ohne (9,97): nichts, 200 Bilder; mit: Durchbruch 3), integration ohne/gerettet (exe: Tuer 1061 ->
+    1041 ohne (9,97): "entfaellt", Elza mit Steuerung an der Tuer Cut 5), integration durch (mit (9,97): Durchbruch wie Abnahme 1).
+
+## 10. Nachbesserung 3 (nach Abnahme 2, analysis/befunde_runde39/Q_abnahme_2.md)
+Start 2026-10-19 10:50, HEAD a176f5cd, Baum sauber. Auftraege (Orchestrator, args_q_nach3.json):
+* MANGEL 1 — alte Leon-Spielstaende nach Irons' Tod (v0.8.22-v0.8.26 und master, (9,73)=1, Kopie-Bits 124..127 nie gesetzt)
+  bekommen beim Betreten von ROOM1060 vier Zombies an der Westseite (auch wenn alle vier 10E0-Zombies tot sind). Ursache laut
+  Abnahme: leon_nachspawn/programm_bauen gaten nur ueber (9,73) und Bits 124..127 == 0; es fehlt ein Merker "Umzug 10E0 -> 1060
+  gelaufen" (Vorbild Leons (9,74)/(9,75)). Ein Bank-9-Bit nur nach Zensus (96 laut VERTRAG 1.1 frei, falls O es nicht belegt hat).
+* MANGEL 2 — Ankunft im Treppenhaus von OBEN (Leon 1120 -> 1060 nach Irons' Tod, Elza 1121 -> 1061): Haltebit 0x20 vor dem ersten
+  KI-Takt -> INIT laeuft nie (st=0, hp=0), Kopien liegen ~30 Bilder flach, springen dann auf und greifen am Treppenfuss (460/497).
+* ORCHESTRATOR-ENTSCHEID E1: "moeglichst weit weg an der Seite" gilt fuer JEDE Ankunftsrichtung (1060/1061); Abstand mindestens
+  4591 (Ankunft von unten) oder der groesste moegliche; STEHEND und initialisiert.
+* Vor dem Abschluss `git merge master` (a138a278) und die Riegel-Gruppen gruen.
+
+### 10.0 Merge
+`git merge master` (a138a278 = 9e94db81 Spur J + Nachtrag 15 + Orchestrator-Doku): konfliktfrei, Merge-Commit dd64b9cb.
+`local_build.sh configure` + `build` ok (792/792), exe 2026-10-19 ~10:55. Messkopien `re15_pc_nb3q_<lauf>.exe` (Skript
+scratchpad/nb3/lauf.sh, Laufordner scratchpad/nb3/runs/<lauf>, Shell ohne RE15_*-Variable, danach geloescht).
+
+### 10.1 Messung vorher (Bau dd64b9cb)
+* MANGEL 1 (Lauf v_altstand = Karte der Abnahme M10): `1040;-20700;0;-13000;0;0;9:71;3:94;9:73;7:224;7:225;7:226;7:227`
+  (Leon nach Irons' Tod, alle vier 10E0-Zombies getoetet, Kopie-Bits 124..127 nie gesetzt = jeder Spielstand v0.8.22..v0.8.26),
+  `A0.2,W5` ab Bild 60, Ende 100#1060. debug.log: `DOOR FIRE slot=2 ... spawn=(26000,0,25300)` -> `PC loaded room1060.rdt` ->
+  `ROOM1060: Leon: Nachspawn 1060 (Programm E): Kopien an der Westseite, gehalten bis Etage 4`; state.log F90:
+  `[1 t=10 st=0 g=2d @(20218,26533)] hp=0 [2 t=10 st=0 g=2d @(20218,25732)] hp=0 [3 t=10 st=0 g=2d @(21019,26532)] hp=0
+  [4 t=10 st=0 g=2d @(20916,25341)] hp=0` = VIER Zombies aus dem Nichts (reproduziert).
+* MANGEL 2 (Lauf v_leon_oben = Karte/Skript der Abnahme M9): `1060;26000;-14400;25300;2048;0;9:71;3:94;9:73;9:74;9:75;9:76;
+  7:224;7:225;7:226;7:227`, Skript `W0.5,U0.67,W0.3,L0.35,W0.3,U0.45,W0.3,A0.2,W5,R0.35,W0.3,U3.0,W0.3,R0.35,W0.3,U0.5,W0.3,A0.2,W8`
+  ab Bild 30, FRAMEDUMP 430-580/10. state.log: F430 cam=1 PL(20373,20332) (Kopf Treppe A, Etage 6), F460..F490 cam=2 PL z 22112
+  -> 24081 (Treppe A abwaerts), alle vier Kopien `st=0 g=2d hp=0`; debug.log `Spielerin auf Etage 4 bei (20364,25368) -> Kopien frei,
+  kleinster Abstand 460`; F500 `st=1 g=00 hp=58/94/66/60`; F520 `gr=1` (gegriffen), F540 hp 80, F560 hp 60. Bildtafel
+  scratchpad/nb3/v_leon_oben.png: Bild 460/480 liegen die vier Kopien STEIF FLACH links unter dem Fenster, Bild 500 stehen sie
+  auf und umringen Leon am Fuss der Westtreppe (reproduziert).
+
+### 10.2 RE-Belege (selbst gelesen/disassembliert)
+* HALTEBIT = GANZER TAKT (Mangel 2). STAGE1.BIN (re15_disasm.py dis 0x80100424/0x801004c4/0x801005d0): @0x80100450 `lbu v0,9(a0)`,
+  @0x80100458 `andi v0,v0,0x20`, @0x8010045c `bne v0,zero,0x80100658` springt hinter: Distanz `jal 0x80065f60` (SquareRoot0)
+  @0x801004ac, Schwerkraft `jal 0x8001bd60` @0x80100514, Steuerung `jal 0x80039e7c` @0x80100538, den ZUSTANDS-DISPATCH
+  `lbu v0,4(v0)` @0x80100568 / `addiu at,at,-2124` (0x8011f7b4) @0x80100578 / `jalr v0` @0x80100588 (Tabelle @0x8011f7b4 Eintrag [0]
+  = 0x80100688 = INIT: `+0x4 = 1` @0x80100704, RNG-Zuege ab @0x80100774; [1] = 0x80101224 aktiv) und die
+  Folgeaufrufe @0x801005dc..@0x80100650 (u.a. `jal 0x8002b498` Kasten-Versatz); es bleibt nur `jal 0x8001b064` @0x8010066c
+  (Schatten, RE15_FUN_CATALOG). => Ein Haltebit VOR dem ersten Takt laesst den INIT nie laufen (st=0, hp=0, nie berechnete Pose =
+  flach liegend, 10.1).
+* ORIGINAL-FORM EINES SICHTBAREN HALTS (ROOM1141, scd_dump_room.py): sub00 setzt die Gorillas ab Spawn gehalten (Sce_em_set grid
+  0x30 @0x00B1A `44 01 27 30 .. a6 27 00 00 6c 20` = (10150,0,8300) und @0x00B2E `.. a8 2f` = (10150,0,12200)), GEPARKT ausserhalb
+  des Raums (SCA ROOM1141 Gruppe 0: Raum bis z 1750, @0x005A0/@0x005AC); sub02 versetzt sie vor der Freigabe (Pos_set @0x00E38
+  `32 00 1c 25 00 00 08 d5` = (9500,-11000), @0x00E4C `.. a6 27 00 00 dc ba` = (10150,-17700)), gibt sie frei `34 0c 10 00`
+  @0x00E40/@0x00E54 und haelt sie ERST nach Sleep 1/10/101 (@0x00E44/@0x00E58/@0x00E68) wieder `34 0c 30 00` @0x00E70/@0x00E78
+  (Freigabe @0x00F64/@0x00F74). Sichtbar gehalten wird also nur, wer schon gelaufen ist (INIT); wer vor dem INIT gehalten wird,
+  steht ausser Sicht. Port: im Spawn-Bild kein Haltebit, der KI-Takt am Ende des Bilds macht den INIT (scd_vm_tick vor
+  re15_game_step, platform/pc/main.c:5702 vor :7707), ab dem naechsten Bild gehalten.
+* ANKUNFT VON OBEN (Mangel 2 / E1). ROOM1060 = ROOM1061 (cmp -l 0, 9.1). Tuer Etage 8: ROOM1120 Slot 0 @0x00C76 -> Raum 0x06,
+  (26000,-14400,25300) (Abnahme 2 M9); ROOM1061 Tueren @0x00D12/@0x00D32/@0x00D52 auf derselben Flaeche (26600,24300,1000,2200),
+  Etagen 8/4/0 (2.2). Weg nach unten: Treppe B 8 -> 6, Treppe A 6 -> 4 (AOT Lauf A x 20200..22600, @0x00D72..); GEMESSENES Ende
+  auf Etage 4: (20364,25368) Leon (v_leon_oben = Abnahme M9), (20432,25368) Elza (Abnahme M11), z 25368 = Treppenende 6 -> 4
+  (probe_stair_hwtruth_1060.c).
+* FREIE FLAECHE ETAGE 4 = Band-4-Zellen der SCA (scratchpad/nb3/tools/sca.py, ROOM1060 SCA @0x004A0, Gruppe 0): Wand Ost @0x00584
+  (x 26900..28900), Nord @0x00590 (z 26950..), West @0x0059C (x ..19800), Sued @0x005B4 (z ..18200), Treppenkern @0x005A8
+  (x 19600..23400, z 20800..24900), Lauf-B-Block @0x005C0 (x 22900..27100, z 20000..24100). Kern und Block ueberlappen in
+  x 22900..23400 und reichen bis an die West-/Ostwand: erreichbar ist das L-Band im Norden (z 24900..26950 bzw. ab x 23400
+  z 24100..26950); das Suedband ist auf Etage 4 abgeschnitten (Zusammenhangskomponente 4182 Rasterpunkte, x 20200..26500,
+  z 24500..26550).
+* PACKUNG (Werkzeug scratchpad/nb3/tools/packung.py, Regel von 2.5: Zellen um r = 400 erweitert, 50er-Raster, gierig der weiteste
+  Punkt mit Abstand >= 800): vom Ankunftspunkt von UNTEN (25023,24568) kommt k_lagen_nach Wert fuer Wert heraus ((20200,26550) 254,
+  (20200,25750) 157, (21000,26550) 298, (20900,25350) 122) - dieselbe Rechnung wie die der bisherigen Lagen. Von OBEN
+  (20364,25368): (26500,26550) 6249 Gier 1924, (26500,24500) 6197 Gier 2140, (26500,25750) 6148 Gier 2007, (25950,25100) 5592
+  Gier 2079 = Ostseite an der 10C1/10C0-Tuer. Dieselbe Menge fuer JEDES Ankunfts-x der Treppe A (20200: 6410..5756; 21576
+  (Abnahme l5): 5064..4382; 22600: 4075..3361 = das geometrische Maximum fuer diese Ankunft), nur die Gier aendert sich um wenige
+  4096tel. Durch die 10C1/10C0-Tuer (Spawn (26000,25300) auf Etage 4) bleibt k_lagen_nach (Abstaende 5933/5817/5154/5100).
+* MERKER (Mangel 1). Leons Montage merkt ihre Umzuege in Bank 9: irons_tod_1150.c umzug_vorbereiten setzt (9,74)=l1140>0,
+  (9,75)=1, (9,76)=l1070>0 (RE15_IT_BIT_1130/_1040/_1030), die Nachspawns 1130/1040 lesen sie (programm_bauen Zustand AUS). Fuer
+  1060 fehlte das: die Kopie-Bits 124..127 sind in einem Spielstand ohne Umzug 0 = "lebt". Bit 96: unit_r36_kartenbits-Zensus
+  (206 RDTs, 40674 Opcodes, 164 Item_aot_set) "belegt: ... 90 91 92 98 99 ..." = 96 im Original frei; im Port frei (k_port[] ohne
+  96; Zweige r39/johnruf1041 nur 97, r39/titelversion und r39/integration ohne Bank-9-Bit 96; Spur O parkplatz_r39 nutzt Bank 3/4/7).
+
+### 10.3 Umsetzung (Nachbesserung 3)
+* include/re15_elzazombies_r39.h: `RE15_R39Q_BIT_LEON_1060 96` (Bank 9, Herleitung im Kopf); Lagen-Abfrage um 3 = "von oben"
+  erweitert; `re15_elzazombies_r39_nach_oben()` (Pruefhaken: welche Packung der letzte Nachspawn nahm).
+* engine/src/elzazombies_r39.c:
+  - re15_r39q_leon_umzug setzt (9,96)=1 (beim Szenenstart, zusammen mit Leons (9,74..76)); leon_nachspawn und programm_bauen
+    (Leon, Zustand AUS) verlangen (9,96), sonst `Leon: kein Nachspawn 1060: Umzug 10E0 -> 1060 nie gelaufen ((9,96)=0, ...)`.
+  - k_lagen_nach_oben (26500,26550,1924) (26500,24500,2140) (26500,25750,2007) (25950,25100,2079); nach_lagen() waehlt beim
+    Bauen des Nachspawns aus dem Band der Figur am Spawn der Eintrittstuer: Band > 4 (Tuer Etage 8) -> Ostseite, sonst
+    Westseite. Gilt fuer Elza (1061) und Leon (1060).
+  - halten_1061: das Haltebit nur auf Kopien mit state != 0 (INIT gelaufen); Freigabe unveraendert (Etage 4 und Treppe zu Ende).
+* tests/unit/test_r36_kartenbits.c: k_port[] + (9,96) (eine Zeile). tests/integration/test_r35_cut1150.cmake Teil D: + 1 Pruefung
+  (kein `Leon: Nachspawn 1060` beim Laden eines Spielstands mit (9,73) ohne (9,96) - die Stelle, die die Abnahme ungeprueft fand).
+* Keine Aenderung an irons_tod_1150.c, scd_vm.c, scd_room_setup.c, main.c; keine Assets, keine Nachrichten-Ids, keine Sprachdateien.
+
+### 10.4 Messung nachher (Bau bab5a6b9, Tests 8c203171; Laeufe scratchpad/nb3/runs/n_*)
+* MANGEL 1, Lauf n_altstand (Karte/Skript wie v_altstand): `DOOR FIRE slot=2 ...` -> `PC loaded room1060.rdt` -> `[elzazombies-r39]
+  ROOM1060: Leon: kein Nachspawn 1060: Umzug 10E0 -> 1060 nie gelaufen ((9,96)=0, Spielstand vor Spur Q)`; state.log F90
+  `PL(26000,25300,rot=2048,hp=100) ... cam=7 ... gr=0` OHNE einen Gegner = Zeichen fuer Zeichen die Gegenprobe der Abnahme mit der
+  ausgelieferten v0.8.26-exe (scratchpad/qa2/runs/g_v0826_altstand/state.log F90 `PL(26000,25300,rot=2048,hp=100) ... cam=7 ...
+  gr=0`). Mit (9,96) (= Umzug mit vier Lebenden) dieselbe Karte: Nachspawn mit 4 Kopien (Riegel altstand, Fall "neu").
+* MANGEL 2, Lauf n_leon_oben (Karte/Skript wie v_leon_oben + (9,96)): `Leon: Nachspawn 1060 (Programm E): Ankunft von oben, Kopien an
+  der Ostseite, gehalten bis Etage 4`; state.log F1 `[1 t=10 st=1 g=20 ... @(26482,26532,r1924)] hp=58 [2 ... st=1 g=20
+  @(26482,24500)] hp=94 [3 ... @(26482,25731)] hp=66 [4 ... @(25950,25100)] hp=60` (INIT im Spawn-Bild, danach gehalten);
+  F430..F490 unveraendert (cam 1 -> 2 ab F458); `Spielerin auf Etage 4 bei (20364,25368) -> Kopien frei, kleinster Abstand 5592`
+  (vorher 460); F500 `g=00`, sie gehen los; F520 5042, F560 3998, F600 3463, F690 1999 = kommen naeher; `gr=0`, PL hp=100 bis F700
+  (vorher Griff ab F520, HP 60 bei F560). Bildtafel Q_belege/q_n3_nachher_leon_oben.png: Bild 460/480 stehen die vier
+  Polizei-Zombies AUFRECHT an der 10C0-Tuer (rechts, Schild F2), Leon kommt die Westtreppe herunter; Bild 500 Leon unten links,
+  die Zombies an der Tuer; Bild 540..680 kommen sie quer ueber den Absatz. Vorher Q_belege/q_n3_vorher_leon_oben.png (flach
+  liegend, Bild 500 umringt).
+* Lauf n_elza_oben (Elza, (9,95), Kopien 124..127 leben): `Nachspawn 1061 (Programm E): Ankunft von oben, Kopien an der Ostseite`;
+  F1 st=1 hp 58/94/66/60 g=20; `Spielerin auf Etage 4 bei (20432,25368) -> Kopien frei, kleinster Abstand 5525` (Abnahme M11:
+  497); kein Griff bis F700. Bildtafel Q_belege/q_n3_nachher_elza_oben.png (Bild 470/480/500).
+* VON UNTEN unveraendert (integration_r39_elzazombies_treppe, Elza, vier Kopien): Kopien bei (20218,26533) (20218,25732)
+  (21019,26532) (20916,25341) - dieselben Lagen wie vorher (v_altstand F90, alter Code) -, frei bei der Ankunft (25424,24568),
+  kleinster Abstand 4574 (>= 4000; die 4591 der Abnahme M5 stammen aus einem Lauf mit DREI Kopien, Bit 125 tot, ohne den
+  Nachbarn bei (20218,25732)).
+
+### 10.5 Tests (Nachbesserung 3)
+* Neue Riegel (tests/unit/probes/r39_elzazombies.cmake): unit_r39_elzazombies_altstand (Karte der Abnahme M10 ohne (9,96) ->
+  1060 ohne Gegner; 10E0 lebt -> bleibt in 10E0; Gegenprobe (9,96)=1 -> 4 Kopien; re15_r39q_leon_umzug setzt (9,96) und die
+  Kopie-Bits), unit_r39_elzazombies_oben (Elza 1061 + Leon 1060 von oben: Ostseiten-Lagen, im Spawn-Bild kein Haltebit, nach dem
+  ersten KI-Takt initialisiert, ab Bild 2 gehalten, 200 Bilder still, frei am Ende der Treppe A mit 5525/5592 >= 4591, naeher,
+  HP 100; 10C1-Tuer: Westseite, sofort frei, 5100), integration_r39_elzazombies_altstand (echte exe, Karte M10: Bild 90 ohne
+  Gegner; mit (9,96): 4), integration_r39_elzazombies_oben (echte exe, Weg von oben Leon + Elza: Ostseite, 0 Bilder mit st=0,
+  42/37 Bilder gehalten in Schnitt 2, Abstand 5592/5525, kein Griff, HP 100 bis Bild 700, Bild ankunft_oben.ppm).
+  Gegenprobe der Pruefmuster am alten Lauf v_leon_oben: st=0 in 500 Zeilen, 0 Bilder "cam=2 + g=20", gr=1 in 100 Zeilen = rot.
+* Nachgezogen: unit leon_nach1060 (Zustand nach der Montage mit (9,96); ohne (9,96) keine Kopie), leon_* ((9,96) nach dem Umzug,
+  mit Modul aus 0), test_r36_kartenbits k_port[] + (9,96) ("Bit  96 ... im Original frei"), integration_r35_cut1150 Teil D
+  (kein `Leon: Nachspawn 1060`).
+* GEZIELTER LAUF (Bau 9c727645 = Code-Stand bab5a6b9 + Riegel 8c203171; `-j 4 --timeout 1500`, 11:16:17-11:39:13), Regex woertlich:
+  `^(unit_|prop_|probe_)|r39_elzazombies|^integration_r35_cut1150$|^integration_r36_szene1150$|^integration_r38_montage$|^integration_r37_zombieaktiv$|^integration_r39_hund1121$|^integration_r38_kleinkram_irons$|^integration_r37_elzaems_leon10c0kraehe$|^integration_r37_elzaems_elza10c1kraehe$|^integration_r33_speichern$|^integration_r36_elza_irons$`
+  -> "100% tests passed, 0 tests failed out of 911" (Total Test time (real) = 1375.68 sec), darunter alle 8
+  integration_r39_elzazombies_* (kette, knall, treppe, durch, ohne, leon, altstand, oben), integration_r35_cut1150 (613 s),
+  integration_r36_szene1150, integration_r38_montage, integration_r37_zombieaktiv, integration_r39_hund1121. Danach lag in
+  build/platform/pc nur re15_pc.exe.
+* Danach nur Kommentare in elzazombies_r39.c (INIT-Adresse 0x80100688 / @0x80100704) -> Neubau, `ctest -R
+  "^unit_r39_elzazombies|^unit_r36_kartenbits$|^integration_r39_elzazombies_(altstand|oben|treppe)$" -j 4` -> "100% tests passed,
+  0 tests failed out of 19".
+
+### 10.6 Je Mangel (Ursache, Messung vorher, Beleg, Aenderung, Messung nachher)
+* MANGEL 1 - alte Leon-Spielstaende nach Irons' Tod bekamen in ROOM1060 vier Zombies aus dem Nichts
+  - Ursache: der Leon-Nachspawn 1060 (Nachbesserung 2) gated nur ueber (9,73) und die Kopie-Bits 124..127 == 0. Ein Spielstand
+    ohne den Umzug dieser Spur (v0.8.22..v0.8.26; auch master/Hauptbaum-exe, dort ist Leons 1060-Schritt noch gar nicht drin:
+    `git show master:re15_port/engine/src/irons_tod_1150.c` ohne re15_r39q-Haken) hat dort 0 = "lebt". Es fehlte der Merker
+    "Umzug gelaufen", den Leons Montage fuer 1130/1040/1030 hat ((9,74)/(9,75)/(9,76)).
+  - Messung vorher (10.1, v_altstand): `Leon: Nachspawn 1060 (Programm E)`, F90 vier Aktoren Typ 0x10 st=0 hp=0 an der Westseite,
+    obwohl alle vier 10E0-Zombies getoetet sind (7:224..227). Ebenso integration_r35_cut1150 Teil D (Abnahme 2: Z. 45).
+  - Beleg (10.2): Leons Merker-Form irons_tod_1150.c umzug_vorbereiten (RE15_IT_BIT_1130/_1040/_1030); Bit 96 im Original-Zensus
+    frei, im Port frei; v0.8.26 zeigt in 1060 keinen Gegner (Abnahme 2 M10, g_v0826_altstand F90).
+  - Aenderung (10.3): `RE15_R39Q_BIT_LEON_1060 96` gesetzt in re15_r39q_leon_umzug, gelesen von leon_nachspawn/programm_bauen;
+    k_port[] + 1 Zeile; r35 Teil D prueft "kein Nachspawn".
+  - Messung nachher (10.4, n_altstand): `Leon: kein Nachspawn 1060: Umzug 10E0 -> 1060 nie gelaufen`, F90 ohne Gegner = v0.8.26.
+    Leben die 10E0-Zombies noch, bleiben sie in 10E0 (unit altstand: 1060 0 Kopien, 10E0 4 Zombies) - nicht doppelt. Mit dem
+    Umzug (neue Spielstaende) unveraendert: Nachspawn mit den Ueberlebenden (unit leon_nach1060, integration altstand Fall "neu").
+* MANGEL 2 - Ankunft im Treppenhaus von OBEN: Haltepose flach liegend, dann Griff am Treppenfuss
+  - Ursache: (a) halten_1061 setzte das Haltebit sofort im Spawn-Bild, vor dem ersten KI-Takt: das Bit ueberspringt den ganzen
+    Takt samt INIT (10.2), die Kopien blieben st=0/hp=0 in der nie berechneten Pose; von unten unsichtbar (Kamera-Wechsel und
+    Freigabe im selben Bild), von oben zeigt Schnitt 2 den Absatz schon waehrend Treppe A. (b) Es gab nur EINE Nachspawn-Packung
+    (Westseite, weit weg vom Ankunftspunkt von unten); von oben endet Treppe A genau dort.
+  - Messung vorher (10.1, v_leon_oben = Abnahme M9): F460..F490 cam=2, vier Kopien st=0 g=2d hp=0; Bild 460/480 flach liegend;
+    Freigabe bei (20364,25368) mit kleinstem Abstand 460; F520 gegriffen, HP 100 -> 60. Elza (Abnahme M11): 497.
+  - Beleg (10.2): STAGE1.BIN @0x80100450/@0x80100458/@0x8010045c -> @0x80100658 hinter den Dispatch @0x80100588 (Tabelle
+    @0x8011f7b4, [0] = INIT); ROOM1141 sub00/sub02 (gehalten ab Spawn nur geparkt ausser Sicht @0x00B1A/@0x00B2E, sichtbar gehalten
+    erst nach dem Lauf @0x00E40/@0x00E54 -> @0x00E70/@0x00E78); SCA Band 4 @0x00584..@0x005C0, Tuer Etage 8 ROOM1120 @0x00C76,
+    Ende Treppe A gemessen (20364,25368)/(20432,25368).
+  - Aenderung (10.3): Haltebit erst nach dem INIT (state != 0); bei Ankunft von oben (Band > 4 am Spawn) die Ostseiten-Packung
+    k_lagen_nach_oben (ORCHESTRATOR-ENTSCHEID E1 "moeglichst weit weg an der Seite" fuer jede Ankunftsrichtung, Lagen aus der
+    SCA mit derselben Regel wie die Westseite), sonst wie bisher die Westseite.
+  - Messung nachher (10.4): Leon von oben 5592, Elza von oben 5525 (>= 4591 von unten), Kopien in Schnitt 2 AUFRECHT an der
+    10C0/10C1-Tuer (st=1, hp 58/94/66/60, 42 bzw. 37 Bilder sichtbar gehalten), kein Griff und HP 100 bis Bild 700; von unten
+    unveraendert (Lagen gleich, frei bei der Ankunft, 4574 >= 4000).
+* MERGE: master a138a278 (Spur J + Nachtrag 15 + Orchestrator-Doku) konfliktfrei gemergt (dd64b9cb), 10.0.
+
+### 10.7 OFFEN (fuer die Integration, keine Luecke im Spurbaum)
+* Wie 9.9: Spur P (Tuersperre 1041 -> 1031 in der Panikphase, Panikmusik ueber der Montage) erst im Integrationsbaum messbar.
+* H4 der Abnahme 2 (Elza-Spielstand mit (9,95) aus dem alten Q-Stand ohne 1071-Umzug): nicht erreichbar - master/Hauptbaum-exe
+  enthaelt Spur P nicht, also setzt dort niemand (9,97), also entsteht (9,95) nie (einziger Setzer: umzug_vorbereiten nach der
+  Flanke von (9,97)). Kein Code noetig; mit P kommen Q (Stand Nachbesserung 3) und P zusammen in das naechste Release.
+* Gehaltene Kopien spielen im Port ihren laufenden Clip noch zu Ende (state.log af 1 -> 43 mit g=20, dann stehend), das Original
+  springt am Haltebit auch an den Animationsaufrufen vorbei (@0x8010045c -> @0x80100658). Waehrend des Halts von oben ist das
+  ausserhalb des Bilds (Etage 8/6, Schnitte 0/1); in Schnitt 2 stehen sie still (Bilder 460/480). Vorbestehende Port-Eigenheit
+  des Haltebits (betrifft auch Leons montage_r38.c), nicht Gegenstand dieser Nachbesserung.
+
+### 10.8 Fuer den Nutzer (einfach)
+* Alte Spielstaende (bis v0.8.26): wer Irons' Tod schon hinter sich hat, findet im Treppenhaus KEINE Zombies aus dem Nichts mehr.
+  Die Zombies aus dem Medical Room tauchen dort nur auf, wenn sie in der neuen Montage nach Irons' Tod wirklich umgezogen sind.
+* Treppenhaus von OBEN (Leon nach Irons' Tod ueber den 3. Stock, Elza aus 1121): die Zombies stehen jetzt auf der anderen Seite
+  des Absatzes an der Tuer zur 2F West Side, aufrecht, und laufen erst los, wenn du unten an der Westtreppe ankommst - mit rund
+  5500 Abstand (von unten sind es rund 4600). Kein Liegen, kein Griff im ersten Moment.
+* Von unten und durch die Tuer der 2F West Side bleibt alles wie bisher: die Zombies stehen an der Westseite unter dem Fenster.
+* Keine neuen Assets, keine Sprachdateien. Neues Speicher-Bit: Bank 9 Bit 96 (Leons Treppenhaus-Umzug), im Spielstand enthalten.
