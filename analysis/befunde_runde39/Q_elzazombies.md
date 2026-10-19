@@ -734,3 +734,59 @@ scratchpad/nb3/lauf.sh, Laufordner scratchpad/nb3/runs/<lauf>, Shell ohne RE15_*
   (21019,26532) (20916,25341) - dieselben Lagen wie vorher (v_altstand F90, alter Code) -, frei bei der Ankunft (25424,24568),
   kleinster Abstand 4574 (>= 4000; die 4591 der Abnahme M5 stammen aus einem Lauf mit DREI Kopien, Bit 125 tot, ohne den
   Nachbarn bei (20218,25732)).
+
+### 10.5 Tests (Nachbesserung 3)
+* (Lauf gestartet 11:16, Ergebnis folgt)
+
+### 10.6 Je Mangel (Ursache, Messung vorher, Beleg, Aenderung, Messung nachher)
+* MANGEL 1 - alte Leon-Spielstaende nach Irons' Tod bekamen in ROOM1060 vier Zombies aus dem Nichts
+  - Ursache: der Leon-Nachspawn 1060 (Nachbesserung 2) gated nur ueber (9,73) und die Kopie-Bits 124..127 == 0. Ein Spielstand
+    ohne den Umzug dieser Spur (v0.8.22..v0.8.26; auch master/Hauptbaum-exe, dort ist Leons 1060-Schritt noch gar nicht drin:
+    `git show master:re15_port/engine/src/irons_tod_1150.c` ohne re15_r39q-Haken) hat dort 0 = "lebt". Es fehlte der Merker
+    "Umzug gelaufen", den Leons Montage fuer 1130/1040/1030 hat ((9,74)/(9,75)/(9,76)).
+  - Messung vorher (10.1, v_altstand): `Leon: Nachspawn 1060 (Programm E)`, F90 vier Aktoren Typ 0x10 st=0 hp=0 an der Westseite,
+    obwohl alle vier 10E0-Zombies getoetet sind (7:224..227). Ebenso integration_r35_cut1150 Teil D (Abnahme 2: Z. 45).
+  - Beleg (10.2): Leons Merker-Form irons_tod_1150.c umzug_vorbereiten (RE15_IT_BIT_1130/_1040/_1030); Bit 96 im Original-Zensus
+    frei, im Port frei; v0.8.26 zeigt in 1060 keinen Gegner (Abnahme 2 M10, g_v0826_altstand F90).
+  - Aenderung (10.3): `RE15_R39Q_BIT_LEON_1060 96` gesetzt in re15_r39q_leon_umzug, gelesen von leon_nachspawn/programm_bauen;
+    k_port[] + 1 Zeile; r35 Teil D prueft "kein Nachspawn".
+  - Messung nachher (10.4, n_altstand): `Leon: kein Nachspawn 1060: Umzug 10E0 -> 1060 nie gelaufen`, F90 ohne Gegner = v0.8.26.
+    Leben die 10E0-Zombies noch, bleiben sie in 10E0 (unit altstand: 1060 0 Kopien, 10E0 4 Zombies) - nicht doppelt. Mit dem
+    Umzug (neue Spielstaende) unveraendert: Nachspawn mit den Ueberlebenden (unit leon_nach1060, integration altstand Fall "neu").
+* MANGEL 2 - Ankunft im Treppenhaus von OBEN: Haltepose flach liegend, dann Griff am Treppenfuss
+  - Ursache: (a) halten_1061 setzte das Haltebit sofort im Spawn-Bild, vor dem ersten KI-Takt: das Bit ueberspringt den ganzen
+    Takt samt INIT (10.2), die Kopien blieben st=0/hp=0 in der nie berechneten Pose; von unten unsichtbar (Kamera-Wechsel und
+    Freigabe im selben Bild), von oben zeigt Schnitt 2 den Absatz schon waehrend Treppe A. (b) Es gab nur EINE Nachspawn-Packung
+    (Westseite, weit weg vom Ankunftspunkt von unten); von oben endet Treppe A genau dort.
+  - Messung vorher (10.1, v_leon_oben = Abnahme M9): F460..F490 cam=2, vier Kopien st=0 g=2d hp=0; Bild 460/480 flach liegend;
+    Freigabe bei (20364,25368) mit kleinstem Abstand 460; F520 gegriffen, HP 100 -> 60. Elza (Abnahme M11): 497.
+  - Beleg (10.2): STAGE1.BIN @0x80100450/@0x80100458/@0x8010045c -> @0x80100658 hinter den Dispatch @0x80100588 (Tabelle
+    @0x8011f7b4, [0] = INIT); ROOM1141 sub00/sub02 (gehalten ab Spawn nur geparkt ausser Sicht @0x00B1A/@0x00B2E, sichtbar gehalten
+    erst nach dem Lauf @0x00E40/@0x00E54 -> @0x00E70/@0x00E78); SCA Band 4 @0x00584..@0x005C0, Tuer Etage 8 ROOM1120 @0x00C76,
+    Ende Treppe A gemessen (20364,25368)/(20432,25368).
+  - Aenderung (10.3): Haltebit erst nach dem INIT (state != 0); bei Ankunft von oben (Band > 4 am Spawn) die Ostseiten-Packung
+    k_lagen_nach_oben (ORCHESTRATOR-ENTSCHEID E1 "moeglichst weit weg an der Seite" fuer jede Ankunftsrichtung, Lagen aus der
+    SCA mit derselben Regel wie die Westseite), sonst wie bisher die Westseite.
+  - Messung nachher (10.4): Leon von oben 5592, Elza von oben 5525 (>= 4591 von unten), Kopien in Schnitt 2 AUFRECHT an der
+    10C0/10C1-Tuer (st=1, hp 58/94/66/60, 42 bzw. 37 Bilder sichtbar gehalten), kein Griff und HP 100 bis Bild 700; von unten
+    unveraendert (Lagen gleich, frei bei der Ankunft, 4574 >= 4000).
+* MERGE: master a138a278 (Spur J + Nachtrag 15 + Orchestrator-Doku) konfliktfrei gemergt (dd64b9cb), 10.0.
+
+### 10.7 OFFEN (fuer die Integration, keine Luecke im Spurbaum)
+* Wie 9.9: Spur P (Tuersperre 1041 -> 1031 in der Panikphase, Panikmusik ueber der Montage) erst im Integrationsbaum messbar.
+* H4 der Abnahme 2 (Elza-Spielstand mit (9,95) aus dem alten Q-Stand ohne 1071-Umzug): nicht erreichbar - master/Hauptbaum-exe
+  enthaelt Spur P nicht, also setzt dort niemand (9,97), also entsteht (9,95) nie (einziger Setzer: umzug_vorbereiten nach der
+  Flanke von (9,97)). Kein Code noetig; mit P kommen Q (Stand Nachbesserung 3) und P zusammen in das naechste Release.
+* Gehaltene Kopien spielen im Port ihren laufenden Clip noch zu Ende (state.log af 1 -> 43 mit g=20, dann stehend), das Original
+  springt am Haltebit auch an den Animationsaufrufen vorbei (@0x8010045c -> @0x80100658). Waehrend des Halts von oben ist das
+  ausserhalb des Bilds (Etage 8/6, Schnitte 0/1); in Schnitt 2 stehen sie still (Bilder 460/480). Vorbestehende Port-Eigenheit
+  des Haltebits (betrifft auch Leons montage_r38.c), nicht Gegenstand dieser Nachbesserung.
+
+### 10.8 Fuer den Nutzer (einfach)
+* Alte Spielstaende (bis v0.8.26): wer Irons' Tod schon hinter sich hat, findet im Treppenhaus KEINE Zombies aus dem Nichts mehr.
+  Die Zombies aus dem Medical Room tauchen dort nur auf, wenn sie in der neuen Montage nach Irons' Tod wirklich umgezogen sind.
+* Treppenhaus von OBEN (Leon nach Irons' Tod ueber den 3. Stock, Elza aus 1121): die Zombies stehen jetzt auf der anderen Seite
+  des Absatzes an der Tuer zur 2F West Side, aufrecht, und laufen erst los, wenn du unten an der Westtreppe ankommst - mit rund
+  5500 Abstand (von unten sind es rund 4600). Kein Liegen, kein Griff im ersten Moment.
+* Von unten und durch die Tuer der 2F West Side bleibt alles wie bisher: die Zombies stehen an der Westseite unter dem Fenster.
+* Keine neuen Assets, keine Sprachdateien. Neues Speicher-Bit: Bank 9 Bit 96 (Leons Treppenhaus-Umzug), im Spielstand enthalten.
