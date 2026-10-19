@@ -765,7 +765,7 @@ static void teil_ohne(void)
 /* ================================================================================================================== */
 /* auswerten_ton <laut.raw> <stumm.raw>: integration_r39_elzazombies_knall — zwei RE15_AUDIO_CAP_SYNC-Mitschnitte desselben  */
 /* Laufs, einmal mit RE15_R39Q_KNALL_STUMM (Signal verbraucht, nicht gespielt). Je Spielbild 1470 Stereo-Abtastungen s16  */
-/* (audio_pc.c, Offset = Bild * 1470). Die Differenz = die Knaelle der Kette (Satz 0: Auftakt 1041, Ende 1061).          */
+/* (audio_pc.c, Offset = Bild * 1470). Die Differenz = die Knaelle der Kette (Satz 0 Auftakt 1041, Satz 1 Ende 1061).    */
 /* ================================================================================================================== */
 static int auswerten_ton(const char *pa, const char *pb)
 {
@@ -789,7 +789,8 @@ static int auswerten_ton(const char *pa, const char *pb)
     }
     if (g_bis >= 0) { printf("  Knall Bilder %d..%d (%d), Differenz-RMS max %.0f\n", g_von, g_bis, g_bis - g_von + 1, g_max);
                       if (g_bis - g_von + 1 >= 20 && g_max >= 1000) lang_ok++; }
-    PRUEF(gruppen == 2 && lang_ok == 2, "zwei hoerbare Tuerknaelle (Knall-Bank Satz 0) in der Kette: %d Gruppen, %d >= 20 Bilder und RMS >= 1000",
+    PRUEF(gruppen == 2 && lang_ok == 2, "zwei hoerbare Knaelle (Knall-Bank Satz 0 Tuer, Satz 1 wie ROOM1030) in der Kette: %d Gruppen, "
+          "%d >= 20 Bilder und RMS >= 1000",
           gruppen, lang_ok);
     free(a); free(b);
     return g_fail;

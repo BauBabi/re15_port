@@ -1,15 +1,18 @@
 # test_r39_elzazombies.cmake — Runde 39 Spur Q "elzazombies": Elza, Zombie-Durchbrueche in der Panikphase an der ECHTEN
 # exe (Dossier analysis/befunde_runde39/Q_elzazombies.md, Mechanik include/re15_elzazombies_r39.h). Aufruf:
 #   cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE=<probe_r39_elzazombies_karte> -DRE15_AUSWERTER=<test_r39_elzazombies>
-#         -DWORKDIR=<dir> -DTEIL=<kette|knall|treppe|ohne> -P test_r39_elzazombies.cmake
+#         -DWORKDIR=<dir> -DTEIL=<kette|knall|treppe|durch|ohne> -P test_r39_elzazombies.cmake
 #
-#   kette   Elza-Spielstand ROOM1041 (Intro durch: (3,125),(3,193); 1011 besucht: (3,116); 10E1/1071 nie betreten = alle
-#           leben), CONTINUE, (9,97) bei Bild 200 (= Spur P beim 1041-Ruf). debug.log: Flanke -> Umzug (10E1 4, 1071 5) ->
-#           Knall in 1041 -> ROOM1061 (+4 Gegner, Cut 2) -> Knall -> ROOM1031 (+5, Cut 7) -> Original-Se_on -> +3 Kriecher ->
-#           Cut 12 -> ROOM1041 -> "Rueckkehr beendet, Steuerung frei"; je Spur-Zeile: jede Kopie >= 400 naeher an der Kamera;
-#           Spieler-HP 100 in allen Schnitten; nach der Rueckkehr steht Elza an der gemerkten Stelle.
+#   kette   Elza-Spielstand ROOM1041 (Intro durch: (3,125),(3,193); 1011 besucht: (3,116); 10E1 nie betreten = alle
+#           leben), CONTINUE, (9,97) bei Bild 200 (= Spur P beim 1041-Ruf). debug.log: Flanke -> Umzug (10E1 4) ->
+#           Tuerknall in 1041 -> ROOM1061 (+4 Gegner, Cut 2) -> Knall Satz 1 -> ROOM1031 (+3 Kriecher, erstes Bild Cut 12) ->
+#           ROOM1041 -> "Rueckkehr beendet, Steuerung frei"; je Spur-Zeile: jede Kopie >= 400 naeher an der Kamera; Spieler-HP
+#           100 in beiden Schnitten; nach der Rueckkehr steht Elza an der gemerkten Stelle; kein 1071-Schritt (Nachtrag 11).
 #   knall   derselbe Lauf zweimal mit RE15_AUDIO_CAP_SYNC, einmal RE15_R39Q_KNALL_STUMM: die Differenz = zwei hoerbare
-#           Tuerknaelle (Auftakt 1041, Ende 1061) — test_r39_elzazombies auswerten_ton.
+#           Knaelle (Tuerknall Auftakt 1041, Knall Satz 1 Ende 1061) — test_r39_elzazombies auswerten_ton.
+#   durch   Nachtrag 11, ECHTER WEG: Elza ROOM1061 Etage 0 an der Tuer nach 1041, (9,95) + lebende 1061-Kopien, Aktion ->
+#           ROOM1041 -> Rolltor-Durchbruch (Cut 1, Knall, Rolltor hoch, 4 Kopien durch und naeher an die Kamera, HP 100) ->
+#           Elza am Eintrittspunkt mit Steuerung; Bild durchbruch.ppm.
 #   treppe  ECHTER WEG: Elza ROOM1041 an der Tuer zu 1061 mit (9,95) (Montage gelaufen), Aktion -> Tuer (Slot 2 @0x010D8)
 #           -> ROOM1061 Etage 0 -> Nachspawn (Kopien an der Westseite, gehalten) -> Treppe A (Etage 0 -> 2) -> Treppe B
 #           (2 -> 4) -> frei bei der Ankunft (25424,24568), kleinster Abstand >= 4000, alle Kopien an der Westseite
@@ -86,15 +89,15 @@ if(TEIL STREQUAL "kette")
     set(_pos 0)
     foreach(_m
             "Flanke (9,97) 0->1 in ROOM1041"
-            "Umzug: 10E1 lebend 4 -> 1061, 1071 lebend 5 -> 1031 Cut 7; (9,95)=1"
+            "Umzug: 10E1 lebend 4 -> 1061; (9,95)=1"
             "Folge #1 K ROOM1041"
             "PC loaded room1061"
             "S ROOM1061 T"
             "C ROOM1061 T"
             "K ROOM1061"
             "PC loaded room1031"
+            "S ROOM1031 T"
             "C ROOM1031 T"
-            "K ROOM1031"
             "PC loaded room1041"
             "Rueckkehr beendet, Steuerung frei")
         finde("${_m}" ${_pos} _p)
@@ -105,9 +108,9 @@ if(TEIL STREQUAL "kette")
         set(_pos ${_p})
     endforeach()
     if(_pos GREATER 0)
-        ok("Folge Flanke -> Umzug -> Knall 1041 -> 1061 (Spawn, Cut) -> Knall -> 1031 (Cut 7, Se_on) -> 1041 -> Steuerung frei")
+        ok("Folge Flanke -> Umzug -> Knall 1041 -> 1061 (Spawn, Cut) -> Knall -> 1031 (Kriecher, Cut 12) -> 1041 -> Steuerung frei")
     endif()
-    foreach(_m "S ROOM1061 T105 4" "C ROOM1061 T105 2" "S ROOM1031 T281 5" "C ROOM1031 T281 7" "K ROOM1031 T457 2" "C ROOM1031 T489 12")
+    foreach(_m "S ROOM1061 T105 4" "C ROOM1061 T105 2" "K ROOM1061 T237 1" "S ROOM1031 T281 3" "C ROOM1031 T281 12")
         string(FIND "${_dbg}" "${_m}" _p)
         if(_p LESS 0)
             # Takte koennen sich unter Last nicht verschieben (je Spielbild), aber der Text muss passen:
@@ -118,7 +121,10 @@ if(TEIL STREQUAL "kette")
             endif()
         endif()
     endforeach()
-    ok("1061: +4 Kopien, Cut 2; 1031: +5 Kopien Cut 7, Original-Knall, Cut 12")
+    ok("1061: +4 Kopien, Cut 2, Knall Satz 1; 1031: +3 Kriecher, erstes Bild Cut 12 (kein 1071-Schritt, Nachtrag 11)")
+    if(_dbg MATCHES "ROOM10[34]1 Cut [0-9]+ Bild [0-9]+: Aktor [0-9]+ Bit 1(28|29|30|31|32) ")
+        fail("eine 1041-/1071-Kopie (Bits 128..132) in der Montage")
+    endif()
     # Spur-Zeilen: jede Kopie naeher an der Kamera
     string(REGEX MATCHALL "ROOM10[36]1 Cut [0-9]+ Bild [0-9]+: Aktor [0-9]+ Bit [0-9]+ Abstand zur Kamera [0-9]+ -> [0-9]+" _sp "${_dbg}")
     set(_n 0)
@@ -132,8 +138,6 @@ if(TEIL STREQUAL "kette")
             set(_d1 "${CMAKE_MATCH_5}")
             set(_zaehlt 0)
             if(_raum STREQUAL "1061" AND _bit GREATER_EQUAL 124 AND _bit LESS_EQUAL 127)
-                set(_zaehlt 1)
-            elseif(_raum STREQUAL "1031" AND _cut EQUAL 7 AND _bit GREATER_EQUAL 128 AND _bit LESS_EQUAL 132)
                 set(_zaehlt 1)
             elseif(_raum STREQUAL "1031" AND _cut EQUAL 12 AND (_bit EQUAL 133 OR _bit EQUAL 144 OR _bit EQUAL 145))
                 set(_zaehlt 1)
@@ -149,10 +153,10 @@ if(TEIL STREQUAL "kette")
             endif()
         endif()
     endforeach()
-    if(_n EQUAL 12 AND _nah EQUAL 12)
-        ok("alle 12 Kopien (4 in 1061 Cut 2, 5 in 1031 Cut 7, 3 Kriecher Cut 12) >= 400 naeher an der Kamera")
+    if(_n EQUAL 7 AND _nah EQUAL 7)
+        ok("alle 7 (4 Kopien in 1061 Cut 2, 3 Kriecher in 1031 Cut 12) >= 400 naeher an der Kamera")
     else()
-        fail("Kopien-Spuren: ${_nah} von ${_n} naeher (erwartet 12 von 12)")
+        fail("Kopien-Spuren: ${_nah} von ${_n} naeher (erwartet 7 von 7)")
     endif()
     string(REGEX MATCHALL "Ende Bild [0-9]+: Spieler-HP min [0-9]+" _hp "${_dbg}")
     list(LENGTH _hp _nhp)
@@ -162,8 +166,8 @@ if(TEIL STREQUAL "kette")
             set(_hp_ok 0)
         endif()
     endforeach()
-    if(_nhp EQUAL 3 AND _hp_ok)
-        ok("Spieler-HP 100 in allen drei Schnitten")
+    if(_nhp EQUAL 2 AND _hp_ok)
+        ok("Spieler-HP 100 in beiden Schnitten")
     else()
         fail("Spieler-HP: ${_hp}")
     endif()
@@ -186,7 +190,7 @@ elseif(TEIL STREQUAL "knall")
                     RESULT_VARIABLE _rva OUTPUT_VARIABLE _outa)
     message(STATUS "${_outa}")
     if(_rva EQUAL 0)
-        ok("zwei hoerbare Tuerknaelle (Differenz der Mitschnitte)")
+        ok("zwei hoerbare Knaelle (Differenz der Mitschnitte)")
     else()
         fail("Knall-Auswertung exit=${_rva}")
     endif()
@@ -239,6 +243,71 @@ elseif(TEIL STREQUAL "treppe")
         ok("Bild der Ankunft: ${_dir}/ankunft.ppm")
     else()
         fail("ankunft.ppm fehlt")
+    endif()
+
+# ------------------------------------------------------------------------------------------------------------------
+elseif(TEIL STREQUAL "durch")
+    # Nachtrag 11: Zustand nach der Montage ((9,95), 10E1-Quellen still, 1041-Kopien still, die vier 1061-Kopien leben =
+    # nicht besiegt), Elza in ROOM1061 Etage 0 an der Tuer nach 1041 (Slot 2 @0x00D52, Rechteck (26600,24300,1000,2200)),
+    # Blick Ost, Aktion -> Tuer -> ROOM1041 -> Rolltor-Durchbruch. Das Skript laeuft je Raum von vorn ("A" in 1041 faellt in
+    # die Szene, Riegel).
+    lauf(durch "1061;26200;0;25300;0;7;3:125;3:193;3:116;9:95;7:224;7:225;7:226;7:227;7:128;7:129;7:130;7:131" 900
+         RE15_NOAUDIO=1 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=60 "RE15_INPUT_SCRIPT=A0.2,W20"
+         "RE15_FRAMEDUMP=260:durchbruch.ppm" "RE15_EXIT_AT=500#1041")
+    set(_pos 0)
+    foreach(_m
+            "Nachspawn 1061 (Programm E)"
+            "DOOR FIRE slot=2"
+            "PC loaded room1041"
+            "Durchbruch 1041: 4 Zombies aus 1061 (nicht besiegt) -> hinter das Rolltor"
+            "C ROOM1041 T0 1"
+            "Durchbruch 1041 startet (Programm G): Eintritt (-21008,0,-13134) Gier 2112 Cut 5, Rolltor faehrt hoch"
+            "K ROOM1041 T"
+            "alle durch das Rolltor"
+            "Durchbruch beendet, Steuerung frei")
+        finde("${_m}" ${_pos} _p)
+        if(_p LESS 0)
+            fail("in der Folge fehlt '${_m}' (nach Stelle ${_pos})")
+            break()
+        endif()
+        set(_pos ${_p})
+    endforeach()
+    if(_pos GREATER 0)
+        ok("Tuer 1061 -> 1041 -> Umzug der 4 -> erstes Bild Cut 1 -> Knall -> alle durchs Rolltor -> Steuerung frei")
+    endif()
+    string(REGEX MATCHALL "ROOM1041 Cut 1 Bild [0-9]+: Aktor [0-9]+ Bit 1(28|29|30|31) Abstand zur Kamera [0-9]+ -> [0-9]+" _sp "${_dbg}")
+    set(_n 0)
+    set(_nah 0)
+    foreach(_z IN LISTS _sp)
+        if(_z MATCHES "Abstand zur Kamera ([0-9]+) -> ([0-9]+)")
+            math(EXPR _n "${_n} + 1")
+            math(EXPR _diff "${CMAKE_MATCH_1} - ${CMAKE_MATCH_2}")
+            if(_diff GREATER_EQUAL 400)
+                math(EXPR _nah "${_nah} + 1")
+            endif()
+        endif()
+    endforeach()
+    if(_n EQUAL 4 AND _nah EQUAL 4)
+        ok("Cut 1: alle 4 Durchgebrochenen >= 400 naeher an der Kamera")
+    else()
+        fail("Cut 1: ${_nah} von ${_n} Kopien naeher (erwartet 4 von 4)")
+    endif()
+    if(_dbg MATCHES "ROOM1041 Cut 1 Ende Bild [0-9]+: Spieler-HP min 100")
+        ok("Spieler-HP 100 waehrend der Szene")
+    else()
+        fail("Spieler-HP waehrend der Szene nicht 100")
+    endif()
+    finde("Durchbruch beendet" 0 _pe)
+    string(SUBSTRING "${_dbg}" ${_pe} -1 _danach)
+    if(_danach MATCHES "\\[walk\\] F[0-9]+ cut=5 [^\n]*pl pos=\\(-21008,0,-13134\\) rot=2112")
+        ok("danach: Elza am Eintrittspunkt (-21008,0,-13134) Gier 2112, Kamera Cut 5")
+    else()
+        fail("Eintrittspunkt nach der Szene nicht gefunden")
+    endif()
+    if(EXISTS "${_dir}/durchbruch.ppm")
+        ok("Bild der Szene: ${_dir}/durchbruch.ppm")
+    else()
+        fail("durchbruch.ppm fehlt")
     endif()
 
 # ------------------------------------------------------------------------------------------------------------------
