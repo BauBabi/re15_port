@@ -294,22 +294,28 @@ Neue Riegel (re15_port/tests/unit/probes/r39_elzazombies.cmake), Stand nach Nach
   beim Wiedereintritt durch meine Rueckkehr-Tuer nicht neu starten (P's eigenes Gesehen-Flag); (b) P's Panikmusik: laeuft
   sie ab dem Bit, klingt sie ueber die Montage-Raeume (Raumwechsel per Tuersatz wie jede Tuer); wartet sie auf "keine
   Szene" (wie Leons MAIN01-Fenster, cut_10f0.c), beginnt sie erst nach der Rueckkehr — P's Wahl; (c) Ereignis 30 und
-  Bank-5-Bits 28/29 nur zustandsgebunden belegt (jede Abfrage prueft Raum UND Zustand).
-* Spur R (Hund 1121): falls R einen Zone-7-Tot-Bit braucht, nicht 124..133/144/145 (hier belegt, Zensus 2.4).
+  Bank-5-Bits 28/29/30 nur zustandsgebunden belegt (jede Abfrage prueft Raum UND Zustand) — P's 1041-Programm sollte
+  Bank-5-Bit 30 nicht als eigenes Signal nutzen, solange mein Durchbruch laeuft (er laeuft nie gleichzeitig mit P's Szene:
+  der Durchbruch kommt erst beim naechsten Betreten von 1041).
+* Spur R (Hund 1121): falls R einen Zone-7-Tot-Bit braucht, nicht 124..131/133/144/145 (hier belegt, Zensus 2.4).
 * Ankunft von OBEN (1121 -> 1061 Etage 8 -> 6 -> 4, Treppe A endet an der Westseite): die Kopien stehen dort, wo sie von
   unten "moeglichst weit weg" sind, und werden auf Etage 4 ebenso frei. Vom Nutzer nicht verlangt (nur "von unten").
+* Durchbruch 1041 nach dem LADEN in 1041: wartet bis zum naechsten Betreten durch eine Tuer (4.6).
 
 ## 7. Fuer den Nutzer
-* Lesart (aus 2.2/2.3, dokumentiert): "in den Flur hinein von 10C1 aus" = das Treppenhaus ROOM1061 auf Etage 2F, die
-  Zombies kommen durch die Tuer von 10C1 herein (10C1 selbst hat nur Kraehen und liegt nicht auf Elzas Weg 1041 -> 1061 ->
-  1121). "das gleiche nochmal wie bei Leon in den ROOM 1071" = Leons 1070-Schritt fuer 1071: leben dort noch Zombies,
-  Tuerknall, sie erscheinen in der Lobby 1031 Cut 7 vor der 1071-Tuer. "ueber die Absperrung/Das Rollo, so wie bei der
-  cutscene" = die Original-Szene von 1031 (sub08): Knall, das Notfall-Rollo bricht, Zombies kriechen darunter durch (Cut 12).
-* Ablauf in der Panikphase: nach der Karte (Spur P) eine kurze Pause, Tuerknall, Schnitt ins Treppenhaus 2F (die
-  Ueberlebenden aus dem Medical Room an der 10C1-Tuer, sie gehen auf die Kamera zu), Tuerknall, Lobby Cut 7 (falls 1071-
-  Zombies leben), Knall, das Rollo bricht, Kriecher, zurueck an Elzas Stelle in 1041. Leben in 10E1/1071 keine Zombies
-  mehr, entfaellt der jeweilige Schnitt (wie bei Leon). Steigt Elza spaeter von unten die Treppe hinauf, stehen die
-  Zombies am 2F-Absatz links unter dem Fenster (am weitesten weg vom Treppenkopf) und kommen erst los, wenn sie oben ist.
-* Keine neuen Assets, keine Sprachdateien. Zeiten (Pause 60, Knall -> Schnitt 45, Schnittlaengen 175/175) = Leons Montage.
+* So laeuft es jetzt (Elza, Panikphase): Nach Johns Ruf und der Karte (Spur P) eine kurze Pause, ein Tuerknall, Schnitt
+  ins Treppenhaus 2F: die Zombies, die du im Medical Room (10E1) uebrig gelassen hast, sind durch die Tuer von 10C1
+  hereingebrochen und gehen auf die Kamera zu. Ein zweiter Knall, Schnitt in die Lobby (1031): das Notfall-Rollo bricht
+  wie in der Original-Szene, Zombies kriechen darunter durch. Dann bist du wieder an deiner Stelle in 1041. Hast du im
+  Medical Room alle getoetet, entfaellt der Treppenhaus-Schnitt.
+* Steigst du danach von unten die Treppe in 1061 hinauf, stehen die Zombies am 2F-Absatz links unter dem Fenster (am
+  weitesten weg vom Treppenkopf) und laufen erst los, wenn du oben angekommen bist.
+* ROOM1041 (Nachtrag 11, "wie bei Leon"): Lebst du die Zombies aus dem Treppenhaus nicht besiegt zurueck und betrittst
+  1041 wieder (durch die Tuer von 1061, der Lobby oder den Aufzug), bricht das Rolltor wie bei Leon: Knall, das Rolltor
+  faehrt hoch, genau diese Zombies kommen hindurch auf die Kamera zu, danach hast du wieder die Steuerung an der Tuer, durch
+  die du gekommen bist. Warum nicht sofort beim Start der Panikphase: da stehst du selbst in 1041, und die Zombies aus dem
+  Treppenhaus hattest du noch gar nicht vor dir — "falls die Zombies nicht besiegt wurden" kann erst danach gelten. Hast du
+  sie im Treppenhaus besiegt, passiert in 1041 nichts. In ROOM1071 bricht nichts durch.
+* Keine neuen Assets, keine Sprachdateien. Zeiten (Pause 60, Knall -> Schnitt 45, Schnittlaengen wie Leon) = Leons Montage.
 * Entscheidungsfrage (optional): Sollen die Zombies am 2F-Absatz auch bei Ankunft von OBEN (Rueckweg aus 1121) "weit weg"
   stehen? Dann wuerden sie fuer diesen Fall an die Tuer-Seite gestellt.
