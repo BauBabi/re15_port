@@ -4994,6 +4994,8 @@ re_title:;
     re15_inventar_r39_install((uint16_t)g_current_room_id);      /* Runde 39 Spur C: Spind ROOM1000, derselbe Grund (Boot-/CONTINUE-Weg) */
     re15_parkplatz_r39_install((uint16_t)g_current_room_id);     /* Runde 39 Spur O: ROOM11C0 Text 40 + Sperre im Kampf, derselbe Grund */
     re15_hund1121_r39_install((uint16_t)g_current_room_id);      /* Runde 39 Spur R: Hund ROOM1121, derselbe Grund (Boot-/CONTINUE-Weg) */
+    { extern void re15_elzazombies_r39_geladen(uint16_t);   /* Runde 39 Spur Q: Laden ist keine Flanke von (9,97); Nachspawns */
+      re15_elzazombies_r39_geladen((uint16_t)g_current_room_id); }
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
