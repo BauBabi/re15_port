@@ -1037,7 +1037,8 @@ Werkzeug `J39n4/lauf.sh` (= `J39abn3/lauf.sh`, eigene exe-Kopie `re15_pc_j39n4_<
   [0] 0x80032f18, [1] 0x80033180 (HOLD), [2] 0x80033460 (Rueckstoss), **[3] 0x80033c74 (SENKEN), [4] 0x80033d7c (NACHLADEN)**,
   [5] 0x80033eec. Nachladen: Init bei +7 = 0 (`80033d90 lbu v0,0(v1)` 0x800aca5b, `80033da4 ori v0,zero,0xd` / `80033dac sb
   0x800acae8` Clip 0x0D), Ende erst am Clip-Ende (`80033ea8 jal 0x8001f314` anim_set, `80033eb0 beq v0,zero,..`, `80033ebc sh
-  v0(=1),-13734(at)` -> HOLD, `80033ec0 jal 0x8004ebdc`, `80033ed0 jal 0x80045024` Ton 0x01030001). Plc_dest loescht +6/+7: ein
+  v0(=1),-13734(at)` -> HOLD, `80033ec0 jal 0x8004ebdc` = Auffuellen (liest den ausgeruesteten Platz 0x800b25c8, das Inventar
+  0x800b10ac und die Waffenzeile 0x80074dac, `8004ec34 jal 0x8004dfec`), `80033ed0 jal 0x80045024` Ton 0x01030001). Plc_dest loescht +6/+7: ein
   laufendes Nachladen oder Senken ist danach weg.
 - **SCD vor dem Spieler im selben Bild:** Spiel-Task `8001cdec jal 0x8003f038` (SCD-Laeufer) vor `8001ce0c jal 0x80031c44`
   (Spieler). Der Spieler-Verteiler haelt nur bei Bit 31 (`80031c54 lw a0,-13760(a0)` g_pauseflags, `80031c78 bltz a0,..`), liest
