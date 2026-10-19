@@ -54,7 +54,8 @@ if(R39T_BASH AND EXISTS "${_r39t_repo}/release/release_alles.sh" AND EXISTS "${_
         add_test(NAME unit_r39_titelversion_${_teil}
                  COMMAND "${R39T_BASH}" "${CMAKE_CURRENT_LIST_DIR}/../r39_titelversion/test_r39_titelversion_release.sh"
                          "${_r39t_repo}" "${CMAKE_CURRENT_BINARY_DIR}/r39_titelversion_wd_${_teil}" ${_teil})
-        set_tests_properties(unit_r39_titelversion_${_teil} PROPERTIES TIMEOUT 600)
+        # gemessen (Windows, ohne Last): huelle 27 s, ablauf 163 s; im Linux-Container < 1 s. Luft wie r38_releaseskript.
+        set_tests_properties(unit_r39_titelversion_${_teil} PROPERTIES TIMEOUT 1200)
     endforeach()
 else()
     message(STATUS "r39_titelversion: bash oder release/*.sh fehlt - unit_r39_titelversion_huelle/_ablauf nicht registriert")
