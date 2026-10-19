@@ -65,7 +65,10 @@ int main(void)
         printf("  [ROOM%04X z%d] Blatt %d, Kasten (%d,%d) %dx%d, %d Zellen\n",
                zz->room, zz->idx, zz->page, x, y, w, h, n);
         snprintf(t, sizeof t, "ROOM%04X z%d: Kasten im Kartenfeld", zz->room, zz->idx);
-        CHECK(t, x >= 90 && y >= 50 && x + w <= 240 && y + h <= 200 && n > 0);
+        /* Runde 39 Spur G: das Kartenfeld ist das des ORIGINALS - die Huelle aller Rechtecke der 13 Seiten-Tabellen
+         * (@0x80076840 + 8*Seite, 12 B je Eintrag) reicht x 39..293 (Blatt 12 / Blatt 6) und y 44..206 (Blatt 7).
+         * Die fruehere Schranke 90..240 / 50..200 war eine Port-Annahme; schon B1s eigene Kachel r1 beginnt bei x 76. */
+        CHECK(t, x >= 39 && y >= 44 && x + w <= 293 && y + h <= 206 && n > 0);
     }
     (void)zn;
 
