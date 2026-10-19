@@ -820,3 +820,23 @@ integration_r39_heliport1171_weg gruen.
 
 ### 10.0 Stand / Fortschritt
 - 04:33 Baum sauber auf 1a6be145 (Abnahme 2), master = 2963579d. Abschnitt angelegt.
+- 04:35 Merge master 2963579d -> 0e486aa6 (Konflikt nur AUFTRAG.md, HEAD-Seite leer -> Fassung master = Nachtrag 11);
+  enemy_common.c / enemy_ai_common.c / game_step_common.c automatisch. configure + build LOCAL-BUILD-OK (exe 04:34).
+- 04:40-04:52 Messung vorher am gemergten Stand (Laeufe v_r2 = Abnahme-Lauf R2, v_m = schneller Messhaken-Lauf; 10.1).
+- 04:55 RE-Belege (10.2), Umsetzung M1/H4/H7 (10.3) geschrieben, Bau folgt.
+
+### 10.1 Messung vorher (gemergter Stand 0e486aa6, echte exe; Messordner scratchpad `j39n3/`, nicht committet)
+Werkzeug `j39n3/lauf.sh` (= `J39abn2/lauf.sh` der Abnahme, eigene exe-Kopie `re15_pc_j39n3_<name>.exe`), Auszug `zust.py`.
+- **Lauf v_r2** (= Abnahme-Lauf R2 bytegleich: Wegplan `plan_r.txt`, P228 RE15_GIVE=0x43:1,0x04:99,0x15:60 RE15_EQUIP=4,
+  RE15_R39_MESS_SPIELER_HP=100, RE15_INPUT_SCRIPT = Schuetze `skript_r.txt` ab Bild 3500 (R1 halten + Feuer), echter Tod beider
+  Gorillas mit 360 Energie, EXIT 6700#1141), rv=0, 345 s. M1 reproduziert, bildgleich zur Abnahme:
+  `[scd F6296] Cut_chg(8)`; state.txt F6287 Schuss (mg 42 -> 41, ac 7 = Rueckstoss-Clip), F6296..F6306 `pst=1 mo=215 ac=7 cam=8 pm=2`
+  bei (-5800,-21500) rot 2048 (= Blick auf John) - 11 Bilder Waffe auf John; F6307 `pst=4 mo=105` (Plc_dest TURN).
+  Vorher (Spielerbilder F6267..F6295, nach dem Kampf-Ende (4,0xF2)=0 F6267 und vor dem Schnitt): Elza frei, zielt und schiesst
+  weiter (Schuesse F6263/F6275/F6287).
+- **Ursache (Code gelesen, Messung oben):** der Schnitt-Block von ENTRIEGELN39 setzte Cut_chg 8, Set(2,7)=1, Set(1,0x1B)=1,
+  Pos_set + Member_set(4) Elza im selben Takt; unter (1,27)/(2,7) setzt main.c (cine_active) player_mode 2, und re15_player_tick
+  ueberspringt im Skript-Modus den ganzen Pad-Zweig samt Ziel-FSM (player_common.c `if (g_scd.player_mode != 2 && !msg_block &&
+  !pushing)`): die Waffe blieb im letzten Ziel-/Rueckstoss-Bild stehen, gedreht auf John, bis Plc_dest TURN (+0x0438) das
+  Kommandowort ersetzte. Kein Regressionsbefund (seit dem Gespraech in Cut 8, b2a2f267, so; die Abnahmen 0/1 fuhren den Schnitt
+  nie mit gehaltenem R1).
