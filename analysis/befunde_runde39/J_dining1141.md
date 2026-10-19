@@ -1086,3 +1086,40 @@ Keine neue Konstante: die Umstellung verschiebt eine vorhandene Original-Zeile (
   +0x38/+0x3C) setzen +0x8f zurueck - im Original endet ein Nachlade-/Senken-Rest in der Form 11C0 sub03 also ebenfalls mit
   dieser Ueberblendung in den ersten Bildern nach dem Schnitt, nicht mit einem harten Wechsel. Der Port war hier schon bytegleich
   (re15_actor.h anim_frac/anim_blend_rate, "byte-true FUN_8001f3bc").
+
+### 11.6 Je Mangel: Ursache - Messung vorher - Beleg - Aenderung - Messung nachher
+| Mangel | Ursache (gemessen) | vorher | Beleg | Aenderung | nachher |
+|---|---|---|---|---|---|
+| M1-Rest (Punkt 8): Nachladen kurz vor der Sperre -> Elza zielt zu Beginn von Cut 8 auf John | ENTRIEGELN39 gab Elza im Schnitt-Takt keinen Plc-Befehl; ihr erster (TURN zu John, Form 1141 sub02 @0x00C50) kam 11 Bilder nach dem Schnitt. Bis dahin blieb sie im Kommando 1, die Ziel-FSM spielte Nachladen (31 Bilder) + Senken (10) aus - laenger als die 30 Bilder zwischen Sperre und Schnitt | v_rl2 (= RL2): F4086..F4093 8 Bilder cam 8 mit mo 215, F4087/F4088 Pistole auf Johns Oberkoerper (`nb4_m1rest_vorher_rl2_F4086-4098.png`) | ROOM11C0 sub03 @0x01B18 Cut_chg / @0x01B1A Work_set(1,0) / @0x01B1E/@0x01B22 Member_set / @0x01B26 Plc_dest im selben Takt; Plc_dest 0x80041be4: +4 = 4 @0x80041c14, +5 @0x80041c18, +6/+7 = 0 @0x80041c1c/@0x80041c20; Work_set Art 1 = 0x800aca54 @0x80040da4..@0x80040db0; Ziel-FSM 0x80032e9c liest 0x800aca5a (@0x80032ea0), Tabelle 0x800740f4 [3] SENKEN 0x80033c74 / [4] NACHLADEN 0x80033d7c; SCD-Laeufer @0x8001cdec vor Spieler @0x8001ce0c; Kommando 4 -> 0x80030660 -> 0x80073e30[9] TURN 0x80031360 | Elzas TURN von +0x0438 nach +0x0426 (Schnitt-Takt, direkt hinter Member_set(4)); Laenge/Anker unveraendert; Riegel: Unit `schnitt` (mit Gegenprobe), `programme` (Lage), Integration `zielen_nachladen` (= RL2), `zielen` (Schnittbild Kommando 4) | n_rl2: F4086 `pst=4 mo=105` im Schnittbild, 0 Bilder Cut 8 mit mo 215; Unit `schnitt`: Nachladen 3/8/1 Bilder vorher, Hieb, Messer ziehen, Halten je 0 Bilder mit erhobener Waffe (Gegenprobe Fassung NB3: 8/3/10/1/../0) |
+| Dossier 10.7 "Randfall nach der Original-Form ... nur das Ende des Senkens" | Begruendung falsch (Abnahme 3, 1.8): die Original-Form wechselt das Kommandowort im Schnittbild | - | wie oben | 10.7-Punkt durch 11.7 ersetzt | - |
+
+### 11.7 OFFEN (Nachbesserung 4)
+- **Ueberblendung nach dem Schnitt (Original-Mechanismus, kein Waffen-Clip):** Bei einem Nachlade-/Senken-/Hieb-Rest im
+  Schnittbild beginnt der TURN mit der Ueberblendung FUN_8001f3bc (+0x8f = 7 @0x800313b8, beim Uebergang in Sub 6 erneut
+  @0x80051874; Gewicht des neuen Clips 0x1000 - 0x200*frac @0x8001f474/@0x8001f4a8/@0x8001f4b0). Sichtbar: in n_rl2 sinkt der
+  Waffenarm in F4087/F4088 noch aus der Halte-Lage (Hand etwa auf Hoehe von Johns Guertel), F4090 an der Huefte, ab F4092
+  unten. Dieselbe Ueberblendung hat die Original-Form ROOM11C0 sub03 (Cut_chg 0x800402a0 und Pos_set 0x80041048 setzen +0x8f
+  nicht zurueck) - der Port bildet hier das Original ab und erfindet nichts dazu.
+- **Nachladen bis in den Schnitt-Takt** (Abzug im letzten Bild vor der Sperre, Unit `schnitt` Fall "1 Bild"): Plc_dest bricht es
+  ab wie im Original (+6/+7 = 0 @0x80041c1c/@0x80041c20; Auffuellen nur am Clip-Ende @0x80033ebc/@0x80033ec0) - das Magazin
+  bleibt leer, der Vorrat 0x15 unveraendert; beim naechsten Abzug laedt Elza nach.
+- **Riegel `integration_r39_dining1141_zielen_nachladen`** braucht ein bildgenaues Szenenende (RE15_AUDIO_CAP_SYNC; gemessen
+  v_rl2/n_rl2 und Abnahme RL/RL2/K: Messhaken F4056). Verschiebt sich die Dauer bis zum Kampfende um mehr als etwa -2/+8 Bilder,
+  meldet das Werkzeug "Vorbedingung Fall nachladen" (statt still zu bestehen); dann den Abzug im Skript (Bild 3000 + 1000 + 3 +
+  50) nachziehen. Den Mechanismus haelt unabhaengig vom Bildtakt der Unit-Teil `schnitt` fest.
+- Weiter offen aus 10.7 (unveraendert): Geltungsbereich der Ziel-FSM unter der Sperre (nur ROOM1141 Phase H; Original senkt
+  ueberall); ein Bild Unterschied am Sperrbeginn; Abnahme 2 H5 (re15_dining_r39_tick ausserhalb des KI-Tors); gemeinsame Dateien
+  ausserhalb VERTRAG 1.3 (audio_pc.c, enemy_ai_common.c, enemy_common.c, game_step_common.c, re15_damage.c, player_common.c);
+  E-Riegel in der Fassung dieses Zweigs uebernehmen (H3); Spieler-Plc_motion(2,c) als W-Bank-Clip nur in ROOM1141. Diese
+  Nachbesserung aendert keine gemeinsame Datei (nur Programm-Bytes, Generator, eigene Riegel).
+
+### 11.8 Fuer den Nutzer (Nachbesserung 4)
+- **Elza laedt nach, wenn die Gorillas sterben:** Wer kurz vor dem Ende des Kampfs noch nachlud (oder mit dem Messer zuschlug
+  oder es zog), sah Elza zu Beginn des Gespraechs noch mit der Waffe auf John. Jetzt bekommt sie ihren ersten Befehl der Szene
+  (sich zu John drehen) genau im Bild des Kamerawechsels - so wie Leon nach den Parkplatz-Gorillas im Original. Die Waffen-
+  Bewegung endet mit dem Schnitt; in den ersten drei, vier Bildern sieht man nur noch, wie ihre Arme weich nach unten gleiten
+  (die Ueberblendung des Originals). Ohne diesen Sonderfall aendert sich nichts: Elza steht beim Schnitt wie bisher ruhig da.
+- Wer im allerletzten Moment nachlaedt, bricht das Nachladen ab (wie im Original): das Magazin ist danach leer, die Munition
+  bleibt im Vorrat, beim naechsten Schuss laedt Elza nach.
+- Keine neuen Dateien unter shared_assets/, keine Sprachdateien, keine Entscheidungsfrage. Neue Belegbilder unter
+  analysis/befunde_runde39/J_belege/ (nb4_*).
