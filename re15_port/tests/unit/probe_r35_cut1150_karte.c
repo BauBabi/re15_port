@@ -14,6 +14,7 @@
  *   tot1140     Zone-7-Bits 0xd3..0xd7 (alle 1140-Zombies tot)
  *   tot1070     Zone-7-Bits 0xc6..0xca (alle 1070-Zombies tot)
  *   gesehen     (9,73)  Todesszene gesehen
+ *   tot10e0     Zone-7-Bits 0xe0..0xe3 (alle 10E0-Zombies tot; Runde 39 Spur Q: Kette ohne Treppenhaus-Schritt 1060)
  */
 #include "re15_actor.h"
 #include "re15_scd.h"
@@ -30,7 +31,7 @@ int main(int argc, char **argv)
 {
     const char *path = (argc > 1) ? argv[1] : "re15_card.mcr";
     unsigned room = (argc > 2) ? (unsigned)strtoul(argv[2], NULL, 16) : 0x1130u;
-    int k = 0, e = 0, t1140 = 0, t1070 = 0, g = 0, tor = 0, t1040 = 0;
+    int k = 0, e = 0, t1140 = 0, t1070 = 0, g = 0, tor = 0, t1040 = 0, t10e0 = 0;
     for (int a = 3; a < argc; a++) {
         if (!strcmp(argv[a], "nach10f0"))        k = 1;
         else if (!strcmp(argv[a], "ersteszene")) e = 1;
@@ -38,6 +39,9 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[a], "tot1070"))    t1070 = 1;
         else if (!strcmp(argv[a], "gesehen"))    g = 1;
         else if (!strcmp(argv[a], "tor1040offen")) tor = 1;   /* Rolltor ROOM1040 schon offen: (4,5)=(4,4)=1 wie sub01 @0x0157A/@0x01586 */
+        /* Runde 39 Spur Q (Nachtrag 12): alle vier 10E0-Zombies tot (Zone-7-Bits 0xe0..0xe3, ROOM10E0 sub00 @0x00D56..) = Kette
+         * ohne den Treppenhaus-Schritt 1060 */
+        else if (!strcmp(argv[a], "tot10e0"))    t10e0 = 1;
         /* Nachbesserung 2 M1: ROOM1040-Raum-Records 0..n-1 getoetet (Tot-Bits 0x14.. in Zone 7, Spawn-Reihenfolge = so,
          * wie das Gleichzeitig-Limit 5 @0x011F0 sie dem Spieler zeigt) */
         else if (!strncmp(argv[a], "tot1040_", 8)) t1040 = atoi(argv[a] + 8);
@@ -64,6 +68,7 @@ int main(int argc, char **argv)
     if (t1070) for (int i = 0; i < 5; i++) re15_game_flag_set(7, (uint8_t)(0xc6 + i), 1);
     if (tor) { re15_game_flag_set(4, 5, 1); re15_game_flag_set(4, 4, 1); }
     for (int i = 0; i < t1040 && i < 20; i++) re15_game_flag_set(7, (uint8_t)(0x14 + i), 1);
+    if (t10e0) for (int i = 0; i < 4; i++) re15_game_flag_set(7, (uint8_t)(0xe0 + i), 1);
 
     re15_savedata_t sd;
     re15_savedata_capture(&sd, 0, 1);

@@ -504,8 +504,10 @@ static void teil_szene(void)
     PRUEF(g_test_tuer_laden_count >= 1 && g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 0 &&
           !re15_game_flag_get(5, RE15_IT_SIG_KNALL_TUER),
           "der Knall am Szenenende: Knall-Bank geladen, genau ein Satz 0 gespielt (Signal (5,28) verbraucht): %d", g_test_tuer_se_count - knall0);
-    /* Variante: 1140 leer -> direkt 1040 */
+    /* Variante: 1140 leer -> direkt 1040. Runde 39 Spur Q (Nachtrag 12): dazu 10E0 leer (Tot-Bits 0xe0..0xe3, ROOM10E0 sub00
+     * @0x00D56..) — leben dort Zombies, kommt vor 1040 der Treppenhaus-Schritt 1060 (Riegel unit_r39_elzazombies_leon_*). */
     szene_flags(); for (int i = 0; i < 5; i++) re15_game_flag_set(7, 0xd3 + i, 1);
+    for (int i = 0; i < 4; i++) re15_game_flag_set(7, (uint8_t)(0xe0 + i), 1);
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);
     if (room_boot(0x1150, -17150, -11960, 1600, 0) == 0) {
         lauf(&L, 4000, 1);

@@ -35,7 +35,7 @@ target_compile_definitions(test_r39_elzazombies PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r39_elzazombies PRIVATE m)
 endif()
-foreach(_teil zensus kette_4 kette_0 kette_2 nach1061 nach1031 durch1041 ohne)
+foreach(_teil zensus kette_4 kette_0 kette_2 kette_00 nach1061 nach1031 durch1041 ohne leon_4 leon_2 leon_0 leon_nach1060)
     add_test(NAME unit_r39_elzazombies_${_teil} COMMAND test_r39_elzazombies ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r39_elzazombies_${_teil} PROPERTIES TIMEOUT 300)
@@ -52,7 +52,7 @@ endforeach()
 #                                       der Ankunft (z 24568), Abstand >= 4000; Bild ankunft.ppm
 #   integration_r39_elzazombies_ohne    Leon 1040 + Flanke: nichts; Elza mit (9,97) im Spielstand: keine Flanke
 if(TARGET re15_pc)
-    foreach(_teil kette knall treppe durch ohne)
+    foreach(_teil kette knall treppe durch ohne leon)
         add_test(NAME integration_r39_elzazombies_${_teil}
             COMMAND ${CMAKE_COMMAND}
                 -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
