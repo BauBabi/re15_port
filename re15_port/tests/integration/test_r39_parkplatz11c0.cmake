@@ -185,7 +185,7 @@ ENDE
     # Waehrend des Kampfes kein Durchgang: die einzige DOOR FIRE slot=0 kommt NACH dem Kampfende.
     string(FIND "${_d}" "MESSHAKEN RE15_R39O_GORILLAS_TOT" _p_tot)
     string(FIND "${_d}" "DOOR FIRE slot=0" _p_tuer)
-    string(FIND "${_d}" "ROOM11C0 Tuer im Kampf -> msg 40" _p_text)
+    string(FIND "${_d}" "[msgtext] room=11c0 id=40 " _p_text)   # der Text selbst (RE15_MSG_LOG; Nachtrag 13: kein Stimmen-Log mehr)
     set(_b FALSE)
     if(_p_tot GREATER 0 AND _p_tuer GREATER _p_tot AND _p_text GREATER 0 AND _p_text LESS _p_tot)
         set(_b TRUE)
@@ -235,7 +235,7 @@ ENDE
     pruef_nicht(W _d "Programm SZENE")
     pruef(W _wp "AOT slot 0 typ 5 ev 40 flags 0x31")
     pruef_nicht(W _wp "AOT slot 0 typ 1 ")
-    pruef(W _d "ROOM11C0 Tuer im Kampf -> msg 40")
+    pruef(W _d "[msgtext] room=11c0 id=40 ")
     pruef_nicht(W _d "DOOR FIRE slot=0")
     pruef(W _d "EXIT_AT: Bild 420 in Raum 11c0")
 endif()
@@ -305,7 +305,7 @@ ENDE
     pruef(I1 _d "[fire-aot] slot=0 at F60")
     pruef(I1 _d "DOOR FIRE slot=0 rect=(-25100,17250,hw=2000,hh=1350) target_cut=1 spawn=(-25552,0,-25331)")
     pruef(I1 _d "loaded room11b0.rdt")
-    pruef_nicht(I1 _d "Tuer im Kampf -> msg 40")
+    pruef_nicht(I1 _d "[msgtext] room=11c0 id=40 ")
     pruef(I1 _d "EXIT_AT: Bild 200 in Raum 11b0")
     lauf(i2 "${_karte_i}" "RAUM 11C0
 AOTS
@@ -331,7 +331,7 @@ ENDE
     pruef(I2 _wp "FLAG (3,67) = 1")
     pruef(I2 _d "DOOR FIRE slot=0 rect=(-25100,17250,hw=2000,hh=1350) target_cut=1 spawn=(-25552,0,-25331)")
     pruef(I2 _d "loaded room11b0.rdt")
-    pruef_nicht(I2 _d "Tuer im Kampf -> msg 40")
+    pruef_nicht(I2 _d "[msgtext] room=11c0 id=40 ")
     pruef(I2 _d "EXIT_AT: Bild 200 in Raum 11b0")
 endif()
 
