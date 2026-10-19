@@ -53,3 +53,25 @@ if(TARGET re15_pc AND TARGET probe_r36_elza_karte)
         set_tests_properties(integration_r39_johnruf1041_${_teil} PROPERTIES TIMEOUT 3600)
     endforeach()
 endif()
+
+# INTEGRATION Nachbesserung 1 (Nutzer-Nachtrag 12; tests/integration/test_r39_johnruf1041_tuer.cmake), echte exe, Elza:
+#   integration_r39_johnruf1041_tuer_t1041   1041 in der Panikphase: Tuer -> 1031 = Satz msg 41, kein Raumwechsel
+#   integration_r39_johnruf1041_tuer_t1041o  1041 ohne Panikphase (nach der Rettung): Tuer -> ROOM1031
+#   integration_r39_johnruf1041_tuer_t1051   1051 in der Panikphase: Tuer -> 10A1 = Satz msg 40, kein Raumwechsel
+#   integration_r39_johnruf1041_tuer_t1051o  1051 ohne Panikphase: Tuer -> ROOM10A1
+#   integration_r39_johnruf1041_tuer_t10b1v  10B1 vor der Sherry-Szene: Kanaldeckel = Text, kein Raumwechsel
+#   integration_r39_johnruf1041_tuer_t10b1s  10B1 Sherry-Szene: Deckel-Text statt ROOM1261, danach Steuerung zurueck
+#   integration_r39_johnruf1041_tuer_t10b1n  10B1 nach der Szene / Sherry-Suche: Kanaldeckel = Text, kein Raumwechsel
+# (der Beginn der Phase IN 1041 am echten Weg 1021 -> 1041 steht in integration_r39_johnruf1041_a)
+if(TARGET re15_pc AND TARGET probe_r36_elza_karte)
+    foreach(_teil t1041 t1041o t1051 t1051o t10b1v t10b1s t10b1n)
+        add_test(NAME integration_r39_johnruf1041_tuer_${_teil}
+            COMMAND ${CMAKE_COMMAND}
+                -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                -DRE15_KARTE_ELZA=$<TARGET_FILE:probe_r36_elza_karte>
+                -DWORKDIR=${CMAKE_BINARY_DIR}/r39_johnruf1041_tuer_wd
+                -DTEIL=${_teil}
+                -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_johnruf1041_tuer.cmake)
+        set_tests_properties(integration_r39_johnruf1041_tuer_${_teil} PROPERTIES TIMEOUT 1800)
+    endforeach()
+endif()

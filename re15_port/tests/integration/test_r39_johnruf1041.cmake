@@ -109,6 +109,14 @@ RAUM 1041
 WARTE 30
 GEGNERWEG
 GEHE -25150 -1500 150
+GEHE -25150 -3800 150
+GEHE -20800 -3800 120
+BLICK 0
+AKTION
+WARTE 150
+AKTION
+WARTE 40
+GEHE -25150 -3800 150
 GEHE -25150 -12300 150
 GEHE -20800 -12300 120
 BLICK 0
@@ -259,6 +267,15 @@ if(TEIL STREQUAL "a")
     pruef(_r "[voice] clip loaded: help02.wav")
     pruef(_r "[voice] Start ROOM1041 Id 40 CD_VOL 16383")
     pruef(_r61 "[bgm] stage=0 room=06 entry=FF01 -> MAIN01(flag 0) SUB--(flags 1/1)  [unveraendert, laeuft durch]")
+    # Nachbesserung 1 (Nutzer-Nachtrag 12): nach dem Musikwechsel zeigt die Tuer nach ROOM1031 den Satz statt des Raumwechsels
+    pos(_r "[msgtext] room=1041 id=41 \"I have to rescue John! He is in danger!\"" _p9)
+    set(_tuer_nach FALSE)
+    if(_p9 GREATER _p8 AND _p8 GREATER -1)
+        set(_tuer_nach TRUE)
+    endif()
+    pruef_wahr(_tuer_nach "nach Bit 97 + MAIN01: Tuer 1041 -> 1031 = \"I have to rescue John! He is in danger!\" (Position ${_p9})")
+    pruef(_r "ROOM1041: Panikphase (Bit 97) -> Tuer Slot 1 -> Text msg 41")
+    pruef_nicht(_d "loaded room1031.rdt")
     if(EXISTS "${_lauf}/karte.bmp")
         file(SIZE "${_lauf}/karte.bmp" _ks)
     else()
