@@ -998,3 +998,61 @@ Cut 8 mit mo 215). Alles, was die Abnahme 3 als erfuellt bewertet hat, bleibt (R
 
 ### 11.0 Stand / Fortschritt
 - 08:16 Baum sauber auf ece3a8f9 (Abnahme 3), Abschnitt angelegt. Messordner scratchpad `J39n4/` (nicht committet).
+- 08:20-08:26 Messung vorher (Lauf v_rl2 = Abnahme-Lauf RL2 bytegleich, 11.1); 08:25-08:35 RE-Belege selbst disassembliert (11.2).
+
+### 11.1 Messung vorher (Stand ece3a8f9 = Code e9f23f50, exe 05:15; Messordner scratchpad `J39n4/`, nicht committet)
+Werkzeug `J39n4/lauf.sh` (= `J39abn3/lauf.sh`, eigene exe-Kopie `re15_pc_j39n4_<name>.exe`, mit RE15_AUDIO_CAP_SYNC).
+- **Lauf v_rl2** (= Abnahme-3-Lauf RL2: `plan_r.txt`, RE15_GIVE=0x43:1,0x03:1,0x15:50 RE15_EQUIP=3 (Browning, 1 Patrone),
+  RE15_R38F_GORILLAS_TOT=600 + _STARR=1, RE15_INPUT_SCRIPT=`M33.3333,MA0.1,M1.6667,MA0.1,M10` mit BASIS=spiel ab Bild 3000,
+  EXIT 4250#1141, FD 4040-4110/1), rv=0, 306 s. Befund bildgleich zur Abnahme:
+  `[dining] F4056 MESSHAKEN`, `[scd F4086] Cut_chg(8)`; state.txt F4053..F4083 `mo=215 ac=13` (Nachladen, Abzug mit leerem Magazin
+  pad 8800 F4053), **F4056 pm=2** (Sperre, Nachladen laeuft weiter), F4084 `ac=8 mg=15` (Auffuellen, Halten), F4085..F4093
+  `mo=215 ac=6` (SENKEN), **F4086..F4093 = 8 Bilder cam=8 mit mo=215**, F4094 `mo=200`, **F4097 `pst=4 mo=105`** (Elzas
+  Plc_dest TURN, 11 Bilder nach dem Schnitt), F4099 `mo=1` (Sub 6). Bild `J_belege/nb4_m1rest_vorher_rl2_F4086-4098.png`
+  (F4086 zeigt noch Cut 5; **F4087/F4088 Arme ausgestreckt, Pistole auf Johns Oberkoerper**, F4089/F4090 Waffe sinkt, ab F4092 unten).
+- **Ursache (gemessen + Programm gelesen):** ENTRIEGELN39 gab Elza im Schnitt-Takt (+0x0408 Cut_chg 8 .. +0x0422 Member_set(4))
+  keinen Plc-Befehl; ihr erster (Plc_dest TURN, Form ROOM1141 sub02 @0x00C50) stand hinter Sleep 1 + Plc_neck + Sleep 10
+  (+0x0426..+0x0438). Bis dahin blieb sie im Kommando 1, die Ziel-FSM spielte Nachladen (31 Bilder) und Senken (10) zu Ende - das
+  passt nicht in die 30 Bilder zwischen Sperre und Schnitt (NB3 deckt nur Halten 9-10 / Rueckstoss bis 16 Bilder). Kein
+  Regressionsbefund: dieselbe Lage seit dem Gespraech in Cut 8; die Form "Sperre vor dem Schnitt" der Nachbesserung 3 verkuerzte
+  ihn nur.
+
+### 11.2 RE-Belege (diese Sitzung selbst disassembliert; `re15_disasm.py` auf info/Re1.5/PSX.EXE, `scd_dump_room.py`)
+- **Original-Form der Szene nach einem Kampf, ROOM11C0 sub03** (`scd_dump_room.py ROOM11C0.RDT`, sub03 [0x1B02..0x1C0C]):
+  `0x01B14 09 0a 1e 00` Sleep 30, `0x01B18 29 04` Cut_chg 4, **`0x01B1A 2e 01 00` Work_set(1,0)** + Nop, `0x01B1E 34 00 9d e0`
+  Member_set(0,-8035), `0x01B22 34 02 ff c1` Member_set(2,-15873), **`0x01B26 40 00 04 00 38 c8 a1 de` Plc_dest** (Modus 4, Ziel
+  (-14280,-8543), Bit 0), `0x01B2E 18 05` Gosub sub05 (= `22 05 00 00` / While Ck(5,0)==0, wartet auf die Ankunft), `0x01B30 40 00
+  09 00 ..` Plc_dest TURN. Kein Sleep zwischen Cut_chg und Plc_dest: der Spieler bekommt seinen Plc-Befehl im SCHNITT-TAKT.
+- **Opcode-Tabelle** 0x800744a8 (die einzige Fundstelle des Worts 0x80041be4 im PSX.EXE ist 0x800745a8 = 0x800744a8 + 0x40*4):
+  [0x2E] = 0x80040d2c (Work_set), [0x3F] = 0x80041b90 (Plc_motion), [0x40] = 0x80041be4 (Plc_dest). SCD-Laeufer 0x8003f038 ->
+  0x8003f0a0: `8003f0b4 addiu s4,s4,17576` (= 0x800744a8), `8003f10c jalr v0`.
+- **Work_set Art 1 = Spieler 0x800aca54:** `80040da4 lui v0,0x800b` / `80040da8 addiu v0,v0,-13740` / `80040db0 sw v0,340(a0)`
+  (Thread+0x154 = Arbeitsfigur). Damit +4 = 0x800aca58 (Kommandowort), +5 = 0x800aca59, +6 = 0x800aca5a, +7 = 0x800aca5b.
+- **Plc_dest-Handler 0x80041be4 schreibt das Kommandowort sofort:** `80041be4 lw a1,340(a0)`, `80041bec lhu v0,452(a1)`, `80041bf0
+  lbu a2,2(v1)` (Modus), `80041bf8 andi v0,v0,0x4` / `80041bfc beq v0,zero,0x80041c14` (Wiederholungs-Waechter: nur bei +0x1c4 Bit 4
+  und gleichem Modus uebersprungen), **`80041c14 sb v0,4(a1)` (v0 = 4 aus `80041c00 ori v0,zero,0x4`), `80041c18 sb a2,5(a1)`,
+  `80041c1c sb zero,6(a1)`, `80041c20 sb zero,7(a1)`**; fuer Spieler-Typen (< 0x10, `80041c50 sltiu v0,v0,0x10`) Modus 4..9 ueber
+  Tabelle 0x80010dcc ([5] = 0x80041d1c fuer Modus 9: +0x1c8 aus 0x80073ee5[Typ*2]).
+- **0x800aca5a ist die Phase der Ziel-FSM:** Pistolen-FSM 0x80032e9c `80032ea0 lbu v0,-13734(v0)` (0x800aca5a), Tabelle 0x800740f4:
+  [0] 0x80032f18, [1] 0x80033180 (HOLD), [2] 0x80033460 (Rueckstoss), **[3] 0x80033c74 (SENKEN), [4] 0x80033d7c (NACHLADEN)**,
+  [5] 0x80033eec. Nachladen: Init bei +7 = 0 (`80033d90 lbu v0,0(v1)` 0x800aca5b, `80033da4 ori v0,zero,0xd` / `80033dac sb
+  0x800acae8` Clip 0x0D), Ende erst am Clip-Ende (`80033ea8 jal 0x8001f314` anim_set, `80033eb0 beq v0,zero,..`, `80033ebc sh
+  v0(=1),-13734(at)` -> HOLD, `80033ec0 jal 0x8004ebdc`, `80033ed0 jal 0x80045024` Ton 0x01030001). Plc_dest loescht +6/+7: ein
+  laufendes Nachladen oder Senken ist danach weg.
+- **SCD vor dem Spieler im selben Bild:** Spiel-Task `8001cdec jal 0x8003f038` (SCD-Laeufer) vor `8001ce0c jal 0x80031c44`
+  (Spieler). Der Spieler-Verteiler haelt nur bei Bit 31 (`80031c54 lw a0,-13760(a0)` g_pauseflags, `80031c78 bltz a0,..`), liest
+  dann `80031c8c lbu v1,-13736(v1)` (0x800aca58) und springt ueber 0x80073f90 (`80031ca4 addiu at,at,16272`, `80031cb4 jalr v0`).
+  Kommando 4 = 0x80030660 (Plc-Executor): `8003068c lbu v0,-13735(v0)` (0x800aca59), Tabelle 0x80073e30 (`8003069c`), `800306ac
+  jalr v0`; [9] = **0x80031360 TURN**: `80031374 lbu v1,0(a0)` (0x800aca5a = 0 nach Plc_dest) -> Init `80031398 sb 1,aca5a`,
+  `800313a4 sb 5,0x800acae8` (Clip 5), `800313b0 sb 0,0x800acae9`, `800313b8 sb 7,0x800acae3`; Ankunftstest `800313d0 jal
+  0x8001ab9c` (Kegel 0x60), Ankunft `800313ec sb 6,0x800aca59` / `800313f4 sb 0,0x800aca5a`; `80031494 jal 0x8001f314` anim_set
+  auf +0x170/+0x174 (0x800acbc4/0x800acbc8). **Im Schnittbild selbst laeuft also schon der TURN-Clip, kein Waffen-Clip.**
+- Port: `op_plc_dest` (scd_vm.c) bildet das ab - Spieler-Walk-Modus: `re15_player_aim_interrupt()` (Phase NONE = +6 = 0) und
+  `a->state = 4` (@0x80041c14); main.c ruft scd_vm_tick vor re15_game_step (wie @0x8001cdec vor @0x8001ce0c). Gemessen in v_rl2:
+  der TURN F4097 beendet den Waffen-Clip im selben Bild (`pst=4 mo=105`).
+- **Folgerung:** Elzas erster Plc-Befehl gehoert in den Schnitt-Takt (Form 11C0 sub03 @0x01B1A..@0x01B26). In ENTRIEGELN39 ist
+  das der TURN zu John (Form 1141 sub02 @0x00C50, Bit 0); er rueckt von +0x0438 nach +0x0426 (direkt hinter Member_set(4)),
+  Sleep 1 / Plc_neck / Sleep 10 folgen unveraendert. Laenge 1376 B und alle Anker bleiben; Johns Befehle liegen alle hinter dem
+  alten Platz (Sleep 5 @+0x0440 beginnt im selben Takt wie vorher) - sein Ablauf ist bildgleich. Elza steht durch Member_set(4)
+  schon zu John gedreht: der TURN kommt im ersten Bild an (Kegel 0x60) und geht wie bisher in Sub 6 ueber, nur 11 Bilder frueher.
+- Messer/Hieb: dieselbe Phase +6 (Messer-FSM, Hieb Clip 7); der Handler unterscheidet keine Waffenart - ein Hieb-Rest endet ebenso.
