@@ -137,6 +137,12 @@ Raumnamen DEBUG.BIN (include/debug_jump_table.h, Stage 0): 0x03 LOBBY, 0x04 WEST
 * Verhalten in den Schnitten (Leons Bausteine 3/4/5) im eigenen Takt (Leons montage_r38.c bleibt unberuehrt).
 * Nachspawn 1061 (Programm E): die vier Saetze an der Westseite, gehalten (entity+0x9 |= 0x20) solange die Spielerin
   nicht auf Etage 4 steht (Band = -(y/0x708)); dann frei. Nachspawn 1031 (Programm F) wie Leons k_p_1030_nach.
+* Nachbesserungen aus den Messungen: (1) Kartenhinweis-Bedingung `re15_map_hint_pending() < 0` (-1 = keiner; Lauf k1 blieb
+  sonst ausstehend); (2) 1061-Kopien erst frei, wenn die Treppe zu Ende ist (re15_stair_active() = 0, Laeufe t6 -> t7);
+  (3) Umzug und (9,95) erst NACH erfolgreichem Start des Auftakt-Fadens, sonst bleibt der Start ausstehend (kein Umzug
+  ohne Montage, wenn alle Ereignis-Plaetze belegt sind).
+* Mess-Haken (env, kein Spielverhalten): RE15_R39Q_KNALL_STUMM (Form Leons RE15_IT_KNALL_STUMM); Pruefhaken im Header
+  (Spuren, Freigabe, HP, Gegenprobe-Schalter re15_elzazombies_r39_enable).
 
 
 ## 4. Messung nachher
@@ -205,6 +211,15 @@ Neue Riegel (re15_port/tests/unit/probes/r39_elzazombies.cmake):
 * unit_r39_elzazombies_nach1031 / _ohne — Nachspawn 1031 mit/ohne (9,95); Laden mit (9,97), ohne (9,97), Leon.
 * integration_r39_elzazombies_kette / _knall / _treppe / _ohne — echte exe (s. 4.1, 4.2, 4.4, 4.5).
 Gezielter Lauf (00:5x): `ctest -R "r39_elzazombies"` -> "100% tests passed, 0 tests failed out of 12".
+
+### 5.1 Abschlusslaeufe (Baum 05d03c9f, gebaut 01:5x)
+* ALLE schnellen Tests (Stand b24d8af4 + Ton-Auswerter-Fix; danach nur der Start-Umbau in elzazombies_r39.c, dessen eigene
+  Riegel unten erneut liefen): `ctest -R "^(unit_|prop_|probe_)" -j 4` ->
+  "100% tests passed, 0 tests failed out of 845" (1125 s).
+* Gezielt (eigene Riegel + Gruppen der beruehrten Module/Raeume: Leons Montage, Zombie-Abbildung, Elza-Raeume 1031/1041/
+  10C1, Tagebuch/Karte, Speichern, k_port), Regex
+  `r39_elzazombies|^unit_r36_kartenbits|^integration_r35_cut1150$|^integration_r38_montage$|^integration_r37_zombieaktiv$|^integration_elza_vollstart$|^integration_r38_elzaintro_|^integration_r39_elza_|^integration_r38_elzatoene_|^integration_r38_tagebuch_|^integration_r37_elzaems_elza10c1kraehe$|^integration_r36_story_elza$|^integration_r36_elza_|^integration_r33_speichern$`
+  (`-j 3`) -> "100% tests passed, 0 tests failed out of 35" (922 s).
 
 ## 6. OFFEN (fuer die Integration, keine Luecke im Spurbaum)
 * Spur P setzt (9,97) (VERTRAG 1.1). Meine Kette startet bei der steigenden Flanke, sobald keine Szene laeuft
