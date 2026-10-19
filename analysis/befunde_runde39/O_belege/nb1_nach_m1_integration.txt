@@ -1,0 +1,62 @@
+# Nachbesserung 1, M1 Messung nachher (Stand 2b4e6dfd gebaut 01:34, exe neu)
+# ctest --test-dir re15_port/build -R "^integration_r39_parkplatz11c0_|^integration_r39_stimmen_11b0$" --timeout 1800 -j 2 --output-on-failure  (01:35:27-01:40:24)
+1/6 Test #1000: integration_r39_parkplatz11c0_n ...   Passed  132.04 sec
+2/6 Test  #998: integration_r39_parkplatz11c0_k ...   Passed  150.96 sec
+3/6 Test  #999: integration_r39_parkplatz11c0_w ...   Passed   31.25 sec
+4/6 Test #1001: integration_r39_parkplatz11c0_e ...   Passed   30.70 sec
+5/6 Test #1002: integration_r39_parkplatz11c0_i ...   Passed  102.28 sec
+6/6 Test #1012: integration_r39_stimmen_11b0 ......   Passed  113.03 sec
+100% tests passed, 0 tests failed out of 6
+Total Test time (real) = 294.78 sec
+
+## integration_r39_stimmen_11b0 (Spur A), re15_port/build/r39_stimmen_wd/lauf_11b0_3bb72cd7/debug.log (gefiltert)
+43:[save] CONTINUE: resumed in room 11c0 (hp=100)
+45:[parkplatz] F0 ROOM11C0 sub01 @0x01824 Evt_exec sub02 bei (3,67)=1 -> keine Sperre (Freigabe sub01 @0x0182E Ck(3,67)==0 greift nie), Original-sub02
+61:[fire-aot] slot=0 at F60 (Raum 11C0)
+62:[aot] DOOR FIRE slot=0 rect=(-25100,17250,hw=2000,hh=1350) target_cut=1 spawn=(-25552,0,-25331)
+64:[room] PC loaded room11b0.rdt (232492 bytes)
+501:[msg] room=11b0 id=20 savepoint=0
+502:[msgtext] room=11b0 id=20 "Marvin: But, hold on..."
+564:[msg] room=11b0 id=21 savepoint=0
+565:[msgtext] room=11b0 id=21 "Marvin: I just want to make sure we don't have any unwanted followers."
+573:[aot] DOOR FIRE slot=5 rect=(-62,-20288,hw=833,hh=833) target_cut=7 spawn=(26750,-1800,9400)
+575:[room] PC loaded room1260.rdt (287920 bytes)
+600:[flow] EXIT_AT: Bild 30 in Raum 1260 erreicht -> exit
+
+## integration_r39_parkplatz11c0_i Lauf i1, re15_port/build/tests/integration/r39_parkplatz11c0_i_wd/lauf_e7737e2a_i1/debug.log (gefiltert)
+44:[save] CONTINUE: resumed in room 11c0 (hp=100)
+46:[parkplatz] F0 ROOM11C0 sub01 @0x01824 Evt_exec sub02 bei (3,67)=1 -> keine Sperre (Freigabe sub01 @0x0182E Ck(3,67)==0 greift nie), Original-sub02
+48:[evt] F0 room=11c0 Evt_exec sub=2 cond=0x0a -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+63:[fire-aot] slot=0 at F60 (Raum 11C0)
+64:[aot] DOOR FIRE slot=0 rect=(-25100,17250,hw=2000,hh=1350) target_cut=1 spawn=(-25552,0,-25331)
+66:[room] PC loaded room11b0.rdt (232492 bytes)
+83:[evt] F6 room=11b0 Evt_exec sub=6 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+167:[flow] EXIT_AT: Bild 200 in Raum 11b0 erreicht -> exit
+
+## Lauf i2, debug.log + wegplan_log.txt (gefiltert)
+44:[save] CONTINUE: resumed in room 11c0 (hp=100)
+46:[parkplatz] F0 ROOM11C0 sub01 @0x01824 Evt_exec sub02 bei (3,67)=1 -> keine Sperre (Freigabe sub01 @0x0182E Ck(3,67)==0 greift nie), Original-sub02
+186:[scd F914] letterbox closed -> gameplay (player_mode=0)
+212:[aot] DOOR FIRE slot=0 rect=(-25100,17250,hw=2000,hh=1350) target_cut=1 spawn=(-25552,0,-25331)
+216:[room] PC loaded room11b0.rdt (232492 bytes)
+318:[flow] EXIT_AT: Bild 200 in Raum 11b0 erreicht -> exit
+2:F901 room=11C0 spieler=(-7131,-12378) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 | RAUM 11C0 geladen, Spieler frei (obj 6 = Slot 6)
+3:F930 room=11C0 spieler=(-7131,-12378) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 0 beendet: Raum bereit
+5:F931 room=11C0 spieler=(-7131,-12378) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 0 typ 1 ev 0 flags 0x31 band 0 mitte (-25100,17250) halb (2000,1350) quad 0
+33:F931 room=11C0 spieler=(-7131,-12378) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 1 beendet: gelistet
+34:F932 room=11C0 spieler=(-7131,-12378) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (4,64)
+35:F932 room=11C0 spieler=(-7131,-12378) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (4,64) = 1
+36:F932 room=11C0 spieler=(-7131,-12378) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 2 beendet: gelesen
+37:F933 room=11C0 spieler=(-7131,-12378) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (3,67)
+38:F933 room=11C0 spieler=(-7131,-12378) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (3,67) = 1
+39:F933 room=11C0 spieler=(-7131,-12378) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 3 beendet: gelesen
+40:F934 room=11C0 spieler=(-7131,-12378) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 | GEGNERWEG
+41:F934 room=11C0 spieler=(-7131,-12378) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 4 beendet: 0 Gegner weg
+62:F1111 room=11C0 spieler=(-15785,-6303) rot=2231 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 5 beendet: angekommen
+73:F1388 room=11C0 spieler=(-15862,12332) rot=2807 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 6 beendet: angekommen
+80:F1543 room=11C0 spieler=(-25018,16553) rot=2423 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 7 beendet: angekommen
+89:F1552 room=11C0 spieler=(-25018,16553) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 8 beendet: Blick steht
+91:F1553 room=11C0 spieler=(-25018,16553) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 0 typ 1 ev 0 flags 0x31 band 0 mitte (-25100,17250) halb (2000,1350) quad 0
+119:F1553 room=11C0 spieler=(-25018,16553) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 9 beendet: gelistet
+121:F2 room=11B0 spieler=(-25552,-25331) rot=3067 mo=210 pm=0 obj6=(0,0,0) b0 |   -> Befehl 10 beendet: gedrueckt
+122:F3 room=11B0 spieler=(-25552,-25331) rot=3067 mo=210 pm=0 obj6=(0,0,0) b0 | RAUM 11B0 geladen, Spieler frei (obj 6 = Slot 6)

@@ -1,0 +1,41 @@
+1:[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r39_parkplatz11c0/re15_port/build/platform/pc
+2:[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r39_parkplatz11c0/re15_port/shared_assets/PSX
+62:[aot] DOOR FIRE slot=1 rect=(-25480,-28190,hw=1250,hh=1750) target_cut=0 spawn=(-25279,0,17268)
+67:[room] PC loaded room11c0.rdt (155552 bytes)
+84:[parkplatz] F6 ROOM11C0 sub01 @0x01824 Evt_exec sub02 -> Programm SZENE (Tuer Slot 0 -> Text msg 40, Gosub sub02)
+86:[evt] F6 room=11c0 Evt_exec sub=2 cond=0x0a -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+143:[msg] room=11c0 id=0 savepoint=0
+154:[msg] room=11c0 id=1 savepoint=0
+163:[msg] room=11c0 id=2 savepoint=0
+172:[msg] room=11c0 id=3 savepoint=0
+173:[msg] room=11c0 id=3 savepoint=0
+174:[msg] room=11c0 id=3 savepoint=0
+175:[msg] room=11c0 id=3 savepoint=0
+176:[msg] room=11c0 id=3 savepoint=0
+177:[msg] room=11c0 id=3 savepoint=0
+187:[msg] room=11c0 id=4 savepoint=0
+208:[msg] room=11c0 id=5 savepoint=0
+218:[msg] room=11c0 id=6 savepoint=0
+229:[evt] F1093 room=11c0 Evt_exec sub=7 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+232:[scd F1107] letterbox closed -> gameplay (player_mode=0)
+266:[parkplatz] F1741 ROOM11C0 Tuer im Kampf -> msg 40 "I cannot leave Ada alone here with those monsters!" (Stimme main40.wav)
+268:[voice] ROOM11C0 msg 40: keine Aufnahme (synchro/STAGE1/room11c0/main40.wav) - Zeile bleibt stumm
+288:[parkplatz] F2207 MESSHAKEN RE15_R39O_GORILLAS_TOT: 2 Gorillas heraus, Flags (7,0x60)/(7,0x61) = 1
+289:[parkplatz] F2207 ROOM11C0 sub01 @0x01842 Evt_exec sub03 -> Programm ENDE (Tuer Slot 0 zurueck -> ROOM11B0, Gosub sub03)
+291:[evt] F2207 room=11c0 Evt_exec sub=3 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+305:[msg] room=11c0 id=7 savepoint=0
+313:[msg] room=11c0 id=8 savepoint=0
+319:[msg] room=11c0 id=9 savepoint=0
+320:[msg] room=11c0 id=9 savepoint=0
+321:[msg] room=11c0 id=9 savepoint=0
+322:[msg] room=11c0 id=9 savepoint=0
+323:[msg] room=11c0 id=9 savepoint=0
+325:[msg] room=11c0 id=9 savepoint=0
+326:[msg] room=11c0 id=9 savepoint=0
+327:[msg] room=11c0 id=9 savepoint=0
+328:[msg] room=11c0 id=9 savepoint=0
+343:[evt] F2806 room=11c0 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+364:[aot] DOOR FIRE slot=0 rect=(-25100,17250,hw=2000,hh=1350) target_cut=1 spawn=(-25552,0,-25331)
+366:[room] PC loaded room11b0.rdt (232492 bytes)
+381:[evt] F6 room=11b0 Evt_exec sub=6 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+465:[flow] EXIT_AT: Bild 200 in Raum 11b0 erreicht -> exit

@@ -1,0 +1,5 @@
+vor2 (Basis fa2c0e7e) gegen nach2 (Stand mit Sperre), gleicher Wegplan/Env (RE15_NOAUDIO=1), state.txt 11C0 bis F1739 (Tuerdruck):
+11C0-Bilder vorher 1738, nachher 1738, verglichen 1738, gleich 1738
+
+vor1 gegen nach3 (Gorillas leben, Leon stirbt unterwegs), gesamter 11C0-Abschnitt:
+11C0-Bilder vorher 2746, nachher 2746, verglichen 2746, gleich 2746

@@ -29,6 +29,7 @@
  *   bild <bmp> ...   Bildauswertung fuer tests/integration/test_r36_karte.cmake
  * ========================================================================== */
 #include <stddef.h>
+#include "r39_karte_b1.h"   /* Runde 39 Spur G: B1 als Schema-Zeichnung */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -390,22 +391,24 @@ static int teil_treppe(void)
     const re15_map_zone_t *zb1 = re15_map_zone_fuer(0x10A0, 0, 0);
     char t[240];
     printf("=== Riegel 1: Treppen im Treppenhaus 10A0 auf B1 ===\n");
-    CHECK("ROOM10A0 hat eine Zeile auf Blatt 0 (B1)", zb1 && zb1->rect == 6);
+    /* Runde 39 Spur G: B1 ist Schema-Zeichnung - die Absatz-Zeile traegt synth 10 statt der Kachel rect 6. */
+    CHECK("ROOM10A0 hat eine Zeile auf Blatt 0 (B1): Schema-Zeichnung des Absatzes",
+          zb1 && zb1->rect == 255 && zb1->synth == R39B1_10A0);
     if (!zb1) return 1;
     re15_map_visited_reset();
     /* Gegenprobe: nur 1F begangen -> auf B1 KEINE 10A0-Treppe (Gatter am B1-Etagen-Bit) */
     miss(0x10A0, 27050, 24900, 8, &m);
     snprintf(t, sizeof t, "nur 1F begangen: auf B1 keine sichtbare 10A0-Treppe - sind %d",
-             marken(0, 6, 10, 1, 0));
-    CHECK(t, marken(0, 6, 10, 1, 0) == 0);
+             marken(0, 255, 10, 1, 0));
+    CHECK(t, marken(0, 255, 10, 1, 0) == 0);
     /* ECHTER WEG: Gang ROOM1230 -> Tuer slot 1 -> ROOM10A0 B1 (Spawn y -7200 = Band 4) */
     re15_map_visited_reset();
     if (!durch_tuer(0x1230, -177, -7400, 0, 0x10A0, 21200, 25500, 4, &vor, &m, &ax, &az)) {
         CHECK("Tuer ROOM1230 -> ROOM10A0 gefunden", 0); return 1;
     }
     druck("10A0 Ankunft aus 1230", 0x10A0, ax, az, &m);
-    CHECK("Ankunft: die Karte zeigt B1 (Blatt 0), aktuell nur rect 6",
-          m.page == 0 && nur_aktuell(&m, 6));
+    CHECK("Ankunft: die Karte zeigt B1 (Blatt 0), aktuell nur die Absatz-Zeichnung",
+          m.page == 0 && r39b1_nur_aktuell(R39B1_10A0, 0));
     /* SOLL aus dem geladenen RDT: die STAIR-AOTs mit Band 4 (Aot_set sce 13 @0x00E7C/@0x00E90),
      * ihre Mitten mit der B1-Abbildung der Zone projiziert. */
     for (k = 0; k < RE15_AOT_MAX && n_band4 < 8; k++) {
@@ -413,7 +416,7 @@ static int teil_treppe(void)
         int16_t px = 0, py = 0;
         int rx, ry, rw, rh, i, neu = 1;
         if (!a->active || a->type != RE15_AOT_TYPE_STAIR || a->band != 4) continue;
-        re15_map_rect_geometry(0, 6, &rx, &ry, &rw, &rh);
+        re15_map_zone_synth(zb1, &rx, &ry, &rw, &rh, 0, 0);   /* Runde 39 Spur G: Kasten der Zeichnung */
         re15_map_zone_marker(zb1, a->x, a->z, rx, ry, rw, rh, &px, &py);
         for (i = 0; i < n_band4; i++) if (soll[i].x == px && soll[i].y == py) neu = 0;
         printf("    STAIR-AOT slot %d Band 4 Mitte (%d,%d) -> B1 (%d,%d)\n", k, (int)a->x,
@@ -433,13 +436,13 @@ static int teil_treppe(void)
             for (j = 0; j < n_band4; j++)
                 if (abs(soll[j].x - mx) <= 1 && abs(soll[j].y - my) <= 1) hit = 1;
             if (!hit) alle_getroffen = 0;
-            /* drei Sprossen 5x1 (kind 4) bzw. 1x5 (kind 5), re15_inv_screen.c - alle auf
-             * gemaltem Innenraum (Index 1) der B1-Kachel */
+            /* drei Sprossen 5x1 (kind 4) bzw. 1x5 (kind 5), re15_inv_screen.c - alle im
+             * Innenraum der Absatz-Zeichnung (Runde 39 Spur G: nicht auf ihrer Wandlinie) */
             for (row = -2; row <= 2; row += 2) {
                 int d;
                 for (d = -2; d <= 2; d++) {
                     int x = (kind == 4) ? mx + d : mx + row, y = (kind == 4) ? my + row : my + d;
-                    if (texel(0, 6, x, y) != 1) alle_auf_kunst = 0;
+                    if (!r39b1_in(R39B1_10A0, x, y, 1)) alle_auf_kunst = 0;
                 }
             }
             printf("    sichtbare Treppenmarke B1 (%d,%d) kind %d\n", mx, my, kind);
@@ -448,8 +451,7 @@ static int teil_treppe(void)
     snprintf(t, sizeof t, "auf B1 sind GENAU die zwei Treppen sichtbar - %d", n_marken);
     CHECK(t, n_marken == 2);
     CHECK("jede B1-Treppe sitzt (<= 1 px) auf der Projektion ihres Band-4-STAIR-AOT", alle_getroffen);
-    CHECK("jede Sprosse liegt auf gemaltem Innenraum der B1-Kachel (MAP01.PIX uv(128,16))",
-          alle_auf_kunst);
+    CHECK("jede Sprosse liegt im Innenraum der Absatz-Zeichnung (Runde 39 Spur G)", alle_auf_kunst);
     /* die anderen Etagen unveraendert: je zwei */
     re15_map_debug_reveal_page(1); re15_map_debug_reveal_page(2);
     CHECK("B2 und 1F tragen weiter je zwei 10A0-Treppen",
@@ -474,34 +476,38 @@ static int teil_marker11d0(void)
     }
     druck("1230 im Tuer-Trigger", 0x1230, 0, 0, &gang);
     druck("11D0 Ankunft", 0x11D0, ax, az, &m);
-    for (i = 0; i < nm; i++) {   /* die Tuermarke 11D0 <-> Gang (zid 30/108) */
+    for (i = 0; i < nm; i++) {   /* die Tuermarke 11D0 <-> Gang (Runde 39 Spur G: zid 25/30) */
         int pg, rc, mx, my, kind, za, zb;
         if (!re15_map_mark_get(i, &pg, &rc, &mx, &my, &kind)) continue;
         re15_map_mark_zonen(i, &za, &zb);
-        if (pg == 0 && za == 30 && zb == 108) { tx0 = mx; ty0 = my; }
+        if (pg == 0 && za == 25 && zb == 30) { tx0 = mx; ty0 = my; }
     }
     printf("    Tuermarke 11D0<->Gang (%d,%d)\n", tx0, ty0);
-    CHECK("Ankunft in 11D0: Blatt 0, aktuell nur rect 5", m.page == 0 && nur_aktuell(&m, 5));
+    CHECK("Ankunft in 11D0: Blatt 0, aktuell nur die Zwinger-Zeichnung",
+          m.page == 0 && r39b1_nur_aktuell(R39B1_11D0, 0));
     snprintf(t, sizeof t, "Ankunft: Marker (%d,%d) hoechstens 6 px unter der Tuermarke (%d,%d) und "
              "<= 2 px seitlich (vorher (129,151) = Mitte)", m.mx, m.my, tx0, ty0);
     CHECK(t, ty0 > 0 && m.my >= ty0 && m.my - ty0 <= 6 && abs(m.mx - tx0) <= 2);
     snprintf(t, sizeof t, "Sprung beim Durchgang Gang -> 11D0 <= 8 px (Gang (%d,%d), Raum (%d,%d))",
              gang.mx, gang.my, m.mx, m.my);
     CHECK(t, abs(gang.mx - m.mx) + abs(gang.my - m.my) <= 8);
-    /* Die Suedwand (Innenkante SCA @0x08A8 z -23050) liegt auf der gemalten Suedwand y172 der
-     * Kachel MAP01.PIX uv(128,56); der Spieler kommt bis 450 (Radius) an sie heran. */
-    miss_hier(0x11D0, 2600, -22600, &unten);
-    snprintf(t, sizeof t, "an der 1260-Tuer (Suedwand, Spielerradius 450 vor der Wand): Marker y %d "
-             "<= 4 px ueber der gemalten Suedwand y172", unten.my);
-    CHECK(t, unten.my <= 172 && unten.my >= 168 && texel(0, 5, unten.mx, 172) == 4);
-    /* Die ANDERE Tuer: aus der Kanalisation ROOM1260 (Tuer slot 3 @0x0118A -> Spawn (3900,-22000)).
-     * Vorher (Huellen-Kasten) (141,171); jetzt im unteren Sechstel an der Tuermarke (137,172). */
+    /* Runde 39 Spur G: die gemalte Kachel rect 5 und ihre "1260-Tuer an der Suedwand" gibt es nicht mehr. Beide Wege
+     * nach ROOM1260 sind BODENLOECHER (11D0 slot 1 @0x01228: Trigger = Kreiszelle @0x00A10 (1800..3300,-22750..-21250))
+     * und liegen in der KAMMER der Kanal-Leiter - einer eigenen Zone 1 (zid 111), die nur aus ROOM1260 erreichbar
+     * ist. Im Zwinger am Ostende des Sued-Gangs (Spielerradius 450 vor der Wand @0x008C0 x 1050) steht der Marker
+     * auf der Zwinger-Zeichnung. */
+    miss_hier(0x11D0, 550, -22000, &unten);
+    snprintf(t, sizeof t, "Ostende des Sued-Gangs (550,-22000): Marker (%d,%d) auf der Zwinger-Zeichnung",
+             unten.mx, unten.my);
+    CHECK(t, r39b1_in(R39B1_11D0, unten.mx, unten.my, 0));
+    /* Die ANDERE Tuer: aus der Kanalisation ROOM1260 (Tuer slot 3 @0x0118A -> Spawn (3900,-22000)) in die Kammer. */
     re15_map_visited_reset();
     if (durch_tuer(0x1260, 21850, -7300, -1, 0x11D0, 3900, -22000, 0, &gang, &m, &ax, &az)) {
         druck("11D0 Ankunft aus 1260", 0x11D0, ax, az, &m);
-        snprintf(t, sizeof t, "Ankunft aus 1260: Marker (%d,%d) an der unteren Tuermarke (137,172): "
-                 "<= 4 px seitlich, y 160..172", m.mx, m.my);
-        CHECK(t, abs(m.mx - 137) <= 4 && m.my >= 160 && m.my <= 172);
+        snprintf(t, sizeof t, "Ankunft aus 1260: Blatt 0, aktuell NUR die Kammer (Zwinger unbesucht), Marker (%d,%d) "
+                 "auf der Kammer-Zeichnung", m.mx, m.my);
+        CHECK(t, m.page == 0 && r39b1_nur_aktuell(R39B1_KAMMER, 0) && r39b1_zustand(R39B1_11D0) == 0 &&
+                 r39b1_in(R39B1_KAMMER, m.mx, m.my, 0));
     } else {
         CHECK("Tuer ROOM1260 -> ROOM11D0 gefunden", 0);
     }
@@ -528,14 +534,14 @@ static int teil_r1190(void)
         CHECK("Tuer ROOM1230 -> 1190 Haupthalle", 0); return 1;
     }
     druck("1190 Haupthalle", 0x1190, ax, az, &m);
-    CHECK("Haupthalle: Blatt 0, aktuell NUR rect 1", m.page == 0 && nur_aktuell(&m, 1));
-    CHECK("Haupthalle: Ostkammer (rect 2) noch UNBESUCHT",
-          re15_map_rect_state(0, 2) == RE15_MAP_RECT_UNVISITED);
-    snprintf(t, sizeof t, "Haupthalle: Marker (%d,%d) auf gemalter Flaeche von rect 1", m.mx, m.my);
-    CHECK(t, texel(0, 1, m.mx, m.my) > 0);
+    /* Runde 39 Spur G: B1 ist Schema-Zeichnung - Haupthalle synth 5, Ostkammer synth 6 (statt rect 1/2). */
+    CHECK("Haupthalle: Blatt 0, aktuell NUR die Hallen-Zeichnung", m.page == 0 && r39b1_nur_aktuell(R39B1_HALLE, 0));
+    CHECK("Haupthalle: Ostkammer noch UNBESUCHT (nicht gefuellt)", r39b1_zustand(R39B1_OST) == 0);
+    snprintf(t, sizeof t, "Haupthalle: Marker (%d,%d) auf der Hallen-Zeichnung", m.mx, m.my);
+    CHECK(t, r39b1_in(R39B1_HALLE, m.mx, m.my, 0));
     /* Hinten an den Zielscheiben (Haupthalle, Westteil) bleibt es rect 1 */
     miss_hier(0x1190, -20000, -20000, &m);
-    CHECK("Haupthalle an den Zielscheiben (-20000,-20000): weiter NUR rect 1", nur_aktuell(&m, 1));
+    CHECK("Haupthalle an den Zielscheiben (-20000,-20000): weiter NUR die Halle", r39b1_nur_aktuell(R39B1_HALLE, 0));
     /* ECHTER WEG 2: Gang -> Ostkammer-Tuer (ROOM1230 slot 4 @0x00CE6 - steht im Else-Zweig von
      * Ck(3,0x89) @0x00B98, vorher ist der Platz eine Meldung) */
     flag_dauer(3, 0x89);
@@ -543,20 +549,28 @@ static int teil_r1190(void)
         CHECK("Tuer ROOM1230 -> 1190 Ostkammer", 0); return 1;
     }
     druck("1190 Ostkammer", 0x1190, ax, az, &m);
-    CHECK("Ostkammer: Blatt 0, aktuell NUR rect 2", m.page == 0 && nur_aktuell(&m, 2));
-    CHECK("Ostkammer: Haupthalle (rect 1) jetzt BESUCHT",
-          re15_map_rect_state(0, 1) == RE15_MAP_RECT_VISITED);
-    snprintf(t, sizeof t, "Ostkammer: Marker (%d,%d) an der gemalten Tuernische (152..156,70..74)",
-             m.mx, m.my);
-    CHECK(t, m.mx >= 152 && m.mx <= 156 && m.my >= 70 && m.my <= 74);
+    CHECK("Ostkammer: Blatt 0, aktuell NUR die Ostkammer", m.page == 0 && r39b1_nur_aktuell(R39B1_OST, 0));
+    CHECK("Ostkammer: Haupthalle jetzt BESUCHT (gruen, nicht rot)", r39b1_zustand(R39B1_HALLE) == 1);
+    {   /* Ankunft an der Tuer Gang <-> Ostkammer: Marker auf deren Marke (Zug tuer_anziehen) */
+        int k, nm2 = re15_map_mark_count(), tx = -99, ty = -99;
+        for (k = 0; k < nm2; k++) {
+            int pg, rc, mx2, my2, kind, za, zb;
+            if (!re15_map_mark_get(k, &pg, &rc, &mx2, &my2, &kind)) continue;
+            re15_map_mark_zonen(k, &za, &zb);
+            if (pg == 0 && za == 25 && zb == 110) { tx = mx2; ty = my2; }
+        }
+        snprintf(t, sizeof t, "Ostkammer: Marker (%d,%d) an der Tuermarke Gang<->Ostkammer (%d,%d), <= 2 px",
+                 m.mx, m.my, tx, ty);
+        CHECK(t, abs(m.mx - tx) <= 2 && abs(m.my - ty) <= 2 && r39b1_in(R39B1_OST, m.mx, m.my, 0));
+    }
     miss_hier(0x1190, 19700, -21000, &m);   /* an der Weste (Aot slot 16 @0x02D90) */
-    CHECK("an der Weste: weiter NUR rect 2", nur_aktuell(&m, 2));
+    CHECK("an der Weste: weiter NUR die Ostkammer", r39b1_nur_aktuell(R39B1_OST, 0));
     /* ROOM11A0 liegt nicht mehr auf B1 */
     re15_map_visited_reset();
     miss(0x11A0, 7500, 10650, 3, &m);
     CHECK("ROOM11A0 (Band 3) zeigt Blatt 6, nicht B1", m.page == 6 && nur_aktuell(&m, 2));
-    CHECK("ROOM11A0 begangen: B1 rect 1 bleibt UNBESUCHT",
-          re15_map_rect_state(0, 1) == RE15_MAP_RECT_UNVISITED);
+    g_inv_screen.map_page = 0;
+    CHECK("ROOM11A0 begangen: die B1-Halle bleibt UNBESUCHT", r39b1_zustand(R39B1_HALLE) == 0);
     /* Wortlaut des Nutzers "ROOM 1090": dessen zwei Bereiche (Hof Band 1 mit Tuer -> 1050
      * @0x0211A, Dachterrasse Band 6 mit Tuer -> 1100 @0x0213A) liegen schon getrennt auf 1F/2F -
      * festgehalten, damit die Zuordnung zu ROOM1190 (Hunde/Luke/Weste, Dossier R0) pruefbar bleibt. */
@@ -587,18 +601,14 @@ static int teil_tuer11c0(void)
         printf("    Marke (%d,%d) kind %d\n", mx, my, kind);
         snprintf(t, sizeof t, "der Balken ist WAAGERECHT (kind 0/2) - kind %d", kind);
         CHECK(t, kind == 0 || kind == 2);
-        /* jeder der 5 Balkenpunkte liegt auf der gemeinsamen Wandzeile: Unterkante der
-         * 11B0-Kachel (rect 3) und Oberkante der 11C0-Kachel (rect 4) = Index 4 */
+        /* Runde 39 Spur G: jeder der 5 Balkenpunkte liegt auf der GEMEINSAMEN Wandlinie der Zeichnungen 11B0
+         * (Unterkante) und 11C0 (Oberkante) - beide Zellen fuehren diese Zeile als Rand (r39_karte_b1.h). */
         for (d = -2; d <= 2; d++)
-            if (texel(0, 3, mx + d, my) != 4 || texel(0, 4, mx + d, my) != 4) wand = 0;
-        snprintf(t, sizeof t, "alle 5 Balkenpunkte (%d..%d,%d) liegen auf der gemalten Wand "
-                 "zwischen 11B0 und 11C0", mx - 2, mx + 2, my);
+            if (!r39b1_in(R39B1_11B0, mx + d, my, 0) || r39b1_in(R39B1_11B0, mx + d, my, 1) ||
+                !r39b1_in(R39B1_11C0, mx + d, my, 0) || r39b1_in(R39B1_11C0, mx + d, my, 1)) wand = 0;
+        snprintf(t, sizeof t, "alle 5 Balkenpunkte (%d..%d,%d) liegen auf der gemeinsamen Wandlinie 11B0/11C0",
+                 mx - 2, mx + 2, my);
         CHECK(t, wand);
-        /* ueber der gemalten Tuernische der 11C0-Kachel: Nischenwaende bei x171/x175 (Index 4)
-         * in den Zeilen y101..104, dazwischen Innenraum (Index 1) */
-        snprintf(t, sizeof t, "Balkenmitte x%d ueber der gemalten Nische x171..175", mx);
-        CHECK(t, mx >= 172 && mx <= 174 && texel(0, 4, 171, 102) == 4 &&
-                 texel(0, 4, 175, 102) == 4 && texel(0, 4, 173, 102) == 1);
     }
     snprintf(t, sizeof t, "genau eine Marke 11B0<->11C0 - %d", gefunden);
     CHECK(t, gefunden == 1);

@@ -28,6 +28,7 @@
  */
 #include "re15_szenenleon_r36.h"
 #include "re15_werkstatt11b0_r38.h"   /* Runde 38 Spur C: Bank im Uebergabebild (Kanal + Phase 7) */
+#include "re15_heliport1171_r39.h"    /* Runde 39 Spur K: Schub Phase 5 -> 6 (RE15_R39K_SCHUB_SAAT) */
 #include "re15_actor.h"
 #include "re15_audio.h"
 #include "re15_collision.h"
@@ -110,8 +111,10 @@ static int clip_laenge(const re15_emd_animation_t *an, int clip)
 /* ===================================================================================================== */
 /*  SPIELER                                                                                              */
 /* ===================================================================================================== */
-static int s_sp = -1;          /* +0x6 (DAT_800aca5a) des Sub 0x13; -1 = Spieler nicht in Sub 0x13 */
+static int s_sp = -1;          /* +0x6 (DAT_800aca5a) des Sub 0x13; -1 = Spieler nicht in Sub 0x13
+                                * Runde 39 Spur K NB1: 8 = Port-Merker "Phase 7 lief, Sub 6 ab dem naechsten Bild" */
 static int s_sp_vorbild = -1;  /* zuletzt posiertes Bild von Clip 0x12 (Wurzel-Delta) */
+static int s_sp_saat = 0;      /* Runde 39 Spur K NB1: Clip 0x11 rueckwaerts erst im 1. Phase-6-Takt (@0x80052b98) */
 
 int re15_szl_schub_spieler_phase(void) { return s_sp; }
 
@@ -128,6 +131,7 @@ void re15_szl_schub_spieler_start(void)
     re15_player_event_reach_end();
     s_sp = 0;
     s_sp_vorbild = -1;
+    s_sp_saat = 0;
     szl_log("Spieler: Plc_dest Modus 0x13 (Schub-Sub @0x80052864)");
 }
 
@@ -146,7 +150,7 @@ static void sp_clip(re15_actor_t *p, int clip, int rueckwaerts, int blend)
 
 int re15_szl_schub_spieler_pl00(void)
 {
-    return (s_sp >= 2 && s_sp <= 7) ? (int)g_actors[RE15_ACTOR_SLOT_PLAYER].motion : -1;
+    return (s_sp >= 2 && s_sp <= 8) ? (int)g_actors[RE15_ACTOR_SLOT_PLAYER].motion : -1;   /* 8: Runde 39 Spur K NB1 */
 }
 int re15_szl_schub_spieler_wclip(void)
 {
@@ -198,22 +202,33 @@ void re15_szl_schub_spieler_tick(void)
         s_sp_vorbild = slot;
         if (re15_game_flag_get(5, p->walk_flag_bit)) {        /* @0x80052b38-4c */
             s_sp = 6;                                         /* @0x80052b60 */
-            sp_clip(p, RE15_SZL_CLIP_ANSATZ, 1, 0);           /* +0x94=0x11 @0x80052b70, +0x95=0 @0x80052b80,
-                                                               * KEIN +0x8f-Store; Phase 6 spielt a2=1 */
+            /* Runde 39 Spur K NB1 (M2, wie K4 beim NPC): +0x94 = 0x11 @0x80052b6c-70 / +0x95 = 0 @0x80052b80 wirken erst
+             * mit dem anim_set von Phase 6 (@0x80052b98) — dieser Takt hat Clip 0x12 schon posiert (@0x80052af4 vor der
+             * Bit-Abfrage @0x80052b44). Clip setzen im 1. Phase-6-Takt. */
+            s_sp_saat = 1;
         }
         break;
     }
     case 6: {                                                 /* @0x80052b84 */
+        if (s_sp_saat) {                                      /* Runde 39 Spur K NB1: Saat aus dem Bit-Takt */
+            s_sp_saat = 0;
+            sp_clip(p, RE15_SZL_CLIP_ANSATZ, 1, 0);           /* +0x94=0x11 @0x80052b70, +0x95=0 @0x80052b80,
+                                                               * KEIN +0x8f-Store; Phase 6 spielt a2=1 @0x80052b8c */
+        }
         int fc = clip_laenge(an, RE15_SZL_CLIP_ANSATZ);
         if (fc > 0 && (int)p->anim_frame >= fc - 1) s_sp = 7; /* +0x6 += anim_set() @0x80052bb4-bc */
         break;
     }
+    case 8:                                                   /* Runde 39 Spur K NB1: Bild nach Phase 7 — Sub 6 uebernimmt */
+        break;
     default: {                                                /* [7] @0x80052bc0 */
-        extern void re15_player_event_reach_begin(void);       /* game_step_common.c: Sub 6 */
+        extern void re15_player_event_reach_begin_naechstes_bild(void);   /* game_step_common.c: Sub 6 */
         re15_audio_room_se_snd0(RE15_SZL_SE_SCHUB);           /* 0x02070000 @0x80052bc8/cc */
-        s_sp = -1;
-        p->anim_flags &= (uint16_t)~RE15_SZL_REVERSE;
-        re15_player_event_reach_begin();                      /* +0x5 = 6 @0x80052be0, +0x6 = 0 @0x80052bf0 */
+        /* Runde 39 Spur K NB1: Phase 7 ruft kein anim_set — die Pose von Phase 6 (Clip 0x11 rueckwaerts, Bild 0) bleibt
+         * stehen; Sub 6 laeuft erst im naechsten Bild (+0x5 = 6 im Dispatcher). Das Rueckwaerts-Bit loescht der Saattakt. */
+        { int fc = clip_laenge(an, RE15_SZL_CLIP_ANSATZ); if (fc > 0) p->anim_frame = (uint16_t)(fc - 1); }
+        s_sp = 8;
+        re15_player_event_reach_begin_naechstes_bild();       /* +0x5 = 6 @0x80052be0, +0x6 = 0 @0x80052bf0 */
         szl_log("Spieler: Schub-Sub zu Ende -> Sub 6 (Event-Reach)");
         break;
     }
@@ -294,12 +309,17 @@ void re15_szl_schub_npc(re15_actor_t *e)
         e->sub_state_3 = (uint8_t)slot;
         if (re15_game_flag_get(5, e->walk_flag_bit)) {        /* @0x80052b38-4c */
             e->sub_state_2 = 6;
-            npc_clip(e, RE15_SZL_CLIP_ANSATZ, 1, 0);          /* @0x80052b60-80, kein +0x8f-Store */
-            e->sub_state_3 = 0;
+            /* Runde 39 Spur K: +0x94 = 0x11 / +0x95 = 0 (@0x80052b6c-80) wirken erst mit dem anim_set von Phase 6
+             * (@0x80052b98) — dieser Takt hat Clip 0x12 schon posiert (@0x80052af4). Clip setzen im 1. Phase-6-Takt. */
+            e->sub_state_3 = RE15_R39K_SCHUB_SAAT;
         }
         break;
     }
     case 6:                                                   /* @0x80052b84, a2 = 1 */
+        if (e->sub_state_3 == RE15_R39K_SCHUB_SAAT) {         /* Runde 39 Spur K: Saat aus dem Bit-Takt */
+            npc_clip(e, RE15_SZL_CLIP_ANSATZ, 1, 0);          /* @0x80052b60-80, kein +0x8f-Store */
+            e->sub_state_3 = 0;
+        }
         if (npc_anim(e, clip_laenge(loco, RE15_SZL_CLIP_ANSATZ))) e->sub_state_2 = 7;
         break;
     default:                                                  /* [7] @0x80052bc0 */

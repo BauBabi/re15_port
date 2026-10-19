@@ -358,10 +358,14 @@ static int ist_fest(const re15_inv_op_t *o)
            (o->x == 0x10e && o->y == 0x28 && o->w == 0x20 && o->h == 0x30);
 }
 
+/* Runde 39 Spur G: B1 (Blatt 0) traegt keine gemalten Kacheln mehr, sondern Schema-Zeichnungen
+ * (re15_map_zones.h, B1-Kopf). Gezaehlt werden dort die Wandlinien (FILL deckend in RE15_KARTE_WAND) und die
+ * Koerper (FILL halbtransparent) - dieselbe Regel wie RE2 Zeile 498: unbesucht = Umriss ohne Koerper. */
+static int s_k_wand, s_k_koerper;
 static void kacheln(unsigned room, int x, int z, unsigned page, int *gesamt, int *unbesucht)
 {
     static re15_inv_op_t ops[1024];
-    *gesamt = 0; *unbesucht = 0;
+    *gesamt = 0; *unbesucht = 0; s_k_wand = 0; s_k_koerper = 0;
     g_current_room_id = room;
     re15_map_zone_update(room, x, z);
     re15_inv_screen_open();
@@ -369,6 +373,10 @@ static void kacheln(unsigned room, int x, int z, unsigned page, int *gesamt, int
     g_inv_screen.map_page = (unsigned char)page;
     int nops = re15_inv_screen_build(&g_inv_screen, ops, 1024);
     for (int i = 0; i < nops; i++) {
+        if (ops[i].kind == RE15_INV_OP_FILL && ops[i].abe == 0 &&
+            ops[i].r == (uint8_t)((RE15_KARTE_WAND & 31u) << 3) &&
+            ops[i].g == (uint8_t)(((RE15_KARTE_WAND >> 5) & 31u) << 3)) s_k_wand++;
+        if (ops[i].kind == RE15_INV_OP_FILL && ops[i].abe == 1) s_k_koerper++;
         if (ops[i].kind != RE15_INV_OP_SPRT || ops[i].page != RE15_INV_PAGE_MAP4 || ist_fest(&ops[i])) continue;
         (*gesamt)++;
         if (ops[i].clut == RE15_INV_CLUT_MAP_UNBESUCHT) (*unbesucht)++;
@@ -382,19 +390,31 @@ static void teil_k(void)
         const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(i);
         int g0 = 0, u0 = 0, g1 = 0, u1 = 0, w0, w1;
         char nm[200];
+        int wand0, koerper0;
         re15_game_state_init();
         re15_map_visited_reset();
         /* Stand im Kartenraum (eine Zone des Raums ist besucht), Bit fehlt */
         kacheln(z->raum, z->rect_x + 500, z->rect_z + 500, z->blatt, &g0, &u0);
+        wand0 = s_k_wand; koerper0 = s_k_koerper;
         w0 = re15_map_blatt_waehlbar((unsigned)((z->blatt + 1) % 5));
         re15_game_flag_set(RE15_R36K_BANK, z->bit, 1);
         kacheln(z->raum, z->rect_x + 500, z->rect_z + 500, z->blatt, &g1, &u1);
-        printf("    Blatt %d (ROOM%04X): ohne Plan %d Kacheln / %d unbesucht, mit Plan %d / %d\n",
-               z->blatt, (unsigned)z->raum, g0, u0, g1, u1);
+        printf("    Blatt %d (ROOM%04X): ohne Plan %d Kacheln / %d unbesucht, mit Plan %d / %d"
+               " | Schema: Wandlinien %d -> %d, Koerper %d -> %d\n",
+               z->blatt, (unsigned)z->raum, g0, u0, g1, u1, wand0, s_k_wand, koerper0, s_k_koerper);
+        if (z->blatt == 0) {   /* Runde 39 Spur G: B1 = Schema-Zeichnungen */
+            snprintf(nm, sizeof nm, "Blatt 0 ohne Plan: nur der besuchte Ort (Umriss + Koerper), kein Umriss "
+                     "unbesuchter Orte (RE2 @0x8006E744)");
+            CHECK(nm, g0 == 0 && wand0 > 0 && koerper0 > 0);
+            snprintf(nm, sizeof nm, "Blatt 0 mit Plan: unbesuchte Orte als UMRISS ohne Koerper (RE2 Zeile 498 "
+                     "@0x8006E71C)");
+            CHECK(nm, s_k_wand > wand0 && s_k_koerper == koerper0);
+        } else {
         snprintf(nm, sizeof nm, "Blatt %d ohne Plan: keine unbesuchte Kachel (RE2 @0x8006E744)", z->blatt);
         CHECK(nm, u0 == 0 && g0 > 0);
         snprintf(nm, sizeof nm, "Blatt %d mit Plan: unbesuchte Kacheln in Zeile 498 (RE2 @0x8006E71C)", z->blatt);
         CHECK(nm, u1 > 0 && g1 - g0 == u1);
+        }
         CHECK("Besitz-Bits enthalten das Blatt", (re15_map_owned_bits() >> z->blatt) & 1u);
         /* Etagenwahl: ein fremdes, nie betretenes Blatt wird mit SEINEM Plan waehlbar */
         {

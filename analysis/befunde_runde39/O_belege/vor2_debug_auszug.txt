@@ -1,0 +1,16 @@
+43:[save] CONTINUE: resumed in room 11b0 (hp=100)
+59:[aot] DOOR FIRE slot=1 rect=(-25480,-28190,hw=1250,hh=1750) target_cut=0 spawn=(-25279,0,17268)
+62:[room] PC loaded room11c0.rdt (155552 bytes)
+78:[evt] F6 room=11c0 Evt_exec sub=2 cond=0x0a -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+134:[msg] room=11c0 id=0 savepoint=0
+144:[msg] room=11c0 id=1 savepoint=0
+152:[msg] room=11c0 id=2 savepoint=0
+160:[msg] room=11c0 id=3 savepoint=0
+169:[msg] room=11c0 id=4 savepoint=0
+188:[msg] room=11c0 id=5 savepoint=0
+197:[msg] room=11c0 id=6 savepoint=0
+208:[evt] F1088 room=11c0 Evt_exec sub=7 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+211:[scd F1102] letterbox closed -> gameplay (player_mode=0)
+244:[aot] DOOR FIRE slot=0 rect=(-25100,17250,hw=2000,hh=1350) target_cut=1 spawn=(-25552,0,-25331)
+247:[room] PC loaded room11b0.rdt (232492 bytes)
+292:[flow] EXIT_AT: Bild 200 in Raum 11b0 erreicht -> exit

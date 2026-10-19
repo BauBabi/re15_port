@@ -29,7 +29,7 @@ Spuren; nach jeder Welle Integration + gezielte Tests, volle Suite einmal am End
 | - | N | (entfallen) | Nachtrag 8: Nutzer liess die Dateien auf die Message-Ids umbenennen (main50-52, main40/42) - Ordnerregel genuegt |
 | 3+ | O | parkplatz11c0 / r39_parkplatz11c0 | ROOM11C0: Tueren waehrend des Gorilla-Kampfes gesperrt + Leon-Text (Nachtrag 9) |
 | 4 | P | johnruf1041 / r39_johnruf1041 | Elza: Johns Ruf ab 1041, Satz + Karte, Panikmusik bis zur Rettung, 1131-Ruf (Nachtrag 10) |
-| 4 | Q | elzazombies / r39_elzazombies | Elza: Zombie-Durchbrueche 10C1/1061/1071/1031 in der Panikphase (Nachtrag 10) |
+| 4 | Q | elzazombies / r39_elzazombies | Elza: Zombie-Durchbrueche 10C1/1061/1041/1031 in der Panikphase (Nachtrag 10 + 11: 1041 statt 1071) |
 | 4 | R | hund1121 / r39_hund1121 | Elza: Hund durchs Fenster in 1121 (Nachtrag 10) |
 | 3 | K | heliport1171 / r39_heliport1171 | John 1171 "Elza hurry up": Heran-Winken statt Klettern; uebrige Szenen-Animationen 1171 |
 
@@ -44,7 +44,7 @@ k_port[] ein (kleiner Haken, eine Zeile).
 
 ### 1.2 Nachrichten-Ids (Port-Text-Plaetze)
 Port-Ids liegen hinter den Original-Nachrichten eines Raums; vorhandene Port-Ids per grep `MSG_ID` (include/, gen/)
-ausschliessen. Zuteilung: **P**: 1041 Id 40 (Stimme room1041/main40.wav liegt), 1131 nur Stimmen ohne Text; **O**: 11C0 Id 40; **I**: 10F1 Ids 40-44; **J**: 1141 Ids 50-59 (40-49 hat Runde 38 F); **C**: 1000 nur, wenn
+ausschliessen. Zuteilung: **P**: 1041 Id 40 (Stimme room1041/main40.wav liegt) + Id 41 (Nachtrag 12), 1051 Id 40 (Nachtrag 12), 1131 nur Stimmen ohne Text; **O**: 11C0 Id 40; **I**: 10F1 Ids 40-44; **J**: 1141 Ids 50-59 (40-49 hat Runde 38 F); **C**: 1000 nur, wenn
 das Aufnahme-Modal einen eigenen Text braucht (Id 40). Alle anderen Spuren: nur vorhandene Nachrichten.
 Sprachdateien (synchro/) folgen der Message-Id (synchro/README.md) — eine Id, zu der der Nutzer schon eine WAV hat,
 nie umwidmen. Nutzer-Dateien unter synchro/ werden NIE umbenannt oder veraendert (Zuordnung im Code).

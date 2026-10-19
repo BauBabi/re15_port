@@ -45,6 +45,9 @@
 #include "re15_dining_r38.h" /* Runde 38 Spur F: Dining Room Key 1011/1131, Roys Leiche 1021, John 1141 (dining_r38.c) */
 #include "re15_inventar_r39.h" /* Runde 39 Spur C: Spind ROOM1000 erst Munition, dann Text (inventar_r39.c) */
 #include "re15_funk10f1_r39.h" /* Runde 39 Spur I: Funkszene ROOM10F1 (funk10f1_r39.c) */
+#include "re15_heliport1171_r39.h" /* Runde 39 Spur K: NPC-INIT-Pose-Merker je Raum loeschen (heliport1171_r39.c) */
+#include "re15_parkplatz_r39.h" /* Runde 39 Spur O: Tuersperre ROOM11C0 im Gorilla-Kampf (parkplatz_r39.c) */
+#include "re15_hund1121_r39.h" /* Runde 39 Spur R: Hund durchs Fenster ROOM1121 (hund1121_r39.c) */
 #include "re15_johnruf_r39.h"  /* Runde 39 Spur P: Johns Ruf 1041/1131, Panikphase Bit 97 (johnruf_r39.c) */
 
 extern scd_vm_t g_scd;
@@ -502,6 +505,9 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     re15_dining_r38_install((uint16_t)g_current_room_id);     /* Runde 38 Spur F: 1011 Schluessel, 1021 Text, 1131 Tuer, 1141 Phase H (re15_dining_r38.h) */
     re15_inventar_r39_install((uint16_t)g_current_room_id);   /* Runde 39 Spur C: Spind ROOM1000 Munition (Form ROOM1001 @0x00C24), NACH feuerloescher_r37 */
     re15_funk10f1_r39_install((uint16_t)g_current_room_id);   /* Runde 39 Spur I: Funkszene ROOM10F1, (9,70)=0 -> Ereignis 27 (re15_funk10f1_r39.h) */
+    re15_r39k_install((uint16_t)g_current_room_id);           /* Runde 39 Spur K: INIT-Pose-Merker (re15_heliport1171_r39.h); die NPC-INIT laeuft erst im Spieltakt */
+    re15_parkplatz_r39_install((uint16_t)g_current_room_id);  /* Runde 39 Spur O: ROOM11C0 Text 40 + Wiedereintritt im Kampf -> Tuer Slot 0 = Text (re15_parkplatz_r39.h) */
+    re15_hund1121_r39_install((uint16_t)g_current_room_id);   /* Runde 39 Spur R: ROOM1121, (9,97)=1 + (7,0xAE)=0 -> Slot 4 Ereignis 30 (re15_hund1121_r39.h) */
     re15_johnruf_r39_install((uint16_t)g_current_room_id);    /* Runde 39 Spur P: 1041 Johns Ruf + Satz + Karte, 1131 lauterer Ruf (re15_johnruf_r39.h) */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).

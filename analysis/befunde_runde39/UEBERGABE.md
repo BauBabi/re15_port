@@ -6,6 +6,37 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 08:10: MASTER ec32aa8b = G+O+R (Integration 921/921, 05:10), Hauptbaum-exe 08:07 + Smoke gruen. Spur Q elzazombies
+  BESTANDEN (Abnahme 1 nach NB1 721d530a: Riegel erben keine RE15_*-Umgebung, jede Schreibweise). Q in die Integration
+  (96b384a7, Konflikte additiv; Ereignis 30 raumgetrennt R=1121, Q=1041/1061/1031), Bau ok, 908 Tests laufen. Spur J
+  Abnahme 3: nur M1-Rest (Nachladen kurz vor der Sperre -> 8 Bilder Waffe auf John in Cut 8; Abhilfe Kommandowort im
+  Schnittbild wie 11C0 sub03 @0x01B26) -> Nachbesserung 4 wf_804c3159-374 (args_j_nach4.json). P wartet auf J.
+* 2026-10-19 04:47: MASTER 2963579d = Spur K (Integration 889/889), Hauptbaum-exe 01:06 + Smoke gruen. BESTANDEN: G karten
+  (Abnahme 3, Fix 0f8545c9: Tuer immer auf der Wand des gezeichneten Raums, B2-Westende 1210/1211), O parkplatz11c0
+  (Abnahme 1, Fix 2c7498cd: Sperre nur bei (3,67)==0), R hund1121 (Abnahme 0, aead0d9b: Hund springt in der Panikphase
+  durch Leons Kraehen-Fenster, RE2-Form ROOM21A0 sub07), P johnruf1041 (Abnahme 0, 20df7045: Rufe 1041 Xa_vol 50, msg 40
+  + main40, Karte 1141, MAIN01-Panikfenster bis zur Rettung, 1131 Xa_vol 100; P sitzt auf J-Zweig -> Integration erst mit J).
+  J Abnahme 2: nur M1 (Elza zielt beim Schnitt Cut 8 11 Bilder auf John) + H4 (Riegel erben Umgebung) -> Nachbesserung 3
+  wf_ef75b1de-26c (args_j_nach3.json). Integration G+O+R (7eb4f61b; Konflikte scd_room_setup.c/scd_vm.c/main.c rein additiv,
+  beide Seiten behalten, scratchpad/konflikt_beide.py): Bau ok 04:45, 921 Tests laufen (b5i5hns0b). K-Baum entfernt.
+  Aktiv: J (NB3), Q elzazombies (wf_c0587ec2-cb8, Bau).
+* 2026-10-19 00:32: Spur G Abnahme 2: N1 (1210-Kammer) erfuellt; neuer Mangel N2 - Tuermarken 1030<->1050/1040 schweben, solange 1030
+  nicht gezeichnet ist (vorbestehend, Nutzerpunkt "Tuer immer genau auf Wand") -> Nachbesserung 3 wf_3e8b0d3e-35e
+  (args_g_nach3.json). Integration: r39/integration ff auf master 131c6289, Spur K gemergt (14270601, Konflikt
+  scd_room_setup.c: Installer-Zeilen I + K beide behalten), Bau ok 00:31; Tests K-Gruppe + Querbezuege + alle
+  unit_/prop_/probe_ (889, Regex scratchpad/integ_regex_k.txt) laufen (b2tehp1rd). Aktiv: G, J, O, P, Q, R.
+* 2026-10-19 00:26: Spur K heliport1171 BESTANDEN (Abnahme 2; Fix 9ca95a72): HOVER-Phase 0 @0x801151d8 ohne f314/Bewegung, SPIN-Phase 2
+  ohne Gier +60 (@0x80115460-6c nur Phase 0/1), Wand-Pass FUN_8003b0a4 der Kraehen-Wurzel nach jedem Zustand (@0x80112204);
+  Griff 9-10 Bilder spaeter, Heranwinken RBJ rec1 Clip 2 unveraendert. Integration mit G (sobald bestanden). Nutzer-Nachtrag
+  11 (0377959a/14c0d454): Zombies in 1041 statt 1071 (Q-Baum cceb31ef/50e00d74). Spur R hund1121 gestartet wf_db73ffe8-91e,
+  args {"welle": ["R"], "slots": 1, "max_nach": 1, "basis": "02dc7917"}. Aktiv: G, J, O, P, Q, R.
+* 2026-10-19 00:16: Nutzer-Nachtrag 10 (02dc7917): Elza - Johns Ruf ab 1041 (leise), Satz msg 40 dort (Stimme room1041/main40.wav =
+  Kopie von room1141/main50), Karte mit 1141-Marker, Panikphase mit Leons Schlussmusik bis zur Rettung, 1131 lauterer Ruf,
+  1141 ohne Reaktion (J, Nachtrag in J-Baum 3f0ef678), Zombie-Durchbrueche 10C1/1061/1071/1031, Hund durchs Fenster 1121.
+  Bank-9-Bit 97 = Elza-Panikphase (P setzt), 95 an Q. Spuren: P johnruf1041 (Baum r39/dining1141 + master, b1309110)
+  wf_65368d68-882 args {"welle": ["P"], "slots": 1, "max_nach": 1, "basis": "b1309110"}; Q elzazombies (02dc7917)
+  wf_c0587ec2-cb8 args {"welle": ["Q"], "slots": 1, "max_nach": 1, "basis": "02dc7917"}; R hund1121 (Baum angelegt) startet,
+  sobald G oder K fertig ist (hoechstens 6 Laeufe). Aktiv: G, J, K, O, P, Q.
 * 2026-10-18 23:00: Spur J Abnahme 1: alles erfuellt ausser N4.3 (Johns Schuesse holen die Gorilla-Aufmerksamkeit nur in 6/16 Salven;
   Ursachen a-c im Bericht J_abnahme_1.md 0aa7b194) -> Nachbesserung 2 wf_9b31e40f-c3f (args_j_nach2.json): zuerst master
   mergen (E2/E3-Gorilla-Regel + Querungs-Wache, Stimmen main50-52), Stimmen messen, N4.3 neu messen und beheben, Regel fuer

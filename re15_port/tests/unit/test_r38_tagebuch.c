@@ -18,6 +18,7 @@
  *             unveraendert und ohne Elza-Flags still.
  *   leon      Gegenprobe ROOM1010 (Leon) mit denselben Flags und demselben Druck: kein Dokument, keine Kette.
  */
+#include "re15_karte_r39.h"   /* Runde 39 Spur G: ROOM11C0 = B1-Schema-Zeichnung synth 8 */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -499,8 +500,8 @@ static void teil_karte(void)
     b0 = re15_map_ziel_aktiv_n(0, &zp, &zr); q0p = zp; q0r = zr;
     b1 = re15_map_ziel_aktiv_n(1, &zp, &zr); q1p = zp;
     b2 = re15_map_ziel_aktiv_n(2, &zp, &zr);
-    PRUEF(b0 && q0p == 0 && q0r == 4 && b1 && q1p == 4 && !b2,
-          "Leon nach der 10F0-Szene: 11C0 (0/4) + 1150 (4/..), kein Elza-Ziel");
+    PRUEF(b0 && q0p == 0 && q0r == RE15_KARTE_R39_SCHEMA_RECT + 8 && b1 && q1p == 4 && !b2,
+          "Leon nach der 10F0-Szene: 11C0 (0/Schema 136, Runde 39 Spur G) + 1150 (4/..), kein Elza-Ziel");
 }
 
 /* ================================================================== leon */

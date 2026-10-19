@@ -1,0 +1,149 @@
+{
+ "_hinweis": "Spur J Nachbesserung 4 nach Abnahme 3 (M1-Rest: Nachladen kurz vor der Sperre -> 8 Bilder Waffe auf John in Cut 8). Baum r39_dining1141. Resume nur mit GENAU diesen args.",
+ "welle": [
+  "J"
+ ],
+ "slots": 1,
+ "max_nach": 1,
+ "basis": "1038dc15",
+ "modus": {
+  "J": "nachbesserung"
+ },
+ "runde0": {
+  "J": 3
+ },
+ "bau": {
+  "J": {
+   "status": "fertig",
+   "zusammenfassung": "M1 vorher am gemergten Stand gemessen: v_r2 (= Abnahme-Lauf R2) und v_m2 zeigen je 11 Bilder in Cut 8 mit pst=1 mo=215, also Elza mit der Waffe auf John (F6296..F6306 bzw. F4086..F4096). Ursache: Der Schnitt auf Cut 8, die Pad-Sperre und Pos_set/Member_set kamen im selben Takt, und der Port haelt unter player_mode 2 die ganze Ziel-FSM an.\nRE selbst gelesen: Set(2,7) setzt im Pausen-Wort Bit 0x01000000 (Tabelle @0x80074664[2] = 0x800aca40). FUN_80030444 kappt dann das Held-Wort (@0x80030514 andi 0xf000, @0x8003051c sw 0x800ac768). Der Umsetzer laeuft im Task-Takt vor der Spiel-Task (@0x80029dd8/@0x80029e14), wirkt also erst im Bild nach dem Setzen. Der Dispatcher haelt nur bei Bit 31 (@0x80031c78); Kommando 1 = 0x80073f90[1] = 0x80031de8. Die Ziel-FSM senkt im HOLD (@0x800331e4/@0x800331ec -> aca5a=3 @0x80033200), beim Messer (@0x80035128..@0x80035144) und im Rueckstoss (@0x80033560/@0x80033600 -> @0x8003364c).\nOriginal-Form fuer eine Szene nach dem Kampf: ROOM11C0 sub03 @0x01B06/@0x01B0A/@0x01B14/@0x01B18 - Balken, Sperre und Sleep 30 kommen VOR dem Schnitt.\nGebaut: ENTRIEGELN39 in dieser Reihenfolge (gleiche Laenge, Anker unveraendert). Dazu re15_dining_r39_ziel_senken mit einem Merker im Spieltakt und ein Haken in player_common.c: in ROOM1141 Phase H laeuft die Ziel-FSM unter der Sperre mit Pad 0.\nNachher: Im Riegel-Lauf zielen beginnt die Sperre F4051, Elza senkt F4052..F4060, der Schnitt kommt F4081, Cut 8 zeigt 0 Bilder mit erhobener Waffe. Echter Tod (n_r2, Eingabe von R2): Senken F6271..F6279, neutral ab F6280, Cut 8 ohne Waffe (vorher 11 Bilder).\nH4: r39_dining1141_umgebung.cmake entfernt jede RE15_*-Variable des Aufrufers. Beleg: ein Lauf mit 5 feindlichen Variablen blieb gruen. H7: Kommentar an den Code angepasst.\nmaster 2963579d gemergt; Johns Heranwinken nutzt weiter RBJ ROOM1171 rec1 Clip 2 mit 96 Bildern (D-Riegel, unit phase_h).",
+   "commits": [
+    "0ea1b100 wip(r39-dining1141): Nachbesserung 3 - Dossier-Abschnitt 10 angelegt",
+    "0e486aa6 merge(r39-dining1141): master 2963579d in r39/dining1141 (Nachbesserung 3)",
+    "01628883 wip(r39-dining1141): NB3 Dossier 10.0/10.1 - Merge, M1 am gemergten Stand reproduziert (v_r2 F6296..F6306)",
+    "8649df54 wip(r39-dining1141): NB3 M1 - Szenenbeginn nach dem Kampf in der Form ROOM11C0 sub03, Waffe senken unter der Pad-Sperre; H4/H7",
+    "5eaa4102 wip(r39-dining1141): NB3 Dossier 10.2 RE-Belege (FUN_80030444, HOLD/Messer/Rueckstoss, ROOM11C0 sub03), 10.3 Umsetzung",
+    "9a745d8e wip(r39-dining1141): NB3 Dossier 10.4 Messung nachher (senken, zielen) + Belegbilder vorher/nachher",
+    "17554589 wip(r39-dining1141): NB3 Dossier 10.4 Lauf n_r2 (echter Tod, Abnahme-R2-Eingabe): 0 Bilder Cut 8 mit Waffe + Belegbilder",
+    "1264c240 wip(r39-dining1141): NB3 Dossier 10.6 je Mangel, 10.7 OFFEN, 10.8 Fuer den Nutzer",
+    "db51683c wip(r39-dining1141): NB3 Kommando-1-Beleg im Haken (0x80073f90[1] = 0x80031de8, [4] = 0x80030660), Riegel zielen mit breitem R1-Fenster",
+    "e36553c2 wip(r39-dining1141): NB3 Dossier 10.5 Tests (Unit 855/855, senken, zielen, H4 mit feindlicher Umgebung)",
+    "e9f23f50 fix(r39-dining1141): Nachbesserung 3 - Elza senkt die Waffe vor dem Schnitt auf Cut 8 (M1), Riegel ohne geerbte Umgebung (H4), H7, master gemergt"
+   ],
+   "suite": "ctest --test-dir re15_port/build -R \"^(unit_|prop_|probe_)\" -j 6 --timeout 600 -> \"100% tests passed, 0 tests failed out of 855\" (Code-Stand 8649df54; danach nur ein Kommentar, objdump -d von player_common.c.obj vorher/nachher gleich). ctest --test-dir re15_port/build -R \"^(integration_r39_dining1141_d|integration_r39_dining1141_kampf|integration_r39_dining1141_zielen|integration_r38_dining1141_[wzdlsra]|integration_r39_gegner_1141|integration_r39_heliport1171_weg)$\" -j 4 --timeout 3600 --output-on-failure -> \"100% tests passed, 0 tests failed out of 12\" (Endstand db51683c; r38 a und d laufen seit Nachbesserung 1 nur als Stellvertreter, 0,17/0,16 s). Zusaetzlich H4-Beleg: env RE15_EXIT_AT=200#1131 RE15_FRAMEDUMP=0-50/1:feind_ RE15_GIVE=0x02:1 RE15_R38F_GORILLAS_TOT=5 RE15_INPUT_SCRIPT=U30 ctest -R \"^integration_r39_dining1141_zielen$\" -> \"100% tests passed, 0 tests failed out of 1\".",
+   "offene_punkte": [
+    "Geltungsbereich: Nur ROOM1141 Phase H senkt die Waffe unter der Pad-Sperre (2,7). In allen anderen Raeumen haelt der Port einen zielenden Spieler unter (2,7) weiter an (Gate player_mode 2), das Original senkt dort nach demselben Mechanismus (z. B. ROOM11C0 sub03 nach den Parkplatz-Gorillas). Fuer eine spaetere Runde: den Haken ohne die Raum-Bedingung allgemein machen; das braucht die volle Suite.",
+    "Randfall nach der Original-Form: Beginnt Nachladen (Clip 0x0D, 32 Bilder) oder ein Messerhieb (Clip 7, 25 Bilder) in den letzten ~12 bzw. ~5 Bildern vor der Sperre, ist zu Beginn von Cut 8 noch das Ende des Senkens zu sehen, bis Plc_dest TURN 11 Bilder nach dem Schnitt. ROOM11C0 sub03 wartet ebenfalls fest 30 Bilder. Gemessen sind nur Halten, Messer und Rueckstoss.",
+    "Ein Bild Unterschied am Sperrbeginn: Im Setz-Bild laeuft im Original der Dispatcher noch mit ungekapptem Wort, der Port haelt den Pad-Zweig schon in diesem Bild an (bestehende Regel player_mode 2). Das Senken beginnt in beiden erst im Bild danach.",
+    "Gemeinsame Dateien ausserhalb VERTRAG 1.3: neu engine/src/player_common.c (+8, nur ROOM1141 Phase H), dazu wie bisher enemy_ai_common.c, enemy_common.c, game_step_common.c, re15_damage.c und audio_pc.c. Bei der Integration mit den Spuren D/E/K/A/B zusammen ansehen.",
+    "Die E-Riegel unit_r39_gegner_1141_ablauf1141 und integration_r39_gegner_1141 bei der Integration in der Fassung dieses Zweigs uebernehmen (Abnahme H3).",
+    "Abnahme 2 H5 war nicht beauftragt und ist unveraendert: re15_dining_r39_tick laeuft ausserhalb des KI-Tors. Der neue Sperr-Merker gehoert bewusst vor jedes Tor, weil er den Pad-Umsetzer nachbildet.",
+    "Riegel integration_r39_dining1141_zielen: Ohne RE15_AUDIO_CAP_SYNC schwankt das Szenenende mit der Wanduhr (3421..3456). Das R1-Fenster (Bild 3000 + 45 s) deckt Szenenenden von ~2420 bis ~3690 ab.",
+    "Klopf-Klang RE2 DOOR0F: Die Abnahme durch Anhoeren liegt beim Nutzer (H1)."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/player_common.c (+8: Runde 39 Spur J Nachbesserung 3, Ziel-FSM unter der Pad-Sperre in ROOM1141 Phase H; ausserhalb VERTRAG 1.3, offengelegt)",
+    "re15_port/tests/integration/test_r38_dining1141.cmake (+3: Umgebung leeren, H4)",
+    "aus dem Merge unveraendert uebernommen: enemy_common.c, enemy_ai_common.c, game_step_common.c (Spur K; die Haken von J stehen weiter an ihrer Stelle)"
+   ],
+   "neue_assets": [],
+   "sprachdateien": []
+  }
+ },
+ "abn": {
+  "J": {
+   "bestanden": false,
+   "suite": "Gezielt, keine volle Suite im Spurbaum. Unit: ctest -R \"^(unit_|prop_|probe_)\" -j 6 -> 100% tests passed, 0 tests failed out of 855. Integration: 21 Tests (alle J-Riegel d/kampf/zielen, r38_dining1141_[wzdlsra], r39_gegner_1141, r39_heliport1171_weg, r36_elza_schuss, r37_elzaems_elza1141, r38_affen3 x3, r35_cut10f0, r39_stimmen_1171, r38_rekorder, r38_elzaintro_stimme), mit feindlicher Variable RE15_ABNAHME3_FEIND=1 -> 100% tests passed, 0 tests failed out of 21. Gegenprobe: Werkzeug zielen auf den Lauf vor dem Fix meldet 3 Fehler.",
+   "urteile": [
+    {
+     "punkt": "1 Keine Zombie-Geraeusche in 1141",
+     "urteil": "erfuellt",
+     "beleg": "Lauf A, debug.log 1141: 0 Zeilen bank 0x3C/0x3D/60/61, main42 und main50. Skript-Toene nur Klopfen 0x3E/0 (18x), help01..05 (0x31..0x35), Glas 0x21 (2x), Rolladen 0x3B, Tuer DOOR1A bank 14. Keine Ton-Zeile ausserhalb des Skript-Pfads."
+    },
+    {
+     "punkt": "2 John kommt durch die Tuer; Kamera vorn auf Elza, Tuer-zu-Ton, dann Kamera auf die Tuer mit John",
+     "urteil": "erfuellt",
+     "beleg": "Laeufe A/P: Cut_chg(7) F1593 (sichtbar F1594); Tuer auf zwischen fd_001665 und fd_001670; John erstmals bei F1670 im Bild von Cut 7 (-7350,-1300), also hinter der Kamera; Tuer zu zwischen fd_001710 und fd_001715; Cut_chg(6) F1739, erstes Bild F1740 mit John vor der Tuer. Vor dem Auftritt kein Bild mit John. Bild J39abn3/a_tuer.png"
+    },
+    {
+     "punkt": "3 Kein Shout-Voiceover fuer John",
+     "urteil": "erfuellt",
+     "beleg": "Laeufe A/P: 0x main42.wav, 0x bank 0x3D; Johns Stimme in Phase H nur help01..05."
+    },
+    {
+     "punkt": "4 help01..05 im Mix mit Abstaenden, dazwischen mehrfaches Klopfen",
+     "urteil": "erfuellt",
+     "beleg": "Lauf A: je Runde drei Schlaege im Abstand von 5 Bildern, 30 Bilder spaeter ein Ruf: help03 F75, help01 F295, help04 F515, help02 F924, help05 F1144, help03 F1364. Mitschnitt: Schlaege RMS ~2480 gegen Musik ~250; help03 rho 0,908, help01 rho 0,895. Klang = RE2 DOOR0F, die Klangabnahme liegt beim Nutzer."
+    },
+    {
+     "punkt": "5 Elzas Reaktion (Fassung Nachtrag 10: entfaellt in 1141)",
+     "urteil": "erfuellt",
+     "beleg": "Lauf A: erste Nachricht in 1141 ist msg 13 bei F676, erste Pad-Sperre F867 (Rolladen). 0x msg 50 und 0x main50.wav; main50 im Mitschnitt rho 0,063. Bild a0_frueh.png"
+    },
+    {
+     "punkt": "6 Scheibenbruch vor 'What was that?!'",
+     "urteil": "erfuellt",
+     "beleg": "Lauf A: msg 5 offen bis F2423, GLAS1090 bei F2424 und F2429 (Takt 6091/6096, RMS bis 10144), msg 6 'Elza: What was that?!' ab F2450."
+    },
+    {
+     "punkt": "7 John schaut ab 'some kind of gorilla' zu Elza",
+     "urteil": "erfuellt",
+     "beleg": "Laeufe A/P, r39.txt: msg 9 in 169 Bildern und msg 10 in 99 Bildern Blickfehler <= 10 (Einheit 4096 = 360 Grad); Ende von msg 11 = John laeuft in seine Ecke (sub02 @0x00F8E)."
+    },
+    {
+     "punkt": "8 Nach dem Tod der Gorillas zwei Zeilen Johns mit passenden Animationen (inkl. Mangel M1 der Abnahme 2)",
+     "urteil": "teilweise",
+     "beleg": "Zeilen msg 51/52 im Wortlaut, Gesten (0,15)/(0,23), Heranwinken mit RBJ ROOM1171 rec1 Clip 2 (96 Bilder), main51/main52 rho 1,000, 0 Laufbilder mit offener msg 52, Kamera folgt Elza: erfuellt. M1 im gemeldeten Fall behoben: R2 (echter Tod, Rueckstoss) Sperre F6266, Senken F6271..F6279, Cut 8 F6296..F6306 mit mo 200 (vorher 11 Bilder Waffe auf John); K (Messer) und Riegel zielen (Pistole): je 0 Bilder mit Waffe in Cut 8. REST: RL2 (Nachladen 3 Bilder vor der Sperre) zeigt 8 Bilder Waffen-Clip in Cut 8, in F4087/F4088 zielt Elza mit der Pistole auf John (rl2_cut8_zoom.png). Die zitierte Original-Form ROOM11C0 sub03 ersetzt das Kommandowort im Schnittbild (Plc_dest @0x1B26, Handler 80041c14 sb 4,4(a1)), ENTRIEGELN39 erst 11 Bilder spaeter."
+    },
+    {
+     "punkt": "9 Keine Panik-Musik beim Wechsel 1141 -> 1171",
+     "urteil": "erfuellt",
+     "beleg": "Werkzeug pegel l_a: Takte 10011..10036 Pegel 0, Takte 10051..10081 Pegel 559 (MAIN32), 0 Fehler. Eigene Pegel: nach dem Tuer-zu-Ton Stille, ab Takt 10038 MAIN32, kein MAIN16. Wartereihenfolge im Original selbst disassembliert (@0x8004429c..@0x800442b8, @0x800399b0 vor @0x80039a00)."
+    },
+    {
+     "punkt": "N4.1 Rolltor oeffnen, danach frei laufen",
+     "urteil": "erfuellt",
+     "beleg": "Lauf A: ROLLTOR39 F674, Sperre F867..F1100, frei F1101..F1484 (Klopfen laeuft weiter), Riegel F1485."
+    },
+    {
+     "punkt": "N4.2 Szene am Riegel: rennen, andere Kamera, zur Tuer drehen, Waffe heben",
+     "urteil": "erfuellt",
+     "beleg": "Lauf A: Messer gezogen (W-Clip 13) ab F1630 in Cut 7. Lauf P: 'Elza hebt Waffe 3 ... Schusswaffe', W-Clip 6 F1630..F1805 (p_heben_zoom.png). Der neue Haken greift dort nicht (Kommando 4)."
+    },
+    {
+     "punkt": "N4.3 John schiesst ab und an und zieht die Aufmerksamkeit",
+     "urteil": "erfuellt",
+     "beleg": "Riegel kampf (lauf_d50d2f11), eigene Auswertung mit salven.py/aufmerk.py: 10 Schuesse, 10 Treffer, 6 davon bei gr=1, rel -6..+2, John im Bild von Cut 0, 5 von 5 Salven 'zugewandt'. R2: 14 Schuesse, 14 Treffer."
+    },
+    {
+     "punkt": "N4.4 / Nachtrag 7 Heranwinken wie in 1171",
+     "urteil": "erfuellt",
+     "beleg": "'F4061 John winkt heran: RBJ ROOM1171 Record 1 Clip 2 geliehen (96 Bilder, 3 Clips)', msg 52 in allen 129 Bildern (0,2), keine Waffe auf Elza (a_wink_zoom.png)."
+    },
+    {
+     "punkt": "N6 'trouble'/'gorilla' klein",
+     "urteil": "erfuellt",
+     "beleg": "msgtext '... we end up as gorilla meal....'; Riegel D: 'nicht da as Gorilla meal' / 'He is in Trouble'."
+    },
+    {
+     "punkt": "Nachtrag 8 Stimmen main50/51/52",
+     "urteil": "erfuellt",
+     "beleg": "main51 rho 1,000 bei Takt 7552, main52 rho 1,000 bei Takt 7728; msg 12/13 bleiben stumm; main50 laut Nachtrag 10 nicht in 1141."
+    },
+    {
+     "punkt": "RE-Gate",
+     "urteil": "erfuellt",
+     "beleg": "Selbst disassembliert und stimmig: FUN_80030444 @0x800304f4..@0x8003051c (andi 0xf000), Aufrufer @0x80029dd8/@0x80029e14, Dispatcher bltz @0x80031c78, 0x80073f90[1]=0x80031de8 / [4]=0x80030660, HOLD @0x800331e4..@0x80033200, Messer @0x80035128..@0x80035144, Rueckstoss @0x80033600/@0x8003364c samt Tabelle 0x80074092, Set-Tabelle @0x80074664[2]=0x800aca40, ROOM11C0 sub03 Bytes @0x1B02..@0x1B18. 0 Rate-Woerter im Diff, kein Env-Schalter als Abschluss. Gegenpruefung: die OFFEN-Begruendung des Randfalls ('nach der Original-Form') haelt nicht (siehe Mangel)."
+    },
+    {
+     "punkt": "Vertrag",
+     "urteil": "erfuellt",
+     "beleg": "Pfade ohne release/, android/, shared_assets/PSX/, CMakeLists und synchro/. Bit 94 und Ids 50..58 wie zugeteilt. Gemeinsame Dateien nur mit kleinen, gekennzeichneten Haken; player_common.c neu (+10/-1, nur 1141 Phase H) und offengelegt. H4 behoben: alle 10 J-Riegel melden 'r39j: 1 RE15_*-Variablen des Aufrufers entfernt: RE15_ABNAHME3_FEIND'."
+    }
+   ],
+   "maengel": [
+    "M1-Rest (Punkt 8, sehr niedrige Schwere, enges Zeitfenster, aber reproduzierbar): Beginnt Elza kurz vor der Pad-Sperre nachzuladen, zielt sie zu Beginn des Gespraechs noch auf John. Lauf RL2 (scratchpad J39abn3, Nachladen ab F4053, Sperre F4056, Schnitt F4086): F4086..F4093 = 8 Bilder in Cut 8 mit mo=215 ac=6, in fd_004087/fd_004088 Arme ausgestreckt und Pistole auf Johns Oberkoerper; erst Plc_dest TURN bei F4097 beendet das. Lauf RL (Nachladen 8 Bilder vor der Sperre): 3 Bilder Waffen-Clip, Waffe dabei schon unten. Ursache: Nachladen (31 Bilder) plus Senken (10 Bilder) passen nicht in die 30 Bilder zwischen Sperre und Schnitt, und ENTRIEGELN39 gibt Elza ihren Plc-Befehl erst 11 Bilder nach dem Schnitt. Die vom Bau-Agenten zitierte Original-Form ROOM11C0 sub03 ersetzt das Kommandowort im Schnittbild selbst: 0x01B26 Plc_dest im selben Takt wie 0x01B18 Cut_chg, Handler 80041c14 sb v0(=4),4(a1), SCD-Laeufer @0x8001cdec laeuft vor dem Spieler @0x8001ce0c. Die Dossier-Aussage 10.7 'Randfall nach der Original-Form ... nur das Ende des Senkens' trifft deshalb nicht zu. Nachpruefen: bash lauf.sh rl2 plan_r.txt \"4250#1141\" \"4040-4110/1:fd_\" RE15_GIVE=0x43:1,0x03:1,0x15:50 RE15_EQUIP=3 RE15_R38F_GORILLAS_TOT=600 RE15_R38F_GORILLAS_STARR=1 \"RE15_INPUT_SCRIPT=M33.3333,MA0.1,M1.6667,MA0.1,M10\" RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=3000. Abhilfe-Richtung: Elzas Kommandowort im Schnittbild ersetzen wie 11C0 sub03 @0x01B1A..@0x01B26 und den Riegel zielen um den Fall 'Nachladen kurz vor der Sperre' erweitern (kein Bild in Cut 8 mit mo 215)."
+   ],
+   "bericht": "Abnahme 3 der Spur J dining1141, Stand e9f23f50, Bau LOCAL-BUILD-OK: nicht bestanden, weil Punkt 8 nur teilweise erfuellt ist.\n\nNachbesserung 3 behebt M1 der Abnahme 2 im gemeldeten Fall. Ich habe das in sechs eigenen Laeufen an der echten exe gemessen, jeweils ueber den echten Weg 1131 -> 1141 -> 1171:\n- **R2 (Nachstellung von Abnahme 2, echter Tod, Elza zielt und schiesst):** Sperre ab F6266, Senken F6271..F6279. Cut 8 ab F6296 zeigt sie neutral (mo 200); vorher stand sie dort 11 Bilder mit der Waffe auf John.\n- **K (Messer gehalten) und Riegel zielen (Pistole gehalten):** je 0 Bilder mit Waffe in Cut 8.\n- **Mechanismus:** selbst nachdisassembliert, alle zitierten Adressen stimmen (Pad-Umsetzer FUN_80030444, Dispatcher, HOLD/Messer/Rueckstoss, Set-Tabelle). Der Szenenbeginn folgt ROOM11C0 sub03 (Balken und Pad-Sperre 30 Bilder vor dem Schnitt).\n\nDie Punkte 1-7 und 9, Nachtrag 4 (Rolltor, Szene am Riegel, John schiesst, Heranwinken), Nachtrag 6 und 8 sowie H4 (Riegel erben keine fremden RE15_*-Variablen mehr) sind erfuellt und gemessen.\n\n**Mangel M1-Rest (sehr niedrige Schwere):** Der Bau-Agent hat diesen Randfall offengelegt, ihn aber nicht gemessen; ich habe ihn nachgestellt. Beginnt Elza 3 Bilder vor der Sperre nachzuladen (Lauf RL2), zeigt Cut 8 noch 8 Bilder im Waffen-Clip. In 2 davon zielt sie mit der Pistole auf John. Seine Begruendung (\"nach der Original-Form\", \"nur das Ende des Senkens\") haelt nicht: ROOM11C0 sub03 ersetzt das Kommandowort im Schnittbild selbst (Plc_dest @0x01B26), ENTRIEGELN39 erst 11 Bilder spaeter.\n\nTests: Unit 855/855, Integration gezielt 21/21. Die Gegenprobe des neuen Riegels auf den Stand vor dem Fix meldet 3 Fehler, er misst den Befund also. RE-Gate und Vertrag gehalten; Hinweise H1-H8 stehen im Bericht.\n\nBericht: C:\\workspace\\git\\reAi_v2\\.claude\\worktrees\\r39_dining1141\\analysis\\befunde_runde39\\J_abnahme_3.md, Commit ece3a8f9 \"doc(r39-dining1141): Abnahme 3\". Vorher gab es Zwischenstands-Commits, die ebenfalls nur diese Datei enthalten. Messdaten und Bilder (nicht committet) liegen im scratchpad unter J39abn3, z. B. rl2_cut8_zoom.png, r2_cut8_zoom.png, k_schnitt.png, a_tuer.png und a_gespraech.png."
+  }
+ }
+}

@@ -24,6 +24,7 @@
 #include "re15_rdt.h"           /* re15_rdt_floor_sound */
 #include "re15_enemy_ai.h"      /* re15_enemy_ai_run_all — the LIVE-zombie per-frame pass (8.6) */
 #include "re15_fenster1120.h"   /* Runde 35 Spur M */
+#include "re15_hund1121_r39.h"  /* Runde 39 Spur R */
 #include "re15_ai_flavor.h"     /* re15_ai_flavor / re15_re2z_owns_type — RE2-Trefferfilter-Nachlauf */
 #include "re15_damage.h"        /* re15_player_is_dead / re15_player_death_tick (8.10 death FSM) */
 #include "re15_menu.h"          /* re15_menu_* — the inventory/weapon-select menu (8.20) */
@@ -38,6 +39,7 @@
 #include "re15_granate_r36.h" /* Runde 36 Spur D N1: Granate verbraucht erst im Spawnbild */
 #include "re15_leiche.h"    /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
 #include "re15_hebetisch.h" /* Runde 31: Ruhe oben des Hebetischs (Mess-Protokoll) */
+#include "re15_heliport1171_r39.h" /* Runde 39 Spur K NB1: Sub-6-Saattakt (re15_r39k_reach_*) */
 #include "re15_map_hint.h"      /* RE2-ERGAENZUNG Kartenhinweis (map_hint_common.c) */
 #include "re15_room.h"          /* re15_room_transition_present — Tuer-Praesentation beim Self-Reenter */
 #include "re15_door_seq.h"      /* RE2-Tuersequenz vor dem Wiedereintritt (Tor ROOM1170) */
@@ -388,8 +390,12 @@ void re15_player_event_reach_begin(void)
     pl->motion = 1; pl->anim_frame = 0; pl->anim_frac = 7;   /* Clip 1 @0x80051844/74 */
     pl->anim_freeze = 0;
     pl->walk_active = 0;
+    re15_r39k_reach_saat(0);   /* Runde 39 Spur K NB1: SCD-Modus 6 -> Phase 0 posiert Bild 0 in DIESEM Bild (@0x8005188c) */
 }
-void re15_player_event_reach_end(void)  { s_ev_reach = 0;
+/* Runde 39 Spur K NB1: +0x5 = 6 aus dem Spieler-Dispatcher (Ankunft @0x80030cf0/@0x800313ec, Schub Phase 7 @0x80052be0)
+ * -> Sub 6 laeuft erst im naechsten Bild (re15_heliport1171_r39.h). */
+void re15_player_event_reach_begin_naechstes_bild(void) { s_ev_reach = 1; re15_r39k_reach_saat(1); }
+void re15_player_event_reach_end(void)  { s_ev_reach = 0; re15_r39k_reach_aus();
     re15_szl_schub_spieler_ende(); }   /* Runde 36 Spur J: jeder neue Plc-Befehl ersetzt auch Sub 0x13 */
 
 /* KOMMANDOREGISTER-RESET — das Port-Gegenstueck zum WORT-Store `sw zero,0x800aca58` @0x80031518
@@ -434,7 +440,8 @@ void re15_player_cmd_zero(void)
     s_hit_flinch = 0; s_hit_kb = 0;
     s_react_pose = 0; s_react_clip = 0;   /* Raumwechsel/Reset: der Spieler-Loader FUN_800314b0
                                            * setzt die Bank ohnehin neu */
-    s_ev_reach = 0;
+    s_ev_reach = 0; re15_r39k_reach_aus();   /* Runde 39 Spur K NB1: auch ein anstehender Sub-6-Start ist weg */
+    re15_szl_schub_spieler_ende();           /* Runde 39 Spur K NB1: ... und Sub 0x13 (+0x5/+0x6 im selben Wort-Store) */
     s_prev_hp = -1;
     { extern void re15_spinnen_r38_gift_cmd0(void);   /* Runde 38 Spur R: Gift-Zaehler 0x800acc27 := 0, */
       re15_spinnen_r38_gift_cmd0(); }                 /* `sb zero,-13273(at)` @0x8003196c (cmd-0-Handler) */
@@ -450,11 +457,13 @@ void re15_player_cmd_reset(void)
     /* Die Objekt-Zaehler obj[+0x8C] gehoeren dem alten Raum. */
     re15_prop_push_reset();
 }
-int  re15_player_event_reach_clip(void) { return s_ev_reach ? ((s_ev_reach == 1) ? 1 : 2) : -1; }
+int  re15_player_event_reach_clip(void) { return (s_ev_reach && !re15_r39k_reach_wartet())   /* Runde 39 Spur K NB1 */
+                                                 ? ((s_ev_reach == 1) ? 1 : 2) : -1; }
 static void re15_player_event_reach_tick(re15_actor_t *pl)
 {
     extern int re15_player_wbank_clip_fc(int clip);   /* player_common.c: PLW-EDD-Laengen */
     if (!s_ev_reach) return;
+    if (re15_r39k_reach_takt(pl)) return;   /* Runde 39 Spur K NB1: Dispatcher-Bild bzw. Saattakt (Bild 0, kein Vorschub) */
     int clip = (s_ev_reach == 1) ? 1 : 2;
     int fc = re15_player_wbank_clip_fc(clip); if (fc < 1) fc = 1;
     pl->motion = (int16_t)clip;
@@ -2415,6 +2424,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * re15_enemy_ai_set_paused bleibt unangetastet (fremde Datei, Batch B1). */
     if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_AI)) {
         re15_fenster1120_tick();   /* Runde 35 Spur M: Fenster ROOM1120, vor der KI (re15_fenster1120.h) */
+        re15_hund1121_r39_tick();  /* Runde 39 Spur R: Hund ROOM1121, vor der KI (re15_hund1121_r39.h) */
         re15_enemy_ai_run_all(g_scd.combat_active);
         /* Runde 34 NACHBESSERUNG (mess_sb 3.1): Abzug der RE2-GL-Sperre der RE1.5-KI-Kandidaten des
          * Bodenfeuers — wie der RE2-Wurzel-Prolog (EMZ0 @0x80100484-98) hinter dem Freeze-Tor

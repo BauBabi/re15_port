@@ -62,6 +62,7 @@
 #include "re15_map_owned.h"   /* Runde 36 Spur N: re15_map_owned_page (Etagenwahl nach Aufnahme) */
 #include "re15_engine.h"     /* g_engine.frame_count — nur fuer die Messschiene */
 #include "re15_tagebuch_r38.h" /* Runde 38 Spur G: Kartenkette nach Roys Diary (Eintraege 3/4) */
+#include "re15_karte_r39.h"    /* Runde 39 Spur G: Ziel auf einer Schema-Zeichnung (B1) */
 #include "re15_johnruf_r39.h"  /* Runde 39 Spur P: Karte mit ROOM1141 nach Elzas Satz in ROOM1041 (Eintrag 5) */
 
 #include "gen/re2_hint_bank.inc"   /* RE2_HINT_EDT_SIZE / _VBD_OFF / _VBD_SIZE / RE2_HINT_SE */
@@ -207,7 +208,7 @@ static const re15_map_zone_t *ziel_zone(int nr)
         if (!zn) continue;
         if (zn->room != s_hints[nr].ziel_raum || zn->idx != s_hints[nr].ziel_idx) continue;
         if (zn->etage) continue;          /* Gastzeile auf fremdem Blatt: nicht das Ziel */
-        if (zn->rect == 255) continue;    /* Schema-Zeichnung ohne Kachel                */
+        if (zn->rect == 255 && !zn->synth) continue;   /* weder Kachel noch Schema (Runde 39 Spur G: B1) */
         return zn;
     }
     return NULL;
@@ -218,7 +219,7 @@ int re15_map_hint_ziel(int nr, int *page, int *rect)
     const re15_map_zone_t *zn = ziel_zone(nr);
     if (!zn) return 0;
     if (page) *page = (int)zn->page;
-    if (rect) *rect = (int)zn->rect;
+    if (rect) *rect = re15_karte_r39_ziel_rect((int)zn->rect, (int)zn->synth);   /* Runde 39 Spur G */
     return 1;
 }
 
@@ -299,7 +300,7 @@ int re15_map_ziel_aktiv_n(int k, int *page, int *rect)
                 : re15_map_zone_visited(zn)) continue;    /* ... sonst das Besucht-Bit der Zone */
         if (n++ != k) continue;
         if (page) *page = (int)zn->page;
-        if (rect) *rect = (int)zn->rect;
+        if (rect) *rect = re15_karte_r39_ziel_rect((int)zn->rect, (int)zn->synth);   /* Runde 39 Spur G */
         return 1;
     }
     return 0;

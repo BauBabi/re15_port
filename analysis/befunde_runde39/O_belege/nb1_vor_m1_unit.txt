@@ -1,0 +1,20 @@
+# Nachbesserung 1, M1 Messung vorher: neue Riegel-Teile gegen den ALTEN Engine-Code (HEAD 1fe3fe06 + Testdatei; Engine = 27d587e1)
+# ctest --test-dir re15_port/build -R "^unit_r39_parkplatz11c0_(ende_gesetzt|echt)$" --timeout 600 --output-on-failure  (01:29:33)
+1/2 Test #994: unit_r39_parkplatz11c0_ende_gesetzt ...***Failed    0.28 sec
+== ende_gesetzt ==
+  ok: vor dem ersten Bild: Slot 0 = Tuer, kein Installer-Eingriff
+  ok: erstes Bild: sub01 @0x01824 startet sub02 wie im Original ((4,64)=1 @0x0184E, Pad-Sperre @0x01856)
+  FEHLER: erstes Bild: KEIN Programm SZENE ((3,67)=1: Freigabe @0x0182E greift nie)
+  FEHLER: Bild 0..59 der Szene: Slot 0 durchgehend die Original-Tuer (main00 @0x01712)
+  FEHLER: Aot_on(0) in Bild 60: Raumwechsel ROOM0000, kein Text msg 40
+  ok: Steuerung zurueck (sub02 @0x01ACE Set(2,7)=0) in Bild 1047
+  FEHLER: die ganze Szene ueber: Slot 0 = Original-Tuer
+  ok: zwei Gorillas (sub00 @0x01784/@0x01798), 'Kampf laeuft' (sub00 @0x017C8/@0x017D0) falsch: (3,67)=1
+  ok: Gorillas tot (Kill-Bits (7,0x60)/(7,0x61)): kein Programm ENDE (sub01 @0x0182E Ck(3,67)==0 falsch)
+  FEHLER: danach: Slot 0 = Tuer
+  FEHLER: Druck an der Tuer: Raumwechsel ROOM0000, kein Text
+  FEHLER: in beiden Laeufen kein Programm SZENE, keine Stimme msg 40
+ende_gesetzt: 7 Fehler (Tuersequenzen 0)
+2/2 Test #995: unit_r39_parkplatz11c0_echt ...........   Passed    0.25 sec
+50% tests passed, 1 tests failed out of 2
+	994 - unit_r39_parkplatz11c0_ende_gesetzt (Failed)
