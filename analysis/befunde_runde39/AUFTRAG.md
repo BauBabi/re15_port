@@ -253,3 +253,9 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
   reAi-Repo (gesucht: TITLEU, *title*/*version*/*stempel*). RE15_REBORN_VERSION_STRING "v0.1.0 Phase 4.1" (re15_engine.h:24) wird
   nirgends benutzt. release_alles.sh bildet die Version aus dem hoechsten Tag (+1); build_android.sh kennt --version.
   -> neue Spur T "titelversion".
+
+## Nachtrag 15 des Nutzers (woertlich, 2026-10-19 zwischen 09:47 und 09:50, fuer Spur Q)
+- "In ROOM 1131 dürfen bei Elza natürlich keine Zombies durchbrechen, der Raum 1141 ist bei ihr ja abgeschlossen."
+  Orchestrator: Spur Q Nachbesserung 2 (e5500cea) fuehrt den Briefing-Room-Durchbruch 1140 -> 1130 NUR bei Leon; bei Elza
+  entfaellt 1141 -> 1131 (ROOM1141 hat keinen Zombie-Record: sub00 @0x00B06 John Typ 0x49, @0x00B1A.. Gorillas Typ 0x27;
+  Dossier Q_elzazombies.md Tabelle). Abnahme: in Elzas Panikphase KEIN Durchbruch und kein Zombie-Spawn in ROOM1131.
