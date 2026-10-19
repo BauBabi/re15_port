@@ -6,7 +6,7 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
-* 2026-10-19 13:24: MASTER 833b29f7 = Integration (P NB2+NB3, Q NB3, T, 11C0 ohne Stimme, Riegel P+Q, knall bildgleich
+* 2026-10-19 13:22: MASTER 833b29f7 = Integration (P NB2+NB3, Q NB3, T, 11C0 ohne Stimme, Riegel P+Q, knall bildgleich
   316bf8b1). Windows: alle 913 unit_/prop_/probe_ + 92 integration_ gruen (979/980 12:38-13:04, knall nachgezogen 3/3,
   26/26 Stimmen/Musik 13:08-13:19). Hauptbaum-exe 13:20 + Smoke gruen (Titel "Ver.0.8.26 dev", 1030, EXIT_AT). Baeume
   r39_johnruf1041/elzazombies/titelversion/integration entfernt (alle in master); r38_testtempo bleibt. Beobachtung: der
