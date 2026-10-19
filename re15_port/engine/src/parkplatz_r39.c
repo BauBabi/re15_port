@@ -25,7 +25,6 @@
 unsigned g_re15_r39o_szene_zaehler    = 0;
 unsigned g_re15_r39o_ende_zaehler     = 0;
 unsigned g_re15_r39o_eintritt_zaehler = 0;
-unsigned g_re15_r39o_stimme_zaehler   = 0;
 
 static void log_f(const char *s)
 {
@@ -133,22 +132,7 @@ const uint8_t *re15_parkplatz_r39_evt_exec(uint16_t room_id, uint8_t sub_id, con
     return k_r39o_p_ende;
 }
 
-/* ============================ Stimme im MESSAGE-AOT-Weg ============================
- * re15_scd_show_message (MESSAGE-AOT, Handler 0x80043084) reiht im Port keine Stimme ein — nur Message_on tut das
- * (scd_vm.c scd_queue_voice). Die Ordnerregel (synchro/README.md: main<MESSAGE-ID>.wav) soll fuer diesen Text gelten:
- * dieselbe Einreihung wie scd_queue_voice, nur fuer ROOM11C0 msg 40. Ohne Datei laeuft sie ins Leere (audio_pc.c
- * re15_voice_load_clip: "[voice] ROOM11C0 msg 40: keine Aufnahme ..."). */
-void re15_parkplatz_r39_stimme(uint16_t room_id, uint8_t msg_id)
-{
-    if (room_id != RE15_R39O_RAUM || msg_id != RE15_R39O_MSG_SPERRE) return;
-    scd_audio_event_t vev;
-    memset(&vev, 0, sizeof vev);
-    vev.kind      = (uint8_t)SCD_AUDIO_VOICE_ON;
-    vev.sample_id = (uint8_t)RE15_R39O_MSG_SPERRE;
-    scd_audio_queue_push(&vev);
-    g_re15_r39o_stimme_zaehler++;
-    log_f("ROOM11C0 Tuer im Kampf -> msg 40 \"I cannot leave Ada alone here with those monsters!\" (Stimme main40.wav)");
-}
+/* Keine Stimme: msg 40 ist ein einfacher Raumtext wie Leons Tuertexte (Nachtrag 13, Orchestrator 2026-10-19). */
 
 /* ============================ Messhaken (env-gegatet, kein Spielverhalten) ============================ */
 void re15_parkplatz_r39_messhaken(void)

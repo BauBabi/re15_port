@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.16)
 #
 #   K  LEON 11B0 -> Parkplatz-Tuer -> 11C0: Ada-Szene (msg 0..6) laeuft, Programm SZENE sperrt die Tuer; im Kampf (Gorillas
 #      leben, per RE15_R39O_GORILLAS_STARR eingefroren, damit Leon zu Fuss lebend ankommt — Lauf vor1 im Dossier) zur Tuer:
-#      Text msg 40, KEIN Raumwechsel, Stimme nach der Ordnerregel angefragt (main40.wav); danach laeuft Leon weiter
+#      Text msg 40, KEIN Raumwechsel, ohne Stimme (Nachtrag 13); danach laeuft Leon weiter
 #      (steuerbar); Kampfende (RE15_R39O_GORILLAS_TOT: genau die Kill-Bits (7,0x60)/(7,0x61) des Gorilla-Todes) ->
 #      Programm ENDE, msg 7, die Ende-Szene geht selbst durch die Tuer -> ROOM11B0. Bilder per RE15_FRAMEDUMP.
 #   W  LEON Wiedereintritt im Kampfzustand ((4,64)=1, (3,67)=0 — z. B. ein Spielstand von vor dieser Runde, als die Tuer im
@@ -172,15 +172,8 @@ ENDE
     pruef_nicht(K _wp "AOT slot 0 typ 1 ")
     pruef(K _wp "FLAG (4,64) = 1")
     pruef(K _wp "FLAG (3,67) = 0")
-    pruef(K _d "ROOM11C0 Tuer im Kampf -> msg 40")
     pruef(K _d "msg 40")
-    # Ordnerregel: die Stimme wird als synchro/STAGE1/room11C0/main40.wav angefragt (ohne Datei: "keine Aufnahme ... stumm")
-    string(REGEX MATCH "\\[voice\\] (ROOM11C0 msg 40: keine Aufnahme \\(synchro/STAGE1/room11[cC]0/main40\\.wav\\)|clip loaded: main40\\.wav)" _stimme "${_d}")
-    set(_b FALSE)
-    if(_stimme)
-        set(_b TRUE)
-    endif()
-    pruef_wahr(K _b "Stimme msg 40 nach der Ordnerregel angefragt (${_stimme})")
+    pruef_nicht(K _d "[voice] ROOM11C0 msg 40:")              # Nachtrag 13: einfacher Raumtext ohne Stimme
     if(_st MATCHES "bilder_mit_msg40=([0-9]+)")
         set(_n "${CMAKE_MATCH_1}")
         set(_b FALSE)

@@ -411,11 +411,10 @@ static void teil_kampf(void)
     PRUEF(n_typ(RE15_R39O_GORILLA_TYP) == 2 && re15_parkplatz_r39_kampf(), "der Kampf laeuft: zwei Gorillas, (4,64)=1, (3,67)=0");
     for (int f = 0; f < 60 && g_scd.player_mode != 0; f++) frame(0, 0);
     gorillas_starr();
-    const unsigned v0 = g_re15_r39o_stimme_zaehler;
     druck_t r = druecke(TUER_X, TUER_Z, TUER_ROT, 240);
     PRUEF(r.msg_id == RE15_R39O_MSG_SPERRE && !r.raumwechsel,
           "Tuer im Kampf: msg %d \"I cannot leave Ada alone here with those monsters!\", kein Raumwechsel", r.msg_id);
-    PRUEF(g_re15_r39o_stimme_zaehler == v0 + 1 && s_n_voice40 == 1, "Stimme msg 40 einmal eingereiht (Ordnerregel main40.wav)");
+    PRUEF(s_n_voice40 == 0, "keine Stimme msg 40 (Nachtrag 13: einfacher Raumtext)");
     PRUEF(slot0_text(), "nach dem Text bleibt Slot 0 der Text");
     PRUEF(laeuft_steuerbar(), "nach dem Text ist Leon steuerbar (laeuft weg, kein Raumwechsel)");
     r = druecke(TUER_X, TUER_Z, TUER_ROT, 240);
@@ -477,7 +476,7 @@ static void ende_gesetzt_flags(void)
 static void teil_ende_gesetzt(void)
 {
     printf("== ende_gesetzt ==\n");
-    const unsigned s0 = g_re15_r39o_szene_zaehler, v0 = g_re15_r39o_stimme_zaehler;
+    const unsigned s0 = g_re15_r39o_szene_zaehler;
     /* (a) die Szene laeuft an, Aot_on(0) in Bild 60 */
     ende_gesetzt_flags();
     const unsigned e0 = g_re15_r39o_eintritt_zaehler;
@@ -525,8 +524,7 @@ static void teil_ende_gesetzt(void)
     druck_t r = druecke(TUER_X, TUER_Z, TUER_ROT, 240);
     PRUEF(r.raumwechsel && r.ziel == 0x11B0 && r.msg_id != RE15_R39O_MSG_SPERRE,
           "Druck an der Tuer: Raumwechsel ROOM%04X, kein Text", (unsigned)(r.ziel < 0 ? 0 : r.ziel));
-    PRUEF(g_re15_r39o_szene_zaehler == s0 && g_re15_r39o_stimme_zaehler == v0,
-          "in beiden Laeufen kein Programm SZENE, keine Stimme msg 40");
+    PRUEF(g_re15_r39o_szene_zaehler == s0, "in beiden Laeufen kein Programm SZENE");
 }
 
 /* ---- Teil: kills_gesetzt ((4,64)=0, (3,67)=0, Kill-Bits gesetzt — Randzustand zu M1) ---------------------------- */

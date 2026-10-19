@@ -35,8 +35,7 @@
  *   Kampf-Ende:     sub01 @0x01842 Evt_exec sub03 -> Programm ENDE: Aot_reset Slot 0 -> DOOR (Nutzlast main00
  *                   @0x01712+14), Gosub sub03 (Szene unveraendert; Aot_on(0) @0x01C08 findet die Tuer).
  *   Elza ROOM11C1: keine Gorillas, kein Begleiter (sub00 = 5 Hunde) -> nichts.
- *   Stimme: synchro/STAGE1/room11C0/main40.wav spielt nach der Ordnerregel, sobald sie liegt (Haken im
- *   MESSAGE-AOT-Weg re15_scd_show_message, der sonst keine Stimme einreiht).
+ *   Stimme: keine - einfacher Raumtext wie Leons Tuertexte (Nachtrag 13).
  */
 #ifndef RE15_PARKPLATZ_R39_H
 #define RE15_PARKPLATZ_R39_H
@@ -76,8 +75,6 @@ void re15_parkplatz_r39_install(uint16_t room_id);
 /* op_evt_exec-Haken: sub02 -> Programm SZENE (nur bei (3,67)==0), sub03 -> Programm ENDE (nur ROOM11C0 mit gueltigen
  * Ankern), sonst orig. */
 const uint8_t *re15_parkplatz_r39_evt_exec(uint16_t room_id, uint8_t sub_id, const uint8_t *orig);
-/* MESSAGE-AOT-Weg (re15_scd_show_message): ROOM11C0 msg 40 reiht die Stimme ein (Ordnerregel main40.wav). */
-void re15_parkplatz_r39_stimme(uint16_t room_id, uint8_t msg_id);
 /* Text-Bytes (Riegel): msg 40. */
 const uint8_t *re15_parkplatz_r39_text(int *out_len);
 /* Programm-Bytes (Riegel): 0 = SZENE, 1 = ENDE. */
@@ -88,7 +85,6 @@ const uint8_t *re15_parkplatz_r39_programm(int nr, int *out_len);
 extern unsigned g_re15_r39o_szene_zaehler;
 extern unsigned g_re15_r39o_ende_zaehler;
 extern unsigned g_re15_r39o_eintritt_zaehler;
-extern unsigned g_re15_r39o_stimme_zaehler;
 
 /* MESSHAKEN (env-gegatet, kein Spielverhalten; Muster Runde 38 F re15_dining_r38_messhaken), je Spielbild aus main.c:
  *   RE15_R39O_GORILLAS_STARR=1  im Kampf (Spieler frei) die Gorillas einfrieren (grid_id | 0x20 = Member_set 0x0C=0x30,
