@@ -181,10 +181,12 @@ if(TEIL STREQUAL "kette")
 
 # ------------------------------------------------------------------------------------------------------------------
 elseif(TEIL STREQUAL "knall")
-    lauf(laut "${_elza_1041}" 900 RE15_AUDIO_CAP_SYNC=cap.raw RE15_SET_FLAG_AT=9:97@200 "RE15_EXIT_AT=530#1031")
+    # Ende in ROOM1031 bei Bild 300: beide Knaelle liegen davor (1041, 1061); der 1031-Schritt dauert ~357 Bilder (Lauf k5),
+    # Bild 530 erreichte er nach Nachtrag 11 nicht mehr (Tuer zurueck nach 1041 vorher -> kein Ende, Zeitueberschreitung).
+    lauf(laut "${_elza_1041}" 600 RE15_AUDIO_CAP_SYNC=cap.raw RE15_SET_FLAG_AT=9:97@200 "RE15_EXIT_AT=300#1031")
     set(_laut "${_dir}/cap.raw")
-    lauf(stumm "${_elza_1041}" 900 RE15_AUDIO_CAP_SYNC=cap.raw RE15_R39Q_KNALL_STUMM=1 RE15_SET_FLAG_AT=9:97@200
-         "RE15_EXIT_AT=530#1031")
+    lauf(stumm "${_elza_1041}" 600 RE15_AUDIO_CAP_SYNC=cap.raw RE15_R39Q_KNALL_STUMM=1 RE15_SET_FLAG_AT=9:97@200
+         "RE15_EXIT_AT=300#1031")
     set(_stumm "${_dir}/cap.raw")
     execute_process(COMMAND "${RE15_AUSWERTER}" auswerten_ton "${_laut}" "${_stumm}" TIMEOUT 120
                     RESULT_VARIABLE _rva OUTPUT_VARIABLE _outa)
