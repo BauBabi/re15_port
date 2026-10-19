@@ -401,3 +401,35 @@ Umgebungsvariablen des Aufrufers erben"). Die Urteile Q1..Q5 sind "erfuellt"; de
   Referenz-Riegel (nur `RE15_` in Grossbuchstaben) laesst auf Windows einen klein geschriebenen Namen durch, und
   Unit-Riegel, die re15_engine linken, erben die Umgebung ebenfalls (kein gemeinsamer Helfer in re15_test_support). Eine
   einheitliche Loesung (gemeinsamer Helfer, Schreibweise egal) waere moeglich; hier nur in den eigenen Dateien umgesetzt.
+
+## 9. Nachbesserung 2 (nach Abnahme 1, analysis/befunde_runde39/Q_abnahme_1.md; Nutzer-Nachtrag 12)
+Stand beim Start: HEAD c59d5df5 (Abnahme 1 + Nachtrag-12-Text), Baum sauber. Auftraege:
+* Mangel 1 = NUTZER-NACHTRAG 12 Teil 2 (AUFTRAG.md, woertlich): "Ausserdem habe ich mich entschlossen eine Angleichung zu
+  machen der hereinbrechenden Zombies. Bei Irons Tod und Johns Hilferuf sollen die Zombies in beiden Szenarien aus den
+  gleichen Tueren brechen. Also bei Leon zusaetzlich das Treppenhaus und bei Elza zusaetzlich ROOM 1071."
+* Mangel 2 = Orchestrator: master mergen (Spuren K, G, O, R; Ereignis 30 auch bei R in ROOM1121), Gruppen-Riegel gruen.
+* Mangel 3 = Orchestrator-Entscheid zu H1: der Rolltor-Durchbruch ROOM1041 NUR in der Panikphase ((9,97)=1); nach Johns
+  Rettung ((9,97)=0) nicht mehr (Nutzer Nachtrag 10: "Die panische Musik hoert auf, sobald man John gerettet hat. Der Rest
+  bleibt normal.").
+
+### 9.0 Merge (Mangel 2)
+`git merge master` (02c8291c = a0d7d749 + Verteil-Commit): Konflikte nur in scd_room_setup.c (include + Installer-Zeile),
+scd_vm.c (include + Ereignis-Weiche) und platform/pc/main.c (CONTINUE-Weg). Beidseitig aufgeloest: die master-Zeilen (Spur O
+parkplatz11c0, Spur R hund1121) zuerst, Spur Q am Ende des Blocks. Ereignis 30: R liefert nur in ROOM1121 ein Programm,
+Q nur in 1041/1061/1031 (und neu 1060, s.u.) — beide Weichen bleiben hintereinander. Die drei Dateien sind danach
+byte-gleich mit dem Integrationsbaum (96b384a7, dort von Hand aufgeloest). Merge-Commit 5a499b3f; configure + build ok
+(795/795).
+
+### 9.1 RE-Belege (selbst gemessen, Datei-Bytes der Auslieferung re15_port/shared_assets/PSX = info/Re1.5/PSX)
+* `cmp -l` der Raum-Paare Leon/Elza: ROOM1060 = ROOM1061, ROOM10E0 = ROOM10E1, ROOM10C0 = ROOM10C1, ROOM1070 = ROOM1071 —
+  je 0 abweichende Bytes (sha256 1060/1061 beide 8a20f079...). ROOM1030/1031, 1040/1041, 1140/1141 sind verschieden.
+  => Leons Treppenhaus-Schritt ist Byte fuer Byte Elzas: Quell-Records ROOM10E0 sub00 @0x00D56.. (Typ 0x10, Tot-Bits
+  0xe0..0xe3), Tuer ROOM10C0 @0x00E42 -> Raum 0x06 Cut 2 Etage 4 Spawn (26000,-7200,25300) Gier 2048, Kamera ROOM1060
+  Cut 2 RID @0x000A0, SCA/BLK von 1060 = 1061 (die Lagen aus 2.5 gelten unveraendert).
+  => Elzas 1071-Schritt ist Byte fuer Byte Leons 1070-Quelle: ROOM1071 sub00 @0x015CA.. / Else @0x01632.. (Typen
+  0x10/0x10/0x10/0x11/0x11, Tot-Bits 0xc6..0xca); ROOM1031 Cut 7 = ROOM1030 Cut 7 (RID @0x00140, Dossier 2.2).
+* ROOM1060 SCD (scd_dump_room.py): main00 nur drei Tueren (Slot 0/1/2, Etage 8/4/0) + Treppen-AOTs, sub00/sub01 = Evt_end;
+  kein Sce_em_set, kein Ck/Set Bank 5 -> Ereignis 21 (Leon) und 30 frei, Tuer-Slot 20 frei, Bank-5-Bits 28/29/30 frei.
+  Port: in ROOM1060 nur tuer1060_1040.c (Runde 35 L, AOT-Slot 2 als Text-Platz bis (9,73)) — keine Ueberschneidung.
+* ROOM1141 sub00 (Elzas Gegenstueck zu Leons 1140): Typ 0x49 (John, Bit 0xff) @0x00B06, Typ 0x27 (Gorillas, Bits
+  0xcb/0xcc) @0x00B1A/@0x00B2E/@0x00B54/@0x00B68 — KEIN Zombie-Record. Leons 1140 -> 1130-Schritt hat bei Elza keine Quelle.
