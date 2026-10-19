@@ -459,6 +459,8 @@ def baue_entriegeln39():
     op([0x3C, 0x01], "Cut_auto 1 (Form ROOM1150 @0x010F4)")
     R.set_flag(2, 0x07, 0, "Set(2,7)=0 (Form sub06 @0x010C8)")
     R.set_flag(1, 0x1B, 0, "Set(1,0x1B)=0 (Form sub06 @0x010CC)")
+    R.kopie("1141", 0x010D2, 0x010D8, [0x2E, 0x01, 0x00, 0x00],
+            "(sub06-Schluss: Work_set(1,0)+Nop, Plc_ret+Nop - Elza zurueck in die normale Steuerung; fehlte bis 2026-10-19, Nutzer: keine Gehanimation nach der Endszene, Zustand pst=4 mo=2)")
     op([0x01, 0x00], "Evt_end = sub05 @0x00FE6")
     return list(prog)
 

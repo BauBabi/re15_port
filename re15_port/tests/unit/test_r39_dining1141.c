@@ -302,6 +302,12 @@ static void teil_programme(void)
     static zeile_t zh[1024], zb[2048];
     const int kh = h ? zerlege(h, nh, zh, 1024) : -1;
     const int kb = b ? zerlege(b, nb, zb, 2048) : -1;
+    {   /* Nutzer-Befund 2026-10-19: nach der Endszene ohne Gehanimation (pst=4). ENTRIEGELN39 endet wie ROOM1141 sub06
+         * @0x010D2..@0x010DA: Work_set(1,0)+Nop, Plc_ret+Nop, Evt_end - Elza zurueck in die normale Steuerung. */
+        static const uint8_t ende[] = { 0x2e, 0x01, 0x00, 0x00, 0x42, 0x00, 0x01, 0x00 };
+        PRUEF(b && nb >= (int)sizeof ende && !memcmp(b + nb - (int)sizeof ende, ende, sizeof ende),
+              "ENTRIEGELN39 endet mit Work_set(1,0), Plc_ret, Evt_end (ROOM1141 sub06 @0x010D2..@0x010DA)");
+    }
     PRUEF(kh > 0 && kb > 0, "HAEMMERN39 %d B / ENTRIEGELN39 %d B opcode-genau zerlegbar", nh, nb);
     if (kh <= 0 || kb <= 0) return;
     /* Punkte 1/3: kein Se_on der Runde-38-Baenke 0x3C (Krachen/Stoehnen RE2 1060) / 0x3D ("Help me out." main42) */
@@ -495,10 +501,11 @@ static void teil_programme(void)
               RE15_R39J_MSG52_REST);
         /* Nachbesserung 2: Kamera am Ende Cut_chg 0 + Cut_auto 1 statt Cut_old (der gemerkte Cut war Cut 8 des Gespraechs; die
          * RVD-Gruppe Cut 8 hat nur ihren Kopf, die Kamera blieb stehen - Lauf v_a F4418..F6200). Kein Cut_old nach Cut 8. */
-        static const uint8_t ende[14] = { 0x29, RE15_R39J_CUT_ENDE, 0x3C, 0x01, 0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1B, 0x00, 0x01, 0x00 };
+        static const uint8_t ende[20] = { 0x29, RE15_R39J_CUT_ENDE, 0x3C, 0x01, 0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1B, 0x00,
+                                          0x2E, 0x01, 0x00, 0x00, 0x42, 0x00, 0x01, 0x00 };   /* + sub06 @0x010D2 Work_set/Plc_ret */
         int alt_cut = 0;
         for (int i = 0; i < kb; i++) if (zb[i].pc > i8 && zb[i].op == 0x2A) alt_cut++;
-        PRUEF(nb > 14 && !memcmp(b + nb - 14, ende, 14) && alt_cut == 0,
+        PRUEF(nb > 20 && !memcmp(b + nb - 20, ende, 20) && alt_cut == 0,
               "ENTRIEGELN39 NB2: Ende Cut_chg %d + Cut_auto 1 (Form sub02 @0x00E80/@0x00F56), kein Cut_old nach Cut 8 (%d)",
               RE15_R39J_CUT_ENDE, alt_cut);
         const int iz = finde(b, nb, ziel, 4, i8 > 0 ? i8 : 0);

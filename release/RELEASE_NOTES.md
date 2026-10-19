@@ -60,7 +60,8 @@ mit dem Angriff ein. Im Kampf richtet sich John sofort auf einen Gorilla aus und
 alle 12 Sekunden zwei Schuesse auf den Gorilla, der Elza gerade nicht festhaelt; der getroffene Gorilla wendet sich ihm
 bis zu 7 Sekunden zu. Am Ende "Puuuh, that was close! ..." und "Elza,
 follow me ..." (Ihre main51/main52) mit dem Heranwinken aus 1171 statt der Waffe auf Elza; danach folgt die Kamera Elza.
-Beim Wechsel aufs Dach (1171) klingt die Kampfmusik nicht mehr zwei Sekunden nach.
+Beim Wechsel aufs Dach (1171) klingt die Kampfmusik nicht mehr zwei Sekunden nach. Nach der Endszene hat Elza wieder
+ihre normale Gehanimation (die Szene gab die Steuerung ohne den Original-Abschluss zurueck, ROOM1141 sub06 @0x010D2).
 
 **Dach (ROOM1171).** Zu "Elza, hurry up!" winkt John Elza heran, statt zu klettern; seine Gesten davor sind die
 Original-Gesten. Die Kraehen halten im Schwebeflug nach jedem Fluegelschlag kurz inne und kreisen nach dem Wurf nicht
