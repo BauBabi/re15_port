@@ -14,8 +14,14 @@ cmake_minimum_required(VERSION 3.16)
 #   aca5a = 3 @0x80033200), kein Bild in Cut 8 mit erhobener Waffe, im Schnittbild neutral
 # Dossier analysis/befunde_runde39/J_dining1141.md Abschnitt 10, Code engine/src/dining_r39.c (re15_dining_r39_ziel_senken),
 # Haken engine/src/player_common.c, Programm tools/r39_dining/programme_bauen.py (baue_entriegeln39).
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_R39J_WERKZEUG=<test_r39_dining1141> -DWORKDIR=<dir> [-DAUSWERTEN=<lauf>]
-#         -P test_r39_dining1141_zielen.cmake
+# NACHBESSERUNG 4 (Abnahme 3 Mangel M1-Rest): im Schnittbild steht Elza im Kommando 4 (ihr Plc_dest TURN zu John kommt im
+# Schnitt-Takt, Form ROOM11C0 sub03 @0x01B1A..@0x01B26, Handler @0x80041c14..@0x80041c20). FALL=nachladen (eigener Riegel
+# integration_r39_dining1141_zielen_nachladen = Abnahme 3 Lauf RL2): Browning mit 1 Patrone, Schuss bei Bild 4000, Abzug mit
+# leerem Magazin bei Bild 4053 = Nachladen 3 Bilder vor der Sperre (F4056); RE15_AUDIO_CAP_SYNC haelt das Szenenende bildgenau
+# (ohne: Wanduhr, 3421..3456). Das Werkzeug prueft die Vorbedingung (Nachladen im Sperr-Bild, 1..11 Bilder vorher begonnen) und
+# Cut 8 ohne erhobene Waffe (vorher 8 Bilder, F4087/F4088 Pistole auf John).
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_R39J_WERKZEUG=<test_r39_dining1141> -DWORKDIR=<dir> [-DFALL=nachladen]
+#         [-DAUSWERTEN=<lauf>] -P test_r39_dining1141_zielen.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
     message(FATAL_ERROR "r39_dining1141_zielen: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")
@@ -38,14 +44,19 @@ if(AUSWERTEN)
     set(_lauf "${AUSWERTEN}")
 endif()
 
-# Eigene exe-Kopie mit Praefix JE TEST (re15_pc_r39j_z_), nur die eigenen alten Kopien weg.
+# Eigene exe-Kopie mit Praefix JE TEST (re15_pc_r39j_z_ / re15_pc_r39j_zn_ fuer FALL=nachladen), nur die eigenen alten Kopien weg.
+if(FALL STREQUAL "nachladen")
+    set(_praefix "re15_pc_r39j_zn_")
+else()
+    set(_praefix "re15_pc_r39j_z_")
+endif()
 get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
 get_filename_component(_exe_ext "${RE15_PC_EXE}" EXT)
-file(GLOB _alte_kopien "${_exe_dir}/re15_pc_r39j_z_*")
+file(GLOB _alte_kopien "${_exe_dir}/${_praefix}*")
 foreach(_k IN LISTS _alte_kopien)
     file(REMOVE "${_k}")
 endforeach()
-set(_exe_kopie "${_exe_dir}/re15_pc_r39j_z_${_lauf_id}${_exe_ext}")
+set(_exe_kopie "${_exe_dir}/${_praefix}${_lauf_id}${_exe_ext}")
 if(NOT AUSWERTEN)
     file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 endif()
@@ -99,6 +110,23 @@ if(NOT AUSWERTEN)
     # RE15_AUDIO_CAP_SYNC nach der Wanduhr), Messhaken 600 freie Kampfbilder spaeter (F4021..F4056), Schnitt 30 Bilder danach:
     # R1 von Bild 3000 an 45 s (1350 Bilder, bis F4350) - waehrend der Szene wirkungslos (player_mode 2, Kommando 4), danach
     # zielt Elza; das Fenster deckt Kampfende und Schnitt fuer ein Szenenende zwischen ~2420 und ~3690.
+    if(FALL STREQUAL "nachladen")
+        # Abnahme 3 Lauf RL2 (Dossier 11.1 Lauf v_rl2): M33.3333 = R1 Bild 3000..3999, MA0.1 = Schuss F4000 (Magazin 1 -> 0),
+        # M1.6667 = R1 bis F4052, MA0.1 = Abzug mit leerem Magazin F4053 (Druck-Flanke @0x80033338 -> Nachladen @0x80033378),
+        # M10 = R1 bis ~F4355. Messhaken F4056 (= Sperre), Schnitt F4086.
+        re15_start_spiel(_rv 1500
+            RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1
+            RE15_MSG_LOG=1 RE15_EVT_TRACE=1 RE15_STATE_LOG=state.txt RE15_R39J_LOG=r39.txt RE15_AUDIO_CAP_SYNC=cap.raw
+            "RE15_WEGPLAN=${_lauf}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt
+            "RE15_EXIT_AT=4250#1141"
+            "RE15_SET_FLAG=3:0x5F,4:0xF0,4:0xF1,4:0xEC,3:0x78" "RE15_GIVE=0x43:1,0x03:1,0x15:50" "RE15_EQUIP=3"
+            "RE15_DEBUG_JUMP=1131@gp" "RE15_PLAYER_POS=-1300,-13900,0"
+            "RE15_R38F_GORILLAS_TOT=600" "RE15_R38F_GORILLAS_STARR=1"
+            "RE15_INPUT_SCRIPT=M33.3333,MA0.1,M1.6667,MA0.1,M10" "RE15_INPUT_SCRIPT_BASIS=spiel" "RE15_INPUT_SCRIPT_START=3000"
+            "RE15_FRAMEDUMP=4040-4110/2:fd_"
+            "${_exe_kopie}")
+        file(REMOVE "${_lauf}/cap.raw")   # nur fuer den Bildtakt noetig (RE15_AUDIO_CAP_SYNC), das Werkzeug liest ihn nicht
+    else()
     re15_start_spiel(_rv 1500
         RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1
         RE15_MSG_LOG=1 RE15_EVT_TRACE=1 RE15_STATE_LOG=state.txt RE15_R39J_LOG=r39.txt
@@ -110,6 +138,7 @@ if(NOT AUSWERTEN)
         "RE15_INPUT_SCRIPT=M45" "RE15_INPUT_SCRIPT_BASIS=spiel" "RE15_INPUT_SCRIPT_START=3000"
         "RE15_FRAMEDUMP=3990-4200/3:fd_"
         "${_exe_kopie}")
+    endif()
     file(REMOVE "${_exe_kopie}")
     message(STATUS "r39_dining1141_zielen: exit=${_rv}, ${_lauf}")
 endif()
@@ -121,7 +150,11 @@ file(STRINGS "${_lauf}/debug.log" _ex REGEX "\\[flow\\] EXIT_AT: ")
 if(NOT _ex)
     message(FATAL_ERROR "r39_dining1141_zielen: RE15_EXIT_AT nicht erreicht (Lauf abgerissen?) ${_lauf}")
 endif()
-execute_process(COMMAND "${RE15_R39J_WERKZEUG}" zielen "${_lauf}" RESULT_VARIABLE _rz OUTPUT_VARIABLE _oz ERROR_VARIABLE _ez)
+set(_fall_arg "")
+if(FALL STREQUAL "nachladen")
+    set(_fall_arg "nachladen")
+endif()
+execute_process(COMMAND "${RE15_R39J_WERKZEUG}" zielen "${_lauf}" ${_fall_arg} RESULT_VARIABLE _rz OUTPUT_VARIABLE _oz ERROR_VARIABLE _ez)
 message(STATUS "${_oz}")
 if(NOT _rz EQUAL 0)
     message(FATAL_ERROR "r39_dining1141_zielen: Werkzeug zielen meldet Fehler (rv=${_rz}) - ${_lauf}")

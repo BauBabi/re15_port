@@ -24,6 +24,9 @@
  *   senken     Nachbesserung 3 (Abnahme 2 M1): wer unter der Pad-Sperre (2,7) zielt, senkt die Waffe wie im Original
  *              (FUN_80030444 kappt das Held-Wort, Ziel-FSM HOLD/Messer/Rueckstoss -> SENKEN), ab dem Bild nach dem Setzen;
  *              Pistole, Messer, Rueckstoss; Geltungsbereich ROOM1141 Phase H
+ *   schnitt    Nachbesserung 4 (Abnahme 3 M1-Rest): Nachladen/Hieb kurz vor der Pad-Sperre - Elzas Plc_dest TURN im Schnitt-
+ *              Takt (Form ROOM11C0 sub03 @0x01B26) beendet den Waffen-Clip im Schnittbild; kein Bild Cut 8 mit erhobener
+ *              Waffe; Gegenprobe mit der Programm-Fassung der Nachbesserung 3
  *   zielen     Werkzeug des Riegels integration_r39_dining1141_zielen: Laufordner der echten exe auswerten (Elza zielt beim
  *              Kampfende -> Sperre >= 29 Bilder vor dem Schnitt, gesenkt, kein Bild in Cut 8 mit erhobener Waffe)
  */
@@ -445,6 +448,27 @@ static void teil_programme(void)
         PRUEF(ia > 0 && is > ia && ifo > is && i51 > ifo && (isp2 < 0 || isp2 > i51),
               "ENTRIEGELN39 NB3: nach Gorillas tot (@+%04X) und Johns Salve (@+%04X) Set(1,0x1B)=1, Set(2,7)=1, Sleep 30, Cut_chg 8 "
               "(@+%04X, Form ROOM11C0 sub03 @0x01B06/@0x01B0A/@0x01B14/@0x01B18), keine zweite Sperre vor msg 51", ia, is, ifo);
+    }
+    {   /* Nachbesserung 4 (Abnahme 3 M1-Rest, Lauf RL2: Nachladen kurz vor der Sperre -> 8 Bilder Cut 8 mit der Waffe auf John):
+         * Elzas Plc_dest TURN zu John im SCHNITT-TAKT - hinter Cut_chg 8, Work_set(1,0) und Member_set(4), vor dem ersten Sleep (Form
+         * ROOM11C0 sub03: Cut_chg @0x01B18, Work_set(1,0) @0x01B1A, Member_set @0x01B1E/@0x01B22, Plc_dest @0x01B26 ohne Sleep
+         * dazwischen; der Handler 0x80041be4 setzt das Kommandowort sofort, @0x80041c14..@0x80041c20). Bis msg 51 kein zweiter TURN
+         * fuer Elza (es ist derselbe Befehl wie sub02 @0x00C50, nur frueher - ein zweiter wuerde ihren Sub-6-Uebergang neu starten). */
+        static const uint8_t form[14] = { 0x22, 0x01, 0x1B, 0x01, 0x22, 0x02, 0x07, 0x01, 0x09, 0x0A, 0x1E, 0x00,
+                                          0x29, RE15_R39J_CUT_GESPRAECH };
+        static const uint8_t sl[2] = { 0x09, 0x0A }, wp[4] = { 0x2E, 0x01, 0x00, 0x00 }, m4[2] = { 0x34, 0x04 };
+        static const uint8_t m51n[4] = { 0x2B, RE15_R39J_MSG_PUH, 0, 0 };
+        const int16_t ex = RE15_R39J_ECKE_X, ez = RE15_R39J_ECKE_Z;
+        const uint8_t turn[8] = { 0x40, 0x00, 0x09, 0x00, (uint8_t)ex, (uint8_t)((uint16_t)ex >> 8), (uint8_t)ez,
+                                  (uint8_t)((uint16_t)ez >> 8) };
+        const int ifo = finde(b, nb, form, 14, 0), i8 = ifo > 0 ? ifo + 12 : -1;
+        const int iwp = i8 > 0 ? finde(b, nb, wp, 4, i8) : -1, im4 = iwp > 0 ? finde(b, nb, m4, 2, iwp) : -1;
+        const int it = i8 > 0 ? finde(b, nb, turn, 8, i8) : -1, isl = i8 > 0 ? finde(b, nb, sl, 2, i8) : -1;
+        const int i51 = i8 > 0 ? finde(b, nb, m51n, 4, i8) : -1, it2 = it > 0 ? finde(b, nb, turn, 8, it + 8) : -1;
+        PRUEF(i8 > 0 && iwp > i8 && im4 > iwp && it == im4 + 4 && isl > it && i51 > isl && (it2 < 0 || it2 > i51),
+              "ENTRIEGELN39 NB4: Elzas Plc_dest TURN @+%04X direkt hinter Cut_chg 8 @+%04X / Work_set(1,0) @+%04X / Member_set(4) @+%04X, "
+              "vor dem ersten Sleep @+%04X (Form ROOM11C0 sub03 @0x01B18..@0x01B26), kein zweiter bis msg 51 @+%04X",
+              it, i8, iwp, im4, isl, i51);
     }
     {   /* Punkt 8: nach der Warteschleife (4,0xF2): Cut 8, msg 51 + Gesten (0,15)/(0,23), Plc_motion(2,6), msg 52 */
         const uint8_t w[4] = { 0x21, 0x04, 0xF2, 0x01 }, c8[2] = { 0x29, RE15_R39J_CUT_GESPRAECH };
@@ -1136,6 +1160,151 @@ static void teil_senken(void)
     }
 }
 
+/* ---- Teil: schnitt (Nachbesserung 4, Abnahme 3 Mangel M1-Rest) -------------------------------------------------------
+ * Abnahme 3 Lauf RL2 (nachgestellt: Dossier 11.1 Lauf v_rl2): Elza beginnt 3 Bilder vor der Pad-Sperre nachzuladen (F4053, Sperre
+ * F4056); Nachladen (Clip 0x0D, 31 Bilder) und Senken (Clip 6, 10) passen nicht in die 30 Bilder bis zum Schnitt (F4086) -
+ * F4086..F4093 = 8 Bilder Cut 8 mit mo 215, F4087/F4088 Pistole auf John; erst Elzas Plc_dest TURN 11 Bilder nach dem Schnitt
+ * (F4097) beendete das.
+ * Original-Form ROOM11C0 sub03: Cut_chg @0x01B18, Work_set(1,0) @0x01B1A, Member_set @0x01B1E/@0x01B22 und Plc_dest @0x01B26 im
+ * SELBEN Takt. Der Handler 0x80041be4 (Tabelle 0x800744a8[0x40]) schreibt das Kommandowort des Spielers 0x800aca54 sofort: +4 = 4
+ * @0x80041c14, +5 = Modus @0x80041c18, +6 = +7 = 0 @0x80041c1c/@0x80041c20 (0x800aca5a = Phase der Ziel-FSM 0x80032e9c, Tabelle
+ * 0x800740f4: [3] SENKEN 0x80033c74, [4] NACHLADEN 0x80033d7c). Der SCD-Laeufer laeuft vor dem Spieler (@0x8001cdec vor
+ * @0x8001ce0c): im Schnittbild fuehrt der Spieler schon Kommando 4 aus (0x80073f90[4] = 0x80030660 -> 0x80073e30[9] TURN
+ * 0x80031360, Clip-Init @0x80031398..@0x800313b8) - der Waffen-Clip endet mit dem Schnitt.
+ * Geprueft am Engine-Weg mit den ECHTEN Bytes von ENTRIEGELN39 ab dem Szenenbeginn nach dem Kampf (Set(1,0x1B), Set(2,7),
+ * Sleep 30, Cut_chg 8, ... als Faden per scd_thread_start), R1 die ganze Zeit gehalten, je Fall:
+ *   Vorbedingung: die Aktion beginnt <vorlauf> Bilder vor dem Sperr-Bild und laeuft dort noch (Nachladen Clip 0x0D / Hieb).
+ *   Schnitt-Takt (Cut_chg 8): Elza im Kommando 4 mit Walk-Modus 9 (Plc_dest TURN), Ziel-Phase NONE, nicht motion 215.
+ *   Cut 8 (40 Bilder ab dem Schnitt): kein Bild mit erhobener Waffe (Ziel-Phase != NONE oder motion 215).
+ *   Gegenprobe mit der Programm-Fassung der Nachbesserung 3 (TURN hinter Sleep 1 + Plc_neck + Sleep 10): Nachladen 3 Bilder vorher
+ *   und Hieb zeigen Bilder mit erhobener Waffe in Cut 8 (der Riegel misst den Befund), Halten nicht (Nachbesserung 3). */
+static void teil_schnitt(void)
+{
+    printf("== schnitt ==\n");
+    extern int  re15_player_aim_phase_debug(void);   /* Phase | 0x10 bei Rueckstoss/Hieb (player_common.c) */
+    extern void re15_player_aim_reset(void);
+    extern int  re15_player_aim_clip(void);
+    enum { NONE = 0, READY = 2, RELOAD = 3 };
+    enum { HALTEN, NACHLADEN, HIEB };
+    int nb = 0;
+    const uint8_t *b = re15_dining_r39_programm(1, &nb);
+    static const uint8_t form[14] = { 0x22, 0x01, 0x1B, 0x01, 0x22, 0x02, 0x07, 0x01, 0x09, 0x0A, 0x1E, 0x00,
+                                      0x29, RE15_R39J_CUT_GESPRAECH };
+    const int16_t ex = RE15_R39J_ECKE_X, ez = RE15_R39J_ECKE_Z;
+    const uint8_t turn[8] = { 0x40, 0x00, 0x09, 0x00, (uint8_t)ex, (uint8_t)((uint16_t)ex >> 8), (uint8_t)ez,
+                              (uint8_t)((uint16_t)ez >> 8) };
+    static const uint8_t sleep1[4] = { 0x09, 0x0A, 0x01, 0x00 }, sleep10[4] = { 0x09, 0x0A, 0x0A, 0x00 };
+    const int ifo = b ? finde(b, nb, form, 14, 0) : -1;
+    const int it = ifo > 0 ? finde(b, nb, turn, 8, ifo) : -1;
+    const int lage_ok = ifo > 0 && it > ifo && it + 26 <= nb && nb <= 2048 && !memcmp(b + it + 8, sleep1, 4) &&
+                        !memcmp(b + it + 22, sleep10, 4);
+    PRUEF(lage_ok, "ENTRIEGELN39: Szenenbeginn nach dem Kampf @+%04X, Elzas TURN @+%04X, dahinter Sleep 1 / Plc_neck / Sleep 10",
+          ifo, it);
+    if (!lage_ok) return;
+    static uint8_t alt[2048];   /* Gegenprobe: Fassung der Nachbesserung 3 = TURN hinter Sleep 1 + Plc_neck + Sleep 10 (18 B) */
+    memcpy(alt, b, (size_t)nb);
+    memcpy(alt + it, b + it + 8, 18);
+    memcpy(alt + it + 18, b + it, 8);
+    static const struct { const char *name; int art, waffe, vorlauf; const char *plw; } faelle[] = {
+        { "Pistole: Nachladen 3 Bilder vor der Sperre (Abnahme 3 Lauf RL2)",             NACHLADEN, 3, 3, "PL04W03.PLW" },
+        { "Pistole: Nachladen 8 Bilder vor der Sperre (Abnahme 3 Lauf RL)",              NACHLADEN, 3, 8, "PL04W03.PLW" },
+        { "Pistole: Nachladen 1 Bild vor der Sperre (laeuft bis in den Schnitt-Takt)",   NACHLADEN, 3, 1, "PL04W03.PLW" },
+        { "Messer: Hieb 3 Bilder vor der Sperre",                                        HIEB,      1, 3, "PL04W01.PLW" },
+        { "Pistole: Halten bis in die Sperre (Nachbesserung 3)",                         HALTEN,    3, 1, "PL04W03.PLW" },
+    };
+    enum { NF = (int)(sizeof faelle / sizeof faelle[0]) };
+    int waffe_alt[NF];
+    for (int k = 0; k < NF; k++) {
+        waffe_alt[k] = -1;
+        for (int v = 0; v < 2; v++) {
+            const uint8_t *prog = v ? alt : b;
+            printf("  -- %s%s\n", faelle[k].name, v ? " [Gegenprobe: Fassung Nachbesserung 3]" : "");
+            re15_game_state_init();
+            re15_inv_load_briefing();
+            re15_game_flag_set(RE15_R38F_F0_BANK, RE15_R38F_F0_BIT, 1);   /* (4,0xF0) = Phase H */
+            if (room_boot(RE15_R38F_RAUM_1141, -7600, -17600, 0, 0) != 0) return;
+            (void)re15_inv_grant(0x03, faelle[k].art == NACHLADEN ? 1 : 15);   /* Browning; Nachladen: 1 Patrone + Vorrat */
+            if (faelle[k].art == NACHLADEN) (void)re15_inv_grant(0x15, 50);
+            (void)plw_cliplaengen(faelle[k].plw);
+            re15_player_aim_reset();
+            re15_player_set_equipped_weapon(faelle[k].waffe);
+            { const int sl = re15_inv_find_item((uint8_t)faelle[k].waffe); if (sl >= 0) re15_inv_set_equipped_slot(sl); }
+            re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            for (int f = 0; f < 60; f++) frame(0, 0);
+            int ok = 0;
+            for (int f = 0; f < 90 && !ok; f++) {
+                frame(RE15_PAD_BIT_R1, f == 0 ? RE15_PAD_BIT_R1 : 0);
+                ok = (re15_player_aim_phase_debug() == READY);
+            }
+            if (ok && faelle[k].art == NACHLADEN) {   /* der eine Schuss leert das Magazin, danach wieder Halten */
+                int rueck = 0, wieder = 0;
+                for (int f = 0; f < 6 && !rueck; f++) {
+                    frame(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE, f == 0 ? RE15_PAD_BIT_SQUARE : 0);
+                    rueck = (re15_player_aim_phase_debug() & 0x10) != 0;
+                }
+                for (int f = 0; f < 60 && !wieder; f++) { frame(RE15_PAD_BIT_R1, 0); wieder = (re15_player_aim_phase_debug() == READY); }
+                ok = rueck && wieder && !re15_ammo_mag_nonzero();
+                /* Abzug mit leerem Magazin (Druck-Flanke @0x80033338, Nachladen @0x80033378) -> Clip 0x0D */
+                frame(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+                ok = ok && (re15_player_aim_phase_debug() & 0x0F) == RELOAD && re15_player_aim_clip() == 0x0D;
+            } else if (ok && faelle[k].art == HIEB) {   /* Hieb = Melee-Rueckstoss (Clip 7) */
+                frame(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+                ok = (re15_player_aim_phase_debug() & 0x10) != 0;
+            } else if (ok) {
+                frame(RE15_PAD_BIT_R1, 0);
+            }
+            for (int f = 1; f < faelle[k].vorlauf; f++) frame(RE15_PAD_BIT_R1, 0);   /* Aktion begann <vorlauf> Bilder vor L */
+            int slot = -1;
+            for (int s = SCD_EVENT_SLOT_FIRST; s <= SCD_EVENT_SLOT_LAST && slot < 0; s++)   /* Ereignis-Faeden wie scd_event_fire */
+                if (!g_scd.threads[s].active) slot = s;
+            const int gestartet = ok && slot > 0 && scd_thread_start(slot, prog + ifo) == 0;
+            PRUEF(gestartet, "Vorlauf: Aktion begonnen, Szenenbeginn ENTRIEGELN39 +%04X als Faden %d", ifo, slot);
+            if (!gestartet) continue;
+            frame(RE15_PAD_BIT_R1, 0);   /* Sperr-Bild L: Set(1,0x1B)=1, Set(2,7)=1, Sleep 30 */
+            const int ph_l = re15_player_aim_phase_debug(), ac_l = re15_player_aim_clip(), gesperrt = re15_game_flag_get(2, 7);
+            const int mag_l = re15_ammo_mag_nonzero();
+            int schnitt = -1, n8 = 0, n8_waffe = 0, st_s = -1, wm_s = -1, ph_s = -1, mo_s = -1, ac_vor = -1, erste_waffe = -1;
+            for (int f = 1; f <= 80; f++) {
+                const int ac_vorher = re15_player_aim_clip(), ph_vorher = re15_player_aim_phase_debug();
+                frame(RE15_PAD_BIT_R1, 0);
+                if (schnitt < 0 && g_scd.cam_id == RE15_R39J_CUT_GESPRAECH) {
+                    schnitt = f; st_s = pl->state; wm_s = pl->walk_mode; ph_s = re15_player_aim_phase_debug(); mo_s = pl->motion;
+                    ac_vor = (ph_vorher & 0x0F) == RELOAD ? ac_vorher : -1;
+                }
+                if (schnitt > 0 && f < schnitt + 40) {
+                    n8++;
+                    if (re15_player_aim_phase_debug() != NONE || pl->motion == 215) { n8_waffe++; if (erste_waffe < 0) erste_waffe = f - schnitt; }
+                }
+            }
+            const int mag_nach = re15_ammo_mag_nonzero();
+            scd_thread_kill(slot);
+            frame(0, 0);
+            printf("    Sperr-Bild: Sperre %d, Phase 0x%02X, W-Clip %d, Magazin %s; Schnitt %d Bilder danach: Kommando %d, Walk-Modus %d, "
+                   "Phase 0x%02X, motion %d; Cut 8: %d Bilder, davon %d mit erhobener Waffe (erstes +%d); Magazin danach %s\n",
+                   gesperrt, ph_l, ac_l, mag_l ? "voll" : "leer", schnitt, st_s, wm_s, ph_s, mo_s, n8, n8_waffe, erste_waffe,
+                   mag_nach ? "voll" : "leer");
+            if (v) { waffe_alt[k] = n8_waffe; continue; }
+            PRUEF(gesperrt && (faelle[k].art == NACHLADEN ? ((ph_l & 0x0F) == RELOAD && ac_l == 0x0D)
+                             : faelle[k].art == HIEB ? ((ph_l & 0x10) != 0) : (ph_l == READY)),
+                  "Vorbedingung: im Sperr-Bild laeuft %s noch (Phase 0x%02X, W-Clip %d)",
+                  faelle[k].art == NACHLADEN ? "das Nachladen (Clip 0x0D)" : faelle[k].art == HIEB ? "der Hieb" : "das Halten", ph_l, ac_l);
+            PRUEF(schnitt == 30, "Schnitt 30 Bilder nach der Sperre (Sleep 30 = ROOM11C0 sub03 @0x01B14; Lauf v_rl2 F4056 -> F4086): %d",
+                  schnitt);
+            PRUEF(st_s == 4 && wm_s == 9 && ph_s == NONE && mo_s != 215,
+                  "Schnitt-Takt: Plc_dest TURN im selben Takt wie Cut_chg 8 (Form ROOM11C0 sub03 @0x01B26) -> Kommando 4 (@0x80041c14), "
+                  "Modus 9 (@0x80041c18), Ziel-Phase geloescht (@0x80041c1c): Kommando %d, Modus %d, Phase 0x%02X, motion %d",
+                  st_s, wm_s, ph_s, mo_s);
+            PRUEF(n8 == 40 && n8_waffe == 0, "Cut 8: %d Bilder, keines mit erhobener Waffe (%d; Abnahme 3 Lauf RL2: 8)", n8, n8_waffe);
+            if (ac_vor == 0x0D)   /* Nachladen lief bis ins Schnittbild: abgebrochen wie im Original, kein Auffuellen */
+                PRUEF(!mag_nach, "Nachladen bis in den Schnitt-Takt: Plc_dest loescht die Phase (+6 @0x80041c1c), das Auffuellen "
+                      "(@0x80033ebc/@0x80033ec0 erst am Clip-Ende) entfaellt - Magazin bleibt leer");
+        }
+    }
+    PRUEF(waffe_alt[0] > 0 && waffe_alt[3] > 0 && waffe_alt[4] == 0,
+          "Gegenprobe Fassung Nachbesserung 3: Nachladen 3 Bilder vorher %d, Hieb %d Bilder Cut 8 mit erhobener Waffe (Befund), "
+          "Halten %d (NB3)", waffe_alt[0], waffe_alt[3], waffe_alt[4]);
+}
+
 /* ---- Teil: zielen (Werkzeug des Riegels integration_r39_dining1141_zielen, Nachbesserung 3 / Abnahme 2 M1) -----------
  * Aufruf: test_r39_dining1141 zielen <laufordner>. Liest <lauf>/debug.log (nach dem letzten "loaded room1141.rdt": Bild des
  * Messhakens "MESSHAKEN RE15_R38F_GORILLAS_TOT" = Kampfende, danach das erste "[scd F<n>] Cut_chg(8)" = Schnitt zum Gespraech)
@@ -1146,7 +1315,12 @@ static void teil_senken(void)
  *   Form ROOM11C0 sub03: die Pad-Sperre (pm 2) steht >= 29 Bilder vor dem Schnitt (Set(2,7)=1 @0x01B0A, Sleep 30 @0x01B14)
  *   unter der Sperre senkt sie (mo 215 mit Clip 6 = SENKEN, HOLD @0x800331ec -> aca5a = 3 @0x80033200), das letzte Zielbild
  *   liegt VOR dem Schnitt
- *   in Cut 8 (40 Bilder ab dem Schnitt) kein Bild mit mo 215; im Schnittbild steht sie neutral (pst 1, mo 200) */
+ *   in Cut 8 (40 Bilder ab dem Schnitt) kein Bild mit mo 215; im Schnittbild Kommando 4 (Nachbesserung 4: Elzas Plc_dest TURN im
+ *   Schnitt-Takt, Form ROOM11C0 sub03 @0x01B26, Handler @0x80041c14) und keine erhobene Waffe
+ * Fall "nachladen" (Aufruf ... zielen <lauf> nachladen; Riegel integration_r39_dining1141_zielen_nachladen, Abnahme 3 Lauf RL2):
+ *   Vorbedingung statt "zielt beim Kampfende": im Sperr-Bild laeuft das Nachladen (mo 215, W-Clip 0x0D) und begann hoechstens
+ *   11 Bilder vorher (Nachladen 31 + Senken 10 > 30 Bilder bis zum Schnitt: ohne Abhilfe Waffe in Cut 8); R1 wie oben. Das Senken
+ *   vor dem Schnitt wird nur gezaehlt (das Nachladen kann bis an den Schnitt reichen). */
 typedef struct { unsigned f, pad; int pst, mo, ac, cam, pm; } zz_t;
 static const zz_t *zz_bild(const zz_t *zs, int nz, long n)   /* letzte Zeile mit Bild n */
 {
@@ -1157,7 +1331,8 @@ static const zz_t *zz_bild(const zz_t *zs, int nz, long n)   /* letzte Zeile mit
 static void teil_zielen(int argc, char **argv)
 {
     printf("== zielen ==\n");
-    if (argc < 3) { printf("  FEHLER: Aufruf test_r39_dining1141 zielen <lauf>\n"); g_fail++; return; }
+    if (argc < 3) { printf("  FEHLER: Aufruf test_r39_dining1141 zielen <lauf> [nachladen]\n"); g_fail++; return; }
+    const int nachladen = (argc > 3 && !strcmp(argv[3], "nachladen"));   /* Nachbesserung 4 (Abnahme 3 M1-Rest) */
     char p[1024]; snprintf(p, sizeof p, "%s/debug.log", argv[2]);
     FILE *f = fopen(p, "rb");
     if (!f) { printf("  FEHLER: %s fehlt\n", p); g_fail++; return; }
@@ -1195,6 +1370,7 @@ static void teil_zielen(int argc, char **argv)
     free(raw);
     int ziel_vor = 0, r1_fehlt = 0, senken = 0, cut8_ziel = 0, cut8_n = 0;
     long sperre = -1, letztes_ziel = -1;
+    static unsigned char nl[20000];   /* je Zeile: Nachlade-Bild (mo 215, W-Clip 0x0D) */
     for (int i = 0; i < nz; i++) {
         const zz_t *r = &zs[i]; const long n = (long)r->f;
         if (n >= kill - 20 && n < kill && r->mo == 215 && (r->pad & 0x0800u)) ziel_vor++;
@@ -1203,19 +1379,37 @@ static void teil_zielen(int argc, char **argv)
         if (n >= kill && n < c8 && r->mo == 215) letztes_ziel = n;
         if (sperre >= 0 && n >= sperre && n < c8 && r->mo == 215 && r->ac == 6) senken++;
         if (n >= c8 && n < c8 + 40 && r->cam == 8) { cut8_n++; if (r->mo == 215) cut8_ziel++; }
+        nl[i] = (r->mo == 215 && r->ac == 0x0D);
     }
+    long nl_beginn = -1; int nl_sperre = 0;   /* Nachladen im Sperr-Bild und sein Beginn (Fall nachladen) */
+    for (int i = 0; i < nz; i++)
+        if ((long)zs[i].f == sperre && nl[i]) {
+            nl_sperre = 1;
+            int j = i; while (j > 0 && nl[j - 1] && zs[j - 1].f + 1 == zs[j].f) j--;
+            nl_beginn = (long)zs[j].f;
+        }
     const zz_t *s8 = zz_bild(zs, nz, c8);
     printf("    %d Bilder ROOM1141; Kampfende %ld, Sperre ab %ld, letztes Zielbild %ld, Schnitt %ld; SENKEN-Bilder %d; Cut 8: %d Bilder, "
            "davon %d mit Waffe; Schnittbild pst=%d mo=%d\n", nz, kill, sperre, letztes_ziel, c8, senken, cut8_n, cut8_ziel,
            s8 ? s8->pst : -1, s8 ? s8->mo : -1);
-    PRUEF(ziel_vor >= 15 && r1_fehlt == 0, "Vorbedingung: Elza zielt beim Kampfende (%d von 20 Bildern mo 215 mit R1) und haelt R1 bis "
-          "20 Bilder nach dem Schnitt (%d Bilder ohne R1)", ziel_vor, r1_fehlt);
+    if (!nachladen)
+        PRUEF(ziel_vor >= 15 && r1_fehlt == 0, "Vorbedingung: Elza zielt beim Kampfende (%d von 20 Bildern mo 215 mit R1) und haelt R1 bis "
+              "20 Bilder nach dem Schnitt (%d Bilder ohne R1)", ziel_vor, r1_fehlt);
+    else {
+        printf("    Nachladen: im Sperr-Bild %d, Beginn %ld (%ld Bilder vor der Sperre)\n", nl_sperre, nl_beginn,
+               nl_beginn >= 0 ? sperre - nl_beginn : -1L);
+        PRUEF(nl_sperre && nl_beginn >= 0 && sperre - nl_beginn >= 1 && sperre - nl_beginn <= 11 && r1_fehlt == 0,
+              "Vorbedingung Fall nachladen: im Sperr-Bild %ld laeuft das Nachladen (W-Clip 0x0D), begonnen %ld Bilder vorher (1..11: "
+              "Nachladen 31 + Senken 10 > 30 Bilder bis zum Schnitt), R1 bis 20 Bilder nach dem Schnitt (%d Bilder ohne R1)",
+              sperre, nl_beginn >= 0 ? sperre - nl_beginn : -1L, r1_fehlt);
+    }
     PRUEF(sperre > 0 && c8 - sperre >= 29, "Form ROOM11C0 sub03: Pad-Sperre ab Bild %ld, %ld Bilder vor dem Schnitt (>= 29: Set(2,7)=1 "
           "@0x01B0A, Sleep 30 @0x01B14, Cut_chg @0x01B18)", sperre, c8 - sperre);
-    PRUEF(senken > 0 && letztes_ziel < c8, "unter der Sperre gesenkt (%d Bilder Clip 6, HOLD @0x800331ec -> aca5a = 3 @0x80033200), "
-          "letztes Zielbild %ld vor dem Schnitt %ld", senken, letztes_ziel, c8);
-    PRUEF(cut8_n >= 30 && cut8_ziel == 0 && s8 && s8->pst == 1 && s8->mo == 200,
-          "Cut 8: %d Bilder, keines mit erhobener Waffe (%d; Abnahme 2 Lauf R2: 11); Schnittbild neutral (pst %d, mo %d)",
+    PRUEF((nachladen || senken > 0) && letztes_ziel < c8, "unter der Sperre gesenkt (%d Bilder Clip 6, HOLD @0x800331ec -> aca5a = 3 "
+          "@0x80033200; Fall nachladen: nur gezaehlt), letztes Zielbild %ld vor dem Schnitt %ld", senken, letztes_ziel, c8);
+    PRUEF(cut8_n >= 30 && cut8_ziel == 0 && s8 && s8->pst == 4 && s8->mo != 215,
+          "Cut 8: %d Bilder, keines mit erhobener Waffe (%d; Abnahme 2 Lauf R2: 11, Abnahme 3 Lauf RL2: 8); Schnittbild Kommando 4 "
+          "= Elzas Plc_dest TURN im Schnitt-Takt (Form ROOM11C0 sub03 @0x01B26, @0x80041c14): pst %d, mo %d",
           cut8_n, cut8_ziel, s8 ? s8->pst : -1, s8 ? s8->mo : -1);
 }
 
@@ -1266,6 +1460,7 @@ int main(int argc, char **argv)
     else if (!strcmp(argv[1], "phase_h")) teil_phase_h();
     else if (!strcmp(argv[1], "fenster")) teil_fenster();
     else if (!strcmp(argv[1], "senken")) teil_senken();
+    else if (!strcmp(argv[1], "schnitt")) teil_schnitt();
     else if (!strcmp(argv[1], "pegel")) teil_pegel(argc, argv);
     else if (!strcmp(argv[1], "zielen")) teil_zielen(argc, argv);
     else { printf("unbekannter Teil %s\n", argv[1]); return 2; }

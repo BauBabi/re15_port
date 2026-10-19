@@ -23,8 +23,10 @@ PROGRAMME (Nachbesserung 1: Ablauf nach Nutzer-Nachtrag 4)
                Tuer zu, Kamera auf die Tuer (Cut 6, John steht schon da), Cut 5, Elza senkt die Waffe, John laeuft heraus;
                Szene der Runde 38 mit Punkt 6 (Glasbruch vor msg 6) und Punkt 7 (Skript wartet auf Johns Drehung vor msg 9);
                nach dem Tod der Gorillas Balken + Pad-Sperre + Sleep 30 vor dem Schnitt (Nachbesserung 3, Form ROOM11C0 sub03
-               @0x01B06..@0x01B18: wer noch zielt, senkt die Waffe), Punkt 8 (zwei Zeilen Johns mit Gesten, Heranwinken aus
-               ROOM1171), dann Johns Abgang.
+               @0x01B06..@0x01B18: wer noch zielt, senkt die Waffe), im Schnitt-Takt Elzas Plc_dest TURN zu John
+               (Nachbesserung 4, Form ROOM11C0 sub03 @0x01B1A..@0x01B26: das Kommandowort wechselt im Schnittbild, ein Rest
+               aus Nachladen/Senken endet dort), Punkt 8 (zwei Zeilen Johns mit Gesten, Heranwinken aus ROOM1171), dann
+               Johns Abgang.
   ROLLTOR39    ROOM1141 Ereignis 6 (Gemaelde) in Phase H: Rolladen hoch mit Ton (Runde 38), danach Steuerung zurueck (N4.1).
 """
 import importlib.util, io, os, struct, sys
@@ -265,10 +267,22 @@ def nach_dem_kampf():
     op([0x34, 0x04] + list(s16(ELZA_BLICK_JOHN)),
        "Member_set(4,%d) = Elzas Blick (+0x6a, actor_common.c Id 4) zu John (Form sub02 @0x00C3A `34 04 00 00`; Yaw aus "
        "pos_advance @0x800245d8: atan2(-dz,dx))" % ELZA_BLICK_JOHN)
+    # Nachbesserung 4 (Abnahme 3 M1-Rest: Nachladen 3 Bilder vor der Sperre -> Lauf RL2 F4086..F4093 acht Bilder Cut 8 im
+    # Waffen-Clip, F4087/F4088 Pistole auf John; erst der TURN 11 Bilder nach dem Schnitt beendete das). Form ROOM11C0 sub03
+    # @0x01B18..@0x01B26: Cut_chg, Work_set(1,0) @0x01B1A, Member_set x/z @0x01B1E/@0x01B22 und Plc_dest @0x01B26 im SELBEN
+    # Takt. Plc_dest (0x800744a8[0x40] = 0x80041be4) schreibt das Kommandowort des Spielers (Work_set Art 1 = 0x800aca54
+    # @0x80040da4-@0x80040db0) sofort: +4 = 4 @0x80041c14, +5 = Modus @0x80041c18, +6 = 0 @0x80041c1c (0x800aca5a = Phase der
+    # Ziel-FSM 0x80032e9c, Tabelle 0x800740f4: [3] SENKEN 0x80033c74, [4] NACHLADEN 0x80033d7c), +7 = 0 @0x80041c20. Der
+    # SCD-Laeufer laeuft vor dem Spieler (@0x8001cdec jal 0x8003f038 vor @0x8001ce0c jal 0x80031c44): im Schnittbild fuehrt der
+    # Spieler-Verteiler schon Kommando 4 aus (0x80073f90[4] = 0x80030660 -> 0x80073e30[9] = TURN 0x80031360, Clip-Init
+    # @0x80031398-@0x800313b8, anim_set @0x80031494) - der Waffen-Clip endet mit dem Schnitt. Elzas erster Plc-Befehl der Szene
+    # ist der TURN zu John (sub02 @0x00C50); er rueckt aus der Lage hinter Sleep 1/10 in den Schnitt-Takt, Laenge und alle
+    # Anker bleiben, John unveraendert (zwischen dem alten und dem neuen Platz liegt kein Sleep fuer ihn).
+    R.dest(9, 0, ECKE, "Plc_dest TURN Elza -> John = sub02 @0x00C50 IM SCHNITT-TAKT (Nachbesserung 4: Form ROOM11C0 sub03 @0x01B26 "
+                       "`40 00 04 00 ..` direkt nach Work_set/Member_set @0x01B1A..@0x01B22, Kommandowort im Schnittbild)")
     sleep(1, "Sleep 1 = sub02 @0x00C3E")
     op(b"\x41\x01" + s16(ECKE[0]) + s16(0) + s16(ECKE[1]) + b"\x64\x00", "Plc_neck Elza -> John = sub02 @0x00C42")
-    sleep(10, "Sleep 10 = sub02 @0x00C4C")
-    R.dest(9, 0, ECKE, "Plc_dest TURN Elza -> John = sub02 @0x00C50")
+    sleep(10, "Sleep 10 = sub02 @0x00C4C (danach stand bis Nachbesserung 3 Elzas TURN @0x00C50, jetzt im Schnitt-Takt oben)")
     sleep(5, "Sleep 5 = sub02 @0x00C58")
     R.work_npc(0, "Work_set(2,0)+Nop John = sub02 @0x00C5C")
     op(b"\x41\x01" + s16(ELZA_NACH[0]) + s16(0) + s16(ELZA_NACH[1]) + b"\x64\x00", "Plc_neck John -> Elza = sub02 @0x00C60")
