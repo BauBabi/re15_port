@@ -291,3 +291,91 @@ Elza IMMER zu, auch bei der Suche nach Sherry.
 - `git merge master` -> 57e5f920. Konflikte nur an den Blockenden: AUFTRAG.md (Nachtrag 11 aus master; der Hinweis an Spur J
   aus J bleibt), Include-/Installer-Zeilen in scd_room_setup.c (2), scd_vm.c, platform/pc/main.c, map_hint_common.c - beide
   Seiten behalten, die Zeile der Spur P jeweils am Ende des Blocks.
+
+### 8.1 Messung vorher (Bau nach dem Merge 57e5f920, echte exe mit Elza, Spielstand + CONTINUE, echte Tueren)
+Werkzeug `P_belege/mess.sh` (Elza-Karte probe_r36_elza_karte, Messkopie `re15_pc_p39n_<lauf>.exe` neben der exe, eigener
+Laufordner, RE15_*-Umgebung nicht geerbt, RE15_WEGPLAN). Auszuege `P_belege/nb1_vorher_<lauf>.txt`.
+| Lauf | Zustand | Eingabe | debug.log | Befund |
+|---|---|---|---|---|
+| v3 | ROOM1041, Bit 97 = 1 (Panikphase), Rollo offen (4,5)/(4,4) | GEHE (-20800,-3800), BLICK 0, AKTION | `[aot] DOOR FIRE slot=1 rect=(-19650,-3800,hw=750,hh=1100) target_cut=8` -> `loaded room1031.rdt` | Tuer 1041 -> 1031 geht in der Phase (Mangel 1) |
+| v4 | ROOM1051, Bit 97 = 1, Rollo 1051 offen (3,0x79) | GEHE (16450,-13700), BLICK 0, AKTION | `[aot] DOOR FIRE slot=4 rect=(17200,-13700,hw=500,hh=1000) target_cut=0` -> `loaded room10a1.rdt` | Tuer 1051 -> 10A1 geht in der Phase (Mangel 1) |
+| v6a | ROOM10B1 (ueber die echte Tuer 1261 Slot 2 -> 10B1 Cut 7), keine Szenen-Flags = vor der Szene | BLICK 3072, AKTION | `[aot] DOOR FIRE slot=1 rect=(-21370,4610,hw=750,hh=1050) target_cut=15` -> `loaded room1261.rdt` | Kanaldeckel offen (Mangel 2) |
+| v6b | wie v6a + (3,0x82)=1 = Szene "John, wait!" steht an (ROOM1171 sub02 @0x013A4) | keine | msg 0..5 mit main00..05.wav, dann `[aot] DOOR FIRE slot=1` (= sub04 @0x01A8E `47 01`) -> `loaded room1261.rdt` | die Szene der Sherry-Suche oeffnet den Deckel (Mangel 2) |
+| v6c | wie v6a + (3,0x83) (3,0x41) (3,0x46) = nach der Szene, Sherry-Suche (ROOM2001 @0x01958) | BLICK 3072, AKTION | `[aot] DOOR FIRE slot=1` -> `loaded room1261.rdt` | offen (Mangel 2) |
+
+v5a-c (Erkundung 10B1): Cut 0 zeigt die obere Terrasse mit der Leiter zum Dach (Slot 0 -> ROOM1171), Cut 7 (Bild
+`P_belege/nb1_10b1_cut7_kanaldeckel.png`, RE15_FORCE_CUT=7) die Gasse mit dem KANALDECKEL vor Elzas Fuessen (Slot 1).
+
+### 8.2 RE-Belege
+Selbst gelesen mit tools/scd_dump_room.py, tools/rdt_msgdump.py und den Skripten P_belege/tueren.py, flagsuche.py,
+msggrep.py; RE2 mit analysis/nutzer_batch_2026-08-27/tools/re2_scd_walk.py und O_belege/re2_msgs.py.
+
+Tuer-Saetze (Door_aot_set, 32 B, Ziel = Byte +22 Stage / +23 Raum / +24 Cut):
+- ROOM1041 main00 @0x010B8 `3b 01 02 31 00 00 50 b0 dc ec dc 05 98 08 9a 99 00 00 eb f0 00 00 00 03 08 00 ..` = Slot 1,
+  sce 2, sat 0x31, Rechteck x -20400 B 1500 / z -4900 T 2200, Ziel (-26214,0,-3861) Stage 0 Raum 0x03 (= ROOM1031) Cut 8.
+  Steht in main00 ohne Bedingung. Gegenstueck ROOM1031 main00 @0x01D18 Slot 2 -> Raum 0x04.
+- ROOM1051 main00 @0x00B5A `3b 04 02 31 00 00 3c 41 94 c6 e8 03 d0 07 58 66 c0 c7 e0 60 00 08 00 0a 00 08 ..` = Slot 4,
+  Rechteck x 16700 B 1000 / z -14700 T 2000, Ziel (26200,-14400,24800) Raum 0x0A (= ROOM10A1) Cut 0. Ohne Bedingung; kein
+  sub setzt Slot 4 um (sub01 @0x00CBA Aot_reset Slot 11, sub02 @0x00CDA Slot 7). Gegenstueck ROOM10A1 main00 @0x00DB2.
+- ROOM10B1 main00 @0x016F2 `3b 01 02 31 00 00 98 a9 e8 0d dc 05 34 08 e6 b0 f8 f8 d4 e5 00 04 00 26 0f 01 ..` = Slot 1,
+  Rechteck x -22120 B 1500 / z 3560 T 2100, Ziel (-20250,-1800,-6700) Raum 0x26 (= ROOM1261 "Sewer Passage") Cut 15;
+  Port-Uebergang re15_tuer_eigen.inc:190 `P16M (Basis DOOR16) V5 (hinab)` = Leiter hinunter, im Bild ein Kanaldeckel.
+  Der zweite Uebergang @0x016D2 Slot 0 -> Raum 0x17 (ROOM1171) Cut 3, Band 5, ist die Leiter zum Dach
+  (tuer_zuordnung.inc:37 `DOOR16 V4 (hinauf)`, Runde 31 Kategorie "leiter"). 10B1 hat keine weiteren Uebergaenge.
+
+"Die Tuer, die sich bei der Sherry-Suche oeffnet" (ROOM10B1; Flag-Zensus aller RDTs Bank 3 Bit 0x80..0x83):
+- ROOM1171 sub02 @0x0139C `22 03 80 01` / @0x013A4 `22 03 82 01` (Abstieg vom Dach mit John) -> ROOM10B1 sub00 @0x017F6
+  Ck(3,0x82)==1: John wartet am Deckel (Pos_set @0x017FE (-21422,0,3307)); sub01 @0x01816 Ck(3,0x82)==1 + @0x0181E Cmp
+  (Cut == 7) -> @0x01824 Evt_exec sub04 = die Szene msg 0..5 ("There's still a little girl trapped in there! ... We can't
+  just leave her behind!" / "...we can go through the sewer tunnels. Follow me."); sub04 @0x0195A Set(3,0x82)=0,
+  @0x0195E Set(3,0x83)=1, @0x01962 Set(3,0x41)=1, @0x01966 Set(2,7)=1, @0x0196A Set(1,0x1B)=1, ..., @0x01A84 Plc_dest John
+  zum Deckel, @0x01A8E `47 01` Aot_on Slot 1 = der Uebergang durch den Deckel, @0x01A90 Evt_end. KEIN Set(2,7)=0 in sub04:
+  Pad-Sperre und Balken loest im Original erst der Raumwechsel.
+  Danach ROOM1261 sub03 (3,0x41) John je Cut, ROOM2001 "Elza: Okay, I'll go for her." @0x01958 (3,0x46)=1
+  (analysis/story_leon_elza/ablauf_elza.md E18-E22).
+- => Die einzige Stelle in 10B1, an der sich etwas oeffnet, ist Slot 1 (Aot_on @0x01A8E) in der Szene, in der Elza nach
+  Sherry suchen will; Slot 1 ist zugleich der einzige Uebergang, der in 10B1 als Tuer dient (Slot 0 ist die Leiter).
+  "Die Tuer im ROOM 10B1" = Slot 1 (Kanaldeckel -> ROOM1261).
+
+Form "Tuer ist immer zu" im Original:
+- RE1.5 (Elza) ROOM11A1 main00 @0x00F9C Door_aot_set Slot 2, unmittelbar danach @0x00FBC `46 02 01 31 01 00 ff ff 00 00`
+  = Aot_reset Slot 2 -> sce 1 MESSAGE msg 1 "It's locked." (@0x01430 `04 02 25 50 3a 4f 00 48 4b 3f 47 41 40 57 01 00`),
+  Maske 0xffff, OHNE Bedingung = eine Tuer, die im Raumaufbau jedes Mal zur Meldung wird.
+- RE1.5 ROOM1041 selbst main00 @0x01076..@0x01096: Ifel Ck(4,0xF3)==0 -> @0x0107E Aot_set Slot 0 sce 1 MESSAGE msg 1
+  (Aufzug ohne Strom) mit dem Rechteck der Tuer, sonst Door_aot_set Slot 0 = Tuer als Meldung, solange ein Flag steht.
+- Aot_on auf einen MESSAGE-Satz ruft den Text: LAB_800407bc @0x8004082c `jalr` PTR_8007469c[rec[0]], [1] = 0x80043084
+  (Port aot_common.c re15_aot_fire_slot case MESSAGE -> re15_scd_show_message). Damit zeigt die Szene den Text statt des
+  Raumwechsels, ohne dass ein Byte der Szene geaendert wird.
+- Gosub-Huelle um eine Original-Szene: Spur O Programm SZENE/ENDE (Gosub @0x8003fc04, Runde 38 F SZENE1021); ein
+  Evt_end im per Gosub gerufenen sub kehrt zum Rufer zurueck.
+- Szenen-Ende in RE1.5-Form (Elza-Raum ROOM1051 sub02 @0x00D90..@0x00D9E): `22 02 07 00` Set(2,7)=0, `22 01 1b 00`
+  Set(1,0x1B)=0, `3c 01` Cut_auto 1, `2e 01 00 00` Work_set(1,0) + Nop, `42 00` Plc_ret + Nop (dieselbe Folge in ROOM1041
+  sub11 @0x0222C..@0x0223B).
+
+Sperrtext 10B1: RE1.5 hat KEINEN Text fuer einen geschlossenen Deckel (msggrep "lid|manhole|cover|hatch|won't open":
+nur Tueren "It's locked."/"The door won't open!" und ROOM3000/3001 msg 0 "A ladder leads down the manhole. / Descend it?").
+Beta -> Retail: RE2 hat genau diesen Fall - ROOM21A0 Slot 2 = Deckel mit Leiter (msg 3 "Will you go down the ladder?"),
+MAIN sub03 @0x01EA4 `46 02 04 31 01 00 00 00 ff ff` -> msg 1 " / The lid is firmly closed.<fd> I might be able to open it /
+with the right tool..." und im Else-Zweig @0x01EC6 `46 02 04 31 04 00 00 00 ff ff` -> msg 4 @0x02963 " / The lid is firmly
+closed.<fd> It's impossible for me / to open it." (die Figur, die ihn nie oeffnen kann). Fuer "ausnahmslos IMMER" = msg 4.
+Umsetzung in RE1.5-Kodierung: `04 02` Erzaehlform, `08` leere erste Zeile (wie RE2 `fc` und RE1.5 ROOM3020 msg 6 @0xF35
+`04 02 08 25 50 3a 4f ..` " / It's locked."), `02 00` Seitenwechsel fuer RE2 `fd` (RE1.5 ROOM3091 msg 6 @0x1FC6 "The door
+is latched shut and won't open." `02 00` "I'd need a key ..."), `01 00` Ende. Kein Tuer-Ton: RE2 spielt Se 0x0216 nur im
+TUER-Handler @0x800516a4 (key_id-Schloss, include/re15_lock_se.h); der Deckel ist dort ein MESSAGE-Satz.
+
+Satz an der Tuer 1041 -> 1031 / 1051 -> 10A1 (NUTZER-VORGABE "I have to rescue John! He is in danger!"):
+- Form wie die Tuersperren 1141 (Runde 38 F msg 41) und 11C0 (Spur O msg 40): Erzaehlform `04 02 <Zeile> 08 <Zeile> 01 00`
+  ohne Sprecherkopf. Original: RE2-Zensus Spur O (O_belege/re2_tuer_msg_zensus.txt, 54 Stellen): JEDE Tuer, die RE2 durch
+  einen Text ersetzt, ist ein MESSAGE-Satz in Erzaehlform - das naechste Vorbild ist ROOM4040 MAIN sub03 @0x00E9E/@0x00EB0
+  (Tueren 1/0 -> msg 9 "I have to catch / that woman!": Leons Ziel, das ihn an der Tuer zurueckhaelt), RE1.5 ROOM1090 Slot 2
+  @0x0230E Aot_set sce 1 -> msg 7 @0x28E6 `04 02 ..` "I must hurry up and get something to / put out this fire to save that
+  woman!". Die Sprecherform "Elza: ..." (msg 40 in 1041, Form ROOM1041 msg 2) gehoert den Szenen-Dialogen (Message_on);
+  an einem MESSAGE-Satz hat weder RE1.5 noch RE2 einen Sprecherkopf.
+- Zeitpunkt: in der Panikphase. Beginn = Set(9,97)=1 in RUF1041 (Elza steht dabei in 1041) -> dort in derselben Szene vor der
+  Rueckgabe der Steuerung, wie RE2 ROOM7040 sub06 @0x0185A `46 00 04 31 01 00 00 00 ff ff` (Spur O, Programm SZENE);
+  spaeteres Betreten von 1041/1051 in der Phase oder Laden = Raumaufbau (Form RE1.5 ROOM1041 main00 @0x01076 /
+  RE2 ROOM4040 sub03: Bedingung -> Tuer als Meldung). Ende der Phase = Johns Rettung in 1141 (Bit 97 = 0); 1041/1051 werden
+  danach neu aufgebaut (main00 Door_aot_set) -> wieder Tueren.
+- Stimme: MESSAGE-Saetze reihen im Port keine Stimme ein (scd_vm.c re15_scd_show_message); fuer die Nutzer-Zeilen gilt die
+  Ordnerregel ueber denselben Haken wie Spur O (11C0 msg 40): synchro/STAGE1/room1041/main41.wav, synchro/STAGE1/room1051/
+  main40.wav, sobald sie liegen.
