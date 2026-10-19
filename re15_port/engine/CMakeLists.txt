@@ -8,6 +8,7 @@
 file(GLOB ENGINE_SOURCES "src/*.c")
 
 add_library(re15_engine STATIC ${ENGINE_SOURCES})
+include(re15_version_r39)   # Runde 39 Spur T: RE15_VERSION nur fuer src/titelversion_r39.c (Titelbild)
 target_include_directories(re15_engine PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
 # Plattform-Definition AN die Engine-Lib geben. Die psx_dev-Engine-Quellen

@@ -39,9 +39,10 @@
 #   vorbedingungen  Version, Tag frei, re15_port/ + Werkzeug sauber, Docker (startet Docker Desktop),
 #                   Platz, Werkzeuge, Archiv, Sperre gegen einen zweiten Lauf
 #   alt       die bisherige Version aus release/ ins Archiv bringen (oder dort pruefen), VOR dem Bauen
-#   windows   release/build_win_cross.sh            -> release/win_out/re15_pc.exe
+#   windows   RE15_VERSION=V release/build_win_cross.sh  -> release/win_out/re15_pc.exe
 #   android   release/build_android.sh --version V  -> release/re15_port_V_android.apk
-#   linux     release/build_linux_deck.sh           -> release/linux_out/re15_pc (volle Suite im Container)
+#   linux     RE15_VERSION=V release/build_linux_deck.sh -> release/linux_out/re15_pc (volle Suite im Container)
+#             (V steht im Titelbild: "Ver.X.Y.Z" - Runde 39 Spur T, re15_port/cmake/re15_version_r39.cmake)
 #   paket     release/make_package.sh --version V   -> Volumes aller DREI Plattformen + SHA256SUMS.txt;
 #             die alten Volumes nimmt make_package.sh aus release/ und aus dem git-Index
 #   archiv    neue Version ins Archiv (sha256sum -c), die alte APK aus release/ (liegt geprueft im Archiv);
@@ -461,9 +462,9 @@ schritt_text() {
     case "$1" in
         alt)       if [[ -n "$ALT" && "$ALT" != "$NEU" ]]; then echo "Vorversion $ALT ins Archiv bringen bzw. dort pruefen (sha256sum -c)"
                    else echo "keine Vorversion zu archivieren"; fi ;;
-        windows)   echo "bash release/build_win_cross.sh -> release/win_out/re15_pc.exe (zuletzt 78 s, Runde 37)" ;;
+        windows)   echo "RE15_VERSION=$NEU bash release/build_win_cross.sh -> release/win_out/re15_pc.exe (zuletzt 78 s, Runde 37)" ;;
         android)   echo "bash release/build_android.sh --version $NEU -> release/re15_port_${NEU}_android.apk (zuletzt ~3 min, Runde 32)" ;;
-        linux)     echo "$( [[ -n "$LINUX_JOBS" ]] && echo "RE15_CTEST_JOBS=$LINUX_JOBS ")bash release/build_linux_deck.sh -> release/linux_out/re15_pc (volle Suite; zuletzt ctest 10827 s seriell, Runde 37)" ;;
+        linux)     echo "$( [[ -n "$LINUX_JOBS" ]] && echo "RE15_CTEST_JOBS=$LINUX_JOBS ")RE15_VERSION=$NEU bash release/build_linux_deck.sh -> release/linux_out/re15_pc (volle Suite; zuletzt ctest 10827 s seriell, Runde 37)" ;;
         paket)     echo "bash release/make_package.sh --version $NEU -> Volumes win64 + linux_steamdeck_x64 + android, SHA256SUMS.txt" ;;
         archiv)    echo "$(zeige_pfad "$ARCHIV/$NEU") anlegen + sha256sum -c; alte APK aus release/ (liegt geprueft im Archiv); im Archiv wird nichts geloescht" ;;
         abschluss) if [[ $NACHHOLEN -eq 1 ]]; then
@@ -614,7 +615,8 @@ s_windows() {
     stand_pruefen
     local exe="$HERE/win_out/re15_pc.exe"
     rm -f "$exe"            # ein altes Binary darf nicht als neues durchgehen
-    lauf "build_win_cross.sh" "bash release/build_win_cross.sh" bash "$HERE/build_win_cross.sh"
+    # Runde 39 Spur T: Version ins Titelbild (RE15_VERSION -> Container -> CMake, re15_port/cmake/re15_version_r39.cmake)
+    lauf "build_win_cross.sh" "RE15_VERSION=$NEU bash release/build_win_cross.sh" env RE15_VERSION="$NEU" bash "$HERE/build_win_cross.sh"
     marke "WIN-CROSS-BUILD-OK"
     frisch_oder_abbruch "$exe"
     stand_pruefen
@@ -643,10 +645,10 @@ s_linux() {
     local bin="$HERE/linux_out/re15_pc"
     rm -f "$bin"
     if [[ -n "$LINUX_JOBS" ]]; then
-        lauf "build_linux_deck.sh" "RE15_CTEST_JOBS=$LINUX_JOBS bash release/build_linux_deck.sh" \
-            env RE15_CTEST_JOBS="$LINUX_JOBS" bash "$HERE/build_linux_deck.sh"
-    else
-        lauf "build_linux_deck.sh" "bash release/build_linux_deck.sh" bash "$HERE/build_linux_deck.sh"
+        lauf "build_linux_deck.sh" "RE15_CTEST_JOBS=$LINUX_JOBS RE15_VERSION=$NEU bash release/build_linux_deck.sh" \
+            env RE15_CTEST_JOBS="$LINUX_JOBS" RE15_VERSION="$NEU" bash "$HERE/build_linux_deck.sh"
+    else   # Runde 39 Spur T: Version ins Titelbild (wie Schritt windows)
+        lauf "build_linux_deck.sh" "RE15_VERSION=$NEU bash release/build_linux_deck.sh" env RE15_VERSION="$NEU" bash "$HERE/build_linux_deck.sh"
     fi
     marke "LINUX-BUILD-OK"
     LINUX_TESTS="$(grep -aoE 'Tests: [0-9]+ gelaufen = [0-9]+ registriert' "$SCHRITT_LOG" | tail -1 || true)"
