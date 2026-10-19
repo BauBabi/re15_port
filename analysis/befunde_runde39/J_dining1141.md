@@ -901,3 +901,12 @@ Werkzeug `j39n3/lauf.sh` (= `J39abn2/lauf.sh` der Abnahme, eigene exe-Kopie `re1
   in Cut 8 der ausgestreckte Arm mit der Pistole auf John) und `J_belege/nb3_m1_nachher_zielen_F4048-4096.png` (nachher: F4048/
   F4052 zielt sie, ab F4054 Balken und Senken, ab F4062 steht sie neutral, F4086/F4096 Cut 8 Elza und John einander zugewandt,
   Arme unten).
+- **Lauf n_r2** (= Abnahme-Lauf R2 / v_r2 bytegleich: echter Tod beider Gorillas mit 360 Energie, Schuetze haelt R1 und feuert;
+  Stand 8649df54), rv=0, 337 s: Schuss F6263 (mg 43 -> 42, Rueckstoss ac 7), **Pad-Sperre ab F6266**, Rueckstoss laeuft bis
+  zum Bruch, **F6271..F6279 SENKEN** (ac 6), **ab F6280 neutral** (mo 200); die Abzuege F6275..F6277 und F6287..F6289 (pad 8800)
+  feuern nicht mehr (mg bleibt 42; Original: gekapptes Wort, kein Bit 0x100 im HOLD). `[scd F6296] Cut_chg(8)` (30 Bilder nach
+  der Sperre, gleiches Bild wie vorher), **0 Bilder in Cut 8 mit mo 215** (vorher F6296..F6306 = 11), F6307 TURN wie vorher.
+  Heranwinken unveraendert: `F6504 John winkt heran: RBJ ROOM1171 Record 1 Clip 2 geliehen (96 Bilder, 3 Clips)` (nach dem
+  Merge mit Ks rbj_resolve_slot). Bilder `J_belege/nb3_m1_vorher_r2_F6280-6308.png` (vorher: F6297..F6306 Arm mit Pistole auf
+  John) und `J_belege/nb3_m1_nachher_r2_F6264-6308.png` (nachher: F6268 Balken, F6271..F6280 Senken, F6297..F6308 Elza neutral
+  John zugewandt).
