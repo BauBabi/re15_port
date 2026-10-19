@@ -462,7 +462,8 @@ Musikwechsel, kein Raumwechsel), Rest unveraendert.
   "Elza, over here!", Aufnahmen room2001/main00..05) fuehrt nicht mehr durch 10B1, sondern ueber den Keller (ROOM11B1 Slot 5
   bzw. ROOM11D1 Slot 1 -> ROOM1261); (3,0x41) setzt die Szene vor dem Deckel selbst (sub04 @0x01962), ROOM2001 sub00
   @0x0179A `21 03 41 01` Ck(3,0x41)==1 -> @0x0179E Sce_em_set John. Diesen Umweg habe ich nicht gemessen.
-- Fremder Riegel: siehe 8.10 (integration_r38_wasser, Lauf elza10b1_tuer).
+- Fremde Riegel: siehe 8.10 (integration_r38_wasser Lauf elza10b1_tuer entfaellt; integration_r39_hund1121 Spielstaende mit
+  4:0xF0). Spur Q: Spielstaende mit 9:97 brauchen ebenfalls 4:0xF0.
 - Die Sprachdateien fuer die Tuer-Saetze liegen noch nicht; ohne Datei steht im debug.log
   "[voice] ROOM1041 msg 41: keine Aufnahme ..." und die Zeile bleibt stumm (Riegel halten auch mit Datei).
 
@@ -494,3 +495,21 @@ Bau: `local_build.sh configure` + `build` -> LOCAL-BUILD-OK (nach jeder neuen Da
   ins Wasser in leon10b0_tuer), Kopf- und Registrierungskommentar nachgezogen. NACHHER:
   `ctest --test-dir re15_port/build -R "^integration_r38_wasser$" --timeout 1800 --output-on-failure`
   -> "100% tests passed, 0 tests failed out of 1".
+- Integration der beruehrten Module (Leons MAIN01-Fenster, 1141 J/F, Stimmen A, Elza-Toene, Tagebuch/Karte, Funk 10F1,
+  Heliport 1171 -> 10B1 K/I, Parkplatz O, Hund R, alle P-Riegel):
+  `ctest --test-dir re15_port/build -R "integration_r39_johnruf1041|integration_r39_hund1121|integration_r39_parkplatz11c0_|integration_r39_heliport1171|integration_r38_heliport1171|integration_r35_cut10f0|integration_r39_dining1141|integration_r38_dining1141|integration_r38_elzatoene|integration_r38_tagebuch|integration_r39_elza_karte|integration_r39_stimmen|integration_r39_funk10f1" --timeout 3600 --output-on-failure -j 4`
+  -> "98% tests passed, 1 tests failed out of 43" (1249,50 s). Rot nur integration_r39_hund1121 Teil E - ein
+  INTEGRATIONSBEFUND P+R (nicht aus dieser Nachbesserung): debug.log `[johnruf] F0 ROOM1061 John gerettet ((4,0xF0)=0,
+  (4,0xF2)=0): Bit 97 = 0`, hund.log `F40 [hund1121] ROOM1121 aus: (9,97)=0` (P_belege/nb1_hund1121_E_vorher_*). Die
+  Spielstaende der Spur R setzen Bit 97 OHNE (4,0xF0)=1; im Spiel setzt nur RUF1041 Bit 97, und das laeuft nur mit
+  (4,0xF0)=1 (ROOM1021 sub02 @0x01FE0); (4,0xF0)=0 + (4,0xF2)=0 ist Johns Rettung (ROOM1141 sub02 @0x00C18, sub01
+  @0x00C0C) - die Regel der Abnahme 0 ist richtig, der Spielstand war es nicht. Teil A/C bestanden nur, weil der Hund-Installer
+  im Raumaufbau vor dem ersten Tick scharf schaltete. Aenderung (12f9f493): Laeufe A, C, E der Spur R tragen 4:0xF0 (Kommentar
+  im Test). Danach `ctest --test-dir re15_port/build -R "^integration_r39_hund1121$" --timeout 1800 --output-on-failure`
+  -> "100% tests passed, 0 tests failed out of 1"; die anderen 42 waren gruen (darunter integration_r38_dining1141_s 751,61 s,
+  integration_r39_dining1141_d 421,19 s, integration_r35_cut10f0 298,95 s, integration_r39_heliport1171_weg 76,51 s).
+- Pflichtgruppe am Endstand (nach beiden Riegel-Anpassungen), ein Lauf:
+  `ctest --test-dir re15_port/build -R "integration_r39_johnruf1041|integration_r39_hund1121|integration_r39_parkplatz11c0_|integration_r38_wasser" --timeout 3600 --output-on-failure -j 4`
+  -> "100% tests passed, 0 tests failed out of 17" (548,83 s; enthaelt integration_r38_wasserzombie ueber den Ausdruck).
+- Hinweis an die Integration (Spur Q, parallel): Riegel, die die Panikphase per Spielstand herstellen, brauchen 9:97 UND
+  4:0xF0 - sonst loescht die Rettungs-Regel Bit 97 im ersten Spielbild (genau der Befund von R Teil E).
