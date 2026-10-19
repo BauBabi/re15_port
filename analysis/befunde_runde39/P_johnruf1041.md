@@ -379,3 +379,73 @@ Satz an der Tuer 1041 -> 1031 / 1051 -> 10A1 (NUTZER-VORGABE "I have to rescue J
 - Stimme: MESSAGE-Saetze reihen im Port keine Stimme ein (scd_vm.c re15_scd_show_message); fuer die Nutzer-Zeilen gilt die
   Ordnerregel ueber denselben Haken wie Spur O (11C0 msg 40): synchro/STAGE1/room1041/main41.wav, synchro/STAGE1/room1051/
   main40.wav, sobald sie liegen.
+
+### 8.3 Umsetzung
+Dateien (NEU): `re15_port/include/re15_tuersperre_r39.h` (alle Konstanten mit Beleg), `re15_port/engine/src/tuersperre_r39.c`,
+`re15_port/tools/r39_johnruf/tuersperre_bauen.py` -> `re15_port/engine/src/gen/tuersperre_r39.inc` (Texte, Programm
+SZENE10B1, FNV-Anker; `--pruefen` vergleicht). Haken: `engine/src/johnruf_r39.c` (eigene Datei: Installer ruft
+`re15_tuersperre_r39_install` vor allen Raum-Weichen, der Spielbild-Tick zuerst `re15_tuersperre_r39_tick`),
+`engine/src/scd_vm.c` je 1 Zeile (Include; op_evt_exec hinter Spur O; re15_scd_show_message hinter Spur O), alle mit
+"Runde 39 Spur P". KEIN Asset-Patch, keine neue Datei unter shared_assets/ oder synchro/.
+| Sperre | Raum / Slot (Beleg) | Bedingung (Form) | Text |
+|---|---|---|---|
+| 1041 -> 1031 | ROOM1041 Slot 1, main00 @0x010B8, Ziel 0x03 (@0x010CF) | Bank 9 Bit 97, je Spielbild VOR dem AOT-Scan (ROOM11B1 sub01 @0x0119C/@0x011C0) | msg 41 "I have to rescue John! / He is in danger!" |
+| 1051 -> 10A1 | ROOM1051 Slot 4, main00 @0x00B5A, Ziel 0x0A | Bank 9 Bit 97, je Spielbild | msg 40, derselbe Satz |
+| 10B1 Kanaldeckel -> 1261 | ROOM10B1 Slot 1, main00 @0x016F2, Ziel 0x26 | immer (ROOM11A1 main00 @0x00FBC ohne Bedingung) | msg 40 = RE2 ROOM21A0 msg 4 " / The lid is firmly closed. [Seite] It's impossible for me / to open it." |
+Satzform jeder Sperre = Aot_reset(slot, sce 1, sat 0x31, msg, Maske 0xffff, 0) (`re15_aot_retype`, LAB_80040738); Ziel-
+Raum/Cut bleiben im Satz (nur sce + 3 Halbworte). Gesperrt wird nur, wenn der Slot noch die ausgelieferte Tuer ist und der
+FNV-Anker des Door_aot_set (bei 10B1 zusaetzlich sub01..sub04 @0x01812..@0x01A92) stimmt. Leon (1040/1050/10B0) wird nie
+angefasst (Tabelle nur 0x1041/0x1051/0x10B1). Stimme: 1041/41 und 1051/40 reihen im MESSAGE-Weg `SCD_AUDIO_VOICE_ON` mit der
+Id ein (Ordnerregel, Muster Spur O); der Deckel-Text bleibt stumm wie in RE2.
+Programm SZENE10B1 (22 B, Listing in gen/tuersperre_r39.inc): `18 04` Gosub sub04 (Szene unveraendert, ihr Aot_on @0x01A8E
+trifft den gesperrten Slot -> Text) | `02 00` Evt_next+Nop (ROOM1051 sub02 @0x00CCC; die VM parkt unter RE15_PAUSE_SCD, bis der
+Text zu ist, FUN_8003f038 @0x8003f040-4c) | `22 02 07 00` `22 01 1b 00` `3c 01` `2e 01 00 00` `42 00` (ROOM1051 sub02
+@0x00D90..@0x00D9F: Pad frei, Balken weg, Cut_auto, Work_set(1,0), Plc_ret) | `01 00` Evt_end (@0x00DA2). Noetig, weil sub04
+@0x01966 Set(2,7)=1 / @0x0196A Set(1,0x1B)=1 setzt und nie loest (gemessen: unit tuerszene "ohne Huelle").
+Dateizahl: 3 neue Quelldateien + Werkzeug + gen-Datei; Haken scd_vm.c +5 Zeilen (3 Stellen), johnruf_r39.c +3.
+
+### 8.4 Messung nachher (echte exe, Elza, Spielstand + CONTINUE, echte Tueren; Auszuege P_belege/nb1_nachher_*.txt)
+| Lauf | Zustand | debug.log | Befund |
+|---|---|---|---|
+| n3 | 1041, Bit 97 = 1 | `[tuersperre] F0 ROOM1041: Panikphase (Bit 97) -> Tuer Slot 1 -> Text msg 41`, an der Tuer `[msgtext] room=1041 id=41 "I have to rescue John! He is in danger!"`, `[voice] ROOM1041 msg 41: keine Aufnahme (synchro/STAGE1/room1041/main41.wav)`; kein DOOR FIRE, zweite Aktion schliesst den Text, Elza frei (Wegplan bis Befehl 12) | Satz statt Raumwechsel |
+| n3o | 1041, Bit 97 = 0, (4,0xF0) = 0 (wie nach der Rettung) | `[aot] DOOR FIRE slot=1 ... target_cut=8` -> `loaded room1031.rdt`, keine [tuersperre]-Zeile | Tuer normal |
+| n4 | 1051, Bit 97 = 1 | `ROOM1051: Panikphase ... Slot 4 -> Text msg 40`, `[msgtext] room=1051 id=40 "I have to rescue John! He is in danger!"`, `[voice] ROOM1051 msg 40: keine Aufnahme (synchro/STAGE1/room1051/main40.wav)` | Satz statt Raumwechsel |
+| n4o | 1051, Bit 97 = 0 | `DOOR FIRE slot=4` -> `loaded room10a1.rdt` | Tuer normal |
+| n6a | 10B1 vor der Szene | `ROOM10B1: Kanaldeckel Slot 1 -> Text msg 40 (immer zu)`, `[msgtext] room=10b1 id=40 " The lid is firmly closed.It's impossible for me to open it."`, kein Raumwechsel | zu |
+| n6b | 10B1 mit (3,0x82) (Sherry-Szene) | `Evt_exec sub04 -> Programm SZENE10B1`, msg 0..5 mit main00..05.wav, Text msg 40 in Bild 733, nach dem Schliessen (RE15_PRESS) Wegplan: `FLAG (2,7) = 0`, `FLAG (1,27) = 0`, pm=0, Elza laeuft (-20303,1579) -> (-20683,2792); kein `loaded room1261.rdt` | zu, Steuerung zurueck |
+| integration_r39_johnruf1041_a (echter Weg 1021 -> 1041) | Beginn der Phase in 1041 | `F511 Karte zu ... Set(9,97)=1` -> im SELBEN Bild `F511 [tuersperre] ROOM1041: Panikphase (Bit 97) -> Tuer Slot 1 -> Text msg 41` und `Panik-Musikfenster auf` + `entry=FF01 -> MAIN01`; Elza geht zur Tuer nach 1031: `F968 ... msg 41 "I have to rescue John! He is in danger!"`, kein `loaded room1031.rdt`; danach Treppe -> 1061 (MAIN01 laeuft durch) | "beim Musikwechsel" belegt |
+Bilder: `P_belege/nb1_nachher_tuertexte_1041_1051.png` (Textkasten an beiden Tueren, Erzaehlform ohne Sprecherkopf),
+`P_belege/nb1_nachher_n6b_deckeltext.png` (Ende der Sherry-Szene: John am Deckel, Text Seite 1/2, danach Balken weg).
+
+### 8.5 Tests (Nachbesserung 1)
+Neu in `tests/unit/test_r39_johnruf1041.c` (registriert in probes/r39_johnruf1041.cmake; `room_boot` setzt jetzt
+`g_room_rdt` wie der Spielweg, damit die Anker greifen):
+| Test | misst |
+|---|---|
+| unit_r39_johnruf1041_tuertexte | Satz = Nutzer-Wortlaut, 1041 = 1051, Erzaehlform ohne Sprecherkopf; 10B1-Text = RE2 ROOM21A0 msg 4 zur Laufzeit aus der RE2-Datei umkodiert (Tabelle Eintrag 4 -> @0x02963); Ids 41/40/40 hinter den Original-Ids (1041: 4, 1051: 6, 10B1: 6); Stimme nur 1041/41 und 1051/40 |
+| unit_r39_johnruf1041_tuer1041 | ohne Phase Aktion -> Raumwechsel ROOM1031; in der Phase Slot 1 = MESSAGE 41 (sat 0x31, Maske 0xffff, Ziel bleibt), Aktion -> Text + Stimme, kein Raumwechsel; RUF1041 setzt Bit 97 -> Tuer im selben Spielbild Text (Bild 543 = 543), 0 freie Bilder mit offener Tuer; Leon 1040 Tuer |
+| unit_r39_johnruf1041_tuer1051 | dasselbe fuer Slot 4 / ROOM10A1; Leon 1050 (Ada gerettet, Bit 97 = 1) Tuer |
+| unit_r39_johnruf1041_tuer10b1 | vor der Szene / Szene steht an / nach der Szene (Sherry-Suche) / Sherry-Flags + Bit 97: Deckel = Text 40, Leiter Slot 0 -> 0x17 bleibt Tuer, Aktion -> Text, kein Raumwechsel, keine Stimme; bei (3,0x82) Evt_exec sub04 -> Huelle; Leon 10B0 -> ROOM1260 |
+| unit_r39_johnruf1041_tuerszene | Programm bytegleich (Gosub sub04 + ROOM1051 sub02 @0x00CCC/@0x00D90..@0x00D9F/@0x00DA2); MESSUNG ohne Huelle: Text kommt, aber (2,7)=1/(1,0x1B)=1 bleiben, Elza eingefroren; mit Huelle: Text statt Raumwechsel, danach (2,7)=0, (1,0x1B)=0, frei, Programm zu Ende, (3,0x83)/(3,0x41) gesetzt |
+Neu `tests/integration/test_r39_johnruf1041_tuer.cmake` (TEIL t1041, t1041o, t1051, t1051o, t10b1v, t10b1s, t10b1n; exe-Kopie
+`re15_pc_r39pt_<teil>_<zufall>`, eigener Laufordner, RE15_*-Umgebung nicht geerbt, Stimmen-Pruefung haelt auch, wenn die
+Aufnahme spaeter liegt). `integration_r39_johnruf1041_a` macht jetzt den Umweg ueber die Tuer nach 1031 (Text nach dem
+Musikwechsel, kein Raumwechsel), Rest unveraendert.
+- `ctest --test-dir re15_port/build -R "integration_r39_johnruf1041_tuer|integration_r39_johnruf1041_a$" --timeout 1800 --output-on-failure -j 4`
+  -> "100% tests passed, 0 tests failed out of 8" (t1041 ~30 s, t10b1s 67,75 s, a 82,93 s).
+- Unit-Teile direkt: tuertexte 9/9, tuer1041 9/9, tuer1051 7/7, tuer10b1 6/6, tuerszene 6/6; die alten Teile texte 2, programme 13,
+  stimme 9, xa 6, ablauf 16, musik 16, ruf1131 7, leon 2 - alle 0 Fehler.
+
+### 8.6 Je Mangel
+- **Mangel 1 (Tuer 1041 -> 1031 / 1051 -> 10A1 in der Panikphase).** Ursache: neue Nutzer-Vorgabe (Nachtrag 12), bisher keine
+  Sperre. Vorher v3/v4: Raumwechsel in der Phase. Beleg: Slots @0x010B8/@0x00B5A, Form ROOM11B1 sub01 @0x011C0 (je Bild unter
+  Flag, Elza-Raum), Text-Form RE1.5 ROOM1090 msg 7 / RE2 ROOM4040 msg 9 (Erzaehlform, kein Sprecherkopf an einem MESSAGE-Satz).
+  Aenderung: tuersperre_r39.c (Tick + Installer), Texte 41/40. Nachher: n3/n4 + integration t1041/t1051 Text, kein Raumwechsel;
+  n3o/n4o + t1041o/t1051o ohne Phase Raumwechsel; integration a: Sperre im Bild des Musikwechsels (F511), Text an der Tuer F968.
+- **Mangel 2 (ROOM10B1 immer zu).** Ursache: neue Nutzer-Vorgabe. Vorher v6a/v6b/v6c: der Kanaldeckel fuehrt in jedem Zustand
+  nach ROOM1261, die Sherry-Szene oeffnet ihn selbst (Aot_on @0x01A8E). Welche Tuer: Slot 1 (einziger Uebergang, der als Tuer
+  dient und sich in der Sherry-Szene oeffnet; Slot 0 = Leiter zum Dach, bleibt). Beleg: Form ROOM11A1 main00 @0x00FBC, Text RE2
+  ROOM21A0 msg 4 @0x02963 (geschlossener Deckel), Aot_on -> MESSAGE @0x8004082c/@0x80043084, Szenen-Ende ROOM1051 sub02.
+  Aenderung: Sperre im Raumaufbau + Huelle SZENE10B1. Nachher: n6a/n6b + integration t10b1v/s/n: Text, kein Raumwechsel, nach
+  der Szene Steuerung zurueck; Leon 10B0 unveraendert (unit).
+- **Mangel 3 (Merge + Bau + Riegel).** 57e5f920, configure/build LOCAL-BUILD-OK; gezielte Laeufe Abschnitt 8.7.
