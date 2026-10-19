@@ -15,8 +15,10 @@
  * Spiel, Bilder in der Reihenfolge von platform/pc/main.c, RE2-Gegnerbaenke wie die exe), Elza = g_gameflow.character 4.
  *
  * Teile (argv[1]):
- *   zensus    Quell-Records (ROOM10E1 @0x00D56.. Tot-Bits 0xe0..0xe3) = Konstanten; die Kopie-Bits (Zone 7) kommen in KEINEM
- *             Sce_em_set von STAGE1-3 vor und nicht in Leons Kopien; die Zeilen des 1031-Programms = RDT-Bytes ROOM1031 sub08
+ *   zensus    Quell-Records (ROOM10E1 @0x00D56.. Tot-Bits 0xe0..0xe3, ROOM1071 @0x015CA.. 0xc6..0xca) = Konstanten; die 16
+ *             Kopie-Bits (Zone 7) kommen in KEINEM Sce_em_set von STAGE1-3 vor, die 11 Elza-Bits nicht in Leons Kopien, die 5
+ *             1031-Cut-7-Bits = Leons Vorlage 6 (Nachtrag 12); Raum-Paare 1060/1061, 10E0/10E1, 10C0/10C1, 1070/1071 byte-gleich;
+ *             Programm L (Leon 1060) + Weiche; die Zeilen des 1031-Programms = RDT-Bytes ROOM1031 sub08
  *             (@0x02858/@0x0286E/@0x0287A/@0x02882..), sub06/07/09 = ROOM1030; ROOM1041 = ROOM1040 (Rolltor-Szene sub08,
  *             Rolltor-Objekt, Schalter-Rechteck, Limit); Programm G traegt die 1041-sub08-Zeilen woertlich; Kamera-Saetze =
  *             RID-Bytes; Tuer-Slot 20 / Ereignis 30 / Bank-5-Bits 28/29/30 frei.
@@ -32,14 +34,15 @@
  *   nach1061  Nachspawn: die 10E1-Kopien stehen an der Westseite (moeglichst weit weg vom gemessenen Ankunftspunkt der
  *             Treppe), gehalten solange die Spielerin unten ist (200 Bilder Etage 0, Weg 0), frei auf Etage 4 (Abstand
  *             >= 4000 beim Freigeben), danach kommen sie naeher; tote Kopien erscheinen nicht.
- *   nach1031  Nachspawn ROOM1031 nach der Montage: 3 Kriecher, keine Kopie; ohne (9,95) nichts.
+ *   nach1031  Nachspawn ROOM1031 nach der Montage: 3 Kriecher + die lebenden 1071-Kopien an Leons Nachspawn-Lagen (Nachtrag 12),
+ *             keine 1061-/1041-Kopie; ohne (9,95) nichts.
  *   durch1041 Nachtrag 11 (+ H1-Entscheid: nur bei (9,97)=1, sonst nichts):
  *             Betreten von 1041 durch die 1061-Tuer mit lebenden 1061-Kopien -> Rolltor-Durchbruch (erstes Bild
  *             Cut 1, Elza auf Leons Parkplatz, Rolltor faehrt hoch, die umgezogenen Kopien kommen durch und naeher an die
  *             Kamera, HP 100, danach Elza an ihrem Eintrittspunkt mit Steuerung, Haltebits los); naechstes Betreten:
  *             kein zweiter Durchbruch, Nachspawn der Durchgebrochenen; Eintritt im Nordteil / alle 1061-Kopien tot: nichts.
  *   ohne      ohne Flanke keine Kette (Bit 97 beim Laden gesetzt = keine Flanke); Leon (Figur 0) mit Flanke und (9,95):
- *             nichts; Modul aus: nichts.
+ *             nichts (Leons Treppenhaus haengt an Leons Kette/(9,73), nicht an Elzas Bits); Modul aus: nichts.
  */
 #if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
 #  define _DEFAULT_SOURCE 1   /* unsetenv (POSIX) unter -std=c11 ohne GNU-Erweiterungen (CMAKE_C_EXTENSIONS OFF); Muster

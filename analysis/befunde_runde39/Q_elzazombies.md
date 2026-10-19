@@ -12,6 +12,10 @@ Lesart des Orchestrators (VERBINDLICH): Elza-Raeume = ROOMxxx1; Ausloeser = stei
 Spur P); Montage-Form wie Leon nach Irons' Tod; Gegner-Verhalten RE2-KI wie bisher; Bit 95 nur, wenn kein Original-/Port-
 Flag reicht.
 
+> STAND NACHBESSERUNG 2 (Nutzer-Nachtrag 12, Abschnitt 9): Elza bekommt den 1071-Schritt (1031 Cut 7) WIEDER, zusaetzlich zum
+> 1041-Durchbruch; Leon bekommt den Treppenhaus-Schritt 1060; der 1041-Durchbruch nur mit (9,97). Aussagen wie "ROOM1071 bleibt
+> unberuehrt" in 0a/0b/2.3/3/4.6/5/7 beschreiben den Stand nach Nachtrag 11 und sind durch Abschnitt 9 ersetzt.
+
 ## 0a. NUTZER-NACHTRAG 11 (AUFTRAG.md, vom Orchestrator um 00:24 in diesen Zweig committet: cceb31ef/50e00d74)
 > "Ich korrigiere, die Zombies sollen nicht in ROM 1071 noch durchbrechen, sondern dann noch wie bei leon im ROOM 1041."
 
