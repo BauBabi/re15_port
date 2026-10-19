@@ -5,7 +5,8 @@ cmake_minimum_required(VERSION 3.16)
 # Dossier analysis/befunde_runde39/T_titelversion.md. Nutzer (AUFTRAG.md, Nachtrag 14): "bei dieser und zukuenftig
 # neuen Versionen passe mir bitte die Version im Titelscreen an. Entferne das bestehende."
 #
-# Lauf: Titelabzug RE15_TITLE_SHOT bei Bild 150 (RE15_TITLE_SHOT_AF=150), Fensterskala 1 (320x240), ohne Intro/Ton,
+# Lauf: Titelabzug RE15_TITLE_SHOT bei Bild 600 (RE15_TITLE_SHOT_AF=600: die Einblende dauert 32 Titel-Ticks = 1,07 s,
+# bei VSync bis 560 Hz sicher vorbei), Fensterskala 1 (320x240), ohne Intro/Ton,
 # Ende per RE15_INV_SHOT (Bild 34 im Spiel). Danach:
 #   - debug.log traegt "[titel_r39] alte Beschriftung entfernt: 929 Pixel; neu "<Anzeige>" (RE15_VERSION "<VERSION>")"
 #     -> der Haken in render_pc.c lief, mit der von CMake bestimmten Version
@@ -25,6 +26,15 @@ if(NOT EXISTS "${RE15_PC_EXE}" OR NOT EXISTS "${PRUEF_TOOL}")
     message(FATAL_ERROR "${_tag}: exe/Pruefwerkzeug fehlt ('${RE15_PC_EXE}' / '${PRUEF_TOOL}')")
 endif()
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+
+# Ohne echte GPU (Linux-Release-Container: Videotreiber offscreen, Mesa-GL, keine Bildrate) ist der Bildvergleich nicht
+# aussagekraeftig (gemessen 2026-10-19: Titel bei Bild 150 noch in der Einblende, 23325 Abweichungen ausserhalb des
+# Kastens) - er wird SICHTBAR uebersprungen wie in test_r30_titel_puls.cmake; die Engine-Pruefungen (Protokollzeile mit
+# Version und 929 Pixeln) bleiben Pflicht. RE15_OHNE_GPU liest die exe nicht - es wird VOR dem Leeren gelesen.
+set(_ohne_gpu 0)
+if(DEFINED ENV{RE15_OHNE_GPU} AND NOT "$ENV{RE15_OHNE_GPU}" STREQUAL "" AND NOT "$ENV{RE15_OHNE_GPU}" STREQUAL "0")
+    set(_ohne_gpu 1)
+endif()
 
 # Keine RE15_*-Variablen des Aufrufers erben (VERTRAG Runde 39 Abschnitt 2).
 execute_process(COMMAND "${CMAKE_COMMAND}" -E environment OUTPUT_VARIABLE _umg)
@@ -46,7 +56,7 @@ file(COPY_FILE "${RE15_PC_EXE}" "${_exe}")
 
 re15_start_spiel(_rv 180
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 SDL_AUDIODRIVER=dummy RE15_WINDOW_SCALE=1
-    RE15_TITLE_SHOT=titel.bmp RE15_TITLE_SHOT_AF=150 RE15_INV_SHOT=ende34.bmp
+    RE15_TITLE_SHOT=titel.bmp RE15_TITLE_SHOT_AF=600 RE15_INV_SHOT=ende34.bmp
     "${_exe}")
 file(REMOVE "${_exe}")
 if(NOT EXISTS "${WORKDIR}/titel.bmp")
@@ -73,6 +83,12 @@ if(NOT "${_anzeige}" MATCHES "^Ver\\." OR "${_rest}" MATCHES "NICHT GEZEICHNET")
     message(FATAL_ERROR "${_tag}: neue Zeile nicht gezeichnet ('${_anzeige}'${_rest})")
 endif()
 
+if(_ohne_gpu)
+    message(STATUS "${_tag}: SKIP Bildvergleich (RE15_OHNE_GPU gesetzt - keine echte GPU); Protokollzeile geprueft: "
+                   "'${_anzeige}', RE15_VERSION '${_version}', ${_entfernt} Pixel entfernt")
+    file(REMOVE_RECURSE "${WORKDIR}")
+    return()
+endif()
 execute_process(COMMAND "${PRUEF_TOOL}" pruefen "${WORKDIR}/titel.bmp"
                 RESULT_VARIABLE _prv OUTPUT_VARIABLE _po ERROR_VARIABLE _pe TIMEOUT 120)
 message(STATUS "${_po}")
