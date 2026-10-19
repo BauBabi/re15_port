@@ -520,3 +520,17 @@ Panikphase = "I have to rescue John! He is in danger!" (msg 41 / 40), ausserhalb
 ROOM10B1 fuer Elza immer zu (auch in der Sherry-Szene, danach Steuerung zurueck), Leon unveraendert. Bau LOCAL-BUILD-OK
 ("ninja: no work to do" am Endstand), Unit/Prop/Sonden 889/889, Integration 42/43 + hund1121 nach Testdaten-Fix 1/1,
 Pflichtgruppe 17/17.
+
+### 8.12 Nachbesserung 2 (Orchestrator selbst, 2026-10-19 ab 12:05; Sparmodus, keine weitere Abnahme)
+Grund: Abnahme 1 (P_abnahme_1.md) M1 und M2.
+- M2 (Nachtrag 13: der Tuersatz ist ein einfacher Raumtext wie Leons Tuertexte): der Stimmen-Haken entfaellt ganz
+  (re15_tuersperre_r39_stimme und sein Aufruf in scd_vm.c re15_scd_show_message). 1041 msg 41 und 1051 msg 40 zeigen nur
+  den Text. Die Bitte in 8.9 um synchro/STAGE1/room1041/main41.wav und room1051/main40.wav ist HINFAELLIG - es gibt
+  keine Aufnahme fuer diese Saetze. Riegel: unit tuer1041/tuer1051 (Stimmen mit Id 41/40 = 0 beim echten Tuerdruck),
+  integration t1041/t1051 (kein "[voice] ROOM1041 msg 41:" bzw. "[voice] ROOM1051 msg 40:" im Protokoll).
+- M1 (Softlock): der Kanaldeckel ROOM10B1 ist ZURUECKGESTELLT - kein Eintrag mehr in k_sperren, 10B1 laeuft wie
+  ausgeliefert (die Sherry-Szene oeffnet den Deckel nach ROOM1261, sub04 @0x01A8E 47 01). Begruendung im Code-Kommentar
+  (einseitiger Abstieg ROOM10B1 SCA @0x00EE4, Aufstiegsregel @0x8002d544/@0x8002d548). Die Tests tuer10b1/tuerszene und
+  t10b1v/t10b1s/t10b1n sind nicht mehr registriert (Quelle bleibt fuer die Entscheidung des Nutzers); der Lauf
+  elza10b1_tuer in integration_r38_wasser ist wieder da (Revert von 01e7fb4b). Entscheidung beim Nutzer: welche Tuer
+  in 10B1 gemeint ist bzw. wie Elza nach der Szene weiterkommt.

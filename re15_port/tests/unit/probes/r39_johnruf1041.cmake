@@ -28,7 +28,8 @@ target_compile_definitions(test_r39_johnruf1041 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r39_johnruf1041 PRIVATE m)
 endif()
-foreach(_teil texte programme stimme xa ablauf musik ruf1131 leon tuertexte tuer1041 tuer1051 tuer10b1 tuerszene)
+# tuer10b1/tuerszene (Kanaldeckel 10B1) nicht registriert: zurueckgestellt nach Abnahme 1 M1 (Softlock), tuersperre_r39.c
+foreach(_teil texte programme stimme xa ablauf musik ruf1131 leon tuertexte tuer1041 tuer1051)
     add_test(NAME unit_r39_johnruf1041_${_teil} COMMAND test_r39_johnruf1041 ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r39_johnruf1041_${_teil} PROPERTIES TIMEOUT 300)
@@ -64,7 +65,8 @@ endif()
 #   integration_r39_johnruf1041_tuer_t10b1n  10B1 nach der Szene / Sherry-Suche: Kanaldeckel = Text, kein Raumwechsel
 # (der Beginn der Phase IN 1041 am echten Weg 1021 -> 1041 steht in integration_r39_johnruf1041_a)
 if(TARGET re15_pc AND TARGET probe_r36_elza_karte)
-    foreach(_teil t1041 t1041o t1051 t1051o t10b1v t10b1s t10b1n)
+    # t10b1v/t10b1s/t10b1n nicht registriert: Kanaldeckel 10B1 zurueckgestellt (Abnahme 1 M1, Softlock)
+    foreach(_teil t1041 t1041o t1051 t1051o)
         add_test(NAME integration_r39_johnruf1041_tuer_${_teil}
             COMMAND ${CMAKE_COMMAND}
                 -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

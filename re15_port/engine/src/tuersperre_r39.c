@@ -3,6 +3,8 @@
  * Panikphase, der Kanaldeckel in 10B1 immer). Herleitung und alle Konstanten: include/re15_tuersperre_r39.h; Texte, Szenen-
  * Huelle und Anker mit Listing: engine/src/gen/tuersperre_r39.inc (tools/r39_johnruf/tuersperre_bauen.py); Dossier
  * analysis/befunde_runde39/P_johnruf1041.md Abschnitt 8. Muster: parkplatz_r39.c (Spur O), tuer1060_1040.c (Runde 35 L).
+ * Nachbesserung 2 (Orchestrator): die Saetze sind einfache Raumtexte ohne Stimme (Nachtrag 13); der Kanaldeckel 10B1 ist
+ * zurueckgestellt (k_sperren, Abnahme 1 M1).
  */
 #include "re15_tuersperre_r39.h"
 
@@ -21,7 +23,7 @@
 
 #include "gen/tuersperre_r39.inc"   /* Texte, Programm SZENE10B1, Anker (tuersperre_bauen.py) */
 
-static unsigned s_zaehler[3];       /* 0 Sperren gesetzt, 1 Szenen-Huellen, 2 Stimmen eingereiht */
+static unsigned s_zaehler[3];       /* 0 Sperren gesetzt, 1 Szenen-Huellen, 2 frei (Stimme entfiel, Nachtrag 13) */
 
 #ifdef RE15_PLATFORM_PC
 #define TS_LOG(...) do { fprintf(stderr, "[tuersperre] F%u ", (unsigned)g_engine.frame_count); \
@@ -30,7 +32,7 @@ static unsigned s_zaehler[3];       /* 0 Sperren gesetzt, 1 Szenen-Huellen, 2 St
 #define TS_LOG(...) do { } while (0)
 #endif
 
-/* ============================ Tabelle der drei Sperren ============================ */
+/* ============================ Tabelle der Sperren ============================ */
 typedef struct {
     uint16_t raum;
     uint8_t  slot;
@@ -48,9 +50,11 @@ static const sperre_t k_sperren[] = {
     { RE15_R39P_TS_RAUM_1051, RE15_R39P_TS_SLOT_1051, RE15_R39P_TS_MSG_1051, 0, k_r39p_ts_msg_rettung,
       sizeof k_r39p_ts_msg_rettung,
       RE15_R39P_TS_ANKER_T1051_OFF, RE15_R39P_TS_ANKER_T1051_LEN, RE15_R39P_TS_ANKER_T1051_FNV },
-    { RE15_R39P_TS_RAUM_10B1, RE15_R39P_TS_SLOT_10B1, RE15_R39P_TS_MSG_10B1, 1, k_r39p_ts_msg_deckel,
-      sizeof k_r39p_ts_msg_deckel,
-      RE15_R39P_TS_ANKER_T10B1_OFF, RE15_R39P_TS_ANKER_T10B1_LEN, RE15_R39P_TS_ANKER_T10B1_FNV },
+    /* ROOM10B1 Kanaldeckel (Nachtrag 12c, immer = 1) ZURUECKGESTELLT nach Abnahme 1 M1: der Abstieg vom Dach ist einseitig
+     * (ROOM10B1 SCA @0x00EE4: Zellen 31 @0x01070 und 18 @0x00FD4 nur "hinab", keine Band-1-Zelle "hinauf"; Aufstieg nur mit
+     * Bit 0 @0x8002d544 `andi v0,s0,0x1` / @0x8002d548 `beq v0,zero,0x8002d634`), und Slot 1 ist der einzige Ausgang des
+     * unteren Teils -> ein immer geschlossener Deckel sperrt Elza ein. Ohne Eintrag laeuft 10B1 wie ausgeliefert (sub04
+     * @0x01A8E `47 01`); die Huelle SZENE10B1 bleibt fuer die Entscheidung des Nutzers im Generator (90e50a2a). */
 };
 #define N_SPERREN ((int)(sizeof k_sperren / sizeof k_sperren[0]))
 
@@ -145,21 +149,6 @@ const uint8_t *re15_tuersperre_r39_evt_exec(uint16_t room_id, uint8_t sub_id, co
     TS_LOG("ROOM%04X sub01 @0x01824 Evt_exec sub%02u -> Programm SZENE10B1 (Szene, Deckel bleibt zu, Steuerung zurueck)",
            (unsigned)RE15_R39P_TS_RAUM_10B1, (unsigned)sub_id);
     return k_r39p_ts_szene10b1;
-}
-
-/* ============================ Stimme im MESSAGE-AOT-Weg (Muster parkplatz_r39.c) ============================ */
-void re15_tuersperre_r39_stimme(uint16_t room_id, uint8_t msg_id)
-{
-    const sperre_t *s = sperre_fuer(room_id);
-    if (!s || s->immer || msg_id != s->msg) return;    /* nur die Nutzer-Zeile 1041/1051; Deckel-Text ohne Stimme */
-    scd_audio_event_t vev;
-    memset(&vev, 0, sizeof vev);
-    vev.kind      = (uint8_t)SCD_AUDIO_VOICE_ON;       /* derselbe Weg wie scd_vm.c scd_queue_voice */
-    vev.sample_id = msg_id;
-    scd_audio_queue_push(&vev);
-    s_zaehler[2]++;
-    TS_LOG("ROOM%04X Tuer in der Panikphase -> msg %u \"I have to rescue John! He is in danger!\" (Stimme main%02u.wav)",
-           (unsigned)room_id, (unsigned)msg_id, (unsigned)msg_id);
 }
 
 /* ============================ Pruefhaken ============================ */

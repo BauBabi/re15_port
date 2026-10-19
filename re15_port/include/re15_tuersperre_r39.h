@@ -35,11 +35,11 @@
 #define RE15_R39P_TS_RAUM_1041   0x1041u
 #define RE15_R39P_TS_SLOT_1041   1      /* ROOM1041 main00 @0x010B8 `3b 01 ..` pc[1]; Ziel @0x010CF Raum 0x03 = ROOM1031    */
 #define RE15_R39P_TS_ZIEL_1041   0x03u  /* @0x010B8+23                                                                      */
-#define RE15_R39P_TS_MSG_1041    41     /* Orchestrator Nachbesserung 1 (VERTRAG 1.2: P 1041); Stimme room1041/main41.wav  */
+#define RE15_R39P_TS_MSG_1041    41     /* Orchestrator Nachbesserung 1 (VERTRAG 1.2: P 1041); einfacher Text ohne Stimme */
 #define RE15_R39P_TS_RAUM_1051   0x1051u
 #define RE15_R39P_TS_SLOT_1051   4      /* ROOM1051 main00 @0x00B5A `3b 04 ..` pc[1]; Ziel Raum 0x0A = ROOM10A1            */
 #define RE15_R39P_TS_ZIEL_1051   0x0Au  /* @0x00B5A+23                                                                      */
-#define RE15_R39P_TS_MSG_1051    40     /* Orchestrator Nachbesserung 1; Stimme room1051/main40.wav (Original-Ids 0..5)    */
+#define RE15_R39P_TS_MSG_1051    40     /* Orchestrator Nachbesserung 1; ohne Stimme (Original-Ids 0..5)                   */
 #define RE15_R39P_TS_RAUM_10B1   0x10B1u
 #define RE15_R39P_TS_SLOT_10B1   1      /* ROOM10B1 main00 @0x016F2 `3b 01 ..` pc[1]; Ziel Raum 0x26 = ROOM1261 (Deckel)    */
 #define RE15_R39P_TS_ZIEL_10B1   0x26u  /* @0x016F2+23                                                                      */
@@ -54,22 +54,19 @@
 
 /* ---- Haken -------------------------------------------------------------------------------------------------------- */
 /* Raumaufbau NACH dem Init-Lauf (aus re15_johnruf_r39_install: scd_room_setup.c Blockende + main.c Boot-/CONTINUE-Weg):
- * Texte einsetzen, Sperren pruefen (10B1 immer, 1041/1051 in der Panikphase). */
+ * Texte einsetzen, Sperren pruefen (1041/1051 in der Panikphase; 10B1 zurueckgestellt, tuersperre_r39.c k_sperren). */
 void re15_tuersperre_r39_install(uint16_t room_id);
 /* Je Spielbild (aus re15_johnruf_r39_tick, game_step_common.c VOR dem AOT-Scan): Panikphase begonnen (Set(9,97)=1 in RUF1041,
  * Elza steht in 1041) -> Tuer im selben Raum sofort Text (Form ROOM11B1 sub01 je Bild). */
 void re15_tuersperre_r39_tick(void);
 /* scd_vm.c op_evt_exec: ROOM10B1 sub04 bei gesperrtem Deckel -> Szenen-Huelle SZENE10B1 (Gosub sub04 + Szenen-Ende). */
 const uint8_t *re15_tuersperre_r39_evt_exec(uint16_t room_id, uint8_t sub_id, const uint8_t *orig);
-/* scd_vm.c re15_scd_show_message (MESSAGE-Satz): Nutzer-Zeilen 1041 msg 41 / 1051 msg 40 reihen ihre Stimme ein
- * (Ordnerregel main<ID>.wav, Muster Spur O); der Deckel-Text 10B1 bleibt ohne Stimme (RE2 ROOM21A0 msg 4 ist stumm). */
-void re15_tuersperre_r39_stimme(uint16_t room_id, uint8_t msg_id);
 
 /* ---- Pruefhaken (Riegel, kein Spielverhalten) ---------------------------------------------------------------------- */
 int  re15_tuersperre_r39_anker_ok(unsigned room_id);              /* Tuer-Satz (und fuer 10B1 die Szene) wie ausgeliefert */
 int  re15_tuersperre_r39_gesperrt(unsigned room_id);              /* 1 = Slot des Raums ist gerade der Sperrtext         */
 const uint8_t *re15_tuersperre_r39_text(unsigned room_id, int *out_len);   /* Sperrtext des Raums */
 const uint8_t *re15_tuersperre_r39_szene(int *out_len);                   /* Programm SZENE10B1 */
-unsigned re15_tuersperre_r39_zaehler(int k);   /* 0 Sperren gesetzt, 1 Szenen-Huellen, 2 Stimmen eingereiht */
+unsigned re15_tuersperre_r39_zaehler(int k);   /* 0 Sperren gesetzt, 1 Szenen-Huellen, 2 frei */
 
 #endif /* RE15_TUERSPERRE_R39_H */

@@ -1637,7 +1637,6 @@ void re15_scd_show_message(uint8_t index, uint32_t pause_mask)
     re15_aufschliessen_r36_notice(g_current_room_id, index, RE15_AUF_WEG_AOT);   /* Runde 36 Spur G */
     if (re15_ziel1190_show(index, pause_mask)) return;   /* Runde 36 Spur H: ROOM1190/1191 Scheiben-Text 6/7 */
     re15_parkplatz_r39_stimme((uint16_t)g_current_room_id, index);   /* Runde 39 Spur O: ROOM11C0 msg 40 -> main40.wav (re15_parkplatz_r39.h) */
-    re15_tuersperre_r39_stimme((uint16_t)g_current_room_id, index);  /* Runde 39 Spur P: 1041 msg 41 / 1051 msg 40 -> main41/main40.wav */
     re15_dialog_open_mask((int)index, 0, pause_mask);
     g_scd.message_arg2 = 0;
     g_scd.message_arg3 = 0;

@@ -593,36 +593,8 @@ static void teil_tuertexte(void)
         PRUEF(n1 > 6 && r1[0] == 0x04 && r1[1] == 0x02 && z08 == 1 && z05 == 0 && r1[n1 - 2] == 0x01 && r1[n1 - 1] == 0x00,
               "Erzaehlform `04 02 <Zeile> 08 <Zeile> 01 00` ohne Sprecherkopf (Form ROOM1090 msg 7 @0x28E6, 1141/11C0-Sperren)");
     }
-    /* 10B1: RE2 ROOM21A0 msg 4 @0x02963 Zeichen fuer Zeichen, Steuercodes in RE1.5-Form */
-    {
-        char p[700];
-        snprintf(p, sizeof p, "%s/ROOM21A0.RDT", RE15_RE2_RDT_DIR);
-        size_t sz = 0;
-        uint8_t *re2 = slurp(p, &sz);
-        uint8_t soll[128];
-        int ns = 0, ok_tab = 0;
-        if (re2 && sz > 0x2A00) {
-            uint32_t ms = (uint32_t)(re2[8 + 14 * 4] | re2[9 + 14 * 4] << 8 | re2[10 + 14 * 4] << 16 | (uint32_t)re2[11 + 14 * 4] << 24);
-            if (ms + 10 < sz) ok_tab = (ms + (uint32_t)(re2[ms + 8] | re2[ms + 9] << 8)) == 0x02963u;   /* Tabelle Eintrag 4 */
-            for (size_t i = 0x02963; i < sz && ns < 120; ) {
-                const uint8_t b = re2[i];
-                if (b == 0xFA)      { soll[ns++] = 0x04; soll[ns++] = re2[i + 1]; i += 2; }
-                else if (b == 0xFC) { soll[ns++] = 0x08; i += 1; }
-                else if (b == 0xFD) { soll[ns++] = 0x02; soll[ns++] = re2[i + 1]; i += 2; }
-                else if (b == 0xFE) { soll[ns++] = 0x01; soll[ns++] = 0x00; break; }
-                else if (b == 0x01) { soll[ns++] = 0x57; i += 1; }
-                else                { soll[ns++] = b; i += 1; }
-            }
-        }
-        free(re2);
-        t[0] = 0; if (d && n3 > 0) re15_msg_decode_text(d, (size_t)n3, t, sizeof t);
-        printf("    10B1: \"%s\" (%d B)\n", t, n3);
-        PRUEF(ok_tab, "RE2 ROOM21A0 Nachrichtentabelle Eintrag 4 -> @0x02963 (Deckel, den die Figur nie oeffnen kann)");
-        PRUEF(ns == n3 && d && !memcmp(d, soll, (size_t)ns),
-              "10B1-Text = RE2 ROOM21A0 msg 4 (fa 02 -> 04 02, fc -> 08, fd 00 -> 02 00, Punkt 01 -> 57, fe 00 -> 01 00)");
-        PRUEF(strstr(t, "The lid is firmly closed.") && strstr(t, "It's impossible for me to open it."), "Wortlaut \"The lid is "
-              "firmly closed. / It's impossible for me / to open it.\"");
-    }
+    /* 10B1 (Kanaldeckel) zurueckgestellt (Abnahme 1 M1, Softlock): kein Eintrag, kein Text */
+    PRUEF(d == NULL && n3 == 0, "10B1: keine Sperre eingetragen (Kanaldeckel zurueckgestellt, Abnahme 1 M1)");
     PRUEF(RE15_R39P_TS_MSG_1041 == 41 && RE15_R39P_TS_MSG_1051 == 40 && RE15_R39P_TS_MSG_10B1 == 40,
           "Ids 1041 = 41, 1051 = 40 (Orchestrator Nachbesserung 1), 10B1 = 40");
     {   /* Ids liegen hinter den Original-Nachrichten der Raeume */
@@ -632,20 +604,6 @@ static void teil_tuertexte(void)
         if (rdt_laden(0x10B1) == 0) mb1 = rdt_nachrichten();
         PRUEF(m41 > 0 && m41 <= RE15_R39P_MSG_SATZ && m51 > 0 && m51 < RE15_R39P_TS_MSG_1051 && mb1 > 0 && mb1 < RE15_R39P_TS_MSG_10B1,
               "keine Kollision mit Original-Ids (ROOM1041 %d, ROOM1051 %d, ROOM10B1 %d Nachrichten)", m41, m51, mb1);
-    }
-    /* Stimme: nur die Nutzer-Zeile 1041/41 und 1051/40 (Ordnerregel), der Deckel-Text nicht */
-    {
-        scd_audio_event_t e;
-        while (scd_audio_queue_pop(&e)) {}
-        int ids[4] = { 0 }, n = 0;
-        re15_tuersperre_r39_stimme(RE15_R39P_TS_RAUM_1041, RE15_R39P_TS_MSG_1041);
-        re15_tuersperre_r39_stimme(RE15_R39P_TS_RAUM_1051, RE15_R39P_TS_MSG_1051);
-        re15_tuersperre_r39_stimme(RE15_R39P_TS_RAUM_10B1, RE15_R39P_TS_MSG_10B1);
-        re15_tuersperre_r39_stimme(RE15_R39P_TS_RAUM_1041, RE15_R39P_MSG_SATZ);
-        re15_tuersperre_r39_stimme(0x1040, RE15_R39P_TS_MSG_1041);
-        while (scd_audio_queue_pop(&e)) if (e.kind == SCD_AUDIO_VOICE_ON && n < 4) ids[n++] = e.sample_id;
-        PRUEF(n == 2 && ids[0] == RE15_R39P_TS_MSG_1041 && ids[1] == RE15_R39P_TS_MSG_1051,
-              "Stimme eingereiht nur fuer 1041/41 und 1051/40 (main41.wav/main40.wav), nicht fuer 10B1/40, 1041/40, Leon");
     }
 }
 
@@ -672,8 +630,8 @@ static void teil_tuer1041(void)
           "Panikphase beim Betreten: Slot 1 = MESSAGE msg 41, sat 0x31, Maske 0xffff (Form ROOM11B1 @0x011C0); Ziel bleibt im Satz");
     s_n_st = 0;
     r = tuer_druecken(-20800, -3800, 0);
-    PRUEF(!r.raumwechsel && r.msg == RE15_R39P_TS_MSG_1041 && stimmen_mit_id(RE15_R39P_TS_MSG_1041) == 1,
-          "Panikphase: Aktion -> Text msg %d + Stimme Id 41, KEIN Raumwechsel", r.msg);
+    PRUEF(!r.raumwechsel && r.msg == RE15_R39P_TS_MSG_1041 && stimmen_mit_id(RE15_R39P_TS_MSG_1041) == 0,
+          "Panikphase: Aktion -> Text msg %d ohne Stimme (Nachtrag 13: einfacher Raumtext), KEIN Raumwechsel", r.msg);
     /* Beginn der Phase IN 1041 (RUF1041 -> Set(9,97)=1): Tuer wird im selben Bild Text, nie freies Bild mit offener Tuer */
     elza_1041(1, 0);
     int b97 = -1, offen_frei = 0, gesperrt_bei = -1;
@@ -717,8 +675,8 @@ static void teil_tuer1051(void)
           "Panikphase: Slot 4 = MESSAGE msg 40, sat 0x31, Maske 0xffff");
     s_n_st = 0;
     r = tuer_druecken(16456, -13709, 0);
-    PRUEF(!r.raumwechsel && r.msg == RE15_R39P_TS_MSG_1051 && stimmen_mit_id(RE15_R39P_TS_MSG_1051) == 1,
-          "Panikphase: Aktion -> Text msg %d + Stimme Id 40, KEIN Raumwechsel", r.msg);
+    PRUEF(!r.raumwechsel && r.msg == RE15_R39P_TS_MSG_1051 && stimmen_mit_id(RE15_R39P_TS_MSG_1051) == 0,
+          "Panikphase: Aktion -> Text msg %d ohne Stimme (Nachtrag 13: einfacher Raumtext), KEIN Raumwechsel", r.msg);
     for (int f = 0; f < 60; f++) bild(0, 0);
     PRUEF(slot_ist(RE15_R39P_TS_SLOT_1051, RE15_AOT_TYPE_MESSAGE, RE15_R39P_TS_MSG_1051), "Sperre bleibt in der Phase stehen");
     /* Leon ROOM1050: Slot 4 gehoert dort adaruf_1050.c (vor der Ada-Rettung (3,0xBB)=0) und sperre1050_r37.c ((9,71)..(9,73));
