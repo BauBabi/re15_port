@@ -280,3 +280,14 @@ Laeufe (Bau am Endstand, gezielt, keine volle Suite):
 - Belegte Sprach-/Nachrichten-Nummern: ROOM1041 Id 40 (Elzas Satz, main40.wav), 53..57 (Rufe = room1141/help01..05,
   ohne Text), 59 (Warte-Zeile Karte); ROOM1131 53..57 (Rufe). Eigene Aufnahmen unter room1041/main53..59.wav bzw.
   room1131/main53..57.wav wuerden dort NICHT gespielt.
+
+## 8. Nachbesserung 1 (Abnahme 0 bestanden; Nutzer-Nachtrag 12, 2026-10-19 08:15-08:22)
+Auftrag (Orchestrator, Maengel 1-3): (3) zuerst `git merge master` (a0d7d749: K heliport1171, G karten, O parkplatz11c0,
+R hund1121); (1) Elza-Panikphase (Bit 97): Tuer ROOM1041 -> ROOM1031 und Tuer ROOM1051 -> ROOM10A1 zeigen statt des
+Raumwechsels "I have to rescue John! He is in danger!" (Port-Ids 1041 = 41, 1051 = 40); (2) ROOM10B1: die Tuer ist fuer
+Elza IMMER zu, auch bei der Suche nach Sherry.
+
+### 8.0 Merge (Mangel 3)
+- `git merge master` -> 57e5f920. Konflikte nur an den Blockenden: AUFTRAG.md (Nachtrag 11 aus master; der Hinweis an Spur J
+  aus J bleibt), Include-/Installer-Zeilen in scd_room_setup.c (2), scd_vm.c, platform/pc/main.c, map_hint_common.c - beide
+  Seiten behalten, die Zeile der Spur P jeweils am Ende des Blocks.
