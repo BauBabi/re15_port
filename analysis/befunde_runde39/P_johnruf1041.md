@@ -12,7 +12,12 @@ Punkte:
 - P2: Panikmusik endet bei Johns Rettung (Gorilla-Kampf 1141 vorbei), Bit 97 aus, Rest normal.
 
 ## 0. Stand / Fortschritt
-- (laufend)
+- 2026-10-19 00:5x Baum sauber auf b1309110, Dossier angelegt (9251be13); Pflichtlektuere AUFTRAG/VERTRAG, J_dining1141, H_elza,
+  H_elzatoene (r38), G_tagebuch (r38), K cut10f0 (r35) gelesen.
+- Bau (configure + build LOCAL-BUILD-OK), Messung vorher v1/v2 (2d109eea), RE-Belege (3c360565).
+- Umsetzung 02469270 (Modul + Haken), Messung n1a/n1b/n2, Unit-Riegel, 1131 auf Xa_vol 100 (gemessen, 4699f778),
+  Integrations-Riegel a/b, Riegel der Spur G (Tabellenzahl) nachgezogen (3e772251).
+- Endstand gezielt gruen: P 10/10, Unit/Prop/Sonden 849/850 + Tagebuch 4/4, Integration 19/19 (Abschnitt 5).
 
 ## 1. Messung vorher
 
@@ -87,8 +92,9 @@ RE2 benutzt Xa_vol fuer Stimmen aus dem Off (Bytes aus den RDTs, info/re2leon/PL
     ROOM1020.RDT sub02 @0x01960 `5f 64` Xa_vol(100) + `59 00 0b 00`   (beide: Se_on mit Lage, Sleep 10, dann die Stimme)
     ROOM1010 sub22 Xa_vol(120) vor einem Dialog = zurueck auf Standard (decompiliert info/re2leon/PL0/RDT/room1010/scd/sub22.c)
 => Form fuer die Nutzer-Vorgabe: 1041 "leise" = Xa_vol 50 (kleinster RE2-Wert, 11D0 Else-Zweig), 1131 "schon etwas lauter"
-= Xa_vol 70 (derselbe RE2-Satz, anderer Zweig), 1141 unveraendert Standard 120; vor Elzas Zeile Xa_vol(120) (Form ROOM1010
-sub22). Messung der Wirkung: Abschnitt 4.
+= Xa_vol 100 (ROOM1020 @0x01960: dieselbe XA-Stimme 0x0B, die 11D0 mit 70 spielt; 70 nach Messung zugunsten von 100 verworfen,
+Abschnitt 4.2), 1141 unveraendert Standard 120; vor Elzas Zeile Xa_vol(120) (Form ROOM1010 sub22). Messung der Wirkung:
+Abschnitt 4.
 
 ### 2.4 Leons "panische finale Musik" (nach Irons' Tod, auf dem Weg zu den Gorillas) = MAIN01-Fenster der Runde 35 K
 include/re15_cut10f0.h / engine/src/cut_10f0.c (Nutzer Runde 35: "Bis Leon dann den Parking Lot erreicht hat, soll
@@ -136,7 +142,7 @@ Skripte scratchpad p39/wahl2.ps1, huelle.py.
 | "dann soll bereits von Elza kommen: Oh, no, this is John! ..." + "Kopiere mir auch das voicefile" | Xa_vol 120, Message_on 40 (Text k_r39p_msg40, Stimme synchro/STAGE1/room1041/main40.wav = Kopie main50, liegt seit 02dc7917), Sleep 100 | sub11 @0x02224/@0x02228; RE2 ROOM1010 sub22 Xa_vol(120) |
 | "Dann soll die Karte aufgehen und den ROOM 1141 markieren" | Warte-Zeile 59: Stimmen-Riegel laesst main40 ausreden, dann Kartenhinweis Eintrag 5 (ROOM1041 -> ROOM1141, zeitgesteuert), Faden parkt bis zu | RE2 0x84 @0x800591C4, Form Spur H / Runde 35 K |
 | "Danach soll wieder die gleiche Panische finale Musik kommen wie bei Leon" | Set(9,97)=1, Steuerung zurueck; Tick: Fenster auf (keine Szene) -> Weiche 0xFF01 = MAIN01 in allen STAGE1-Raeumen ausser 1141, Sce_bgm_control Slot 0 gesperrt, Raummusik-Anstoss | 2.4 (cut_10f0.c, Eintrag 0xFF01, 11C0 ausgenommen) |
-| "Wenn wir uns den Flur 1131 naehern, ... please help ... etwas lauter" | Installer 1131: Bit 97=1, (4,0xF0)=1, Ruf in dieser Phase noch nicht -> RUF1131: Sleep 30, Xa_vol 70, help02, Sleep 90, Xa_vol 120 (keine Szene) | 2.3 RE2 Xa_vol 70 @0x01F7A |
+| "Wenn wir uns den Flur 1131 naehern, ... please help ... etwas lauter" | Installer 1131: Bit 97=1, (4,0xF0)=1, Ruf in dieser Phase noch nicht -> RUF1131: Sleep 30, Xa_vol 100, help02, Sleep 90, Xa_vol 120 (keine Szene) | 2.3 RE2 Xa_vol 100 ROOM1020 @0x01960, Wahl 4.2 |
 | "Im ROOM 1141 soll alles so bleiben wie bisher" | 1141 von der Weiche ausgenommen (eigene Musik MAIN16 und Sce_bgm_control der Spur J wie bisher); Rufe in 1141 Standard 120 | Leon-Form 11C0; Runde 38 F |
 | "Die panische Musik hoert auf, sobald man John gerettet hat. Der Rest bleibt normal." | Tick: Bit 97 und (4,0xF0)=0 und (4,0xF2)=0 -> Bit 97 = 0, Fenster zu, Tabellen-Musik | 2.1 sub02 @0x00C18 / sub01 @0x00C0C (+ @0x00C06 MAIN16 Stop) |
 | (3) Wiederbetreten 1041 / Laden in der Phase | Bit 97 sperrt RUF1041; Bit 97 im Spielstand (Bank 9 mit g_game.flags), Tick stoesst MAIN01 nach dem Laden an | Form cut_10f0.c bgm_fenster_tick |
@@ -238,6 +244,11 @@ Laeufe (Bau am Endstand, gezielt, keine volle Suite):
   "99% tests passed, 1 tests failed out of 850" (1370 s); rot nur unit_r38_tagebuch_karte = Pin der Hinweis-Tabelle auf 5
   Eintraege (mein Eintrag 5 ist neu) -> Riegel nachgezogen (3e772251), danach
   `ctest --test-dir re15_port/build -R "unit_r38_tagebuch" --timeout 600` -> "100% tests passed, 0 tests failed out of 4".
+- Integration der beruehrten Module (Pflicht: integration_r39_dining1141_d + integration_r38_dining1141*; dazu Leons
+  MAIN01-Fenster, Sprachpfad, 1041-Schuss, Kartenketten), ctest -R woertlich:
+  `ctest --test-dir re15_port/build -R "integration_r39_dining1141_d|integration_r38_dining1141|integration_r35_cut10f0|integration_r39_stimmen|integration_r38_elzatoene|integration_r38_tagebuch|integration_r39_elza_karte" --timeout 3600 --output-on-failure -j 2`
+  -> "100% tests passed, 0 tests failed out of 19" (darin integration_r35_cut10f0 268,87 s = Leon unveraendert,
+  integration_r38_dining1141_s 667,65 s, integration_r39_dining1141_d 359,26 s, integration_r38_elzatoene_gunshot1041 79,73 s).
 
 ## 6. OFFEN
 - Spur J (parallel, Zweig r39/dining1141): entfernt Elzas Reaktion msg 50 in 1141 (Nachtrag 10). In diesem Baum laeuft sie
@@ -266,3 +277,6 @@ Laeufe (Bau am Endstand, gezielt, keine volle Suite):
   oder 1131 andere Rufe (z.B. help01 "Hello? ... Please help!"), genuegt ein Wort.
 - Paket-Gate: KEINE neue Datei unter shared_assets/ oder synchro/ (Programme als engine/src/gen/johnruf_r39_programme.inc).
 - Bedienhinweis: die Karte schliesst nach ~4 s von selbst oder mit START; danach hast du die Steuerung.
+- Belegte Sprach-/Nachrichten-Nummern: ROOM1041 Id 40 (Elzas Satz, main40.wav), 53..57 (Rufe = room1141/help01..05,
+  ohne Text), 59 (Warte-Zeile Karte); ROOM1131 53..57 (Rufe). Eigene Aufnahmen unter room1041/main53..59.wav bzw.
+  room1131/main53..57.wav wuerden dort NICHT gespielt.
