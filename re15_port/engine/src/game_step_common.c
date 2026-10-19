@@ -2421,6 +2421,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * sie durch re15_enemy_ai_run_all, also steht das Gate hier am Sammel-Aufruf; Wirkung
      * identisch (kein Root laeuft). Der bereits vorhandene, aber NIE verdrahtete Hebel
      * re15_enemy_ai_set_paused bleibt unangetastet (fremde Datei, Batch B1). */
+    { extern void re15_dining_r39_tick(void); re15_dining_r39_tick(); }   /* Runde 39 Spur J: 1141 W-Clip halten, Johns Schuss -
+                                       * VOR der KI wie der Spieler-Resolver, damit der Treffer im selben Bild verarbeitet wird */
     if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_AI)) {
         re15_fenster1120_tick();   /* Runde 35 Spur M: Fenster ROOM1120, vor der KI (re15_fenster1120.h) */
         re15_hund1121_r39_tick();  /* Runde 39 Spur R: Hund ROOM1121, vor der KI (re15_hund1121_r39.h) */

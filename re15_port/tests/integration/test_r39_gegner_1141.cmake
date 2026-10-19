@@ -61,6 +61,14 @@ foreach(_v RE15_AI_FLAVOR RE15_R39_GEGNER_LOG RE15_R39_MESS_SPIELER_HP RE15_FRAM
 endforeach()
 
 # Wegplan = integration_r38_dining1141_d bis zum Gemaelde (1131: Schluessel + Tuer; 1141: Phase H, Gemaelde "ja").
+# Runde 39 Spur J (bei der Integration nachgezogen, Merge in r39/dining1141 Nachbesserung 2, wie oben vorgesehen: "aendert eine
+# spaetere Spur die Szene, ist der Wegplan bei der Integration nachzuziehen"): seit J Nachbesserung 1 (Nutzer-Nachtrag 4) oeffnet
+# das Gemaelde nur den Rolladen; die Szene mit dem Gorilla-Einbruch startet erst am Riegel der Dachtuer (Ereignis 5, main00
+# @0x00A9A -> sub05 @0x00FC8). Darum nach dem Gemaelde wie integration_r39_dining1141_d durch die Rolladen-Oeffnung zum Riegel
+# (Vorwaerts-Punkt (-7250,-1000), Blick +Z), druecken und msg 12 schliessen. Seit Nutzer-Nachtrag 10 ohne Elzas Reaktion in 1141:
+# die Szene endet bei F3438 (Messlauf scratchpad j39n2/e_mess2: pm 0 ab F3438, Elza wieder bei (-7998,-10284); mit Reaktion
+# e_mess F3655, vorher ueber das Gemaelde ~F2700) - Schuetze 65 Bilder nach dem Szenenende wie zuvor, gleiche Kampfdauer
+# 1740 Bilder (START 2760 -> 3500, EXIT 4500 -> 5240).
 file(WRITE "${_dir}/wegplan.txt" "RAUM 1131
 AKTION
 WARTE 60
@@ -86,6 +94,16 @@ WARTE 60
 AKTION
 WARTE 60
 AKTION
+WARTE 200
+GEHE -7350 -8500 150
+GEHE -7350 -7600 150
+GEHE -7250 -1000 80
+BLICK 3072
+AKTION
+WARTE 40
+AKTION
+WARTE 40
+AKTION
 WARTE 120
 ENDE
 ")
@@ -106,8 +124,8 @@ set(_env RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSE
          "RE15_WEGPLAN=${_dir}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt
          RE15_SET_FLAG=3:0x5F,4:0xF0,4:0xF1,4:0xEC,3:0x78 RE15_GIVE=0x43:1,0x04:99,0x15:60 RE15_EQUIP=4
          RE15_DEBUG_JUMP=1131@gp RE15_PLAYER_POS=-1300,-13900,0 RE15_R39_MESS_SPIELER_HP=100
-         "RE15_INPUT_SCRIPT=${_skript}" RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=2760
-         "RE15_EXIT_AT=4500")
+         "RE15_INPUT_SCRIPT=${_skript}" RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=3500
+         "RE15_EXIT_AT=5240")
 re15_start_spiel(_rv 900 ${_env} "${_exe_kopie}")
 file(REMOVE "${_dir}/cap.raw")
 file(REMOVE "${_exe_kopie}")

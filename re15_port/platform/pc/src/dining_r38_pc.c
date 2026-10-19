@@ -180,4 +180,5 @@ int re15_pc_dining_r38_sicht(const re15_actor_t *npc)
 void re15_pc_dining_r38_init(void)
 {
     re15_dining_r38_se_hook = spielen;
+    { extern void re15_pc_dining_r39_init(void); re15_pc_dining_r39_init(); }   /* Runde 39 Spur J: Port-Bank 0x3E */
 }

@@ -38,6 +38,9 @@ if(NOT TEIL)
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+# Runde 39 Spur J Nachbesserung 3 (Abnahme 2 H4, VERTRAG Abschnitt 2): keine RE15_*-Variable des Aufrufers erben.
+include("${CMAKE_CURRENT_LIST_DIR}/r39_dining1141_umgebung.cmake")
+r39j_umgebung_leeren()
 
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_basis "${WORKDIR}/lauf_${_lauf_id}")
@@ -209,6 +212,11 @@ endif()
 # (-7900,-17750) Blick -X; Dachtuer Slot 1 @0x00A7A/@0x00AB2 (z -750..250) von (-7250,-1000) Blick +Z.
 # Kampf: Gorillas eingefroren (RE15_R38F_GORILLAS_STARR) und nach 600 freien Kampfbildern tot (RE15_R38F_GORILLAS_TOT).
 if(TEIL MATCHES "D")
+    # Runde 39 Spur J (AUFTRAG Runde 39, ROOM1141 Punkte 1-9): der Weg D laeuft jetzt mit John durch die Tuer, Klopfen +
+    # help01..05, Elzas Reaktion, Glasbruch, Johns Zeilen 51/52 — ersetzt durch integration_r39_dining1141_d, das auch
+    # die weiter gueltigen Pruefungen dieses Teils traegt (Schluessel, msg 40/41/11, Rolladen-Ton, Tuer-Toene, Cut 7).
+    message(STATUS "r38_dining1141[D]: ersetzt durch integration_r39_dining1141_d (Runde 39 Spur J)")
+elseif(FALSE)
     f_lauf(d ELZA "60#1171" "RAUM 1131
 AKTION
 WARTE 60
@@ -427,7 +435,17 @@ WARTE 60
 AKTION
 WARTE 60
 AKTION
-WARTE 120
+WARTE 200
+GEHE -7350 -8500 150
+GEHE -7350 -7600 150
+GEHE -7250 -1000 80
+BLICK 3072
+AKTION
+WARTE 40
+AKTION
+WARTE 40
+AKTION
+WARTE 60
 GEHE -7900 -15000 150
 GEHE -7900 -17750 80
 BLICK 2048
@@ -437,6 +455,7 @@ AKTION
 WARTE 30
 GEHE -5500 -19000 150
 WARTE 700
+WARTE 900
 GEHE -6000 -12000 150
 GEHE -7350 -7600 150
 GEHE -7250 -1000 80
@@ -445,9 +464,12 @@ WARTE 60
 ENDE
 ")
     set(_env_s "${_nach1021};RE15_GIVE=0x43:1;RE15_DEBUG_JUMP=1131@gp;RE15_PLAYER_POS=-1300,-13900,0;RE15_R38F_GORILLAS_TOT=600;RE15_R38F_GORILLAS_STARR=1;RE15_R38F_SICHT=sicht_")
-    f_lauf(sa ELZA "4450#1141" "${_weg_s}" "${_env_s}" _sa _wpsa)
-    f_lauf(sb ELZA "4450#1141" "${_weg_s}" "${_env_s};RE15_R38F_JOHN_AUS=1" _sb _wpsb)
-    pruef(S _sa "ROOM1141 Phase H: John im Dachgang hinter dem Rolladen")
+    # Runde 39 Spur J: Ende 5800 statt 4450 - Tuer-Auftritt (+~250 Bilder) und Johns Zeilen 51/52 (+~350) verlaengern 1141
+    # (gemessen Lauf n1: Elza an der Dachtuer F5602). Nachbesserung 1 (Nutzer-Nachtrag 4): nach dem Rolladen laeuft Elza
+    # frei, die Szene startet erst am Riegel der Dachtuer (Weg oben: 200 freie Bilder, Gang, Riegel, msg 12).
+    f_lauf(sa ELZA "5800#1141" "${_weg_s}" "${_env_s}" _sa _wpsa)
+    f_lauf(sb ELZA "5800#1141" "${_weg_s}" "${_env_s};RE15_R38F_JOHN_AUS=1" _sb _wpsb)
+    pruef(S _sa "ROOM1141 Phase H: John auf dem Dach (geparkt")   # Runde 39 Spur J Punkt 2 (dining_r39.c)
     pruef(S _sa "MESSHAKEN RE15_R38F_GORILLAS_TOT")
     pruef(S _sa "[r38f-sicht] F")
     pruef(S _sb "[r38f-sicht] F")
@@ -523,6 +545,10 @@ endif()
 # der Abgang, sie steht dann auf Johns (unsichtbarem) Weg — er laeuft ohne Schub durch (Bit 0x2); danach weiter zur
 # Dachtuer -> 1171. Zustands-Log: Cut 7 erst NACH dem Verlassen der Bahn, Elza waehrend Cut 7 unverrueckt, John geparkt.
 if(TEIL MATCHES "A")
+    # Runde 39 Spur J (Punkt 8): nach dem Tod der Gorillas steht Elza fuer Johns Zeilen an einer festen Lage ausserhalb seiner
+    # Bahn (Pos_set wie ROOM1141 sub02 @0x00C32); Warten/Schub dieses Teils prueft unit_r39_dining1141_phase_h.
+    message(STATUS "r38_dining1141[A]: ersetzt durch unit_r39_dining1141_phase_h / integration_r39_dining1141_d (Runde 39 Spur J)")
+elseif(FALSE)
     f_lauf(a ELZA "60#1171" "RAUM 1131
 AKTION
 WARTE 60

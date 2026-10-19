@@ -5,6 +5,7 @@
  * analysis/befunde_runde38/F_dining1141.md. Muster: schluessel_r36.c (Gegenstand, Tuer-Handler RE2 LAB_80051514).
  */
 #include "re15_dining_r38.h"
+#include "re15_dining_r39.h"   /* Runde 39 Spur J: Phase-H-Programme, Port-Bank 0x3E, Texte 50..52 */
 
 #include <stddef.h>
 #include <string.h>
@@ -107,7 +108,9 @@ static int phase_h_bedingung(uint16_t room_id)
 {
     if (room_id != RE15_R38F_RAUM_1141) return 0;
     if (!re15_game_flag_get(RE15_R38F_F0_BANK, RE15_R38F_F0_BIT)) return 0;
-    if (re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT)) return 0;
+    /* Runde 39 Spur J (Nachbesserung 1 N4.1): Phase H dauert, bis Elza die Dachtuer entriegelt ((4,0xC3), sub05 @0x00FD2),
+     * nicht nur bis zum Rolladen ((3,0x6A)) - nach dem Rolladen laeuft sie frei, John klopft weiter. */
+    if (re15_game_flag_get(4, 0xC3)) return 0;
     const int alle = A_ROLL1141 | A_SUB02_05 | A_SUB00 | A_MAIN00;
     return (anker(room_id) & alle) == alle;
 }
@@ -263,6 +266,7 @@ void re15_dining_r38_install(uint16_t room_id)
     else if (room_id == RE15_R38F_RAUM_1021) meldung(RE15_R38F_MSG_1021_LEICHE, k_r38f_msg1021_leiche, sizeof k_r38f_msg1021_leiche);
     else if (room_id == RE15_R38F_RAUM_1131) tuer_1131();
     else if (room_id == RE15_R38F_RAUM_1141) raum_1141();
+    re15_dining_r39_install(room_id, s_phase_h);   /* Runde 39 Spur J: Texte 50..52; Phase H: John auf dem Dach */
 }
 
 /* ============================ Programme ============================ */
@@ -270,8 +274,11 @@ const uint8_t *re15_dining_r38_evt_exec(uint16_t room_id, uint8_t sub_id, const 
 {
     if (room_id == RE15_R38F_RAUM_1141 && sub_id == RE15_R38F_SUB_SZENE && phase_h_bedingung(room_id)) {
         log_f("ROOM1141 sub00 @0x00B02 Evt_exec sub02 -> Klopf-Schleife (Phase H)");
-        return k_r38f_p_haemmern;
+        return re15_dining_r39_haemmern();   /* Runde 39 Spur J: Klopfen + help01..05 + Elzas Reaktion statt HAEMMERN */
     }
+    /* Runde 39 Spur J (Nachbesserung 1 N4.3): ENTRIEGELN39 startet Johns Schuetzen-Faden per Evt_exec sub 30 (ROOM1141 hat
+     * sub00..sub06, die Nummer ist im RDT frei). */
+    if (room_id == RE15_R38F_RAUM_1141 && sub_id == RE15_R39J_SUB_SCHUETZE && !orig) return re15_dining_r39_schuetze();
     return orig;
 }
 
@@ -280,13 +287,21 @@ const uint8_t *re15_dining_r38_ereignis(uint16_t room_id, uint8_t event_id)
     if (room_id == RE15_R38F_RAUM_1140 && event_id == RE15_R38F_1140_EREIGNIS && (anker(room_id) & A_ROLL1140))
         return k_r38f_p_roll1140;
     if (room_id == RE15_R38F_RAUM_1141 && event_id == RE15_R38F_1141_EREIGNIS_GEMAELDE && phase_h_bedingung(room_id)) {
-        /* Gemaelde in Phase H: BEFREIUNG (Rolladen hoch mit Ton, John kommt heraus, Szene, Sperre, Abgang). Die
-         * Tuerbank laedt schon hier den Tonteil der Dachtuer (DOOR1A, gen/tuer_zuordnung.inc S064 ROOM1141 Slot 1)
-         * fuer Johns Abgang am Ende. */
+        /* Runde 39 Spur J (Nachbesserung 1): Gemaelde in Phase H = nur Rolladen hoch mit Ton, danach frei laufen (N4.1).
+         * Merker (5,0x10) SYNCHRON beim Ausloesen: Elzas Reaktion wartet, bis ROLLTOR39 ihn am Ende loescht (M1). */
+        re15_game_flag_set(RE15_R39J_MERKER_BANK, RE15_R39J_MERKER_BIT, 1);
+        log_f("ROOM1141 Gemaelde (Ereignis 6) in Phase H -> Programm ROLLTOR39 (Merker (5,0x10) = 1)");
+        return re15_dining_r39_rolltor();
+    }
+    if (room_id == RE15_R38F_RAUM_1141 && event_id == RE15_R39J_EREIGNIS_RIEGEL && phase_h_bedingung(room_id)) {
+        /* Runde 39 Spur J (Nachbesserung 1 N4.2): Riegel der Dachtuer in Phase H = die Szene (John kommt herein, Kampf,
+         * Gespraech, Abgang). Die Tuerbank laedt den Tonteil der Dachtuer (DOOR1A, gen/tuer_zuordnung.inc S064 ROOM1141
+         * Slot 1) fuer Johns Auftritt und Abgang; die Waffe, die Elza hebt, wird jetzt gewaehlt. */
         { int n = 0; const uint8_t *ton = re15_szl_tuerton(&n);
           if (!re15_audio_re2_tuer_laden(ton, n)) log_f("Tuerbank DOOR1A nicht geladen (kein Audiogeraet?)"); }
-        log_f("ROOM1141 Gemaelde (Ereignis 6) in Phase H -> Programm BEFREIUNG");
-        return k_r38f_p_befreiung;
+        (void)re15_dining_r39_waffe_waehlen();
+        log_f("ROOM1141 Riegel der Dachtuer (Ereignis 5) in Phase H -> Programm ENTRIEGELN39");
+        return re15_dining_r39_entriegeln();
     }
     if (room_id == RE15_R38F_RAUM_1141 && event_id == RE15_R38F_1141_EREIGNIS_GEMAELDE && (anker(room_id) & A_ROLL1141))
         return k_r38f_p_roll1141;
@@ -327,6 +342,7 @@ const uint8_t *re15_dining_r38_ereignis(uint16_t room_id, uint8_t event_id)
 int re15_dining_r38_se_on(unsigned bank, int satz)
 {
     int k;
+    if (re15_dining_r39_se_on(bank, satz)) return 1;   /* Runde 39 Spur J: Port-Bank 0x3E */
     if (bank == RE15_R38F_SE_BANK_ROLLADEN)     k = 0;
     else if (bank == RE15_R38F_SE_BANK_KLOPFEN) k = 1;
     else if (bank == RE15_R38F_SE_BANK_HILFE)   k = 2;
@@ -344,6 +360,7 @@ int re15_dining_r38_se_on(unsigned bank, int satz)
  * Johns Abgang ohne Kampf-Eingaben (der Zaehler laeuft ab dem Ende der Szene, unabhaengig von der Dauer davor). */
 void re15_dining_r38_messhaken(void)
 {
+    re15_dining_r39_messhaken();   /* Runde 39 Spur J: RE15_R39J_LOG */
 #ifdef RE15_PLATFORM_PC
     static int s_init = 0, s_n = -1, s_done = 0, s_kampf = 0, s_starr = 0;
     if (!s_init) { const char *e = getenv("RE15_R38F_GORILLAS_TOT"); s_init = 1; if (e && *e) s_n = atoi(e);

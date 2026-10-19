@@ -2252,6 +2252,8 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
     /* Runde 39 Spur A: Nutzer-Reihenfolge der Port-Szenen 1050/1150/11B0/1171; -1 = Datei gehoert einer anderen Zeile (re15_stimmen_r39.h). */
     if (re15_stimmen_r39_stamm((unsigned)room, voice_id, stamm, sizeof stamm) < 0) return 0;
     re15_rekorder_r38_stimme((unsigned)room, voice_id, reldir, sizeof reldir, stamm, sizeof stamm);   /* Runde 38 Spur J: ROOM1100/1101 Id 40 */
+    { extern void re15_dining_r39_stamm(unsigned, int, char *, size_t);   /* Runde 39 Spur J: ROOM1141 Id 53..57 = help01..05 */
+      re15_dining_r39_stamm((unsigned)room, voice_id, stamm, sizeof stamm); }
     snprintf(path, sizeof path, "%s%s.wav", reldir, stamm);
     wav = re15_pc_read_base(path, &wsz);
     /* the synchro dirs are lower-case "room1170" on disk; retry lower-hex if the
@@ -3618,6 +3620,9 @@ static void ss_seq_ctl_ex(int slot, int op, int part, int vol, int pan)
     else if (op == 2)            s_bgm_slot_status[slot] = 2;
     else if (op == 4)            s_bgm_slot_status[slot] = 4;
     SDL_LockAudioDevice(s_audio_dev);
+    if (!s_bgm_pending)   /* Runde 39 Spur J: waehrend des aufgeschobenen Musikwechsels NUR latchen (oben) - das Original wartet in
+                           * FUN_80044210 @0x8004429c-@0x800442b0 auf das Ende der Ausblendung, laedt @0x800442b8, und erst danach
+                           * startet FUN_800396fc @0x80039a00 das Raum-Skript: dessen Sce_bgm_control trifft nie den alten Track */
     switch (op) {
         case 1:   /* SsSeqSetVol + SsSeqPlay (loop) → audible */
         case 3:   /* SsSeqReplay → audible (restart-from-top; mute-toggle ok for drone) */
