@@ -72,6 +72,7 @@
 #include "re15_dining_r38.h" /* Runde 38 Spur F: Programme 1140/1141/1021, Tuer 1131, Phase H 1141 (dining_r38.c) */
 #include "re15_toene_r39.h"  /* Runde 39 Spur B: Toene Schublade 11F0, Gitter + Schrank 1190 (toene_r39.c) */
 #include "re15_funk10f1_r39.h" /* Runde 39 Spur I: Funkszene ROOM10F1, Ereignis 27 (funk10f1_r39.c) */
+#include "re15_parkplatz_r39.h" /* Runde 39 Spur O: Tuersperre ROOM11C0 im Gorilla-Kampf (parkplatz_r39.c) */
 
 scd_vm_t g_scd;
 
@@ -1230,6 +1231,8 @@ static int op_evt_exec(scd_thread_t *t)
     const uint8_t *target_pc = s_current_rdt->sub_scd[sub_id];
     /* Runde 38 Spur F: ROOM1141 sub00 @0x00B02 Evt_exec sub02 -> Klopf-Schleife in Phase H (re15_dining_r38.h). */
     target_pc = re15_dining_r38_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);
+    /* Runde 39 Spur O: ROOM11C0 sub01 @0x01824/@0x01842 Evt_exec sub02/sub03 -> Tuersperre an/aus (re15_parkplatz_r39.h). */
+    target_pc = re15_parkplatz_r39_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);
     if (!target_pc) return 1;   /* no such sub → drop */
 
     int slot;
@@ -1622,6 +1625,7 @@ void re15_scd_show_message(uint8_t index, uint32_t pause_mask)
     re15_lock_se_notice(g_current_room_id, index, RE15_LOCK_WEG_AOT);
     re15_aufschliessen_r36_notice(g_current_room_id, index, RE15_AUF_WEG_AOT);   /* Runde 36 Spur G */
     if (re15_ziel1190_show(index, pause_mask)) return;   /* Runde 36 Spur H: ROOM1190/1191 Scheiben-Text 6/7 */
+    re15_parkplatz_r39_stimme((uint16_t)g_current_room_id, index);   /* Runde 39 Spur O: ROOM11C0 msg 40 -> main40.wav (re15_parkplatz_r39.h) */
     re15_dialog_open_mask((int)index, 0, pause_mask);
     g_scd.message_arg2 = 0;
     g_scd.message_arg3 = 0;
