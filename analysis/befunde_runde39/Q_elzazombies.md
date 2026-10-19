@@ -279,14 +279,14 @@ Neue Riegel (re15_port/tests/unit/probes/r39_elzazombies.cmake), Stand nach Nach
 * unit_r39_elzazombies_ohne — Laden mit (9,97), ohne (9,97), Leon 1040/1060 (auch mit (9,95): kein Durchbruch).
 * integration_r39_elzazombies_kette / _knall / _treppe / _durch / _ohne — echte exe (4.2, 4.4, 4.5, 4.6).
 
-### 5.1 Abschlusslaeufe (Baum 05d03c9f, gebaut 01:5x)
-* ALLE schnellen Tests (Stand b24d8af4 + Ton-Auswerter-Fix; danach nur der Start-Umbau in elzazombies_r39.c, dessen eigene
-  Riegel unten erneut liefen): `ctest -R "^(unit_|prop_|probe_)" -j 4` ->
-  "100% tests passed, 0 tests failed out of 845" (1125 s).
-* Gezielt (eigene Riegel + Gruppen der beruehrten Module/Raeume: Leons Montage, Zombie-Abbildung, Elza-Raeume 1031/1041/
-  10C1, Tagebuch/Karte, Speichern, k_port), Regex
-  `r39_elzazombies|^unit_r36_kartenbits|^integration_r35_cut1150$|^integration_r38_montage$|^integration_r37_zombieaktiv$|^integration_elza_vollstart$|^integration_r38_elzaintro_|^integration_r39_elza_|^integration_r38_elzatoene_|^integration_r38_tagebuch_|^integration_r37_elzaems_elza10c1kraehe$|^integration_r36_story_elza$|^integration_r36_elza_|^integration_r33_speichern$`
-  (`-j 3`) -> "100% tests passed, 0 tests failed out of 35" (922 s).
+### 5.1 Abschlusslaeufe
+* VOR Nachtrag 11 (Baum 05d03c9f): `ctest -R "^(unit_|prop_|probe_)" -j 4` -> "100% tests passed, 0 tests failed out of 845";
+  gezielt 35/35 (Leons Montage, Elza-Raeume, Speichern) — ueberholt durch den Lauf unten.
+* ENDSTAND (Baum 0f730673 = master 2963579d gemergt + Nachtrag-11-Umbau, gebaut 02:3x), EIN Lauf mit `-j 4`, Regex
+  `^(unit_|prop_|probe_)|r39_elzazombies|^integration_r35_cut1150$|^integration_r38_montage$|^integration_r37_zombieaktiv$|^integration_elza_vollstart$|^integration_r38_elzaintro_|^integration_r39_elza_|^integration_r38_elzatoene_|^integration_r38_tagebuch_|^integration_r37_elzaems_elza10c1kraehe$|^integration_r36_story_elza$|^integration_r36_elza_|^integration_r33_speichern$|^integration_r39_heliport1171`
+  (= alle 857 schnellen Tests + eigene 13 + Gruppen der beruehrten Module/Raeume: Leons Montage/Zombie-Abbildung, Elza-
+  Raeume 1031/1041/10C1, Tagebuch/Karte, Speichern, Spur K nach dem Merge) ->
+  "100% tests passed, 0 tests failed out of 886" (1107 s).
 
 ## 6. OFFEN (fuer die Integration, keine Luecke im Spurbaum)
 * Spur P setzt (9,97) (VERTRAG 1.1). Meine Kette startet bei der steigenden Flanke, sobald keine Szene laeuft
