@@ -284,3 +284,6 @@ bzw. Energie-Abfrage ausloesen oder abwarten); die Integration zieht die Energie
 - "Dann bei synchro/stage1/room1141 habe ich eine door_sound.wav hinterlegt. Bitte setze die immer mal wieder im wechsel mit dem please Help Rufen ein."
 - "Und dann - bis zum ersten Schuss steht John relativ unbeteiligt in der Ecke, wenn der Kampf gegen die Gorillas los geht. Das soll er nicht. Es soll gleich zumindest sich Richtung Gorillas ausrichten und vielleicht schon mal schießen."
 - "Bitte noch einbauen, und minimale Abnahme Testschiene da wir nicht mehr viel Tokens haben."
+- Antwort auf die Fragen der Release Notes v0.8.27 (woertlich, um 14:04): "Und zu deinen Fragen - das ist alles super, das kann so bleiben."
+  Orchestrator: Schrank-Ton 1190 (Regal-Welle) bleibt, Schublade 11F0 Ton bei jedem Oeffnen bleibt, Gorillas greifen John
+  nicht an, Salventakt ~12 s bleibt (der erste Schuss frueher: Nachtrag 17 Punkt 6). Abschnitt "Zu entscheiden" entfaellt.
