@@ -1,7 +1,9 @@
 # Runde 39 Spur Q "elzazombies" — Elza: Zombie-Durchbrueche in der Panikphase (Bank-9-Bit 97, Spur P):
-# 10E1-Ueberlebende durch die 10C1-Tuer ins Treppenhaus ROOM1061 (Etage 4), 1071-Ueberlebende in ROOM1031 Cut 7,
-# Kriecher durch das Rollo ROOM1031 (Original-Szene sub08) — Montage-Form wie Leon nach Irons' Tod.
-# Dossier analysis/befunde_runde39/Q_elzazombies.md.
+# 10E1-Ueberlebende durch die 10C1-Tuer ins Treppenhaus ROOM1061 (Etage 4), Kriecher durch das Rollo ROOM1031
+# (Original-Szene sub08), nicht besiegte 1061-Zombies beim naechsten Betreten von ROOM1041 durchs Rolltor (Nachtrag 11;
+# ROOM1071 bleibt unberuehrt) — Montage-Form wie Leon nach Irons' Tod. Dossier analysis/befunde_runde39/Q_elzazombies.md.
+# Alle Riegel unten loeschen vor dem ersten Engine-/exe-Aufruf jede geerbte RE15_*-Variable (VERTRAG Runde 39
+# Abschnitt 2, Nachbesserung 1: test_r39_elzazombies.c main(), test_r39_elzazombies.cmake nach dem include).
 #
 # MESS-WERKZEUG (kein add_test):
 #   probe_r39_elzazombies_karte <karte> <raum-hex> <x> <y> <z> <gier> <cut> [bank:bit ...] [give:id]

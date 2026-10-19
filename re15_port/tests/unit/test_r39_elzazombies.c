@@ -35,6 +35,10 @@
  *   ohne      ohne Flanke keine Kette (Bit 97 beim Laden gesetzt = keine Flanke); Leon (Figur 0) mit Flanke und (9,95):
  *             nichts; Modul aus: nichts.
  */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#  define _DEFAULT_SOURCE 1   /* unsetenv (POSIX) unter -std=c11 ohne GNU-Erweiterungen (CMAKE_C_EXTENSIONS OFF); Muster
+                               * test_r36_zombieki_affen_block.c */
+#endif
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -796,8 +800,66 @@ static int auswerten_ton(const char *pa, const char *pb)
     return g_fail;
 }
 
+/* ================================================================================================================== */
+/* VERTRAG Runde 39 Abschnitt 2 "keine Umgebungsvariablen des Aufrufers erben" (Nachbesserung 1). Die Engine liest an     */
+/* vielen Stellen RE15_*-Schalter; ctest reicht die Umgebung der Shell durch. Gemessen (Bau 02:20, ohne diese Funktion):  */
+/* geerbtes RE15_RE2_DMG_MODEL=0 verschob in kette_4 die Spur-Lagen (ROOM1061 Aktor 1 Bit 124 6245 -> 6194, ROOM1031    */
+/* Aktor 1 Bit 0 8997 -> 9836), RE15_SCD_TRACE=1 verlaengerte kette_4 um 112177 Zeilen. Darum loescht main() vor dem     */
+/* ersten Engine-Aufruf jede RE15_*-Variable, ohne Ruecksicht auf die Schreibweise: Windows liest Namen ohne sie         */
+/* (gemessen: "re15_scd_trace=1" schaltete den Trace ein, nach1061 15 -> 325 Zeilen).                                    */
+/* ================================================================================================================== */
+#ifdef _WIN32
+#  define R39Q_UMGEBUNG _environ
+#else
+extern char **environ;
+#  define R39Q_UMGEBUNG environ
+#endif
+static int ist_re15_name(const char *s)
+{
+    return (s[0] == 'R' || s[0] == 'r') && (s[1] == 'E' || s[1] == 'e') && s[2] == '1' && s[3] == '5' && s[4] == '_';
+}
+/* -> Zahl der RE15_*-Namen, die danach noch in der Umgebung stehen (0 = sauber, -1 = kein Speicher) */
+static int umgebung_leeren(void)
+{
+    size_t n = 0, k = 0;
+    for (char **e = R39Q_UMGEBUNG; e && *e; e++) n++;
+    char **namen = (char **)calloc(n + 1, sizeof *namen);
+    if (!namen) return -1;
+    for (char **e = R39Q_UMGEBUNG; e && *e && k < n; e++) {
+        size_t l = strcspn(*e, "=");
+        if (l < 5 || !ist_re15_name(*e)) continue;
+        namen[k] = (char *)malloc(l + 2);
+        if (!namen[k]) break;
+        memcpy(namen[k], *e, l);
+        namen[k][l] = '=';
+        namen[k][l + 1] = '\0';
+        k++;
+    }
+    for (size_t i = 0; i < k; i++) {
+        size_t l = strlen(namen[i]) - 1;
+        printf("umgebung: geerbt %.*s -> geloescht\n", (int)l, namen[i]);
+#ifdef _WIN32
+        _putenv(namen[i]);                 /* "NAME=" entfernt die Variable (CRT-Tabelle und Prozess-Umgebung) */
+#else
+        namen[i][l] = '\0';
+        unsetenv(namen[i]);
+#endif
+        free(namen[i]);
+    }
+    free(namen);
+    int rest = 0;
+    for (char **e = R39Q_UMGEBUNG; e && *e; e++)
+        if (strcspn(*e, "=") >= 5 && ist_re15_name(*e)) rest++;
+    return rest;
+}
+
 int main(int argc, char **argv)
 {
+    int rest = umgebung_leeren();
+    if (rest != 0) {
+        printf("  FEHLER: geerbte RE15_*-Umgebung laesst sich nicht loeschen (%d)\n", rest);
+        return 1;
+    }
     const char *teil = argc > 1 ? argv[1] : "alle";
     if (!strcmp(teil, "auswerten_ton")) {
         if (argc < 4) { printf("auswerten_ton <laut.raw> <stumm.raw>\n"); return 2; }

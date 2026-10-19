@@ -20,7 +20,8 @@
 #   ohne    Leon ROOM1040 mit (9,97)-Flanke: keine Kette; Elza-Spielstand mit (9,97) schon gesetzt (Laden): keine Flanke.
 #
 # Parallel-/Linux-fest: exe-Kopie mit eigenem Praefix je TEIL, eigener Laufordner je Lauf, Umgebung nur ueber
-# re15_start_spiel (spiel_lauf.cmake), keine .exe-/Backslash-Pfade.
+# re15_start_spiel (spiel_lauf.cmake) — geerbte RE15_*-Variablen des Aufrufers (jede Schreibweise) loescht der Block
+# nach dem include vor dem ersten Lauf (VERTRAG Runde 39 Abschnitt 2, Nachbesserung 1) —, keine .exe-/Backslash-Pfade.
 cmake_minimum_required(VERSION 3.16)
 foreach(_v RE15_PC_EXE RE15_KARTE RE15_AUSWERTER WORKDIR TEIL)
     if(NOT DEFINED ${_v})
@@ -28,6 +29,35 @@ foreach(_v RE15_PC_EXE RE15_KARTE RE15_AUSWERTER WORKDIR TEIL)
     endif()
 endforeach()
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+
+# Keine Umgebungsvariablen des Aufrufers erben (VERTRAG Runde 39 Abschnitt 2; Abnahme 0 Mangel 1: mit geerbtem
+# RE15_NOAUDIO=1 schrieb TEIL knall keinen Mitschnitt, "[audio] RE15_NOAUDIO set -> audio disabled" audio_pc.c:1955).
+# spiel_lauf.cmake setzt und loescht nur die UEBERGEBENEN Paare; alles andere ginge an Kartenwerkzeug, exe und Auswerter.
+# Muster test_r39_stimmen.cmake / test_r39_heliport1171.cmake, hier ohne Ruecksicht auf die Gross-/Kleinschreibung:
+# Windows liest Umgebungsnamen ohne sie (gemessen: "re15_nb1=1" -> $ENV{RE15_NB1} = 1; "re15_scd_trace=1" schaltet in
+# test_r39_elzazombies den SCD-Trace ein, 15 -> 325 Zeilen), "cmake -E environment" listet den Namen aber so, wie er
+# gesetzt wurde. Danach Selbstpruefung: bleibt einer stehen, bricht der Riegel ab statt mit fremder Umgebung zu messen.
+function(r39q_geerbte_namen _out)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -E environment OUTPUT_VARIABLE _envdump)
+    string(REGEX MATCHALL "(^|\n)[Rr][Ee]15_[A-Za-z0-9_]*=" _treffer "${_envdump}")
+    set(_namen "")
+    foreach(_t IN LISTS _treffer)
+        string(REGEX REPLACE "^\n?([Rr][Ee]15_[A-Za-z0-9_]*)=$" "\\1" _n "${_t}")
+        list(APPEND _namen "${_n}")
+    endforeach()
+    set(${_out} "${_namen}" PARENT_SCOPE)
+endfunction()
+r39q_geerbte_namen(_geerbt)
+foreach(_n IN LISTS _geerbt)
+    unset(ENV{${_n}})
+endforeach()
+r39q_geerbte_namen(_rest)
+if(_rest)
+    message(FATAL_ERROR "r39_elzazombies[${TEIL}]: geerbte Umgebung laesst sich nicht loeschen: ${_rest}")
+endif()
+if(_geerbt)
+    message(STATUS "r39_elzazombies[${TEIL}]: geerbte Umgebung geloescht: ${_geerbt}")
+endif()
 
 set(_tag "r39_elzazombies[${TEIL}]")
 set(_basisdir "${WORKDIR}_${TEIL}")
