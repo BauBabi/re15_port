@@ -536,3 +536,39 @@ bisher, Knall vor 1040 Satz 1), leon_nach1060 (Leon betritt 1060 nach der Szene:
 Etage 0, frei auf Etage 4 mit kleinstem Abstand 4961), durch1041 (H1: (9,97)=0 -> nichts, 200 Bilder; Gegenprobe (9,97)=1 ->
 Durchbruch mit 3), nach1031 (2 von 5 1071-Kopien + 3 Kriecher an Leons Nachspawn-Lagen), zensus (16 Kopie-Bits; Cut-7-Bits =
 Leons Vorlage 6; Raum-Paare byte-gleich; Programm L endet Byte fuer Byte wie Leons k_p_1130; Weiche).
+
+### 9.7 Gegenueberstellung: aus welchen Tueren die Zombies brechen (Stand Nachbesserung 2)
+| Tuer / Ort | Leon (Montage nach Irons' Tod) | Elza (Johns Hilferuf, Panikphase (9,97)) |
+|---|---|---|
+| Briefing Room -> 3F-Flur (1140/1141 -> 1130/1131), Cut 0 | ja: so viele, wie in 1140 leben | entfaellt: ROOM1141 hat keinen Zombie-Record (sub00 @0x00B06 John Typ 0x49, @0x00B1A.. Gorillas Typ 0x27) |
+| 2F West Side -> Treppenhaus-Absatz 2F (10C0/10C1 -> 1060/1061), Cut 2 | NEU (Nachtrag 12): so viele, wie in 10E0 leben; nach 1130, vor dem Rolltor | ja: so viele, wie in 10E1 leben; erster Schnitt nach dem Auftakt |
+| Rolltor West Corridor (1040/1041), Cut 1 | ja: in der Montage (5 Raum-Zombies) | ja: beim naechsten Betreten von 1041 in der Panikphase, die im Treppenhaus nicht besiegten (H1: nur mit (9,97)) |
+| Lobby Office -> Lobby (1070/1071 -> 1030/1031), Cut 7 | ja: so viele, wie in 1070 leben | NEU (Nachtrag 12): so viele, wie in 1071 leben (Leons Schritt Byte fuer Byte) |
+| Notfall-Rollo / Tor der Lobby (1030/1031), Cut 12 | ja: Original-Szene sub08, Kriecher | ja: Original-Szene sub08, Kriecher |
+| Parkplatz 11C0, Cut 13 | Ada/Marvin-Szene (keine Zombies) | — (keine Entsprechung) |
+
+### 9.8 Fuer den Nutzer (einfach)
+* Nach Irons' Tod (Leon) und nach Johns Hilferuf (Elza) brechen die Zombies jetzt in beiden Szenarien aus denselben Tueren
+  (Tabelle oben).
+* LEON: In der Montage nach Irons' Tod kommt nach dem Flur vor dem Besprechungsraum ein neuer Schnitt ins Treppenhaus (2. Stock,
+  Schild "F2"): die Zombies, die du im Medical Room (10E0) am Leben gelassen hast, sind durch die Tuer der 2F West Side
+  hereingebrochen und gehen auf die Kamera zu — genau wie bei Elza. Danach geht es wie bisher weiter (Rolltor, Lobby, Parkplatz).
+  Hast du im Medical Room alle getoetet, entfaellt der Schnitt. Kommst du spaeter ins Treppenhaus, stehen sie auf dem Absatz
+  unter dem Fenster und laufen erst los, wenn du oben ankommst (wie bei Elza).
+* ELZA: In der Panik-Montage kommt vor dem Rollo wieder der Schnitt auf die Tuer des Lobby Office (1071): die Zombies, die dort
+  noch leben, stehen davor und gehen auf die Kamera zu — wie bei Leon. Dann bricht wie bisher das Rollo. Spaeter findest du sie
+  in der Lobby.
+* ROLLTOR 1041: Der Durchbruch kommt nur noch waehrend der Panikphase (bis John gerettet ist). Danach bleiben die Zombies aus dem
+  Treppenhaus dort; "der Rest bleibt normal".
+* Den Briefing-Room-Schnitt von Leon gibt es bei Elza nicht: in Elzas Raum 1141 sind nur John und die Gorillas, keine Zombies.
+* Keine neuen Assets, keine Sprachdateien. Schnittlaengen und Knaelle sind Leons Montage (Treppenhaus 176 Bilder = Leons
+  Flur-Schnitt; Lobby-Office-Schnitt 175 Bilder + Original-Knall).
+
+### 9.9 OFFEN (fuer die Integration, keine Luecke im Spurbaum)
+* Spur P (Nachbesserung 1, Nachtrag 12): sperrt in der Panikphase die Tuer 1041 -> 1031 (Text statt Raumwechsel). Die Montage
+  nutzt ihren eigenen Tuersatz (Slot 20, Door_aot_set + Aot_on), nicht Slot 1 — keine Ueberschneidung; im Integrationsbaum mit P
+  zu messen. Der Durchbruch 1041 kommt beim Betreten von 1041 (von 1061, aus der Lobby oder mit dem Aufzug) waehrend (9,97)=1.
+* Die Elza-Montage ist mit dem Lobby-Office-Schnitt ~830 Bilder lang (Auftakt 105 + 1061 176 + 1031 542); P's Panikmusik
+  (Leons Schlussmusik) klingt darueber oder beginnt danach — P's Wahl (wie 6.).
+* Ankunft im Treppenhaus von OBEN (Leon aus 1120, Elza aus 1121): die Kopien stehen an der Westseite nahe dem Ende von Treppe A
+  (wie Abnahme 1 H3) — nicht verlangt.
