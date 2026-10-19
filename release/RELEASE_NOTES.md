@@ -141,6 +141,8 @@ monsters!" (einfacher Raumtext ohne Stimme). Nach dem Kampf laeuft die Original-
 * Neues Speicher-Bit (Bank 9 Bit 96, Leons Treppenhaus-Umzug); alte Spielstaende laufen weiter.
 * Ihre `synchro/STAGE1/room1141/door_sound.wav` ist jetzt im Repo und im Paket und klingt in 1141 im Wechsel mit den
   Hilferufen (eine zweite Fassung unter `synchro/unused/` wird nicht verwendet).
+* Ihre neuen Aufnahmen fuer ROOM3020 (Stage 3): `synchro/STAGE3/room3020/main00..02.wav` - Leon "Dammit! the door
+  does not open!" und Marvins zwei Zeilen; sie spielen automatisch an ihren Zeilen.
 
 # v0.8.26 - 2026-10-17
 
