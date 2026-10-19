@@ -244,3 +244,12 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
   Spur O ("I cannot leave Ada alone here with those monsters!") hat diese einfache Form bereits.
 - Nachschub (woertlich, nach 08:33): "Das mit den I cannot leave him alone with those monsters, ist auch ein normaler Raumtext."
   Orchestrator: ROOM1141 msg 41 (Runde 38 F) bleibt ein einfacher Raumtext ohne Stimme - keine Aenderung noetig.
+
+## Nachtrag 14 des Nutzers (woertlich, 2026-10-19 zwischen 08:34 und 08:43)
+- "Eine letzte Ergänzung - bei dieser und zukünftig neuen Versionen passe mir bitte die Version im Titelscreen an. Entferne das bestehende. Ich glaube dafür gibt es auch schon ein Skript iregndwo."
+  Orchestrator (gemessen 08:46, Titelabzug RE15_TITLE_SHOT_AF=150): oben rechts im Titelbild steht "Sample" / "Ver.2025.01.25"
+  als Graustufen-Pixelschrift auf Schwarz, Bereich x 180..283, y 11..~30 (320x240), eingebrannt in DATA/TITLEU.TIM (320x240
+  16bpp; render_pc.c s_title_tex / re15_render_pc_show_title). Ein vorhandenes Skript dafuer gibt es weder hier noch im alten
+  reAi-Repo (gesucht: TITLEU, *title*/*version*/*stempel*). RE15_REBORN_VERSION_STRING "v0.1.0 Phase 4.1" (re15_engine.h:24) wird
+  nirgends benutzt. release_alles.sh bildet die Version aus dem hoechsten Tag (+1); build_android.sh kennt --version.
+  -> neue Spur T "titelversion".
