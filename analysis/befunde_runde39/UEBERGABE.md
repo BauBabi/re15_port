@@ -6,6 +6,13 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 13:24: MASTER 833b29f7 = Integration (P NB2+NB3, Q NB3, T, 11C0 ohne Stimme, Riegel P+Q, knall bildgleich
+  316bf8b1). Windows: alle 913 unit_/prop_/probe_ + 92 integration_ gruen (979/980 12:38-13:04, knall nachgezogen 3/3,
+  26/26 Stimmen/Musik 13:08-13:19). Hauptbaum-exe 13:20 + Smoke gruen (Titel "Ver.0.8.26 dev", 1030, EXIT_AT). Baeume
+  r39_johnruf1041/elzazombies/titelversion/integration entfernt (alle in master); r38_testtempo bleibt. Beobachtung: der
+  Hinweis-Kartenschirm schliesst nach Wanduhr-VBlanks (map_hint_common.c, Port-Wahl Runde 30) -> Laeufe mit dem Ruf
+  der Spur P sind nicht bildgleich (+-1 Bild); fuer Mitschnitt-Differenzen die Flanke per RE15_SET_FLAG_AT setzen.
+  Release Notes v0.8.27 oben in release/RELEASE_NOTES.md. Naechster Schritt: release_alles.sh --tag --linux-jobs 6.
 * 2026-10-19 12:37: Gezielter Lauf 12:15 (973 Tests, nach P-Merge) zeigte 3 Fehlerklassen, alle in Riegeln, keine im
   Spiel: (1) O K/N/W lasen die mit dem 11C0-Stimmen-Haken entfallene Log-Zeile -> Marke = [msgtext] (1760243a); (2) Q-Riegel
   setzten (9,97) per Test-Haken ohne (4,0xF0) -> Spur P loescht das Bit ("John gerettet") -> Q auf die ECHTE Kette umgestellt

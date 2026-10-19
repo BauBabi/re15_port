@@ -1,3 +1,146 @@
+# v0.8.27 - 2026-10-19
+
+Ihr Auftrag vom 17.10. (Runde 39, 30 Punkte) mit den 16 Nachtraegen bis heute, darunter Elzas Panikphase nach Johns
+Hilferuf und die Version im Titelbild. Wie gewohnt hat ein zweiter Agent die Punkte unabhaengig am gebauten Spiel gegen
+Ihren Wortlaut nachgemessen - mit einer Ausnahme: Wegen des Guthabens habe ich drei letzte Stellen selbst mit gezielten
+Tests abgenommen (die Version im Titelbild, die dritte Nachbesserung der Zombie-Durchbrueche, die letzten beiden
+Nachbesserungen von Johns Ruf mit der Tuer in 11B1).
+Geprueft unter Windows: alle 913 Unit-, Eigenschafts- und Sonden-Riegel und die 92 Spiel-Laeufe, die diese
+Runde beruehrt (Elza, Karte, Tueren, Stimmen, Musik, Titel) - alle gruen. Die volle Suite (1143 Tests) laeuft beim
+Bau im Linux-Container; ein roter Test haelt das Release an.
+
+## Was Sie merken
+
+### Elza: Johns Hilferuf und die Panikphase (Nachtraege 10 bis 15)
+
+**Der Ruf in ROOM1041.** Nach der Szene in ROOM1021 ist John verschwunden. Betritt Elza danach den Gang 1041, ruft John
+zweimal leise um Hilfe ("Help!", dann "Please help!"), Elza dreht sich zur Treppe und sagt "Oh, no, this is John! He is
+in trouble, I have to help him!" (Ihre Aufnahme, als `synchro/STAGE1/room1041/main40.wav`). Die Karte geht auf und
+markiert ROOM1141 (3F); sie schliesst nach etwa 4 Sekunden von selbst oder mit START. Danach laeuft in allen Raeumen
+Leons Panikmusik nach Irons' Tod (MAIN01), bis beide Gorillas in 1141 tot sind. Im Flur 1131 ruft John noch einmal
+"Please help!", deutlich lauter. Lautstaerken wie in RE2: 1041 leise (42 %), 1131 83 %, 1141 voll. In 1141 selbst kommt
+Elzas Satz nicht mehr.
+
+**Gesperrte Tueren.** In der Panikphase zeigen die Tuer 1041 -> 1031 und die Tuer 1051 -> 10A1 "I have to rescue John!
+He is in danger!" - ein einfacher Raumtext ohne Stimme, wie Leons Tuertexte in seiner Panikphase. Nach Johns Rettung
+gehen beide Tueren wieder normal.
+
+**Zombie-Durchbrueche - in beiden Szenarien aus denselben Tueren.**
+- Elza, nach Johns Ruf: kurze Pause, Tuerknall, Schnitt ins Treppenhaus 2F: die Zombies, die Sie im Medical Room (10E1)
+  am Leben gelassen haben, brechen herein und gehen auf die Kamera zu (haben Sie dort alle getoetet, entfaellt der
+  Schnitt). Dann vor dem Lobby Office (1071) die Zombies, die dort noch leben, und das Notfall-Rollo der Lobby (1031)
+  bricht wie in der Original-Szene. Im Flur 1131 bricht bei Elza nichts durch (ihr 1141 ist verschlossen).
+- Leon, nach Irons' Tod: nach dem Flur vor dem Besprechungsraum kommt derselbe neue Schnitt ins Treppenhaus 2F (die
+  Zombies aus 10E0), danach wie bisher Rolltor, Lobby, Parkplatz.
+- Im Treppenhaus stehen die Zombies danach moeglichst weit weg an der Seite: von unten am 2F-Absatz unter dem Fenster,
+  von oben an der Tuer zur 2F West Side. Sie laufen erst los, wenn Sie am anderen Ende angekommen sind.
+- Elza, ROOM1041: Laesst sie die Treppenhaus-Zombies unbesiegt zurueck und betritt 1041 waehrend der Panikphase wieder,
+  bricht das Rolltor wie bei Leon.
+- Alte Spielstaende (bis v0.8.26), die Irons' Tod schon hinter sich haben, bekommen im Treppenhaus keine Zombies aus dem
+  Nichts.
+
+**Parkplatz-Tuer in ROOM11B1 (Ihr Nachtrag 12, korrigiert auf 11B1).** Elzas Tuer von 11B1 zum Parkplatz (11C1) ist
+jetzt immer zu - auch bei der Suche nach Sherry. Mit Strom kommt der Original-Text des Raums "The door is locked.",
+ohne Strom wie bisher "It's too dark to see anything...". Im Parkplatz 11C1 sind nur die fuenf Hunde, es fehlt also
+nichts. Elzas Kanaldeckel in 10B1 bleibt wie im Original.
+
+**Hund durchs Fenster (ROOM1121).** In der Panikphase springt Elza im langen Gang ein Hund durch das zerbrochene Fenster
+entgegen (Glassplitter und Glasknalle wie bei Leons Kraehe) und greift an. Nur einmal; Leons 1120 ist unveraendert.
+
+### Elza: ROOM1141, Dach und Funkgeraet
+
+**ROOM1141 (Ihre Nachtraege 4 und 7).** Elza oeffnet das Rolltor und laeuft danach frei weiter; John klopft weiter. Erst
+wenn sie die Dachtuer entriegelt ("You've opened the lock."), beginnt die Szene: Elza rennt in den Raum, die Kamera
+schneidet auf die Ansicht vom Gangende, Elza dreht sich zur Tuer und hebt eine Schusswaffe aus ihrem Inventar (ohne
+Schusswaffe das Messer). Im Kampf schiesst John etwa alle 12 Sekunden zweimal auf den Gorilla, der Elza gerade nicht
+festhaelt; der getroffene Gorilla wendet sich ihm bis zu 7 Sekunden zu. Am Ende "Puuuh, that was close! ..." und "Elza,
+follow me ..." (Ihre main51/main52) mit dem Heranwinken aus 1171 statt der Waffe auf Elza; danach folgt die Kamera Elza.
+Beim Wechsel aufs Dach (1171) klingt die Kampfmusik nicht mehr zwei Sekunden nach.
+
+**Dach (ROOM1171).** Zu "Elza, hurry up!" winkt John Elza heran, statt zu klettern; seine Gesten davor sind die
+Original-Gesten. Die Kraehen halten im Schwebeflug nach jedem Fluegelschlag kurz inne und kreisen nach dem Wurf nicht
+mehr ununterbrochen - wie im Original. Die erste Kraehe packt Elza dadurch rund 1/3 Sekunde spaeter.
+
+**Funkgeraet (ROOM10F1).** Neue Szene beim ersten Betreten: Elza geht zur Konsole, "Hello, anyone, can you hear me? We
+need help!", Umsehen, dann "Uhh, this thing is broken!" (Ihre main40/main42).
+
+**Kleinigkeiten.** In ROOM1031 hebt Elza die Hand nur einmal. Nach Roys Tagebuch geht die Karte direkt nach dem Ablegen
+auf. Am Feuerloescher in 1090/1091 (und 1030) klettert sie nicht mehr aufs Autowrack. Im 1141-Kampf kann ein Gorilla
+Elza (oder den anderen Gorilla) nicht mehr durch die Wand nach draussen druecken (RE2-Regel).
+
+### Leon
+
+**Stimmen.** Ihre Aufnahmen spielen an ihren Zeilen: ROOM1050 main09-11 (vor Adas Rettung), Irons' Sterbeszene in 1150
+bis "SIR, Sir?!" (main22), 11B0 main13-14, 1171 main00-02. Irons' Dateien hebt der Port jetzt 6,9- bis 12,6-fach an
+(vorher hoechstens 4-fach).
+
+**Parkplatz (ROOM11C0).** Solange die Gorillas leben, ist die Tuer gesperrt: "I cannot leave Ada alone here with those
+monsters!" (einfacher Raumtext ohne Stimme). Nach dem Kampf laeuft die Original-Szene und geht selbst durch die Tuer.
+
+**Spind (ROOM1000).** Erst Handgun Bullets (15 Schuss), danach "Nothing unusual.".
+
+### Kampf und Gegner
+
+- Ueber Tische, Pulte, Betten, Stuehle, Kisten usw. kann man jetzt schiessen; Regale, Saeulen und Waende sperren weiter
+  (RE2-Regel). Die Zielhilfe nimmt nur noch Gegner mit freier Sichtlinie.
+- Aufstehende Zombies sind wie in RE2 bis kurz vor Ende des Aufstehens nur an den Beinen treffbar (Ihr Entscheid). Tipp:
+  D-Pad UNTEN + R1.
+- Alle Gorillas: doppelte Energie (360), sie zucken erst beim dritten Handfeuerwaffen-Treffer.
+- Hunde: waehrend Ihrer Treffer-Reaktion beisst kein zweiter Hund.
+- Liegende Zombies (1010/1011, 1220/1221) kriechen heran, sobald Sie naeher als 3000 vor ihnen stehen.
+
+### Zustand und Inventar
+
+- Volle Heilung stellt die Kleidung wieder her (auch die Weste). Gift zieht etwa jede Sekunde 1 HP ab (nie unter 1), das
+  EKG ist dann magenta mit "Poison".
+- Alles mit einer Menge stapelt, auch Memory Cards und Granaten, auch in der Kiste (bis 250).
+- Elzas Statusschirm zeigt ihren Fuehrerschein statt Leons Bild. Die Yellow Keycard fragt nach dem richtigen Code in B2
+  "Will you discard ...?".
+
+### Karten
+
+- 1F, 2F, 3F und B2 nach Ihren map*_correct.png; B1 neu gezeichnet (echter S-Verlauf des Gangs, Parkdeck, Zwinger 1160
+  mit Marker). Rot wird nur der Teil eines Raums, in dem Sie stehen. Der Marker in 1090 steht im Raum.
+- Bewusste Abweichungen von Ihren Vorlagen: auf 3F drei Treppensymbole (1060 auf x140 wie auf 1F/2F, 1170 auf dem echten
+  Lauf, die Treppe bei (168,107) auf y106, weil 1/3 Pixel bei 1x nicht geht); auf B2 die begehbare Suedwest-Zelle in
+  ROOM1210, die weder das Original noch Ihre Vorlage zeichnet - sie erscheint, sobald Sie sie betreten haben. Bilder unter
+  `analysis/befunde_runde39/G_karten_bilder/`.
+
+### Bild und Ton
+
+- ROOM1100: der Streifen an der Westwand-Ecke deckt die Figur nicht mehr ab.
+- Schluessel im Kommunikationsraum (10F0/10F1) hoechstens halb so gross: der Prison Key genau halb, der Parking Lot Key
+  etwa ein Drittel (die naechste Stufe waere groesser als die Haelfte). Bei Fensterskala 1 (320x240) sind beide nicht mehr
+  zu sehen, bei 960x720 schon.
+- Neue Toene: Schublade im Boiler Room (11F0/11F1, RE2), Hunde-Luke und Schrank im Schiessstand (1190/1191; Gitter aus
+  Stage 2, Schrank = RE2-Regal). Ihre Raumnummern "10F0" und "1090" meinten diese Raeume.
+- Titelbild: oben rechts steht jetzt "Ver.0.8.27" in der Pixelschrift der alten Zeile; "Sample" / "Ver.2025.01.25" ist
+  weg. Kuenftig traegt das Release-Skript die Version automatisch ein; eine selbst gebaute exe zeigt "Ver.<letzte
+  Version> dev". Das Skript aus dem Vorprojekt (`scripts/patch_save_final.py`) gibt es nicht mehr - erhalten ist nur sein
+  Ergebnis, die gepatchte Disc.
+
+## Grenzen
+
+* Irons: "But... I'm not going to make it" und "Please... one last favor" bleiben etwas unter der Musik, weil beide
+  Dateien je einen lauten Knall enthalten, der die Anhebung begrenzt. Abhilfe: ohne den Knall neu exportieren.
+
+## Zu entscheiden
+
+* Schrank-Ton 1190: die Regal-Welle klingt etwa 1 Sekunde nach dem Halt aus (RE2-Form) - so lassen oder auf die Fahrt
+  kuerzen? Schublade 11F0: Ton bei jedem Oeffnen (Stand) oder nur beim ersten?
+* ROOM1141: Sollen die Gorillas John auch angreifen koennen (dann braucht John eine Treffer- und Todesreaktion, die RE1.5
+  nicht hat)? Passt "etwa alle 12 Sekunden eine Salve"?
+
+## Neu fuer das Paket / Ihre Dateien
+
+* Neue Paketdatei: `shared_assets/RE2/TOENE39.VBS` (Schublade, Gitter, Schrank), im Paket-Gate eingetragen.
+* Ihre Aufnahmen, umbenannt auf die Nachrichtennummern: `room1141/main50..52` (main50 = Elzas "Oh, no, this is John!",
+  als Kopie `room1041/main40.wav` jetzt in 1041 im Einsatz; main51/main52 = John in 1141) und `room10F1/main40`,
+  `main42` (`main41.wav` waere optional, z. B. Atmen). Die Rohfassungen liegen unter `synchro/unused/`.
+* Keine Aufnahmen noetig (Nachtrag 13): die Tuersaetze in 1041/1051 und 11C0 sind einfache Raumtexte. Fruehere Hinweise
+  auf `room1041/main41.wav`, `room1051/main40.wav` und `room11C0/main40.wav` sind hinfaellig.
+* Neues Speicher-Bit (Bank 9 Bit 96, Leons Treppenhaus-Umzug); alte Spielstaende laufen weiter.
+
 # v0.8.26 - 2026-10-17
 
 Ihr Auftrag vom 16.10. (Runde 38, mit den Nachtraegen zu ROOM20A0 und zu John in ROOM1141) und die zwei Reste der
