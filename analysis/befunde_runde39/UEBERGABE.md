@@ -6,6 +6,13 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 12:42: Gezielter Lauf 12:15 (973 Tests, nach P-Merge) zeigte 3 Fehlerklassen, alle in Riegeln, keine im
+  Spiel: (1) O K/N/W lasen die mit dem 11C0-Stimmen-Haken entfallene Log-Zeile -> Marke = [msgtext] (1760243a); (2) Q-Riegel
+  setzten (9,97) per Test-Haken ohne (4,0xF0) -> Spur P loescht das Bit ("John gerettet") -> Q auf die ECHTE Kette umgestellt
+  (Probelauf 12:29: Ruf P -> Karte zu Bild 432 -> Flanke -> Montage komplett, Rueckkehr korrekt); (3) Q startete in P-Riegeln
+  ihre Montage -> P-Unit mit re15_elzazombies_r39_enable(0), Lauf a endet in der Montage (d7faf636). Nutzer-Nachtrag 16:
+  die Tuer war 11B1, nicht 10B1 -> P Nachbesserung 3 (f8dae60d, Elzas Parkplatz-Tuer 11B1 mit Strom immer "The door is
+  locked."), gemergt. Bau + Wiederholung laufen; knall per TaskStop abgebrochen (alter Stand, haette Zeitlimit gerissen).
 * 2026-10-19 12:08: SPARMODUS (Nutzer: Restguthaben 86 EUR, "Abnahme ausnahmsweise reduzieren"): keine weiteren
   unabhaengigen Abnahmen. Q Nachbesserung 3 und T titelversion ohne Abnahme in r39/integration (723304bf, 11:48), gezielte
   Tests 923/923 gruen (11:50-12:04). Spur P Abnahme 1 "teilweise": M1 Softlock (Kanaldeckel 10B1 immer zu, Abstieg vom
