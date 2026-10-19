@@ -13,15 +13,22 @@
 #   unit_r39_johnruf1041_musik      Weiche/Sperre, Kampf, Rettung -> Bit 97 aus + Tabellen-Musik, Laden in der Phase
 #   unit_r39_johnruf1041_ruf1131    1131: ein Ruf lauter, einmal je Phase, nicht ohne Phase / nach der Rettung
 #   unit_r39_johnruf1041_leon       Leon ROOM1040 unveraendert
+# Nachbesserung 1 (Nutzer-Nachtrag 12; include/re15_tuersperre_r39.h, engine/src/tuersperre_r39.c, gen/tuersperre_r39.inc):
+#   unit_r39_johnruf1041_tuertexte  Satz 1041/1051 = Nutzer-Wortlaut in Erzaehlform; 10B1 = RE2 ROOM21A0 msg 4; Ids; Stimme
+#   unit_r39_johnruf1041_tuer1041   Tuer -> ROOM1031: ohne Phase Raumwechsel, in der Phase Text 41; Beginn in 1041 sperrt sofort
+#   unit_r39_johnruf1041_tuer1051   Tuer -> ROOM10A1: ohne Phase Raumwechsel, in der Phase Text 40; Leon 1050 unveraendert
+#   unit_r39_johnruf1041_tuer10b1   Kanaldeckel -> ROOM1261 in allen Zustaenden Text 40; Leiter bleibt; Leon 10B0 unveraendert
+#   unit_r39_johnruf1041_tuerszene  Sherry-Szene sub04: Text statt Raumwechsel; ohne Huelle bliebe die Pad-Sperre stehen
 add_executable(test_r39_johnruf1041 ${CMAKE_CURRENT_LIST_DIR}/../test_r39_johnruf1041.c)
 target_link_libraries(test_r39_johnruf1041 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r39_johnruf1041 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_r39_johnruf1041 PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_RE2_RDT_DIR="${CMAKE_SOURCE_DIR}/../info/re2leon/PL0/RDT")
 if(NOT WIN32)
     target_link_libraries(test_r39_johnruf1041 PRIVATE m)
 endif()
-foreach(_teil texte programme stimme xa ablauf musik ruf1131 leon)
+foreach(_teil texte programme stimme xa ablauf musik ruf1131 leon tuertexte tuer1041 tuer1051 tuer10b1 tuerszene)
     add_test(NAME unit_r39_johnruf1041_${_teil} COMMAND test_r39_johnruf1041 ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r39_johnruf1041_${_teil} PROPERTIES TIMEOUT 300)

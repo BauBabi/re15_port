@@ -39,6 +39,7 @@
 #include "re15_inventory.h"
 #include "re15_map_hint.h"
 #include "re15_johnruf_r39.h"
+#include "re15_tuersperre_r39.h"
 #include "re15_stimmen_pegel_r39.h"
 
 #include <math.h>
@@ -142,6 +143,7 @@ static void bild(uint16_t pressed, uint16_t held)
 static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot)
 {
     if (rdt_laden(room) != 0) { printf("  FEHLER: ROOM%04X nicht ladbar\n", room); g_fail++; return -1; }
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1;   /* Nachbesserung 1: der Spielweg liest den GELADENEN Raum (Anker tuersperre_r39.c) */
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
     re15_game_state_t flags_vorher = g_game;
@@ -520,6 +522,330 @@ static void teil_leon(void)
     PRUEF(re15_johnruf_r39_bgm_eintrag(0, 0x04) < 0 && !re15_johnruf_r39_fenster(), "Weiche -1 (Leons Musik unveraendert)");
 }
 
+/* ================================================================== Nachbesserung 1: Tuersperren (re15_tuersperre_r39.h)
+ * Nutzer-Nachtrag 12: Tuer 1041 -> 1031 und 1051 -> 10A1 in der Panikphase = "I have to rescue John! He is in danger!";
+ * die Tuer in ROOM10B1 (Kanaldeckel -> ROOM1261) fuer Elza IMMER zu, auch in der Sherry-Szene. */
+static void elza_raum(uint16_t room, int32_t x, int32_t z, int16_t rot, int b97, const int *bits)
+{
+    re15_game_state_init();
+    re15_inv_init();
+    g_gameflow.character = (room & 1u) ? 4 : 0;
+    re15_game_flag_set(9, RE15_R39P_BIT_PANIK, b97 ? 1 : 0);
+    re15_game_flag_set(3, 0x5F, 1); re15_game_flag_set(4, 0xF1, 1);
+    for (int i = 0; bits && bits[i] >= 0; i += 2) re15_game_flag_set((uint8_t)bits[i], (uint8_t)bits[i + 1], 1);
+    (void)room_boot(room, x, z, rot);
+}
+
+static int stimmen_mit_id(int id)
+{
+    int n = 0;
+    for (int i = 0; i < s_n_st; i++) if (s_st[i].id == id) n++;
+    return n;
+}
+
+/* EIN Aktionsdruck (Viereck) am ECHTEN Weg (Muster test_r38_tagebuch.c druck): Spielschritt mit der Taste -> AOT-Scan ->
+ * Tuer-Handler (Raumwechsel angefordert, re15_room_request_change) bzw. MESSAGE-Handler (Text). Danach 40 Bilder. */
+typedef struct { int raumwechsel; unsigned ziel; int msg; } tuer_erg_t;
+static tuer_erg_t tuer_druecken(int32_t x, int32_t z, int16_t rot)
+{
+    tuer_erg_t r = { 0, 0u, -1 };
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    g_room_change.pending = 0;
+    pl->x = x; pl->z = z; pl->rot_y = rot;
+    bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+    for (int f = 0; f < 40; f++) {
+        if (g_scd.message_active && r.msg < 0) r.msg = (int)g_scd.message_id;
+        if (g_room_change.pending) break;
+        bild(0, 0);
+    }
+    if (g_room_change.pending) { r.raumwechsel = 1; r.ziel = g_room_change.room_id; }
+    return r;
+}
+
+static int slot_ist(int slot, int typ, int ev)
+{
+    const re15_aot_t *a = &g_aot.slots[slot];
+    return a->active && (int)a->type == typ && (ev < 0 || (int)a->event_id == ev);
+}
+
+static int rdt_nachrichten(void)   /* Zahl der Original-Nachrichten des geladenen Raums (Tabelle: erstes u16 / 2) */
+{
+    if (!s_rdt.messages || s_rdt.messages_size < 2) return 0;
+    return (int)((s_rdt.messages[0] | (s_rdt.messages[1] << 8)) / 2);
+}
+
+/* ================================================================== tuertexte */
+static void teil_tuertexte(void)
+{
+    printf("== tuertexte ==\n");
+    char t[512];
+    int n1 = 0, n2 = 0, n3 = 0;
+    const uint8_t *r1 = re15_tuersperre_r39_text(RE15_R39P_TS_RAUM_1041, &n1);
+    const uint8_t *r2 = re15_tuersperre_r39_text(RE15_R39P_TS_RAUM_1051, &n2);
+    const uint8_t *d  = re15_tuersperre_r39_text(RE15_R39P_TS_RAUM_10B1, &n3);
+    t[0] = 0; if (r1 && n1 > 0) re15_msg_decode_text(r1, (size_t)n1, t, sizeof t);
+    printf("    1041/1051: \"%s\"\n", t);
+    PRUEF(!strcmp(t, "I have to rescue John! He is in danger!"), "Satz = Nutzer-Wortlaut Nachtrag 12");
+    PRUEF(r1 && r2 && n1 == n2 && !memcmp(r1, r2, (size_t)n1), "1041 und 1051 zeigen denselben Satz");
+    {
+        int z08 = 0, z05 = 0;
+        for (int i = 0; r1 && i < n1; i++) { z08 += r1[i] == 0x08; z05 += r1[i] == 0x05; }
+        PRUEF(n1 > 6 && r1[0] == 0x04 && r1[1] == 0x02 && z08 == 1 && z05 == 0 && r1[n1 - 2] == 0x01 && r1[n1 - 1] == 0x00,
+              "Erzaehlform `04 02 <Zeile> 08 <Zeile> 01 00` ohne Sprecherkopf (Form ROOM1090 msg 7 @0x28E6, 1141/11C0-Sperren)");
+    }
+    /* 10B1: RE2 ROOM21A0 msg 4 @0x02963 Zeichen fuer Zeichen, Steuercodes in RE1.5-Form */
+    {
+        char p[700];
+        snprintf(p, sizeof p, "%s/ROOM21A0.RDT", RE15_RE2_RDT_DIR);
+        size_t sz = 0;
+        uint8_t *re2 = slurp(p, &sz);
+        uint8_t soll[128];
+        int ns = 0, ok_tab = 0;
+        if (re2 && sz > 0x2A00) {
+            uint32_t ms = (uint32_t)(re2[8 + 14 * 4] | re2[9 + 14 * 4] << 8 | re2[10 + 14 * 4] << 16 | (uint32_t)re2[11 + 14 * 4] << 24);
+            if (ms + 10 < sz) ok_tab = (ms + (uint32_t)(re2[ms + 8] | re2[ms + 9] << 8)) == 0x02963u;   /* Tabelle Eintrag 4 */
+            for (size_t i = 0x02963; i < sz && ns < 120; ) {
+                const uint8_t b = re2[i];
+                if (b == 0xFA)      { soll[ns++] = 0x04; soll[ns++] = re2[i + 1]; i += 2; }
+                else if (b == 0xFC) { soll[ns++] = 0x08; i += 1; }
+                else if (b == 0xFD) { soll[ns++] = 0x02; soll[ns++] = re2[i + 1]; i += 2; }
+                else if (b == 0xFE) { soll[ns++] = 0x01; soll[ns++] = 0x00; break; }
+                else if (b == 0x01) { soll[ns++] = 0x57; i += 1; }
+                else                { soll[ns++] = b; i += 1; }
+            }
+        }
+        free(re2);
+        t[0] = 0; if (d && n3 > 0) re15_msg_decode_text(d, (size_t)n3, t, sizeof t);
+        printf("    10B1: \"%s\" (%d B)\n", t, n3);
+        PRUEF(ok_tab, "RE2 ROOM21A0 Nachrichtentabelle Eintrag 4 -> @0x02963 (Deckel, den die Figur nie oeffnen kann)");
+        PRUEF(ns == n3 && d && !memcmp(d, soll, (size_t)ns),
+              "10B1-Text = RE2 ROOM21A0 msg 4 (fa 02 -> 04 02, fc -> 08, fd 00 -> 02 00, Punkt 01 -> 57, fe 00 -> 01 00)");
+        PRUEF(strstr(t, "The lid is firmly closed.") && strstr(t, "It's impossible for me to open it."), "Wortlaut \"The lid is "
+              "firmly closed. / It's impossible for me / to open it.\"");
+    }
+    PRUEF(RE15_R39P_TS_MSG_1041 == 41 && RE15_R39P_TS_MSG_1051 == 40 && RE15_R39P_TS_MSG_10B1 == 40,
+          "Ids 1041 = 41, 1051 = 40 (Orchestrator Nachbesserung 1), 10B1 = 40");
+    {   /* Ids liegen hinter den Original-Nachrichten der Raeume */
+        int m41 = -1, m51 = -1, mb1 = -1;
+        if (rdt_laden(0x1041) == 0) m41 = rdt_nachrichten();
+        if (rdt_laden(0x1051) == 0) m51 = rdt_nachrichten();
+        if (rdt_laden(0x10B1) == 0) mb1 = rdt_nachrichten();
+        PRUEF(m41 > 0 && m41 <= RE15_R39P_MSG_SATZ && m51 > 0 && m51 < RE15_R39P_TS_MSG_1051 && mb1 > 0 && mb1 < RE15_R39P_TS_MSG_10B1,
+              "keine Kollision mit Original-Ids (ROOM1041 %d, ROOM1051 %d, ROOM10B1 %d Nachrichten)", m41, m51, mb1);
+    }
+    /* Stimme: nur die Nutzer-Zeile 1041/41 und 1051/40 (Ordnerregel), der Deckel-Text nicht */
+    {
+        scd_audio_event_t e;
+        while (scd_audio_queue_pop(&e)) {}
+        int ids[4] = { 0 }, n = 0;
+        re15_tuersperre_r39_stimme(RE15_R39P_TS_RAUM_1041, RE15_R39P_TS_MSG_1041);
+        re15_tuersperre_r39_stimme(RE15_R39P_TS_RAUM_1051, RE15_R39P_TS_MSG_1051);
+        re15_tuersperre_r39_stimme(RE15_R39P_TS_RAUM_10B1, RE15_R39P_TS_MSG_10B1);
+        re15_tuersperre_r39_stimme(RE15_R39P_TS_RAUM_1041, RE15_R39P_MSG_SATZ);
+        re15_tuersperre_r39_stimme(0x1040, RE15_R39P_TS_MSG_1041);
+        while (scd_audio_queue_pop(&e)) if (e.kind == SCD_AUDIO_VOICE_ON && n < 4) ids[n++] = e.sample_id;
+        PRUEF(n == 2 && ids[0] == RE15_R39P_TS_MSG_1041 && ids[1] == RE15_R39P_TS_MSG_1051,
+              "Stimme eingereiht nur fuer 1041/41 und 1051/40 (main41.wav/main40.wav), nicht fuer 10B1/40, 1041/40, Leon");
+    }
+}
+
+/* ================================================================== tuer1041 */
+static void teil_tuer1041(void)
+{
+    printf("== tuer1041 ==\n");
+    static const int k_gerettet[] = { -1 };
+    tuer_erg_t r;
+    /* ohne Panikphase (vor dem Ruf bzw. nach der Rettung: Bit 97 = 0, (4,0xF0) = 0, (4,0xF2) = 0) */
+    elza_raum(0x1041, -20800, -3800, 0, 0, k_gerettet);
+    PRUEF(re15_tuersperre_r39_anker_ok(RE15_R39P_TS_RAUM_1041), "Anker ROOM1041 main00 @0x010B8 (Door_aot_set Slot 1) wie ausgeliefert");
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_1041, RE15_AOT_TYPE_DOOR, -1) &&
+          g_aot.door_params[RE15_R39P_TS_SLOT_1041].dest_room == RE15_R39P_TS_ZIEL_1041,
+          "ohne Panikphase: Slot 1 ist die Tuer nach Raum 0x03 (ROOM1031)");
+    r = tuer_druecken(-20800, -3800, 0);
+    PRUEF(r.raumwechsel && r.ziel == 0x1031u && r.msg < 0, "ohne Panikphase: Aktion -> Raumwechsel nach ROOM%04X", r.ziel);
+    /* in der Panikphase */
+    elza_raum(0x1041, -20800, -3800, 0, 1, NULL);
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_1041, RE15_AOT_TYPE_MESSAGE, RE15_R39P_TS_MSG_1041) &&
+          (g_aot.slots[RE15_R39P_TS_SLOT_1041].sce_flags & 0x7F) == RE15_R39P_TS_SAT &&
+          g_aot.slots[RE15_R39P_TS_SLOT_1041].pause_mask16 == RE15_R39P_TS_MASKE &&
+          g_aot.door_params[RE15_R39P_TS_SLOT_1041].dest_room == RE15_R39P_TS_ZIEL_1041,
+          "Panikphase beim Betreten: Slot 1 = MESSAGE msg 41, sat 0x31, Maske 0xffff (Form ROOM11B1 @0x011C0); Ziel bleibt im Satz");
+    s_n_st = 0;
+    r = tuer_druecken(-20800, -3800, 0);
+    PRUEF(!r.raumwechsel && r.msg == RE15_R39P_TS_MSG_1041 && stimmen_mit_id(RE15_R39P_TS_MSG_1041) == 1,
+          "Panikphase: Aktion -> Text msg %d + Stimme Id 41, KEIN Raumwechsel", r.msg);
+    /* Beginn der Phase IN 1041 (RUF1041 -> Set(9,97)=1): Tuer wird im selben Bild Text, nie freies Bild mit offener Tuer */
+    elza_1041(1, 0);
+    int b97 = -1, offen_frei = 0, gesperrt_bei = -1;
+    for (int f = 0; f < 4000; f++) {
+        bild(0, 0);
+        const int p97 = flag(9, RE15_R39P_BIT_PANIK);
+        if (p97 && b97 < 0) b97 = s_bild;
+        if (p97 && !flag(2, 7) && slot_ist(RE15_R39P_TS_SLOT_1041, RE15_AOT_TYPE_DOOR, -1)) offen_frei++;
+        if (gesperrt_bei < 0 && slot_ist(RE15_R39P_TS_SLOT_1041, RE15_AOT_TYPE_MESSAGE, RE15_R39P_TS_MSG_1041)) gesperrt_bei = s_bild;
+        if (b97 >= 0 && s_bild > b97 + 30) break;
+    }
+    printf("    Bit 97 ab Bild %d, Slot 1 Text ab Bild %d, freie Bilder mit offener Tuer %d\n", b97, gesperrt_bei, offen_frei);
+    PRUEF(b97 >= 0 && gesperrt_bei == b97 && offen_frei == 0,
+          "RUF1041 setzt Bit 97 -> Tuer im selben Spielbild Text (Tick vor dem AOT-Scan), kein freies Bild mit offener Tuer");
+    PRUEF(gesperrt_bei < 0 || slot_ist(RE15_R39P_TS_SLOT_1041, RE15_AOT_TYPE_MESSAGE, RE15_R39P_TS_MSG_1041),
+          "nach dem Beginn bleibt die Tuer Text");
+    r = tuer_druecken(-20800, -3800, 0);
+    PRUEF(!r.raumwechsel && r.msg == RE15_R39P_TS_MSG_1041, "danach an der Tuer: Text msg %d, kein Raumwechsel", r.msg);
+    /* Leon ROOM1040 unveraendert (auch mit Bit 97) */
+    elza_raum(0x1040, -20800, -3800, 0, 1, NULL);
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_1041, RE15_AOT_TYPE_DOOR, -1), "Leon ROOM1040: Slot 1 bleibt Tuer");
+}
+
+/* ================================================================== tuer1051 */
+static void teil_tuer1051(void)
+{
+    printf("== tuer1051 ==\n");
+    static const int k_rollo[] = { 3, 0x79, -1 };   /* Rollo 1051 offen (sub02 @0x00CD6) */
+    tuer_erg_t r;
+    elza_raum(0x1051, 16456, -13709, 0, 0, k_rollo);
+    PRUEF(re15_tuersperre_r39_anker_ok(RE15_R39P_TS_RAUM_1051), "Anker ROOM1051 main00 @0x00B5A (Door_aot_set Slot 4) wie ausgeliefert");
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_1051, RE15_AOT_TYPE_DOOR, -1) &&
+          g_aot.door_params[RE15_R39P_TS_SLOT_1051].dest_room == RE15_R39P_TS_ZIEL_1051,
+          "ohne Panikphase: Slot 4 ist die Tuer nach Raum 0x0A (ROOM10A1)");
+    r = tuer_druecken(16456, -13709, 0);
+    PRUEF(r.raumwechsel && r.ziel == 0x10A1u, "ohne Panikphase: Aktion -> Raumwechsel nach ROOM%04X", r.ziel);
+    elza_raum(0x1051, 16456, -13709, 0, 1, k_rollo);
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_1051, RE15_AOT_TYPE_MESSAGE, RE15_R39P_TS_MSG_1051) &&
+          (g_aot.slots[RE15_R39P_TS_SLOT_1051].sce_flags & 0x7F) == RE15_R39P_TS_SAT &&
+          g_aot.slots[RE15_R39P_TS_SLOT_1051].pause_mask16 == RE15_R39P_TS_MASKE,
+          "Panikphase: Slot 4 = MESSAGE msg 40, sat 0x31, Maske 0xffff");
+    s_n_st = 0;
+    r = tuer_druecken(16456, -13709, 0);
+    PRUEF(!r.raumwechsel && r.msg == RE15_R39P_TS_MSG_1051 && stimmen_mit_id(RE15_R39P_TS_MSG_1051) == 1,
+          "Panikphase: Aktion -> Text msg %d + Stimme Id 40, KEIN Raumwechsel", r.msg);
+    for (int f = 0; f < 60; f++) bild(0, 0);
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_1051, RE15_AOT_TYPE_MESSAGE, RE15_R39P_TS_MSG_1051), "Sperre bleibt in der Phase stehen");
+    /* Leon ROOM1050: Slot 4 gehoert dort adaruf_1050.c (vor der Ada-Rettung (3,0xBB)=0) und sperre1050_r37.c ((9,71)..(9,73));
+     * nach der Ada-Rettung ohne Chief-Plan ist er die Original-Tuer - Bit 97 aendert daran nichts. */
+    static const int k_leon[] = { 3, 0x79, 3, 0xBB, -1 };
+    elza_raum(0x1050, 16456, -13709, 0, 1, k_leon);
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_1051, RE15_AOT_TYPE_DOOR, -1), "Leon ROOM1050 (Ada gerettet, Bit 97 = 1): Slot 4 bleibt Tuer");
+}
+
+/* ================================================================== tuer10b1 */
+static void teil_tuer10b1(void)
+{
+    printf("== tuer10b1 ==\n");
+    static const int k_vor[]   = { -1 };
+    static const int k_szene[] = { 3, 0x82, -1 };                                  /* ROOM1171 sub02 @0x013A4 */
+    static const int k_nach[]  = { 3, 0x83, 3, 0x41, 3, 0x46, -1 };              /* sub04 @0x0195E/@0x01962, ROOM2001 @0x01958 */
+    static const int k_gefunden[] = { 3, 0x83, 3, 0x41, 3, 0x44, 9, 97, -1 };   /* ROOM11B1 sub03 @0x0143C, mit Bit 97 */
+    /* (3,0x82): John steht nach sub00 @0x017F6/@0x017FE am Deckel (-21422,3307) und die Szene startet, sobald Elza Cut 7
+     * betritt (sub01 @0x0181E) - ein Druck "vor" ihr ist im Spiel nicht erreichbar (im Prueflauf schob Johns Koerper Elza
+     * auf (-20518,3246), Vorwaertspunkt ausserhalb des Rechtecks). Dort zaehlen Sperre + Szenen-Huelle (Teil tuerszene). */
+    static const struct { const int *bits; const char *was; int druck; } z[] = {
+        { k_vor, "vor der Szene", 1 }, { k_szene, "Szene steht an (3,0x82)", 0 }, { k_nach, "nach der Szene, Sherry-Suche", 1 },
+        { k_gefunden, "Sherry-Flags + Bit 97", 1 },
+    };
+    for (unsigned i = 0; i < sizeof z / sizeof z[0]; i++) {
+        elza_raum(0x10B1, -21159, 3289, 3072, 0, z[i].bits);
+        const int ok = re15_tuersperre_r39_anker_ok(RE15_R39P_TS_RAUM_10B1) &&
+                       slot_ist(RE15_R39P_TS_SLOT_10B1, RE15_AOT_TYPE_MESSAGE, RE15_R39P_TS_MSG_10B1) &&
+                       g_aot.door_params[RE15_R39P_TS_SLOT_10B1].dest_room == RE15_R39P_TS_ZIEL_10B1 &&
+                       slot_ist(0, RE15_AOT_TYPE_DOOR, -1) && g_aot.door_params[0].dest_room == 0x17;
+        if (!z[i].druck) {
+            const uint8_t *orig = s_rdt.sub_scd[RE15_R39P_TS_SUB_10B1];
+            int n = 0;
+            const uint8_t *huelle = re15_tuersperre_r39_szene(&n);
+            PRUEF(ok && orig && re15_tuersperre_r39_evt_exec(RE15_R39P_TS_RAUM_10B1, RE15_R39P_TS_SUB_10B1, orig) == huelle,
+                  "%s: Deckel Slot 1 = Text msg 40 (Ziel 0x26 bleibt im Satz, Leiter Slot 0 -> 0x17 bleibt Tuer); Evt_exec sub04 "
+                  "-> Szenen-Huelle SZENE10B1", z[i].was);
+            continue;
+        }
+        s_n_st = 0;
+        tuer_erg_t r = tuer_druecken(-21159, 3289, 3072);
+        PRUEF(ok && !r.raumwechsel && r.msg == RE15_R39P_TS_MSG_10B1 && stimmen_mit_id(RE15_R39P_TS_MSG_10B1) == 0,
+              "%s: Deckel Slot 1 = Text msg 40 (Ziel 0x26 bleibt im Satz, Leiter Slot 0 -> 0x17 bleibt Tuer), Aktion -> Text "
+              "msg %d, kein Raumwechsel, keine Stimme", z[i].was, r.msg);
+    }
+    /* Leon ROOM10B0 unveraendert */
+    static const uint8_t k_leon_sub[2] = { 0x01, 0x00 };
+    elza_raum(0x10B0, -21159, 3289, 3072, 1, NULL);
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_10B1, RE15_AOT_TYPE_DOOR, -1) &&
+          re15_tuersperre_r39_evt_exec(0x10B0, RE15_R39P_TS_SUB_10B1, k_leon_sub) == k_leon_sub,
+          "Leon ROOM10B0: Deckel bleibt Tuer, kein Programm");
+    tuer_erg_t r = tuer_druecken(-21159, 3289, 3072);
+    PRUEF(r.raumwechsel && r.ziel == 0x1260u, "Leon ROOM10B0: Aktion -> Raumwechsel nach ROOM%04X", r.ziel);
+}
+
+/* ================================================================== tuerszene (ROOM10B1 sub04 mit gesperrtem Deckel) */
+typedef struct { int text, text_bild, pad, balken, raumwechsel, frei, ende; } szene_erg_t;
+static szene_erg_t szene_10b1(int mit_huelle)
+{
+    static const int k_szene[] = { 3, 0x82, -1 };
+    szene_erg_t e = { 0, -1, -1, -1, 0, 0, -1 };
+    elza_raum(0x10B1, -21159, 3289, 3072, 0, k_szene);   /* (3,0x82)=1 beim Aufbau: sub00 @0x017F6 stellt John an den Deckel */
+    int john = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type == 0x49) john = 1;
+    if (!john) printf("    (John Typ 0x49 nach dem Aufbau nicht aktiv)\n");
+    /* Die Szene startet hier von Hand (wie op_evt_exec); sub01 (je Bild) darf sie nicht ein zweites Mal starten. sub04
+     * loescht (3,0x82) als erstes Opcode selbst (@0x0195A) - hier vorweg, weil der Ausloeser umgangen wird. */
+    re15_game_flag_set(3, 0x82, 0);
+    g_room_change.pending = 0;
+    const uint8_t *orig = s_rdt.sub_scd[RE15_R39P_TS_SUB_10B1];
+    const uint8_t *p = mit_huelle ? re15_tuersperre_r39_evt_exec(RE15_R39P_TS_RAUM_10B1, RE15_R39P_TS_SUB_10B1, orig) : orig;
+    int slot = -1;
+    for (int s = SCD_EVENT_SLOT_FIRST; s <= SCD_EVENT_SLOT_LAST; s++) if (!g_scd.threads[s].active) { slot = s; break; }
+    if (slot < 0 || !p || scd_thread_start(slot, p) != 0) return e;   /* wie op_evt_exec (cond 0xFF: erster freier Faden) */
+    int zu = -1;
+    for (int f = 0; f < 4000; f++) {
+        uint16_t taste = 0;
+        if (g_scd.message_active && g_scd.message_id == RE15_R39P_TS_MSG_10B1) {
+            if (!e.text) { e.text = 1; e.text_bild = s_bild; }
+            if ((f % 15) == 0) taste = RE15_PAD_BIT_SQUARE;   /* Text lesen und schliessen */
+        } else if (g_scd.message_active && (f % 15) == 0) {
+            taste = RE15_PAD_BIT_SQUARE;                      /* Szenen-Zeilen 0..5 weiterschalten */
+        }
+        bild(taste, taste);
+        if (g_room_change.pending) e.raumwechsel = 1;
+        if (e.text && zu < 0 && !g_scd.message_active) zu = s_bild;
+        if (zu >= 0 && s_bild > zu + 60) break;
+    }
+    e.pad = flag(2, 7); e.balken = flag(1, 0x1B);
+    e.frei = !re15_cine_active() && g_scd.player_mode == 0;
+    e.ende = !g_scd.threads[slot].active;
+    return e;
+}
+
+static void teil_tuerszene(void)
+{
+    printf("== tuerszene ==\n");
+    int n = 0;
+    const uint8_t *p = re15_tuersperre_r39_szene(&n);
+    {
+        uint8_t *r51 = NULL;
+        size_t sz = 0;
+        char rp[600];
+        snprintf(rp, sizeof rp, "%s/STAGE1/ROOM1051.RDT", RE15_ASSET_PSX_DIR);
+        r51 = slurp(rp, &sz);
+        PRUEF(r51 && sz > 0xDA4 && n == 22 && p[0] == 0x18 && p[1] == RE15_R39P_TS_SUB_10B1 && !memcmp(p + 2, r51 + 0x00CCC, 2) &&
+              !memcmp(p + 4, r51 + 0x00D90, 16) && !memcmp(p + 20, r51 + 0x00DA2, 2),
+              "SZENE10B1 = Gosub sub04 + ROOM1051 sub02 @0x00CCC (Evt_next) + @0x00D90..@0x00D9F (Pad frei, Balken weg, Cut_auto, "
+              "Plc_ret) + @0x00DA2 Evt_end, bytegleich");
+        free(r51);
+    }
+    /* Ohne Huelle (nur die Original-Szene): der Deckel bleibt zu, aber die Szene loest Pad-Sperre und Balken nie */
+    szene_erg_t o = szene_10b1(0);
+    printf("    ohne Huelle: Text %d (Bild %d), Raumwechsel %d, (2,7)=%d, (1,0x1B)=%d, frei %d\n", o.text, o.text_bild, o.raumwechsel,
+           o.pad, o.balken, o.frei);
+    PRUEF(o.text && !o.raumwechsel && o.pad == 1 && o.balken == 1 && !o.frei,
+          "MESSUNG: Original-sub04 allein zeigt den Deckel-Text (Aot_on @0x01A8E -> MESSAGE), laesst Pad-Sperre @0x01966 und "
+          "Balken @0x0196A aber stehen (Elza eingefroren) -> Huelle noetig");
+    szene_erg_t m = szene_10b1(1);
+    printf("    mit Huelle:  Text %d (Bild %d), Raumwechsel %d, (2,7)=%d, (1,0x1B)=%d, frei %d, Programm zu Ende %d\n", m.text,
+           m.text_bild, m.raumwechsel, m.pad, m.balken, m.frei, m.ende);
+    PRUEF(m.text && !m.raumwechsel, "Sherry-Szene: am Ende Deckel-Text msg 40 statt Raumwechsel nach ROOM1261");
+    PRUEF(m.pad == 0 && m.balken == 0 && m.frei && m.ende, "nach dem Text: Pad frei, Balken weg, Steuerung zurueck, Programm zu Ende");
+    PRUEF(flag(3, 0x83) && flag(3, 0x41) && !flag(3, 0x82), "Szenen-Flags wie im Original gesetzt ((3,0x83)/(3,0x41), (3,0x82)=0)");
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_10B1, RE15_AOT_TYPE_MESSAGE, RE15_R39P_TS_MSG_10B1), "Deckel bleibt danach Text");
+}
+
 /* ================================================================== pegel (Werkzeug fuer die Integrations-Riegel)
  * test_r39_johnruf1041 pegel <cap.raw> <wav> <capTick> <xa_vol>
  * Misst im RE15_AUDIO_CAP_SYNC-Mitschnitt (Stereo int16, 44100 Hz, 1470 Werte je Spielbild) die Verstaerkung einer
@@ -632,7 +958,13 @@ int main(int argc, char **argv)
     else if (!strcmp(teil, "musik"))     teil_musik();
     else if (!strcmp(teil, "ruf1131"))   teil_ruf1131();
     else if (!strcmp(teil, "leon"))      teil_leon();
-    else { printf("Teil? texte|programme|stimme|xa|ablauf|musik|ruf1131|leon\n"); return 2; }
+    else if (!strcmp(teil, "tuertexte")) teil_tuertexte();
+    else if (!strcmp(teil, "tuer1041"))  teil_tuer1041();
+    else if (!strcmp(teil, "tuer1051"))  teil_tuer1051();
+    else if (!strcmp(teil, "tuer10b1"))  teil_tuer10b1();
+    else if (!strcmp(teil, "tuerszene")) teil_tuerszene();
+    else { printf("Teil? texte|programme|stimme|xa|ablauf|musik|ruf1131|leon|tuertexte|tuer1041|tuer1051|tuer10b1|tuerszene\n");
+           return 2; }
     printf("%d Pruefungen, %d Fehler\n", g_n, g_fail);
     return g_fail ? 1 : 0;
 }
