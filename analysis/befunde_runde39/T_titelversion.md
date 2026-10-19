@@ -4,7 +4,7 @@ Baum: `.claude/worktrees/r39_titelversion` (Zweig `r39/titelversion`, Basis 832b
 Nutzer (Nachtrag 14, woertlich): "Eine letzte Ergänzung - bei dieser und zukünftig neuen Versionen passe mir bitte die
 Version im Titelscreen an. Entferne das bestehende. Ich glaube dafür gibt es auch schon ein Skript iregndwo."
 
-Status: begonnen 2026-10-19.
+Status: fertig 2026-10-19 (alle Punkte gemessen, belegt, gebaut, Riegel gruen).
 
 ## 1. Messung vorher
 
@@ -194,10 +194,67 @@ Spalten 229..283` und `SKIP Bildvergleich (RE15_OHNE_GPU gesetzt - keine echte G
 'Ver.9.9.9', RE15_VERSION 'v9.9.9', 929 Pixel entfernt`.
 
 ## 5. Tests
-(folgt)
+Neue Riegel (registriert nur aus `re15_port/tests/unit/probes/r39_titelversion.cmake`; Unit-Quelle
+`tests/unit/test_r39_titelversion.c`, Skripte `tests/unit/r39_titelversion/`, Integration
+`tests/integration/test_r39_titelversion_titel.cmake`):
+
+| Test | misst | Ergebnis (Windows) |
+|---|---|---|
+| unit_r39_titelversion_glyphen | 16 Glyphen; Ausschnitte bytegleich mit TITLEU.TIM an der dokumentierten Stelle; eigenes Flaechenmodell (Raster 1,12 / Quadrat 1,52 / y 24,88) trifft die Ausschnitte bis 4..7 Stufen und die ergaenzten bis 0..5 (nie mehr als die Ausschnitte); Kern 25, Halo-Zeilen 24/33 <= 4 wie bei 0/1/2/5 | 50/50 |
+| unit_r39_titelversion_text | Version -> Anzeige (9 Faelle + NULL + zu kleiner Puffer) | 11/11 |
+| unit_r39_titelversion_layout | alte Zeile "Ver.2025.01.25" mit den Konstanten hoechstens 1 Spalte neben den Original-Stellen, letzte "5" genau x277; neue Zeilen rechts an 283,60 (Tinte 7090/25), Abstaende 0,72/2,74 px +-0,48, links >= x188 | 10/10 |
+| unit_r39_titelversion_maske | 929 Pixel, bbox x198..283 y11..33, 357/572 je Zeile, grau + STP 0, Ring 608 x 0x8000, jeder Kern >= 20 im Kasten erfasst, Kunst-Staub (9 Pixel) nicht in der Maske; Kunstfaelle (Rand, rot, ohne Kern) bleiben | 11/11 |
+| unit_r39_titelversion_anwenden | "v0.8.27"/"v0.8.26 dev"/"v9.9.9": 929 entfernt, ausserhalb Maske + neuer Kacheln bytegleich, Maske ohne Kachel = 0x8000, neue Zeile exakt; letzte "9" bei x277 = Kachel; falsches Mass -> -1; TITLEU.TIM auf der Platte bytegleich | 15/15 |
+| unit_r39_titelversion_version | einkompilierte Version == die von CMake bestimmte | 2/2 |
+| unit_r39_titelversion_cmake | Versionsquelle (cmake -P): -D, Umgebung, -D schlaegt Umgebung, leeres -D, git-Tag + " dev" (Fremd-Tag danach zaehlt nicht, neuer Tag zaehlt), ohne git "dev" | 8/8 |
+| unit_r39_titelversion_huelle | ECHTE build_win_cross.sh / build_linux_deck.sh mit docker-Attrappe: --version, Umgebung, --version schlaegt Umgebung, ohne Angabe Host-Tag + " dev", ohne git keine Weitergabe -> `docker run ... -e RE15_VERSION=...` | 12/12 |
+| unit_r39_titelversion_ablauf | ECHTES release_alles.sh (Wegwerf-Repo, r38-Attrappen umhuellt): Trockenlauf zeigt RE15_VERSION=v0.8.26 an windows/linux; Lauf bis linux: windows/linux bekommen RE15_VERSION=v0.8.26, android --version v0.8.26; Aufrufliste der r38-Attrappen unveraendert | 12/12 |
+| integration_r39_titelversion_titel | echte exe (Kopie mit eigenem Namen, eigener Laufordner, keine RE15_* geerbt), Titelabzug Bild 600 Fensterskala 1: debug.log-Zeile mit 929 Pixeln und der CMake-Version; ausserhalb des Kastens (ohne Menue) = rohes TITLEU.TIM (0); Zeile "Sample" weg (0); Abzug == Erwartung pixelgleich (0 Abweichungen, 499 neue Pixel, "Ver.0.8.26 dev" Spalten 200..283). Ohne GPU (RE15_OHNE_GPU) Bildvergleich sichtbar uebersprungen | gruen |
+
+Gezielte Laeufe im Spurbaum (keine volle Suite), Endstand:
+- `ctest --test-dir re15_port/build -R "r39_titelversion|r30_titel|boot_bg_pin|dark_start_pin" --timeout 600`:
+  **100% tests passed, 0 tests failed out of 14**
+- `ctest --test-dir re15_port/build -R "r39_titelversion|r38_releaseskript|r35_android|r34a_asset_abgleich|r30_android|r30_titel|boot_bg_pin|dark_start_pin" --timeout 600`
+  (Release-Riegel test_r38_releaseskript*, unit_r35_android_* inkl. Pruefkette/apk-Gate-Mutanten, Titel-Haken):
+  **100% tests passed, 0 tests failed out of 30** (vor der Phasen-Angleichung e/.; release/ seitdem unveraendert)
+- alle Unit-/Prop-/Sonden-Riegel `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -j4 --timeout 600`:
+  **100% tests passed, 0 tests failed out of 888** (Endstand, 603 s; erster Lauf vor der Phasen-Angleichung ebenfalls 888/888)
+- Linux-Container (`re15-linux-build:deb11`, `-e RE15_VERSION=v9.9.9`): `ctest -R r39_titelversion`
+  **100% tests passed, 0 tests failed out of 10**
+
+Linux-fest: im Container `re15-linux-build:deb11` liefen alle 10 Riegel gruen (9 Unit + Integration mit sichtbar
+uebersprungenem Bildvergleich, Abschnitt 4.2). Parallel-fest: eigene
+Laufordner/Zufalls-Id, exe-Kopie mit Praefix `re15_pc_r39t_<id>`, kein Glob ueber fremde Kopien, RE15_* des Aufrufers
+geloescht; `cmake_minimum_required(VERSION 3.16)` in jedem -P-Skript; keine libm-Funktionen.
 
 ## 6. OFFEN
-(folgt)
+- `RE15_MIN_TESTS` (re15_port/tools/local_build.sh, Untergrenze 960) nicht angehoben: +10 Tests dieser Spur - gemeinsame
+  Datei, Anhebung bei der Integration (die Untergrenze bleibt ohnehin erfuellt).
+- Linux-Container: der Bildvergleich des Integrations-Riegels ist dort nicht aussagekraeftig (offscreen + Mesa-GL, Titel
+  bei Bild 150 noch in der Einblende) und wird wie bei integration_r30_titel_puls sichtbar uebersprungen; die
+  Protokoll-Pruefungen (Version, 929 Pixel, Anzeige) laufen auch dort.
+- Android: nur Konfigurations-/Kompilier-Beleg (Abschnitt 4.1), kein Titelabzug auf einem Geraet/Emulator - der
+  Titel laeuft dort durch denselben Code (render_pc.c + engine), die Version kommt ueber -Pre15Version.
+- Ein vollstaendiger build_linux_deck.sh-Lauf (mit voller Suite) gehoert zum Release, nicht zur Spur.
+- Integration: neue Quelldatei `engine/src/titelversion_r39.c` (GLOB) -> im Hauptbaum `local_build.sh configure` vor dem
+  Bau; RELEASE_NOTES.md (tabu) nennt die Titelbild-Version noch nicht.
 
 ## 7. Fuer den Nutzer
-(folgt)
+- **"Ich glaube dafuer gibt es auch schon ein Skript irgendwo":** Es gab keins - weder in diesem Repo noch im alten
+  reAi-Ordner (der enthaelt nur noch eine leere Datei). Die Version kam bisher nur in die Paket-Dateinamen und in die APK,
+  nicht ins Spiel. Das ist jetzt eingebaut.
+- **Was du siehst:** Oben rechts im Titelbild stehen "Sample" und "Ver.2025.01.25" nicht mehr. Dort steht jetzt die
+  Version in derselben Pixelschrift, rechtsbuendig wie vorher, z. B. **"Ver.0.8.27"** im Release v0.8.27. Logo und "TM"
+  bleiben unveraendert. Die Bilddatei TITLEU.TIM wird nicht veraendert - das Spiel schreibt die Zeile beim Laden.
+- **Automatisch bei jeder neuen Version:** `release/release_alles.sh` gibt seine Version an den Windows-, Linux- und
+  Android-Bau weiter. Du musst nichts tun. Von Hand geht es auch: `bash release/build_win_cross.sh --version v0.8.27`,
+  `bash release/build_linux_deck.sh --version v0.8.27`, `bash release/build_android.sh --version v0.8.27` (wie bisher).
+- **Lokaler Bau** (die exe im Hauptverzeichnis, `local_build.sh`): zeigt die letzte veroeffentlichte Version mit "dev",
+  z. B. **"Ver.0.8.26 dev"**, nach dem Release-Tag v0.8.27 dann "Ver.0.8.27 dev". So erkennst du, dass es kein
+  Release-Paket ist.
+- **Ziffern 3, 4, 6, 7, 8, 9 und "dev":** die alte Zeile enthielt nur 0, 1, 2 und 5. Die uebrigen Zeichen sind im selben
+  Raster und mit derselben Schattierung ergaenzt (Form der klassischen 5x7-Pixelschrift, aus der auch die 0 und die 2
+  der alten Zeile stammen). Vorschau: `analysis/befunde_runde39/T_belege/glyphen_vorschau.png`.
+- Neue Assets fuer das Paket-Gate: **keine**. Sprachdateien: **keine**. Bedienung: unveraendert.
+- Entscheidungsfragen: keine offenen. (Falls dir eine der neuen Ziffern nicht gefaellt: sag welche - die Form steht
+  an einer Stelle, `re15_port/tools/r39_titelversion/glyphen_bauen.py`, ERGAENZT.)
