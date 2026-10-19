@@ -107,7 +107,10 @@ Nachbarspalten, die zur Nachbar-Glyphe gehoeren, ausgeblendet):
   Doku (PORTING_ROADMAP.md, Auftrag/Orchestrator der Runde 39), Binaerdateien/Pakete und
   `analysis/save_system_patched_build.md` (die Spur zum Vorprojekt-Skript, s. o.). `psx_dev/save/build.py` nennt
   patch_save_final.py nur als Empfaenger seines save_stub.bin. `RE15_REBORN_VERSION_STRING "v0.1.0 Phase 4.1"`
-  (`include/re15_engine.h:24`) wird nirgends benutzt (grep: nur die Definition).
+  (`include/re15_engine.h:24`) wird nirgends benutzt (grep: nur die Definition). git-Historie:
+  `git log --all --oneline -S TITLEU` (Stand f6901111) = 20 Commits; vor Runde 39 nur Front-End-, Titel-Puls-, Kamera-, Asset-Pfad- und Release-Commits
+  (fc0882ec, e858c2f2, 405b8bd4, a548773d, 008b13e8, 815ff1ec, cf93edd1, Pakete 68bde6bd/47391207/9f2d3c16/754f67ad) -
+  laut Betreff betrifft keiner eine Version im Titelbild.
 - `release/release_alles.sh` bestimmt die Version (hoechster Tag +1 bzw. `--version`) und gab sie bisher nur an
   `build_android.sh --version` (versionName der APK) und `make_package.sh --version` (Dateinamen) - im Port nicht ans Spiel.
 
@@ -283,7 +286,8 @@ geloescht; `cmake_minimum_required(VERSION 3.16)` in jedem -P-Skript; keine libm
   (`C:/workspace/git/reAi`). Dessen Bau-Skript `scripts/patch_save_final.py` hat bei jeder Version eine Zeile
   "v<Version> <Datum>" direkt in die Titelbild-Datei der gepatchten Disc geschrieben, zuletzt **"V1.18 2026.04.24"**:
   eine Zeile mit Version und Datum, in einer einfachen 5x7-Pixelschrift (einfarbig grau, ohne Schattierung). Dafuer hat
-  es ein ganzes Rechteck schwarz gemacht und dabei auch ein Stueck der Hintergrundgrafik links daneben geloescht.
+  es ein ganzes Rechteck schwarz gemacht und dabei auch ein kleines, sehr dunkles Stueck der Hintergrundgrafik
+  links daneben geloescht (33 Pixel).
   Das Skript selbst gibt es nicht mehr: der Ordner `C:/workspace/git/reAi` enthaelt nur noch `psx_dev/re15_reborn_pc/build/`.
   Erhalten ist nur sein Ergebnis, die gepatchte Disc `info/Re1.5/re15_save_final.bin`. In meiner ersten Antwort stand
   "es gab keins" - das war falsch.
@@ -406,3 +410,18 @@ Daraus:
   (Hilfsprogramm, nicht im CMake-Bau: GLOB nur `engine/src/*.c` und `platform/*/src/*.c`),
   `analysis/befunde_runde39/T_belege/titel_vorprojekt_vergleich.png`.
 - Nicht geaendert: Spiel-Code, Riegel, `release/`, `platform/android/`, `shared_assets/PSX/*`, AUFTRAG.md.
+
+### 8.5 Messung nachher
+- Dossier: `grep -n "kein Skript\|Es gab keins\|gab keins\|nicht ins Spiel\|nur die Runde-30"` trifft nur noch die als
+  falsch gekennzeichneten alten Saetze (1.3 Schluss, 7 erster Punkt "das war falsch") und die Zitate in 8.
+- Bau (`bash re15_port/tools/local_build.sh configure` / `build`): `=== LOCAL-BUILD-OK (configure)` mit
+  `-- RE15_VERSION (Titelbild): 'v0.8.26 dev' (git describe (letzter Tag) + dev)`, dann `ninja: no work to do.` /
+  `=== LOCAL-BUILD-OK (build)` - kein uebersetzter Quelltext geaendert (die neuen Dateien liegen unter tools/, ausserhalb
+  der GLOBs).
+- Gezielte Riegel (keine volle Suite; dieselbe Auswahl wie Abnahme 0 Abschnitt 5: eigene 10 Riegel, Titel-Haken,
+  Release-/Android-Riegel, weil der Zweig release/*.sh und build.gradle beruehrt), keine RE15_* im Aufrufer
+  (`env | grep -c ^RE15_` = 0):
+  `ctest --test-dir re15_port/build -R "r39_titelversion|r38_releaseskript|r35_android|r34a_asset_abgleich|r30_android|r30_titel|boot_bg_pin|dark_start_pin" --timeout 1200 --output-on-failure -j4`
+  -> **100% tests passed, 0 tests failed out of 30** (Total Test time (real) = 880.60 sec; u. a.
+  integration_r39_titelversion_titel 10,05 s, unit_r39_titelversion_ablauf 13,78 s, unit_r39_titelversion_huelle 6,36 s,
+  integration_r30_titel_puls 25,21 s, unit_r35_android_bash_mutanten 848,29 s). Kein Fenster-Haken rot.
