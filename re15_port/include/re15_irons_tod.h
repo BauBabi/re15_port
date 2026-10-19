@@ -29,7 +29,8 @@
  * Programm, das der Installer nach dem Init-Lauf von main00 startet (scd_event_fire(21)). Waehrend
  * eines Montage-Schritts unterbleibt der Reseed des raumeigenen sub01 (FUN_8003f038 @0x8003f064-84),
  * weil ROOM11C0 sub01 @0x01824 `04 0a 18 02` sonst die spaetere Ada-Szene verbrauchen wuerde.
- * Kette: 1150 (Szene) -> [1130 Cut 0, nur wenn in 1140 noch Zombies leben] -> 1040 Cut 1 -> 1030
+ * Kette: 1150 (Szene) -> [1130 Cut 0, nur wenn in 1140 noch Zombies leben] -> [1060 Cut 2, nur wenn in 10E0 noch
+ * Zombies leben — Runde 39 Spur Q, Nachtrag 12, re15_elzazombies_r39.h] -> 1040 Cut 1 -> 1030
  * (Cut 7 nur wenn in 1070 noch Zombies leben; Cut 6 immer) -> 11C0 Cut 13 -> 1150 (Rueckkehr).
  */
 #ifndef RE15_IRONS_TOD_H

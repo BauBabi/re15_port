@@ -1422,15 +1422,6 @@ void re15_irons_tod_install(uint16_t room_id)
         if (re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130))
             if (starten(1) >= 0) log_it("Nachspawn 1130 (Programm 10)");
         return;
-    case RE15_IT_RAUM_1060:   /* Runde 39 Spur Q (Nachtrag 12): Treppenhaus-Schritt nach 1130 bzw. nach der Szene (1140 leer) */
-        if (re15_r39q_leon_1060_zahl() > 0 && (s_zustand == RE15_IT_S1130 ||
-            (s_zustand == RE15_IT_SZENE && !re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)))) {
-            s_zustand = RE15_IT_S1060; knallbank_laden();
-            if (starten(1) >= 0) log_it("Montage 1060 (Runde 39 Spur Q, Programm L)");
-            return;
-        }
-        if (s_zustand != RE15_IT_AUS) { s_zustand = RE15_IT_AUS; log_it("Kette unterbrochen (1060)"); }
-        return;
     case RE15_IT_RAUM_1040:
         if (s_zustand == RE15_IT_S1130 || s_zustand == RE15_IT_S1060 /* Runde 39 Spur Q */ ||
             (s_zustand == RE15_IT_SZENE && !re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130))) {
@@ -1465,6 +1456,10 @@ void re15_irons_tod_install(uint16_t room_id)
         }
         if (s_zustand != RE15_IT_AUS) { s_zustand = RE15_IT_AUS; log_it("Kette unterbrochen (11C0)"); }
         return;
+    case RE15_IT_RAUM_1060:   /* Runde 39 Spur Q (Nachtrag 12): Treppenhaus-Schritt (re15_elzazombies_r39.h), sonst wie default */
+        if (re15_r39q_leon_1060_dran(s_zustand)) {
+            s_zustand = RE15_IT_S1060; knallbank_laden(); if (starten(1) >= 0) log_it("Montage 1060 (Runde 39 Spur Q, Programm L)"); return; }
+        /* fall through */
     default:
         if (s_zustand != RE15_IT_AUS) { s_zustand = RE15_IT_AUS; log_it("Kette unterbrochen (fremder Raum)"); }
         return;

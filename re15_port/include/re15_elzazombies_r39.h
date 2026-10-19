@@ -124,6 +124,9 @@
  * Kopie 1). Merkt die Zahl fuer die Weiche. */
 void re15_r39q_leon_umzug(void);
 int  re15_r39q_leon_1060_zahl(void);                       /* lebende 10E0-Zombies beim Szenenstart (0 = kein 1060-Schritt) */
+/* HAKEN re15_irons_tod_install (ROOM1060): 1 = Leons Kette kommt in den Treppenhaus-Schritt — Zahl > 0 und der Vorgaenger ist der
+ * 1130-Schritt (RE15_IT_S1130) oder die Szene bei leerem 1140 (RE15_IT_SZENE mit (9,74)=0; die Tuer setzt re15_r39q_leon_tuer). */
+int  re15_r39q_leon_1060_dran(int it_zustand);
 /* Weiche: den LETZTEN Tuersatz eines Leon-Programms (Form irons_tod_1150.c OP_DOOR + Aot_on + Evt_end, davor Knall + Sleep 45)
  * auf ROOM1060 Cut 2 Etage 4 (Parkplatz hinter der Kamera) stellen, Knall = Tuerknall Satz 0; nur wenn re15_r39q_leon_1060_zahl()
  * > 0. */

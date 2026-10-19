@@ -750,6 +750,11 @@ void re15_r39q_leon_umzug(void)
 #endif
 }
 int re15_r39q_leon_1060_zahl(void) { return s_an ? s_leon_n1060 : 0; }
+int re15_r39q_leon_1060_dran(int it_zustand)
+{
+    return re15_r39q_leon_1060_zahl() > 0 && (it_zustand == RE15_IT_S1130 ||
+           (it_zustand == RE15_IT_SZENE && !re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)));
+}
 
 /* HAKEN irons_tod_1150.c programm_bauen (Szene bei 1140 leer, 1130-Schritt): letzte Tuer -> ROOM1060 Cut 2 auf den Parkplatz
  * hinter der Kamera (Etage 4, = Elzas PARK_1061: ROOM1060 = ROOM1061), Knall davor = Tuerknall Satz 0 (die 10C0-Tuer bricht;
