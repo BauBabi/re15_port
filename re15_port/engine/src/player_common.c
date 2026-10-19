@@ -955,7 +955,15 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
      * LAB_8003579c + @0x80031f14 LAB_80035810) — der Lauf-/Ziel-/Idle-Zweig unten laeuft
      * dann nicht. */
     int pushing = (g_scd.player_mode != 2 && !msg_block) ? re15_player_push_fsm(p, pad_bits) : 0;
-    if (g_scd.player_mode != 2 && !msg_block && !pushing) {
+    /* Runde 39 Spur J (Nachbesserung 3, Abnahme 2 M1): unter der Pad-Sperre (2,7) laeuft die Ziel-FSM im Original mit gekapptem
+     * Held-Wort weiter und senkt die Waffe (FUN_80030444 @0x80030514/@0x8003051c, HOLD @0x800331e4-@0x80033200); der Skript-
+     * Modus des Ports haelt sie an. In ROOM1141 Phase H laeuft der Zweig unten dann mit Pad 0 (include/re15_dining_r39.h).
+     * Nur im Kommando 1 (state 1 = 0x80073f90[1] = 0x80031de8, Ziel-FSM; [4] = 0x80030660 ist der Plc-Executor). */
+    extern int re15_dining_r39_ziel_senken(void);
+    const int senken39 = g_scd.player_mode == 2 && !msg_block && p->state == 1 && s_player_aim_phase != RE15_AIM_NONE &&
+                         re15_dining_r39_ziel_senken();
+    if (senken39) pad_bits = 0;
+    if ((g_scd.player_mode != 2 || senken39) && !msg_block && !pushing) {
         int yaw_delta = 0;
         int move_dir  = 0;
         /* RUN modifier: X (CROSS) on PSX / shift→CROSS on PC, HELD (Nutzer-bestätigt: RE1.5/RE2 walk

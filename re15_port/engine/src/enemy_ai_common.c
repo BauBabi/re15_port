@@ -8949,6 +8949,10 @@ static void re15_maggot_ai_tick(int slot)
         int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 @0x80117300 */
         e->dog_dist = (int16_t)dist;                          /* +0x1d4 @0x80117314 */
         int ab_nur_b = 0, ab = 0;                             /* Runde 35 Spur J (10): A-Wechsel -> B[neu] im selben Tick @0x80117358-78 */
+        { extern int re15_dining_r39_affe_jagt_john(int slot);   /* Runde 39 Spur J N4.3: nach Johns Treffer kriecht */
+          if (re15_dining_r39_affe_jagt_john(slot)) {            /* der Gorilla zu John (B[3], ohne Elza-Angriffe A[*]) */
+              if (e->sub_state_1 != 3) { re15_dog_sub(e, 3); e->sub_state_3 = 0; }
+              ab_nur_b = 1; } }
     ab_b:
         switch (e->sub_state_1) {
         case 0:   /* A[0] 0x80117484 + B[0] idle-wander 0x80117574 (clip 0x16) */
@@ -9036,7 +9040,10 @@ static void re15_maggot_ai_tick(int slot)
             {   /* fresh random slew 6-37 EVERY tick (audit #5) @0x80117d1c-34, a8f8 @0x80117d50 */
                 int slew = (int)(re15_affen_rng_a0(&a0_b3) & 0x1f) + 6;
                 e->grab_kill_ctr = (int16_t)slew;
-                int32_t st_x, st_z; re15_r36_affen_padsuche_ziel(e, slot, 3, pl->x, pl->z, &st_x, &st_z);   /* Runde 36 Spur F Punkt 2: playerX (@0x80117d4c) oder Pad-Mitte */
+                int32_t st_x, st_z, zx = pl->x, zz = pl->z;
+                { extern int re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z);   /* Runde 39 Spur J N4.3: 1141 nach Johns */
+                  if (re15_dining_r39_affe_ziel(slot, &zx, &zz)) { st_x = zx; st_z = zz; }   /* Treffer zu John, ohne Elzas Pad-Umweg (NB2) */
+                  else re15_r36_affen_padsuche_ziel(e, slot, 3, zx, zz, &st_x, &st_z); }   /* Runde 36 Spur F Punkt 2: playerX (@0x80117d4c) oder Pad-Mitte */
                 re15_enemy_steer_point(e, st_x, st_z, slew);
             }
             re15_maggot_anim(e);
