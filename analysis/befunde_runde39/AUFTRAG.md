@@ -233,7 +233,7 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
     10C0 -> 1060), Elza zusaetzlich ROOM1071 (Gegenstueck zu Leons 1070; Nachtrag 11 hatte 1071 gestrichen, jetzt
     zusaetzlich). Liste je Szenario im Dossier gegenueberstellen.
 
-## Nachtrag 13 des Nutzers (woertlich, 2026-10-19 zwischen 08:31 und 08:40, fuer Spur P)
+## Nachtrag 13 des Nutzers (woertlich, 2026-10-19 zwischen 08:31 und 08:33, fuer Spur P)
 - Auf die Frage nach einer Aufnahme fuer "I have to rescue John! He is in danger!": "Achso, nein, das ist ein einfacher text,
   wie bei Leon auch im Panik Abschnitt."
   Orchestrator: der Tuersatz an 1041 -> 1031 und 1051 -> 10A1 ist ein EINFACHER TEXT ohne Sprecher-Kopf und ohne Stimme -
@@ -242,3 +242,5 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
   main00 @0x01320, ROOM1130 sub01 @0x00A1C `46 03 01 31 01 00 ff ff 00 00`). 1051 -> 10A1 ist Elzas Gegenstueck zu
   Leons 1050 -> 10A0. KEIN "Elza:"-Kopf, keine Sprachdatei. Port-Ids bleiben 1041 = 41, 1051 = 40. Die 11C0-Zeile der
   Spur O ("I cannot leave Ada alone here with those monsters!") hat diese einfache Form bereits.
+- Nachschub (woertlich, nach 08:33): "Das mit den I cannot leave him alone with those monsters, ist auch ein normaler Raumtext."
+  Orchestrator: ROOM1141 msg 41 (Runde 38 F) bleibt ein einfacher Raumtext ohne Stimme - keine Aenderung noetig.
