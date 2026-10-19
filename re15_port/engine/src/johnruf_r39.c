@@ -16,6 +16,7 @@
 #include "re15_menu.h"
 #include "re15_audio.h"
 #include "re15_engine.h"   /* g_engine.frame_count (Protokoll) */
+#include "re15_tuersperre_r39.h"   /* Nachbesserung 1: Tuersperren 1041/1051 (Panikphase) und 10B1 (immer) */
 
 #include "gen/johnruf_r39_programme.inc"
 
@@ -67,6 +68,7 @@ void re15_johnruf_r39_install(uint16_t room_id)
     s_xa_vol = RE15_R39P_XA_NORMAL;       /* RE2: jeder Raum-Skript-Init setzt 120 (FUN_80052f3c @0x80053014/@0x80053038) */
     s_karte_pc = NULL;
     s_vm_tick_aufbau = g_scd.tick_count;   /* NACH dem Init-Lauf, VOR jedem Spielbild-Lauf (Form cut_10f0.c) */
+    re15_tuersperre_r39_install(room_id);  /* Nachbesserung 1: Texte 1041/41, 1051/40, 10B1/40 + Sperren (re15_tuersperre_r39.h) */
 
     if (raum == RE15_R39P_RAUM_1041) {
         re15_msg_install_text((unsigned char)RE15_R39P_MSG_SATZ, k_r39p_msg40, sizeof k_r39p_msg40);
@@ -221,6 +223,7 @@ int re15_johnruf_r39_main_gesperrt(unsigned slot, int op, long cap_tick)
 
 void re15_johnruf_r39_tick(void)
 {
+    re15_tuersperre_r39_tick();   /* Nachbesserung 1: Bit 97 in 1041 gestiegen -> Tuer nach 1031 Text, VOR dem AOT-Scan */
     /* Rettung: ROOM1141 sub02 @0x00C18 hat F0 geloescht (Szene mit John begonnen), sub01 @0x00C0C F2 (beide Gorillas tot,
      * @0x00C06 MAIN16 Stop) -> Panikphase vorbei, raumunabhaengig. */
     if (panik() && !john_verschwunden() && !flag(RE15_R39P_F2_BANK, RE15_R39P_F2_BIT)) {
