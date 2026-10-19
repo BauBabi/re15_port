@@ -1,0 +1,17 @@
+01:50:32
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r39_hund1121/re15_port/build
+        Start  974: unit_r39_hund1121_ereignis
+811/843 Test  #974: unit_r39_hund1121_ereignis .............   Passed    0.01 sec
+        Start  975: unit_r39_hund1121_sprung
+812/843 Test  #975: unit_r39_hund1121_sprung ...............   Passed    0.02 sec
+        Start  976: unit_r39_hund1121_re15
+813/843 Test  #976: unit_r39_hund1121_re15 .................   Passed    0.01 sec
+        Start  977: unit_r39_hund1121_einmal
+814/843 Test  #977: unit_r39_hund1121_einmal ...............   Passed    0.01 sec
+        Start  978: unit_r39_hund1121_treffer
+815/843 Test  #978: unit_r39_hund1121_treffer ..............   Passed    0.01 sec
+        Start  979: unit_r39_hund1121_startmaschine
+816/843 Test  #979: unit_r39_hund1121_startmaschine ........   Passed    0.01 sec
+100% tests passed, 0 tests failed out of 843
+Total Test time (real) = 1737.67 sec
+02:19:30

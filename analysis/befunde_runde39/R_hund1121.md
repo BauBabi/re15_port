@@ -15,7 +15,7 @@ Hunde-Gegner (Typ 0x20). Leon unveraendert, ohne Bit 97 kein Hund.
 - [x] 3 RE2-Form eines Hunde-Sprungs: ROOM21A0 sub07 + Modul Sub 14 (R2/R3), RE1.5-Gegenstueck (R4)
 - [x] 4 Umsetzung (U1-U4)
 - [x] 5 Messung am echten Weg mit Elza (CONTINUE + Tuer-Weg) + Riegel unit/integration (N1-N4)
-- [~] 6 gezielte Tests gruen (T1); alle unit_/prop_/probe_ laufen (T2)
+- [x] 6 gezielte Tests gruen (T1: 77/77), alle unit_/prop_/probe_ gruen (T2: 843/843)
 
 ## Messung vorher
 
@@ -281,8 +281,13 @@ Total Test time (real) = 891.69 sec
 ```
 integration_r39_hund1121 darin 144 s (Laeufe A-E).
 
-### T2 Alle unit_/prop_/probe_ (VERTRAG/Auftrag: vor dem Abschluss)
-(folgt)
+### T2 Alle unit_/prop_/probe_ (Auftrag: vor dem Abschluss; seriell, Bau 87307d18)
+`ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" --timeout 600 --output-on-failure`
+```
+100% tests passed, 0 tests failed out of 843
+Total Test time (real) = 1737.67 sec
+```
+(Auszug R_belege/R_hund1121_ctest_alle_unit.txt.) Keine volle Suite im Spurbaum (VERTRAG §2).
 
 ## OFFEN
 * Integration mit Spur P (setzt/loescht (9,97)): hier per Spielstand-Flag gemessen; im Spielablauf kommt das Bit aus P.
