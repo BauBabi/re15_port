@@ -6,6 +6,12 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 18:11: RELEASE v0.8.27 FERTIG - Commit 6ee2f62c, Tag v0.8.27, gepusht (origin bestaetigt), 9 Volumes
+  (win64, linux_steamdeck_x64, android), Archiv C:/workspace/Re15Data/re15_packages_archiv/v0.8.27 9/9. Linux-Suite
+  1143/1143 nach Riegel-Fix 26d5985c (integration_r39_schluessel2: Huelle <= GTE-Viereck x 3; llvmpipe fuellte 8 x 6 statt
+  8 x 5). APK-Gate fand die Nutzer-Aufnahmen synchro/STAGE3/room3020/main00..02.wav (16:48-16:56, nach dem APK-Bau) ->
+  committet 2515c76f, APK neu, dann Paket/Archiv/Abschluss. Paket-exe traegt "v0.8.27" (Titel "Ver.0.8.27"). Offen:
+  Zweig r38/testtempo (Baum r38_testtempo).
 * 2026-10-19 15:41: Nutzer-Befund "nach der finalen Cutscene in 1141 keine normale Gehanimation": ENTRIEGELN39 ohne
   Plc_ret (Elza blieb pst=4 mo=2) -> sub06 @0x010D2..@0x010D7 kopiert; gemessen pst=1 mo=105. 1141 28/28, unit 914/914.
   Release-Lauf 14:52 dafuer per TaskStop beendet; neuer Lauf folgt.
