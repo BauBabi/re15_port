@@ -15,6 +15,11 @@ TUER-SAETZE (Door_aot_set, ausgeliefert, vom Werkzeug geprueft):
   ROOM1041 main00 @0x010B8 Slot 1 -> Raum 0x03 = ROOM1031 Cut 8
   ROOM1051 main00 @0x00B5A Slot 4 -> Raum 0x0A = ROOM10A1 Cut 0
   ROOM10B1 main00 @0x016F2 Slot 1 -> Raum 0x26 = ROOM1261 Cut 15 (Kanaldeckel; Slot 0 @0x016D2 ist die Leiter zum Dach)
+  ROOM11B1 main00 @0x00F9C Slot 1 -> Raum 0x1C = ROOM11C1 Cut 0 (Elzas Parkplatz-Tuer). Nutzer-Korrektur 2026-10-19:
+           "Ah, ich meinte die Tuer in Raum 11B1, nicht 10B1, die sowieso geschlossen ist ohne Strom." Ohne Strom macht
+           sub01 @0x0119C/@0x011A0 Ck(4,0xF3)==0 -> @0x011C0 `46 01 01 31 0e 00 ff ff 00 00` den Slot selbst zum Text
+           msg 14; mit Strom zeigt der Port dieselbe Zeile mit msg 12 = Original-Text "The door is locked." @0x179F (der
+           Werkstatt-Tuer, sub00 @0x0112A). Kein Port-Text, kein Programm - nur Anker.
 TEXTE:
   RETTUNG  ROOM1041 msg 41 und ROOM1051 msg 40 (Ids: Orchestrator Nachbesserung 1): NUTZER-VORGABE "I have to rescue John!
            He is in danger!" in Erzaehlform `04 02 <Zeile> 08 <Zeile> 01 00` wie die Tuersperren 1141 (Runde 38 F msg 41) /
@@ -83,6 +88,14 @@ ERWARTET = (   # (Datei, Offset, Bytes, Bedeutung) - das Werkzeug bricht ab, wen
     (D1051, 0x00CCC, "02 00", "Form: ROOM1051 sub02 Evt_next + Nop hinter Message_on"),
     (D1051, 0x00D90, "22 02 07 00 22 01 1b 00 3c 01 2e 01 00 00 42 00 08 00 01 00",
      "Form: ROOM1051 sub02 Szenen-Ende Set(2,7)=0 Set(1,0x1B)=0 Cut_auto 1 Work_set(1,0) Plc_ret, Endif, Evt_end"),
+    (D11B1, 0x00F9C, "3b 01 02 31 00 00 96 97 0c 8b c4 09 ac 0d 41 9d 00 00 74 43 fb 11 00 1c 00",
+     "ROOM11B1 main00 Door_aot_set Slot 1 -> Raum 0x1C (ROOM11C1) Cut 0 = Elzas Parkplatz-Tuer (Nachbesserung 3)"),
+    (D11B1, 0x0119C, "06 00 4a 00 21 04 f3 00",
+     "ROOM11B1 sub01 Ifel_ck + Ck(4,0xF3)==0: ohne Strom (dann @0x011C0 Slot 1 -> msg 14 'It's too dark...')"),
+    (D11B1, 0x0112A, "2c 08 01 31 00 00 80 a8 d0 bc b0 04 a4 06 0c 00 ff ff 00 00",
+     "ROOM11B1 sub00 Aot_set Slot 8 MESSAGE msg 12 (Werkstatt-Tuer = Original-Nutzer von 'The door is locked.')"),
+    (D11B1, 0x0179F, "04 02 30 44 41 00 40 4b 4b 4e 00 45 4f 00 48 4b 3f 47 41 40 57 01 00",
+     "ROOM11B1 msg 12 @0x179F (msg_sec 0x1544 + 0x25B) 'The door is locked.'"),
 )
 
 
@@ -175,6 +188,8 @@ ANKER = (   # (Name, Datei, von, bis) - der C-Teil prueft diese Bereiche im GELA
     ("T1051", D1051, 0x00B5A, 0x00B7A),      # Door_aot_set Slot 4 -> ROOM10A1
     ("T10B1", D10B1, 0x016F2, 0x01712),      # Door_aot_set Slot 1 -> ROOM1261 (Kanaldeckel)
     ("S10B1", D10B1, 0x01812, 0x01A92),      # sub01 (Ausloeser) .. sub04 (Szene + Aot_on @0x01A8E)
+    ("T11B1", D11B1, 0x00F9C, 0x00FBC),      # Door_aot_set Slot 1 -> ROOM11C1 (Elzas Parkplatz-Tuer)
+    ("M11B1", D11B1, 0x0179F, 0x017B6),      # msg 12 "The door is locked." (der gezeigte Original-Text)
 )
 
 
@@ -186,7 +201,7 @@ def main():
     szene = baue_szene10b1()
     f = io.StringIO()
     f.write("/* GENERIERT von re15_port/tools/r39_johnruf/tuersperre_bauen.py - NICHT HAND-EDITIEREN.\n"
-            " * Runde 39 Spur P, Nachbesserung 1: Tuersperren 1041/1051 (Panikphase) und 10B1 (immer) - Texte, Szenen-Huelle,\n"
+            " * Runde 39 Spur P, Nachbesserung 1-3: Tuersperren 1041/1051 (Panikphase) und 11B1 (mit Strom) - Texte, Szenen-Huelle 10B1,\n"
             " * Anker. Dossier: analysis/befunde_runde39/P_johnruf1041.md Abschnitt 8. */\n\n")
     for name, d, von, bis in ANKER:
         f.write("#define RE15_R39P_TS_ANKER_%s_OFF 0x%05Xu\n" % (name, von))

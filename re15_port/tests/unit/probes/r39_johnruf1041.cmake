@@ -29,7 +29,7 @@ if(NOT WIN32)
     target_link_libraries(test_r39_johnruf1041 PRIVATE m)
 endif()
 # tuer10b1/tuerszene (Kanaldeckel 10B1) nicht registriert: zurueckgestellt nach Abnahme 1 M1 (Softlock), tuersperre_r39.c
-foreach(_teil texte programme stimme xa ablauf musik ruf1131 leon tuertexte tuer1041 tuer1051)
+foreach(_teil texte programme stimme xa ablauf musik ruf1131 leon tuertexte tuer1041 tuer1051 tuer11b1)
     add_test(NAME unit_r39_johnruf1041_${_teil} COMMAND test_r39_johnruf1041 ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r39_johnruf1041_${_teil} PROPERTIES TIMEOUT 300)
@@ -60,13 +60,15 @@ endif()
 #   integration_r39_johnruf1041_tuer_t1041o  1041 ohne Panikphase (nach der Rettung): Tuer -> ROOM1031
 #   integration_r39_johnruf1041_tuer_t1051   1051 in der Panikphase: Tuer -> 10A1 = Satz msg 40, kein Raumwechsel
 #   integration_r39_johnruf1041_tuer_t1051o  1051 ohne Panikphase: Tuer -> ROOM10A1
+#   integration_r39_johnruf1041_tuer_t11b1   11B1 mit Strom: Parkplatz-Tuer -> 11C1 = "The door is locked." (msg 12)
+#   integration_r39_johnruf1041_tuer_t11b1d  11B1 ohne Strom: Original-Text msg 14, keine Port-Sperre
 #   integration_r39_johnruf1041_tuer_t10b1v  10B1 vor der Sherry-Szene: Kanaldeckel = Text, kein Raumwechsel
 #   integration_r39_johnruf1041_tuer_t10b1s  10B1 Sherry-Szene: Deckel-Text statt ROOM1261, danach Steuerung zurueck
 #   integration_r39_johnruf1041_tuer_t10b1n  10B1 nach der Szene / Sherry-Suche: Kanaldeckel = Text, kein Raumwechsel
 # (der Beginn der Phase IN 1041 am echten Weg 1021 -> 1041 steht in integration_r39_johnruf1041_a)
 if(TARGET re15_pc AND TARGET probe_r36_elza_karte)
     # t10b1v/t10b1s/t10b1n nicht registriert: Kanaldeckel 10B1 zurueckgestellt (Abnahme 1 M1, Softlock)
-    foreach(_teil t1041 t1041o t1051 t1051o)
+    foreach(_teil t1041 t1041o t1051 t1051o t11b1 t11b1d)
         add_test(NAME integration_r39_johnruf1041_tuer_${_teil}
             COMMAND ${CMAKE_COMMAND}
                 -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

@@ -8,6 +8,9 @@ cmake_minimum_required(VERSION 3.16)
 #   TEIL t1041o  ROOM1041 ohne Panikphase (nach Johns Rettung: Bit 97 = 0, (4,0xF0) = 0): Tuer -> ROOM1031 wechselt den Raum
 #   TEIL t1051   ROOM1051 in der Panikphase: Tuer -> ROOM10A1 zeigt den Satz (msg 40), KEIN Raumwechsel
 #   TEIL t1051o  ROOM1051 ohne Panikphase: Tuer -> ROOM10A1 wechselt den Raum
+#   TEIL t11b1   ROOM11B1 mit Strom (4,0xF3) (Nachtrag 12c, Nutzer-Korrektur "11B1, nicht 10B1"): Parkplatz-Tuer -> ROOM11C1
+#                zeigt "The door is locked." (Original-msg 12), KEIN Raumwechsel
+#   TEIL t11b1d  ROOM11B1 ohne Strom: Original-Text msg 14 ("It's too dark..."), keine Port-Sperre
 #   TEIL t10b1v  ROOM10B1 vor der Sherry-Szene (ueber die echte Tuer 1261 -> 10B1 Cut 7): Kanaldeckel -> Text msg 40
 #   TEIL t10b1s  ROOM10B1 mit (3,0x82) (Szene "John, wait!" steht an): Szene msg 0..5, am Ende Deckel-Text statt ROOM1261,
 #                nach dem Text Pad frei, Balken weg, Elza laeuft
@@ -113,6 +116,16 @@ AKTION
 WARTE 60
 ENDE
 ")
+# Parkplatz-Tuer 11B1 -> 11C1: Rechteck x -26730 B 2500 / z -29940 T 3500 (ROOM11B1 main00 @0x00F9C); Lage und Blick wie
+# integration_r39_parkplatz11c0_e (dort fuehrte derselbe Druck vor Nachtrag 12c nach ROOM11C1)
+set(_plan_11b1 "RAUM 11B1
+WARTE 30
+AKTION
+WARTE 150
+AKTION
+WARTE 60
+ENDE
+")
 if(TEIL STREQUAL "t1041")
     set(_karte "1041;-25150;-3800;0;${_basis};4:0xF0;4:5;4:4;9:97")
     set(_plan "RAUM 1041\n${_plan_tuer}${_plan_1041}")
@@ -129,6 +142,14 @@ elseif(TEIL STREQUAL "t1051o")
     set(_karte "1051;15000;-10000;3072;${_basis};3:0x79")
     set(_plan "RAUM 1051\n${_plan_tuer}${_plan_1051}")
     set(_ende "RE15_EXIT_AT=120#10a1")
+elseif(TEIL STREQUAL "t11b1")
+    set(_karte "11B1;-25480;-26000;1024;${_basis};4:0xF3")
+    set(_plan "${_plan_11b1}")
+    set(_ende "RE15_EXIT_AT=480#11b1")
+elseif(TEIL STREQUAL "t11b1d")
+    set(_karte "11B1;-25480;-26000;1024;${_basis}")
+    set(_plan "${_plan_11b1}")
+    set(_ende "RE15_EXIT_AT=480#11b1")
 elseif(TEIL STREQUAL "t10b1v")
     set(_karte "1261;-20250;-6700;2048;${_basis};4:0xF0")
     set(_plan "${_plan_10b1}")
@@ -224,9 +245,21 @@ elseif(TEIL STREQUAL "t1051o")
     pruef_nicht(_d "[tuersperre]")
     pruef(_d "[aot] DOOR FIRE slot=4 rect=(17200,-13700,hw=500,hh=1000) target_cut=0")
     pruef(_d "loaded room10a1.rdt")
+elseif(TEIL STREQUAL "t11b1")
+    pruef(_d "ROOM11B1: Slot 1 -> Text msg 12 (immer zu)")
+    pruef(_d "[msgtext] room=11b1 id=12 ")
+    pruef(_d "The door is locked.")
+    pruef_nicht(_d "[aot] DOOR FIRE slot=1")
+    pruef_nicht(_d "loaded room11c1.rdt")
+    pruef(_wl "Befehl 5 beendet")                            # zweite AKTION (Text weg) + WARTE 60: Elza wieder frei
+elseif(TEIL STREQUAL "t11b1d")
+    pruef_nicht(_d "[tuersperre]")
+    pruef(_d "[msgtext] room=11b1 id=14 ")
+    pruef_nicht(_d "[aot] DOOR FIRE slot=1")
+    pruef_nicht(_d "loaded room11c1.rdt")
 elseif(TEIL STREQUAL "t10b1v" OR TEIL STREQUAL "t10b1n")
     pruef(_d "loaded room10b1.rdt")
-    pruef(_d "ROOM10B1: Kanaldeckel Slot 1 -> Text msg 40 (immer zu)")
+    pruef(_d "ROOM10B1: Slot 1 -> Text msg 40 (immer zu)")
     pruef(_d "[msgtext] room=10b1 id=40 \"${_deckel}\"")
     pruef_nicht(_d "[aot] DOOR FIRE slot=1")
     pruef_nicht(_d "loaded room1261.rdt")                     # nur der Start liegt in 1261 (CONTINUE), nie ein Rueckweg

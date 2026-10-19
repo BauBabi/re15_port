@@ -8,8 +8,9 @@
  *   test_r36_schluessel tuer    ROOM11B0 (Strom an): Slot 1 gesperrt; Druck OHNE Schluessel -> msg 28 +
  *                               Verschlossen-Ton, kein Raumwechsel; Druck MIT Schluessel -> msg 29 +
  *                               Aufschliess-Ton + (9,93), Slot 1 wieder die Original-Tuer, naechster
- *                               Druck -> ROOM11C0; (9,93) gesetzt -> keine Sperre; ohne Strom und in
- *                               ROOM11B1 (Elza) bleibt die Tuer unberuehrt
+ *                               Druck -> ROOM11C0; (9,93) gesetzt -> keine Sperre; ohne Strom bleibt die
+ *                               Tuer unberuehrt; ROOM11B1 (Elza): keine Schluessel-Sperre (dort sperrt seit
+ *                               Runde 39 Nachtrag 12c tuersperre_r39.c mit msg 12)
  *   test_r36_schluessel zelle   ROOM1011: Roy-Ereignis 6 laeuft als sub07 (msg 18), (4,0xEC) bleibt 0;
  *                               ROOM1211: ohne (4,0xEC) Text msg 10, mit (4,0xEC) John + Befreiungs-Platz
  *   test_r36_schluessel namen   Prompt "Will you take the <Name>?", CHECK-Text, Icon-Tile, Item-Bild
@@ -385,11 +386,12 @@ static void teil_tuer(void)
     CHECK(!re15_schluessel_r36_tuer_gesperrt() && g_aot.slots[1].type == RE15_AOT_TYPE_MESSAGE &&
           g_aot.slots[1].event_id == 15,
           "D ohne Strom: Slot 1 = Text msg 15 (\"It's too dark...\", RE1.5 sub01 @0x01216), keine Sperre");
-    /* 5. Elza ROOM11B1: unberuehrt */
+    /* 5. Elza ROOM11B1: keine Schluessel-Sperre; die Tuer ist seit Runde 39 Nachtrag 12c immer zu (tuersperre_r39.c) */
     hochfahren(&r1, tx, tz, 0, strom, 1);
     ruhe(3);
-    CHECK(!re15_schluessel_r36_tuer_gesperrt() && g_aot.slots[1].type == RE15_AOT_TYPE_DOOR,
-          "E ROOM11B1 (Elza): Parkplatz-Tuer unberuehrt (Nachtrag 14:00)");
+    CHECK(!re15_schluessel_r36_tuer_gesperrt() && g_aot.slots[1].type == RE15_AOT_TYPE_MESSAGE &&
+          g_aot.slots[1].event_id == 12,
+          "E ROOM11B1 (Elza): keine Schluessel-Sperre; Slot 1 = Text msg 12 \"The door is locked.\" (Runde 39 Nachtrag 12c)");
     free(r.buf); free(r1.buf);
 }
 

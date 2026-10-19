@@ -686,6 +686,55 @@ static void teil_tuer1051(void)
     PRUEF(slot_ist(RE15_R39P_TS_SLOT_1051, RE15_AOT_TYPE_DOOR, -1), "Leon ROOM1050 (Ada gerettet, Bit 97 = 1): Slot 4 bleibt Tuer");
 }
 
+/* ================================================================== tuer11b1
+ * Nachtrag 12c, Nutzer-Korrektur 2026-10-19: "die Tuer in Raum 11B1, nicht 10B1, die sowieso geschlossen ist ohne Strom".
+ * ROOM11B1 main00 @0x00F9C Slot 1 -> ROOM11C1; Druck-Lage und Blick = integration_r39_parkplatz11c0_e (vorher Raumwechsel). */
+static void teil_tuer11b1(void)
+{
+    printf("== tuer11b1 ==\n");
+    static const int k_strom[] = { 4, 0xF3, -1 };
+    static const int k_suche[] = { 4, 0xF3, 3, 0x83, 3, 0x41, -1 };   /* nach der Szene in 10B1 (sub04 @0x0195E/@0x01962) */
+    tuer_erg_t r;
+    /* mit Strom: ab dem Raumaufbau Text msg 12 */
+    const unsigned z0 = re15_tuersperre_r39_zaehler(0);
+    elza_raum(0x11B1, -25480, -26000, 1024, 0, k_strom);
+    PRUEF(re15_tuersperre_r39_anker_ok(RE15_R39P_TS_RAUM_11B1),
+          "Anker ROOM11B1 main00 @0x00F9C (Door_aot_set Slot 1) und msg 12 @0x179F wie ausgeliefert");
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_11B1, RE15_AOT_TYPE_MESSAGE, RE15_R39P_TS_MSG_11B1) &&
+          (g_aot.slots[RE15_R39P_TS_SLOT_11B1].sce_flags & 0x7F) == RE15_R39P_TS_SAT &&
+          g_aot.slots[RE15_R39P_TS_SLOT_11B1].pause_mask16 == RE15_R39P_TS_MASKE &&
+          g_aot.door_params[RE15_R39P_TS_SLOT_11B1].dest_room == RE15_R39P_TS_ZIEL_11B1 &&
+          re15_tuersperre_r39_zaehler(0) == z0 + 1,
+          "mit Strom (4,0xF3): Slot 1 = MESSAGE msg 12, sat 0x31, Maske 0xffff (= @0x011C0 mit msg 12); Ziel bleibt im Satz");
+    s_n_st = 0;
+    r = tuer_druecken(-25480, -26000, 1024);
+    PRUEF(!r.raumwechsel && r.msg == RE15_R39P_TS_MSG_11B1 && s_n_st == 0,
+          "mit Strom: Aktion -> msg %d \"The door is locked.\", kein Raumwechsel, keine Stimme", r.msg);
+    for (int f = 0; f < 60; f++) bild(0, 0);
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_11B1, RE15_AOT_TYPE_MESSAGE, RE15_R39P_TS_MSG_11B1), "die Sperre bleibt stehen");
+    /* Sherry-Suche: (3,0x83)/(3,0x41) gesetzt - die Tuer bleibt zu, der Schacht Slot 5 -> ROOM1261 bleibt Tuer */
+    elza_raum(0x11B1, -25480, -26000, 1024, 0, k_suche);
+    for (int f = 0; f < 3; f++) bild(0, 0);
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_11B1, RE15_AOT_TYPE_MESSAGE, RE15_R39P_TS_MSG_11B1) &&
+          slot_ist(5, RE15_AOT_TYPE_DOOR, -1) && g_aot.door_params[5].dest_room == 0x26u,
+          "Sherry-Suche: Slot 1 bleibt Text msg 12; Schacht Slot 5 (main00 @0x00FFA -> ROOM1261) bleibt Tuer");
+    r = tuer_druecken(-25480, -26000, 1024);
+    PRUEF(!r.raumwechsel && r.msg == RE15_R39P_TS_MSG_11B1, "Sherry-Suche: Aktion -> msg %d, kein Raumwechsel", r.msg);
+    /* ohne Strom: das Original (sub01 @0x011C0 -> msg 14), keine Port-Sperre */
+    const unsigned z1 = re15_tuersperre_r39_zaehler(0);
+    elza_raum(0x11B1, -25480, -26000, 1024, 0, NULL);
+    for (int f = 0; f < 3; f++) bild(0, 0);
+    PRUEF(slot_ist(RE15_R39P_TS_SLOT_11B1, RE15_AOT_TYPE_MESSAGE, RE15_R39P_TS_MSG_DUNKEL) &&
+          re15_tuersperre_r39_zaehler(0) == z1,
+          "ohne Strom: Slot 1 = Original-Text msg 14 (sub01 @0x011C0), keine Port-Sperre");
+    r = tuer_druecken(-25480, -26000, 1024);
+    PRUEF(!r.raumwechsel && r.msg == RE15_R39P_TS_MSG_DUNKEL, "ohne Strom: Aktion -> msg %d \"It's too dark...\"", r.msg);
+    /* Leon ROOM11B0: nicht dieses Modul (seine Parkplatz-Tuer: Runde 36 Q, Parking Lot Key) */
+    const unsigned z2 = re15_tuersperre_r39_zaehler(0);
+    elza_raum(0x11B0, -25480, -26000, 1024, 0, k_strom);
+    PRUEF(!re15_tuersperre_r39_gesperrt(0x11B0) && re15_tuersperre_r39_zaehler(0) == z2, "Leon ROOM11B0: kein Eingriff");
+}
+
 /* ================================================================== tuer10b1 */
 static void teil_tuer10b1(void)
 {
@@ -919,9 +968,10 @@ int main(int argc, char **argv)
     else if (!strcmp(teil, "tuertexte")) teil_tuertexte();
     else if (!strcmp(teil, "tuer1041"))  teil_tuer1041();
     else if (!strcmp(teil, "tuer1051"))  teil_tuer1051();
+    else if (!strcmp(teil, "tuer11b1"))  teil_tuer11b1();
     else if (!strcmp(teil, "tuer10b1"))  teil_tuer10b1();
     else if (!strcmp(teil, "tuerszene")) teil_tuerszene();
-    else { printf("Teil? texte|programme|stimme|xa|ablauf|musik|ruf1131|leon|tuertexte|tuer1041|tuer1051|tuer10b1|tuerszene\n");
+    else { printf("Teil? texte|programme|stimme|xa|ablauf|musik|ruf1131|leon|tuertexte|tuer1041|tuer1051|tuer11b1|tuer10b1|tuerszene\n");
            return 2; }
     printf("%d Pruefungen, %d Fehler\n", g_n, g_fail);
     return g_fail ? 1 : 0;

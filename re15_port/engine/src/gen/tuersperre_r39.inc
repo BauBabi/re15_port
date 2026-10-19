@@ -1,5 +1,5 @@
 /* GENERIERT von re15_port/tools/r39_johnruf/tuersperre_bauen.py - NICHT HAND-EDITIEREN.
- * Runde 39 Spur P, Nachbesserung 1: Tuersperren 1041/1051 (Panikphase) und 10B1 (immer) - Texte, Szenen-Huelle,
+ * Runde 39 Spur P, Nachbesserung 1-3: Tuersperren 1041/1051 (Panikphase) und 11B1 (mit Strom) - Texte, Szenen-Huelle 10B1,
  * Anker. Dossier: analysis/befunde_runde39/P_johnruf1041.md Abschnitt 8. */
 
 #define RE15_R39P_TS_ANKER_T1041_OFF 0x010B8u
@@ -14,6 +14,12 @@
 #define RE15_R39P_TS_ANKER_S10B1_OFF 0x01812u
 #define RE15_R39P_TS_ANKER_S10B1_LEN 640u
 #define RE15_R39P_TS_ANKER_S10B1_FNV 0x60D166C0u
+#define RE15_R39P_TS_ANKER_T11B1_OFF 0x00F9Cu
+#define RE15_R39P_TS_ANKER_T11B1_LEN 32u
+#define RE15_R39P_TS_ANKER_T11B1_FNV 0xB93CFC61u
+#define RE15_R39P_TS_ANKER_M11B1_OFF 0x0179Fu
+#define RE15_R39P_TS_ANKER_M11B1_LEN 23u
+#define RE15_R39P_TS_ANKER_M11B1_FNV 0x7B6A7A04u
 
 /* k_r39p_ts_szene10b1: 22 Byte
  *   +0000 18 04                    Gosub sub04 = die Szene UNVERAENDERT aus dem RDT (@0x0195A..@0x01A90, msg 0..5); ihr Aot_on @0x01A8E `47 01` trifft den gesperrten Slot 1 -> Text msg 40 statt Raumwechsel (Form Gosub-Huelle Spur O / Runde 38 F, Gosub @0x8003fc04)

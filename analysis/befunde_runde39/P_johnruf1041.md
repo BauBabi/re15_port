@@ -534,3 +534,25 @@ Grund: Abnahme 1 (P_abnahme_1.md) M1 und M2.
   t10b1v/t10b1s/t10b1n sind nicht mehr registriert (Quelle bleibt fuer die Entscheidung des Nutzers); der Lauf
   elza10b1_tuer in integration_r38_wasser ist wieder da (Revert von 01e7fb4b). Entscheidung beim Nutzer: welche Tuer
   in 10B1 gemeint ist bzw. wie Elza nach der Szene weiterkommt.
+
+### 8.13 Nachbesserung 3 (Orchestrator selbst, 2026-10-19 ab 12:20): Nachtrag 12c gilt ROOM11B1
+Nutzer (woertlich): "Ah, ich meinte die Tür in Raum 11B1, nicht 10B1, die sowieso geschlossen ist ohne Strom. Einfach noch
+schnell hinzufügen."
+- Welche Tuer (selbst gelesen, re15_port/tools/scd_dump_room.py + rdt_msgdump.py): ROOM11B1 main00 @0x00F9C
+  3b 01 02 31 00 00 96 97 0c 8b c4 09 ac 0d 41 9d 00 00 74 43 fb 11 00 1c 00 = Door_aot_set Slot 1, Rechteck
+  (-26730,-29940,2500,3500), Ziel Raum 0x1C = ROOM11C1 (Elzas Parkplatz). "Ohne Strom ohnehin zu": sub01 (je Bild,
+  FUN_8003f038 @0x8003f064-84) @0x0119C 06 00 4a 00 / @0x011A0 21 04 f3 00 Ck(4,0xF3)==0 -> @0x011C0
+  46 01 01 31 0e 00 ff ff 00 00 (Slot 1 -> msg 14 "It's too dark to see anything...I must find way to activate the
+  energy."). Die anderen Slots 4/7/8 dieser Zeile sind Item, Rolltor-Text (msg 13) und Werkstatt-Tuer-Text (msg 12) -
+  Slot 1 ist die einzige Tuer, die ohne Strom zu ist und mit Strom aufgeht. (Runde 36 Q nannte sie schon "Elzas
+  Parkplatz-Tuer ohne Strom".)
+- Umsetzung: k_sperren-Eintrag 11B1 (immer, Bedingung Strom (4,0xF3)): Aot_reset-Form wie @0x011C0, nur msg 12 =
+  Original "The door is locked." @0x179F (04 02 30 44 41 00 40 4b 4b 4e 00 45 4f 00 48 4b 3f 47 41 40 57 01 00; im
+  Original der Text der Werkstatt-Tuer sub00 @0x0112A). Kein Port-Text. Ohne Strom greift nichts (das Original zeigt
+  msg 14). Anker T11B1 (Tuer-Satz) + M11B1 (msg 12), Generator tuersperre_bauen.py prueft die Bytes.
+- Kein Softlock: ROOM11C1 main00 @0x016AE hat nur die Tuer zurueck (Raum 0x1B), sub00 fuenf Hunde (Sce_em_set Typ 0x20),
+  keine Items, kein Nachrichtenblock. Die Sherry-Suche ((3,0x83), Schacht Slot 5 @0x00FFA -> ROOM1261) bleibt offen.
+- Riegel: unit_r39_johnruf1041_tuer11b1 (mit Strom Text 12 + Druck ohne Raumwechsel, Sherry-Suche, ohne Strom msg 14,
+  Leon 11B0 unberuehrt), integration_r39_johnruf1041_tuer_t11b1 / _t11b1d (echte exe). Angepasst:
+  unit_r36_schluessel_tuer Teil E (vorher "Parkplatz-Tuer unberuehrt") und integration_r39_parkplatz11c0_e (Start
+  jetzt IN 11C1, Weg 11C1 -> 11B1; die Gegenrichtung ist zu).

@@ -12,8 +12,9 @@ cmake_minimum_required(VERSION 3.16)
 #   W  LEON Wiedereintritt im Kampfzustand ((4,64)=1, (3,67)=0 — z. B. ein Spielstand von vor dieser Runde, als die Tuer im
 #      Kampf noch ging): Tuer Slot 0 ist ab dem Eintritt der Text; Druck -> msg 40, kein Raumwechsel.
 #   N  LEON nach dem Kampf ((4,64)=1, (3,67)=1): Tuer ist die Original-Tuer, Druck -> ROOM11B0, kein Eingriff.
-#   E  ELZA 11B1 -> 11C1 (Hunde, kein Begleiter): Tuer bleibt Tuer, Druck -> zurueck nach ROOM11B1 (die fuenf Hunde nimmt
-#      WEGPLAN GEGNERWEG heraus, damit kein Biss den Druck schluckt — die Tuer haengt an keinem Gegner).
+#   E  ELZA in 11C1 (Hunde, kein Begleiter): Tuer bleibt Tuer, Druck -> zurueck nach ROOM11B1 (die fuenf Hunde nimmt
+#      WEGPLAN GEGNERWEG heraus, damit kein Biss den Druck schluckt — die Tuer haengt an keinem Gegner). Start per Spielstand
+#      IN 11C1: die Gegenrichtung 11B1 -> 11C1 ist seit Runde 39 Nachtrag 12c fuer Elza zu (tuersperre_r39.c).
 #   I  LEON (4,64)=0, (3,67)=1 (Karte des Spur-A-Riegels integration_r39_stimmen_11b0; Abnahme 0 M1): keine Sperre -
 #      die Freigabe sub01 @0x0182E Ck(3,67)==0 griffe nie. i1 Aot_on(0) in Bild 60 der Szene -> ROOM11B0; i2 Szene
 #      durch, zu Fuss zur Tuer, Druck -> ROOM11B0.
@@ -269,12 +270,9 @@ ENDE
     pruef(N _d "EXIT_AT: Bild 200 in Raum 11b0")
 endif()
 
-# --- E: Elza ROOM11B1 -> 11C1 -> 11B1 --------------------------------------------------------------------------------
+# --- E: Elza ROOM11C1 -> 11B1 (Ankunftslage aus ROOM11B1 main00 @0x00F9C: (-25279,17268), Blick 0x11FB & 0xFFF) --------
 if(TEIL STREQUAL "E")
-    lauf(e "11B1;-25480;-26000;1024;elza;flag:4:0xF3;flag:4:64" "RAUM 11B1
-WARTE 20
-AKTION
-RAUM 11C1
+    lauf(e "11C1;-25279;17268;507;elza;flag:4:0xF3;flag:4:64" "RAUM 11C1
 AOTS
 GEGNERWEG
 BLICK 3072
@@ -283,10 +281,10 @@ RAUM 11B1
 WARTE 30
 ENDE
 " "RE15_EXIT_AT=200#11b1" _d _st _wp)
-    pruef(E _d "loaded room11c1.rdt")
     pruef(E _wp "AOT slot 0 typ 1 ev 0 flags 0x31 band 0 mitte (-25100,17250)")
     pruef_nicht(E _d "[parkplatz]")
     pruef(E _d "DOOR FIRE slot=0 rect=(-25100,17250")
+    pruef(E _d "loaded room11b1.rdt")
     pruef(E _d "EXIT_AT: Bild 200 in Raum 11b1")
 endif()
 
