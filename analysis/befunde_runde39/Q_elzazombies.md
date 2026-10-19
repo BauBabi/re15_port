@@ -330,4 +330,50 @@ Umgebungsvariablen des Aufrufers erben"). Die Urteile Q1..Q5 sind "erfuellt"; de
   `set(ENV{..})` fuer die UEBERGEBENEN Paare, danach `unset` nur fuer diese). Jede andere RE15_*-Variable der Shell, aus der
   ctest laeuft, geht unveraendert an das Kartenwerkzeug, die exe und den Auswerter. Der Kopf des Skripts ("Umgebung nur
   ueber re15_start_spiel") war damit falsch.
-* Messung vorher / Aenderung / Messung nachher: folgen (8.2 ff.).
+* Beleg: keine Spiel-Konstante, kein Original-Code beruehrt (kein Disasm noetig); Beleg = VERTRAG Abschnitt 2 + die
+  Messungen unten + das abgenommene Muster test_r39_stimmen.cmake:31-37 / test_r39_heliport1171.cmake:47-53.
+* Messung vorher (Bau 02:17/02:20 = Stand der Abnahme, Skript aus 1c304b80; Logs scratchpad/nb1/):
+  - `RE15_NOAUDIO=1 RE15_ASSET_DEBUG=1 ctest -R "^integration_r39_elzazombies_(kette|knall|treppe|durch|ohne)$" -j 2`
+    -> "80% tests passed, 1 tests failed out of 5": knall Failed, "FEHLER: Mitschnitt fehlt (.../r39_elzazombies_wd_knall/
+    laut/cap.raw / .../stumm/cap.raw)"; knall/laut/debug.log: "[audio] RE15_NOAUDIO set -> audio disabled"
+    (audio_pc.c:1954-1955) = die Abnahme-Messung M9 nachgestellt.
+  - Zeiger RE15_ASSET_DEBUG (asset_root_pc.c:343-344, schreibt nur "[asset]   cd[0] = ..." ins debug.log, kein Verhalten):
+    in ALLEN 7 Laeufen der 5 Teile (kette, laut, stumm, treppe, durch, leon, laden) je 1 Zeile -> jeder Teil erbt.
+  - Dieselbe Klasse im Unit-Riegel test_r39_elzazombies.c (linkt re15_engine; engine/src liest 87 verschiedene
+    getenv("RE15_..."), ctest reicht die Shell-Umgebung durch): geerbtes RE15_RE2_DMG_MODEL=0 (re15_damage.c:681, der Riegel
+    setzt das Schadensmodell nicht) verschob die gemessenen Lagen: kette_4 ROOM1061 Aktor 1 Bit 124 Abstand zur Kamera
+    7062 -> 6245 (ohne) / 6194 (geerbt), ROOM1031 Aktor 1 Bit 0 12906 -> 8997 / 9836; kette_0/_2, nach1061, durch1041 je
+    30-50 Zeilen anders. RE15_SCD_TRACE=1: kette_4 +112177 Zeilen. Urteil blieb "0 Fehler" (Glueck, keine Isolation).
+  - Schreibweise (Windows): `env re15_scd_trace=1 test_r39_elzazombies nach1061` -> 15 -> 325 Zeilen (CRT-getenv ohne
+    Gross-/Kleinschreibung); `env re15_nb1=1 cmake -P`: $ENV{RE15_NB1} = "1", `cmake -E environment` listet "re15_nb1=".
+    Das Muster der Referenz-Riegel (Regex `(^|\n)RE15_[A-Za-z0-9_]*=`, test_r39_stimmen.cmake:33) faengt diesen Namen nicht.
+* Aenderung (Commit 8334db2d, Abschluss-Commit unten):
+  - tests/integration/test_r39_elzazombies.cmake, direkt nach include(spiel_lauf.cmake): r39q_geerbte_namen() liest
+    `cmake -E environment`, Regex `(^|\n)[Rr][Ee]15_[A-Za-z0-9_]*=`; jede gefundene Variable `unset(ENV{..})`; danach
+    Selbstpruefung (zweite Liste nicht leer -> FATAL_ERROR, statt mit fremder Umgebung zu messen); STATUS-Zeile
+    "geerbte Umgebung geloescht: <namen>". Kopfkommentar richtiggestellt. Gilt fuer alle 5 Teile (jeder Teil = eigener
+    cmake -P-Lauf desselben Skripts) und damit auch fuer Kartenwerkzeug und Auswerter.
+  - tests/unit/test_r39_elzazombies.c: `_DEFAULT_SOURCE` ausserhalb Windows (unsetenv unter -std=c11, Muster
+    test_r36_zombieki_affen_block.c:13); umgebung_leeren() als erste Anweisung von main(): alle RE15_*-Namen (jede
+    Schreibweise) aus _environ/environ sammeln, loeschen (`_putenv("NAME=")` bzw. `unsetenv`), neu zaehlen; Rest != 0 ->
+    "FEHLER" + exit 1. Je geloeschtem Namen eine Zeile "umgebung: geerbt <name> -> geloescht" (ohne Erbe: keine Ausgabe).
+  - tests/unit/probes/r39_elzazombies.cmake: nur der Kopfkommentar (veraltete 1071-/Cut-7-Zeile nach Nachtrag 11 ersetzt,
+    Umgebungsregel vermerkt); Registrierung unveraendert.
+* Messung nachher (Bau 03:5x; re15_pc.exe unveraendert 02:17:18, neu gebaut nur test_r39_elzazombies):
+  - Unit ohne Umgebung: alle 8 Teile Ausgabe BYTEGLEICH zum Stand vor der Aenderung (20/101/73/89/15/18/70/34 Zeilen).
+  - Unit mit geerbter Umgebung, 7 Faelle (RE15_RE2_DMG_MODEL=0, RE15_SCD_TRACE=1, re15_scd_trace=1, Re15_Flag_Trace=1,
+    RE15_EVT_TRACE=1, RE15_CLIPDONE_LEGACY=1, RE15_AI_MODELS=re15) x 8 Teile = 56 Laeufe: je genau eine Zeile "umgebung:
+    geerbt <name> -> geloescht", der Rest gleich der Ausgabe ohne Umgebung (56/56), exit 0.
+  - Integration mit `RE15_ASSET_DEBUG=1 re15_noaudio=1` (Kleinschreibung): "100% tests passed, 0 tests failed out of 5";
+    Zeiger-Zeilen 0 in allen 7 Laeufen; knall/laut + stumm ohne "RE15_NOAUDIO set", cap.raw je 6762000 B (= 1150 Bilder
+    x 1470 x 4).
+  - Die Nachpruefung der Abnahme `RE15_NOAUDIO=1 ctest -R "^integration_r39_elzazombies_knall$"` (-V) -> Passed 76,21 s,
+    "-- r39_elzazombies[knall]: geerbte Umgebung geloescht: RE15_NOAUDIO", "Knall Bilder 624..665 (42), Differenz-RMS max
+    6567" / "Knall Bilder 806..849 (44), Differenz-RMS max 4657" = genau die Werte der Abnahme ohne Variable (knall_v.log).
+  - Ohne Umgebung: `ctest -R "r39_elzazombies" -j 2` -> "100% tests passed, 0 tests failed out of 13" (168,77 s).
+
+### 8.2 Fuer den Orchestrator (keine Luecke dieser Spur)
+* Laut Abnahme haben 13 der 15 test_r39_*.cmake dieselbe Luecke. Zusaetzlich gemessen: auch das Muster der beiden
+  Referenz-Riegel (nur `RE15_` in Grossbuchstaben) laesst auf Windows einen klein geschriebenen Namen durch, und
+  Unit-Riegel, die re15_engine linken, erben die Umgebung ebenfalls (kein gemeinsamer Helfer in re15_test_support). Eine
+  einheitliche Loesung (gemeinsamer Helfer, Schreibweise egal) waere moeglich; hier nur in den eigenen Dateien umgesetzt.
