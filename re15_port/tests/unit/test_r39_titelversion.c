@@ -87,12 +87,13 @@ static int modell(const char *const *bm, int zeilen, int phase25, int c, int r)
 }
 
 typedef struct { char ch; int x0; int phase25; const char *bm[7]; } quelle_t;
-/* Ausschnitte: Stelle in TITLEU.TIM (erste Kachelspalte) und angepasstes Bitmuster/Phase (Dossier 1.2) */
+/* Ausschnitte: Stelle in TITLEU.TIM (erste Kachelspalte) und angepasstes Bitmuster/Phase (Dossier 1.2,
+ * tools/r39_titelversion/messen.py) */
 static const quelle_t k_aus[] = {
     { 'V', 198, 20, { "###.###", ".#...#.", ".#...#.", ".#..#..", ".#.#...", ".##....", ".#....." } },
-    { 'e', 207, 20, { ".....", ".....", ".###.", "#...#", "#####", "#....", ".####" } },
+    { 'e', 207, 21, { ".....", ".....", ".###.", "#...#", "#####", "#....", ".####" } },
     { 'r', 214, 15, { ".....", ".....", "#.##.", "##..#", "#....", "#....", "#...." } },
-    { '.', 221, 12, { "..", "..", "..", "..", "..", "##", "##" } },
+    { '.', 221,  8, { "..", "..", "..", "..", "..", "##", "##" } },
     { '0', 233, 15, { ".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###." } },
     { '1', 264,  0, { ".#", "##", ".#", ".#", ".#", ".#", ".#" } },
     { '2', 226, 21, { ".###.", "#...#", "....#", "...#.", "..#..", ".#...", "#####" } },

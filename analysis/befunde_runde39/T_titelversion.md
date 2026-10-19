@@ -16,7 +16,7 @@ Anzeige: `platform/pc/src/render_pc.c` `re15_render_pc_show_title` (einmalige Um
 Alpha immer 0xFF -> das STP-Bit spielt fuer das Titelbild keine Rolle). Android uebersetzt dieselbe Datei
 (`platform/android/jni/CMakeLists.txt`: libmain = platform/pc/main.c + platform/pc/src/*.c + engine).
 
-Werkzeug: Python-Auswertung der Rohpixel (Skripte im Spur-Werkzeug `re15_port/tools/r39_titelversion/`).
+Werkzeug: `python re15_port/tools/r39_titelversion/messen.py` (liest nur; gibt 1.1 und 1.2 genau so aus, ~30 s).
 Suchkasten x 188..295, y 4..35 (Rand ist komplett schwarz, 0 Nicht-Schwarz-Pixel auf dem Rand gemessen).
 8-zusammenhaengende Komponenten der Nicht-Schwarz-Pixel im Kasten:
 
@@ -53,21 +53,24 @@ Belege (aus den Rohwerten, Spalten/Zeilen-Profile):
 - Tintenbreite der Ziffern 6,00 px = 5 x 1,12 + 0,40; Hoehe 8,24 = 7 x 1,12 + 0,40; Ziffern-Vorschub 6,72..6,76 px = 6 Raster.
 - Gleiche Glyphe, gleiche Phase -> bitgleich: "2" bei x226 und x270 (Abstand 44 px) sind identisch; "0"(x233) und "5"(x277)
   haben dieselbe Phase (Tintenkante links bei .60).
-Modell-Anpassung (Bitmuster je Glyphe per Bit-Abstieg, Phase in 0,04-px-Schritten, Raster 28/25 px, Quadrat 38/25 px):
+Modell-Anpassung (`messen.py`: je Glyphe fuer jede der 25 Phasen auf dem 1/25-px-Raster ein Startmuster aus den
+Rasterzellen-Mitten, dann Bit-Abstieg gegen das Flaechenmodell; Raster 28/25 px, Quadrat 38/25 px, oben 622/25 px;
+Nachbarspalten, die zur Nachbar-Glyphe gehoeren, ausgeblendet):
 
-| Glyphe (Stelle) | Phase (Tinte links) | Bitmuster 5x7 (Zeile 0..6) | SSE | max. Abweichung |
+| Glyphe (Stelle) | Phase (Tinte links) | Bitmuster (Zeile 0..6) | SSE | max. Abweichung |
 |---|---|---|---|---|
 | 0 (x233) | 233,60 | .###. #...# #..## #.#.# ##..# #...# .###. | 135 | 5 |
 | 0 (x257) | 257,36 | dasselbe | 136 | 4 |
-| 2 (x226/x270) | 226,84 | .###. #...# ....# ...#. ..#.. .#... ##### | 146 | 4 |
+| 2 (x226) | 226,84 | .###. #...# ....# ...#. ..#.. .#... ##### | 146 | 4 |
 | 2 (x240) | 240,36 | dasselbe | 162 | 5 |
-| 5 (x247) | 247,09 | ##### #.... ####. #...# ....# #...# .###. | 132 | 4 |
-| 5 (x277) | 277,56 | dasselbe | 102 | 4 |
-| V (x198) | 198,80 | ###.### .#...#. .#...#. .#..#.. .#.#... .##.... .#..... (7 breit) | 185 | 5 |
-| e (x207) | 207,80 | ..... ..... .###. #...# ##### #.... .#### | 85 | 4 |
+| 5 (x247) | 247,08 | ##### #.... ####. #...# ....# #...# .###. | 132 | 4 |
+| 5 (x277) | 277,60 | dasselbe | 96 | 5 |
+| V (x198) | 198,80 | ###.### .#...#. .#...#. .#..#.. .#.#... .##.... .#..... (7 breit) | 157 | 5 |
+| e (x207) | 207,84 | ..... ..... .###. #...# ##### #.... .#### | 100 | 4 |
 | r (x214) | 214,60 | ..... ..... #.##. ##..# #.... #.... #.... | 77 | 4 |
-| 1 (x264) | 264,01 | .# ## .# .# .# .# .# (2 breit) | 73 | 7 |
-| . (x221 / x253) | 221,46 / 253,80 | 2x2 in Zeile 5..6 | 63 / 58 | 5 / 3 |
+| 1 (x264) | 264,00 | .# ## .# .# .# .# .# (2 breit) | 73 | 7 |
+| . (x221) | 221,32 | 2x2 in Zeile 5..6 | 62 | 4 |
+| . (x253) | 253,80 | dasselbe | 58 | 3 |
 
 (je Glyphe ~70 Pixel; SSE in 5-bit-Stufen^2). Das Modell trifft die Originalwerte bis auf die aeusseren Ecken
 (dort +-3..5 Stufen: das Original rundet die Ecken etwas weicher). "0" und "2" sind bitgleich mit der bekannten
@@ -135,7 +138,7 @@ Asset-Patch, keine neue Datei im Paket. docker_win_build.sh / docker_linux_build
 | `RE15_R39T_ABSTAND25` | 18 (0,72 px) | 1 Raster - 0,40; gemessen 0,65..0,92 zwischen den Zeichen der Zeile |
 | `RE15_R39T_WORT25` | 69 (2,74 px) | Tinte "." (Ver.) bis 224,10, "2" ab 226,84 |
 | Schriftfarbe | 25 (5 bit), STP 0 | Kerne 25 (`0x6739`), alle 929 Maskenpixel STP 0 |
-| Kachel-Tintenkanten | je Glyphe im .inc | Phase aus der Modell-Anpassung 1.2 (0,04-px-Stufen) |
+| Kachel-Tintenkanten | je Glyphe im .inc | Phase aus der Modell-Anpassung 1.2 (`messen.py`, 1/25-px-Raster): V .80, e .84, r .60, . .32, 0 .60, 1 .00, 2 .84, 5 .60 |
 
 ### 3.3 Glyphen
 | Zeichen | Quelle | Kachel |
@@ -145,7 +148,7 @@ Asset-Patch, keine neue Datei im Paket. docker_win_build.sh / docker_linux_build
 
 Gegenprobe des reinen Flaechenmodells an den Lern-Glyphen: 0(x233) SSE 135 max 5, 5(x277) SSE 96 max 5, r(x214) SSE 77
 max 4. Eigenes Modell im Riegel (unabhaengig vom Generator): Ausschnitte weichen hoechstens 4..7 Stufen ab (V 5, e 4, r 4,
-. 5, 0 5, 1 7, 2 4, 5 5), die ergaenzten 0..5 (3 5, 4 0, 6 5, 7 0, 8 5, 9 3, d 5, v 0) - also nicht mehr als die
+. 4, 0 5, 1 7, 2 4, 5 5), die ergaenzten 0..5 (3 5, 4 0, 6 5, 7 0, 8 5, 9 3, d 5, v 0) - also nicht mehr als die
 Ausschnitte. Vorschau aller Ziffern + "dev": `T_belege/glyphen_vorschau.png` (oben das Original).
 
 ### 3.4 Layout und Zeichnen
@@ -157,12 +160,12 @@ Zeichnen: Deckung v/25 als Alpha in Schriftfarbe 25 ueber das Bild (auf 0x8000 g
 Anzeige: "v0.8.27" -> "Ver.0.8.27"; alles hinter X.Y.Z (" dev", "-5-gabc" aus `git describe --always`) -> " dev"; ohne
 Ziffern "Ver.dev". Passt die Zeile nicht rechts von x188, wird nur entfernt ("NICHT GEZEICHNET" im Protokoll).
 Protokoll (debug.log, einmal je Prozess): `[titel_r39] alte Beschriftung entfernt: 929 Pixel; neu "Ver.0.8.26 dev"
-(RE15_VERSION "v0.8.26 dev") Spalten 199..283`.
+(RE15_VERSION "v0.8.26 dev") Spalten 200..283`.
 
 ## 4. Messung nachher
 | Lauf | Ergebnis |
 |---|---|
-| lokaler Bau (ohne Angabe), AF 150 | debug.log `neu "Ver.0.8.26 dev" (RE15_VERSION "v0.8.26 dev") Spalten 199..283`; Abzug vorher/nachher unterscheidet sich NUR in x198..283 y11..33 (955 Pixel). `T_belege/titel_nachher_v0.8.26_dev.png` / `_zoom.png` |
+| lokaler Bau (ohne Angabe), Endstand, AF 600 | debug.log `neu "Ver.0.8.26 dev" (RE15_VERSION "v0.8.26 dev") Spalten 200..283`; Abzug vorher (AF 150) / nachher ausserhalb des (pulsierenden) Menues NUR in x198..283 y11..33 verschieden (981 Pixel); nachher gegen rohes TITLEU.TIM ausserhalb Kasten + Menue: 0. `T_belege/titel_nachher_v0.8.26_dev.png` / `_zoom.png` (erster Stand vor der Phasen-Angleichung e/.: Spalten 199..283, 955 Pixel bei AF 150) |
 | `-DRE15_VERSION=v9.9.9` (eigener Bau `re15_port/build_v999`; in PowerShell das Argument in Anfuehrungszeichen - ohne trennt PowerShell 5.1 bei "." und CMake sah "v9") | Configure `RE15_VERSION (Titelbild): 'v9.9.9' (CMake-Variable RE15_VERSION)`; debug.log `neu "Ver.9.9.9" (RE15_VERSION "v9.9.9") Spalten 229..283`; Abzug AF 600: ausserhalb Kasten + Menue 0 Abweichungen, Zeile "Sample": Maske schwarz, Rest 0 Abweichungen. `T_belege/titel_v9.9.9.png` / `_zoom.png` |
 | Linux-Container (Image `re15-linux-build:deb11` wie build_linux_deck.sh, Quellbaum als Kopie, `-e RE15_VERSION=v9.9.9` wie `container_lauf`, derselbe Configure wie docker_linux_build.sh:70-72) | `RE15_VERSION (Titelbild): 'v9.9.9' (Umgebung RE15_VERSION)`; Compile-Befehl titelversion_r39.c `-DRE15_VERSION=\"v9.9.9\"`; `strings re15_pc` -> `v9.9.9`; `ctest -R r39_titelversion` dort: 9 Unit-Riegel gruen (Linux-fest), Integration: Protokollzeile `neu "Ver.9.9.9" (RE15_VERSION "v9.9.9")` richtig, Bildvergleich dort nicht aussagekraeftig (Videotreiber offscreen + Mesa-GL, Bild 150 noch in der Einblende: 23325 Abweichungen, `T_belege/titel_linux_container_bild150.png`) -> wird dort seitdem wie in test_r30_titel_puls SICHTBAR uebersprungen (RE15_OHNE_GPU), die Protokoll-Pruefungen bleiben Pflicht |
 | Android | Abschnitt 4.1 |

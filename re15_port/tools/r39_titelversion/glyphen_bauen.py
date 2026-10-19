@@ -61,13 +61,14 @@ def muster(zeilen):
 # --- Ausgeschnittene Glyphen ------------------------------------------------------------------------------------------
 # (Zeichen, erste Spalte, letzte Spalte, Tintenkante links in 1/25 px relativ zur ersten Spalte, Bitmuster-Breite,
 #  {Spalte: Bildzeilen, die zum NACHBARN gehoeren}, Herkunftstext)
-# Tintenkante: Modell-Anpassung (Dossier 1.2, Phase in 0,04-px-Stufen); Tintenbreite = (n-1)*1,12 + 1,52 px.
+# Tintenkante: Modell-Anpassung tools/r39_titelversion/messen.py (Dossier 1.2, Phase auf dem 1/25-px-Raster);
+# Tintenbreite = (n-1)*1,12 + 1,52 px.
 AUSSCHNITT = [
     ('V', 198, 207, 20, 7, {207: range(27, 34)},
      'V aus "Ver." x198..207 (Spalte 207 nur Zeilen 24..26; 27..33 = linke Kante des "e")'),
-    ('e', 207, 213, 20, 5, {207: range(24, 27)}, 'e aus "Ver." x207..213 (Spalte 207 nur Zeilen 27..33)'),
+    ('e', 207, 213, 21, 5, {207: range(24, 27)}, 'e aus "Ver." x207..213 (Spalte 207 nur Zeilen 27..33)'),
     ('r', 214, 220, 15, 5, {}, 'r aus "Ver." x214..220'),
-    ('.', 221, 223, 12, 2, {}, '. aus "Ver." x221..223 (gleiche Werte wie der Punkt bei x267..269)'),
+    ('.', 221, 223, 8, 2, {}, '. aus "Ver." x221..223 (gleiche Werte wie der Punkt bei x267..269)'),
     ('0', 233, 239, 15, 5, {}, '0 aus "2025" x233..239'),
     ('1', 264, 266, 0, 2, {}, '1 aus ".01." x264..266'),
     ('2', 226, 232, 21, 5, {}, '2 aus "2025" x226..232 (bitgleich mit der "2" bei x270..276)'),

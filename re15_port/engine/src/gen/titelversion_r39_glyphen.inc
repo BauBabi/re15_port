@@ -214,9 +214,9 @@ static const uint8_t k_r39t_g_v[70] = {
 };
 static const re15_r39t_glyphe_t k_r39t_glyphen[] = {
     { 'V', 10,  20, 226, RE15_R39T_AUSGESCHNITTEN, k_r39t_g_V },
-    { 'e', 7,  20, 170, RE15_R39T_AUSGESCHNITTEN, k_r39t_g_e },
+    { 'e', 7,  21, 171, RE15_R39T_AUSGESCHNITTEN, k_r39t_g_e },
     { 'r', 7,  15, 165, RE15_R39T_AUSGESCHNITTEN, k_r39t_g_r },
-    { '.', 3,  12,  78, RE15_R39T_AUSGESCHNITTEN, k_r39t_g_punkt },
+    { '.', 3,   8,  74, RE15_R39T_AUSGESCHNITTEN, k_r39t_g_punkt },
     { '0', 7,  15, 165, RE15_R39T_AUSGESCHNITTEN, k_r39t_g_0 },
     { '1', 3,   0,  66, RE15_R39T_AUSGESCHNITTEN, k_r39t_g_1 },
     { '2', 7,  21, 171, RE15_R39T_AUSGESCHNITTEN, k_r39t_g_2 },
