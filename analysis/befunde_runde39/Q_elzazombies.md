@@ -12,6 +12,33 @@ Lesart des Orchestrators (VERBINDLICH): Elza-Raeume = ROOMxxx1; Ausloeser = stei
 Spur P); Montage-Form wie Leon nach Irons' Tod; Gegner-Verhalten RE2-KI wie bisher; Bit 95 nur, wenn kein Original-/Port-
 Flag reicht.
 
+## 0a. NUTZER-NACHTRAG 11 (AUFTRAG.md, vom Orchestrator um 00:24 in diesen Zweig committet: cceb31ef/50e00d74)
+> "Ich korrigiere, die Zombies sollen nicht in ROM 1071 noch durchbrechen, sondern dann noch wie bei leon im ROOM 1041."
+
+Orchestrator (verbindlich): KEIN Durchbruch aus/in 1071; statt dessen wie Leons Durchbruch in ROOM1040 (Rolltor-Schnitt
+Cut 1, include/re15_montage_r38.h) in ROOM1041. "falls die Zombies nicht besiegt wurden" = die aus 10C1/1061. Zeitpunkt
+belegen und begruenden (Elza steht beim Start der Panikphase selbst in 1041), spielbare Form (z.B. Durchbruch durchs
+Rolltor beim naechsten Betreten von 1041, solange diese Zombies leben), Leons Form 1040 als Vorbild.
+ERST UM 02:00 BEMERKT (beim master-Merge): bis dahin war der 1071-Schritt nach Nachtrag 10 gebaut (Abschnitte 2.3, 3,
+4.1). Umbau 0b unten; die Messungen 4.1 (Cut-7-Teil) gelten nur noch fuer den Stand vor dem Umbau.
+
+### 0b. Umbau nach Nachtrag 11 (Plan, Begruendung)
+* Montage beim Start der Panikphase: Auftakt 1041 -> [1061 Cut 2, wenn 10E1-Ueberlebende] -> 1031 Rollo (Cut 12) ->
+  Rueckkehr. Der 1031-Cut-7-Teil (1071-Kopien) und der Umzug der 1071-Records entfallen; ROOM1071 bleibt unberuehrt.
+* DURCHBRUCH 1041 = Leons 1040-Schritt (irons_tod_1150.c k_p_1040_*; ROOM1041 = ROOM1040 in RID/SCA/BLK/RVD, sub08 Byte fuer
+  Byte, Versatz +0x2A: Rolltor-Fahrt @0x019DC..@0x01A50; Rolltor = Objekt 0 main00 @0x01190 (-25200,0,-360); Schalter-
+  Rechteck Slot 4 @0x01118 = Leons Parkplatz (-24950,-14900); Gleichzeitig-Limit Save(0x12,5) @0x01218).
+  ZEITPUNKT: Elza steht beim Start der Panikphase selbst in 1041 (Spur P), und die Bedingung "falls die Zombies nicht
+  besiegt wurden" betrifft die Zombies aus 10C1/1061 — die hatte sie dann noch gar nicht vor sich. Deshalb beim NAECHSTEN
+  Betreten von 1041 nach der Montage (Tuer oder Laden, nicht die Rueckkehr der Montage selbst), solange mindestens eine der
+  1061-Kopien lebt; nur beim Eintritt im Suedteil (vor dem Rolltor, z < -360: Tueren 1061/1031/Aufzug), damit die Zombies
+  durchs Rolltor auf sie zukommen. Die ueberlebenden 1061-Kopien ziehen um (1061-Bit 1, 1041-Bit 0), erscheinen hinter
+  dem Rolltor (Leons Aufstell-Gassen), Elza wartet unsichtbar auf Leons Parkplatz hinter der Kamera Cut 1, Knall wie 1030,
+  Rolltor hoch (falls zu), die Zombies kommen durch, danach Elza zurueck an ihren Eintrittspunkt mit Steuerung.
+  Einmalig von selbst: danach lebt keine 1061-Kopie mehr (umgezogen); spaeteres Betreten von 1041 = Nachspawn der
+  1041-Kopien (wie Leons k_p_1040_nach).
+* Bits: 1041-Kopien = 128..131 (die bisherigen 1071-Kopie-Bits, Zensus 2.4 frei), 132 wieder frei.
+
 ## 0. Arbeitsplan
 1. Leons Form messen/belegen (Runde 35 L irons_tod_1150.c, Runde 38 O montage_r38.c, Runde 37 H zombieaktiv_r37.c).
 2. Elza: Durchbruch 10C1 -> Flur, Zahl = Zombies, die in 10E1 leben; 1061 Aufstellung; 1071 wie Leon; 1031 ueber das Rollo.
