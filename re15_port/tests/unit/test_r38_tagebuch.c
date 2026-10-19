@@ -452,8 +452,10 @@ static void teil_karte(void)
     const int a2  = re15_map_hint_eintrag_fuer(0x10F0, 0x1150);
     const int k1  = re15_map_hint_eintrag_fuer(RE15_TAGEBUCH_R38_RAUM, RE15_TAGEBUCH_R38_ZIEL1_RAUM);
     const int k2  = re15_map_hint_eintrag_fuer(RE15_TAGEBUCH_R38_RAUM, RE15_TAGEBUCH_R38_ZIEL2_RAUM);
-    PRUEF(alt == 0 && a1 == 1 && a2 == 2 && k1 >= 3 && k2 >= 3 && k1 != k2 && re15_map_hint_anzahl() == 5,
-          "Tabelle: Leon 0/1/2 an ihrem Platz, Elza %d/%d, 5 Eintraege", k1, k2);
+    /* Runde 39 Spur P: + Eintrag ROOM1041 -> ROOM1141 hinter den Eintraegen dieser Spur (include/re15_johnruf_r39.h) */
+    const int p1  = re15_map_hint_eintrag_fuer(0x1041, 0x1141);
+    PRUEF(alt == 0 && a1 == 1 && a2 == 2 && k1 >= 3 && k2 >= 3 && k1 != k2 && p1 > k1 && p1 > k2 && re15_map_hint_anzahl() == 6,
+          "Tabelle: Leon 0/1/2 an ihrem Platz, Elza %d/%d, Runde 39 P %d, 6 Eintraege", k1, k2, p1);
     PRUEF(re15_map_hint_folge(alt) == -1 && !re15_map_hint_zeitgesteuert(alt) &&
           re15_map_hint_folge(a1) == a2 && re15_map_hint_folge(a2) == -1 &&
           re15_map_hint_zeitgesteuert(a1) && re15_map_hint_zeitgesteuert(a2),

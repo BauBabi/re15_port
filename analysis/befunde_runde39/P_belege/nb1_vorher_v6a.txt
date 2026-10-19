@@ -1,0 +1,18 @@
+# Lauf v6a (Spurbaum P, Bau nach Merge 57e5f920, vor der Nachbesserung) - Wegplan:
+RAUM 10B1
+WARTE 30
+GEGNERWEG
+AOTS
+BLICK 3072
+WARTE 10
+AKTION
+WARTE 200
+ENDE
+# debug.log (gefiltert):
+[save] CONTINUE: resumed in room 1261 (hp=100)
+[fire-aot] slot=2 at F40 (Raum 1261)
+[aot] DOOR FIRE slot=2 rect=(-20250,-5750,hw=750,hh=500) target_cut=7 spawn=(-21159,0,3289)
+[room] PC loaded room10b1.rdt (139080 bytes)
+[aot] DOOR FIRE slot=1 rect=(-21370,4610,hw=750,hh=1050) target_cut=15 spawn=(-20250,-1800,-6700)
+[room] PC loaded room1261.rdt (287712 bytes)
+[flow] EXIT_AT: Bild 500 in Raum 1261 erreicht -> exit

@@ -15,6 +15,7 @@
 #
 #   --image NAME   NAME unveraendert nehmen (z.B. debian:11: installiert wie frueher)
 #   --mount        alter Weg: Repo direkt als /src einhaengen (Vergleich, Fehlersuche)
+#   --version V    Version fuers Titelbild (sonst Umgebung RE15_VERSION, sonst letzter Tag + " dev")
 # =============================================================================
 set -euo pipefail
 
@@ -27,10 +28,20 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --image) IMAGE="$2"; shift 2 ;;
         --mount) MODE=mount; shift ;;
-        -h|--help) sed -n '2,17p' "${BASH_SOURCE[0]}"; exit 0 ;;
+        --version) [[ -n "${2:-}" ]] || { echo "--version braucht einen Wert" >&2; exit 2; }
+                   RE15_VERSION="$2"; shift 2 ;;
+        -h|--help) sed -n '2,18p' "${BASH_SOURCE[0]}"; exit 0 ;;
         *) echo "unbekannte Option: $1" >&2; exit 2 ;;
     esac
 done
+# Runde 39 Spur T: Version ins Titelbild. Der Container hat kein .git - ohne Angabe bestimmt sie der Host
+# (wie re15_port/cmake/re15_version_r39.cmake: letzter Tag vX.Y.Z + " dev").
+if [[ -z "${RE15_VERSION:-}" ]]; then
+    RE15_VERSION="$(cd "$REPO" && git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || true)"
+    if [[ -n "$RE15_VERSION" ]]; then RE15_VERSION="$RE15_VERSION dev"; fi
+fi
+export RE15_VERSION
+echo "== RE15_VERSION (Titelbild): '${RE15_VERSION:-}' =="
 
 RUNNER=""
 command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && RUNNER=docker
@@ -56,5 +67,5 @@ KOPIE=(
 NIE=( release/wxbuild release/win_out )
 SKRIPT=release/docker_win_build.sh
 AUSGABE=release/win_out
-ENV_WEITER=()
+ENV_WEITER=( RE15_VERSION )   # Runde 39 Spur T: -> docker_win_build.sh -> cmake (Umgebung RE15_VERSION)
 container_lauf

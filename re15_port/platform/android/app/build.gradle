@@ -215,6 +215,9 @@ android {
                           "-DRE15_ASSETS_PATH=" + new File(portRoot, "shared_assets/PSX").absolutePath.replace('\\', '/'),
                           "-DANDROID_STL=c++_static",
                           "-DANDROID_PLATFORM=android-24"
+                // Runde 39 Spur T: Version ins Titelbild (-Pre15Version, release/build_android.sh --version); ohne
+                // Angabe bestimmt re15_port/cmake/re15_version_r39.cmake sie selbst (letzter Tag + " dev").
+                if (project.findProperty("re15Version")) { arguments "-DRE15_VERSION=" + re15Version }
                 targets "main", "SDL2"
             }
         }

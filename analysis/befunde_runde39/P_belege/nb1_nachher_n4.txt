@@ -1,0 +1,33 @@
+# Lauf n4 (Spurbaum P, Bau 23cb48d9 + Riegel, nach der Nachbesserung) - Wegplan:
+RAUM 1051
+WARTE 30
+GEGNERWEG
+FLAG 9 97
+GEHE 15000 -12500 150
+GEHE 16450 -13700 60
+BLICK 0
+AKTION
+WARTE 150
+AKTION
+WARTE 60
+AOTS
+ENDE
+# Umgebung: 
+# debug.log (gefiltert):
+[save] CONTINUE: resumed in room 1051 (hp=100)
+[tuersperre] F0 ROOM1051: Panikphase (Bit 97) -> Tuer Slot 4 -> Text msg 40
+[tuersperre] F196 ROOM1051 Tuer in der Panikphase -> msg 40 "I have to rescue John! He is in danger!" (Stimme main40.wav)
+[msgtext] room=1051 id=40 "I have to rescue John! He is in danger!"
+[voice] ROOM1051 msg 40: keine Aufnahme (synchro/STAGE1/room1051/main40.wav) - Zeile bleibt stumm
+[flow] EXIT_AT: Bild 500 in Raum 1051 erreicht -> exit
+# wegplan_log (Befehle/Flags):
+F62 room=1051 spieler=(15000,-10000) rot=3072 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (9,97) = 1
+F62 room=1051 spieler=(15000,-10000) rot=3072 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 3 beendet: gelesen
+F130 room=1051 spieler=(14980,-12364) rot=912 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 4 beendet: angekommen
+F190 room=1051 spieler=(16456,-13709) rot=288 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 5 beendet: angekommen
+F195 room=1051 spieler=(16456,-13709) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 6 beendet: Blick steht
+F198 room=1051 spieler=(16456,-13709) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 7 beendet: gedrueckt
+F348 room=1051 spieler=(16456,-13709) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 8 beendet: gewartet
+F351 room=1051 spieler=(16456,-13709) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 9 beendet: gedrueckt
+F411 room=1051 spieler=(16456,-13709) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 10 beendet: gewartet
+F412 room=1051 spieler=(16456,-13709) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 11 beendet: gelistet

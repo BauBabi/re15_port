@@ -6,14 +6,15 @@ cmake_minimum_required(VERSION 3.16)
 #
 #   K  LEON 11B0 -> Parkplatz-Tuer -> 11C0: Ada-Szene (msg 0..6) laeuft, Programm SZENE sperrt die Tuer; im Kampf (Gorillas
 #      leben, per RE15_R39O_GORILLAS_STARR eingefroren, damit Leon zu Fuss lebend ankommt — Lauf vor1 im Dossier) zur Tuer:
-#      Text msg 40, KEIN Raumwechsel, Stimme nach der Ordnerregel angefragt (main40.wav); danach laeuft Leon weiter
+#      Text msg 40, KEIN Raumwechsel, ohne Stimme (Nachtrag 13); danach laeuft Leon weiter
 #      (steuerbar); Kampfende (RE15_R39O_GORILLAS_TOT: genau die Kill-Bits (7,0x60)/(7,0x61) des Gorilla-Todes) ->
 #      Programm ENDE, msg 7, die Ende-Szene geht selbst durch die Tuer -> ROOM11B0. Bilder per RE15_FRAMEDUMP.
 #   W  LEON Wiedereintritt im Kampfzustand ((4,64)=1, (3,67)=0 — z. B. ein Spielstand von vor dieser Runde, als die Tuer im
 #      Kampf noch ging): Tuer Slot 0 ist ab dem Eintritt der Text; Druck -> msg 40, kein Raumwechsel.
 #   N  LEON nach dem Kampf ((4,64)=1, (3,67)=1): Tuer ist die Original-Tuer, Druck -> ROOM11B0, kein Eingriff.
-#   E  ELZA 11B1 -> 11C1 (Hunde, kein Begleiter): Tuer bleibt Tuer, Druck -> zurueck nach ROOM11B1 (die fuenf Hunde nimmt
-#      WEGPLAN GEGNERWEG heraus, damit kein Biss den Druck schluckt — die Tuer haengt an keinem Gegner).
+#   E  ELZA in 11C1 (Hunde, kein Begleiter): Tuer bleibt Tuer, Druck -> zurueck nach ROOM11B1 (die fuenf Hunde nimmt
+#      WEGPLAN GEGNERWEG heraus, damit kein Biss den Druck schluckt — die Tuer haengt an keinem Gegner). Start per Spielstand
+#      IN 11C1: die Gegenrichtung 11B1 -> 11C1 ist seit Runde 39 Nachtrag 12c fuer Elza zu (tuersperre_r39.c).
 #   I  LEON (4,64)=0, (3,67)=1 (Karte des Spur-A-Riegels integration_r39_stimmen_11b0; Abnahme 0 M1): keine Sperre -
 #      die Freigabe sub01 @0x0182E Ck(3,67)==0 griffe nie. i1 Aot_on(0) in Bild 60 der Szene -> ROOM11B0; i2 Szene
 #      durch, zu Fuss zur Tuer, Druck -> ROOM11B0.
@@ -172,15 +173,8 @@ ENDE
     pruef_nicht(K _wp "AOT slot 0 typ 1 ")
     pruef(K _wp "FLAG (4,64) = 1")
     pruef(K _wp "FLAG (3,67) = 0")
-    pruef(K _d "ROOM11C0 Tuer im Kampf -> msg 40")
     pruef(K _d "msg 40")
-    # Ordnerregel: die Stimme wird als synchro/STAGE1/room11C0/main40.wav angefragt (ohne Datei: "keine Aufnahme ... stumm")
-    string(REGEX MATCH "\\[voice\\] (ROOM11C0 msg 40: keine Aufnahme \\(synchro/STAGE1/room11[cC]0/main40\\.wav\\)|clip loaded: main40\\.wav)" _stimme "${_d}")
-    set(_b FALSE)
-    if(_stimme)
-        set(_b TRUE)
-    endif()
-    pruef_wahr(K _b "Stimme msg 40 nach der Ordnerregel angefragt (${_stimme})")
+    pruef_nicht(K _d "[voice] ROOM11C0 msg 40:")              # Nachtrag 13: einfacher Raumtext ohne Stimme
     if(_st MATCHES "bilder_mit_msg40=([0-9]+)")
         set(_n "${CMAKE_MATCH_1}")
         set(_b FALSE)
@@ -192,7 +186,7 @@ ENDE
     # Waehrend des Kampfes kein Durchgang: die einzige DOOR FIRE slot=0 kommt NACH dem Kampfende.
     string(FIND "${_d}" "MESSHAKEN RE15_R39O_GORILLAS_TOT" _p_tot)
     string(FIND "${_d}" "DOOR FIRE slot=0" _p_tuer)
-    string(FIND "${_d}" "ROOM11C0 Tuer im Kampf -> msg 40" _p_text)
+    string(FIND "${_d}" "[msgtext] room=11c0 id=40 " _p_text)   # der Text selbst (RE15_MSG_LOG; Nachtrag 13: kein Stimmen-Log mehr)
     set(_b FALSE)
     if(_p_tot GREATER 0 AND _p_tuer GREATER _p_tot AND _p_text GREATER 0 AND _p_text LESS _p_tot)
         set(_b TRUE)
@@ -242,7 +236,7 @@ ENDE
     pruef_nicht(W _d "Programm SZENE")
     pruef(W _wp "AOT slot 0 typ 5 ev 40 flags 0x31")
     pruef_nicht(W _wp "AOT slot 0 typ 1 ")
-    pruef(W _d "ROOM11C0 Tuer im Kampf -> msg 40")
+    pruef(W _d "[msgtext] room=11c0 id=40 ")
     pruef_nicht(W _d "DOOR FIRE slot=0")
     pruef(W _d "EXIT_AT: Bild 420 in Raum 11c0")
 endif()
@@ -269,12 +263,9 @@ ENDE
     pruef(N _d "EXIT_AT: Bild 200 in Raum 11b0")
 endif()
 
-# --- E: Elza ROOM11B1 -> 11C1 -> 11B1 --------------------------------------------------------------------------------
+# --- E: Elza ROOM11C1 -> 11B1 (Ankunftslage aus ROOM11B1 main00 @0x00F9C: (-25279,17268), Blick 0x11FB & 0xFFF) --------
 if(TEIL STREQUAL "E")
-    lauf(e "11B1;-25480;-26000;1024;elza;flag:4:0xF3;flag:4:64" "RAUM 11B1
-WARTE 20
-AKTION
-RAUM 11C1
+    lauf(e "11C1;-25279;17268;507;elza;flag:4:0xF3;flag:4:64" "RAUM 11C1
 AOTS
 GEGNERWEG
 BLICK 3072
@@ -283,10 +274,10 @@ RAUM 11B1
 WARTE 30
 ENDE
 " "RE15_EXIT_AT=200#11b1" _d _st _wp)
-    pruef(E _d "loaded room11c1.rdt")
     pruef(E _wp "AOT slot 0 typ 1 ev 0 flags 0x31 band 0 mitte (-25100,17250)")
     pruef_nicht(E _d "[parkplatz]")
     pruef(E _d "DOOR FIRE slot=0 rect=(-25100,17250")
+    pruef(E _d "loaded room11b1.rdt")
     pruef(E _d "EXIT_AT: Bild 200 in Raum 11b1")
 endif()
 
@@ -312,7 +303,7 @@ ENDE
     pruef(I1 _d "[fire-aot] slot=0 at F60")
     pruef(I1 _d "DOOR FIRE slot=0 rect=(-25100,17250,hw=2000,hh=1350) target_cut=1 spawn=(-25552,0,-25331)")
     pruef(I1 _d "loaded room11b0.rdt")
-    pruef_nicht(I1 _d "Tuer im Kampf -> msg 40")
+    pruef_nicht(I1 _d "[msgtext] room=11c0 id=40 ")
     pruef(I1 _d "EXIT_AT: Bild 200 in Raum 11b0")
     lauf(i2 "${_karte_i}" "RAUM 11C0
 AOTS
@@ -338,7 +329,7 @@ ENDE
     pruef(I2 _wp "FLAG (3,67) = 1")
     pruef(I2 _d "DOOR FIRE slot=0 rect=(-25100,17250,hw=2000,hh=1350) target_cut=1 spawn=(-25552,0,-25331)")
     pruef(I2 _d "loaded room11b0.rdt")
-    pruef_nicht(I2 _d "Tuer im Kampf -> msg 40")
+    pruef_nicht(I2 _d "[msgtext] room=11c0 id=40 ")
     pruef(I2 _d "EXIT_AT: Bild 200 in Raum 11b0")
 endif()
 

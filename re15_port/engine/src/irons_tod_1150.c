@@ -19,6 +19,7 @@
 #include "re15_scd.h"
 #include "re15_szene11c0_r37.h"   /* Runde 37 Spur O: Port-Takt + Mess-Haken der 11C0-Szene */
 #include "re15_montage_r38.h"     /* Runde 38 Spur O: Zombies gehen in jedem Schnitt auf die Kamera zu */
+#include "re15_elzazombies_r39.h" /* Runde 39 Spur Q (Nachtrag 12): Treppenhaus-Schritt 10C0 -> 1060 (re15_r39q_leon_*) */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -841,6 +842,7 @@ static void umzug_vorbereiten(void)
     re15_game_flag_set(RE15_IT_BANK, RE15_IT_BIT_1130, l1140 > 0 ? 1 : 0);
     re15_game_flag_set(RE15_IT_BANK, RE15_IT_BIT_1040, 1);
     re15_game_flag_set(RE15_IT_BANK, RE15_IT_BIT_1030, l1070 > 0 ? 1 : 0);
+    re15_r39q_leon_umzug();                                  /* Runde 39 Spur Q (Nachtrag 12): 10E0-Ueberlebende -> 1060 */
 #ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[irons-tod] Umzug: 1140 lebend %d -> 1130 (9,74)=%d; 1070 lebend %d -> 1030 (9,76)=%d\n",
             l1140, l1140 > 0, l1070, l1070 > 0);
@@ -1058,13 +1060,19 @@ static int programm_bauen(uint16_t room_id)
         if (!re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)) {  /* 1140 leer: "passiert nichts" -> 1040 */
             tuer_setzen(s_prog_len - 36, RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 0x04, RE15_IT_CUT_1040);
             knall_setzen(RE15_IT_SIG_KNALL_1030);            /* der Knall des 1040-Schritts (Runde 36 Spur K, K3) */
+            re15_r39q_leon_tuer(s_prog, s_prog_len);         /* Runde 39 Spur Q: erst 1060, wenn in 10E0 Zombies leben */
         }
         return 1;
     case RE15_IT_S1130:
         if (room_id != RE15_IT_RAUM_1130) return 0;
         prog_anhaengen(k_p_1130, (int)sizeof k_p_1130);
         if (!re15_r38_montage_enabled()) r38_gegenprobe_grid(0, s_prog_len, 0x02);   /* Gegenprobe: EM_1130_LISTE */
+        re15_r39q_leon_tuer(s_prog, s_prog_len);             /* Runde 39 Spur Q: -> 1060 statt 1040, wenn in 10E0 Zombies leben */
         return 1;
+    case RE15_IT_S1060:                                      /* Runde 39 Spur Q (Nachtrag 12): Programm L, re15_elzazombies_r39.h */
+        if (room_id != RE15_IT_RAUM_1060) return 0;
+        s_prog_len = re15_r39q_leon_1060_bauen(s_prog, (int)sizeof s_prog);
+        return s_prog_len > 0;
     case RE15_IT_S1040:
         if (room_id != RE15_IT_RAUM_1040) return 0;
         prog_anhaengen(k_p_1040_kopf, (int)sizeof k_p_1040_kopf);
@@ -1165,7 +1173,8 @@ int re15_irons_tod_sub01_gesperrt(void)
     if ((uint16_t)g_current_room_id == RE15_IT_RAUM_1150 && re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN))
         return 1;
     return s_zustand == RE15_IT_S1130 || s_zustand == RE15_IT_S1040 ||
-           s_zustand == RE15_IT_S1030 || s_zustand == RE15_IT_S11C0;
+           s_zustand == RE15_IT_S1030 || s_zustand == RE15_IT_S11C0 ||
+           s_zustand == RE15_IT_S1060;                       /* Runde 39 Spur Q (Nachtrag 12) */
 }
 
 /* Irons: Clip `clip` ab Bild `bild` im Motion-Sub 0 (Phase 1 = spielt bis Clip-Ende, dann Halt
@@ -1414,7 +1423,7 @@ void re15_irons_tod_install(uint16_t room_id)
             if (starten(1) >= 0) log_it("Nachspawn 1130 (Programm 10)");
         return;
     case RE15_IT_RAUM_1040:
-        if (s_zustand == RE15_IT_S1130 ||
+        if (s_zustand == RE15_IT_S1130 || s_zustand == RE15_IT_S1060 /* Runde 39 Spur Q */ ||
             (s_zustand == RE15_IT_SZENE && !re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130))) {
             s_zustand = RE15_IT_S1040;
             knallbank_laden();
@@ -1447,6 +1456,10 @@ void re15_irons_tod_install(uint16_t room_id)
         }
         if (s_zustand != RE15_IT_AUS) { s_zustand = RE15_IT_AUS; log_it("Kette unterbrochen (11C0)"); }
         return;
+    case RE15_IT_RAUM_1060:   /* Runde 39 Spur Q (Nachtrag 12): Treppenhaus-Schritt (re15_elzazombies_r39.h), sonst wie default */
+        if (re15_r39q_leon_1060_dran(s_zustand)) {
+            s_zustand = RE15_IT_S1060; knallbank_laden(); if (starten(1) >= 0) log_it("Montage 1060 (Runde 39 Spur Q, Programm L)"); return; }
+        /* fall through */
     default:
         if (s_zustand != RE15_IT_AUS) { s_zustand = RE15_IT_AUS; log_it("Kette unterbrochen (fremder Raum)"); }
         return;

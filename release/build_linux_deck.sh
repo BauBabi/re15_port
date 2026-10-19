@@ -24,6 +24,7 @@
 # Link /src/<pfad> -> /host/<pfad> angelegt — es fehlt keine Datei, die es im Repo
 # gibt. release/linux_out wird direkt eingehaengt (dort landet das Binary).
 #   --mount   alter Weg: Repo direkt als /src einhaengen (Vergleichslaeufe, Fehlersuche)
+#   --version V  Version fuers Titelbild (sonst Umgebung RE15_VERSION, sonst letzter Tag + " dev")
 #   RE15_CTEST_JOBS=N  ctest parallel (Opt-in, Standard seriell; -j8: ctest 101 s statt 392 s)
 # Diagnose je Lauf (auch bei Rot): release/linux_out/diag/ (ctest-Ausgabe, LastTest.log,
 # Fingerabdruck je Test, .ninja_log; bei rotem ctest das Binary als re15_pc.UNGEPRUEFT-...).
@@ -44,16 +45,26 @@ while [[ $# -gt 0 ]]; do
         --distrobox) BOX="$2"; shift 2 ;;
         --image)     IMAGE="$2"; shift 2 ;;
         --mount)     MODE=mount; shift ;;
-        -h|--help)   sed -n '2,32p' "${BASH_SOURCE[0]}"; exit 0 ;;
+        --version)   [[ -n "${2:-}" ]] || { echo "--version braucht einen Wert" >&2; exit 2; }
+                     RE15_VERSION="$2"; shift 2 ;;
+        -h|--help)   sed -n '2,33p' "${BASH_SOURCE[0]}"; exit 0 ;;
         *) echo "unbekannte Option: $1" >&2; exit 2 ;;
     esac
 done
+# Runde 39 Spur T: Version ins Titelbild. Der Container hat kein .git - ohne Angabe bestimmt sie der Host
+# (wie re15_port/cmake/re15_version_r39.cmake: letzter Tag vX.Y.Z + " dev").
+if [[ -z "${RE15_VERSION:-}" ]]; then
+    RE15_VERSION="$(cd "$REPO" && git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || true)"
+    if [[ -n "$RE15_VERSION" ]]; then RE15_VERSION="$RE15_VERSION dev"; fi
+fi
+export RE15_VERSION
+echo "== RE15_VERSION (Titelbild): '${RE15_VERSION:-}' =="
 
 if [[ -n "$BOX" ]]; then
     command -v distrobox >/dev/null 2>&1 || { echo "distrobox fehlt" >&2; exit 1; }
     echo "== Bauen in distrobox '$BOX' =="
     exec distrobox enter --no-tty "$BOX" -- bash -lc \
-        "set -e; cd '$REPO' && bash release/docker_linux_build.sh"
+        "set -e; cd '$REPO' && RE15_VERSION='$RE15_VERSION' bash release/docker_linux_build.sh"
 fi
 
 RUNNER=""
@@ -106,5 +117,5 @@ KOPIE=(
 NIE=( release/lbuild release/linux_out )
 SKRIPT=release/docker_linux_build.sh
 AUSGABE=release/linux_out
-ENV_WEITER=( RE15_CTEST_JOBS )
+ENV_WEITER=( RE15_CTEST_JOBS RE15_VERSION )   # RE15_VERSION: Runde 39 Spur T -> docker_linux_build.sh -> cmake
 container_lauf

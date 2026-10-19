@@ -106,7 +106,10 @@ function(lauf _name _ton)
 endfunction()
 
 # ---- A: Panikphase, echter Weg -------------------------------------------------------------------
-lauf(A 1 1121 150 9550 0 9:97)
+# Runde 39 Spur P (Integration mit johnruf_r39.c): die Panikphase des Spiels ist Bank 9 Bit 97 UND (4,0xF0)=1 - Bit 97 setzt
+# nur RUF1041, das (4,0xF0)=1 braucht (ROOM1021 sub02 @0x01FE0); (4,0xF0)=0 mit (4,0xF2)=0 heisst "John gerettet" (ROOM1141
+# sub02 @0x00C18 / sub01 @0x00C0C) und loescht Bit 97 im ersten Spielbild. Darum tragen die Elza-Spielstaende mit 9:97 auch 4:0xF0.
+lauf(A 1 1121 150 9550 0 9:97 4:0xF0)
 if(NOT R39R_CONT MATCHES "room 1121")
     fail("A: Spielstand ROOM1121 nicht geladen")
 endif()
@@ -201,7 +204,7 @@ if(_vr LESS 25 OR NOT _vl LESS 5)
 endif()
 
 # ---- C: schon gesprungen --------------------------------------------------------------------------
-lauf(C 0 1121 150 9550 0 9:97 7:0xAE)
+lauf(C 0 1121 150 9550 0 9:97 4:0xF0 7:0xAE)
 string(FIND "${R39R_H}" "ROOM1121 aus: (9,97)=1 (7,0xAE)=1" _f)
 if(_f LESS 0 OR R39R_SP)
     fail("C: mit (7,0xAE)=1 gab es ein Ereignis/einen Hund")
@@ -226,7 +229,7 @@ endif()
 set(R39R_START 200)
 set(R39R_ENDE "420#1121")
 set(R39R_EXTRA "RE15_FIRE_AOT=0@40#1061")
-lauf(E 0 1061 26600 24300 0 9:97)
+lauf(E 0 1061 26600 24300 0 9:97 4:0xF0)
 list(LENGTH R39R_TUER _nt)
 if(_nt LESS 2)
     fail("E: Tuer Slot 0 nicht genommen: '${R39R_TUER}'")

@@ -199,6 +199,9 @@ endif()
 # --- D: 1060 frei ((9,73)=1): Tuer nach 1040 -----------------------------------------------------
 it_lauf(d 1060 "nach10f0;ersteszene;gesehen" "W1,A0.2,W3" 240 1040 240 _dbg)
 it_darf_nicht(D "${_dbg}" "[tuer1060]")
+# Runde 39 Spur Q, Nachbesserung 3 (Abnahme 2 Mangel 1): dieser Spielstand traegt (9,73) ohne den Q-Umzug ((9,96)=0) = jeder
+# Leon-Spielstand v0.8.22..v0.8.26 -> beim Laden in 1060 kein Nachspawn (vorher: vier Zombies aus dem Nichts, Zeile 45).
+it_darf_nicht(D "${_dbg}" "Leon: Nachspawn 1060")
 it_muss(D "${_dbg}" "DOOR FIRE slot=2")
 it_muss(D "${_dbg}" "[room] PC loaded room1040.rdt")
 
