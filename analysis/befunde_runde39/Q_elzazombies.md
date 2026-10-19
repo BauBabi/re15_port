@@ -580,7 +580,8 @@ Leons Vorlage 6; Raum-Paare byte-gleich; Programm L endet Byte fuer Byte wie Leo
   Schild "F2"): die Zombies, die du im Medical Room (10E0) am Leben gelassen hast, sind durch die Tuer der 2F West Side
   hereingebrochen und gehen auf die Kamera zu — genau wie bei Elza. Danach geht es wie bisher weiter (Rolltor, Lobby, Parkplatz).
   Hast du im Medical Room alle getoetet, entfaellt der Schnitt. Kommst du spaeter ins Treppenhaus, stehen sie auf dem Absatz
-  unter dem Fenster und laufen erst los, wenn du oben ankommst (wie bei Elza).
+  unter dem Fenster und laufen erst los, wenn du oben ankommst (wie bei Elza). [Nachbesserung 3: gilt fuer die Ankunft von unten; von OBEN stehen sie
+  an der Tuer zur 2F West Side und laufen erst los, wenn du unten an der Westtreppe ankommst - 10.8.]
 * ELZA: In der Panik-Montage kommt vor dem Rollo wieder der Schnitt auf die Tuer des Lobby Office (1071): die Zombies, die dort
   noch leben, stehen davor und gehen auf die Kamera zu — wie bei Leon. Dann bricht wie bisher das Rollo. Spaeter findest du sie
   in der Lobby.
@@ -662,7 +663,8 @@ scratchpad/nb3/lauf.sh, Laufordner scratchpad/nb3/runs/<lauf>, Shell ohne RE15_*
 * HALTEBIT = GANZER TAKT (Mangel 2). STAGE1.BIN (re15_disasm.py dis 0x80100424/0x801004c4/0x801005d0): @0x80100450 `lbu v0,9(a0)`,
   @0x80100458 `andi v0,v0,0x20`, @0x8010045c `bne v0,zero,0x80100658` springt hinter: Distanz `jal 0x80065f60` (SquareRoot0)
   @0x801004ac, Schwerkraft `jal 0x8001bd60` @0x80100514, Steuerung `jal 0x80039e7c` @0x80100538, den ZUSTANDS-DISPATCH
-  `lbu v0,4(v0)` @0x80100568 / `addiu at,at,-2124` (0x8011f7b4) @0x80100578 / `jalr v0` @0x80100588 (Eintrag [0] = INIT) und die
+  `lbu v0,4(v0)` @0x80100568 / `addiu at,at,-2124` (0x8011f7b4) @0x80100578 / `jalr v0` @0x80100588 (Tabelle @0x8011f7b4 Eintrag [0]
+  = 0x80100688 = INIT: `+0x4 = 1` @0x80100704, RNG-Zuege ab @0x80100774; [1] = 0x80101224 aktiv) und die
   Folgeaufrufe @0x801005dc..@0x80100650 (u.a. `jal 0x8002b498` Kasten-Versatz); es bleibt nur `jal 0x8001b064` @0x8010066c
   (Schatten, RE15_FUN_CATALOG). => Ein Haltebit VOR dem ersten Takt laesst den INIT nie laufen (st=0, hp=0, nie berechnete Pose =
   flach liegend, 10.1).
