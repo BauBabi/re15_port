@@ -40,6 +40,7 @@
 #include "re15_map_hint.h"
 #include "re15_johnruf_r39.h"
 #include "re15_tuersperre_r39.h"
+#include "re15_dining_r38.h"     /* Nachtrag 17: Herzschluessel (9,64) */
 #include "re15_elzazombies_r39.h"     /* Integration: Spur Q fuer diese P-Riegel abgeschaltet */
 #include "re15_stimmen_pegel_r39.h"
 
@@ -206,7 +207,7 @@ static int op_len(const uint8_t *p)
         case 0x00: case 0x02: case 0x42: return 1;
         case 0x01: case 0x12: case 0x3C: case 0x5F: return 2;
         case 0x2E: return 3;
-        case 0x09: case 0x11: case 0x21: case 0x22: case 0x2B: return 4;
+        case 0x09: case 0x11: case 0x21: case 0x22: case 0x2B: case 0x3F: case 0x43: return 4;   /* 0x3F/0x43: Geste (Nachtrag 17) */
         case 0x40: return 8;
         default: return -1;
     }
@@ -228,7 +229,7 @@ static void teil_programme(void)
         if (p[o] == 0x22 && p[o + 1] == 2 && p[o + 2] == 7 && p[o + 3] == 1 && sperre < 0) sperre = o;
         if (p[o] == 0x5F) { xa = p[o + 1]; if (xa == RE15_R39P_XA_NORMAL && i_xa120 < 0) i_xa120 = o; }
         if (p[o] == 0x2B && p[o + 1] == RE15_R39P_HILFE_ID0 + RE15_R39P_RUF1041_A - 1) { i_rf1 = o; xa_rf1 = xa; }
-        if (p[o] == 0x2B && p[o + 1] == RE15_R39P_HILFE_ID0 + RE15_R39P_RUF1041_B - 1) { i_rf2 = o; xa_rf2 = xa; }
+        if (p[o] == 0x2B && p[o + 1] >= RE15_R39P_HILFE_ID0 && p[o + 1] < RE15_R39P_HILFE_ID0 + RE15_R39P_HILFE_N) { i_rf2++; (void)xa_rf2; }
         if (p[o] == 0x40) { i_dreh = o; dreh_mode = p[o + 2]; dreh_x = (int16_t)(p[o + 4] | p[o + 5] << 8); dreh_z = (int16_t)(p[o + 6] | p[o + 7] << 8); }
         if (p[o] == 0x2B && p[o + 1] == RE15_R39P_MSG_SATZ) { i_m40 = o; xa_m40 = xa; }
         if (p[o] == 0x2B && p[o + 1] == RE15_R39P_MSG_KARTE) i_karte = o;
@@ -243,17 +244,16 @@ static void teil_programme(void)
           RE15_R39P_RUF1041_A, xa_rf1);
     PRUEF(i_dreh > i_rf1 && dreh_mode == 9 && dreh_x == RE15_R39P_TREPPE_X && dreh_z == RE15_R39P_TREPPE_Z,
           "danach Plc_dest Modus 9 zur Treppentuer (%d,%d) (Form sub11 @0x0220C)", dreh_x, dreh_z);
-    PRUEF(i_rf2 > i_dreh && xa_rf2 == RE15_R39P_XA_LEISE, "zweiter Ruf help%02d (\"Please help!\") ebenfalls Xa_vol %d",
-          RE15_R39P_RUF1041_B, xa_rf2);
-    PRUEF(i_xa120 > i_rf2 && i_m40 > i_xa120 && xa_m40 == RE15_R39P_XA_NORMAL,
+    PRUEF(i_rf2 == 0, "genau ein Ruf (Nachtrag 17 Punkt 2: \"Das 1. reicht\", help02 entfaellt): %d weitere", i_rf2 + 1 - 1);
+    PRUEF(i_xa120 > i_dreh && i_m40 > i_xa120 && xa_m40 == RE15_R39P_XA_NORMAL,
           "Xa_vol 120 VOR msg 40: Elzas Zeile mit Standardlautstaerke (Form RE2 ROOM1010 sub22)");
     PRUEF(i_karte > i_m40 && i_b97 > i_karte && i_frei > i_b97,
           "Reihenfolge msg 40 -> Karte (Warte-Zeile 59) -> Set(9,97)=1 -> Steuerung zurueck");
-    /* zwischen zweitem Ruf und Xa_vol 120 mindestens die Ruflaenge help02 (1,96 s = 59 Bilder) */
+    /* zwischen dem Ruf und Xa_vol 120 mindestens die Ruflaenge help03 (1,57 s = 47 Bilder) */
     {
         int sl = 0;
-        for (o = i_rf2; o < i_xa120; o += op_len(p + o)) if (p[o] == 0x09) sl += p[o + 2] | p[o + 3] << 8;
-        PRUEF(sl >= 59, "Pause zwischen help02 und Xa_vol 120 = %d Bilder >= 59 (der Ruf klingt mit 50 aus)", sl);
+        for (o = i_rf1; o < i_xa120; o += op_len(p + o)) if (p[o] == 0x09) sl += p[o + 2] | p[o + 3] << 8;
+        PRUEF(sl >= 47, "Pause zwischen help03 und Xa_vol 120 = %d Bilder >= 47 (der Ruf klingt mit 50 aus)", sl);
     }
     /* Original-Zeilen bytegleich mit ROOM1041.RDT sub11 */
     if (rdt_laden(0x1041) == 0) {
@@ -261,17 +261,16 @@ static void teil_programme(void)
             { 0x00, 0x021F8, 8 },   /* Set(2,7)=1 Set(1,0x1B)=1                       */
             { 0x12, 0x02204, 8 },   /* Work_set(1,0) Nop Sleep 25                      */
             { 0x22, 0x02214, 16 },  /* Do Evt_next Nop Edwhile Ck(5,0x20)==0 Sleep 25  */
-            { 0x40, 0x02228, 4 },   /* Sleep 100                                       */
-            { 0x4C, 0x0222C, 18 },  /* Set(2,7)=0 .. Evt_end                           */
+            { 0x5C, 0x0222C, 18 },  /* Set(2,7)=0 .. Evt_end (Sleep 100 @0x02228 -> Elzas Geste, Nachtrag 17) */
         };
         int alle = 1;
         for (unsigned i = 0; i < sizeof k / sizeof k[0]; i++)
             if (k[i].off + k[i].len > n || memcmp(p + k[i].off, s_raw + k[i].rdt, (size_t)k[i].len)) {
                 alle = 0; printf("    Abweichung +%04X <-> @0x%05X\n", k[i].off, k[i].rdt);
             }
-        PRUEF(alle, "Original-Zeilen bytegleich mit ROOM1041.RDT sub11 (5 Bereiche, 54 B)");
-        PRUEF(p[0x1A] == 0x40 && !memcmp(p + 0x1A, s_raw + 0x0220C, 4) && p[0x3C] == 0x2B && s_raw[0x02224] == 0x2B &&
-              p[0x3D] == RE15_R39P_MSG_SATZ && s_raw[0x02225] == 0x02,
+        PRUEF(alle, "Original-Zeilen bytegleich mit ROOM1041.RDT sub11 (4 Bereiche, 50 B)");
+        PRUEF(p[0x1A] == 0x40 && !memcmp(p + 0x1A, s_raw + 0x0220C, 4) && p[0x34] == 0x2B && s_raw[0x02224] == 0x2B &&
+              p[0x35] == RE15_R39P_MSG_SATZ && s_raw[0x02225] == 0x02,
               "Plc_dest-Kopf `40 00 09 20` = @0x0220C, msg 40 an der Stelle von msg 2 @0x02224");
     }
     /* RUF1131 */
@@ -346,12 +345,14 @@ static void teil_xa(void)
 }
 
 /* ================================================================== ablauf */
+static int s_ohne_schluessel = 0;   /* Nachtrag 17 Punkt 1: Gegenprobe ohne Herzschluessel */
 static void elza_1041(int f0, int b97)
 {
     re15_game_state_init();
     re15_inv_init();
     g_gameflow.character = 4;
     re15_game_flag_set(4, 0xF0, f0 ? 1 : 0);
+    re15_game_flag_set(9, RE15_R38F_BIT_GENOMMEN, (f0 && !s_ohne_schluessel) ? 1 : 0);   /* Herzschluessel aufgenommen (ROOM1011) */
     re15_game_flag_set(9, RE15_R39P_BIT_PANIK, b97 ? 1 : 0);
     re15_game_flag_set(3, 0x5F, 1); re15_game_flag_set(4, 0xF1, 1);
     (void)room_boot(0x1041, -24194, 16500, 2048);
@@ -360,6 +361,17 @@ static void elza_1041(int f0, int b97)
 static void teil_ablauf(void)
 {
     printf("== ablauf ==\n");
+    {   /* Nachtrag 17 Punkt 1: mit (4,0xF0), aber ohne Herzschluessel startet nichts; Gesten-Quelle erst mit dem Schluessel */
+        s_ohne_schluessel = 1;
+        elza_1041(1, 0);
+        s_ohne_schluessel = 0;
+        for (int f = 0; f < 60; f++) bild(0, 0);
+        PRUEF(!faden_im_programm(0) && s_n_st == 0 && re15_johnruf_r39_gesten_quelle(0x1041) == 0,
+              "ohne Herzschluessel (9,64): kein RUF1041, kein Ruf, keine Gesten-Leihe");
+        re15_game_flag_set(9, RE15_R38F_BIT_GENOMMEN, 1);
+        PRUEF(re15_johnruf_r39_gesten_quelle(0x1041) == RE15_R39P_GESTEN_RAUM && re15_johnruf_r39_gesten_quelle(0x1040) == 0,
+              "mit Herzschluessel: Gesten-Quelle ROOM1031 fuer 1041 (Leon 1040: keine)");
+    }
     elza_1041(0, 0);
     PRUEF(!faden_im_programm(0), "(4,0xF0)=0 (John-Szene 1021 noch nicht gelaufen): kein Programm in 1041");
     elza_1041(1, 1);
@@ -389,11 +401,18 @@ static void teil_ablauf(void)
     for (int i = 0; i < s_n_st; i++) printf("    Stimme Bild %d Id %d Xa_vol %d\n", s_st[i].bild, s_st[i].id, s_st[i].xa);
     PRUEF(b_sperre >= 0 && b_sperre <= 1, "Pad-Sperre (2,7) ab dem ersten Spielbild (Form sub11 @0x021F8)");
     PRUEF(frei_davor == 0, "zwischen Sperre und Bit 97 kein freies Spielbild (Rufe, Satz, Karte am Stueck)");
-    PRUEF(s_n_st >= 3 && s_st[0].id == RE15_R39P_HILFE_ID0 + RE15_R39P_RUF1041_A - 1 && s_st[0].xa == RE15_R39P_XA_LEISE &&
-          s_st[1].id == RE15_R39P_HILFE_ID0 + RE15_R39P_RUF1041_B - 1 && s_st[1].xa == RE15_R39P_XA_LEISE,
-          "zwei Rufe help03, help02 mit Xa_vol 50 beim Abspielen (leise)");
-    PRUEF(s_n_st >= 3 && s_st[2].id == RE15_R39P_MSG_SATZ && s_st[2].xa == RE15_R39P_XA_NORMAL && s_st[2].bild > s_st[1].bild,
+    PRUEF(s_n_st >= 2 && s_st[0].id == RE15_R39P_HILFE_ID0 + RE15_R39P_RUF1041_A - 1 && s_st[0].xa == RE15_R39P_XA_LEISE,
+          "ein Ruf help03 mit Xa_vol 50 beim Abspielen (leise; Nachtrag 17: der zweite entfaellt)");
+    PRUEF(s_n_st >= 2 && s_st[1].id == RE15_R39P_MSG_SATZ && s_st[1].xa == RE15_R39P_XA_NORMAL && s_st[1].bild > s_st[0].bild,
           "danach Elzas Stimme main40 (Id 40) mit Xa_vol 120");
+    {   /* Nachtrag 17 Punkt 3: Elzas Geste zur Zeile = ROOM10B1 sub04 @0x019BA..@0x019D5 Byte fuer Byte im Programm */
+        static const uint8_t g[] = { 0x3f, 0x00, 0x05, 0x00, 0x09, 0x0a, 0x32, 0x00, 0x3f, 0x00, 0x05, 0x00, 0x43, 0x00, 0x80, 0x00,
+                                     0x09, 0x0a, 0x32, 0x00, 0x3f, 0x00, 0x09, 0x00, 0x09, 0x0a, 0x14, 0x00 };
+        int n = 0, hat = 0;
+        const uint8_t *pr = re15_johnruf_r39_programm(0, &n);
+        for (int i = 0; pr && i + (int)sizeof g <= n; i++) if (!memcmp(pr + i, g, sizeof g)) hat = 1;
+        PRUEF(hat, "RUF1041 enthaelt Elzas Geste (ROOM10B1 sub04 @0x019BA..@0x019D5)");
+    }
     {
         const double soll = atan2(-(double)(RE15_R39P_TREPPE_Z - 16500), (double)(RE15_R39P_TREPPE_X - (-24194))) / (2.0 * PI_D) * 4096.0;
         int d = ((rot_m40 - (int)lround(soll)) % 4096 + 4096 + 2048) % 4096 - 2048;
@@ -427,7 +446,7 @@ static void teil_musik(void)
     PRUEF(flag(9, RE15_R39P_BIT_PANIK) && re15_johnruf_r39_fenster(), "Panikphase + Fenster nach dem 1041-Ablauf");
     static const struct { int stage, room, soll; const char *name; } k[] = {
         { 0, 0x04, 1, "ROOM1041" }, { 0, 0x06, 1, "ROOM1061" }, { 0, 0x12, 1, "ROOM1121" }, { 0, 0x13, 1, "ROOM1131" },
-        { 0, 0x03, 1, "ROOM1031" }, { 0, 0x14, 0, "ROOM1141 (eigene Musik MAIN16)" }, { 1, 0x00, 0, "STAGE2" },
+        { 0, 0x03, 1, "ROOM1031" }, { 0, 0x14, 1, "ROOM1141 vor dem Entriegeln (Nachtrag 17: MAIN01 bleibt)" }, { 1, 0x00, 0, "STAGE2" },
     };
     for (unsigned i = 0; i < sizeof k / sizeof k[0]; i++) {
         const int e = re15_johnruf_r39_bgm_eintrag(k[i].stage, k[i].room);
@@ -437,7 +456,12 @@ static void teil_musik(void)
     PRUEF(re15_johnruf_r39_main_gesperrt(0, 2, 0) == 1 && re15_johnruf_r39_main_gesperrt(1, 1, 0) == 0,
           "Sce_bgm_control: Slot 0 gesperrt, Slot 1 (SUB) frei, solange 0xFF01 geliefert ist");
     (void)re15_johnruf_r39_bgm_eintrag(0, 0x14);
-    PRUEF(re15_johnruf_r39_main_gesperrt(0, 2, 0) == 0, "in ROOM1141 gilt der Stopp sub01 @0x00C06 (nicht gesperrt)");
+    PRUEF(re15_johnruf_r39_main_gesperrt(0, 1, 0) == 1,
+          "ROOM1141 vor dem Entriegeln: MAIN Play beim Betreten (sub00 @0x00B4E in HAEMMERN39) gesperrt - MAIN01 bleibt (Nachtrag 17)");
+    re15_game_flag_set(RE15_R39P_DACHTUER_BANK, RE15_R39P_DACHTUER_BIT, 1);   /* Dachtuer entriegelt (sub05 @0x00FD2) */
+    PRUEF(re15_johnruf_r39_bgm_eintrag(0, 0x14) < 0, "Weiche ROOM1141 nach dem Entriegeln -> Tabelle (-1: MAIN16 mit Handstart, still)");
+    PRUEF(re15_johnruf_r39_main_gesperrt(0, 2, 0) == 0, "in ROOM1141 gilt danach der Stopp sub01 @0x00C06 (nicht gesperrt)");
+    re15_game_flag_set(RE15_R39P_DACHTUER_BANK, RE15_R39P_DACHTUER_BIT, 0);
     /* Kartenziel aktiv, solange 1141 nicht betreten ist */
     {
         int pg = -1, rc = -1, zp = -1, zr = -1;

@@ -4410,6 +4410,12 @@ re_title:;
                 pl00_ok ? &pl00_skel : NULL, &skel, &anim,
                 &elliot_base_skel, elliot_skel_ok, &elliot_skel, &elliot_anim,
                 &s_cine_scratch_skel, &s_cine_scratch_anim, pc_enemy_load);
+        /* Runde 39 Spur P (Nachtrag 17 Punkt 3): RUF1041 steht an -> nur das SPIELER-Overlay aus Elzas Bibliothek
+         * (ROOM1031 Record 0, platform/pc/src/cut10f0_pc.c); der eigene Block bleibt fuer die Gegner gebunden (unten). */
+        { extern unsigned re15_johnruf_r39_gesten_quelle(unsigned); int gs = 0;
+          uint8_t *gb = re15_johnruf_r39_gesten_quelle(boot_room) ? re15_cut10f0_pc_rbj_leihen(boot_room, &gs) : NULL;
+          if (gb) re15_apply_room_cinematic(gb, (size_t)gs, boot_room, pl00_ok ? &pl00_skel : NULL, &skel, &anim,
+                                            NULL, 0, NULL, NULL, &s_cine_scratch_skel, &s_cine_scratch_anim, NULL); }
         /* RBJ-MARKER-BINDER (byte-true FUN_8001b3f8 @0x80039a08): registriert die rohe
          * RBJ-Sektion; die Record->Entity-Bindung (Marker-Bit (1+i) -> Aktor-Slot 1+i,
          * Kanal +0x180 = Executor-Sub 0) loest die Engine lazy nach den Spawns auf. */
@@ -8297,6 +8303,11 @@ re_title:;
                                         pl00_ok ? &pl00_skel : NULL, &skel, &anim,
                                         &elliot_base_skel, elliot_skel_ok, &elliot_skel, &elliot_anim,
                                         &s_cine_scratch_skel, &s_cine_scratch_anim, pc_enemy_load);
+                                /* Runde 39 Spur P (Nachtrag 17 Punkt 3): wie im Boot-Weg - Elzas Gesten fuer RUF1041 */
+                                { extern unsigned re15_johnruf_r39_gesten_quelle(unsigned); int gs = 0;
+                                  uint8_t *gb = re15_johnruf_r39_gesten_quelle(dest_room) ? re15_cut10f0_pc_rbj_leihen(dest_room, &gs) : NULL;
+                                  if (gb) re15_apply_room_cinematic(gb, (size_t)gs, dest_room, pl00_ok ? &pl00_skel : NULL, &skel, &anim,
+                                                                    NULL, 0, NULL, NULL, &s_cine_scratch_skel, &s_cine_scratch_anim, NULL); }
                                 /* Marker-Binder (FUN_8001b3f8): Raum-RBJ registrieren — die
                                  * Engine bindet Records lazy an die gespawnten Entity-Slots.
                                  * (rbuf bleibt resident: s_room_rbj bzw. RDT-Alias.) */

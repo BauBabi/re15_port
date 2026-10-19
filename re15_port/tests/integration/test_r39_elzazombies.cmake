@@ -131,7 +131,7 @@ set(_elza_1041 "1041;-21008;0;-13134;2112;0;3:125;3:193;3:116")
 # selben Bild ("John gerettet"). Fuer Laeufe, die bildgleich sein muessen (knall: Differenz zweier Mitschnitte), setzt
 # _flanke_ohne_ruf (4,0xF0) und (9,97) erst im Spiel: kein RUF1041 (beim Eintritt fehlte F0), keine Rettung (F0 steht);
 # der Kartenschirm des Rufs schliesst nach Menue-Schritten, nicht Spielbildern (Lauf 12:52: F514 gegen F515).
-set(_elza_1041_p "${_elza_1041};4:240")
+set(_elza_1041_p "${_elza_1041};4:240;9:64")   # 9:64 Herzschluessel: RUF1041 startet erst damit (Nachtrag 17)
 set(_flanke_ohne_ruf "RE15_SET_FLAG_AT=4:240,9:97@200")
 
 # ------------------------------------------------------------------------------------------------------------------

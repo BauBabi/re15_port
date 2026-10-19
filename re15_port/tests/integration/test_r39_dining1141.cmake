@@ -207,8 +207,8 @@ pruef_nicht(_r "SCD Se_on: bank=61 ")
 pruef_nicht(_r "clip loaded: main42.wav")
 pruef(_r "ROOM1141 Phase H: John auf dem Dach (geparkt -30000,-30000)")
 # Punkt 4: Klopfen (RE2 DOOR0F) und Hilferufe aus den Nutzer-Dateien
-pruef(_r "Klopfbank RE2 DOOR0F geladen")
-pruef(_r "(RE2 DOOR0F Klopfen)")
+pruef(_r "(Stimme door_sound.wav, Id 59)")                 # Nachtrag 17 Punkt 5: Nutzer-Aufnahme statt RE2 DOOR0F
+pruef(_r "clip loaded: door_sound.wav")
 pruef(_r "(Stimme help03.wav, Id 55)")
 pruef(_r "(Stimme help01.wav, Id 53)")
 pruef(_r "[voice] clip loaded: help03.wav")

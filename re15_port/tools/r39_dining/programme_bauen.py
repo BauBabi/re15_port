@@ -46,6 +46,7 @@ BANK = 0x3E                     # RE15_R39J_SE_BANK
 SATZ_KLOPFEN = 0x00             # RE15_R39J_SATZ_KLOPFEN  DOOR0F Satz 0
 SATZ_GLAS = 0x21                # RE15_R39J_SATZ_GLAS     RE2 ROOM1090 @0x02BB0 `36 02 21 ..`
 SATZ_HILFE0 = 0x31              # RE15_R39J_SATZ_HILFE0   0x31..0x35 = help01..05
+SATZ_TUERTON = 0x36             # RE15_R39J_SATZ_TUERTON  Nachtrag 17 Punkt 5: door_sound.wav (Sprach-Id 59)
 MSG_REAKTION, MSG_PUH, MSG_FOLGEN = 50, 51, 52
 MSG_STIMME_WARTEN = 58          # RE15_R39J_MSG_STIMME_WARTEN (Port-Warte-Zeile, Punkt 6)
 BIT_REAKTION = 94               # RE15_R39J_BIT_REAKTION (Bank 9, VERTRAG 1.1)
@@ -127,6 +128,36 @@ def klopfen_gruppe():
             sleep(5, "Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`")
 
 
+def wav_sekunden(pfad):
+    """Laenge einer WAV-Datei (auch WAVE_FORMAT_EXTENSIBLE): data-Bytes / Blockausrichtung / Abtastrate."""
+    b = open(pfad, "rb").read()
+    i, rate, block, daten = 12, 0, 0, 0
+    while i + 8 <= len(b):
+        cid, n = b[i:i + 4], struct.unpack_from("<I", b, i + 4)[0]
+        if cid == b"fmt ":
+            rate, block = struct.unpack_from("<I", b, i + 12)[0], struct.unpack_from("<H", b, i + 20)[0]
+        elif cid == b"data":
+            daten = n
+        i += 8 + n + (n & 1)
+    if not (rate and block and daten):
+        sys.exit("ABBRUCH: %s ohne fmt/data" % pfad)
+    return daten / block / rate
+
+
+TUERTON_DATEI = os.path.join(REPO, "synchro", "STAGE1", "room1141", "door_sound.wav")
+TUERTON_S = wav_sekunden(TUERTON_DATEI)
+TUERTON_BILDER = int(math.ceil(TUERTON_S * 30))   # Spielbilder (30 je Sekunde, Sleep 30 = 1 s wie RE2 ROOM1060 sub05 +0x2E)
+
+
+def tuerton():
+    """Nachtrag 17 Punkt 5 ("door_sound.wav ... immer mal wieder im Wechsel mit dem please Help Rufen"): statt der drei
+    RE2-Holzschlaege DOOR0F die Nutzer-Aufnahme, einmal je Runde vor dem Hilferuf. Se_on(0x3E,0x36) -> Sprach-Pfad Id 59
+    (eine Sprachspur wie die Rufe): erst nach der Laenge der Datei kommt der Ruf. In Ifel Ck(4,0xC3)==0 wie die Schlaege."""
+    ifel_c3([0x36, BANK, SATZ_TUERTON] + [0] * 9, "Se_on(0x3E,0x36) door_sound.wav (NUTZER-VORGABE Nachtrag 17 Punkt 5)")
+    sleep(TUERTON_BILDER, "Sleep %d = Laenge door_sound.wav %.3f s (die Sprachspur ist frei, bevor der Ruf kommt)"
+          % (TUERTON_BILDER, TUERTON_S))
+
+
 # Nutzer-Nachtrag 10 (2026-10-19): Elzas Reaktion "Oh, no, this is John! ..." (bis Nachbesserung 2 hier als reaktion(): Ifel
 # Ck(9,94)==0 nach dem ersten Hilferuf, Merker (5,0x10)/Pad-Sperre abwarten, msg 50, Sleep 90, Warte-Zeile msg 58, Set(9,94)=1)
 # entfaellt in ROOM1141; sie kommt in ROOM1041 (Spur P "johnruf1041").
@@ -141,7 +172,7 @@ def baue_haemmern39():
     op(b"\x21\x04\xc3\x00", "  Ck(4,0xC3)==0 (Schleife laeuft, solange die Dachtuer verriegelt ist; main00 @0x00A76) - "
                             "Nachbesserung 1 N4.1: vorher Ck(3,0x6A)==0 (nur bis zum Rolladen)")
     for i, h in enumerate(MIX):
-        klopfen_gruppe()
+        tuerton()   # Nachtrag 17 Punkt 5 (vorher klopfen_gruppe(): RE2 DOOR0F dreimal)
         sleep(30, "Sleep 30 = RE2 ROOM1060 sub05 +0x2E")
         ifel_c3([0x36, BANK, SATZ_HILFE0 + h - 1] + [0] * 9,
                 "Se_on(0x3E,0x%02X) Hilferuf help%02d.wav (NUTZER-VORGABE Punkt 4; Sprach-Pfad wie main42)" % (SATZ_HILFE0 + h - 1, h))
@@ -469,8 +500,6 @@ def baue_schuetze39():
     kopf = len(prog)
     op(b"\x0f\x04\x00\x00", "While (Laenge s.u.) = Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`")
     op(b"\x21\x04\xf2\x01", "  Ck(4,0xF2)==1 = sub00 @0x00B4A (Gorillas leben)")
-    sleep(90, "Sleep 90 (PORT-WAHL \"ab und an\": Takt der Ruf-Schleife, RE2 ROOM1060 sub05 +0x58)")
-    sleep(90, "Sleep 90 (RE2 ROOM1060 sub05 +0x5E)")
 
     def salve():
         R.set_flag(SCHUETZE_BANK, SCHUETZE_BIT, 1, "  Set(5,0x11)=1 Salve laeuft (ENTRIEGELN39 wartet nach dem Kampf darauf)")
@@ -500,6 +529,10 @@ def baue_schuetze39():
         sleep(20, "  Sleep 20 = ROOM1021 sub02 @0x020F2 `09 0a 14 00`")
         R.set_flag(SCHUETZE_BANK, SCHUETZE_BIT, 0, "  Set(5,0x11)=0 Salve fertig")
     ifel_f2(salve, "Salve nur, solange die Gorillas leben")
+    # Nachtrag 17 Punkt 6 ("bis zum ersten Schuss steht John relativ unbeteiligt in der Ecke"): die Salve ZUERST, die
+    # Pause danach - John richtet sich gleich nach dem Ankommen (Sleep 60 oben) auf den naechsten Gorilla aus und schiesst.
+    sleep(90, "Sleep 90 (PORT-WAHL \"ab und an\": Takt der Ruf-Schleife, RE2 ROOM1060 sub05 +0x58)")
+    sleep(90, "Sleep 90 (RE2 ROOM1060 sub05 +0x5E)")
     op(b"\x10\x00", "Ewhile = ROOM1141 sub03 @0x00FB2")
     laenge = sum(len(b) for b, _ in prog[kopf + 1:])
     prog[kopf] = (b"\x0f\x04" + struct.pack("<H", laenge), prog[kopf][1].replace("Laenge s.u.", "Laenge %d bis hinter das Ewhile" % laenge))

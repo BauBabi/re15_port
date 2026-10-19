@@ -1,6 +1,6 @@
 # v0.8.27 - 2026-10-19
 
-Ihr Auftrag vom 17.10. (Runde 39, 30 Punkte) mit den 16 Nachtraegen bis heute, darunter Elzas Panikphase nach Johns
+Ihr Auftrag vom 17.10. (Runde 39, 30 Punkte) mit den 17 Nachtraegen bis heute, darunter Elzas Panikphase nach Johns
 Hilferuf und die Version im Titelbild. Wie gewohnt hat ein zweiter Agent die Punkte unabhaengig am gebauten Spiel gegen
 Ihren Wortlaut nachgemessen - mit einer Ausnahme: Wegen des Guthabens habe ich drei letzte Stellen selbst mit gezielten
 Tests abgenommen (die Version im Titelbild, die dritte Nachbesserung der Zombie-Durchbrueche, die letzten beiden
@@ -13,9 +13,11 @@ Bau im Linux-Container; ein roter Test haelt das Release an.
 
 ### Elza: Johns Hilferuf und die Panikphase (Nachtraege 10 bis 15)
 
-**Der Ruf in ROOM1041.** Nach der Szene in ROOM1021 ist John verschwunden. Betritt Elza danach den Gang 1041, ruft John
-zweimal leise um Hilfe ("Help!", dann "Please help!"), Elza dreht sich zur Treppe und sagt "Oh, no, this is John! He is
-in trouble, I have to help him!" (Ihre Aufnahme, als `synchro/STAGE1/room1041/main40.wav`). Die Karte geht auf und
+**Der Ruf in ROOM1041.** Nach der Szene in ROOM1021 ist John verschwunden. Die Panikphase beginnt erst, wenn Elza den
+Herzschluessel (Dining Room Key) in ROOM1011 aufgenommen hat: Betritt sie danach den Gang 1041 (der einzige Weg aus
+1011/1021), ruft John einmal leise um Hilfe, Elza dreht sich zur Treppe und sagt "Oh, no, this is John! He is in
+trouble, I have to help him!" (Ihre Aufnahme, als `synchro/STAGE1/room1041/main40.wav`) - mit Gesten, und zwar
+denselben, mit denen sie im Original "There's still a little girl trapped in there!" sagt (ROOM10B1). Die Karte geht auf und
 markiert ROOM1141 (3F); sie schliesst nach etwa 4 Sekunden von selbst oder mit START. Danach laeuft in allen Raeumen
 Leons Panikmusik nach Irons' Tod (MAIN01), bis beide Gorillas in 1141 tot sind. Im Flur 1131 ruft John noch einmal
 "Please help!", deutlich lauter. Lautstaerken wie in RE2: 1041 leise (42 %), 1131 83 %, 1141 voll. In 1141 selbst kommt
@@ -49,11 +51,14 @@ entgegen (Glassplitter und Glasknalle wie bei Leons Kraehe) und greift an. Nur e
 
 ### Elza: ROOM1141, Dach und Funkgeraet
 
-**ROOM1141 (Ihre Nachtraege 4 und 7).** Elza oeffnet das Rolltor und laeuft danach frei weiter; John klopft weiter. Erst
+**ROOM1141 (Ihre Nachtraege 4, 7 und 17).** Beim Betreten laeuft die Panikmusik weiter; statt des RE2-Klopfens hoert man
+Ihre `door_sound.wav` im Wechsel mit Johns Hilferufen. Elza oeffnet das Rolltor und laeuft danach frei weiter. Erst
 wenn sie die Dachtuer entriegelt ("You've opened the lock."), beginnt die Szene: Elza rennt in den Raum, die Kamera
 schneidet auf die Ansicht vom Gangende, Elza dreht sich zur Tuer und hebt eine Schusswaffe aus ihrem Inventar (ohne
-Schusswaffe das Messer). Im Kampf schiesst John etwa alle 12 Sekunden zweimal auf den Gorilla, der Elza gerade nicht
-festhaelt; der getroffene Gorilla wendet sich ihm bis zu 7 Sekunden zu. Am Ende "Puuuh, that was close! ..." und "Elza,
+Schusswaffe das Messer); mit dem Entriegeln endet die Panikmusik, es ist still, und die Gorilla-Musik setzt wie bisher
+mit dem Angriff ein. Im Kampf richtet sich John sofort auf einen Gorilla aus und gibt die erste Salve ab, danach etwa
+alle 12 Sekunden zwei Schuesse auf den Gorilla, der Elza gerade nicht festhaelt; der getroffene Gorilla wendet sich ihm
+bis zu 7 Sekunden zu. Am Ende "Puuuh, that was close! ..." und "Elza,
 follow me ..." (Ihre main51/main52) mit dem Heranwinken aus 1171 statt der Waffe auf Elza; danach folgt die Kamera Elza.
 Beim Wechsel aufs Dach (1171) klingt die Kampfmusik nicht mehr zwei Sekunden nach.
 
@@ -124,13 +129,6 @@ monsters!" (einfacher Raumtext ohne Stimme). Nach dem Kampf laeuft die Original-
 * Irons: "But... I'm not going to make it" und "Please... one last favor" bleiben etwas unter der Musik, weil beide
   Dateien je einen lauten Knall enthalten, der die Anhebung begrenzt. Abhilfe: ohne den Knall neu exportieren.
 
-## Zu entscheiden
-
-* Schrank-Ton 1190: die Regal-Welle klingt etwa 1 Sekunde nach dem Halt aus (RE2-Form) - so lassen oder auf die Fahrt
-  kuerzen? Schublade 11F0: Ton bei jedem Oeffnen (Stand) oder nur beim ersten?
-* ROOM1141: Sollen die Gorillas John auch angreifen koennen (dann braucht John eine Treffer- und Todesreaktion, die RE1.5
-  nicht hat)? Passt "etwa alle 12 Sekunden eine Salve"?
-
 ## Neu fuer das Paket / Ihre Dateien
 
 * Neue Paketdatei: `shared_assets/RE2/TOENE39.VBS` (Schublade, Gitter, Schrank), im Paket-Gate eingetragen.
@@ -140,6 +138,8 @@ monsters!" (einfacher Raumtext ohne Stimme). Nach dem Kampf laeuft die Original-
 * Keine Aufnahmen noetig (Nachtrag 13): die Tuersaetze in 1041/1051 und 11C0 sind einfache Raumtexte. Fruehere Hinweise
   auf `room1041/main41.wav`, `room1051/main40.wav` und `room11C0/main40.wav` sind hinfaellig.
 * Neues Speicher-Bit (Bank 9 Bit 96, Leons Treppenhaus-Umzug); alte Spielstaende laufen weiter.
+* Ihre `synchro/STAGE1/room1141/door_sound.wav` ist jetzt im Repo und im Paket und klingt in 1141 im Wechsel mit den
+  Hilferufen (eine zweite Fassung unter `synchro/unused/` wird nicht verwendet).
 
 # v0.8.26 - 2026-10-17
 

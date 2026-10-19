@@ -17,6 +17,7 @@
 #include "asset_root_pc.h"   /* re15_pc_read_any: dieselbe Wurzelliste wie main.c pc_read_shared */
 #include "re15_entladen.h"    /* Runde 35 Spur I (N2): Generation + Freigabe an jeder Grenze */
 #include "re15_funk10f1_r39.h" /* Runde 39 Spur I: ROOM10F1 leiht den Block von ROOM1031 (Elzas Gesten) */
+#include "re15_johnruf_r39.h"  /* Runde 39 Spur P: ROOM1041 leiht ihn fuer das Spieler-Overlay (Nachtrag 17) */
 
 /* Den Animationsblock leihen, den die ausstehende Szene im Raum room_id braucht. Rueckgabe: Zeiger IN
  * den residenten Dateipuffer der Quell-RDT (bleibt bis zur naechsten Leihe gueltig; der Aufrufer behandelt
@@ -34,6 +35,7 @@ uint8_t *re15_cut10f0_pc_rbj_leihen(unsigned room_id, int *size)
 {
     unsigned quelle = re15_cut10f0_rbj_quelle(room_id);
     if (!quelle) quelle = re15_funk10f1_r39_rbj_quelle(room_id);   /* Runde 39 Spur I: 10F1 -> 0x1031 */
+    if (!quelle) quelle = re15_johnruf_r39_gesten_quelle(room_id); /* Runde 39 Spur P: 1041 (RUF1041) -> 0x1031 */
     char rel[48];
     int n = 0;
     if (!quelle || !size) return NULL;                 /* *size bleibt dann unberuehrt */
@@ -47,6 +49,7 @@ uint8_t *re15_cut10f0_pc_rbj_leihen(unsigned room_id, int *size)
     s_leih_gen = g_re15_entladen_gen;   /* Runde 35 Spur I (N2) */
     *size = s_leih_rdt.animation_size;
     fprintf(stderr, "[rbj] Animationsblock von ROOM%04X geliehen (%d B, %s)\n", quelle, *size,
+            (room_id & 0xFFFFu) == 0x1041u ? "Runde 39 Spur P" :
             quelle == RE15_FUNK10F1_RBJ_RAUM ? "Runde 39 Spur I" : "Runde 35 Spur K");
     return (uint8_t *)s_leih_rdt.animation;
 }

@@ -6,7 +6,7 @@
 #define RE15_R39P_ANKER_SUB11_LEN 84u
 #define RE15_R39P_ANKER_SUB11_FNV 0x0EE013E3u
 
-/* k_r39p_p_ruf1041: 94 Byte
+/* k_r39p_p_ruf1041: 110 Byte
  *   +0000 22 02 07 01                          ROOM1041 sub11 @0x021F8 Set Set(2,7)=1 Pad-Sperre (Szenen-Rahmen)
  *   +0004 22 01 1b 01                          ROOM1041 sub11 @0x021FC Set Set(1,0x1B)=1 Balken
  *   +0008 09 0a 1e 00                          Sleep 30 (Elza ist eben durch die Tuer; RE2 ROOM1060 sub05 +0x2E `09 0a 1e 00`, wie HAEMMERN39 der Spur J)
@@ -22,28 +22,33 @@
  *   +0028 12 04                                ROOM1041 sub11 @0x0221A Edwhile Edwhile
  *   +002A 21 05 20 00                          ROOM1041 sub11 @0x0221C Ck Ck(5,0x20)==0 (bis die Drehung steht)
  *   +002E 09 0a 19 00                          ROOM1041 sub11 @0x02220 Sleep Sleep 25
- *   +0032 2b 36 00 00                          Message_on 54 = Sprach-Zeile help02.wav OHNE Text (Port; Form `2b id 00 00` wie sub11 @0x02224; der Stimmen-Riegel in op_message_on laesst den vorigen Ruf ausreden) - zweiter Ruf "Please help!" (leise; derselbe Ruf kommt in 1131 lauter, NUTZER-VORGABE "noch mal")
- *   +0036 09 0a 5a 00                          Sleep 90 (RE2 ROOM1060 sub05 +0x58 `09 0a 5a 00`; help02 1,96 s = 59 Bilder: Ruf ist aus, bevor Xa_vol wechselt)
- *   +003A 5f 78                                Xa_vol(120) = RE2-Opcode 0x5F (Verteiler @0x800a74c8[0x5F] -> 0x80058090: `lbu v1,1(v0)` / `sw v1,0x5b50(at)`, pc += 2) - zurueck auf den Standard vor Elzas Zeile (Form RE2 ROOM1010 sub22: Xa_vol(120) vor dem Dialog)
- *   +003C 2b 28 00 00                          ROOM1041 sub11 @0x02224 Message_on 2 -> Id 40 "Elza: Oh, no, this is John! ..." (NUTZER-VORGABE; Stimme synchro/STAGE1/room1041/main40.wav per Ordnerregel)
- *   +0040 09 0a 64 00                          ROOM1041 sub11 @0x02228 Sleep Sleep 100
- *   +0044 2b 3b 00 00                          Message_on 59 = Port-Warte-Zeile ohne Text: der Stimmen-Riegel laesst Elzas Zeile ausreden (main40.wav 6,0 s), dann Kartenhinweis ROOM1041 -> ROOM1141 (RE2 Opcode 0x84 @0x800591C4; Port-Form Spur H: Faden parkt, bis der Schirm wieder zu ist)
- *   +0048 22 09 61 01                          Set(9,97)=1 Panikphase (VERTRAG 1.1; Set-Form sub11 @0x021EA `22 03 ad 01`) - Musik und Folgen (Spuren Q/R) haengen an diesem Bit
- *   +004C 22 02 07 00                          ROOM1041 sub11 @0x0222C Set Set(2,7)=0
- *   +0050 22 01 1b 00                          ROOM1041 sub11 @0x02230 Set Set(1,0x1B)=0
- *   +0054 3c 01                                ROOM1041 sub11 @0x02234 Cut_auto Cut_auto 1
- *   +0056 2e 01 00                             ROOM1041 sub11 @0x02236 Work_set Work_set(1,0)
- *   +0059 00                                   ROOM1041 sub11 @0x02239  Nop
- *   +005A 42                                   ROOM1041 sub11 @0x0223A  Plc_ret
- *   +005B 00                                   ROOM1041 sub11 @0x0223B  Nop
- *   +005C 01 00                                ROOM1041 sub11 @0x0223C Evt_end Evt_end
+ *   +0032 5f 78                                Xa_vol(120) = RE2-Opcode 0x5F (Verteiler @0x800a74c8[0x5F] -> 0x80058090: `lbu v1,1(v0)` / `sw v1,0x5b50(at)`, pc += 2) - zurueck auf den Standard vor Elzas Zeile (Form RE2 ROOM1010 sub22: Xa_vol(120) vor dem Dialog)
+ *   +0034 2b 28 00 00                          ROOM1041 sub11 @0x02224 Message_on 2 -> Id 40 "Elza: Oh, no, this is John! ..." (NUTZER-VORGABE; Stimme synchro/STAGE1/room1041/main40.wav per Ordnerregel)
+ *   +0038 3f 00 05 00                          ROOM10B1 sub04 @0x019BA Plc_motion(0,5) (Elzas Geste, Nachtrag 17 Punkt 3)
+ *   +003C 09 0a 32 00                          ROOM10B1 sub04 @0x019BE Sleep 50 (Elzas Geste, Nachtrag 17 Punkt 3)
+ *   +0040 3f 00 05 00                          ROOM10B1 sub04 @0x019C2 Plc_motion(0,5) (Elzas Geste, Nachtrag 17 Punkt 3)
+ *   +0044 43 00 80 00                          ROOM10B1 sub04 @0x019C6 Plc_flg 0x80 (Elzas Geste, Nachtrag 17 Punkt 3)
+ *   +0048 09 0a 32 00                          ROOM10B1 sub04 @0x019CA Sleep 50 (Elzas Geste, Nachtrag 17 Punkt 3)
+ *   +004C 3f 00 09 00                          ROOM10B1 sub04 @0x019CE Plc_motion(0,9) (Elzas Geste, Nachtrag 17 Punkt 3)
+ *   +0050 09 0a 14 00                          ROOM10B1 sub04 @0x019D2 Sleep 20 (Elzas Geste, Nachtrag 17 Punkt 3)
+ *   +0054 2b 3b 00 00                          Message_on 59 = Port-Warte-Zeile ohne Text: der Stimmen-Riegel laesst Elzas Zeile ausreden (main40.wav 6,0 s), dann Kartenhinweis ROOM1041 -> ROOM1141 (RE2 Opcode 0x84 @0x800591C4; Port-Form Spur H: Faden parkt, bis der Schirm wieder zu ist)
+ *   +0058 22 09 61 01                          Set(9,97)=1 Panikphase (VERTRAG 1.1; Set-Form sub11 @0x021EA `22 03 ad 01`) - Musik und Folgen (Spuren Q/R) haengen an diesem Bit
+ *   +005C 22 02 07 00                          ROOM1041 sub11 @0x0222C Set Set(2,7)=0
+ *   +0060 22 01 1b 00                          ROOM1041 sub11 @0x02230 Set Set(1,0x1B)=0
+ *   +0064 3c 01                                ROOM1041 sub11 @0x02234 Cut_auto Cut_auto 1
+ *   +0066 2e 01 00                             ROOM1041 sub11 @0x02236 Work_set Work_set(1,0)
+ *   +0069 00                                   ROOM1041 sub11 @0x02239  Nop
+ *   +006A 42                                   ROOM1041 sub11 @0x0223A  Plc_ret
+ *   +006B 00                                   ROOM1041 sub11 @0x0223B  Nop
+ *   +006C 01 00                                ROOM1041 sub11 @0x0223C Evt_end Evt_end
  */
-static const uint8_t k_r39p_p_ruf1041[94] = {
+static const uint8_t k_r39p_p_ruf1041[110] = {
     0x22,0x02,0x07,0x01,0x22,0x01,0x1b,0x01,0x09,0x0a,0x1e,0x00,0x5f,0x32,0x2b,0x37,
     0x00,0x00,0x2e,0x01,0x00,0x00,0x09,0x0a,0x19,0x00,0x40,0x00,0x09,0x20,0x3e,0xb3,
     0x38,0xcd,0x11,0x00,0x08,0x00,0x02,0x00,0x12,0x04,0x21,0x05,0x20,0x00,0x09,0x0a,
-    0x19,0x00,0x2b,0x36,0x00,0x00,0x09,0x0a,0x5a,0x00,0x5f,0x78,0x2b,0x28,0x00,0x00,
-    0x09,0x0a,0x64,0x00,0x2b,0x3b,0x00,0x00,0x22,0x09,0x61,0x01,0x22,0x02,0x07,0x00,
+    0x19,0x00,0x5f,0x78,0x2b,0x28,0x00,0x00,0x3f,0x00,0x05,0x00,0x09,0x0a,0x32,0x00,
+    0x3f,0x00,0x05,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x32,0x00,0x3f,0x00,0x09,0x00,
+    0x09,0x0a,0x14,0x00,0x2b,0x3b,0x00,0x00,0x22,0x09,0x61,0x01,0x22,0x02,0x07,0x00,
     0x22,0x01,0x1b,0x00,0x3c,0x01,0x2e,0x01,0x00,0x00,0x42,0x00,0x01,0x00,
 };
 

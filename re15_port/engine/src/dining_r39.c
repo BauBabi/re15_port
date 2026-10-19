@@ -524,7 +524,7 @@ void re15_dining_r39_install(uint16_t room_id, int phase_h)
 int re15_dining_r39_se_on(unsigned bank, int satz)
 {
     if (bank != RE15_R39J_SE_BANK) return 0;
-    if (satz == RE15_R39J_SATZ_KLOPFEN) g_re15_r39j_se_zaehler[0]++;
+    if (satz == RE15_R39J_SATZ_KLOPFEN || satz == RE15_R39J_SATZ_TUERTON) g_re15_r39j_se_zaehler[0]++;   /* [0] = Klopfen */
     else if (satz == RE15_R39J_SATZ_GLAS) g_re15_r39j_se_zaehler[1]++;
     else if (satz >= RE15_R39J_SATZ_HILFE0 && satz < RE15_R39J_SATZ_HILFE0 + RE15_R39J_HILFE_N) {
         g_re15_r39j_se_zaehler[2]++;
@@ -549,6 +549,7 @@ int re15_dining_r39_message_on(const uint8_t *pc)
 void re15_dining_r39_stamm(unsigned room_id, int voice_id, char *stamm, size_t n)
 {
     if ((room_id & 0xFFFFu) != RE15_R38F_RAUM_1141 || !stamm || n < 7) return;
+    if (voice_id == RE15_R39J_TUERTON_ID && n >= 11) { snprintf(stamm, n, "door_sound"); return; }   /* Nachtrag 17 Punkt 5 */
     if (voice_id < RE15_R39J_HILFE_ID0 || voice_id >= RE15_R39J_HILFE_ID0 + RE15_R39J_HILFE_N) return;
     snprintf(stamm, n, "help%02d", voice_id - RE15_R39J_HILFE_ID0 + 1);
 }

@@ -71,8 +71,18 @@
 
 /* ---- Rufe (PORT-WAHL der Dateien, Dossier 3) ---------------------------------------------------------------------- */
 #define RE15_R39P_RUF1041_A      3      /* help03 zuerst (wie Spur J MIX in 1141)                                         */
-#define RE15_R39P_RUF1041_B      2      /* help02 "Please help!" (Spracherkennung Dossier 3.2)                             */
 #define RE15_R39P_RUF1131        2      /* "das please help von John auch noch mal" = derselbe Ruf, lauter                */
+/* ---- Nachtrag 17 (2026-10-19) ----------------------------------------------------------------------------------------- */
+/* Punkt 1: RUF1041 erst nach dem Herzschluessel = Bank 9 Bit 64 (RE15_R38F_BIT_GENOMMEN, ROOM1011). ROOM1011 fuehrt nur
+ * nach 1021 (main00 Tueren 0/1 -> Raum 0x02), 1021 nur nach 1011/1041 (Slot 2 -> 0x04): der Weg danach geht durch 1041. */
+/* Punkt 3: Elzas Gesten-Bibliothek (RBJ Record 0, Marker 1) liegt nicht in ROOM1041 (Record 0 Marker 0x7E, 5 Clips);
+ * Quelle ROOM1031 Record 0 (Clips 0..10 = ROOM10B1/1021 Record 0, rbj_zensus.py suche). */
+#define RE15_R39P_GESTEN_RAUM    0x1031u
+/* Punkt 4: in 1141 bleibt MAIN01, bis die Dachtuer entriegelt ist: (4,0xC3) = ROOM1141 sub05 @0x00FD2 `22 04 c3 01`,
+ * gelesen main00 @0x00A76 (Ck). Danach Tabellen-Musik (MAIN16 mit Handstart: still bis Sce_bgm_control op 1). */
+#define RE15_R39P_DACHTUER_BANK  4
+#define RE15_R39P_DACHTUER_BIT   0xC3
+unsigned re15_johnruf_r39_gesten_quelle(unsigned room_id);   /* 0x1031 solange RUF1041 in diesem Besuch ansteht, sonst 0 */
 #define RE15_R39P_TREPPE_X       (-19650)   /* Elza dreht sich zur Tuer slot 2 -> ROOM1061 (Treppe): ROOM1041 main00     */
 #define RE15_R39P_TREPPE_Z       (-13000)   /* @0x010D8 Rechteck x -20400 B 1500, z -14100 T 2200 -> Mitte               */
 

@@ -17,6 +17,7 @@
 #include "re15_audio.h"
 #include "re15_engine.h"   /* g_engine.frame_count (Protokoll) */
 #include "re15_tuersperre_r39.h"   /* Nachbesserung 1: Tuersperren 1041/1051 (Panikphase) und 10B1 (immer) */
+#include "re15_dining_r38.h"       /* Nachtrag 17: Herzschluessel = Bank 9 Bit 64 (RE15_R38F_BIT_GENOMMEN) */
 
 #include "gen/johnruf_r39_programme.inc"
 
@@ -35,6 +36,7 @@ static unsigned       s_zaehler[4];        /* 0 Rufe 1041, 1 Rufe 1131, 2 Karten
 static int flag(int bank, int bit) { return re15_game_flag_get((uint8_t)bank, (uint8_t)bit) != 0; }
 static int panik(void)          { return flag(RE15_R39P_BIT_BANK, RE15_R39P_BIT_PANIK); }
 static int john_verschwunden(void) { return flag(RE15_R39P_F0_BANK, RE15_R39P_F0_BIT); }
+static int schluessel(void) { return flag(9, RE15_R38F_BIT_GENOMMEN); }   /* Nachtrag 17 Punkt 1 */
 
 static int im_programm(const uint8_t *pc, const uint8_t *p, size_t n) { return pc && pc >= p && pc < p + n; }
 static int in_meinen_programmen(const uint8_t *pc)
@@ -76,7 +78,7 @@ void re15_johnruf_r39_install(uint16_t room_id)
             int d = re15_msg_compute_duration(k_r39p_msg40, sizeof k_r39p_msg40, 0);
             if (d > 0 && d < 65535) re15_msg_install_durations((unsigned char)RE15_R39P_MSG_SATZ, d);
         }
-        if (!john_verschwunden() || panik()) return;
+        if (!john_verschwunden() || panik() || !schluessel()) return;   /* Nachtrag 17: erst mit dem Herzschluessel */
         {
             const int slot = starten(k_r39p_p_ruf1041, sizeof k_r39p_p_ruf1041);
 #ifdef RE15_PLATFORM_PC
@@ -196,7 +198,8 @@ void re15_johnruf_r39_stimme(unsigned room_id, int voice_id, char *reldir, size_
 static int weiche(int stage, int room)
 {
     if (stage != 0) return -1;                                   /* nur STAGE1 */
-    if (room == RE15_R39P_BGM_RAUM_1141) return -1;              /* im Gorilla-Raum dessen eigene Musik (Leon: 11C0) */
+    /* Nachtrag 17 Punkt 4: im Gorilla-Raum dessen eigene Musik erst, wenn die Dachtuer entriegelt ist; vorher MAIN01 */
+    if (room == RE15_R39P_BGM_RAUM_1141 && flag(RE15_R39P_DACHTUER_BANK, RE15_R39P_DACHTUER_BIT)) return -1;
     if (!s_bgm_offen || !panik()) return -1;
     return RE15_R39P_BGM_EINTRAG;
 }
@@ -264,6 +267,14 @@ void re15_johnruf_r39_tick(void)
         re15_audio_start_room_bgm(stage, room);
         s_bgm_stand = (uint8_t)soll;
     }
+}
+
+/* Nachtrag 17 Punkt 3: Quelle des SPIELER-Overlays (main.c nach re15_apply_room_cinematic), solange RUF1041 in diesem
+ * Besuch ansteht (dieselbe Bedingung wie der Start im Installer). */
+unsigned re15_johnruf_r39_gesten_quelle(unsigned room_id)
+{
+    if ((room_id & 0xFFFFu) != RE15_R39P_RAUM_1041 || !john_verschwunden() || panik() || !schluessel()) return 0;
+    return RE15_R39P_GESTEN_RAUM;
 }
 
 /* ============================ Pruefhaken ============================ */

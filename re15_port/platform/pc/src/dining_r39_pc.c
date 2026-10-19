@@ -87,6 +87,13 @@ static void spielen(int satz)
         re15_audio_re2_glas_se(RE15_R39J_SATZ_GLAS);
         return;
     }
+    if (satz == RE15_R39J_SATZ_TUERTON) {   /* Nachtrag 17 Punkt 5: Nutzer-Aufnahme door_sound.wav ueber den Sprach-Pfad */
+        s_gespielt[0]++;
+        if (dbg) fprintf(stderr, "[se] Se_on bank=0x%02X id=0x%02X -> Runde 39 Spur J (Stimme door_sound.wav, Id %d) F%u tick=%ld\n",
+                         RE15_R39J_SE_BANK, satz, RE15_R39J_TUERTON_ID, (unsigned)g_engine.frame_count, re15_audio_cap_tick());
+        re15_audio_stimme((uint16_t)g_current_room_id, RE15_R39J_TUERTON_ID);
+        return;
+    }
     if (satz >= RE15_R39J_SATZ_HILFE0 && satz < RE15_R39J_SATZ_HILFE0 + RE15_R39J_HILFE_N) {
         const int id = RE15_R39J_HILFE_ID0 + (satz - RE15_R39J_SATZ_HILFE0);
         s_gespielt[2]++;

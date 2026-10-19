@@ -14,7 +14,7 @@ PROGRAMME (NUTZER-VORGABE Nachtrag 10, Ablauf des Orchestrators in AUFTRAG.md)
   RUF1041  ROOM1041 (Elza), gestartet vom Installer beim Betreten, solange John "verschwunden" ist ((4,0xF0)=1, ROOM1021
            sub02 @0x01FE0) und die Panikphase noch nicht lief (Bank 9 Bit 97 = 0). Form = ROOM1041 sub11 @0x021EA..@0x0223C
            (das Original "Elza hoert etwas" in diesem Raum: Szenen-Rahmen, Geraeusch, Drehen, Satz, Steuerung zurueck):
-           zwei LEISE Hilferufe Johns (help03, help02 "Please help!"; RE2 Xa_vol 50 = ROOM11D0.RDT @0x01F84), Elza dreht
+           ein LEISER Hilferuf Johns (help03; Nachtrag 17: "Das 1. reicht", help02 entfaellt; RE2 Xa_vol 50 = ROOM11D0.RDT @0x01F84), Elza dreht
            sich zur Treppe, Xa_vol 120 (Standard), msg 40 "Elza: Oh, no, this is John! ...", Warte-Zeile 59 = Karte mit
            ROOM1141 (Kartenhinweis, Faden parkt bis zum Schliessen), dann Set(9,97)=1 = Panikphase, Steuerung zurueck.
   RUF1131  ROOM1131 (Flur vor 1141) in der Panikphase: ein Hilferuf help02 "Please help!", LAUTER als in 1041 (RE2 Xa_vol 100 =
@@ -34,6 +34,14 @@ R = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(R)
 
 D1041 = open(os.path.join(PORT, "shared_assets", "PSX", "STAGE1", "ROOM1041.RDT"), "rb").read()
+D10B1 = open(os.path.join(PORT, "shared_assets", "PSX", "STAGE1", "ROOM10B1.RDT"), "rb").read()
+# Nachtrag 17 Punkt 3: Elzas Geste zu ihrer dringenden Zeile "There's still a little girl trapped in there!" (msg 1),
+# ROOM10B1 sub04 @0x019BA..@0x019D5: Plc_motion(0,5), Sleep 50, Plc_motion(0,5), Plc_flg 0x80, Sleep 50, Plc_motion(0,9),
+# Sleep 20. Clips 5/9 = Elzas Bibliothek RBJ Record 0 (ROOM10B1 rec0 Clip 5/9 = ROOM1031 rec0 Clip 5/9, rbj_zensus suche).
+GESTE = ((0x019BA, "3f 00 05 00", "Plc_motion(0,5)"), (0x019BE, "09 0a 32 00", "Sleep 50"),
+         (0x019C2, "3f 00 05 00", "Plc_motion(0,5)"), (0x019C6, "43 00 80 00", "Plc_flg 0x80"),
+         (0x019CA, "09 0a 32 00", "Sleep 50"), (0x019CE, "3f 00 09 00", "Plc_motion(0,9)"),
+         (0x019D2, "09 0a 14 00", "Sleep 20"))
 
 # ---- Konstanten (muessen mit include/re15_johnruf_r39.h uebereinstimmen; der Riegel vergleicht) ----
 MSG_SATZ = 40                   # RE15_R39P_MSG_SATZ        (VERTRAG 1.2: P = 1041 Id 40; Stimme room1041/main40.wav liegt)
@@ -47,7 +55,7 @@ XA_LAUTER = 100                 # RE15_R39P_XA_LAUTER       RE2 ROOM1020.RDT sub
                                 #   GEMESSEN: in 1131 laeuft MAIN01, mit 70 laege der Ruf nur +2,9 dB ueber der Musik gegen
                                 #   +4,2 dB des leisen Rufs in 1041 ueber dessen Raumklang - Dossier 4.2)
 XA_NORMAL = 120                 # RE15_R39P_XA_NORMAL       RE2-Standard @0x80012958 / @0x80053014 (`li v0,0x78`)
-RUF1041 = (3, 2)                # RE15_R39P_RUF1041_A/_B    help03, dann help02 ("Please help!") - PORT-WAHL, Dossier 3
+RUF1041 = (3,)                  # RE15_R39P_RUF1041_A       help03 - PORT-WAHL, Dossier 3; Nachtrag 17: nur dieser Ruf
 RUF1131 = 2                     # RE15_R39P_RUF1131         help02 "Please help!" ("das please help ... noch mal")
 TREPPE = (-19650, -13000)       # RE15_R39P_TREPPE_X/_Z     Mitte Tuer slot 2 -> ROOM1061 (Treppe nach oben):
                                 #   ROOM1041 main00 @0x010D8 `3b 02 02 31 00 00 50 b0 ec c8 dc 05 98 08` = x -20400 + 1500/2,
@@ -109,8 +117,6 @@ def baue_ruf1041():
     orig(0x0221A, [0x12, 0x04], "Edwhile")
     orig(0x0221C, [0x21, 0x05, 0x20, 0x00], "Ck(5,0x20)==0 (bis die Drehung steht)")
     orig(0x02220, [0x09, 0x0A, 0x19, 0x00], "Sleep 25")
-    ruf(RUF1041[1], "- zweiter Ruf \"Please help!\" (leise; derselbe Ruf kommt in 1131 lauter, NUTZER-VORGABE \"noch mal\")")
-    sleep(90, "Sleep 90 (RE2 ROOM1060 sub05 +0x58 `09 0a 5a 00`; help02 1,96 s = 59 Bilder: Ruf ist aus, bevor Xa_vol wechselt)")
     xa_vol(XA_NORMAL, "- zurueck auf den Standard vor Elzas Zeile (Form RE2 ROOM1010 sub22: Xa_vol(120) vor dem Dialog)")
     b = bytearray(D1041[0x02224:0x02228])
     if bytes(b) != bytes([0x2B, 0x02, 0x00, 0x00]):
@@ -118,7 +124,13 @@ def baue_ruf1041():
     b[1] = MSG_SATZ
     op(bytes(b), "ROOM1041 sub11 @0x02224 Message_on 2 -> Id 40 \"Elza: Oh, no, this is John! ...\" (NUTZER-VORGABE; "
                  "Stimme synchro/STAGE1/room1041/main40.wav per Ordnerregel)")
-    orig(0x02228, [0x09, 0x0A, 0x64, 0x00], "Sleep 100")
+    # Nachtrag 17 Punkt 3 ("unterstuetzende Animationen fuer den Text"): statt @0x02228 Sleep 100 Elzas Geste wie zu ihrer
+    # dringenden Zeile in ROOM10B1 (GESTE oben, Bytes aus dem RDT); 120 Bilder, den Rest der Zeile haelt msg 59 (Stimmen-Riegel).
+    for off, hexs, was in GESTE:
+        b = D10B1[off:off + 4]
+        if b != bytes.fromhex(hexs.replace(" ", "")):
+            sys.exit("ABBRUCH: ROOM10B1 @0x%05X erwartet %s, ist %s" % (off, hexs, b.hex(" ")))
+        op(b, "ROOM10B1 sub04 @0x%05X %s (Elzas Geste, Nachtrag 17 Punkt 3)" % (off, was))
     op([0x2B, MSG_KARTE, 0x00, 0x00], "Message_on 59 = Port-Warte-Zeile ohne Text: der Stimmen-Riegel laesst Elzas Zeile "
                                       "ausreden (main40.wav 6,0 s), dann Kartenhinweis ROOM1041 -> ROOM1141 (RE2 Opcode 0x84 "
                                       "@0x800591C4; Port-Form Spur H: Faden parkt, bis der Schirm wieder zu ist)")

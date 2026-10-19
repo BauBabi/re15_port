@@ -310,7 +310,7 @@ static void teil_programme(void)
         if (zh[i].op != 0x36) continue;
         const uint8_t bank = h[zh[i].pc + 1], satz = h[zh[i].pc + 2];
         if (bank == 0x3C || bank == 0x3D) alt++;
-        if (bank == RE15_R39J_SE_BANK && satz == RE15_R39J_SATZ_KLOPFEN) {
+        if (bank == RE15_R39J_SE_BANK && satz == RE15_R39J_SATZ_TUERTON) {
             /* zwischen zwei Schlaegen einer Gruppe genau `09 0a 05 00` (RE2 ROOM1090 @0x02BBC) */
             if (letzter_klopf >= 0 && i - letzter_klopf <= 4) {
                 int sl = -1;
@@ -325,7 +325,7 @@ static void teil_programme(void)
         }
     }
     PRUEF(alt == 0, "HAEMMERN39: kein Se_on der Baenke 0x3C (Zombie-Stoehnen/Krachen) / 0x3D (\"Help me out.\") (Punkte 1, 3)");
-    PRUEF(klopf == 15 && takt_ok, "HAEMMERN39: Klopfen 5 Runden x 3 Schlaege, Abstand Sleep 5 (Punkt 4): %d", klopf);
+    PRUEF(klopf == 5 && takt_ok, "HAEMMERN39: door_sound.wav einmal je Runde im Wechsel mit den Rufen (Nachtrag 17 Punkt 5): %d", klopf);
     PRUEF(hilfe[1] == 1 && hilfe[2] == 1 && hilfe[3] == 1 && hilfe[4] == 1 && hilfe[5] == 1,
           "HAEMMERN39: help01..05 je einmal je Durchlauf (Punkt 4)");
     {
@@ -599,7 +599,7 @@ static void teil_phase_h(void)
         for (int i = 0; i < s_n_se; i++) {
             if (s_se[i].bank == 0x3C || s_se[i].bank == 0x3D) alt++;
             if (s_se[i].bank != RE15_R39J_SE_BANK) continue;
-            if (s_se[i].satz == RE15_R39J_SATZ_KLOPFEN) {
+            if (s_se[i].satz == RE15_R39J_SATZ_TUERTON) {
                 const long d = s_se[i].bild - vorher;
                 if (d < 5 && vorher >= 0) gruppen_ok = 0;
                 vorher = s_se[i].bild; n_klopf++;
@@ -611,7 +611,7 @@ static void teil_phase_h(void)
             printf("    Bild %4ld Se_on(0x%02X,0x%02X)\n", s_se[i].bild, s_se[i].bank, s_se[i].satz);
         }
         PRUEF(alt == 0, "kein Se_on 0x3C/0x3D (Zombie-Stoehnen, \"Help me out.\") in Phase H (Punkte 1, 3)");
-        PRUEF(n_klopf >= 6 && gruppen_ok, "Klopfen (DOOR0F) in Gruppen, %d Schlaege", n_klopf);
+        PRUEF(n_klopf >= 2 && gruppen_ok, "door_sound.wav im Wechsel mit den Hilferufen, %d mal (Nachtrag 17)", n_klopf);
         PRUEF(n_hilfe >= 2 && nh >= 2 && hilfe_reihe[0] != 1, "Hilferufe help%02d, help%02d ... (%d, im Mix)", hilfe_reihe[0],
               nh > 1 ? hilfe_reihe[1] : 0, n_hilfe);
         PRUEF(erster_hilfe > 0, "erster Hilferuf Bild %d", erster_hilfe);
@@ -647,10 +647,10 @@ static void teil_phase_h(void)
         for (int f = 0; f < 260; f++) frame(RE15_PAD_BIT_UP, f == 0 ? RE15_PAD_BIT_UP : 0);
         const long weg = (long)labs((long)(pl->x - x0)) + (long)labs((long)(pl->z - z0));
         int klopf = 0;
-        for (int i = se0; i < s_n_se; i++) if (s_se[i].bank == RE15_R39J_SE_BANK && s_se[i].satz == RE15_R39J_SATZ_KLOPFEN) klopf++;
+        for (int i = se0; i < s_n_se; i++) if (s_se[i].bank == RE15_R39J_SE_BANK && s_se[i].satz == RE15_R39J_SATZ_TUERTON) klopf++;
         for (int f = 0; f < 400 && klopf == 0; f++) {
             frame(0, 0);
-            for (int i = se0; i < s_n_se; i++) if (s_se[i].bank == RE15_R39J_SE_BANK && s_se[i].satz == RE15_R39J_SATZ_KLOPFEN) klopf++;
+            for (int i = se0; i < s_n_se; i++) if (s_se[i].bank == RE15_R39J_SE_BANK && s_se[i].satz == RE15_R39J_SATZ_TUERTON) klopf++;
         }
         PRUEF(weg > 300, "N4.1: Elza laeuft nach dem Rolladen frei (Weg %ld)", weg);
         PRUEF(klopf > 0, "N4.1: John klopft weiter, solange die Dachtuer verriegelt ist (%d Schlaege)", klopf);

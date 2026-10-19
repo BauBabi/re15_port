@@ -99,6 +99,8 @@
                                          * @0x8009A5D4 `88 2a cc 8b ..` Tonteil 0x2A88 B (gen/re2_tuer_tabelle.inc)        */
 #define RE15_R39J_SATZ_GLAS      0x21   /* RE2 ROOM1090 sub15 @0x02BB0 `36 02 21 01 ..` = GLAS1090 Satz 0x21              */
 #define RE15_R39J_SATZ_HILFE0    0x31   /* 0x31..0x35 -> Sprach-Id 53..57 (help01..05)                                    */
+#define RE15_R39J_SATZ_TUERTON   0x36   /* Nachtrag 17 Punkt 5: synchro/STAGE1/room1141/door_sound.wav (Nutzer)          */
+#define RE15_R39J_TUERTON_ID     59     /* Sprach-Id (1141: 40-42, 50-58 vergeben); Stamm "door_sound"                  */
 
 /* ---- Lagen (PORT-WAHL mit Beleg, Dossier 2.5) --------------------------------------------------------------------- */
 #define RE15_R39J_PARK_X         (-30000)   /* John auf dem Dach = geparkt (ROOM11B0 main00 @0x01080 `d0 8a`)          */
