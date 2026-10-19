@@ -625,3 +625,15 @@ Leons Vorlage 6; Raum-Paare byte-gleich; Programm L endet Byte fuer Byte wie Leo
   - Aenderung: `if (!(9,97)) { "Durchbruch 1041 entfaellt: Panikphase vorbei ((9,97)=0)"; return 0; }` in durchbruch_1041.
   - Nachher: unit durch1041 (ohne (9,97): nichts, 200 Bilder; mit: Durchbruch 3), integration ohne/gerettet (exe: Tuer 1061 ->
     1041 ohne (9,97): "entfaellt", Elza mit Steuerung an der Tuer Cut 5), integration durch (mit (9,97): Durchbruch wie Abnahme 1).
+
+## 10. Nachbesserung 3 (nach Abnahme 2, analysis/befunde_runde39/Q_abnahme_2.md)
+Start 2026-10-19 10:50, HEAD a176f5cd, Baum sauber. Auftraege (Orchestrator, args_q_nach3.json):
+* MANGEL 1 — alte Leon-Spielstaende nach Irons' Tod (v0.8.22-v0.8.26 und master, (9,73)=1, Kopie-Bits 124..127 nie gesetzt)
+  bekommen beim Betreten von ROOM1060 vier Zombies an der Westseite (auch wenn alle vier 10E0-Zombies tot sind). Ursache laut
+  Abnahme: leon_nachspawn/programm_bauen gaten nur ueber (9,73) und Bits 124..127 == 0; es fehlt ein Merker "Umzug 10E0 -> 1060
+  gelaufen" (Vorbild Leons (9,74)/(9,75)). Ein Bank-9-Bit nur nach Zensus (96 laut VERTRAG 1.1 frei, falls O es nicht belegt hat).
+* MANGEL 2 — Ankunft im Treppenhaus von OBEN (Leon 1120 -> 1060 nach Irons' Tod, Elza 1121 -> 1061): Haltebit 0x20 vor dem ersten
+  KI-Takt -> INIT laeuft nie (st=0, hp=0), Kopien liegen ~30 Bilder flach, springen dann auf und greifen am Treppenfuss (460/497).
+* ORCHESTRATOR-ENTSCHEID E1: "moeglichst weit weg an der Seite" gilt fuer JEDE Ankunftsrichtung (1060/1061); Abstand mindestens
+  4591 (Ankunft von unten) oder der groesste moegliche; STEHEND und initialisiert.
+* Vor dem Abschluss `git merge master` (a138a278) und die Riegel-Gruppen gruen.
