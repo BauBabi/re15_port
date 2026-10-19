@@ -319,3 +319,15 @@ Neue Riegel (re15_port/tests/unit/probes/r39_elzazombies.cmake), Stand nach Nach
 * Keine neuen Assets, keine Sprachdateien. Zeiten (Pause 60, Knall -> Schnitt 45, Schnittlaengen wie Leon) = Leons Montage.
 * Entscheidungsfrage (optional): Sollen die Zombies am 2F-Absatz auch bei Ankunft von OBEN (Rueckweg aus 1121) "weit weg"
   stehen? Dann wuerden sie fuer diesen Fall an die Tuer-Seite gestellt.
+
+## 8. Nachbesserung 1 (nach Abnahme 0, analysis/befunde_runde39/Q_abnahme_0.md)
+Stand beim Start: HEAD 1c304b80 (Abnahme 0 committet), master 2963579d schon gemergt (`git log HEAD..master` leer), Bau
+vom 02:17/02:20 = Code-Stand der Abnahme. Einziger Mangel der Abnahme: Mangel 1 (VERTRAG Abschnitt 2, "keine
+Umgebungsvariablen des Aufrufers erben"). Die Urteile Q1..Q5 sind "erfuellt"; deren Riegel bleiben unveraendert gruen.
+
+### 8.1 Mangel 1 — Riegel erben die Umgebung des Aufrufers
+* Ursache (gelesen): test_r39_elzazombies.cmake setzt die Umgebung nur ueber re15_start_spiel (spiel_lauf.cmake:
+  `set(ENV{..})` fuer die UEBERGEBENEN Paare, danach `unset` nur fuer diese). Jede andere RE15_*-Variable der Shell, aus der
+  ctest laeuft, geht unveraendert an das Kartenwerkzeug, die exe und den Auswerter. Der Kopf des Skripts ("Umgebung nur
+  ueber re15_start_spiel") war damit falsch.
+* Messung vorher / Aenderung / Messung nachher: folgen (8.2 ff.).
