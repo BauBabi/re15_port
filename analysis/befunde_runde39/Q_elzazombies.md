@@ -348,12 +348,13 @@ Umgebungsvariablen des Aufrufers erben"). Die Urteile Q1..Q5 sind "erfuellt"; de
   - Dieselbe Klasse im Unit-Riegel test_r39_elzazombies.c (linkt re15_engine; engine/src liest 87 verschiedene
     getenv("RE15_..."), ctest reicht die Shell-Umgebung durch): geerbtes RE15_RE2_DMG_MODEL=0 (re15_damage.c:681, der Riegel
     setzt das Schadensmodell nicht) verschob die gemessenen Lagen: kette_4 ROOM1061 Aktor 1 Bit 124 Abstand zur Kamera
-    7062 -> 6245 (ohne) / 6194 (geerbt), ROOM1031 Aktor 1 Bit 0 12906 -> 8997 / 9836; kette_0/_2, nach1061, durch1041 je
-    30-50 Zeilen anders. RE15_SCD_TRACE=1: kette_4 +112177 Zeilen. Urteil blieb "0 Fehler" (Glueck, keine Isolation).
+    7062 -> 6245 (ohne) / 6194 (geerbt), ROOM1031 Aktor 1 Bit 0 12906 -> 8997 / 9836 (kette_4 50 Diff-Zeilen, kette_0 36,
+    kette_2 44, durch1041 30, nach1061 2). RE15_SCD_TRACE=1: kette_4 112177 Diff-Zeilen. Urteil blieb "0 Fehler" (Glueck,
+    keine Isolation).
   - Schreibweise (Windows): `env re15_scd_trace=1 test_r39_elzazombies nach1061` -> 15 -> 325 Zeilen (CRT-getenv ohne
     Gross-/Kleinschreibung); `env re15_nb1=1 cmake -P`: $ENV{RE15_NB1} = "1", `cmake -E environment` listet "re15_nb1=".
     Das Muster der Referenz-Riegel (Regex `(^|\n)RE15_[A-Za-z0-9_]*=`, test_r39_stimmen.cmake:33) faengt diesen Namen nicht.
-* Aenderung (Commit 8334db2d, Abschluss-Commit unten):
+* Aenderung (Commits 8334db2d + 812183e8, Abschluss-Commit unten):
   - tests/integration/test_r39_elzazombies.cmake, direkt nach include(spiel_lauf.cmake): r39q_geerbte_namen() liest
     `cmake -E environment`, Regex `(^|\n)[Rr][Ee]15_[A-Za-z0-9_]*=`; jede gefundene Variable `unset(ENV{..})`; danach
     Selbstpruefung (zweite Liste nicht leer -> FATAL_ERROR, statt mit fremder Umgebung zu messen); STATUS-Zeile
@@ -377,6 +378,23 @@ Umgebungsvariablen des Aufrufers erben"). Die Urteile Q1..Q5 sind "erfuellt"; de
     "-- r39_elzazombies[knall]: geerbte Umgebung geloescht: RE15_NOAUDIO", "Knall Bilder 624..665 (42), Differenz-RMS max
     6567" / "Knall Bilder 806..849 (44), Differenz-RMS max 4657" = genau die Werte der Abnahme ohne Variable (knall_v.log).
   - Ohne Umgebung: `ctest -R "r39_elzazombies" -j 2` -> "100% tests passed, 0 tests failed out of 13" (168,77 s).
+  - Linux (Release-Container re15-linux-build:deb11, gcc 10.2.1, cmake 3.28.6; Auszug per awk aus den Dateien, gleicher
+    Code): C-Teil mit `-std=c11 -Wall -Wextra -Werror` uebersetzt; `env RE15_NOAUDIO=1 re15_klein=2 ANDERES=3` -> "umgebung:
+    geerbt RE15_NOAUDIO -> geloescht", "... re15_klein -> geloescht", rest=0, ANDERES=3 bleibt. CMake-Block unter Linux und
+    Windows gleich: "geerbte Umgebung geloescht: RE15_NOAUDIO;re15_klein", danach $ENV{..} leer, ANDERES=[3].
+  - ENDSTAND (Skript 812183e8 = Abschluss-Stand der Riegel): ohne Umgebung `ctest -R "r39_elzazombies" -j 2` ->
+    "100% tests passed, 0 tests failed out of 13" (164,08 s); mit geerbtem `RE15_NOAUDIO=1 re15_asset_debug=1
+    RE15_RE2_DMG_MODEL=0` (-V) -> "100% tests passed, 0 tests failed out of 13", 5x "geerbte Umgebung geloescht: <die drei
+    Namen>" (je Teil), 24x "umgebung: geerbt" (8 Unit-Teile x 3), Zeiger-Zeilen 0 in allen 7 Laeufen.
+  - Schnelle Tests einmal (Bau 03:5x, Skript 8334db2d): `ctest -R "^(unit_|prop_|probe_)|r39_elzazombies" -j 4` ->
+    "100% tests passed, 0 tests failed out of 862" (627,27 s). Die Engine/exe sind unveraendert (re15_pc.exe 02:17:18, nur
+    test_r39_elzazombies neu uebersetzt); die Gruppenlaeufe der Abnahme (117 Tests: Leons Montage, Elza-Raeume,
+    Speichern, Karte, 1141, Spur K) liefen auf denselben Binaerdateien und wurden nicht wiederholt.
+* Nebenbefund (kein Mangel der Abnahme, gleiche Test-Regel): die Messkopien re15_pc_r39elzazombies_<teil>.exe blieben nach
+  jedem Lauf neben der exe liegen (gezaehlt: 5 Stueck je 7,6 MB in build/platform/pc - nach der Integration neben der exe,
+  die der Nutzer startet); die Referenz-Riegel loeschen ihre (test_r39_heliport1171.cmake:93). Jetzt `file(REMOVE "${_exe}")`
+  am Ende (812183e8). Vorher gemessen: file(REMOVE) auf eine laufende, gesperrte Kopie -> cmake exit 0, Datei bleibt; die
+  Loeschung kann den Riegel also nicht rot machen. Nachher: 0 Kopien.
 
 ### 8.2 Fuer den Orchestrator (keine Luecke dieser Spur)
 * Laut Abnahme haben 13 der 15 test_r39_*.cmake dieselbe Luecke. Zusaetzlich gemessen: auch das Muster der beiden
