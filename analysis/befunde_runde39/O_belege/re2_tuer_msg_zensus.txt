@@ -1,0 +1,54 @@
+ROOM1010 MAIN sub02 @0x01A2E aot_reset Tuer-Slot 0 -> MESSAGE msg 17 "The streets are no longer / secure."   bed: 21 04 1b 00 | 07 00 2c 00
+ROOM1010 MAIN sub10 @0x01DBC aot_reset Tuer-Slot 0 -> MESSAGE msg 17 "The streets are no longer / secure."   bed: 
+ROOM1010 MAIN sub33 @0x027CC aot_reset Tuer-Slot 0 -> MESSAGE msg 17 "The streets are no longer / secure."   bed: 
+ROOM1060 MAIN sub02 @0x00E72 aot_reset Tuer-Slot 0 -> MESSAGE msg 5 "It's too dangerous to / go back outside...!!"   bed: 07 00 1a 00 | 07 00 66 00
+ROOM1060 MAIN sub11 @0x01238 aot_reset Tuer-Slot 0 -> MESSAGE msg 5 "It's too dangerous to / go back outside...!!"   bed: 
+ROOM1090 INIT sub00 @0x0212E aot_reset Tuer-Slot 2 -> MESSAGE msg 2 " / The door won't open!"   bed: 21 01 06 00 | 07 00 2a 00 | 06 00 26 00 | 21 01 06 01
+ROOM10A0 INIT sub00 @0x01AD6 aot_reset Tuer-Slot 2 -> MESSAGE msg 3 " / The door won't open! / "   bed: 06 00 96 00 | 21 01 06 01
+ROOM10C0 MAIN sub00 @0x01930 aot_reset Tuer-Slot 1 -> MESSAGE msg 3 " / The door won't open! / "   bed: 06 00 28 00 | 21 01 06 01
+ROOM1120 INIT sub00 @0x0291A aot_reset Tuer-Slot 2 -> MESSAGE msg 7 " / The door won't open!"   bed: 06 00 10 00 | 21 01 06 01
+ROOM1140 INIT sub00 @0x009C2 aot_set slot 1 MESSAGE msg 0 ueber Tuer-Rechteck (Tuer-Slot 1) " / The door won't open! / "   bed: 06 00 5c 00 | 21 01 06 01
+ROOM2000 MAIN sub12 @0x02DA4 aot_set slot 0 MESSAGE msg 7 ueber Tuer-Rechteck (Tuer-Slot 0) " / The door won't open!"   bed: 
+ROOM2000 MAIN sub12 @0x02DD8 aot_set slot 2 MESSAGE msg 7 ueber Tuer-Rechteck (Tuer-Slot 2) " / The door won't open!"   bed: 
+ROOM2040 INIT sub00 @0x01988 aot_reset Tuer-Slot 2 -> MESSAGE msg 8 " / The door won't open!"   bed: 06 00 52 00 | 21 01 06 01
+ROOM2050 INIT sub00 @0x01746 aot_set slot 1 MESSAGE msg 7 ueber Tuer-Rechteck (Tuer-Slot 1) " / The door won't open! / "   bed: 06 00 1c 00 | 21 01 06 01
+ROOM2070 MAIN sub05 @0x01226 aot_set slot 2 MESSAGE msg 7 ueber Tuer-Rechteck (Tuer-Slot 2) " / The door won't open!"   bed: 
+ROOM2070 MAIN sub05 @0x0125A aot_set slot 4 MESSAGE msg 7 ueber Tuer-Rechteck (Tuer-Slot 4) " / The door won't open!"   bed: 
+ROOM20A0 INIT sub00 @0x0086A aot_set slot 2 MESSAGE msg 6 ueber Tuer-Rechteck (Tuer-Slot 2) " / The door won't open! / "   bed: 06 00 5c 00 | 21 01 06 01
+ROOM20B0 INIT sub00 @0x02FA8 aot_reset Tuer-Slot 2 -> MESSAGE msg 18 " / The door won't open! / "   bed: 06 00 28 00 | 21 01 06 00 | 07 00 26 00 | 06 00 ac 00 | 21 01 06 01
+ROOM20F0 INIT sub00 @0x0179A aot_reset Tuer-Slot 2 -> MESSAGE msg 5 " / The door won't open! / "   bed: 06 00 54 00 | 21 01 06 01
+ROOM2110 MAIN sub11 @0x01C0E aot_set slot 2 MESSAGE msg 5 ueber Tuer-Rechteck (Tuer-Slot 2) " / The door won't open!"   bed: 
+ROOM2110 MAIN sub11 @0x01C22 aot_set slot 3 MESSAGE msg 5 ueber Tuer-Rechteck (Tuer-Slot 3) " / The door won't open!"   bed: 
+ROOM2110 MAIN sub11 @0x01C36 aot_set slot 8 MESSAGE msg 5 ueber Tuer-Rechteck (Tuer-Slot 8) " / The door won't open!"   bed: 
+ROOM2110 MAIN sub11 @0x01C4A aot_set slot 1 MESSAGE msg 5 ueber Tuer-Rechteck (Tuer-Slot 1) " / The door won't open!"   bed: 
+ROOM2190 INIT sub00 @0x009A2 aot_set slot 3 MESSAGE msg 4 ueber Tuer-Rechteck (Tuer-Slot 3) " / The door won't open! / "   bed: 06 00 1c 00 | 21 01 06 01
+ROOM21A0 MAIN sub03 @0x01EA4 aot_reset Tuer-Slot 2 -> MESSAGE msg 1 " / The lid is firmly closed.<fd> I might be able to open it / with the right tool..."   bed: 07 00 0a 00 | 06 00 46 00 | 21 04 3b 00 | 06 00 26 00 | 21 01 00 00
+ROOM21A0 MAIN sub03 @0x01EC6 aot_reset Tuer-Slot 2 -> MESSAGE msg 4 " / The lid is firmly closed.<fd> It's impossible for me / to open it."   bed: 06 00 46 00 | 21 04 3b 00 | 06 00 26 00 | 21 01 00 00 | 07 00 10 00
+ROOM3030 MAIN sub00 @0x017E6 aot_reset Tuer-Slot 0 -> MESSAGE msg 3 " / It's tightly locked. <fd> The panel on the right / appears to open it."   bed: 07 00 16 00 | 06 00 10 00 | 21 04 3a 00
+ROOM3040 MAIN sub21 @0x0193C aot_set slot 4 MESSAGE msg 8 ueber Tuer-Rechteck (Tuer-Slot 4) " / The door won't open!"   bed: 06 00 0a 00 | 21 04 fe 01
+ROOM30B0 INIT sub00 @0x00BBE aot_set slot 3 MESSAGE msg 14 ueber Tuer-Rechteck (Tuer-Slot 3) " / The door won't open!"   bed: 06 00 1c 00 | 21 01 06 01
+ROOM4010 MAIN sub00 @0x0258E aot_reset Tuer-Slot 0 -> MESSAGE msg 5 " / A small ventilation hole.<fd> It's way too small for an / adult to enter."   bed: 06 00 12 00 | 21 01 01 01
+ROOM4040 MAIN sub03 @0x00E9E aot_reset Tuer-Slot 1 -> MESSAGE msg 9 "I have to catch  / that woman!"   bed: 06 00 6a 00 | 21 04 3e 00
+ROOM4040 MAIN sub03 @0x00EB0 aot_reset Tuer-Slot 0 -> MESSAGE msg 9 "I have to catch  / that woman!"   bed: 06 00 6a 00 | 21 04 3e 00 | 06 00 10 00 | 21 01 01 01
+ROOM4040 MAIN sub03 @0x00F1A aot_reset Tuer-Slot 1 -> MESSAGE msg 9 "I have to catch  / that woman!"   bed: 07 00 6a 00 | 06 00 60 00 | 21 04 44 01
+ROOM4040 MAIN sub03 @0x00F2C aot_reset Tuer-Slot 0 -> MESSAGE msg 9 "I have to catch  / that woman!"   bed: 06 00 10 00 | 21 01 01 01
+ROOM4040 MAIN sub18 @0x0145E aot_reset Tuer-Slot 1 -> MESSAGE msg 9 "I have to catch  / that woman!"   bed: 
+ROOM4050 MAIN sub01 @0x0101C aot_reset Tuer-Slot 0 -> MESSAGE msg 0 "I have to catch  / that woman!"   bed: 06 00 12 00 | 3e 00 06 00 0e 00
+ROOM4090 MAIN sub00 @0x0256E aot_reset Tuer-Slot 1 -> MESSAGE msg 35 "There's a ventilation hole / at the end of the ladder.<fd> The fan is spinning too / fast for me to enter. / "   bed: 21 04 1e 00 | 07 00 12 00 | 06 00 1a 00 | 21 04 20 00
+ROOM4090 MAIN sub02 @0x02986 aot_reset Tuer-Slot 1 -> MESSAGE msg 35 "There's a ventilation hole / at the end of the ladder.<fd> The fan is spinning too / fast for me to enter. / "   bed: 
+ROOM5000 MAIN sub00 @0x01666 aot_set slot 3 MESSAGE msg 1 ueber Tuer-Rechteck (Tuer-Slot 0) "The gondola is moving. / I can't get off right now."   bed: 06 00 56 00 | 21 03 c0 00
+ROOM6010 MAIN sub00 @0x0068A aot_set slot 5 MESSAGE msg 6 ueber Tuer-Rechteck (Tuer-Slot 2) " / I can't leave Sherry behind!"   bed: 07 00 b6 00 | 06 00 34 00 | 21 04 8b 00 | 07 00 1a 00
+ROOM6020 INIT sub00 @0x00896 aot_set slot 3 MESSAGE msg 9 ueber Tuer-Rechteck (Tuer-Slot 3) "It's an elevator.  / The power is not on..."   bed: 06 00 28 00 | 21 04 91 01 | 07 00 1a 00
+ROOM6020 MAIN sub03 @0x00B5A aot_reset Tuer-Slot 3 -> MESSAGE msg 10 "The elevator is in motion. / The door won't open now!"   bed: 
+ROOM6060 MAIN sub00 @0x00F0A aot_reset Tuer-Slot 0 -> MESSAGE msg 1 " / I can't go back now!"   bed: 06 00 14 00 | 21 04 5c 01 | 21 01 01 01
+ROOM6060 MAIN sub02 @0x00F26 aot_reset Tuer-Slot 2 -> MESSAGE msg 0 "An elevator. Pressing the / button has no effect.<fd> It hasn't been used for a  / long time."   bed: 06 00 10 00 | 21 01 01 00
+ROOM60C0 INIT sub00 @0x00FCA aot_reset Tuer-Slot 3 -> MESSAGE msg 3 "It's tightly sealed. There / is a panel on the left."   bed: 06 00 10 00 | 21 04 8e 00
+ROOM6160 MAIN sub00 @0x01F4E aot_reset Tuer-Slot 2 -> MESSAGE msg 4 "The vaccine has not  / been completed yet!"   bed: 07 00 12 00 | 06 00 18 00 | 21 01 01 00 | 21 01 00 01 | 21 22 2c 00
+ROOM7030 MAIN sub12 @0x02890 aot_reset Tuer-Slot 0 -> MESSAGE msg 4 " / It's locked."   bed: 
+ROOM7030 MAIN sub13 @0x02928 aot_reset Tuer-Slot 0 -> MESSAGE msg 4 " / It's locked."   bed: 
+ROOM7040 MAIN sub06 @0x0185A aot_reset Tuer-Slot 0 -> MESSAGE msg 1 "I can't put my friends / in danger.<fd> I have no choice but to / stop that creature here!"   bed: 3e 00 0f 04 00 10
+ROOMA050 INIT sub00 @0x011FE aot_reset Tuer-Slot 1 -> MESSAGE msg 0 " / The door won't open! / "   bed: 
+ROOMA0C0 INIT sub00 @0x018E6 aot_reset Tuer-Slot 1 -> MESSAGE msg 3 " / The door won't open! / "   bed: 
+ROOME040 INIT sub00 @0x01C4E aot_reset Tuer-Slot 1 -> MESSAGE msg 0 "You've passed the point of  / no return!"   bed: 
+ROOMF160 INIT sub00 @0x01D1A aot_reset Tuer-Slot 2 -> MESSAGE msg 0 " / The door won't open!"   bed: 
+ROOMG040 MAIN sub06 @0x01832 aot_reset Tuer-Slot 0 -> MESSAGE msg 1 "I can't put my friends / in danger.<fd> I have no choice but to / stop that creature here!"   bed: 3e 00 0f 04 00 10

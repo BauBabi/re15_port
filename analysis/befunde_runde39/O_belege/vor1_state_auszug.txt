@@ -1,0 +1,32 @@
+F0 pad=0000 PL(-25480,-26000,rot=1024,hp=100) pst=0 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0
+F49 pad=0000 PL(-18183,13604,rot=307,hp=100) pst=4 ps1=0 ps2=0 mo=100 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=1 msg(a=0 fsm=0 
+F149 pad=0000 PL(-15900,-4082,rot=1019,hp=100) pst=4 ps1=0 ps2=0 mo=100 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=3 msg(a=0 fsm=
+F249 pad=0000 PL(-7148,-12363,rot=1507,hp=100) pst=4 ps1=0 ps2=0 mo=2 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=13 msg(a=0 fsm=0
+F349 pad=0000 PL(-7148,-12363,rot=1507,hp=100) pst=4 ps1=0 ps2=0 mo=23 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=13 msg(a=0 fsm=
+F449 pad=0000 PL(-7148,-12363,rot=1507,hp=100) pst=4 ps1=0 ps2=0 mo=23 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=13 msg(a=0 fsm=
+F549 pad=0000 PL(-7148,-12363,rot=1507,hp=100) pst=4 ps1=0 ps2=0 mo=23 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=13 msg(a=1 fsm=
+F649 pad=0000 PL(-7148,-12363,rot=1507,hp=100) pst=4 ps1=0 ps2=0 mo=15 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=13 msg(a=1 fsm=
+F749 pad=0000 PL(-7148,-12363,rot=1507,hp=100) pst=4 ps1=0 ps2=0 mo=15 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=13 msg(a=0 fsm=
+F849 pad=0000 PL(-7148,-12363,rot=647,hp=100) pst=4 ps1=0 ps2=0 mo=2 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=12 msg(a=0 fsm=0 
+F949 pad=0000 PL(-7148,-12363,rot=647,hp=100) pst=4 ps1=0 ps2=0 mo=17 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=5 msg(a=1 fsm=1 
+F1049 pad=0000 PL(-7148,-12363,rot=647,hp=100) pst=4 ps1=0 ps2=0 mo=17 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=5 msg(a=1 fsm=1
+F1149 pad=0010 PL(-7679,-11958,rot=2471,hp=100) pst=1 ps1=0 ps2=0 mo=105 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=5 msg(a=0 fsm
+F1249 pad=0010 PL(-12462,-8306,rot=2471,hp=88) pst=1 ps1=0 ps2=0 mo=12 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=4 msg(a=0 fsm=0
+F1349 pad=0010 PL(-12647,-7245,rot=2951,hp=82) pst=1 ps1=0 ps2=0 mo=9 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=4 msg(a=0 fsm=0 
+F1449 pad=0000 PL(-14620,-5284,rot=3047,hp=76) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=4 msg(a=0 fsm=
+F1549 pad=0000 PL(-15236,-4727,rot=3047,hp=64) pst=1 ps1=0 ps2=0 mo=9 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=4 msg(a=0 fsm=0 
+F1649 pad=0000 PL(-15618,-2332,rot=2187,hp=58) pst=1 ps1=0 ps2=0 mo=1 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=3 msg(a=0 fsm=0 
+F1749 pad=0000 PL(-15423,-2375,rot=2187,hp=52) pst=1 ps1=0 ps2=0 mo=8 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=3 msg(a=0 fsm=0 
+F1849 pad=0000 PL(-15645,-2265,rot=2187,hp=40) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=3 msg(a=0 fsm=
+F1949 pad=0000 PL(-17138,-1953,rot=2187,hp=22) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=3 msg(a=0 fsm=
+F2049 pad=0000 PL(-17322,-119,rot=2027,hp=22) pst=1 ps1=0 ps2=0 mo=1 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=3 msg(a=0 fsm=0 i
+F2149 pad=0000 PL(-17324,-265,rot=2027,hp=10) pst=1 ps1=0 ps2=0 mo=12 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=3 msg(a=0 fsm=0 
+F2249 pad=0000 PL(-17322,-260,rot=2027,hp=4) pst=1 ps1=0 ps2=0 mo=9 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=3 msg(a=0 fsm=0 id
+F2349 pad=0000 PL(-17333,-252,rot=2027,hp=-2) pst=1 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=3 msg(a=0 fsm=0 i
+F2449 pad=0000 PL(-17333,-252,rot=2027,hp=-2) pst=7 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=3 msg(a=0 fsm=0 i
+F3 pad=0000 PL(-25480,-26000,rot=1024,hp=100) pst=0 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0
+F103 pad=0000 PL(-25480,-26000,rot=1024,hp=100) pst=0 ps1=0 ps2=0 mo=210 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm
+43:[save] CONTINUE: resumed in room 11b0 (hp=100)
+62:[room] PC loaded room11c0.rdt (155552 bytes)
+507:[save] CONTINUE: resumed in room 11b0 (hp=100)
+526:[flow] EXIT_AT: Bild 200 in Raum 11b0 erreicht -> exit

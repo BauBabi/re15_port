@@ -1,0 +1,42 @@
+RE15_WEGPLAN C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/o/nach1/wegplan.txt: 24 Befehle
+F1 room=11B0 spieler=(-25480,-26000) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 | RAUM 11B0 geladen, Spieler frei (obj 6 = Slot 6)
+F30 room=11B0 spieler=(-25480,-26000) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 0 beendet: Raum bereit
+F31 room=11B0 spieler=(-25480,-26000) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 20
+F50 room=11B0 spieler=(-25480,-26000) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 1 beendet: gewartet
+F51 room=11B0 spieler=(-25480,-26000) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 | AKTION
+F2 room=11C0 spieler=(-25279,17268) rot=4603 mo=210 pm=0 obj6=(0,0,0) b0 |   -> Befehl 2 beendet: gedrueckt
+F3 room=11C0 spieler=(-25279,17268) rot=4603 mo=210 pm=0 obj6=(0,0,0) b0 | RAUM 11C0 geladen, Spieler frei (obj 6 = Slot 6)
+F1119 room=11C0 spieler=(-7148,-12363) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 3 beendet: Raum bereit
+F1120 room=11C0 spieler=(-7148,-12363) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 | AOTS
+F1120 room=11C0 spieler=(-7148,-12363) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 0 typ 5 ev 40 flags 0x31 band 0 mitte (-25100,17250) halb (2000,1350) quad 0
+F1120 room=11C0 spieler=(-7148,-12363) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 4 beendet: gelistet
+F1121 room=11C0 spieler=(-7148,-12363) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (4,64)
+F1121 room=11C0 spieler=(-7148,-12363) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (4,64) = 1
+F1121 room=11C0 spieler=(-7148,-12363) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 5 beendet: gelesen
+F1122 room=11C0 spieler=(-7148,-12363) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (3,67)
+F1122 room=11C0 spieler=(-7148,-12363) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (3,67) = 0
+F1122 room=11C0 spieler=(-7148,-12363) rot=647 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 6 beendet: gelesen
+F1299 room=11C0 spieler=(-15805,-6293) rot=2231 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 7 beendet: angekommen
+F1575 room=11C0 spieler=(-15860,12335) rot=2807 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 8 beendet: angekommen
+F1730 room=11C0 spieler=(-25016,16556) rot=2423 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 9 beendet: angekommen
+F1739 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 10 beendet: Blick steht
+F1740 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 | AOTS
+F1740 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 0 typ 5 ev 40 flags 0x31 band 0 mitte (-25100,17250) halb (2000,1350) quad 0
+F1740 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 11 beendet: gelistet
+F1741 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 | AKTION
+F1743 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 12 beendet: gedrueckt
+F1744 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 60
+F1803 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 13 beendet: gewartet
+F1804 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 | AKTION
+F1806 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 14 beendet: gedrueckt
+F1807 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 60
+F1866 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 15 beendet: gewartet
+F1867 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 | AKTION
+F1869 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 16 beendet: gedrueckt
+F1870 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 60
+F1929 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 17 beendet: gewartet
+F1930 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 | AOTS
+F1930 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 0 typ 5 ev 40 flags 0x31 band 0 mitte (-25100,17250) halb (2000,1350) quad 0
+F1930 room=11C0 spieler=(-25016,16556) rot=3095 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 18 beendet: gelistet
+F2050 room=11C0 spieler=(-20083,12132) rot=4775 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 19 beendet: angekommen
+F2051 room=11C0 spieler=(-20083,12132) rot=4775 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 400

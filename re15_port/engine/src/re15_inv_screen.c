@@ -40,6 +40,7 @@
                                   * ARCHIV der Originalbytes (s. emit_file_list). */
 #include "re15_files.h"          /* Runde 30: die dynamische FILE-Liste (RE2 @0x800D4B68) */
 #include "re15_karte_fahrstuhl.h" /* Runde 35 Spur G: Klemmfenster der Fahrstuhlkabine */
+#include "re15_karte_r39.h"      /* Runde 39 Spur G: Kachel-Korrekturen nach den Nutzer-Vorlagen */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Name + CHECK-Text der Ids 0x42/0x45 */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: "Empty Fire Extinguisher" (Nachtrag 4c) */
 #include "re15_dining_r38.h"     /* Runde 38 Spur F: Name + CHECK-Text der Id 0x43 (Dining Room Key) */
@@ -776,6 +777,7 @@ static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
             if (g < 0) g = 0;
             if (g > 256) g = 256;
             if (!re15_map_mark_get(beste, &mpg, &mrc, &smx, &smy, &kind)) return;
+            re15_karte_r39_tuer_lage(&g_inv_screen, (unsigned)mpg, kind, &smx, &smy);   /* Runde 39 Spur G */
             *mx = (int16_t)(*mx + ((smx - *mx) * g) / 256);
             *my = (int16_t)(*my + ((smy - *my) * g) / 256);
         }
@@ -872,6 +874,7 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                 if (hi_y < lo_y) { lo_y = hi_y = ry + rh / 2; }
                 /* Runde 35 Spur G (Nachbesserung 1): Fahrstuhlkabine - Fenster = gemalter Innenraum */
                 re15_karte_fahrstuhl_fenster(zn->room, rx, ry, &lo_x, &hi_x, &lo_y, &hi_y);
+                re15_karte_r39_fenster(zn, world_x, world_z, &lo_x, &hi_x, &lo_y, &hi_y);   /* Runde 39 Spur G */
                 if (*mx < lo_x) *mx = (int16_t)lo_x;
                 if (*mx > hi_x) *mx = (int16_t)hi_x;
                 if (*my < lo_y) *my = (int16_t)lo_y;
@@ -2282,6 +2285,7 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
             int mpage, mrect, mx, my, kind, row;
             if (!re15_map_mark_get(k, &mpage, &mrect, &mx, &my, &kind)) continue;
             if (mpage != (int)st->map_page) continue;
+            re15_karte_r39_tuer_lage(st, (unsigned)mpage, kind, &mx, &my);   /* Runde 39 Spur G: Tuer folgt der Linie */
             {
                 /* ---- RE1.5-TUERSYMBOL statt eines eigenen Balkens -------------------
                  * Nutzer 2026-08-31: "ich haette gerne die Resident Evil 1.5 Tuer
@@ -2631,6 +2635,9 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                                                 &rx, &ry, &rw, &rh)) continue;
                     if (!re15_map_rect_uv((unsigned)st->map_page, (unsigned)i, &ru, &rv))
                         continue;
+                    if (!re15_karte_r39_kachel(st, e.ops, &e.n, e.max, st->map_page, i,   /* Runde 39 Spur G */
+                            st->hint_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
+                            rx, ry, rw, rh, ru, rv, 128, 128, 128))
                     sprt(&e, RE15_INV_PAGE_MAP4,
                          st->hint_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
                          rx, ry, rw, rh, ru, rv, 128, 128, 128, 1);
@@ -2655,6 +2662,9 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                                                 &rx, &ry, &rw, &rh)) continue;
                     if (!re15_map_rect_uv((unsigned)st->map_page, (unsigned)i, &ru, &rv))
                         continue;
+                    if (!re15_karte_r39_kachel(st, e.ops, &e.n, e.max, st->map_page, i,   /* Runde 39 Spur G */
+                            st->ziel_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
+                            rx, ry, rw, rh, ru, rv, 128, 128, 128))
                     sprt(&e, RE15_INV_PAGE_MAP4,
                          st->ziel_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
                          rx, ry, rw, rh, ru, rv, 128, 128, 128, 1);
@@ -2753,6 +2763,8 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                          * auf genau den bemalten Texeln — dasselbe Ergebnis wie der
                          * Schleier, aber mit RE2s Mechanismus statt einer zweiten Op.
                          * (Tint 128 ist neutral: mod5(t5,128) == t5.) */
+                        if (!re15_karte_r39_kachel(st, e.ops, &e.n, e.max, st->map_page, i, clut_kachel,
+                                rx, ry, rw, rh, ru, rv, cr, cg, cb))   /* Runde 39 Spur G */
                         sprt(&e, RE15_INV_PAGE_MAP4, clut_kachel,
                              rx, ry, rw, rh, ru, rv, cr, cg, cb, 1);
                     } else {
@@ -2809,7 +2821,9 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                             if (tw <= 0 || th <= 0) continue;
                             /* Schleier entfaellt auch hier — die Aktuell-Zeile
                              * 502 traegt 680808+STP selbst (s. ganzes Rechteck). */
-                            sprt(&e, RE15_INV_PAGE_MAP4, clut_teil,
+                            if (!re15_karte_r39_kachel(st, e.ops, &e.n, e.max, st->map_page, i, clut_teil,
+                                    tx, ty, tw, th, ru + (tx - rx), rv + (ty - ry), tr, tg, tb))
+                            sprt(&e, RE15_INV_PAGE_MAP4, clut_teil,   /* Runde 39 Spur G: Haken oben */
                                  tx, ty, tw, th,
                                  ru + (tx - rx), rv + (ty - ry),
                                  tr, tg, tb, 1);
@@ -2895,7 +2909,8 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                         rs2 = RE15_MAP_RECT_VISITED;
                     cur2 = re15_map_zone_current();
                     if (cur2 && cur2->room == zg->room && cur2->idx == zg->idx &&
-                        (!zg->etage || re15_map_zone_etage_besucht(zg)))
+                        (!zg->etage || re15_map_zone_etage_besucht(zg)) &&
+                        re15_karte_r39_etage_hier(zg, st->map_page))   /* Runde 39 Spur G */
                         rs2 = RE15_MAP_RECT_CURRENT;
                 }
                 /* ⛔ ROT GEHOERT DEM RAUM, NICHT DER EINZELNEN ZEICHNUNG.
@@ -2907,8 +2922,14 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                  * Rot wird deshalb jede BESUCHTE Zeichnung des Raums, in dem der
                  * Spieler steht. Das Besucht-Bit bleibt pro Zeichnung, damit ein
                  * noch nicht betretener zweiter Bereich nicht vorzeitig auftaucht. */
-                if (rs2 == RE15_MAP_RECT_VISITED && akt && akt->room == zn2->room)
-                    rs2 = RE15_MAP_RECT_CURRENT;
+                /* Runde 39 Spur G: ROT NUR FUER DIE ZONE, IN DER MAN STEHT - wie die Kacheln
+                 * (re15_map_rect_state: Raum UND idx). Die Raum-Regel darueber stammt aus dem
+                 * Grundriss-Modus (ROOM2080 ist heute eine gemalte Kachel); Schema-Zeichnungen tragen
+                 * heute nur ROOM1000 und B1, und fuer beide hat der Nutzer das verlangt: ROOM1190 "Das
+                 * muss als 2 separate Bereich in der Map eingeblendet sein und sauber getrennt" (Runde 36,
+                 * Riegel unit_r36_karte_r1190) und ROOM1000 "es soll immer nur der markiert und geladen
+                 * werden, in dem man auch drin ist" (2026-09-13). */
+                (void)akt;
                 /* ⛔ IM STOCK-MODUS GAR NICHT ZEICHNEN. RE15_MAP_STOCK=1 heisst "zeig
                  * mir die Karte des Originals" - dazu gehoert die gemalte Kunst und die
                  * ausgelieferte Rechteckliste (@0x80076840 + 8*seite), NICHT unser
@@ -2917,7 +2938,16 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                  * war als Referenz unbrauchbar. */
                 if (re15_map_stock_mode()) continue;
                 if (!re15_map_ebene_schema()) continue;      /* Messschiene */
-                if (rs2 == RE15_MAP_RECT_UNVISITED) continue;
+                /* Runde 39 Spur G: mit dem Plan des Blattes (re15_map_owned_page, wie die Kacheln oben) zeigt
+                 * auch eine UNBESUCHTE Schema-Zeichnung ihren Umriss - Koerper durchsichtig wie
+                 * RE15_KARTE_UNBESUCHT (0x0000). Noetig, seit B1 ganz aus Schema-Zeichnungen besteht. */
+                {   /* Runde 39 Spur G: Kartenhinweis-Ziel auf einer Schema-Zeichnung (B1) - rote Phase wie
+                     * CLUT 502 (aktuell), Umriss-Phase wie CLUT 498 (nur Wandlinie), immer gezeichnet. */
+                    int zp = re15_karte_r39_schema_ziel(st, (unsigned)st->map_page, zn2->synth);
+                    if (zp) rs2 = (zp == 1) ? RE15_MAP_RECT_CURRENT : RE15_MAP_RECT_UNVISITED;
+                    if (rs2 == RE15_MAP_RECT_UNVISITED &&
+                        !(nur_rand && (zp || re15_map_owned_page((unsigned)st->map_page)))) continue;
+                }
                 /* ⛔ JEDE ZEICHNUNG GENAU EINMAL - AUCH UEBER DIE DURCHGAENGE HINWEG
                  * (Runde 30, GEMESSEN mit unit_r30_karte_nutzerstand, Spieler in
                  * ROOM1000/z0: Blatt 2 Op 108 UND Op 109, beide FILL (207,89) 15x33).
@@ -2956,6 +2986,7 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                     for (s2 = 0; s2 < 4; s2++) {
                         int laenge = (s2 < 2) ? cw : ch;
                         int lauf = -1, t;
+                        if (re15_karte_r39_kante_weg(st, st->map_page, cx, cy, cw, ch, s2)) continue;   /* Runde 39 Spur G */
                         for (t = 0; t <= laenge; t++) {
                             int frei = 0;
                             if (t < laenge) {
