@@ -637,3 +637,23 @@ Start 2026-10-19 10:50, HEAD a176f5cd, Baum sauber. Auftraege (Orchestrator, arg
 * ORCHESTRATOR-ENTSCHEID E1: "moeglichst weit weg an der Seite" gilt fuer JEDE Ankunftsrichtung (1060/1061); Abstand mindestens
   4591 (Ankunft von unten) oder der groesste moegliche; STEHEND und initialisiert.
 * Vor dem Abschluss `git merge master` (a138a278) und die Riegel-Gruppen gruen.
+
+### 10.0 Merge
+`git merge master` (a138a278 = 9e94db81 Spur J + Nachtrag 15 + Orchestrator-Doku): konfliktfrei, Merge-Commit dd64b9cb.
+`local_build.sh configure` + `build` ok (792/792), exe 2026-10-19 ~10:55. Messkopien `re15_pc_nb3q_<lauf>.exe` (Skript
+scratchpad/nb3/lauf.sh, Laufordner scratchpad/nb3/runs/<lauf>, Shell ohne RE15_*-Variable, danach geloescht).
+
+### 10.1 Messung vorher (Bau dd64b9cb)
+* MANGEL 1 (Lauf v_altstand = Karte der Abnahme M10): `1040;-20700;0;-13000;0;0;9:71;3:94;9:73;7:224;7:225;7:226;7:227`
+  (Leon nach Irons' Tod, alle vier 10E0-Zombies getoetet, Kopie-Bits 124..127 nie gesetzt = jeder Spielstand v0.8.22..v0.8.26),
+  `A0.2,W5` ab Bild 60, Ende 100#1060. debug.log: `DOOR FIRE slot=2 ... spawn=(26000,0,25300)` -> `PC loaded room1060.rdt` ->
+  `ROOM1060: Leon: Nachspawn 1060 (Programm E): Kopien an der Westseite, gehalten bis Etage 4`; state.log F90:
+  `[1 t=10 st=0 g=2d @(20218,26533)] hp=0 [2 t=10 st=0 g=2d @(20218,25732)] hp=0 [3 t=10 st=0 g=2d @(21019,26532)] hp=0
+  [4 t=10 st=0 g=2d @(20916,25341)] hp=0` = VIER Zombies aus dem Nichts (reproduziert).
+* MANGEL 2 (Lauf v_leon_oben = Karte/Skript der Abnahme M9): `1060;26000;-14400;25300;2048;0;9:71;3:94;9:73;9:74;9:75;9:76;
+  7:224;7:225;7:226;7:227`, Skript `W0.5,U0.67,W0.3,L0.35,W0.3,U0.45,W0.3,A0.2,W5,R0.35,W0.3,U3.0,W0.3,R0.35,W0.3,U0.5,W0.3,A0.2,W8`
+  ab Bild 30, FRAMEDUMP 430-580/10. state.log: F430 cam=1 PL(20373,20332) (Kopf Treppe A, Etage 6), F460..F490 cam=2 PL z 22112
+  -> 24081 (Treppe A abwaerts), alle vier Kopien `st=0 g=2d hp=0`; debug.log `Spielerin auf Etage 4 bei (20364,25368) -> Kopien frei,
+  kleinster Abstand 460`; F500 `st=1 g=00 hp=58/94/66/60`; F520 `gr=1` (gegriffen), F540 hp 80, F560 hp 60. Bildtafel
+  scratchpad/nb3/v_leon_oben.png: Bild 460/480 liegen die vier Kopien STEIF FLACH links unter dem Fenster, Bild 500 stehen sie
+  auf und umringen Leon am Fuss der Westtreppe (reproduziert).
