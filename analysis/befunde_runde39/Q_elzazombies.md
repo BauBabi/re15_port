@@ -657,3 +657,80 @@ scratchpad/nb3/lauf.sh, Laufordner scratchpad/nb3/runs/<lauf>, Shell ohne RE15_*
   kleinster Abstand 460`; F500 `st=1 g=00 hp=58/94/66/60`; F520 `gr=1` (gegriffen), F540 hp 80, F560 hp 60. Bildtafel
   scratchpad/nb3/v_leon_oben.png: Bild 460/480 liegen die vier Kopien STEIF FLACH links unter dem Fenster, Bild 500 stehen sie
   auf und umringen Leon am Fuss der Westtreppe (reproduziert).
+
+### 10.2 RE-Belege (selbst gelesen/disassembliert)
+* HALTEBIT = GANZER TAKT (Mangel 2). STAGE1.BIN (re15_disasm.py dis 0x80100424/0x801004c4/0x801005d0): @0x80100450 `lbu v0,9(a0)`,
+  @0x80100458 `andi v0,v0,0x20`, @0x8010045c `bne v0,zero,0x80100658` springt hinter: Distanz `jal 0x80065f60` (SquareRoot0)
+  @0x801004ac, Schwerkraft `jal 0x8001bd60` @0x80100514, Steuerung `jal 0x80039e7c` @0x80100538, den ZUSTANDS-DISPATCH
+  `lbu v0,4(v0)` @0x80100568 / `addiu at,at,-2124` (0x8011f7b4) @0x80100578 / `jalr v0` @0x80100588 (Eintrag [0] = INIT) und die
+  Folgeaufrufe @0x801005dc..@0x80100650 (u.a. `jal 0x8002b498` Kasten-Versatz); es bleibt nur `jal 0x8001b064` @0x8010066c
+  (Schatten, RE15_FUN_CATALOG). => Ein Haltebit VOR dem ersten Takt laesst den INIT nie laufen (st=0, hp=0, nie berechnete Pose =
+  flach liegend, 10.1).
+* ORIGINAL-FORM EINES SICHTBAREN HALTS (ROOM1141, scd_dump_room.py): sub00 setzt die Gorillas ab Spawn gehalten (Sce_em_set grid
+  0x30 @0x00B1A `44 01 27 30 .. a6 27 00 00 6c 20` = (10150,0,8300) und @0x00B2E `.. a8 2f` = (10150,0,12200)), GEPARKT ausserhalb
+  des Raums (SCA ROOM1141 Gruppe 0: Raum bis z 1750, @0x005A0/@0x005AC); sub02 versetzt sie vor der Freigabe (Pos_set @0x00E38
+  `32 00 1c 25 00 00 08 d5` = (9500,-11000), @0x00E4C `.. a6 27 00 00 dc ba` = (10150,-17700)), gibt sie frei `34 0c 10 00`
+  @0x00E40/@0x00E54 und haelt sie ERST nach Sleep 1/10/101 (@0x00E44/@0x00E58/@0x00E68) wieder `34 0c 30 00` @0x00E70/@0x00E78
+  (Freigabe @0x00F64/@0x00F74). Sichtbar gehalten wird also nur, wer schon gelaufen ist (INIT); wer vor dem INIT gehalten wird,
+  steht ausser Sicht. Port: im Spawn-Bild kein Haltebit, der KI-Takt am Ende des Bilds macht den INIT (scd_vm_tick vor
+  re15_game_step, platform/pc/main.c:5702 vor :7707), ab dem naechsten Bild gehalten.
+* ANKUNFT VON OBEN (Mangel 2 / E1). ROOM1060 = ROOM1061 (cmp -l 0, 9.1). Tuer Etage 8: ROOM1120 Slot 0 @0x00C76 -> Raum 0x06,
+  (26000,-14400,25300) (Abnahme 2 M9); ROOM1061 Tueren @0x00D12/@0x00D32/@0x00D52 auf derselben Flaeche (26600,24300,1000,2200),
+  Etagen 8/4/0 (2.2). Weg nach unten: Treppe B 8 -> 6, Treppe A 6 -> 4 (AOT Lauf A x 20200..22600, @0x00D72..); GEMESSENES Ende
+  auf Etage 4: (20364,25368) Leon (v_leon_oben = Abnahme M9), (20432,25368) Elza (Abnahme M11), z 25368 = Treppenende 6 -> 4
+  (probe_stair_hwtruth_1060.c).
+* FREIE FLAECHE ETAGE 4 = Band-4-Zellen der SCA (scratchpad/nb3/tools/sca.py, ROOM1060 SCA @0x004A0, Gruppe 0): Wand Ost @0x00584
+  (x 26900..28900), Nord @0x00590 (z 26950..), West @0x0059C (x ..19800), Sued @0x005B4 (z ..18200), Treppenkern @0x005A8
+  (x 19600..23400, z 20800..24900), Lauf-B-Block @0x005C0 (x 22900..27100, z 20000..24100). Kern und Block ueberlappen in
+  x 22900..23400 und reichen bis an die West-/Ostwand: erreichbar ist das L-Band im Norden (z 24900..26950 bzw. ab x 23400
+  z 24100..26950); das Suedband ist auf Etage 4 abgeschnitten (Zusammenhangskomponente 4182 Rasterpunkte, x 20200..26500,
+  z 24500..26550).
+* PACKUNG (Werkzeug scratchpad/nb3/tools/packung.py, Regel von 2.5: Zellen um r = 400 erweitert, 50er-Raster, gierig der weiteste
+  Punkt mit Abstand >= 800): vom Ankunftspunkt von UNTEN (25023,24568) kommt k_lagen_nach Wert fuer Wert heraus ((20200,26550) 254,
+  (20200,25750) 157, (21000,26550) 298, (20900,25350) 122) - dieselbe Rechnung wie die der bisherigen Lagen. Von OBEN
+  (20364,25368): (26500,26550) 6249 Gier 1924, (26500,24500) 6197 Gier 2140, (26500,25750) 6148 Gier 2007, (25950,25100) 5592
+  Gier 2079 = Ostseite an der 10C1/10C0-Tuer. Dieselbe Menge fuer JEDES Ankunfts-x der Treppe A (20200: 6410..5756; 21576
+  (Abnahme l5): 5064..4382; 22600: 4075..3361 = das geometrische Maximum fuer diese Ankunft), nur die Gier aendert sich um wenige
+  4096tel. Durch die 10C1/10C0-Tuer (Spawn (26000,25300) auf Etage 4) bleibt k_lagen_nach (Abstaende 5933/5817/5154/5100).
+* MERKER (Mangel 1). Leons Montage merkt ihre Umzuege in Bank 9: irons_tod_1150.c umzug_vorbereiten setzt (9,74)=l1140>0,
+  (9,75)=1, (9,76)=l1070>0 (RE15_IT_BIT_1130/_1040/_1030), die Nachspawns 1130/1040 lesen sie (programm_bauen Zustand AUS). Fuer
+  1060 fehlte das: die Kopie-Bits 124..127 sind in einem Spielstand ohne Umzug 0 = "lebt". Bit 96: unit_r36_kartenbits-Zensus
+  (206 RDTs, 40674 Opcodes, 164 Item_aot_set) "belegt: ... 90 91 92 98 99 ..." = 96 im Original frei; im Port frei (k_port[] ohne
+  96; Zweige r39/johnruf1041 nur 97, r39/titelversion und r39/integration ohne Bank-9-Bit 96; Spur O parkplatz_r39 nutzt Bank 3/4/7).
+
+### 10.3 Umsetzung (Nachbesserung 3)
+* include/re15_elzazombies_r39.h: `RE15_R39Q_BIT_LEON_1060 96` (Bank 9, Herleitung im Kopf); Lagen-Abfrage um 3 = "von oben"
+  erweitert; `re15_elzazombies_r39_nach_oben()` (Pruefhaken: welche Packung der letzte Nachspawn nahm).
+* engine/src/elzazombies_r39.c:
+  - re15_r39q_leon_umzug setzt (9,96)=1 (beim Szenenstart, zusammen mit Leons (9,74..76)); leon_nachspawn und programm_bauen
+    (Leon, Zustand AUS) verlangen (9,96), sonst `Leon: kein Nachspawn 1060: Umzug 10E0 -> 1060 nie gelaufen ((9,96)=0, ...)`.
+  - k_lagen_nach_oben (26500,26550,1924) (26500,24500,2140) (26500,25750,2007) (25950,25100,2079); nach_lagen() waehlt beim
+    Bauen des Nachspawns aus dem Band der Figur am Spawn der Eintrittstuer: Band > 4 (Tuer Etage 8) -> Ostseite, sonst
+    Westseite. Gilt fuer Elza (1061) und Leon (1060).
+  - halten_1061: das Haltebit nur auf Kopien mit state != 0 (INIT gelaufen); Freigabe unveraendert (Etage 4 und Treppe zu Ende).
+* tests/unit/test_r36_kartenbits.c: k_port[] + (9,96) (eine Zeile). tests/integration/test_r35_cut1150.cmake Teil D: + 1 Pruefung
+  (kein `Leon: Nachspawn 1060` beim Laden eines Spielstands mit (9,73) ohne (9,96) - die Stelle, die die Abnahme ungeprueft fand).
+* Keine Aenderung an irons_tod_1150.c, scd_vm.c, scd_room_setup.c, main.c; keine Assets, keine Nachrichten-Ids, keine Sprachdateien.
+
+### 10.4 Messung nachher (Bau bab5a6b9, Tests 8c203171; Laeufe scratchpad/nb3/runs/n_*)
+* MANGEL 1, Lauf n_altstand (Karte/Skript wie v_altstand): `DOOR FIRE slot=2 ...` -> `PC loaded room1060.rdt` -> `[elzazombies-r39]
+  ROOM1060: Leon: kein Nachspawn 1060: Umzug 10E0 -> 1060 nie gelaufen ((9,96)=0, Spielstand vor Spur Q)`; state.log F90
+  `PL(26000,25300,rot=2048,hp=100) ... cam=7 ... gr=0` OHNE einen Gegner = Zeichen fuer Zeichen die Gegenprobe der Abnahme mit der
+  ausgelieferten v0.8.26-exe (scratchpad/qa2/runs/g_v0826_altstand/state.log F90 `PL(26000,25300,rot=2048,hp=100) ... cam=7 ...
+  gr=0`). Mit (9,96) (= Umzug mit vier Lebenden) dieselbe Karte: Nachspawn mit 4 Kopien (Riegel altstand, Fall "neu").
+* MANGEL 2, Lauf n_leon_oben (Karte/Skript wie v_leon_oben + (9,96)): `Leon: Nachspawn 1060 (Programm E): Ankunft von oben, Kopien an
+  der Ostseite, gehalten bis Etage 4`; state.log F1 `[1 t=10 st=1 g=20 ... @(26482,26532,r1924)] hp=58 [2 ... st=1 g=20
+  @(26482,24500)] hp=94 [3 ... @(26482,25731)] hp=66 [4 ... @(25950,25100)] hp=60` (INIT im Spawn-Bild, danach gehalten);
+  F430..F490 unveraendert (cam 1 -> 2 ab F458); `Spielerin auf Etage 4 bei (20364,25368) -> Kopien frei, kleinster Abstand 5592`
+  (vorher 460); F500 `g=00`, sie gehen los; F520 5042, F560 3998, F600 3463, F690 1999 = kommen naeher; `gr=0`, PL hp=100 bis F700
+  (vorher Griff ab F520, HP 60 bei F560). Bildtafel Q_belege/q_n3_nachher_leon_oben.png: Bild 460/480 stehen die vier
+  Polizei-Zombies AUFRECHT an der 10C0-Tuer (rechts, Schild F2), Leon kommt die Westtreppe herunter; Bild 500 Leon unten links,
+  die Zombies an der Tuer; Bild 540..680 kommen sie quer ueber den Absatz. Vorher Q_belege/q_n3_vorher_leon_oben.png (flach
+  liegend, Bild 500 umringt).
+* Lauf n_elza_oben (Elza, (9,95), Kopien 124..127 leben): `Nachspawn 1061 (Programm E): Ankunft von oben, Kopien an der Ostseite`;
+  F1 st=1 hp 58/94/66/60 g=20; `Spielerin auf Etage 4 bei (20432,25368) -> Kopien frei, kleinster Abstand 5525` (Abnahme M11:
+  497); kein Griff bis F700. Bildtafel Q_belege/q_n3_nachher_elza_oben.png (Bild 470/480/500).
+* VON UNTEN unveraendert (integration_r39_elzazombies_treppe, Elza, vier Kopien): Kopien bei (20218,26533) (20218,25732)
+  (21019,26532) (20916,25341) - dieselben Lagen wie vorher (v_altstand F90, alter Code) -, frei bei der Ankunft (25424,24568),
+  kleinster Abstand 4574 (>= 4000; die 4591 der Abnahme M5 stammen aus einem Lauf mit DREI Kopien, Bit 125 tot, ohne den
+  Nachbarn bei (20218,25732)).
