@@ -6,6 +6,9 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 15:41: Nutzer-Befund "nach der finalen Cutscene in 1141 keine normale Gehanimation": ENTRIEGELN39 ohne
+  Plc_ret (Elza blieb pst=4 mo=2) -> sub06 @0x010D2..@0x010D7 kopiert; gemessen pst=1 mo=105. 1141 28/28, unit 914/914.
+  Release-Lauf 14:52 dafuer per TaskStop beendet; neuer Lauf folgt.
 * 2026-10-19 14:51: Release-Lauf v0.8.27 (13:23) bei Nutzer-Nachtrag 17 im Linux-Schritt per TaskStop beendet (Container
   gestoppt; Windows/Android waren gebaut). Nachtrag 17 (6 Punkte) + Antwort "alles bleibt" auf die Notes-Fragen umgesetzt im
   Baum r39_n17 (868bb7b2, ff nach master): RUF1041 erst mit Herzschluessel (9,64); ein Ruf; Elzas Geste = ROOM10B1 sub04
