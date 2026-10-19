@@ -258,3 +258,8 @@ geloescht; `cmake_minimum_required(VERSION 3.16)` in jedem -P-Skript; keine libm
 - Neue Assets fuer das Paket-Gate: **keine**. Sprachdateien: **keine**. Bedienung: unveraendert.
 - Entscheidungsfragen: keine offenen. (Falls dir eine der neuen Ziffern nicht gefaellt: sag welche - die Form steht
   an einer Stelle, `re15_port/tools/r39_titelversion/glyphen_bauen.py`, ERGAENZT.)
+
+## 8. Nachbesserung 1 (Abnahme 0, Mangel M1)
+Status: in Arbeit (2026-10-19). Abnahmebericht: `analysis/befunde_runde39/T_abnahme_0.md` Abschnitt 4 und 10.
+Mangel M1 (T4, Auskunft an den Nutzer): Abschnitt 1.3 ("Ergebnis: es gab kein Skript dafuer") und Abschnitt 7 ("Es gab
+keins - weder in diesem Repo noch im alten reAi-Ordner ...") sind widerlegt. Abhilfe laut Abnahme: nur Dokument, kein Code.
