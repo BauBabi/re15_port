@@ -6,6 +6,11 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 08:10: MASTER ec32aa8b = G+O+R (Integration 921/921, 05:10), Hauptbaum-exe 08:07 + Smoke gruen. Spur Q elzazombies
+  BESTANDEN (Abnahme 1 nach NB1 721d530a: Riegel erben keine RE15_*-Umgebung, jede Schreibweise). Q in die Integration
+  (96b384a7, Konflikte additiv; Ereignis 30 raumgetrennt R=1121, Q=1041/1061/1031), Bau ok, 908 Tests laufen. Spur J
+  Abnahme 3: nur M1-Rest (Nachladen kurz vor der Sperre -> 8 Bilder Waffe auf John in Cut 8; Abhilfe Kommandowort im
+  Schnittbild wie 11C0 sub03 @0x01B26) -> Nachbesserung 4 wf_804c3159-374 (args_j_nach4.json). P wartet auf J.
 * 2026-10-19 04:47: MASTER 2963579d = Spur K (Integration 889/889), Hauptbaum-exe 01:06 + Smoke gruen. BESTANDEN: G karten
   (Abnahme 3, Fix 0f8545c9: Tuer immer auf der Wand des gezeichneten Raums, B2-Westende 1210/1211), O parkplatz11c0
   (Abnahme 1, Fix 2c7498cd: Sperre nur bei (3,67)==0), R hund1121 (Abnahme 0, aead0d9b: Hund springt in der Panikphase
