@@ -805,3 +805,18 @@ Aufnahme synchro/STAGE1/room1041/main40.wav).
   `ctest --test-dir re15_port/build -R "^integration_r39_dining1141_kampf$" --timeout 1800` -> "100% tests passed, 0 tests failed
   out of 1" (Passed 300.61 sec; "10 Schuesse, 10 Treffer", 6 Treffer bei gr=1, 5 von 5 Treffer-Salven mit Zuwendung, 10 Schuesse
   bei Cut 0, Querungs-Wache 0 Bilder; EXIT_AT Bild 5500 erreicht).
+
+## 10. Nachbesserung 3 (nach Abnahme 2, `J_abnahme_2.md`; Start 2026-10-19 04:33, Uhrzeiten aus `date`)
+
+Auftrag: (M1) Punkt 8 - zielt Elza noch, wenn ENTRIEGELN39 nach dem Tod der Gorillas auf Cut 8 schneidet, richtet sie
+11 Bilder lang die Waffe auf John (Lauf R/R2 der Abnahme, state.txt F6296..F6306 pst=1 mo=215 rot 2048, F6307 pst=4).
+Abhilfe: Elza vor dem ersten Bild von Cut 8 in einen neutralen Zustand (Original-Form belegen) + Riegel mit zielender
+Elza beim Schnitt. Orchestrator: (a) H4 - die J-Integrationsriegel (integration_r39_dining1141_d/_kampf,
+integration_r38_dining1141_*) erben keine RE15_*-Variablen des Aufrufers (VERTRAG 2); (b) H7 - Kommentar in
+re15_dining_r39_install an den Code; (c) `git merge master` (2963579d, Spur K: RBJ-Kanal-Cache-Fix rbj_resolve_slot)
+gegen Js RBJ-Leihe (re15_actor_rbj_anim/_skel) pruefen - Heranwinken in 1141 weiter RBJ ROOM1171 rec1 Clip 2 (96 Bilder);
+danach ALLE unit_/prop_/probe_ + integration_r39_dining1141* + integration_r38_dining1141* + integration_r39_gegner_1141 +
+integration_r39_heliport1171_weg gruen.
+
+### 10.0 Stand / Fortschritt
+- 04:33 Baum sauber auf 1a6be145 (Abnahme 2), master = 2963579d. Abschnitt angelegt.
