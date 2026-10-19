@@ -824,6 +824,9 @@ integration_r39_heliport1171_weg gruen.
   enemy_common.c / enemy_ai_common.c / game_step_common.c automatisch. configure + build LOCAL-BUILD-OK (exe 04:34).
 - 04:40-04:52 Messung vorher am gemergten Stand (Laeufe v_r2 = Abnahme-Lauf R2, v_m = schneller Messhaken-Lauf; 10.1).
 - 04:55 RE-Belege (10.2), Umsetzung M1/H4/H7 (10.3) geschrieben, Bau folgt.
+- 04:58-05:01 Bau gruen, Unit senken/programme gruen, Commit 8649df54 (M1, H4, H7); 05:01-05:07 Riegel zielen + Lauf n_r2
+  (10.4); 05:06-05:16 alle Unit-Riegel 855/855; 05:09-05:14 zielen mit feindlicher Umgebung (H4); 05:16 db51683c
+  (Kommentar Kommando 1, R1-Fenster des Riegels); 05:16-05:27 Integration gezielt 12/12 (10.5).
 
 ### 10.1 Messung vorher (gemergter Stand 0e486aa6, echte exe; Messordner scratchpad `j39n3/`, nicht committet)
 Werkzeug `j39n3/lauf.sh` (= `J39abn2/lauf.sh` der Abnahme, eigene exe-Kopie `re15_pc_j39n3_<name>.exe`), Auszug `zust.py`.
@@ -932,6 +935,18 @@ Werkzeug `j39n3/lauf.sh` (= `J39abn2/lauf.sh` der Abnahme, eigene exe-Kopie `re1
   `objdump -d player_common.c.obj` vor/nach bytegleich ("CODE_GLEICH", 2974 Zeilen).
 - Hinweis zum Riegel zielen: ohne RE15_AUDIO_CAP_SYNC laufen die Stimmen-Zeilen nach der Wanduhr - das Szenenende schwankte
   in drei Laeufen 3421..3456 (Kampfende 4021..4056). Das R1-Fenster (Bild 3000 + 45 s) deckt Szenenenden ~2420..~3690 ab.
+- Integration gezielt am Endstand db51683c (Lauf 05:16:08..05:27:14):
+  `ctest --test-dir re15_port/build -R "^(integration_r39_dining1141_d|integration_r39_dining1141_kampf|integration_r39_dining1141_zielen|integration_r38_dining1141_[wzdlsra]|integration_r39_gegner_1141|integration_r39_heliport1171_weg)$" -j 4 --timeout 3600 --output-on-failure`
+  -> **"100% tests passed, 0 tests failed out of 12"** (r38 r 191.97 s, r39_gegner_1141 299.10 s, r39_dining1141_d 354.16 s,
+  r38 w 188.43 s, r38 z 117.20 s, r38 l 45.86 s, r38 a 0.17 s und r38 d 0.16 s (beide seit Nachbesserung 1 durch die
+  r39-Riegel ersetzt: "ersetzt durch unit_r39_dining1141_phase_h / integration_r39_dining1141_d"), r39_dining1141_zielen 269.68 s,
+  r39_heliport1171_weg 59.23 s, r39_dining1141_kampf 308.38 s, r38 s 665.97 s).
+  - D (lauf_0b122b1a, ohne R1): Messhaken F3833, Sperre ab F3833 (pm 2), `[scd F3863] Cut_chg(8)` = 30 Bilder danach; nach dem Merge mit Spur K
+    `F4061 John winkt heran: RBJ ROOM1171 Record 1 Clip 2 geliehen (96 Bilder, 3 Clips)` (Pruefung `pruef(_r "John winkt heran:
+    RBJ ROOM1171 Record 1 Clip 2 geliehen (96 Bilder")` gruen); Unit phase_h (`wink`: re15_actor_rbj_anim(John) Clip 2 = 96 Bilder)
+    in 855/855.
+  - zielen (lauf_8042d2e3, R1-Fenster 3000..4350): Kampfende F4051, Sperre ab F4051, letztes Zielbild F4060 (9 Bilder SENKEN),
+    Schnitt F4081, 40 Bilder Cut 8, 0 mit Waffe, Schnittbild pst 1 mo 200 - `zielen: 0 Fehler`.
 
 ### 10.6 Je Mangel / Auftrag: Ursache - Messung vorher - Beleg - Aenderung - Messung nachher
 | Punkt | Ursache (gemessen) | vorher | Beleg | Aenderung | nachher |
@@ -956,6 +971,10 @@ Werkzeug `j39n3/lauf.sh` (= `J39abn2/lauf.sh` der Abnahme, eigene exe-Kopie `re1
 - **Ein Bild Unterschied am Sperr-Beginn:** im Setz-Bild laeuft im Original der Dispatcher noch mit ungekapptem Wort (Drehen im
   Halten moeglich), der Port haelt den Pad-Zweig ab demselben Bild an (vorbestehende Port-Regel player_mode 2); das Senken beginnt
   in beiden im Bild danach.
+- Abnahme 2 H5 (kein Auftrag dieser Nachbesserung, unveraendert): re15_dining_r39_tick laeuft ausserhalb des KI-Tors
+  (game_step_common.c, vor `!(g_re15_pauseflags & RE15_PAUSE_AI)`); unter einer die Welt einfrierenden Nachricht laufen Johns
+  Nachfuehren, ein angestossener Schuss und die Aufmerksamkeits-Zaehler weiter. Der neue Sperr-Merker gehoert dagegen bewusst
+  VOR jedes Tor (er bildet den Pad-Umsetzer nach, der im Original im Task-Takt immer laeuft).
 - Weiter offen aus 9.7: gemeinsame Dateien ausserhalb VERTRAG 1.3 - jetzt zusaetzlich engine/src/player_common.c (+7, nur
   ROOM1141 Phase H); E-Riegel (unit_r39_gegner_1141_ablauf1141, integration_r39_gegner_1141) in der Fassung dieses Zweigs
   uebernehmen (H3); Spieler-Plc_motion(2,c) als W-Bank-Clip nur in ROOM1141.
