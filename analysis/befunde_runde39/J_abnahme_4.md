@@ -1,7 +1,7 @@
 # Runde 39 — Spur J "dining1141": Abnahme 4 (unabhaengig, nach Nachbesserung 4)
 
 Baum `.claude/worktrees/r39_dining1141`, Zweig `r39/dining1141`, Stand 4ed68276 (Merge-Basis mit master 2963579d; master =
-c4675474). Geprueft: `git diff master...HEAD -- re15_port` (Zweig-eigene Aenderungen, 29 Dateien unter re15_port) und gesondert die
+c4675474). Geprueft: `git diff master...HEAD -- re15_port` (Zweig-eigene Aenderungen, 26 Dateien unter re15_port) und gesondert die
 Nachbesserung 4 `git diff ece3a8f9..HEAD` (nur gen/dining_r39_programme.inc +-12, tools/r39_dining/programme_bauen.py +-22,
 Riegel test_r39_dining1141.c / probes / test_r39_dining1141_zielen.cmake, Dossier, Belegbilder). Massstab: AUFTRAG.md (Punkte 1-9
 "Mit Room 1141 ..." + "Wenn man ROOM 1141 danach verlaesst ..."; Nutzer-Nachtraege 4, 6, 7, 8, 10, 13), VERTRAG.md, Abnahme 3
@@ -10,7 +10,7 @@ Messordner (nicht committet): scratchpad `J39abn4/` (Laeufe `l_<name>`, eigene e
 neben der Baum-exe, danach geloescht; Werkzeuge aus Abnahme 3 uebernommen und vorher gelesen: `lauf.sh` (Praefix j39abn4),
 `auswert.py`, `cap.py`, `stimme_xkorr.py`, `salven.py`, `aufmerk.py`, `bogen.py`, `crop.py`).
 
-## 0. Stand der Abnahme (fortlaufend)
+## 0. Stand der Abnahme
 - AUFTRAG (Baum + master-Fassung: dort zusaetzlich Nachtraege 12-14, fuer J nur 13 "1141 msg 41 bleibt einfacher Raumtext"),
   VERTRAG, Dossier Abschnitt 11 (Nachbesserung 4), Abnahme 3 gelesen; Code-Diff gelesen (NB4 vollstaendig; die gemeinsamen
   Dateien des Zweigs erneut: dining_r38.c, enemy_ai_common.c, enemy_common.c, game_step_common.c, player_common.c, re15_damage.c,
@@ -21,6 +21,8 @@ neben der Baum-exe, danach geloescht; Werkzeuge aus Abnahme 3 uebernommen und vo
   +0x0408 `29 08` Cut_chg 8, +0x040A Work_set(2,0), +0x040E Pos_set John, +0x0416 `2e 01 00 00` Work_set(1,0), +0x041A Pos_set Elza,
   +0x0422 `34 04 00 08` Member_set(4,2048), **+0x0426 `40 00 09 00 82 e2 04 ac` Plc_dest TURN Elza -> John**, +0x042E Sleep 1,
   +0x0432 Plc_neck, +0x043C Sleep 10, +0x0440 Sleep 5 (1376 B).
+- Laeufe A, P, R2, RL2, RL3 (neu), KH (neu) ausgewertet (Abschnitt 1); RE-Gate neun Stichproben (Abschnitt 2); Unit 856/856, Integration
+  gezielt 22/22 (Abschnitt 3); Vertrag (Abschnitt 4). Exe-Kopien `re15_pc_j39abn4_*` nach jedem Lauf geloescht (lauf.sh).
 
 ## 1. Messlaeufe (echte exe, eigene Kopie je Lauf)
 Gemeinsame Umgebung (`J39abn4/lauf.sh` = Abnahme 3, nur Praefix): RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_PSELECT_AUTO(_SWITCH)=1
@@ -70,7 +72,7 @@ Plc_dest), gegen den Vorher-Lauf der Abnahme 3 (`J39abn3/l_rl2`, exe 05:15) gepr
 - Lauf A: je Runde drei Schlaege im Abstand 5 Bilder (F35/F40/F45, F255/F260/F265, F475/F480/F485, F884.., F1104.., F1324..), 30 Bilder
   danach ein Hilferuf: help03 F75, help01 F295, help04 F515, help02 F924, help05 F1144, help03 F1364 (PORT-WAHL Mix); nach dem Riegel F1485
   keiner mehr. (Wie Abnahme 3: waehrend der Rolladen-Szene verwirft das SE-Tor FUN_80045a18 die drei Schlaege F884..F894 -
-  `GATE: ... VERWORFEN (laufend prio=6)`, H7.)
+  `GATE: ... VERWORFEN (laufend prio=6)`, H6.)
 - Mitschnitt A (`cap.py l_a/cap.raw 3698 3720 1`): Schlaege Takt 3705/3710/3715 RMS 2480/2484/2502 (Spitze ~8000) gegen Musik RMS ~250;
   `stimme_xkorr.py`: help03.wav rho 0,908 bei Takt 3744 (= F75), help01.wav rho 0,895 bei Takt 3964 (= F295), Median |rho| 0,007/0,008.
 - **Urteil: erfuellt** (Klang = RE2 DOOR0F-Holzschlag; Klangabnahme beim Nutzer, H1).
@@ -92,7 +94,7 @@ Plc_dest), gegen den Vorher-Lauf der Abnahme 3 (`J39abn3/l_rl2`, exe 05:15) gepr
 
 ### 1.8 Punkt 8 — nach dem Tod der Gorillas zwei Zeilen Johns "mit passenden Animationen" (+ Nachtraege 4/7/8; Mangel M1-Rest der Abnahme 3)
 - **Ablauf (Lauf A/P, Messhaken F3833):** Balken + Pad-Sperre ab **F3834** (pm 2 bis F4347), `[scd F3863] Cut_chg(8)` und **im selben
-  Takt** `[scd] Plc_dest(slot=0 mode=0x09 dest=(-7550,-21500) flag=0)` (debug.log Zeilen 1449/1450; Abnahme 3: 11 Bilder spaeter),
+  Takt** `[scd] Plc_dest(slot=0 mode=0x09 dest=(-7550,-21500) flag=0)` (`a_1141.log` Zeilen 1449/1450; Abnahme 3: 11 Bilder spaeter),
   angezeigt F3864. msg 51 `"John: Puuuh, that was close! I thought we end up as gorilla meal...."` F3886..F4060, msg 52 `"John: Elza,
   follow me, I think I might have found a way out of here!"` F4062..F4190; John laeuft F4192 los (0 Laufbilder mit offener msg 52);
   Kamera nach (9,67)=1: F4319 Cut 7, F4334 Cut 0, F5954 Cut 5, F6117 Cut 6 (folgt Elza). Alle Bildnummern ab msg 51 = Abnahme 3.
@@ -165,7 +167,8 @@ Plc_dest), gegen den Vorher-Lauf der Abnahme 3 (`J39abn3/l_rl2`, exe 05:15) gepr
   Episoden, z. B. Gorilla B F4989..F5197 Abstand zu John 12188 -> 2929 (`aufmerk.py`). Dazu Riegel `integration_r39_dining1141_kampf`
   (Abschnitt 3). **erfuellt.**
 - N4.4 / Nachtrag 7: Heranwinken RBJ ROOM1171 rec1 Clip 2 (96 Bilder), 0 Bilder Waffe auf Elza (1.8). **erfuellt.**
-- N6: `"... we end up as gorilla meal...."`, `"He is in trouble"` nur im Riegel `texte` (msg 50 kommt in 1141 nicht vor). **erfuellt.**
+- N6: `[msgtext] room=1141 id=51 "John: Puuuh, that was close! I thought we end up as gorilla meal...."`; msg 50 (`"... He is in
+  trouble, I have to help him!"`) nur noch im Riegel `texte` (`texte: 0 Fehler`), in 1141 nicht gezeigt. **erfuellt.**
 - N8: main51/main52 an msg 51/52 (rho 1,000). **erfuellt.** N10: keine Reaktion in 1141 (1.5). **erfuellt.**
 
 ## 2. RE-Gate (Nachbesserung 4): Stichproben selbst disassembliert/gelesen (richtige Binaerdatei, Sprungziele)
@@ -206,6 +209,31 @@ Nachbesserung 4: keine (nur die Lage einer vorhandenen Original-Zeile im Program
   (**Timeout 1199,96 s** = eigene TIMEOUT-Eigenschaft 1200; Kostenmittel 603,7 s; die Geschwister liefen unter derselben Last 2,3x
   langsamer: fehler_bau 892 s statt 390, ablauf 898 statt 367, cmd 805 statt 346) - Release-Skript-Riegel (tests/unit/r38_releaseskript),
   vom Zweig nicht beruehrt; Einzel-Nachlauf siehe unten.
+- Einzel-Nachlauf des roten Release-Skript-Riegels (ohne die Unit-Last, waehrend meiner Integration):
+  `ctest --test-dir re15_port/build -R "^unit_r38_releaseskript_fehler_umfeld$" --output-on-failure` (09:42:14..09:44:58) ->
+  `1/1 Test #884: unit_r38_releaseskript_fehler_umfeld ... Passed 164.20 sec`, "100% tests passed". Der Timeout war Last, kein Befund:
+  **Unit gesamt 856/856**.
+- Integration gezielt (Spur-Riegel inkl. neuem `zielen_nachladen`, alle R38-dining-Teile, E-1141, Weg nach 1171, BGM-Wechsel 10F0,
+  Stimmen-Pfad, Elza-Schuss, Elza in 1141, Gorilla-Riegel R38), Regex `J39abn4/regex_integ.txt`:
+  `^(integration_r39_dining1141_d|integration_r39_dining1141_kampf|integration_r39_dining1141_zielen|integration_r39_dining1141_zielen_nachladen|integration_r38_dining1141_[wzdlsra]|integration_r39_gegner_1141|integration_r39_heliport1171_weg|integration_r36_elza_schuss|integration_r37_elzaems_elza1141|integration_r38_affen3|integration_r38_affen3_decke|integration_r38_affen3_tor|integration_r35_cut10f0|integration_r39_stimmen_1171|integration_r38_rekorder|integration_r38_elzaintro_stimme)$`
+  mit `env RE15_ABNAHME4_FEIND=1 ctest ... -j 3 --timeout 3600 -V` (09:28:54..09:52:52, unter Last) -> **"100% tests passed, 0 tests failed
+  out of 22"** (1437,75 s; r39 d 436,8 s, zielen_nachladen 330,1 s, zielen 276,5 s, kampf 310,3 s, r39_gegner_1141 404,0 s, r38 s 834,1 s,
+  r38 l 50,3 s, r38 a/d 0,4 s = Stellvertreter seit NB1: "ersetzt durch ... integration_r39_dining1141_d"). Alle elf Riegel mit dem
+  Umgebungs-Haken melden `r39j: 1 RE15_*-Variablen des Aufrufers entfernt: RE15_ABNAHME4_FEIND`.
+  - D (alle Nutzer-Punkte am echten Weg, 71 Pruefzeilen): u. a. `ok nicht da 'Oh, no, this is John!'`, `... 'Se_on bank=0x3C'`/`0x3D`/
+    `main42.wav`/`main50.wav`/`main12..14.wav`, `ok 'Klopfbank RE2 DOOR0F geladen'`, `ok Punkt 2: John kommt innen vor die Dachtuer,
+    waehrend die Kamera vorne auf Elza steht (Cut 7)`, `ok Punkt 2: Kamera auf die Tuer (Cut 6): John steht schon da`, `ok Punkt 6:
+    Glasbruch (F2424) erst am Ende von msg 5`, `ok Punkt 7: ... 0 von 268 Bildern ueber 160`, `ok Punkt 8 / M2 / Nachtrag 7: Heranwinken
+    (0,2) zu msg 52`, `ok M2/N4.4: John richtet im Gespraech nie die Waffe auf Elza`, `ok N4.1 ... 386 freie Bilder`, `ok N4.2 ...`,
+    `ok N4.3: John schiesst (2 Schuesse, 2 Treffer)`, `ok: Punkt 9: nach dem Tuer-zu-Ton keine Musik aus 1141 (Pegel 0 < 60 ...)`.
+  - zielen_nachladen (lauf_54359179): "Kampfende 4056, Sperre ab 4056, letztes Zielbild 4085, Schnitt 4086; SENKEN-Bilder 1; Cut 8: 40
+    Bilder, davon 0 mit Waffe; Schnittbild pst=4 mo=105", "Nachladen: im Sperr-Bild 1, Beginn 4053 (3 Bilder vor der Sperre)",
+    `zielen: 0 Fehler` (unter Last bildgleich zu meinem Lauf RL2 - CAP_SYNC haelt den Takt).
+  - zielen (Halten, lauf_736a13ad): "Kampfende 4052 ... Schnitt 4082; SENKEN-Bilder 9; Cut 8: 40 Bilder, davon 0 mit Waffe; Schnittbild
+    pst=4 mo=105", `zielen: 0 Fehler`.
+  - kampf: "10 Schuesse, 10 Treffer, 0 ausser Kegel", "6 Treffer, waehrend Elza im Griff ist", "5 von 5 Treffer-Salven mit sichtbarer
+    Zuwendung", "John beim Schiessen im Bild - 10 Treffer-Schuesse bei Kamera Cut 0", "Querungs-Wache: niemand hinter einer Wand".
+  - r38 L (Leon ROOM1140): Rolladen-Toene 0x3B id 12/10/11, `nicht da 'Phase H'` - das zweite Szenario ist unberuehrt.
 
 ## 4. Vertrag (VERTRAG.md Runde 39)
 - Pfade (`git diff master...HEAD --name-only`): `analysis/befunde_runde39/{AUFTRAG.md (nur Orchestrator-Commits + Merges), J_abnahme_0..4.md,
@@ -226,6 +254,11 @@ Nachbesserung 4: keine (nur die Lage einer vorhandenen Original-Zeile im Program
   nicht mit "z_"), eigener Laufordner `r39_dining1141_zielen_nachladen_wd`, Umgebung des Aufrufers geleert (r39j_umgebung_leeren),
   `cmake_minimum_required(VERSION 3.16)`, Endung per `get_filename_component(... EXT)`, cap.raw danach geloescht.
 - **Vertrag gehalten.**
+
+## 5. Maengel
+Keine. (M1-Rest der Abnahme 3 behoben und am echten Weg in vier Faellen gemessen: RL2 8 -> 0, RL3 0, KH 0, R2 0 Bilder Cut 8 mit
+Waffen-Clip; der neue Riegel `integration_r39_dining1141_zielen_nachladen` und der Unit-Teil `schnitt` messen den Befund - Gegenprobe
+auf den Vorher-Lauf `zielen: 1 Fehler`, Unit-Gegenprobe Fassung NB3 8/3/10/1/0/0.)
 
 ## 6. Hinweise (keine Maengel)
 - H1 Klopf-Klang = RE2 DOOR0F-Holzschlag (RE2 hat keinen Tuer-Klopfton) - Klangabnahme beim Nutzer (wie Abnahmen 2/3).
@@ -254,3 +287,33 @@ Nachbesserung 4: keine (nur die Lage einer vorhandenen Original-Zeile im Program
 - H11 Zusammenspiel mit Spur P (Nachtraege 10/12: Johns Ruf ab 1041, Panikmusik bis zur Rettung, Tuersaetze): nicht in diesem Zweig;
   Punkt 9 (keine MAIN16-Reste beim Wechsel 1141 -> 1171) haengt am audio_pc.c-Haken und gilt unabhaengig davon, welche Musik vorher lief -
   bei der Integration von P den Wechsel 1141 -> 1171 mit P's Panikmusik einmal nachmessen (Werkzeug `test_r39_dining1141 pegel`).
+
+## 7. Urteil
+
+| Punkt (Wortlaut AUFTRAG.md) | Urteil | Kurzbeleg |
+|---|---|---|
+| 1 keine Zombie-Geraeusche | erfuellt | A: 0x bank 0x3C/0x3D/60/61, 0x main42; nur Klopfen/help/Glas/Rolladen/DOOR1A + zugeordnete Spieler-/Menue-Toene |
+| 2 John durch die Tuer; Kamera Elza -> Tuer-zu-Ton -> Kamera Tuer mit John | erfuellt | A/P: Cut 7 F1594, Tuer auf ~F1667, John F1670 hinter der Kamera, Tuer zu ~F1712, Cut 6 F1740 mit John (`a_tuer.png`) |
+| 3 kein "shout" | erfuellt | 0x main42.wav geladen, xkorr rho 0,159 (kein Treffer) |
+| 4 help01..05 im Mix + mehrfaches Klopfen | erfuellt | 3 Schlaege je Runde (Abstand 5), Rufe 3,1,4,2,5,3, RMS ~2490 ueber Musik ~250, help03/help01 rho 0,908/0,895 |
+| 5 Reaktion (Nachtrag 10: in 1141 entfaellt sie) | erfuellt | erste Nachricht msg 13 F676, kein msg 50 / main50 (rho 0,063) |
+| 6 Glasbruch vor "What was that?!" | erfuellt | F2424/F2429 direkt nach msg 5 (zuletzt F2423), msg 6 F2450; Takt 6092.. RMS ~10000 |
+| 7 John schaut ab msg 9 zu Elza | erfuellt | msg 9/10 Blickfehler <= 10 in 268 Bildern (`a_blick.png`) |
+| 8 zwei Zeilen Johns mit passenden Animationen | erfuellt | msg 51/52 + Gesten (0,15)/(0,23), Heranwinken RBJ 1171 rec1 Clip 2, main51/main52 rho 1,000; M1-Rest behoben: Elzas TURN im Schnitt-Takt, 0 Bilder Waffen-Clip in Cut 8 (RL2/RL3/KH/R2) |
+| 9 keine Panik-Musik 1141 -> 1171 | erfuellt | pegel 0 / MAIN32 559; eigene Pegel: Stille 10008..10032, kein MAIN16 |
+| N4.1 Rolltor oeffnen, danach normal laufen | erfuellt | F1101..F1484 frei, Klopfen weiter |
+| N4.2 Szene am Riegel; rennen, andere Kamera, zur Tuer drehen, Waffe heben | erfuellt | A Messer (W-Clip 13/6), P Browning aus dem Inventar (`p_heben_zoom.png`) |
+| N4.3 John schiesst ab und an, erhaelt die Aufmerksamkeit | erfuellt | R2 14/14 Treffer, 7 Episoden; kampf 10/10, 5/5 Salven zugewandt |
+| N4.4 / Nachtrag 7 Heranwinken wie 1171 | erfuellt | (0,2) RBJ ROOM1171 rec1 Clip 2 (96 Bilder), keine Waffe auf Elza (`a_wink_zoom.png`) |
+| N6 Schreibweise "trouble"/"gorilla" | erfuellt | msgtext |
+| N8 Stimmen main51/52 | erfuellt | rho 1,000 / 1,000 an ihren Zeilen; 12/13 stumm |
+
+Gates: **RE-Gate gehalten** (Abschnitt 2: neun Stichproben selbst disassembliert/gelesen - Sprungziele und Tabellen in PSX.EXE, SCD-Bytes in
+den Original-RDTs; alle stimmen; 0 Rate-Woerter, kein Env-Schalter als Abschluss, keine neue Konstante; der Fix erklaert den gemessenen
+Befund: ohne Plc-Befehl im Schnitt-Takt lief die Ziel-FSM weiter, mit Plc_dest im Schnitt-Takt ist das Kommandowort im Schnittbild 4 -
+vorher/nachher am selben Lauf RL2 8 -> 0). **Vertrag gehalten** (Abschnitt 4). **Tests:** Unit 856/856 (ein Last-Timeout eines
+Release-Skript-Riegels einzeln gruen nachgefahren), Integration gezielt 22/22, Gegenprobe des neuen Riegels auf den Stand vor dem Fix 1 Fehler.
+
+**bestanden = true** - alle Punkte und Nachtraege erfuellt, alle Gates halten. Hinweise H1-H11 (Abschnitt 6) sind keine Maengel; fuer die
+Integration wichtig: H2 (gemeinsame Dateien), H3 (E-Riegel in der Fassung dieses Zweigs), H11 (Wechsel 1141 -> 1171 mit Spur P nachmessen).
+
