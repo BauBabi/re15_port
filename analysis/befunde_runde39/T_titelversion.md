@@ -318,7 +318,7 @@ geloescht; `cmake_minimum_required(VERSION 3.16)` in jedem -P-Skript; keine libm
   an einer Stelle, `re15_port/tools/r39_titelversion/glyphen_bauen.py`, ERGAENZT.)
 
 ## 8. Nachbesserung 1 (Abnahme 0, Mangel M1)
-Status: in Arbeit (2026-10-19). Abnahmebericht: `analysis/befunde_runde39/T_abnahme_0.md` Abschnitt 4 und 10.
+Status: erledigt (2026-10-19). Abnahmebericht: `analysis/befunde_runde39/T_abnahme_0.md` Abschnitt 4 und 10.
 Mangel M1 (T4, Auskunft an den Nutzer): Abschnitt 1.3 ("Ergebnis: es gab kein Skript dafuer") und Abschnitt 7 ("Es gab
 keins - weder in diesem Repo noch im alten reAi-Ordner ...") sind widerlegt. Abhilfe laut Abnahme: nur Dokument, kein Code.
 Die Punkte T1-T3 (erfuellt) bleiben unberuehrt: kein Spiel-Code, kein Riegel, nichts unter release/ geaendert.
@@ -425,3 +425,11 @@ Daraus:
   -> **100% tests passed, 0 tests failed out of 30** (Total Test time (real) = 880.60 sec; u. a.
   integration_r39_titelversion_titel 10,05 s, unit_r39_titelversion_ablauf 13,78 s, unit_r39_titelversion_huelle 6,36 s,
   integration_r30_titel_puls 25,21 s, unit_r35_android_bash_mutanten 848,29 s). Kein Fenster-Haken rot.
+- Alle Unit-/Prop-/Sonden-Riegel (Auftrag: vor dem Abschluss):
+  `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -j4 --timeout 600`
+  -> **100% tests passed, 0 tests failed out of 888** (Total Test time (real) = 671.84 sec).
+
+Ergebnis Nachbesserung 1: Mangel M1 behoben. Die Auskunft an den Nutzer (1.3, 7) lautet jetzt: ja, im Vorprojekt gab es
+das Skript (`reAi/scripts/patch_save_final.py`, Stempel zuletzt "V1.18 2026.04.24", selbst gemessen in
+`info/Re1.5/re15_save_final.bin` LBA 1101); es existiert nicht mehr; der Port macht dasselbe im Speicher und automatisch
+je Release. Die erfuellten Punkte T1-T3 sind unveraendert (kein Spiel-Code geaendert, ihre Riegel gruen).
