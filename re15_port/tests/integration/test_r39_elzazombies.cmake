@@ -124,13 +124,18 @@ function(finde _muster _ab _out)
     endif()
 endfunction()
 
-set(_elza_1041 "1041;-21008;0;-13134;2112;0;3:125;3:193;3:116")
+# (4,0xF0) = 240: Johns Szene in 1021 gelaufen (ROOM1021 sub02 @0x01FE0) - die echte Vorbedingung der Panikphase. Seit
+# Spur P in der Integration (Runde 39) startet damit ihr Ruf RUF1041 beim Betreten von 1041 und setzt (9,97) beim
+# Kartenschluss selbst; ohne (4,0xF0) loescht Spur P ein von aussen gesetztes Bit 97 im selben Bild ("John gerettet").
+set(_elza_1041 "1041;-21008;0;-13134;2112;0;3:125;3:193;3:116;4:240")
 
 # ------------------------------------------------------------------------------------------------------------------
 if(TEIL STREQUAL "kette")
-    # Ende im ZWEITEN 1041-Besuch: der erste verlaesst 1041 bei Bild ~306 (Tuer des Auftakts), Bild 400 erreicht nur die
-    # Rueckkehr (Bildzaehler je Raum). Spielstand: 10E1 und 1071 nie betreten = 4 + 5 Zombies leben (Nachtrag 12: 1071-Schritt).
-    lauf(kette "${_elza_1041}" 900 RE15_NOAUDIO=1 RE15_SET_FLAG_AT=9:97@200 "RE15_EXIT_AT=400#1041")
+    # ECHTE KETTE P -> Q (Integration Runde 39): der Ruf der Spur P (RUF1041, Karte) setzt (9,97) beim Kartenschluss
+    # (Lauf 12:29: Bild 432), Spur Q sieht die Flanke und startet die Montage. Ende im ZWEITEN 1041-Besuch: der erste
+    # verlaesst 1041 bei Bild ~540, Bild 900 erreicht nur die Rueckkehr (Bildzaehler je Raum). Spielstand: 10E1 und 1071
+    # nie betreten = 4 + 5 Zombies leben (Nachtrag 12: 1071-Schritt).
+    lauf(kette "${_elza_1041}" 900 RE15_NOAUDIO=1 "RE15_EXIT_AT=900#1041")
     set(_pos 0)
     foreach(_m
             "Flanke (9,97) 0->1 in ROOM1041"
@@ -227,22 +232,34 @@ if(TEIL STREQUAL "kette")
     else()
         fail("Spieler-HP: ${_hp}")
     endif()
-    finde("PC loaded room1041" 100 _pr)
-    string(SUBSTRING "${_dbg}" ${_pr} -1 _rueck)
-    if(_rueck MATCHES "\\[walk\\] F[0-9]+ cut=0 [^\n]*pl pos=\\(-21008,0,-13134\\) rot=2112")
-        ok("Rueckkehr: Elza an der gemerkten Stelle (-21008,0,-13134) Gier 2112 Cut 0")
+    # Rueckkehr an die beim Montage-Start gemerkte Stelle (Spur P dreht Elza beim Ruf zur Treppe - die Gier kommt aus dem Lauf)
+    string(REGEX MATCH "Montage startet in ROOM1041: Rueckkehr \\((-?[0-9]+),(-?[0-9]+),(-?[0-9]+)\\) Gier ([0-9]+) Cut ([0-9]+)"
+           _mm "${_dbg}")
+    if(NOT _mm)
+        fail("Montage-Start mit gemerkter Stelle nicht gefunden")
     else()
-        fail("Rueckkehr-Stelle nicht gefunden")
+        set(_gx "${CMAKE_MATCH_1}")
+        set(_gy "${CMAKE_MATCH_2}")
+        set(_gz "${CMAKE_MATCH_3}")
+        set(_gg "${CMAKE_MATCH_4}")
+        set(_gc "${CMAKE_MATCH_5}")
+        finde("PC loaded room1041" 100 _pr)
+        string(SUBSTRING "${_dbg}" ${_pr} -1 _rueck)
+        if(_rueck MATCHES "\\[walk\\] F[0-9]+ cut=${_gc} [^\n]*pl pos=\\(${_gx},${_gy},${_gz}\\) rot=${_gg}")
+            ok("Rueckkehr: Elza an der gemerkten Stelle (${_gx},${_gy},${_gz}) Gier ${_gg} Cut ${_gc}")
+        else()
+            fail("Rueckkehr-Stelle (${_gx},${_gy},${_gz}) Gier ${_gg} Cut ${_gc} nicht gefunden")
+        endif()
     endif()
 
 # ------------------------------------------------------------------------------------------------------------------
 elseif(TEIL STREQUAL "knall")
     # Ende in ROOM1031 bei Bild 300: beide Knaelle liegen davor (1041, 1061); der 1031-Schritt dauert ~357 Bilder (Lauf k5),
     # Bild 530 erreichte er nach Nachtrag 11 nicht mehr (Tuer zurueck nach 1041 vorher -> kein Ende, Zeitueberschreitung).
-    lauf(laut "${_elza_1041}" 600 RE15_AUDIO_CAP_SYNC=cap.raw RE15_SET_FLAG_AT=9:97@200 "RE15_EXIT_AT=300#1031")
+    # Flanke aus dem echten Ruf der Spur P (_elza_1041 mit (4,0xF0)); P-Ton ist in beiden Mitschnitten gleich (Differenz)
+    lauf(laut "${_elza_1041}" 600 RE15_AUDIO_CAP_SYNC=cap.raw "RE15_EXIT_AT=300#1031")
     set(_laut "${_dir}/cap.raw")
-    lauf(stumm "${_elza_1041}" 600 RE15_AUDIO_CAP_SYNC=cap.raw RE15_R39Q_KNALL_STUMM=1 RE15_SET_FLAG_AT=9:97@200
-         "RE15_EXIT_AT=300#1031")
+    lauf(stumm "${_elza_1041}" 600 RE15_AUDIO_CAP_SYNC=cap.raw RE15_R39Q_KNALL_STUMM=1 "RE15_EXIT_AT=300#1031")
     set(_stumm "${_dir}/cap.raw")
     execute_process(COMMAND "${RE15_AUSWERTER}" auswerten_ton "${_laut}" "${_stumm}" TIMEOUT 120
                     RESULT_VARIABLE _rva OUTPUT_VARIABLE _outa)
@@ -309,7 +326,7 @@ elseif(TEIL STREQUAL "durch")
     # nicht besiegt), Elza in ROOM1061 Etage 0 an der Tuer nach 1041 (Slot 2 @0x00D52, Rechteck (26600,24300,1000,2200)),
     # Blick Ost, Aktion -> Tuer -> ROOM1041 -> Rolltor-Durchbruch. Das Skript laeuft je Raum von vorn ("A" in 1041 faellt in
     # die Szene, Riegel).
-    lauf(durch "1061;26200;0;25300;0;7;3:125;3:193;3:116;9:95;9:97;7:224;7:225;7:226;7:227;7:128;7:129;7:130;7:131" 900
+    lauf(durch "1061;26200;0;25300;0;7;3:125;3:193;3:116;4:240;9:95;9:97;7:224;7:225;7:226;7:227;7:128;7:129;7:130;7:131" 900
          RE15_NOAUDIO=1 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=60 "RE15_INPUT_SCRIPT=A0.2,W20"
          "RE15_FRAMEDUMP=260:durchbruch.ppm" "RE15_EXIT_AT=500#1041")
     set(_pos 0)

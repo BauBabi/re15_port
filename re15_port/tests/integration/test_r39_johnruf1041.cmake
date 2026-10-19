@@ -108,23 +108,12 @@ AKTION
 RAUM 1041
 WARTE 30
 GEGNERWEG
-GEHE -25150 -1500 150
-GEHE -25150 -3800 150
-GEHE -20800 -3800 120
-BLICK 0
-AKTION
-WARTE 150
-AKTION
-WARTE 40
-GEHE -25150 -3800 150
-GEHE -25150 -12300 150
-GEHE -20800 -12300 120
-BLICK 0
-AKTION
 RAUM 1061
 WARTE 120
 ENDE
 ")
+    # Integration Runde 39: nach dem Kartenschluss (Bit 97) faehrt Spur Q ihre Montage (1041 -> 1061 -> 1031 -> 1041); der
+    # Lauf endet in deren 1061-Schnitt. Die Tuer 1041 -> 1031 als Text pruefen unit tuer1041 und integration ..._tuer_t1041.
     set(_ende "RE15_EXIT_AT=120#1061")
     set(_extra "RE15_INV_FB_SHOT=karte.bmp" "RE15_INV_FB_SHOT_AT=60" "RE15_FRAMEDUMP=0-600/30:fd_")
 elseif(TEIL STREQUAL "b")
@@ -238,7 +227,7 @@ if(TEIL STREQUAL "a")
     if(_a GREATER -1 AND _b GREATER _a)
         set(_ok_ab TRUE)
     endif()
-    pruef_wahr(_ok_ab "Weg 1021 -> 1041 -> 1061 ueber echte Tueren")
+    pruef_wahr(_ok_ab "Weg 1021 -> 1041 (echte Tuer) -> 1061 (Montage der Spur Q nach Bit 97)")
     if(NOT _ok_ab)
         message(FATAL_ERROR "r39_johnruf1041[a]: ${_fehler}")
     endif()
@@ -267,13 +256,14 @@ if(TEIL STREQUAL "a")
     pruef(_r "[voice] clip loaded: help02.wav")
     pruef(_r "[voice] Start ROOM1041 Id 40 CD_VOL 16383")
     pruef(_r61 "[bgm] stage=0 room=06 entry=FF01 -> MAIN01(flag 0) SUB--(flags 1/1)  [unveraendert, laeuft durch]")
-    # Nachbesserung 1 (Nutzer-Nachtrag 12): nach dem Musikwechsel zeigt die Tuer nach ROOM1031 den Satz statt des Raumwechsels
-    pos(_r "[msgtext] room=1041 id=41 \"I have to rescue John! He is in danger!\"" _p9)
-    set(_tuer_nach FALSE)
-    if(_p9 GREATER _p8 AND _p8 GREATER -1)
-        set(_tuer_nach TRUE)
+    # Integration P -> Q: nach Kartenschluss + Bit 97 sieht Spur Q die Flanke und startet ihre Montage (elzazombies_r39.c)
+    pos(_r "[elzazombies-r39] Flanke (9,97) 0->1 in ROOM1041" _p9)
+    pos(_r "[elzazombies-r39] Montage startet in ROOM1041" _p10)
+    set(_montage FALSE)
+    if(_p9 GREATER _p6 AND _p6 GREATER -1 AND _p10 GREATER _p9)
+        set(_montage TRUE)
     endif()
-    pruef_wahr(_tuer_nach "nach Bit 97 + MAIN01: Tuer 1041 -> 1031 = \"I have to rescue John! He is in danger!\" (Position ${_p9})")
+    pruef_wahr(_montage "nach Kartenschluss + Bit 97: Flanke und Montage der Spur Q (Positionen ${_p9}/${_p10})")
     pruef(_r "ROOM1041: Panikphase (Bit 97) -> Tuer Slot 1 -> Text msg 41")
     pruef_nicht(_d "loaded room1031.rdt")
     if(EXISTS "${_lauf}/karte.bmp")

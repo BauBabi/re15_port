@@ -40,6 +40,7 @@
 #include "re15_map_hint.h"
 #include "re15_johnruf_r39.h"
 #include "re15_tuersperre_r39.h"
+#include "re15_elzazombies_r39.h"     /* Integration: Spur Q fuer diese P-Riegel abgeschaltet */
 #include "re15_stimmen_pegel_r39.h"
 
 #include <math.h>
@@ -907,6 +908,10 @@ static int teil_pegel(int argc, char **argv)
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "";
+    /* Diese Riegel pruefen Spur P allein (Stand vor Spur Q, Pruefhaken elzazombies_r39.c @re15_elzazombies_r39_enable): sonst
+     * startet Q auf jede hier gesetzte Flanke (9,97) ihre Montage. Die Kette P -> Q pruefen integration_r39_elzazombies_kette
+     * (echter Ruf) und integration_r39_johnruf1041_a. */
+    re15_elzazombies_r39_enable(0);
     if (!strcmp(teil, "pegel"))          return teil_pegel(argc, argv);
     if (!strcmp(teil, "texte"))          teil_texte();
     else if (!strcmp(teil, "programme")) teil_programme();
