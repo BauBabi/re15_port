@@ -6,6 +6,12 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 14:51: Release-Lauf v0.8.27 (13:23) bei Nutzer-Nachtrag 17 im Linux-Schritt per TaskStop beendet (Container
+  gestoppt; Windows/Android waren gebaut). Nachtrag 17 (6 Punkte) + Antwort "alles bleibt" auf die Notes-Fragen umgesetzt im
+  Baum r39_n17 (868bb7b2, ff nach master): RUF1041 erst mit Herzschluessel (9,64); ein Ruf; Elzas Geste = ROOM10B1 sub04
+  @0x019BA..@0x019D5 (Spieler-Overlay aus ROOM1031 rec0 geliehen); 1141 MAIN01 bis zum Entriegeln (4,0xC3), MAIN Play beim
+  Betreten gesperrt; door_sound.wav (12c83b96, Nutzer-Datei) statt DOOR0F; SCHUETZE39 Salve zuerst. Gezielt 948/952 +
+  5/5 nach Riegel-Anpassung. Hauptbaum-exe 14:50 + Smoke gruen. Baum r39_n17 entfernt. Naechster Schritt: Release neu.
 * 2026-10-19 13:22: MASTER 833b29f7 = Integration (P NB2+NB3, Q NB3, T, 11C0 ohne Stimme, Riegel P+Q, knall bildgleich
   316bf8b1). Windows: alle 913 unit_/prop_/probe_ + 92 integration_ gruen (979/980 12:38-13:04, knall nachgezogen 3/3,
   26/26 Stimmen/Musik 13:08-13:19). Hauptbaum-exe 13:20 + Smoke gruen (Titel "Ver.0.8.26 dev", 1030, EXIT_AT). Baeume
