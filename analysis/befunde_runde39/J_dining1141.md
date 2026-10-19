@@ -910,3 +910,38 @@ Werkzeug `j39n3/lauf.sh` (= `J39abn2/lauf.sh` der Abnahme, eigene exe-Kopie `re1
   Merge mit Ks rbj_resolve_slot). Bilder `J_belege/nb3_m1_vorher_r2_F6280-6308.png` (vorher: F6297..F6306 Arm mit Pistole auf
   John) und `J_belege/nb3_m1_nachher_r2_F6264-6308.png` (nachher: F6268 Balken, F6271..F6280 Senken, F6297..F6308 Elza neutral
   John zugewandt).
+
+### 10.6 Je Mangel / Auftrag: Ursache - Messung vorher - Beleg - Aenderung - Messung nachher
+| Punkt | Ursache (gemessen) | vorher | Beleg | Aenderung | nachher |
+|---|---|---|---|---|---|
+| M1 (Punkt 8) | ENTRIEGELN39 setzte Cut_chg 8, Pad-Sperre und Pos_set/Member_set(4) Elzas im selben Takt; der Port haelt im Skript-Modus (player_mode 2) die ganze Ziel-FSM an, die Waffe blieb oben und zeigte nach Member_set auf John | v_r2 F6296..F6306, v_m2 F4086..F4096: je 11 Bilder `pst=1 mo=215 cam=8` | ROOM11C0 sub03 @0x01B06/@0x01B0A/@0x01B14/@0x01B18; FUN_80030444 @0x800304f4..@0x8003051c; Dispatcher `bltz` @0x80031c78; HOLD @0x800331e4/@0x800331ec/@0x80033200, Messer @0x80035128/@0x80035130/@0x80035144, Rueckstoss @0x80033560/@0x80033600/@0x8003364c; Umsetzer im Task-Takt @0x80029dd8/@0x80029e14 | Form: Balken + Sperre + Sleep 30 VOR dem Schnitt; Mechanismus: Ziel-FSM unter der Sperre mit Pad 0 (ROOM1141 Phase H, ab dem Bild nach dem Setzen) | zielen: Sperre 30 Bilder vor dem Schnitt, 9 Bilder SENKEN, 0 Bilder Cut 8 mit Waffe, Schnittbild neutral; n_r2 (echter Tod): 0 statt 11 |
+| H4 | die J-Integrationsriegel setzten ihre Umgebung nur ueber re15_start_spiel; fremde RE15_*-Variablen des Aufrufers liefen mit in die exe | Abnahme 2 H4 (Code gelesen) | VERTRAG Abschnitt 2 | `r39j_umgebung_leeren()` (alle RE15_* aus `cmake -E environment`) in allen vier J-Skripten | 10.5 (Lauf mit feindlicher Umgebung) |
+| H7 | Kommentar "s_leihe_ok bleibt" gegen `s_leihe_ok = 0` | Abnahme 2 H7 | - | Kommentar an den Code | - |
+| Merge | master 2963579d (Spur K): rbj_resolve_slot belegt fuer Slots ohne Record keinen Cache-Platz | - | Js Leihe steht in re15_actor_rbj_anim/_skel VOR rbj_resolve_slot (enemy_common.c), wirkt also unabhaengig vom Cache | Merge 0e486aa6 | n_r2 F6504 "RBJ ROOM1171 Record 1 Clip 2 geliehen (96 Bilder, 3 Clips)"; Unit phase_h prueft re15_actor_rbj_anim(John) Clip 2 = 96 Bilder (10.5) |
+
+### 10.7 OFFEN (Nachbesserung 3)
+- **Geltungsbereich der Ziel-FSM unter der Sperre:** der Port haelt in ALLEN anderen Raeumen einen zielenden Spieler unter
+  (2,7) weiter an (player_common.c Pad-Zweig nur bei player_mode != 2); das Original senkt ueberall nach demselben Mechanismus
+  (FUN_80030444 + HOLD, 10.2) - z. B. Leon nach dem Tod der Parkplatz-Gorillas (ROOM11C0 sub03). Diese Nachbesserung beschraenkt
+  sich auf ROOM1141 Phase H (Riegel `senken` Fall 4 haelt den Geltungsbereich fest). Fuer eine spaetere Runde: den Haken ohne die
+  Raum-Bedingung (re15_dining_r39_ziel_senken) allgemein machen - braucht die volle Suite (alle Szenen, die nach einem Kampf
+  beginnen).
+- **Randfall Nachladen/Hieb im letzten Augenblick:** Nachladen (Clip 0x0D, 32 Bilder) und Messerhieb (Clip 7, 25 Bilder) testen
+  R1 nicht und spielen erst aus, dann senkt die FSM (10 Bilder). Beginnt eines davon in den letzten ~12 (Nachladen) bzw. ~5 (Hieb)
+  Bildern vor der Sperre, ist zu Beginn von Cut 8 noch das Ende des Senkens zu sehen (bis Plc_dest TURN 11 Bilder nach dem
+  Schnitt). Das ist die Original-Form (ROOM11C0 sub03 wartet ebenfalls fest 30 Bilder); ein Warten auf "Spieler neutral" gibt es
+  im Skript-Satz des Originals nicht. Gemessen nur der Halten-, Messer- und Rueckstoss-Fall.
+- **Ein Bild Unterschied am Sperr-Beginn:** im Setz-Bild laeuft im Original der Dispatcher noch mit ungekapptem Wort (Drehen im
+  Halten moeglich), der Port haelt den Pad-Zweig ab demselben Bild an (vorbestehende Port-Regel player_mode 2); das Senken beginnt
+  in beiden im Bild danach.
+- Weiter offen aus 9.7: gemeinsame Dateien ausserhalb VERTRAG 1.3 - jetzt zusaetzlich engine/src/player_common.c (+7, nur
+  ROOM1141 Phase H); E-Riegel (unit_r39_gegner_1141_ablauf1141, integration_r39_gegner_1141) in der Fassung dieses Zweigs
+  uebernehmen (H3); Spieler-Plc_motion(2,c) als W-Bank-Clip nur in ROOM1141.
+
+### 10.8 Fuer den Nutzer (Nachbesserung 3)
+- **Elza zielt noch, wenn die Gorillas sterben:** Die Szene beginnt jetzt wie im Original nach einem Kampf (dieselbe Form wie bei
+  Leon und Ada auf dem Parkplatz): zuerst kommen die schwarzen Balken und Elza kann sich nicht mehr bewegen; haelt man die
+  Zieltaste noch, senkt sie dabei ihre Waffe. Eine Sekunde spaeter schneidet die Kamera auf Elza und John - Elza steht ruhig da und
+  richtet die Waffe nicht mehr auf John. Wer die Taste nicht haelt, merkt nur, dass die Balken etwas frueher kommen.
+- Keine neuen Dateien unter shared_assets/, keine Sprachdateien, keine Entscheidungsfrage. Neue Belegbilder unter
+  analysis/befunde_runde39/J_belege/.
