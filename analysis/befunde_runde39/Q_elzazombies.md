@@ -738,7 +738,26 @@ scratchpad/nb3/lauf.sh, Laufordner scratchpad/nb3/runs/<lauf>, Shell ohne RE15_*
   Nachbarn bei (20218,25732)).
 
 ### 10.5 Tests (Nachbesserung 3)
-* (Lauf gestartet 11:16, Ergebnis folgt)
+* Neue Riegel (tests/unit/probes/r39_elzazombies.cmake): unit_r39_elzazombies_altstand (Karte der Abnahme M10 ohne (9,96) ->
+  1060 ohne Gegner; 10E0 lebt -> bleibt in 10E0; Gegenprobe (9,96)=1 -> 4 Kopien; re15_r39q_leon_umzug setzt (9,96) und die
+  Kopie-Bits), unit_r39_elzazombies_oben (Elza 1061 + Leon 1060 von oben: Ostseiten-Lagen, im Spawn-Bild kein Haltebit, nach dem
+  ersten KI-Takt initialisiert, ab Bild 2 gehalten, 200 Bilder still, frei am Ende der Treppe A mit 5525/5592 >= 4591, naeher,
+  HP 100; 10C1-Tuer: Westseite, sofort frei, 5100), integration_r39_elzazombies_altstand (echte exe, Karte M10: Bild 90 ohne
+  Gegner; mit (9,96): 4), integration_r39_elzazombies_oben (echte exe, Weg von oben Leon + Elza: Ostseite, 0 Bilder mit st=0,
+  42/37 Bilder gehalten in Schnitt 2, Abstand 5592/5525, kein Griff, HP 100 bis Bild 700, Bild ankunft_oben.ppm).
+  Gegenprobe der Pruefmuster am alten Lauf v_leon_oben: st=0 in 500 Zeilen, 0 Bilder "cam=2 + g=20", gr=1 in 100 Zeilen = rot.
+* Nachgezogen: unit leon_nach1060 (Zustand nach der Montage mit (9,96); ohne (9,96) keine Kopie), leon_* ((9,96) nach dem Umzug,
+  mit Modul aus 0), test_r36_kartenbits k_port[] + (9,96) ("Bit  96 ... im Original frei"), integration_r35_cut1150 Teil D
+  (kein `Leon: Nachspawn 1060`).
+* GEZIELTER LAUF (Bau 9c727645 = Code-Stand bab5a6b9 + Riegel 8c203171; `-j 4 --timeout 1500`, 11:16:17-11:39:13), Regex woertlich:
+  `^(unit_|prop_|probe_)|r39_elzazombies|^integration_r35_cut1150$|^integration_r36_szene1150$|^integration_r38_montage$|^integration_r37_zombieaktiv$|^integration_r39_hund1121$|^integration_r38_kleinkram_irons$|^integration_r37_elzaems_leon10c0kraehe$|^integration_r37_elzaems_elza10c1kraehe$|^integration_r33_speichern$|^integration_r36_elza_irons$`
+  -> "100% tests passed, 0 tests failed out of 911" (Total Test time (real) = 1375.68 sec), darunter alle 8
+  integration_r39_elzazombies_* (kette, knall, treppe, durch, ohne, leon, altstand, oben), integration_r35_cut1150 (613 s),
+  integration_r36_szene1150, integration_r38_montage, integration_r37_zombieaktiv, integration_r39_hund1121. Danach lag in
+  build/platform/pc nur re15_pc.exe.
+* Danach nur Kommentare in elzazombies_r39.c (INIT-Adresse 0x80100688 / @0x80100704) -> Neubau, `ctest -R
+  "^unit_r39_elzazombies|^unit_r36_kartenbits$|^integration_r39_elzazombies_(altstand|oben|treppe)$" -j 4` -> "100% tests passed,
+  0 tests failed out of 19".
 
 ### 10.6 Je Mangel (Ursache, Messung vorher, Beleg, Aenderung, Messung nachher)
 * MANGEL 1 - alte Leon-Spielstaende nach Irons' Tod bekamen in ROOM1060 vier Zombies aus dem Nichts

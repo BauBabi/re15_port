@@ -1018,7 +1018,8 @@ static void halt_loesen(void)
  * Original den GANZEN Takt: STAGE1.BIN `lbu v0,9(a0)` @0x80100450 / `andi v0,v0,0x20` @0x80100458 / `bne v0,zero,0x80100658`
  * @0x8010045c springt nach @0x80100658 — hinter Distanz (SquareRoot0 @0x801004ac), Schwerkraft (`jal 0x8001bd60` @0x80100514),
  * Steuerung (`jal 0x80039e7c` @0x80100538), den Zustands-Dispatch (`jalr v0` @0x80100588 ueber die Tabelle @0x8011f7b4[entity+0x4],
- * Eintrag [0] = INIT) und die Folgeaufrufe @0x801005dc..@0x80100650; es bleibt nur der Schwanz `jal 0x8001b064` @0x8010066c
+ * Eintrag [0] = 0x80100688 = INIT, setzt `+0x4 = 1` @0x80100704) und die Folgeaufrufe @0x801005dc..@0x80100650; es bleibt nur
+ * der Schwanz `jal 0x8001b064` @0x8010066c
  * (Schatten, RE15_FUN_CATALOG).
  * Vor dem ersten Takt gesetzt laeuft der INIT nie: gemessen st=0, hp=0, die Pose bleibt die nie berechnete = STEIF FLACH
  * LIEGEND (Dossier 10.1, v_leon_oben Bild 460/480). Das Original haelt SICHTBARE Gegner nur, nachdem sie gelaufen sind: ROOM1141
@@ -1044,7 +1045,8 @@ static void halten_1061(void)
         for (int b = 0; b < RE15_R39Q_N_10E1; b++) if (a->em_flag_id == BIT_1061(b)) kopie = 1;
         if (!a->active || !a->type || !kopie) continue;
         if (auf_etage)          a->grid_id = (uint8_t)(a->grid_id & ~RE15_AI_GRID_SKIP);
-        else if (a->state != 0) a->grid_id = (uint8_t)(a->grid_id | RE15_AI_GRID_SKIP);   /* erst nach dem INIT (NB3) */
+        else if (a->state != 0) a->grid_id = (uint8_t)(a->grid_id | RE15_AI_GRID_SKIP);   /* erst nach dem INIT (NB3): state = +0x4,
+                                                                                            * INIT @0x80100688 setzt `+0x4 = 1` @0x80100704 */
     }
     if (auf_etage) {
         s_halt_1061 = 0;
