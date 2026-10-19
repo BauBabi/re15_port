@@ -74,6 +74,7 @@
 #include "re15_funk10f1_r39.h" /* Runde 39 Spur I: Funkszene ROOM10F1, Ereignis 27 (funk10f1_r39.c) */
 #include "re15_parkplatz_r39.h" /* Runde 39 Spur O: Tuersperre ROOM11C0 im Gorilla-Kampf (parkplatz_r39.c) */
 #include "re15_hund1121_r39.h" /* Runde 39 Spur R: Hund durchs Fenster ROOM1121, Ereignis 30 (hund1121_r39.c) */
+#include "re15_elzazombies_r39.h" /* Runde 39 Spur Q: Elza-Zombie-Durchbrueche, Ereignis 30 (elzazombies_r39.c) */
 
 scd_vm_t g_scd;
 
@@ -672,6 +673,7 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_dining_r38_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 38 Spur F: 1140/3, 1141/5+6, 1021/6, 1131/29 */
     if (!pc) pc = re15_funk10f1_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur I: 10F1/27 Funkszene */
     if (!pc) pc = re15_hund1121_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur R: 1121/30 Hund */
+    if (!pc) pc = re15_elzazombies_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur Q: 1041/1061/1031 Ereignis 30 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -745,10 +747,12 @@ void scd_vm_tick(void)
      * ROOM1040s Schalter tat beim Druecken gar nichts (Nutzer-Report). */
     /* Runde 35 Spur L: waehrend eines Montage-Schritts in einem fremden Raum (irons_tod_1150.c) bleibt
      * dessen sub01 aus (ROOM11C0 sub01 @0x01824 wuerde sonst die Ada-Szene verbrauchen). */
-    if (!s_vm_room_init && s_current_rdt && s_current_rdt->sub_scd[1] && !re15_irons_tod_sub01_gesperrt())
+    if (!s_vm_room_init && s_current_rdt && s_current_rdt->sub_scd[1] && !re15_irons_tod_sub01_gesperrt() &&
+        !re15_elzazombies_r39_sub01_gesperrt())   /* Runde 39 Spur Q: Montage-Schritt 1061/1031 */
         scd_thread_reseed(1, s_current_rdt->sub_scd[1]);
     if (!s_vm_room_init) re15_irons_tod_tick();   /* Runde 35 Spur L: Signal (5,12) -> Irons' Arm faellt */
     if (!s_vm_room_init) re15_elza_r36_tick();    /* Runde 36 Spur L: verzoegerte Anker-Toene (re15_elza_r36.h) */
+    if (!s_vm_room_init) re15_elzazombies_r39_tick();   /* Runde 39 Spur Q: Flanke (9,97), Montage, Halten 1061 */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
 
