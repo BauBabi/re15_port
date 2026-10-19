@@ -68,7 +68,7 @@ void re15_johnruf_r39_install(uint16_t room_id)
     s_xa_vol = RE15_R39P_XA_NORMAL;       /* RE2: jeder Raum-Skript-Init setzt 120 (FUN_80052f3c @0x80053014/@0x80053038) */
     s_karte_pc = NULL;
     s_vm_tick_aufbau = g_scd.tick_count;   /* NACH dem Init-Lauf, VOR jedem Spielbild-Lauf (Form cut_10f0.c) */
-    re15_tuersperre_r39_install(room_id);  /* Nachbesserung 1: Texte 1041/41, 1051/40, 10B1/40 + Sperren (re15_tuersperre_r39.h) */
+    re15_tuersperre_r39_install(room_id);  /* Texte 1041/41, 1051/40 + Sperren; 11B1 mit Original-msg 12 (re15_tuersperre_r39.h) */
 
     if (raum == RE15_R39P_RAUM_1041) {
         re15_msg_install_text((unsigned char)RE15_R39P_MSG_SATZ, k_r39p_msg40, sizeof k_r39p_msg40);

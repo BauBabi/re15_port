@@ -7,6 +7,8 @@
  *    "I have to rescue John! He is in danger!". Auch bei der Tür 1051 zu 10A1."
  *   "Außerdem möchte ich das in Elzas Szenario die Tür im ROOM 10B1 ausnahmslos IMMER geschlossen ist. auch wenn sie nach
  *    Sherry sucht."
+ *   KORREKTUR (2026-10-19, nach Nachbesserung 2): "Ah, ich meinte die Tür in Raum 11B1, nicht 10B1, die sowieso geschlossen ist ohne Strom. Einfach noch schnell hinzufügen."
+ *   -> gesperrt wird Elzas Parkplatz-Tuer ROOM11B1 -> ROOM11C1; 10B1 bleibt wie ausgeliefert (siehe unten).
  *
  * BELEGT IST DIE FORM (RE1.5 hat diese Sperren nicht):
  *   - Tuer -> Text = Aot_reset des Tuer-Slots auf sce 1 MESSAGE (LAB_80040738: rec[0] = pc[2] @0x80040764, rec[1] =
@@ -21,7 +23,16 @@
  *     Die 10B1-Szene (sub04 @0x01A8E `47 01`) zeigt deshalb den Text statt des Raumwechsels, ohne geaenderte Szenen-Bytes.
  *   - Texte: gen/tuersperre_r39.inc (tools/r39_johnruf/tuersperre_bauen.py, Form je Zeile im Werkzeugkopf).
  *
- * WELCHE TUER IN 10B1: ROOM10B1 hat zwei Uebergaenge - Slot 0 @0x016D2 = die Leiter zum Dach (ROOM1171) und Slot 1
+ * WELCHE TUER IN 11B1: main00 @0x00F9C Door_aot_set Slot 1 -> Raum 0x1C = ROOM11C1 (Parkplatz). Die einzige Tuer des
+ *   Raums, die "ohne Strom ohnehin zu" ist: sub01 (je Bild) @0x0119C `06 00 4a 00` @0x011A0 `21 04 f3 00` Ck(4,0xF3)==0 ->
+ *   @0x011C0 `46 01 01 31 0e 00 ff ff 00 00` (Slot 1 -> msg 14 "It's too dark to see anything...I must find way to
+ *   activate the energy."; dieselbe Zeile fuer Item 4, Rolltor 7, Werkstatt-Tuer 8). Mit Strom jetzt dieselbe Zeile mit
+ *   msg 12 @0x179F "The door is locked." (Original-Text der Werkstatt-Tuer, sub00 @0x0112A Aot_set Slot 8). Andere Wege
+ *   bleiben: Slot 0 @0x00F56/@0x00F7A, Schacht Slot 5 @0x00FFA -> ROOM1261 (offen ab (3,0x83), sub00 @0x010FA).
+ *   ROOM11C1 ist eine Sackgasse (main00 @0x016AE einzige Tuer -> 0x1B = 11B1, sub00 fuenf Hunde Typ 0x20, keine Items,
+ *   kein Nachrichtenblock) - die Sperre kann Elza nirgends einschliessen; Leon (ROOM11B0) bleibt unberuehrt.
+ *
+ * (Historie) WELCHE TUER IN 10B1: ROOM10B1 hat zwei Uebergaenge - Slot 0 @0x016D2 = die Leiter zum Dach (ROOM1171) und Slot 1
  *   @0x016F2 = der Kanaldeckel (ROOM1261 "Sewer Passage"). Der einzige, der sich in der Sherry-Szene oeffnet, ist Slot 1
  *   (sub01 @0x01816 Ck(3,0x82) + @0x0181E Cut 7 -> @0x01824 Evt_exec sub04 "John, wait! There's still a little girl
  *   trapped in there! ... we can go through the sewer tunnels. Follow me." -> @0x01A8E Aot_on Slot 1).
@@ -45,6 +56,13 @@
 #define RE15_R39P_TS_ZIEL_10B1   0x26u  /* @0x016F2+23                                                                      */
 #define RE15_R39P_TS_MSG_10B1    40     /* erste Port-Id hinter den Original-Ids 0..5 (msg_sec 0x1AB8), wie 11C0/1051       */
 #define RE15_R39P_TS_SUB_10B1    4      /* ROOM10B1 sub01 @0x01824 `04 ff 18 04` = die Szene der Sherry-Suche               */
+#define RE15_R39P_TS_RAUM_11B1   0x11B1u
+#define RE15_R39P_TS_SLOT_11B1   1      /* ROOM11B1 main00 @0x00F9C `3b 01 ..` pc[1]; Ziel Raum 0x1C = ROOM11C1 (Parkplatz)  */
+#define RE15_R39P_TS_ZIEL_11B1   0x1Cu  /* @0x00F9C+23                                                                      */
+#define RE15_R39P_TS_MSG_11B1    12     /* ROOM11B1 msg 12 @0x179F "The door is locked." (Original; sub00 @0x0112A Slot 8)   */
+#define RE15_R39P_TS_MSG_DUNKEL  14     /* ROOM11B1 msg 14 @0x17E1 "It's too dark..." (sub01 @0x011C0, ohne Strom)          */
+#define RE15_R39P_TS_STROM_BANK  4      /* ROOM11B1 sub01 @0x011A0 `21 04 f3 00` Ck(4,0xF3): Strom an                        */
+#define RE15_R39P_TS_STROM_BIT   0xF3u
 
 /* ---- Satzform (Aot_reset-Zeile) ------------------------------------------------------------------------------------- */
 #define RE15_R39P_TS_SCE_MESSAGE 1      /* PTR_8007469c[1] = 0x80043084                                                    */
@@ -54,7 +72,7 @@
 
 /* ---- Haken -------------------------------------------------------------------------------------------------------- */
 /* Raumaufbau NACH dem Init-Lauf (aus re15_johnruf_r39_install: scd_room_setup.c Blockende + main.c Boot-/CONTINUE-Weg):
- * Texte einsetzen, Sperren pruefen (1041/1051 in der Panikphase; 10B1 zurueckgestellt, tuersperre_r39.c k_sperren). */
+ * Texte einsetzen, Sperren pruefen (1041/1051 in der Panikphase; 11B1 immer, solange Strom da ist). */
 void re15_tuersperre_r39_install(uint16_t room_id);
 /* Je Spielbild (aus re15_johnruf_r39_tick, game_step_common.c VOR dem AOT-Scan): Panikphase begonnen (Set(9,97)=1 in RUF1041,
  * Elza steht in 1041) -> Tuer im selben Raum sofort Text (Form ROOM11B1 sub01 je Bild). */
@@ -63,7 +81,7 @@ void re15_tuersperre_r39_tick(void);
 const uint8_t *re15_tuersperre_r39_evt_exec(uint16_t room_id, uint8_t sub_id, const uint8_t *orig);
 
 /* ---- Pruefhaken (Riegel, kein Spielverhalten) ---------------------------------------------------------------------- */
-int  re15_tuersperre_r39_anker_ok(unsigned room_id);              /* Tuer-Satz (und fuer 10B1 die Szene) wie ausgeliefert */
+int  re15_tuersperre_r39_anker_ok(unsigned room_id);              /* Tuer-Satz (11B1: und msg 12) wie ausgeliefert      */
 int  re15_tuersperre_r39_gesperrt(unsigned room_id);              /* 1 = Slot des Raums ist gerade der Sperrtext         */
 const uint8_t *re15_tuersperre_r39_text(unsigned room_id, int *out_len);   /* Sperrtext des Raums */
 const uint8_t *re15_tuersperre_r39_szene(int *out_len);                   /* Programm SZENE10B1 */

@@ -3,8 +3,8 @@
  * Panikphase, der Kanaldeckel in 10B1 immer). Herleitung und alle Konstanten: include/re15_tuersperre_r39.h; Texte, Szenen-
  * Huelle und Anker mit Listing: engine/src/gen/tuersperre_r39.inc (tools/r39_johnruf/tuersperre_bauen.py); Dossier
  * analysis/befunde_runde39/P_johnruf1041.md Abschnitt 8. Muster: parkplatz_r39.c (Spur O), tuer1060_1040.c (Runde 35 L).
- * Nachbesserung 2 (Orchestrator): die Saetze sind einfache Raumtexte ohne Stimme (Nachtrag 13); der Kanaldeckel 10B1 ist
- * zurueckgestellt (k_sperren, Abnahme 1 M1).
+ * Nachbesserung 2 (Orchestrator): die Saetze sind einfache Raumtexte ohne Stimme (Nachtrag 13). Nachbesserung 3: statt
+ * des Kanaldeckels 10B1 (Abnahme 1 M1: Softlock) Elzas Parkplatz-Tuer ROOM11B1 (Nutzer: "11B1, nicht 10B1").
  */
 #include "re15_tuersperre_r39.h"
 
@@ -37,10 +37,11 @@ typedef struct {
     uint16_t raum;
     uint8_t  slot;
     uint8_t  msg;
-    uint8_t  immer;                 /* 1 = ohne Bedingung (10B1), 0 = nur in der Panikphase (Bit 97) */
-    const uint8_t *text;
+    uint8_t  immer;                 /* 1 = ohne Panik-Bedingung (11B1), 0 = nur in der Panikphase (Bit 97) */
+    const uint8_t *text;            /* NULL = Original-Nachricht des Raums (11B1 msg 12), nichts einzusetzen */
     size_t   text_len;
     uint32_t anker_off, anker_len, anker_fnv;
+    uint8_t  bed_bank, bed_bit;     /* bed_bank != 0: nur solange dieses Flag steht (11B1: Strom (4,0xF3)) */
 } sperre_t;
 
 static const sperre_t k_sperren[] = {
@@ -50,11 +51,17 @@ static const sperre_t k_sperren[] = {
     { RE15_R39P_TS_RAUM_1051, RE15_R39P_TS_SLOT_1051, RE15_R39P_TS_MSG_1051, 0, k_r39p_ts_msg_rettung,
       sizeof k_r39p_ts_msg_rettung,
       RE15_R39P_TS_ANKER_T1051_OFF, RE15_R39P_TS_ANKER_T1051_LEN, RE15_R39P_TS_ANKER_T1051_FNV },
-    /* ROOM10B1 Kanaldeckel (Nachtrag 12c, immer = 1) ZURUECKGESTELLT nach Abnahme 1 M1: der Abstieg vom Dach ist einseitig
-     * (ROOM10B1 SCA @0x00EE4: Zellen 31 @0x01070 und 18 @0x00FD4 nur "hinab", keine Band-1-Zelle "hinauf"; Aufstieg nur mit
-     * Bit 0 @0x8002d544 `andi v0,s0,0x1` / @0x8002d548 `beq v0,zero,0x8002d634`), und Slot 1 ist der einzige Ausgang des
-     * unteren Teils -> ein immer geschlossener Deckel sperrt Elza ein. Ohne Eintrag laeuft 10B1 wie ausgeliefert (sub04
-     * @0x01A8E `47 01`); die Huelle SZENE10B1 bleibt fuer die Entscheidung des Nutzers im Generator (90e50a2a). */
+    /* ROOM11B1 Elzas Parkplatz-Tuer (Nachtrag 12c; Nutzer-Korrektur 2026-10-19 "die Tuer in Raum 11B1, nicht 10B1, die
+     * sowieso geschlossen ist ohne Strom"): main00 @0x00F9C Slot 1 -> ROOM11C1. Ohne Strom macht sub01 @0x011A0
+     * Ck(4,0xF3)==0 -> @0x011C0 `46 01 01 31 0e 00 ff ff 00 00` den Slot je Bild selbst zum Text msg 14 (bed_bank: dann
+     * nichts); mit Strom dieselbe Zeile mit msg 12 = Original "The door is locked." @0x179F (Werkstatt-Tuer, sub00
+     * @0x0112A). ROOM11C1 ist eine Sackgasse (main00 @0x016AE, sub00 fuenf Hunde, keine Items) - kein Softlock. */
+    { RE15_R39P_TS_RAUM_11B1, RE15_R39P_TS_SLOT_11B1, RE15_R39P_TS_MSG_11B1, 1, NULL, 0,
+      RE15_R39P_TS_ANKER_T11B1_OFF, RE15_R39P_TS_ANKER_T11B1_LEN, RE15_R39P_TS_ANKER_T11B1_FNV,
+      RE15_R39P_TS_STROM_BANK, RE15_R39P_TS_STROM_BIT },
+    /* ROOM10B1 (Kanaldeckel): kein Eintrag - gemeint war 11B1 (oben). Ein immer geschlossener Deckel waere zudem ein Softlock
+     * (Abnahme 1 M1: Abstieg vom Dach einseitig, ROOM10B1 SCA @0x00EE4 Zellen 31/18 nur "hinab", Aufstieg nur mit Bit 0
+     * @0x8002d544 / @0x8002d548). 10B1 laeuft wie ausgeliefert (sub04 @0x01A8E `47 01`). */
 };
 #define N_SPERREN ((int)(sizeof k_sperren / sizeof k_sperren[0]))
 
@@ -87,6 +94,8 @@ int re15_tuersperre_r39_anker_ok(unsigned room_id)
     if (!bereich_ok(s->anker_off, s->anker_len, s->anker_fnv)) return 0;
     if (s->raum == RE15_R39P_TS_RAUM_10B1 &&
         !bereich_ok(RE15_R39P_TS_ANKER_S10B1_OFF, RE15_R39P_TS_ANKER_S10B1_LEN, RE15_R39P_TS_ANKER_S10B1_FNV)) return 0;
+    if (s->raum == RE15_R39P_TS_RAUM_11B1 &&           /* der gezeigte Text ist die Original-Nachricht 12 des Raums */
+        !bereich_ok(RE15_R39P_TS_ANKER_M11B1_OFF, RE15_R39P_TS_ANKER_M11B1_LEN, RE15_R39P_TS_ANKER_M11B1_FNV)) return 0;
     return 1;
 }
 
@@ -104,6 +113,7 @@ int re15_tuersperre_r39_gesperrt(unsigned room_id)
 static void sperren(const sperre_t *s)
 {
     if (!s->immer && !panik()) return;                 /* 1041/1051: nur in der Panikphase */
+    if (s->bed_bank && !re15_game_flag_get(s->bed_bank, s->bed_bit)) return;   /* 11B1 ohne Strom: sub01 @0x011C0 (msg 14) */
     const re15_aot_t *a = &g_aot.slots[s->slot];
     if (!a->active || a->type != RE15_AOT_TYPE_DOOR) return;   /* schon Text oder vom Skript geaendert: nichts */
     if (!re15_tuersperre_r39_anker_ok(s->raum)) {
@@ -114,7 +124,7 @@ static void sperren(const sperre_t *s)
     /* = Aot_reset(slot, 1, 0x31, msg, 0xffff, 0): ROOM11B1 sub01 @0x011C0 / ROOM11A1 main00 @0x00FBC (Bytes im Kopf) */
     re15_aot_retype(s->slot, RE15_R39P_TS_SCE_MESSAGE, RE15_R39P_TS_SAT, (uint16_t)s->msg, (uint16_t)RE15_R39P_TS_MASKE, 0);
     s_zaehler[0]++;
-    if (s->immer) TS_LOG("ROOM%04X: Kanaldeckel Slot %u -> Text msg %u (immer zu)", (unsigned)s->raum, (unsigned)s->slot,
+    if (s->immer) TS_LOG("ROOM%04X: Slot %u -> Text msg %u (immer zu)", (unsigned)s->raum, (unsigned)s->slot,
                          (unsigned)s->msg);
     else          TS_LOG("ROOM%04X: Panikphase (Bit 97) -> Tuer Slot %u -> Text msg %u", (unsigned)s->raum,
                          (unsigned)s->slot, (unsigned)s->msg);
@@ -124,9 +134,9 @@ static void sperren(const sperre_t *s)
 void re15_tuersperre_r39_install(uint16_t room_id)
 {
     const sperre_t *s = sperre_fuer(room_id);
-    if (!s) return;                                    /* Leon (1040/1050/10B0) und alle anderen Raeume: nichts */
-    re15_msg_install_text(s->msg, s->text, s->text_len);   /* gilt an jedem Raumstart-Weg; der Teardown loescht Port-Ids */
-    {
+    if (!s) return;                                    /* Leon (1040/1050/11B0) und alle anderen Raeume: nichts */
+    if (s->text) {                                     /* Port-Text; 11B1 zeigt die Original-Nachricht 12 des Raums */
+        re15_msg_install_text(s->msg, s->text, s->text_len);   /* gilt an jedem Raumstart-Weg; der Teardown loescht Port-Ids */
         int d = re15_msg_compute_duration(s->text, s->text_len, 0);
         if (d > 0 && d < 65535) re15_msg_install_durations(s->msg, d);
     }
