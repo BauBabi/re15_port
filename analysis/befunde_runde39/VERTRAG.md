@@ -44,7 +44,7 @@ k_port[] ein (kleiner Haken, eine Zeile).
 
 ### 1.2 Nachrichten-Ids (Port-Text-Plaetze)
 Port-Ids liegen hinter den Original-Nachrichten eines Raums; vorhandene Port-Ids per grep `MSG_ID` (include/, gen/)
-ausschliessen. Zuteilung: **P**: 1041 Id 40 (Stimme room1041/main40.wav liegt), 1131 nur Stimmen ohne Text; **O**: 11C0 Id 40; **I**: 10F1 Ids 40-44; **J**: 1141 Ids 50-59 (40-49 hat Runde 38 F); **C**: 1000 nur, wenn
+ausschliessen. Zuteilung: **P**: 1041 Id 40 (Stimme room1041/main40.wav liegt) + Id 41 (Nachtrag 12), 1051 Id 40 (Nachtrag 12), 1131 nur Stimmen ohne Text; **O**: 11C0 Id 40; **I**: 10F1 Ids 40-44; **J**: 1141 Ids 50-59 (40-49 hat Runde 38 F); **C**: 1000 nur, wenn
 das Aufnahme-Modal einen eigenen Text braucht (Id 40). Alle anderen Spuren: nur vorhandene Nachrichten.
 Sprachdateien (synchro/) folgen der Message-Id (synchro/README.md) — eine Id, zu der der Nutzer schon eine WAV hat,
 nie umwidmen. Nutzer-Dateien unter synchro/ werden NIE umbenannt oder veraendert (Zuordnung im Code).

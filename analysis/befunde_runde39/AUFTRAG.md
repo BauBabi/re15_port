@@ -215,3 +215,20 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
   Durchbruch an "falls die Zombies nicht besiegt wurden" (die aus 10C1/1061) - Form so waehlen, dass der Ablauf spielbar
   bleibt (z.B. Durchbruch durchs Rolltor beim naechsten Betreten von 1041, solange diese Zombies leben), Leons Form 1040 als
   Vorbild, im Dossier "Fuer den Nutzer" in einfachen Worten beschreiben.
+
+## Nachtrag 12 des Nutzers (woertlich, 2026-10-19 zwischen 08:15 und 08:22)
+- "Aller letzte Ergänzungen - beim Musikwechsel, wenn Elza John retten soll, soll beim anklciken der Tür von ROOM 1041 zu Room 1031 kommen "I have to rescue John! He is in danger!". Auch bei der Tür 1051 zu 10A1."
+- "Außerdem habe ich mich entschlossen eine Angleichung zu machen der hereinbrechenden Zombies. Bei Irons Tod und Johns Hilferuf sollen die Zombies in beiden Szenarien aus den gleichen Türen brechen. Also bei Leon zusätzlich das Treppenhaus und bei Elza zusätzlich ROOM 1071."
+- "Außerdem möchte ich das in Elzas Szenario die Tür im ROOM 10B1 ausnahmslos IMMER geschlossen ist. auch wenn sie nach Sherry sucht."
+  Orchestrator (Lesart + Zuteilung):
+  - Spur P (Nachbesserung): in der Elza-Panikphase (Bank 9 Bit 97) an der Tuer ROOM1041 -> ROOM1031 und an der Tuer
+    ROOM1051 -> ROOM10A1 statt des Raumwechsels der Text "I have to rescue John! He is in danger!" (NUTZER-VORGABE,
+    Form wie die Tuersperren 1141/11C0 - Spur O parkplatz_r39.c ist in master); Port-Ids: 1041 = 41, 1051 = 40
+    (Sprachdateien spaeter room1041/main41.wav, room1051/main40.wav). Ausserhalb der Panikphase Tueren normal.
+  - Spur P (Nachbesserung): ROOM10B1 (Elza; Szene "There's still a little girl trapped in there!" / "...sewer tunnels.
+    Follow me.", msg_sec 0x1AB8) - die Tuer ist IMMER zu, auch bei der Suche nach Sherry (welche Tuer: im RDT belegen;
+    Text der Original-Sperrform des Raums bzw. RE1.5-Standard "It's locked."-Form belegen).
+  - Spur Q (Nachbesserung): Angleichung - bei Irons' Tod (Leon) und Johns Ruf (Elza) brechen die Zombies in beiden
+    Szenarien aus DENSELBEN Tueren: Leon zusaetzlich das Treppenhaus (Gegenstueck zu Elzas 10C1 -> Flur 1061 = Leon
+    10C0 -> 1060), Elza zusaetzlich ROOM1071 (Gegenstueck zu Leons 1070; Nachtrag 11 hatte 1071 gestrichen, jetzt
+    zusaetzlich). Liste je Szenario im Dossier gegenueberstellen.
