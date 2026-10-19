@@ -1183,7 +1183,8 @@ static int auswerten_ton(const char *pa, const char *pb)
     }
     if (g_bis >= 0) { printf("  Knall Bilder %d..%d (%d), Differenz-RMS max %.0f\n", g_von, g_bis, g_bis - g_von + 1, g_max);
                       if (g_bis - g_von + 1 >= 20 && g_max >= 1000) lang_ok++; }
-    PRUEF(gruppen == 2 && lang_ok == 2, "zwei hoerbare Knaelle (Knall-Bank Satz 0 Tuer, Satz 1 wie ROOM1030) in der Kette: %d Gruppen, "
+    PRUEF(gruppen == 2 && lang_ok == 2, "zwei hoerbare Knaelle (Knall-Bank Satz 0 Auftakt 1041; Ende 1061 Satz 0 vor der 1071-Tuer bzw. "
+          "Satz 1 wie ROOM1030 ohne 1071-Ueberlebende) in der Kette: %d Gruppen, "
           "%d >= 20 Bilder und RMS >= 1000",
           gruppen, lang_ok);
     free(a); free(b);
