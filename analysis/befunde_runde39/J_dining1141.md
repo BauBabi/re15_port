@@ -999,6 +999,8 @@ Cut 8 mit mo 215). Alles, was die Abnahme 3 als erfuellt bewertet hat, bleibt (R
 ### 11.0 Stand / Fortschritt
 - 08:16 Baum sauber auf ece3a8f9 (Abnahme 3), Abschnitt angelegt. Messordner scratchpad `J39n4/` (nicht committet).
 - 08:17-08:22 Messung vorher (Lauf v_rl2 = Abnahme-Lauf RL2 bytegleich, 11.1); waehrenddessen RE-Belege selbst disassembliert (11.2), Commit 0a7d8264 08:23.
+- 08:24 Generator + Bau gruen, 08:24-08:28 Lauf n_rl2 (11.4), 08:27-08:33 Riegel (Unit schnitt/programme, zielen nachladen), Bau 08:32, Unit schnitt gruen 08:33, wip 82320b2a 08:33 (Uhrzeiten aus Dateizeiten/git log).
+- 08:33:43-08:43:13 alle Unit-Riegel 856/856; 08:44:09-09:02:44 Integration gezielt 22/22 (11.5).
 
 ### 11.1 Messung vorher (Stand ece3a8f9 = Code e9f23f50, exe 05:15; Messordner scratchpad `J39n4/`, nicht committet)
 Werkzeug `J39n4/lauf.sh` (= `J39abn3/lauf.sh`, eigene exe-Kopie `re15_pc_j39n4_<name>.exe`, mit RE15_AUDIO_CAP_SYNC).
@@ -1057,7 +1059,6 @@ Werkzeug `J39n4/lauf.sh` (= `J39abn3/lauf.sh`, eigene exe-Kopie `re15_pc_j39n4_<
   alten Platz (Sleep 5 @+0x0440 beginnt im selben Takt wie vorher) - sein Ablauf ist bildgleich. Elza steht durch Member_set(4)
   schon zu John gedreht: der TURN kommt im ersten Bild an (Kegel 0x60) und geht wie bisher in Sub 6 ueber, nur 11 Bilder frueher.
 - Messer/Hieb: dieselbe Phase +6 (Messer-FSM, Hieb Clip 7); der Handler unterscheidet keine Waffenart - ein Hieb-Rest endet ebenso.
-- 08:24 Generator + Bau gruen, 08:24-08:28 Lauf n_rl2 (11.4), 08:27-08:33 Riegel (Unit schnitt/programme, zielen nachladen), Bau 08:32, Unit schnitt gruen 08:33, wip 82320b2a 08:33 (Uhrzeiten aus Dateizeiten/git log).
 
 ### 11.3 Umsetzung (Commit 82320b2a)
 | Teil | Aenderung | Datei / Beleg |
@@ -1088,6 +1089,46 @@ Keine neue Konstante: die Umstellung verschiebt eine vorhandene Original-Zeile (
   dieser Ueberblendung in den ersten Bildern nach dem Schnitt, nicht mit einem harten Wechsel. Der Port war hier schon bytegleich
   (re15_actor.h anim_frac/anim_blend_rate, "byte-true FUN_8001f3bc").
 
+### 11.5 Tests (gezielt, keine volle Suite im Spurbaum)
+- Neu: `unit_r39_dining1141_schnitt` (Teil `schnitt`: echte ENTRIEGELN39-Bytes ab dem Szenenbeginn +0x03FC als Ereignis-Faden,
+  R1 gehalten; je Fall Vorbedingung im Sperr-Bild, Schnitt 30 Bilder nach der Sperre (Sleep 30 @0x01B14), im Schnitt-Takt
+  Kommando 4 / Walk-Modus 9 / Ziel-Phase NONE, 40 Bilder Cut 8 ohne erhobene Waffe; Gegenprobe mit der Fassung der Nachbesserung 3):
+  | Fall | nachher (Cut 8 mit Waffe) | Gegenprobe Fassung NB3 |
+  |---|---|---|
+  | Pistole: Nachladen 3 Bilder vor der Sperre (= RL2) | 0 | 8 (= v_rl2 F4086..F4093) |
+  | Pistole: Nachladen 8 Bilder vorher (= RL) | 0 | 3 (= Abnahme 3 RL) |
+  | Pistole: Nachladen 1 Bild vorher (laeuft in den Schnitt-Takt) | 0; Magazin leer, Vorrat 0x15 50 -> 50 | 10 |
+  | Messer: Hieb 3 Bilder vorher | 0 | 1 |
+  | Messer: Ziehen 3 Bilder vorher (PL04W01 Clip 0x0D = 15 Bilder) | 0 | 0 (15 + 10 < 33) |
+  | Pistole: Halten (NB3) | 0 | 0 |
+  `schnitt: 0 Fehler`. Neu `integration_r39_dining1141_zielen_nachladen` (FALL=nachladen desselben Skripts). Erweitert:
+  `unit_r39_dining1141_programme` ("ENTRIEGELN39 NB4: Elzas Plc_dest TURN @+0426 direkt hinter Cut_chg 8 @+0408 / Work_set(1,0)
+  @+0416 / Member_set(4) @+0422, vor dem ersten Sleep @+042E ..., kein zweiter bis msg 51 @+0460"), Werkzeug `zielen`
+  (Schnittbild Kommando 4, Fall nachladen).
+- Alle Unit-Riegel (Code 82320b2a; 08:33:43..08:43:13):
+  `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -j 6 --timeout 600`
+  -> **"100% tests passed, 0 tests failed out of 856"** (570.04 sec). Danach nur Riegel-Verfeinerung (Messer ziehen, Vorrat;
+  5fe60d59): `ctest --test-dir re15_port/build -R "^unit_r39_dining1141" --timeout 600 -j 4` -> **"100% tests passed, 0 tests
+  failed out of 7"**.
+- Integration gezielt (Abnahme-3-Satz + neuer Riegel; 08:44:09..09:02:44), Regex `J39n4/regex_integ.txt`:
+  `ctest --test-dir re15_port/build -R "^(integration_r39_dining1141_d|integration_r39_dining1141_kampf|integration_r39_dining1141_zielen|integration_r39_dining1141_zielen_nachladen|integration_r38_dining1141_[wzdlsra]|integration_r39_gegner_1141|integration_r39_heliport1171_weg|integration_r36_elza_schuss|integration_r37_elzaems_elza1141|integration_r38_affen3|integration_r38_affen3_decke|integration_r38_affen3_tor|integration_r35_cut10f0|integration_r39_stimmen_1171|integration_r38_rekorder|integration_r38_elzaintro_stimme)$" -j 4 --timeout 3600 --output-on-failure`
+  -> **"100% tests passed, 0 tests failed out of 22"** (1114.81 sec; r39 d 351 s, kampf 307 s, zielen 268 s, zielen_nachladen 264 s,
+  r39_gegner_1141 298 s, r38 s 656 s; r38 a/d 0,1 s = Stellvertreter seit NB1).
+  - zielen_nachladen (lauf_8a5ce6d1): "Kampfende 4056, Sperre ab 4056, letztes Zielbild 4085, Schnitt 4086; SENKEN-Bilder 1; Cut 8:
+    40 Bilder, davon 0 mit Waffe; Schnittbild pst=4 mo=105", "Nachladen: im Sperr-Bild 1, Beginn 4053 (3 Bilder vor der Sperre)",
+    `zielen: 0 Fehler`. Gegenprobe des Werkzeugs auf Lauf v_rl2 (vorher): "Cut 8: 40 Bilder, davon 8 mit Waffe; Schnittbild pst=1
+    mo=215" -> `zielen: 1 Fehler`; auf n_rl2 (nachher) `0 Fehler`.
+  - zielen (Halten, lauf_7a76a508): "Kampfende 4050, Sperre ab 4050, letztes Zielbild 4059, Schnitt 4080; SENKEN-Bilder 9; Cut 8:
+    40 Bilder, davon 0 mit Waffe; Schnittbild pst=4 mo=105"; Bild `J_belege/nb4_zielen_halten_F4047-4140.png` (F4047 zielt,
+    F4053 Balken + Senken, F4059/F4065 neutral, ab F4083 Cut 8: Elza steht ruhig John zugewandt, F4104 msg 51) - der Normalfall
+    sieht aus wie vorher; der TURN kommt nur 11 Bilder frueher (Elza steht durch Member_set(4) schon zu John).
+  - D (Hauptriegel aller Nutzer-Punkte 1-9), kampf, r38-Riegel, E-1141, Weg nach 1171: unveraendert gruen.
+- Vertrag: geaenderte Pfade dieser Nachbesserung nur eigene (tools/r39_dining/programme_bauen.py, engine/src/gen/
+  dining_r39_programme.inc, tests/unit/test_r39_dining1141.c, tests/unit/probes/r39_dining1141.cmake, tests/integration/
+  test_r39_dining1141_zielen.cmake, Dossier, J_belege/nb4_*); keine gemeinsame Datei, keine neue Ressource (Bank 9 / Ids).
+  Riegel parallel-/Linux-fest: eigene exe-Kopie je Test (`re15_pc_r39j_zn_<id>`, der Glob `re15_pc_r39j_z_*` des Geschwister-
+  Riegels trifft sie nicht), eigener Laufordner, Umgebung des Aufrufers geleert (r39j_umgebung_leeren), keine .exe-Pfade.
+
 ### 11.6 Je Mangel: Ursache - Messung vorher - Beleg - Aenderung - Messung nachher
 | Mangel | Ursache (gemessen) | vorher | Beleg | Aenderung | nachher |
 |---|---|---|---|---|---|
@@ -1115,8 +1156,8 @@ Keine neue Konstante: die Umstellung verschiebt eine vorhandene Original-Zeile (
   Nachbesserung aendert keine gemeinsame Datei (nur Programm-Bytes, Generator, eigene Riegel).
 
 ### 11.8 Fuer den Nutzer (Nachbesserung 4)
-- **Elza laedt nach, wenn die Gorillas sterben:** Wer kurz vor dem Ende des Kampfs noch nachlud (oder mit dem Messer zuschlug
-  oder es zog), sah Elza zu Beginn des Gespraechs noch mit der Waffe auf John. Jetzt bekommt sie ihren ersten Befehl der Szene
+- **Elza laedt nach, wenn die Gorillas sterben:** Wer kurz vor dem Ende des Kampfs noch nachlud (oder mit dem Messer
+  zuschlug), sah Elza zu Beginn des Gespraechs noch mit der Waffe auf John. Jetzt bekommt sie ihren ersten Befehl der Szene
   (sich zu John drehen) genau im Bild des Kamerawechsels - so wie Leon nach den Parkplatz-Gorillas im Original. Die Waffen-
   Bewegung endet mit dem Schnitt; in den ersten drei, vier Bildern sieht man nur noch, wie ihre Arme weich nach unten gleiten
   (die Ueberblendung des Originals). Ohne diesen Sonderfall aendert sich nichts: Elza steht beim Schnitt wie bisher ruhig da.
