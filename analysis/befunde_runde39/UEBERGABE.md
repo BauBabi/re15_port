@@ -6,6 +6,14 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 08:50: Nutzer-Nachtrag 13 (a66578a6/92ad1685): Tuersatz "I have to rescue John!" = einfacher Text ohne Stimme wie Leons
+  "I have to get the Chief first..." (sperre1050_r37.c), 1141 msg 41 ebenso - in P-Baum nachgetragen (dc4bc297). Nutzer-Nachtrag 14
+  (832b68bd): Version im Titelbild statt "Sample Ver.2025.01.25" (TITLEU.TIM), automatisch je Release -> Spur T titelversion,
+  Baum auf 832b68bd, Lauf wf_ed6f367d-ac6 args {"welle": ["T"], "slots": 1, "max_nach": 1, "basis": "832b68bd"} (darf in
+  release/ NUR die Versions-Weitergabe aendern). Aktiv: J, P, Q, T.
+* 2026-10-19 08:31: MASTER 01fb57a1 = Spur Q (alter Stand, Integration 908/908), Hauptbaum-exe 08:30 + Smoke gruen. Offen: J
+  Nachbesserung 4, P Nachbesserung 1 (Nachtrag 12), Q Nachbesserung 2 (Nachtrag 12 + 1041 nur in der Panikphase).
+  Danach: Integration J+P+Q, volle Suite, Release Notes, release_alles.sh --tag.
 * 2026-10-19 08:26: Nutzer-Nachtrag 12 (a0d7d749): Tuersaetze "I have to rescue John! He is in danger!" an 1041->1031 und 1051->10A1
   in der Panikphase + 10B1-Tuer fuer Elza immer zu -> Spur P Nachbesserung 1 wf_a155d59d-a4e (args_p_nach1.json; Ids 1041=41,
   1051=40); gleiche Durchbruch-Tueren (Leon + Treppenhaus, Elza + 1071) + ORCHESTRATOR-ENTSCHEID 1041-Durchbruch nur in

@@ -232,3 +232,24 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
     Szenarien aus DENSELBEN Tueren: Leon zusaetzlich das Treppenhaus (Gegenstueck zu Elzas 10C1 -> Flur 1061 = Leon
     10C0 -> 1060), Elza zusaetzlich ROOM1071 (Gegenstueck zu Leons 1070; Nachtrag 11 hatte 1071 gestrichen, jetzt
     zusaetzlich). Liste je Szenario im Dossier gegenueberstellen.
+
+## Nachtrag 13 des Nutzers (woertlich, 2026-10-19 zwischen 08:31 und 08:33, fuer Spur P)
+- Auf die Frage nach einer Aufnahme fuer "I have to rescue John! He is in danger!": "Achso, nein, das ist ein einfacher text,
+  wie bei Leon auch im Panik Abschnitt."
+  Orchestrator: der Tuersatz an 1041 -> 1031 und 1051 -> 10A1 ist ein EINFACHER TEXT ohne Sprecher-Kopf und ohne Stimme -
+  genau die Form von Leons Tuertexten "I have to get the Chief first..." (Text-Platz sce 1 per re15_aot_retype,
+  engine/src/sperre1050_r37.c an der Tuer ROOM1050 -> ROOM10A0 und include/re15_tuer1060.h; RE1.5-Vorbilder ROOM1170
+  main00 @0x01320, ROOM1130 sub01 @0x00A1C `46 03 01 31 01 00 ff ff 00 00`). 1051 -> 10A1 ist Elzas Gegenstueck zu
+  Leons 1050 -> 10A0. KEIN "Elza:"-Kopf, keine Sprachdatei. Port-Ids bleiben 1041 = 41, 1051 = 40. Die 11C0-Zeile der
+  Spur O ("I cannot leave Ada alone here with those monsters!") hat diese einfache Form bereits.
+- Nachschub (woertlich, nach 08:33): "Das mit den I cannot leave him alone with those monsters, ist auch ein normaler Raumtext."
+  Orchestrator: ROOM1141 msg 41 (Runde 38 F) bleibt ein einfacher Raumtext ohne Stimme - keine Aenderung noetig.
+
+## Nachtrag 14 des Nutzers (woertlich, 2026-10-19 zwischen 08:34 und 08:43)
+- "Eine letzte Ergänzung - bei dieser und zukünftig neuen Versionen passe mir bitte die Version im Titelscreen an. Entferne das bestehende. Ich glaube dafür gibt es auch schon ein Skript iregndwo."
+  Orchestrator (gemessen 08:46, Titelabzug RE15_TITLE_SHOT_AF=150): oben rechts im Titelbild steht "Sample" / "Ver.2025.01.25"
+  als Graustufen-Pixelschrift auf Schwarz, Bereich x 180..283, y 11..~30 (320x240), eingebrannt in DATA/TITLEU.TIM (320x240
+  16bpp; render_pc.c s_title_tex / re15_render_pc_show_title). Ein vorhandenes Skript dafuer gibt es weder hier noch im alten
+  reAi-Repo (gesucht: TITLEU, *title*/*version*/*stempel*). RE15_REBORN_VERSION_STRING "v0.1.0 Phase 4.1" (re15_engine.h:24) wird
+  nirgends benutzt. release_alles.sh bildet die Version aus dem hoechsten Tag (+1); build_android.sh kennt --version.
+  -> neue Spur T "titelversion".

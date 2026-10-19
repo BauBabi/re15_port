@@ -31,6 +31,7 @@ Spuren; nach jeder Welle Integration + gezielte Tests, volle Suite einmal am End
 | 4 | P | johnruf1041 / r39_johnruf1041 | Elza: Johns Ruf ab 1041, Satz + Karte, Panikmusik bis zur Rettung, 1131-Ruf (Nachtrag 10) |
 | 4 | Q | elzazombies / r39_elzazombies | Elza: Zombie-Durchbrueche 10C1/1061/1041/1031 in der Panikphase (Nachtrag 10 + 11: 1041 statt 1071) |
 | 4 | R | hund1121 / r39_hund1121 | Elza: Hund durchs Fenster in 1121 (Nachtrag 10) |
+| 4 | T | titelversion / r39_titelversion | Version im Titelbild statt "Sample Ver.2025.01.25", automatisch je Release (Nachtrag 14) |
 | 3 | K | heliport1171 / r39_heliport1171 | John 1171 "Elza hurry up": Heran-Winken statt Klettern; uebrige Szenen-Animationen 1171 |
 
 ## 1. Ressourcen
