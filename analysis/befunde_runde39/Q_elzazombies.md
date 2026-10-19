@@ -278,6 +278,8 @@ Neue Riegel (re15_port/tests/unit/probes/r39_elzazombies.cmake), Stand nach Nach
   Eintritt im Nordteil: nichts; alle 1061-Kopien besiegt: nichts.
 * unit_r39_elzazombies_ohne — Laden mit (9,97), ohne (9,97), Leon 1040/1060 (auch mit (9,95): kein Durchbruch).
 * integration_r39_elzazombies_kette / _knall / _treppe / _durch / _ohne — echte exe (4.2, 4.4, 4.5, 4.6).
+* Seit Nachbesserung 1 (8.1): jeder der 13 Riegel loescht vor dem ersten Engine-/exe-Aufruf jede geerbte RE15_*-Variable
+  (jede Schreibweise) und bricht ab, wenn eine stehen bleibt (VERTRAG Abschnitt 2).
 
 ### 5.1 Abschlusslaeufe
 * VOR Nachtrag 11 (Baum 05d03c9f): `ctest -R "^(unit_|prop_|probe_)" -j 4` -> "100% tests passed, 0 tests failed out of 845";
@@ -301,6 +303,9 @@ Neue Riegel (re15_port/tests/unit/probes/r39_elzazombies.cmake), Stand nach Nach
 * Ankunft von OBEN (1121 -> 1061 Etage 8 -> 6 -> 4, Treppe A endet an der Westseite): die Kopien stehen dort, wo sie von
   unten "moeglichst weit weg" sind, und werden auf Etage 4 ebenso frei. Vom Nutzer nicht verlangt (nur "von unten").
 * Durchbruch 1041 nach dem LADEN in 1041: wartet bis zum naechsten Betreten durch eine Tuer (4.6).
+* Orchestrator (Nachbesserung 1, 8.2): dieselbe Umgebungs-Luecke in anderen Riegeln (13 von 15 test_r39_*.cmake laut
+  Abnahme; das Referenz-Muster faengt auf Windows klein geschriebene Namen nicht; Unit-Riegel mit re15_engine erben
+  ebenfalls) - nicht in dieser Spur geaendert (fremde Dateien).
 
 ## 7. Fuer den Nutzer
 * So laeuft es jetzt (Elza, Panikphase): Nach Johns Ruf und der Karte (Spur P) eine kurze Pause, ein Tuerknall, Schnitt
@@ -317,6 +322,7 @@ Neue Riegel (re15_port/tests/unit/probes/r39_elzazombies.cmake), Stand nach Nach
   Treppenhaus hattest du noch gar nicht vor dir — "falls die Zombies nicht besiegt wurden" kann erst danach gelten. Hast du
   sie im Treppenhaus besiegt, passiert in 1041 nichts. In ROOM1071 bricht nichts durch.
 * Keine neuen Assets, keine Sprachdateien. Zeiten (Pause 60, Knall -> Schnitt 45, Schnittlaengen wie Leon) = Leons Montage.
+* Nachbesserung 1 aendert nur die Tests (sie erben keine Einstellungen der Shell mehr), nichts am Spiel.
 * Entscheidungsfrage (optional): Sollen die Zombies am 2F-Absatz auch bei Ankunft von OBEN (Rueckweg aus 1121) "weit weg"
   stehen? Dann wuerden sie fuer diesen Fall an die Tuer-Seite gestellt.
 

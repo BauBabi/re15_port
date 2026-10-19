@@ -364,6 +364,11 @@ else()
     message(FATAL_ERROR "r39_elzazombies: TEIL '${TEIL}' unbekannt")
 endif()
 
+# Messkopie wieder entfernen (Muster test_r39_heliport1171.cmake:93), sonst liegen nach jedem Lauf fuenf Kopien neben der
+# exe, die der Nutzer startet. file(REMOVE) bricht bei einer noch gesperrten Datei nicht ab (gemessen 2026-10-19 an einer
+# laufenden Kopie: cmake exit 0, Datei bleibt) - der Riegel kann dadurch nicht rot werden.
+file(REMOVE "${_exe}")
+
 if(_fehler)
     list(LENGTH _fehler _nf)
     message(FATAL_ERROR "${_tag}: ${_nf} Fehler")
