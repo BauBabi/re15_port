@@ -275,3 +275,12 @@ bzw. Energie-Abfrage ausloesen oder abwarten); die Integration zieht die Energie
   sub01 @0x011A0 Ck(4,0xF3)==0 -> @0x011C0 Slot 1 -> msg 14 "It's too dark...". Umsetzung P Nachbesserung 3 (f8dae60d):
   mit Strom Slot 1 -> Original-msg 12 "The door is locked." (@0x179F). 10B1 bleibt wie ausgeliefert. ROOM11C1 ist eine
   Sackgasse (nur Tuer zurueck, fuenf Hunde, keine Items) - kein Softlock.
+
+## Nachtrag 17 des Nutzers (woertlich, 2026-10-19 zwischen 13:53 und 14:04, waehrend des Release-Laufs v0.8.27 -> Lauf gestoppt)
+- "Der Panik Sound Modus bei Elza mit dem Please Help kommt zu früh. Ich würde vorschlagen er startet erst, sobald man den Herzschlüssel aufgenommen hat."
+- "Sobald der Panik Modus startet  kommt direkt 2x bei John - "please help", "help me" oder sowas. Das 1. reicht komplett, das andere streichen."
+- "Dann fehlt mir bei den Text von Elza - this is John I have to help him unterstützende Animationen für den Text."
+- "Dann In Room 1141 setzt plötzlich bereits die Affen Endgegner Musik ein, das ist falsch! Es bleibt die Panik Musik bestehen, bis die Tür geöffnet wird um John zu helfen. Dann spielt - wie jetzt auch keine Musik - und dann geht die Gorilla Endgegner Musik erst los wie jetzt auch. Also bei ROOM 1141 am Anfang BLEIBT die Panik Musik!"
+- "Dann bei synchro/stage1/room1141 habe ich eine door_sound.wav hinterlegt. Bitte setze die immer mal wieder im wechsel mit dem please Help Rufen ein."
+- "Und dann - bis zum ersten Schuss steht John relativ unbeteiligt in der Ecke, wenn der Kampf gegen die Gorillas los geht. Das soll er nicht. Es soll gleich zumindest sich Richtung Gorillas ausrichten und vielleicht schon mal schießen."
+- "Bitte noch einbauen, und minimale Abnahme Testschiene da wir nicht mehr viel Tokens haben."
