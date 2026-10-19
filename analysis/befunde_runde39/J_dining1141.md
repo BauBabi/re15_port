@@ -1056,3 +1056,31 @@ Werkzeug `J39n4/lauf.sh` (= `J39abn3/lauf.sh`, eigene exe-Kopie `re15_pc_j39n4_<
   alten Platz (Sleep 5 @+0x0440 beginnt im selben Takt wie vorher) - sein Ablauf ist bildgleich. Elza steht durch Member_set(4)
   schon zu John gedreht: der TURN kommt im ersten Bild an (Kegel 0x60) und geht wie bisher in Sub 6 ueber, nur 11 Bilder frueher.
 - Messer/Hieb: dieselbe Phase +6 (Messer-FSM, Hieb Clip 7); der Handler unterscheidet keine Waffenart - ein Hieb-Rest endet ebenso.
+- 08:40 Umsetzung (Generator + Riegel), 08:50 Bau gruen, 08:52-08:57 Lauf n_rl2 (11.4), 09:05 Unit schnitt gruen, wip 82320b2a.
+
+### 11.3 Umsetzung (Commit 82320b2a)
+| Teil | Aenderung | Datei / Beleg |
+|---|---|---|
+| Programm | ENTRIEGELN39: Elzas `40 00 09 00 82 e2 04 ac` Plc_dest TURN -> John (Form 1141 sub02 @0x00C50) von +0x0438 nach +0x0426, direkt hinter `2e 01 00 00` Work_set(1,0) (+0x0416), Pos_set (+0x041A) und `34 04 00 08` Member_set(4) (+0x0422), also im Takt von `29 08` Cut_chg 8 (+0x0408); dahinter unveraendert Sleep 1, Plc_neck, Sleep 10, Sleep 5. Laenge 1376 B, Anker WINK 0x048C unveraendert | tools/r39_dining/programme_bauen.py (nach_dem_kampf), gen/dining_r39_programme.inc; Form ROOM11C0 sub03 @0x01B18/@0x01B1A/@0x01B1E/@0x01B22/@0x01B26 |
+| Engine | keine Aenderung: op_plc_dest bildet @0x80041c14..@0x80041c20 schon ab (re15_player_aim_interrupt + state 4), main.c ruft scd_vm_tick vor re15_game_step (@0x8001cdec vor @0x8001ce0c) | engine/src/scd_vm.c (unveraendert) |
+| Riegel Unit | neuer Teil `schnitt` (siehe 11.5) und in `programme` die Pruefung "TURN im Schnitt-Takt, kein zweiter bis msg 51" | tests/unit/test_r39_dining1141.c, probes/r39_dining1141.cmake |
+| Riegel Integration | Werkzeug `zielen`: Schnittbild = Kommando 4 (vorher pst 1 mo 200); Fall `nachladen` (Vorbedingung: Nachladen im Sperr-Bild, 1..11 Bilder vorher begonnen); neuer Riegel `integration_r39_dining1141_zielen_nachladen` = Lauf RL2 (eigene exe-Kopie `re15_pc_r39j_zn_<id>`, eigener Laufordner, RE15_AUDIO_CAP_SYNC fuer ein bildgenaues Szenenende, cap.raw danach geloescht) | tests/integration/test_r39_dining1141_zielen.cmake (FALL=nachladen) |
+Keine neue Konstante: die Umstellung verschiebt eine vorhandene Original-Zeile (Belegstellen im Listing der .inc).
+
+### 11.4 Messung nachher (Stand 82320b2a, echte exe)
+- **Lauf n_rl2** (= v_rl2 bytegleich, neue exe), rv=0, 256 s: bis F4085 bildgleich (Nachladen F4053..F4083, Sperre F4056, F4084
+  `ac=8 mg=15`, F4085 `ac=6` SENKEN); `[scd F4086] Cut_chg(8)` und **im selben Takt** `[scd] Plc_dest(slot=0 mode=0x09
+  dest=(-7550,-21500) flag=0) walk_active=1`; state.txt **F4086 `pst=4 mo=105` cam=8**, F4087 `pst=4 mo=105`, ab F4088 `mo=1`
+  (Sub 6 Clip 1). **Cut 8 (F4086..F4125): 0 Bilder mit mo 215** (vorher F4086..F4093 = 8). Elzas Blick rot 2047 (vorher nach
+  dem TURN F4097 ebenso 2047).
+- Bild `J_belege/nb4_m1rest_nachher_rl2_F4086-4098.png` (Ausschnitt) und `..._bogen_F4080-4105.png` (ganze Bilder): F4086 zeigt
+  noch Cut 5 (die Kamera wird ein Bild spaeter sichtbar, wie Cut 7 in 1.2 der Abnahme 3). F4087/F4088: der Waffenarm sinkt
+  noch aus der Halte-Lage (Hand auf Hoehe von Johns Guertel, vorher F4087/F4088 beide Arme auf Brusthoehe), F4089 tiefer,
+  F4090 an der Huefte, ab F4092 unten. **Das ist die Ueberblendung des Originals**, kein Waffen-Clip: der TURN-Init setzt
+  +0x8f = 7 (`800313b8 sb v0(=7),-13597(at)` = 0x800acae3), Sub 6 beim Uebergang erneut (`80051874 sb v0(=7),143(v1)`), beide
+  mit Schrittweite `ori a3,zero,0x200` (@0x80031498 / @0x80051890); FUN_8001f3bc liest +0x8f (`8001f408 lbu s0,143(v1)`,
+  `8001f41c bne a3,zero,..` = Ueberblend-Zweig) und mischt die zuletzt gezeigte Lage mit 0x200*frac (0x1000 = 100 %) ein. Weder
+  Cut_chg (0x800402a0: setzt nur das Kamera-Bit 0x100 in 0x800aca3c und ruft 0x800142f4) noch Pos_set (0x80041048: nur +0x34/
+  +0x38/+0x3C) setzen +0x8f zurueck - im Original endet ein Nachlade-/Senken-Rest in der Form 11C0 sub03 also ebenfalls mit
+  dieser Ueberblendung in den ersten Bildern nach dem Schnitt, nicht mit einem harten Wechsel. Der Port war hier schon bytegleich
+  (re15_actor.h anim_frac/anim_blend_rate, "byte-true FUN_8001f3bc").
