@@ -7,8 +7,12 @@
  * dann, wenn man in ROOM 1061 die Etage von unten ueber die Treppe erreicht aber moeglichst weit weg an der Seite stehen.
  * Dann das gleiche nochmal wie bei Leon in den ROOM 1071, falls die Zombies nicht besiegt wurden und im ROOM 1031 ueber
  * die Absperrung/Das Rollo, so wie bei der cutscene."
+ * NACHTRAG 11 (woertlich): "Ich korrigiere, die Zombies sollen nicht in ROM 1071 noch durchbrechen, sondern dann noch wie
+ * bei leon im ROOM 1041."
  * ORCHESTRATOR (verbindlich): Elza-Raeume = ROOMxxx1; Ausloeser = steigende Flanke von Bank-9-Bit 97 (setzt NUR Spur P beim
  * 1041-Ruf, geloescht bei Johns Rettung); Montage-Form wie Leon; Gegner-Verhalten RE2-KI wie bisher; Bit 95 an Q.
+ * Nachtrag 11: kein 1071-Durchbruch; 1041 wie Leons 1040 (Rolltor-Schnitt Cut 1); "falls die Zombies nicht besiegt
+ * wurden" = die aus 10C1/1061; Zeitpunkt begruenden (Elza steht beim Start selbst in 1041), spielbar.
  *
  * NUTZER-VORGABE / PORT-WAHL: RE1.5 hat diese Montage nicht. Die FORM ist Leons Montage (include/re15_irons_tod.h,
  * include/re15_montage_r38.h), deren Bausteine Original-Adressen tragen; jede Zeile der Programme traegt ihr Vorbild
@@ -17,12 +21,13 @@
  * KETTE (Elza): Flanke (9,97) 0->1 im Spiel (nicht beim Laden) -> sobald keine Szene laeuft (re15_cine_active = (1,27) ||
  * (2,7), g_scd.player_mode != 2) startet im AKTUELLEN Raum (Spur P: ROOM1041) der Auftakt: Riegel, Pause, Knall ->
  *   [ROOM1061 Cut 2, nur wenn in 10E1 noch Zombies leben: die Ueberlebenden stehen hinter der 10C1-Tuer auf Etage 4]
- *   -> [ROOM1031 Cut 7, nur wenn in 1071 noch Zombies leben: Tuerknall + Kopien vor der 1071-Tuer]
- *   -> ROOM1031 Original-Knall + Rollo bricht (falls (4,15)=0) + Kriecher -> Cut 12 (= ROOM1031 sub08 @0x02850)
+ *   -> ROOM1031 Original-Rollo-Szene: Rollo bricht (falls (4,15)=0) + Kriecher, Cut 12 (= ROOM1031 sub08 @0x02850)
  *   -> Rueckkehr in den Startraum an die gemerkte Stelle (Lage, Gier, Schnitt), Riegel los.
+ * DURCHBRUCH 1041 (Nachtrag 11): beim NAECHSTEN Betreten von 1041 durch eine Tuer im Suedteil, solange Zombies aus 1061
+ * leben: sie ziehen nach 1041 um und brechen durchs Rolltor (Leons 1040-Schritt, Cut 1), dann Steuerung zurueck.
  * SPAETERES BETRETEN ((9,95)=1): ROOM1061 = die 10E1-Kopien moeglichst weit weg vom Ankunftspunkt der Treppe (Etage 4) an
- * der Westseite, angehalten (entity+0x9 Bit 0x20) bis die Spielerin Etage 4 erreicht; ROOM1031 = die 1071-Kopien + Kriecher
- * wie Leons ROOM1030-Nachspawn.
+ * der Westseite, angehalten (entity+0x9 Bit 0x20) bis die Spielerin Etage 4 erreicht; ROOM1031 = die Kriecher (Leons
+ * ROOM1030-Nachspawn ohne 1070-Kopien); ROOM1041 = die Durchgebrochenen hinter dem Rolltor (wie Leons k_p_1040_nach).
  */
 #ifndef RE15_ELZAZOMBIES_R39_H
 #define RE15_ELZAZOMBIES_R39_H
@@ -45,7 +50,7 @@
 #define RE15_R39Q_RAUM_1061       0x1061   /* UPPER STAIRS (DEBUG.BIN Satz 0x06) */
 #define RE15_R39Q_RAUM_1031       0x1031   /* LOBBY (Satz 0x03) */
 #define RE15_R39Q_RAUM_10E1       0x10E1   /* MED. EXAM ROOM (Satz 0x0E) = "medical room" */
-#define RE15_R39Q_RAUM_1071       0x1071   /* LOBBY OFFICE (Satz 0x07) */
+#define RE15_R39Q_RAUM_1071       0x1071   /* LOBBY OFFICE (Satz 0x07) — Nachtrag 11: bleibt unberuehrt */
 /* Port-Ereignis der Programme: < RE15_RDT_MAX_SUB_SCD (32); kein Sub in 1041 (12 Subs), 1061 (2), 1031 (16); die Port-
  * Ereignisse anderer Spuren sind 2,3,4,5,6,13,20..29 (Zensus der RE15_*_EREIGNIS in include/). Jede Abfrage prueft
  * Raum UND Zustand, ein gleichnamiges fremdes Ereignis in einem anderen Zustand bleibt unberuehrt. */
@@ -58,22 +63,21 @@
  * 1041 und 1031 (Bank-5-Zensus: Bits 0..20 + 32..35) und 1061 (keins). */
 #define RE15_R39Q_SIG_KNALL_TUER  28
 #define RE15_R39Q_SIG_KNALL_1030  29
+/* "Alle durch"-Signal des Durchbruchs 1041 = Leons (5,30) RE15_IT_SIG_ALLE_DURCH: der Takt setzt es, das Programm wartet mit
+ * der Ankunfts-Poll-Form ROOM1150 sub08 @0x0112A..@0x01132. Frei in 1041 (Bank-5-Zensus: Bits 0..20 + 32..35). */
+#define RE15_R39Q_SIG_ALLE_DURCH  30
 
 /* ---- Quellen der Kopien (Tot-Bits = Sce_em_set pc[7], Zone 7 = re15_em_status_zone fuer Stage 1-3, Gate @0x80042128-38) */
 /* ROOM10E1 sub00 (= ROOM10E0 Byte fuer Byte): Fresser Typ 0x10 grid 0x06 @0x00D56/@0x00D6A/@0x00D7E/@0x00D92 bzw. Steher
  * grid 0x02 @0x00DBE.. (Else-Zweig nach (4,246)=1), Tot-Bits 0xe0..0xe3. "Am Leben gelassen" = Tot-Bit 0. */
 #define RE15_R39Q_BIT_10E1_0      0xe0
 #define RE15_R39Q_N_10E1          4
-/* ROOM1071 sub00 (= ROOM1070): 5 Records Typen 0x10,0x10,0x10,0x11,0x11 @0x015CA.. / Steher-Zweig @0x01632.., Tot-Bits
- * 0xc6..0xca (= Leons RE15_IT_BIT_1070_0). */
-#define RE15_R39Q_BIT_1071_0      0xc6
-#define RE15_R39Q_N_1071          5
 #define RE15_R39Q_N_KRIECHER      3   /* wie Leons RE15_IT_N_KRIECHER (Kriecher durch das Tor, 1030-Szene sub08 viermal sub09) */
 
 /* ---- Schnitte, Etage ----------------------------------------------------------------------------------------------- */
 #define RE15_R39Q_CUT_1061        2    /* ROOM10C1 Tuer Slot 0 @0x00E42: Zielschnitt `02` (Nutzlast +10); RID @0x000A0 */
-#define RE15_R39Q_CUT_1031_TUER   7    /* ROOM1031 RID @0x00140 = ROOM1030 Cut 7 (Kamera auf die 1071-Tuer) */
 #define RE15_R39Q_CUT_1031_TOR    12   /* ROOM1031 sub08 Cut_chg `29 0c` @0x02896 (Rollo aufgebrochen) */
+#define RE15_R39Q_CUT_1041        1    /* ROOM1041 sub08 Cut_chg `29 01` @0x01A1A = Leons Rolltor-Schnitt; RID @0x00080 */
 /* Etage 4 = y -7200: Tuer ROOM10C1 @0x00E42 Nutzlast y `e0 e3`, Etagen-Byte `04`; ROOM1061 Tuer Slot 1 @0x00D32 pc[4] = 4;
  * SCA-Band 4 = Zellen mit floor-Byte 0x43 (`>>4` = 4, Band-Gate @0x8003b8a0-b0). Sce_em_set traegt die Etage in pc[4]
  * und y = -pc[4]*1800 (ROOM1090 sub00 @0x02214 `.. 01 00 .. f8 f8`; Enemy +0x82 = pc[4] @0x800421c8/@0x800421d0). */
@@ -84,8 +88,9 @@
 #define RE15_R39Q_AUS        0
 #define RE15_R39Q_AUFTAKT    1   /* Startraum: Riegel, Pause, Knall, Tuer zum ersten Schritt */
 #define RE15_R39Q_S1061      2   /* ROOM1061 Cut 2 */
-#define RE15_R39Q_S1031      3   /* ROOM1031 Cut 7 / Cut 12 */
+#define RE15_R39Q_S1031      3   /* ROOM1031 Cut 12 (Rollo) */
 #define RE15_R39Q_RUECKKEHR  4   /* Startraum: Riegel los */
+#define RE15_R39Q_D1041      5   /* Durchbruch 1041 (Nachtrag 11): Rolltor-Szene beim naechsten Betreten */
 
 /* HAKEN scd_room_setup.c (Tuer-Weg, nach dem Init-Lauf, Ende des Installer-Blocks): Montage-Schritt / Rueckkehr /
  * Nachspawn 1061/1031. */
@@ -106,13 +111,15 @@ int  re15_elzazombies_r39_zustand(void);
 void re15_elzazombies_r39_zustand_setzen(int z);
 int  re15_elzazombies_r39_ausstehend(void);
 int  re15_elzazombies_r39_lebend_10e1(void);
-int  re15_elzazombies_r39_lebend_1071(void);
+int  re15_elzazombies_r39_lebend_1061(void);   /* lebende 1061-Kopien (Bedingung des Durchbruchs 1041) */
+int  re15_elzazombies_r39_lebend_1041(void);   /* lebende 1041-Kopien (Nachspawn 1041) */
+int  re15_elzazombies_r39_durchbruch_zahl(void);   /* Zahl der beim letzten Durchbruch umgezogenen Kopien */
 const uint8_t *re15_elzazombies_r39_laufprogramm(int *out_len);
-/* Kopie-Tot-Bits (Zone 7) — Zensus im Riegel: 1061 (4), 1031 (5), Kriecher (3) = 12 in dieser Reihenfolge. */
+/* Kopie-Tot-Bits (Zone 7) — Zensus im Riegel: 1061 (4), 1041 (4), Kriecher (3) = 11 in dieser Reihenfolge. */
 int  re15_elzazombies_r39_kopiebits(const uint8_t **out);
-/* Lagen (Riegel / Messung): Montage-Spawn 1061 (Tuer-Packung), Nachspawn 1061 (Weit-weg-Packung). */
+/* Lagen (Riegel / Messung): Montage-Spawn 1061 (Tuer-Packung), Nachspawn 1061 (Weit-weg-Packung), 1041 (Gassen). */
 typedef struct { int16_t x, z, gier; } re15_r39q_lage_t;
-int  re15_elzazombies_r39_lagen(int welche /* 0 = Montage 1061, 1 = Nachspawn 1061 */, const re15_r39q_lage_t **out);
+int  re15_elzazombies_r39_lagen(int welche /* 0 = Montage 1061, 1 = Nachspawn 1061, 2 = 1041 */, const re15_r39q_lage_t **out);
 void re15_elzazombies_r39_park_1061(int32_t *x, int32_t *z);
 /* Rueckkehr-Stelle (Lage/Gier/Schnitt beim Start gemerkt). */
 void re15_elzazombies_r39_rueck(uint16_t *raum, int32_t *x, int32_t *y, int32_t *z, int16_t *gier, uint8_t *cut);
