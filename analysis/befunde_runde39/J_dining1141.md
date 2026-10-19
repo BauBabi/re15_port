@@ -986,3 +986,15 @@ Werkzeug `j39n3/lauf.sh` (= `J39abn2/lauf.sh` der Abnahme, eigene exe-Kopie `re1
   richtet die Waffe nicht mehr auf John. Wer die Taste nicht haelt, merkt nur, dass die Balken etwas frueher kommen.
 - Keine neuen Dateien unter shared_assets/, keine Sprachdateien, keine Entscheidungsfrage. Neue Belegbilder unter
   analysis/befunde_runde39/J_belege/.
+
+## 11. Nachbesserung 4 (nach Abnahme 3, `J_abnahme_3.md`; Start 2026-10-19, Uhrzeiten aus `date`)
+
+Auftrag: (M1-Rest, Punkt 8) Beginnt Elza kurz vor der Pad-Sperre nachzuladen, zielt sie zu Beginn des Gespraechs noch auf
+John (Abnahme 3 Lauf RL2: Nachladen ab F4053, Sperre F4056, Schnitt F4086; F4086..F4093 = 8 Bilder Cut 8 mit mo=215 ac=6,
+fd_004087/fd_004088 Pistole auf Johns Oberkoerper; Ende erst durch Plc_dest TURN F4097). Abhilfe-Richtung der Abnahme:
+Elzas Kommandowort im Schnittbild ersetzen wie ROOM11C0 sub03 @0x01B1A..@0x01B26 (Plc-Befehl fuer Elza im selben Takt wie
+Cut_chg 8 / Pos_set / Member_set) und den Riegel zielen um den Fall "Nachladen kurz vor der Sperre" erweitern (kein Bild in
+Cut 8 mit mo 215). Alles, was die Abnahme 3 als erfuellt bewertet hat, bleibt (Riegel gruen).
+
+### 11.0 Stand / Fortschritt
+- 08:16 Baum sauber auf ece3a8f9 (Abnahme 3), Abschnitt angelegt. Messordner scratchpad `J39n4/` (nicht committet).
