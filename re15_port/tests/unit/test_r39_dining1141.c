@@ -21,6 +21,11 @@
  *              (Heranwinken ROOM1171 RBJ rec1 Clip 2, 96 Bilder, geliehen; M2/Nachtrag 7), kein Sprung (M3), Abgang
  *   fenster    Gemaelde gleich nach dem ersten Ruf: Rolladen, frei laufen, keine Reaktion (Nachtrag 10); Wiederbetreten mit
  *              offenem Rolladen, Messer-Fall
+ *   senken     Nachbesserung 3 (Abnahme 2 M1): wer unter der Pad-Sperre (2,7) zielt, senkt die Waffe wie im Original
+ *              (FUN_80030444 kappt das Held-Wort, Ziel-FSM HOLD/Messer/Rueckstoss -> SENKEN), ab dem Bild nach dem Setzen;
+ *              Pistole, Messer, Rueckstoss; Geltungsbereich ROOM1141 Phase H
+ *   zielen     Werkzeug des Riegels integration_r39_dining1141_zielen: Laufordner der echten exe auswerten (Elza zielt beim
+ *              Kampfende -> Sperre >= 29 Bilder vor dem Schnitt, gesenkt, kein Bild in Cut 8 mit erhobener Waffe)
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -423,6 +428,23 @@ static void teil_programme(void)
         const int i9 = finde(b, nb, m9, 4, 0);
         PRUEF(k == 2 && it > 0 && i9 > it, "ENTRIEGELN39 Punkt 7: John TURN -> Elza + Gosub sub04 auch vor msg 9 (%d Stellen, "
                                            "letzte @+%04X, msg 9 @+%04X)", k, it, i9);
+    }
+    {   /* Nachbesserung 3 (Abnahme 2 M1): Szenenbeginn nach dem Kampf in der Form ROOM11C0 sub03 @0x01B06..@0x01B18 - Balken,
+         * Pad-Sperre, Sleep 30, DANN Cut_chg 8 (vorher Cut_chg 8 + Sperre im selben Takt: wer zielte, stand mit der Waffe auf
+         * John im Schnittbild). Die Sperre liegt hinter beiden Wartezeilen (Gorillas tot (4,0xF2), Johns Salve (5,0x11)). */
+        static const uint8_t w_affen[4] = { 0x21, 0x04, 0xF2, 0x01 };
+        static const uint8_t w_salve[4] = { 0x21, RE15_R39J_SCHUETZE_BANK, RE15_R39J_SCHUETZE_BIT, 0x01 };
+        static const uint8_t form[14] = { 0x22, 0x01, 0x1B, 0x01, 0x22, 0x02, 0x07, 0x01, 0x09, 0x0A, 0x1E, 0x00,
+                                          0x29, RE15_R39J_CUT_GESPRAECH };
+        static const uint8_t sperre[4] = { 0x22, 0x02, 0x07, 0x01 };
+        static const uint8_t m51n[4] = { 0x2B, RE15_R39J_MSG_PUH, 0, 0 };
+        const int ia = finde(b, nb, w_affen, 4, 0), is = finde(b, nb, w_salve, 4, ia > 0 ? ia : 0);
+        const int ifo = finde(b, nb, form, 14, is > 0 ? is : 0);
+        const int i51 = finde(b, nb, m51n, 4, 0);
+        const int isp2 = finde(b, nb, sperre, 4, ifo > 0 ? ifo + 8 : 0);
+        PRUEF(ia > 0 && is > ia && ifo > is && i51 > ifo && (isp2 < 0 || isp2 > i51),
+              "ENTRIEGELN39 NB3: nach Gorillas tot (@+%04X) und Johns Salve (@+%04X) Set(1,0x1B)=1, Set(2,7)=1, Sleep 30, Cut_chg 8 "
+              "(@+%04X, Form ROOM11C0 sub03 @0x01B06/@0x01B0A/@0x01B14/@0x01B18), keine zweite Sperre vor msg 51", ia, is, ifo);
     }
     {   /* Punkt 8: nach der Warteschleife (4,0xF2): Cut 8, msg 51 + Gesten (0,15)/(0,23), Plc_motion(2,6), msg 52 */
         const uint8_t w[4] = { 0x21, 0x04, 0xF2, 0x01 }, c8[2] = { 0x29, RE15_R39J_CUT_GESPRAECH };
@@ -1003,6 +1025,200 @@ static void teil_fenster(void)
     }
 }
 
+/* ---- Teil: senken (Nachbesserung 3, Abnahme 2 M1) -------------------------------------------------------------------
+ * Abnahme 2 Lauf R/R2: zielte Elza beim Schnitt auf Cut 8 noch, stand sie dort 11 Bilder mit der Waffe auf John (state.txt
+ * F6296..F6306 pst=1 mo=215). Original: unter der Pad-Sperre Set(2,7)=1 kappt FUN_80030444 das Held-Wort (`andi v0,v0,0xf000`
+ * @0x80030514, `sw 0x800ac768` @0x8003051c), der Dispatcher laeuft weiter (nur Bit 31 haelt ihn, @0x80031c78), die Ziel-FSM liest
+ * dasselbe Wort (HOLD @0x800331e4/@0x800331ec, Messer @0x80035128/@0x80035130, Rueckstoss @0x80033560/@0x80033600) und senkt
+ * (aca5a = 3 @0x80033200 / @0x80035144 / @0x8003364c). Der Umsetzer laeuft im Task-Takt VOR der Spiel-Task (@0x80029dd8/
+ * @0x80029e14), das Skript setzt das Bit IN der Spiel-Task: wirksam ab dem Bild nach dem Setzen.
+ * Geprueft am Engine-Weg (re15_game_step, R1 bleibt die ganze Zeit gehalten): Pistole im Halten, Messer im Halten, Pistole im
+ * Rueckstoss -> im Setz-Bild noch oben, danach SENKEN (Clip 6 rueckwaerts, Laenge aus der W-Bank), dann neutral (motion 200)
+ * und unten, solange die Sperre steht. Geltungsbereich: ROOM1141 ohne Phase H behaelt den bisherigen Port-Stand (Waffe oben). */
+static int plw_cliplaengen(const char *name)   /* PLD/<name>: Verzeichnis dir[0] = EDD -> Cliplaengen; Rueckgabe = Bilder Clip 6 */
+{
+    char p[600]; snprintf(p, sizeof p, "%s/PLD/%s", RE15_ASSET_PSX_DIR, name);
+    size_t sz = 0; uint8_t *plw = slurp(p, &sz);
+    if (!plw || sz < 16) { printf("  FEHLER: %s fehlt\n", p); g_fail++; free(plw); return -1; }
+#define R32(o) ((uint32_t)plw[(o)] | ((uint32_t)plw[(o)+1] << 8) | ((uint32_t)plw[(o)+2] << 16) | ((uint32_t)plw[(o)+3] << 24))
+    const uint32_t dir = R32(0);
+    int fc6 = -1;
+    if (dir + 8 <= sz) {
+        const uint32_t d0 = R32(dir), d1 = R32(dir + 4);
+        re15_emd_animation_t an; memset(&an, 0, sizeof an);
+        if (d0 < d1 && d1 <= sz && re15_emd_parse_animation(plw + d0, (size_t)(d1 - d0), &an) == 0) {
+            uint16_t fcs[16]; const int n = an.clip_count < 16 ? an.clip_count : 16;
+            for (int i = 0; i < n; i++) fcs[i] = (uint16_t)an.clips[i].frame_count;
+            extern void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n);
+            re15_player_set_aim_clip_lens(fcs, n);
+            if (n > 6) fc6 = fcs[6];
+        }
+    }
+#undef R32
+    free(plw);
+    if (fc6 <= 0) { printf("  FEHLER: %s ohne Clip 6\n", name); g_fail++; }
+    return fc6;
+}
+
+static void teil_senken(void)
+{
+    printf("== senken ==\n");
+    extern int  re15_player_aim_phase_debug(void);   /* Phase | 0x10 bei Rueckstoss (player_common.c) */
+    extern void re15_player_aim_reset(void);
+    enum { NONE = 0, READY = 2, LOWER = 4 };
+    static const struct { const char *name; int phase_h, waffe, schuss; const char *plw; } faelle[] = {
+        { "Pistole im Halten",     1, 3, 0, "PL04W03.PLW" },
+        { "Messer im Halten",      1, 1, 0, "PL04W01.PLW" },
+        { "Pistole im Rueckstoss", 1, 3, 1, "PL04W03.PLW" },
+        { "Geltungsbereich: ROOM1141 ohne Phase H (Pistole)", 0, 3, 0, "PL04W03.PLW" },
+    };
+    for (unsigned k = 0; k < sizeof faelle / sizeof faelle[0]; k++) {
+        printf("  -- %s\n", faelle[k].name);
+        re15_game_state_init();
+        re15_inv_load_briefing();
+        re15_game_flag_set(RE15_R38F_F0_BANK, RE15_R38F_F0_BIT, faelle[k].phase_h ? 1 : 0);   /* (4,0xF0) = Phase H */
+        if (room_boot(RE15_R38F_RAUM_1141, -7600, -17600, 0, 0) != 0) return;
+        (void)re15_inv_grant(0x03, 15);   /* nach dem Raumaufbau (wie phase_h vor dem Riegel): Browning, 15 Schuss */
+        PRUEF(re15_dining_r38_phase_h() == faelle[k].phase_h, "Phase H = %d", faelle[k].phase_h);
+        const int fc6 = plw_cliplaengen(faelle[k].plw);
+        re15_player_aim_reset();
+        re15_player_set_equipped_weapon(faelle[k].waffe);
+        { const int sl = re15_inv_find_item((uint8_t)faelle[k].waffe); if (sl >= 0) re15_inv_set_equipped_slot(sl); }
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        for (int f = 0; f < 60; f++) frame(0, 0);   /* Eintritt, Klopf-Schleife laeuft (keine Sperre in Phase H) */
+        int bereit = -1;
+        for (int f = 0; f < 90 && bereit < 0; f++) {
+            frame(RE15_PAD_BIT_R1, f == 0 ? RE15_PAD_BIT_R1 : 0);
+            if (re15_player_aim_phase_debug() == READY) bereit = f;
+        }
+        int rueck = 0;
+        if (faelle[k].schuss && bereit >= 0) {   /* Abzug (Quadrat) bis der Rueckstoss laeuft (Feuer-Tor game_step_common.c) */
+            for (int f = 0; f < 6 && !rueck; f++) {
+                frame(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE, f == 0 ? RE15_PAD_BIT_SQUARE : 0);
+                rueck = (re15_player_aim_phase_debug() & 0x10) != 0;
+            }
+            printf("    Abzug: Phase 0x%02X, Magazin %d, Waffe %d\n", re15_player_aim_phase_debug(), re15_ammo_mag_nonzero(),
+                   re15_player_equipped_weapon());
+        }
+        PRUEF(bereit >= 0 && g_scd.player_mode == 0 && (!faelle[k].schuss || rueck),
+              "Elza zielt (Waffe %d, Halten nach %d Bildern, Clip 6 = %d Bilder%s)", faelle[k].waffe, bereit, fc6,
+              faelle[k].schuss ? (rueck ? ", Schuss: Rueckstoss" : ", Schuss: KEIN Rueckstoss") : "");
+        re15_game_flag_set(2, 7, 1);   /* = SCD Set(2,7)=1 (Set-Handler @0x8003fdd8.., Pausen-Wort Bit 0x01000000) */
+        frame(RE15_PAD_BIT_R1, 0);
+        const int im_setzbild = re15_player_aim_phase_debug();
+        int senken_ab = -1, neutral_ab = -1, wieder_oben = 0, mo_neutral = -1;
+        for (int f = 1; f <= 90; f++) {
+            frame(RE15_PAD_BIT_R1, 0);
+            const int ph = re15_player_aim_phase_debug() & 0x0F;
+            if (senken_ab < 0 && ph == LOWER) senken_ab = f;
+            if (neutral_ab < 0 && ph == NONE) { neutral_ab = f; mo_neutral = (int)pl->motion; }
+            if (neutral_ab > 0 && ph != NONE) wieder_oben++;
+        }
+        printf("    Setz-Bild Phase 0x%02X, SENKEN ab Bild %d, neutral ab Bild %d (motion %d), danach wieder oben %d, player_mode %d\n",
+               im_setzbild, senken_ab, neutral_ab, mo_neutral, wieder_oben, (int)g_scd.player_mode);
+        if (faelle[k].phase_h) {
+            PRUEF((im_setzbild & 0x0F) == READY, "im Setz-Bild noch oben (Phase 0x%02X): der Umsetzer kappt erst im naechsten Bild "
+                  "(@0x80029dd8/@0x80029e14 vor der Spiel-Task)", im_setzbild);
+            PRUEF(faelle[k].schuss ? (senken_ab >= 1 && senken_ab <= 12) : (senken_ab == 1),
+                  "unter der Sperre SENKEN ab Bild %d (%s)", senken_ab,
+                  faelle[k].schuss ? "Rueckstoss bis Bild > Byte 2 der Waffenzeile @0x80074092, @0x8003362c/@0x8003364c"
+                                   : "HOLD ohne Bit 0x100 @0x800331ec/@0x80035130 -> aca5a = 3");
+            PRUEF(neutral_ab > senken_ab && neutral_ab - senken_ab <= fc6 + 1 && mo_neutral == 200 && wieder_oben == 0,
+                  "danach neutral (Bild %d = SENKEN + %d <= Clip 6 %d + 1, motion %d) und unten, solange die Sperre steht",
+                  neutral_ab, neutral_ab - senken_ab, fc6, mo_neutral);
+            PRUEF(g_scd.player_mode == 2 && re15_dining_r39_ziel_senken() == 1, "Sperre steht (player_mode 2), Haken aktiv");
+        } else {
+            PRUEF(senken_ab < 0 && neutral_ab < 0 && re15_dining_r39_ziel_senken() == 0,
+                  "ohne Phase H unveraendert (Port-Stand ausserhalb des Geltungsbereichs, Dossier OFFEN): Waffe bleibt oben");
+        }
+        re15_game_flag_set(2, 7, 0);
+        for (int f = 0; f < 30; f++) frame(0, 0);
+    }
+}
+
+/* ---- Teil: zielen (Werkzeug des Riegels integration_r39_dining1141_zielen, Nachbesserung 3 / Abnahme 2 M1) -----------
+ * Aufruf: test_r39_dining1141 zielen <laufordner>. Liest <lauf>/debug.log (nach dem letzten "loaded room1141.rdt": Bild des
+ * Messhakens "MESSHAKEN RE15_R38F_GORILLAS_TOT" = Kampfende, danach das erste "[scd F<n>] Cut_chg(8)" = Schnitt zum Gespraech)
+ * und <lauf>/state.txt (Abschnitt ab der letzten Zeile "F1 " = ROOM1141; je Bild pad, pst, mo, ac, cam, pm).
+ * Abnahme 2 Lauf R/R2 (vorher): F6296..F6306 pst=1 mo=215 cam=8 = 11 Bilder Waffe auf John; gemergter Stand Lauf v_m2: Kampfende
+ * F4056, Schnitt F4086, F4086..F4096 pst=1 mo=215 ac=8 cam=8 pm=2 (Dossier 10.1). Geprueft:
+ *   Vorbedingung: Elza zielt beim Kampfende (mo 215 in >= 15 der 20 Bilder davor) und haelt R1 bis 20 Bilder nach dem Schnitt
+ *   Form ROOM11C0 sub03: die Pad-Sperre (pm 2) steht >= 29 Bilder vor dem Schnitt (Set(2,7)=1 @0x01B0A, Sleep 30 @0x01B14)
+ *   unter der Sperre senkt sie (mo 215 mit Clip 6 = SENKEN, HOLD @0x800331ec -> aca5a = 3 @0x80033200), das letzte Zielbild
+ *   liegt VOR dem Schnitt
+ *   in Cut 8 (40 Bilder ab dem Schnitt) kein Bild mit mo 215; im Schnittbild steht sie neutral (pst 1, mo 200) */
+typedef struct { unsigned f, pad; int pst, mo, ac, cam, pm; } zz_t;
+static const zz_t *zz_bild(const zz_t *zs, int nz, long n)   /* letzte Zeile mit Bild n */
+{
+    const zz_t *t = NULL;
+    for (int i = 0; i < nz; i++) if ((long)zs[i].f == n) t = &zs[i];
+    return t;
+}
+static void teil_zielen(int argc, char **argv)
+{
+    printf("== zielen ==\n");
+    if (argc < 3) { printf("  FEHLER: Aufruf test_r39_dining1141 zielen <lauf>\n"); g_fail++; return; }
+    char p[1024]; snprintf(p, sizeof p, "%s/debug.log", argv[2]);
+    FILE *f = fopen(p, "rb");
+    if (!f) { printf("  FEHLER: %s fehlt\n", p); g_fail++; return; }
+    static char z[8192];
+    long kill = -1, c8 = -1;
+    while (fgets(z, sizeof z, f)) {
+        if (strstr(z, "loaded room1141.rdt")) { kill = -1; c8 = -1; continue; }
+        const char *m = strstr(z, " MESSHAKEN RE15_R38F_GORILLAS_TOT");
+        if (m && kill < 0) { const char *q = strstr(z, "] F"); if (q && q < m) kill = atol(q + 3); continue; }
+        if (kill >= 0 && c8 < 0 && !strncmp(z, "[scd F", 6) && strstr(z, "] Cut_chg(8)")) c8 = atol(z + 6);
+    }
+    fclose(f);
+    PRUEF(kill > 0 && c8 > kill, "Kampfende (Messhaken) Bild %ld, Schnitt Cut_chg(8) Bild %ld", kill, c8);
+    if (kill <= 0 || c8 <= kill) return;
+    snprintf(p, sizeof p, "%s/state.txt", argv[2]);
+    size_t sz = 0; uint8_t *raw = slurp(p, &sz);
+    if (!raw) { printf("  FEHLER: %s fehlt\n", p); g_fail++; return; }
+    /* Abschnitt ROOM1141 = ab der letzten Zeile "F1 " (die Bildnummer beginnt je Raum neu) */
+    size_t ab = 0;
+    for (size_t i = 0; i + 3 < sz; i++)
+        if ((i == 0 || raw[i - 1] == '\n') && raw[i] == 'F' && raw[i + 1] == '1' && raw[i + 2] == ' ') ab = i;
+    static zz_t zs[20000]; int nz = 0;
+    for (size_t i = ab; i < sz && nz < (int)(sizeof zs / sizeof zs[0]); ) {
+        size_t e = i; while (e < sz && raw[e] != '\n') e++;
+        size_t l = e - i; if (l > sizeof z - 1) l = sizeof z - 1;
+        memcpy(z, raw + i, l); z[l] = 0; i = e + 1;
+        zz_t r; int x, zc, rot, hp, s1, s2;
+        if (sscanf(z, "F%u pad=%x PL(%d,%d,rot=%d,hp=%d) pst=%d ps1=%d ps2=%d mo=%d ac=%d", &r.f, &r.pad, &x, &zc, &rot, &hp,
+                   &r.pst, &s1, &s2, &r.mo, &r.ac) != 11) continue;
+        const char *c = strstr(z, " cam="), *q = strstr(z, " pm=");
+        if (!c || !q) continue;
+        r.cam = atoi(c + 5); r.pm = atoi(q + 4);
+        zs[nz++] = r;
+    }
+    free(raw);
+    int ziel_vor = 0, r1_fehlt = 0, senken = 0, cut8_ziel = 0, cut8_n = 0;
+    long sperre = -1, letztes_ziel = -1;
+    for (int i = 0; i < nz; i++) {
+        const zz_t *r = &zs[i]; const long n = (long)r->f;
+        if (n >= kill - 20 && n < kill && r->mo == 215 && (r->pad & 0x0800u)) ziel_vor++;
+        if (n >= kill && n <= c8 + 20 && !(r->pad & 0x0800u)) r1_fehlt++;
+        if (n >= kill && sperre < 0 && r->pm == 2) sperre = n;
+        if (n >= kill && n < c8 && r->mo == 215) letztes_ziel = n;
+        if (sperre >= 0 && n >= sperre && n < c8 && r->mo == 215 && r->ac == 6) senken++;
+        if (n >= c8 && n < c8 + 40 && r->cam == 8) { cut8_n++; if (r->mo == 215) cut8_ziel++; }
+    }
+    const zz_t *s8 = zz_bild(zs, nz, c8);
+    printf("    %d Bilder ROOM1141; Kampfende %ld, Sperre ab %ld, letztes Zielbild %ld, Schnitt %ld; SENKEN-Bilder %d; Cut 8: %d Bilder, "
+           "davon %d mit Waffe; Schnittbild pst=%d mo=%d\n", nz, kill, sperre, letztes_ziel, c8, senken, cut8_n, cut8_ziel,
+           s8 ? s8->pst : -1, s8 ? s8->mo : -1);
+    PRUEF(ziel_vor >= 15 && r1_fehlt == 0, "Vorbedingung: Elza zielt beim Kampfende (%d von 20 Bildern mo 215 mit R1) und haelt R1 bis "
+          "20 Bilder nach dem Schnitt (%d Bilder ohne R1)", ziel_vor, r1_fehlt);
+    PRUEF(sperre > 0 && c8 - sperre >= 29, "Form ROOM11C0 sub03: Pad-Sperre ab Bild %ld, %ld Bilder vor dem Schnitt (>= 29: Set(2,7)=1 "
+          "@0x01B0A, Sleep 30 @0x01B14, Cut_chg @0x01B18)", sperre, c8 - sperre);
+    PRUEF(senken > 0 && letztes_ziel < c8, "unter der Sperre gesenkt (%d Bilder Clip 6, HOLD @0x800331ec -> aca5a = 3 @0x80033200), "
+          "letztes Zielbild %ld vor dem Schnitt %ld", senken, letztes_ziel, c8);
+    PRUEF(cut8_n >= 30 && cut8_ziel == 0 && s8 && s8->pst == 1 && s8->mo == 200,
+          "Cut 8: %d Bilder, keines mit erhobener Waffe (%d; Abnahme 2 Lauf R2: 11); Schnittbild neutral (pst %d, mo %d)",
+          cut8_n, cut8_ziel, s8 ? s8->pst : -1, s8 ? s8->mo : -1);
+}
+
 /* ---- Teil: pegel (Werkzeug des Riegels integration_r39_dining1141_d, Punkt 9) --------------------------------------
  * Aufruf: test_r39_dining1141 pegel <laufordner>. Liest <lauf>/debug.log: nach "loaded room1171.rdt" das erste
  * "[bgm] Sce_bgm_control slot=0 op=1 ... capTick=N" (= ROOM1171 main00 @0x011D6). Aus <lauf>/cap.raw (RE15_AUDIO_CAP_SYNC,
@@ -1049,7 +1265,9 @@ int main(int argc, char **argv)
     else if (!strcmp(argv[1], "stamm")) teil_stamm();
     else if (!strcmp(argv[1], "phase_h")) teil_phase_h();
     else if (!strcmp(argv[1], "fenster")) teil_fenster();
+    else if (!strcmp(argv[1], "senken")) teil_senken();
     else if (!strcmp(argv[1], "pegel")) teil_pegel(argc, argv);
+    else if (!strcmp(argv[1], "zielen")) teil_zielen(argc, argv);
     else { printf("unbekannter Teil %s\n", argv[1]); return 2; }
     printf("%s: %d Fehler\n", argv[1], g_fail);
     return g_fail ? 1 : 0;

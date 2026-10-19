@@ -140,6 +140,12 @@ int re15_dining_r39_waffe_waehlen(void);
  * -1 = aus. Endet, sobald ein anderer Plc-Befehl Clip oder Kommandowort des Spielers aendert. */
 void re15_dining_r39_w_beginn(int entity, int clip);
 void re15_dining_r39_tick(void);   /* je Bild: W-Clip halten, Schuss (Verzug 1), Aufmerksamkeit */
+/* Nachbesserung 3 (Abnahme 2 M1): 1 = in ROOM1141 Phase H stand im letzten Spielschritt die Pad-Sperre (2,7) (Pausen-Wort
+ * Bit 0x01000000, Set-Tabelle @0x80074664[2]). Dann laeuft die Ziel-FSM des Spielers mit gekapptem Pad weiter wie im Original
+ * (FUN_80030444 `andi v0,v0,0xf000` @0x80030514 / `sw 0x800ac768` @0x8003051c; Dispatcher haelt nur bei Bit 31 @0x80031c78)
+ * und senkt die Waffe (HOLD @0x800331e4-@0x80033200, Messer @0x80035128-@0x80035144, Rueckstoss @0x80033600/@0x8003364c).
+ * Haken in player_common.c re15_player_tick; der Stand gilt ab dem Bild NACH dem Setzen (Umsetzer vor der Spiel-Task). */
+int  re15_dining_r39_ziel_senken(void);
 int  re15_dining_r39_w_clip(void);
 /* N4.3: Faden SCHUETZE39 (Evt_exec sub 30 in ROOM1141, Haken dining_r38.c), Anker im VM-Takt (scd_vm.c, Haken),
  * Lenkziel eines Gorillas (enemy_ai_common.c Gorilla B[3], Haken): John statt Elza, solange er Johns Treffer

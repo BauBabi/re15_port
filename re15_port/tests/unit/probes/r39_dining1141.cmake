@@ -11,9 +11,13 @@
 #                                  Tuer-Auftritt mit Kameraschnitten, Glasbruch, Blick ab msg 9, Zeilen 51/52, Abgang
 #   unit_r39_dining1141_fenster    Nachbesserung 1: Gemaelde im Fenster erster Ruf..Reaktion -> Reaktion erst nach der Rolladen-
 #                                  Szene, genau einmal (M1); Wiederbetreten mit offenem Rolladen + Entriegeln (N4.1/N4.2)
+#   unit_r39_dining1141_senken     Nachbesserung 3 (Abnahme 2 M1): wer unter der Pad-Sperre (2,7) zielt, senkt die Waffe
+#                                  (FUN_80030444 kappt das Held-Wort, Ziel-FSM HOLD/Messer/Rueckstoss -> SENKEN)
 #   integration_r39_dining1141_d   echte exe, echter Weg mit Elza 1131 -> 1141 (Gemaelde, frei laufen, Riegel, Szene, John
 #                                  schiesst) -> 1171 (Ton-Mitschnitt, Messschiene
 #                                  RE15_R39J_LOG, debug.log): alle Punkte 1-9 am Lauf, Punkt 9 am Mitschnitt
+#   integration_r39_dining1141_zielen Nachbesserung 3 (Abnahme 2 M1): echter Weg, Browning, Elza haelt R1 ueber Kampfende und
+#                                  Schnitt: Sperre >= 29 Bilder vor Cut 8, gesenkt, kein Bild in Cut 8 mit erhobener Waffe
 #   integration_r39_dining1141_kampf  Nachbesserung 2 (Abnahme 1 M1): echter Weg, Pistole, Gorillas LEBEND, Elza neben John:
 #                                  Treffer auch bei Elza im Griff (a), kein Schuss ausser Kegel (b), Zuwendung je Treffer-Salve (c),
 #                                  John beim Schiessen in Cut 0, Querungs-Wache
@@ -25,7 +29,7 @@ target_compile_definitions(test_r39_dining1141 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r39_dining1141 PRIVATE m)
 endif()
-foreach(_teil texte programme stamm phase_h fenster)
+foreach(_teil texte programme stamm phase_h fenster senken)
     add_test(NAME unit_r39_dining1141_${_teil} COMMAND test_r39_dining1141 ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r39_dining1141_${_teil} PROPERTIES TIMEOUT 300)
@@ -47,4 +51,14 @@ if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_dini
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_dining1141_kampf_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_dining1141_kampf.cmake)
     set_tests_properties(integration_r39_dining1141_kampf PROPERTIES TIMEOUT 3600)
+endif()
+if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_dining1141_zielen.cmake)
+    # Nachbesserung 3 (Abnahme 2 M1): Elza zielt beim Kampfende -> Sperre vor dem Schnitt, gesenkt, Cut 8 ohne erhobene Waffe
+    add_test(NAME integration_r39_dining1141_zielen
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_R39J_WERKZEUG=$<TARGET_FILE:test_r39_dining1141>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_dining1141_zielen_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_dining1141_zielen.cmake)
+    set_tests_properties(integration_r39_dining1141_zielen PROPERTIES TIMEOUT 3600)
 endif()

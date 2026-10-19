@@ -38,6 +38,9 @@ if(NOT TEIL)
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+# Runde 39 Spur J Nachbesserung 3 (Abnahme 2 H4, VERTRAG Abschnitt 2): keine RE15_*-Variable des Aufrufers erben.
+include("${CMAKE_CURRENT_LIST_DIR}/r39_dining1141_umgebung.cmake")
+r39j_umgebung_leeren()
 
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_basis "${WORKDIR}/lauf_${_lauf_id}")

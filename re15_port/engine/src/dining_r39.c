@@ -103,6 +103,35 @@ void re15_dining_r39_w_beginn(int entity, int clip)
 #endif
 }
 
+/* ============================ Nachbesserung 3 (Abnahme 2 M1): Waffe senken unter der Pad-Sperre ============================
+ * Befund (Abnahme 2 Lauf R/R2): zielte Elza noch, als ENTRIEGELN39 nach dem Kampf auf Cut 8 schnitt, stand sie dort nach
+ * Pos_set + Member_set(4) mit Blick zu John 11 Bilder lang mit erhobener Waffe (state.txt F6296..F6306 pst=1 mo=215), bis
+ * Plc_dest TURN das Kommandowort ersetzte. Ursache im Port: im Skript-Modus (player_mode 2, main.c cine_active = (1,27) oder
+ * (2,7)) ueberspringt re15_player_tick den ganzen Pad-Zweig samt Ziel-FSM - die Waffe bleibt einfach oben.
+ * Original (selbst disassembliert, info/Re1.5/PSX.EXE): Set(2,7)=1 setzt Bit 0x01000000 des Pausen-Worts 0x800aca40
+ * (Set-Tabelle @0x80074664[2], game_state.c). Der Pad-Umsetzer FUN_80030444 (Aufrufe im Task-Takt @0x80029dd8/@0x80029e14,
+ * VOR der Spiel-Task) kappt dann das virtuelle Held-Wort: `lw v0,-13760(v0)` @0x800304f4, `lui v1,0x100` @0x800304f8,
+ * `andi v0,v0,0xf000` @0x80030514, `sw v0,-14488(at)` @0x8003051c (0x800ac768). Der Spieler-Dispatcher haelt nur bei Bit 31
+ * (`bltz a0` @0x80031c78) und laeuft also weiter; die Ziel-FSM liest genau dieses Wort und senkt ohne Bit 0x100:
+ *   Schusswaffe HOLD  `lw v1,-14488(v1)` @0x800331e4 / `andi v0,v1,0x100` @0x800331ec / `ori v0,zero,0x3` @0x800331f8 /
+ *                     `sh v0,-13734(at)` @0x80033200 (aca5a = 3 = SENKEN)
+ *   Messer HOLD       @0x80035128 / @0x80035130 / @0x8003513c / @0x80035144
+ *   Rueckstoss        `lw a0,-14488(a0)` @0x80033560 / `andi v0,a0,0x100` @0x80033600, ab Bild > Byte 2 der Waffenzeile
+ *                     @0x80074092 + (w-1)*5 (@0x8003362c) -> @0x8003364c
+ * Wer beim Szenenbeginn zielt, senkt also die Waffe (Clip 6 rueckwaerts) und steht danach neutral; ENTRIEGELN39 setzt die
+ * Sperre darum wie ROOM11C0 sub03 (@0x01B06/@0x01B0A, Sleep 30 @0x01B14) 30 Bilder VOR dem Schnitt @0x01B18.
+ * Port: re15_player_tick laesst die Ziel-FSM in ROOM1141 Phase H unter der Sperre mit gekapptem Pad laufen (Haken
+ * player_common.c). Der Sperr-Stand wird hier am Ende des Spielschritts gemerkt (re15_dining_r39_tick laeuft nach dem
+ * Spieler-Takt) und gilt im naechsten Bild - wie im Original, wo der Umsetzer vor der Spiel-Task laeuft und das Skript das Bit
+ * in der Spiel-Task setzt. Nur ROOM1141 Phase H (die anderen Raeume behalten den bisherigen Port-Stand, Dossier OFFEN). */
+static int s_phase_h = 0;
+static int s_sperre_gesehen = 0;
+
+int re15_dining_r39_ziel_senken(void)
+{
+    return s_phase_h && (g_current_room_id & 0xFFFFu) == RE15_R38F_RAUM_1141 && s_sperre_gesehen;
+}
+
 /* ============================ N4.3: John schiesst (Faden SCHUETZE39) ============================
  * Original-Form: ROOM1021 sub02 @0x020C6 Plc_motion(2,6) Zielen, @0x020CA Sleep 110, @0x020CE/@0x020D6 Plc_motion(2,7)
  * Feuer-Clip (eigene Bank Clip 7) im Abstand Sleep 30 (@0x020D2), @0x020EA/@0x020EE (2,6) rueckwaerts Senken. Der Ton
@@ -361,6 +390,7 @@ static void w_halten(void)
 
 void re15_dining_r39_tick(void)
 {
+    s_sperre_gesehen = (g_re15_pauseflags & RE15_PAUSE_PAD) ? 1 : 0;   /* Nachbesserung 3: gilt im naechsten Bild (s. oben) */
     w_halten();
     if (s_leihe_an && !leihe_gilt(s_leihe_slot) && s_leihe_slot >= 0 &&
         ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141 || (int)g_actors[s_leihe_slot].motion != RE15_R39J_WINK_CLIP ||
@@ -457,8 +487,10 @@ int re15_dining_r39_waffe_waehlen(void)
 void re15_dining_r39_install(uint16_t room_id, int phase_h)
 {
     s_w_clip = -1;
-    s_leihe_an = 0; s_leihe_slot = -1;   /* s_leihe_ok bleibt: der Record haengt an Johns Bank - neu parsen je Raum */
-    s_leihe_ok = 0;
+    s_phase_h = 0; s_sperre_gesehen = 0;   /* Nachbesserung 3: Senken unter der Sperre nur in ROOM1141 Phase H */
+    s_leihe_an = 0; s_leihe_slot = -1;
+    s_leihe_ok = 0;   /* auch die geparste Leihe faellt: der Record haengt an Johns Bank (Basis-Hierarchie, re15_enemy_find),
+                       * die mit dem Raum neu geladen wird - leihe_starten() parst ihn je Raum neu (Abnahme 2 H7) */
     s_schuss_offen = 0;
     s_zielen = 0;
     s_ziel_slot = -1;
@@ -475,6 +507,7 @@ void re15_dining_r39_install(uint16_t room_id, int phase_h)
     meldung(RE15_R39J_MSG_PUH,      k_r39j_msg51, sizeof k_r39j_msg51);
     meldung(RE15_R39J_MSG_FOLGEN,   k_r39j_msg52, sizeof k_r39j_msg52);
     if (!phase_h) return;
+    s_phase_h = 1;
     re15_actor_t *j = &g_actors[RE15_R38F_JOHN_SCRIPT_SLOT + 1];   /* SCRIPT_SLOT_TO_ACTOR = +1 (scd_vm.c) */
     if (j->active && j->type == RE15_R38F_JOHN_TYP) {
         j->x = RE15_R39J_PARK_X;

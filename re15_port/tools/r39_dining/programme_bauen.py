@@ -22,7 +22,9 @@ PROGRAMME (Nachbesserung 1: Ablauf nach Nutzer-Nachtrag 4)
                Elza rennt zur Kamera Cut 7, dreht sich zur Tuer, hebt die Waffe (N4.2), Tuer auf, John innen vor die Tuer,
                Tuer zu, Kamera auf die Tuer (Cut 6, John steht schon da), Cut 5, Elza senkt die Waffe, John laeuft heraus;
                Szene der Runde 38 mit Punkt 6 (Glasbruch vor msg 6) und Punkt 7 (Skript wartet auf Johns Drehung vor msg 9);
-               nach dem Tod der Gorillas Punkt 8 (zwei Zeilen Johns mit Gesten, Heranwinken aus ROOM1171), dann Johns Abgang.
+               nach dem Tod der Gorillas Balken + Pad-Sperre + Sleep 30 vor dem Schnitt (Nachbesserung 3, Form ROOM11C0 sub03
+               @0x01B06..@0x01B18: wer noch zielt, senkt die Waffe), Punkt 8 (zwei Zeilen Johns mit Gesten, Heranwinken aus
+               ROOM1171), dann Johns Abgang.
   ROLLTOR39    ROOM1141 Ereignis 6 (Gemaelde) in Phase H: Rolladen hoch mit Ton (Runde 38), danach Steuerung zurueck (N4.1).
 """
 import importlib.util, io, os, struct, sys
@@ -253,9 +255,8 @@ def nach_dem_kampf():
     RBJ-Records 1, geliehen) statt Plc_motion(2,6) (= Zielen, ROOM1021 @0x020C6); der zwischenzeitliche Armschwung (Clip 17,
     1141 sub02 @0x00DBA..@0x00DC6 = Bibliotheks-Geste zu "Hurry up! They're coming!", ROOM3070 sub03 @0x03724) lehnte der
     Nutzer ab."""
-    R.cut_chg(CUT_GESPRAECH, "Cut_chg 8 = Suedwest-Ecke, John und Elza im Bild (Form sub02 @0x00C24 `29 07`)")
-    R.set_flag(2, 0x07, 1, "Set(2,7)=1 = sub02 @0x00C26")
-    R.set_flag(1, 0x1B, 1, "Set(1,0x1B)=1 Balken = sub02 @0x00C2A")
+    R.cut_chg(CUT_GESPRAECH, "Cut_chg 8 = Suedwest-Ecke, John und Elza im Bild (Form ROOM11C0 sub03 @0x01B18 `29 04`: der Schnitt "
+                             "nach Balken, Pad-Sperre und Sleep 30; Nachbesserung 3 - vorher wie sub02 @0x00C24 erst Schnitt, dann Sperre)")
     R.work_npc(0, "Work_set(2,0)+Nop John (Form sub02 @0x00C5C)")
     R.pos_set(ECKE, "Pos_set John an seinen Platz im Kampf (Ziel sub02 @0x00F8E) IM SCHNITTBILD (Nachbesserung 1 M3: vorher "
                     "erst hinter Sleep 1/10/5 = 16 Bilder nach dem Schnitt sichtbar)")
@@ -371,7 +372,17 @@ def baue_entriegeln39():
     # ---- Gorillas tot -> Punkt 8, dann Doppeltuer frei und Johns Abgang (Runde 38) ----
     R.warte(4, 0xF2, 1, "Gorillas leben (sub01 @0x00C0C loescht (4,0xF2))")
     warte_solange(SCHUETZE_BANK, SCHUETZE_BIT, "Johns letzte Salve zu Ende (N4.3)")
-    sleep(30, "Sleep 30 (Form ROOM1021 sub06 @0x021FE)")
+    # Nachbesserung 3 (Abnahme 2 M1: Elza zielte beim Schnitt noch und stand in Cut 8 11 Bilder lang mit der Waffe auf John):
+    # Szenenbeginn nach einem Kampf in der Original-Form ROOM11C0 sub03 @0x01B02..@0x01B18 (Leon und Ada nach dem Tod der
+    # Parkplatz-Gorillas, sub01 @0x01836/@0x0183E -> Evt_exec sub03 @0x01842): Balken und Pad-Sperre ZUERST, dann Sleep 30, dann
+    # der Schnitt. Unter der Sperre kappt FUN_80030444 ab dem naechsten Bild das Held-Wort (@0x80030514 `andi 0xf000` /
+    # @0x8003051c `sw 0x800ac768`); die Ziel-FSM liest es (HOLD @0x800331e4/@0x800331ec, Messer @0x80035128/@0x80035130,
+    # Rueckstoss @0x80033560/@0x80033600) und senkt die Waffe (aca5a = 3 @0x80033200/@0x80035144/@0x8003364c) - wer zielt,
+    # steht beim Schnitt neutral (Port: dining_r39.c re15_dining_r39_ziel_senken + Haken player_common.c).
+    R.set_flag(1, 0x1B, 1, "Set(1,0x1B)=1 Balken = ROOM11C0 sub03 @0x01B06 `22 01 1b 01` (Nachbesserung 3)")
+    R.set_flag(2, 0x07, 1, "Set(2,7)=1 Pad-Sperre = ROOM11C0 sub03 @0x01B0A `22 02 07 01`: Pausen-Wort Bit 0x01000000 (Tabelle "
+                           "@0x80074664[2] = 0x800aca40) -> FUN_80030444 kappt das Held-Wort, die Ziel-FSM senkt (Nachbesserung 3)")
+    sleep(30, "Sleep 30 = ROOM11C0 sub03 @0x01B14 `09 0a 1e 00` (zwischen Sperre und Schnitt @0x01B18; Nachbesserung 3)")
     nach_dem_kampf()
     op([0x46, 0x00, 0x02, 0x31] + list(D1141[0x00A52 + 14:0x00A52 + 20]),
        "Aot_reset Slot 0 -> Tuer ROOM1131 (Nutzlast = main00 @0x00A52+14; Runde 38 Nachbesserung 1 M3)")
