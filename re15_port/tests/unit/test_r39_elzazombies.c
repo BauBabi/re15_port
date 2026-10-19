@@ -30,7 +30,18 @@
  *   leon_<a>  NACHTRAG 12, Leon: Kette ab ROOM1150 (Szene) bis 1030 mit <a> lebenden 10E0-Zombies: 4 (1140 voll, Gegenprobe +
  *             Vergleich des 1040-Schritts), 2 (1140 leer: Szene -> 1060), 0 (Kette wie bisher). 1060 Cut 2 = Elzas Form
  *             (K3-Folge, Kopien naeher an der Kamera, HP 100, Schnitt 176 Bilder).
- *   leon_nach1060  Leon betritt 1060 nach der Szene: Kopien an der Westseite, gehalten bis Etage 4, ohne (9,73) nichts.
+ *   leon_nach1060  Leon betritt 1060 nach der Szene: Kopien an der Westseite, gehalten bis Etage 4, ohne (9,73) nichts;
+ *             NACHBESSERUNG 3: ohne (9,96) (Umzug nie gelaufen) nichts.
+ *   altstand  NACHBESSERUNG 3, Mangel 1 der Abnahme 2: alter Leon-Spielstand nach Irons' Tod (v0.8.22..v0.8.26: (9,73)=1, Kopie-
+ *             Bits 124..127 nie gesetzt, (9,96)=0) -> ROOM1060 ohne Gegner, egal ob die 10E0-Zombies getoetet sind (Karte der
+ *             Abnahme M10) oder leben (dann stehen sie weiter in 10E0, nicht doppelt); GEGENPROBE derselbe Stand mit (9,96)=1 ->
+ *             vier Kopien (der Riegel sieht den Unterschied); re15_r39q_leon_umzug setzt (9,96) und die Kopie-Bits.
+ *   oben      NACHBESSERUNG 3, Mangel 2 + ORCHESTRATOR-ENTSCHEID E1: Ankunft im Treppenhaus von OBEN (Tuer Etage 8, Elza 1061 und
+ *             Leon 1060): Kopien an der Ostseite (Lagen 3 = weiteste Packung vom Ende der Treppe A), im Spawn-Bild OHNE Haltebit
+ *             (INIT laeuft), danach gehalten und initialisiert (state != 0, HP > 0, Weg <= 50 in 200 Bildern auf Etage 8, kein
+ *             Griff); frei bei der Ankunft am Ende der Treppe A (20364/20432,25368) mit kleinstem Abstand >= 4591 (= gemessen
+ *             von unten), danach kommen sie naeher, Spieler-HP 100. Ankunft durch die 10C1-Tuer (Etage 4): Westseite, sofort
+ *             frei, Abstand >= 4591.
  *   nach1061  Nachspawn: die 10E1-Kopien stehen an der Westseite (moeglichst weit weg vom gemessenen Ankunftspunkt der
  *             Treppe), gehalten solange die Spielerin unten ist (200 Bilder Etage 0, Weg 0), frei auf Etage 4 (Abstand
  *             >= 4000 beim Freigeben), danach kommen sie naeher; tote Kopien erscheinen nicht.
@@ -1075,6 +1086,9 @@ static void teil_leon(int lebend_10e0, int lebend_1140, int an)
         int k = leon_finde('S', 0x1040, 0) - 1; while (k >= 0 && re15_irons_tod_folge(k)->art != 'K') k--;
         const re15_it_folge_t *K = re15_irons_tod_folge(k);
         PRUEF(K && K->wert == 1, "ohne 1060: der Knall vor 1040 ist wie bisher Satz 1 (%d)", K ? K->wert : -1);
+        PRUEF(re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060) == (an ? 1 : 0),
+              "NB3: (9,96) = %d (%s)", re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060),
+              an ? "Umzug lief, 0 Kopien" : "Modul aus: kein Umzug");
         re15_elzazombies_r39_enable(1);
         re15_irons_tod_zustand_setzen(RE15_IT_AUS);
         return;
@@ -1105,8 +1119,8 @@ static void teil_leon(int lebend_10e0, int lebend_1140, int an)
     PRUEF(hp0 == 100 && hpmin == 100, "Leon: Spieler-HP bis 1030 unveraendert (%d -> min %d)", hp0, hpmin);
     int quellen = 1; for (int i = 0; i < 4; i++) quellen &= re15_game_flag_get(7, (uint8_t)(0xe0 + i));
     int scharf = 0; for (int i = 0; i < 4; i++) scharf += !re15_game_flag_get(7, (uint8_t)(124 + i));
-    PRUEF(quellen && scharf == lebend_10e0 && !re15_game_flag_get(9, 95),
-          "Umzug: 10E0-Quellen still, %d 1060-Kopien scharf (= Elzas 1061-Bits 124..127); Elzas (9,95) bleibt 0", scharf);
+    PRUEF(quellen && scharf == lebend_10e0 && !re15_game_flag_get(9, 95) && re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060),
+          "Umzug: 10E0-Quellen still, %d 1060-Kopien scharf (= Elzas 1061-Bits 124..127); Elzas (9,95) bleibt 0; (9,96)=1 (NB3)", scharf);
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);
 }
 /* Vergleich: der 1040-Schritt ist nach dem Treppenhaus derselbe wie vorher (gleiche Bildzahl bis zur Tuer nach 1030). */
@@ -1124,6 +1138,7 @@ static void teil_leon_nach1060(void)
     /* Zustand nach Leons Montage: (9,73) Szene gesehen, 10E0-Quellen still, 1060-Kopien 124/125 scharf, 126/127 still */
     re15_game_state_init(); g_gameflow.character = 0;
     re15_game_flag_set(9, 71, 1); re15_game_flag_set(3, 94, 1); re15_game_flag_set(9, 73, 1);
+    re15_game_flag_set(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060, 1);   /* NB3: Umzug gelaufen (re15_r39q_leon_umzug) */
     for (int i = 0; i < 4; i++) re15_game_flag_set(7, (uint8_t)(0xe0 + i), 1);
     re15_game_flag_set(7, 126, 1); re15_game_flag_set(7, 127, 1);
     re15_elzazombies_r39_reset();
@@ -1151,11 +1166,179 @@ static void teil_leon_nach1060(void)
     const int nf = re15_elzazombies_r39_freigabe(&px, &pz, &dmin);
     PRUEF(nf == 2 && dmin >= 4000 && !re15_elzazombies_r39_1061_gehalten(),
           "Leon auf Etage 4: %d Kopien frei, kleinster Abstand %d >= 4000 (wie Elza in 1061)", nf, dmin);
+    /* ohne (9,96) (Umzug nie gelaufen, Nachbesserung 3): nichts */
+    re15_game_flag_set(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060, 0);
+    re15_elzazombies_r39_reset();
+    if (room_boot(0x1060, 26000, 0, 25300, 2048, 7) != 0) return;
+    PRUEF(kopien_im_raum(124, 127) == 0, "Leon ROOM1060 ohne (9,96): keine Kopie");
+    re15_game_flag_set(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060, 1);
     /* ohne (9,73) (Szene nicht gesehen): nichts */
     re15_game_flag_set(9, 73, 0);
     re15_elzazombies_r39_reset();
     if (room_boot(0x1060, 26000, 0, 25300, 2048, 7) != 0) return;
     PRUEF(kopien_im_raum(124, 127) == 0, "Leon ROOM1060 ohne (9,73): keine Kopie");
+    g_gameflow.character = 4;
+}
+
+/* ================================================================================================================== */
+/* Teil altstand (Nachbesserung 3, Mangel 1 der Abnahme 2)                                                            */
+/* ================================================================================================================== */
+/* Leon nach Irons' Tod OHNE den Umzug dieser Spur = jeder Spielstand v0.8.22..v0.8.26 (und master vor Nachbesserung 3):
+ * (9,71) 10F0-Szene, (3,94) erste Irons-Szene, (9,73) Todesszene gesehen; Kopie-Bits 124..127 und (9,96) nie gesetzt. */
+static void altstand_flags(int tot_10e0)
+{
+    re15_game_state_init(); g_gameflow.character = 0;
+    re15_game_flag_set(9, 71, 1); re15_game_flag_set(3, 94, 1); re15_game_flag_set(9, 73, 1);
+    if (tot_10e0) for (int i = 0; i < 4; i++) re15_game_flag_set(7, (uint8_t)(0xe0 + i), 1);
+    re15_elzazombies_r39_reset();
+    re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+}
+static void teil_altstand(void)
+{
+    printf("== altstand ==\n");
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    /* (a) Karte der Abnahme M10: alle vier 10E0-Zombies getoetet. Eintritt von unten (ROOM1040 Tuer Slot 2 @0x010D8). */
+    altstand_flags(1);
+    if (room_boot(0x1060, 26000, 0, 25300, 2048, 7) != 0) return;
+    int n0 = aktive_gegner();
+    for (int f = 0; f < 90; f++) frame();
+    PRUEF(n0 == 0 && aktive_gegner() == 0 && kopien_im_raum(124, 127) == 0,
+          "alter Spielstand, 10E0 alle getoetet: ROOM1060 ohne Gegner (Raumaufbau %d, Bild 90 %d) = v0.8.26 (Abnahme 2 M10 Gegenprobe)",
+          n0, aktive_gegner());
+    /* (b) dieselben Zombies leben noch (10E0 nie betreten): kein Nachspawn in 1060 - sie stehen weiter in ROOM10E0 */
+    altstand_flags(0);
+    if (room_boot(0x1060, 26000, 0, 25300, 2048, 7) != 0) return;
+    const int n1060 = kopien_im_raum(124, 127);
+    if (room_boot(0x10E0, -2000, 0, -2000, 0, 0) != 0) return;   /* irgendein Platz: gezaehlt werden nur die Records */
+    const int n10e0 = kopien_im_raum(0xe0, 0xe3);
+    PRUEF(n1060 == 0 && n10e0 == 4, "alter Spielstand, 10E0 lebt: ROOM1060 %d Kopien, ROOM10E0 %d Zombies (Bits 0xe0..0xe3) - nicht doppelt",
+          n1060, n10e0);
+    /* (c) GEGENPROBE: Stand (a) mit (9,96)=1 (= Umzug mit vier Lebenden) -> vier Kopien. Ohne den Merker sah der alte Code genau
+     *     das in (a). */
+    altstand_flags(1);
+    re15_game_flag_set(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060, 1);
+    if (room_boot(0x1060, 26000, 0, 25300, 2048, 7) != 0) return;
+    PRUEF(kopien_im_raum(124, 127) == 4, "Gegenprobe (9,96)=1: %d Kopien (der Riegel unterscheidet die Staende)", kopien_im_raum(124, 127));
+    /* (d) der Umzug beim Szenenstart setzt den Merker und die Kopie-Bits: 0xe1/0xe3 leben, 0xe0/0xe2 tot */
+    altstand_flags(0);
+    re15_game_flag_set(7, 0xe0, 1); re15_game_flag_set(7, 0xe2, 1);
+    re15_r39q_leon_umzug();
+    int quellen = 1; for (int i = 0; i < 4; i++) quellen &= re15_game_flag_get(7, (uint8_t)(0xe0 + i));
+    PRUEF(re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060) && re15_r39q_leon_1060_zahl() == 2 && quellen &&
+          re15_game_flag_get(7, 124) && !re15_game_flag_get(7, 125) && re15_game_flag_get(7, 126) && !re15_game_flag_get(7, 127),
+          "re15_r39q_leon_umzug: (9,96)=1, Zahl %d, Quellen still, Kopien 125/127 scharf, 124/126 still", re15_r39q_leon_1060_zahl());
+    g_gameflow.character = 4;
+}
+
+/* ================================================================================================================== */
+/* Teil oben (Nachbesserung 3, Mangel 2 der Abnahme 2 + ORCHESTRATOR-ENTSCHEID E1)                                     */
+/* ================================================================================================================== */
+static int oben_kopien(int32_t *xs, int32_t *zs, int *init, int *halt)
+{
+    int n = 0; *init = 0; *halt = 0;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        const re15_actor_t *a = &g_actors[i];
+        if (!a->active || a->em_flag_id < 124 || a->em_flag_id > 127) continue;
+        if (xs) xs[i] = a->x;
+        if (zs) zs[i] = a->z;
+        n++;
+        if (a->state != 0 && a->hp > 0) (*init)++;
+        if (a->grid_id & RE15_AI_GRID_SKIP) (*halt)++;
+    }
+    return n;
+}
+static void oben_lauf(uint16_t raum, int32_t ank_x, const char *wer)
+{
+    /* Eintritt von oben: Tuer Etage 8 (ROOM1120/1121 Tuer Slot 0 @0x00C76 -> Raum 0x06, (26000,-14400,25300) Gier 2048, Cut 0) */
+    if (room_boot(raum, 26000, -14400, 25300, 2048, 0) != 0) return;
+    const re15_r39q_lage_t *lagen = NULL; re15_elzazombies_r39_lagen(3, &lagen);
+    int an_lage = 0, ost = 0, init = 0, halt = 0;
+    int32_t x0[RE15_ACTOR_MAX] = {0}, z0[RE15_ACTOR_MAX] = {0};
+    const int n = oben_kopien(NULL, NULL, &init, &halt);
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        const re15_actor_t *a = &g_actors[i];
+        if (!a->active || a->em_flag_id < 124 || a->em_flag_id > 127) continue;
+        const int k = a->em_flag_id - 124;
+        if (a->x == lagen[k].x && a->z == lagen[k].z && a->y == RE15_R39Q_Y_1061 && a->floor == RE15_R39Q_ETAGE_1061) an_lage++;
+        if (a->x >= 25500) ost++;
+    }
+    PRUEF(n == 4 && an_lage == 4 && ost == 4 && re15_elzazombies_r39_nach_oben() == 1,
+          "%s ROOM%04X von oben: 4 Kopien an den Ostseiten-Lagen (Lagen 3) auf Etage 4 (%d/%d, x >= 25500: %d)", wer, raum, an_lage, n, ost);
+    PRUEF(init == 0 && halt == 0, "%s: im Spawn-Bild noch kein INIT und KEIN Haltebit (%d initialisiert, %d gehalten) - sonst liefe der INIT nie",
+          wer, init, halt);
+    frame();
+    oben_kopien(NULL, NULL, &init, &halt);
+    PRUEF(init == 4, "%s: nach dem ersten KI-Takt alle 4 initialisiert (state != 0, HP > 0): %d", wer, init);
+    frame();
+    oben_kopien(x0, z0, &init, &halt);
+    PRUEF(halt == 4 && re15_elzazombies_r39_1061_gehalten(), "%s: ab dem zweiten Bild gehalten (%d)", wer, halt);
+    for (int f = 0; f < 200; f++) frame();
+    int still = 1, init2 = 0, halt2 = 0;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        const re15_actor_t *a = &g_actors[i];
+        if (!a->active || a->em_flag_id < 124 || a->em_flag_id > 127) continue;
+        if (labs((long)a->x - x0[i]) + labs((long)a->z - z0[i]) > 50) still = 0;
+    }
+    oben_kopien(NULL, NULL, &init2, &halt2);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    PRUEF(still && init2 == 4 && halt2 == 4 && pl->hp == 100,
+          "%s: 200 Bilder auf Etage 8: stehen initialisiert und gehalten (Weg <= 50, %d initialisiert), Spieler-HP %d", wer, init2, pl->hp);
+    /* Ankunft am Ende der Treppe A (gemessen: Leon (20364,25368), Elza (20432,25368)) */
+    pl->x = ank_x; pl->y = RE15_R39Q_Y_1061; pl->z = 25368; pl->rot_y = 3072;
+    pl->floor = RE15_R39Q_ETAGE_1061; re15_collision_set_band(RE15_R39Q_ETAGE_1061);
+    frame();
+    int32_t px = 0, pz = 0, dmin = -1;
+    const int nf = re15_elzazombies_r39_freigabe(&px, &pz, &dmin);
+    PRUEF(nf == 4 && dmin >= 4591 && !re15_elzazombies_r39_1061_gehalten(),
+          "%s auf Etage 4 bei (%d,25368): %d Kopien frei, kleinster Abstand %d >= 4591 (= gemessen von unten, Abnahme 2 M5)", wer, ank_x,
+          nf, dmin);
+    int32_t d_vorher = dmin, d_nach = 1 << 30;
+    int hpmin = pl->hp;
+    for (int f = 0; f < 90; f++) { frame(); if (pl->hp < hpmin) hpmin = pl->hp; }
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        const re15_actor_t *a = &g_actors[i];
+        if (!a->active || a->em_flag_id < 124 || a->em_flag_id > 127) continue;
+        int32_t d = (int32_t)lround(sqrt((double)(a->x - pl->x) * (a->x - pl->x) + (double)(a->z - pl->z) * (a->z - pl->z)));
+        if (d < d_nach) d_nach = d;
+    }
+    PRUEF(d_nach < d_vorher - KOERPERRADIUS && hpmin == 100,
+          "%s: nach der Freigabe kommen sie naeher (%d -> %d in 90 Bildern), kein Griff (HP min %d)", wer, d_vorher, d_nach, hpmin);
+}
+static void teil_oben(void)
+{
+    printf("== oben ==\n");
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    /* Elza: Zustand nach der Montage ((9,95), 10E1-Quellen still, alle vier 1061-Kopien scharf) */
+    elza_flags();
+    re15_game_flag_set(9, 95, 1);
+    for (int i = 0; i < RE15_R39Q_N_10E1; i++) re15_game_flag_set(7, (uint8_t)(RE15_R39Q_BIT_10E1_0 + i), 1);
+    re15_elzazombies_r39_reset();
+    oben_lauf(0x1061, 20432, "Elza");
+    /* Elza durch die 10C1-Tuer (ROOM10C1 @0x00E42 -> (26000,-7200,25300) Cut 2): Westseite, sofort frei */
+    re15_elzazombies_r39_reset();
+    if (room_boot(0x1061, 26000, -7200, 25300, 2048, 2) != 0) return;
+    {
+        const re15_r39q_lage_t *lagen = NULL; re15_elzazombies_r39_lagen(1, &lagen);
+        int an_lage = 0;
+        for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+            const re15_actor_t *a = &g_actors[i];
+            if (!a->active || a->em_flag_id < 124 || a->em_flag_id > 127) continue;
+            const int k = a->em_flag_id - 124;
+            if (a->x == lagen[k].x && a->z == lagen[k].z) an_lage++;
+        }
+        int32_t px = 0, pz = 0, dmin = -1;
+        const int nf = re15_elzazombies_r39_freigabe(&px, &pz, &dmin);
+        PRUEF(an_lage == 4 && re15_elzazombies_r39_nach_oben() == 0 && nf == 4 && dmin >= 4591 && !re15_elzazombies_r39_1061_gehalten(),
+              "Elza durch die 10C1-Tuer (Etage 4): Westseiten-Lagen (%d/4), sofort frei, kleinster Abstand %d >= 4591", an_lage, dmin);
+    }
+    /* Leon: Zustand nach seiner Montage ((9,73), (9,96), 10E0-Quellen still, alle vier 1060-Kopien scharf) */
+    re15_game_state_init(); g_gameflow.character = 0;
+    re15_game_flag_set(9, 71, 1); re15_game_flag_set(3, 94, 1); re15_game_flag_set(9, 73, 1);
+    re15_game_flag_set(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060, 1);
+    for (int i = 0; i < 4; i++) re15_game_flag_set(7, (uint8_t)(0xe0 + i), 1);
+    re15_elzazombies_r39_reset();
+    re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+    oben_lauf(0x1060, 20364, "Leon");
     g_gameflow.character = 4;
 }
 
@@ -1271,6 +1454,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "leon_2"))    teil_leon(2, 0, 1);     /* 1140 leer: Szene -> 1060 -> 1040 */
     if (alle || !strcmp(teil, "leon_0"))    teil_leon(0, 5, 1);     /* 10E0 leer: Kette wie bisher */
     if (alle || !strcmp(teil, "leon_nach1060")) teil_leon_nach1060();
+    if (alle || !strcmp(teil, "altstand"))  teil_altstand();     /* Nachbesserung 3, Mangel 1 */
+    if (alle || !strcmp(teil, "oben"))      teil_oben();         /* Nachbesserung 3, Mangel 2 / E1 */
     if (alle || !strcmp(teil, "nach1061"))  teil_nach1061();
     if (alle || !strcmp(teil, "nach1031"))  teil_nach1031();
     if (alle || !strcmp(teil, "durch1041")) teil_durch1041();

@@ -1,7 +1,7 @@
 # test_r39_elzazombies.cmake — Runde 39 Spur Q "elzazombies": Elza, Zombie-Durchbrueche in der Panikphase an der ECHTEN
 # exe (Dossier analysis/befunde_runde39/Q_elzazombies.md, Mechanik include/re15_elzazombies_r39.h). Aufruf:
 #   cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE=<probe_r39_elzazombies_karte> -DRE15_AUSWERTER=<test_r39_elzazombies>
-#         -DWORKDIR=<dir> -DTEIL=<kette|knall|treppe|durch|ohne|leon> -P test_r39_elzazombies.cmake
+#         -DWORKDIR=<dir> -DTEIL=<kette|knall|treppe|durch|ohne|leon|altstand|oben> -P test_r39_elzazombies.cmake
 #
 #   kette   Elza-Spielstand ROOM1041 (Intro durch: (3,125),(3,193); 1011 besucht: (3,116); 10E1 und 1071 nie betreten = alle
 #           leben), CONTINUE, (9,97) bei Bild 200 (= Spur P beim 1041-Ruf). debug.log: Flanke -> Umzug (10E1 4, 1071 5) ->
@@ -23,6 +23,16 @@
 #           (x <= 21100); Bild der Ankunft (ankunft.ppm).
 #   ohne    Leon ROOM1040 mit (9,97)-Flanke: keine Kette; Elza-Spielstand mit (9,97) schon gesetzt (Laden): keine Flanke;
 #           H1: Weg wie TEIL durch OHNE (9,97) (John gerettet): kein Durchbruch, Elza mit Steuerung an der Tuer.
+#   altstand NACHBESSERUNG 3, Mangel 1 der Abnahme 2, ECHTER WEG: Karte der Abnahme M10 (Leon nach Irons' Tod, (9,71),(3,94),(9,73),
+#           alle vier 10E0-Zombies getoetet, Kopie-Bits und (9,96) nie gesetzt = Spielstand v0.8.22..v0.8.26), Tuer 1040 -> 1060:
+#           kein Nachspawn, Bild 90 des 1060-Besuchs ohne Gegner (= v0.8.26-exe, Abnahme 2 M10). GEGENPROBE dieselbe Karte mit
+#           (9,96)=1: Nachspawn mit vier Kopien (der Riegel sieht den Unterschied).
+#   oben    NACHBESSERUNG 3, Mangel 2 + ORCHESTRATOR-ENTSCHEID E1, ECHTER WEG von oben (Tuer Etage 8 = Ankunft aus ROOM1120/1121
+#           Slot 0 @0x00C76, Treppe B 8 -> 6, Treppe A 6 -> 4; Skript der Abnahme M9) fuer Leon (1060, Zustand nach seiner Montage
+#           mit (9,96)) und Elza (1061, (9,95)): Nachspawn "Ankunft von oben" mit vier Kopien an der Ostseite (x >= 25500), im
+#           ganzen Besuch keine nicht initialisierte Kopie (state.log nie " st=0 "), gehalten und sichtbar in Schnitt 2
+#           (cam=2 mit g=20), frei am Ende der Treppe A (z 25368) mit kleinstem Abstand >= 4591 (= gemessen von unten), kein Griff
+#           (gr=0, Spieler-HP 100 bis Bild 700); Bild ankunft_oben.ppm (Bild 480, Schnitt 2 waehrend Treppe A).
 #
 # Parallel-/Linux-fest: exe-Kopie mit eigenem Praefix je TEIL, eigener Laufordner je Lauf, Umgebung nur ueber
 # re15_start_spiel (spiel_lauf.cmake) — geerbte RE15_*-Variablen des Aufrufers (jede Schreibweise) loescht der Block
@@ -499,6 +509,142 @@ elseif(TEIL STREQUAL "leon")
     else()
         fail("state.log fehlt")
     endif()
+
+# ------------------------------------------------------------------------------------------------------------------
+elseif(TEIL STREQUAL "altstand")
+    # Nachbesserung 3, Mangel 1: alter Leon-Spielstand (Karte der Abnahme M10), Tuer 1040 -> 1060 (Slot 2 @0x010D8).
+    foreach(_fall alt neu)
+        if(_fall STREQUAL "alt")
+            set(_k "1040;-20700;0;-13000;0;0;9:71;3:94;9:73;7:224;7:225;7:226;7:227")
+        else()
+            set(_k "1040;-20700;0;-13000;0;0;9:71;3:94;9:73;9:96;7:224;7:225;7:226;7:227")
+        endif()
+        lauf(altstand_${_fall} "${_k}" 300 RE15_NOAUDIO=1 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=60
+             "RE15_INPUT_SCRIPT=A0.2,W5" RE15_STATE_LOG=state.log "RE15_EXIT_AT=100#1060")
+        if(NOT _dbg MATCHES "PC loaded room1060")
+            fail("${_fall}: Tuer 1040 -> 1060 nicht durchschritten")
+            continue()
+        endif()
+        # state.log: Bild 90 des ZWEITEN Raumbesuchs (1 = 1040, 2 = 1060; der Bildzaehler faellt beim Raumwechsel zurueck)
+        set(_g90 -1)
+        if(EXISTS "${_dir}/state.log")
+            file(STRINGS "${_dir}/state.log" _st)
+            set(_letzt -1)
+            set(_besuch 1)
+            foreach(_z IN LISTS _st)
+                if(_z MATCHES "^F([0-9]+) ")
+                    set(_f ${CMAKE_MATCH_1})
+                    if(_f LESS _letzt)
+                        math(EXPR _besuch "${_besuch} + 1")
+                    endif()
+                    if(_besuch EQUAL 2 AND _f EQUAL 90)
+                        string(REGEX MATCHALL " t=[0-9a-f]+ st=" _g "${_z}")
+                        list(LENGTH _g _g90)
+                    endif()
+                    set(_letzt ${_f})
+                endif()
+            endforeach()
+        endif()
+        if(_fall STREQUAL "alt")
+            if(_dbg MATCHES "kein Nachspawn 1060: Umzug 10E0 -> 1060 nie gelaufen" AND NOT _dbg MATCHES "Leon: Nachspawn 1060"
+               AND _g90 EQUAL 0)
+                ok("alter Spielstand ((9,73)=1, ohne (9,96)): ROOM1060 Bild 90 ohne Gegner = v0.8.26 (Abnahme 2 M10)")
+            else()
+                fail("alter Spielstand: ROOM1060 Bild 90 mit ${_g90} Gegnern (erwartet 0, kein Nachspawn)")
+            endif()
+        else()
+            if(_dbg MATCHES "Leon: Nachspawn 1060 \\(Programm E\\)" AND _g90 EQUAL 4)
+                ok("Gegenprobe (9,96)=1: Nachspawn mit ${_g90} Kopien (der Riegel unterscheidet die Staende)")
+            else()
+                fail("Gegenprobe (9,96)=1: Bild 90 mit ${_g90} Gegnern (erwartet 4)")
+            endif()
+        endif()
+    endforeach()
+
+# ------------------------------------------------------------------------------------------------------------------
+elseif(TEIL STREQUAL "oben")
+    # Nachbesserung 3, Mangel 2 + E1: Ankunft von OBEN. Karte = Ankunft aus ROOM1120/1121 (Tuer Slot 0 @0x00C76: Raum 0x06,
+    # (26000,-14400,25300) Gier 2048, Cut 0); Skript der Abnahme 2 M9/M11: Treppe B 8 -> 6, quer zur Westtreppe, Treppe A 6 -> 4.
+    set(_skript "W0.5,U0.67,W0.3,L0.35,W0.3,U0.45,W0.3,A0.2,W5,R0.35,W0.3,U3.0,W0.3,R0.35,W0.3,U0.5,W0.3,A0.2,W8")
+    foreach(_wer leon elza)
+        if(_wer STREQUAL "leon")
+            set(_raum 1060)
+            set(_k "1060;26000;-14400;25300;2048;0;9:71;3:94;9:73;9:96;9:74;9:75;9:76;7:224;7:225;7:226;7:227")
+            set(_ns "Leon: Nachspawn 1060 \\(Programm E\\): Ankunft von oben, Kopien an der Ostseite")
+        else()
+            set(_raum 1061)
+            set(_k "1061;26000;-14400;25300;2048;0;3:125;3:193;3:116;9:95;7:224;7:225;7:226;7:227")
+            set(_ns "Nachspawn 1061 \\(Programm E\\): Ankunft von oben, Kopien an der Ostseite")
+        endif()
+        lauf(oben_${_wer} "${_k}" 600 RE15_NOAUDIO=1 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=30
+             "RE15_INPUT_SCRIPT=${_skript}" RE15_STATE_LOG=state.log "RE15_FRAMEDUMP=480:ankunft_oben.ppm"
+             "RE15_EXIT_AT=700#${_raum}")
+        if(_dbg MATCHES "${_ns}")
+            ok("${_wer}: Nachspawn von oben (Ostseite)")
+        else()
+            fail("${_wer}: kein Nachspawn 'Ankunft von oben' im debug.log")
+        endif()
+        string(REGEX MATCHALL "ROOM${_raum}: Kopie Aktor [0-9]+ Bit [0-9]+ bei \\([0-9-]+,[0-9-]+\\)" _ks "${_dbg}")
+        set(_nk 0)
+        set(_ost 0)
+        foreach(_z IN LISTS _ks)
+            if(_z MATCHES "bei \\(([0-9-]+),([0-9-]+)\\)")
+                math(EXPR _nk "${_nk} + 1")
+                if(CMAKE_MATCH_1 GREATER_EQUAL 25500)
+                    math(EXPR _ost "${_ost} + 1")
+                endif()
+            endif()
+        endforeach()
+        if(_nk EQUAL 4 AND _ost EQUAL 4)
+            ok("${_wer}: alle vier Kopien standen bei der Ankunft an der Ostseite (x >= 25500)")
+        else()
+            fail("${_wer}: Kopien bei der Ankunft: ${_ost} von ${_nk} an der Ostseite")
+        endif()
+        string(REGEX MATCH "ROOM${_raum}: Spielerin auf Etage 4 bei \\(([0-9-]+),([0-9-]+)\\) -> Kopien frei, kleinster Abstand ([0-9]+)" _m "${_dbg}")
+        if(_m AND CMAKE_MATCH_2 EQUAL 25368 AND CMAKE_MATCH_3 GREATER_EQUAL 4591)
+            ok("${_wer}: frei erst am Ende der Treppe A (z ${CMAKE_MATCH_2}), kleinster Abstand ${CMAKE_MATCH_3} >= 4591 (= von unten)")
+        else()
+            fail("${_wer}: Freigabe '${_m}' (erwartet z 25368, Abstand >= 4591)")
+        endif()
+        set(_st0 0)
+        set(_sicht 0)
+        set(_griff 0)
+        set(_hp 0)
+        if(EXISTS "${_dir}/state.log")
+            file(STRINGS "${_dir}/state.log" _st)
+            foreach(_z IN LISTS _st)
+                if(_z MATCHES " t=[0-9a-f]+ st=0 ")
+                    math(EXPR _st0 "${_st0} + 1")
+                endif()
+                if(_z MATCHES " cam=2 " AND _z MATCHES " g=20 ")
+                    math(EXPR _sicht "${_sicht} + 1")
+                endif()
+                if(_z MATCHES " gr=1")
+                    math(EXPR _griff "${_griff} + 1")
+                endif()
+                if(_z MATCHES "PL\\([-0-9]+,[-0-9]+,rot=[0-9]+,hp=([-0-9]+)\\)" AND NOT CMAKE_MATCH_1 EQUAL 100)
+                    math(EXPR _hp "${_hp} + 1")
+                endif()
+            endforeach()
+        else()
+            fail("${_wer}: state.log fehlt")
+        endif()
+        if(_st0 EQUAL 0 AND _sicht GREATER_EQUAL 10)
+            ok("${_wer}: keine nicht initialisierte Kopie (0 Bilder mit st=0); ${_sicht} Bilder in Schnitt 2 gehalten und initialisiert")
+        else()
+            fail("${_wer}: ${_st0} Bilder mit nicht initialisierter Kopie (st=0), ${_sicht} Bilder in Schnitt 2 gehalten (erwartet 0 / >= 10)")
+        endif()
+        if(_griff EQUAL 0 AND _hp EQUAL 0)
+            ok("${_wer}: kein Griff, Spieler-HP 100 bis Bild 700")
+        else()
+            fail("${_wer}: ${_griff} Bilder gegriffen, ${_hp} Bilder mit HP != 100")
+        endif()
+        if(EXISTS "${_dir}/ankunft_oben.ppm")
+            ok("${_wer}: Bild ${_dir}/ankunft_oben.ppm")
+        else()
+            fail("${_wer}: ankunft_oben.ppm fehlt")
+        endif()
+    endforeach()
 
 else()
     message(FATAL_ERROR "r39_elzazombies: TEIL '${TEIL}' unbekannt")

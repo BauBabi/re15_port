@@ -27,7 +27,13 @@ target_include_directories(probe_r39_elzazombies_karte PRIVATE ${CMAKE_SOURCE_DI
 #   unit_r39_elzazombies_leon_4 / _2 / _0  Leon (Nachtrag 12): Kette 1150 -> [1130] -> 1060 Cut 2 -> 1040 -> 1030 mit 4 / 2 (1140
 #                                  leer) / 0 (wie bisher) lebenden 10E0-Zombies; K3-Folge, Kopien naeher, HP 100; leon_4 mit
 #                                  Gegenprobe und Vergleich: Leons 1040-Schritt nach 1060 unveraendert
-#   unit_r39_elzazombies_leon_nach1060  Leon betritt 1060 nach der Szene: Kopien Westseite, gehalten bis Etage 4
+#   unit_r39_elzazombies_leon_nach1060  Leon betritt 1060 nach der Szene: Kopien Westseite, gehalten bis Etage 4; ohne (9,96) nichts
+#   unit_r39_elzazombies_altstand  Nachbesserung 3, Mangel 1: alter Leon-Spielstand nach Irons' Tod (v0.8.22..v0.8.26, (9,96)=0):
+#                                  ROOM1060 ohne Gegner (10E0 getoetet: Karte der Abnahme M10; 10E0 lebt: bleiben in 10E0, nicht
+#                                  doppelt); Gegenprobe (9,96)=1 -> 4 Kopien; re15_r39q_leon_umzug setzt (9,96) + Kopie-Bits
+#   unit_r39_elzazombies_oben      Nachbesserung 3, Mangel 2 / E1: Ankunft von oben (Tuer Etage 8, Elza 1061 + Leon 1060): Ostseite,
+#                                  im Spawn-Bild kein Haltebit (INIT), danach gehalten + initialisiert, frei am Ende der Treppe A
+#                                  mit Abstand >= 4591, kein Griff; Tuer 10C1 (Etage 4): Westseite, sofort frei
 #   unit_r39_elzazombies_nach1061  Nachspawn Westseite, gehalten 200 Bilder auf Etage 0, frei auf Etage 4 (>= 4000), kommen
 #                                  danach naeher; getoetete Kopie fehlt
 #   unit_r39_elzazombies_nach1031  Nachspawn 1031 mit (9,95) = 3 Kriecher + die lebenden 1071-Kopien (Leons Nachspawn-Form);
@@ -45,7 +51,8 @@ target_compile_definitions(test_r39_elzazombies PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r39_elzazombies PRIVATE m)
 endif()
-foreach(_teil zensus kette_4 kette_0 kette_2 kette_00 nach1061 nach1031 durch1041 ohne leon_4 leon_2 leon_0 leon_nach1060)
+foreach(_teil zensus kette_4 kette_0 kette_2 kette_00 nach1061 nach1031 durch1041 ohne leon_4 leon_2 leon_0 leon_nach1060
+              altstand oben)
     add_test(NAME unit_r39_elzazombies_${_teil} COMMAND test_r39_elzazombies ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r39_elzazombies_${_teil} PROPERTIES TIMEOUT 300)
@@ -63,8 +70,15 @@ endforeach()
 #   integration_r39_elzazombies_ohne    Leon 1040 + Flanke: nichts; Elza mit (9,97) im Spielstand: keine Flanke; H1: Tuer
 #                                       1061 -> 1041 ohne (9,97): kein Durchbruch
 #   integration_r39_elzazombies_leon    Nachtrag 12, echter Weg Leon 1130 -> Szene -> 1130 -> Treppenhaus 1060 -> 1040 -> 1030
+#   integration_r39_elzazombies_altstand Nachbesserung 3, Mangel 1: Karte der Abnahme M10 (Leon nach Irons' Tod, 10E0 getoetet, ohne
+#                                       (9,96)) -> Tuer 1040 -> 1060: kein Gegner (state.log Bild 90 = v0.8.26); Gegenprobe mit
+#                                       (9,96): Nachspawn mit 4 Kopien
+#   integration_r39_elzazombies_oben    Nachbesserung 3, Mangel 2 / E1: echter Weg von oben (Tuer Etage 8 -> Treppe B -> Treppe A)
+#                                       fuer Leon (1060) und Elza (1061): Kopien an der Ostseite, in Schnitt 2 initialisiert
+#                                       stehend (state.log st != 0, hp > 0), frei am Ende der Treppe A mit Abstand >= 4591, kein
+#                                       Griff; Bild ankunft_oben.ppm
 if(TARGET re15_pc)
-    foreach(_teil kette knall treppe durch ohne leon)
+    foreach(_teil kette knall treppe durch ohne leon altstand oben)
         add_test(NAME integration_r39_elzazombies_${_teil}
             COMMAND ${CMAKE_COMMAND}
                 -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
