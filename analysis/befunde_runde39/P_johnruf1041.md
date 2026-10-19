@@ -513,3 +513,10 @@ Bau: `local_build.sh configure` + `build` -> LOCAL-BUILD-OK (nach jeder neuen Da
   -> "100% tests passed, 0 tests failed out of 17" (548,83 s; enthaelt integration_r38_wasserzombie ueber den Ausdruck).
 - Hinweis an die Integration (Spur Q, parallel): Riegel, die die Panikphase per Spielstand herstellen, brauchen 9:97 UND
   4:0xF0 - sonst loescht die Rettungs-Regel Bit 97 im ersten Spielbild (genau der Befund von R Teil E).
+
+### 8.11 Endstand Nachbesserung 1
+Alle drei Maengel umgesetzt und gemessen: Merge master a0d7d749 (57e5f920); Tuer 1041 -> 1031 und 1051 -> 10A1 in der
+Panikphase = "I have to rescue John! He is in danger!" (msg 41 / 40), ausserhalb der Phase normale Tueren; Kanaldeckel
+ROOM10B1 fuer Elza immer zu (auch in der Sherry-Szene, danach Steuerung zurueck), Leon unveraendert. Bau LOCAL-BUILD-OK
+("ninja: no work to do" am Endstand), Unit/Prop/Sonden 889/889, Integration 42/43 + hund1121 nach Testdaten-Fix 1/1,
+Pflichtgruppe 17/17.
