@@ -33,6 +33,7 @@
 #include "re15_entladen.h"    /* Runde 35 Spur I: Generation je Cache + Entladen (Block vor re15_render_pc_set_pri_atlas) */
 #include "re15_pri_schatten_r36.h"  /* Runde 36 Spur O: Schatten in der OT-Ordnung der Masken/Dreiecke */
 #include "re15_objabe_r38.h"         /* Runde 38 Spur W: STP-Teil-Texturen halbtransparenter Raum-Objekte */
+#include "re15_titelversion_r39.h"    /* Runde 39 Spur T: Version im Titelbild */
 extern unsigned g_current_room_id;   /* nur fuer die RE15_PRI_LOG-Messschiene */
 /* Der gezeigte Cut. Ohne ihn ist eine Maskenmessung nicht zuzuordnen: unsere
  * nachgezeichneten Masken liegen je Cut vor, und "0 Masken" kann heissen "Cut ohne
@@ -1810,7 +1811,9 @@ void re15_render_pc_show_title(const re15_tim_t *tim)
         if (n <= 0 || tim->bpp != 16) return;
         uint32_t *rgba = (uint32_t *) malloc((size_t)n * 4);
         if (!rgba) return;
-        for (int i = 0; i < n; i++) rgba[i] = 0xff000000u | (rgb555_to_argb8888(tim->pixels[i]) & 0xffffffu);
+        /* Runde 39 Spur T: Version statt "Sample Ver.2025.01.25" (Kopie im Speicher, TITLEU.TIM bleibt bytegleich) */
+        const uint16_t *tpx = re15_titelversion_r39_bild(tim->pixels, tim->width, tim->height);
+        for (int i = 0; i < n; i++) rgba[i] = 0xff000000u | (rgb555_to_argb8888(tpx[i]) & 0xffffffu);
         s_title_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888,
                                         SDL_TEXTUREACCESS_STATIC, tim->width, tim->height);
         if (s_title_tex) SDL_UpdateTexture(s_title_tex, NULL, rgba, tim->width * 4);
