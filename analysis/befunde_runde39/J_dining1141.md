@@ -998,7 +998,7 @@ Cut 8 mit mo 215). Alles, was die Abnahme 3 als erfuellt bewertet hat, bleibt (R
 
 ### 11.0 Stand / Fortschritt
 - 08:16 Baum sauber auf ece3a8f9 (Abnahme 3), Abschnitt angelegt. Messordner scratchpad `J39n4/` (nicht committet).
-- 08:20-08:26 Messung vorher (Lauf v_rl2 = Abnahme-Lauf RL2 bytegleich, 11.1); 08:25-08:35 RE-Belege selbst disassembliert (11.2).
+- 08:17-08:22 Messung vorher (Lauf v_rl2 = Abnahme-Lauf RL2 bytegleich, 11.1); waehrenddessen RE-Belege selbst disassembliert (11.2), Commit 0a7d8264 08:23.
 
 ### 11.1 Messung vorher (Stand ece3a8f9 = Code e9f23f50, exe 05:15; Messordner scratchpad `J39n4/`, nicht committet)
 Werkzeug `J39n4/lauf.sh` (= `J39abn3/lauf.sh`, eigene exe-Kopie `re15_pc_j39n4_<name>.exe`, mit RE15_AUDIO_CAP_SYNC).
@@ -1056,7 +1056,7 @@ Werkzeug `J39n4/lauf.sh` (= `J39abn3/lauf.sh`, eigene exe-Kopie `re15_pc_j39n4_<
   alten Platz (Sleep 5 @+0x0440 beginnt im selben Takt wie vorher) - sein Ablauf ist bildgleich. Elza steht durch Member_set(4)
   schon zu John gedreht: der TURN kommt im ersten Bild an (Kegel 0x60) und geht wie bisher in Sub 6 ueber, nur 11 Bilder frueher.
 - Messer/Hieb: dieselbe Phase +6 (Messer-FSM, Hieb Clip 7); der Handler unterscheidet keine Waffenart - ein Hieb-Rest endet ebenso.
-- 08:40 Umsetzung (Generator + Riegel), 08:50 Bau gruen, 08:52-08:57 Lauf n_rl2 (11.4), 09:05 Unit schnitt gruen, wip 82320b2a.
+- 08:24 Generator + Bau gruen, 08:24-08:28 Lauf n_rl2 (11.4), 08:27-08:33 Riegel (Unit schnitt/programme, zielen nachladen), Bau 08:32, Unit schnitt gruen 08:33, wip 82320b2a 08:33 (Uhrzeiten aus Dateizeiten/git log).
 
 ### 11.3 Umsetzung (Commit 82320b2a)
 | Teil | Aenderung | Datei / Beleg |
