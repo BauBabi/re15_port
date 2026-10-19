@@ -24,9 +24,13 @@ function(re15_version_r39_ermitteln _out)
         set(_q "Umgebung RE15_VERSION")
     else()
         find_package(Git QUIET)
+        set(_wd "${CMAKE_SOURCE_DIR}")
+        if(DEFINED RE15_VERSION_R39_GITDIR)   # nur der Riegel (cmake -P) setzt ein anderes Repo
+            set(_wd "${RE15_VERSION_R39_GITDIR}")
+        endif()
         if(GIT_EXECUTABLE)
             execute_process(COMMAND "${GIT_EXECUTABLE}" describe --tags --abbrev=0 --match "v[0-9]*"
-                            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                            WORKING_DIRECTORY "${_wd}"
                             OUTPUT_VARIABLE _tag RESULT_VARIABLE _rc ERROR_QUIET
                             OUTPUT_STRIP_TRAILING_WHITESPACE)
             if(_rc EQUAL 0 AND NOT "${_tag}" STREQUAL "")
@@ -64,6 +68,11 @@ function(re15_version_r39_tag_abhaengigkeit)
         endif()
     endforeach()
 endfunction()
+
+# Im Skript-Modus (cmake -P, Riegel unit_r39_titelversion_cmake) nur die Funktionen.
+if(CMAKE_SCRIPT_MODE_FILE)
+    return()
+endif()
 
 re15_version_r39_ermitteln(RE15_VERSION_TITEL)
 if("${RE15_VERSION_TITEL_QUELLE}" MATCHES "^git")
