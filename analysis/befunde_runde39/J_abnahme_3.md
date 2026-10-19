@@ -155,7 +155,13 @@ der Riegel) RE15_DEBUG_JUMP=1131@gp RE15_PLAYER_POS=-1300,-13900,0 RE15_FRAMEDUM
   noch geparkt; Lauf P: `Elza hebt Waffe 3 (vorher 1, Schusswaffe)`, W-Clip 6 F1630..F1805; Bild `J39abn3/p_heben_zoom.png` (F1645..
   F1735 Browning beidhaendig auf die Tuer hinter der Kamera). Der neue Haken greift dabei nicht (Elza steht im Kommando 4, Plc-Executor;
   der Haken verlangt Kommando 1). **erfuellt.**
-- N4.3 (John schiesst ab und an, Aufmerksamkeit): Abschnitt 3 (Riegel `kampf`, lebende Gorillas) und Lauf R2 (14 Schuesse / 14 Treffer).
+- N4.3 (John schiesst ab und an, Aufmerksamkeit) - nach dem Merge 2963579d (Spur K, Gorilla-/Kraehen-/Plc-Aenderungen) neu gemessen:
+  Riegel `integration_r39_dining1141_kampf` (mein Lauf `r39_dining1141_kampf_wd/lauf_d50d2f11`, lebende Gorillas, Elza neben John) und
+  eigene Auswertung desselben Laufs mit `salven.py` / `aufmerk.py`: 10 Schuesse / 10 Treffer (F3651, F3681, F4025, F4055, F4401, F4431,
+  F4778, F4808, F5149, F5179 - zwei je Salve, Salvenabstand ~370 Bilder), 6 davon waehrend Elza im Griff ist (gr=1, Ziel = der andere
+  Gorilla), Peilung rel -6..+2 (im Kegel), John bei jedem Schuss im Bild von Cut 0 (Projektion (122,103)); 5 Aufmerksamkeits-Episoden
+  mit `zugewandt` (59..84 Bilder; der Gorilla steht am Tisch/zweiten Gorilla, Abstand 3729 -> 3373 usw. - bildgleich zu Abnahme 2 L3).
+  Lauf R2 (echter Kampf): 14 Schuesse / 14 Treffer. **erfuellt.**
 - N4.4 / Nachtrag 7: Heranwinken RBJ ROOM1171 rec1 Clip 2 (96 Bilder), 0 Bilder Waffe auf Elza (1.8). **erfuellt.**
 - N6: `"... we end up as gorilla meal...."` (Lauf A/P msgtext); msg 50 ("He is in trouble") kommt in 1141 nicht mehr vor, der Text
   bleibt im Riegel `texte` gepinnt. **erfuellt.**
@@ -250,3 +256,23 @@ pad_phase_common.c / panel_zeiger_common.c / dining_r39.c) - der Haken greift al
 - H7 SE-Tor: waehrend der Rolladen-Szene verwirft FUN_80045a18 drei Schlaege (1.1) - Prioritaetsregel, danach klopft es weiter.
 - H8 Riegel `integration_r39_dining1141_zielen` laeuft ohne RE15_AUDIO_CAP_SYNC (Szenenende nach der Wanduhr); in meinem Lauf
   Kampfende 4051 / Schnitt 4081, im R1-Fenster 3000..4350.
+
+## 7. Urteil
+
+| Punkt (Wortlaut AUFTRAG.md) | Urteil | Kurzbeleg |
+|---|---|---|
+| 1 keine Zombie-Geraeusche | erfuellt | A: 0x bank 0x3C/0x3D/main42; nur Klopfen/help/Glas/Rolladen/DOOR1A |
+| 2 John durch die Tuer; Kamera Elza -> Tuer-zu-Ton -> Kamera Tuer mit John | erfuellt | A/P: Cut 7 F1594, Tuer auf ~F1667, John F1670 hinter der Kamera, Tuer zu ~F1712, Cut 6 F1740 mit John (`a_tuer.png`) |
+| 3 kein "shout" | erfuellt | 0x main42 / 0x3D |
+| 4 help01..05 im Mix + mehrfaches Klopfen | erfuellt | 3 Schlaege je Runde (Abstand 5), Rufe 3,1,4,2,5,3, hoerbar (RMS ~2480 ueber Musik ~250), help03/help01 rho 0,908/0,895 |
+| 5 Reaktion (Nachtrag 10: in 1141 entfaellt sie) | erfuellt | erste Nachricht msg 13 F676, kein msg 50 / main50 (rho 0,063) |
+| 6 Glasbruch vor "What was that?!" | erfuellt | F2424/F2429 direkt nach msg 5, msg 6 F2450 |
+| 7 John schaut ab msg 9 zu Elza | erfuellt | msg 9/10 Blickfehler <= 10 in 268 Bildern |
+| 8 zwei Zeilen Johns mit passenden Animationen | **teilweise** | Zeilen/Gesten/Heranwinken/Stimmen/Ausreden/Kamera erfuellt; M1 der Abnahme 2 im Normalfall behoben (R2: 11 -> 0 Bilder, K: 0, zielen: 0); Rest: Nachladen kurz vor der Sperre -> RL2 8 Bilder Cut 8 im Waffen-Clip, F4087/F4088 Pistole auf John (M1-Rest) |
+| 9 keine Panik-Musik 1141 -> 1171 | erfuellt | pegel 0 / MAIN32 559; eigene Pegel ohne MAIN16 |
+| N4.1 Rolltor oeffnen, danach normal laufen | erfuellt | 384 freie Bilder, Klopfen weiter |
+| N4.2 Szene am Riegel; rennen, andere Kamera, zur Tuer drehen, Waffe heben | erfuellt | A Messer-Ziehen, P Browning aus dem Inventar |
+| N4.3 John schiesst ab und an, erhaelt die Aufmerksamkeit | erfuellt | kampf: 10/10 Treffer, 6 bei gr=1, 5/5 Salven zugewandt, John im Bild; R2 14/14 |
+| N4.4 / Nachtrag 7 Heranwinken wie 1171 | erfuellt | (0,2) RBJ ROOM1171 rec1 Clip 2 (96 Bilder) |
+| N6 "trouble"/"gorilla" klein | erfuellt | msgtext |
+| Nachtrag 8 Stimmen main51/52 | erfuellt | rho 1,000 / 1,000 an ihren Zeilen; 12/13 stumm |
