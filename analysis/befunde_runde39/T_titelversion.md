@@ -168,7 +168,27 @@ Protokoll (debug.log, einmal je Prozess): `[titel_r39] alte Beschriftung entfern
 | Android | Abschnitt 4.1 |
 
 ### 4.1 Android
-(folgt)
+Weg von `release/build_android.sh` ohne APK/Assets (nur der native Teil, Messskript im scratchpad): `app/.cxx` geloescht
+(wie build_android.sh), `local.properties` sdk.dir, `bash ./gradlew --no-daemon --console=plain -Pre15Version=v9.9.9
+fetchSdl2 :app:externalNativeBuildRelease` im Baum (JDK 17.0.15, SDK `%LOCALAPPDATA%/Android/Sdk`, NDK 27.2, SDK-CMake
+3.22.1, AGP 8.7.3) -> **BUILD SUCCESSFUL in 5m 23s**.
+- `app/build/intermediates/cxx/RelWithDebInfo/41306e4f/logs/{arm64-v8a,x86_64}/configure_command.bat`: alle bisherigen
+  Argumente (`-DRE15_BUILD_PC=OFF` ... `-DANDROID_PLATFORM=android-24`) und dazu `"-DRE15_VERSION=v9.9.9"` - das
+  zweite `arguments` haengt an, es ersetzt nichts.
+- `.../logs/{arm64-v8a,x86_64}/configure_stdout.txt`: `-- RE15_VERSION (Titelbild): 'v9.9.9' (CMake-Variable RE15_VERSION)`.
+- Compile-Befehl titelversion_r39.c (compile_commands.json, beide ABIs): `-DRE15_VERSION=\"v9.9.9\"`.
+- `libmain.so` arm64-v8a und x86_64 (`app/build/intermediates/cmake/release/obj/...`): je 1 Treffer `v9.9.9` und
+  `[titel_r39]`.
+Ohne `-Pre15Version` gibt build.gradle nichts weiter (`if (project.findProperty("re15Version"))`); build_android.sh selbst
+setzt ohne `--version` `git describe --tags --always` (z. B. `v0.8.26-5-g832b68bd`) -> Anzeige "Ver.0.8.26 dev" (Riegel
+`text`). Ein Titelabzug auf Geraet/Emulator wurde nicht gemacht (Abschnitt 6).
+
+### 4.2 Linux-Container, zweiter Lauf (Endstand der Riegel)
+Derselbe Weg wie oben mit dem Endstand: `ctest -R r39_titelversion` im Container **100% tests passed, 0 tests failed
+out of 10**; der Integrations-Riegel meldet dort (ausfuehrlich, RE15_OHNE_GPU=1 wie docker_linux_build.sh:92):
+`r39_titelversion_titel: [titel_r39] alte Beschriftung entfernt: 929 Pixel; neu "Ver.9.9.9" (RE15_VERSION "v9.9.9")
+Spalten 229..283` und `SKIP Bildvergleich (RE15_OHNE_GPU gesetzt - keine echte GPU); Protokollzeile geprueft:
+'Ver.9.9.9', RE15_VERSION 'v9.9.9', 929 Pixel entfernt`.
 
 ## 5. Tests
 (folgt)
