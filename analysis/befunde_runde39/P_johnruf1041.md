@@ -18,6 +18,8 @@ Punkte:
 - Umsetzung 02469270 (Modul + Haken), Messung n1a/n1b/n2, Unit-Riegel, 1131 auf Xa_vol 100 (gemessen, 4699f778),
   Integrations-Riegel a/b, Riegel der Spur G (Tabellenzahl) nachgezogen (3e772251).
 - Endstand gezielt gruen: P 10/10, Unit/Prop/Sonden 849/850 + Tagebuch 4/4, Integration 19/19 (Abschnitt 5).
+- 2026-10-19 08:3x-10:xx Nachbesserung 1 (Nutzer-Nachtrag 12): Merge master 57e5f920, Messung vorher, RE-Belege, Modul
+  tuersperre_r39 (1041/1051 Panikphase, Kanaldeckel 10B1 immer zu), Riegel unit + integration, Abschnitt 8.
 
 ## 1. Messung vorher
 
@@ -448,7 +450,7 @@ Musikwechsel, kein Raumwechsel), Rest unveraendert.
   ROOM21A0 msg 4 @0x02963 (geschlossener Deckel), Aot_on -> MESSAGE @0x8004082c/@0x80043084, Szenen-Ende ROOM1051 sub02.
   Aenderung: Sperre im Raumaufbau + Huelle SZENE10B1. Nachher: n6a/n6b + integration t10b1v/s/n: Text, kein Raumwechsel, nach
   der Szene Steuerung zurueck; Leon 10B0 unveraendert (unit).
-- **Mangel 3 (Merge + Bau + Riegel).** 57e5f920, configure/build LOCAL-BUILD-OK; gezielte Laeufe Abschnitt 8.7.
+- **Mangel 3 (Merge + Bau + Riegel).** 57e5f920, configure/build LOCAL-BUILD-OK; gezielte Laeufe Abschnitt 8.10.
 
 ### 8.8 OFFEN (Nachbesserung 1)
 - Spur Q (elzazombies, parallel) arbeitet laut Nachtrag 11/12 auch in ROOM1041 (Durchbruch durchs Rolltor) und liest Bit 97.
@@ -460,7 +462,7 @@ Musikwechsel, kein Raumwechsel), Rest unveraendert.
   "Elza, over here!", Aufnahmen room2001/main00..05) fuehrt nicht mehr durch 10B1, sondern ueber den Keller (ROOM11B1 Slot 5
   bzw. ROOM11D1 Slot 1 -> ROOM1261); (3,0x41) setzt die Szene vor dem Deckel selbst (sub04 @0x01962), ROOM2001 sub00
   @0x0179A `21 03 41 01` Ck(3,0x41)==1 -> @0x0179E Sce_em_set John. Diesen Umweg habe ich nicht gemessen.
-- Fremder Riegel: siehe 8.7 (integration_r38_wasser, Lauf elza10b1_tuer).
+- Fremder Riegel: siehe 8.10 (integration_r38_wasser, Lauf elza10b1_tuer).
 - Die Sprachdateien fuer die Tuer-Saetze liegen noch nicht; ohne Datei steht im debug.log
   "[voice] ROOM1041 msg 41: keine Aufnahme ..." und die Zeile bleibt stumm (Riegel halten auch mit Datei).
 
@@ -478,3 +480,17 @@ Musikwechsel, kein Raumwechsel), Rest unveraendert.
   Folge: der Weg in die Kanaele (ROOM1261 und weiter nach ROOM2001 zu deinen Aufnahmen room2001/main00..05) geht nicht mehr
   ueber 10B1, sondern nur noch ueber den Keller (Garage 11B1 oder 11D1 -> 1261).
 - Neue Assets fuer das Paket-Gate: keine (Texte und Programm stehen im Code: engine/src/gen/tuersperre_r39.inc).
+
+### 8.10 Gezielte Laeufe am Endstand (keine volle Suite im Spurbaum)
+Bau: `local_build.sh configure` + `build` -> LOCAL-BUILD-OK (nach jeder neuen Datei neu konfiguriert).
+- ALLE Unit-/Prop-/Sonden-Riegel:
+  `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" --timeout 600 -j 4`
+  -> "100% tests passed, 0 tests failed out of 889" (Total Test time 1339,76 s).
+- Fremder Riegel integration_r38_wasser (Runde 38 Spur N): VORHER am neuen Stand rot - Lauf elza10b1_tuer
+  `re15_pc exit=Process terminated due to timeout`; im Lauf-debug.log `[tuersperre] F250 ROOM10B1: Kanaldeckel Slot 1 -> Text
+  msg 40 (immer zu)`, kein DOOR FIRE, kein `loaded room1261.rdt` (= genau die neue Nutzer-Vorgabe; der Lauf wartete auf
+  EXIT_AT 150#1261). Die 15 Pruefungen der anderen Laeufe waren gruen. Aenderung: Lauf elza10b1_tuer entfaellt (Kommentar mit
+  Grund und Verweis auf integration_r39_johnruf1041_tuer_t10b1v/_s/_n; Elzas Wasserschritt bleibt in elza1261, der Tuerweg
+  ins Wasser in leon10b0_tuer), Kopf- und Registrierungskommentar nachgezogen. NACHHER:
+  `ctest --test-dir re15_port/build -R "^integration_r38_wasser$" --timeout 1800 --output-on-failure`
+  -> "100% tests passed, 0 tests failed out of 1".
