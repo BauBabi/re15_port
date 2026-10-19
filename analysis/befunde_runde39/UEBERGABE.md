@@ -6,7 +6,7 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
-* 2026-10-19 12:42: Gezielter Lauf 12:15 (973 Tests, nach P-Merge) zeigte 3 Fehlerklassen, alle in Riegeln, keine im
+* 2026-10-19 12:37: Gezielter Lauf 12:15 (973 Tests, nach P-Merge) zeigte 3 Fehlerklassen, alle in Riegeln, keine im
   Spiel: (1) O K/N/W lasen die mit dem 11C0-Stimmen-Haken entfallene Log-Zeile -> Marke = [msgtext] (1760243a); (2) Q-Riegel
   setzten (9,97) per Test-Haken ohne (4,0xF0) -> Spur P loescht das Bit ("John gerettet") -> Q auf die ECHTE Kette umgestellt
   (Probelauf 12:29: Ruf P -> Karte zu Bild 432 -> Flanke -> Montage komplett, Rueckkehr korrekt); (3) Q startete in P-Riegeln
