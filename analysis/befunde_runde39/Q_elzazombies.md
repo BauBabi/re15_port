@@ -541,6 +541,28 @@ Etage 0, frei auf Etage 4 mit kleinstem Abstand 4961), durch1041 (H1: (9,97)=0 -
 Durchbruch mit 3), nach1031 (2 von 5 1071-Kopien + 3 Kriecher an Leons Nachspawn-Lagen), zensus (16 Kopie-Bits; Cut-7-Bits =
 Leons Vorlage 6; Raum-Paare byte-gleich; Programm L endet Byte fuer Byte wie Leons k_p_1130; Weiche).
 
+### 9.6 Tests (Nachbesserung 2)
+* Neue/geaenderte Riegel (tests/unit/probes/r39_elzazombies.cmake, test_r39_elzazombies.c / .cmake):
+  unit_r39_elzazombies_{zensus, kette_4, kette_0, kette_2, kette_00, nach1061, nach1031, durch1041, ohne, leon_4, leon_2, leon_0,
+  leon_nach1060} (13) und integration_r39_elzazombies_{kette, knall, treppe, durch, ohne, leon} (6). Neu: kette_00, leon_*,
+  integration leon; kette_* mit 1071-Schritt; durch1041 + integration ohne/gerettet = H1; nach1031 mit 1071-Kopien.
+* Leons Riegel begruendet nachgezogen (Abschnitt 9.4): test_r35_cut1150.c (Variante "1140 leer -> direkt 1040" mit 10E0 leer),
+  test_r36_szene1150.c szene_flags (10E0 leer), test_r36_szene1150.cmake (Karte mit tot10e0), probe_r35_cut1150_karte.c (Option
+  tot10e0). integration_r35_cut1150 und integration_r38_montage UNVERAENDERT: sie laufen jetzt mit dem Treppenhaus-Schritt
+  (debug.log Lauf A: "Montage 1060 (Runde 39 Spur Q, Programm L)" ... "Rueckkehr: Programm 5" ... "EXIT_AT: Bild 1500 in Raum
+  1150"; r38: "Bilanz 1040: 5 Zombies, durchs Tor 5 ... HP 100") und sind gruen.
+* GEZIELTER LAUF (Endstand-Code = 9df98991 + Merge 9aadee89 (nur Doku); ein Lauf `-j 4 --timeout 1500`, Regex woertlich:
+  `^(unit_|prop_|probe_)|r39_elzazombies|^integration_r35_cut1150$|^integration_r36_szene1150$|^integration_r38_montage$|^integration_r37_zombieaktiv$|^integration_r38_kleinkram_irons$|^integration_r37_elzaems_leon10c0kraehe$|^integration_r39_hund1121$|^integration_elza_vollstart$|^integration_r38_elzaintro_|^integration_r39_elza_|^integration_r38_elzatoene_|^integration_r37_elzaems_elza10c1kraehe$|^integration_r36_story_elza$|^integration_r36_elza_|^integration_r33_speichern$|^integration_r38_tagebuch_`
+  = alle schnellen Tests + eigene 19 + Leons Montage (r35/r36/r38/r37 zombieaktiv/kleinkram_irons/leon10c0kraehe) + hund1121 +
+  Elza-Gruppen 1031/1041/10C1 + Speichern + Tagebuch):
+  "100% tests passed, 0 tests failed out of 916" (Total Test time (real) = 2009.19 sec), darunter integration_r35_cut1150 (598,69 s),
+  integration_r36_szene1150, integration_r38_montage, integration_r37_zombieaktiv, integration_r39_hund1121, alle sechs
+  integration_r39_elzazombies_*.
+* Danach nur Kopfkommentare von test_r39_elzazombies.c (af066de2) -> Neubau nur dieses Riegels; `ctest -R
+  "^unit_(r39_elzazombies|r35_cut1150|r36_szene1150|r38_montage|r37_zombieaktiv|r36_kartenbits)"` -> "100% tests passed, 0 tests
+  failed out of 41"; `ctest -R "^integration_r39_elzazombies_knall$"` -> "100% tests passed, 0 tests failed out of 1".
+* Nach jedem Lauf liegt in build/platform/pc nur re15_pc.exe (eine Kopie eines abgebrochenen Laufs von Hand entfernt).
+
 ### 9.7 Gegenueberstellung: aus welchen Tueren die Zombies brechen (Stand Nachbesserung 2)
 | Tuer / Ort | Leon (Montage nach Irons' Tod) | Elza (Johns Hilferuf, Panikphase (9,97)) |
 |---|---|---|
@@ -576,3 +598,30 @@ Leons Vorlage 6; Raum-Paare byte-gleich; Programm L endet Byte fuer Byte wie Leo
   (Leons Schlussmusik) klingt darueber oder beginnt danach — P's Wahl (wie 6.).
 * Ankunft im Treppenhaus von OBEN (Leon aus 1120, Elza aus 1121): die Kopien stehen an der Westseite nahe dem Ende von Treppe A
   (wie Abnahme 1 H3) — nicht verlangt.
+
+### 9.10 Je Mangel (Kurzfassung: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher)
+* MANGEL 1 — Nutzer-Nachtrag 12 Teil 2 (Angleichung der Durchbruch-Tueren)
+  - Ursache: neue Nutzer-Vorgabe; Leons Montage hatte kein Treppenhaus, Elzas Kette seit Nachtrag 11 keinen 1071-Schritt.
+  - Vorher (9.2): Leon 1150 -> 1130 -> 1040 -> 1030 -> 11C0, kein room1060 trotz vier lebender 10E0-Zombies; Elza 1041 -> 1061
+    -> 1031 (erstes Bild Cut 12), kein Cut 7 trotz fuenf lebender 1071-Zombies.
+  - Beleg (9.1/9.3): Raum-Paare 1060=1061, 10E0=10E1, 10C0=10C1, 1070=1071 byte-gleich (cmp -l 0); ROOM10E0 @0x00D56.. (0xe0..0xe3),
+    ROOM10C0 @0x00E42 (Raum 0x06, Cut 2, Etage 4), RID ROOM1060 @0x000A0, ROOM1071 @0x015CA.. (0xc6..0xca), RID ROOM1031 @0x00140,
+    ROOM1031 sub08 @0x02862 = ROOM1030 @0x02776; Formen = Leons Montage (irons_tod_1150.c Vorlagen 1/6/7/12/19) und Elzas
+    Programm B/E. NUTZER-VORGABE fuer das Ob; Reihenfolge Leon (3F -> 2F -> 1F) PORT-WAHL, begruendet (9.4).
+  - Aenderung (9.4): Elza Cut-7-Teil + Nachspawn mit Leons Vorlagen; Leon Programm L + 6 Haken in irons_tod_1150.c (je <= 3
+    Zeilen, "Runde 39 Spur Q"); Kopie-Bits nach der Raum-Paar-Regel des Originals geteilt (kein neues Bit).
+  - Nachher (9.5): Leon 1130 -> Tuerknall -> 1060 (+4, Cut 2, Kopien naeher, HP 100) -> Knall Satz 1 -> 1040 (unveraendert 361
+    Bilder) -> 1030; Elza 1061 -> Tuerknall -> 1031 Cut 7 (+5, naeher, HP 100) -> Original-Knall -> Kriecher -> Cut 12 -> 1041.
+    Bildtafeln q_n2_leon_1060_cut2.png, q_n2_elza_1031_cut7.png.
+* MANGEL 2 — master mergen, Gruppen-Riegel gruen
+  - Ursache: master um die Spuren K/G/O/R weiter (Konflikte in drei gemeinsamen Dateien).
+  - Aenderung (9.0): beidseitig aufgeloest (master-Zeilen zuerst, Q am Ende), byte-gleich mit dem Integrationsbaum.
+  - Nachher: Bau ok; Riegel 9.6.
+* MANGEL 3 — H1-Entscheid: Rolltor-Durchbruch 1041 nur in der Panikphase
+  - Ursache: durchbruch_1041 pruefte (9,97) nicht.
+  - Vorher (9.2): unit durch1041 ohne (9,97): "Durchbruch 1041: 2 Zombies aus 1061 (nicht besiegt)" + Szene.
+  - Beleg: Orchestrator-Entscheid (Nutzer Nachtrag 10 "Die panische Musik hoert auf, sobald man John gerettet hat. Der Rest bleibt
+    normal."); (9,97) = Panikphase (VERTRAG 1.1, setzt/loescht Spur P).
+  - Aenderung: `if (!(9,97)) { "Durchbruch 1041 entfaellt: Panikphase vorbei ((9,97)=0)"; return 0; }` in durchbruch_1041.
+  - Nachher: unit durch1041 (ohne (9,97): nichts, 200 Bilder; mit: Durchbruch 3), integration ohne/gerettet (exe: Tuer 1061 ->
+    1041 ohne (9,97): "entfaellt", Elza mit Steuerung an der Tuer Cut 5), integration durch (mit (9,97): Durchbruch wie Abnahme 1).
