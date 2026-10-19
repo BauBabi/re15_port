@@ -268,3 +268,10 @@ bzw. Energie-Abfrage ausloesen oder abwarten); die Integration zieht die Energie
 - Nachschub (woertlich, nach 09:51): "Nur die Zombies von ROOM 1071 kommen bei Elza noch hinzu."
   Orchestrator: deckt sich mit Q Nachbesserung 2 (Dossier 9.7): bei Elza ist der einzige neue Durchbruch 1071 -> 1031
   (so viele, wie in 1071 leben); bei Leon kommt das Treppenhaus 10C0 -> 1060 hinzu.
+
+## Nachtrag 16 des Nutzers (woertlich, 2026-10-19 nach 12:10, Korrektur von Nachtrag 12c, fuer Spur P)
+- "Ah, ich meinte die Tür in Raum 11B1, nicht 10B1, die sowieso geschlossen ist ohne Strom. Einfach noch schnell hinzufügen."
+  Orchestrator (selbst gelesen): ROOM11B1 main00 @0x00F9C Door_aot_set Slot 1 -> ROOM11C1 (Elzas Parkplatz); ohne Strom
+  sub01 @0x011A0 Ck(4,0xF3)==0 -> @0x011C0 Slot 1 -> msg 14 "It's too dark...". Umsetzung P Nachbesserung 3 (f8dae60d):
+  mit Strom Slot 1 -> Original-msg 12 "The door is locked." (@0x179F). 10B1 bleibt wie ausgeliefert. ROOM11C1 ist eine
+  Sackgasse (nur Tuer zurueck, fuenf Hunde, keine Items) - kein Softlock.
