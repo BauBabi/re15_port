@@ -210,3 +210,14 @@ bzw. Energie-Abfrage ausloesen oder abwarten); die Integration zieht die Energie
   - Spur R "hund1121" (Baum auf master): Hund springt in ROOM1121 durchs Fenster, an der Stelle von Leons Kraehe in ROOM1120,
     beim Durchlauf in der Panikphase.
   - Spur J: 1141 bleibt, nur OHNE Elzas Reaktion ("Oh, no, this is John! ..." msg 50 entfaellt in 1141).
+
+## Nachtrag 11 des Nutzers (woertlich, 2026-10-19 zwischen 00:16 und 00:23, fuer Spur Q)
+- "Ich korrigiere, die Zombies sollen nicht in ROM 1071 noch durchbrechen, sondern dann noch wie bei leon im ROOM 1041."
+  Orchestrator: ersetzt im Nachtrag 10 "Dann das gleiche nochmal wie bei Leon in den ROOM 1071, falls die Zombies nicht
+  besiegt wurden" durch ROOM1041 - Vorbild ist Leons Durchbruch in ROOM1040 (Montage nach Irons' Tod, Rolltor-Schnitt
+  ROOM1040 Cut 1, include/re15_montage_r38.h). In ROOM1071 brechen KEINE Zombies durch. Uebrige Stellen unveraendert:
+  10C1 -> Flur (Zahl = in 10E1 am Leben gelassen), Aufstellung 1061 (weit weg an der Seite), 1031 ueber das Rollo.
+  Zeitpunkt 1041 belegen und begruenden: Elza steht beim Start der Panikphase selbst in 1041. Der Nutzer knuepfte den
+  Durchbruch an "falls die Zombies nicht besiegt wurden" (die aus 10C1/1061) - Form so waehlen, dass der Ablauf spielbar
+  bleibt (z.B. Durchbruch durchs Rolltor beim naechsten Betreten von 1041, solange diese Zombies leben), Leons Form 1040 als
+  Vorbild, im Dossier "Fuer den Nutzer" in einfachen Worten beschreiben.

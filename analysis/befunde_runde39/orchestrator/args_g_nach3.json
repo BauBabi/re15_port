@@ -1,0 +1,93 @@
+{
+ "_hinweis": "Spur G Nachbesserung 3 nach Abnahme 2 (N2 schwebende 1030-Tuermarken ohne gezeichnetes 1030). Baum r39_karten. Resume nur mit GENAU diesen args.",
+ "welle": [
+  "G"
+ ],
+ "slots": 1,
+ "max_nach": 1,
+ "basis": "1038dc15",
+ "modus": {
+  "G": "nachbesserung"
+ },
+ "runde0": {
+  "G": 2
+ },
+ "bau": {
+  "G": {
+   "status": "fertig",
+   "zusammenfassung": "N1 ist behoben. Die Suedwest-Kammer von ROOM1210 steht jetzt auf B2. Vorher reproduziert: markerflaeche 1210 = 1693 von 10387 Punkten neben der Zeichnung, Ring der echten exe bei (191,117) im Blau.\nIm Original begehbar: eigene Kameraschnitte 6 und 7 (RVD ROOM1210.RDT @0x002DC Schnitt 5->6 in der Oeffnung, dazu @0x002F0/@0x00318/@0x0032C). Fuer die Zelle gibt es keine Tuer (Door_aot_set nur @0x01CC6..@0x01D66). Obj_model_set @0x01E4E ist die offene Zellentuer, ihre Kollisionsbox ist 0. Bei Elza (ROOM1211) bleibt die Zelle zu, bis (4,0xEC) und (4,0xFC) gesetzt sind: sub00 Sca_id_set @0x01E0E/@0x01E5A auf Zelle @0x01C34.\nGebaut: Zone 1 fuer 1210/1211 (zid 112, synth 12). Der Marker nutzt dieselbe Zeile wie der Flur, @0x800769B8 = (177,140,2496,2250). Die Weltbox kommt aus den Innenseiten @0x01BEC, @0x01BF8 und @0x01BE0; die Ostgrenze x -22128 ist die Stelle, an der px von 200 auf 201 wechselt.\nZeichnung (186,112) 15x18: die Linien x186, y112 und y129 liegen auf den gemalten Linien (MAP02.PIX Index 4), keine Doppelwand. Durchgang x201 y117..119 (@0x01BC8 endet bei z -20746, @0x01C40 beginnt bei z -22520). Er oeffnet nur, wenn die Kammer gefuellt gezeichnet ist (neuer Traeger R39_SCHEMA_KOERPER). Die Ostkante der Kammer entfaellt, wenn r3 gezeichnet wird.\nNeuer Befund: 184 der 1693 Punkte lagen gar nicht in der Kammer, sondern im Querbalken. Die Kachel malt ihn gestaucht (Linien y70/y78; die Waende @0x01B8C/@0x01BD4 liegen bei py 70/82), dadurch landete der Marker auf y79 in den Zellen. Behoben mit einem Klemmfenster r3 y70..78 ausserhalb der Flurspanne (Grenzen aus @0x01BC8/@0x01C04).\nNachher: 1210 0 von 10387; 1211 mit offener Kammer 0 von 10391, mit geschlossener 0 von 8783 und 0 von 2022. Echte exe am Weg der Abnahme: Spieler bei (-25500,0,-21700), Ring (191,117) im Rot der Kammer. gdigrab des Direct3D-Fensters stimmt mit dem FB-Abzug ueberein, bis auf 13 Pixel Blinkphase des Rings.\nNebenwirkungen: 12 von 13 Blaettern pixelgleich zu Abnahme 1, B2 weicht nur im Kammer-Kasten ab (249 Pixel). Alle 132 Tuerpaare unveraendert. Alle Raeume der Polizeistation 0 Punkte neben der Zeichnung. Gegenproben: ohne Kammer bzw. ohne Koerper-Gatter melden die Riegel ROT.",
+   "commits": [
+    "c6e0b801 wip(r39-karten): Nachbesserung 2 - Dossier-Abschnitt angelegt (N1 ROOM1210 Suedwest-Kammer)",
+    "a6ba2ff0 wip(r39-karten): Nachbesserung 2 - Messung vorher und RE-Belege N1 (ROOM1210 RVD @0x002DC..@0x00340, SCA @0x01BEC/@0x01BF8/@0x01BE0/@0x01C40/@0x01BC8)",
+    "8dcd780d wip(r39-karten): Nachbesserung 2 N1 - ROOM1210 Suedwest-Kammer auf B2 gezeichnet, Querbalken-Fenster, Riegel",
+    "d29ee63b wip(r39-karten): Nachbesserung 2 - Lauf K (list SUBLIST bei einem Element), Bilder vorher/nachher Kammer",
+    "7ec823df wip(r39-karten): Nachbesserung 2 - Dossier Umsetzung, Messung nachher, Gegenprobe (184 Querbalken-Punkte erklaert)",
+    "6ea1cec7 wip(r39-karten): Nachbesserung 2 - Durchgang nur mit gefuellter Kammer (R39_SCHEMA_KOERPER), Riegel Plan-Zustaende 5/6 (ungebaut)",
+    "a8e630e5 wip(r39-karten): Nachbesserung 2 - Dossier OFFEN und Fuer den Nutzer",
+    "6027bf4d wip(r39-karten): Nachbesserung 2 - Gegenprobe Koerper-Gatter, gdigrab des echten Fensters am Abnahme-Weg",
+    "59ed4de3 fix(r39-karten): Nachbesserung 2 - ROOM1210 Suedwest-Kammer auf B2 gezeichnet, Marker in 1210 ueberall auf der Zeichnung"
+   ],
+   "suite": "100% tests passed, 0 tests failed out of 99 - ctest --test-dir re15_port/build -R \"^(unit_map_|unit_karte_|unit_r30_karte|unit_r30_hinweis|unit_r33_karte|unit_r35_karte|unit_r35_cut10f0|integration_r35_cut10f0|unit_r36_karte|unit_r36_kartenbits|unit_r36_kartenitems|integration_r36_karte|integration_r36_kartenitems_bild|unit_r38_tagebuch|integration_r38_tagebuch|unit_r39_karten|integration_r39_karten|integration_r39_elza_karte|unit_r39_inventar|integration_r39_inventar|integration_map_uebergang|integration_map_raum_live|integration_r35_karte|unit_inv_|unit_r26_inventar|unit_r35_inventar1050|integration_r35_inventar1050|unit_r36_inventar|integration_r36_inventar|unit_r38_kleinkram_inventar|integration_r38_kleinkram_inventar|unit_pri_inventar_riegel|unit_r30_android_n1_inventar_cmd|unit_1210_)\" -j 4 --timeout 900 --output-on-failure (Bau vom Stand 6ea1cec7; spaetere Commits aendern nur Dossier und Werkzeugkopien)",
+   "offene_punkte": [
+    "Aus N1 bleibt nichts offen. Die Entscheidungsfrage 'Kammer zeichnen oder B2 wie die Vorlage' ist durch den Orchestrator-Entscheid erledigt.",
+    "Dem Nutzer melden (steht im Dossier unter 'Fuer den Nutzer (Nachbesserung 2)'): Die Kammer weicht bewusst von mapB2_correct.png ab. Bilder: analysis/befunde_runde39/G_karten_bilder/b2_kammer_soll_nachher_x4.png, b2_kammer_echtlauf_vorher_nachher_x4.png und b2_kammer_gdigrab_x4.png.",
+    "Dem Nutzer melden: Die Kammer erscheint auf der Karte erst, wenn man sie einmal betreten hat (wie die WCs in ROOM1000), und ist nur rot, solange man drin steht. Bei Elza ist die Zelle im Original zunaechst verschlossen (sub00 Sca_id_set, bis (4,0xEC) und (4,0xFC) gesetzt sind).",
+    "Vorbestehend und nicht Teil von N1: Die Schwenk-Tilgung des Renderers laesst Kerben bei (187,71)/(187,77) am Tuerbalken 11E0<->1210. Im Lauf K liegen dort 4 Koerperpixel am Grund ausserhalb des Kammer-Kastens; die Wand x186 steht direkt daneben.",
+    "Weiter vorbestehend und unveraendert (Hinweise der Abnahme 1): Kachel-Klemmung reserve 4 (H2), Tuer 1030<->1050 bei ungezeichnetem 1030 (H1), 1130-Wandnasen (H4), 11A0 Band 1 102/444 auf Blatt 6, 10B0/1260 ohne Kartenblatt."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/re15_inv_screen.c (1 Zeile: Haken re15_karte_r39_fenster neben re15_karte_fahrstuhl_fenster, Kommentar 'Runde 39 Spur G')",
+    "re15_port/engine/src/re15_map_zones.h (Karten-Code Spur G: zwei Zonenzeilen 0x1210/0x1211 Zone 1, s_map_synth synth 12, s_map_synth_cells Index 21)"
+   ],
+   "neue_assets": [],
+   "sprachdateien": []
+  }
+ },
+ "abn": {
+  "G": {
+   "bestanden": false,
+   "suite": "Gezielt, keine volle Suite: ctest --test-dir re15_port/build -R \"^(unit_map_|unit_karte_|unit_r30_karte|unit_r30_hinweis|unit_r33_karte|unit_r35_karte|unit_r35_cut10f0|integration_r35_cut10f0|unit_r36_karte|unit_r36_kartenbits|unit_r36_kartenitems|integration_r36_karte|integration_r36_kartenitems_bild|unit_r38_tagebuch|integration_r38_tagebuch|unit_r39_karten|integration_r39_karten|integration_r39_elza_karte|unit_r39_inventar|integration_r39_inventar|integration_map_uebergang|integration_map_raum_live|integration_r35_karte|unit_inv_|unit_r26_inventar|unit_r35_inventar1050|integration_r35_inventar1050|unit_r36_inventar|integration_r36_inventar|unit_r38_kleinkram_inventar|integration_r38_kleinkram_inventar|unit_pri_inventar_riegel|unit_r30_android_n1_inventar_cmd|unit_1210_)\" -j 4 --timeout 900 -> 100% tests passed, 0 tests failed out of 99 (483 s). Bau: local_build.sh configure+build = LOCAL-BUILD-OK, \"ninja: no work to do\".",
+   "urteile": [
+    {
+     "punkt": "1a Blaetter 1F/2F/3F/B2 nach den Vorlagen (keine Doppelwaende, Tuer immer genau auf Wand, Treppen nicht in der Wand)",
+     "urteil": "teilweise",
+     "beleg": "Echte exe, Sweep aller 13 Blaetter: gegen Abnahme 1 sind 12 Blaetter pixelgleich, B2 weicht in 249 Pixeln ab, alle im Kammer-Kasten x186..201 y113..129. Gegen die Vorlagen: 1F 0 und 2F 0 Abweichungen, B2 nur die Kammer (bewusst, Orchestrator-Entscheid), 3F die zwei begruendeten Treppen (H3). Doppelwand 0 auf B1..3F und in allen 43 Abzuegen mit einem einzeln besuchten Raum. ABER: im normalen ersten Stand auf 1F schwebt die Tuer 1030<->1050 bei x186 y150..154 neben der 1050-Wand x187 im Leeren. Gemessen auf dem echten Tuerweg Hof 1090 -> 1050 (DOOR FIRE slot=0, PC loaded room1050.rdt). Ebenso schwebt 1030<->1040 bei x119 neben x118 (N2)."
+    },
+    {
+     "punkt": "1b Spielermarker muss entsprechend passen (Mangel N1 der Abnahme 1: ROOM1210-Kammer)",
+     "urteil": "erfuellt",
+     "beleg": "Sonde markerflaeche ROOM1210, Dichte 1: 0 von 10387 Punkten (vorher 1693). Echte exe auf dem Abnahme-Weg W1,U4,W5: pos=(-25500,0,-21700), Ring (191,117) im Rot der Kammer (vorher im Blau). gdigrab des Direct3D-Fensters gleich FB-Abzug bis auf 13 px Blinkphase. An 5 weiteren Lagen stimmen exe-Ring, Sonde und Handrechnung nach FUN_800473f8 ueberein. Querbalken: VORHER-exe Marker y79, NEU y78. ROOM1211 ohne Flags: Halt bei x -20824, Kammer ungezeichnet; mit (4,0xEC)/(4,0xFC) Ring in der Kammer. Teilzustaende Flur allein, Plan und Kammer besucht sind geschlossen."
+    },
+    {
+     "punkt": "1c B1 neu (passt nicht zu wie man sich bewegt)",
+     "urteil": "erfuellt",
+     "beleg": "Blatt 0 pixelgleich zum Sweep der Abnahme 1 (dort erfuellt), Doppelwand 0, unit_r39_karten_b1 gruen."
+    },
+    {
+     "punkt": "1 gesamt (Karten Polizeistation)",
+     "urteil": "teilweise",
+     "beleg": "1b und 1c erfuellt; 1a teilweise wegen N2 (schwebende 1030-Tuer im normalen ersten 1F-Zustand)."
+    },
+    {
+     "punkt": "2 ROOM1090 Leons Positionsmarker im aktuellen Raum",
+     "urteil": "erfuellt",
+     "beleg": "Nutzerpunkt (-12528,-9000,959): Ring (183,72) im Rot, s03 0 px verschieden zu Abnahme 1. Echter Weg Leon 10F0 -> Klettern -> Tuer: room1090 band 5, Ring (182,72) im Rot, 0 px verschieden. Echter Weg Elza (PL04) 10F1 -> 1091: Ring (182,72) im Rot."
+    },
+    {
+     "punkt": "Gate RE (Disasm-Belege, Rate-Woerter)",
+     "urteil": "erfuellt",
+     "beleg": "Selbst geprueft: Zeile @0x800769B8 = b1 00 8c 00 c0 09 ca 08; FUN_800473f8 disassembliert und als Skript nachgerechnet (alle zitierten px/py stimmen); Seiten-Tabelle B2 @0x800762F4; ROOM1210 RVD @0x002DC..@0x00340 (Schnitte 6/7); SCA-Zellen; main00 mit 6 Door_aot_set und Obj_model_set @0x01E4E; ROOM1211 sub00 Sca_id_set @0x01E0E/@0x01E5A auf Zelle 15; MAP02.PIX-Linien. Kein deferred/tunable/TODO/getenv im Diff."
+    },
+    {
+     "punkt": "Gate Vertrag/Pfade/Tests",
+     "urteil": "erfuellt",
+     "beleg": "Keine Bank-9-Bits, Nachrichten-Ids oder Slots. Das Besucht-Bit ist das Zonen-Bit 2n+1 von ROOM1210. Pfade nur Karten-Code und Tests, keine release/, android/, shared_assets/ oder CMakeLists.txt. re15_inv_screen.c bekommt eine Zeile Haken. Gezielte Tests 99/99. Lauf K misst: auf dem VORHER-Abzug rot=0 -> ROT. merge-tree gegen master ohne Konflikt. Tueruebergaenge 132/132 gleich."
+    }
+   ],
+   "maengel": [
+    "N2 (Punkt 1a 'Tuer immer genau auf Wand platziert'; vorbestehend, keine Regression, in Abnahme 1 nur Hinweis H1): Solange ROOM1030 nicht gezeichnet ist, schweben seine Tuermarken neben der Wand des Nachbarraums. (a) Tuer 1030<->1050 {2,4,186,152,3,4,6,1} (re15_map_zones.h:753): Balken x186 y150..154 links neben der 1050-Westwand x187, Enden (186,149)/(186,155) Grund. (b) Tuer 1030<->1040 {2,4,119,129,3,4,5,1} (re15_map_zones.h:730): Balken x119 y127..131 rechts neben der 1040-Ostwand x118. Normaler erster Stand auf 1F: der 1F-Plan liegt in ROOM1030 selbst (gen/kartenitems_r36.inc:1230), und der Weg 10F0 -> 1090 -> Hof fuehrt zuerst nach 1050. Pruefen: probe_r36_karte karte re15_card.mcr 1090 -10100 -1800 4200 1024 besucht:10F0:8400:-350 besucht:1090:-13600:1300:5 besucht:1090:-10100:4200:1, LOAD GAME, RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT=W1,U0.3,W0.3,A0.1,W8 RE15_INV_OPEN_AT=40#1050 RE15_INV_FB_SHOT=karte.bmp RE15_INV_FB_SHOT_AT=60. Erwartet im Log: DOOR FIRE slot=0 und PC loaded room1050.rdt; im Abzug steht der gelbe Balken ausserhalb der Wand. Soll: in jedem erreichbaren Kartenzustand liegt jeder gezeichnete Tuerbalken auf einer gezeichneten Wand, mit einem Riegel fuer die Einzelzustaende 1050 und 1040 ohne 1030. Die uebrigen 39 Einzelzustaende haben keine schwebende Tuer."
+   ],
+   "bericht": "Bericht: C:/workspace/git/reAi_v2/.claude/worktrees/r39_karten/analysis/befunde_runde39/G_abnahme_2.md (Commit 4ea5e62c, nur diese Datei). Messordner: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/G39abn2/\n\nErgebnis: nicht bestanden. Die Kammer ist sauber umgesetzt, aber eine Tuer zur Eingangshalle schwebt im normalen ersten Stand auf 1F neben der Wand (N2).\n\nN1 ist an der echten exe behoben.\n- ROOM1210: Auf dem Weg der Abnahme 1 steht der Ring (191,117) jetzt im Rot der Kammer, vorher im Blau.\n- Sonde: 0 von 10387 Punkten neben der Zeichnung, vorher 1693.\n- gdigrab des Fensters gleicht dem FB-Abzug bis auf 13 px Blinkphase des Rings.\n- An 5 weiteren Lagen stimmen exe-Ring, Sonde und Handrechnung nach der selbst disassemblierten Formel FUN_800473f8 ueberein.\n- Der Querbalken-Rest (184 Punkte) ist echt: die VORHER-exe zeigt y79, die NEU-exe y78.\n- ROOM1211 (Elza) ist ohne die Flags (4,0xEC)/(4,0xFC) zu, mit ihnen offen.\n\nKeine Nebenwirkungen gefunden.\n- Sweep: 12 Blaetter pixelgleich, B2 nur im Kammer-Kasten.\n- Tueruebergaenge 132/132 gleich.\n- Punkt 2 ROOM1090: Nutzerpunkt, Echtweg Leon und Echtweg Elza haben den Ring im Rot.\n\nAlle Gates halten.\n- RE: Zeile @0x800769B8, Formel, Seiten-Tabelle, RVD @0x002DC..@0x00340, SCA-Zellen, main00 und ROOM1211 sub00 selbst gelesen.\n- Keine Rate-Woerter im Diff.\n- Vertrag und Pfade sauber.\n- 99/99 gezielte Tests gruen.\n- merge-tree gegen master ohne Konflikt.\n\nNeu (N2, Punkt 1a): Ich habe jeden Raum der Polizeistation einzeln an der echten exe abgezogen, 43 Abzuege an 42 auswertbaren Lagen.\n- Doppelwand ueberall 0.\n- Bevor ROOM1030 gezeichnet ist, schwebt dessen Tuer zu 1050 bei x186 neben der 1050-Wand x187.\n- Belegt mit dem echten Tuerweg Hof -> 1050. Das ist der normale erste Stand auf 1F, denn der 1F-Plan liegt in 1030 selbst.\n- Gleiches gilt fuer 1030<->1040 bei x119.\n- Es ist vorbestehend und keine Regression; die Abnahme 1 fuehrte es nur als Hinweis H1. Gegen den Wortlaut 'Tuer immer genau auf Wand platziert' ist Punkt 1 damit nur teilweise erfuellt.\n\nHinweise ohne Mangel: Die Kammer weicht bewusst von mapB2_correct.png ab und ist dem Nutzer gemeldet. H2 bis H6 der Abnahme 1 sind unveraendert. 1 von rund 70 Laeufen blieb beim Start haengen (bekannter Start-Haenger, Wiederholung lief normal)."
+  }
+ }
+}
