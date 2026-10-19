@@ -310,7 +310,7 @@ Neue Riegel (re15_port/tests/unit/probes/r39_elzazombies.cmake), Stand nach Nach
   Medical Room alle getoetet, entfaellt der Treppenhaus-Schnitt.
 * Steigst du danach von unten die Treppe in 1061 hinauf, stehen die Zombies am 2F-Absatz links unter dem Fenster (am
   weitesten weg vom Treppenkopf) und laufen erst los, wenn du oben angekommen bist.
-* ROOM1041 (Nachtrag 11, "wie bei Leon"): Lebst du die Zombies aus dem Treppenhaus nicht besiegt zurueck und betrittst
+* ROOM1041 (Nachtrag 11, "wie bei Leon"): Laesst du die Zombies aus dem Treppenhaus unbesiegt zurueck und betrittst
   1041 wieder (durch die Tuer von 1061, der Lobby oder den Aufzug), bricht das Rolltor wie bei Leon: Knall, das Rolltor
   faehrt hoch, genau diese Zombies kommen hindurch auf die Kamera zu, danach hast du wieder die Steuerung an der Tuer, durch
   die du gekommen bist. Warum nicht sofort beim Start der Panikphase: da stehst du selbst in 1041, und die Zombies aus dem
