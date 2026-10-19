@@ -911,6 +911,28 @@ Werkzeug `j39n3/lauf.sh` (= `J39abn2/lauf.sh` der Abnahme, eigene exe-Kopie `re1
   John) und `J_belege/nb3_m1_nachher_r2_F6264-6308.png` (nachher: F6268 Balken, F6271..F6280 Senken, F6297..F6308 Elza neutral
   John zugewandt).
 
+### 10.5 Tests (gezielt, keine volle Suite im Spurbaum)
+- Neu: `unit_r39_dining1141_senken` (Teil senken, 10.4), `integration_r39_dining1141_zielen` (tests/integration/
+  test_r39_dining1141_zielen.cmake, registriert in probes/r39_dining1141.cmake; Werkzeug `test_r39_dining1141 zielen <lauf>`:
+  Kampfende/Schnitt aus debug.log, Zustand je Bild aus state.txt (Abschnitt ab der letzten Zeile "F1 ")). Erweitert:
+  `unit_r39_dining1141_programme` (NB3: `22 01 1b 01 22 02 07 01 09 0a 1e 00 29 08` hinter beiden Wartezeilen, keine zweite Sperre
+  vor msg 51).
+- Gegenprobe: `test_r39_dining1141 zielen l_v_m2` (Lauf am Stand vor dem Fix) -> **3 Fehler** (Sperre 0 Bilder vor dem Schnitt,
+  0 Bilder gesenkt, 11 Bilder Cut 8 mit Waffe); `senken` Fall 4 (ohne Phase H) zeigt den alten Port-Stand (Waffe bleibt oben).
+- H4 am Lauf: `env RE15_EXIT_AT=200#1131 RE15_FRAMEDUMP=0-50/1:feind_ RE15_GIVE=0x02:1 RE15_R38F_GORILLAS_TOT=5
+  RE15_INPUT_SCRIPT=U30 ctest -R "^integration_r39_dining1141_zielen$"` -> `r39j: 5 RE15_*-Variablen des Aufrufers entfernt:
+  RE15_EXIT_AT;RE15_FRAMEDUMP;RE15_GIVE;RE15_INPUT_SCRIPT;RE15_R38F_GORILLAS_TOT`, Lauf lauf_2e593b55 bis 4210#1141 (kein Abbruch
+  in 1131, kein `feind_`-Bild), `zielen: 0 Fehler`, "100% tests passed, 0 tests failed out of 1". Rauchprobe D/kampf-Skript
+  (RE15_DUMMY_X=1): "r39j: 1 RE15_*-Variablen des Aufrufers entfernt: RE15_DUMMY_X".
+- Messkopien/Laufordner: zielen nutzt `re15_pc_r39j_z_<id>` und `lauf_<id>` (eigene Praefixe, nur eigene alte Kopien geloescht),
+  `cmake_minimum_required(VERSION 3.16)`, keine .exe-/Backslash-Pfade (Endung aus `get_filename_component(... EXT)`).
+- Alle Unit-Riegel am Stand 1264c240 (Code = 8649df54; Lauf 05:06:02..05:15:35):
+  `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -j 6 --timeout 600`
+  -> **"100% tests passed, 0 tests failed out of 855"** (572.19 sec). Danach nur ein Kommentar in player_common.c (db51683c):
+  `objdump -d player_common.c.obj` vor/nach bytegleich ("CODE_GLEICH", 2974 Zeilen).
+- Hinweis zum Riegel zielen: ohne RE15_AUDIO_CAP_SYNC laufen die Stimmen-Zeilen nach der Wanduhr - das Szenenende schwankte
+  in drei Laeufen 3421..3456 (Kampfende 4021..4056). Das R1-Fenster (Bild 3000 + 45 s) deckt Szenenenden ~2420..~3690 ab.
+
 ### 10.6 Je Mangel / Auftrag: Ursache - Messung vorher - Beleg - Aenderung - Messung nachher
 | Punkt | Ursache (gemessen) | vorher | Beleg | Aenderung | nachher |
 |---|---|---|---|---|---|
