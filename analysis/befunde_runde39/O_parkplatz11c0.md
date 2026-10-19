@@ -14,6 +14,8 @@ Zuteilung (VERTRAG.md): Port-Message-Id 11C0 = 40 (1.2); Bank-9-Bit 96 nur, wenn
 - [x] Umsetzung (Programme SZENE/ENDE + Installer + Stimme, Haken je 1 Zeile)
 - [x] Messung nachher (nach1-3 + integration K/W/N/E; Szene/Kampf bitgleich vor/nach)
 - [x] Tests (unit 7, integration 4; Modulgruppen; alle unit_/prop_/probe_)
+- [x] Nachbesserung 1 (Abnahme 0 M1: Programm SZENE nur bei (3,67)==0; Riegel ende_gesetzt/kills_gesetzt/echt +
+      integration I; `integration_r39_stimmen_11b0` gruen) — Abschnitt am Ende
 
 ## Messung vorher (Basis fa2c0e7e, exe `re15_pc_r39o_mess.exe` = Kopie der gebauten exe)
 
@@ -112,11 +114,12 @@ Erzaehlform (`fa 02 ...`, kein Sprecherkopf).
 ### Ablauf (alles an Original-Stellen des Raums, die Szenen selbst laufen UNVERAENDERT aus dem RDT)
 | Zeitpunkt | Mechanik | Beleg / Form |
 |---|---|---|
-| Erster Besuch, Szene beginnt | sub01 @0x01824 Evt_exec sub02 -> Port-Programm **SZENE** = `46 00 01 31 28 00 ff ff 00 00` (Aot_reset Slot 0 -> MESSAGE msg 40, Maske 0xffff) + `18 02` Gosub sub02 + `01 00` | Zeile: ROOM11B0 sub01 @0x01216; Stelle: RE2 ROOM7040 sub06 @0x0185A (in der Kampf-Beginn-Szene vor der Rueckgabe der Steuerung). sub02 sperrt den Pad in DERSELBEN Runde (@0x01856, drittes Opcode) und gibt ihn erst @0x01ACE zurueck — die Sperre vor dem Gosub wirkt wie eine direkt vor @0x01ACE. Gosub-Huelle wie Runde 38 F SZENE1021 |
+| Erster Besuch, Szene beginnt (nur bei (3,67)==0, Nachbesserung 1) | sub01 @0x01824 Evt_exec sub02 -> Port-Programm **SZENE** = `46 00 01 31 28 00 ff ff 00 00` (Aot_reset Slot 0 -> MESSAGE msg 40, Maske 0xffff) + `18 02` Gosub sub02 + `01 00` | Zeile: ROOM11B0 sub01 @0x01216; Stelle: RE2 ROOM7040 sub06 @0x0185A (in der Kampf-Beginn-Szene vor der Rueckgabe der Steuerung). sub02 sperrt den Pad in DERSELBEN Runde (@0x01856, drittes Opcode) und gibt ihn erst @0x01ACE zurueck — die Sperre vor dem Gosub wirkt wie eine direkt vor @0x01ACE. Gosub-Huelle wie Runde 38 F SZENE1021 |
 | Kampf laeuft | Slot 0 = MESSAGE msg 40 (Typ 5 im Port) — Druck an der Tuer zeigt den Text (MESSAGE-Handler 0x80043084 = re15_scd_show_message, Maske 0xffff0000 friert die Welt wie jeder Examine-Text), kein Raumwechsel | Aot_reset LAB_80040738; sce-Tabelle PTR_8007469c[1] |
 | Wiedereintritt im Kampf ((4,64)=1, (3,67)=0) | Installer nach dem Init-Lauf: derselbe Aot_reset aus C (`re15_aot_retype(0, 1, 0x31, 40, 0xffff, 0)`), Muster dining_r38.c tuer_1131 | Bedingung = sub00 @0x017C8/@0x017D0 (Original-Zweig "Kampf laeuft weiter") |
 | Kampf-Ende | sub01 @0x01842 Evt_exec sub03 -> Port-Programm **ENDE** = `46 00 02 31 30 9c 00 00 0d 9d` (Aot_reset Slot 0 -> TUER, Nutzlast = main00 @0x01712+14) + `18 03` Gosub sub03 + `01 00` | Zeile: ROOM1141 sub05 @0x00FDC; Stelle: RE2 ROOM7040 sub07 @0x01ACC; MUSS vor sub03 @0x01C08 Aot_on(0) stehen (@0x8004082c `jalr` auf den aktuellen Handler) |
 | nach dem Kampf | (3,67)=1: kein Eingriff, die Tuer ist die Original-Tuer | sub00 @0x017CC |
+| (4,64)=0 bei (3,67)=1 (nur Spielstand/Debug-Flags) | kein Eingriff: Original-sub02, die Tuer bleibt die Tuer | die einzige Freigabe sub01 @0x0182E Ck(3,67)==0 griffe nie (Nachbesserung 1, M1) |
 | Elza ROOM11C1 | kein Eingriff (Raum-Id 0x11C1, 5 Hunde, kein Begleiter) | ROOM11C1 sub00 @0x016F8.. |
 | fremdes RDT | FNV-Anker main00-Tuer (@0x01712, 32 B) + sub00..sub03 (@0x01768, 1188 B) — weicht ein Byte ab, bleibt alles Original | Muster dining_r38.c |
 | Stimme | MESSAGE-AOT-Weg (re15_scd_show_message) reiht im Port KEINE Stimme ein (nur Message_on). Haken: fuer ROOM11C0 msg 40 dieselbe Einreihung wie scd_queue_voice -> `synchro/STAGE1/room11C0/main40.wav` spielt nach der Ordnerregel, sobald sie liegt | PORT-WAHL (synchro = eigene Produktion, keine Byte-true-Frage); Messung nachher: `[voice] ROOM11C0 msg 40: keine Aufnahme (synchro/STAGE1/room11c0/main40.wav)` |
@@ -196,9 +199,29 @@ Gezielte Laeufe (Spurbaum, KEINE volle Suite):
 - Querbezug vor dem Abschluss (Memory reai-v2-gezielte-integration-querbezug), ALLE unit_/prop_/probe_:
   `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -j 6 --timeout 900` -> `100% tests passed, 0 tests failed out of 844`
   (875 s).
+- Nachbesserung 1 (neue Teile ende_gesetzt, kills_gesetzt, echt, integration I; Laeufe nach dem Fix): s. Abschnitt
+  "Nachbesserung 1" am Ende.
 
 ## OFFEN
-- Keine offenen Punkte dieser Spur.
+- Keine offenen Punkte dieser Spur (Abnahme 0 M1 behoben, Nachbesserung 1).
+- Hinweis an Orchestrator / Spur E (Abnahme 0 H1, nicht Spur O): der Port setzt die Kill-Bits eines Gegners erst im
+  Leichen-Zustand 7 (enemy_ai_common.c run_all), das Original im ersten Todesbild (STAGE1.BIN @0x8011b7c8/@0x8011b8f4).
+  In 11C0 gemessen (unit echt): Tod Bild 150, Kill-Bits Bild 221, ENDE Bild 222 — so lange zeigt die Tuer nach dem Tod
+  des zweiten Gorillas noch msg 40; die Original-Ende-Szene beginnt ~2,4 s spaeter. Gilt fuer alle Kill-Flags.
+- Hinweis an Orchestrator (Abnahme 0 H3, nicht Spur O): ein Druck waehrend der Schreibmaschine beschleunigt einen
+  MESSAGE-AOT-Text nicht (allgemeine Text-FSM re15_scd_show_message -> re15_dialog_open_mask), nicht gegen das
+  Original geprueft.
+- Nebenbefund an Orchestrator (nicht Spur O, vorbestehend, `O_belege/nb1_continue_11c0_fallback.txt`): am Boot-/
+  CONTINUE-Weg bewaffnet platform/pc/main.c:4858-4860 `s_preintro` fuer JEDEN Raum, dessen Boot-Tick einen Event-Thread
+  hinterlaesst (gedacht nur fuer den 1170-Erzaehler sub11); dann laeuft der "door-3 self-reentry FALLBACK"
+  (main.c:5631-5642, Frame-Cap Bild 900) main00+sub00 mitten in der Szene neu. Der Raumwechsel-Weg (main.c:8208-8223)
+  ist seit dem ROOM1150-Befund auf 1170 beschraenkt, der Boot-Weg nicht. Gemessen: CONTINUE direkt in 11C0 (erster
+  Besuch) -> Szene ab Bild 0, msg 5 Bild 893, FALLBACK Bild 900, Szene zu Ende Bild 914 (Tuerweg: Bild 1102/1107).
+  Im Spiel nur ueber einen Spielstand in einem Raum mit sofortiger Szene erreichbar (11C0 hat keine Schreibmaschine);
+  betrifft Testkarten wie die des Spur-A-Riegels (dort feuert die Tuer schon in Bild 60, vor dem Haken).
+- Optional (Orchestrator, Datei der Spur A): die Karte von `integration_r39_stimmen_11b0` (test_r39_stimmen.cmake:97)
+  traegt (3,67)=1 ohne (4,64); seit Nachbesserung 1 laeuft der Riegel damit gruen, eine Ergaenzung um `4:64` ist
+  nicht mehr noetig.
 - Hinweis an Spur J / Orchestrator (nicht Spur O): ROOM1141 msg 41 ("I cannot leave him alone with those monsters.",
   Runde 38 F) laeuft ebenfalls ueber den MESSAGE-AOT-Weg, der im Port KEINE Stimme einreiht (scd_vm.c
   re15_scd_show_message, nur Message_on ruft scd_queue_voice). Eine kuenftige `synchro/STAGE1/room1141/main41.wav` bliebe
@@ -217,6 +240,9 @@ Gezielte Laeufe (Spurbaum, KEINE volle Suite):
   danach ist die Tuer wieder normal. Elzas Parkplatz (ROOM11C1, Hunde) ist unveraendert.
 - **Alte Spielstaende:** wer in einer frueheren Fassung mitten im Kampf hinausgegangen ist, findet beim Wiederbetreten den
   Kampf wie im Original weiterlaufend vor (Gorillas, Ada im Wagen) — jetzt mit gesperrter Tuer bis zum Kampfende.
+- **Nachbesserung 1:** im normalen Spiel keine sichtbare Aenderung. Ein Spielstand mit widerspruechlichen Flags (Ende-
+  Szene als gelaufen markiert, Ada-Szene nicht — nur ueber Test-/Debug-Spielstaende) sperrt die Tuer nicht mehr fuer
+  immer; sie bleibt dort die Original-Tuer.
 - Keine Entscheidungsfragen.
 
 ## Nachbesserung 1 (nach Abnahme 0, `O_abnahme_0.md`; Basis HEAD 72c76540)
@@ -225,9 +251,9 @@ Stand:
 - [x] M1 Messung vorher (exe mit der Spur-A-Karte; Riegel-Teil `ende_gesetzt` am alten Stand rot)
 - [x] M1 RE-Beleg (Freigabeweg sub01 @0x0182E/@0x01842, Setzer von (3,67)/(4,64) im RDT-Zensus)
 - [x] M1 Aenderung (Programm SZENE nur bei (3,67)==0)
-- [ ] M1 Messung nachher (unit, integration Teil I, `integration_r39_stimmen_11b0`)
+- [x] M1 Messung nachher (unit, integration Teil I, `integration_r39_stimmen_11b0`)
 - [x] Hinweise H1/H2/H3 der Abnahme eingeordnet (H2 als Riegel `echt` uebernommen)
-- [ ] gezielte Tests + alle unit_/prop_/probe_
+- [x] gezielte Tests + alle unit_/prop_/probe_
 
 ### M1 — Programm SZENE sperrte auch bei schon gesetztem (3,67)
 
@@ -287,7 +313,19 @@ spawned threads", Evt_exec @0x8003f2a0 / scd_execute_scripts @0x8003f0a0) -> die
 Sperre (Slot 10). Gemessen (Pruefstand, dann Riegel `kills_gesetzt`): Bild 0 SZENE 1 / ENDE 1, Slot 0 am Bildende Tuer,
 msg 7, Raumwechsel ROOM11B0 Bild 876, kein msg 40 — keine Dauersperre, keine zusaetzliche Bedingung noetig.
 
-**Messung nachher:** s. unten (Tests Nachbesserung 1).
+**Messung nachher** (Stand 2b4e6dfd gebaut 01:34, `O_belege/nb1_nach_m1_integration.txt`):
+- `integration_r39_stimmen_11b0` (der haengende master-Riegel der Spur A): **Passed 113,03 s**; debug.log
+  `[parkplatz] F0 ... bei (3,67)=1 -> keine Sperre`, `[fire-aot] slot=0 at F60`, `DOOR FIRE slot=0 ... spawn=(-25552,0,
+  -25331)`, `loaded room11b0.rdt`, msg 20 "Marvin: But, hold on..." / msg 21 "... unwanted followers.", `DOOR FIRE
+  slot=5` -> `loaded room1260.rdt`, `EXIT_AT: Bild 30 in Raum 1260`.
+- exe-Teil I (neu): i1 = Weg des Spur-A-Riegels -> `keine Sperre`, Original `Evt_exec sub=2 ... slot 10`, `DOOR FIRE
+  slot=0` in Bild 60, `loaded room11b0`; i2 = Szene bis zur Rueckgabe (am CONTINUE-Weg durch den vorbestehenden
+  F900-Haken gekuerzt, s. OFFEN), `AOT slot 0 typ 1` vor und nach dem Weg, nie `typ 5`, (4,64)=1/(3,67)=1, zu Fuss
+  zur Tuer (Bild 1553), Druck -> `DOOR FIRE slot=0` -> ROOM11B0.
+- unit `ende_gesetzt` (vorher 7 Fehler) -> 0 Fehler: kein SZENE, Slot 0 durchgehend Tuer (Szene Bild 0..1047), Aot_on(0)
+  Bild 60 -> ROOM11B0, nach den Kill-Bits kein ENDE und trotzdem Tuer, Druck -> ROOM11B0.
+- Die abgenommenen Punkte bleiben: K/W/N/E unveraendert gruen (Kampf: Text msg 40, kein Raumwechsel, Leon steuerbar,
+  Ende -> ROOM11B0; Wiedereintritt; nach dem Kampf; Elza), unit kampf/wiedereintritt/nachher/elza/fremd gruen.
 
 ### Hinweise der Abnahme (kein Mangel)
 - **H1** Kill-Bit-Zeitpunkt im Port (Leichen-Zustand 7, enemy_ai_common.c run_all) 71 Bilder nach dem Original-Todesbild
@@ -299,3 +337,29 @@ msg 7, Raumwechsel ROOM11B0 Bild 876, kein msg 40 — keine Dauersperre, keine z
   in PSX.EXE selbst gelesen), Kill-Bits NUR vom Todes-Commit der Engine -> ENDE -> msg 7 -> ROOM11B0.
 - **H3** Schreibmaschine wird durch einen Druck nicht beschleunigt: allgemeine Text-FSM (re15_scd_show_message ->
   re15_dialog_open_mask), nicht Spur O -> OFFEN (Hinweis).
+
+### Tests (Nachbesserung 1)
+
+Neu bzw. erweitert (registriert nur in `tests/unit/probes/r39_parkplatz11c0.cmake`):
+| Test | misst | vorher (alter Engine-Code) | nachher |
+|---|---|---|---|
+| unit_r39_parkplatz11c0_ende_gesetzt | (4,64)=0/(3,67)=1 mit Flags und Lage der Spur-A-Karte: (a) Bild 0 startet das Original-sub02 ((4,64)=1, Pad-Sperre), KEIN Programm SZENE, Slot 0 Bild 0..59 Tuer, Aot_on(0) in Bild 60 -> ROOM11B0 ohne msg 40; (b) Szene bis zur Rueckgabe (Bild 1047) durchgehend Tuer, zwei Gorillas, Kill-Bits -> kein ENDE, Slot 0 Tuer, Druck -> ROOM11B0; keine Stimme msg 40 | **7 Fehler** | gruen |
+| unit_r39_parkplatz11c0_kills_gesetzt | Randzustand (4,64)=0/(3,67)=0 + Kill-Bits: SZENE und ENDE im selben Bild, Slot 0 am Bildende Tuer, msg 7, ROOM11B0, kein msg 40 | (Pruefstand: dasselbe) | gruen |
+| unit_r39_parkplatz11c0_echt | Abnahme 0 H2: echte Pistolen-Treffer (Waffe 3, Schaden @0x8006ee44 = 12) bis zum Tod, Kill-Bits nur vom Todes-Commit -> ENDE -> msg 7 -> ROOM11B0 | gruen (31/31 Treffer, Tod Bild 150, Kill-Bits 221, ENDE 222, Wechsel 932) | gruen (dieselben Bilder) |
+| unit_r39_parkplatz11c0_programme | zusaetzlich: Haken bei (3,67)=1 liefert das Original-sub02 | - | gruen |
+| integration_r39_parkplatz11c0_i | echte exe, Karte `11C0 -25100 15000 1024 flag:3:67 flag:3:0x82 flag:4:0xF3` + CONTINUE; i1 `RE15_FIRE_AOT=0@60#11c0`, i2 Szene + zu Fuss zur Tuer (s. Messung nachher) | (i1 = Lauf `nb1_vor_m1_exe.txt`: msg 40, haengt in 11C0) | gruen (102,28 s) |
+
+Gezielte Laeufe (Spurbaum, KEINE volle Suite), woertlich:
+- `ctest --test-dir re15_port/build -R "^unit_r39_parkplatz11c0_" --timeout 600 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 10`
+- `ctest --test-dir re15_port/build -R "^integration_r39_parkplatz11c0_|^integration_r39_stimmen_11b0$" --timeout 1800 -j 2 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 6` (n 132,04 s, k 150,96 s, w 31,25 s, e 30,70 s, i 102,28 s,
+  integration_r39_stimmen_11b0 113,03 s; vorher 2x ***Failed 600 s laut Abnahme)
+- 11C0/11B0-Nachbarn an der exe (Liste der Abnahme 0 §5):
+  `ctest --test-dir re15_port/build -R "^integration_r37_szene11c0$|^integration_r36_schluessel$|^integration_r39_gegner_schatten$|^integration_r35_cut1150$|^integration_r36_szene1150$|^integration_r38_montage$|^integration_r38_werkstatt11b0$|^integration_r35_granate$|^integration_r35_cut10f0$" -j 3 --timeout 1800 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 9` (542,32 s; werkstatt11b0 158,81, cut10f0 252,87, granate 177,99, szene11c0 119,43, szene1150 118,17, montage 102,20, cut1150 529,74, gegner_schatten 58,76, schluessel 87,28 s)
+- Querbezug vor dem Abschluss (Memory reai-v2-gezielte-integration-querbezug), ALLE unit_/prop_/probe_ (darin die 136
+  Modulgruppen-Tests der Abnahme-Liste):
+  `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -j 6 --timeout 900` -> `100% tests passed, 0 tests failed out of 847`
+  (877,26 s)
+- Generator: `python re15_port/tools/r39_parkplatz/programme_bauen.py --pruefen` -> `...parkplatz_r39_programme.inc ok`
