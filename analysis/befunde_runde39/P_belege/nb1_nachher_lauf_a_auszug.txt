@@ -1,0 +1,9 @@
+[room] PC loaded room1041.rdt (213700 bytes)
+[johnruf] F511 ROOM1041 Karte zu: Faden laeuft weiter (Set(9,97)=1, Steuerung zurueck)
+[tuersperre] F511 ROOM1041: Panikphase (Bit 97) -> Tuer Slot 1 -> Text msg 41
+[johnruf] F511 Panik-Musikfenster auf in ROOM1041 (Bit 97 = 1)
+[bgm] stage=0 room=04 entry=FF01 -> MAIN01(flag 0) SUB--(flags 1/1)
+[tuersperre] F968 ROOM1041 Tuer in der Panikphase -> msg 41 "I have to rescue John! He is in danger!" (Stimme main41.wav)
+[msgtext] room=1041 id=41 "I have to rescue John! He is in danger!"
+[room] PC loaded room1061.rdt (149428 bytes)
+[bgm] stage=0 room=06 entry=FF01 -> MAIN01(flag 0) SUB--(flags 1/1)  [unveraendert, laeuft durch]

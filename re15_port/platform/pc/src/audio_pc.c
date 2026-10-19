@@ -2254,6 +2254,8 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
     re15_rekorder_r38_stimme((unsigned)room, voice_id, reldir, sizeof reldir, stamm, sizeof stamm);   /* Runde 38 Spur J: ROOM1100/1101 Id 40 */
     { extern void re15_dining_r39_stamm(unsigned, int, char *, size_t);   /* Runde 39 Spur J: ROOM1141 Id 53..57 = help01..05 */
       re15_dining_r39_stamm((unsigned)room, voice_id, stamm, sizeof stamm); }
+    { extern void re15_johnruf_r39_stimme(unsigned, int, char *, size_t, char *, size_t);   /* Runde 39 Spur P: 1041/1131 Id 53..57 = room1141/help01..05 */
+      re15_johnruf_r39_stimme((unsigned)room, voice_id, reldir, sizeof reldir, stamm, sizeof stamm); }
     snprintf(path, sizeof path, "%s%s.wav", reldir, stamm);
     wav = re15_pc_read_base(path, &wsz);
     /* the synchro dirs are lower-case "room1170" on disk; retry lower-hex if the
@@ -2407,6 +2409,10 @@ static void re15_voice_play(uint16_t room, int voice_id)
     /* RE2 addresses a voice by (file, channel); model file = room low byte,
      * channel = voice id (the r<room>_m<id> key). */
     re15_xa_set_filter((uint8_t)(room & 0xFF), (uint8_t)voice_id);
+    { extern unsigned re15_johnruf_r39_xa_cdvol(void);   /* Runde 39 Spur P: RE2 Xa_vol (0x800d5b50 -> DsMix @0x80013b34), Standard 120 = 0x3FFF */
+      s_xa.cd_vol_l = s_xa.cd_vol_r = (uint16_t)re15_johnruf_r39_xa_cdvol();
+      if (getenv("RE15_SE_DEBUG")) fprintf(stderr, "[voice] Start ROOM%04X Id %d CD_VOL %u capTick %ld\n", (unsigned)room, voice_id,
+                                         (unsigned)s_xa.cd_vol_l, s_cap_ticks); }   /* Messschiene (Riegel r39_johnruf1041 pegel) */
     re15_xa_read_s(s_voice_clip[voice_id].pcm, s_voice_clip[voice_id].len);
 }
 /* Runde 38 Spur F: Johns Hilferuf ROOM1141 als Sprachzeile ohne Text (synchro main42.wav, dining_r38_pc.c). */
@@ -2921,6 +2927,8 @@ static int ss_bgm_entry(int stage, int room) {
     /* Runde 35 Spur K (re15_cut10f0.h): MAIN01 vom Ende der ROOM10F0-Szene bis zum Parkplatz —
      * erzwungener Tabellen-Eintrag 0xFF01 statt UNK_80074828[...], sonst -1 = Tabelle. */
     { int k = re15_cut10f0_bgm_eintrag(stage, room); if (k >= 0) return k; }
+    { extern int re15_johnruf_r39_bgm_eintrag(int, int);   /* Runde 39 Spur P: Elzas Panikphase (Bit 97) = MAIN01 wie Leon */
+      int k = re15_johnruf_r39_bgm_eintrag(stage, room); if (k >= 0) return k; }
     if (stage < 0 || stage > 5) return -1;
     int idx = room + SS_STAGE_OFF[stage];
     if (idx < 0 || idx >= (int)(sizeof SS_BGMTBL / sizeof SS_BGMTBL[0])) return -1;
@@ -3775,6 +3783,8 @@ void re15_audio_tick(void)
                 /* Runde 35 Spur K (cut_10f0.c): im MAIN01-Fenster gilt ein Befehl an den MAIN-Slot nicht —
                  * FUN_80044da4 op 2 @0x80044e50 stoppte sonst MAIN01, die Nutzlast @0x80044f50 traefe dessen Bank. */
                 if (re15_cut10f0_main_gesperrt((unsigned)evt.bank, (int)evt.volume, s_cap_ticks)) break;
+                { extern int re15_johnruf_r39_main_gesperrt(unsigned, int, long);   /* Runde 39 Spur P: dito in Elzas Panikphase */
+                  if (re15_johnruf_r39_main_gesperrt((unsigned)evt.bank, (int)evt.volume, s_cap_ticks)) break; }
                 ss_seq_ctl_ex(evt.bank, evt.volume, evt.sample_id, (int)evt.raw_w0, evt.pan);
                 break;
             case SCD_AUDIO_BGMTBL_SET: g_audio.events_bgm++;     break;

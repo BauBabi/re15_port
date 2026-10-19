@@ -1,0 +1,21 @@
+# Lauf v3 (Spurbaum P, Bau nach Merge 57e5f920, vor der Nachbesserung) - Wegplan:
+RAUM 1041
+WARTE 30
+GEGNERWEG
+AOTS
+FLAG 9 97
+GEHE -20800 -3800 120
+BLICK 0
+AKTION
+WARTE 200
+ENDE
+# debug.log (gefiltert):
+[save] CONTINUE: resumed in room 1041 (hp=100)
+[aot] DOOR FIRE slot=1 rect=(-19650,-3800,hw=750,hh=1100) target_cut=8 spawn=(-26214,0,-3861)
+[room] PC loaded room1031.rdt (219120 bytes)
+[aot] DOOR FIRE slot=18 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[room] PC loaded room1241.rdt (163748 bytes)
+[voice] clip loaded: main00.wav (48000 Hz x2 → 248062 @44100 Hz)
+[voice] clip loaded: main01.wav (48000 Hz x2 → 235200 @44100 Hz)
+[voice] clip loaded: main02.wav (48000 Hz x2 → 259087 @44100 Hz)
+[flow] EXIT_AT: Bild 600 in Raum 1241 erreicht -> exit

@@ -1,0 +1,7 @@
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r39_johnruf1041/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r39_johnruf1041/re15_port/shared_assets/PSX
+[save] CONTINUE: resumed in room 1061 (hp=100)
+[johnruf] F0 ROOM1061 John gerettet ((4,0xF0)=0, (4,0xF2)=0): Bit 97 = 0, Panikmusik aus
+[fire-aot] slot=0 at F40 (Raum 1061)
+[room] PC loaded room1121.rdt (86900 bytes)
+[flow] EXIT_AT: Bild 420 in Raum 1121 erreicht -> exit

@@ -63,6 +63,7 @@
 #include "re15_engine.h"     /* g_engine.frame_count — nur fuer die Messschiene */
 #include "re15_tagebuch_r38.h" /* Runde 38 Spur G: Kartenkette nach Roys Diary (Eintraege 3/4) */
 #include "re15_karte_r39.h"    /* Runde 39 Spur G: Ziel auf einer Schema-Zeichnung (B1) */
+#include "re15_johnruf_r39.h"  /* Runde 39 Spur P: Karte mit ROOM1141 nach Elzas Satz in ROOM1041 (Eintrag 5) */
 
 #include "gen/re2_hint_bank.inc"   /* RE2_HINT_EDT_SIZE / _VBD_OFF / _VBD_SIZE / RE2_HINT_SE */
 
@@ -116,6 +117,10 @@ static const re15_map_hint_eintrag_t s_hints[] = {
       4, 1, RE15_TAGEBUCH_R38_ZIEL1_ERREICHT_BANK, RE15_TAGEBUCH_R38_ZIEL1_ERREICHT_BIT },
     { RE15_TAGEBUCH_R38_RAUM, { 0 }, 0, RE15_TAGEBUCH_R38_ZIEL2_RAUM, 0, RE15_TAGEBUCH_R38_BANK, RE15_TAGEBUCH_R38_BIT,
       -1, 1, RE15_TAGEBUCH_R38_ZIEL2_ERREICHT_BANK, RE15_TAGEBUCH_R38_ZIEL2_ERREICHT_BIT },
+    /* Runde 39 Spur P (include/re15_johnruf_r39.h): nach Elzas Satz in ROOM1041 (Programm RUF1041, Warte-Zeile 59) die Karte
+     * mit ROOM1141 (Zone 0, Blatt 4). Kein Anker; "gezeigt" = Bank 9 Bit 97 (Panikphase: nach dem Schliessen gesetzt, bei
+     * Johns Rettung geloescht), "erreicht" = Besucht-Bit der Zone ROOM1141 (Runde-33-Regel, erreicht_bank 0). */
+    { RE15_R39P_RAUM_1041, { 0 }, 0, RE15_R39P_RAUM_1141, 0, RE15_R39P_BIT_BANK, RE15_R39P_BIT_PANIK, -1, 1, 0, 0 },
 };
 #define HINT_COUNT ((int)(sizeof s_hints / sizeof s_hints[0]))
 

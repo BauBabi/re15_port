@@ -1,0 +1,17 @@
+# Lauf v4 (Spurbaum P, Bau nach Merge 57e5f920, vor der Nachbesserung) - Wegplan:
+RAUM 1051
+WARTE 30
+GEGNERWEG
+FLAG 9 97
+FLAG 3 121
+GEHE 15000 -12500 150
+GEHE 16450 -13700 60
+BLICK 0
+AKTION
+WARTE 200
+ENDE
+# debug.log (gefiltert):
+[save] CONTINUE: resumed in room 1051 (hp=100)
+[aot] DOOR FIRE slot=4 rect=(17200,-13700,hw=500,hh=1000) target_cut=0 spawn=(26200,-14400,24800)
+[room] PC loaded room10a1.rdt (101164 bytes)
+[flow] EXIT_AT: Bild 600 in Raum 10a1 erreicht -> exit
