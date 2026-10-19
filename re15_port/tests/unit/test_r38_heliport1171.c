@@ -302,14 +302,15 @@ static void teil_flagwort(void)
      * das Bild genau (frame() tickt den Effekt-Pool nicht, die Zahl steigt also nur durch Spawns). */
     PRUEF(fx_griff == 0, "im Kontakt-Bild noch kein ORIENT-Effekt (%d; 0x80115d74 setzt nur Sub 2 / Schritt 0)", fx_griff);
     {
+        /* Runde 39 Spur K NB1: der Effekt liest die Teil-2-Matrix (+0x188 + 408), die die Zeichenschleife des VORIGEN
+         * Bildes zusammengesetzt hat (jal 0x8001e8c8 @0x8001d108 NACH der Logik @0x8001ce04-34); der Clip-Setzer
+         * 0x80115d94 @0x80115310 posiert nicht. Pose im Spawn-Augenblick = die zuletzt posierte HOVER-Pose (Kraehen-
+         * Aktorfelder vor diesem Bild), ORIENT bewegt die Kraehe nicht. Vorher erwartete der Riegel Clip 8 Bild 0. */
+        re15_actor_t vorbild = *k;
         frame();                                           /* ORIENT Schritt 0 */
         int n = re15_esp_fx_count(), treffer = 0;
         int32_t g[3], d = -1;
-        {   /* Pose im Spawn-Augenblick: Clip 8 Bild 0, +0x8f = 7 (re15_crow_clip), VOR dem f314-Vorschub */
-            re15_actor_t kk = *k;
-            kk.anim_frame = 0; kk.anim_frac = 7;
-            re15_enemy_bone_world_pos(&kk, RE15_R38I_ORIENT_TEIL, g);
-        }
+        re15_enemy_bone_world_pos(&vorbild, RE15_R38I_ORIENT_TEIL, g);
         for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
             const re15_esp_fx_t *fx = re15_esp_fx_get(i);
             if (!fx || fx->effect_id != 0 || fx->sub_index != 0 || fx->scale16 != RE15_R38I_ORIENT_SKALA) continue;

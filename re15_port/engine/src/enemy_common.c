@@ -118,7 +118,9 @@ static int rbj_resolve_slot(int slot)
     /* Runde 35 Spur K: geliehener Block (ROOM10F0 <- ROOM11B0) hat nur Marker-Bits 0/1 — der zweite NPC
      * (Aktor 2, Marvin) liest denselben NPC-Record 1 (re15_cut10f0.h). Sonst -1 = unveraendert. */
     if (rec < 0) rec = re15_cut10f0_rbj_record_alias(slot);
-    /* negativ cachen (Slot ohne Record), damit der Scan nicht jeden Frame laeuft */
+    if (rec < 0) return -1;   /* Runde 39 Spur K: Slot OHNE Record belegt keinen Cache-Platz — FUN_8001b3f8 bindet nur
+                               * Marker-Bits, ohne Grenze (@0x8001b470-c4); sonst nahmen ROOM1171s Kraehen (state 4/Sub 0)
+                               * beide Plaetze vor John (rec1 Marker 0x2) -> Bank-0-Kletterclip statt RBJ rec1 Clip 2. */
     int ci = -1;
     for (int i = 0; i < RE15_RBJ_CACHE_MAX; i++)
         if (s_rbj_cache[i].slot < 0) { ci = i; break; }
