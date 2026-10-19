@@ -13,7 +13,8 @@
 #   integration_r38_wasser   echte exe (Messkopie): Leon ROOM1260 und Elza ROOM1261 gehen in den Fleck P0 —
 #                            RE15_WASSER_LOG zweig=boden mit dem Original-Anker, RE15_FX_LOG zeichnet id=6 sub=5,
 #                            [foot] VAG 7 (Wasser) im Fleck und VAG 1 (Beton) davor; ROOM2090 Watschritt (Stempel);
-#                            echte Tuerwege 10B0 -> 1260 (Leon) und 10B1 -> 1261 (Elza) in den Fleck P5.
+#                            echter Tuerweg 10B0 -> 1260 (Leon) in den Fleck P5 (Elzas Weg 10B1 -> 1261 entfaellt: der
+#                            Kanaldeckel ist fuer Elza immer zu, Runde 39 Spur P / Nutzer-Nachtrag 12).
 add_executable(test_r38_wasser ${CMAKE_CURRENT_SOURCE_DIR}/test_r38_wasser.c)
 target_link_libraries(test_r38_wasser PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r38_wasser PRIVATE ${CMAKE_SOURCE_DIR}/include)

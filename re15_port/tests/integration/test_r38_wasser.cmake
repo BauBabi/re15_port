@@ -14,7 +14,7 @@
 #             (der Alligator greift ab ~F52 an, der erste Schritt liegt davor):
 #               zweig=stempel code=0x06032000 part=6 stempel=-1620 edt=0x1a, [foot] type=26 vag=3 (Watschritt).
 #   leon10b0_tuer  echter Weg: Sprung nach 10B0, durch die Tuer nach 1260 (Ankunft vor Fleck P5), Wasserschritt + Spritzer.
-#   elza10b1_tuer  echter Weg mit Elza: 10B1 -> Tuer -> 1261, Wasserschritt + Spritzer + VAG 7 im Fleck P5, Beton ohne Effekt.
+#   (elza10b1_tuer entfallen: der Kanaldeckel ROOM10B1 ist fuer Elza seit Runde 39 Spur P immer zu, Nutzer-Nachtrag 12)
 # v0.8.25 (2077bb8e) faellt hier durch: kein RE15_WASSER_LOG, kein id=6 im FX_LOG, im Becken Betonschritt vag=1.
 # Die exe laeuft als Messkopie re15_pc_r38n_haken_<id> neben der Original-exe (Muster test_r34n_b_cursor.cmake).
 
@@ -162,19 +162,13 @@ r38n_zeile(leon10b0_tuer "${_d}/wasser.log" "room=1260;zweig=boden;code=0x06050d
            "nach der Tuer: Wasserschritt im Fleck P5 von ROOM1260")
 r38n_fx_bilder(leon10b0_tuer "${_d}/fx.log" 13)
 
-# ---- Elza durch die Tuer ROOM10B1 -> ROOM1261 (echter Weg mit Elza, Lauf 3 2026-10-17) -----------------------------
-# Elza-RDT = Leon-RDT + 1 (@0x800397e4/ec): dieselbe Tuer fuehrt Elza nach 1261, Ankunft vor Fleck P5. Gemessen:
-# F39 room=1261 zweig=boden part=7 edt=0x17, F63 dito, danach Beton 0x1d; [foot] type=23 vag=7 / type=29 vag=1.
-r38n_exe(elza10b1_tuer elza 10B1 "-21370,3000,3072,0" "U0.6,A0.2,U3" 30 "150#1261")
-set(_d "${_wurzel}/elza10b1_tuer")
-r38n_zeile(elza10b1_tuer "${_d}/debug.log" "Elza-Bit=1" "Spielerin Elza (PL04)")
-r38n_zeile(elza10b1_tuer "${_d}/debug.log" "JUMP -> 10b" "Sprung nur nach 10B1")
-r38n_zeile(elza10b1_tuer "${_d}/wasser.log" "room=10B1;zweig=trocken" "Schritt vor der Tuer (10B1)")
-r38n_zeile(elza10b1_tuer "${_d}/wasser.log" "room=1261;zweig=boden;code=0x06050d00;edt=0x17"
-           "nach der Tuer: Wasserschritt Elza im Fleck P5 von ROOM1261")
-r38n_zeile(elza10b1_tuer "${_d}/wasser.log" "room=1261;zweig=trocken;edt=0x1d" "Elza auf Beton in 1261: kein Effekt")
-r38n_fx_bilder(elza10b1_tuer "${_d}/fx.log" 13)
-r38n_zeile(elza10b1_tuer "${_d}/debug.log" "type=23 vag=7" "Wasser-Schritt-Ton Elza nach der Tuer (VAG 7)")
+# ---- Elza durch die Tuer ROOM10B1 -> ROOM1261: ENTFALLEN (Runde 39 Spur P, Nachbesserung 1) ----------------------------
+# Nutzer-Nachtrag 12 (analysis/befunde_runde39/AUFTRAG.md): "in Elzas Szenario die Tür im ROOM 10B1 ausnahmslos IMMER
+# geschlossen ... auch wenn sie nach Sherry sucht". Der Kanaldeckel ROOM10B1 Slot 1 (@0x16f2) ist fuer Elza seitdem ein
+# Text (include/re15_tuersperre_r39.h); diesen Weg gibt es im Spiel nicht mehr. Der Deckel selbst ist in
+# integration_r39_johnruf1041_tuer_t10b1v/_t10b1s/_t10b1n gesichert. Elzas Wasserschritt im Fleck der Kanalgaenge bleibt
+# durch elza1261 belegt (gleiche Lage/Eingabe wie leon1260: zweig=boden, edt 0x17, VAG 7), der Tuerweg in den Fleck P5
+# durch leon10b0_tuer (Leons Deckel ROOM10B0 ist offen).
 
 # ---- Skriptlauf ROOM20B0 (Leon) / ROOM20B1 (Elza): Flut-Szene, Plc_dest (Lauf 3) ---------------------------------
 # Raum-Skript laesst die Figur auf Band 1 entlang z -6355 nach -x rennen (200/Bild). Die Skript-Bewegung
