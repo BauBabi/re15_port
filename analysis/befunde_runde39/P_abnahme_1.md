@@ -140,9 +140,110 @@ ausgeliefertem RDT EINSEITIG:
   Set(3,0x41)=1 nur ROOM10B1 @0x01962. Ohne (3,0x83) bleibt die Werkstatttuer 11B1 -> 1261 Text (ROOM11B1 sub00 @0x0112A
   Aot_set Slot 8 MESSAGE msg 12, @0x0113E Aot_reset Slot 5 sce 0); ohne (3,0x41) kein John in 1261/2001 (ROOM2001 sub00
   @0x0179A, Dossier 8.8).
+- Zweiter Weg in dieselbe Falle (Lauf `l_e1261h`): Spielstand ROOM1261 mit den Flags der Sherry-Suche `3:0x83 3:0x41 3:0x46`,
+  Steg hinauf (mo 230), Leiter ROOM1261 main00 @0x0116A Slot 2 (ohne Bedingung) per Aktionstaste: `DOOR FIRE slot=2 ...
+  spawn=(-21159,0,3289)` -> `loaded room10b1.rdt` -> `[tuersperre] F232 ... Kanaldeckel ... (immer zu)`, am Deckel der Text
+  (Blatt `l_e1261h/sheet_deckel.png`). Elza steht damit in der Gasse (Band 0) - zurueck nach unten zu, nach oben (Band 5)
+  kein Weg (s. o.).
 - Folge: Wer der Geschichte folgt (John geht voran, die Szene liegt unten), kommt aus 10B1 nicht mehr heraus; vorher fuehrte
   der Deckel am Szenenende nach 1261. Die Aussage im Dossier 8.8/8.9 "der Weg in die Kanaele ... geht nicht mehr ueber 10B1,
   sondern nur noch ueber den Keller (Garage 11B1 oder 11D1 -> 1261)" stimmt nicht: aus dem unteren Teil von 10B1 erreicht
   Elza den Keller nicht (die Spur hatte den Umweg ausdruecklich NICHT gemessen).
 **Urteil: teilweise** - der Deckel ist in jedem Zustand zu (Wortlaut erfuellt), aber Elzas Szenario ist danach nicht mehr
 spielbar und dem Nutzer wird ein Weg genannt, den es nicht gibt (Mangel M1, Entscheidung beim Nutzer/Orchestrator noetig).
+
+### 3.5 Nachtrag 10 (Punkte der Abnahme 0) - Regression nach Merge a0d7d749 und Nachbesserung
+Abnahme 0 hatte alle Teile 1a-1g und 2 als erfuellt gemessen; die Nachbesserung aendert johnruf_r39.c nur um zwei Haken
+(Install + Tick der Tuersperre). Nachgemessen an meinen Laeufen a/b dieses Stands mit dem Pegel-Werkzeug der Spur
+(`tests/unit/test_r39_johnruf1041.exe pegel <cap.raw> <wav> <capTick> <xa_vol>`):
+| Teil | Beleg (Lauf) | Ergebnis |
+|---|---|---|
+| 1a Rufe leise in 1041 nach Johns Verschwinden | a: `F91 ROOM1041: John verschwunden ((4,0xF0)=1)`, help03 Takt 649 g 0,4179 / Soll 0,4167, help02 Takt 711 g 0,4201 | wie Abnahme 0 |
+| 1b Elzas Satz in 1041 | a: `[msgtext] room=1041 id=40 "Elza: Oh, no, this is John! He is in trouble, I have to help him!"`, main40 Takt 801 g 1,0021 | wie Abnahme 0 |
+| 1c Sprachdatei room1041/main40.wav | liegt, `clip loaded: main40.wav` | wie Abnahme 0 |
+| 1d Karte mit 1141 | a: `F370 Kartenhinweis angefordert (Eintrag 5: ROOM1041 -> ROOM1141)`, `[hint]` rot/umriss, Abzug `karte.bmp` (POLICE STATION 3F, Umriss 1141; Kopie `p_abn1/karte_lauf_a.png`) | wie Abnahme 0 |
+| 1e Leons Panikmusik MAIN01 | a: `F512 Panik-Musikfenster auf` + `entry=FF01 -> MAIN01`, 1061 `[unveraendert, laeuft durch]` | wie Abnahme 0 |
+| 1f 1131 lauter | b: `[voice] Start ROOM1131 Id 54 CD_VOL 13652 capTick 649`, g 0,8331 / Soll 0,8333 | wie Abnahme 0 |
+| 1g 1141 wie bisher (P-Anteil) | b: MAIN16, Rufe Id 55/53 CD_VOL 16383; Elzas msg 50 spricht in DIESEM Baum noch in 1141 (Spur J entfernt sie, J ist in der Integration - wie Abnahme 0 H3) | P-Anteil wie Abnahme 0 |
+| 2 Panikmusik endet bei der Rettung | b: `F4039 ROOM1141 John gerettet ((4,0xF0)=0, (4,0xF2)=0): Bit 97 = 0, Panikmusik aus`, 1171 `entry=5572 -> MAIN32` | wie Abnahme 0 |
+Die Tuersperre beruehrt den Ablauf nicht: in 1121/1131/1141 keine `[tuersperre]`-Zeile (Lauf b). **Urteil: erfuellt** (alle Teile).
+
+## 4. Nachbarn / Nebenwirkungen (gezielt)
+- `ctest --test-dir re15_port/build -R "integration_r38_wasser$|integration_r39_hund1121|integration_r39_heliport1171|
+  integration_r38_heliport1171|integration_r39_parkplatz11c0|unit_r36_kartenbits|unit_r38_wasser|unit_r39_hund1121|
+  unit_r39_parkplatz11c0|unit_scd_" --timeout 1800 --output-on-failure -j 3` -> "100% tests passed, 0 tests failed out of 45"
+  (u. a. integration_r38_wasser 176,23 s mit Leons Tuerweg 10B0 -> 1260 = Leon-Deckel offen; integration_r39_hund1121 144,58 s;
+  integration_r39_heliport1171_weg 76,91 s / _laden 59,82 s und integration_r38_heliport1171_weg_re2/_re15/_laden = Abstieg
+  1171 -> 10B1 mit aktiver Deckel-Sperre; integration_r39_parkplatz11c0_k/n/i/w/e = Spur-O-Tuertext im selben MESSAGE-Weg).
+- Leon unveraendert: Tabelle der Sperren nur 0x1041/0x1051/0x10B1 (tuersperre_r39.c k_sperren); unit tuer1041/tuer1051/tuer10b1
+  pruefen ROOM1040/1050/10B0 (Tuer bleibt Tuer, 10B0 -> ROOM1260).
+- Spur Q (master 017f5094, nicht in diesem Baum): ihre Montage-Tueren laufen ueber AOT-Slot 20 (`RE15_R39Q_TUER_SLOT 20`,
+  master:re15_port/include/re15_elzazombies_r39.h:60), nicht ueber Slot 1 von 1041 -> kein direkter Konflikt mit der Sperre;
+  das Zusammenspiel zeigt erst der Integrationslauf.
+- 1141/1131/1121: keine `[tuersperre]`-Zeile (Lauf b), Ablauf wie Abnahme 0.
+
+## 5. Vertrag (VERTRAG.md)
+- Bank 9: keine neuen Bits; Bit 97 nur gelesen (re15_tuersperre_r39.c panik()). haelt.
+- Nachrichten-Ids: ROOM1041 Id 41 und ROOM1051 Id 40 = VERTRAG 1.2 (Nachtrag 12). ROOM10B1 Id 40 steht NICHT in 1.2 (formal,
+  Hinweis H1); keine Kollision: ROOM10B1 hat Original-Ids 0..5 (unit tuertexte "keine Kollision"), kein anderes Modul in master
+  oder diesem Baum belegt einen 10B1-Text (`git grep 0x10B1` nur Tuer-Tabellen/Raumliste), keine Stimme.
+- Pfade (`git diff 57e5f920..HEAD --name-only`): eigene Dateien (tuersperre_r39.{h,c}, gen/tuersperre_r39.inc,
+  tools/r39_johnruf/tuersperre_bauen.py, Tests/Riegel/Dossier der Spur P) + gemeinsame Haken scd_vm.c +4 (Include, op_evt_exec,
+  re15_scd_show_message; Kommentar "Runde 39 Spur P"), johnruf_r39.c +3 (eigene Datei). AUFTRAG.md nur durch den Orchestrator
+  (dc4bc297, Nachtrag 13). Kein release/, platform/android/, shared_assets/PSX/, synchro/, keine CMakeLists. Werkzeug
+  `tuersperre_bauen.py --pruefen` -> "gen/tuersperre_r39.inc ok". haelt.
+- Fremde Riegel geaendert (vom Bau-Agenten offengelegt, Orchestrator soll bestaetigen): integration_r38_wasser Lauf
+  elza10b1_tuer entfernt (+ Kommentar in probes/r38_wasser.cmake) und integration_r39_hund1121 Spielstaende A/C/E + `4:0xF0`.
+  Beide Aenderungen folgen aus gemessenem Verhalten (Deckel zu; Rettungs-Regel loescht Bit 97 ohne (4,0xF0)) und sind
+  kommentiert -> Hinweis H2 (haengt an M1: aendert sich die 10B1-Loesung, ist der entfernte Lauf neu zu bewerten).
+- Riegel je Punkt vorhanden und messend (5 Unit + 7 Integration neu, a erweitert); Parallel-/Linux-Festigkeit wie Abnahme 0
+  (exe-Kopie `re15_pc_r39pt_<teil>_<zufall>`, eigener Laufordner, RE15_*-Umgebung geloescht, `cmake_minimum_required`). ABER:
+  die Riegel unit tuertexte und integration t1041/t1051 verlangen die Stimmen-Einreihung, die Nachtrag 13 ausschliesst (M2), und
+  KEIN Riegel prueft, dass Elza 10B1 nach der Szene wieder verlassen kann (M1; t10b1s prueft nur "Elza laeuft").
+
+## 6. Hinweise (kein eigener Mangel)
+- **H1** ROOM10B1 Port-Id 40 (Deckel-Text) ist in VERTRAG 1.2 nicht zugeteilt (formal; keine Kollision, s. 5.).
+- **H2** Fremde Riegel geaendert (integration_r38_wasser ohne Lauf elza10b1_tuer; integration_r39_hund1121 Spielstaende mit
+  `4:0xF0`) - begruendet und gemessen, Bestaetigung durch den Orchestrator offen; der entfernte Elza-Lauf ist nach der Loesung
+  von M1 neu zu bewerten.
+- **H3** ROOM1051 Slot 0 -> ROOM1031 (@0x00ADA) bleibt in der Panikphase offen (nicht verlangt).
+- **H4** Nach der Szene steht John AUF dem Deckel (sub04 @0x01A84 Plc_dest (-21422,4607)); ein erneuter Versuch am Deckel scheitert
+  an seinem Koerper (l_e10b1f: `GEHE (-21000,2900)` "Runden erschoepft" bei (-20781,2673), AKTION ohne Treffer). Fuer M1 relevant.
+- **H5** In diesem Baum spricht Elza ihren Satz in 1141 noch (msg 50, Lauf b) - Spur J entfernt ihn, J ist in der Integration
+  (wie Abnahme 0 H3).
+- **H6** Deckel-Text Seite 1 steht auf Zeile 2 (leere Kopfzeile = RE2 `fc` @0x02965, so umkodiert) - RE2-Form, kein Fehler.
+
+## 7. Maengel
+- **M1 (kritisch, Nebenwirkung von Nachtrag 12c): ROOM10B1 wird fuer Elza zur Falle - Elzas Szenario ist nicht mehr spielbar.**
+  Der untere Teil von 10B1 (Kisten Band 1, Gasse Band 0) ist nur ueber den einseitigen Abstieg vom Dach (SCA Zelle 31 @0x01070,
+  Band 5, u1 0x0e "hinab") oder ueber die Leiter aus ROOM1261 (main00 @0x0116A Slot 2, ohne Bedingung) erreichbar und hat als
+  einzigen Ausgang den Kanaldeckel (Slot 1 @0x016F2, floor 0), der jetzt immer Text ist; einen Aufstieg Band 1 -> Band 5 gibt es
+  nicht (keine Band-1-Zelle mit "hinauf"; EXE @0x8002d544/@0x8002d548; gemessen l_e10b1h: AKTION an der Dachwand bei vier
+  Lagen und drei Blickrichtungen -> `sub=0`). Die Szene der Sherry-Suche - und damit (3,0x83)/(3,0x41), die der Rest der Kette
+  braucht (11B1-Werkstatttuer @0x0112A/@0x0113E, John in 1261/2001) - liegt NUR dort (sub01 @0x0181E Schnitt 7; Flag-Zensus:
+  Set(3,0x83)=1 fuer Elza nur @0x0195E, Set(3,0x41)=1 nur @0x01962). Am echten Weg (l_e10b1f) endet die Szene mit dem
+  Deckel-Text, Elza ist frei, kommt aber aus dem unteren Teil nicht heraus. Das Dossier (8.8/8.9 "Fuer den Nutzer") nennt dem
+  Nutzer einen Umweg "ueber den Keller (Garage 11B1 oder 11D1 -> 1261)", den Elza von dort nicht erreichen kann; der Bau-Agent
+  hat ihn nach eigener Angabe nicht gemessen. Kein Riegel prueft, dass Elza 10B1 nach der Szene verlassen kann.
+  Noetig: Entscheidung des Nutzers, wie es nach der Szene weitergeht (z. B. Deckel in der Sherry-Szene doch oeffnen = Abweichung
+  vom Wortlaut "auch wenn sie nach Sherry sucht"; oder ein belegter Weg aus dem unteren Teil zurueck auf das Dach bzw. in den
+  Keller), danach am ECHTEN Weg 1171 -> 10B1 -> ... -> 1261/2001 messen und als Riegel sichern; Dossier 8.8/8.9 berichtigen.
+- **M2 (Nachtrag 13): Der Tuersatz 1041/1051 ist im Code, in den Riegeln und im Nutzer-Hinweis KEIN "einfacher Text wie bei Leon".**
+  `re15_tuersperre_r39_stimme` (engine/src/tuersperre_r39.c:151-163) + Haken scd_vm.c re15_scd_show_message reihen fuer
+  1041 msg 41 / 1051 msg 40 eine Stimme ein (Log `[voice] ROOM1041 msg 41: keine Aufnahme (synchro/STAGE1/room1041/main41.wav)`);
+  Leons Tuertexte (sperre1050_r37.c, tuer1060_1040.c) haben keinen solchen Haken. unit_r39_johnruf1041_tuertexte und
+  integration_r39_johnruf1041_tuer_t1041/_t1051 VERLANGEN die Einreihung; Dossier 8.9 bittet den Nutzer um
+  `room1041/main41.wav` und `room1051/main40.wav` - der Nutzer hat in Nachtrag 13 genau das verneint, das Dossier erwaehnt
+  Nachtrag 13 nicht. Noetig: Stimmen-Haken fuer diese beiden Zeilen entfernen, Riegel auf "keine Stimme" umstellen
+  (z. B. `pruef_nicht(_d "[voice] ROOM1041 msg 41")`), Dossier 8.9 berichtigen.
+
+## 8. Ergebnis
+| Punkt | Urteil |
+|---|---|
+| Nachtrag 12a: Tuer 1041 -> 1031 ab dem Musikwechsel = "I have to rescue John! He is in danger!" | erfuellt |
+| Nachtrag 12b: dasselbe an der Tuer 1051 -> 10A1 | erfuellt |
+| Nachtrag 13: einfacher Text wie bei Leon (ohne Sprecherkopf, ohne Stimme) | teilweise (M2) |
+| Nachtrag 12c: Tuer ROOM10B1 fuer Elza immer zu, auch bei der Sherry-Suche | teilweise (M1: Wortlaut umgesetzt, Szenario danach nicht spielbar, falscher Umweg-Hinweis) |
+| Nachtrag 10 (Abnahme 0: Rufe/Satz/Datei/Karte/Panikmusik/1131/1141; Musik endet bei der Rettung) | erfuellt (Regression gemessen) |
+Gates: Bau gruen; Riegel der Spur 22/22, Nachbarn 45/45; RE-Gate haelt (10 Zitate selbst gelesen/disassembliert); Vertrag haelt
+(H1/H2 formal). **Abnahme 1: NICHT bestanden** (M1 kritisch, M2).
