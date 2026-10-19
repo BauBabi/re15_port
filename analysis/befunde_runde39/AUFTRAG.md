@@ -232,3 +232,13 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
     Szenarien aus DENSELBEN Tueren: Leon zusaetzlich das Treppenhaus (Gegenstueck zu Elzas 10C1 -> Flur 1061 = Leon
     10C0 -> 1060), Elza zusaetzlich ROOM1071 (Gegenstueck zu Leons 1070; Nachtrag 11 hatte 1071 gestrichen, jetzt
     zusaetzlich). Liste je Szenario im Dossier gegenueberstellen.
+
+## Nachtrag 13 des Nutzers (woertlich, 2026-10-19 zwischen 08:31 und 08:40, fuer Spur P)
+- Auf die Frage nach einer Aufnahme fuer "I have to rescue John! He is in danger!": "Achso, nein, das ist ein einfacher text,
+  wie bei Leon auch im Panik Abschnitt."
+  Orchestrator: der Tuersatz an 1041 -> 1031 und 1051 -> 10A1 ist ein EINFACHER TEXT ohne Sprecher-Kopf und ohne Stimme -
+  genau die Form von Leons Tuertexten "I have to get the Chief first..." (Text-Platz sce 1 per re15_aot_retype,
+  engine/src/sperre1050_r37.c an der Tuer ROOM1050 -> ROOM10A0 und include/re15_tuer1060.h; RE1.5-Vorbilder ROOM1170
+  main00 @0x01320, ROOM1130 sub01 @0x00A1C `46 03 01 31 01 00 ff ff 00 00`). 1051 -> 10A1 ist Elzas Gegenstueck zu
+  Leons 1050 -> 10A0. KEIN "Elza:"-Kopf, keine Sprachdatei. Port-Ids bleiben 1041 = 41, 1051 = 40. Die 11C0-Zeile der
+  Spur O ("I cannot leave Ada alone here with those monsters!") hat diese einfache Form bereits.
