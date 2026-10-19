@@ -185,8 +185,9 @@ FIXME|vorerst|geschaetzt|approx|ungefaehr|platzhalter|placeholder|sieht richtig|
 keine Zahl ausser der Programm-Umstellung (Sleep 30 = @0x01B14); der Haken arbeitet nur mit Bedingungen (Raum, Phase H, Sperr-Bit,
 Kommando 1, Zielphase). Fix erklaert den Befund: Ursache "player_mode 2 haelt die Ziel-FSM an" im Code nachgelesen
 (player_common.c `if (g_scd.player_mode != 2 && !msg_block && !pushing)` vor dem Haken; main.c re15_cine_active = (1,27)||(2,7));
-im Port wird RE15_PAUSE_PAD nur vom Skript gesetzt (`grep RE15_PAUSE_PAD`: game_state.c Set-Handler, Leser game_step_common.c /
-pad_phase_common.c / panel_zeiger_common.c / dining_r39.c) - der Haken greift also nur unter Set(2,7) in ROOM1141 Phase H.
+das Bit RE15_PAUSE_PAD (0x01000000) setzen im Port der Set-Handler (Set(2,7), game_state.c) und die Freeze-Masken (game_state.c
+`g_re15_pauseflags |= mask` @0x80027ecc: Message_on / Item-Modal / Raumwechsel); der Haken verlangt zusaetzlich player_mode 2, kein
+Textfenster, Kommando 1 und eine laufende Zielphase - wirksam also nur unter Set(2,7) in ROOM1141 Phase H (H5).
 
 ## 3. Tests (gezielt, keine volle Suite im Spurbaum)
 - Unit, alle Riegel der Modul-Ebene (der Diff beruehrt jetzt auch player_common.c = Spieler-/Ziel-FSM, dazu enemy_ai_common.c,
@@ -195,6 +196,17 @@ pad_phase_common.c / panel_zeiger_common.c / dining_r39.c) - der Haken greift al
 - Gegenprobe des neuen Riegel-Werkzeugs: `test_r39_dining1141 zielen` auf den Lauf des Bau-Agenten am Stand VOR dem Fix
   (scratchpad `j39n3/l_v_m2`, gemergter Stand 0e486aa6) -> "Sperre ab 4086 ... Cut 8: 40 Bilder, davon 11 mit Waffe; Schnittbild pst=1
   mo=215", **`zielen: 3 Fehler`**; auf meinen Lauf K (nachher) `0 Fehler`. Der Riegel misst also den Befund.
+- Integration gezielt (Spur-Riegel, alle R38-dining-Teile, E-1141, Weg nach 1171, BGM-Wechsel 10F0, Stimmen-Pfad, Elza-Schuss,
+  Elza in 1141, Gorilla-Riegel R38), Regex `J39abn3/regex_integ.txt`:
+  `^(integration_r39_dining1141_d|integration_r39_dining1141_kampf|integration_r39_dining1141_zielen|integration_r38_dining1141_[wzdlsra]|integration_r39_gegner_1141|integration_r39_heliport1171_weg|integration_r36_elza_schuss|integration_r37_elzaems_elza1141|integration_r38_affen3|integration_r38_affen3_decke|integration_r38_affen3_tor|integration_r35_cut10f0|integration_r39_stimmen_1171|integration_r38_rekorder|integration_r38_elzaintro_stimme)$`
+  mit `env RE15_ABNAHME3_FEIND=1 ctest ... -j 4 --timeout 3600 -V` (05:47:34..06:02:11) -> **"100% tests passed, 0 tests failed out of
+  21"** (876 s; r39 d 353,6 s, kampf 307,6 s, zielen 270,2 s, r39_gegner_1141 302,1 s, r38 s 653,3 s, r38 a/d 0,1 s = Stellvertreter seit
+  NB1). Alle zehn J-Riegel melden `r39j: 1 RE15_*-Variablen des Aufrufers entfernt: RE15_ABNAHME3_FEIND` (H4 der Abnahme 2 behoben).
+  Ausgaben: D `John schiesst (Schuss 2)`, `nicht da 'Oh, no, this is John!'`, `nicht da 'Se_on bank=0x3C'`/`0x3D`/`main42`, `Klopfbank RE2
+  DOOR0F geladen`; zielen (lauf_6136ecbb) "Kampfende 4051, Sperre ab 4051, letztes Zielbild 4060, Schnitt 4081; SENKEN-Bilder 9; Cut 8:
+  40 Bilder, davon 0 mit Waffe" (Bogen `J39abn3/z_riegel.png`); kampf "10 Schuesse, 10 Treffer, 0 ausser Kegel", "5 von 5 Treffer-Salven
+  mit sichtbarer Zuwendung".
+- Luecke: kein Riegel deckt den Randfall "Nachladen kurz vor der Sperre" ab (M1-Rest).
 
 ## 4. Vertrag (VERTRAG.md Runde 39)
 - Pfade (`git diff master...HEAD --name-only`): `analysis/befunde_runde39/{AUFTRAG.md (nur Orchestrator-Commits 4d7c7b34, 2f889c9f,
@@ -276,3 +288,14 @@ pad_phase_common.c / panel_zeiger_common.c / dining_r39.c) - der Haken greift al
 | N4.4 / Nachtrag 7 Heranwinken wie 1171 | erfuellt | (0,2) RBJ ROOM1171 rec1 Clip 2 (96 Bilder) |
 | N6 "trouble"/"gorilla" klein | erfuellt | msgtext |
 | Nachtrag 8 Stimmen main51/52 | erfuellt | rho 1,000 / 1,000 an ihren Zeilen; 12/13 stumm |
+
+Gates: **RE-Gate gehalten** (Abschnitt 2: sechs Stichproben selbst disassembliert/gelesen, alle stimmen; keine Rate-Woerter, kein
+Env-Schalter; Fix erklaert den gemessenen Befund M1). Die Begruendung des verbleibenden Randfalls ("nach der Original-Form", Dossier 10.7)
+haelt der RE-Gegenpruefung nicht stand (1.8, M1-Rest). **Vertrag gehalten** (Abschnitt 4, Hinweise H2/H3). **Tests:** Unit 855/855,
+Integration gezielt 21/21, Gegenprobe des neuen Riegels auf den Stand vor dem Fix 3 Fehler.
+
+**bestanden = false** - Punkt 8 teilweise (Mangel M1-Rest: Nachladen kurz vor der Pad-Sperre -> Elza zielt in den ersten Bildern von
+Cut 8 noch 2 Bilder lang auf John; sehr niedrige Schwere, enges Zeitfenster, aber am echten Weg reproduzierbar (Kampfende per
+Messhaken = dieselben Kill-Flags (7,0xCB)/(7,0xCC), Nachladen per echter Eingabe) und anders als die zitierte
+Original-Form ROOM11C0 sub03, die das Kommandowort im Schnittbild ersetzt). Alle uebrigen Punkte und Nachtraege erfuellt; M1 der
+Abnahme 2 ist im gemeldeten Fall (Elza haelt R1 beim Kampfende: Halten, Rueckstoss, Messer) behoben und gemessen.
