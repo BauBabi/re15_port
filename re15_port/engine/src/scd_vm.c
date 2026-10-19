@@ -802,6 +802,9 @@ void scd_vm_tick(void)
             if (g_re15_elzatoene_anker_n) re15_elzatoene_r38_pc(t->pc);
             /* Runde 39 Spur B: Schublade 11F0, Gitter + Schrank 1190 (Wachposten = Ankerzahl, sonst 0). */
             if (g_re15_toene39_anker_n) re15_toene_r39_pc(t->pc);
+            /* Runde 39 Spur J (Nachbesserung 1 N4.3): Anker in Johns Schuetzen-Faden ROOM1141 (Ziel eintragen, Schuss). */
+            { extern int g_re15_r39j_anker_n; extern void re15_dining_r39_pc(const uint8_t *pc);
+              if (g_re15_r39j_anker_n) re15_dining_r39_pc(t->pc); }
             /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
              * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
              * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */
@@ -1884,6 +1887,8 @@ static int op_message_on(scd_thread_t *t)
     /* Runde 38 Spur G: ROOM1011 msg 18 (Roys Zettel "0513", sub07 @0x00E64) -> Roys Diary statt der Nachricht;
      * 2 = parken, solange der Leser laeuft (include/re15_tagebuch_r38.h). */
     { const int tb = re15_tagebuch_r38_message_on(t); if (tb == 2) return 2; if (tb == 1) { t->pc += 4; return 1; } }
+    { extern int re15_dining_r39_message_on(const uint8_t *pc);   /* Runde 39 Spur J: 1141 msg 58 = nur auf die Sprachzeile warten */
+      if (re15_dining_r39_message_on(t->pc)) { t->pc += 4; return 1; } }
 
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
      * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text
@@ -2406,6 +2411,8 @@ static int op_plc_motion(scd_thread_t *t)
     if (slot == RE15_ACTOR_SLOT_PLAYER) {
         extern void re15_player_event_reach_end(void);
         re15_player_event_reach_end();
+        { extern void re15_dining_r39_w_beginn(int entity, int clip);   /* Runde 39 Spur J: 1141 Plc_motion(2,c) = W-Bank */
+          re15_dining_r39_w_beginn((int)entity, (int)motion_id); }
     }
     re15_actor_set_motion(&g_actors[slot], (int16_t)motion_id);
     /* Player animation-bank select (see re15_actor.h + memory anim_bank_selection_mechanism for

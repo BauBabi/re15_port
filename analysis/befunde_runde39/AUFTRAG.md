@@ -89,6 +89,12 @@ NUTZER-VORGABE; "dass es passt" ist zu MESSEN (Bezug: Leons Zeilen derselben Sze
 lautet schon "I just want to make sure / we don't have any unwanted followers." (tools/r36_j/szene11b0_bauen.py:286,
 gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aendern; dem Nutzer gemeldet. (4) erledigt.
 
+## Hinweis des Orchestrators an Spur J (2026-10-18 14:27, Nutzer-Nachtrag 3)
+Der Nutzer hat entschieden: "wir machen das Gorilla Verhalten generell so" - die Gorillas Typ 0x27 bekommen durch Spur E
+(Welle 2, Nachbesserung 2, Zweig r39/gegner, noch nicht in master) in ALLEN Raeumen doppelte Energie (Saat 180
+@0x8011f514 -> 360) und zucken erst nach 36 Energie (3 Handfeuerwaffen-Treffer), also auch in ROOM1141. Fuer Spur J:
+Riegel, die den Tod der Gorillas in 1141 brauchen, NICHT auf eine Schusszahl festlegen (Tod per Ereignis/Flag (7,0xCB)/(7,0xCC)
+bzw. Energie-Abfrage ausloesen oder abwarten); die Integration zieht die Energie nach. Die Szene muss mit beiden Energien laufen.
 ## Nachtrag 3 des Nutzers (woertlich, 2026-10-18 14:25, Antworten auf die Entscheidungsfragen der Wellen 1/2)
 
 - "Zu 1. ok, wenn Resident Evil 2 das so macht, lassen wir das so." (Spur D: Sturz-Aufsteher bis Clip-Bild 55 nur an den

@@ -138,11 +138,15 @@ static int rbj_resolve_slot(int slot)
 
 const re15_emd_animation_t *re15_actor_rbj_anim(int slot)
 {
+    { extern const void *re15_dining_r39_rbj_anim(int slot);   /* Runde 39 Spur J: 1141 Johns Heranwinken aus ROOM1171 */
+      const void *l = re15_dining_r39_rbj_anim(slot); if (l) return (const re15_emd_animation_t *)l; }
     int ci = rbj_resolve_slot(slot);
     return (ci >= 0 && s_rbj_cache[ci].valid) ? &s_rbj_cache[ci].anim : NULL;
 }
 const re15_emd_skeleton_t *re15_actor_rbj_skel(int slot)
 {
+    { extern const void *re15_dining_r39_rbj_skel(int slot);   /* Runde 39 Spur J: 1141 Johns Heranwinken aus ROOM1171 */
+      const void *l = re15_dining_r39_rbj_skel(slot); if (l) return (const re15_emd_skeleton_t *)l; }
     int ci = rbj_resolve_slot(slot);
     return (ci >= 0 && s_rbj_cache[ci].valid) ? &s_rbj_cache[ci].skel : NULL;
 }

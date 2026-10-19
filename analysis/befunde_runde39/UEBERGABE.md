@@ -6,6 +6,15 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 10:49: MASTER 9e94db81 = Spur J (Integration 938/938), Hauptbaum-exe + Smoke gruen. Spur Q Abnahme 2: Mangel 1 (alte
+  Leon-Spielstaende nach Irons' Tod bekommen in 1060 Zombies aus dem Nichts - fehlender Merker "Umzug gelaufen"), Mangel 2
+  (Ankunft im Treppenhaus von oben: Kopien liegen ~30 Bilder flach, dann Griff am Treppenfuss) + ORCHESTRATOR-ENTSCHEID E1
+  ("moeglichst weit weg an der Seite" fuer jede Ankunftsrichtung, stehend) -> Nachbesserung 3 wf_af141cbb-ee8
+  (args_q_nach3.json). Nutzer-Guthaben 185 EUR: Schaetzung Rest ~20-55 EUR -> Abnahmen normal weiter. Aktiv: P, Q, T.
+* 2026-10-19 09:57: Spur J dining1141 BESTANDEN (Abnahme 4; Fix 4ed68276: Elzas Plc_dest TURN im Schnitt-Takt wie ROOM11C0 sub03
+  @0x01B1A..@0x01B26). J in die Integration (konfliktfrei; E-Riegel test_r39_gegner_1141.* in J-Fassung), Bau ok 09:57,
+  Tests laufen (Regex scratchpad/integ_regex_j.txt, bepsctcn4). Nutzer-Nachtrag 15 (089b6817/ca49f1e2): 1131 bei Elza ohne
+  Durchbruch, bei Elza kommt nur 1071 hinzu = Q-NB2-Stand. Aktiv: P (Abnahme 1), Q (Abnahme 2), T (Bau).
 * 2026-10-19 08:50: Nutzer-Nachtrag 13 (a66578a6/92ad1685): Tuersatz "I have to rescue John!" = einfacher Text ohne Stimme wie Leons
   "I have to get the Chief first..." (sperre1050_r37.c), 1141 msg 41 ebenso - in P-Baum nachgetragen (dc4bc297). Nutzer-Nachtrag 14
   (832b68bd): Version im Titelbild statt "Sample Ver.2025.01.25" (TITLEU.TIM), automatisch je Release -> Spur T titelversion,

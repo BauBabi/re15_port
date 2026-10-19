@@ -358,9 +358,23 @@ static int bis_zum_kampf(void)
         ja = re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT);
     }
     if (!ja) { printf("  FEHLER: Gemaelde-Schalter nicht ausgeloest\n"); return 0; }
+    /* Runde 39 Spur J (bei der Integration nachgezogen, Merge in r39/dining1141 Nachbesserung 2): seit J Nachbesserung 1
+     * (Nutzer-Nachtrag 4) oeffnet das Gemaelde in Phase H nur den Rolladen (ROLLTOR39), danach laeuft Elza frei; die Szene mit
+     * John und dem Gorilla-Einbruch startet erst am Riegel der Dachtuer (Ereignis 5, main00 @0x00A9A -> sub05 @0x00FC8, msg 12
+     * mit Pausemaske `2b 0c ff ff`). Rolladen abwarten, Riegel druecken (Vorwaerts-Punkt (-7250,-250), Blick +Z), msg 12
+     * schliessen - Muster test_r38_dining1141.c bis_zur_ecke. */
+    {   int pm = 0, f1 = 0;
+        for (int f = 0; f < 1200 && !f1; f++) { frame(0, 0); if (g_scd.player_mode == 2) pm = 1; if (pm && g_scd.player_mode == 0) f1 = 1; }
+        if (!f1) { printf("  FEHLER: Rolladen-Szene gab die Steuerung nicht zurueck\n"); return 0; }
+        pl->x = -7250; pl->z = -250 - 620; pl->rot_y = 3072;
+        frame(0, 0);
+        for (int f = 0; f < 300 && !re15_game_flag_get(4, 0xC3); f++)
+            frame(f < 12 ? RE15_PAD_BIT_SQUARE : 0, f == 0 ? RE15_PAD_BIT_SQUARE : 0);
+        if (!re15_game_flag_get(4, 0xC3)) { printf("  FEHLER: Riegel der Dachtuer nicht ausgeloest\n"); return 0; }
+    }
     int pm2 = 0, frei = 0;
     for (int f = 0; f < 4000 && !frei; f++) {
-        frame(0, 0);
+        { uint16_t e = (g_scd.message_active && g_scd.message_id == 12 && (f % 15) == 0) ? RE15_PAD_BIT_SQUARE : 0; frame(e, e); }
         if (g_scd.player_mode == 2) pm2 = 1;
         if (pm2 && g_scd.player_mode == 0 && !g_scd.message_active && f > 200) frei = 1;
     }
