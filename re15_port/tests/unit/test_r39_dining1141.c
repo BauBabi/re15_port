@@ -1177,15 +1177,16 @@ static void teil_senken(void)
  *   Schnitt-Takt (Cut_chg 8): Elza im Kommando 4 mit Walk-Modus 9 (Plc_dest TURN), Ziel-Phase NONE, nicht motion 215.
  *   Cut 8 (40 Bilder ab dem Schnitt): kein Bild mit erhobener Waffe (Ziel-Phase != NONE oder motion 215).
  *   Gegenprobe mit der Programm-Fassung der Nachbesserung 3 (TURN hinter Sleep 1 + Plc_neck + Sleep 10): Nachladen 3 Bilder vorher
- *   und Hieb zeigen Bilder mit erhobener Waffe in Cut 8 (der Riegel misst den Befund), Halten nicht (Nachbesserung 3). */
+ *   und Hieb zeigen Bilder mit erhobener Waffe in Cut 8 (der Riegel misst den Befund), Messer ziehen (15 + 10 Bilder) und Halten
+ *   nicht. */
 static void teil_schnitt(void)
 {
     printf("== schnitt ==\n");
     extern int  re15_player_aim_phase_debug(void);   /* Phase | 0x10 bei Rueckstoss/Hieb (player_common.c) */
     extern void re15_player_aim_reset(void);
     extern int  re15_player_aim_clip(void);
-    enum { NONE = 0, READY = 2, RELOAD = 3 };
-    enum { HALTEN, NACHLADEN, HIEB };
+    enum { NONE = 0, RAISE = 1, READY = 2, RELOAD = 3 };
+    enum { HALTEN, NACHLADEN, HIEB, ZIEHEN };
     int nb = 0;
     const uint8_t *b = re15_dining_r39_programm(1, &nb);
     static const uint8_t form[14] = { 0x22, 0x01, 0x1B, 0x01, 0x22, 0x02, 0x07, 0x01, 0x09, 0x0A, 0x1E, 0x00,
@@ -1210,6 +1211,7 @@ static void teil_schnitt(void)
         { "Pistole: Nachladen 8 Bilder vor der Sperre (Abnahme 3 Lauf RL)",              NACHLADEN, 3, 8, "PL04W03.PLW" },
         { "Pistole: Nachladen 1 Bild vor der Sperre (laeuft bis in den Schnitt-Takt)",   NACHLADEN, 3, 1, "PL04W03.PLW" },
         { "Messer: Hieb 3 Bilder vor der Sperre",                                        HIEB,      1, 3, "PL04W01.PLW" },
+        { "Messer: Ziehen (noch nicht in der Hand) 3 Bilder vor der Sperre",             ZIEHEN,    1, 3, "PL04W01.PLW" },
         { "Pistole: Halten bis in die Sperre (Nachbesserung 3)",                         HALTEN,    3, 1, "PL04W03.PLW" },
     };
     enum { NF = (int)(sizeof faelle / sizeof faelle[0]) };
@@ -1231,8 +1233,12 @@ static void teil_schnitt(void)
             { const int sl = re15_inv_find_item((uint8_t)faelle[k].waffe); if (sl >= 0) re15_inv_set_equipped_slot(sl); }
             re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
             for (int f = 0; f < 60; f++) frame(0, 0);
-            int ok = 0;
-            for (int f = 0; f < 90 && !ok; f++) {
+            int ok = 0, vorrat0 = -1;   /* Vorrat 0x15 vor dem Abzug, der das Nachladen ausloest */
+            if (faelle[k].art == ZIEHEN) {   /* Messer nicht in der Hand: R1 -> DRAW (Melee sub4 @0x80035538, Clip 0x0D) */
+                frame(RE15_PAD_BIT_R1, RE15_PAD_BIT_R1);
+                ok = (re15_player_aim_phase_debug() == RAISE && re15_player_aim_clip() == 0x0D);
+            }
+            for (int f = 0; f < 90 && !ok && faelle[k].art != ZIEHEN; f++) {
                 frame(RE15_PAD_BIT_R1, f == 0 ? RE15_PAD_BIT_R1 : 0);
                 ok = (re15_player_aim_phase_debug() == READY);
             }
@@ -1245,12 +1251,13 @@ static void teil_schnitt(void)
                 for (int f = 0; f < 60 && !wieder; f++) { frame(RE15_PAD_BIT_R1, 0); wieder = (re15_player_aim_phase_debug() == READY); }
                 ok = rueck && wieder && !re15_ammo_mag_nonzero();
                 /* Abzug mit leerem Magazin (Druck-Flanke @0x80033338, Nachladen @0x80033378) -> Clip 0x0D */
+                { const int b0 = re15_inv_find_item(0x15); vorrat0 = b0 >= 0 ? (int)g_inv.slots[b0].qty : -1; }
                 frame(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
                 ok = ok && (re15_player_aim_phase_debug() & 0x0F) == RELOAD && re15_player_aim_clip() == 0x0D;
             } else if (ok && faelle[k].art == HIEB) {   /* Hieb = Melee-Rueckstoss (Clip 7) */
                 frame(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
                 ok = (re15_player_aim_phase_debug() & 0x10) != 0;
-            } else if (ok) {
+            } else if (ok && faelle[k].art == HALTEN) {
                 frame(RE15_PAD_BIT_R1, 0);
             }
             for (int f = 1; f < faelle[k].vorlauf; f++) frame(RE15_PAD_BIT_R1, 0);   /* Aktion begann <vorlauf> Bilder vor L */
@@ -1263,6 +1270,7 @@ static void teil_schnitt(void)
             frame(RE15_PAD_BIT_R1, 0);   /* Sperr-Bild L: Set(1,0x1B)=1, Set(2,7)=1, Sleep 30 */
             const int ph_l = re15_player_aim_phase_debug(), ac_l = re15_player_aim_clip(), gesperrt = re15_game_flag_get(2, 7);
             const int mag_l = re15_ammo_mag_nonzero();
+            const int bxs = re15_inv_find_item(0x15), vorrat_l = bxs >= 0 ? (int)g_inv.slots[bxs].qty : -1;
             int schnitt = -1, n8 = 0, n8_waffe = 0, st_s = -1, wm_s = -1, ph_s = -1, mo_s = -1, ac_vor = -1, erste_waffe = -1;
             for (int f = 1; f <= 80; f++) {
                 const int ac_vorher = re15_player_aim_clip(), ph_vorher = re15_player_aim_phase_debug();
@@ -1276,18 +1284,21 @@ static void teil_schnitt(void)
                     if (re15_player_aim_phase_debug() != NONE || pl->motion == 215) { n8_waffe++; if (erste_waffe < 0) erste_waffe = f - schnitt; }
                 }
             }
-            const int mag_nach = re15_ammo_mag_nonzero();
+            const int mag_nach = re15_ammo_mag_nonzero(), vorrat_nach = bxs >= 0 ? (int)g_inv.slots[bxs].qty : -1;
             scd_thread_kill(slot);
             frame(0, 0);
             printf("    Sperr-Bild: Sperre %d, Phase 0x%02X, W-Clip %d, Magazin %s; Schnitt %d Bilder danach: Kommando %d, Walk-Modus %d, "
-                   "Phase 0x%02X, motion %d; Cut 8: %d Bilder, davon %d mit erhobener Waffe (erstes +%d); Magazin danach %s\n",
+                   "Phase 0x%02X, motion %d; Cut 8: %d Bilder, davon %d mit erhobener Waffe (erstes +%d); Magazin danach %s, "
+                   "Vorrat 0x15 vor dem Abzug %d, im Sperr-Bild %d, danach %d\n",
                    gesperrt, ph_l, ac_l, mag_l ? "voll" : "leer", schnitt, st_s, wm_s, ph_s, mo_s, n8, n8_waffe, erste_waffe,
-                   mag_nach ? "voll" : "leer");
+                   mag_nach ? "voll" : "leer", vorrat0, vorrat_l, vorrat_nach);
             if (v) { waffe_alt[k] = n8_waffe; continue; }
             PRUEF(gesperrt && (faelle[k].art == NACHLADEN ? ((ph_l & 0x0F) == RELOAD && ac_l == 0x0D)
-                             : faelle[k].art == HIEB ? ((ph_l & 0x10) != 0) : (ph_l == READY)),
+                             : faelle[k].art == HIEB ? ((ph_l & 0x10) != 0)
+                             : faelle[k].art == ZIEHEN ? (ph_l == RAISE && ac_l == 0x0D) : (ph_l == READY)),
                   "Vorbedingung: im Sperr-Bild laeuft %s noch (Phase 0x%02X, W-Clip %d)",
-                  faelle[k].art == NACHLADEN ? "das Nachladen (Clip 0x0D)" : faelle[k].art == HIEB ? "der Hieb" : "das Halten", ph_l, ac_l);
+                  faelle[k].art == NACHLADEN ? "das Nachladen (Clip 0x0D)" : faelle[k].art == HIEB ? "der Hieb"
+                  : faelle[k].art == ZIEHEN ? "das Ziehen des Messers (Clip 0x0D)" : "das Halten", ph_l, ac_l);
             PRUEF(schnitt == 30, "Schnitt 30 Bilder nach der Sperre (Sleep 30 = ROOM11C0 sub03 @0x01B14; Lauf v_rl2 F4056 -> F4086): %d",
                   schnitt);
             PRUEF(st_s == 4 && wm_s == 9 && ph_s == NONE && mo_s != 215,
@@ -1296,13 +1307,18 @@ static void teil_schnitt(void)
                   st_s, wm_s, ph_s, mo_s);
             PRUEF(n8 == 40 && n8_waffe == 0, "Cut 8: %d Bilder, keines mit erhobener Waffe (%d; Abnahme 3 Lauf RL2: 8)", n8, n8_waffe);
             if (ac_vor == 0x0D)   /* Nachladen lief bis ins Schnittbild: abgebrochen wie im Original, kein Auffuellen */
-                PRUEF(!mag_nach, "Nachladen bis in den Schnitt-Takt: Plc_dest loescht die Phase (+6 @0x80041c1c), das Auffuellen "
-                      "(@0x80033ebc/@0x80033ec0 erst am Clip-Ende) entfaellt - Magazin bleibt leer");
+                PRUEF(!mag_nach && vorrat0 >= 0 && vorrat_nach == vorrat0, "Nachladen bis in den Schnitt-Takt: Plc_dest loescht die "
+                      "Phase (+6 @0x80041c1c), das Auffuellen (@0x80033ebc/@0x80033ec0 erst am Clip-Ende) entfaellt - Magazin bleibt "
+                      "leer, Vorrat 0x15 unveraendert (%d -> %d)", vorrat0, vorrat_nach);
         }
     }
-    PRUEF(waffe_alt[0] > 0 && waffe_alt[3] > 0 && waffe_alt[4] == 0,
-          "Gegenprobe Fassung Nachbesserung 3: Nachladen 3 Bilder vorher %d, Hieb %d Bilder Cut 8 mit erhobener Waffe (Befund), "
-          "Halten %d (NB3)", waffe_alt[0], waffe_alt[3], waffe_alt[4]);
+    /* Laengen der W-Baenke (PLD/PL04W03.PLW / PL04W01.PLW, dir[0] = EDD): Nachladen Clip 0x0D 32 / Hieb Clip 7 25 / Messer ziehen
+     * Clip 0x0D 15 / Senken Clip 6 10 Bilder. Nur wo Aktion + Senken laenger als <vorlauf> + 30 Bilder dauern, reichte die Waffe in
+     * der Fassung der Nachbesserung 3 nach Cut 8: Nachladen (3 Bilder vorher) ja, Hieb ja; Messer ziehen 15 + 10 < 3 + 30 nicht. */
+    PRUEF(waffe_alt[0] > 0 && waffe_alt[3] > 0 && waffe_alt[4] == 0 && waffe_alt[5] == 0,
+          "Gegenprobe Fassung Nachbesserung 3: Nachladen 3 Bilder vorher %d, Hieb %d Bilder Cut 8 mit erhobener Waffe (Befund); "
+          "Messer ziehen %d (15 + 10 Bilder passen in die Sperre), Halten %d (NB3)", waffe_alt[0], waffe_alt[3], waffe_alt[4],
+          waffe_alt[5]);
 }
 
 /* ---- Teil: zielen (Werkzeug des Riegels integration_r39_dining1141_zielen, Nachbesserung 3 / Abnahme 2 M1) -----------
