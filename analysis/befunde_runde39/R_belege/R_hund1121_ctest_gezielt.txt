@@ -1,0 +1,161 @@
+01:34:39
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r39_hund1121/re15_port/build
+      Start  28: unit_dog_ai
+ 1/77 Test  #28: unit_dog_ai ..............................   Passed    0.05 sec
+      Start  29: unit_crow_ai
+ 2/77 Test  #29: unit_crow_ai .............................   Passed    0.07 sec
+      Start  51: unit_aot_edge
+ 3/77 Test  #51: unit_aot_edge ............................   Passed    0.05 sec
+      Start  53: unit_scd_aot_opcodes
+ 4/77 Test  #53: unit_scd_aot_opcodes .....................   Passed    0.06 sec
+      Start  85: unit_dog_aim_band
+ 5/77 Test  #85: unit_dog_aim_band ........................   Passed    0.04 sec
+      Start 107: unit_aot_sce_census
+ 6/77 Test #107: unit_aot_sce_census ......................   Passed    0.08 sec
+      Start 110: unit_re2_dog_ai
+ 7/77 Test #110: unit_re2_dog_ai ..........................   Passed    0.03 sec
+      Start 111: unit_re2_room1190_ab
+ 8/77 Test #111: unit_re2_room1190_ab .....................   Passed    0.09 sec
+      Start 112: unit_re2_crow_ai
+ 9/77 Test #112: unit_re2_crow_ai .........................   Passed    0.05 sec
+      Start 116: unit_crow_fixes
+10/77 Test #116: unit_crow_fixes ..........................   Passed    0.04 sec
+      Start 121: probe_crow_kill
+11/77 Test #121: probe_crow_kill ..........................   Passed    0.06 sec
+      Start 122: unit_crow_death_corpse
+12/77 Test #122: unit_crow_death_corpse ...................   Passed    0.12 sec
+      Start 138: unit_re2_dog_hitwindow
+13/77 Test #138: unit_re2_dog_hitwindow ...................   Passed    0.06 sec
+      Start 139: unit_gegenprobe_hund_luftzeile
+14/77 Test #139: unit_gegenprobe_hund_luftzeile ...........   Passed    0.09 sec
+      Start 140: unit_dog_hit
+15/77 Test #140: unit_dog_hit .............................   Passed    0.04 sec
+      Start 141: unit_dog_devour
+16/77 Test #141: unit_dog_devour ..........................   Passed    0.04 sec
+      Start 180: unit_re2_hit_repeat_crow_spider
+17/77 Test #180: unit_re2_hit_repeat_crow_spider ..........   Passed    0.15 sec
+      Start 186: unit_re2_dog_hp_reroll
+18/77 Test #186: unit_re2_dog_hp_reroll ...................   Passed    0.11 sec
+      Start 187: unit_re2_dog_playdead_gate
+19/77 Test #187: unit_re2_dog_playdead_gate ...............   Passed    0.09 sec
+      Start 189: unit_re2_crow_se_bank
+20/77 Test #189: unit_re2_crow_se_bank ....................   Passed    0.09 sec
+      Start 214: unit_dog_grab_anchor
+21/77 Test #214: unit_dog_grab_anchor .....................   Passed    0.05 sec
+      Start 221: unit_re2_dog_jaw_contact
+22/77 Test #221: unit_re2_dog_jaw_contact .................   Passed    0.04 sec
+      Start 223: unit_re2_crow_shadow_release
+23/77 Test #223: unit_re2_crow_shadow_release .............   Passed    0.07 sec
+      Start 224: unit_re2_dog_grab_anchor
+24/77 Test #224: unit_re2_dog_grab_anchor .................   Passed    0.08 sec
+      Start 254: unit_1190_weste
+25/77 Test #254: unit_1190_weste ..........................   Passed    0.12 sec
+      Start 255: unit_1190_ruestung
+26/77 Test #255: unit_1190_ruestung .......................   Passed    0.07 sec
+      Start 264: unit_re2_crow_kill_cmd3
+27/77 Test #264: unit_re2_crow_kill_cmd3 ..................   Passed    0.06 sec
+      Start 332: unit_r27_hund_wandtrieb
+28/77 Test #332: unit_r27_hund_wandtrieb ..................   Passed    0.35 sec
+      Start 345: unit_r30_hund_tod
+29/77 Test #345: unit_r30_hund_tod ........................   Passed    2.45 sec
+      Start 346: unit_r30_hund_tod_n2
+30/77 Test #346: unit_r30_hund_tod_n2 .....................   Passed    0.07 sec
+      Start 347: unit_r30_hund_tod_elza
+31/77 Test #347: unit_r30_hund_tod_elza ...................   Passed    2.77 sec
+      Start 379: r30_hund_hitbox_stauchung
+32/77 Test #379: r30_hund_hitbox_stauchung ................   Passed    0.19 sec
+      Start 504: unit_r35_fenster_glas
+33/77 Test #504: unit_r35_fenster_glas ....................   Passed    0.04 sec
+      Start 505: unit_r35_fenster_kraehe
+34/77 Test #505: unit_r35_fenster_kraehe ..................   Passed    0.03 sec
+      Start 506: unit_r35_fenster_ereignis
+35/77 Test #506: unit_r35_fenster_ereignis ................   Passed    0.02 sec
+      Start 507: unit_r35_fenster_knall
+36/77 Test #507: unit_r35_fenster_knall ...................   Passed    0.04 sec
+      Start 508: unit_r35_fenster_satzform
+37/77 Test #508: unit_r35_fenster_satzform ................   Passed    0.02 sec
+      Start 509: integration_r35_fenster
+38/77 Test #509: integration_r35_fenster ..................   Passed   30.49 sec
+      Start 549: unit_r35_raeume_hundeschatten
+39/77 Test #549: unit_r35_raeume_hundeschatten ............   Passed    0.08 sec
+      Start 575: unit_r36_elza_fenster
+40/77 Test #575: unit_r36_elza_fenster ....................   Passed    0.06 sec
+      Start 583: integration_r36_elza_fenster
+41/77 Test #583: integration_r36_elza_fenster .............   Passed   52.74 sec
+      Start 603: unit_r36_karte_r1190
+42/77 Test #603: unit_r36_karte_r1190 .....................   Passed    0.13 sec
+      Start 614: unit_r36_kleidung_hund
+43/77 Test #614: unit_r36_kleidung_hund ...................   Passed    0.06 sec
+      Start 615: unit_r36_kleidung_kraehe
+44/77 Test #615: unit_r36_kleidung_kraehe .................   Passed    0.09 sec
+      Start 619: integration_r36_kleidung_hundeweg
+45/77 Test #619: integration_r36_kleidung_hundeweg ........   Passed   82.96 sec
+      Start 646: unit_r36_schuss_kraehe
+46/77 Test #646: unit_r36_schuss_kraehe ...................   Passed    0.06 sec
+      Start 671: unit_r36_ziel1190
+47/77 Test #671: unit_r36_ziel1190 ........................   Passed    1.75 sec
+      Start 672: integration_r36_ziel1190_scheiben
+48/77 Test #672: integration_r36_ziel1190_scheiben ........   Passed  269.06 sec
+      Start 695: unit_r37_elzaems_toc
+49/77 Test #695: unit_r37_elzaems_toc .....................   Passed    0.09 sec
+      Start 696: unit_r37_elzaems_weiche
+50/77 Test #696: unit_r37_elzaems_weiche ..................   Passed    0.02 sec
+      Start 697: unit_r37_elzaems_raeume
+51/77 Test #697: unit_r37_elzaems_raeume ..................   Passed    0.15 sec
+      Start 698: unit_r37_elzaems_griff
+52/77 Test #698: unit_r37_elzaems_griff ...................   Passed    0.50 sec
+      Start 699: unit_r37_elzaems_opfer27
+53/77 Test #699: unit_r37_elzaems_opfer27 .................   Passed    0.04 sec
+      Start 700: integration_r37_elzaems_elza5081
+54/77 Test #700: integration_r37_elzaems_elza5081 .........   Passed   12.71 sec
+      Start 701: integration_r37_elzaems_elza3071
+55/77 Test #701: integration_r37_elzaems_elza3071 .........   Passed   17.19 sec
+      Start 702: integration_r37_elzaems_leon5080
+56/77 Test #702: integration_r37_elzaems_leon5080 .........   Passed   16.30 sec
+      Start 703: integration_r37_elzaems_elza3091
+57/77 Test #703: integration_r37_elzaems_elza3091 .........   Passed   16.04 sec
+      Start 704: integration_r37_elzaems_elza1101
+58/77 Test #704: integration_r37_elzaems_elza1101 .........   Passed   20.28 sec
+      Start 705: integration_r37_elzaems_leon1100
+59/77 Test #705: integration_r37_elzaems_leon1100 .........   Passed   21.25 sec
+      Start 706: integration_r37_elzaems_elza11b1
+60/77 Test #706: integration_r37_elzaems_elza11b1 .........   Passed   12.34 sec
+      Start 707: integration_r37_elzaems_elza5091
+61/77 Test #707: integration_r37_elzaems_elza5091 .........   Passed   20.22 sec
+      Start 708: integration_r37_elzaems_elza1181griff
+62/77 Test #708: integration_r37_elzaems_elza1181griff ....   Passed   15.53 sec
+      Start 709: integration_r37_elzaems_elza10c1kraehe
+63/77 Test #709: integration_r37_elzaems_elza10c1kraehe ...   Passed   50.15 sec
+      Start 710: integration_r37_elzaems_leon10c0kraehe
+64/77 Test #710: integration_r37_elzaems_leon10c0kraehe ...   Passed   39.78 sec
+      Start 711: integration_r37_elzaems_elza1141
+65/77 Test #711: integration_r37_elzaems_elza1141 .........   Passed   12.58 sec
+      Start 897: unit_r38_griff_hund15
+66/77 Test #897: unit_r38_griff_hund15 ....................   Passed    0.09 sec
+      Start 898: unit_r38_griff_hund2
+67/77 Test #898: unit_r38_griff_hund2 .....................   Passed    0.32 sec
+      Start 956: unit_r39_gegner_hund_riegel
+68/77 Test #956: unit_r39_gegner_hund_riegel ..............   Passed    0.05 sec
+      Start 957: unit_r39_gegner_hund_re15
+69/77 Test #957: unit_r39_gegner_hund_re15 ................   Passed    0.02 sec
+      Start 972: integration_r39_gegner_hunde1190
+70/77 Test #972: integration_r39_gegner_hunde1190 .........   Passed   46.16 sec
+      Start 974: unit_r39_hund1121_ereignis
+71/77 Test #974: unit_r39_hund1121_ereignis ...............   Passed    0.04 sec
+      Start 975: unit_r39_hund1121_sprung
+72/77 Test #975: unit_r39_hund1121_sprung .................   Passed    0.05 sec
+      Start 976: unit_r39_hund1121_re15
+73/77 Test #976: unit_r39_hund1121_re15 ...................   Passed    0.02 sec
+      Start 977: unit_r39_hund1121_einmal
+74/77 Test #977: unit_r39_hund1121_einmal .................   Passed    0.04 sec
+      Start 978: unit_r39_hund1121_treffer
+75/77 Test #978: unit_r39_hund1121_treffer ................   Passed    0.03 sec
+      Start 979: unit_r39_hund1121_startmaschine
+76/77 Test #979: unit_r39_hund1121_startmaschine ..........   Passed    0.03 sec
+      Start 980: integration_r39_hund1121
+77/77 Test #980: integration_r39_hund1121 .................   Passed  144.07 sec
+
+100% tests passed, 0 tests failed out of 77
+
+Total Test time (real) = 891.69 sec
+01:49:31

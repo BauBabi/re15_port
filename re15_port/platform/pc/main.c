@@ -100,6 +100,7 @@ static inline int RNDI(float f) {
 #include "re2fx_pc.h"         /* Runde 34 V3: re2fx_pc_draw im Effekt-Zeichenpass (Spur D)       */
 #include "glas1120_pc.h"       /* Runde 35 Spur M: Fenster ROOM1120 (Raum-ESP, Glas, Schaden)    */
 #include "re15_fenster1120.h"  /* Runde 35 Spur M: re15_fenster1120_install (Boot-/CONTINUE-Weg)  */
+#include "re15_hund1121_r39.h" /* Runde 39 Spur R: re15_hund1121_r39_install (Boot-/CONTINUE-Weg), Schatten */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Schluessel 10F0/10F1, Tuer 11B0, Icon/Bild/Modell */
 #include "re15_kartenitems_r36.h" /* Runde 36 Spur N: Lageplan-Karte (Boot-/CONTINUE-Weg + Prop-Lader) */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: Feuerloescher (Boot-/CONTINUE-Weg + Prop-Lader) */
@@ -4992,6 +4993,7 @@ re_title:;
     re15_dining_r38_install((uint16_t)g_current_room_id);        /* Runde 38 Spur F: 1011/1021/1131/1141, derselbe Grund (Boot-/CONTINUE-Weg) */
     re15_inventar_r39_install((uint16_t)g_current_room_id);      /* Runde 39 Spur C: Spind ROOM1000, derselbe Grund (Boot-/CONTINUE-Weg) */
     re15_parkplatz_r39_install((uint16_t)g_current_room_id);     /* Runde 39 Spur O: ROOM11C0 Text 40 + Sperre im Kampf, derselbe Grund */
+    re15_hund1121_r39_install((uint16_t)g_current_room_id);      /* Runde 39 Spur R: Hund ROOM1121, derselbe Grund (Boot-/CONTINUE-Weg) */
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
@@ -9798,6 +9800,7 @@ re_title:;
                      * nicht zeichnen) wirft keinen Schatten an den Fuss der Rueckwand. */
                     if (npc->type == 0x21 && npc->state == 4 && npc->crow_hide) crow_no_record = 1;
                     if (re15_r38_sm_schatten_aus(npc)) crow_no_record = 1;   /* Runde 38 Spur T: +0xBC/+0xBE = 0 @0x80115370-74 */
+                    if (re15_hund1121_r39_schatten_aus(npc)) crow_no_record = 1;   /* Runde 39 Spur R: Hund noch jenseits der Glasebene */
                     /* HUND 0x20 - EIGENE Lachen-Maschine, genau wie die Kraehe:
                      * RE2 0x80104A2C faerbt den Record auf 0x00BFBF10 (@0x80104A50-84) und
                      * laesst rec+4/+6 90 Takte lang um 8 wachsen (@0x80104A8C-C0);
