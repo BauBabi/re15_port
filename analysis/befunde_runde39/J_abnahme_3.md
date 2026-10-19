@@ -209,3 +209,44 @@ pad_phase_common.c / panel_zeiger_common.c / dining_r39.c) - der Haken greift al
   Neue Riegel parallel-/Linux-fest: eigene exe-Kopie `re15_pc_r39j_z_<id>` + eigener Laufordner, `cmake_minimum_required(VERSION 3.16)`
   im -P-Skript, Endung per `get_filename_component(... EXT)` (keine `.exe`-/Backslash-Pfade).
 - **Vertrag gehalten** (Hinweise H2/H3 in Abschnitt 6).
+
+## 5. Maengel (nummeriert, nachpruefbar)
+- **M1-Rest (Punkt 8, sehr niedrig - enges Zeitfenster, aber reproduzierbar und gegen die zitierte Original-Form): beginnt Elza kurz
+  vor der Pad-Sperre nachzuladen, zielt sie zu Beginn des Gespraechs noch auf John.** Die Nachbesserung 3 beendet den Waffenzustand
+  nur, wenn der Rest der Ziel-FSM in die 30 Bilder zwischen Sperre und Schnitt passt (Halten 9-10, Rueckstoss bis 16 Bilder: erfuellt,
+  Laeufe R2/K/zielen). Nachladen (Clip 0x0D, 31 Bilder) und danach Senken (10 Bilder) ueberschreiten das: Lauf RL (Nachladebeginn 8
+  Bilder vor der Sperre) 3 Bilder Cut 8 mit mo 215 (Waffe schon unten); **Lauf RL2 (Nachladebeginn 3 Bilder vor der Sperre) 8 Bilder
+  Cut 8 mit mo 215 (F4086..F4093), davon F4087/F4088 mit ausgestreckten Armen und der Pistole auf Johns Oberkoerper**
+  (`J39abn3/rl2_cut8_zoom.png`), Ende erst durch Plc_dest TURN F4097. Sinngemaess (nicht gemessen) gilt dasselbe fuer Messerhieb
+  (Clip 7) und kaltes Messer-Ziehen kurz vor der Sperre. Abnahme 2 / Auftrag NB3 verlangten "Elza vor dem ersten Bild von Cut 8 in
+  einen neutralen Zustand (Original-Form belegen)". Die zitierte Original-Form ROOM11C0 sub03 ersetzt das Kommandowort des Spielers im
+  Schnittbild (`0x01B26 Plc_dest` im selben Takt wie `0x01B18 Cut_chg`; Handler `80041c14 sb v0(=4),4(a1)`; SCD-Laeufer @0x8001cdec vor
+  dem Spieler @0x8001ce0c) - dort endet ein solcher Rest mit dem Schnitt. ENTRIEGELN39 gibt Elza ihren Plc-Befehl erst 11 Bilder nach
+  dem Schnitt (Sleep 1 + Sleep 10 aus der Form 1141 sub02). Die Begruendung im Dossier 10.7 / Bau-Agent "Randfall nach der
+  Original-Form ... noch das Ende des Senkens zu sehen" trifft nicht zu (gemessen: auch der Anfang des Senkens, Waffe auf John; die
+  Original-Form haette keinen Rest).
+  Nachpruefen (scratchpad J39abn3): `bash lauf.sh rl2 plan_r.txt "4250#1141" "4040-4110/1:fd_" RE15_GIVE=0x43:1,0x03:1,0x15:50
+  RE15_EQUIP=3 RE15_R38F_GORILLAS_TOT=600 RE15_R38F_GORILLAS_STARR=1 "RE15_INPUT_SCRIPT=M33.3333,MA0.1,M1.6667,MA0.1,M10"
+  RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=3000` -> l_rl2/state.txt F4086..F4093 `mo=215 ac=6 cam=8`, Bilder
+  fd_004087/fd_004088. Abhilfe-Richtung (Entscheidung beim Bau-Agenten, mit Beleg): Elzas Kommandowort im Schnittbild ersetzen wie
+  11C0 sub03 @0x01B1A..@0x01B26 (Plc-Befehl fuer Elza im selben Takt wie Cut_chg 8 / Pos_set / Member_set), Riegel `zielen` um den
+  Fall "Nachladen kurz vor der Sperre" erweitern (kein Bild in Cut 8 mit mo 215).
+
+## 6. Hinweise (keine Maengel)
+- H1 Klopf-Klang = RE2 DOOR0F-Holzschlag (RE2 hat keinen Tuer-Klopfton) - Klangabnahme beim Nutzer (wie Abnahme 2).
+- H2 Gemeinsame Dateien ausserhalb VERTRAG 1.3 (Abschnitt 4), jetzt auch player_common.c - bei der Integration mit A/B (audio_pc.c),
+  D/E (enemy_ai_common.c), K (enemy_common.c; player_common.c traegt seit dem Merge 2963579d auch Ks Haken) zusammen ansehen.
+- H3 Die E-Riegel `unit_r39_gegner_1141_ablauf1141` / `integration_r39_gegner_1141` tragen im Zweig den J-Ablauf - bei der
+  Integration die Fassung dieses Zweigs nehmen (unveraendert seit Abnahme 2).
+- H4 Geltungsbereich des Senkens: nur ROOM1141 Phase H. In allen anderen Raeumen haelt der Port einen zielenden Spieler unter (2,7) weiter
+  an (player_mode-2-Tor), das Original senkt dort nach demselben Mechanismus (FUN_80030444 + HOLD, Abschnitt 2) - z. B. ROOM11C0 sub03
+  (Leon nach den Parkplatz-Gorillas). Offengelegt (Dossier 10.7), eigener Punkt fuer eine spaetere Runde.
+- H5 Der Sperr-Merker liest das ECHTE Pausen-Wort (`g_re15_pauseflags & RE15_PAUSE_PAD`); dort setzen im Port auch Message_on /
+  Item-Modal / Raumwechsel Bit 0x01000000 (game_state.c, Kommentar zu Zone 2). Der Haken verlangt zusaetzlich player_mode 2, kein
+  Textfenster, Kommando 1 und eine laufende Zielphase - in Phase H oeffnet keine dieser Quellen, waehrend Elza zielt (Aktionstaste =
+  Schuss/Hieb). Im Original kappt FUN_80030444 ebenfalls nach dem echten Wort. Kein Befund, nur fuer kuenftige Erweiterungen (H4) im Blick
+  behalten.
+- H6 Abnahme 2 H5 unveraendert (kein Auftrag): re15_dining_r39_tick laeuft vor, aber ausserhalb des KI-Tors.
+- H7 SE-Tor: waehrend der Rolladen-Szene verwirft FUN_80045a18 drei Schlaege (1.1) - Prioritaetsregel, danach klopft es weiter.
+- H8 Riegel `integration_r39_dining1141_zielen` laeuft ohne RE15_AUDIO_CAP_SYNC (Szenenende nach der Wanduhr); in meinem Lauf
+  Kampfende 4051 / Schnitt 4081, im R1-Fenster 3000..4350.
