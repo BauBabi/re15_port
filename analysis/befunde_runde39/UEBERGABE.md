@@ -6,6 +6,15 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 04:47: MASTER 2963579d = Spur K (Integration 889/889), Hauptbaum-exe 01:06 + Smoke gruen. BESTANDEN: G karten
+  (Abnahme 3, Fix 0f8545c9: Tuer immer auf der Wand des gezeichneten Raums, B2-Westende 1210/1211), O parkplatz11c0
+  (Abnahme 1, Fix 2c7498cd: Sperre nur bei (3,67)==0), R hund1121 (Abnahme 0, aead0d9b: Hund springt in der Panikphase
+  durch Leons Kraehen-Fenster, RE2-Form ROOM21A0 sub07), P johnruf1041 (Abnahme 0, 20df7045: Rufe 1041 Xa_vol 50, msg 40
+  + main40, Karte 1141, MAIN01-Panikfenster bis zur Rettung, 1131 Xa_vol 100; P sitzt auf J-Zweig -> Integration erst mit J).
+  J Abnahme 2: nur M1 (Elza zielt beim Schnitt Cut 8 11 Bilder auf John) + H4 (Riegel erben Umgebung) -> Nachbesserung 3
+  wf_ef75b1de-26c (args_j_nach3.json). Integration G+O+R (7eb4f61b; Konflikte scd_room_setup.c/scd_vm.c/main.c rein additiv,
+  beide Seiten behalten, scratchpad/konflikt_beide.py): Bau ok 04:45, 921 Tests laufen (b5i5hns0b). K-Baum entfernt.
+  Aktiv: J (NB3), Q elzazombies (wf_c0587ec2-cb8, Bau).
 * 2026-10-19 00:32: Spur G Abnahme 2: N1 (1210-Kammer) erfuellt; neuer Mangel N2 - Tuermarken 1030<->1050/1040 schweben, solange 1030
   nicht gezeichnet ist (vorbestehend, Nutzerpunkt "Tuer immer genau auf Wand") -> Nachbesserung 3 wf_3e8b0d3e-35e
   (args_g_nach3.json). Integration: r39/integration ff auf master 131c6289, Spur K gemergt (14270601, Konflikt
