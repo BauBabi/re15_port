@@ -448,3 +448,45 @@ byte-gleich mit dem Integrationsbaum (96b384a7, dort von Hand aufgeloest). Merge
 * H1 (unit_r39_elzazombies_durch1041, Zustand nach der Montage OHNE (9,97)): `Durchbruch 1041: 2 Zombies aus 1061 (nicht
   besiegt) -> hinter das Rolltor` -> Szene laeuft (Knall, `Durchbruch Bild 295: alle durch`). Der Durchbruch prueft (9,97)
   nicht — er kaeme auch nach Johns Rettung.
+
+### 9.3 RE-Belege der neuen Konstanten (Datei-Bytes selbst gelesen, python struct)
+| Konstante | Wert | Beleg |
+|---|---|---|
+| Quell-Records Leon (10E0) | Typ 0x10 grid 0x06, Tot-Bits 0xe0..0xe3 | ROOM10E0 @0x00D56 `44 01 10 06 00 00 01 e0 04 f7 ..`, @0x00D6A `.. e1`, @0x00D7E `.. e2`, @0x00D92 `.. e3` (Datei = ROOM10E1) |
+| Tuer 10C0 -> Treppenhaus | Raum 0x06, Cut 2, Etage 4, (26000,-7200,25300) Gier 2048 | ROOM10C0 @0x00E42 `3b 00 02 31 00 00 b4 fb 66 21 e8 03 d0 07 90 65 e0 e3 d4 62 00 08 00 06 02 04` (= ROOM10C1) |
+| Kamera Leon 1060 Cut 2 | pos (20199,-12628,21273) target (24670,-7088,27767) | ROOM1060 RID @0x000A0 `00 00 3c 68 e7 4e 00 00 ac ce ff ff 19 53 ..` (Datei = ROOM1061) |
+| Quell-Records Elza (1071) | Typen 0x10/0x10/0x10/0x11/0x11, Tot-Bits 0xc6..0xca | ROOM1071 @0x015CA `44 00 10 88 00 00 00 c6 ..`, @0x015DE `.. c7`, @0x015F2 `.. c8`, @0x01606 `44 03 11 88 .. c9`, @0x0161A `44 04 11 87 .. ca` (Datei = ROOM1070) |
+| Kamera Elza 1031 Cut 7 | pos (-26820,-3114,-2574) target (-15858,-936,-5040) | ROOM1031 RID @0x00140 `00 00 3c 68 3c 97 ff ff d6 f3 ff ff f2 f5 ff ff 0e c2 ff ff 58 fc ff ff 50 ec ff ff` = ROOM1030 @0x00140 (nur der PRI-Zeiger +28 verschieden: 0x1298 / 0x123c) |
+| Original-Knall 1031 Cut 7 | Se_on Bank 2 Satz 0x0c | ROOM1031 sub08 @0x02862 `36 02 0c 00 00 00 cc dd f8 f8 f0 a7` = ROOM1030 sub08 @0x02776 (Leons Vorlage 7) |
+| ROOM1060 frei fuer Leon | Ereignis 21 (Leon) / 30, Slot 20, Bank-5-Bits 28/29/30 | SCD 1060: main00 = 3 Door_aot_set (Slot 0..2) + 8 Aot_set (Slot 3..10) + Slot 16; sub00/sub01 `01 00`; kein Ck/Set |
+| ROOM1040 Tuer -> 1060 (Leons Ankunft von unten) | Raum 0x06 Cut 7 (26000,0,25300) Gier 2048 | ROOM1040 @0x010D8 `3b 02 02 31 .. 90 65 00 00 d4 62 00 08 00 06 07` (= ROOM1041 @0x010D8) |
+| Leons Weiche/Knall | Tuerknall = Signal (5,28) Satz 0; Knall wie 1030 = (5,29) Satz 1 | re15_irons_tod.h RE15_IT_SIG_KNALL_TUER/_1030 (Runde 35/36), unveraendert; Elzas Auftakt nutzt dieselbe Form |
+Was KEIN neuer Wert ist: alle Lagen/Parkplaetze/Zeiten des Treppenhaus-Schritts sind Elzas (Abschnitt 2.5, Runde 39) bzw.
+Leons (k_p_1130: 1 + 130 + 45 Bilder, Tuer nach 1040 Cut 1 auf RE15_IT_PARK_1040); die 1031-Cut-7-Bytes sind Leons Vorlagen
+6/7/19/12 (irons_tod_1150.c), zur Laufzeit ueber re15_irons_tod_programm() uebernommen — der Riegel prueft sie gegen die RDT.
+
+### 9.4 Umsetzung (Nachbesserung 2)
+* KOPIE-BITS (PORT-WAHL nach der Regel des Originals): dieselben Zombies tragen in beiden Szenarien dasselbe Bit, wie die
+  ausgelieferten Raum-Paare ihre Quell-Records (ROOM10E0/10E1 beide 0xe0..0xe3, ROOM1070/1071 beide 0xc6..0xca, Dateien
+  gleich). Leons 1060-Kopien = Elzas 1061-Kopien (124..127); Elzas 1031-Cut-7-Kopien = Leons 1030-Cut-7-Kopien (47,48,49,75,76).
+  Kein neues Bit verbraucht. Leon und Elza teilen nie einen Spielstand; Leons Code wirkt nur in xxx0-Raeumen, Elzas nur fuer
+  Elza in xxx1-Raeumen.
+* ELZA (engine/src/elzazombies_r39.c): Zahl der 1071-Ueberlebenden beim Kettenstart (s_n1071), Umzug wie Leons 1070-Umzug;
+  Weiche tuer_zum_naechsten() = Leons programm_bauen-Weiche (nach dem Auftakt: 1061, sonst 1031 Cut 7, sonst 1031 Cut 12;
+  nach 1061: 1031 Cut 7 mit Tuerknall Satz 0, sonst Cut 12 mit Satz 1); Programm C mit Leons Vorlagen 6 (Kopien + 175 Bilder)
+  + 7 (Original-Knall) + 19 (Luecke 10) vor dem Rollo-Teil; Nachspawn F = Leons k_p_1030_nach (Vorlage 12 + Kriecher);
+  Baustein 5 (Rollo-Zombies warten bis Cut 12, BLK 0/10) mit eigenem Merker; Folge-Eintrag 'K' 2 fuer den Original-Knall.
+* H1 (durchbruch_1041): ohne (9,97) "Durchbruch 1041 entfaellt: Panikphase vorbei ((9,97)=0)" und nichts weiter.
+* LEON (engine/src/elzazombies_r39.c Programm L + 6 Haken in engine/src/irons_tod_1150.c, je mit "Runde 39 Spur Q"):
+  umzug_vorbereiten -> re15_r39q_leon_umzug() (10E0 -> 1060-Kopien, Zahl); programm_bauen Szene (nur bei 1140 leer) und
+  1130-Schritt -> re15_r39q_leon_tuer() (letzte Tuer -> ROOM1060 Cut 2 Etage 4 auf Elzas Parkplatz (20200,-7200,20400),
+  Knall davor Satz 0); neuer Zustand RE15_IT_S1060 = 7 (include/re15_irons_tod.h) mit Programm L (vier Saetze wie Elzas
+  Programm B, Ende Byte fuer Byte wie Leons k_p_1130); install ROOM1060 -> S1060; ROOM1040 nimmt S1060 als Vorgaenger;
+  sub01-Sperre auch in S1060. Verhalten im Schnitt (Einzelstopp hinter der Kamera) + Messung im eigenen Takt (Kamera
+  ROOM1060 Cut 2). Spaeteres Betreten von 1060 nach der Szene ((9,73)=1, Leons Nachspawn-Gate): Elzas Programm E.
+* REIHENFOLGE Leon (PORT-WAHL, begruendet): 1130 (3F) -> 1060 (2F-Absatz) -> 1040/1030 (1F): die Montage geht von Irons'
+  Buero im 3F Stockwerk fuer Stockwerk nach unten zur Lobby; bei Elza steht das Treppenhaus ebenso vor der Lobby.
+* Leons Montage-Riegel nachgezogen (begruendet, 9.6): unit_r35_cut1150_szene (Variante "1140 leer -> direkt 1040") und
+  unit/integration_r36_szene1150 laufen mit 10E0 leer, damit sie ihre Kette 1130/1040/1030/11C0 unveraendert messen
+  (Kartenwerkzeug probe_r35_cut1150_karte: neue Option tot10e0); integration_r35_cut1150 und integration_r38_montage laufen
+  unveraendert MIT dem neuen Schritt (10E0 im Spielstand nie betreten) und muessen gruen bleiben.
