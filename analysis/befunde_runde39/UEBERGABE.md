@@ -6,6 +6,11 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 08:26: Nutzer-Nachtrag 12 (a0d7d749): Tuersaetze "I have to rescue John! He is in danger!" an 1041->1031 und 1051->10A1
+  in der Panikphase + 10B1-Tuer fuer Elza immer zu -> Spur P Nachbesserung 1 wf_a155d59d-a4e (args_p_nach1.json; Ids 1041=41,
+  1051=40); gleiche Durchbruch-Tueren (Leon + Treppenhaus, Elza + 1071) + ORCHESTRATOR-ENTSCHEID 1041-Durchbruch nur in
+  der Panikphase -> Spur Q Nachbesserung 2 wf_1b015c91-02c (args_q_nach2.json). Beide mergen zuerst master. Laufende
+  Integration Q (alter Stand, 908 Tests) wird noch ausgewertet; Q geht erst nach NB2 nach master. Aktiv: J, P, Q.
 * 2026-10-19 08:10: MASTER ec32aa8b = G+O+R (Integration 921/921, 05:10), Hauptbaum-exe 08:07 + Smoke gruen. Spur Q elzazombies
   BESTANDEN (Abnahme 1 nach NB1 721d530a: Riegel erben keine RE15_*-Umgebung, jede Schreibweise). Q in die Integration
   (96b384a7, Konflikte additiv; Ereignis 30 raumgetrennt R=1121, Q=1041/1061/1031), Bau ok, 908 Tests laufen. Spur J
