@@ -14,7 +14,9 @@ cmake_minimum_required(VERSION 3.16)
 #   R  RASTER: Messschiene RE15_TRILOG (render_pc.c) im Fenster der Marke: die Ecken der letzten 4 Dreiecke (ein Bild) ==
 #      RE15_R39M_*_GTE_X0/Y0/B/H aus gen/itemorte_r38_lage.inc (Park 2 x 1, Prison 3 x 2; Spur L war 6 x 3 / 6 x 4)
 #   H  HALB: Unterschied mit/ohne (probe_r38_itemorte_kontrast, |dR|+|dG|+|dB| > 30) im Pinnwand-Fenster: Huelle Breite
-#      UND Hoehe <= halbe Spur-L-Messung (Abnahme L0 bei 960x720: Leon 14 x 8, Elza 16 x 10 -> <= 7 x 4 bzw. 8 x 5)
+#      UND Hoehe <= volle Deckung des (halbierten, R) GTE-Vierecks bei Fensterskala 3: Park 6 x 3, Prison 9 x 6. Vorher
+#      "halbe Spur-L-Messung" 7 x 4 / 8 x 5 - eine Windows-GL-Messung: der Linux-Container (llvmpipe) fuellt dasselbe
+#      3 x 2-Viereck mit 8 x 6 statt 8 x 5 (Release-Lauf v0.8.27, 2026-10-19), die Fuellregel entscheidet ueber eine Zeile.
 #   S  SICHTBAR: Pixel und Sum|dL| >= ~60 % der Messung 2026-10-18 (Leon 9 / 403, Elza 16 / 748), AUSSEN == 0
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KONTRAST_TOOL=<probe_r38_itemorte_kontrast>
@@ -203,8 +205,13 @@ raster(R_prison "${_tri_elza_mit}" ${RE15_R39M_PRISON_GTE_X0} ${RE15_R39M_PRISON
 
 # Grenzen: halbe Spur-L-Messung bei 960x720 (Abnahme L0: Leon 14 x 8, Elza 16 x 10), abgerundet. Mindestwerte ~60 % der
 # Messung 2026-10-18 (Dossier "Messung nachher": Leon 9 Pixel / Sum|dL| 403, Elza 16 / 748).
-mass(H_leon "${_ppm_leon_mit}" "${_ppm_leon_ohne}" 5 240 7 4)
-mass(H_elza "${_ppm_elza_mit}" "${_ppm_elza_ohne}" 9 450 8 5)
+# Huelle hoechstens die volle Deckung des GTE-Vierecks bei Fensterskala 3 (das Halbieren selbst pruefen R_park/R_prison).
+math(EXPR _max_lb "${RE15_R39M_PARK_GTE_B} * 3")
+math(EXPR _max_lh "${RE15_R39M_PARK_GTE_H} * 3")
+math(EXPR _max_eb "${RE15_R39M_PRISON_GTE_B} * 3")
+math(EXPR _max_eh "${RE15_R39M_PRISON_GTE_H} * 3")
+mass(H_leon "${_ppm_leon_mit}" "${_ppm_leon_ohne}" 5 240 ${_max_lb} ${_max_lh})
+mass(H_elza "${_ppm_elza_mit}" "${_ppm_elza_ohne}" 9 450 ${_max_eb} ${_max_eh})
 file(REMOVE "${_exe_kopie}")
 
 if(_fehler)
