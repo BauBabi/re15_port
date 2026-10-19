@@ -189,6 +189,24 @@ FIXME|vorerst|geschaetzt|approx|ungefaehr|platzhalter|placeholder|sieht richtig|
 im ganzen Zweig: nur `RE15_R39J_LOG` (Messschiene) und `RE15_SE_DEBUG` (Log) - kein Env-Schalter als Abschluss. Neue Konstanten der
 Nachbesserung 4: keine (nur die Lage einer vorhandenen Original-Zeile im Programm; Pruefzahlen im Riegel = Messfaelle).
 
+## 3. Tests (gezielt, keine volle Suite im Spurbaum)
+- Unit-Teil der Nachbesserung direkt: `test_r39_dining1141 schnitt` -> je Fall "Schnitt-Takt: ... Kommando 4, Modus 9, Phase 0x00, motion
+  105", "Cut 8: 40 Bilder, davon 0 mit erhobener Waffe" (Pistole Nachladen 3/8/1 Bilder vorher, Messer-Hieb, Messer ziehen, Halten);
+  Fall "1 Bild": "Magazin danach leer, Vorrat 0x15 ... 50, danach 50"; Gegenprobe Fassung NB3 "Nachladen 3 Bilder vorher 8, Hieb 1 ...;
+  Messer ziehen 0, Halten 0" (je Fall auch 8/3/10/1/0/0 im Einzel-Ausdruck); `schnitt: 0 Fehler`.
+- Werkzeug `test_r39_dining1141 zielen <lauf> nachladen` auf meine Laeufe: `J39abn4/l_rl2` "Kampfende 4056, Sperre ab 4056, letztes Zielbild
+  4085, Schnitt 4086 ... Cut 8: 40 Bilder, davon 0 mit Waffe; Schnittbild pst=4 mo=105", `zielen: 0 Fehler`; `l_rl3` "Beginn 4055 (1 Bilder
+  vor der Sperre) ... 0 mit Waffe", `0 Fehler`; Gegenprobe auf den Vorher-Lauf der Abnahme 3 `J39abn3/l_rl2`: "davon 8 mit Waffe;
+  Schnittbild pst=1 mo=215", **`zielen: 1 Fehler`** - der Riegel misst den Befund.
+- Unit, alle Riegel der Modul-Ebene (der Zweig beruehrt dining_r38/r39, player_common, enemy_ai_common, enemy_common, game_step_common,
+  re15_damage, scd_vm, main.c, audio_pc.c): `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -j 6 --timeout 600`
+  (09:21:47..09:41:49, parallel zu fremden Laeufen anderer Spuren und zu meiner Integration) -> "99% tests passed, 1 tests failed out of
+  856": **855 gruen**, darunter unit_r39_dining1141_* 7/7, unit_r38_dining1141_* 10/10, unit_r39_gegner_1141_* 4/4, unit_r36_kartenbits,
+  unit_r38_affen3_* 11/11, unit_r39_heliport1171_* 12/12, unit_r36_elza_schuss. Rot nur `unit_r38_releaseskript_fehler_umfeld`
+  (**Timeout 1199,96 s** = eigene TIMEOUT-Eigenschaft 1200; Kostenmittel 603,7 s; die Geschwister liefen unter derselben Last 2,3x
+  langsamer: fehler_bau 892 s statt 390, ablauf 898 statt 367, cmd 805 statt 346) - Release-Skript-Riegel (tests/unit/r38_releaseskript),
+  vom Zweig nicht beruehrt; Einzel-Nachlauf siehe unten.
+
 ## 4. Vertrag (VERTRAG.md Runde 39)
 - Pfade (`git diff master...HEAD --name-only`): `analysis/befunde_runde39/{AUFTRAG.md (nur Orchestrator-Commits + Merges), J_abnahme_0..4.md,
   J_belege/*.png, J_dining1141.md}` und `re15_port/{engine/src, engine/src/gen, include, platform/pc, platform/pc/src, tests/integration,
