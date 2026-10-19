@@ -1079,7 +1079,9 @@ Keine neue Konstante: die Umstellung verschiebt eine vorhandene Original-Zeile (
   F4090 an der Huefte, ab F4092 unten. **Das ist die Ueberblendung des Originals**, kein Waffen-Clip: der TURN-Init setzt
   +0x8f = 7 (`800313b8 sb v0(=7),-13597(at)` = 0x800acae3), Sub 6 beim Uebergang erneut (`80051874 sb v0(=7),143(v1)`), beide
   mit Schrittweite `ori a3,zero,0x200` (@0x80031498 / @0x80051890); FUN_8001f3bc liest +0x8f (`8001f408 lbu s0,143(v1)`,
-  `8001f41c bne a3,zero,..` = Ueberblend-Zweig) und mischt die zuletzt gezeigte Lage mit 0x200*frac (0x1000 = 100 %) ein. Weder
+  `8001f41c bne a3,zero,..` = Ueberblend-Zweig), rechnet `8001f474 mult v0,a3` (Schrittweite x frac), `8001f4a8 ori v0,zero,
+  0x1000` / `8001f4b0 subu v0,v0,v1` (Gewicht des neuen Clips = 0x1000 - 0x200*frac) und mischt per GTE die zuletzt gezeigte
+  Lage (Entity+0x188 -> +56/+58/+60) ein: Bild 1 nach dem Wechsel 87,5 % alte Lage, dann je Bild 12,5 % weniger. Weder
   Cut_chg (0x800402a0: setzt nur das Kamera-Bit 0x100 in 0x800aca3c und ruft 0x800142f4) noch Pos_set (0x80041048: nur +0x34/
   +0x38/+0x3C) setzen +0x8f zurueck - im Original endet ein Nachlade-/Senken-Rest in der Form 11C0 sub03 also ebenfalls mit
   dieser Ueberblendung in den ersten Bildern nach dem Schnitt, nicht mit einem harten Wechsel. Der Port war hier schon bytegleich
