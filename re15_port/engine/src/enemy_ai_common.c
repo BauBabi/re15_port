@@ -25,6 +25,7 @@
                             * grab-start 4, grab-release 7 (FUN_80102548), death groan 5/8 (FUN_80107cb0 f7) */
 #include "re15_esp.h"      /* re15_esp_fx_spawn — the collapse frame-0x37 blood burst */
 #include "re15_wasser20b0_r41.h"   /* Runde 41 Spur A: EM024-Partikel-Sequencer (grid 0/1) + Zeichenmaske */
+#include "re15_wassersprung_r41.h"  /* Runde 41 Spur A: NPC-Wasser-Schritte (FUN_80045630 Typ >= 0x40) */
 #include "re15_collision.h" /* re15_collision_constrain — the enemy SCA wall clamp (m0 root
                              * @0x8010062c jal 0x8003b0a4, runs per tick after the state handler) */
 #include "re15_room.h"      /* g_room_rdt + g_current_room_id (em-status stage zone) */
@@ -10003,6 +10004,7 @@ static void re15_npc_sub_walk(re15_actor_t *e)
          * DAT_800aca3c&0x4000-Override @0x80045788-90; das Port-API re15_audio_footstep(foot,type)
          * maskiert &0x7f erst NACH der Addition (audio_pc.c:2448) — der -8-Shift ist damit nicht
          * abbildbar, ohne audio_pc.c anzufassen (gehoert einer anderen Lane). */
+        (void)re15_wassersprung_r41_npc_takt(e, (sub == 5) ? 1 : 0);   /* Runde 41 Spur A: Schritt @0x80051278-a8 / @0x800515e4-614 */
         re15_npc_anim(e);                                    /* f314 @0x800512c4/@0x80051630 */
         return;                                              /* EXIT @0x800512cc/@0x80051638 */
     }
@@ -10015,6 +10017,7 @@ static void re15_npc_sub_walk(re15_actor_t *e)
                                                               * @0x80051bc4 — 180 Grad rueckwaerts */
     else          re15_dog_advance(e, e->crow_speed);        /* pos_advance(a0=0) @0x80051344/@0x800516b0 */
     if (sub == 5 && re15_npckante_nach_schritt(e)) return;  /* Runde 38 Spur M: Sonde VOR anim_set @0x800516c4 */
+    (void)re15_wassersprung_r41_npc_takt(e, 0);             /* Runde 41 Spur A: Schritt Phase 2 @0x800512d4-308 / @0x800519dc-a10 / @0x80051bd4-c08 (a0 = 0) */
     re15_npc_anim(e);
     if (sub == 4 && re15_npckante_nach_schritt(e)) return;  /* Runde 38 Spur M: Sonde NACH anim_set @0x80051374 */
     {

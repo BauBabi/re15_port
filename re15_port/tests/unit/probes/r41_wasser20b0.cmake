@@ -8,6 +8,8 @@
 #   unit_r41_wasser20b0_sequencer  grid 0/1/5 am Sequencer mit der Raum-Bank 20B0 (Takte, Phasen, Codes, a1, Anker)
 #   unit_r41_wasser20b0_raum       ROOM20B0/20B1 am VM: 35 EM024 unsichtbar, Drift byte-gleich zu ts_10/Umbruch/ts_14,
 #                                  Partikel 0x0f im Pool, Spawn-Zaehlung je grid
+#   unit_r41_wasser20b0_landung    Punkt 2a: Landungs-Spritzer @0x80038730-d0 (8 x 0x06033000, Gier-Faecher, Gate Stempel < y)
+#   unit_r41_wasser20b0_npc        Punkt 2b: NPC-Schritt FUN_80045630 Typ >= 0x40 (Boden-/Stempel-Zweig, Ton -8, Bildwort-Takt)
 #   integration_r41_wasser20b0     echte exe: Debug-Sprung 20B0 (Leon) + 20B1 (Elza): Partikel 0x0f gezeichnet
 #                                  (RE15_FX_LOG), sub05 feuert (Cut 7, Tuerblatt fliegt, (3,0xEB)), Spieler wieder frei
 add_executable(test_r41_wasser20b0 ${CMAKE_CURRENT_LIST_DIR}/../test_r41_wasser20b0.c)
@@ -18,7 +20,7 @@ target_compile_definitions(test_r41_wasser20b0 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_wasser20b0 PRIVATE m)
 endif()
-foreach(_teil bytes modell sequencer raum)
+foreach(_teil bytes modell sequencer raum landung npc)
     add_test(NAME unit_r41_wasser20b0_${_teil} COMMAND test_r41_wasser20b0 ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_wasser20b0_${_teil} PROPERTIES TIMEOUT 300)

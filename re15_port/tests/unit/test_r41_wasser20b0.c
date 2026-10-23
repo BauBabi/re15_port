@@ -37,6 +37,8 @@
 #include "re15_skeleton.h"
 #include "re15_anim_select.h"
 #include "re15_wasser20b0_r41.h"
+#include "re15_wassersprung_r41.h"
+#include "re15_wasser_r38.h"
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -406,6 +408,112 @@ static int teil_raum(void)
     return a && b;
 }
 
+/* ============================ Punkt 2: landung / npc (wassersprung_r41.c) ============================ */
+static int pool_code(uint8_t id, uint8_t sub, uint16_t skala, int16_t *params, int max)
+{
+    int n = 0;
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        const re15_esp_fx_t *f = re15_esp_fx_get(i);
+        if (f && f->rows_base && f->effect_id == id && f->sub_index == sub && f->scale16 == skala) {
+            if (params && n < max) params[n] = f->param;
+            n++;
+        }
+    }
+    return n;
+}
+
+static int teil_landung(void)
+{
+    printf("\n== landung (ROOM2090, Becken y=0, Stempel -1620 = Zone slot 2/3 Band 0)\n");
+    if (!raum("STAGE2/ROOM2090.RDT", 0x2090u, 4500, 0, -15200, 3072, 0)) { s_fails++; return 0; }
+    const re15_esp_t *bank = re15_esp_room_bank();
+    CHECK(bank && re15_esp_find_id(bank, 0x06) >= 0, "Raum-Bank 2090 traegt Effekt 6 (Wasser-Spritzer)");
+    re15_esp_fx_reset(); re15_wassersprung_r41_reset();
+    re15_actor_t p; memset(&p, 0, sizeof p);
+    p.active = 1; p.type = 0; p.x = 4500; p.z = -16000; p.y = 0; p.rot_y = 3072;
+    /* nass: Stempel -1620 < y 0 (PSX y nach unten: Wasserspiegel ueber dem Beckenboden) */
+    int n = re15_wassersprung_r41_landung(&p, -1620, -400);
+    int16_t par[8]; int np = pool_code(0x06, 0x03, 0x3000, par, 8);
+    CHECK(n == 8 && np == 8, "nass: %d Spawn-Aufrufe, %d Plaetze Effekt 6 Sub 3 Skala 0x3000 (erwartet 8/8, `ori s1,zero,0x4` x 2)", n, np);
+    const re15_wassersprung_r41_mess_t *m = re15_wassersprung_r41_mess();
+    static const int16_t gier_erw[8] = { 3072+512, 3072+512+2048, 3072+256, 3072+256+2048, 3072, 3072+2048, 3072-256, 3072-256+2048 };
+    int gier_ok = 1;
+    for (int i = 0; i < 8; i++) if (m->letzte_gier[i] != gier_erw[i]) gier_ok = 0;
+    CHECK(gier_ok, "Gier-Faecher rot_y + (s1-2)<<8 (+2048): %d %d %d %d %d %d %d %d (@0x80038788-98 / @0x800387c0)",
+          m->letzte_gier[0], m->letzte_gier[1], m->letzte_gier[2], m->letzte_gier[3], m->letzte_gier[4], m->letzte_gier[5], m->letzte_gier[6], m->letzte_gier[7]);
+    int par_ok = 1;
+    for (int i = 0; i < np; i++) { int hit = 0; for (int k = 0; k < 8; k++) if (par[i] == gier_erw[k]) hit = 1; if (!hit) par_ok = 0; }
+    CHECK(par_ok, "jeder Platz traegt eine der 8 Gieren als Parameter (slot+0x2e)");
+    CHECK(m->letzter_anker[0] == 4500 && m->letzter_anker[1] == -400 && m->letzter_anker[2] == -16000,
+          "Anker = Entity-Matrix +0x20 (zuletzt gezeichnete Lage, y vor dem Bodenschreiben): (%d,%d,%d) (erwartet (4500,-400,-16000))",
+          m->letzter_anker[0], m->letzter_anker[1], m->letzter_anker[2]);
+    /* trocken: Stempel 0 bei y -1800 (0 < -1800 falsch) -> nichts; Stempel -540 auf dem Steg y -1800 (20A0) -> nichts */
+    re15_esp_fx_reset();
+    p.y = -1800;
+    n = re15_wassersprung_r41_landung(&p, 0, -2200);
+    int n2 = re15_wassersprung_r41_landung(&p, -540, -2200);
+    CHECK(n == 0 && n2 == 0 && pool_code(0x06, 0x03, 0x3000, NULL, 0) == 0 && m->landung_trocken == 2,
+          "trocken: Stempel 0 / -540 bei y -1800 -> keine Plaetze (`slt v1,v1,a0` @0x8003874c, beq @0x80038758), trocken=%u", m->landung_trocken);
+    return 1;
+}
+
+static int teil_npc(void)
+{
+    printf("\n== npc (ROOM2000: Wasserflecken FLR 0x97 x -5220..-3420 / z -9750..-1650, Trockenfleck 0x17 x -2400..-700)\n");
+    if (!raum("STAGE2/ROOM2000.RDT", 0x2000u, -4300, -1800, -5000, 0, 0)) { s_fails++; return 0; }
+    const re15_esp_t *bank = re15_esp_room_bank();
+    CHECK(bank && re15_esp_find_id(bank, 0x06) >= 0, "Raum-Bank 2000 traegt Effekt 6");
+    int b40 = bank_re15(0x40), b42 = bank_re15(0x42);
+    printf("     NPC-Baenke: 0x40=%d 0x42=%d\n", b40, b42);
+    uint8_t typ = b40 ? 0x40 : (b42 ? 0x42 : 0x40);
+    re15_actor_t *e = &g_actors[3];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = typ; e->x = -4300; e->y = -1800; e->z = -5000; e->rot_y = 1500; e->floor = 1; e->motion = 5;
+    /* Zweig Bit 0x80: Fleck 0x97 */
+    re15_esp_fx_reset(); re15_wassersprung_r41_reset();
+    int boden = re15_rdt_floor_sound(&g_room_rdt, e->x, e->z);
+    CHECK(boden == 0x97, "Bodentyp an (-4300,-5000) = %#x (erwartet 0x97, FLR-Satz 3)", boden);
+    int idx = re15_wassersprung_r41_npc_schritt(e, 0, 7, &g_room_rdt);
+    const re15_wassersprung_r41_mess_t *m = re15_wassersprung_r41_mess();
+    int n5 = pool_code(0x06, 0x05, 0x0D00, NULL, 0);
+    CHECK(idx == (0x97 & 0x7f) - 8 && m->npc_boden == 1 && n5 >= 1,
+          "Wasserboden: Ton %d (erwartet 0x17-8 = 15, `addiu s3,a0,-8` @0x8004575c), Zweig boden %u, Plaetze 0x06050D00: %d", idx, m->npc_boden, n5);
+    CHECK(m->letzter_anker[0] != 0 && m->letzter_anker[1] < -1800 + 200 && m->letzter_anker[1] > -1800 - 2200,
+          "Anker am Fuss-Part 7 (Pose) y=%d (zwischen Boden und Huefte; Rueckfall = Aktorlage y -1800)", m->letzter_anker[1]);
+    /* Stempel-Zweig: Trockenfleck 0x17 + +0x88 != 0 */
+    re15_esp_fx_reset(); re15_wassersprung_r41_reset();
+    e->x = -1500; e->water_y = -1620;
+    boden = re15_rdt_floor_sound(&g_room_rdt, e->x, e->z);
+    idx = re15_wassersprung_r41_npc_schritt(e, 1, 4, &g_room_rdt);
+    int n3 = pool_code(0x06, 0x03, 0x2000, NULL, 0);
+    CHECK(boden == 0x17 && idx == 1 + (0x17 - 3) - 8 && m->npc_stempel == 1 && n3 >= 1,
+          "Stempel: Boden %#x, Ton %d (erwartet a0 1 + 0x17-3 - 8 = 13), Zweig stempel %u, Plaetze 0x06032000: %d", boden, idx, m->npc_stempel, n3);
+    /* trocken: kein Stempel, Fleck 0x17 -> kein Platz, Ton 0x17-8 */
+    re15_esp_fx_reset(); re15_wassersprung_r41_reset();
+    e->water_y = 0;
+    idx = re15_wassersprung_r41_npc_schritt(e, 0, 7, &g_room_rdt);
+    CHECK(idx == 0x17 - 8 && re15_esp_fx_count() == 0, "trocken: Ton %d (0x17-8 = 15), keine Plaetze (%d)", idx, re15_esp_fx_count());
+    /* Takt: Bildwort-Bit 0x4000 des Geh-Clips (motion 5) der NPC-Bank */
+    if (b40 || b42) {
+        re15_enemy_bank_t *b = re15_enemy_find(typ);
+        int plant = 0, erstes = -1;
+        for (int f = 0; f < 60 && b; f++) { int fs = re15_actor_footstep(&b->anim, e, -1, (uint32_t)f); if (fs) { plant++; if (erstes < 0) erstes = f; } }
+        CHECK(plant > 0, "Typ 0x%02x Clip 5: %d Bilder mit Fussaufsetzer in 60 (erstes Bild %d)", typ, plant, erstes);
+        if (plant > 0) {
+            re15_esp_fx_reset(); re15_wassersprung_r41_reset();
+            e->x = -4300; e->water_y = 0; e->anim_frame = (uint16_t)erstes;
+            int t = re15_wassersprung_r41_npc_takt(e, 0);
+            e->anim_frame = (uint16_t)((erstes + 1) % 60);
+            int t2 = (re15_actor_footstep(&b->anim, e, -1, e->anim_frame) == 0) ? re15_wassersprung_r41_npc_takt(e, 0) : -1;
+            CHECK(t == 1 && m->npc_schritte == 1 && m->npc_boden == 1 && (t2 == 0 || t2 == -1),
+                  "Takt: Aufsetzer-Bild -> 1 Schritt (Wasserboden), Folgebild ohne Bit -> keiner (t=%d t2=%d schritte=%u)", t, t2, m->npc_schritte);
+        }
+    } else {
+        printf("     (keine NPC-Bank ladbar: Takt-Teil uebersprungen)\n");
+    }
+    return 1;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -414,6 +522,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "modell"))    teil_modell();
     if (alle || !strcmp(teil, "sequencer")) teil_sequencer();
     if (alle || !strcmp(teil, "raum"))      teil_raum();
+    if (alle || !strcmp(teil, "landung"))   teil_landung();
+    if (alle || !strcmp(teil, "npc"))       teil_npc();
     printf("\n%s: %d Pruefungen, %d Fehler\n", teil, s_checks, s_fails);
     return s_fails ? 1 : 0;
 }

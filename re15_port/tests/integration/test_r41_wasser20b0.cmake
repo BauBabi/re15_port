@@ -42,11 +42,10 @@ function(flut_lauf _name _raum _extra)
     file(REMOVE "${WORKDIR}/debug.log" "${WORKDIR}/fx.log" "${WORKDIR}/enemy_dbg.log")
     re15_start_spiel(_rv 300
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
-        RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
-        "RE15_DEBUG_JUMP=${_raum}@240"
+        "RE15_DEBUG_JUMP=${_raum}@250"
         RE15_FX_LOG=fx.log RE15_ENEMY_DBG=1
         "RE15_FRAMEDUMP=0-900/30:f"
-        "RE15_EXIT_AT=900#${_raum}"
+        "RE15_EXIT_AT=900"
         ${_extra}
         "${RE15_PC_EXE}")
     message(STATUS "r41_wasser20b0[${_name}]: exit=${_rv}")
@@ -54,6 +53,11 @@ function(flut_lauf _name _raum _extra)
         message(FATAL_ERROR "r41_wasser20b0[${_name}]: kein debug.log (exit=${_rv})")
     endif()
     file(READ "${WORKDIR}/debug.log" _dbg)
+    string(TOLOWER "${_raum}" _raum_lc)
+    string(FIND "${_dbg}" "PC loaded room${_raum_lc}.rdt" _pos_rdt)
+    if(_pos_rdt EQUAL -1)
+        message(FATAL_ERROR "r41_wasser20b0[${_name}]: ROOM${_raum} wurde nicht geladen (kein 'PC loaded room${_raum_lc}.rdt')")
+    endif()
     file(STRINGS "${WORKDIR}/debug.log" _spawns REGEX "spawn-diag\\] Sce_em_set type=0x24")
     list(LENGTH _spawns _n_spawn)
     if(NOT EXISTS "${WORKDIR}/fx.log")
@@ -100,8 +104,10 @@ function(flut_lauf _name _raum _extra)
     endif()
 endfunction()
 
-flut_lauf(leon 20b0 "RE15_SPAWN_DIAG=1")
-flut_lauf(elza 20b1 "RE15_SPAWN_DIAG=1;RE15_PSELECT_AUTO=1;RE15_PSELECT_AUTO_SWITCH=1")
+# Leon: Titelbild-Automatik (RE15_TITLE_SHOT_AF); Elza: Spielerwahl-Automatik wie test_r35_werfer_elza.cmake
+# (RE15_TITLE_CONFIRM_MS=1500 + RE15_PSELECT_AUTO=1 + RE15_PSELECT_AUTO_SWITCH=1 -> die Wahl schaltet auf Elza).
+flut_lauf(leon 20b0 "RE15_SPAWN_DIAG=1;RE15_TITLE_SHOT=title.bmp;RE15_TITLE_SHOT_AF=2")
+flut_lauf(elza 20b1 "RE15_SPAWN_DIAG=1;RE15_TITLE_CONFIRM_MS=1500;RE15_PSELECT_AUTO=1;RE15_PSELECT_AUTO_SWITCH=1")
 
 file(REMOVE "${_exe_kopie}")
 message(STATUS "r41_wasser20b0: OK (Leon 20B0 + Elza 20B1)")

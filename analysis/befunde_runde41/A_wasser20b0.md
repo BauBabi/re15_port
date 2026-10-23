@@ -147,3 +147,49 @@ fx.log id=15, Cut 7/6 = sub05, Spieler frei, kein "ZEICHNE Typ 0x24").
   nur 20B0/20B1 (35) ueberschreiten 20 ungedeckelt; 1040/1041 (40) und 1030/1031 (20) haben Save(0x12)-Deckel 5/6.
   test_r36_gegnerzahl.c: Masken uint64_t, Erwartung 35 Aktoren (Belegkommentar im Kopf).
 - Riegel: unit_r41_wasser20b0_{bytes,modell,sequencer,raum} + unit_r36_gegnerzahl_* (7) = 11/11 gruen.
+
+## Punkt 2 — Wassereffekt beim Sprung von der Kante ins Wasser; NPCs teilen die Wasser-Effekte
+
+### 2.1 Messung vorher (Port)
+- Landung: climb_common.c Phase 4 (@0x800386d4) fuehrte den Block @0x80038758-cc als "Landestaub ... OPEN" (Dateikopf:
+  "FUN_80019700(0x6033000, ...) @0x80038794/@0x800387bc — der Landestaub (8 Partikel)") — nicht gebaut. Lauf
+  ROOM2090 (RE15_DEBUG_JUMP=2090, RE15_PLAYER_POS=4500,-15200,3072, RE15_PRESS=square@60): der Sprung setzt den
+  Spieler mit y=0 INS Becken (RE15_PLAYER_POS kannte kein y, Band -1); fx.log ohne Effekt 6. Der Port-Steg liegt bei
+  y=-1800 (SCA ROOM2090: Band-1-Zelle x 1850..7200 / z -18100..-14500, Kantenzellen Band 16 u1=02 bei z -19100..-18100
+  und -14500..-13500; Becken Band 0 y=0, Zonen slot 2/3 Stempel -1620).
+- NPC-Schritte: enemy_ai_common.c re15_npc_sub_walk fuehrt den Schritt als "OPEN (Footstep-SE der Phase 1, byte-genau
+  lokalisiert, NICHT portiert)" — kein Wassereffekt, kein Schritt-Ton fuer Typen >= 0x40. Zensus STAGE2 (Skript):
+  NPC-Spawns nur in 2000 (0x42, 0x40), 2001 (0x49, 0x49, 0x4b), 2011 (0x4b); kein ausgeliefertes Plc_dest-Ziel liegt
+  in einem Wasserfleck (FLR 0x97) oder einer sce-8-Zone; die Mechanik ist fuer die neuen Szenen (Spur C/G) noetig.
+
+### 2.2 RE-Belege (PSX.EXE, selbst disassembliert; Adressen auch im Kopf von include/re15_wassersprung_r41.h)
+- Landung @0x80038724-d0: +0x38 := +0x1ba (Boden) @0x80038724-2c; `lh v1,-13604(v1)` (Spieler+0x88 Stempel) @0x8003873c;
+  `lw a0,-13684(a0)` (Spieler+0x38) @0x80038744; `slt v1,v1,a0` @0x8003874c; `beq v1,zero` @0x80038758 -> nur wenn
+  Stempel < y (Boden unter dem Wasserspiegel). Schleife `ori s1,zero,0x4` @0x8003875c / `addiu s1,s1,-1` @0x800387d0,
+  je Durchlauf 2x `jal 0x80019700` (@0x80038794, @0x800387bc) mit a0 = 0x06033000 (`lui a0,0x603`/`ori 0x3000`
+  @0x8003876c-70), a1 = +0x6a + ((s1-2)<<8) (@0x8003878c-98) bzw. +2048 (`addiu a1,a1,2048` @0x800387c0), a2 =
+  Spieler+0x20 (`addiu s3,a2,25`, a2 = 0x800aca5b -> 0x800aca74 = Entity-Matrix, T = zuletzt gezeichnete Lage),
+  a3 = 0x8007428c = (0,0,0,0) (`read 0x8007428c 4 --w 4`). Der Stempel ist in der Landung noch da: FUN_80031c44
+  loescht +0x88 erst @0x80031da4, NACH dem Executor-`jalr` @0x80031cb4. "Landestaub" war eine Fehldeutung — es ist
+  der Wasser-Spritzer (Effekt 6 = die Wasser-Sprites der Raum-Banken, Sub 3 wie der Stempel-Schritt).
+- NPC-Schritt: Geh-Subs 4/5 Phase 1 @0x80051278-a8 / @0x800515e4-614 (a0 = 0 @0x80051290 bzw. 1 @0x800515fc),
+  Phase 2 @0x800512d4-308, rueckwaerts @0x800519dc-a10 / @0x80051bd4-c08 (alle a0 = 0): Bildwort *(+0x168) Bit 0x4000,
+  Fuss 7 - 3*((Wort>>12)&1), `jal 0x80045630`. FUN_80045630: Effekt-Zweig vor der Typweiche (Bit 0x80 -> 0x06050D00
+  @0x800456b8-d0; Stempel -> 0x06032000 @0x800456e8-710), Typ >= 0x40 (`sltiu v0,v0,0x40` @0x80045730) -> Tonindex
+  a0 + (Boden&0x7f) - 8 (`addiu s3,a0,-8` @0x8004575c), kein Objekt-Override. +0x88 wird je Entity NACH dem Dispatch
+  geloescht (`sh zero,136(v0)` @0x8001a59c hinter `jalr` @0x8001a588) und vom AUTO-Pass Pool 2 (@0x80043720-28) neu
+  gestempelt.
+
+### 2.3 Umsetzung
+Neue Dateien include/re15_wassersprung_r41.h, engine/src/wassersprung_r41.c:
+- re15_wassersprung_r41_landung(p, stempel, t_y): Gate stempel < p->y, 8 Spawns 0x06033000 (re15_esp_fx_spawn_rows,
+  Effekt 6 Sub 3 Skala 0x3000) bei (x, t_y, z) mit Gier rot_y + {512,2560,256,2304,0,2048,-256,1792}.
+- re15_wassersprung_r41_npc_schritt(e, a0, fuss, rdt): Bodentyp an +0x34/+0x3c, Zweig Bit 0x80 / Stempel (water_y),
+  Anker = Part-Weltmatrix * (0,100,0) (re15_wasser_r38_anker mit der NPC-Bank), Ton a0 + (Boden&0x7f) - 8 ueber
+  re15_audio_footstep; Folge-Plaetze (Sub 3, Flags 0x04) je Bild nachgefuehrt (re15_wassersprung_r41_bildanfang).
+- re15_wassersprung_r41_npc_takt(e, a0): Bildwort-Test (re15_actor_footstep auf der NPC-Bank, Bild des gezeichneten Takts).
+Haken: climb_common.c Phase 4 (t_y vor dem Bodenschreiben, Aufruf nach hit_react), enemy_ai_common.c
+re15_npc_sub_walk (Phase 1 a0 = sub==5, Phase 2 a0 = 0, je vor re15_npc_anim), wasser_r38.c (Getter
+re15_wasser_r38_stempel + Folge-Haken im Bildanfang), platform/pc/main.c RE15_PLAYER_POS 4. Wert = y (Band -y/1800).
+Riegel: unit_r41_wasser20b0_landung (2090: 8 Plaetze/Gier-Faecher/Anker, trocken 0), unit_r41_wasser20b0_npc (2000:
+Fleck 0x97 -> 0x06050D00 Ton 15, Stempel -> 0x06032000 Ton 13, trocken 0, Bildwort-Takt).

@@ -4681,11 +4681,14 @@ re_title:;
      * parity from the (fuzzy vgamepad) input-replay. Reusable parity tool (memory: parity-oracle). */
     {
         const char *pp = getenv("RE15_PLAYER_POS");
-        int px = 0, pz = 0, prot = 0;
-        if (pp && *pp && sscanf(pp, "%d,%d,%d", &px, &pz, &prot) >= 2) {
+        int px = 0, pz = 0, prot = 0, py = 0;
+        int pn = (pp && *pp) ? sscanf(pp, "%d,%d,%d,%d", &px, &pz, &prot, &py) : 0;
+        if (pn >= 2) {
             g_actors[RE15_ACTOR_SLOT_PLAYER].x     = px;
             g_actors[RE15_ACTOR_SLOT_PLAYER].z     = pz;
             g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = (int16_t)prot;
+            if (pn >= 4) { g_actors[RE15_ACTOR_SLOT_PLAYER].y = py;              /* Runde 41 Spur A: 4. Wert = y (Band = -y/1800) */
+                           g_actors[RE15_ACTOR_SLOT_PLAYER].floor = (uint8_t)(-py / 1800); }
             fprintf(stderr, "[parity] player teleported to (%d,%d) rot=%d\n", px, pz, prot);
         }
     }
