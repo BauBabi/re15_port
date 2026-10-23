@@ -29,7 +29,13 @@ Zeiten immer aus der Uhr (date), nie schätzen.
   erst NACH dem Release nach MASKS/ kopiert (re15_port muss waehrend des Laufs sauber sein).
 * 2026-10-23: STAGE3-6-Masken "ueberall Loecher" (Nutzer): GEMESSEN - keine eigenen _PRIcc.TIM, die Rechtecke des
   Generators (b8db7b2b) lesen den Original-SLD-Atlas, CLUT[0]=0x0000 (wirklich durchsichtig), 17,3 % der Rechteck-
-  Texel tragen Index 0 (3050 C1: 51 %). Vorschlag an den Nutzer offen.
+  Texel tragen Index 0 (3050 C1: 51 %). Nutzer 14:xx: "danach kannst du deine Masken schliessen in der naechsten
+  Version" -> Runde 41. Messungen fuer den Ansatz (71 Cuts mit Atlas):
+  - Hintergrund-Helligkeit (max Kanal) an Index-0-Stellen < 24: 50,3 % (deckende Stellen 19,4 %) - "dunkel = Loch"
+    trennt NICHT (die grosszuegigen Rechtecke enthalten auch echtes Aussen).
+  - eingeschlossene Loecher (binary_fill_holes): 18423, Groessen 1 px 8139, 2 px 3139, 3-4 3812, 5-8 1861, 9-16 870,
+    17-32 380, 33-64 150, 65-128 46, 129-256 21, >256 5 - KEINE Luecke in der Verteilung, eine Schwelle allein
+    trennt Pixelrauschen nicht von Gelaender-Zwischenraeumen. Ansatz erst an Bildern pruefen (vor/nach je Cut).
 
 * 2026-10-23 11:50: Release-Lauf 1 (10:32) im Linux-Schritt ROT: unit_r37_kistenregel_raumstart (Querbezug zu
   nahaufnahmen_r40: 1100/1101 Platz 2 ohne Geraet jetzt Ereignis 31 -> Erwartung angepasst 1207e1f5) und
