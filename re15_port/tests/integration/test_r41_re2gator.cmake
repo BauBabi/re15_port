@@ -32,8 +32,11 @@ file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
 set(WORKDIR "${_dir}")
 file(REMOVE "${_dir}/debug.log" "${_dir}/state.log" "${_dir}/gator_boss.log")
+# Umgebung wie test_r35_granate.cmake (_env_basis): Titelbild + Auto-Start (RE15_TITLE_SHOT_AF=2), sonst
+# bleibt die exe im Titel stehen und der Sprung @250 greift nie (gemessen 2026-10-23: 7 debug-Zeilen in 90 s).
 re15_start_spiel(_rv 300
-    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
+    SDL_ASSERT=always_ignore
     RE15_DEBUG_JUMP=2090@250 RE15_GB_TEST=1
     "RE15_GATOR_KANISTER=-6000,-15000"
     RE15_STATE_LOG=state.log
