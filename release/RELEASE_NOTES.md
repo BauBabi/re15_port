@@ -1,3 +1,37 @@
+# v0.8.28 - 2026-10-23
+
+Ihr Auftrag vom 23.10. (Runde 40): "Also, bei ROOM 1120/1121: 1, 3 und 4 koennen wir gerne zuordnen. 1070/1071 wuerde
+ich erst einmal so lassen."
+Geprueft unter Windows: alle Unit-, Eigenschafts- und Sonden-Riegel und die Spiel-Laeufe durch 1120/1121. Die volle
+Suite laeuft beim Bau im Linux-Container; ein roter Test haelt das Release an.
+
+## Was Sie merken
+
+**ROOM1120/1121 (Buero mit Aufzug, Leon und Elza): drei neue Untersuchungsstellen.** Die Texte standen schon in der
+Original-Texttabelle des Raums, das Skript hat sie aber nie gezeigt. Jetzt:
+- das bunte Gemaelde an der Wand gegenueber dem Schreibtisch (nicht das braune ueber dem Sofa): "A painting, titled:
+  The Music Lesson"
+- das Jalousiefenster an der Ostwand (mit den erleuchteten Fenstern dahinter): "Only the lights of the buildings are
+  visible."
+- der Schrank mit den Ordnern in der Ecke hinter dem Schreibtisch: "Various reports and case information. Nothing
+  useful."
+Wie alle Untersuchungstexte des Originals ohne Stimme. Telefon (Speichern), Aufzug und Tueren sind unveraendert.
+Die Vorschlaege fuer 1070/1071 bleiben wie gewuenscht liegen (Bilder: `analysis/untersuchungstexte_2026-10-23/`).
+
+**Ihre Frage zu ROOM11D0 (Hundenamen).** Vom Raetsel ist nur das Bild da: Kamera 12 ist die Nahaufnahme des
+Zwinger-Schaltpults mit den sechs Namen (BOCKER, COURIER, GUTS, ROCKEY, DOGMEAT, JoJo), aufgestellt direkt vor dem Pult.
+Keine Kamerazone und kein Skriptbefehl schaltet je auf diese Kamera; es gibt keinen Text mit den Namen, kein Flag und
+keinen Gegenstand dafuer. Das Pult sagt nur "A panel to control the cells of the dogs. It does not work.", und die Hunde
+kommen ueber die Falle im Lager (Munition aufnehmen -> Zwinger gehen auf). Geaendert ist daran nichts.
+
+## Technisch
+
+* Neues Modul `engine/src/untersuchen_r40.c` (+ `include/re15_untersuchen_r40.h`): Text-Plaetze 5/6/7 in der Satzform
+  des Telefon-Platzes (ROOM1120 main00 @0x00CF8), Orte aus den Kamerabildern zurueckgerechnet. Die RDTs bleiben
+  unveraendert.
+* Riegel `unit_r40_untersuchen1120`: beide Raeume, Aktion vor Bild/Fenster/Schrank oeffnet genau diese Texte; Telefon
+  bleibt Speicherpunkt; andere Raeume bekommen nichts.
+
 # v0.8.27 - 2026-10-19
 
 Ihr Auftrag vom 17.10. (Runde 39, 30 Punkte) mit den 17 Nachtraegen bis heute, darunter Elzas Panikphase nach Johns
