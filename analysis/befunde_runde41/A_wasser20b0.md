@@ -235,6 +235,10 @@ Fleck 0x97 -> 0x06050D00 Ton 15, Stempel -> 0x06032000 Ton 13, trocken 0, Bildwo
   Media-Capture per Pad-Hotkey lieferte nur 0,9 s (erster LB-Druck wird geschluckt); Bild-Serie der Fruehphase steht aus.
 - PSX-Ziel: RE15_ACTOR_MAX 36 kostet +28 KB BSS (PSX-Laufzeitbudget pruefen, wenn der PSX-Bau wieder gebaut wird).
 - NPC-Schritt-Ton (-8) ist mit dem Effekt portiert (dieselbe Funktion); hoerbar erst mit Clips, die Aufsetzer tragen.
+- Video-Vergleich (1.9): Ort und Takt der Spritzer stimmen, die Wolke des Ports ist 2-5x duenner/dunkler (Pixelzahl)
+  und der erste Schub an der Osttuer (Original Raumbild 6-9) erscheint im Port erst ab Bild 11-15; Zeitachse des
+  Originals durch Ladestaus gedehnt. Naechster Schritt: Helligkeit/Mischmodus der Effekt-0x0f-Sprites im PC-Zeichner
+  (fx_plattform_pc) gegen VRAM/CLUT des Originals (ShowVRAM, re15_ss) messen; Sprite-Groesse 0x4000/0x3000 pruefen.
 
 ## Fuer den Nutzer
 - Keine neuen Assets (Effekte 0x0f/6 liegen in den Raum-ESP-Banken der Original-RDTs), keine Sprachdateien, kein
@@ -281,3 +285,35 @@ Fleck 0x97 -> 0x06050D00 Ton 15, Stempel -> 0x06032000 Ton 13, trocken 0, Bildwo
 
 ## Stand (Abschluss 2026-10-23)
 Beide Nutzer-Punkte gebaut und gemessen; Entscheidungsfrage zu NPC-Schritten (Clip-5-Daten) im Abschnitt "Fuer den Nutzer".
+
+### 1.9 Original-VIDEO der Flut (Nachtrag 2 des Nutzers) und Bild-fuer-Bild-Vergleich mit dem Port
+Aufnahme: DuckStation Media Capture (settings.ini Backend = FFmpeg, Container = mp4 — Nachtrag 1), Hotkey
+ToggleMediaCapture auf SDL-0/LeftShoulder (vgamepad), Ablauf Debug-Menue -> Dreieck (Stage 2) -> Rechts x11 (0x20B)
+-> Quadrat (Laden) -> 0,8 s -> LB (Aufnahme an); Skript scratchpad/r41a_flut_capture.py (Fassung "Square -> LB";
+die Reihenfolge LB -> Square schluckt den Quadrat-Druck, das Video flut_c zeigte nur das Intro). Ergebnis:
+`A_belege/orig_20b0_flut_duckstation_2026-10-23-18-48-26.mp4` (19,98 s, 1196 Bilder bei 59,8 fps, 13,7 MB):
+0,0-4,7 s schwarz (Laden, blackdetect), dann Cut 11 (Leon an der Osttuer), Lauf mit der Spritzerwolke, Westtuer
+(Cut 7, Tuerblatt), Nahaufnahme (Cut 15), Leon frei an der Westtuer (Cut 6).
+Bildreihen (30 fps = ein Bild je Spieltakt, 320x240 PNG):
+- `A_belege/orig_20b0/oNNN.png` = Original, NNN = Raumbild ab dem ersten nicht-schwarzen Bild (Videobild 141 bei 30 fps).
+- `A_belege/port_20b0/pNNN.png` = Port (RE15_FRAMEDUMP=0-320/1, RE15_WINDOW_SCALE=1, Leon, Debug-Sprung 20B0),
+  NNN = Raumbild (g_engine.frame_count ab dem Laden).
+- `A_belege/kontaktbogen_20b0_orig_links_port_rechts.png` (alle 10 Bilder, Original links / Port rechts),
+  `A_belege/vergleich_20b0.tsv` (je Bild: Partikelpixel n, Schwerpunkt cx/cy, Bbox bw x bh, mittlere Helligkeit;
+  Partikelpixel = hell und gruenlich: G >= 150, G > R+8, G > B+8, R > 60 — Lampen weiss/gelb, Leon dunkelblau).
+  Werkzeug scratchpad/flut_vergleich.py (reines Python, raw RGB).
+Ergebnis (vergleich_20b0.tsv, Raumbild 0..110 = Cut 11..14 bis zur Westtuer):
+- ORT: die Spritzerwolke liegt in beiden Reihen an derselben Stelle hinter/neben Leon — Schwerpunkt Original
+  (102..114, 140..157) / Port (102..116, 137..160); Bbox Original 63..101 x 44..66 px, Port 52..85 x 35..55 px.
+- ZEITPUNKT/TAKT: Schuebe im ~10-11-Bild-Rhythmus (grid 0: 11 Takte je Phase) in beiden Reihen: Original F25-26,
+  F33-37, F44-48, F64, F75, F83-86, F94-97, F104-106; Port F24-26, F33-37, F44-48, F55-59, F69-70, F78-81, F90-92,
+  F99-103. Bis F48 bildgenau gleich, danach laeuft der Port 4-5 Bilder VOR dem Original (F78-81 vs F83-86, F90-92 vs
+  F94-97, F99-103 vs F104-106) — das Original-Video enthaelt Ladestaus (F16-23 sind acht identische Videobilder,
+  tf_5/tf_8 standen beim Laden bei Raumbild 1), die Zeitachse des Originals ist also um die Staus gedehnt.
+- ZAHL DER SPAWNS: Port fx.log = 8 Plaetze bei F7 (6 grid 0 + 2 grid 1), danach je Takt-0/3/6/9/12 wie disassembliert
+  (Tabellen 1.2); im Video sind die Einzelsprites in der Wolke nicht trennbar (Pixelzahl als Mass).
+- GROESSE/DICHTE: die gruenlich-hellen Pixel je Schub sind im Original 2-5x zahlreicher (Original 150..750 px je Bild,
+  z.B. F6-9 314/498/642/747 und F36 342, F48 463, F105 460; Port 30..145 px, F36 82, F48 83, F102 108). Der erste
+  Schub an der Osttuer (Original F6-9, 300-750 px) ist im Port erst ab F11-15 mit 33-145 px zu sehen. Die Bboxen sind
+  aehnlich gross, die Wolke des Ports ist also DUENNER/dunkler, nicht kleiner -> OFFEN (unten): Helligkeit/Mischung
+  der 0x0f-Sprites im PC-Zeichner (Zeile 0 Routine 10: Flags row[0x0e]=7, TPAGE|=row[0x16]=0, keine Additiv-Marke).
