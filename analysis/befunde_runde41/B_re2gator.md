@@ -10,6 +10,9 @@ Zeiten aus `date`. Jeder Schritt wird hier VOR dem Bau notiert.
 
 ## 0. Protokoll (neueste Eintraege oben)
 
+* 2026-10-23 19:xx: Modul, Haken, PC-Zeichner, Raumbank, Tests gebaut; unit_r41_re2gator 6/6 gruen, gezielte
+  Regression 35/35 (unit_gator_sweep nach Bank-Anpassung), Integration laeuft/siehe §5. Op 11/73 fuer den Putz
+  in re2_fx.c nachgezogen (FUN_8001e4b4 / FUN_8002387c).
 * 2026-10-23 17:5x: RE-Belege (Abschnitt 2) vollstaendig, Kanister-Modell + TIM nach shared_assets/RE2
   geschnitten. Naechster Schritt: Modul gator_re2_r41.c (Zonen-Dash, Hysterese, Ereignis-Schuetteln, Rumble,
   Putz, Kanister T2/R1, HURT-Selektor RE2, HP-Sockel), Haken in enemy_ai_boss_gator.c, PC-Zeichner, Tests.
@@ -20,8 +23,22 @@ Zeiten aus `date`. Jeder Schritt wird hier VOR dem Bau notiert.
   der Clips 2/3 ist), analysis/befunde_runde6_2026-09-12/gator-vollausbau.md (Zustandstabelle),
   befunde_runde8_2026-09-13/gator-schrei-schaden.md (SE-Zensus, ROOM40A0-Raumbank Saetze 14/15).
 
-## 1. Messung vorher
-(folgt: Clip-Nutzung des Port-Bosses in einem Testlauf, Schuetteln = keines, Kanister = keiner)
+## 1. Messung vorher (Stand master 116e8b0f, Code-Zensus + Messungen der Vorrunden)
+
+- Clips des Port-Bosses je Phase (enemy_ai_boss_gator.c master): LURK/CHASE/GUARD/CROSS immer Clip 0
+  (`e->motion = 0`), LUNGE Clip 4 (45 F), FLINCH Clip 10, FRESSEN 4 -> 5 -> 11, DIE Clip 7. Nie: 1 (Paddeln),
+  2/3 (Lunge-Anlauf/-Biss), 6 (Durchbruch), 8, 9 (Explosion). Gemessen in Runde 8 (gator-schrei-schaden.md
+  §1.4: "der Port faehrt nur die Clips 0/4/5/7/10/11") und Runde 16 (Stufe B2 vermessen, nicht eingebaut).
+- Verfolgung: Design-Vortrieb 56/F, BURST 100/F fuer 75 F (v0.7.72), kein Zonenbezug; Angriffs-SE 4 nur am
+  Lunge-Start (Phase 2 Runde 16). Kein Bildschirm-Schuetteln (Sce_shake_on 0x5C ist im Port ein 4-Byte-Stub,
+  scd_vm.c), kein Putz, kein Rumble aus dem Boss. HP 3000 (DESIGN), 10 %-Flinch + 6-Treffer-Flinch, Beschuss
+  toetet (GBP_DIE Clip 7).
+- Kanister: nicht vorhanden (kein Modell, keine Aufnahme, kein R1). Finisher: seit Runde 6/16 der RE2-Finisher
+  (Clip 4 -> 5 -> 11, Opfer-Paar 3, Anker-Paar skaliert) - unveraendert uebernommen (unit_gator_fress gruen).
+- Erster Lauf der neuen Riegel am NEUEN Code mit der falschen Test-Lage (Leon 5000 vor dem Gator): LUNGE +
+  Fressen statt Paddeln (Clip 11 im Protokoll) - das ist das heutige Biss-Gate (Maulpunkt 2600 + 2400) des
+  Nutzer-Designs, kein Fehler; die Riegel messen deshalb mit 6800 Abstand.
+
 
 ## 2. RE-Belege (alle Adressen selbst mit re2_disasm.py aus EM23_OVL_0000.BIN / info/re2leon/PSX.EXE gelesen)
 
@@ -138,16 +155,132 @@ Tausch 6->13/7->14, Sleep 170) `For 6: Gosub sub14` — sub13 startet sub11 bei 
   `0x800cfbd8 &= ~0x101` — Endzustand (Leiche haelt die Clip-9-Endpose).
 
 ## 3. Umsetzung
-(folgt)
 
-## 4. Messung nachher
-(folgt)
+### 3.1 Dateien
+- NEU `engine/src/gator_re2_r41.c` + `include/re15_gator_re2_r41.h` (alle Konstanten mit @0x, s. §2).
+- NEU `platform/pc/src/gator_re2_pc.c`: Kanister-Prop (KANISTER40A0.MD1/.TIM, TIM-Platz 53, Licht des aktiven
+  Cuts, RTPT/NCLIP ueber objpoly_r38 wie der Prop-Pass), Raumbank GATOR40A0.VBS (Laderpaar wie TUERSE), Init.
+- NEU `tools/r41_re2gator/gator40a0_se_cut.py` -> `shared_assets/RE2/GATOR40A0.VBS` (34296 B, md5
+  fc68d18c687fac207e52f9d0c71e71ed) + `engine/src/gen/r41_gator40a0_bank.inc`.
+- NEU `shared_assets/RE2/KANISTER40A0.MD1` (3444 B) / `.TIM` (33824 B) - byteidentisch aus ROOM40A0.RDT.
+- `enemy_ai_boss_gator.c` (Eigentuemer): GB_HP = 25300; Neuspawn-Reset -> re15_gr2_reset; Frame-Woerter ->
+  re15_gr2_frame_wort; Takt nach dem Treffer-Absorb; gb_absorb_hit = RE2-Selektor (R0/R4/R1) + Unverwundbarkeit
+  in FLINCH/TOD; LURK->INTRO (Clip 6 -> 3) wenn Bahn frei; CHASE: Zonen-Dash (Clip 2 -> 3), Clip-Wahl + Vortrieb
+  aus re15_gr2_chase_clip (BURST entfaellt, Block als `if (0)` dokumentiert); neue Phasen GBP_RE2_INTRO /
+  GBP_RE2_DASH / GBP_RE2_TOD; Spine-Haken addiert +0x22A/+0x228 (Bones 6/7); Biss -> Sperre 70; Sieger-Abzug
+  laesst die RE2-Phasen aus. gb_bahn_frei = Insel + Aussenwand-Klemmlinien (1600) fuer Clip-Bahnen.
+- `platform/pc/main.c` (3 kleine Haken "Runde 41 Spur B"): `re15_bg_blit(-dx,-dy)` mit dem Schuettel-Versatz,
+  `re15_gr2_pc_zeichnen` nach dem Prop-Pass, `re15_pc_gator_re2_init` bei den Port-Bank-Inits.
+- `engine/src/re2_fx.c`: Op 11 (FUN_8001e4b4, Skala/3000) und Op 73 (FUN_8002387c) - beide vom RE2-CORE-
+  Effekt 4 (Putz) benoetigt, Block "RUNDE 41 SPUR B" am Dateiende.
+- `tests/unit/probe_gator_sweep.c` (bestehender Riegel, MIT BELEG angepasst): laedt jetzt die EM23-Bank wie
+  probe_gator_fress.c, weil der Vortrieb der Verfolgung aus den Keyframe-Bytes 6..11 kommt (FUN_80015e7c);
+  ohne Bank gab es keinen Vortrieb (3286/3286 "end == start"). Mit Bank: gruen in 1,9 s.
+
+### 3.2 Was woher kommt (RE2 / NUTZER-VORGABE / PORT-WAHL)
+- RE2 (byte-belegt, §2): HP-Sockel, Hysterese + Blend-Zaehler, authored Vortrieb je Bild, Dash-Clips + SE 4,
+  Intro-Clips + Sperre 110, Biss-Sperre 70, Ereignis-Maschine (Rumble-Rampen, Bits 4/8 fuer 5/10 Bilder),
+  Schuettel-Tabellen + Hintergrund-DR_MOVE, HURT-Selektor (R4-Wahrscheinlichkeit 1/4, Sperre 120..183,
+  Unverwundbarkeit, Clip 10 Blend 3; R0 nur SE 5), Kanister-Fenster/Vorhalt/Stufen/Ease-Werte/Lokallage
+  (1750,-210)/liegende Drehung (0x690,0,0xfc00), R1 komplett (SE 4, Raum-Satz 15, Rumble (8,3)+(50,255->0),
+  Ereignis 1, Kiefer-Farbe 0x38/0x20/0x20 + az -10, Fontaenen 64 Ticks, Spritzring, Clip 9, Vortrieb -500
+  (+40, -2/F), Ziel-Yaw +160 mit 75/F, Entfernen nach 9 P1-Bildern, Endzustand Leiche), Putz-Emitter (Ids,
+  Typen, Params, Richtungen, Hoehen, Pausen, 6 Durchlaeufe).
+- NUTZER-VORGABE (bleibt): Klettern ueber die Rampe (gb_cross_*), GUARD-Belagerung, Wegfindung im Becken,
+  Biss-/Schadens-Mechanik (Clip-4-Schnapp, Fenster 6..34, 50 Schaden, Knockdown, FRESSEN bei hp<0),
+  Render-Scale 2/3 (GB_SCALE_Q12; alle Rig-Versaetze mit s skaliert).
+- PORT-WAHL (keine RE2-Adresse, je begruendet im Code): Zonenlinien = die drei sce-8-Wasserzonen des RDT statt
+  x<-17877/z>=-7322; Dash/Intro nur bei freier Bahn (gb_bahn_frei); kein `yaw += 0x400` nach Clip 3 (Korridor-
+  Ecke; Root-Yaw der Clips 2/3 endet bei 0, EMR selbst geparst); Putz-Bursts beim Dash-Start um Leon (RE2:
+  Kamera 9 am Korridorende, Hoehen -2000..-4400 ueber dem Steg = ueber Leons Watt-Ebene y=0); Kanister-
+  Aufnahme laengs der Blickachse mit seitlicher Koerperbreite (RE2: Korridor); R1 auch aus dem Schwimm-Sub
+  (RE2-Ausnahme +0x230 == 1 @0x80101f04 bewusst weggelassen - Nutzer: "sobald er den Kanister im Maul hat");
+  Kanister-Schwimmhoehe y = -267 (Radius aus dem MD1) auf Leons Ebene; Kanister 1x gezeichnet (Leons Welt).
+- Entfallen: BURST-Design (RE2s Paddeln ist die Beschleunigung), 10 %-/6-Treffer-Flinch (RE2-Kadenz), Attrition-
+  Tod durch Beschuss (Sockel); GBP_DIE (Clip 7) bleibt fuer e->state == 3 (GB_TEST=3 / Explosionen).
+
+### 3.3 Frame-Latenz des Frame-Wort-Blocks
+Der Boss-Tick liest das Frame-Wort des Bildes, das der VORIGE Tick gesetzt hat (Port-Struktur, gilt seit Runde 8
+fuer alle Frame-Flag-SEs). RE2 verarbeitet das Wort im selben Tick nach dem Clip-Vorschub (@0x80100438 nach dem
+Dispatch). Folge: Stroke-SE/Ereignis ein Bild spaeter als in RE2; gemessen in unit_r41_re2gator_dash (Bit 4 ab
++4 statt +3 relativ zum Wort-Bild).
+
+## 4. Messung nachher (Riegel, Build re15_port/build, 2026-10-23)
+
+| Messung | Wert |
+|---|---|
+| HP nach INIT | 25300 (RE2 INIT) |
+| Verfolgung, Leon 6800 fern, Zone gleich | Clip 1 in 60/60 Bildern, Wrap nach 26 Bildern, Vortrieb = off[f]-off[f-1] x 2731/4096 in 30/30 Bildern (+-2) |
+| Biss-Sperre 70 | Clip 0 in 70/70 Bildern, danach Clip 1 |
+| Zonenwechsel in Leons Zone | SE 4 am Start, Clip 2 150 Bilder, Clip 3 150 Bilder, dann CHASE (Dash 45..345) |
+| Stroke-Wort Clip 2 f50 | Bit 4 (Modus 2) 5 Bilder ab +4, Bit 8 (Modus 1) 10 Bilder +9..+18, Rumble-Ring belegt, Versatz 0..3 px |
+| Intro (Aggro, Bahn frei) | Clip 6 125 Bilder, Clip 3 150 Bilder, Sperre 110 -> Clip 0 110/110, danach Clip 1 |
+| 200 Pistolentreffer (je 30, RE1.5-Zeile) | HP 25300 -> lebt (kein Tod), geschwaecht ab Treffer 11, R4 (SE 0 + Clip 10) 48x mit Abstand >= 4 Treffer-Takte (Sperre 120..183 Bilder), R0 (SE 5) sonst, nie beides |
+| Kanister 8800 x 2/3 vor der Schnauze | Stufe 1 sofort, Stufe 2 13 Bilder (Kopf-az 204, Kiefer-az -272), 3/4 je 6, 5/6 je 7, getragen ab Bild 40 (Kopf 34, Kiefer -161 = Ease-Summen), Lage folgt Part 6 |
+| Treffer beim Tragen | R1: SE 4, Raum-Satz 15, Rumble beide Ringe, Clip 9, Stufe 13, Kanister 10 Bilder sichtbar (P0 + 9), Leiche (Clip-9-Endpose), weitere Treffer wirkungslos |
+| Dash-Start | 54 Putz-Partikel (6 x 9) ueber re2fx, 0 unbekannte Ops (Op 0: 918, 11: 54, 73: 864 Rufe) |
+| unit_gator_sweep (3286 Paare) | gruen, 1,9 s (vorher ohne Bank 3286 Blocker = kein Vortrieb) |
+| unit_gator_fress (RE2-Finisher) | gruen (unveraendert) |
+
+Die exe-Messung (integration_r41_re2gator: ROOM2090 per Sprung, GB_TEST=1, RE15_GATOR_KANISTER=-6000,-15000,
+1300 Bilder, Zustandslog): siehe §5.
 
 ## 5. Tests
-(folgt)
+Neu (tests/unit/probes/r41_re2gator.cmake): unit_r41_re2gator_{clips,dash,intro,sockel,kanister,putz},
+integration_r41_re2gator (tests/integration/test_r41_re2gator.cmake, eigene exe-Kopie re15_pc_r41b_*.exe).
+Angepasst mit Beleg: unit_gator_sweep (EM23-Bank laden, §3.1).
 
-## 6. OFFEN
-(folgt)
+Gezielt gelaufen (keine volle Suite):
+- `ctest -R "unit_r41_re2gator"`: 100% tests passed, 0 tests failed out of 6
+- `ctest -R "^unit_(alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|r34_re2fx|r35_granate|r36_granate|r30_granate|r38_wasser|r38_wasserzombie|montage_fx|r38_montage|r35_cut1150_montage)"`:
+  97% tests passed, 1 tests failed out of 35 (unit_gator_sweep, VOR der Bank-Anpassung) -> danach
+  `ctest -R "^unit_gator_sweep$"`: 100% tests passed, 0 tests failed out of 1
+- Integration (exe): siehe Nachtrag unten.
+
+## 6. OFFEN (benannt, nicht geraten)
+
+- Part-7-Felder nach FUN_80104318 (Flags |= 0x4a, +0x98 = yaw+0x800, +0x9a = -10, +0xa0 = 0x8000, +0xa4 = 0):
+  die Renderer-Semantik der Part-Flags 0x4a im RE2-Modellzeichner ist nicht RE'd. Port: Kiefer-az -10 (byte-
+  belegt), Farbe 0x38/0x20/0x20 als Getter (re15_gr2_kiefer_farbe) — der NPC-Zeichner (main.c) faerbt den
+  Kiefer NOCH NICHT ein (kein Haken gesetzt, um main.c nicht weiter zu beruehren). Der "geplatzte Kiefer" ist im
+  Port: Clip-9-Endpose + Blutfontaenen (Effekte 0x00/0x08 an Part 7/6, 64 Ticks) + Kiefer-Versatz.
+- Raum-Effekt 0x26 (ROOM40A0-ESP, erster Fontaenen-Tick `0x26032000` @0x80103f4c-6c) liegt nicht im Port
+  (ROOM2090 hat eine andere ESP-Liste): der Spawn laeuft gegen die CORE-Bank ins Leere (re2fx_spawn -1).
+  Die CORE-Effekte 0x00/0x08/0x03 der Ticks 2-8 und der Spritzring (Effekt 3) laufen. Wer den 0x26 will,
+  schneidet ihn aus ROOM40A0.RDT (ESPid-Liste @0x59CC, EFF @0x65E4, TIM @0x221FC) nach shared_assets/RE2
+  und registriert ihn ueber re2fx_register_raum.
+- Frame-Wort-Latenz 1 Bild (§3.3) — Port-Struktur seit Runde 8, nicht in dieser Spur geaendert.
+- RE2 schneidet im Intro/R1 die Kamera um (Cut 0/1, 5, 6/13) und friert den Spieler (0x800cfbd8 |= 0x110):
+  Pool-Kampf ohne Kameraskript, Leon behaelt die Kontrolle (PORT-WAHL).
+- Schaden je Waffe: der Port rechnet weiter die RE1.5-Zeile (Handgun 30) — RE2 (0x800A4A28: 17) braeuchte
+  eine RE1.5->RE2-Waffenzuordnung (nicht vorhanden). Folge: "geschwaecht" nach 10 statt 18 Pistolentreffern.
+- Die RE2-Hysterese-Schwellen 0x65/0x5a (Wurzel-Distanz < 101/90) sind im Becken praktisch "immer Paddeln"
+  ausser in der Biss-Sperre — das IST RE2 (Wurzel liegt ~9000 hinter der Schnauze), aber der Gator ist damit
+  mit 149/Bild (223 x 2/3) deutlich schneller als das fruehere Design 56/100. Entscheidungsfrage §7.
+- GUARD (Belagerung) und CROSS (Klettern) spielen weiter Clip 0 (Nutzer-Design unveraendert).
+- Kein Original-Test mit DuckStation moeglich (info/re2leon ist ein Dateibaum, kein RE2-Image).
 
 ## 7. Fuer den Nutzer
-(folgt)
+
+Neue Assets (Paket-Gate, alle in `re15_port/shared_assets/RE2/`):
+- `KANISTER40A0.MD1` (3444 B) + `KANISTER40A0.TIM` (33824 B): der RE2-Gaskanister (ROOM40A0 Modell 1).
+- `GATOR40A0.VBS` (34296 B): RE2-Raumbrueller (Satz 0 = Tod/R2, Satz 1 = Explosion/R1) aus ROOM40A0.
+Keine neuen Sprachdateien.
+
+Bedienung / Testhaken:
+- `RE15_GATOR_KANISTER=x,z[,y]` legt den Kanister ins Wasser von ROOM2090 (y Standard -267 = halb
+  eingetaucht auf Leons Ebene). Spur G setzt dieselbe Funktion (`re15_gr2_kanister_setzen`) aus der Szene.
+- API fuer Spur F/G: `re15_gr2_geschwaecht()` (HP < 25000 = RE2-Schwaeche), `re15_gr2_treffer()`,
+  `re15_gr2_traegt()`, `re15_gr2_tot()` (Leiche nach der Explosion), `re15_gr2_intro_start/_tick`
+  (Durchbruch Clip 6 + Schnapper Clip 3 fuer "springt aus dem Wasser").
+- `gator_boss.log` traegt Zeilen "RE2 INTRO/DASH/KANISTER/R1 ...".
+
+Entscheidungsfragen:
+1. Tempo: die Verfolgung faehrt jetzt die authored RE2-Geschwindigkeiten (Schwimmen 24,5/Bild in der Biss-
+   Sperre, Paddeln ~149/Bild) statt 56/100. Das ist RE2-treu ("an gleichen Stellen beschleunigt" = Paddeln,
+   sobald der Gator weiter als 101 Einheiten weg ist, und die Zonen-Dashes), macht den Gator im Becken aber
+   deutlich schneller. Soll das so bleiben, oder soll das Paddeln auf den frueheren Design-Wert gedeckelt werden?
+2. Beschuss toetet nicht mehr (RE2-Sockel 25300): der Tod kommt nur ueber den Kanister (Spur G). Die
+   Grossreaktion (SE 0 + Clip 10) kommt mit 25 % je Treffer und 2-3 s Sperre wie in RE2 statt alle 6 Treffer.
+3. Putz faellt beim Dash-Start um Leon (RE2: einmalig am Korridorende). Soll er zusaetzlich bei jedem starken
+   Schuetteln (Bit 4) fallen?

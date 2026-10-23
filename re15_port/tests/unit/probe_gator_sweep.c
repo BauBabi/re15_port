@@ -37,6 +37,7 @@
 #include "re15_collision.h"
 #include "re15_inventory.h"
 #include "re15_boss_gator.h"
+#include "re2_ems.h"           /* Runde 41 Spur B: EM23-Bank (authored Wurzelgeschwindigkeit der Verfolgung) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -68,6 +69,25 @@ static int in_insel(int32_t x, int32_t z, int32_t m)
     return 0;
 }
 
+/* Runde 41 Spur B: Die Verfolgung faehrt jetzt die AUTHORED Wurzelgeschwindigkeit der RE2-Clips 0/1
+ * (FUN_80015e7c, Differenz der Keyframe-Bytes 6..11) statt einer Design-Konstanten - ohne die
+ * EM23-Bank gibt es keinen Vortrieb (und kein Bild). Laden wie probe_gator_fress.c. */
+static int load_re2_bank(uint8_t type)
+{
+    static uint8_t *s_ems = NULL; static long s_ems_sz = 0;
+    if (!s_ems) { size_t n = 0;
+        s_ems = slurp(RE15_ASSET_PSX_DIR "/../RE2/CDEMD0.EMS", &n);
+        s_ems_sz = (long)n; }
+    if (!s_ems) return 0;
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
+    if (eb && eb->ok) return 1;
+    if (!eb) eb = re15_enemy_alloc(type);
+    if (!eb) return 0;
+    if (re2_ems_load_bank(s_ems, (size_t)s_ems_sz, (int)type, eb, NULL) == 0) {
+        eb->buf = NULL; eb->ok = 1; return 1;
+    }
+    eb->type = 0; return 0;
+}
 typedef struct { int32_t x, z, y; const char *wo; } leon_pos_t;
 
 static int g_nur_gx, g_nur_gz, g_nur_li = -1;   /* Einzelfall-Modus (argv) */
@@ -98,6 +118,7 @@ int main(int argc, char **argv)
     re15_player_cmd_reset();
     re15_damage_seed_rng(0x2545f491u);
     g_current_room_id = 0x2090;
+    if (!load_re2_bank(0x23u)) { printf("FAIL: RE2-EM23-Bank nicht ladbar (CDEMD0.EMS)\n"); return 1; }   /* Runde 41 Spur B */
 
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 

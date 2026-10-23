@@ -879,6 +879,7 @@ static void op_39(void);
 static void op_84(void);
 /* Runde 41 Spur B (Putz der RE2-CORE00.ESP id 4, ROOM40A0 sub14), definiert am Dateiende. */
 static void op_11(void);
+static void op_73(void);
 
 static void op_rufen(unsigned op)
 {
@@ -898,6 +899,7 @@ static void op_rufen(unsigned op)
     case 70: op_70(); break;    /* 0x80023204  Runde 35 Spur B */
     case 5:  op_5();  break;    /* 0x8001df90 (Runde 35 Spur M) */
     case 11: op_11(); break;    /* 0x8001e4b4 (Runde 41 Spur B) */
+    case 73: op_73(); break;    /* 0x8002387c (Runde 41 Spur B) */
     case 16: op_16(); break;    /* 0x8001f128 (Runde 35 Spur M) */
     case 19: op_19(); break;    /* 0x8001f2c0 */
     case 25: op_25(); break;    /* 0x8001fa08 */
@@ -1572,4 +1574,19 @@ static void op_11(void)
         b[o] = (uint8_t)(int8_t)(((int32_t)(int8_t)b[o] * s) / 3000);
     for (int o = 0x0C; o <= 0x10; o += 2)              /* @0x8001e590-62c */
         wr16(b, o, (uint16_t)(int16_t)(((int32_t)rds16(b, o) * s) / 3000));
+}
+
+/* Op 73 = FUN_8002387c (Tabelle @0x8009d99c): nur wenn Anim-Index +0x21 == step[2] (`lbu v1,33 /
+ * lbu v0,2 / bne` @0x80023888-94): step[9] := -1 (@0x80023898-9c), step[8] := -3 (@0x800238a8-ac),
+ * step[0] := 0 (`sb zero,0` @0x800238c0 = Op A aus), step[0xC] := step[0xC] / 2 (sll/sra 16,
+ * srl 31, addu, sra 1 @0x800238c4-d8 = vorzeichenbehaftet mit Abschneiden). */
+static void op_73(void)
+{
+    uint8_t *b = cur();
+    if (b[0x21] != b[0x02]) return;
+    b[0x09] = 0xFF;
+    b[0x08] = 0xFD;
+    int16_t v = rds16(b, 0x0C);
+    b[0x00] = 0;
+    wr16(b, 0x0C, (uint16_t)(int16_t)(v / 2));
 }
