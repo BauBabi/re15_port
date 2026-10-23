@@ -20,9 +20,17 @@
 { 0x1141, 0x1140 },   /* RDT verschieden, SCA gleich */
 { 0x1161, 0x1160 },   /* RDT bytegleich, SCA gleich */
 { 0x1181, 0x1180 },   /* RDT bytegleich, SCA gleich */
+{ 0x11A1, 0x11A0 },   /* RDT verschieden, SCA gleich */
 { 0x11B1, 0x11B0 },   /* RDT verschieden, SCA gleich */
 { 0x11D1, 0x11D0 },   /* RDT bytegleich, SCA gleich */
 { 0x11F1, 0x11F0 },   /* RDT bytegleich, SCA gleich */
 { 0x1221, 0x1220 },   /* RDT bytegleich, SCA gleich */
 { 0x1231, 0x1230 },   /* RDT bytegleich, SCA gleich */
+{ 0x2011, 0x2010 },   /* RDT verschieden, SCA gleich */
+{ 0x2021, 0x2020 },   /* RDT verschieden, SCA gleich */
+{ 0x2031, 0x2030 },   /* RDT bytegleich, SCA gleich */
+{ 0x2041, 0x2040 },   /* RDT bytegleich, SCA gleich */
+{ 0x2051, 0x2050 },   /* RDT bytegleich, SCA gleich */
+{ 0x2081, 0x2080 },   /* RDT bytegleich, SCA gleich */
 { 0x2091, 0x2090 },   /* RDT bytegleich, SCA gleich */
+{ 0x20A1, 0x20A0 },   /* RDT bytegleich, SCA gleich */
