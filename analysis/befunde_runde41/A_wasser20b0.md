@@ -129,3 +129,21 @@ Tests: tests/unit/test_r41_wasser20b0.c (bytes = Walker ueber STAGE2.BIN gegen d
 Teil-0-Matrix; sequencer = Takte/Phasen/Codes/Anker; raum = 20B0 + 20B1 am VM mit Drift-Pins ts_10/Umbruch/ts_14),
 probes/r41_wasser20b0.cmake, tests/integration/test_r41_wasser20b0.cmake (echte exe Leon 20B0 + Elza 20B1:
 fx.log id=15, Cut 7/6 = sub05, Spieler frei, kein "ZEICHNE Typ 0x24").
+
+### 1.5 Nachmessung Port (Stand nach den Haken) und zwei Korrekturen
+- Integrationslauf 1 (Leon 20B0, Debug-Sprung): fx.log 1844 Zeilen `id=15 sub=0|7` (Partikel 0x0f werden gezeichnet),
+  `Cut_chg(7)` F~150 und `Cut_chg(6)` F228 (sub05 lief: Westtuer obj 3 fliegt, Set (3,0xEB)), F242 "letterbox
+  closed -> gameplay (player_mode=0)" = Spieler frei (Original: Zustand 1 zwischen ts_12 Bild 181 und ts_14 Bild 233).
+- Korrektur A (Zeichenmaske): enemy_dbg meldete "ZEICHNE Typ 0x24" in den Bildern 0..2 des Raums (Lauf
+  RE15_EXIT_AT=3#20b0) — der Port zeichnet das frisch gespawnte EM024 VOR seinem INIT-Takt; das Original setzt
+  die Maske im INIT des ERSTEN Entity-Takts (@0x8010efe4, Takt vor dem Zeichnen @0x8001ce04 < @0x8001ce34;
+  Original-RAM tf_5/tf_8 Bild 1: Part-Wort 0). Port: no_draw schon beim Spawn (scd_vm.c op_sce_em_set, 1 Zeile).
+- Korrektur B (Aktor-Plaetze): unit raum zeigte nur 20 EM024 (RE15_ACTOR_MAX 21): die Saetze 20..34 fielen weg,
+  darunter der zweite grid-1-Emitter (Satz 0x1A, z=-5550) = die halbe Partikel-Kaskade. Original-RAM: alle 35 leben
+  (DAT_800aca4e = 35, Slot 26 driftet und spawnt: Platz off (400,1800,-600) bei z=-6150). Die Runde-36-Notiz "Slots
+  20..34 hinter dem 20er-Feld verworfen" (test_r36_gegnerzahl.c) ist damit widerlegt: `sltiu 0x14` @0x800372b4 ist die
+  Schleife von FUN_80037250, Sce_em_set legt ohne Grenzpruefung ab (@0x800420dc/@0x80042118) und der Entity-Takt
+  fuehrt alle. RE15_ACTOR_MAX := 36 (re15_actor.h; sizeof(re15_actor_t) = 1888 B -> +28 KB). Zensus aller RDTs:
+  nur 20B0/20B1 (35) ueberschreiten 20 ungedeckelt; 1040/1041 (40) und 1030/1031 (20) haben Save(0x12)-Deckel 5/6.
+  test_r36_gegnerzahl.c: Masken uint64_t, Erwartung 35 Aktoren (Belegkommentar im Kopf).
+- Riegel: unit_r41_wasser20b0_{bytes,modell,sequencer,raum} + unit_r36_gegnerzahl_* (7) = 11/11 gruen.
