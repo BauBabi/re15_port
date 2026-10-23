@@ -317,3 +317,158 @@ Ergebnis (vergleich_20b0.tsv, Raumbild 0..110 = Cut 11..14 bis zur Westtuer):
   Schub an der Osttuer (Original F6-9, 300-750 px) ist im Port erst ab F11-15 mit 33-145 px zu sehen. Die Bboxen sind
   aehnlich gross, die Wolke des Ports ist also DUENNER/dunkler, nicht kleiner -> OFFEN (unten): Helligkeit/Mischung
   der 0x0f-Sprites im PC-Zeichner (Zeile 0 Routine 10: Flags row[0x0e]=7, TPAGE|=row[0x16]=0, keine Additiv-Marke).
+
+## Nachbesserung 1 (nach Abnahme 0, 2026-10-23 22:30 ff.)
+
+Massstab: `A_abnahme_0.md` §12 (M1..M7). Je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher.
+Belege dieser Nachbesserung: `A_belege/nb1/` (Vergleichsbilder, ESP-Pool-Dumps mit korrektem Platz-Stride, OWN-Bank-Dump,
+Kennlinie Framebuffer->Video). Werkzeuge im Scratch (nb1/): pool_dump.py (Stride 0x84), fbvgl.py (exakter 15-bit-Framebuffer aus
+dem Savestate gegen Port-PPM), sonde_npc_own.c (OWN-Bank-Dump), edit_tests.py.
+
+### N1.0 Ueberblick
+| Mangel | Ergebnis |
+|---|---|
+| M1 Wolkendichte 5-30x | WIDERLEGT durch Messung am exakten Framebuffer: der Port zeichnet dieselben opaken CLUT-Texel wie das Original (Histogramm je CLUT-Index +-10 %); die Abnahme mass die Tiefpass-Glaettung der Videokette. Restabweichungen der Szene gemessen und als OFFEN benannt (1 Bild EM024-INIT, 1 Bild Sprites beim Kamerawechsel, RVD 12->13 2-3 Bilder). |
+| M2 NPC-Schritte | BEHOBEN: der Bau-Stand las die falsche Bank. Die OWN-Bank (+0x170/+0x174), die die Geh-Subs spielen, TRAEGT Aufsetzer (Clip 5 Bilder 7/22 bzw. 8/22) -> byte-true fuer 0x40/0x42/0x45/0x49/0x4d; PORT-WAHL-Regel nur fuer 0x4b (keine Marke in keiner Bank). Beide Archive. |
+| M3 Szenen-Sperre WATER | BEHOBEN: ENV-Stempel (sce 7/8) ohne in_cinematic-Gate (aot_common.c), Riegel `stempel`. |
+| M4 Letterbox | WIDERLEGT: 24 px sind byte-true (POLY_F4 @0x80072ecc/@0x80072efc, ts_12-Framebuffer 24 schwarze Zeilen); das Video ist der Overscan-Ausschnitt (224 Zeilen auf 240 gestreckt) -> 16/17 px; die Balken F5-F14 des Ports sind die FUN_80021a0c-Rampe des Vor-Sprung-Zustands (ROOM1240 Set(1,27)). |
+| M5 Riegel | GEBAUT: `unit_r41_wasser20b0_npc` (Zensus beider Archive + Regelpruefung), `_npc_wasser` (echter Geh-Sub je Typ durch den Wasserfleck), `_stempel`; `integration_r41_wasser20b0_npc` (2000-Szene Marvin/Ada an der exe; Landung ueber die Tuer 20A0->2090 Leon und 20A1->2091 Elza). |
+| M6 main.c | BLEIBT (begruendet, N1.6): Schatten-Bedingung ist noetig; der 4. Wert von RE15_PLAYER_POS traegt den Tuer-Landungsriegel (Band 2 in 20A0). |
+| M7 Hundemaske | BEHOBEN: uint64_t. PSX-BSS weiter OFFEN. |
+
+### N1.1 M1 — Wolkendichte: Ursache Videokette, nicht Zeichner
+**Korrektur des Werkzeugs.** Der ESP-Platz ist 0x84 Byte gross (FUN_80053240: `pbVar3 = pbVar3 + -0x84`, Schleife von 0x800aa538
+abwaerts bis 0x800a73b8 = 12672 B = 96 Plaetze; re15_esp.c "s2 = s0+12672"). em024_dump.py (Dossier 1.3) las mit Stride 0x108 nur
+jeden ZWEITEN Platz — "3..14 Plaetze" waren 6..28. Neuer Dump `nb1/esp_pool_*.txt`:
+- tf_7 (Takt 48, +0x8c = 168): **22** aktive 0x0f-Plaetze: 16 x sub 0 = alle Spawns der grid-1-Phase 2 seit Takt 37 (Takt 0
+  (200,1800,-1200)/0x2000, Takt 3 (400,1800,-600)+(400,2400,-1200)/0x2600, Takt 6 (600,1800,0)/0x2000+(600,2400,-600)/0x3000+
+  (600,3000,-1200)/0x2c00, Takt 9 (800,600,0)+(800,3000,-600)/0x3200) je BEIDER grid-1-Emitter (+0x74 = 801237fc / 80124a8c),
+  dazu 6 x sub 7 (grid 0, Phase 0, Takt 44: (-1000/-2000, 2700/1300, ...)/0x4000, 0x3000). Alle Plaetze: fl=07, defW=defH=0x1000,
+  tpage 0x000c, clut 0x7b12, +0x6e (Anim-Index) = Alter + 3, +0x6f = 1.
+- tf_8 / tf_5 (Takt 1): genau die 8 Plaetze des Ports bei F7 (6 x sub 7 + 2 x sub 0 (200,1800,0)/0x2000 a1=-200), Anim-Index 4 =
+  Port `frame=4`. Der Spawn-Satz des Ports ist damit byte-gleich (Lage, Skala, a1, Alter).
+**Textur und Palette sind byte-gleich.** Der Installer FUN_800194f8 stapelt die Effekt-TIMs in VRAM-Spalten von `sVar10 = 0xf`
+(`<< 6` = x 960) abwaerts, Umbruch bei y + h > 256 (`0x100 <`), die CLUTs ab (0x120, 0x1e0) = (288,480) kumuliert (`uVar9 +=
+crect->h`); die Koordinaten-Saetze werden um den y-Versatz gepatcht (`*pcVar4 += uVar8`). Fuer ROOM20B0 (TIM-Hoehen 72/128/32/
+104/184/88/96) liegt 0x0f bei VRAM **(768, 88)**: Vergleich mit der Datei-TIM @0x21e34 = **6144/6144** Halbworte gleich; die CLUT
+bei (288, 492) (clut 0x7b12 = x 0x12*16, y 0x1ec) = Datei-Zeile 0 (16/16: 0000 e39a d737 ced4 c272 ba0f adac a56a 9d28 9907 90c5
+8ca4 8883 8462 8041 8020). Der Port laedt dieselbe TIM in Slot 42 (Zeile 0).
+**Zeichnen ist opak und unmoduliert.** FUN_800534c4: Primitiv-Code = 0x2C + ((flags >> 3) & 2) (`local_38 = *(param_2+0x6c) >> 3 & 2`,
+`+7 = (char)r0[4] + ','`); flags = 7 -> 0x2C = POLY_FT4 ohne ABE. Im exakten 15-bit-Framebuffer von tf_7 (oberer Puffer = Cut 12,
+Takt 47) sind in der Wolkenregion (x 60..200, y 70..170) **3857 Pixel = 23 %** exakt CLUT-Farben (Indizes 3..12: (32,41,24) 906x,
+(57,65,49) 826x, (41,49,32) 673x, (65,74,57) 393x, (82,90,74) 308x, (98,106,90) 236x), und nur **21** Pixel erfuellen das
+Abnahme-Kriterium "gruenlich G>=100" (5 bei G>=150). Die Groessenformel des Ports (main.c pc_draw_effects) ist dieselbe wie im
+Decompile (param_5 = S * scale16 * camf, / (sz<<4), w16 = defW * step, stepX = w16 / S, Zellen (u,v)..(u+S,v+S)); camf = fov
+26684 >> 7 = 208 fuer ALLE Cuts 11..15 (RDT+0x60+cut*0x20+2, tf_7 DAT_800b0fe4=13 -> 208).
+**Port = Original am exakten Framebuffer, gleicher Takt, gleicher Cut.** Kamera per RE15_FORCE_CUT=12 gehalten, Port F52 (EM024-
+Takt 46, Spieler-Takt 47) gegen tf_7 oben (Takt 47, Anzeige = Zustand des Vortakts, s.u.), Region x 60..200 / y 70..170,
+CLUT-Index-Histogramm (Port-Farben sind die CLUT-Werte in der `<<3`-Abbildung, Original in `*255/31`):
+```
+Index:   3    4    5    6    7    8    9   10   11   12
+Orig :   5   21   40  240  321  432  925  779 1079    1   (3857 CLUT-Pixel)
+Port :   5   22   57  242  336  470  910  809  743    1   (3597 CLUT-Pixel)
+```
+(`nb1/vgl_tf7_oben_F52cut12.png`: Original links, Port rechts — dieselbe Wolke an derselben Stelle mit derselben Loecherstruktur.)
+**Opak-Emulation der Port-Zeichenliste.** Rasterung der 12 Sprites von F11 (Zellen nearest, Index 0 transparent) ergibt 7825
+deckende Pixel, davon **90** "gruenlich hell" (Kriterium G > R+8 schliesst alle CLUT-Indizes >= 4 aus; Indizes 1..3 kommen in der
+Textur nur 87-mal unter 24576 Texeln vor) — der Port zeigt gemessen 33..145 (`nb1/emu_F11.png`, `nb1/port_fx_F11.txt`). Mehr als
+~100 solcher Pixel kann diese Textur opak nicht liefern.
+**Kennlinie Framebuffer -> Video** (`nb1/kennlinie_fb_video.txt`, tf_7 oben gegen o045): Hintergrund (rechte Wand) 1:1 (FB G 32..47
+-> Video 35.0, 96..111 -> 102.0), die Wolkentexel dagegen gemittelt: FB (32,41,24) -> Video (70,75,63), (57,65,49) -> (73,79,67),
+(98,106,90) -> (84,91,78). Das 1-px-Muster aus hellen und dunklen Texeln wird von BilinearSmooth-Skalierung 320->640 (settings.ini
+[Display] Scaling = BilinearSmooth), yuv420p-Chroma-Unterabtastung, VP9 6000 kbit/s und der Rueckskalierung auf 320 tiefpassgefiltert:
+Region FB 21 gruenlich (G>=100) vs Video 1477. Der Abnahme-Massstab (Pixelzahl G>=100/150 im Video) mass also die Kodierung.
+Bild-fuer-Bild identisch ist der Port am exakten Framebuffer; das Video kann es prinzipiell nicht sein.
+**Zeitachsen (gemessen an der exe mit RE15_STATE_LOG/RE15_WAFFEN_LOG/Framedumps, `nb1/m1b..m1e`).** Nach dem Debug-Sprung: F1..F5
+sind schwarz und der Spielschritt laeuft nicht (keine w.log-Zeilen F1..F5, fx=0), F6 = erstes Bild (EM024-INIT), F7 = EM024-Takt 1
+(frame=4 wie tf_8), Takt 4 bei F10, Takt 7 bei F13; der Spieler steht bei F53 auf x=-5020 = Original Takt 48 (tf_7). Also Skript
+F = Takt + 5, EM024 F = Takt + 6. Im Original laufen die Takte ab dem Ladebild (tf_8: Takt 1 bei noch SCHWARZEM Framebuffer), das
+Bild erscheint bei o1 (Helligkeit 29). Der "fehlende erste Schub o5-9" der Abnahme ist der Schub p11-15 (Versatz 6 = 5 Schwarzbilder
+des Sprung-Pfads + 1 Takt INIT): `nb1/vgl_erster_schub_zoom.png` (o6/o7/o8 links, p11/p12/p13 rechts).
+**Fernbild (Cut 13).** Der untere Puffer von tf_7 (DAT_800aca34 = 0 = der gerade gebaute Puffer, Cut 13) zeigt Leon OHNE Wolke;
+das Rohvideo o058 (erstes Bild nach dem Schnitt) ebenso, o060/o062 zeigen die grosse Wolke wie der Port bei F52/F54
+(`nb1/vgl_fern_video_port.png`, `nb1/vgl_fern_zoom.png`). Das Original zeichnet die Sprites im ERSTEN Bild eines Kamerawechsels
+nicht; der Port zeichnet sie (F50). Mechanismus nicht RE't (Kandidat: FUN_80052fd0 `if (DAT_800a73a4 != DAT_800aca34)` /
+Reihenfolge beim Cut-Apply @0x80021c00) -> OFFEN (1 Bild je Schnitt).
+**RVD 12 -> 13.** Port: Anforderung bei F49/F50 (x -4220 / -4420), sichtbar F51; Original: Takt 47/48 (x -4866 / -5020, tf_7
+oben/unten). Zone = RVD-Satz 52 (from 12 to 13, x -5800..-4200): der Port schaltet an der Zonengrenze, das Original ~600-800
+Einheiten tiefer -> 2-3 Bilder. Kamerazonen-Mechanik, nicht Spur A -> OFFEN (Orchestrator).
+**Ergebnis M1:** als Zeichner-/Dichte-Mangel widerlegt (Textur, Palette, Code, Groesse, Zahl und Lage je Platz belegt gleich);
+die drei verbleibenden Zeitabweichungen (INIT-Takt, Schnittbild, RVD) sind gemessen und OFFEN.
+
+### N1.2 M4 — Letterbox: 24 px byte-true, 16/17 px = Overscan-Ausschnitt des Videos
+- Original-Primitive (PSX.EXE-Daten, gelesen): DAT_80072ecc POLY_F4 (0,0)-(320,0)-(0,24)-(320,24), DAT_80072efc (0,216)-(320,216)-
+  (0,240)-(320,240); zweiter Satz +0x18 gleich. = Port render_pc.c (24 px).
+- Exakter Framebuffer ts_12 (Cut 15, DAT_800b5568 = 0xF0, Bit 0x10 gesetzt): **24 schwarze Zeilen oben und 24 unten** in beiden
+  Puffern. ts_14 (Level 64, Bit frei): 24 dunkle Zeilen (Rampe).
+- Video: DuckStation `CropMode = Overscan`, Aufnahme 640x480. Alignment-Test tf_7 (oben) gegen o045: Identitaet mean|diff| 8.79,
+  "Zeilen 8..232 auf 240 gestreckt" **2.83** -> das Video ist der 224-Zeilen-Ausschnitt; 24 Balkenzeilen - 8 = 16 Zeilen,
+  gestreckt 17.1 px = die 16/17 px der Abnahme.
+- Port-Balken F5..F14 nach dem Debug-Sprung: Helligkeit der obersten 24 Zeilen 0.0 (F1..F10), 0.4 / 2.6 / 7.8 / 16.1 / 28.9
+  (F11..F15) = die 15-stufige -0x10-Rampe von FUN_80021a0c ab 0xF0 (subtraktiv, Hintergrund 28.9). Der Level war vor dem Sprung
+  0xF0, weil ROOM1240 (Startraum des Harness) `Set(1,0x1b,1)` traegt (ROOM1240.RDT @0x0055e) und der Raumlader nur das
+  Richtungsbit loescht (FUN_800396fc). Im Original kam der JUMP aus dem Debug-Menue (Level 0; tf_7: DAT_800b5568 = 0). Beim
+  echten Weg (Tuer) verhalten sich beide gleich (derselbe Mechanismus). -> kein Mangel der Szene, Harness-Artefakt.
+
+### N1.3 M2 — NPC-Schritte: die falsche Bank
+**Ursache.** `re15_wassersprung_r41_npc_takt` las das Bildwort aus `b->anim` (Container-Bank dir[1]); deren Clip 5 ist eine
+20-Bild-Kniebeuge (Fuesse statisch, Wurzel -1874 -> -1513) ohne Marke. Die NPC-Geh-Subs rufen anim_set aber mit dem Paar
++0x170/+0x174 (`lw a0,368(v0)` / `lw a1,372(v0)` vor `jal 0x8001f314` @0x800512bc-c0, Sub 5 @0x80051714-18, Sub 6
+@0x80051884-88) = OWN-Bank dir[3]/dir[4] (FUN_80022300 @0x800224b8/@0x800224c8; Port `b->anim_own`, Regel
+`re15_actor_uses_own_bank`). +0x168 zeigt auf das Bildwort DIESER Bank.
+**Beleg (Sonde nb1/sonde_npc_own.c, `nb1/npc_own_bank.txt`, beide Archive via TOC @0x80072f38/@0x80073178):**
+```
+Typ   Archiv        OWN Clip 5 (30 Bilder)  Marken        OWN Clip 0 (22 Bilder)  Marken
+0x40  CDEMD0/1      2222222 6 0..0 5 2222222  7: 0x6 (Fuss 7), 22: 0x5 (Fuss 4)   5 0..0 2 2 2 7 2..2 0 0   0: 0x5, 12: 0x7
+0x45  CDEMD0/1      wie 0x40                                                   wie 0x40
+0x49  CDEMD0/1      wie 0x40                                                   wie 0x40
+0x42  CDEMD0/1      222222 0 0 4 0..0 2 2 7 2222222  8: 0x4 (Fuss 7), 22: 0x7 (Fuss 4)   4 0..0 2 2 2 7 2..2   0: 0x4, 11: 0x7
+0x4d  CDEMD0/1      wie 0x42                                                   wie 0x42
+0x4b  CDEMD0/1      28 Bilder, alle 0 (auch Clips 0..8 und Container)  -> KEINE Marke
+```
+Die Marken sitzen an den Fersenaufsaetzen der Pose (0x40 Clip 5: Teil 4 erreicht seine Tiefstlage y -163 bei Bild 7, Teil 7 bei
+Bild 22; `nb1/npc_own_bank.txt`). Die Entscheidungsfrage des Bau-Stands war damit gegenstandslos: im Original spritzen und
+klingen Ada/Marvin/0x45/0x49/0x4d beim Gehen — der Port las die falsche Bank.
+**PORT-WAHL nur fuer 0x4b** (Wurzelhoehe -1250 = Kind; NUTZER-VORGABE Nachtrag 3 / E1 "alle NPCs"): Aufsetzer = Bild, in dem der
+Fuss-Teil 4 bzw. 7 nach der Schwungphase erstmals seine Tiefstlage erreicht (Pose-y >= max - (max-min)/10, Vorbild < Schwelle).
+Form an den markierten Typen belegt: 0x40/0x45/0x49 Clip 5 Marken 7/22 -> Regel 7/20, Clip 0 Marken 0/12 -> 0/11; 0x42/0x4d
+Clip 5 Marken 8/22 -> 5/18, Clip 0 0/11 -> 21(-1)/10. Ergebnis fuer 0x4b: Clip 5 Bilder 5 (Teil 4 -> Code 7) und 19 (Teil 7 ->
+Code 4), Clip 0 Bilder 0 und 10. Fuss-Code wie in den Original-Daten (Teil 4 landet -> Bit 0x1000 frei -> Code 7).
+**Aenderung** (`wassersprung_r41.c`): `re15_wassersprung_r41_npc_bank` (Own/Loco/Container nach der EINEN Regel),
+`clip_hat_marken`, `portwahl_ableiten` (Pose-Regel, einmal je Bank/Clip), `re15_wassersprung_r41_aufsetzer` /
+`_regel` (Riegel-API), Anker der Spritzer aus derselben Bank; Mess-Log `RE15_NPCSCHRITT_LOG=<datei>` (je Schritt: F, slot, typ,
+clip, bild, fuss, boden, stempel, zweig, ton, plaetze, portwahl, pos).
+**Messung nachher (Riegel, woertlich):** unit `npc_wasser` — echter Geh-Sub (state 4 / sub 4, Plc_dest-Felder @0x80041c14-24)
+von (-4300,-3000) nach (-4300,-9000) durch den Fleck FLR 0x97 in ROOM2000, 150 Takte:
+```
+CDEMD0 0x40: z -3000 -> -8974, Boden 0x97, Schritte 6 (boden 6), Plaetze 6, Ton 15, letztes Bild 22 Clip 5
+CDEMD0 0x42: z -3000 -> -8974, Schritte 6, Plaetze 6, Ton 15        CDEMD0 0x45: z -> -8926, Schritte 6, Plaetze 6, Ton 15
+CDEMD1 0x49: z -3000 -> -8974, Schritte 6, Plaetze 6, Ton 15        CDEMD1 0x4d: z -> -8926, Schritte 6, Plaetze 6, Ton 15
+CDEMD1 0x4b: z -3000 -> -8933, Schritte 9 (portwahl 9), Plaetze 9, Ton 15, letztes Bild 5 Clip 5
+```
+(Ton 15 = (0x97 & 0x7f) - 8 mit a0 = 0 im Sub 4 @0x80051290; Effekt 0x06050D00 je Schritt.)
+
+### N1.4 M3 — ENV-Stempel ohne Szenen-Gate
+`aot_common.c` (Z. 1169): die Szenen-Sperre `in_cinematic` ueberspringt WATER (sce 8) und RAMP (sce 7) nicht mehr. Original:
+FUN_800436a8 wird @0x8001ce1c unbedingt gerufen (Spieler-Pool `ori a1,zero,0x1` / `jal 0x80042bac` @0x800436bc-cc, Gegner-Schleife
+`sltu v0,s0,v0` @0x80043740 ueber alle aktiven Entities). Die Verallgemeinerung fuer die uebrigen Typen (AUTO/FLAG_CHG ausserhalb
+20B0/20B1) bleibt OFFEN (volle Suite). Riegel `unit_r41_wasser20b0_stempel`: ROOM20B0 WATER-Satz Slot 5 (p0 = -900): NPC und
+Spieler unter player_mode 2 gestempelt (+0x88 = -900), ebenso bei player_mode 0.
+
+### N1.5 M5 — Riegel
+- `unit_r41_wasser20b0_npc`: OWN-Bank-Zensus beider Archive (Clip 5/0 Bilder und Fuss-Codes je Typ wie Tabelle N1.3, Container-Clip 5
+  ohne Marke), Regelpruefung (|Regel - Marke| <= 4 an 0x40/0x42/0x45/0x49/0x4d), Zweige von FUN_80045630, Takt an der OWN-Bank.
+- `unit_r41_wasser20b0_npc_wasser`: s. N1.3 (6 Typen, beide Archive, echter Geh-Sub).
+- `unit_r41_wasser20b0_stempel`: s. N1.4.
+- `integration_r41_wasser20b0_npc` (echte exe): (a) ROOM2000 Leon, Flag (4,244): Marvin (Slot 1, 0x42) und Ada (Slot 2, 0x40) laufen
+  per Plc_dest; RE15_NPCSCHRITT_LOG muss >= 4 Schritte je Slot (Clip 5, Ton >= 0) zeigen; (b) Landung ueber den ECHTEN Weg:
+  Tuer 20A0 -> 2090 (Leon) und 20A1 -> 2091 (Elza; Tuersatz @0x1754 byte-gleich: `3b 00 02 31 02 00 7a0d 9411 b80b e803 9c18 f8f8
+  86c0 0008 01 09 02 01`), Eingabeskript der Abnahme (E2), climb.log "Landung" + fx.log >= 8 Zeilen `id=6 sub=3`.
+
+### N1.6 M6 — main.c
+Beide Haken bleiben: die Schatten-Bedingung `npc->type != 0x24u` ist noetig (EM024 ohne `jal 0x8001b064`, Abnahme §4 bestaetigt);
+der 4. Wert von RE15_PLAYER_POS (Band) traegt den Tuer-Landungsriegel (Spawn in 20A0 auf Band 2 vor der Tuer) und die Abnahme-
+Laeufe B/D/E2. Konfliktrisiko mit Spur D gering (andere Stellen); zur Integration gemeldet.
+
+### N1.7 M7
+`s_dog_noclamp_mask` ist uint64_t (`(uint64_t)1u << slot`, enemy_ai_common.c). PSX-BSS (+28 KB) weiter OFFEN.

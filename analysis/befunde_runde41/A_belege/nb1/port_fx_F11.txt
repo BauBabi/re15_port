@@ -1,0 +1,24 @@
+id=15 sub=0 eidx=6 frame=8 w(7400,-3329,-7350) phys=1 xlat=(600,-300,0) drift=(120,-30,0) slot=42 q=468 wpos=(7857,-3589,-7206) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=11
+   -> sx=123 sy=147 S=32 n=1 c0=8 w16=1343488 camf=208
+id=15 sub=7 eidx=6 frame=8 w(6200,-2429,-7650) phys=1 xlat=(350,0,0) drift=(70,0,0) slot=42 q=468 wpos=(6480,-2429,-7650) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=11
+   -> sx=138 sy=172 S=32 n=1 c0=8 w16=3092480 camf=208
+id=15 sub=7 eidx=6 frame=8 w(5200,-2429,-5250) phys=1 xlat=(350,0,0) drift=(70,0,0) slot=42 q=468 wpos=(5480,-2429,-5250) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=11
+   -> sx=77 sy=175 S=32 n=1 c0=8 w16=3805184 camf=208
+id=15 sub=7 eidx=6 frame=8 w(6200,-2429,-6450) phys=1 xlat=(350,0,0) drift=(70,0,0) slot=42 q=468 wpos=(6480,-2429,-6450) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=11
+   -> sx=109 sy=173 S=32 n=1 c0=8 w16=2420736 camf=208
+id=15 sub=7 eidx=6 frame=8 w(5200,-3829,-7650) phys=1 xlat=(350,0,0) drift=(70,0,0) slot=42 q=468 wpos=(5480,-3829,-7650) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=11
+   -> sx=144 sy=137 S=32 n=1 c0=8 w16=3338240 camf=208
+id=15 sub=7 eidx=6 frame=8 w(6200,-3829,-5250) phys=1 xlat=(350,0,0) drift=(70,0,0) slot=42 q=468 wpos=(6480,-3829,-5250) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=11
+   -> sx=81 sy=138 S=32 n=1 c0=8 w16=3268608 camf=208
+id=15 sub=7 eidx=6 frame=8 w(5200,-3829,-6450) phys=1 xlat=(350,0,0) drift=(70,0,0) slot=42 q=468 wpos=(5480,-3829,-6450) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=11
+   -> sx=113 sy=136 S=32 n=1 c0=8 w16=3493888 camf=208
+id=15 sub=0 eidx=6 frame=8 w(7400,-3329,-5550) phys=1 xlat=(600,-300,0) drift=(120,-30,0) slot=42 q=468 wpos=(7857,-3589,-5406) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=11
+   -> sx=85 sy=146 S=32 n=1 c0=8 w16=1417216 camf=208
+id=15 sub=0 eidx=6 frame=5 w(7234,-3329,-7950) phys=1 xlat=(240,-150,0) drift=(120,-60,0) slot=42 q=468 wpos=(7352,-3409,-7932) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=11
+   -> sx=140 sy=150 S=32 n=1 c0=5 w16=1638400 camf=208
+id=15 sub=0 eidx=6 frame=5 w(7234,-2729,-7350) phys=1 xlat=(240,-150,0) drift=(120,-60,0) slot=42 q=468 wpos=(7352,-2809,-7332) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=11
+   -> sx=127 sy=163 S=32 n=1 c0=5 w16=1687552 camf=208
+id=15 sub=0 eidx=6 frame=5 w(7234,-3329,-6150) phys=1 xlat=(240,-150,0) drift=(120,-60,0) slot=42 q=468 wpos=(7352,-3409,-6132) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=11
+   -> sx=101 sy=150 S=32 n=1 c0=5 w16=1732608 camf=208
+id=15 sub=0 eidx=6 frame=5 w(7234,-2729,-5550) phys=1 xlat=(240,-150,0) drift=(120,-60,0) slot=42 q=468 wpos=(7352,-2809,-5532) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=11
+   -> sx=87 sy=163 S=32 n=1 c0=5 w16=1789952 camf=208

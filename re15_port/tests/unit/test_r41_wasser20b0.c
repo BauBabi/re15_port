@@ -505,6 +505,7 @@ static int teil_npc(void)
     for (int arch = 0; arch < 2; arch++) {
         for (int ti = 0; ti < 6; ti++) {
             uint8_t typ = k_erw[ti].typ;
+            re15_enemy_reset();   /* Registry (RE15_ENEMY_MAX) je Typ leeren */
             if (!bank_npc(arch, typ)) { CHECK(0, "%s Typ 0x%02x: Bank nicht ladbar", re15_ems_archiv_datei(arch), typ); continue; }
             re15_enemy_bank_t *b = re15_enemy_find(typ);
             CHECK(b && b->ok && b->own_ok && b->anim_own.clip_count >= 6 && b->anim_own.clips[5].frame_count == (typ == 0x4b ? 28 : 30),
