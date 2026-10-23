@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-23 21:40: SITZUNGSLIMIT ~19:25 (reset 21:30) brach Welle 1 ab (wf_cad46b03-1ad: 8 Agenten, 2 fertig, 6 abgebrochen, 3,16 Mio Token). Stand: A Bau 'teilweise' (13 Commits, Video A_belege/, Abnahme 0 abgebrochen), D Bau 'fertig' (4cbbf4a2, Abnahme 0 abgebrochen), B Bau abgebrochen kurz vor Abschluss (Reste als 86661849 UNGEPRUEFT gesichert), C Bau abgebrochen waehrend der Integrationsgruppe (1745af8e, Baum sauber), E/M nicht begonnen (0 Commits). Orchestrator-Entscheide zu den Fragen von A (E1/E2), D (D1-D3), B (B1-B3), C (a-e) in AUFTRAG.md; Nutzer-Nachtraege 1-3 (DuckStation FFmpeg/mp4, Video Pflicht, NPC-Schritte = Vorgabe). REST-LAUF 1 gestartet: wf_4d79520c-fba, args orchestrator/args_rest1.json (A/D modus abnahme mit bau aus dem Journal, B/C stand-Fortsetzung, E/M neu, slots 4, max_nach 2).
+
 * 2026-10-23 16:58: WELLE 1 gestartet: Workflow wf_cad46b03-1ad (Skript orchestrator/r41-runde.js, args {welle:[A,B,C,D,E,M], slots:4, basis:116e8b0f, max_nach:2}), Journal ~/.claude/projects/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/subagents/workflows/wf_cad46b03-1ad/. Baeume r41_wasser20b0 / re2gator / ventilkette / kleinkram_a / kleinkram_b / masken36 auf 116e8b0f (RE2-Overlays EM23_OVL_0000.BIN u.a. versioniert, 116e8b0f). Waechter (scratchpad/waechter41.sh) meldet Haenger > 75 min.
 
 * 2026-10-23 16:36: Auftrag des Nutzers (Wortlaut in AUFTRAG.md) nach dem Release v0.8.28 (f632a17b). Nutzer-Vorgabe
