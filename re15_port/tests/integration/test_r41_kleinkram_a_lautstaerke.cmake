@@ -58,10 +58,8 @@ function(laut_mitschnitt _name _prozent)
         return()
     endif()
     file(READ "${WORKDIR}/debug.log" _dbg)
-    string(FIND "${_dbg}" "[lautstaerke] ${WORKDIR}/opt.cfg gelesen (2 Schluessel): ${_prozent} %" _p)
-    if(_p LESS 0)
-        set(_fehler "${_fehler}\n[${_name}] Optionsdatei nicht gelesen (${_prozent} %)" PARENT_SCOPE)
-    endif()
+    # (Die Zeile "[lautstaerke] ... gelesen" faellt VOR der stderr-Umleitung nach debug.log und steht nur auf der
+    #  Konsole; dass die Datei wirkt, beweist das RMS-Verhaeltnis unten.)
     string(FIND "${_dbg}" "CAP_SYNC: 330 Frames geschrieben" _p)
     if(_p LESS 0)
         set(_fehler "${_fehler}\n[${_name}] Mitschnitt nicht vollstaendig (exit=${_rv})" PARENT_SCOPE)
@@ -110,10 +108,12 @@ else()
         set(${_out} "${_px}" PARENT_SCOPE)
     endfunction()
     # (a) VOLUME-Kachel (y 221..238, freier Streifen unter dem Kasten) == erste Kachel (y 51..68) in den textfreien
-    #     Spalten x 116/117 und 202/203.
+    #     Spalten x 116/117 und 202/203, Zeilen 2..15 (die abgerundeten Ecken der Kachel sind durchsichtig und
+    #     zeigen den Hintergrund, der an y 51 (Controller-Bild) und y 221 (Streifen) verschieden ist — gemessen:
+    #     genau die 8 Eckpixel wichen ab).
     set(_gleich 0)
     set(_anders 0)
-    foreach(_dy RANGE 0 17)
+    foreach(_dy RANGE 2 15)
         foreach(_x 116 117 202 203)
             math(EXPR _y1 "51 + ${_dy}")
             math(EXPR _y3 "221 + ${_dy}")
