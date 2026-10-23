@@ -239,7 +239,9 @@ set(_wp_schrot2030 "OBJ 1" "RAUM 2030" "GEGNERWEG" "WARTE 30" "FLAG 9 108" "GEHE
     "GEHE -6350 -7700 80" "BLICK 0" "WARTE 20" "AKTION" "WARTE 300" "GEHE -1050 -7700" "GEHE -1050 7100"
     "GEHE 4300 7100 100" "BLICK 0" "WARTE 20" "AKTION" "WARTE 60" "AKTION" "WARTE 60" "AKTION" "WARTE 100" "FLAG 9 108"
     "ENDE")
-_lauf(schrot2030 600 _wp_schrot2030 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=6550,-100,1024,3" "RE15_EXIT_AT=1650")
+_lauf(schrot2030 600 _wp_schrot2030 RE15_SET_FLAG=9:101,9:102 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=6550,-100,1024,3" "RE15_EXIT_AT=1650")
+# RE15_SET_FLAG 9:101,9:102 = Runde 41 Spur C: die Bruecke (obj 0 @0x01B6C) steht bis zum Pult-Raetsel oben und die Steg-Zelle 12
+# ist gesperrt (re15_ventilkette_r41.h); dieser Lauf prueft die Band-Regel, nicht die Bruecke -> Bruecke unten vorgesetzt.
 set(_stair "")
 if(EXISTS "${_sub}/stair_dbg.log")
     file(READ "${_sub}/stair_dbg.log" _stair)
