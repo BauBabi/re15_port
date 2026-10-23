@@ -9,6 +9,21 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 22:30 (Fortsetzung) Integrationsgruppe der beruehrten Raeume (16 Haken, seriell) gestartet; Ergebnis §5. Dossier
+  §3.3/§4/§5/§6/§7 um die Laeufe der Fortsetzung ergaenzt. Orchestrator-Entscheide C-a..e (AUFTRAG.md 21:37) alle
+  angenommen -> keine offene Entscheidungsfrage mehr; die Port-Texte (§7) bleiben Vorschlag bis zur Freigabe.
+* 22:24 Ertrink-Blende: gemessen, dass "ABR 0 + Maske Blau" im PC-Renderer (render_pc.c:1282, nur ABR 1/2) als B-F
+  gezeichnet wurde -> Blau WEG (Bildmitte F2740 (29,36,29) -> F2760 (30,37,0), gelbgruen). Behoben: ABR 2 (die
+  ausgelieferte Form @0x174a) + Maske Rot+Gruen -> (0,0,30) = Blau bleibt (C_belege/flut_blende_vergleich.png).
+  integration_r41_ventilkette A+B+C PASS (214 s); Commit 76fdeca4.
+* 22:00 Die Flut am Spiel gemessen (exe, RE15_STATE_LOG, C_belege/flut_echt_sheet.png): Spinnen als Spielzustand
+  "schon getoetet" ueber ihre Kill-Bits (kein Haken); Warnung zu F820 -> Flut F2621 (= 1800) -> Fuesse F2728 ->
+  Spritzer ab F2733 -> Tod F2746 (= +125) -> YOU DIED. integration_r41_ventilkette: A neu getaktet (Debug-Sprung
+  blickt auf die Ost-Tuer, nicht auf die Ventile; Ja erst beim 4. Druck, Warnung 1 Druck spaeter), B Leiter-
+  Position -26000 (bei -25900 traf der Vorwaertspunkt das Rechteck nicht), C = Flut-Lauf neu.
+* 21:50 Fortsetzung nach dem Sitzungslimit (Vorgaenger ~19:25). Bau 1745af8e + e19d755d: LOCAL-BUILD-OK. Gezielte
+  Unit-Gruppe (37 Tests): 1 rot = unit_r41_ventilkette D2 (Riegel-Erwartung 324, gemessen 323: der erste der 324
+  Schritte laeuft im Marker-Takt) -> Erwartung korrigiert, PASS; Commit 029c5460.
 * 18:35 Alle sechs Punkte gebaut und gemessen. unit_r41_ventilkette PASS (227 Pruefungen, Leon + Elza); gezielte
   Unit-Gruppe 18/18. Integrationsgruppe (exe, seriell) laeuft; Ergebnis in §5.
 * 17:44 Generator (Texte/Original-Scheiben/Programme/Wasser) + Modul + Haken; erster Bau ab 17:50 (Engine durfte
@@ -221,7 +236,11 @@ Mit Bit 100 bleibt Slot 4 die Tuer. Dasselbe in 20B0/20B1 (dort nur bei Debug-Sp
   Cut 11 (Ziel der 20B0-Szene @0x01F00/@0x01F08; Gegenweg der 20B0-Tuer @0x019C2), Wasserflaechen angelegt und bei
   z 60000 geparkt. Marker (5,0x1E) -> Flut: steht die Flaeche 900 ueber den Fuessen (RE15_R41C_ERTRINK_TIEFE, halbe
   Koerperhoehe = Typ-4-Anhebung -900 @0x8002c24c), dann hp := -1 (= RE15_KILL_AT main.c, Todeskette game_step_common.c
-  :1413) + blaue Blende Kanal 0 (Form ROOM11F0 @0x174a `56 00 02 07 00 00` + `57`, hier ABR 0, Maske Blau, Level 0x5000)
+  :1413) + blaue Blende Kanal 0 (Form ROOM11F0 @0x174a `56 00 02 07 00 00` + `57 00 <level>`: ABR 2 = subtraktiv, der
+  einzige Blendmodus der ausgelieferten Skripte (Zensus aller RDTs: nur 11F0/11F1/3080, immer `56 00 02 07`, Pulse
+  `57 00 00 08`); hier Maske 0x6 = Rot+Gruen (FUN_800217b0 Config-Bits 2+1, fade_common.c), d. h. die Kachel zieht
+  Rot und Gruen ab und Blau bleibt stehen = blauer Schleier; Level 0x5000 = Helligkeit 160 (level >> 7 @0x800218d0),
+  PORT-WAHL. Erste Fassung "ABR 0 + Maske Blau" war ein Defekt, s. §4 "Blende")
   + Spritzer am Spieler alle 6 Takte (Wasser-Schritt-Effekt FUN_80045630 Code 0x06050D00, re15_esp_fx_spawn_rows).
   Tod loescht den Zaehler (keine Flut-Bits beim CONTINUE); der Raumstart loescht Marker, Blende, Zustand.
 * Verlassen waehrend des Zaehlers (jede Tuer): der Installer des naechsten Raums setzt Bits 103 + 100 (Nutzer:
@@ -285,9 +304,37 @@ shared_assets/PSX, pri/, synchro/, release/.
 * Zaehler/Flut/Tod (Unit-Riegel, Takt fuer Takt, Spieler auf dem Ring y -5400): Warnung zu -> Marker -> Zaehler
   (Ost-Tuer Ziel 0x0B Cut 11, Wasser geparkt) -> Flut 1800 Takte nach dem Schliessen der Warnung (gemessen 1504 +
   600 Takte nach der Aktion, davon ~300 Takte Texte) -> Wasser 50/Takt -> Tod bei Wasser y -6300 (= -5400 - 900),
-  125 Takte nach Flutbeginn -> Blende Kanal 0 (level 0x5000, Maske Blau) -> Wasser endet bei -16200.
-  (Ein exe-Lauf ueber 60 s scheitert an den drei Spinnen des Eintritts-Cuts 0 — kein Harness-Schalter ohne Gegner;
-  deshalb nur der Unit-Riegel. Offen §6.)
+  125 Takte nach Flutbeginn -> Blende Kanal 0 (level 0x5000, ABR 2, Maske Rot+Gruen) -> Wasser endet bei -16200.
+  D2 (Tuerebene y -16200): Tod mit der Endlage -16200 im Takt flut_bei + 323 (der erste der 324 Schritte laeuft im
+  Marker-Takt: der For-Koerper laeuft bis zum ersten Evt_next, derselbe Takt sieht s_flut = 1).
+* **Flut am Spiel** (Fortsetzung 22:00, exe-Kopie re15_pc_r41c_mess.exe, RE15_STATE_LOG, Bildnummern = Spielbilder ab
+  dem Sprung; Reihe C_belege/flut_echt_sheet.png = F2600/2620/2640/2680/2720/2740/2760/2780/2820/2880/2940/2960):
+  - Messmittel (kein Spielverhalten): die drei Spinnen des Eintritts-Cuts als Spielzustand "schon getoetet" ueber ihre
+    Kill-Bits `RE15_SET_FLAG=7:155,7:156,7:157` = Sce_em_set pc[7] 0x9b/0x9c/0x9d (main00 @0x01C18/@0x01C2C/@0x01C40),
+    EM-Status-Gate FUN_800420a0 @0x80042120-38 (`persist != 0xFF && flag(zone, persist)` -> kein Spawn), Zone 7 =
+    STAGE2 (re15_em_status_zone, enemy_ai_common.c:14208); Zustandslog: 0 Gegner-Eintraege in 2030. Spieler per
+    RE15_PLAYER_POS (6550,-100) Blick +z (3072; der Vorwaertspunkt 620 trifft keinen Platz), der Ventil-Platz per
+    RE15_FIRE_AOT=14@330 (= derselbe Pfad wie die Aktionstaste, re15_aot_fire_slot -> scd_event_fire 26), Druecke alle
+    4 s ab F450 (ein Druck nach dem Schliessen der Warnung trifft so keinen Platz mehr).
+  - Vorbefund (21:52): der Debug-Sprung stellt den Spieler mit Blick +x = auf die Ost-Tuer; die Aktionstaste bei F330
+    feuerte Tuer Slot 0 nach ROOM2070 (`[aot] DOOR FIRE slot=0 rect=(7350,-200,...)`), dort toeteten zwei Spinnen den
+    stehenden Spieler (hp 100 -> -20 bei F605). Darum tragen integration A und der Flut-Lauf jetzt RE15_PLAYER_POS
+    mit Blickrichtung.
+  - Ablauf: F330 Ereignis 26 -> Frage 45 oeffnet F331 (Pause-Maske FFFF0007); Druecke F450/F573 spulen und blaettern,
+    F696 = Ja -> 45 zu (F697), Warnung 46 auf (F699); F819 schliesst -> Marker (5,0x1D) -> `[ventilkette41] Zaehler
+    laeuft` + Ost-Tuer -> 20B0 Cut 11 (F820) -> Sleep 1800 -> **F2621 Flut** (`FLUT: Wasser steigt`, Cut 0 -> 4,
+    Pause-Maske 21000007 = Pad-Sperre) = 1800 Bilder nach dem Schliessen -> Wasser 50 je Takt ab y 0: Flaeche sichtbar
+    unter der Bruecke (F2640 y -1000, F2680 -3000), Bruecke taucht unter (F2720 -5000), Fuesse (-5400) bei F2728,
+    Spritzer alle 6 Takte ab F2733 (Zustandslog fx 1/2/3 bei F2733/2739/2745), **F2746 Tod** (`ERTRUNKEN: Wasser y
+    -6300, Spieler y -5400 -> hp -1`, = 125 Bilder nach dem Flutbeginn, 126 Schritte x 50 = 6300 mit dem ersten im
+    Marker-Takt), Blende (`config ch=0 abr=2 mask=6`, `kick ch=0 value=0x5000`), Todeskette (weisser Blitz F2820,
+    pst 7 bei F2859, YOU DIED F2880..F2960), Ende F2960#2030. Ein spaeteres Ende (3500 ohne Raumfilter) lief in den
+    Neustart nach dem Tod, dessen Bildzaehler die Framedumps 2400..3400 mit ROOM1170-Bildern ueberschrieb (erster
+    Lauf, verworfen).
+  - Blende (22:05): Bildmitte 100x60 F2740 (29,36,29) -> F2760 mit "ABR 0 + Maske Blau": (30,37,0) = Blau WEG
+    (render_pc.c:1282 kennt nur ABR 1 additiv / 2 subtraktiv, 0/3 fallen auf subtraktiv zurueck -> "minus Blau");
+    mit ABR 2 + Maske Rot+Gruen: (0,0,30) = Blau bleibt (C_belege/flut_blende_vergleich.png). Die Form ist auf der PSX
+    dieselbe (GPU B-F je Kanal, Kachel-RGB = Helligkeit & Maske @0x800218d0).
 * Echter Weg 2030 -> Ost-Tuer -> 20B0: integration_r41_ventilkette Lauf A (§5).
 
 ## 5. Tests
@@ -302,16 +349,27 @@ shared_assets/PSX, pri/, synchro/, release/.
   ohne Strom, Pult Nein/Ja, Cursorfahrt sub07, Zonen, 30+40+10 = 80, Zeiger x(80)=238/x(0)=166, Marken, Bit 106 nach
   <= 32 Ruhebildern, Ausstieg sub10, Cursor geparkt, Hebel = Original (3,104)=1, Zustandssatz, CROSS = Abbruch;
   G 2080 Original / mit Flut (msg 0 + 40, Bit 107, Wasser -3400) / Rechner schon gelaufen / mit 107.
-  **Ergebnis: PASS (227 Pruefungen), Leon + Elza.**
-* `integration_r41_ventilkette` (tests/integration/test_r41_ventilkette.cmake): A echter Weg 2030 Ventile -> Frage ->
-  Ja -> Warnung -> Zaehler -> Ost-Tuer feuert (RE15_FIRE_AOT=0) -> ROOM20B0 geladen -> Bits 103 + 100, kein 2070;
-  B 2000 Leiter = Sperrtext, kein Raumwechsel nach 2050. Ergebnis: siehe Abschnitt 0 / letzter Eintrag unten.
+  D2 Tuerebene (Tod mit der Endlage -16200, flut_bei + 323). **Ergebnis: PASS (233 Pruefungen), Leon + Elza**
+  (Fortsetzung: Blenden-Riegel = abr 2, Masken r/g 0xff, b 0, Helligkeit 160).
+* `integration_r41_ventilkette` (tests/integration/test_r41_ventilkette.cmake): A echter Weg 2030 Ventile (Aktionstaste,
+  Blick 2048) -> Frage -> Ja (4. Druck) -> Warnung -> zu (F777) -> Zaehler -> Ost-Tuer feuert (RE15_FIRE_AOT=0@900) ->
+  ROOM20B0 geladen -> Bits 103 + 100, kein 2070; B 2000 Leiter (-26000) = Sperrtext `[msgtext] room=2000 id=40`, kein
+  Raumwechsel nach 2050; C Flut am Spiel (Kill-Bits, FIRE_AOT 14, Zustandslog): Zaehler 1800 +- 3 Bilder, Flut unter
+  Cut 4, Tod 125 +- 2 Bilder danach bei Wasser -6300 / Spieler -5400, Blende kick 0x5000, Framedump F2750, Ende
+  F2960#2030. **`ctest --timeout 900 -R "^integration_r41_ventilkette$"` -> `100% tests passed, 0 tests failed out
+  of 1` (213.97 s)** — davor zwei rote Laeufe: A/B mit den alten Takten (Tuer statt Ventile; Leiter nicht getroffen).
 * Gezielte Gruppe (ctest, Regex woertlich):
   `ctest -j 6 --timeout 600 -R "^(unit_r41_ventilkette|unit_r36_kartenbits|unit_r37_fahrstuhl_lift2030|unit_r36_gegnerzahl_raum20b0|unit_r38_npckante_j2000|unit_r40_nahaufnahmen|unit_r40_untersuchen1120|unit_r34n_a_rolltor|unit_r36_kartenitems|unit_r38_wasser_.*|unit_r38_wasserzombie)$"`
-  -> `100% tests passed, 0 tests failed out of 18`.
+  -> `100% tests passed, 0 tests failed out of 18` (18:35, vor dem Riegel D2).
+  Fortsetzung, erweitert um die Gruppen der beruehrten Dateien (scd_room_setup.c, scd_vm.c, main.c, kartenbits):
+  `ctest -j 6 --timeout 600 -R "^(unit_r41_ventilkette|unit_r36_kartenbits|unit_scd_.*|unit_aot_.*|unit_r40_nahaufnahmen|unit_r40_untersuchen1120|unit_r37_kistenregel_.*|unit_r36_dachkiste_.*|unit_r37_kiste.*|unit_r37_itemband|unit_r37_fahrstuhl_lift2030|unit_r36_gegnerzahl_raum20b0|unit_r38_npckante_j2000|unit_r34n_a_rolltor|unit_r36_kartenitems|unit_r38_wasser_.*|unit_r38_wasserzombie|unit_r38_spinnen)$"`
+  -> 21:50 `97% tests passed, 1 tests failed out of 37` (unit_r41_ventilkette D2, Erwartung 324 statt 323) ->
+  nach dem Riegel-Fix und dem Blenden-Fix: UNIT_GRUPPE_ENDE.
 * Integrationsgruppe der beruehrten Raeume (seriell, exe): Regex
   `^(integration_r41_ventilkette|integration_r37_fahrstuhl_n1|integration_r37_itemband|integration_r37_itemband_lift|integration_r37_kiste|integration_r37_kiste2feld|integration_r37_kistenregel|integration_r36_gegnerzahl|integration_r36_dachkiste|integration_r38_spinnen_echtlauf|integration_r38_wasser|integration_r38_wasserzombie|integration_map_uebergang|integration_cross_stage|integration_item_name_census|integration_save_counter_pin)$`
-  -> Summenzeile: (wird nach dem Lauf eingetragen).
+  -> 19:03 (Vorgaenger, alte exe, abgebrochen vom Sitzungslimit nach 4 von 16): dachkiste rot (echt2050 Leiter — der
+  Querbezug unten), gegnerzahl / fahrstuhl_n1 / itemband gruen (103 / 155 / 829 s).
+  Fortsetzung (exe nach den Fixes, `--timeout 1800`, weil dachkiste allein ~1100 s braucht): INTEG_GRUPPE_ENDE.
 
 * Querbezuege (Memory "neue Regeln widerlegen alte Riegel", beim ersten Integrationslauf gefunden):
   - `integration_r36_dachkiste` echt2050/elza2051 fahren 2050 -> 2000 -> Leiter slot 4 @0x0169E -> 2050; die Leiter ist
@@ -323,8 +381,10 @@ shared_assets/PSX, pri/, synchro/, release/.
   Beide Aenderungen sind Kommentar-belegt in den cmake-Dateien.
 
 ## 6. OFFEN
-* Die Flut als exe-Messung ueber 60 s: die drei Spinnen des Eintritts-Cuts (2030 main00 Case 0 @0x01C12) toeten den
-  Spieler vorher; es gibt keinen Harness-Schalter "ohne Gegner". Mechanik ist im Unit-Riegel Takt fuer Takt belegt.
+* (erledigt 22:00) Die Flut als exe-Messung: gemessen mit den Spinnen-Kill-Bits als Spielzustand (§4 "Flut am Spiel",
+  Riegel integration C). Offen bleibt nur die ORIGINAL-Seite: RE1.5/RE2 kennen kein Ertrinken, Form = PORT-WAHL.
+* Der Level 0x5000 (Helligkeit 160) der Ertrink-Blende ist PORT-WAHL: die ausgelieferten Skripte nutzen die Blende nur
+  als Lampenflackern (11F0/11F1/3080, `57 00 00 08` = Helligkeit 16); ein ausgelieferter Tint-Wert existiert nicht.
 * Verlaesst der Spieler 2030 waehrend des Zaehlers NICHT ueber die Ost-Tuer (sondern per Lift nach 2080/2060/2020),
   gilt die Flut ebenfalls als gelaufen (Bits 103 + 100); die 20B0-Szene laeuft dann beim naechsten Eintritt in 2000
   (= 20B0), gleich von welcher Tuer (die Original-Szene sub02 setzt den Spieler an die Ost-Tuer). PORT-WAHL, nicht
@@ -357,5 +417,10 @@ shared_assets/PSX, pri/, synchro/, release/.
 * Entscheidungsfragen: (a) Hebelgewichte 30/20/40/10 (Loesung Hebel 1 + 3 + klein) — anderes Muster gewuenscht?
   (b) Bruecke "oben" = Ringebene y -5400 — hoeher gewuenscht? (c) Flut auch beim Verlassen ueber die oberen Tueren
   (jetzt: ja, siehe §6). (d) Lift-Rufzonen oben nutzen nach der Flut den Original-Satz 1 ("not responding") —
-  eigener Satz ("The elevator is flooded.") gewuenscht? (e) Ertrink-Effekt = Tod + blaue Blende + Spritzer; ein
-  eigener Ton fehlt (RE2-Liste ohne Ertrinken).
+  eigener Satz ("The elevator is flooded.") gewuenscht? (e) Ertrink-Effekt = Tod + blaue Blende (subtraktiv Rot+Gruen,
+  Blau bleibt) + Spritzer; ein eigener Ton fehlt (RE2-Liste ohne Ertrinken).
+  -> Orchestrator-Entscheide 21:37 (AUFTRAG.md): a-e alle angenommen; die Texte bleiben Vorschlag bis zur Freigabe.
+* Sichtprobe fuer den Nutzer: 2030 am Ring vor den Ventilen die Aktionstaste, Ja, Warnung wegdruecken, 60 s stehen
+  bleiben -> Draufsicht, Wasser steigt ueber die Bruecke und den Ring, Spritzer, Tod mit blauem Schleier
+  (C_belege/flut_echt_sheet.png). Mit den drei Spinnen im Raum (ohne Kill-Bits) stirbt man vorher an den Spinnen;
+  im Spiel also erst die Spinnen erledigen oder den Raum durch die Ost-Tuer verlassen (-> 20B0).
