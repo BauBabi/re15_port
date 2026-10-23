@@ -160,7 +160,8 @@ static int teil_bytes(void)
 
 /* ============================ Baenke / Raum (Muster test_r38_spinnen.c) ============================ */
 static uint8_t *s_re15_ems = NULL; static size_t s_re15_n = 0;
-static uint8_t  s_blob[0x80000];
+/* Je Typ ein EIGENER Blob (die Bank zeigt in den Puffer; ein geteilter Puffer wie in test_r38_spinnen.c
+ * macht die zuerst geladene Bank beim zweiten Laden zu Datenmuell). */
 static int bank_re15(uint8_t type)
 {
     if (!s_re15_ems) s_re15_ems = slurp(RE15_ASSET_PSX_DIR "/EMD/CDEMD0.EMS", &s_re15_n);
@@ -170,13 +171,14 @@ static int bank_re15(uint8_t type)
     int idx = re15_ems_index_for_type(type);
     size_t off = 0, len = 0;
     if (idx < 0 || re15_ems_get_entry(s_re15_ems, s_re15_n, idx, &off, &len) != 0) return 0;
-    if (len > sizeof s_blob) return 0;
     if (!eb) eb = re15_enemy_alloc(type);
     if (!eb) return 0;
-    memcpy(s_blob, s_re15_ems + off, len);
+    uint8_t *blob = (uint8_t *)malloc(len);
+    if (!blob) return 0;
+    memcpy(blob, s_re15_ems + off, len);
     re15_tim_t tim = (re15_tim_t){0};
-    if (re15_emd_parse_container(s_blob, len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) { eb->type = 0; return 0; }
-    eb->ok = 1; eb->buf = NULL;
+    if (re15_emd_parse_container(blob, len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) { eb->type = 0; free(blob); return 0; }
+    eb->ok = 1; eb->buf = NULL;   /* blob bleibt absichtlich stehen (Lebensdauer = Prozess) */
     return 1;
 }
 
@@ -463,9 +465,43 @@ static int teil_npc(void)
     if (!raum("STAGE2/ROOM2000.RDT", 0x2000u, -4300, -1800, -5000, 0, 0)) { s_fails++; return 0; }
     const re15_esp_t *bank = re15_esp_room_bank();
     CHECK(bank && re15_esp_find_id(bank, 0x06) >= 0, "Raum-Bank 2000 traegt Effekt 6");
+    /* Zensus: welche ausgelieferten NPC-Typen tragen im Geh-Clip 5 (+0x94 = 5 @0x80051d3c) Fussaufsetzer (Bit 0x4000)? */
+    static const uint8_t npc_typen[6] = { 0x40, 0x42, 0x45, 0x49, 0x4b, 0x4d };
     int b40 = bank_re15(0x40), b42 = bank_re15(0x42);
-    printf("     NPC-Baenke: 0x40=%d 0x42=%d\n", b40, b42);
     uint8_t typ = b40 ? 0x40 : (b42 ? 0x42 : 0x40);
+    uint8_t typ_takt = 0; int takt_bild = -1;
+    for (int ti = 0; ti < 6; ti++) {
+        if (!bank_re15(npc_typen[ti])) { printf("     Typ 0x%02x: keine Bank\n", npc_typen[ti]); continue; }
+        re15_enemy_bank_t *b = re15_enemy_find(npc_typen[ti]);
+        int fc = (b && b->ok && b->anim.clip_count > 5) ? b->anim.clips[5].frame_count : 0;
+        int plants = 0, erstes = -1;
+        for (int f = 0; f < fc; f++) if (re15_emd_get_frame_entry(&b->anim, 5, f) & 0x4000u) { plants++; if (erstes < 0) erstes = f; }
+        printf("     Typ 0x%02x: Clip 5 = %d Bilder, Fussaufsetzer %d (erstes Bild %d)\n", npc_typen[ti], fc, plants, erstes);
+        if (plants > 0 && !typ_takt) { typ_takt = npc_typen[ti]; takt_bild = erstes; }
+    }
+    printf("     NPC-Baenke: 0x40=%d 0x42=%d, Takt-Typ 0x%02x Bild %d\n", b40, b42, typ_takt, takt_bild);
+    {   /* Diagnose der NPC-Bank: Skelett, Clips, Bildworte des Geh-Clips 5, Pose der Fuesse (Bild 0) */
+        re15_enemy_bank_t *b = re15_enemy_find(typ);
+        if (b && b->ok) {
+            printf("     Bank 0x%02x: Knochen %d, Keyframes %d, Clips %d, Meshes %d\n", typ, b->skel.bone_count, b->skel.keyframe_count, b->anim.clip_count, b->md1.mesh_count);
+            for (int c = 0; c < b->anim.clip_count && c < 8; c++) {
+                printf("       Clip %d: %d Bilder:", c, b->anim.clips[c].frame_count);
+                for (int f = 0; f < b->anim.clips[c].frame_count && f < 24; f++) printf(" %04x", (unsigned)(re15_emd_get_frame_entry(&b->anim, c, f) >> 12));
+                printf("\n");
+            }
+            static const int cl[4] = { 0, 1, 4, 5 };
+            for (int ci = 0; ci < 4; ci++) for (int fr = 0; fr < 20; fr += 10) {
+                re15_actor_t d; memset(&d, 0, sizeof d); d.active = 1; d.type = typ; d.motion = (int16_t)cl[ci]; d.anim_frame = (uint16_t)fr;
+                int kf = re15_compute_actor_kf(&b->anim, &b->skel, &d, -1, (uint32_t)fr);
+                re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+                if (re15_skel_compute_pose(&b->skel, kf, poses) == 0)
+                    printf("       Pose Clip %d Bild %d (kf %d, Wort %08x): Knochen 0 (%d,%d,%d) 4 (%d,%d,%d) 7 (%d,%d,%d)\n", cl[ci], fr, kf,
+                           (unsigned)re15_emd_get_frame_entry(&b->anim, cl[ci], fr),
+                           poses[0].trans[0], poses[0].trans[1], poses[0].trans[2], poses[4].trans[0], poses[4].trans[1], poses[4].trans[2],
+                           poses[7].trans[0], poses[7].trans[1], poses[7].trans[2]);
+            }
+        }
+    }
     re15_actor_t *e = &g_actors[3];
     memset(e, 0, sizeof *e);
     e->active = 1; e->type = typ; e->x = -4300; e->y = -1800; e->z = -5000; e->rot_y = 1500; e->floor = 1; e->motion = 5;
@@ -493,23 +529,24 @@ static int teil_npc(void)
     e->water_y = 0;
     idx = re15_wassersprung_r41_npc_schritt(e, 0, 7, &g_room_rdt);
     CHECK(idx == 0x17 - 8 && re15_esp_fx_count() == 0, "trocken: Ton %d (0x17-8 = 15), keine Plaetze (%d)", idx, re15_esp_fx_count());
-    /* Takt: Bildwort-Bit 0x4000 des Geh-Clips (motion 5) der NPC-Bank */
-    if (b40 || b42) {
-        re15_enemy_bank_t *b = re15_enemy_find(typ);
-        int plant = 0, erstes = -1;
-        for (int f = 0; f < 60 && b; f++) { int fs = re15_actor_footstep(&b->anim, e, -1, (uint32_t)f); if (fs) { plant++; if (erstes < 0) erstes = f; } }
-        CHECK(plant > 0, "Typ 0x%02x Clip 5: %d Bilder mit Fussaufsetzer in 60 (erstes Bild %d)", typ, plant, erstes);
-        if (plant > 0) {
-            re15_esp_fx_reset(); re15_wassersprung_r41_reset();
-            e->x = -4300; e->water_y = 0; e->anim_frame = (uint16_t)erstes;
-            int t = re15_wassersprung_r41_npc_takt(e, 0);
-            e->anim_frame = (uint16_t)((erstes + 1) % 60);
-            int t2 = (re15_actor_footstep(&b->anim, e, -1, e->anim_frame) == 0) ? re15_wassersprung_r41_npc_takt(e, 0) : -1;
-            CHECK(t == 1 && m->npc_schritte == 1 && m->npc_boden == 1 && (t2 == 0 || t2 == -1),
-                  "Takt: Aufsetzer-Bild -> 1 Schritt (Wasserboden), Folgebild ohne Bit -> keiner (t=%d t2=%d schritte=%u)", t, t2, m->npc_schritte);
-        }
+    /* Takt: Bildwort-Bit 0x4000 des Geh-Clips 5 — mit dem ersten Typ, dessen Clip 5 Aufsetzer traegt; Typen ohne
+     * Aufsetzer (z.B. 0x40 Ada: Clip 5 = 20 Bilder, alle Worte 0) erreichen FUN_80045630 im Original NIE. */
+    if (typ_takt) {
+        re15_enemy_bank_t *b = re15_enemy_find(typ_takt);
+        re15_esp_fx_reset(); re15_wassersprung_r41_reset();
+        e->type = typ_takt; e->motion = 5; e->x = -4300; e->water_y = 0; e->anim_frame = (uint16_t)takt_bild;
+        int fs = re15_actor_footstep(&b->anim, e, -1, e->anim_frame);
+        int t = re15_wassersprung_r41_npc_takt(e, 0);
+        int fc = b->anim.clips[5].frame_count;
+        int ohne = -1;
+        for (int f = 0; f < fc; f++) if (!(re15_emd_get_frame_entry(&b->anim, 5, f) & 0x4000u)) { ohne = f; break; }
+        int t2 = -1;
+        if (ohne >= 0) { e->anim_frame = (uint16_t)ohne; t2 = re15_wassersprung_r41_npc_takt(e, 0); }
+        CHECK(fs != 0 && t == 1 && m->npc_schritte == 1 && m->npc_boden == 1 && t2 == 0,
+              "Takt Typ 0x%02x: Aufsetzer-Bild %d (Fuss %d) -> 1 Schritt (Wasserboden), Bild %d ohne Bit -> keiner (t=%d t2=%d schritte=%u)",
+              typ_takt, takt_bild, fs, ohne, t, t2, m->npc_schritte);
     } else {
-        printf("     (keine NPC-Bank ladbar: Takt-Teil uebersprungen)\n");
+        printf("     (kein ausgelieferter NPC-Typ traegt im Clip 5 Fussaufsetzer: Takt-Teil ohne Pruefung)\n");
     }
     return 1;
 }
