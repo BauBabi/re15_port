@@ -365,9 +365,15 @@ void re15_wassersprung_r41_bildanfang(void)
     init();
     if (++s_gen == 0) s_gen = 1;
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {        /* Zustand des gezeichneten Bilds je NPC (s. Kopf s_gez) */
-        const re15_actor_t *e = &g_actors[i];
+        re15_actor_t *e = &g_actors[i];
         gezeichnet_t *g = &s_gez[i];
         g->ok = 0;
+        /* STEMPEL +0x88 IST EIN PRO-BILD-WERT: der Entity-Takt FUN_8001a50c loescht ihn je Entity NACH dem Handler
+         * (`jalr v0` @0x8001a588, `sh zero,136(v0)` @0x8001a59c), der AUTO-Pass FUN_800436a8 (@0x8001ce1c) stempelt neu,
+         * wer im WATER-Satz steht. Der Port-Scan (re15_aot_scan) schreibt nur und laeuft im Schritt VOR den KI-Takten
+         * (game_step_common.c) - der Bildanfang davor ist die Stelle des Loeschens. Ohne das blieb ein NPC, der einmal
+         * durch einen WATER-Satz ging, fuer den Rest des Raums gestempelt (Zweig 0x06032000 auf trockenem Boden). */
+        if (e->active) e->water_y = 0;
         if (!e->active || e->type < 0x40) continue;
         const void *sk = NULL;
         const void *an = re15_wassersprung_r41_npc_bank(e, &sk);

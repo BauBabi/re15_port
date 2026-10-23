@@ -648,6 +648,35 @@ static int teil_stempel(void)
     pl->water_y = 0; e->water_y = 0;
     re15_aot_scan(pl->x, pl->z, 0);
     CHECK(e->water_y == p0 && pl->water_y == p0, "dasselbe im freien Lauf (player_mode 0): NPC %d, Spieler %d", (int)e->water_y, (int)pl->water_y);
+
+    /* PRO-BILD-STEMPEL (Fortsetzung 2026-10-24): `sh zero,136(v0)` @0x8001a59c loescht +0x88 je Entity nach dem Handler, der
+     * AUTO-Pass stempelt neu. Takt A: NPC im WATER-Satz (Bild ohne Marke) -> gestempelt. Takt B: derselbe NPC AUSSERHALB jedes
+     * WATER-Satzes auf trockenem Boden, gezeichnetes Bild 7 (Marke) -> der Schritt sieht KEINEN Stempel mehr -> Zweig trocken. */
+    if (!bank_npc(0, 0x40)) { CHECK(0, "Bank 0x40 nicht ladbar"); return 0; }
+    const re15_wassersprung_r41_mess_t *m = re15_wassersprung_r41_mess();
+    int32_t ax = 0, az = 0, gefunden = 0;
+    for (int32_t dx = 1000; dx <= 12000 && !gefunden; dx += 500)
+        for (int sg = -1; sg <= 1 && !gefunden; sg += 2) {
+            int32_t x = a->x + sg * (a->half_w + dx), z = a->z;
+            int fl = re15_rdt_floor_sound(&g_room_rdt, x, z);
+            if (re15_aot_water_at(x, z) == 0 && !(fl & 0x80)) { ax = x; az = z; gefunden = 1; }
+        }
+    CHECK(gefunden, "trockener Punkt ausserhalb aller WATER-Saetze neben Satz %d: (%d,%d)", wi, (int)ax, (int)az);
+    if (!gefunden) return 0;
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = 0x40; e->hp = 100; e->x = a->x; e->z = a->z; e->y = -1800; e->floor = (uint8_t)(a->band & 0x7f);
+    e->state = 4; e->sub_state_1 = 9; e->sub_state_2 = 1; e->motion = 5; e->anim_frame = 0;
+    e->steer_x = (int16_t)(e->x - 3000); e->steer_z = (int16_t)e->z; e->rot_y = 0;   /* Ziel hinter dem NPC: Sub 9 dreht weiter */
+    re15_esp_fx_reset(); re15_wassersprung_r41_reset();
+    bild();
+    int16_t st_a = e->water_y;
+    unsigned sch_a = m->npc_schritte;
+    e->x = ax; e->z = az; e->motion = 5; e->anim_frame = 7; e->sub_state_1 = 9; e->sub_state_2 = 1; e->state = 4;
+    bild();
+    CHECK(st_a == p0 && sch_a == 0, "Takt A im Satz %d: Stempel %d (p0 %d), kein Schritt (%u)", wi, (int)st_a, (int)p0, sch_a);
+    CHECK(m->npc_schritte == 1 && m->npc_stempel == 0 && m->npc_boden == 0 && e->water_y == 0,
+          "Takt B ausserhalb: 1 Schritt, Zweig trocken (stempel %u, boden %u), +0x88 = %d (Pro-Bild-Wert @0x8001a59c)",
+          m->npc_stempel, m->npc_boden, (int)e->water_y);
     return 1;
 }
 
