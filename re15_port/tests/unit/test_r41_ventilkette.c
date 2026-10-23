@@ -397,9 +397,14 @@ static void fall_d(uint16_t r)
            "ROOM%04X: Tod, als das Wasser 900 ueber den Fuessen stand (Wasser y %d beim Tod, Fuesse -5400)", r, (int)wy_tot);
     PRUEFE(g_scd.props[pa].y == RE15_R41C_WASSER_Y_ENDE, "ROOM%04X: Wasser am Ende auf der Tuerebene y %d (ist %d)", r,
            RE15_R41C_WASSER_Y_ENDE, (int)g_scd.props[pa].y);
-    PRUEFE(!(g_fade_ch[RE15_R41C_FADE_KANAL].level & 0x8000) && g_fade_ch[RE15_R41C_FADE_KANAL].mask_b == 0xff &&
-           g_fade_ch[RE15_R41C_FADE_KANAL].mask_r == 0, "ROOM%04X: blaue Blende aktiv (level %04x r %02x b %02x)", r,
-           g_fade_ch[RE15_R41C_FADE_KANAL].level, g_fade_ch[RE15_R41C_FADE_KANAL].mask_r, g_fade_ch[RE15_R41C_FADE_KANAL].mask_b);
+    /* Blau bleibt: ABR 2 (B-F) zieht nur Rot + Gruen ab (Masken r/g 0xff, b 0x00); gemessen 2026-10-23 22:05, dass
+     * "ABR 0 + Maske Blau" im PC-Renderer Blau WEGzog (Bildmitte (29,36,29) -> (30,37,0)). */
+    PRUEFE(!(g_fade_ch[RE15_R41C_FADE_KANAL].level & 0x8000) && g_fade_ch[RE15_R41C_FADE_KANAL].abr == 2 &&
+           g_fade_ch[RE15_R41C_FADE_KANAL].mask_r == 0xff && g_fade_ch[RE15_R41C_FADE_KANAL].mask_g == 0xff &&
+           g_fade_ch[RE15_R41C_FADE_KANAL].mask_b == 0 && (g_fade_ch[RE15_R41C_FADE_KANAL].level >> 7) == 160,
+           "ROOM%04X: blaue Blende aktiv = subtraktiv Rot+Gruen, Blau bleibt (level %04x abr %d r %02x g %02x b %02x)", r,
+           g_fade_ch[RE15_R41C_FADE_KANAL].level, g_fade_ch[RE15_R41C_FADE_KANAL].abr, g_fade_ch[RE15_R41C_FADE_KANAL].mask_r,
+           g_fade_ch[RE15_R41C_FADE_KANAL].mask_g, g_fade_ch[RE15_R41C_FADE_KANAL].mask_b);
     PRUEFE(!re15_ventilkette_r41_timer_laeuft(), "ROOM%04X: nach dem Tod kein Zaehler mehr (keine Flut-Bits beim Neustart)", r);
     PRUEFE(bit(RE15_R41C_BIT_FLUT_GELAUFEN) == 0, "ROOM%04X: Bit 103 nach dem Tod nicht gesetzt", r);
     /* Neustart (CONTINUE) nach dem Tod: Blende weg, Zaehler weg, Ventile wieder fragbar */

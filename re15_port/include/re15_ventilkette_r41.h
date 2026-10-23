@@ -90,7 +90,10 @@
  *   Hintergrundfadens) -> Pad-Sperre, Cut 4, Wasser steigt 324 x 50 (Rate des Rechners @0x00CC8) vom Beckengrund
  *   y 0 bis zur Tuerebene y -16200; der C-Takt ertraenkt den Spieler, sobald die Flaeche 900 ueber seinen Fuessen
  *   steht (hp := -1 wie RE15_KILL_AT, main.c; blaue Blende Kanal 0 in der Form ROOM11F0 @0x174a `56 00 02 07 00 00`
- *   + `57`, hier ABR 0 + Maske Blau; Spritzer = Wasser-Schritt-Effekt FUN_80045630 Code 0x06050D00).
+ *   + `57`: ABR 2 (subtraktiv, der einzige Blendmodus der ausgelieferten Skripte) mit Maske Rot+Gruen (Bits 2+1) -
+ *   die Kachel zieht Rot und Gruen ab, Blau bleibt = blauer Schleier; Spritzer = Wasser-Schritt-Effekt FUN_80045630
+ *   Code 0x06050D00). Gemessen 2026-10-23 22:05 (Flut-Lauf, Bildmitte): die erste Fassung "ABR 0 + Maske Blau"
+ *   zeichnete der PC-Renderer als B-F (render_pc.c kennt nur ABR 1/2) -> (29,36,29) wurde (30,37,0) = Blau WEG.
  * - Verlassen waehrend des Zaehlers (jede Tuer) = Flut gelaufen: Bits 103 + 100. Ost-Tuer Slot 0 (-> 2070) wird
  *   dabei auf ROOM20B0 Cut 11 umgelenkt (Ziel der Szene @0x01F00/@0x01F08) — der Gegenweg der 20B0-Tuer Slot 3
  *   @0x019C2, die 2070 ebenfalls ueberspringt. Danach dauerhaft (Bit 103).
@@ -214,12 +217,13 @@
  * beide Bits bei jedem Raumstart zusaetzlich. */
 #define RE15_R41C_FLAG_TIMER       0x1D
 #define RE15_R41C_FLAG_FLUT        0x1E
-/* Blaue Blende: Kanal 0, ABR 0 (B/2+F/2), Maske Blau (Bit 0), statisch (Form ROOM11F0 @0x174a `56 00 02 07 00 00`
+/* Blaue Blende: Kanal 0, ABR 2 (B-F subtraktiv wie @0x174a), Maske Rot+Gruen (Config-Bits 2+1: Blau bleibt stehen),
+ * statisch (Form ROOM11F0 @0x174a `56 00 02 07 00 00`
  * + `57 00 <level>`; Helligkeit = level >> 7, re15_fade.h). */
 #define RE15_R41C_FADE_KANAL   0
-#define RE15_R41C_FADE_ABR     0
-#define RE15_R41C_FADE_MASKE   0x1
-#define RE15_R41C_FADE_LEVEL   0x5000u      /* -> 160 */
+#define RE15_R41C_FADE_ABR     2            /* @0x174a `56 00 02 ..` (FUN_800217b0: abr = Byte 2)                */
+#define RE15_R41C_FADE_MASKE   0x6          /* Rot (Bit 2) + Gruen (Bit 1) abziehen, Blau (Bit 0) bleibt          */
+#define RE15_R41C_FADE_LEVEL   0x5000u      /* -> Helligkeit 160 (level >> 7 @0x800218d0); PORT-WAHL: tiefer Schleier */
 #define RE15_R41C_FADE_BUCKET  7
 
 /* ---- 2050 Schaltpult ----------------------------------------------------------------------------------------- */
