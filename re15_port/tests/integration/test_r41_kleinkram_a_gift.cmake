@@ -111,7 +111,7 @@ endfunction()
 
 gift_lauf(leon 2030 "5:15" "")
 gift_lauf(leon_hp100 2030 "" "")
-gift_lauf(elza 2031 "5:15" "RE15_PSELECT_AUTO=1;RE15_PSELECT_AUTO_SWITCH=1")
+gift_lauf(elza 2031 "5:15" "RE15_TITLE_SHOT_CHAR=1")   # Elza (PL04) wie integration_r38_spinnen_echtlauf Lauf E; RE15_PSELECT_AUTO greift nur im echten Titelweg
 
 file(REMOVE "${_exe}")
 if(NOT _fehler STREQUAL "")
