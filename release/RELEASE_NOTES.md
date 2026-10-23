@@ -18,6 +18,11 @@ Original-Texttabelle des Raums, das Skript hat sie aber nie gezeigt. Jetzt:
 Wie alle Untersuchungstexte des Originals ohne Stimme. Telefon (Speichern), Aufzug und Tueren sind unveraendert.
 Die Vorschlaege fuer 1070/1071 bleiben wie gewuenscht liegen (Bilder: `analysis/untersuchungstexte_2026-10-23/`).
 
+**Ihre neuen Aufnahmen vom 19.10. sind drin (45 Dateien, unveraendert).** Elza und Sherry im Kanal (ROOM2001,
+`main06`-`main14`), die Ankunft im Labor (ROOM3001 `main03`-`main09`), Sherrys Geheimgang (ROOM3061 `main01`-`main09`),
+Leon/Marvin/Ada am Lift (ROOM3070 `main00`-`main04`), Ada in ROOM3080 (`main00`, `main01`) und die Szene in ROOM30E0
+(`main00`-`main05`, `main07`-`main13`). Jede Datei gehoert zu der Zeile mit derselben Nummer; die Sprecher passen.
+
 **Ihre Frage zu ROOM11D0 (Hundenamen).** Vom Raetsel ist nur das Bild da: Kamera 12 ist die Nahaufnahme des
 Zwinger-Schaltpults mit den sechs Namen (BOCKER, COURIER, GUTS, ROCKEY, DOGMEAT, JoJo), aufgestellt direkt vor dem Pult.
 Keine Kamerazone und kein Skriptbefehl schaltet je auf diese Kamera; es gibt keinen Text mit den Namen, kein Flag und
