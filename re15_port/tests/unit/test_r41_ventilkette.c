@@ -409,6 +409,34 @@ static void fall_d(uint16_t r)
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_FRAGE, "ROOM%04X Neustart: Ventile wieder fragbar", r);
 }
 
+/* ---- D2: Spieler auf der Tuerebene (Band 9, y -16200): stirbt spaetestens mit der Endlage des Wassers ------ */
+static void fall_d2(uint16_t r)
+{
+    bits_leeren();
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    if (raum_hoch(r, 6500, -5400, -200) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+    lauf_t L = druecken(6500, -200, 2048, 0, 600);
+    PRUEFE(L.n_msgs == 2 && re15_ventilkette_r41_timer_laeuft(), "ROOM%04X D2: Zaehler laeuft", r);
+    /* dann hinauf zur Tuerebene (im Spiel per Lift B); hier gesetzt */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].y = -16200; g_actors[RE15_ACTOR_SLOT_PLAYER].x = -8000; g_actors[RE15_ACTOR_SLOT_PLAYER].z = -5000;
+    band_aus_y(-16200);
+    int takte = 0, flut_bei = -1, tot_bei = -1; int32_t wy_tot = 0;
+    int pa = re15_ventilkette_r41_wasser_prop(0);
+    for (int i = 0; i < 2800; i++) {
+        g_scd_pad_edge = 0; g_scd_pad_held = 0;
+        if (g_scd.message_active && (i & 7) == 7) g_scd_pad_edge = 0x4000;
+        takt(); takte++; g_scd_pad_edge = 0;
+        if (flut_bei < 0 && re15_ventilkette_r41_flut_laeuft()) flut_bei = takte;
+        if (tot_bei < 0 && g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0) { tot_bei = takte; wy_tot = pa >= 0 ? g_scd.props[pa].y : 0; }
+        if (tot_bei > 0 && takte > tot_bei + 60) break;
+    }
+    printf("  ROOM%04X D2 Tuerebene: Flut bei %d, tot bei %d, Wasser y %d\n", r, flut_bei, tot_bei, (int)wy_tot);
+    PRUEFE(tot_bei > 0 && wy_tot == RE15_R41C_WASSER_Y_ENDE, "ROOM%04X D2: Tod auf der Tuerebene mit der Endlage -16200 (Wasser %d)", r, (int)wy_tot);
+    PRUEFE(flut_bei > 0 && tot_bei - flut_bei >= RE15_R41C_WASSER_SCHRITTE && tot_bei - flut_bei <= RE15_R41C_WASSER_SCHRITTE + 4,
+           "ROOM%04X D2: Tod %d Takte nach Flutbeginn (324 Schritte)", r, tot_bei - flut_bei);
+}
+
 /* ---- E: Verlassen -> Flut gelaufen; 20B0; Umlenkung; 2030 unter Wasser ------------------------------------ */
 static void fall_e(uint16_t r2030, uint16_t r20b0, uint16_t r2000, uint16_t r2010, uint16_t r2050, uint16_t r2070, uint16_t r1260)
 {
@@ -596,6 +624,7 @@ int main(void)
         fall_b((uint16_t)(0x2000 + v), (uint16_t)(0x20B0 + v));
         fall_c((uint16_t)(0x2030 + v));
         fall_d((uint16_t)(0x2030 + v));
+        fall_d2((uint16_t)(0x2030 + v));
         fall_e((uint16_t)(0x2030 + v), (uint16_t)(0x20B0 + v), (uint16_t)(0x2000 + v), (uint16_t)(0x2010 + v),
                (uint16_t)(0x2050 + v), (uint16_t)(0x2070 + v), (uint16_t)(0x1260 + v));
         fall_f((uint16_t)(0x2050 + v));

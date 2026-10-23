@@ -474,7 +474,9 @@ static void flut_tick(void)
                                    (uint16_t)(code & 0xffffu), pl->x, wy, pl->z, INT32_MAX, pl->rot_y);
         }
     }
-    if (wy <= pl->y - RE15_R41C_ERTRINK_TIEFE) {
+    /* Ertrinken, sobald die Flaeche 900 ueber den Fuessen steht — spaetestens auf der Tuerebene (Endlage -16200):
+     * "Zeit abgelaufen und noch im Raum: Tot" gilt auf jeder Ebene (NUTZER-VORGABE). */
+    if (wy <= pl->y - RE15_R41C_ERTRINK_TIEFE || wy <= RE15_R41C_WASSER_Y_ENDE) {
         s_ertrunken = 1;
         s_timer = 0;                                        /* Tod: keine Flut-Bits beim naechsten Raumstart */
         if (pl->hp >= 0) pl->hp = -1;                       /* tot = hp < 0 (main.c RE15_KILL_AT, game_step_common.c) */
