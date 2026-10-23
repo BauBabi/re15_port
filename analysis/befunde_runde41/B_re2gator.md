@@ -563,4 +563,23 @@ ANGENOMMEN (M3 kein Mangel mehr); Abnahme B 1 prueft zusaetzlich Nachtrag 4 (RE2
 - gator_re2_pc.c raum_se(): debug.log-Zeile "[gator-re2] Raum-SE 15 -> GATOR40A0.VBS Satz 1" (bzw. "(Bank fehlt,
   stumm)") bei jedem Ruf des Hakens. Messung nachher: s. §8.7 (Lauf K).
 
-### 8.7 Messungen nachher (werden nach dem Bau eingetragen)
+### 8.7 Messungen nachher
+
+**Fortsetzung 2026-10-24 00:07 (neuer Agent nach dem Fable-Limit 23:45):** Baum sauber, HEAD 8b8c9b5b (= 591041e9
+UNGEPRUEFT + AUFTRAG/VERTRAG vom master). Bau: `local_build.sh configure` + `build` -> "ninja: no work to do" (exe
+23:45 = Stand 591041e9); danach die 6 Spur-B-Quellen (gator_re2_r41.c, enemy_ai_boss_gator.c, gator_re2_pc.c,
+re2_fx.c, enemy_ai_re2_zombie.c, test_r41_re2gator.c) per touch neu uebersetzt: 782 Schritte, `LOCAL-BUILD-OK`,
+EXIT 0, keine Warnung -> 591041e9 kompiliert.
+
+Gezielte Tests am Stand 591041e9 (Bau 00:08):
+- `ctest -R "^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|sca_wall_hit|re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_.*|re2_hit_repeat_crow_spider|re2_crow_.*|crow_ai|crow_fixes|crow_death_corpse|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|r35_fenster_kraehe|r37_re2zombie_.*|r34_re2fx.*|montage_fx|r35_cut1150_montage.*|r38_montage.*|r38_wasser.*|r38_wasserzombie|r39_heliport1171_kraehen|r30_granate|r35_granate|r36_granate)$|^probe_(re2z_stomp|crow_kill)$"`
+  (= Regex der Abnahme 0, jetzt inkl. unit_r41_re2gator_wand): **100% tests passed, 0 tests failed out of 88** (7,34 s).
+- `ctest -R "^integration_r41_re2gator$"`: **100% tests passed, 0 tests failed out of 1** (35,76 s); Statuszeile des
+  Riegels (natuerlicher Ablauf, Leon nach dem Sprung in der Tuernische, GB_TEST=1, 700 Bilder):
+  `r41_re2gator: ok — Kanister gesetzt, RE2-Zeilen 11 (INTRO 1/1, DASH 1/1, Putz 6 x 9 = 54), Clip 6/2/3 Bilder 125/150/300, HP min 25300`.
+  gator_boss.log dieses Laufs (lauf_c01305e9):
+  `RE2 INTRO start pos=(-7200,-9200) yaw=1089 bahn_ende=(-7847,-15498)` / `RE2 INTRO ende pos=(-7416,-17140) yaw=2113` /
+  `RE2 DASH start pos=(-7300,-18109) yaw=1024 putz_um=(-8438,0,-25538)` / 6 x `RE2 PUTZ runde r/6 spawns=9 ...
+  um=(-8438,0,-25538) letzter=(-9060,-2400,-25588)` / `RE2 DASH ende pos=(-7416,-22300) yaw=2048`.
+  -> M1: Intro (Clip 6 -> 3) und Dash (Clip 2 -> 3, auf der Westwand-Klemmlinie nach Sueden) zuenden im normalen
+  Ablauf; M2: 54 Putz-Spawns um Leons Stand (-8438,0,-25538), letzter Spawn = Leon + (-622,-2400,-50) (k_putz[8]).
