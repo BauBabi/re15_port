@@ -96,3 +96,13 @@ Vereinbarte Reihenfolge: (1) Release v0.8.28 [erledigt], (2) 20B0-Wasser im Orig
 - Die 20B0-Flut ist im Port kaputt: EM024 (Typ 0x24, Partikel-Emitter) Unterzweige grid 0/1 (0x8010f130 / 0x8010f3fc
   -> 0x80019700) stehen in enemy_ai_common.c als OFFEN.
 - Elzas Variante der Zeile "Hey, Leon, try with this!" heisst sinngemaess "Hey, Elza, try with this!" (John).
+
+## 2026-10-23 17:3x — Nachtrag 1 (Wortlaut, waehrend Welle 1; betrifft Spur A / jede DuckStation-Aufnahme)
+
+> Er sagt immer failed media capture - invalid type. Du musst in duckstation backend auf FFmpeg ändern und container
+> auf mp4.
+
+Umgesetzt vom Orchestrator: `%LOCALAPPDATA%/DuckStation/settings.ini` `[MediaCapture]` `Backend = FFmpeg`,
+`Container = mp4` (vorher MediaFoundation + avi -> "failed media capture - invalid type"). Gilt ab dem naechsten
+DuckStation-Start; Sicherung `settings.ini.vor_ffmpeg_2026-10-23`. Agenten: settings.ini NICHT auf MediaFoundation/avi
+zuruecksetzen; Aufnahmen landen als .mp4 (Frames per ffmpeg extrahieren).
