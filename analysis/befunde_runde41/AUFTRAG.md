@@ -120,3 +120,17 @@ extrahiert die Bilder (ffmpeg, ab Szenenstart bis Leon frei ist), legt Video + B
 analysis/befunde_runde41/A_belege/ ab (Pfade im Dossier) und vergleicht Bild fuer Bild mit dem Port-Framedump
 (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1): Zeitpunkt, Ort, Zahl und Groesse der Partikel je Bild. Die Abnahme prueft das
 Video, nicht nur die RAM-Reihe.
+
+## 2026-10-23 18:5x — Orchestrator-Entscheide zu den Fragen der Spur A (Bau-Ergebnis 18:54; der Nutzer kann widersprechen)
+
+- E1 NPC-Wasserschritte: Der Nutzer-Wortlaut "Auch die NPCs teilen die gleichen Effekte wenn sie durch das Wasser gehen"
+  ist eine Vorgabe. Befund der Spur: die ausgelieferten NPC-Geh-Clips 5 (0x40/0x42/0x45) tragen keine Fussaufsetzer
+  (Bildwort-Bit 0x4000 fehlt), im Original spritzt also kein NPC. ENTSCHEID: NPC-Schritte BAUEN als PORT-WAHL mit der
+  vorgeschlagenen Form (Aufsetzer-Bilder des Geh-Clips 0 derselben EDD auf den 20-Bild-Clip 5 abbilden, Beleg der
+  Bildnummern im Dossier), Spritzer + Schritt-Ton wie beim Spieler; Pin je NPC-Typ.
+- E2 RE15_ACTOR_MAX 21 -> 36: angenommen, sofern das Original in 20B0 wirklich 35 Emitter fuehrt (DAT_800aca4e=35 am
+  Savestate belegt; die Abnahme prueft das gegen den Runde-36-Befund "20 Plaetze, FUN_80037250 sltiu 0x14" und erklaert
+  den Widerspruch mit Adresse). Querschnitt: alle Aktor-Schleifen/Schattenliste; die volle Suite vor dem Release ist
+  das Gate; PSX-Budget (+28 KB BSS) im Dossier OFFEN lassen.
+- Video-Vergleich (Port-Wolke 2-5x duenner/dunkler, erster Schub spaeter): bleibt MANGEL bis Bild-fuer-Bild gleich
+  (Helligkeit/Mischmodus der Effekt-0x0f-Sprites gegen VRAM/CLUT des Originals messen, nicht schaetzen).
