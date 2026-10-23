@@ -96,3 +96,12 @@ Vereinbarte Reihenfolge: (1) Release v0.8.28 [erledigt], (2) 20B0-Wasser im Orig
 - Die 20B0-Flut ist im Port kaputt: EM024 (Typ 0x24, Partikel-Emitter) Unterzweige grid 0/1 (0x8010f130 / 0x8010f3fc
   -> 0x80019700) stehen in enemy_ai_common.c als OFFEN.
 - Elzas Variante der Zeile "Hey, Leon, try with this!" heisst sinngemaess "Hey, Elza, try with this!" (John).
+
+## 2026-10-23 21:37 — Orchestrator-Entscheide zu den Fragen der Spur D (Bau-Ergebnis 4cbbf4a2; der Nutzer kann widersprechen)
+
+- D1 Puls nur fuer Port-Gegenstaende (Feuerloescher 1030, spaeter der Schluessel 2090 der Spur F) — der Nutzer hat den
+  Feuerloescher genannt; die Original-Item-Props der RDTs bleiben wie im Original (Nutzerfrage in der Abschlussmeldung).
+- D2 Giftkugel: KEIN One-Save (RE2 FUN_800401d4) — Nutzer-Wortlaut "kann nicht sterben ... aber bereits auf Danger" =
+  Danger + Treffer = Tod. Bleibt so.
+- D3 VOLUME-Zeile im freien Streifen y 221 unter dem Options-Kasten (keine Original-Beschriftung angeschnitten) —
+  angenommen; Nutzer sieht es im Spiel und kann die Lage aendern lassen.
