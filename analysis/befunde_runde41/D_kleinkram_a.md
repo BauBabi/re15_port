@@ -5,6 +5,14 @@ Wortlaut (AUFTRAG.md): (1) Lautstaerke-Option "alles lauter oder leiser"; (2) Fe
 Blink-Effekt "existiert bereits in RE2, uebernehme den"; (3) Spieler stirbt nicht bei erneutem Spinnengift auf Danger.
 
 ## 0. Stand / Protokoll (neueste zuerst)
+* 2026-10-23 19:xx: Riegel-Fehler im Lautstaerke-Echtlauf korrigiert (gelesen-Zeile vor der stderr-Umleitung, Eckpixel),
+  Shot-/TAB-4-Einstieg laedt den gespeicherten Sound-Modus (main.c, 2 Zeilen, @0x8002f244-4c), Elza-Lauf des Gift-
+  Riegels ueber RE15_TITLE_SHOT_CHAR=1 (gemessen: RE15_PSELECT_AUTO liess beim Debug-Sprung Leon stehen). Neubau,
+  Endlauf r41_kleinkram_a.
+* 2026-10-23 18:xx: gezielte Laeufe (34 unit/probe gruen; 16 Echtlauf: 15 gruen, Lautstaerke-Riegel rot = Riegel-Fehler).
+* 2026-10-23 17:4x: VOLUME-Zeile von y 89 (Shot: "Forwar" angeschnitten, DAT_80073d2c[2]/[8]) in den freien Streifen
+  y 221 verlegt; Messungen nachher: RMS 0,5000, Puls-Hub 10,5, Danger-Treffer = Tod (Leon).
+* 2026-10-23 17:3x: Code gebaut (df6141a5), Messungen nachher fuer alle drei Punkte.
 * 2026-10-23: Baum sauber (116e8b0f), AUFTRAG/VERTRAG/UEBERGABE-40 gelesen, Einstiegspunkte lokalisiert:
   Options-FSM `platform/pc/main.c` pc_run_config (CFG_TOP/PICKER/SOUND/EDIT/AI, Zeilen ~2543-2905), Audio
   `platform/pc/src/audio_pc.c` (audio_callback :416, SS_BASE_MVOL :384, s_audio_mono :282), Feuerloescher
@@ -180,7 +188,40 @@ Gleicher Aufbau, RE15_R41_HP_AT=5:15 (Danger):
   Spieler lebt (Zustand 2).
 
 ## 4. Tests
-(folgt)
+Alle neu, registriert nur aus `tests/unit/probes/r41_kleinkram_a.cmake` (GLOB); Werkzeug + Riegel in
+`tests/unit/test_r41_kleinkram_a.c`, Echtlauf-Skripte `tests/integration/test_r41_kleinkram_a_{lautstaerke,blink,gift}.cmake`
+(eigene Laufordner mit Zufalls-Id, exe-Kopie `re15_pc_r41d_<thema>_<id>`, cmake_minimum_required 3.21, kein Backslash,
+libm fuer sqrt, `_DEFAULT_SOURCE` fuer setenv).
+* `unit_r41_kleinkram_a` — A Lautstaerke (Parser/Formatierer, Q15 100 -> 0x8000 / 50 -> 0x4000 / 0, Klemme, Schritt,
+  Arbeitskopie-Modell Eintritt/Bestaetigen/Cross mit echter Datei ueber RE15_OPTIONS_FILE, Rundreise), B Blink
+  (`re15_blink_r41_wert(n)` == Titelpuls title_pulse.c nach n Schritten fuer n = 0..130, Spanne 0x80..0xBE, Spitze 31 /
+  Reset 60, Tabelle, Lichtkontext x Wert/0x80 mit Klemme 255, aus = unveraendert), C Giftkugel (RE2-Gehirn + Spinne:
+  HP 15 -> -5 Zustand 3 + is_dead, HP 19 -> -1 Tod, HP 30 -> 10 Zustand 2 + hit-once, Schutz vorbei + Danger -> Tod,
+  HP 20 -> 0 lebt, RE1.5-Gehirn / fremder Absender / Kasten daneben / Slot 0 -> nicht zustaendig).
+  Ergebnis: ALLE PRUEFUNGEN GRUEN (34 Pruefungen).
+* `integration_r41_kleinkram_a_lautstaerke` — echte exe: (1) zwei CAP_SYNC-Mitschnitte 100 % / 50 % (Leon ROOM2030,
+  Schuss + Giftkugel) -> `rms_vergleich` 500 Promille (soll 500 +- 5), Mindestpegel; (2) Options-Shot Tab 4 mit
+  volume=50: VOLUME-Kachel y 221 pixelgleich mit Kachel 1 (Randspalten, Zeilen 2..15), Ziffern "50" rechtsbuendig
+  (helle Pixel 186..201 = 18, 172..184 = 0); (3) echte Tastenkette im Options-Schirm (RE15_CONFIG_TEST, Tab 4, Eingabe-
+  skript LEFT LEFT Quadrat RIGHT Quadrat, Vorspann uebersprungen): `[lautstaerke] ... geschrieben: 80 %, Stereo`,
+  Datei `volume=80`, exe exit 0. Erster Batch-Lauf rot durch zwei Riegel-Fehler (gelesen-Zeile faellt vor die stderr-
+  Umleitung; die 8 durchsichtigen Eckpixel der Kachel zeigen verschiedenen Hintergrund) — Riegel korrigiert, Messwerte
+  selbst waren gruen (RMS 500 Promille, 18/0 helle Pixel, volume=80).
+* `integration_r41_kleinkram_a_blink` — echte exe: Leon ROOM1030 Cut 0, Serie 400..460/4 -> `ppm_puls` Huelle x 38..48
+  y 111..122 Hub 10,5 (soll 6..40), Pfeiler x 24..34 Hub 0 (soll <= 1).
+* `integration_r41_kleinkram_a_gift` — echte exe: Leon ROOM2030 HP 15 -> `[giftkugel] F19 RE2-Treffer ... HP 15 -> -5 =
+  TOD (Kommando 3)`, pst=3 mit hp=-5 in 100/100 Bildern ab F19, Neuladen (gift.log F0 hp=100); Gegenprobe HP 100 ->
+  80 (Kommando 2), kein Tod; Elza ROOM2031 (RE15_TITLE_SHOT_CHAR=1 -> PL04; RE15_PSELECT_AUTO greift nur im echten
+  Titelweg, gemessen character=0) dieselbe Kette (F19 Tod).
+* Angepasst: `unit_r38_spinnen` teil_b RE2-Lauf erwartet 100 - 20 (RE2 Op 32 @0x800200dc), RE1.5-Lauf weiter 100 - 10.
+* Gezielte Laeufe (KEINE volle Suite), Stand 4c713ad5 / exe df6141a5-Stand + Shot-Pfad-Patch:
+  - `ctest -R "unit_r41_kleinkram_a|unit_r38_spinnen|unit_r39_zustand|unit_r37_feuerloescher|unit_r38_itemorte|unit_damage|unit_bleed_rng|r31_boxen|r38_cursor|r39_elza_klettern|r39_inventar|r38_rolltor20a0_windung"`:
+    **100% tests passed, 0 tests failed out of 34**
+  - `ctest -R "integration_r41_kleinkram_a|integration_r38_spinnen_echtlauf|integration_r37_feuerloescher|integration_r38_itemorte|integration_r39_zustand|integration_r39_johnruf1041"` (vor der Riegel-Korrektur):
+    **94% tests passed, 1 tests failed out of 16** — rot nur integration_r41_kleinkram_a_lautstaerke (Riegel-Fehler s. o.;
+    r37_feuerloescher 390 s, r38_spinnen_echtlauf 114 s, r38_itemorte, r39_zustand_kleidung/gift, r39_johnruf1041 a-t11b1d,
+    r41 blink 43 s + gift 856 s gruen).
+  - Endlauf `ctest -R "r41_kleinkram_a"` nach dem Neubau: (Summenzeile folgt unten im Protokoll)
 
 ## 5. OFFEN
 * Giftkugel-Kasten: Radius 500 (RE1.5 Routine 25 @0x80017ffc) statt RE2 800 (`li a1,0x320` @0x800200d0) — Hybrid
