@@ -249,3 +249,10 @@ Fleck 0x97 -> 0x06050D00 Ton 15, Stempel -> 0x06032000 Ton 13, trocken 0, Bildwo
   spritzt und klingt kein NPC beim Skriptlauf durch Wasser. Soll der Port NPC-Schritte trotzdem erzeugen (PORT-WAHL;
   Form-Vorschlag: die Aufsetzer-Bilder des Geh-Clips 0 derselben EDD, Bild 8 links / Bild 22 rechts bei 0x40, auf den
   20-Bild-Clip 5 abgebildet) oder bleibt es byte-gleich zum Original?
+
+### 1.7 Bildvergleich Original / Port (Fruehphase der Flut)
+- Original tf_7.sav (Bild 48 nach dem Sprung, Cut 11/12): Leon rennt den Gang hinunter, hinter/neben ihm die
+  gruenlich-weisse Spritzerwolke (Effekt 0x0f) der Wasserfront; im zweiten Framebuffer die Front weit im Gang.
+- Port (Integrationslauf 3, Leon, Framedumps f000030/f000060 = Raumbild 30/60, Cut 12/13): Leon rennt, hinter ihm die
+  gleiche gruenlich-weisse Spritzerwolke, bei Bild 30 noch an der Osttuer, bei Bild 60 im Gang.
+  (Bilder im Scratch: orig/tf_7.png, r41_wasser20b0_wd/lauf_ca6f84d2_leon/f000030.png, f000060.png.)
