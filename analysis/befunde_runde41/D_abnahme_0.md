@@ -199,12 +199,12 @@ fuer den Nutzer (Dossier §6 (2)).
 ## 6. Testlaeufe (eigene, im Spurbaum, nur `ctest -R`)
 * `ctest -R "r41_kleinkram_a" -j 2 --timeout 1800`: unit_r41_kleinkram_a Passed 0,01 s;
   integration_r41_kleinkram_a_lautstaerke Passed 50,19 s; integration_r41_kleinkram_a_blink Passed 43,19 s;
-  integration_r41_kleinkram_a_gift: LAEUFT (Ergebnis in §9 nachgetragen).
+  integration_r41_kleinkram_a_gift: Passed 851,75 s (§9).
 * Unit-Nachbarn `ctest -R "unit_r41_kleinkram_a|unit_r38_spinnen|unit_r39_zustand|unit_r37_feuerloescher|
   unit_r38_itemorte|unit_damage|unit_bleed_rng|r30_titel_blinken|unit_audio"`: **100% tests passed, 0 failed out of 22**.
 * Integrations-Nachbarn `ctest -R "integration_r38_spinnen_echtlauf|integration_r37_feuerloescher|
   integration_r38_itemorte|integration_r39_zustand|integration_r30_titel_puls|integration_r39_johnruf1041" -j 1`:
-  LAEUFT (Ergebnis in §9 nachgetragen).
+  durch das Sitzungslimit abgebrochen — Ergebnis in §10.4/§10.5 (Sitzung 2).
 * C4 (RE1.5-KI, `RE15_AI_FLAVOR=re15`, HP 15 per Messhaken): siehe §9.
 
 ## 7. Maengel (nummeriert; keiner blockiert die Abnahme)
@@ -238,3 +238,113 @@ fuer den Nutzer (Dossier §6 (2)).
   Spinnen spuckten in 400 Bildern nicht (HP blieb 15, pst=1) — der Beta-Pfad (Routine 25 -> FUN_80012d60, 10 HP,
   Tod nur HP < 0 @0x80012ee8) ist im Diff unveraendert (spinnen_r38.c: Haken vor dem Resolver, Resolver-Aufruf
   unveraendert). Mangel 4 bleibt als Hinweis.
+
+## 10. Fortsetzung der Abnahme 0 (Sitzung 2, 2026-10-23 ab 21:4x — Sitzungslimit hatte §6 offen gelassen)
+
+### 10.1 Stand
+* HEAD jetzt 69142b95 = 4cbbf4a2 + zwei Doku-Commits (20caeac3 dieser Bericht, 69142b95 AUFTRAG D1-D3).
+  `git diff 4cbbf4a2 HEAD --stat`: nur analysis/befunde_runde41/{AUFTRAG.md,D_abnahme_0.md} — der Code-Stand ist
+  unveraendert. Baum sauber (`git status --short` leer).
+* Bau erneut: `bash re15_port/tools/local_build.sh build` -> Preflight OK, `ninja: no work to do`, `LOCAL-BUILD-OK
+  (build)`. exe re15_pc.exe 18:32:16 ist juenger als jede Quelle des Diffs (juengste: main.c 17:47:39,
+  lautstaerke_r41_pc.c 17:42:56). `cmp re15_pc.exe re15_pc_abn0.exe` = IDENTISCH (md5 9a89f3d700698e8c605669bff2b822bb)
+  — alle Messungen aus §1-§3 und §9 gelten damit fuer den gebauten Stand dieses Berichts.
+* Mess-Artefakte aus §1-§3 nachgeprueft (scratchpad/abn0/...): c1_leon_natur/debug.log enthaelt `[giftkugel] F19 ... 100 -> 80`,
+  `F580 62 -> 42`, `F639 41 -> 21`; state.log F1041..F1154 `hp=-11 pst=3`, F1155 pst=7, danach `F1041 ... hp=100 pst=0`
+  (Neuladen); c3_elza_natur: `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)` + `F1041 HP 9 -> -11 = TOD (Kommando 3)`;
+  c2_hook20: `F19 HP 20 -> 0 (Kommando 2)`, state.log F19 `hp=0 pst=2 ps1=2`; a_tasten_confirm/re15_options.cfg =
+  `volume=70 / sound=stereo` + `geschrieben: 70 %, Stereo`; a_tasten_cancel/opt.cfg unveraendert `volume=60 / sound=mono`;
+  a_cap_{100,50,25,0,mono}/konsole.txt je `gelesen (2 Schluessel): <p> %, <Stereo|Mono>`; b1_blink 72 Dateien (61 ppm +
+  crops); b2_tuer1040/debug.log `[aot] DOOR FIRE slot=1 ... spawn=(-26214,0,-3861)`, `[room] PC loaded room1030.rdt`,
+  `[feuerloescher] ROOM1030: Loescher an der Wand obj 5 ...`.
+
+### 10.2 Orchestrator-Entscheide D1-D3 (AUFTRAG.md 21:37) gegen den Code geprueft
+* D1 "Puls nur fuer Port-Gegenstaende": einziger Aufrufer von `re15_blink_r41_setzen` ist feuerloescher_r37.c:195 mit
+  `g->zone_item` (k_lagen: 0x1030 zone 1, 0x1090/0x1091 zone 0); der Render-Haken main.c:10935 fragt die Tabelle je
+  (Raum, oid) ab. In ROOM1030 Cut 0 werden drei Props gezeichnet (b1_blink/debug.log `[prop-render] pi=0 oid=0x00`,
+  `pi=1 oid=0x05`, `pi=2 oid=0x0F`), nur 0x05 ist eingetragen -> Original-Props bleiben wie im Original. Unit-Riegel
+  "andere Raum-/Objekt-Ids bleiben inaktiv" deckt das ab. ERFUELLT.
+* D2 "kein One-Save": giftkugel_r41.c:159-167 — `if (pl->hp < 0) { re2z_self1d3 |= 0x80; state = 3; ... return 2; }`,
+  kein Latch, kein `HP := 0`-Zweig; Header re15_giftkugel_r41.h kennzeichnet das als NUTZER-VORGABE. Messung §3.1
+  (HP 9 -> -11 = TOD, beide Szenarien). ERFUELLT.
+* D3 "VOLUME-Zeile y 221": lautstaerke_r41_pc.c `LAUT_PC_KACHEL_Y 221`, `LAUT_PC_TEXT_Y 223`; Riegel vergleicht
+  y 221..238 (Zeilen 2..15) mit Kachel 1; Shot a_shot_50/sound.png (§1.1). ERFUELLT.
+
+### 10.3 RE-Gate, Stichproben dieser Sitzung (selbst gegriffen, nicht aus dem Dossier uebernommen)
+* ghidra1_V2.txt:122564-122567 `8002f0e0 ori t4,zero,0x58` / `8002f0e4 ori t3,zero,0x12` / `8002f0e8 ori t2,zero,0x74`
+  / `8002f0ec ori t1,zero,0xe8`; :122581 `8002f124 sh t2,0x8(s1)`, :122582 `8002f128 sh v0,0xa(s1)`, :122583
+  `8002f12c sb zero,0xc(s1)`, :122603 `8002f17c ori v0,zero,0x46`; :122655 `8002f244 lbu v0,DAT_800b0fce`, :122657
+  `8002f24c sb v0,0x7(v1)`; :122667 `8002f270 andi v0,v1,0x40`, :122669 `8002f278 _andi v0,v1,0xa0`, :122677
+  `8002f294 _andi v0,v1,0x5000`, :122688 `8002f2c0 sh v0,DAT_800b0fce`, :122699 `8002f2e8 xori v0,v0,0x1`.
+  -> Mangel 2 (§7) bestaetigt: der `ori t2,zero,0x74` steht @0x8002f0e8, @0x8002f124 ist der Store.
+* Danger: ghidra1_V2.txt:74727 `800112b5 undefined1 14h`, :169708 `8004ed7c lb v1,DAT_800112b5`, :169734
+  `8004ede0 slt v1,a0,v1`. Routine 25 / Damage: :84671 `80017ffc ori a0,zero,0x1f4`, :84674 `80018008 jal FUN_80012d60`,
+  :77709 `80012ee8 bgez v1`, :77659 `80012e24 lbu v0,DAT_800acae7`, :77678 `80012e70 jal FUN_800453d0`.
+* RE2 (ghidra_re2_Leon.txt): :100360 `800200d0 li a1,0x320`, :100363 `800200dc li a2,0x14`, :100364 `800200e0 jal
+  FUN_80047664`; :152330/1 `800476c8 li s8,0x2` / `800476cc li s7,0x3`, :152337 `800476e0 andi v0,v0,0x1`, :152340
+  `800476ec lbu v0,0x1d3(s0)`, :152344/6 `800476fc lh v0,0x156(s0)` / `80047704 bltz`, :152394 `800477b8 _sw s8,0x4(s3)`,
+  :152412 `800477fc jal FUN_800401d4`, :152414 `80047804 bne v0,s8`, :152416 `8004780c sw s7,0x4(s3)`; FUN_800401d4
+  :143377 `80040250 subu a0,v0,a0`, :143380 `8004025c _sh a0,0x156(a2)`, :143391/2 `80040284 bgez` / `80040288 _slti
+  v0,v0,-0xe`, :143397 `8004029c andi v0,v0,0x1000`, :143403/4 `800402b0 sh zero,0x156(a2)` / `800402b4 ori v1,v1,0x1000`,
+  :143408/12 `800402c0 lbu v1,0x1d3(a2)` / `800402d0 sb v1,0x1d3(a2)` (DAT_800cfdcb), :143413/17 `800402d4 lw` /
+  `800402e4 _sw` DAT_800cfb74; Item_aot_set :173924 `80054cf8 lbu s2,0x14(s0)`, :173973/4 `80054db0 lui v1,0x8000` /
+  `80054db4 sw`, :173987 `80054de4 _sb s1,0x4281(v1)`, :173989 `80054dec sw`. Alle wie im Diff zitiert.
+* TITLE.BIN (info/Re1.5/PSX/BIN/TITLE.BIN, 11832 Byte, identisch mit shared_assets; KEIN 0x800-Header: Datei-Offset =
+  Adresse - 0x80100000): Bytefolge `2c62001f` (sltiu v0,v1,0x1f) genau einmal @0x28fc = 0x801028fc; `24840002`
+  (addiu a0,a0,2) @0x290c; `2484fffe` (addiu a0,a0,-2) @0x2910; `24630001` @0x2914; `3402003c` (ori v0,zero,0x3c)
+  @0x2918; `34040080` (ori a0,zero,0x80) @0x2928. Woerter ab 0x28ec: 3c038010 94632946 3c048010 94842944 2c62001f
+  10400003 00000000 08040a45 24840002 2484fffe 24630001 3402003c 14620003 00000000 34030000 34040080 — die Konstanten
+  in include/re15_blink_r41.h stimmen (und sind dieselben wie include/re15_title_pulse.h).
+* Guess-Tells im Code-Diff (`git diff master...HEAD -- re15_port`, nur +-Zeilen, deferred|tunable|interim|for now|
+  faithful|plausibel|TODO|FIXME|hack): keine Treffer.
+* Pfade (`git diff master...HEAD --name-only`, 21 Dateien): analysis/ (3), engine/src (6), include (3), platform/pc (3),
+  tests/{integration,unit,unit/probes} (6). Kein release/, platform/android/, shared_assets/, pri/, synchro/, keine
+  Test-CMakeLists (Registrierung ueber tests/unit/probes/r41_kleinkram_a.cmake, GLOB). OK.
+* re15_options.cfg liegt wirklich "neben re15_card.mcr": beide CWD-relativ (main.c:1605 `RE15_CARD_PATH "re15_card.mcr"`,
+  lautstaerke_r41.h RE15_LAUT_R41_DATEI), CWD = exe-Ordner (main.c:3242). OK. Mangel 3 im Code nachvollzogen:
+  `re15_lautstaerke_r41_pc_start()` main.c:3249 liegt VOR `freopen("debug.log","w",stderr)` main.c:3271.
+
+### 10.3a Beleg "alles lauter oder leiser" (statisch, audio_pc.c audio_callback, Zeilen 416-521)
+Reihenfolge im Rueckruf (selbst gelesen): `SDL_memset(stream, 0)` -> SE-Slots (s_active[], je Voice Q15-Pegel und Tail-Fade)
+-> XA-Stimmen (`s_xa`, cd_vol_l/r >> 14) -> FMV-Ton (`s_fmv_audio`, cd_vol >> 7) -> BGM `re15_ss_render_bgm(out, frames)`
+-> Ambience `re15_amb_mix(out, frames)` -> Mono-Faltung (`s_audio_mono`) -> **Endstufe der Spur** (q != 0x8000: out[i] =
+out[i] * q >> 15 ueber frames*2 Samples) -> `fwrite` des Cap-Hakens. Es gibt keinen Ausgabepfad an der Endstufe vorbei;
+der Mitschnitt RE15_AUDIO_CAP_SYNC (§1.1) nimmt hinter der Endstufe ab, deshalb ist das gemessene RMS-Verhaeltnis 0,5000
+der Beweis fuer die ganze Mischung.
+
+### 10.4 Nachbar-Echtlaeufe (Abschluss von §6)
+* Sitzung 1 (LastTest.log.tmpcef94, Start 19:07, abgebrochen durch das Sitzungslimit 19:13): integration_r30_titel_puls
+  **Passed**, integration_r37_feuerloescher **Passed**.
+* Sitzung 2: `ctest --test-dir re15_port/build -R "integration_r38_itemorte|integration_r38_spinnen_echtlauf|
+  integration_r39_johnruf1041|integration_r39_zustand" -j 1 --timeout 900 --output-on-failure` (12 Tests) — Ergebnis
+  in §10.5.
+
+### 10.5 Ergebnis der Nachbar-Echtlaeufe (Sitzung 2, Start 21:45:40, -j 1, exe md5 9a89f3d7...)
+```
+ 1/12 integration_r38_itemorte                 Passed  404.59 s
+ 2/12 integration_r38_spinnen_echtlauf         Passed  120.76 s
+ 3/12 integration_r39_johnruf1041_a            Passed   44.54 s
+ 4/12 integration_r39_johnruf1041_b            Passed  281.13 s
+ 5/12 integration_r39_johnruf1041_tuer_t1041   Passed   26.49 s
+ 6/12 integration_r39_johnruf1041_tuer_t1041o  Passed   35.68 s
+ 7/12 integration_r39_johnruf1041_tuer_t1051   Passed   29.10 s
+ 8/12 integration_r39_johnruf1041_tuer_t1051o  Passed   32.07 s
+ 9/12 integration_r39_johnruf1041_tuer_t11b1   Passed   27.59 s
+10/12 integration_r39_johnruf1041_tuer_t11b1d  Passed   29.50 s
+11/12 integration_r39_zustand_kleidung         Passed  184.96 s
+12/12 integration_r39_zustand_gift             Passed   99.73 s
+100% tests passed, 0 tests failed out of 12   Total Test time (real) = 1316.24 sec
+```
+(Log: scratchpad/abn0/ctest_nachbarn_rest.log. Waehrend des Laufs liefen parallel Echtlauf-Riegel der Baeume r41_re2gator
+und r41_ventilkette — keine Rotfaerbung, kein Nachfahren noetig.) Damit sind alle in §6 angesetzten Nachbarn gruen:
+Unit-Nachbarn 22/22, Spur-Riegel 4/4 (§9), Integrations-Nachbarn 14/14 (2 aus Sitzung 1 + 12 aus Sitzung 2).
+
+### 10.6 Schluss (Sitzung 2)
+* Urteile unveraendert: Punkt 1 **erfuellt** (§1.3), Punkt 2 **erfuellt** (§2.3; "uebernehme den aus RE2" belegt nicht
+  erfuellbar, PORT-WAHL mit belegter Form, Entscheid D1 eingehalten), Punkt 3 **erfuellt** (§3.3; Entscheid D2 eingehalten).
+  RE-Gate (§4, §10.3) und Vertrag (§5) halten; D3 eingehalten (§10.2).
+* Maengel: §7 Nr. 1-5 bleiben (nicht blockierend; 1 und 2 sind reine Kommentar-/Zitatkorrekturen fuer die Integration,
+  3 ist Diagnose-Sichtbarkeit, 4 ist eine Nutzer-/Release-Note-Entscheidung, 5 ein Integrationshinweis). Neu nur ein
+  HINWEIS ohne Mangelstatus: der Riegel integration_r41_kleinkram_a_gift braucht 851 s (drei Laeufe a 700 Bilder mit
+  RE15_STATE_LOG) — innerhalb seines TIMEOUT 1800, aber ein spuerbarer Posten fuer die volle Suite im Release-Container.
+* ABNAHME 0: **BESTANDEN** (bestanden = true), Maengelliste §7 zur Nachbesserung in der Integration.
