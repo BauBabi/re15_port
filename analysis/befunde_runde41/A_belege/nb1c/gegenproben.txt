@@ -1,0 +1,35 @@
+# Gegenproben der Nachbesserung 1 (Fortsetzung 2026-10-24), test_r41_wasser20b0.exe, woertliche Ausgabe
+
+## npc_subs gegen den ALTEN Engine-Stand (engine/src/{enemy_ai_common,npckante_r38,szenenleon_r36,wassersprung_r41}.c +
+## include/re15_wassersprung_r41.h auf e6e6869b zurueckgesetzt, Riegel neu):
+ok  : Vorbedingung OWN 0x40: Clip 5 Bild 7 Marke, Clip 5 Bild 0 ohne, Clip 0 Bild 0 Marke
+ok  : Wasserfleck (-4300,-5000) = FLR 0x97
+FAIL: Sub 9 (Drehen, @0x80051e88): 1 Schritt aus dem gezeichneten Bild 7, Zweig boden, Ton -1 (15 = a0 0 @0x80051e70), Fuss 0 (schritte 0)
+FAIL: Sub 9: Anker = Part 7 der GEZEICHNETEN Pose (Gier 0, nach dem Kurs 4000): (0,0,0) vs (-4828,-1886,-4855)
+FAIL: Kante 0x12 Phase 1 (@0x800525d4): 1 Schritt, Zweig boden, Ton -1 (15 = a0 0 @0x800525bc), schritte 0
+FAIL: Schub 0x13 Phase 1 (@0x80052930): 1 Schritt, Zweig boden, Ton -1 (15 = a0 0 @0x80052918), schritte 0
+FAIL: Sub 5 Laufbeginn: Takt 1 1 Schritte (Clip danach 0), Takt 2 gesamt 2, Ton 15 (erwartet 0 / 0 / 1 / 15)
+ok  : Fleckrand bei z -9750 (dahinter Boden 0x1d)
+FAIL: Sub 4 Phase 2 am Fleckrand: Zweig boden 0, Ton 21 (15 = Boden VOR dem Vorschub; danach trocken 0x1d), z -9750 -> -10150
+npc_subs: 9 Pruefungen, 6 Fehler
+
+## npc_subs mit dem neuen Stand (3dbc1eb0):
+ok  : Sub 9 (Drehen, @0x80051e88): 1 Schritt aus dem gezeichneten Bild 7, Zweig boden, Ton 15 (15 = a0 0 @0x80051e70), Fuss 7 (schritte 1)
+ok  : Sub 9: Anker = Part 7 der GEZEICHNETEN Pose (Gier 0, nach dem Kurs 4000): (-4828,-1886,-4855) vs (-4828,-1886,-4855)
+ok  : Kante 0x12 Phase 1 (@0x800525d4): 1 Schritt, Zweig boden, Ton 15 (15 = a0 0 @0x800525bc), schritte 1
+ok  : Schub 0x13 Phase 1 (@0x80052930): 1 Schritt, Zweig boden, Ton 15 (15 = a0 0 @0x80052918), schritte 1
+ok  : Sub 5 Laufbeginn: Takt 1 0 Schritte (Clip danach 0), Takt 2 gesamt 1, Ton 15 (erwartet 0 / 0 / 1 / 15)
+ok  : Fleckrand bei z -9750 (dahinter Boden 0x1d)
+ok  : Sub 4 Phase 2 am Fleckrand: Zweig boden 1, Ton 15 (15 = Boden VOR dem Vorschub; danach trocken 0x1d), z -9750 -> -10150
+npc_subs: 9 Pruefungen, 0 Fehler
+
+## stempel OHNE das Loeschen am Bildanfang (Zeile `if (e->active) e->water_y = 0;` auskommentiert, Stand f5cb9e0f sonst):
+ok  : Takt A im Satz 5: Stempel -900 (p0 -900), kein Schritt (0)
+FAIL: Takt B ausserhalb: 1 Schritt, Zweig trocken (stempel 1, boden 0), +0x88 = -900 (Pro-Bild-Wert @0x8001a59c)
+stempel: 7 Pruefungen, 1 Fehler
+
+## stempel mit dem Loeschen (f5cb9e0f):
+ok  : trockener Punkt ausserhalb aller WATER-Saetze neben Satz 5: (-26200,-5400)
+ok  : Takt A im Satz 5: Stempel -900 (p0 -900), kein Schritt (0)
+ok  : Takt B ausserhalb: 1 Schritt, Zweig trocken (stempel 0, boden 0), +0x88 = 0 (Pro-Bild-Wert @0x8001a59c)
+stempel: 7 Pruefungen, 0 Fehler

@@ -1,0 +1,14 @@
+# Lauf A_nb1c/elza1 (Stand e6e6869b, Riegel-Umgebung VOR dem Fix: RE15_TITLE_CONFIRM_MS=1500 + RE15_PSELECT_AUTO + _SWITCH)
+# Befehl: RE15_DEBUG_JUMP=20a1@240 RE15_PLAYER_POS=4950,5000,2048,2 RE15_INPUT_SCRIPT=W9,A0.2,W4,R0.37,W0.3,U0.7,W0.2,A0.2,W0.3,A0.2,W0.3,A0.2,W0.3,A0.2,W4 RE15_INPUT_SCRIPT_START=0 RE15_EXIT_AT=360#2091; timeout 120 s -> exit 124
+7:[input-script] RE15_INPUT_SCRIPT="W9,A0.2,W4,R0.37,W0.3,U0.7,W0.2,A0.2,W0.3,A0.2,W0.3,A0.2,W0.3,A0.2,W4" -> 614 ticks @ 30 fps, start frame 0
+9:[input-script] Tick 270 -> F0 Tasten 0x8000
+10:[input-script] Tick 396 -> F0 Tasten 0x0020
+11:[input-script] Tick 416 -> F0 Tasten 0x0010
+12:[input-script] Tick 443 -> F0 Tasten 0x8000
+13:[input-script] Tick 458 -> F0 Tasten 0x8000
+14:[input-script] Tick 473 -> F0 Tasten 0x8000
+15:[input-script] Tick 488 -> F0 Tasten 0x8000
+34:[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+73:[debug-menu] AUTO-JUMP -> ROOM20A1 (Frame 240)
+77:[room] PC loaded room20a1.rdt (300176 bytes)
+exit=124 dauer=120s
