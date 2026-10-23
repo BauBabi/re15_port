@@ -33,3 +33,20 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r41_kleinkram_b_karte_pin COMMAND probe_r41_kleinkram_b_karte pin WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r41_kleinkram_b_karte_pin PROPERTIES TIMEOUT 300)
+#   unit_r41_kleinkram_b_kurbel_{laenge,schleife}
+#       Punkt 1: Kurbel ROOM2020/2021 — Spieler-Clip im Kommandowort 4 (FUN_80030660 @0x800306a4 -> 0x80050cb8) laeuft
+#       mit Plc_flg(0,4) als Schleife (Umlauf 39 -> 0) statt 138 Bilder Bild 39 zu halten; ohne Flag Halten; Laenge aus
+#       dem Raum-RBJ-Record (Marker-Bit 0) bzw. PL00 (engine/src/plcloop_r41.c).
+add_executable(test_r41_kleinkram_b_kurbel ${CMAKE_CURRENT_LIST_DIR}/../test_r41_kleinkram_b_kurbel.c)
+target_link_libraries(test_r41_kleinkram_b_kurbel PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r41_kleinkram_b_kurbel PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r41_kleinkram_b_kurbel PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r41_kleinkram_b_kurbel PRIVATE m)
+endif()
+foreach(_teil laenge schleife)
+    add_test(NAME unit_r41_kleinkram_b_kurbel_${_teil} COMMAND test_r41_kleinkram_b_kurbel ${_teil}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(unit_r41_kleinkram_b_kurbel_${_teil} PROPERTIES TIMEOUT 300)
+endforeach()
