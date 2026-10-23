@@ -2,10 +2,13 @@
  * pc_run_config / pc_config_draw_overlay) und ihre Eingabe. Belege: include/re15_lautstaerke_r41.h,
  * analysis/befunde_runde41/D_kleinkram_a.md §1.
  *
- * Lage (PORT-WAHL im Original-Raster): die zwei Original-Kacheln liegen bei y 0x33 (51) und 0x46 (70)
- * (FUN_8002f0d4 @0x8002f128 / @0x8002f17c, Schritt 19) -> dritte Kachel y 89, dieselbe CONFIG.TIM-Kachel
- * uv(0,232) 88x18 bei x 0x74 (116) (@0x8002f11c-30). Text "VOLUME" ab x 119 wie "STEREO" (Prim-Scan der
- * Options-Spur, main.c), Zeile y 91 (Kachel + 2 wie STEREO 51 -> 53); Zahl rechtsbuendig bis x 201
+ * Lage (PORT-WAHL): dieselbe CONFIG.TIM-Kachel wie die zwei Original-Kacheln (y 0x33/0x46, FUN_8002f0d4
+ * @0x8002f128 / @0x8002f17c; uv(0,232) 88x18 bei x 0x74 (116), @0x8002f11c-30), gezeichnet im freien Streifen
+ * unter dem byte-true Kasten (Kastenende y 220 -> Kachel y 221..238, Vorbild CFG_AI_Y 225 in main.c). Die
+ * Raster-Lage y 89 wurde am Shot gemessen und verworfen: die Original-Beschriftungskaesten DAT_80073d2c[2] =
+ * (46,91) und [8] = (203,91) wuerden von der Kachel 116..204 angeschnitten ("Forwar").
+ * Text "VOLUME" ab x 119 wie "STEREO" (Prim-Scan der Options-Spur, main.c), Zeile y 223 (Kachel + 2 wie STEREO
+ * 51 -> 53); Zahl rechtsbuendig bis x 201
  * (Kachelende 204 - 3 px Rand wie der linke Rand 116 -> 119). Breiten aus der Vorschubtabelle der Spielschrift
  * (BIN/DEBUG.BIN@0x4416, re15_render_pc_game_text_width): "VOLUME" 52 px, "100" 23 px, "0" 8 px. */
 #include "re15_lautstaerke_r41.h"
@@ -22,13 +25,13 @@ extern int  re15_render_pc_game_text_width(const char *str);
 extern void re15_audio_set_mono(int mono);
 
 #define LAUT_PC_KACHEL_X   116   /* @0x8002f124 `ori t2,zero,0x74` */
-#define LAUT_PC_KACHEL_Y   89    /* 51 + 2 * 19 (Raster @0x8002f128 / @0x8002f17c) */
+#define LAUT_PC_KACHEL_Y   221   /* freier Streifen unter dem byte-true Kasten (Kastenende y 220, Vorbild CFG_AI_Y 225 in main.c); y 89 im Kachel-Raster verdeckte den Forward-Kasten (DAT_80073d2c), gemessen am Shot */
 #define LAUT_PC_KACHEL_W   88    /* @0x8002f0e0 `ori t4,zero,0x58` */
 #define LAUT_PC_KACHEL_H   18    /* @0x8002f0e4 `ori t3,zero,0x12` */
 #define LAUT_PC_KACHEL_U   0     /* @0x8002f12c `sb zero,0xc(s1)` */
 #define LAUT_PC_KACHEL_V   232   /* @0x8002f0ec `ori t1,zero,0xe8` */
 #define LAUT_PC_TEXT_X     119   /* wie STEREO */
-#define LAUT_PC_TEXT_Y     91    /* Kachel + 2 wie STEREO (51 -> 53) */
+#define LAUT_PC_TEXT_Y     223   /* Kachel + 2 wie STEREO (51 -> 53) */
 #define LAUT_PC_ZAHL_RECHTS 201  /* Kachelende 204 - 3 px */
 
 /* ASCII -> Glyphcode der Spielschrift (TEX.TIM): A-Z ab 0x1D, 0-9 ab 0x0C (main.c pc_font_code, shots/texfont_grid.png). */

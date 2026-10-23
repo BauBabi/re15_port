@@ -17,9 +17,12 @@
  * RE2 PSX (Leon) hat ebenso keine Lautstaerke (kein "VOLUME"-Text in ghidra_re2_Leon.txt; Options = Stereo/Monaural).
  *
  * => PORT-WAHL, FORM aus dem Original:
- *   - dritte Zeile im Raster der beiden Original-Kacheln (51/70 -> 89 = derselbe 19-px-Schritt), dieselbe CONFIG.TIM-
- *     Kachel uv(0,232) 88x18 bei x 116, Beschriftung "VOLUME" in der Spielschrift ab x 119 (wie STEREO), die Zahl
- *     rechtsbuendig bis x 201 (3 px Rand wie links). Vorschuebe BIN/DEBUG.BIN@0x4416: "VOLUME" 52 px, "100" 23 px.
+ *   - dieselbe CONFIG.TIM-Kachel uv(0,232) 88x18 bei x 116 wie STEREO/MONO, Beschriftung "VOLUME" in der Spielschrift
+ *     ab x 119 (wie STEREO), die Zahl rechtsbuendig bis x 201 (3 px Rand wie links). Vorschuebe BIN/DEBUG.BIN@0x4416:
+ *     "VOLUME" 52 px, "100" 23 px. LAGE: im freien Streifen unter dem byte-true Kasten (Kastenende y 220 -> Kachel
+ *     y 221..238; Vorbild = die AI-Zeile des Ports, CFG_AI_Y 225 in main.c). Die Raster-Lage y 89 (51/70 -> 89) wurde
+ *     am Shot GEMESSEN und verworfen: dort liegen die Original-Beschriftungskaesten DAT_80073d2c[2] = (46,91) und
+ *     [8] = (203,91), die Kachel 116..204 verdeckte "Forward" ("Forwar") und den Rand des rechten Kastens.
  *   - Stufen 0..100 in Zehnerschritten, LEFT = leiser, RIGHT = lauter (sofort hoerbar = Arbeitskopie), Kreis/
  *     Quadrat speichert (wie @0x8002f2c0), Cross verwirft (wie @0x8002f27c), Eintritt laedt (wie @0x8002f244-4c).
  *   - WIRKUNG: EINE Endstufe am Ende der Mischkette audio_callback (audio_pc.c) nach der Mono-Faltung — dort laufen
