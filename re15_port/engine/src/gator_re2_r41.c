@@ -56,6 +56,8 @@ typedef struct {
     uint8_t  geschwaecht;     /* +0x218 & 0x20 */
     uint8_t  im_dash;         /* +0x225 */
     uint8_t  dash_phase;      /* 0 aus, 1 Clip 2, 2 Clip 3 */
+    uint8_t  dash_endbild;    /* voriger Tick zeigte das letzte Clip-Bild (FUN_8001a330 lieferte 1) */
+    uint8_t  intro_endbild;   /* dito fuer den Intro */
     int8_t   zone_alt;        /* zuletzt gesehene Beckenzone (PORT) */
     uint8_t  intro_phase;     /* 0 aus, 1 Clip 6, 2 Clip 3 */
     int16_t  kopf_az;         /* +0x22A (Part 6 az) */
@@ -576,30 +578,49 @@ void re15_gr2_dash_start(int slot, re15_actor_t *e, const re15_actor_t *pl)
     re15_gr2_log("DASH start pos=(%d,%d) yaw=%d putz_um=(%d,%d,%d)", e->x, e->z, (int)e->rot_y,
                  g->putz_x, g->putz_y, g->putz_z);
 }
+/* Ein Tick FUN_8001a330(em, clip, blend, 0) im Port-Modell (Bild = e->anim_frame NACH dem Tick):
+ *   FUN_8002959c/80029614 rechnet die Pose fuer +0x14D, erhoeht dann +0x14D (`lbu v0,333 / addiu v0,v0,1 /
+ *   sb v0,333` @0x80029b28-34) und meldet 1, sobald der neue Wert die Bildzahl erreicht (`sltu v0,v0,s3`
+ *   @0x80029b3c, `sb zero,333 / addiu v0,zero,1` @0x80029b48-4c); FUN_8001a330 laesst dann FUN_800152c8 AUS
+ *   (`bne v0,zero,0x8001a3cc` @0x8001a3b0): das LETZTE Bild wird gezeigt, aber sein Wurzelschritt nicht mehr
+ *   angewandt, und der Rufer fuehrt seine Ende-Aktionen im selben Tick aus (Dash: +0x225 = 0, yaw += 1024).
+ *   Port: Rueckgabe 2 = letztes Bild liegt an (Ende-Aktionen jetzt), der folgende Tick schaltet um. */
+static int gr2_clip_tick(re15_actor_t *e, const re15_enemy_bank_t *bk, int clip)
+{
+    int n = bk->anim.clips[clip].frame_count;
+    int f = (int)e->anim_frame + 1;                         /* Bildvorschub @0x80029b28-34 */
+    if (f >= n - 1) { e->anim_frame = (uint16_t)(n - 1); return 2; }   /* letztes Bild, kein 152c8 @0x8001a3b0 */
+    gr2_wurzel_schritt(e, bk, clip, f);                     /* FUN_80015e7c + FUN_800152c8 fuer Bild f */
+    e->anim_frame = (uint16_t)f;
+    return 1;
+}
 int re15_gr2_dash_tick(int slot, re15_actor_t *e)
 {
     gr2_t *g = &s_g[slot];
     re15_enemy_bank_t *bk = gr2_bank(e);
     if (!g->dash_phase || !bk) { g->im_dash = 0; g->dash_phase = 0; return 0; }
-    int clip = (g->dash_phase == 1) ? 2 : 3;
-    int n = bk->anim.clips[clip].frame_count;
-    e->motion = (uint8_t)clip;
-    gr2_wurzel_schritt(e, bk, clip, (int)e->anim_frame);   /* bildweise, durch die Dispatcher-Klemme */
-    if (e->anim_frame + 1 >= n) {                           /* FUN_8001a330 liefert 1 am Clip-Ende */
-        if (g->dash_phase == 1) {
-            g->dash_phase = 2; e->motion = 3; e->anim_frame = 0; e->anim_frac = 0;   /* Clip 3 (0) @0x80100e20-28 */
+    if (g->dash_endbild) {                                  /* voriger Tick: FUN_8001a330 == 1 */
+        g->dash_endbild = 0;
+        if (g->dash_phase == 1) {                           /* P2: Clip 3 (0) @0x80100e20-28 */
+            g->dash_phase = 2; e->motion = 3; e->anim_frame = 0; e->anim_frac = 0;
             return 1;
         }
-        g->im_dash = 0; g->dash_phase = 0;                  /* +0x225 = 0 `sb zero,549` @0x80100eb8, -> 0x101 @0x80100ee4 */
-        /* `lhu v0,118 / addiu v0,v0,1024 / sh v0,118` @0x80100eb0-c0: Clip 3 dreht den Root-Bone von 438 auf
-         * 1023 (f70..f148, EMR, Probe nb1/probe_bahn) und springt im letzten Bild auf 0 - die Vierteldrehung
-         * wandert in den Entity-Yaw. Nachbesserung 1: vorher weggelassen (als "Korridor-Ecke" gelesen), dann
-         * poppte der Koerper am Dash-Ende um 90 Grad zurueck; die Verfolgung dreht danach auf Leon (Wende). */
-        e->rot_y = (int16_t)((e->rot_y + 1024) & 0x0fff);
-        re15_gr2_log("DASH ende pos=(%d,%d) yaw=%d", e->x, e->z, (int)e->rot_y);
+        g->im_dash = 0; g->dash_phase = 0;                  /* Routine 0x101 @0x80100ee4 */
         return 0;
     }
-    e->anim_frame++;
+    int clip = (g->dash_phase == 1) ? 2 : 3;
+    e->motion = (uint8_t)clip;
+    if (gr2_clip_tick(e, bk, clip) == 2) {                  /* letztes Bild liegt an */
+        g->dash_endbild = 1;
+        if (g->dash_phase == 2) {
+            /* Ende-Aktionen P2 @0x80100eb0-c0: `lhu v0,118(s1) / sb zero,549(s1) (+0x225 = 0) / addiu v0,v0,1024 /
+             * sh v0,118(s1)` - im Tick des letzten Bildes (Root-ry von Clip 3: 438 -> 1023 ueber f70..f148, f149 = 0,
+             * EMR/Probe nb1/probe_bahn): die Vierteldrehung wandert OHNE Pop in den Entity-Yaw. Nachbesserung 1:
+             * vorher weggelassen (als "Korridor-Ecke" gelesen) und erst einen Tick spaeter -> 90-Grad-Pop. */
+            e->rot_y = (int16_t)((e->rot_y + 1024) & 0x0fff);
+            re15_gr2_log("DASH ende pos=(%d,%d) yaw=%d", e->x, e->z, (int)e->rot_y);
+        }
+    }
     return 1;
 }
 int re15_gr2_im_dash(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].im_dash : 0; }
@@ -628,25 +649,28 @@ int re15_gr2_intro_tick(int slot, re15_actor_t *e)
     gr2_t *g = &s_g[slot];
     re15_enemy_bank_t *bk = gr2_bank(e);
     if (!g->intro_phase || !bk) { g->intro_phase = 0; return 0; }
-    int clip = (g->intro_phase == 1) ? 6 : 3;
-    int n = bk->anim.clips[clip].frame_count;
-    e->motion = (uint8_t)clip;
-    gr2_wurzel_schritt(e, bk, clip, (int)e->anim_frame);   /* bildweise, durch die Dispatcher-Klemme */
-    if (e->anim_frame + 1 >= n) {
+    if (g->intro_endbild) {                                 /* voriger Tick: FUN_8001a330 == 1 */
+        g->intro_endbild = 0;
         if (g->intro_phase == 1) {
-            /* Clip 3 @0x801008e4-f0. RE2 setzt davor Cut 1 + z = -21212 (@0x801008c4-e0, Korridor-Ecke);
+            /* P2 Clip 3 @0x801008e4-f0. RE2 setzt davor Cut 1 + z = -21212 (@0x801008c4-e0, Korridor-Ecke);
              * PORT-WAHL: am Ort weiter (kein Kameraskript, kein Teleport). */
             g->intro_phase = 2; e->motion = 3; e->anim_frame = 0; e->anim_frac = 0;
             return 1;
         }
-        g->intro_phase = 0;
-        g->biss_cd = RE15_GR2_BISS_CD_INTRO;                /* +0x238 = 110 @0x8010091c-20 */
-        g->letzter_clip = 0;                                /* Routine 0x101 @0x80100928-2c */
-        e->rot_y = (int16_t)((e->rot_y + 1024) & 0x0fff);   /* `lhu v0,118 / addiu v0,v0,1024 / sh v0,118` @0x80100938-48 */
-        re15_gr2_log("INTRO ende pos=(%d,%d) yaw=%d", e->x, e->z, (int)e->rot_y);
+        g->intro_phase = 0;                                 /* Routine 0x101 @0x80100928-2c -> CHASE */
         return 0;
     }
-    e->anim_frame++;
+    int clip = (g->intro_phase == 1) ? 6 : 3;
+    e->motion = (uint8_t)clip;
+    if (gr2_clip_tick(e, bk, clip) == 2) {                  /* letztes Bild liegt an (s. gr2_clip_tick) */
+        g->intro_endbild = 1;
+        if (g->intro_phase == 2) {                          /* Ende-Aktionen P2 @0x801008f8-948 */
+            g->biss_cd = RE15_GR2_BISS_CD_INTRO;            /* +0x238 = 110 @0x8010091c-20 */
+            g->letzter_clip = 0;                            /* Routine 0x101 @0x80100928-2c */
+            e->rot_y = (int16_t)((e->rot_y + 1024) & 0x0fff);   /* `lhu v0,118 / addiu v0,v0,1024 / sh v0,118` @0x80100938-48 */
+            re15_gr2_log("INTRO ende pos=(%d,%d) yaw=%d", e->x, e->z, (int)e->rot_y);
+        }
+    }
     return 1;
 }
 int re15_gr2_im_intro(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? (s_g[slot].intro_phase != 0) : 0; }

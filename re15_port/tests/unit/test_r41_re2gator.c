@@ -295,7 +295,9 @@ static int teil_intro(void)
         if (e->motion == 6) n6++;
         else if (e->motion == 3 && n6 > 0 && f_cd < 0) n3++;
         else if (n3 > 0) {
-            if (f_cd < 0) { f_cd = f; CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO, "Biss-Sperre nach dem Intro %d != 110 (@0x8010091c)", re15_gr2_biss_cd_rest(slot)); }
+            /* +0x238 = 110 wird im Tick des LETZTEN Clip-3-Bildes gesetzt (@0x8010091c-20, FUN_8001a330 == 1,
+             * Nachbesserung 1); der Umschalt-Tick (Clip 0) hat den Takt schon einmal abgezogen -> 109 hier. */
+            if (f_cd < 0) { f_cd = f; CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO - 1, "Biss-Sperre im ersten Clip-0-Tick %d != 109 (110 @0x8010091c im Ende-Tick, ein Takt weniger)", re15_gr2_biss_cd_rest(slot)); }
             if (f < f_cd + RE15_GR2_BISS_CD_INTRO) { if (e->motion == 0) n0++; }
             else if (f < f_cd + RE15_GR2_BISS_CD_INTRO + 10) { if (e->motion == 1) n1++; }
         }
@@ -583,7 +585,8 @@ static int teil_wand(void)
     CHECK(x_min >= -8900 + 1400, "Intro: Gator in der Westwand (x_min %d, Klemmlinie -7434)", x_min);
     CHECK(z_min <= -9200 - 5000, "Intro: Durchbruch kam nicht voran (z_min %d; Clip 6 netto 6281 laengs)", z_min);
     CHECK(((yaw1 - yaw0) & 0xfff) == 1024, "Intro-Ende: yaw %d -> %d, erwartet +1024 (@0x80100938-48)", yaw0, yaw1);
-    CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO, "Biss-Sperre nach dem Intro %d != 110", re15_gr2_biss_cd_rest(slot));
+    CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO - 1,
+          "Biss-Sperre im ersten CHASE-Tick %d != 109 (110 im Ende-Tick @0x8010091c-20, ein Takt abgezogen)", re15_gr2_biss_cd_rest(slot));
     /* (b) Dash: Klemmlinie im Westkanal, Blick Sued, Leon Zone 0 */
     e->x = -7434; e->z = -17900; e->y = -1200; e->rot_y = 1024;
     int f_start = -1, n2 = 0, yaw_d = 0; n3 = 0;
@@ -596,14 +599,18 @@ static int teil_wand(void)
         int32_t z_b = e->z;
         int im_dash_b = re15_gr2_im_dash(slot);
         leon_statue(-8200, -25550); tick();
-        if (im_dash_b && (clip_b == 2 || clip_b == 3)) {   /* auch der letzte Schritt (Clip 3 f149, Dash-Ende-Tick) */
+        if (im_dash_b && (clip_b == 2 || clip_b == 3)) {
+            /* Soll = Schritt des NEUEN Bildes f_b+1 (FUN_8001a330: Vorschub, dann e7c+152c8); das letzte Bild
+             * (f = n-1) wird ohne Schritt gezeigt (`bne v0,zero,0x8001a3cc` @0x8001a3b0), der Umschalt-Tick
+             * (Bild 0 des Folgeclips / Clip 0) ebenfalls ohne Schritt. */
             re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
             int16_t a[3] = {0,0,0}, b[3] = {0,0,0};
             const re15_emd_clip_t *c = &bk->anim.clips[clip_b];
             int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
-            if (f_b > 0) {
-                re15_emd_get_keyframe_speed(&bk->skel, (int)(bk->anim.frames[c->first_frame + f_b] & 0xfffu), &b[0], &b[1], &b[2]);
-                re15_emd_get_keyframe_speed(&bk->skel, (int)(bk->anim.frames[c->first_frame + f_b - 1] & 0xfffu), &a[0], &a[1], &a[2]);
+            int f_n = f_b + 1;
+            if (f_n < c->frame_count - 1 && f_b < c->frame_count - 1) {
+                re15_emd_get_keyframe_speed(&bk->skel, (int)(bk->anim.frames[c->first_frame + f_n] & 0xfffu), &b[0], &b[1], &b[2]);
+                re15_emd_get_keyframe_speed(&bk->skel, (int)(bk->anim.frames[c->first_frame + f_n - 1] & 0xfffu), &a[0], &a[1], &a[2]);
             }
             int32_t vx = (int32_t)(((int64_t)(b[0] - a[0]) * s) >> 12), vz = (int32_t)(((int64_t)(b[2] - a[2]) * s) >> 12);
             int32_t dz_soll = (int32_t)((-(int64_t)re15_sin_q12(yaw_b) * vx + (int64_t)re15_cos_q12(yaw_b) * vz) >> 12);

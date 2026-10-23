@@ -340,9 +340,14 @@ se=2 Bank 17 (Frame-Flag Clip 0/1, mehrfach), se=4 Bank 17 am Schnapp-Start (F80
 Keine HP-Abnahme des Gators (25300, kein Beschuss). Bilder: bilder_r41b/finisher_a2_f090_schnapp_an_der_leiter.png
 (Schnapp an der Leiter), finisher_a2_f400_p3_kauschleife_youdied.png (P3 von oben, Leon im Maul unter YOU DIED);
 die Kamera dazwischen ist die Port-Todeskamera (Nahaufnahme, §6 PORT-WAHL), kein RE2-Kameraskript.
-Der RE2-Zonen-Dash kam in diesem Lauf nicht vor: Leon und Gator blieben in derselben Beckenzone (Sued), die
-Zonenlinie wurde nicht ueberschritten - der Dash ist im Riegel unit_r41_re2gator_dash (Clip 2 150 / Clip 3 150,
-SE 4, Schuetteln) gemessen; im Spiel loest ihn ein Zonenwechsel in Leons Zone aus (§3.2 PORT-WAHL).
+KORRIGIERT (Nachbesserung 1, M4 - die urspruengliche Erklaerung "Leon und Gator blieben in derselben Beckenzone,
+die Zonenlinie wurde nicht ueberschritten" war FALSCH): der Gator durchlief in diesem Lauf die Zonen 1 -> 2 -> 0
+(state.log F40 z -14990 ... F61 z -18020 -> F62 (-7289,-18278) = Zonenlinie z = -18100 in Leons Zone 0), die
+Vorbedingung des Dashes war erfuellt. Nicht gezuendet hat er, weil die damalige Bahn-Probe gb_bahn_frei (Ende-x
+>= -8900 + 1600 = -7300 fuer die GANZE Clip-Bahn) auf der Westwand-Klemmlinie scheiterte: Clip-2-Ende x = -7309,
+Clip-3-Ende mit dem RE2-Korridor-Seitversatz (-2775 x2/3) bei x ~ -9986 in der Wand; der Intro vom Lauerplatz
+(Ende-x ~ -7830) ebenso. Ursache und Behebung: §8 (M1). Der Riegel unit_r41_re2gator_dash mass den Dash nur in
+einer Geometrie nach Norden (Gator (-6500,-22000), Leon (-6500,-8000)), die im Spiel aus der Tuernische nie eintritt.
 
 **Lauf B (erster Versuch, GB_TEST=1, Kanister (-7500,-16500), Leon Tuernische Blick Nord, Pistole, Skript
 W1.0 + 20 x (M0.3,MA0.1)):** Aufnahme im Vorbeischwimmen (Stufe 1 laengs=5916 quer=-240 -> Stufe 7, Bilder
