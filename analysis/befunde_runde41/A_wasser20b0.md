@@ -193,3 +193,59 @@ re15_npc_sub_walk (Phase 1 a0 = sub==5, Phase 2 a0 = 0, je vor re15_npc_anim), w
 re15_wasser_r38_stempel + Folge-Haken im Bildanfang), platform/pc/main.c RE15_PLAYER_POS 4. Wert = y (Band -y/1800).
 Riegel: unit_r41_wasser20b0_landung (2090: 8 Plaetze/Gier-Faecher/Anker, trocken 0), unit_r41_wasser20b0_npc (2000:
 Fleck 0x97 -> 0x06050D00 Ton 15, Stempel -> 0x06032000 Ton 13, trocken 0, Bildwort-Takt).
+
+### 2.4 Messung nachher (Port)
+- Landung (exe, ROOM2090, Steg Band 1): `RE15_DEBUG_JUMP=2090@240 RE15_PLAYER_POS=4500,-14700,3072,1 RE15_PRESS=square@60
+  RE15_CLIMB_TRACE RE15_FX_LOG RE15_KEIN_GATOR=1`: climb.log sub 9 (kind 0x02, 1 Bild) -> sub 10 (14 Bilder Band 1, 24 Bilder
+  Band 0) -> Landung (4500,0,-14032); fx.log: 104 Zeilen `id=6 sub=3` (8 Plaetze Effekt 6 Sub 3 ueber ihre Lebensdauer),
+  erster Spawn F79 bei w(4500,-640,-14032) fl=07 — y = die zuletzt gezeichnete Fall-Lage (Entity-Matrix +0x20), nicht
+  der Boden. Vorher (gleicher Lauf ohne Haken): kein `id=6`. Framedumps r41a_m5/f000080/090 (Scratch).
+- NPC-Schritt: nur am Riegel messbar (kein ausgeliefertes STAGE2-Skript fuehrt einen NPC durch Wasser, 2.1). Riegel
+  unit_r41_wasser20b0_npc: Fleck 0x97 -> Platz 0x06050D00 am Fuss-Part (Anker y -2151 bei Lage -1800 = Pose),
+  Ton 0x17-8 = 15; Trockenfleck 0x17 + Stempel -1620 -> 0x06032000, Ton 1+0x14-8 = 13; trocken -> kein Platz, Ton 15.
+- BEFUND (Datenlage, Original): die NPC-Geh-Subs setzen +0x94 := 5 (`ori v0,zero,0x5` / `sb v0,148(v1)` @0x80051d38-3c)
+  und pruefen das Bildwort dieses Clips. Zensus der ausgelieferten NPC-EDDs (CDEMD0.EMS): Typ 0x40 (Ada), 0x42 (Marvin),
+  0x45: Clip 5 = 20 Bilder, KEIN Bildwort mit Bit 0x4000 (Aufsetzer; Clip 0 traegt 0x5 bei Bild 8, Clip 1 bei 7/22) —
+  im Original erreicht ein Skript-Lauf dieser NPCs FUN_80045630 NIE (kein Schritt-Ton, kein Wasser-Effekt). Typen
+  0x49/0x4b/0x4d (2001/2011) liegen nicht in CDEMD0.EMS (Elza-Archiv CDEMD1.EMS; nicht gezaehlt). Die Mechanik ist
+  portiert und greift, sobald ein Geh-Clip Aufsetzer traegt; fuer die ausgelieferten NPC-Clips bleibt das Verhalten
+  byte-gleich zum Original (keine Effekte) -> Entscheidungsfrage an den Nutzer (unten).
+
+### 1.6 Messung nachher Punkt 1 (Integrationslauf 3, nach allen Korrekturen)
+- integration_r41_wasser20b0: Leon 20B0 (room20b0.rdt) UND Elza 20B1 (PL04, room20b1.rdt, EM024 aus CDEMD1.EMS Sektor 795):
+  je 35 EM024-Spawns, fx.log 2408 Zeilen `id=15 sub=0|7` (Partikel 0x0f gezeichnet), KEIN "ZEICHNE Typ 0x24" (Mesh nie
+  gezeichnet), Cut_chg(7) F105, Cut_chg(6) F228, "letterbox closed -> gameplay (player_mode=0)" F242 (Original: frei
+  zwischen Bild 181 und 233). Laufzeit 103 s.
+- Drift-Pins am VM (unit raum): Bild 131 x=-17166/+0x8c=251 = ts_10.sav, Bild 161 Umbruch 20000/225, Bild 233 1172/297 =
+  ts_14.sav — byte-gleich zum Original-RAM; alle 35 Emitter ohne Zeichnung; grid 0 132 + grid 1 124 Spawns in 234 Takten.
+
+## Tests (Namen, Ergebnis)
+- unit_r41_wasser20b0_bytes / _modell / _sequencer / _raum / _landung / _npc — gruen.
+- unit_r36_gegnerzahl_{feld,raum1030,raum1031,raum1040,raum1041,raum20b0,kein_platz} (angepasst auf 36 Plaetze) — gruen.
+- integration_r41_wasser20b0 (Leon 20B0 + Elza 20B1, echte exe) — gruen (103 s).
+- Gezielte Gruppen der beruehrten Module: siehe Summenzeile am Ende.
+
+## OFFEN
+- Allgemeine Aufhebung der Port-Sperre `in_cinematic` fuer AUTO-Ereignis-Saetze (FUN_800436a8 @0x8001ce1c laeuft im
+  Original ohne Gate): hier bewusst auf 20B0/20B1 begrenzt; die Verallgemeinerung braucht die volle Suite (andere Szenen
+  mit AUTO-Saetzen unter Pad-Sperre).
+- EM024 grid 2..4 (0x8010f910 / 0x8010fe24 / 0x80110338): nicht gebaut — kein ausgeliefertes RDT spawnt sie.
+- DAT_800acc0c := 1 @0x8010ef34 (Spieler-Sekundaerbewegung, Konsument FUN_80024c30) weiter OFFEN (wie zuvor).
+- Original-Fruehphase (Bild 0..130) nur als RAM gemessen (tf_5/tf_8 = Bild 1, tf_7 = Bild 48), kein Video: DuckStation-
+  Media-Capture per Pad-Hotkey lieferte nur 0,9 s (erster LB-Druck wird geschluckt); Bild-Serie der Fruehphase steht aus.
+- PSX-Ziel: RE15_ACTOR_MAX 36 kostet +28 KB BSS (PSX-Laufzeitbudget pruefen, wenn der PSX-Bau wieder gebaut wird).
+- NPC-Schritt-Ton (-8) ist mit dem Effekt portiert (dieselbe Funktion); hoerbar erst mit Clips, die Aufsetzer tragen.
+
+## Fuer den Nutzer
+- Keine neuen Assets (Effekte 0x0f/6 liegen in den Raum-ESP-Banken der Original-RDTs), keine Sprachdateien, kein
+  Patch an shared_assets.
+- Sichtbar: in 20B0/20B1 spritzt beim Betreten das Wasser aus der Osttuer (zwei Kaskaden + sechs grosse Spritzer je
+  Front), die Front laeuft den Gang hinunter und kehrt wieder; die Szene laeuft jetzt zu Ende (Westtuer fliegt, Leon/Elza
+  wieder frei). Beim Sprung von der Kante ins Becken (2090) spritzt es an der Landestelle (8 Spritzer im Faecher).
+- Bedienhinweis Messung: RE15_PLAYER_POS nimmt auch beim Boot den 4. Wert als Band (y = -Band*1800).
+- DuckStation settings.ini: ConfirmPowerOff stand auf true (Capture-Skripte brauchen false, Skill re15-room-capture);
+  fuer die Messungen auf false gesetzt und danach auf true zurueckgestellt.
+- ENTSCHEIDUNGSFRAGE: Die ausgelieferten NPC-Geh-Clips (Ada/Marvin, Clip 5) tragen keine Fussaufsetzer — im Original
+  spritzt und klingt kein NPC beim Skriptlauf durch Wasser. Soll der Port NPC-Schritte trotzdem erzeugen (PORT-WAHL;
+  Form-Vorschlag: die Aufsetzer-Bilder des Geh-Clips 0 derselben EDD, Bild 8 links / Bild 22 rechts bei 0x40, auf den
+  20-Bild-Clip 5 abgebildet) oder bleibt es byte-gleich zum Original?
