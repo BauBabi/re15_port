@@ -160,8 +160,33 @@ else()
     endif()
 endif()
 
+# --- Echte Tastenkette im Options-Schirm (pc_run_config, Start im SOUND-Tab): LEFT LEFT = 80 %, Kreis/Quadrat
+#     speichert (@0x8002f2c0-Analog -> Datei), RIGHT auf EXIT, Kreis/Quadrat verlaesst den Schirm (exit 0).
+#     Eingabeskript auf der Tick-Achse des Eingabetreibers (laeuft auch im Titel, input_pc.c), Vorspann uebersprungen.
+set(WORKDIR "${_basis}_tasten")
+file(MAKE_DIRECTORY "${WORKDIR}")
+file(WRITE "${WORKDIR}/opt.cfg" "volume=100\nsound=stereo\n")
+re15_start_spiel(_rv 180
+    SDL_ASSERT=always_ignore RE15_NOAUDIO=1 RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1
+    "RE15_OPTIONS_FILE=${WORKDIR}/opt.cfg"
+    RE15_CONFIG_TEST=1 RE15_CONFIG_TAB=4
+    "RE15_INPUT_SCRIPT=W5,L0.1,W0.5,L0.1,W0.5,A0.1,W0.5,R0.1,W0.5,A0.1,W3" RE15_INPUT_SCRIPT_START=0
+    "${_exe}")
+if(NOT EXISTS "${WORKDIR}/debug.log")
+    set(_fehler "${_fehler}\n[tasten] kein debug.log (exit=${_rv})")
+else()
+    file(READ "${WORKDIR}/debug.log" _dbg)
+    string(FIND "${_dbg}" "[lautstaerke] ${WORKDIR}/opt.cfg geschrieben: 80 %, Stereo" _p)
+    file(READ "${WORKDIR}/opt.cfg" _cfg)
+    string(FIND "${_cfg}" "volume=80" _q)
+    message(STATUS "r41_kleinkram_a_lautstaerke[tasten]: exit=${_rv}, geschrieben-Zeile=${_p}, Datei '${_cfg}'")
+    if(_p LESS 0 OR _q LESS 0 OR NOT _rv EQUAL 0)
+        set(_fehler "${_fehler}\n[tasten] LEFT LEFT + Bestaetigen schrieb nicht volume=80 (exit=${_rv}, Datei '${_cfg}')")
+    endif()
+endif()
+
 file(REMOVE "${_exe}")
 if(NOT _fehler STREQUAL "")
     message(FATAL_ERROR "r41_kleinkram_a_lautstaerke FEHLER:${_fehler}")
 endif()
-message(STATUS "r41_kleinkram_a_lautstaerke: OK (RMS halbiert, Optionsdatei gelesen, VOLUME-Zeile im Schirm)")
+message(STATUS "r41_kleinkram_a_lautstaerke: OK (RMS halbiert, Optionsdatei gelesen/geschrieben, VOLUME-Zeile im Schirm, Tastenkette)")

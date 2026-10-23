@@ -2825,7 +2825,7 @@ static void pc_run_config(void)
           int t = atoi(pt);
           if (t <= 2)      { screen = CFG_TOP;    cur = t; }
           else if (t == 3) { screen = CFG_PICKER; cur = 0; }
-          else if (t == 4) { screen = CFG_SOUND;  }
+          else if (t == 4) { screen = CFG_SOUND; s_config_sound = re15_lautstaerke_r41_pc_eintritt(); }   /* Runde 41 Spur D: wie der TOP->SOUND-Eintritt */
           else if (t == 8) { screen = CFG_AI;     cur = 3; }
       } }
     int fade_level = 0x7fff;   /* brightness = fade_level>>7; fade IN from black */
@@ -3522,6 +3522,7 @@ re_title:;
                       int screen = (t == 8) ? CFG_AI
                                  : (t <= 2) ? CFG_TOP
                                  : (t == 3) ? CFG_PICKER : (t == 4 ? CFG_SOUND : CFG_EDIT);
+                      if (t == 4) s_config_sound = re15_lautstaerke_r41_pc_eintritt();   /* Runde 41 Spur D: Shot zeigt den gespeicherten Sound-Modus (@0x8002f244-4c) */
                       int cur = (t == 8) ? 3
                               : (t <= 2) ? t : atoi(getenv("RE15_CONFIG_CUR")?getenv("RE15_CONFIG_CUR"):"0");
                       if (t >= 5 && t <= 7) { s_config_type = 3; s_edit_phase = t - 5; s_edit_slot = cur;
