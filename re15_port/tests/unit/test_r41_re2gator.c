@@ -26,6 +26,8 @@
 #include "re15_boss_gator.h"
 #include "re15_gator_re2_r41.h"
 #include "re15_emd.h"
+#include "re15_md1.h"
+#include "re15_tim.h"
 #include "re15_rumble.h"
 #include "re2_fx.h"
 #include "re2_ems.h"
@@ -421,11 +423,44 @@ static int teil_putz(void)
     return fails ? 1 : 0;
 }
 
+/* ================================================================================================ */
+/* Kanister-Modell: ROOM40A0 Modell 1 = MD1 @RDT 0x4024 .. 0x5388 (4964 B; das len-Feld 3444 endet GENAU
+ * am Quad-UV-Block @0xC+0xD68, der bis zum naechsten Modell reicht) + TIM @0x2fcfc (8 Bit, 2 CLUTs). */
+static int teil_modell(void)
+{
+    size_t n = 0, tn = 0;
+    uint8_t *md1 = slurp(RE15_ASSET_RE2_DIR "/KANISTER40A0.MD1", &n);
+    uint8_t *tim = slurp(RE15_ASSET_RE2_DIR "/KANISTER40A0.TIM", &tn);
+    CHECK(md1 && n == 4964, "KANISTER40A0.MD1 fehlt oder %u B statt 4964", (unsigned)n);
+    CHECK(tim && tn == 33824, "KANISTER40A0.TIM fehlt oder %u B statt 33824", (unsigned)tn);
+    if (!md1 || !tim) return 1;
+    re15_md1_t m; memset(&m, 0, sizeof m);
+    int rc = re15_md1_parse(md1, (int)n, &m);
+    CHECK(rc == 0, "re15_md1_parse = %d", rc);
+    CHECK(m.mesh_count == 1, "mesh_count %d != 1", m.mesh_count);
+    if (m.mesh_count >= 1) {
+        CHECK(m.meshes[0].quad_count == 95 && m.meshes[0].triangle_count == 0,
+              "Quads %d / Dreiecke %d (RDT: 95 / 0)", m.meshes[0].quad_count, m.meshes[0].triangle_count);
+        CHECK(m.meshes[0].quad_vertex_count == 104, "Vertices %d != 104", m.meshes[0].quad_vertex_count);
+        if (m.meshes[0].quad_count >= 1)
+            CHECK(m.meshes[0].quad_uvs[0].clut == 0x7840, "CLUT des ersten Quads 0x%x != 0x7840 (CLUT-Zeile 481 = Warnstreifen)", m.meshes[0].quad_uvs[0].clut);
+    }
+    re15_tim_t t; memset(&t, 0, sizeof t);
+    CHECK(re15_tim_parse(tim, (int)tn, &t) == 0, "re15_tim_parse fehlgeschlagen");
+    CHECK(t.bpp == 8 && t.width == 128 && t.height == 256 && t.has_clut && t.clut_entries == 512,
+          "TIM %d bpp %dx%d clut %d/%d (soll 8 bpp 128x256, 2 CLUTs = 512)", t.bpp, t.width, t.height, t.has_clut, t.clut_entries);
+    printf("modell: MD1 %u B, Quads %d, Vertices %d; TIM %d bpp %dx%d, CLUTs %d\n", (unsigned)n,
+           m.mesh_count ? m.meshes[0].quad_count : -1, m.mesh_count ? m.meshes[0].quad_vertex_count : -1,
+           t.bpp, t.width, t.height, t.clut_entries / 256);
+    return fails ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "clips";
     int rc = 1;
-    if (!strcmp(t, "clips")) rc = teil_clips();
+    if (!strcmp(t, "modell")) rc = teil_modell();
+    else if (!strcmp(t, "clips")) rc = teil_clips();
     else if (!strcmp(t, "dash")) rc = teil_dash();
     else if (!strcmp(t, "intro")) rc = teil_intro();
     else if (!strcmp(t, "sockel")) rc = teil_sockel();

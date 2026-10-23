@@ -81,6 +81,16 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
     int32_t bm[9], bt[3];
     re15_camera_compose_view_bone(cam_view, rot, pos, bm, bt);
 
+    /* MESSSCHIENE (stderr, kein Verhalten): die ersten drei Bilder und jeder Stufenwechsel - Lage, Drehung,
+     * Bildschirm-Kasten, Tiefe, Licht. Grund: Sichtlauf e 2026-10-23 - RE15_TRILOG zeigte 110 Dreiecke je Bild
+     * auf Platz 53 im Kasten (98..115, 91..107) bei z 10875..13512, im Framedump war dort nur Dunkel. Ob das
+     * Beleuchtung oder Verdeckung ist, entscheidet diese Zeile, nicht das Auge. */
+    static int s_diag_n, s_diag_stufe = -2;
+    const int stufe = re15_gr2_kanister_stufe();
+    const int diag = (s_diag_n < 3) || (stufe != s_diag_stufe);
+    int d_tris = 0, d_weg = 0, d_x0 = 9999, d_x1 = -9999, d_y0 = 9999, d_y1 = -9999, d_z0 = 99999, d_z1 = -1;
+    int d_c[3] = { -1, -1, -1 };
+
     for (int mi = 0; mi < s_md1.mesh_count; mi++) {
         const re15_md1_mesh_t *hm = &s_md1.meshes[mi];
         for (int ti = 0; ti < hm->triangle_count; ti++) {
@@ -89,7 +99,8 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
                 || tr->v2 >= (uint32_t)hm->tri_vertex_count) continue;
             const re15_md1_vertex_t *vp[3] = { &hm->tri_vertices[tr->v0], &hm->tri_vertices[tr->v1], &hm->tri_vertices[tr->v2] };
             int ax[3], ay[3], wz = 0;
-            if (!re15_objpoly_r38_tri_mesh(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, ax, ay, &wz)) continue;
+            if (!re15_objpoly_r38_tri_mesh(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, ax, ay, &wz)) { d_weg++; continue; }
+            d_tris++;
             const re15_md1_tri_uv_t *uv = &hm->triangle_uvs[ti];
             int po = (int)((uv->page & 0x000F) * 128);
             uint8_t c[3][3];
@@ -112,7 +123,8 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
             const re15_md1_vertex_t *vp[4] = { &hm->quad_vertices[qd->v0], &hm->quad_vertices[qd->v1],
                                                &hm->quad_vertices[qd->v2], &hm->quad_vertices[qd->v3] };
             int ax[4], ay[4], wz = 0; uint8_t ok[2];
-            if (!re15_objpoly_r38_quad_mesh(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, ax, ay, &wz, ok)) continue;
+            if (!re15_objpoly_r38_quad_mesh(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, ax, ay, &wz, ok)) { d_weg++; continue; }
+            d_tris++;
             const re15_md1_quad_uv_t *uv = &hm->quad_uvs[qi];
             int po = (int)((uv->page & 0x000F) * 128);
             uint8_t c[4][3];
@@ -121,6 +133,16 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
                 if (hm->quad_normals && ni < (uint32_t)hm->quad_normal_count)
                     re15_light_shade_vertex(&lctx, hm->quad_normals[ni].x, hm->quad_normals[ni].y, hm->quad_normals[ni].z, &c[k][0], &c[k][1], &c[k][2]);
                 else { c[k][0] = g_re15_light_tint[0]; c[k][1] = g_re15_light_tint[1]; c[k][2] = g_re15_light_tint[2]; }
+            }
+            if (diag) {
+                for (int k = 0; k < 4; k++) {
+                    if (ax[k] < d_x0) d_x0 = ax[k]; if (ax[k] > d_x1) d_x1 = ax[k];
+                    if (ay[k] < d_y0) d_y0 = ay[k]; if (ay[k] > d_y1) d_y1 = ay[k];
+                }
+                if (wz < d_z0) d_z0 = wz; if (wz > d_z1) d_z1 = wz;
+                if (d_c[0] < 0 || (int)c[0][0] + c[0][1] + c[0][2] > d_c[0] + d_c[1] + d_c[2]) {
+                    d_c[0] = c[0][0]; d_c[1] = c[0][1]; d_c[2] = c[0][2];   /* hellster Scheitel 0 */
+                }
             }
             if (ok[0])
                 re15_render_textured_tri_lit(ax[0], ay[0], (int)uv->u0 + po, (int)uv->v0,
@@ -135,6 +157,16 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
                                              (int)uv->page, (int)uv->clut, wz,
                                              c[0][0], c[0][1], c[0][2], c[3][0], c[3][1], c[3][2], c[2][0], c[2][1], c[2][2]);
         }
+    }
+    if (diag) {
+        s_diag_n++; s_diag_stufe = stufe;
+        fprintf(stderr, "[gator-re2] Kanister Stufe %d pos=(%d,%d,%d) rot=[%d %d %d|%d %d %d|%d %d %d] "
+                        "Kasten=(%d..%d,%d..%d) z=%d..%d Dreiecke %d weg %d hellster=(%d,%d,%d) "
+                        "ambient=(%d,%d,%d) tint=(%d,%d,%d) cut=%d\n",
+                stufe, pos[0], pos[1], pos[2], rot[0], rot[1], rot[2], rot[3], rot[4], rot[5], rot[6], rot[7], rot[8],
+                d_x0, d_x1, d_y0, d_y1, d_z0, d_z1, d_tris, d_weg, d_c[0], d_c[1], d_c[2],
+                (int)lctx.ambient[0], (int)lctx.ambient[1], (int)lctx.ambient[2],
+                (int)g_re15_light_tint[0], (int)g_re15_light_tint[1], (int)g_re15_light_tint[2], g_re15_active_cut);
     }
 }
 

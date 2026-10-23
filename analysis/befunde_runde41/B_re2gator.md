@@ -10,6 +10,13 @@ Zeiten aus `date`. Jeder Schritt wird hier VOR dem Bau notiert.
 
 ## 0. Protokoll (neueste Eintraege oben)
 
+* 2026-10-23 19:1x: Kanister-Sichtbarkeit GEMESSEN statt gedeutet (§4 Sichtlaeufe e-i): RE15_TRILOG zeigt
+  110 Dreiecke/Bild auf TIM-Platz 53 am richtigen Ort und in richtiger Groesse (Durchmesser 534 -> 17 px bei
+  z 11000, H = 350), Pixel-Differenz mit/ohne Kanister 34 px (liegend, Cut 7) bzw. 522..902 px (im Maul); die
+  Lichtrechnung liefert hellste Scheitel 53..84 (von 128) wie fuer jeden Prop, die RE2-Textur des Tankkoerpers
+  ist (41,41,41) grau -> im dunklen Becken ~17/255 = praktisch unsichtbar. Hoehe des Testhakens auf -1200
+  (GB_WATER_Y) gesetzt; Messzeile [gator-re2] Kanister Stufe ... im PC-Zeichner. Neubau 19:05, unit 7/7,
+  Regression 5/5, integration_r41_re2gator gruen (19,12 s).
 * 2026-10-23 19:xx: Modul, Haken, PC-Zeichner, Raumbank, Tests gebaut; unit_r41_re2gator 6/6 gruen, gezielte
   Regression 35/35 (unit_gator_sweep nach Bank-Anpassung), Integration laeuft/siehe §5. Op 11/73 fuer den Putz
   in re2_fx.c nachgezogen (FUN_8001e4b4 / FUN_8002387c).
@@ -121,8 +128,10 @@ Tausch 6->13/7->14, Sleep 170) `For 6: Gosub sub14` — sub13 startet sub11 bei 
   (33824 B, 8 Bit, 2 CLUTs; CLUT 1 = schwarzer Tank mit gelb-schwarzen Warnstreifen und Umbrella-Logo,
   Quad-Texturrecord `5c 80 40 78 6a 80 80 00 ...` -> clut 0x7840 = CLUT-Zeile 481) = DER GASKANISTER.
   Modell 0 (@0x3918) ist das 9x8-Wassergitter (y = 0, 1800er Raster), Modell 2 (@0x5388) die Gitterplatte.
-  -> shared_assets/RE2/KANISTER40A0.MD1 (md5 ded422132cc885d9c6bf1e143bcbe265) + KANISTER40A0.TIM
-  (md5 3b56b9667312cdae4bc4f97da076446b), byteidentisch aus dem RDT geschnitten.
+  -> shared_assets/RE2/KANISTER40A0.MD1 = RDT 0x4024..0x5388 (4964 B, md5 d4c74fedc299d001c8995cb94b5e9c5f;
+  das len-Feld 3444 endet GENAU am Quad-UV-Block @0xC+0xD68, der 95 x 16 B bis zum naechsten Modell reicht -
+  der erste Schnitt nach dem len-Feld wurde von re15_md1_parse verworfen, gemessen im exe-Lauf 3c9fe9dd) +
+  KANISTER40A0.TIM (33824 B, md5 3b56b9667312cdae4bc4f97da076446b), byteidentisch aus dem RDT.
   Nach dem Fall: sub05 `Pos_set (-22816,-1984,-9500)` + `Dir_set (0x690, 0, 0xfc00)` (@0x0484-0x0493, liegend).
 - Stufen (+0x226, Ease-Deltas 0x80101bac ease-in: A*(t^2-(t-1)^2)/N^2, 0x80101c74 ease-out: A*((N-t+1)^2-(N-t)^2)/N^2;
   +0x22A = Kopf-Part 6 az, +0x228 = Kiefer-Part 7 az, Root @0x8010037c-cc):
@@ -162,7 +171,7 @@ Tausch 6->13/7->14, Sleep 170) `For 6: Gosub sub14` — sub13 startet sub11 bei 
   Cuts, RTPT/NCLIP ueber objpoly_r38 wie der Prop-Pass), Raumbank GATOR40A0.VBS (Laderpaar wie TUERSE), Init.
 - NEU `tools/r41_re2gator/gator40a0_se_cut.py` -> `shared_assets/RE2/GATOR40A0.VBS` (34296 B, md5
   fc68d18c687fac207e52f9d0c71e71ed) + `engine/src/gen/r41_gator40a0_bank.inc`.
-- NEU `shared_assets/RE2/KANISTER40A0.MD1` (3444 B) / `.TIM` (33824 B) - byteidentisch aus ROOM40A0.RDT.
+- NEU `shared_assets/RE2/KANISTER40A0.MD1` (4964 B) / `.TIM` (33824 B) - byteidentisch aus ROOM40A0.RDT.
 - `enemy_ai_boss_gator.c` (Eigentuemer): GB_HP = 25300; Neuspawn-Reset -> re15_gr2_reset; Frame-Woerter ->
   re15_gr2_frame_wort; Takt nach dem Treffer-Absorb; gb_absorb_hit = RE2-Selektor (R0/R4/R1) + Unverwundbarkeit
   in FLINCH/TOD; LURK->INTRO (Clip 6 -> 3) wenn Bahn frei; CHASE: Zonen-Dash (Clip 2 -> 3), Clip-Wahl + Vortrieb
@@ -195,7 +204,9 @@ Tausch 6->13/7->14, Sleep 170) `For 6: Gosub sub14` — sub13 startet sub11 bei 
   Kamera 9 am Korridorende, Hoehen -2000..-4400 ueber dem Steg = ueber Leons Watt-Ebene y=0); Kanister-
   Aufnahme laengs der Blickachse mit seitlicher Koerperbreite (RE2: Korridor); R1 auch aus dem Schwimm-Sub
   (RE2-Ausnahme +0x230 == 1 @0x80101f04 bewusst weggelassen - Nutzer: "sobald er den Kanister im Maul hat");
-  Kanister-Schwimmhoehe y = -267 (Radius aus dem MD1) auf Leons Ebene; Kanister 1x gezeichnet (Leons Welt).
+  Kanister-Hoehe des Testhakens y = -1200 (= Wasser-INIT-Y der 0x23-KI @0x8010c65c, GB_WATER_Y; Sichtlauf c
+  zeigte den Kanister bei -267 komplett unter der gemalten Wasseroberflaeche); Kanister 1x gezeichnet (Leons
+  Welt); Beleuchtung wie jeder RDT-Prop (Lichtsatz des aktiven Cuts, FUN_8002c18c-Weg des main.c-Prop-Passes).
 - Entfallen: BURST-Design (RE2s Paddeln ist die Beschleunigung), 10 %-/6-Treffer-Flinch (RE2-Kadenz), Attrition-
   Tod durch Beschuss (Sockel); GBP_DIE (Clip 7) bleibt fuer e->state == 3 (GB_TEST=3 / Explosionen).
 
@@ -222,8 +233,33 @@ Dispatch). Folge: Stroke-SE/Ereignis ein Bild spaeter als in RE2; gemessen in un
 | unit_gator_sweep (3286 Paare) | gruen, 1,9 s (vorher ohne Bank 3286 Blocker = kein Vortrieb) |
 | unit_gator_fress (RE2-Finisher) | gruen (unveraendert) |
 
-Die exe-Messung (integration_r41_re2gator: ROOM2090 per Sprung, GB_TEST=1, RE15_GATOR_KANISTER=-6000,-15000,
-1300 Bilder, Zustandslog): siehe §5.
+exe-Messungen (eigene exe-Kopie, ROOM2090 per Sprung @250, GB_TEST=1, Titel-Auto-Start wie r35):
+
+| Lauf | Ergebnis |
+|---|---|
+| integration_r41_re2gator (Kanister -6000,-15000, 300 Bilder im Raum) | exe bis EXIT_AT (26 s); Kanister-Modell geladen (1 Mesh, TIM-Platz 53); 'RE2 KANISTER gesetzt'; Gator-Clips in 300 Bildern: mo=1 (Paddeln) 103, mo=4 (Schnapp) 68, mo=5 (FRESSEN P2) 89, mo=0 40; HP nie unter 25300 |
+| Sichtlauf a (Kanister -7200,-23500 nahe der Tuernische, Framedump 1..700/50) | 'RE2 KANISTER Stufe 1 laengs=5963 quer=110' -> 'angehaengt lokal=(3683,2317,556)' -> 'getragen (Stufe 7)' - die Aufnahme laeuft im echten Spiel beim Vorbeischwimmen; Bilder scratchpad/sichtlauf_a/bild_*.png, Belegbilder analysis/befunde_runde41/bilder_r41b/ |
+
+Sichtlaeufe Kanister (eigene exe-Kopie re15_pc_r41b_sicht.exe, RE15_FRAMEDUMP + RE15_TRILOG, 2026-10-23 19:0x-19:1x):
+
+| Lauf | Aufbau | Messung |
+|---|---|---|
+| e/f | Leon Tuernische (Cut 0), Kanister (-8200,-24300,-1200) | TRILOG: 110 Dreiecke/Bild auf Platz 53 (55 Vierecke, 40 Rueckseiten per NCLIP weg), Kasten (98..115, 91..107), z 10875..13512 = der Kanister liegt laengs der Blickachse (Dir_set 0x690/0/0xfc00 = Laengsachse auf Welt-X, Cut 0 blickt nach Westen); Groesse stimmt: 534 Durchmesser x 350/11000 = 17 px; hellster Scheitel (81,81,81), Ambient (63,63,63), Tint 128; Textur-Upload 128x512 8bpp 2 CLUTs, 0,8 % transparent |
+| g | Leon (-6000,-19000) per RE15_PLAYER_POS -> Cut 7 (Blick nach Norden) | Cut 7 nur 37 Bilder: Spinne wirft Leon nach (-5397,-19797) = Zone 22 -> Cut 0; Framedump ab 40 deshalb Cut 0 |
+| h | Leon (-6000,-18520) -> Cut 7 fuer 68 Bilder, Kanister (-6500,-15700,-1200) | Stufe 1 laengs=5850 quer=-32, angehaengt lokal=(3640,890,131), getragen (Stufe 7); liegend Kasten (89..148, 118..132) = 60 x 15 px quer zur Blickachse, getragen (150..207, 120..167); hellster Scheitel 47..53, Ambient (63,73,63) |
+| i | wie h OHNE Kanister (Kontrolle) | Gator-Bahn bitidentisch (Positionen Bild 10/30 gleich); Pixel-Differenz h-i: Bild 10: 34 px (31 im Kanister-Kasten), Bild 20: 47, Bild 30: 151, Bild 40: 662, Bild 50: 522, Bild 60: 902 px im Kasten |
+
+Befund: der Kanister WIRD gezeichnet (Ort, Groesse, Dreieckszahl, Differenzpixel), ist im Becken aber kaum zu
+sehen: der Tankkoerper der RE2-Textur (CLUT-Zeile 481) ist (41,41,41) grau, die Warnstreifen liegen nur an den
+Enden (v 128..140 / 236..255); mit dem hellsten Scheitel 53 (Cut 7) bzw. 81 (Cut 0) von 128 bleiben ~17..26/255
+auf dem schwarzen Wasser. Liegend in Cut 7 aendert er 34 Pixel, im Maul 500..900 (Bilder bilder_r41b/, die
+Ausschnitte *_gain4 sind zur Sichtbarkeit 4x aufgehellt und so beschriftet). Das ist die RE2-Textur unter
+ROOM2090-Licht, keine Zeichnerluecke; Spur G entscheidet Kamera/Lage der Szene (Cut 7 = Zone 2 des RDT:
+x -10000..-1000, z -19500..-18500 von Cut 0 aus; zurueck nach Cut 0 ab z < -19500).
+
+⛔ Gemessene Folge des RE2-Tempos: Leon in der Tuernische (-8200,-25550, 100 HP) ist in BEIDEN exe-Laeufen binnen
+~210 Bildern gefressen (mo=5 ab ~Bild 210; Lauf 0d58130a mit EXIT_AT 1300: Game Over -> Titel, der Riegel lief in
+den Timeout). Der Riegel misst deshalb 300 Bilder. Entscheidungsfrage §7.1.
 
 ## 5. Tests
 Neu (tests/unit/probes/r41_re2gator.cmake): unit_r41_re2gator_{clips,dash,intro,sockel,kanister,putz},
@@ -231,11 +267,21 @@ integration_r41_re2gator (tests/integration/test_r41_re2gator.cmake, eigene exe-
 Angepasst mit Beleg: unit_gator_sweep (EM23-Bank laden, §3.1).
 
 Gezielt gelaufen (keine volle Suite):
-- `ctest -R "unit_r41_re2gator"`: 100% tests passed, 0 tests failed out of 6
+- `ctest -R "unit_r41_re2gator"`: 100% tests passed, 0 tests failed out of 7 (modell, clips, dash, intro, sockel, kanister, putz);
+  nach dem Neubau 19:05 (Hoehe -1200, Messzeile) erneut: 100% tests passed, 0 tests failed out of 7 (0.19 sec)
+- `ctest -R "^unit_(gator_sweep|gator_fress|alligator_ai|re2_spider_water_2090|r34_re2fx)$"` (nach dem Neubau):
+  100% tests passed, 0 tests failed out of 5 (2.06 sec)
+- `ctest -R "^integration_r41_re2gator$"` (nach dem Neubau, Kanister-Hoehe -1200): 100% tests passed, 0 tests failed out of 1 (19.12 sec)
 - `ctest -R "^unit_(alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|r34_re2fx|r35_granate|r36_granate|r30_granate|r38_wasser|r38_wasserzombie|montage_fx|r38_montage|r35_cut1150_montage)"`:
   97% tests passed, 1 tests failed out of 35 (unit_gator_sweep, VOR der Bank-Anpassung) -> danach
-  `ctest -R "^unit_gator_sweep$"`: 100% tests passed, 0 tests failed out of 1
-- Integration (exe): siehe Nachtrag unten.
+  `ctest -R "^unit_gator_sweep$"`: 100% tests passed, 0 tests failed out of 1 (1.91 sec)
+- `ctest -R "^integration_(r35_granate|r38_wasser|r41_re2gator)$"` (Stapel 1): integration_r38_wasser Passed 180.00 sec;
+  integration_r35_granate Failed (duenn_a exe exit=-1 bei Bild ~44, ROOM1220 ohne Gator) - Ursache: mein eigener
+  local_build.sh-Lauf um 18:27 (taskkill //IM re15_pc.exe, r35 nutzt die exe unter Originalnamen); Wiederholung
+  ohne Bau: `ctest -R "^integration_(r41_re2gator|r35_granate)$"`: integration_r35_granate Passed 162.92 sec
+  (gator: HP 25300 -> 24300, birkin ok); integration_r41_re2gator zweimal rot durch den Riegel selbst (Titel ohne
+  Auto-Start; dann EXIT_AT 1300 nach Leons Tod unerreichbar; dann MD1 ohne UV-Block), danach
+  `ctest -R "^integration_r41_re2gator$"`: 100% tests passed, 0 tests failed out of 1 (26.39 sec).
 
 ## 6. OFFEN (benannt, nicht geraten)
 
@@ -257,19 +303,29 @@ Gezielt gelaufen (keine volle Suite):
 - Die RE2-Hysterese-Schwellen 0x65/0x5a (Wurzel-Distanz < 101/90) sind im Becken praktisch "immer Paddeln"
   ausser in der Biss-Sperre — das IST RE2 (Wurzel liegt ~9000 hinter der Schnauze), aber der Gator ist damit
   mit 149/Bild (223 x 2/3) deutlich schneller als das fruehere Design 56/100. Entscheidungsfrage §7.
+- Kanister im Becken kaum sichtbar (§4 Sichtlaeufe): RE2-Tanktextur (41,41,41) x ROOM2090-Licht (hellster
+  Scheitel 53..84/128) = ~17..26/255. Gezeichnet wird er (34 bzw. 500..900 Differenzpixel). Keine Aufhellung
+  eingebaut (keine RE2-Adresse dafuer; RE2 ROOM40A0 ist ein hell ausgeleuchteter Korridor). Spur G waehlt
+  Kamera/Lage; falls gewuenscht: Prop-Licht wie die Irons-Tisch-Ausnahme (include/re15_irons_tisch.h) als
+  PORT-WAHL mit Messtabelle.
 - GUARD (Belagerung) und CROSS (Klettern) spielen weiter Clip 0 (Nutzer-Design unveraendert).
 - Kein Original-Test mit DuckStation moeglich (info/re2leon ist ein Dateibaum, kein RE2-Image).
 
 ## 7. Fuer den Nutzer
 
 Neue Assets (Paket-Gate, alle in `re15_port/shared_assets/RE2/`):
-- `KANISTER40A0.MD1` (3444 B) + `KANISTER40A0.TIM` (33824 B): der RE2-Gaskanister (ROOM40A0 Modell 1).
+- `KANISTER40A0.MD1` (4964 B, mit UV-Block) + `KANISTER40A0.TIM` (33824 B): der RE2-Gaskanister (ROOM40A0 Modell 1).
 - `GATOR40A0.VBS` (34296 B): RE2-Raumbrueller (Satz 0 = Tod/R2, Satz 1 = Explosion/R1) aus ROOM40A0.
 Keine neuen Sprachdateien.
 
 Bedienung / Testhaken:
-- `RE15_GATOR_KANISTER=x,z[,y]` legt den Kanister ins Wasser von ROOM2090 (y Standard -267 = halb
-  eingetaucht auf Leons Ebene). Spur G setzt dieselbe Funktion (`re15_gr2_kanister_setzen`) aus der Szene.
+- `RE15_GATOR_KANISTER=x,z[,y]` legt den Kanister ins Wasser von ROOM2090 (y Standard -1200 = GB_WATER_Y,
+  Wasserkoerper-Hoehe des Gators; bei -267 lag er unter der gemalten Wasseroberflaeche). Spur G setzt dieselbe
+  Funktion (`re15_gr2_kanister_setzen`) aus der Szene. Sichtlauf-Rezept (§4): `RE15_PLAYER_POS=-6000,-18520,0`
+  + `RE15_GATOR_KANISTER=-6500,-15700` -> Cut 7 blickt nach Norden, der Gator kommt frontal mit dem Kanister
+  quer im Maul; debug.log traegt die Messzeile `[gator-re2] Kanister Stufe N pos=... Kasten=... hellster=...`.
+- Belegbilder `analysis/befunde_runde41/bilder_r41b/` (kanister_cut7_f10_liegend, kanister_cut7_f50_gator_frontal,
+  kanister_cut0_f30_nische, *_ausschnitt_x4_gain4 = 4x vergroessert und 4x aufgehellt).
 - API fuer Spur F/G: `re15_gr2_geschwaecht()` (HP < 25000 = RE2-Schwaeche), `re15_gr2_treffer()`,
   `re15_gr2_traegt()`, `re15_gr2_tot()` (Leiche nach der Explosion), `re15_gr2_intro_start/_tick`
   (Durchbruch Clip 6 + Schnapper Clip 3 fuer "springt aus dem Wasser").

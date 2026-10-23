@@ -27,7 +27,9 @@ target_compile_definitions(test_r41_re2gator PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_re2gator PRIVATE m)
 endif()
-foreach(_teil clips dash intro sockel kanister putz)
+#   unit_r41_re2gator_modell     KANISTER40A0.MD1 (4964 B, 95 Quads, 104 Vertices, CLUT 0x7840) + .TIM (8 bpp 128x256,
+#                                2 CLUTs) parsen wie der PC-Zeichner (re15_md1_parse / re15_tim_parse)
+foreach(_teil modell clips dash intro sockel kanister putz)
     add_test(NAME unit_r41_re2gator_${_teil} COMMAND test_r41_re2gator ${_teil})
     set_tests_properties(unit_r41_re2gator_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()

@@ -778,7 +778,11 @@ void re15_gr2_kanister_env(void)
     s_env_geprueft = 1;
     const char *v = getenv("RE15_GATOR_KANISTER");
     if (!v || !*v) return;
-    int x = 0, z = 0, y = -267;   /* PORT-WAHL: halb eingetaucht (Radius 267 aus dem MD1) auf Leons Watt-Ebene y=0 */
+    /* PORT-WAHL Hoehe: Mitte auf der Wasserkoerper-Hoehe des Beckens (-1200 = Wasser-INIT-Y der 0x23-KI
+     * @0x8010c65c, GB_WATER_Y) - auf Leons Watt-Ebene (y=0, Mitte -267) laege der liegende Kanister komplett
+     * unter der gemalten Wasseroberflaeche (Sichtlauf c 2026-10-23: Leons Beine werden dort von der Maske
+     * geschnitten, der Kanister war unsichtbar). */
+    int x = 0, z = 0, y = -1200;
     int n = sscanf(v, "%d,%d,%d", &x, &z, &y);
     if (n >= 2) re15_gr2_kanister_setzen(x, y, z);
 }

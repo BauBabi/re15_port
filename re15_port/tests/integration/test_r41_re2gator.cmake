@@ -40,8 +40,12 @@ re15_start_spiel(_rv 300
     RE15_DEBUG_JUMP=2090@250 RE15_GB_TEST=1
     "RE15_GATOR_KANISTER=-6000,-15000"
     RE15_STATE_LOG=state.log
-    "RE15_EXIT_AT=1300#2090"
+    "RE15_EXIT_AT=300#2090"
     "${_exe_kopie}")
+# ⛔ 300 Bilder im Raum, nicht mehr (gemessen 2026-10-23, Lauf 0d58130a): Leon steht nach dem Sprung in der
+# Tuernische (-8200,-25550) mit 100 HP, der Gator erreicht ihn mit dem RE2-Paddeltempo in ~1 s, drei Bisse
+# -> FRESSEN -> Game Over -> Titel; ein spaeteres RE15_EXIT_AT #2090 greift dann nie (Memory
+# reai-v2-gator-bosskampf: "Design-Schaden + Biss = Leon in <2 s tot -> Game Over -> Title").
 file(REMOVE "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
     message(FATAL_ERROR "r41_re2gator: exe exit=${_rv} (erwartet 0 bis RE15_EXIT_AT), ${_dir}")
@@ -90,7 +94,8 @@ foreach(_l IN LISTS _zl)
         if("${CMAKE_MATCH_2}" STREQUAL "1")
             math(EXPR _mo1 "${_mo1} + 1")
         endif()
-        if(${CMAKE_MATCH_3} LESS _hp_min)
+        # hp=0 steht nur im Spawn-Bild VOR dem Boss-INIT (main.c spawnt mit 0, der erste Boss-Tick schreibt 25300)
+        if(${CMAKE_MATCH_3} GREATER 0 AND ${CMAKE_MATCH_3} LESS _hp_min)
             set(_hp_min ${CMAKE_MATCH_3})
         endif()
     endif()
@@ -99,7 +104,7 @@ if(NOT _gator)
     message(FATAL_ERROR "r41_re2gator: kein Alligator (t=23) im Zustandslog")
 endif()
 if(_mo1 LESS 30)
-    message(FATAL_ERROR "r41_re2gator: Paddeln (Clip 1) nur in ${_mo1} Bildern (RE2 Sub 2 bei +0x1F0 >= 0x65)")
+    message(FATAL_ERROR "r41_re2gator: Paddeln (Clip 1) nur in ${_mo1} Bildern von 300 (RE2 Sub 2 bei +0x1F0 >= 0x65)")
 endif()
 if(_hp_min LESS 25000)
     message(FATAL_ERROR "r41_re2gator: HP unter dem RE2-Sockel (${_hp_min} < 25000) ohne Beschuss")
