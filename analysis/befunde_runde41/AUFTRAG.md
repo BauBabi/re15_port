@@ -176,3 +176,12 @@ Spur C (ventilkette, §7):
   ohne eigenen Ton (RE2 hat keinen) — angenommen.
 - Port-Texte 2000/2030/2050/2080 (Dossier §7) gelten bis zur Freigabe des Nutzers als Vorschlag; Wortlaut-Vorgaben
   des Nutzers unveraendert.
+
+## 2026-10-23 22:32 — Orchestrator-Entscheid B4 (Fortsetzungs-Ergebnis der Spur B; der Nutzer kann widersprechen)
+
+- B4 Kamera: Intro/Grossreaktion/Finisher/Kanister-Tod des Alligators laufen mit der Port-Todeskamera bzw. den 2090-
+  Kameras, NICHT mit den RE2-Schnitten aus ROOM40A0 (Cut 0/1/5/6/13 gehoeren zum RE2-Korridor, nicht zum Becken).
+  Spur G darf fuer die Kanister-Szene eigene Kamera-Programme (2080/2090-Kameras) anlegen. Nutzerfrage in der
+  Abschlussmeldung: RE2-artige Kameraschnitte fuer die Explosion gewuenscht?
+- Hinweis an Spur G (aus B §6): Zielhilfe FUN_8003703c = naechster Gegner rundum — solange die Spinnen im Becken sind,
+  trifft man den Gator nur, wenn er naeher ist als die Spinnen; Spur F entfernt die Spinnen (Nutzer-Auftrag).
