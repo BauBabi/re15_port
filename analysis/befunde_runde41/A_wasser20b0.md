@@ -514,3 +514,40 @@ Laeufe B/D/E2. Konfliktrisiko mit Spur D gering (andere Stellen); zur Integratio
   Bilder, A_nb1c/e11c1) spawnt 5 Hunde 0x20 statt eines NPC (Leons 11C0: Marvin 0x42 laeuft per Plc_dest, Clip 0 Bilder 0/11);
   ROOM2001 mit (3,66)/(3,68) spawnt John 0x49 + 0x4B ohne Plc_dest (Lauf der Vorgaengerin, nb1/s2001). Beide Szenarien der
   NPC-Schritte bleiben am Unit-Riegel `npc_wasser` (CDEMD0 UND CDEMD1, echter Geh-Sub) belegt, an der exe Leons 2000-Szene.
+
+### N1.10 Fortsetzung 2026-10-24: der NPC-Schritt in ALLEN NPC-Subs (eigener Befund, nicht aus der Abnahme)
+- **Befund (gemessen).** Leons 11C0-Szene (Lauf der Vorgaengerin nb1/s11c0, RE15_NPCSCHRITT_LOG): `F1071 slot=1 typ=0x42 clip=0
+  bild=0 fuss=7 ... ton=22` und `F1072 slot=1 typ=0x42 clip=0 bild=0 fuss=7 ... ton=21` - zwei Schritte aus DEMSELBEN Bild in zwei
+  Folgetakten am Laufbeginn (Plc_dest Modus 0x05 -> Sub 5). Ausserdem ruft der Port den Schritt nur in den Subs 4/5/7/8.
+- **RE (PSX.EXE, re15_disasm.py, ghidra1_V2 XREF[24] von FUN_80045630).** NPC-Sub-Tabelle @0x80076ca0 (`table`: [4] 0x80051148,
+  [5] 0x80051484, [7] 0x80051908, [8] 0x80051b00, [9] 0x80051cf8, [18] = [22] 0x80052508, [19] 0x80052864). Aufrufe von
+  FUN_80045630 aus diesen Subs: Sub 4 @0x800512a8 (Phase 1) / @0x80051304 (Phase 2), Sub 5 @0x80051614 / @0x80051670, Sub 7
+  @0x80051a0c, Sub 8 @0x80051c04, **Sub 9 (Drehen) @0x80051e88**, **Kante 0x12/0x16 Phase 1 @0x800525d4**, **Schub 0x13 Phase 1
+  @0x80052930**; a0 = 0 (`addu a0,zero,zero` @0x80051e70 / @0x800525bc / @0x80052918 / @0x800512f0 / @0x8005165c), nur Sub 5
+  Phase 1 a0 = 1 (`ori a0,zero,0x1` @0x800515fc). Die STAGE-Overlays rufen FUN_80045630 nur aus Typ-Handlern (Wort 0x0C01158C:
+  STAGE1 @0x80111da4/@0x8011c4f0, STAGE3 @0x80110884/@0x80116180, STAGE4 @0x80111820/@0x801162dc/@0x801166b4, STAGE5
+  @0x801119a0/@0x8011645c/@0x80116834, STAGE2 keinen; STAGE1 @0x8011c4f0 haengt an Spieler-+0x95 == 0x3c) - nicht Teil der
+  NPC-Geh-Subs.
+- **Lage im Takt.** Sub 4 Phase 2: Test @0x800512d4-308 VOR `jal 0x8001aac4` @0x8005133c (Kurs) und pos_advance @0x80051344;
+  Sub 5 Phase 2: @0x80051640-74 VOR @0x800516a8 / @0x800516b0 und vor der Kanten-Sonde @0x800516c4; Sub 7/8: pos_advance
+  @0x800519c8 / @0x80051bc0 VOR dem Test @0x800519dc / @0x80051bd4; Sub 9: Kurs @0x80051e44 vor dem Test @0x80051e58; Kante/Schub:
+  direkt vor anim_set @0x800525f0 / @0x8005294c. Der Port testete Sub 4/5 Phase 2 NACH Kurs und Vorschub.
+- **Was gelesen wird.** *(+0x168) zeigt auf das Bildwort des Bilds, das anim_set POSIERT hat (`sw a2,360(t0)` @0x8001f36c,
+  Vorschub erst @0x8001f618-1c), der Anker ist Part[fuss] der beim Zeichnen gebauten Matrizen (`lw a2,392(a1)` +0x188 + fuss*0xac
+  @0x8004567c-a8). Beides gehoert zum GEZEICHNETEN Bild - auch wenn der Sub im selben Takt schon +0x94/+0x95 neu gesetzt hat
+  (Sub 5 Phase 1 ausgerichtet: `sb zero,148` @0x8005157c / `sb zero,149` @0x8005158c VOR dem Test @0x800515e4; jede Phase 0).
+  Der Port las Clip/Bild des Aktors im Takt (nach dem Neusetzen) -> 11C0: Clip 0 Bild 0 zweimal = der Doppelschritt.
+- **Aenderung.** wassersprung_r41.c: Schnappschuss je Aktor am Bildanfang (Bank, Clip, Bild, Lage, Gier des gezeichneten Bilds;
+  `s_gez`, gerufen aus re15_wasser_r38_bildanfang vor allen KI-Takten), Bildwort-Test und Part-Anker daraus; ohne Bildanfang
+  (Riegel, die den Sub direkt rufen) wie bisher der Aktorzustand. Haken (je 1 Zeile, "Runde 41 Spur A"): enemy_ai_common.c
+  re15_npc_sub_walk (Phase 2: Sub 4/5 VOR Kurs/Vorschub, Sub 7/8 NACH dem Vorschub), re15_npc_sub_turn (Sub 9 zwischen Kurs und
+  anim), npckante_r38.c sub_kante Phase 1, szenenleon_r36.c re15_szl_schub_npc Phase 1 (+ je ein Include). Kopf (d) in
+  include/re15_wassersprung_r41.h.
+- **Riegel** `unit_r41_wasser20b0_npc_subs` (ROOM2000-Wasserfleck, Typ 0x40 OWN-Bank): Sub 9 aus Phase 0 -> 1 Schritt aus dem
+  gezeichneten Bild 7, Anker = Part 7 der gezeichneten Pose (Gier 0, nach dem Kurs 4000; (-4828,-1886,-4855) beide); Kante 0x12
+  und Schub 0x13 Phase 1 je 1 Schritt, Ton 15; Sub 5 aus dem Stand: Takt 1 kein Schritt, Takt 2 genau einer, Ton 15; Sub 4 Phase 2
+  am Fleckrand z -9750 (dahinter 0x1d): Zweig boden, Ton 15 = Boden VOR dem Vorschub.
+  **Gegenprobe** (Engine-Dateien auf e6e6869b zurueckgesetzt, nur der Riegel neu): `npc_subs: 9 Pruefungen, 6 Fehler` - Sub 9
+  `schritte 0`, Anker (0,0,0), Kante `schritte 0`, Schub `schritte 0`, Sub 5 `Takt 1 1 Schritte ... Takt 2 gesamt 2`, Sub 4
+  `Zweig boden 0, Ton 21` (trocken nach dem Vorschub). Mit dem neuen Stand `npc_subs: 9 Pruefungen, 0 Fehler`.
+  npc_wasser unveraendert: 0x40/0x42/0x45/0x49/0x4d je 6 Schritte (Plaetze 6), 0x4b 9 (PORT-WAHL), Ton 15.
