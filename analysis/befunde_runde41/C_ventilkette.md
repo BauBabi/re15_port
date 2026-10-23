@@ -9,6 +9,12 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-24 00:26-00:29 Luecken am Spiel geschlossen (neue Messlaeufe, keine Wiederholung; Skript scratchpad
+  r41c2/mess_b.sh, exe-Kopie re15_pc_r41c_mess2.exe): Punkt 5 GANZ (Pult -> 80 V -> "Power supply OK." -> Hebel =
+  Original sub04 -> Wasser steigt) und Hebel vorher mit der Aktionstaste gesperrt; Punkt 2 Pult ohne Ventil 13
+  (Text 40, zwei Seiten); Punkt 4 Leiter 20B0 -> 2050 und 2050-Leiter -> 20B0; Punkt 6 2030 mit Bit 107 bitgleich
+  zum Stand ohne Flut. Belegbilder pult2050_loesung_sheet / pult2030_ohne_ventil / raum2030_leer_vergleich (§4).
+  Befund beim Lesen von integration A: ohne den Haken der Spur A haengt die 20B0-Szene (§6, Querbezug A).
 * 2026-10-24 00:21 (dritte Fortsetzung, Opus; Vorgaenger vom Fable-Limit ~23:45 beendet). Baum sauber, HEAD 2088dd38.
   Bau `local_build.sh build` -> `ninja: no work to do.` / `LOCAL-BUILD-OK (build)`: die exe vom 23.10. 22:17 ist der
   Stand aller Commits (seit 76fdeca4 nur Dossier/Bilder/Auftrag; `git diff --stat 76fdeca4 HEAD -- re15_port` leer),
@@ -370,6 +376,44 @@ shared_assets/PSX, pri/, synchro/, release/.
   (Bit 107 steht im selben Ja-Zweig `22 09 6b 01`; das Zustandslog fuehrt Bank 9 nicht, das Bit misst Riegel G).
   Bilderreihe **C_belege/rechner2080_sheet.png**: F360 Frage (Sprung-Kamera), F600 Cut 7 Wasser sinkt, F750, F900
   (Becken leer bis auf den Grund), F930 Cut 3 Text 40 (Schreibmaschine), F1200 Text 40 komplett.
+* **Luecken am Spiel (dritte Fortsetzung, 2026-10-24 00:26-00:29, scratchpad r41c2/mess/<lauf>/debug.log)** — was bis
+  dahin nur der Unit-Riegel zeigte, jetzt mit der exe (Eingabeskript = Aktionstaste/Steuerkreuz, Bildnummern = Spielbilder):
+  - **P5 Pult -> Hebel, ein Lauf** (`p5a_pult_loesung`, `RE15_PLAYER_POS=4900,-7100,1024` vor dem Pult wie pult2050c):
+    F330 Aktion -> `ROOM2050 Ereignis 9 -> Port-Programm 2050_pult_ein` -> id 43 "A high voltage switchboard. The pump
+    needs 80 volts." -> F453 -> id 41 "Will you push them?" -> F531 Ja -> `[scd F534] Cut_chg(15)`; F564 RIGHT (8 Bilder),
+    F581 SQUARE -> `Pult 2050: Hebel 3 -> EIN, Schalter 0x4, 40 V`; F605 LEFT (36 Bilder), F650 SQUARE -> `Hebel 1 -> EIN,
+    Schalter 0x5, 70 V`; F674 RIGHT (60 Bilder = 12000 bei 200 je Bild `2f 00 c8 00` sub07), F743 SQUARE -> `Hebel 4 ->
+    EIN, Schalter 0xD, 80 V` -> nach den 30 Ruhebildern (RE2 @0x0171C) `Pult 2050 GELOEST: 80 V -> Bit 106, "Power supply
+    OK."` + id 42 (= 11F0 msg 2) -> F836 zu -> `Pult 2050 verlassen (Schalter 0xD, 80 V)` (sub10 @0x0240C). Danach der
+    Hebel-Platz Slot 6 (Ereignis 4) ueber `RE15_FIRE_AOT=6@900` (= re15_aot_fire_slot, derselbe Pfad wie die Aktionstaste;
+    das Pult steht an der Saeule, der Hebel in der Nische dahinter — ein offenes Skript um die Wand herum waere geraten)
+    -> KEIN Port-Programm mehr, das Original sub04: id 0 "A lever to fill and drain water. Will you move it?" -> F1022 Ja
+    -> `[prop-member F1026] prop[5] obj=0x04 m=1 → val=-1400` (@0x0230C ff.) -> `[scd F1046] Cut_chg(4)` (Sleep 20) ->
+    For 180 x Speed -20 (@0x02324/@0x02328) -> `[prop-member F1226] prop[6] obj=0x05 m=1 → val=-5000` + `Cut_chg(7)` ->
+    `[scd F1240] letterbox closed -> gameplay`. Bildvergleich Cut 4: F1050..F1155 0 Pixel Unterschied, F1200 736, F1215
+    1283 Pixel (Rahmen x 52..233, y 188..215 = die Wasserflaeche taucht unter dem Gitter ins Bild).
+  - **P5 Hebel vorher, Aktionstaste** (`p5b_hebel_gesperrt`, `RE15_PLAYER_POS=4300,-11150,0,3` = Nische westlich des
+    Hebels, Blick +x, Vorwaertspunkt x 4920 im Rechteck (4700,-11550,800,800) @0x01E28): F330 Aktion -> `ROOM2050
+    Ereignis 4 -> Port-Programm 2050_hebel_sperre` -> id 40 "The pump has no power. The switchboard must be set first.";
+    kein Cut_chg, kein Member_set. Bilderreihe **C_belege/pult2050_loesung_sheet.png** (F420 Hebel vorher, F540 Cut 15,
+    F585 40 V, F660 70 V, F750 80 V mit drei gruenen Marken, F795 "Power supply OK.", F990 Original-Frage am Hebel,
+    F1155 Cut 4, F1215 Wasser im Bild).
+  - **P2 Pult ohne Ventil 13** (`p2a_pult_ohne`, Ring vor der Nordwand wie pult_bruecke, ohne Bit 101): F330 Aktion ->
+    `Ereignis 24 -> Port-Programm 2030_pult_ohne` -> `[msgtext] room=2030 id=40 "A control panel for the bridge. The
+    pressure gauge reads zero.Intake valve 13 is closed."` (zwei Seiten, F453 blaettert); kein Cut_chg(4), keine
+    Fahrt. Bild **C_belege/pult2030_ohne_ventil.png** (F440 Seite 1, F560 Seite 2).
+  - **P4 Leiter 20B0 -> 2050** (`p4a_leiter20b0`, Zustand nach der Szene: `RE15_SET_FLAG=3:235,9:103,9:100`, Spieler
+    vor der Leiter wie integration B): F330 Aktion -> `[aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500)
+    target_cut=0 spawn=(9100,-5400,4100)` -> `[room] PC loaded room2050.rdt` (kein Sperrtext) -> in 2050 sofort
+    `[ventilkette41] ROOM2050: Tuer Slot 0 -> ROOM20B0 Cut 9 (Ziel ROOM2000)`.
+  - **P4 2050-Leiter hinab -> 20B0** (`p4b_leiter2050`, gleicher Zustand, `RE15_PLAYER_POS=9100,4300,3072` wie
+    integration_r36_dachkiste echt2050): F330 Aktion -> `[aot] DOOR FIRE slot=0 rect=(9100,5700,hw=1000,hh=1000)
+    target_cut=9 spawn=(-26450,-1800,10250)` -> `[room] PC loaded room20b0.rdt` (Original-Ziel ROOM2000 Cut 10 @0x01C4A,
+    Zwilling Cut 9 laut §1.2).
+  - **P6 2030 nach dem Rechner** (`p6b_leer_cut4`, Cut 4 erzwungen, Bits 101/102/103/100 + 107): kein `unter Wasser`-
+    Satz im Log (nur `Tuer Slot 0 -> ROOM20B0 Cut 11 (Ost-Tuer nach der Flut)`); das Bild ist **bitgleich** (0 Pixel
+    > 24) zum Stand ohne Flut (r41c/mess/bruecke_unten, nur 101+102) und unterscheidet sich vom Flut-Stand ohne 107
+    (r41c/mess/flut_cut4) in 39271 Pixeln. Bild **C_belege/raum2030_leer_vergleich.png**.
 
 ## 5. Tests
 * `unit_r41_ventilkette` (tests/unit/test_r41_ventilkette.c, registriert in probes/r41_ventilkette.cmake): A Scheiben
