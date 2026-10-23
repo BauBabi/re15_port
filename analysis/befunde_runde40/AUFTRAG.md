@@ -32,3 +32,10 @@ Ergebnis: `analysis/untersuchungstexte_2026-10-23/README.md` (Vorschläge mit Bi
 
 1. ROOM1120/1121: Text-Plätze für msg 1 (Bild "The Music Lesson"), msg 3 (Fenster), msg 4 (Aktenschrank).
 2. ROOM11D0: Frage (Befund in `UEBERGABE.md`).
+
+## 2026-10-23 — Nachtrag 1
+
+> ok. GIbt es noch weitere Dinge in STAGE1 mit son einer Nahaufnahme die auf Rätsel oder Informationen hindeuten
+> könnten? Wenn ja, baue die ruhig mit ein.
+
+Umsetzung: nie geschaltete Nahaufnahmen 11D0, 1110 (2), 1100 (VUS INVALID/TRY AGAIN), 11F0 (`nahaufnahmen_r40.c`).

@@ -23,11 +23,22 @@ Die Vorschlaege fuer 1070/1071 bleiben wie gewuenscht liegen (Bilder: `analysis/
 Leon/Marvin/Ada am Lift (ROOM3070 `main00`-`main04`), Ada in ROOM3080 (`main00`, `main01`) und die Szene in ROOM30E0
 (`main00`-`main05`, `main07`-`main13`). Jede Datei gehoert zu der Zeile mit derselben Nummer; die Sprecher passen.
 
-**Ihre Frage zu ROOM11D0 (Hundenamen).** Vom Raetsel ist nur das Bild da: Kamera 12 ist die Nahaufnahme des
-Zwinger-Schaltpults mit den sechs Namen (BOCKER, COURIER, GUTS, ROCKEY, DOGMEAT, JoJo), aufgestellt direkt vor dem Pult.
-Keine Kamerazone und kein Skriptbefehl schaltet je auf diese Kamera; es gibt keinen Text mit den Namen, kein Flag und
-keinen Gegenstand dafuer. Das Pult sagt nur "A panel to control the cells of the dogs. It does not work.", und die Hunde
-kommen ueber die Falle im Lager (Munition aufnehmen -> Zwinger gehen auf). Geaendert ist daran nichts.
+**Nahaufnahmen, die das Original nie zeigt (Ihre Frage zu ROOM11D0 und "Wenn ja, baue die ruhig mit ein").** Ich
+habe alle STAGE1-Kameras gesucht, auf die nichts schaltet (keine Kamerazone, kein Skriptbefehl, keine Tuer). Wo eine
+Nahaufnahme vor einer Untersuchungsstelle mit passendem Text steht, zeigt sie jetzt beim Untersuchen - bei Leon und
+Elza, danach geht die Kamera zurueck:
+- ROOM11D0 Zwinger: das Schaltpult mit den Hundenamen (BOCKER, COURIER, GUTS, ROCKEY, DOGMEAT, JoJo) zu "A panel to
+  control the cells of the dogs. It does not work." Ein Raetsel dazu gibt es in den Daten nicht (kein Text mit den
+  Namen, kein Flag, kein Gegenstand); die Hunde kommen weiter ueber die Falle im Lager.
+- ROOM1110 Asservatenkammer: die Waffenspinde zu "Weapons seized, those that remain are unusable." und der Spind mit
+  "EXPLOSIVE" bei "Will you take the Time Bomb?".
+- ROOM1100 Stimmschloss (VUS): ohne Minidisc Player zeigt das Display jetzt "SYSTEM READY", "SAY HELLO", "INVALID" und
+  "TRY AGAIN", dann der Satz "A type of voice device is required to open the lock." Die beiden Fehleranzeigen lagen
+  im Original fertig vor, wurden aber nie geschaltet. Mit Minidisc Player laeuft alles wie bisher.
+- ROOM11F0 Notstrom: das Pult an der Wand waehrend der Beschreibung und der Frage "Will you push them?"; mit "Ja" geht
+  es wie bisher in die Bedienansicht, mit "Nein" zurueck in den Raum.
+Ohne passende Stelle und deshalb nicht eingebaut: Messlatte in 1010, ausgebranntes Fahrzeug in 1090, Bett in 10E0,
+Schild auf dem Dach (1171), Bahnfenster im Schiessstand (1190).
 
 ## Technisch
 
@@ -36,6 +47,9 @@ kommen ueber die Falle im Lager (Munition aufnehmen -> Zwinger gehen auf). Geaen
   unveraendert.
 * Riegel `unit_r40_untersuchen1120`: beide Raeume, Aktion vor Bild/Fenster/Schrank oeffnet genau diese Texte; Telefon
   bleibt Speicherpunkt; andere Raeume bekommen nichts.
+* Neues Modul `engine/src/nahaufnahmen_r40.c` (+ `include/re15_nahaufnahmen_r40.h`): kurze Programme aus Original-
+  Befehlen (Vorbild: Elzas Leichen-Nahaufnahme ROOM1051 sub03 und die VUS-Folgen ROOM1100 sub02/sub08); Zeitbombe und
+  Notstrom-Pult umhuellen die Original-Abschnitte Byte fuer Byte. Riegel `unit_r40_nahaufnahmen` (53 Pruefungen).
 
 # v0.8.27 - 2026-10-19
 

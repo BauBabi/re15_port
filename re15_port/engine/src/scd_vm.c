@@ -49,6 +49,7 @@
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
 #include "re15_rolltor.h"   /* Runde 34 Nacht, Spur A: Rolltor ROOM1050/1051 (rolltor_1050.c) */
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Cursor haelt sub04 vor For @0x0FC0 (op_for) */
+#include "re15_nahaufnahmen_r40.h" /* Runde 40: Nahaufnahmen-Programme (nahaufnahmen_r40.c) */
 #include "re15_leiche.h"     /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
 #include "re15_adaruf.h"     /* Runde 34 Nacht, Spur D: Ada-Ruf ROOM1050 (adaruf_1050.c) */
 #include "re15_cut10f0.h"    /* Runde 35 Spur K: Szene ROOM10F0 (cut_10f0.c) */
@@ -678,6 +679,7 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_funk10f1_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur I: 10F1/27 Funkszene */
     if (!pc) pc = re15_hund1121_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur R: 1121/30 Hund */
     if (!pc) pc = re15_elzazombies_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur Q: 1041/1061/1031 Ereignis 30 */
+    if (!pc) pc = re15_nahaufnahmen_r40_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 40: 11D0/1110/1100 Ereignis 31, 1110/3, 11F0/16 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
