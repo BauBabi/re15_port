@@ -1,0 +1,38 @@
+# Runde 41 — UEBERGABE (laufend; neueste Einträge oben)
+
+Für jede nächste Sitzung/jeden anderen Account geschrieben. Nach JEDEM Schritt hier eintragen und committen.
+Pflichtlektüre: `CLAUDE.md`, `analysis/befunde_runde41/AUFTRAG.md` (Wortlaut), `VERTRAG.md` (Spuren, Wellen, Ressourcen).
+Verfahren wie Runde 38/39 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4). Release-Ziel **v0.8.29**.
+Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
+
+## ✅ Fortschritt (neueste zuerst)
+
+* 2026-10-23 16:36: Auftrag des Nutzers (Wortlaut in AUFTRAG.md) nach dem Release v0.8.28 (f632a17b). Nutzer-Vorgabe
+  zum Ablauf: "Brich all diese Aufgaben in immer wenige parallele Tasks runter" -> Wellen zu je 4 gleichzeitigen Spuren
+  (Semaphor), Integration nach jeder Welle, volle Suite einmal vor dem Release. Vorarbeit gelesen: Runde-36/38/39-
+  Vertraege, Workflow-Vorlage r36-rest3.js, Memory (Worktree-, Limit-, Haenger-Lehren), Gator-Memory
+  (reai-v2-gator-bosskampf.md), RE2-EM23-Vorarbeit (analysis/befunde_2026-09-19/gator-finisher-sounds.md).
+  Docker/WSL-Haenger des Release-Laufs 2: Distribution docker-desktop stand nach dem Neustart auf "Uninstalling";
+  `wsl --unregister docker-desktop` (Daten-vhdx bleibt), Docker Desktop legte sie neu an, alle Images erhalten.
+
+## 1. Spuren (Status)
+siehe VERTRAG.md §0; Status je Spur wird hier nachgetragen (Bau / Abnahme N / bestanden / integriert).
+
+## 2. Bei einem Abbruch (Sitzungs-/Wochen-/Monatslimit)
+1. Verwaiste Prozesse beenden (`tasklist`; nur per PID, nie /IM), DuckStation `settings.ini` EnableGDBServer = false prüfen.
+2. Je Baum: `git -C .claude/worktrees/r41_<x> status --short` — Reste als `wip(r41-<x>): ... UNGEPRUEFT` committen.
+3. Journal des Workflows lesen (`~/.claude/projects/c--workspace-git-reAi-v2/<sitzung>/subagents/workflows/<run>/journal.jsonl`),
+   je Spur feststellen: Bau fertig? Abnahme Nr.? Dann Rest-Lauf mit args: unfertiger Bau -> `stand.X`; Abnahme offen ->
+   `modus.X='abnahme'` + `bau.X`; Nachbesserung -> `modus.X='nachbesserung'` + `abn.X` + `runde0.X`
+   (Muster `analysis/befunde_runde36/orchestrator/args_rest*.json`; Skript `analysis/befunde_runde41/orchestrator/r41-runde.js`).
+
+## 3. Integration (wenn Spuren bestanden sind)
+Integrationsbaum `.claude/worktrees/r41_integration` von master; je bestandene Spur `git merge --no-ff r41/<x>`; Konflikte
+mit `analysis/befunde_runde36/orchestrator/konflikt_beide.py <dateien>` (beide Seiten); dann `bash re15_port/tools/local_build.sh
+configure && ... build`; gezielte Tests je Spur + `ctest -j 6 -R '^(unit_|prop_|probe_)'` (Querbezüge, Memory
+reai-v2-gezielte-integration-querbezug); ⛔ neue gemeinsame Regeln können ALTE Riegel widerlegen — nach dem Merge alle
+Riegel greppen, die dieselben Bits/Räume setzen. master ff, Hauptbaum-exe neu bauen (Nutzer testet dort).
+
+## 4. Release v0.8.29
+Release Notes oben in release/RELEASE_NOTES.md, `bash release/release_alles.sh --version v0.8.29 --tag --linux-jobs 6`
+(volle Suite im Linux-Container ist das Gate), Bäume entfernen, Memory, Abschlussmeldung.
