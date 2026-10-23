@@ -5,6 +5,14 @@ Zeiten immer aus der Uhr (date), nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-23 11:50: Release-Lauf 1 (10:32) im Linux-Schritt ROT: unit_r37_kistenregel_raumstart (Querbezug zu
+  nahaufnahmen_r40: 1100/1101 Platz 2 ohne Geraet jetzt Ereignis 31 -> Erwartung angepasst 1207e1f5) und
+  unit_pri_hashes (unversionierte Nutzer-Masken pri/STAGE1/11A0 gehen per kopie_lauf.sh "unversioniert-nicht-
+  ignoriert" mit in den Container). Volle Windows-Unit-Suite danach 915/916 (nur pri_hashes). Masken geparkt nach
+  C:/workspace/Re15Data/pri_parkplatz_2026-10-23/STAGE1/11A0 (sha256 im LIESMICH.txt dort), ZURUECKLEGEN nach dem
+  Release. Lauf 2: release_alles.sh --version v0.8.28 --ab windows --tag --linux-jobs 6.
+  Offen beim Nutzer: Zweck 2050-Pult / Bruecke 2030 (Vorschlag 1: Pult 80 V speist Brueckenhydraulik 2030).
+
 * 2026-10-23 10:33: Commit c93af9f8 (Nahaufnahmen), gezielt 91/91. Release-Lauf `release_alles.sh --tag --linux-jobs 6`
   gestartet (Protokolle release/logs/v0.8.28_*). Offen: Rueckfrage Nutzer-Masken pri/STAGE1/11A0 + pri/STAGE2/*.
 
