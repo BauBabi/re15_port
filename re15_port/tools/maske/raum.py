@@ -676,6 +676,8 @@ def main():
                          "je Band, Klemmpfad re15_collision_constrain). Der alte Dump von "
                          "probe_r16_pri_masken_audit wird ABGEWIESEN.")
     ap.add_argument("--nur-pruefen", action="store_true", help="bauen und pruefen, nichts schreiben")
+    ap.add_argument("--p2", action="store_true",
+                    help="Phase-2-Kette (bau_p2.py + Abnahme) auch ausserhalb von STAGE1 - Runde 40: Nutzer-Freistellungen STAGE2")
     a = ap.parse_args()
 
     room = a.room.upper()
@@ -689,7 +691,7 @@ def main():
     cuts = sorted(int(c) for c in aus[room] if not c.startswith("_"))
     if a.cut is not None:
         cuts = [a.cut]
-    if rid < 0x2000:
+    if rid < 0x2000 or a.p2:
         return main_p2(a, room, rid, aus, rdt, cam, cuts)
     secs = {}
     for cut in cuts:
