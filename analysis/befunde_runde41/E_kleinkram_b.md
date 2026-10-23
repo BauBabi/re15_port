@@ -14,7 +14,7 @@ Ressourcen (VERTRAG §1): Bank-9-Bit 120 (nur wenn kein Original-Flag reicht), k
 elzazombies_r39.c, test_r36_kartenbits.c k_port[] (nur falls Bit 120 belegt).
 
 ## Status
-- [ ] Punkt 1 Kurbel 2020
+- [x] Punkt 1 Kurbel 2020 — plcloop_r41.c (Schleife statt Standbild), unit_r41_kleinkram_b_kurbel 2/2; "Fliegen" nicht reproduziert (OFFEN)
 - [x] Punkt 2 Karte B1 / 1090-Vordertuer — karte_r41.c, unit_r41_kleinkram_b_karte_pin 17/17
 - [x] Punkt 3 Werkstatt-Tuer 11B1 (Elza) — Ereignis 24, unit_r41_kleinkram_b_11b1 3/3
 
@@ -130,3 +130,42 @@ unveraendert.
 `ctest -R unit_r41_kleinkram_b_karte_pin`: 100% tests passed, 0 tests failed out of 1 (17 Pruefungen: 6 Annaeherungs-
 punkte Ostkammer-Tuer auf der Ostkammer-Marke (<= 4 px, nie zur Halle), 6 Hallen-Tuer, beide Ankuenfte 1190,
 ROOM1180). Vorher 13/17 (die vier naechsten Punkte zur Ostkammer-Tuer rot).
+
+## Punkt 1 — Kurbel ROOM2020: Messung, Beleg, Umsetzung, Messung nachher, OFFEN
+### Messung vorher (exe-Kopie, 7 Laeufe)
+w1/w5 (FIRE_AOT 3, Leon), w9a (echter Weg: Aktionstaste an der Kurbel, yaw 1024), w9c (Waffe RE15_EQUIP=3), f1 (Fernstart
+5000 Einheiten: Pos_set springt sofort, kein Gleiten), f2 (Elza ROOM2021): in allen Laeufen dieselbe Folge — msg 0,
+msg 1 "Will you use the Crank?", Ja -> @0x0A7E Cut_chg 3, @0x0A8C Pos_set (3650,-1800,-2925), Sleep 20, @0x0A9C
+Plc_motion(0,0,0) = Raum-RBJ Clip 0 (ROOM2020 RBJ @0xBB0 rec0 Marker 1, 15 Knochen, 40 Bilder; Wurzel je Bild
+(0,-1704,0): keine Wurzelbewegung), @0x0AA0 Plc_flg(0,4). RE15_ANIM_TRACE (w1): Clip 0 spielt F443..F482 EINMAL, danach
+`cur` 40, 41, ... bei `slot` 39 bis Plc_ret @0x0B16 F621 = 138 Bilder eingefrorene Kurbelpose, waehrend die Buehne
+faehrt. Bilder w1_sheet/w5_sheet/w9a_sheet/w9c_sheet/f1_sheet/f2_sheet.png: kein "Fliegen" sichtbar.
+Ursache des Haltens: der Spieler-Vorschub (player_common.c `p->anim_frame++`) kennt das Clip-Ende nicht —
+re15_actor_clip_len liefert fuer den Spieler 0 (keine Gegner-Bank, RBJ-Cache rbj_resolve_slot schliesst Slot 0 aus);
+der Zeichner klemmt den Slot auf 39.
+### RE-Beleg (selbst disassembliert, ghidra1_V2.txt)
+Kommandowort 4 (Plc_motion @0x80041bb0 `sb v1(=4),4(v0)`) -> Dispatcher FUN_80031c44 Tabelle @0x80073f90 [4] =
+FUN_80030660: @0x80030670/@0x8003067c `andi 0x10/0x20` (Halbtakt, Runde 35 L), @0x8003068c `lbu v0,DAT_800aca59`
+(Spieler +0x5 = Plc_motion pc[1] = 0), @0x8003069c `addiu at,at,0x3e30` / @0x800306a4 `lw v0,0(at)=>PTR_LAB_80073e30`
+= 0x80050cb8 / @0x800306ac `jalr v0`. 0x80050cb8 ist die Bewegungs-Phasen-FSM des NPC-Executors (enemy_ai_common.c
+re15_npc_sub_motion, byte-true): Phase 1 ruft FUN_8001f314 (posiert +0x95, wrappt @0x8001f63c auf 0, Rueckgabe 1),
+dann @0x80050da4 Phase 2 = HALTEN — mit +0x1c4 & 0x04 @0x80050dbc-c8 bleibt Phase 1 = SCHLEIFE. Mit Plc_flg(0,4)
+@0x0AA0 kurbelt der Spieler im Original durchgehend bis Plc_ret.
+### Umsetzung
+NEU `include/re15_plcloop_r41.h`, `engine/src/plcloop_r41.c`: re15_plcloop_r41_takt(p) nach dem Vorschub im
+Kommandowort 4 (Haken player_common.c hinter `p->anim_frame++`, 1 Zeile "Runde 41 Spur E"): Clip-Laenge aus dem
+Raum-RBJ-Record mit Marker-Bit 0 (= Spieler; Bankwahl wie anim_select_common.c: anim_use_pl00 -> PL00, sonst RBJ,
+ohne RBJ PL00), am Ende +0x1c4&4 -> Bild 0, sonst fc-1. Nur state 4; Sub 6 (Event-Reach) und W-Bank-Klemmung bleiben.
+### Messung nachher (exe-Kopie re15_pc_r41e3.exe, n1 echter Weg mit Aktionstaste)
+Trace Aktor 0: Clip 0 wrappt 39 -> 0 bei F497/498, F537/538, F577/578, F617/618 = vier volle Kurbel-Umlaeufe bis
+Plc_ret F636 (vorher: ein Umlauf + 138 Bilder Standbild).
+### Tests
+`ctest -R unit_r41_kleinkram_b_kurbel`: 100% tests passed, 0 tests failed out of 2 — laenge (RBJ rec0 Clip 0 = 40,
+ausser Bereich 0, PL00-Rueckfall, Elza 2021 = 40), schleife (Leon: 178 Bilder im Kommandowort 4, max anim_frame 39,
+4 Umlaeufe; ohne Flag: Halten bei 39, 0 Umlaeufe; Elza: 4 Umlaeufe).
+### OFFEN (Punkt 1)
+Das vom Nutzer beschriebene "Herumfliegen" liess sich in sieben Laeufen (Leon/Elza, Aktionstaste/FIRE_AOT, Waffe,
+Nah-/Fernstart, 1-Bild-Abstand) NICHT reproduzieren: Clip, Bank, Wurzel und Pos_set sind richtig. Die einzige
+gemessene Abweichung war das Einfrieren nach einem Umlauf (behoben). Bleibt das "Fliegen" beim Nutzer, braucht es
+seinen Weg (Spielstand/Raum davor, Waffe, Bild) — Frage unten. Nicht gemessen: Original in DuckStation
+(re15-room-capture, Savestate der Kurbelszene) — Beleg hier aus dem Disasm.
