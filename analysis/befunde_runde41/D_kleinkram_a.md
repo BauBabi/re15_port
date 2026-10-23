@@ -5,6 +5,7 @@ Wortlaut (AUFTRAG.md): (1) Lautstaerke-Option "alles lauter oder leiser"; (2) Fe
 Blink-Effekt "existiert bereits in RE2, uebernehme den"; (3) Spieler stirbt nicht bei erneutem Spinnengift auf Danger.
 
 ## 0. Stand / Protokoll (neueste zuerst)
+* 2026-10-23 19:5x: FERTIG. Endlauf ctest -R r41_kleinkram_a nach dem Neubau: 100% tests passed, 0 tests failed out of 4. Alles committet (feat-Commit unten).
 * 2026-10-23 19:xx: Riegel-Fehler im Lautstaerke-Echtlauf korrigiert (gelesen-Zeile vor der stderr-Umleitung, Eckpixel),
   Shot-/TAB-4-Einstieg laedt den gespeicherten Sound-Modus (main.c, 2 Zeilen, @0x8002f244-4c), Elza-Lauf des Gift-
   Riegels ueber RE15_TITLE_SHOT_CHAR=1 (gemessen: RE15_PSELECT_AUTO liess beim Debug-Sprung Leon stehen). Neubau,
@@ -221,7 +222,7 @@ libm fuer sqrt, `_DEFAULT_SOURCE` fuer setenv).
     **94% tests passed, 1 tests failed out of 16** — rot nur integration_r41_kleinkram_a_lautstaerke (Riegel-Fehler s. o.;
     r37_feuerloescher 390 s, r38_spinnen_echtlauf 114 s, r38_itemorte, r39_zustand_kleidung/gift, r39_johnruf1041 a-t11b1d,
     r41 blink 43 s + gift 856 s gruen).
-  - Endlauf `ctest -R "r41_kleinkram_a"` nach dem Neubau: (Summenzeile folgt unten im Protokoll)
+  - Endlauf `ctest -R "r41_kleinkram_a"` nach dem Neubau: **100% tests passed, 0 tests failed out of 4** (unit 0,01 s, lautstaerke 50 s, blink 44 s, gift 851 s)
 
 ## 5. OFFEN
 * Giftkugel-Kasten: Radius 500 (RE1.5 Routine 25 @0x80017ffc) statt RE2 800 (`li a1,0x320` @0x800200d0) — Hybrid
