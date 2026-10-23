@@ -10,6 +10,11 @@
 #       Rect (3450,4500) 3000x1000, Ziel (6300,-1800,-16250), rot 0x800, Cut 2, Band 1), Steg, Drehung auf rot 3072,
 #       Kante: Kletter-Sub 9/10 -> Landung @0x80038730-d0 -> 8 x FUN_80019700(0x06033000) = fx.log "id=6 sub=3".
 #       Eingabeskript = Abnahme 0 Lauf E2 (Tick 270 + Raumbild; LEFT -96/Bild).
+#       Beide Laeufe starten ueber RE15_TITLE_SHOT (+_AF=2) mit fester Bildzahl im Vorspann; Elza ueber
+#       RE15_TITLE_SHOT_CHAR=1 = re15_gameflow_new_game(1), derselbe Aufruf wie das Player-Select-Ende (main.c).
+#       NICHT ueber RE15_TITLE_CONFIRM_MS + RE15_PSELECT_AUTO: der Titel bestaetigt dort nach WANDUHR-Zeit, das
+#       Eingabeskript zaehlt aber gerenderte Bilder MIT Vorspann (input_pc.c s_input_ticks) - gemessen 2026-10-24:
+#       alle 7 Skript-Tasten (Tick 270..488) fielen in den Vorspann (F0), die Tuer 20A1 feuerte nie (Zeitueberschreitung).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_wasser20b0_npc.cmake
 # =============================================================================
@@ -87,7 +92,7 @@ if(NOT _ton_ok)
 endif()
 
 # ---- (b) Landung ueber die Tuer 20A0 -> 2090 (Leon) und 20A1 -> 2091 (Elza) ----------------------------------------
-function(landung_lauf _name _raum_ab _raum_ziel _extra)
+function(landung_lauf _name _raum_ab _raum_ziel _elza_bit _extra)
     set(WORKDIR "${_basis}_${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     re15_start_spiel(_rv 300
@@ -107,6 +112,11 @@ function(landung_lauf _name _raum_ab _raum_ziel _extra)
     string(FIND "${_dbg}" "DOOR FIRE slot=0" _pd)
     if(_pz EQUAL -1 OR _pd EQUAL -1)
         message(FATAL_ERROR "r41_wasser20b0_npc[${_name}]: Tuer ${_raum_ab} -> ${_raum_ziel} nicht genommen (DOOR FIRE=${_pd}, geladen=${_pz})")
+    endif()
+    # Szenario: die Spielerfamilie meldet main.c beim Spielstart (PL00 Leon / PL04 Elza)
+    string(FIND "${_dbg}" "Elza-Bit=${_elza_bit})" _pe)
+    if(_pe EQUAL -1)
+        message(FATAL_ERROR "r41_wasser20b0_npc[${_name}]: falsches Szenario (erwartet Elza-Bit=${_elza_bit} im debug.log)")
     endif()
     set(_n_land 0)
     if(EXISTS "${WORKDIR}/climb.log")
@@ -128,8 +138,8 @@ function(landung_lauf _name _raum_ab _raum_ziel _extra)
     endif()
 endfunction()
 
-landung_lauf(landung_leon 20a0 2090 "RE15_TITLE_SHOT=title.bmp;RE15_TITLE_SHOT_AF=2")
-landung_lauf(landung_elza 20a1 2091 "RE15_TITLE_CONFIRM_MS=1500;RE15_PSELECT_AUTO=1;RE15_PSELECT_AUTO_SWITCH=1")
+landung_lauf(landung_leon 20a0 2090 0 "RE15_TITLE_SHOT=title.bmp;RE15_TITLE_SHOT_AF=2")
+landung_lauf(landung_elza 20a1 2091 1 "RE15_TITLE_SHOT=title.bmp;RE15_TITLE_SHOT_AF=2;RE15_TITLE_SHOT_CHAR=1")
 
 file(REMOVE "${_exe_kopie}")
 message(STATUS "r41_wasser20b0_npc: OK (NPC-Schritte 2000 + Landung Leon 2090 / Elza 2091)")

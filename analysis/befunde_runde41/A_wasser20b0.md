@@ -472,3 +472,45 @@ Laeufe B/D/E2. Konfliktrisiko mit Spur D gering (andere Stellen); zur Integratio
 
 ### N1.7 M7
 `s_dog_noclamp_mask` ist uint64_t (`(uint64_t)1u << slot`, enemy_ai_common.c). PSX-BSS (+28 KB) weiter OFFEN.
+
+### N1.8 Weitere Belege (Disasm, am 2026-10-24 mit re15_disasm.py nachgeprueft, PSX.EXE)
+- Sub 4 Phase 1 Fusstest @0x80051278-ac: `lw v0,360(v0)` (+0x168) / `lw v1,0(v0)` / `andi v0,v1,0x4000` @0x80051288 / `beq`
+  @0x8005128c / `addu a0,zero,zero` @0x80051290 / `andi v0,v1,0x1000` / `srl v0,v0,12` / a1 = 7 - 3*bit (`ori v0,zero,0x7`
+  @0x800512a4, `subu a1,v0,a1` @0x800512ac) / `jal 0x80045630` @0x800512a8. anim_set des Sub 4: `lw a0,368(v0)` / `lw a1,372(v0)`
+  @0x800512bc-c0 vor `jal 0x8001f314` @0x800512c4 = +0x170/+0x174 = OWN-Bank.
+- Sub 5 Phase 2 @0x80051640-74: `lw v0,360(a0)` / `andi v0,v1,0x4000` @0x80051650 / `andi v0,v1,0x1000` @0x80051658 (Verzoegerungs-
+  platz) / `addu a0,zero,zero` @0x8005165c (a0 = 0 auch im Lauf-Sub, Phase 2) / `ori v0,zero,0x7` @0x8005166c / `jal 0x80045630`
+  @0x80051670; anim_set des Sub 5: `lw a0,368(v0)` @0x80051714 / `lw a1,372(v0)` @0x80051718 / `jal 0x8001f314` @0x8005171c.
+- Gleichzeitig gezeichnete 0x0f-Plaetze im Port: 6..28 je Bild (Abnahme 0 §5.6), bei Takt 47/48 (F53/F54) 22 = die 22 aktiven
+  Plaetze von tf_7 (`nb1/esp_pool_tf_7.txt`).
+- AOT-Zensus (re15_port/tools/aot_sce_census.py, 240 RDTs, 2295 Saetze): sce 7 (RAMP) nur ROOM5060/5061 (je 2), sce 8 (WATER)
+  32 Saetze in 11A0/11A1, 1260/1261, 2000/2001, 2070/2071, 20A0/20A1, 20B0/20B1 (je 2), 2020/2021 (je 1), 2090/2091 (je 3) — der
+  Wirkungsbereich der M3-Aufhebung.
+
+### N1.9 Fortsetzung 2026-10-24: Riegel-Defekt im Teil landung_elza (Sitzungslimit der Vorgaengerin)
+- Bau: `local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`, `... build` -> `ninja: no work to do.` /
+  `=== LOCAL-BUILD-OK (build)`; re15_pc.exe 23:40:04 juenger als jede Quelle des Diffs (wassersprung_r41.c 23:39:33,
+  aot_common.c/enemy_ai_common.c 23:34:17) -> der Stand 35860e86/42fbd21f kompiliert und ist gebaut.
+- Befund (letzter Lauf der Vorgaengerin, integration_r41_wasser20b0_npc 390 s): npc2000 und landung_leon gruen, landung_elza
+  "Process terminated due to timeout" + "Tuer 20a1 -> 2091 nicht genommen (DOOR FIRE=-1, geladen=-1)".
+- Messung (eigener Lauf A_nb1c/elza1, dieselbe Umgebung wie der Riegel): debug.log `[input-script] Tick 270 -> F0 Tasten
+  0x8000` ... `Tick 488 -> F0 Tasten 0x8000` — ALLE 7 Skript-Tasten fielen in den Vorspann (Spielbild F0), erst DANACH
+  `AUTO-JUMP -> ROOM20A1 (Frame 240)`. Ursache: der Elza-Lauf startete ueber RE15_TITLE_CONFIRM_MS=1500 (main.c: Bestaetigung
+  nach WANDUHR-Zeit) + RE15_PSELECT_AUTO, das Eingabeskript zaehlt aber gerenderte Bilder MIT Vorspann (input_pc.c
+  s_input_ticks); ohne VSync laeuft der Titel mit 40..980 Bildern/s -> die Tick-Zeitachse des Skripts ist nach diesem Vorspann
+  unbestimmt. Leon (RE15_TITLE_SHOT, AF=2) hat einen Vorspann fester Bildzahl: `Tick 270 -> F27` = Tuer.
+  => RIEGEL-Defekt, kein Spiel-Defekt.
+- Aenderung (tests/integration/test_r41_wasser20b0_npc.cmake): Elza startet wie Leon ueber RE15_TITLE_SHOT (+_AF=2) mit
+  RE15_TITLE_SHOT_CHAR=1 = `re15_gameflow_new_game(1)`, derselbe Aufruf wie das Player-Select-Ende (main.c, Zweig NEW GAME
+  `re15_gameflow_new_game(ch)`); zusaetzlich prueft der Riegel das Szenario am debug.log (`Elza-Bit=0` Leon / `Elza-Bit=1`
+  Elza). Kontrolllauf A_nb1c/elza2: `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`, `Tick 270 -> F27 Tasten 0x8000`,
+  `[aot] DOOR FIRE slot=0 rect=(4950,5000,hw=1500,hh=500) target_cut=2 spawn=(6300,-1800,-16250)`, `PC loaded room2091.rdt`,
+  climb.log `T459 room=2091 ... pos=(6363,-640,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=4`, fx.log 104 Zeilen `id=6 sub=3`,
+  exit 0 nach 27 s.
+- Riegel danach: `ctest --test-dir re15_port/build -R "^integration_r41_wasser20b0_npc$" --timeout 600` -> `100% tests passed,
+  0 tests failed out of 1` (118.03 s): npc2000 Schritte Slot 1 (0x42, Clip 5) = 7, Slot 2 (0x40, Clip 5) = 7, Toene >= 0;
+  landung_leon Landungen 1 / 104 Zeilen id=6 sub=3; landung_elza Landungen 1 / 104 Zeilen id=6 sub=3.
+- Nebenversuch (kein Riegel): eine Elza-Szene mit laufendem NPC an der exe gesucht — ROOM11C1 (Elza, Debug-Sprung, 1500
+  Bilder, A_nb1c/e11c1) spawnt 5 Hunde 0x20 statt eines NPC (Leons 11C0: Marvin 0x42 laeuft per Plc_dest, Clip 0 Bilder 0/11);
+  ROOM2001 mit (3,66)/(3,68) spawnt John 0x49 + 0x4B ohne Plc_dest (Lauf der Vorgaengerin, nb1/s2001). Beide Szenarien der
+  NPC-Schritte bleiben am Unit-Riegel `npc_wasser` (CDEMD0 UND CDEMD1, echter Geh-Sub) belegt, an der exe Leons 2000-Szene.
