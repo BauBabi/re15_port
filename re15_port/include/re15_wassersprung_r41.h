@@ -50,6 +50,19 @@
  *        (NUTZER-VORGABE Nachtrag 3 / E1 "alle NPCs"): Aufsetzer = Bild, in dem der Fuss-Teil 4/7 nach der
  *        Schwungphase erstmals seine Tiefstlage erreicht (Pose-y im obersten Zehntel der Spanne) — an den
  *        markierten Typen belegt (0x40-Familie Clip 5: Marken 7/22, Regel 7/20; Clip 0: Marken 0/12, Regel 0/11).
+ *
+ *  (d) NACHBESSERUNG 1, Fortsetzung 2026-10-24: ALLE Aufrufe von FUN_80045630 aus den NPC-Subs (Tabelle @0x80076ca0;
+ *        ghidra1_V2 XREF[24] von FUN_80045630): Sub 4 @0x800512a8 (Phase 1) / @0x80051304 (Phase 2), Sub 5 @0x80051614 /
+ *        @0x80051670, Sub 7 @0x80051a0c, Sub 8 @0x80051c04, Sub 9 (Drehen) @0x80051e88, Sub 0x12/0x16 (Kante, Phase 1)
+ *        @0x800525d4, Sub 0x13 (Schub, Phase 1) @0x80052930; a0 = 1 nur Sub 5 Phase 1 (@0x800515fc), sonst 0. Lage im Takt:
+ *        Sub 4/5 Phase 2 testen VOR Kurs und Vorschub (@0x800512d4 vor @0x8005133c/@0x80051344, @0x80051640 vor
+ *        @0x800516a8/@0x800516b0), Sub 7/8 NACH dem Vorschub (@0x800519c8 -> @0x800519dc, @0x80051bc0 -> @0x80051bd4),
+ *        Sub 9 NACH dem Kurs (@0x80051e44 -> @0x80051e58), Kante/Schub direkt vor anim_set (@0x800525f0 / @0x8005294c).
+ *        Gelesen werden *(+0x168) und Part[fuss] (+0x188 + fuss*0xac @0x8004567c-a8) des GEZEICHNETEN Bilds, auch wenn
+ *        der Sub im selben Takt schon +0x94/+0x95 neu gesetzt, gedreht oder geschoben hat -> Port: Schnappschuss je
+ *        Aktor am Bildanfang (wassersprung_r41.c s_gez). Die STAGE-Overlays rufen FUN_80045630 nur aus Typ-Handlern
+ *        (STAGE1 @0x80111da4/@0x8011c4f0, STAGE3 @0x80110884/@0x80116180, STAGE4 @0x80111820/@0x801162dc/@0x801166b4,
+ *        STAGE5 @0x801119a0/@0x8011645c/@0x80116834; STAGE2 keinen) - nicht Teil der NPC-Geh-Subs.
  */
 #ifndef RE15_WASSERSPRUNG_R41_H
 #define RE15_WASSERSPRUNG_R41_H
@@ -70,8 +83,9 @@ int re15_wassersprung_r41_landung(const re15_actor_t *p, int16_t stempel, int32_
  * rdt = Raum (Bodentyp), fuss = 7/4 (Part-Index). Liefert den Tonindex (oder -1 ohne Ton). */
 int re15_wassersprung_r41_npc_schritt(re15_actor_t *e, int a0, int fuss, const void *rdt);
 
-/* Haken im NPC-Geh-Sub (Phase 1 und 2): Bildwort-Test + Schritt wie @0x80051278-a8. Liefert 1, wenn ein
- * Schritt lag. Muss VOR dem Bildvorschub dieses Takts laufen (Bildwort des gezeichneten Bilds). */
+/* Haken in den NPC-Subs (Lagen s. Kopf (d)): Bildwort-Test + Schritt wie @0x80051278-a8. Liefert 1, wenn ein
+ * Schritt lag. Liest Bank/Clip/Bild/Lage des am Bildanfang festgehaltenen GEZEICHNETEN Bilds; ohne Bildanfang
+ * (Riegel, die den Sub direkt rufen) den aktuellen Zustand - dann VOR dem Bildvorschub dieses Takts rufen. */
 int re15_wassersprung_r41_npc_takt(re15_actor_t *e, int a0);
 
 /* Die Bank des Kanals, den der laufende Sub des Aktors spielt (Own / Loco / Container, s. Kopf (c)); liefert
@@ -85,7 +99,8 @@ int re15_wassersprung_r41_aufsetzer(const void *anim, const void *skel, uint8_t 
 /* Nur fuer Riegel: die PORT-WAHL-Regel UNABHAENGIG von den Marken auf einen Clip anwenden (Regelpruefung). */
 int re15_wassersprung_r41_regel(const void *anim, const void *skel, uint8_t type, int clip, int bilder[4], int fuesse[4]);
 
-/* Je Bild (Bildanfang): Folge-Plaetze der NPC-Schritte nachfuehren (Flags-Bit 0x04 @0x80019f54-a4). */
+/* Je Bild (Bildanfang, vor allen KI-Takten): Zustand des gezeichneten Bilds je NPC festhalten (Kopf (d)) und die
+ * Folge-Plaetze der NPC-Schritte nachfuehren (Flags-Bit 0x04 @0x80019f54-a4). */
 void re15_wassersprung_r41_bildanfang(void);
 
 typedef struct {

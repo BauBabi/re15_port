@@ -651,6 +651,92 @@ static int teil_stempel(void)
     return 1;
 }
 
+/* ============================ npc_subs: ALLE NPC-Sub-Aufrufe von FUN_80045630 + gezeichneter Zustand (Fortsetzung) ============================
+ * re15_wassersprung_r41.h Kopf (d): Sub 9 @0x80051e88, Kante [1] @0x800525d4, Schub [1] @0x80052930, Sub 4/5 Phase 2 VOR
+ * Kurs/Vorschub (@0x800512d4 / @0x80051640), Bildwort *(+0x168) und Part (+0x188) des GEZEICHNETEN Bilds (Sub 5 Phase 1 setzt
+ * +0x94/+0x95 @0x8005157c-8c VOR dem Test @0x800515e4). Typ 0x40 (CDEMD0), OWN-Clip 5 Marken Bild 7 (Fuss 7) / 22 (Fuss 4),
+ * OWN-Clip 0 Marken Bild 0 / 12 (Tabelle Dossier N1.3). Ort: Wasserfleck FLR 0x97 in ROOM2000 -> Zweig boden, Ton 0x17-8 = 15. */
+static re15_actor_t *npc_sub_setzen(uint8_t typ, int sub, int phase, int clip, int bild_, int32_t x, int32_t z, int16_t rot,
+                                     int32_t zx, int32_t zz)
+{
+    re15_actor_t *e = &g_actors[3];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = typ; e->hp = 100; e->x = x; e->y = -1800; e->z = z; e->rot_y = rot; e->floor = 1;
+    e->state = 4; e->sub_state_1 = (uint8_t)sub; e->sub_state_2 = (uint8_t)phase;
+    e->steer_x = (int16_t)zx; e->steer_z = (int16_t)zz; e->walk_dest_x = (int16_t)zx; e->walk_dest_z = (int16_t)zz;
+    e->motion = (int16_t)clip; e->anim_frame = bild_;
+    re15_esp_fx_reset(); re15_wassersprung_r41_reset();
+    return e;
+}
+
+static int teil_npc_subs(void)
+{
+    printf("\n== npc_subs (ROOM2000 Wasserfleck FLR 0x97, Typ 0x40 OWN-Bank: Sub 9 / Kante / Schub / Sub 5 Phase 1 / Sub 4 Phase 2)\n");
+    if (!raum("STAGE2/ROOM2000.RDT", 0x2000u, 4350, -1800, -20500, 0, 0)) { s_fails++; return 0; }
+    if (!bank_npc(0, 0x40)) { CHECK(0, "Bank 0x40 nicht ladbar"); return 0; }
+    re15_enemy_bank_t *b = re15_enemy_find(0x40);
+    CHECK(b && b->own_ok && (re15_emd_get_frame_entry(&b->anim_own, 5, 7) & 0x4000u) && !(re15_emd_get_frame_entry(&b->anim_own, 5, 0) & 0x4000u)
+          && (re15_emd_get_frame_entry(&b->anim_own, 0, 0) & 0x4000u),
+          "Vorbedingung OWN 0x40: Clip 5 Bild 7 Marke, Clip 5 Bild 0 ohne, Clip 0 Bild 0 Marke");
+    if (!b || !b->own_ok) return 0;
+    const re15_wassersprung_r41_mess_t *m = re15_wassersprung_r41_mess();
+    const int32_t wx = -4300, wz = -5000;
+    CHECK(re15_rdt_floor_sound(&g_room_rdt, wx, wz) == 0x97, "Wasserfleck (%d,%d) = FLR 0x97", (int)wx, (int)wz);
+
+    /* (1) Sub 9 DREHEN, Phase 0: INIT setzt +0x94 = 5 / +0x95 = 0 (@0x80051d3c/4c), der Test liest das GEZEICHNETE Bild
+     *     (Clip 5 Bild 7 = Marke) NACH dem Kurs @0x80051e44; Part = gezeichnete Lage/Gier (vor dem Kurs). */
+    re15_actor_t *e = npc_sub_setzen(0x40, 9, 0, 5, 7, wx, wz, 0, wx - 3000, wz);   /* Ziel hinter dem NPC -> nicht ausgerichtet */
+    re15_actor_t vor = *e;
+    bild();
+    int32_t erw[3] = { 0, 0, 0 };
+    int rv = re15_wasser_r38_anker(&b->skel_own, &b->anim_own, &vor, -1, 7u, 7, erw);
+    CHECK(m->npc_schritte == 1 && m->npc_boden == 1 && m->letzter_ton == 15 && m->letzter_fuss == 7,
+          "Sub 9 (Drehen, @0x80051e88): 1 Schritt aus dem gezeichneten Bild 7, Zweig boden, Ton %d (15 = a0 0 @0x80051e70), Fuss %u (schritte %u)",
+          m->letzter_ton, (unsigned)m->letzter_fuss, m->npc_schritte);
+    CHECK(rv == 0 && e->rot_y != vor.rot_y && m->letzter_anker[0] == erw[0] && m->letzter_anker[1] == erw[1] && m->letzter_anker[2] == erw[2],
+          "Sub 9: Anker = Part 7 der GEZEICHNETEN Pose (Gier %d, nach dem Kurs %d): (%d,%d,%d) vs (%d,%d,%d)", (int)vor.rot_y, (int)e->rot_y,
+          (int)m->letzter_anker[0], (int)m->letzter_anker[1], (int)m->letzter_anker[2], (int)erw[0], (int)erw[1], (int)erw[2]);
+
+    /* (2) Kante 0x12 Phase 1 (@0x80052598): Schritt vor anim_set @0x800525f0 */
+    e = npc_sub_setzen(0x40, 0x12, 1, 5, 7, wx, wz, 0x200, wx, wz - 3000);
+    bild();
+    CHECK(m->npc_schritte == 1 && m->npc_boden == 1 && m->letzter_ton == 15,
+          "Kante 0x12 Phase 1 (@0x800525d4): 1 Schritt, Zweig boden, Ton %d (15 = a0 0 @0x800525bc), schritte %u", m->letzter_ton, m->npc_schritte);
+
+    /* (3) Schub 0x13 Phase 1 (@0x800528f4): Schritt vor anim_set @0x8005294c */
+    e = npc_sub_setzen(0x40, 0x13, 1, 5, 7, wx, wz, 0x200, wx, wz - 3000);
+    bild();
+    CHECK(m->npc_schritte == 1 && m->npc_boden == 1 && m->letzter_ton == 15,
+          "Schub 0x13 Phase 1 (@0x80052930): 1 Schritt, Zweig boden, Ton %d (15 = a0 0 @0x80052918), schritte %u", m->letzter_ton, m->npc_schritte);
+
+    /* (4) Sub 5 LAUFEN aus dem Stand, Ziel geradeaus (sofort ausgerichtet): Takt 1 setzt +0x94 = 0 / +0x95 = 0 (@0x8005157c-8c)
+     *     VOR dem Test @0x800515e4 -> gelesen wird das gezeichnete Clip-5-Bild 0 (keine Marke) -> KEIN Schritt (der Port las
+     *     vorher Clip 0 Bild 0 = Marke -> Doppelschritt am Laufbeginn, gemessen 11C0 F1071/F1072). Takt 2 (Phase 2): das in
+     *     Takt 1 posierte Clip-0-Bild 0 traegt die Marke -> genau EIN Schritt mit a0 = 0 (@0x8005165c) -> Ton 15. */
+    e = npc_sub_setzen(0x40, 5, 0, 5, 0, wx, wz, 1024, wx, wz - 6000);   /* Gier 1024: Vorschub nach -z (pos_advance) */
+    bild();
+    unsigned s1 = m->npc_schritte;
+    int m1 = (int)e->motion;
+    bild();
+    CHECK(s1 == 0 && m1 == 0 && m->npc_schritte == 1 && m->letzter_ton == 15,
+          "Sub 5 Laufbeginn: Takt 1 %u Schritte (Clip danach %d), Takt 2 gesamt %u, Ton %d (erwartet 0 / 0 / 1 / 15)", s1, m1, m->npc_schritte, m->letzter_ton);
+
+    /* (5) Sub 4 Phase 2: der Schritt liegt VOR Kurs und Vorschub (@0x800512d4-308 vor @0x8005133c/@0x80051344). Lage am
+     *     Rand des Flecks, so dass die Lage VOR dem Vorschub im Wasser (0x97) und die DANACH trocken ist. */
+    int32_t zr = 0, zt = 0;
+    for (int32_t z = wz; z > wz - 8000; z -= 10)
+        if (re15_rdt_floor_sound(&g_room_rdt, wx, z) != 0x97) { zr = z + 10; zt = z; break; }
+    int trocken = (zt != 0) ? re15_rdt_floor_sound(&g_room_rdt, wx, zt - 300) : -1;
+    CHECK(zr != 0 && trocken >= 0 && !(trocken & 0x80), "Fleckrand bei z %d (dahinter Boden %#x)", (int)zr, trocken);
+    e = npc_sub_setzen(0x40, 4, 2, 5, 7, wx, zr, 1024, wx, zr - 6000);
+    e->crow_speed = 400;                                     /* ein Vorschub ueber den Rand (pos_advance +0x8c) */
+    bild();
+    CHECK(m->npc_schritte == 1 && m->npc_boden == 1 && m->letzter_ton == 15 && e->z < zr - 300,
+          "Sub 4 Phase 2 am Fleckrand: Zweig boden %u, Ton %d (15 = Boden VOR dem Vorschub; danach trocken %#x), z %d -> %d",
+          m->npc_boden, m->letzter_ton, trocken, (int)zr, (int)e->z);
+    return 1;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -663,6 +749,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "npc"))       teil_npc();
     if (alle || !strcmp(teil, "npc_wasser")) teil_npc_wasser();
     if (alle || !strcmp(teil, "stempel"))   teil_stempel();
+    if (alle || !strcmp(teil, "npc_subs"))  teil_npc_subs();
     printf("\n%s: %d Pruefungen, %d Fehler\n", teil, s_checks, s_fails);
     return s_fails ? 1 : 0;
 }

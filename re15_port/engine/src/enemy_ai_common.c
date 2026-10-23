@@ -9883,6 +9883,7 @@ static void re15_npc_sub_turn(re15_actor_t *e)
         if (e->anim_flags & 4) { e->sub_state_1 = 9; e->sub_state_2 = 2; }   /* re-arm (@0x80051df4) */
     }
     re15_enemy_steer_point(e, e->steer_x, e->steer_z, cone); /* yaw-slew (@0x80051e44) */
+    (void)re15_wassersprung_r41_npc_takt(e, 0);              /* Runde 41 Spur A: Schritt @0x80051e4c-88 (a0 = 0 @0x80051e70) */
     re15_npc_anim(e);                                        /* advance the turn clip (motion 5) */
 }
 
@@ -9995,7 +9996,7 @@ static void re15_npc_sub_walk(re15_actor_t *e)
         /* PHASE-1-BODY — laeuft in BEIDEN Faellen (aligned wie nicht-aligned) und beendet den Tick. */
         re15_enemy_steer_point(e, e->steer_x, e->steer_z,
                                re15_npc_type_cone(e->type));  /* Slew 96/80 @0x80076c41 */
-        /* OPEN (Footstep-SE der Phase 1, byte-genau lokalisiert, NICHT portiert): Frame-Flag-Test
+        /* Runde 41 Spur A: PORTIERT (wassersprung_r41.c, Ton -8 dort vor re15_audio_footstep). Frame-Flag-Test
          * `lw v0,360(entity)`(+0x168) / `lw v1,0(v0)` / `andi 0x4000` @0x80051278-88 (Sub 4) bzw.
          * @0x800515e4-f4 (Sub 5) -> `jal 0x80045630(a0, 7-3*((flag>>12)&1))` @0x800512a8 / @0x80051614
          * (a0=0 Sub 4 @0x80051290, a0=1 Sub 5 @0x800515fc; Phase 2 @0x800512d4-308 / @0x800519dc-a10 /
@@ -10012,12 +10013,13 @@ static void re15_npc_sub_walk(re15_actor_t *e)
      * Die Slew-Tabellen sind fuer beide Faelle 48 an allen 16 Typ-Positionen (@0x80076c01 fuer
      * Sub 4/5/8, @0x80076c21 fuer Sub 7) — der Unterschied ist ausschliesslich das VORZEICHEN
      * (`subu a2,zero,a2` @0x800519c4 / @0x80051bbc) und der pos_advance-Yaw-Offset. */
+    if (!backward) (void)re15_wassersprung_r41_npc_takt(e, 0);   /* Runde 41 Spur A: Schritt VOR Kurs/Vorschub @0x800512d4-308 / @0x80051640-74 */
     re15_enemy_steer_point(e, e->steer_x, e->steer_z, backward ? -48 : 48);
     if (backward) re15_dog_advance_ofs(e, 0x800);            /* `ori a0,zero,0x800` @0x800519cc /
                                                               * @0x80051bc4 — 180 Grad rueckwaerts */
     else          re15_dog_advance(e, e->crow_speed);        /* pos_advance(a0=0) @0x80051344/@0x800516b0 */
     if (sub == 5 && re15_npckante_nach_schritt(e)) return;  /* Runde 38 Spur M: Sonde VOR anim_set @0x800516c4 */
-    (void)re15_wassersprung_r41_npc_takt(e, 0);             /* Runde 41 Spur A: Schritt Phase 2 @0x800512d4-308 / @0x800519dc-a10 / @0x80051bd4-c08 (a0 = 0) */
+    if (backward) (void)re15_wassersprung_r41_npc_takt(e, 0);    /* Runde 41 Spur A: Sub 7/8 NACH dem Vorschub @0x800519dc-a10 / @0x80051bd4-c08 */
     re15_npc_anim(e);
     if (sub == 4 && re15_npckante_nach_schritt(e)) return;  /* Runde 38 Spur M: Sonde NACH anim_set @0x80051374 */
     {

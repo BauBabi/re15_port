@@ -40,6 +40,7 @@
 #include "re15_scd.h"
 #include "re15_skeleton.h"     /* re15_cos_q12 / re15_sin_q12 */
 #include "re15_engine.h"       /* g_engine.frame_count — nur fuer das Log der Ereignisfolge (Nachbesserung 1) */
+#include "re15_wassersprung_r41.h"   /* Runde 41 Spur A: NPC-Schritt FUN_80045630 im Schub-Sub [1] */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -281,6 +282,7 @@ void re15_szl_schub_npc(re15_actor_t *e)
         e->crow_speed = 0;                                    /* +0x8c = 0 @0x800528f0 */
         /* fall through */
     case 1:                                                   /* @0x800528f4 */
+        (void)re15_wassersprung_r41_npc_takt(e, 0);           /* Runde 41 Spur A: Schritt @0x800528f4-930 (a0 = 0 @0x80052918) */
         npc_anim(e, clip_laenge(own, RE15_SZL_CLIP_DREH));    /* anim_set(+0x170,+0x174) @0x8005294c */
         kurs_rasten(e);
         if (kurs_gerastet(e)) e->sub_state_2 = 2;

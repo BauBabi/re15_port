@@ -13,6 +13,8 @@
 #   unit_r41_wasser20b0_npc_wasser Nachbesserung 1: der echte Geh-Sub (state 4 / sub 4) fuehrt jeden NPC-Typ (beide Archive)
 #                                  durch den Wasserfleck ROOM2000 -> Spritzer 0x06050D00 + Ton (OWN-Bank-Marken, 0x4b PORT-WAHL)
 #   unit_r41_wasser20b0_stempel    Nachbesserung 1 (M3): WATER-Stempel +0x88 fuer NPC und Spieler auch unter player_mode 2
+#   unit_r41_wasser20b0_npc_subs   Nachbesserung 1 (Fortsetzung): Schritt auch in Sub 9 / Kante 0x12 / Schub 0x13, Sub 4/5
+#                                  Phase 2 VOR Kurs/Vorschub, Bildwort + Part des GEZEICHNETEN Bilds (kein Doppelschritt am Laufbeginn)
 #   integration_r41_wasser20b0_npc Nachbesserung 1 (M5): echte exe: NPC-Schritte in der 2000-Szene (Marvin/Ada), Landung ueber
 #                                  die Tuer 20A0->2090 (Leon) und 20A1->2091 (Elza)
 #   integration_r41_wasser20b0     echte exe: Debug-Sprung 20B0 (Leon) + 20B1 (Elza): Partikel 0x0f gezeichnet
@@ -25,7 +27,7 @@ target_compile_definitions(test_r41_wasser20b0 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_wasser20b0 PRIVATE m)
 endif()
-foreach(_teil bytes modell sequencer raum landung npc npc_wasser stempel)
+foreach(_teil bytes modell sequencer raum landung npc npc_wasser stempel npc_subs)
     add_test(NAME unit_r41_wasser20b0_${_teil} COMMAND test_r41_wasser20b0 ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_wasser20b0_${_teil} PROPERTIES TIMEOUT 300)

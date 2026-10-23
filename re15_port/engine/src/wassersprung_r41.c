@@ -28,6 +28,32 @@ static re15_wassersprung_r41_mess_t s_mess;
 static struct { int platz; int aktor; int part; } s_folge[FOLGE_MAX];
 static int s_init = 0;
 
+/* GEZEICHNETER ZUSTAND je Aktor (Nachbesserung 1, Fortsetzung 2026-10-24) = das Port-Gegenstueck zu *(+0x168) und den
+ * Part-Matrizen +0x188 des Originals. anim_set FUN_8001f314 setzt +0x168 auf das Bildwort des Bilds, das es POSIERT
+ * (`sw a2,360(t0)` @0x8001f36c, Vorschub erst danach @0x8001f618-1c); die Part-Matrizen (Stride 0xac) entstehen beim
+ * Zeichnen dieses Bilds. Die Schritt-Tests der NPC-Subs lesen beide im NAECHSTEN Takt - auch wenn der Sub davor schon
+ * +0x94/+0x95 neu gesetzt (Sub 5 Phase 1 ausgerichtet: +0x94 = 0 / +0x95 = 0 @0x8005157c-8c vor dem Test @0x800515e4;
+ * Phase 0 jedes Subs), gedreht (Kurs Sub 4/5 Phase 1 `jal 0x8001aac4` @0x80051264 / @0x800515d0, Sub 9 @0x80051e44) oder geschoben hat
+ * (Sub 7/8: pos_advance @0x800519c8 / @0x80051bc0 vor dem Test @0x800519dc / @0x80051bd4). Der Port haelt deshalb am
+ * Bildanfang (game_step_common.c, vor allen KI-Takten) je Aktor Bank, Clip, Bild und Lage des gezeichneten Bilds fest. */
+typedef struct {
+    uint32_t gen;
+    uint8_t  ok, type;
+    int16_t  motion, rot_y;
+    int32_t  bild, x, y, z;
+    const void *anim, *skel;
+} gezeichnet_t;
+static gezeichnet_t s_gez[RE15_ACTOR_MAX];
+static uint32_t s_gen = 0;
+
+static const gezeichnet_t *gezeichnet(const re15_actor_t *e)
+{
+    if (!e || e < &g_actors[0] || e >= &g_actors[RE15_ACTOR_MAX] || s_gen == 0) return NULL;
+    const gezeichnet_t *g = &s_gez[e - g_actors];
+    if (!g->ok || g->gen != s_gen || g->type != e->type || !g->anim) return NULL;
+    return g;
+}
+
 static void init(void)
 {
     if (s_init) return;
@@ -39,6 +65,8 @@ const re15_wassersprung_r41_mess_t *re15_wassersprung_r41_mess(void) { return &s
 void re15_wassersprung_r41_reset(void)
 {
     memset(&s_mess, 0, sizeof s_mess);
+    memset(s_gez, 0, sizeof s_gez);
+    s_gen = 0;
     s_mess.letzter_ton = -1;
     for (int i = 0; i < FOLGE_MAX; i++) { s_folge[i].platz = -1; s_folge[i].aktor = -1; s_folge[i].part = -1; }
     s_init = 1;
@@ -235,6 +263,12 @@ static void folge_merken(int platz, int aktor, int part)
 
 static int npc_anker(const re15_actor_t *e, int part, int32_t out[3])
 {
+    const gezeichnet_t *g = gezeichnet(e);
+    if (g && g->skel) {   /* Part[fuss] des gezeichneten Bilds: `lw a2,392(a1)` (+0x188) + fuss*0xac @0x8004567c-a8 (s. Kopf s_gez) */
+        re15_actor_t v = *e;
+        v.x = g->x; v.y = g->y; v.z = g->z; v.rot_y = g->rot_y; v.motion = g->motion; v.anim_frame = g->bild;
+        return re15_wasser_r38_anker(g->skel, g->anim, &v, -1, (uint32_t)g->bild, part, out);
+    }
     const void *sk = NULL;
     const void *an = re15_wassersprung_r41_npc_bank(e, &sk);
     if (an && sk)
@@ -293,16 +327,23 @@ int re15_wassersprung_r41_npc_takt(re15_actor_t *e, int a0)
 {
     if (!e || e->type < 0x40) return 0;
     const void *sk_v = NULL;
-    const re15_emd_animation_t *an = (const re15_emd_animation_t *)re15_wassersprung_r41_npc_bank(e, &sk_v);
+    const re15_emd_animation_t *an;
+    int clip;
+    int32_t bild_roh;
+    const gezeichnet_t *g = gezeichnet(e);
+    if (g) {   /* *(+0x168) = Bildwort des GEZEICHNETEN Bilds (s. Kopf s_gez) - unabhaengig von +0x94/+0x95 dieses Takts */
+        an = (const re15_emd_animation_t *)g->anim; sk_v = g->skel; clip = (int)g->motion; bild_roh = g->bild;
+    } else {   /* ohne Bildanfang (Riegel, die den Sub direkt rufen): der Aktor steht noch im gezeichneten Zustand */
+        an = (const re15_emd_animation_t *)re15_wassersprung_r41_npc_bank(e, &sk_v); clip = (int)e->motion; bild_roh = e->anim_frame;
+    }
     if (!an || an->clip_count <= 0) return 0;
-    int clip = (int)e->motion;
     if (clip < 0 || clip >= an->clip_count) return 0;
     int fc = an->clips[clip].frame_count;
     if (fc <= 0) return 0;
-    /* Bildwort des gezeichneten Bilds = *(+0x168) (`lw v0,360(v0)` / `lw v1,0(v0)` / `andi 0x4000` @0x80051278-88),
-     * Fuss 7 - 3*((Wort>>12)&1) @0x80051294-ac. Der Haken laeuft VOR dem Bildvorschub des Takts (anim_set posiert
-     * +0x95 und erhoeht danach, s. enemy_ai_common.c POSE-DANN-VORSCHUB) -> e->anim_frame = das posierte Bild. */
-    uint32_t bild = (uint32_t)e->anim_frame % (uint32_t)fc;
+    /* Bildwort *(+0x168) (`lw v0,360(v0)` / `lw v1,0(v0)` / `andi 0x4000` @0x80051278-88), Fuss 7 - 3*((Wort>>12)&1)
+     * @0x80051294-ac. Ohne Schnappschuss gilt: der Haken laeuft VOR dem Bildvorschub des Takts (POSE-DANN-VORSCHUB,
+     * enemy_ai_common.c re15_npc_anim) -> e->anim_frame = das zuletzt posierte Bild. */
+    uint32_t bild = (uint32_t)bild_roh % (uint32_t)fc;
     uint32_t wort = re15_emd_get_frame_entry(an, clip, (int)bild);
     int fuss = 0; unsigned pw_treffer = 0;
     if (wort & 0x4000u) fuss = (wort & 0x1000u) ? 4 : 7;
@@ -322,6 +363,18 @@ int re15_wassersprung_r41_npc_takt(re15_actor_t *e, int a0)
 void re15_wassersprung_r41_bildanfang(void)
 {
     init();
+    if (++s_gen == 0) s_gen = 1;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {        /* Zustand des gezeichneten Bilds je NPC (s. Kopf s_gez) */
+        const re15_actor_t *e = &g_actors[i];
+        gezeichnet_t *g = &s_gez[i];
+        g->ok = 0;
+        if (!e->active || e->type < 0x40) continue;
+        const void *sk = NULL;
+        const void *an = re15_wassersprung_r41_npc_bank(e, &sk);
+        if (!an) continue;
+        g->gen = s_gen; g->ok = 1; g->type = e->type; g->motion = e->motion; g->rot_y = e->rot_y;
+        g->bild = e->anim_frame; g->x = e->x; g->y = e->y; g->z = e->z; g->anim = an; g->skel = sk;
+    }
     for (int i = 0; i < FOLGE_MAX; i++) {
         if (s_folge[i].platz < 0) continue;
         re15_esp_fx_t *f = (re15_esp_fx_t *)re15_esp_fx_get(s_folge[i].platz);
