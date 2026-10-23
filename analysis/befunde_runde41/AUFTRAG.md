@@ -97,7 +97,7 @@ Vereinbarte Reihenfolge: (1) Release v0.8.28 [erledigt], (2) 20B0-Wasser im Orig
   -> 0x80019700) stehen in enemy_ai_common.c als OFFEN.
 - Elzas Variante der Zeile "Hey, Leon, try with this!" heisst sinngemaess "Hey, Elza, try with this!" (John).
 
-## 2026-10-23 17:3x — Nachtrag 1 (Wortlaut, waehrend Welle 1; betrifft Spur A / jede DuckStation-Aufnahme)
+## 2026-10-23 17:2x — Nachtrag 1 (Wortlaut, waehrend Welle 1; betrifft Spur A / jede DuckStation-Aufnahme)
 
 > Er sagt immer failed media capture - invalid type. Du musst in duckstation backend auf FFmpeg ändern und container
 > auf mp4.
