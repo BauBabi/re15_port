@@ -23,7 +23,8 @@
 #      Gate FUN_800420a0 @0x80042120-38, Zone 7 = STAGE2) - kein Haken, kein Spielverhalten. F330 RE15_FIRE_AOT=14
 #      (der Ventil-Platz, Ereignis 26) -> Frage 45; Druecke alle 4 s ab F450: F696 Ja (46 oeffnet F699), F819 zu
 #      -> Marker F820 -> Sleep 1800 -> F2621 Flut (Cut 4, Pad-Sperre), Wasser 50 je Takt ab y 0: Fuesse (-5400)
-#      bei F2728 (Spritzer alle 6 Takte ab F2733), -6300 = 900 ueber den Fuessen bei F2746 -> hp -1 + blaue Blende
+#      bei F2728 (dort EIN Spritzer, Wasser-Schritt-Effekt 0x06050D00 @0x800456b8 - Ereignis statt der frueheren
+#      Rate ohne Beleg), -6300 = 900 ueber den Fuessen bei F2746 -> hp -1 + blaue Blende
 #      (fade-log kick ch=0 value=0x5000), Todeskette (pst 7 bei F2859). Riegel: Zaehler-Ende 1800 +- 3 Bilder nach dem
 #      Schliessen, Tod 125 +- 2 Bilder nach dem Flutbeginn, Blende, Wasser -6300 / Spieler -5400.
 #
@@ -159,6 +160,16 @@ _muss("${_dbgc}" "[ventilkette41] Zaehler laeuft: 1800 Takte, Ost-Tuer -> 20B0, 
 _muss("${_dbgc}" "[ventilkette41] FLUT: Wasser steigt" c "Zaehler abgelaufen -> Flut")
 _muss("${_dbgc}" "room=2030 CUT 0 -> 4" c "Flut unter Cut 4 (Draufsicht)")
 _muss("${_dbgc}" "[ventilkette41] ERTRUNKEN: Wasser y -6300, Spieler y -5400 -> hp -1, blaue Blende" c "Ertrinken 900 ueber den Fuessen auf dem Ring")
+string(FIND "${_dbgc}" "[ventilkette41] SPRITZER: Wasser y -5400 erreicht die Fuesse (Spieler y -5400)" _p_spritz)
+string(FIND "${_dbgc}" "[ventilkette41] ERTRUNKEN:" _p_tot)
+if(_p_spritz LESS 0 OR _p_tot LESS 0 OR NOT _p_spritz LESS _p_tot)
+    message(FATAL_ERROR "r41_ventilkette[c]: kein Spritzer beim Erreichen der Fuesse vor dem Ertrinken (Spritzer ${_p_spritz}, tot ${_p_tot})")
+endif()
+string(REGEX MATCHALL "SPRITZER: Wasser y" _spritz_alle "${_dbgc}")
+list(LENGTH _spritz_alle _n_spritz)
+if(NOT _n_spritz EQUAL 1)
+    message(FATAL_ERROR "r41_ventilkette[c]: ${_n_spritz} Spritzer-Ereignisse statt genau einem (Ereignis, keine Rate)")
+endif()
 _muss("${_dbgc}" "kick ch=0 value=0x5000" c "blaue Blende Kanal 0 (level 0x5000)")
 _darf_nicht("${_dbgc}" "[esp] room 2070:" c "kein Raumwechsel waehrend der Flut")
 _muss("${_dbgc}" "EXIT_AT: Bild" c "Endbild erreicht")
