@@ -22,3 +22,15 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette.cmake)
     set_tests_properties(integration_r41_ventilkette PROPERTIES TIMEOUT 900 RUN_SERIAL TRUE)
 endif()
+
+# Teil B (dritte Fortsetzung 2026-10-24): die Glieder, die Teil A nicht faehrt — Pult 2050 -> 80 V -> Hebel = Original
+# sub04 (Leon + Elza), Hebel vorher gesperrt, 2030-Pult ohne Ventil 13, Leitern 20B0 <-> 2050 nach der Flut, 2030 mit
+# Bit 107 ohne Wasser (Gegenprobe ohne 107), Elza-Leiter 2001. Eigener exe-Kopie-Praefix re15_pc_r41cb_.
+if(RE15_BUILD_PC AND TARGET re15_pc)
+    add_test(NAME integration_r41_ventilkette_b
+             COMMAND ${CMAKE_COMMAND}
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_b
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_b.cmake)
+    set_tests_properties(integration_r41_ventilkette_b PROPERTIES TIMEOUT 1200 RUN_SERIAL TRUE)
+endif()
