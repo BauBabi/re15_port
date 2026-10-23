@@ -23,6 +23,10 @@ Die Vorschlaege fuer 1070/1071 bleiben wie gewuenscht liegen (Bilder: `analysis/
 Leon/Marvin/Ada am Lift (ROOM3070 `main00`-`main04`), Ada in ROOM3080 (`main00`, `main01`) und die Szene in ROOM30E0
 (`main00`-`main05`, `main07`-`main13`). Jede Datei gehoert zu der Zeile mit derselben Nummer; die Sprecher passen.
 
+**Ihre Aufnahmen vom 23.10. ebenfalls (22 Dateien, unveraendert):** John, Elza und Sherry nach der Rettung in ROOM3091
+(`synchro/STAGE3/room3091/main09`-`main30`), von "That was a close shave!" bis Elzas "Thanks!". Jede Datei gehoert
+zu der Zeile mit derselben Nummer der Texttabelle des Raums (Zeilen 9-30 sind genau diese Szene).
+
 **Nahaufnahmen, die das Original nie zeigt (Ihre Frage zu ROOM11D0 und "Wenn ja, baue die ruhig mit ein").** Ich
 habe alle STAGE1-Kameras gesucht, auf die nichts schaltet (keine Kamerazone, kein Skriptbefehl, keine Tuer). Wo eine
 Nahaufnahme vor einer Untersuchungsstelle mit passendem Text steht, zeigt sie jetzt beim Untersuchen - bei Leon und
