@@ -59,6 +59,8 @@
 #include "re15_math.h"       /* re15_squareroot0 - Fress-Ausrichtung (Maulachsen-Elevation) */
 #include "re15_enemy_ai.h"   /* victim_force + Clip-Anker-Exporte (Fress-Finisher R6) */
 #include "re15_audio.h"     /* re15_audio_core_se - Leons Schrei im Fress-Finisher (@0x80102EF4) */
+#include "re15_gator_re2_r41.h" /* Runde 41 Spur B: RE2-Bausteine (Hysterese, Zonen-Dash, Intro, HURT-Selektor,
+                                 * Kanister T2/R1, Schuetteln) - gator_re2_r41.c */
 
 /* Wrapper aus enemy_ai_common.c (dort static — als re15_ai_* exportiert). */
 extern void    re15_ai_advance(re15_actor_t *e, int32_t sp);
@@ -71,7 +73,9 @@ extern void    re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, i
 extern re15_actor_t g_actors[];
 
 /* ==== DESIGN-Konstanten (Nutzer-Auftrag 2026-09-10; KEINE Original-Werte) ==== */
-#define GB_HP            3000   /* DESIGN: 10x die byte-true 300er-HP-Zeile @0x801175dc */
+#define GB_HP   RE15_GR2_HP_INIT /* Runde 41 Spur B: RE2-Sockel 25300 = 25000 + [0x801045bc] (INIT
+                                 * @0x80100518-580); Beschuss toetet nicht, < 25000 = geschwaecht
+                                 * (@0x80101ebc-dc). Vorher DESIGN 3000. */
 #define GB_AGGRO         9000   /* DESIGN: ~halbe Pool-Diagonale (Pool 16100x21600) */
 #define GB_BITE_TYPE        5   /* byte-true dmg_table[5] = 50 (DAT_8006f418) */
 #define GB_FLINCH_STEP    300   /* DESIGN: 10%-Schwellen von GB_HP */
@@ -172,7 +176,10 @@ enum {
     GBP_FRESSEN,    /* toedlicher Biss: Kopf runter, Leon fressen, abgehen
                      * (Nutzer-Design 2026-09-11) */
     GBP_DIE,        /* Todesrolle (Clip 7) */
-    GBP_DEAD
+    GBP_DEAD,
+    GBP_RE2_INTRO,  /* Runde 41 Spur B: RE2 Sub 0 P1/P2 (Clip 6 Durchbruch -> Clip 3 Schnapper, @0x801008ac-f0) */
+    GBP_RE2_DASH,   /* RE2 LUNGE Sub 3: Clip 2 (16) -> Clip 3 (0) als Zonen-Dash (@0x80100dac-e28) */
+    GBP_RE2_TOD     /* RE2 R1 Kanister-Explosionstod (@0x80102158), Endzustand = Leiche (@0x80102654) */
 };
 
 typedef struct {
@@ -398,6 +405,7 @@ static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl)
         g->arc_vz = 0;
     } else {
         re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
+        re15_gr2_biss_cd((int)(e - g_actors), RE15_GR2_BISS_CD_BISS);   /* Runde 41 Spur B: +0x238 = 70 @0x801016b0-b4 */
     }
     pl->hit_react |= 1;
     e->hit_stun = 0x64;                       /* byte-true Re-Attack-Sperre */
@@ -572,6 +580,13 @@ static int gb_wand_dazwischen(const re15_actor_t *e, const re15_actor_t *pl)
  * liessen ihn an der Rampen-NORDKANTE kriechen (Nutzer 2026-09-11, 4. Fall:
  * z=-13063-Klemmlinie, Ziel suedlich hinter der Rampe). */
 static int gb_seg_frei(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t m);
+/* Runde 41 Spur B: RE2-Clip-Bahnen (Intro Clip 6, Dash Clip 2/3) muessen Insel UND Aussenwaende
+ * meiden (Klemmlinien wie das CHASE-Steuerziel: Kante + 1600). */
+static int gb_bahn_frei(int32_t x0, int32_t z0, int32_t x1, int32_t z1)
+{
+    if (x1 < -8900 + 1600 || x1 > 7200 - 1600 || z1 < -27000 + 1600 || z1 > -5400 - 1600) return 0;
+    return gb_seg_frei(x0, z0, x1, z1, GB_KOERPER_M);
+}
 
 /* Die vier Plattform-Umlauf-Ecken (+GB_RING_M) - gemeinsame Wegpunkte fuer
  * Ring-Following und den zentralen Kanten-Umweg. */
@@ -742,6 +757,11 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
     if (e->state == 3) { g->phase = GBP_DIE; g->timer = 0; e->state = 1; return; }
     if (e->state != 2) return;
     e->state = 1;                       /* Boss-Panzerung: HURT-Route selbst verwalten */
+    /* Runde 41 Spur B: Unverwundbarkeit +0x1D3 |= 0x80 waehrend der Grossreaktion (@0x80102c20-28)
+     * und nach dem Explosionstod (R1 P0 @0x801022ec-f4): Schaden zuruecknehmen. */
+    if (g->phase == GBP_FLINCH || g->phase == GBP_RE2_TOD) {
+        e->hp = g->prev_hp; e->hit_react &= (uint8_t)~1u; return;
+    }
     e->hit_react &= (uint8_t)~1u;       /* Fenster-Latch loesen (byte-true HURT-Tail) */
     /* TREFFER-STOTTERER: RE2 wirft die laufende Animation bei JEDEM Treffer zwei
      * Bilder zurueck - `lhu v0,332(s0)` / `addiu v0,v0,-2` / `sh` @0x80102030-48.
@@ -757,7 +777,30 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
                              bp[0], bp[1], bp[2], (int16_t)e->rot_y);
     }
     g->hit_zaehler++;
-    {
+    {   /* Runde 41 Spur B: HURT-Selektor FUN @0x80101eac (gator_re2_r41.c): 1 = Kanister-Explosion R1
+         * (+0x226 == 7), 4 = Grossreaktion R4 (+0x225 == 0 && +0x22E == 0 && rnd&3 == 0, Sperre
+         * 120+(rnd&0x3f)), sonst 0 = Standard R0 (nur SE 5 @0x801020c4, Gate +0x232/+0x233). Die
+         * Port-Kadenz (10 %-Schwellen / 6 Treffer) ist damit durch die RE2-Kadenz ersetzt. */
+        int slot = (int)(e - g_actors);
+        int gesperrt = (g->phase == GBP_CROSS || g->phase == GBP_DIE || g->phase == GBP_RE2_INTRO
+                        || g->phase == GBP_FRESSEN);
+        int r = re15_gr2_hurt_reaktion(slot, e, &g_actors[RE15_ACTOR_SLOT_PLAYER], gesperrt);
+        if (r == 1) {
+            re15_gr2_r1_start(slot, e);
+            g->phase = GBP_RE2_TOD; g->timer = 0; g->arc_vz = 0; g->pitch_vz = 0; g->jaw_vz = 0;
+            return;
+        }
+        if (s_gb_brull_cd == 0) gb_se(r == 4 ? 0 : 5);
+        if (r == 4) {
+            g->hit_zaehler = 0;
+            g->phase = GBP_FLINCH; g->timer = 0;
+            e->motion = 10; e->anim_frame = 0;   /* Clip 10 @0x80102c40-48 */
+            e->anim_frac = 3;                    /* `addiu a2,zero,3` @0x80102c44 */
+            {   re15_enemy_bank_t *bk = re15_enemy_find(e->type);
+                if (bk && bk->ok) re15_clip_anchor_set_pub(e, &bk->skel, &bk->anim, 10, 0); }
+        }
+    }
+    if (0) {
         /* ⛔ SE 0 ODER SE 5, NIE BEIDES (gator-schrei-schaden.md §2/§6): RE2 fuehrt
          * zwei getrennte Treffer-Handler - die kleine Reaktion @0x801020B0 spielt
          * SE 5 (`jal 0x8005BD6C` @0x801020C4, Gate `lbu v0,562(s0)` @0x801020AC),
@@ -1017,6 +1060,7 @@ void re15_gator_boss_tick(int slot)
                 if (kf != s_gb_kf_zuletzt) {
                     uint32_t w = bb->anim.frames[kf];
                     s_gb_kf_zuletzt = kf;
+                    re15_gr2_frame_wort(slot, w);   /* Runde 41 Spur B: 0x28-Stroke-Ereignis @0x801003f0-40c */
                     if (w & 0x08000000u) gb_se_frameflag((int)(w >> 28));
                 }
             }
@@ -1031,8 +1075,9 @@ void re15_gator_boss_tick(int slot)
         memset(g, 0, sizeof *g);
 
     if (g->phase == GBP_OFF) {                /* INIT (Punkt 2): Lauerstellung */
-        if (e->hp <= 0) e->hp = GB_HP;
+        e->hp = GB_HP;                        /* RE2 INIT schreibt HP unbedingt (@0x80100518-580) */
         g->prev_hp = e->hp;
+        re15_gr2_reset(slot, gb_se);          /* Runde 41 Spur B: RE2-Bausteine je Aktor-Leben */
         g->next_flinch_hp = (int16_t)(e->hp - GB_FLINCH_STEP);
         e->x = GB_START_X; e->z = GB_START_Z; e->y = GB_WATER_Y;
         /* Blick zur Leiter ueber die ENGINE-Peilung (steer mit Voll-Slew 0x800 =
@@ -1097,6 +1142,8 @@ void re15_gator_boss_tick(int slot)
         gb_absorb_hit(e, g);
         g->prev_hp = e->hp;
     }
+    /* Runde 41 Spur B: Ereignis-Maschine, Schuetteln, Rumble, Putz, Zaehler, Kanister-Vorpass */
+    re15_gr2_takt(slot, e, pl, g->phase == GBP_CHASE || g->phase == GBP_LURK);
 
     /* SELBST-BEFREIUNG (Sweep-Klasse "end==start", probe_gator_sweep
      * 2026-09-11): steckt das ZENTRUM im Klemm-Slab (Blockkante +
@@ -1184,7 +1231,8 @@ void re15_gator_boss_tick(int slot)
                                                * Continue mitten im Fressen greift */
     }
     if (pl->hp < 0 && g->phase != GBP_DIE && g->phase != GBP_DEAD
-        && g->phase != GBP_OFF && g->phase != GBP_FRESSEN) {
+        && g->phase != GBP_OFF && g->phase != GBP_FRESSEN
+        && g->phase != GBP_RE2_TOD && g->phase != GBP_RE2_DASH && g->phase != GBP_RE2_INTRO) {
         int64_t rdx = (int64_t)GB_START_X - e->x, rdz = (int64_t)GB_START_Z - e->z;
         re15_enemy_steer_point(e, GB_START_X, GB_START_Z, 0x20);
         if (rdx * rdx + rdz * rdz > (int64_t)1500 * 1500)
@@ -1230,7 +1278,15 @@ void re15_gator_boss_tick(int slot)
                                                             * reicht die Distanzregel -
                                                             * der Tuer-Spawn ist ~16600
                                                             * entfernt */
-        if (g->aggro) { g->phase = GBP_CHASE; e->motion = 0; e->anim_frame = 0; break; }
+        if (g->aggro) {
+            /* Runde 41 Spur B: RE2-INTRO Sub 0 P1/P2 (Clip 6 Durchbruch @0x801008ac-b8 -> Clip 3
+             * @0x801008e4-f0, danach +0x238 = 110 @0x8010091c), wenn die Clip-Bahn frei ist. */
+            int32_t zi[2]; re15_gr2_intro_bahn(e, zi);
+            if (gb_bahn_frei(e->x, e->z, zi[0], zi[1])) {
+                re15_gr2_intro_start(slot, e); g->phase = GBP_RE2_INTRO; g->timer = 0; break;
+            }
+            g->phase = GBP_CHASE; e->motion = 0; e->anim_frame = 0; break;
+        }
         e->motion = 0;                        /* still liegen, Blick zur Leiter */
         e->anim_frame++;
         break;
@@ -1263,6 +1319,18 @@ void re15_gator_boss_tick(int slot)
             g->phase = GBP_GUARD; g->guard_t = 0; g->bite_done = 0;
             e->motion = 0; e->anim_frame = 0;
             break;
+        }
+        {   /* Runde 41 Spur B: RE2-LUNGE als Zonen-Dash (Zonenlinie +0x21A 0->1->2 @0x801009a8/@0x801009ec
+             * -> Routine 0x301 @0x801009ac/@0x801009f4). PORT-WAHL: die drei sce-8-Wasserzonen des RDT
+             * statt der Korridorlinien; nur wenn beide Clip-Bahnen (Netto-Wurzelversatz Clip 2 / 2+3,
+             * skaliert, um den Yaw gedreht) frei von Insel und Waenden sind. */
+            int32_t z2[2], z3[2];
+            if (re15_gr2_dash_zonenwechsel(slot, e, gb_zone(e->z), gb_zone(pl->z), z2, z3)
+                && gb_bahn_frei(e->x, e->z, z2[0], z2[1]) && gb_bahn_frei(z2[0], z2[1], z3[0], z3[1])) {
+                re15_gr2_dash_start(slot, e);
+                g->phase = GBP_RE2_DASH; g->timer = 0;
+                break;
+            }
         }
 
         /* ROUTENWAHL ueber die Becken-Zonen (ersetzt rim-Anlauf + Ring-Mix,
@@ -1469,8 +1537,7 @@ void re15_gator_boss_tick(int slot)
                     e->z += (int32_t)(((int64_t)bs * 44) >> 12);
                 }
                 e->y = GB_WATER_Y;
-                if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
-                e->anim_frame++;
+                re15_gr2_chase_clip(slot, e, dist, NULL);   /* Runde 41 Spur B: Clip nach RE2-Hysterese (Wende ohne Vortrieb) */
                 break;
             }
             re15_enemy_steer_point(e, tx, tz, 0x30);
@@ -1478,7 +1545,8 @@ void re15_gator_boss_tick(int slot)
                                   * byte-true B[4]-Streuung (6..37) - "leere
                                   * Drehungen ohne Sinn muessen komplett raus" */
         }
-        {   /* BURST-Start: Leon im Wasser-Sichtkegel, mittlere Distanz */
+        if (0) {   /* Runde 41 Spur B: BURST entfaellt - RE2s Paddeln (Clip 1, Sub 2) IST die Beschleunigung;
+                    * Block bleibt als Dokument des frueheren Designs stehen. */
             int soll2 = ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 0x400) & 0x0fff;
             int dlt2  = ((soll2 - (int)e->rot_y + 0x800) & 0x0fff) - 0x800;
             if (g->burst_t == 0 && g->burst_cd == 0
@@ -1493,13 +1561,15 @@ void re15_gator_boss_tick(int slot)
                 }
             }
         }
-        re15_ai_advance(e, g->burst_t ? 100 : 56);
-                                 /* DESIGN: Verfolgung 56 (statt byte-true
-                                  * Proxy 48), BURST 100 fuer 75 F - im
-                                  * Wasser ist Leon nie sicher */
+        {   /* Runde 41 Spur B: Verfolgung = RE2 Sub 1/2 - Clip 0 (Schwimmen, Blend 32 @0x80100c38) <->
+             * Clip 1 (Paddeln, Blend 4 @0x80100cfc) nach der +0x1F0-Hysterese (@0x80100b88/@0x80100be4),
+             * Vortrieb = AUTHORED Wurzelversatz des Bildes (FUN_80015e7c, x Render-Scale) statt der
+             * frueheren Design-Geschwindigkeiten 56/100. */
+            int32_t v = 0;
+            re15_gr2_chase_clip(slot, e, dist, &v);
+            re15_ai_advance(e, v);
+        }
         e->y = GB_WATER_Y;
-        if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
-        e->anim_frame++;
 
         /* Biss-Commit: byte-true Reichweiten-Test, Winkel-Gate auf 0x400
          * geoeffnet + Nah-Trigger (Session-Telemetrie 2026-09-10: er stand
@@ -2214,6 +2284,19 @@ void re15_gator_boss_tick(int slot)
         }
         break;
     }
+    case GBP_RE2_INTRO:                       /* Runde 41 Spur B: RE2 Sub 0 (Clip 6 -> Clip 3) */
+        e->y = GB_WATER_Y;
+        if (!re15_gr2_intro_tick(slot, e)) { g->phase = GBP_CHASE; e->motion = 0; e->anim_frame = 0; }
+        break;
+    case GBP_RE2_DASH:                        /* RE2 LUNGE Clip 2 (16) -> Clip 3 (0), authored Wurzelbahn */
+        e->y = GB_WATER_Y;
+        if (!re15_gr2_dash_tick(slot, e)) { g->phase = GBP_CHASE; e->motion = 0; e->anim_frame = 0; }
+        break;
+    case GBP_RE2_TOD:                         /* RE2 R1: Clip 9 + Vortrieb, danach Leiche (Clip-9-Endpose) */
+        e->y = GB_WATER_Y;
+        re15_gr2_r1_tick(slot, e);
+        break;
+
     case GBP_DIE:                             /* Todesrolle Clip 7, dann CORPSE */
         e->motion = 7;
         e->anim_frame++;
@@ -2373,15 +2456,18 @@ int re15_gator_spine_arc_vz(const re15_actor_t *e, int bone)
 {
     if (!re15_gator_boss_active(e)) return 0;
     const gb_state_t *g = &s_gb[(int)(e - g_actors)];
-    if (g->arc_vz == 0 && g->pitch_vz == 0 && g->jaw_vz == 0) return 0;
+    /* Runde 41 Spur B: RE2-Zusaetze +0x22A (Part 6) / +0x228 (Part 7), Root @0x8010037c-cc */
+    int re2 = re15_gr2_bone_az((int)(e - g_actors), bone);
+    if (g->arc_vz == 0 && g->pitch_vz == 0 && g->jaw_vz == 0) return re2;
     /* Nutzer-Befund 2026-09-10: "Der Bogen muss sein - unten Kopf, Ruecken
      * oben, unten Schweif" - die alte Vorzeichenwahl schweifte BEIDE Enden
      * nach OBEN (U statt Bogen). Rz-Geometrie: +X-Kette (Kopf) haengt mit
      * az>0 ab (x'->+y = PSX-unten), -X-Kette (Schwanz) mit az<0. */
     switch (bone) {
     case 0:                            return  (int)g->pitch_vz; /* Root-Neigung der Bahn */
-    case 7:                            return  (int)g->jaw_vz;   /* Kiefer reisst auf (Fressen) */
-    case 1: case 5: case 6:            return  (int)g->arc_vz;   /* Kopf haengt drueben ab */
+    case 7:                            return  (int)g->jaw_vz + re2;   /* Kiefer reisst auf (Fressen) */
+    case 6:                            return  (int)g->arc_vz + re2;   /* Kopf (Part 6, RE2 +0x22A) */
+    case 1: case 5:                    return  (int)g->arc_vz;   /* Kopf haengt drueben ab */
     case 11: case 12: case 13:         return -(int)g->arc_vz;   /* Schweif haengt diesseits */
     default:                           return 0;
     }

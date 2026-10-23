@@ -1,0 +1,437 @@
+/* test_r41_re2gator.c — Runde 41 Spur B "re2gator": Riegel fuer die RE2-Bausteine des ROOM2090-Bosses.
+ *
+ * Treibt den ECHTEN Boss-Tick (re15_gator_boss_tick + Dispatcher-Klemme wie probe_gator_fress.c, kein
+ * Nachbau) mit der RE2-EM23-Bank. Belege je Zahl: analysis/befunde_runde41/B_re2gator.md §2 und die
+ * @0x-Kommentare in engine/src/gator_re2_r41.c.
+ *
+ *   clips     Clip 1 (Paddeln) bei dist >= 0x65 ohne Biss-Sperre, Clip 0 in der Sperre, authored Vortrieb
+ *   dash      Zonenwechsel -> SE 4, Clip 2 (150) -> Clip 3 (150), Stroke-Ereignis -> Schuetteln 5 x Bit 4 + 10 x Bit 8
+ *   intro     Aggro -> Clip 6 (125) -> Clip 3 (150) -> Biss-Sperre 110 -> Clip 0, dann Clip 1
+ *   sockel    HP 25300, 200 Pistolentreffer toeten nicht, geschwaecht < 25000, SE 0 xor SE 5, R4-Sperre 120..183
+ *   kanister  Fenster -> Stufen 1..7 (Kopf/Kiefer-az), Anhaengen an Part 6, Treffer -> R1 (SE 4, Raum-Satz 15,
+ *             Rumble, Clip 9, Kanister nach 9 Bildern weg, Leiche)
+ *   putz      Dash-Start -> 54 Putz-Partikel (RE2 CORE00.ESP id 4) ohne unbekannte re2fx-Ops
+ */
+#include "re15_rdt.h"
+#include "re15_scd.h"
+#include "re15_actor.h"
+#include "re15_aot.h"
+#include "re15_room.h"
+#include "re15_enemy_ai.h"
+#include "re15_enemy.h"
+#include "re15_ai_flavor.h"
+#include "re15_player.h"
+#include "re15_damage.h"
+#include "re15_collision.h"
+#include "re15_boss_gator.h"
+#include "re15_gator_re2_r41.h"
+#include "re15_emd.h"
+#include "re15_rumble.h"
+#include "re2_fx.h"
+#include "re2_ems.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#ifndef RE15_ASSET_PSX_DIR
+#define RE15_ASSET_PSX_DIR "shared_assets/PSX"
+#endif
+#ifndef RE15_ASSET_RE2_DIR
+#define RE15_ASSET_RE2_DIR "shared_assets/RE2"
+#endif
+
+static int fails = 0;
+#define CHECK(c, ...) do { if (!(c)) { printf("FAIL %s:%d: ", __FILE__, __LINE__); printf(__VA_ARGS__); printf("\n"); fails++; } } while (0)
+
+static uint8_t *slurp(const char *path, size_t *n)
+{
+    FILE *f = fopen(path, "rb");
+    if (!f) return NULL;
+    fseek(f, 0, SEEK_END); long sz = ftell(f); fseek(f, 0, SEEK_SET);
+    uint8_t *b = (uint8_t *)malloc((size_t)sz);
+    if (b && fread(b, 1, (size_t)sz, f) != (size_t)sz) { free(b); b = NULL; }
+    fclose(f); *n = (size_t)sz;
+    return b;
+}
+static int load_re2_bank(uint8_t type)
+{
+    static uint8_t *s_ems = NULL; static long s_ems_sz = 0;
+    if (!s_ems) { size_t n = 0; s_ems = slurp(RE15_ASSET_RE2_DIR "/CDEMD0.EMS", &n); s_ems_sz = (long)n; }
+    if (!s_ems) return 0;
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
+    if (eb && eb->ok) return 1;
+    if (!eb) eb = re15_enemy_alloc(type);
+    if (!eb) return 0;
+    if (re2_ems_load_bank(s_ems, (size_t)s_ems_sz, (int)type, eb, NULL) == 0) { eb->buf = NULL; eb->ok = 1; return 1; }
+    eb->type = 0; return 0;
+}
+
+/* ---- SE-Rekorder (ENEMSE Bank 17 ueber den Boss-Haken, Raum-Satz ueber den R41-Haken) ---- */
+static int s_se_log[512], s_se_n;
+static int s_raum_se_log[16], s_raum_se_n;
+static int s_se_tick_mark;   /* Zahl der SEs beim letzten Marker */
+static void se_rec(int id, int flag2000) { (void)flag2000; if (s_se_n < 512) s_se_log[s_se_n++] = id; }
+static void bank_rec(int bank) { (void)bank; }
+static void raum_rec(int satz) { if (s_raum_se_n < 16) s_raum_se_log[s_raum_se_n++] = satz; }
+static int se_count_since(int id, int from) { int n = 0; for (int i = from; i < s_se_n; i++) if (s_se_log[i] == id) n++; return n; }
+
+static int slot;
+static re15_actor_t *e, *pl;
+
+static void tick(void)
+{
+    int32_t ox = e->x, oz = e->z;
+    re15_gator_boss_tick(slot);
+    if ((e->x != ox || e->z != oz) && !re15_gator_boss_skip_clamp(e)) {
+        int32_t nx = e->x, nz = e->z;
+        re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
+        e->x = nx; e->z = nz;
+    }
+}
+static void leon_statue(int32_t x, int32_t z)
+{
+    pl->x = x; pl->z = z; pl->y = 0; pl->floor = 0;
+    pl->state = 0; pl->motion = 0; pl->hit_react = 0;
+}
+
+static int setup(int gb_test)
+{
+#ifdef _WIN32
+    _putenv(gb_test ? "RE15_GB_TEST=1" : "RE15_GB_TEST=");
+    _putenv("RE15_GB_STUMM=1");
+    _putenv("RE15_GATOR_KANISTER=");
+#else
+    if (gb_test) setenv("RE15_GB_TEST", "1", 1); else unsetenv("RE15_GB_TEST");
+    setenv("RE15_GB_STUMM", "1", 1);
+    unsetenv("RE15_GATOR_KANISTER");
+#endif
+    size_t n = 0;
+    uint8_t *buf = slurp(RE15_ASSET_PSX_DIR "/STAGE2/ROOM2090.RDT", &n);
+    if (!buf) { printf("FAIL: ROOM2090.RDT nicht lesbar\n"); return 0; }
+    if (re15_rdt_parse(buf, n, &g_room_rdt) != 0) { printf("FAIL: RDT-Parse\n"); return 0; }
+    g_room_rdt_ok = 1;
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    re15_actor_init(); re15_aot_init();
+    re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+    re15_player_cmd_reset();
+    re15_damage_seed_rng(0x2545f491u);
+    g_current_room_id = 0x2090;
+    if (!load_re2_bank(0x23u)) { printf("FAIL: RE2-EM23-Bank nicht ladbar (CDEMD0.EMS)\n"); return 0; }
+    re15_enemy_bank_t *eb = re15_enemy_find(0x23u);
+    if (!eb || eb->skel.bone_count != 22) { printf("FAIL: erwartet 22 Bones\n"); return 0; }
+    pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    slot = RE15_ACTOR_MAX - 1;
+    e = &g_actors[slot];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = 0x23u;
+    e->x = -6000; e->y = 0; e->z = -22000;
+    e->grid_id = 0; e->state = 0; e->em_flag_id = 0xFF;
+    re15_enemy_apply_hitbox(e, 0x23u);
+    pl->active = 1; pl->type = 0; pl->hp = 100;
+    s_se_n = 0; s_raum_se_n = 0;
+    re15_gator_audio_hook(se_rec, bank_rec);
+    re15_gr2_raum_se_hook = raum_rec;
+    re15_rumble_reset();
+    return 1;
+}
+
+/* Authored Wurzelversatz-Differenz (FUN_80015e7c) eines Bildes, skaliert. */
+static int32_t authored_vortrieb(int clip, int frame, int32_t s)
+{
+    re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+    const re15_emd_clip_t *c = &bk->anim.clips[clip];
+    int16_t a[3] = {0,0,0}, b[3] = {0,0,0};
+    int kfb = (int)(bk->anim.frames[c->first_frame + frame] & 0xfffu);
+    re15_emd_get_keyframe_speed(&bk->skel, kfb, &b[0], &b[1], &b[2]);
+    if (frame > 0) {
+        int kfa = (int)(bk->anim.frames[c->first_frame + frame - 1] & 0xfffu);
+        re15_emd_get_keyframe_speed(&bk->skel, kfa, &a[0], &a[1], &a[2]);
+    }
+    return (int32_t)(((int64_t)(b[0] - a[0]) * s) >> 12);
+}
+
+/* ================================================================================================ */
+static int teil_clips(void)
+{
+    if (!setup(1)) return 1;
+    /* Gator UND Leon in Zone 0 (z <= -18100): kein Zonenwechsel, also kein Dash - nur die Hysterese.
+     * Abstand 6800 > Biss-Commit (Maulpunkt = Zentrum + 2600, Gate 2400) und ausserhalb des Wand-Slabs. */
+    leon_statue(-6000, -18200);
+    tick();                                    /* INIT (Lauerplatz) + LURK/aggro -> CHASE */
+    e->x = -6000; e->z = -25000; e->y = -1200; e->rot_y = 0xC00;   /* nach Norden */
+    CHECK(e->hp == RE15_GR2_HP_INIT, "HP nach INIT %d != %d (RE2 @0x80100518-580)", (int)e->hp, RE15_GR2_HP_INIT);
+    int clip1 = 0, wrap = 0, vortrieb_ok = 0, vortrieb_n = 0;
+    uint32_t af_alt = 0;
+    for (int f = 0; f < 60; f++) {
+        leon_statue(-6000, -18200); e->x = -6000; e->z = -25000; e->rot_y = 0xC00;
+        tick();
+        if (e->motion == 1) {
+            clip1++;
+            if (af_alt == 25 && e->anim_frame == 0) wrap++;     /* 26 Bilder, Selbst-Reset @0x80100d08-10 */
+            af_alt = e->anim_frame;
+        }
+    }
+    CHECK(clip1 >= 50, "Paddeln (Clip 1) nur in %d/60 Bildern - RE2 Sub 2 bei +0x1F0 >= 0x65 (@0x80100b88)", clip1);
+    CHECK(wrap >= 1, "Clip 1 wrappt nicht nach 26 Bildern (wrap=%d)", wrap);
+    /* Vortrieb je Bild = off[f]-off[f-1] x Scale: Gator wieder weit weg stellen, Positionen vergleichen */
+    for (int f = 0; f < 30; f++) {
+        leon_statue(-6000, -18200);
+        e->x = -6000; e->z = -25000; e->rot_y = 0xC00;   /* Statue, nur der Vortrieb dieses Bildes zaehlt */
+        int32_t z0 = e->z;
+        tick();
+        if (e->motion == 1) {
+            int32_t soll = authored_vortrieb(1, (int)e->anim_frame, e->render_scale_q12 ? e->render_scale_q12 : 4096);
+            int32_t ist = e->z - z0;              /* nach Norden = +z */
+            vortrieb_n++;
+            if (ist >= soll - 2 && ist <= soll + 2) vortrieb_ok++;
+            else printf("  vortrieb f=%u ist=%d soll=%d\n", (unsigned)e->anim_frame, ist, soll);
+        }
+    }
+    CHECK(vortrieb_n > 0 && vortrieb_ok >= vortrieb_n - 2,
+          "Vortrieb nicht der authored Wurzelversatz (FUN_80015e7c): %d/%d Bilder ok", vortrieb_ok, vortrieb_n);
+    /* Biss-Sperre +0x238 -> Schwimmen Clip 0 (@0x80100bf4-c04), danach wieder Paddeln */
+    re15_gr2_biss_cd(slot, RE15_GR2_BISS_CD_BISS);
+    int clip0 = 0;
+    for (int f = 0; f < RE15_GR2_BISS_CD_BISS; f++) {
+        leon_statue(-6000, -18200); e->x = -6000; e->z = -25000; e->rot_y = 0xC00;
+        tick();
+        if (e->motion == 0) clip0++;
+    }
+    CHECK(clip0 >= RE15_GR2_BISS_CD_BISS - 1, "in der Biss-Sperre nur %d/%d Bilder Clip 0", clip0, RE15_GR2_BISS_CD_BISS);
+    for (int f = 0; f < 3; f++) { leon_statue(-6000, -18200); e->x = -6000; e->z = -25000; e->rot_y = 0xC00; tick(); }
+    CHECK(e->motion == 1, "nach der Sperre nicht wieder Clip 1 (motion=%d)", (int)e->motion);
+    printf("clips: Clip1 %d/60, wrap %d, Vortrieb %d/%d, Sperre Clip0 %d/%d\n", clip1, wrap, vortrieb_ok, vortrieb_n, clip0, RE15_GR2_BISS_CD_BISS);
+    return fails ? 1 : 0;
+}
+
+/* ================================================================================================ */
+static int dash_fahren(int max, int *f_start, int *n2, int *n3, int modus_log[])
+{
+    *f_start = -1; *n2 = *n3 = 0;
+    int seen = 0;
+    for (int f = 0; f < max; f++) {
+        leon_statue(-6500, -8000);
+        int se_vor = s_se_n;
+        tick();
+        if (modus_log) modus_log[f] = re15_gr2_schuettel_modus();
+        if (re15_gr2_im_dash(slot)) {
+            if (*f_start < 0) { *f_start = f; CHECK(se_count_since(4, se_vor) >= 1, "kein SE 4 am Dash-Start (@0x80100d64/84)"); }
+            if (e->motion == 2) (*n2)++; else if (e->motion == 3) (*n3)++;
+            seen = 1;
+        } else if (seen) return f;             /* Dash zu Ende */
+    }
+    return -1;
+}
+static int teil_dash(void)
+{
+    if (!setup(1)) return 1;
+    leon_statue(-6500, -8000);
+    tick();
+    e->x = -6500; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
+    static int modus_log[1200];
+    int f_start, n2, n3;
+    int f_ende = dash_fahren(1200, &f_start, &n2, &n3, modus_log);
+    CHECK(f_start >= 0, "kein Dash beim Zonenwechsel in Leons Zone (RE2 Zonenlinie -> 0x301 @0x801009ac)");
+    CHECK(n2 == 150 && n3 == 150, "Dash-Clips: Clip 2 %d / Clip 3 %d Bilder (RE2: 150/150, EDD)", n2, n3);
+    CHECK(f_ende > 0, "Dash endet nicht");
+    /* Schuetteln: Clip 2 f50 (Wort 0x280000e2). Der Frame-Wort-Block des Boss-Ticks liest das Bild des
+     * VORIGEN Ticks (Port-Struktur, gilt auch fuer alle Frame-Flag-SEs): Wort f50 im Bild f_start+51 ->
+     * Ereignis 1 + Rumble (10,120,50) + Zaehler 2 -> +2 Bilder Ereignis 3 -> Bit 4 (Modus 2) 5 Bilder
+     * (+0x16A = 5 @0x80101dcc) -> Bit 8 (Modus 1) 10 Bilder (+0x16A = 10 @0x80101e24) -> frei. Relativ
+     * zu t = f_start+50: Bit 4 in +4..+8, Bit 8 in +9..+18. */
+    if (f_start >= 0) {
+        int t = f_start + 50;
+        int m2 = 0, m1 = 0, erstes2 = -1, erstes1 = -1, letztes1 = -1;
+        for (int f = t; f < t + 40 && f < 1200; f++) {
+            if (modus_log[f] == 2) { m2++; if (erstes2 < 0) erstes2 = f; }
+            if (modus_log[f] == 1) { m1++; if (erstes1 < 0) erstes1 = f; letztes1 = f; }
+        }
+        CHECK(m2 == 5, "Modus 2 (Bit 4, Tabelle @0x8009db14) in %d Bildern statt 5 (+0x16A = 5 @0x80101dcc)", m2);
+        CHECK(m1 == 10, "Modus 1 (Bit 8, Tabelle @0x8009daf4) in %d Bildern statt 10 (+0x16A = 10 @0x80101e24)", m1);
+        CHECK(erstes2 == t + 4, "Bit 4 ab Bild +%d statt +4 (Wort im Folgebild, Zaehler 2, dann Ereignis 3)", erstes2 - t);
+        CHECK(erstes1 == t + 9 && letztes1 == t + 18, "Bit 8 Bilder +%d..+%d statt +9..+18", erstes1 - t, letztes1 - t);
+        CHECK(re15_rumble_belegt(1) > 0 || re15_rumble_belegt(0) > 0, "kein Rumble-Eintrag (FUN_800395b8(10,120,50))");
+        /* Versatzwerte liegen in der Tabelle (0..3) */
+        int dx, dy; re15_gr2_schuettel_offset(&dx, &dy);
+        CHECK(dx >= 0 && dx <= 3 && dy >= 0 && dy <= 3, "Versatz (%d,%d) ausserhalb der Tabellenwerte", dx, dy);
+    }
+    printf("dash: start %d, Clip2 %d, Clip3 %d, ende %d\n", f_start, n2, n3, f_ende);
+    return fails ? 1 : 0;
+}
+
+/* ================================================================================================ */
+static int teil_intro(void)
+{
+    if (!setup(0)) return 1;                    /* kein GB_TEST: Aggro ueber die Distanz (GB_AGGRO 9000) */
+    leon_statue(-6000, 2000);                   /* weit weg, noch kein Aggro */
+    tick();                                     /* INIT -> LURK */
+    e->x = -6000; e->z = -24000; e->y = -1200; e->rot_y = 0xC00;   /* Bahn nach Norden frei (Westkanal) */
+    leon_statue(-6000, -16000);                 /* dist 8000 < 9000 -> Aggro */
+    int n6 = 0, n3 = 0, f_cd = -1, n0 = 0, n1 = 0;
+    for (int f = 0; f < 600; f++) {
+        if (f_cd >= 0) {
+            /* nach dem Intro: Gator-Statue in Zone 2 (kein Zonenwechsel/Dash), Leon fern (kein Biss) */
+            e->x = -6000; e->z = -16300; e->rot_y = 0xC00; leon_statue(-6000, -8000);
+        } else leon_statue(-6000, -16000);
+        tick();
+        if (e->motion == 6) n6++;
+        else if (e->motion == 3 && n6 > 0 && f_cd < 0) n3++;
+        else if (n3 > 0) {
+            if (f_cd < 0) { f_cd = f; CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO, "Biss-Sperre nach dem Intro %d != 110 (@0x8010091c)", re15_gr2_biss_cd_rest(slot)); }
+            if (f < f_cd + RE15_GR2_BISS_CD_INTRO) { if (e->motion == 0) n0++; }
+            else if (f < f_cd + RE15_GR2_BISS_CD_INTRO + 10) { if (e->motion == 1) n1++; }
+        }
+    }
+    CHECK(n6 == 125, "Clip 6 (Durchbruch) %d Bilder statt 125 (EDD)", n6);
+    CHECK(n3 == 150, "Clip 3 (Schnapper) %d Bilder statt 150 (EDD)", n3);
+    CHECK(n0 >= RE15_GR2_BISS_CD_INTRO - 2, "in der 110er-Sperre nur %d Bilder Clip 0", n0);
+    CHECK(n1 >= 8, "nach der Sperre nicht Clip 1 (%d/10)", n1);
+    printf("intro: Clip6 %d, Clip3 %d, Sperre ab %d, Clip0 %d, danach Clip1 %d\n", n6, n3, f_cd, n0, n1);
+    return fails ? 1 : 0;
+}
+
+/* ================================================================================================ */
+static int teil_sockel(void)
+{
+    if (!setup(1)) return 1;
+    leon_statue(-6000, -8000);
+    tick();
+    e->x = -6000; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
+    int hp0 = e->hp, r4 = 0, r0 = 0, beide = 0, geschw_bei = -1, cd_min = 999, cd_max = 0, letzter_r4 = -1000;
+    int treffer = 0;
+    for (int i = 0; i < 200; i++) {
+        leon_statue(-6000, -8000); e->x = -6000; e->z = -22000;
+        int hp_vor = e->hp, se_vor = s_se_n;
+        (void)re15_enemy_take_damage(e, 0);     /* attack_type 0 = Handfeuerwaffe */
+        tick();
+        treffer++;
+        int se0 = se_count_since(0, se_vor), se5 = se_count_since(5, se_vor);
+        if (se0 && se5) beide++;
+        if (e->motion == 10 && hp_vor != e->hp) { r4++; if (letzter_r4 >= 0) { int d = i - letzter_r4; if (d < cd_min) cd_min = d; if (d > cd_max) cd_max = d; } letzter_r4 = i; }
+        else if (se5) r0++;
+        if (geschw_bei < 0 && re15_gr2_geschwaecht()) geschw_bei = i;
+        for (int f = 0; f < 3; f++) { leon_statue(-6000, -8000); e->x = -6000; e->z = -22000; tick(); }
+    }
+    CHECK(hp0 == RE15_GR2_HP_INIT, "HP-Start %d", hp0);
+    CHECK(e->hp > 0 && e->hp < hp0, "HP nach 200 Treffern %d (Sockel: lebt, aber getroffen)", (int)e->hp);
+    CHECK(!re15_gr2_tot(), "Gator tot durch Beschuss - RE2 kennt keinen Attrition-Tod (Sockel 25000 @0x80100518)");
+    CHECK(beide == 0, "SE 0 und SE 5 im selben Treffer (%d x) - RE2 R0/R4 schliessen sich aus", beide);
+    CHECK(r4 >= 1, "keine Grossreaktion in 200 Treffern (rnd&3 == 0 @0x80101fb4)");
+    CHECK(geschw_bei >= 0, "nie geschwaecht (HP < 25000 @0x80101ec4)");
+    CHECK(re15_gr2_treffer() >= 150, "Trefferzaehler %d", re15_gr2_treffer());
+    printf("sockel: hp %d -> %d, R4 %d (Abstand %d..%d Treffer), R0 %d, geschwaecht ab Treffer %d\n", hp0, (int)e->hp, r4, cd_min, cd_max, r0, geschw_bei);
+    return fails ? 1 : 0;
+}
+
+/* ================================================================================================ */
+static int teil_kanister(void)
+{
+    if (!setup(0)) return 1;
+    leon_statue(-6000, 2000);                   /* kein Aggro: LURK, Kanister-Vorpass laeuft auch dort */
+    tick();
+    e->x = -6000; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    int32_t laengs = (int32_t)(((int64_t)8800 * s) >> 12);          /* im Fenster [8601, 9000) x Scale */
+    re15_gr2_kanister_setzen(-6000, -267, -22000 + laengs);
+    CHECK(re15_gr2_kanister_stufe() == 0, "Kanister nicht gesetzt");
+    int stufe_bilder[14]; memset(stufe_bilder, 0, sizeof stufe_bilder);
+    int kopf2 = 0, kiefer2 = 0, f7 = -1;
+    for (int f = 0; f < 120; f++) {
+        leon_statue(-6000, 2000); e->x = -6000; e->z = -22000; e->rot_y = 0xC00;
+        tick();
+        int st = re15_gr2_kanister_stufe();
+        if (st >= 0 && st < 14) stufe_bilder[st]++;
+        if (st == 3 && kopf2 == 0) { kopf2 = re15_gr2_bone_az(slot, 6); kiefer2 = re15_gr2_bone_az(slot, 7); }
+        if (st == 7 && f7 < 0) f7 = f;
+    }
+    CHECK(f7 >= 0, "Kanister nie getragen (Stufe 7)");
+    CHECK(stufe_bilder[2] == 13, "Stufe 2 %d Bilder statt 13 (@0x801018c4)", stufe_bilder[2]);
+    CHECK(stufe_bilder[3] == 6 && stufe_bilder[4] == 6, "Stufe 3/4 %d/%d Bilder statt 6/6", stufe_bilder[3], stufe_bilder[4]);
+    CHECK(stufe_bilder[5] == 7 && stufe_bilder[6] == 7, "Stufe 5/6 %d/%d Bilder statt 7/7", stufe_bilder[5], stufe_bilder[6]);
+    CHECK(kopf2 > 150 && kopf2 <= 240, "Kopf-az nach Stufe 2 = %d (ease-in 13 x 240 @0x80101860)", kopf2);
+    CHECK(kiefer2 < -200 && kiefer2 >= -320, "Kiefer-az nach Stufe 2 = %d (ease-in 13 x -320 @0x80101870)", kiefer2);
+    int kopf7 = re15_gr2_bone_az(slot, 6), kiefer7 = re15_gr2_bone_az(slot, 7);
+    /* Summen der Ease-Deltas wie das Overlay sie rechnet (ease-in t=0..N-1: A*(N-1)^2/N^2, ease-out
+     * t=0..N-1: A + A*(N^2-1)/N^2, weil ease-out bei t=0 die VOLLE Amplitude liefert, `addu v0,a2`
+     * @0x80101d38): Kopf 204 - 97 - 276 + 55 + 148 = 34, Kiefer -272 - 41 - 118 + 73 + 198 = -160. */
+    CHECK(kopf7 >= 30 && kopf7 <= 40, "Kopf-az beim Tragen %d (Ease-Summen = 34)", kopf7);
+    CHECK(kiefer7 >= -170 && kiefer7 <= -150, "Kiefer-az beim Tragen %d (Ease-Summen = -160)", kiefer7);
+    /* Welt-Lage folgt Part 6 */
+    int32_t kp[3], kr[9], b6[3];
+    CHECK(re15_gr2_kanister_welt(kp, kr) == 1, "Kanister unsichtbar beim Tragen");
+    re15_enemy_bone_world_pos(e, 6, b6);
+    {   int64_t d2 = (int64_t)(kp[0]-e->x)*(kp[0]-e->x) + (int64_t)(kp[2]-e->z)*(kp[2]-e->z);
+        CHECK(d2 < (int64_t)9000*9000, "Kanister weit weg vom Gator (%d,%d) vs (%d,%d)", kp[0], kp[2], e->x, e->z); }
+    /* Treffer beim Tragen -> R1 */
+    int se_vor = s_se_n, raum_vor = s_raum_se_n;
+    re15_rumble_reset();
+    (void)re15_enemy_take_damage(e, 0);
+    tick();
+    CHECK(re15_gr2_r1_laeuft(slot), "Treffer beim Tragen loest R1 nicht aus (@0x80101ef4-fc)");
+    CHECK(se_count_since(4, se_vor) >= 1, "R1 ohne SE 4 (@0x801021c4/ec)");
+    CHECK(s_raum_se_n > raum_vor && s_raum_se_log[s_raum_se_n-1] == 15, "R1 ohne Raum-Satz 15 (Se_on 0x020f0001 @0x8010237c-88)");
+    CHECK(re15_rumble_belegt(0) > 0 && re15_rumble_belegt(1) > 0, "R1 ohne Rumble (8,3)/(50,255->0) @0x80102328-44");
+    CHECK(e->motion == 9, "R1 spielt nicht Clip 9 (motion=%d)", (int)e->motion);
+    CHECK(re15_gr2_kanister_stufe() == 13, "Kanister nicht auf Stufe 13 (+0x226 = 13 @0x801022b8)");
+    int sichtbar = 0, hp_r1 = e->hp;
+    for (int f = 0; f < 60; f++) {
+        if (re15_gr2_kanister_welt(kp, kr)) sichtbar++;
+        tick();
+    }
+    CHECK(sichtbar == 10, "Kanister nach R1 %d Bilder sichtbar statt 10 (P0 + 9 P1-Bilder, +0x16B = 9 @0x80102394, Abbau @0x8010255c-78)", sichtbar);
+    CHECK(re15_gr2_tot(), "Leiche nicht erreicht (P3 @0x80102654)");
+    CHECK(e->motion == 9, "Leiche haelt nicht die Clip-9-Pose (motion=%d)", (int)e->motion);
+    (void)re15_enemy_take_damage(e, 0); tick();
+    CHECK(e->hp == hp_r1, "Leiche nimmt Schaden (%d -> %d) - +0x1D3 |= 0x80 @0x801022ec", hp_r1, (int)e->hp);
+    printf("kanister: Stufen %d/%d/%d/%d/%d/%d, kopf2 %d kiefer2 %d, getragen ab %d, kopf7 %d kiefer7 %d, R1 sichtbar %d\n",
+           stufe_bilder[2], stufe_bilder[3], stufe_bilder[4], stufe_bilder[5], stufe_bilder[6], stufe_bilder[7],
+           kopf2, kiefer2, f7, kopf7, kiefer7, sichtbar);
+    return fails ? 1 : 0;
+}
+
+/* ================================================================================================ */
+static int teil_putz(void)
+{
+    if (!setup(1)) return 1;
+    size_t n = 0;
+    uint8_t *esp = slurp(RE15_ASSET_RE2_DIR "/CORE00.ESP", &n);
+    if (!esp) { printf("FAIL: shared_assets/RE2/CORE00.ESP fehlt\n"); return 1; }
+    re2fx_reset();
+    CHECK(re2fx_register_core(esp, n) == 0, "re2fx_register_core schlug fehl");
+    leon_statue(-6500, -8000);
+    tick();
+    e->x = -6500; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
+    int f_start, n2, n3;
+    int spawns0 = re15_gr2_putz_spawns();
+    /* bis zum Dash-Start fahren, dann 120 Bilder re2fx mitticken */
+    int gestartet = 0;
+    for (int f = 0; f < 1200 && !gestartet; f++) {
+        leon_statue(-6500, -8000); tick(); re2fx_tick();
+        if (re15_gr2_im_dash(slot)) gestartet = 1;
+    }
+    (void)f_start; (void)n2; (void)n3;
+    CHECK(gestartet, "kein Dash");
+    for (int f = 0; f < 120; f++) { leon_statue(-6500, -8000); tick(); re2fx_tick(); }
+    int spawns = re15_gr2_putz_spawns() - spawns0;
+    CHECK(spawns == 54, "Putz-Spawns %d statt 54 (6 x 9, ROOM40A0 sub13/sub14)", spawns);
+    CHECK(re2fx_op_unbekannt() == 0, "re2fx meldet %u unbekannte Ops fuer Effekt 4", re2fx_op_unbekannt());
+    printf("putz: spawns %d, unbekannte Ops %u; Op-Zaehler:", spawns, re2fx_op_unbekannt());
+    for (int op = 0; op < 96; op++) if (re2fx_op_zaehler(op)) printf(" %d:%u", op, re2fx_op_zaehler(op));
+    printf("\n");
+    return fails ? 1 : 0;
+}
+
+int main(int argc, char **argv)
+{
+    const char *t = argc > 1 ? argv[1] : "clips";
+    int rc = 1;
+    if (!strcmp(t, "clips")) rc = teil_clips();
+    else if (!strcmp(t, "dash")) rc = teil_dash();
+    else if (!strcmp(t, "intro")) rc = teil_intro();
+    else if (!strcmp(t, "sockel")) rc = teil_sockel();
+    else if (!strcmp(t, "kanister")) rc = teil_kanister();
+    else if (!strcmp(t, "putz")) rc = teil_putz();
+    else printf("unbekannter Teil %s\n", t);
+    printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);
+    return rc;
+}

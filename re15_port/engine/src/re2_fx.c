@@ -877,6 +877,8 @@ static void op_5(void);
 static void op_16(void);
 static void op_39(void);
 static void op_84(void);
+/* Runde 41 Spur B (Putz der RE2-CORE00.ESP id 4, ROOM40A0 sub14), definiert am Dateiende. */
+static void op_11(void);
 
 static void op_rufen(unsigned op)
 {
@@ -895,6 +897,7 @@ static void op_rufen(unsigned op)
     case 59: op_59(); break;    /* 0x800223f8  Runde 35 Spur B */
     case 70: op_70(); break;    /* 0x80023204  Runde 35 Spur B */
     case 5:  op_5();  break;    /* 0x8001df90 (Runde 35 Spur M) */
+    case 11: op_11(); break;    /* 0x8001e4b4 (Runde 41 Spur B) */
     case 16: op_16(); break;    /* 0x8001f128 (Runde 35 Spur M) */
     case 19: op_19(); break;    /* 0x8001f2c0 */
     case 25: op_25(); break;    /* 0x8001fa08 */
@@ -1549,4 +1552,24 @@ static void op_84(void)
     wr16(b, 0x18, 0);                                  /* `sh zero,24(v0)` @0x80025378 */
     int16_t ofs[4] = { rds16(b, 0x34), rds16(b, 0x36), rds16(b, 0x38), rds16(b, 0x3A) };   /* a3 = Platz+52 @0x80025380 */
     (void)re2fx_spawn(0x14000000u | rd16(b, 0x3A), 0, re2fx_einheitsmatrix, ofs);   /* `lui a0,0x1400` @0x8002534c, `jal 0x8001cbe8` @0x80025384 */
+}
+
+/* ============================================================================================
+ * RUNDE 41 SPUR B — Op 11 = FUN_8001e4b4 (Tabelle @0x8009d894): der Putz der RE2-CORE00.ESP id 4
+ * (ROOM40A0 sub14, Typen 0x10/0x08/0x00) laeuft ueber Op 0 und Op 11.
+ *   `jal 0x8001dc30` @0x8001e4bc = Op 1 (Step laden), danach je Feld des frisch geladenen Steps:
+ *   Byte +8/+9/+10 (lb @0x8001e4d0/510/550) und Wort +0xC/+0xE/+0x10 (lh @0x8001e590/5b0/5c4)
+ *   := Feld * Skala(+0x3A, lhu @0x8001e4d4) / 3000 — Magic 0x057619f1 (`lui a3,0x576 / ori 0x19f1`
+ *   @0x8001e4e4-e8), `mfhi / sra 6 / subu (p>>31)` @0x8001e4f4-fc = exakte vorzeichenbehaftete
+ *   Division mit Abschneiden (2^38 / 0x057619f1 = 3000,0).
+ * ========================================================================================== */
+static void op_11(void)
+{
+    op_1();                                            /* @0x8001e4bc */
+    uint8_t *b = cur();
+    int32_t s = (int32_t)rd16(b, 0x3A);                /* Skala = a0 & 0xffff des Spawns (+0x3A) */
+    for (int o = 8; o <= 10; o++)                      /* @0x8001e4d0-580 */
+        b[o] = (uint8_t)(int8_t)(((int32_t)(int8_t)b[o] * s) / 3000);
+    for (int o = 0x0C; o <= 0x10; o += 2)              /* @0x8001e590-62c */
+        wr16(b, o, (uint16_t)(int16_t)(((int32_t)rds16(b, o) * s) / 3000));
 }

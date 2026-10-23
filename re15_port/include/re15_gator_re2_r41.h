@@ -1,0 +1,135 @@
+/*
+ * re15_gator_re2_r41.h — Runde 41 Spur B "re2gator": das RE2-Verhalten des Alligators (EM23)
+ * fuer den ROOM2090-Boss (Nutzer 2026-10-23: "Du kannst fast alles vom Aligator Fight von
+ * Resident Evil 2 uebernehmen ... das gleiche Verhalten bei Animation und schreien ... an
+ * gleichen Stellen beschleunigt ... die Waende ab und an wackeln ... Putz runter faellt ...
+ * Kanister ... aufnehmen, GENAUSO wie im original ... Sterbe Animation mit geplatzten Kiefer").
+ *
+ * Quelle: info/re2leon/COMMON/BIN/EM23_OVL_0000.BIN (@0x80100000) + info/re2leon/PSX.EXE,
+ * alles selbst mit re2_disasm.py gelesen; Dossier analysis/befunde_runde41/B_re2gator.md §2.
+ * Jede Konstante traegt ihre @0x-Adresse im Code. Was NICHT aus RE2 kommt, heisst hier
+ * PORT-WAHL (Pool-Geometrie von ROOM2090 statt des RE2-Korridors ROOM40A0).
+ *
+ * Eigentuemer der Zustaende bleibt enemy_ai_boss_gator.c (Phasen, Wegfindung, Klettern ueber
+ * die Rampe = Nutzer-Vorgabe); dieses Modul liefert die RE2-Bausteine je Boss-Slot.
+ */
+#ifndef RE15_GATOR_RE2_R41_H
+#define RE15_GATOR_RE2_R41_H
+
+#include <stdint.h>
+#include "re15_actor.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* ---- HP-Sockel (INIT @0x80100518-580: 25000 + Tabelle[0x800cfb74 & 0x40/0x20] = 300) ---- */
+#define RE15_GR2_HP_SOCKEL  25000   /* `slti v0,v0,25000` @0x80101ec4 -> +0x218 |= 0x20 (geschwaecht) */
+#define RE15_GR2_HP_INIT    25300   /* 25000 + [0x801045bc] = 300 (Bit 0x40 aus) */
+
+/* ---- Hysterese Schwimmen (Clip 0) <-> Paddeln (Clip 1), Sub 1/2 ------------------------- */
+#define RE15_GR2_PADDEL_AB  0x65    /* +0x1F0 >= 101 -> 0x201  `sltiu v0,v0,0x65` @0x80100b88/@0x80100ba4 */
+#define RE15_GR2_SCHWIMM_AB 0x5a    /* +0x1F0 <  90  -> 0x101  `sltiu v0,v0,0x5a` @0x80100be4/@0x80100ca4 */
+#define RE15_GR2_BISS_CD_INTRO 110  /* +0x238 = 110 nach dem Intro @0x8010091c-20 */
+#define RE15_GR2_BISS_CD_BISS   70  /* +0x238 = 70 nach dem Chomp-Commit @0x801016b0-b4 */
+
+/* ---- Grossreaktion R4 (@0x80101f8c-fd4) ---------------------------------------------------- */
+#define RE15_GR2_R4_CD_BASIS 120    /* +0x22E = (rnd & 0x3f) + 120 @0x80101fc8-cc */
+
+/* ---- Kanister (T2 @0x801017c4, Tabelle @0x80100024) ---------------------------------------- */
+#define RE15_GR2_KAN_FENSTER_AB  8601   /* obj[1].z - z - 8601 in [0, 0x18f) @0x80100ae4-e8 */
+#define RE15_GR2_KAN_FENSTER_LEN 0x18f
+#define RE15_GR2_KAN_VORHALT     8100   /* Kanister >= eigene z + 8100 waehrend Stufe 2 @0x801018a4-c0 */
+#define RE15_GR2_KAN_LOKAL_X     1750   /* Ziel-Lokallage im Maul @0x801019c4 / @0x80101a30 / ... */
+#define RE15_GR2_KAN_LOKAL_Y     -210   /* @0x80101a4c / @0x80101ad4 / @0x80101b84 */
+#define RE15_GR2_KAN_ENTFERN_F   9      /* +0x16B = 9: Kanister 9 Bilder nach R1-Start weg @0x80102394 */
+
+typedef void (*re15_gr2_se_fn)(int se_id);           /* ENEMSE Bank 17 (gb_se des Boss-Moduls) */
+
+/* Zuruecksetzen je Boss-Slot (Boss-INIT) + SE-Ausgang anmelden. */
+void re15_gr2_reset(int slot, re15_gr2_se_fn se);
+/* Jedes neue Frame-Wort des gerade gespielten Clips (Root @0x801003f0-40c: Top-5-Bits 0x28 ->
+ * Ereignis 1). Der Boss-Tick ruft das aus seinem Frame-Flag-Block. */
+void re15_gr2_frame_wort(int slot, uint32_t wort);
+/* Ein Takt je Boss-Tick (vor dem Phasen-Switch): Ereignis-Maschine (+0x227/+0x16A), Schuetteln,
+ * Rumble, Putz, Zaehler (+0x238/+0x22E), Kanister-Vorpass (nur wenn `im_chase`). */
+void re15_gr2_takt(int slot, re15_actor_t *e, re15_actor_t *pl, int im_chase);
+
+/* Verfolgungs-Clip nach der RE2-Hysterese setzen (e->motion/anim_frame) und die AUTHORED
+ * Wurzelgeschwindigkeit dieses Bildes (Clip 0/1: off[f] - off[f-1], FUN_80015e7c, x-Komponente,
+ * skaliert mit e->render_scale_q12) liefern. `dist` = Wurzel<->Spieler (re15_enemy_player_dist). */
+int  re15_gr2_chase_clip(int slot, re15_actor_t *e, int32_t dist, int32_t *vortrieb);
+void re15_gr2_biss_cd(int slot, int n);
+int  re15_gr2_biss_cd_rest(int slot);
+
+/* RE2-LUNGE als Zonen-Dash: `zone` = aktuelle Beckenzone des Gators (gb_zone), `zone_leon` =
+ * Leons Zone. Liefert 1, wenn eben eine neue Zone betreten wurde, in der Leon ist (RE2: Zonenlinie
+ * +0x21A 0->1->2 @0x801009a8/@0x801009ec = Routine 0x301). Das Ziel der Bahn (Ende Clip 2 bzw.
+ * Clip 3, Netto-Wurzelversatz skaliert, um den Yaw gedreht) steht danach in ziel[]. */
+int  re15_gr2_dash_zonenwechsel(int slot, const re15_actor_t *e, int zone, int zone_leon,
+                                int32_t ziel2[2], int32_t ziel3[2]);
+void re15_gr2_dash_start(int slot, re15_actor_t *e);      /* SE 4 @0x80100d64/84, Clip 2 (16), Anker */
+int  re15_gr2_dash_tick(int slot, re15_actor_t *e);       /* 1 = laeuft, 0 = fertig (0x101) */
+int  re15_gr2_im_dash(int slot);                          /* +0x225 */
+
+/* RE2-INTRO (Sub 0 P1/P2 @0x8010086c-948): Clip 6 (Durchbruch) -> Clip 3 (Schnapper), danach
+ * +0x238 = 110. Bahn-Ende (Wurzel) in ziel[] fuer die Freiheitsprobe. */
+void re15_gr2_intro_bahn(const re15_actor_t *e, int32_t ziel[2]);
+void re15_gr2_intro_start(int slot, re15_actor_t *e);
+int  re15_gr2_intro_tick(int slot, re15_actor_t *e);      /* 1 = laeuft, 0 = fertig */
+
+/* HURT-Selektor FUN @0x80101eac: 0 = Standard (SE 5, @0x80102090), 1 = Kanister-Explosion
+ * (@0x80102158), 4 = Grossreaktion (SE 0, Clip 10, @0x80102bd0). `gesperrt` = Phase, in der
+ * der Boss nicht flincht (CROSS/DIE, Nutzer-Design). Fuehrt +0x218 Bit 0x20 und +0x22E. */
+int  re15_gr2_hurt_reaktion(int slot, re15_actor_t *e, const re15_actor_t *pl, int gesperrt);
+
+/* R1 = Kanister-Explosionstod (@0x80102158): start einmal, dann tick je Bild; 0 = Endzustand
+ * (P3 @0x80102654: Leiche haelt die Clip-9-Endpose). */
+void re15_gr2_r1_start(int slot, re15_actor_t *e);
+int  re15_gr2_r1_tick(int slot, re15_actor_t *e);
+int  re15_gr2_r1_laeuft(int slot);
+
+/* Zusatz-az je Bone (Root @0x8010037c-cc: +0x22A auf Part 6, +0x228 auf Part 7; T1/T2-Easing und
+ * der Kiefer nach R1 FUN_80104318). Vom Spine-Haken des Boss-Moduls addiert. */
+int  re15_gr2_bone_az(int slot, int bone);
+/* Kiefer-Faerbung nach R1 (`sw a2(0x202038),112(a1)` @0x8010434c = R 0x38 G 0x20 B 0x20): 1 wenn aktiv. */
+int  re15_gr2_kiefer_farbe(int slot, uint8_t rgb[3]);
+
+/* Bildschirm-Schuetteln (FUN_8002aa28/aa6c): Versatz (dx,dy) des HINTERGRUNDS fuer dieses Bild,
+ * 0/0 wenn keines; Modus 2 = Bit 4 (stark), 1 = Bit 8 (schwach). */
+void re15_gr2_schuettel_offset(int *dx, int *dy);
+int  re15_gr2_schuettel_modus(void);
+uint8_t re15_gr2_ereignis(int slot);                      /* +0x227 (Messhaken) */
+
+/* ---- Kanister (Port-Prop aus ROOM40A0 Modell 1) ---------------------------------------------
+ * setzen(x, y, z): ins Wasser legen (liegend, Dir_set 0x690/0/0xfc00 @ROOM40A0 sub05 0x048C);
+ * Testhaken RE15_GATOR_KANISTER=x,z[,y] (Spur G setzt ihn ueber die Szene). */
+void re15_gr2_kanister_setzen(int32_t x, int32_t y, int32_t z);
+void re15_gr2_kanister_entfernen(void);
+int  re15_gr2_kanister_stufe(void);                       /* +0x226: 0 frei .. 7 getragen, 13 explodiert, -1 keiner */
+/* Lage fuer den Zeichner: 1 = sichtbar; pos = Welt, rot = Q12 3x3 (Welt). */
+int  re15_gr2_kanister_welt(int32_t pos[3], int32_t rot[9]);
+/* Umgebungs-Haken einmal auswerten (RE15_GATOR_KANISTER). */
+void re15_gr2_kanister_env(void);
+
+/* ---- Fuer Spur F/G ------------------------------------------------------------------------ */
+int  re15_gr2_geschwaecht(void);     /* +0x218 & 0x20: HP < 25000 (= 300 Schaden genommen) */
+int  re15_gr2_treffer(void);         /* Treffer seit INIT */
+int  re15_gr2_tot(void);             /* R1-Endzustand erreicht (Leiche, +0x10E |= 0x4000 @0x80102654-64) */
+int  re15_gr2_traegt(void);          /* Stufe 7 */
+
+/* ---- PC-Haken ------------------------------------------------------------------------------ */
+extern void (*re15_gr2_raum_se_hook)(int satz);   /* ROOM40A0-Raumbank: 15 = Explosionsbrueller (@0x8010237c-88) */
+/* platform/pc/src/gator_re2_pc.c: Kanister-Prop zeichnen (Aufruf aus dem Prop-Pass von main.c). */
+struct re15_camera_view_s;
+void re15_gr2_pc_zeichnen(const void *cam_view, int cx, int cy);
+/* Messhaken: Zahl der gespawnten Putz-Partikel (re2fx) seit Start. */
+int  re15_gr2_putz_spawns(void);
+
+/* Messhaken: Log-Zeilen (gator_boss.log, "RE2 ...") an/aus. */
+void re15_gr2_log(const char *fmt, ...);
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* RE15_GATOR_RE2_R41_H */
