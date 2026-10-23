@@ -135,7 +135,7 @@ Video, nicht nur die RAM-Reihe.
 - Video-Vergleich (Port-Wolke 2-5x duenner/dunkler, erster Schub spaeter): bleibt MANGEL bis Bild-fuer-Bild gleich
   (Helligkeit/Mischmodus der Effekt-0x0f-Sprites gegen VRAM/CLUT des Originals messen, nicht schaetzen).
 
-## 2026-10-23 19:08 — Nachtrag 3 (Wortlaut; bestaetigt und erweitert Entscheid E1, Spur A)
+## 2026-10-23 19:12 — Nachtrag 3 (Wortlaut; bestaetigt und erweitert Entscheid E1, Spur A)
 
 > Zu deiner Aussage - "NPC-Wasserschritte" - ja alles: Effekte wenn sie sich im Wasser bewegen fußschritt sounds wenn
 > sie laufen. All das muss auch für die NPCs gelten.
