@@ -52,6 +52,7 @@
 #include "re15_johnruf_r39.h"  /* Runde 39 Spur P: Johns Ruf 1041/1131, Panikphase Bit 97 (johnruf_r39.c) */
 #include "re15_untersuchen_r40.h" /* Runde 40: Text-Plaetze ROOM1120/1121 msg 1/3/4 (untersuchen_r40.c) */
 #include "re15_nahaufnahmen_r40.h" /* Runde 40: nie gezeigte Nahaufnahmen 11D0/1110/1100/11F0 (nahaufnahmen_r40.c) */
+#include "re15_ventilkette_r41.h" /* Runde 41 Spur C: STAGE2-Ventilkette (ventilkette_r41.c) */
 
 extern scd_vm_t g_scd;
 
@@ -515,6 +516,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     re15_johnruf_r39_install((uint16_t)g_current_room_id);    /* Runde 39 Spur P: 1041 Johns Ruf + Satz + Karte, 1131 lauterer Ruf (re15_johnruf_r39.h) */
     re15_untersuchen_r40_install((uint16_t)g_current_room_id); /* Runde 40: ROOM1120/1121 Bild/Fenster/Akten -> Plaetze 5..7 (re15_untersuchen_r40.h) */
     re15_nahaufnahmen_r40_install((uint16_t)g_current_room_id); /* Runde 40: Text-Plaetze 11D0/1110/1100 -> Ereignis 31 (re15_nahaufnahmen_r40.h) */
+    re15_ventilkette_r41_install((uint16_t)g_current_room_id, rdt); /* Runde 41 Spur C: Leiter 2000, Bruecke/Ventile 2030, 20B0, Pult 2050, Rechner 2080 (re15_ventilkette_r41.h) */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und

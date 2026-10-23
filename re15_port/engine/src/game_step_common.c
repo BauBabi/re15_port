@@ -1337,6 +1337,7 @@ void re15_game_step(const re15_game_ctx_t *c)
     re15_szl_tick();       /* Runde 36 Spur J: Irons-Kopf nach dem Tod, ROOM11B0-Erweiterung (re15_szenenleon_r36.h) */
     re15_tagebuch_r38_tick();   /* Runde 38 Spur G: nach Roys Diary Kartenkette Comms -> Prison (re15_tagebuch_r38.h) */
     { extern void re15_johnruf_r39_tick(void); re15_johnruf_r39_tick(); }   /* Runde 39 Spur P: Rettung -> Bit 97 aus, Panikmusik (re15_johnruf_r39.h) */
+    { extern void re15_ventilkette_r41_tick(void); re15_ventilkette_r41_tick(); }   /* Runde 41 Spur C: Zaehler/Flut 2030, Pult 2050 (re15_ventilkette_r41.h) */
     if (re15_map_hint_pending() >= 0 &&
         re15_menu_request_map_hint(re15_map_hint_pending()))
         re15_map_hint_take();

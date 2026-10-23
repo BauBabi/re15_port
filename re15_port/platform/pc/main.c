@@ -106,6 +106,7 @@ static inline int RNDI(float f) {
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: Feuerloescher (Boot-/CONTINUE-Weg + Prop-Lader) */
 #include "re15_itemorte_r38.h"      /* Runde 38 Spur K: Sichtbarkeitsregel Loescher 1030 / Schluessel 10F0 */
 #include "re15_dining_r38.h" /* Runde 38 Spur F: Dining Room Key (Boot-/CONTINUE-Weg, Prop-Lader, Icon/Bild) */
+#include "re15_ventilkette_r41.h" /* Runde 41 Spur C: Ventilkette (Boot-/CONTINUE-Weg, Wasserflaechen 2030, Pult-Zeiger 2050) */
 
 /* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
@@ -1598,6 +1599,11 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         const uint8_t *tb = re15_dining_r38_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
         if (f_oid >= 0 && nprops <= f_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[f_oid]) == 0) ok[f_oid] = 1;
         if (f_oid >= 0 && nprops <= f_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(f_oid)); }
+    for (int vk = 0; vk < 2; vk++) {   /* Runde 41 Spur C: zwei Wasserflaechen ROOM2030/2031 (ROOM2080 Prop 0, gen/ventilkette_r41_wasser.inc), Muster oben. */
+        const int v_oid = re15_ventilkette_r41_obj_id((uint16_t)g_current_room_id, vk);
+        int msz = 0, tsz = 0; const uint8_t *mb = re15_ventilkette_r41_md1_bytes(&msz); const uint8_t *tb = re15_ventilkette_r41_tim_bytes(&tsz); re15_tim_t tt;
+        if (v_oid >= 0 && nprops <= v_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[v_oid]) == 0) ok[v_oid] = 1;
+        if (v_oid >= 0 && nprops <= v_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(v_oid)); }
 }
 
 /* ── FE-4 memory-card save/load ────────────────────────────────────────────── */
@@ -5004,6 +5010,7 @@ re_title:;
       re15_elzazombies_r39_geladen((uint16_t)g_current_room_id); }
     { extern void re15_johnruf_r39_install(uint16_t);   /* Runde 39 Spur P: 1041/1131 + Xa_vol-Init, derselbe Grund (Boot-/CONTINUE-Weg) */
       re15_johnruf_r39_install((uint16_t)g_current_room_id); }
+    re15_ventilkette_r41_install((uint16_t)g_current_room_id, rdt_ok ? &rdt : NULL);   /* Runde 41 Spur C: derselbe Grund (Boot-/CONTINUE-Weg) */
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
@@ -5595,6 +5602,7 @@ re_title:;
             } else {
                 re15_bg_blit(0, 0);
             }
+            re15_ventilkette_r41_zeichnen();   /* Runde 41 Spur C: Zeiger + Hebelmarken des 2050-Pults (Cut 15), gleiche Lage wie der 11F0-Zeiger */
             /* DER ROTE LEISTUNGS-ZEIGER des Boiler-Room-Bedienfelds (ROOM11F0, Cut 10).
              * Direkt nach dem Hintergrund und vor dem 3D-Pass, weil er zur ANZEIGE des
              * Bedienfelds gehoert (die Skala selbst steckt im BSS). Er liegt bei x 282,
