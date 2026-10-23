@@ -5,6 +5,9 @@ Zeiten immer aus der Uhr (date), nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-23 10:33: Commit c93af9f8 (Nahaufnahmen), gezielt 91/91. Release-Lauf `release_alles.sh --tag --linux-jobs 6`
+  gestartet (Protokolle release/logs/v0.8.28_*). Offen: Rueckfrage Nutzer-Masken pri/STAGE1/11A0 + pri/STAGE2/*.
+
 * 2026-10-23 10:18: Nutzer: "GIbt es noch weitere Dinge in STAGE1 mit son einer Nahaufnahme ... Wenn ja, baue die ruhig
   mit ein." Zensus "Kamera ohne Ausloeser" (keine RVD-Zielzone, kein Cut_chg/Cut_replace, kein Tuer-Eintritt aus irgendeinem
   Raum): 54 Eintraege / 34 Bilder in STAGE1. Nahaufnahmen vor einer passenden Untersuchungsstelle -> eingebaut
@@ -45,3 +48,23 @@ Zeiten immer aus der Uhr (date), nie schätzen.
   Die Hunde kommen über die Falle: Item 0x05 (15 Stück, Bit (9,0x9B)) im Lager, sub03 @0x01892 -> sub02 @0x01728
   (Member_set 0x0C = 0x42 für alle fünf, Cut 13).
 * Ergebnis: vom Rätsel existiert nur das Bild und der Kamerasatz.
+
+## Befund STAGE2 (Nutzerfragen 2026-10-23, nur Analyse, kein Code)
+
+* ROOM2030/2031 Mittelplattform: obj 0 (main00 @0x01B6C, Lage (-1075,-1800,-275)) wird von keinem Skript bewegt (kein
+  Work_set(3,0)). Kollision: Steg Nord-Sued durch die Schachtmitte auf Band 1 (y -1800), Zellen 3/4 Gelaender
+  x -2550..-2050 / -50..450, Zelle 12 Lauf x -2050..-50 z -5950..5450 (u0 0), darunter Zelle 17 Band 0 (u0 FF).
+  Keine Halte-Zelle ueber der Mitte auf Band 3/6/9. Nie geschaltete Kameras: Cut 14 (pixelgleich zu Cut 3), Cut 15
+  (P(-875,-12710,-217), Schachtmitte oben, Blick auf die Doppeltuer Band 3). Kein Text, kein Flag. Die beiden
+  Seitenlifte (obj 1 sub02/03, obj 2 sub04/05) sind vollstaendig und haengen am Generator 2060 ((3,0x7E) @0x012AE,
+  gelesen 2030 sub01 @0x01E14). RE2-Gegenstueck: ROOM4080 (Wasserhalle mit runder Mittelsaeule), sub05 @0x00FC
+  Fahrt-Signatur `22 01 1c 01 09 0a 08 00 22 01 1c 00 09 0a 14 00`, Zustand (4,0x1E), Sca_id_set/Cut-Varianten.
+* ROOM2050/2051 Hebel: aktiv sind Hebel sub04 (Fuellen/Ablassen, (3,0x68)) und das Kisten-Raetsel (obj 1-3 Typ 4 in
+  die Zonen Platz 3-5 -> (5,0..2) -> sub01 @0x0201A Platz 6 -> sub02 Endzustand (3,0x6D), obj 0 bei y -3600).
+  Ueberrest: Schaltpult Cut 15 (2D, 3 grosse + 1 kleiner Hebel, "DANGER High voltage KEEP OUT", Skala 0-90, 80 rot),
+  Cut 14 (Weltansicht Schaltschrank, nie geschaltet), Ausloeser Platz 8 (4000,-8450,1800,800) Band 3 -> sub09 nur bei
+  (5,7)=1 (main00 @0x01D30), das nichts setzt; Cursor obj 8 (Modell/Lage wie VUS 1100), Bewegung sub05-08 und
+  Ausstieg sub10 fertig, KEINE Schalter-/Spannungslogik, kein Ergebnis-Flag. Vorbilder: 2060 Generator (4 Schalter,
+  Loesung (5,6..9)=1,0,1,0 -> (3,0x7E)), 11F0 Notstrom (Ziel 80).
+* ROOM2080: (3,0xF5) ist ein Raum-Merkflag (sub02 @0x00C94 setzt, sub00 @0x00C02 liest; Wasser obj 0 sinkt, Tuer 1
+  frei) - kein toter Ausgang.
