@@ -96,3 +96,23 @@ Vereinbarte Reihenfolge: (1) Release v0.8.28 [erledigt], (2) 20B0-Wasser im Orig
 - Die 20B0-Flut ist im Port kaputt: EM024 (Typ 0x24, Partikel-Emitter) Unterzweige grid 0/1 (0x8010f130 / 0x8010f3fc
   -> 0x80019700) stehen in enemy_ai_common.c als OFFEN.
 - Elzas Variante der Zeile "Hey, Leon, try with this!" heisst sinngemaess "Hey, Elza, try with this!" (John).
+
+## 2026-10-23 21:37 — Orchestrator-Entscheide zu den Fragen der Spuren B und C (Dossier-Stand beim Sitzungslimit; der Nutzer kann widersprechen)
+
+Spur B (re2gator, §7):
+- B1 Tempo: RE2-Werte bleiben (Schwimmen 24,5/Bild in der Biss-Sperre, Paddeln ~149/Bild, Zonen-Dashes) — Nutzer-
+  Wortlaut "fast alles vom Aligator Fight von Resident Evil 2 uebernehmen ... an gleichen Stellen beschleunigt". Kein
+  Deckel; Nutzer testet das Tempo im Becken und entscheidet dann.
+- B2 Beschuss toetet nicht (RE2-Sockel 25300), Tod nur ueber den Kanister (Spur G), Grossreaktion 25 % je Treffer mit
+  2-3 s Sperre wie RE2 — angenommen (deckt sich mit dem Nutzer-Design: Treffer-Schwelle -> Szene -> Kanister -> Tod).
+- B3 Putz nur an den RE2-Stellen (Dash-Start), nicht bei jedem starken Schuetteln — angenommen ("ab und an").
+- Fortsetzung: Baum ist auf 86661849 gesichert (UNGEPRUEFT); gezielte Tests zu Ende fahren, Dossier §4/§5 abschliessen,
+  Abschluss-Commit feat(r41-re2gator).
+
+Spur C (ventilkette, §7):
+- C-a Hebelgewichte 30/20/40/10 (Loesung 1 + 3 + klein) — angenommen. C-b Bruecke oben = Ringebene y -5400 — angenommen.
+- C-c Flut gilt auch beim Verlassen ueber die oberen Tueren — angenommen (Nutzer: "verlaesst man den Raum").
+- C-d Lift-Rufzonen nach der Flut mit dem Original-Satz 1 — angenommen. C-e Ertrinken = Tod + blaue Blende + Spritzer,
+  ohne eigenen Ton (RE2 hat keinen) — angenommen.
+- Port-Texte 2000/2030/2050/2080 (Dossier §7) gelten bis zur Freigabe des Nutzers als Vorschlag; Wortlaut-Vorgaben
+  des Nutzers unveraendert.
