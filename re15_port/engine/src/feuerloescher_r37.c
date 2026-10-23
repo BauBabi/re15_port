@@ -18,6 +18,7 @@
 #include "re15_room.h"        /* g_current_room_id */
 #include "re15_gameflow.h"    /* re15_char_variant (Leon 0 / Elza 1) */
 #include "re15_itemorte_r38.h" /* Runde 38 Spur K: Lage ROOM1030 + Slot-Freimachen */
+#include "re15_blink_r41.h"    /* Runde 41 Spur D: Helligkeitspuls des aufnehmbaren Loeschers */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #endif
@@ -191,6 +192,7 @@ void re15_feuerloescher_r37_install(uint16_t room_id)
         g_scd.props[i].flags = RE15_FL37_PROP_FLAGS;      /* 0x000A | 1 @0x80040998         */
         g_scd.props[i].attr  = RE15_FL37_PROP_ATTR;       /* 0 = NCCT (@0x8002c2f4 Bit 0x10 aus) */
     }
+    (void)re15_blink_r41_setzen(room_id, RE15_FL37_OBJ, g->zone_item);   /* Runde 41 Spur D: Puls nur, wo der Loescher aufnehmbar ist (ROOM1030) */
 
     /* ZONE — nur in einen freien Slot (fremde Saetze bleiben unberuehrt). */
     re15_itemorte_r38_platz_frei(room_id, (int)g->slot);   /* Runde 38 Spur K: ROOM1030 Slot 14 (msg 14) -> 20 */

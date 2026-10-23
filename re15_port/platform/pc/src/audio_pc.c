@@ -521,6 +521,10 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
         }
     }
 
+    /* Runde 41 Spur D: Lautstaerke-Endstufe — EINE Stelle fuer SE/Stimmen/FMV/BGM/Ambience, nach der Mono-
+     * Faltung; Q15, 100 % = 0x8000 = unveraendert (include/re15_lautstaerke_r41.h). */
+    { extern int re15_lautstaerke_r41_q15(void); const int q = re15_lautstaerke_r41_q15();
+      if (q != 0x8000) for (int i = 0; i < frames * 2; i++) out[i] = (int16_t)(((int32_t)out[i] * q) >> 15); }
     if (s_audio_cap) fwrite(stream, 1, (size_t)len, s_audio_cap);   /* RE15_AUDIO_CAP verify hook */
 }
 

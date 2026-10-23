@@ -326,8 +326,11 @@ static void teil_b(re15_actor_t *e, int re2, const char *name)
         if (f_treffer < 0 && pl->hp < 100) { f_treffer = f; break; }
     }
     CHECK(max_plaetze == 3, "%s: Spucken spawnt %d Gift-Plaetze (Effekt 0x0d sub 0 = 3 Stroeme)", name, max_plaetze);
-    CHECK(f_treffer >= 0 && pl->hp == 90, "%s: Treffer nach %d Bildern, HP %d (= 100 - 10, Resolver Art 0 @0x80018004, "
-          "DAT_8006f418[0] = 10)", name, f_treffer, pl->hp);
+    /* Runde 41 Spur D: unter dem RE2-Gehirn trifft die Giftkugel wie RE2 Op 32 mit 20 HP (`li a2,0x14` @0x800200dc,
+     * giftkugel_r41.c); RE1.5-Gehirn unveraendert 10 (Resolver Art 0 @0x80018004, DAT_8006f418[0]). */
+    const int erwartet = re2 ? 100 - 20 : 100 - 10;
+    CHECK(f_treffer >= 0 && pl->hp == erwartet, "%s: Treffer nach %d Bildern, HP %d (= %d; RE1.5 Resolver Art 0 @0x80018004 "
+          "DAT_8006f418[0] = 10 / RE2 Op 32 @0x800200dc = 20)", name, f_treffer, pl->hp, erwartet);
     CHECK(pl->state == 2, "%s: Spieler Zustand %d (= 2 getroffen @0x80012ebc)", name, pl->state);
     CHECK((pl->status_flags & 2u) && re15_spinnen_r38_gift_treffer() >= 1,
           "%s: GIFT gesetzt (status 0x%04X, Treffer %u) — RE2 Op 32 `sh 5400,0x800cfe10` @0x80020130", name,
