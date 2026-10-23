@@ -35,6 +35,7 @@
 #include "re15_objfall_r36.h"  /* Runde 36 Spur A: Objekt-Fall FUN_8002c444 (objfall_r36.c) */
 #include "re15_story_r36.h"    /* Runde 36 Spur P: Roy 1020 / Zelle 1210 / Schuppen 1091 (story_r36.c) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: ROOM11B0 Werkstatt-Tuer (szenenleon_r36.c) */
+#include "re15_werkstatt11b1_r41.h"   /* Runde 41 Spur E: ROOM11B1 Werkstatt-Tuer zu (werkstatt11b1_r41.c) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Schluessel 10F0/10F1 + Parkplatz-Tuer 11B0 */
 #include "re15_ziel1190.h"     /* Runde 36 Spur H: Scheiben-Texte ROOM1190/1191 (ziel_1190.c) */
 #include "re15_kartenitems_r36.h" /* Runde 36 Spur N: Lageplaene zum Aufsammeln (kartenitems_r36.c) */
@@ -380,6 +381,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     if (rdt && rdt->main_scd)   scd_thread_start(0, rdt->main_scd);    /* init  = main00 */
     if (rdt && rdt->sub_scd[0]) scd_thread_start(1, rdt->sub_scd[0]);  /* main  = sub00  */
     re15_szl_init_lauf((uint16_t)g_current_room_id);   /* Runde 36 Spur J: Ereignis 23 im Init-Lauf hinter sub00 */
+    re15_werkstatt11b1_r41_init_lauf((uint16_t)g_current_room_id);   /* Runde 41 Spur E: ROOM11B1 Werkstatt-Tuer zu, Ereignis 24 hinter sub00 (re15_werkstatt11b1_r41.h) */
 
     /* RE2-KARTENSYSTEM: den geladenen Raum als BESUCHT markieren (Port-Erweiterung,
      * re15_map_visited.c) — dieser Choke-Point deckt Boot, Tuer, Selbst-Tuer und Load. */
