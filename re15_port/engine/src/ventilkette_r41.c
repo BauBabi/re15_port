@@ -43,6 +43,7 @@ extern void re15_scd_show_message(uint8_t index, uint32_t pause_mask);
 
 /* ---- Zustand (nicht gespeichert; die Spielbits stehen in Bank 9) ------------------------------------------ */
 static int      s_timer   = 0;      /* 2030: Zaehler laeuft (Faden schlaeft 1800 Takte)                      */
+static int      s_timer_gesehen = 0;/* 2030: Marker (5,0x1D) schon verbraucht (einmal je Raumstart)          */
 static int      s_flut    = 0;      /* 2030: Flut laeuft (Wasser steigt)                                      */
 static int      s_ertrunken = 0;
 static int      s_fade_an = 0;
@@ -258,6 +259,9 @@ static void install_2000(uint16_t room_id)
     if (!bit(RE15_R41C_BIT_LEITER_FREI)) {
         re15_aot_t *a = &g_aot.slots[RE15_R41C_SLOT_2000_LEITER];
         if (a->active && a->type == RE15_AOT_TYPE_DOOR) {
+            /* Tuersaetze tragen ihr Band in door_params (Door_aot_set pc[4]); das Band-Gate des Aktions-Scans
+             * (FUN_80042cac) liest fuer Text-Plaetze das Slot-Band -> uebertragen wie adaruf_1050.c. */
+            a->band = g_aot.door_params[RE15_R41C_SLOT_2000_LEITER].band;
             sperrtext(RE15_R41C_SLOT_2000_LEITER, RE15_R41C_MSG_LEITER);
             LOG("[ventilkette41] ROOM%04X: Leiter Slot 4 (@0x0169E) -> Sperrtext %d (Form ROOM2030 @0x01B12)\n",
                 (unsigned)room_id, RE15_R41C_MSG_LEITER);
@@ -325,10 +329,12 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
         bit_setzen(RE15_R41C_BIT_LEITER_FREI);
         LOG("[ventilkette41] Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100 (Flut gelaufen, Leiter frei)\n");
     }
-    s_timer = 0; s_flut = 0; s_ertrunken = 0; s_spritzer_takt = 0;
+    s_timer = 0; s_timer_gesehen = 0; s_flut = 0; s_ertrunken = 0; s_spritzer_takt = 0;
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
+    re15_game_flag_set(5, RE15_R41C_FLAG_TIMER, 0);   /* Raum-Scratch, wie das Raumladen (FUN_8003ecec @0x8003ed74) */
+    re15_game_flag_set(5, RE15_R41C_FLAG_FLUT, 0);
     s_v13_vorher = bit(RE15_R41C_BIT_VENTIL13);
     s_letzter_raum = room_id;
 
@@ -343,7 +349,7 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
 void re15_ventilkette_r41_reset(void)
 {
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
-    s_timer = 0; s_flut = 0; s_ertrunken = 0; s_spritzer_takt = 0; s_v13_vorher = -1; s_letzter_raum = 0xFFFFu;
+    s_timer = 0; s_timer_gesehen = 0; s_flut = 0; s_ertrunken = 0; s_spritzer_takt = 0; s_v13_vorher = -1; s_letzter_raum = 0xFFFFu;
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
 }
@@ -406,7 +412,7 @@ int re15_ventilkette_r41_zeiger_x(int wert)
 {
     if (wert < 0) wert = 0;
     if (wert > 100) wert = 100;
-    return (RE15_R41C_SKALA_X0_100 + RE15_R41C_SKALA_PX_100 * wert + 5) / 10;
+    return (RE15_R41C_SKALA_X0_100 + RE15_R41C_SKALA_PX_100 * wert + 50) / 100;   /* 165.5 + 0.91 * Wert */
 }
 
 static void panel_tick(void)
@@ -494,8 +500,10 @@ void re15_ventilkette_r41_tick(void)
         const int v13 = bit(RE15_R41C_BIT_VENTIL13);
         if (s_v13_vorher == 0 && v13) re15_audio_re2_panel_se(RE15_PANEL_SE_KLICK);
         s_v13_vorher = v13;
-        /* Zaehler gestartet (Programm 2030_ventile Set(5,0x3D)): Ost-Tuer -> 20B0, Wasser parken */
-        if (!s_timer && re15_game_flag_get(5, RE15_R41C_FLAG_TIMER)) {
+        /* Zaehler gestartet (Programm 2030_ventile Set(5,0x1D), genau einmal je Raumstart): Ost-Tuer -> 20B0,
+         * Wasser parken. s_timer_gesehen bleibt stehen, auch wenn der Tod s_timer loescht. */
+        if (!s_timer_gesehen && re15_game_flag_get(5, RE15_R41C_FLAG_TIMER)) {
+            s_timer_gesehen = 1;
             s_timer = 1;
             if (g_aot.slots[RE15_R41C_SLOT_2030_OSTTUER].type == RE15_AOT_TYPE_DOOR)
                 tuer_nach_20b0(RE15_R41C_SLOT_2030_OSTTUER, 5950, -1800, -6400, 2048, 11, "Zaehler laeuft");

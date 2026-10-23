@@ -28,6 +28,7 @@
 #include "re15_inventory.h"
 #include "re15_esp.h"
 #include "re15_fade.h"
+#include "re15_collision.h"
 #include "re15_ventilkette_r41.h"
 #include "gen/ventilkette_r41_original.inc"
 
@@ -57,6 +58,13 @@ static uint8_t *slurp(const char *path, long *out_sz)
 
 static uint8_t *s_daten = NULL;
 static re15_rdt_t s_rdt;
+static re15_esp_t s_esp;
+
+/* Spielbits, die VOR dem Raumstart gelten sollen: scd_vm_init() loescht alle Flags (re15_game_state_init,
+ * scd_vm.c:566), deshalb werden sie nach den Inits und vor scd_room_reenter gesetzt (wie ein Spielstand). */
+static struct { uint8_t zone, idx; } s_vf[16];
+static int s_nvf = 0;
+static void vorflag(uint8_t zone, uint8_t idx) { if (s_nvf < 16) { s_vf[s_nvf].zone = zone; s_vf[s_nvf].idx = idx; s_nvf++; } }
 
 static uint8_t *rdt_lesen(uint16_t raum, long *sz)
 {
@@ -64,6 +72,8 @@ static uint8_t *rdt_lesen(uint16_t raum, long *sz)
     snprintf(pfad, sizeof pfad, RE15_ASSET_PSX_DIR "/STAGE%d/ROOM%04X.RDT", (raum >> 12), raum);
     return slurp(pfad, sz);
 }
+
+static void band_aus_y(int32_t y) { re15_collision_set_band(re15_collision_band_from_y(y)); }
 
 static int raum_hoch(uint16_t raum, int32_t x, int32_t y, int32_t z)
 {
@@ -73,14 +83,20 @@ static int raum_hoch(uint16_t raum, int32_t x, int32_t y, int32_t z)
     if (!s_daten || re15_rdt_parse(s_daten, (size_t)sz, &s_rdt) != 0) return -1;
     re15_actor_init(); re15_aot_init();
     scd_vm_init(); re15_inv_init();
+    for (int i = 0; i < s_nvf; i++) re15_game_flag_set(s_vf[i].zone, s_vf[i].idx, 1);
     memset(&g_room_change, 0, sizeof g_room_change);
     g_current_room_id = raum;
     scd_register_current_rdt(&s_rdt);
     re15_msg_clear_room_block();
     re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
+    /* Effekt-Bank des Raums wie main.c (RDT+0x4C/0x50/0x54/0x58), damit Sce_espr_on Strahlen anlegt. */
+    { uint32_t idh = 0, pe = 0, tb = 0, te = 0;
+      memcpy(&idh, s_daten + 0x4C, 4); memcpy(&pe, s_daten + 0x50, 4); memcpy(&tb, s_daten + 0x54, 4); memcpy(&te, s_daten + 0x58, 4);
+      if (re15_esp_parse(s_daten, (size_t)sz, idh, pe, tb, te, &s_esp) == 0) re15_esp_set_room_bank(&s_esp); else re15_esp_set_room_bank(NULL); }
     re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     p->active = 1; p->type = 0; p->hp = 100;
     p->x = x; p->y = y; p->z = z; p->rot_y = 0; p->state = 1;
+    re15_collision_reset_band(); band_aus_y(y);
     g_scd.player_mode = 0;
     scd_register_room_events(&s_rdt);
     scd_room_reenter(&s_rdt, p->x, p->z, 0);
@@ -114,6 +130,7 @@ static lauf_t druecken(int32_t x, int32_t z, int rot, int nein, int max_takte)
     lauf_t L; memset(&L, 0, sizeof L);
     re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     p->x = x; p->z = z; p->rot_y = (int16_t)rot;
+    band_aus_y(p->y);   /* Band-Gate der Aktion (FUN_80042cac): Spielerband = Band der Stelle */
     L.cut_vorher = g_scd.work_vars[0x0A];
     L.cuts[L.n_cuts++] = L.cut_vorher;
     g_aot.fired_event_id_this_frame = 0;
@@ -132,7 +149,8 @@ static lauf_t druecken(int32_t x, int32_t z, int rot, int nein, int max_takte)
             }
             if ((i & 7) == 7 && (g_scd.message_fsm == 1 || g_scd.message_fsm == 3 ||
                                  g_scd.message_fsm == 4 || g_scd.message_fsm == 7)) {
-                if (nein && !umgeschaltet && re15_msg_is_choice(g_scd.message_id)) { g_scd_pad_edge = 0x1000; umgeschaltet = 1; }
+                /* "Nein" nur in der Auswahl (fsm 3 = SELECT); bei zweiseitigen Fragen kommt davor PAGE_WAIT (1) */
+                if (nein && !umgeschaltet && g_scd.message_fsm == 3) { g_scd_pad_edge = 0x1000; umgeschaltet = 1; }
                 else g_scd_pad_edge = 0x4000;
             }
         } else offen = -1;
@@ -159,7 +177,7 @@ static void zeige(const char *was, uint16_t raum, const lauf_t *L)
 }
 
 static int bit(int b) { return re15_game_flag_get(RE15_R41C_BANK, (uint8_t)b) ? 1 : 0; }
-static void bits_leeren(void) { re15_game_state_init(); re15_ventilkette_r41_reset(); }
+static void bits_leeren(void) { re15_game_state_init(); re15_ventilkette_r41_reset(); s_nvf = 0; }
 
 static int prop_von_obj(int obj)
 {
@@ -249,25 +267,28 @@ static void fall_a(void)
 static void fall_b(uint16_t r2000, uint16_t r20b0)
 {
     bits_leeren();
-    if (raum_hoch(r2000, -25900, -1800, 10300) != 0) { PRUEFE(0, "ROOM%04X Parse", r2000); return; }
+    if (raum_hoch(r2000, -25950, -1800, 10300) != 0) { PRUEFE(0, "ROOM%04X Parse", r2000); return; }
     const re15_aot_t *a = &g_aot.slots[RE15_R41C_SLOT_2000_LEITER];
     PRUEFE(a->active && a->type == RE15_AOT_TYPE_MESSAGE && a->event_id == RE15_R41C_MSG_LEITER,
            "ROOM%04X: Leiter Slot 4 aktiv=%d Typ=%d msg=%d (erwartet Text 40)", r2000, a->active, a->type, a->event_id);
-    lauf_t L = druecken(-25900, 10300, 2048, 0, 400); zeige("leiter", r2000, &L);
+    /* Leiter-Rechteck x -27600..-26600 (Slot 4 @0x0169E, Mitte -27100 +- 500), Spieler bei x -26000 Blick -x:
+     * Vorwaertspunkt -26620 */
+    lauf_t L = druecken(-26000, 10300, 2048, 0, 400); zeige("leiter", r2000, &L);
     PRUEFE(L.n_msgs >= 1 && L.msgs[0] == RE15_R41C_MSG_LEITER, "ROOM%04X: Aktion an der Leiter zeigt Text 40", r2000);
-    PRUEFE(memcmp(&g_room_change, "\0\0\0\0", 4) == 0 || !g_room_change.pending, "ROOM%04X: kein Raumwechsel ausgeloest", r2000);
+    PRUEFE(!g_room_change.pending, "ROOM%04X: kein Raumwechsel ausgeloest", r2000);
     /* mit Bit 100: Tuer */
-    bits_leeren(); re15_game_flag_set(RE15_R41C_BANK, RE15_R41C_BIT_LEITER_FREI, 1);
-    if (raum_hoch(r2000, -25900, -1800, 10300) != 0) { PRUEFE(0, "Parse"); return; }
+    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_LEITER_FREI);
+    if (raum_hoch(r2000, -25950, -1800, 10300) != 0) { PRUEFE(0, "Parse"); return; }
     PRUEFE(g_aot.slots[4].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[4].dest_room == 5,
            "ROOM%04X mit Bit 100: Leiter ist Tuer nach ROOM2050 (Typ %d, Ziel %d)", r2000, g_aot.slots[4].type, g_aot.door_params[4].dest_room);
     /* 20B0 ohne Bit 100 (Debug-Sprung): ebenfalls Sperrtext; mit (3,235)=1 die drei Strahlen (Original) */
-    bits_leeren(); re15_game_flag_set(3, 235, 1);
-    if (raum_hoch(r20b0, -25900, -1800, 10300) != 0) { PRUEFE(0, "ROOM%04X Parse", r20b0); return; }
+    bits_leeren(); vorflag(3, 235);
+    if (raum_hoch(r20b0, -25950, -1800, 10300) != 0) { PRUEFE(0, "ROOM%04X Parse", r20b0); return; }
     PRUEFE(g_aot.slots[4].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[4].event_id == RE15_R41C_MSG_LEITER,
            "ROOM%04X ohne Bit 100: Leiter = Text 40", r20b0);
     int n_ohne = strahlen_zaehlen();
-    PRUEFE(n_ohne == 3, "ROOM%04X (3,235)=1 ohne Bit 100: %d Strahlen (Original 3 @0x01E96..)", r20b0, n_ohne);
+    /* drei Sce_espr_on @0x01E96/@0x01EA6/@0x01EB6 zu je 6 Stroemen (re15_esp.c, Effekt 0x0b) = 18 Effektplaetze */
+    PRUEFE(n_ohne == 18, "ROOM%04X (3,235)=1 ohne Bit 100: %d Strahlen-Plaetze (Original 3 x 6)", r20b0, n_ohne);
 }
 
 /* ---- C: Bruecke, Pult, Ventil 13 --------------------------------------------------------------------------- */
@@ -315,7 +336,8 @@ static void fall_c(uint16_t r)
     PRUEFE(L.takte >= 60 && L.takte <= 200, "ROOM%04X Pult Ja: Fahrt %d Takte (30 Schritte x 2 Evt_next + Sleep 20)", r, L.takte);
     L = druecken(350, -9500, 1024, 0, 400); zeige("pult unten", r, &L);
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_BRUECKE_UNTEN, "ROOM%04X Pult danach: Zustandssatz 44", r);
-    /* Neustart des Raums mit Bit 102: unten, Zelle offen */
+    /* Neustart des Raums mit Bit 102 (wie ein Spielstand): unten, Zelle offen */
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     if (raum_hoch(r, 350, -5400, -9500) != 0) { PRUEFE(0, "Parse"); return; }
     pb = prop_von_obj(0);
     PRUEFE(pb >= 0 && g_scd.props[pb].y == RE15_R41C_BRUECKE_Y_UNTEN && zelle12_u0(0) == 0x00 && zelle12_u0(4) == 0x00,
@@ -326,12 +348,12 @@ static void fall_c(uint16_t r)
 static void fall_d(uint16_t r)
 {
     bits_leeren();
-    re15_game_flag_set(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13, 1);
-    re15_game_flag_set(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN, 1);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     if (raum_hoch(r, 6500, -5400, -200) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
-    lauf_t L = druecken(6500, -200, 2048, 1, 300); zeige("ventile nein", r, &L);
-    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_FRAGE && !re15_ventilkette_r41_timer_laeuft(),
-           "ROOM%04X Ventile Nein: nur Frage, kein Zaehler", r);
+    lauf_t L = druecken(6500, -200, 2048, 1, 400); zeige("ventile nein", r, &L);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_FRAGE && !re15_ventilkette_r41_timer_laeuft() && !g_scd.message_active,
+           "ROOM%04X Ventile Nein: nur Frage, kein Zaehler (msgs %d, timer %d)", r, L.n_msgs, re15_ventilkette_r41_timer_laeuft());
     /* Ja: Frage + Warnung, dann schlaeft der Faden (druecken bricht nach 600 Takten ab) */
     L = druecken(6500, -200, 2048, 0, 600); zeige("ventile ja", r, &L);
     PRUEFE(L.n_msgs == 2 && L.msgs[0] == RE15_R41C_MSG_VENTILE_FRAGE && L.msgs[1] == RE15_R41C_MSG_WARNUNG,
@@ -347,14 +369,14 @@ static void fall_d(uint16_t r)
     PRUEFE(re15_ventilkette_r41_programm("2030_ventile", NULL) != NULL, "Programm 2030_ventile");
     /* Zaehler bis zum Ende: 1800 Takte Sleep (600 liefen schon in druecken) */
     int takte = 0, flut_bei = -1, tot_bei = -1;
-    int32_t wy_vorher = 0;
+    int32_t wy_vorher = 0, wy_tot = 0;
     for (int i = 0; i < 2800; i++) {
         g_scd_pad_edge = 0; g_scd_pad_held = 0;
         if (g_scd.message_active && (i & 7) == 7) g_scd_pad_edge = 0x4000;
         takt(); takte++;
         g_scd_pad_edge = 0;
         if (flut_bei < 0 && re15_ventilkette_r41_flut_laeuft()) { flut_bei = takte; wy_vorher = g_scd.props[pa].y; }
-        if (tot_bei < 0 && g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0) tot_bei = takte;
+        if (tot_bei < 0 && g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0) { tot_bei = takte; wy_tot = g_scd.props[pa].y; }
         if (flut_bei > 0 && takte == flut_bei + 10) {
             PRUEFE(g_scd.props[pa].y == wy_vorher - 10 * RE15_R41C_WASSER_SCHRITT || g_scd.props[pa].y < wy_vorher,
                    "ROOM%04X: Wasser steigt 50/Takt (y %d -> %d nach 10 Takten)", r, (int)wy_vorher, (int)g_scd.props[pa].y);
@@ -363,14 +385,18 @@ static void fall_d(uint16_t r)
     }
     printf("  ROOM%04X Flut bei Takt %d (nach druecken +600), tot bei %d, Wasser y %d, Spieler y %d\n", r, flut_bei, tot_bei,
            pa >= 0 ? (int)g_scd.props[pa].y : 0, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].y);
-    PRUEFE(flut_bei > 0 && flut_bei + 600 >= RE15_R41C_ZAEHLER_BILDER - 40 && flut_bei + 600 <= RE15_R41C_ZAEHLER_BILDER + 80,
-           "ROOM%04X: Flut nach ~1800 Takten (gemessen %d + 600)", r, flut_bei);
+    /* 1800 Takte Sleep ab dem Schliessen der Warnung; davor Frage (2 Seiten) + Warnung im druecken-Lauf (je 8 Takte
+     * Tastentakt + Schreibmaschine), gemessen ~300 Takte -> Flut zwischen 1800 und 1800 + 450 nach der Aktion */
+    PRUEFE(flut_bei > 0 && flut_bei + 600 >= RE15_R41C_ZAEHLER_BILDER && flut_bei + 600 <= RE15_R41C_ZAEHLER_BILDER + 450,
+           "ROOM%04X: Flut nach 1800 Takten Sleep (gemessen %d + 600 nach der Aktion)", r, flut_bei);
     PRUEFE(re15_game_flag_get(2, 7) == 1 || tot_bei > 0, "ROOM%04X: Pad-Sperre waehrend der Flut", r);
     PRUEFE(g_scd.cam_id == RE15_R41C_FAHRT_CUT, "ROOM%04X: Flut unter Cut 4 (cam %d)", r, g_scd.cam_id);
     PRUEFE(tot_bei > 0 && re15_ventilkette_r41_ertrunken() && g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0,
            "ROOM%04X: Zeit abgelaufen und noch im Raum -> tot (hp %d)", r, g_actors[RE15_ACTOR_SLOT_PLAYER].hp);
-    PRUEFE(tot_bei > 0 && g_scd.props[pa].y <= -5400 - RE15_R41C_ERTRINK_TIEFE + RE15_R41C_WASSER_SCHRITT,
-           "ROOM%04X: Tod, als das Wasser 900 ueber den Fuessen stand", r);
+    PRUEFE(tot_bei > 0 && wy_tot <= -5400 - RE15_R41C_ERTRINK_TIEFE && wy_tot > -5400 - RE15_R41C_ERTRINK_TIEFE - RE15_R41C_WASSER_SCHRITT,
+           "ROOM%04X: Tod, als das Wasser 900 ueber den Fuessen stand (Wasser y %d beim Tod, Fuesse -5400)", r, (int)wy_tot);
+    PRUEFE(g_scd.props[pa].y == RE15_R41C_WASSER_Y_ENDE, "ROOM%04X: Wasser am Ende auf der Tuerebene y %d (ist %d)", r,
+           RE15_R41C_WASSER_Y_ENDE, (int)g_scd.props[pa].y);
     PRUEFE(!(g_fade_ch[RE15_R41C_FADE_KANAL].level & 0x8000) && g_fade_ch[RE15_R41C_FADE_KANAL].mask_b == 0xff &&
            g_fade_ch[RE15_R41C_FADE_KANAL].mask_r == 0, "ROOM%04X: blaue Blende aktiv (level %04x r %02x b %02x)", r,
            g_fade_ch[RE15_R41C_FADE_KANAL].level, g_fade_ch[RE15_R41C_FADE_KANAL].mask_r, g_fade_ch[RE15_R41C_FADE_KANAL].mask_b);
@@ -387,16 +413,20 @@ static void fall_d(uint16_t r)
 static void fall_e(uint16_t r2030, uint16_t r20b0, uint16_t r2000, uint16_t r2010, uint16_t r2050, uint16_t r2070, uint16_t r1260)
 {
     bits_leeren();
-    re15_game_flag_set(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13, 1);
-    re15_game_flag_set(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN, 1);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     if (raum_hoch(r2030, 6500, -5400, -200) != 0) { PRUEFE(0, "Parse"); return; }
     lauf_t L = druecken(6500, -200, 2048, 0, 600);
     PRUEFE(re15_ventilkette_r41_timer_laeuft(), "ROOM%04X: Zaehler laeuft", r2030);
     /* Raumwechsel waehrend des Zaehlers (= Tuer): Installer des naechsten Raums setzt 103 + 100 */
-    re15_game_flag_set(3, 235, 1);   /* 20B0 nach der Auswasch-Szene (sub05 @0x01FBC), damit der Else-Zweig laeuft */
-    if (raum_hoch(r20b0, -25900, -1800, 10300) != 0) { PRUEFE(0, "ROOM%04X Parse", r20b0); return; }
+    vorflag(3, 235);   /* 20B0 nach der Auswasch-Szene (sub05 @0x01FBC), damit der Else-Zweig laeuft */
+    if (raum_hoch(r20b0, -25950, -1800, 10300) != 0) { PRUEFE(0, "ROOM%04X Parse", r20b0); return; }
     PRUEFE(bit(RE15_R41C_BIT_FLUT_GELAUFEN) == 1 && bit(RE15_R41C_BIT_LEITER_FREI) == 1, "Verlassen -> Bits 103 + 100");
     PRUEFE(!re15_ventilkette_r41_timer_laeuft(), "Zaehler nach dem Raumwechsel aus");
+    /* ab hier gelten 103 + 100 wie in einem Spielstand (jeder Raumstart setzt sie neu, s. raum_hoch); der naechste
+     * Eintritt in 20B0 (Else-Zweig @0x01E0A, (3,235)=1 nach der Auswasch-Szene) laeuft mit Bit 100 */
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_LEITER_FREI);
+    if (raum_hoch(r20b0, -25950, -1800, 10300) != 0) { PRUEFE(0, "ROOM%04X Parse", r20b0); return; }
     PRUEFE(g_aot.slots[4].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[4].dest_room == 5, "ROOM%04X: Leiter ist Tuer nach 2050", r20b0);
     int n_mit = strahlen_zaehlen();
     PRUEFE(n_mit == 0, "ROOM%04X nach der Flut: %d Strahlen (erwartet 0, unterdrueckt @0x01E96/@0x01EA6/@0x01EB6)", r20b0, n_mit);
@@ -411,7 +441,7 @@ static void fall_e(uint16_t r2030, uint16_t r20b0, uint16_t r2000, uint16_t r201
                "ROOM%04X Slot %d: -> ROOM20B0 Cut %d (ist Raum %d Cut %d)", t[i].raum, t[i].slot, t[i].cut, d->dest_room, d->target_cut);
     }
     /* 2030 nach der Flut: Wasser y -7200, Ost-Tuer -> 20B0, Lift-A-Rufzone oben (mit (3,222)=1) = msg 1 */
-    re15_game_flag_set(3, 222, 1);
+    vorflag(3, 222);
     if (raum_hoch(r2030, 0, -16200, -3000) != 0) { PRUEFE(0, "Parse"); return; }
     int pa = re15_ventilkette_r41_wasser_prop(0), pw = re15_ventilkette_r41_wasser_prop(1);
     PRUEFE(pa >= 0 && pw >= 0 && g_scd.props[pa].y == RE15_R41C_WASSER_Y_RUHE && g_scd.props[pw].y == RE15_R41C_WASSER_Y_RUHE &&
@@ -420,10 +450,11 @@ static void fall_e(uint16_t r2030, uint16_t r20b0, uint16_t r2000, uint16_t r201
     PRUEFE(g_aot.door_params[0].dest_room == 0x0B && g_aot.door_params[0].target_cut == 11, "ROOM%04X nach der Flut: Ost-Tuer -> 20B0", r2030);
     PRUEFE(g_aot.slots[4].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[4].event_id == RE15_R41C_MSG_LIFT_ORIGINAL,
            "ROOM%04X nach der Flut: Lift-A-Rufzone Slot 4 = msg 1 (Typ %d msg %d)", r2030, g_aot.slots[4].type, g_aot.slots[4].event_id);
+    g_actors[RE15_ACTOR_SLOT_PLAYER].y = -5400;   /* Band 3 fuer das Band-Gate der Stelle (im Spiel unter Wasser, hier nur der Satz) */
     L = druecken(6500, -200, 2048, 0, 300);
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_ZUSTAND, "ROOM%04X nach der Flut: Ventile = Zustandssatz 48", r2030);
     /* mit Bit 107: leer */
-    re15_game_flag_set(RE15_R41C_BANK, RE15_R41C_BIT_2030_LEER, 1);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_2030_LEER);
     if (raum_hoch(r2030, 0, -16200, -3000) != 0) { PRUEFE(0, "Parse"); return; }
     PRUEFE(prop_von_obj(RE15_R41C_WASSER_OBJ_A) < 0 && prop_von_obj(RE15_R41C_WASSER_OBJ_B) < 0, "ROOM%04X mit Bit 107: kein Wasser", r2030);
     PRUEFE(g_aot.slots[4].type != RE15_AOT_TYPE_MESSAGE, "ROOM%04X mit Bit 107: Lift-Rufzone wieder Original", r2030);
@@ -460,11 +491,12 @@ static void fall_f(uint16_t r)
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_HEBEL_OHNE && re15_game_flag_get(3, 104) == 0,
            "ROOM%04X Hebel ohne Strom: Sperrsatz 40, (3,104) bleibt 0", r);
     /* Pult: Platz 8 (4000,-8450,1800,800), Blick -z; Nein -> nichts */
-    L = druecken(4900, -7000, 1024, 1, 400); zeige("pult nein", r, &L);
+    /* Platz 8 (4000,-8450,1800,800) = z -8450..-7650; Spieler z -7100 Blick -z: Vorwaertspunkt -7720 */
+    L = druecken(4900, -7100, 1024, 1, 400); zeige("pult nein", r, &L);
     PRUEFE(L.n_msgs == 2 && L.msgs[0] == RE15_R41C_MSG_PULT_BESCHR && L.msgs[1] == RE15_R41C_MSG_PULT_FRAGE && re15_game_flag_get(5, 4) == 0 && g_scd.cam_id != 15,
            "ROOM%04X Pult Nein: Beschreibung 43 + Frage 41, kein Pult", r);
     /* Ja -> Cut 15, (5,4)=1, (5,6)=1, (5,5)=0, Slot 8 aus */
-    L = druecken(4900, -7000, 1024, 0, 200); zeige("pult ja", r, &L);
+    L = druecken(4900, -7100, 1024, 0,200); zeige("pult ja", r, &L);
     PRUEFE(g_scd.cam_id == 15 && re15_game_flag_get(5, 4) == 1 && re15_game_flag_get(5, 6) == 1 && re15_game_flag_get(5, 5) == 0,
            "ROOM%04X Pult Ja: Cut 15, (5,4)=%d (5,6)=%d (5,5)=%d", r, re15_game_flag_get(5, 4), re15_game_flag_get(5, 6), re15_game_flag_get(5, 5));
     PRUEFE(re15_ventilkette_r41_panel_aktiv() == 1 && g_aot.slots[8].type != RE15_AOT_TYPE_GENERIC, "ROOM%04X Pult aktiv, Slot 8 aus", r);
@@ -509,12 +541,12 @@ static void fall_f(uint16_t r)
     /* danach: Hebel = Original sub04 -> (3,104)=1; Pult = Zustandssatz */
     L = druecken(5100, -10500, 1024, 0, 600); zeige("hebel orig", r, &L);
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == 0 && re15_game_flag_get(3, 104) == 1, "ROOM%04X Hebel mit Strom: Original msg 0, (3,104)=1", r);
-    L = druecken(4900, -7000, 1024, 0, 300); zeige("pult zust", r, &L);
+    L = druecken(4900, -7100, 1024, 0,300); zeige("pult zust", r, &L);
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_PULT_ZUSTAND, "ROOM%04X Pult danach: Zustandssatz 44", r);
     /* Abbruch mit CROSS: neuer Raum ohne Bit 106 */
     bits_leeren();
-    if (raum_hoch(r, 4900, -5400, -7000) != 0) { PRUEFE(0, "Parse"); return; }
-    L = druecken(4900, -7000, 1024, 0, 200);
+    if (raum_hoch(r, 4900, -5400, -7100) != 0) { PRUEFE(0, "Parse"); return; }
+    L = druecken(4900, -7100, 1024, 0,200);
     PRUEFE(re15_game_flag_get(5, 4) == 1, "ROOM%04X: Pult offen", r);
     g_scd_pad_edge = 0x8000; takt(); g_scd_pad_edge = 0;
     for (int i = 0; i < 40; i++) takt();
@@ -526,31 +558,34 @@ static void fall_g(uint16_t r)
 {
     /* ohne Flut: Original */
     bits_leeren();
-    if (raum_hoch(r, -11550, -16200, -6000) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+    if (raum_hoch(r, -11550, -14400, -6000) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
     lauf_t L = druecken(-11550, -6000, 1024, 0, 900); zeige("rechner", r, &L);
     int p0 = prop_von_obj(0);
-    PRUEFE(L.n_msgs == 1 && L.msgs[0] == 0 && re15_game_flag_get(3, 245) == 1 && bit(RE15_R41C_BIT_2030_LEER) == 0 && p0 >= 0 && g_scd.props[p0].y == -3420,
+    /* Wasser obj 0: -10800 (@0x00C2E) + 148 x 50 (@0x00CC8/@0x00CCC) = -3400 */
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == 0 && re15_game_flag_get(3, 245) == 1 && bit(RE15_R41C_BIT_2030_LEER) == 0 && p0 >= 0 && g_scd.props[p0].y == -3400,
            "ROOM%04X ohne Flut: Original sub02 ((3,245)=%d, Bit 107=%d, Wasser y %d)", r, re15_game_flag_get(3, 245), bit(107), p0 >= 0 ? (int)g_scd.props[p0].y : 0);
     /* mit Flut, Rechner noch nicht gelaufen: sub02 + Schwanz */
-    bits_leeren(); re15_game_flag_set(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN, 1);
-    if (raum_hoch(r, -11550, -16200, -6000) != 0) { PRUEFE(0, "Parse"); return; }
+    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN);
+    if (raum_hoch(r, -11550, -14400, -6000) != 0) { PRUEFE(0, "Parse"); return; }
     L = druecken(-11550, -6000, 1024, 0, 900); zeige("rechner+2030", r, &L);
     p0 = prop_von_obj(0);
     PRUEFE(L.n_msgs == 2 && L.msgs[0] == 0 && L.msgs[1] == RE15_R41C_MSG_RECHNER_2030 && re15_game_flag_get(3, 245) == 1 &&
-           bit(RE15_R41C_BIT_2030_LEER) == 1 && p0 >= 0 && g_scd.props[p0].y == -3420,
-           "ROOM%04X mit Flut: msg 0 + 40, (3,245)=1, Bit 107, Wasser -3420 (msgs %d)", r, L.n_msgs);
+           bit(RE15_R41C_BIT_2030_LEER) == 1 && p0 >= 0 && g_scd.props[p0].y == -3400,
+           "ROOM%04X mit Flut: msg 0 + 40, (3,245)=1, Bit 107, Wasser -3400 (msgs %d, y %d)", r, L.n_msgs, p0 >= 0 ? (int)g_scd.props[p0].y : 0);
     PRUEFE(g_scd.cam_id == 3 && re15_game_flag_get(2, 7) == 0, "ROOM%04X: Ende wie Original (Cut 3, frei)", r);
     /* mit Flut, Rechner schon gelaufen ((3,245)=1): Slot 4 erneut, nur Frage + Bit 107 */
-    bits_leeren(); re15_game_flag_set(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN, 1); re15_game_flag_set(3, 245, 1);
-    if (raum_hoch(r, -11550, -16200, -6000) != 0) { PRUEFE(0, "Parse"); return; }
+    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN); vorflag(3, 245);
+    if (raum_hoch(r, -11550, -14400, -6000) != 0) { PRUEFE(0, "Parse"); return; }
     PRUEFE(g_aot.slots[4].active && g_aot.slots[4].type == RE15_AOT_TYPE_GENERIC && g_aot.slots[4].event_id == 2,
            "ROOM%04X Rechner gelaufen + Flut: Slot 4 erneut (Typ %d ev %d)", r, g_aot.slots[4].type, g_aot.slots[4].event_id);
     L = druecken(-11550, -6000, 1024, 0, 400); zeige("nur 2030", r, &L);
     PRUEFE(L.n_msgs == 2 && L.msgs[0] == 0 && L.msgs[1] == RE15_R41C_MSG_RECHNER_2030 && bit(RE15_R41C_BIT_2030_LEER) == 1 &&
            g_aot.slots[4].type != RE15_AOT_TYPE_GENERIC, "ROOM%04X nur 2030: Frage + Satz, Bit 107, Slot 4 aus", r);
     /* mit Bit 107: keine Stelle mehr */
-    if (raum_hoch(r, -11550, -16200, -6000) != 0) { PRUEFE(0, "Parse"); return; }
-    PRUEFE(g_aot.slots[4].type != RE15_AOT_TYPE_GENERIC, "ROOM%04X mit Bit 107: Slot 4 bleibt aus", r);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_2030_LEER);
+    if (raum_hoch(r, -11550, -14400, -6000) != 0) { PRUEFE(0, "Parse"); return; }
+    PRUEFE(!g_aot.slots[4].active || g_aot.slots[4].type != RE15_AOT_TYPE_GENERIC, "ROOM%04X mit Bit 107: Slot 4 bleibt aus (Typ %d ev %d, (3,245)=%d, Bit 103=%d 107=%d)", r,
+           g_aot.slots[4].type, g_aot.slots[4].event_id, re15_game_flag_get(3, 245), bit(RE15_R41C_BIT_FLUT_GELAUFEN), bit(RE15_R41C_BIT_2030_LEER));
 }
 
 int main(void)
@@ -573,7 +608,7 @@ int main(void)
         for (int s = 0; s < RE15_AOT_MAX; s++)
             if (g_aot.slots[s].active && g_aot.slots[s].type == RE15_AOT_TYPE_GENERIC &&
                 (g_aot.slots[s].event_id == RE15_R41C_EV_PULT || g_aot.slots[s].event_id == RE15_R41C_EV_VENTIL13 || g_aot.slots[s].event_id == RE15_R41C_EV_VENTILE)) n++;
-        PRUEFE(n == 0 && prop_von_obj(RE15_R41C_WASSER_OBJ_A) < 0, "ROOM2060: %d fremde Plaetze", n);
+        PRUEFE(n == 0 && re15_ventilkette_r41_wasser_prop(0) < 0, "ROOM2060: %d fremde Plaetze (obj 4 ist dort das Sicherungs-Panel)", n);
     }
     printf("%s (%d Pruefungen)\n", s_fail ? "FAIL" : "PASS", s_pruef);
     free(s_daten);

@@ -65,15 +65,15 @@ static const unsigned char re15_r41c_prg_2030_v13_zustand[8] = {
     /* +006 */ 0x01,0x00, /* Evt_end */
 };
 
-/* re15_r41c_prg_2030_ventile (104 B) */
-static const unsigned char re15_r41c_prg_2030_ventile[104] = {
+/* re15_r41c_prg_2030_ventile (112 B) */
+static const unsigned char re15_r41c_prg_2030_ventile[112] = {
     /* +000 */ 0x2b,0x2d,0xff,0xff, /* Message_on 45, Maske ffff - Numbered valves... Will you turn them? */
     /* +004 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +006 */ 0x06,0x00,0x5c,0x00, /* Ifel_ck (Laenge automatisch) Ja-Zweig */
+    /* +006 */ 0x06,0x00,0x64,0x00, /* Ifel_ck (Laenge automatisch) Ja-Zweig */
     /* +00A */ 0x21,0x0c,0x1f,0x00, /* Ck(12,31)=0 = Ja (ROOM2050 sub04 @0x022F0) */
     /* +00E */ 0x2b,0x2e,0xff,0xff, /* Message_on 46, Maske ffff - WARNING: The water will rise in one minute. Leave the room! */
     /* +012 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +014 */ 0x22,0x05,0x3d,0x01, /* Set(5,0x3D)=1 Zaehler laeuft (Bank 5 Wort 1, Raum-Init loescht @0x8003ec1c; C-Takt liest) */
+    /* +014 */ 0x22,0x05,0x1d,0x01, /* Set(5,0x1D)=1 Zaehler laeuft (Bank 5 Wort 0 = Raum-Scratch, Raumladen wischt @0x8003ed74; C-Takt liest) */
     /* +018 */ 0x09,0x0a,0x08,0x07, /* Sleep 1800 = 60 s bei 30 Takten (Hintergrundfaden wie ROOM2000 sub07 @0x01B36) */
     /* +01C */ 0x22,0x02,0x07,0x01, /* Set(2,7)=1 Pad-Sperre (ROOM2030 sub02 @0x01E30) */
     /* +020 */ 0x22,0x02,0x02,0x01, /* Set(2,2)=1 KI steht (ROOM2050 sub02 @0x0223C) */
@@ -85,17 +85,19 @@ static const unsigned char re15_r41c_prg_2030_ventile[104] = {
     /* +038 */ 0x2e,0x03,0x05,0x00, /* Work_set(3,5) Wasser B + Nop */
     /* +03C */ 0x32,0x00,0xd0,0xd5,0x00,0x00,0xd8,0x0e, /* Pos_set (-10800,0,3800) */
     /* +044 */ 0x2f,0x01,0xce,0xff, /* Speed_set(1,-50) */
-    /* +048 */ 0x22,0x05,0x3e,0x01, /* Set(5,0x3E)=1 Flut laeuft (C-Takt: Ertrinken) */
-    /* +04C */ 0x0d,0x00,0x06,0x00,0x44,0x01, /* For 324 (324 x 50 = 16200 bis zur Tuerebene; Form ROOM2080 @0x00CCC) */
+    /* +048 */ 0x22,0x05,0x1e,0x01, /* Set(5,0x1E)=1 Flut laeuft (Bank 5 Wort 0; C-Takt: Ertrinken) */
+    /* +04C */ 0x0d,0x00,0x16,0x00,0x44,0x01, /* For 324, Block 0x16 = Koerper 20 + Next 2 (324 x 50 = 16200 bis zur Tuerebene; Form ROOM2080 @0x00CCC) */
     /* +052 */ 0x2e,0x03,0x04,0x00, /* Work_set(3,4) + Nop */
-    /* +056 */ 0x30, /* Add_speed A */
-    /* +057 */ 0x2e,0x03,0x05,0x00, /* Work_set(3,5) + Nop */
-    /* +05B */ 0x30, /* Add_speed B */
-    /* +05C */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +05E */ 0x0e,0x00, /* Next */
-    /* +060 */ 0x09,0x0a,0x3c,0x00, /* Sleep 60 (Form ROOM20B0 sub05 @0x01FB2) */
-    /* +064 */ 0x08,0x00, /* Endif  */
-    /* +066 */ 0x01,0x00, /* Evt_end */
+    /* +056 */ 0x2f,0x01,0xce,0xff, /* Speed_set(1,-50) (Form: Speed_set direkt vor Add_speed, sub03 @0x01ED6) */
+    /* +05A */ 0x30, /* Add_speed A */
+    /* +05B */ 0x2e,0x03,0x05,0x00, /* Work_set(3,5) + Nop */
+    /* +05F */ 0x2f,0x01,0xce,0xff, /* Speed_set(1,-50) */
+    /* +063 */ 0x30, /* Add_speed B */
+    /* +064 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +066 */ 0x0e,0x00, /* Next */
+    /* +068 */ 0x09,0x0a,0x3c,0x00, /* Sleep 60 (Form ROOM20B0 sub05 @0x01FB2) */
+    /* +06C */ 0x08,0x00, /* Endif  */
+    /* +06E */ 0x01,0x00, /* Evt_end */
 };
 
 /* re15_r41c_prg_2030_ventile_zustand (8 B) */
@@ -168,7 +170,7 @@ static const re15_r41c_programm_t re15_r41c_programme[] = {
     { "2030_pult_senken", re15_r41c_prg_2030_pult_senken, 86 },
     { "2030_v13_frage", re15_r41c_prg_2030_v13_frage, 28 },
     { "2030_v13_zustand", re15_r41c_prg_2030_v13_zustand, 8 },
-    { "2030_ventile", re15_r41c_prg_2030_ventile, 104 },
+    { "2030_ventile", re15_r41c_prg_2030_ventile, 112 },
     { "2030_ventile_zustand", re15_r41c_prg_2030_ventile_zustand, 8 },
     { "2050_hebel_sperre", re15_r41c_prg_2050_hebel_sperre, 8 },
     { "2050_pult_ein", re15_r41c_prg_2050_pult_ein, 44 },

@@ -208,8 +208,12 @@
                                               * -900 @0x8002c24c als Mass einer Koerperhaelfte)   */
 #define RE15_R41C_SPRITZER_TAKT    6
 #define RE15_R41C_ZAEHLER_BILDER   1800      /* 60 s bei 30 SCD-Takten (Sleep `09 0a 08 07`)     */
-#define RE15_R41C_FLAG_TIMER       0x3D      /* Bank 5 Wort 1 (geloescht beim Raum-Init @0x8003ec1c) */
-#define RE15_R41C_FLAG_FLUT        0x3E
+/* Marker des Programms fuer den C-Takt: Bank 5 WORT 0 (Raum-Scratch, beim Raumladen gewischt FUN_8003ecec
+ * @0x8003ed74; Wort 1 taugt NICHT — es ist der Ein-Bild-Handshake, den FUN_8003ebf4 @0x8003ec1c am Ende JEDES
+ * VM-Laufs loescht). 2030 benutzt Bank 5 nicht (0 Treffer `21 05`/`22 05` in ROOM2030.RDT); der Installer loescht
+ * beide Bits bei jedem Raumstart zusaetzlich. */
+#define RE15_R41C_FLAG_TIMER       0x1D
+#define RE15_R41C_FLAG_FLUT        0x1E
 /* Blaue Blende: Kanal 0, ABR 0 (B/2+F/2), Maske Blau (Bit 0), statisch (Form ROOM11F0 @0x174a `56 00 02 07 00 00`
  * + `57 00 <level>`; Helligkeit = level >> 7, re15_fade.h). */
 #define RE15_R41C_FADE_KANAL   0
@@ -233,9 +237,10 @@
 #define RE15_R41C_PANEL_ZONE_Z0    19800
 #define RE15_R41C_PANEL_X0         { -26550, -22972, -19393, -14622 }
 #define RE15_R41C_CURSOR_OBJ       8
-/* Zeiger auf der Skala (320x240): x = 165.5 + 0.91 * Wert, Schiene y 70..73, rotes Band 239..256. */
-#define RE15_R41C_SKALA_X0_100     1655     /* x 0 in Zehntelpixeln */
-#define RE15_R41C_SKALA_PX_100     91       /* Zehntelpixel je Punkt */
+/* Zeiger auf der Skala (320x240): x = 165.5 + 0.91 * Wert (Ziffern 0 @165.5 .. 100 @256.5 = 91 px je 100 Punkte),
+ * Schiene y 70..73, rotes Band 239..256. Ganzzahlig: x = (16550 + 91 * Wert + 50) / 100. */
+#define RE15_R41C_SKALA_X0_100     16550    /* x 0 in Hundertstelpixeln */
+#define RE15_R41C_SKALA_PX_100     91       /* Hundertstelpixel je Punkt (= 91 px je 100 Punkte) */
 #define RE15_R41C_SKALA_Y          70
 #define RE15_R41C_SKALA_H          4
 #define RE15_R41C_LAMPE_Y          168      /* gruene Marke unter einem EIN-Hebel (PORT-WAHL) */
