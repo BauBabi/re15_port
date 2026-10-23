@@ -169,3 +169,40 @@ Nah-/Fernstart, 1-Bild-Abstand) NICHT reproduzieren: Clip, Bank, Wurzel und Pos_
 gemessene Abweichung war das Einfrieren nach einem Umlauf (behoben). Bleibt das "Fliegen" beim Nutzer, braucht es
 seinen Weg (Spielstand/Raum davor, Waffe, Bild) — Frage unten. Nicht gemessen: Original in DuckStation
 (re15-room-capture, Savestate der Kurbelszene) — Beleg hier aus dem Disasm.
+
+## Nachbesserung waehrend der Spur (gezielte Tests)
+Erster gezielter Lauf (66 Tests) rot: unit_r36_szenenleon_schub, unit_r36_szenenleon_erweiterung,
+unit_r38_werkstatt11b0_takt — Leons Container-Schub ROOM11B0 (Plc_dest Modus 0x13, eigener Bildzaehler des Schub-Subs
+@0x80052ac0, Clip 0x12 = 25 Bilder in 3 Umlaeufen). Ursache: re15_plcloop_r41_takt griff bei JEDEM Kommandowort 4.
+FUN_80030660 dispatcht aber ueber +0x5 (@0x8003068c `lbu DAT_800aca59`): nur Sub 0 ist die Bewegungs-FSM 0x80050cb8.
+Gate jetzt `state == 4 && sub_state_1 == 0 && !walk_active` (dasselbe Gate wie re15_actor_clip_len fuer NPCs).
+
+## Gemeinsame Dateien (Haken, je 1-3 Zeilen, Kommentar "Runde 41 Spur E")
+- engine/src/scd_room_setup.c: include + `re15_werkstatt11b1_r41_init_lauf` direkt hinter re15_szl_init_lauf (Init-
+  Lauf, VOR scd_vm_tick — Muster Runde 36 J; deshalb nicht am Ende des Installer-Blocks).
+- engine/src/scd_vm.c: include + Ereignis-Kette `re15_werkstatt11b1_r41_ereignis` hinter nahaufnahmen_r40.
+- engine/src/re15_inv_screen.c: include + `zielzone` (1 Zeile) + `if (zielzone >= 0) ... else for (...)` in
+  tuer_anziehen.
+- engine/src/player_common.c: include + `re15_plcloop_r41_takt(p)` hinter `p->anim_frame++` (Kommandowort 4).
+Neue Dateien: engine/src/werkstatt11b1_r41.c, karte_r41.c, plcloop_r41.c; include/re15_werkstatt11b1_r41.h,
+re15_karte_r41.h, re15_plcloop_r41.h; tests/unit/test_r41_kleinkram_b_{11b1,karte,kurbel}.c,
+tests/unit/probes/r41_kleinkram_b.cmake. Keine Assets, kein Bank-9-Bit, keine neue Nachricht, kein Patch an
+shared_assets/PSX.
+
+## OFFEN
+- Punkt 1: das "Herumfliegen" selbst ist nicht reproduziert (7 Laeufe, Bilder im scratchpad r41e/*_sheet.png). Behoben
+  ist die einzige gemessene Abweichung (Standbild statt Schleife). Original-Gegenprobe in DuckStation (Savestate der
+  Kurbelszene, re15-room-capture) steht aus; der Beleg kommt aus dem Disasm (FUN_80030660 -> 0x80050cb8).
+- Nebenbefund Karte: die Sonde probe_r39_karten (Runde 39) tickt die VM nicht und sieht den Tuer-Zug nicht — ihre
+  "Tuer-Sprung"-Zahlen gelten ohne Zug. Nicht angefasst.
+- Nebenbefund Elza 11B1: sub03 fuehrt Elza mit Plc_dest 09 nach (-22695,-20321) WESTLICH der Trennwand; im Port endet
+  sie an der Blockzelle bei (-18192,-20453) (Original nicht gemessen). Mit zugesperrter Tuer bleibt ihr der Schacht
+  (ROOM1261 -> 11D1 / 10B1 / 2001).
+
+## Fuer den Nutzer
+- Keine neuen Assets, keine Sprachdateien.
+- Bedienhinweis Elza: Nach der Sherry-Suche in der Garage (11B1) ist die Werkstatt-Tuer zur Vorhalle dauerhaft
+  verschlossen ("The door is locked."); zurueck geht es durch den Bodenschacht (Kanal 1261 -> Zwinger 11D1 /
+  Kanaldeckel 10B1 / Kanalisation 2001).
+- Entscheidungsfrage (nur falls das "Fliegen" an der Kurbel in 2020 weiter auftritt): bitte Weg (Spielstand/Raum
+  davor, Waffe in der Hand) und ein Bild — im Port kurbelt Leon jetzt durchgehend, bis die Buehne unten ist.

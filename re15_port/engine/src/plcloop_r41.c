@@ -57,7 +57,10 @@ int re15_plcloop_r41_clip_len(const re15_actor_t *p)
 
 void re15_plcloop_r41_takt(re15_actor_t *p)
 {
-    if (!p || p->state != 4) return;                        /* nur Kommandowort 4 (Plc_motion @0x80041bb0) */
+    /* Nur Kommandowort 4 UND Sub 0: FUN_80030660 dispatcht ueber +0x5 (@0x8003068c lbu DAT_800aca59) — allein
+     * Sub 0 ist die Bewegungs-FSM 0x80050cb8; Plc_dest-Subs (z.B. 0x13 = Container-Schub ROOM11B0, eigener
+     * Bildzaehler @0x80052ac0) und Laeufe zaehlen selbst (dasselbe Gate wie re15_actor_clip_len fuer NPCs). */
+    if (!p || p->state != 4 || p->sub_state_1 != 0 || p->walk_active) return;
     int fc = re15_plcloop_r41_clip_len(p);
     if (fc <= 0 || (int)p->anim_frame < fc) return;         /* Clip laeuft noch / Laenge unbekannt: wie bisher */
     if (p->anim_flags & 0x04u) { p->anim_frame = 0; s_umlaeufe++; }           /* SCHLEIFE @0x80050dbc-c8, @0x8001f63c */
