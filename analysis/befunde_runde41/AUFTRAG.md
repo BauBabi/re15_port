@@ -106,3 +106,17 @@ Umgesetzt vom Orchestrator: `%LOCALAPPDATA%/DuckStation/settings.ini` `[MediaCap
 `Container = mp4` (vorher MediaFoundation + avi -> "failed media capture - invalid type"). Gilt ab dem naechsten
 DuckStation-Start; Sicherung `settings.ini.vor_ffmpeg_2026-10-23`. Agenten: settings.ini NICHT auf MediaFoundation/avi
 zuruecksetzen; Aufnahmen landen als .mp4 (Frames per ffmpeg extrahieren).
+
+## 2026-10-23 17:4x — Nachtrag 2 (Wortlaut; betrifft Spur A und jede Original-Messung mit Bild)
+
+> Du scheinst immernoch kein Video aufgenommen zu haben, wie du es wohl vorhin geplant hast. Warum?
+
+Stand laut Dossier A §1.3: Media-Capture lieferte nur 0,9 s (55 Bilder, videos/...2026-10-23-17-21-39.mp4), danach
+Savestate-Reihe + RAM/ESP-Pool statt Video; Fruehphase (Bild 0..130, Osttuer, Cut 11) noch nicht gemessen.
+VERBINDLICH (Nutzer-Massstab, Memory reai-v2-duckstation-config-update: "Ist das Video vom Original identisch deinem
+Port, dann ist es richtig umgesetzt, sonst nicht"): Spur A nimmt die GANZE 20B0-Flutszene im Original als Video auf
+(settings.ini steht seit 17:25 auf Backend = FFmpeg, Container = mp4; Hotkey ToggleMediaCapture per vgamepad-Button),
+extrahiert die Bilder (ffmpeg, ab Szenenstart bis Leon frei ist), legt Video + Bildreihe unter
+analysis/befunde_runde41/A_belege/ ab (Pfade im Dossier) und vergleicht Bild fuer Bild mit dem Port-Framedump
+(RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1): Zeitpunkt, Ort, Zahl und Groesse der Partikel je Bild. Die Abnahme prueft das
+Video, nicht nur die RAM-Reihe.
