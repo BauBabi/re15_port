@@ -15,7 +15,7 @@ elzazombies_r39.c, test_r36_kartenbits.c k_port[] (nur falls Bit 120 belegt).
 
 ## Status
 - [ ] Punkt 1 Kurbel 2020
-- [ ] Punkt 2 Karte B1 / 1090-Vordertuer
+- [x] Punkt 2 Karte B1 / 1090-Vordertuer — karte_r41.c, unit_r41_kleinkram_b_karte_pin 17/17
 - [x] Punkt 3 Werkstatt-Tuer 11B1 (Elza) — Ereignis 24, unit_r41_kleinkram_b_11b1 3/3
 
 ## Protokoll
@@ -98,3 +98,35 @@ kein "Fliegen". Offen: echter Weg mit Aktionstaste (w9a/w9b), Waffe (w9c, RE15_E
 0 tests failed out of 3 (Programmform + Anker; (3,0x83)=1: Zelle ff/03, Platz 8 msg 12, RVD-Zonen == unveraenderte
 Parse, Eingangs-Cut 0, Schacht bleibt Tuer, Container z -19368, Lauf blockiert bei x -20942, Aktionstaste msg 12 ohne
 Raumwechsel, Wiederbetreten; ohne (3,0x83) Else-Zweig unveraendert; Leon 11B0 Zelle offen, kein Ereignis).
+
+## Punkt 2 — REPRODUZIERT, Umsetzung, Messung nachher
+### Messung vorher (probe_r41_kleinkram_b_karte mess, Stand 3309246f; VM im Init-Lauf getickt = Tuer-AOTs vorhanden)
+Gang ROOM1230 (Strom (4,0xF3), Ostkammer-Tuer (3,0x89) = main00 @0x00CE2 Else -> Slot 4 Tuer @0x00CE6), Annaeherung an
+die Ostkammer-Tuer (Mitte (96,12161), Zugbereich hh*2+450 = 1384): (96,13500) -> Marker (146,106); (96,13300) ->
+(141,109); (96,13100) -> (137,110); (96,13078) -> (137,111). Die Ostkammer-Marke liegt bei (146,109), die Hallen-
+Marke bei (127,115): der Marker wandert 9 px nach Westen zur HALLE = "Sprung zum hinteren Teil, obwohl man gar nicht
+da ist". Vor der Hallen-Tuer ((-8118,10272) -> (127,114)) und an beiden Ankuenften in 1190 ((19515,-12109) ->
+(146,110), (3174,-11182) -> (128,117)) stimmt alles. Die alte Sonde probe_r39_karten tickte die VM nicht (keine Tuer-
+AOTs) und konnte den Zug nicht sehen; die exe-Laeufe w2/w3 standen ausserhalb des Zugbereichs (Kollision schiebt
+RE15_PLAYER_POS aus der Tuernische auf z 13765).
+### Ursache (Code) + Beleg
+re15_inv_screen.c tuer_anziehen(): Symbol = erste Marke, deren andere Zone zu IRGENDEINER Zone des Zielraums gehoert
+(re15_map_zone_fuer(ziel, ix, Blatt) ix 0..7). ROOM1190 hat zwei Zonen (Halle zid 26, Ostkammer zid 110,
+re15_map_zones.h:319-322); s_map_marks fuehrt die Hallen-Marke (:986) vor der Ostkammer-Marke (:987) -> beide Gang-
+Tueren nach 1190 zogen auf die Hallen-Marke. Welche Zone eine Tuer meint, sagt ihr Datensatz: Door_aot_set next x/z
+(door_params spawn_x/z): ROOM1230 Slot 4 @0x00CE6 `3b 4c 00 00 b3 d0` = (19515,0,-12109) -> Ostkammer; Slot 2
+@0x00B54 `66 0c 00 00 52 d4` = (3174,0,-11182) -> Halle. Dieselbe Lage setzt der Raumaufbau nach dem Durchgang als
+Zone (scd_room_setup.c:388 re15_map_zone_update). PORT-WAHL (der Zug ist eine Port-Ergaenzung, Runde 30; RE1.5 hat
+keine Tuermarken, RE2 zieht nicht).
+### Umsetzung
+NEU `include/re15_karte_r41.h`, `engine/src/karte_r41.c`: re15_karte_r41_tuer_zielzone(slot, ziel) = zid der Zone
+von (spawn_x, spawn_z) im Zielraum, -1 ohne Tuer/Zone. Haken re15_inv_screen.c tuer_anziehen (3 Zeilen, "Runde 41
+Spur E"): zielzone einmal je Tuer, Marke nur mit andere == zielzone; -1 -> alte Suche (Rueckfall).
+### Messung nachher (gleiche Sonde, Bau 8)
+(96,13500) -> (146,106); (96,13300) -> (146,107); (96,13100) -> (146,107); (96,13078) -> (146,108) — auf der
+Ostkammer-Marke, kein Wandern zur Halle. Hallen-Tuer, Ankuenfte, ROOM1180 (ohne Strom: Slot 4 Text @0x00A94)
+unveraendert.
+### Tests
+`ctest -R unit_r41_kleinkram_b_karte_pin`: 100% tests passed, 0 tests failed out of 1 (17 Pruefungen: 6 Annaeherungs-
+punkte Ostkammer-Tuer auf der Ostkammer-Marke (<= 4 px, nie zur Halle), 6 Hallen-Tuer, beide Ankuenfte 1190,
+ROOM1180). Vorher 13/17 (die vier naechsten Punkte zur Ostkammer-Tuer rot).

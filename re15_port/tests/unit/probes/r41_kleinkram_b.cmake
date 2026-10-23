@@ -18,3 +18,18 @@ foreach(_teil programm zu original)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_kleinkram_b_11b1_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
+#   probe_r41_kleinkram_b_karte mess|pin
+#       Punkt 2: Karte B1 — Marker vor der Ostkammer-Tuer von ROOM1190 ("vordere Tuer der Waffen Armory") bleibt auf der
+#       Ostkammer-Marke (146,109) und wird nicht zur Hallen-Marke (127,115) gezogen (tuer_anziehen: Marke ueber die
+#       SPAWN-Zone der Tuer statt "irgendeine Zone des Zielraums"); Hallen-Tuer, Ausgaenge in 1190, ROOM1180 ohne Strom.
+#       Im Gegensatz zu probe_r39_karten wird die VM im Init-Lauf getickt (Tuer-AOTs vorhanden, Zug wirksam).
+add_executable(probe_r41_kleinkram_b_karte ${CMAKE_CURRENT_LIST_DIR}/../test_r41_kleinkram_b_karte.c)
+target_link_libraries(probe_r41_kleinkram_b_karte PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r41_kleinkram_b_karte PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/..)
+target_compile_definitions(probe_r41_kleinkram_b_karte PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(probe_r41_kleinkram_b_karte PRIVATE m)
+endif()
+add_test(NAME unit_r41_kleinkram_b_karte_pin COMMAND probe_r41_kleinkram_b_karte pin WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r41_kleinkram_b_karte_pin PROPERTIES TIMEOUT 300)
