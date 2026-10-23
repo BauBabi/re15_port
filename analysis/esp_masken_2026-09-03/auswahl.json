@@ -1885,5 +1885,914 @@
     }
    ]
   }
+ },
+ "ROOM11A0": {
+  "1": {
+   "objekte": [
+    {
+     "name": "ROOM11A0 Cut 1 Objekt 01",
+     "png": "pri/STAGE1/11A0/01.png",
+     "x": 38,
+     "y": 76,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 2 gleich gute Lage(n), 6678 Maskenpixel. Ebene y=-1800 GEMESSEN (2026-10-23): Kollisionszelle Band 1 traegt die Silhouette (IoU 0,46, Band 0 nur 0,19); Kamera y -5534, Blickziel y -2130 -> naechste Ebene unter der Kamera ist Band 1.",
+     "ebene": -1800
+    }
+   ]
+  },
+  "3": {
+   "objekte": [
+    {
+     "name": "ROOM11A0 Cut 3 Objekt 03",
+     "png": "pri/STAGE1/11A0/03.png",
+     "x": 199,
+     "y": 0,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 8 gleich gute Lage(n), 21576 Maskenpixel. Ebene y=-1800 GEMESSEN (2026-10-23): Kollisionszelle Band 1 traegt die Silhouette (IoU 0,88, Band 0 nur 0,39); Kamera y -4317, Blickziel y -2387.",
+     "ebene": -1800
+    }
+   ]
+  },
+  "6": {
+   "objekte": [
+    {
+     "name": "ROOM11A0 Cut 6 Objekt 06",
+     "png": "pri/STAGE1/11A0/06.png",
+     "x": 141,
+     "y": 107,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 98.7 %, 1 gleich gute Lage(n), 18886 Maskenpixel. Ebene y=0 GEMESSEN (2026-10-23): Kollisionszelle Band 0 traegt die Silhouette (IoU 0,96); Kamera y -4948, Blickziel y 2688.",
+     "ebene": 0
+    }
+   ]
+  }
+ },
+ "ROOM2010": {
+  "1": {
+   "objekte": [
+    {
+     "name": "ROOM2010 Cut 1 Objekt 01_01",
+     "png": "pri/STAGE2/2010/01_01.png",
+     "x": 137,
+     "y": 118,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 95.3 %, 1 gleich gute Lage(n), 11072 Maskenpixel."
+    },
+    {
+     "name": "ROOM2010 Cut 1 Objekt 01_02",
+     "png": "pri/STAGE2/2010/01_02.png",
+     "x": 140,
+     "y": 165,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2261 Maskenpixel."
+    }
+   ]
+  },
+  "2": {
+   "objekte": [
+    {
+     "name": "ROOM2010 Cut 2 Objekt 02",
+     "png": "pri/STAGE2/2010/02.png",
+     "x": 0,
+     "y": 201,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 8410 Maskenpixel."
+    }
+   ]
+  },
+  "4": {
+   "objekte": [
+    {
+     "name": "ROOM2010 Cut 4 Objekt 04",
+     "png": "pri/STAGE2/2010/04.png",
+     "x": 150,
+     "y": 120,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 15088 Maskenpixel."
+    }
+   ]
+  }
+ },
+ "ROOM2020": {
+  "0": {
+   "objekte": [
+    {
+     "name": "ROOM2020 Cut 0 Objekt 00",
+     "png": "pri/STAGE2/2020/00.png",
+     "x": 140,
+     "y": 78,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 6061 Maskenpixel."
+    }
+   ]
+  },
+  "1": {
+   "objekte": [
+    {
+     "name": "ROOM2020 Cut 1 Objekt 01",
+     "png": "pri/STAGE2/2020/01.png",
+     "x": 93,
+     "y": 70,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 5718 Maskenpixel."
+    }
+   ]
+  },
+  "2": {
+   "objekte": [
+    {
+     "name": "ROOM2020 Cut 2 Objekt 02",
+     "png": "pri/STAGE2/2020/02.png",
+     "x": 133,
+     "y": 44,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 5671 Maskenpixel."
+    }
+   ]
+  },
+  "3": {
+   "objekte": [
+    {
+     "name": "ROOM2020 Cut 3 Objekt 03_01",
+     "png": "pri/STAGE2/2020/03_01.png",
+     "x": 0,
+     "y": 91,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 4163 Maskenpixel."
+    },
+    {
+     "name": "ROOM2020 Cut 3 Objekt 03_02",
+     "png": "pri/STAGE2/2020/03_02.png",
+     "x": 202,
+     "y": 103,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2511 Maskenpixel."
+    }
+   ]
+  }
+ },
+ "ROOM2030": {
+  "0": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 0 Objekt 00",
+     "png": "pri/STAGE2/2030/00.png",
+     "x": 0,
+     "y": 129,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 7551 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Ringsteg Band 3 (y -5400): Tuer 2070->2030 setzt den Spieler auf (6550,-5400,-100); die Umschaltzonen (RVD, RDT+0x28) dieses Cuts liegen auf y -5400 auf dem gemalten Ringboden (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    }
+   ]
+  },
+  "1": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 1 Objekt 01",
+     "png": "pri/STAGE2/2030/01.png",
+     "x": 0,
+     "y": 102,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 5314 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Ringsteg Band 3 (y -5400): Tuer 2070->2030 setzt den Spieler auf (6550,-5400,-100); die Umschaltzonen (RVD, RDT+0x28) dieses Cuts liegen auf y -5400 auf dem gemalten Ringboden (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    }
+   ]
+  },
+  "2": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 2 Objekt 02",
+     "png": "pri/STAGE2/2030/02.png",
+     "x": 0,
+     "y": 98,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 7780 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Ringsteg Band 3 (y -5400): Tuer 2070->2030 setzt den Spieler auf (6550,-5400,-100); die Umschaltzonen (RVD, RDT+0x28) dieses Cuts liegen auf y -5400 auf dem gemalten Ringboden (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    }
+   ]
+  },
+  "3": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 3 Objekt 03_01",
+     "png": "pri/STAGE2/2030/03_01.png",
+     "x": 235,
+     "y": 96,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 1780 Maskenpixel. Ebene y=-1800 GEMESSEN (2026-10-23): Mittelsteg Band 1 (y -1800): Steg-Zellen auf Band 1 (Zelle 12 x -2050..-50, Gelaender 3/4, UEBERGABE Runde 40); die Umschaltzonen dieses Cuts liegen auf y -1800 auf dem gemalten Steg, Kamera y ~-4065 liegt UNTER Band 3.",
+     "ebene": -1800
+    },
+    {
+     "name": "ROOM2030 Cut 3 Objekt 03_02",
+     "png": "pri/STAGE2/2030/03_02.png",
+     "x": 26,
+     "y": 91,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2841 Maskenpixel. Ebene y=-1800 GEMESSEN (2026-10-23): Mittelsteg Band 1 (y -1800): Steg-Zellen auf Band 1 (Zelle 12 x -2050..-50, Gelaender 3/4, UEBERGABE Runde 40); die Umschaltzonen dieses Cuts liegen auf y -1800 auf dem gemalten Steg, Kamera y ~-4065 liegt UNTER Band 3.",
+     "ebene": -1800
+    },
+    {
+     "name": "ROOM2030 Cut 3 Objekt 03_03",
+     "png": "pri/STAGE2/2030/03_03.png",
+     "x": 0,
+     "y": 100,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 3916 Maskenpixel. Ebene y=-1800 GEMESSEN (2026-10-23): Mittelsteg Band 1 (y -1800): Steg-Zellen auf Band 1 (Zelle 12 x -2050..-50, Gelaender 3/4, UEBERGABE Runde 40); die Umschaltzonen dieses Cuts liegen auf y -1800 auf dem gemalten Steg, Kamera y ~-4065 liegt UNTER Band 3.",
+     "ebene": -1800
+    }
+   ]
+  },
+  "5": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 5 Objekt 05_01",
+     "png": "pri/STAGE2/2030/05_01.png",
+     "x": 5,
+     "y": 92,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 3921 Maskenpixel. Ebene y=-1800 GEMESSEN (2026-10-23): Mittelsteg Band 1 (y -1800): Steg-Zellen auf Band 1 (Zelle 12 x -2050..-50, Gelaender 3/4, UEBERGABE Runde 40); die Umschaltzonen dieses Cuts liegen auf y -1800 auf dem gemalten Steg, Kamera y ~-4065 liegt UNTER Band 3.",
+     "ebene": -1800
+    },
+    {
+     "name": "ROOM2030 Cut 5 Objekt 05_02",
+     "png": "pri/STAGE2/2030/05_02.png",
+     "x": 257,
+     "y": 98,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 1808 Maskenpixel. Ebene y=-1800 GEMESSEN (2026-10-23): Mittelsteg Band 1 (y -1800): Steg-Zellen auf Band 1 (Zelle 12 x -2050..-50, Gelaender 3/4, UEBERGABE Runde 40); die Umschaltzonen dieses Cuts liegen auf y -1800 auf dem gemalten Steg, Kamera y ~-4065 liegt UNTER Band 3.",
+     "ebene": -1800
+    }
+   ]
+  },
+  "6": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 6 Objekt 06",
+     "png": "pri/STAGE2/2030/06.png",
+     "x": 48,
+     "y": 98,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 5676 Maskenpixel. Ebene y=-1800 GEMESSEN (2026-10-23): Mittelsteg Band 1 (y -1800): Steg-Zellen auf Band 1 (Zelle 12 x -2050..-50, Gelaender 3/4, UEBERGABE Runde 40); die Umschaltzonen dieses Cuts liegen auf y -1800 auf dem gemalten Steg, Kamera y ~-4065 liegt UNTER Band 3.",
+     "ebene": -1800
+    }
+   ]
+  },
+  "7": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 7 Objekt 07_01",
+     "png": "pri/STAGE2/2030/07_01.png",
+     "x": 0,
+     "y": 104,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 5315 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Ringsteg Band 3 (y -5400): Tuer 2070->2030 setzt den Spieler auf (6550,-5400,-100); die Umschaltzonen (RVD, RDT+0x28) dieses Cuts liegen auf y -5400 auf dem gemalten Ringboden (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    },
+    {
+     "name": "ROOM2030 Cut 7 Objekt 07_02",
+     "png": "pri/STAGE2/2030/07_02.png",
+     "x": 151,
+     "y": 92,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 373 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Ringsteg Band 3 (y -5400): Tuer 2070->2030 setzt den Spieler auf (6550,-5400,-100); die Umschaltzonen (RVD, RDT+0x28) dieses Cuts liegen auf y -5400 auf dem gemalten Ringboden (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    }
+   ]
+  },
+  "8": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 8 Objekt 08",
+     "png": "pri/STAGE2/2030/08.png",
+     "x": 182,
+     "y": 154,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 3214 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Ringsteg Band 3 (y -5400): Tuer 2070->2030 setzt den Spieler auf (6550,-5400,-100); die Umschaltzonen (RVD, RDT+0x28) dieses Cuts liegen auf y -5400 auf dem gemalten Ringboden (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    }
+   ]
+  },
+  "9": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 9 Objekt 09",
+     "png": "pri/STAGE2/2030/09.png",
+     "x": 73,
+     "y": 106,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 1912 Maskenpixel. Ebene y=-16200 GEMESSEN (2026-10-23): Obere Tuerebene Band 9 (y -16200): Tueren 2020/2060/2080->2030 setzen den Spieler auf y -16200, Auslöser 2030->2080/2020 auf Band 9; der Cut hat keine Umschaltzone, Kamera y -17032. \"zelle\" = das Gelaender selbst: Sperrzelle Band 9 (-6350,2450,500,8050) liegt im Pruefbild genau am gemalten Gelaenderfuss. Ohne sie hatten nur 16 von 216 Spalten einen eigenen Bodenpunkt - die Unterkante ist in den meisten Spalten der untere Holm, dessen Sehstrahl (Kamera nur 832 ueber Band 9, Blick 8 Grad nach oben) den Boden nicht trifft; die geerbten Standlinien liessen 7 Standplaetze VOR dem Gelaender verdecken (abgelehnt).",
+     "ebene": -16200,
+     "zelle": [
+      -6350,
+      2450,
+      500,
+      8050
+     ]
+    }
+   ]
+  },
+  "10": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 10 Objekt 10",
+     "png": "pri/STAGE2/2030/10.png",
+     "x": 208,
+     "y": 98,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 1347 Maskenpixel. Ebene y=-10800 GEMESSEN (2026-10-23): Buero Band 6 (y -10800): die Umschaltzonen dieses Cuts liegen auf y -10800 auf dem gemalten Bueroboden; Zelle Band 6 (Cut 12 IoU 0,90).",
+     "ebene": -10800
+    }
+   ]
+  },
+  "11": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 11 Objekt 11",
+     "png": "pri/STAGE2/2030/11.png",
+     "x": 223,
+     "y": 138,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 345 Maskenpixel. Ebene y=-10800 GEMESSEN (2026-10-23): Buero Band 6 (y -10800): die Umschaltzonen dieses Cuts liegen auf y -10800 auf dem gemalten Bueroboden; Zelle Band 6 (Cut 12 IoU 0,90).",
+     "ebene": -10800
+    }
+   ]
+  },
+  "12": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 12 Objekt 12",
+     "png": "pri/STAGE2/2030/12.png",
+     "x": 267,
+     "y": 159,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 3639 Maskenpixel. Ebene y=-10800 GEMESSEN (2026-10-23): Buero Band 6 (y -10800): die Umschaltzonen dieses Cuts liegen auf y -10800 auf dem gemalten Bueroboden; Zelle Band 6 (Cut 12 IoU 0,90).",
+     "ebene": -10800
+    }
+   ]
+  },
+  "13": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 13 Objekt 13_01",
+     "png": "pri/STAGE2/2030/13_01.png",
+     "x": 51,
+     "y": 122,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 672 Maskenpixel. Ebene y=-16200 GEMESSEN (2026-10-23): Obere Tuerebene Band 9 (y -16200): Tueren 2020/2060/2080->2030 setzen den Spieler auf y -16200, Auslöser 2030->2080/2020 auf Band 9; der Cut hat keine Umschaltzone, Kamera y -19314.",
+     "ebene": -16200
+    },
+    {
+     "name": "ROOM2030 Cut 13 Objekt 13_02",
+     "png": "pri/STAGE2/2030/13_02.png",
+     "x": 111,
+     "y": 93,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 1666 Maskenpixel. Ebene y=-16200 GEMESSEN (2026-10-23): Obere Tuerebene Band 9 (y -16200): Tueren 2020/2060/2080->2030 setzen den Spieler auf y -16200, Auslöser 2030->2080/2020 auf Band 9; der Cut hat keine Umschaltzone, Kamera y -19314.",
+     "ebene": -16200
+    }
+   ]
+  },
+  "14": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 14 Objekt 14_01",
+     "png": "pri/STAGE2/2030/14_01.png",
+     "x": 235,
+     "y": 96,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 1780 Maskenpixel. Ebene y=-1800 GEMESSEN (2026-10-23): Cut 14 = Kamerasatz von Cut 3 (pixelgleich, nie geschaltet): Mittelsteg Band 1 (y -1800): Steg-Zellen auf Band 1 (Zelle 12 x -2050..-50, Gelaender 3/4, UEBERGABE Runde 40); die Umschaltzonen dieses Cuts liegen auf y -1800 auf dem gemalten Steg, Kamera y ~-4065 liegt UNTER Band 3.",
+     "ebene": -1800
+    },
+    {
+     "name": "ROOM2030 Cut 14 Objekt 14_02",
+     "png": "pri/STAGE2/2030/14_02.png",
+     "x": 26,
+     "y": 91,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2841 Maskenpixel. Ebene y=-1800 GEMESSEN (2026-10-23): Cut 14 = Kamerasatz von Cut 3 (pixelgleich, nie geschaltet): Mittelsteg Band 1 (y -1800): Steg-Zellen auf Band 1 (Zelle 12 x -2050..-50, Gelaender 3/4, UEBERGABE Runde 40); die Umschaltzonen dieses Cuts liegen auf y -1800 auf dem gemalten Steg, Kamera y ~-4065 liegt UNTER Band 3.",
+     "ebene": -1800
+    },
+    {
+     "name": "ROOM2030 Cut 14 Objekt 14_03",
+     "png": "pri/STAGE2/2030/14_03.png",
+     "x": 0,
+     "y": 100,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 3916 Maskenpixel. Ebene y=-1800 GEMESSEN (2026-10-23): Cut 14 = Kamerasatz von Cut 3 (pixelgleich, nie geschaltet): Mittelsteg Band 1 (y -1800): Steg-Zellen auf Band 1 (Zelle 12 x -2050..-50, Gelaender 3/4, UEBERGABE Runde 40); die Umschaltzonen dieses Cuts liegen auf y -1800 auf dem gemalten Steg, Kamera y ~-4065 liegt UNTER Band 3.",
+     "ebene": -1800
+    }
+   ]
+  },
+  "15": {
+   "objekte": [
+    {
+     "name": "ROOM2030 Cut 15 Objekt 15",
+     "png": "pri/STAGE2/2030/15.png",
+     "x": 0,
+     "y": 126,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 5227 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Ringsteg Band 3: Cut 15 hat keine Umschaltzone (nie geschaltet), Blickziel y -5177 auf die Doppeltuer des Rings; Zelle Band 3 IoU 0,42.",
+     "ebene": -5400
+    }
+   ]
+  }
+ },
+ "ROOM2040": {
+  "1": {
+   "objekte": [
+    {
+     "name": "ROOM2040 Cut 1 Objekt 01",
+     "png": "pri/STAGE2/2040/01.png",
+     "x": 85,
+     "y": 90,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 3219 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Steg Band 4 (y -7200): die grosse Umschaltzone dieses Cuts liegt auf y -7200 zwischen Gelaender und Wand auf dem gemalten Steg (auf Band 3 laege sie davor ueber dem Kanal); Tuer-Ausloeser 2040->2050 traegt Band 4. \"zelle\": false - die beste Zelle dieses Bands trifft nur 10 % (IoU) der Silhouette, sie beschreibt den Gegenstand nicht (Regel ROOM10D0).",
+     "ebene": -7200,
+     "zelle": false
+    }
+   ]
+  },
+  "2": {
+   "objekte": [
+    {
+     "name": "ROOM2040 Cut 2 Objekt 02_01",
+     "png": "pri/STAGE2/2040/02_01.png",
+     "x": 0,
+     "y": 102,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 567 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Steg Band 4 (y -7200): die grosse Umschaltzone dieses Cuts liegt auf y -7200 zwischen Gelaender und Wand auf dem gemalten Steg (auf Band 3 laege sie davor ueber dem Kanal); Tuer-Ausloeser 2040->2050 traegt Band 4. \"zelle\": false - die beste Zelle dieses Bands trifft nur 1 % (IoU) der Silhouette, sie beschreibt den Gegenstand nicht (Regel ROOM10D0).",
+     "ebene": -7200,
+     "zelle": false
+    },
+    {
+     "name": "ROOM2040 Cut 2 Objekt 02_02",
+     "png": "pri/STAGE2/2040/02_02.png",
+     "x": 108,
+     "y": 109,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 1740 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Steg Band 4 (y -7200): die grosse Umschaltzone dieses Cuts liegt auf y -7200 zwischen Gelaender und Wand auf dem gemalten Steg (auf Band 3 laege sie davor ueber dem Kanal); Tuer-Ausloeser 2040->2050 traegt Band 4. \"zelle\": false - die beste Zelle dieses Bands trifft nur 4 % (IoU) der Silhouette, sie beschreibt den Gegenstand nicht (Regel ROOM10D0).",
+     "ebene": -7200,
+     "zelle": false
+    }
+   ]
+  },
+  "3": {
+   "objekte": [
+    {
+     "name": "ROOM2040 Cut 3 Objekt 03",
+     "png": "pri/STAGE2/2040/03.png",
+     "x": 0,
+     "y": 69,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 5481 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Band 3 (y -5400): Kamera y -6854 liegt UNTER Band 4, die Umschaltzone liegt auf y -5400 auf dem Steg; Zelle Band 3 IoU 0,28.",
+     "ebene": -5400
+    }
+   ]
+  },
+  "5": {
+   "objekte": [
+    {
+     "name": "ROOM2040 Cut 5 Objekt 05",
+     "png": "pri/STAGE2/2040/05.png",
+     "x": 32,
+     "y": 97,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 4027 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Steg Band 4 (y -7200): die grosse Umschaltzone dieses Cuts liegt auf y -7200 zwischen Gelaender und Wand auf dem gemalten Steg (auf Band 3 laege sie davor ueber dem Kanal); Tuer-Ausloeser 2040->2050 traegt Band 4. \"zelle\": false - die beste Zelle dieses Bands trifft nur 14 % (IoU) der Silhouette, sie beschreibt den Gegenstand nicht (Regel ROOM10D0).",
+     "ebene": -7200,
+     "zelle": false
+    }
+   ]
+  },
+  "6": {
+   "objekte": [
+    {
+     "name": "ROOM2040 Cut 6 Objekt 06_01",
+     "png": "pri/STAGE2/2040/06_01.png",
+     "x": 0,
+     "y": 81,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 472 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Steg Band 4 (y -7200): die grosse Umschaltzone dieses Cuts liegt auf y -7200 zwischen Gelaender und Wand auf dem gemalten Steg (auf Band 3 laege sie davor ueber dem Kanal); Tuer-Ausloeser 2040->2050 traegt Band 4. \"zelle\": false - die beste Zelle dieses Bands trifft nur 1 % (IoU) der Silhouette, sie beschreibt den Gegenstand nicht (Regel ROOM10D0).",
+     "ebene": -7200,
+     "zelle": false
+    },
+    {
+     "name": "ROOM2040 Cut 6 Objekt 06_02",
+     "png": "pri/STAGE2/2040/06_02.png",
+     "x": 135,
+     "y": 80,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 4418 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Steg Band 4 (y -7200): die grosse Umschaltzone dieses Cuts liegt auf y -7200 zwischen Gelaender und Wand auf dem gemalten Steg (auf Band 3 laege sie davor ueber dem Kanal); Tuer-Ausloeser 2040->2050 traegt Band 4. \"zelle\": false - die beste Zelle dieses Bands trifft nur 10 % (IoU) der Silhouette, sie beschreibt den Gegenstand nicht (Regel ROOM10D0).",
+     "ebene": -7200,
+     "zelle": false
+    }
+   ]
+  },
+  "7": {
+   "objekte": [
+    {
+     "name": "ROOM2040 Cut 7 Objekt 07",
+     "png": "pri/STAGE2/2040/07.png",
+     "x": 0,
+     "y": 110,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2981 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Band 3 (y -5400): Kamera y -7311 nur 111 ueber Band 4 (Zone dort als Strich auf Augenhoehe); die Umschaltzone liegt auf y -5400 auf dem Gitterboden.",
+     "ebene": -5400
+    }
+   ]
+  },
+  "9": {
+   "objekte": [
+    {
+     "name": "ROOM2040 Cut 9 Objekt 09_01",
+     "png": "pri/STAGE2/2040/09_01.png",
+     "x": 67,
+     "y": 101,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40). Lage fein gemessen (mittlere Farbabweichung ueber alle Pixel): x=67 y=101 Fehler 0,22, zweitbeste Lage 3,12. Die Grobmessung (x=60) hatte 356 gleich gute Lagen. Ebene y=-5400 GEMESSEN (2026-10-23): Band 3 (y -5400): Zelle Band 3 traegt 09_01 (IoU 0,69); Kamera y -8455.",
+     "ebene": -5400
+    },
+    {
+     "name": "ROOM2040 Cut 9 Objekt 09_02",
+     "png": "pri/STAGE2/2040/09_02.png",
+     "x": 127,
+     "y": 61,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 502 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Band 3 (y -5400): Zelle Band 3 traegt 09_01 (IoU 0,69); Kamera y -8455. \"zelle\": false - die beste Zelle dieses Bands trifft nur 5 % (IoU) der Silhouette, sie beschreibt den Gegenstand nicht (Regel ROOM10D0).",
+     "ebene": -5400,
+     "zelle": false
+    }
+   ]
+  },
+  "13": {
+   "objekte": [
+    {
+     "name": "ROOM2040 Cut 13 Objekt 13_01",
+     "png": "pri/STAGE2/2040/13_01.png",
+     "x": 0,
+     "y": 102,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 567 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Steg Band 4 (y -7200): die grosse Umschaltzone dieses Cuts liegt auf y -7200 zwischen Gelaender und Wand auf dem gemalten Steg (auf Band 3 laege sie davor ueber dem Kanal); Tuer-Ausloeser 2040->2050 traegt Band 4. \"zelle\": false - die beste Zelle dieses Bands trifft nur 1 % (IoU) der Silhouette, sie beschreibt den Gegenstand nicht (Regel ROOM10D0).",
+     "ebene": -7200,
+     "zelle": false
+    },
+    {
+     "name": "ROOM2040 Cut 13 Objekt 13_02",
+     "png": "pri/STAGE2/2040/13_02.png",
+     "x": 108,
+     "y": 109,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40). Lage fein gemessen: Massstab 1, x=108 y=109, Fehler 0,84 gegen 8,20 der zweitbesten Lage. Die Grobmessung nahm Massstab 3 (12 gleich gute Lagen) - die Phase-3-Falle. Ebene y=-7200 GEMESSEN (2026-10-23): Steg Band 4 (y -7200): die grosse Umschaltzone dieses Cuts liegt auf y -7200 zwischen Gelaender und Wand auf dem gemalten Steg (auf Band 3 laege sie davor ueber dem Kanal); Tuer-Ausloeser 2040->2050 traegt Band 4. \"zelle\": false - die beste Zelle dieses Bands trifft nur 4 % (IoU) der Silhouette, sie beschreibt den Gegenstand nicht (Regel ROOM10D0).",
+     "ebene": -7200,
+     "zelle": false
+    }
+   ]
+  },
+  "15": {
+   "objekte": [
+    {
+     "name": "ROOM2040 Cut 15 Objekt 15_01",
+     "png": "pri/STAGE2/2040/15_01.png",
+     "x": 4,
+     "y": 134,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 1138 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Band 3 (y -5400): Kamera y -7311 nur 111 ueber Band 4 (Zone dort als Strich auf Augenhoehe); die Umschaltzone liegt auf y -5400 auf dem Gitterboden.",
+     "ebene": -5400
+    },
+    {
+     "name": "ROOM2040 Cut 15 Objekt 15_02",
+     "png": "pri/STAGE2/2040/15_02.png",
+     "x": 0,
+     "y": 154,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 71 gleich gute Lage(n), 2197 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Band 3 (y -5400): Kamera y -7311 nur 111 ueber Band 4 (Zone dort als Strich auf Augenhoehe); die Umschaltzone liegt auf y -5400 auf dem Gitterboden.",
+     "ebene": -5400
+    },
+    {
+     "name": "ROOM2040 Cut 15 Objekt 15_03",
+     "png": "pri/STAGE2/2040/15_03.png",
+     "x": 208,
+     "y": 133,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 1101 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Band 3 (y -5400): Kamera y -7311 nur 111 ueber Band 4 (Zone dort als Strich auf Augenhoehe); die Umschaltzone liegt auf y -5400 auf dem Gitterboden.",
+     "ebene": -5400
+    }
+   ]
+  }
+ },
+ "ROOM2050": {
+  "0": {
+   "objekte": [
+    {
+     "name": "ROOM2050 Cut 0 Objekt 00",
+     "png": "pri/STAGE2/2050/00.png",
+     "x": 113,
+     "y": 83,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026), geliefert als 01.png, am 2026-10-23 in 00.png umbenannt (Nutzer: \"Sollte ich da nachweislich einen Fehler in der Benennung gemacht haben, benenne sie um\"). Beleg: Feinmessung (mittlere Farbabweichung ueber alle Maskenpixel, Massstab 1..4) - Kamera 0 x=113 y=83 Massstab 1 Fehler 1,02, in der Kamera des alten Namens (1) bestenfalls 18,73. In 2050 nannten die Dateien 01..04 durchgehend die Kamera plus eins; 05_xx, 09, 10, 12 passen zu ihrem Namen. Ebene y=-5400 GEMESSEN (2026-10-23): Laufsteg Band 3 (y -5400): Tueren 2000/2020/2040->2050 setzen den Spieler auf y -5400; die Umschaltzonen dieses Cuts liegen auf y -5400 auf dem gemalten Steg (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    }
+   ]
+  },
+  "1": {
+   "objekte": [
+    {
+     "name": "ROOM2050 Cut 1 Objekt 01",
+     "png": "pri/STAGE2/2050/01.png",
+     "x": 120,
+     "y": 88,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026), geliefert als 02.png, am 2026-10-23 in 01.png umbenannt (Nutzer: \"Sollte ich da nachweislich einen Fehler in der Benennung gemacht haben, benenne sie um\"). Beleg: Feinmessung (mittlere Farbabweichung ueber alle Maskenpixel, Massstab 1..4) - Kamera 1 x=120 y=88 Massstab 1 Fehler 1,08, in der Kamera des alten Namens (2) bestenfalls 13,67. In 2050 nannten die Dateien 01..04 durchgehend die Kamera plus eins; 05_xx, 09, 10, 12 passen zu ihrem Namen. Ebene y=-5400 GEMESSEN (2026-10-23): Laufsteg Band 3 (y -5400): Tueren 2000/2020/2040->2050 setzen den Spieler auf y -5400; die Umschaltzonen dieses Cuts liegen auf y -5400 auf dem gemalten Steg (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    }
+   ]
+  },
+  "2": {
+   "objekte": [
+    {
+     "name": "ROOM2050 Cut 2 Objekt 02",
+     "png": "pri/STAGE2/2050/02.png",
+     "x": 0,
+     "y": 114,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026), geliefert als 03.png, am 2026-10-23 in 02.png umbenannt (Nutzer: \"Sollte ich da nachweislich einen Fehler in der Benennung gemacht haben, benenne sie um\"). Beleg: Feinmessung (mittlere Farbabweichung ueber alle Maskenpixel, Massstab 1..4) - Kamera 2 x=0 y=114 Massstab 1 Fehler 0,49, in der Kamera des alten Namens (3) bestenfalls 7,38. In 2050 nannten die Dateien 01..04 durchgehend die Kamera plus eins; 05_xx, 09, 10, 12 passen zu ihrem Namen. Ebene y=-5400 GEMESSEN (2026-10-23): Laufsteg Band 3 (y -5400): Tueren 2000/2020/2040->2050 setzen den Spieler auf y -5400; die Umschaltzonen dieses Cuts liegen auf y -5400 auf dem gemalten Steg (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    }
+   ]
+  },
+  "3": {
+   "objekte": [
+    {
+     "name": "ROOM2050 Cut 3 Objekt 03",
+     "png": "pri/STAGE2/2050/03.png",
+     "x": 0,
+     "y": 105,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026), geliefert als 04.png, am 2026-10-23 in 03.png umbenannt (Nutzer: \"Sollte ich da nachweislich einen Fehler in der Benennung gemacht haben, benenne sie um\"). Beleg: Feinmessung (mittlere Farbabweichung ueber alle Maskenpixel, Massstab 1..4) - Kamera 3 x=0 y=105 Massstab 1 Fehler 0,57, in der Kamera des alten Namens (4) bestenfalls 9,34. In 2050 nannten die Dateien 01..04 durchgehend die Kamera plus eins; 05_xx, 09, 10, 12 passen zu ihrem Namen. Ebene y=-5400 GEMESSEN (2026-10-23): Laufsteg Band 3 (y -5400): Tueren 2000/2020/2040->2050 setzen den Spieler auf y -5400; die Umschaltzonen dieses Cuts liegen auf y -5400 auf dem gemalten Steg (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    }
+   ]
+  },
+  "5": {
+   "objekte": [
+    {
+     "name": "ROOM2050 Cut 5 Objekt 05_01",
+     "png": "pri/STAGE2/2050/05_01.png",
+     "x": 79,
+     "y": 92,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 3117 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Laufsteg Band 3 (y -5400): Tueren 2000/2020/2040->2050 setzen den Spieler auf y -5400; die Umschaltzonen dieses Cuts liegen auf y -5400 auf dem gemalten Steg (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    },
+    {
+     "name": "ROOM2050 Cut 5 Objekt 05_02",
+     "png": "pri/STAGE2/2050/05_02.png",
+     "x": 162,
+     "y": 110,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 1054 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Laufsteg Band 3 (y -5400): Tueren 2000/2020/2040->2050 setzen den Spieler auf y -5400; die Umschaltzonen dieses Cuts liegen auf y -5400 auf dem gemalten Steg (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    },
+    {
+     "name": "ROOM2050 Cut 5 Objekt 05_03",
+     "png": "pri/STAGE2/2050/05_03.png",
+     "x": 188,
+     "y": 101,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 840 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Laufsteg Band 3 (y -5400): Tueren 2000/2020/2040->2050 setzen den Spieler auf y -5400; die Umschaltzonen dieses Cuts liegen auf y -5400 auf dem gemalten Steg (Pruefbild zonen_bilder).",
+     "ebene": -5400
+    }
+   ]
+  },
+  "9": {
+   "objekte": [
+    {
+     "name": "ROOM2050 Cut 9 Objekt 09",
+     "png": "pri/STAGE2/2050/09.png",
+     "x": 0,
+     "y": 0,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 3 gleich gute Lage(n), 19304 Maskenpixel. Ebene y=-3600 GEMESSEN (2026-10-23): Band 2 (y -3600): Zelle Band 2 traegt die Silhouette vollstaendig (Anteil 1,00, IoU 0,61; Band 3 Anteil 0,52). Kamera y -6401 blickt in den Schacht.",
+     "ebene": -3600
+    }
+   ]
+  },
+  "10": {
+   "objekte": [
+    {
+     "name": "ROOM2050 Cut 10 Objekt 10",
+     "png": "pri/STAGE2/2050/10.png",
+     "x": 21,
+     "y": 33,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40). Lage fein gemessen: x=21 y=33 Fehler 1,48, zweitbeste 4,42 (Grobmessung x=20, 18 gleich gute Lagen). Ebene y=-5400 GEMESSEN (2026-10-23): das Objekt ist die Unterkante des oberen Laufstegs (Band 3), gesehen vom Beckengrund - es liegt UEBER der Kamera (y -3542), die Sehstrahlen durch seine Unterkante steigen und treffen die Stegebene y -5400. Auf y 0 (Boden des Cuts) trifft kein Strahl (\"keine Tiefe\").",
+     "ebene": -5400
+    }
+   ]
+  },
+  "12": {
+   "objekte": [
+    {
+     "name": "ROOM2050 Cut 12 Objekt 12",
+     "png": "pri/STAGE2/2050/12.png",
+     "x": 270,
+     "y": 15,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 2 gleich gute Lage(n), 6084 Maskenpixel. Ebene y=0 GEMESSEN (2026-10-23): Beckengrund Band 0 (y 0): keine Tuer fuehrt hierher, aber die Umschaltzonen dieses Cuts liegen NUR auf y 0 auf dem gemalten Boden (auf -1800 schweben sie an der Wand); Kamera y -3835. Zelle Band 0 (Cut 12 IoU 0,77).",
+     "ebene": 0
+    }
+   ]
+  }
+ },
+ "ROOM2080": {
+  "2": {
+   "objekte": [
+    {
+     "name": "ROOM2080 Cut 2 Objekt 02_01",
+     "png": "pri/STAGE2/2080/02_01.png",
+     "x": 0,
+     "y": 158,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2016 Maskenpixel. Ebene y=-14400 GEMESSEN (2026-10-23): Band 8 (y -14400): Tuer 2090->2080 setzt den Spieler auf y -14400; die Umschaltzonen liegen auf y -14400 auf dem gemalten Boden; Zelle Band 8 (04_02 IoU 0,72, 07 0,45).",
+     "ebene": -14400
+    },
+    {
+     "name": "ROOM2080 Cut 2 Objekt 02_02",
+     "png": "pri/STAGE2/2080/02_02.png",
+     "x": 199,
+     "y": 127,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2609 Maskenpixel. Ebene y=-14400 GEMESSEN (2026-10-23): Band 8 (y -14400): Tuer 2090->2080 setzt den Spieler auf y -14400; die Umschaltzonen liegen auf y -14400 auf dem gemalten Boden; Zelle Band 8 (04_02 IoU 0,72, 07 0,45).",
+     "ebene": -14400
+    }
+   ]
+  },
+  "3": {
+   "objekte": [
+    {
+     "name": "ROOM2080 Cut 3 Objekt 03",
+     "png": "pri/STAGE2/2080/03.png",
+     "x": 182,
+     "y": 0,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 11225 Maskenpixel. Ebene y=-14400 GEMESSEN (2026-10-23): Band 8 (y -14400): Tuer 2090->2080 setzt den Spieler auf y -14400; die Umschaltzonen liegen auf y -14400 auf dem gemalten Boden; Zelle Band 8 (04_02 IoU 0,72, 07 0,45).",
+     "ebene": -14400
+    }
+   ]
+  },
+  "4": {
+   "objekte": [
+    {
+     "name": "ROOM2080 Cut 4 Objekt 04_01",
+     "png": "pri/STAGE2/2080/04_01.png",
+     "x": 0,
+     "y": 91,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2471 Maskenpixel. Ebene y=-14400 GEMESSEN (2026-10-23): Band 8 (y -14400): Tuer 2090->2080 setzt den Spieler auf y -14400; die Umschaltzonen liegen auf y -14400 auf dem gemalten Boden; Zelle Band 8 (04_02 IoU 0,72, 07 0,45).",
+     "ebene": -14400
+    },
+    {
+     "name": "ROOM2080 Cut 4 Objekt 04_02",
+     "png": "pri/STAGE2/2080/04_02.png",
+     "x": 167,
+     "y": 116,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 322 Maskenpixel. Ebene y=-14400 GEMESSEN (2026-10-23): Band 8 (y -14400): Tuer 2090->2080 setzt den Spieler auf y -14400; die Umschaltzonen liegen auf y -14400 auf dem gemalten Boden; Zelle Band 8 (04_02 IoU 0,72, 07 0,45).",
+     "ebene": -14400
+    }
+   ]
+  },
+  "7": {
+   "objekte": [
+    {
+     "name": "ROOM2080 Cut 7 Objekt 07",
+     "png": "pri/STAGE2/2080/07.png",
+     "x": 188,
+     "y": 0,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 3636 Maskenpixel. Ebene y=-14400 GEMESSEN (2026-10-23): Band 8 (y -14400): Tuer 2090->2080 setzt den Spieler auf y -14400; die Umschaltzonen liegen auf y -14400 auf dem gemalten Boden; Zelle Band 8 (04_02 IoU 0,72, 07 0,45).",
+     "ebene": -14400
+    }
+   ]
+  }
+ },
+ "ROOM20A0": {
+  "2": {
+   "objekte": [
+    {
+     "name": "ROOM20A0 Cut 2 Objekt 02",
+     "png": "pri/STAGE2/20A0/02.png",
+     "x": 247,
+     "y": 0,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 12320 Maskenpixel. Ebene y=-1800 GEMESSEN (2026-10-23): Band 1 (y -1800) fuer die Wand am rechten Rand: Zelle Band 1 traegt sie (IoU 0,57, Band 2 nur 0,18). Der Spieler steht in Cut 2 auf dem hinteren Steg (Band 2), die Wand reicht vorn tiefer hinab.",
+     "ebene": -1800
+    }
+   ]
+  },
+  "4": {
+   "objekte": [
+    {
+     "name": "ROOM20A0 Cut 4 Objekt 04_01",
+     "png": "pri/STAGE2/20A0/04_01.png",
+     "x": 0,
+     "y": 50,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 3 gleich gute Lage(n), 3943 Maskenpixel. Ebene y=0 GEMESSEN (2026-10-23): Band 0 (y 0): Kamera y -2916 liegt UNTER Band 2; Zelle Band 0 traegt die Objekte (04_01 IoU 0,87, 05_02 0,71).",
+     "ebene": 0
+    },
+    {
+     "name": "ROOM20A0 Cut 4 Objekt 04_02",
+     "png": "pri/STAGE2/20A0/04_02.png",
+     "x": 19,
+     "y": 0,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 3019 Maskenpixel. Ebene y=0 GEMESSEN (2026-10-23): Band 0 (y 0): Kamera y -2916 liegt UNTER Band 2; Zelle Band 0 traegt die Objekte (04_01 IoU 0,87, 05_02 0,71).",
+     "ebene": 0
+    }
+   ]
+  },
+  "5": {
+   "objekte": [
+    {
+     "name": "ROOM20A0 Cut 5 Objekt 05_01",
+     "png": "pri/STAGE2/20A0/05_01.png",
+     "x": 45,
+     "y": 18,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 6301 Maskenpixel. Ebene y=0 GEMESSEN (2026-10-23): Band 0 (y 0): Kamera y -2916 liegt UNTER Band 2; Zelle Band 0 traegt die Objekte (04_01 IoU 0,87, 05_02 0,71).",
+     "ebene": 0
+    },
+    {
+     "name": "ROOM20A0 Cut 5 Objekt 05_02",
+     "png": "pri/STAGE2/20A0/05_02.png",
+     "x": 122,
+     "y": 0,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 40046 Maskenpixel. Ebene y=0 GEMESSEN (2026-10-23): Band 0 (y 0): Kamera y -2916 liegt UNTER Band 2; Zelle Band 0 traegt die Objekte (04_01 IoU 0,87, 05_02 0,71).",
+     "ebene": 0
+    }
+   ]
+  },
+  "8": {
+   "objekte": [
+    {
+     "name": "ROOM20A0 Cut 8 Objekt 08",
+     "png": "pri/STAGE2/20A0/08.png",
+     "x": 127,
+     "y": 98,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2922 Maskenpixel. Ebene y=-3600 GEMESSEN (2026-10-23): Band 2 (y -3600): der Steg fuehrt zur Tuer nach 11A0 (Ausloeser (25800,50) Band 2, Gegenrichtung setzt auf y -3600).",
+     "ebene": -3600
+    }
+   ]
+  },
+  "9": {
+   "objekte": [
+    {
+     "name": "ROOM20A0 Cut 9 Objekt 09",
+     "png": "pri/STAGE2/20A0/09.png",
+     "x": 89,
+     "y": 62,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 3263 Maskenpixel. Ebene y=-3600 GEMESSEN (2026-10-23): Band 2 (y -3600): der Steg fuehrt zur Tuer nach 11A0 (Ausloeser (25800,50) Band 2, Gegenrichtung setzt auf y -3600).",
+     "ebene": -3600
+    }
+   ]
+  },
+  "10": {
+   "objekte": [
+    {
+     "name": "ROOM20A0 Cut 10 Objekt 10",
+     "png": "pri/STAGE2/20A0/10.png",
+     "x": 0,
+     "y": 52,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 4409 Maskenpixel. Ebene y=-3600 GEMESSEN (2026-10-23): Band 2 (y -3600): der Steg fuehrt zur Tuer nach 11A0 (Ausloeser (25800,50) Band 2, Gegenrichtung setzt auf y -3600).",
+     "ebene": -3600
+    }
+   ]
+  },
+  "12": {
+   "objekte": [
+    {
+     "name": "ROOM20A0 Cut 12 Objekt 12_01",
+     "png": "pri/STAGE2/20A0/12_01.png",
+     "x": 75,
+     "y": 59,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2064 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Band 4 (y -7200): Blickziel (11754,-8335,-20268) liegt am Austritt der Leiter-Tuer 20A0->20A0 (16500,-7200,-20000); Zelle Band 4 traegt 12_01 (IoU 0,81).",
+     "ebene": -7200
+    },
+    {
+     "name": "ROOM20A0 Cut 12 Objekt 12_02",
+     "png": "pri/STAGE2/20A0/12_02.png",
+     "x": 94,
+     "y": 126,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 237 gleich gute Lage(n), 3572 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Band 4 (y -7200): Blickziel (11754,-8335,-20268) liegt am Austritt der Leiter-Tuer 20A0->20A0 (16500,-7200,-20000); Zelle Band 4 traegt 12_01 (IoU 0,81).",
+     "ebene": -7200
+    }
+   ]
+  }
  }
 }

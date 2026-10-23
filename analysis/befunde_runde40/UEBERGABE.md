@@ -5,6 +5,32 @@ Zeiten immer aus der Uhr (date), nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-23 13:20: Release-Lauf 2 im Linux-Schritt ROT: 1144/1145, unit_r35_android_konflikt TIMEOUT. Befund: vier
+  r35_android_pruefstand-Prozesse hingen seit 11:55 im Container (docker top), Szenarien K2_update, K2_neustart,
+  K3_frisch, K3_update; jedes Protokoll endet nach "3 / 3 DATEIEN (100%)" - danach kommen in android_glue.c nur
+  sync() (:654), liste_schreiben (fsync/rename) und "Entpacken fertig" (nie gedruckt). Container nicht mehr
+  betretbar (setns-Fehler), nicht killbar ("did not receive an exit event") -> D-Zustand. Docker Desktop kam nach
+  `docker desktop restart` nicht hoch, `wsl --shutdown` haengt (13:18). OFFEN: genaue Wartestelle (sync oder fsync)
+  nicht gemessen - KEIN Code geaendert. Erstauftreten (v0.8.26/27 und Lauf 1 ohne diesen Test rot).
+  Inzwischen committet: a8be31a7 (pri: 75 Nutzer-Freistellungen + 219 *_port.png als Uebersicht, 2050 01..04 ->
+  00..03 umbenannt, Beleg im Commit), 2010a4a2 (pri_stage1_hashes.inc neu, unit_pri_hashes 1/1), cc682b95
+  (raum.py --p2). Geparkte 11A0-Masken waren schon zurueckgelegt (Nutzer gegen Parken). Neuer Lauf muss ab
+  `windows` (re15_port hat neue Commits).
+* 2026-10-23 13:10: Nutzer-Freistellungen -> Masken (Nutzer "ja, mach das"): Ebene je Cut GEMESSEN und in
+  analysis/esp_masken_2026-09-03/auswahl.json eingetragen (Beleg je Objekt im "grund"): Tuer-Eintritte (ny),
+  Tuer-Ausloeser-Band, Umschaltzonen RVD je Band in den Cut projiziert (welche Hoehe liegt auf dem gemalten Boden),
+  Sperrzellen je Band, Kamera-Hoehe. Ergebnis: 11A0 1/3=-1800, 6=0; 2010/2020 einziges Band (auto); 2030 Ring
+  0/1/2/7/8/15=-5400, Mittelsteg 3/5/6/14=-1800, Tuerebene 9/13=-16200, Buero 10/11/12=-10800; 2040 1/2/5/6/13=-7200,
+  3/7/9/15=-5400; 2050 Steg 0/1/2/3/5=-5400, 9=-3600, Beckengrund 12=0, 10=-5400 (Stegunterkante ueber der Kamera);
+  2080 alle -14400; 20A0 2=-1800, 4/5=0, 8/9/10=-3600, 12=-7200. ⛔ geom.begehbare_baender (Tueren+Treppen) kennt den
+  Beckengrund 2050 NICHT (keine Tuer fuehrt hin) - die Regel "einziges Band" waere dort falsch gewesen.
+  2030 C9 Gelaender: "zelle" (-6350,2450,500,8050) - Unterkante = Holm, Sehstrahlen trafen den Boden nicht.
+  Probebau aller 53 Cuts: fehlt 0 / zuviel 0 / VORverd 0. Masken werden in scratchpad/masks_r40 geschrieben und
+  erst NACH dem Release nach MASKS/ kopiert (re15_port muss waehrend des Laufs sauber sein).
+* 2026-10-23: STAGE3-6-Masken "ueberall Loecher" (Nutzer): GEMESSEN - keine eigenen _PRIcc.TIM, die Rechtecke des
+  Generators (b8db7b2b) lesen den Original-SLD-Atlas, CLUT[0]=0x0000 (wirklich durchsichtig), 17,3 % der Rechteck-
+  Texel tragen Index 0 (3050 C1: 51 %). Vorschlag an den Nutzer offen.
+
 * 2026-10-23 11:50: Release-Lauf 1 (10:32) im Linux-Schritt ROT: unit_r37_kistenregel_raumstart (Querbezug zu
   nahaufnahmen_r40: 1100/1101 Platz 2 ohne Geraet jetzt Ereignis 31 -> Erwartung angepasst 1207e1f5) und
   unit_pri_hashes (unversionierte Nutzer-Masken pri/STAGE1/11A0 gehen per kopie_lauf.sh "unversioniert-nicht-
