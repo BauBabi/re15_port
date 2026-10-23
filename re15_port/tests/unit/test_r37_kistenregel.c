@@ -297,8 +297,8 @@ static const rs_fall_t k_rs[] = {
     { "K1 1090",      0x1090, 0,      0, -1800,    250, F_K1,  0x31, 3, 0x81,  2, T_MSG, 7,  T_GEN, 6,  -1, 0 },
     { "K5 11E0",      0x11E0, 0, -12450,     0,  -8200, F_K5,  0x30, 4, 0x24,  6, T_MSG, 10, T_GEN, 26, -2, 0 },
     { "K5 11E1",      0x11E1, 1, -12450,     0,  -8200, F_K5,  0x30, 4, 0x24,  6, T_MSG, 10, T_GEN, 26, -2, 0 },
-    { "K6 1100",      0x1100, 0, -25450,     0,  -9000, F_K6,  0x44, 4, 0xE8,  2, T_MSG, 1,  T_GEN, 7,  T_MSG, 5 },
-    { "K6 1101",      0x1101, 1, -25450,     0,  -9000, F_K6,  0x44, 4, 0xE8,  2, T_MSG, 1,  T_GEN, 7,  T_MSG, 5 },
+    { "K6 1100",      0x1100, 0, -25450,     0,  -9000, F_K6,  0x44, 4, 0xE8,  2, T_GEN, 31, T_GEN, 7,  T_MSG, 5 },  /* ohne Geraet: Runde 40 Nahaufnahme VUS (re15_nahaufnahmen_r40.h), Platz 2 -> Ereignis 31, das msg 1 zeigt */
+    { "K6 1101",      0x1101, 1, -25450,     0,  -9000, F_K6,  0x44, 4, 0xE8,  2, T_GEN, 31, T_GEN, 7,  T_MSG, 5 },  /* ohne Geraet: Runde 40 Nahaufnahme VUS (re15_nahaufnahmen_r40.h), Platz 2 -> Ereignis 31, das msg 1 zeigt */
     { "K7 3010",      0x3010, 0, -26750, -1800, -19800, F_K7,  0x36, 3, 0x3C,  6, T_MSG, 0,  T_GEN, 2,  T_DOOR, -1 },
     { "K7 3011",      0x3011, 1, -26750, -1800, -19800, F_K7,  0x36, 3, 0x3C,  6, T_MSG, 0,  T_GEN, 2,  T_DOOR, -1 },
     { "K8 3050",      0x3050, 0, -25400,     0, -15900, F_K8,  0x46, 3, 0xB3, 10, T_MSG, 3,  T_GEN, 10, T_MSG, 7 },
