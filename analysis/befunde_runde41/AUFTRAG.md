@@ -107,7 +107,7 @@ Umgesetzt vom Orchestrator: `%LOCALAPPDATA%/DuckStation/settings.ini` `[MediaCap
 DuckStation-Start; Sicherung `settings.ini.vor_ffmpeg_2026-10-23`. Agenten: settings.ini NICHT auf MediaFoundation/avi
 zuruecksetzen; Aufnahmen landen als .mp4 (Frames per ffmpeg extrahieren).
 
-## 2026-10-23 17:4x — Nachtrag 2 (Wortlaut; betrifft Spur A und jede Original-Messung mit Bild)
+## 2026-10-23 17:37 — Nachtrag 2 (Wortlaut; betrifft Spur A und jede Original-Messung mit Bild)
 
 > Du scheinst immernoch kein Video aufgenommen zu haben, wie du es wohl vorhin geplant hast. Warum?
 
