@@ -78,3 +78,33 @@ Effekt 0x0f der Raum-Bank (ROOM20B0.RDT idh @0x3450, ids 05 06 07 0b 0c 0d 0f; 0
   36 Anim-Saetze / 17 Zellen, TIM @0x21e34, rowblk 0x4d18, Sub-Offsets [4,26,48,70,92,114,136,158]):
   sub 0: 1 Strom, 2 Zeilen: Zeile0 A=10 (gate 4, p0e=7), Zeile1 A=0 acc=(0,10,0) vel=(120,-80,0);
   sub 1: vel (90,-180,0); sub 2: vel (60,-30,0); sub 3: vel (100,0,0) acc 0; (sub 4..7 s.u.).
+
+### 1.3 Original-Messung (DuckStation, MZD-Disc, Debug-JUMP Stage 2 Raum 0x20B "L TUNNEL FLOOD")
+Werkzeug: `re15_quickload.py --triangle 1 --right 11 --postload N` (Basis stage_saves/mzd_debugmenu.sav, Flag
+(3,0xEB)=0), Savestates ts_10/12/14/16.sav + flut_a.sav (~50 s); Auswertung em024_dump.py (Entity-Feld
++0x34/+0x8c/+0x5/+0x6/+0x1d0, ESP-Pool 0x800a73b8 Stride 0x108) und re15_ss.py (Framebuffer).
+Vorab: settings.ini hatte `ConfirmPowerOff = true` (Close haengt im Dialog, kein resume.sav) -> auf false
+gesetzt (Skill-Voraussetzung); Media-Capture per Pad-Hotkey lieferte nur 0,9 s -> Savestate-Reihe statt Video.
+Befund (widerlegt die R38-Notiz "Original-Debug-Sprung startet die Flut nicht"): der JUMP startet die Szene
+sofort (sub02), Leon steht am Ende bei (-20657,-1800,-9629) Gier 2779 = Ziel des letzten Plc_dest in sub05
+(0xaf74,-0x25e9 = -20620,-9705); flut_a.sav: Spielerzustand 1 (frei), alle 35 EM024 leben weiter (Zustand 1).
+EM024-RAM (alle 35 gleich): +0x8c und x folgen exakt der Drift: ts_10 x=-17166/+0x8c=251 = Bild 131
+(7200 - 131*(121+251)/2), erster Umbruch bei Bild 161 (x<-25000 -> x=20000, +0x8c=225), ts_12 x=15290/245
+(Bild 181), ts_14 x=1172/297 (Bild 233), flut_a x=-3716/313 (Bild n*k...). +0x93=1, +0x94=0, +0x95=1 KONSTANT
+(kein Bildvorschub), +0x5 = grid (5/1/0), +0x6 = Phase (grid 1: 0..3, grid 0: 0..1), +0x1d0 = Takt.
+Part-Record *(+0x188): Wort 0 = 0 (Bit 0 = ZEICHENMASKE geloescht @0x8010efe4 -> das EM024-Mesh wird NIE
+gezeichnet; nur die Partikel sind sichtbar), Matrix +0x40 = Einheitsrotation, T = (x, y-3329, z) =
+Knochen 0 der Pose (0,-3329,0) + Entity-Lage.
+ESP-Pool: nur Effekt 0x0f, st=7 (Flags lebend|sichtbar|Folge), sub 00 (grid 1) / 07 (grid 0), Skalen
+0x2000/0x2600/0x2c00/0x3000/0x3200/0x3800/0x4000, +0x2e = a1 (-200/-100/0/100), Versatz +0x40 = die
+Disasm-Vektoren, z.B. (200,1800,-1200), (-1000,2700,-1200), (800,600,0). Zu jedem Zeitpunkt 3..14 Plaetze
+mit 0x0f aktiv. Weltlage (y) der Partikel -2389..-4879 = ueber dem Boden (-1800), Bewegung nach oben/vorn.
+Bilder: ts_10 (Bild 131) Cut auf die Westtuer: ein Tuerblatt (obj 3) liegt schraeg quer, Leon in der Tuer;
+ts_12 Nahaufnahme (Cut 15), ts_14 Leon frei neben dem Rahmen. Die Partikel stehen zu diesen Zeitpunkten
+im Ostteil (x 1300..2800) und sind in den West-Cuts nicht im Bild -> Fruehphase (Bild 0..130, Osttuer, Cut 11)
+noch zu messen (Serie 5..9 s).
+Original-AOT-Mechanik fuer sub05: FUN_800436a8 (AUTO-Pass, a2=0 fuer Spieler Pool 1 @0x800436bc-cc und
+jeden Gegner Pool 2 @0x80043720-28) wird UNBEDINGT je Bild aus der Hauptschleife gerufen (`jal 0x800436a8`
+@0x8001ce1c, direkt nach FUN_80031c44/FUN_8002bd44) - kein Gate auf Pad-Sperre/Spielermodus. Port:
+aot_common.c Z.1169 `if (in_cinematic && a->type != CAM_SWITCH) continue;` (BL-round 2026-05-29, Port-Wahl
+ohne Adresse) blockiert den AUTO-Satz 7 (0x41), solange (2,7)=1 den Spieler auf player_mode 2 haelt.
