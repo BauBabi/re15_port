@@ -50,7 +50,8 @@ static int      s_fade_an = 0;
 static int      s_v13_vorher = -1;  /* Flanke von Bit 101 fuer den Klick                                      */
 static unsigned s_letzter_raum = 0xFFFFu;
 static int      s_wasser_prop[2] = { -1, -1 };
-static int      s_spritzer_takt = 0;
+static int      s_fuesse_nass = 0;  /* 2030: die steigende Flaeche hat die Fuesse erreicht (einmal je Flut)    */
+static int      s_spritzer_n = 0;   /* Spritzer-Ereignisse seit dem Raumstart (Riegel)                        */
 /* 2050 Pult */
 static int      s_panel_aktiv = 0;
 static unsigned s_schalter = 0;
@@ -329,7 +330,7 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
         bit_setzen(RE15_R41C_BIT_LEITER_FREI);
         LOG("[ventilkette41] Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100 (Flut gelaufen, Leiter frei)\n");
     }
-    s_timer = 0; s_timer_gesehen = 0; s_flut = 0; s_ertrunken = 0; s_spritzer_takt = 0;
+    s_timer = 0; s_timer_gesehen = 0; s_flut = 0; s_ertrunken = 0; s_fuesse_nass = 0; s_spritzer_n = 0;
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
@@ -349,7 +350,7 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
 void re15_ventilkette_r41_reset(void)
 {
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
-    s_timer = 0; s_timer_gesehen = 0; s_flut = 0; s_ertrunken = 0; s_spritzer_takt = 0; s_v13_vorher = -1; s_letzter_raum = 0xFFFFu;
+    s_timer = 0; s_timer_gesehen = 0; s_flut = 0; s_ertrunken = 0; s_fuesse_nass = 0; s_spritzer_n = 0; s_v13_vorher = -1; s_letzter_raum = 0xFFFFu;
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
 }
@@ -465,14 +466,20 @@ static void flut_tick(void)
     if (s_wasser_prop[0] < 0) return;
     const int32_t wy = g_scd.props[s_wasser_prop[0]].y;
     if (s_ertrunken) return;
-    /* Spritzer am Spieler, sobald die Flaeche seine Fuesse erreicht (Wasser-Schritt-Effekt FUN_80045630) */
-    if (wy <= pl->y && wy > pl->y - RE15_R41C_ERTRINK_TIEFE) {
-        if (++s_spritzer_takt >= RE15_R41C_SPRITZER_TAKT) {
-            s_spritzer_takt = 0;
-            const uint32_t code = RE15_WASSER_R38_CODE_BODEN;
-            re15_esp_fx_spawn_rows(re15_esp_room_bank(), (uint8_t)(code >> 24), (uint8_t)((code >> 16) & 0xffu),
-                                   (uint16_t)(code & 0xffffu), pl->x, wy, pl->z, INT32_MAX, pl->rot_y);
-        }
+    /* Spritzer: das Original setzt den Wasser-Schritt-Effekt nur je Fuss-Aufsetzer (Bildwort-Bit 0x4000
+     * `andi v0,v1,0x4000` @0x8003253c -> `jal 0x80045630` @0x8003255c; dort Wasserboden `andi v0,s0,0x80`
+     * @0x800456ac -> EIN Effekt 0x06050D00 `lui a0,0x605`/`ori a0,a0,0xd00` @0x800456b8/bc, Gier +0x6a @0x800456d0,
+     * `jal 0x80019700` @0x80045710). Waehrend der Flut steht der Spieler (Pad-Sperre), es gibt keinen Aufsetzer;
+     * der Port setzt den Effekt deshalb als EREIGNIS genau einmal, wenn die steigende Flaeche die Fuesse erreicht
+     * (PORT-WAHL ohne eigene Rate; Anker = Spielerlage auf der Flaeche statt Part[Fuss]+0x40 + (0,100,0)). */
+    if (!s_fuesse_nass && wy <= pl->y) {
+        s_fuesse_nass = 1;
+        s_spritzer_n++;
+        const uint32_t code = RE15_WASSER_R38_CODE_BODEN;
+        re15_esp_fx_spawn_rows(re15_esp_room_bank(), (uint8_t)(code >> 24), (uint8_t)((code >> 16) & 0xffu),
+                               (uint16_t)(code & 0xffffu), pl->x, wy, pl->z, INT32_MAX, pl->rot_y);
+        LOG("[ventilkette41] SPRITZER: Wasser y %d erreicht die Fuesse (Spieler y %d), Effekt 0x06050D00\n",
+            (int)wy, (int)pl->y);
     }
     /* Ertrinken, sobald die Flaeche 900 ueber den Fuessen steht — spaetestens auf der Tuerebene (Endlage -16200):
      * "Zeit abgelaufen und noch im Raum: Tot" gilt auf jeder Ebene (NUTZER-VORGABE). */
@@ -490,6 +497,7 @@ static void flut_tick(void)
 int re15_ventilkette_r41_timer_laeuft(void) { return s_timer; }
 int re15_ventilkette_r41_flut_laeuft(void)  { return s_flut; }
 int re15_ventilkette_r41_ertrunken(void)    { return s_ertrunken; }
+int re15_ventilkette_r41_spritzer(void)     { return s_spritzer_n; }
 
 void re15_ventilkette_r41_tick(void)
 {

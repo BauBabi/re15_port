@@ -368,8 +368,9 @@ static void fall_d(uint16_t r)
            "ROOM%04X: Wasserflaechen angelegt und geparkt (z %d)", r, pa >= 0 ? (int)g_scd.props[pa].z : 0);
     PRUEFE(re15_ventilkette_r41_programm("2030_ventile", NULL) != NULL, "Programm 2030_ventile");
     /* Zaehler bis zum Ende: 1800 Takte Sleep (600 liefen schon in druecken) */
-    int takte = 0, flut_bei = -1, tot_bei = -1;
-    int32_t wy_vorher = 0, wy_tot = 0;
+    int takte = 0, flut_bei = -1, tot_bei = -1, spritz_bei = -1;
+    int32_t wy_vorher = 0, wy_tot = 0, wy_spritz = 0;
+    PRUEFE(re15_ventilkette_r41_spritzer() == 0, "ROOM%04X: vor der Flut kein Spritzer", r);
     for (int i = 0; i < 2800; i++) {
         g_scd_pad_edge = 0; g_scd_pad_held = 0;
         if (g_scd.message_active && (i & 7) == 7) g_scd_pad_edge = 0x4000;
@@ -377,6 +378,7 @@ static void fall_d(uint16_t r)
         g_scd_pad_edge = 0;
         if (flut_bei < 0 && re15_ventilkette_r41_flut_laeuft()) { flut_bei = takte; wy_vorher = g_scd.props[pa].y; }
         if (tot_bei < 0 && g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0) { tot_bei = takte; wy_tot = g_scd.props[pa].y; }
+        if (spritz_bei < 0 && re15_ventilkette_r41_spritzer() > 0) { spritz_bei = takte; wy_spritz = g_scd.props[pa].y; }
         if (flut_bei > 0 && takte == flut_bei + 10) {
             PRUEFE(g_scd.props[pa].y == wy_vorher - 10 * RE15_R41C_WASSER_SCHRITT || g_scd.props[pa].y < wy_vorher,
                    "ROOM%04X: Wasser steigt 50/Takt (y %d -> %d nach 10 Takten)", r, (int)wy_vorher, (int)g_scd.props[pa].y);
@@ -395,6 +397,11 @@ static void fall_d(uint16_t r)
            "ROOM%04X: Zeit abgelaufen und noch im Raum -> tot (hp %d)", r, g_actors[RE15_ACTOR_SLOT_PLAYER].hp);
     PRUEFE(tot_bei > 0 && wy_tot <= -5400 - RE15_R41C_ERTRINK_TIEFE && wy_tot > -5400 - RE15_R41C_ERTRINK_TIEFE - RE15_R41C_WASSER_SCHRITT,
            "ROOM%04X: Tod, als das Wasser 900 ueber den Fuessen stand (Wasser y %d beim Tod, Fuesse -5400)", r, (int)wy_tot);
+    /* Spritzer = EIN Ereignis, wenn die Flaeche die Fuesse erreicht (Original nur je Fuss-Aufsetzer @0x8003253c ->
+     * FUN_80045630 @0x800456b8; keine Rate) — nicht davor, nicht wiederholt bis zum Tod. */
+    PRUEFE(spritz_bei > 0 && wy_spritz == -5400 && spritz_bei < tot_bei && re15_ventilkette_r41_spritzer() == 1,
+           "ROOM%04X: genau ein Spritzer, als die Flaeche die Fuesse erreichte (Takt %d, Wasser y %d, Tod %d, Zahl %d)", r,
+           spritz_bei, (int)wy_spritz, tot_bei, re15_ventilkette_r41_spritzer());
     PRUEFE(g_scd.props[pa].y == RE15_R41C_WASSER_Y_ENDE, "ROOM%04X: Wasser am Ende auf der Tuerebene y %d (ist %d)", r,
            RE15_R41C_WASSER_Y_ENDE, (int)g_scd.props[pa].y);
     /* Blau bleibt: ABR 2 (B-F) zieht nur Rot + Gruen ab (Masken r/g 0xff, b 0x00); gemessen 2026-10-23 22:05, dass
@@ -443,6 +450,9 @@ static void fall_d2(uint16_t r)
      * und Tod im Takt flut_bei + 323. Gemessen 323 (Leon + Elza), Lauf 2026-10-23 21:50. */
     PRUEFE(flut_bei > 0 && tot_bei - flut_bei >= RE15_R41C_WASSER_SCHRITTE - 1 && tot_bei - flut_bei <= RE15_R41C_WASSER_SCHRITTE + 4,
            "ROOM%04X D2: Tod %d Takte nach Flutbeginn (324 Schritte, der erste im Marker-Takt)", r, tot_bei - flut_bei);
+    /* Die Flaeche erreicht die Fuesse (-16200) erst mit der Endlage: ein Spritzer im Todestakt, keiner davor. */
+    PRUEFE(re15_ventilkette_r41_spritzer() == 1, "ROOM%04X D2: genau ein Spritzer (Fuesse auf der Tuerebene, Zahl %d)", r,
+           re15_ventilkette_r41_spritzer());
 }
 
 /* ---- E: Verlassen -> Flut gelaufen; 20B0; Umlenkung; 2030 unter Wasser ------------------------------------ */

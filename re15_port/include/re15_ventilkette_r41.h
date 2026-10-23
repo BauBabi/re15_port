@@ -197,8 +197,8 @@
 #define RE15_R41C_WASSER_X         (-10800)  /* Flaeche 0..21600 -> x -10800..10800            */
 #define RE15_R41C_WASSER_ZA        (-12400)  /* Flaeche A 0..16200 -> z -12400..3800            */
 #define RE15_R41C_WASSER_ZB        3800      /* Flaeche B -> z 3800..20000                      */
-#define RE15_R41C_WASSER_PARK_Z    60000     /* ausserhalb jeder Kamera, bis der Zaehler laeuft */
-#define RE15_R41C_WASSER_PARK_Y    1800
+#define RE15_R41C_WASSER_PARK_Z    60000     /* ausserhalb jeder Kamera, bis die Flut laeuft: PORT-WAHL des Parkplatzes, */
+#define RE15_R41C_WASSER_PARK_Y    1800      /* Form = ROOM2050 Wasser obj 0 "ausser Sicht" bei y -16200 @0x01D92       */
 #define RE15_R41C_WASSER_Y_BODEN   0         /* Beckengrund Band 0                              */
 #define RE15_R41C_WASSER_Y_RUHE    (-7200)   /* nach der Flut: 1800 ueber dem Ring (-5400)       */
 #define RE15_R41C_WASSER_Y_ENDE    (-16200)  /* Tuerebene Band 9                                 */
@@ -209,7 +209,8 @@
 #define RE15_R41C_WASSER_ATTR      0x001Au   /* @0x00C2E pc[8..9]                                */
 #define RE15_R41C_ERTRINK_TIEFE    900       /* Wasser 900 ueber den Fuessen = halbe Koerperhoehe (Typ-4-Anhebung
                                               * -900 @0x8002c24c als Mass einer Koerperhaelfte)   */
-#define RE15_R41C_SPRITZER_TAKT    6
+/* Spritzer: KEINE Rate — ein Ereignis, wenn die Flaeche die Fuesse erreicht (ventilkette_r41.c flut_tick; Original
+ * nur je Fuss-Aufsetzer @0x8003253c -> FUN_80045630 @0x800456b8). Die fruehere Rate "alle 6 Takte" war ohne Beleg. */
 #define RE15_R41C_ZAEHLER_BILDER   1800      /* 60 s bei 30 SCD-Takten (Sleep `09 0a 08 07`)     */
 /* Marker des Programms fuer den C-Takt: Bank 5 WORT 0 (Raum-Scratch, beim Raumladen gewischt FUN_8003ecec
  * @0x8003ed74; Wort 1 taugt NICHT — es ist der Ein-Bild-Handshake, den FUN_8003ebf4 @0x8003ec1c am Ende JEDES
@@ -224,7 +225,7 @@
 #define RE15_R41C_FADE_ABR     2            /* @0x174a `56 00 02 ..` (FUN_800217b0: abr = Byte 2)                */
 #define RE15_R41C_FADE_MASKE   0x6          /* Rot (Bit 2) + Gruen (Bit 1) abziehen, Blau (Bit 0) bleibt          */
 #define RE15_R41C_FADE_LEVEL   0x5000u      /* -> Helligkeit 160 (level >> 7 @0x800218d0); PORT-WAHL: tiefer Schleier */
-#define RE15_R41C_FADE_BUCKET  7
+#define RE15_R41C_FADE_BUCKET  7            /* OT-Fach der SCD-Blende: Handler 0x56 @0x80042a58 `ori a3,7` (scd_vm.c op_fade_config) */
 
 /* ---- 2050 Schaltpult ----------------------------------------------------------------------------------------- */
 #define RE15_R41C_PANEL_CUT        15
@@ -272,6 +273,7 @@ int re15_ventilkette_r41_sicht(int nr, int *x0, int *y0, int *w, int *h);
 int      re15_ventilkette_r41_timer_laeuft(void);
 int      re15_ventilkette_r41_flut_laeuft(void);
 int      re15_ventilkette_r41_ertrunken(void);
+int      re15_ventilkette_r41_spritzer(void);     /* Spritzer-Ereignisse seit dem Raumstart (Riegel) */
 unsigned re15_ventilkette_r41_schalter(void);      /* Maske der EIN-Hebel (Bit 0..3) */
 int      re15_ventilkette_r41_spannung(void);      /* Summe der Gewichte der EIN-Hebel */
 int      re15_ventilkette_r41_spannung_aus_maske(unsigned maske);
