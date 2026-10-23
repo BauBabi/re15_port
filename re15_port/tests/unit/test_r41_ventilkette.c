@@ -433,8 +433,11 @@ static void fall_d2(uint16_t r)
     }
     printf("  ROOM%04X D2 Tuerebene: Flut bei %d, tot bei %d, Wasser y %d\n", r, flut_bei, tot_bei, (int)wy_tot);
     PRUEFE(tot_bei > 0 && wy_tot == RE15_R41C_WASSER_Y_ENDE, "ROOM%04X D2: Tod auf der Tuerebene mit der Endlage -16200 (Wasser %d)", r, (int)wy_tot);
-    PRUEFE(flut_bei > 0 && tot_bei - flut_bei >= RE15_R41C_WASSER_SCHRITTE && tot_bei - flut_bei <= RE15_R41C_WASSER_SCHRITTE + 4,
-           "ROOM%04X D2: Tod %d Takte nach Flutbeginn (324 Schritte)", r, tot_bei - flut_bei);
+    /* 324 Schritte, davon der ERSTE im selben VM-Takt wie der Marker Set(5,0x1E) (der For-Koerper laeuft bis zum ersten
+     * Evt_next, scd_vm.c op_for; derselbe Takt sieht in re15_ventilkette_r41_tick schon s_flut = 1) -> Endlage -16200
+     * und Tod im Takt flut_bei + 323. Gemessen 323 (Leon + Elza), Lauf 2026-10-23 21:50. */
+    PRUEFE(flut_bei > 0 && tot_bei - flut_bei >= RE15_R41C_WASSER_SCHRITTE - 1 && tot_bei - flut_bei <= RE15_R41C_WASSER_SCHRITTE + 4,
+           "ROOM%04X D2: Tod %d Takte nach Flutbeginn (324 Schritte, der erste im Marker-Takt)", r, tot_bei - flut_bei);
 }
 
 /* ---- E: Verlassen -> Flut gelaufen; 20B0; Umlenkung; 2030 unter Wasser ------------------------------------ */
