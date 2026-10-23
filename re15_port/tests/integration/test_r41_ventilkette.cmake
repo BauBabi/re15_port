@@ -8,9 +8,10 @@
 # mit dem Setzen der Bits 103 + 100; dazu die Leiter in 2000 als Sperrtext (kein Raumwechsel nach 2050).
 #
 #   A  ROOM2030 per Debug-Sprung (Ost-Tuer-Spawn (6550,-5400,-100), Blick -x = auf die Ventile 04/05/06):
-#      F330 Aktion -> Frage 45, F378 Ja, F441 Warnung 46 zu; Zaehler laeuft -> Tuer Slot 0 -> 20B0;
-#      F540 RE15_FIRE_AOT=0 (die Ost-Tuer feuert) -> ROOM20B0 geladen, "Zaehler lief beim Verlassen" (Bits 103 + 100),
-#      Framedump F600 (20B0 Eintrittsszene).
+#      F330 Aktion -> Frage 45 Seite 1 (Schreibmaschine ~3 s), F453 Seite 2, F531 Ja, Warnung 46 (~3 s), F654 zu;
+#      Zaehler laeuft -> Tuer Slot 0 -> 20B0; F720 RE15_FIRE_AOT=0 (die Ost-Tuer feuert) -> ROOM20B0 geladen,
+#      "Zaehler lief beim Verlassen" (Bits 103 + 100), Framedump F790 (20B0 Eintrittsszene).
+#      (Gemessen am Pult-Lauf 2050: ein Druck waehrend der Schreibmaschine spult nur vor, erst der naechste schliesst.)
 #   B  ROOM2000 per Debug-Sprung + RE15_PLAYER_POS vor die Leiter (-25900,10300, Blick -x): F330 Aktion ->
 #      Sperrtext 40, KEIN Raumwechsel nach ROOM2050 bis zum Ende (F520).
 #
@@ -69,11 +70,11 @@ re15_start_spiel(_rva 300
     RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_DEBUG_JUMP=2030@240
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330
-    "RE15_INPUT_SCRIPT=A0.1,W1.5,A0.1,W2,A0.1,W6"
+    "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W2.5,A0.1,W4,A0.1,W4"
     RE15_MSG_LOG=1
-    "RE15_FIRE_AOT=0@540#2030"
-    "RE15_FRAMEDUMP=600:${WORKDIR}/f20b0_600.ppm"
-    "RE15_EXIT_AT=660#20B0"
+    "RE15_FIRE_AOT=0@720#2030"
+    "RE15_FRAMEDUMP=790:${WORKDIR}/f20b0_790.ppm"
+    "RE15_EXIT_AT=860#20B0"
     "${RE15_PC_EXE}")
 if(NOT EXISTS "${WORKDIR}/debug.log")
     message(FATAL_ERROR "r41_ventilkette[a]: kein debug.log (exit=${_rva}, ${WORKDIR})")
@@ -91,8 +92,8 @@ _muss("${_dbg}" "[esp] room 20B0:" a "ROOM20B0 geladen (Umlenkung wirksam)")
 _muss("${_dbg}" "[ventilkette41] Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100" a "Flut gelaufen + Leiter frei")
 _darf_nicht("${_dbg}" "[esp] room 2070:" a "ohne Umlenkung waere die Ost-Tuer nach ROOM2070 gegangen")
 _muss("${_dbg}" "EXIT_AT: Bild" a "Endbild in ROOM20B0 erreicht")
-if(NOT EXISTS "${WORKDIR}/f20b0_600.ppm")
-    message(FATAL_ERROR "r41_ventilkette[a]: Framedump F600 fehlt")
+if(NOT EXISTS "${WORKDIR}/f20b0_790.ppm")
+    message(FATAL_ERROR "r41_ventilkette[a]: Framedump F790 fehlt")
 endif()
 
 # ---- B: 2000 Leiter = Sperrtext, kein Raumwechsel ------------------------------------------------------------
