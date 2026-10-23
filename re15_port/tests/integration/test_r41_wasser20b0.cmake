@@ -45,8 +45,8 @@ function(flut_lauf _name _raum _extra)
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
         "RE15_DEBUG_JUMP=${_raum}@240"
         RE15_FX_LOG=fx.log RE15_ENEMY_DBG=1
-        "RE15_FRAMEDUMP=260-700/40:f"
-        "RE15_EXIT_AT=760#${_raum}"
+        "RE15_FRAMEDUMP=260-900/40:f"
+        "RE15_EXIT_AT=900#${_raum}"
         ${_extra}
         "${RE15_PC_EXE}")
     message(STATUS "r41_wasser20b0[${_name}]: exit=${_rv}")
@@ -65,8 +65,14 @@ function(flut_lauf _name _raum _extra)
     list(LENGTH _cut7 _n_cut7)
     string(REGEX MATCHALL "Cut_chg\\(6\\)" _cut6 "${_dbg}")
     list(LENGTH _cut6 _n_cut6)
-    string(REGEX MATCHALL "\\[walk\\] F[0-9]+ cut=[0-9]+ mo=1 " _frei "${_dbg}")
-    list(LENGTH _frei _n_frei)
+    # "frei" = ein [walk]-Bild mit mo=1 NACH dem Cut_chg(6) von sub05 (Plc_ret, Pad-Sperre (2,7)=0)
+    set(_n_frei 0)
+    string(FIND "${_dbg}" "Cut_chg(6)" _pos6)
+    if(NOT _pos6 EQUAL -1)
+        string(SUBSTRING "${_dbg}" ${_pos6} -1 _nach6)
+        string(REGEX MATCHALL "\\[walk\\] F[0-9]+ cut=[0-9]+ mo=1 " _frei "${_nach6}")
+        list(LENGTH _frei _n_frei)
+    endif()
     set(_zeichnet 0)
     if(EXISTS "${WORKDIR}/enemy_dbg.log")
         file(READ "${WORKDIR}/enemy_dbg.log" _edbg)
@@ -83,7 +89,7 @@ function(flut_lauf _name _raum _extra)
         message(FATAL_ERROR "r41_wasser20b0[${_name}]: sub05 (Aot 7, Cut 7 -> ... -> Cut 6) lief nicht: Cut7=${_n_cut7} Cut6=${_n_cut6} - die Szene haengt")
     endif()
     if(NOT _n_frei GREATER 0)
-        message(FATAL_ERROR "r41_wasser20b0[${_name}]: Spieler wird nach der Szene nicht frei (kein [walk] mo=1 nach dem Sprung)")
+        message(FATAL_ERROR "r41_wasser20b0[${_name}]: Spieler wird nach der Szene nicht frei (kein [walk] mo=1 nach Cut_chg(6))")
     endif()
     if(_zeichnet)
         message(FATAL_ERROR "r41_wasser20b0[${_name}]: EM024-Mesh wird gezeichnet (enemy_dbg 'ZEICHNE Typ 0x24') - Zeichenmaske @0x8010efe4 fehlt")

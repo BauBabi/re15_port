@@ -108,3 +108,24 @@ jeden Gegner Pool 2 @0x80043720-28) wird UNBEDINGT je Bild aus der Hauptschleife
 @0x8001ce1c, direkt nach FUN_80031c44/FUN_8002bd44) - kein Gate auf Pad-Sperre/Spielermodus. Port:
 aot_common.c Z.1169 `if (in_cinematic && a->type != CAM_SWITCH) continue;` (BL-round 2026-05-29, Port-Wahl
 ohne Adresse) blockiert den AUTO-Satz 7 (0x41), solange (2,7)=1 den Spieler auf player_mode 2 haelt.
+
+### 1.4 Umsetzung
+Neue Dateien: `re15_port/include/re15_wasser20b0_r41.h`, `re15_port/engine/src/wasser20b0_r41.c`.
+- `re15_wasser20b0_r41_init(e)`: no_draw := 1 (Part-Wort Bit 0 geloescht @0x8010efc8-e4 -> Mesh nie gezeichnet),
+  anim_frame := 1 (+0x95 = 1, Original-RAM), Takt (+0x1d0 -> sub_state_3) := 0 (@0x8010efa8).
+- `re15_wasser20b0_r41_sub(e)`: der jalr @0x8010f0a8 ueber @0x80118d58[+0x5]: grid 0 (Phasen @0x80118d88, 2 x 11
+  Takte, 6 Spawns bei Takt 0, sub 7) und grid 1 (Phasen @0x80118d90, 26/11/26/11 Takte, Spawns Takt 0/3/6/9/12,
+  sub 0, a1 -200/-100/0/100/200); grid 5..7 = `jr ra` @0x8011084c; grid 2..4 OFFEN (kein RDT spawnt sie).
+  Spawn = re15_esp_fx_spawn_rows(Raum-Bank, 0x0f, sub, Skala, Anker, INT32_MAX, a1) = FUN_80019700
+  (a0 = 0x0f000000|sub<<16|Skala @0x801109b8-c0, a1 -> slot+0x2e, a3 = Versatz, a2 = Teil-0-Matrix).
+- `re15_wasser20b0_r41_anker(e, off, out)`: Pose Clip 0 Bild 1 des EM024-Skeletts (re15_compute_actor_kf +
+  re15_skel_compute_pose), Knochen 0 rot*off + trans, dann Gier + Lage (re15_skel_bone_to_world) = *(+0x188)+0x40.
+  Erwartung aus dem Original-RAM: trans = (0,-3329,0), rot = Einheit.
+- `re15_wasser20b0_r41_auto_aot(room, type)`: AUTO_EVENT-Saetze in 20B0/20B1 uebergehen die Port-Sperre
+  in_cinematic (FUN_800436a8 @0x8001ce1c ohne Gate); bewusst auf die Flut-Raeume begrenzt (OFFEN: allgemein).
+Haken (gemeinsame Dateien, "Runde 41 Spur A"): enemy_ai_common.c re15_fx_emitter_ai_tick (Init-Aufruf, Sub-Aufruf
+VOR der Drift, Bildvorschub entfernt), aot_common.c Z. ~1169 (Bedingung + Include).
+Tests: tests/unit/test_r41_wasser20b0.c (bytes = Walker ueber STAGE2.BIN gegen die Port-Tabellen; modell =
+Teil-0-Matrix; sequencer = Takte/Phasen/Codes/Anker; raum = 20B0 + 20B1 am VM mit Drift-Pins ts_10/Umbruch/ts_14),
+probes/r41_wasser20b0.cmake, tests/integration/test_r41_wasser20b0.cmake (echte exe Leon 20B0 + Elza 20B1:
+fx.log id=15, Cut 7/6 = sub05, Spieler frei, kein "ZEICHNE Typ 0x24").

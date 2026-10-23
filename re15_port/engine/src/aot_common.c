@@ -25,13 +25,13 @@
 #include "re15_skeleton.h"   /* re15_sin_q12/cos_q12 — door forward-reach trigger */
 #include "re15_collision.h"  /* set the floor band at a same-room door (band from spawn Y) — shared (PSX + PC) */
 #include "re15_room.h"       /* g_current_room_id + cross-room transition request.
-#include "re15_wasser20b0_r41.h"   /* Runde 41 Spur A: AUTO-Ereignis in 20B0/20B1 unter Pad-Sperre */
                               * SHARED now (room_common.c) — both ports queue the
                               * cross-room change; only the RDT LOADER (CD vs file)
                               * differs, behind the re15_room_apply_pending ctx. */
 #include "re15_player.h"     /* RE15_PAD_BIT_UP + re15_player_push_substate (Schiebe-Handshake) */
 #include "re15_item_modal.h" /* item pickup PRESENTATION modal (FUN_8001db28) — deferred grant */
 #include "re15_itemband_r37.h" /* Runde 37 Spur D: Band-Gate @0x80042cac-ccc auch fuer ITEM */
+#include "re15_wasser20b0_r41.h"   /* Runde 41 Spur A: AUTO-Ereignis in 20B0/20B1 unter Pad-Sperre */
 #include "re15_files.h"      /* Runde 30: Dokument-Ids ab 0x48 (RE15_FILES_FIRST_ITEM_ID) */
 #include "re15_menu.h"       /* Runde 30: re15_menu_request_doc — Aufheben oeffnet den Leser */
 #include "re15_ziel1190.h"   /* Runde 36 Spur H: Scheiben-Text-Plaetze haengen an ihrer Scheibe */
