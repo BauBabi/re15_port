@@ -10,6 +10,7 @@
 
 #include "re15_player.h"
 #include "re15_enemy.h"
+#include "re15_szenenleon_r36.h"   /* re15_szl_schub_spieler_phase */
 
 static unsigned s_umlaeufe, s_halte;
 
@@ -61,6 +62,9 @@ void re15_plcloop_r41_takt(re15_actor_t *p)
      * Sub 0 ist die Bewegungs-FSM 0x80050cb8; Plc_dest-Subs (z.B. 0x13 = Container-Schub ROOM11B0, eigener
      * Bildzaehler @0x80052ac0) und Laeufe zaehlen selbst (dasselbe Gate wie re15_actor_clip_len fuer NPCs). */
     if (!p || p->state != 4 || p->sub_state_1 != 0 || p->walk_active) return;
+    /* Port-seitige Besitzer des Spieler-Bildzaehlers (sie fuehren +0x5 nicht im Aktor): der Skript-Schub ROOM11B0
+     * (szenenleon_r36.c, Sub 0x13 @0x80052864, eigener Umlauf @0x80052ac0) und der Substate-8-Schub (player_common.c). */
+    if (re15_szl_schub_spieler_phase() >= 0 || re15_player_push_substate()) return;
     int fc = re15_plcloop_r41_clip_len(p);
     if (fc <= 0 || (int)p->anim_frame < fc) return;         /* Clip laeuft noch / Laenge unbekannt: wie bisher */
     if (p->anim_flags & 0x04u) { p->anim_frame = 0; s_umlaeufe++; }           /* SCHLEIFE @0x80050dbc-c8, @0x8001f63c */
