@@ -2173,6 +2173,8 @@ void re15_gator_boss_tick(int slot)
              * Tod-FSM ist per Modus-4-Besitz pausiert). */
             e->motion = 4; e->anim_frame = 0;          /* Gator-Clip 4 (45 F) */
             g->gefressen = 0;
+            /* Runde 41 Spur B, Nachtrag 4: RE2 FRESSEN P0 Sperre + Cut 7/14 (@0x80100fbc-ff4) -> Blick FINISHER */
+            re15_gr2_kamera_finisher((int)(e - g_actors), e, pl);
         }
         if (!g->gefressen) {                           /* ---- P1: Clip 4 bis f13 ---- */
             if (pl->anim_frame < 29) pl->anim_frame++;    /* Opfer-Clip 0 (30 F), HOLD */

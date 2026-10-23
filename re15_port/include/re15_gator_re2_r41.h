@@ -124,6 +124,40 @@ int  re15_gr2_treffer(void);         /* Treffer seit INIT */
 int  re15_gr2_tot(void);             /* R1-Endzustand erreicht (Leiche, +0x10E |= 0x4000 @0x80102654-64) */
 int  re15_gr2_traegt(void);          /* Stufe 7 */
 
+/* ---- Nachtrag 4: RE2-Kameraschnitte des Alligator-Kampfes (ROOM40A0) auf ROOM2090/2091 --------
+ * NUTZER-VORGABE (AUFTRAG.md 22:37 "Ja, ich moechte RE2-artige Kameraschnitte"). FORM = RE2: dieselben
+ * Ausloeser/Bilder/Sperren wie das RE2-Kameraskript (Dossier §9.1: 9 Rufe FUN_8002c7ac im EM23-Overlay,
+ * Cut_chg nur in ROOM40A0 sub02), Sperre der Zonenkamera = RE2 0x800cfbd8 |= 0x100 (Hauptschleife
+ * @0x80026394-ac) = RE1.5 DAT_800aca3c Bit 0x100 = Port g_scd.cut_auto_enabled = 0; Schnitt = RE1.5
+ * Cut_chg-Zwilling (scd_vm.c op_cut_chg), Rueckkehr = Cut_old-Zwilling (FUN_8004032c).
+ * ZUORDNUNG = PORT-WAHL: je RE2-Schnitt die ZONENKAMERA des Raums (RVD-Gruppen, ROOM2090: Cuts 0..7), die den
+ * Kopf (Bone 6) zeigt und deren "frontal"-Wert = cos(Blickachse Bone 1 -> Bone 6, Kopf -> Kamera) dem des
+ * RE2-Schnitts am naechsten kommt (Soll je Blick in Q12, gemessen mit tools/r41_re2gator/probe_kamera_re2.c
+ * an der RE2-Lage des Schnittbilds, Dossier §9.2). */
+#define RE15_GR2_BLICK_DURCHBRUCH 1   /* RE2 Cut 10: Clip 6 Bild 0..69 (SCD sub02 `29 0a` @0x00E0), soll +4092 */
+#define RE15_GR2_BLICK_SEITE      2   /* RE2 Cut 0: Clip-6-Bild 70 (@0x80100894-a4), soll +1445 */
+#define RE15_GR2_BLICK_ANGRIFF    3   /* RE2 Cut 1: Clip-6-Ende -> Clip 3 (@0x801008bc-c8), soll +3386 */
+#define RE15_GR2_BLICK_EXPLOSION  4   /* RE2 Cut 5: R1 P0, nur wenn der aktuelle Cut den Kopf nicht zeigt
+                                       * (RE2: Cut 6/13 @0x80102218-24, Kopf dort bei Bild-x -2), soll +4046 */
+#define RE15_GR2_BLICK_FINISHER   5   /* RE2 Cut 7/14: FRESSEN P0 (@0x80100fbc-ff4), Opfer mit im Bild, soll +4094 */
+
+/* Beste Zonenkamera fuer `blick` (s.o.); `opfer` (oder NULL) muss fuer FINISHER mit im Bild liegen (sonst
+ * Rueckfall ohne Opfer). -1 = keine Zonenkamera zeigt den Kopf. *frontal = Ist-Wert (Q12) der Wahl. */
+int  re15_gr2_kamera_wahl(int blick, const re15_actor_t *gator, const re15_actor_t *opfer, int *frontal);
+/* Programm-Schnitt fuer Szenen (Spur F/G): Sperre setzen + auf die Wahl schneiden (Cut_chg-Zwilling);
+ * liefert den Cut oder -1 (dann nur Sperre). `programm` erscheint in gator_boss.log ("RE2 KAMERA ..."). */
+int  re15_gr2_kamera_schnitt(int blick, const re15_actor_t *gator, const re15_actor_t *opfer, const char *programm);
+/* Programm-Ende: zurueck auf den Zonen-Cut vor dem Programm und Zonenkamera wieder an (Cut_old-Zwilling). */
+void re15_gr2_kamera_frei(const char *programm);
+int  re15_gr2_kamera_gesperrt(void);                      /* 1 = ein Programm haelt die Kamera */
+/* Automatische Programme (Intro/R1/Finisher) an/aus — eine Szene, die eigene Schnitte setzt, schaltet sie aus. */
+void re15_gr2_kamera_auto(int an);
+/* Finisher (FRESSEN P0, Haken in enemy_ai_boss_gator.c NACH der Opfer-Platzierung): Sperre + FINISHER-Wahl. */
+void re15_gr2_kamera_finisher(int slot, const re15_actor_t *gator, const re15_actor_t *opfer);
+/* Messhaken: Schnittfolge seit dem Boss-INIT (cut[i] = gewaehlter Cut, -1 = Sperre ohne Schnitt, -2 = frei;
+ * blick[i] = RE15_GR2_BLICK_*, 0 = frei/zurueck; clip/bild = Gator-Clip und -Bild beim Ereignis). */
+int  re15_gr2_kamera_folge(int max, int *cut, int *blick, int *clip, int *bild);
+
 /* ---- PC-Haken ------------------------------------------------------------------------------ */
 extern void (*re15_gr2_raum_se_hook)(int satz);   /* ROOM40A0-Raumbank: 15 = Explosionsbrueller (@0x8010237c-88) */
 /* platform/pc/src/gator_re2_pc.c: Kanister-Prop zeichnen (Aufruf aus dem Prop-Pass von main.c). */

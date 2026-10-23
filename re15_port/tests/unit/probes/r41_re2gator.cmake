@@ -37,7 +37,13 @@ endif()
 #                                SUEDEN auf der Klemmlinie (x = -7434) mit Leon in der Tuernische: Zonenwechsel 2 -> 0 ->
 #                                SE 4, Clip 2/3 je 150, Gator bleibt im Becken (Dispatcher-Klemme nimmt den RE2-Korridor-
 #                                Seitversatz -2775), laengs ~4188 voran, yaw += 1024 @0x80100eb0-c0
-foreach(_teil modell clips dash intro sockel kanister kiefer putz wand)
+#   unit_r41_re2gator_kamera     Nachtrag 4 (RE2-Kameraschnitte ROOM40A0 -> ROOM2090): Intro DURCHBRUCH bei Clip 6
+#                                Bild 0 -> SEITE bei Bild 70 (@0x80100894-a4) -> ANGRIFF am Clip-6-Ende (@0x801008bc-c8)
+#                                -> zurueck + frei am Clip-3-Ende (@0x801008f8-918); R1 aus einem Cut mit Kopf im Bild =
+#                                nur Sperre, ohne = EXPLOSION-Schnitt, zurueck bei Clip-9-Bild 36 (@0x801024a4-ec), frei in
+#                                P3 (@0x80102688-94); FINISHER bei FRESSEN P0 (@0x80100fbc-ff4) mit Kopf + Kiefer im Bild;
+#                                jede Wahl unabhaengig nachgerechnet (Projektion, frontal = cos Blickachse/Kamera)
+foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera)
     add_test(NAME unit_r41_re2gator_${_teil} COMMAND test_r41_re2gator ${_teil})
     set_tests_properties(unit_r41_re2gator_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()

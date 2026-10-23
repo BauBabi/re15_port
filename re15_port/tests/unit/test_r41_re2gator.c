@@ -32,6 +32,9 @@
 #include "re15_gator_re2_r41.h"
 #include "re15_emd.h"
 #include "re15_skeleton.h"      /* re15_sin_q12 / re15_cos_q12 (Soll-Schritt im Riegel wand) */
+#include "re15_camera.h"        /* Nachtrag 4: re15_camera_build_view (Nachrechnung der Kamerawahl) */
+#include "re15_anim_select.h"   /* Nachtrag 4: re15_compute_actor_kf */
+#include <math.h>
 #include "re15_md1.h"
 #include "re15_tim.h"
 #include "re15_rumble.h"
@@ -644,6 +647,165 @@ static int teil_wand(void)
     return fails ? 1 : 0;
 }
 
+/* ================================================================================================ */
+/* Nachtrag 4: RE2-Kameraschnitte. Unabhaengige Nachrechnung der Wahl (Projektion re15_camera_build_view,
+ * Kopf = Bone 6 mit Entity-Scale, Blickachse Bone 1 -> Bone 6, frontal = cos in xz, gleitkomma) gegen das
+ * Modul: der gewaehlte Cut ist eine Zonenkamera mit dem Kopf im Bild, und keine andere solche Kamera liegt
+ * naeher am Soll (Toleranz 8/4096 fuer Integer-gegen-Gleitkomma). Soll je Blick = RE2-Messung (Dossier §9.2). */
+static const int k_soll[6] = { 0, 4092, 1445, 3386, 4046, 4094 };
+static void kopf_welt(int bone, int32_t out[3])
+{
+    re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+    int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, e, -1, (uint32_t)e->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    re15_skel_compute_pose(&bk->skel, kf, poses);
+    g_anim_pose_actor = save;
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    int32_t tr[3] = { (int32_t)(((int64_t)poses[bone].trans[0] * s) >> 12), (int32_t)(((int64_t)poses[bone].trans[1] * s) >> 12),
+                      (int32_t)(((int64_t)poses[bone].trans[2] * s) >> 12) };
+    re15_skel_bone_to_world(tr, e->rot_y, e->x, e->y, e->z, out);
+}
+static int bild(int cut, const int32_t p[3], int *sx, int *sy)
+{
+    re15_camera_view_t v; re15_camera_build_view(&g_room_rdt.cuts[cut], &v);
+    int64_t px = p[0], py = p[1], pz = p[2];
+    int32_t vx = (int32_t)(((int64_t)v.rot[0]*px + (int64_t)v.rot[1]*py + (int64_t)v.rot[2]*pz) >> 12) + v.trans[0];
+    int32_t vy = (int32_t)(((int64_t)v.rot[3]*px + (int64_t)v.rot[4]*py + (int64_t)v.rot[5]*pz) >> 12) + v.trans[1];
+    int32_t vz = (int32_t)(((int64_t)v.rot[6]*px + (int64_t)v.rot[7]*py + (int64_t)v.rot[8]*pz) >> 12) + v.trans[2];
+    if (vz <= 0) { *sx = *sy = -9999; return 0; }
+    *sx = 160 + (int)(((int64_t)vx * v.fov_screen_dist) / vz); *sy = 120 + (int)(((int64_t)vy * v.fov_screen_dist) / vz);
+    return *sx >= 0 && *sx < 320 && *sy >= 0 && *sy < 240;
+}
+static int zonenkamera(int cut) { int n = 0; for (int i = 0; i < g_room_rdt.zone_count; i++) if (g_room_rdt.zones[i].cam_from == cut) n++; return n >= 2; }
+/* Prueft die Wahl im aktuellen Zustand; druckt die Kandidatentabelle (Dossier §9.3). */
+static void wahl_pruefen(const char *was, int blick, int gewaehlt, const re15_actor_t *opfer_unbenutzt)
+{
+    (void)opfer_unbenutzt;
+    int32_t k6[3], k1[3], k7[3]; kopf_welt(6, k6); kopf_welt(1, k1); kopf_welt(7, k7);
+    /* FINISHER: Kiefer (Part 7) muss mit ins Bild (Opfer im Maul ab P1, gator_re2_r41.c k_blick) */
+    const int32_t *opfer = (blick == RE15_GR2_BLICK_FINISHER) ? k7 : NULL;
+    double ax = k6[0] - k1[0], az = k6[2] - k1[2], la = sqrt(ax*ax + az*az);
+    int best = -1; double best_d = 1e9;
+    printf("  %s: Kopf (%d,%d,%d) Achse (%.0f,%.0f), gewaehlt Cut %d\n", was, k6[0], k6[1], k6[2], ax, az, gewaehlt);
+    for (int pass = (opfer ? 0 : 1); pass < 2 && best < 0; pass++) {
+        for (int k = 0; k < g_room_rdt.cut_count; k++) {
+            if (!zonenkamera(k)) continue;
+            int sx, sy, ox = 0, oy = 0;
+            int im = bild(k, k6, &sx, &sy);
+            int oim = opfer ? bild(k, opfer, &ox, &oy) : 1;
+            const re15_camera_cut_t *c = &g_room_rdt.cuts[k];
+            double cx = c->pos_x - k6[0], cz = c->pos_z - k6[2], lc = sqrt(cx*cx + cz*cz);
+            double f = (la > 0 && lc > 0) ? (ax*cx + az*cz) / (la*lc) * 4096.0 : 0;
+            if (pass == (opfer ? 0 : 1))
+                printf("    Cut %d: Kopf-Bild (%5d,%5d) %s%s frontal %+5.0f |f-soll| %4.0f dist %5.0f\n", k, sx, sy,
+                       im ? "im Bild" : "draussen", opfer ? (oim ? " +Kiefer" : " -Kiefer") : "", f, fabs(f - k_soll[blick]), lc);
+            if (!im || (pass == 0 && !oim)) continue;
+            double d = fabs(f - k_soll[blick]);
+            if (d < best_d - 8.0) { best = k; best_d = d; }
+            else if (fabs(d - best_d) <= 8.0 && best >= 0) { /* Gleichstand im Rauschen: Modulwahl zulassen */
+                if (k == gewaehlt) best = k; }
+        }
+    }
+    CHECK(best == gewaehlt, "%s: Wahl Cut %d, Nachrechnung Cut %d (Blick %d, soll %d)", was, gewaehlt, best, blick, k_soll[blick]);
+}
+static int teil_kamera(void)
+{
+    if (!setup(1)) return 1;
+    /* (a) INTRO vom Lauerplatz, Leon in der Tuernische, Zonenkamera vorher Cut 0 (Leons Eintrittskamera) */
+    g_scd.cam_id = 0; g_scd.work_vars[0x0A] = 0; g_scd.cut_auto_enabled = 1;
+    leon_statue(-8200, -25550);
+    tick();                                    /* INIT + LURK/aggro -> Intro-Start: Programm DURCHBRUCH */
+    int cut[24], blick[24], clip[24], bildn[24];
+    int n = re15_gr2_kamera_folge(24, cut, blick, clip, bildn);
+    CHECK(n == 1 && blick[0] == RE15_GR2_BLICK_DURCHBRUCH && clip[0] == 6 && bildn[0] == 0,
+          "Intro-Start: erwartet DURCHBRUCH bei Clip 6 Bild 0 (n=%d blick=%d clip=%d bild=%d)", n, n ? blick[0] : -1, n ? clip[0] : -1, n ? bildn[0] : -1);
+    if (n >= 1) wahl_pruefen("DURCHBRUCH (Clip 6 Bild 0)", RE15_GR2_BLICK_DURCHBRUCH, cut[0], NULL);
+    CHECK(re15_gr2_kamera_gesperrt() && g_scd.cut_auto_enabled == 0, "Intro: Zonenkamera nicht gesperrt (RE2 0x800cfbd8 |= 0x110 @0x8010087c)");
+    CHECK(n >= 1 && (int)g_scd.cam_id == cut[0] && g_scd.cam_change_pending, "Intro: Cut_chg-Zwilling nicht angefordert (cam_id %d)", (int)g_scd.cam_id);
+    int gesehen_seite = 0, gesehen_angriff = 0, gesperrt_bis = -1;
+    for (int f = 0; f < 400; f++) {
+        leon_statue(-8200, -25550); tick();
+        int m = re15_gr2_kamera_folge(24, cut, blick, clip, bildn);
+        if (m >= 2 && !gesehen_seite) { gesehen_seite = 1; wahl_pruefen("SEITE (Clip 6 Bild 70)", RE15_GR2_BLICK_SEITE, cut[1], NULL); }
+        if (m >= 3 && !gesehen_angriff) { gesehen_angriff = 1; wahl_pruefen("ANGRIFF (Clip-6-Ende)", RE15_GR2_BLICK_ANGRIFF, cut[2], NULL); }
+        if (re15_gr2_kamera_gesperrt()) gesperrt_bis = f;
+        if (!re15_gr2_im_intro(slot) && f > 2) break;
+    }
+    n = re15_gr2_kamera_folge(24, cut, blick, clip, bildn);
+    for (int i = 0; i < n; i++) printf("  Intro-Folge %d: blick %d cut %d clip %d bild %d\n", i, blick[i], cut[i], clip[i], bildn[i]);
+    CHECK(n >= 4, "Intro-Folge zu kurz (%d)", n);
+    if (n >= 4) {
+        CHECK(blick[1] == RE15_GR2_BLICK_SEITE && clip[1] == 6 && bildn[1] == 70, "SEITE nicht bei Clip 6 Bild 70 (@0x80100894-a4): blick %d clip %d bild %d", blick[1], clip[1], bildn[1]);
+        CHECK(blick[2] == RE15_GR2_BLICK_ANGRIFF && clip[2] == 6 && bildn[2] == 124, "ANGRIFF nicht am Clip-6-Ende Bild 124 (@0x801008bc-c8): blick %d clip %d bild %d", blick[2], clip[2], bildn[2]);
+        CHECK(cut[n-1] == -2 && clip[n-1] == 3 && bildn[n-1] == 149, "Sperre nicht am Clip-3-Ende frei (@0x801008f8-918): cut %d clip %d bild %d", cut[n-1], clip[n-1], bildn[n-1]);
+    }
+    CHECK(!re15_gr2_kamera_gesperrt() && g_scd.cut_auto_enabled == 1 && g_scd.cam_id == 0,
+          "nach dem Intro: Zonenkamera an + zurueck auf Cut 0 (Cut_old-Zwilling) - gesperrt %d auto %d cam %d",
+          re15_gr2_kamera_gesperrt(), (int)g_scd.cut_auto_enabled, (int)g_scd.cam_id);
+    printf("kamera intro: Sperre bis Takt %d, Schnitte %d\n", gesperrt_bis, n);
+
+    /* (b) R1 Kanister-Explosion aus zwei Ausgangs-Cuts: 7 zeigt den Kopf (RE2: Cut 3/4/5 -> nur Sperre),
+     * 2 zeigt ihn nicht (RE2: Cut 6/13, Kopf bei Bild-x -2 -> Cut 5 @0x80102218-6c, zurueck @0x801024a4-ec). */
+    for (int fall = 0; fall < 2; fall++) {
+        if (!setup(0)) return 1;
+        leon_statue(-6000, 2000); tick();
+        e->x = -6000; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
+        int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+        re15_gr2_kanister_setzen(-6000, -1200, -22000 + (int32_t)(((int64_t)8800 * s) >> 12));
+        for (int f = 0; f < 120 && !re15_gr2_traegt(); f++) { leon_statue(-6000, 2000); e->x = -6000; e->z = -22000; e->rot_y = 0xC00; tick(); }
+        CHECK(re15_gr2_traegt(), "R1-Fall %d: Kanister nicht getragen", fall);
+        int start = fall == 0 ? 7 : 2;
+        g_scd.cam_id = (uint8_t)start; g_scd.work_vars[0x0A] = (int16_t)start; g_scd.cut_auto_enabled = 1;
+        int n0 = re15_gr2_kamera_folge(24, cut, blick, clip, bildn);
+        (void)re15_enemy_take_damage(e, 0);
+        tick();
+        n = re15_gr2_kamera_folge(24, cut, blick, clip, bildn);
+        CHECK(re15_gr2_r1_laeuft(slot) && n == n0 + 1 && blick[n0] == RE15_GR2_BLICK_EXPLOSION,
+              "R1-Fall %d: kein EXPLOSION-Eintrag beim R1-Start (n %d -> %d)", fall, n0, n);
+        CHECK(re15_gr2_kamera_gesperrt() && g_scd.cut_auto_enabled == 0, "R1-Fall %d: keine Sperre (RE2 `ori 0x100` @0x8010220c)", fall);
+        if (fall == 0) {
+            CHECK(n > n0 && cut[n0] == -1 && g_scd.cam_id == 7, "R1 aus Cut 7 (Kopf im Bild): geschnitten auf %d statt nur Sperre", n > n0 ? cut[n0] : -9);
+        } else if (n > n0) {
+            CHECK(cut[n0] >= 0 && g_scd.cam_id == (uint8_t)cut[n0], "R1 aus Cut 2 (Kopf draussen): kein Schnitt (cut %d)", cut[n0]);
+            wahl_pruefen("EXPLOSION (R1 P0, aus Cut 2)", RE15_GR2_BLICK_EXPLOSION, cut[n0], NULL);
+        }
+        for (int f = 0; f < 80 && !re15_gr2_tot(); f++) tick();
+        n = re15_gr2_kamera_folge(24, cut, blick, clip, bildn);
+        for (int i = n0; i < n; i++) printf("  R1-Fall %d Folge %d: blick %d cut %d clip %d bild %d\n", fall, i, blick[i], cut[i], clip[i], bildn[i]);
+        CHECK(re15_gr2_tot() && !re15_gr2_kamera_gesperrt() && g_scd.cut_auto_enabled == 1 && g_scd.cam_id == (uint8_t)start,
+              "R1-Fall %d: nach P3 nicht frei/zurueck (tot %d gesperrt %d auto %d cam %d, Start %d)", fall, re15_gr2_tot(),
+              re15_gr2_kamera_gesperrt(), (int)g_scd.cut_auto_enabled, (int)g_scd.cam_id, start);
+        if (fall == 1)
+            CHECK(n == n0 + 3 && cut[n0+1] == start && blick[n0+1] == 0 && clip[n0+1] == 9 && bildn[n0+1] == 36 && cut[n0+2] == -2,
+                  "R1 aus Cut 2: Folge Schnitt -> zurueck (Clip 9 Bild 36, @0x801024a4-ec) -> frei erwartet (n %d)", n - n0);
+        else
+            CHECK(n == n0 + 2 && cut[n0+1] == -2, "R1 aus Cut 7: Folge Sperre -> frei erwartet (n %d)", n - n0);
+    }
+
+    /* (c) FINISHER: toedlicher Biss in der Tuernische -> FRESSEN P0 (Haken in enemy_ai_boss_gator.c nach der
+     * Opfer-Platzierung) -> Sperre + Cut mit Kopf UND Leon im Bild (RE2 Cut 7 @0x80100fbc-ff4), kein Ende. */
+    if (!setup(1)) return 1;
+    g_scd.cam_id = 0; g_scd.work_vars[0x0A] = 0; g_scd.cut_auto_enabled = 1;
+    leon_statue(-8200, -25550); pl->hp = 1;
+    int fin = -1;
+    for (int f = 0; f < 2500 && fin < 0; f++) {
+        leon_statue(-8200, -25550);
+        if (pl->hp < 1 && fin < 0) { /* Leon stirbt: Statue nicht mehr erzwingen (Opfer-Modus) */ }
+        tick();
+        n = re15_gr2_kamera_folge(24, cut, blick, clip, bildn);
+        for (int i = 0; i < n; i++) if (blick[i] == RE15_GR2_BLICK_FINISHER) { fin = i; break; }
+    }
+    CHECK(fin >= 0, "kein FINISHER-Schnitt nach dem toedlichen Biss (FRESSEN P0)");
+    if (fin >= 0) {
+        printf("  FINISHER: Folge %d cut %d clip %d bild %d, Leon (%d,%d)\n", fin, cut[fin], clip[fin], bildn[fin], pl->x, pl->z);
+        CHECK(clip[fin] == 4 && bildn[fin] == 0, "FINISHER nicht bei Clip 4 Bild 0 (FRESSEN P0): clip %d bild %d", clip[fin], bildn[fin]);
+        wahl_pruefen("FINISHER (FRESSEN P0)", RE15_GR2_BLICK_FINISHER, cut[fin], pl);
+        CHECK(re15_gr2_kamera_gesperrt() && g_scd.cut_auto_enabled == 0, "FINISHER: keine Sperre (@0x80100fcc)");
+    }
+    return fails ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "clips";
@@ -657,6 +819,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "kiefer")) rc = teil_kiefer();
     else if (!strcmp(t, "putz")) rc = teil_putz();
     else if (!strcmp(t, "wand")) rc = teil_wand();
+    else if (!strcmp(t, "kamera")) rc = teil_kamera();
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);
     return rc;

@@ -45,6 +45,11 @@
 #include "re2_fx.h"            /* FUN_8001bf10-Zwilling re2fx_spawn_sofort */
 #include "re15_damage.h"       /* re15_enemy_bone_world_pos (Blut) */
 #include "re15_esp.h"          /* re15_esp_fx_spawn_ex (Blut) */
+#include "re15_scd.h"          /* Nachtrag 4: g_scd (cam_id / cut_auto_enabled / work_vars) = Cut_chg-Zwilling */
+#include "re15_room.h"         /* Nachtrag 4: g_room_rdt (RID-Saetze + RVD-Gruppen) */
+#include "re15_camera.h"       /* Nachtrag 4: re15_camera_build_view (FUN_80053ca4-Zwilling) */
+#include "re15_math.h"         /* Nachtrag 4: re15_squareroot0 */
+#include "re15_engine.h"       /* Nachtrag 4: g_engine.frame_count (Bildnummer im Log) */
 
 /* ------------------------------------------------------------------------------------------ */
 typedef struct {
@@ -102,6 +107,13 @@ static struct {
 } s_kan;
 
 static int s_env_geprueft;
+/* Nachtrag 4: Kamera-Programme (Definitionen vor dem Takt) */
+static void gr2_kam_reset(void);
+static int  gr2_kam_schnitt(int programm, int blick, const re15_actor_t *e, const re15_actor_t *opfer);
+static void gr2_kam_r1_start(const re15_actor_t *e);
+static void gr2_kam_zurueck(const re15_actor_t *e);
+static void gr2_kam_frei(const re15_actor_t *e);
+static int  gr2_kam_auto(void);
 
 /* ------------------------------------------------------------------------------------------ */
 void re15_gr2_log(const char *fmt, ...)
@@ -259,6 +271,7 @@ void re15_gr2_reset(int slot, re15_gr2_se_fn se)
     s_g[slot].zone_alt = -1;
     s_g[slot].letzter_clip = 0;
     s_cfbd8 = 0;                                            /* Raumstart: keine Schuettel-Bits */
+    gr2_kam_reset();                                        /* Nachtrag 4: keine offene Kamera-Sperre (Raum neu geladen) */
     re15_gr2_kanister_env();
 }
 
@@ -498,6 +511,239 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
     if (s_kan.angehaengt) gr2_kan_folgen(e);
 }
 
+/* ==== Nachtrag 4: Kamera-Programme = das RE2-Kameraskript des Alligator-Kampfes (ROOM40A0) auf ROOM2090 ====
+ * FORM = RE2 (Dossier §9.1, alles selbst gelesen):
+ *   - Schnitt FUN_8002c7ac(cut) (`DAT_800cfbf2 = cut`), Sperre der Zonenkamera 0x800cfbd8 |= 0x100 (die
+ *     Hauptschleife ruft FUN_8002c6b4 nur bei Bit 0x100 = 0: `andi v0,v0,0x100 / bne` @0x8002639c-a0).
+ *   - INTRO: Clip 6 laeuft in Cut 10 an (ROOM40A0 sub02 `29 0a` @SCD 0x00E0, 78 Bilder vor Evt_exec sub11),
+ *     Bild 70 -> Cut 0 (`addiu v0,zero,70 / bne v1,v0` @0x80100894-98, jal @0x801008a0), Clip-6-Ende -> Cut 1
+ *     (@0x801008bc-c8), Clip-3-Ende -> Bits 0x110 frei (`and v0,v0,-17 / and v0,v0,-257` @0x801008f8-918).
+ *   - R1: Sperre (`ori v0,v0,0x100` @0x8010220c); Cut 5 nur, wenn der aktuelle Cut 6/13 ist (@0x80102218-24) und
+ *     z < -13300 (@0x8010222c-34) = dort, wo der Kopf NICHT im Bild ist (Probe: Kopf in Cut 6 bei Bild-x -2);
+ *     dann +0x218 |= 0x40 (@0x80102240-4c), am Clip-9-Ende zurueck auf 6/13 (@0x801024a4-ec); P3 Sperre frei
+ *     (`addiu v1,zero,-257 / and / sw` @0x80102688-94).
+ *   - FRESSEN P0: Sperre (`ori v0,v0,0x100` @0x80100fcc) + Cut 7 bzw. 14 (@0x80100fd4-ff4), kein Ende.
+ *   - Kein Schnitt in Dash, R4, R0, Kanister-Aufnahme (T2 0x801017c4-0x80101d40) - Zensus der 9 Rufe.
+ * ZUORDNUNG = PORT-WAHL (Nutzer-Nachtrag 4: "je RE2-Schnitt die 2090-Kamera mit gleicher Blickbeziehung"):
+ *   Kandidaten = die ZONENKAMERAS des Raums (Cuts mit RVD-Gruppe; ROOM2090: 0..7, die einzigen mit Masken -
+ *   die Sonderkameras 8..12 sind Nahaufnahmen ohne Zonen); Bedingung = Kopf (Bone 6) im Bild (Projektion wie
+ *   der Zeichner, re15_camera_build_view, sx = 160 + H*x/z in 0..319, sy in 0..239, Tiefe > 0); Wahl = kleinster
+ *   Abstand |frontal - soll|, frontal = cos(Blickachse Bone 1 -> Bone 6, Kopf -> Kamera) in Q12. Das Soll je
+ *   RE2-Schnitt ist an der RE2-Lage des Schnittbildes gemessen (tools/r41_re2gator/probe_kamera_re2.c; Lagen:
+ *   Pos_set sub11 @SCD 0x0736 + R*off6[f] (FUN_80015e7c/152c8), Clip-3-Anker z -21212 @0x801008d0, R1 Bein 2 mit
+ *   Kanister-Fenster @0x80100ae4-ec, FRESSEN x -23078 @0x80101048 / Leon x+10643, -915 @0x8010106c-84).
+ *   Rueckkehr am Programm-Ende = Cut_old-Zwilling (FUN_8004032c) auf den Zonen-Cut VOR dem Programm (RE2 kehrt
+ *   in R1 genauso auf 6/13 zurueck; im Intro war Cut 1 dort selbst die Zonenkamera fuer Leon). */
+static const struct { int16_t re2_cut; int16_t soll; uint8_t opfer; const char *name; } k_blick[6] = {
+    { -1,    0, 0, "-" },
+    { 10, 4092, 0, "DURCHBRUCH" },   /* Probe: Clip 6 f0, Cut 10: frontal +1.00 (3 Grad), Kopf bei Bild (140,126) */
+    {  0, 1445, 0, "SEITE" },        /* Clip 6 f70, Cut 0: +0.35 (69 Grad), Bild (145,116) */
+    {  1, 3386, 0, "ANGRIFF" },      /* Clip 6 f124, Cut 1: +0.83 (34 Grad), Bild (183,109); in Clip 3 bis +0.99 */
+    {  5, 4046, 0, "EXPLOSION" },    /* R1 Clip 9 f0, Cut 5: +0.99 (9 Grad), Bild (170,111) */
+    {  7, 4094, 1, "FINISHER" },     /* FRESSEN P0 Clip 4 f13, Cut 7: +1.00 (2 Grad), Leon im Bild (186,186) */
+};
+/* FINISHER: das Opfer haengt ab P1 ueber das Anker-Paar im Maul (@0x80101110-34, Port gb FRESSEN P1/P2), also
+ * muss neben dem Kopf der KIEFER (Part 7) im Bild liegen. Leons P0-Lage (Gator + R*(10643 x s, -915) @0x8010106c-84)
+ * taugt dafuer nicht: aus der Tuernische liegt sie hinter der Suedwand (gemessen unit_r41_re2gator_kamera:
+ * z -29941 bei Wand -27000), gezeichnet wird Leon dort erst ab P1 im Maul. */
+enum { GR2_KAM_INTRO = 1, GR2_KAM_R1 = 2, GR2_KAM_FRESSEN = 3, GR2_KAM_SZENE = 4 };
+static const char *const k_kam_prog[5] = { "-", "INTRO", "R1", "FINISHER", "SZENE" };
+#define GR2_KAM_FOLGE 24
+static struct {
+    uint8_t  aktiv;              /* Sperre gesetzt (RE2 0x800cfbd8 |= 0x100) */
+    uint8_t  programm;           /* GR2_KAM_* */
+    uint8_t  r1_geschnitten;     /* RE2 +0x218 |= 0x40 @0x80102248 */
+    int16_t  vorher;             /* Zonen-Cut vor dem Programm (-1 = keiner) */
+    int      n;                  /* Messhaken: Schnittfolge */
+    int8_t   cut[GR2_KAM_FOLGE], blick[GR2_KAM_FOLGE];
+    int16_t  clip[GR2_KAM_FOLGE], bild[GR2_KAM_FOLGE];
+} s_kam;
+static uint8_t s_kam_aus;        /* re15_gr2_kamera_auto(0): Szene haelt die Kamera selbst */
+
+/* Kopf (Bone 6) und Blickachse (Bone 1 -> Bone 6, xz) der aktuellen Pose (Kette 1->5->6, Memory gator-bosskampf). */
+static int gr2_kopf_achse(const re15_actor_t *e, int32_t kopf[3], int32_t achse[2])
+{
+    int32_t r[9], p1[3];
+    if (!gr2_bone_welt(e, 6, r, kopf) || !gr2_bone_welt(e, 1, r, p1)) return 0;
+    achse[0] = kopf[0] - p1[0]; achse[1] = kopf[2] - p1[2];
+    return 1;
+}
+/* Punkt im Bild von Kamera c? Projektion wie der Zeichner (re15_camera_build_view = FUN_80053ca4-Zwilling,
+ * sx = 160 + H*x/z, sy = 120 + H*y/z, H = fov >> 7). */
+static int gr2_im_bild(const re15_camera_cut_t *c, const int32_t p[3], int *sx, int *sy)
+{
+    re15_camera_view_t v;
+    if (re15_camera_build_view(c, &v) != 0) return 0;
+    int64_t px = p[0], py = p[1], pz = p[2];
+    int32_t vx = (int32_t)(((int64_t)v.rot[0]*px + (int64_t)v.rot[1]*py + (int64_t)v.rot[2]*pz) >> 12) + v.trans[0];
+    int32_t vy = (int32_t)(((int64_t)v.rot[3]*px + (int64_t)v.rot[4]*py + (int64_t)v.rot[5]*pz) >> 12) + v.trans[1];
+    int32_t vz = (int32_t)(((int64_t)v.rot[6]*px + (int64_t)v.rot[7]*py + (int64_t)v.rot[8]*pz) >> 12) + v.trans[2];
+    if (vz <= 0) return 0;
+    int x = 160 + (int)(((int64_t)vx * v.fov_screen_dist) / vz);
+    int y = 120 + (int)(((int64_t)vy * v.fov_screen_dist) / vz);
+    if (sx) *sx = x;
+    if (sy) *sy = y;
+    return x >= 0 && x < 320 && y >= 0 && y < 240;
+}
+/* frontal (Q12) = cos(Blickachse, Kopf -> Kamera) in xz. */
+static int gr2_frontal(const int32_t kopf[3], const int32_t achse[2], const re15_camera_cut_t *c)
+{
+    int64_t cx = (int64_t)c->pos_x - kopf[0], cz = (int64_t)c->pos_z - kopf[2];
+    uint32_t lc = re15_squareroot0((uint32_t)(cx * cx + cz * cz));
+    uint32_t la = re15_squareroot0((uint32_t)((int64_t)achse[0] * achse[0] + (int64_t)achse[1] * achse[1]));
+    if (lc == 0 || la == 0) return 0;
+    return (int)((((int64_t)achse[0] * cx + (int64_t)achse[1] * cz) * 4096) / ((int64_t)la * lc));
+}
+/* Zonenkamera = Cut, dessen RVD-Gruppe ausser dem Such-Anker (erster Satz je cam_from, rdt_common.c) mindestens
+ * einen Wechselsatz hat. ROOM2090: Cuts 0..7 je 3 Saetze; die Sonderkameras 8..12 tragen nur den Anker (RVD
+ * @0x400-0x450, Ziel 0) und haben keine Masken (MASKS/ROOM2090_PRI00..07). */
+static int gr2_zonenkamera(int cut)
+{
+    int n = 0;
+    for (int i = 0; i < g_room_rdt.zone_count; i++)
+        if ((int)g_room_rdt.zones[i].cam_from == cut) n++;
+    return n >= 2;
+}
+
+int re15_gr2_kamera_wahl(int blick, const re15_actor_t *gator, const re15_actor_t *opfer, int *frontal)
+{
+    if (frontal) *frontal = 0;
+    if (blick < RE15_GR2_BLICK_DURCHBRUCH || blick > RE15_GR2_BLICK_FINISHER || !gator) return -1;
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || g_room_rdt.cut_count <= 0) return -1;
+    int32_t kopf[3], achse[2];
+    if (!gr2_kopf_achse(gator, kopf, achse)) return -1;
+    int32_t kiefer[3] = { 0, 0, 0 }, op[3] = { 0, 0, 0 }, r[9];
+    int mit_opfer = k_blick[blick].opfer && gr2_bone_welt(gator, 7, r, kiefer);
+    if (opfer) { op[0] = opfer->x; op[1] = opfer->y; op[2] = opfer->z; }   /* Szene: Opfer-Fusspunkt zusaetzlich */
+    for (int pass = (mit_opfer || opfer) ? 0 : 1; pass < 2; pass++) {   /* 0: Kopf + Kiefer/Opfer, 1: nur Kopf */
+        int best = -1, best_d = 0x7fffffff, best_f = 0;
+        for (int k = 0; k < g_room_rdt.cut_count; k++) {
+            if (!gr2_zonenkamera(k)) continue;
+            const re15_camera_cut_t *c = &g_room_rdt.cuts[k];
+            if (!gr2_im_bild(c, kopf, NULL, NULL)) continue;
+            if (pass == 0 && mit_opfer && !gr2_im_bild(c, kiefer, NULL, NULL)) continue;
+            if (pass == 0 && opfer && !gr2_im_bild(c, op, NULL, NULL)) continue;
+            int f = gr2_frontal(kopf, achse, c);
+            int d = f - k_blick[blick].soll; if (d < 0) d = -d;
+            if (d < best_d) { best = k; best_d = d; best_f = f; }   /* Gleichstand: kleinerer Cut */
+        }
+        if (best >= 0) { if (frontal) *frontal = best_f; return best; }
+    }
+    return -1;
+}
+
+static void gr2_kam_merken(int cut, int blick, const re15_actor_t *e)
+{
+    if (s_kam.n >= GR2_KAM_FOLGE) return;
+    s_kam.cut[s_kam.n] = (int8_t)cut; s_kam.blick[s_kam.n] = (int8_t)blick;
+    s_kam.clip[s_kam.n] = e ? (int16_t)e->motion : -1; s_kam.bild[s_kam.n] = e ? (int16_t)e->anim_frame : -1;
+    s_kam.n++;
+}
+/* RE1.5 Cut_chg-Zwilling (scd_vm.c op_cut_chg, LAB_800402a0): angeforderter Cut + Work-Vars + Bit 0x100. */
+static void gr2_kam_cut_chg(int cut)
+{
+    g_scd.cam_id_prev        = (uint8_t)g_scd.work_vars[0x0A];   /* @0x800402c0 / @0x800402e4 */
+    g_scd.cam_id             = (uint8_t)cut;
+    g_scd.cam_arg2           = 0;
+    g_scd.cam_arg3           = 0;
+    g_scd.cam_change_pending = 1;
+    g_scd.work_vars[0x0C]    = g_scd.work_vars[0x0A];          /* @0x800402ec */
+    g_scd.work_vars[0x0A]    = (int16_t)cut;                   /* @0x800402fc */
+    g_scd.cut_auto_enabled   = 0;                              /* @0x800402d4 `ori ...,0x100` */
+}
+static void gr2_kam_sperre(int programm)
+{
+    if (!s_kam.aktiv) { s_kam.vorher = (int16_t)g_scd.cam_id; s_kam.aktiv = 1; }
+    s_kam.programm = (uint8_t)programm;
+    g_scd.cut_auto_enabled = 0;                                /* RE2 0x800cfbd8 |= 0x100 */
+}
+static int gr2_kam_schnitt(int programm, int blick, const re15_actor_t *e, const re15_actor_t *opfer)
+{
+    gr2_kam_sperre(programm);
+    int f = 0, cut = re15_gr2_kamera_wahl(blick, e, opfer, &f);
+    if (cut >= 0) gr2_kam_cut_chg(cut);
+    gr2_kam_merken(cut, blick, e);
+    re15_gr2_log("KAMERA %s %s RE2-Cut %d -> Cut %d F%u clip=%d bild=%d frontal=%d soll=%d",
+                 k_kam_prog[programm], k_blick[blick].name, (int)k_blick[blick].re2_cut, cut,
+                 (unsigned)g_engine.frame_count, e ? (int)e->motion : -1, e ? (int)e->anim_frame : -1,
+                 f, (int)k_blick[blick].soll);
+    return cut;
+}
+/* Cut_old-Zwilling (FUN_8004032c: cam_id = gemerkter Cut, Work-Vars) auf den Zonen-Cut VOR dem Programm. */
+static void gr2_kam_zurueck(const re15_actor_t *e)
+{
+    if (s_kam.vorher < 0 || (int)g_scd.cam_id == s_kam.vorher) return;
+    gr2_kam_cut_chg(s_kam.vorher);
+    gr2_kam_merken(s_kam.vorher, 0, e);
+    re15_gr2_log("KAMERA %s zurueck -> Cut %d F%u clip=%d bild=%d", k_kam_prog[s_kam.programm], (int)s_kam.vorher,
+                 (unsigned)g_engine.frame_count, e ? (int)e->motion : -1, e ? (int)e->anim_frame : -1);
+}
+static void gr2_kam_frei(const re15_actor_t *e)
+{
+    if (!s_kam.aktiv) return;
+    gr2_kam_zurueck(e);
+    g_scd.cut_auto_enabled = 1;                                /* FUN_8004032c @0x8004032c / RE2 &= ~0x100 */
+    gr2_kam_merken(-2, 0, e);
+    re15_gr2_log("KAMERA %s frei (Zonenkamera an) Cut %d F%u clip=%d bild=%d", k_kam_prog[s_kam.programm],
+                 (int)g_scd.cam_id, (unsigned)g_engine.frame_count, e ? (int)e->motion : -1, e ? (int)e->anim_frame : -1);
+    s_kam.aktiv = 0; s_kam.programm = 0; s_kam.r1_geschnitten = 0; s_kam.vorher = -1;
+}
+
+int re15_gr2_kamera_schnitt(int blick, const re15_actor_t *gator, const re15_actor_t *opfer, const char *programm)
+{
+    if (programm) re15_gr2_log("KAMERA SZENE \"%s\"", programm);
+    return gr2_kam_schnitt(GR2_KAM_SZENE, blick, gator, opfer);
+}
+void re15_gr2_kamera_frei(const char *programm)
+{
+    if (programm) re15_gr2_log("KAMERA SZENE \"%s\" Ende", programm);
+    gr2_kam_frei(NULL);
+}
+int  re15_gr2_kamera_gesperrt(void) { return s_kam.aktiv; }
+static int gr2_kam_auto(void) { return !s_kam_aus; }
+static void gr2_kam_reset(void)
+{
+    /* Boss-INIT = Raum frisch geladen: g_scd (cut_auto_enabled = 1) setzt der Raumlader selbst zurueck. */
+    memset(&s_kam, 0, sizeof s_kam);
+    s_kam.vorher = -1;
+}
+/* R1 P0 (@0x801021ec-6c): Sperre immer; Schnitt nur, wenn der aktuelle Cut den Kopf nicht zeigt (RE2: Cut 6/13 und
+ * z < -13300 = genau der Fall "Kopf ausserhalb", Probe: Bild-x -2 in Cut 6), dann +0x218 |= 0x40 (@0x80102240-4c). */
+static void gr2_kam_r1_start(const re15_actor_t *e)
+{
+    if (!gr2_kam_auto()) return;
+    int32_t kopf[3], achse[2];
+    int cur = (int)g_scd.cam_id, sx = -1, sy = -1, sichtbar = 0;
+    if (g_room_rdt_ok && g_room_rdt.cuts && cur < g_room_rdt.cut_count && gr2_kopf_achse(e, kopf, achse))
+        sichtbar = gr2_im_bild(&g_room_rdt.cuts[cur], kopf, &sx, &sy);
+    if (!sichtbar) {
+        s_kam.r1_geschnitten = (uint8_t)(gr2_kam_schnitt(GR2_KAM_R1, RE15_GR2_BLICK_EXPLOSION, e, NULL) >= 0);
+        return;
+    }
+    gr2_kam_sperre(GR2_KAM_R1);
+    gr2_kam_merken(-1, RE15_GR2_BLICK_EXPLOSION, e);
+    re15_gr2_log("KAMERA R1 Sperre ohne Schnitt: Kopf im Bild von Cut %d bei (%d,%d) F%u", cur, sx, sy,
+                 (unsigned)g_engine.frame_count);
+}
+void re15_gr2_kamera_auto(int an) { s_kam_aus = (uint8_t)(an ? 0 : 1); }
+void re15_gr2_kamera_finisher(int slot, const re15_actor_t *gator, const re15_actor_t *opfer)
+{
+    (void)slot; (void)opfer;                                /* Opfer = Kiefer (s. k_blick), nicht die P0-Lage */
+    if (s_kam_aus) return;
+    gr2_kam_schnitt(GR2_KAM_FRESSEN, RE15_GR2_BLICK_FINISHER, gator, NULL);   /* @0x80100fbc-ff4, kein Ende */
+}
+int re15_gr2_kamera_folge(int max, int *cut, int *blick, int *clip, int *bild)
+{
+    int n = s_kam.n < max ? s_kam.n : max;
+    for (int i = 0; i < n; i++) {
+        if (cut) cut[i] = s_kam.cut[i];
+        if (blick) blick[i] = s_kam.blick[i];
+        if (clip) clip[i] = s_kam.clip[i];
+        if (bild) bild[i] = s_kam.bild[i];
+    }
+    return n;
+}
+
 /* ---- Takt ---------------------------------------------------------------------------------- */
 void re15_gr2_takt(int slot, re15_actor_t *e, re15_actor_t *pl, int im_chase)
 {
@@ -505,6 +751,10 @@ void re15_gr2_takt(int slot, re15_actor_t *e, re15_actor_t *pl, int im_chase)
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
     gr2_t *g = &s_g[slot];
     if (!s_env_geprueft) re15_gr2_kanister_env();
+    /* Nachtrag 4: ein Programm, dessen Ablauf nicht mehr laeuft (Intro/R1 abgebrochen), gibt die Kamera frei. */
+    if (s_kam.aktiv && ((s_kam.programm == GR2_KAM_INTRO && !g->intro_phase)
+                        || (s_kam.programm == GR2_KAM_R1 && !g->r1_phase)))
+        gr2_kam_frei(e);
     gr2_ereignis_takt(g);                                   /* Root @0x80100410 */
     gr2_schuettel_takt();                                   /* EXE je Bild */
     gr2_putz_takt(g);
@@ -643,6 +893,9 @@ void re15_gr2_intro_start(int slot, re15_actor_t *e)
     e->motion = 6; e->anim_frame = 0; e->anim_frac = 0;     /* Clip 6 (0) @0x801008ac-b8 */
     g->intro_phase = 1;
     re15_gr2_log("INTRO start pos=(%d,%d) yaw=%d bahn_ende=(%d,%d)", e->x, e->z, (int)e->rot_y, zi[0], zi[1]);
+    /* Nachtrag 4: RE2 laesst Clip 6 im Szenen-Cut 10 anlaufen (ROOM40A0 sub02 `29 0a` @SCD 0x00E0, 78 Bilder vor
+     * `Evt_exec 0x0b` @0x00EE -> sub11 Member_set2 +0x1D4 -> Sub 0 P1) = Blick DURCHBRUCH, Sperre wie 0x110 @0x8010087c. */
+    if (gr2_kam_auto()) gr2_kam_schnitt(GR2_KAM_INTRO, RE15_GR2_BLICK_DURCHBRUCH, e, NULL);
 }
 int re15_gr2_intro_tick(int slot, re15_actor_t *e)
 {
@@ -662,13 +915,22 @@ int re15_gr2_intro_tick(int slot, re15_actor_t *e)
     }
     int clip = (g->intro_phase == 1) ? 6 : 3;
     e->motion = (uint8_t)clip;
-    if (gr2_clip_tick(e, bk, clip) == 2) {                  /* letztes Bild liegt an (s. gr2_clip_tick) */
+    int rc = gr2_clip_tick(e, bk, clip);
+    int kam = (s_kam.aktiv && s_kam.programm == GR2_KAM_INTRO);   /* Nachtrag 4: Intro-Programm laeuft */
+    /* Nachtrag 4: Bild 70 -> Cut 0 (`addiu v0,zero,70 / bne v1(+0x14D),v0` @0x80100894-98 VOR dem Clip-Tick = das
+     * Bild 70 wird in diesem Tick gezeigt; port: anim_frame nach gr2_clip_tick). */
+    if (kam && g->intro_phase == 1 && rc == 1 && e->anim_frame == 70)
+        gr2_kam_schnitt(GR2_KAM_INTRO, RE15_GR2_BLICK_SEITE, e, NULL);
+    if (rc == 2) {                                          /* letztes Bild liegt an (s. gr2_clip_tick) */
         g->intro_endbild = 1;
+        if (kam && g->intro_phase == 1)                     /* Clip-6-Ende -> Cut 1 (@0x801008bc-c8) */
+            gr2_kam_schnitt(GR2_KAM_INTRO, RE15_GR2_BLICK_ANGRIFF, e, NULL);
         if (g->intro_phase == 2) {                          /* Ende-Aktionen P2 @0x801008f8-948 */
             g->biss_cd = RE15_GR2_BISS_CD_INTRO;            /* +0x238 = 110 @0x8010091c-20 */
             g->letzter_clip = 0;                            /* Routine 0x101 @0x80100928-2c */
             e->rot_y = (int16_t)((e->rot_y + 1024) & 0x0fff);   /* `lhu v0,118 / addiu v0,v0,1024 / sh v0,118` @0x80100938-48 */
             re15_gr2_log("INTRO ende pos=(%d,%d) yaw=%d", e->x, e->z, (int)e->rot_y);
+            if (kam) gr2_kam_frei(e);                       /* Bits 0x110 frei @0x801008f8-918 (Nachtrag 4) */
         }
     }
     return 1;
@@ -792,6 +1054,7 @@ void re15_gr2_r1_start(int slot, re15_actor_t *e)
     e->motion = 9; e->anim_frame = 0; e->anim_frac = 0;     /* Clip 9 @0x80102488-98 */
     if (bk) re15_clip_anchor_set_pub(e, &bk->skel, &bk->anim, 9, 0);
     re15_gr2_log("R1 start pos=(%d,%d) hp=%d", e->x, e->z, (int)e->hp);
+    gr2_kam_r1_start(e);                                    /* Nachtrag 4: Sperre @0x8010220c, Cut 5 @0x80102218-6c */
 }
 
 static void gr2_fontaene_takt(gr2_t *g, re15_actor_t *e)
@@ -847,13 +1110,21 @@ int re15_gr2_r1_tick(int slot, re15_actor_t *e)
         if (g->r1_176 > 3478) g->r1_176 = (int16_t)(g->r1_176 - 20);   /* @0x8010260c-34 */
         e->motion = 9;
         re15_clip_root_motion_abs_pub(e, &bk->skel, &bk->anim, 9, (int)e->anim_frame);
-        if (e->anim_frame + 1 >= n) { g->r1_phase = 2; return 1; }   /* FUN_8001a330 == 1 @0x8010249c */
+        if (e->anim_frame + 1 >= n) {                       /* FUN_8001a330 == 1 @0x8010249c */
+            g->r1_phase = 2;
+            /* Nachtrag 4: +0x218 & 0x40 -> zurueck auf den Ausgangs-Cut (6/13 @0x801024a4-ec), Sperre bleibt bis P3 */
+            if (s_kam.aktiv && s_kam.programm == GR2_KAM_R1 && s_kam.r1_geschnitten) gr2_kam_zurueck(e);
+            return 1;
+        }
         e->anim_frame++;
         return 1;
     }
     if (g->r1_phase == 2) { g->r1_phase = 3; return 1; }   /* @0x80102638-50 */
     /* P3 @0x80102654: +0x10E |= 0x4000, Raumflag 30 — Endzustand, Pose bleibt (Clip 9 letztes Bild) */
-    if (!g->tot) { g->tot = 1; re15_gr2_log("R1 ende (Leiche) pos=(%d,%d)", e->x, e->z); }
+    if (!g->tot) {
+        g->tot = 1; re15_gr2_log("R1 ende (Leiche) pos=(%d,%d)", e->x, e->z);
+        if (s_kam.aktiv && s_kam.programm == GR2_KAM_R1) gr2_kam_frei(e);   /* P3 `&= ~0x100` @0x80102688-94 */
+    }
     e->motion = 9; e->anim_frame = bk->anim.clips[9].frame_count - 1;
     return 0;
 }
