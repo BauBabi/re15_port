@@ -313,6 +313,15 @@ shared_assets/PSX, pri/, synchro/, release/.
   `^(integration_r41_ventilkette|integration_r37_fahrstuhl_n1|integration_r37_itemband|integration_r37_itemband_lift|integration_r37_kiste|integration_r37_kiste2feld|integration_r37_kistenregel|integration_r36_gegnerzahl|integration_r36_dachkiste|integration_r38_spinnen_echtlauf|integration_r38_wasser|integration_r38_wasserzombie|integration_map_uebergang|integration_cross_stage|integration_item_name_census|integration_save_counter_pin)$`
   -> Summenzeile: (wird nach dem Lauf eingetragen).
 
+* Querbezuege (Memory "neue Regeln widerlegen alte Riegel", beim ersten Integrationslauf gefunden):
+  - `integration_r36_dachkiste` echt2050/elza2051 fahren 2050 -> 2000 -> Leiter slot 4 @0x0169E -> 2050; die Leiter ist
+    jetzt bis zur Flut gesperrt -> die zwei Laeufe setzen `RE15_SET_FLAG=9:100` (Leiter frei; Gegenstand des Riegels
+    ist der Kisten-Record, nicht die Leiter). Lauf 1 der Gruppe fiel genau an "DOOR FIRE slot=4 rect=(-27100,10300"
+    durch (1115 s unter Last).
+  - `integration_r37_itemband` schrot2030 geht ueber den Steg (GEHE -1050 -7700 -> -1050 7100 = Zelle 12) zu den
+    Schrotpatronen; der Steg ist bis zum Pult-Raetsel gesperrt -> Lauf setzt `RE15_SET_FLAG=9:101,9:102`.
+  Beide Aenderungen sind Kommentar-belegt in den cmake-Dateien.
+
 ## 6. OFFEN
 * Die Flut als exe-Messung ueber 60 s: die drei Spinnen des Eintritts-Cuts (2030 main00 Case 0 @0x01C12) toeten den
   Spieler vorher; es gibt keinen Harness-Schalter "ohne Gegner". Mechanik ist im Unit-Riegel Takt fuer Takt belegt.
