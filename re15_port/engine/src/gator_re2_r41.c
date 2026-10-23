@@ -627,6 +627,60 @@ int re15_gr2_hurt_reaktion(int slot, re15_actor_t *e, const re15_actor_t *pl, in
     return 0;
 }
 
+/* ---- Geplatzter Kiefer = FUN_80104318 (@0x80104318-58) -------------------------------------
+ * Aufruf aus R1 P0: `addu a0,s1,zero / jal 0x80104318 / addiu a1,s3,1204` @0x80102350-58 mit
+ * s3 = [em+0x198] (`lw s3,408(s1)` @0x80102174) = der RE2-MODELLBLOCK (Records a 172 Byte,
+ * FUN_80028368); 1204 = 7 x 172 = Part-Record 7 = KIEFER. Die Funktion (selbst disassembliert):
+ *   lw v0,0(a1) / ori v0,v0,0x4a / sw v0,0(a1)        @0x8010431c/24/28  Flagwort |= 0x4A
+ *       (0x40 = eigene Matrix `andi v0,s3,0x40` @0x80027498, 0x08 = Drift-Physik FUN_80028DAC
+ *        @0x80027B98 UND Scherben-Zeichnung FUN_8002D3C8/D718 statt intaktem Mesh, FUN_80027434.c:168-170)
+ *   lhu v1,118(a0) / addiu v1,v1,2048 / sh v1,152(a1)  @0x8010432c/50/58  +0x98 = Kurs yaw + 0x800
+ *   ori v0,zero,0x8000 / sh v0,160(a1)                 @0x80104330/34     +0xA0 = 0x8000: Lebensdauer-Zaehler
+ *       (FUN_80028DAC: `andi 0x7fff / sltiu 0x1d` @0x80028DC8-CC zaehlt 0..28, dann `sw zero,0(s0)`
+ *        @0x80028DDC = Flagwort 0 = weg; Bit 15 = Zeile 1 der Burst-Skalentabelle @0x8009DC64,
+ *        `lhu / srl 0xf` FUN_8002d3c8.c)
+ *   addiu v0,zero,-10 / sh v0,154(a1)                  @0x80104338/40     +0x9A = vy -10 (steigt 10/Bild,
+ *       `t[1] += +0x9A` @0x80028E04-14) — KEIN Kiefer-az (so stand es in 86661849, korrigiert)
+ *   sh zero,156(a1) / sh zero,158(a1) / sh zero,164(a1) @0x8010433c/44/48 +0x9C/+0x9E/+0xA4 = 0 (kein Vortrieb)
+ *   lui a2,0x20 / ori a2,a2,0x2038 / sw a2,112(a1)     @0x80104318/20/4c  +0x70 = 0x202038 (R 0x38 G 0x20 B 0x20,
+ *       flache Scherbenfarbe `lw t2,112(a2)` @0x8002D508)
+ * PORT: dieselbe Part-Bruecke wie Zombie-Arm (Flagwort 0x4A, enemy_ai_re2_zombie.c re2z_arm_throw) und
+ * Kraehe (schuss_r36.c): Seed des Blocks wie FUN_80028368 (Bit 0, +0x70 = 0x808080, Mesh = i), dann der
+ * Stempel. Den Haken in re15_re2z_gore_active (Typ 0x23: Bruecke an, sobald Record 0 Bit 0 traegt) liest
+ * der NPC-Zeichner in main.c (re15_re2z_gore_part_matrix @10512 / re15_re2z_gore_part_burst @10624). */
+static void gr2_kiefer_platzen(re15_actor_t *e)
+{
+    memset(e->re2z_part_v,    0, sizeof e->re2z_part_v);
+    memset(e->re2z_part_rot,  0, sizeof e->re2z_part_rot);
+    memset(e->re2z_part_m,    0, sizeof e->re2z_part_m);
+    memset(e->re2z_part_t,    0, sizeof e->re2z_part_t);
+    memset(e->re2z_part_grav, 0, sizeof e->re2z_part_grav);
+    memset(e->re2z_part_st86, 0, sizeof e->re2z_part_st86);
+    memset(e->re2z_part_yaw98,0, sizeof e->re2z_part_yaw98);
+    memset(e->re2z_part_w9a,  0, sizeof e->re2z_part_w9a);
+    memset(e->re2z_part_w9c,  0, sizeof e->re2z_part_w9c);
+    memset(e->re2z_part_w9e,  0, sizeof e->re2z_part_w9e);
+    memset(e->re2z_part_life, 0, sizeof e->re2z_part_life);
+    memset(e->re2z_part_life_draw, 0, sizeof e->re2z_part_life_draw);
+    memset(e->re2z_part_wa4,  0, sizeof e->re2z_part_wa4);
+    e->re2z_part_burst_draw = 0u;
+    e->re2z_part_seeded = 0u; e->re2z_part_stepped = 0u; e->re2z_part_frame = 0u;
+    for (int i = 0; i < 16; i++) {
+        e->re2z_part_blend[i] = -1;                          /* +0x7A: keine Setz-Blende (`bltz` @0x80028D2C) */
+        e->re2z_part_flags[i] = 1u;                          /* Bit 0 = Part vorhanden (EM23: 22 Parts, Block 16 Records) */
+        e->re2z_part_tint[i]  = 0x00808080u;                 /* FUN_80028368: +0x70 = 0x808080 */
+        e->re2z_part_mesh[i]  = (uint8_t)i;
+    }
+    e->re2z_part_flags[7] |= 0x4Au;                          /* @0x8010431c-28 */
+    e->re2z_part_tint [7]  = 0x00202038u;                    /* @0x8010434c */
+    e->re2z_part_yaw98[7]  = (int16_t)(e->rot_y + 0x800);    /* @0x80104350/58 */
+    e->re2z_part_w9a  [7]  = -10;                            /* @0x80104338/40 */
+    e->re2z_part_w9c  [7]  = 0;                              /* @0x8010433c */
+    e->re2z_part_w9e  [7]  = 0;                              /* @0x80104344 */
+    e->re2z_part_wa4  [7]  = 0;                              /* @0x80104348 */
+    e->re2z_part_life [7]  = 0x8000u;                        /* @0x80104330/34 */
+}
+
 /* ---- R1 Kanister-Explosionstod @0x80102158 ------------------------------------------------- */
 static const int16_t k_ring[6][4] = {   /* SVECTOR-Tabelle @0x801000a8 */
     { 0, -2800, 0, 0 }, { 300, -2100, 0, 0 }, { 0, -700, 0, 0 },
@@ -657,7 +711,7 @@ void re15_gr2_r1_start(int slot, re15_actor_t *e)
     }
     re15_rumble_small(8, 3);                                /* FUN_8003947c(8,3) @0x80102328-30 */
     re15_rumble_ramp(50, 255, 0, 0);                        /* FUN_800395b8(50,255,0,0) @0x80102334-44 */
-    g->kiefer_rot = 1;                                      /* FUN_80104318(em, Part 7) @0x80102354-58 */
+    gr2_kiefer_platzen(e); g->kiefer_rot = 1;               /* FUN_80104318(em, Part 7) @0x80102354-58 */
     g->fontaene = 1;                                        /* Callback +0x234 = FUN_80103eb4 @0x80102368 */
     /* Spritzring @0x80102374 -> 0x8010338c: 6 Effekte an der Kanister-Matrix */
     if (s_kan.aktiv)
@@ -742,15 +796,11 @@ int re15_gr2_bone_az(int slot, int bone)
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
     const gr2_t *g = &s_g[slot];
     if (bone == 6) return g->kopf_az;                       /* Part 6 az += +0x22A @0x8010037c-94 */
-    if (bone == 7) return g->kiefer_az + (g->kiefer_rot ? -10 : 0);   /* Part 7 az += +0x228 @0x801003a8-cc; FUN_80104318 +0x9a = -10 */
+    if (bone == 7) return g->kiefer_az;                     /* Part 7 az += +0x228 @0x801003a8-cc (R1 setzt +0x228 = 0
+                                                             * @0x801022dc; der Kiefer fliegt danach als Part-Record, s.o.) */
     return 0;
 }
-int re15_gr2_kiefer_farbe(int slot, uint8_t rgb[3])
-{
-    if (slot < 0 || slot >= RE15_ACTOR_MAX || !s_g[slot].kiefer_rot) return 0;
-    rgb[0] = 0x38; rgb[1] = 0x20; rgb[2] = 0x20;            /* `sw 0x202038,112(a1)` @0x8010431c/4c */
-    return 1;
-}
+int re15_gr2_kiefer_geplatzt(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].kiefer_rot : 0; }
 
 /* ---- Kanister-API ---------------------------------------------------------------------------- */
 void re15_gr2_kanister_setzen(int32_t x, int32_t y, int32_t z)

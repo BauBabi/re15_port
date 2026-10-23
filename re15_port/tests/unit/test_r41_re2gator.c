@@ -392,6 +392,78 @@ static int teil_kanister(void)
 }
 
 /* ================================================================================================ */
+/* Geplatzter Kiefer: FUN_80104318 (@0x80104318-58) stempelt Part-Record 7 des RE2-Modellblocks
+ * ([em+0x198] + 7 x 172, `addiu a1,s3,1204` @0x80102358): Flagwort |= 0x4A, +0x70 = 0x202038, +0x98 = yaw
+ * + 0x800, +0x9A = -10, +0x9C/+0x9E/+0xA4 = 0, +0xA0 = 0x8000. Danach uebernimmt der Zeichner FUN_80027434:
+ * eigene Matrix (0x40 @0x80027498), Drift FUN_80028DAC (@0x80027B98: y += -10 je Bild @0x80028E04-14,
+ * Lebensdauer `andi 0x7fff / sltiu 0x1d` @0x80028DC8-CC, dann Flagwort 0 @0x80028DDC) und Scherben-Zeichnung
+ * FUN_8002D3C8 (Skala = Tabelle[life>>15][life&0x7fff] @0x8009DC28/@0x8009DC64, Farbe flach +0x70). Der Riegel
+ * treibt die Port-Bruecke so, wie main.c sie je Bild ruft (re15_re2z_gore_part_matrix, dann _part_burst). */
+static int teil_kiefer(void)
+{
+    if (!setup(0)) return 1;
+    leon_statue(-6000, 2000);
+    tick();
+    e->x = -6000; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    re15_gr2_kanister_setzen(-6000, -267, -22000 + (int32_t)(((int64_t)8800 * s) >> 12));
+    for (int f = 0; f < 60 && re15_gr2_kanister_stufe() != 7; f++) {
+        leon_statue(-6000, 2000); e->x = -6000; e->z = -22000; e->rot_y = 0xC00; tick();
+    }
+    CHECK(re15_gr2_kanister_stufe() == 7, "Kanister nicht getragen (Stufe %d)", re15_gr2_kanister_stufe());
+    CHECK(re15_re2z_gore_active(e) == 0, "Part-Bruecke VOR dem Explosionstod aktiv");
+    int16_t yaw_vor = e->rot_y;
+    (void)re15_enemy_take_damage(e, 0);
+    tick();                                                     /* -> R1 P0: FUN_80104318 @0x80102354-58 */
+    CHECK(re15_gr2_kiefer_geplatzt(slot), "Kiefer nicht gestempelt (FUN_80104318)");
+    CHECK(re15_re2z_gore_active(e) == 1, "Part-Bruecke nach R1 nicht aktiv (Haken re15_re2z_gore_active, Typ 0x23)");
+    CHECK(e->re2z_part_flags[7] == 0x4Bu, "Part 7 Flagwort 0x%x != 0x4B (Bit 0 + `ori 0x4a` @0x80104324)", e->re2z_part_flags[7]);
+    CHECK(e->re2z_part_tint[7] == 0x00202038u, "Part 7 Tinte 0x%x != 0x202038 (@0x8010434c)", e->re2z_part_tint[7]);
+    CHECK(e->re2z_part_life[7] == 0x8000u, "Part 7 +0xA0 = 0x%x != 0x8000 (@0x80104334)", e->re2z_part_life[7]);
+    CHECK(e->re2z_part_w9a[7] == -10, "Part 7 +0x9A = %d != -10 (@0x80104340)", e->re2z_part_w9a[7]);
+    CHECK(e->re2z_part_w9c[7] == 0 && e->re2z_part_w9e[7] == 0 && e->re2z_part_wa4[7] == 0, "Part 7 +0x9C/+0x9E/+0xA4 nicht 0");
+    CHECK(((e->re2z_part_yaw98[7] - yaw_vor) & 0xfff) == 0x800, "Part 7 +0x98 = %d, erwartet yaw %d + 0x800 (@0x80104350)", e->re2z_part_yaw98[7], yaw_vor);
+    for (int i = 0; i < 16; i++) if (i != 7)
+        CHECK(e->re2z_part_flags[i] == 1u && e->re2z_part_tint[i] == 0x00808080u, "Record %d nicht neutral geseedet", i);
+    CHECK(re15_gr2_bone_az(slot, 7) == 0, "Kiefer-az nach R1 %d != 0 (+0x228 = 0 @0x801022dc; -10 ist vy, kein az)", re15_gr2_bone_az(slot, 7));
+    /* Elternkette: kein Kind haengt am Kiefer (Kaskade @0x80027480-94 traefe sonst mit) */
+    re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+    int kinder = 0;
+    for (int i = 0; i < bk->skel.bone_count; i++) if (bk->skel.bone_parent[i] == 7) kinder++;
+    CHECK(kinder == 0, "%d Bones haengen am Kiefer-Part 7", kinder);
+    /* Zeichner-Bruecke je Bild: Matrix (seed + Physik) und dann Burst-Skala/Tinte wie main.c */
+    int32_t rot[9] = { 4096,0,0, 0,4096,0, 0,0,4096 }, trans[3], y0 = 0;
+    re15_enemy_bone_world_pos(e, 7, trans); y0 = trans[1];
+    int burst_bilder = 0, m_ok = 0, erste_skala = -1, letzte_skala = -1; uint32_t tint = 0; int y_ok = 0, weg_ab = -1;
+    for (int k = 1; k <= 34; k++) {
+        int32_t r2[9]; memcpy(r2, rot, sizeof r2);
+        int32_t t2[3]; memcpy(t2, trans, sizeof t2);
+        int m = re15_re2z_gore_part_matrix(e, 7, (uint32_t)k, r2, t2);
+        int32_t sk = 0; uint32_t tn = 0;
+        int b = re15_re2z_gore_part_burst(e, 7, &sk, &tn);
+        if (m) { m_ok++; if (t2[1] == y0 - 10 * k) y_ok++; }     /* vy -10 je Bild (@0x80028E04-14) */
+        if (b) { burst_bilder++; if (erste_skala < 0) erste_skala = sk; letzte_skala = sk; tint = tn; }
+        if (!m && weg_ab < 0) weg_ab = k;
+        tick();
+    }
+    CHECK(burst_bilder == 30, "Scherben-Bilder %d != 30 (life 0x8000..0x801d, `sltiu 0x1d` @0x80028DCC)", burst_bilder);
+    CHECK(m_ok == 30 && y_ok == 30, "eigene Matrix in %d Bildern, Aufstieg -10/Bild in %d (soll 30/30)", m_ok, y_ok);
+    CHECK(erste_skala == 180 && letzte_skala == 2790, "Burst-Skala %d..%d, soll 180..2790 (Zeile 1 @0x8009DC64, Bit 15 von 0x8000)", erste_skala, letzte_skala);
+    CHECK(tint == 0x00202038u, "Scherben-Tinte 0x%x != 0x202038", tint);
+    CHECK(weg_ab == 31, "Kiefer weg ab Bild %d statt 31 (Flagwort 0 @0x80028DDC nach 29 Zaehlschritten)", weg_ab);
+    CHECK(e->re2z_part_flags[7] == 0u, "Part 7 Flagwort %u != 0 nach Ablauf", e->re2z_part_flags[7]);
+    {   uint8_t dr[RE15_EMD_MAX_BONES]; uint32_t tn[RE15_EMD_MAX_BONES]; uint8_t ms[RE15_EMD_MAX_BONES];
+        for (int i = 0; i < RE15_EMD_MAX_BONES; i++) { dr[i] = 1; tn[i] = 0x00808080u; ms[i] = (uint8_t)i; }
+        int on = re15_re2z_gore_resolve(e, bk->skel.bone_parent, bk->skel.bone_count, dr, tn, ms);
+        int gezeichnet = 0; for (int i = 0; i < bk->skel.bone_count; i++) gezeichnet += dr[i];
+        CHECK(on == 1 && dr[7] == 0 && gezeichnet == bk->skel.bone_count - 1,
+              "Resolver: on=%d Kiefer gezeichnet=%d, uebrige %d/%d (Bit 0 @0x8002737C)", on, dr[7], gezeichnet, bk->skel.bone_count); }
+    printf("kiefer: Flag 0x%x Tinte 0x%x life 0x%x vy %d Kurs %d; Scherben %d Bilder Skala %d..%d, weg ab %d, Kinder %d\n",
+           0x4B, 0x202038, 0x8000, -10, (int)e->re2z_part_yaw98[7], burst_bilder, erste_skala, letzte_skala, weg_ab, kinder);
+    return fails ? 1 : 0;
+}
+
+/* ================================================================================================ */
 static int teil_putz(void)
 {
     if (!setup(1)) return 1;
@@ -465,6 +537,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "intro")) rc = teil_intro();
     else if (!strcmp(t, "sockel")) rc = teil_sockel();
     else if (!strcmp(t, "kanister")) rc = teil_kanister();
+    else if (!strcmp(t, "kiefer")) rc = teil_kiefer();
     else if (!strcmp(t, "putz")) rc = teil_putz();
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);

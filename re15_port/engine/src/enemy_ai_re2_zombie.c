@@ -4631,6 +4631,10 @@ static int re2z_bone_to_part(const re15_actor_t *e, int bone)
 int re15_re2z_gore_active(const re15_actor_t *e)
 {
     if (!e) return 0;
+    /* Runde 41 Spur B: der RE2-ALLIGATOR (0x23) faehrt die Part-Bruecke fuer den geplatzten Kiefer (FUN_80104318
+     * @0x80104318-58: Part-Record 7 |= 0x4A); den Block seedet NUR der Explosionstod R1 (gator_re2_r41.c), vorher
+     * ist Record 0 ohne Bit 0 (Aktor-memset) und die Bruecke bleibt aus. */
+    if (e->type == 0x23u) return (e->re2z_part_flags[0] & 1u) != 0;
     /* Runde 36 Spur C: auch die RE2-KRAEHE (0x21) faehrt die Part-Bruecke — ihr GIB 0x80102CA0 wirft
      * dieselben 13 Zeilen mit denselben Flagworten 0x4A/0x1062 (schuss_r36.c); Seed in re2c_init. */
     if (e->type == 0x21u) return re15_ai_re2_for_type(0x21u) && e->re2c_gib_parts != 0u;

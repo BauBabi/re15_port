@@ -92,8 +92,11 @@ int  re15_gr2_r1_laeuft(int slot);
 /* Zusatz-az je Bone (Root @0x8010037c-cc: +0x22A auf Part 6, +0x228 auf Part 7; T1/T2-Easing und
  * der Kiefer nach R1 FUN_80104318). Vom Spine-Haken des Boss-Moduls addiert. */
 int  re15_gr2_bone_az(int slot, int bone);
-/* Kiefer-Faerbung nach R1 (`sw a2(0x202038),112(a1)` @0x8010434c = R 0x38 G 0x20 B 0x20): 1 wenn aktiv. */
-int  re15_gr2_kiefer_farbe(int slot, uint8_t rgb[3]);
+/* Geplatzter Kiefer (FUN_80104318 @0x80104318-58, aus R1 P0 @0x80102354-58): 1, sobald Part-Record 7 des
+ * RE2-Modellblocks gestempelt ist (Flagwort 0x4A, +0xA0 = 0x8000, +0x9A = -10, +0x70 = 0x202038) — der
+ * Kiefer fliegt dann ueber die Part-Bruecke (re15_re2z_gore_part_matrix / _part_burst, re15_actor.h) als
+ * dunkelrote Scherbenwolke 10/Bild nach oben und ist nach 29 Bildern weg (FUN_80028DAC @0x80028DC8-DC). */
+int  re15_gr2_kiefer_geplatzt(int slot);
 
 /* Bildschirm-Schuetteln (FUN_8002aa28/aa6c): Versatz (dx,dy) des HINTERGRUNDS fuer dieses Bild,
  * 0/0 wenn keines; Modus 2 = Bit 4 (stark), 1 = Bit 8 (schwach). */

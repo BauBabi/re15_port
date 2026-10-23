@@ -10,6 +10,19 @@ Zeiten aus `date`. Jeder Schritt wird hier VOR dem Bau notiert.
 
 ## 0. Protokoll (neueste Eintraege oben)
 
+* 2026-10-23 21:5x (FORTSETZUNG nach Sitzungslimit, neuer Agent): Baum sauber, HEAD c488687a (= 86661849 +
+  AUFTRAG-Entscheide). Bau: local_build.sh configure + build, danach alle beruehrten Quellen per touch neu
+  uebersetzt (783 Ninja-Schritte, EXIT 0, keine Warnung in den Spur-B-Dateien; die drei main.c-Warnungen
+  liegen an Z. 8803/10132/10512 = Altbestand) -> 86661849 kompiliert. Gezielte Unit-Tests (§5): 43/43 gruen.
+  Orchestrator-Entscheide B1-B3 (AUFTRAG.md 21:37) uebernommen: kein Tempo-Deckel, Tod nur ueber den
+  Kanister, Putz nur am Dash-Start — der Code entspricht dem bereits; §7 entsprechend abgeschlossen.
+  KORREKTUR am OFFEN-Punkt "Kiefer": FUN_80104318 selbst disassembliert (§2.6) — a1 = `[em+0x198] + 1204`
+  = Part-Record 7 des RE2-MODELLBLOCKS (Stride 172), die Felder +0x98/+0x9A/+0x9C/+0x9E/+0xA0/+0xA4/+0x70
+  sind die Drift-/Burst-Felder des Records (FUN_80028DAC / FUN_8002D3C8), KEIN Kiefer-az: der Kiefer wird
+  zum freifliegenden, als dunkelrote Scherbenwolke gezeichneten Teil (Flagwort 0x4A), steigt 10/Bild und
+  verschwindet nach 29 Bildern. Der Port fuehrt genau diese Part-Bruecke schon (Zombie-Arm, Kraehe) ->
+  Anschluss ueber einen 3-Zeilen-Haken in re15_re2z_gore_active + Seed/Stempel in gator_re2_r41.c; der
+  falsche "-10 az" aus 86661849 ist entfernt. Riegel unit_r41_re2gator_kiefer neu.
 * 2026-10-23 19:1x: Kanister-Sichtbarkeit GEMESSEN statt gedeutet (§4 Sichtlaeufe e-i): RE15_TRILOG zeigt
   110 Dreiecke/Bild auf TIM-Platz 53 am richtigen Ort und in richtiger Groesse (Durchmesser 534 -> 17 px bei
   z 11000, H = 350), Pixel-Differenz mit/ohne Kanister 34 px (liegend, Cut 7) bzw. 522..902 px (im Maul); die
@@ -163,6 +176,31 @@ Tausch 6->13/7->14, Sleep 170) `For 6: Gosub sub14` — sub13 startet sub11 bei 
   (@0x8010252c-58); Clip-Ende -> P2 -> P3 @0x80102654: +0x10E |= 0x4000, Raumflag Bit 30, `0x800dfc1a = 2`,
   `0x800cfbd8 &= ~0x101` — Endzustand (Leiche haelt die Clip-9-Endpose).
 
+### 2.6 Geplatzter Kiefer = FUN_80104318 (Part-Record 7 des RE2-Modellblocks) — KORREKTUR zu 86661849
+R1 P0 ruft `addu a0,s1,zero / jal 0x80104318 / addiu a1,s3,1204` @0x80102350-58 mit s3 = `lw s3,408(s1)`
+@0x80102174 = em+0x198 = der RE2-MODELLBLOCK (Records a 172 Byte, Aufbau FUN_80028368); 1204 = 7 x 172 =
+Part-Record 7 = Kiefer. FUN_80104318 (selbst disassembliert, re2_disasm.py dis 0x80104318 --bin EM23_OVL_0000.BIN):
+    80104318 lui a2,0x20          8010431c lw v0,0(a1)        80104320 ori a2,a2,0x2038    80104324 ori v0,v0,0x4a
+    80104328 sw v0,0(a1)          8010432c lhu v1,118(a0)     80104330 ori v0,zero,0x8000  80104334 sh v0,160(a1)
+    80104338 addiu v0,zero,-10    8010433c sh zero,156(a1)    80104340 sh v0,154(a1)       80104344 sh zero,158(a1)
+    80104348 sh zero,164(a1)      8010434c sw a2,112(a1)      80104350 addiu v1,v1,2048    80104354 jr ra
+    80104358 sh v1,152(a1)
+= Record 7: Flagwort |= 0x4A, +0x70 = 0x202038, +0x98 = yaw + 0x800, +0x9A = -10, +0x9C/+0x9E/+0xA4 = 0,
++0xA0 = 0x8000. Das sind die Felder des FREIFLIEGENDEN TEILS (dieselben wie beim abgerissenen Zombie-Arm,
+re2z_arm_throw @0x80107554-74, und beim Kraehen-GIB 0x80102CA0): der Zeichner FUN_80027434 nimmt bei Bit 0x40
+die Record-Matrix statt der Elternkette (`andi v0,s3,0x40` @0x80027498), laesst bei Bit 0x08 die Drift-Physik
+FUN_80028DAC laufen (@0x80027B98: `+0x9A += +0x9E; t.y += +0x9A` @0x80028DF0-E14 = steigt 10/Bild; Lebensdauer
+`andi 0x7fff / sltiu 0x1d` @0x80028DC8-CC, sonst `sw zero,0(s0)` @0x80028DDC = Flagwort 0 = Teil weg nach 29
+Zaehlschritten; Vortrieb +0x9C += +0xA4 = 0) und zeichnet ein Bit-0x08-Teil NIE als intaktes Mesh, sondern
+ueber FUN_8002D3C8/D718 (FUN_80027434.c:168-170): jedes Prim entlang seiner n0-Normale um
+Skala[life>>15][life&0x7fff] versetzt (Tabelle @0x8009DC28 Zeile 0 = 30..465, @0x8009DC64 Zeile 1 = 180..2790;
+0x8000 waehlt ZEILE 1, `lhu / srl 0xf` FUN_8002d3c8.c) und alle Farben flach = +0x70 (`lw t2,112(a2)`
+@0x8002D508): eine dunkelrote (R 0x38 G 0x20 B 0x20) Scherbenwolke, die 30 Bilder lang auseinanderberstet und
+dabei 300 Einheiten steigt — der "geplatzte Kiefer". Danach fehlt der Leiche der Unterkiefer (Record 7 Bit 0 = 0,
+Walk @0x8002737C). Am Kiefer haengt kein Kind-Bone (EM23-Elternkette, Riegel unit_r41_re2gator_kiefer), also
+keine Kaskade @0x80027480-94. 86661849 hatte +0x9A = -10 als Kiefer-az und +0x70 als Faerbung des intakten
+Kiefers gelesen — falsch; beides ist ersetzt (§3.1).
+
 ## 3. Umsetzung
 
 ### 3.1 Dateien
@@ -182,6 +220,13 @@ Tausch 6->13/7->14, Sleep 170) `For 6: Gosub sub14` — sub13 startet sub11 bei 
   `re15_gr2_pc_zeichnen` nach dem Prop-Pass, `re15_pc_gator_re2_init` bei den Port-Bank-Inits.
 - `engine/src/re2_fx.c`: Op 11 (FUN_8001e4b4, Skala/3000) und Op 73 (FUN_8002387c) - beide vom RE2-CORE-
   Effekt 4 (Putz) benoetigt, Block "RUNDE 41 SPUR B" am Dateiende.
+- `enemy_ai_re2_zombie.c` (gemeinsame Datei, 3-Zeilen-Haken in re15_re2z_gore_active, Muster Kraehe Runde 36 Spur C):
+  Typ 0x23 -> Part-Bruecke an, sobald Record 0 Bit 0 traegt (Seed NUR durch R1). Damit laufen
+  re15_re2z_gore_resolve / _part_matrix / _part_burst aus main.c (@10280/10512/10624, unveraendert) auch fuer den
+  Gator: eigene Matrix + Drift FUN_80028DAC + Scherbenzeichnung FUN_8002D3C8 fuer Part-Record 7 (§2.6).
+- `gator_re2_r41.c` gr2_kiefer_platzen (R1 P0, Ruf @0x80102354-58): Seed des Blocks wie FUN_80028368 (16 Records
+  Bit 0, +0x70 = 0x808080, Mesh = i) + Stempel FUN_80104318 (§2.6). re15_gr2_kiefer_farbe (Fehldeutung) entfernt,
+  re15_gr2_kiefer_geplatzt (Messhaken) neu; re15_gr2_bone_az(7) ohne den falschen -10 (R1 setzt +0x228 = 0).
 - `tests/unit/probe_gator_sweep.c` (bestehender Riegel, MIT BELEG angepasst): laedt jetzt die EM23-Bank wie
   probe_gator_fress.c, weil der Vortrieb der Verfolgung aus den Keyframe-Bytes 6..11 kommt (FUN_80015e7c);
   ohne Bank gab es keinen Vortrieb (3286/3286 "end == start"). Mit Bank: gruen in 1,9 s.
@@ -192,7 +237,8 @@ Tausch 6->13/7->14, Sleep 170) `For 6: Gosub sub14` — sub13 startet sub11 bei 
   Schuettel-Tabellen + Hintergrund-DR_MOVE, HURT-Selektor (R4-Wahrscheinlichkeit 1/4, Sperre 120..183,
   Unverwundbarkeit, Clip 10 Blend 3; R0 nur SE 5), Kanister-Fenster/Vorhalt/Stufen/Ease-Werte/Lokallage
   (1750,-210)/liegende Drehung (0x690,0,0xfc00), R1 komplett (SE 4, Raum-Satz 15, Rumble (8,3)+(50,255->0),
-  Ereignis 1, Kiefer-Farbe 0x38/0x20/0x20 + az -10, Fontaenen 64 Ticks, Spritzring, Clip 9, Vortrieb -500
+  Ereignis 1, Kiefer = Part-Record 7 als Burst-Teil (Flagwort 0x4A, Tinte 0x202038, Lebensdauer 0x8000,
+  vy -10, Kurs yaw+0x800; §2.6), Fontaenen 64 Ticks, Spritzring, Clip 9, Vortrieb -500
   (+40, -2/F), Ziel-Yaw +160 mit 75/F, Entfernen nach 9 P1-Bildern, Endzustand Leiche), Putz-Emitter (Ids,
   Typen, Params, Richtungen, Hoehen, Pausen, 6 Durchlaeufe).
 - NUTZER-VORGABE (bleibt): Klettern ueber die Rampe (gb_cross_*), GUARD-Belagerung, Wegfindung im Becken,
@@ -285,11 +331,9 @@ Gezielt gelaufen (keine volle Suite):
 
 ## 6. OFFEN (benannt, nicht geraten)
 
-- Part-7-Felder nach FUN_80104318 (Flags |= 0x4a, +0x98 = yaw+0x800, +0x9a = -10, +0xa0 = 0x8000, +0xa4 = 0):
-  die Renderer-Semantik der Part-Flags 0x4a im RE2-Modellzeichner ist nicht RE'd. Port: Kiefer-az -10 (byte-
-  belegt), Farbe 0x38/0x20/0x20 als Getter (re15_gr2_kiefer_farbe) — der NPC-Zeichner (main.c) faerbt den
-  Kiefer NOCH NICHT ein (kein Haken gesetzt, um main.c nicht weiter zu beruehren). Der "geplatzte Kiefer" ist im
-  Port: Clip-9-Endpose + Blutfontaenen (Effekte 0x00/0x08 an Part 7/6, 64 Ticks) + Kiefer-Versatz.
+- (ERLEDIGT 21:5x) Part-7-Felder nach FUN_80104318: RE'd als Part-Record des Modellblocks (§2.6) und ueber
+  die bestehende Part-Bruecke angeschlossen; der Scherben-Zeichner selbst (FUN_8002D3C8-Zwilling in main.c)
+  ist seit Runde 5 (kopf-flug.md) byte-true und wurde nicht angefasst.
 - Raum-Effekt 0x26 (ROOM40A0-ESP, erster Fontaenen-Tick `0x26032000` @0x80103f4c-6c) liegt nicht im Port
   (ROOM2090 hat eine andere ESP-Liste): der Spawn laeuft gegen die CORE-Bank ins Leere (re2fx_spawn -1).
   Die CORE-Effekte 0x00/0x08/0x03 der Ticks 2-8 und der Spritzring (Effekt 3) laufen. Wer den 0x26 will,
@@ -331,12 +375,14 @@ Bedienung / Testhaken:
   (Durchbruch Clip 6 + Schnapper Clip 3 fuer "springt aus dem Wasser").
 - `gator_boss.log` traegt Zeilen "RE2 INTRO/DASH/KANISTER/R1 ...".
 
-Entscheidungsfragen:
-1. Tempo: die Verfolgung faehrt jetzt die authored RE2-Geschwindigkeiten (Schwimmen 24,5/Bild in der Biss-
-   Sperre, Paddeln ~149/Bild) statt 56/100. Das ist RE2-treu ("an gleichen Stellen beschleunigt" = Paddeln,
-   sobald der Gator weiter als 101 Einheiten weg ist, und die Zonen-Dashes), macht den Gator im Becken aber
-   deutlich schneller. Soll das so bleiben, oder soll das Paddeln auf den frueheren Design-Wert gedeckelt werden?
-2. Beschuss toetet nicht mehr (RE2-Sockel 25300): der Tod kommt nur ueber den Kanister (Spur G). Die
-   Grossreaktion (SE 0 + Clip 10) kommt mit 25 % je Treffer und 2-3 s Sperre wie in RE2 statt alle 6 Treffer.
-3. Putz faellt beim Dash-Start um Leon (RE2: einmalig am Korridorende). Soll er zusaetzlich bei jedem starken
-   Schuetteln (Bit 4) fallen?
+Entscheidungen (Orchestrator 2026-10-23 21:37 in AUFTRAG.md, Dossier-Stand beim Sitzungslimit; der Nutzer kann
+widersprechen — der Code folgt diesen Entscheiden, nichts davon ist ein Schalter):
+1. B1 Tempo: die RE2-Werte bleiben (Schwimmen Clip 0 = 24,5/Bild in der Biss-Sperre, Paddeln Clip 1 ~149/Bild,
+   Zonen-Dashes Clip 2/3 mit SE 4), kein Deckel — Nutzer-Wortlaut "fast alles vom Aligator Fight von Resident
+   Evil 2 uebernehmen ... an gleichen Stellen beschleunigt". Folge im Becken: Leon in der Tuernische ist binnen
+   ~210 Bildern gefressen (§4). Der Nutzer testet das Tempo und entscheidet dann.
+2. B2 Beschuss toetet nicht (RE2-Sockel 25300, Treffer-Reaktionen R0 SE 5 / R4 SE 0 + Clip 10 mit 25 % und Sperre
+   120..183 Bilder wie RE2); der Tod kommt nur ueber den Kanister (Spur G): Aufnahme Stufen 1..7, Treffer beim
+   Tragen -> R1 (Explosion, Clip 9, geplatzter Kiefer §2.6, Leiche).
+3. B3 Putz nur an den RE2-Stellen = beim Dash-Start (ROOM40A0 sub13/sub14, 6 x 9 Partikel), nicht bei jedem
+   starken Schuetteln.

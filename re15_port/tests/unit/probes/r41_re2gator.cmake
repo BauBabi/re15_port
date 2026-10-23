@@ -29,7 +29,10 @@ if(NOT WIN32)
 endif()
 #   unit_r41_re2gator_modell     KANISTER40A0.MD1 (4964 B, 95 Quads, 104 Vertices, CLUT 0x7840) + .TIM (8 bpp 128x256,
 #                                2 CLUTs) parsen wie der PC-Zeichner (re15_md1_parse / re15_tim_parse)
-foreach(_teil modell clips dash intro sockel kanister putz)
+#   unit_r41_re2gator_kiefer     Treffer beim Tragen -> FUN_80104318 stempelt Part-Record 7 (Flagwort 0x4A, Tinte 0x202038,
+#                                +0xA0 0x8000, +0x9A -10, +0x98 yaw+0x800); Part-Bruecke (re15_re2z_gore_part_matrix /
+#                                _part_burst): 30 Scherben-Bilder, Skala 180..2790, Aufstieg -10/Bild, danach Flagwort 0
+foreach(_teil modell clips dash intro sockel kanister kiefer putz)
     add_test(NAME unit_r41_re2gator_${_teil} COMMAND test_r41_re2gator ${_teil})
     set_tests_properties(unit_r41_re2gator_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()
