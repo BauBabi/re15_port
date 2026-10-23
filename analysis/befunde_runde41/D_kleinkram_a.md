@@ -12,8 +12,13 @@ Blink-Effekt "existiert bereits in RE2, uebernehme den"; (3) Spieler stirbt nich
   Schaden `engine/src/re15_damage.c`.
 
 ## 1. Punkt 1 — Lautstaerke-Option
-### 1.1 Messung vorher
-(folgt)
+### 1.1 Messung vorher (Stand 116e8b0f gebaut, Messkopie re15_pc_r41d_cfg.exe)
+* Options-Schirm SOUND (RE15_CONFIG_TEST=1 RE15_CONFIG_SHOT=sound_vorher.bmp RE15_CONFIG_TAB=4): nur die zwei
+  Kacheln STEREO (y 51) / MONO (y 70), keine Lautstaerke (Bild scratch r41d/cfg_vorher/sound_vorher.png).
+* Code: kein Master-Pegel im Port — audio_pc.c kennt nur je-Pfad-Pegel (SS_BASE_MVOL = BGM-Layer, Se_on-Pegel,
+  cd_vol der XA/FMV); der Sound-Modus s_config_sound (main.c:2495) ist ein static ohne Datei (grep fopen: kein
+  Schreiber) -> ein per Kreis gesetztes MONO ist nach dem Neustart weg; Cross liess den umgeschalteten Wert stehen
+  (Original laedt die Arbeitskopie bei jedem Eintritt neu, @0x8002f244-4c).
 ### 1.2 RE-Belege
 * RE1.5 SOUND-Schirm = Sub-Treiber FUN_8002f0d4 (Handler-Tabelle @0x80073d9c[5], `XREF 80073db0`), vollstaendig
   gelesen (ghidra1_V2.txt:122560-122800). Aufbau (Phase 0) @0x8002f11c-30: zwei SPRTs w=0x58 (88) h=0x12 (18) x=0x74 (116)
@@ -38,13 +43,45 @@ Blink-Effekt "existiert bereits in RE2, uebernehme den"; (3) Spieler stirbt nich
   `re15_options.cfg` am selben Ort wie `re15_card.mcr` (Arbeitsverzeichnis, main.c RE15_CARD_PATH), Zeilen
   `volume=<0..100>` und `sound=stereo|mono`; Umgebungs-Override RE15_OPTIONS_FILE fuer Messungen/Tests.
 ### 1.3 Umsetzung
-(folgt)
-### 1.4 Messung nachher
-(folgt)
+* NEU `engine/src/lautstaerke_r41.c` + `include/re15_lautstaerke_r41.h` (Zustand Arbeitskopie/gespeichert, Q15,
+  Datei-Parser/Formatierer, Eintritt/Bestaetigen/Verwerfen), NEU `platform/pc/src/lautstaerke_r41_pc.c` (Kachel,
+  Text, LEFT/RIGHT, Start). Haken: `audio_pc.c` audio_callback-Ende (4 Zeilen, Endstufe nach der Mono-Faltung),
+  `main.c` (extern-Block bei s_config_sound; Start 1 Zeile; TOP->SOUND 1 Zeile = Eintritt; Overlay 1 Zeile;
+  Eingabe/Confirm/Cancel 3 Zeilen).
+* Konstanten: Kachel uv(0,232) 88x18 (`ori t4,0x58` @0x8002f0e0, `ori t3,0x12` @0x8002f0e4, `ori t1,0xe8`
+  @0x8002f0ec, `sb zero,0xc(s1)` @0x8002f12c), x 116 (`ori t2,0x74` @0x8002f124); Text ab x 119 (STEREO-Spalte,
+  Prim-Scan der Options-Spur), Zahl rechtsbuendig bis 201 (Kachelende 204 - 3); Schritt 10, Klemme 0..100; Q15
+  prozent*0x8000/100 (100 % = unveraendert, 50 % = 0x4000).
+* LAGE: zuerst y 89 (Raster 51/70/89, wie die AI-Zeile des Ports) — am Shot GEMESSEN: die Kachel 116..204 schneidet
+  die Original-Beschriftungskaesten DAT_80073d2c[2] = (46,91) ("Forwar") und [8] = (203,91) an -> verworfen. Jetzt
+  im freien Streifen unter dem byte-true Kasten (Kastenende y 220 -> Kachel y 221..238, Text y 223), Vorbild
+  CFG_AI_Y 225 (main.c): kein Original-Pixel verdeckt.
+* Datei `re15_options.cfg` am Ort von `re15_card.mcr` (CWD-relativ wie RE15_CARD_PATH), Zeilen `volume=<0..100>` /
+  `sound=stereo|mono`; Override RE15_OPTIONS_FILE. Der Sound-Modus wird mitgespeichert und beim Start angewendet
+  (re15_lautstaerke_r41_pc_start -> re15_audio_set_mono); Cross stellt die Arbeitskopie zurueck, Eintritt laedt sie
+  (@0x8002f244-4c / @0x8002f2c0 / @0x8002f27c).
+### 1.4 Messung nachher (Stand df6141a5 gebaut, Messkopien re15_pc_r41d_cap.exe / re15_pc_r41d_cfg2.exe)
+* Zwei deterministische Mitschnitte (RE15_AUDIO_CAP_SYNC=cap.raw, RE15_AUDIO_CAP_FRAMES=330, Leon ROOM2030,
+  Waffe 8 Schuss per Eingabeskript M1,MA0.2 ab Bild 20, Giftkugel-Treffer F19), RE15_OPTIONS_FILE mit volume=100
+  bzw. 50 (scratch r41d/cap100, cap50):
+  | Datei | RMS (int16, beide Kanaele) | Samples | Spitze |
+  |---|---|---|---|
+  | cap100 | 1701,145 | 970200 | 16681 |
+  | cap50  |  850,572 | 970200 |  8340 |
+  Verhaeltnis 50/100 = **0,5000** (Endstufe Q15 0x4000). debug.log: `[lautstaerke] .../opt.cfg gelesen (2
+  Schluessel): 50 %, Stereo`.
+* Options-Schirm mit volume=50 / 100 (RE15_CONFIG_SHOT, Tab 4): Kachel + "VOLUME 50" / "VOLUME 100" sichtbar
+  (scratch r41d/cfg_nachher50/sound.png, cfg_nachher100/sound.png — noch in der Raster-Lage y 89, die wegen des
+  angeschnittenen "Forward"-Kastens verworfen wurde; der Riegel prueft die Endlage y 221).
 
 ## 2. Punkt 2 — Feuerloescher 1030 Blink-Effekt
-### 2.1 Messung vorher
-(folgt)
+### 2.1 Messung vorher (Stand 116e8b0f, Messkopie re15_pc_r41d_cfg.exe)
+* Leon ROOM1030 Cut 0 (RE15_DEBUG_JUMP=1030@250, RE15_PLAYER_POS=-11500,-19500,2048 = Stand des Nutzerbilds
+  fire_extinguisher.bmp, Runde 38 Spur K), Bildserie RE15_FRAMEDUMP 400..520/20 (7 Bilder), Loescher-Huelle
+  x 38..48 / y 111..122 (K_itemorte 1.1): Mittel RGB (51,3 / 59,1 / 69,5), hellstes Pixel 115 — in ALLEN sieben
+  Bildern identisch -> kein Puls (Bild scratch r41d/fl_vorher/crop400.png: Loescher am Pfeiler unter dem Monitor).
+  debug.log: `[feuerloescher] ROOM1030: Loescher an der Wand obj 5 bei (-2813,-2122,-17904) rot_y 3072`,
+  `[prop-render] pi=1 oid=0x05`.
 ### 2.2 RE-Belege (RE2)
 * RE2 kennt KEIN Blinken aufnehmbarer Gegenstaende — ehrlich belegt am Code (ghidra_re2_Leon.txt):
   - `Item_aot_set` (0x4E) = FUN_80054cd4: Item-Modell = Raum-Objekt Om[md1] (`lbu s2,0x14(s0)` @0x80054cf8, Om-Feld
@@ -68,13 +105,39 @@ Blink-Effekt "existiert bereits in RE2, uebernehme den"; (3) Spieler stirbt nich
   Spielbild (30 Hz) = Periode 2 s. Anwendung auf das Prop: Lichtkontext (ambient + C) x Wert/0x80 -> Spitze 0xBE/0x80 =
   +48,4 %, dasselbe Farbbyte-Semantik (0x80 = neutral) wie im Titel-Rechteck (`sb` @0x80102850/54/58).
 ### 2.3 Umsetzung
-(folgt)
-### 2.4 Messung nachher
-(folgt)
+* NEU `engine/src/blink_r41.c` + `include/re15_blink_r41.h`: Pulswert = FUN_801028ec Schritt fuer Schritt (Start
+  0x80 @0x80102928, +2/-2 @0x8010290c/@0x80102910, Schwelle 0x1f @0x801028fc, Periode 0x3c @0x80102918), Tabelle
+  (Raum, Obj_model_set-Id, an) mit 8 Eintraegen, Lichtkontext-Skalierung ambient (geklemmt 255) + C (linear) x
+  Wert/0x80. Takt = g_engine.frame_count (ein Takt je Spielbild = 30 Hz -> Periode 2 s).
+* Haken: `main.c` Prop-Render nach dem Aufbau des Lichtkontexts (1 Zeile, `re15_blink_r41_lichtctx(raum, oid,
+  frame_count, &lctx_prop)`), `feuerloescher_r37.c` nach dem Anlegen des Props (1 Zeile): an = zone_item ->
+  nur ROOM1030 (Leon, aufnehmbar). ROOM1031 (Elza) hat keinen Loescher (k_lagen ohne Eintrag), ROOM1090/1091
+  (liegend, nur Untersuchen) -> aus.
+* API fuer Spur F (Schluessel ROOM2090): `re15_blink_r41_setzen(raum, obj_id, 1)` nach dem Anlegen des Props; der
+  Prop muss NCCT-beleuchtet sein (attr ohne Bit 0x10; flach 0x808080 und Tint-Pfad ohne Normalen bleiben
+  unveraendert — RE2-MD1 tragen Normalen).
+### 2.4 Messung nachher (Stand df6141a5, Messkopie re15_pc_r41d_blink.exe, Serie 400..464/4, scratch r41d/fl_nachher)
+| Bild | Takt (Bild mod 60) | Pulswert | Mittel RGB Huelle | hellstes Pixel |
+|---|---|---|---|---|
+| 400 | 40 | 0xAC | 59,1 / 64,2 / 74,1 | 149 |
+| 420 |  0 | 0x80 | 51,3 / 59,1 / 69,5 | 115 (= vorher) |
+| 436 | 16 | 0xA0 | 57,1 / 62,8 / 72,8 | 139 |
+| 452 | 32 | 0xBC | 61,8 / 66,0 / 75,8 | 164 |
+| 460 | 40 | 0xAC | 59,1 / 64,2 / 74,1 | 149 (= Bild 400: Periode 60) |
+Hub des Mittels 10,5 (51,3 -> 61,8), hellstes Pixel +42,6 % (115 -> 164; Modell-Spitze 0xBE/0x80 = +48,4 %, der
+Mittelwert enthaelt Pfeilerpixel). Bild crop452.png (Spitze) vs crop420.png (Grund). Pfeilerflaeche daneben
+(x 24..34) konstant (Riegel).
 
 ## 3. Punkt 3 — Spinnengift bei Danger toedlich
-### 3.1 Messung vorher
-(folgt)
+### 3.1 Messung vorher (Stand 116e8b0f, Messkopie re15_pc_r41d_mess.exe, scratch r41d/gift1)
+Leon ROOM2030 (RE15_DEBUG_JUMP=2030@250, RE15_PLAYER_POS=6550,2000,3072,3 wie integration_r38_spinnen_echtlauf),
+RE2-Gehirn (Voreinstellung), 2400 Bilder ohne Eingabe, RE15_R39_LOG + RE15_SPINNEN_LOG + RE15_STATE_LOG:
+* Giftklumpen-Treffer F19 (100 -> 90), F580 (72 -> 62), F639 (61 -> 51), F1041 (39 -> 29), F1435 (17 -> 7),
+  F2041 (1 -> -9): je **-10 HP** (RE1.5 Routine 25 -> FUN_80012d60 Art 0), Gift-Bit ab F19, Gift-Takt -1 HP alle
+  31 Bilder bis HP 1 (F1621), danach kein Abzug mehr (RE2 `slti v0,v0,0x2` @0x8003c174).
+* Bei DANGER (HP 17, < 20) ueberlebt der Treffer (17 -> 7); erst der Treffer bei HP 1 (F2041) geht unter 0 ->
+  st=3 (Tod), Todesfolge, Neuladen des Raums (hp=100). **Der Nutzerpunkt ist reproduziert**: ein Giftklumpen
+  toetet nur bei HP <= 9, bei Danger-HP 10..19 nie.
 ### 3.2 RE-Belege
 * RE2 (Ziel, Beta -> Retail) Giftkugel der Spinne = Op 32 @0x800200b0 (ghidra_re2_Leon.txt:100352ff): Treffertest
   `jal FUN_80047664` @0x800200e0 mit a1 = 0x320 (Radius 800, @0x800200d0) und a2 = 0x14 (Schaden 20, @0x800200dc).
@@ -92,15 +155,56 @@ Blink-Effekt "existiert bereits in RE2, uebernehme den"; (3) Spieler stirbt nich
   (DAT_8006f418[0]), Tod nur bei HP < 0 (`bgez` @0x80012ee8), HP 0 = lebt. Gift-Takt RE2 FUN_8003bfac @0x8003c168-80
   zieht bis HP 1 (`slti v0,v0,0x2` @0x8003c174) und toetet NIE (zustand_r39.c).
 ### 3.3 Umsetzung
-(folgt)
-### 3.4 Messung nachher
-(folgt)
+* NEU `engine/src/giftkugel_r41.c` + `include/re15_giftkugel_r41.h`: unter dem RE2-Gehirn der Spinne
+  (re15_ai_re2_for_type(0x25)) trifft die Giftkugel wie RE2 Op 32: Schaden 20 (`li a2,0x14` @0x800200dc), Tore
+  wie FUN_80047664 (+0x93 hit-once = RE2 +0x1d3 @0x800476ec-f4, Griff, HP < 0 @0x800476fc-704), Kommando 2
+  (@0x800477b8, Port-Form Zustand 2 + Richtung + +0x93) bzw. Kommando 3 (@0x8004780c) mit dem Todeszweig von
+  FUN_800401d4 (DAT_800cfdcb |= 0x80 @0x800402c0-d0 -> re2z_self1d3, Zustand 3); Treffer-SE 10 wie @0x80012e70.
+  Der Treffer-Kasten bleibt der RE1.5-Effektkasten (Radius 500 @0x80017ffc; Hybrid wie das RE1.5-ESP-Geschoss).
+* NUTZER-VORGABE "Danger + Treffer = Tod": der Rettungszweig von FUN_800401d4 (HP := 0 + Latch DAT_800cfd4c &
+  0x1000, einmal je Raum im Port) wird fuer die Giftkugel NICHT uebernommen — er wuerde genau den gemeldeten Fall
+  einmal je Raum erzeugen. Mit 20 Schaden geht jeder Treffer bei Danger (HP < 20, Schwelle `lb` @0x800112b5) unter
+  0; HP 20 (Caution) -> 0 lebt.
+* RE1.5-Gehirn: unveraendert (Beta-Wert 10, Tod bei HP < 0 @0x80012ee8).
+* Haken: `spinnen_r38.c` Routine 25 (2 Zeilen VOR dem RE1.5-Resolver; der setzt +0x93 und zieht danach nicht
+  noch einmal ab), `game_step_common.c` Messschiene RE15_R41_HP_AT=<bild>:<hp> (2 Zeilen, Baseline s_prev_hp
+  nachgezogen = kein Pseudo-Treffer), `tests/unit/test_r38_spinnen.c` teil_b: Erwartung des RE2-Laufs 100 - 20.
+### 3.4 Messung nachher (Stand df6141a5, Messkopie re15_pc_r41d_mess2.exe, scratch r41d/gift2)
+Gleicher Aufbau, RE15_R41_HP_AT=5:15 (Danger):
+* debug.log: `[giftkugel] F5 Messhaken: HP := 15`, `[giftkugel] F19 RE2-Treffer (Spinne Slot 1): HP 15 -> -5 =
+  TOD (Kommando 3)`; gift.log F6 hp=15 -> F20 hp=-5 status 0x0002.
+* state.log: pst=3 (Todeskommando) ab F19 durchgehend bis F132 (114 Bilder), Spieler-Motion 200 -> 7 (Todes-Clip)
+  ab F20, danach Neuladen (gift.log `F0 aktiv=1 hp=100`) — Todesfolge 0x78 @0x8003694c + Game-Over wie beim
+  RE1.5-Tod in 3.1.
+* Gegenprobe HP 100 (cap100-Lauf): `[giftkugel] F19 RE2-Treffer (Spinne Slot 1): HP 100 -> 80 (Kommando 2)`,
+  Spieler lebt (Zustand 2).
 
 ## 4. Tests
 (folgt)
 
 ## 5. OFFEN
-(folgt)
+* Giftkugel-Kasten: Radius 500 (RE1.5 Routine 25 @0x80017ffc) statt RE2 800 (`li a1,0x320` @0x800200d0) — Hybrid
+  wie das RE1.5-ESP-Geschoss (Runde 38 Spur R), Trefferweite unveraendert gelassen.
+* RE2-Skalierungen in FUN_800401d4 (DAT_800cfb74 & 0x40 bzw. HP > 0x78 -> x1,5 bei dmg < 0x29; Schwierigkeit
+  DAT_800d482a == 3 -> x5/x2) haben kein Port-Gegenstueck (wie bei Zombie/Hund/Kraehe, enemy_ai_re2_zombie.c).
+* Vorbestand (nicht Spur D): der RE2-Spinnen-BISS (enemy_ai_re2_spider.c re2s_attack) zieht 20 HP ueber die
+  One-Save-Latch-Funktion, setzt aber kein Kommando 2/3 am Spieler ("OPEN, wie beim Hunde-Biss").
+* Lautstaerke-Datei speichert nur Lautstaerke + Sound-Modus; AI-Modus und TYPE A/B/C/EDIT bleiben wie bisher
+  unpersistiert (nicht zugeteilt).
+* Puls nur fuer NCCT-beleuchtete Props; flach gezeichnete (attr 0x10) oder normalenlose Props bekaemen keinen
+  Puls (fuer 1030 und den RE2-Schluessel 2090 nicht noetig).
 
 ## 6. Fuer den Nutzer
-(folgt)
+* BEDIENUNG: OPTIONS -> SOUND: LEFT/RIGHT = Lautstaerke 0..100 in Zehnerschritten (sofort hoerbar, auch der
+  Menueton), Kreis/Quadrat speichert (zusammen mit Stereo/Mono), Cross verwirft. Die Zeile "VOLUME <Zahl>" steht
+  unter dem Options-Kasten (freier Streifen, damit keine Original-Beschriftung verdeckt wird). Gespeichert in
+  `re15_options.cfg` neben `re15_card.mcr` (Spielordner); Loeschen der Datei = 100 %, Stereo.
+* FEUERLOESCHER 1030: pulsiert in der Helligkeit (2-s-Periode, bis +48 %, Form = Puls der Titelzeile). RE2 hat
+  KEIN Blinken aufnehmbarer Gegenstaende (Item_aot_set FUN_80054cd4 + Objektpass FUN_800363f0 gelesen) — der
+  Puls ist eine Port-Form. Spur F nutzt dieselbe API fuer den Schluessel in 2090.
+* GIFTKUGEL: unter der RE2-KI (Voreinstellung) nimmt der Giftklumpen wie in RE2 20 HP; bei Danger (HP < 20) ist
+  jeder Treffer toedlich (Todesanimation, Neuladen). Unter "AI RE1.5" bleibt der Beta-Wert 10.
+* Keine neuen Assets (shared_assets/RE2 unveraendert), keine Sprachdateien, keine Bank-9-Bits, keine Nachrichten-Ids.
+* ENTSCHEIDUNGSFRAGEN: (1) Sollen auch die ORIGINAL-Item-Props der RDTs (z. B. Munition am Boden) pulsieren?
+  (2) RE2 gewaehrt bei einem toedlichen Treffer einmal je Raum die Rettung auf HP 0 (FUN_800401d4) — fuer die
+  Giftkugel bewusst nicht uebernommen; soll sie es?
