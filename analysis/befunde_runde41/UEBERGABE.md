@@ -7,7 +7,7 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
-* 2026-10-23 17:2x: WELLE 1 gestartet: Workflow wf_cad46b03-1ad (Skript orchestrator/r41-runde.js, args {welle:[A,B,C,D,E,M], slots:4, basis:116e8b0f, max_nach:2}), Journal ~/.claude/projects/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/subagents/workflows/wf_cad46b03-1ad/. Baeume r41_wasser20b0 / re2gator / ventilkette / kleinkram_a / kleinkram_b / masken36 auf 116e8b0f (RE2-Overlays EM23_OVL_0000.BIN u.a. versioniert, 116e8b0f). Waechter (scratchpad/waechter41.sh) meldet Haenger > 75 min.
+* 2026-10-23 16:58: WELLE 1 gestartet: Workflow wf_cad46b03-1ad (Skript orchestrator/r41-runde.js, args {welle:[A,B,C,D,E,M], slots:4, basis:116e8b0f, max_nach:2}), Journal ~/.claude/projects/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/subagents/workflows/wf_cad46b03-1ad/. Baeume r41_wasser20b0 / re2gator / ventilkette / kleinkram_a / kleinkram_b / masken36 auf 116e8b0f (RE2-Overlays EM23_OVL_0000.BIN u.a. versioniert, 116e8b0f). Waechter (scratchpad/waechter41.sh) meldet Haenger > 75 min.
 
 * 2026-10-23 16:36: Auftrag des Nutzers (Wortlaut in AUFTRAG.md) nach dem Release v0.8.28 (f632a17b). Nutzer-Vorgabe
   zum Ablauf: "Brich all diese Aufgaben in immer wenige parallele Tasks runter" -> Wellen zu je 4 gleichzeitigen Spuren
