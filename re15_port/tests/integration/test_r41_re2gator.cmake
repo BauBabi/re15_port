@@ -22,11 +22,9 @@ string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_dir "${WORKDIR}/lauf_${_lauf_id}")
 file(MAKE_DIRECTORY "${_dir}")
 # EIGENER EXE-NAME (Muster test_r34n_b_cursor.cmake): parallele Bauten beenden re15_pc.exe per Namen.
+# Nachbesserung 1 (Abnahme 0, M5): KEIN file(GLOB)+REMOVE fremder re15_pc_r41b_*.exe mehr - zwei Instanzen
+# dieses Riegels auf einem Bauordner toeteten sich gegenseitig; nur die eigene Kopie wird am Ende entfernt.
 get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
-file(GLOB _alte "${_exe_dir}/re15_pc_r41b_*.exe")
-foreach(_k IN LISTS _alte)
-    file(REMOVE "${_k}")
-endforeach()
 set(_exe_kopie "${_exe_dir}/re15_pc_r41b_${_lauf_id}.exe")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 

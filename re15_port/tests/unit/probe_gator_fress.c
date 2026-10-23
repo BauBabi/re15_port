@@ -30,6 +30,7 @@
 #include "re15_damage.h"
 #include "re15_collision.h"
 #include "re15_boss_gator.h"
+#include "re15_gator_re2_r41.h"   /* Runde 41 Spur B: re15_gr2_im_intro / re15_gr2_biss_cd (Intro abwarten) */
 #include "re15_emd.h"
 #include "re15_md1.h"
 #include "re15_skeleton.h"
@@ -323,6 +324,22 @@ int main(void)
     pl->x = -4000; pl->z = -22000; pl->y = 0; pl->floor = 0;
 
     re15_gator_boss_tick(slot);           /* Frame 0 = Boss-INIT (setzt Lauerplatz) */
+    /* Runde 41 Spur B, Nachbesserung 1: seit dem Wegfall des Bahn-Gates zuendet der RE2-Intro (Clip 6 ->
+     * Clip 3, 275 Bilder, RE2 Sub 0 @0x8010086c-948) bei JEDEM Aggro - vorher lief er am Lauerplatz nie
+     * (gb_bahn_frei scheiterte dort). Er wird hier abgewartet, damit der Riegel wie bisher den Biss in
+     * OFFENEM Wasser misst: mit dem Intro landete der Gator an der Suedwand (z -24781), die Dispatcher-
+     * Klemme hielt ihn dort waehrend der FRESSEN-Anker-Bahn fest, Leon folgte dem ungeklemmten Anker ->
+     * Sitz-Abweichung 11 statt <= 5 (gemessen 2026-10-23). Die Pins selbst bleiben unveraendert. */
+    for (int f = 0; f < 400 && (re15_gr2_im_intro(slot) || f < 2); f++) {
+        int32_t ox = e->x, oz = e->z;
+        re15_gator_boss_tick(slot);
+        if ((e->x != ox || e->z != oz) && !re15_gator_boss_skip_clamp(e)) {
+            int32_t nx = e->x, nz = e->z;
+            re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
+            e->x = nx; e->z = nz;
+        }
+    }
+    re15_gr2_biss_cd(slot, 0);            /* Intro-Biss-Sperre 110 (@0x8010091c) weg: der Biss soll sofort kommen */
     e->x = -6000; e->z = -22000; e->y = -1200;
 
     int fress_gesehen = 0;

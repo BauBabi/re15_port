@@ -580,13 +580,13 @@ static int gb_wand_dazwischen(const re15_actor_t *e, const re15_actor_t *pl)
  * liessen ihn an der Rampen-NORDKANTE kriechen (Nutzer 2026-09-11, 4. Fall:
  * z=-13063-Klemmlinie, Ziel suedlich hinter der Rampe). */
 static int gb_seg_frei(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t m);
-/* Runde 41 Spur B: RE2-Clip-Bahnen (Intro Clip 6, Dash Clip 2/3) muessen Insel UND Aussenwaende
- * meiden (Klemmlinien wie das CHASE-Steuerziel: Kante + 1600). */
-static int gb_bahn_frei(int32_t x0, int32_t z0, int32_t x1, int32_t z1)
-{
-    if (x1 < -8900 + 1600 || x1 > 7200 - 1600 || z1 < -27000 + 1600 || z1 > -5400 - 1600) return 0;
-    return gb_seg_frei(x0, z0, x1, z1, GB_KOERPER_M);
-}
+/* Runde 41 Spur B, Nachbesserung 1 (Abnahme 0, M1): die fruehere gb_bahn_frei (Insel + Aussenwand-
+ * Klemmlinien 1600 fuer die GANZE Clip-Bahn inkl. Quer-Komponente) ist weg - sie scheiterte im Westkanal
+ * nach Sueden systematisch (Clip-2-Ende x = -7309 < -7300; Clip-3-Ende mit dem RE2-Korridor-Seitversatz
+ * -2775 in der Westwand), der Dash/Intro zuendete im Spiel nie (Abnahme-Laeufe A/D1: 0 "RE2 "-Zeilen).
+ * Die RE2-Clip-Bahnen laufen jetzt bildweise durch die Dispatcher-Klemme (gator_re2_r41.c
+ * gr2_wurzel_schritt, wie der CHASE-Vortrieb); vor dem Dash wird nur noch die LAENGS-Bahn gegen Insel und
+ * Rampe geprueft (gb_seg_frei), damit er nicht 300 Bilder frontal gegen den Block drueckt. */
 
 /* Die vier Plattform-Umlauf-Ecken (+GB_RING_M) - gemeinsame Wegpunkte fuer
  * Ring-Following und den zentralen Kanten-Umweg. */
@@ -1280,12 +1280,10 @@ void re15_gator_boss_tick(int slot)
                                                             * entfernt */
         if (g->aggro) {
             /* Runde 41 Spur B: RE2-INTRO Sub 0 P1/P2 (Clip 6 Durchbruch @0x801008ac-b8 -> Clip 3
-             * @0x801008e4-f0, danach +0x238 = 110 @0x8010091c), wenn die Clip-Bahn frei ist. */
-            int32_t zi[2]; re15_gr2_intro_bahn(e, zi);
-            if (gb_bahn_frei(e->x, e->z, zi[0], zi[1])) {
-                re15_gr2_intro_start(slot, e); g->phase = GBP_RE2_INTRO; g->timer = 0; break;
-            }
-            g->phase = GBP_CHASE; e->motion = 0; e->anim_frame = 0; break;
+             * @0x801008e4-f0, danach +0x238 = 110 @0x8010091c-20 und yaw += 1024 @0x80100938-48). RE2 spielt
+             * ihn IMMER (P0 wartet nur auf +0x1D4 @0x80100854-68 = Member_set2 des Raumskripts; hier: Aggro).
+             * Nachbesserung 1 (M1): kein Bahn-Gate mehr, s. gb_seg_frei-Kommentar oben. */
+            re15_gr2_intro_start(slot, e); g->phase = GBP_RE2_INTRO; g->timer = 0; break;
         }
         e->motion = 0;                        /* still liegen, Blick zur Leiter */
         e->anim_frame++;
@@ -1321,13 +1319,15 @@ void re15_gator_boss_tick(int slot)
             break;
         }
         {   /* Runde 41 Spur B: RE2-LUNGE als Zonen-Dash (Zonenlinie +0x21A 0->1->2 @0x801009a8/@0x801009ec
-             * -> Routine 0x301 @0x801009ac/@0x801009f4). PORT-WAHL: die drei sce-8-Wasserzonen des RDT
-             * statt der Korridorlinien; nur wenn beide Clip-Bahnen (Netto-Wurzelversatz Clip 2 / 2+3,
-             * skaliert, um den Yaw gedreht) frei von Insel und Waenden sind. */
-            int32_t z2[2], z3[2];
-            if (re15_gr2_dash_zonenwechsel(slot, e, gb_zone(e->z), gb_zone(pl->z), z2, z3)
-                && gb_bahn_frei(e->x, e->z, z2[0], z2[1]) && gb_bahn_frei(z2[0], z2[1], z3[0], z3[1])) {
-                re15_gr2_dash_start(slot, e);
+             * -> Routine 0x301 @0x801009ac/@0x801009f4; die Pruefung liegt VOR und unabhaengig von der
+             * Biss-Sperre +0x238 @0x80100b5c-64, also auch in der 110er-Sperre nach dem Intro). PORT-WAHL:
+             * die drei sce-8-Wasserzonen des RDT statt der Korridorlinien, nur beim Wechsel in Leons Zone.
+             * Nachbesserung 1 (M1): statt der ganzen Bahn gegen Insel + Aussenwaende nur noch die Laengs-
+             * Bahn gegen Insel/Rampe; Quer-Komponente und Aussenwaende nimmt die Dispatcher-Klemme. */
+            int32_t zv[2];
+            if (re15_gr2_dash_zonenwechsel(slot, e, gb_zone(e->z), gb_zone(pl->z), zv)
+                && gb_seg_frei(e->x, e->z, zv[0], zv[1], GB_KOERPER_M)) {
+                re15_gr2_dash_start(slot, e, pl);
                 g->phase = GBP_RE2_DASH; g->timer = 0;
                 break;
             }

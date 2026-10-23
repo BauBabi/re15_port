@@ -10,7 +10,12 @@
  *   sockel    HP 25300, 200 Pistolentreffer toeten nicht, geschwaecht < 25000, SE 0 xor SE 5, R4-Sperre 120..183
  *   kanister  Fenster -> Stufen 1..7 (Kopf/Kiefer-az), Anhaengen an Part 6, Treffer -> R1 (SE 4, Raum-Satz 15,
  *             Rumble, Clip 9, Kanister nach 9 Bildern weg, Leiche)
- *   putz      Dash-Start -> 54 Putz-Partikel (RE2 CORE00.ESP id 4) ohne unbekannte re2fx-Ops
+ *   putz      Dash-Start -> 54 Putz-Partikel (RE2 CORE00.ESP id 4) ohne unbekannte re2fx-Ops, Lage um Leon
+ *   wand      Nachbesserung 1 (M1): Intro ohne Bahn-Gate + Dash auf der Westwand-Klemmlinie nach Sueden (Klemme
+ *             nimmt den RE2-Korridor-Seitversatz), yaw += 1024 nach Clip 3 (@0x80100938-48 / @0x80100eb0-c0)
+ *
+ * Seit Nachbesserung 1 zuendet der RE2-Intro bei JEDEM Aggro (RE2 Sub 0; vorher nur bei freier Bahn, was am
+ * Lauerplatz nie galt): Riegel, die das Verhalten DANACH messen, warten ihn mit intro_abwarten() ab.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -26,6 +31,7 @@
 #include "re15_boss_gator.h"
 #include "re15_gator_re2_r41.h"
 #include "re15_emd.h"
+#include "re15_skeleton.h"      /* re15_sin_q12 / re15_cos_q12 (Soll-Schritt im Riegel wand) */
 #include "re15_md1.h"
 #include "re15_tim.h"
 #include "re15_rumble.h"
@@ -95,6 +101,14 @@ static void leon_statue(int32_t x, int32_t z)
     pl->x = x; pl->z = z; pl->y = 0; pl->floor = 0;
     pl->state = 0; pl->motion = 0; pl->hit_react = 0;
 }
+/* Intro (Clip 6 + Clip 3, 275 Bilder) zu Ende ticken und die Intro-Biss-Sperre (110) loeschen - fuer die
+ * Riegel, die die Verfolgung/Treffer DANACH messen (Leon bleibt, wo der Aufrufer ihn hingestellt hat). */
+static void intro_abwarten(void)
+{
+    int32_t lx = pl->x, lz = pl->z;
+    for (int f = 0; f < 400 && (re15_gr2_im_intro(slot) || f < 2); f++) { leon_statue(lx, lz); tick(); }
+    re15_gr2_biss_cd(slot, 0);
+}
 
 static int setup(int gb_test)
 {
@@ -159,7 +173,8 @@ static int teil_clips(void)
     /* Gator UND Leon in Zone 0 (z <= -18100): kein Zonenwechsel, also kein Dash - nur die Hysterese.
      * Abstand 6800 > Biss-Commit (Maulpunkt = Zentrum + 2600, Gate 2400) und ausserhalb des Wand-Slabs. */
     leon_statue(-6000, -18200);
-    tick();                                    /* INIT (Lauerplatz) + LURK/aggro -> CHASE */
+    tick();                                    /* INIT (Lauerplatz) + LURK/aggro -> INTRO -> CHASE */
+    intro_abwarten();
     e->x = -6000; e->z = -25000; e->y = -1200; e->rot_y = 0xC00;   /* nach Norden */
     CHECK(e->hp == RE15_GR2_HP_INIT, "HP nach INIT %d != %d (RE2 @0x80100518-580)", (int)e->hp, RE15_GR2_HP_INIT);
     int clip1 = 0, wrap = 0, vortrieb_ok = 0, vortrieb_n = 0;
@@ -229,6 +244,7 @@ static int teil_dash(void)
     if (!setup(1)) return 1;
     leon_statue(-6500, -8000);
     tick();
+    intro_abwarten();
     e->x = -6500; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
     static int modus_log[1200];
     int f_start, n2, n3;
@@ -298,6 +314,7 @@ static int teil_sockel(void)
     if (!setup(1)) return 1;
     leon_statue(-6000, -8000);
     tick();
+    intro_abwarten();
     e->x = -6000; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
     int hp0 = e->hp, r4 = 0, r0 = 0, beide = 0, geschw_bei = -1, cd_min = 999, cd_max = 0, letzter_r4 = -1000;
     int treffer = 0;
@@ -474,6 +491,7 @@ static int teil_putz(void)
     CHECK(re2fx_register_core(esp, n) == 0, "re2fx_register_core schlug fehl");
     leon_statue(-6500, -8000);
     tick();
+    intro_abwarten();
     e->x = -6500; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
     int f_start, n2, n3;
     int spawns0 = re15_gr2_putz_spawns();
@@ -489,6 +507,12 @@ static int teil_putz(void)
     int spawns = re15_gr2_putz_spawns() - spawns0;
     CHECK(spawns == 54, "Putz-Spawns %d statt 54 (6 x 9, ROOM40A0 sub13/sub14)", spawns);
     CHECK(re2fx_op_unbekannt() == 0, "re2fx meldet %u unbekannte Ops fuer Effekt 4", re2fx_op_unbekannt());
+    {   /* Nachbesserung 1 (M2): Lage um LEON (putz_x/y/z war vorher ungesetzt = (0,0,0) ausserhalb des Beckens).
+         * Letzter Spawn jeder Runde = k_putz[8] @0x0900: Versatz (-622, -2400, -50) zu Leons Stand (-6500, 0, -8000). */
+        int32_t lp[3]; re15_gr2_putz_letzte(lp);
+        CHECK(lp[0] == -6500 - 622 && lp[1] == -2400 && lp[2] == -8000 - 50,
+              "letzter Putz-Spawn bei (%d,%d,%d) statt (-7122,-2400,-8050) um Leon", lp[0], lp[1], lp[2]);
+    }
     printf("putz: spawns %d, unbekannte Ops %u; Op-Zaehler:", spawns, re2fx_op_unbekannt());
     for (int op = 0; op < 96; op++) if (re2fx_op_zaehler(op)) printf(" %d:%u", op, re2fx_op_zaehler(op));
     printf("\n");
@@ -527,6 +551,92 @@ static int teil_modell(void)
     return fails ? 1 : 0;
 }
 
+/* ================================================================================================ */
+/* Nachbesserung 1 (Abnahme 0, M1): Dash und Intro muessen im NATUERLICHEN Ablauf zuenden.
+ * (a) Intro vom Lauerplatz (-7200,-9200), Blick zur Leiter (INIT-Yaw ~1087), Leon in der Tuernische
+ *     (-8200,-25550): RE2 Sub 0 ohne Bahn-Gate - Clip 6 (125) -> Clip 3 (150) -> yaw += 1024 (@0x80100938-48),
+ *     Biss-Sperre 110 (@0x8010091c-20); der Durchbruch (Clip 6 netto 6281 laengs) kommt nach Sueden voran, die
+ *     Dispatcher-Klemme (tick()) haelt ihn an der Westwand (x >= -8900 + 1466).
+ * (b) Dash im Westkanal nach SUEDEN auf der Klemmlinie x = -7434 (Abnahme-Lauf A: Route bei x -7289..-7300),
+ *     Leon Zone 0: Zonenwechsel 2 -> 0 bei z = -18100 -> SE 4 + Clip 2/3 je 150 (@0x80100dac-e28); die Klemme
+ *     nimmt den RE2-Korridor-Seitversatz von Clip 3 (-2775 quer = West), laengs ~4188 (2307 + 1881) voran, am
+ *     Ende yaw += 1024 (@0x80100eb0-c0). Vorher (gb_bahn_frei, Ende-x -7309 < -7300) zuendete hier nichts. */
+static int teil_wand(void)
+{
+    if (!setup(1)) return 1;
+    leon_statue(-8200, -25550);
+    tick();                                   /* INIT: Lauerplatz, Blick zur Leiter, aggro (GB_TEST=1) -> der
+                                               * INIT-Tick laeuft schon in LURK -> Intro-Start (Clip 6, Bild 0) */
+    CHECK(e->x == -7200 && e->z == -9200, "INIT-Lage (%d,%d) statt Lauerplatz (-7200,-9200)", e->x, e->z);
+    int yaw0 = (int)e->rot_y & 0xfff;
+    int n6 = (e->motion == 6) ? 1 : 0, n3 = 0, f;
+    int32_t x_min = e->x, z_min = e->z;
+    for (f = 0; f < 400; f++) {
+        leon_statue(-8200, -25550); tick();
+        if (!re15_gr2_im_intro(slot) && f > 2) break;
+        if (e->motion == 6) n6++; else if (e->motion == 3) n3++;
+        if (e->x < x_min) x_min = e->x;
+        if (e->z < z_min) z_min = e->z;
+    }
+    int yaw1 = (int)e->rot_y & 0xfff;
+    CHECK(n6 == 125 && n3 == 150, "Intro Clip 6 %d / Clip 3 %d Bilder (RE2: 125/150, EDD)", n6, n3);
+    CHECK(x_min >= -8900 + 1400, "Intro: Gator in der Westwand (x_min %d, Klemmlinie -7434)", x_min);
+    CHECK(z_min <= -9200 - 5000, "Intro: Durchbruch kam nicht voran (z_min %d; Clip 6 netto 6281 laengs)", z_min);
+    CHECK(((yaw1 - yaw0) & 0xfff) == 1024, "Intro-Ende: yaw %d -> %d, erwartet +1024 (@0x80100938-48)", yaw0, yaw1);
+    CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO, "Biss-Sperre nach dem Intro %d != 110", re15_gr2_biss_cd_rest(slot));
+    /* (b) Dash: Klemmlinie im Westkanal, Blick Sued, Leon Zone 0 */
+    e->x = -7434; e->z = -17900; e->y = -1200; e->rot_y = 1024;
+    int f_start = -1, n2 = 0, yaw_d = 0; n3 = 0;
+    int32_t z_start = 0, x_dmin = e->x, x_dmax = e->x;
+    int32_t dz_soll_sum = 0, dz_ist_sum = 0; int abw_n = 0;
+    int se_vor = s_se_n;
+    for (f = 0; f < 600; f++) {
+        /* Soll-Schritt dieses Bildes (FUN_80015e7c-Delta, um den Yaw gedreht wie gr2_rig_welt), nur z */
+        int clip_b = (int)e->motion, f_b = (int)e->anim_frame, yaw_b = (int)e->rot_y & 0xfff;
+        int32_t z_b = e->z;
+        int im_dash_b = re15_gr2_im_dash(slot);
+        leon_statue(-8200, -25550); tick();
+        if (im_dash_b && (clip_b == 2 || clip_b == 3)) {   /* auch der letzte Schritt (Clip 3 f149, Dash-Ende-Tick) */
+            re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+            int16_t a[3] = {0,0,0}, b[3] = {0,0,0};
+            const re15_emd_clip_t *c = &bk->anim.clips[clip_b];
+            int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+            if (f_b > 0) {
+                re15_emd_get_keyframe_speed(&bk->skel, (int)(bk->anim.frames[c->first_frame + f_b] & 0xfffu), &b[0], &b[1], &b[2]);
+                re15_emd_get_keyframe_speed(&bk->skel, (int)(bk->anim.frames[c->first_frame + f_b - 1] & 0xfffu), &a[0], &a[1], &a[2]);
+            }
+            int32_t vx = (int32_t)(((int64_t)(b[0] - a[0]) * s) >> 12), vz = (int32_t)(((int64_t)(b[2] - a[2]) * s) >> 12);
+            int32_t dz_soll = (int32_t)((-(int64_t)re15_sin_q12(yaw_b) * vx + (int64_t)re15_cos_q12(yaw_b) * vz) >> 12);
+            int32_t dz_ist = e->z - z_b;
+            dz_soll_sum += dz_soll; dz_ist_sum += dz_ist;
+            if (dz_ist != dz_soll && abw_n++ < 6)
+                printf("  wand: Bild %d clip %d f %d yaw %d dz ist %d soll %d\n", f, clip_b, f_b, yaw_b, dz_ist, dz_soll);
+        }
+        if (re15_gr2_im_dash(slot)) {
+            if (f_start < 0) { f_start = f; z_start = e->z; yaw_d = (int)e->rot_y & 0xfff; }
+            if (e->motion == 2) n2++; else if (e->motion == 3) n3++;
+            if (e->x < x_dmin) x_dmin = e->x;
+            if (e->x > x_dmax) x_dmax = e->x;
+        } else if (f_start >= 0) break;
+    }
+    int yaw2 = (int)e->rot_y & 0xfff;
+    int32_t weg = z_start - e->z;
+    CHECK(dz_ist_sum == dz_soll_sum, "Dash z-Summe ist %d != soll %d (authored Delta um den Yaw gedreht; %d Bilder weichen ab)",
+          dz_ist_sum, dz_soll_sum, abw_n);
+    CHECK(f_start >= 0 && f_start < 60, "kein Dash beim Zonenwechsel 2 -> 0 in Leons Zone (f_start %d)", f_start);
+    CHECK(se_count_since(4, se_vor) >= 1, "kein SE 4 am Dash-Start (@0x80100d64/84)");
+    CHECK(n2 == 150 && n3 == 150, "Dash Clip 2 %d / Clip 3 %d Bilder (150/150)", n2, n3);
+    CHECK(x_dmin >= -8900 + 1400, "Dash: Gator in der Westwand (x_min %d, Klemmlinie -7434)", x_dmin);
+    /* laengs: roh 3535 + 2884 = 6419 x 2731/4096 = 4279, je Bild dreimal floor (Skalierung x/z, Rotation) ->
+     * gemessen 4389 bei Yaw 1007; exakt = -dz_soll_sum (dieselbe Integer-Arithmetik wie gr2_rig_welt) */
+    CHECK(weg == -dz_soll_sum && weg >= 4000 && weg <= 4500,
+          "Dash laengs %d (soll %d aus den authored Deltas; Klemme nur quer)", weg, -dz_soll_sum);
+    CHECK(((yaw2 - yaw_d) & 0xfff) == 1024, "Dash-Ende: yaw %d -> %d, erwartet +1024 (@0x80100eb0-c0)", yaw_d, yaw2);
+    printf("wand: intro Clip6 %d Clip3 %d x_min %d z_min %d yaw %d->%d | dash ab f%d yaw %d Clip2 %d Clip3 %d x[%d..%d] laengs %d yaw %d\n",
+           n6, n3, x_min, z_min, yaw0, yaw1, f_start, yaw_d, n2, n3, x_dmin, x_dmax, weg, yaw2);
+    return fails ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "clips";
@@ -539,6 +649,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "kanister")) rc = teil_kanister();
     else if (!strcmp(t, "kiefer")) rc = teil_kiefer();
     else if (!strcmp(t, "putz")) rc = teil_putz();
+    else if (!strcmp(t, "wand")) rc = teil_wand();
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);
     return rc;

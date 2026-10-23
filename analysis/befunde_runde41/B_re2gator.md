@@ -479,3 +479,83 @@ widersprechen — der Code folgt diesen Entscheiden, nichts davon ist ein Schalt
    Tragen -> R1 (Explosion, Clip 9, geplatzter Kiefer §2.6, Leiche).
 3. B3 Putz nur an den RE2-Stellen = beim Dash-Start (ROOM40A0 sub13/sub14, 6 x 9 Partikel), nicht bei jedem
    starken Schuetteln.
+
+## 8. Nachbesserung 1 (Abnahme 0, B_abnahme_0.md; Beginn 2026-10-23 23:1x, HEAD 18c0894b)
+
+Orchestrator-Entscheid B5 (AUFTRAG.md master 23:06): die Haken in main.c / enemy_ai_re2_zombie.c / re2_fx.c sind
+ANGENOMMEN (M3 kein Mangel mehr); Abnahme B 1 prueft zusaetzlich Nachtrag 4 (RE2-Kameraschnitte) - s. §9.
+
+### M1 (Punkt 2c): RE2-Dash (Clip 2 -> 3) und Intro (Clip 6 -> 3) zuendeten im Spiel nie
+- Ursache (Code, nicht Geometrie-Pech): beide Bahnen liefen ABSOLUT vom Clip-Anker (re15_clip_root_motion_abs_pub =
+  FUN_8001ad68-Zwilling, der Griff-Platzierer) und wurden deshalb VORHER als Ganzes auf Freiheit geprueft
+  (gb_bahn_frei: Insel + Aussenwand-Klemmlinien 1600 fuer den Endpunkt inkl. QUER-Komponente). Die CHASE-Route
+  im Westkanal liegt auf der Klemmlinie x ~ -7290..-7434 (Leon in der Tuernische = Wand-Schatten); Clip-2-Ende
+  x = -7309 < -7300 (um 9 gescheitert), Clip-3-Ende mit dem Seitversatz -2775 (x2/3) in der Westwand; Intro vom
+  Lauerplatz (Yaw 1087) Ende-x ~ -7830. Alles gemessen von der Abnahme (Laeufe A/D1: 0 "RE2 "-Zeilen) und mit
+  probe_bahn.c (nb1) nachvollzogen.
+- Beleg der Clip-Geometrie (EM23.EMD aus CDEMD0.EMS, EMR-Keyframe-Bytes 6..11 und Root-Bone-Winkel, selbst geparst;
+  Probe nb1/probe_bahn.c gegen libre15_engine.a, skaliert 2731/4096):
+  * Clip 2 (150 Bilder): Summe (laengs, quer) = (2307, -90), groesster Einzelschritt 81; Root-ry 0 -> 438 (f40..f149).
+  * Clip 3 (150 Bilder): Summe (1881, -2775); quer faellt ab f60 (roh z 22 -> -4042 bei f149); Root-ry 438 -> 1023
+    (f70..f148) und im LETZTEN Bild f149 zurueck auf 0. Groesster Einzelschritt 70.
+  * Clip 6 (125 Bilder): off[0] = (-7040, 0, 0) roh = Rueckversatz hinter die Wand (Korridor-Staging des
+    ROOM40A0-Durchbruchs, RE2 Pos_set + Cut 0 @0x80100894-a4), danach +9498 roh laengs (6281 skaliert ohne f0);
+    groesster Einzelschritt 320 (f29). Root-ry -47..+77, am Ende 317 (f124).
+  * Die Quer-Komponente von Clip 3 IST die RE2-Korridor-Ecke: nach dem Clip addiert RE2 `yaw += 1024` -
+    Dash @0x80100eb0-c0 `lhu v0,118(s1) / sb zero,549(s1) / addiu v0,v0,1024 / sh v0,118(s1)`, Intro @0x80100938-48
+    `lhu v0,118(s0) / addiu v0,v0,1024 / sh v0,118(s0)` (beide selbst disassembliert, EM23_OVL_0000.BIN). Mit Yaw 2048
+    (RE2-Korridor nach -x) zeigt quer -4042 nach +z = die neue Korridorrichtung (yaw 3072). Die Root-ry-Rampe auf
+    1023 ist dieselbe Vierteldrehung als Pose; f149 = 0 ist das Bild, in dem der Entity-Yaw sie uebernimmt.
+  * Zonenlinien-Pruefung Sub 1 Pre @0x80100964: `lw v0,56 / slti v0,v0,-17877` @0x80100990-98 -> Zone 1 + Routine
+    0x301 (@0x801009a8-b0), `lw v0,64 / slti v0,v0,-7322` @0x801009d8-e0 -> Zone 2 + 0x301 (@0x801009ec-fc); liegt
+    VOR dem Kanister-Vorpass (@0x80100a0c) und der Hysterese mit +0x238 (@0x80100b5c-64) -> der Dash zuendet auch in
+    der Biss-Sperre (z.B. den 110 Bildern nach dem Intro).
+  * RE2-Bewegung = FUN_8001a330 -> FUN_80015e7c (Delta `subu` @0x80015fcc/@0x80015fd4, Bild 0 `sw zero,524`
+    @0x80015f14) + FUN_800152c8 (Rotation/Addition @0x80015314-34), info/re2leon/PSX.EXE (Zwilling in
+    enemy_ai_common.c re15_clip_root_motion_delta). Die Dispatcher-Klemme des Ports fuer den 0x23er
+    (enemy_ai_common.c:14873-14876, re15_collision_constrain_enemy nach dem Boss-Tick, hit_radius 1466) ist dieselbe,
+    durch die der CHASE-Vortrieb laeuft.
+- Aenderung (gator_re2_r41.c, enemy_ai_boss_gator.c, Header):
+  * gr2_wurzel_schritt(): Dash/Intro bewegen bildweise (off[f]-off[f-1], laengs UND quer, um den Yaw gedreht) statt
+    absolut; Bild 0 = Neu-Anker ohne Schritt (Port-Konvention; der Clip-6-Rueckversatz -7040 ist Korridor-Staging,
+    im Becken ist der Lauerplatz der Startpunkt - PORT-WAHL). Jeder Schritt laeuft durch die Dispatcher-Klemme.
+  * gb_bahn_frei entfernt. Intro: zuendet bei jedem Aggro (RE2 Sub 0 P0 wartet nur auf +0x1D4 @0x80100854-68).
+    Dash: Zonenwechsel in Leons Zone + nur noch die LAENGS-Bahn (x-Netto 2+3) gegen Insel/Rampe (gb_seg_frei,
+    GB_KOERPER_M) - damit er nicht 300 Bilder frontal gegen den Block drueckt (PORT-WAHL, Rest der alten Probe).
+  * `yaw += 1024` nach Clip 3 (Dash @0x80100eb0-c0, Intro @0x80100938-48) jetzt uebernommen - die frueher als
+    PORT-WAHL weggelassene Zeile liess den Koerper am Clip-Ende um 90 Grad zurueckpoppen (Root-ry 1023 -> 0).
+  * Messhaken re15_gr2_im_intro(); Log-Zeilen "RE2 INTRO start ... bahn_ende", "RE2 DASH ende ... yaw".
+- Unit-Riegel: NEU unit_r41_re2gator_wand (Intro vom Lauerplatz ohne Bahn-Gate + Dash auf der Westwand-Klemmlinie
+  nach Sueden mit Leon in der Tuernische: SE 4, 150/150, Gator bleibt im Becken, laengs ~4188, yaw +1024);
+  clips/dash/sockel/putz warten den jetzt immer zuendenden Intro per intro_abwarten() ab.
+- Messung nachher: s. §8.7 (exe).
+
+### M2 (Punkt 2e): Putz im Spiel nicht belegt, keine exe-Messzeile
+- Ursache: (a) haengt an M1; (b) LATENTER LAGEFEHLER: g->putz_x/y/z wurden nie gesetzt (nur deklariert und in
+  gr2_putz_takt gelesen) -> alle 54 Bursts um (0,0,0) + RE2-Versatz = noerdlich AUSSERHALB des Beckens (z > -5400);
+  der Riegel unit_r41_re2gator_putz zaehlte nur Spawns.
+- Aenderung: re15_gr2_dash_start(slot, e, pl) setzt die Lage auf Leons Stand beim Dash-Start (PORT-WAHL "um Leon",
+  RE2: Kamera 9 am Korridorende, sub13 @0x0778/@0x0786); Messzeile je Durchlauf in gator_boss.log
+  "RE2 PUTZ runde r/6 spawns=n gesamt=m um=(x,y,z) letzter=(x,y,z)" + Haken re15_gr2_putz_letzte(); der Riegel
+  pinnt den letzten Spawn jeder Runde auf Leon + (-622, -2400, -50) (k_putz[8] @0x0900).
+- Messung nachher: s. §8.7.
+
+### M3 (Vertrag §1.3): Haken in nicht zugeteilten Dateien
+- Orchestrator-Entscheid B5: angenommen, Vertrag um B erweitert; Konflikte loest die Integration. master (bb08d04f)
+  hat die drei Dateien seit der Basis 116e8b0f nicht angefasst (git diff 116e8b0f master --stat = leer).
+  Haken: main.c @122 (include), @4008 (re15_pc_gator_re2_init), @5598-5599 (Schuettel-Versatz), @11094
+  (re15_gr2_pc_zeichnen); enemy_ai_re2_zombie.c @4634-4637 (Typ 0x23 in re15_re2z_gore_active); re2_fx.c @880,
+  @901-902 (Dispatch) + Block "RUNDE 41 SPUR B" ab @1560 (op_11/op_73).
+
+### M4 (Dossier §4.3): falsche Erklaerung
+- §4.3 Lauf A2 korrigiert: der Gator durchlief die Zonen 1 -> 2 -> 0 (Zonenlinie z = -18100 bei (-7289,-18278)
+  in Leons Zone 0), die Vorbedingung war erfuellt; es scheiterte die Bahn-Probe (M1).
+
+### M5 (Test): file(GLOB)+REMOVE aller re15_pc_r41b_*.exe
+- test_r41_re2gator.cmake loescht keine fremden Kopien mehr; nur die eigene Kopie am Ende (file(REMOVE _exe_kopie)).
+
+### M6 (Beleg-Luecke): Raum-Brueller Satz 15 in der exe nicht messbar
+- gator_re2_pc.c raum_se(): debug.log-Zeile "[gator-re2] Raum-SE 15 -> GATOR40A0.VBS Satz 1" (bzw. "(Bank fehlt,
+  stumm)") bei jedem Ruf des Hakens. Messung nachher: s. §8.7 (Lauf K).
+
+### 8.7 Messungen nachher (werden nach dem Bau eingetragen)

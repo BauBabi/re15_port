@@ -64,19 +64,22 @@ int  re15_gr2_biss_cd_rest(int slot);
 
 /* RE2-LUNGE als Zonen-Dash: `zone` = aktuelle Beckenzone des Gators (gb_zone), `zone_leon` =
  * Leons Zone. Liefert 1, wenn eben eine neue Zone betreten wurde, in der Leon ist (RE2: Zonenlinie
- * +0x21A 0->1->2 @0x801009a8/@0x801009ec = Routine 0x301). Das Ziel der Bahn (Ende Clip 2 bzw.
- * Clip 3, Netto-Wurzelversatz skaliert, um den Yaw gedreht) steht danach in ziel[]. */
-int  re15_gr2_dash_zonenwechsel(int slot, const re15_actor_t *e, int zone, int zone_leon,
-                                int32_t ziel2[2], int32_t ziel3[2]);
-void re15_gr2_dash_start(int slot, re15_actor_t *e);      /* SE 4 @0x80100d64/84, Clip 2 (16), Anker */
-int  re15_gr2_dash_tick(int slot, re15_actor_t *e);       /* 1 = laeuft, 0 = fertig (0x101) */
+ * +0x21A 0->1->2 @0x801009a8/@0x801009ec = Routine 0x301, geprueft VOR der Biss-Sperre +0x238).
+ * ziel_vor[] = Ende der LAENGS-Bahn (x-Netto Clip 2 + 3, skaliert, um den Yaw gedreht) fuer die
+ * Insel-Probe des Boss-Moduls; die Quer-Komponente (RE2-Korridor-Ecke) nimmt die Dispatcher-Klemme.
+ * Nachbesserung 1 (Abnahme 0, M1): die Bahn laeuft bildweise (FUN_80015e7c/152c8-Delta) statt absolut. */
+int  re15_gr2_dash_zonenwechsel(int slot, const re15_actor_t *e, int zone, int zone_leon, int32_t ziel_vor[2]);
+/* SE 4 @0x80100d64/84, Clip 2 (16); `pl` = Leon (Putz-Lage, PORT-WAHL "um Leon"). */
+void re15_gr2_dash_start(int slot, re15_actor_t *e, const re15_actor_t *pl);
+int  re15_gr2_dash_tick(int slot, re15_actor_t *e);       /* 1 = laeuft, 0 = fertig (0x101, yaw += 1024 @0x80100eb0-c0) */
 int  re15_gr2_im_dash(int slot);                          /* +0x225 */
 
 /* RE2-INTRO (Sub 0 P1/P2 @0x8010086c-948): Clip 6 (Durchbruch) -> Clip 3 (Schnapper), danach
- * +0x238 = 110. Bahn-Ende (Wurzel) in ziel[] fuer die Freiheitsprobe. */
+ * +0x238 = 110 und yaw += 1024 (@0x80100938-48). Bahn-Ende (Wurzel) in ziel[] nur fuer die Telemetrie. */
 void re15_gr2_intro_bahn(const re15_actor_t *e, int32_t ziel[2]);
 void re15_gr2_intro_start(int slot, re15_actor_t *e);
 int  re15_gr2_intro_tick(int slot, re15_actor_t *e);      /* 1 = laeuft, 0 = fertig */
+int  re15_gr2_im_intro(int slot);                         /* Messhaken: Intro laeuft (Clip 6/3) */
 
 /* HURT-Selektor FUN @0x80101eac: 0 = Standard (SE 5, @0x80102090), 1 = Kanister-Explosion
  * (@0x80102158), 4 = Grossreaktion (SE 0, Clip 10, @0x80102bd0). `gesperrt` = Phase, in der
@@ -126,8 +129,10 @@ extern void (*re15_gr2_raum_se_hook)(int satz);   /* ROOM40A0-Raumbank: 15 = Exp
 /* platform/pc/src/gator_re2_pc.c: Kanister-Prop zeichnen (Aufruf aus dem Prop-Pass von main.c). */
 struct re15_camera_view_s;
 void re15_gr2_pc_zeichnen(const void *cam_view, int cx, int cy);
-/* Messhaken: Zahl der gespawnten Putz-Partikel (re2fx) seit Start. */
+/* Messhaken: Zahl der gespawnten Putz-Partikel (re2fx) seit Start + Welt-Lage des letzten Spawns
+ * (Nachbesserung 1, M2: die exe-Zeile "RE2 PUTZ runde ..." in gator_boss.log traegt beides). */
 int  re15_gr2_putz_spawns(void);
+void re15_gr2_putz_letzte(int32_t pos[3]);
 
 /* Messhaken: Log-Zeilen (gator_boss.log, "RE2 ...") an/aus. */
 void re15_gr2_log(const char *fmt, ...);

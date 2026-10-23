@@ -156,6 +156,30 @@ static void gr2_rig_welt(const re15_actor_t *e, const int32_t v[3], int32_t out[
     out[1] = e->z + (int32_t)((-(int64_t)sn * vx + (int64_t)c * vz) >> 12);
 }
 
+/* Ein Bild authored Wurzelbewegung (FUN_8001a330 -> FUN_80015e7c + FUN_800152c8, info/re2leon/PSX.EXE):
+ * Delta = off[f] - off[f-1] (`subu` @0x80015fcc/@0x80015fd4), um den Yaw gedreht und auf +0x38/+0x40
+ * addiert (@0x80015314-34) - BEIDE Komponenten (laengs und quer), skaliert. Bild 0 = Neu-Anker ohne Schritt
+ * (Port-Konvention von re15_clip_root_motion_delta bei fr_prev < 0): RE2 nullt dort die Momentaufnahme
+ * (`sw zero,524` @0x80015f14) und springt um off[0] - fuer Clip 6 sind das -7040 roh (Probe nb1/probe_bahn,
+ * EMR), das Korridor-Staging des ROOM40A0-Durchbruchs (Pos_set + Rueckversatz hinter die Wand); im Becken
+ * IST der Lauerplatz der Startpunkt (PORT-WAHL). Clip 2/3: off[0] = (0,0,0)/(0,0,3), ohne Belang.
+ * Nachbesserung 1 (Abnahme 0, M1): vorher lief die Bahn ABSOLUT vom Anker (FUN_8001ad68-Zwilling) und
+ * brauchte deshalb eine freie Bahn (gb_bahn_frei, Klemmlinie 1600) - im Westkanal nach Sueden scheiterte
+ * die um 9 Einheiten (Ende-x -7309 < -7300), der Dash zuendete im Spiel nie. Jetzt geht jeder Schritt wie
+ * der CHASE-Vortrieb durch die Dispatcher-Klemme (enemy_ai_common.c: re15_collision_constrain_enemy nach
+ * dem Boss-Tick, hit_radius 1466); die Wand nimmt den RE2-Korridor-Seitversatz von Clip 3 (-4042 roh quer
+ * ueber f60..f149 = die Ecke, nach der RE2 `yaw += 1024` dreht, @0x80100eb0-c0). Groesster Einzelschritt
+ * skaliert: Clip 2 81, Clip 3 70, Clip 6 320 (f29) - weit unter dem Klemmradius. */
+static void gr2_wurzel_schritt(re15_actor_t *e, const re15_enemy_bank_t *bk, int clip, int frame)
+{
+    if (frame <= 0) return;
+    int16_t a[3], b[3];
+    gr2_off(bk, clip, frame, b); gr2_off(bk, clip, frame - 1, a);
+    int32_t v[3] = { b[0] - a[0], 0, b[2] - a[2] };
+    int32_t out[2]; gr2_rig_welt(e, v, out);
+    e->x = out[0]; e->z = out[1];
+}
+
 static re15_enemy_bank_t *gr2_bank(const re15_actor_t *e)
 {
     re15_enemy_bank_t *bk = re15_enemy_find(e->type);
@@ -315,22 +339,34 @@ static const struct { int8_t bild; uint8_t typ; uint16_t param; int16_t dx, y, d
 };
 #define GR2_PUTZ_DAUER 15     /* letzter Spawn Bild 9 + Sleep 5 @0x0910 -> Evt_end */
 #define GR2_PUTZ_RUNDEN 6     /* sub13 `For 6: Gosub sub14` @0x0862-6A */
-static int s_putz_spawns;
+static int s_putz_spawns, s_putz_runde_start;
+static int32_t s_putz_letzt[3];                              /* Messhaken: Welt-Lage des letzten Spawns */
 static void gr2_putz_takt(gr2_t *g)
 {
     if (g->putz_t <= 0) return;
     int t = g->putz_t - 1;                                  /* 0.. */
-    int bild = t % GR2_PUTZ_DAUER;
+    int bild = t % GR2_PUTZ_DAUER, runde = t / GR2_PUTZ_DAUER;
+    if (bild == 0) s_putz_runde_start = s_putz_spawns;
     for (int i = 0; i < 9; i++) {
         if (k_putz[i].bild != bild) continue;
         int32_t pos[3] = { g->putz_x + k_putz[i].dx, g->putz_y + k_putz[i].y, g->putz_z + k_putz[i].dz };
         uint32_t a0 = 0x04000000u | ((uint32_t)k_putz[i].typ << 16) | k_putz[i].param;
-        if (gr2_fx(a0, (int16_t)k_putz[i].dir, NULL, pos, NULL) >= 0) s_putz_spawns++;
+        if (gr2_fx(a0, (int16_t)k_putz[i].dir, NULL, pos, NULL) >= 0) {
+            s_putz_spawns++;
+            memcpy(s_putz_letzt, pos, sizeof s_putz_letzt);
+        }
     }
+    /* Messzeile je Durchlauf (Abnahme 0, M2: die exe hatte keine Zeile fuer die Putz-Spawns) - nach dem
+     * letzten Spawn-Bild 9 (@0x08F0/@0x0900) des Durchlaufs. */
+    if (bild == 9)
+        re15_gr2_log("PUTZ runde %d/%d spawns=%d gesamt=%d um=(%d,%d,%d) letzter=(%d,%d,%d)",
+                     runde + 1, GR2_PUTZ_RUNDEN, s_putz_spawns - s_putz_runde_start, s_putz_spawns,
+                     g->putz_x, g->putz_y, g->putz_z, s_putz_letzt[0], s_putz_letzt[1], s_putz_letzt[2]);
     g->putz_t++;
     if (g->putz_t > GR2_PUTZ_DAUER * GR2_PUTZ_RUNDEN) g->putz_t = 0;
 }
-int re15_gr2_putz_spawns(void) { return s_putz_spawns; }
+int  re15_gr2_putz_spawns(void) { return s_putz_spawns; }
+void re15_gr2_putz_letzte(int32_t pos[3]) { memcpy(pos, s_putz_letzt, sizeof s_putz_letzt); }
 
 /* ---- Kanister: Vorpass (Sub-1-Pre @0x80100a0c-b18) + T2-Maschine @0x801017c4 ---------------- */
 static int gr2_kan_vor(const re15_actor_t *e, int32_t *laengs, int32_t *quer)
@@ -509,8 +545,7 @@ void re15_gr2_biss_cd(int slot, int n) { if (slot >= 0 && slot < RE15_ACTOR_MAX)
 int  re15_gr2_biss_cd_rest(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].biss_cd : 0; }
 
 /* ---- Dash ---------------------------------------------------------------------------------- */
-int re15_gr2_dash_zonenwechsel(int slot, const re15_actor_t *e, int zone, int zone_leon,
-                               int32_t ziel2[2], int32_t ziel3[2])
+int re15_gr2_dash_zonenwechsel(int slot, const re15_actor_t *e, int zone, int zone_leon, int32_t ziel_vor[2])
 {
     gr2_t *g = &s_g[slot];
     int neu = (g->zone_alt >= 0 && zone != g->zone_alt);
@@ -518,24 +553,28 @@ int re15_gr2_dash_zonenwechsel(int slot, const re15_actor_t *e, int zone, int zo
     if (!neu || zone != zone_leon || g->im_dash) return 0;
     re15_enemy_bank_t *bk = gr2_bank(e);
     if (!bk) return 0;
+    /* Ende der Bahn in Blickrichtung = nur die LAENGS-Komponente (x) der Netto-Versaetze Clip 2 + 3
+     * (2307 + 1881 skaliert); die Quer-Komponente ist die RE2-Korridor-Ecke und geht im Becken in die
+     * Wand-Klemme (s. gr2_wurzel_schritt). Nachbesserung 1 (M1). */
     int32_t n2[3], n3[3];
     gr2_netto(bk, 2, n2); gr2_netto(bk, 3, n3);
-    gr2_rig_welt(e, n2, ziel2);
-    int32_t sum[3] = { n2[0] + n3[0], n2[1] + n3[1], n2[2] + n3[2] };
-    gr2_rig_welt(e, sum, ziel3);
+    int32_t v[3] = { n2[0] + n3[0], 0, 0 };
+    gr2_rig_welt(e, v, ziel_vor);
     return 1;
 }
-void re15_gr2_dash_start(int slot, re15_actor_t *e)
+void re15_gr2_dash_start(int slot, re15_actor_t *e, const re15_actor_t *pl)
 {
     gr2_t *g = &s_g[slot];
-    re15_enemy_bank_t *bk = gr2_bank(e);
     gr2_se(g, 4);                                           /* P0: `addiu a0,zero,4` @0x80100d64, jal @0x80100d84 */
     e->motion = 2; e->anim_frame = 0; e->anim_frac = 16;    /* Clip 2 Blend 16 @0x80100dac-b4 */
     g->im_dash = 1; g->dash_phase = 1;                      /* +0x225 = 1 @0x80100e04-0c */
-    if (bk) re15_clip_anchor_set_pub(e, &bk->skel, &bk->anim, 2, 0);
-    /* PORT-WAHL: Putz-Sequenz um Leon (s. k_putz) */
+    /* PORT-WAHL: Putz-Sequenz um Leon (s. k_putz) - Lage = Leons Stand beim Dash-Start (RE2: Kamera 9 am
+     * Korridorende, dort laeuft Leon, sub13 @0x0778/0x0786). Nachbesserung 1 (M2): vorher blieb putz_x/y/z
+     * ungesetzt (0,0,0) = noerdlich ausserhalb des Beckens (z > -5400). */
     g->putz_t = 1;
-    re15_gr2_log("DASH start pos=(%d,%d) yaw=%d", e->x, e->z, (int)e->rot_y);
+    g->putz_x = pl ? pl->x : e->x; g->putz_y = pl ? pl->y : 0; g->putz_z = pl ? pl->z : e->z;
+    re15_gr2_log("DASH start pos=(%d,%d) yaw=%d putz_um=(%d,%d,%d)", e->x, e->z, (int)e->rot_y,
+                 g->putz_x, g->putz_y, g->putz_z);
 }
 int re15_gr2_dash_tick(int slot, re15_actor_t *e)
 {
@@ -545,15 +584,19 @@ int re15_gr2_dash_tick(int slot, re15_actor_t *e)
     int clip = (g->dash_phase == 1) ? 2 : 3;
     int n = bk->anim.clips[clip].frame_count;
     e->motion = (uint8_t)clip;
-    re15_clip_root_motion_abs_pub(e, &bk->skel, &bk->anim, clip, (int)e->anim_frame);
+    gr2_wurzel_schritt(e, bk, clip, (int)e->anim_frame);   /* bildweise, durch die Dispatcher-Klemme */
     if (e->anim_frame + 1 >= n) {                           /* FUN_8001a330 liefert 1 am Clip-Ende */
         if (g->dash_phase == 1) {
             g->dash_phase = 2; e->motion = 3; e->anim_frame = 0; e->anim_frac = 0;   /* Clip 3 (0) @0x80100e20-28 */
-            re15_clip_anchor_set_pub(e, &bk->skel, &bk->anim, 3, 0);
             return 1;
         }
-        g->im_dash = 0; g->dash_phase = 0;                  /* +0x225 = 0 @0x80100eb8, -> 0x101 @0x80100ee4 */
-        re15_gr2_log("DASH ende pos=(%d,%d)", e->x, e->z);
+        g->im_dash = 0; g->dash_phase = 0;                  /* +0x225 = 0 `sb zero,549` @0x80100eb8, -> 0x101 @0x80100ee4 */
+        /* `lhu v0,118 / addiu v0,v0,1024 / sh v0,118` @0x80100eb0-c0: Clip 3 dreht den Root-Bone von 438 auf
+         * 1023 (f70..f148, EMR, Probe nb1/probe_bahn) und springt im letzten Bild auf 0 - die Vierteldrehung
+         * wandert in den Entity-Yaw. Nachbesserung 1: vorher weggelassen (als "Korridor-Ecke" gelesen), dann
+         * poppte der Koerper am Dash-Ende um 90 Grad zurueck; die Verfolgung dreht danach auf Leon (Wende). */
+        e->rot_y = (int16_t)((e->rot_y + 1024) & 0x0fff);
+        re15_gr2_log("DASH ende pos=(%d,%d) yaw=%d", e->x, e->z, (int)e->rot_y);
         return 0;
     }
     e->anim_frame++;
@@ -575,11 +618,10 @@ void re15_gr2_intro_bahn(const re15_actor_t *e, int32_t ziel[2])
 void re15_gr2_intro_start(int slot, re15_actor_t *e)
 {
     gr2_t *g = &s_g[slot];
-    re15_enemy_bank_t *bk = gr2_bank(e);
+    int32_t zi[2]; re15_gr2_intro_bahn(e, zi);              /* nur Telemetrie (Nachbesserung 1: kein Bahn-Gate) */
     e->motion = 6; e->anim_frame = 0; e->anim_frac = 0;     /* Clip 6 (0) @0x801008ac-b8 */
     g->intro_phase = 1;
-    if (bk) re15_clip_anchor_set_pub(e, &bk->skel, &bk->anim, 6, 0);
-    re15_gr2_log("INTRO start pos=(%d,%d) yaw=%d", e->x, e->z, (int)e->rot_y);
+    re15_gr2_log("INTRO start pos=(%d,%d) yaw=%d bahn_ende=(%d,%d)", e->x, e->z, (int)e->rot_y, zi[0], zi[1]);
 }
 int re15_gr2_intro_tick(int slot, re15_actor_t *e)
 {
@@ -589,22 +631,25 @@ int re15_gr2_intro_tick(int slot, re15_actor_t *e)
     int clip = (g->intro_phase == 1) ? 6 : 3;
     int n = bk->anim.clips[clip].frame_count;
     e->motion = (uint8_t)clip;
-    re15_clip_root_motion_abs_pub(e, &bk->skel, &bk->anim, clip, (int)e->anim_frame);
+    gr2_wurzel_schritt(e, bk, clip, (int)e->anim_frame);   /* bildweise, durch die Dispatcher-Klemme */
     if (e->anim_frame + 1 >= n) {
         if (g->intro_phase == 1) {
-            g->intro_phase = 2; e->motion = 3; e->anim_frame = 0; e->anim_frac = 0;   /* Clip 3 @0x801008e4-f0 */
-            re15_clip_anchor_set_pub(e, &bk->skel, &bk->anim, 3, 0);
+            /* Clip 3 @0x801008e4-f0. RE2 setzt davor Cut 1 + z = -21212 (@0x801008c4-e0, Korridor-Ecke);
+             * PORT-WAHL: am Ort weiter (kein Kameraskript, kein Teleport). */
+            g->intro_phase = 2; e->motion = 3; e->anim_frame = 0; e->anim_frac = 0;
             return 1;
         }
         g->intro_phase = 0;
         g->biss_cd = RE15_GR2_BISS_CD_INTRO;                /* +0x238 = 110 @0x8010091c-20 */
         g->letzter_clip = 0;                                /* Routine 0x101 @0x80100928-2c */
-        re15_gr2_log("INTRO ende pos=(%d,%d)", e->x, e->z);
+        e->rot_y = (int16_t)((e->rot_y + 1024) & 0x0fff);   /* `lhu v0,118 / addiu v0,v0,1024 / sh v0,118` @0x80100938-48 */
+        re15_gr2_log("INTRO ende pos=(%d,%d) yaw=%d", e->x, e->z, (int)e->rot_y);
         return 0;
     }
     e->anim_frame++;
     return 1;
 }
+int re15_gr2_im_intro(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? (s_g[slot].intro_phase != 0) : 0; }
 
 /* ---- HURT-Selektor @0x80101eac -------------------------------------------------------------- */
 int re15_gr2_hurt_reaktion(int slot, re15_actor_t *e, const re15_actor_t *pl, int gesperrt)

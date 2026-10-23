@@ -32,7 +32,12 @@ endif()
 #   unit_r41_re2gator_kiefer     Treffer beim Tragen -> FUN_80104318 stempelt Part-Record 7 (Flagwort 0x4A, Tinte 0x202038,
 #                                +0xA0 0x8000, +0x9A -10, +0x98 yaw+0x800); Part-Bruecke (re15_re2z_gore_part_matrix /
 #                                _part_burst): 30 Scherben-Bilder, Skala 180..2790, Aufstieg -10/Bild, danach Flagwort 0
-foreach(_teil modell clips dash intro sockel kanister kiefer putz)
+#   unit_r41_re2gator_wand       Nachbesserung 1 (Abnahme 0, M1): Intro vom Lauerplatz OHNE Bahn-Gate (Clip 6 125 ->
+#                                Clip 3 150 -> yaw += 1024 @0x80100938-48, Biss-Sperre 110) und Dash im Westkanal nach
+#                                SUEDEN auf der Klemmlinie (x = -7434) mit Leon in der Tuernische: Zonenwechsel 2 -> 0 ->
+#                                SE 4, Clip 2/3 je 150, Gator bleibt im Becken (Dispatcher-Klemme nimmt den RE2-Korridor-
+#                                Seitversatz -2775), laengs ~4188 voran, yaw += 1024 @0x80100eb0-c0
+foreach(_teil modell clips dash intro sockel kanister kiefer putz wand)
     add_test(NAME unit_r41_re2gator_${_teil} COMMAND test_r41_re2gator ${_teil})
     set_tests_properties(unit_r41_re2gator_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()

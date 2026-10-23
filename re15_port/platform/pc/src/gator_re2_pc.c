@@ -209,9 +209,13 @@ static int bank_laden(void)
 
 static void raum_se(int satz_re2)
 {
-    if (!bank_laden()) return;
     int satz = (satz_re2 == 15) ? R41_GATOR_SE_EXPLOSION : (satz_re2 == 14) ? R41_GATOR_SE_TOD : -1;
-    if (satz < 0) return;
+    int ok = bank_laden();
+    /* Messzeile (Abnahme 0, M6): der Raum-Brueller war in der exe nicht nachweisbar - debug.log traegt
+     * jetzt jeden Ruf des Hakens (15 = Explosion @0x8010237c-88, 14 = Tod). */
+    fprintf(stderr, "[gator-re2] Raum-SE %d -> GATOR40A0.VBS Satz %d%s\n", satz_re2, satz,
+            ok ? "" : " (Bank fehlt, stumm)");
+    if (!ok || satz < 0) return;
     re15_audio_se_play_bank(s_edt, &s_vab, s_decoded, s_decoded_len, satz);
 }
 
