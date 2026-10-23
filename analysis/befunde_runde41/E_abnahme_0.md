@@ -111,6 +111,38 @@ Leon) reproduziert worden; eine Original-Gegenprobe (DuckStation-Savestate der K
 damit behoben ist, ist nicht bewiesen — es bleibt die Rueckfrage an den Nutzer (Weg/Spielstand/Waffe/Bild), die das
 Dossier selbst stellt.
 
+### 3.5 Port mit anderen Waffen (Fortsetzung 2026-10-24) — die ersten ~25 Bilder nach Cut_chg 3 / Pos_set @0x0A8C
+Laeufe `<sp>/runs_abn0/K_w{1,4,7,8}` (NACHHER-exe): `RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_PLAYER_POS=2600,-2800,1024,1
+RE15_EQUIP=<w> RE15_PRESS=square@330,square@380,square@420,square@460 RE15_SCD_TRACE=1 RE15_ANIM_TRACE=anim.txt RE15_MOTRACE=1
+RE15_STATE_LOG=state.txt RE15_FRAMEDUMP=455-700/1:fd_ RE15_EXIT_AT=700` mit w = 1 (Messer), 4 (SIG P228), 7 (Super Redhawk =
+Magnum), 8 (Remington M870 = Schrotflinte); Log `[equip] W-bank -> W01 / W04 / W07 / W08`.
+- Ablauf in allen vier Laeufen bildgleich: `[scd] F463 @0x0A8C op=0x32` (Pos_set) + `Cut_chg(3)`, `F483 @0x0A9C op=0x3F`
+  (Plc_motion), `Cut_chg(4)` F591, `F661 @0x0B16 op=0x42` (Plc_ret). anim.txt: F463 Motion 211 (Idle-Sway), ab F483 Motion 0.
+- Pixelvergleich gegen w1 im Leon-Ausschnitt (40,60)-(140,190): F464..F482 nur 5-16 px Unterschied in einem 6x30-px-Kasten
+  (die Waffe in der Hand), F484 0 px, F490..F560 4-32 px (Waffe beim Kurbeln). Der Koerper posiert also mit jeder Waffe
+  identisch: Motion 211 bildet der Port fuer alle Waffen auf PL00W01 Clip 2 ab (anim_select_common.c:10), nur das
+  Waffen-Mesh wechselt.
+- Bilder je Bild F462..F489 (Ausschnitt x2): `<sp>/abn0_bilder/K_w{1,4,7,8}_crop_F462_489.png`; Ueberblick
+  `<sp>/abn0_bilder/K_w8_F460_506.png`. F464-F482 Leon steht mit dem Ruecken zur Kamera an der Kurbel (Gier 1024 aus
+  `34 04 00 04` @0x00A94), leichtes Wiegen; F483 Uebergang (Crossfade 7 Bilder @0x80050cfc) in den Kurbel-Clip; danach
+  Kurbeln. **Kein Fliegen, Springen oder Gleiten — mit keiner der vier Waffen.**
+
+### 3.6 Original-Gegenprobe in DuckStation (Fortsetzung 2026-10-24) — Stand
+Vorbereitung (nachpruefbar): Debug-Menue-Basis `stage_saves/mzd_debugmenu.sav` mit `re15_ss_patch.py` gepatcht ->
+`<sp>/abn0_orig/menu_kurbel.sav`: `0x800b1004:4:0x2000` = Flag (3,0x72) (Bank-3-Basis 0x800b0ff8 aus der Op_set-Tabelle
+@0x80074664[3]; Bit 114 -> Wort 3, Maske 0x80000000>>18 = 0x2000 nach dem Setzer FUN_8004ef90 `srl v1,a1,5` /
+`lui v0,0x8000` / `srlv v0,v0,a1` @0x8004ef90-a8), JUMP-Satz 0x202 "ZOMBIE TUNNEL" (RAM 0x800c2b68, DEBUG.BIN @0x2b68,
+Satzformel @0x8001476C-A8) X 11350 -> 2600 / Z -3150 -> -2800 (Band 1 bleibt; der Debug-Zweig des JUMP-Executors schreibt
+X/Z/Band @0x8001d6b4/@0x8001d72c/@0x8001d7a4, aber keine Gier), Gier 0x800acabe -> 1024 — derselbe Startpunkt wie
+`RE15_PLAYER_POS=2600,-2800,1024,1` der Port-Laeufe. Treiber `<sp>/abn0_orig_kurbel.py` (Quick-Load, Hoch x2 / Runter /
+Dreieck / Rechts x2 / Quadrat = Stage 2 Raum 0x202; ToggleMediaCapture voruebergehend auf SDL-0/LeftShoulder wie Spur A,
+settings.ini bytegleich zurueck; Close per `taskkill /PID` ohne /F, nie /IM).
+Ergebnis bisher (Laeufe v1..v4): DuckStation startet und beendet sauber (playtime.dat aktualisiert), aber WEDER
+SaveStateOnExit (resume.sav) NOCH der LB-Hotkey (Slot 1) schreiben einen Zustand. Befund dazu: die aktuelle settings.ini
+steht auf `ConfirmPowerOff = true` (die Sicherung `settings.ini.vor_ffmpeg_2026-10-23` von 17:25 hatte `false`; der Skill
+re15-room-capture verlangt `false`); das DuckStation-Fenster war in der Desktop-Aufnahme (`<sp>/abn0_orig/diag/desk.mp4`)
+nicht im Vordergrund. -> siehe 3.7 (wird ergaenzt).
+
 ## 4. Punkt 2 — Karte B1, Ostkammer-Tuer ROOM1230 -> ROOM1190
 (Fortsetzung 2026-10-24, Abnahme 0 zweiter Pruefer; `<sp>` = Scratchpad
 `C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad`.)
