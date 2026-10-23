@@ -16,7 +16,7 @@ elzazombies_r39.c, test_r36_kartenbits.c k_port[] (nur falls Bit 120 belegt).
 ## Status
 - [ ] Punkt 1 Kurbel 2020
 - [ ] Punkt 2 Karte B1 / 1090-Vordertuer
-- [ ] Punkt 3 Werkstatt-Tuer 11B1 (Elza)
+- [x] Punkt 3 Werkstatt-Tuer 11B1 (Elza) — Ereignis 24, unit_r41_kleinkram_b_11b1 3/3
 
 ## Protokoll
 - (Start) Baum sauber auf 116e8b0f, Dossier angelegt.
@@ -59,3 +59,42 @@ die RDT: msg 0 F301, msg 1 "Will you use the Crank?" F342, Ja F422 -> @0x0A7E Cu
 15 Knochen, 1 Clip, 40 Bilder) spielt F443..F482 einmal und HAELT bei Bild 39 (Plc_flg 0x04 wird nicht geschleift —
 Nebenbefund, nicht der Nutzer-Punkt). Bilder w1_sheet.png / w5_sheet.png: Leon steht an der Kurbel und kurbelt,
 kein "Fliegen". Offen: echter Weg mit Aktionstaste (w9a/w9b), Waffe (w9c, RE15_EQUIP=3), Szenenende.
+
+## Punkt 3 — Umsetzung + Messung nachher
+### RE-Belege (Adressen/Bytes, selbst gelesen: scd_dump_room.py, rdt_msgdump.py, Hex der RDT)
+- Tuer = Durchgangszelle SCA Region 3 Index 0x0C @0x00EC8 `e4 02 d0 07 7a a9 b2 bc 01 ff 00 03` (x -22150 w 740,
+  z -17230 h 2000, u0 ff, fl 03). Bild: Cuts 0..6 zu, 7..10 offen (Runde 36 J N1.1, BSS 2 vs 8).
+- sub00 @0x010F6: `21 03 83 01` -> `23 00 0a 00 00 00 / 29 07 / 3c 01` (Eingangs-Cut 0 -> 7), `4b 00 07` @0x0110E +
+  `4b 02 08` @0x01112 (Cut_replace, selbstinvers LAB_80040414 @0x80040458..@0x80040494), `37 03 0c 00` @0x01116 +
+  `39 03 0c 40` @0x0111A (Zelle auf), `2e 03 00` + `34 02 58 b4` (Container z -19368); Else @0x0112A Text-Platz 8
+  `2c 08 01 31 00 00 80 a8 d0 bc b0 04 a4 06 0c 00 ff ff 00 00` (msg 12 @0x179F "The door is locked."), @0x0113E
+  Aot_reset Slot 5 (Schacht zu), @0x01148.. Zellen (2,4)/(3,9) auf.
+- (3,0x83) "Schacht offen": Setzer ROOM10B1 sub04 @0x0195E `22 03 83 01` (Elza), ROOM11B0 sub06 @0x01478 (Leon).
+  (3,0x46): ROOM2001 @0x01958 `22 03 46 01` -> sub03 (Sherry-Suche, msg 10 @0x01480 / 11 @0x014CE). Weg 2001 Slot 0
+  @0x0161E -> ROOM1261 (Spawn (-9262,-1800,-5108)); 1261 Slot 0 @0x0112A -> 11B1 (-195,0,-21821) Cut 6.
+  ROOM1261 fuehrt ausserdem nach 2001 (Slots 1/4), 10B1 (Slot 2 @0x0116A, Cut 7) und 11D1 (Slot 3 @0x0118A, Cut 7) —
+  mit dauerhaft zugesperrter Werkstatt-Tuer bleibt Elza der Rueckweg ueber den Schacht: KEIN Softlock.
+- Gemessen (w6, Stand vorher): nach sub03 steht Elza bei (-18192,-20453) in der Werkstatt (Plc_dest 09 nach
+  (-22695,-20321) endet an der Blockzelle), Kamera Cut 8 = OFFENES Tuerblatt.
+### Umsetzung (PORT-WAHL, Form = Runde 36 J Ereignis 23 / gen/szl11b0_szene.inc k_szl_tuerprog)
+- NEU `include/re15_werkstatt11b1_r41.h`, `engine/src/werkstatt11b1_r41.c`: Port-Ereignis 24 in ROOM11B1, gestartet im
+  Init-Lauf direkt hinter sub00 (Dispatcher FUN_8003ef6c/@0x8003f17c: hoeherer Slot laeuft im selben Lauf), nur bei
+  (3,0x83)==1 und wenn sub00 der geladenen RDT bytegleich zum Anker (102 B @0x010F6) ist. Programm 70 B: Cut_replace
+  0<->7, 2<->8 zurueck (= @0x0110E/@0x01112 noch einmal), `37 03 0c ff` + `39 03 0c 03` (RDT @0x00EC8), Aot_set Platz 8
+  (= @0x0112A Byte fuer Byte, msg 12), Cut 7->0 / 8->2 (Form @0x01102..@0x0110A umgekehrt). Schacht Slot 5,
+  Container, Zellen (2,4)/(3,9) bleiben wie im offenen Zweig.
+- Haken (je 1 Zeile + include, Kommentar "Runde 41 Spur E"): scd_room_setup.c hinter re15_szl_init_lauf (Init-Lauf,
+  Muster J — NICHT am Blockende, weil das Ereignis VOR scd_vm_tick in der Warteschlange stehen muss), scd_vm.c
+  Ereignis-Kette hinter re15_nahaufnahmen_r40_ereignis.
+- Kein neues Bit, keine neue Nachricht, kein Asset. Leon (0x11B0) unberuehrt.
+### Messung nachher (exe-Kopie re15_pc_r41e2.exe, Bau 455f4eeb+)
+- n13 (wie w6): debug.log `[wk11b1-r41] ROOM11B1 (3,0x83)=1: Ereignis 24 im Init-Lauf hinter sub00`; Trace F240:
+  sub00 `Cut_chg(7)` -> Ereignis `op=0x4B, 0x4B, 0x37, (0x39), 0x2C` -> `Cut_chg(0)`; Szene sub03 wie vorher
+  (Cut 6, msg 10/11, Plc_ret), danach Elza bei (-18192,-20453) mit **Cut 2** (zu) statt Cut 8 (offen).
+- n14 (Elza von Osten vor der Tuer, (-20200,-16230) yaw 2048 = -x, `U1.5,A0.1`): Lauf endet bei x=-20942
+  (= Zellkante -21410 + Radius 450), Cut 2, kein Raumwechsel; Aktionstaste -> Text (mo=200 Halt).
+### Tests
+`ctest -R unit_r41_kleinkram_b_11b1`: unit_r41_kleinkram_b_11b1_programm / _zu / _original — 100% tests passed,
+0 tests failed out of 3 (Programmform + Anker; (3,0x83)=1: Zelle ff/03, Platz 8 msg 12, RVD-Zonen == unveraenderte
+Parse, Eingangs-Cut 0, Schacht bleibt Tuer, Container z -19368, Lauf blockiert bei x -20942, Aktionstaste msg 12 ohne
+Raumwechsel, Wiederbetreten; ohne (3,0x83) Else-Zweig unveraendert; Leon 11B0 Zelle offen, kein Ereignis).
