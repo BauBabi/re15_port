@@ -138,3 +138,11 @@ mit der entsprechenden Blickbeziehung: Gator frontal / seitlich / Nahaufnahme; Z
 PORT-WAHL der Zuordnung, Form = RE2). Pins: Schnittfolge + Bildnummern im Log je Phase. Spur G nutzt dieselben Programme
 fuer die Kanister-Szene (Wurf aus 2080 -> Landung 2090 -> Aufnahme -> Explosion). Faellt die laufende Abnahme B ohne
 diesen Punkt "bestanden" aus, folgt eine gesonderte Nachbesserung B mit diesem Mangel.
+
+## 2026-10-23 23:06 — Orchestrator-Entscheid B5 (Abnahme B 0, Mangel M3) + Hinweis fuer Abnahme B 1
+
+- B5 Gemeinsame Dateien: die kleinen, markierten Haken der Spur B in platform/pc/main.c (3), enemy_ai_re2_zombie.c (4
+  Zeilen re15_re2z_gore_active fuer Typ 0x23) und re2_fx.c (+40 Zeilen Op 11/73) sind ANGENOMMEN (Vertrag §1.3 um B
+  erweitert); Konflikte mit D/I/G loest die Integration. Kein Mangel mehr fuer Abnahme 1.
+- Abnahme B 1 prueft zusaetzlich Nachtrag 4 (RE2-artige Kameraschnitte fuer Durchbruch/R1/Finisher/Kanister/Explosion,
+  Zuordnung ROOM40A0-Schnitte -> 2090-Kameras mit Belegen). Fehlt das, ist die Spur NICHT bestanden.
