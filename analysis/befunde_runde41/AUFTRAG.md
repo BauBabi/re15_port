@@ -97,6 +97,66 @@ Vereinbarte Reihenfolge: (1) Release v0.8.28 [erledigt], (2) 20B0-Wasser im Orig
   -> 0x80019700) stehen in enemy_ai_common.c als OFFEN.
 - Elzas Variante der Zeile "Hey, Leon, try with this!" heisst sinngemaess "Hey, Elza, try with this!" (John).
 
+## 2026-10-23 17:2x — Nachtrag 1 (Wortlaut, waehrend Welle 1; betrifft Spur A / jede DuckStation-Aufnahme)
+
+> Er sagt immer failed media capture - invalid type. Du musst in duckstation backend auf FFmpeg ändern und container
+> auf mp4.
+
+Umgesetzt vom Orchestrator: `%LOCALAPPDATA%/DuckStation/settings.ini` `[MediaCapture]` `Backend = FFmpeg`,
+`Container = mp4` (vorher MediaFoundation + avi -> "failed media capture - invalid type"). Gilt ab dem naechsten
+DuckStation-Start; Sicherung `settings.ini.vor_ffmpeg_2026-10-23`. Agenten: settings.ini NICHT auf MediaFoundation/avi
+zuruecksetzen; Aufnahmen landen als .mp4 (Frames per ffmpeg extrahieren).
+
+## 2026-10-23 17:37 — Nachtrag 2 (Wortlaut; betrifft Spur A und jede Original-Messung mit Bild)
+
+> Du scheinst immernoch kein Video aufgenommen zu haben, wie du es wohl vorhin geplant hast. Warum?
+
+Stand laut Dossier A §1.3: Media-Capture lieferte nur 0,9 s (55 Bilder, videos/...2026-10-23-17-21-39.mp4), danach
+Savestate-Reihe + RAM/ESP-Pool statt Video; Fruehphase (Bild 0..130, Osttuer, Cut 11) noch nicht gemessen.
+VERBINDLICH (Nutzer-Massstab, Memory reai-v2-duckstation-config-update: "Ist das Video vom Original identisch deinem
+Port, dann ist es richtig umgesetzt, sonst nicht"): Spur A nimmt die GANZE 20B0-Flutszene im Original als Video auf
+(settings.ini steht seit 17:25 auf Backend = FFmpeg, Container = mp4; Hotkey ToggleMediaCapture per vgamepad-Button),
+extrahiert die Bilder (ffmpeg, ab Szenenstart bis Leon frei ist), legt Video + Bildreihe unter
+analysis/befunde_runde41/A_belege/ ab (Pfade im Dossier) und vergleicht Bild fuer Bild mit dem Port-Framedump
+(RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1): Zeitpunkt, Ort, Zahl und Groesse der Partikel je Bild. Die Abnahme prueft das
+Video, nicht nur die RAM-Reihe.
+
+## 2026-10-23 18:5x — Orchestrator-Entscheide zu den Fragen der Spur A (Bau-Ergebnis 18:54; der Nutzer kann widersprechen)
+
+- E1 NPC-Wasserschritte: Der Nutzer-Wortlaut "Auch die NPCs teilen die gleichen Effekte wenn sie durch das Wasser gehen"
+  ist eine Vorgabe. Befund der Spur: die ausgelieferten NPC-Geh-Clips 5 (0x40/0x42/0x45) tragen keine Fussaufsetzer
+  (Bildwort-Bit 0x4000 fehlt), im Original spritzt also kein NPC. ENTSCHEID: NPC-Schritte BAUEN als PORT-WAHL mit der
+  vorgeschlagenen Form (Aufsetzer-Bilder des Geh-Clips 0 derselben EDD auf den 20-Bild-Clip 5 abbilden, Beleg der
+  Bildnummern im Dossier), Spritzer + Schritt-Ton wie beim Spieler; Pin je NPC-Typ.
+- E2 RE15_ACTOR_MAX 21 -> 36: angenommen, sofern das Original in 20B0 wirklich 35 Emitter fuehrt (DAT_800aca4e=35 am
+  Savestate belegt; die Abnahme prueft das gegen den Runde-36-Befund "20 Plaetze, FUN_80037250 sltiu 0x14" und erklaert
+  den Widerspruch mit Adresse). Querschnitt: alle Aktor-Schleifen/Schattenliste; die volle Suite vor dem Release ist
+  das Gate; PSX-Budget (+28 KB BSS) im Dossier OFFEN lassen.
+- Video-Vergleich (Port-Wolke 2-5x duenner/dunkler, erster Schub spaeter): bleibt MANGEL bis Bild-fuer-Bild gleich
+  (Helligkeit/Mischmodus der Effekt-0x0f-Sprites gegen VRAM/CLUT des Originals messen, nicht schaetzen).
+
+## 2026-10-23 19:12 — Nachtrag 3 (Wortlaut; bestaetigt und erweitert Entscheid E1, Spur A)
+
+> Zu deiner Aussage - "NPC-Wasserschritte" - ja alles: Effekte wenn sie sich im Wasser bewegen fußschritt sounds wenn
+> sie laufen. All das muss auch für die NPCs gelten.
+
+Orchestrator: Damit ist E1 NUTZER-VORGABE, nicht nur Port-Wahl: NPCs (alle Typen 0x40..0x4b, in Szenen UND beim
+freien Lauf) bekommen dieselben Schritt-Effekte wie der Spieler — Wasser-Spritzer/Wellen beim Bewegen im Wasser UND
+Fussschritt-Toene beim Laufen (Boden-Zweig mit Ton -8 @0x8004575c, Wasser-Zweig) — ueber die Original-Routine
+FUN_80045630, deren Aufsetzer-Bits (0x4000) in den ausgelieferten NPC-Geh-Clips 5 fehlen: Aufsetzer-Bilder aus dem
+Geh-Clip 0/1 derselben EDD auf Clip 5 abbilden (Bildnummern im Dossier belegen), fuer jeden NPC-Typ, beide Szenarien.
+Pin je Typ: Schritt-Ton und Wasser-Effekt beim Lauf durch Wasser (z.B. Ada/Marvin in STAGE2) und Schritt-Ton auf dem
+Boden (z.B. 11C0/10F0).
+
+## 2026-10-23 21:37 — Orchestrator-Entscheide zu den Fragen der Spur D (Bau-Ergebnis 4cbbf4a2; der Nutzer kann widersprechen)
+
+- D1 Puls nur fuer Port-Gegenstaende (Feuerloescher 1030, spaeter der Schluessel 2090 der Spur F) — der Nutzer hat den
+  Feuerloescher genannt; die Original-Item-Props der RDTs bleiben wie im Original (Nutzerfrage in der Abschlussmeldung).
+- D2 Giftkugel: KEIN One-Save (RE2 FUN_800401d4) — Nutzer-Wortlaut "kann nicht sterben ... aber bereits auf Danger" =
+  Danger + Treffer = Tod. Bleibt so.
+- D3 VOLUME-Zeile im freien Streifen y 221 unter dem Options-Kasten (keine Original-Beschriftung angeschnitten) —
+  angenommen; Nutzer sieht es im Spiel und kann die Lage aendern lassen.
+
 ## 2026-10-23 21:37 — Orchestrator-Entscheide zu den Fragen der Spuren B und C (Dossier-Stand beim Sitzungslimit; der Nutzer kann widersprechen)
 
 Spur B (re2gator, §7):
@@ -146,3 +206,14 @@ diesen Punkt "bestanden" aus, folgt eine gesonderte Nachbesserung B mit diesem M
   erweitert); Konflikte mit D/I/G loest die Integration. Kein Mangel mehr fuer Abnahme 1.
 - Abnahme B 1 prueft zusaetzlich Nachtrag 4 (RE2-artige Kameraschnitte fuer Durchbruch/R1/Finisher/Kanister/Explosion,
   Zuordnung ROOM40A0-Schnitte -> 2090-Kameras mit Belegen). Fehlt das, ist die Spur NICHT bestanden.
+
+## 2026-10-23 23:27 — Nachtrag 5 (Wortlaut; betrifft Spur G, Welle 2)
+
+> Auch beim runterschmeißen des Gaskanisters - es gibt eine Szene in Resident Evil 2, wo Ada den Raketenwerfer runter
+> wirft. GENAUSO würde ich das auch haben wollen von der Kamera.
+
+Orchestrator: NUTZER-VORGABE fuer die Kanister-Szene der Spur G. Vorbild = die RE2-Szene, in der Ada den Raketenwerfer
+von oben zu Leon hinunterwirft (Endkampf gegen den Tyrant; RE2-Raum per Zensus ermitteln: Item_aot_set des
+Raketenwerfers / Ada-NPC + Wurf-Clip im SCD der Leon-Disc info/re2leon/PL0/RDT, Offsets belegen). Kameraschnitte,
+Zeitpunkte, NPC-Clips (Werfen) und Flugbahn des Objekts dieser Szene auf 2080 (Marvin/John an der Reling) -> 2090
+(Landung im Wasser) abbilden; Zuordnung der RE2-Schnitte auf 2080/2090-Kameras im Dossier mit Bildbelegen.
