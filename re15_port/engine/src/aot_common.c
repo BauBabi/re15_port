@@ -1168,6 +1168,10 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * massgeblich, RE2-Retail ist NICHT das Ziel. */
         /* Suppress non-RVD AOTs during cinematic. */
         if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH
+            && a->type != RE15_AOT_TYPE_WATER && a->type != RE15_AOT_TYPE_RAMP   /* Runde 41 Spur A (Nachbesserung 1, M3): die ENV-
+                                                            * Stempel sce 7/8 laufen im Original ohne Szenen-Gate: FUN_800436a8 wird
+                                                            * @0x8001ce1c unbedingt gerufen (Spieler-Pool @0x800436bc-cc, Gegner-
+                                                            * Schleife sltu @0x80043740) -> NPC-/Spieler-Stempel auch in Szenen */
             && !re15_wasser20b0_r41_auto_aot(g_current_room_id, a->type)) continue;   /* Runde 41 Spur A: AUTO-Pass
                                                             * FUN_800436a8 @0x8001ce1c laeuft ohne Gate (20B0/20B1 sub05) */
         /* cam_from filter: RVD CAM_SWITCH zones only fire when the

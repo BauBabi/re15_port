@@ -39,6 +39,8 @@
 #include "re15_wasser20b0_r41.h"
 #include "re15_wassersprung_r41.h"
 #include "re15_wasser_r38.h"
+#include "re15_roy_r37.h"      /* re15_ems_toc / re15_ems_archiv_datei: beide Archive */
+#include "re15_enemy_ai.h"
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -179,6 +181,35 @@ static int bank_re15(uint8_t type)
     re15_tim_t tim = (re15_tim_t){0};
     if (re15_emd_parse_container(blob, len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) { eb->type = 0; free(blob); return 0; }
     eb->ok = 1; eb->buf = NULL;   /* blob bleibt absichtlich stehen (Lebensdauer = Prozess) */
+    return 1;
+}
+
+/* Nachbesserung 1: Bank-Lader fuer NPC-Typen aus BEIDEN Archiven (TOC @0x80072f38 Leon / @0x80073178 Elza, roy_r37.c) —
+ * Container + OWN-Bank (+0x170/+0x174 = dir[3]/dir[4]) + Loco-Bank in die Registry, wie platform/pc/main.c. */
+static uint8_t *s_ems_arch[2] = { NULL, NULL }; static size_t s_ems_arch_n[2] = { 0, 0 };
+static int bank_npc(int archiv, uint8_t type)
+{
+    if (!s_ems_arch[archiv]) {
+        char p[512]; snprintf(p, sizeof p, "%s/%s", RE15_ASSET_PSX_DIR, re15_ems_archiv_datei(archiv));
+        s_ems_arch[archiv] = slurp(p, &s_ems_arch_n[archiv]);
+    }
+    if (!s_ems_arch[archiv]) return 0;
+    uint32_t sek = 0, laen = 0;
+    if (!re15_ems_toc(archiv, type, &sek, &laen)) return 0;
+    size_t off = (size_t)sek * 2048u;
+    if (off + laen > s_ems_arch_n[archiv]) return 0;
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
+    if (!eb) eb = re15_enemy_alloc(type);
+    if (!eb) return 0;
+    uint8_t *blob = (uint8_t *)malloc(laen);
+    if (!blob) return 0;
+    memcpy(blob, s_ems_arch[archiv] + off, laen);
+    re15_tim_t tim = (re15_tim_t){0};
+    memset(&eb->md1, 0, sizeof eb->md1); memset(&eb->skel, 0, sizeof eb->skel); memset(&eb->anim, 0, sizeof eb->anim);
+    if (re15_emd_parse_container(blob, laen, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) { eb->type = 0; free(blob); return 0; }
+    eb->ok = 1; eb->buf = NULL;   /* blob bleibt stehen (Lebensdauer = Prozess) */
+    eb->own_ok  = (re15_emd_parse_own_bank(blob, laen, &eb->skel_own, &eb->anim_own) == 0);
+    eb->loco_ok = (re15_emd_parse_loco_bank(blob, laen, &eb->skel_loco, &eb->anim_loco) == 0);
     return 1;
 }
 
@@ -461,51 +492,57 @@ static int teil_landung(void)
 
 static int teil_npc(void)
 {
-    printf("\n== npc (ROOM2000: Wasserflecken FLR 0x97 x -5220..-3420 / z -9750..-1650, Trockenfleck 0x17 x -2400..-700)\n");
-    if (!raum("STAGE2/ROOM2000.RDT", 0x2000u, -4300, -1800, -5000, 0, 0)) { s_fails++; return 0; }
-    const re15_esp_t *bank = re15_esp_room_bank();
-    CHECK(bank && re15_esp_find_id(bank, 0x06) >= 0, "Raum-Bank 2000 traegt Effekt 6");
-    /* Zensus: welche ausgelieferten NPC-Typen tragen im Geh-Clip 5 (+0x94 = 5 @0x80051d3c) Fussaufsetzer (Bit 0x4000)? */
-    static const uint8_t npc_typen[6] = { 0x40, 0x42, 0x45, 0x49, 0x4b, 0x4d };
-    int b40 = bank_re15(0x40), b42 = bank_re15(0x42);
-    uint8_t typ = b40 ? 0x40 : (b42 ? 0x42 : 0x40);
-    uint8_t typ_takt = 0; int takt_bild = -1;
-    for (int ti = 0; ti < 6; ti++) {
-        if (!bank_re15(npc_typen[ti])) { printf("     Typ 0x%02x: keine Bank\n", npc_typen[ti]); continue; }
-        re15_enemy_bank_t *b = re15_enemy_find(npc_typen[ti]);
-        int fc = (b && b->ok && b->anim.clip_count > 5) ? b->anim.clips[5].frame_count : 0;
-        int plants = 0, erstes = -1;
-        for (int f = 0; f < fc; f++) if (re15_emd_get_frame_entry(&b->anim, 5, f) & 0x4000u) { plants++; if (erstes < 0) erstes = f; }
-        printf("     Typ 0x%02x: Clip 5 = %d Bilder, Fussaufsetzer %d (erstes Bild %d)\n", npc_typen[ti], fc, plants, erstes);
-        if (plants > 0 && !typ_takt) { typ_takt = npc_typen[ti]; takt_bild = erstes; }
-    }
-    printf("     NPC-Baenke: 0x40=%d 0x42=%d, Takt-Typ 0x%02x Bild %d\n", b40, b42, typ_takt, takt_bild);
-    {   /* Diagnose der NPC-Bank: Skelett, Clips, Bildworte des Geh-Clips 5, Pose der Fuesse (Bild 0) */
-        re15_enemy_bank_t *b = re15_enemy_find(typ);
-        if (b && b->ok) {
-            printf("     Bank 0x%02x: Knochen %d, Keyframes %d, Clips %d, Meshes %d\n", typ, b->skel.bone_count, b->skel.keyframe_count, b->anim.clip_count, b->md1.mesh_count);
-            for (int c = 0; c < b->anim.clip_count && c < 8; c++) {
-                printf("       Clip %d: %d Bilder:", c, b->anim.clips[c].frame_count);
-                for (int f = 0; f < b->anim.clips[c].frame_count && f < 24; f++) printf(" %04x", (unsigned)(re15_emd_get_frame_entry(&b->anim, c, f) >> 12));
-                printf("\n");
+    printf("\n== npc (Nachbesserung 1: Aufsetzer der OWN-Bank +0x170/+0x174, beide Archive, PORT-WAHL nur 0x4b)\n");
+    /* Erwartung je Typ (Sonde npc_own.txt, Dossier Nachbesserung 1): Clip 5 = Gehen (30 Bilder), Clip 0 = Laufen (22) */
+    static const struct { uint8_t typ; int c5[2]; int f5[2]; int c0[2]; int f0[2]; int portwahl; } k_erw[6] = {
+        { 0x40, {7, 22}, {7, 4}, {0, 12}, {4, 4}, 0 },
+        { 0x42, {8, 22}, {7, 4}, {0, 11}, {7, 4}, 0 },
+        { 0x45, {7, 22}, {7, 4}, {0, 12}, {4, 4}, 0 },
+        { 0x49, {7, 22}, {7, 4}, {0, 12}, {4, 4}, 0 },
+        { 0x4b, {5, 19}, {7, 4}, {0, 10}, {7, 4}, 1 },   /* PORT-WAHL-Regel: keine Marke in keiner Bank */
+        { 0x4d, {8, 22}, {7, 4}, {0, 11}, {7, 4}, 0 },
+    };
+    for (int arch = 0; arch < 2; arch++) {
+        for (int ti = 0; ti < 6; ti++) {
+            uint8_t typ = k_erw[ti].typ;
+            if (!bank_npc(arch, typ)) { CHECK(0, "%s Typ 0x%02x: Bank nicht ladbar", re15_ems_archiv_datei(arch), typ); continue; }
+            re15_enemy_bank_t *b = re15_enemy_find(typ);
+            CHECK(b && b->ok && b->own_ok && b->anim_own.clip_count >= 6 && b->anim_own.clips[5].frame_count == (typ == 0x4b ? 28 : 30),
+                  "%s Typ 0x%02x: OWN-Bank geladen (Clips %d, Clip 5 = %d Bilder)", re15_ems_archiv_datei(arch), typ,
+                  b ? b->anim_own.clip_count : -1, (b && b->own_ok) ? b->anim_own.clips[5].frame_count : -1);
+            if (!b || !b->own_ok) continue;
+            int bi[4] = {0,0,0,0}, fu[4] = {0,0,0,0}, pw = 0;
+            int n5 = re15_wassersprung_r41_aufsetzer(&b->anim_own, &b->skel_own, typ, 5, bi, fu, &pw);
+            CHECK(n5 == 2 && bi[0] == k_erw[ti].c5[0] && bi[1] == k_erw[ti].c5[1] && fu[0] == k_erw[ti].f5[0] && fu[1] == k_erw[ti].f5[1] && pw == k_erw[ti].portwahl,
+                  "%s Typ 0x%02x Clip 5: Aufsetzer Bilder %d/%d Fuesse %d/%d portwahl=%d (erwartet %d/%d, %d/%d, %d)", re15_ems_archiv_datei(arch), typ,
+                  bi[0], bi[1], fu[0], fu[1], pw, k_erw[ti].c5[0], k_erw[ti].c5[1], k_erw[ti].f5[0], k_erw[ti].f5[1], k_erw[ti].portwahl);
+            int n0 = re15_wassersprung_r41_aufsetzer(&b->anim_own, &b->skel_own, typ, 0, bi, fu, &pw);
+            CHECK(n0 == 2 && bi[0] == k_erw[ti].c0[0] && bi[1] == k_erw[ti].c0[1] && fu[0] == k_erw[ti].f0[0] && fu[1] == k_erw[ti].f0[1] && pw == k_erw[ti].portwahl,
+                  "%s Typ 0x%02x Clip 0: Aufsetzer Bilder %d/%d Fuesse %d/%d portwahl=%d (erwartet %d/%d, %d/%d, %d)", re15_ems_archiv_datei(arch), typ,
+                  bi[0], bi[1], fu[0], fu[1], pw, k_erw[ti].c0[0], k_erw[ti].c0[1], k_erw[ti].f0[0], k_erw[ti].f0[1], k_erw[ti].portwahl);
+            /* Regelpruefung: die PORT-WAHL-Regel trifft die Original-Marken der markierten Typen auf <= 4 Bilder */
+            if (!k_erw[ti].portwahl && arch == 0) {
+                int rb[4] = {0,0,0,0}, rf[4] = {0,0,0,0};
+                int nr = re15_wassersprung_r41_regel(&b->anim_own, &b->skel_own, typ, 5, rb, rf);
+                int d0 = rb[0] - k_erw[ti].c5[0], d1 = rb[1] - k_erw[ti].c5[1];
+                CHECK(nr == 2 && d0 >= -4 && d0 <= 4 && d1 >= -4 && d1 <= 4,
+                      "Regel an Typ 0x%02x Clip 5: %d/%d gegen Marken %d/%d (|Abstand| <= 4)", typ, rb[0], rb[1], k_erw[ti].c5[0], k_erw[ti].c5[1]);
             }
-            static const int cl[4] = { 0, 1, 4, 5 };
-            for (int ci = 0; ci < 4; ci++) for (int fr = 0; fr < 20; fr += 10) {
-                re15_actor_t d; memset(&d, 0, sizeof d); d.active = 1; d.type = typ; d.motion = (int16_t)cl[ci]; d.anim_frame = (uint16_t)fr;
-                int kf = re15_compute_actor_kf(&b->anim, &b->skel, &d, -1, (uint32_t)fr);
-                re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
-                if (re15_skel_compute_pose(&b->skel, kf, poses) == 0)
-                    printf("       Pose Clip %d Bild %d (kf %d, Wort %08x): Knochen 0 (%d,%d,%d) 4 (%d,%d,%d) 7 (%d,%d,%d)\n", cl[ci], fr, kf,
-                           (unsigned)re15_emd_get_frame_entry(&b->anim, cl[ci], fr),
-                           poses[0].trans[0], poses[0].trans[1], poses[0].trans[2], poses[4].trans[0], poses[4].trans[1], poses[4].trans[2],
-                           poses[7].trans[0], poses[7].trans[1], poses[7].trans[2]);
-            }
+            /* Container-Bank Clip 5 (20-Bild-Kniebeuge, 0x4b: 38) traegt KEINE Marke - der Bau-Fehler (falsche Bank) */
+            int kb[4] = {0,0,0,0}, kf[4] = {0,0,0,0}, kpw = 0;
+            (void)re15_wassersprung_r41_aufsetzer(&b->anim, &b->skel, typ, 5, kb, kf, &kpw);
+            CHECK(kpw == 1, "%s Typ 0x%02x: Container-Clip 5 (%d Bilder) ohne Marke (nur PORT-WAHL-Pfad)", re15_ems_archiv_datei(arch), typ, b->anim.clips[5].frame_count);
         }
     }
+    /* Zweige von FUN_80045630 am Riegel-Aktor (wie bisher): Fleck 0x97, Stempel, trocken */
+    printf("\n== npc Zweige (ROOM2000: Wasserflecken FLR 0x97 x -5220..-3420 / z -9750..-1650, Trockenfleck 0x17 x -2400..-700)\n");
+    if (!raum("STAGE2/ROOM2000.RDT", 0x2000u, 4350, -1800, -20500, 0, 0)) { s_fails++; return 0; }
+    (void)bank_npc(0, 0x40);
+    const re15_esp_t *bank = re15_esp_room_bank();
+    CHECK(bank && re15_esp_find_id(bank, 0x06) >= 0, "Raum-Bank 2000 traegt Effekt 6");
     re15_actor_t *e = &g_actors[3];
     memset(e, 0, sizeof *e);
-    e->active = 1; e->type = typ; e->x = -4300; e->y = -1800; e->z = -5000; e->rot_y = 1500; e->floor = 1; e->motion = 5;
-    /* Zweig Bit 0x80: Fleck 0x97 */
+    e->active = 1; e->type = 0x40; e->x = -4300; e->y = -1800; e->z = -5000; e->rot_y = 1500; e->floor = 1; e->motion = 5;
     re15_esp_fx_reset(); re15_wassersprung_r41_reset();
     int boden = re15_rdt_floor_sound(&g_room_rdt, e->x, e->z);
     CHECK(boden == 0x97, "Bodentyp an (-4300,-5000) = %#x (erwartet 0x97, FLR-Satz 3)", boden);
@@ -514,9 +551,6 @@ static int teil_npc(void)
     int n5 = pool_code(0x06, 0x05, 0x0D00, NULL, 0);
     CHECK(idx == (0x97 & 0x7f) - 8 && m->npc_boden == 1 && n5 >= 1,
           "Wasserboden: Ton %d (erwartet 0x17-8 = 15, `addiu s3,a0,-8` @0x8004575c), Zweig boden %u, Plaetze 0x06050D00: %d", idx, m->npc_boden, n5);
-    CHECK(m->letzter_anker[0] != 0 && m->letzter_anker[1] < -1800 + 200 && m->letzter_anker[1] > -1800 - 2200,
-          "Anker am Fuss-Part 7 (Pose) y=%d (zwischen Boden und Huefte; Rueckfall = Aktorlage y -1800)", m->letzter_anker[1]);
-    /* Stempel-Zweig: Trockenfleck 0x17 + +0x88 != 0 */
     re15_esp_fx_reset(); re15_wassersprung_r41_reset();
     e->x = -1500; e->water_y = -1620;
     boden = re15_rdt_floor_sound(&g_room_rdt, e->x, e->z);
@@ -524,30 +558,95 @@ static int teil_npc(void)
     int n3 = pool_code(0x06, 0x03, 0x2000, NULL, 0);
     CHECK(boden == 0x17 && idx == 1 + (0x17 - 3) - 8 && m->npc_stempel == 1 && n3 >= 1,
           "Stempel: Boden %#x, Ton %d (erwartet a0 1 + 0x17-3 - 8 = 13), Zweig stempel %u, Plaetze 0x06032000: %d", boden, idx, m->npc_stempel, n3);
-    /* trocken: kein Stempel, Fleck 0x17 -> kein Platz, Ton 0x17-8 */
     re15_esp_fx_reset(); re15_wassersprung_r41_reset();
     e->water_y = 0;
     idx = re15_wassersprung_r41_npc_schritt(e, 0, 7, &g_room_rdt);
     CHECK(idx == 0x17 - 8 && re15_esp_fx_count() == 0, "trocken: Ton %d (0x17-8 = 15), keine Plaetze (%d)", idx, re15_esp_fx_count());
-    /* Takt: Bildwort-Bit 0x4000 des Geh-Clips 5 — mit dem ersten Typ, dessen Clip 5 Aufsetzer traegt; Typen ohne
-     * Aufsetzer (z.B. 0x40 Ada: Clip 5 = 20 Bilder, alle Worte 0) erreichen FUN_80045630 im Original NIE. */
-    if (typ_takt) {
-        re15_enemy_bank_t *b = re15_enemy_find(typ_takt);
-        re15_esp_fx_reset(); re15_wassersprung_r41_reset();
-        e->type = typ_takt; e->motion = 5; e->x = -4300; e->water_y = 0; e->anim_frame = (uint16_t)takt_bild;
-        int fs = re15_actor_footstep(&b->anim, e, -1, e->anim_frame);
-        int t = re15_wassersprung_r41_npc_takt(e, 0);
-        int fc = b->anim.clips[5].frame_count;
-        int ohne = -1;
-        for (int f = 0; f < fc; f++) if (!(re15_emd_get_frame_entry(&b->anim, 5, f) & 0x4000u)) { ohne = f; break; }
-        int t2 = -1;
-        if (ohne >= 0) { e->anim_frame = (uint16_t)ohne; t2 = re15_wassersprung_r41_npc_takt(e, 0); }
-        CHECK(fs != 0 && t == 1 && m->npc_schritte == 1 && m->npc_boden == 1 && t2 == 0,
-              "Takt Typ 0x%02x: Aufsetzer-Bild %d (Fuss %d) -> 1 Schritt (Wasserboden), Bild %d ohne Bit -> keiner (t=%d t2=%d schritte=%u)",
-              typ_takt, takt_bild, fs, ohne, t, t2, m->npc_schritte);
-    } else {
-        printf("     (kein ausgelieferter NPC-Typ traegt im Clip 5 Fussaufsetzer: Takt-Teil ohne Pruefung)\n");
+    /* Takt: Bildwort der OWN-Bank (Geh-Sub 4 -> re15_actor_uses_own_bank): Bild 7 = Marke, Bild 8 = keine */
+    re15_esp_fx_reset(); re15_wassersprung_r41_reset();
+    e->x = -4300; e->water_y = 0; e->state = 4; e->sub_state_1 = 4; e->motion = 5; e->anim_frame = 7;
+    const void *sk = NULL; const void *an = re15_wassersprung_r41_npc_bank(e, &sk);
+    re15_enemy_bank_t *b40 = re15_enemy_find(0x40);
+    CHECK(an && b40 && an == (const void *)&b40->anim_own, "Takt: Bank des Geh-Subs = OWN-Bank (+0x170/+0x174)");
+    int t = re15_wassersprung_r41_npc_takt(e, 0);
+    e->anim_frame = 8;
+    int t2 = re15_wassersprung_r41_npc_takt(e, 0);
+    CHECK(t == 1 && t2 == 0 && m->npc_schritte == 1 && m->npc_boden == 1 && m->letzter_fuss == 7,
+          "Takt Typ 0x40 Clip 5: Bild 7 (Wort 0x6xxx, Fuss 7) -> 1 Schritt im Wasser, Bild 8 -> keiner (t=%d t2=%d schritte=%u fuss=%u)",
+          t, t2, m->npc_schritte, m->letzter_fuss);
+    return 1;
+}
+
+/* ============================ npc_wasser: der ECHTE Geh-Sub (state 4 / sub 4) durch den Wasserfleck ============================ */
+static int npc_wasser_einer(int archiv, uint8_t typ, int erw_portwahl)
+{
+    if (!raum("STAGE2/ROOM2000.RDT", 0x2000u, 4350, -1800, -20500, 0, 0)) { s_fails++; return 0; }
+    if (!bank_npc(archiv, typ)) { CHECK(0, "%s Typ 0x%02x: Bank nicht ladbar", re15_ems_archiv_datei(archiv), typ); return 0; }
+    re15_actor_t *e = &g_actors[3];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = typ; e->hp = 100; e->x = -4300; e->y = -1800; e->z = -3000; e->rot_y = 2048; e->floor = 1;
+    /* Plc_dest(mode 4) @0x80041c14-24: State 4, Sub 4, Ziel +0x1bc/+0x1be, Phase 0 (scd_vm.c op_plc_dest) */
+    e->state = 4; e->sub_state_1 = 4; e->sub_state_2 = 0; e->steer_x = -4300; e->steer_z = -9000;
+    e->walk_dest_x = -4300; e->walk_dest_z = -9000; e->walk_flag_bit = 0; e->anim_flags = 0; e->motion = 5;
+    re15_esp_fx_reset(); re15_wassersprung_r41_reset();
+    int32_t z0 = e->z; int max_pool = 0;
+    for (int f = 0; f < 150; f++) {
+        bild();
+        int n = pool_code(0x06, 0x05, 0x0D00, NULL, 0);
+        if (n > max_pool) max_pool = n;
+        if (e->state != 4 || e->sub_state_1 != 4) break;
     }
+    const re15_wassersprung_r41_mess_t *m = re15_wassersprung_r41_mess();
+    int boden = re15_rdt_floor_sound(&g_room_rdt, e->x, e->z);
+    printf("     %s Typ 0x%02x: z %d -> %d, Boden %#x, Schritte %u (boden %u, stempel %u, portwahl %u), Plaetze %u, max gleichzeitig %d, letzter Ton %d, letztes Bild %u Clip %u\n",
+           re15_ems_archiv_datei(archiv), typ, z0, e->z, boden, m->npc_schritte, m->npc_boden, m->npc_stempel, m->portwahl_schritte, m->plaetze, max_pool, m->letzter_ton,
+           m->letztes_bild, m->letzter_clip);
+    CHECK(e->z < z0 - 2000, "%s Typ 0x%02x: der Geh-Sub bewegt den NPC durch den Fleck (z %d -> %d)", re15_ems_archiv_datei(archiv), typ, z0, e->z);
+    CHECK(m->npc_schritte >= 4 && m->npc_boden >= 4, "%s Typ 0x%02x: >= 4 Schritte im Wasser (FLR 0x97 -> Zweig boden): %u/%u", re15_ems_archiv_datei(archiv), typ, m->npc_schritte, m->npc_boden);
+    CHECK(m->plaetze >= 4 && max_pool >= 1, "%s Typ 0x%02x: Wasser-Spritzer 0x06050D00 gespawnt (%u Plaetze, max %d gleichzeitig)", re15_ems_archiv_datei(archiv), typ, m->plaetze, max_pool);
+    CHECK(m->letzter_ton == (0x97 & 0x7f) - 8, "%s Typ 0x%02x: Schritt-Ton 0x17-8 = 15 (a0 = 0 im Sub 4 @0x80051290): %d", re15_ems_archiv_datei(archiv), typ, m->letzter_ton);
+    CHECK((m->portwahl_schritte > 0) == (erw_portwahl != 0), "%s Typ 0x%02x: Schritte aus der PORT-WAHL-Regel %u (erwartet %s)", re15_ems_archiv_datei(archiv), typ, m->portwahl_schritte, erw_portwahl ? ">0" : "0");
+    return 1;
+}
+static int teil_npc_wasser(void)
+{
+    printf("\n== npc_wasser (ROOM2000, Geh-Sub 4 von (-4300,-3000) nach (-4300,-9000) durch den Fleck FLR 0x97)\n");
+    npc_wasser_einer(0, 0x40, 0);   /* Ada    (Leon-Archiv)  */
+    npc_wasser_einer(0, 0x42, 0);   /* Marvin (Leon-Archiv)  */
+    npc_wasser_einer(0, 0x45, 0);
+    npc_wasser_einer(1, 0x49, 0);   /* Elza-Archiv           */
+    npc_wasser_einer(1, 0x4b, 1);   /* Kind: PORT-WAHL-Regel */
+    npc_wasser_einer(1, 0x4d, 0);
+    return 1;
+}
+
+/* ============================ stempel: WATER-Stempel (sce 8) auch unter player_mode 2 (M3) ============================ */
+static int teil_stempel(void)
+{
+    printf("\n== stempel (ROOM20B0: Aot_set sce 8 Slots 5/6, Flags 0x47 = alle Pools; FUN_800436a8 ohne Szenen-Gate)\n");
+    if (!raum("STAGE2/ROOM20B0.RDT", 0x20B0u, 4350, -1800, -20500, 0, 0)) { s_fails++; return 0; }
+    (void)bank_npc(0, 0x40);
+    int wi = -1;
+    for (int i = 0; i < RE15_AOT_MAX; i++)
+        if (g_aot.slots[i].active && g_aot.slots[i].type == RE15_AOT_TYPE_WATER) { wi = i; break; }
+    CHECK(wi >= 0, "20B0 traegt einen WATER-Satz (Slot %d)", wi);
+    if (wi < 0) return 0;
+    const re15_aot_t *a = &g_aot.slots[wi];
+    int16_t p0 = g_aot.env_params[wi].p0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *e = &g_actors[3];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = 0x40; e->hp = 100; e->x = a->x; e->z = a->z; e->y = -1800; e->floor = (uint8_t)(a->band & 0x7f); e->state = 4; e->motion = 2;
+    pl->x = a->x; pl->z = a->z; pl->floor = e->floor;
+    pl->water_y = 0; e->water_y = 0;
+    g_scd.player_mode = 2;                       /* Szene (Pad-Sperre) -> in_cinematic */
+    re15_aot_scan(pl->x, pl->z, 0);
+    CHECK(e->water_y == p0 && p0 != 0, "NPC im WATER-Satz %d unter player_mode 2: +0x88 = %d (p0 %d)", wi, (int)e->water_y, (int)p0);
+    CHECK(pl->water_y == p0, "Spieler im WATER-Satz %d unter player_mode 2: +0x88 = %d (p0 %d)", wi, (int)pl->water_y, (int)p0);
+    g_scd.player_mode = 0;
+    pl->water_y = 0; e->water_y = 0;
+    re15_aot_scan(pl->x, pl->z, 0);
+    CHECK(e->water_y == p0 && pl->water_y == p0, "dasselbe im freien Lauf (player_mode 0): NPC %d, Spieler %d", (int)e->water_y, (int)pl->water_y);
     return 1;
 }
 
@@ -561,6 +660,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "raum"))      teil_raum();
     if (alle || !strcmp(teil, "landung"))   teil_landung();
     if (alle || !strcmp(teil, "npc"))       teil_npc();
+    if (alle || !strcmp(teil, "npc_wasser")) teil_npc_wasser();
+    if (alle || !strcmp(teil, "stempel"))   teil_stempel();
     printf("\n%s: %d Pruefungen, %d Fehler\n", teil, s_checks, s_fails);
     return s_fails ? 1 : 0;
 }

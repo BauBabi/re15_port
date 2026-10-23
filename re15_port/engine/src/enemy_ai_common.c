@@ -7267,10 +7267,10 @@ static uint16_t s_dog_pack_alert;
  * (@0x801104e0-0x8011052c) so the SCA sweep does NOT clamp the hop back off the obstacle.
  * The port's equivalent sweep is the run_all constrain from the tick-start pos — this mask
  * skips it for the burst frame. */
-static uint32_t s_dog_noclamp_mask;
+static uint64_t s_dog_noclamp_mask;   /* Runde 41 Spur A (Nachbesserung 1, M7): 64 Bit - seit RE15_ACTOR_MAX 36 reicht 1u << slot nicht */
 static int re15_dog_consume_noclamp(int slot)
 {
-    uint32_t b = 1u << (unsigned)slot;
+    uint64_t b = (uint64_t)1u << (unsigned)slot;
     int r = (s_dog_noclamp_mask & b) != 0;
     s_dog_noclamp_mask &= ~b;
     return r;
@@ -7365,7 +7365,7 @@ static void re15_dog_reroute13(re15_actor_t *e, int slot)   /* FUN_801102dc */
             e->y -= 0x708;                              /* +0x38 -= 1800 (one level UP) @0x801104b4 */
             e->crow_speed = 0xc1c;                      /* +0x8c = 3100 @0x801104c8 */
             re15_dog_advance_ofs(e, 0);                 /* func_0x800245d8(0) burst @0x801104d4 */
-            s_dog_noclamp_mask |= 1u << (unsigned)slot; /* old-pos snap +0x40/+0x42/+0x44 @0x801104e0-52c */
+            s_dog_noclamp_mask |= (uint64_t)1u << (unsigned)slot; /* old-pos snap +0x40/+0x42/+0x44 @0x801104e0-52c */
             e->sub_state_2 = 4;                         /* -> step 4 @0x80110534 */
         }
         break;
