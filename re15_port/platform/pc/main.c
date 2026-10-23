@@ -9742,8 +9742,12 @@ re_title:;
                 /* RE1.5 character shadow for this NPC — FUN_8001b064 is called
                  * PER-ENTITY (corners from param_1+0xc/+0xe), so each on-stage
                  * actor gets one. Actor-position center + CAMERA-yaw rotation
-                 * (same corrected scheme as the player). Gecullt: kein Schatten (wie bisher). */
-                if (!npc_region_culled) {
+                 * (same corrected scheme as the player). Gecullt: kein Schatten (wie bisher).
+                 * Runde 41 Spur A: der Schatten ist KEIN Automatismus des Zeichners, sondern ein Aufruf aus dem
+                 * Typ-Code des Overlays (`jal 0x8001b064`, z.B. Feuer-Emitter 0x26 @0x80116740; STAGE2.BIN: 8 Stellen
+                 * 0x80100500/0x8010a9a4/0x8010c550/0x80110b50/0x80115870/0x80115e40/0x80116404/0x801169cc). Der
+                 * EM024-Code 0x8010ee9c..0x80110a00 (Flut 20B0/20B1) ruft ihn NIE -> kein Schatten fuer Typ 0x24. */
+                if (!npc_region_culled && npc->type != 0x24u) {
                     /* byte-true actor-yaw shadow matrix = RotMatrixY(npc->rot_y) via the trig LUT. */
                     int32_t nyaw[9];
                     re15_camera_yaw_matrix_angle(npc->rot_y, nyaw);

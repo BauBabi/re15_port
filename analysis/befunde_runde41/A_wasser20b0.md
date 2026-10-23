@@ -256,3 +256,15 @@ Fleck 0x97 -> 0x06050D00 Ton 15, Stempel -> 0x06032000 Ton 13, trocken 0, Bildwo
 - Port (Integrationslauf 3, Leon, Framedumps f000030/f000060 = Raumbild 30/60, Cut 12/13): Leon rennt, hinter ihm die
   gleiche gruenlich-weisse Spritzerwolke, bei Bild 30 noch an der Osttuer, bei Bild 60 im Gang.
   (Bilder im Scratch: orig/tf_7.png, r41_wasser20b0_wd/lauf_ca6f84d2_leon/f000030.png, f000060.png.)
+
+### 1.8 Schatten der EM024-Emitter (Korrektur C, gefunden ueber integration_r36_gegnerzahl Teil e)
+- Teil e des Runde-36-Riegels erwartete "20 Emitter, 21 Schatten (Spieler + 20)". Der Port warf fuer JEDEN Aktor einen
+  Figurenschatten (main.c NPC-Schleife: "FUN_8001b064 is called PER-ENTITY ... each on-stage actor gets one").
+- Beleg Original: der Schatten ist ein Aufruf aus dem Typ-Code des Overlays, nicht Teil des Zeichners. STAGE2.BIN enthaelt
+  `jal 0x8001b064` an genau 8 Stellen (0x80100500, 0x8010a9a4, 0x8010c550, 0x80110b50, 0x80115870, 0x80115e40,
+  0x80116404, 0x801169cc; Muster Feuer-Emitter 0x26: `addiu a1,zero,-1800` / `jal 0x8001b064` / `addiu a0,a0,176`
+  @0x8011673c-44 in STAGE1.BIN) — KEINE davon im EM024-Bereich 0x8010ee9c..0x80110a00. Die unsichtbaren Emitter
+  werfen im Original also keinen Schatten; der Port zeichnete 20 (jetzt 35) dunkle Ellipsen, die mit der Front durch
+  den Gang gelaufen waeren.
+- Port: main.c NPC-Schatten `&& npc->type != 0x24u` (Runde 41 Spur A, 1 Bedingung). test_r36_gegnerzahl.cmake Teil e:
+  35 Emitter (Aktor 1..35), Schattenliste "gezeichnet 1 (Spieler), verworfen 0 (Kapazitaet 36)".
