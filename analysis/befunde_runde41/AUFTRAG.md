@@ -134,3 +134,16 @@ Video, nicht nur die RAM-Reihe.
   das Gate; PSX-Budget (+28 KB BSS) im Dossier OFFEN lassen.
 - Video-Vergleich (Port-Wolke 2-5x duenner/dunkler, erster Schub spaeter): bleibt MANGEL bis Bild-fuer-Bild gleich
   (Helligkeit/Mischmodus der Effekt-0x0f-Sprites gegen VRAM/CLUT des Originals messen, nicht schaetzen).
+
+## 2026-10-23 19:08 — Nachtrag 3 (Wortlaut; bestaetigt und erweitert Entscheid E1, Spur A)
+
+> Zu deiner Aussage - "NPC-Wasserschritte" - ja alles: Effekte wenn sie sich im Wasser bewegen fußschritt sounds wenn
+> sie laufen. All das muss auch für die NPCs gelten.
+
+Orchestrator: Damit ist E1 NUTZER-VORGABE, nicht nur Port-Wahl: NPCs (alle Typen 0x40..0x4b, in Szenen UND beim
+freien Lauf) bekommen dieselben Schritt-Effekte wie der Spieler — Wasser-Spritzer/Wellen beim Bewegen im Wasser UND
+Fussschritt-Toene beim Laufen (Boden-Zweig mit Ton -8 @0x8004575c, Wasser-Zweig) — ueber die Original-Routine
+FUN_80045630, deren Aufsetzer-Bits (0x4000) in den ausgelieferten NPC-Geh-Clips 5 fehlen: Aufsetzer-Bilder aus dem
+Geh-Clip 0/1 derselben EDD auf Clip 5 abbilden (Bildnummern im Dossier belegen), fuer jeden NPC-Typ, beide Szenarien.
+Pin je Typ: Schritt-Ton und Wasser-Effekt beim Lauf durch Wasser (z.B. Ada/Marvin in STAGE2) und Schritt-Ton auf dem
+Boden (z.B. 11C0/10F0).
