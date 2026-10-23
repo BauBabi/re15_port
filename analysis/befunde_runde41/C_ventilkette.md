@@ -9,6 +9,12 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-24 00:21 (dritte Fortsetzung, Opus; Vorgaenger vom Fable-Limit ~23:45 beendet). Baum sauber, HEAD 2088dd38.
+  Bau `local_build.sh build` -> `ninja: no work to do.` / `LOCAL-BUILD-OK (build)`: die exe vom 23.10. 22:17 ist der
+  Stand aller Commits (seit 76fdeca4 nur Dossier/Bilder/Auftrag; `git diff --stat 76fdeca4 HEAD -- re15_port` leer),
+  also gelten die Laeufe des Vorgaengers. Aus dessen Protokollen (scratchpad r41c/) uebernommen, NICHT wiederholt:
+  Integrationsgruppe 16/16 gruen (Ende 23:46:27, 4908 s), Unit-Gruppe 37/37 gruen (23:46:55), Messlaeufe Ventil 13 /
+  Pult -> Bruecke / Rechner 2080 (23:47-23:51) mit den drei Belegbildern 55f511a8 — Logs gelesen, in §4/§5 eingeordnet.
 * 22:30 (Fortsetzung) Integrationsgruppe der beruehrten Raeume (16 Haken, seriell) gestartet; Ergebnis §5. Dossier
   §3.3/§4/§5/§6/§7 um die Laeufe der Fortsetzung ergaenzt. Orchestrator-Entscheide C-a..e (AUFTRAG.md 21:37) alle
   angenommen -> keine offene Entscheidungsfrage mehr; die Port-Texte (§7) bleiben Vorschlag bis zur Freigabe.
@@ -336,6 +342,34 @@ shared_assets/PSX, pri/, synchro/, release/.
     mit ABR 2 + Maske Rot+Gruen: (0,0,30) = Blau bleibt (C_belege/flut_blende_vergleich.png). Die Form ist auf der PSX
     dieselbe (GPU B-F je Kanal, Kachel-RGB = Helligkeit & Maske @0x800218d0).
 * Echter Weg 2030 -> Ost-Tuer -> 20B0: integration_r41_ventilkette Lauf A (§5).
+* **Punkt 2 am Spiel** (Vorgaenger 23:47-23:49, exe-Kopie re15_pc_r41c_mess.exe, Skript scratchpad r41c/mess_punkte.sh,
+  Spinnen per Kill-Bits wie im Flut-Lauf; die Kamera bleibt beim Sprung-Cut 0, weil der Spieler nicht laeuft;
+  Logs scratchpad r41c/mess/{v13,pult_bruecke}/debug.log, von mir gelesen):
+  - Ventil 13 (`RE15_PLAYER_POS=-1500,-6400,2048,1`, Log `pl pos=(-1500,-1800,-6418) rot=2048` = Landeplatz Band 1
+    am Tank): F330 Aktion -> `[ventilkette41] ROOM2030 Ereignis 25 -> Port-Programm 2030_v13_frage` ->
+    `[msgtext] room=2030 id=41 "Intake valve 13. Will you open it?"` (Bild **C_belege/ventil13_frage.png** = F360,
+    Schreibmaschine "Intake valve 13. / Wi"); F453 Ja -> `[msgtext] room=2030 id=42 "You've opened valve 13. The
+    pressure is rising."` (Bit 101); F699 Aktion -> `Port-Programm 2030_v13_zustand` -> id 47 "Intake valve 13 is open."
+    (die Programmwahl selbst belegt Bit 101 = 1, ventilkette_r41.c re15_ventilkette_r41_ereignis).
+  - Pult mit offenem Ventil 13 (`RE15_SET_FLAG=...,9:101`, `RE15_PLAYER_POS=350,-9500,1024,3`, Log `pl pos=(350,-5400,
+    -9500)` = Ring Band 3 vor der Nordwand): F330 Aktion -> `Ereignis 24 -> Port-Programm 2030_pult_senken` ->
+    id 43 "The pressure gauge reads 80. Lower the bridge?"; F453 Ja -> `[scd F456] Cut_chg(4)` + `[szenenschutz] F456 an`
+    -> `[prop-member F516] prop[0] obj=0x00 m=1 → val=-1800` (Endlage Member_set(1,-1800) nach 30 Schritten je 120
+    jeden zweiten Takt: 456 + 60 = 516) -> Kamera zurueck (Cut_old, cut 0) -> `[scd F550] letterbox closed -> gameplay`;
+    F576 Aktion -> `2030_pult_unten` -> id 44 "The bridge is down.". Bilderreihe **C_belege/bruecke_fahrt_sheet.png**:
+    F345 Frage 43 (Schreibmaschine), F450 Frage komplett mit Yes/No, F465 Cut 4 (Draufsicht, Fahrt laeuft), F480/F495/
+    F510 die Planke sinkt ueber dem Becken, F525 unten (Steg-Ebene), F600 zurueck an der Nordwand mit Text 44.
+* **Punkt 6 am Spiel** (Vorgaenger 23:49-23:51, Bits 103 + 100 vorgesetzt, Log scratchpad r41c/mess/rechner2080b/):
+  erster Versuch `RE15_PLAYER_POS=-11550,-6000,1024,8` verworfen (die Kollision schob den Spieler nach (-11185,-7206),
+  Blick 1024 = -z, der Vorwaertspunkt traf das Rechner-Rechteck (-12050,-7250,1000,1000) nicht -> kein Ereignis);
+  zweiter Lauf `(-11185,-7206)` Blick 3072 (+z, Vorwaertspunkt z -6586 im Rechteck), Log `[parity] JUMP-Spawn ersetzt
+  durch RE15_PLAYER_POS (-11185,-7206) rot=3072 band=8`: F330 Aktion -> `ROOM2080 Ereignis 2 -> Port-Programm
+  2080_rechner_erw` -> `[msgtext] room=2080 id=0 "From here maybe I can control the water level.Will you operate the
+  computer?"` (Original-Text) -> F453 spult, F576 Ja -> `[scd F599] Cut_chg(7)` -> Wasser obj 0 sinkt (Original For 148
+  @0x00CCC, 2 Evt_next je Schritt: 599 + 296 + Sleep 20 = 915) -> `[scd F915] Cut_chg(3)` -> `[msgtext] room=2080 id=40 "The treatment pool is being drained as well."`
+  (Bit 107 steht im selben Ja-Zweig `22 09 6b 01`; das Zustandslog fuehrt Bank 9 nicht, das Bit misst Riegel G).
+  Bilderreihe **C_belege/rechner2080_sheet.png**: F360 Frage (Sprung-Kamera), F600 Cut 7 Wasser sinkt, F750, F900
+  (Becken leer bis auf den Grund), F930 Cut 3 Text 40 (Schreibmaschine), F1200 Text 40 komplett.
 
 ## 5. Tests
 * `unit_r41_ventilkette` (tests/unit/test_r41_ventilkette.c, registriert in probes/r41_ventilkette.cmake): A Scheiben
@@ -364,12 +398,20 @@ shared_assets/PSX, pri/, synchro/, release/.
   Fortsetzung, erweitert um die Gruppen der beruehrten Dateien (scd_room_setup.c, scd_vm.c, main.c, kartenbits):
   `ctest -j 6 --timeout 600 -R "^(unit_r41_ventilkette|unit_r36_kartenbits|unit_scd_.*|unit_aot_.*|unit_r40_nahaufnahmen|unit_r40_untersuchen1120|unit_r37_kistenregel_.*|unit_r36_dachkiste_.*|unit_r37_kiste.*|unit_r37_itemband|unit_r37_fahrstuhl_lift2030|unit_r36_gegnerzahl_raum20b0|unit_r38_npckante_j2000|unit_r34n_a_rolltor|unit_r36_kartenitems|unit_r38_wasser_.*|unit_r38_wasserzombie|unit_r38_spinnen)$"`
   -> 21:50 `97% tests passed, 1 tests failed out of 37` (unit_r41_ventilkette D2, Erwartung 324 statt 323) ->
-  nach dem Riegel-Fix und dem Blenden-Fix: UNIT_GRUPPE_ENDE.
+  nach dem Riegel-Fix und dem Blenden-Fix (Lauf 23:46:55 auf der exe/den Test-exe vom 22:17, Protokoll scratchpad
+  r41c/ctest_unit_r41c_final.txt): **`100% tests passed, 0 tests failed out of 37`** (`Total Test time (real) =
+  6.24 sec`).
 * Integrationsgruppe der beruehrten Raeume (seriell, exe): Regex
   `^(integration_r41_ventilkette|integration_r37_fahrstuhl_n1|integration_r37_itemband|integration_r37_itemband_lift|integration_r37_kiste|integration_r37_kiste2feld|integration_r37_kistenregel|integration_r36_gegnerzahl|integration_r36_dachkiste|integration_r38_spinnen_echtlauf|integration_r38_wasser|integration_r38_wasserzombie|integration_map_uebergang|integration_cross_stage|integration_item_name_census|integration_save_counter_pin)$`
   -> 19:03 (Vorgaenger, alte exe, abgebrochen vom Sitzungslimit nach 4 von 16): dachkiste rot (echt2050 Leiter — der
   Querbezug unten), gegnerzahl / fahrstuhl_n1 / itemband gruen (103 / 155 / 829 s).
-  Fortsetzung (exe nach den Fixes, `--timeout 1800`, weil dachkiste allein ~1100 s braucht): INTEG_GRUPPE_ENDE.
+  Fortsetzung (exe vom 22:17 = Stand aller Commits, `--timeout 1800`, weil dachkiste allein >1100 s braucht; Lauf
+  ~22:24:39-23:46:27, Protokoll scratchpad r41c/ctest_integ_gruppe.txt, `exit=0`):
+  **`100% tests passed, 0 tests failed out of 16`** (`Total Test time (real) = 4908.47 sec`; dachkiste 1425.21 s,
+  itemband_lift 1379.32 s, itemband 824.22 s, kistenregel 284.60 s, r41_ventilkette 214.59 s, wasser 179.11 s,
+  fahrstuhl_n1 132.01 s, wasserzombie 122.24 s, spinnen_echtlauf 115.02 s, gegnerzahl 90.71 s, kiste 63.03 s,
+  kiste2feld 57.60 s, save_counter_pin 19.68 s, map_uebergang 0.69 s, item_name_census 0.31 s, cross_stage 0.02 s).
+  Kein roter Fenster-Haken -> nichts einzeln nachzufahren.
 
 * Querbezuege (Memory "neue Regeln widerlegen alte Riegel", beim ersten Integrationslauf gefunden):
   - `integration_r36_dachkiste` echt2050/elza2051 fahren 2050 -> 2000 -> Leiter slot 4 @0x0169E -> 2050; die Leiter ist
