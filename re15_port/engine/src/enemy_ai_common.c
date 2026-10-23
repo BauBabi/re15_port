@@ -24,6 +24,7 @@
 #include "re15_audio.h"    /* re15_audio_room_se — zombie combat SEs on snd1 (func_0x800453d0):
                             * grab-start 4, grab-release 7 (FUN_80102548), death groan 5/8 (FUN_80107cb0 f7) */
 #include "re15_esp.h"      /* re15_esp_fx_spawn — the collapse frame-0x37 blood burst */
+#include "re15_wasser20b0_r41.h"   /* Runde 41 Spur A: EM024-Partikel-Sequencer (grid 0/1) + Zeichenmaske */
 #include "re15_collision.h" /* re15_collision_constrain — the enemy SCA wall clamp (m0 root
                              * @0x8010062c jal 0x8003b0a4, runs per tick after the state handler) */
 #include "re15_room.h"      /* g_room_rdt + g_current_room_id (em-status stage zone) */
@@ -13601,6 +13602,7 @@ static void re15_fx_emitter_ai_tick(int slot)
         e->ai_timer = 0x78;                      /* +0x8c drift timer = 120 @0x8010ef6c */
         e->sub_state_1 = e->grid_id;             /* +0x5 = grid @0x8010f00c */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
+        re15_wasser20b0_r41_init(e);             /* Runde 41 Spur A: Zeichenmaske *(+0x188)&=~1 @0x8010efe4, +0x95 = 1 */
         e->state = 1;                            /* +0x4 = 1 @0x8010eff4 */
         break;
     case 1:   /* ACTIVE 0x8010f020: accelerating leftward X-drift. No damage. */
@@ -13608,10 +13610,11 @@ static void re15_fx_emitter_ai_tick(int slot)
          * spawns) it is the `jr ra` NOP @0x8011084c, so drift-only is byte-true here. The grid-0/grid-1
          * particle-burst sequencer (0x80019700 ESP FX) is render-side ambience only -> OPEN (dormant #1).
          * The +0x1d4 SquareRoot0 dist cache (sh @0x8010f078) feeds only that sequencer -> also OPEN. */
+        (void)re15_wasser20b0_r41_sub(e);        /* Runde 41 Spur A: jalr @0x80118d58[+0x5] @0x8010f0a8 - grid 0/1 Spawns 0x80019700 */
         e->ai_timer++;                           /* timer++ @0x8010f0c8 */
         e->x -= e->ai_timer;                     /* X -= timer @0x8010f0e8 */
         if (e->x < -25000) { e->x = 20000; e->ai_timer = 0xe1; }   /* wrap @0x8010f100-11c (0x4e20/0xe1) */
-        e->anim_frame++;                         /* clip frame advance (billboard); no burst modeled (OPEN) */
+        /* Runde 41 Spur A: KEIN Bildvorschub - +0x95 bleibt 1 (Original-RAM ts_10..flut_a), Mesh nie gezeichnet. */
         break;
     default:
         e->state = 1;

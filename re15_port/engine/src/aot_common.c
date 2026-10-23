@@ -25,6 +25,7 @@
 #include "re15_skeleton.h"   /* re15_sin_q12/cos_q12 — door forward-reach trigger */
 #include "re15_collision.h"  /* set the floor band at a same-room door (band from spawn Y) — shared (PSX + PC) */
 #include "re15_room.h"       /* g_current_room_id + cross-room transition request.
+#include "re15_wasser20b0_r41.h"   /* Runde 41 Spur A: AUTO-Ereignis in 20B0/20B1 unter Pad-Sperre */
                               * SHARED now (room_common.c) — both ports queue the
                               * cross-room change; only the RDT LOADER (CD vs file)
                               * differs, behind the re15_room_apply_pending ctx. */
@@ -1166,7 +1167,9 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * Tuer-Sub sub10, Etagen-Flags, eigene Panel-Kamera) — also bleibt RE1.5
          * massgeblich, RE2-Retail ist NICHT das Ziel. */
         /* Suppress non-RVD AOTs during cinematic. */
-        if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH) continue;
+        if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH
+            && !re15_wasser20b0_r41_auto_aot(g_current_room_id, a->type)) continue;   /* Runde 41 Spur A: AUTO-Pass
+                                                            * FUN_800436a8 @0x8001ce1c laeuft ohne Gate (20B0/20B1 sub05) */
         /* cam_from filter: RVD CAM_SWITCH zones only fire when the
          * active cut matches. Other types use 0xFF (always active).
          *
