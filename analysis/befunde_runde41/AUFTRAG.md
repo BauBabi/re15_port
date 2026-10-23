@@ -206,3 +206,14 @@ diesen Punkt "bestanden" aus, folgt eine gesonderte Nachbesserung B mit diesem M
   erweitert); Konflikte mit D/I/G loest die Integration. Kein Mangel mehr fuer Abnahme 1.
 - Abnahme B 1 prueft zusaetzlich Nachtrag 4 (RE2-artige Kameraschnitte fuer Durchbruch/R1/Finisher/Kanister/Explosion,
   Zuordnung ROOM40A0-Schnitte -> 2090-Kameras mit Belegen). Fehlt das, ist die Spur NICHT bestanden.
+
+## 2026-10-23 23:27 — Nachtrag 5 (Wortlaut; betrifft Spur G, Welle 2)
+
+> Auch beim runterschmeißen des Gaskanisters - es gibt eine Szene in Resident Evil 2, wo Ada den Raketenwerfer runter
+> wirft. GENAUSO würde ich das auch haben wollen von der Kamera.
+
+Orchestrator: NUTZER-VORGABE fuer die Kanister-Szene der Spur G. Vorbild = die RE2-Szene, in der Ada den Raketenwerfer
+von oben zu Leon hinunterwirft (Endkampf gegen den Tyrant; RE2-Raum per Zensus ermitteln: Item_aot_set des
+Raketenwerfers / Ada-NPC + Wurf-Clip im SCD der Leon-Disc info/re2leon/PL0/RDT, Offsets belegen). Kameraschnitte,
+Zeitpunkte, NPC-Clips (Werfen) und Flugbahn des Objekts dieser Szene auf 2080 (Marvin/John an der Reling) -> 2090
+(Landung im Wasser) abbilden; Zuordnung der RE2-Schnitte auf 2080/2090-Kameras im Dossier mit Bildbelegen.
