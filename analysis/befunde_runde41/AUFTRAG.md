@@ -185,3 +185,16 @@ Spur C (ventilkette, §7):
   Abschlussmeldung: RE2-artige Kameraschnitte fuer die Explosion gewuenscht?
 - Hinweis an Spur G (aus B §6): Zielhilfe FUN_8003703c = naechster Gegner rundum — solange die Spinnen im Becken sind,
   trifft man den Gator nur, wenn er naeher ist als die Spinnen; Spur F entfernt die Spinnen (Nutzer-Auftrag).
+
+## 2026-10-23 22:37 — Nachtrag 4 (Wortlaut; ersetzt Entscheid B4, betrifft Spur B jetzt und Spur G in Welle 2)
+
+> Ja, ich möchte RE2-artige Kameraschnitte
+
+Orchestrator: Antwort auf die Frage "RE2-artige Kameraschnitte fuer die Explosion gewuenscht?" -> NUTZER-VORGABE. Spur B
+baut das RE2-Kameraskript des Alligator-Kampfes nach: die Kameraschnitte von ROOM40A0 (Intro/Durchbruch, Grossreaktion
+R1, Finisher, Kanister-Aufnahme, Schuss -> Explosion/Kiefer-Tod — Cut-Folge, Zeitpunkte und Dauer je Schnitt aus dem
+RE2-SCD/Overlay mit Offsets belegen) und bildet sie auf die Kameras von ROOM2090/2091 ab (je RE2-Schnitt die 2090-Kamera
+mit der entsprechenden Blickbeziehung: Gator frontal / seitlich / Nahaufnahme; Zuordnung im Dossier mit Bildbelegen,
+PORT-WAHL der Zuordnung, Form = RE2). Pins: Schnittfolge + Bildnummern im Log je Phase. Spur G nutzt dieselben Programme
+fuer die Kanister-Szene (Wurf aus 2080 -> Landung 2090 -> Aufnahme -> Explosion). Faellt die laufende Abnahme B ohne
+diesen Punkt "bestanden" aus, folgt eine gesonderte Nachbesserung B mit diesem Mangel.
