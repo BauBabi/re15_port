@@ -206,3 +206,14 @@ shared_assets/PSX.
   Kanaldeckel 10B1 / Kanalisation 2001).
 - Entscheidungsfrage (nur falls das "Fliegen" an der Kurbel in 2020 weiter auftritt): bitte Weg (Spielstand/Raum
   davor, Waffe in der Hand) und ein Bild — im Port kurbelt Leon jetzt durchgehend, bis die Buehne unten ist.
+
+## Tests (gezielt, kein voller Lauf) — Endstand
+- `ctest --test-dir re15_port/build -R "^unit_(r36_szenenleon_schub|r36_szenenleon_erweiterung|r38_werkstatt11b0_takt|r41_kleinkram_b_kurbel)"`:
+  100% tests passed, 0 tests failed out of 5
+- `ctest --test-dir re15_port/build -R "^unit_(map_|karte_|r30_karte|r33_karte|r35_karte|r36_karte|r36_kartenbits|r36_kartenitems|r36_szenenleon|r38_werkstatt11b0|r38_tagebuch_karte|r39_karten|r39_johnruf1041_tuer|plc_back_yaw_1090|r30_android_n3_plc_aim|r41_kleinkram_b)" -j 4`:
+  100% tests passed, 0 tests failed out of 66
+  (darin die neuen Riegel unit_r41_kleinkram_b_11b1_{programm,zu,original}, unit_r41_kleinkram_b_karte_pin,
+  unit_r41_kleinkram_b_kurbel_{laenge,schleife} sowie alle Gruppen der beruehrten Module: Karte/Kartenbits/Karten-
+  items (re15_inv_screen.c), szenenleon/werkstatt11b0/johnruf1041_tuer (scd_room_setup.c, scd_vm.c, 11B0/11B1),
+  plc-Riegel (player_common.c)).
+- Letzter exe-Lauf (re15_pc_r41e4.exe, Endstand, echter Weg mit Aktionstaste): Kurbel-Clip wrappt bei F498/538/578/618.
