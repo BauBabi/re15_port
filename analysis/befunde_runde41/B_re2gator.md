@@ -10,6 +10,11 @@ Zeiten aus `date`. Jeder Schritt wird hier VOR dem Bau notiert.
 
 ## 0. Protokoll (neueste Eintraege oben)
 
+* 2026-10-23 22:0x-22:2x: Kiefer-Umbau gebaut (22:04, 783 Schritte, keine neue Warnung), Unit-Riegel 45/45 inkl.
+  unit_r41_re2gator_kiefer, Integration r41_re2gator + r36_schuss 2/2 am neuen Stand. exe-Messungen (§4.3): Lauf A2
+  (Verfolgung + RE2-Finisher, Clip-Folge 0/1/4/0/1/4/5/11 bitgleich in zwei Laeufen) und Laeufe B2/B3 (Kanister-
+  Aufnahme im LURK, erster Pistolentreffer F70 -> R1: SE 4, Clip 9 37 Bilder, Ziel-Yaw +160 mit 75/Bild, Kiefer-
+  Scherben, Leiche). Erster B-Versuch scheiterte an der Zielhilfe (rundum naechster Gegner = Spinne 2) - §4.3.
 * 2026-10-23 21:5x (FORTSETZUNG nach Sitzungslimit, neuer Agent): Baum sauber, HEAD c488687a (= 86661849 +
   AUFTRAG-Entscheide). Bau: local_build.sh configure + build, danach alle beruehrten Quellen per touch neu
   uebersetzt (783 Ninja-Schritte, EXIT 0, keine Warnung in den Spur-B-Dateien; die drei main.c-Warnungen
@@ -307,6 +312,75 @@ x -10000..-1000, z -19500..-18500 von Cut 0 aus; zurueck nach Cut 0 ab z < -1950
 ~210 Bildern gefressen (mo=5 ab ~Bild 210; Lauf 0d58130a mit EXIT_AT 1300: Game Over -> Titel, der Riegel lief in
 den Timeout). Der Riegel misst deshalb 300 Bilder. Entscheidungsfrage §7.1.
 
+### 4.3 exe-Messungen am gebauten Stand (25a3fc77 + Bau 22:04; eigene exe-Kopien re15_pc_r41b_lauf*.exe)
+Umgebung aller Laeufe: RE15_NO_INTRO=1 RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=2090@250
+RE15_AUDIO_CAP_SYNC=audio.raw (Mixer ohne Geraet, damit die SE-Zeilen entstehen; mit RE15_NOAUDIO bleibt
+g_audio.initialized 0 und der ENEMSE-Pfad kehrt vor dem Log um) RE15_SE_DEBUG=1 RE15_STATE_LOG RE15_FRAMEDUMP.
+Bildzaehler: g_engine.frame_count wird beim Raumeintritt genullt (main.c:8241); RE15_EXIT_AT=<n>#2090 muss VOR dem
+Raumende liegen - im ersten A-Lauf (EXIT_AT 500) ging Leon bei F197 verloren, Game Over -> Titel -> Auto-Neustart,
+und der Neustart ueberschrieb die Raum-Bilder 0..500 mit Vorspann-Bildern (Dateizeiten 22:05:41-58 = eine Folge).
+
+**Lauf A2 - Verfolgung + Finisher** (GB_TEST=1, Leon in der Tuernische (-8200,-25550), EXIT_AT=460#2090; identisch
+mit Lauf A, also deterministisch). Gator-Clips (state.log, Slot 20, t=23):
+
+| Bilder | mo | Phase | Beleg |
+|---|---|---|---|
+| F1-F6 | 0 | INIT/LURK (Teleport Lauerplatz, Yaw zur Leiter) | - |
+| F7-F79 | 1 | PADDELN Sub 2 (Wurzel-Distanz >= 0x65) | @0x80100b88, Vortrieb authored ~149/Bild (z -9406 -> -20900 in 73 Bildern) |
+| F80-F122 | 4 | Schnapp (Nutzer-Design LUNGE, Clip 4 45 Bilder), Treffer F87 Leon 80 -> 30 | gator_boss.log BISS af=7 hr=1 |
+| F123-F156 | 0 | SCHWIMMEN = Biss-Sperre +0x238 = 70 ab F87 (endet F157) | @0x801016b0-b4 |
+| F157-F186 | 1 | PADDELN | |
+| F187-F211 | 4 | Schnapp, Treffer F197 Leon 30 -> -20 = toedlich -> FRESSEN P0/P1 (Clip 4 bis f13) | @0x801010FC-1104 |
+| F212-F331 | 5 | FRESSEN P2 Clip 5 (120 Bilder) + Opfer-Clip 1 synchron, FRESS-P2 Anker=(-5774,-23046) yaw=1344 | @0x80101168-78 |
+| F332-F451 | 11 | FRESSEN P3 Clip 11 Kau-Schleife (120 Bilder) | @0x801011D8-E0 |
+| F452- | 0 | Sieger-Abzug | |
+
+Leon-HP: 100 -> 80 (F57, Spinne 2 - se=0 Bank 11) -> 30 (F87, Biss) -> -20 (F197, Biss). SE (debug.log [re2se]):
+se=2 Bank 17 (Frame-Flag Clip 0/1, mehrfach), se=4 Bank 17 am Schnapp-Start (F80 / F187), Bank 11 = Spinne.
+Keine HP-Abnahme des Gators (25300, kein Beschuss). Bilder: bilder_r41b/finisher_a2_f090_schnapp_an_der_leiter.png
+(Schnapp an der Leiter), finisher_a2_f400_p3_kauschleife_youdied.png (P3 von oben, Leon im Maul unter YOU DIED);
+die Kamera dazwischen ist die Port-Todeskamera (Nahaufnahme, §6 PORT-WAHL), kein RE2-Kameraskript.
+Der RE2-Zonen-Dash kam in diesem Lauf nicht vor: Leon und Gator blieben in derselben Beckenzone (Sued), die
+Zonenlinie wurde nicht ueberschritten - der Dash ist im Riegel unit_r41_re2gator_dash (Clip 2 150 / Clip 3 150,
+SE 4, Schuetteln) gemessen; im Spiel loest ihn ein Zonenwechsel in Leons Zone aus (§3.2 PORT-WAHL).
+
+**Lauf B (erster Versuch, GB_TEST=1, Kanister (-7500,-16500), Leon Tuernische Blick Nord, Pistole, Skript
+W1.0 + 20 x (M0.3,MA0.1)):** Aufnahme im Vorbeischwimmen (Stufe 1 laengs=5916 quer=-240 -> Stufe 7, Bilder
+kanister_* des Vorgaengers bestaetigt), aber 0 Treffer auf den Gator: die byte-true Zielhilfe FUN_8003703c
+(re15_player_aim_target, naechster Gegner RUNDUM, kein Bogen) drehte Leon beim Heben auf rot 3943 = Peilung zur
+Spinne 2 (4633 entfernt; Gator 10600), und der Schuss-Streifen traf die Spinne. Peilungskonvention dabei
+belegt: bearing = (atan2q(dz,dx) - 0x400) & 0xfff -> Ost 0, Sued 1024, West 2048, Nord 3072 (Spieler und
+Gegner gleich; INIT-Yaw des Gators vom Lauerplatz zur Leiter = 1087, gemessen r1089).
+Mit beiden Spinnen im Becken gibt es keinen Stand, der "Gator naechster Gegner" UND "noch nicht im Biss" erfuellt
+(Biss-Commit bei Maul < 3200 = Wurzel ~5650, Spinne 2 immer naeher) -> Messaufbau B2.
+
+**Laeufe B2/B3 - Kanister-Aufnahme -> Schuss -> Kiefer-Tod** (GB_TEST=5: Gator parkt bei (4997,-20318) ohne
+Distanz-Aggro, INIT-Yaw 1087; Kanister 5870 voraus = (4430,-26160); Leon (6500,-25000) Blick Nord = naechster
+Gegner (Gator 4917, Spinne 2 8869); RE15_GIVE=3:15,21:50 RE15_EQUIP=3; Skript W2.0 + 10 x (M0.3,MA0.1);
+EXIT_AT=260#2090; B3 zusaetzlich RE15_FORCE_CUT=1 = Kamera SW-Ecke mit Blick auf den Parkplatz). Beide Laeufe
+bitgleich im state.log:
+
+| Bild | Ereignis | Beleg |
+|---|---|---|
+| F7 | KANISTER Stufe 1 laengs=5868 quer=17 (Fenster 5734..6000 x Scale, Rechnung 5870) | @0x80100ae4-ec |
+| F8-F20 | Stufe 2 (13 Bilder), F20 angehaengt lokal=(4211,1178,5) an Part 6 | @0x80101860-8c, @0x801018d0-60 |
+| F21-F46 | Stufen 3/4 (6/6), 5/6 (7/7), F47 "getragen (Stufe 7)"; Gator liegt still (LURK, mo=0) | @0x80101970-b58 |
+| F61-F69 | Leon hebt (R1), Zielhilfe dreht auf den Gator (rot 3072 -> 2867 = Peilung) | FUN_8003703c/8001a8f8 |
+| F70 | Schuss trifft (HP 25300 -> 25293 = Pistolenzeile 7, s_wpn_dmg_gator[3]) -> Aggro + HURT-Selektor R1 | @0x80101ef4-fc |
+| F70 | R1 P0: SE 4 (re2se se=4 Bank 17), Kanister Stufe 13, Rumble, Kiefer-Record 7 gestempelt, Fontaenen, Spritzring | @0x801021c4-0x80102374 |
+| F70-F106 | Clip 9 (af 1..36 = 37 Bilder), Yaw 1089 -> 1164 -> 1249 (Ziel +160, Schritt 75) | @0x8010239c-a4, @0x801025f8-608 |
+| F70-F106 | Vortrieb: (4997,-20318) -> (3413,-25001) (Rueckstoss -500 + 40-2/Bild auf den Anker) | @0x8010246c-84, @0x8010257c-a0 |
+| F70-F99 | Kiefer = Scherbenwolke 30 Bilder (Part-Bruecke), danach Record 7 Bit 0 = 0 | FUN_80028DAC/8002D3C8 |
+| F79 | Kanister weg (10 Bilder sichtbar, Stufe 13 -> entfernt) | @0x80102394, @0x8010255c-78 |
+| F107- | Leiche: mo=9 af=36 gehalten, Position fest, "R1 ende (Leiche)" | @0x80102654 |
+
+Bilder (bilder_r41b/): kiefer_b2_f064_kanister_getragen.png (Cut 0, Kanister hell im Maul), kiefer_b2_f076_scherben.png
+und _f084_scherben.png (Cut 0: dunkelrote Scherben fliegen durchs Bild - Zeile 1 der Skalentabelle, bis 4 x 2790
+Einheiten), kiefer_b2_f160_leiche.png; kiefer_b3_cut1_f064/f076/f088/f160_*.png (Cut 1 von der SW-Ecke: Gator mit
+Kanister, Scherben + Spritzring am Kopf, Fontaenen, Leiche) und die *_ausschnitt_x3_gain3.png (Ausschnitt um den
+Gator, 3x vergroessert, 3x aufgehellt - nur zur Sichtung, so beschriftet). Der Raum-Satz 15 (GATOR40A0.VBS) laeuft
+ueber den Raumbank-Haken (unit_r41_re2gator_kanister pinnt ihn); im [re2se]-Log erscheint nur die ENEMSE-Bank.
+
 ## 5. Tests
 Neu (tests/unit/probes/r41_re2gator.cmake): unit_r41_re2gator_{clips,dash,intro,sockel,kanister,putz},
 integration_r41_re2gator (tests/integration/test_r41_re2gator.cmake, eigene exe-Kopie re15_pc_r41b_*.exe).
@@ -329,6 +403,18 @@ Gezielt gelaufen (keine volle Suite):
   Auto-Start; dann EXIT_AT 1300 nach Leons Tod unerreichbar; dann MD1 ohne UV-Block), danach
   `ctest -R "^integration_r41_re2gator$"`: 100% tests passed, 0 tests failed out of 1 (26.39 sec).
 
+Fortsetzung 2026-10-23 21:4x-22:2x (gebauter Stand, keine volle Suite):
+- Stand c488687a (= 86661849) nach touch + Neubau: `ctest -R "^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|sca_wall_hit|montage_fx|r34_re2fx.*|r30_granate|r35_granate|r36_granate|r38_wasser.*|r38_wasserzombie|r35_cut1150_montage.*|r38_montage.*)$"`:
+  100% tests passed, 0 tests failed out of 43 (8.21 sec)
+- Stand c488687a: `ctest -R "^integration_(r41_re2gator|r35_granate|r38_wasser|r34_granaten|r36_granate|r30_granate_laden|r38_montage|r38_wasserzombie)$"`:
+  100% tests passed, 0 tests failed out of 8 (r30_granate_laden 82 s, r34_granaten 239 s, r35_granate 170 s,
+  r36_granate 96 s, r38_montage 107 s, r38_wasser 185 s, r38_wasserzombie 168 s, r41_re2gator 27 s)
+- Stand 25a3fc77 (Kiefer-Umbau + Haken in enemy_ai_re2_zombie.c), Bau 22:04: `ctest -R "^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|sca_wall_hit|re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_spawn_seed|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|r35_fenster_kraehe|re2_crow_ai|crow_ai|crow_fixes|crow_death_corpse|re2_crow_kill_cmd3|r37_re2zombie_.*|r34_re2fx.*|montage_fx)$"`:
+  100% tests passed, 0 tests failed out of 45 (unit_r41_re2gator_kiefer: "Flag 0x4b Tinte 0x202038 life 0x8000 vy -10
+  Kurs 5120; Scherben 30 Bilder Skala 180..2790, weg ab 31, Kinder 0")
+- Stand 25a3fc77: `ctest -R "^integration_(r41_re2gator|r36_schuss)$"`: 100% tests passed, 0 tests failed out of 2
+  (integration_r36_schuss 161.53 sec, integration_r41_re2gator 27.58 sec)
+
 ## 6. OFFEN (benannt, nicht geraten)
 
 - (ERLEDIGT 21:5x) Part-7-Felder nach FUN_80104318: RE'd als Part-Record des Modellblocks (§2.6) und ueber
@@ -342,8 +428,9 @@ Gezielt gelaufen (keine volle Suite):
 - Frame-Wort-Latenz 1 Bild (§3.3) — Port-Struktur seit Runde 8, nicht in dieser Spur geaendert.
 - RE2 schneidet im Intro/R1 die Kamera um (Cut 0/1, 5, 6/13) und friert den Spieler (0x800cfbd8 |= 0x110):
   Pool-Kampf ohne Kameraskript, Leon behaelt die Kontrolle (PORT-WAHL).
-- Schaden je Waffe: der Port rechnet weiter die RE1.5-Zeile (Handgun 30) — RE2 (0x800A4A28: 17) braeuchte
-  eine RE1.5->RE2-Waffenzuordnung (nicht vorhanden). Folge: "geschwaecht" nach 10 statt 18 Pistolentreffern.
+- Schaden je Waffe: der Port rechnet die RE1.5-Zeile je Typ (exe: Pistole 7 = s_wpn_dmg_gator[3],
+  re15_damage.c:429; der Riegel sockel nutzt attack_type 0 = 30) — RE2 (0x800A4A28: 17) braeuchte eine
+  RE1.5->RE2-Waffenzuordnung (nicht vorhanden). Folge: "geschwaecht" (< 25000) erst nach 43 Pistolentreffern.
 - Die RE2-Hysterese-Schwellen 0x65/0x5a (Wurzel-Distanz < 101/90) sind im Becken praktisch "immer Paddeln"
   ausser in der Biss-Sperre — das IST RE2 (Wurzel liegt ~9000 hinter der Schnauze), aber der Gator ist damit
   mit 149/Bild (223 x 2/3) deutlich schneller als das fruehere Design 56/100. Entscheidungsfrage §7.
@@ -369,9 +456,15 @@ Bedienung / Testhaken:
   + `RE15_GATOR_KANISTER=-6500,-15700` -> Cut 7 blickt nach Norden, der Gator kommt frontal mit dem Kanister
   quer im Maul; debug.log traegt die Messzeile `[gator-re2] Kanister Stufe N pos=... Kasten=... hellster=...`.
 - Belegbilder `analysis/befunde_runde41/bilder_r41b/` (kanister_cut7_f10_liegend, kanister_cut7_f50_gator_frontal,
-  kanister_cut0_f30_nische, *_ausschnitt_x4_gain4 = 4x vergroessert und 4x aufgehellt).
+  kanister_cut0_f30_nische, *_ausschnitt_x4_gain4 = 4x vergroessert und 4x aufgehellt; finisher_a2_*,
+  kiefer_b2_* (Cut 0), kiefer_b3_cut1_* (Cut 1) + *_ausschnitt_x3_gain3 / *_x2_gain25 = nur Sichtung, §4.3).
+- Messrezept Kanister-Tod ohne Szene (§4.3): RE15_GB_TEST=5 "RE15_PLAYER_POS=6500,-25000,3072"
+  "RE15_GATOR_KANISTER=4430,-26160" RE15_GIVE=3:15,21:50 RE15_EQUIP=3 RE15_INPUT_SCRIPT_BASIS=spiel
+  RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=W2.0,M0.3,MA0.1,..." (RE15_FORCE_CUT=1 fuer die Kamera auf den
+  Parkplatz). Im Spiel gilt: die Zielhilfe (R1) dreht auf den NAECHSTEN Gegner - solange die Spinnen im Becken
+  sind, trifft man den Gator nur, wenn er naeher als die Spinnen ist (Nutzer-Auftrag an Spur G: Spinnen entfernen).
 - API fuer Spur F/G: `re15_gr2_geschwaecht()` (HP < 25000 = RE2-Schwaeche), `re15_gr2_treffer()`,
-  `re15_gr2_traegt()`, `re15_gr2_tot()` (Leiche nach der Explosion), `re15_gr2_intro_start/_tick`
+  `re15_gr2_traegt()`, `re15_gr2_tot()` (Leiche nach der Explosion), `re15_gr2_kiefer_geplatzt()`, `re15_gr2_intro_start/_tick`
   (Durchbruch Clip 6 + Schnapper Clip 3 fuer "springt aus dem Wasser").
 - `gator_boss.log` traegt Zeilen "RE2 INTRO/DASH/KANISTER/R1 ...".
 
