@@ -8,7 +8,9 @@ exe 23:23). Messkopie `re15_port/build/platform/pc/re15_pc_abn0.exe`; jeder Lauf
 `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1`, Elza-Laeufe
 zusaetzlich `RE15_TITLE_SHOT_CHAR=1`; Bilder als PPM-Framedump (RE15_FRAMEDUMP) zu Kontaktbogen-PNG gewandelt.
 
-Status dieses Berichts: FORTLAUFEND (nach jedem gemessenen Punkt gespeichert).
+Status dieses Berichts: FORTLAUFEND (nach jedem gemessenen Punkt gespeichert). §0-§3.4 und §5 vom ersten Pruefer
+(Fable-Limit 2026-10-23 ~23:45, Commit 0e6c9a70); §3.5ff, §4, §6-§8 Fortsetzung 2026-10-24 (zweiter Pruefer, Stand HEAD
+5ef6329b = ed7bd4ff + Doku, Code unveraendert).
 
 ## 0. Gelesen
 AUFTRAG.md (Baum), VERTRAG.md, Dossier E_kleinkram_b.md, `git log master..HEAD` (11 Commits), `git diff master --stat`,
@@ -110,7 +112,72 @@ damit behoben ist, ist nicht bewiesen — es bleibt die Rueckfrage an den Nutzer
 Dossier selbst stellt.
 
 ## 4. Punkt 2 — Karte B1, Ostkammer-Tuer ROOM1230 -> ROOM1190
-(wird ergaenzt)
+(Fortsetzung 2026-10-24, Abnahme 0 zweiter Pruefer; `<sp>` = Scratchpad
+`C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad`.)
+
+### 4.1 Zwei exe, derselbe Weg
+- **NACHHER** = HEAD: `re15_port/build/platform/pc/re15_pc_abn0b.exe` (md5 757da3a9132018190427a32a39b67d96 = re15_pc.exe
+  nach `local_build.sh configure`+`build`, "ninja: no work to do").
+- **VORHER** = Basis 116e8b0f, selbst gebaut: `git archive 116e8b0f -- re15_port ':(exclude)re15_port/shared_assets'` nach
+  `<sp>/abn0_base`, Junction `shared_assets` -> Assets des Spurbaums (der Zweig aendert sie nicht), `local_build.sh configure`,
+  `ninja re15_pc test_map_uebergang` -> `<sp>/abn0_base/re15_port/build/platform/pc/re15_pc_abn0_basis.exe`
+  (md5 2310696431b26d115bc00f3796663c01; Log `[asset] cd-root: <sp>/abn0_base/re15_port/shared_assets/PSX`).
+- Laeufe `<sp>/runs_abn0/<lauf>/` (cmd.txt, debug.log, state.txt, map.bmp), Helfer `<sp>/abn0_run.sh`. Gemeinsam:
+  `RE15_DEBUG_JUMP=1230@240 RE15_SET_FLAG=4:0xf3,3:0x89,7:0x88,7:0x89 RE15_PLAYER_POS=96,14500,1024,0
+  RE15_INPUT_SCRIPT="U<t>,W0.2,S0.1,W1.0,Q0.1" RE15_INPUT_SCRIPT_START=300 RE15_INPUT_SCRIPT_BASIS=spiel RE15_STATE_LOG=state.txt
+  RE15_INV_FB_SHOT=map.bmp RE15_INV_FB_SHOT_AT=120 RE15_MAP_SHOT_PAGE=0 RE15_EXIT_AT=560` (S = START/Statusschirm, Q = L1 =
+  Karten-Sofortstart, input_pc.c:86/91).
+- Flags: (4,0xF3) Strom; (3,0x89) -> ROOM1230 main00 @0x00B94 Ifel (3,0x89)==0 sonst @0x00CE2 Else -> Slot 4
+  `Door_aot_set` @0x00CE6 (rect (-1052,11694,2297,934), next (19515,0,-12109), ROOM1190, Cut 12); (7,0x88)/(7,0x89) = Kill-Flags
+  der zwei Hunde `Sce_em_set` @0x00D08/@0x00D1C (pc[7] = 0x88/0x89; Spawn-Gate FUN_800420a0 @0x80042120-38, Stage 1 = Zone 7,
+  scd_vm.c:3861-3869). Ohne sie beissen die Hunde (erste Laeufe `P2_*`: hp 100 -> 40, Lauf stockt bei z 13252) — die Lage waere
+  verfaelscht. `RE15_MAP_SHOT_PAGE=0` deckt nur die Zeichnung von Blatt 0 (B1) auf; die Markerrechnung bleibt unberuehrt.
+- Marker = Mittelpunkt des 8x8-Rings (re15_inv_screen.c:2233 `sprt(... map_marker_x - 4, map_marker_y - 4, 8, 8, 224, 128,
+  ecg_glow ...)`), aus map.bmp per Texelfilter B<=8, |R-G|<=8, R>=0x18 (`<sp>/abn0_marker.py`; 13 Ringtexel je Bild).
+  Marken laut Dossier/re15_map_zones.h:986/987: Hallen-Tuer (127,115), Ostkammer-Tuer (146,109).
+
+| Lauf | Spieler am Ende (state.txt / [walk]) | Marker VORHER | Marker NACHHER |
+|---|---|---|---|
+| U0.4 | (96,13600), dz 1439 > Zugbereich hh 1384 | (145,105) | (145,105) |
+| U0.6 | (96,13150), dz 989 | **(137,109)** | (145,106) |
+| U0.8 / U1.0 / U1.5 (Lauf endet an der Tuer) | (96,12779), dz 618 | **(130,112)** | (145,107) |
+| Elza: `RE15_TITLE_SHOT_CHAR=1 RE15_DEBUG_JUMP=1231@240`, U1.5 (PL04, room1231.rdt) | (96,12779) | **(130,112)** | (145,107) |
+| Panel-Weg (erster Besuch): ohne (3,0x89), `RE15_FORCE_EVENT=19@262` = sub19 @0x01428 (@0x0143C Aot_reset Slot 4 sce 0, @0x01450 Aot_reset Slot 6 sce 2 next (19515,0,-12109)), Text "You've opened the lock." per Aktionstaste weg, dann U1.2 | (96,12779) | **(130,112)** | (145,107) |
+| Rueckkehr aus der Ostkammer: Ankunftspunkt ROOM1190 sub14 Slot 6 @0x02B40 next (142,0,13001), PLAYER_POS 142,13001,3072 | (142,13001) | **(134,111)** | (145,107) |
+| Hallen-Tuer Slot 2 @0x00B54: PLAYER_POS -8118,11200,1024, U1.5 | (-8118,9944) | (126,113) | (126,113) |
+| ECHTER Tuerweg Leon: `U1.0,W0.3,A0.1`, `RE15_INV_OPEN_AT=60#1190` -> `[tuer] Sequenz Archiv 2 DOOR19 ... 301 Bilder`, room1190.rdt, Cut 12 | (19515,-12109) | (145,108) | (145,108) |
+| ECHTER Tuerweg Elza 1231 -> 1191 (gleich, `RE15_INV_OPEN_AT=60#1191`) | (19515,-12109) | (145,108) | (145,108) |
+
+**VORHER reproduziert die exe den Nutzer-Befund:** je naeher Leon bzw. Elza an die vordere Tuer (Ostkammer) tritt, desto
+weiter wandert der Marker den Gang-Arm entlang nach Westen bis an die Hallen-Tuer ((130,112), 15 px) — "Sprung zum hinteren
+Teil, obwohl man garnicht da ist"; nach dem Durchgang springt er zurueck in die Ostkammer (145,108), und beim Rueckweg aus der
+Ostkammer erscheint er wieder an der Hallen-Tuer ((134,111)). **NACHHER** bleibt der Marker in allen Lagen an der Ostkammer-
+Marke ((145,105..107)) und geht beim Durchgang um 1 px weiter ((145,108)). Hallen-Tuer und Ankunft unveraendert.
+Bilder: `<sp>/abn0_bilder/P2_leon_reihe_vor_nach.png` (oben vorher, unten nachher: z 13600 / 13150 / 12779 / Ankunft 1190),
+`<sp>/abn0_bilder/P2_leon_x96_vor_nach.png`, `<sp>/abn0_bilder/P2_elza_1231_und_panel_vor_nach.png`.
+
+### 4.2 Erklaert der Fix den Befund?
+Ja, quantitativ: Zug in tuer_anziehen mit `RE15_ZUGKURVE` (Default 1, re15_inv_screen.c:655 `wert = e ? atoi(e) : 1`):
+hh = 467*2+450 = 1384, th = 467; fz = (hh-dz)*256/(hh-th). dz 989 -> 110/256, dz 618 -> 213/256. Mit Ziel = Hallen-Marke x 127
+und unverzogenem Marker x 145 (Lauf U0.4): 145 - 18*110/256 = 137,3 -> **137** und 145 - 18*213/256 = 130,0 -> **130** — genau
+die gemessenen VORHER-Werte. Mit Ziel = Ostkammer-Marke x 146: 145 + 1*213/256 -> 145 (gemessen 145). Die Wanderung ist also
+der Tuer-Zug auf die falsche Marke (Ursache §2 Nr. 7), und die neue Wahl der Marke ueber die Zone der Tuer-Ankunft
+(karte_r41.c: `re15_map_zone_at(ziel, door_params[k].spawn_x/z)`) beseitigt sie. Auch der Panel-Weg haelt: Aot_reset setzt
+door_params ueber `re15_aot_retype` mit `(int16_t)p2` = -12109 (aot_common.c:293-295), die Ankunftszone stimmt.
+Die Ankunftszone vergleicht die Zonen-Nummer (zid); Gast-Zeilen anderer Blaetter tragen dieselbe zid wie die Hauptzeile
+(re15_room.h:108 Kommentar zu `etage`), `re15_map_zone_at` ueberspringt sie (re15_map_zones.c:320) — kein Blatt-Problem.
+
+### 4.3 Nebenwirkungen (alle Tueren)
+`integration_map_uebergang` (laedt JEDEN Raum wie das Spiel, liest die Tueren aus g_aot, ruft die echte Marker-Funktion an
+Trigger und Gegen-Spawn) mit `RE15_UEBERGANG_LISTE=1`, einmal mit dem Basis-Bau (`<sp>/abn0_base/.../test_map_uebergang.exe`) und
+einmal mit HEAD: beide Listen 226 Zeilen, **`diff` leer** (`<sp>/abn0_uebergang/{vor,nach}/liste.txt`; 214 Tueren, 151
+Uebergaenge auf 12 Blaettern, Median 6 px vorher wie nachher). Keine andere Tuer zieht anders. Grenzen des Werkzeugs: nur
+Leon-Raeume; ROOM1230 -> 1190 faellt dort als "AUSFALL ohne Gegen-Tuer" heraus — deshalb die exe-Laeufe in 4.1.
+
+### 4.4 Urteil Punkt 2: **erfuellt**
+Am echten Spiel gemessen, Leon UND Elza, Annaeherung, Panel-Weg, Durchgang (echte Tuer) und Rueckkehr: kein Sprung des
+Markers in den hinteren Teil mehr; VORHER-exe zeigt den Befund an derselben Stelle (15 px zur Hallen-Tuer). Riegel
+`unit_r41_kleinkram_b_karte_pin` (17 Pruefungen) gruen (§1).
 
 ## 5. Punkt 3 — Werkstatt-Tuer ROOM11B1 (Elza)
 ### 5.1 Messung D1 — ECHTER Weg: Elza aus ROOM1261 durch die Schacht-Tuer nach 11B1, Szene laeuft
