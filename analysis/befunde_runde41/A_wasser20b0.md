@@ -268,3 +268,16 @@ Fleck 0x97 -> 0x06050D00 Ton 15, Stempel -> 0x06032000 Ton 13, trocken 0, Bildwo
   den Gang gelaufen waeren.
 - Port: main.c NPC-Schatten `&& npc->type != 0x24u` (Runde 41 Spur A, 1 Bedingung). test_r36_gegnerzahl.cmake Teil e:
   35 Emitter (Aktor 1..35), Schattenliste "gezeichnet 1 (Spieler), verworfen 0 (Kapazitaet 36)".
+
+## Tests — Summenzeilen (woertlich, gezielte Laeufe, KEINE volle Suite)
+- `ctest --test-dir re15_port/build -R "^(unit|probe|prop)_(r41_wasser20b0|r36_gegnerzahl|r38_wasser|r38_wasserzombie|r34_wasser|re2_spider_water|r38_npckante|npc_|marvin_|aot_|scd_aot|rvd_scan|1090_climb|1090_npc|r36_klettern|r39_elza_klettern|room1140_spawn|spawn_entered|1030_spawncap|re2z_spawn|r34n_d_adaruf|r27_ada|ada_eintritt|r35_affen_npcband|r35_affen_sprung|r39_hund1121_sprung)"`
+  -> `100% tests passed, 0 tests failed out of 68` (nach dem letzten Bau).
+- `ctest --test-dir re15_port/build -R "^integration_(r41_wasser20b0|r36_gegnerzahl)$"`
+  -> `100% tests passed, 0 tests failed out of 2` (integration_r36_gegnerzahl 88 s, integration_r41_wasser20b0 98 s, nach dem Schatten-Haken).
+- `ctest --test-dir re15_port/build -R "^integration_(r41_wasser20b0|r38_wasser|r36_gegnerzahl|r36_klettern)$"` (Lauf VOR dem
+  Schatten-Haken): `75% tests passed, 1 tests failed out of 4` — integration_r36_klettern Passed 521.97 s, integration_r38_wasser
+  Passed 183.31 s, integration_r41_wasser20b0 Passed 97.94 s; integration_r36_gegnerzahl Teil e (20 Emitter / 21 Schatten) war
+  der Befund 1.8 und ist mit dem Haken + der Riegel-Anpassung gruen (Zeile darueber).
+
+## Stand (Abschluss 2026-10-23)
+Beide Nutzer-Punkte gebaut und gemessen; Entscheidungsfrage zu NPC-Schritten (Clip-5-Daten) im Abschnitt "Fuer den Nutzer".
