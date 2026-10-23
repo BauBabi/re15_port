@@ -165,7 +165,7 @@ Tausch 6->13/7->14, Sleep 170) `For 6: Gosub sub14` — sub13 startet sub11 bei 
   +0x232/+0x233 == 0 (@0x801020ac-c8), Treffer-VFX, Routine-Restore. R4 @0x80102bd0: SE 0 (Gate +0x232 == 0),
   +0x1D3 |= 0x80, Clip 10 (Blend 3), fertig -> 0x101.
 - R1 KANISTER-EXPLOSION @0x80102158: P0 @0x801021ec: ENEMSE SE 4; `0x800cfbd8 |= 0x100`; Nahkamera 5 nur fuer
-  Waffe 6/13 & z < -13300 (@0x80102218-7c); `|= 4` (Schuetteln stark) @0x801022a8-b4; +0x226 = 13; +0x176 = 3678;
+  aktueller CUT 6/13 (KORRIGIERT §9.1: [0x800d4820] = Cut, nicht Waffe) & z < -13300 (@0x80102218-7c); `|= 4` (Schuetteln stark) @0x801022a8-b4; +0x226 = 13; +0x176 = 3678;
   +0x227 = 1 (Ereigniskette); +0x22A/+0x228/+0x224 = 0; +0x218 |= 2; +0x1D3 |= 0x80; Kanister geloest (+0x80 =
   Einheitsmatrix 0x8009db44, Weltlage aus Matrix-Translation @0x80102300-24); Rumble `0x8003947c(8,3)` +
   `0x800395b8(50,255,0,0)` @0x80102328-44; FUN_80104318(em, Part 7 @mw+1204) = Kiefer: Flags |= 0x4a, +0x9a = -10,
@@ -583,3 +583,70 @@ Gezielte Tests am Stand 591041e9 (Bau 00:08):
   um=(-8438,0,-25538) letzter=(-9060,-2400,-25588)` / `RE2 DASH ende pos=(-7416,-22300) yaw=2048`.
   -> M1: Intro (Clip 6 -> 3) und Dash (Clip 2 -> 3, auf der Westwand-Klemmlinie nach Sueden) zuenden im normalen
   Ablauf; M2: 54 Putz-Spawns um Leons Stand (-8438,0,-25538), letzter Spawn = Leon + (-622,-2400,-50) (k_putz[8]).
+
+## 9. Nachtrag 4 — RE2-Kameraschnitte des Alligator-Kampfes (ROOM40A0) auf ROOM2090/2091
+
+NUTZER-VORGABE (AUFTRAG.md 22:37, "Ja, ich moechte RE2-artige Kameraschnitte"): die Schnittfolge des RE2-Kampfes
+(Durchbruch, R1, Finisher, Kanister-Aufnahme, Explosion) belegen und je RE2-Schnitt die 2090-Kamera mit gleicher
+Blickbeziehung waehlen. Form = RE2 (Ausloeser, Bild, Dauer, Sperre), Zuordnung = PORT-WAHL.
+
+### 9.1 RE2-Mechanik der Schnitte (selbst gelesen)
+- Schnitt = FUN_8002c7ac(cut): `DAT_800cfbf2 = cut; DAT_800ce33c = FUN_8002c7dc()` (RE2_Quellcode_V2/FUN_8002c7ac.c;
+  FUN_8002c7dc sucht die RVD-Gruppe des Cuts, Stride 0x14). Apply FUN_8002b968 -> FUN_8002bdf4: `DAT_800d4824 =
+  DAT_800d4820; DAT_800d4820 = DAT_800cfbf2`, RID-Satz `*(rdt+0x24) + cut*0x20` (RE2_Quellcode_V2/FUN_8002bdf4.c:19-20,
+  :74-75). **[0x800d4820] ist der AKTUELLE Cut** (G.Cut_no) — KORREKTUR zu §2.5: "Nahkamera 5 nur fuer Waffe 6/13"
+  war falsch gelesen, es heisst "nur wenn der aktuelle Cut 6 oder 13 ist"; ebenso R2/R3 "[0x800d4820] == 8" =
+  aktueller Cut 8 (@0x80101f30-3c `lui v1,0x800d / lh v1,18464(v1) / bne v1,v0(8)`).
+- Zonen-Kamera (RVD) laeuft nur bei geloeschtem Bit 0x100 von 0x800cfbd8: Hauptschleife
+  `lw v0,0x0(s0)=>DAT_800cfbd8 / andi v0,v0,0x100 / bne v0,zero,LAB_800263b0 / jal FUN_8002c6b4 / _clear a0`
+  @0x80026394-ac (ghidra_re2_Leon.txt Z. 107189-107194). Bit 0x100 = Kamera-Sperre (= RE1.5 DAT_800aca3c Bit 0x100,
+  Port g_scd.cut_auto_enabled = 0). Bit 0x10 = Kino-Balken (FUN_8002c378: DAT_800dfd55 +-0x10 je Bild bis 0xF0,
+  zwei Balken-Prims; RE2_Quellcode_V2/FUN_8002c378.c:40-58).
+- Zensus ALLER Schnitte des Overlays (`re2_disasm.py dis 0x80100000 4666 --bin EM23_OVL_0000.BIN`, grep
+  `jal 0x8002c7ac`): genau 9 Rufe —
+  | Adresse | Routine | Cut | Ausloeser (Bytes) |
+  |---|---|---|---|
+  | @0x801008a0 | Sub 0 INTRO P1 | 0 | `addiu v0,zero,70 / bne v1(+0x14D),v0 / jal 0x8002c7ac / addu a0,zero,zero` @0x80100894-a4: im Tick, in dem Clip-6-Bild 70 gezeigt wird |
+  | @0x801008c4 | Sub 0 INTRO P1->P2 | 1 | `jal 0x8001a330 (Clip 6)` == 1 -> `jal 0x8002c7ac / addiu a0,zero,1` @0x801008bc-c8 (letztes Clip-6-Bild), dazu z = -21212 |
+  | @0x80100ff4 | FRESSEN P0 | 7 bzw. 14 | `ori v0,v0,0x100` (Sperre) @0x80100fcc; 14 nur bei 0x800cfbd8 & 0x40000000 und Flag(a0 = 0x800cfbd8 + 0x4e54 = 0x800d4a2c, Bit 16; `addiu a0,a0,20052` im Delay-Slot @0x80100fdc) @0x80100fd4-f0, sonst `addiu a0,zero,7` @0x80100ff0 |
+  | @0x80102268 | R1 P0 | 5 | `ori v0,v0,0x100` @0x8010220c; nur wenn aktueller Cut 6/13 (`addiu v0,zero,6 / beq v1,v0` / `addiu v0,zero,13 / bne v1,v0` @0x80102218-24) UND z < -13300 (`slti v0,v0,-13300` @0x80102234); dann +0x218 \|= 0x40, `jal 0x8002c7ac / addiu a0,zero,5` @0x80102268-6c |
+  | @0x801024ec | R1 P1 (Clip-9-Ende) | 6 bzw. 13 | nur wenn +0x218 & 0x40 (`andi v0,v1,0x40` @0x801024ac): zurueck auf den Ausgangs-Cut @0x801024b8-ec |
+  | @0x80102784 / @0x80102880 | R2 | 9, dann 8 | Tod durch Beschuss bei offenem Maul in Cut 8 — im Port nicht gebaut (Entscheid B2) |
+  | @0x80102a7c / @0x80102aec | R3 | 7/14, dann 8 | dito |
+  KEIN Schnitt in: T2 Kanister-Aufnahme (0x801017c4-0x80101d40), Sub-1-Pre mit Kanister-Fenster (0x80100964-0x80100c1c),
+  Sub 3 Dash (0x80100d30-0x80100f34), R4 Grossreaktion (@0x80102bd0), R0. Sperre-Ende: Intro P2 `and v0,v0,-17 / and
+  v0,v0,-257` @0x801008fc-918 (Bits 0x10/0x100 frei am Clip-3-Ende), R1 P3 `addiu v1,zero,-257 / and v0,v0,v1 / sw v0,0x800cfbd8` @0x80102688-94 (NUR Bit 0x100 frei; §2.5 nannte "&= ~0x101" - korrigiert). Zusatzbefund R1: `addiu v0,zero,4 / sb v0,0x800dfc1a` @0x8010235c-64 = VSync(4) statt 2 (FUN_8002b968 `VSync(DAT_800dfc1a)`) = halbe Bildrate (Zeitlupe) von P0 bis P3, P3 setzt 2 zurueck @0x80102668/7c (§9.7 OFFEN).
+- SCD ROOM40A0 (Walker re15_port/tools/r41_re2gator/re2_scd_walk.py, Laengen information73.txt): Cut_chg NUR in sub02 = Durchbruch-Szene
+  (Ausloeser AOT 5 `Aot_set_4p 67 05 05 41 ... ff 00 18 02` @SCD-main 0x04CA, sat 0x41 Betreten, einmalig ueber
+  Flag 4/0x33 @0x00AE): `29 0a` @0x00CC (Cut 10) -> warten auf 5/0x0b (Leons Satz: sub03 Message_on 7 + Xa_on 0x20
+  @0x015C-62, `Set 22 05 0b 01` @0x0169) -> `29 0b` @0x00DA (Cut 11) -> `Sleep 0x1e` @0x00DC (30 Bilder) -> `29 0a`
+  @0x00E0 (Cut 10) -> `Sleep 0x3c` + `Sleep 0x12` @0x00E2/E6 (78 Bilder) -> `Evt_exec sub31/sub11/sub12` @0x00EA-F2
+  (sub11 `Member_set2 35 17 10` @0x0730 = +0x1D4 des Gators -> INTRO P1 startet Clip 6 IN Cut 10). sub03 wartet
+  danach `While Cmp var 0x1a != 1` @0x025E-62 auf den Overlay-Cut 1. Cut_replace 6->13 / 7->14 (`4b 06 0d` / `4b 07 0e`
+  @0x0850/0x0853 in sub13 bzw. @0x040A/0x040D in sub05) tauscht nur die Hintergruende nach dem Putz (Schutt im Bild,
+  Belegbild 9.2), kein Schnitt. Kein Cut_auto/Cut_old/Cut_be_set in ROOM40A0.
+
+**RE2-Schnittfolge des Kampfes (Form):**
+1. Durchbruch: [Szene: Cut 10 -> 11 (30 B.) -> 10 (78 B.)] -> Clip 6 Bild 0..69 in Cut 10 -> Bild 70: Cut 0 ->
+   Clip-6-Ende (Bild 124): Cut 1 -> Clip 3 (150 B.) in Cut 1 -> Clip-3-Ende: Sperre + Balken aus (Zonen-Kamera).
+2. Verfolgung/Dash/Grossreaktion/Kanister-Aufnahme: keine Schnitte (Zonen-Kamera).
+3. Schuss -> Explosion R1: Sperre; Cut 5 nur, wenn die aktuelle Kamera (6/13) den Gator nicht zeigt; nach Clip 9
+   (37 B.) zurueck auf 6/13; Sperre aus im Endzustand P3.
+4. Finisher (toedlicher Biss, FRESSEN P0): Sperre + Cut 7 (14 nach dem Putz), kein Ende (Game Over).
+
+### 9.2 Blickbeziehung je RE2-Schnitt (gemessen, Probe re15_port/tools/r41_re2gator/probe_kamera_re2.c)
+Gator-Lage aus den Belegen: Intro = Pos_set sub11 (4557,-1800,-18237) @0x0736, yaw 0x400 (Sce_em_set @0x25A0), Wurzel(f)
+= Pos + R*off6[f] (FUN_80015e7c/152c8), Clip 3 ab (x, -21212) @0x801008d0; R1 = Bein 2 x -23078, Kanister (-22816,-9500)
+im Fenster 8601..9000 vor der Wurzel; FRESSEN = x -23078 @0x80101048, Leon (x+10643, -915) @0x8010106c-84. Kopf =
+Bone 6, Blickachse = Bone 1 -> Bone 6 (xz) der EM23-Pose (Scale 1). "frontal" = cos(Blickachse, Kopf->Kamera).
+| RE2-Schnitt | Bild | Kopf im Bild (x,y) | Tiefe | dist xz | frontal | Lesart |
+|---|---|---|---|---|---|---|
+| Cut 10 (Szene) | Clip 6 f0 | (140,126) | 11734 | 10890 | +1.00 (3 Grad) | Gator bricht frontal auf die Kamera zu |
+| Cut 10 | Clip 6 f69 | (142,144) | 4188 | 3756 | +1.00 | naht bis 3700 heran |
+| Cut 0 | Clip 6 f70 | (145,116) | 8898 | 8878 | +0.35 (69 Grad) | seitlich von vorn (quert das Bild) |
+| Cut 1 | Clip 6 f124 | (183,109) | 16318 | 16379 | +0.83 (34 Grad) | Angriff: dreht in Clip 3 voll auf die Kamera (f110/148: +0.99) |
+| Cut 5 | R1 Clip 9 f0 | (170,111) | 13113 | 12983 | +0.99 (9 Grad) | Explosion frontal; im Ausgangs-Cut 6 lag der Kopf bei x = -2 = AUSSERHALB |
+| Cut 7 | FRESSEN P0 (Clip 4 f13) | (204,118) | 11175 | 11227 | +1.00 (2 Grad) | Finisher frontal, Leon VOR der Kamera im Bild (186,186), Tiefe 5040 |
+Belegbilder der RE2-Hintergruende: info/re2leon/COMMON/BSS/ROOM40A/ROOM40A{10,11,00,01,05,06,07,13,14}.bmp
+(Bildbogen bilder_r41b/re2_40a0_cuts_10_11_00_01_05.png und re2_40a0_cuts_06_07_08_13_14.png, halbe Groesse, Reihenfolge wie im Dateinamen: Cut 10 Durchbruchstelle mit Muellhaufen, Cut 11 Leiter/Gelaender,
+Cut 0/1 Korridor Bein 1, Cut 5 Bein 2 nach Sueden, Cut 6/7 Bein 3, Cut 13/14 = 6/7 mit Schutt).
