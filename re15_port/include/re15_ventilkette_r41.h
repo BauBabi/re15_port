@@ -255,8 +255,9 @@ void re15_ventilkette_r41_reset(void);
 int re15_ventilkette_r41_obj_id(uint16_t room_id, int k);
 const uint8_t *re15_ventilkette_r41_md1_bytes(int *out_size);
 const uint8_t *re15_ventilkette_r41_tim_bytes(int *out_size);
-/* Zeichner (main.c, nach dem 11F0-Zeiger): Zeiger + Hebelmarken des 2050-Pults, nur solange es aktiv ist. */
-void re15_ventilkette_r41_zeichnen(void);
+/* Zeichner-Abfrage (main.c zeichnet, nach dem 11F0-Zeiger): nr 0 = Zeiger, nr 1..4 = gruene Marke unter dem
+ * EIN-Hebel nr; 1 = zeichnen, Rechteck in *x0/*y0/*w/*h (320x240). Nur solange das 2050-Pult aktiv ist. */
+int re15_ventilkette_r41_sicht(int nr, int *x0, int *y0, int *w, int *h);
 
 /* ---- Messhaken (Riegel) --------------------------------------------------------------------------------------- */
 int      re15_ventilkette_r41_timer_laeuft(void);

@@ -540,18 +540,21 @@ const uint8_t *re15_ventilkette_r41_tim_bytes(int *out_size)
 #endif
 }
 
-void re15_ventilkette_r41_zeichnen(void)
+/* Zeichner-Abfrage (main.c zeichnet mit re15_render_tile; die Engine-Bibliothek kennt den Zeichner nicht):
+ * nr 0 = Zeiger (roter Laeufer auf der Schiene; RE2 ROOM2130: Zeiger unter der waagerechten Skala, Rot wie der
+ * 11F0-Zeiger esp16.tim CLUT 0 @0x22), nr 1..4 = gruene Marke unter dem EIN-Hebel nr (PORT-WAHL, Farbe der
+ * 11F0-Lampe CLUT-Zeile 2). Rueckgabe 1 = zeichnen, Rechteck in *x0/*y0/*w/*h (320x240). */
+int re15_ventilkette_r41_sicht(int nr, int *x0, int *y0, int *w, int *h)
 {
-#ifdef RE15_PLATFORM_PC
-    if (!s_panel_aktiv || !ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2050)) return;
-    if (g_scd.cam_id != RE15_R41C_PANEL_CUT) return;
-    /* Roter Laeufer auf der Schiene (RE2 ROOM2130: Zeiger unter der waagerechten Skala; Rot = esp16.tim CLUT 0
-     * @0x22 wie der 11F0-Zeiger, re15_panel_zeiger.h). */
-    const int zx = re15_ventilkette_r41_zeiger_x(re15_ventilkette_r41_spannung());
-    re15_render_tile(zx - 1, RE15_R41C_SKALA_Y, 3, RE15_R41C_SKALA_H, 0, 208, 24, 40);
-    /* Gruene Marke unter jedem EIN-Hebel (PORT-WAHL, Farbe der 11F0-Lampe: CLUT-Zeile 2 gruen). */
+    if (!s_panel_aktiv || !ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2050)) return 0;
+    if (g_scd.cam_id != RE15_R41C_PANEL_CUT) return 0;
     static const int k_x[RE15_R41C_PANEL_N] = { 88, 133, 178, 238 };
-    for (int i = 0; i < RE15_R41C_PANEL_N; i++)
-        if (s_schalter & (1u << i)) re15_render_tile(k_x[i] - 4, RE15_R41C_LAMPE_Y, 8, 3, 0, 40, 200, 60);
-#endif
+    if (nr == 0) {
+        const int zx = re15_ventilkette_r41_zeiger_x(re15_ventilkette_r41_spannung());
+        if (x0) *x0 = zx - 1; if (y0) *y0 = RE15_R41C_SKALA_Y; if (w) *w = 3; if (h) *h = RE15_R41C_SKALA_H;
+        return 1;
+    }
+    if (nr < 1 || nr > RE15_R41C_PANEL_N || !(s_schalter & (1u << (nr - 1)))) return 0;
+    if (x0) *x0 = k_x[nr - 1] - 4; if (y0) *y0 = RE15_R41C_LAMPE_Y; if (w) *w = 8; if (h) *h = 3;
+    return 1;
 }
