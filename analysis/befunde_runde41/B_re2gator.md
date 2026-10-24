@@ -1091,3 +1091,51 @@ Anschwimm-Sperre +0x1C0 & 4, Hals-Zielmodus OFFEN mit Beleg) -> Bau -> gezielte 
   sonst `FUN_80017d98(em, yaw)` (nicht dekompiliert, ghidra_re2_Leon.txt Z. 85839 Rohbytes); Hals-Part +0x1C1 = 5 (@0x801001c4-cc
   `sb v0(5),449(s0)`), Grenzen aus dem INIT: Part 5 +0x9C/+0x9E = 20 (Rate), +0xA0 = 560 (Gier), +0xA2 = 312 (Neigung)
   (`sh v0,1016/1018/1020/1022(v1)` @0x801005a0-c4, 1012 = 5 x 172 + 152).
+
+### 11.1 M1 (Punkt 2, B9): der lauernde Gator ist bis zum Durchbruch untergetaucht - behoben
+- **Ursache:** seit Nachbesserung 2 versetzt der Pos_set-Zwilling `re15_gr2_intro_lage` den SICHTBAR lauernden Gator beim
+  Aggro auf die gerechnete Intro-Startlage (Nutzer-Design 2026-09-10: Lauern an der Leiter, sichtbar). RE2 kennt diesen
+  sichtbaren Sprung nicht, weil sein Gator vorher 3000 unter dem Boden steht (§11.0).
+- **Messung vorher** (Abnahme 2, Lauf N = gleicher Code-Stand 06bc6578, `B41abn2/mess/N`, nicht wiederholt):
+  gator_boss.log `RE2 INTRO Lage (Pos_set-Zwilling ...) von (-7200,-9200) yaw 1089 -> (5085,-19880) yaw 1536` = 16 278;
+  Bilder F190/F200 (Cut 7) Gator am Kanalende neben Leons Kopf sichtbar, F201 weg, ab F202 Durchbruch im Suedostbecken.
+  Dazu das alte Ein-Bild-Aufblitzen an der Spawn-Lage (-5300,-16300) vor dem Boss-INIT (Abnahme 2 §5, A2 F5).
+- **RE-Beleg:** §11.0 (Sce_em_set y = +3000 @RDT 0x25A0; Sub 0 P0 @0x80100854-68 ohne FUN_8001a330, Sub-0-Pre `jr ra`
+  @0x801007fc; Auftauchen sub11 `Member_set2` @SCD 0x0730 -> `Pos_set` @SCD 0x0736 im naechsten Bild, P1 Clip 6
+  @0x801008ac-b8).
+- **Aenderung** (Form = RE2 "untergetaucht", B9 "Lage frei"; der Lauerplatz bleibt der Aggro-Bezug GB_AGGRO 9000):
+  - enemy_ai_boss_gator.c `gb_untertauchen` im Boss-INIT (ausser RE15_GB_TEST=5 = Marker-Repro mitten im Kampf):
+    Trefferbox hit_radius_min/max = 0 (wie der verborgene RE2-Zellenarm: kein Ziel der Zielhilfe `hit_radius_min <= 0`,
+    kein Schuss-Kandidat, kein Spieler-Push `hit_radius_min == 0`; RE2 erreicht dasselbe ueber die Lage 3000 unter dem
+    Boden), keine Animation (LURK `anim_frame++` nur aufgetaucht: keine Clip-0-Bildwort-SE f76/f162, keine 0x28-Strokes =
+    kein Schuetteln aus dem Versteck), kein Kanister-Vorpass, keine Selbst-Befreiung, kein Sieger-Abzug, kein
+    Koerperlaengen-Push; ein Treffer aus dem Versteck (nur der Granaten-Kasten erreicht ihn, re15_re2_gl_kandidat nimmt
+    eine Null-Box als 1) loest weder R4/Clip 10 noch Blut noch SE 0/5 aus, er weckt ihn (aggro) - der Durchbruch folgt.
+  - `gb_auftauchen` nach dem Phasen-Switch, sobald das Lauern endet oder ein Intro laeuft (auch der Szenen-Aufruf
+    re15_gr2_intro_start von Spur F): Trefferbox zurueck (1466), Logzeile `RE2 AUFTAUCHEN F<n> ...`.
+  - `re15_gator_boss_untergetaucht(e)` (re15_boss_gator.h): 1 untergetaucht oder Spawn-Bild vor dem INIT (state 0).
+  - Zeichner: EIN markierter Haken in main.c (NPC-Schleife, an der Stelle des RE2-Zellenarm-Ausstiegs, vor Schatten und
+    Mesh): `if (re15_gr2_pc_untergetaucht(npc, npc_region_culled)) continue;` - gator_re2_pc.c fragt den Boss ab und
+    schreibt die Messzeilen `[gator-re2] Sicht F<n> untergetaucht|aufgetaucht ...`, `Sicht erstes Bild F<n> gezeichnet ...`,
+    `Sicht Lagesprung max <d> ...` (groesster Wurzelschritt zwischen zwei aufgetauchten Bildern). Gemeinsame Datei main.c:
+    +1 Zeile (Entscheid B5: Haken der Spur B in main.c angenommen; jetzt 5 statt 4).
+- **Messung nachher** (exe, eigene Kopie, `B41nb3/mess/N`, Rezept wie Abnahme 2 Lauf N, EXIT_AT 600, Framedump 1-600):
+  debug.log `Sicht F1 untergetaucht pos=(-5300,0,-16300)` (Spawn-Bild vor dem INIT) ... `Sicht F201 aufgetaucht
+  pos=(5085,-1200,-19880) clip=6 bild=0`, `Sicht erstes Bild F201 gezeichnet ... (untergetaucht vorher 200 Bilder)`,
+  groesster Bildschritt 338 (F229, Clip 6 Bild 28); gator_boss.log `RE2 AUFTAUCHEN F201 pos=(5085,-19880) yaw=1536
+  phase=11 clip=6 bild=0 r=1466`. **Pixelvergleich** gegen denselben Lauf mit RE15_KEIN_GATOR=1 (`B41nb3/mess/N0`,
+  `vergleich.py`): **F1-F201 pixelgleich (201/201)**, ab F202 verschieden (der DURCHBRUCH-Schnitt Cut 1 wirkt ab F202) -
+  kein Bild mit sichtbarem Gator vor dem Durchbruch, auch kein Spawn-Aufblitzen. Bildbelege
+  `bilder_r41b/nb3_m1_N_lauer_vorher_nachher_x3_gain3.png` (F190/F200 Ausschnitt 3x, oben vorher mit Gator neben Leons
+  Kopf, unten nachher ohne) und `bilder_r41b/nb3_m1_N_vorher_nachher_F190_F230.png`.
+- **Riegel:** unit_r41_re2gator_lauer (NEU) `untergetaucht 123 Takte am Lauerplatz (-7200,-9200), Auftauchen Takt 123 auf
+  der Intro-Lage (5085,-19894) - Pos_set-Sprung 16287 im untergetauchten Takt; Intro 274 Schritte, groesster 339,
+  Grenze 340 (authored Clip 6/3/0/1 340/72/104/259 x Skala)` - prueft je Takt Box 0, keine Bewegung/Animation, kein Ziel
+  der Zielhilfe, Auftauchen mit Clip 6 Bild 0, Box 1466 danach. integration_r41_re2gator Lauf 3 "natuerlich" (NEU, Lauf-N-
+  Rezept): `natuerlich: untergetaucht bis F201 (Lauerplatz -7200,-9200), Auftauchen Clip/Bild 6/0, erstes Bild F201
+  Clip 6, groesster Bildschritt 338`.
+- Riegel mit Beleg angepasst (der Gator taucht im natuerlichen Lauern nicht mehr auf, also kein Kanister-Fenster dort):
+  unit_r41_re2gator_kanister/kiefer und die R1-Faelle von _kamera laufen mit RE15_GB_TEST=5 (aufgetaucht wartend, wie das
+  K-Rezept §7); probe_r34_reaktion (unit_r34_reaktion, Zensus B12) laesst den Boss vor der Messung auftauchen (Leon einmal
+  6000 vor den Lauerplatz) - Zeile `Gator-Boss 0x23@2090 HT HT HT HT` (ohne das: `?? ?? ?? ??` = unerwartet nicht
+  getroffen, 16 Fehler).
