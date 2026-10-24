@@ -242,6 +242,20 @@ Rechtecke; Bau-Schiene VOR 354 verdeckt 0, teil 0). ROOM20A1 nutzt die Masken vo
 und Elza (20A1) 0.
 **Frage an den Nutzer:** was sollte 12_02 verdecken? Als Bodenstreifen kann es keine Figur richtig verdecken.
 
+## Nachbesserung 1 (2026-10-24, nach Abnahme 0 = analysis/befunde_runde41/M_abnahme_0.md)
+
+Grundlage: Abnahme 0 (Urteil "nicht bestanden", Maengel 1-5), Nutzer-Nachtrag 11 (AUFTRAG.md: 12_02 bleibt weg,
+pri-Uebersichtsbilder ersetzt bis auf 10). Keine Messung der Abnahme wird wiederholt; ihre Zahlen werden zitiert.
+
+### Stand Nachbesserung 1
+- [ ] Mangel 5 Doku (original.py-Kommentar, Kopf schliessen_r41.py, P1_exe_*.png, Dossier 1.4 DAVOR-Aussage)
+- [ ] Mangel 2 Begruendung 12_02 richtigstellen (Rolladen obj 1 / Schacht hinter der Schwelle Zelle 32)
+- [ ] Mangel 4 VOR-Stellen 2030 C7 / 2040 C7 mit Spielfigur im Bild (oder Beleg "keine")
+- [ ] Mangel 3 ROOM2030/2031 C15 Handlauf-Tiefe, VOR-Szene Leon + Elza H == 0
+- [ ] Mangel 1 Tiefe je Objekt aus der Kollisionszelle/Geometrie fuer die ausgeschlossenen Rechtecke, Restliste mit Bildern
+- [ ] Auflage Nachtrag 11: 10 Uebersichtsbilder (3040/3041 01, 3050/3051 06+15, 30E0/30E1 06+07)
+- [ ] Bau, gezielte Tests, Commit fix(r41-masken36): Nachbesserung 1
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
