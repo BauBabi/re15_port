@@ -75,6 +75,9 @@ endif()
 #   unit_r41_kleinkram_b_takt_rennstopp  Renn-Stopp 0x80032604/0x80032778 (Tabellen-Tempo, Abbruch, Skript-Zweig)
 #   unit_r41_kleinkram_b_takt_renntempo  Renn-Tempo FUN_800369f8 Modus 1 gegen die GDB-Werte o_renn2 / o_rennstopp,
 #                                        Kurbel-Lagen n94..n99 ueber den Spieler-Pfad, Gegenprobe ohne Bank
+#   unit_r41_kleinkram_b_takt_rennpfad   Fortsetzung: Unterzustand 2 ueber den echten Spieler-Takt (ROOM2020): Drehen 72
+#                                        (@0x80032620-@0x800326a0), OBEN im Stopp = Gehen (@0x80032738), Stehen-Fall 0 erst
+#                                        nach dem Stopp (@0x80032958 -> @0x80032074); Gegenprobe ohne Modul
 add_executable(test_r41_kleinkram_b_takt ${CMAKE_CURRENT_LIST_DIR}/../test_r41_kleinkram_b_takt.c)
 target_link_libraries(test_r41_kleinkram_b_takt PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_kleinkram_b_takt PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -83,7 +86,7 @@ target_compile_definitions(test_r41_kleinkram_b_takt PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_kleinkram_b_takt PRIVATE m)
 endif()
-foreach(_teil msgtakt kamerahalt frage rennstopp renntempo)
+foreach(_teil msgtakt kamerahalt frage rennstopp renntempo rennpfad)
     add_test(NAME unit_r41_kleinkram_b_takt_${_teil} COMMAND test_r41_kleinkram_b_takt ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_kleinkram_b_takt_${_teil} PROPERTIES TIMEOUT 300)

@@ -46,6 +46,21 @@
  *   - Waehrend des Stopps kein Zielen (R1 wird erst im Stehen wieder gelesen, wie im Original).
  *   - Skript-Modus (Port player_mode 2, Pad gesperrt — Kurbel nach Set(2,7)/(1,27) @0x0A80/@0x0A84): das Original laesst
  *     den Spieler-Takt mit leerem Pad laufen, der Stopp laeuft durch.
+ * NACHBESSERUNG 3, Fortsetzung (selbst disassembliert, Dossier "Nachbesserung 3 — Fortsetzung"):
+ *   - DREHEN im Unterzustand 2: DECIDE 0x80032604 dreht in JEDEM Bild des Unterzustands 2 (Rennen +6 < 2 UND Stopp +6 >= 2)
+ *     zuerst um @0x80073f25[Figur*2] (= 72): held & 0x2 @0x80032620 -> += (@0x80032654/@0x8003265c), held & 0x8 @0x80032660
+ *     -> -= (@0x80032698/@0x800326a0) — VOR der OBEN/RENNEN-Pruefung @0x800326fc und VOR Zielen @0x80032708. Der Port
+ *     waehlte die Rate nach dem Pad (ohne OBEN 96, OBEN ohne RENNEN 48) und drehte mit R1 gar nicht ->
+ *     re15_rennstopp_r41_unterzustand2 (Aufrufer: Rate 72, Drehen auch mit R1).
+ *   - OBEN im Stopp -> 0x0101 GEHEN (@0x80032738-@0x8003275c), auch mit gehaltenem RENNEN: Rennen erst im naechsten Bild
+ *     aus dem Gehen-DECIDE 0x800322e8 (& 0x201 == 0x201 @0x80032444-@0x80032454 -> 0x0201). Der Dispatcher 0x80031de8 liest
+ *     +5 nach dem DECIDE neu (@0x80031efc) -> das ANIMATE des neuen Unterzustands laeuft im selben Bild (Rueckgabe 2:
+ *     der Aufrufer geht in diesem Bild, statt zu rennen).
+ *   - STEHEN erst NACH dem Stopp: Fall 3 schreibt bei Tempo < 0 das Kommandowort 0x0001 (@0x80032950/@0x80032958); das
+ *     Stehen-ANIMATE 0x80032038 Fall 0 laeuft im FOLGEbild (@0x80032074-@0x800320bc: +6 = 1, Clip 3, Bild 0 +0x95 = 0,
+ *     Mischung +0x8f = 7, Tempo 0, Zeitgeber rng & 0x1f + 90). Waehrend der Stopp-Bilder laeuft also KEIN Stehen-FSM
+ *     (Aufrufer: Rueckgabe 1 -> Bewegung bleibt, Leerlauf-FSM nicht betreten); im Folgebild setzt das Modul Bild 0 /
+ *     Mischung 7 (re15_rennstopp_r41_takt/_skript), der Leerlauf-FSM des Aufrufers beginnt dort.
  */
 #ifndef RE15_RENNSTOPP_R41_H
 #define RE15_RENNSTOPP_R41_H
@@ -61,11 +76,18 @@
 int32_t re15_rennstopp_r41_lauftempo(re15_actor_t *p, int erstes_bild, int gier_vorher, int32_t tabelle);
 
 /* Renn-Stopp, Bewegungs-Block des Spielers, je Spieler-Takt VOR der Bewegungswahl: 1 = dieses Bild gehoert dem Stopp
- * (Leon ist um das Tempo verschoben, Bewegung = steh_motion), dann waehlt der Aufrufer Stehen und zielt nicht.
+ * (Leon ist um das Tempo verschoben, Bewegung = steh_motion), dann behaelt der Aufrufer die Bewegung, betritt den
+ * Leerlauf-FSM nicht und zielt nicht. 2 = OBEN im Stopp: in diesem Bild GEHEN, auch wenn RENNEN gehalten ist
+ * (0x0101 @0x80032738-@0x8003275c). 0 = kein Stopp.
  * Der Stopp beginnt mit dem letzten Renn-Tempo (re15_rennstopp_r41_lauftempo); tabelle (@0x80073f24) gilt nur, wenn noch
  * keins gerechnet wurde. waffe = Waffe in der Hand (DAT_800aca5d != 0). */
 int re15_rennstopp_r41_takt(re15_actor_t *p, uint16_t pad_bits, int lauf_motion, int steh_motion, int32_t tabelle,
                             int waffe);
+
+/* 1 = der Spieler beginnt dieses Bild im Unterzustand 2 (Rennen oder Renn-Stopp, Kommando 1): DECIDE 0x80032604 dreht
+ * dann mit @0x80073f25 (72) — auch ohne OBEN und mit R1 (@0x80032620-@0x800326a0 vor @0x800326fc/@0x80032708). Vor dem
+ * Drehen aufrufen (Zustand vom Ende des letzten Bilds). */
+int re15_rennstopp_r41_unterzustand2(const re15_actor_t *p, int lauf_motion);
 
 /* Skript-Zweig (player_mode 2, ohne Pad): derselbe Stopp mit leerem Pad. 1 = Stopp aktiv (nichts weiter tun). */
 int re15_rennstopp_r41_skript(re15_actor_t *p, int lauf_motion, int steh_motion, int32_t tabelle);

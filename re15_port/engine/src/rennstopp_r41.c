@@ -25,6 +25,7 @@ static int     s_tempo_ok;   /* ein Renn-Tempo wurde gerechnet bzw. aus Fall 0 g
 static int16_t s_winkel[RE15_EMD_MAX_BONES][3];   /* Teil+0x60 je Teil = letzte Pose aus anim_set (FUN_8001f3bc) */
 static int32_t s_wurzel[3];                        /* Wurzel-Kopie +0x38/+0x3a/+0x3c (int16) */
 static int     s_pose_ok;
+static int     s_stand_neu;  /* Stopp endete im letzten Bild (Kommandowort 0x0001 @0x80032958): Stehen-Fall 0 steht an */
 static int     s_pruef_aus;  /* NUR Sonden-Gegenprobe (re15_rennstopp_r41_pruef_aus), kein Spielweg */
 
 /* ---------------------------------------------------------------------------------------------- Fusskette */
@@ -178,6 +179,17 @@ static void vorschub(re15_actor_t *p)
 static int schritt(re15_actor_t *p, uint16_t pad_bits, int lauf_motion, int steh_motion, int32_t tabelle, int waffe)
 {
     if (s_pruef_aus) return 0;                        /* Sonden-Gegenprobe: Stand vor Nachbesserung 3 (sofort Stehen) */
+    if (s_stand_neu) {
+        /* Stehen-ANIMATE 0x80032038 Fall 0 im Bild NACH dem Stopp-Ende (@0x80032074-@0x8003209c): Clip 3 bleibt,
+         * Bild +0x95 = 0, Mischung +0x8f = 7. Waehlt der Aufrufer in diesem Bild eine neue Bewegung (Stehen-DECIDE
+         * 0x80031f38), setzt er Bild/Mischung ohnehin selbst. */
+        s_stand_neu = 0;
+        if (!s_aktiv && p->motion == s_steh && p->state == 1) {
+            p->anim_frame        = 0;
+            p->motion_init_delay = 0;
+            p->anim_frac         = RS_MISCHUNG;       /* @0x8003208c/@0x8003209c `sb 7,+0x8f` */
+        }
+    }
     if (s_aktiv && (p->motion != s_steh || p->state != 1)) s_aktiv = 0;   /* Skript/Treffer/Treppe hat uebernommen */
     if (!s_aktiv) {
         if (p->motion != lauf_motion || p->state != 1) return 0;          /* nur aus dem Rennen (+6 < 2) */
@@ -192,15 +204,21 @@ static int schritt(re15_actor_t *p, uint16_t pad_bits, int lauf_motion, int steh
         p->motion_init_delay = 0;
         p->anim_frac         = RS_MISCHUNG;           /* @0x80032908/@0x80032910 +0x8f = 7 */
     } else {
-        /* @0x80032730-@0x80032760: OBEN -> Gehen, UNTEN -> Rueckwaerts, LINKS/RECHTS -> Drehen (Stopp endet,
-         * der Aufrufer waehlt die neue Bewegung in diesem Bild). */
-        if (pad_bits & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN | RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT)) {
+        /* @0x80032730-@0x80032760: OBEN -> Gehen 0x0101 (@0x80032738, auch mit RENNEN: Rennen erst aus dem Gehen-DECIDE
+         * des Folgebilds @0x80032444-@0x80032454), UNTEN -> Rueckwaerts 0x0401 (@0x80032744), LINKS/RECHTS -> Drehen
+         * 0x0301 (@0x80032750). Der Dispatcher liest +5 nach dem DECIDE neu (@0x80031efc): das neue ANIMATE laeuft in
+         * DIESEM Bild, der Aufrufer waehlt die Bewegung jetzt. */
+        if (pad_bits & RE15_PAD_BIT_UP) {
+            s_aktiv = 0;
+            return 2;                                 /* Gehen erzwingen */
+        }
+        if (pad_bits & (RE15_PAD_BIT_DOWN | RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT)) {
             s_aktiv = 0;
             return 0;
         }
     }
     s_tempo = (int16_t)(s_tempo - RS_ABZUG);          /* @0x80032930-@0x80032944 */
-    if (s_tempo < 0) s_aktiv = 0;                     /* @0x8003294c `bgez` / @0x80032958 -> Stehen */
+    if (s_tempo < 0) { s_aktiv = 0; s_stand_neu = 1; }   /* @0x8003294c `bgez` / @0x80032958 Kommandowort 0x0001 -> Stehen */
     vorschub(p);                                      /* auch der letzte, negative Schritt */
     return 1;
 }
@@ -218,12 +236,19 @@ int re15_rennstopp_r41_skript(re15_actor_t *p, int lauf_motion, int steh_motion,
     return schritt(p, 0, lauf_motion, steh_motion, tabelle, 0);
 }
 
-void    re15_rennstopp_r41_pruef_aus(int aus) { s_pruef_aus = aus ? 1 : 0; s_aktiv = 0; }
+int re15_rennstopp_r41_unterzustand2(const re15_actor_t *p, int lauf_motion)
+{
+    if (!p || s_pruef_aus || p->state != 1) return 0;   /* nur Kommando 1 (0x80031de8) */
+    if (s_aktiv && p->motion == s_steh) return 1;       /* Stopp: +6 >= 2 */
+    return p->motion == lauf_motion;                    /* Rennen: +6 < 2 */
+}
+
+void    re15_rennstopp_r41_pruef_aus(int aus) { s_pruef_aus = aus ? 1 : 0; s_aktiv = 0; s_stand_neu = 0; }
 int     re15_rennstopp_r41_aktiv(void) { return s_aktiv; }
 int32_t re15_rennstopp_r41_tempo(void) { return s_tempo; }
 void    re15_rennstopp_r41_zuruecksetzen(void)
 {
-    s_aktiv = 0; s_tempo = 0; s_tempo_ok = 0; s_steh = 0; s_pose_ok = 0;
+    s_aktiv = 0; s_tempo = 0; s_tempo_ok = 0; s_steh = 0; s_pose_ok = 0; s_stand_neu = 0;
     memset(s_winkel, 0, sizeof s_winkel);
     memset(s_wurzel, 0, sizeof s_wurzel);
 }

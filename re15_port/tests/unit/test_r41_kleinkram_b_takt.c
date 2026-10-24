@@ -21,6 +21,11 @@
  *               Bild 2 210 170 182 205 210 214 210 188 159 176 197; ueber den Spieler-Pfad (lauftempo + Skript-Stopp) die
  *               Kurbel-Lagen n94..n99 z -3099 -3233 -3327 -3381 -3395 -3369; Gegenprobe ohne Bank (Tempo 200): -3285;
  *               kein Tween-Bild (0x8000) im Renn-Clip 0 einer Waffen-Bank PL00Wxx/PL04Wxx.
+ * Nachbesserung 3, Fortsetzung (DECIDE 0x80032604 vollstaendig), ueber den ECHTEN Spieler-Takt (re15_game_step, ROOM2020):
+ *   rennpfad    Unterzustand 2 dreht mit 72 (@0x80073f25, @0x80032620-@0x800326a0) auch ohne OBEN und mit R1; OBEN im
+ *               Stopp -> ein Bild GEHEN auch mit RENNEN (0x0101 @0x80032738, Rennen erst aus dem Gehen-DECIDE
+ *               @0x80032444); Stopp-Bilder ohne Leerlauf-FSM, im Bild nach dem Stopp-Ende Stehen-Fall 0 (Mischung 7,
+ *               @0x80032074-@0x8003209c); Gegenprobe ohne Modul (Stand vor Nachbesserung 3).
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -166,7 +171,29 @@ static void teil_rennstopp(void)
     re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP, RUN, IDLE, 200, 0);          /* RENNEN losgelassen, OBEN gehalten */
     PRUEF(re15_rennstopp_r41_aktiv() && a.x == 160, "nur RENNEN losgelassen: Stopp-Bild (+6 = 2 im Rennen-DECIDE)");
     r = re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP, RUN, IDLE, 200, 0);
-    PRUEF(r == 0 && !re15_rennstopp_r41_aktiv() && a.x == 160, "OBEN im Stopp -> Gehen (0x0101 @0x80032738), kein Stopp-Schritt");
+    PRUEF(r == 2 && !re15_rennstopp_r41_aktiv() && a.x == 160, "OBEN im Stopp -> Gehen (0x0101 @0x80032738, Rueckgabe 2), kein Stopp-Schritt");
+    re15_rennstopp_r41_zuruecksetzen();
+    a.motion = RUN; a.x = 0;
+    re15_rennstopp_r41_takt(&a, 0, RUN, IDLE, 200, 0);
+    r = re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP | RE15_PAD_BIT_CROSS, RUN, IDLE, 200, 0);
+    PRUEF(r == 2 && !re15_rennstopp_r41_aktiv() && a.x == 160,
+          "OBEN+RENNEN im Stopp -> auch Gehen (OBEN @0x80032738 vor jeder RENNEN-Pruefung), Rueckgabe 2");
+    re15_rennstopp_r41_zuruecksetzen();
+    a.motion = RUN; a.x = 0; a.state = 1;
+    PRUEF(re15_rennstopp_r41_unterzustand2(&a, RUN) == 1, "Unterzustand 2 im Rennen");
+    re15_rennstopp_r41_takt(&a, 0, RUN, IDLE, 200, 0);
+    PRUEF(re15_rennstopp_r41_unterzustand2(&a, RUN) == 1, "Unterzustand 2 im Stopp (+6 >= 2)");
+    for (int i = 0; i < 5; i++) re15_rennstopp_r41_takt(&a, 0, RUN, IDLE, 200, 0);
+    PRUEF(!re15_rennstopp_r41_aktiv() && re15_rennstopp_r41_unterzustand2(&a, RUN) == 0, "nach dem Stopp-Ende: Stehen (Unterzustand 0)");
+    a.anim_frame = 3; a.anim_frac = 1;
+    r = re15_rennstopp_r41_takt(&a, 0, RUN, IDLE, 200, 0);
+    PRUEF(r == 0 && a.anim_frame == 0 && a.anim_frac == 7, "Folgebild: Stehen-Fall 0 Bild 0 / Mischung 7 (@0x80032074-@0x8003209c)");
+    a.anim_frac = 3;
+    re15_rennstopp_r41_takt(&a, 0, RUN, IDLE, 200, 0);
+    PRUEF(a.anim_frac == 3, "nur EIN Folgebild");
+    a.state = 4;
+    PRUEF(re15_rennstopp_r41_unterzustand2(&a, RUN) == 0, "Kommandowort 4: kein Unterzustand 2");
+    a.state = 1;
     re15_rennstopp_r41_zuruecksetzen();
     a.motion = RUN; a.x = 0;
     re15_rennstopp_r41_takt(&a, 0, RUN, IDLE, 200, 0);
@@ -437,6 +464,98 @@ static frage_t frage_lauf(int r41)
     return r;
 }
 
+/* ============================================================================================ rennpfad */
+typedef struct { int32_t x, z; int rot, mo, frac, aktiv; } rp_t;
+
+static rp_t rp_bild(uint16_t held)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    bild(0, held);
+    rp_t b = { pl->x, pl->z, (int)pl->rot_y, (int)pl->motion, (int)pl->anim_frac, re15_rennstopp_r41_aktiv() };
+    return b;
+}
+static int rp_drehung(rp_t a, rp_t b) { int d = (b.rot - a.rot) & 0xfff; return d >= 0x800 ? d - 0x1000 : d; }
+static int rp_weg(rp_t a, rp_t b)
+{
+    const long dx = (long)b.x - a.x, dz = (long)b.z - a.z;
+    long w = 0; while ((w + 1) * (w + 1) <= dx * dx + dz * dz) w++;
+    return (int)w;
+}
+/* ROOM2020 Tunnel (z -3150, wie der Weg des Nutzers 11350 -> West), Blick 0 (+x), 8 Bilder Rennen. */
+static rp_t rp_start(int waffe)
+{
+    extern void re15_player_set_equipped_weapon(int weapon_id);
+    static int s_gemerkt = 0; static re15_game_state_t s_ausgang;
+    if (!s_gemerkt) { s_ausgang = g_game; s_gemerkt = 1; } else g_game = s_ausgang;
+    re15_msgtakt_r41_zuruecksetzen();
+    re15_rennstopp_r41_zuruecksetzen();
+    re15_game_flag_set(3, 0x72, 1);
+    rp_t r = { 0, 0, 0, -1, 0, 0 };
+    if (room_boot(0x2020, 4000, -3150, 0, 1) != 0) return r;
+    re15_player_set_equipped_weapon(waffe);
+    for (int f = 0; f < 3; f++) bild(0, 0);
+    for (int f = 0; f < 8; f++) r = rp_bild(RE15_PAD_BIT_UP | RE15_PAD_BIT_CROSS);
+    return r;
+}
+
+static void teil_rennpfad(void)
+{
+    printf("== rennpfad ==\n");
+    const uint16_t U = RE15_PAD_BIT_UP, X = RE15_PAD_BIT_CROSS, L = RE15_PAD_BIT_LEFT, M = RE15_PAD_BIT_R1;
+    extern void re15_player_set_equipped_weapon(int weapon_id);
+    for (int gegen = 0; gegen < 2; gegen++) {
+        re15_rennstopp_r41_pruef_aus(gegen);
+        const char *w = gegen ? "Gegenprobe ohne Modul" : "Modul";
+        /* A: aus dem Rennen nur LINKS */
+        rp_t r0 = rp_start(0), a1 = rp_bild(L), a2 = rp_bild(L), a3 = rp_bild(L);
+        printf("  [%s] A Rennen->LINKS: Renn-Bild x %d mo %d | S1 dreh %d mo %d weg %d | S2 dreh %d mo %d weg %d | S3 dreh %d\n", w,
+               (int)r0.x, r0.mo, rp_drehung(r0, a1), a1.mo, rp_weg(r0, a1), rp_drehung(a1, a2), a2.mo, rp_weg(a1, a2), rp_drehung(a2, a3));
+        const int okA = r0.mo == 100 && rp_drehung(r0, a1) == -72 && a1.mo == 200 && a1.aktiv && rp_weg(r0, a1) == 160 &&
+                        rp_drehung(a1, a2) == -72 && a2.mo == 105 && !a2.aktiv && rp_weg(a1, a2) == 0 && rp_drehung(a2, a3) == -96;
+        /* B: RENNEN los, OBEN+LINKS gehalten */
+        rp_t s0 = rp_start(0), b1 = rp_bild(U | L), b2 = rp_bild(U | L), b3 = rp_bild(U | L);
+        printf("  [%s] B Rennen->OBEN+LINKS: S1 dreh %d mo %d weg %d | S2 dreh %d mo %d weg %d | S3 dreh %d mo %d\n", w,
+               rp_drehung(s0, b1), b1.mo, rp_weg(s0, b1), rp_drehung(b1, b2), b2.mo, rp_weg(b1, b2), rp_drehung(b2, b3), b3.mo);
+        const int okB = rp_drehung(s0, b1) == -72 && b1.mo == 200 && rp_weg(s0, b1) == 160 &&
+                        rp_drehung(b1, b2) == -72 && b2.mo == 105 && rp_weg(b1, b2) == 75 && rp_drehung(b2, b3) == -48;
+        /* C: Stopp, dann OBEN+RENNEN */
+        rp_t c0 = rp_start(0), c1 = rp_bild(0), c2 = rp_bild(U | X), c3 = rp_bild(U | X);
+        printf("  [%s] C Stopp->OBEN+RENNEN: S1 mo %d weg %d | S2 mo %d weg %d | S3 mo %d weg %d\n", w,
+               c1.mo, rp_weg(c0, c1), c2.mo, rp_weg(c1, c2), c3.mo, rp_weg(c2, c3));
+        const int okC = c1.mo == 200 && rp_weg(c0, c1) == 160 && c2.mo == 105 && rp_weg(c1, c2) == 75 &&
+                        c3.mo == 100 && rp_weg(c2, c3) == 200;
+        /* D: ganzer Stopp, Folgebild = Stehen-Fall 0 */
+        rp_t d[9]; d[0] = rp_start(0);
+        for (int i = 1; i < 9; i++) d[i] = rp_bild(0);
+        int okD = 1;
+        static const int soll_weg[6] = { 160, 120, 80, 40, 0, 40 };
+        for (int i = 1; i <= 6; i++) if (d[i].mo != 200 || rp_weg(d[i - 1], d[i]) != soll_weg[i - 1]) okD = 0;
+        okD = okD && d[6].aktiv == 0 && d[7].mo == 200 && d[7].frac == 7 && rp_weg(d[6], d[7]) == 0 && d[8].frac == 6;
+        printf("  [%s] D Stopp: weg %d %d %d %d %d %d (x %d -> %d), mo %d..%d, Folgebild mo %d Mischung %d, danach %d\n", w,
+               rp_weg(d[0], d[1]), rp_weg(d[1], d[2]), rp_weg(d[2], d[3]), rp_weg(d[3], d[4]), rp_weg(d[4], d[5]), rp_weg(d[5], d[6]),
+               (int)d[0].x, (int)d[6].x, d[1].mo, d[6].mo, d[7].mo, d[7].frac, d[8].frac);
+        /* E: Zielen mit Waffe aus dem Rennen, LINKS gehalten */
+        rp_t e0 = rp_start(3), e1 = rp_bild(U | X | M | L);
+        printf("  [%s] E Rennen->Zielen+LINKS (Waffe 3): S1 dreh %d mo %d weg %d\n", w, rp_drehung(e0, e1), e1.mo, rp_weg(e0, e1));
+        const int okE = rp_drehung(e0, e1) == -72 && e1.mo == 200 && rp_weg(e0, e1) == 160;
+        re15_player_set_equipped_weapon(0);
+        if (!gegen) {
+            PRUEF(okA, "A: aus dem Rennen LINKS: Stopp-Bild dreht 72 (@0x80073f25, @0x80032660-@0x800326a0), 160 Vorschub; "
+                       "Folgebild 72 + Drehen 0x0301 (@0x80032750) ohne Schritt; danach 96 (Drehen-DECIDE)");
+            PRUEF(okB, "B: RENNEN los, OBEN+LINKS: Stopp-Bild 72 statt 48, Folgebild 72 + Gehen 0x0101 (@0x80032738), danach 48");
+            PRUEF(okC, "C: OBEN+RENNEN im Stopp: ein Bild Gehen (0x0101 @0x80032738), Rennen erst aus dem Gehen-DECIDE (@0x80032444)");
+            PRUEF(okD, "D: 6 Stopp-Bilder mo 200 ohne Leerlauf-FSM, Folgebild Stehen-Fall 0 Mischung 7 (@0x80032074-@0x8003209c)");
+            PRUEF(okE, "E: Zielen mit Waffe aus dem Rennen: Drehen 72 vor dem Zielen (@0x80032620 vor @0x80032708), dann Stopp");
+        } else {
+            PRUEF(!okA && !okB && !okC && !okD && !okE, "Gegenprobe ohne Modul (Stand vor Nachbesserung 3): A-E fallen durch (%d%d%d%d%d)",
+                  okA, okB, okC, okD, okE);
+        }
+    }
+    re15_rennstopp_r41_pruef_aus(0);
+    re15_rennstopp_r41_zuruecksetzen();
+    re15_msgtakt_r41_zuruecksetzen(); re15_pauseflags_clear();
+}
+
 static void teil_frage(void)
 {
     printf("== frage ==\n");
@@ -462,6 +581,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "rennstopp")  || !strcmp(teil, "alle")) teil_rennstopp();
     if (!strcmp(teil, "renntempo")  || !strcmp(teil, "alle")) teil_renntempo();
     if (!strcmp(teil, "frage")      || !strcmp(teil, "alle")) teil_frage();
+    if (!strcmp(teil, "rennpfad")   || !strcmp(teil, "alle")) teil_rennpfad();
     printf("%s: %d/%d bestanden\n", g_fail ? "FAIL" : "OK", g_n - g_fail, g_n);
     return g_fail ? 1 : 0;
 }

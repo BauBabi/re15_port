@@ -782,3 +782,60 @@ Griff, das ist Original-Verhalten.
   im Dauerlauf 208 208 205 204 204 202 203 188 159 176 197 207 208 205 205 203 200 199 186 170 182 194 = Mittel 196,0 je Bild
   (vorher konstant 200); Elza (PL04-Bindepose + PL04W03, Lauf `<sp>/E41n3/runs/elza_renn2`): erstes Renn-Bild 190, Stopp mit
   Rueckschritt an der Stegkante wie Leon.
+
+## Nachbesserung 3 — Fortsetzung (nach dem Wochenlimit, 2026-10-24 ab 14:0x)
+Stand bei Beginn: HEAD 4190e6b0, Baum sauber. `local_build.sh configure` -> `LOCAL-BUILD-OK (configure)`, `build` -> "ninja: no
+work to do", `LOCAL-BUILD-OK (build)` (exe md5 9de3bd488e72334278224893f65b136d = Messkopie re15_pc_E41n3.exe). Gezielt
+`ctest -R "r41_kleinkram_b|^unit_r36_zombieki_affen_block$" -j 3 --timeout 900` -> **100% tests passed, 0 tests failed out of
+20** (`<sp>/E41n3b/ctest_spur.log`). Laeufe dieser Fortsetzung unter `<sp>/E41n3b/`.
+
+### DECIDE 0x80032604 vollstaendig gelesen — drei Luecken der Umsetzung aus 841e0ef6 (selbst disassembliert)
+`re15_disasm.py dis 0x80031de8 70` / `dis 0x80031efc 30` / `dis 0x80032604 95` / `dis 0x800322e8 110` / `dis 0x80032498 95` /
+`dis 0x80032ae4 55` / `dis 0x80032778 128` / `dis 0x80032038 60`, Tabellen `table 0x80073fb0 8` / `table 0x80073ff0 8`,
+`read 0x80073f24/0x80073ea4/0x80073ee4 8 --w 2`:
+- Dispatcher Kommando 1 = 0x80031de8: @0x80031ef4 `jalr` DECIDE[+5] (Tabelle @0x80073fb0: [0] 0x80031f38 Stehen, [1] 0x800322e8
+  Gehen, [2] 0x80032604 Rennen, [3] 0x80032974 Drehen), dann @0x80031efc `lbu v0,0(s0)` (+5 NEU gelesen) und @0x80031f1c `jalr`
+  ANIMATE[+5] (Tabelle @0x80073ff0: [0] 0x80032038, [1] 0x80032498, [2] 0x80032778, [3] 0x80032ae4) — ein Wechsel im DECIDE
+  laeuft im SELBEN Bild ins ANIMATE des neuen Unterzustands (Fall 0).
+- Tabellen je Figur*2 (u16 = Tempo | Drehrate<<8): @0x80073f24 Rennen 0x48C8 = (200, 72) fuer Figur 0..3, 0x48D2 = (210, 72) fuer
+  4..7; @0x80073ea4 Gehen 0x304B = (75, 48) / 0x3046 = (70, 48); @0x80073ee4 Drehen 0x6000 = (0, 96). Das Tabellen-Tempo setzt nur
+  Fall 0, Fall 1 ueberschreibt es im selben Bild mit der Fussrechnung (Rennen @0x800328cc, Gehen @0x800325c4), ausser Figur 0xf.
+- **Luecke 1 — Drehen im Unterzustand 2.** 0x80032604 dreht in JEDEM Bild des Unterzustands 2 zuerst: @0x80032618 `lw a0,0(s0)`
+  (gehalten), @0x80032620 `andi 0x2` -> @0x8003262c-@0x8003265c `+=` lbu @0x80073f25[Figur*2] (72), @0x80032660 `andi 0x8` ->
+  @0x8003266c-@0x800326a0 `-=` 72 — VOR der Aktions-Pruefung (@0x800326a4), VOR `+6 < 2` (@0x800326e0), VOR OBEN+RENNEN
+  (@0x800326fc) und VOR Zielen (@0x80032708). Der Port waehlte die Rate nach dem Pad (ohne OBEN 96 = Stehen-Rate, OBEN ohne
+  RENNEN 48 = Geh-Rate) und drehte mit R1 gar nicht (`zielt_schon`). Im Stopp-Einstiegsbild und im Bild, das den Stopp mit
+  LINKS/RECHTS/OBEN beendet, drehte er darum 96 bzw. 48 statt 72, mit R1+Waffe 0 statt 72.
+- **Luecke 2 — OBEN im Stopp.** +6 >= 2 (@0x80032730): @0x80032738 `andi 0x1` (OBEN) -> @0x8003275c/@0x80032760 `sw 0x0101` =
+  GEHEN, auch wenn RENNEN gehalten ist (RENNEN wird hier nicht gelesen); erst das Gehen-DECIDE 0x800322e8 des Folgebilds schaltet
+  mit `& 0x201 == 0x201` (@0x80032444-@0x80032454 `sw a0(=0x201)`) aufs Rennen. Das Gehen-ANIMATE laeuft im selben Bild (Fall 0
+  @0x800324b8-@0x80032524: +6 = 1, Clip 5, +0x8f = 7, dann Fall 1 mit Vorschub @0x800325ec). Der Port ging bei OBEN+RENNEN im
+  Stopp sofort ins Rennen (ein Geh-Bild zu wenig).
+- **Luecke 3 — Stehen erst nach dem Stopp.** Fall 3 (@0x80032918-@0x8003295c): Tempo -= 40 @0x8003293c, @0x8003294c `bgez`, sonst
+  @0x80032958 `sw 1` = Kommandowort 0x0001 (Stehen, +6 = 0). Das Stehen-ANIMATE 0x80032038 Fall 0 laeuft also im FOLGEbild:
+  @0x80032074-@0x800320bc +6 = 1, Clip 3 (+0x94), Bild +0x95 = 0, Mischung +0x8f = 7, Tempo 0, Zeitgeber `rng & 0x1f` + 90
+  (@0x800320a8 `jal 0x8001af20`). Der Port betrat seinen Leerlauf-FSM (player_common.c, Zeitgeber re15_idle_rand) schon im
+  ERSTEN Stopp-Bild (Hook-Rueckgabe 1 -> move_dir 0 -> Leerlauf-Zweig) — der Zeitgeber lief 6 Bilder zu frueh, und die
+  Mischung des Stehen-Fall-0 fehlte.
+- Drehen-ANIMATE 0x80032ae4 Fall 0 (@0x80032b04-@0x80032b4c: +6 = 1, Clip 5, +0x8f = 7, Tempo 0) dreht NICHT — im Bild, das den
+  Stopp mit LINKS/RECHTS beendet, wirkt also nur die 72 des Renn-DECIDE; das Drehen-DECIDE 0x80032974 dreht ab dem Folgebild
+  (Rate @0x80073ee5 = 96).
+- Nicht umgesetzt (OFFEN, s. unten): die Aktions-Pruefung @0x800326a4-@0x800326dc (`lw 0x800ac76c & 0x80` -> FUN_8002d474 /
+  FUN_80042bac(Spieler, 1, 0x10) -> bei Treffer `bne` @0x800326c4/@0x800326d8 zum Ende, ohne Stopp-Entscheidung). Im Bild, in dem
+  die Aktionstaste einen Aktions-AOT ausloest, bleibt das Original im Unterzustand (Rennen laeuft ein Bild weiter, auch ohne
+  OBEN+RENNEN). Der Port prueft Aktions-AOTs erst NACH dem Spieler-Takt (game_step_common.c re15_aot_scan; Katalog
+  RE15_FUN_CATALOG.md Zeile 150/151: Port-Scan = Spieler + Flanke, Umbau #14/#15 in aot_common.c — keine Datei der Spur E).
+
+### Umsetzung (Fortsetzung, UNGEBAUT bei diesem Eintrag)
+- engine/src/rennstopp_r41.c / include/re15_rennstopp_r41.h: `re15_rennstopp_r41_unterzustand2(p, lauf)` (Kommando 1 und Rennen
+  oder aktiver Stopp); `schritt()` gibt bei OBEN im Stopp 2 zurueck (Gehen erzwingen, @0x80032738), merkt das Stopp-Ende
+  (`s_stand_neu`, @0x80032958) und setzt im Folgebild Bild 0 / Mischung 7 (@0x80032074-@0x8003209c), wenn die Bewegung noch die
+  Steh-Bewegung ist. Keine neue Zahl: 72 = TURN_RATE_RUN_PER_FRAME (@0x80073f24 Byte 1, schon im Port), 7 = RS_MISCHUNG.
+- player_common.c (Haken "Runde 41 Spur E", E-E1/E-E2): Rate = 72 im Unterzustand 2 (`s2_41`), Drehen dort auch mit R1;
+  Rueckgabe 2 -> `run = 0`; Rueckgabe 1 -> `want_motion = p->motion` vor dem Leerlauf-Zweig; Renn-Tempo-Gier mit derselben
+  Drehbedingung.
+- Riegel NEU `unit_r41_kleinkram_b_takt_rennpfad` (echter Spieler-Takt re15_game_step, ROOM2020 Tunnel, Blick 0, 8 Renn-Bilder,
+  ohne Waffen-Bank = Tabellen-Tempo 200): A Rennen -> LINKS (72/160, 72 + Drehen ohne Schritt, dann 96), B Rennen -> OBEN+LINKS
+  (72 statt 48, dann Gehen 75), C Stopp -> OBEN+RENNEN (ein Geh-Bild, dann Rennen 200), D ganzer Stopp (160 120 80 40 0 40, mo 200,
+  Folgebild Mischung 7), E Zielen mit Waffe 3 + LINKS (72 und Stopp); Gegenprobe mit re15_rennstopp_r41_pruef_aus(1) muss in
+  allen fuenf durchfallen. rennstopp-Teil erweitert (Rueckgabe 2, OBEN+RENNEN im Stopp, unterzustand2, Stehen-Fall 0).
