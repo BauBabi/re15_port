@@ -10,7 +10,11 @@
 #   tuer2000   ECHTER WEG: Debug-Sprung 2070, Wegplan (RE15_WEGPLAN, engine/src/dachkiste_r36.c) durch die Tuer
 #              nach ROOM2000 und auf den Oststeg (-20600,-10600) vor die beiden Kanal-Zombies (Muster
 #              test_r38_wasserzombie.cmake Teil e). Leon, Standard-KI (RE2).
-#   elza2001   Spielstand Elza ROOM2001 (Spawn-Bit 3:0x45, sub00 @0x01826) + CONTINUE, Oststeg (-21300,-1800,-10100).
+#   elza2001   ECHTER WEG als Elza: Debug-Sprung 2071 (Titel-Autostart Elza, RE15_TITLE_SHOT_CHAR=1), Spawn-Bit 3:0x45
+#              (sub00 @0x01826, RE15_SET_FLAG; Bank 3 bleibt beim Raumwechsel stehen), Wegplan durch die Tuer nach
+#              ROOM2001 auf den Oststeg. (Der LADE-Weg CONTINUE in 2000/2001 spawnt die Zombies im Port NICHT: der
+#              Boot-Pfad in platform/pc/main.c haelt sub00 zurueck, sobald main00 einen Ereignis-Thread startet —
+#              2000/2001 main00 `Evt_exec` @0x0177c — Dossier OFFEN 2.)
 #   leon3000   Spielstand Leon ROOM3000 (4:9 main00 @0x014b6, 4:0xC6 = Marvin-Szene aus) + CONTINUE, 1200 vor (-9900,-14800).
 #   leon3010   Spielstand Leon ROOM3010 (4:0x0A main00 @0x0210e) + CONTINUE, 1100 vor (-9100,-19800).
 #   re15_3000  wie leon3000, RE15_AI_FLAVOR=re15 (RE1.5-Liege-Phasenmaschine, Aufsteh-Clip 0x12).
@@ -71,25 +75,31 @@ file(COPY_FILE "${RE15_PC_EXE}" "${_exe}")
 # ---- Lauf je TEIL ------------------------------------------------------------------------------------------------
 set(_re2 1)
 set(_ki "")
-if(TEIL STREQUAL "tuer2000")
-    set(_raum 2000)
+if(TEIL STREQUAL "tuer2000" OR TEIL STREQUAL "elza2001")
+    # Tuer 0 von ROOM2070/2071 (Door_aot_set @0x00a3a: Rechteck x -19950..-18950, Ziel Stage 1 Raum 0) -> Oststeg
+    if(TEIL STREQUAL "tuer2000")
+        set(_raum 2000)
+        set(_von 2070)
+        set(_figur "")
+    else()
+        set(_raum 2001)
+        set(_von 2071)
+        set(_figur RE15_TITLE_SHOT_CHAR=1 RE15_SET_FLAG=3:0x45)
+    endif()
     set(_ende 700)
-    file(WRITE "${WORKDIR}/plan.txt" "RAUM 2070\nWARTE 20\nBLICK 2048\nWARTE 10\nAKTION\nRAUM 2000\nWARTE 10\n"
+    file(WRITE "${WORKDIR}/plan.txt" "RAUM ${_von}\nWARTE 20\nBLICK 2048\nWARTE 10\nAKTION\nRAUM ${_raum}\nWARTE 10\n"
                                      "GEHE -20600 -10600 200\nBLICK 2048\nWARTE 1500\nENDE\n")
     re15_start_spiel(_rv 400
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
-        RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
-        "RE15_DEBUG_JUMP=2070@250" "RE15_PLAYER_POS=-18500,-6400,2048,0"
+        RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${_figur}
+        "RE15_DEBUG_JUMP=${_von}@250" "RE15_PLAYER_POS=-18500,-6400,2048,0"
         "RE15_WEGPLAN=${WORKDIR}/plan.txt"
         RE15_ZOMBIEFRESSER_LOG=zf.log RE15_STATE_LOG=state.log
         "RE15_EXIT_AT=${_ende}#${_raum}"
         "${_exe}")
-    set(_marke "PC loaded room2000.rdt")
+    set(_marke "PC loaded room${_raum}.rdt")
 else()
-    if(TEIL STREQUAL "elza2001")
-        set(_raum 2001)
-        set(_karte 2001 -21300 -10100 2048 1 elza 3:0x45)
-    elseif(TEIL STREQUAL "leon3000" OR TEIL STREQUAL "re15_3000")
+    if(TEIL STREQUAL "leon3000" OR TEIL STREQUAL "re15_3000")
         set(_raum 3000)
         set(_karte 3000 -8700 -14800 2048 0 leon 4:9 4:0xC6)
         if(TEIL STREQUAL "re15_3000")
@@ -102,7 +112,7 @@ else()
     else()
         message(FATAL_ERROR "${_tag}: unbekannter TEIL")
     endif()
-    set(_ende 600)
+    set(_ende 360)                    # Angriff im Unit-Lauf ab Bild 76..128; danach stirbt Leon im Griff (RE1.5)
     execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" ${_karte}
                     WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 60 RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
     if(NOT _rvk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")

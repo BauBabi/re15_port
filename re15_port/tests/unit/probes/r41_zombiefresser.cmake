@@ -31,7 +31,7 @@ endif()
 
 #   integration_r41_zombiefresser_<teil>   echte exe (Messkopie re15_pc_r41i_<teil>_*), RE15_ZOMBIEFRESSER_LOG + RE15_STATE_LOG:
 #     tuer2000   ECHTER WEG: Debug-Sprung 2070, Wegplan durch die Tuer nach ROOM2000 auf den Oststeg (Leon, Standard-KI)
-#     elza2001   Spielstand Elza ROOM2001 (Spawn-Bit 3:0x45) + CONTINUE, Oststeg
+#     elza2001   ECHTER WEG als Elza: Debug-Sprung 2071 + Spawn-Bit 3:0x45, Wegplan durch die Tuer nach ROOM2001
 #     leon3000   Spielstand Leon ROOM3000 (4:9, 4:0xC6) + CONTINUE, 1200 vor dem Zombie (-9900,-14800)
 #     leon3010   Spielstand Leon ROOM3010 (4:0x0A) + CONTINUE, 1100 vor dem Zombie (-9100,-19800)
 #     re15_3000  wie leon3000 mit RE1.5-KI (Clip 0x12 statt RE2-Clip 8)
