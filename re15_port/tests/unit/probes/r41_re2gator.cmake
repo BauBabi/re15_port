@@ -59,9 +59,9 @@ foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera au
 endforeach()
 
 if(TARGET re15_pc)
-    # echte exe, ROOM2090 per Sprung, RE15_GB_TEST=1 (Kampf sofort), RE15_GATOR_KANISTER am Suedufer:
-    # Zustandslog zeigt Clip 1 (Paddeln) in der Verfolgung, gator_boss.log die RE2-Zeilen (INTRO/DASH/KANISTER),
-    # keine HP-Abnahme unter den Sockel.
+    # echte exe, ROOM2090 per Sprung, RE15_GB_TEST=1 (Kampf sofort). Nachbesserung 2: zwei Laeufe - "nische" (Intro mit
+    # gewaehlter Startlage ohne Wanddurchdringung, Kamera-Programm, Finisher-Schnitt haelt bis zum Raumende = Entscheid B6)
+    # und "dash" (Leon im Suedbecken Ost: Zonen-Dash mit Putz 6 x 9, Kopf/Rumpf im Wasser).
     add_test(NAME integration_r41_re2gator
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

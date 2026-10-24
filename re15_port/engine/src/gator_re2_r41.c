@@ -64,6 +64,8 @@ typedef struct {
     uint8_t  dash_phase;      /* 0 aus, 1 Clip 2, 2 Clip 3 */
     uint8_t  dash_endbild;    /* voriger Tick zeigte das letzte Clip-Bild (FUN_8001a330 lieferte 1) */
     uint8_t  dash_vor;        /* Nachbesserung 2 (M2): Vordrehung auf dash_gier laeuft (PORT-WAHL, s. Dash-Planung) */
+    int32_t  wand_max;        /* Nachbesserung 2 (M2, Messzeile): groesster Aussenabstand Rumpf/Hals/Kopf/Kiefer */
+    int32_t  kopf_x_min;      /*   ... und kleinstes Kopf-x (Bone 6) waehrend Intro bzw. Dash */
     int16_t  dash_gier;       /* geplante Start-Gier des Dashes (-1 = keine) */
     uint8_t  intro_endbild;   /* dito fuer den Intro */
     int8_t   zone_alt;        /* zuletzt gesehene Beckenzone (PORT) */
@@ -1233,6 +1235,7 @@ int re15_gr2_dash_planen(int slot, const re15_actor_t *e, const re15_actor_t *pl
 }
 
 /* ---- Dash ---------------------------------------------------------------------------------- */
+static void gr2_wand_messen(gr2_t *g, const re15_actor_t *e);   /* Messzeile (Nachbesserung 2, M2), s.u. */
 int re15_gr2_dash_zonenwechsel(int slot, const re15_actor_t *e, int zone, int zone_leon, int32_t ziel_vor[2])
 {
     gr2_t *g = &s_g[slot];
@@ -1317,6 +1320,8 @@ int re15_gr2_dash_tick(int slot, re15_actor_t *e)
     }
     int clip = (g->dash_phase == 1) ? 2 : 3;
     e->motion = (uint8_t)clip;
+    if (g->dash_phase == 1 && e->anim_frame == 0) { g->wand_max = 0; g->kopf_x_min = 0x7fffffff; }
+    gr2_wand_messen(g, e);                                  /* Messzeile "DASH ende ... wand_draussen_max" */
     if (gr2_clip_tick(e, bk, clip) == 2) {                  /* letztes Bild liegt an */
         g->dash_endbild = 1;
         if (g->dash_phase == 2) {
@@ -1325,7 +1330,9 @@ int re15_gr2_dash_tick(int slot, re15_actor_t *e)
              * EMR/Probe nb1/probe_bahn): die Vierteldrehung wandert OHNE Pop in den Entity-Yaw. Nachbesserung 1:
              * vorher weggelassen (als "Korridor-Ecke" gelesen) und erst einen Tick spaeter -> 90-Grad-Pop. */
             e->rot_y = (int16_t)((e->rot_y + 1024) & 0x0fff);
-            re15_gr2_log("DASH ende pos=(%d,%d) yaw=%d", e->x, e->z, (int)e->rot_y);
+            gr2_wand_messen(g, e);
+            re15_gr2_log("DASH ende pos=(%d,%d) yaw=%d wand_draussen_max=%d kopf_x_min=%d", e->x, e->z, (int)e->rot_y,
+                         (int)g->wand_max, (int)g->kopf_x_min);
         }
     }
     return 1;
@@ -1334,6 +1341,18 @@ int re15_gr2_im_dash(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s
 /* Messhaken (Nachbesserung 2): Bone-Weltlage MIT der Zeichen-Skala +0x166 (ScaleMatrix um den Ursprung @0x8001e904-40) -
  * re15_enemy_bone_world_pos (re15_damage.c) rechnet in voller Groesse, der Boss wird mit 2731/4096 gezeichnet. */
 int re15_gr2_bone_welt_pub(const re15_actor_t *e, int bone, int32_t pos[3]) { int32_t r[9]; return gr2_bone_welt(e, bone, r, pos); }
+/* Messzeile (Nachbesserung 2, M2): Aussenabstand der gezeichneten Bones 0/1/5/6/7 zum Wasser dieses Bildes. */
+static void gr2_wand_messen(gr2_t *g, const re15_actor_t *e)
+{
+    if (!s_becken_fn) return;
+    for (int i = 0; i < GR2_BAHN_BONES; i++) {
+        int32_t r[9], p[3];
+        if (!gr2_bone_welt(e, k_bahn_bone[i], r, p)) continue;
+        int32_t d = s_becken_fn(p[0], p[2], 0);
+        if (d > g->wand_max) g->wand_max = d;
+        if (k_bahn_bone[i] == 6 && p[0] < g->kopf_x_min) g->kopf_x_min = p[0];
+    }
+}
 int re15_gr2_dash_vordrehung(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].dash_vor : 0; }
 
 /* ---- Intro --------------------------------------------------------------------------------- */
@@ -1376,6 +1395,8 @@ int re15_gr2_intro_tick(int slot, re15_actor_t *e)
     }
     int clip = (g->intro_phase == 1) ? 6 : 3;
     e->motion = (uint8_t)clip;
+    if (g->intro_phase == 1 && e->anim_frame == 0) { g->wand_max = 0; g->kopf_x_min = 0x7fffffff; }
+    gr2_wand_messen(g, e);                                  /* Messzeile "INTRO ende ... wand_draussen_max" */
     int rc = gr2_clip_tick(e, bk, clip);
     int kam = (s_kam.aktiv && s_kam.programm == GR2_KAM_INTRO);   /* Nachtrag 4: Intro-Programm laeuft */
     /* Nachtrag 4: Bild 70 -> Cut 0 (`addiu v0,zero,70 / bne v1(+0x14D),v0` @0x80100894-98 VOR dem Clip-Tick = das
@@ -1390,7 +1411,9 @@ int re15_gr2_intro_tick(int slot, re15_actor_t *e)
             g->biss_cd = RE15_GR2_BISS_CD_INTRO;            /* +0x238 = 110 @0x8010091c-20 */
             g->letzter_clip = 0;                            /* Routine 0x101 @0x80100928-2c */
             e->rot_y = (int16_t)((e->rot_y + 1024) & 0x0fff);   /* `lhu v0,118 / addiu v0,v0,1024 / sh v0,118` @0x80100938-48 */
-            re15_gr2_log("INTRO ende pos=(%d,%d) yaw=%d", e->x, e->z, (int)e->rot_y);
+            gr2_wand_messen(g, e);
+            re15_gr2_log("INTRO ende pos=(%d,%d) yaw=%d wand_draussen_max=%d kopf_x_min=%d", e->x, e->z, (int)e->rot_y,
+                         (int)g->wand_max, (int)g->kopf_x_min);
             if (kam) gr2_kam_frei(e);                       /* Bits 0x110 frei @0x801008f8-918 (Nachtrag 4) */
         }
     }
