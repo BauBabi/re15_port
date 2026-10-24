@@ -141,10 +141,10 @@ void re15_k2080_pc_zeichnen(const void *cam_view_v, int cx, int cy)
         }
     }
     /* MESSZEILE (kein Verhalten): Lage + Bildkasten bei jedem Lagewechsel des Zustands (steht/Haende/Fall) und alle 30 Bilder. */
-    static unsigned s_letzt = 0xffffffffu; static int32_t s_alt[3] = { 0, 0, 0 };
+    static unsigned s_letzt = 0xffffffffu; static int32_t s_alt[3] = { 0, 0, 0 }; static int s_cut_alt = -99;
     const int neu = (pos[0] != s_alt[0] || pos[1] != s_alt[1] || pos[2] != s_alt[2]);
-    if (s_letzt == 0xffffffffu || (neu && (g_engine.frame_count - s_letzt) >= 30u)) {
-        s_letzt = g_engine.frame_count; memcpy(s_alt, pos, sizeof s_alt);
+    if (s_letzt == 0xffffffffu || g_re15_active_cut != s_cut_alt || (neu && (g_engine.frame_count - s_letzt) >= 30u)) {
+        s_letzt = g_engine.frame_count; memcpy(s_alt, pos, sizeof s_alt); s_cut_alt = g_re15_active_cut;
         fprintf(stderr, "[k2080] F%u Kanister pos=(%d,%d,%d) Cut %d Kasten=(%d..%d,%d..%d) Dreiecke %d\n",
                 (unsigned)g_engine.frame_count, (int)pos[0], (int)pos[1], (int)pos[2], g_re15_active_cut, x0, x1, y0, y1, tris);
     }
