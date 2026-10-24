@@ -645,3 +645,58 @@ Folgen (Orchestrator): Kein Schliess-Ton, sondern der KNALL des Hereinbrechens, 
 (Leon und Elza). Spur G (und Spur F fuer die Einstellung "oben in 2080 kommen die Zombies herein" in der 2090-Szene) belegt
 die genaue Original-Stelle (Raum, SCD-Offset des Ton-Befehls / Szenen-Ereignis, Ton-Id bzw. VAG/VAB-Satz) und verwendet
 denselben Ton (gleiche Datei/Stimme, Ton-Datei des Ports im Dossier fuer den Nutzer nennen). Beide nutzen denselben Ton.
+
+## 2026-10-24 19:53 — Nachtrag 18 (Wortlaut; vier Punkte zur Ventilkette, Spur C)
+
+> 4 Dinge:
+>
+> - Das Poster mit der Anleitung der Valves die gedreht werden müssen entspricht nicht dem Stil des restlichen Spieles wie
+>   die Dinge dort aussehen. Das sieht er aus wie aus Monkey Island..... Wenn schon muss du den Stil des Rest des Spieles
+>   damit treffen
+> - in ROOM 2050 bei den neuen Rätsel mit den hebeln finde ich das mit den Lampen unten gut. ABER, bei den ausgewählten
+>   hebel, muss dann auch der Heben runter gehen wenn er ausgewählt wurde.
+> - Wenn an den valves gedreht wird in ROOM 2030, dann muss auch die valve dreh animation kommen. Die kannst du aus Resident
+>   Evil 2 übernehmen.
+> - Bei der Minute in ROOM 2030 bis der Raum flutet, muss es einen typischen Timer geben wie aus den Rest des Spiels, der dann
+>   abläuft. Außerdem brauche ich den Text noch mal, damit ich den voiceover dafür aufnehmen kann. Also - Alarm, so wie am
+>   Spiel Ende immer und dann das Voiceover beim Text.
+
+Folgen (Orchestrator, Umsetzung Spur C in der naechsten Nachbesserung):
+1. Plakat im Stil des Spiels: Vorbild sind die echten Nahaufnahmen/Dokumente des Spiels (RE1.5-Nahaufnahmen der Runde 40,
+   RE2-Aushaenge/Dokumente aus info/re2leon bzw. extracted_re2_dokumente) — Papier/Textur, Schrift (Schreibmaschine/Druck wie
+   die Spiel-Dokumente), Farben, Abnutzung; keine Comic-/Zeichentrick-Optik. Vorher/Nachher-Bild + Vergleich mit 2 echten
+   Spiel-Nahaufnahmen im Dossier. Inhalt (Reihenfolge/Farben/Nummern) bleibt wie freigegeben (Nachtrag 15).
+2. ROOM2050 Schaltpult: die Lampen bleiben; der ausgewaehlte/umgelegte Hebel muss sichtbar nach unten gehen (Hebel-Stellung
+   je Zustand, Form wie die Original-Hebel 11F0/2060 mit Beleg; Grafik aus dem Hintergrund/den Original-Modellen ableiten).
+3. ROOM2030 Ventile: beim Drehen spielt die Ventil-Dreh-Animation aus Resident Evil 2 (RE2-Spieler-Clip des Ventilrads,
+   Raum/RBJ/EDD mit Offsets belegen, wie Spur B die RE2-Clips uebernommen hat; ggf. das Rad selbst mitdrehen).
+4. ROOM2030 Countdown: die 60 s laufen als typischer Spiel-Timer ab (Anzeige wie der Countdown am Spielende — Original-
+   Timer-UI belegen), dazu der Alarm wie am Spielende (Original-Ton belegen), und beim Warntext die Sprachausgabe des Nutzers.
+   Datei-Platz fuer die Aufnahme des Nutzers: synchro/STAGE2/room2030/main46.wav (Elza: room2031/main46.wav; fehlt die Datei,
+   kein Ton — der Port darf sie nicht erzeugen). Wortlaut des Textes Id 46 wird dem Nutzer genannt.
+
+## 2026-10-24 19:55 — Nachtrag 19 (Wortlaut; Warntext 2030 Id 46, Spur C)
+
+> Ändere den Text zu: WARNING: The water will rise in one minute. Please leave the room immediately!
+
+Folgen (Orchestrator): Text 2030/2031 Id 46 = "WARNING: The water will rise in one minute. Please leave the room
+immediately!" (Wortlaut exakt; nur der Zeilenumbruch nach der Breite des Nachrichtenfensters). Die Sprachaufnahme des Nutzers
+kommt nach synchro/STAGE2/room2030/main46.wav bzw. room2031/main46.wav (Nachtrag 18 Punkt 4).
+
+## 2026-10-24 20:34 — Orchestrator-Entscheid E-E5 (Fragen der Nachbesserung E 4; der Nutzer kann widersprechen)
+
+- Der 2-Zeilen-Haken der Spur E in engine/src/game_step_common.c (vor der Zweig-Kette des Spieler-Dispatchers; Renn-Stopp
+  endet, wenn ein Durchlauf keinen Kommando-1-Schritt macht — Original +5/+6 @0x8003272c/@0x800328fc, Ueberschreiber
+  @0x80043544/@0x80043610/@0x80038ea8/@0x80041f90/@0x80041bb0/@0x80102640/@0x8011c38c) ist angenommen (Erweiterung von E-E1/E-E2).
+- Die dritte benannte Ausnahme der Gorilla-Sonde (WESTBLOCK x 3800..6200 / z 9900..12500) ist bestaetigt, weil dort auch die
+  Original-Regel haengt (AUS 5880 in 15 Seeds) — kein Rueckschritt der Spur E. Die drei Gorilla-Haenger (TASCHE, SUB7,
+  WESTBLOCK; zombieki_r36.c, Runde-36-PORT-WAHL) sind Folgeauftrag (UEBERGABE §3b).
+
+## 2026-10-24 21:41 — Nachtrag 20 (Wortlaut; Lage der Zombies in 2080, Spuren G und F)
+
+> In 2080, nachdem die Zombies durch die Tür gebrochen sind, sollen sie oberhalb von der Treppe laufen, nicht unten.
+
+Folgen (Orchestrator): Die 8 Zombies (Spur G, ROOM2080/2081) brechen durch die Tuer herein und laufen auf der OBEREN Ebene
+(oberhalb der Treppe), nicht unten. Ebene/Band und Tuer aus der Geometrie belegen (SCA-Zellen/Baender, Tuer-Satz), Wege der
+Zombies auf der oberen Ebene halten (kein Abstieg ueber die Treppe), Bildbeleg aus den 2080-Kameras. Spur F zeigt in der
+2090-Einstellung "oben in 2080 kommen die Zombies herein" dieselbe Lage.
