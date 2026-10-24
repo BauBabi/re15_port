@@ -279,3 +279,44 @@ room2051.rdt`; Baender in Folge `band=1` -> `band=3` (T313) -> `band=2` (T754) -
 vor **109 / 240** Lagezeilen mit Kisten-Ueberlappung (obj 1 bis z 1032 durch obj 2), 0 gesperrt — nach **0 / 240**,
 `F1978 room=2051 OBJEKT-GESPERRT p=2 obj=1 ziel=(2052,-1852) gegen p=3 obj=2 lage=(659,0,-64) dX=1393 dZ=-1788 sumX=1800 sumZ=1800`,
 obj 1 bleibt bei z -1884 (\|dZ\| 1820).
+
+## 5. Gezielte Testgruppen (selbst gefahren, Spurbaum, keine volle Suite)
+### 5.1 unit_/prop_/probe_ (der Diff aendert den NPC-Tick aller NPC-Typen, die Schubkette aller Kisten und den Bildablauf)
+`ctest --test-dir <baum>/re15_port/build -R "^(unit_|prop_|probe_)" -E "releaseskript|android_pruefkette|android_bash_mutanten|
+titelversion_ablauf" -j 4 --timeout 600 --output-on-failure` -> **`100% tests passed, 0 tests failed out of 922`**
+(`Total Test time (real) = 402.29 sec`, `ctest_unit.log`). Ausgenommen (kein Bezug zum Diff: release/ und Android-Kette, Bash-
+Fixtures, die unter Agentenlast in ihre Zeitgrenzen laufen — so schon Abnahme 0, H3): unit_r38_releaseskript_{version,bausteine,
+trocken,ablauf,fehler_bau,fehler_umfeld,cmd}, unit_r35_android_pruefkette, unit_r35_android_bash_mutanten, unit_r39_titelversion_ablauf.
+Die vier Unit-Teile der Spur zusaetzlich direkt gelesen (`test_r41_kollision.exe npc|raum3070|raum3001|kiste`): 11/6/6/12 PASS,
+0 FAIL, z.B. `SquareRoot0(250000) = 499 -> erwartet x 901`, `min. Abstand 899 >= 880` (3070), `min. Abstand 732 >= 730` (3001).
+
+### 5.2 Integrationsgruppe (NPC-Szenen, Kisten/Objekte, Raumlauf-Riegel)
+Regex wie Abnahme 0 (Datei `integ_regex.txt`, 81 Tests): `^integration_(r35_cut10f0|r35_cut1150|r36_szene1150|r36_szenenleon|
+r36_story_leon|r36_story_elza|r37_szene11c0|r37_roy_szene1011|r37_roy_szene1021|r37_roy_leon1170|r37_sperre1050|r38_heliport1171_.*|
+r39_heliport1171_.*|r38_werkstatt11b0|r38_szenenschutz|r38_kleinkram_irons|r36_elza_irons|r39_johnruf1041_a|r39_johnruf1041_b|
+r39_funk10f1_.*|r39_parkplatz11c0_.*|r38_dining1141_.*|r39_dining1141_.*|r39_stimmen_.*|r39_toene_szene.*|r38_elzatoene_.*|
+r30_irons_tisch_.*|r30_cut_blitz|r37_elzaems_.*|r41_wasser20b0.*|r39_gegner_1141|r36_dachkiste|r36_klettern|r37_kiste.*|
+r37_itemband.*|r38_wasser.*|room_transition|cross_stage|door_traversal|room_probe_sweep|...)$`, `-j 3 --timeout 2700
+--output-on-failure` (`ctest_integ.log`).
+Stand beim Speichern: LAEUFT (gestartet 18:27, 4/81 bisher gruen) — Ergebnis wird hier nachgetragen.
+
+## 6. Vertrag (VERTRAG.md)
+- **Pfade** (`git diff master...HEAD --name-only`; das 2-Punkt-Diff gegen das inzwischen weitere master listet fremde pri/-/
+  Doku-Commits, s. Abschnitt 1): ausser `analysis/befunde_runde41/H_*` (+ AUFTRAG.md-Abgleich durch den Orchestrator, 4616305a /
+  91e19ffa) nur `re15_port/engine/src/{kollision_r41.c,aot_common.c,enemy_ai_common.c,game_step_common.c}`,
+  `re15_port/include/re15_kollision_r41.h`, `re15_port/tests/unit/{probes/r41_kollision.cmake,test_r41_kollision.c,
+  probe_r41_kollision_abstand.c}`, `re15_port/tests/integration/{test_r41_kollision.cmake,test_r39_dining1141_kampf.cmake}`.
+  Keine Datei unter release/, platform/android/, shared_assets/PSX/, pri/, synchro/; kein CMakeLists.txt (Registrierung ueber
+  `tests/unit/probes/*.cmake`, eingesammelt von `file(GLOB _re15_probe_cmakes ...)` tests/unit/CMakeLists.txt:4060). **haelt.**
+- **Bank-9-Bits / Nachrichten-Ids / Slots / Ereignisse:** keine (einziges `re15_game_flag_set` im Diff steht im Unit-Test und setzt
+  dort die Story-Flags der Sandbox). **haelt.**
+- **Gemeinsame Dateien nur kleine Haken** mit "Runde 41 Spur H": aot_common.c +10/-5 (Include, 3 Zeilen Logik, berichtigter
+  Kopfkommentar), game_step_common.c +2, enemy_ai_common.c +2. aot_common.c und game_step_common.c sind der Spur H in §1.3
+  zugeteilt; enemy_ai_common.c (V1) und der fremde Riegel test_r39_dining1141_kampf.cmake (V2) sind per **Orchestrator-Entscheid
+  H-E1** (AUFTRAG.md 2026-10-24 17:38) angenommen und werden hier nicht mehr als Mangel bewertet. Die Nachbesserung 1 hat beide im
+  Dossier dokumentiert (Abschnitt "Nachbesserung 1"); ihre neuen Adressen sind in RE-Gate 6 nachgeprueft. **haelt.**
+- **Riegel je Punkt vorhanden und messend:** Punkt 1 `unit_r41_kollision_{npc,raum3070,raum3001}` + `integration_r41_kollision_
+  {npc3070,npc3001}`, Punkt 2 `unit_r41_kollision_kiste` + `integration_r41_kollision_{kiste,raetsel_leon,raetsel_elza}`;
+  parallel-fest und Linux-fest (Abschnitt 2). **haelt.**
+- **Nebenwirkungen beide Szenarien / Nachbarraeume:** Leon und Elza fuer beide Punkte gemessen (4.1-4.9); Nachbarszenen 3080/3081
+  und Folgeraeume 4000/4001 unveraendert bzw. ohne Kontakt (4.6); 30E0 (4.7) und 3011 (4.8) als weitere Eskorten-Orte. **haelt.**
