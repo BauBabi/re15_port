@@ -271,6 +271,55 @@ Fortsetzung 2026-10-24 ~14:1x (Vorgaenger vom Wochenlimit ~13:5x beendet; Commit
 - [ ] Auflage Nachtrag 11: 10 Uebersichtsbilder (3040/3041 01, 3050/3051 06+15, 30E0/30E1 06+07)
 - [ ] Bau, gezielte Tests, Commit fix(r41-masken36): Nachbesserung 1
 
+### NB1 Mangel 3 - ROOM2030/2031 Cut 15 (4400,3850) Band 3: die "uebermalten Leon-Punkte" sind die Spinne (widerlegt)
+
+**Ursache der Abnahme-Zahl:** das Mass S = |B - Hintergrund| > 24 im Figurfenster zaehlt JEDE Figur. Direkt hinter Leon (und
+hinter der Reling) steht eine Spinne (Akteur 1, EM025 -> TIM-Slot 11, debug.log `[enemy] RE2 EM025 ... -> slot 11`).
+**Messung** (Scratchpad `m41nb1c/`, `hs.py`/`ana.py`; exe = Spurbaum, Bild 120, RE15_WINDOW_SCALE=1; Dreiecke des letzten
+Bilds per RE15_TRILOG, render_pc.c `re15_trilog`: Slot, z = Mittel der drei Kamera-z, main.c `avg_z`; eine Maske wird vor einem
+Dreieck gezogen, wenn ihr Schluessel (depth+1)*65536/1023 > Dreieck-z, render_pc.c `pc_masken_schatten_flush`, = Original-Urteil
+depth < (1023*vz)>>16, @0x8002565c `sra v1,v1,4`, ZSF3 = 341 @0x80066c70, re15_pri.h):
+| Szene | S | H | Leon-Punkte (Slot 0) | davon unter einer Maske mit Schluessel <= Dreieck-z |
+|---|---|---|---|---|
+| Leon, Spinne da (= Abnahme) | 1762 | 166 | 1505 | **0** |
+| Leon, Spinne weggestellt (RE15_GEGNER_POS 1,-20000,-20000) | 1225 | **0** | 1922 | **0** |
+| Elza (2031), Spinne da | 1721 | 216 | 1037 | **0** |
+| Elza, Spinne weggestellt | 1017 | **0** | 1320 | **0** |
+Die uebermalten Punkte sind Slot 11 (Spinne, Dreieck-z 9596..9964) gegen Masken-Schluessel 8520..8905: die Reling verdeckt die
+Spinne dahinter - richtig. Leons Dreiecke liegen bei z 6905..8911; die Reling-Tiefe 131..145 kommt aus der Zelle x 5400..5900
+z -9000..8650 (Band 3, Typ 1, Hoehe 1650, auswahl.json/raum.py, Dossier 2.2), 1000 Einheiten HINTER Leon (x 4400). Die Tiefe des
+Handlaufs ist richtig, **keine Aenderung**. Bilder `M_bilder/NB1_M3_ROOM2030_C15_mit_spinne.png`, `_spinne_weg.png`,
+`NB1_M3_ROOM2031_C15_*.png` (mit | ohne Masken | rot = veraendert). Riegel: `test_r41_masken36_szenen.cmake` `v2030_15`/`v2031_15`
+(VOR, Spinne weggestellt: H == 0) und `m2030_15` (Gegenprobe mit Spinne: die Reling verdeckt sie, H > 0).
+
+### NB1 Mangel 4 - VOR-Stellen 2030 C7 / 2040 C7 mit Spielfigur im Bild: es gibt keine
+
+**Ursache:** `e1_stellen.py` nahm die staerkste Ueberdeckung "VOR der Standlinie (.STAND)" und schnitt den Figurkasten nur ans
+Bild - ob die Figur im Bild ist, wurde nicht verlangt (2030 C7 (0,-1950): sy 928; 2040 C7 (-17300,-8800): Leon nicht im Bild).
+**Messung 1 - Standlinien-Modell mit Figur VOLL im Bild** (`c6_vorstellen.py`: Plaetze aus `test_r37_masken36 plaetze` =
+Flutfuellung + Kamerazonen + Akteur-Cull FUN_8002c18c, Kasten 3000 x +-350 mit allen vier Ecken im Bild): 2030 C7 82 Plaetze
+(staerkste (4500,9150) Band 3), 2040 C7 1477 (staerkste (-17500,-5600) Band 3). An der exe verdeckt die Maske Leon dort teilweise.
+**Beleg - die Plaetze liegen HINTER dem Gelaender** (`c9_vor3d.py`): Sehstrahl Kamera -> Figurpunkt (7 x 13 Punkte des
+Kastens) gegen die Gelaenderzelle als Quader (SCA Band 3, Hoehe per geometrie.hoehe_messen gegen die Freistellung):
+* 2040 C7: Kamera (-17264,-7310,-9105), Gelaender x -18250..4150 z -6500..-6050, Hoehe 1800 -> von 2378 erreichbaren Plaetzen mit
+  Figur voll im Bild und Ueberlappung mit der Maske: **0 VOR**, 807 ganz und 1571 teilweise HINTER (Kopf ueber dem Handlauf).
+* 2030 C7: Kamera (-23,-8310,-2043), Ring-Gelaender x -6350..5900 z 8150..8650 und x 5400..5900 z -9000..8650, Hoehe 1875 ->
+  von 767 Plaetzen **0 VOR**, 767 teilweise HINTER.
+Die Kamera haengt in beiden Cuts VOR dem Gelaender ausserhalb des Stegs; jede erreichbare Stelle mit der Figur im Bild liegt
+dahinter. **Ergebnis: keine begehbare VOR-Stelle mit Figur im Bild** (die VOR-Pruefung dieser Cuts ist leer, nicht verfehlt);
+die Standlinien-"VOR"-Stellen sind HINTER-Stellen.
+**Nebenbefund dabei (Punkt 2, behoben):** an diesen HINTER-Stellen verdeckte der Handlauf Leon NICHT (exe, Leon-Dreiecke):
+2040 C7 (-17500,-5600): 355 Leon-Punkte unter der Maskenflaeche, 146 verdeckt (Pfosten, Tiefe 43), **209 nicht** (Handlauf
+Tiefe 391/392, Leon z 2713..3169 = Bucket 42..49); 2030 C7 (4500,9150): 297 unter der Maske, 28 verdeckt, **269 nicht** (Tiefe
+186..256 an der Ecke, Leon Bucket 179..193). Ursache: Profil-Tiefe (geometrie.tiefe_profil) - der Handlauf hat im Bild keinen
+Bodenkontakt, seine Spalten erbten den Bodenpunkt weit hinten (2040 C7 "Profil-Tiefe 43..631"; 2030 C7 07_01 "83..202" fuer
+Nord- UND Ostgelaender zusammen). **Aenderung** (auswahl.json, `"r41"`-Vermerk; Nutzer-PNG unveraendert): 2040 C7 `"zelle"`
+[-18250,-6500,22400,450]; 2030 C7 07_01 an der Ecke (Bildspalte 173..186, Projektion der Zellenecke) bei Spalte 179 in zwei
+Objekte geteilt (`"minus"`), Nordgelaender `"zelle"` [-6350,8150,12250,500], Ostgelaender [5400,-9000,500,17650]; `raum.py ROOMxxxx 7
+--p2 --stufe 16 --statistik max --dump build/p2/dump_klemmpfad_r40.txt` -> 2040 C7 33 Rechtecke Tiefe 35..50 (2898 von 2981
+Punkten direkt getroffen), 2030 C7 105 Rechtecke Tiefe 78..258 (Nord 130..183, Ost 77..181, 07_02 unveraendert 246..258);
+Bau-Schiene VOR verdeckt 0 / teil 0. Bilder vorher `M_bilder/NB1_M4_ROOM2030_C07_hinter.png`, `NB1_M4_ROOM2040_C07_hinter.png`.
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
