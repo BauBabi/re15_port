@@ -170,6 +170,20 @@ Aufbau: `RE15_DEBUG_JUMP=2030@250`, Start an der Ost-Tuer `RE15_PLAYER_POS=6550,
   Bildbogen `<a3>/kette_leon_teil1_b.png`: F3610 Cut 4 auf dem Steg, F3760 Cut 5 Leon vor dem Schild 09 (rotes und gruenes
   Ventilrad), F3850/F4030 Text 49, F4300/F4450 Sicherung (Frage, genommen), F4780/F4900 Frage 45.
 
+### L2b — Punkt 2 ueber die echte Tuer: 2070 Mittelgang -> 2030 Ring vor der Flut (Leon `eingang`, Elza `eingang_elza`; Serie 12)
+Die Laeufe L2/L3/L3b sprangen nach 2030; hier der Eintritt so, wie ihn ein Spieler vor der Flut macht (2000 -> 2070 -> Ring; die
+2000-Tuer nach 2070 ist vor der Flut unveraendert Original). `RE15_DEBUG_JUMP=2070@250`, Start im Mittelgang vor Slot 1 (4400,-6400)
+Blick 0, Plan `eingang.txt` (GEGNERWEG, Aktion an der Tuer, in 2030 zu Fuss zum Pult, Aktion).
+* Leon: Wegplan `FLAG (9,102) = 0`, `FLAG (9,103) = 0` -> `DOOR FIRE slot=1 rect=(5500,-6400,hw=500,hh=1500) target_cut=0
+  spawn=(6550,-5400,-100)` -> `loaded room2030.rdt` -> **`ROOM2030: Bruecke obj 0 oben y -5400, Zelle 12 gesperrt`** -> AOTS
+  `slot 12 typ 0 ev 24 ... band 3 mitte (350,-10350)`, `slot 13 ... ev 25 band 1 mitte (-2400,-6400)`, `slot 14 ... ev 26 band 1
+  mitte (-900,7900) halb (2500,500)`; `ZELLE r0[12] LAUFZEIT: x -2050..-50 z -5950..5450 typ 1 u0 0xff` -> Ring zu Fuss zum Pult ->
+  `ROOM2030 Ereignis 24 -> Port-Programm 2030_pult_ohne` -> `[msgtext] room=2030 id=40 "A control panel for the bridge. The pressure
+  gauge reads zero.Intake valve 13 is closed."`.
+* Elza: `PL04` -> `loaded room2071.rdt` -> dieselbe Tuer -> `loaded room2031.rdt` -> `ROOM2031: Bruecke obj 0 oben ...` -> AOTS 12/13/14
+  gleich, Zelle 12 `u0 0xff` -> `[msgtext] room=2031 id=40 "A control panel for the bridge. ..."`.
+  => Der Raumaufbau der Kette laeuft auch beim Tuer-Eintritt (room_common.c -> scd_room_reenter -> Installer), nicht nur per Sprung.
+
 ### L3 — Punkt 3: Zaehler, Flut, Tod mit Ertrink-Effekt (Leon `flut`; Bildbogen `<a3>/flut_sheet.png`)
 Aufbau: Bits 101/102/(3,108) gesetzt (Bruecke unten, Sicherung genommen — Vorbedingung nach Nachtraegen 9/10), Spinnen-Kill-Bits,
 Start vor den Ventilen am Sued-Landeplatz `RE15_PLAYER_POS=-600,7150,3072,1`, Plan `flut.txt` (Aktion, Ja, Warnung zu, stehen).
@@ -247,6 +261,13 @@ Aufbau wie L3 (Bruecke + Sicherung gesetzt, Start vor den Ventilen), aber nach d
   Wasser y -5400 ...`, `ERTRUNKEN: Wasser y -6300, Spieler y -5400 -> hp -1, blaue Blende`), F2461 `hp=-1`.
   => "Wasser in 2030: Ueber die Ringebene" und "Zeit abgelaufen und noch im Raum: Tot mit Ertrink-Effekt" gelten auch auf dem
   Ring, fuer beide Figuren.
+* Bild (Leon `flut_ring2`, derselbe Lauf mit Framedump F2200-2560, Bildbogen **`<a3>/flut_ring_leon.png`**): F2340 Cut 4 (Draufsicht)
+  Flut beginnt, F2380 (Wasser y -2200) die gesenkte Bruecke ist untergetaucht, F2420 (-4200) die Waende mit 05/01/02 verschwinden,
+  F2440-F2460 (-5200..-6200) das ganze Bild ist Wasser, F2480 blaue Blende. Beobachtung (kein Befund, unveraendert seit Abnahme 2):
+  die beiden Flutflaechen (x -10800..10800, z -12400..20000) liegen wie jede Flaeche ueber dem tiefenlosen BSS-Bild; schon im
+  ersten Flutbild (y -200) deckt die Flaeche in Cut 4 die Landeplaetze im Bild zu, sichtbar "steigt" danach die Bruecke ab und
+  die Wand verschwindet. Die Relinghoehe (Nachtrag 8) begrenzt ihre Flaeche deshalb auf die Schachtoeffnung (L6b); fuer die
+  Flut selbst gibt es keine Nutzer-Vorgabe ueber die Form ("Platzhalter").
 
 ### L3b — Punkt 3 Flucht: Sicherung -> Ventile -> Warnung -> zu Fuss zur Ost-Tuer -> 20B0 (Leon `kette_b`, Elza `kette_b_elza`)
 Aufbau: Bruecke unten vorgesetzt (`RE15_SET_FLAG=7:155..158,9:101,9:102`; die Bruecke selbst misst L2), Start am Suedende des
