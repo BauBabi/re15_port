@@ -319,6 +319,27 @@ STAGE3: 80100e64 sb zero,149 / 80100e74 sb zero,143 / 80100e8c jal 0x8001f314 / 
   Gewicht `anim_frac * anim_blend_rate` — dieselbe Formel wie FUN_8001f3bc; zeigt der Port bis P2 Clip 0x0c/0x0e Bild 0,
   blendet P2 (anim_frac 0xf, Rate 0x100) automatisch aus dieser Pose heraus.
 
+**Zusatzbefund M1b (gemessen am Zwischenstand mit Halt, `scratchpad/I41nb1/runs/re15_2000/pose.log`, RE1.5-KI, LADEN 2000,
+Kamera 7):** F0..F10 `mo=18 af=0 frac=0 kf=301` (Halt = Clip 0x0c Bild 0, richtig); F11 (P1 -> P2) `kf=400 frac=15` mit
+unveraenderten Knochen (Rate 0 -> Vorgabe 0x200, Gewicht geklemmt 0x1000 = Halt-Pose); **F12 `af=1 frac=14 kf=401`** —
+der Port zeigt im ersten P2-Takt schon Bild 1 mit +0x8f 14, das Original Bild 0 mit +0x8f 0xf. Ursache: P1 kehrt im
+Original OHNE anim_set zurueck, P2 ist ein eigener Fall der +0x6-Weiche (STAGE2, eigener Lauf
+`re15_disasm.py --bin STAGE2.BIN dis 0x801038ec 76`):
+```
+801038fc lbu v1,6(a1) / 80103904 beq v1,1 -> 80103964 (P1) / 80103914 beq v1,0 -> 80103940 (P0)
+80103928 beq v1,2 -> 8010399c (P2) / 80103930 beq v1,3 -> 801039d0 (P3)
+P1 80103964 lhu v1,156 / 8010396c addiu v0,v1,-1 / 80103970 bne v1,zero,0x80103a10 / 80103974 sh v0,156
+   80103984 sb v0(=2),6 / 80103994 j 0x80103a10 / 80103998 sb v0(=0xf),143      ; zurueck, KEIN f314
+P2 8010399c addu a2,zero,zero / 801039a0 lw a0,368 / 801039a4 lw a1,372 / 801039a8 jal 0x8001f314 / 801039ac ori a3,0x100
+   801039bc lbu v1,6 / 801039c4 addu v1,v1,v0 / 801039cc sb v1,6                 ; +0x6 += fertig
+```
+=> Takt T: P1 setzt +0x6 = 2 / +0x8f = 0xf, Skelett unveraendert. T+1..T+98: 98 anim_set (Bild 0..97, Gewicht
+0xf00, 0xe00, ...), Wrap im 98. -> +0x6 = 3 in T+98, P3 in T+99. Der Port schob ab T+1 vor (Ordnung Vorschub -> KI ->
+Zeichnen, player_common.c) -> P2 einen Takt zu kurz (Abnahme S5: ss2=2 F83..F179 = 97 Takte, ss2=3 F180). Die
+Skript-Weckung 9/10 ist NICHT betroffen: DECIDE @0x801039fc setzt +0x6 = 2 und ANIMATE (P2) laeuft im selben Takt.
+Abhilfe im Port-Vokabular: `motion_init_delay = 1` ("Saat-Takt posiert Bild 0", wie re15_npc_seed_clip /
+game_step_common.c) genau beim Uebergang P1 -> P2, und der Halt gilt bis zu diesem ersten P2-anim_set.
+
 ### 8.2 I-E2 — LADEN in ROOM2000/2001: keine Zombies
 
 **Messung vorher** (Abnahme S8, nicht wiederholt; debug.log selbst gelesen): `abn/s8_laden2000/debug.log`
