@@ -4,7 +4,7 @@ ROOM3040 C0  | 2 | (-9, 124) | rot  1283 px | [2, 3, 4, 5, 6, 36] | Objekt: Band
 ROOM3040 C1  | 1 | (64, 0) | rot  7920 px | [5] | Objekt: Band N: kein Bodenkontakt; Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
 ROOM3040 C1  | 2 | (22, -63) | rot  2195 px | [6] | Objekt: Band N: kein Bodenkontakt; Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
 ROOM3040 C1  | 3 | (-98, 98) | rot   712 px | [0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18] | Objekt: Band N: keine Zelle traegt die Mehrheit der Bodenkontakte ; Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
-ROOM3040 C3  | 1 | (81, 84) | rot   407 px | [10, 13, 20, 21, 55, 56, 57, 58, 59, 61, 65, 67, 68, 69, 70, 71, 72, 73, 74, 77] | 
+ROOM3040 C3  | 1 | (81, 84) | rot  1307 px | [9, 10, 13, 20, 21, 55, 56, 57, 58, 59, 61, 65, 67, 68, 69, 70, 71, 72, 73, 74, 77] | 
 ROOM3040 C9  | 1 | (180, 137) | rot  2597 px | [23] | 
 ROOM3040 C9  | 2 | (41, 3) | rot   261 px | [3, 84, 86] | 
 ROOM3050 C1  | 1 | (58, -74) | rot  3638 px | [43] | Objekt: Band N: kein Bodenkontakt; Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
@@ -19,7 +19,7 @@ ROOM3050 C7  | 1 | (86, 160) | rot  8744 px | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
 ROOM3050 C13 | 1 | (-49, 128) | rot   976 px | [1, 16, 20, 37, 40, 67, 69, 71, 72, 73, 75] | Objekt: Band N: keine Zelle traegt die Mehrheit der Bodenkontakte ; Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
 ROOM3050 C15 | 1 | (31, 57) | rot 31163 px | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69] | 
 ROOM3050 C15 | 2 | (31, 55) | rot   111 px | [34] | 
-ROOM30A0 C0  | 1 | (-25, 211) | rot  1469 px | [31, 32, 34, 35, 36, 101, 102] | Zellen-Tiefe N nicht ferner als N
+ROOM30A0 C0  | 1 | (-25, 211) | rot  1618 px | [31, 32, 33, 34, 35, 36, 37, 101, 102, 103, 104] | Objekt: Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
 ROOM30A0 C1  | 1 | (9, 175) | rot   587 px | [28, 29, 31, 32, 56, 58, 68, 69, 73, 75, 88, 89, 93] | Objekt: Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
 ROOM30A0 C3  | 1 | (124, 51) | rot  4501 px | [20, 21] | Objekt: Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
 ROOM30A0 C3  | 2 | (221, 0) | rot  2460 px | [45] | Objekt: Band N: kein Bodenkontakt
@@ -58,8 +58,9 @@ ROOM5020 C11 | 2 | (78, 174) | rot  7062 px | [0] | Objekt: Band N: keine Zelle 
 ROOM5020 C12 | 1 | (-75, 124) | rot  1762 px | [0, 16, 17] | Objekt: Band N: kein Bodenkontakt; Band N: kein Bodenkontakt
 ROOM5050 C1  | 1 | (33, 197) | rot   448 px | [6, 7, 9, 10, 90, 95, 97, 102] | 
 ROOM5050 C1  | 2 | (-57, 132) | rot  1287 px | [22, 56] | 
-ROOM5050 C1  | 3 | (32, 105) | rot  3958 px | [0, 2, 3, 43, 45] | 
-ROOM5050 C2  | 1 | (2, 178) | rot  1477 px | [0, 7, 8, 10, 12, 15, 20, 23, 57, 58, 59, 60, 61, 62, 63, 67, 68] | Zellen-Tiefe N nicht ferner als N
+ROOM5050 C1  | 3 | (32, 105) | rot  4182 px | [0, 1, 2, 3, 4, 43, 45, 47] | 
+ROOM5050 C1  | 4 | (214, 132) | rot  1647 px | [11, 13] | Objekt: Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
+ROOM5050 C2  | 1 | (2, 178) | rot  3719 px | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 55, 56, 57, 58, 59, 60, 61, 62, 63, 65, 66, 67, 68, 71, 72, 73, 80, 83, 84, 85, 88, 89, 90, 91, 92, 95, 96] | Objekt: Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
 ROOM5050 C2  | 2 | (5, 202) | rot  2157 px | [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 69, 70, 75, 77, 81, 82, 86, 87, 93, 94, 97, 98, 99, 100, 101, 102, 103, 104] | Objekt: Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
 ROOM5090 C13 | 1 | (47, -14) | rot  2162 px | [42] | Objekt: Band N: kein Bodenkontakt
 ROOM5090 C14 | 1 | (39, 97) | rot   609 px | [54, 56, 58, 95, 99] | Objekt: Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
@@ -96,4 +97,4 @@ ROOM6010 C12 | 1 | (70, -56) | rot   938 px | [53, 62] | Objekt: Band N: kein Bo
 ROOM6010 C13 | 1 | (-72, -11) | rot   624 px | [54, 56, 58, 60, 67, 76, 77] | Objekt: Band N: keine Zelle traegt die Mehrheit der Bodenkontakte ; Band N: keine Zelle traegt die Mehrheit der Bodenkontakte ; Band N: kein Bodenkontakt
 ROOM6010 C13 | 2 | (-48, -104) | rot  1064 px | [43, 57, 59] | Objekt: Band N: kein Bodenkontakt; Band N: kein Bodenkontakt; Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
 ROOM6030 C12 | 1 | (-46, 224) | rot   991 px | [0, 1, 2, 4, 5, 6, 7, 9] | Objekt: Band N: keine Zelle traegt die Mehrheit der Bodenkontakte ; Band N: keine Zelle traegt die Mehrheit der Bodenkontakte
-SUMME rot 267134 px
+SUMME rot 272296 px
