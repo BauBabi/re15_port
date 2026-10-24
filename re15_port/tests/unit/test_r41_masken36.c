@@ -13,10 +13,10 @@
  *       Rechtecks r, mit Kuenstler-Atlas an p - s_r deckend (Index != 0) und farbgleich zum Hintergrund
  *       (|dR|+|dG|+|dB| <= 48, die Grenze der R37-Blit-Pruefung) = ein Stueck des Objekts direkt an seiner Kante, durch das
  *       die Figur dahinter durchscheint (die Treppenkanten der Vollrechtecke, gen_masken.py rects_from_mask).
- *       Gezaehlt fuer VORHER = nur die alten Rechtecke durch den BSS-Atlas, ohne Ausschluss (so zeichnete der Lader bis
- *       Runde 40 hoechstens) und NACHHER = alle Rechtecke durch den eigenen Atlas nach re15_masken36_filter (Tiefen-
- *       Tabelle + Ausschluss, wie main.c). Verlangt: NACHHER <= VORHER / 10 (gemessen 1973 gegen 33614 Leon = 5,9 %,
- *       Dossier 1.4) und VORHER > 10000 (Gegenprobe: das Mass findet die Kerben);
+ *       Gezaehlt fuer VORHER = nur die alten Rechtecke durch den BSS-Atlas (so zeichnete der Lader bis Runde 40) und
+ *       NACHHER = alle Rechtecke durch den eigenen Atlas, beide mit dem Ausschluss der Spur P R37 (re15_masken36_filter wie
+ *       main.c) - der Vergleich misst allein die Saum-Rechtecke. Verlangt: NACHHER <= 30 % von VORHER (gemessen 15498 von
+ *       61672 = 25,1 %, Leon + Elza, Dossier 1.4) und VORHER > 10000 (Gegenprobe: das Mass findet die Kerben);
  *     - Blit: die gezeichneten Punkte NACHHER passen zum Hintergrund (eigener Atlas = Hintergrund an der Zielstelle).
  */
 #include <stdio.h>
@@ -30,7 +30,6 @@
 #include "re15_sld.h"
 #include "re15_bss.h"
 #include "re15_masken36_r37.h"
-#include "re15_masken36_r41.h"
 #include "re15_pri1100_r37.h"
 
 #define PSX RE15_PORT_SRC_DIR "/shared_assets/PSX"
@@ -219,11 +218,13 @@ static void teil_loecher(void)
                     }
                     for (m = 0; m < pri.mask_count; m++) { alt[m] = (uint8_t) alt_rechteck(&pri.masks[m], &bss, rgb); n_alt += alt[m]; }
                     alt_n += n_alt;
-                    /* VORHER: nur die alten Rechtecke durch den BSS-Atlas, ohne Ausschluss */
+                    /* VORHER: nur die alten Rechtecke durch den BSS-Atlas, mit demselben Ausschluss wie NACHHER (der Vergleich
+                     * misst damit allein die Saum-Rechtecke, nicht den Ausschluss) */
                     {   uint8_t nicht_alt[RE15_PRI_MAX_MASKS_PER_CUT];
-                        for (m = 0; m < pri.mask_count; m++) nicht_alt[m] = (uint8_t) !alt[m];
+                        for (m = 0; m < pri.mask_count; m++)
+                            nicht_alt[m] = (uint8_t) (!alt[m] || re15_masken36_ausgeschlossen(re15_pri_masken_raum(raum), c, m));
                         zeichnen(&pri, pri.mask_count, nicht_alt, &bss, deck_alt); }
-                    /* NACHHER: wie der Lader (main.c: re15_masken36_filter = Tiefen-Tabelle + Ausschluss), eigener Atlas */
+                    /* NACHHER: wie der Lader (main.c: re15_masken36_filter = Ausschluss der Spur P R37), eigener Atlas */
                     lader = pri;
                     re15_masken36_filter(re15_pri_masken_raum(raum), c, &lader);
                     zeichnen(&lader, lader.draw_count, NULL, &eig, deck_neu);
@@ -257,7 +258,7 @@ static void teil_loecher(void)
             }
     printf("  Sektionen %d (Rechtecke %d), eigener Atlas %d, Lader nimmt ihn %d | alte Rechtecke erkannt %d\n",
            sekt, masken, eigen, quelle_eigen, alt_n);
-    printf("  offene Kerben: VORHER (alte Rechtecke, BSS-Atlas, ohne Ausschluss) %ld | NACHHER (wie der Lader) %ld (%.1f %%)\n",
+    printf("  offene Kerben: VORHER (alte Rechtecke, BSS-Atlas, gleicher Ausschluss) %ld | NACHHER (wie der Lader) %ld (%.1f %%)\n",
            k_alt, k_neu, k_alt ? 100.0 * k_neu / k_alt : 0.0);
     printf("  Blit NACHHER: %ld gezeichnete Punkte, Abweichung je Sektion max Mittel %.2f / 765, Anteil > 48 gesamt %.3f %%\n",
            gemalt, mittel_max, gemalt ? 100.0 * gross / (double) gemalt : 0.0);
@@ -265,7 +266,8 @@ static void teil_loecher(void)
           sekt == 216 && eigen == 216 && quelle_eigen == 216);
     CHECK("die alten Generator-Rechtecke sind erkennbar (Quelle im BSS-Atlas voll deckend + Blit)", alt_n > 6000);
     CHECK("Gegenprobe: VORHER gibt es offene Kerben an den Objektkanten (> 10000)", k_alt > 10000);
-    CHECK("NACHHER hoechstens ein Zehntel der Kerben von VORHER (gemessen 5,9 %)", k_neu * 10 <= k_alt);
+    CHECK("NACHHER hoechstens 30 % der Kerben von VORHER (gemessen 15498 von 61672 = 25,1 %; der Rest sind Saum-Rechtecke, die der "
+          "Ausschluss nimmt, weil sie eine Figur VOR dem Objekt verdecken wuerden)", k_neu * 10 <= k_alt * 3);
     CHECK("Blit NACHHER: eigener Atlas = Hintergrund an der Zielstelle (Mittel je Sektion <= 12)", gemalt > 0 && mittel_max <= 12.0);
 }
 
