@@ -371,6 +371,17 @@ schliessen_r41.py ohne den verworfenen Weg (a24e2389). (c) `M_bilder/P1_exe_*.pn
 (kein Saum-Rechteck), Leon-Dreiecke gegen Schluessel: 120 Rasterpunkte verdeckt vor und nach NB1; +2 im Bildvergleich = andere
 Texelfarbe des eigenen Atlas. Altbestand -> OFFEN 6.
 
+### NB1 Auflage Nachtrag 11 - die 10 Uebersichtsbilder ohne berichtigtes Gegenstueck
+
+Die 10 Dateien (pri/STAGE3/3040+3041/01, 3050+3051/06+15, 30E0+30E1/06+07) hatten kein Gegenstueck, weil in diesen 5 Cuts
+KEIN Maskenpunkt gezeichnet wird: alle Rechtecke sind ausgeschlossen (3040 C1 19 von 19, 3050 C6 19, 30E0 C6 35, 30E0 C7 53;
+3050 C15 = Sektion ohne Stehplatz = Original-NULL-Sektion, R37 NB2 - auch nach NB1 Mangel 1: keine Zellen-Tiefe uebersteht dort
+den Ausschluss). Die alten Bilder unter pri/ zeigen Masken, die das Spiel nie zeichnet. `bilder_r41.py` schreibt fuer solche Cuts
+jetzt ein volles, ganz durchsichtiges Bild 320 x 240 (RGBA) in den Leon- UND den Elza-Ordner:
+`M_bilder/uebersicht/STAGE3/{3040,3041}/01_port.png`, `{3050,3051}/06_port.png`, `{3050,3051}/15_port.png`,
+`{30E0,30E1}/06_port.png`, `{30E0,30E1}/07_port.png`. Ausserdem sind alle Uebersichtsbilder und Bogen `M_bilder/ROOMxxxx_Ccc.png`
+mit dem Endstand von NB1 neu erzeugt (wieder aufgenommene Rechtecke, Mangel 1) - geaenderte Bilder s. "Fuer den Nutzer".
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):

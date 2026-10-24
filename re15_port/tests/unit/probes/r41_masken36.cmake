@@ -33,3 +33,21 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
     set_tests_properties(integration_r41_masken36_stage2 PROPERTIES TIMEOUT 1500)
 endif()
+
+# Nachbesserung 1 (Abnahme 0, Mangel 1): ausgeschlossene Generator-Objekte der Stages 3..6 mit der Tiefe ihrer Kollisionszelle
+#   integration_r41_masken36_zelle  echte exe (Leon): je Objekt eine HINTER-Stelle (die wieder aufgenommenen Rechtecke verdecken
+#                             Leon: H >= Haelfte bzw. H > 0) und eine DAVOR-Stelle (Leon ueberlappt sie, 0 Punkte uebermalt);
+#                             Szenen test_r41_masken36_zelle_szenen.cmake, Laeufer wie integration_r41_masken36_stage2.
+if(TARGET re15_pc)
+    add_test(NAME integration_r41_masken36_zelle
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r37_masken36_ppm>
+                     -DRE15_BG_TOOL=$<TARGET_FILE:probe_bg_dump>
+                     -DCD_ROOT=${CMAKE_SOURCE_DIR}/shared_assets/PSX
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_masken36_zelle_wd
+                     -DSZENEN=${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_zelle_szenen.cmake
+                     -DPRAEFIX=r41m3
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
+    set_tests_properties(integration_r41_masken36_zelle PROPERTIES TIMEOUT 1500)
+endif()
