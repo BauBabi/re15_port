@@ -91,7 +91,9 @@ unit = unit_r41_ventilkette (Abschnitte A-I, D2), _b = integration_r41_ventilket
 integration_r41_ventilkette_kette (nur mit Spur A registriert, Entscheid C-E1). Offen nach Messung: §6 (Querbezug A; Ring-Eintritt in das geflutete 2030 = Frage
 §7 f). **Nachbesserung 1 (§0b):** Punkt 5 + Kisten-Hebel (M1, unit F, _b E2/E3/E4), Punkte 3/4 ganze Kette in einem
 Lauf mit dem Haken der Spur A (M2, _kette), Blendenfarbe (M4, integration C), Bank 5 (M3, unit H), Text 49 (M8),
-Ring-Zugaenge des gefluteten 2030 gesperrt (M5 / C-E2, unit I, _b L/L2/M/M2).
+Ring-Zugaenge des gefluteten 2030 gesperrt (M5 / C-E2, unit I, _b L/L2/M/M2). **Nachbesserung 2 (§0c):** Punkt 6 nach
+der Flut — Tuergraph + Weg zu Fuss: kein Weg zum Rechner (ORIGINAL-Sperre ROOM11A0 Slot 4, (3,206)); OFFEN, Frage §7 (j);
+Riegel unit J, integration_r41_ventilkette_weg.
 
 ## 0b. Nachbesserung 1 (Abnahme 0 vom 2026-10-24, `C_abnahme_0.md` §4) — je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher
 
@@ -253,7 +255,10 @@ Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "
     @0x00A5A** `3b 01 02 31 00 00 88 13 24 e1 e8 03 b8 0b 96 19 e8 ea 9c ff 00 08 01 03 00 03` (Rechteck (5000,-7900,
     1000,3000), Band 0) und **Slot 2 @0x00A7A** `3b 02 02 31 00 00 12 b2 24 13 ...` (Rechteck (-19950,4900,1000,3000)).
   - Tuerebene (Ankunft y -16200, nfloor 9 = ueber dem Wasser y -7200): 2020/2021 Slot 1 @0x00866/@0x0088A, 2060/2061
-    Slot 0 @0x00D9A, 2080/2081 Slot 0 @0x00BA2 -> bleiben offen (Weg zum Rechner 2080).
+    Slot 0 @0x00D9A, 2080/2081 Slot 0 @0x00BA2 -> bleiben offen. **⛔ BERICHTIGT (Nachbesserung 2, N1):** ein "Weg
+    zum Rechner 2080" ist das NICHT — 2020/2060 kommen auf der Nordgalerie an, 2080 auf der Suedgalerie; beide trennt
+    Wand 66 (Abnahme 1 L9, SCA ROOM2030 @0x880); die Suedgalerie erreicht man nur per Lift B vom (gesperrten,
+    gefluteten) Ring. Den Weg nach der Flut gibt es nicht (§0c: Original-Sperre ROOM11A0 Slot 4, (3,206)).
   - 2070 hat nur msg 0 "You've opened the lock." (Port-Id 40 frei), 20B0 keine Texttabelle (Id 40 = Leiter, Id 41 frei).
 * **Aenderung:** `ring_sperren()` (ventilkette_r41.c): bei Bit 103 ohne 107 wird die Tuer (nur wenn sie wirklich nach
   Stage 1 Raum 3 fuehrt) zum Text-Platz sce 1 im Tuer-Rechteck — Form der Leiter 2000 (ROOM2030 main00 @0x01B12), Band aus
@@ -302,6 +307,13 @@ Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "
   Abnahme L6 `nach2030`), 20B0 hat (wie im Original-20B0, Slot 3 @0x019C2 -> 2030) keine Tuer nach 2070, und 2040
   braucht den Aufzug mit Strom (Nutzer: "Der Umweg 2070 -> 2040 -> 2050 geht nicht, ... Aufzug der Strom braucht").
   §6 und §3.6 sind korrigiert ("mit Bit 107 alles Original" galt nie fuer die Ost-Tuer).
+* **⛔ BERICHTIGT (Nachbesserung 2, §0c):** ROOM2070 sind DREI getrennte Gaenge (SCA ROOM2070 @0x714: Mittelgang
+  Slots 0/1 = 2000 <-> Ring, Suedgang Slots 2/3 = Ring <-> 2000, Nordgang Slots 4/5 = 11A0 <-> 2040). Die Tuer nach
+  11A0 liegt im Nordgang; den betritt man nur aus 2040 (Galerie, Slot 4 @0x0131C) oder aus 11A0 nach dem Riegel
+  (3,151) (2070 sub02 @0x00CE4). Die 2030-Ost-Tuer fuehrte (ohne Umlenkung) in den MITTELgang, nicht zur 11A0-Tuer.
+  Einen Aufzug hat 2040 nicht: Halle <-> Galerie = Treppe sce 13 (Slot 5/6 @0x0133C/@0x01350), Halle Sued <-> Nord =
+  Rost-Tuer (Zelle 19, frei erst nach der Zeitbombe (3,53) @0x01624; Bombe aus ROOM1110 (3,146) @0x00D32). Nach der
+  Flut erreicht man den Nordgang also ueber 2050/2060 -> 2040 -> Rost-Tuer -> Treppe -> Galerie (gemessen §0c Glied 6).
 * **Entscheidungsfrage (g):** soll 2030 Slot 0 nach dem Entleeren (Bit 107) wieder nach 2070 fuehren (Original-Ziel,
   2070 und 11A0 wieder direkt erreichbar), oder bleibt 2030 <-> 20B0 dauerhaft (Original-20B0 kennt 2070 nicht)?
 
@@ -960,6 +972,12 @@ shared_assets/PSX, pri/, synchro/, release/.
     Abnahme 0 — das Loeschen war fuer sie unsichtbar, s. M3).
 
 ## 6. OFFEN
+* **Nachbesserung 2 (2026-10-24, Abnahme 1 Mangel N1, Entscheid C-E2b): der Weg zum Rechner 2080 nach der Flut
+  existiert nicht** — blockiert an der ORIGINAL-Sperre ROOM11A0/11A1 Slot 4 ((3,206); main00 @0x00FEA/@0x00FEE; nur
+  ROOM20A0/20A1 sub10 @0x01FF0 setzt das Bit), gemessen zu Fuss mit Leon und Elza (§0c Glied 7, Bilder nb2_11a0/nb2_11a1).
+  Keine Port-Sperre der Runde 41 auf dem Weg -> nichts erfunden, kein Code geaendert. Entscheidungsfrage §7 (j) an den
+  Orchestrator. Riegel unit_r41_ventilkette J + integration_r41_ventilkette_weg halten den Befund fest (sie fallen,
+  sobald jemand die Sperre oder die Zugaenge aendert, und muessen dann mit dem Entscheid neu gefasst werden).
 * **Nachbesserung 1 (2026-10-24):** M2 bleibt eine Integrationsabhaengigkeit von Spur A (Entscheid C-E1) — mit dem
   wortgleichen Haken laeuft die ganze Kette in EINEM exe-Lauf (§0b M2, `r41c_nb1/mess/kette3`, Riegel-Lauf auf dem
   Endstand); der Ketten-Riegel `integration_r41_ventilkette_kette` wird nur mit A's Modul registriert (C-Baum:
@@ -1018,6 +1036,8 @@ shared_assets/PSX, pri/, synchro/, release/.
   gilt die Flut ebenfalls als gelaufen (Bits 103 + 100); die 20B0-Szene laeuft dann beim naechsten Eintritt in 2000
   (= 20B0), gleich von welcher Tuer (die Original-Szene sub02 setzt den Spieler an die Ost-Tuer). PORT-WAHL, nicht
   vom Nutzer entschieden.
+* (⛔ BERICHTIGT in Nachbesserung 2, §0b M7 / §0c: 2070 = drei getrennte Gaenge, 2040 ohne Aufzug — Treppe + Rost-Tuer
+  mit Zeitbombe; der folgende Satz der Nachbesserung 1 bleibt als Protokoll stehen.)
 * 2070 (der Gang, mit der Tuer nach 11A0) ist nach der Flut NUR noch ueber 2040 (Aufzug mit Strom) erreichbar: 2030
   Slot 0 bleibt auch mit Bit 107 auf 20B0 umgelenkt, und 20B0 hat (wie im Original-20B0) keine Tuer nach 2070
   (Nachbesserung 1, M7; die fruehere Fassung "von 2030/2040 aus" war falsch). 2070 -> 2000 landet in 20B0 am Westtor
@@ -1031,8 +1051,11 @@ shared_assets/PSX, pri/, synchro/, release/.
 ## 7. Fuer den Nutzer
 * Keine neuen Assets im Paket-Gate (alles eingebacken in gen/*.inc aus den vorhandenen RDTs); keine Sprachdateien.
 * Nach der Flut sind die Tueren aus 20B0 (Ost) und 2070 in den Ring von 2030 zu ("I cannot open the door because of the
-  water pressure."), bis der Rechner 2080 das Becken geleert hat; der Weg zum Rechner fuehrt ueber die Tuerebene
-  (2050 -> 2020 -> 2030 oben -> 2080).
+  water pressure."), bis der Rechner 2080 das Becken geleert hat. **⛔ BERICHTIGT (Nachbesserung 2):** den frueher
+  hier genannten Weg "2050 -> 2020 -> 2030 oben -> 2080" gibt es nicht (die Tuerebene von 2030 hat zwei getrennte
+  Galerien), und auch der Umweg 2050 -> 2040 -> 2070 -> 11A0 -> 20A0 -> 2090 -> 2080 endet an der Original-Tuer in
+  11A0: "It's locked from the other side." (§0c, Bilder C_belege/nb2_11a0_sperre_leon_sheet.png /
+  nb2_11a1_sperre_elza_sheet.png). Nach der Flut ist der Rechner 2080 derzeit NICHT erreichbar -> Frage (j).
 * Bedienung: 2030 Ring-Nordwand (Cut 1/2) = Pult; Treppe hinab, am Tank rechts (Zelle 2) = Ventil 13; Ring Ost-Streifen
   an der Tuer (Schilder 04/05/06) = die Ventile (Platzhalter des spaeteren Raetsels). 2050: Pult an der Saeule
   (Slot 8), Cursor mit dem Steuerkreuz, SQUARE kippt einen Hebel, CROSS verlaesst das Pult; Loesung 30 + 40 + 10 V.
@@ -1063,16 +1086,38 @@ shared_assets/PSX, pri/, synchro/, release/.
   z. B. "I cannot open the door because of the water pressure." (Mechanik wie die Leiter: Sperrtext-Satz sce 1, Form
   ROOM2030 @0x01B12). Braucht Port-Id 41 in 20B0/20B1 und Id 40 in 2070/2071 — VERTRAG §1.2 teilt C dort nur 20B0 Id 40
   zu, deshalb nicht gebaut. Der Weg zum Rechner bleibt offen (2050 -> 2020 -> 2030 Tuerebene -> 2080, ueber dem Wasser).
+  **⛔ BERICHTIGT (Nachbesserung 2, Abnahme 1 N1):** dieser Weg existiert nicht (Nord-/Suedgalerie getrennt, L9) — der
+  Vorschlag (f) und damit C-E2 beruhten auf einer ungemessenen Behauptung; Befund und Revisionsfrage §0c / (j).
   Alternative: so lassen (Waten in Brusthoehe). -> **Orchestrator-Entscheid C-E2 (05:25): Vorschlag angenommen, Ids
   zugeteilt, umgesetzt** (§0b M5).
   **(g) NEU (Nachbesserung 1, M7):** 2030 Slot 0 (Ost-Tuer) bleibt auch nach dem Entleeren (Bit 107) auf 20B0 umgelenkt;
-  damit ist 2070 (mit der Tuer nach 11A0) nach der Flut nur ueber 2040 (Aufzug mit Strom) erreichbar. Soll die Ost-Tuer
+  damit ist 2070 (mit der Tuer nach 11A0) nach der Flut nur ueber 2040 (Aufzug mit Strom) erreichbar [⛔ BERICHTIGT
+  Nachbesserung 2: die Ost-Tuer fuehrt in den 2070-MITTELgang (2000 <-> Ring), nicht zur 11A0-Tuer im Nordgang; 2040 hat
+  keinen Aufzug, §0b M7]. Soll die Ost-Tuer
   mit Bit 107 wieder nach 2070 fuehren (Original-Ziel)? Ohne Entscheid bleibt 2030 <-> 20B0.
   **(h) NEU (Hinweis H2):** steht Leon waehrend der Flut an den Ventilen, liegt sein Spritzer ausserhalb der Flut-Kamera
   Cut 4; sichtbar sind Wasser, blauer Schleier, Tod. Kamera vor dem Tod auf Leons Zone zurueckschalten (neue Regel ohne
   Vorbild) oder so lassen?
   **(i) (Abnahme M6):** die kleinen Haken der Spur C in main.c / game_step_common.c und die Querbezug-Flags ->
   **Orchestrator-Entscheid C-E3: angenommen.**
+  **(j) NEU (Nachbesserung 2, Abnahme 1 N1 / Entscheid C-E2b) — an den Orchestrator:** Nach der Flut (Bits 103+100
+  ohne 107) erreicht der Spieler den Rechner 2080 NICHT; 2030 bleibt geflutet, 2080/2090/20A0 (Alligator, Kanister-
+  Szene der Spuren F/G) sind unerreichbar. Gemessen (§0c): bis 11A0 ist alles mit den Original-Raetseln zu Fuss
+  begehbar; der Weg nach 20A0 endet an der ORIGINAL-Sperre ROOM11A0/11A1 Slot 4 (main00 @0x00FEA Ck(3,206)=0 ->
+  @0x00FEE msg 2 "It's locked from the other side."), und (3,206) setzt nur ROOM20A0/20A1 sub10 @0x01FF0 (von innen).
+  Vor der Flut ist 2080 ebenfalls unerreichbar (Lift B braucht den Generator 2060, der hinter der gesperrten Leiter
+  liegt) — die Lage tritt also in JEDER Spielreihenfolge ein. Moegliche Entscheide (nichts davon gebaut, C-E2b):
+  (j1) die 11A0-Tuer nach 20A0 nach der Flut oeffnen (Port: (3,206)=1, z. B. zusammen mit Bit 103) — dann gilt der in
+       C-E2b gedachte Weg 2050 -> 2020 -> 2030 Nordgalerie -> 2060 -> 2040 (Zeitbombe) -> 2070 Nordgang -> 11A0 -> 20A0
+       -> 2090 (Becken) -> 2080 -> Rechner (Glieder 2-9 gemessen bis auf die Strecken IN 20A0 und 2090). Das ist ein
+       Eingriff in eine Original-Sperre und stellt den Alligator VOR den Rechner.
+  (j2) einen Ring-Zugang nach der Flut offen lassen (C-E2 teilweise zuruecknehmen): Waten in Brusthoehe (Pegel y -7200,
+       Ring y -5400) zu Lift B unten (Slot 7) -> Suedgalerie -> 2080. Lift B braucht Strom (3,126) = Generator 2060
+       (nach der Flut erreichbar) mit der Sicherung aus 2030 Slot 9 @0x01BAA (Steg-Suedlandeplatz Band 1, nach der Flut
+       5400 unter der Wasserflaeche) — ob man die nach der Flut noch holen kann/soll, waere mitzuentscheiden.
+  (j3) die Flut erst zulassen, wenn 2080 schon besucht ist, o. ae. (aendert die Reihenfolge des Nutzer-Designs).
+  Ohne Entscheid bleibt Punkt 6 ("entleert danach auch 2030") im Spielablauf nach der Flut unerreichbar; die Mechanik des
+  Rechners selbst ist gemessen (L6, §0c Glied 9).
 * Sichtprobe fuer den Nutzer: 2030 am Ring vor den Ventilen die Aktionstaste, Ja, Warnung wegdruecken, 60 s stehen
   bleiben -> Draufsicht, Wasser steigt ueber die Bruecke und den Ring, Spritzer, Tod mit blauem Schleier
   (C_belege/flut_echt_sheet.png). Mit den drei Spinnen im Raum (ohne Kill-Bits) stirbt man vorher an den Spinnen;
@@ -1080,9 +1125,11 @@ shared_assets/PSX, pri/, synchro/, release/.
 * Nach der Flut: in 20B0 laeuft die Auswasch-Szene des Originals erst mit dem Haken der Spur A bis zur Freigabe (§6
   Querbezug A); ohne ihn bleibt Leon im Westgang (Cut 14) stehen. Mit dem Haken (gemessen, ein Lauf, §0b M2): Szene
   -> frei im Mittelgang -> an der Kante zum Kanal die Aktionstaste (Sprung hinunter), durch den Kanal, an der anderen
-  Kante die Aktionstaste (Aufstieg) -> Westgang -> Leiter -> 2050 (Bild C_belege/nb1_kette_ein_lauf_mit_haken_a_sheet.png). Zum Rechner 2080 geht es ueber 2050 -> 2020 -> die
-  Tuerebene von 2030 (ueber dem Wasser) -> 2080; der Rechner senkt 2080 und leert 2030 (Bild C_belege/rechner2080_sheet.png,
-  raum2030_leer_vergleich.png).
+  Kante die Aktionstaste (Aufstieg) -> Westgang -> Leiter -> 2050 (Bild C_belege/nb1_kette_ein_lauf_mit_haken_a_sheet.png).
+  **⛔ BERICHTIGT (Nachbesserung 2):** "Zum Rechner 2080 geht es ueber 2050 -> 2020 -> die Tuerebene von 2030 -> 2080"
+  war falsch; nach der Flut gibt es derzeit keinen Weg zum Rechner (§0c, Frage j). Der Rechner selbst senkt 2080 und leert
+  2030 (gemessen per Sprung und von der 2090-Tuer aus: Bild C_belege/rechner2080_sheet.png, raum2030_leer_vergleich.png,
+  §0c Glied 9).
 * Neue Belegbilder dieser Fortsetzung: C_belege/querbezug_a_20b0_szene_sheet.png (Szene mit dem Haken der Spur A),
   C_belege/ring_nach_flut_sheet.png (Frage f). Nachbesserung 1: C_belege/nb1_kette_ein_lauf_mit_haken_a_sheet.png (die
   ganze Kette in einem Lauf mit dem Haken der Spur A), C_belege/nb1_kisten_hebel_sheet.png (Kisten-Hebel gesperrt),
