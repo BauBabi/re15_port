@@ -10,14 +10,18 @@ Begonnen 2026-10-24 ~18:4x. Pruefer: Abnahme 4 (Opus). Der Bericht wird FORTLAUF
 `C41abn4/` (unten `<a4>` =
 `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/C41abn4`).
 
-**Ergebnis (abgeschlossen 2026-10-24 20:3x): NICHT bestanden.** Punkte 1, 2, 3, 4, 5, 6 erfuellt (Leon UND Elza, ueber echte Tueren);
+**Ergebnis (abgeschlossen 2026-10-24 20:4x): NICHT bestanden.** Punkte 1, 2, 3, 4, 5, 6 erfuellt (Leon UND Elza, ueber echte Tueren);
 Nachtrag 12 (k) erfuellt (Pegel y -5350 knapp unter dem Ringboden, Bilder); Abnahme-3-Maengel 1 (`_kette` rc=0) und 2 (Doku) behoben;
 Nachtrag 13 (echtes Ventilraetsel; vom Nutzer mit Nachtrag 15 freigegeben) **teilweise**: Raetsel, Plakat, Texte, Leser und Ableitung
 stimmen, aber das Dokument-Blatt ist in der Welt nicht zu erkennen (15 von 16 Kameras 0 Pixel, Cut 5 39 dunkle Pixel) -> Mangel 1
-(mittel); dazu Mangel 2 (niedrig): Schliessen des Plakats in der Flut hebt deren Pad-Sperre auf (gemessen). Gates: RE-Gate und Vertrag
+(mittel); dazu Mangel 2 (niedrig): Schliessen des Plakats in der Flut hebt deren Pad-Sperre auf (gemessen); Mangel 3 (hoch): die
+Nachtraege 16/18/19 (19:31-19:55, nach dem Bau, waehrend dieser Abnahme in den Zweig committet) sind nicht umgesetzt. Gates: RE-Gate und Vertrag
 halten, Nebenwirkungen bis auf Mangel 2 keine. Tests: Unit 241/241 + PASS (446), Integration 22/22, `_kette` von Hand rc=0.
 
 ## 0. Stand / Protokoll (neueste zuerst)
+* 20:4x NACHTRAG ZUR ABSCHLUSSFASSUNG: beim Commit fielen drei Orchestrator-Commits in diesem Zweig auf (Nachtraege 16/18/19 in
+  AUFTRAG.md/VERTRAG.md 19:31-19:55, Nutzer-Aufnahme main46.wav 20:06). Als Punkte bewertet und am gebauten Stand gemessen (§1 N16/N18/N19,
+  Lauf `v46`), Mangel 3. Code-Stand unveraendert b08bb0c4-Code (exe 16:59).
 * 20:3x ABSCHLUSS: Raum-/Dokument-Gruppe 17/17 gruen (§3); FLR Elza, PK (Plakat bis in die Flut -> Mangel 2) gemessen; Urteile §4,
   Maengel §5. Kein Code geaendert; nur dieser Bericht committet.
 * 19:3x Messungen K1/K2/D/P/P1/P4/P5/P6/FL/FLR/N12/KE abgeschlossen (Leon + Elza wo verlangt); Integration r41 4/5 gruen, Haupt-Riegel
@@ -195,6 +199,29 @@ Plan `<a4>/plaene/pk.txt` (richtige Folge, Warnung, zurueck zum Plakat, Aktion) 
 closed -> gameplay (player_mode=0)`** -> `Ereignis 23 -> 2030_plakat` -> `Plakat-Nahaufnahme offen` -> `SPRITZER` -> `ERTRUNKEN: Wasser y
 -2700, Spieler y -1800` (F3585) -> Mangel 2 (§5).
 
+### N16/N18/N19 — Nachtraege 16 (19:31), 18 (19:53), 19 (19:55): kamen NACH dem letzten Code-Commit (18:24) und waehrend dieser Abnahme
+Der Orchestrator hat sie in diesen Zweig committet (150eab26, 457fda36, 1517abe1; dazu f091aa04 = die Nutzer-Aufnahme
+synchro/STAGE2/room2030/main46.wav und room2031/main46.wav, Blob 2f750a04 = master 3da82407). AUFTRAG.md ist massgeblich -> als Punkte
+bewertet (wie Abnahme 3 mit den Nachtraegen 12/13); gemessen am gebauten Stand:
+* **Nachtrag 16** (zweiter Sicherungskasten in ROOM2010/2011 statt der "look around"-Sperre; Text 49 "komisch"): nicht gebaut. K1 Leon +
+  Elza zeigen an den Ventilen ohne Sicherung weiter `id=49 "I should look around here first."`; in 2010/2011 legt der Port nichts an
+  (`install`: fuer 2010 nur `tueren_umlenken`, wirkt erst ab Bit 103; P1r-Lauf durch 2010 ohne `[ventilkette41] ROOM2010`-Zeile).
+* **Nachtrag 18 (1)** Plakat im Stil des Spiels: das Plakat ist unveraendert die Fassung, die der Nutzer als "wie aus Monkey Island"
+  beschreibt (Nahaufnahme `<a4>/bilder/plakat.png`, Asset gen/ventilkette_r41_plakat.inc seit 1a852d77 unveraendert).
+* **Nachtrag 18 (2)** 2050-Hebel gehen beim Umlegen nicht sichtbar runter: Pixelvergleich `p5p` F540 (Hebel 1 AUS) gegen F780 (Hebel 1 EIN),
+  Bereich Hebelkoerper x 66..110 y 80..162 -> **0 Pixel** Unterschied; nur die Lampenzeile darunter (y 162..175: 24 Pixel = gruene Marke)
+  (`<a4>/py/region.py`).
+* **Nachtrag 18 (3)** RE2-Ventil-Dreh-Animation: keine — beim Drehen bleibt der Spieler in der Ruhe-Bewegung (K2: vor/nach `Ventil 09
+  gedreht` durchgehend `mo=200`).
+* **Nachtrag 18 (4)** Timer wie am Spielende + Alarm + Sprachausgabe: kein Timer im Bild waehrend der 60 s (K2 F4030/F4570,
+  `<a4>/bilder/k2_countdown.png`), kein Alarm-Aufruf im Code (ventilkette_r41.c). Die Sprachausgabe laeuft dagegen schon ueber den
+  datengetriebenen Stimmen-Weg (scd_vm.c `scd_queue_voice`, "Datei da = sie spielt"): Lauf `v46` (Leon, RE15_SE_DEBUG,
+  RE15_AUDIO_CAP_SYNC, nach f091aa04) -> `[voice] clip loaded: main46.wav (32000 Hz x1 -> 226817 @44100 Hz)` -> `[voice] Start ROOM2030
+  Id 46` — zur ALTEN Untertitelzeile.
+* **Nachtrag 19** Text 46 = "WARNING: The water will rise in one minute. Please leave the room immediately!": nicht umgesetzt — gemessen
+  `[msgtext] room=2030 id=46 "WARNING: The water will rise in one minute. Leave the room!"` (K2, v46; Elza `room=2031` gleich). Die Nutzer-
+  Aufnahme spricht damit einen anderen Satz als der Untertitel.
+
 ## 2. Gates
 
 ### G1 RE-Gate (eigene Disassembly / eigene Byte-Lesung)
@@ -239,8 +266,9 @@ Stichproben der in Nachbesserung 4 NEU zitierten Stellen (alle selbst gelesen, r
 
 
 ### G2 Vertrag (VERTRAG.md §1/§2)
-* Pfade (`git diff master...HEAD --name-only`, ohne analysis/): 32; KEIN Pfad unter release/, platform/android/, shared_assets/PSX/, pri/,
-  synchro/; keine Test-CMakeLists (nur die eigene probes/r41_ventilkette.cmake). Neue Assets nur unter shared_assets/RE2/FILES/
+* Pfade (`git diff master...HEAD --name-only`, ohne analysis/): 32 Pfade der Spur; KEIN Pfad der Spur unter release/, platform/android/,
+  shared_assets/PSX/, pri/, synchro/ (die zwei synchro/STAGE2/room203x/main46.wav im Zweig stammen aus dem Orchestrator-Commit f091aa04,
+  Blob 2f750a04 = master 3da82407, nicht vom Bau-Agenten); keine Test-CMakeLists (nur die eigene probes/r41_ventilkette.cmake). Neue Assets nur unter shared_assets/RE2/FILES/
   (FILE31_title_page/p00/p01/p02/title_paper.TIM), im Dossier §7 fuers Paket-Gate genannt.
 * Gemeinsame Dateien (Diff selbst gelesen, alle Zeilen "Runde 41 Spur C"): game_step_common.c +1 (Tick, C-E3), scd_room_setup.c +2
   (include + Installer-Zeile am Ende des Blocks), scd_vm.c +4 (include, Ereignis-Kette, Strahlen-Haken in op_sce_espr_on; f3173450 nur
@@ -319,6 +347,9 @@ Ventilraetsel freigegeben ("Freigeben" — Plakat, Loesung 09 -> 07 -> 02 -> 01,
 | Nachtrag 13 (+ Freigabe Nachtrag 15): echtes Ventilraetsel — (1) Text 49 neutral, (2) Dokument mit dem Nutzer-Text woertlich, (3) Plakat als Nahaufnahme mit der falschen Anleitung, (4) Dreh-Raetsel mit Reihenfolge und Zuruecksetzen, Loesung -> Warnung -> Flut, (5) Dossier §7 zur Freigabe | **teilweise** | (1) K1 `id=49 "I should look around here first."`; (2) Leser Leon + Elza: Text woertlich (nur U+2014 -> '-'), Bit 107 — ABER das Blatt ist in der Welt nicht zu sehen (15 von 16 Cuts 0 Pixel, Cut 5 39 dunkle Pixel; Mangel 1); (3) Plakat-Nahaufnahme Leon + Elza, Aushang an der Suedwand sichtbar; (4) K2 Leon + Elza falsch -> 45 + zurueck, richtig -> 46; Ableitung eindeutig (§1 D/P); (5) Dossier §7 + Freigabe Nachtrag 15 |
 | Nachtraege 6, 9/10 | **erfuellt** | keine zusaetzliche Tuer (Diff; `_sperre` gruen); Ventile vor Bruecke (K1 Nordventil 01: 49) und vor Sicherung (K1 Ventil 09: 49), danach Fragen 50-55 (K2) |
 | Abnahme 3 Mangel 1 (`_kette`) / Mangel 2 (Doku) | **behoben** | KE rc=0 auf der heutigen Kette; Dossier §7/§0b/probes-Kopf berichtigt (gelesen) |
+| Nachtrag 16 (19:31, nach dem Bau): Ventil-Sicherungskasten in ROOM2010 statt "look around"-Sperre, ohne Kasten-Sicherung neutraler Text | **nicht erfuellt** | N16: Text 49 "I should look around here first." weiter an den Ventilen (K1); kein Kasten in 2010 |
+| Nachtrag 18 (19:53, nach dem Bau): (1) Plakat im Spiel-Stil, (2) 2050-Hebel gehen sichtbar runter, (3) RE2-Ventil-Animation, (4) Timer + Alarm + Sprachausgabe | **nicht erfuellt** ((4) Sprachausgabe laeuft bereits datengetrieben) | N18: Plakat unveraendert; Hebelkoerper 0 Pixel Unterschied AUS/EIN; mo=200 beim Drehen; kein Timer/Alarm; `[voice] Start ROOM2030 Id 46` |
+| Nachtrag 19 (19:55, nach dem Bau): Text 46 "WARNING: The water will rise in one minute. Please leave the room immediately!" | **nicht erfuellt** | gemessen weiter "... Leave the room!" (K2, v46) |
 
 
 ## 5. Maengel (nummeriert, nachpruefbar)
@@ -352,6 +383,13 @@ Ventilraetsel freigegeben ("Freigeben" — Plakat, Loesung 09 -> 07 -> 02 -> 01,
   Plakat waehrend Zaehler/Flut nicht oeffnen oder beim Schliessen nur die eigene Sperre zuruecknehmen, wenn keine Flut laeuft) — Form mit
   Beleg, Riegel (Plakat offen bis in die Flut -> nach dem Schliessen player_mode bleibt 2 bis zum Tod).
 
+* **Mangel 3 (hoch, Nutzer-Wortlaut Nachtraege 16/18/19 — kamen 19:31-19:55 nach dem letzten Code-Commit 18:24) — nicht umgesetzt.**
+  Ist (§1 N16/N18/N19): Text 49 "look around" statt Sicherungskasten 2010 (N16); Plakat im kritisierten Stil (N18-1); 2050-Hebelkoerper
+  unveraendert beim Umlegen (0 Pixel, N18-2); keine Ventil-Dreh-Animation (mo=200, N18-3); kein Timer/Alarm in den 60 s (N18-4; die
+  Sprachausgabe main46.wav spielt bereits); Text 46 im alten Wortlaut (N19). Forderung: die Folgen 1-6 des Nachtrags 16 und 1-4 des
+  Nachtrags 18 sowie Nachtrag 19 (Wortlaut exakt) mit Belegen umsetzen, je Punkt messen (Leon UND Elza), Riegel nachziehen (die Pins auf
+  Text 49 / Text 46 alt / "Sicherung aufgehoben" als Bedingung: Unit, `_weg`, Haupt-Riegel D, `_kette`).
+
 Hinweise (kein Mangel):
 * (a) Fehlerton 0x0B: Aufruf und Bank-Eintrag (PANEL2130.EDT Satz 0x0B `00 00 83 01`) geprueft, nicht mitgeschnitten (RE15_NOAUDIO).
 * (b) PSX-Ziel ungebaut: Plakat-Nahaufnahme ueber die PC-Vollbild-Ebene, Wassernetze/Blaetter nur unter RE15_PLATFORM_PC (bekannt, H3).
@@ -361,4 +399,4 @@ Hinweise (kein Mangel):
 * (e) 20B0-Auswasch-Szene: nach C-E1 nur mit dem Haken der Spur A; im Integrationsbaum wird `_kette` registriert (Merge-Probe §1 KE).
 
 Gates: G1 RE-Gate haelt (7 Stichproben selbst disassembliert/gelesen, alle bestaetigt), G2 Vertrag haelt, G3 Nebenwirkungen: Mangel 2.
-**bestanden = false** (Mangel 1 mittel, Mangel 2 niedrig).
+**bestanden = false** (Mangel 1 mittel, Mangel 2 niedrig, Mangel 3 hoch — Nachtraege 16/18/19 nach dem Bau).
