@@ -101,9 +101,35 @@ static void putz_sicht(const re15_camera_view_t *cam, int cx, int cy)
                 (unsigned)g_engine.frame_count, re15_gr2_putz_spawns(), re2fx_pc_letzte_quads());
 }
 
+/* (6) MESSZEILE Kanister-Sitz (Nachbesserung 4, Abnahme 3 M1): nach dem NPC-Pass je Bild |Part6(gezeichnete Pose) x Lokallage -
+ * gezeichnete Kanister-Lage| (re15_gr2_kanister_sitz, aus dem Ueberblend-Schnappschuss, den der Zeichner eben geschrieben hat).
+ * debug.log "[gator-re2] Kanister-Sitz F<n>: angehaengt <k> Bilder, Abweichung max <m> ..." alle 30 angehaengten Bilder und
+ * bei jedem neuen Hoechstwert. RE2: Kind der Part-6-Weltmatrix (@0x801018d0-e0) = Abweichung 0 in jedem Bild. */
+static void kanister_sitz(void)
+{
+    static int s_n = 0; static int32_t s_max = -1; static unsigned s_fmax = 0, s_raum = 0xffffffffu;
+    if (s_raum != (unsigned)g_current_room_id) { s_raum = (unsigned)g_current_room_id; s_n = 0; s_max = -1; s_fmax = 0; }
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        re15_actor_t *a = &g_actors[i];
+        if (!a->active || a->type != 0x23u || !re15_gator_boss_active(a) || re15_gator_boss_untergetaucht(a)) continue;
+        int32_t abw = 0;
+        if (!re15_gr2_kanister_sitz(a, &abw)) return;
+        unsigned f = (unsigned)g_engine.frame_count;
+        s_n++;
+        int neu = abw > s_max;
+        if (neu) { s_max = abw; s_fmax = f; }
+        if (neu || (s_n % 30) == 0)
+            fprintf(stderr, "[gator-re2] Kanister-Sitz F%u: angehaengt %d Bilder, Abweichung max %d (F%u), jetzt %d clip=%d bild=%d gier=%d frac=%d\n",
+                    f, s_n, (int)s_max, s_fmax, (int)abw, (int)a->motion, (int)a->anim_frame, (int)(a->rot_y & 0xfff),
+                    (int)a->anim_frac);
+        return;
+    }
+}
+
 void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
 {
     putz_sicht((const re15_camera_view_t *)cam_view_v, cx, cy);   /* Messzeile (M2) */
+    kanister_sitz();                                               /* Messzeile Nachbesserung 4 (M1) */
     int32_t pos[3], rot[9];
     if (!re15_gr2_kanister_welt(pos, rot)) return;
     if (!modell_laden()) return;

@@ -40,6 +40,10 @@ void re15_gator_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int));
  * (Mesh und Schatten), keine Trefferbox. Auch 1 im Spawn-Bild vor dem Boss-INIT (state 0). Fuer Spur F/G: die Szene
  * "Alligator springt aus dem Wasser" taucht ihn mit re15_gr2_intro_start auf. */
 int  re15_gator_boss_untergetaucht(const re15_actor_t *e);
+/* Runde 41 Spur B, Nachbesserung 4 (Abnahme 3, M2) - Messhaken: Zahl der Selbst-Befreiungen (nur noch im echten Gefaengnis, als
+ * Schub ohne Gier-Snap) und 1 = Boss in der Verfolgung (CHASE) oder Belagerung (GUARD). */
+int  re15_gator_boss_befreiungen(void);
+int  re15_gator_boss_verfolgt(const re15_actor_t *e);
 
 
 

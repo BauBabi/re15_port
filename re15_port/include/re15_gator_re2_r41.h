@@ -159,6 +159,9 @@ void re15_gr2_nachtakt(int slot, re15_actor_t *e);
 /* Messhaken (Riegel unit_r41_re2gator_sitz): Part-6-Weltmatrix der letzten re15_gr2_nachtakt-Pose (Rotation ohne Skala, Lage
  * mit Zeichen-Skala) und die Effekt-Quellpuffer (0 = Part 6, 1 = Part 7, 2 = Kanister; 32-Byte-MATRIX-Abbild). 0 = keine. */
 int  re15_gr2_part6_gezeichnet(int32_t rot[9], int32_t pos[3]);
+/* Messhaken (PC-Zeichner nach dem NPC-Pass): Kanister-Sitz gegen die gezeichnete Pose aus dem Ueberblend-Schnappschuss;
+ * 1 = gemessen (angehaengt), *abw = |Part6(gezeichnet) x Lokallage - Kanister-Weltlage|. Ohne Wirkung auf den Aktor. */
+int  re15_gr2_kanister_sitz(re15_actor_t *e, int32_t *abw);
 int  re15_gr2_fx_quelle(int i, uint8_t m[32]);
 /* Umgebungs-Haken einmal auswerten (RE15_GATOR_KANISTER). */
 void re15_gr2_kanister_env(void);

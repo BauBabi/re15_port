@@ -1827,6 +1827,42 @@ void re15_gr2_nachtakt(int slot, re15_actor_t *e)
     if (re15_gr2_kanister_welt(kp, kr)) gr2_mtx(s_fx_mtx[GR2_FXM_KANISTER], kr, kp);
     s_fx_ok = 1;
 }
+/* Messhaken (Nachbesserung 4, M1; PC-Zeichner nach dem NPC-Pass): Kanister-Sitz gegen die WIRKLICH gezeichnete Pose. Nach dem
+ * NPC-Pass haelt der Ueberblend-Schnappschuss genau die gezeichneten Winkel/Wurzel dieses Bildes (skeleton_common.c schreibt
+ * das Mischergebnis vor den Zusaetzen zurueck); mit Vorbild-Gewicht 0x1000 (anim_frac 8 x Rate 0x200) liefert
+ * re15_skel_compute_pose sie samt Zusaetzen (+0x22A/+0x228/Bogen, unveraendert seit dem Zeichnen) wieder. Daraus Part 6 x
+ * Lokallage gegen die Weltlage, die der Kanister-Zeichner bekommt. 1 = gemessen (angehaengt), *abw = Betrag der Differenz.
+ * Zaehler, Rate und Schnappschuss werden zurueckgeschrieben (keine Wirkung). */
+int re15_gr2_kanister_sitz(re15_actor_t *e, int32_t *abw)
+{
+    if (!e || !s_kan.aktiv || !s_kan.angehaengt || !e->anim_prev_valid) return 0;
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    if (!bk || bk->skel.bone_count <= 7) return 0;
+    uint8_t frac = e->anim_frac; uint16_t rate = e->anim_blend_rate; uint8_t gueltig = e->anim_prev_valid;
+    int32_t root[3]; int16_t ang[32][3];
+    memcpy(root, e->prev_root, sizeof root); memcpy(ang, e->prev_angles, sizeof ang);
+    e->anim_frac = 8; e->anim_blend_rate = 0x200;            /* wp = 8 x 0x200 = 0x1000 = nur der Schnappschuss */
+    int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, e, -1, (uint32_t)e->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor; g_anim_pose_actor = e;
+    int rv = re15_skel_compute_pose(&bk->skel, kf, poses);
+    g_anim_pose_actor = save;
+    e->anim_frac = frac; e->anim_blend_rate = rate; e->anim_prev_valid = gueltig;
+    memcpy(e->prev_root, root, sizeof root); memcpy(e->prev_angles, ang, sizeof ang);
+    if (rv != 0) return 0;
+    int32_t r6[9], p6[3];
+    gr2_part_welt(e, &poses[6], r6, p6);
+    int32_t s = gr2_scale(e);
+    int32_t l[3] = { q12mul(s_kan.lokal[0], s), q12mul(s_kan.lokal[1], s), q12mul(s_kan.lokal[2], s) };
+    int64_t q = 0;
+    for (int r = 0; r < 3; r++) {
+        int32_t soll = p6[r] + (int32_t)(((int64_t)r6[r*3] * l[0] + (int64_t)r6[r*3+1] * l[1] + (int64_t)r6[r*3+2] * l[2]) >> 12);
+        int64_t d = (int64_t)soll - s_kan.welt[r];
+        q += d * d;
+    }
+    if (abw) *abw = (int32_t)re15_squareroot0((uint32_t)(q > 0xffffffffLL ? 0xffffffffLL : q));
+    return 1;
+}
 int re15_gr2_part6_gezeichnet(int32_t rot[9], int32_t pos[3])
 {
     if (!s_fx_ok) return 0;

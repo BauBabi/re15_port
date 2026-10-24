@@ -222,6 +222,8 @@ typedef struct {
     int16_t  seite_t;              /* Frames, die die NEUE Seite schon anliegt */
     int8_t   frei_seen;            /* frei_lx/lz gueltig (1 ab dem 2. Tick) */
     int32_t  frei_lx, frei_lz;     /* Position im Vortick (Totalstand-Nachweis) */
+    int8_t   befrei_schub;         /* Runde 41 Spur B NB4 (M2): Befreiung laeuft (Schub aus dem Slab, Gier bleibt) */
+    int32_t  befrei_x, befrei_z;   /*   ... Ziel = Slab-Rand + 120 (wie bisher bx/bz) */
     /* v0.7.65: Steuer-Zustaende AUS den file-statics hierher - die lebten
      * ueber Neuspawns/Raum-Re-Entries (und Sweep-Testpaare) hinweg weiter
      * und verschleppten Pendel-/Waechterziele (Sweep-Beleg: Einzelfall
@@ -1140,6 +1142,65 @@ int re15_gator_boss_untergetaucht(const re15_actor_t *e)
     return s_gb[slot].untergetaucht && !re15_gr2_im_intro(slot);
 }
 
+/* ---- Runde 41 Spur B, Nachbesserung 4 (Abnahme 3, M2): Befreiung ohne Gier-Snap (PORT-WAHL, Begruendung bei SELBST-BEFREIUNG
+ * im Takt) ---------------------------------------------------------------------------------------------------------------- */
+static int s_gb_befreiungen;                /* Messhaken: Befreiungen seit Programmstart */
+int re15_gator_boss_befreiungen(void) { return s_gb_befreiungen; }
+int re15_gator_boss_verfolgt(const re15_actor_t *e)
+{
+    if (!re15_gator_boss_active(e)) return 0;
+    const gb_state_t *g = &s_gb[(int)(e - g_actors)];
+    return g->phase == GBP_CHASE || g->phase == GBP_GUARD;
+}
+static int32_t gb_wurzel64(int64_t q)
+{
+    return (int32_t)re15_squareroot0((uint32_t)(q > 0xffffffffLL ? 0xffffffffLL : (q < 0 ? 0 : q)));
+}
+/* Gefaengnis = die Wand-Klemme verwirft schon einen Schritt GB_SWIM_SPEED zum Slab-Ausgang (bx,bz): push_rect Fall 0 setzt auf die
+ * Vorlage zurueck (re15_collision.c, FUN_8003bca8). Drueckt der Gator nur von aussen gegen eine Wand, ist der Schritt hinaus frei. */
+static int gb_gefangen(const re15_actor_t *e, int32_t bx, int32_t bz)
+{
+    if (!g_room_rdt_ok) return 1;
+    int64_t dx = (int64_t)bx - e->x, dz = (int64_t)bz - e->z;
+    int32_t d = gb_wurzel64(dx * dx + dz * dz);
+    if (d <= 0) return 0;
+    int32_t nx = e->x + (int32_t)(dx * GB_SWIM_SPEED / d), nz = e->z + (int32_t)(dz * GB_SWIM_SPEED / d);
+    re15_collision_constrain_enemy(&g_room_rdt, e->x, e->z, &nx, &nz, e->hit_radius_min, e->y, 4u);
+    return nx == e->x && nz == e->z;
+}
+/* Ein Schub-Schritt: GB_SWIM_SPEED zum Ausgang (der Schritt der bisherigen Befreiung re15_ai_advance(e, GB_SWIM_SPEED)), Gier
+ * bleibt, Klemme fuer diesen und den naechsten Takt aus (befrei = 2, wie bisher), Schwimm-Clip 0 laeuft weiter. 1 = Takt verbraucht. */
+static int gb_befrei_schritt(re15_actor_t *e, gb_state_t *g)
+{
+    int64_t dx = (int64_t)g->befrei_x - e->x, dz = (int64_t)g->befrei_z - e->z;
+    int32_t d = gb_wurzel64(dx * dx + dz * dz);
+    if (d <= GB_SWIM_SPEED) { e->x = g->befrei_x; e->z = g->befrei_z; g->befrei_schub = 0; }
+    else { e->x += (int32_t)(dx * GB_SWIM_SPEED / d); e->z += (int32_t)(dz * GB_SWIM_SPEED / d); }
+    e->y = GB_WATER_Y;
+    g->befrei = 2;
+    if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
+    {   re15_enemy_bank_t *bk = re15_enemy_find(e->type);
+        int n = (bk && bk->ok && bk->anim.clip_count > 0) ? bk->anim.clips[0].frame_count : 0;
+        if (++e->anim_frame >= n && n > 0) e->anim_frame = 0; }
+    if (!g->befrei_schub && !s_gb_stumm) {
+        FILE *f = fopen("gator_boss.log", "a");
+        if (f) { fprintf(f, "BEFREI ende F%u pos=(%d,%d) yaw=%d\n", (unsigned)g_engine.frame_count, e->x, e->z,
+                         (int)(e->rot_y & 0xfff)); fclose(f); }
+    }
+    return 1;
+}
+static void gb_befrei_beginn(re15_actor_t *e, gb_state_t *g, int32_t bx, int32_t bz)
+{
+    g->befrei_schub = 1; g->befrei_x = bx; g->befrei_z = bz;
+    s_gb_befreiungen++;
+    if (!s_gb_stumm) {
+        FILE *f = fopen("gator_boss.log", "a");
+        if (f) { fprintf(f, "BEFREI start F%u pos=(%d,%d) ziel=(%d,%d) yaw=%d phase=%d (Gefaengnis: Klemme verwirft den Schritt hinaus)\n",
+                         (unsigned)g_engine.frame_count, e->x, e->z, bx, bz, (int)(e->rot_y & 0xfff), (int)g->phase); fclose(f); }
+    }
+    (void)gb_befrei_schritt(e, g);
+}
+
 static void gb_takt(int slot);
 /* Runde 41 Spur B, Nachbesserung 4 (Abnahme 3, M1): BOSS-TAKT-HUELLE.
  *  (1) Ueberblend-Zaehler -1 je Takt: RE2 0x80029614 zaehlt +0x14E nach dem Mischen herunter (`lbu v0,334(s2) / addiu
@@ -1296,7 +1357,19 @@ static void gb_takt(int slot)
      * Totalstand trotz korrektem Ziel/advance. Real erreichbar ueber
      * CROSS-Landungen (Klemme ausgesetzt). Raus zum naechsten Slab-Rand,
      * Klemme fuer das Fenster ausgesetzt (skip_clamp liest g->befrei). */
+    /* Runde 41 Spur B, Nachbesserung 4 (Abnahme 3, M2) - BEFREIUNG OHNE SOFORT-SNAP (PORT-WAHL; RE2 hat kein Gefaengnis, sein
+     * Gator dreht den Koerper in der Verfolgung nie: Gier-Schreiber des EM23-Overlays nur @0x80100280/2a0/948/ec0/2404/2440/
+     * 27c8/2a34, keiner in Sub 1/2 (Pre @0x80100964, Main @0x80100c20/@0x80100cdc) oder T2):
+     *  (a) vorher drehte die Befreiung mit re15_enemy_steer_point(.., 0x800) in EINEM Bild auf den Slab-Ausgang (gemessen
+     *      Abnahme 3: E1 +-1944..1984 im 32-Bild-Takt, C3/A2/D2/N 1300..1650) - und das fast nur an WAENDEN, gegen die die
+     *      Verfolgung von aussen drueckt (Ziel Leon in der Tuernische / GUARD-Ziel 700 vor der Ostwand): dort verwirft die
+     *      Box-Klemme nur den Schritt HINEIN, ein Schritt hinaus ist frei - kein Gefaengnis.
+     *  (b) jetzt: Befreiung nur, wenn die Klemme selbst einen Schritt GB_SWIM_SPEED zum Ausgang verwirft (gb_gefangen - das
+     *      Gefaengnis aus dem Sweep: Zentrum IM Slab, push_rect Fall 0 setzt auf die Vorlage zurueck, re15_collision.c), und
+     *      dann als SCHUB: je Takt GB_SWIM_SPEED (der Schritt der bisherigen Befreiung) zum Ausgang, Gier unveraendert, Klemme
+     *      ausgesetzt (befrei), bis der Ausgang erreicht ist. Form = die Wand-Klemme selbst (verschiebt nur die Lage). */
     if (g->befrei > 0) g->befrei--;
+    if (g->befrei_schub && gb_befrei_schritt(e, g)) return;
     if (!g->untergetaucht                     /* Nachbesserung 3 (B9): RE2 Sub 0 P0 bewegt nichts */
         && !re15_gr2_aufnahme_lenksperre(slot)   /* Nachbesserung 3 (M2): kein Snap der Gier vor dem Anhaengen */
         && (g->phase == GBP_LURK || g->phase == GBP_CHASE || g->phase == GBP_GUARD)) {
@@ -1316,13 +1389,8 @@ static void gb_takt(int slot)
             if (bz < -27000 + r) { bz = -27000 + r + 120; war = 1; }
             if (bz >  -5400 - r) { bz =  -5400 - r - 120; war = 1; }
             if (war && gb_iabs(e->x - g->frei_lx) + gb_iabs(e->z - g->frei_lz) < 8
-                && g->frei_seen) {
-                re15_enemy_steer_point(e, bx, bz, 0x800);
-                re15_ai_advance(e, GB_SWIM_SPEED);
-                e->y = GB_WATER_Y;
-                g->befrei = 2;
-                if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
-                e->anim_frame++;
+                && g->frei_seen && gb_gefangen(e, bx, bz)) {
+                gb_befrei_beginn(e, g, bx, bz);    /* NB4 (M2): Schub statt Snap, s.o. */
                 return;
             }
         }
@@ -1357,13 +1425,10 @@ static void gb_takt(int slot)
                 else if (s2 == 2) bz = GB_RAMP_Z0 - r - 120;
                 else              bz = GB_RAMP_Z1 + r + 120;
             }
-            re15_enemy_steer_point(e, bx, bz, 0x800);
-            re15_ai_advance(e, GB_SWIM_SPEED);
-            e->y = GB_WATER_Y;
-            g->befrei = 2;
-            if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
-            e->anim_frame++;
-            return;
+            if (gb_gefangen(e, bx, bz)) {          /* NB4 (M2): nur im echten Gefaengnis, Schub statt Snap */
+                gb_befrei_beginn(e, g, bx, bz);
+                return;
+            }
         }
     }
     /* SIEGER-ABZUG (Nutzer 2026-09-11: "Sobald ich tot bin dreht sich der
