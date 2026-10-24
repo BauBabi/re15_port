@@ -328,3 +328,13 @@ in das 2090-Becken). Spur C (Nachbesserung 2):
    frei ist (mit Beleg). Steht eine ORIGINAL-Sperre im Weg oder gibt es den Weg nicht: NICHTS erfinden — den
    blockierenden Punkt (Tuer, Bit, SCD-Offset, Bild) im Dossier benennen und als OFFEN fuer den Orchestrator melden.
 3. Dossier §7 und §0b (M5) richtigstellen.
+
+## 2026-10-24 08:06 — Orchestrator-Entscheid B9 (Abnahme B 2, Mangel M1; der Nutzer kann widersprechen)
+
+M1 der Abnahme B 2: die Intro-Startlage teleportiert den SICHTBAR lauernden Gator ueber ~16000 Einheiten. Form = RE2:
+vor dem Intro ist der Gator NICHT sichtbar (RE2: Sce_em_set mit y = 3000 @RDT 0x25A0, also unter der Wasserlinie;
+Pos_set erst im Intro @SCD 0x0736); er bricht aus dem Wasser. Fuer ROOM2090/2091 heisst das: bis zum Intro-Ausloeser kein
+sichtbarer Gator (untergetaucht/unsichtbar wie RE2, Lage frei), dann Pos_set auf die Intro-Startlage nach B7. Passt zur
+neuen Szene der Spur F ("der Alligator springt aus dem Wasser"). Riegel: im natuerlichen Ablauf (Lauf N der Abnahme)
+kein Bild mit sichtbarem Gator vor dem Durchbruch und kein sichtbarer Lagesprung. Weitere Maengel M2/M3 der Abnahme B 2
+wie dort gefordert (RE2-Form, Adressen dort).
