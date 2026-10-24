@@ -761,3 +761,15 @@ Folgen (Orchestrator):
 - **FG-E2:** Spur G darf dafuer gezielt in Spur B's Modulen (gator_re2_r41.c, enemy_ai_boss_gator.c) aendern — nur die
   Aufnahme-/Anschwimm-Logik, markiert "Runde 41 Spur G (Nachtrag 24)"; Spur F aendert dort nur die Szene/den Auftritt.
   Bei der Integration beidseitig mergen; die B-Riegel (unit_r41_re2gator_*, integration_r41_re2gator) bleiben gruen.
+
+## 2026-10-25 00:24 — Nachtrag 24b (Wortlaut; BERICHTIGT Nachtrag 24 — es geht um Marvin/John, nicht um den Alligator)
+
+> nein, nicht der aligator
+
+Folgen (Orchestrator, ersetzt die Folgen von Nachtrag 24; FG-E2 ist WIDERRUFEN, keine Aenderung in Spur B's Modulen):
+- Die "daemliche Kletter-Animation" vor dem Aufnehmen des Kanisters spielt **Marvin (Leon) bzw. John (Elza) in ROOM2080/2081**
+  in der Kanister-Szene der Spur G (Punkt 3: "Rennt zu dem Gas Kanister, nimmt ihn auf in beide Haende"). Spur G belegt, welcher
+  Clip dort laeuft (Bank/EDD/RBJ, Clip-Nummer, Ursache: z. B. falscher Clip-Index, Kanten-/Kletter-Sub des NPC-Gangs an der
+  Reling, Stufe), und ersetzt ihn durch passende Animationen: Hinlaufen (Lauf-Clip des NPC) und Aufnehmen mit beiden Haenden
+  (Original-/RE2-Clip mit Beleg — z. B. eine Aufheb-/Trage-Animation aus RE1.5-NPC- oder RE2-Banken; Herkunft im Dossier).
+  Bildbogen der Szene vorher/nachher, Leon UND Elza.
