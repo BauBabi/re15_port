@@ -7393,6 +7393,7 @@ re_title:;
                             }
                         }
                     }
+                    { extern void re15_sherry_r41_messhaken(void); re15_sherry_r41_messhaken(); }   /* Runde 41 Spur K: RE15_WORKVAR_AT (Messhaken) */
                     /* MESS-HAKEN RE15_DEBUG_SUB="<sub>[,<sub>...]@<frame>" (Runde 34) —
                      * startet einen SUB-Thread des geladenen Raums von Hand, genauso wie es
                      * `Evt_exec` (0x04, sub_id = pc[3], scd_vm.c:1076) im Skript tut. Notwendig
