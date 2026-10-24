@@ -225,7 +225,7 @@ Stand bei Beginn: HEAD 88bfae38 (Code = ed7bd4ff), exe md5 757da3a9132018190427a
 `<sp>/E41n1/runs/<lauf>/` (`<sp>` = Scratchpad dieser Sitzung), Messkopie `re15_pc_E41n1.exe`, VORHER-exe =
 `<sp>/abn0_base/re15_port/build/platform/pc/re15_pc_abn0_basis.exe` (Basis 116e8b0f, md5 2310696431b26d115bc00f3796663c01).
 
-### Mangel 1 — "Herumfliegen" an der Kurbel 2020: Anlauf-Varianten (in Arbeit)
+### Mangel 1 — "Herumfliegen" an der Kurbel 2020: Anlauf-Varianten
 Werkzeug: `<sp>/E41n1/run.sh` (exe-Kopie, eigener Laufordner), Bildboegen `<sp>/E41n1/sheet.py` / `pairs.py` (oben Original
 v(b+2k), unten Port F(b'+k), Port +5 px wie Abnahme §3.7). Gemeinsam: `RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72
 RE15_INPUT_SCRIPT_START=300 RE15_INPUT_SCRIPT_BASIS=spiel RE15_SCD_TRACE=1 RE15_ANIM_TRACE RE15_MOTRACE RE15_STATE_LOG
@@ -258,3 +258,82 @@ im Original NIE bewegt; Port scd_work_bind Art 3 = Prop-Pool obj_id (scd_vm.c), 
 work_prop_idx — Spielerlage im Port unveraendert (oben), Buehne faellt in Cut 4 (Bildbogen `<sp>/E41n1/pr_w03_cut4.png`).
 Nebenbefund Kamera (nicht Spur E): Port-Lauf g2 (Stand bei (9000,-3200), Kamera-Spur state.txt) springt F1..F299 JEDES
 Bild zwischen Cut 0 und Cut 2; im Original-Video `o_hg_ost.mp4` steht derselbe Ort ~100 Videobilder ruhig auf Cut 0.
+
+#### Original-Gegenproben (DuckStation, MZD-Disc, Treiber `<sp>/E41n1/orig_driver.py` = abn0-Treiber + `--nomenu`/`--latecap`/U+S)
+Pfad-Falle: `-statefile` nimmt nur einen Windows-Pfad mit Backslash und langem Namen (Kurzname `MJOEDI~1`/Schraegstriche:
+DuckStation startet ohne Spiel, weder Slot-1 noch resume.sav). settings.ini nach jedem Lauf bytegleich zurueck (Treiber),
+Sicherung `<sp>/E41n1/orig/settings.ini.vor_E41n1`; EnableGDBServer blieb false.
+- **Waffe im Original wechseln:** der Debug-JUMP setzt die Waffe in der Spieler-Init FUN_800314b0 ueber die MZD-Tabelle
+  @0x800c00d4 (FUN_800c00a8: `lbu v0,0(t0)`, t0 = 0x800c00d4 + DAT_800aca5c; Messer = 1 fuer char 0..6), nicht aus dem
+  Inventar. Darum: Statusschirm offen sichern (`s1_open_slot1.sav`; DAT_800b25ce = Abbild der Ausruestung beim Oeffnen,
+  @0x8004649c), dort DAT_800b25ce := 1 und DAT_800b25c8 := 1 (Browning) setzen, START -> Schliess-Zweig @0x800465f4..@0x8004661c
+  (inv[25c8] != 25ce) -> @0x80046688 `sb v0,DAT_800aca5d` + @0x800466b0 `jal FUN_80036b68` (PLW laden). RAM danach:
+  DAT_800aca5d = 3 (Handgun).
+- **o_w03_stand** (`<sp>/E41n1/orig/o_w03_stand.mp4`, 1031 Bilder; Schnitte v470 -> Cut 3, v736 -> 4, v889 -> 3 = dieselben
+  Abstaende 266/153 wie w1b): Original mit Handgun gegen Port `runs/K_w3_stand` (RE15_EQUIP=3), Bogen
+  `<sp>/E41n1/pr_w03_k18_36.png`: Stehen, Zwischenpose k20 und Kurbeln Bild fuer Bild gleich; die Waffe kreist im Original
+  genauso mit der Hand (Teil 11 = PLW-Netz, Skill re15-weapon-render §2). Cut 4 (`pr_w03_cut4.png`) gleich, das Original
+  6..9 Bilder spaeter (CD-Nachladen).
+- **o_hg_cut3 = der Weg des Nutzers** (`<sp>/E41n1/orig/o_hg_cut3.mp4`, 988 Bilder): Leon per RAM bei (9000,-3200), 3 s nach
+  Westen gelaufen -> `p_x9000_slot1.sav`: (3012,-3200), **Cut 3** (wie Port t2), dann links drehen + Quadrat, Ja.
+  v418 Frage, v420 Frage zu, **v420..v436 17 Videobilder unbewegt** (Nachladen), v438 steht Leon an der Kurbel (Sprung
+  (3012,-3200)/Gier ~1500 -> (3650,-3018)/1024 im SELBEN Bild, die Balken setzen ein). Paarbogen gegen Port e1
+  (`<sp>/E41n1/pr_cut3_k0_30.png`, Original v(438+2k) / Port F(523+k)): Stehen, Uebergang k21, Kurbeln gleich.
+  Der Sprung ist also ORIGINAL (Pos_set @0x0A8C mitten in Cut 3); der Port springt 2 Bilder nach dem Ja, das Original nach
+  ~8 Spielbildern Standbild. Grund (selbst disassembliert): Cut_chg LAB_800402a0 setzt OHNE Vergleich mit dem alten Cut
+  `@0x800402f4 sb v0(=1),0x800b5457`; der Zeichner @0x80021530 `lbu 0x800b5457` -> @0x80021558 `jal FUN_80021bbc` +
+  `j 0x800215fc` ueberspringt die DrawOTag-Aufrufe @0x800215bc..@0x800215e4; FUN_80021bbc laedt den Hintergrund
+  (@0x80021d2c `jal 0x80013c50`) auch bei gleichem Cut. Die Dauer ist CD-Ladezeit (w1b 8, w03 14 Spielbilder) — kein
+  Spielwert; der Port laedt sofort. Nicht geaendert (keine belegbare Bildzahl, betrifft jeden Cut_chg).
+- **Gehen + Quadrat im Original** (`o_hg_geh2.mp4`, `o_hg_geh3.mp4`): Meldung 0 und die Frage erscheinen, die Bestaetigung
+  per Quadrat wurde in 2 Laeufen NICHT angenommen (Spieler-RAM `+4..+7 = [1,1,1,0]` = Gehen, angehalten; Pad held
+  0x0000, keine haengende Taste); im Stand (`t_hg_stand`, `o_w03_stand`) nimmt dieselbe Automatisierung das Ja an.
+  Ursache nicht ermittelt (OFFEN unten) — betrifft nicht das "Fliegen".
+
+#### Der Weg des Nutzers (sein eigenes befund.log)
+`C:/workspace/git/reAi_v2/re15_port/build/platform/pc/befund.log` (Hauptbaum, nur gelesen): alle 492 ROOM2020-Zeilen stehen in
+Sitzungen der exe "Oct 19 2026 15:24:05" (Zeilen 64768..65283); in den v0.8.28-Sitzungen ("Oct 23 2026 15:41:40") gibt es
+KEIN R2020. Drei Kurbel-Szenen (Zeilen 64787..64800, 64951..64967, 65123..65151), jede aus Richtung ROOM2050 mit **Kamera C3**
+beim Druecken und **masken=0**, z.B. `F235 R2020 C3 pos=(2166,-1800,-3382) rot=864` -> `F295 ... pos=(3650,-1800,-3018)
+rot=1024`. Zwischen dem 19.10. (86394fc2) und der Basis 116e8b0f aendert `git diff --stat 86394fc2 116e8b0f --
+re15_port/engine` nur dining_r39, nahaufnahmen_r40, untersuchen_r40 (andere Raeume) und die Masken-Zwillinge: der Nutzer sah
+den VORHER-Stand — Sprung im selben Bild (Original), EIN Kurbel-Umlauf und danach 138 Bilder Standbild in der
+vorgebeugten Pose (Port-Defekt, behoben) — und keine Maske (H2 scheidet als Ursache aus).
+
+#### Ergebnis Mangel 1
+Alle Anlauf-Varianten (a)-(d) des Orchestrators und der echte Weg des Nutzers sind am Port gemessen, die beiden
+Original-Gegenproben mit Handgun (Stand, Cut-3-Anlauf) Bild fuer Bild gleich. Ein "Herumfliegen", das das Original nicht
+hat, gibt es nach dem Fix nicht mehr; vorher wich nur das Standbild ab. Der Sprung zur Kurbel ist Original (Pos_set).
+Die Rueckfrage an den Nutzer bleibt, jetzt genau gestellt (Abschnitt "Fuer den Nutzer").
+
+### Hinweis H1 — Haken in scd_vm.c (VERTRAG §1.3) — behoben
+Ursache: re15_werkstatt11b1_r41_init_lauf startete das Programm ueber scd_event_fire(24), das die Kette in scd_vm.c braucht.
+Aenderung: das Modul startet den Faden selbst im ersten freien Ereignis-Slot — dieselbe Suche wie scd_event_fire
+(Slots SCD_EVENT_SLOT_FIRST..SCD_EVENT_SLOT_LAST, `!active && scd_thread_start(slot, pc) == 0`), Programm unveraendert.
+scd_vm.c ist wieder bytegleich zur Basis (`git diff master -- re15_port/engine/src/scd_vm.c` leer). Messung nachher:
+integration_r41_kleinkram_b_werkstatt_szene/_tuer und unit_r41_kleinkram_b_11b1_* gruen (unten), Logzeile
+`[wk11b1-r41] ROOM11B1 (3,0x83)=1: Ereignis 24 im Init-Lauf hinter sub00` unveraendert. Die zwei uebrigen Haken liegen an den
+einzigen Stellen, an denen der Defekt sitzt: re15_inv_screen.c tuer_anziehen() (static, Markenwahl) und player_common.c
+`p->anim_frame++` (Vorschub des Spielers); je 1-3 Zeilen mit "Runde 41 Spur E".
+
+### Hinweis H2 — Maske ROOM2020 Cut 3 (Spur M)
+Kein Code dieser Spur. Neu belegt: der Nutzer-Befund kam NICHT von der Maske — sein befund.log zeigt in allen 492
+R2020-Zeilen `masken=0` (die Masken kamen erst mit 5924939d am 23.10. 16:23). Sichtpruefung/Korrektur: Spur M (Orchestrator).
+
+### Hinweis H3 — Integrations-Riegel mit der echten exe — behoben
+NEU tests/integration/test_r41_kleinkram_b.cmake + Auswerter tests/unit/test_r41_kleinkram_b_exe.c (marker / kurbel /
+segment), registriert in tests/unit/probes/r41_kleinkram_b.cmake (exe-Kopie je Lauf, eigener Laufordner, geerbte RE15_*
+geloescht, Timeout 900, kein .exe-Pfad im Skript):
+
+| Riegel | Weg | NACHHER | VORHER-exe (Basis 116e8b0f) |
+|---|---|---|---|
+| integration_r41_kleinkram_b_kurbel | Leon 2050 -Tuer Slot 1-> 2020, Cut 3, Kurbel | Pos_set F343 / Plc_motion F363 / Plc_ret F541; Lage (3650,-3018) 197/197; Clip 0 fc 40 178 Bilder, **4 Umlaeufe, max 1 Bild Slot 39** | 0 Umlaeufe, **139 Bilder Slot 39** -> rot |
+| integration_r41_kleinkram_b_karte | Leon 1230 bis an die Ostkammer-Tuer, Karte B1 | **MARKER 145 107** | MARKER 130 112 -> rot |
+| integration_r41_kleinkram_b_werkstatt_szene | Elza 1261 -Tuer-> 11B1, Szene sub03 | Kameras 2,3,4,5,6, Ende **Cut 2** | Kameras 3,4,5,6,8, Ende Cut 8 -> rot |
+| integration_r41_kleinkram_b_werkstatt_tuer | Elza 11B1 vor der Tuer, gehen + Quadrat | min x -20950, msg 12 "The door is locked.", Bild 380 in 11B1 | min x -23575 (durchgelaufen), kein msg 12 -> rot |
+
+### Nebenbefund Kamera ROOM2020 (nicht Spur E, fuer den Orchestrator)
+Port: steht der Spieler bei (9000,-3200) (Lauf g2, RE15_PLAYER_POS), wechselt die Kamera JEDES Bild zwischen Cut 0 und 2
+(state.txt F1..F299). Im Gehen tritt es nicht auf (t2: 0 -> 2 bei x 8982 nach Westen; g1: 0 -> 2 bei 8018, 2 -> 0 bei 9068
+nach Osten). Original-Video `o_hg_ost.mp4`: dieselbe Lage steht ~100 Videobilder ruhig auf Cut 0. Ursache nicht untersucht
+(RVD-Auswahl aot_common.c / FUN_80014230).
