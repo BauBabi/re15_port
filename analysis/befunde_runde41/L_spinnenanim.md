@@ -13,6 +13,9 @@ Baum `.claude/worktrees/r41_spinnenanim`, Zweig `r41/spinnenanim`, Basis e5c914f
 - 22:55 RE-Belege Zeichenweg (2.1-2.3) — Original-Messung mit Bildern folgt (1.3).
 - 23:00-23:25 Original gemessen (GDB-Zahlen + Video, 1.3/1.4); Massstab 0xccc gefunden (2.2).
 - 23:45 Umsetzung (3) committet 380cf999 (ungebaut), Bau laeuft.
+- 2026-10-25 00:00-00:40 Riegel unit/integration_r41_spinnenanim (ede09109, 768593a4), Gift-Anker == Original, Toleranz
+  belegt; Schatten (24a27472); echter Weg durch die Tuer (bed1d57c); Riegel C ROOM20A0 (b72acb66); gezielte Gruppe 24/24.
+- Abschluss: Endlauf der gezielten Gruppe (8), Abschluss-Commit fix(r41-spinnenanim).
 
 ## 1. Messung vorher
 
@@ -206,6 +209,9 @@ der grosse Spinnenschatten liegt ab Takt 93 auf dem Boden an der Wand wie im Ori
 Restunterschied: die Abstiegshoehe je Takt folgt der Zufallszahl (+100 + (rng & 0xf) @0x801150dc-e8 / @0x80115198-bc), der
 Port zieht andere Zahlen als die Messung (Endhoehe Port -462, Original -428, Takt 110: -793 / -737) — kein Mechanik-Unterschied.
 
+Halten im Schacht (Cut 0 an der Tuer): `L_belege/vgl_cut0_halten.jpg` (Original / Port vorher / Port nachher): vorher
+hingen grosse Spinnenbeine sichtbar aus dem Schacht oben links, nachher wie im Original nur die Beinspitzen + Schatten.
+
 ### 4.2 Echter Weg (Tuer statt Sprung, `t1_2030_2060` und integration_r41_spinnenanim)
 ROOM2030 oberer Steg -> Tuer slot 3 (Door_aot_set @RDT 0x01B4C: Stage 2 Raum 6, (7600,0,3950), Blick 2048) -> ROOM2060, Leon
 geht 1,2 s geradeaus: Cut 1 in Raumbild 68, sub02 setzt grid 0x42, Spinne kriecht heraus, klettert kopfueber an der Wand
@@ -288,3 +294,14 @@ Nebenbefund aus dem Runde-38-Echtlauf (ROOM2030/2031, RE2-KI, 9225 Figur-Bilder 
 * **Entscheidungsfragen:** keine. Hinweis zu deiner Einordnung: Groesse und Schatten gelten auch, wenn in den Optionen die RE2-KI
   gewaehlt ist — die KI-Option tauscht das Verhalten, nicht die Figur (Begruendung Dossier 3).
 
+## 8. Abschluss (Endlauf der gezielten Gruppe, keine volle Suite)
+
+`ctest --test-dir re15_port/build -R "unit_damage|unit_spider_ai|unit_adult_spider_ai|unit_rotmatrix|unit_re2_spider_ai|unit_re2_spider_water_2090|unit_re2_hit_repeat_crow_spider|unit_re2_baby_spider_dmg|probe_spinne_elevation|r31_trefferboxen|unit_r38_spiderman|unit_r38_griff_spiderman|unit_r38_spinnen|integration_r38_spinnen_echtlauf|r39_gegner_schatten|r39_zustand|r41_spinnenanim|integration_headless_run" --timeout 600 --output-on-failure -j 4`
+
+-> `100% tests passed, 0 tests failed out of 24` (Endlauf nach Riegel C; Einzelzeiten u.a. integration_r41_spinnenanim, integration_r38_spinnen_echtlauf, integration_r39_zustand_gift/_kleidung, integration_r39_gegner_schatten: Passed)
+
+Geaenderte gemeinsame Dateien (je kleine markierte Haken "Runde 41 Spur L"): platform/pc/main.c (Zeichner: Figur-Matrix,
+Pose-Klammer, Messschiene, 2 Schatten-Haken, Include), engine/src/enemy_ai_common.c (Spinnen-Takt + anim_set-Zwilling,
+Include), engine/src/scd_room_setup.c (Installer-Zeile am Blockende + Include). Eigene Dateien: engine/src/spinnenanim_r41.c,
+include/re15_spinnenanim_r41.h, engine/src/spinnen_r38.c (Runde-38-Modul der Spinne: lauer_anim-Haken, Gift-Anker).
+Keine Bank-9-Bits, keine Nachrichten-Ids, keine Assets.
