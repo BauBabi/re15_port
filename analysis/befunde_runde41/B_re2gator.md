@@ -1406,3 +1406,53 @@ Riegel auf die Lagen E1 und C3 ueber >= 300 Bilder; Bildbeleg) -> Bau -> gezielt
     Bild `bilder_r41b/nb4_m1_C3_F1276-1284_vorher_nachher_x3_gain2.png` (Ausschnitt 3x, Aufhellung 2,2): oben vorher (C3v) der
     Zylinder auf/hinter dem Kopf ab F1280, unten nachher (C3m1) das gelbe Kanister-Ende zwischen den Kiefern, ab F1282 vom Kiefer
     verdeckt (er steckt im Maul).
+
+### 12.2 M2 (Punkt 2): Gier-Spruenge von 100-180 Grad in Verfolgung und Belagerung - behoben
+- **Ursache (bestaetigt):** die Selbst-Befreiung (Sweep-Klasse (3), 2026-09-11) loeste aus, sobald das Zentrum im Slab (Kante +
+  Koerperradius + 60) stand und sich < 8 bewegt hatte, und lenkte dann mit `re15_enemy_steer_point(e, bx, bz, 0x800)` (Sofort-Snap)
+  zum Slab-Ausgang. Diese Bedingung erfuellt jeder Gator, der von AUSSEN gegen eine Wand drueckt (Klemmlinie = Kante - Radius, also
+  im +60-Rand): Ziel Leon in der Tuernische (C3/A2/D2, Westwand), Leon im Norden (N, Nordwand), GUARD-Ziel GPAT (6500,-12600) 700
+  vor der Ostwand = hinter der Klemmlinie 7200 - 1466 (E1). Danach drehte die Verfolgung mit 0x40/0x60 zurueck an die Wand ->
+  der naechste Snap (E1: alle 32 Bilder = 2048 / 0x40).
+- **Messung vorher:** Abnahme 3 (`gier.py`): E1 F426 +1944, F458 +1984, F490 -1984, F522 +1984, F546 -1472; C3 F1097 -1488, F1207
+  -1474, F1327 -1490 (dazu F1116/1218/1338/1344 -336..-576 und F634 -1114 nach der CROSS-Landung); A2 F379 +1650; D2 F1004 -478,
+  F1075 -1302, F1083 -480; N F1057 +1557. Bilder der Abnahme: beleg_gier_kanister.png, E1_snap.png, A2_snap.png.
+- **RE-Beleg:** §12.0 (RE2: kein Gier-Schreiber in Sub 1/2 / T2; Schreiber nur @0x80100280/2a0 (Root-Sichern/-Rueckschreiben um
+  FUN_80035408 @0x80100284), @0x80100948 / @0x80100ec0 (+1024-Knicke), @0x80102404/2440/27c8/2a34 (R1-R3)). Die Befreiung ist
+  Port-Design ohne RE2-Gegenstueck.
+- **Aenderung (PORT-WAHL, Form = die Wand-Klemme selbst, sie verschiebt nur die Lage):** enemy_ai_boss_gator.c
+  - `gb_gefangen(e, bx, bz)`: Befreiung nur noch im echten GEFAENGNIS = die Wand-Klemme (re15_collision_constrain_enemy, dieselben
+    Argumente wie die Takt-Klemme) verwirft schon einen Schritt GB_SWIM_SPEED (48) zum Slab-Ausgang (push_rect Fall 0 setzt auf die
+    Vorlage zurueck, re15_collision.c FUN_8003bca8). Wand-DRUCK von aussen ist kein Gefaengnis (der Schritt hinaus ist frei) - dort
+    bleibt der Gator an der Wand und lenkt weiter mit seiner Wenderate auf sein Ziel.
+  - `gb_befrei_beginn` / `gb_befrei_schritt`: die Befreiung ist ein SCHUB ohne Drehung - je Takt GB_SWIM_SPEED zum Ausgang (derselbe
+    Weg je Bild wie bisher re15_ai_advance(e, GB_SWIM_SPEED)), Gier unveraendert, Klemme ausgesetzt (befrei = 2 wie bisher),
+    Schwimm-Clip 0 laeuft weiter, bis der Ausgang (Slab-Rand + 120 wie bisher) erreicht ist. gator_boss.log `BEFREI start/ende`.
+  - Messzeile GIER-WACHE (Takt-Huelle): je Bildpaar mit beiden Takten in CHASE/GUARD das Gier-Delta; `GIER-SPRUNG F.. d=..` je
+    Delta > 0x60 ausser +1024, `GIER-WACHE bis F..: n Bildpaare, max |Gier-Delta| m (ohne +1024), Spruenge k, Befreiungen b` alle 300
+    Paare. Messhaken re15_gator_boss_gier_wache / _befreiungen / _verfolgt / _phase (re15_boss_gator.h).
+  - Ausgenommen wie verlangt: CROSS (Bahn-Blick, Nutzer-Design), Intro-Start (Pos_set-Zwilling, davor untergetaucht), +1024-Knick.
+- **Messung nachher:**
+  - Riegel `unit_r41_re2gator_gier` (NEU): `E1 Plattform-Belagerung (Leon oben auf der Rampe) 800 Bildpaare CHASE/GUARD (GUARD 800,
+    an der Wand 461), max |Gier-Delta| 64 (ohne +1024), Spruenge > 0x60 0, Befreiungen 0` | `C3 Westwand vor der Tuernische (Leon in
+    der Nische) 536 Bildpaare CHASE/GUARD (GUARD 0, an der Wand 284), max |Gier-Delta| 96, Spruenge > 0x60 0, Befreiungen 0`.
+    `unit_r41_re2gator_sitz` (c): Gefaengnis (Zentrum 600 im aufgeblasenen Plattform-Slab) -> 1 Befreiung, 17 Schub-Bilder, Gier fest.
+  - GEGENPROBE: derselbe Riegel gegen einen Bau mit der alten Befreiung (gb_gefangen = 1, Snap 0x800 + advance): `E1 ... max |Gier-
+    Delta| 1984, Spruenge 15, Befreiungen 15` (Takte 202/234/266 = alle 32 wie Abnahme-E1), `C3 ... max 1954, Spruenge 9` -> FAIL;
+    zurueckgebaut, neu gebaut.
+  - Konvergenz-Garantie unveraendert: unit_gator_sweep `gator-biss: 80 Faelle, 0 ohne Treffer` / `gator-sweep: 3342 Paare, 0 nicht
+    konvergiert` (66 s).
+  - exe (eigene Kopien re15_pc_b41n4_*.exe, Rezepte der Abnahme 3, Endstand): `gier.py > 0x60` + gator_boss.log:
+    E1n (Tuerweg 20A0) `GIER-WACHE bis F581: 300 Bildpaare CHASE/GUARD, max |Gier-Delta| 64, Spruenge 0, Befreiungen 0`, Spruenge im
+    Zustandslog nur F6 (Intro-Start -352) und F280 (+1024); C3n `GIER-WACHE bis F1302: 300 Bildpaare, max 96, Spruenge 0, Befreiungen
+    0`, sonst nur F280/F934 (+1024) und F393 (+348 CROSS-Start); A2n2 nur F6 (Intro-Start) und F280 (+1024), Finisher-Schnitt F398
+    (vorher F403 - der Snap F379 und die Rueckdrehung fehlen); D2n `GIER-WACHE bis F980: 300 Bildpaare, max 96, Spruenge 0`, Dash/Putz
+    unveraendert (Planung (-6052,-18113) 1139 -> 624, Putz 54, wand 0); Nn nur F6 (Lauer-INIT, untergetaucht), F201 (+447 Auftauchen),
+    F475/F931 (+1024); NZn (Elza, ROOM2091) Auftauchen F201 Clip 6 Bild 0, Lagesprung max 338 F229 wie Abnahme 3, keine Spruenge.
+  - Bilder: `bilder_r41b/nb4_m2_A2_westwand_F377-381_vorher_nachher_x3_gain2.png` (gleicher Ablauf bis F378; oben vorher F379 dreht
+    der Gator in einem Bild mit offenem Maul zur Kamera, unten nachher bleibt er laengs der Wand), `bilder_r41b/nb4_m2_E1_belagerung_
+    vorher_nachher_x2_gain18.png` (Belagerung an der Rampe: oben vorher F425 -> F427 Umschlag des Koerpers, unten nachher F420-F430
+    aufgerichtet zu Leon ohne Umschlag).
+- **Nebenwirkung K (Kanister-Tod, GB_TEST=5) geprueft:** Kn `KANISTER Stufe 1 ... F6`, `angehaengt ... F18`, `R1 VSync 4 F70`,
+  Raum-SE 15, `R1 ende (Leiche)`, `VSync 2 F108` (2521 ms), Explosionsbilder F70-F88 wie Abnahme 3 (Blitz/Scherben am Kopf, Leiche);
+  `Kanister-Sitz F47: angehaengt 30 Bilder, Abweichung max 0`.
