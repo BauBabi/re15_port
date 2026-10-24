@@ -268,15 +268,15 @@ pri-Uebersichtsbilder ersetzt bis auf 10). Keine Messung der Abnahme wird wieder
 ### Stand Nachbesserung 1
 Fortsetzung 2026-10-24 ~14:1x (Vorgaenger vom Wochenlimit ~13:5x beendet; Commits 5d10ccc0, f00fbf3e, a24e2389, 50c72950).
 - [x] Mangel 5 (a)-(c) Doku: original.py-Kommentar, Kopf schliessen_r41.py, P1_exe_*.png umbenannt (a24e2389)
-- [ ] Mangel 5 (d) Dossier 1.4 DAVOR-Aussage (5100 C7 +2 Leon-Hand, 4040 C11 +1)
-- [x] Mangel 2 Begruendung 12_02 richtiggestellt (a24e2389, 2.3 + auswahl.json "r41")
-- [ ] Mangel 4 VOR-Stellen 2030 C7 / 2040 C7 mit Spielfigur im Bild (oder Beleg "keine")
-- [ ] Mangel 3 ROOM2030/2031 C15 Handlauf-Tiefe, VOR-Szene Leon + Elza H == 0
-- [ ] Mangel 1 Zellen-Tiefe fuer ausgeschlossene Rechtecke: Werkzeug tiefe_zelle_r41.py (f00fbf3e), drei Iterationen im
-      Scratchpad `m41nb1/tz1..tz3` (tz2_aus.inc == tz3_aus.inc), MASKS = tz3 (50c72950, 18 MSK, nur Tiefenfelder);
-      offen: Ausschluss-Tabelle einsetzen, an der exe messen (HINTER/DAVOR je wieder aufgenommenem Objekt), Restliste mit Bildern
-- [ ] Auflage Nachtrag 11: 10 Uebersichtsbilder (3040/3041 01, 3050/3051 06+15, 30E0/30E1 06+07)
-- [ ] Bau, gezielte Tests, Commit fix(r41-masken36): Nachbesserung 1
+- [x] Mangel 5 (d) Dossier 1.4 DAVOR-Aussage berichtigt (5100 C7 Hand unter ALTEM Rechteck 0; 4040 C11/4080 C7 Tuermodell)
+- [x] Mangel 2 Begruendung 12_02 richtiggestellt (a24e2389, 2.3 + auswahl.json "r41"), Nutzer-Entscheid "Weglassen ist ok"
+- [x] Mangel 4 VOR-Stellen 2030 C7 / 2040 C7: es gibt keine (3D-Sehstrahl, 767 / 2378 Plaetze, 0 VOR); dabei Handlauf-Tiefe
+      2030/2040 C7 gefunden und behoben (Leon HINTER dem Gelaender jetzt verdeckt)
+- [x] Mangel 3 ROOM2030/2031 C15: widerlegt (Spinne hinter Leon), Riegel-Szenen mit weggestellter Spinne H == 0
+- [x] Mangel 1 Zellen-Tiefe Schritt 1 (236 Rechtecke, exe 39 DAVOR / 10 HINTER) + Schritt 2 (131 Rechtecke, Erben wie raum.py
+      "zelle"), Restliste mit Bildern `M_bilder/NB1_rest/`
+- [x] Auflage Nachtrag 11: 10 Uebersichtsbilder (durchsichtig, Leon + Elza), alle Uebersichtsbilder/Boegen neu erzeugt
+- [ ] exe-Pruefung Schritt 2, gezielte Tests, Abschluss-Commit
 
 ### NB1 Mangel 1 - ausgeschlossene Objektteile mit der Tiefe ihrer Kollisionszelle
 
