@@ -1944,3 +1944,41 @@ ohne Ende, bis 600 Bilder), buehne (jede laufende Kamera, Raum-Objekte), integra
   - G2F (`RE15_PLAYER_POS=-5950,-20550,2048 RE15_EXIT_AT=470#2090`): state.log cam=6 bis F439, Biss F440 -> `... -> (2100,-24500) Gier 1951
     Cut 1 ... laufende Kamera 6/6 ausgeschlossen`; Bild `B41nb6/G2_nachher.png`: F440 Cut 6, **F441 Schnitt auf Cut 1**.
   - E1 (Tuerweg): laufend 2/2 -> Cut 6, Schnitt F627 -> F628 (`B41nb6/E1_nachher_schnitt_p1.png`).
+
+### 14.3 M3 - Opfer in P1 verdeckt (behoben; zweiter Verdecker gefunden)
+- **Ursache 1 (Abnahme 5, nicht wiederholt):** in der NB5-Buehne des Tuerwegs (Cut 4) liegt die treibende Raum-Leiche Obj_model_set[3]
+  (-25,-1740,-7423) zwischen Kamera und Leon (Bild (98,116) gegen Leons Wurzel (138,128), `B41abn5/E1_p1_zoom4.png`). Die NB5-Suche
+  kannte keine Raum-Objekte. Unabhaengig nachgerechnet im Riegel (Gegenprobe, s. §14.5): NB5-Buehne (5638,-12546) Gier 2323 Cut 4, Leon
+  P1 Bild 8 -> **196 von 776** Koerper-Vertices hinter dem Huellquader von obj 3.
+- **Ursache 2 (dieser Agent gemessen, im Abnahmebericht nicht genannt):** auch ohne die Leiche war Leon in P1 kaum zu sehen. Zwischenstand
+  E1 (Buehne Cut 7, `B41nb6/E1_p1_zoom.png` des ersten Laufs): F628-F634 nur Kopf/Schultern, F636-F640 einzelne Pixel. A/B mit
+  `RE15_NO_PRI=1` (`B41nb6/mess/E1np`, `E1np_p1_zoom.png`, `E1np_p1_gain.png` x8): gleich -> keine Maske. RE15_TRILOG im Fenster um Leon
+  (`B41nb6/mess/E1tri/trilog.txt`, F638): Dreiecke von TIM-Platz 5 = Objekt obj 1 (Typ-3-Raster, **Wasseroberflaeche** y -1620) mit z
+  7243..16951 vor Leons Platz 0 (z 10208..11080). NB5 stellte Leon in P1 auf den Beckenboden (pl->y 0); mit dem Maul-Massstab 2/3
+  (render_scale_q12, P0) liegt sein ganzer Koerper unter y -1620 (gezeichnete Wurzel -1186).
+- **Belege:** RE2 P0 nimmt das einzige Raum-Objekt neben dem Gator aus dem Bild (Kanister `sw zero,1308(at)` @0x80101008-0c) - der
+  Finisher zeigt nur Gator und Opfer; RE1.5 Objekt-Zeichner: Typ 3 = Raster-Sprite @0x8002c2bc-c8 (die Wasseroberflaeche, durchscheinend,
+  kein Verdecker), Mesh-Objekte nur im Regions-Viereck des Cuts @0x8002c2d8-e4 (in ROOM2090 haben alle 13 Cuts dasselbe Viereck
+  (-11000..9500) x (-29000..-3500), Sonde `B41nb6/probe/probe_region.c`); RE2 P0 schreibt nur Leons x/z (@0x8010106c-84), Leon behaelt
+  die Bodenhoehe, auf der auch der Gator steht; ab P2 setzt FUN_80015cb8 beide auf die Anker-Hoehe (`sw v0,60(s1)` @0x80015d7c).
+- **Aenderung:**
+  1. Buehnen-Pruefung "unverdeckt" (gator_re2_r41.c gr2_fin_unverdeckt, PORT-WAHL "Raum-Objekte bleiben stehen, die Buehne weicht aus",
+     Form RE2-P0): in JEDEM Bild der Bahn schneidet kein in der Buehnen-Kamera gezeichnetes Mesh-Objekt (aktiv, Typ != 3, ohne
+     Elternteil; MD1-Huelle unter der Objekt-Drehung = Drehformel von main.c pc_prop_rot_q12, Lage x / Zeichen-y re15_prop_render_y / z)
+     den Strahl Kamera -> Leons Knochen-Urspruenge (PL00-Knochen 0..14 mit den Opfer-Posen, wie der Spieler-Zeichner) bzw. -> Kopf/Kiefer
+     (Bones 6/7); nur Punkte im Bild zaehlen.
+  2. P0 stellt Leon auf die Gator-Hoehe (`pl->y = e->y`, enemy_ai_boss_gator.c; vorher 0) - in P1 ragt er wie ein watender Leon aus dem
+     Wasser, und P1 -> P2 springt nicht mehr um 1200 (gezeichnete Wurzel P1 -1186 -> P2 -2141 vorher). Messhaken/Buehne/Riegel rechnen
+     P1 ebenfalls auf der Gator-Hoehe.
+  3. Ordnung der Buehnen (PORT-WAHL, Form = RE2-Finisher-Schnitt): erst der Kopf-Massstab im Koppelbild moeglichst nahe am RE2-Schnitt
+     Cut 7 (gr2_massstab_soll(FINISHER) = H 231 / Kopf-Tiefe 11175 = 1354, §9.2), dann Versatz + 4 x Drehung (NB5-Ordnung). Grund: seit M2
+     faellt jedes Umsetzen in einen Schnitt - die NB5-Ordnung "naechste Lage" lieferte ohne Nutzen ferne Aufnahmen (Zwischenstand E1: Cut 7,
+     Massstab 629-681, Leon im Normalbild kaum zu erkennen; Abnahme 5 H3: 573-1318). Suche grob -> fein (Raster 1000 ueber das Becken, dann
+     250 im Fenster +-1000): 12,7 ms je Suche im Riegel (volles 250er-Raster 58 ms).
+- **Messung nachher:** exe E1 `Buehne ... -> (-5650,-16000) Gier 2929 Cut 6 ... Raum-Objekte 3, Leon-Stichpunkte 15, wegen Verdeckung
+  verworfen 24 ..., Massstab Koppelbild 1357 (RE2-Finisher 1354)`, KAMERA `massstab=1332`; Maul-Sitz Ende `Opfer frei 275/275`; Bild
+  `B41nb6/E1_nachher_schnitt_p1.png`: **F628-F640 Leon gross und frei vor dem frontalen Gator** (Hochheben), F642 gepackt, F650 Schuetteln,
+  F700 Wurf - vorher `B41abn5/E1_p1_zoom4.png` (Leiche vor Leon). G1F/G2F ebenso (§14.2, Bilder G1_nachher/G2_nachher).
+- **Dossier-Berichtigung zu §13.5/§13.7:** der Verdecker in P1 der Cut-4-Buehne war die Raum-Leiche Obj_model_set[3] (und, durch die
+  P1-Hoehe, die Wasseroberflaeche), **nicht** eine Raum-Spinne - die Spinnen standen bei x 6182 (Abnahme 5 §3.3 c). Spur F muss diese
+  Leiche nicht entfernen; die Buehne meidet sie selbst.
