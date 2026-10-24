@@ -16,7 +16,8 @@
  *       Gezaehlt fuer VORHER = nur die alten Rechtecke durch den BSS-Atlas (so zeichnete der Lader bis Runde 40) und
  *       NACHHER = alle Rechtecke durch den eigenen Atlas, beide mit dem Ausschluss der Spur P R37 (re15_masken36_filter wie
  *       main.c) - der Vergleich misst allein die Saum-Rechtecke. Verlangt: NACHHER <= 30 % von VORHER (gemessen 15498 von
- *       61672 = 25,1 %, Leon + Elza, Dossier 1.4) und VORHER > 10000 (Gegenprobe: das Mass findet die Kerben);
+ *       61672 = 25,1 %, Leon + Elza, Dossier 1.4; nach Nachbesserung 1 - Zellen-Tiefe fuer ausgeschlossene Rechtecke,
+ *       tools/maske/tiefe_zelle_r41.py - 11494 von 62432 = 18,4 %) und VORHER > 10000 (Gegenprobe: das Mass findet die Kerben);
  *     - Blit: die gezeichneten Punkte NACHHER passen zum Hintergrund (eigener Atlas = Hintergrund an der Zielstelle).
  */
 #include <stdio.h>
@@ -266,7 +267,7 @@ static void teil_loecher(void)
           sekt == 216 && eigen == 216 && quelle_eigen == 216);
     CHECK("die alten Generator-Rechtecke sind erkennbar (Quelle im BSS-Atlas voll deckend + Blit)", alt_n > 6000);
     CHECK("Gegenprobe: VORHER gibt es offene Kerben an den Objektkanten (> 10000)", k_alt > 10000);
-    CHECK("NACHHER hoechstens 30 % der Kerben von VORHER (gemessen 15498 von 61672 = 25,1 %; der Rest sind Saum-Rechtecke, die der "
+    CHECK("NACHHER hoechstens 30 % der Kerben von VORHER (gemessen 11494 von 62432 = 18,4 %, vor Nachbesserung 1 25,1 %; der Rest sind Saum-Rechtecke, die der "
           "Ausschluss nimmt, weil sie eine Figur VOR dem Objekt verdecken wuerden)", k_neu * 10 <= k_alt * 3);
     CHECK("Blit NACHHER: eigener Atlas = Hintergrund an der Zielstelle (Mittel je Sektion <= 12)", gemalt > 0 && mittel_max <= 12.0);
 }

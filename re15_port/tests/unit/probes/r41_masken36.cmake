@@ -4,7 +4,7 @@
 # aufweisen." -> "danach kannst du deine Masken schliessen in der naechsten Version."
 #   unit_r41_masken36_loecher  Mechanik des Schliessens an allen 216 Generator-Sektionen (test_r41_masken36.c): eigener Atlas,
 #                             den der Lader nimmt; offene Kerben (Kuenstler-Atlas deckend + farbgleich direkt an der Kante
-#                             eines alten Rechtecks, nicht gezeichnet) NACHHER <= 30 % von VORHER (gemessen 25,1 %), Gegenprobe VORHER > 10000; Blit.
+#                             eines alten Rechtecks, nicht gezeichnet) NACHHER <= 30 % von VORHER (gemessen 18,4 %, vor NB1 25,1 %), Gegenprobe VORHER > 10000; Blit.
 add_executable(test_r41_masken36 ${CMAKE_CURRENT_LIST_DIR}/../test_r41_masken36.c)
 target_link_libraries(test_r41_masken36 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_masken36 PRIVATE ${CMAKE_SOURCE_DIR}/include)
