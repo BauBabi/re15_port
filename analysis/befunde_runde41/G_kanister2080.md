@@ -97,3 +97,10 @@ Zensus scd_dump_room.py ueber alle RDTs STAGE1-3 (Sce_em_set pc[7] + Ck/Set Bank
 Work_set(2,0) @0x020C2; **Plc_motion(2,6) Zielen @0x020C6**, Sleep 110 @0x020CA, **Plc_motion(2,7) Feuer @0x020CE**, Sleep 30
 @0x020D2, Plc_motion(2,7) @0x020D6; Senken Plc_motion(2,6) + Plc_flg 0x80 @0x020EA/@0x020EE, Sleep 20 @0x020F2. Marvin (0x40)
 traegt dieselbe Eigenbank (Sub 2 = 0x80050f00 auf +0x170/+0x174, ROOM10D0 Plc_motion(2,6,0), enemy_ai_common.c:10069).
+
+## 2. Messung vorher (Stand 2adca3bf, Bau local_build.sh, exe-Kopie re15_pc_g41_mess.exe)
+Lauf vorher1: `RE15_DEBUG_JUMP=2080@250 RE15_SET_FLAG=9:110,3:245 RE15_FORCE_CUT=5 RE15_FRAMEDUMP=20-60/20 RE15_SPAWN_DIAG=1
+RE15_EXIT_AT=60#2080` (Titel-Autostart wie die r41-Riegel).
+- Punkt 1: debug.log 0 Zeilen `[spawn-diag]` in ROOM2080 (kein Gegner), kein Tuer-Ton (Bit 110 gesetzt, 2080 aendert sich nicht).
+- Punkt 2: Cut 5 Bild 40 (G_belege/vorher_2080_cut5_f40_x2.png, 2x vergroessert): Balkon leer, kein Kanister.
+- Punkt 3: kein Ausloeser, keine Szene (kein Code ausser B's Testhaken RE15_GATOR_KANISTER).
