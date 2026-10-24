@@ -149,3 +149,68 @@ Spieler (Marvin, PL0D) ab Sub-03-Start: F25 Clip 105 (W5), F28 W-Clip 1 (16), F4
 Bildern = PL00.EDD Clip 6 (Knien)** — scd_vm.c `anim_use_pl00 = (entity != 0)` waehlt fuer pc[1] = 2 die PLD-Grundbank
 statt +0x170/+0x174. Bild: Marvin kniet ab F75 (J_belege/vergleich_3060_marvin.png, Spalte "Port vorher F90").
 **Ursache Punkt 1 = Plc_motion(2,6) auf dem Spieler spielt die falsche Bank.**
+
+## §2 ROOM3061 — Sherry kriecht in den Schacht, Elzas Ende (Punkt 2)
+
+### §2.1 Original-Skript (ROOM3061.RDT, scd_dump_room.py; Nachrichten rdt_msgdump.py)
+- Ausloeser: main00 Door_aot_set Slot 1 @0x00E96 Rechteck (-4500,-27300, 2600x1300); sub00 @0x00F3A `46 01 03 31 ff 00 18 02`
+  (Bit 4:244 = 1) = Aktions-AOT (Flags 0x31: 0x10 Aktion, 0x20 Vorwaerts-620) -> Evt_exec sub02. Bit 3:160 muss 1 sein
+  (sonst setzt @0x01016 Slot 1 auf sce 1 zurueck). Aktionstaste = Quadrat (Memory reai-v2-door-transition).
+- Akteure: em0 = Typ 0x4B Sherry (@0x00F44), em1 = Typ 0x49 John (@0x00F58), em2 = Hund 0x20 (@0x00F6C), Obj 0 = Gitter
+  (@0x00F80, Lage (-19095,-495,-27045) rot (0,3072,0)). RBJ-Records: rec0 Marker 0x1 (Spieler, 11 Clips), rec1 Marker 0x2
+  (em0 Sherry, Clips 90/75/60 Bilder).
+- **Kriechen = sub04** (Evt_exec @0x01138, parallel zu sub02):
+  `37/39 02 00 00`, `37/39 03 01 00` (SCA 2/3 aus) @0x0123E..4A; Sherry Plc_dest(9,1) auf (-19095,-30000) @0x01252 + Gosub 7;
+  **Plc_motion(0,0)** @0x01266 (rec1 Clip 0, 90 B.), Sleep 33, Se_on; **Work_set(3,0) + Super_set `48 00 80 8e fc 00 c0 00 67 ff
+  00 00 00 04 00 0c`** @0x0127E (Gitter an Sherrys Teil 14, lokal (252,192,-153), Rot (0,1024,3072)), Sleep 26, Se_on,
+  **Super_reset `49 00 48 00 00 0c 00 00`** @0x0129E, Speed_set(0,40)x4/Sleep 9/(0,80)x4/(0,40)x2 Add_speed (Gitter rutscht +x);
+  Evt_exec sub05 (Sherry Speed_set(0,-5) x60 Add_speed); Sleep 7; **Plc_motion(0,1)** @0x012E4 (75 B.), Sleep 20,
+  **Plc_flg SET 1** (Sleep 22), **SET 2** (22), **SET 1** (11) = 20+22+22+11 = 75 = Clip-1-Laenge; **Plc_motion(0,2)** @0x01304
+  (60 B.), For 34 x [**SET 4** Sleep 8, **SET 6** Sleep 26, **SET 5** Sleep 24, **SET 4** Sleep 2] = 60 = Clip-2-Laenge;
+  SCA zurueck @0x01330..3C.
+- **Elzas Ende = sub02** @0x011C6..0x011FA: Work_set Spieler, Plc_neck + Plc_dest(9,0) auf den Hund (-13350,-22000),
+  Gosub 6, **Plc_motion(2,6)** @0x011DE, Sleep 5, John Plc_motion(2,6) @0x011EA, Sleep 60, Save 0x10 = 0x0F (Sherry), Aot_on 3
+  -> ROOM30C1.
+
+### §2.2 RE-Beleg (selbst disassembliert, PSX.EXE)
+- Plc_flg @0x80041fb8: pc[1] = 0 -> @0x80041ffc `or` (+0x1c4 |= u16), **1 -> @0x80042008 `sh a2,452(v0)` (+0x1c4 = u16)**,
+  2 -> @0x8004201c `xor`.
+- NPC-Executor State 4 @0x80050be8 (Spieler-Gegenstueck 0x80030660 @0x800306b4..f8 identisch): Halbtakt-Tor
+  @0x80050c00..0c (0x10 und 0x20), Sub-Tabelle 0x80076ca0 @0x80050c24, @0x80050c50 `xori v0,v0,0x20`,
+  **@0x80050c6c `andi v0,v0,0x1` -> @0x80050c78 `jal 0x800369f8` (a0 = 0, a1 = 0)**,
+  **@0x80050c94 `andi v0,v0,0x2` -> @0x80050ca0 `jal 0x800369f8` (a0 = 0, a1 = 1 @0x80050ca4)**.
+- **FUN_800369f8 = Fuss-/Glied-Anker** (nicht Keyframe-Wurzelweg): s3 = Entity+0x188 (Part-Feld, Stride 0xAC = 172);
+  @0x80036a34 `jal 0x80068098` (RotMatrix(+0x68) -> Entity-Matrix +0x20, Translation = +0x34/+0x38/+0x3c);
+  @0x80036a48 `jal 0x80022da0` (Entity-Matrix x Part 0 lokal @s3+24), @0x80036a58 (x Part 1 @s3+196);
+  @0x80036a60..70 s3 += a1*0x204 + 0x2b0 (Kette a1=0: Parts 2,3,4 / a1=1: Parts 5,6,7) -> @0x80036a7c (s3-320),
+  @0x80036a8c (s3-148), @0x80036a9c (s3+24) = **feste Kette 0->1->2->3->4 bzw. 0->1->5->6->7** mit den LOKALEN Matrizen
+  des aktuellen Bildes. Modus 0 (@0x80036aa4 `bne s2,zero`): **@0x80036ab4..ac8 `x -= (neu.x - Part[+84])`,
+  @0x80036ad4..aec `z -= (neu.z - Part[+92])`**, Part+84/+92 = Welt-Translation dieses Parts aus dem letzten Zeichnen
+  (Welt-Matrix Part+64, Zusammensetzen FUN_8001e8c8 / 0x80022da0). Das Kettenende bleibt also am Boden stehen, die Figur
+  wandert um dessen Gegenbewegung. Modus != 0 (@0x80036af0..b44): nur Strecke -> +0x8c (hier nicht benutzt).
+- Super_set @0x80040b20: pc[2] & 0xc0 = 0x80 und pc[3] & 0x80 -> **Vater = Gegner (pc[2]-0x80) Part (pc[3]&0x7f) Welt-
+  Matrix** (@0x80040c18 `addiu at,at,-11340` = 0x8009d3b4 + pc[2]*0x1F4 = Gegner+0x188, @0x80040c30 +64), @0x80040c74
+  `sw v0,116(a2)` (Objekt+0x74 = Vater-Zeiger); @0x80040c78..cbc lokal pos (pc+4/6/8) -> +0x34/+0x38/+0x3c,
+  Rot (pc+10/12/14) -> +0x68/+0x6a/+0x6c. Super_reset @0x80040cd0 (Kopie Welt +0x5c/+0x60/+0x64 -> +0x34.., Vater =
+  0x80072d4c). Im Port beide nicht umgesetzt (RE15_SCD_OPCODES_REFERENCE.md: `—defer`, scd_vm.c nur Laengen 16/8).
+- Zensus Plc_flg mit Bit 1/2 in allen 240 RDTs: NUR ROOM3061 sub04 (6 Stellen). Plc_motion-Flagbyte pc[3] ist in allen
+  1359 Aufrufen 0.
+
+### §2.3 Messung Original (DuckStation, MZD-Disc; Werkzeug `re15_port/tools/r41_j/j41_szene.py`)
+Zustand `J41/orig/o3061_a.sav` (Elza, 3061, Sherry/John angekommen; Bits 4:244 = 1, 3:160 = 1 im RAM gelesen) gepatcht
+(`re15_ss_patch.py` 0x800aca88 = -3500, 0x800aca90 = -26650, Spieler steht danach bei (-3500,-26276) im Slot-1-Rechteck)
+-> `J41b/orig/p3061_aot.sav`; Laden, Quadrat im 1,5-s-Takt. Lauf v1 mit Kreuz/Kreis: kein Ausloesen (Aktion = Quadrat).
+Lauf **o3061_v3** (Video 165 s, `J41b/orig/o3061_v3.mp4`): "It's locked." (Msg 0 @0x01040), Verfolgung, am Gitter
+Msg 3-5; **Sherry kniet, hebt das Gitter mit der Hand ab und legt es zur Seite, geht auf alle Viere und kriecht IN die
+Oeffnung, bis nur noch die Fuesse herausschauen und sie verschwunden ist** (J_belege/o3061_kriechen_4fps.png, ab 20 s,
+4 Bilder/s); Cut 1, Hund erhebt sich und kommt; **Elza dreht sich zum Hund und zieht die Waffe (Arme vorn, halten)**,
+John ebenso (J_belege/o3061_ende_elza_zieht.png); Abblende -> ROOM30C1, Spieler = Modell 0x0F (Sherry), Waffe 0
+(Resume-Stand: Raum 0x0c, mdl 0xf, w0).
+
+### §2.4 Messung Port VORHER (Lauf e3061_vor, Elza ueber PSELECT, RE15_SET_FLAG 4:244/3:160, RE15_FIRE_AOT 1@400)
+- Sherry: Plc_motion(0,0/1/2) und Plc_flg SET 1/2/6/5/4 kommen an (debug.log F1085..F1258), aber **Sherry bleibt vor der
+  Wand liegen** und kriecht nicht hinein (J_belege/e3061_vor_kriechen.png F1092..F1332); das Gitter bleibt am Platz.
+  Ursache: enemy_ai_common.c re15_npc_executor — Bit 1 ruft `re15_clip_root_motion_delta` (Keyframe-Wurzelweg, falsche
+  Mechanik, falsche Bank), **Bit 2 "deferred"**; Super_set/Super_reset fehlen.
+- Elza: Plc_motion(2,6) (log Zeile 796) -> PL04-Grundbank Clip 6 = **Knien** (J_belege/e3061_vor_ende_elza_kniet.png
+  F1416..F1452), Original zieht die Waffe = W-Bank PL04W01 Clip 6 (§1.2). Dieselbe Ursache wie Punkt 1.
