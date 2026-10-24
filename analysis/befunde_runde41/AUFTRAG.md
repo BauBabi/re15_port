@@ -282,3 +282,15 @@ Umsetzung B6/B7 in der naechsten Nachbesserung der Spur B (oder, falls B vorher 
     gleichen Patch konfliktfrei) und misst 3091 darauf. Abweichungen am Binder meldet K im Dossier an J (nicht selbst aendern).
 - Engine-weite Restpunkte der Spur A (OFFEN 1 ESP-Sprites im ersten Bild nach dem Kamerawechsel, OFFEN 2 RVD-Schaltzeitpunkt,
   OFFEN 3 Gegner-INIT-Takt, OFFEN 4 allgemeine Szenensperre AUTO/FLAG_CHG) bleiben fuer die naechste Runde (UEBERGABE).
+
+## 2026-10-24 04:52 — Orchestrator-Auftraege nach Nachbesserung E 1 (kein Nutzer-Wortlaut; Spur E)
+
+- **E-N1 Kamera-Flackern ROOM2020 (Nebenbefund der Nachbesserung E 1, Lauf g2):** steht der Spieler bei (9000,-3200), wechselt
+  der Port JEDES Bild zwischen Cut 0 und Cut 2 (F1..F299); im Original-Video steht dieselbe Lage ruhig auf Cut 0. Das ist ein
+  sichtbarer Port-Fehler in einem Raum der Spur E und wird von Spur E behoben: Mechanismus der Zonen-Umschaltung im Original
+  belegen (RVD-Pruefung, Reihenfolge/Hysterese, Adressen), Ursache im Port finden, beheben, vorher/nachher an genau dieser
+  Lage messen (Cut je Bild), dazu ein Riegel. Abnahmepunkt der Spur E.
+- **E-N2 Geh-Stopp waehrend der Frage (Punkt Kurbel):** "Mechanismus nicht gefunden = NICHT fertig". Der Port wechselt beim
+  Anlauf im Gehen zwischen Message_on 0 und 1 ein Bild lang auf Stehen 200, das Original-RAM zeigt waehrend der Frage noch
+  Gehen. Den Geh-Stopp (Kommando 1, 0x80031de8) disassemblieren, das Original nach dem Ja im Geh-Fall messen (DuckStation,
+  Ja-Eingabe zuverlaessig machen) und den Port angleichen oder mit Messung + Adresse als gleich belegen.
