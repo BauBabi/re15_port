@@ -1250,3 +1250,7 @@ Eigene Dateien: rennstopp_r41.c/.h, kamerahalt_r41.c/.h, bildhalt_r41_pc.c, Test
 - Integration (echte exe; Bedingung E-E1 Nachrichten-/Szenen-/Tuer-/Karten-Riegel + Renn-Eingaben + die zwei neuen): Auswahl der
   NB3-Laeufe 1/3 (`<sp>/E41n3b/ziel_regex.txt` + `rest_regex.txt`, nur integration_*) + treppe/losl = 153 Tests,
   `<sp>/E41n4/integ_regex.txt`: laeuft.
+- Gegenproben mit der VORHER-exe re15_pc_E41a3.exe (c3ba4317 = Stand Abnahme 3; `cmake -DRE15_PC_EXE=... -DTEIL=<t> -P
+  tests/integration/test_r41_kleinkram_b.cmake`, `<sp>/E41n4/vorher_riegel/`): **treppe DURCHGEFALLEN** ("F376 (-1359,-13665) ...
+  8 Lageaenderungen in 8 Bildern"), **geh DURCHGEFALLEN** ("Standbild F382: 0 Bilder 0 ms" — sonst alles wie das Original), losl
+  BESTANDEN (Verhalten unveraendert, Gegenprobe der Uebernahme-Regel). Unit takt_uebernahme: Gegenprobe vor NB4 T/R/G rot.
