@@ -20,4 +20,17 @@ set(R41M_SZENEN
     "v20A0_12 20A0 12 14000 -18900 4 V 83 82 117 154"
     "s20A0_12 20A0 12 14000 -19300 4 V 88 79 121 150"
     "s20A1_12 20A0 12 14000 -19300 4 V 88 79 121 150 E"
+    # Nachbesserung 1, Mangel 3: ROOM2030/2031 Cut 15 (4400,3850) Band 3 - Leon/Elza VOR der Reling. Die Abnahme zaehlte dort
+    # 12/24 "Figurpunkte" uebermalt: es sind Punkte der Spinne (Akteur 1, EM025) direkt HINTER Leon und HINTER der Reling
+    # (RE15_TRILOG: Slot 11, Dreieck-z 9596..9964 >= Masken-Schluessel 8520..8905); Leons Dreiecke (z 6905..8911) liegen
+    # nirgends unter einer Maske mit Schluessel <= z. Mit der Spinne weggestellt (G=) zaehlt S nur Leon/Elza: H == 0.
+    # Gegenprobe m2030_15: dieselbe Stelle MIT Spinne - die Reling verdeckt die Spinne dahinter (H > 0).
+    "v2030_15 2030 15 4400 3850 3 V 7 119 66 189 G=1,-20000,-20000,0"
+    "v2031_15 2030 15 4400 3850 3 V 7 119 66 189 E G=1,-20000,-20000,0"
+    "m2030_15 2030 15 4400 3850 3 M 7 119 66 189"
+    # Nachbesserung 1, Mangel 4: ROOM2030 C7 / ROOM2040 C7 haben keine erreichbare Stelle VOR dem Gelaender mit der Figur im
+    # Bild (Dossier NB1 Mangel 4: 3D-Sehstrahl gegen die Gelaenderzellen, 767 bzw. 2378 Plaetze, 0 VOR). Die Stellen, die das
+    # Standlinien-Modell (.STAND) als VOR nennt, liegen HINTER dem Gelaender: dort verdeckt die Maske Leon (H > 0).
+    "m2030_07 2030 7 4500 9150 3 M 145 79 167 139"
+    "m2040_07 2040 7 -17500 -5600 3 M 63 28 120 222"
 )

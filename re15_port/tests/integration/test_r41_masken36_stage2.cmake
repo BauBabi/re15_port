@@ -14,6 +14,9 @@ cmake_minimum_required(VERSION 3.16)
 #   KURBEL ROOM2020 Cut 3 (Pos_set @0x0A8C (3650,-1800,-2925)): Leon steht HINTER der Suedreling (Riegel
 #        unit_r41_masken36_kurbel: Sichtlinie kreuzt die solide Zelle x -400..13100 z -2550..-2050), die Reling-Maske
 #        verdeckt seine Beine: S > 50 und H > 0 (gemessen 86 von 779).
+#   M    (Nachbesserung 1) Gegenprobe "die Maske wirkt": Figur HINTER dem Objekt, S > 50 und H > 0.
+# Nachbesserung 1 (Abnahme 0): SZENEN waehlt die Szenendatei (test_r41_masken36_zelle_szenen.cmake = Stages 3..6, Mangel 1),
+# die Hintergruende kommen fuer jede Stage der Szenen; Feld G= stellt einen Gegner weg (RE15_GEGNER_POS).
 # Dazu muss das Log fuer den Cut "masks=<n> fg_atlas=1" (n > 0) zeigen.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PPM_TOOL=<probe_r37_masken36_ppm> -DRE15_BG_TOOL=<probe_bg_dump>
@@ -32,27 +35,44 @@ include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
 get_filename_component(_exe_ext "${RE15_PC_EXE}" LAST_EXT)
-file(GLOB _alte_kopien "${_exe_dir}/re15_pc_r41m2_*")
+if(NOT PRAEFIX)                     # je Riegel ein eigenes Praefix (parallel-fest: kein Riegel loescht die Kopie eines anderen)
+    set(PRAEFIX "r41m2")
+endif()
+file(GLOB _alte_kopien "${_exe_dir}/re15_pc_${PRAEFIX}_*")
 foreach(_k IN LISTS _alte_kopien)
     file(REMOVE "${_k}")
 endforeach()
-set(_exe_kopie "${_exe_dir}/re15_pc_r41m2_${_lauf_id}${_exe_ext}")
+set(_exe_kopie "${_exe_dir}/re15_pc_${PRAEFIX}_${_lauf_id}${_exe_ext}")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 set(_basis_wd "${WORKDIR}")
 
-# Hintergruende der Stages 1 und 2 (C-Bilder)
+# Szenen: name raum(hex) cut x z band art(V/H/K/M) fenster x0 y0 x1 y1 [E = Elza] [G=<akteur>,<x>,<z>,<rot>]
+# (Lagen/Fenster: Dossier Punkt 2 und Nachbesserung 1). SZENEN = Szenendatei (Vorgabe test_r41_masken36_szenen.cmake).
+# G= stellt den Akteur <akteur> ab Bild 0 im Szenenraum fest (RE15_GEGNER_POS, engine/src/pri1100_r37.c) - so zaehlt S nur die
+# Spielfigur, wenn ein Gegner direkt hinter ihr steht (Nachbesserung 1, Mangel 3: ROOM2030 C15 Spinne = Akteur 1).
+if(NOT SZENEN)
+    set(SZENEN "${CMAKE_CURRENT_LIST_DIR}/test_r41_masken36_szenen.cmake")
+endif()
+include("${SZENEN}")
+
+# Hintergruende der Stages der Szenen (C-Bilder, probe_bg_dump)
 set(_bg "${_basis_wd}/bg_${_lauf_id}")
 file(MAKE_DIRECTORY "${_bg}")
-foreach(_st 1 2)
+set(_stages "")
+foreach(_sz IN LISTS R41M_SZENEN)
+    string(FIND "${_sz}" " " _sp)
+    math(EXPR _sp1 "${_sp} + 1")
+    string(SUBSTRING "${_sz}" ${_sp1} 1 _st)
+    list(APPEND _stages "${_st}")
+endforeach()
+list(REMOVE_DUPLICATES _stages)
+foreach(_st IN LISTS _stages)
     execute_process(COMMAND "${RE15_BG_TOOL}" "${CD_ROOT}" "${_bg}" ${_st} RESULT_VARIABLE _rv OUTPUT_QUIET ERROR_QUIET TIMEOUT 300)
     if(NOT _rv EQUAL 0)
         file(REMOVE "${_exe_kopie}")
         message(FATAL_ERROR "r41_masken36_stage2: probe_bg_dump Stage ${_st} exit=${_rv}")
     endif()
 endforeach()
-
-# Szenen: name raum(hex) cut x z band art(V/H/K) fenster x0 y0 x1 y1 [E = Elza]  (Lagen/Fenster: Dossier Punkt 2)
-include("${CMAKE_CURRENT_LIST_DIR}/test_r41_masken36_szenen.cmake")
 
 set(_fehler "")
 set(_n 0)
@@ -71,13 +91,23 @@ foreach(_sz IN LISTS R41M_SZENEN)
     list(GET _f 10 _y1)
     list(LENGTH _f _fl)
     set(_figur "")
+    set(_gegner "")
     set(_zr "${_raum}")
+    set(_gpos "")
     if(_fl GREATER 11)
-        list(GET _f 11 _wer)
-        if(_wer STREQUAL "E")     # Elza: der Sprung laedt ihre Raumvariante ROOMxxx1 (Zwilling-Masken, re15_pri_masken_raum)
-            set(_figur "RE15_TITLE_SHOT_CHAR=1")
-            string(REGEX REPLACE ".$" "1" _zr "${_raum}")
-        endif()
+        math(EXPR _letzt "${_fl} - 1")
+        foreach(_i RANGE 11 ${_letzt})
+            list(GET _f ${_i} _wer)
+            if(_wer STREQUAL "E")     # Elza: der Sprung laedt ihre Raumvariante ROOMxxx1 (Zwilling-Masken, re15_pri_masken_raum)
+                set(_figur "RE15_TITLE_SHOT_CHAR=1")
+                string(REGEX REPLACE ".$" "1" _zr "${_raum}")
+            elseif(_wer MATCHES "^G=(.+)$")
+                set(_gpos "${CMAKE_MATCH_1}")
+            endif()
+        endforeach()
+    endif()
+    if(_gpos)
+        set(_gegner "RE15_GEGNER_POS=${_gpos}@0#${_zr}")
     endif()
     set(_ppm "")
     foreach(_mit a b)
@@ -93,7 +123,7 @@ foreach(_sz IN LISTS R41M_SZENEN)
             RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
             "RE15_DEBUG_JUMP=${_raum}@250" "RE15_PLAYER_POS=${_x},${_z},0,${_band}" "RE15_FORCE_CUT=${_cut}"
             "RE15_FRAMEDUMP=120:f.ppm" "RE15_EXIT_AT=120#${_zr}"
-            ${_extra} ${_figur}
+            ${_extra} ${_figur} ${_gegner}
             "${_exe_kopie}")
         if(NOT EXISTS "${WORKDIR}/f.ppm")
             file(REMOVE "${_exe_kopie}")
@@ -144,6 +174,8 @@ foreach(_sz IN LISTS R41M_SZENEN)
         endif()
     elseif(_art STREQUAL "K" AND NOT _h GREATER 0)
         list(APPEND _fehler "${_name}: Kurbel - die Reling-Maske verdeckt Leons Beine nicht (H=${_h})")
+    elseif(_art STREQUAL "M" AND NOT _h GREATER 0)
+        list(APPEND _fehler "${_name}: Gegenprobe - die Maske verdeckt die Figur HINTER dem Objekt nicht (H=${_h})")
     endif()
 endforeach()
 file(REMOVE "${_exe_kopie}")

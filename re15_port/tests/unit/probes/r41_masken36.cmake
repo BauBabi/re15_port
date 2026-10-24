@@ -31,5 +31,5 @@ if(TARGET re15_pc)
                      -DCD_ROOT=${CMAKE_SOURCE_DIR}/shared_assets/PSX
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_masken36_s2_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
-    set_tests_properties(integration_r41_masken36_stage2 PROPERTIES TIMEOUT 900)
+    set_tests_properties(integration_r41_masken36_stage2 PROPERTIES TIMEOUT 1500)
 endif()
