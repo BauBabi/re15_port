@@ -544,6 +544,46 @@ entscheidet weiter der Ausschluss mit dem 3D-Urteil - die Zuordnung liefert nur 
 **3D-Urteil, Feinschliff:** ein Figurpunkt IM Koerper (Kamera draussen) zaehlt jetzt als verdeckt - die Strecke Kamera -> Punkt tritt
 vor ihm in den Koerper ein (vorher "kein Urteil"; betraf 5090 C11 R0/R5/R89, je 1..3 Punkte an der Dreieckszelle).
 
+### NB2 Mangel 1 - Ergebnis nach Kette k2 (3D-Urteil + Zuordnung von Hand), Messung nachher
+**Kette k2** (`m41nb2/kette2.sh`: zellen3d mit Zuordnung -> MASKS -> Neubau -> erzeuge -> --zurueck -> MASKS -> Neubau -> erzeuge):
+Modell-Tabelle 771 -> 576 Zeilen, **zweites erzeuge bitgleich zum ersten (stabil)**, Tabelle eingebaut, exe neu gebaut.
+**Statisch (Leon Stage 3..6; Elza bytegleich; Zaehler wie stat_nb1 der Abnahme, Ausgangszahlen bitgleich nachgerechnet):**
+| | vor NB2 (= nach NB1) | nach NB2 (a), nur Automatik | nach NB2 (k2, mit Zuordnung von Hand) |
+|---|---|---|---|
+| ausgeschlossene Rechtecke | 1186 | 1106 | **976** (0 neu ausgeschlossen) |
+| gezeichnete Generator-Punkte | 889 591 | 920 514 | **962 144** (+72 553, +8,2 %) |
+| Punkte nur in ausgeschlossenen Rechtecken | 341 352 | 310 429 | **268 799** (-21,3 %) |
+Geaendert sind nur die Tiefenfelder (+4 im Satz) der 210 wieder aufgenommenen Rechtecke (103 naeher, 107 ferner; 0 Bytes
+ausserhalb, `m41nb2/msk_diff.py`), Atlas/Lage/Gruppen unveraendert. Wieder drin (Leon; Elza gleich): 3040 C0 3 (Schaltkasten),
+3040 C3 1, 30A0 C0 26 (Trennwand + Moebel vorn), 30A0 C1 6 (Trennwand), 5020 C0 24 (Treppenraum), 5020 C6 20 (X-Kiste + Kufen),
+5050 C1 5, 5050 C2 36 (Pult vorn), 5090 C11 3 (Kiste vorn links), 5090 C13 10 (Kistenstapel), 6000 C5 26 / C7 12 / C8 24 / C9 14 (Lok,
+Gittertraeger oben). Das Uebersichtsbild `M_bilder/uebersicht/STAGE5/5020/06_port.png` zeigt die X-Kiste jetzt (Abnahme 1: fehlte).
+**Warum der Rest aus bleibt (976 Rechtecke, Leon):** 616 kein Modell - keine Sperrzelle mit der Mehrheit der Bodenkontakte (ueberwiegend
+Waende, Boeden, Decken: 4040/4080 Gangwaende, 5020 C11 Boden, 30E0 Bodenstreifen, 3040 C1 Rueckwand, 5100 Decke); 125 mit Modell,
+aber ein verdeckter Figurpunkt liegt nicht hinter dem Koerper (Modell erklaert nicht jeden Punkt des Rechtecks - z.B. 6000 C5 unterer
+Gittertraeger: IoU 0,86, die Rechtecke reichen ueber die Zelle hinaus); 70 Sektion ohne Stehplatz (3050 C15, Original-NULL);
+66 Zelle trifft bei keiner Hoehe; 62 kein Bodenkontakt; 37 Saeule mit schraeger Zelle.
+**Unabhaengige 3D-Gegenprobe** (`m41nb2/py/statisch.py`, alle Stehplaetze, alle Zellkoerper): fuer jeden Cut mit neuen Rechtecken
+**0 verdeckte Figurpunkte ohne Koerper davor** (3040 C0/C3, 30A0 C0/C1, 5020 C0/C6, 5050 C1/C2, 5090 C11/C13, 6000 C5/C8/C9; 6000 C7
+2 Punkte des groben Gitters am Bildrand, s. oben).
+**exe (Kette k2; Szenen `m41nb2/szenen_k2.json` je Modellzelle, Leon = vorderstes Dreieck, RE15_TRILOG):**
+| Szene | Platz (Band 0) | Leon vorne | sichtbar uebermalt/verdeckt vorher -> nachher | Befund |
+|---|---|---|---|---|
+| d3040_00 DAVOR (Schaltkasten) | (-22600,-2000) | 1911 | 0 -> 0 | frei |
+| d5020_06 DAVOR (X-Kiste) | (-1733,-14625) | 1894 | 0 -> 0 | frei |
+| d5090_13 DAVOR (Kistenstapel) x 2 | (20717,-21365) / (20717,-26065) | 1195 / 1700 | 0 -> 0 / 55 -> 55 (Altbestand) | frei |
+| d30A0_01 DAVOR (Trennwand) | (-21243,13663) | 4035 | 0 -> 0 | frei |
+| d30A0_00 (Trennwand) | (-21143,15863) | 2407 | 14 -> 39 | die 25 neuen Punkte liegen HINTER dem Koerper (Leon z 7112..7220 > Eintritt 5077..5191, Zelle 6) = Rueckseite/Rand von Leon hinter der Trennwand |
+| d5020_00 (Treppenraum) | (-12033,-18725) | 3139 | 160 -> 295 | 128 der 135 neuen Punkte HINTER dem Koerper (Leon z 8374..8719 > Eintritt 6976..7303), 6 in der Saeule darueber; sichtbar: 0 Punkte geaendert (Bild `NB2_k2_d5020_00_g0_0.png`, magenta = Leons Rueckseite neben dem Treppenraum) |
+| h5020_06 HINTER (X-Kiste) | (-4333,-15925) | 1626 | 25 -> 170 | verdeckt |
+| h30A0_00 / h30A0_01 HINTER (Trennwand) | (-21843,15863) / (-19443,15363) | 2010 / 1983 | 42 -> 757 / 85 -> 935 | verdeckt |
+| h5020_00 HINTER (Treppenraum) | (-13633,-21625) | 1121 | 0 -> 944 | verdeckt |
+| h5090_13 HINTER x 2 | (24417,-20365) / (24417,-26365) | 652 / 906 | 0 -> 129 / 0 -> 906 | verdeckt |
+| h5050_01 / h5050_02 HINTER | (-16600,-20950) / (-22100,-20150) | 5894 / 6986 | 132 -> 772 / 0 -> 810 | verdeckt |
+(h5090_11: Leon 0 neu; die Kiste vorn links verdeckt dort Teile eines anderen Akteurs (Slot 50) dahinter.) Bilder
+`M_bilder/NB2/NB2_k2_*.png`. Die Python-Szenenwahl "DAVOR" nimmt den Figurkasten +-350; Leons echte Silhouette ist breiter (OFFEN 7)
+- deshalb zeigen d30A0_00/d5020_00 Randpunkte, und jeder davon liegt nachgerechnet hinter dem Koerper.
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
