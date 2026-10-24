@@ -57,7 +57,47 @@ Gemessen (debug.log / wegplan.txt, Leon; Elza Zeile fuer Zeile gleich mit `room=
 
 
 ## 2. Gates
-(folgt)
+
+### G1 RE-Gate (eigene Disassembly / eigene Byte-Lesung)
+Stichproben der in Nachbesserung 4 NEU zitierten Stellen (alle selbst gelesen, richtige Binaerdatei):
+1. **@0x8002d370** (Kletter-Sonde FUN_8002d2c0, Begruendung von RE15_R41C_BLATT_BAND 2) — `re15_disasm.py dis 0x8002d2c0 64`
+   (info/Re1.5/PSX.EXE): Schleife ueber die Objekte `0x800b3f98 + i*148` (`addiu s2,s2,-148` @0x8002d360), aktiv `andi v0,v0,0x101`
+   @0x8002d358, `lbu v1,0(s3)` @0x8002d364 mit s3 = 0x800aca3c + 154 = **0x800acad6**, `lbu v0,130(s0)` @0x8002d368 = Objekt+0x82,
+   **`bne v1,v0,0x8002d3a4` @0x8002d370**, sonst `jal 0x8002d1e8` / `jal 0x8002da4c`. Gegenprobe **@0x80031cfc** `lbu v0,130(a0)`,
+   @0x80031d04 `lbu v1,-13610(v1)` = 0x800acad6 (vom Disassembler als `player.floor(+0x82)` benannt), @0x80031d08 `addiu v0,v0,1`,
+   @0x80031d0c `bne v0,v1` -> "Objekt-Band == Spielerband" (Sonde) und "Objekt-Band + 1 == Spielerband" (Standtest) stimmen; Band 2
+   liegt am Landeplatz (Spielerband 1) in keinem der beiden Faelle. **Bestaetigt.**
+2. **@0x80028698** (Schliessen der Plakat-Nahaufnahme) — `dis 0x80028680 12`: `lw v0,-14484(v0)` = 0x800ac76c, **`andi v0,v0,0xc000`
+   @0x80028698**, `beq v0,zero,0x80028748`. **Bestaetigt.**
+3. **RE2 ROOM2130** (info/re2leon/PL0/RDT/ROOM2130.RDT, Datei-Offsets, selbst gelesen): @0x01752 `23 00 05 00 50 00` (cmp var5 == 80),
+   @0x017D6 `23 00 05 00 00 00 2b 00`, @0x017E8 `23 00 05 01 50 00 2b 00`, **@0x01800 `36 02 0b 01`** (Fehlerton Satz 0x0B), @0x01138
+   `24 05 00 00`, @0x01192 `36 02 0a 01` (Klick), @0x01762 `36 02 0c 01`, @0x0171C `09 0a 1e 00`. **Bestaetigt.** RE2 **@0x80071d04**
+   `addiu a0,a3,-104` (`re2_disasm.py dis 0x80071cf0`, info/re2leon/PSX.EXE). **Bestaetigt.**
+4. **RE1.5 ROOM11F0 sub17** (STAGE1/ROOM11F0.RDT): @0x0168C..@0x016BC `22 05 00 00`..`22 05 0c 00`, **@0x016C0..@0x016E4 `22 05 0d 00`..
+   `22 05 16 00`**, @0x016E8 `22 02 00 00`, @0x016EC `22 02 02 00`, @0x016F0 `2a 00 3c 01`; @0x01602 `32 00 9e b3 00 00 9c 58`, @0x0160E
+   `33 00 00 00 00 00 00 02`. **Bestaetigt.** ROOM1051 @0x00DA4 `22 02 07 01` / @0x00DD2 `22 02 07 00` **bestaetigt**; ROOM2080
+   @0x00CC4 `2e 03 00 00` **@0x00CC8 `2f 01 32 00`** @0x00CCC `0d 00 06 00 94 00` **bestaetigt**.
+5. **ROOM2030 SCA** (STAGE2/ROOM2030.RDT, 12 B je Zelle w,d,x,z,typ,u0,u1,fl) — Absperrung: 19 @0x0097C `f4 01 f2 44 18 15 d8 dc 01 ff 00 33`
+   (x 5400..5900 z -9000..8650), 20 @0x00988 (x -5900..5900 z -9000..-8500), 21 @0x00994 (x -6350..5900 z 8150..8650), 22 @0x009A0
+   (x -6350..-5850 z 2450..8650), 31 @0x00A0C (x -8150..-5400 z -6900..-6400), 32 @0x00A18 (x -5900..-5400 z -9000..-6400), alle typ 1
+   fl 0x33; Ringboden 36..41 @0x00A48..@0x00A84 u1 01 fl 0x23 (z. B. 36 `08 07 7a 0d ec e1 92 d7 01 ff 01 23`); Wandzellen 6 @0x008E0
+   (z -9000..-8500) / 7 @0x008EC (z 7900..8400) fl 0x11 = Wandflaechen der Ventile. Die drei Wasser-Rechtecke (x -5400..5400 z -8500..
+   -6400; x -7700..5400 z -6400..2450; x -5850..5400 z 2450..8150) liegen innerhalb der Absperrung und ueberdecken keine Ringboden-
+   Zelle (selbst nachgerechnet). **Bestaetigt.** Sicherung Slot 9 @0x01BAA `2c 09 03 31 01 00 f4 e8 fa 19 20 03 e8 03 ...`
+   = x -5900..-5100 z 6650..7650; @0x01FF2 `22 03 6c 01`; Bruecke @0x01B6C `2d 00 00 00 00 00 0a 00 ...`; Treppe @0x01B8E `2c 08 0c
+   31 80 00 ...` **bestaetigt**.
+6. **"2030 benutzt Bank 5 nicht"** (Begruendung der Raum-Scratch-Bits 0x10..0x13/0x1B/0x1C): `scd_dump_room.py ROOM2030.RDT` (main
+   0x1AC8..0x1CBC, sub 0x1CBC..0x3DD8, 7 Regionen) -> **0 Zeilen `bank=5`** (`<a4>/scd_2030.txt`). **Bestaetigt.**
+7. Dokument-Basis 0x48 (u8 @0x800c7370): liegt hinter dem PSX.EXE-Bild (t_addr 0x80010000 + t_size 0xaf000 = 0x800bf000; laut
+   re15_files.h DEBUG.BIN) — kein neuer Beleg dieser Spur (vorhandene Konstante RE15_FILES_FIRST_ITEM_ID), nicht nachgeprueft.
+* Konstanten-Durchsicht (Kopf re15_ventilkette_r41.h, alle NB4-Zeilen): jede traegt @0x.../Datei-Offset oder ist als PORT-WAHL bzw.
+  NUTZER-VORGABE benannt (Ventil-x = Rueckprojektion BSS + "auf 50 gerundet", Zuordnung Rad -> Nummer PORT-WAHL, Loesung PORT-WAHL zur
+  Freigabe, Pegel-Abstand 50 PORT-WAHL mit Mass @0x00CC8, Blatt-Band PORT-WAHL mit @0x8002d370/@0x80031cfc, Plakat-/Dokument-Lage
+  PORT-WAHL mit Bezug Slot 9 @0x01BAA bzw. Wand z 7900). Ids/Slots/Ereignisse = Vertrags-Zuteilungen.
+* Rate-Woerter: `git diff master...HEAD -- re15_port` (ohne die zwei Daten-inc) nach deferred|tunable|interim|for now|faithful|plausib|
+  TODO|FIXME -> 0 Treffer (2 Fehltreffer "ROOMxxx1"). Kein Env-Schalter als Abschluss (die neuen getenv sind keine; Plakat/Dokument
+  laufen ohne Haken).
+
 
 ## 3. Tests (gezielt, im Spurbaum; KEINE volle Suite)
 (folgt)
