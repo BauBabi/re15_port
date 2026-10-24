@@ -400,3 +400,13 @@ Gezielte Laeufe (keine volle Suite; re15_pc.exe 20:31 = letzter Code-Stand, Test
   dining_r39.c (3 Zeilen wclip), enemy_common.c + platform/psx/src/asset_psx.c (RBJ-Binder §0).
 - Werkzeuge: `re15_port/tools/r41_j/j41_szene.py` (DuckStation-Szene aus einem Savestate: Video und/oder Slot-1-Reihe,
   settings.ini bytegleich zurueck), `lauf.sh` (Port-Messlauf mit eigener exe-Kopie).
+
+## Nachbesserung 1 (nach Abnahme J 0, `J_abnahme_0.md`; Start 2026-10-24 spaet, Kopf 238c1319, Baum sauber)
+Ausgangslage: Abnahme J 0 bewertet alle drei Nutzer-Punkte (1 ROOM3060 Marvin, 2a Sherry kriecht, 2b Elzas Ende) und A-E5
+(RBJ-Binder) als **erfuellt**; offen sind zwei Gate-Maengel: **V1** (Vertrag, formal) und **M2** (Doku). Dazu Hinweise H1-H4
+(keine Maengel) und Nebenbefund N1 (Hund, nicht Spur J). Orchestrator-Entscheid **J-E1** (master dba6ff8e, AUFTRAG.md
+"2026-10-24 23:10"): V1 angenommen, M2 berichtigt diese Nachbesserung. Messungen der Abnahme werden hier NICHT wiederholt,
+nur zitiert (Laeufe im Scratchpad `J41abn0/`).
+Plan: V1 = Entscheid J-E1 dokumentieren (Haken bleiben unveraendert); M2 = Kopf `re15_superobj_r41.h` + §2.6/§4.1 mit der
+Beleg-Kette (SCD-Bytes je Glied) berichtigen; H1 = Riegel 3060 nimmt die Tuer per Quadrat; H2 = Kopf der probes-Datei;
+Bau + gezielte Riegel.
