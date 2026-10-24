@@ -234,6 +234,20 @@ Plan `leiter3.txt` (zu Fuss an die Leiter (-26150,10300) Blick 2048, dreimal Akt
 * 20B0 (nach der Flut): `fx=0` in allen 551 Zeilen, kein Satz; Bild: dasselbe Gitterfenster ohne Strahl (nur die gemalten Spuren
   des 20B0-Hintergrunds), Leon an der Leiter. Die Leiter selbst ist danach eine Tuer nach 2050 (L4, L7).
 
+### L3c — Punkt 3: Flut UEBER die Ringebene, Spieler auf dem Ring (Leon `flut_ring`, Elza `flut_ring_elza`; Serie 10)
+Aufbau wie L3 (Bruecke + Sicherung gesetzt, Start vor den Ventilen), aber nach der Warnung zu Fuss zurueck: Steg -> Treppe hinauf
+-> NW-Balkon (Ringebene, Wegplan F1221 Halt bei (-6368,-8032) an der Balkon-Reling), dort stehen bleiben (Plan `flut_ring.txt`).
+* Leon debug.log: `2030_ventile` -> `id=45` -> `id=46` -> `Zaehler laeuft: 1800 Takte` -> `[scd F2336] Cut_chg(4)` / `FLUT: Wasser
+  steigt` -> **`SPRITZER: Wasser y -5400 erreicht die Fuesse (Spieler y -5400), Effekt 0x06050D00`** -> `[fade-log] config ch=0
+  abr=2 mask=6 step=0 bucket=7` / `kick ch=0 value=0x5000` -> **`ERTRUNKEN: Wasser y -6300, Spieler y -5400 -> hp -1, blaue
+  Blende`**. state.txt: Warnung zu F535 -> Flut F2336 (**1801 Bilder**) -> Spritzer bei Wasser -5400 (108 x 50) -> F2461 `hp=-1`
+  (Wasser -6300 = 126 x 50, also 900 ueber dem Ringboden). Danach Todesfolge des Ports (Neustart ab ROOM1240 -> `EXIT_AT` nie
+  erreicht, rc=124 = Ablauf des Messrahmens, kein Befund).
+* Elza: `PL04`, `loaded room2031.rdt` -> dieselben Saetze (`ROOM2031 ... 2030_ventile`, `Zaehler laeuft`, `FLUT`, `SPRITZER:
+  Wasser y -5400 ...`, `ERTRUNKEN: Wasser y -6300, Spieler y -5400 -> hp -1, blaue Blende`), F2461 `hp=-1`.
+  => "Wasser in 2030: Ueber die Ringebene" und "Zeit abgelaufen und noch im Raum: Tot mit Ertrink-Effekt" gelten auch auf dem
+  Ring, fuer beide Figuren.
+
 ### L3b — Punkt 3 Flucht: Sicherung -> Ventile -> Warnung -> zu Fuss zur Ost-Tuer -> 20B0 (Leon `kette_b`, Elza `kette_b_elza`)
 Aufbau: Bruecke unten vorgesetzt (`RE15_SET_FLAG=7:155..158,9:101,9:102`; die Bruecke selbst misst L2), Start am Suedende des
 Stegs `RE15_PLAYER_POS=-1100,5900,3072,1`, Plan `kette_b.txt` (Sicherung am Westende, Ventile, dann gehend Steg -> Nord-
