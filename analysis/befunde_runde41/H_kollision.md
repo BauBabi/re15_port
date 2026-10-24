@@ -12,6 +12,8 @@ Baum `.claude/worktrees/r41_kollision`, Zweig `r41/kollision`, Basis master-HEAD
 - Punkt 1: Messung vorher (3070 Leon, 3001 Elza), RE (28 NPC-Wurzeln), Umsetzung, Messung nachher.
 - Riegel probes/r41_kollision.cmake gruen, Kisten-Raetsel loesbar (Leon + Elza), Original-Messungen beider Punkte,
   Regressionen gefahren (ein Querbezug R39 J angepasst), master (A + D) gemergt und nachgemessen.
+- 2026-10-24 Nachbesserung 1: V1/V2 der Abnahme H 0 dokumentiert (Orchestrator-Entscheid H-E1: beide angenommen),
+  neuer Beleg zu den aec4-Gates fuer NPC/Gorilla (V2); Code unveraendert. Abschnitt 'Nachbesserung 1' am Ende.
 
 ## Punkt 1 — NPC <-> NPC
 ### Messung vorher (exe dieses Baums, Stand 4c667c97 = re15_pc_h41_vorher.exe: Haken abgeschaltet, sonst gleich)
@@ -339,3 +341,76 @@ Nach dem Merge von master (370d8c31: Spur A + D integriert), neu gebaut:
   Kiste nach Sueden nur bis zur Linie der noerdlichen Kerbe (schiebt man sie zu weit, stoesst sie beim Westschub an die
   mittlere Kiste) und dann nach Westen. Steckt eine Kiste fest, beruehrt sie eine andere.
 - Entscheidungsfragen: keine.
+
+## Nachbesserung 1 (2026-10-24, nach Abnahme H 0)
+Ausgangslage: Abnahme H 0 (`H_abnahme_0.md`, 46b38db9) — beide Nutzer-Punkte **erfuellt**, "bestanden = NEIN" nur wegen der
+formalen Vertragsabweichungen V1/V2. Orchestrator-Entscheid **H-E1** (AUFTRAG.md "2026-10-24 17:38", master 200184bc, vom
+Orchestrator in diesen Zweig gespiegelt mit 91e19ffa): V1 und V2 **angenommen**; "Die Nachbesserung H 1 dokumentiert beides im
+Dossier; sonst ist nichts zu tun." Deshalb: kein Code geaendert, keine Messung der Abnahme wiederholt. Neu ist nur ein Beleg zu
+V2 (die aec4-Gates fuer das Paar NPC/Gorilla), den die Abnahme in RE-Gate 3 offen gelassen hatte ("Bewertung s. Mangelliste").
+Arbeitsordner (Skripte, Logs): `scratchpad/H41nb1/`; Belege im Zweig: `H_belege/nb1_*`.
+
+### V1 — Haken in enemy_ai_common.c (nicht in der Zuteilung VERTRAG §1.3)
+- **Ursache:** VERTRAG §1.3 teilt Spur H re15_collision.c / game_step_common.c / aot_common.c zu. Die Original-Reihenfolge
+  Zustand -> aec4(Spieler, NPC) -> b544 -> Wandklemme liegt IN der NPC-Wurzel (Ada STAGE1: `8011cc1c jalr v0`,
+  `8011cc3c jal 0x8002aec4`, `8011cc44 jal 0x8002b544`, `8011cc64 jal 0x8003b0a4`; alle 28 Wurzeln, Abnahme RE-Gate 1). Das
+  Port-Gegenstueck ist `re15_npc_ai_tick` (enemy_ai_common.c:10572); die Klemme `re15_npc_wall_clamp` ist `static` in derselben
+  Datei (enemy_ai_common.c:10301) und klemmt gegen die Lage vom Tick-Anfang (`npc_ox/npc_oz`, Kern
+  `re15_collision_constrain_contact_band` re15_collision.c:820). Ein Haken in einer H-Datei (game_step_common.c nach
+  `re15_enemy_ai_run_all`) liefe NACH der Klemme und nach den Ticks aller spaeteren Aktoren; ein zweiter Klemmaufruf von dort
+  waere eine im Original nicht vorhandene zweite Klemme. Es gibt keine Stelle ausserhalb enemy_ai_common.c, die die Folge
+  @0x8011cc44 -> @0x8011cc64 einhaelt.
+- **Messung vorher** (Stand 46b38db9): `git diff 7b59e297 HEAD -- re15_port/engine/src/enemy_ai_common.c` = 2 Zeilen:
+  Z. 59 `#include "re15_kollision_r41.h"`, Z. 10710 `re15_kollision_r41_npc_schwanz(slot);` (zwischen `re15_npckante_altlage`
+  und `re15_npc_wall_clamp`).
+- **Beleg:** Adressen oben (Abnahme RE-Gate 1 selbst gescannt, 28/28). Konfliktprobe (nur rechnerisch, `git merge-tree
+  --write-tree`, kein Checkout): r41/kollision gegen master -> sauber (exit 0); gegen r41/integration, r41/zombiefresser (Spur I,
+  eigenes Include in enemy_ai_common.c Z. 61), r41/wasser20b0, r41/spinnenanim, r41/stage3szenen_a/_b -> enemy_ai_common.c
+  OHNE Konflikt. Gemeldet werden nur die Doku-Abgleiche AUFTRAG.md/VERTRAG.md der jeweiligen Zweige und bei
+  r41/stage3szenen_a enemy_common.c — die aendert Spur H nicht (`git diff 7b59e297 r41/kollision -- .../enemy_common.c` leer);
+  derselbe Konflikt entsteht schon bei master gegen r41/stage3szenen_a (Spur A in master).
+- **Aenderung:** keine (H-E1: "V1 angenommen").
+- **Messung nachher:** Diff unveraendert (2 Zeilen); Riegel gruen (s. "Bau und gezielte Tests").
+
+### V2 — fremder Riegel test_r39_dining1141_kampf.cmake (Runde 39 Spur J), WARTE 60 -> 240
+- **Ursache:** Kriterium (a) des Riegels braucht eine Salve Johns IN einem Griff-Fenster eines Gorillas — eine Deckung der
+  Zeitachse. Mit dem NPC-Wurzel-Schwanz schiebt b544 im Tick von John (0x49, STAGE1-Wurzel 0x8011dc68: `8011dd28 jal 0x8002aec4`
+  / `8011dd30 jal 0x8002b544`) John aus dem Gorilla-Kasten (r 1600, `0x80121350 = {0,-1440,0,1600,1440,1600}`); die
+  Gorilla-Wege und damit die Griff-Fenster verschieben sich.
+- **Messung vorher:** Abnahme 5.2 (nicht wiederholt): alte Fassung (WARTE 60) mit der vor-exe gruen (2 Treffer im Griff), mit
+  der nach-exe rot (0, nur (a)); neue Fassung (WARTE 240) mit der nach-exe gruen (Abnahme 5.4, `Passed 307.60 sec`).
+- **Beleg NEU — ist "John wird aus dem Gorilla geschoben" Original?** FUN_8002aec4 prueft drei Bits im Wort +0x0 (selbst
+  disassembliert): `8002af04 or v0,a0,v1 / 8002af08 andi v0,v0,0x2 / 8002af0c bne -> 0x8002af30 (return 0)` (Bit 2 an einem),
+  `8002af14 and v0,a0,v1 / 8002af18 andi v0,v0,0x1000 / 8002af1c bne -> 0x8002b464 (return 0)` (Bit 0x1000 an beiden),
+  `8002af24 andi v0,v1,0x4 / 8002af28 beq v0,zero,0x8002af38 (weiter) / 8002af30 j 0x8002b464 (return 0)` (Bit 4 am
+  Geschobenen a1 = John). Wer setzt diese Bits?
+  - Spawn Sce_em_set (PSX.EXE): `80042298 sw s3,0(s0)` mit s3 = 1 (`80042284` bzw. `8004228c ori s3,zero,0x1`), bei pc[3] != 0
+    `800422ac ori v0,zero,0x2001 / 800422b0 sw v0,0(s0)`. ROOM1141 sub00 @0x00B06: John `44 00 49 40 ...` (pc[3] = 0x40),
+    Gorillas @0x00B1A/@0x00B2E `44 01 27 30 ...` / `44 02 27 30 ...` (bzw. @0x00B54/@0x00B68 mit 0x10) -> Wort0 = 0x2001.
+  - NPC-INIT 0x49 (0x8011dd98): `8011ddbc lw v0,0(a0) / 8011ddc0 lui v1,0x4000 / 8011ddc4 or v0,v0,v1 / 8011ddc8 sw v0,0(a0)`
+    -> Wort0 |= 0x40000000.
+  - Bit-Scan `H_belege/nb1_flagscan.py` (jedes `ori` mit Gate-Bit auf ein geladenes Wort mit Speicher auf +0/+1 innerhalb von
+    4 Instruktionen, dazu die `and`-Loeschmasken; PSX.EXE + STAGE1..6.BIN; Ausgabe `H_belege/nb1_flagscan.txt`):
+    Bit 0x2 nur in Sterbe-/Leichen-Zweigen, fuer den Gorilla nur `8011beac ori v0,v0,0x2 / 8011beb0 sw v0,0(v1)` in Zustand 7
+    (Tabelle `0x801213c8[7] = 0x8011be54`; Port: enemy_ai_common.c Gorilla case 7 setzt `flags |= 0x02` @0x8011beac-b0,
+    kollision_r41.c schliesst Zustand 7 aus). Bit 0x1000 nur in Griff-Paaren (Gorilla `8011ac34` setzen / `8011ad8c` loeschen),
+    KEIN Schreiber im NPC-Bereich von STAGE1 (ab 0x8011b000 einziger Treffer ueberhaupt 0x8011beac). Bit 0x4: kein Schreiber im
+    Spiel-Code (einzige Treffer PSX.EXE `8006b214 ori v1,v1,0x7` / `8006b2a0 ori v0,v0,0x504` = Bibliotheks-Schreibzugriffe
+    0x10000007 / 0x20000504 ueber Zeiger, keine Entitaet). Grenze des Scans: Konstanten-Speicher (ori mit zero + sb auf +0)
+    lassen sich keiner Entitaet zuordnen und sind nicht gewertet — dafuer die Laufzeitmessung unten.
+  - ROOM1141-SCD (`re15_port/tools/scd_dump_room.py`): Member_set nur mit Id 0x04 (rot_y, @0x00C3A) und 0x0C (+0x9 = 0x10/0x30,
+    @0x00E40..@0x010C2), keine Id 6 (= Wort +0x0, actor_common.c case 6).
+  - **Laufzeit** (Auslieferungs-Savestate `stage_saves/mzd_stage1_maggot_heavy.sav`, `@0x80026e4c = 03e00008`, Stage/Raum
+    0x800b0fe0/fe2 = 0/28 = ROOM11C0; `H_belege/nb1_savestate_flags.py`, Ausgabe `H_belege/nb1_savestate_flags_11c0.txt`):
+    `E0 typ=0x42 Wort0=40000001 Gate-Bits=keine`, `E1 typ=0x27 Wort0=60000801 Gate-Bits=keine Zustand=1/6`,
+    `E2 typ=0x27 Wort0=60000811 Gate-Bits=keine Zustand=1/6` — NPC und lebende Gorillas tragen keines der Gate-Bits.
+  => Im Original schiebt b544 im NPC-Tick (`8011dd30` -> `8002b598 jal 0x8002aec4`) John aus jedem lebenden Gorilla, den er
+  ueberlappt. Ausgenommen sind nur der Freeze (`8011dca4 andi v0,v0,0x20 / 8011dca8 bne -> 0x8011dd68` = ganzer Schwanz
+  uebersprungen; 1141 setzt +0x9 = 0x30 per Member_set 0x0C; Port: re15_npc_ai_tick kehrt bei `grid_id & RE15_AI_GRID_SKIP`
+  VOR dem Haken zurueck) und die Gorilla-Leiche (Bit 2; Port: Zustand 7 und flags 0x02). Die Verschiebung in 1141 ist
+  Original-Verhalten; WARTE 60 hing an der alten Port-Abweichung (NPC nie geschoben).
+- **Aenderung:** keine (H-E1: "V2 angenommen als belegter Querbezug").
+- **Messung nachher:** `integration_r39_dining1141_kampf` (Fassung WARTE 240) im gezielten Lauf unten.
+
+### Bau und gezielte Tests (Nachbesserung 1)
+(laeuft)
