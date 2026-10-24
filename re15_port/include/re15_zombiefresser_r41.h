@@ -95,7 +95,7 @@ int  re15_r41_liegewecker_re15_decide(re15_actor_t *e);
  *   80100c7c / 80100cc0  sb 0x12 / 0x13,148       -> FINAL +0x94 OHNE anim_set
  * P0 (@0x80103940-60) und P1 (@0x80103964-98) rufen kein anim_set; der erste nach der INIT ist P2 @0x801039a8 (mit
  * +0x8f = 0xf @0x80103998: Ueberblendung aus der gehaltenen Pose). Script-geweckte 0x89/0x8a springen direkt nach P2
- * (@0x80103a1c). Bank 1 (CDEMD0.EMS dir[3]/dir[4], alle Zombie-Typen 0x10/0x11/0x12/0x16/0x18 wortgleich): Clip 0x0c
+ * (STAGE1: DECIDE 0x801039fc `sb 2,6` @0x80103a1c). Bank 1 (CDEMD0.EMS dir[3]/dir[4], alle Zombie-Typen 0x10/0x11/0x12/0x16/0x18 wortgleich): Clip 0x0c
  * n=1 Bild 0 = 0x0000012d, Clip 0x0e n=1 Bild 0 = 0x00000149 (Clip 0x12 f0 = 0x190, Clip 0x13 f0 = 0x1c2).
  * Der Port posiert jedes Bild aus (motion, anim_frame) = (+0x94, +0x95); diese Funktion liefert dem Renderer
  * (anim_select_common.c, Gegnerzweig) den Clip, den das Skelett TATSAECHLICH traegt, solange er von +0x94 abweicht:
@@ -110,7 +110,8 @@ int  re15_r41_liege_skelett_clip(const re15_actor_t *a);
  * Bild 0 (Gewicht 0xf00). Der Port-Vorschub (player_common.c) liefe aber schon in diesem naechsten Takt vor -> P2 zeigte
  * Bild 1 / +0x8f 14 und endete einen Takt zu frueh. Abhilfe im Port-Vokabular: motion_init_delay = 1 ("Saat-Takt posiert
  * Bild 0", re15_npc_seed_clip / game_step_common.c), NUR beim Uebergang P1 -> P2 (ph_vor = +0x6 vor dem ANIMATE == 1).
- * Die Skript-Weckung 9/10 (DECIDE @0x801039fc setzt +0x6 = 2, ANIMATE im selben Takt) bleibt unberuehrt. */
+ * Die Skript-Weckung 9/10 bleibt unberuehrt: STAGE1-DECIDE 0x801039fc setzt +0x6 = 2 (@0x80103a1c) und +0x8f = 0xf
+ * (@0x80103a30), das ANIMATE (P2, anim_set) laeuft im SELBEN Takt (Dispatcher @0x80101a20 / @0x80101a54). */
 void re15_r41_liege_p2_saat(re15_actor_t *e, uint8_t ph_vor);
 
 /* Schalter fuer Tests (Standard AN). */

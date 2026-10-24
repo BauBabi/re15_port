@@ -336,7 +336,8 @@ P2 8010399c addu a2,zero,zero / 801039a0 lw a0,368 / 801039a4 lw a1,372 / 801039
 => Takt T: P1 setzt +0x6 = 2 / +0x8f = 0xf, Skelett unveraendert. T+1..T+98: 98 anim_set (Bild 0..97, Gewicht
 0xf00, 0xe00, ...), Wrap im 98. -> +0x6 = 3 in T+98, P3 in T+99. Der Port schob ab T+1 vor (Ordnung Vorschub -> KI ->
 Zeichnen, player_common.c) -> P2 einen Takt zu kurz (Abnahme S5: ss2=2 F83..F179 = 97 Takte, ss2=3 F180). Die
-Skript-Weckung 9/10 ist NICHT betroffen: DECIDE @0x801039fc setzt +0x6 = 2 und ANIMATE (P2) laeuft im selben Takt.
+Skript-Weckung 9/10 ist NICHT betroffen: STAGE1-DECIDE 0x801039fc setzt +0x6 = 2 (@0x80103a1c) / +0x8f = 0xf
+(@0x80103a30), und ANIMATE (P2) laeuft im selben Takt (eigener Lauf `re15_disasm.py --bin STAGE1.BIN dis 0x801039fc 20`).
 Abhilfe im Port-Vokabular: `motion_init_delay = 1` ("Saat-Takt posiert Bild 0", wie re15_npc_seed_clip /
 game_step_common.c) genau beim Uebergang P1 -> P2, und der Halt gilt bis zu diesem ersten P2-anim_set.
 

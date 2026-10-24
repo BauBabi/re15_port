@@ -603,7 +603,8 @@ static void teil_g2(const raum_t *r, const char *name, int32_t zx, int32_t zz, i
 }
 
 /* G3: Skript-Wecken 0x87/0x88 -> 0x89/0x8a (ROOM1070 sub02 Member_set(12,..) @0x016ae-ce, `sb a2,9(a0)` @0x800411f4):
- * DECIDE @0x80103a0c-30 setzt +0x6 = 2 / +0x8f = 0xf im selben Takt -> ab diesem Bild zeigt der Renderer +0x94. */
+ * STAGE1-DECIDE 0x801039fc setzt +0x6 = 2 / +0x8f = 0xf (@0x80103a1c/@0x80103a30), ANIMATE im selben Takt -> ab diesem
+ * Bild zeigt der Renderer +0x94. */
 static void teil_g3(void)
 {
     raum_t r1070 = { "STAGE1/ROOM1070.RDT", 0x1070, 0, 0, {{0,0}}, 0 };
