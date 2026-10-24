@@ -127,6 +127,7 @@ void re15_pc_gatorszene_r41_init(void);
 #define RE15_GSZ_MSG_AUF         43    /* 2090/2091: "You've opened the lock." (= ROOM20A0 msg 2 @0x204C)              */
 #define RE15_GSZ_MSG20A0_ZU      1     /* 20A0/20A1: Original msg 1 "It's locked." (@0x203C)                           */
 int  re15_gatorszene_r41_tor_gesperrt(void);                              /* Pruefhaken: 1 = Tor-Satz umgewidmet     */
+const uint8_t *re15_gatorszene_r41_tor_text(int nr, int *out_len);      /* Pruefhaken: 0 = msg 42, 1 = msg 43        */
 /* Wegwerf-Kette (item_discard_common.c, RE2 @0x80051670): (2090/2091, msg 43) -> Water Key. */
 int  re15_gatorszene_r41_discard_stelle(unsigned room_id, uint8_t msg_id, uint8_t *out_item);
 

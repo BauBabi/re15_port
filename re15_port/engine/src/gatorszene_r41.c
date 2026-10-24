@@ -800,6 +800,15 @@ static re15_actor_t *gator_aktor(void)
         if (g_actors[i].active && g_actors[i].type == 0x23u) return &g_actors[i];
     return NULL;
 }
+/* Alligator tot: RE2-R1-Endzustand (Kanister/Kiefer, +0x10E |= 0x4000 @0x80102654-64 = re15_gr2_tot) ODER die Todesrolle
+ * Clip 7 des Boss-Moduls (Explosionen/GB_TEST=3) mit dem byte-true CORPSE-Zustand 7 (enemy_ai_boss_gator.c GBP_DIE -> GBP_DEAD
+ * `e->state = 7`). */
+static int gator_tot(void)
+{
+    if (re15_gr2_tot()) return 1;
+    const re15_actor_t *g = gator_aktor();
+    return g && g->state == 7;
+}
 /* Schluessel-Lage nach dem Tod: Kopf (Part 6) der Leiche (dort platzte der Kiefer, R1 @0x80102354-58), in eine Wasserzone
  * (re15_aot_water_at = FUN_800527B4-Zwilling) gezogen - sonst Richtung Wurzel, sonst die Ersatzlage. */
 static void key_lage_bei_tod(void)
@@ -821,8 +830,8 @@ void re15_gatorszene_r41_tick(void)
 {
     const uint16_t basis = (uint16_t)(g_current_room_id & 0xFFFEu);
     if (basis == RE15_GSZ_RAUM && re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN)
-        && !re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT) && re15_gr2_tot()) {
-        key_lage_bei_tod();                                  /* Alligator tot (R1-Endzustand +0x10E |= 0x4000 @0x80102654-64) */
+        && !re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT) && gator_tot()) {
+        key_lage_bei_tod();                                  /* Alligator tot (gator_tot) */
         re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT, 1);
         key_bei_leiche((uint16_t)g_current_room_id);
         folge('L', (int)s_key_x, (int)s_key_z);
@@ -862,6 +871,12 @@ static const uint8_t k_tor_evt_end[2] = { 0x01, 0x00 };
 static uint8_t s_tor_slot = 0;      /* 1 + gesperrter Slot, 0 = nichts gesperrt */
 static int16_t s_tor_next[3];       /* Door_aot_set-Nutzlast +0/+2/+4 fuers Zurueckwidmen (Aot_reset @0x80040788-a8) */
 int re15_gatorszene_r41_tor_gesperrt(void) { return s_tor_slot != 0; }
+const uint8_t *re15_gatorszene_r41_tor_text(int nr, int *out_len)
+{
+    const uint8_t *b = nr == 0 ? k_tor_msg_zu : nr == 1 ? k_tor_msg_auf : NULL;
+    if (out_len) *out_len = nr == 0 ? (int)sizeof k_tor_msg_zu : nr == 1 ? (int)sizeof k_tor_msg_auf : 0;
+    return b;
+}
 
 static void tor_meldung(int id, const uint8_t *b, size_t n)
 {
@@ -952,7 +967,7 @@ static int musik_soll(void)
 {
     if ((g_current_room_id & 0xFFFEu) != RE15_GSZ_RAUM) return 0;
     if (!re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN)) return 0;
-    if (re15_gr2_tot()) return 0;
+    if (gator_tot()) return 0;
     re15_actor_t *g = gator_aktor();
     if (!g) return 0;
     if (re15_gator_boss_untergetaucht(g)) return 0;
