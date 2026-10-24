@@ -513,3 +513,12 @@ Seed schlechter. Die Sonde gehoert nicht dieser Spur -> OFFEN, Entscheid Orchest
 - Weg des Nutzers (`R1_weg2050_nach`: 2050 -Tuer-> 2020, Cut 3, gehen, Aktion): Geh-Clip Bild 125 von F186 (msg 0) bis
   zur Frage ohne Luecke (VORHER F261 mo 200 = Luecken-Bild mit Stehen), Pos_set F342 im Bild nach dem Schliessen (VORHER
   F343), F342 gehalten; dazu je Zonen-Kamerawechsel auf dem Weg ein gehaltenes Bild (F102 Cut 0 -> 2, F150 2 -> 3).
+
+#### DuckStation (Nachbesserung 2)
+Messungen nur per GDB-Server (Port 2345, `<sp>/E41n2/gdb_cam*.py`, `gdb_geh*.py`; EnableGDBServer nur fuer den Lauf true).
+Sicherung vor dem ersten Lauf: `<sp>/E41n2/ds_backup/` (settings.ini md5 b3e22060..., resume.sav 54717c88..., Slot 1
+6f59edd4...). FALLE: die GDB-Treiber nach Muster F_nb4/gdb_affen.py schreiben settings.ini im TEXTMODUS zurueck -> unter
+Windows CRLF statt LF (11702 statt 11177 Bytes); ihre Pruefung "settings.ini zurueck: True" vergleicht nur den Text. Nach
+den Laeufen beide Dateien per Byte-Kopie aus der Sicherung zurueckgesetzt (md5 wieder b3e22060... / 54717c88...; Slot 1
+unveraendert). ConfirmPowerOff = false, ToggleMediaCapture = Keyboard/F12, SaveSelectedSaveState = SDL-0/LeftShoulder,
+EnableGDBServer = false wie vorher.
