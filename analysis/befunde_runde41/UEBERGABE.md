@@ -35,6 +35,27 @@ siehe VERTRAG.md §0; Status je Spur wird hier nachgetragen (Bau / Abnahme N / b
    (Muster `analysis/befunde_runde36/orchestrator/args_rest*.json`; Skript `analysis/befunde_runde41/orchestrator/r41-runde.js`).
 
 ## 3. Integration (wenn Spuren bestanden sind)
+
+### 3a. Integrations-Checkliste Runde 41 (Querbezuege, laufend gepflegt; Stand 2026-10-24 07:12)
+- **A <-> B/F/G:** RE15_ACTOR_MAX 21 -> 36 (Spur A) verschiebt den Alligator auf Slot 35 (main.c setzt RE15_ACTOR_MAX-1).
+  Nach dem Merge A+B alle Gator-Riegel greppen (`20` als Slot, `Slot 20`, `boss slot`) und an RE15_ACTOR_MAX-1 koppeln;
+  F/G-Prompts/Baeume vom integrierten Stand starten. test_r35_granate ist in A bereits gekoppelt.
+- **A <-> C:** C's 20B0-Kette braucht A's AUTO-AOT-Haken (aot_common.c + re15_wasser20b0_r41_auto_aot). C-Riegel
+  `integration_r41_ventilkette_kette` wird nur mit A's Modul registriert -> im Integrationsbaum MUSS er laufen und gruen
+  sein (Ventile -> Ost-Tuer -> Szene bis (3,235)=1 -> Leiter -> 2050). Entscheid C-E1.
+- **A <-> D:** audio_pc.c (D: Lautstaerke-Option; A: 4-Zeilen-Haken Schritt-Lage FUN_80045a64, Entscheid A-E4) -> beide Seiten.
+- **B/C/D/E main.c-Haken:** B 4, C 4, A 2 (+D) markierte Haken -> beim Merge beide Seiten, danach Bau + Fenster-Riegel.
+- **E:** scd_vm.c wieder bytegleich (H1 erledigt); Haken in player_common.c / re15_inv_screen.c.
+- **J/K:** RBJ-Binder (Entscheid A-E5) — J baut, K cherry-pickt; bei der Integration identischer Patch.
+
+### 3b. Folgeauftraege nach der Integration (Orchestrator, nicht in den Spuren)
+- Spieler-Schritte mit Lage/Abstand (dieselbe FUN_80045a64 @0x80045830 wie die NPCs; Original nutzt sie fuer jede Entity) —
+  engine-weit, trifft 23 Mitschnitt-Riegel -> eigener Auftrag + volle Suite.
+- rotor_common.c: Pan-Winkel per ATAN-Tabelle statt CORDIC @0x800658fc (bis +-7/4096) und L/R vertauscht gegen den
+  Verbraucher SsUtKeyOnV (voll = DAT_800b2824) — Beleg Spur A A_belege/nb2/cordic_vgl.py.
+- SpuVmKeyOnNow quadriert die Lautstaerke (v*v/0x3fff), der Port-Mischer ist linear — engine-weit (spaetere Runde).
+- Spur A OFFEN 1-4 (ESP-Sprites im ersten Bild nach dem Kamerawechsel, RVD-Schaltzeitpunkt, Gegner-INIT-Takt, allgemeine
+  Szenensperre AUTO/FLAG_CHG) — spaetere Runde.
 Integrationsbaum `.claude/worktrees/r41_integration` von master; je bestandene Spur `git merge --no-ff r41/<x>`; Konflikte
 mit `analysis/befunde_runde36/orchestrator/konflikt_beide.py <dateien>` (beide Seiten); dann `bash re15_port/tools/local_build.sh
 configure && ... build`; gezielte Tests je Spur + `ctest -j 6 -R '^(unit_|prop_|probe_)'` (Querbezüge, Memory
