@@ -72,3 +72,11 @@ Tuerweg 20A0 -> 2090, Ankunft (6300,-16250) Cut 2)
   (g_current_room_id bleibt 0) und ist deshalb unberuehrt; `r31_trefferboxen*` zaehlt Spinnen ueber alle Raeume (> 0 verlangt).
 - Gezielt (Stand mit Haken): `ctest -R "^(unit_sca_wall_hit|unit_re2_spider_water_2090|r31_trefferboxen|r31_trefferboxen_versteckt)$"`
   -> `100% tests passed, 0 tests failed out of 4`.
+
+### 2.4 Messung nachher (gebauter Stand mit Haken, exe-Kopien)
+- Leon, Lauf `n20a0` (echter Tuerweg 20A0 -> 2090 wie 2.1): debug.log
+  `[gatorszene] ROOM2090: Spinne 0x25 bei (-100,-8296) verworfen ...` und `... bei (-2300,-23896) verworfen ...`;
+  state.log ab der Ankunft (PL(6300,-16250), Cut 2): 0 Zeilen mit einem Aktor `t=25`, nur der Boss `[35 t=23 ...]`.
+- Elza, Lauf `n2091` (RE15_PSELECT_AUTO=1 + _SWITCH=1, Tuerweg 20A1 -> 2091, debug.log `Spieler-Familie PL04`):
+  dieselben zwei Zeilen fuer ROOM2091, state.log ab der Ankunft 0 Zeilen `t=25`.
+- In 20A0/20A1 bleiben die Schachtspinnen (dort nicht verlangt; `t=25` steht vor dem Tuerwechsel im state.log).
