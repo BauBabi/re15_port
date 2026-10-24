@@ -1,0 +1,229 @@
+{
+ "welle": [
+  "A",
+  "B",
+  "C",
+  "E",
+  "M",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L"
+ ],
+ "slots": 4,
+ "basis": "116e8b0f (Welle-1-Baeume) bzw. master-HEAD 4c667c97 (neue Baeume ab 2026-10-24)",
+ "max_nach": 2,
+ "modus": {
+  "A": "nachbesserung",
+  "B": "nachbesserung",
+  "E": "abnahme"
+ },
+ "runde0": {
+  "A": 0,
+  "B": 0,
+  "E": 0
+ },
+ "bau": {
+  "A": {
+   "status": "teilweise",
+   "zusammenfassung": "Punkt 1 (20B0-Flut): Original per DuckStation gemessen (Savestate-Reihe ts_10/12/14/16/tf_5-8/flut_a + Video flut_d.mp4, Nachtrag 2): 35 EM024 leben (DAT_800aca4e=35), Part-Wort 0 (Zeichenmaske @0x8010efe4), Drift x/+0x8c byte-gleich (Bild 131 -17166/251, Umbruch 20000/225, Bild 233 1172/297), ESP-Pool nur Effekt 0x0f. Disasm STAGE2.BIN: Tabellen @0x80118d50/58/88/90, grid 0 (0x8010f178/0x8010f2c0, 11 Takte, 6 Spawns), grid 1 (0x8010f444..0x8010f8b8, 26/11/26/11 Takte), Helfer 0x801108cc/0x80110988 -> jal 0x80019700 @0x801109cc (a0=0x0f<<24|sub<<16|Skala). Gebaut: wasser20b0_r41.c (Sequencer, Anker Teil-0-Matrix (0,-3329,0)), no_draw beim Spawn, RE15_ACTOR_MAX 21->36 (Original fuehrt 35; r36-Riegel angepasst), AUTO-AOT sub05 unter Pad-Sperre (FUN_800436a8 @0x8001ce1c ohne Gate), EM024 ohne Schatten (kein jal 0x8001b064 im Bereich). Port-Szene laeuft jetzt zu Ende (Cut 7/6, gameplay F242), Partikel gezeichnet (fx.log 2408 Zeilen id=15), Leon 20B0 + Elza 20B1. Video-Vergleich (A_belege): Ort und 10-11-Takt-Rhythmus gleich, Port-Wolke aber 2-5x duenner/dunkler -> OFFEN.\nPunkt 2: Landungs-Spritzer @0x80038730-d0 (Gate Stempel<y `slt` @0x8003874c, 8x FUN_80019700(0x06033000), Gier-Faecher) in wassersprung_r41.c + Haken climb_common.c; exe-Messung 2090: 104 fx-Zeilen id=6 sub=3 nach der Landung. NPC-Schritte FUN_80045630 Typ>=0x40 (Boden/Stempel-Zweig, Ton -8 @0x8004575c, Bildwort @0x80051278-a8) mit Haken in re15_npc_sub_walk; Befund: ausgelieferte NPC-Geh-Clips 5 (0x40/0x42/0x45) tragen keine Aufsetzer -> Entscheidungsfrage.\nDossier analysis/befunde_runde41/A_wasser20b0.md; Belege A_belege/ (Video, Bildreihen, TSV).",
+   "commits": [
+    "70ca36a8",
+    "ed551daa",
+    "5792691f",
+    "b03b68b4",
+    "c594a443",
+    "f0564aca",
+    "9fd5a5ef",
+    "2a61602c",
+    "341ebe27",
+    "66dd359b",
+    "ee935239",
+    "edcaeb35",
+    "e4612ae2"
+   ],
+   "suite": "ctest -R \"^(unit|probe|prop)_(r41_wasser20b0|r36_gegnerzahl|r38_wasser|r38_wasserzombie|r34_wasser|re2_spider_water|r38_npckante|npc_|marvin_|aot_|scd_aot|rvd_scan|1090_climb|1090_npc|r36_klettern|r39_elza_klettern|room1140_spawn|spawn_entered|1030_spawncap|re2z_spawn|r34n_d_adaruf|r27_ada|ada_eintritt|r35_affen_npcband|r35_affen_sprung|r39_hund1121_sprung)\" -> \"100% tests passed, 0 tests failed out of 68\"; ctest -R \"^integration_(r41_wasser20b0|r36_gegnerzahl)$\" -> \"100% tests passed, 0 tests failed out of 2\"; vorher ctest -R \"^integration_(r41_wasser20b0|r38_wasser|r36_gegnerzahl|r36_klettern)$\" -> \"75% tests passed, 1 tests failed out of 4\" (integration_r36_klettern Passed 521.97 s, integration_r38_wasser Passed 183.31 s, integration_r41_wasser20b0 Passed 97.94 s; r36_gegnerzahl Teil e = Befund 1.8, danach gruen)",
+   "offene_punkte": [
+    "Video-Vergleich: Spritzerwolke des Ports 2-5x duenner/dunkler als im Original (Partikelpixel je Schub Original 150-750, Port 30-145; Bboxen gleich gross), erster Schub an der Osttuer (Original Raumbild 6-9) im Port erst ab 11-15 -> Helligkeit/Mischmodus der Effekt-0x0f-Sprites im PC-Zeichner (fx_plattform_pc) gegen VRAM/CLUT des Originals messen; Sprite-Skala 0x4000/0x3000 pruefen (A_wasser20b0.md 1.9)",
+    "Allgemeine Aufhebung der Port-Sperre in_cinematic fuer AUTO-Ereignis-Saetze (FUN_800436a8 @0x8001ce1c laeuft im Original ohne Gate): bewusst auf 20B0/20B1 begrenzt, Verallgemeinerung braucht die volle Suite",
+    "EM024 grid 2..4 (0x8010f910/0x8010fe24/0x80110338) nicht gebaut (kein ausgeliefertes RDT spawnt sie); DAT_800acc0c:=1 @0x8010ef34 weiter OFFEN",
+    "RE15_ACTOR_MAX 36 = +28 KB BSS: PSX-Laufzeitbudget pruefen, wenn der PSX-Bau wieder gebaut wird",
+    "Original-Zeitachse im Video durch Ladestaus gedehnt (Raumbild 16-23 = acht identische Videobilder); Port laeuft ab Bild ~50 4-5 Bilder vor dem Video - nicht als Port-Fehler belegbar",
+    "NPC-Schritt-Ton (-8) mit dem Effekt portiert, hoerbar erst mit Geh-Clips, die Aufsetzer tragen",
+    "DuckStation settings.ini: ConfirmPowerOff stand auf true (Capture-Skripte brauchen false); fuer die Messungen auf false, danach auf true zurueckgestellt; Backend FFmpeg/mp4 (Nachtrag 1) unveraendert gelassen"
+   ],
+   "fragen_an_nutzer": [
+    "NPC-Wasser-Schritte: Die ausgelieferten NPC-Geh-Clips 5 (Ada 0x40, Marvin 0x42, 0x45; +0x94:=5 @0x80051d3c) tragen keine Fussaufsetzer (Bildwort-Bit 0x4000 fehlt in allen 20 Bildern; Clip 0/1 derselben EDDs haben sie bei Bild 8 bzw. 7/22) - im Original spritzt und klingt also kein NPC beim Skriptlauf durch Wasser. Mechanik ist portiert und greift bei Clips mit Aufsetzern. Soll der Port trotzdem NPC-Schritte erzeugen (PORT-WAHL, Form-Vorschlag: Aufsetzer-Bilder des Geh-Clips 0 derselben EDD auf den 20-Bild-Clip 5 abbilden) oder bleibt es byte-gleich zum Original?",
+    "RE15_ACTOR_MAX 21 -> 36 ist eine Querschnittsaenderung (alle Aktor-Schleifen, Schattenliste; test_r36_gegnerzahl angepasst). Einverstanden, oder nur fuer 20B0/20B1 wirken lassen?"
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/enemy_ai_common.c (EM024-Zweig: Init-Zeichenmaske, +0x5-Dispatch vor der Drift, kein Bildvorschub; re15_npc_sub_walk: NPC-Schritt Phase 1/2)",
+    "re15_port/engine/src/aot_common.c (in_cinematic-Sperre fuer AUTO-Ereignis in 20B0/20B1 aufgehoben)",
+    "re15_port/engine/src/scd_vm.c (Typ 0x24 no_draw beim Spawn, 1 Zeile)",
+    "re15_port/engine/src/climb_common.c (Phase 4: Landungs-Spritzer-Aufruf)",
+    "re15_port/engine/src/wasser_r38.c + include/re15_wasser_r38.h (Getter re15_wasser_r38_stempel, Folge-Haken im Bildanfang)",
+    "re15_port/include/re15_actor.h (RE15_ACTOR_MAX 21 -> 36)",
+    "re15_port/platform/pc/main.c (RE15_PLAYER_POS 4. Wert = Band auch beim Boot; NPC-Schatten nicht fuer Typ 0x24)",
+    "re15_port/tests/unit/test_r36_gegnerzahl.c + tests/integration/test_r36_gegnerzahl.cmake (36 Plaetze, 35 Emitter, 1 Schatten)"
+   ],
+   "neue_assets": [
+    "keine unter shared_assets (Effekte 0x0f/6 liegen in den Raum-ESP-Banken der Original-RDTs)",
+    "analysis/befunde_runde41/A_belege/ (84 MB): orig_20b0_flut_duckstation_2026-10-23-18-48-26.mp4, orig_20b0/oNNN.png, port_20b0/pNNN.png, kontaktbogen_20b0_orig_links_port_rechts.png, vergleich_20b0.tsv"
+   ],
+   "sprachdateien": []
+  },
+  "B": {
+   "status": "fertig",
+   "zusammenfassung": "Fortsetzung Spur B: 86661849 gebaut (touch+Neubau, 0 neue Warnungen), gezielte Tests gruen, drei Nutzer-Punkte am gebauten Stand gemessen.\nKORREKTUR Kiefer: FUN_80104318 @0x80104318-58 (Aufruf R1 P0 @0x80102354-58, a1=[em+0x198]+7*172) stempelt Part-RECORD 7: Flagwort|=0x4A, +0x70=0x202038, +0x98=yaw+0x800, +0x9A=-10 (vy, FUN_80028DAC @0x80028DF0-E14), +0xA0=0x8000 (29 Bilder @0x80028DC8-DC; Bit15=Burst-Skalenzeile 1 @0x8009DC64 180..2790). 86661849 hatte -10 als Kiefer-az gelesen -> entfernt; Anschluss an die vorhandene Part-Bruecke (3-Zeilen-Haken re15_re2z_gore_active fuer Typ 0x23, Seed/Stempel in gator_re2_r41.c), Riegel unit_r41_re2gator_kiefer (30 Scherben-Bilder, Skala 180..2790, Aufstieg -10/Bild, weg ab Bild 31).\nLauf A2 (exe, Leon Tuernische): Clip-Folge 0/1(73)/4(43)/0(34=Sperre 70)/1/4/5(120)/11(120) = RE2-Finisher Clip 4->5->11 mit Opfer-Clip, SE 4 Bank 17 am Schnapp, bitgleich in 2 Laeufen.\nLaeufe B2/B3 (exe, GB_TEST=5, Kanister 5870 vor der Nase): Stufe 1 laengs=5868 (Rechnung 5870, INIT-Yaw 1087 gemessen 1089) ..7 im LURK; erster Pistolentreffer F70 -> R1: SE 4, Stufe 13, Clip 9 37 Bilder, Yaw +160 mit 75/Bild, Vortrieb (4997,-20318)->(3413,-25001), Scherbenwolke, Kanister nach 10 Bildern weg, Leiche. Belegbilder bilder_r41b/ (finisher_a2_*, kiefer_b2_*, kiefer_b3_cut1_*).\nErster B-Versuch: Zielhilfe FUN_8003703c = naechster Gegner rundum -> Spinne 2; Peilung bearing=(atan2q(dz,dx)-0x400)&0xfff belegt (Ost 0/Sued 1024/West 2048/Nord 3072).\nOrchestrator-Entscheide B1-B3 in Dossier §7 uebernommen (Code entsprach bereits). Dossier B_re2gator.md §0/§2.6/§3/§4.3/§5/§6/§7 abgeschlossen.",
+   "commits": [
+    "f85f929e wip Dossier (Vorgaenger)",
+    "9f903f6e wip RE-Belege + Kanister-Modell (Vorgaenger)",
+    "4c376639 wip Modul gator_re2_r41.c + Haken + Tests (Vorgaenger)",
+    "4b38938a wip Op 73 Putz, Sweep-Bank (Vorgaenger)",
+    "d749bfd8 wip Integrations-Riegel Auto-Start (Vorgaenger)",
+    "86661849 wip Zwischenstand (Orchestrator)",
+    "c488687a doc AUFTRAG Entscheide B1-B3 (Orchestrator)",
+    "25a3fc77 wip(r41-re2gator): geplatzter Kiefer = Part-Record 7 (FUN_80104318) ueber die Part-Bruecke, Dossier-Korrektur",
+    "c2404c61 feat(r41-re2gator): RE2-Alligator im ROOM2090-Boss - Abschluss Spur B (Messungen nachher, Dossier, Belegbilder)"
+   ],
+   "suite": "Stand 25a3fc77 (Bau 22:04): ctest -R \"^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|sca_wall_hit|re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_spawn_seed|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|r35_fenster_kraehe|re2_crow_ai|crow_ai|crow_fixes|crow_death_corpse|re2_crow_kill_cmd3|r37_re2zombie_.*|r34_re2fx.*|montage_fx)$\" -> \"100% tests passed, 0 tests failed out of 45\"; ctest -R \"^integration_(r41_re2gator|r36_schuss)$\" -> \"100% tests passed, 0 tests failed out of 2\". Stand c488687a (=86661849, vor dem Kiefer-Umbau): ctest -R \"^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|sca_wall_hit|montage_fx|r34_re2fx.*|r30_granate|r35_granate|r36_granate|r38_wasser.*|r38_wasserzombie|r35_cut1150_montage.*|r38_montage.*)$\" -> \"100% tests passed, 0 tests failed out of 43\"; ctest -R \"^integration_(r41_re2gator|r35_granate|r38_wasser|r34_granaten|r36_granate|r30_granate_laden|r38_montage|r38_wasserzombie)$\" -> \"100% tests passed, 0 tests failed out of 8\". Keine volle Suite.",
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/enemy_ai_boss_gator.c (Haken: INIT, Frame-Woerter, Takt, HURT-Selektor, CHASE-Clip, Phasen RE2_INTRO/DASH/TOD, Spine-az)",
+    "re15_port/engine/src/enemy_ai_re2_zombie.c (3-Zeilen-Haken in re15_re2z_gore_active fuer Typ 0x23)",
+    "re15_port/platform/pc/main.c (3 Haken: Hintergrund-Versatz Schuetteln, Kanister-Zeichner, Init)",
+    "re15_port/engine/src/re2_fx.c (Op 11 FUN_8001e4b4, Op 73 FUN_8002387c, Block am Dateiende)",
+    "re15_port/tests/unit/probe_gator_sweep.c (laedt EM23-Bank, mit Beleg)"
+   ],
+   "neue_assets": [
+    "re15_port/shared_assets/RE2/KANISTER40A0.MD1 (4964 B, ROOM40A0 Modell 1 = Gaskanister)",
+    "re15_port/shared_assets/RE2/KANISTER40A0.TIM (33824 B)",
+    "re15_port/shared_assets/RE2/GATOR40A0.VBS (34296 B, Raum-Saetze 14/15 aus ROOM40A0)",
+    "re15_port/engine/src/gen/r41_gator40a0_bank.inc"
+   ],
+   "sprachdateien": [],
+   "offene_punkte": [
+    "Raum-Effekt 0x26 (ROOM40A0-ESP, erster Fontaenen-Tick @0x80103f4c-6c) liegt nicht im Port; CORE-Effekte 0x00/0x08/0x03 und Spritzring laufen (Dossier §6)",
+    "Frame-Wort-Latenz 1 Bild (Port-Struktur seit Runde 8, Stroke-SE/Ereignis ein Bild spaeter als RE2)",
+    "Kein RE2-Kameraskript fuer Intro/R1/Finisher (Port-Todeskamera, PORT-WAHL); kein DuckStation-Originaltest moeglich (info/re2leon ist ein Dateibaum)",
+    "Schaden je Waffe bleibt die RE1.5-Typzeile (Pistole 7 = s_wpn_dmg_gator[3]); RE2 (17 @0x800A4A28) braeuchte eine Waffenzuordnung",
+    "Kanister im dunklen Becken kaum sichtbar (RE2-Textur 41,41,41 x ROOM2090-Licht) - Spur G waehlt Kamera/Lage",
+    "Zielhilfe (FUN_8003703c, naechster Gegner rundum): solange die Spinnen im Becken sind, trifft man den Gator nur, wenn er naeher ist als die Spinnen (Nutzer-Auftrag Spinnen entfernen = Spur G)",
+    "GUARD/CROSS (Nutzer-Design Klettern) spielen weiter Clip 0",
+    "Hinweis fuer Spur G: Lage per re15_gr2_kanister_setzen(x,y,z) (Testhaken RE15_GATOR_KANISTER), Aufnahme nur in CHASE/LURK (nicht in GUARD/CROSS)"
+   ],
+   "fragen_an_nutzer": [
+    "B1 (Orchestrator-Entscheid, Nutzer kann widersprechen): Verfolgung mit den RE2-Werten (Paddeln ~149/Bild, Schwimmen 24,5/Bild in der Biss-Sperre, Zonen-Dashes) ohne Deckel - Leon in der Tuernische ist binnen ~210 Bildern gefressen; so belassen?",
+    "Intro/R1/Finisher ohne RE2-Kameraschnitte (Port-Todeskamera statt Cut 0/1/5/6/13 von ROOM40A0) - so belassen oder RE2-Kameraskript fuer die Kanister-Explosion nachbauen?"
+   ]
+  },
+  "E": {
+   "status": "fertig",
+   "zusammenfassung": "Punkt 1 Kurbel 2020: gemessen (7 exe-Laeufe, RE15_ANIM_TRACE) - Clip 0 der Raum-RBJ (ROOM2020 RBJ @0xBB0, rec0 Marker 1, 40 B, Wurzel statisch) spielte einmal und stand 138 Bilder bei Bild 39, obwohl @0x00AA0 Plc_flg(0,4) die Schleife verlangt; \"Fliegen\" nicht reproduziert (OFFEN). Beleg: FUN_80030660 @0x8003068c lbu DAT_800aca59 / @0x800306a4 PTR_LAB_80073e30[+0x5] = 0x80050cb8 (Phasen-FSM: Schleife @0x80050dbc-c8, Wrap @0x8001f63c, Halten @0x80050da4). Neu plcloop_r41.c: Spieler-Clip-Ende im Kommandowort 4 (nur Sub 0, nicht Skript-/Substate-8-Schub). Nachher: 4 Umlaeufe bis Plc_ret (F498/538/578/618).\nPunkt 2 Karte B1 (ROOM1190 = \"1090\" des Nutzers): mit getickter VM gemessen - vor der Ostkammer-Tuer (ROOM1230 Slot 4 @0x00CE6) wanderte der Marker von (146,109) zur Hallen-Marke: (96,13078) -> (137,111). Ursache tuer_anziehen (erste Marke irgendeiner Zielraum-Zone; Halle vor Ostkammer in s_map_marks). Neu karte_r41.c: Zone der Tuer-ANKUNFT (Door_aot_set next x/z @0x00CE6 (19515,-12109) = Ostkammer). Nachher (96,13078) -> (146,108).\nPunkt 3 Werkstatt-Tuer 11B1 Elza: reproduziert (sub00 @0x1108..@0x111A oeffnet bei (3,0x83)=1, Setzer 10B1 @0x0195E; Szene sub03 nach 2001 @0x01958). Neu werkstatt11b1_r41.c: Ereignis 24 im Init-Lauf hinter sub00 (Form Runde 36 J): Cut_replace 0<->7/2<->8 zurueck, Zelle (3,0x0C) u0=ff fl=03 (RDT @0x00EC8), Text-Platz 8 msg 12 (@0x0112A/@0x179F), Cut 7->0; Schacht bleibt (1261 -> 11D1/10B1, kein Softlock). Nachher: Cut 2 statt 8, Lauf blockiert bei x -20942, Aktionstaste msg 12.\nGebaut mit local_build.sh (Bau 12), exe-Messungen auf Kopien re15_pc_r41e*.exe; Dossier analysis/befunde_runde41/E_kleinkram_b.md.",
+   "commits": [
+    "ab8b2393 wip: Dossier angelegt",
+    "c78ef88f wip: Messung vorher",
+    "455f4eeb wip: ROOM11B1 Ereignis 24 hinter sub00",
+    "3309246f wip: Punkt 3 fertig, Riegel 11b1 3/3",
+    "935413ef wip: Punkt 2 Karte B1 Tuer-Zug Ankunftszone, Pin 17/17",
+    "871826e7 wip: Punkt 1 Spieler-Clip-Ende Kommandowort 4",
+    "c2 (Riegel kurbel) + 15e3b71b Dossier Punkt 1",
+    "73957408 wip: plcloop-Gate Sub 0",
+    "f63b4fb2 wip: plcloop Port-Besitzer ausnehmen",
+    "ed7bd4ff fix(r41-kleinkram_b): Kurbel 2020 Schleife, Karte B1 Tuer-Zug auf Ankunftszone, Werkstatt-Tuer 11B1 bei Elza dauerhaft zu"
+   ],
+   "suite": "100% tests passed, 0 tests failed out of 66 — ctest --test-dir re15_port/build -R \"^unit_(map_|karte_|r30_karte|r33_karte|r35_karte|r36_karte|r36_kartenbits|r36_kartenitems|r36_szenenleon|r38_werkstatt11b0|r38_tagebuch_karte|r39_karten|r39_johnruf1041_tuer|plc_back_yaw_1090|r30_android_n3_plc_aim|r41_kleinkram_b)\" -j 4 --timeout 600; zusaetzlich 100% tests passed, 0 tests failed out of 5 — -R \"^unit_(r36_szenenleon_schub|r36_szenenleon_erweiterung|r38_werkstatt11b0_takt|r41_kleinkram_b_kurbel)\"",
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/scd_room_setup.c (+2: include, re15_werkstatt11b1_r41_init_lauf hinter re15_szl_init_lauf - Init-Lauf vor scd_vm_tick, Muster Runde 36 J)",
+    "re15_port/engine/src/scd_vm.c (+2: include, Ereignis-Kette re15_werkstatt11b1_r41_ereignis)",
+    "re15_port/engine/src/re15_inv_screen.c (+4/-1: include, zielzone in tuer_anziehen)",
+    "re15_port/engine/src/player_common.c (+2: include, re15_plcloop_r41_takt hinter anim_frame++)"
+   ],
+   "neue_assets": [],
+   "sprachdateien": [],
+   "offene_punkte": [
+    "Punkt 1: das vom Nutzer beschriebene 'Herumfliegen' an der Kurbel in 2020 ist in 7 Laeufen (Leon/Elza, Aktionstaste/FIRE_AOT, Waffe, Nah-/Fernstart, 1-Bild-Abstand) nicht reproduziert; behoben ist die einzige gemessene Abweichung (Standbild statt Schleife). Original-Gegenprobe in DuckStation (Savestate der Kurbelszene) steht aus, Beleg aus dem Disasm.",
+    "Nebenbefund: probe_r39_karten (Runde 39) tickt die VM nicht und sieht den Tuer-Zug nicht - ihre Tuer-Sprung-Zahlen gelten ohne Zug (nicht angefasst).",
+    "Nebenbefund: ROOM11B1 sub03 fuehrt Elza per Plc_dest 09 nach (-22695,-20321) westlich der Trennwand; im Port endet sie an der Blockzelle (-18192,-20453); Original nicht gemessen.",
+    "Kein Integrations-Riegel (echte exe) angelegt; die exe-Messungen (n13/n14 Elza 11B1, n1/n2 Kurbel, n12 Ostkammer-Tuer) sind im Dossier dokumentiert."
+   ],
+   "fragen_an_nutzer": [
+    "Nur falls das 'Fliegen' an der Kurbel in ROOM2020 weiterhin auftritt: Weg (Spielstand/Raum davor, Waffe in der Hand) und ein Bild - im Port kurbelt Leon jetzt durchgehend, bis die Buehne unten ist."
+   ]
+  }
+ },
+ "abn": {
+  "A": {
+   "bestanden": false,
+   "suite": "Selbst gefahren im Spurbaum (keine volle Suite): ctest -R \"^unit_r41_wasser20b0_\" -> 100% passed, 6/6 (0.19 s); gezielte Gruppe ctest -R \"^(unit|probe|prop)_(r41_wasser20b0|r36_gegnerzahl|r38_wasser|r38_wasserzombie|r34_wasser|re2_spider_water|r38_npckante|npc_|marvin_|aot_|scd_aot|rvd_scan|1090_climb|1090_npc|r36_klettern|r39_elza_klettern|room1140_spawn|spawn_entered|1030_spawncap|re2z_spawn|r34n_d_adaruf|r27_ada|ada_eintritt|r35_affen_npcband|r35_affen_sprung|r39_hund1121_sprung|fx_emitter|esp_|r34_re2fx|r39_gegner_schatten|r36_pri_schatten|r35_raeume_hundeschatten)\" -> 100% passed, 78/78 (68.11 s); ctest -R \"^integration_r41_wasser20b0$\" -> 1/1 Passed (100.61 s); ctest -R \"^integration_(r36_gegnerzahl|r36_klettern|r38_wasser)$\" -> 3/3 Passed (96.20 / 524.49 / 206.65 s, gesamt 827.46 s); ctest -R \"^integration_(r39_gegner_schatten|r36_pri_schatten|r38_wasserzombie)$\" -> 3/3 Passed (59.36 / 31.16 / 170.07 s). Summe 91 Tests gruen, 0 rot, keine Wiederholung noetig. Bau: local_build.sh configure + build = LOCAL-BUILD-OK (exe 18:36:03 juenger als alle Quelldateien des Diffs = HEAD-Stand).",
+   "urteile": [
+    {
+     "punkt": "Punkt 1: Wasserschwall 20B0 im Original messen, im Port reparieren (\"in unserem Port noch kaputt\")",
+     "urteil": "teilweise",
+     "beleg": "Mechanik belegt und selbst nachgemessen: STAGE2.BIN Zeichenmaske @0x8010efd4-e4, jalr @0x8010f0a8 ueber 0x80118d58, Drift 0x4e20/0xe1 @0x8010f108/118, grid-0-Spawns @0x8010f194-f1f0, sltiu 0xb @0x8010f284, Helfer lui 0xf00 @0x801109b8 + jal 0x80019700 @0x801109cc, AUTO-Pass jal 0x800436a8 @0x8001ce1c ohne Gate (@0x800436bc-cc, sltu @0x80043740); Original-RAM (eigene Lesung re15_ss.Ram, ts_10/flut_a/tf_7): DAT_800aca4e=35, Drift x/+0x8c byte-gleich, Part-Wort 0; Deckel der Ablage = 255 (ori 0xff/sh @0x8003ed58-60, RAM 255) -> E2-Widerspruch erklaert (sltiu 0x14 @0x800372b4 ist die Rundlauf-Zielwahl FUN_80037250, nicht Ablage/Takt). exe Lauf A + integration (Leon 20B0, Elza 20B1): 35 Spawns, fx id=15 ab F7, Cut 7 F105 / 15 F146 / 6 F228, Spieler frei F242, kein ZEICHNE Typ 0x24. Video-Vergleich mit eigener Zaehlung: Schnitte nach Stau-Korrektur +-2 Bilder (Original 20/49/105/145 vs Port 22/51/106/146), Ort und 10-11-Takt-Rhythmus gleich. NICHT erfuellt (Orchestrator-Massstab Bild-fuer-Bild): Wolkenflaeche Bild 0..110 Original 13301 px vs Port 2535 px (G>=150; bei G>=100 Faktor 15-30), erster Schub o5-9 (95..747 px) fehlt (Port erst F11-15, 33..145 px), Letterbox-Balken im Port F5-12 (24 px) ohne Gegenstueck im Original, spaeter 24 vs 16/17 px."
+    },
+    {
+     "punkt": "Punkt 2 (gesamt): STAGE2 Wassereffekt beim Sprung von der Kante ins Wasser; NPCs teilen die gleichen Effekte (Nachtrag 3: auch Fussschritt-Toene)",
+     "urteil": "teilweise",
+     "beleg": "2a erfuellt, 2b nicht erfuellt (siehe Einzelurteile)."
+    },
+    {
+     "punkt": "Punkt 2a: Wassereffekt beim Sprung von der Kante ins Wasser",
+     "urteil": "erfuellt",
+     "beleg": "PSX.EXE selbst disassembliert: slt v1,v1,a0 @0x8003874c (Stempel < y), beq @0x80038758, ori s1,zero,0x4 @0x8003875c, lui a0,0x603/ori 0x3000 @0x8003876c-70, jal 0x80019700 @0x80038794 und @0x800387bc mit addiu a1,a1,2048 @0x800387c0, a3=0x8007428c=(0,0,0,0). exe: Lauf B (Leon 2090) und D (Elza 2091) je 8 Plaetze id=6 sub=3 ab F79, 104 Zeichenzeilen; echter Weg Lauf E2 (Tuer 20A0->2090 DOOR FIRE, Steg, rot 3072, Kante: climb sub 9 kind 0x02 -> Landung (6363,0,-14032), Cut 3): 8 Plaetze bei sx 93..96/sy 148 im Bild, Spritzer in den Framedumps 195-204 sichtbar. Vorbehalt: kein Original-Bild der Landung in den Belegen."
+    },
+    {
+     "punkt": "Punkt 2b: NPCs teilen die Wasser-Effekte; Nachtrag 3/Entscheid E1: Wasser-Spritzer UND Fussschritt-Toene fuer alle NPCs, Aufsetzer aus Clip 0/1 auf Clip 5 abbilden, Pin je Typ",
+     "urteil": "nicht_erfuellt",
+     "beleg": "Mechanik portiert (FUN_80045630 Typweiche sltiu 0x40 @0x80045730, addiu s3,a0,-8 @0x8004575c, Bildwort andi 0x4000 @0x80051288 — selbst disassembliert), aber im gebauten Stand wirkungslos: Riegel-Ausgabe \"Typ 0x40/0x42/0x45: Clip 5 = 20 Bilder, Fussaufsetzer 0\"; exe Lauf F (ROOM2000, RE15_SET_FLAG=4:244): Marvin Slot 1 und Ada Slot 2 laufen per Plc_dest ~13000 Einheiten (mode 4/9 Sub-VM-WALK), [foot]-Aufrufe nur type=29 (Spieler), kein NPC-Typ 21/22, kein Effekt. Keine Abbildung Clip 0/1 -> Clip 5, kein Pin je Typ, kein Code-Commit nach 18:36 (E1 18:5x, Nachtrag 3 19:12). Zusaetzlich sperrt aot_common.c Z.1169 waehrend in_cinematic auch den WATER-Stempel (Typ 9) fuer alle Pools."
+    }
+   ],
+   "maengel": [
+    "M1 (Punkt 1, Orchestrator-Massstab Bild-fuer-Bild): Spritzerwolke 20B0 im Port 5x (G>=150) bzw. 15-30x (G>=100) weniger Flaeche als im Original-Video (Bild 0..110: 13301 vs 2535 px, Max 747 vs 145), erster Schub o5-9 fehlt (Port F11-15). Port-Sprites sind HELLER (mittl. G 170 vs 128), aber viel kleiner/weniger -> Sprite-Groesse/Anzahl je Platz (S, Skala, defW, step16, gleichzeitig gezeichnete Plaetze) gegen Original-VRAM/ESP-Pool belegen, nicht Mischmodus allein. Nachpruefbar: scratchpad/abn0/zaehl.py auf A_belege/orig_20b0 vs RE15_FRAMEDUMP-Lauf (Port deterministisch, pixelgleich zur Dossier-Reihe).",
+    "M2 (Punkt 2b, NUTZER-VORGABE Nachtrag 3 + Entscheid E1): NPC-Schritte (Wasser-Spritzer/Wellen UND Fussschritt-Toene) fuer Typen 0x40..0x4b nicht gebaut — Aufsetzer-Abbildung aus Clip 0/1 auf Clip 5 fehlt, kein Pin je Typ, beide Szenarien offen. Nachweis: Lauf F (ROOM2000 mit RE15_SET_FLAG=4:244: Marvin/Ada laufen ohne [foot]-Aufruf und ohne Effekt), Riegel-Ausgabe Fussaufsetzer 0, Commit-Historie ohne Code nach 18:36.",
+    "M3 (Punkt 2b, Szenen): aot_common.c Z.1169 ueberspringt waehrend in_cinematic auch WATER-Saetze (Typ 9, Stempel +0x88 fuer alle Pools, Z.1347-1366) — NPC-Wasserschritte in Szenen koennen den Stempel-Zweig 0x06032000 nie erreichen; Original FUN_800436a8 laeuft ohne Gate (jal @0x8001ce1c linear, Spieler-Pool @0x800436bc-cc, Gegner-Schleife sltu @0x80043740). Aufhebung mindestens fuer WATER (besser allgemein, Dossier OFFEN) + Riegel.",
+    "M4 (Punkt 1, Bild-fuer-Bild): Letterbox-Balken im Port F5-F12 (24/24 px) und F11-12 (24/0), Original o1..o100 ohne Balken; spaeter Port 24 px vs Original 16/17 px (o140..o250). Ohne @0x-Beleg auf beiden Seiten: RE'en (Balkenhoehe/Zeitpunkt des Originals) oder vom Orchestrator als nicht Teil der Spur ausweisen.",
+    "M5 (Riegel): kein messender Riegel fuer einen NPC-Schritt im Spiel (unit npc prueft nur die isolierte Funktion, Takt-Teil laeuft \"ohne Pruefung\") und keine exe-Pruefung der 2090/2091-Landung im Riegel-Satz. Fuer die Nachbesserung: Pin je NPC-Typ (z.B. 2000-Szene via RE15_SET_FLAG=4:244 mit RE15_FOOT_DEBUG) und ein exe-Riegel der Landung ueber den echten Weg (Tuer 20A0 -> 2090, Skript W9,A0.2,W4,R0.37,W0.3,U0.7,...).",
+    "M6 (Vertrag, klein): platform/pc/main.c ist Spur A laut VERTRAG §1.3 nicht zugeteilt (D, F/G); zwei markierte Haken dort (RE15_PLAYER_POS 4. Wert, Schatten-Bedingung npc->type != 0x24). Konfliktrisiko mit D bei der Integration gering, zur Kenntnis.",
+    "M7 (Hinweis, kein Spur-Mangel): s_dog_noclamp_mask ist uint32_t mit 1u << slot (enemy_ai_common.c:7270/7368) — bei RE15_ACTOR_MAX 36 fuer Slots >= 32 undefiniert (praktisch nur 20B0/20B1, dort nur EM024). PSX-BSS +28 KB weiter OFFEN. a2 beim Executor-jalr @0x80031cb4 (Landungs-Anker = Entity-Matrix +0x20) statisch nicht aus dem Prolog belegbar; Port-Wirkung gemessen (Spawn bei Fall-Lage y=-640), nicht am Original verglichen."
+   ],
+   "bericht": "C:/workspace/git/reAi_v2/.claude/worktrees/r41_wasser20b0/analysis/befunde_runde41/A_abnahme_0.md (337 Zeilen, Commit 0dde36c5 \"doc(r41-wasser20b0): Abnahme 0\", nur diese Datei; Baum sauber, keine Messkopien). Inhalt: 0 Baustand (exe = HEAD, kein Code nach 18:36 -> E1/Nachtrag 3 nicht umgesetzt), 1 Diff-Umfang + Guess-Tell-Suche (keine Treffer), 2 gezielte Tests, 3 RE-Gate mit 12 selbst disassemblierten Stellen (STAGE2.BIN/PSX.EXE) + Savestate-RAM-Lesung (DAT_800aca4e=35, DAT_800b0ff4=255 @0x8003ed58-60, Widerspruch zu Runde 36 erklaert: FUN_80037250 = Rundlauf-Zielwahl), 4 Schatten-Scan (8 jal 0x8001b064 in STAGE2.BIN, keine im EM024-Bereich), 5 Punkt 1 exe-Messung + eigener Video-Vergleich (Schnitte +-2 Bilder nach Stau-Korrektur, Flaeche Faktor 5/15-30, duenner statt dunkler, Letterbox, Determinismus pixelgleich), 6 Punkt 2a (Laeufe B/D Leon+Elza, Sichtbarkeitsartefakt des Debug-Sprungs erklaert, echter Weg E2 mit sichtbarem Spritzer), 7 Vertrag (Pfade ok, main.c-Abweichung, ACTOR_MAX-Querschnitt, Riegel je Punkt), 8 Punkt 2b (Clip-5-Zensus, eigene Sonde gegen libre15_engine.a, Szenensperre WATER, Lauf F: NPC-Laufszene ohne Schritt), 9 Integrationsriegel 1+3+3 gruen, 10 Urteile (P1 teilweise, P2 teilweise: 2a erfuellt / 2b nicht), 11 Gates (RE-Gate haelt, Vertrag mit Abweichung, bestanden NEIN), 12 Maengel M1-M7. Messartefakte im Scratchpad C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn0/ (lauf.sh, zaehl.py, kontakt_*.png, landung_*.png, wd_*/ Logs+Framedumps, sonde_npc2000.c, ctest_*.log)."
+  },
+  "B": {
+   "bestanden": false,
+   "suite": "Gebauter Stand: touch + local_build.sh build (784 Schritte, EXIT 0, 3 Warnungen = main.c 8803/10132/10512 Altbestand 2026-06/08, keine in Spur-B-Dateien). ctest -R \"^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|sca_wall_hit|re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_.*|re2_hit_repeat_crow_spider|re2_crow_.*|crow_ai|crow_fixes|crow_death_corpse|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|r35_fenster_kraehe|r37_re2zombie_.*|r34_re2fx.*|montage_fx|r35_cut1150_montage.*|r38_montage.*|r38_wasser.*|r38_wasserzombie|r39_heliport1171_kraehen|r30_granate|r35_granate|r36_granate)$|^probe_(re2z_stomp|crow_kill)$\" -> 100% tests passed, 0 tests failed out of 87 (45,8 s). ctest -R \"^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate)$\" --timeout 900 -> 100% tests passed, 0 tests failed out of 4 (r35_granate 166 s, r36_schuss 148 s, r38_wasser 183 s, r41_re2gator 22 s). Keine volle Suite.",
+   "urteile": [
+    {
+     "punkt": "1 Finisher + fehlende Animationen aus RE2 extrahieren",
+     "urteil": "teilweise",
+     "beleg": "Lauf A (exe, Tuernische, GB_TEST=1, state.log Slot 20 t=23): Clip-Folge 0(F1-6)/1(F7-79)/4(F80-122)/0(F123-156)/1/4/5(F212-331)/11(F332-451), bitgleich mit Bau-Lauf A2. Finisher = RE2-FRESSEN (Clip 4 @0x801010ec, Clip 5 @0x80101180, Clip 11 @0x801011d8-e0, selbst disassembliert) - bestand schon vor der Runde. Clip-Zensus EM23: Port spielt jetzt zusaetzlich 1/2/3/6/9; Clip 8 (R3 @0x80102ac8) ungenutzt (B2-gedeckt). ABER: Clips 2/3/6 sind im Spiel aus der Tuernische unerreichbar (s. Punkt 2); von den 'fehlenden Animationen' zeigt der normale Ablauf nur Clip 1, Clip 9 nur ueber den Kanister-Testhaken."
+    },
+    {
+     "punkt": "2 Verfolgung wie RE2 (Animation, Schreie, an gleichen Stellen beschleunigt), Waende wackeln + Putz, Klettern bleibt",
+     "urteil": "teilweise",
+     "beleg": "Erfuellt: Paddeln Clip 1 mit authored Vortrieb (Probe gegen libre15_engine.a: Clip 1 26 Bilder, Mittel 235,0 roh = 156,7 x2/3; Lauf A gemessen 157,7/Bild, max 258 = Bild 3 x2/3); SE 4 Bank 17 am Angriff (debug.log Z.467/610; @0x80100d64/84), Frame-Flag-SE 2; Schuetteln gemessen per Framedump (Lauf A Bilder 33..90 Versatz (0,1)/(1,1) mit Periode 16 exakt an den Plaetzen 0/3/4/6/10/11/14 der Modus-1-Tabelle @0x8009daf4, Modus 2 (0,2) in 176/178; Lauf K 72-78 Modus 2 nach R1); Klettern: Lauf C (GB_TEST=2) 'CROSS start=(4450,-11900) ende=(3350,-20700) frames=240', danach normale Verfolgung. NICHT erfuellt: RE2-Zonen-Dash (Clip 2->3, SE 4) und Intro (Clip 6->3) zuenden im Spiel nicht - Laeufe A und D1: grep '^RE2 ' gator_boss.log = 0, obwohl der Gator die Zonenlinie z=-18100 bei (-7289,-18278) in Leons Zone kreuzte (Zonen 1->2->0). Nachgerechnet: gb_bahn_frei verlangt Ende-x >= -7300; Clip-2-Netto (2356,-20) x2/3 -> Ende x=-7309 (scheitert um 9), Clip-3-Netto (1922,-2697) (RE2-Korridor-Ecke) -> Ende x~-9986 in der Westwand; Intro vom Lauerplatz ebenso (Ende x~-7830). Putz haengt am Dash-Start -> im Spiel nie; nur Riegel unit_r41_re2gator_dash/putz. Lauf D2 (Verfolgung nach Norden) nicht pruefbar: Spinnen toeten Leon vor dem 900-Bilder-Aggro (EXIT=124)."
+    },
+    {
+     "punkt": "3 Kanister aufnehmen wie RE2, beim Tragen beschiessbar, Sterbeanimation mit geplatztem Kiefer wie RE2 (Mechanik mit Testhaken)",
+     "urteil": "erfuellt",
+     "beleg": "Lauf K (exe, GB_TEST=5, RE15_GATOR_KANISTER=4430,-26160, Pistole, Skript W2.0+(M0.3,MA0.1)x10, FORCE_CUT=1), bitgleich mit Bau-Lauf B2/B3: F7 'Stufe 1 laengs=5868 quer=17' (Fenster addiu -8601/sltiu 0x18f @0x80100ae4-ec), F20 'angehaengt lokal=(4211,1178,5)', F47 'getragen (Stufe 7)', F70 Treffer HP 25300->25293 -> 'R1 start', [re2se] se=4 bank=17, Kanister Stufe 13, Clip 9 af 1..36, Yaw 1164->1249, Pos (4997,-20318)->(3413,-25001), 'R1 ende (Leiche)' af=36 gehalten; Bild k_076 (Cut 1): dunkelrote Scherbenwolke + Spritzring am Kopf, k_160 Leiche. Selbst disassembliert: FUN_80104318 @0x80104318-58 (17 Instr.: ori 0x4a, sh 0x8000 +0xA0, -10 +0x9A, 0x202038 +0x70, yaw+0x800 +0x98), Ruf @0x80102354-58 a1=s3+1204, s3=lw 408(s1) @0x80102174, Se_on 0x020f0001 @0x8010237c-88, +0x16B=9 @0x80102390-94, yaw+160 @0x8010239c-a4, HURT-Selektor +0x226==7 @0x80101ef4-fc. Riegel unit_r41_re2gator_kanister/kiefer gruen. Einschraenkung: Raum-Satz 15 nur im Riegel messbar; R1 auch aus LURK/CHASE (PORT-WAHL, kommentiert)."
+    }
+   ],
+   "maengel": [
+    "M1 (Punkt 2c, wesentlich): RE2-Dash (Clip 2->3, SE 4) und RE2-Intro (Clip 6->3) zuenden im normalen Spielablauf nicht. Nachpruefung: Laeufe A/D1 (GB_TEST=1, Leon Tuernische bzw. (-7300,-26000)) -> grep '^RE2 ' gator_boss.log = 0 Zeilen, obwohl der Gator die Zonenlinie z=-18100 bei (-7289,-18278) in Leons Zone kreuzt. Rechnung: gb_bahn_frei verlangt Ende-x >= -8900+1600 = -7300; Clip-2-Ende -7309, Clip-3-Ende ~-9986 (Seitversatz -2697 aus der RE2-Korridor-Ecke, Probe probe_clips.c gegen libre15_engine.a). Behebung mit Beleg (Bahn/Route/Dash-Geometrie), nicht nach Gefuehl.",
+    "M2 (Punkt 2e): Putz im Spiel nicht belegt - haengt am Dash-Start (M1); zudem keine exe-Messzeile fuer re15_gr2_putz_spawns (nur Riegel unit_r41_re2gator_putz). Nach M1: Framedump um 'RE2 DASH start' + Zaehlerzeile.",
+    "M3 (VERTRAG §1.3): Spur B aenderte nicht zugeteilte gemeinsame Dateien: platform/pc/main.c (3 Haken; Datei D/F/G), enemy_ai_re2_zombie.c (4-Zeilen-Haken in re15_re2z_gore_active; Datei I/G), re2_fx.c (+40 Zeilen Op 11/73; nicht gelistet). Klein und markiert ('Runde 41 Spur B'); bei der Integration Konflikte mit D/I/G pruefen (Orchestrator-Entscheid).",
+    "M4 (Dossier §4.3): falsche Erklaerung 'Leon und Gator blieben in derselben Beckenzone, die Zonenlinie wurde nicht ueberschritten' - state.log Lauf A widerlegt das (Gator Zonen 1->2->0, Leon Zone 0). Dossier korrigieren.",
+    "M5 (klein, Test): tests/integration/test_r41_re2gator.cmake loescht beim Start ALLE re15_pc_r41b_*.exe im Bauordner (file(GLOB)+REMOVE) - zwei gleichzeitige Instanzen des Riegels auf einem Bauordner toeten sich gegenseitig; nur die eigene Kopie am Ende entfernen.",
+    "M6 (Beleg-Luecke, klein): Raum-Brueller Satz 15 (GATOR40A0.VBS) ist in der exe nicht messbar (kein Logpfad im Raumbank-Haken), nur unit_r41_re2gator_kanister pinnt ihn - eine '[gator-re2] Raum-SE 15'-Zeile schliesst das."
+   ],
+   "bericht": "Bericht: C:/workspace/git/reAi_v2/.claude/worktrees/r41_re2gator/analysis/befunde_runde41/B_abnahme_0.md, committed als 18c0894b \"doc(r41-re2gator): Abnahme 0\" (Zweig r41/re2gator, HEAD vorher c2404c61; nur diese Datei, Baum sonst sauber). Kein Code geaendert. Messdaten (Laeufe A/K/C/D1/D2, Framedumps, PNGs, Helfer lauf.sh/statelog.py/schuettel.py/ppm2png.py/probe_clips.c) im Scratchpad C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn0/. RE-Gate: Diff ohne Guess-Tells (deferred/tunable/interim/for now/faithful/plausibel/TODO = 0), Env-Schalter nur RE15_GB_STUMM (Log) und der geforderte Testhaken RE15_GATOR_KANISTER; 13 Adressen selbst disassembliert (re2_disasm.py, EM23_OVL_0000.BIN + RE2 PSX.EXE) - alle stimmen: FUN_80104318, R1 P0 @0x80102340-ac, lw s3,408 @0x80102174, Hysterese sltiu 0x65/0x5a @0x80100b88/ba4/be4/ca4, EXE-Distanz @0x800265a4-e0 (+0x8008d2f4 = SquareRoot0 via LZCS/LZCR), INIT 25300 @0x80100518-580 ([0x801045bc/be]=300; bei Bit 0x40 von 0x800cfb74 waeren es [0x801045ec/ee]=240 - Dossier-Annahme 'Bit 0x40 aus' unbelegt, ohne Folgen fuer den Sockel 25000), LUNGE @0x80100d30-e50, HURT-Selektor @0x80101eac-fe8, Root-Frame-Wort @0x801003f0-434, Ereignis-Maschine @0x80101d44-e98, FRESSEN-Clips 4/5/11, Sperren 70 @0x801016b0 / 110 @0x8010091c, EXE-Schuetteln FUN_8002aa28/aa6c + Tabellen @0x8009daf4/db14 byteidentisch; ROOM40A0.RDT-Bytes (sub14 @main+0x086E, sub13 For6/Gosub14, em_set @0x25A0, Obj_model_set, Pos_set/Dir_set 0x690/0/0xfc00) selbst gelesen. Vertrag: keine Bank-9-Bits/Msg-Ids, keine verbotenen Pfade, Tests parallel-/Linux-fest; Abweichung M3. Nebenbefunde: Lauf A bitgleich mit Bau-Lauf A2 (deterministisch); GBP_DIE (Clip 7 = RE2-R2-Clip) bleibt ueber Explosionsschaden (26 Granaten) erreichbar - Nicht-RE2-Tod, von B2 nicht ausdruecklich behandelt; re15_bg_blit(-dx,-dy) laesst Randpixel wie DR_MOVE stehen (ok). Gesamt: Punkt 3 erfuellt, Punkte 1/2 teilweise -> bestanden=false; nach Behebung von M1/M4 erneute exe-Messung des Dash/Putz Pflicht."
+  }
+ },
+ "stand": {
+  "A": "Baum r41_wasser20b0, Zweig r41/wasser20b0: deine Vorgaengerin (Nachbesserung 1, zweite Fortsetzung) wurde vom Sitzungslimit 2026-10-24 ~01:00 beendet, KURZ VOR DEM ABSCHLUSS. Commits seit 5babfaea: e6e6869b (Riegel landung_elza: Vorspann fester Bildzahl; Dossier N1.8/N1.9 - das rote landung_lauf war ein Riegel-Defekt), 3dbc1eb0 + 25b324eb (eigener Befund: NPC-Schritt FUN_80045630 in ALLEN NPC-Subs inkl. Sub 9 / Kante 0x12/0x16 / Schub 0x13, Reihenfolge Phase 2, gezeichneter Zustand; Riegel unit_r41_wasser20b0_npc_subs 9/9, Gegenprobe 6/9 rot; Dossier N1.10), f5cb9e0f (NPC-Stempel +0x88 als Pro-Bild-Wert @0x8001a59c, Riegel stempel Takt A/B), d77bf72a (Belege A_belege/nb1c inkl. gegenproben.txt). Unit-Gruppe am Stand f5cb9e0f GRUEN: '100% tests passed, 0 tests failed out of 128' (C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/A_nb1c/unit3.log, Regex C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/A_nb1c/unit_regex.txt). Der Abschlusstext des Dossiers liegt FERTIG, aber NICHT eingefuegt im Scratch: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/A_nb1c/dossier_schluss.md (N1.10b Stempel +0x88, N1.11 Messung nachher je Mangel am Stand f5cb9e0f, N1.12 Tests, N1.13 OFFEN, N1.14 Fuer den Nutzer) - lesen, gegen den Baum pruefen, ins Dossier nach N1.10 uebernehmen. Die Integrationsgruppe (Regex C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/A_nb1c/integ_regex2.txt, 17 Tests) wurde nach 1/17 abgebrochen (C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/A_nb1c/integ_kette3.log: nur integration_r34_plattform_esp_eintritt Passed) -> VOLLSTAENDIG fahren (seriell oder -j 2, --timeout 1800, weil dachkiste/itemband >800 s brauchen; rote Fenster-Haken einzeln nachfahren), Summenzeilen woertlich in N1.12. OFFEN in dieser Reihenfolge: (1) local_build.sh build (exe muss Stand d77bf72a sein); (2) Integrationsgruppe; (3) Dossier abschliessen; (4) Abschluss-Commit fix(r41-wasser20b0): Nachbesserung 1 per git commit -F. Querbezug Spur C (gemessen): deren 2030->20B0-Kette haengt OHNE deinen AUTO-AOT-Haken in aot_common.c - der Haken bleibt noetig. Wiederhole KEINE vorliegende Messung.",
+  "B": "Baum r41_re2gator, Zweig r41/re2gator: deine Vorgaengerin (Nachbesserung 1, zweite Fortsetzung) wurde vom Sitzungslimit 2026-10-24 ~01:00 beendet. Commits seit 8b8c9b5b: 78b863d6 (Stand 591041e9 gebaut + gezielt getestet: Unit-Gruppe 88/88, integration_r41_re2gator 1/1, Dossier 8.7 Messungen nachher M1/M2 mit gator_boss.log-Zeilen), dba43790 (Nachtrag 4: RE2-Kameraskript ROOM40A0 belegt, Dossier 9.1/9.2 - 9 jal 0x8002c7ac im EM23-Overlay, SCD sub02 Cut 10/11, Blickbeziehungen per tools/r41_re2gator/probe_kamera_re2.c), a6653809 (Kamera-Programme INTRO/R1/FINISHER in gator_re2_r41.c, API re15_gr2_kamera_wahl/_schnitt/_frei/_auto/_gesperrt + Messhaken re15_gr2_kamera_folge, 1 Haken FRESSEN P0 in enemy_ai_boss_gator.c, NEU unit_r41_re2gator_kamera) - a6653809 ist UNGEPRUEFT (weder gebaut noch getestet). Zuletzt las sie in RE2 FUN_8001cbe8 / FUN_8001bf10 (Aufrufer mit DAT_8009db44) und Sce_espr_on gegen re2_fx.c - Zweck nicht notiert; selbst beurteilen, ob das fuer M2 (Putz) oder 9 noetig ist. OFFEN: (1) local_build.sh configure + build, pruefen, dass a6653809 kompiliert; (2) gezielte Tests (Regex aus 8.7 + unit_r41_re2gator_kamera + integration_r41_re2gator); (3) die Schnittfolge im ECHTEN Ablauf an der exe messen (Leon in der Tuernische, GB_TEST=1: Durchbruch -> Seite -> Angriff -> Zonenkamera frei; Schuss/Explosion R1 mit Rueckkehr; Finisher) - Log der Schnitte + Framedump je Schnitt, Bildbogen neben die RE2-Hintergruende info/re2leon/COMMON/BSS/ROOM40A/*.bmp als Beleg der Blickbeziehung; (4) Dossier 9.3ff (Umsetzung, Messung nachher, PORT-WAHL der Zuordnung, Hinweis: Kanister-Wurf-Kamera nach Nachtrag 5 = Spur G, nutzt deine API) + Abschnitt 8 abschliessen; (5) Abschluss-Commit fix(r41-re2gator): Nachbesserung 1 per git commit -F. Wiederhole KEINE vorliegende RE-Messung.",
+  "C": "Baum r41_ventilkette, Zweig r41/ventilkette: dein Vorgaenger (dritte Fortsetzung) wurde vom Sitzungslimit 2026-10-24 ~01:00 beendet. Commits seit 2088dd38: a7b6d4a6 (Dossier: Summenzeilen der Gruppen woertlich, Unit 37/37, Integration 16/16), 9bc6585d + e1cb3352 + b486f182 (Luecken am Spiel gemessen: Punkt 5 ganz - Pult 80 V -> Bit 106 -> Hebel = Original sub04 -> Wasser steigt, Hebel vorher gesperrt; Punkt 2 Pult ohne Ventil 13; Punkt 4 Leitern 20B0<->2050; Punkt 6 2030 mit Bit 107; NEU integration_r41_ventilkette_b), ddb65cfc (Ertrink-Spritzer ohne erfundene Rate: EIN Wasser-Schritt-Effekt 0x06050D00 @0x800456b8, wenn die steigende Flaeche die Fuesse erreicht), 271b05ea (integration_r41_ventilkette C prueft den Spritzer; ctest -R \"^integration_r41_ventilkette(_b)?$\" -> '100% tests passed, 0 tests failed out of 2', 545.09 s, exe 00:41). NICHT committet und vom Orchestrator ZURUECKGENOMMEN: ein TEMPORAERER Nachbau des AUTO-AOT-Hakens der Spur A in aot_common.c (Kommentar 'TEMP Spur-A-Haken, NICHT committen'; Patch gesichert: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/r41c2/temp_haken_spur_a_aot_common.patch). ACHTUNG: die exe im Baum (re15_pc.exe 00:56) wurde MIT diesem Haken gebaut -> vor jeder weiteren Messung local_build.sh build. Mit dem Haken lief die Kette 2030 Ventile -> Ost-Tuer -> ROOM20B0 bis F700 in 20B0 durch (Lauf C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/r41c2/mess/kette_mit_a: debug.log, state.txt, Framedumps f000000..f000680 alle 20 Bilder; Skript C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/r41c2/mess_kette_a.sh) - AUSWERTEN (Szene sub02 -> Zone Slot 7 -> sub05 -> Set(3,235) -> Spieler frei?) und im Dossier 6 als Querbezug A dokumentieren: ohne den Haken der Spur A haengt die 20B0-Szene, mit ihm laeuft sie (der echte Haken kommt mit Spur A bei der Integration; NICHT in deinen Baum uebernehmen). OFFEN: (1) neu bauen; (2) die gezielte Unit-Gruppe am Stand 271b05ea (Regex aus Dossier 5) - Summenzeile woertlich; (3) Dossier 0 Protokoll + 4/5/6/7 abschliessen; (4) Abschluss-Commit feat(r41-ventilkette) per git commit -F. Wiederhole KEINE vorliegende Messung.",
+  "E": "Abnahme-Fortsetzung (zweite): dein Vorgaenger-Pruefer wurde vom Sitzungslimit 2026-10-24 ~01:00 beendet. Teilbericht committet: analysis/befunde_runde41/E_abnahme_0.md (0ce76f13, 260 Zeilen) mit 1 Tests (6/6, 66/66, 157/157), 2 RE-Gate, 3 Punkt 1 Kurbel (3.4 teilweise; 3.5 Port mit Messer/SIG/Magnum/Schrotflinte: kein Fliegen; 3.6 Original-Gegenprobe Stand), 4 Punkt 2 Karte B1 = ERFUELLT, 5 Punkt 3 Werkstatt-Tuer 11B1 = ERFUELLT; 3.7, 6 Gates, 7 Maengel, 8 Urteil FEHLEN. Die Original-Gegenprobe ist nach dem Stand in 3.6 doch GELUNGEN (Laeufe v5..v10, w1, w1b): Videos C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn0_orig/orig_kurbel_w1.mp4 und C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn0_orig/orig_kurbel_w1b.mp4 (640x480, w1b 28.4 s / 1225 Bilder), Savestates C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn0_orig/*_slot1.sav, Treiber C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn0_orig_kurbel.py - AUSWERTEN statt neu aufnehmen: Frames per ffmpeg, Bild fuer Bild gegen die Port-Framedumps der Laeufe C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/runs_abn0/K_w{1,4,7,8} (gleicher Startpunkt 2600,-2800, Gier 1024, Band 1), besonders die ersten ~25 Bilder nach Cut_chg 3 / Pos_set @0x0A8C. Zeigt das Original ein 'Herumfliegen'? Welche Waffe war im Original-Lauf ausgeruestet (RAM aus dem Savestate)? Die Integrationsgruppe (-j 2, 33 Tests) brach nach 15/33 ab, alle 15 gruen (C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn0_ctest_integ.log) - die 15 NICHT wiederholen, die restlichen 18 fahren (Namen ueber ctest -N mit derselben Auswahl wie in 1 rekonstruieren). DuckStation: der Orchestrator hat in %LOCALAPPDATA%/DuckStation/settings.ini ConfirmPowerOff wieder auf false gesetzt (Sicherung settings.ini.vor_confirmpoweroff_2026-10-24); Backend FFmpeg / Container mp4; Hotkeys stehen wie vor deinem Vorgaenger (ToggleMediaCapture = Keyboard/F12, SaveSelectedSaveState = SDL-0/LeftShoulder) - falls doch eine Aufnahme noetig ist, danach genau so zuruecksetzen. Dann 3.7 + 6-8 abschliessen, Datei committen (doc(r41-kleinkram_b): Abnahme 0). Kein Code aendern."
+ }
+}
