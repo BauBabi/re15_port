@@ -759,6 +759,10 @@ prueft NPC-Schritte oder hat mehr als 31 Aktoren.
    12xx/3071/3091/50xx); fuer saubere Spuren braeuchte re15_wasser_r38_anker eine Keyframe-Variante (Mess-Artefakt, kein Verhalten).
 
 ### N1.14 Fuer den Nutzer (Stand Nachbesserung 1)
+**RICHTIGSTELLUNG (Nachbesserung 2, Abnahme-1-Mangel M5):** die folgende Aussage "alle NPCs ... machen beim Gehen, Laufen ...
+Schrittgeraeusche" galt am Stand 7db5a6b2 NICHT: die Abnahme mass an der exe 61 von 64 NPC-Schritten in ROOM2000, 8/8 in ROOM11C0 und
+23/23 in ROOM2001 STUMM (`[foot] SE unterdrueckt: type=21 -> vag=-1`) - der Index Boden - 8 traf leere EDT-Zeilen. Der Riegel pruefte
+nur den Index. Behoben und gemessen in Nachbesserung 2 (N2.1, N2.4); die gueltige Aussage steht in N2.9.
 - Keine neuen Assets, keine Sprachdateien, kein Patch an shared_assets/PSX (Effekte 0x0f/6 aus den Raum-ESP-Banken der
   Original-RDTs, Toene aus den Raum-Baenken).
 - Hoer-/sichtbar: alle NPCs (Ada 0x40, Marvin 0x42, Irons 0x45, Elliot/Roy 0x47, John 0x49, 0x4d) machen beim Gehen, Laufen,
@@ -869,3 +873,35 @@ Verhaeltnisse 690 gleich, Rest +-1..7) = bis eine Pan-Stufe (i = rel >> 3). Auss
   Integration zusammenfuehren, Entscheid A-E4): Lage abholen (oben in re15_audio_footstep), `vol_r = ..._lage_pegel(&vol, ...)`,
   `s_active[slot].vol_r_q15 = vol_r` (0 = wie bisher mono).
 - `tests/integration/test_r35_granate.cmake` (M3): Alligator-Platz = RE15_ACTOR_MAX - 1, gelesen aus include/re15_actor.h.
+
+### N2.5 M4 — Riegel (messen jetzt das Abspielen)
+- `unit_r41_wasser20b0_ton` (neu): alle 52 NPC-Raeume (Liste = Zensus der Abnahme), je erreichbarer FLR-Bodentyp eine Stelle dieses
+  Typs, Zweig ohne/mit Stempel, a0 0/1, Fuss 7/4 -> `re15_wassersprung_r41_npc_schritt` (536 Faelle). Erwartung je Fall UNABHAENGIG aus
+  den EDT-Bytes + re15_footstep_vag (dieselbe Aufloesung wie audio_pc.c); Pruefung: Zeile + Quelle gleich, jeder nicht stumme Schritt hat
+  einen VAG (= der Mischer bekommt einen Ton), Zaehlung 35 / 387 / 114 (stumm ohne Stempel nur ROOM6030/6031 Boden 0x17 = 8),
+  unerreichbar nur ROOM10D0 0x1d (FLR-Satz hinter dem Ende x == 0).
+- `unit_r41_wasser20b0_lage` (neu): PAN/ATT (256 B) der Nachbildung = PSX.EXE @0x80074728, CORDIC-Winkel @0x80078c90 = Datei; drei
+  Lagen von Hand aus dem Disasm (geradeaus 10000: 103/103; seitlich +x: 83/101 = PAN[37] 119 - 36 / 0x89 - 36; geradeaus 25000:
+  74/74), Abstand mit SquareRoot0 (SR0(1e8) = 9980 -> 42 statt exakt 43); Pegel nach SsUtKeyOnV/SpuVmKeyOnNow (83/101 -> L/R
+  5376/6514, gespiegelt 6514/5376, 103/103 -> 6643/6643, 74/74 -> 4773/4773); ROOM2000-Schritt traegt die Lage, danach keine haengende.
+- `unit_r41_wasser20b0_npc` / `_npc_wasser` / `_npc_subs`: Ton-Pruefungen auf Original-Zeile + GESPIELTE Zeile + Quelle + VAG >= 0
+  umgestellt (vorher nur "Index 15", der in ROOM2000 leer ist). npc_wasser jetzt auch Typ 0x47 beider Archive (Elliot CDEMD0 Marken,
+  Roy CDEMD1 PORT-WAHL; Roy >= 2 Schritte im Fleck, weil sein PORT-WAHL-Clip nur 2 Aufsetzer je Umlauf hat). npc_subs zusaetzlich
+  Lauf-Pins der Rueckwaerts-Subs 7/8 (90 Takte rueckwaerts durch den Wasserfleck: Schritt NACH dem Vorschub, Clip 1, Bilder 7/22,
+  Zweig boden, Ton gespielt).
+- `integration_r41_wasser20b0_npc`: Ton AN (RE15_AUDIO_CAP_SYNC, kein SDL-Geraet) + RE15_FOOT_DEBUG. Neue Pruefung je Lauf:
+  Zahl der `[foot] NPC-Lage`-Zeilen (nur nach der VAG-Pruefung von re15_audio_footstep) == Zahl der NPC-Schritte, 0 stumm, >= 1 Schritt
+  mit L != R; npc2000 bis Bild 2100 (Gehen, Kanal, Laufen) mit "naechster Schritt lauter als fernster"; neu elza2001 (Elza, John 0x49,
+  Flag 3:65, durch den Kanal) und npc11c0 (Leon, Marvin 0x42, Boden 0x1d).
+
+### N2.6 M3 — Regression integration_r35_granate
+**Ursache (Abnahme 1, 5.):** main.c setzt den Alligator (0x23) auf den hoechsten freien Platz ab RE15_ACTOR_MAX-1 (Rueckwaertssuche,
+main.c `for (int _pi = RE15_ACTOR_MAX - 1; _pi >= 1; _pi--)`); seit RE15_ACTOR_MAX 36 (Entscheid E2) ist das Slot 35, der Riegel
+erwartete fest 20 (test_r35_granate.cmake `r35_boss(gator 2090 20 23 60 1000)`). Das Spiel ist richtig (Abnahme: FORCE_EXPLOSION auf
+Slot 35 -> hp 3000 -> 2000).
+**Aenderung:** der Lauf "gator" liest RE15_ACTOR_MAX aus include/re15_actor.h (`file(STRINGS ... REGEX "^#define RE15_ACTOR_MAX")`)
+und setzt Slot = RE15_ACTOR_MAX - 1 (Kopf des Riegels ergaenzt). Weitere feste "letzter Platz = 20"-Annahmen: grep `\[20 t=` /
+`FORCE_EXPLOSION=...:20` / `t=23` in tests: keine weiteren (test_r38_itemorte "Slot 20" = Nachrichten-/Item-Platz, kein Aktor).
+**An den Orchestrator (Spuren B/F/G, kein SendMessage aus der Spur):** der Alligator liegt seit Runde 41 Spur A auf Slot 35
+(RE15_ACTOR_MAX 36). Riegel/Haken, die den Alligator-Platz fest annehmen (z.B. RE15_FORCE_EXPLOSION=..:20, `[20 t=23`), muessen an
+RE15_ACTOR_MAX-1 gekoppelt werden; Aktor-Masken mit 32 Bit (1u << slot) reichen fuer Slot 35 nicht (s. N1.10c, Hundemaske M7).
