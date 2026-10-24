@@ -257,10 +257,14 @@ Stichproben der in Nachbesserung 4 NEU zitierten Stellen (alle selbst gelesen, r
   46 + Zaehler, Dokument-Zone Slot 20 (Item 0x4E, Bit 107, obj 6), Leser angefordert, Aushang Band 2, Plakat offen/zu).
 * Integration r41 (`<a4>/integ.sh`, `-j 2`, alle RUN_SERIAL, Protokoll `<a4>/ctest_integ_r41.txt`, unter Last fremder Abnahmen und meiner
   Messlaeufe): `integration_r41_ventilkette_weg_elza Passed 1203.69 sec`, `integration_r41_ventilkette_weg Passed 1032.25 sec`,
-  `integration_r41_ventilkette_sperre Passed 688.48 sec`, (Rest folgt). Laufordner selbst gelesen, z. B. `_weg` lauf_e25cc082_v2b:
+  `integration_r41_ventilkette_sperre Passed 688.48 sec`, `integration_r41_ventilkette_b Passed 721.66 sec`, `integration_r41_ventilkette
+  Passed 520.42 sec` -> **`100% tests passed, 0 tests failed out of 5`** (Total Test time (real) = 4166.59 sec). Haupt-Riegel lauf_883883f4:
+  a `RICHTIG` -> `loaded room20b0.rdt` -> `Bits 103 + 100`; b `room=2000 id=40`; c `SPRITZER: Wasser y -5400` -> `ERTRUNKEN: Wasser y -6300,
+  Spieler y -5400`; d `id=49 "I should look around here first."`. Laufordner selbst gelesen, z. B. `_weg` lauf_e25cc082_v2b:
   `Folge 09 07 02 01 -> RICHTIG` -> `DOOR FIRE slot=0 ... target_cut=11` -> `loaded room20b0.rdt` -> `Bits 103 + 100`; w3: `Wasser knapp
   unter der Absperrung y -5350`, `[prop-render] pi=4 oid=0x04 pos=(0,-5350,0)`.
-* (folgt: Haupt, `_b`, Raum-/Dokument-Gruppe, `_kette` von Hand)
+* `_kette` von Hand (C-E1, im Spurbaum nicht registriert): rc=0 bis zur 20B0-Ankunft (§1 KE).
+* Raum-/Dokument-Gruppe (17 Riegel, Regex `<a4>/regex_integ_raum.txt`, `-j 2`): (laeuft, Protokoll `<a4>/ctest_integ_raum.txt`)
 
 
 ## 4. Urteil je Nutzer-Punkt (gegen den Wortlaut, AUFTRAG.md; gebauter Stand exe 16:59 = Code HEAD b08bb0c4)
