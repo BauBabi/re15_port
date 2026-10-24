@@ -90,6 +90,7 @@ function(npc_ton_pruefen _name _dir _typ _min)
         message(FATAL_ERROR "r41_wasser20b0_npc[${_name}]: kein NPC-Schritt mit L != R - Lage (FUN_80045a64 / Tastenpan) nicht angewandt")
     endif()
     set(${_name}_WASSER ${_n_wasser} PARENT_SCOPE)
+    file(REMOVE "${_dir}/cap.raw")   # Mitschnitt nur fuer den Mischer-Lauf noetig (~12 MB je Lauf), Auswertung ueber die Logs
 endfunction()
 
 # ---- (a) NPC-Schritte ROOM2000 (Leon): Marvin Slot 1 (0x42) + Ada Slot 2 (0x40), Ton + Lage (A-E4) ---------------------------
