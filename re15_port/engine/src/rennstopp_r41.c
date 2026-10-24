@@ -30,6 +30,7 @@ static int32_t s_wurzel[3];                        /* Wurzel-Kopie +0x38/+0x3a/+
 static int     s_pose_ok;
 static int     s_stand_neu;  /* Stopp endete im letzten Bild (Kommandowort 0x0001 @0x80032958): Stehen-Fall 0 steht an */
 static int     s_pruef_aus;  /* NUR Sonden-Gegenprobe (re15_rennstopp_r41_pruef_aus), kein Spielweg */
+static int     s_pruef_nb4;  /* NUR Riegel-Gegenprobe (re15_rennstopp_r41_pruef_uebernahme_aus): Uebernahme wie vor NB4 */
 
 /* ---------------------------------------------------------------------------------------------- Fusskette */
 typedef struct { int32_t m[9]; int32_t t[3]; } rs_mat_t;
@@ -196,7 +197,7 @@ static int schritt(re15_actor_t *p, uint16_t pad_bits, int lauf_motion, int steh
     }
     /* Skript/Treffer hat uebernommen. NB4: auch wenn ein anderer Zustand +6 neu geschrieben hat (Plc_ret @0x80041f98,
      * Plc_motion @0x80041bb4, Raumeintritt, Treffer, Flinch-Ende) — der Stopp lebt im Original nur in +5 = 2 / +6 = 3. */
-    if (s_aktiv && (p->motion != s_steh || p->state != 1 || p->sub_state_2 != RS_FALL3)) s_aktiv = 0;
+    if (s_aktiv && (p->motion != s_steh || p->state != 1 || (p->sub_state_2 != RS_FALL3 && !s_pruef_nb4))) s_aktiv = 0;
     if (!s_aktiv) {
         if (p->motion != lauf_motion || p->state != 1) return 0;          /* nur aus dem Rennen (+6 < 2) */
         const int oben_rennen = (pad_bits & RE15_PAD_BIT_UP) && (pad_bits & RE15_PAD_BIT_CROSS);   /* & 0x201 == 0x201 */
@@ -257,8 +258,8 @@ int re15_rennstopp_r41_unterzustand2(const re15_actor_t *p, int lauf_motion)
 
 /* NB4 (Abnahme 3 Mangel 1, Entscheid E-E4): UEBERNAHME. Der Stopp lebt im Original ausschliesslich in den Spieler-Bytes
  * +5 = 2 / +6 = 3 unter Kommando 1 (DECIDE 0x80032604 @0x8003272c, ANIMATE 0x80032778 @0x800328fc). Jeder andere Zustand
- * schreibt sie neu, bevor er den Spieler zurueckgibt — die Treppe beim Start (sce-12/13-Handler @0x80043540/@0x80043544
- * `sb 0xb,5(a1)`, @0x80043594 `sb v0,6(v1)`) und im Abschluss LAB_80038e50 (@0x80038ea8 `sb zero,0x800aca59`, @0x80038eb0
+ * schreibt sie neu, bevor er den Spieler zurueckgibt — die Treppe beim Start (sce 12 @0x80043500: `ori 0xb` + `sb v0,5(a1)`
+ * @0x80043540/@0x80043544, +6 @0x80043594; sce 13 @0x800435cc: @0x8004360c/@0x80043610, +6 @0x80043660) und im Abschluss LAB_80038e50 (@0x80038ea8 `sb zero,0x800aca59`, @0x80038eb0
  * `sb zero,0x800aca5a`), Plc_ret (@0x80041f90-@0x80041f9c), Plc_motion (@0x80041bb0-@0x80041bc4), der Griff (STAGE1
  * FUN_80102548 @0x80102640 `sw v0,0x800aca58` = Wort Kommando 5; Freigabe z.B. @0x8011c38c `sw 1,0x800aca58`), Treffer/Tod
  * (@0x80012ef4-@0x80012efc). Der Port fuehrt diese Zustaende in eigenen
@@ -270,7 +271,7 @@ int re15_rennstopp_r41_unterzustand2(const re15_actor_t *p, int lauf_motion)
  * nach Pos_set — o_renn_losl n94..n98, Abnahme 3 §3.2). Gerufen VOR der Zweig-Kette, laeuft = rdt_ok && kein Spieler-Bit. */
 void re15_rennstopp_r41_dispatcher(re15_actor_t *p, int laeuft)
 {
-    if (!laeuft || s_pruef_aus) return;
+    if (!laeuft || s_pruef_aus || s_pruef_nb4) return;
     if (s_takt_offen) {
         s_aktiv = 0; s_stand_neu = 0;
         if (p && p->sub_state_2 == RS_FALL3) p->sub_state_2 = 0;   /* Port-Zweige schreiben +6 nicht selbst */
@@ -283,6 +284,7 @@ void re15_rennstopp_r41_dispatcher(re15_actor_t *p, int laeuft)
 void re15_rennstopp_r41_halten(void) { s_takt_offen = 0; }
 
 void    re15_rennstopp_r41_pruef_aus(int aus) { s_pruef_aus = aus ? 1 : 0; s_aktiv = 0; s_stand_neu = 0; s_takt_offen = 0; }
+void    re15_rennstopp_r41_pruef_uebernahme_aus(int aus) { s_pruef_nb4 = aus ? 1 : 0; s_takt_offen = 0; }
 int     re15_rennstopp_r41_aktiv(void) { return s_aktiv; }
 int32_t re15_rennstopp_r41_tempo(void) { return s_tempo; }
 void    re15_rennstopp_r41_zuruecksetzen(void)

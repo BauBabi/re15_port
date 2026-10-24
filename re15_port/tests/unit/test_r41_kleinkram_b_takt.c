@@ -26,6 +26,15 @@
  *               Stopp -> ein Bild GEHEN auch mit RENNEN (0x0101 @0x80032738, Rennen erst aus dem Gehen-DECIDE
  *               @0x80032444); Stopp-Bilder ohne Leerlauf-FSM, im Bild nach dem Stopp-Ende Stehen-Fall 0 (Mischung 7,
  *               @0x80032074-@0x8003209c); Gegenprobe ohne Modul (Stand vor Nachbesserung 3).
+ * Nachbesserung 4 (Abnahme 3 Mangel 1, Orchestrator-Entscheid E-E4), ueber den ECHTEN Spieler-Takt:
+ *   uebernahme  Der Stopp lebt im Original nur in +5 = 2 / +6 = 3 (@0x8003272c, @0x800328fc); jeder andere Zustand
+ *               ueberschreibt sie. T Treppe ROOM2040 (Loslassen + Quadrat an der Treppe sce 13, Abnahme 3 §6.2): nach dem
+ *               Abschluss LAB_80038e50 (@0x80038ea8/@0x80038eb0 +5/+6 = 0) keine Lageaenderung; R Plc_ret im Stopp
+ *               (@0x80041f90-@0x80041f9c): kein Stopp-Schritt mehr; F Flinch (Kommando 2, Ende @0x80035c80) im Stopp: danach
+ *               kein Rest-Stopp; P gesperrte Durchlaeufe (`bltz` @0x80031c78, Kurbel-Fragen) loeschen NICHT: der Stopp
+ *               laeuft danach mit dem naechsten Schritt weiter. Gegenprobe re15_rennstopp_r41_pruef_uebernahme_aus(1)
+ *               (Stand vor Nachbesserung 4): T und R fallen durch; F und P bestehen auch vorher (der Flinch gibt den
+ *               Spieler mit seinem Clip zurueck - schon die Bewegungs-Pruefung von NB3 bricht ab; F bleibt als Pin).
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -558,6 +567,111 @@ static void teil_rennpfad(void)
     re15_msgtakt_r41_zuruecksetzen(); re15_pauseflags_clear();
 }
 
+/* ============================================================================================ uebernahme (NB4) */
+static const uint8_t SK_PLC_RET[] = { SCD_OP_PLC_RET, SCD_OP_EVT_END, 0x00 };   /* Muster probe_r30_android_n3_plc_aim.c */
+void re15_player_stagger_cmd2(uint8_t clip);                                     /* game_step_common.c (Kommando 2) */
+void re15_re2z_player_pin(void);                                                 /* enemy_ai_common.c (Griff-Pin, Kommando 5) */
+void re15_enemy_ai_run_all(int combat_active);                                   /* loescht den Pin je Durchlauf */
+
+/* T: ROOM2040 Galerie Band 5, Blick 3072 (-z), wie Abnahme 3 `N2_treppe_im_stopp`: 12 Bilder OBEN+RENNEN (an der Kante
+ * blockiert), dann Loslassen + Quadrat -> Treppe sce 13 abwaerts; Rueckgabe: Lageaenderungen in den 8 Bildern nach dem
+ * Abschluss (mo 220 -> 200), *vor = Stopp aktiv im Aktionsbild, *f_ab = Abschlussbild (relativ). */
+static int ue_treppe(int *vor, int *f_ab, int32_t *z_ab, int32_t *z_end)
+{
+    extern void re15_player_set_equipped_weapon(int weapon_id);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_msgtakt_r41_zuruecksetzen(); re15_rennstopp_r41_zuruecksetzen();
+    *vor = 0; *f_ab = -1; *z_ab = *z_end = 0;
+    if (room_boot(0x2040, -1350, -19200, 3072, 5) != 0) return -1;
+    re15_player_set_equipped_weapon(3);
+    for (int f = 0; f < 3; f++) bild(0, 0);
+    for (int f = 0; f < 12; f++) bild(0, RE15_PAD_BIT_UP | RE15_PAD_BIT_CROSS);
+    bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+    *vor = re15_rennstopp_r41_aktiv() && pl->motion == 220;
+    for (int f = 0; f < 240; f++) {
+        const int mo = pl->motion;
+        bild(0, 0);
+        if (mo == 220 && pl->motion == 200) { *f_ab = f; break; }
+    }
+    if (*f_ab < 0) return -1;
+    const int32_t x0 = pl->x, z0 = pl->z;
+    int bewegt = 0;
+    for (int f = 0; f < 8; f++) { bild(0, 0); if (pl->x != x0 || pl->z != z0) bewegt++; }
+    *z_ab = z0; *z_end = pl->z;
+    return bewegt;
+}
+
+static void teil_uebernahme(void)
+{
+    printf("== uebernahme ==\n");
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    for (int gegen = 0; gegen < 2; gegen++) {
+        re15_rennstopp_r41_pruef_uebernahme_aus(gegen);
+        const char *w = gegen ? "Gegenprobe vor NB4" : "NB4";
+        /* T: Treppe im Stopp */
+        int t_vor = 0, t_ab = -1; int32_t t_z0 = 0, t_z1 = 0;
+        const int t_bew = ue_treppe(&t_vor, &t_ab, &t_z0, &t_z1);
+        printf("  [%s] T Treppe: Stopp im Aktionsbild %d, Abschluss nach %d Bildern z %d, 8 Bilder danach z %d, Lageaenderungen %d\n",
+               w, t_vor, t_ab, (int)t_z0, (int)t_z1, t_bew);
+        const int okT = t_vor && t_ab >= 0 && t_bew == 0;
+        /* R: Plc_ret im Stopp (ROOM2020 Tunnel, ohne Bank: Schritte 160 120 80 ...) */
+        rp_t r0 = rp_start(0), r1 = rp_bild(0);
+        g_scd.threads[2].active = 0;
+        scd_thread_start(2, SK_PLC_RET);                       /* laeuft im naechsten scd_vm_tick (Anfang von bild) */
+        rp_t r2 = rp_bild(0), r3 = rp_bild(0), r4 = rp_bild(0);
+        printf("  [%s] R Plc_ret: Stopp-Bild weg %d mo %d | nach Plc_ret weg %d %d %d, aktiv %d, state %d +6 %d\n", w,
+               rp_weg(r0, r1), r1.mo, rp_weg(r1, r2), rp_weg(r2, r3), rp_weg(r3, r4), r4.aktiv, (int)pl->state, (int)pl->sub_state_2);
+        const int okR = r1.mo == 200 && rp_weg(r0, r1) == 160 && rp_weg(r1, r2) == 0 && rp_weg(r2, r3) == 0 &&
+                        rp_weg(r3, r4) == 0 && !r4.aktiv;
+        /* F: Flinch (Kommando 2) im Stopp — der Flinch-Zweig laesst den Spieler-Takt aus */
+        rp_t f0 = rp_start(0), f1 = rp_bild(0);
+        re15_player_stagger_cmd2(0x0a);
+        int n_fl = 0;
+        for (; n_fl < 60 && pl->motion == 0x0a; n_fl++) (void)rp_bild(0);
+        rp_t fa = rp_bild(0), fb = fa;
+        int f_bew = 0;
+        for (int i = 0; i < 8; i++) { rp_t fn = rp_bild(0); if (rp_weg(fb, fn) != 0) f_bew++; fb = fn; }
+        printf("  [%s] F Flinch: Stopp-Bild weg %d | Flinch %d Bilder | danach aktiv %d, Lageaenderungen in 8 Bildern %d (x %d -> %d)\n",
+               w, rp_weg(f0, f1), n_fl, fa.aktiv, f_bew, (int)fa.x, (int)fb.x);
+        const int okF = rp_weg(f0, f1) == 160 && n_fl > 0 && n_fl < 60 && !fa.aktiv && f_bew == 0;
+        /* P: gesperrte Durchlaeufe (Spieler-Bit 0x80000000, wie die Kurbel-Fragen) — keine Uebernahme */
+        rp_t p0 = rp_start(0), p1 = rp_bild(0);
+        g_re15_pauseflags |= RE15_PAUSE_PLAYER;
+        int p_bew = 0; rp_t pp = p1;
+        for (int i = 0; i < 20; i++) { rp_t pn = rp_bild(0); if (rp_weg(pp, pn)) p_bew++; pp = pn; }
+        g_re15_pauseflags &= ~RE15_PAUSE_PLAYER;
+        rp_t p2 = rp_bild(0), p3 = rp_bild(0);
+        printf("  [%s] P gesperrt: Stopp-Bild weg %d | 20 gesperrte Bilder, Lageaenderungen %d | danach weg %d %d mo %d\n", w,
+               rp_weg(p0, p1), p_bew, rp_weg(pp, p2), rp_weg(p2, p3), p3.mo);
+        const int okP = rp_weg(p0, p1) == 160 && p_bew == 0 && rp_weg(pp, p2) == 120 && rp_weg(p2, p3) == 80 && p3.mo == 200;
+        /* G: Griff im Stopp (Kommando 5 = Griff-Zweig des Dispatchers, STAGE1 @0x80102640 Wort Kommando 5); die Freigabe gibt den
+         * Spieler wie das Release-Ende in enemy_ai_common.c mit Bewegung 200 zurueck (Original: Wort 1 @0x8011c38c). */
+        rp_t g0 = rp_start(0), g1 = rp_bild(0);
+        for (int i = 0; i < 10; i++) { re15_re2z_player_pin(); (void)rp_bild(0); }
+        re15_enemy_ai_run_all(0);                               /* keine lebenden Greifer: Pin geloescht */
+        pl->motion = 200; pl->anim_frame = 0; pl->anim_frac = 0;
+        rp_t ga = rp_bild(0), gb = ga; int g_bew = rp_weg(g1, ga) ? 1 : 0;
+        for (int i = 0; i < 8; i++) { rp_t gn = rp_bild(0); if (rp_weg(gb, gn)) g_bew++; gb = gn; }
+        printf("  [%s] G Griff: Stopp-Bild weg %d | 10 Griff-Bilder | nach der Freigabe aktiv %d, Lageaenderungen in 9 Bildern %d\n",
+               w, rp_weg(g0, g1), ga.aktiv, g_bew);
+        const int okG = rp_weg(g0, g1) == 160 && !ga.aktiv && g_bew == 0;
+        if (!gegen) {
+            PRUEF(okT, "T: Treppe im Stopp (sce 13 @0x800435cc +5 = 0xb, Abschluss LAB_80038e50 @0x80038ea8/@0x80038eb0): nach dem "
+                       "Abschluss keine Lageaenderung");
+            PRUEF(okR, "R: Plc_ret im Stopp (@0x80041f94/@0x80041f98 +5/+6 = 0): kein Stopp-Schritt mehr");
+            PRUEF(okF, "F: Flinch im Stopp (Kommando 2, Ende @0x80035c80 Wort 1): danach kein Rest-Stopp");
+            PRUEF(okP, "P: gesperrte Durchlaeufe (`bltz` @0x80031c78) loeschen den Stopp nicht: danach 120, 80 (Kurbel o_renn_losl)");
+            PRUEF(okG, "G: Griff im Stopp (Kommando 5, Freigabe Wort 1 @0x8011c38c): nach der Freigabe kein Rest-Stopp");
+        } else {
+            PRUEF(!okT && !okR && okF && okP && !okG, "Gegenprobe vor NB4: T/R/G fallen durch, F/P bestehen (%d%d%d%d%d)",
+                  okT, okR, okF, okP, okG);
+        }
+    }
+    re15_rennstopp_r41_pruef_uebernahme_aus(0);
+    re15_rennstopp_r41_zuruecksetzen();
+    re15_msgtakt_r41_zuruecksetzen(); re15_pauseflags_clear();
+}
+
 static void teil_frage(void)
 {
     printf("== frage ==\n");
@@ -584,6 +698,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "renntempo")  || !strcmp(teil, "alle")) teil_renntempo();
     if (!strcmp(teil, "frage")      || !strcmp(teil, "alle")) teil_frage();
     if (!strcmp(teil, "rennpfad")   || !strcmp(teil, "alle")) teil_rennpfad();
+    if (!strcmp(teil, "uebernahme") || !strcmp(teil, "alle")) teil_uebernahme();
     printf("%s: %d/%d bestanden\n", g_fail ? "FAIL" : "OK", g_n - g_fail, g_n);
     return g_fail ? 1 : 0;
 }

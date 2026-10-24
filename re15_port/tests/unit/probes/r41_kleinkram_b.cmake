@@ -58,7 +58,7 @@ endforeach()
 #   integration_r41_kleinkram_b_werkstatt_tuer   Elza 11B1: Trennwand blockiert, msg 12, kein Raumwechsel
 add_executable(test_r41_kleinkram_b_exe ${CMAKE_CURRENT_LIST_DIR}/../test_r41_kleinkram_b_exe.c)
 if(TARGET re15_pc)
-    foreach(_teil kurbel karte werkstatt_szene werkstatt_tuer kante geh renn spawn_kante)   # kante/geh/renn: Nachbesserung 2, spawn_kante: Nachbesserung 3
+    foreach(_teil kurbel karte werkstatt_szene werkstatt_tuer kante geh renn spawn_kante treppe losl)   # kante/geh/renn: Nachbesserung 2, spawn_kante: Nachbesserung 3, treppe/losl: Nachbesserung 4
         add_test(NAME integration_r41_kleinkram_b_${_teil}
             COMMAND ${CMAKE_COMMAND}
                 -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
@@ -86,7 +86,11 @@ target_compile_definitions(test_r41_kleinkram_b_takt PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_kleinkram_b_takt PRIVATE m)
 endif()
-foreach(_teil msgtakt kamerahalt frage rennstopp renntempo rennpfad)
+# Nachbesserung 4 (Abnahme 3 Mangel 1, Entscheid E-E4) - rennstopp_r41.c Uebernahme:
+#   unit_r41_kleinkram_b_takt_uebernahme Treppe ROOM2040 / Plc_ret / Flinch im Stopp beenden ihn (Original +5/+6 neu
+#                                        geschrieben: @0x80043544/@0x80043594, @0x80038ea8/@0x80038eb0, @0x80041f94/98,
+#                                        @0x80035c80), gesperrte Durchlaeufe (bltz @0x80031c78) nicht; Gegenprobe vor NB4
+foreach(_teil msgtakt kamerahalt frage rennstopp renntempo rennpfad uebernahme)
     add_test(NAME unit_r41_kleinkram_b_takt_${_teil} COMMAND test_r41_kleinkram_b_takt ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_kleinkram_b_takt_${_teil} PROPERTIES TIMEOUT 300)

@@ -1030,3 +1030,65 @@ E-E4 Gorilla-Sonde misst den Haenger (benannte Ausnahmen, Ursache in zombieki_r3
 - [ ] Punkt 1 / Nachtrag 14 Standbild nach Cut_chg (Sprung an die Kurbel)
 - [ ] Mangel 2 / E-E4 Gorilla-Sonde
 - [ ] Bau, gezielte Tests, Abschluss
+
+### Mangel 1 — Renn-Stopp endet bei einer Uebernahme (Treppe, Griff, Plc_ret)
+- Ursache (Abnahme 3 §6.2, bestaetigt): `s_aktiv` (rennstopp_r41.c) war ein Modul-Zustand, den nur der eigene Schritt abbrach,
+  wenn er eine fremde Bewegung SAH. Port-Zweige, die den Spieler-Takt auslassen (Treppe, Klettern, Griff, Tod, Knockdown,
+  Flinch, Schieben) und ihn mit der Steh-Bewegung 200 zurueckgeben (Treppen-Abschluss stair_common.c, Griff-Freigabe
+  enemy_ai_common.c, Plc_ret scd_vm.c), liessen den Rest-Stopp weiterlaufen.
+- Messung vorher (Abnahme 3, nicht wiederholt): `N2_treppe_im_stopp` c3ba4317 F375 Abschluss z -13782, F376..F379 -13665 -13588
+  -13551 -13554; `N2b` (2 Stopp-Bilder vor der Aktion) F376.. -13783.
+- RE-Belege (selbst disassembliert, `re15_disasm.py`):
+  - Der Stopp lebt nur in den Spieler-Bytes: DECIDE 0x80032604 @0x8003272c `sb 2,+6`, ANIMATE 0x80032778 @0x8003277c/@0x80032780
+    a1 = 0x800aca5a, Fall 2 @0x800328f8 `ori v0,zero,0x3` / @0x800328fc `sb v0,0(a1)` -> +6 = 3; Ende @0x80032958 `sw 1` (Wort
+    = +4..+7 1,0,0,0). Original-RAM `<sp>/E41a3/o_renn_losl.txt` (GDB, Abnahme 3): `cmd=1/2/3/0` (+4/+5/+6/+7) in n93..n97, n98
+    `cmd=1/0/0/0`, n99 `cmd=1/0/1/0` (Stehen Fall 0).
+  - Jeder andere Zustand schreibt die Bytes neu: Treppe = Kommando-1-Unterzustaende 11..13 (Tabelle @0x80073fb0 [11]
+    0x80038848, [12] 0x80038c58, [13] 0x80038ef4; ANIMATE @0x80073ff0 [11] 0x80038850, [12] 0x80038c60), Start im sce-Handler
+    (sce 12 @0x80043500: @0x80043540 `ori v0,zero,0xb` / @0x80043544 `sb v0,5(a1)`, +6 @0x80043594 `sb v0,6(v1)`; sce 13
+    @0x800435cc: @0x8004360c/@0x80043610, @0x80043634/@0x80043638, @0x8004364c/@0x80043650, +6 @0x80043660; Rueckgabe 1
+    @0x800435c8), Abschluss LAB_80038e50 @0x80038ea8 `sb zero,-13735(at)` = 0x800aca59 / @0x80038eb0 `sb zero,-13734(at)` =
+    0x800aca5a; Plc_ret @0x80041f90-@0x80041f9c (`sb 1,4` / `sb zero,5/6/7`); Plc_motion @0x80041bb0 `sb 4,4` / @0x80041bb4
+    `sb zero,6` / @0x80041bc4 `sb a2,5`; Griff STAGE1 FUN_80102548 @0x80102640 `sw v0,0x800aca58` (Wort Kommando 5),
+    Freigabe @0x8011c384/@0x8011c38c `sw 1,0x800aca58`; Kommando-Tabelle @0x80073f90 ([1] 0x80031de8, [2] 0x80035af0, [5]
+    0x80036834 ...). Gesperrte Durchlaeufe ueberspringen den ganzen Dispatcher (`bltz` @0x80031c78) und lassen +4..+7 stehen
+    (o_renn_losl: Stopp im Aktionsbild n7, `cmd=1/2/3/0` eingefroren bis n93, Auslauf n94..n98).
+- Umsetzung (rennstopp_r41.c/.h, Haken "Runde 41 Spur E NB4"):
+  - Marke +6 = 3 (`RS_FALL3` @0x800328fc) im re15_actor_t.sub_state_2 des Spielers ab dem ersten Stopp-Bild; Stopp-Ende und
+    Abbruch per Pad schreiben +6 = 0 (@0x80032958 bzw. Wort @0x80032760). Wer +6 neu schreibt (Port: Plc_ret scd_vm.c
+    @0x80041f98, Plc_motion @0x80041bb4, Raumeintritt room_common.c, Treffer re15_damage.c, Flinch-Ende game_step_common.c),
+    beendet den Stopp. +5 fuehrt der Port fuer den Spieler NICHT (Plc_motion schreibt dort nichts, plcloop_r41.c erwartet 0;
+    re15_damage.c nutzt +5 als Treffer-Index) — nur +6 dient als Marke; kein Skript liest +6 des Spielers (Zensus aller RDT:
+    Member_cmp nie auf 9/10, `<sp>/E41n4/member_ops.txt`).
+  - `re15_rennstopp_r41_dispatcher(pl, laeuft)` VOR der Zweig-Kette des Spieler-Dispatchers (game_step_common.c, 2 Zeilen
+    neben den Haken Zopf R38 / Zustand R39, laeuft = rdt_ok && !(pauseflags & 0x80000000)): lief der letzte ungesperrte
+    Durchlauf OHNE den Kommando-1-Schritt des Moduls (Treppe, Klettern, Griff, Tod, Knockdown, Flinch, Schieben), ist der Stopp
+    geloescht (und die Marke +6). Gesperrte Durchlaeufe zaehlen nicht.
+  - player_common.c msg_block-Zweig (Nachricht OHNE Spieler-Bit; Original laesst Kommando 1 laufen): `re15_rennstopp_r41_halten()`
+    = keine Uebernahme, Verhalten wie NB3 (1 Zeile).
+  - Pruefhaken `re15_rennstopp_r41_pruef_uebernahme_aus` (nur Riegel-Gegenprobe, kein getenv).
+- Messung nachher (exe re15_pc_E41n4a.exe md5 1751c3d6..., Laeufe `<sp>/E41n4/runs/`, Befehle der Abnahme 3 aus deren cmd.txt):
+  | Lauf | NB4 | c3ba4317 (Abnahme 3) |
+  |---|---|---|
+  | N2_treppe_im_stopp | F375 -13782, **F376..F382 -13782** | F376 -13665 F377 -13588 F378 -13551 F379 -13554 |
+  | N2b (2 Stopp-Bilder vorher) | F375.. -13782 | F376.. -13783 |
+  | N2c (Rennen gehalten), N1 Tuer, N3 Statusschirm, P1_rennstopp_frei, TA, TC, Elza E_elza_renn | jede Zeile x/z/rot/mo gleich | — |
+  | P1_renn_a2 (o_renn2) | F382..F387 -3099 -3233 -3327 -3381 -3395 -3369, Plc_motion F402 | gleich |
+  | P1_renn_losl_aktion (o_renn_losl) | F282..F286 -3056 -3147 -3198 -3209 -3180 (Marke +6 = 3 F163..F285) | gleich |
+  Der Treppen-Abstieg F312..F374 ist in allen drei Staenden gleich (Leon steht an der Kante -18368, der Stopp-Schritt im
+  Aktionsbild wird von der Kollision gehalten).
+- Riegel:
+  - `unit_r41_kleinkram_b_takt_uebernahme` (echter Spieler-Takt re15_game_step): T Treppe ROOM2040 (Abschluss, 8 Bilder ohne
+    Lageaenderung), R Plc_ret im Stopp (SCD-Schnipsel `42 01`, danach Weg 0), G Griff (Pin 10 Bilder, Freigabe mit Bewegung 200,
+    danach kein Rest-Stopp), F Flinch (Kommando 2), P gesperrte Durchlaeufe (20 Bilder Spieler-Bit, danach 120, 80 = der Stopp
+    laeuft weiter). NB4 6/6; Gegenprobe vor NB4: T/R/G fallen durch (T: 8 Lageaenderungen, z -16688 -> -16488; R: 120 80 40;
+    G: 4 Lageaenderungen), F/P bestehen (F bricht schon in NB3 ueber die Bewegungs-Pruefung ab).
+  - `integration_r41_kleinkram_b_treppe` (echte exe, Abnahme-Lauf N2): bestanden; mit der VORHER-exe re15_pc_E41a3.exe
+    (c3ba4317) DURCHGEFALLEN ("F376 (-1359,-13665) ... 8 Lageaenderungen in 8 Bildern", `<sp>/E41n4/vorher_riegel/treppe.log`).
+  - `integration_r41_kleinkram_b_losl` (Gegenprobe Kurbel o_renn_losl n94..n98): bestanden, VORHER ebenso (Verhalten unveraendert).
+  - `ctest -R "^(unit_r41_kleinkram_b_takt_.*|integration_r41_kleinkram_b_(treppe|losl|renn))$"`: 100% tests passed, 0 tests
+    failed out of 10.
+- OFFEN (unveraendert, Hinweis H2 der Abnahme 3): die Aktions-Pruefung im Renn-DECIDE @0x800326a4-@0x800326dc liegt im Original
+  VOR der Stopp-Entscheidung (Treppe: Handler-Rueckgabe 1 @0x800435c8 -> kein Stopp-Schritt im Aktionsbild); der Port prueft
+  Aktions-AOTs/Treppe/Klettern hinter dem Spieler-Takt (game_step_common.c `re15_stair_try_start` nach `re15_player_tick`). An der
+  gemessenen Treppe ohne Wirkung (Kollision haelt Leon an der Kante); Umbau = aot_common.c/game_step_common.c (Katalog #14/#15).

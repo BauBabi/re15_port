@@ -90,7 +90,7 @@ int re15_rennstopp_r41_takt(re15_actor_t *p, uint16_t pad_bits, int lauf_motion,
 int re15_rennstopp_r41_unterzustand2(const re15_actor_t *p, int lauf_motion);
 
 /* NACHBESSERUNG 4 (Abnahme 3 Mangel 1, Entscheid E-E4) — UEBERNAHME: der Stopp lebt im Original nur in +5 = 2 / +6 = 3
- * (@0x8003272c / @0x800328fc); jeder andere Zustand ueberschreibt sie (Treppe sce 12/13 @0x80043544/@0x80043594, Abschluss
+ * (@0x8003272c / @0x800328fc); jeder andere Zustand ueberschreibt sie (Treppe sce 12 @0x80043544/@0x80043594, sce 13 @0x80043610/@0x80043660, Abschluss
  * LAB_80038e50 @0x80038ea8/@0x80038eb0, Plc_ret @0x80041f90-@0x80041f9c, Plc_motion @0x80041bb0-@0x80041bc4, Griff STAGE1
  * @0x80102640 / Freigabe @0x8011c38c, Treffer/Tod @0x80012ef4-@0x80012efc). Port: (a) das Modul fuehrt die Marke +6 = 3
  * (re15_actor_t.sub_state_2) waehrend des Stopps; wer +6 schreibt (Plc_ret, Plc_motion, Raumeintritt, Treffer, Flinch-Ende),
@@ -108,6 +108,8 @@ int re15_rennstopp_r41_skript(re15_actor_t *p, int lauf_motion, int steh_motion,
 /* NUR fuer Sonden-Gegenproben (Messung des Einflusses auf fremde Sonden, z.B. unit_r36_zombieki_affen_block): 1 = Renn-Tempo
  * und Renn-Stopp aus = Bewegung wie vor Nachbesserung 3 (Tabellen-Tempo, sofort Stehen). Kein Spielweg, keine Umgebung. */
 void    re15_rennstopp_r41_pruef_aus(int aus);
+/* NUR Riegel-Gegenprobe (unit_r41_kleinkram_b_takt_uebernahme): 1 = Uebernahme-Erkennung aus (Stand vor Nachbesserung 4). */
+void    re15_rennstopp_r41_pruef_uebernahme_aus(int aus);
 int     re15_rennstopp_r41_aktiv(void);
 int32_t re15_rennstopp_r41_tempo(void);
 void    re15_rennstopp_r41_zuruecksetzen(void);

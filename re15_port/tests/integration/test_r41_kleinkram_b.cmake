@@ -30,6 +30,11 @@ cmake_minimum_required(VERSION 3.16)
 #   TEIL spawn_kante     Raumeintritt ROOM2020 mit der Spielerlage AUF der Kante (9000,-3200): jedes Bild ab F1 ist ein
 #                        Apply-Bild (gehalten), der Blenden-Takt FUN_80021880 laeuft trotzdem (@0x80020f44 vor dem Present
 #                        @0x80020f4c), der Eintritts-Freeze faellt in F6 wie VORHER, der Spieler laeuft (vorher: Softlock).
+# NACHBESSERUNG 4 (Abnahme 3 Mangel 1, Orchestrator-Entscheid E-E4):
+#   TEIL treppe          ROOM2040 Galerie -> Treppe sce 13 im Renn-Stopp (Loslassen + Quadrat): nach dem Abschluss
+#                        LAB_80038e50 (@0x80038ea8/@0x80038eb0 +5/+6 = 0) steht Leon (c3ba4317: +117 +77 +37 -3).
+#   TEIL losl            Gegenprobe: Kurbel, Loslassen + Aktion im selben Bild (Original o_renn_losl): der Stopp ueberlebt
+#                        die gesperrten Frage-Bilder (`bltz` @0x80031c78 = keine Uebernahme), Auslauf n94..n98.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_WERKZEUG=<test_r41_kleinkram_b_exe> -DWORKDIR=<dir> -DTEIL=<teil>
 #               -P test_r41_kleinkram_b.cmake
 # =============================================================================
@@ -139,6 +144,18 @@ elseif(TEIL STREQUAL "renn")
     # Rennen ab F157 (6 Bilder XU + 1 Bild XU mit Aktion = o_renn2 n0..n6), Fragen per Quadrat.
     set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-3018,1024,1
              "RE15_INPUT_SCRIPT=XU0.2,XUA0.034,XU1.0" RE15_INPUT_SCRIPT_START=157 RE15_INPUT_SCRIPT_BASIS=spiel
+             RE15_PRESS=square@200,square@240,square@280,square@320
+             RE15_SCD_TRACE=1 RE15_MOTRACE=1 RE15_STATE_LOG=state.txt RE15_KAMERAHALT_LOG=1 "RE15_EXIT_AT=420#2020")
+elseif(TEIL STREQUAL "treppe")
+    # Abnahme 3 §6.2 `N2_treppe_im_stopp`: ROOM2040 Galerie Band 5, 12 Bilder Rennen an die Kante, dann Loslassen + Quadrat
+    # (Treppe sce 13 abwaerts, Abschluss F375).
+    set(_env RE15_STAIR_DBG=1 RE15_DEBUG_JUMP=2040@250 RE15_PLAYER_POS=-1350,-19200,3072,5 RE15_EQUIP=3
+             "RE15_INPUT_SCRIPT=XU0.4,A0.034,W0.034,A0.034,W0.034,A0.034,W0.034,A0.034,W5" RE15_INPUT_SCRIPT_START=300
+             RE15_INPUT_SCRIPT_BASIS=spiel RE15_STATE_LOG=state.txt RE15_MOTRACE=1 "RE15_EXIT_AT=420#2040")
+elseif(TEIL STREQUAL "losl")
+    # Abnahme 3 §3.2 `P1_renn_losl_aktion` (Original o_renn_losl): 6 Bilder Rennen aus dem Stehclip 2, im 7. Bild nur Quadrat.
+    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-3018,1024,1
+             "RE15_INPUT_SCRIPT=XU0.2,A0.034,W1.0" RE15_INPUT_SCRIPT_START=157 RE15_INPUT_SCRIPT_BASIS=spiel
              RE15_PRESS=square@200,square@240,square@280,square@320
              RE15_SCD_TRACE=1 RE15_MOTRACE=1 RE15_STATE_LOG=state.txt RE15_KAMERAHALT_LOG=1 "RE15_EXIT_AT=420#2020")
 else()
@@ -300,6 +317,28 @@ elseif(TEIL STREQUAL "geh" OR TEIL STREQUAL "renn")
         set(_ok TRUE)
     endif()
     pruef_wahr(_ok "Kurbel-Anlauf ${TEIL}: Bildfolge und Lagen wie das Original (Auswerter ${_modus})")
+elseif(TEIL STREQUAL "treppe")
+    pruef(_d "loaded room2040.rdt")
+    execute_process(COMMAND "${RE15_WERKZEUG}" treppe "${_lauf}/state.txt"
+                    RESULT_VARIABLE _rw OUTPUT_VARIABLE _ow ERROR_VARIABLE _ew)
+    message(STATUS "${_ow}${_ew}")
+    set(_ok FALSE)
+    if(_rw EQUAL 0)
+        set(_ok TRUE)
+    endif()
+    pruef_wahr(_ok "Treppe im Renn-Stopp: nach dem Abschluss LAB_80038e50 (+5/+6 = 0 @0x80038ea8/@0x80038eb0) kein Rest-Stopp")
+elseif(TEIL STREQUAL "losl")
+    pruef(_d "loaded room2020.rdt")
+    pruef(_d "@0x0A62 op=0x2B")
+    pruef(_d "@0x0A8C op=0x32")
+    execute_process(COMMAND "${RE15_WERKZEUG}" losl "${_lauf}/debug.log" "${_lauf}/state.txt"
+                    RESULT_VARIABLE _rw OUTPUT_VARIABLE _ow ERROR_VARIABLE _ew)
+    message(STATUS "${_ow}${_ew}")
+    set(_ok FALSE)
+    if(_rw EQUAL 0)
+        set(_ok TRUE)
+    endif()
+    pruef_wahr(_ok "Kurbel Loslassen + Aktion: Stopp ueberlebt die gesperrten Frage-Bilder, Auslauf wie o_renn_losl n94..n98")
 endif()
 
 if(_fehler)

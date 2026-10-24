@@ -33,6 +33,11 @@
  *                                       -6144: 0x7fff -> nach 6 Takten Bit 15) endet, der Eintritts-Freeze (pf FF......)
  *                                       faellt in F6 wie VORHER (753652fc, ohne Bildhalt) und der Spieler laeuft.
  *                                       Ausgabe "FREI F<n> GEHALTEN <k> X100 <x>".
+ * Nachbesserung 4 (Abnahme 3 Mangel 1, Orchestrator-Entscheid E-E4):
+ *   treppe <state.txt>                 Treppe aus dem Renn-Stopp (Loslassen + Quadrat): nach dem Abschluss LAB_80038e50
+ *                                       (+5/+6 = 0 @0x80038ea8/@0x80038eb0) 8 Bilder keine Lageaenderung.
+ *   losl <debug.log> <state.txt>       Gegenprobe Kurbel o_renn_losl: Stopp im Aktionsbild, eingefroren waehrend der
+ *                                       Fragen, nach Pos_set z -3056 -3147 -3198 -3209 -3180 (Original n94..n98).
  * Rueckgabe 0 = bestanden, 1 = durchgefallen, 2 = Eingabefehler.
  */
 #define _DEFAULT_SOURCE
@@ -421,8 +426,80 @@ static int einblendung(const char *dlog, const char *state)
     return ok ? 0 : 1;
 }
 
+/* ---- Nachbesserung 4 ------------------------------------------------------------------------------------ */
+/* Abnahme 3 Mangel 1 (Entscheid E-E4): Treppe im Renn-Stopp. Letzter Raum-Abschnitt des State-Logs: erstes Bild mit
+ * mo 220 (Treppe abwaerts, PL00 Clip 21), dessen Vorbild noch RENNEN war (mo 100: Loslassen + Quadrat im selben Bild = Stopp-
+ * Einstieg im Aktionsbild); Abschluss = erstes Bild danach mit mo 200 hinter mo 220 (LAB_80038e50). Original: der Abschluss
+ * schreibt +5/+6 = 0 (@0x80038ea8/@0x80038eb0), der Stopp ist geloescht -> 8 Bilder danach keine Lageaenderung (Abnahme 3:
+ * c3ba4317 F376..F379 z +117 +77 +37 -3). */
+static int treppe(const char *state)
+{
+    static long fr_[MAXF * 4]; static int x_[MAXF * 4], z_[MAXF * 4], mo_[MAXF * 4];
+    FILE *f = fopen(state, "rb");
+    if (!f) { printf("FEHLER %s\n", state); return 2; }
+    char line[4096];
+    int n = 0;
+    while (fgets(line, sizeof line, f) && n < MAXF * 4) {
+        long fr; int x, z, mo;
+        const char *pl = strstr(line, "PL("), *mp = strstr(line, " mo=");
+        if (line[0] != 'F' || !pl || !mp || sscanf(line + 1, "%ld", &fr) != 1 || sscanf(pl + 3, "%d,%d", &x, &z) != 2 ||
+            sscanf(mp + 4, "%d", &mo) != 1) continue;
+        fr_[n] = fr; x_[n] = x; z_[n] = z; mo_[n] = mo; n++;
+    }
+    fclose(f);
+    int a = 0;
+    for (int i = 1; i < n; i++) if (fr_[i] < fr_[i - 1]) a = i;
+    int s = -1, e = -1;
+    for (int i = a + 1; i < n; i++) if (mo_[i] == 220 && mo_[i - 1] == 100) { s = i; break; }
+    if (s > 0) for (int i = s + 1; i < n; i++) if (mo_[i] == 200 && mo_[i - 1] == 220) { e = i; break; }
+    printf("Treppe ab F%ld (Vorbild mo %d), Abschluss F%ld z %d\n", s > 0 ? fr_[s] : -1L, s > 0 ? mo_[s - 1] : -1,
+           e > 0 ? fr_[e] : -1L, e > 0 ? z_[e] : 0);
+    if (s < 0 || e < 0 || e + 8 >= n) { printf("FAIL Treppe aus dem Rennen nicht vollstaendig im Log\n"); printf("DURCHGEFALLEN\n"); return 1; }
+    int ok = 1, bew = 0;
+    for (int i = e + 1; i <= e + 8; i++) {
+        printf("F%ld (%d,%d) mo %d\n", fr_[i], x_[i], z_[i], mo_[i]);
+        if (x_[i] != x_[e] || z_[i] != z_[e]) bew++;
+    }
+    if (bew) { printf("FAIL Rest-Stopp nach der Treppe: %d Lageaenderungen in 8 Bildern\n", bew); ok = 0; }
+    printf(ok ? "BESTANDEN\n" : "DURCHGEFALLEN\n");
+    return ok ? 0 : 1;
+}
+
+/* Gegenprobe zu Mangel 1 (Abnahme 3 §3.2, Original o_renn_losl.txt GDB): Kurbel, RENNEN loslassen und Aktion im SELBEN Bild:
+ * der Stopp beginnt im Aktionsbild, steht waehrend der Fragen (gesperrte Durchlaeufe, `bltz` @0x80031c78, KEINE Uebernahme)
+ * und laeuft nach Pos_set @0x0A8C aus: z -3056 -3147 -3198 -3209 -3180 (Original n94..n98, Tempo 131 91 51 11 -29), dann
+ * Stand (3650,-3180) bis Plc_motion @0x0A9C. Bildfolge wie takt. */
+static int losl(const char *dlog, const char *state)
+{
+    long f_pos = -1;
+    int ok = takt_gemein(dlog, state, &f_pos);
+    if (ok < 0) return -ok;
+    const long f_m0 = scd_bild_erst(dlog, "@0x0A5C"), f_mot = scd_bild(dlog, "@0x0A9C");
+    int stopp = 1;
+    for (long fr = f_m0; fr < f_pos; fr++) if (!s_mv[fr] || s_mo[fr] != 200) { stopp = 0; break; }
+    printf("Stopp-Pose mo 200 von Message_on 0 F%ld bis vor Pos_set F%ld: %s\n", f_m0, f_pos, stopp ? "ja" : "nein");
+    if (!stopp) { printf("FAIL Stopp nicht im Aktionsbild begonnen bzw. nicht eingefroren (Original n7 mo=3/0 e3=6 bis n93)\n"); ok = 0; }
+    static const int soll[5] = { -3056, -3147, -3198, -3209, -3180 };
+    for (int i = 0; i < 5; i++) {
+        const zustand_t *st = &s_z[f_pos + i];
+        printf("F%ld (%d,%d) Original z %d\n", f_pos + i, st->x, st->z, soll[i]);
+        if (!st->gueltig || st->x != 3650 || st->z != soll[i]) ok = 0;
+    }
+    long letzt = f_pos + 4;
+    for (long fr = f_pos + 4; fr < MAXF && s_z[fr].gueltig; fr++) {
+        if (s_z[fr].x != 3650 || s_z[fr].z != -3180) { ok = 0; printf("FAIL F%ld (%d,%d) nach dem Auslauf\n", fr, s_z[fr].x, s_z[fr].z); break; }
+        letzt = fr;
+    }
+    printf("Stand (3650,-3180) F%ld..F%ld, Plc_motion F%ld\n", f_pos + 4, letzt, f_mot);
+    if (f_mot <= f_pos + 4 || letzt < f_mot) { printf("FAIL Plc_motion nicht im Stand (3650,-3180)\n"); ok = 0; }
+    printf(ok ? "BESTANDEN\n" : "DURCHGEFALLEN\n");
+    return ok ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
+    if (argc >= 3 && strcmp(argv[1], "treppe") == 0) return treppe(argv[2]);
+    if (argc >= 4 && strcmp(argv[1], "losl") == 0) return losl(argv[2], argv[3]);
     if (argc >= 4 && strcmp(argv[1], "einblendung") == 0) return einblendung(argv[2], argv[3]);
     if (argc >= 3 && strcmp(argv[1], "segment") == 0) return segment(argv[2]);
     if (argc >= 3 && strcmp(argv[1], "marker") == 0) return marker(argv[2]);
