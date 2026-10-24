@@ -508,6 +508,21 @@ Hoehen 0..5400 schneidet den Lokkoerper (gerechnet), das Tor steht 4 500 hinter 
 Verdeckung ist geometrisch richtig (vorher zeichnete das Spiel das Tor ueber die Lok; Bilder `M_bilder/NB2/NB2_M1_d6000_0*_tor.png`).
 Bilder: `M_bilder/NB2/NB2_M1_<szene>.png` (oben: mit | ohne Masken | rot = veraendert; unten Ausschnitt).
 
+### NB2 Mangel 1 - die vier Cuts ohne Maske und das "Treppengelaender" 3050 C6 (gemessen: was die Region dort IST)
+Bild `M_bilder/NB2/NB2_vier_cuts_region.png` (je Cut: Hintergrund | Generator-Region rot, `m41nb2/py/region_crop.py` aus dem
+Regionen-Cache `m41/grown`, Objekte `m41nb2/py/objekte.py`):
+* **3050 C6**: zwei Objekte - Verschiebung (184,137) 2 150 px, Bildzeilen 139..182 = der BODEN vor/unter dem Treppengelaender (die
+  Pfosten stehen in Zeile 113..150 und sind nur mit ihren Fussenden angeschnitten); (75,-15) 717 px, Zeile 4..44 = Rohre unter der
+  Decke (Tiefe 0 = vor allem). Das Gelaender selbst (duenne Pfosten) ist NICHT in der Region.
+* **30E0 C6 / C7**: der Bodenstreifen vor dem Gelaender (C6 x 120..320 y 160..208; C7 die Bodenflaeche vorn) - die Gelaenderstaebe sind
+  nicht in der Region.
+* **3040 C1**: die Rueckwand (Rautengitter links), die Haengeleuchte unter der Decke und ein Bodenfleck am Treppenfuss.
+Eine Maske aus Boden oder Raumwand verdeckt nie richtig etwas (eine stehende Figur ist nie HINTER dem Boden, auf dem sie steht, und
+nie hinter der Raumbegrenzung) - sie kann nur eine Figur DAVOR uebermalen; das ist der Fehler, gegen den der Ausschluss der Spur P
+gebaut ist (masken36_r37.c Kopf: "Bodenflaechen in der Auswahl (ROOM30E0 Cut 7, ROOM3050 Cut 6 ...)"). **Ergebnis:** dass diese vier
+Cuts im Spiel keine Generator-Maske zeichnen, ist richtig. Was dort fehlt, sind die GELAENDER (3050 C6, 30E0 C6/C7) - die hat der
+Generator nie gefunden; sie brauchen eine Freistellung (Restliste fuer den Nutzer).
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
