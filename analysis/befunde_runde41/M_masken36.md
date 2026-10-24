@@ -188,3 +188,55 @@ Freistellung 03_01 des Nutzers ist genau die fehlende Verdeckung. Der R40-Bau sa
 von ROOM2020, geom.begehbare_baender). Nebenbefund im selben Bild: die rechte Reling-Freistellung (03_02) liegt im Bild auch
 ueber dem Rand des dunklen 3D-Objekts in der Beckenmitte (obj 1, `Obj_model_set[1] pos=(-1452,-1784,-584)`) - Objekte
 und Effekte prueft die Erreichbarkeits-Schiene nicht (nur Figuren), s. OFFEN.
+
+### 2.2 Sichtpruefung aller 53 Masken an der exe (Leon, Elza-Stichproben)
+
+**Stellen** (Scratchpad `m41/py/e1_stellen.py`): je Cut aus dem begehbaren Boden (Klemmpfad-Dump R40
+`build/p2/dump_klemmpfad_r40.txt`, nur begehbare Baender: geom.begehbare_baender + Ebene der Freistellung aus auswahl.json)
+die Stelle mit der groessten Ueberdeckung der Maskenflaeche VOR bzw. HINTER der Standlinie der Freistellung (.STAND,
+Figurkasten 3000 x +-350). 44 VOR-Stellen (9 Cuts haben keine: 2020 C1/C2/C3, 2040 C1/C2/C5/C6/C13, 2080 C3), 53 HINTER.
+**Laeufe** (`e2_sweep.py`): A mit Masken / B RE15_NO_PRI, Bild 120; **Leon allein** (`e4_c.py`): C = Leon ausserhalb des
+Regionsvierecks des Cuts (Akteur-Cull FUN_8002c18c, wie R37), Leon-Punkte = |B - C| > 24 (Props bleiben in B und C gleich);
+fuer 2010/2020 gibt es keine begehbare Stelle ausserhalb des Vierecks - dort zaehlt |B - Hintergrund|.
+Bilder je Cut: `M_bilder/P2_ROOMxxxx_Ccc.png` (VOR/HINTER: mit Masken | ohne | rot = uebermalt), Zahlen `M_bilder/P2_zahlen.txt`.
+
+**Ergebnis VOR (Leon darf nirgends uebermalt sein):** 42 von 44 Stellen mit sichtbarer Figur; was die Masken an ANDEREN
+Objekten uebermalen, ist richtig (Spinnen hinter den Relingen in 2030/2050, die Kisten im Becken 2050 C12 hinter dem Pfeiler:
+Kiste obj 2 (2052,0,-5552) vz 5315 = Bucket 82, Pfeilermaske Tiefe 42..50). Leon selbst:
+| Stelle | Leon-Punkte uebermalt | Befund |
+|---|---|---|
+| ROOM20A0 C12 (14000,-18900) Band 4 | 30 von 698 | **Fehler**: hinteres Fussgelenk unter dem Bodenstreifen 12_02 -> 2.3 |
+| ROOM2030 C15 (4400,3850) Band 3 | <= 8 | Handlauf an der Schulterkante, Leon steht 1 Bucket vor der Reling (Maskentiefe 132..137, Leon 135); Bucket-Rundung |
+| ROOM2030 C8 (2200,2650) Band 3 | 6 von 11567 | kein Leon-Punkt: Maskentiefe dort 97, Leon Bucket 19 - kann ihn nicht verdecken; die Punkte sind eine Spinne, die sich in C bewegt hat |
+| 2030 C7, 2050 C1/C2/C3 | 12 / 599 / 21 / 116 | Spinnen hinter der Reling (in C an anderer Stelle), nicht Leon (Bilder P2_ROOM2030_C07, P2_ROOM2050_C01..03) |
+**HINTER:** Leon 11 552 von 73 067 Punkten verdeckt (46 Stellen mit C); niedrige Werte, wo die Stelle nach dem Stand-Modell
+"hinter" liegt, Leon aber auf einem anderen Band steht (z.B. 2050 C9) - kein Fehlerbild.
+**Kurbel 2020/2021 C3:** s. 2.1 (Leon 86/779, Elza 124/648 - Beine hinter der Reling, geometrisch richtig).
+**Statische Gegenprobe** (Werkzeug `test_r37_masken36 fehl`, jetzt auch fuer Freistellungen): das Grundriss-Modell der R37
+meldet in den Mehrebenen-Raeumen (2030/2040/2050/2080) viele Punkte "ohne Zelle davor" - es kennt nur Zellen desselben
+Bands, eine Reling auf Band 1 vor einer Figur auf Band 0 zaehlt nicht; als Urteil fuer die Freistellungen ungeeignet
+(Beispiel 2080 C3 (-9900,-9100) Band 8: 1814/1817 "frei", an der exe steht Leon sichtbar hinter dem gruenen Rohr, Bild
+P2_ROOM2080_C03). Massgeblich ist die exe.
+**Probe Bau:** alle 8 Raeume mit `raum.py --p2 --stufe 16 --statistik max --dump build/p2/dump_klemmpfad_r40.txt` (Werte
+aus 5924939d) in den Scratchpad gebaut: MSK/TIM/PBM/STAND bitgleich zu MASKS - der Bestand ist reproduzierbar.
+
+### 2.3 Fehler ROOM20A0 Cut 12: Bodenstreifen 12_02 (behoben)
+
+**Messung vorher:** Leon an der Wand (14000,-7200,-18900): 30 von 698 Leon-Punkten uebermalt (hinteres Fussgelenk);
+AUF dem Streifen (14000,-7200,-19300): 50 von 678 (Bein und Schatten weg) - exe des Basisstands b28c7236,
+`M_bilder/P2_ROOM20A0_C12_bodenstreifen.png` (VORHER | NACHHER | ohne Masken | rot). Der R40-Bau meldete denselben Ort als
+"HINTER-Rest" (4,14000,-19300) 0,53 / (4,13600,-19700) 0,92 - als Figur HINTER der Kante, obwohl dort Boden ist.
+**Beleg:** 12_02 = Streifen BODEN vor dem Fuss der Ziegelwand: Lage fein gemessen (94,126) Fehler 1,65 (zweitbeste 2,24 - die
+grobe R40-Messung hatte "237 gleich gute Lagen"); die Projektion der Vorderkante der Zelle x 8000..14700 z -21000..-20500
+(Band 4) auf y -7200 verlaeuft genau an der OBERKANTE des Streifens (Bild Scratchpad `20a0_c12_kante.png`, kontrastverstaerkt
+`20a0_c12_streifen.png`: Bodenfliesen unter dem Streifen). Die Profil-Tiefe des Baus (119..151) setzt den Bodenkontakt an
+die UNTERKANTE des Streifens, ~1400 vor der Wand (Bildpunkt (110,148) -> Boden (13814,-19080)). Eine Maske auf der
+Bodenebene verdeckt nichts richtig - wer auf ihr steht, verliert die Fuesse (Regel ROOM10E0 C7, Nutzer-Marke F1585, Memory
+reai-v2-flache-maske-verdeckt-nichts).
+**Umsetzung:** `analysis/esp_masken_2026-09-03/auswahl.json` ROOM20A0 Cut 12: 12_02 unter `"_r41_nicht_gebaut"` (mit
+Begruendung; die PNG unter pri/ bleibt unveraendert), 12_01 (Mauerecke, Tiefe aus der Zelle x14700..15800 z-21000..-20000)
+bleibt; `raum.py ROOM20A0 12 --p2 --stufe 16 --statistik max` -> MASKS/ROOM20A0.MSK + _PRI12.TIM/.PBM/.STAND (88 statt 101
+Rechtecke; Bau-Schiene VOR 354 verdeckt 0, teil 0). ROOM20A1 nutzt die Masken von 20A0 (Zwilling).
+**Messung nachher:** (14000,-18900) 0 von 698, (14000,-19300) 0 von 678; Riegel integration_r41_masken36_stage2 mit Leon
+und Elza (20A1) 0.
+**Frage an den Nutzer:** was sollte 12_02 verdecken? Als Bodenstreifen kann es keine Figur richtig verdecken.
