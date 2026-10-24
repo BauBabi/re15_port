@@ -27,15 +27,24 @@
 #      Rate ohne Beleg), -6300 = 900 ueber den Fuessen bei F2746 -> hp -1 + blaue Blende
 #      (fade-log kick ch=0 value=0x5000), Todeskette (pst 7 bei F2859). Riegel: Zaehler-Ende 1800 +- 3 Bilder nach dem
 #      Schliessen, Tod 125 +- 2 Bilder nach dem Flutbeginn, Blende, Wasser -6300 / Spieler -5400.
+#      Nachbesserung 1 (Abnahme 0, M4): C laeuft im BESCHLEUNIGTEN Renderer (direct3d/opengl, wie beim Nutzer), weil SDLs
+#      Software-Renderer die subtraktive Blende ABR 2 nicht kann (`[render] ... ABR2 (B-F) NICHT unterstuetzt -> Rueckfall
+#      BLEND`: die Kachel (160,160,0) wird DECKEND gelb gezeichnet). Gemessen 2026-10-24 05:43 (direct3d, scratchpad
+#      r41c_nb1/mess/flut_d3d): Flaeche (120,80)..(200,160) vor dem Tod (30,37,30), ab dem Todesbild (0,0,30). Der Riegel
+#      misst die Farbe 4 Bilder vor und 4 Bilder nach dem Todesbild (Werkzeug test_r41_ventilkette ppm): vorher Rot und
+#      Gruen >= 15 (unverschleiert), nachher Rot und Gruen <= 4 und Blau >= 20 (Rot+Gruen abgezogen, Blau bleibt).
 #
 # Die Spinnen (main00 Switch auf den Eintritts-Cut, Case 0 @0x01C12) greifen in A nach wenigen Sekunden an; A bleibt
 # deshalb unter 35 s im Raum (Zaehler-Start reicht); C laeuft ohne sie (Kill-Bits, s. o.).
 #
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_ventilkette.cmake
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_R41C_WERKZEUG=<test_r41_ventilkette> -DWORKDIR=<dir> -P test_r41_ventilkette.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
     message(FATAL_ERROR "r41_ventilkette: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")
+endif()
+if(NOT RE15_R41C_WERKZEUG OR NOT EXISTS "${RE15_R41C_WERKZEUG}")
+    message(FATAL_ERROR "r41_ventilkette: RE15_R41C_WERKZEUG (test_r41_ventilkette, ppm-Mittel) fehlt: '${RE15_R41C_WERKZEUG}'")
 endif()
 if(NOT WORKDIR)
     message(FATAL_ERROR "r41_ventilkette: WORKDIR fehlt")
@@ -137,7 +146,7 @@ _muss("${_dbgb}" "EXIT_AT: Bild" b "Endbild in ROOM2000 erreicht")
 set(WORKDIR "${_basis}_c")
 file(MAKE_DIRECTORY "${WORKDIR}")
 re15_start_spiel(_rvc 420
-    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
     RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_DEBUG_JUMP=2030@240
     "RE15_PLAYER_POS=6550,-100,3072"
@@ -146,13 +155,14 @@ re15_start_spiel(_rvc 420
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=450
     "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W4,A0.1,W4,A0.1,W4,A0.1,W4,A0.1,W4,A0.1,W4,A0.1,W4"
     RE15_MSG_LOG=1 RE15_FADE_LOG=1 RE15_STATE_LOG=state.txt
-    "RE15_FRAMEDUMP=2750:${WORKDIR}/f2030_2750.ppm"
+    "RE15_FRAMEDUMP=2730-2770/2:${WORKDIR}/f_"
     "RE15_EXIT_AT=2960#2030"
     "${RE15_PC_EXE}")
 if(NOT EXISTS "${WORKDIR}/debug.log")
     message(FATAL_ERROR "r41_ventilkette[c]: kein debug.log (exit=${_rvc}, ${WORKDIR})")
 endif()
 file(READ "${WORKDIR}/debug.log" _dbgc)
+_muss("${_dbgc}" "ABR2 (B-F) ok" c "Renderer mit subtraktiver Blende (ABR 2) - der Software-Renderer zeichnet die Ertrink-Blende deckend gelb (Nachbesserung 1, M4)")
 _muss("${_dbgc}" "[fire-aot] slot=14" c "Ventil-Platz (Ereignis 26) gefeuert")
 _muss("${_dbgc}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile" c "Programm gestartet")
 _muss("${_dbgc}" "[msg] room=2030 id=46" c "Warnung 46 (Ja gewaehlt)")
@@ -211,9 +221,35 @@ endif()
 if(_d_tod LESS 123 OR _d_tod GREATER 127)
     message(FATAL_ERROR "r41_ventilkette[c]: Tod ${_d_tod} Bilder nach dem Flutbeginn (erwartet 125 +- 2: 126 Schritte x 50 = 6300 = -5400 - 900, der erste Schritt im Marker-Takt)")
 endif()
-if(NOT EXISTS "${WORKDIR}/f2030_2750.ppm")
-    message(FATAL_ERROR "r41_ventilkette[c]: Framedump F2750 fehlt")
+# Farbe der Ertrink-Blende (M4): Mittel der Bildmitte 4 Bilder vor / nach dem Todesbild (Framedumps je 2 Bilder).
+function(_mittel _bild _out)
+    set(_ppm "${WORKDIR}/f_00${_bild}.ppm")
+    if(NOT EXISTS "${_ppm}")
+        message(FATAL_ERROR "r41_ventilkette[c]: Framedump F${_bild} fehlt (${_ppm})")
+    endif()
+    execute_process(COMMAND "${RE15_R41C_WERKZEUG}" ppm "${_ppm}" 120 80 200 160 OUTPUT_VARIABLE _o RESULT_VARIABLE _r)
+    string(REGEX MATCH "MITTEL ([0-9]+) ([0-9]+) ([0-9]+)" _m "${_o}")
+    if(NOT _m)
+        message(FATAL_ERROR "r41_ventilkette[c]: ppm-Werkzeug F${_bild}: ${_o}")
+    endif()
+    set(${_out} "${CMAKE_MATCH_1};${CMAKE_MATCH_2};${CMAKE_MATCH_3}" PARENT_SCOPE)
+endfunction()
+math(EXPR _bild_vor "((${_f_tot} - 4 - 2730) / 2) * 2 + 2730")
+math(EXPR _bild_nach "((${_f_tot} + 5 - 2730) / 2) * 2 + 2730")
+_mittel(${_bild_vor} _rgb_vor)
+_mittel(${_bild_nach} _rgb_nach)
+list(GET _rgb_vor 0 _vr)
+list(GET _rgb_vor 1 _vg)
+list(GET _rgb_nach 0 _nr)
+list(GET _rgb_nach 1 _ng)
+list(GET _rgb_nach 2 _nb)
+message(STATUS "r41_ventilkette[c]: Blende Bildmitte F${_bild_vor} (${_rgb_vor}) -> F${_bild_nach} (${_rgb_nach})")
+if(_vr LESS 15 OR _vg LESS 15)
+    message(FATAL_ERROR "r41_ventilkette[c]: vor dem Tod (F${_bild_vor}) ist die Bildmitte schon dunkel (${_rgb_vor}) - Gegenprobe ungueltig")
+endif()
+if(_nr GREATER 4 OR _ng GREATER 4 OR _nb LESS 20)
+    message(FATAL_ERROR "r41_ventilkette[c]: Ertrink-Blende F${_bild_nach} nicht blau (${_rgb_nach}; erwartet Rot/Gruen <= 4, Blau >= 20 - ABR 2 Maske Rot+Gruen @0x174a)")
 endif()
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_ventilkette: A (2030 -> Ost-Tuer -> 20B0, Bits 103+100), B (Leiter 2000 = Text 40) und C (Zaehler ${_d_zaehler} -> Flut -> tot nach ${_d_tod}) bestanden")
+message(STATUS "r41_ventilkette: A (2030 -> Ost-Tuer -> 20B0, Bits 103+100), B (Leiter 2000 = Text 40) und C (Zaehler ${_d_zaehler} -> Flut -> tot nach ${_d_tod}, Blende ${_rgb_vor} -> ${_rgb_nach}) bestanden")

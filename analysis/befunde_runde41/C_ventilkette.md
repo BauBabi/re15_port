@@ -80,13 +80,62 @@ Messordner: scratchpad `r41c_nb1/` (`C:/Users/MJOEDI~1/AppData/Local/Temp/claude
 Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "vorher" zitiert.
 
 ### M1 (hoch, Punkt 5) — Kisten im Becken: Hebel = Ereignis 2 hebt das Wasser ohne das Pult
-(in Arbeit)
+* **Ursache:** `re15_ventilkette_r41_ereignis` sperrte in 2050/2051 nur Ereignis 4. Derselbe Hebel-Platz Slot 6 traegt
+  Ereignis 2, sobald die drei Kisten im Becken liegen — das Original-Kistenraetsel des Raums hob das Wasser dann
+  weiter ohne Bit 106.
+* **Messung vorher** (Abnahme 0, nicht wiederholt): `abn0/mess/kisten_hebel` — `AOT slot 6 typ 0 ev 2` (F404), Aktion ->
+  kein Port-Programm -> sub02: msg 0 -> Ja -> obj 1/2/3 m0 -17700, obj 4 -1400, obj 0 y 0, Cut 4, For 180 ->
+  `FLAG (3,109) = 1` bei `FLAG (9,106) = 0`. Gegenprobe des neuen Unit-Riegels am ALTEN Modul (ventilkette_r41.c von
+  4af8fa3d eingesetzt, gebaut, gefahren; Protokoll scratchpad `r41c_nb1/unit_gegen.txt`):
+  `FAIL: ROOM2050 Kisten ohne Strom: Sperrsatz 40, (3,109)=1, kein Cut 4 (1), Wasser y -16200 -> -3600 (erwartet -16200)`
+  (ebenso ROOM2051).
+* **Beleg** (selbst aus den Bytes, `tools/scd_dump_room.py` ROOM2050.RDT und ROOM2051.RDT, beide gleich):
+  sub01 @0x02006 `06 00 1c 00` Ifel_ck, @0x0200A `21 03 6d 00` Ck(3,109)=0, @0x0200E `21 05 00 01` / @0x02012
+  `21 05 01 01` / @0x02016 `21 05 02 01` Ck(5,0..2)=1, **@0x0201A `46 06 03 31 ff 00 18 02 00 00` Aot_reset Slot 6
+  sce 3 sat 0x31 -> Ereignis 2**, Endif @0x02024. (5,0)/(5,1)/(5,2) setzt sub01 selbst, wenn Kiste obj 1/2/3 auf Feld
+  3/4/5 steht (@0x02036 `3e 00 0f 00 03 00` Member_cmp -> @0x0203C `22 05 00 01` usw. bis @0x0212C).
+  sub02 @0x0220E `2b 00 ff ff` msg 0, @0x02218 `21 0c 1f 00` Ja, @0x0221C `22 03 6d 01` Set(3,109), @0x02244
+  `34 00 dc ba` Kisten m0 -17700, @0x02260 `34 01 88 fa` obj 4 -1400, @0x02268 `34 01 00 00` Wasser obj 0 y 0,
+  @0x02270 `29 04` Cut 4, @0x0227C `2f 01 ec ff` Speed_set(1,-20), @0x02280 `0d 00 06 00 b4 00` For 180 = das Wasser
+  steigt 3600 (-> y -3600). Zensus der Ereignis-Plaetze in 2050 (alle Aot_set/Aot_reset mit Nutzlast `18 ee`): Slot 8
+  Ereignis 9 (@0x01D38, @0x0241C), Slot 6 Ereignis 4 (@0x01E28, @0x01EB2), Slot 6 **Ereignis 2 (@0x0201A)** — weitere
+  Wege, das Wasser zu heben, gibt es nicht.
+* **Aenderung:** `RE15_R41C_EV_2050_KISTEN 2` (Kopf, mit den Bytes oben); `re15_ventilkette_r41_ereignis` legt in
+  2050/2051 Ereignis 4 UND 2 ohne Bit 106 auf `2050_hebel_sperre` (derselbe Sperrsatz 40, Form ROOM2060 sub12
+  @0x015D0). Mit Bit 106 bleibt beides das Original. Scheibe `re15_r41c_org_2050_kisten` (@0x0201A, 10 B) im
+  Generator, Riegel A vergleicht sie mit beiden RDTs.
+* **Messung nachher:**
+  - unit_r41_ventilkette Fall F (Leon + Elza): nach dem Setzen der Kisten-Bits steht Slot 6 auf Ereignis 2; ohne
+    Bit 106 `kisten ohne msgs: 40@Cut0  Cuts: 0` ((3,109)=0, Wasser obj 0 bleibt -16200 = @0x01D92), mit Bit 106
+    `kisten 106 msgs: 0@Cut0  Cuts: 0 4 7` (Original sub02, Wasser -3600). PASS (255 Pruefungen).
+  - exe (scratchpad `r41c_nb1/mess/kisten_hebel`, Aufbau und Wegplan der Abnahme, zu Fuss in die Nische):
+    `[ventilkette41] ROOM2050 Ereignis 2 -> Port-Programm 2050_hebel_sperre` -> `[msgtext] room=2050 id=40 "The pump
+    has no power. The switchboard must be set first."`; kein Cut_chg(4), kein Member_set der Kisten/des Wassers.
+    (Der Plan wartet danach 600 Bilder in der Nische; ohne die Wasser-Szene greifen die Gegner des Raums an und
+    toeten Leon — Messmittel, kein Befund; deshalb endet dieser Lauf im Timeout.)
+  - Riegel integration_r41_ventilkette_b, neue Laeufe E2 (Leon, Kisten ohne Pult -> gesperrt), E3 (Gegenprobe mit
+    Bit 106 -> Original sub02: msg 0, Kisten -17700, Cut 4, obj 5 -5000 = das Kistenraetsel bleibt nach dem Pult
+    loesbar), E4 (Elza 2051, Kisten ohne Pult -> gesperrt). Ergebnis §5 "Nachbesserung 1".
 
 ### M2 (hoch, Punkte 3/4) — 20B0-Auswasch-Szene braucht den AUTO-Haken der Spur A
 (in Arbeit)
 
 ### M3 (mittel) — Installer loeschte (5,0x1D)/(5,0x1E) in jedem Raum
-(in Arbeit)
+* **Ursache:** `re15_ventilkette_r41_install` loeschte die Port-Marker nach dem Init-Lauf in JEDEM Raum; in fremden
+  Raeumen sind (5,0x1D)/(5,0x1E) Original-Bits.
+* **Messung vorher** (Abnahme 0): `abn0/mess/h1171` — SCD-Trace F250 slot 10 @0x13B2 `22 05 1e 01` im Init-Takt, danach
+  der Installer. Gegenprobe des neuen Riegels am alten Modul: `FAIL: ROOM1171: Installer laesst (5,0x1D)/(5,0x1E) stehen`
+  und `FAIL: ROOM1171 (3,194): sub02 lief ((3,194)=0) und (5,0x1E) = 0 nach dem Installer (erwartet 1, @0x013B2)`.
+* **Beleg:** ROOM1171 sub02 (scd_dump_room.py): @0x01398 `22 03 c2 00` Set(3,194)=0, **@0x013B2 `22 05 1e 01`** vor dem
+  ersten Sleep @0x013C6 `09 0a 01 00` (also im Init-Takt), @0x01404 `22 05 1d 01`, erst @0x014A4 `22 05 1e 00` /
+  @0x014A8 `22 05 1d 00` loeschen beide (nach dem Warten auf (5,28) @0x013F4). Bank 5 Wort 0 wischt das Raumladen
+  ohnehin: FUN_8003ecec @0x8003ed74 `sw zero,4136(at)` = 0x800b1028 (scd_room_setup.c:319 `g_game.flags[5][0] = 0`).
+* **Aenderung:** die beiden `re15_game_flag_set(5, 0x1D/0x1E, 0)` laufen nur noch, wenn der Raum 2030/2031 ist
+  (ventilkette_r41.c `re15_ventilkette_r41_install`; Kopf-Kommentar der Marker angepasst).
+* **Messung nachher:** unit_r41_ventilkette Fall H PASS: Installer in 1171 laesst beide Bits stehen, in 2031 loescht
+  er sie; echter Raumstart ROOM1171 mit (3,194) (sub00 -> Gosub sub07 -> Evt_exec sub02) -> (3,194)=0 und (5,0x1E)=1
+  nach dem Installer. Querbezug-Riegel der Heliport-Szene (unit_r38/r39_heliport1171_*, integration_r38/r39_heliport1171_*)
+  in §5 "Nachbesserung 1".
 
 ### M4 (mittel) — Riegel C belegte die Farbe der Ertrink-Blende nicht
 (in Arbeit)
@@ -101,13 +150,31 @@ Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "
 (in Arbeit)
 
 ### M8 (niedrig, Text) — Ventile melden nach dem Entleeren weiter "flooded"
-(in Arbeit)
+* **Ursache:** das Programm der Ventile waehlte nur zwischen Frage (vor der Flut) und `2030_ventile_zustand` (Bit 103).
+* **Messung vorher:** Abnahme L6/L8; Gegenprobe des neuen Riegels am alten Modul: `FAIL: ROOM2030 mit Bit 107: Ventile =
+  Zustandssatz 49 (msgs 1, erste 48)` (ebenso 2031).
+* **Aenderung (PORT-WAHL, Wortlaut zur Freigabe):** Id 49 (VERTRAG §1.2: 2030 Ids 40-49) "The valves are open. / The pool
+  has been drained." in der Form von Id 48 (Generator `gen_r41_ventilkette.py`, Kodierung + Rueckdekodierung geprueft),
+  Programm `2030_ventile_leer` (`2b 31 ff ff` `02 00` `01 00`), gewaehlt bei Bit 107.
+* **Messung nachher:** unit_r41_ventilkette Fall E (Leon + Elza): mit Bit 107 zeigt die Aktion an den Ventilen genau
+  Text 49; Fall A dekodiert Text 2031/49 woertlich. PASS.
 
 ### M9 (niedrig, Doku) — Kopf des Unit-Riegels nannte (5,0x3D)/(5,0x3E)
-(in Arbeit)
+* Kopf von `tests/unit/test_r41_ventilkette.c`: Zaehler (5,0x1D) / Flut (5,0x1E) (Bank 5 Wort 0, wie der Code), dazu die
+  neuen Faelle E (Text 49), F (Kisten), H (fremde Raeume) und das ppm-Werkzeug beschrieben.
 
 ### H1-H3 (Hinweise)
-(in Arbeit)
+* **H1** `RE15_R41C_ERTRINK_TIEFE 900` steht jetzt ausdruecklich als PORT-WAHL mit entliehenem Mass im Kopf. Selbst
+  disassembliert (re15_disasm.py, PSX.EXE): @0x8002c1f8 `addiu s6,s6,148` (Objekt-Schleife, Schritt 148), @0x8002c234
+  `lbu v1,8(s1)` (Objekttyp), @0x8002c238 `ori v0,zero,0x4`, @0x8002c23c `bne v1,v0,0x8002c254`, @0x8002c244
+  `lw v0,96(s1)`, @0x8002c24c `addiu v0,v0,-900`, @0x8002c250 `sw v0,96(s1)` = die y-Lage von Typ-4-Objekten wird
+  um 900 angehoben. Keine Koerperhoehe; Ertrinken gibt es im Original nicht. Wert unveraendert.
+* **H2** Steht Leon waehrend der Flut an den Ventilen (Ost-Streifen), liegt sein Spritzer ausserhalb der Flut-Kamera
+  Cut 4 (Draufsicht); sichtbar sind das steigende Wasser, der blaue Schleier und der Tod. Eine Rueckschaltung auf
+  Leons Zonen-Kamera vor dem Tod waere eine neue Kamera-Regel ohne Vorbild -> nicht gebaut, Frage §7 (h).
+* **H3** PSX-Ziel: in diesem Baum weder gebaut noch gemessen (keine PSn00bSDK-Kette in der Spur); die Wasserflaechen-
+  Daten sind nur `RE15_PLATFORM_PC` (Laufzeitbudget), Bits/Zaehler/Flut/Tod/Sperren sind plattformneutral. Bleibt OFFEN
+  fuer die Integration (§6).
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 

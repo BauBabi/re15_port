@@ -13,11 +13,13 @@ set_tests_properties(unit_r41_ventilkette PROPERTIES TIMEOUT 300)
 
 # Echter Weg mit der exe (nur PC-Ziel): Sprung nach 2030 (Ost-Tuer), Ventile -> Frage -> Ja -> Warnung, Zaehler,
 # Tuer Slot 0 feuert -> ROOM20B0 geladen (Umlenkung), Szene sub02 (Cut 11), Bits 103 + 100; zweiter Lauf: 2000 mit
-# Leiter-Text, dritter Lauf: Zaehler abgelaufen -> Flut -> tot.
+# Leiter-Text, dritter Lauf: Zaehler abgelaufen -> Flut -> tot (Nachbesserung 1, M4: beschleunigter Renderer, Farbe der
+# Ertrink-Blende ueber das ppm-Werkzeug von test_r41_ventilkette).
 if(RE15_BUILD_PC AND TARGET re15_pc)
     add_test(NAME integration_r41_ventilkette
              COMMAND ${CMAKE_COMMAND}
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_R41C_WERKZEUG=$<TARGET_FILE:test_r41_ventilkette>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette.cmake)
     set_tests_properties(integration_r41_ventilkette PROPERTIES TIMEOUT 900 RUN_SERIAL TRUE)
@@ -33,4 +35,18 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_b
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_b.cmake)
     set_tests_properties(integration_r41_ventilkette_b PROPERTIES TIMEOUT 1200 RUN_SERIAL TRUE)
+endif()
+
+# Nachbesserung 1 (Abnahme 0, M2): die ganze Kette in EINEM Lauf - 2030 Ventile -> Ost-Tuer zu Fuss -> 20B0-Szene
+# sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> 2050. Braucht den AUTO-Haken der Spur A (aot_common.c
+# re15_wasser20b0_r41_auto_aot); ohne ihn haengt die Szene -> "R41C-SKIP:" (Skipped), mit ihm muss sie durchlaufen.
+if(RE15_BUILD_PC AND TARGET re15_pc)
+    add_test(NAME integration_r41_ventilkette_szene
+             COMMAND ${CMAKE_COMMAND}
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_SRC=${CMAKE_SOURCE_DIR}
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_szene
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_szene.cmake)
+    set_tests_properties(integration_r41_ventilkette_szene PROPERTIES TIMEOUT 900 RUN_SERIAL TRUE
+                         SKIP_REGULAR_EXPRESSION "R41C-SKIP:")
 endif()

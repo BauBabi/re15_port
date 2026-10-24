@@ -16,6 +16,13 @@
 #      Original sub04: Frage msg 0 -> Ja -> obj 4 y -1400 (@0x0230C ff.) -> Cut 4 -> For 180 Speed -20 -> obj 5 y -5000.
 #   E  Punkt 5 vorher: Aktionstaste am Hebel (Nische (4300,-11150) Blick +x) ohne Bit 106 -> 2050_hebel_sperre, Text 40,
 #      kein Cut 4, kein Member_set des Wassers.
+#   E2 Nachbesserung 1 (Abnahme 0, M1): die drei Kisten liegen im Becken ((5,0..2)=1 ab F300 = die Bits, die sub01 beim
+#      Einschieben setzt @0x0203C ff.) -> sub01 @0x0201A `46 06 03 31 ff 00 18 02` legt den Hebel-Platz Slot 6 auf
+#      Ereignis 2 (= sub02 @0x0220E: Set(3,109), Speed -20 For 180 @0x0227C = Wasser steigt). Ohne Bit 106: Ereignis 2 ->
+#      2050_hebel_sperre, Text 40, kein Cut 4, keine Kisten-/Wasser-Member_set (val -17700 @0x02244, -1400 @0x02260).
+#   E3 Gegenprobe: dasselbe mit Bit 106 (Pult geloest) -> Original sub02: Frage msg 0 -> Ja -> Kisten obj 1 m0 -17700
+#      (@0x02244), Cut 4 (@0x02270), obj 5 y -5000 (@0x02290) = das Kisten-Raetsel bleibt nach dem Pult loesbar.
+#   E4 Elza (ROOM2051): E2 mit Elza.
 #   F  Punkt 2 vorher: Bruecken-Pult 2030 (Ring (350,-9500) Blick -z) ohne Bit 101 -> 2030_pult_ohne, Text 40, keine
 #      Fahrt (kein Cut_chg(4), kein Member_set der Planke obj 0). Spinnen als "schon getoetet" ueber ihre Kill-Bits
 #      (Sce_em_set pc[7] 0x9b/0x9c/0x9d @0x01C18/@0x01C2C/@0x01C40, EM-Status-Gate FUN_800420a0 @0x80042120-38).
@@ -156,6 +163,41 @@ _darf_nicht("${_dbg}" "Cut_chg(4)" e "kein Wasser-Cut ohne Pult-Loesung")
 _darf_nicht("${_dbg}" "val=-1400" e "kein Member_set des Wassers ohne Pult-Loesung")
 _muss("${_dbg}" "EXIT_AT: Bild" e "Endbild erreicht")
 
+# ---- E2/E3/E4: Kisten im Becken (Nachbesserung 1, M1) -----------------------------------------------------------
+macro(_kisten_gesperrt _name _raum)
+    _muss("${_dbg}" "[setflag-at] Frame 300: flag(5,2/0x02) = 1" ${_name} "Kisten-Bits (5,0..2) gesetzt")
+    _muss("${_dbg}" "[ventilkette41] ROOM${_raum} Ereignis 2 -> Port-Programm 2050_hebel_sperre" ${_name} "Hebel mit Kisten (Ereignis 2, sub01 @0x0201A) ohne Bit 106 gesperrt")
+    _muss("${_dbg}" "[msgtext] room=${_raum} id=40" ${_name} "Sperrtext 40")
+    _darf_nicht("${_dbg}" "[msg] room=${_raum} id=0 " ${_name} "keine Original-Frage msg 0 (sub02 @0x0220E) ohne Pult")
+    _darf_nicht("${_dbg}" "Cut_chg(4)" ${_name} "kein Wasser-Cut (@0x02270) ohne Pult")
+    _darf_nicht("${_dbg}" "val=-17700" ${_name} "keine Kisten-Member_set (@0x02244) ohne Pult")
+    _darf_nicht("${_dbg}" "val=-1400" ${_name} "kein Member_set des Wassers ohne Pult")
+    _muss("${_dbg}" "EXIT_AT: Bild" ${_name} "Endbild erreicht")
+endmacro()
+_lauf(e2 240 ${_leon}
+      RE15_DEBUG_JUMP=2050@240 "RE15_PLAYER_POS=4300,-11150,0,3" "RE15_SET_FLAG_AT=5:0,5:1,5:2@300"
+      RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W3"
+      "RE15_FRAMEDUMP=360:${_basis}_e2/f2050_360.ppm"
+      "RE15_EXIT_AT=520#2050")
+_kisten_gesperrt(e2 2050)
+_lauf(e3 300 ${_leon}
+      RE15_DEBUG_JUMP=2050@240 "RE15_PLAYER_POS=4300,-11150,0,3" "RE15_SET_FLAG=9:106" "RE15_SET_FLAG_AT=5:0,5:1,5:2@300"
+      RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W10"
+      "RE15_EXIT_AT=780#2050")
+_darf_nicht("${_dbg}" "2050_hebel_sperre" e3 "mit Bit 106 bleibt der Kisten-Hebel das Original")
+_muss("${_dbg}" "[msg] room=2050 id=0 " e3 "Original-Frage msg 0 (sub02 @0x0220E)")
+_muss_re("${_dbg}" "obj=0x01 m=0 [^ ]+ val=-17700" e3 "Kisten steigen (sub02 @0x02244)")
+_danach("${_dbg}" "val=-17700" "Cut_chg(4)" e3 "Wasser-Cut 4 (@0x02270)")
+_muss_re("${_dbg}" "obj=0x05 m=1 [^ ]+ val=-5000" e3 "Endlage nach For 180 (@0x02290)")
+_muss("${_dbg}" "EXIT_AT: Bild" e3 "Endbild erreicht")
+_lauf(e4 240 ${_elza}
+      RE15_DEBUG_JUMP=2050@250 "RE15_PLAYER_POS=4300,-11150,0,3" "RE15_SET_FLAG_AT=5:0,5:1,5:2@300"
+      RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W3"
+      "RE15_EXIT_AT=520#2051")
+_muss("${_dbg}" "Spieler-Familie PL04" e4 "Elza gewaehlt")
+_muss("${_dbg}" "loaded room2051.rdt" e4 "ROOM2051 geladen")
+_kisten_gesperrt(e4 2051)
+
 # ---- F: Bruecken-Pult 2030 ohne Ventil 13 = Text 40, keine Fahrt ----------------------------------------------
 _lauf(f 240 ${_leon}
       RE15_DEBUG_JUMP=2030@240 "RE15_PLAYER_POS=350,-9500,1024,3" "RE15_SET_FLAG=7:155,7:156,7:157"
@@ -228,4 +270,4 @@ _darf_nicht("${_dbg}" "loaded room2051.rdt" k "die Leiter darf nicht nach ROOM20
 _muss("${_dbg}" "EXIT_AT: Bild" k "Endbild in ROOM2001 erreicht")
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_ventilkette_b: D (Pult 2050 -> 80 V -> Hebel = Original), E (Hebel gesperrt), F (2030-Pult ohne Ventil 13), G/H (Leitern 20B0 <-> 2050), I (2030 Flut / leer mit 107), J (Elza 2051), K (Elza Leiter 2001) bestanden")
+message(STATUS "r41_ventilkette_b: D (Pult 2050 -> 80 V -> Hebel = Original), E (Hebel gesperrt), E2/E3/E4 (Kisten-Hebel ohne/mit Pult, Elza), F (2030-Pult ohne Ventil 13), G/H (Leitern 20B0 <-> 2050), I (2030 Flut / leer mit 107), J (Elza 2051), K (Elza Leiter 2001) bestanden")
