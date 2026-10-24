@@ -1,10 +1,10 @@
 # Runde 41 — Spur H "kollision": Abnahme 0 (unabhaengig, 2026-10-24)
 
-Baum `.claude/worktrees/r41_kollision`, Zweig `r41/kollision`, gepruefter Stand **103563cc** (merge-base master =
-7b59e297, d.h. master ist enthalten). Arbeitsordner der Abnahme (Logs, Bilder, Skripte):
+Baum `.claude/worktrees/r41_kollision`, Zweig `r41/kollision`, gepruefter Code-Stand **103563cc** (= HEAD 4616305a ohne Doku;
+merge-base master = 7b59e297, d.h. master bis dahin ist enthalten). Arbeitsordner der Abnahme (Logs, Bilder, Skripte):
 `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/H41abn0/`.
 
-Status: IN ARBEIT (fortlaufend geschrieben). Fortsetzung 2026-10-24 nachmittags (Vorgaenger vom Sitzungslimit ~12:23
+Status: ABGESCHLOSSEN (Ergebnis Abschnitt 11). Fortsetzung 2026-10-24 nachmittags (Vorgaenger vom Sitzungslimit ~12:23
 beendet); geprueft wird jetzt HEAD **4616305a** (= 103563cc + Abnahme-Anfang 7552fee6 + AUFTRAG/VERTRAG-Sync, nur Doku:
 `git diff 103563cc 4616305a --stat` -> nur AUFTRAG.md und diese Datei).
 
@@ -16,7 +16,13 @@ beendet); geprueft wird jetzt HEAD **4616305a** (= 103563cc + Abnahme-Anfang 755
   `aot_common.c.obj: ... re15_kollision_r41_kisten_pass`, `game_step_common.c.obj: ... re15_kollision_r41_objspiegel`;
   Quellen 11:27:59, `re15_pc.exe` 11:28:49, Arbeitsbaum sauber (`git status` leer).
 
-## 1. Diff gelesen (git diff master -- re15_port)
+### 0a. Bau erneut (Fortsetzung)
+- `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`;
+  `bash re15_port/tools/local_build.sh build` -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)`.
+- `re15_pc.exe` 11:28:49 > alle Quellen des Diffs (kollision_r41.c 10:14:41, Haken-Dateien 11:27:59); Messkopie
+  `re15_pc_h41abn0.exe` sha1 `3da1c0f4c3df7fbabd91679e961d93e6f10df207` = `re15_pc.exe` (bytegleich).
+
+## 1. Diff gelesen (git diff 7b59e297 -- re15_port, = master...HEAD)
 - NEU `engine/src/kollision_r41.c` (221 Z.), `include/re15_kollision_r41.h` (49 Z.).
 - Haken: `enemy_ai_common.c` (+1 Include, +1 Zeile in re15_npc_ai_tick vor re15_npc_wall_clamp),
   `aot_common.c` (+1 Include, Objekt-Pass in re15_prop_push_tick, Kopfkommentar), `game_step_common.c` (+1 Include,
@@ -24,12 +30,6 @@ beendet); geprueft wird jetzt HEAD **4616305a** (= 103563cc + Abnahme-Anfang 755
 - Tests: `tests/unit/probes/r41_kollision.cmake`, `tests/unit/test_r41_kollision.c`, `tests/unit/probe_r41_kollision_abstand.c`,
   `tests/integration/test_r41_kollision.cmake`; FREMDER Riegel geaendert: `tests/integration/test_r39_dining1141_kampf.cmake`
   (WARTE 60 -> 240).
-
-### 0a. Bau erneut (Fortsetzung)
-- `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`;
-  `bash re15_port/tools/local_build.sh build` -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)`.
-- `re15_pc.exe` 11:28:49 > alle Quellen des Diffs (kollision_r41.c 10:14:41, Haken-Dateien 11:27:59); Messkopie
-  `re15_pc_h41abn0.exe` sha1 `3da1c0f4c3df7fbabd91679e961d93e6f10df207` = `re15_pc.exe` (bytegleich).
 
 ## 2. Tests der Spur (selbst gefahren)
 `ctest --test-dir re15_port/build -R "r41_kollision" -j 3 --timeout 900 --output-on-failure` ->
@@ -131,7 +131,9 @@ F1875, <Summe-50: 4012, <Summe: 4013, Ende 0`; nach `... MIN 882 bei F1408, <Sum
 `kollision.txt` (nach): 1451 Zeilen `NPC-SCHUB`, davon 643 `slot=2 typ=40 von=1 typ=42` (Marvin aus Ada, b544).
 Bildbogen `bild_p1_3070_vor_nach.png` (F1950/F2400/F3000/F4500, RE15_WINDOW_SCALE=1): **vor** stehen Ada und Marvin als EINE
 Figur ineinander (Nutzer-Befund am echten Weg reproduziert), **nach** stehen sie getrennt nebeneinander. Die 47 Bilder
-zwischen 850 und 900 sind die Wandklemme nach dem Schub (Reihenfolge b544 @0x8011cc44 vor b0a4 @0x8011cc64, s. RE-Gate 1).
+zwischen 850 und 900 sind die Wandklemme nach dem Schub (Reihenfolge b544 @0x8011cc44 vor b0a4 @0x8011cc64, s. RE-Gate 1),
+am Minimum selbst nachgesehen: `kollision.txt` `F1408 ... NPC-SCHUB slot=2 typ=40 von=1 typ=42 vor=(-12829,-16835)
+nach=(-12870,-16864)`, state.txt F1408 Marvin `@(-12870,-16834)` = 30 Einheiten von der Klemme zurueck Richtung Ada.
 Spieler/Ada min 675 (F1755) nach: Ada steht zwischen Leon und Marvin — `kollision.txt` F1755 `von=SPIELER vor=(-10204,-17278)
 nach=(-10128,-17078)` und danach `von=2 typ=40 ... nach=(-10224,-17285)`: der spaetere b544-Schub (Marvin) gewinnt gegen den
 aec4-Schub (Spieler), genau die Original-Reihenfolge @0x8011cc3c -> @0x8011cc44; kein Befund.
@@ -255,6 +257,33 @@ Fenster), nicht durch einen Fehlschuss am Opferzustand. Dass John (0x49) jetzt a
 b544 hat keinen Typfilter (RE-Gate 2), Gorilla-Kasten r 1600 vorbestehend (`re15_damage.c`, @0x80121350). Die geaenderte Fassung
 (WARTE 240) laeuft in der Integrationsgruppe 5.3 mit.
 
+### 5.3 Integrationsgruppe (Auswahl)
+Auswahl = alle Integrationsriegel mit NPC-Szenen (der Schub wirkt in jedem NPC-Tick, auch in Szenen), alle mit Kisten/Objekten
+(Schubkette, Spiegel +0x42) und die breiten Raumlauf-Riegel; 81 Tests:
+`ctest --test-dir re15_port/build -R "^integration_(r35_cut10f0|r35_cut1150|r36_szene1150|r36_szenenleon|r36_story_leon|
+r36_story_elza|r37_szene11c0|r37_roy_szene1011|r37_roy_szene1021|r37_roy_leon1170|r37_sperre1050|r38_heliport1171_.*|
+r39_heliport1171_.*|r38_werkstatt11b0|r38_szenenschutz|r38_kleinkram_irons|r36_elza_irons|r39_johnruf1041_a|r39_johnruf1041_b|
+r39_funk10f1_.*|r39_parkplatz11c0_.*|r38_dining1141_.*|r39_dining1141_.*|r39_stimmen_.*|r39_toene_szene.*|r38_elzatoene_.*|
+r30_irons_tisch_.*|r30_cut_blitz|r37_elzaems_.*|r41_wasser20b0.*|r39_gegner_1141|r36_dachkiste|r36_klettern|r37_kiste.*|
+r37_itemband.*|r38_wasser.*|room_transition|cross_stage|door_traversal|room_probe_sweep)$" -j 3 --timeout 2700
+--output-on-failure` (`ctest_integ.log`).
+Nicht gefahren: die ROOM1260-Parallelszene (Ada + Marvin, Switch case 7 @0x0124E, sub04/sub05) — mein Tuerweg 11B0 slot 5 kam
+nicht an die Tuer (Spieler blieb bei (-62,-18308) haengen, Laeufe `p1_1260_*` abgebrochen). Statisch: die Wegpunkte der beiden
+liegen paarweise 1498/1543 auseinander, die Endlagen (-7500,-6250)/(-8900,-4600) 2164 — kein Plc_dest-Ziel innerhalb der
+Radien-Summe 900 einer anderen Figur. Beleg der Spur (`H_belege/npc11b0_vorher/abstand.txt`, Lauf ueber die 11B0-Szene bis
+ROOM1260): `Paar Slot1(t=42)-Slot2(t=40): min 2372 bei F1 (26750, 11800) (25400, 9850)` = die case-7-Startlagen @0x01254/@0x01268,
+danach nie naeher — in 1260 beruehren sich die beiden schon vorher nicht, der Schub greift dort nicht (nicht selbst gemessen).
+
+### 5.4 Ergebnis der Integrationsgruppe
+**`100% tests passed, 0 tests failed out of 81`** (`Total Test time (real) = 4694.57 sec`, -j 3 unter Last weiterer Agenten,
+`ctest_integ.log`). Darin u.a. integration_r39_dining1141_kampf (geaenderte Fassung WARTE 240) `Passed 307.60 sec`,
+integration_r36_dachkiste `Passed 1394.25 sec`, integration_r36_klettern, integration_r37_kiste/kiste2feld/kistenregel,
+integration_r37_itemband(_lift), integration_r41_wasser20b0(_npc) (NPC-Wasserschritte der Spur A mit dem Schub), alle NPC-Szenen
+(cut10f0, cut1150, szene1150, szenenleon, story_leon/elza, szene11c0, roy_*, heliport1171_*, johnruf1041_a/b, funk10f1_*,
+parkplatz11c0_*, dining1141_*, stimmen_*, toene_szene*, elzatoene_*, irons_tisch_*, elzaems_*), room_transition, cross_stage,
+door_traversal, room_probe_sweep. Kein Fenster-Haken rot, nichts nachzufahren.
+Aufraeumen: eigene Messkopien `re15_pc_h41abn0.exe` / `re15_pc_h41abn0_vorher.exe` aus build/platform/pc entfernt.
+
 ## 6. Vertrag (VERTRAG.md)
 - Pfade (`git diff master...HEAD --name-only`, gegen die merge-base 7b59e297, weil master inzwischen weiter ist — ein plumpes
   `git diff master` listet die pri/-Ersetzung 919cc1ed des Orchestrators, die NICHT von der Spur stammt): ausser `analysis/
@@ -281,23 +310,6 @@ b544 hat keinen Typfilter (RE-Gate 2), Gorilla-Kasten r 1600 vorbestehend (`re15
   gelesen (`test_r41_kollision.exe npc|raum3070|raum3001|kiste`: alle PASS, z.B. `|dX| = 1800 = hx+hx -> UEBERLAPPUNG`,
   `|dX| = 1801 -> frei`, `min. Abstand 899 >= 880`, `min. Abstand 732 >= 730`). **haelt.**
 
-### 5.3 Integrationsgruppe (laeuft; Ergebnis folgt unten in 5.4)
-Auswahl = alle Integrationsriegel mit NPC-Szenen (der Schub wirkt in jedem NPC-Tick, auch in Szenen), alle mit Kisten/Objekten
-(Schubkette, Spiegel +0x42) und die breiten Raumlauf-Riegel; 81 Tests:
-`ctest --test-dir re15_port/build -R "^integration_(r35_cut10f0|r35_cut1150|r36_szene1150|r36_szenenleon|r36_story_leon|
-r36_story_elza|r37_szene11c0|r37_roy_szene1011|r37_roy_szene1021|r37_roy_leon1170|r37_sperre1050|r38_heliport1171_.*|
-r39_heliport1171_.*|r38_werkstatt11b0|r38_szenenschutz|r38_kleinkram_irons|r36_elza_irons|r39_johnruf1041_a|r39_johnruf1041_b|
-r39_funk10f1_.*|r39_parkplatz11c0_.*|r38_dining1141_.*|r39_dining1141_.*|r39_stimmen_.*|r39_toene_szene.*|r38_elzatoene_.*|
-r30_irons_tisch_.*|r30_cut_blitz|r37_elzaems_.*|r41_wasser20b0.*|r39_gegner_1141|r36_dachkiste|r36_klettern|r37_kiste.*|
-r37_itemband.*|r38_wasser.*|room_transition|cross_stage|door_traversal|room_probe_sweep)$" -j 3 --timeout 2700
---output-on-failure` (`ctest_integ.log`).
-Nicht gefahren: die ROOM1260-Parallelszene (Ada + Marvin, Switch case 7 @0x0124E, sub04/sub05) — mein Tuerweg 11B0 slot 5 kam
-nicht an die Tuer (Spieler blieb bei (-62,-18308) haengen, Laeufe `p1_1260_*` abgebrochen). Statisch: die Wegpunkte der beiden
-liegen paarweise 1498/1543 auseinander, die Endlagen (-7500,-6250)/(-8900,-4600) 2164 — kein Plc_dest-Ziel innerhalb der
-Radien-Summe 900 einer anderen Figur. Beleg der Spur (`H_belege/npc11b0_vorher/abstand.txt`, Lauf ueber die 11B0-Szene bis
-ROOM1260): `Paar Slot1(t=42)-Slot2(t=40): min 2372 bei F1 (26750, 11800) (25400, 9850)` = die case-7-Startlagen @0x01254/@0x01268,
-danach nie naeher — in 1260 beruehren sich die beiden schon vorher nicht, der Schub greift dort nicht (nicht selbst gemessen).
-
 ## 7. Urteile je Nutzer-Punkt (gegen den Wortlaut)
 | Punkt (Wortlaut) | Urteil | Beleg |
 |---|---|---|
@@ -308,7 +320,7 @@ danach nie naeher — in 1260 beruehren sich die beiden schon vorher nicht, der 
 - **RE-Gate: haelt.** Jede neue verhaltensrelevante Zahl hat ihre Adresse; 8 Stellen selbst disassembliert/gelesen (Abschnitt 3),
   alle stimmen mit dem Behaupteten ueberein; keine Rate-Woerter im Code-Diff; der Fix erklaert beide gemessenen Befunde.
 - **Tests: halten** (Spur 9/9 + 5/5 mit -V; unit_/prop_/probe_ 922/922 ohne 10 Bash-Riegel ohne Diff-Bezug; Integrationsgruppe
-  s. 5.4).
+  81/81, 5.4).
 - **Vertrag: haelt mit zwei formalen Abweichungen** (V1 Haken in enemy_ai_common.c ausserhalb der Zuteilung §1.3, V2 fremder
   Riegel geaendert). Beide sind technisch begruendet und nachgemessen, brauchen aber einen Orchestrator-Entscheid (Muster B5 /
   C-E3 / E-E1 / I-E1).
@@ -339,3 +351,15 @@ danach nie naeher — in 1260 beruehren sich die beiden schon vorher nicht, der 
   Radien-Summe an einer anderen Figur wird nie erreicht (wie im Original).
 - H6: ROOM3001 direkt nach dem Eintritt Spieler/John 53 Bilder < 850 in BEIDEN exe (vorbestehend, Spieler-gegen-NPC, nicht Teil
   des Punkts).
+
+## 11. Ergebnis
+- Punkt 1 (NPCs ineinander): **erfuellt** — am echten Tuerweg fuer Leon (3070) und Elza (3001) vorher reproduziert (Abstand 0),
+  nachher getrennt (min 882 bzw. 737 bei Radien-Summe 900 bzw. 750, Rest = Wandklemme mit Hautabstand 18 @0x8003bce0), Mechanismus
+  byte-true (aec4 @0x8011cc3c + b544 @0x8011cc44 vor b0a4 @0x8011cc64, 28/28 Wurzeln), STAGE2-Szene 2000 unveraendert.
+- Punkt 2 (Kisten 2050 ineinander): **erfuellt** — eigene Szenarien auf beiden Achsen (Leon) und fuer Elza (2051) vorher
+  ineinander (bis 1781 Einheiten tief, Kisten zuletzt deckungsgleich), nachher 0 Ueberlappung mit `OBJEKT-GESPERRT` an der
+  inklusiven Grenze 1800 (FUN_8002cdf4 @0x8002ce80-cea0, Durchlauf @0x8002c03c-c0a8); Raetsel bleibt loesbar (Leon + Elza).
+- RE-Gate und Tests halten; Vertrag mit den formalen Abweichungen V1 (Haken in enemy_ai_common.c) und V2 (fremder Riegel R39 J).
+- **bestanden = NEIN** — nur wegen V1/V2: beide brauchen einen Orchestrator-Entscheid (Muster B5/C-E3/E-E1/I-E1), aber keine
+  Code-Nachbesserung. Werden V1 und V2 angenommen, ist die Spur in diesem Stand (4616305a + diese Abnahme) integrierbar; bei der
+  Integration H5 beachten (NPC-Szenen der Spuren G/J/K mit dem Schub nachfahren).
