@@ -1,0 +1,288 @@
+== Spieler (Sherry): Original 20 Abschnitte (alle Subs 34), Port 28 Abschnitte
+   ORIG B    0-    0 sub0 clip 3     Bild 0..0 fl 0000
+   ORIG B    1-  779 sub0 clip13     Bild 0..39 fl 0024
+   ORIG B  780-  829 sub0 clip12     Bild 0..29 fl 0020
+   ORIG B  830-  879 sub0 clip12 rev Bild 0..29 fl 00a0
+   ORIG B  880- 1383 sub0 clip13     Bild 0..39 fl 0024
+   ORIG B 1384- 1433 sub0 clip11     Bild 0..24 fl 0020
+   ORIG B 1434- 1483 sub0 clip11 rev Bild 0..14 fl 00a0
+   ORIG B 1484- 1716 sub0 clip13     Bild 0..39 fl 0024
+   ORIG B 1717- 1766 sub0 clip11     Bild 0..33 fl 0020
+   ORIG B 1767- 1816 sub0 clip11 rev Bild 0..14 fl 00a0
+   ORIG B 1817- 1976 sub0 clip13     Bild 0..39 fl 0024
+   ORIG B 1977- 2026 sub0 clip12     Bild 0..29 fl 0020
+   ORIG B 2027- 2076 sub0 clip12 rev Bild 0..29 fl 00a0
+   ORIG B 2077- 2492 sub0 clip13     Bild 0..39 fl 0024
+   ORIG B 2493- 2542 sub0 clip12     Bild 0..29 fl 0020
+   ORIG B 2543- 2613 sub0 clip12 rev Bild 0..29 fl 00a0
+   ORIG B 2614- 2663 sub0 clip11     Bild 0..14 fl 0020
+   ORIG B 2664- 2713 sub0 clip11 rev Bild 0..14 fl 00a0
+   ORIG B 2714- 2877 sub0 clip13     Bild 0..39 fl 0024
+   ORIG B 2878- 2878 sub9 clip13     Bild 4..4 fl 0000
+   ORIG B 2879- 2883 sub9 clip 5     Bild 1..5 fl 0020
+   ORIG B 2884- 2884 sub5 clip 5     Bild 6..6 fl 0000
+   ORIG B 2885- 2892 sub5 clip 0     Bild 1..8 fl 0020
+   ORIG B 2893- 2893 sub9 clip 0     Bild 9..9 fl 0000
+   ORIG B 2894- 2894 sub5 clip 5     Bild 1..1 fl 0000
+   ORIG B 2895- 2903 sub5 clip 0     Bild 1..9 fl 0020
+   ORIG B 2904- 2904 sub9 clip 0     Bild 10..10 fl 0000
+   ORIG B 2905- 2908 sub9 clip 5     Bild 1..4 fl 0020
+   ORIG B 2909- 2909 sub5 clip 5     Bild 5..5 fl 0000
+   ORIG B 2910- 2937 sub5 clip 0     Bild 0..19 fl 0020
+   ORIG B 2938- 2938 sub6 clip 0     Bild 9..9 fl 0020
+   ORIG B 2939- 2939 sub6 clip 1     Bild 0..0 fl 0000
+   ORIG B 2940- 2952 sub6 clip 2     Bild 1..13 fl 0020
+   ORIG B 2953- 2953 sub0 clip 2     Bild 13..13 fl 0020
+   PORT F    0-    5 clip 1     fc 1
+   PORT F    6-  122 clip 3     fc 1
+   PORT F  123-  901 clip13     fc 40
+   PORT F  902-  951 clip12     fc 30
+   PORT F  952- 1001 clip12 rev fc 30
+   PORT F 1002- 1505 clip13     fc 40
+   PORT F 1506- 1555 clip11     fc 15
+   PORT F 1556- 1605 clip11 rev fc 15
+   PORT F 1606- 1838 clip13     fc 40
+   PORT F 1839- 1888 clip11     fc 15
+   PORT F 1889- 1938 clip11 rev fc 15
+   PORT F 1939- 2098 clip13     fc 40
+   PORT F 2099- 2148 clip12     fc 30
+   PORT F 2149- 2198 clip12 rev fc 30
+   PORT F 2199- 2614 clip13     fc 40
+   PORT F 2615- 2664 clip12     fc 30
+   PORT F 2665- 2735 clip12 rev fc 30
+   PORT F 2736- 2785 clip11     fc 15
+   PORT F 2786- 2835 clip11 rev fc 15
+   PORT F 2836- 2999 clip13     fc 40
+   PORT F 3000- 3005 clip 5     fc 28
+   PORT F 3006- 3014 clip 0     fc 20
+   PORT F 3015- 3016 clip 5     fc 28
+   PORT F 3017- 3026 clip 0     fc 20
+   PORT F 3027- 3031 clip 5     fc 28
+   PORT F 3032- 3060 clip 0     fc 20
+   PORT F 3061- 3061 clip 1     fc 1
+   PORT F 3062- 3062 clip 2     fc 40
+   Original Sub-0-Clipfolge: [(3, 0), (13, 0), (12, 0), (12, 1), (13, 0), (11, 0), (11, 1), (13, 0), (11, 0), (11, 1), (13, 0), (12, 0), (12, 1), (13, 0), (12, 0), (12, 1), (11, 0), (11, 1), (13, 0), (2, 0)]
+== Gegner 0 (John 0x49): Original 32 Abschnitte (alle Subs 63), Port 53 Abschnitte
+   ORIG B    0-   43 sub6 clip 2     Bild 0..51 fl 0020
+   ORIG B   44-   44 sub5 clip 2     Bild 33..33 fl 0000
+   ORIG B   45-   65 sub5 clip 0     Bild 1..21 fl 0020
+   ORIG B   66-   66 sub6 clip 0     Bild 0..0 fl 0000
+   ORIG B   67-   74 sub6 clip 1     Bild 1..8 fl 0020
+   ORIG B   75-  104 sub0 clip 3     Bild 0..19 fl 0020
+   ORIG B  105-  124 sub0 clip 3 rev Bild 0..19 fl 00a0
+   ORIG B  125-  176 sub0 clip 2     Bild 0..29 fl 0020
+   ORIG B  177-  226 sub0 clip 0     Bild 0..19 fl 0020
+   ORIG B  227-  276 sub0 clip 0 rev Bild 0..19 fl 00a0
+   ORIG B  277-  418 sub0 clip 8     Bild 0..23 fl 0020
+   ORIG B  419-  468 sub0 clip 0     Bild 0..19 fl 0020
+   ORIG B  469-  518 sub0 clip 0 rev Bild 0..19 fl 00a0
+   ORIG B  519-  659 sub0 clip 8     Bild 0..23 fl 0020
+   ORIG B  660-  709 sub0 clip 1     Bild 0..29 fl 0020
+   ORIG B  710-  759 sub0 clip 1 rev Bild 0..29 fl 00a0
+   ORIG B  760-  899 sub0 clip 8     Bild 0..23 fl 0020
+   ORIG B  900-  924 sub0 clip 4     Bild 0..24 fl 0020
+   ORIG B  925-  949 sub0 clip 4 rev Bild 1..25 fl 00a0
+   ORIG B  950-  974 sub0 clip 3     Bild 0..25 fl 0020
+   ORIG B  975-  999 sub0 clip 3 rev Bild 0..19 fl 00a0
+   ORIG B 1000- 1141 sub0 clip 8     Bild 0..23 fl 0020
+   ORIG B 1142- 1166 sub0 clip 1     Bild 0..24 fl 0020
+   ORIG B 1167- 1191 sub0 clip 1 rev Bild 1..25 fl 00a0
+   ORIG B 1192- 1216 sub0 clip 0     Bild 0..25 fl 0020
+   ORIG B 1217- 1241 sub0 clip 0 rev Bild 0..19 fl 00a0
+   ORIG B 1242- 1676 sub0 clip 8     Bild 0..23 fl 0020
+   ORIG B 1677- 1677 sub9 clip 8     Bild 0..0 fl 0000
+   ORIG B 1678- 1685 sub9 clip 5     Bild 1..8 fl 0020
+   ORIG B 1686- 1686 sub6 clip 5     Bild 9..9 fl 0020
+   ORIG B 1687- 1702 sub6 clip 1     Bild 0..15 fl 0020
+   ORIG B 1703- 1711 sub6 clip 2     Bild 1..9 fl 0020
+   ORIG B 1712- 1836 sub2 clip 6     Bild 0..10 fl 0020
+   ORIG B 1837- 1856 sub2 clip 6 rev Bild 0..9 fl 00a0
+   ORIG B 1857- 1881 sub0 clip 4     Bild 0..24 fl 0020
+   ORIG B 1882- 1906 sub0 clip 4 rev Bild 1..25 fl 00a0
+   ORIG B 1907- 1931 sub0 clip 0     Bild 0..25 fl 0020
+   ORIG B 1932- 1956 sub0 clip 0 rev Bild 0..19 fl 00a0
+   ORIG B 1957- 2121 sub0 clip 8     Bild 0..23 fl 0020
+   ORIG B 2122- 2122 sub9 clip 8     Bild 0..0 fl 0000
+   ORIG B 2123- 2130 sub9 clip 5     Bild 1..8 fl 0020
+   ORIG B 2131- 2131 sub6 clip 5     Bild 9..9 fl 0020
+   ORIG B 2132- 2147 sub6 clip 1     Bild 0..15 fl 0020
+   ORIG B 2148- 2271 sub6 clip 2     Bild 0..51 fl 0020
+   ORIG B 2272- 2321 sub0 clip 3     Bild 0..21 fl 0020
+   ORIG B 2322- 2372 sub0 clip 3 rev Bild 0..19 fl 00a0
+   ORIG B 2373- 2422 sub0 clip 0     Bild 0..19 fl 0020
+   ORIG B 2423- 2472 sub0 clip 0 rev Bild 0..19 fl 00a0
+   ORIG B 2473- 2855 sub0 clip 8     Bild 0..23 fl 0020
+   ORIG B 2856- 2856 sub9 clip 8     Bild 0..0 fl 0000
+   ORIG B 2857- 2857 sub5 clip 5     Bild 1..1 fl 0000
+   ORIG B 2858- 2868 sub5 clip 0     Bild 1..11 fl 0020
+   ORIG B 2869- 2869 sub9 clip 0     Bild 12..12 fl 0000
+   ORIG B 2870- 2873 sub9 clip 5     Bild 1..4 fl 0020
+   ORIG B 2874- 2874 sub5 clip 5     Bild 5..5 fl 0000
+   ORIG B 2875- 2883 sub5 clip 0     Bild 1..9 fl 0020
+   ORIG B 2884- 2884 sub9 clip 0     Bild 10..10 fl 0000
+   ORIG B 2885- 2888 sub9 clip 5     Bild 1..4 fl 0020
+   ORIG B 2889- 2889 sub5 clip 5     Bild 5..5 fl 0000
+   ORIG B 2890- 2924 sub5 clip 0     Bild 0..21 fl 0020
+   ORIG B 2925- 2925 sub6 clip 0     Bild 14..14 fl 0000
+   ORIG B 2926- 2941 sub6 clip 1     Bild 0..15 fl 0020
+   ORIG B 2942- 2953 sub6 clip 2     Bild 1..11 fl 0020
+   PORT F    0-    6 clip 2     fc 50
+   PORT F    7-   22 clip 1     fc 16
+   PORT F   23-  165 clip 2     fc 52
+   PORT F  166-  187 clip 0     fc 22
+   PORT F  188-  196 clip 1     fc 16
+   PORT F  197-  226 clip 3     fc 20
+   PORT F  227-  246 clip 3 rev fc 20
+   PORT F  247-  298 clip 2     fc 30
+   PORT F  299-  348 clip 0     fc 20
+   PORT F  349-  398 clip 0 rev fc 20
+   PORT F  399-  540 clip 8     fc 24
+   PORT F  541-  590 clip 0     fc 20
+   PORT F  591-  640 clip 0 rev fc 20
+   PORT F  641-  781 clip 8     fc 24
+   PORT F  782-  831 clip 1     fc 30
+   PORT F  832-  881 clip 1 rev fc 30
+   PORT F  882- 1021 clip 8     fc 24
+   PORT F 1022- 1046 clip 4     fc 30
+   PORT F 1047- 1071 clip 4 rev fc 30
+   PORT F 1072- 1096 clip 3     fc 20
+   PORT F 1097- 1121 clip 3 rev fc 20
+   PORT F 1122- 1263 clip 8     fc 24
+   PORT F 1264- 1288 clip 1     fc 30
+   PORT F 1289- 1313 clip 1 rev fc 30
+   PORT F 1314- 1338 clip 0     fc 20
+   PORT F 1339- 1363 clip 0 rev fc 20
+   PORT F 1364- 1798 clip 8     fc 24
+   PORT F 1799- 1807 clip 5     fc 30
+   PORT F 1808- 1823 clip 1     fc 16
+   PORT F 1824- 1833 clip 2     fc 52
+   PORT F 1834- 1958 clip 6     fc 10
+   PORT F 1959- 1978 clip 6 rev fc 10
+   PORT F 1979- 2003 clip 4     fc 30
+   PORT F 2004- 2028 clip 4 rev fc 30
+   PORT F 2029- 2053 clip 0     fc 20
+   PORT F 2054- 2078 clip 0 rev fc 20
+   PORT F 2079- 2243 clip 8     fc 24
+   PORT F 2244- 2252 clip 5     fc 30
+   PORT F 2253- 2268 clip 1     fc 16
+   PORT F 2269- 2393 clip 2     fc 52
+   PORT F 2394- 2443 clip 3     fc 20
+   PORT F 2444- 2494 clip 3 rev fc 20
+   PORT F 2495- 2544 clip 0     fc 20
+   PORT F 2545- 2594 clip 0 rev fc 20
+   PORT F 2595- 2976 clip 8     fc 24
+   PORT F 2977- 2977 clip 5     fc 30
+   PORT F 2978- 2989 clip 0     fc 22
+   PORT F 2990- 2994 clip 5     fc 30
+   PORT F 2995- 3004 clip 0     fc 22
+   PORT F 3005- 3009 clip 5     fc 30
+   PORT F 3010- 3045 clip 0     fc 22
+   PORT F 3046- 3061 clip 1     fc 16
+   PORT F 3062- 3062 clip 2     fc 52
+   Original Sub-0-Clipfolge: [(3, 0), (3, 1), (2, 0), (0, 0), (0, 1), (8, 0), (0, 0), (0, 1), (8, 0), (1, 0), (1, 1), (8, 0), (4, 0), (4, 1), (3, 0), (3, 1), (8, 0), (1, 0), (1, 1), (0, 0), (0, 1), (8, 0), (4, 0), (4, 1), (0, 0), (0, 1), (8, 0), (3, 0), (3, 1), (0, 0), (0, 1), (8, 0)]
+== Gegner 1 (Elza-NPC 0x42): Original 28 Abschnitte (alle Subs 58), Port 46 Abschnitte
+   ORIG B    0-   26 sub6 clip 2     Bild 0..51 fl 0020
+   ORIG B   27-   27 sub5 clip 2     Bild 16..16 fl 0000
+   ORIG B   28-   43 sub5 clip 0     Bild 1..16 fl 0020
+   ORIG B   44-   44 sub9 clip 0     Bild 17..17 fl 0000
+   ORIG B   45-   48 sub9 clip 5     Bild 1..4 fl 0020
+   ORIG B   49-   49 sub5 clip 5     Bild 5..5 fl 0000
+   ORIG B   50-   57 sub5 clip 0     Bild 1..8 fl 0020
+   ORIG B   58-   58 sub9 clip 0     Bild 9..9 fl 0000
+   ORIG B   59-   72 sub9 clip 5     Bild 1..14 fl 0020
+   ORIG B   73-   73 sub6 clip 5     Bild 15..15 fl 0020
+   ORIG B   74-   89 sub6 clip 1     Bild 0..15 fl 0020
+   ORIG B   90-  297 sub6 clip 2     Bild 0..51 fl 0020
+   ORIG B  298-  322 sub0 clip 4     Bild 1..24 fl 0020
+   ORIG B  323-  347 sub0 clip 4 rev Bild 1..25 fl 00a0
+   ORIG B  348-  372 sub0 clip 3     Bild 0..25 fl 0020
+   ORIG B  373-  397 sub0 clip 3 rev Bild 0..19 fl 00a0
+   ORIG B  398-  539 sub0 clip 9     Bild 0..23 fl 0020
+   ORIG B  540-  564 sub0 clip 1     Bild 0..24 fl 0020
+   ORIG B  565-  589 sub0 clip 1 rev Bild 1..25 fl 00a0
+   ORIG B  590-  614 sub0 clip 0     Bild 0..25 fl 0020
+   ORIG B  615-  639 sub0 clip 0 rev Bild 0..19 fl 00a0
+   ORIG B  640- 1020 sub0 clip 9     Bild 0..23 fl 0020
+   ORIG B 1021- 1070 sub0 clip 4     Bild 0..29 fl 0020
+   ORIG B 1071- 1120 sub0 clip 4 rev Bild 0..29 fl 00a0
+   ORIG B 1121- 1261 sub0 clip 9     Bild 0..23 fl 0020
+   ORIG B 1262- 1286 sub0 clip 1     Bild 0..24 fl 0020
+   ORIG B 1287- 1312 sub0 clip 1 rev Bild 1..25 fl 00a0
+   ORIG B 1313- 1337 sub0 clip 0     Bild 0..26 fl 0020
+   ORIG B 1338- 1362 sub0 clip 0 rev Bild 0..19 fl 00a0
+   ORIG B 1363- 1503 sub0 clip 9     Bild 0..23 fl 0020
+   ORIG B 1504- 1553 sub0 clip 4     Bild 0..29 fl 0020
+   ORIG B 1554- 1603 sub0 clip 4 rev Bild 0..29 fl 00a0
+   ORIG B 1604- 1671 sub0 clip 9     Bild 0..23 fl 0020
+   ORIG B 1672- 1672 sub9 clip 9     Bild 0..0 fl 0000
+   ORIG B 1673- 1694 sub9 clip 5     Bild 1..22 fl 0020
+   ORIG B 1695- 1695 sub6 clip 5     Bild 23..23 fl 0020
+   ORIG B 1696- 1706 sub6 clip 1     Bild 1..11 fl 0020
+   ORIG B 1707- 2096 sub2 clip 6     Bild 0..12 fl 0020
+   ORIG B 2097- 2116 sub2 clip 6 rev Bild 0..9 fl 00a0
+   ORIG B 2117- 2117 sub9 clip 6     Bild 0..0 fl 0000
+   ORIG B 2118- 2137 sub9 clip 5     Bild 1..20 fl 0020
+   ORIG B 2138- 2138 sub6 clip 5     Bild 21..21 fl 0020
+   ORIG B 2139- 2151 sub6 clip 1     Bild 1..13 fl 0020
+   ORIG B 2152- 2176 sub0 clip 5     Bild 1..24 fl 0020
+   ORIG B 2177- 2201 sub0 clip 5 rev Bild 0..24 fl 00a0
+   ORIG B 2202- 2251 sub0 clip 2     Bild 0..29 fl 0020
+   ORIG B 2252- 2733 sub0 clip 9     Bild 0..23 fl 0020
+   ORIG B 2734- 2783 sub0 clip 6     Bild 0..29 fl 0020
+   ORIG B 2784- 2833 sub0 clip 6 rev Bild 0..29 fl 00a0
+   ORIG B 2834- 2874 sub0 clip 9     Bild 0..23 fl 0020
+   ORIG B 2875- 2875 sub9 clip 9     Bild 0..0 fl 0000
+   ORIG B 2876- 2885 sub9 clip 5     Bild 1..10 fl 0020
+   ORIG B 2886- 2886 sub6 clip 5     Bild 11..11 fl 0020
+   ORIG B 2887- 2902 sub6 clip 1     Bild 0..15 fl 0020
+   ORIG B 2903- 2940 sub6 clip 2     Bild 1..38 fl 0020
+   ORIG B 2941- 2941 sub9 clip 2     Bild 39..39 fl 0000
+   ORIG B 2942- 2951 sub9 clip 5     Bild 1..10 fl 0020
+   ORIG B 2952- 2953 sub6 clip 5     Bild 11..11 fl 0020
+   PORT F    0-    6 clip 2     fc 50
+   PORT F    7-   22 clip 1     fc 16
+   PORT F   23-  148 clip 2     fc 52
+   PORT F  149-  165 clip 0     fc 22
+   PORT F  166-  170 clip 5     fc 30
+   PORT F  171-  179 clip 0     fc 22
+   PORT F  180-  194 clip 5     fc 30
+   PORT F  195-  210 clip 1     fc 16
+   PORT F  211-  419 clip 2     fc 52
+   PORT F  420-  444 clip 4     fc 30
+   PORT F  445-  469 clip 4 rev fc 30
+   PORT F  470-  494 clip 3     fc 20
+   PORT F  495-  519 clip 3 rev fc 20
+   PORT F  520-  661 clip 9     fc 24
+   PORT F  662-  686 clip 1     fc 30
+   PORT F  687-  711 clip 1 rev fc 30
+   PORT F  712-  736 clip 0     fc 20
+   PORT F  737-  761 clip 0 rev fc 20
+   PORT F  762- 1142 clip 9     fc 24
+   PORT F 1143- 1192 clip 4     fc 30
+   PORT F 1193- 1242 clip 4 rev fc 30
+   PORT F 1243- 1383 clip 9     fc 24
+   PORT F 1384- 1408 clip 1     fc 30
+   PORT F 1409- 1434 clip 1 rev fc 30
+   PORT F 1435- 1459 clip 0     fc 20
+   PORT F 1460- 1484 clip 0 rev fc 20
+   PORT F 1485- 1625 clip 9     fc 24
+   PORT F 1626- 1675 clip 4     fc 30
+   PORT F 1676- 1725 clip 4 rev fc 30
+   PORT F 1726- 1793 clip 9     fc 24
+   PORT F 1794- 1816 clip 5     fc 30
+   PORT F 1817- 1828 clip 1     fc 16
+   PORT F 1829- 2218 clip 6     fc 10
+   PORT F 2219- 2238 clip 6 rev fc 10
+   PORT F 2239- 2259 clip 5     fc 30
+   PORT F 2260- 2273 clip 1     fc 16
+   PORT F 2274- 2298 clip 5     fc 25
+   PORT F 2299- 2323 clip 5 rev fc 25
+   PORT F 2324- 2373 clip 2     fc 30
+   PORT F 2374- 2855 clip 9     fc 24
+   PORT F 2856- 2905 clip 6     fc 30
+   PORT F 2906- 2955 clip 6 rev fc 30
+   PORT F 2956- 2996 clip 9     fc 24
+   PORT F 2997- 3007 clip 5     fc 30
+   PORT F 3008- 3023 clip 1     fc 16
+   PORT F 3024- 3062 clip 2     fc 52
+   Original Sub-0-Clipfolge: [(4, 0), (4, 1), (3, 0), (3, 1), (9, 0), (1, 0), (1, 1), (0, 0), (0, 1), (9, 0), (4, 0), (4, 1), (9, 0), (1, 0), (1, 1), (0, 0), (0, 1), (9, 0), (4, 0), (4, 1), (9, 0), (5, 0), (5, 1), (2, 0), (9, 0), (6, 0), (6, 1), (9, 0)]

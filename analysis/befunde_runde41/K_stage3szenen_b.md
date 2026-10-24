@@ -172,3 +172,56 @@ debug.log: `[sherry-r41] Spielermodell 4 -> 15, Waffe (aca5d) 0`, `[sherry-r41] 
 24 Clips, W00 9 Clips, Wurzel-Bind y -1268`, `[pld] Spielermodell -> PLD/PL0F.PLD`. Bild
 **`K_belege/k1_original_vs_port_nachher_30c1.png`** (Original-Puffer | Port vorher F200 | Port nachher F20 | F200):
 nachher steht Sherry wie im Original als Kind mit geschlossenen Gliedern, Schuhe im Schatten, keine Waffe.
+
+## K2 — ROOM3091-Szene "staendig falsche Animationen"
+
+### K2.1 Skript (ROOM3091 sub07 @0x016CA..@0x01DB0, `K_belege/k2_scd3091.txt`) und Rollen
+Spieler = SHERRY (Modell 0x0F, K1.3), Gegner 0 = John (0x49, Sce_em_set @0x014E0), Gegner 1 = Elza als NPC (0x42 aus
+CDEMD1 Sektor 1505, @0x014F4). Plc_motion(0,n) = Kanal-Sub 0 = Raum-RBJ (+0x180/+0x184, Handler @0x80041b90:
++0x94 = pc[2] @0x80041ba8, +0x5 = pc[1] @0x80041bc4, +0x1c4 = pc[3] @0x80041bc8), Plc_motion(2,6) = Sub 2 = eigene
+Bank (+0x170/+0x174), Plc_dest Modus 5/9 = Geh-/Dreh-Sub (eigene Bank). Raum-RBJ 3091: rec0 Marker 0x1 (1 Clip,
+2 Keyframes = Platzhalter), rec1 Marker 0x2 (10 Clips, John), rec2 Marker 0x3 (14 Clips; 0..10 Erwachsenenhoehe =
+Elza, 11..13 Kindhoehe = Sherry, K1.3). Binder FUN_8001b3f8 (Spur J, @0x8001b410/@0x8001b450/@0x8001b4c4):
+Spieler = letzter Record mit Bit 0 = rec2, Gegner 0 = rec1, Gegner 1 = rec2.
+
+### K2.2 Messung vorher (Port, Basis 700483de ohne Binder; Laeufe `re15_port/build/r41k_laeufe/v3091a|b`)
+Elza-Neuspiel, RE15_DEBUG_JUMP=3090@250, RE15_SUBSTART=7@40#3091, Kreuz alle 30 Bilder (RE15_PAD_AT), RE15_ANIM_TRACE,
+RE15_FRAMEDUMP. Clip-Folge `K_belege/k2_port_vorher_3091_clipfolge.txt`, Bilder `k2_vorher_bogen1.png`,
+`k2_vorher_zoom1.png`. debug.log `[rbj] room 3091 cinematic overlay: 1 clips, 2 kf`:
+* Spieler: in ALLEN Spielerzeilen Clip 0 mit 2 Bildern (rec0-Platzhalter) — die Figur steht starr, keine Geste.
+* Gegner 1 (Elza-NPC): UNGEBUNDEN -> Plc_motion(0,n) spielt Bank 0 des NPC-Blobs (dir1: Clips {34,32,50,20,20,20,
+  50,1,...}): u.a. Clip 9 = 1 Bild, hunderte Bilder lang gehalten (F520-661, F762-1142, ...), Clip 3/4 mit
+  Wurzelversatz -> Bilder zeigen verrenkte/kniende Posen.
+* Gegner 0 (John): rec1 (richtig gebunden).
+=> Nutzer-Befund reproduziert. Ursache: Binder (A-E5, Spur J) — Spieler rec0 statt rec2, Gegner 1 ohne Record.
+
+### K2.3 ORIGINAL gemessen (DuckStation-GDB, `re15_port/tools/r41_k/k2_orig_3091.py`)
+Ausgang: Spielstand HASH-957757946319438E_1.sav (sauber, Modell 0x0F in 30C1, Kopie scratchpad K41/orig). Bild 20:
+Flags (4,8)=1 + (9,21)=1 (Bank-Tabelle @0x80074664), Tuerwechsel wie FUN_800430bc mit der Nutzlast der 30C1-Tuer
+Slot 0 (@0x00B5A, Ziel 3091), Spieler vor die Riegeltuer (Slot 1), Viereck (= raw 0x80, AOT-Pruefung) -> sub02 ->
+sub07: "SZENE (4,16)=1 bei Bild 175". Danach je Bild (Haltepunkt 0x8001ce04) Spieler + Gegner 0/1: Sub, Phase, Clip,
+Bild, +0x1c4, +0x180/+0x184, Lage; Kreuz alle 40 Bilder. 2953 Szenenbilder bis zum Raumwechsel nach 30C1.
+settings.ini und resume.sav danach bytegleich zurueck (Protokoll-Kopf `K_belege/k2_orig_3091_gdb_lauf2_kopf.txt`,
+volles Protokoll `k2_orig_3091_gdb_lauf2.log.gz`).
+* RBJ-Kanaele im RAM: Spieler (Typ 0x0f) und Gegner 1 (0x42) w180/w184 = 0x8012737c/0x8012da54 = rec2, Gegner 0
+  (0x49) 0x80121de4/0x80126edc = rec1 (Basis RBJ+0x1440; Record-Offsets aus dem RDT-Trailer) -> Binder-Ergebnis
+  der Spur J am Original bestaetigt.
+* Sub-0-Clipfolgen (Original):
+  Spieler: 13(Schleife), 12, 12r, 13, 11, 11r, 13, 11, 11r, 13, 12, 12r, 13, 12, 12r, 11, 11r, 13
+  Gegner 0: 3, 3r, 2, 0, 0r, 8, 0, 0r, 8, 1, 1r, 8, 4, 4r, 3, 3r, 8, 1, 1r, 0, 0r, 8, 4, 4r, 0, 0r, 8, 3, 3r, 0, 0r, 8
+  Gegner 1: 4, 4r, 3, 3r, 9, 1, 1r, 0, 0r, 9, 4, 4r, 9, 1, 1r, 0, 0r, 9, 4, 4r, 9, 5, 5r, 2, 9, 6, 6r, 9
+  (r = Plc_flg 0x80 rueckwaerts). Dazwischen die Geh-/Dreh-Subs 5/6/9 (eigene Bank Clip 0/1/2/5) und Sub 2 Clip 6.
+
+### K2.4 Umsetzung
+Keine eigene Aenderung am Binder (A-E5): J's Commit e4a9f39c `rbj-binder` UNVERAENDERT per cherry-pick (hier
+299b6deb). Dazu K1 (Sherry-Koerper), damit rec2-Clips 11..13 auf dem Kind-Skelett laufen, fuer das sie gebaut sind.
+
+### K2.5 Messung nachher (Bau cdb12ea8, Lauf `re15_port/build/r41k_laeufe/n3091s`)
+Sherry als Spielfigur (RE15_WORKVAR_AT=0x10:15@200 vor dem Sprung -> Raumlader tauscht den Koerper), sonst wie K2.2.
+debug.log: `[rbj-binder] ROOM3091 Spieler rec2 (alt rec0) Gegner 0:rec1(alt rec1) 1:rec2(alt rec-1)`,
+`Aktor 1 Typ 0x49 Marker-Slot 1 -> rec1`, `Aktor 2 Typ 0x42 Marker-Slot 2 -> rec2`.
+Vergleich `K_belege/k2_vergleich_orig_port_nachher.txt` (`re15_port/tools/r41_k/k2_vergleich.py`): die Sub-0-
+Clipfolgen von Spieler, John und Elza-NPC sind im Port nachher IDENTISCH mit dem Original (gleiche Clips, gleiche
+Reihenfolge, gleiche Vor-/Rueckwaerts-Paare, gleiche Schleife Clip 13); Bildzahlen je Clip gleich (rec2: 13=40,
+12=30, 11=15; Elza 4=30, 3=20, 9=24, 1=30, 0=20, 5=25, 2=30, 6=30; John rec1). Absolute Bildnummern weichen nur
+durch den Tastentakt der Nachrichten ab (Port 30, Original 40 Bilder). Bilder `K_belege/k2_nachher_zoom1.png`.
