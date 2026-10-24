@@ -328,3 +328,31 @@ in das 2090-Becken). Spur C (Nachbesserung 2):
    frei ist (mit Beleg). Steht eine ORIGINAL-Sperre im Weg oder gibt es den Weg nicht: NICHTS erfinden — den
    blockierenden Punkt (Tuer, Bit, SCD-Offset, Bild) im Dossier benennen und als OFFEN fuer den Orchestrator melden.
 3. Dossier §7 und §0b (M5) richtigstellen.
+
+## 2026-10-24 08:06 — Orchestrator-Entscheid B9 (Abnahme B 2, Mangel M1; der Nutzer kann widersprechen)
+
+M1 der Abnahme B 2: die Intro-Startlage teleportiert den SICHTBAR lauernden Gator ueber ~16000 Einheiten. Form = RE2:
+vor dem Intro ist der Gator NICHT sichtbar (RE2: Sce_em_set mit y = 3000 @RDT 0x25A0, also unter der Wasserlinie;
+Pos_set erst im Intro @SCD 0x0736); er bricht aus dem Wasser. Fuer ROOM2090/2091 heisst das: bis zum Intro-Ausloeser kein
+sichtbarer Gator (untergetaucht/unsichtbar wie RE2, Lage frei), dann Pos_set auf die Intro-Startlage nach B7. Passt zur
+neuen Szene der Spur F ("der Alligator springt aus dem Wasser"). Riegel: im natuerlichen Ablauf (Lauf N der Abnahme)
+kein Bild mit sichtbarem Gator vor dem Durchbruch und kein sichtbarer Lagesprung. Weitere Maengel M2/M3 der Abnahme B 2
+wie dort gefordert (RE2-Form, Adressen dort).
+
+## 2026-10-24 09:00 — Orchestrator-Entscheid C-E2c (Frage (j) der Nachbesserung C 2; der Nutzer kann widersprechen)
+
+Befund der Nachbesserung C 2 (Tuergraph C_belege/nb2_tuergraph_nach_flut.txt, zu Fuss gemessen): nach der Flut gibt es
+KEINEN Weg zum Rechner 2080. Die 2080-Tuer von 2030 liegt auf der Suedgalerie (nur per Lift B vom gefluteten Ring), und der
+Umweg 2040 -> 2070 -> 11A0 -> 20A0 -> 2090 -> 2080 endet an der ORIGINAL-Sperre ROOM11A0/11A1 Slot 4 (Ck(3,206)=0
+@0x00FEA -> msg 2 "It's locked from the other side." @0x00FEE; (3,206)=1 setzt nur 20A0/20A1 sub10 @0x01FF0). Die
+Reihenfolge der Kette ist durch den Nutzer-Auftrag erzwungen (Leiter 2000 bis zur Flut gesperrt -> 2050/2020/2060/Strom erst
+NACH der Flut; beide 2030-Lifte haengen am Generator 2060), also kann der Ring vor der Flut nicht der Weg sein.
+Entscheid j1: Mit dem Ende der Flut (Bits 103 + 100) wird (3,206) = 1 gesetzt — die 11A0/11A1-Tuer nach 20A0 ist danach
+offen (PORT-WAHL als Folge der Port-Flut; kein neuer Text, die Tuer oeffnet wie im Original nach sub10). Weg nach der Flut:
+20B0 -> Leiter -> 2050 -> 2020 -> 2030 Nordgalerie -> 2060 -> 2040 -> 2070 Nordgang -> 11A0 -> 20A0 -> Sprung ins Wasser ->
+2090 -> Tuer Slot 0 -> 2080 -> Rechner (Bit 107) -> 2030 entleert. Passt zur Geschichte der Spuren F/G (2090-Szene mit dem
+Alligator, dann 2080 mit Marvin/John, der Kanister fliegt zurueck ins 2090-Becken). j2 (Waten im gefluteten Ring) und j3
+(Flut erst nach 2080) verworfen: j2 widerspricht dem Ertrinken (Pegel 1800 ueber dem Ring), j3 widerspricht der vom Nutzer
+verlangten Leiter-Sperre bis zur Flut.
+Spur C setzt j1 um (Riegel: (3,206) vor der Flut 0, danach 1; zu Fuss gemessener Weg 11A0 -> 20A0 -> 2090 -> 2080 fuer Leon
+UND Elza, Alligator dabei per Testhaken ruhig/entfernt), Dossier §7 mit dem Weg fuer den Nutzer.
