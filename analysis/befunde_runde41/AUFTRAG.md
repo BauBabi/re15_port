@@ -294,3 +294,20 @@ Umsetzung B6/B7 in der naechsten Nachbesserung der Spur B (oder, falls B vorher 
   Anlauf im Gehen zwischen Message_on 0 und 1 ein Bild lang auf Stehen 200, das Original-RAM zeigt waehrend der Frage noch
   Gehen. Den Geh-Stopp (Kommando 1, 0x80031de8) disassemblieren, das Original nach dem Ja im Geh-Fall messen (DuckStation,
   Ja-Eingabe zuverlaessig machen) und den Port angleichen oder mit Messung + Adresse als gleich belegen.
+
+## 2026-10-24 05:25 — Orchestrator-Entscheide C-E1..C-E3 (Abnahme C 0; der Nutzer kann widersprechen)
+
+- **C-E1 (Mangel M2, Abhaengigkeit von Spur A):** Der AUTO-AOT-Haken bleibt Code der Spur A (aot_common.c +
+  re15_wasser20b0_r41_auto_aot); Spur C uebernimmt ihn NICHT (auch nicht per cherry-pick — er haengt an A's Modul). Spur C
+  baut stattdessen den Ketten-Riegel `integration_r41_ventilkette_kette` (Ventile -> Ost-Tuer zu Fuss -> 20B0-Szene bis
+  Szenen-Ende/letterbox zu und (3,235)=1 -> Leiter -> 2050) und registriert ihn in probes/r41_ventilkette.cmake NUR, wenn
+  A's Modul im Baum liegt (`if(EXISTS ${...}/engine/src/wasser20b0_r41.c)`), sonst mit einer Statuszeile "uebersprungen: Spur A
+  fehlt". Der Orchestrator misst die ganze Kette im Integrationsbaum A+C; M2 gilt fuer die Abnahme der Spur C als erfuellt,
+  wenn der Riegel existiert, im C-Baum sauber uebersprungen wird und sein Ablauf im Dossier beschrieben ist.
+- **C-E2 (Mangel M5, geflutetes 2030):** Bis der Rechner 2080 entleert hat (Bit 107), sind die Zugaenge ins geflutete 2030
+  (20B0 Ost-Tuer, 2070 Slots 1/2, jede weitere Tuer in den Ring) gesperrt: Aktionstaste -> Port-Text, kein Raumwechsel.
+  Id-Zuteilung (VERTRAG 1.2 ergaenzt): 20B0/20B1 Id 41, 2070/2071 Id 40 (Wortlaut englisch wie das Spiel, Vorschlag bis zur
+  Freigabe durch den Nutzer). Nach Bit 107 wieder offen. Riegel: Sperre vor 107, offen nach 107, je Zugang.
+- **C-E3 (Mangel M6, Vertrag):** Die Haken in platform/pc/main.c (4 Stellen) und game_step_common.c (1 Zeile) sowie die
+  Querbezugs-Flags in test_r36_dachkiste.cmake / test_r37_itemband.cmake sind angenommen (wie B5), weil sie klein,
+  markiert und durch die neue Sperre noetig sind. Kein Mangel mehr.
