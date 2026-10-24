@@ -90,3 +90,45 @@ Auszuege: `A41abn2/dis_45700.txt`, `dis_45a64.txt`, `dis_59d3c.txt`, `dis_55d10.
   @0x80059e10, `_PAN_TEILER 0x3f` @0x80055f68-6c, k_pan_att = PSX.EXE @0x80074728 (256 B, Riegel `lage` gegen die Datei), W[] @0x80078c90,
   0x89 @0x80045c0c/@0x80045c78, /250 @0x80045b3c-4c, Deckel 0x7f @0x80045b5c, `& 0x7f` @0x80045d28/@0x80045d3c. Alle mit Adresse, alle
   selbst nachgeprueft (oben).
+
+## 3. Punkt 1 — 20B0-Wasserschwall (eigene Messung an der exe; Code seit Abnahme 1 unveraendert, wasser20b0_r41.c 2026-10-23 17:35)
+- Laeufe `p20b0` (Leon) / `p20b1` (Elza, `RE15_TITLE_SHOT_CHAR=1` -> `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`), je
+  `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_DEBUG_JUMP=20b0@250 (20b1@250)
+  RE15_FX_LOG=fx.log RE15_SPAWN_DIAG=1 RE15_FRAMEDUMP=0-330 RE15_EXIT_AT=340#20b0`, rc 0: `PC loaded room20b0.rdt` / `room20b1.rdt`,
+  je 35 x `Sce_em_set type=0x24`, `[scd F105] Cut_chg(7)`, `[scd F146] Cut_chg(15)`, `[scd F228] Cut_chg(6)`, `[scd F242] letterbox
+  closed -> gameplay (player_mode=0)`; fx.log je 1735 Zeilen `id=15`.
+- **Zeitachse gegen die Original-Savestates (eigene Lesung, `A41abn2/py/orig_takt.py` auf scratchpad/orig/*.sav; Takt n aus der
+  EM024-Drift +0x8c = 120 + n bzw. 161 + (+0x8c - 225) nach dem Umbruch)** gegen `RE15_STATE_LOG` des Laufs `p20b0_state`:
+  | Takt n | Original (Cut, Spieler x/z, Gier, +4) | Port F = n + 5 (cam, PL x/z, rot, pst) |
+  |---|---|---|
+  | 1 (tf_5/tf_8) | 11, (2380,-6355), 2048, 1 | F6/F7: 11, (2380,-6355), 2048, 1 |
+  | 48 (tf_7) | 13, (-5020,-6355), 2047, 4 | F53: 13, (-5020,-6355), 2047, 4 |
+  | 100 (tf_9) | 7, (-15599,-7283), 2120, 4 | F105: 7, (-15599,-7283), 2120, 4 |
+  | 131 (ts_10) | 7, (-20308,-7472), 1399, 4 | F136: 7, (-20308,-7472), 1399, 4 |
+  | 181 (ts_12) | 15, (-20657,-9629), 2779, 4 | F186: 15, (-20657,-9629), 2779, 4 |
+  | 233 (ts_14) | 6, (-20657,-9629), 2779, 1 | F238: 6, (-20657,-9629), 2779, 1 |
+  Lauf, Schnitte und Spielerzustand der Szene sind an allen sechs Original-Zeitpunkten gleich (fester Versatz +5 = Sprungbilder).
+- **Partikel-Pool:** `A41abn1/pool_vgl.py` (Original-ESP-Pool 0x800a73b8, Stride 0x84) gegen meinen fx.log: tf_7 (Takt 48) `22 aktive
+  0x0f-Plaetze` / Port F54 `22 gezeichnete`, (sub, anim) Original = Port = {(0,5):4, (0,8):6, (0,11):4, (0,14):2, (7,7):6}; tf_8 (Takt 1)
+  8 / Port F7 8. Der Emitter laeuft 1 Takt hinter dem Spieler (F = n + 6; Abnahme-1-OFFEN 3, Orchestrator 04:01: naechste Runde).
+- **Video (Nachtrag 2):** Bogen `A41abn2/bogen_20b0_a.png` (o008/F8, o014/F14, o026/F26, o036/F36, o048/F48) und `bogen_20b0_b.png`
+  (o075 ... o240): Wolke an der Osttuer und hinter Leon an gleicher Stelle und in gleicher Form/Textur; ab ~o100 laeuft das VIDEO hinter
+  dem Port her (o120 noch im Gang, F120 schon Cut 7; o160 Cut 7, F160 Cut 15). Das ist die Aufnahme: die Savestates zeigen Cut 7 schon bei
+  Takt 100 und Cut 15 bei Takt 181 - genau wie der Port (Tabelle oben). Die Videozeitachse ist durch Aufnahmestaus gedehnt (flut_d.txt:
+  Aufnahme 50 s, Datei 19,98 s). Massgeblich sind Savestate-RAM und Framebuffer (so auch Abnahme 1, 3.4).
+- **Urteil Punkt 1: ERFUELLT** (Original gemessen, Port repariert: Szene, Schnitte, Spielerweg und Partikelpool gleich; Restversatz
+  Emitter +1 Takt / erstes Bild nach dem Sprung = OFFEN 1-3, per Orchestrator-Entscheid 04:01 naechste Runde).
+
+## 4. Punkt 2 — Sprung von der Kante ins Wasser; NPCs teilen die Wasser-Effekte (+ Nachtrag 3, E1, A-E4)
+### 4.1 Punkt 2a Landung (eigene Laeufe, echter Weg Tuer 20A0 -> 2090 bzw. 20A1 -> 2091)
+- `landung_leon`: `RE15_DEBUG_JUMP=20a0@240 RE15_PLAYER_POS=4950,5000,2048,2 RE15_INPUT_SCRIPT=W9,A0.2,W4,R0.37,W0.3,U0.7,W0.2,A0.2,W0.3,
+  A0.2,W0.3,A0.2,W0.3,A0.2,W4 RE15_INPUT_SCRIPT_START=0 RE15_CLIMB_TRACE=climb.log RE15_FX_LOG=fx.log RE15_KEIN_GATOR=1
+  RE15_FRAMEDUMP=180-215 RE15_EXIT_AT=360#2090`: `[aot] DOOR FIRE slot=0 ... spawn=(6300,-1800,-16250)`, `PC loaded room2090.rdt`,
+  climb.log `T459 room=2090 ... pos=(6363,-640,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=4`, fx.log 104 Zeilen `id=6 sub=3` ab F192
+  `w(6363,-640,-14032)` `-> sx=96 sy=148`. Bild `A41abn2/landung2090_bogen.png`: Spritzer um Leons Fuesse F196-F202, F206 verklungen.
+- `landung_elza` (dieselbe Eingabe, `RE15_TITLE_SHOT_CHAR=1`, `20a1@240`, `#2091`): `Spieler-Familie PL04 ... Elza-Bit=1`, `PC loaded
+  room2091.rdt`, `T459 room=2091 ... sub=10 kind=0x02 ph=4`, 104 Zeilen `id=6 sub=3`; Bild `A41abn2/landung2091_bogen.png`.
+- `kante2000` (Gehweg -> Kanal ROOM2000, `RE15_PLAYER_POS=-4321,-21100,1024,1 RE15_PRESS=square@60`): `T319 ... pos=(-4321,-640,-22068)
+  ... sub=10 kind=0x02 ph=4`, 104 Zeilen `id=6 sub=3` ab F79 (`-> sx=191 sy=168`); Bild `A41abn2/kante2000_bogen.png`: deutlicher
+  gruen-weisser Spritzerkranz F81-F89. Mechanik @0x80038724-d0 hat Abnahme 1 selbst disassembliert (unveraendert).
+- **2a: erfuellt.**
