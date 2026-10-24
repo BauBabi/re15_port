@@ -11424,9 +11424,9 @@ re_title:;
               } } }
 
         re15_msgtakt_r41_nach_spieltakt();   /* Runde 41 Spur E: Absicherung (Bild ohne Spiel-Takt) */
-        { extern int re15_render_pc_standbild_wiederholen(void);   /* Runde 41 Spur E: Apply-Bild @0x80021560 zeigt das vorige Bild */
-          if (md1_ok && re15_kamerahalt_r41_haelt((unsigned)g_current_room_id)) re15_render_pc_standbild_wiederholen(); }
-        re15_render_end_frame();
+        { extern void re15_render_pc_bild_halten(void);   /* Runde 41 Spur E: Apply-Bild @0x80021560 - kein DrawOTag, kein Pufferwechsel */
+          if (md1_ok && re15_kamerahalt_r41_haelt((unsigned)g_current_room_id)) re15_render_pc_bild_halten();
+          else re15_render_end_frame(); }
         pc_cut_sync_log();   /* Messschiene RE15_CUT_SYNC_LOG (env-gegatet, kein Verhalten) */
 
         /* DEBUG-HARNESS: RE15_EXIT_AT="<bild>[#<raum-hex>]" beendet den Prozess am ENDE des

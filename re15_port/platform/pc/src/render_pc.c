@@ -562,7 +562,6 @@ int re15_render_pc_standbild_wiederholen(void)
     if (!s_sb_gueltig) return 0;
     memcpy(s_framebuffer, s_sb_fb, sizeof s_sb_fb);
     if (s_sb_text_used) { memcpy(s_text_overlay, s_sb_text, sizeof s_sb_text); s_text_overlay_used = s_sb_text_used; }
-    else s_text_overlay_used = 0;   /* Runde 41 Spur E: auch die Text-Ebene des stehenden Bildes (kein DrawOTag @0x80021560) */
     s_shadow_quad_count = s_sb_shadow_n;
     if (s_sb_shadow_n > 0) {
         memcpy(s_shadow_quads, s_sb_shadow, (size_t)s_sb_shadow_n * sizeof s_shadow_quads[0]);
@@ -878,6 +877,14 @@ void re15_render_pc_request_readback(const char *path)
     if (!path || !*path) return;
     snprintf(s_readback_path, sizeof s_readback_path, "%s", path);
     s_readback_pending = 1;
+}
+/* Runde 41 Spur E: offenen Ruecklese-Auftrag abholen, fuer ein gehaltenes Bild (platform/pc/src/bildhalt_r41_pc.c). */
+int re15_render_pc_abzug_nehmen(char *pfad, int n)
+{
+    if (!s_readback_pending || !pfad || n <= 0) return 0;
+    s_readback_pending = 0;
+    snprintf(pfad, (size_t)n, "%s", s_readback_path);
+    return 1;
 }
 
 /* MESSSCHIENE: die Zeilenregion der aktiven Titelzeile zuruecklesen (s. s_trow_*). Nur mit
@@ -1686,6 +1693,7 @@ void re15_render_end_frame(void)
      * RE15_FBDUMP wiederum dumpt nur die 2D-Ebene (BG-Blit), NICHT die ueber
      * SDL_RenderGeometry gezeichneten 3D-Props. Dieser Haken liefert beides zusammen.
      * Rein env-/aufruf-gegatet; der Normalpfad ist unberuehrt. */
+    { extern void re15_bildhalt_r41_merken(void); re15_bildhalt_r41_merken(); }   /* Runde 41 Spur E: Abzug fuer gehaltene Bilder (nur RE15_FRAMEDUMP) */
     if (s_readback_pending) {
         s_readback_pending = 0;
         int rw = 0, rh = 0;

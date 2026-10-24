@@ -10,14 +10,14 @@
 
 #include "re15_scd.h"          /* g_scd: cam_id = DAT_800afbb5, work_vars[0x0A] = DAT_800b0fe4, cam_change_pending = DAT_800b5457 */
 #include "re15_montage_fx.h"   /* re15_montage_fx_active — ROOM1240-Montage (RE2-Praesentation) */
+#include "re15_engine.h"       /* g_engine.frame_count — nur fuer die Messschiene RE15_KAMERAHALT_LOG */
+#include <stdio.h>
 
 static unsigned s_raum = 0xFFFFFFFFu;   /* Raum des zuletzt durchgereichten Spielbilds */
 static unsigned s_zahl;
 
-int re15_kamerahalt_r41_haelt(unsigned raum)
+static int entscheiden(unsigned raum, unsigned vorher)
 {
-    const unsigned vorher = s_raum;
-    s_raum = raum;
     if (raum != vorher) return 0;                     /* erstes Bild des Raums: kein Bild dieses Raums zum Halten */
     {   static int s_force = -1;
         if (s_force < 0) { const char *f = getenv("RE15_FORCE_CUT"); s_force = (f && *f) ? 1 : 0; }
@@ -25,8 +25,21 @@ int re15_kamerahalt_r41_haelt(unsigned raum)
     if (re15_montage_fx_active()) return 0;
     /* @0x800214f4-@0x80021514 Vergleich + Dirty, @0x80021530/@0x80021538 Dirty -> Apply-Zweig @0x80021558/@0x80021560 */
     if (!g_scd.cam_change_pending && (int)g_scd.work_vars[0x0A] == (int)g_scd.cam_id) return 0;
-    s_zahl++;
     return 1;
+}
+
+int re15_kamerahalt_r41_haelt(unsigned raum)
+{
+    const unsigned vorher = s_raum;
+    s_raum = raum;
+    const int h = entscheiden(raum, vorher);
+    if (h) s_zahl++;
+    {   static int s_log = -1;   /* Messschiene RE15_KAMERAHALT_LOG (kein Verhalten) */
+        if (s_log < 0) { const char *e = getenv("RE15_KAMERAHALT_LOG"); s_log = (e && *e) ? 1 : 0; }
+        if (s_log) fprintf(stderr, "[kamerahalt] F%u raum=%04x vorher=%04x pend=%d wv0A=%d cam=%d -> %s\n",
+                           (unsigned)g_engine.frame_count, raum & 0xFFFFu, vorher & 0xFFFFu, (int)g_scd.cam_change_pending,
+                           (int)g_scd.work_vars[0x0A], (int)g_scd.cam_id, h ? "HALTEN" : "zeigen"); }
+    return h;
 }
 
 unsigned re15_kamerahalt_r41_zahl(void) { return s_zahl; }
