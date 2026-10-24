@@ -946,3 +946,36 @@ work to do", `LOCAL-BUILD-OK (build)` (exe md5 9de3bd488e72334278224893f65b136d 
   dort hinter einem kurzen Standbild), (b) das Einfrieren nach einer Kurbel-Umdrehung (behoben in Nachbesserung 1), (c) die
   Waffe, die beim Kurbeln mit der Hand mitkreist (Original), (d) das Ausrutschen nach dem Rennen (Original, jetzt auch im Port),
   (e) etwas anderes — dann bitte: gerannt/gegangen/gestanden, welche Waffe, oder ein Bild (F9).
+
+### Fortsetzung — Messung nachher an der exe (re15_pc_E41n3c.exe md5 1f38e02535c6259e6f99619bba2917ab = Endstand; VORHER re15_pc_E41n3.exe md5 9de3bd48... = 4190e6b0)
+Laeufe `<sp>/E41n3b/runs/<lauf>/` (Treiber `<sp>/E41n3b/run.sh` + `laeufe.sh`, Auswertung `zust.py`), gemeinsam `RE15_NO_INTRO=1
+RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_STATE_LOG=state.txt`.
+- **Kurbel im Stand** (`P1_stand_n3c`, Eingaben wie Abnahme 2 §3.2): Frage zu F461, Pos_set F462 (3650,-3018) = Schliessen + 1,
+  Leerlauf mo 212 laeuft weiter, Plc_motion F482 (pst 4) = Pos_set + 20 — unveraendert gegen Abnahme 2 (= Original o_stand1).
+- **Kurbel im Rennen, Anlauf der Abnahme** (`P1_renn_{n3c,n3}`, Start (2600,-800) wie Abnahme 2 §3.4 `P1_renn_nach`): Frage zu F381,
+  **F382..F387 (3650,-3099) -3233 -3327 -3381 -3395 -3369**, Stand (3650,-3369) bis Plc_motion F402 — dieselbe Folge wie Original
+  o_renn2 n94..n99 (vorher 11b8f867: F382 Stehen (3650,-3018)). Kurbel im Gehen: Riegel geh (unten), Weg des Nutzers: Riegel kurbel.
+- **Tunnel ROOM2020 (4000,-3150) Blick 0, 8 Renn-Bilder F60..F67** (Tempo 210 213 214 210), dann:
+  | Lauf | Endstand n3c | VORHER n3 (4190e6b0) | Original (Disasm) |
+  |---|---|---|---|
+  | TA LINKS | F68 dreh -72 mo 200 Weg 169, F69 -72 mo 105 Weg 0, F70 -96 | F68 -96 mo 105 Weg 170, F69 -96, F70 -96 | 72 (@0x80032660-@0x800326a0) + Stopp, 72 + Drehen 0x0301, dann 96 (@0x80032a00) |
+  | TB OBEN+LINKS | F68 -72 mo 200 Weg 169, F69 -72 mo 105 Weg 75, F70 -48 | F68 -48 mo 105 Weg 169, F69 -48, F70 -48 | 72 + Stopp, 72 + Gehen 0x0101 (@0x80032738), dann 48 (@0x8003235c) |
+  | TC Stopp, dann OBEN+RENNEN | F68/F69 Stopp 170/130, F70 mo 105 Weg 75, F71 mo 100 Weg 208, F72 231; loslassen F73 191 | F70 sofort mo 100 Weg 208 | Gehen 0x0101 (@0x80032738), Rennen erst @0x80032444 |
+  | TD ganzer Stopp | F68..F73 170 130 90 50 10 -30, ab F74 Stehen, erster Leerlauf-Wechsel mo 210 F169 (= F74 + 95) | Stopp gleich, Leerlauf-FSM ab F68, mo 210 F189 | Stehen-ANIMATE Fall 0 im Bild nach dem Stopp-Ende (@0x80032958 -> @0x80032074), Zeitgeber rng & 0x1f + 90 (@0x800320a8-@0x800320bc) |
+  Der Zeitgeberwert selbst kommt im Port aus re15_idle_rand (Bildzaehler-Hash, vorbestehend) — belegt ist hier nur der Einstieg
+  (Bild nach dem Stopp-Ende), nicht der Wert.
+
+### Fortsetzung — Tests (gezielt, keine volle Suite)
+- Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)` (Endstand; keine neue .c-Datei seit dem letzten
+  configure), exe md5 1f38e02535c6259e6f99619bba2917ab.
+- Gezielter Lauf 1 (14:37-15:08), Auswahl `<sp>/E41n3b/ziel2.txt` = alle Tests, deren Name r41_kleinkram_b, r36_zombieki,
+  r17_cursor_klick, r37_re2zombie, r36_klettern, r36_ziel1190, r38_zopf, r39_hund1121, r36_schluessel (Renn-Eingaben: XU/
+  UP+CROSS, gesucht in tests/integration und tests/unit) oder msg|scd|cut|door|tuer|szene|karte|map|dialog|frage|story|
+  nachricht|message|fade|blend|kamera|cam|player|plc|lauf|renn|walk|move enthaelt (ohne releaseskript/android):
+  `ctest --test-dir re15_port/build -R "$(cat <sp>/E41n3b/ziel_regex.txt)" -j 3 --timeout 1500 --output-on-failure`
+  -> **100% tests passed, 0 tests failed out of 266** (1844 s, CTEST_EXIT=0, `<sp>/E41n3b/ctest_ziel.log`); darin 50 Integrations-
+  Riegel mit der echten exe (alle 8 integration_r41_kleinkram_b_*, door_lock/door_traversal/keydoor, map_raum_live/map_uebergang,
+  r30_cut_blitz, r35_cut10f0/cut1150, r35_karte/_fahrstuhl, r36_karte/_kartenitems_bild/_klettern/_schluessel(_befreiung)/_story_elza/
+  _story_leon/_szene1150/_szenenleon/_tueren/_ziel1190_scheiben, r37_bissarm_echtlauf/_re2zombie/_roy_szene1011/_1021/_szene11c0,
+  r38_elzatoene_szene1021/_spinnen_echtlauf/_szenenschutz/_tagebuch_karte/_zopf, r39_elza_karte/_hund1121/_johnruf1041_tuer_*
+  (6)/_karten/_toene_szene(_elza)) und unit_r36_zombieki_affen_block, unit_r41_kleinkram_b_takt_rennpfad.
