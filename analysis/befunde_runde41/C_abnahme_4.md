@@ -248,6 +248,19 @@ Stichproben der in Nachbesserung 4 NEU zitierten Stellen (alle selbst gelesen, r
   Riegel; -P-Skripte mit `cmake_minimum_required`.
 * Kein SendMessage, kein Code ausserhalb des Baums (Pruefer).
 
+### G3 Nebenwirkungen (beide Szenarien, Nachbarraeume)
+* Beide Szenarien gemessen: K1/K2/D/P/P1/P4/P5/P6 je mit Leon UND Elza (`Spieler-Familie PL04`, Raeume 20x1), FL/FLR Leon (FLR Elza s. u.);
+  Unit-Fall M fuer 2030 UND 2031.
+* Nachbarraeume: 2000/2001 (Leiter), 2010/2011 (Tuer -> 20B0 erst nach der Flut), 20B0/20B1, 2050/2051, 2070/2071 (Ring-Sperre, `_sperre`
+  gruen), 2080/2081 (Rechner Original, P6), 2090/2091 (Ankunft P6) — alle wie vorgesehen; 1260 (Tuer nach 2000 -> 20B0 nur mit Bit 103)
+  nur ueber Unit-Fall E.
+* Dokument-System (re15_files.c +1 Eintrag): die Dokument-Riegel der Unit-Gruppe gruen (unit_r34n_e_dokumente, unit_r38_tagebuch_dokument,
+  unit_r30_irons_diary_dokument, unit_re2doc_bildebene, unit_r34a_asset_abgleich); Integrations-Dokumentriegel in der Raumgruppe (§3).
+* Render-Haken main.c: Plakat-Ebene nur, solange `re15_ventilkette_r41_plakat_rgba()` != NULL (nur 2030 mit offener Nahaufnahme), versteckt
+  nur die eigene Ebene; Prop-Lader k 2/3 nur in 2030/2031 (`re15_ventilkette_r41_obj_id`).
+* Nebenwirkung gefunden: Plakat-Schliessen hebt die Flut-Pad-Sperre auf (Mangel 2, §1 PK).
+* Merge-Probe gegen den aktuellen master: nur AUFTRAG.md kollidiert (§1 KE).
+
 ## 3. Tests (gezielt, im Spurbaum; KEINE volle Suite)
 * Unit-Gruppe (Regex `<a4>/regex_unit.txt` = Regex der Nachbesserung 4 + Dokument-/Asset-Riegel unit_r38_dining.*, unit_r37_dining.*,
   unit_files.*, unit_.*dokument.*, unit_r34_dok.*, unit_r40_.*nahaufnahme.*, unit_r34a_.*, probe_r16_objekte_paket; 241 Tests):
