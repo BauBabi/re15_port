@@ -534,3 +534,48 @@ Folgen (Orchestrator, Umsetzung Spur C):
    Warnung -> Flut wie bisher.
 5. Fuer den Nutzer (Dossier §7): Plakat-Bild, Dokument-Text, Loesung und Ableitung als Vorschlag zur Freigabe.
 6. Nachrichten-Ids: 2030 Ids 40-49 sind C's; werden mehr gebraucht, 2030 Ids 50-55 (VERTRAG 1.2 ergaenzt).
+
+## 2026-10-24 17:32 — Orchestrator-Entscheid E-E4 (Abnahme E 3, Mangel 2; der Nutzer kann widersprechen)
+
+unit_r36_zombieki_affen_block darf nicht durch eine nachtraeglich gewaehlte Schranke gruen werden. Die Sonde misst den
+Haenger (blockierte Gorilla-Bilder an einer Klemme je Seed) wieder wirksam; die zwei bekannten Haenger-Stellen (u. a. Klemme
+(11129,9982), Seed 0x9b5bf362: 4405/6000 Bilder) werden als BENANNTE Ausnahmen mit Beleg gefuehrt. Ist die Ursache im
+Port-Code (zombieki_r36.c, Runde-36-PORT-WAHL) belegbar und klein zu beheben, behebt Spur E sie in dieser Nachbesserung
+(mit Riegel); sonst Folgeauftrag in UEBERGABE §3b. Mangel 1 (Renn-Stopp nach Treppe, Griff-Freigabe, Plc_ret: Original
+loescht +5/+6 @0x80038ea8/@0x80038eb0 bzw. @0x80041f90-9c) behebt Spur E wie gefordert.
+
+## 2026-10-24 17:36 — Nachtrag 14 (Nutzer-Antwort per Auswahl; Kurbel ROOM2020, Spur E)
+
+Frage (gekuerzt): "Was meintest du mit 'herumfliegend'?" — Optionen: das Einfrieren (behoben) / den Sprung an die Kurbel
+(Original macht ihn genauso, davor friert das Bild ~1/4 s ein) / etwas anderes. **Antwort des Nutzers:**
+
+> Ja, direkt am Anfang springt Leon so komisch zu der Kurbel. So halb fliegend.
+
+Folgen (Orchestrator, Umsetzung Spur E):
+- Gemeint ist der Sprung an die Kurbel (Cut_chg 3 @0x0A7E, Pos_set @0x0A8C, Gier @0x0A94, Sleep 20, Plc_motion @0x0A9C).
+  Im Original ist er nicht als "Fliegen" zu sehen, weil das Bild nach Cut_chg stehen bleibt, bis der Hintergrund von CD
+  geladen ist (Apply-Zweig @0x80021558/@0x80021560, Lader FUN_80013c50; im Original-Video ~8 Bilder). Im Port dauert dieses
+  Standbild 1 Bild -> der Uebergang (alte Lage/Pose -> Kurbel) wird sichtbar.
+- Ziel: Port Bild fuer Bild wie das Original-Video vom "Yes" bis Plc_motion (Leon erscheint erst an der Kurbel, kein
+  sichtbares Hinueberfliegen, keine sichtbare Ueberblendung von der alten Pose). Die Standbild-Dauer des Originals an
+  genau dieser Stelle aus dem Original-Video bzw. DuckStation-RAM MESSEN (nicht schaetzen) und als gemessenen Wert mit
+  Quelle (Video/Savestate, Bildnummern) einsetzen; pruefen, ob die Laenge vom Hintergrund-Laden abhaengt und ob sie fuer
+  alle Cut_chg mit Hintergrundwechsel gilt (dann spielweit, mit den Riegeln der Spur E-E1). Riegel + Bildvergleich
+  Port/Original (Gehen, Rennen, Stehen).
+
+## 2026-10-24 17:38 — Orchestrator-Entscheid H-E1 (Abnahme H 0: beide Nutzer-Punkte erfuellt, nur Vertrag V1/V2)
+
+- **V1 angenommen** (wie B5/I-E1): Include + Aufruf `re15_kollision_r41_npc_schwanz(slot)` in enemy_ai_common.c
+  (re15_npc_ai_tick vor re15_npc_wall_clamp; Original-Reihenfolge aec4/b544 vor der Wandklemme @0x8011cc64).
+- **V2 angenommen** als belegter Querbezug ("neue Regel widerlegt alten Riegel"): test_r39_dining1141_kampf.cmake
+  `WARTE 60` -> `WARTE 240` ist durch die festen NPCs noetig (alt: vor-exe gruen / nach-exe rot nur ueber die Zufallsdeckung
+  Salve/Griff; neu: nach-exe gruen) — Messung steht in H_abnahme_0.md. Die Nachbesserung H 1 dokumentiert beides im Dossier;
+  sonst ist nichts zu tun. Die naechste Abnahme der Spur H bewertet V1/V2 nicht mehr als Mangel.
+
+## 2026-10-24 19:01 — Nachtrag 15 (Nutzer-Entscheid per Auswahl: Ventilraetsel freigegeben, Spur C)
+
+Vorgelegt (Nachbesserung C 4): echte Ventile Nordwand 03 rot / 02 gruen / 01 schwarz, Suedwand 09 rot / 08 gruen / 07
+schwarz; Plakat (absichtlich falsch) "1. GREEN 09 - 2. RED 01 - 3. BLACK 02 - 4. RED 07"; Dokument "Technician's Note"
+(Nutzer-Text woertlich) neben der Sicherung; Loesung 09 -> 07 -> 02 -> 01; falsche Folge -> "The valves turned back to
+their original position."; Frage am Rad "Valve 09, red wheel. Will you turn it?". **Antwort: "Freigeben"** — Plakat,
+Loesung, Titel und Texte bleiben so (Fragen (m) und (n) der Spur C damit beantwortet).
