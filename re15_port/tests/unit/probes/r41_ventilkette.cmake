@@ -53,3 +53,16 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
         message(STATUS "integration_r41_ventilkette_kette uebersprungen: Spur A fehlt (engine/src/wasser20b0_r41.c, AUTO-Haken re15_wasser20b0_r41_auto_aot)")
     endif()
 endif()
+
+# Nachbesserung 2 (Abnahme 1 Mangel N1, Orchestrator-Entscheid C-E2b): der Weg zum Rechner 2080 nach der Flut zu Fuss -
+# 2050 -> 2020, 2030 Nordgalerie -> 2060, 2040 Halle -> Galerie -> 2070 Nordgang -> 11A0 bis zur ORIGINAL-Sperre slot 4
+# ((3,206), @0x00FEA/@0x00FEE; Leon + Elza), Gegenprobe (3,206)=1 -> 20A0, 2080 ab der 2090-Tuer -> Rechner -> Bit 107.
+# Eigener exe-Kopie-Praefix re15_pc_r41cw_.
+if(RE15_BUILD_PC AND TARGET re15_pc)
+    add_test(NAME integration_r41_ventilkette_weg
+             COMMAND ${CMAKE_COMMAND}
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_weg
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_weg.cmake)
+    set_tests_properties(integration_r41_ventilkette_weg PROPERTIES TIMEOUT 1800 RUN_SERIAL TRUE)
+endif()

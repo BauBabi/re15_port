@@ -26,6 +26,10 @@
  *   I  Ring-Zugaenge des gefluteten 2030 (Orchestrator-Entscheid C-E2, Abnahme 0 M5): 20B0/20B1 Slot 3 @0x019C2 und
  *      2070/2071 Slot 1 @0x00A5A / Slot 2 @0x00A7A sind mit Bit 103 ohne 107 Sperrtexte (41 bzw. 40, Aktion zeigt ihn,
  *      kein Raumwechsel), mit 107 wieder Tueren nach 2030; die Tuerebenen-Tueren (2080 Slot 0 @0x00BA2) bleiben offen
+ *   J  Weg zum Rechner 2080 nach der Flut (Nachbesserung 2, N1 / Orchestrator-Entscheid C-E2b): J1 Zugangs-Zensus
+ *      aller RDTs (Tueren nach 2080/2090/20A0 und Setzer von (3,206) genau wie der Tuergraph), J2 die ORIGINAL-Sperre
+ *      ROOM11A0/11A1 Slot 4 (@0x00FEA Ck(3,206)=0 -> @0x00FEE msg 2) an der Engine: Aktion = nur msg 2, kein
+ *      Raumwechsel; mit (3,206)=1 Tuer nach 20A0
  *
  * Werkzeug (Riegel integration_r41_ventilkette C, Nachbesserung 1 M4): `test_r41_ventilkette ppm <datei.ppm> x0 y0 x1 y1`
  * gibt "MITTEL r g b" der Flaeche (P6-Framedump, x1/y1 ausschliesslich) aus.
@@ -42,6 +46,7 @@
 #include "re15_collision.h"
 #include "re15_ventilkette_r41.h"
 #include "gen/ventilkette_r41_original.inc"
+#include "re15_room_list.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -740,6 +745,155 @@ static void fall_i(uint16_t r20b0, uint16_t r2070, uint16_t r2080)
                "ROOM%04X geflutet: Tuerebenen-Tuer Slot 0 nach 2030 bleibt offen (Typ %d)", r2080, g_aot.slots[0].type);
 }
 
+/* ---- J: Weg zum Rechner 2080 nach der Flut (Nachbesserung 2, Mangel N1 / Orchestrator-Entscheid C-E2b) ------------
+ * J1 Zugangs-Zensus ueber ALLE RDTs (re15_room_ids): SCD-Regionen von main (RDT+0x40) und sub (RDT+0x44) wie
+ *    tools/scd_dump_room.py (Zeigertabelle, Regionsende = naechster Zeiger bzw. kleinster Kopf-Zeiger hinter der
+ *    Tabelle), Laengen aus scd_opcode_size_at (= VM-Tabelle s_opcode_sizes). Door_aot_set (0x3B) mit Ziel
+ *    Stage-Index 1 / Raum 8 (2080), 9 (2090), 0x0A (20A0) und Set(3,206)=1 `22 03 ce 01` muessen GENAU an den Stellen
+ *    des Tuergraphen stehen (tools/r41_ventilkette/tuergraph_nach_flut.py, C_belege/nb2_tuergraph_nach_flut.txt).
+ *    Dazu die Bytes der Sperre ROOM11A0/11A1 main00 @0x00FEA `21 03 ce 00` + @0x00FEE (Text-Platz slot 4 msg 2).
+ * J2 die Original-Sperre an der Engine (Leon 11A0, Elza 11A1): Zustand nach der Flut (Bits 103+100) mit (3,151) aus
+ *    2070: Slot 4 = Text msg 2 im Band 1, Aktion vom Steg (28457,-1800,1319) Blick +x zeigt nur msg 2 ("It's locked
+ *    from the other side.", ROOM11A0 msg @0x142C), kein Raumwechsel, (3,206) bleibt 0; Gegenprobe mit (3,206)=1: Slot 4 =
+ *    Tuer nach Stage-Index 1 Raum 0x0A, Aktion -> Raumwechsel nach 20A0. */
+static uint32_t le32(const uint8_t *p) { return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24); }
+static unsigned le16u(const uint8_t *p) { return (unsigned)p[0] | ((unsigned)p[1] << 8); }
+
+typedef struct { uint16_t raum; uint32_t off; uint8_t art; } fund_t;   /* art: 8/9/10 = Tuer-Ziel, 206 = Set(3,206) */
+static fund_t s_fund[64];
+static int s_nfund = 0;
+
+static uint32_t abschnitt_ende(const uint8_t *d, uint32_t n, uint32_t s)
+{
+    uint32_t boden = s;
+    unsigned first = le16u(d + s);
+    if (first >= 2 && !(first & 1) && s + first <= n) {
+        unsigned mx = 0;
+        for (unsigned i = 0; i < first / 2; i++) {
+            unsigned o = le16u(d + s + 2 * i);
+            if (o && s + o < n && o > mx) mx = o;
+        }
+        boden = s + mx;
+    }
+    uint32_t best = n;
+    for (int o = 0x40; o < 0x60; o += 4) {
+        uint32_t v = le32(d + o);
+        if (v > boden && v <= n && v < best) best = v;
+    }
+    return best;
+}
+
+static void abschnitt_laufen(uint16_t raum, const uint8_t *d, uint32_t n, uint32_t s)
+{
+    if (s == 0 || s + 2 > n) return;
+    unsigned first = le16u(d + s);
+    if (first < 2 || (first & 1) || s + first > n) return;
+    uint32_t se = abschnitt_ende(d, n, s);
+    unsigned offs[64]; int k = 0;
+    for (unsigned i = 0; i < first / 2 && k < 64; i++) {
+        unsigned o = le16u(d + s + 2 * i);
+        if (!o || s + o >= n) continue;
+        int dup = 0;
+        for (int j = 0; j < k; j++) if (offs[j] == o) dup = 1;
+        if (!dup) offs[k++] = o;
+    }
+    for (int i = 0; i < k; i++)                       /* aufsteigend wie section_regions */
+        for (int j = i + 1; j < k; j++) if (offs[j] < offs[i]) { unsigned t = offs[i]; offs[i] = offs[j]; offs[j] = t; }
+    for (int i = 0; i < k; i++) {
+        uint32_t a = s + offs[i], e = (i + 1 < k) ? s + offs[i + 1] : se;
+        if (e > se) e = se;
+        for (uint32_t pc = a; pc < e; ) {
+            int sz = scd_opcode_size_at(d + pc);
+            if (sz <= 0 || pc + (uint32_t)sz > e) break;
+            uint8_t art = 0;
+            if (d[pc] == 0x3B && sz >= 26 && d[pc + 22] == 1 && (d[pc + 23] == 8 || d[pc + 23] == 9 || d[pc + 23] == 0x0A))
+                art = d[pc + 23];
+            if (d[pc] == 0x22 && d[pc + 1] == 3 && d[pc + 2] == 206 && d[pc + 3] == 1) art = 206;
+            if (art && s_nfund < 64) { s_fund[s_nfund].raum = raum; s_fund[s_nfund].off = pc; s_fund[s_nfund].art = art; s_nfund++; }
+            pc += (uint32_t)sz;
+        }
+    }
+}
+
+static void fall_j1(void)
+{
+    static const fund_t soll[] = {
+        { 0x2030, 0x01AEA, 8 }, { 0x2031, 0x01AEA, 8 }, { 0x2090, 0x00996, 8 }, { 0x2091, 0x00996, 8 },
+        { 0x2080, 0x00BC2, 9 }, { 0x2081, 0x00BC2, 9 }, { 0x20A0, 0x01746, 9 }, { 0x20A1, 0x01746, 9 },
+        { 0x11A0, 0x01006, 10 }, { 0x11A1, 0x01006, 10 }, { 0x2090, 0x009B6, 10 }, { 0x2091, 0x009B6, 10 },
+        { 0x20A0, 0x01766, 10 }, { 0x20A1, 0x01766, 10 },
+        { 0x20A0, 0x01FF0, 206 }, { 0x20A1, 0x01FF0, 206 },
+    };
+    const int nsoll = (int)(sizeof soll / sizeof soll[0]);
+    s_nfund = 0;
+    int raeume = 0;
+    for (int r = 0; r < RE15_ROOM_COUNT; r++) {
+        long sz = 0;
+        uint8_t *d = rdt_lesen((uint16_t)re15_room_ids[r], &sz);
+        if (!d) continue;
+        if (sz >= 0x60) {
+            raeume++;
+            abschnitt_laufen((uint16_t)re15_room_ids[r], d, (uint32_t)sz, le32(d + 0x40));
+            abschnitt_laufen((uint16_t)re15_room_ids[r], d, (uint32_t)sz, le32(d + 0x44));
+        }
+        free(d);
+    }
+    int alle = 1, fremd = 0;
+    for (int i = 0; i < nsoll; i++) {
+        int da = 0;
+        for (int j = 0; j < s_nfund; j++)
+            if (s_fund[j].raum == soll[i].raum && s_fund[j].off == soll[i].off && s_fund[j].art == soll[i].art) da = 1;
+        if (!da) { alle = 0; printf("    fehlt: ROOM%04X @0x%05X art %d\n", soll[i].raum, (unsigned)soll[i].off, soll[i].art); }
+    }
+    for (int j = 0; j < s_nfund; j++) {
+        int bek = 0;
+        for (int i = 0; i < nsoll; i++)
+            if (s_fund[j].raum == soll[i].raum && s_fund[j].off == soll[i].off && s_fund[j].art == soll[i].art) bek = 1;
+        if (!bek) { fremd++; printf("    fremd: ROOM%04X @0x%05X art %d\n", s_fund[j].raum, (unsigned)s_fund[j].off, s_fund[j].art); }
+    }
+    printf("  J1 Zensus: %d Raeume, %d Funde (Tueren nach 2080/2090/20A0 + Set(3,206)=1)\n", raeume, s_nfund);
+    PRUEFE(raeume >= 200, "J1: RDTs gelesen (%d)", raeume);
+    PRUEFE(alle && fremd == 0, "J1: Zugaenge 2080/2090/20A0 und Setzer von (3,206) genau wie der Tuergraph (%d fremd)", fremd);
+    /* Bytes der Sperre (beide Szenarien gleich) */
+    static const uint8_t ck[4]  = { 0x21, 0x03, 0xce, 0x00 };
+    static const uint8_t txt[20] = { 0x2c, 0x04, 0x01, 0x31, 0x01, 0x00, 0x54, 0x6f, 0xc8, 0x00, 0xe8, 0x03, 0x98, 0x08,
+                                     0x02, 0x00, 0xff, 0xff, 0x00, 0x00 };
+    for (int v = 0; v < 2; v++) {
+        long sz = 0;
+        uint8_t *d = rdt_lesen((uint16_t)(0x11A0 + v), &sz);
+        PRUEFE(d && sz > 0x1026 && memcmp(d + 0x00FEA, ck, 4) == 0 && memcmp(d + 0x00FEE, txt, 20) == 0 && d[0x01006] == 0x3B,
+               "ROOM%04X main00: @0x00FEA Ck(3,206)=0, @0x00FEE Text slot 4 msg 2, @0x01006 Tuer (Sonst-Zweig)", 0x11A0 + v);
+        free(d);
+    }
+}
+
+static void fall_j2(uint16_t r11a0)
+{
+    /* Spieler auf dem Steg (Band 1, y -1800) vor der Ost-Tuer: Rechteck x 28500..29500 z 200..2400, Punkt 620 voraus */
+    bits_leeren();
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_LEITER_FREI); vorflag(3, 151);
+    if (raum_hoch(r11a0, 28457, -1800, 1319) != 0) { PRUEFE(0, "ROOM%04X Parse", r11a0); return; }
+    const re15_aot_t *a = &g_aot.slots[4];
+    PRUEFE(a->active && a->type == RE15_AOT_TYPE_MESSAGE && a->event_id == 2 && a->band == 1,
+           "ROOM%04X nach der Flut: Slot 4 = Text msg 2 Band 1 (Typ %d ev %d Band %d)", r11a0, a->type, a->event_id, a->band);
+    memset(&g_room_change, 0, sizeof g_room_change);
+    lauf_t L = druecken(28457, 1319, 0, 0, 300); zeige("11A0 zu", r11a0, &L);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == 2 && !g_room_change.pending && re15_game_flag_get(3, 206) == 0,
+           "ROOM%04X: Aktion zeigt nur msg 2 (locked from the other side), kein Raumwechsel, (3,206)=0 (msgs %d erste %d pending %d)",
+           r11a0, L.n_msgs, L.n_msgs ? L.msgs[0] : -1, g_room_change.pending);
+    /* Gegenprobe: mit (3,206)=1 ist Slot 4 die Tuer nach 20A0 */
+    vorflag(3, 206);
+    if (raum_hoch(r11a0, 28457, -1800, 1319) != 0) { PRUEFE(0, "ROOM%04X Parse", r11a0); return; }
+    PRUEFE(g_aot.slots[4].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[4].dest_stage == 1 && g_aot.door_params[4].dest_room == 0x0A,
+           "ROOM%04X mit (3,206): Slot 4 Tuer nach 20A0 (Typ %d Stage %d Raum 0x%02X)", r11a0, g_aot.slots[4].type,
+           g_aot.door_params[4].dest_stage, g_aot.door_params[4].dest_room);
+    memset(&g_room_change, 0, sizeof g_room_change);
+    L = druecken(28457, 1319, 0, 0, 60);
+    PRUEFE(g_room_change.pending && (g_room_change.room_id & 0xFFF0u) == 0x20A0u,
+           "ROOM%04X mit (3,206): Aktion -> Raumwechsel nach 20A0 (pending %d Raum %04X)", r11a0, g_room_change.pending,
+           g_room_change.room_id);
+}
+
 /* ---- H: Bank-5-Marker nur in 2030 loeschen (Nachbesserung 1, M3) ------------------------------------------------ */
 static void fall_h(void)
 {
@@ -801,6 +955,7 @@ int main(int argc, char **argv)
         fall_f((uint16_t)(0x2050 + v));
         fall_g((uint16_t)(0x2080 + v));
         fall_i((uint16_t)(0x20B0 + v), (uint16_t)(0x2070 + v), (uint16_t)(0x2080 + v));
+        fall_j2((uint16_t)(0x11A0 + v));
     }
     /* fremd: ROOM2060 ohne Plaetze 12..14 / Wasser */
     bits_leeren();
@@ -812,6 +967,7 @@ int main(int argc, char **argv)
         PRUEFE(n == 0 && re15_ventilkette_r41_wasser_prop(0) < 0, "ROOM2060: %d fremde Plaetze (obj 4 ist dort das Sicherungs-Panel)", n);
     }
     fall_h();
+    fall_j1();
     printf("%s (%d Pruefungen)\n", s_fail ? "FAIL" : "PASS", s_pruef);
     free(s_daten);
     return s_fail;
