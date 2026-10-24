@@ -15,8 +15,12 @@ const SPUREN = CFG.spuren || []          // [{id:'C', thema:'ventilkette'}, ...]
 const KETTE_AC = !!CFG.kette_ac
 const LABEL = CFG.label || SPUREN.map(s => s.id).join('')
 
+const BEREITS = CFG.bereits || []      // schon gemergt, Tests/Gegenpruefung stehen noch aus: [{id, thema, merge}]
 const liste = SPUREN.map(s => `- Spur ${s.id} "${s.thema}": Zweig r41/${s.thema}, Dossier analysis/befunde_runde41/${s.id}_${s.thema}.md, letzte Abnahme analysis/befunde_runde41/${s.id}_abnahme_*.md (hoechste Nummer)`).join('\n')
 
+const bereitsText = BEREITS.length ? '
+' + BEREITS.map(b => `- BEREITS GEMERGT (Merge ${b.merge}), Tests und Gegenpruefung stehen noch aus: Spur ${b.id} "${b.thema}": Zweig r41/${b.thema}, Dossier analysis/befunde_runde41/${b.id}_${b.thema}.md, letzte Abnahme ${b.id}_abnahme_*.md (hoechste Nummer)`).join('
+') : ''
 const GEMEINSAM = `
 ## Rahmen (bindend)
 - Integrationsbaum ${BAUM} (Zweig r41/integration). ALLE Aenderungen nur dort; Spurbaeume und Hauptbaum ${ROOT} nur lesen. Kein push, kein master-Merge (macht der Orchestrator).
@@ -61,7 +65,8 @@ const PRUEF_SCHEMA = {
 
 phase('Merge+Bau')
 const merge = await agent(`Du bist der INTEGRATOR der Runde 41 im Projekt reAi_v2 (RE1.5-PSX -> PC-Port). Fuehre diese bestandenen Spuren in den Integrationsbaum zusammen:
-${liste}
+${liste}${bereitsText ? '
+(Bereits gemergt, NICHT erneut mergen:' + bereitsText + ')' : ''}
 ${GEMEINSAM}
 ## Vorgehen
 1. git -C "${BAUM}" status (muss sauber sein), git -C "${BAUM}" log --oneline -3. Vorher master in r41/integration mergen (git -C "${BAUM}" merge --no-edit master), Konflikte in AUFTRAG.md/VERTRAG.md/UEBERGABE.md immer mit der master-Fassung loesen (git checkout --theirs), dann pruefen, dass keine Zeile der vorigen Fassung fehlt.
@@ -74,12 +79,12 @@ log(`Merge: ${merge.merge_commits.length} Commits, Konflikte ${merge.konflikte.l
 
 phase('Pruefung')
 const testPrompt = `Du bist der TEST-INTEGRATOR der Runde 41. Im Integrationsbaum wurden diese Spuren gemergt und gebaut (Kopf ${merge.kopf}):
-${liste}
+${liste}${bereitsText}
 Merge-Bericht: ${merge.bericht}
 ${GEMEINSAM}
 ## Vorgehen
 1. Bau pruefen (local_build.sh build -> "ninja: no work to do" oder sauber).
-2. ctest -j 6 --timeout 600 -R "^(unit_|prop_|probe_)" — Summenzeile woertlich. Jede rote: Ursache mit Beleg (Querbezug zwischen Spuren? alter Riegel durch neue Regel widerlegt? Memory reai-v2-gezielte-integration-querbezug), im Integrationsbaum beheben (kleinster belegter Eingriff; widerlegte alte Riegel nur mit Beleg anpassen) oder als echter Spielfehler melden.
+2. ctest -j 6 --timeout 600 -R "^(unit_|prop_|probe_)" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)" — Summenzeile woertlich. Die ausgeschlossenen Release-/Android-Skripttests pruefen release/ und platform/android/ (von den Spuren nicht beruehrt) und laufen unter der Last paralleler Agenten in Zeitueberschreitungen; sie laufen in der vollen Suite vor dem Release ohne Last — hier NICHT fahren und NICHT nachfahren. Jede rote: Ursache mit Beleg (Querbezug zwischen Spuren? alter Riegel durch neue Regel widerlegt? Memory reai-v2-gezielte-integration-querbezug), im Integrationsbaum beheben (kleinster belegter Eingriff; widerlegte alte Riegel nur mit Beleg anpassen) oder als echter Spielfehler melden.
 3. Je Spur die gezielten Testgruppen aus ihrem Dossier/ihrer letzten Abnahme (dort steht der -R-Ausdruck woertlich) erneut fahren — Unit-Gruppen und die Integrationsriegel der Spur (integration_r41_<thema>*), dazu die Querbezugs-Riegel aus UEBERGABE §3a (z. B. alle Gator-Riegel nach RE15_ACTOR_MAX 36: test_r35_granate, integration_r36_schuss, integration_r41_re2gator ...; alle Riegel, die dieselben Bank-Bits/Raeume setzen wie die gemergten Spuren: git grep in re15_port/tests nach den Bits/Raeumen der VERTRAG-Zuteilung). Integrationsriegel seriell oder -j 2 mit --timeout 1800.
 4. Antwort: alle Summenzeilen woertlich mit -R-Ausdruck, rote Tests mit Ursache, Fixes (Commit + Beleg), git-Kopf.`
 
@@ -99,7 +104,7 @@ log(`Tests: ${test ? (test.gruen ? 'GRUEN' : 'ROT ' + test.rot.length) : 'OHNE E
 phase('Gegenpruefung')
 const gegen = await agent(`Du bist die UNABHAENGIGE GEGENPRUEFUNG der Integration der Runde 41. Glaube dem Integrator nichts. Integrationsbaum ${BAUM}, Kopf jetzt: git -C "${BAUM}" log -1.
 Gemergte Spuren:
-${liste}
+${liste}${bereitsText}
 Bericht des Integrators: ${merge.bericht}
 Fixes des Test-Integrators: ${test ? test.fixes.join(' | ') : '(keine Angabe)'}
 ${GEMEINSAM}
