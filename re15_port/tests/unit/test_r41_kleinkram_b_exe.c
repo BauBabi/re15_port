@@ -146,8 +146,7 @@ static int kurbel(const char *dlog, const char *state, const char *anim)
 static int segment(const char *state)
 {
     FILE *f = fopen(state, "rb");
-    if (!f) { printf("FEHLER %s
-", state); return 2; }
+    if (!f) { printf("FEHLER %s\n", state); return 2; }
     static long fr_[MAXF * 4]; static int cam_[MAXF * 4], x_[MAXF * 4];
     int n = 0;
     char line[4096];
@@ -159,8 +158,7 @@ static int segment(const char *state)
         fr_[n] = fr; cam_[n] = c; x_[n] = x; n++;
     }
     fclose(f);
-    if (n == 0) { printf("SEGMENT leer
-"); return 1; }
+    if (n == 0) { printf("SEGMENT leer\n"); return 1; }
     int a = 0;
     for (int i = 1; i < n; i++) if (fr_[i] < fr_[i - 1]) a = i;
     int seen[64] = {0}, mnx = 1 << 30, mxx = -(1 << 30);
@@ -172,8 +170,7 @@ static int segment(const char *state)
     printf("SEGMENT bilder=%d kameras=", n - a);
     int erst = 1;
     for (int c = 0; c < 64; c++) if (seen[c]) { printf(erst ? "%d" : ",%d", c); erst = 0; }
-    printf(" letzte_kamera=%d min_x=%d max_x=%d
-", cam_[n - 1], mnx, mxx);
+    printf(" letzte_kamera=%d min_x=%d max_x=%d\n", cam_[n - 1], mnx, mxx);
     return 0;
 }
 
