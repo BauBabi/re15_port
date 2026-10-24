@@ -284,3 +284,15 @@ Gates: RE **haelt** (11 Adressbereiche selbst disassembliert, Original-Daten sel
 (formal, Orchestrator-Entscheid wie B5 genuegt); N **keine erreichbare Nebenwirkung**, aber **Mangel M2** (falsche Dossier-Aussage
 zu ROOM4031) + Nebenbefund N1 (Hund, nicht Spur J); T: Riegel der Spur 9/9, unit/probe/prop 917/923 (6 release/-Skript-Zeitablaeufe
 unter Last, vom Diff unberuehrt; trocken einzeln gruen), Integration 54/54 (2 davon einzeln nachgefahren).
+
+## Stand am Ende (release/-Skript-Riegel, einzeln nachgefahren)
+- unit_r38_releaseskript_trocken: Passed (788,71 s, ctest_release_einzeln.log)
+- unit_r35_android_pruefkette: Timeout (900,23 s, ctest_release_rest.log)
+- unit_r35_android_bash_mutanten: Timeout (1500,84 s, ctest_release_rest.log)
+- unit_r38_releaseskript_ablauf: Passed (175,02 s, ctest_release_rest.log)
+Bewertung: Diese Riegel pruefen nur Skripte unter release/ (apk_pruefen.sh, gate_urteil.py, release_alles.sh mit Attrappen)
+und lesen keine Engine-Datei, die der Diff aendert; release/ ist unberuehrt. Ein Zeitablauf unter Parallel-Last ist deshalb
+kein Spur-J-Befund; massgeblich ist der Einzellauf. Nicht zu Ende nachgefahren: unit_r38_releaseskript_fehler_bau (lief, beim
+Abschluss dieses Berichts mit den Kind-Prozessen per PID beendet, um die Maschine freizugeben) und _fehler_umfeld; die beiden
+Android-Riegel liefen zweimal unter Fremdlast in den Zeitablauf (alle Pruefzeilen ok). Diese Riegel faehrt die Integration ohnehin
+erneut ("alle unit_/prop_/probe_", VERTRAG Ablauf).
