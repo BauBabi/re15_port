@@ -223,11 +223,72 @@ gegen p=4 obj=3 ... dX=1799 dZ=-1781`): die Kerben liegen im Raster 1900/1850, d
 bleiben 100/50 Einheiten Spiel, genau wie im Original (FUN_8002cdf4 ist dieselbe Pruefung). Fenster fuer obj 1:
 z in (-3750, z3 - 1800) (r0[0] @0x00910 sperrt die Kiste bei z < -3750, Zellentest FUN_8003b558).
 
+## Gemeinsame Dateien (Haken, je "Runde 41 Spur H")
+- `engine/src/enemy_ai_common.c`: 1 Include (hinter re15_npckante_r38.h) + 1 Zeile in re15_npc_ai_tick vor
+  `re15_npc_wall_clamp` (`re15_kollision_r41_npc_schwanz(slot)`). ⛔ NICHT in der Haken-Liste der Spur H (VERTRAG §1.3
+  nennt re15_collision.c / game_step_common.c / aot_common.c) und abweichend vom Auftragstext "nur Haken in
+  game_step_common.c": die Original-Reihenfolge Dispatch -> aec4/b544 -> Wandklemme (@0x8011cc1c / @0x8011cc3c-44 /
+  @0x8011cc64) liegt INNERHALB des NPC-Ticks; ein Haken nach run_all in game_step_common.c liefe hinter der Klemme
+  (eine geschobene NPC stuende in der Wand) und hinter allen anderen Ticks. Keine Ueberschneidung mit Spur A (deren
+  NPC-Haken sitzen in re15_npc_sub_turn/re15_npc_sub_walk, Include hinter re15_esp.h) — fuer die Integration vermerkt.
+- `engine/src/aot_common.c`: 1 Include (hinter re15_zellschub_r36.h, nicht neben Spur A's Include) + Objekt-Pass in
+  re15_prop_push_tick (3 Zeilen + berichtigter Kopfkommentar).
+- `engine/src/game_step_common.c`: 1 Include + 1 Zeile `re15_kollision_r41_objspiegel()` nach re15_objfall_nach_pass.
+- Keine Bank-9-Bits, keine Nachrichten-Ids, keine Assets, kein Eingriff in shared_assets/pri/synchro/release.
+- Messhaken (kein Spielverhalten, env): `RE15_KOLLISION_LOG=<datei>` (NPC-SCHUB / OBJEKT-GESPERRT / SETZE),
+  `RE15_KOLLISION_SETZE="<obj>:<x>,<y>,<z>,<band>@<bild>"` (Objekt einmal je Raum versetzen = Gegenstueck der
+  RAM-Schreibung der Original-Messung).
+
 ## Tests
-(offen)
+Riegel `re15_port/tests/unit/probes/r41_kollision.cmake` (Quellen tests/unit/test_r41_kollision.c,
+tests/unit/probe_r41_kollision_abstand.c, tests/integration/test_r41_kollision.cmake):
+- `unit_r41_kollision_npc` — Schub-Formel mit SquareRoot0 (SquareRoot0(250000) = 499 -> Marvin x 901; Spieler-Schub
+  (0,-305) mit SquareRoot0(360000) = 596), nur a1 bewegt sich, Gates toter Spieler / Leiche / Y-Band (3060 strikt), Kasten
+  0x4b 300.
+- `unit_r41_kollision_raum3070` — echte ROOM3070, Ada + Marvin Eskorte: 900 Bilder, Weg 4190/5128, min 899, Ende 900,
+  870 Kontaktbilder.
+- `unit_r41_kollision_raum3001` — echte ROOM3001 (Elza-Raum), John + Sherry: min 732 (>= 750-20), Ende 750.
+- `unit_r41_kollision_kiste` — ROOM2050: Grenze |dX| 1800 gesperrt / 1801 frei, Durchlauf, Gate 0x40, anderes Band frei,
+  vertikaler Eintritt y 1801, Raetsel-Endlage ohne Sperre, obj 1 bei z -3687 gesperrt.
+- `integration_r41_kollision_kiste` — exe: SCHUB-GESPERRT + OBJEKT-GESPERRT gegen obj 3, Lage obj 2 nie >= 2448.
+- `integration_r41_kollision_raetsel_leon` / `_raetsel_elza` — exe: (5,0..2) = 1, Endlagen |dZ| > 1800.
+- `integration_r41_kollision_npc3070` (Leon) / `_npc3001` (Elza) — exe: Kontakt ja, kein Bild < Summe-50, min >=
+  Summe-20, Ende >= Summe-5, NPC-SCHUB im Log.
+Gezielte Laeufe (Summenzeilen woertlich): s. unten "Ergebnisse".
 
 ## OFFEN
-(offen)
+1. **Entity-Durchlauf der Schubkette @0x8002bfec-c038** (FUN_8002cabc(Entitaet, obj, 1) fuer jede aktive Entitaet:
+   Kiste wird aus einem Gegner/NPC herausgesetzt, Zaehler obj+0x8C = 10 `sb s7,140(s2)` @0x8002c030, KEINE
+   Ruecksetzung) — nicht portiert (nicht Teil des Nutzer-Befunds; der Port schiebt umgekehrt die Aktoren aus den Kisten,
+   re15_actor_prop_pushout @0x8002be0c-4c). Kopfkommentar in aot_common.c nennt ihn.
+2. **Zaehler-Ueberlauf obj+0x8C**: das Original zaehlt als Byte (`lbu v0,140(s2)` / `addiu v0,v0,1` / `sb v0,140(s2)`
+   @0x8002bf60-70) und laeuft nach 255 auf 0 -> bei dauerhaft gehaltenem UP alle 256 Bilder ein neuer Schubversuch;
+   der Port saettigt bei 255 (aot_common.c `if (s_prop_push_count[p] < 255)`). Vorbestehend, nicht Teil des Befunds.
+3. **Spiegel +0x42 (y)**: per Bild-Schnappschuss nach dem Objekt-Pass; abweichend vom Original nur fuer ein Objekt,
+   dessen y sich im laufenden Pass VOR dem Schubtest aendert (im selben Bild fallende Nachbarkiste). In 2050 faellt nur
+   obj 6 (Band 3 -> 2), die Raetsel-Kisten stehen in Band 0 -> kein ausgelieferter Fall.
+4. **Yield-Zweige** von re15_npc_ai_tick (walk_active = Elliot 0x47 Altweg; SCD-besetzter Slot ausserhalb der
+   Executor-Subs) kehren vor dem Schwanz zurueck — wie bisher auch vor der Wandklemme. Im Original laeuft der Schwanz
+   (ausser bei den Freeze-Toren @0x8011cb90/@0x8011cbb0) jedes Bild.
+5. **Querbezug fuer die Integration** (Memory reai-v2-gezielte-integration-querbezug): der Schub wirkt jetzt in JEDEM
+   NPC-Tick, auch in Szenen. Spuren mit NPC-Szenen nach dem Merge nachfahren: G (2080 Marvin/John + 8 Zombies +
+   Kanister: Marvin wird aus Zombies/Leon geschoben), J/K (STAGE3-Szenen 3060/3061/30C1/3091), A (NPC-Wasserschritte,
+   RE15_ACTOR_MAX 36 — die Schleifen hier nutzen RE15_ACTOR_MAX). Ein Plc_dest-Ziel, das naeher als die Radien-Summe
+   an einer anderen Figur liegt, wird nie erreicht (Ankunft 100/300 @actor_locomotion) — im Original genauso.
+6. Die im Auftragstext genannten `integration_r37_kiste*` sind die KISTEN-(Item-Box-)Riegel der Runde 37, nicht das
+   Schiebe-Raetsel; sie sind trotzdem im gezielten Lauf (unten).
 
 ## Fuer den Nutzer
-(offen)
+- **Neue Assets:** keine (nichts unter shared_assets/RE2, keine Sprachdateien, keine Bits/Texte).
+- **NPCs sind fest** (Ada, Marvin, John, Sherry, Irons, Annette, Katherine, Ben, ...): zwei NPCs laufen nicht mehr
+  ineinander, auch nicht in Gegner; laeuft Leon/Elza in eine NPC hinein, weicht sie aus — wie im Original (Schub im
+  Wurzel-Schwanz aller 24 NPC-Wurzeln, am Original gemessen: Ada/Marvin in ROOM3070 nie naeher als 901). Zum Ansehen:
+  ROOM3070 (Lagerhalle, Ada + Marvin folgen Leon, nach dem G-Birkin-Kampf) und ROOM3001 (Elza, John + Sherry folgen).
+  Folge, ebenfalls wie im Original: eine folgende NPC kommt nicht mehr DURCH Leon/Elza hindurch, sie bleibt vor ihr stehen.
+- **Kisten in ROOM2050/2051 sperren sich gegenseitig** (am Original gemessen, Port = Original). Das Raetsel bleibt
+  loesbar, braucht aber Genauigkeit: die drei Kerben an der Westwand liegen 1900 bzw. 1850 auseinander, die Kisten sind
+  1800 tief. Erprobter Weg: (1) die mittlere Kiste gerade nach Westen in die suedliche Kerbe; (2) die suedoestliche Kiste
+  nach Norden bis knapp hinter die Linie der Kerben-Mitte und dann nach Westen in die mittlere Kerbe; (3) die noerdliche
+  Kiste nach Sueden nur bis zur Linie der noerdlichen Kerbe (schiebt man sie zu weit, stoesst sie beim Westschub an die
+  mittlere Kiste) und dann nach Westen. Steckt eine Kiste fest, beruehrt sie eine andere.
+- Entscheidungsfragen: keine.
