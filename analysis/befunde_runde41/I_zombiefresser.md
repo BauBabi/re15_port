@@ -11,12 +11,12 @@ Start 2026-10-24 09:44 (Uhr). Vorgaengerlauf (wf_a8b604c5-d10) starb beim Start 
 
 ## 0. Status
 
-- [ ] Zensus Fresser-Spawns STAGE2/3
-- [ ] Messung vorher (Port)
-- [ ] RE-Belege (RE1.5 + RE2)
-- [ ] Umsetzung
-- [ ] Messung nachher
-- [ ] Tests
+- [x] Zensus Fresser-Spawns STAGE2/3 (§1.1)
+- [x] Messung vorher (Port, §1.2) und Original (DuckStation, §2.1b)
+- [x] RE-Belege (RE1.5 STAGE1/2/3 + RE2 EMZ0, §2)
+- [x] Umsetzung (§3)
+- [x] Messung nachher (§4)
+- [x] Tests (§5)
 
 ## 1. Messung vorher
 
@@ -163,6 +163,8 @@ sel 5 -> Clip 22/9 (bestehende Abbildung re15_re2z_spawn_pose_seed, RE1.5-Spaltu
 
 ## 4. Messung nachher (gebauter Stand, Messkopie re15_pc_r41i_mess.exe)
 
+Nach dem Merge von master (Spur A + D integriert, ce430484) unveraendert (integration_r41_zombiefresser_*).
+
 ROOM2000, RE2-KI, Leon Oststeg (-20300,-1800,-11600) (`I_belege/nachher_2000_zf.log`):
 ```
 F6  slot=3/4 INIT grid=84 Wort=1/7/0 f10e=4002      (EXEC[7] liegend, nicht mehr 1/8 Fressen)
@@ -180,12 +182,64 @@ Bilder: `I_belege/vorher_nachher_3000.png` (oben vorher: kniend/fressend; unten 
 
 ## 5. Tests
 
-(folgt)
+Neu (registriert NUR in `re15_port/tests/unit/probes/r41_zombiefresser.cmake`):
+- `unit_r41_zombiefresser` (`tests/unit/test_r41_zombiefresser.c`, echte RDT/SCD/SCA + game_step, beide KI):
+  A Zensus 2000 (2), 2001 (2), 3000 (7), 3010 (6) liegen (RE2 1/7 Latch 4002 Clip 23/22; RE1.5 grid 84/85
+  Sub 0 Clip 0x12/0x13), keiner frisst. B Ruhe 300 Bilder bei d >= 4000: liegend + unschiessbar (+0x93 Bit 0).
+  C je Raum Spieler 500..1500 vor einem Zombie: Wecken im ersten Takt, Wartezeit <= 16, Aufsteh-Clip ganz
+  (RE2 Clip 8, 80 Bilder; RE1.5 Clip 0x12, 98 Bilder), aufrecht, Angriff. Gemessen (Auszug):
+  `[C 3000 RE2] d0=1144 weckt F0 frei F1 Aufstehen F2 Clip 8 Laenge 80 steht F73 angriff F76`,
+  `[C 3000 RE1.5] ... Clip 18 Laenge 98 steht F99 angriff F103`, `[C 3010 RE2] ... steht F82 angriff F128`,
+  `[C 2000 RE1.5] d0=1366 ... steht F102 angriff F323` (zieht sich hoch), `[C 2000-Steg RE2] d0=2684 ...
+  steht F74 angriff F306`. D Grenze am GEMESSENEN +0x1d0 (SquareRoot0 trifft nicht jeden Wert: Versatz 4008 ->
+  4007 weckt 300 Bilder nicht, 4007 -> 3998 weckt). E 48 Seeds: 15 verschiedene Wartezeiten in 1..16.
+  F ROOM1140: die vier 0x86-Fresser bleiben Fresser (RE2 Sub 8, RE1.5 grid 0 / Sub 0xc).
+- `integration_r41_zombiefresser_{tuer2000,elza2001,leon3000,leon3010,re15_3000}` (echte exe, Messkopie
+  `re15_pc_r41i_<teil>_*`, `tests/integration/test_r41_zombiefresser.cmake`): tuer2000/elza2001 = ECHTER Tuerweg
+  2070/2071 -> 2000/2001 (Wegplan, Elza mit RE15_TITLE_SHOT_CHAR=1 + Spawn-Bit 3:0x45); leon3000/leon3010/re15_3000
+  = Spielstand + CONTINUE (Kartenwerkzeug `probe_r41_zombiefresser_karte`). Gemessen: tuer2000 F61 WECKT d=3949
+  warte=10 -> F71 STEHT AUF, F94/F99 Slot 3, Griff F371 (hp 80); elza2001 identisch als Elza; leon3000 F1/F2,
+  Griff F77; leon3010 F1/F2, Griff F129; re15_3000 F1 WECKT(RE1.5), Griff F109.
+
+Nachgezogene alte Pins (ihre Praemisse "Grid [4]/[5]/[6] = Fresser" ist durch §2.1/§2.1b widerlegt):
+- `unit_p3_restposten_pin` [D]: jetzt 0x84/0x85 -> EXEC[7] mit Latch, 0x86 -> EXEC[8].
+- `unit_anim_rate` PIN 4: das Paar Clip 0x29 / +0x8f 7 kommt vom ECHTEN Fresser (grid 0 / Sub 0xc ->
+  decide[0xc] @0x801048bc -> 0xd01), nicht mehr vom Grid-5-Zweig.
+- `unit_room1140_combat` (13b): Grid 0x84 spielt in P2 das vorhandene +0x94 = 0x12 aus (+0x8f 0xf), kein Clip-Wechsel.
+- `integration_r38_wasserzombie` Teil e: Endbild 406 -> 560 (das Partner-Domino-Zwischenbild liegt mit dem
+  Liege-Aufstehen bei Bild 461/462; gemessen `F461 ... zwischenbild st=1/9/0 mo=22 af=59`, `F462 abbruch af=60`).
+
+Gezielte Laeufe (Ergebnisse woertlich in §5.1).
 
 ## 6. OFFEN
 
-(folgt)
+1. **RE2-KI, Kanalraum 2000/2001: Spieler direkt UEBER dem Zombie** (Oststeg, Abstand < 2000): der aufgestandene
+   Zombie schnappt nach oben statt zur Kante zu laufen. Das ist RE2-Retail-Verhalten, kein Rest des Fixes: Block A
+   der RE2-DECISION[2] @0x8010205C-94 (`a1300 == 0 && dist < 0x7d0 && +0x106 != Spieler-Etage && kein Griff ->
+   0x0E01` = EXEC[14] Schnappen @0x80104D74). Gemessen (unit_r41_zombiefresser C 2000 RE2, Spieler (-21300,-10100)):
+   Ende Wort 1/2/1 @(-22143,0,-10029), +0x90 = 0, keine Kante vorn. Steht der Spieler weiter weg (Oststeg
+   (-20300,-11600)), laeuft er zur Kante, zieht sich hoch (Runde 38 U) und greift (F306). Die RE1.5-KI hat keinen
+   Etagen-Schnapper (Engage-Decide prueft dieselbe Etage nur fuer den Griff) und zieht sich auch von direkt unten hoch.
+2. **LADE-Weg in ROOM2000/2001 (Nebenbefund, nicht Teil des Auftrags):** wird ein Spielstand IN 2000/2001 geladen
+   (RE15_CONTINUE_TEST/Karte), laeuft sub00 nicht -> die beiden Zombies (und die 2000-Szene sub02) fehlen. Ursache
+   im Boot-Pfad platform/pc/main.c (Pre-Intro-Erkennung nach dem ersten main00-Takt: laeuft ein Ereignis-Thread,
+   wird sub00 zurueckgehalten); 2000/2001 main00 endet mit `Evt_exec 0xff,0x18,0x07/0x08` (@0x0177c). Das Original
+   startet sub00 in der SCD-Raum-Init immer (FUN_8003ef6c @0x8003efd8, Zitat main.c). Tuerweg und Debug-Sprung sind
+   nicht betroffen (gemessen). Naechster Weg: die Pre-Intro-Erkennung auf ROOM1170/den Erzaehler (sub11) eingrenzen.
+3. **RE1.5-KI, Pose vor dem Wecken:** der Port zeigt Clip 0x12 Bild 0 (Hoehe -457), das Original die INIT-Pose
+   Clip 0x0c Bild 0 (Hoehe -234; f314 @0x80100c34 VOR dem FINAL +0x94 = 0x12 @0x80100c7c), weil der Port Pose und
+   +0x94 nicht trennt. Beide liegend; vorbestehend auch fuer 0x87/0x88. Nur RE1.5-KI.
+4. **RE2-KI, Aufsteh-Dauer:** RE2-Clip 8/9 (80 Bilder, Startbild rand&0xf @0x80103838-4C) statt RE1.5-Clip
+   0x12 (98 Bilder) — RE2-Praesentation der RE2-KI, gewollt (Executor = RE2, Zeitpunkt = RE1.5).
 
 ## 7. Fuer den Nutzer
 
-(folgt)
+- Keine neuen Assets, keine Sprachdateien, keine Nachrichten-Ids, keine Bank-9-Bits.
+- Bedienhinweis: In ROOM2000/2001 liegen die beiden Zombies flach im Abwasserkanal, in ROOM3000/3010 auf dem
+  Boden (wie im Original) — sie fressen NICHT mehr. Kommt Leon/Elza naeher als 4000 Einheiten, stehen sie nach
+  hoechstens einer halben Sekunde auf und greifen an; im Kanal ziehen sie sich dazu an der Kante hoch. Solange sie
+  liegen, sind sie (wie im Original) nicht zu treffen. Die echten Fresser im Speisesaal (ROOM1140) und in 10E0
+  bleiben Fresser.
+- Mit RE2-KI schnappt ein Kanal-Zombie, der direkt unter dem Spieler steht, nach oben (RE2-Verhalten, §6.1);
+  einen Schritt vom Kanalrand weg laeuft er zur Kante und klettert hoch.
+- Keine Entscheidungsfragen.
