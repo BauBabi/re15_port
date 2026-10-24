@@ -139,3 +139,36 @@ PLD-Inhalt (`K_belege`, eigener Schnitt ueber die Verzeichnistabelle): PL0F.PLD 
 {28,28,133,30,20,38,1x11,45,31,1x5}, EMR 15 Knochen Hierarchie wie PL04, Bind Wurzel (0,-1268,0) (Kind; PL04 -1709),
 MD1 15 Meshes, TIM 256x256 8bpp. PL0FW00.PLW: EDD 9 Clips {20,1,40,1,1,28,15,1,8}, EMR 15 Knochen 115 Keyframes,
 MD1 1 Mesh, dir[3] 2336 B.
+
+### K1.6 Weitere Modell-0x0F-Stellen im Original (alle 33 Leser von DAT_800aca5c, ghidra1_V2.txt, + Overlays)
+* Bewegung je Modell [Tempo, Drehung], Index Modell*2 (Zeile 15 = Sherry, Bytes aus PSX.EXE):
+  GEHEN @0x80073ea4 (Leser Tempo @0x800324d4, Drehung @0x800323a0) Zeile 15 @0x80073ec2 = `32 30` = [50,48];
+  RUECK @0x80073ec4 (@0x80032d5c / @0x80032c4c) Zeile 15 `23 30` = [35,48]; DREHEN @0x80073ee4 (@0x80032a08) Zeile 15
+  `00 50` = [0,80]; RENNEN @0x80073f24 (@0x800327e8 / @0x80032688) Zeile 15 @0x80073f42 = `78 40` = [120,64].
+  (Leon Zeile 0: [75,48] [70,48] [0,96] [200,72]; Elza Zeile 4: [70,48] [65,48] [0,96] [210,72].)
+* Gehen @0x8003258c / Rennen @0x80032898: `ori v0,zero,0xf` + `beq` -> Modell 0x0F ueberspringt den Fussanker
+  FUN_800369f8 und die Tempo-Mischung (Port fuehrt diese Mischung fuer niemanden -> nichts zu tun).
+* Hochklettern @0x8003818c-a8: Ausloesebild 0x63 statt 0x1d fuer Modell 0x0F (Sherrys Clip 2 hat 133 Bilder).
+  Port: climb_common.c verglich `p->type == 0x0f` — der Spieler-Typ ist im Port aber immer 0 (actor_common.c:38),
+  der Zweig war tot -> jetzt `re15_sherry_r41_modell()`.
+* Zielen nur mit Waffe != 0 (`lbu DAT_800aca5d` + beq/bne zero vor `ori v0,zero,0x701`): Stehen @0x80032014, Gehen
+  @0x80032430, Rennen @0x80032720, Drehen @0x80032a80, Rueckwaerts @0x80032cb4. Port zielte mit R1 immer.
+* Wund-Zeile = Modell (FUN_80037c1c @0x80037c8c `lbu DAT_800aca5c`, 8 Zeilen @0x80074208-87); Zeile 15 liegt hinter
+  der Tabelle (Original liest @0x800742f8 Fremddaten) -> Port: keine Zeile (re15_kleidung_panel_ziel liefert 0).
+* Overlays STAGE1-5 je 1 Leser (Griff-Zweig Leon/Elza ueber Bit 2) — nicht Sherry-spezifisch.
+
+### K1.7 Umsetzung (Commit cdb12ea8, Messung nachher K1.8)
+| Datei | Inhalt |
+|---|---|
+| NEU engine/src/sherry_r41.c, include/re15_sherry_r41.h | Modell-Spiegel (`re15_sherry_r41_modell`), Waffe beim Wechsel (0x0F -> 0 @0x800316c4; zurueck -> vorherige Waffe = PORT-WAHL wie Westen-Weg, Original: DEBUG.BIN-Tabelle @0x800c00d4 = 1 Messer), Ausruesten gesperrt solange 0x0F, Bewegungs-Zeile 15, Messhaken RE15_WORKVAR_AT |
+| NEU platform/pc/src/sherry_pc_r41.c/.h | Koerper-Tausch: bei neuer Waffen-Familie (@0x800741e8[Modell]: 76/97/118) EDD+EMR der PLD binden (@0x8003154c/@0x80031578), W00-Bank der Familie (PL0FW00.PLW, @0x80036be4/@0x80036c04, Verbund Bindelage+Keyframes wie main.c [wpn-bank]), alle Hand-Meshes aus (@0x80036c08), Wunden loeschen (FUN_80037c1c @0x800316c8), CORE-Bank des Modells (FUN_800440c4 @0x800316e8 -> CORE0F.VB 41200 B); Boot-Familie gesichert + beim Zurueckkehren wiederhergestellt; gleiche Familie (Weste PL00/01, Elza PL04-07: EDD/EMR md5-gleich) -> unveraendert |
+| platform/pc/main.c (Haken) | include; Anmeldung nach pl00_*; Aufruf in pc_sync_player_model nach MD1/TIM; Hand-Mesh nur bei Waffe != 0 (@0x80036c08); Wund-Zeile = Modell (@0x80037c8c) |
+| engine/src/re15_damage.c (2 Zeilen) | `re15_player_waffe_roh` (nur aca5d, kein Ausruest-Platz); Ausruesten gesperrt solange Sherry |
+| engine/src/player_common.c (4 Haken) | Tempo/Drehung Zeile 15 fuer Modell 0x0F; kein Zielen mit Waffe 0 (5 Original-Stellen oben) |
+| engine/src/climb_common.c (1 Zeile) | Ausloesebild 0x63 fuer Modell 0x0F (@0x8003818c) ueber den Modell-Spiegel |
+
+### K1.8 Messung nachher (gleicher Lauf, Bau cdb12ea8: `re15_port/build/r41k_laeufe/n30c1s`)
+debug.log: `[sherry-r41] Spielermodell 4 -> 15, Waffe (aca5d) 0`, `[sherry-r41] Koerper -> Familie 118 (PL0F): 15 Knochen,
+24 Clips, W00 9 Clips, Wurzel-Bind y -1268`, `[pld] Spielermodell -> PLD/PL0F.PLD`. Bild
+**`K_belege/k1_original_vs_port_nachher_30c1.png`** (Original-Puffer | Port vorher F200 | Port nachher F20 | F200):
+nachher steht Sherry wie im Original als Kind mit geschlossenen Gliedern, Schuhe im Schatten, keine Waffe.
