@@ -428,6 +428,26 @@ Keine Messung der Abnahme wird wiederholt; ihre Zahlen werden zitiert. Punkt 2 (
 - [ ] Mangel 1 (b): Restliste fuer den Nutzer (Freistellung je Kamera)
 - [ ] exe-Messung nachher, gezielte Tests, Abschluss-Commit
 
+### NB2 Ausgangslage (Lektuere, keine neue Messung)
+Stand nach NB1 (Bericht `m41nb1c/tz4b/tiefe_zelle_r41.json` des Bau-Agenten, eigene Auszaehlung): von 1317 Rechtecken, die vor NB1
+ausgeschlossen waren, haben 370 ein Zellen-Modell (Zelle + gemessene Hoehe): 131 wieder drin (Schritt 2), **135 trotz Zellen-Tiefe
+weiter aus** (davon 70 in 3050 C15 = Sektion ohne Stehplatz, Original-NULL, bleiben aus; 26 ohne geerbten Punkt) und **104 mit
+"Zellen-Tiefe nicht ferner als die alte"** (NB1 hat nur FERNERE Tiefen geschrieben; 6000 C5 Lok 27 Rechtecke 17 941 px, 6000 C7/C8/C9,
+4040 C6/C7/C9/C10, 4080 C7, 3050 C9, 5050 C1). 947 Rechtecke (256 518 px) haben kein Modell (576 x "keine Zelle traegt die Mehrheit
+der Bodenkontakte", 45+ "kein Bodenkontakt", 66 "Zelle trifft bei keiner Hoehe", 37 "Saeule mit schraeger Zelle").
+Die vier Cuts ohne Maske (3040 C1, 3050 C6, 30E0 C6, 30E0 C7) sind laut Bildern `M_bilder/NB1_rest/` ueberwiegend Boden-/Wandflaechen,
+die der Generator in seine Region nahm (30E0 C6/C7: Bodenstreifen vor dem Gelaender; das Gelaender selbst ist NICHT in der Region).
+
+### NB2 Plan (Weg (a) der Abnahme, als Regel im Ausschluss-Generator)
+Warum das Grundriss-Netz der Spur P diese Rechtecke nimmt: `zelle_dazwischen` (test_r37_masken36.c) kennt nur Zellen DESSELBEN Bands
+und laesst Zellen aus, in deren Grundriss die Kamera steht; die Hoehe kennt es nicht. Fuer ein Rechteck mit Zellen-Modell ist die
+richtige Frage die 3D-Frage: liegt der verdeckte Figurpunkt F auf dem Sehstrahl HINTER dem Koerper des eigenen Objekts (Zellform x
+[Bandboden, Bandboden + gemessene Hoehe])? Dann zeigt der Hintergrund an diesem Punkt das Objekt VOR der Figur, die Verdeckung ist
+richtig. Regel neu: ein verdeckter Figurpunkt ist "mit Gegenstand davor", wenn (alt) die Grundriss-Strecke eine solide Zelle des
+Bands kreuzt ODER (neu) die Strecke Kamera -> F den Koerper der Modell-Zelle des verdeckenden Rechtecks vor F schneidet (F und Kamera
+nicht im Koerper). Die Regel nimmt nur dazu - kein bisher gezeichnetes Rechteck faellt dadurch weg. Rechtecke mit Modell bekommen die
+Zellen-Tiefe (auch naeher als die alte); was danach weiter aus ist, bekommt die alte Tiefe zurueck (wie NB1 --zurueck).
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
