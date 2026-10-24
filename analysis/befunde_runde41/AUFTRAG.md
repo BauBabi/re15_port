@@ -397,3 +397,19 @@ Folgen (Orchestrator, Umsetzung Spur C):
 - Weg nach der Flut (zu Fuss messen, Leon UND Elza, Riegel): 20B0 -> Leiter -> 2050 -> (Kisten-Raetsel) -> 2020 -> Kurbel
   (3,219) -> 2030 Nordgalerie -> 2060 Generator -> Strom -> 2030 trocken -> Lift -> Ring -> Lift B -> Suedgalerie -> 2080
   -> Rechner -> 2090. Keine zusaetzliche Tuer, keine Original-Sperre umgehen.
+
+## 2026-10-24 09:24 — Nachtrag 8 (Wortlaut; ergaenzt Nachtrag 7, Spur C)
+
+> der Wasser pegel in 2030 kann dann noch auf reling höhe sein. also quasi nur noch der untere bereich geflutet nach strom
+> aktivierungüber generator.
+
+Folgen (Orchestrator, Umsetzung Spur C):
+- Nach der Stromaktivierung (Generator 2060) sinkt das Wasser in 2030 NICHT ganz ab, sondern bleibt auf Relinghoehe stehen:
+  nur der untere Bereich (Schachtgrund, Steg/Bruecke auf Band 1, Tank mit Ventil 13) bleibt geflutet, der Ring ist trocken
+  und begehbar (Lift A/B, Ring-Tueren 20B0-Ost und 2070 Slots 1/2 wieder offen).
+- "Relinghoehe" aus der Geometrie belegen (Gelaender-Zellen der SCA mit Offsets, z. B. Steg-Gelaender Zellen 3/4 und die
+  Ring-Reling; Hoehe so, dass der Ring trocken bleibt und der untere Bereich unter Wasser steht) und mit Bildern aus den
+  Kameras des Rings und der Draufsicht zeigen (vorher/nachher).
+- Der geflutete untere Bereich ist nicht begehbar (kein Weg unter Wasser; z. B. die Treppe zum Tank gesperrt wie die
+  Steg-Sperre vor dem Pult) — Umsetzung mit Beleg, Riegel. Gegenstaende im unteren Bereich (z. B. Schrotpatronen am Steg)
+  sind nach der Flut nicht mehr erreichbar: im Dossier fuer den Nutzer nennen.
