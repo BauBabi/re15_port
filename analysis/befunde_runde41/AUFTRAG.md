@@ -377,3 +377,94 @@ Folgen (Orchestrator):
   blinkenden Schluessel -> oben in 2080 kommen die Zombies herein (die 8 Zombies der Spur G) -> erneut Kamera auf den Zombie
   mit dem Schluessel -> der Alligator kommt und frisst den Zombie samt Schluessel -> Schrei- und Schuettel-Animation in
   Richtung Leon -> Kampfbeginn mit der Kampfmusik aus Resident Evil 2 (RE2-Alligator-BGM aus ROOM40A0 belegen).
+
+## 2026-10-24 09:22 — Nachtrag 7 (Wortlaut; Antwort auf die Frage "Wie soll 2030 nach der Flut wieder trocken werden?"; Spur C)
+
+Frage des Orchestrators (gekuerzt): 2080 erreicht man nur ueber die 2030-Suedgalerie (Lift B vom Ring; beide Lifte brauchen
+den Generator 2060) oder aus 2090; wegen der Leiter-Sperre kommen 2050/2020/2060 und damit der Strom erst nach der Flut.
+Angeboten: "Pumpe in 2050" oder "2030 laeuft durch 20B0 leer". Antwort des Nutzers:
+
+> Nach der Aktivierung des Stroms ist 2030 leer gelaufen.
+
+Folgen (Orchestrator, Umsetzung Spur C):
+- Ausloeser der Entleerung = Strom aktiviert (Generator 2060, Original-Ergebnisbit (3,0x7E) aus 2060; Setzer und Leser mit
+  SCD-Offsets belegen). Ist die Flut gelaufen (Bits 103 + 100) und der Strom an, ist 2030 beim naechsten Betreten trocken
+  (Zustand wie bisher nach Bit 107; Bit 107 wird mit dem Strom gesetzt, oder der Zustand haengt direkt an (3,0x7E) — Wahl mit
+  Beleg im Dossier). Kein neuer Text noetig.
+- Der Rechner in 2080 macht nur noch seine ORIGINAL-Aufgabe (Wasser in 2080 senken, Tuer nach 2090 frei, (3,245)); die
+  Port-Erweiterung "2080_rechner_erw" und die Texte 2080 Id 40-41 entfallen (VERTRAG 1.2 entsprechend).
+- Ring-Sperre C-E2 (20B0 Ost-Tuer, 2070 Slots 1/2) gilt nur, solange 2030 geflutet ist (Flut gelaufen UND Strom aus).
+- Weg nach der Flut (zu Fuss messen, Leon UND Elza, Riegel): 20B0 -> Leiter -> 2050 -> (Kisten-Raetsel) -> 2020 -> Kurbel
+  (3,219) -> 2030 Nordgalerie -> 2060 Generator -> Strom -> 2030 trocken -> Lift -> Ring -> Lift B -> Suedgalerie -> 2080
+  -> Rechner -> 2090. Keine zusaetzliche Tuer, keine Original-Sperre umgehen.
+
+## 2026-10-24 09:24 — Nachtrag 8 (Wortlaut; ergaenzt Nachtrag 7, Spur C)
+
+> der Wasser pegel in 2030 kann dann noch auf reling höhe sein. also quasi nur noch der untere bereich geflutet nach strom
+> aktivierungüber generator.
+
+Folgen (Orchestrator, Umsetzung Spur C):
+- Nach der Stromaktivierung (Generator 2060) sinkt das Wasser in 2030 NICHT ganz ab, sondern bleibt auf Relinghoehe stehen:
+  nur der untere Bereich (Schachtgrund, Steg/Bruecke auf Band 1, Tank mit Ventil 13) bleibt geflutet, der Ring ist trocken
+  und begehbar (Lift A/B, Ring-Tueren 20B0-Ost und 2070 Slots 1/2 wieder offen).
+- "Relinghoehe" aus der Geometrie belegen (Gelaender-Zellen der SCA mit Offsets, z. B. Steg-Gelaender Zellen 3/4 und die
+  Ring-Reling; Hoehe so, dass der Ring trocken bleibt und der untere Bereich unter Wasser steht) und mit Bildern aus den
+  Kameras des Rings und der Draufsicht zeigen (vorher/nachher).
+- Der geflutete untere Bereich ist nicht begehbar (kein Weg unter Wasser; z. B. die Treppe zum Tank gesperrt wie die
+  Steg-Sperre vor dem Pult) — Umsetzung mit Beleg, Riegel. Gegenstaende im unteren Bereich (z. B. Schrotpatronen am Steg)
+  sind nach der Flut nicht mehr erreichbar: im Dossier fuer den Nutzer nennen.
+
+## 2026-10-24 09:26 — Nachtrag 9 (Wortlaut; Reihenfolge in 2030, Spur C)
+
+> und die brücke in 2030 muss man entsprechd vorher runtergelassen haben, damit man das valve rätsel vorher lösen kann.
+
+Folgen (Orchestrator, Umsetzung Spur C):
+- Reihenfolge in 2030: Bruecke herunterlassen (Pult + Ventil 13, Bit 102) -> erst DANN ist das Ventilraetsel loesbar -> Flut.
+- Wo liegen die nummerierten Ventile im Bild wirklich? Aus den Hintergruenden/Kameras von 2030 belegen (Bildbogen mit den
+  Ventil-Schildern und ihrer Lage in der Kollision). Liegen sie im unteren Bereich (ueber den Steg/die Bruecke erreichbar),
+  gehoert der Ausloeser des Ventilraetsels dorthin (dann ergibt sich die Reihenfolge aus dem Weg); liegen sie am Ring,
+  sperrt Bit 102 das Ventilraetsel (Aktionstaste vorher: vorhandene/Port-Nachricht aus den Ids 2030 40-49, Wortlaut als
+  Vorschlag fuer den Nutzer). Riegel: Ventilraetsel vor Bit 102 nicht ausloesbar, danach ja; Weg zu Fuss (Leon UND Elza).
+- Nach der Flut liegen die Ventile ggf. im gefluteten unteren Bereich (Nachtrag 8) — das ist gewollt.
+
+## 2026-10-24 09:55 — Nachtrag 10 (Nutzer-Entscheid per Auswahl; Sicherung vor der Flut, Spur C)
+
+Frage des Orchestrators (Hinweis H-a der Abnahme C 2): Der Generator 2060 braucht die Sicherung ((3,144), 2060 sub19
+@0x0169E; ohne sie msg 3 "One of the fuses is missing..."); die Sicherung liegt in 2030 im UNTEREN Bereich (Slot 9 @0x01BAA,
+Steg-Suedlandeplatz, Band 1), der nach der Flut geflutet bleibt -> wer sie vor der Flut nicht aufhebt, bekommt nie Strom.
+Angeboten: "Flut erst mit Sicherung" / "Sicherung wird nach 20B0 gespuelt" / "Sicherung woanders hinlegen".
+**Gewaehlt vom Nutzer: "Flut erst mit Sicherung (Empfohlen)"** — Beschreibung der Option: "Die Ventile lassen sich erst
+drehen, wenn die Sicherung aufgehoben ist (vorher ein kurzer Text am Ventil). Die Sicherung bleibt am Original-Platz; man
+kommt nach Nachtrag 9 ohnehin ueber die Bruecke an ihr vorbei. Kein Softlock moeglich."
+
+Folgen (Umsetzung Spur C): Bedingung des Ventilraetsels = Bruecke unten (Bit 102, Nachtrag 9) UND Sicherung aufgehoben
+(Item-Taken-Bit der Sicherung aus dem RDT-Zensus belegen — nicht "im Inventar", denn sie kann schon in 2060 eingesetzt
+sein). Vorher an den Ventilen ein kurzer Port-Text (Id aus 2030 40-49, Wortlaut als Vorschlag). Riegel: ohne Sicherung kein
+Ventilraetsel, mit Sicherung ja; ganzer Ablauf zu Fuss (Leon UND Elza).
+
+## 2026-10-24 10:50 — Orchestrator-Entscheide E-E1..E-E3 (Abnahme E 2; der Nutzer kann widersprechen)
+
+- **E-E1 (Mangel 3, Vertrag):** Die spielweit wirkenden Haken der Spur E (Bildreihenfolge Spiel-Task @0x80020de4 vor
+  Nachrichten-Takt @0x80020f3c/@0x80010044; Message_on kehrt zurueck @0x80040520, Freeze ueber @0x8003f040; Apply-Bild nicht
+  praesentiert @0x80021558/@0x80021560) sind angenommen, weil sie das Original nachbilden — in scd_vm.c, main.c, render_pc.c,
+  msg_common.c, player_common.c, re15_inv_screen.c je klein und markiert. Bedingung: Bei der Integration laufen alle
+  Nachrichten-/Szenen-/Tuer-Riegel (msg, scd, cut, door, szene, karte) mit; Konflikte mit C/F/G (op_message_on) und D
+  (render_pc.c, main.c) werden dort beidseitig geloest.
+- **E-E2 (Maengel 1/2, Renn-Stopp):** Der Renn-Stopp des Originals (0x80032604 @0x8003272c/@0x80032730-760, 0x80032778
+  @0x800328f8-95c) wird SPIELWEIT eingebaut (Stand 635be823 als Ausgang). unit_r36_zombieki_affen_block (Runde 36 Spur F,
+  Seed 0x67be2dfd) ist neu einzumessen: erst belegen, WAS die Sonde misst und warum der Renn-Stopp den Wert aendert; die neue
+  Schranke nur aus einer Messung mit Beleg, nicht "gruen gemacht". Der Riegel integration_r41_kleinkram_b_renn wird auf die
+  Original-Lage nach dem Auslaufen umgestellt (Original o_renn2 n93-n99: 6 Bilder, Kurbeln bei (3650,-3369)).
+- **E-E3 (Mangel 4, Softlock):** Im gehaltenen Apply-Bild laeuft der Blenden-Takt weiter (Original: @0x80020f44 vor dem
+  Present @0x80020f4c) — re15_fade_tick auch im gehaltenen Bild; Riegel: Raumeintritt ROOM2020 auf der Kante (9000,-3200)
+  blendet ein (pf-Rampe wie VORHER bis F10), Spieler steuerbar.
+
+## 2026-10-24 12:42 — Nachtrag 11 (Nutzer-Entscheide per Auswahl, 11:4x; Spur M)
+
+1. Frage: "ROOM20A0 Kamera 12, Datei 12_02, ist ein Bodenstreifen vor der Ziegelwand. Wer darauf stand, verlor im Spiel die
+   Fuesse; sie wird deshalb vorerst nicht gebaut (deine PNG bleibt unveraendert, 12_01 bleibt aktiv). Was soll damit
+   passieren?" — **Antwort: "Weglassen ist ok"** (12_02 bleibt aus dem Bau; Mangel 2 der Abnahme M 0 ist damit erledigt).
+2. Frage: "Soll ich die alten _port.png in pri/ durch die berichtigten ersetzen?" — **Antwort: "Ja, ersetzen"**.
+   Erledigt vom Orchestrator auf master 919cc1ed: 204 von 214 pri/STAGE3-6/*_port.png aus M_bilder/uebersicht/ ersetzt.
+   Ohne berichtigtes Gegenstueck (Spur M liefert sie nach, Ersatz bei der Integration): pri/STAGE3/3040+3041/01,
+   3050+3051/06+15, 30E0+30E1/06+07.
