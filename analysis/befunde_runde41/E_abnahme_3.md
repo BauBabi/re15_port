@@ -150,3 +150,48 @@ ob er weg ist ("Fix erklaert den Befund" ist nicht belegbar). Grund des Urteils:
 original-gleich. Damit ist die Bedingung des Orchestrator-Hinweises 2026-10-24 03:21 fuer die Rueckfrage an den Nutzer erfuellt; die
 Rueckfrage im Dossier ("Fuer den Nutzer (Stand NB3)", Moeglichkeiten a-e) ist sachlich richtig gestellt. **Kein Bau-Mangel** — eine
 weitere Nachbesserung kann diesen Punkt nicht schliessen, nur die Antwort des Nutzers.
+
+## 4. Punkt 2 — Karte B1, vordere Tuer der "Waffen Armory" (ROOM1230 Gang -> ROOM1190 Ostkammer) — neu gemessen
+Gemeinsam `RE15_DEBUG_JUMP=1230@240 RE15_PLAYER_POS=96,14500,1024,0 RE15_SET_FLAG=4:0xf3,3:0x89,7:0x88,7:0x89
+RE15_INPUT_SCRIPT=<anlauf>,W0.2,S0.1,W1.0,Q0.1 RE15_INPUT_SCRIPT_START=300 RE15_INPUT_SCRIPT_BASIS=spiel RE15_STATE_LOG=state.txt
+RE15_INV_FB_SHOT=map.bmp RE15_INV_FB_SHOT_AT=120 RE15_MAP_SHOT_PAGE=0 RE15_EXIT_AT=560`; Marker per `test_r41_kleinkram_b_exe marker
+map.bmp`; BASIS = 116e8b0f, NACHHER = HEAD. Laeufe `<sp>/E41a3/runs/P2_*`.
+
+| Lauf | Spieler (state.txt) | BASIS | NACHHER |
+|---|---|---|---|
+| Leon U0.2 (Kontrolle, weit weg) | (96,14050) | MARKER 145 104 | MARKER 145 104 |
+| Leon U0.6 | (96,13150) | **MARKER 137 109** | MARKER 145 106 |
+| Leon U1.0 (an der Tuer) | (96,12779) | **MARKER 130 112** | MARKER 145 107 |
+| Elza `RE15_TITLE_SHOT_CHAR=1`, room1231.rdt, U1.0 | (96,12779) | **MARKER 130 112** | MARKER 145 107 |
+| Leon RENNEND (XU0.25, Auslauf bis zur Tuer) | (96,12799) | — | MARKER 145 107 |
+| Leon echte Tuer `U1.0,W0.3,A0.1` + `RE15_INV_OPEN_AT=60#1190` (`[tuer] Sequenz fertig: 301 Bilder`, room1190.rdt) | (19515,-12109) | — | MARKER 145 108 |
+
+Ostkammer-Marke (146,109), Hallen-Marke (127,115). BASIS wandert beim Herantreten an die vordere Tuer bis zu 15 px zur Hallen-
+Seite (= "Sprung zum hinteren Teil, obwohl man gar nicht da ist"), NACHHER bleibt der Marker an der Ostkammer — Leon und Elza,
+gehend und rennend (Renn-Stopp der NB3 aendert daran nichts), nach dem Durchgang (145,108). Ausschnitt x4
+`<sp>/E41a3/P2_karte_basis_nach.png` (Reihenfolge: BASIS U0.6, BASIS U1.0, NACHHER U0.6, NACHHER U1.0).
+Code von Punkt 2 (karte_r41.c, Haken re15_inv_screen.c) seit Abnahme 1 unveraendert. **Urteil Punkt 2: erfuellt.**
+
+## 5. Punkt 3 — Werkstatt-Tuer ROOM11B1 bei Elza dauerhaft zu — neu gemessen
+### 5.1 ECHTER Tuerweg Elza ROOM1261 -> Tuer Slot 0 -> ROOM11B1 mit der Szene "Sherry!? / Where has she gone!?"
+`RE15_TITLE_SHOT_CHAR=1 RE15_DEBUG_JUMP=1261@240 RE15_SET_FLAG=3:0x83,3:0x46,4:0xf3 RE15_PLAYER_POS=27650,9450,1024,1
+RE15_PRESS=square@300,square@310 RE15_SCD_TRACE=1 RE15_MSG_LOG=1 RE15_CAM_TRACE=1 RE15_STATE_LOG=state.txt RE15_KAMERAHALT_LOG=1
+RE15_FRAMEDUMP=0-700/10:fd_ RE15_EXIT_AT=700#11b1` (Flags = Zustand nach 10B1 sub04 @0x0195E und 2001 @0x01958), Laeufe
+`P3a_szene_{nach,basis}`:
+- NACHHER: `loaded room1261.rdt` -> `[tuer] Sequenz fertig: 331 Bilder` -> `loaded room11b1.rdt` -> `[wk11b1-r41] ROOM11B1 (3,0x83)=1:
+  Ereignis 24 im Init-Lauf hinter sub00 — Werkstatt-Tuer bleibt zu` -> `[msgtext] room=11b1 id=10 "Elza: Sherry!?"`, `id=11 "Elza:
+  Where has she gone!?"`, Plc_ret @0x14E6 F473; Kameras **2,3,4,5,6, letzte 2** (nie Cut 7/8 = gemaltes offenes Tuerblatt).
+- BASIS: kein Ereignis 24, Kameras 3,4,5,6,8, **letzte 8**.
+- Bild F690 `<sp>/E41a3/P3a_ende_basis_nach.png`: links BASIS Tuerblatt hinter Elza aufgeschwungen (hell), rechts NACHHER
+  geschlossene dunkle Tuer mit Klinke.
+### 5.2 "dauerhaft": gegen die Tuer von beiden Seiten (`RE15_DEBUG_JUMP=11b1@240 RE15_SET_FLAG=3:0x83,4:0xf3`, Start 262)
+- Garagenseite `P3b_garage_nach` (`RE15_PLAYER_POS=-20200,-16230,2048,0`, `U1.5,W0.3,A0.1`): ab F272 **(-20942,-16230) blockiert**,
+  `[msgtext] room=11b1 id=12 "The door is locked."`, `EXIT_AT: Bild 380 in Raum 11b1`.
+- Werkstattseite `P3c_werkstatt_{nach,basis}` (`RE15_PLAYER_POS=-24000,-16230,0,0`, `U2.0,W0.3,A0.1`): NACHHER ab F282 **(-22618,-16230)
+  blockiert**, Cut 0, msg 12; BASIS laeuft durch (F302 -20925, F322 -19768, Kameras 7 -> 8).
+- Mechanismus (Code gelesen, werkstatt11b1_r41.c): sub00 des Originals oeffnet nur bei (3,0x83)=1 (RDT-Anker @0x010F6, sonst
+  Else-Zweig = zu); das Modul kehrt genau diesen Zweig bei JEDEM Raumeintritt mit (3,0x83)=1 um (Init-Lauf) -> vor und nach dem
+  Schacht-Ereignis zu. Leon (11B0) unberuehrt (Raum-Pruefung `RE15_WK11B1_RAUM`).
+### 5.3 Grenze
+Der Abschnitt 2001 -> 1261 ist wie in Abnahme 2 nicht gefahren (Zustand nach 2001 sub04 per RE15_SET_FLAG); 1261 -> 11B1 ist die
+echte Tuer. Code von Punkt 3 seit Abnahme 1 unveraendert. **Urteil Punkt 3: erfuellt.**
