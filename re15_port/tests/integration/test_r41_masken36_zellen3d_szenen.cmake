@@ -5,6 +5,8 @@
 # Punkt; Fenster = Figurkasten 3000 x +-350 (+4), ans Bild geschnitten. An der exe gemessen (Dossier NB2, RE15_TRILOG, Leon =
 # vorderstes Dreieck): DAVOR sichtbar uebermalt 0 -> 0; HINTER sichtbar verdeckt vorher -> nachher 6000 C5 0 -> 1387, 6000 C9
 # 0 -> 437, 5050 C1 0 -> 76, 3040 C3 0 -> 20. Die 6000-HINTER-Stellen liegen auf Band 0 (Gleisebene) im Grundriss der Lok.
+# Zuordnung von Hand (S/H gemessen): X-Kiste 5020 C6 DAVOR 1903/0, HINTER 1081/63; Trennwand 30A0 C1 HINTER 1675/889; Schaltkasten
+# 3040 C0 DAVOR 1489/0; Treppenraum 5020 C0 HINTER 751/606; Kistenstapel 5090 C13 DAVOR 945/0, HINTER 739/732.
 #   name raum cut x z band art x0 y0 x1 y1 [E] [G=...]
 set(R41M_SZENEN
     "d6000_05 6000 5 15433 -4184 2 V 0 91 58 171"
@@ -16,4 +18,12 @@ set(R41M_SZENEN
     "h5050_01 5050 1 -21600 -24450 0 M 48 68 91 166"
     "h3040_03 3040 3 -21200 -12600 1 M 270 49 309 133"
     "e6001_05 6000 5 15433 -4184 2 V 0 91 58 171 E"
+    # Zuordnung von Hand (tools/maske/zuordnung_r41.json): gemessen S/H (Spurbaum-exe, Kette k2)
+    "d5020_06 5020 6 -1733 -14625 0 V 187 49 223 174"
+    "h5020_06 5020 6 -4333 -15925 0 M 169 71 196 158"
+    "h30A0_01 30A0 1 -19443 15363 0 H 53 71 91 164"
+    "d3040_00 3040 0 -22600 -2000 0 V 173 84 205 186"
+    "h5020_00 5020 0 -13633 -21625 0 H 181 69 207 147"
+    "d5090_13 5090 13 20717 -21365 0 V 137 64 162 139"
+    "h5090_13 5090 13 24417 -26365 0 H 247 63 275 128"
 )

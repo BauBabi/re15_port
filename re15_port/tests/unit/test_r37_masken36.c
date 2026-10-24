@@ -1151,8 +1151,8 @@ static void teil_zellen3d(void)
     CHECK("MSK-Tiefenfeld (Leon und Elza) == Zellen-Tiefe der Zeile", msk_ok == 2 * n);
     CHECK("die Engine-Tabelle zeichnet jedes Modell-Rechteck (Leon und Elza)", tab_ok == 2 * n);
     CHECK("Ausschluss MIT 3D-Urteil == Engine-Tabelle in jedem Cut mit Modell", cuts > 0 && gleich == cuts);
-    CHECK("Gegenprobe: ohne 3D-Urteil fielen Rechtecke weg (NB2: 80 je Variante), jedes davon mit Modell-Zeile",
-          nur3d >= 80 && nur3d_modell == nur3d && echt3d > 0);
+    CHECK("Gegenprobe: ohne 3D-Urteil fielen Rechtecke weg (NB2 gemessen: 125 der Leon-Dateien, Elza bytegleich), jedes davon mit "
+          "Modell-Zeile", nur3d >= 125 && nur3d_modell == nur3d && echt3d > 0);
 }
 
 /* ---- warum (Werkzeug R41 NB2) ----------------------------------------------------------------------------------- */
