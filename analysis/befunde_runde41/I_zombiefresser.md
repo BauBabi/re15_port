@@ -17,6 +17,8 @@ Start 2026-10-24 09:44 (Uhr). Vorgaengerlauf (wf_a8b604c5-d10) starb beim Start 
 - [x] Umsetzung (§3)
 - [x] Messung nachher (§4)
 - [x] Tests (§5)
+- [x] Nachbesserung 1 (§8, nach Abnahme 0): M1 Liegepose (+ Zusatzbefund M1b P2-Takt) und I-E2 LADEN 2000/2001 behoben,
+      V1 durch Orchestrator-Entscheid I-E1 erledigt; Bau + gezielte Laeufe §8.8
 
 ## 1. Messung vorher
 
@@ -463,6 +465,52 @@ Slot 1: F1 WECKT, F2 P2-SAAT, F3 erstes P2-Bild `kf=400 af=0 frac=15`, die 4 fer
    98 (+0x94 = 0x12); der Bildzaehler steht dort fest auf 0 (player_common.c Liege-Pin), die Uhr wirkt erst ab P2. Der
    Blutanker-Zwilling `schuss_r36.c zeichen_bank` kennt den Halt nicht — Liegende sind in P0..P2 unschiessbar
    (+0x93 Bit 0 @0x80103940-4c), es entsteht dort kein Treffer.
+
+### 8.8 Gezielte Laeufe (Nachbesserung 1; KEINE volle Suite)
+
+Fortsetzung nach dem Wochenlimit (Kontowechsel 2026-10-24 ~14:0x): `bash re15_port/tools/local_build.sh build` ->
+`ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)` — exe `re15_pc.exe` 13:30:09 = Codestand 3083b2da (letzte
+Quellaenderung 13:29:11, danach nur Doku). Beruehrte Code-Dateien (`git diff master...HEAD`): anim_select_common.c
+(Renderer-Auswahl der Gegner), enemy_ai_common.c (Grid [4..6]), enemy_ai_re2_zombie.c, player_common.c (Vorschub-Pin),
+zombiefresser_r41.c, platform/pc/main.c (Boot-/LADE-Pfad). Der Haken in anim_select_common.c greift nur fuer
+0x10/0x11/0x12/0x16/0x18/0x1c-0x1f mit Grid-Bit 0x80 und sel 4/5/7/8/9/0xa unter einem RE1.5-Hirn (RE1.5 oder MIXED);
+unter der Standard-KI gehoeren 0x10/0x11/0x12/0x13/0x16/0x18 dem RE2-Hirn (`re15_re2z_owns_type`) -> Rueckgabe -1. Liegende
+mit diesen Deskriptoren (Zensus `fresser_zensus.py`): 1020/1021, 1070/1071, 10E0/10E1, 1100/1101, 1110/1111, 1140 (Slot 0,
+0x88), 11F0/11F1, 1200/1201, 2000/2001, 3000/3001, 3010/3011 — nur Typen 0x10/0x11/0x16.
+
+1. **Unit-/Probe-Gruppe** (eigener Lauf, `-j 4`, Log `I_belege/nb1_ctest_unit_gezielt.log`): Abnahme-Regex `rx_u` + alle
+   registrierten Tests, deren Quelle `re15_actor_anim_select` / `re15_compute_actor_kf` / `re15_actors_anim_advance` ruft,
+   + Lade-/Speicher-Units:
+   ```
+   ctest -R "^(unit_(damage|enemy_ai|enemy_shootable|enemy_body_push|enemy_attack_reach|hit_reaction|getup_advance|anim_.*|zombie_.*|room1140_.*|re2_.*|re2z_.*|re15_re2z_.*|re15_zombie_death_anim|writher_.*|1140_straight_shot|ai_flavor_mixed|r16_.*|r19_.*|r36_zombieki_.*|r36_gegnerzahl_.*|r36_schuss.*|r36_kleidung_.*|r37_re2zombie_.*|r37_zombieaktiv_.*|r37_bissarm_.*|r38_wasserzombie|r38_griff_zombie.*|r38_npckante_.*|r38_dining1141_.*|r39_elzazombies_.*|r39_treffer_.*|r39_gegner_.*|r41_zombiefresser|r41_wasser20b0_.*|p3_restposten_pin|aot_sce_census|r35_inhalt_zombies|lane_b1_t3b_getupsfx|1090_.*|knockdown_.*|npc_scd_pose|plc_back_yaw_1090|irons_neck_1150|dog_grab_anchor|r30_hinweis_.*|r35_affen_.*|r35_granate|r35_raeume_.*|r36_szenenleon_.*|r37_roy_.*|r37_beretta|r37_elzaems_.*|r38_spiderman|r38_spinnen|r38_szenenschutz.*|r38_werkstatt11b0_.*|r38_heliport1171.*|r39_elza_.*|r39_heliport1171_.*|r39_hund1121_.*|r39_zustand_.*|save_.*|savedata_.*|continue_.*|text_freeze)|probe_(10d0_.*|re2z_.*|1090_.*|elevator_1080|p2_birkin_g5|r16_tuer1040_.*)|r19_marke1_10d0_c1|r30_hund_hitbox_stauchung|r31_trefferboxen.*)$" -j 4 --timeout 600
+   100% tests passed, 0 tests failed out of 323        (Total Test time (real) = 24.86 sec, exit=0)
+   ```
+   `unit_r41_zombiefresser -V` gelesen (keine Schein-Pruefung): `[G1 2000 RE1.5 Spawnbild] slot 3 typ 16 grid 84 Wort 0/0/0
+   +0x94 18 -> Renderer Clip 12 Keyframe 0x12d (Halt 12)`, `[G1 2000 MIXED Ruhe] ... Clip 12 Keyframe 0x12d`, `[G1 2000 RE2
+   Ruhe] ... Wort 1/7/1 +0x94 23 -> Renderer Clip 23 Keyframe 0x2dc (Halt -1)`, `[G1 3010 RE1.5 Ruhe] slot 4 typ 11 grid 85
+   ... +0x94 19 -> Renderer Clip 14 Keyframe 0x149 (Halt 14)`, `[G2 2000 RE1.5] slot 4 grid 84: 5 Bilder Halt (falsch 0),
+   Saat-Takt F4, erstes P2-Bild F5 Clip 18 Bild 0 +0x8f 15 ... +0x6 = 2 fuer 98 Takte`, G3 1070 (0x89/0x8a ohne Saat-Takt),
+   `== OK ==`. Vorgaenger 13:24-13:29 zusaetzlich breite Unit-Ebene (unit_/probe_/prop_ ohne Android-/Release-Skript-Tests):
+   `100% tests passed, 0 tests failed out of 922` (Regex dort nicht protokolliert, deshalb oben der eigene Lauf).
+2. **Integration: LADE-/Boot-Pfad + Zombie-Module + eigene Teile** (Lauf des Vorgaengers 13:30:46-14:00:13 auf der exe
+   13:30:09, `-j 3`, Log `I_belege/nb1_ctest_integration.log`):
+   ```
+   ctest -R "^integration_(elza_vollstart|r36_elza_.*|r36_gegnerzahl|r36_schuss|r37_re2zombie|r37_roy_.*|r37_zombieaktiv|r38_elzaintro_.*|r38_elzatoene_.*|r38_heliport1171_.*|r38_itemorte|r38_montage|r38_wasser|r38_wasserzombie|r39_elza_.*|r39_elzazombies_.*|r39_gegner_.*|r39_heliport1171_.*|r39_hund1121|r39_johnruf1041_.*|r41_wasser20b0.*|r41_zombiefresser_.*|boot_bg_pin|save_counter_pin)$" -j 3 --timeout 600
+   100% tests passed, 0 tests failed out of 61         (Total Test time (real) = 1766.80 sec, exit=0)
+   ```
+   Darin alle 8 eigenen Teile (tuer2000 40.3 s, elza2001 40.2 s, leon3000 18.1 s, leon3010 18.1 s, re15_3000 18.4 s,
+   laden2000 18.2 s, laden2001 18.1 s, re15_2000 26.2 s), die Abnahme-Gruppe `rx_i` (r38_wasserzombie, r37_zombieaktiv,
+   r37_re2zombie, r39_elzazombies_*, r36_gegnerzahl, r36_schuss, r36_elza_schuss, r39_gegner_*, r41_wasser20b0*) und die
+   LADE-Wege der Raeume mit main00-Evt_exec (Zensus 8.2): 1021 (r36_elza_stoehnen, r37_roy_szene1021, r39_johnruf1041_a/b),
+   1031 (r38_elzatoene_*, r38_itemorte), 1170/1171 = Erzaehler-Halte unveraendert (r37_roy_leon1170,
+   r38/r39_heliport1171_laden, r38_elzaintro_*, boot_bg_pin, elza_vollstart).
+3. **Integration-Ergaenzung** (eigener Lauf, `-j 3`, Log `I_belege/nb1_ctest_integration2.log`): RE1.5-KI mit dem
+   0x88-Liegenden in 1140 (r37_beretta, Teil leon_re15_w5), Vorspann-/Boot-Weg 1240 -> 1170 und CONTINUE in 1170
+   (r35_entladen_d/e/f/h), Liege-Raeume 1100/1101/1141 (r37_elzaems_leon1100/elza1101/elza1141), room_probe_sweep:
+   ```
+   ctest -R "^integration_(r37_beretta|room_probe_sweep|r35_entladen_[defh]|r37_elzaems_(leon1100|elza1101|elza1141))$" -j 3 --timeout 600
+   (laeuft - Ergebnis folgt)
+   ```
 
 ### 8.9 Fuer den Nutzer (Nachbesserung 1)
 
