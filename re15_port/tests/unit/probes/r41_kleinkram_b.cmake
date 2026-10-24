@@ -50,3 +50,22 @@ foreach(_teil laenge schleife)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_kleinkram_b_kurbel_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
+# Nachbesserung 1 (Abnahme 0 Hinweis H3): INTEGRATION mit der ECHTEN exe (tests/integration/test_r41_kleinkram_b.cmake),
+# Auswerter test_r41_kleinkram_b_exe (BMP-Marker, Kurbel-Lauf, State-Log-Abschnitt):
+#   integration_r41_kleinkram_b_kurbel           Leon 2050 -Tuer-> 2020, Kurbel: Lage (3650,-3018) bis Plc_ret, Schleife
+#   integration_r41_kleinkram_b_karte            Leon 1230 an der Ostkammer-Tuer: Marker auf der Ostkammer-Seite
+#   integration_r41_kleinkram_b_werkstatt_szene  Elza 1261 -Tuer-> 11B1, Szene: nie Cut 7/8, Ende Cut 2
+#   integration_r41_kleinkram_b_werkstatt_tuer   Elza 11B1: Trennwand blockiert, msg 12, kein Raumwechsel
+add_executable(test_r41_kleinkram_b_exe ${CMAKE_CURRENT_LIST_DIR}/../test_r41_kleinkram_b_exe.c)
+if(TARGET re15_pc)
+    foreach(_teil kurbel karte werkstatt_szene werkstatt_tuer)
+        add_test(NAME integration_r41_kleinkram_b_${_teil}
+            COMMAND ${CMAKE_COMMAND}
+                -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                -DRE15_WERKZEUG=$<TARGET_FILE:test_r41_kleinkram_b_exe>
+                -DWORKDIR=${CMAKE_BINARY_DIR}/r41_kleinkram_b_wd
+                -DTEIL=${_teil}
+                -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_kleinkram_b.cmake)
+        set_tests_properties(integration_r41_kleinkram_b_${_teil} PROPERTIES TIMEOUT 900)
+    endforeach()
+endif()

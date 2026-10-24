@@ -78,7 +78,15 @@ void re15_werkstatt11b1_r41_init_lauf(uint16_t room_id)
         return;
     }
     {
-        int slot = scd_event_fire(RE15_WK11B1_EREIGNIS);
+        /* Faden direkt in den ersten freien Ereignis-Slot (dieselbe Suche wie scd_event_fire: Slots
+         * SCD_EVENT_SLOT_FIRST..LAST der Reihe nach, scd_thread_start == 0) — ohne Eintrag in der
+         * scd_event_fire-Kette von scd_vm.c (Nachbesserung 1, Abnahme 0 Hinweis H1: VERTRAG §1.3 teilt scd_vm.c
+         * nur C/F/G zu). Der Init-Lauf-Dispatcher @0x8003f17c erreicht den hoeheren Slot im selben Lauf. */
+        int slot = -1;
+        for (int s = SCD_EVENT_SLOT_FIRST; s <= SCD_EVENT_SLOT_LAST; s++) {
+            if (g_scd.threads[s].active) continue;
+            if (scd_thread_start(s, k_wk11b1_prog) == 0) { slot = s; break; }
+        }
         if (slot >= 0) s_starts++;
 #ifdef RE15_PLATFORM_PC
         fprintf(stderr, slot >= 0

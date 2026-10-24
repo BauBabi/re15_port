@@ -59,10 +59,13 @@
 #define RE15_WK11B1_ANKER_LEN      102u
 
 /* Raumaufbau, direkt hinter dem Start von sub00 im Init-Lauf (scd_room_setup.c, Muster re15_szl_init_lauf):
- * ROOM11B1 + (3,0x83)==1 + RDT-Anker stimmt -> Ereignis RE15_WK11B1_EREIGNIS starten. */
+ * ROOM11B1 + (3,0x83)==1 + RDT-Anker stimmt -> Programm des Ereignisses RE15_WK11B1_EREIGNIS in einem freien
+ * Ereignis-Slot starten (scd_thread_start, Slot-Suche wie scd_event_fire). */
 void re15_werkstatt11b1_r41_init_lauf(uint16_t room_id);
 
-/* Ereignis-Programm fuer (ROOM11B1, 24) — scd_event_fire-Kette in scd_vm.c; sonst NULL. */
+/* Ereignis-Programm fuer (ROOM11B1, 24), sonst NULL. Seit Nachbesserung 1 NICHT mehr in der scd_event_fire-Kette
+ * (scd_vm.c bleibt unberuehrt): re15_werkstatt11b1_r41_init_lauf startet das Programm selbst im ersten freien
+ * Ereignis-Slot (SCD_EVENT_SLOT_FIRST..LAST, scd_thread_start). Zugriff fuer Riegel/Diagnose. */
 const uint8_t *re15_werkstatt11b1_r41_ereignis(uint16_t room_id, uint8_t event_id);
 
 /* Pruefhaken: Programmbytes + Laenge; 1, wenn der geladene RDT-Raum den Ankern entspricht; Zaehler der Starts. */

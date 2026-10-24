@@ -61,7 +61,6 @@
 #include "re15_trage1200.h"   /* Runde 35 Spur H: +0x1ba-Seed fuer die Schwerkraft (trage_1200.c) */
 #include "re15_elza_r36.h"   /* Runde 36 Spur L: Anker-Toene/Stimme Elza-Szenen (elza_r36.c) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Erweiterung ROOM11B0 sub06 (szenenleon_r36.c) */
-#include "re15_werkstatt11b1_r41.h"   /* Runde 41 Spur E: ROOM11B1 Ereignis 24 (werkstatt11b1_r41.c) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Parkplatz-Tuer 11B0 + Roy 1011 (schluessel_r36.c) */
 #include "re15_codepanel_r37.h" /* Runde 37 Spur E: Code-Panel-Kamera/Lampen (codepanel_r37.c) */
 #include "re15_lift2030_r37.h" /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (lift2030_r37.c) */
@@ -681,7 +680,6 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_hund1121_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur R: 1121/30 Hund */
     if (!pc) pc = re15_elzazombies_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur Q: 1041/1061/1031 Ereignis 30 */
     if (!pc) pc = re15_nahaufnahmen_r40_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 40: 11D0/1110/1100 Ereignis 31, 1110/3, 11F0/16 */
-    if (!pc) pc = re15_werkstatt11b1_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur E: ROOM11B1 Ereignis 24 (Werkstatt-Tuer zu) */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
