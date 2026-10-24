@@ -241,3 +241,19 @@ an der Kurbel (Spielerlage nach `Pos_set` @0x0A8C = (3650,-1800,-2925)), obwohl 
 Original hat in Cut 3 keine PRI (RDT @0x3FC = ff ff ff ff). Tiefe/Ebene dieser Freistellung belegen und korrigieren
 (Nutzer-Dateien unter pri/ nicht aendern — nur Zuordnung/Tiefe im Maskenbau), Vorher/Nachher-Bild genau an dieser Stelle,
 und dieselbe Pruefung (Spielfigur an begehbaren Stellen VOR der Freistellung) fuer alle 53 neuen Masken.
+
+## 2026-10-24 03:58 — Orchestrator-Entscheide B6-B8 (Fragen aus Nachbesserung B 1, c59802b5; der Nutzer kann widersprechen)
+
+Massstab: Nutzer-Auftrag "RE2-Alligator-Finisher" + Nachtrag 4 "RE2-artige Kameraschnitte"; Regel Beta -> Retail (wo RE1.5
+nichts vorgibt, gilt RE2).
+- **B6 Finisher-Kamera = RE2.** Im Alligator-Finisher bleibt der Finisher-Schnitt (FRESSEN P0, Sperre + Cut @0x80100fbc-ff4,
+  kein Ende) bis zum Game Over stehen; die RE1.5-Todeskamera (FUN_80015850: Weissblende, kreisende Kamera) wird fuer diesen
+  Tod NICHT gezeigt. Die Game-Over-Folge danach bleibt die des Ports. Messung: Finisher-Lauf bis Game Over, Cut und Bild je 20
+  Bilder, kein Kamerawechsel nach F658.
+- **B7 Intro ohne Wanddurchdringung.** Der Kopf darf im Westkanal nicht ueber die Wand ragen (gemessen F160-F279 Cut 7,
+  Kopf x -9574 / Wand x -8900). Form = RE2 (Clip 6 -> Clip 3, Knick yaw += 1024 @0x80100938-48 unveraendert); die
+  Startlage/-gier des Intros in ROOM2090 wird so gewaehlt, dass der Knick auf Leons Angriffslinie endet (PORT-WAHL, im Dossier
+  mit Rechnung). Messung: Kopf-x je Bild F160-F279 innerhalb der Wand, Bildbogen.
+- **B8 Seitliche Sicht bleibt.** ROOM2090 hat keine frontale Zonenkamera in Explosions-/Finisher-Lage; neue Hintergruende
+  werden nicht erfunden. Die Massstabsgrenze (groesster RE2-Schnitt) bleibt.
+Umsetzung B6/B7 in der naechsten Nachbesserung der Spur B (oder, falls B vorher besteht, als eigener Auftrag vor Spur F).
