@@ -58,7 +58,7 @@ endforeach()
 #   integration_r41_kleinkram_b_werkstatt_tuer   Elza 11B1: Trennwand blockiert, msg 12, kein Raumwechsel
 add_executable(test_r41_kleinkram_b_exe ${CMAKE_CURRENT_LIST_DIR}/../test_r41_kleinkram_b_exe.c)
 if(TARGET re15_pc)
-    foreach(_teil kurbel karte werkstatt_szene werkstatt_tuer)
+    foreach(_teil kurbel karte werkstatt_szene werkstatt_tuer kante geh renn)   # kante/geh/renn: Nachbesserung 2
         add_test(NAME integration_r41_kleinkram_b_${_teil}
             COMMAND ${CMAKE_COMMAND}
                 -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

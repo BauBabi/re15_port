@@ -14,6 +14,17 @@
  *                                       §3.7) und hoechstens 2 Bilder am Stueck auf Slot 39 (vorher 138: Standbild).
  *   segment <state.txt>                 letzter Raum-Abschnitt des State-Logs (Bildzaehler beginnt je Raum neu):
  *                                       "SEGMENT bilder=<n> kameras=<c,..> letzte_kamera=<c> min_x=<x> max_x=<x>".
+ * Nachbesserung 2 (Abnahme 1 Maengel 1-3, master-AUFTRAG E-N1/E-N2):
+ *   gleich <praefix> <von> <bis>       RE15_FRAMEDUMP-Serie <praefix>NNNNNN.ppm: Zahl der Folgepaare ohne Pixel-
+ *                                       unterschied ("GLEICH <gleiche> von <paare>"); 0 = alle gleich (stehendes Bild).
+ *   kamwechsel <state.txt> <von> <bis> letzter Raum-Abschnitt: Zahl der cam=-Wechsel im Bildbereich.
+ *   takt <debug.log> <state.txt>       Kurbel im GEHEN (ROOM2020 sub02): Geh-Bild unveraendert von Message_on 0
+ *                                       @0x0A5C bis Message_on 1 @0x0A62 ([mot]-Spur), Pos_set @0x0A8C im ersten Bild
+ *                                       nach dem Schliessen der Frage und im selben Skript-Takt wie Ifel_ck @0x0A68,
+ *                                       dieses Bild gehalten ([kamerahalt] HALTEN), Spieler dort (3650,-3018) mo 200.
+ *   renn <debug.log> <state.txt>       Kurbel im RENNEN: ab Pos_set (3650,-2925) Renn-Stopp mit dem Port-Tempo 200,
+ *                                       Schritte 160,120,80,40,0,-40 (0x80032778 @0x8003293c/@0x8003295c), danach
+ *                                       Stand bis Plc_motion @0x0A9C.
  * Rueckgabe 0 = bestanden, 1 = durchgefallen, 2 = Eingabefehler.
  */
 #define _DEFAULT_SOURCE
@@ -174,11 +185,169 @@ static int segment(const char *state)
     return 0;
 }
 
+/* ---- Nachbesserung 2 ------------------------------------------------------------------------------------ */
+static unsigned char *ppm_lesen(const char *pfad, int *w, int *h)
+{
+    FILE *f = fopen(pfad, "rb");
+    if (!f) return NULL;
+    int mx = 0;
+    if (fscanf(f, "P6 %d %d %d", w, h, &mx) != 3 || *w <= 0 || *h <= 0 || *w > 8192 || *h > 8192) { fclose(f); return NULL; }
+    fgetc(f);
+    size_t n = (size_t)(*w) * (size_t)(*h) * 3u;
+    unsigned char *b = (unsigned char *)malloc(n);
+    if (!b || fread(b, 1, n, f) != n) { free(b); fclose(f); return NULL; }
+    fclose(f);
+    return b;
+}
+
+static int gleich(const char *praefix, long von, long bis)
+{
+    unsigned char *vor = NULL; int vw = 0, vh = 0, paare = 0, gleiche = 0, fehlt = 0;
+    for (long fr = von; fr <= bis; fr++) {
+        char p[1024]; int w = 0, h = 0;
+        snprintf(p, sizeof p, "%s%06ld.ppm", praefix, fr);
+        unsigned char *b = ppm_lesen(p, &w, &h);
+        if (!b) { fehlt++; continue; }
+        if (vor && w == vw && h == vh) {
+            paare++;
+            if (memcmp(vor, b, (size_t)w * (size_t)h * 3u) == 0) gleiche++;
+        }
+        free(vor); vor = b; vw = w; vh = h;
+    }
+    free(vor);
+    printf("GLEICH %d von %d (fehlend %d)\n", gleiche, paare, fehlt);
+    return (paare > 0 && gleiche == paare && fehlt == 0) ? 0 : 1;
+}
+
+static int kamwechsel(const char *state, long von, long bis)
+{
+    FILE *f = fopen(state, "rb");
+    if (!f) { printf("FEHLER %s\n", state); return 2; }
+    static long fr_[MAXF * 4]; static int cam_[MAXF * 4];
+    int n = 0; char line[4096];
+    while (fgets(line, sizeof line, f) && n < MAXF * 4) {
+        long fr; int c; const char *cm = strstr(line, " cam=");
+        if (line[0] != 'F' || !cm || sscanf(line + 1, "%ld", &fr) != 1 || sscanf(cm + 5, "%d", &c) != 1) continue;
+        fr_[n] = fr; cam_[n] = c; n++;
+    }
+    fclose(f);
+    int a = 0;
+    for (int i = 1; i < n; i++) if (fr_[i] < fr_[i - 1]) a = i;
+    int wechsel = 0;
+    for (int i = a + 1; i < n; i++) if (fr_[i] > von && fr_[i] <= bis && cam_[i] != cam_[i - 1]) wechsel++;
+    printf("KAMWECHSEL %d\n", wechsel);
+    return 0;
+}
+
+/* Bild der ERSTEN SCD-Trace-Zeile mit dieser Adresse im letzten Raum (nach "loaded room2020"). */
+static long scd_bild_erst(const char *log, const char *adr)
+{
+    FILE *f = fopen(log, "rb");
+    if (!f) return -2;
+    char line[1024]; long res = -1;
+    while (fgets(line, sizeof line, f)) {
+        long fr; char a[32];
+        if (strstr(line, "loaded room2020.rdt")) res = -1;
+        if (strncmp(line, "[scd] F", 7) != 0) continue;
+        if (res < 0 && sscanf(line + 7, "%ld slot=%*d %31s", &fr, a) == 2 && strcmp(a, adr) == 0) res = fr;
+    }
+    fclose(f);
+    return res;
+}
+
+typedef struct { int x, z, msg_a, msg_id, gueltig; } zustand_t;
+static zustand_t s_z[MAXF];
+static int zustand_lesen(const char *state)
+{
+    memset(s_z, 0, sizeof s_z);
+    FILE *f = fopen(state, "rb");
+    if (!f) return -1;
+    char line[4096];
+    while (fgets(line, sizeof line, f)) {
+        long fr; int x, z, a = 0, id = 0;
+        if (line[0] != 'F' || sscanf(line + 1, "%ld", &fr) != 1 || fr < 0 || fr >= MAXF) continue;
+        const char *pl = strstr(line, "PL("), *m = strstr(line, "msg(a=");
+        if (!pl || sscanf(pl + 3, "%d,%d", &x, &z) != 2) continue;
+        if (m) { const char *ip = strstr(m, " id="); a = atoi(m + 6); if (ip) id = atoi(ip + 4); }
+        s_z[fr].x = x; s_z[fr].z = z; s_z[fr].msg_a = a; s_z[fr].msg_id = id; s_z[fr].gueltig = 1;
+    }
+    fclose(f);
+    return 0;
+}
+
+/* [mot]-Spur (RE15_MOTRACE): "[mot] F<n> cut=<c> mo=<m> af=<a> ..." und [kamerahalt]-Spur — letzter Raum. */
+static int s_mo[MAXF], s_af[MAXF], s_mv[MAXF], s_halt[MAXF];
+static void mot_lesen(const char *log)
+{
+    memset(s_mv, 0, sizeof s_mv); memset(s_halt, 0, sizeof s_halt);
+    FILE *f = fopen(log, "rb");
+    if (!f) return;
+    char line[1024];
+    while (fgets(line, sizeof line, f)) {
+        long fr; int c, mo, af;
+        if (strstr(line, "loaded room2020.rdt")) { memset(s_mv, 0, sizeof s_mv); memset(s_halt, 0, sizeof s_halt); }
+        if (sscanf(line, "[mot] F%ld cut=%d mo=%d af=%d", &fr, &c, &mo, &af) == 4 && fr >= 0 && fr < MAXF) {
+            s_mo[fr] = mo; s_af[fr] = af; s_mv[fr] = 1;
+        }
+        if (sscanf(line, "[kamerahalt] F%ld", &fr) == 1 && fr >= 0 && fr < MAXF && strstr(line, "HALTEN")) s_halt[fr] = 1;
+    }
+    fclose(f);
+}
+
+static int takt(const char *dlog, const char *state)
+{
+    long f_m0 = scd_bild_erst(dlog, "@0x0A5C"), f_m1 = scd_bild_erst(dlog, "@0x0A62");
+    long f_if = scd_bild(dlog, "@0x0A68"), f_pos = scd_bild(dlog, "@0x0A8C");
+    printf("SCD Message_on0 F%ld Message_on1 F%ld Ifel_ck F%ld Pos_set F%ld\n", f_m0, f_m1, f_if, f_pos);
+    if (f_m0 < 0 || f_m1 <= f_m0 || f_pos <= f_m1 || f_pos >= MAXF - 1) { printf("FAIL Szene nicht vollstaendig\n"); return 1; }
+    if (zustand_lesen(state) != 0) { printf("FEHLER %s\n", state); return 2; }
+    mot_lesen(dlog);
+    int ok = 1, wechsel = 0;
+    for (long fr = f_m0 + 1; fr <= f_m1; fr++)
+        if (s_mv[fr] && s_mv[fr - 1] && (s_af[fr] != s_af[fr - 1] || s_mo[fr] != s_mo[fr - 1])) wechsel++;
+    printf("Spieler-Pose zwischen Message_on 0 und 1: %d Wechsel\n", wechsel);
+    if (wechsel) { printf("FAIL Luecken-Bild (Original: Spieler angehalten, n9..n47 Clip 5 Bild 9)\n"); ok = 0; }
+    long f_zu = -1;
+    for (long fr = f_m1; fr < f_pos; fr++)
+        if (s_z[fr].gueltig && s_z[fr].msg_a == 1 && s_z[fr].msg_id == 1 && s_z[fr + 1].gueltig && s_z[fr + 1].msg_a == 0) f_zu = fr + 1;
+    printf("Frage geschlossen in F%ld, Pos_set F%ld\n", f_zu, f_pos);
+    if (f_zu < 0 || f_pos != f_zu + 1) { printf("FAIL Pos_set nicht im ersten Bild nach dem Schliessen (Original n94 -> n95)\n"); ok = 0; }
+    if (f_if != f_pos) { printf("FAIL Ifel_ck und Pos_set nicht im selben Skript-Takt\n"); ok = 0; }
+    if (!s_halt[f_pos]) { printf("FAIL Pos_set-Bild (Cut_chg @0x0A7E) nicht gehalten\n"); ok = 0; }
+    if (!s_z[f_pos].gueltig || s_z[f_pos].x != 3650 || s_z[f_pos].z != -3018 || !s_mv[f_pos] || s_mo[f_pos] != 200) {
+        printf("FAIL im Pos_set-Bild nicht (3650,-3018) mo 200: (%d,%d) mo %d\n", s_z[f_pos].x, s_z[f_pos].z, s_mo[f_pos]); ok = 0; }
+    printf(ok ? "BESTANDEN\n" : "DURCHGEFALLEN\n");
+    return ok ? 0 : 1;
+}
+
+static int renn(const char *dlog, const char *state)
+{
+    long f_pos = scd_bild(dlog, "@0x0A8C"), f_mot = scd_bild(dlog, "@0x0A9C");
+    printf("SCD Pos_set F%ld Plc_motion F%ld\n", f_pos, f_mot);
+    if (f_pos < 0 || f_mot <= f_pos + 6 || f_mot >= MAXF) { printf("FAIL Szene nicht vollstaendig\n"); return 1; }
+    if (zustand_lesen(state) != 0) { printf("FEHLER %s\n", state); return 2; }
+    int ok = 1, z = -2925, tempo = 200;            /* Pos_set @0x0A8C z -2925; Port-Renntempo (Tabelle @0x80073f24) */
+    for (int i = 0; i < 6; i++) {
+        tempo -= 40; z -= tempo;                     /* @0x8003293c, Vorschub @0x8003295c in Blickrichtung 1024 = -z */
+        const zustand_t *st = &s_z[f_pos + i];
+        printf("F%ld (%d,%d) Soll z %d\n", f_pos + i, st->x, st->z, z);
+        if (!st->gueltig || st->x != 3650 || st->z != z) ok = 0;
+    }
+    for (long fr = f_pos + 6; fr <= f_mot; fr++)
+        if (!s_z[fr].gueltig || s_z[fr].x != 3650 || s_z[fr].z != z) { ok = 0; printf("FAIL F%ld (%d,%d) nach dem Stopp\n", fr, s_z[fr].x, s_z[fr].z); break; }
+    printf(ok ? "BESTANDEN\n" : "DURCHGEFALLEN (Renn-Stopp fehlt oder weicht ab)\n");
+    return ok ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     if (argc >= 3 && strcmp(argv[1], "segment") == 0) return segment(argv[2]);
     if (argc >= 3 && strcmp(argv[1], "marker") == 0) return marker(argv[2]);
     if (argc >= 5 && strcmp(argv[1], "kurbel") == 0) return kurbel(argv[2], argv[3], argv[4]);
+    if (argc >= 5 && strcmp(argv[1], "gleich") == 0) return gleich(argv[2], atol(argv[3]), atol(argv[4]));
+    if (argc >= 5 && strcmp(argv[1], "kamwechsel") == 0) return kamwechsel(argv[2], atol(argv[3]), atol(argv[4]));
+    if (argc >= 4 && strcmp(argv[1], "takt") == 0) return takt(argv[2], argv[3]);
+    if (argc >= 4 && strcmp(argv[1], "renn") == 0) return renn(argv[2], argv[3]);
     fprintf(stderr, "Aufruf: %s marker <bmp> | kurbel <debug.log> <state.txt> <anim.txt> | segment <state.txt>\n",
             argv[0]);
     return 2;

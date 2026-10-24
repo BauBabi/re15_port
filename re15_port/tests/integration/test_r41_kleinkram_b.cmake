@@ -13,6 +13,15 @@ cmake_minimum_required(VERSION 3.16)
 #                        Port-Programm hinter sub00, Kamera nie Cut 8 (offenes Tuerblatt), am Ende Cut 2.
 #   TEIL werkstatt_tuer  Punkt 3: Elza in ROOM11B1 vor der Werkstatt-Tuer: Lauf nach Westen blockiert (x >= -20950),
 #                        Aktionstaste -> msg 12 "The door is locked." (@0x179F), kein Raumwechsel.
+# NACHBESSERUNG 2 (Abnahme 1 Maengel 1-3, master-AUFTRAG E-N1/E-N2):
+#   TEIL kante           E-N1: Leon geht in ROOM2020 genau auf die gemeinsame Kante x = 9000 der RVD-Zonen z1 @0x016C
+#                        (Cut 0 -> 2) / z5 @0x01BC (Cut 2 -> 0): angeforderter Cut wechselt jedes Bild (wie das Original,
+#                        GDB o_cam9000: FUN_800142f4 je Durchlauf), das Bild STEHT (Present @0x80021558/@0x80021560: kein
+#                        DrawOTag, kein Pufferwechsel) - alle Abzuege ab dem Stand pixelgleich.
+#   TEIL geh             E-N2: Kurbel im GEHEN (Abnahme 1 R2): kein Spieler-Bild zwischen Message_on 0 @0x0A5C und 1
+#                        @0x0A62 (Spiel-Task @0x80020de4 vor Nachrichten-Takt @0x80020f3c), Pos_set @0x0A8C im ersten Bild
+#                        nach dem Schliessen der Frage (Auswahl-Message_on kehrt sofort zurueck @0x80040520), Bild gehalten.
+#   TEIL renn            Kurbel im RENNEN (Abnahme 1 R4): Renn-Stopp an der Kurbel (0x80032778 @0x8003293c/@0x8003295c).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_WERKZEUG=<test_r41_kleinkram_b_exe> -DWORKDIR=<dir> -DTEIL=<teil>
 #               -P test_r41_kleinkram_b.cmake
 # =============================================================================
@@ -101,6 +110,21 @@ elseif(TEIL STREQUAL "werkstatt_tuer")
     set(_env RE15_TITLE_SHOT_CHAR=1 RE15_DEBUG_JUMP=11b1@240 RE15_SET_FLAG=3:0x83,4:0xf3
              RE15_PLAYER_POS=-20200,-16230,2048,0 "RE15_INPUT_SCRIPT=U1.5,W0.3,A0.1" RE15_INPUT_SCRIPT_START=262
              RE15_INPUT_SCRIPT_BASIS=spiel RE15_STATE_LOG=state.txt RE15_MSG_LOG=1 RE15_EXIT_AT=380)
+elseif(TEIL STREQUAL "kante")
+    # Lauf EN1w des Dossiers: (9375,-3200) Blick 2048 (-x), 5 Bilder Gehen (75 je Bild) -> x 9000 ab Bild 64.
+    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_PLAYER_POS=9375,-3200,2048,1 RE15_INPUT_SCRIPT=U0.1667
+             RE15_INPUT_SCRIPT_START=60 RE15_INPUT_SCRIPT_BASIS=spiel RE15_STATE_LOG=state.txt RE15_FRAMEDUMP=66-90/1:fd_
+             "RE15_EXIT_AT=92#2020")
+elseif(TEIL STREQUAL "geh")
+    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-1500,1024,1
+             "RE15_INPUT_SCRIPT=U0.3,UA0.1,U0.1,UA0.1,U0.1,UA0.1,U0.1,UA0.1,U0.1,UA0.1,U1.0" RE15_INPUT_SCRIPT_START=300
+             RE15_INPUT_SCRIPT_BASIS=spiel RE15_PRESS=square@380,square@430,square@470,square@510 RE15_SCD_TRACE=1
+             RE15_MOTRACE=1 RE15_STATE_LOG=state.txt RE15_KAMERAHALT_LOG=1 "RE15_EXIT_AT=420#2020")
+elseif(TEIL STREQUAL "renn")
+    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-800,1024,1
+             "RE15_INPUT_SCRIPT=XU0.2,XUA0.1,XU0.1,XUA0.1,XU0.1,XUA0.1,XU0.1,XUA0.1,XU0.1,XUA0.1,XU1.0"
+             RE15_INPUT_SCRIPT_START=300 RE15_INPUT_SCRIPT_BASIS=spiel RE15_PRESS=square@380,square@430,square@470,square@510
+             RE15_SCD_TRACE=1 RE15_STATE_LOG=state.txt "RE15_EXIT_AT=430#2020")
 else()
     message(FATAL_ERROR "r41_kleinkram_b: TEIL '${TEIL}' unbekannt")
 endif()
@@ -210,6 +234,45 @@ elseif(TEIL STREQUAL "werkstatt_tuer")
         set(_ok TRUE)
     endif()
     pruef_wahr(_ok "Elza an der Trennwand blockiert (min x ${_mnx} >= -20950)")
+endif()
+
+if(TEIL STREQUAL "kante")
+    pruef(_d "loaded room2020.rdt")
+    pruef(_d "(gehalten)")
+    execute_process(COMMAND "${RE15_WERKZEUG}" kamwechsel "${_lauf}/state.txt" 66 90 OUTPUT_VARIABLE _ok_)
+    message(STATUS "${_ok_}")
+    set(_kw 0)
+    if(_ok_ MATCHES "KAMWECHSEL ([0-9]+)")
+        set(_kw ${CMAKE_MATCH_1})
+    endif()
+    set(_ok FALSE)
+    if(_kw GREATER_EQUAL 20)
+        set(_ok TRUE)
+    endif()
+    pruef_wahr(_ok "angeforderter Cut wechselt auf der Kante jedes Bild wie im Original (${_kw} Wechsel in 24 Bildern)")
+    execute_process(COMMAND "${RE15_WERKZEUG}" gleich "${_lauf}/fd_" 66 90 RESULT_VARIABLE _rg OUTPUT_VARIABLE _og)
+    message(STATUS "${_og}")
+    set(_ok FALSE)
+    if(_rg EQUAL 0)
+        set(_ok TRUE)
+    endif()
+    pruef_wahr(_ok "Bild steht (Present @0x80021560: kein DrawOTag, kein Pufferwechsel): Abzuege F66..F90 pixelgleich")
+elseif(TEIL STREQUAL "geh" OR TEIL STREQUAL "renn")
+    pruef(_d "loaded room2020.rdt")
+    pruef(_d "@0x0A62 op=0x2B")
+    pruef(_d "@0x0A8C op=0x32")
+    set(_modus renn)
+    if(TEIL STREQUAL "geh")
+        set(_modus takt)
+    endif()
+    execute_process(COMMAND "${RE15_WERKZEUG}" ${_modus} "${_lauf}/debug.log" "${_lauf}/state.txt"
+                    RESULT_VARIABLE _rw OUTPUT_VARIABLE _ow ERROR_VARIABLE _ew)
+    message(STATUS "${_ow}${_ew}")
+    set(_ok FALSE)
+    if(_rw EQUAL 0)
+        set(_ok TRUE)
+    endif()
+    pruef_wahr(_ok "Kurbel-Anlauf ${TEIL}: Bildfolge wie das Original (Auswerter ${TEIL})")
 endif()
 
 if(_fehler)
