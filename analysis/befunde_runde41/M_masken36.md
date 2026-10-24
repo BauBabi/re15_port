@@ -412,6 +412,22 @@ jetzt ein volles, ganz durchsichtiges Bild 320 x 240 (RGBA) in den Leon- UND den
 `{30E0,30E1}/06_port.png`, `{30E0,30E1}/07_port.png`. Ausserdem sind alle Uebersichtsbilder und Bogen `M_bilder/ROOMxxxx_Ccc.png`
 mit dem Endstand von NB1 neu erzeugt (wieder aufgenommene Rechtecke, Mangel 1) - geaenderte Bilder s. "Fuer den Nutzer".
 
+## Nachbesserung 2 (2026-10-24, nach Abnahme 1 = analysis/befunde_runde41/M_abnahme_1.md)
+
+Grundlage: Abnahme 1 (Urteil "nicht bestanden": Punkt 1 teilweise, Punkt 2 erfuellt), Mangel 1 = Punkt 1 weiter nicht
+geschlossen (530 alte + 656 Saum-Rechtecke aus, 341 352 Punkte nur in ausgeschlossenen Rechtecken, 4 Cuts ganz ohne Maske:
+3040 C1, 3050 C6, 30E0 C6, 30E0 C7; echte Gegenstaende 3050 C6 Treppengelaender, 5020 C6 X-Kiste, 6000 C5 Lok/Traeger).
+Weg der Abnahme: (a) die 135 Rechtecke mit Zellen-Tiefe, die nur das Grundriss-Netz der Spur P nimmt, formgenau in 3D mit
+gemessener Hoehe entscheiden; (b) die uebrigen echten Gegenstaende dem Nutzer zur Freistellung vorlegen.
+Keine Messung der Abnahme wird wiederholt; ihre Zahlen werden zitiert. Punkt 2 (erfuellt) wird nicht angefasst.
+
+### Stand Nachbesserung 2
+- [ ] Lektuere (AUFTRAG, VERTRAG, Abnahme 1, Dossier, git log master..HEAD) - Werkzeuge tiefe_zelle_r41.py, test_r37_masken36.c
+- [ ] Mangel 1 (a): Ausschluss-Urteil der 135 Rechtecke formgenau in 3D
+- [ ] Mangel 1: die vier Cuts ohne Maske (3040 C1, 3050 C6, 30E0 C6/C7) und die genannten Gegenstaende (3050 C6, 5020 C6, 6000 C5)
+- [ ] Mangel 1 (b): Restliste fuer den Nutzer (Freistellung je Kamera)
+- [ ] exe-Messung nachher, gezielte Tests, Abschluss-Commit
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
