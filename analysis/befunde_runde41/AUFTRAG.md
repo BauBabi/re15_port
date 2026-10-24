@@ -732,3 +732,17 @@ Folgen (Orchestrator):
 3. "Soll beim Hereinkommen von Marvin/John ebenfalls der Knall kommen?" — **"Stahltuer-Ton lassen"** (DOOR06 wie gebaut).
 Damit sind alle Entscheidungsfragen der Spur G beantwortet. Sprachaufnahmen fuer den Nutzer: synchro/STAGE2/room2080/main42.wav
 ("Hey, Leon, try with this!", Marvin) und synchro/STAGE2/room2081/main42.wav ("Hey, Elza, try with this!", John).
+
+## 2026-10-25 00:22 — Nachtrag 23 (Wortlaut; Ablauf des Alligator-Kampfes mit der Kanister-Szene, Spuren G/F/B)
+
+> Aber die Kanister Szene kommt erst nachdem der Aligator genug getroffen wurde. Aligator Kampf -> Mehrere Treffer ->
+> Kanister Szene -> Kampf geht weiter, Aligator nimmt irgendwann in dem weiteren Rundlauf den Kanister auf -> Schuss -> Ende
+> Kiefer kaputt.
+
+Folgen (Orchestrator): Massgeblicher Ablauf (ergaenzt Nachtrag 22 Punkt 2 "Erst beim Annaehern" = der Alligator setzt nach
+der Szene seinen normalen RE2-Ablauf fort, nicht sofort angreifend): Kampf -> Treffer bis zur RE2-Schwelle (300 Schaden) ->
+Kanister-Szene (Marvin/John, Wurf ins 2090-Becken) -> Kampf geht weiter -> der Alligator nimmt den Kanister IRGENDWANN in
+seinem weiteren Rundlauf auf (Aufnahme-Mechanik der Spur B, RE2-Form) -> Schuss auf den Kanister im Maul -> Explosion ->
+Tod mit geplatztem Kiefer. Abnahmepunkt der Spur G: diese ganze Folge im ECHTEN Ablauf an der exe (Leon UND Elza), ohne
+Testhaken fuer den Kanister — insbesondere: der Kanister liegt nach dem Wurf erreichbar auf dem Rundweg des Alligators
+und wird im normalen Kampf tatsaechlich aufgenommen (Messung: Bild der Aufnahme, Zeit seit dem Wurf).
