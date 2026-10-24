@@ -334,7 +334,10 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
 ## §4 OFFEN (je mit Adresse; keiner betrifft das, was der Nutzer in 3060/3061 sieht)
 1. Super_set-Vaterarten 0x40 (Spieler), 0xc0 (Objekt) und Gegner ausserhalb State 4 (Lieferfall nur ROOM4030/4031 sub07
    `48 00 80 81`, Typ 0x2D Teil 1): der Opcode wird wie vor dieser Spur uebersprungen (Messzeile `[superobj41] ... OFFEN`).
-   Fuer die Gegner-Pose ausserhalb State 4 fehlt dem Port die Kanal-Zuordnung je AI-Zustand (Zeichner main.c).
+   GEMESSEN Lauf r4030_super (Sprung 4030, RE15_FORCE_EVENT 6 -> sub07): `[superobj41] F171 Super_set Objekt 0 Art 0x80
+   Teil-Byte 0x81 lokal (0,0,0) Rot (0,0,0) -> OFFEN (Vater nicht berechenbar, uebersprungen)`, Gegner 0 Typ 0x2D in State 1
+   — ROOM4030 verhaelt sich wie vor dieser Spur. Fuer die Gegner-Pose ausserhalb State 4 fehlt dem Port die
+   Kanal-Zuordnung je AI-Zustand (Zeichner main.c).
 2. PSX-Plattform: Zeichner-Haken fuer angehaengte Props (pc_prop_world) und fuer den W-Bank-Clip (dining_r39-Haken) gibt
    es nur im PC-Zeichner; die Engine-Module (fussanker/superobj/wclip) sind plattformneutral. PSX in dieser Runde nicht gebaut.
 3. Sherrys Lage VOR dem Kriechen: Port (-18857,-26256), Original (-18860,-26266) — Ende des NPC-Gangs (Plc_dest Modus 5/9 in
