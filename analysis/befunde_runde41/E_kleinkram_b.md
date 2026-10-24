@@ -1249,7 +1249,19 @@ Eigene Dateien: rennstopp_r41.c/.h, kamerahalt_r41.c/.h, bildhalt_r41_pc.c, Test
   0 tests failed out of 914** (311 s, CTEST_EXIT=0, `<sp>/E41n4/ctest_unit_alle.log`).
 - Integration (echte exe; Bedingung E-E1 Nachrichten-/Szenen-/Tuer-/Karten-Riegel + Renn-Eingaben + die zwei neuen): Auswahl der
   NB3-Laeufe 1/3 (`<sp>/E41n3b/ziel_regex.txt` + `rest_regex.txt`, nur integration_*) + treppe/losl = 153 Tests,
-  `<sp>/E41n4/integ_regex.txt`: laeuft.
+  `<sp>/E41n4/integ_regex.txt`. Unter hoher Fremdlast (CPU 82-84 %, Laeufe anderer Spuren und des Integrationsbaums mit -j 6) lief
+  jeder Test 2-3 x so lang wie in NB3 (dachkiste 1900 s, story_leon 703 s statt 389 s); nach 72 min / 22 Tests abgebrochen (nur
+  eigene PID 35884 mit Kindern): 21 bestanden (r35_cut1150, r38_dining1141_s, r36_kartenitems_bild, r36_dachkiste, r36_story_leon,
+  r39_dining1141_d/_kampf/_zielen/_zielen_nachladen, r37_feuerloescher, r38_itemorte, r37_masken36_stage3/_nb2, r39_gegner_1141,
+  r37_kistenregel, r39_johnruf1041_b, r35_zgirl, r38_rolltor20a0, r34_granaten, r35_cut10f0, r39_optik_schluessel),
+  1 rot: integration_r36_klettern Teil C ("Tuer von oben NICHT genommen ... exe exit=Process terminated due to timeout": 480 s
+  Wanduhr fuer 4550 Bilder, erreicht F2730 = 5,7 Bilder/s). Kein Standbild-Effekt: derselbe Lauf mit RE15_KAMERAHALT_LOG hat 7
+  gehaltene Bilder (`<sp>/E41n4/runs/C10f0_voll`, 7 x 198 ms); Skript-Zeitachse zaehlt Bilder (input_pc.c: Sekunden x fps),
+  nicht Wanduhr. Nachlauf einzeln in der Fokus-Auswahl unten.
+- Fokus-Auswahl (33 Tests, -j 2, `<sp>/E41n4/integ_regex2.txt`): alle integration_r41_kleinkram_b_* (10), Renn-Eingaben (r36_klettern,
+  r34n_b_cursor, r36_kleidung_spielweg, r36_ziel1190_scheiben, r38_zopf, r39_hund1121, r36_schluessel(_befreiung)), Tuer/Karte/Szene/
+  Blende (door_lock, door_traversal, keydoor, map_raum_live, map_uebergang, r35_karte, r36_karte, r36_tueren, r39_karten,
+  r30_cut_blitz, r36_szene1150, elza_vollstart, boot_bg_pin, dark_start_pin, r36_story_elza): laeuft.
 - Gegenproben mit der VORHER-exe re15_pc_E41a3.exe (c3ba4317 = Stand Abnahme 3; `cmake -DRE15_PC_EXE=... -DTEIL=<t> -P
   tests/integration/test_r41_kleinkram_b.cmake`, `<sp>/E41n4/vorher_riegel/`): **treppe DURCHGEFALLEN** ("F376 (-1359,-13665) ...
   8 Lageaenderungen in 8 Bildern"), **geh DURCHGEFALLEN** ("Standbild F382: 0 Bilder 0 ms" — sonst alles wie das Original), losl
