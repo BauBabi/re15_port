@@ -420,7 +420,7 @@ Gezielte Laeufe (keine volle Suite; re15_pc.exe 20:31 = letzter Code-Stand, Test
 - Werkzeuge: `re15_port/tools/r41_j/j41_szene.py` (DuckStation-Szene aus einem Savestate: Video und/oder Slot-1-Reihe,
   settings.ini bytegleich zurueck), `lauf.sh` (Port-Messlauf mit eigener exe-Kopie).
 
-## Nachbesserung 1 (nach Abnahme J 0, `J_abnahme_0.md`; Start 2026-10-24 spaet, Kopf 238c1319, Baum sauber)
+## Nachbesserung 1 (nach Abnahme J 0, `J_abnahme_0.md`; Start 2026-10-24 spaet, Kopf 27471186 = 238c1319 + Orchestrator-Commit J-E1, Baum sauber)
 Ausgangslage: Abnahme J 0 bewertet alle drei Nutzer-Punkte (1 ROOM3060 Marvin, 2a Sherry kriecht, 2b Elzas Ende) und A-E5
 (RBJ-Binder) als **erfuellt**; offen sind zwei Gate-Maengel: **V1** (Vertrag, formal) und **M2** (Doku). Dazu Hinweise H1-H4
 (keine Maengel) und Nebenbefund N1 (Hund, nicht Spur J). Orchestrator-Entscheid **J-E1** (master dba6ff8e, AUFTRAG.md
@@ -483,3 +483,50 @@ Bau + gezielte Riegel.
 - Messung nachher (ctest -V, Zensus): `Sce_em_set Gegner 0 ROOM4030 @0x0052C Typ 0x2D`, `ROOM4031 @0x00556 Typ 0x49`,
   `ROOM4031 @0x00586 Typ 0x2D`; `Set 3:87 = 1 ROOM4040 @0x01020` / `ROOM4041 @0x01020`; `Set 3:78 = 1 ROOM4030 @0x0068C`
   / `ROOM4031 @0x006CE`; `ROOM4031 Glieder der Aufzugs-Kette: 9/9 Byte-Folgen wie belegt` — alle ok.
+
+### NB1.H1 — Riegel 3060 nimmt die Tuer per Quadrat (Hinweis der Abnahme)
+- Vorher: `integration_r41_stage3szenen_a_3060` feuerte die Tuer ROOM3040 -> ROOM3060 per `RE15_FIRE_AOT=0@1200#3040`.
+- Beleg: ROOM3060 Slot 2 @0x00ED6 `3b 02 02 31 00 00 dc 05 d0 bc 80 0c 14 05 3c dd 00 00 44 99 00 0c 02 04 09 ...` = Tuer
+  nach 3040, Ankunft next_pos (-8900,0,-26300), Blick 3072; ROOM3040 Slot 0 @0x0127E (sce 2, Rechteck x -10650 +3700,
+  z -27300 +700) fuehrt nach 3060. Der Riegel setzt Marvin beim Sprung an diesen Ankunftspunkt, umgedreht zur Tuer
+  (Blick 1024), und drueckt Quadrat im 1,5-s-Takt (Weg der Abnahme p1a/p1b/p1c).
+- Aenderung (`tests/integration/test_r41_stage3szenen_a.cmake`): `RE15_PLAYER_POS=-8900,-26300,1024,0` statt
+  `RE15_FIRE_AOT`; `unset(ENV{RE15_FIRE_AOT})` vor dem Start; neue Pruefungen: Sprung-Spawn-Zeile, `DOOR FIRE slot=0
+  rect=(-8800,-26950,...` mit Ankunft (2063,0,-17192), keine `[fire-aot]`-Zeile.
+- Messung nachher (Lauf `re15_port/build/r41_stage3szenen_a_wd_3060_8805684c/lauf/debug.log`):
+  `[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-8900,-26300) rot=1024 band=0`, `[debug-menu] JUMP -> 304 FACTORY
+  LINE A (ROOM3040) spawn=(-8900,0,-26300) cut=0`, `[aot] DOOR FIRE slot=0 rect=(-8800,-26950,hw=1850,hh=350) target_cut=4
+  spawn=(2063,0,-17192)`, `[wclip41] ROOM3060 F65 Spieler Plc_motion(2,6) -> W-Bank-Clip 6 (... Waffe 1, 10 Bilder)`;
+  Riegel: `40 Bilder Motion 6, davon 0 nicht Clip 6/10 Bilder, 31 x Bild 9 gehalten` — dieselben Werte wie bei der Abnahme.
+
+### NB1.H2 / H3 / H4 / N1
+- H2: Kopf von `tests/unit/probes/r41_stage3szenen_a.cmake` an die Riegel angeglichen (anker bytegleich = Abweichung 0,
+  superobj = Original (0,0,0) + "ausserhalb State 4 -> uebersprungen", Zensus-Erweiterung, 3060 per Quadrat).
+- H3 (Vorbild-Stand nur merken, wenn Bit 1/2 gesetzt ist): **nicht umgesetzt**. FUN_800369f8 vergleicht im Original mit
+  Part+84/+92 aus dem letzten Zusammensetzen (`80036ab4..aec`), das jede Entity in jedem Bild hat; Plc_flg setzt das Bit im
+  SCD-Takt (@0x80042008) VOR den Entities desselben Bildes. Ohne Vorbild-Stand aus dem Bild davor fehlte im ersten Bild nach
+  dem Setzen die Verschiebung (Abweichung zum bytegleichen Riegel `_anker`); ob das Bit im naechsten Bild gesetzt wird, ist
+  vorher nicht bekannt. PC ohne Belang; fuer PSX eine Budgetfrage, wenn PSX gebaut wird (§4.2).
+- H4: nichts zu tun (keine eigene Warnung).
+- N1 (Hund, nicht Spur J): als §4.7 eingetragen (Messung der Abnahme, nicht wiederholt).
+- Doku-Stand im Zweig: AUFTRAG.md = master (Commit 27471186 des Orchestrators mit J-E1); VERTRAG.md weicht in einer Zeile
+  ab (Nachrichten-Ids der Spur C, Nachtrag 13/16) — bei der Integration die master-Fassung nehmen.
+
+### NB1 Bau und Tests (gezielt, keine volle Suite)
+- Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)` (keine neue .c-Datei).
+- `ctest --test-dir re15_port/build -R "^unit_r41_stage3szenen_a" --timeout 600 --output-on-failure -V` ->
+  **`100% tests passed, 0 tests failed out of 7`** (zensus mit den neuen M2-Pruefungen, anker, superobj, wclip, rbj_mechanik,
+  rbj_zensus, rbj_kanal)
+- `ctest --test-dir re15_port/build -R "^integration_r41_stage3szenen_a_" -j 2 --timeout 1200 --output-on-failure -V` ->
+  **`100% tests passed, 0 tests failed out of 2`** (3061 60,20 s: Cut_chg(6) F497, Super_set F1049, Super_reset F1075
+  (-18753,-266,-26778), Elza W-Clip 6 F1456 — wie bei der Abnahme; 3060 104,82 s per Quadrat, s. NB1.H1)
+- Breiter nicht noetig: Diff der Nachbesserung = Kommentar im Kopf re15_superobj_r41.h (kein Code), Riegel-Dateien der Spur,
+  Dossier. Die uebrigen Riegel, die die Abnahme gefahren hat (unit/probe/prop, 54 Integrationsriegel), pruefen Code, den
+  diese Nachbesserung nicht aendert; sie wurden hier nicht erneut gefahren.
+
+### NB1 Ergebnis
+- V1: erledigt durch Orchestrator-Entscheid J-E1 (Haken angenommen, unveraendert; Integrations-Hinweis oben).
+- M2: berichtigt (Kopf re15_superobj_r41.h, §2.6, §3, §4.1) mit Beleg-Kette und Bytes; der Zensus-Riegel pinnt die
+  Praemissen. Am Spielverhalten aendert die Nachbesserung nichts (keine Code-Zeile, nur Kommentar + Riegel).
+- H1/H2 umgesetzt, H3 begruendet nicht umgesetzt, H4 ohne Handlung, N1 als §4.7 an den Orchestrator weitergegeben.
+- Fuer den Nutzer: nichts Neues (keine Assets, keine Sprachdateien, keine Bits/Nachrichten-Ids).
