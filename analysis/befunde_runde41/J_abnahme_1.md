@@ -16,15 +16,18 @@ Dazu die Maengel der Abnahme J 0: V1 (Vertrag) und M2 (Doku ROOM4031), Orchestra
 - [x] Bau: `local_build.sh configure` + `build` -> `=== LOCAL-BUILD-OK (build)`, "ninja: no work to do"; exe 23:37:49 und
       Test-exe 23:38:53 juenger als jede Quellaenderung (letzte 23:32, Kommentar-Kopf 23:28), `git status` leer
 - [x] Riegel der Spur unit 7/7, integration 2/2 (eigene Laeufe, s. Gate T)
-- [x] RE-Gate (6 Adressbereiche selbst disassembliert, s. Gate RE)
+- [x] RE-Gate (7 Adressbereiche selbst disassembliert, s. Gate RE)
+- [x] Gegenprobe mit der master-exe (Riegel 3060 rot; Vorher-Bilder 3060/3061 reproduzieren die Nutzer-Befunde)
+- [x] Integrations-Probe (`git merge-tree`, ohne Aenderung am Baum)
 - [x] Original-Savestates selbst gelesen (eigenes Skript `J41abn1/py/orig_lesen.py`, `orig_3061.py`)
 - [x] M2-Bytes selbst gelesen (25 Byte-Folgen in ROOM4030/4031/4040/4041/4000/4001)
 - [x] Punkt 1 gemessen (eigene Laeufe p1a/p1b, echter Tuerweg 3040 -> 3060 per Quadrat, Framedump, Wechsel nach 3020)
 - [x] Punkt 2a gemessen (eigener Lauf p2, echter Tuerweg 3011 -> 3061 per Quadrat, Szene per Quadrat am AOT, Framedump)
 - [x] Punkt 2b gemessen (dto.)
-- [ ] gezielte Riegel der beruehrten Module
+- [x] gezielte Riegel der beruehrten Module, Unit-Ebene: 227/227 (s. Gate T)
+- [ ] gezielte Integrationsriegel der beruehrten Module (31, laeuft)
 - [x] Vertrag (Pfade, Woerter, Env-Schalter, Bits/Ids) — s. Gate V
-- [ ] Nebenwirkungen
+- [x] Nebenwirkungen — s. Gate N
 
 ## Gate RE — selbst disassembliert (info/Re1.5/PSX.EXE, `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`)
 | Stelle | eigene Disasm (Auszug) | Behauptung im Code/Dossier | Urteil |
@@ -34,6 +37,7 @@ Dazu die Maengel der Abnahme J 0: V1 (Vertrag) und M2 (Doku ROOM4031), Orchestra
 | Sub 2 0x80050f00 | `80050f88 lw a0,368(v0)` (+0x170), `80050f90 lw a1,372(v0)` (+0x174), `80050f94 jal 0x8001f314`; Rueckgabe != 0 -> `80050fe8 ori v0,zero,0x2` / `80050fec sb v0,6(v1)` (Phase 2); `80051004 andi v0,v0,0x4` -> `80051010 sb v0(=1),6(v1)`; Phase 2 -> `80050f24 beq v0,zero,0x80051014` = Ruecksprung ohne anim_set | Kanal +0x170/+0x174, Halten Phase 2, Schleife nur mit Bit 4 | stimmt |
 | W-Bank-Lader 0x80036b68 + Tabelle 0x800741e8 | `80036b84 lbu 0x800aca5c` (Modell), `80036b8c lbu 0x800aca5d` (Waffe), `80036bac addiu at,at,16872` (0x800741e8), `80036bc4 addu a0,v0,a0`, `80036be4 sw v0,-13368(at)` (0x800acbc8 = +0x174), `80036c04 sw v0,-13372(at)` (0x800acbc4 = +0x170); Tabelle (u16) `4c 4c 4c 4c 61 61 61 61 4c 4c 4c 4c 4c 4c 4c 76` | Modell 0x0D -> 76 (PL00Wxx), 4 -> 97 (PL04Wxx), 15 -> 118 | stimmt; Gegenprobe: 97-76 = 21 = Zahl der Dateien PL00W00..W14, 118-97 = 21 = PL04W00..W14 (shared_assets/PSX/PLD) |
 | NPC-Executor 0x80050c4c..ca8 | `80050c50 xori v0,v0,0x20`, `80050c6c andi v0,v0,0x1` -> `80050c78 jal 0x800369f8` (Delay `addu a1,zero,zero`), `80050c94 andi v0,v0,0x2` -> `80050ca0 jal 0x800369f8` (Delay `80050ca4 ori a1,zero,0x1`) | Bit 1 -> Kette 0, Bit 2 -> Kette 1 | stimmt |
+| Super_reset 0x80040cd0 | `80040cd8..ce0 lw 92/96/100(v0)` (Welt +0x5c/+0x60/+0x64), `80040ce8 addiu v1,v1,11596` (0x80072d4c) -> `80040cec sw v1,116(v0)`, `80040cf0..cf8 sw 52/56/60(v0)` (+0x34/+0x38/+0x3c), `80040cfc..d1c lhu 2/4/6(a1)` -> `sh 104/106/108(v0)` (Rot), `80040d18 addiu a1,a1,8` | Welt-Lage -> lokal, Vater = Welt, Rot = pc+2/4/6, 8 Bytes | stimmt |
 | RBJ-Binder 0x8001b464..4d8 | `8001b470 andi v0,a0,0x1`, `8001b478 srl a0,a0,1` (Delay), `8001b47c andi v0,a3,0xff`, `8001b498 addiu at,at,-12884` (0x800acdac = Gegner + 0x180) + a3*500, `8001b4a0 sw t1,0(at)`, `8001b4c0 bne a0,zero,0x8001b470` mit Delay **`8001b4c4 addiu a3,a3,1`** (je Bitposition), `8001b4cc..d4` Record-Schleife ohne a3-Ruecksetzen | a3 kumulativ, spaeterer Record ueberschreibt | stimmt |
 
 ## Original selbst gelesen (Savestates des Bau-Agenten, eigenes Skript `J41abn1/py/orig_lesen.py` / `orig_3061.py`)
@@ -251,3 +255,12 @@ fehlten (Gitter blieb stehen).
   Merge-Ergebnis). Nach dem Merge `unit_r39_heliport1171_binder` (Riegel der Spur A zu RE15_ACTOR_MAX 36) und die Riegel
   `r41_stage3szenen_a` fahren. Spur K (cherry-pick 299b6deb des Binders) trifft denselben Konflikt.
 - scd_vm.c, platform/pc/main.c, enemy_ai_common.c mergen ohne Konflikt.
+
+## Gate T — gezielte Tests (eigene Laeufe, keine volle Suite; Logs `J41abn1/ctest_*.log`)
+1. Riegel der Spur: `ctest -R "^unit_r41_stage3szenen_a" -V` -> **7/7 Passed** (zensus mit den NB1-Pruefungen 4030/4031/4040/4041
+   und 9/9 Gliedern, anker (0,0)/(0,0), superobj (0,0,0), wclip, rbj_mechanik, rbj_zensus, rbj_kanal);
+   `ctest -R "^integration_r41_stage3szenen_a_" -j 2` -> **2/2 Passed** (3061 60,1 s, 3060 114,1 s per Quadrat).
+2. Unit-/Probe-Ebene der beruehrten Module (NPC-Executor, RBJ-Bindung, SCD-Opcodes, Zeichner-/Raum-Module, Szenen-Riegel der
+   Runden 33-39; Regex `J41abn1/unit_regex.txt`): `ctest -R "<regex>" -j 4` -> **227/227 Passed** (22,8 s).
+3. Integrationsriegel der beruehrten Raeume/Module (dining1141-Haken, RBJ-Raeume 3091/1040/1041/10F0, NPC-Szenen 1150/11C0/Roy,
+   Elza-Kette, STAGE3-Masken, Tuerweg; Regex `J41abn1/integ_regex.txt`, 31 Riegel, `-j 3`): Stand s. unten.
