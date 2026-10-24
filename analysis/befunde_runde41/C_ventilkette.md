@@ -9,6 +9,21 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-24 02:51-03:10 (vierte Fortsetzung, Opus; Vorgaenger vom Sitzungslimit ~01:00 beendet). Baum sauber
+  (`status --porcelain` leer, HEAD 271b05ea): der TEMPORAERE Nachbau des Spur-A-Hakens in aot_common.c war schon
+  zurueckgenommen, die exe 00:56 aber MIT ihm gebaut -> `local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`
+  (exe 02:51; Quelle = Bau 00:41, auf dem beide r41-Integrationsriegel gruen liefen -> nicht wiederholt).
+  Gezielte Unit-Gruppe (Regex §5) 02:56: `100% tests passed, 0 tests failed out of 37`. Lauf kette_mit_a (mit dem
+  Haken, 00:56-00:58) ausgewertet -> §6 Querbezug A (ohne den Haken haengt die 20B0-Szene, mit ihm laeuft sie bis
+  zur Freigabe). NEUE Messung ring_nach_flut (Eintritt in das geflutete 2030 ueber die 20B0-Ost-Tuer, 03:03-03:05)
+  -> §4, §6 OFFEN, §7 Frage (f). Dossier nachgezogen: §1.1 Cut der 2000-Tuer Slot 3 (3, nicht 13), §3.3/§4 Spritzer
+  = EIN Ereignis (ddb65cfc), §5 Teil B + Gruppenlauf 2/2 + Unit 239 Pruefungen.
+* 00:30-00:58 (Vorgaenger, aus Commits und Logs scratchpad r41c2/ uebernommen, NICHT wiederholt): e1cb3352/b486f182
+  integration_r41_ventilkette_b (erste Fahrt 00:36-00:41 PASS, 291.85 s, exe 22:17); ddb65cfc Spritzer ohne
+  erfundene Rate + Nachmessung flut_spritzer (exe 00:41); 271b05ea Riegel C prueft den EINEN Spritzer, beide
+  r41-Riegel 00:46:38-00:55:43 auf der exe 00:41 gruen (2/2, 545.09 s); ab 00:56 temporaerer Spur-A-Haken (nicht
+  committet, vom Orchestrator zurueckgenommen, Patch scratchpad r41c2/temp_haken_spur_a_aot_common.patch) + Lauf
+  kette_mit_a (scratchpad r41c2/mess/kette_mit_a, Skript r41c2/mess_kette_a.sh).
 * 2026-10-24 00:26-00:29 Luecken am Spiel geschlossen (neue Messlaeufe, keine Wiederholung; Skript scratchpad
   r41c2/mess_b.sh, exe-Kopie re15_pc_r41c_mess2.exe): Punkt 5 GANZ (Pult -> 80 V -> "Power supply OK." -> Hebel =
   Original sub04 -> Wasser steigt) und Hebel vorher mit der Aktionstaste gesperrt; Punkt 2 Pult ohne Ventil 13
@@ -51,7 +66,8 @@ in beiden Fassungen).
 
 ### 1.1 ROOM2000 — die Leiter nach 2050 (Punkt 1)
 * Tuersaetze main00 @0x0161E..@0x016BD (fuenf `3b`): Slot 0 @0x0161E -> ROOM1260 (hinauf), Slot 1 @0x0163E -> ROOM1260
-  Cut 8, Slot 2 @0x0165E -> ROOM2010, Slot 3 @0x0167E (Rechteck (-20300,-8200,1000,4000)) -> ROOM2070 Cut 13,
+  Cut 8, Slot 2 @0x0165E -> ROOM2010, Slot 3 @0x0167E (Rechteck (-20300,-8200,1000,4000)) -> ROOM2070 Cut 3 (pc[22..25] `01 07 03 00`; Cut 13 tragen
+  umgekehrt die 2070-Tueren nach 2000, §1.2),
   **Slot 4 @0x0169E = die Leiter nach ROOM2050**:
   `3b 04 02 31 01 00 30 94 48 26 e8 03 e8 03 8c 23 e8 ea 04 10 00 04 01 05 00 03 00 00 00 00 00 00`
   = sce 2, sat 0x31, Band 1, Rechteck x -27600 z 9800 1000x1000, Ziel (9100,-5400,4100) Richtung 1024,
@@ -253,8 +269,15 @@ Mit Bit 100 bleibt Slot 4 die Tuer. Dasselbe in 20B0/20B1 (dort nur bei Debug-Sp
   `57 00 00 08`); hier Maske 0x6 = Rot+Gruen (FUN_800217b0 Config-Bits 2+1, fade_common.c), d. h. die Kachel zieht
   Rot und Gruen ab und Blau bleibt stehen = blauer Schleier; Level 0x5000 = Helligkeit 160 (level >> 7 @0x800218d0),
   PORT-WAHL. Erste Fassung "ABR 0 + Maske Blau" war ein Defekt, s. §4 "Blende")
-  + Spritzer am Spieler alle 6 Takte (Wasser-Schritt-Effekt FUN_80045630 Code 0x06050D00, re15_esp_fx_spawn_rows).
-  Tod loescht den Zaehler (keine Flut-Bits beim CONTINUE); der Raumstart loescht Marker, Blende, Zustand.
+  + EIN Spritzer am Spieler, wenn die steigende Flaeche seine Fuesse erreicht (`wy <= pl->y`, einmal je Flut;
+  re15_esp_fx_spawn_rows mit dem Wasser-Schritt-Effekt 0x06050D00 = `lui a0,0x605` / `ori a0,a0,0xd00`
+  @0x800456b8/bc in FUN_80045630, Gier `lh a1,106(a1)` @0x800456d0, `jal 0x80019700` @0x80045710). Das Original
+  setzt diesen Effekt nur je Fuss-Aufsetzer (Bildwort-Bit 0x4000 `andi v0,v1,0x4000` @0x8003253c -> Fuss 7 - 3*Bit12
+  @0x80032548-60 -> `jal 0x80045630` @0x8003255c, Wasserboden `andi v0,s0,0x80` @0x800456ac); waehrend der Flut steht
+  der Spieler unter der Pad-Sperre, es gibt keinen Aufsetzer -> PORT-WAHL "ein Ereignis, keine Rate". Die erste
+  Fassung "alle 6 Takte" (RE15_R41C_SPRITZER_TAKT 6) hatte keine Adresse und ist entfernt (ddb65cfc).
+  Jeder Tod in 2030 (Ertrinken oder Spinnen: tick `if (hp < 0) s_timer = 0`) loescht den Zaehler, also setzt der
+  naechste Raumstart (Titel -> LOAD GAME) keine Flut-Bits; der Raumstart loescht Marker, Blende, Zustand.
 * Verlassen waehrend des Zaehlers (jede Tuer): der Installer des naechsten Raums setzt Bits 103 + 100 (Nutzer:
   "Verlaesst man den Raum fuehrt das zu ROOM 20B0"); ueber die Ost-Tuer landet man in 20B0 und dessen Original-Szene
   sub02/sub05 laeuft (Cut 11, Auswasch, Set(3,235)).
@@ -337,7 +360,8 @@ shared_assets/PSX, pri/, synchro/, release/.
     laeuft` + Ost-Tuer -> 20B0 Cut 11 (F820) -> Sleep 1800 -> **F2621 Flut** (`FLUT: Wasser steigt`, Cut 0 -> 4,
     Pause-Maske 21000007 = Pad-Sperre) = 1800 Bilder nach dem Schliessen -> Wasser 50 je Takt ab y 0: Flaeche sichtbar
     unter der Bruecke (F2640 y -1000, F2680 -3000), Bruecke taucht unter (F2720 -5000), Fuesse (-5400) bei F2728,
-    Spritzer alle 6 Takte ab F2733 (Zustandslog fx 1/2/3 bei F2733/2739/2745), **F2746 Tod** (`ERTRUNKEN: Wasser y
+    [Stand 22:00, alte Fassung: Spritzer alle 6 Takte ab F2733 (Zustandslog fx 1/2/3 bei F2733/2739/2745) — seit
+    ddb65cfc EIN Spritzer bei F2728, s. "Spritzer nachgemessen"], **F2746 Tod** (`ERTRUNKEN: Wasser y
     -6300, Spieler y -5400 -> hp -1`, = 125 Bilder nach dem Flutbeginn, 126 Schritte x 50 = 6300 mit dem ersten im
     Marker-Takt), Blende (`config ch=0 abr=2 mask=6`, `kick ch=0 value=0x5000`), Todeskette (weisser Blitz F2820,
     pst 7 bei F2859, YOU DIED F2880..F2960), Ende F2960#2030. Ein spaeteres Ende (3500 ohne Raumfilter) lief in den
@@ -347,7 +371,30 @@ shared_assets/PSX, pri/, synchro/, release/.
     (render_pc.c:1282 kennt nur ABR 1 additiv / 2 subtraktiv, 0/3 fallen auf subtraktiv zurueck -> "minus Blau");
     mit ABR 2 + Maske Rot+Gruen: (0,0,30) = Blau bleibt (C_belege/flut_blende_vergleich.png). Die Form ist auf der PSX
     dieselbe (GPU B-F je Kanal, Kachel-RGB = Helligkeit & Maske @0x800218d0).
-* Echter Weg 2030 -> Ost-Tuer -> 20B0: integration_r41_ventilkette Lauf A (§5).
+  - **Spritzer nachgemessen** (Vorgaenger 00:43-00:45, exe 00:41 = Stand ddb65cfc, gleicher Aufbau wie oben,
+    Skript scratchpad r41c2/mess_flut.sh, Log r41c2/mess/flut_spritzer/debug.log + state.txt, von mir gelesen):
+    `FLUT: Wasser steigt` (F2621) -> F2728 `[ventilkette41] SPRITZER: Wasser y -5400 erreicht die Fuesse (Spieler y
+    -5400), Effekt 0x06050D00` GENAU EINMAL (Zustandslog fx=1 F2728..F2740, ab F2741 fx=0) -> `config ch=0 abr=2
+    mask=6 step=0 bucket=7` + `kick ch=0 value=0x5000` -> F2746 `ERTRUNKEN: Wasser y -6300, Spieler y -5400 -> hp
+    -1, blaue Blende` (Zustandslog hp 100 -> -1 bei F2746). Bildreihe **C_belege/flut_spritzer_sheet.png**.
+* Echter Weg 2030 -> Ost-Tuer -> 20B0: integration_r41_ventilkette Lauf A (§5). Die Original-Szene in 20B0 (sub02 ->
+  Zone Slot 7 -> sub05 -> Set(3,235)) laeuft im Port erst mit dem Haken der Spur A: §6 Querbezug A (Lauf kette_mit_a,
+  Bild C_belege/querbezug_a_20b0_szene_sheet.png).
+* **Eintritt in das geflutete 2030 nach der Flut** (NEU 03:03-03:05, exe 02:51, Kopie re15_pc_r41c3_mess.exe, Skript
+  scratchpad r41c3/mess_ring.sh, Log r41c3/mess/ring_nach_flut/debug.log + state.txt): Zustand nach der Szene
+  `RE15_SET_FLAG=3:235,9:103,9:100` (ohne 107), Sprung 20B0, `RE15_FIRE_AOT=3@200#20B0` = die Original-Ost-Tuer
+  Slot 3 @0x019C2 (`[aot] DOOR FIRE slot=3 rect=(5950,-6400,hw=500,hh=1500) target_cut=0 spawn=(6550,-5400,-100)`)
+  -> `[room] PC loaded room2030.rdt` -> `[ventilkette41] ROOM2030: unter Wasser (y -7200), Lift-Rufzonen 4/6 -> msg 1`
+  + `Tuer Slot 0 -> ROOM20B0 Cut 11 (Ost-Tuer nach der Flut)`. Der Spieler steht auf dem Ring (y -5400), die
+  Wasserflaeche 1800 ueber seinen Fuessen, und laeuft (Eingabe U2 ab F330: x 6782 -> 6368, mo 105); kein Ertrinken
+  (der Ertrink-Takt laeuft nur waehrend der Flut, s_flut), eine Spinne greift im Wasser an (hp 100 -> 77 bis F460).
+  Bild **C_belege/ring_nach_flut_sheet.png** (F60..F480, Cut 0: die Flaeche als Band in Brusthoehe vor Leon).
+  Dieselbe Landung haben 2070 Slots 1/2 @0x00A5A/@0x00A7A (unbedingt in main00, Ziel ROOM2030 Cut 0, spawn
+  (6550,-5400,-100) = dieselben Bytes wie 20B0 @0x019C2 ab pc[14]; Tuersaetze selbst dekodiert). Nicht gemessen: ob
+  2070 nach der Flut erreichbar ist (2070 Slot 4 -> ROOM11A0, Slot 5 -> 2040; Nutzer: 2040 braucht den Aufzug mit
+  Strom). Der Weg zum Rechner 2080 braucht den Ring NICHT (aus den Tuersaetzen, nicht gefahren): 2050 Slot 1 @0x01C6A
+  -> 2020, 2020 Slot 1 (@0x0088A, bei (3,219) = 0 erst der Ereignis-Platz Slot 4 @0x00852 + Tuer sce 0 @0x00866) ->
+  2030 Tuerebene (spawn y -16200, ueber dem Wasser) -> 2030 Slot 1 @0x01AEA -> 2080. -> §6 OFFEN, §7 Frage (f).
 * **Punkt 2 am Spiel** (Vorgaenger 23:47-23:49, exe-Kopie re15_pc_r41c_mess.exe, Skript scratchpad r41c/mess_punkte.sh,
   Spinnen per Kill-Bits wie im Flut-Lauf; die Kamera bleibt beim Sprung-Cut 0, weil der Spieler nicht laeuft;
   Logs scratchpad r41c/mess/{v13,pult_bruecke}/debug.log, von mir gelesen):
@@ -427,8 +474,10 @@ shared_assets/PSX, pri/, synchro/, release/.
   ohne Strom, Pult Nein/Ja, Cursorfahrt sub07, Zonen, 30+40+10 = 80, Zeiger x(80)=238/x(0)=166, Marken, Bit 106 nach
   <= 32 Ruhebildern, Ausstieg sub10, Cursor geparkt, Hebel = Original (3,104)=1, Zustandssatz, CROSS = Abbruch;
   G 2080 Original / mit Flut (msg 0 + 40, Bit 107, Wasser -3400) / Rechner schon gelaufen / mit 107.
-  D2 Tuerebene (Tod mit der Endlage -16200, flut_bei + 323). **Ergebnis: PASS (233 Pruefungen), Leon + Elza**
-  (Fortsetzung: Blenden-Riegel = abr 2, Masken r/g 0xff, b 0, Helligkeit 160).
+  D2 Tuerebene (Tod mit der Endlage -16200, flut_bei + 323). Ergebnis bis 00:41: PASS (233 Pruefungen), Leon + Elza
+  (Fortsetzung: Blenden-Riegel = abr 2, Masken r/g 0xff, b 0, Helligkeit 160). Seit ddb65cfc zusaetzlich D: genau EIN
+  Spritzer bei Wasser y -5400 (= Fuesse) vor dem Tod, D2: einer im Todestakt auf der Tuerebene.
+  **Lauf 2026-10-24 02:56 (exe/Test-exe 02:51 = Stand 271b05ea): `PASS (239 Pruefungen)`.**
 * `integration_r41_ventilkette` (tests/integration/test_r41_ventilkette.cmake): A echter Weg 2030 Ventile (Aktionstaste,
   Blick 2048) -> Frage -> Ja (4. Druck) -> Warnung -> zu (F777) -> Zaehler -> Ost-Tuer feuert (RE15_FIRE_AOT=0@900) ->
   ROOM20B0 geladen -> Bits 103 + 100, kein 2070; B 2000 Leiter (-26000) = Sperrtext `[msgtext] room=2000 id=40`, kein
@@ -436,6 +485,24 @@ shared_assets/PSX, pri/, synchro/, release/.
   Cut 4, Tod 125 +- 2 Bilder danach bei Wasser -6300 / Spieler -5400, Blende kick 0x5000, Framedump F2750, Ende
   F2960#2030. **`ctest --timeout 900 -R "^integration_r41_ventilkette$"` -> `100% tests passed, 0 tests failed out
   of 1` (213.97 s)** — davor zwei rote Laeufe: A/B mit den alten Takten (Tuer statt Ventile; Leiter nicht getroffen).
+  Seit 271b05ea prueft C zusaetzlich `SPRITZER: Wasser y -5400 erreicht die Fuesse (Spieler y -5400)` VOR `ERTRUNKEN:`
+  und genau EIN `SPRITZER:`-Satz (Ereignis, keine Rate). A prueft den Szenenverlauf in 20B0 NICHT (der haengt ohne den
+  Haken der Spur A, §6) — der Riegel bleibt also mit und ohne diesen Haken gueltig.
+* `integration_r41_ventilkette_b` (tests/integration/test_r41_ventilkette_b.cmake, Kopf-Praefix re15_pc_r41cb_): die
+  Glieder, die A nicht faehrt — D Punkt 5 in einem Lauf (Pult 2050 -> Text 43 -> "Will you push them?" -> Cut 15 ->
+  Cursor RIGHT 8 / LEFT 36 / RIGHT 60 -> 40/70/80 V -> 30 Ruhebilder -> Bit 106 + "Power supply OK." -> sub10 -> Hebel
+  Slot 6 per FIRE_AOT = Original sub04 -> obj 4 y -1400 -> Cut 4 -> obj 5 y -5000); E Hebel vorher = 2050_hebel_sperre
+  (Text 40, kein Cut 4, kein Member_set); F Bruecken-Pult ohne Ventil 13 = 2030_pult_ohne (Text 40, keine Fahrt);
+  G 20B0 nach der Szene mit 103 + 100: Leiter Slot 4 = Tuer nach 2050, dort Slot 0 -> 20B0 Cut 9; H 2050-Leiter hinab
+  -> 20B0 Cut 9; I 2030 mit 103 ohne 107 = Wasser y -7200 (Gegenprobe), mit 107 kein Wasser; J Elza 2051 = D bis
+  "Power supply OK." + Original-Hebel; K Elza 2001 Leiter = Sperrtext 40 woertlich. Erste Fahrt (exe 22:17, 00:36-00:41,
+  Protokoll scratchpad r41c2/ctest_b2.txt): `100% tests passed, 0 tests failed out of 1` (291.85 s).
+* Beide r41-Integrationsriegel auf der exe 00:41 (= Quellstand ddb65cfc/271b05ea; 00:46:38-00:55:43, Protokoll
+  scratchpad r41c2/ctest_integ_r41.txt, `exit=0`):
+  `ctest --test-dir re15_port/build -R "^integration_r41_ventilkette(_b)?$" --timeout 1200`
+  -> **`100% tests passed, 0 tests failed out of 2`** (`Total Test time (real) = 545.09 sec`; A/B/C 216.23 s,
+  Teil B 328.81 s). Die exe 02:51 ist aus derselben Quelle gebaut (nur der temporaere Spur-A-Haken war dazwischen
+  drin und wieder heraus) -> nicht wiederholt.
 * Gezielte Gruppe (ctest, Regex woertlich):
   `ctest -j 6 --timeout 600 -R "^(unit_r41_ventilkette|unit_r36_kartenbits|unit_r37_fahrstuhl_lift2030|unit_r36_gegnerzahl_raum20b0|unit_r38_npckante_j2000|unit_r40_nahaufnahmen|unit_r40_untersuchen1120|unit_r34n_a_rolltor|unit_r36_kartenitems|unit_r38_wasser_.*|unit_r38_wasserzombie)$"`
   -> `100% tests passed, 0 tests failed out of 18` (18:35, vor dem Riegel D2).
@@ -445,6 +512,10 @@ shared_assets/PSX, pri/, synchro/, release/.
   nach dem Riegel-Fix und dem Blenden-Fix (Lauf 23:46:55 auf der exe/den Test-exe vom 22:17, Protokoll scratchpad
   r41c/ctest_unit_r41c_final.txt): **`100% tests passed, 0 tests failed out of 37`** (`Total Test time (real) =
   6.24 sec`).
+  **Abschluss-Lauf 2026-10-24 02:56** (gleicher Regex, Bau 02:51 = Stand 271b05ea ohne den temporaeren Haken,
+  `--output-on-failure`, Protokoll scratchpad r41c3/ctest_unit.txt, `EXIT=0`):
+  `ctest --test-dir re15_port/build -j 6 --timeout 600 --output-on-failure -R "^(unit_r41_ventilkette|unit_r36_kartenbits|unit_scd_.*|unit_aot_.*|unit_r40_nahaufnahmen|unit_r40_untersuchen1120|unit_r37_kistenregel_.*|unit_r36_dachkiste_.*|unit_r37_kiste.*|unit_r37_itemband|unit_r37_fahrstuhl_lift2030|unit_r36_gegnerzahl_raum20b0|unit_r38_npckante_j2000|unit_r34n_a_rolltor|unit_r36_kartenitems|unit_r38_wasser_.*|unit_r38_wasserzombie|unit_r38_spinnen)$"`
+  -> **`100% tests passed, 0 tests failed out of 37`** (`Total Test time (real) =   8.32 sec`).
 * Integrationsgruppe der beruehrten Raeume (seriell, exe): Regex
   `^(integration_r41_ventilkette|integration_r37_fahrstuhl_n1|integration_r37_itemband|integration_r37_itemband_lift|integration_r37_kiste|integration_r37_kiste2feld|integration_r37_kistenregel|integration_r36_gegnerzahl|integration_r36_dachkiste|integration_r38_spinnen_echtlauf|integration_r38_wasser|integration_r38_wasserzombie|integration_map_uebergang|integration_cross_stage|integration_item_name_census|integration_save_counter_pin)$`
   -> 19:03 (Vorgaenger, alte exe, abgebrochen vom Sitzungslimit nach 4 von 16): dachkiste rot (echt2050 Leiter — der
@@ -455,7 +526,9 @@ shared_assets/PSX, pri/, synchro/, release/.
   itemband_lift 1379.32 s, itemband 824.22 s, kistenregel 284.60 s, r41_ventilkette 214.59 s, wasser 179.11 s,
   fahrstuhl_n1 132.01 s, wasserzombie 122.24 s, spinnen_echtlauf 115.02 s, gegnerzahl 90.71 s, kiste 63.03 s,
   kiste2feld 57.60 s, save_counter_pin 19.68 s, map_uebergang 0.69 s, item_name_census 0.31 s, cross_stage 0.02 s).
-  Kein roter Fenster-Haken -> nichts einzeln nachzufahren.
+  Kein roter Fenster-Haken -> nichts einzeln nachzufahren. Seit diesem Lauf hat sich im Engine-Code nur flut_tick
+  (Spritzer, ddb65cfc) geaendert; der Takt laeuft nur waehrend der Flut in 2030 (s_flut), die keine der 15 fremden
+  Gruppen faehrt — die r41-Riegel selbst liefen auf der neuen exe (2/2 oben).
 
 * Querbezuege (Memory "neue Regeln widerlegen alte Riegel", beim ersten Integrationslauf gefunden):
   - `integration_r36_dachkiste` echt2050/elza2051 fahren 2050 -> 2000 -> Leiter slot 4 @0x0169E -> 2050; die Leiter ist
@@ -467,6 +540,48 @@ shared_assets/PSX, pri/, synchro/, release/.
   Beide Aenderungen sind Kommentar-belegt in den cmake-Dateien.
 
 ## 6. OFFEN
+* **Querbezug A — die 20B0-Szene haengt ohne den Haken der Spur A, mit ihm laeuft sie** (ausgewertet 2026-10-24 02:52):
+  - OHNE Haken (integration A, Lauf build/tests/integration/r41_ventilkette/lauf_912f1ca0_a/debug.log, 00:47, exe
+    00:41 = Quellstand 271b05ea): `[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11
+    spawn=(5950,-1800,-6400)` -> `[room] PC loaded room20b0.rdt` -> sub00 Ck(3,235)=0 @0x01AAA -> Evt_exec sub02 @0x01E06
+    -> `[scd F900] Cut_chg(11)` (@0x01F00) -> `Plc_dest(slot=0 mode=0x05 dest=(-15920,-6355) flag=0)` (@0x01F24) ->
+    Lauf nach Westen (Cut 12 F30, Cut 13 F60/F90) -> ab F120 steht der Spieler bei (-15820,-1800,-6355) in Cut 14, mo 2,
+    bis zum Ende F1040: im Rechteck der Zone Slot 7 (@0x01DF2, (-17400,-8700,2250,4600), Band 1, sce 3 Ereignis 5),
+    aber sub05 startet nie (kein `thread start ... first_op=0x46` = Aot_reset @0x01F5C, kein Cut_chg(7), kein
+    `letterbox closed`). Ursache im Port: re15_aot_scan ueberspringt waehrend einer Szene jeden Platz ausser CAM_SWITCH
+    (aot_common.c:1169 `if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH) continue;`; in_cinematic @1077 =
+    player_mode 2 oder Balken schliessen noch, player_mode 2 setzt main.c:5795 solange re15_cine_active() = (1,27) ||
+    (2,7), game_state.c:256), und sub02 setzt (2,7)=1 @0x01EF8 / (1,27)=1 @0x01EFC, ohne sie zu loeschen — das tut erst sub05
+    @0x01FC0/@0x01FC4. Ohne den Haken bleibt der Spieler in 20B0 unter der Pad-Sperre stehen.
+  - MIT Haken (temporaerer Nachbau, NICHT committet: AUTO_EVENT in 20B0/20B1 trotz in_cinematic, Patch scratchpad
+    r41c2/temp_haken_spur_a_aot_common.patch; Lauf scratchpad r41c2/mess/kette_mit_a, 00:56-00:58, Aufbau wie
+    integration A ohne Kill-Bits, Ende F700#20B0, Bild C_belege/querbezug_a_20b0_szene_sheet.png): 2030 F900 Ost-Tuer
+    -> 20B0 F0 Cut 11 + Pos_set (2380,-1800,-6355) @0x01F08 (Zustandslog F1 `PL(2380,-6355)`) -> Plc_dest wie oben ->
+    beim Eintritt in Zone Slot 7 `thread start slot=11 first_op=0x46` = sub05 @0x01F5C (zwischen F100 und F105; mit 200
+    je Bild ab F90 x -12420 erreicht der Spieler die Zonenkante x -15150 in F104) -> F105
+    Cut_chg(7) @0x01F6A -> Plc_dest (-20370,-7305) @0x01F80 / (-21020,-9355) @0x01F8E (Bild F120: Cut 7, die Tuer
+    fliegt auf) -> F146 Cut_chg(15) @0x01F9C -> Plc_dest Modus 9 (-22820,-7555) @0x01F9E / Modus 7 (-20620,-9705)
+    @0x01FA8 -> Sleep 60 @0x01FB2 -> F228 Cut_chg(6) @0x01FB6 + Plc_ret @0x01FB8 (Zustandslog pm 2 -> 1) -> Cut_auto 1
+    -> **Set(3,235)=1 @0x01FBC** -> Set(2,7)=0 @0x01FC0 -> Set(1,27)=0 @0x01FC4 -> Sca_id_set x10 -> Evt_end @0x01FF0.
+    Set(3,235) wird nicht eigens geloggt: sub05 ist ohne Verzweigung (scd_dump_room.py), die Flanke von (1,27)/(2,7)
+    meldet main.c:5797-5816 nach den 15 Abblend-Takten als `[scd F242] letterbox closed -> gameplay (player_mode=0)`,
+    also liefen Set(3,235) und die beiden Freigaben im VM-Lauf von F228. **Spieler frei**: pm 0 ab F242 (Zustandslog),
+    danach die freien Steh-Varianten mo 200 -> 210 (F343) -> 211 (F359) -> 212 (F448) wie im freien 2030 (F119/F135/
+    F303), Bilder F260/F700 Cut 6 ohne Balken. (Die Wasserwand EM024 ist darin noch die Port-Fassung — Spur A.)
+  - Der echte Haken kommt mit Spur A (Zweig r41/wasser20b0: aot_common.c `&& !re15_wasser20b0_r41_auto_aot(
+    g_current_room_id, a->type)`, AUTO-Pass FUN_800436a8 @0x8001ce1c ohne Szenen-Gate) bei der Integration; in diesem
+    Baum NICHT uebernommen. integration_r41_ventilkette A prueft den Szenenverlauf nicht und bleibt mit dem Haken
+    gueltig; die Bits 103 + 100 setzt schon der Raumwechsel (Installer), nicht die Szene.
+* **Geflutetes 2030 ueber den Ring betretbar** (NEU 03:03, §4 "Eintritt in das geflutete 2030"): nach der Flut (103
+  ohne 107) fuehren 20B0 Slot 3 @0x019C2 und 2070 Slots 1/2 @0x00A5A/@0x00A7A auf den Ring (y -5400); die Flaeche steht
+  1800 darueber (y -7200, PORT-WAHL §3.6), der Spieler steht und laeuft im Wasser, die Spinnen greifen an; ertrunken
+  wird nur waehrend der Flut (900 ueber den Fuessen, s_flut). Der Wortlaut ("Wasser in 2030: Ueber die Ringebene",
+  "spaeter wieder frei ohne Wasser") ist erfuellt, er legt aber nicht fest, was der Ring-Eintritt in den gefluteten
+  Raum tut. Innerhalb der Zuteilung versucht: (1) Original-Text als Sperrsatz — 20B0 hat keine Texttabelle (msg_sec 0),
+  2070 nur msg 0 "You've opened the lock." (rdt_msgdump.py); (2) ein Tuer-Riegel ohne eigenen Text —
+  re15_aot_door_params_t hat kein Schloss-Feld, die Port-Sperren (tuersperre_r39.c, sperre1050_r37.c) nutzen je Raum
+  eine Port-Id; (3) Ertrinken auch nach der Flut — ein Sofort-Tod hinter einer Tuer ohne Warnung. Keins davon ist
+  belegt oder vertraglich gedeckt -> nicht gebaut, Entscheidungsfrage §7 (f) mit Vorschlag.
 * (erledigt 22:00) Die Flut als exe-Messung: gemessen mit den Spinnen-Kill-Bits als Spielzustand (§4 "Flut am Spiel",
   Riegel integration C). Offen bleibt nur die ORIGINAL-Seite: RE1.5/RE2 kennen kein Ertrinken, Form = PORT-WAHL.
 * Der Level 0x5000 (Helligkeit 160) der Ertrink-Blende ist PORT-WAHL: die ausgelieferten Skripte nutzen die Blende nur
@@ -506,7 +621,20 @@ shared_assets/PSX, pri/, synchro/, release/.
   eigener Satz ("The elevator is flooded.") gewuenscht? (e) Ertrink-Effekt = Tod + blaue Blende (subtraktiv Rot+Gruen,
   Blau bleibt) + Spritzer; ein eigener Ton fehlt (RE2-Liste ohne Ertrinken).
   -> Orchestrator-Entscheide 21:37 (AUFTRAG.md): a-e alle angenommen; die Texte bleiben Vorschlag bis zur Freigabe.
+  **(f) NEU (2026-10-24, §6):** Nach der Flut fuehren die 20B0-Ost-Tuer (Slot 3) und 2070 (Slots 1/2) auf den
+  gefluteten Ring von 2030; Leon steht dort bis zur Brust im Wasser (Bild C_belege/ring_nach_flut_sheet.png). Vorschlag:
+  diese Tueren sperren, bis der Rechner 2080 2030 entleert hat (Bit 107), mit einem Satz in der Form der Leiter-Vorgabe,
+  z. B. "I cannot open the door because of the water pressure." (Mechanik wie die Leiter: Sperrtext-Satz sce 1, Form
+  ROOM2030 @0x01B12). Braucht Port-Id 41 in 20B0/20B1 und Id 40 in 2070/2071 — VERTRAG §1.2 teilt C dort nur 20B0 Id 40
+  zu, deshalb nicht gebaut. Der Weg zum Rechner bleibt offen (2050 -> 2020 -> 2030 Tuerebene -> 2080, ueber dem Wasser).
+  Alternative: so lassen (Waten in Brusthoehe).
 * Sichtprobe fuer den Nutzer: 2030 am Ring vor den Ventilen die Aktionstaste, Ja, Warnung wegdruecken, 60 s stehen
   bleiben -> Draufsicht, Wasser steigt ueber die Bruecke und den Ring, Spritzer, Tod mit blauem Schleier
   (C_belege/flut_echt_sheet.png). Mit den drei Spinnen im Raum (ohne Kill-Bits) stirbt man vorher an den Spinnen;
   im Spiel also erst die Spinnen erledigen oder den Raum durch die Ost-Tuer verlassen (-> 20B0).
+* Nach der Flut: in 20B0 laeuft die Auswasch-Szene des Originals erst mit dem Haken der Spur A bis zur Freigabe (§6
+  Querbezug A); ohne ihn bleibt Leon im Westgang (Cut 14) stehen. Zum Rechner 2080 geht es ueber 2050 -> 2020 -> die
+  Tuerebene von 2030 (ueber dem Wasser) -> 2080; der Rechner senkt 2080 und leert 2030 (Bild C_belege/rechner2080_sheet.png,
+  raum2030_leer_vergleich.png).
+* Neue Belegbilder dieser Fortsetzung: C_belege/querbezug_a_20b0_szene_sheet.png (Szene mit dem Haken der Spur A),
+  C_belege/ring_nach_flut_sheet.png (Frage f).
