@@ -775,3 +775,17 @@ Folgen (Orchestrator, ersetzt die Folgen von Nachtrag 24; FG-E2 ist WIDERRUFEN, 
   Bildbogen der Szene vorher/nachher, Leon UND Elza.
 
 Nachsatz des Nutzers zu 24b (Wortlaut): "marvin" — gesehen bei Marvin (Leons Szenario); John (Elza) gleich pruefen.
+
+## 2026-10-25 00:56 — Orchestrator-Entscheide FG-E3/FG-E4 (Abnahme G 0, Maengel M2/M3; der Nutzer kann widersprechen)
+
+- **FG-E3 (M2, Nachtrag 23):** Nach der Kanister-Szene setzt der Kampf mit DEMSELBEN Alligator fort (HP, Intro gesehen,
+  Lage/Zustand bleiben; kein erneuter Durchbruch), und der Kanister landet so, dass der Alligator ihn im normalen Rundlauf
+  aufnimmt (B's Aufnahme-Fenster). Spur G darf dafuer kleine, markierte Haken ("Runde 41 Spur G, FG-E3") in Spur B's Modulen
+  setzen (gator_re2_r41.c / enemy_ai_boss_gator.c: Zustand ueber die Szene erhalten, Landepunkt/Fenster), Merkbits aus G's
+  Zuteilung 114-119. B's Riegel bleiben gruen. Beleg im echten Ablauf ohne Testhaken (Leon UND Elza): Wurf -> Kampf -> Aufnahme
+  -> Schuss -> Kiefer.
+- **FG-E4 (M3, Nachtrag 5):** Eine Kamera "genau wie Adas Raketenwerfer-Wurf" (Werferin von unten, ~44 Grad) gibt es in
+  ROOM2080/2090 nicht — der Port hat nur die vorgerenderten Hintergruende der Original-Kameras, eine neue Blickrichtung
+  braeuchte einen neuen Hintergrund. Gewaehlt wird die naechstliegende vorhandene Kamera (laut Abnahme 2090 Cut 12, knapp
+  daneben) mit der RE2-Schnittfolge des Wurfs (ROOM7020 sub12/13: Bild, Dauer, Schnitte belegen); PORT-WAHL im Dossier mit
+  Bildvergleich RE2 <-> Port. Der Nutzer wird darauf hingewiesen.
