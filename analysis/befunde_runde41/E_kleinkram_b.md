@@ -14,7 +14,9 @@ Ressourcen (VERTRAG §1): Bank-9-Bit 120 (nur wenn kein Original-Flag reicht), k
 elzazombies_r39.c, test_r36_kartenbits.c k_port[] (nur falls Bit 120 belegt).
 
 ## Status
-- [x] Punkt 1 Kurbel 2020 — plcloop_r41.c (Schleife statt Standbild), unit_r41_kleinkram_b_kurbel 2/2; "Fliegen" nicht reproduziert (OFFEN)
+- [x] Punkt 1 Kurbel 2020 — plcloop_r41.c (Schleife statt Standbild), unit_r41_kleinkram_b_kurbel 2/2; Nachbesserung 1:
+  alle Anlauf-Varianten + echter Weg des Nutzers (befund.log) gemessen, Original mit Handgun (Stand + Cut-3-Anlauf)
+  Bild fuer Bild gleich, integration_r41_kleinkram_b_kurbel; Rueckfrage an den Nutzer bleibt
 - [x] Punkt 2 Karte B1 / 1090-Vordertuer — karte_r41.c, unit_r41_kleinkram_b_karte_pin 17/17
 - [x] Punkt 3 Werkstatt-Tuer 11B1 (Elza) — Ereignis 24, unit_r41_kleinkram_b_11b1 3/3
 
@@ -180,7 +182,8 @@ Gate jetzt `state == 4 && sub_state_1 == 0 && !walk_active` (dasselbe Gate wie r
 ## Gemeinsame Dateien (Haken, je 1-3 Zeilen, Kommentar "Runde 41 Spur E")
 - engine/src/scd_room_setup.c: include + `re15_werkstatt11b1_r41_init_lauf` direkt hinter re15_szl_init_lauf (Init-
   Lauf, VOR scd_vm_tick — Muster Runde 36 J; deshalb nicht am Ende des Installer-Blocks).
-- engine/src/scd_vm.c: include + Ereignis-Kette `re15_werkstatt11b1_r41_ereignis` hinter nahaufnahmen_r40.
+- ~~engine/src/scd_vm.c: include + Ereignis-Kette `re15_werkstatt11b1_r41_ereignis` hinter nahaufnahmen_r40.~~
+  Nachbesserung 1 (H1): entfernt, scd_vm.c bytegleich zur Basis; werkstatt11b1_r41.c startet den Faden selbst.
 - engine/src/re15_inv_screen.c: include + `zielzone` (1 Zeile) + `if (zielzone >= 0) ... else for (...)` in
   tuer_anziehen.
 - engine/src/player_common.c: include + `re15_plcloop_r41_takt(p)` hinter `p->anim_frame++` (Kommandowort 4).
@@ -337,3 +340,34 @@ Port: steht der Spieler bei (9000,-3200) (Lauf g2, RE15_PLAYER_POS), wechselt di
 (state.txt F1..F299). Im Gehen tritt es nicht auf (t2: 0 -> 2 bei x 8982 nach Westen; g1: 0 -> 2 bei 8018, 2 -> 0 bei 9068
 nach Osten). Original-Video `o_hg_ost.mp4`: dieselbe Lage steht ~100 Videobilder ruhig auf Cut 0. Ursache nicht untersucht
 (RVD-Auswahl aot_common.c / FUN_80014230).
+
+### Nachbesserung 1 — Tests (gezielt, keine volle Suite; Bau `local_build.sh configure` + `build` -> LOCAL-BUILD-OK)
+- `ctest --test-dir re15_port/build -R "r41_kleinkram_b" -j 2 --timeout 900 --output-on-failure`:
+  **100% tests passed, 0 tests failed out of 10** (6 unit + 4 neue integration_r41_kleinkram_b_*; `<sp>/E41n1/ctest_eigen2.log`)
+- `ctest --test-dir re15_port/build -R "^unit_(r36_szenenleon|r38_werkstatt11b0|r39_johnruf1041|r41_kleinkram_b|r36_kartenbits|scd_|r40_nahaufnahmen|r40_untersuchen|r39_hund1121|r39_elzazombies|r39_funk10f1|r38_dining|r36_schluessel|r35_cut10f0)" -j 4 --timeout 600`:
+  **100% tests passed, 0 tests failed out of 85** (alle Ereignis-Ketten-Nachbarn von scd_event_fire + 11B0/11B1; `<sp>/E41n1/ctest_unit.log`)
+- `ctest --test-dir re15_port/build -R "^integration_(r39_johnruf1041_tuer_t11b1|r39_johnruf1041_tuer_t11b1d|r37_elzaems_elza11b1|r38_werkstatt11b0|r36_szenenleon|r41_kleinkram_b_werkstatt_szene|r41_kleinkram_b_werkstatt_tuer)$" -j 2 --timeout 900`:
+  **100% tests passed, 0 tests failed out of 7** (225 s; `<sp>/E41n1/ctest_integ2.log`)
+- Gegenprobe der neuen Riegel mit der VORHER-exe (`cmake -P tests/integration/test_r41_kleinkram_b.cmake`, Basis 116e8b0f):
+  alle 4 DURCHGEFALLEN (`<sp>/E41n1/vorher_riegel/*.log`, Werte in der H3-Tabelle) — die Riegel messen die Mechanik.
+
+### OFFEN (Stand Nachbesserung 1)
+- Punkt 1: ob der Nutzer mit "herumfliegend" das (behobene) Standbild nach einem Umlauf oder den Original-Sprung zur Kurbel
+  (Pos_set @0x0A8C mitten in Cut 3, im Original hinter ~8 Bildern Nachlade-Standbild) meint, sagt nur er — Frage unten.
+- Gehen/Rennen in die Kurbel-Zone (Port, Lauf t2): zwischen Message_on 0 und 1 laeuft der Spieler EIN Bild (F261,
+  msg(a=0)) und wechselt dabei mit losgelassenem Pad von der Geh-Pose auf Stehen 200 (frac 7); das Original-RAM waehrend der
+  Frage (`o_hg_geh3_slot1.sav`: `+4..+7 = [1,1,1,0]`, `+0x94 = 5`, `+0x95 = 2`) steht noch im Gehen. Wie lange das Original
+  nach dem Ja (Sleep 20 @0x0A98) die Geh-Pose zeigt, ist nicht gemessen: im Original nahm die Automatisierung im Geh-Fall das Ja
+  nicht an (2 Laeufe, Stand-Fall ja). Nicht geaendert (Mechanismus nicht belegt). Weg: Geh-Stop des Originals im Kommando 1
+  (0x80073f90[1] = 0x80031de8) disassemblieren bzw. Ja per Savestate-Patch der Frage (DAT_800b8525/Antwortbit (12,31)).
+- Nachlade-Standbild bei Cut_chg (Original ~8 Spielbilder, CD-Ladezeit, @0x800402f4 / @0x80021530..@0x8002155c): im Port
+  sofort; keine belegbare Bildzahl, betrifft jeden Cut_chg — nicht Teil der Spur.
+- Kamera-Pendeln ROOM2020 bei (9000,-3200) im Stand (Port, Nebenbefund oben) — nicht Spur E.
+
+### Fuer den Nutzer (Stand Nachbesserung 1)
+- Keine neuen Assets, keine Sprachdateien.
+- Kurbel ROOM2020: Dein befund.log zeigt drei Kurbel-Nutzungen (Build vom 19.10., Kamera von hinten = Cut 3, aus Richtung
+  ROOM2050). Damals spielte Leon die Kurbel EINMAL und blieb dann ~4,6 s vorgebeugt stehen, waehrend die Buehne fuhr — das
+  ist behoben (er kurbelt jetzt durchgehend wie im Original). Dass Leon beim "Yes" an die Kurbel SPRINGT, macht das
+  Original genauso (im Original friert das Bild vorher ~1/4 s ein). Frage: Meinst du mit "herumfliegend" den Sprung, das
+  Standbild, oder etwas anderes? Ein Bild (F9) oder die Stelle (welche Waffe, gerannt oder gegangen) wuerde es klaeren.
