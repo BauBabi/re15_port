@@ -9,6 +9,11 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-24 ab 14:3x **Nachbesserung 4** (Abnahme 3 `C_abnahme_3.md`, Maengel 1-4; Nachtraege 12/13 des Nutzers, AUFTRAG.md
+  13:11/13:19). Baum sauber (`status --porcelain` leer, HEAD a4f68cff = Abnahme 3 vollstaendig: Urteile, Maengel, Integration
+  16/16). Der FORTSETZUNGS-Block des Auftrags ("Abnahme-3-Fortsetzung ... Kein Code aendern") gehoert zur Abnahme 3 und ist mit
+  320b57d8/a4f68cff erledigt -> nicht wiederholt; diese Sitzung ist die Nachbesserung 4. Arbeitsplan und Ergebnis in §0e.
+  Messordner scratchpad `nb4/`.
 * 2026-10-24 ab 10:00 **Nachbesserung 3** (Abnahme 2 `C_abnahme_2.md`, Maengel N1-N4 + Hinweis H-a; Nachtraege 6-10 des
   Nutzers, AUFTRAG.md 09:17-09:55). Baum sauber (`status --porcelain` leer, HEAD 4abf0500). Arbeitsplan und Ergebnis in §0d.
   Messordner scratchpad `r41c_nb3/`.
@@ -697,6 +702,23 @@ Messungen an der exe 10:27 bzw. 10:31 (Quellstand = Commit 6a51727b ff.), Laeufe
 * Riegel (neu gefasst, H-d der Abnahme 2): **integration_r41_ventilkette_weg** (Leon) und **_weg_elza** (Elza) = Glieder
   v1/v2/g1/g2/w1/w3/w4 mit den Saetzen oben; **integration_r41_ventilkette_sperre** = die frueheren Laeufe a/b/c (die
   Original-Sperre 11A0 Slot 4 bleibt, Nachtrag 6); unit_r41_ventilkette J (Zensus + Sperre) bleibt, K/L neu.
+
+## 0e. Nachbesserung 4 (Abnahme 3 `C_abnahme_3.md` Maengel 1-4; Nachtraege 12 (k) und 13, AUFTRAG.md 2026-10-24 13:11/13:19)
+
+Massstab: die Forderungen der Abnahme 3 §5 und der Wortlaut der Nachtraege 12/13 (AUFTRAG.md). Punkte, die die Abnahme als
+erfuellt bewertet hat (1, 2, 4, 5, Nachtraege 6/9/10), bleiben unveraendert; ihre Riegel bleiben gruen.
+
+### Arbeitsplan
+1. Mangel 4 (hoch, Nachtrag 12 (k)): Absperrung am inneren Ringrand aus der SCA (Offsets) + Bild belegen; Ruhepegel knapp unter
+   die Ringboden-Kante y -5400 (Grenze @-Beleg, Abstand PORT-WAHL mit Begruendung); Flaeche/Netz neu (Treppe westlich x -4200
+   dann unter Wasser); Bildbogen vorher/nachher aus den Ring-Kameras (Cut 1/2/7/15); Riegel `_b`/`_weg`/Unit nachziehen.
+2. Mangel 3 (hoch, Nachtrag 13): echtes Ventilraetsel — Text 49 neutral; Dokument mit dem Nutzer-Text woertlich (Fundort mit
+   Begruendung, re15_files Id 0x4E, Taken-Bit 107 nach Zensus); Plakat als Nahaufnahme (Bild-Asset) mit der falschen
+   Anleitung; Ventile einzeln in Reihenfolge, falsch -> zurueckgesetzt (Form eines Original-Raetsels mit @-Beleg), richtig ->
+   Warnung 46 -> Flut; Texte 2030 Ids 50-55; §7 zur Freigabe; Riegel zu Fuss mit Leon UND Elza.
+3. Mangel 1 (mittel): `integration_r41_ventilkette_kette` auf die Kette der Nachbesserung 3 + das neue Raetsel; von Hand
+   (`cmake -P`) bis `loaded room20b0.rdt` + "Bits 103 + 100"; Dossier §0b M2 / §6.
+4. Mangel 2 (niedrig): veraltete Saetze (§7 Z. 1450/1459, probes/r41_ventilkette.cmake Z. 2/30).
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
