@@ -199,6 +199,14 @@ def kandidaten(room, cut, blob, sek, aus, rdt, cam, cache):
             for e in ZUORDNUNG.get((room, cut), []):      # Nachbesserung 2: Zelle von Hand (Beleg im Eintrag)
                 if tuple(e["verschiebung"]) == tuple(sh) and labs[sh][e["punkt"][1], e["punkt"][0]] == j:
                     z, b = zelle_von_hand(rdt, e)
+                    c = kameraort(R, t)
+                    if z[0] <= c[0] <= z[0] + z[2] and z[1] <= c[2] <= z[1] + z[3]:
+                        # Kamera UEBER dem Grundriss der Zelle: der Koerper liegt im Nahfeld (Tiefe nahe 0), das Grundriss-Netz
+                        # laesst Zellen mit der Kamera darin aus, und die Sehstrahlen verlassen den Grundriss oberhalb des Deckels
+                        # - keine der beiden Pruefungen kann die nahe Tiefe tragen (gemessen 5050 C2: 381 verdeckte Gitterpunkte
+                        # ohne jeden Koerper davor). Zuordnung von Hand dort nicht zulaessig.
+                        geo[(sh, j)] = {"grund": "Zuordnung von Hand: Kamera ueber dem Grundriss der Zelle"}
+                        return geo[(sh, j)]
                     mess = np.zeros((240, 320), bool)        # Hoehe an allen Objekten derselben Zelle in diesem Cut
                     for e2 in ZUORDNUNG.get((room, cut), []):
                         sh2 = tuple(e2["verschiebung"])

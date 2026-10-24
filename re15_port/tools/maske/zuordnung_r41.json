@@ -7,7 +7,8 @@
   "x,y enthaelt; schliessen_r41.region_im_bild), zelle = RDT-Offset des SCA-Eintrags (12 Bytes, solide), beleg = Messung.",
   "Hoehe und Tiefe rechnet tiefe_zelle_r41.koerper_geometrie wie fuer jedes Objekt; ob ein Rechteck gezeichnet wird, entscheidet",
   "der Ausschluss (test_r37_masken36, 3D-Urteil: jeder verdeckte Figurpunkt hinter dem Koerper). Benutzt von zellen3d_r41.py.",
-  "Bilder: analysis/befunde_runde41/M_bilder/NB2/NB2_zuordnung_*.png; Dossier M_masken36.md 'Nachbesserung 2'."
+  "Bilder: analysis/befunde_runde41/M_bilder/NB2/NB2_zuordnung_*.png; Dossier M_masken36.md 'Nachbesserung 2'.",
+  "Nicht zulaessig (tiefe_zelle_r41: Kamera UEBER dem Grundriss der Zelle -> Nahfeld, keine Pruefung traegt die Tiefe): gemessen an 5050 C2 Pult vorn (381 verdeckte Gitterpunkte ohne jeden Koerper davor); deshalb auch nicht 5050 C1 Pult rechts, 30A0 C0 Moebel vorn, 5090 C11 Kiste vorn links (Dossier NB2)."
  ],
  "ROOM5020": {
   "6": [
@@ -81,21 +82,6 @@
   ]
  },
  "ROOM5090": {
-  "11": [
-   {
-    "objekt": "Kiste vorn links",
-    "verschiebung": [
-     0,
-     179
-    ],
-    "punkt": [
-     14,
-     213
-    ],
-    "zelle": "0x009D4",
-    "beleg": "SCA-Zelle 29 @RDT+0x009D4 = 66 3a d0 07 b4 14 c0 95 01 ff 00 03 (x 5300..20250 z -27200..-25200 Typ 1 Band 0); Koerper-Silhouette bei gemessener Hoehe 2075: IoU 0.72, 100 % des Objekts im Koerper; automatisch: Modell [-425, -27200, 5725, 2000], im Ausschluss verfehlt; Bild M_bilder/NB2/NB2_zuordnung_5090_11_0_179.png"
-   }
-  ],
   "13": [
    {
     "objekt": "Kistenstapel rechts, unten",
@@ -165,19 +151,6 @@
     ],
     "zelle": "0x0045C",
     "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Koerper-Silhouette bei gemessener Hoehe 525: IoU 0.30, 79 % des Objekts im Koerper; automatisch: Objekt: keine Zelle traegt die Mehrheit der Bodenkontakte (0.02); Bild M_bilder/NB2/NB2_zuordnung_30A0_00_-5_91.png"
-   },
-   {
-    "objekt": "Moebel vorn unten (Bildrand)",
-    "verschiebung": [
-     -25,
-     211
-    ],
-    "punkt": [
-     130,
-     229
-    ],
-    "zelle": "0x00468",
-    "beleg": "SCA-Zelle 7 @RDT+0x00468 = 16 0d 4d 08 0c b3 60 22 01 ff 00 03 (x -19700..-16350 z 8800..10925 Typ 1 Band 0); Koerper-Silhouette bei gemessener Hoehe 1225: IoU 0.43, 84 % des Objekts im Koerper; automatisch: Objekt: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Bild M_bilder/NB2/NB2_zuordnung_30A0_00_-25_211.png"
    }
   ],
   "1": [
@@ -193,38 +166,6 @@
     ],
     "zelle": "0x0045C",
     "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Koerper-Silhouette bei gemessener Hoehe 1925: IoU 0.57, 98 % des Objekts im Koerper; automatisch: Objekt: keine Zelle traegt die Mehrheit der Bodenkontakte (0.46); Bild M_bilder/NB2/NB2_zuordnung_30A0_01_-120_118.png"
-   }
-  ]
- },
- "ROOM5050": {
-  "1": [
-   {
-    "objekt": "Pult vorn rechts (Bildrand)",
-    "verschiebung": [
-     214,
-     132
-    ],
-    "punkt": [
-     266,
-     212
-    ],
-    "zelle": "0x003A0",
-    "beleg": "SCA-Zelle 6 @RDT+0x003A0 = d0 07 fb 1d 3c c4 5e 9d 01 ff 00 03 (x -15300..-13300 z -25250..-17575 Typ 1 Band 0); Koerper-Silhouette bei gemessener Hoehe 2525: IoU 0.51, 92 % des Objekts im Koerper; automatisch: Objekt: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Bild M_bilder/NB2/NB2_zuordnung_5050_01_214_132.png"
-   }
-  ],
-  "2": [
-   {
-    "objekt": "Pult vorn links (Bildrand)",
-    "verschiebung": [
-     2,
-     178
-    ],
-    "punkt": [
-     45,
-     213
-    ],
-    "zelle": "0x00388",
-    "beleg": "SCA-Zelle 4 @RDT+0x00388 = ba 0e 05 14 20 93 98 9a 01 ff 00 03 (x -27872..-24102 z -25960..-20835 Typ 1 Band 0); Koerper-Silhouette bei gemessener Hoehe 3475: IoU 0.63, 89 % des Objekts im Koerper; automatisch: Objekt: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Bild M_bilder/NB2/NB2_zuordnung_5050_02_2_178.png"
    }
   ]
  },
