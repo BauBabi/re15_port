@@ -1,0 +1,36 @@
+# Gegenprobe (2026-10-24): neuer Riegel unit npc gegen den ALTEN Schritt-Code (engine/src/wassersprung_r41.c auf d1809dbf), woertlich gefiltert
+FAIL: EMD/CDEMD0.EMS Typ 0x40: Container-Clip 5 (20 Bilder) ohne Marke und kein Fortbewegungs-Clip -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD0.EMS Typ 0x40: LOCO-Clip 2 (INIT-Pose, 50 Bilder) -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD0.EMS Typ 0x42: Container-Clip 5 (20 Bilder) ohne Marke und kein Fortbewegungs-Clip -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD0.EMS Typ 0x42: LOCO-Clip 2 (INIT-Pose, 50 Bilder) -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD0.EMS Typ 0x45: Container-Clip 5 (20 Bilder) ohne Marke und kein Fortbewegungs-Clip -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD0.EMS Typ 0x45: LOCO-Clip 2 (INIT-Pose, 50 Bilder) -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD0.EMS Typ 0x49: Container-Clip 5 (20 Bilder) ohne Marke und kein Fortbewegungs-Clip -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD0.EMS Typ 0x49: LOCO-Clip 2 (INIT-Pose, 50 Bilder) -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD0.EMS Typ 0x4b: Container-Clip 5 (38 Bilder) ohne Marke und kein Fortbewegungs-Clip -> 4 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD0.EMS Typ 0x4b: LOCO-Clip 2 (INIT-Pose, 133 Bilder) -> 2 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD0.EMS Typ 0x4d: Container-Clip 5 (20 Bilder) ohne Marke und kein Fortbewegungs-Clip -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD0.EMS Typ 0x4d: LOCO-Clip 2 (INIT-Pose, 50 Bilder) -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD1.EMS Typ 0x40: Container-Clip 5 (20 Bilder) ohne Marke und kein Fortbewegungs-Clip -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD1.EMS Typ 0x40: LOCO-Clip 2 (INIT-Pose, 50 Bilder) -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD1.EMS Typ 0x42: Container-Clip 5 (20 Bilder) ohne Marke und kein Fortbewegungs-Clip -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD1.EMS Typ 0x42: LOCO-Clip 2 (INIT-Pose, 50 Bilder) -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD1.EMS Typ 0x45: Container-Clip 5 (20 Bilder) ohne Marke und kein Fortbewegungs-Clip -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD1.EMS Typ 0x45: LOCO-Clip 2 (INIT-Pose, 50 Bilder) -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD1.EMS Typ 0x49: Container-Clip 5 (20 Bilder) ohne Marke und kein Fortbewegungs-Clip -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD1.EMS Typ 0x49: LOCO-Clip 2 (INIT-Pose, 50 Bilder) -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD1.EMS Typ 0x4b: Container-Clip 5 (38 Bilder) ohne Marke und kein Fortbewegungs-Clip -> 4 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD1.EMS Typ 0x4b: LOCO-Clip 2 (INIT-Pose, 133 Bilder) -> 2 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD1.EMS Typ 0x4d: Container-Clip 5 (20 Bilder) ohne Marke und kein Fortbewegungs-Clip -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+FAIL: EMD/CDEMD1.EMS Typ 0x4d: LOCO-Clip 2 (INIT-Pose, 50 Bilder) -> 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+     EMD/CDEMD0.EMS Typ 0x47 OWN Clip 5 (30 Bilder): Aufsetzer 2 -> Bilder 7/22 Fuesse 7/4 portwahl=0
+FAIL: EMD/CDEMD0.EMS Typ 0x47 LOCO-Clip 2 (INIT-Pose @0x8011d978): 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+     EMD/CDEMD1.EMS Typ 0x47 OWN Clip 5 (61 Bilder): Aufsetzer 4 -> Bilder 19/45 Fuesse 7/7 portwahl=1
+FAIL: CDEMD1 Typ 0x47 (Roy) Clip 5 ohne Marke -> PORT-WAHL 19/45 Fuesse 7/7 (erwartet 19/50, 7/4, portwahl=1)
+FAIL: EMD/CDEMD1.EMS Typ 0x47 LOCO-Clip 2 (INIT-Pose @0x8011d978): 3 Aufsetzer, portwahl=1 (erwartet 0/0)
+npc: 90 Pruefungen, 27 Fehler
+
+# mit dem neuen Code:
+     EMD/CDEMD0.EMS Typ 0x47 OWN Clip 5 (30 Bilder): Aufsetzer 2 -> Bilder 7/22 Fuesse 7/4 portwahl=0
+     EMD/CDEMD1.EMS Typ 0x47 OWN Clip 5 (61 Bilder): Aufsetzer 2 -> Bilder 19/50 Fuesse 7/4 portwahl=1
+npc: 90 Pruefungen, 0 Fehler

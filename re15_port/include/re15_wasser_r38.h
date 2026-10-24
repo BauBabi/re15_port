@@ -96,6 +96,8 @@ typedef struct {
 } re15_wasser_r38_mess_t;
 const re15_wasser_r38_mess_t *re15_wasser_r38_mess(void);
 void re15_wasser_r38_reset(void);
+/* Runde 41 Spur A: der am Bildanfang gelatchte Stempel +0x88 (Landungs-Gate `slt v1,v1,a0` @0x8003874c). */
+int16_t re15_wasser_r38_stempel(void);
 
 /* Anker = Part-Weltmatrix * (0,100,0) + T fuer einen Aktor-Zustand (Pose aus skel/anim, Clip
  * clip_override, Bild cur). Liefert 0, oder -1 (dann out = Aktorlage). Fuer Sonden exportiert. */

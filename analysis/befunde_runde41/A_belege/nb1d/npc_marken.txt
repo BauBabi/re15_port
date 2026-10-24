@@ -1,0 +1,72 @@
+# Sonde sonde_npc_marken.c (2026-10-24, gegen libre15_engine.a am Stand d1809dbf): Bildwort-Bit 0x4000 je Bank und Clip
+# c<clip>(<Bilder>)[<Bild>:<Wort>>12>,...]; CONT = Container dir[1], OWN = +0x170/+0x174, LOCO = +0x84/+0x16c
+EMD/CDEMD0.EMS Typ 0x40 (Sektor 1435, 133400 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  OWN  Clips 14: c0(22)[0:5,12:7] c5(30)[7:6,22:5]
+  LOCO Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  => Typ 0x40 EMD/CDEMD0.EMS: MARKIERT
+EMD/CDEMD0.EMS Typ 0x42 (Sektor 1501, 162524 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  OWN  Clips  6: c0(22)[0:4,11:7] c5(30)[8:4,22:7]
+  LOCO Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  => Typ 0x42 EMD/CDEMD0.EMS: MARKIERT
+EMD/CDEMD0.EMS Typ 0x45 (Sektor 1581, 128432 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  OWN  Clips  6: c0(22)[0:5,12:7] c5(30)[7:6,22:5]
+  LOCO Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  => Typ 0x45 EMD/CDEMD0.EMS: MARKIERT
+EMD/CDEMD0.EMS Typ 0x47 (Sektor 1644, 127640 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  OWN  Clips  6: c0(22)[0:5,12:7] c5(30)[7:6,22:5]
+  LOCO Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  => Typ 0x47 EMD/CDEMD0.EMS: MARKIERT
+EMD/CDEMD0.EMS Typ 0x49 (Sektor 1707, 137200 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  OWN  Clips 14: c0(22)[0:5,12:7] c5(30)[7:6,22:5]
+  LOCO Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  => Typ 0x49 EMD/CDEMD0.EMS: MARKIERT
+EMD/CDEMD0.EMS Typ 0x4b (Sektor 1774, 139016 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: KEINE Marke
+  OWN  Clips  9: KEINE Marke
+  LOCO Clips 24: KEINE Marke
+  => Typ 0x4b EMD/CDEMD0.EMS: OHNE MARKE (PORT-WAHL)
+EMD/CDEMD0.EMS Typ 0x4d (Sektor 1842, 163316 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  OWN  Clips  6: c0(22)[0:4,11:7] c5(30)[8:4,22:7]
+  LOCO Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  => Typ 0x4d EMD/CDEMD0.EMS: MARKIERT
+EMD/CDEMD1.EMS Typ 0x40 (Sektor 1439, 133400 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  OWN  Clips 14: c0(22)[0:5,12:7] c5(30)[7:6,22:5]
+  LOCO Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  => Typ 0x40 EMD/CDEMD1.EMS: MARKIERT
+EMD/CDEMD1.EMS Typ 0x42 (Sektor 1505, 144032 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  OWN  Clips 14: c0(22)[0:4,11:7] c5(30)[8:4,22:7]
+  LOCO Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  => Typ 0x42 EMD/CDEMD1.EMS: MARKIERT
+EMD/CDEMD1.EMS Typ 0x45 (Sektor 1576, 128432 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  OWN  Clips  6: c0(22)[0:5,12:7] c5(30)[7:6,22:5]
+  LOCO Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  => Typ 0x45 EMD/CDEMD1.EMS: MARKIERT
+EMD/CDEMD1.EMS Typ 0x47 (Sektor 1639, 142272 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  OWN  Clips  6: c0(22)[0:5,12:7]
+  LOCO Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  => Typ 0x47 EMD/CDEMD1.EMS: MARKIERT
+EMD/CDEMD1.EMS Typ 0x49 (Sektor 1709, 137200 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  OWN  Clips 14: c0(22)[0:5,12:7] c5(30)[7:6,22:5]
+  LOCO Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  => Typ 0x49 EMD/CDEMD1.EMS: MARKIERT
+EMD/CDEMD1.EMS Typ 0x4b (Sektor 1776, 139016 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: KEINE Marke
+  OWN  Clips  9: KEINE Marke
+  LOCO Clips 24: KEINE Marke
+  => Typ 0x4b EMD/CDEMD1.EMS: OHNE MARKE (PORT-WAHL)
+EMD/CDEMD1.EMS Typ 0x4d (Sektor 1844, 163316 B): Container ok, OWN ok, LOCO ok
+  CONT Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  OWN  Clips  6: c0(22)[0:4,11:7] c5(30)[8:4,22:7]
+  LOCO Clips 24: c0(34)[8:5,25:4] c1(32)[7:5,22:4]
+  => Typ 0x4d EMD/CDEMD1.EMS: MARKIERT

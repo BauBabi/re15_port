@@ -451,6 +451,8 @@ static void routine25(re15_esp_fx_t *f)
         { extern void re15_zustand_r39_gift_setzen(void);          /* Runde 39 Spur F: Takt-Zaehler := 30 wie */
           re15_zustand_r39_gift_setzen(); }                        /* RE2 Op 32 @0x80020138-40 (0x800cfe12) */
     }
+    { extern int re15_giftkugel_r41_treffer(re15_actor_t *, const re15_attack_box_t *, int);   /* Runde 41 Spur D: RE2-Giftkugel */
+      (void)re15_giftkugel_r41_treffer(spl, &box, besitzer); }   /* 20 HP @0x800200dc, Kommando 2/3 wie FUN_80047664; setzt +0x93 -> der Spielerzweig unten zieht nicht noch einmal ab */
     int treffer = re15_resolve_attack(&box, 0, besitzer);     /* FUN_80012d60(500,&P,0) @0x80018008 */
     if (szene) spl->hit_react = hr_echt;                      /* echter +0x93 zurueck (die Sicht gilt nur hier) */
     if (treffer == 0 && P[1] < (int32_t)boden) return;        /* `slt v1,v1,v0 / bne` @0x80018024-28 */

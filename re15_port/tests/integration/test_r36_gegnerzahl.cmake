@@ -193,18 +193,19 @@ gz_soll(c "${_c}" "1;2;3;4;5")
 gz_lauf(d 1040 -20083 -3559 0 "7:20-39;7:0-16" "${_tuer}" 1030 90 16 "RE15_SOFTWARE_RENDER=1" _d)
 gz_soll(d "${_d}" "18;19;20")
 
-# e: ROOM20B0 — 20 Emitter und 21 Schatten (Spieler + 20) ohne Verwurf.
-# Beschleunigter Renderer (ohne RE15_SOFTWARE_RENDER), Sprung @250, Ende Bild 300 im Raum (gemessen r36e s20b0_21:
-# "gezeichnet 21, verworfen 0" in den ersten Bildern nach dem Laden, bei F90..F120 und F270..F300).
+# e: ROOM20B0 — alle 35 Emitter (Runde 41 Spur A: RE15_ACTOR_MAX 36, Original fuehrt 35, Savestate flut_a.sav) und
+# die Schattenliste ohne Verwurf. Die EM024-Emitter werfen KEINEN Schatten (ihr Overlay-Code 0x8010ee9c..0x80110a00
+# ruft FUN_8001b064 nie; A_wasser20b0.md 1.8), also "gezeichnet 1" (Spieler) bei Kapazitaet 36.
+# Beschleunigter Renderer (ohne RE15_SOFTWARE_RENDER), Sprung @250, Ende Bild 300 im Raum.
 gz_sprung(e 20b0 300 24 "RE15_SCHATTEN_LOG=1" _e)
-gz_soll(e "${_e}" "1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20")
-string(FIND "${_e_DBG}" "<schatten> gezeichnet 21, verworfen 0 (Kapazitaet 21)" _p)
+gz_soll(e "${_e}" "1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;24;25;26;27;28;29;30;31;32;33;34;35")
+string(FIND "${_e_DBG}" "<schatten> gezeichnet 1, verworfen 0 (Kapazitaet 36)" _p)
 if(_p LESS 0)
-    message(FATAL_ERROR "r36_gegnerzahl[e]: kein Bild mit 21 Schatten (Spieler + 20 Emitter) - Schattenliste?")
+    message(FATAL_ERROR "r36_gegnerzahl[e]: kein Bild mit genau 1 Schatten (Spieler; Emitter schattenlos) bei Kapazitaet 36 - Schattenliste?")
 endif()
 string(REGEX MATCH "<schatten> gezeichnet [0-9]+, verworfen [1-9][0-9]*" _verw "${_e_DBG}")
 if(_verw)
     message(FATAL_ERROR "r36_gegnerzahl[e]: Schatten verworfen: '${_verw}'")
 endif()
-message(STATUS "r36_gegnerzahl[e]: ok - 20 Emitter, 21 Schatten, keiner verworfen")
-message(STATUS "r36_gegnerzahl: OK - 1040 Records 15..19 = Aktor 16..20 (a), 1030 dito (b), Kontrolle 1..5 (c), 1030 17 tot -> 18..20 (d), 20B0 21 Schatten (e)")
+message(STATUS "r36_gegnerzahl[e]: ok - 35 Emitter, 1 Schatten (Spieler), keiner verworfen")
+message(STATUS "r36_gegnerzahl: OK - 1040 Records 15..19 = Aktor 16..20 (a), 1030 dito (b), Kontrolle 1..5 (c), 1030 17 tot -> 18..20 (d), 20B0 35 Emitter / 1 Schatten (e)")

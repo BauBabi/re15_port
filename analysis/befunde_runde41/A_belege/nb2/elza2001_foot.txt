@@ -1,0 +1,49 @@
+[foot] Bank snd0 geladen: 9 VAGs, vh=3104B vb=29584B edt=128B
+[foot] Bank snd0 geladen: 9 VAGs, vh=3104B vb=33408B edt=128B
+[foot] SE foot=7 type=29 vag=1
+[foot] SE foot=7 type=29 vag=1
+[foot] NPC-Lage voll=99 volr=109 -> Pegel 109 Pan 69 -> L=3567 R=3875 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=99 volr=109 -> Pegel 109 Pan 69 -> L=3567 R=3875 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=112 volr=100 -> Pegel 112 Pan 57 -> L=3981 R=3601 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=114 volr=90 -> Pegel 114 Pan 50 -> L=4052 R=3215 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=106 volr=80 -> Pegel 106 Pan 48 -> L=3768 R=2870 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=107 volr=75 -> Pegel 107 Pan 44 -> L=3803 R=2656 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=89 volr=107 -> Pegel 107 Pan 74 -> L=3199 R=3803 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=84 volr=105 -> Pegel 105 Pan 76 -> L=3021 R=3732 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=81 volr=103 -> Pegel 103 Pan 77 -> L=2905 R=3661 (Q15, Ton 4515)
+[foot] SE foot=7 type=29 vag=1
+[foot] NPC-Lage voll=79 volr=102 -> Pegel 102 Pan 78 -> L=2820 R=3626 (Q15, Ton 4515)
+[foot] SE foot=7 type=29 vag=1
+[foot] NPC-Lage voll=79 volr=102 -> Pegel 102 Pan 78 -> L=2820 R=3626 (Q15, Ton 4515)
+[foot] SE foot=7 type=26 vag=3
+[foot] NPC-Lage voll=68 volr=99 -> Pegel 99 Pan 84 -> L=3431 R=5027 (Q15, Ton 6450)
+[foot] SE foot=4 type=26 vag=3
+[foot] NPC-Lage voll=64 volr=98 -> Pegel 98 Pan 86 -> L=3239 R=4977 (Q15, Ton 6450)
+[foot] SE foot=7 type=26 vag=3
+[foot] NPC-Lage voll=60 volr=96 -> Pegel 96 Pan 87 -> L=3095 R=4875 (Q15, Ton 6450)
+[foot] SE foot=4 type=26 vag=3
+[foot] NPC-Lage voll=57 volr=95 -> Pegel 95 Pan 89 -> L=2909 R=4824 (Q15, Ton 6450)
+[foot] SE foot=7 type=26 vag=3
+[foot] NPC-Lage voll=56 volr=94 -> Pegel 94 Pan 89 -> L=2879 R=4774 (Q15, Ton 6450)
+[foot] SE foot=7 type=29 vag=1
+[foot] NPC-Lage voll=55 volr=96 -> Pegel 96 Pan 91 -> L=1949 R=3412 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=54 volr=94 -> Pegel 94 Pan 91 -> L=1909 R=3341 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=54 volr=91 -> Pegel 91 Pan 90 -> L=1899 R=3235 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=51 volr=87 -> Pegel 87 Pan 90 -> L=1815 R=3092 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=50 volr=84 -> Pegel 84 Pan 89 -> L=1801 R=2986 (Q15, Ton 4515)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=47 volr=80 -> Pegel 80 Pan 90 -> L=1670 R=2844 (Q15, Ton 4515)
+[foot] SE foot=7 type=29 vag=1
+[foot] NPC-Lage voll=45 volr=78 -> Pegel 78 Pan 91 -> L=1584 R=2772 (Q15, Ton 4515)
