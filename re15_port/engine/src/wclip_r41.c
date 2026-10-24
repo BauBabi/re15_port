@@ -12,11 +12,13 @@ extern int re15_player_wbank_clip_fc(int clip);   /* player_common.c: Bildzahlen
 extern int re15_player_equipped_weapon(void);     /* re15_damage.h: DAT_800aca5d */
 
 static int s_clip = -1;
+static unsigned s_raum = 0;   /* Raum der Phase: der Raumwechsel setzt den Spieler neu auf (cmd 0), die W-Phase endet dort */
 
 void re15_wclip_r41_beginn(int entity, int clip)
 {
     if (entity != RE15_WCLIP_R41_SUB || clip < 0) { s_clip = -1; return; }
     s_clip = clip;
+    s_raum = g_current_room_id;
 #ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[wclip41] ROOM%04X F%u Spieler Plc_motion(2,%d) -> W-Bank-Clip %d (0x80073e30[2] = 0x80050f00, "
                     "Kanal +0x170/+0x174, Waffe %d, %d Bilder)\n", g_current_room_id, (unsigned)g_engine.frame_count,
@@ -26,6 +28,10 @@ void re15_wclip_r41_beginn(int entity, int clip)
 
 int re15_wclip_r41_clip(void)
 {
+    /* Gemessen (Lauf m3060_tuer, RE15_ANIM_TRACE): ohne diese Pruefung zeichnete das ERSTE Bild in ROOM3020 Leon noch mit
+     * W-Clip 6 (Halten laeuft erst im Spielschritt danach). Original nach dem Wechsel (Savestate o3060_s2_t04, ROOM3020):
+     * Spieler cmd 0 / Sub 0 / Phase 0 — der Plc-Executor 0x80030660 (cmd 4) und damit Sub 2 (0x80050f00) laeuft nicht mehr. */
+    if (s_clip >= 0 && g_current_room_id != s_raum) s_clip = -1;
     return s_clip;
 }
 
