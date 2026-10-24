@@ -198,3 +198,11 @@ Auszuege: `A41abn2/dis_45700.txt`, `dis_45a64.txt`, `dis_59d3c.txt`, `dis_55d10.
 | M3 integration_r35_granate | behoben: Passed 174.59 s, `23 Slot 35: HP 3000 -> 2000` (1.) |
 | M4 Riegel | behoben: unit ton/lage, Ton-Pruefungen auf "gespielt", 0x47 beide Archive, Sub-7/8-Lauf-Pins, integration elza2001/npc11c0 (1., 4.2) |
 | M5 Dossier N1.14 | behoben (Richtigstellung steht in N1.14); neuer Bezeichnungsfehler 0x40/0x42 -> Hinweis H2 |
+
+## 7. Nebenwirkungen (selbst gefahren)
+- `ct.sh -R "^(unit|probe|prop)_" --timeout 600 -j 3` (07:26-07:41, git im PATH) -> `100% tests passed, 0 tests failed out of 927`
+  (893.35 s; darin unit_r39_titelversion_cmake gruen).
+- Spieler-Schritte bleiben ohne Lage (kein Durchreichen): npc2000 71 `[foot] SE foot=` gegen 64 `NPC-Lage` (7 Spielerschritte mono),
+  elza2001 24/23, npc11c0 28/8.
+- Mitschnitt-Riegel (alle 24 Testdateien mit RE15_AUDIO_CAP_SYNC = 69 Eintraege, dieselbe Liste wie der Bau-Agent, `A41abn2/
+  regex_mitschnitt.txt`), `ct.sh ... --timeout 1800 -j 4` ab 07:45: laeuft (Stand wird nachgetragen).
