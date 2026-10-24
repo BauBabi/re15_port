@@ -23,6 +23,10 @@ Regel (dieselbe wie fuer die Nutzer-Freistellungen STAGE1/2, geometrie.py Phase 
      Masken-OT = depth @0x80039650). Warum das sicher ist: ein Figurpunkt wird nur verdeckt, wenn er auf dem Sehstrahl
      HINTER dem Eintritt in die Zelle liegt; Figuren stehen ausserhalb solider Zellen (Spielerradius 450,
      DAT_80073e94[6]) - also hinter ihr.
+  4b. Schritt 2 (--erben, Nachbesserung 1 nach der exe-Pruefung von Schritt 1: 39 DAVOR-Szenen ohne neu uebermalten
+     Leon-Punkt): Rechtecke, deren Punkte die Zelle NICHT alle direkt trifft, bekommen die Tiefe wie raum.py "zelle" fuer
+     die Nutzer-Freistellungen (geometrie.tiefe_zelle): Punkte ohne Treffer erben den naechsten Treffer desselben Objekts
+     (geometrie._erben), Rechteck-Tiefe = max bucket. Das Netz der Spur P (Regel 6) entscheidet danach wie in Schritt 1.
   5. Die Profil-Tiefe (geometrie "(ii)+(iii)", ohne Zelle) wird NICHT benutzt: gemessen ROOM4080 Cut 2, rechte Gangwand:
      Profil-Tiefe max 88, Leon VOR der Wand bei (10475,-13710) bucket 134..148 -> die Wand haette ihn uebermalt, und der
      Ausschluss sieht es nicht (die Grundriss-Strecke Kamera -> Leon kreuzt die schraegen Typ-2/6-Zellen, in deren Huelle
@@ -56,6 +60,8 @@ import geometrie as G            # noqa: E402
 import maskenbild                # noqa: E402
 import original                  # noqa: E402
 import schliessen_r41 as SR      # noqa: E402
+
+ERBEN = False                    # --erben (Nachbesserung 1, Schritt 2), s. Kopf Regel 4b
 
 REPO = SR.REPO
 PSX = SR.PSX
@@ -214,9 +220,17 @@ def kandidaten(room, cut, blob, sek, aus, rdt, cam, cache):
             info.append({k: g[k] for k in ("zelle", "typ", "hoehe", "iou", "saeule", "anteil", "band", "treffer", "px")})
         else:
             if not hit[d].all():
-                r["grund"] = "nicht jeder Punkt direkt getroffen (%d von %d)" % (int(hit[d].sum()), int(d.sum()))
-                r["zellen"] = info
-                continue
+                if not ERBEN:
+                    r["grund"] = "nicht jeder Punkt direkt getroffen (%d von %d)" % (int(hit[d].sum()), int(d.sum()))
+                    r["zellen"] = info
+                    continue
+                # --erben (Schritt 2): wie raum.py "zelle" (geometrie.tiefe_zelle): Punkte des Objekts ohne Treffer erben den
+                # naechsten Treffer (geometrie._erben, Distanztransformation); die Rechteck-Tiefe bleibt das Maximum.
+                obj = np.zeros((240, 320), bool)
+                for c in comps:
+                    obj |= labs[sh] == c
+                vz = G._erben(np.where(hit, vz, 0.0), obj | d)
+                r["geerbt"] = int((d & ~hit).sum())
             neu = int(G.rastern(vz[d]).max())
             r["zellen"] = info
             r["vz_min"] = int(G.rastern(vz[d]).min())
@@ -235,7 +249,11 @@ def main():
     ap.add_argument("--zurueck", default=None, help="Tabelle nach erzeuge: dort weiter ausgeschlossene -> alte Tiefe")
     ap.add_argument("--quelle", default=MASKS, help="MSK-Ordner (Stand vor diesem Schritt)")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--erben", action="store_true",
+                    help="Schritt 2: Rechtecke mit nicht direkt getroffenen Punkten wie raum.py 'zelle' (Fehltreffer erben)")
     a = ap.parse_args()
+    global ERBEN
+    ERBEN = a.erben
     os.makedirs(a.out, exist_ok=True)
     aus = ausschluss(a.aus)
     zur = ausschluss(a.zurueck) if a.zurueck else None

@@ -133,11 +133,20 @@ def main():
             # Uebersichtsbild wie pri/STAGEn/<raum>/<cc>_port.png (Ausschnitt der gezeichneten Punkte, RGBA)
             rgba = farbe(own[0], own[1], neu, cut, aus_neu.get((rid, cut), set()))
             ys, xs = np.nonzero(rgba[:, :, 3])
+            ud = os.path.join(a.out, "uebersicht", "STAGE%d" % (rid >> 12), "%03X0" % (rid >> 4))
+            os.makedirs(ud, exist_ok=True)
             if len(xs):
-                ud = os.path.join(a.out, "uebersicht", "STAGE%d" % (rid >> 12), "%03X0" % (rid >> 4))
-                os.makedirs(ud, exist_ok=True)
                 Image.fromarray(rgba[ys.min():ys.max() + 1, xs.min():xs.max() + 1]).save(
                     os.path.join(ud, "%02d_port.png" % cut), optimize=True)
+            else:
+                # Nachbesserung 1 (Auflage Nachtrag 11): Cut OHNE gezeichneten Maskenpunkt (alle Rechtecke ausgeschlossen, z.B.
+                # Sektion ohne Stehplatz = Original-NULL-Sektion) -> volles Bild 320x240, ganz durchsichtig, fuer den Leon- UND
+                # den Elza-Ordner (pri/STAGEn/<raum>/<cc>_port.png gibt es fuer beide; das alte Bild zeigte nie gezeichnete Masken).
+                leer = Image.fromarray(np.zeros((240, 320, 4), np.uint8))
+                for v in (0, 1):
+                    uv = os.path.join(a.out, "uebersicht", "STAGE%d" % (rid >> 12), "%03X%d" % (rid >> 4, v))
+                    os.makedirs(uv, exist_ok=True)
+                    leer.save(os.path.join(uv, "%02d_port.png" % cut), optimize=True)
     with open(os.path.join(a.out, "zahlen.txt"), "w") as fp:
         fp.write("\n".join(zeilen) + "\n")
         fp.write("SUMME %d Cuts: vorher %d px, nachher %d px, neu %d, weg %d, eingeschlossen offen %d\n" % (
