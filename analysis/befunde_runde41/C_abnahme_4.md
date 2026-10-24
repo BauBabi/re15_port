@@ -253,5 +253,33 @@ Ventilraetsel freigegeben ("Freigeben" — Plakat, Loesung 09 -> 07 -> 02 -> 01,
 | Abnahme 3 Mangel 1 (`_kette`) / Mangel 2 (Doku) | **behoben** | KE rc=0 auf der heutigen Kette; Dossier §7/§0b/probes-Kopf berichtigt (gelesen) |
 
 
-## 5. Maengel
-(folgt)
+## 5. Maengel (nummeriert, nachpruefbar)
+* **Mangel 1 (mittel, Nachtrag 13 Folge 2 / Freigabe Nachtrag 15 "Dokument ... neben der Sicherung") — das Dokument-Blatt ist in der
+  Welt nicht zu erkennen.** Ist (§1 D/P, eigene Messung): das Weltmodell obj 6 (RE2-Blatt mesh01, (-4600,-1800,7150), Band 2) wird
+  gezeichnet (`[prop-render] pi=5 oid=0x06 pos=(-4600,-1800,7150)`), aber zwischen "Dokument da" und "Dokument genommen" (Bit 107
+  vorgesetzt, sonst gleicher Lauf, RE15_FORCE_CUT nur zur Bildwahl) unterscheiden sich in 15 der 16 Kameras von ROOM2030 **0 Pixel**
+  (Cut 0-4, 6-15) und in Cut 5 — der Kamera, die der Spieler am Sued-Landeplatz sieht (K1 `cut=5` an der Sicherung) — nur **39 Pixel**
+  (x 102..113, y 143..149), ein dunkelgrauer Fleck hinter dem Gelaender (`<a4>/bilder/sicht_c5_dok.png`, 4x
+  `<a4>/bilder/sicht_c5_dok_diff.png`, `<a4>/sicht_rest.txt`). Wer die Sicherung aufhebt, steht genau auf dem Blatt (K1 (-4686,7144)).
+  Das Dokument ist nur durch blindes Druecken der Aktionstaste in seinem 1000 x 1000-Rechteck zu finden; die Loesung haengt aber an ihm
+  (das Plakat ist absichtlich falsch; Nachtrag 13 Folge 4: "Loesung muss aus Plakat + Dokument + den sichtbaren Ventilen eindeutig
+  ableitbar sein"), und Dossier §7 legte es dem Nutzer als "Blatt am Sued-Landeplatz direkt neben der Sicherung" vor (Grundlage der
+  Freigabe). Das Plakat dagegen ist im Spielbild deutlich sichtbar (K1 Cut 5). Forderung: das Blatt am freigegebenen Fundort "neben der
+  Sicherung" so legen bzw. kenntlich machen, dass es in der Kamera des Landeplatzes (Cut 5; Gegenprobe Cut 6/7) als Blatt erkennbar ist
+  (z. B. eine Stelle des Landeplatzes vor dem Gelaender bzw. im freien Bodenbereich von Cut 5, oder an Wand/Gelaender neben der Tuer
+  wie das Plakat, oder die RE2-Blink-Form der Spur D (re15_blink, Feuerloescher 1030) — Form mit Beleg, Begruendung im Dossier);
+  Zone weiter neben der Sicherung erreichbar; Messung wie oben (Pixel-Unterschied mit/ohne Bit 107 in Cut 5 deutlich > 39, Bild 1x/4x),
+  Riegel mit Leon UND Elza; Dossier §7 fuer den Nutzer nachziehen.
+
+Hinweise (kein Mangel):
+* (a) Plakat waehrend des Zaehlers: `2030_plakat` ist auch waehrend der 60 s ausloesbar (ventilkette_r41.c `re15_ventilkette_r41_ereignis`:
+  nur `!s_plakat_offen && !bit(103)`), und `plakat_tick` loescht beim Schliessen (2,7)/(2,2) unbedingt. Laeuft der Zaehler ab, waehrend die
+  Nahaufnahme offen ist, gibt das Schliessen die Pad-Sperre der Flut frei (Spieler beweglich unter Cut 4). Nicht gemessen (Randfall;
+  am Landeplatz erreicht das Wasser die Fuesse nach ~36 Takten, ein Entkommen ist nicht moeglich).
+* (b) Fehlerton 0x0B: Aufruf und Bank-Eintrag (PANEL2130.EDT Satz 0x0B `00 00 83 01`) geprueft, nicht mitgeschnitten (RE15_NOAUDIO).
+* (c) PSX-Ziel ungebaut: Plakat-Nahaufnahme ueber die PC-Vollbild-Ebene, Wassernetze/Blaetter nur unter RE15_PLATFORM_PC (bekannt, H3).
+* (d) Ein Messlauf (sv_6_mit) blieb nach `[flow] EXIT_AT ... -> exit` haengen und endete erst am 200-s-Zeitlimit (allgemeiner
+  Beenden-Haenger der exe unter Last, nicht Spur C).
+* (e) Fragen (g)/(h) aus frueheren Abnahmen bleiben offen (keine Maengel der Spur); (m)/(n) mit Nachtrag 15 beantwortet.
+* (f) 20B0-Auswasch-Szene: nach C-E1 nur mit dem Haken der Spur A; im Integrationsbaum wird `_kette` registriert (Merge-Probe §1 KE).
+
