@@ -9,7 +9,7 @@ Baum `.claude/worktrees/r41_kollision`, Zweig `r41/kollision`, Basis master-HEAD
 ## Stand
 - 2026-10-24: Dossier angelegt, Pflichtlektuere AUFTRAG/VERTRAG/UEBERGABE gelesen.
 - Punkt 2: Messung vorher + RE-Belege (FUN_8002bd44 @0x8002c03c-c0a8, FUN_8002cdf4), Umsetzung, Messung nachher.
-- Punkt 1: Messung vorher (3070 Leon, 3001 Elza), RE (24 NPC-Wurzeln), Umsetzung, Messung nachher.
+- Punkt 1: Messung vorher (3070 Leon, 3001 Elza), RE (28 NPC-Wurzeln), Umsetzung, Messung nachher.
 - Naechster Schritt: Riegel (probes/r41_kollision.cmake), Kisten-Raetsel loesbar, Regressionen der Szenen.
 
 ## Punkt 1 — NPC <-> NPC
@@ -43,7 +43,7 @@ Port vorher: die NPC-Familie lief in `re15_enemy_ai_run_all` nur ueber `re15_npc
 Schwanz NUR die Wandklemme hat (`re15_npc_wall_clamp`, @0x8011cc64). Spieler-Pass (re15_body_push_player) und
 Gegner-Schwanz (re15_enemy_body_push_tail) schieben Spieler/Gegner aus den NPCs — die NPC selbst wurde nie geschoben.
 
-Original: ALLE 24 NPC-Wurzeln (Registrierung `sw v0,0x2cXX(at)` auf 0x80072bac+typ*4, Scanner ueber STAGE1..6.BIN)
+Original: ALLE 28 NPC-Wurzeln (STAGE1 6, STAGE2-4 je 4, STAGE5/6 je 5) (Registrierung `sw v0,0x2cXX(at)` auf 0x80072bac+typ*4, Scanner ueber STAGE1..6.BIN)
 tragen nach dem Zustands-`jalr` dieselbe Kette (Ausgabe des Scans, alle `jal`/`jalr` in Reihenfolge):
 ```
 STAGE1 0x40 0x8011c5a0: jalr, b498, aec4 @8011c66c (Delay: addiu a0,s0,20 @8011c670), b544 @8011c674, b0a4
@@ -282,7 +282,7 @@ Gezielte Laeufe (Summenzeilen woertlich): s. unten "Ergebnisse".
 - **Neue Assets:** keine (nichts unter shared_assets/RE2, keine Sprachdateien, keine Bits/Texte).
 - **NPCs sind fest** (Ada, Marvin, John, Sherry, Irons, Annette, Katherine, Ben, ...): zwei NPCs laufen nicht mehr
   ineinander, auch nicht in Gegner; laeuft Leon/Elza in eine NPC hinein, weicht sie aus — wie im Original (Schub im
-  Wurzel-Schwanz aller 24 NPC-Wurzeln, am Original gemessen: Ada/Marvin in ROOM3070 nie naeher als 901). Zum Ansehen:
+  Wurzel-Schwanz aller 28 NPC-Wurzeln, am Original gemessen: Ada/Marvin in ROOM3070 nie naeher als 901). Zum Ansehen:
   ROOM3070 (Lagerhalle, Ada + Marvin folgen Leon, nach dem G-Birkin-Kampf) und ROOM3001 (Elza, John + Sherry folgen).
   Folge, ebenfalls wie im Original: eine folgende NPC kommt nicht mehr DURCH Leon/Elza hindurch, sie bleibt vor ihr stehen.
 - **Kisten in ROOM2050/2051 sperren sich gegenseitig** (am Original gemessen, Port = Original). Das Raetsel bleibt

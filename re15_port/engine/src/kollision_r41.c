@@ -31,7 +31,7 @@ static FILE *kollision_log(void)
 }
 
 /* ================================ (1) NPC-WURZEL-SCHWANZ ================================================
- * Selbst gescannt: alle 24 NPC-Wurzeln der sechs Stage-Overlays (Registrierung `sw v0,0x2cXX(at)` auf
+ * Selbst gescannt: alle 28 NPC-Wurzeln der sechs Stage-Overlays (STAGE1 6, STAGE2-4 je 4, STAGE5/6 je 5) (Registrierung `sw v0,0x2cXX(at)` auf
  * 0x80072bac + typ*4) tragen nach dem Zustands-`jalr` b498 -> aec4(Spieler, NPC) -> b544 -> b0a4, z.B.
  *   STAGE1 0x40 0x8011c5a0: aec4 @0x8011c66c (a0 = s0+20 @0x8011c670), b544 @0x8011c674, b0a4 @0x8011c694
  *   STAGE1 0x42 0x8011cb70: aec4 @0x8011cc3c (a0 = s0+20 @0x8011cc40), b544 @0x8011cc44, b0a4 @0x8011cc64

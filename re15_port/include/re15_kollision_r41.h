@@ -5,7 +5,7 @@
  *   (1) "Die NPCs z.B. Ada und Marvin koennen ineinander rein laufen, das ist falsch, die sind beide fest."
  *   (2) "In ROOM 2050 lassen sich die Kisten in einander schieben, das ist falsch"
  *
- * (1) NPC-WURZEL-SCHWANZ. Jede der 24 NPC-Wurzeln (Typ 0x40/0x42/0x45/0x47/0x49/0x4b/0x4d, STAGE1..6, Dispatch-
+ * (1) NPC-WURZEL-SCHWANZ. Jede der 28 NPC-Wurzeln (Typ 0x40/0x42/0x45/0x47/0x49/0x4b/0x4d, STAGE1..6, Dispatch-
  *     Eintraege 0x80072bac[typ], selbst gescannt) laeuft nach dem Zustands-`jalr` dieselbe Kette, z.B. Ada STAGE1
  *     Wurzel 0x8011cb70:
  *         8011cc2c  jal 0x8002b498                 Kasten-Versatz drehen, Kontakt loeschen
