@@ -29,7 +29,6 @@
 #include "re15_gator_re2_r41.h"
 #include "re15_boss_gator.h"
 #include <string.h>
-#include <math.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #include <stdlib.h>
@@ -315,10 +314,9 @@ static int starten(const uint8_t *p, int n)
  * Werfers (PORT-WAHL: RE2 wirft nach +x; gedreht um die Gier, x' = x cos + z sin, z' = -x sin + z cos = RotMatrixY). ----- */
 static void vektor_drehen(int16_t gier, int32_t vx, int32_t vz, int32_t *ox, int32_t *oz)
 {
-    const double w = (double)gier * 6.283185307179586 / 4096.0;
-    const double c = cos(w), s = sin(w);
-    *ox = (int32_t)lround((double)vx * c + (double)vz * s);
-    *oz = (int32_t)lround(-(double)vx * s + (double)vz * c);
+    const int32_t c = re15_cos_q12(gier), s = re15_sin_q12(gier);              /* Q12 wie RotMatrixY (@0x80068130) */
+    *ox = (int32_t)(((int64_t)vx * c + (int64_t)vz * s) >> 12);
+    *oz = (int32_t)((-(int64_t)vx * s + (int64_t)vz * c) >> 12);
 }
 static void bahn_start(const int32_t start[3], int16_t gier)
 {
@@ -402,11 +400,10 @@ static void kanister_in_haenden(const re15_actor_t *n)
 {
     int32_t h[3];
     haende_welt(n, h);
-    const double w = (double)n->rot_y * 6.283185307179586 / 4096.0;
-    const double c = cos(w), s = sin(w);
-    /* RotY(g) = [c 0 s; 0 1 0; -s 0 c], RotX(90) = [1 0 0; 0 0 -1; 0 1 0] -> M = RotY*RotX = [c s 0; 0 0 -1; -s c 0] */
-    const double m[9] = { c, s, 0.0,  0.0, 0.0, -1.0,  -s, c, 0.0 };
-    for (int i = 0; i < 9; i++) s_kan_rot[i] = (int32_t)lround(m[i] * 4096.0);
+    const int32_t c = re15_cos_q12(n->rot_y), s = re15_sin_q12(n->rot_y);
+    /* RotY(g) = [c 0 s; 0 1 0; -s 0 c], RotX(90) = [1 0 0; 0 0 -1; 0 1 0] -> M = RotY*RotX = [c s 0; 0 0 -1; -s c 0] (Q12) */
+    const int32_t m[9] = { c, s, 0,  0, 0, -4096,  -s, c, 0 };
+    memcpy(s_kan_rot, m, sizeof s_kan_rot);
     /* s_kan_pos = MITTE des Kanisters = Mitte der Haende (die Wurfbahn laeuft auf der Mitte, RE2: Super_reset uebernimmt die
      * Weltlage des angehaengten Objekts @0x800558b8-d8); der MD1-Ursprung (Fuss) folgt in kanister_ursprung. */
     memcpy(s_kan_pos, h, sizeof s_kan_pos);
@@ -453,8 +450,7 @@ static void nachfuehren(re15_actor_t *n)
 {
     if (s_ziel_slot <= 0 || s_ziel_slot >= RE15_ACTOR_MAX) return;
     const re15_actor_t *e = &g_actors[s_ziel_slot];
-    const double w = atan2(-(double)(e->z - n->z), (double)(e->x - n->x));
-    int soll = (int)lround(w * 4096.0 / 6.283185307179586) & 0xfff;
+    int soll = ((int)re15_atan2_q12(e->z - n->z, e->x - n->x) - 0x400) & 0xfff;   /* Mesh-Gier zum Ziel (re15_actor.h:1196) */
     int d = ((soll - (int)n->rot_y + 0x800) & 0xfff) - 0x800;
     if (d > RE15_K2080_NACHFUEHREN) d = RE15_K2080_NACHFUEHREN;
     if (d < -RE15_K2080_NACHFUEHREN) d = -RE15_K2080_NACHFUEHREN;

@@ -206,3 +206,23 @@ Grundumgebung: RE15_NO_INTRO=1 RE15_NOAUDIO=1 Titel-Autostart, RE15_WINDOW_SCALE
   Bild G_belege/szene2081_john_wurf_f600_x2.png ("John: Hey, Elza, try with this!").
 - Landepunkt (-2278,-17267) liegt im Becken: Aussenwaende x[-8900..7200] z[-27000..-5400], 578 westlich des Plattform-Blocks
   x[-1700..1850] z[-20000..-12450] (gb_becken_draussen, enemy_ai_boss_gator.c) = Westkanal.
+
+### 3.4 Kamera des Wurfs (Nachtrag 5 "GENAUSO ... von der Kamera") - Zuordnung RE2-Schnitt -> 2080/2090-Kamera
+RE2 ROOM7020 (RID @RDT+0x24, 32 B je Cut): Cut 7 pos (-22158,-3852,-15174) -> (-28368,-7434,-18234) fov 26684 = der Werfer-Schnitt
+(@0x0726, Ada steht bei (-28000,-7500,-17900) @0x0740 mit Gier 0x0e74 @0x0748); Cut 11 pos (-15948,-1584,-21978) ->
+(-20592,-2448,-20790) fov 37165 = der Fangende (Leon, @0x07D4). Blickbeziehung (frontal = cos zwischen Blickrichtung des Werfers
+und Werfer-Kopf -> Kamera; Kopf = Fuss - 2500; Rechnung im Chat-Protokoll dieser Spur, Werte):
+
+| Kamera | frontal | Hoehe zum Werfer-Kopf | Abstand | Werfer im Bild |
+|---|---|---|---|---|
+| RE2 ROOM7020 Cut 7 (Vorbild) | 0,99 (10 Grad) | 43,6 Grad UNTER dem Kopf (von unten) | 8908 | ja (Vorbild) |
+| 2080 Cut 7 (gewaehlt) | 0,89 (27 Grad) | 6,4 Grad ueber dem Kopf | 17168 | ja (Fuss (130,71) Probe) |
+| 2080 Cut 8 (flag 1) | 0,90 | 44,4 Grad unter dem Kopf | 13757 | NEIN (blickt nach Osten weg) |
+| 2080 Cut 2 | 0,93 | 49,8 Grad ueber | 3768 | nein (nur Kopf am Bildrand) |
+| 2080 Cut 5 | -1,00 (von hinten) | 17,4 Grad ueber | 6015 | ja, von hinten |
+| 2080 Cut 6 | -0,89 | 60,7 Grad ueber | 495 | nein |
+| 2090 alle 13 Cuts | - | - | - | nein (Probe: Balkon in keinem 2090-Bild) |
+PORT-WAHL der Zuordnung: Cut 7 ist die einzige Kamera, die den Werfer von der Seite des Fangenden (frontal) und ganz im Bild
+zeigt; von unten wie RE2 sieht ihn keine vorhandene Kamera (keine neuen Hintergruende, Entscheid B8). RE2 Cut 11 (Schnitt auf den
+Fangenden 15 Bilder nach dem Aufschlag) = Rueckkehr nach 2090 auf die Kamera, die Leon beim Ausloesen hatte. Die RE2-Schnitte des
+Alligatorkampfes (Nachtrag 4: Aufnahme ohne Schnitt, Explosion R1 automatisch) laufen danach unveraendert in Spur B's Modul.
