@@ -78,6 +78,44 @@ Begonnen 2026-10-24 11:55. Pruefer: Abnahme 3 (Opus). Der Bericht wird FORTLAUFE
   TODO/FIXME/approx/ungefaehr/geschaetzt/vermutlich/wahrscheinlich/sieht richtig: **0 Treffer**; "Platzhalter" nur als Nutzer-
   Wortlaut (Ventilraetsel als Platzhalter). Kein neues `getenv` in engine/include/platform.
 
+* **Erklaert der Fix den Befund?** (Abnahme 2 L11): N2 — `ring_sperren()` prueft jetzt `zustand_2030() == GEFLUTET` (Bit 103 UND
+  (3,126)=0, ventilkette_r41.c), vorher nur Bit 103 -> erklaert `ring_strom` (Flut + Strom -> Sperrtext 41); gemessen L6/L9 (mit
+  Strom `DOOR FIRE`, ohne Strom Sperrtext). N3 — dritter Zustand RELING (Flaeche obj 4 y -3600 nur ueber der Schachtoeffnung,
+  Treppe Slot 8 -> Text 48 Band 3) erklaert "nur zwei Zustaende"; gemessen L6 (Text 48, Leon bleibt auf y -5400). N4 —
+  Ereignis 26 waehlt `2030_ventile` nur bei Bit 102 UND (3,108), sonst `2030_ventile_vorher` (Text 49), und der Platz Slot 14
+  liegt Band 1 an der Suedwand (vorher Band 3 am Ring) -> erklaert `ventile_ohne_102`; gemessen L2 (49 vor der Sicherung, 45
+  danach). Rechner 2080: `install_2080` und die Ereignis-Abzweigung fuer 2080 sind entfernt (kein 2080-Zweig mehr in
+  `re15_ventilkette_r41_ereignis`), Text 2080/40 nicht mehr in der Tabelle -> L6 `room=2080 id=0` Original, kein Port-Programm.
+
+### G2 Vertrag (VERTRAG.md §1/§2)
+* Pfade (`git diff master...HEAD --name-only` ohne `analysis/`): engine/src/{ventilkette_r41.c, gen/ventilkette_r41_*.inc (4),
+  game_step_common.c, scd_room_setup.c, scd_vm.c}, include/re15_ventilkette_r41.h, platform/pc/main.c, tests/integration/
+  {test_r41_ventilkette*.cmake (5), test_r36_dachkiste.cmake, test_r37_itemband.cmake}, tests/unit/{probes/r41_ventilkette.cmake,
+  test_r41_ventilkette.c, test_r36_kartenbits.c}, tools/r41_ventilkette/ (3). Suche nach `release/`, `platform/android/`,
+  `shared_assets/PSX/`, `pri/`, `synchro/`, `CMakeLists.txt`: **0 Treffer**.
+* Gemeinsame Dateien = kleine markierte Haken ("Runde 41 Spur C"): game_step_common.c +1 (Takt), scd_room_setup.c +2 (include +
+  Installer am Ende des Blocks), scd_vm.c +4 (include, Ereignis-Kette, Sce_espr_on-Haken), main.c +11 an 4 Stellen (include,
+  Wasserflaechen-Lader, CONTINUE-Install, Pult-Zeichner) — angenommen durch C-E3; test_r36_dachkiste.cmake +2 / test_r37_
+  itemband.cmake +3/-1 (Querbezugs-Flags 9:100 bzw. 9:101,9:102, C-E3).
+* Bank-9-Bits: gesetzt werden nur 100/103 (ventilkette_r41.c `bit_setzen`), 101/102 (Programme `22 09 65 01`/`22 09 66 01`), 106
+  (`panel_tick`) = Zuteilung C (100-103, 106; 107 seit Nachtrag 7 frei und nirgends gesetzt — Unit G prueft `bit(107) == 0`).
+  k_port[] in test_r36_kartenbits.c um genau diese 5 Zeilen ergaenzt; `unit_r36_kartenbits` gruen (Unit-Gruppe §3).
+* Text-Ids (gen/ventilkette_r41_texte.inc Tabelle): 2000/40, 2030/40-49, 2050/40,43,44 (+41/42 = Original-Bytes ROOM11F0 msg 1/2),
+  20B0/41 (+ Leitersatz 40 ueber die Gruppe 2000), 2070/40; **keine 2080-Ids** mehr (VERTRAG 1.2: entfallen). Alle innerhalb der
+  Zuteilung.
+* Plaetze/Ereignisse: 2030 Slots 12/13/14 (frei laut Kopf-Zensus) mit Port-Ereignissen 24/25/26 (> sub06); 2050 Slot 8 + obj 8 =
+  die Original-Saetze @0x01D38/@0x01D4C; umgetypt nur 2000 Slot 4, 20B0 Slot 3, 2070 Slots 1/2, 2030 Slot 8 und die Rufzonen 4/6
+  (nur GEFLUTET). Bank 5 0x1D/0x1E nur in 2030/2031 (M3, Unit H).
+* Riegel je Punkt (probes/r41_ventilkette.cmake): unit_r41_ventilkette A-L (376 Pruefungen, Leon + Elza); integration
+  `_` (Laeufe Ventile/Flucht/Leiter/Tod mit Blendenfarbe), `_b` (Pult 2050, Hebel, Leitern nach der Flut, Elza 2001/2051),
+  `_weg`/`_weg_elza` (v1/v2/g1/g2/w1/w3/w4 zu Fuss), `_sperre` (11A0-Sperre, Nachtrag 6), `_kette` (nur mit Spur A, C-E1).
+  Jeder Lauf mit eigener exe-Kopie (Praefixe `re15_pc_r41c_haken_`, `_r41cb_`, `_r41ck_`, `_r41cs_`, `_r41cw<figur>_`, alte
+  Kopien vorher geloescht), eigenem Arbeitsordner, `cmake_minimum_required(VERSION 3.21)`, `.exe` nur per `MATCHES`,
+  `RUN_SERIAL`. Messend: Log-Saetze woertlich (`DOOR FIRE` mit Rechteck/Ziel, `[msgtext]`), Wegplan-FLAG-Folgen, Zellen.
+* Hinweis (Doku, kein Verhalten): Kopfkommentar von `tests/unit/probes/r41_ventilkette.cmake` Z. 2 ("Rechner 2080 entleert
+  2030") und Z. 30 ("2030 mit Bit 107 ohne Wasser (Gegenprobe ohne 107)") beschreiben noch den Stand vor Nachtrag 7; der Code
+  der Riegel prueft den neuen Stand (`_b` I2/L2/M2 mit (3,126), Unit G `bit(107) == 0`).
+
 ## 1. Messungen an der exe (eigene Laeufe)
 Runner `<a3>/lauf.sh` (eigene exe-Kopie `re15_pc_abn3c_<lauf>.exe` je Lauf, danach geloescht; erbt keine RE15_-Variablen;
 Arbeitsordner `<a3>/mess/<lauf>/` mit debug.log, state.txt, wegplan.txt, bilder/), Serien `<a3>/serie1.sh` .. `serie4.sh`, eigene
@@ -177,6 +215,15 @@ Plan `leiter3.txt` (zu Fuss an die Leiter (-26150,10300) Blick 2048, dreimal Akt
 * Bild: der Lauf stand in Cut 0 (Leiter links im Bild, Satz zweizeilig, `<a3>/leiter3_leon.png`, `<a3>/leiter3_f600_x2.png`);
   den Leiter-Schnitt mit dem Strahl misst L1b (unten).
 
+### L1b — Punkt 1/4 im Bild: Leiter-Schnitt vor und nach der Flut (Leon `leiter4`, `leiter4_nach`; Serie 9)
+`RE15_FORCE_CUT` nur zur Bildwahl (2000 Cut 10 = 20B0 Cut 9, Kameratabellen-Zwilling laut Kopf), sonst wie L1; nach der Flut
+`RE15_SET_FLAG=3:235,9:103,9:100`, Sprung nach 20B0 an dieselbe Stelle (-25500,10300). Bildbogen **`<a3>/leiter_vorher_nachher.png`**.
+* 2000: `ROOM2000: Leiter Slot 4 (@0x0169E) -> Sperrtext 40` -> 2x `[msgtext] room=2000 id=40 "I cannot climb up the ladder because
+  of the water pressure."`, kein Raumwechsel; `fx=21` 338 / `fx=23` 262 Bilder. Bild: der Wasserstrahl faellt aus dem Gitterfenster
+  neben der Leiter, Leon steht an der Leiter, der Satz zweizeilig.
+* 20B0 (nach der Flut): `fx=0` in allen 551 Zeilen, kein Satz; Bild: dasselbe Gitterfenster ohne Strahl (nur die gemalten Spuren
+  des 20B0-Hintergrunds), Leon an der Leiter. Die Leiter selbst ist danach eine Tuer nach 2050 (L4, L7).
+
 ### L3b — Punkt 3 Flucht: Sicherung -> Ventile -> Warnung -> zu Fuss zur Ost-Tuer -> 20B0 (Leon `kette_b`, Elza `kette_b_elza`)
 Aufbau: Bruecke unten vorgesetzt (`RE15_SET_FLAG=7:155..158,9:101,9:102`; die Bruecke selbst misst L2), Start am Suedende des
 Stegs `RE15_PLAYER_POS=-1100,5900,3072,1`, Plan `kette_b.txt` (Sicherung am Westende, Ventile, dann gehend Steg -> Nord-
@@ -251,6 +298,14 @@ danach alles zu Fuss mit der Aktionstaste (Plan `nachflut4.txt`: 2010-Tuer nach 
   `loaded room20b1.rdt`; `fx=0` in allen 812 Bildern.
 
 ### L8 — Weg nach der Flut, Glieder 2060 (Original-Raetsel) und 2060 -> 2030 Nordgalerie -> 2020 (Rohdaten der ersten Sitzung)
+* `w1` (Leon, NEU in der Fortsetzung, Serie 9; Zustand "Flut gelaufen", Original-Raetsel ausserhalb der Kette (Kisten (3,109),
+  Kurbel (3,219), Pult 106) gesetzt, OHNE Strom; Start an der 2050-Leiter-Ankunft (9100,4100), Plan `w1.txt` zu Fuss): Wegplan F62
+  `FLAG (3,126) = 0`, `ZELLE r0[51] LAUFZEIT: x -7550..-6150 z -4500..850 typ 1 u0 0x00` -> `DOOR FIRE slot=1 rect=(-5150,4450,
+  hw=1000,hh=500) target_cut=0 spawn=(11350,-1800,-3150)` -> `loaded room2020.rdt` -> `DOOR FIRE slot=1 rect=(-14200,3300,hw=1000,
+  hh=500) target_cut=13 spawn=(-450,-16200,-9700)` -> `loaded room2030.rdt` -> **`ROOM2030: unter Wasser (y -7200), Lift-Rufzonen
+  4/6 -> msg 1`** (Nordgalerie auf der Tuerebene, ueber dem Wasser) -> zu Fuss zur 2060-Tuer -> `DOOR FIRE slot=3 rect=(-7700,
+  -7250,hw=500,hh=900) target_cut=0 spawn=(7600,0,3950)` -> `loaded room2060.rdt`. Elza `w1_elza`: `PL04` -> `room2051` ->
+  `room2021` -> `room2031` (`ROOM2031: unter Wasser (y -7200) ...`) -> `room2061`, dieselben Tuersaetze.
 * `sicherung2060` (Leon, Zustand "Flut gelaufen", Start vor dem Sicherungskasten, Eingabeskript): `[msgtext] room=2060 id=3
   "One of the fuses is missing..."` -> `id=4 "Will you use the Fuse?"` -> `[scd F519] Cut_chg(8)` -> Cursor -> **`WRITE Set zone=3
   idx=144 op=1`** -> `Cut_chg(9)` -> `id=5 "You've used the Fuse."` (Original sub18/sub19 @0x0169E, kein Port-Programm).
