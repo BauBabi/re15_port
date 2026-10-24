@@ -64,6 +64,7 @@ static unsigned s_schalter = 0;
 static int      s_ruhe = 0;
 static int      s_panel_phase = 0;  /* 0 frei, 1 geloest: Satz laeuft, 2 Ausstieg angefordert */
 static int      s_cursor_vorher = -1;
+static int      s_hebel_t[RE15_R41C_PANEL_N];   /* Nachbesserung 5: Stellung je Hebel 0..16 (11F0 sub06 For 16)  */
 /* 2030 Ventilraetsel + Plakat (Nachbesserung 4) */
 static int      s_folge[RE15_R41C_DREHUNGEN];   /* Ventil-Index je vermerkter Drehung                          */
 static int      s_ventil_gewaehlt = -1;         /* Ventil des zuletzt gefeuerten Platzes (Ereignis 17..22)    */
@@ -500,6 +501,7 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
     s_timer = 0; s_timer_gesehen = 0; s_flut = 0; s_ertrunken = 0; s_fuesse_nass = 0; s_spritzer_n = 0;
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
+    for (int i = 0; i < RE15_R41C_PANEL_N; i++) s_hebel_t[i] = 0;
     s_ventil_gewaehlt = -1; s_ventile_geloest = 0; s_falsch_offen = 0; s_plakat_offen = 0; s_plakat_takte = 0;
     s_standbild_offen = 0; s_standbild_takte = 0; s_zaehler_takte = 0;
     for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
@@ -539,6 +541,7 @@ void re15_ventilkette_r41_reset(void)
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
     s_ventil_gewaehlt = -1; s_ventile_geloest = 0; s_falsch_offen = 0; s_plakat_offen = 0; s_plakat_takte = 0;
     s_standbild_offen = 0; s_standbild_takte = 0; s_kasten_vorher = -1; s_zaehler_takte = 0;
+    for (int i = 0; i < RE15_R41C_PANEL_N; i++) s_hebel_t[i] = 0;
     for (int i = 0; i < 3; i++) s_ton_n[i] = 0;
     for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
 }
@@ -614,6 +617,12 @@ int re15_ventilkette_r41_spannung_aus_maske(unsigned maske)
 unsigned re15_ventilkette_r41_schalter(void) { return s_schalter; }
 int re15_ventilkette_r41_spannung(void) { return re15_ventilkette_r41_spannung_aus_maske(s_schalter); }
 int re15_ventilkette_r41_panel_aktiv(void) { return s_panel_aktiv; }
+int re15_ventilkette_r41_hebel_stellung(int i)
+{
+    if (i < 0 || i >= RE15_R41C_PANEL_N || !s_panel_aktiv || !ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2050)) return 0;
+    if (g_scd.cam_id != RE15_R41C_PANEL_CUT) return 0;
+    return s_hebel_t[i];
+}
 
 int re15_ventilkette_r41_panel_zone(int32_t x, int32_t z)
 {
@@ -639,6 +648,13 @@ static void panel_tick(void)
         return;
     }
     s_panel_aktiv = 1;
+    /* Nachbesserung 5 (Nachtrag 18 Punkt 2): jeder Hebel laeuft je Bild einen Schritt auf seine Stellung zu (EIN = unten),
+     * 16 Schritte wie ROOM11F0 sub06 (For 16 @0x01336). */
+    for (int i = 0; i < RE15_R41C_PANEL_N; i++) {
+        const int ziel = ((s_schalter >> i) & 1u) ? RE15_R41C_HEBEL_TAKTE : 0;
+        if (s_hebel_t[i] < ziel) s_hebel_t[i]++;
+        else if (s_hebel_t[i] > ziel) s_hebel_t[i]--;
+    }
     if (bit(RE15_R41C_BIT_PULT2050)) {
         /* geloest: Satz laeuft, danach Ausstieg (Original sub10 @0x0240C) */
         if (s_panel_phase == 1 && g_scd.message_display_frames <= 0) { scd_event_fire(RE15_R41C_EV_2050_AUS); s_panel_phase = 2; }

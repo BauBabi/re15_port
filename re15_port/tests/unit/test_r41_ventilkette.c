@@ -848,10 +848,20 @@ static void fall_f(uint16_t r)
     PRUEFE(re15_ventilkette_r41_schalter() == 0, "ROOM%04X: SQUARE zwischen den Hebeln kippt nichts", r);
     cursor_setzen(zx[0], 22215); square();
     PRUEFE(re15_ventilkette_r41_schalter() == 0x1 && re15_ventilkette_r41_spannung() == 30, "ROOM%04X: Hebel 1 EIN -> 30 V (0x%X)", r, re15_ventilkette_r41_schalter());
+    /* Nachbesserung 5 (Nachtrag 18 Punkt 2): der umgelegte Hebel laeuft je Bild einen Schritt nach unten, 16 Schritte wie
+     * ROOM11F0 sub06 (For 16 @0x01336); square() zaehlt 4 Takte (Kippen + 3), der erste Schritt faellt in das Bild NACH dem
+     * Kippen (der Schritt steht in panel_tick vor der SQUARE-Auswertung) -> nach square() Stellung 3. */
+    { const int t0 = re15_ventilkette_r41_hebel_stellung(0); int n = 0;
+      while (re15_ventilkette_r41_hebel_stellung(0) < RE15_R41C_HEBEL_TAKTE && n < 40) { takt(); n++; }
+      PRUEFE(t0 == 3 && t0 + n == RE15_R41C_HEBEL_TAKTE && re15_ventilkette_r41_hebel_stellung(1) == 0,
+             "ROOM%04X: Hebel 1 laeuft in 16 Bildern nach unten (nach dem Kippen %d, danach %d Bilder), Hebel 2 bleibt oben", r, t0, n); }
     cursor_setzen(zx[1], 22215); square();
     PRUEFE(re15_ventilkette_r41_schalter() == 0x3 && re15_ventilkette_r41_spannung() == 50, "ROOM%04X: Hebel 2 EIN -> 50 V", r);
     cursor_setzen(zx[1], 22215); square();
     PRUEFE(re15_ventilkette_r41_schalter() == 0x1, "ROOM%04X: Hebel 2 wieder AUS", r);
+    { int n = 0; while (re15_ventilkette_r41_hebel_stellung(1) > 0 && n < 40) { takt(); n++; }
+      PRUEFE(re15_ventilkette_r41_hebel_stellung(1) == 0 && re15_ventilkette_r41_hebel_stellung(0) == RE15_R41C_HEBEL_TAKTE,
+             "ROOM%04X: Hebel 2 laeuft wieder nach oben, Hebel 1 bleibt unten", r); }
     cursor_setzen(zx[2], 22215); square();
     cursor_setzen(zx[3], 22215); square();
     PRUEFE(re15_ventilkette_r41_schalter() == 0xD && re15_ventilkette_r41_spannung() == 80 && bit(RE15_R41C_BIT_PULT2050) == 0,

@@ -38,6 +38,42 @@ extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, i
                                     const int *decoded_len, int satz);       /* audio_pc.c */
 
 #define R41C_KARTE_SE_AUF_HIER 3   /* gen/re2_karten_bank.inc RE2_KARTE_SE_AUF_HIER = RE2 ROOM20A0 Satz 0x26 */
+#include <math.h>
+#include "../../../engine/src/gen/ventilkette_r41_hebel.inc"   /* re15_r41c_hebel[4] (tools/r41_ventilkette/hebel2050.py) */
+extern uint32_t *re15_pc_framebuffer(void);   /* render_pc.c: RGBA8888, R in Bit 24..31 */
+
+/* 2050-Hebel (Nachtrag 18 Punkt 2): Stellung t 0..16 -> Grund unter der Maske, dann Griff + Klingen senkrecht skaliert um
+ * den Drehpunkt, Faktor cos(45 + 90 t/16 Grad) / cos(45 Grad) (Form ROOM11F0 sub06, Kopf re15_ventilkette_r41.h). */
+static void hebel_zeichnen(void)
+{
+    uint32_t *fb = re15_pc_framebuffer();
+    if (!fb) return;
+    for (int i = 0; i < 4; i++) {
+        const int t = re15_ventilkette_r41_hebel_stellung(i);
+        if (t <= 0) continue;
+        const re15_r41c_hebel_t *h = &re15_r41c_hebel[i];
+        const double s = cos((45.0 + 90.0 * t / RE15_R41C_HEBEL_TAKTE) * 3.14159265358979 / 180.0) / cos(45.0 * 3.14159265358979 / 180.0);
+        for (int y = 0; y < h->h; y++)
+            for (int x = 0; x < h->w; x++) {
+                const int k = y * h->w + x;
+                if (!h->maske[k]) continue;
+                const int sx = h->x0 + x, sy = h->y0 + y;
+                if ((unsigned)sx >= SCREEN_XRES || (unsigned)sy >= SCREEN_YRES) continue;
+                const uint8_t *g = &h->grund[3 * k];
+                fb[sy * SCREEN_XRES + sx] = ((uint32_t)g[0] << 24) | ((uint32_t)g[1] << 16) | ((uint32_t)g[2] << 8) | 0xFFu;
+            }
+        for (int y = 0; y < h->h; y++)
+            for (int x = 0; x < h->w; x++) {
+                const int k = y * h->w + x;
+                if (!h->maske[k]) continue;
+                const int sx = h->x0 + x;
+                const int sy = (int)lround(h->dreh_y + (h->y0 + y - h->dreh_y) * s);
+                if ((unsigned)sx >= SCREEN_XRES || (unsigned)sy >= SCREEN_YRES) continue;
+                const uint8_t *p = &h->teil[3 * k];
+                fb[sy * SCREEN_XRES + sx] = ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) | ((uint32_t)p[2] << 8) | 0xFFu;
+            }
+    }
+}
 #define R41C_BSS_CHUNK 0x10000     /* eine Kamera-Scheibe (bg_pc.c / probe_bg_dump.c) */
 
 /* ---- Ventil-Bank VENTIL1080 (RE2 ROOM1080 snd0) ------------------------------------------------------------- */
@@ -158,7 +194,8 @@ void re15_ventilkette_r41_pc_bild(void)
     static int s_angemeldet = 0, s_vollbild = 0;
     if (!s_angemeldet) { re15_ventilkette_r41_ton_hook = ton_spielen; s_angemeldet = 1; }
 
-    /* 2050-Pult: Zeiger (rot) + Hebelmarken (gruen), Cut 15 (Farben wie bisher in main.c, Nachbesserung 1). */
+    /* 2050-Pult: Hebel (Nachbesserung 5), Zeiger (rot) + Hebelmarken (gruen), Cut 15 (Farben wie bisher in main.c). */
+    hebel_zeichnen();
     int vx0, vy0, vw, vh;
     if (re15_ventilkette_r41_sicht(0, &vx0, &vy0, &vw, &vh)) re15_render_tile(vx0, vy0, vw, vh, 0, 208, 24, 40);
     for (int vn = 1; vn <= 4; vn++)

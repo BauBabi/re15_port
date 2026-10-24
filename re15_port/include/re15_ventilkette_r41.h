@@ -463,6 +463,14 @@
 #define RE15_R41C_SKALA_Y          70
 #define RE15_R41C_SKALA_H          4
 #define RE15_R41C_LAMPE_Y          168      /* gruene Marke unter einem EIN-Hebel (PORT-WAHL) */
+/* Hebel gehen sichtbar runter (Nachbesserung 5, Nachtrag 18 Punkt 2, Dossier §0f B5-2): Form der Original-Hebel ROOM11F0
+ * sub06 @0x01322.. (`2f 05 40 00` Speed_set(5,+0x40) @0x01332, For 16 `0d 00 04 00 10 00` @0x01336, Add_speed + Evt_next):
+ * 16 Bilder je Umlegen, 64 je Bild = 1024 = 90 Grad aus der Grundstellung rot_z 512 (Obj_model_set @0x00E76). Die 2050-Hebel
+ * sind gemalt -> Griff + Klingen als Bildteil (gen/ventilkette_r41_hebel.inc, tools/r41_ventilkette/hebel2050.py), senkrecht
+ * skaliert um den Drehpunkt mit cos(45 + 90 t/16 Grad) / cos(45 Grad). */
+#define RE15_R41C_HEBEL_TAKTE      16       /* @0x01336 For 16  */
+#define RE15_R41C_HEBEL_SCHRITT    64       /* @0x01332 +0x40   */
+#define RE15_R41C_HEBEL_GRUND      512      /* @0x00E76 rot_z   */
 
 /* ---- API ------------------------------------------------------------------------------------------------------ */
 /* Nach dem Init-Lauf (scd_room_setup.c Installer-Block; main.c Boot-/CONTINUE-Weg). rdt darf NULL sein. */
@@ -516,6 +524,7 @@ int      re15_ventilkette_r41_standbild(unsigned *raum, int *cut);  /* 1 = Stand
 unsigned re15_ventilkette_r41_ton_zaehler(int ton);               /* gespielte Toene je RE15_R41C_TON_* (Riegel)      */
 int      re15_ventilkette_r41_ventil_rbj(unsigned room_id);       /* 1 = Raum bindet das RE2-RBJ VENTIL1080 (2030/2031) */
 int      re15_ventilkette_r41_countdown(int *rest_bilder);        /* 1 = Countdown sichtbar (2030, Zaehler laeuft)      */
+int      re15_ventilkette_r41_hebel_stellung(int i);              /* 0 (oben) .. 16 (unten), Hebel 0..3 im Pult 2050    */
 /* Countdown als Nachrichten-Bytes (`05 02` Ziffern/':' `05 00` `01 00`) fuer re15_render_pc_msg_text; Rueckgabe Laenge. */
 int      re15_ventilkette_r41_countdown_text(int rest_bilder, uint8_t *out, int cap);
 /* Plattform-Haken fuer die Toene (PC setzt ihn; ohne Haken nur gezaehlt). */
