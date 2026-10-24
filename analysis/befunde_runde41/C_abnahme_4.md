@@ -179,6 +179,12 @@ Wie FL, nach der Warnung zu Fuss ueber Treppe und Ring vor die Ost-Tuer (6606,-5
 `<a4>/bilder/flr_ring.png`: F3540 Wasser ueber dem Steg, F3580/F3620 der Ring unter der Flaeche, F3660 blauer Schleier, F3800 "YOU DIED"
 (F3700/F3740 Todes-Kamera der Engine).
 
+### PK — Randfall Plakat waehrend des Zaehlers bis in die Flut (Leon `pk`)
+Plan `<a4>/plaene/pk.txt` (richtige Folge, Warnung, zurueck zum Plakat, Aktion) + `RE15_PRESS=square@3540`: `Plakat-Nahaufnahme offen` (F2118)
+-> `[scd F3524] Cut_chg(4)` -> `FLUT: Wasser steigt` -> `Plakat-Nahaufnahme zu (nach 1421 Bildern)` (F3540) -> **`[scd F3555] letterbox
+closed -> gameplay (player_mode=0)`** -> `Ereignis 23 -> 2030_plakat` -> `Plakat-Nahaufnahme offen` -> `SPRITZER` -> `ERTRUNKEN: Wasser y
+-2700, Spieler y -1800` (F3585) -> Mangel 2 (§5).
+
 ## 2. Gates
 
 ### G1 RE-Gate (eigene Disassembly / eigene Byte-Lesung)
@@ -303,7 +309,7 @@ Ventilraetsel freigegeben ("Freigeben" — Plakat, Loesung 09 -> 07 -> 02 -> 01,
   (ventilkette_r41.c) setzt beim Schliessen (2,7) und (2,2) unbedingt auf 0, und `re15_ventilkette_r41_ereignis` laesst das Plakat auch
   waehrend Zaehler/Flut zu (nur `!s_plakat_offen && !bit(103)`). Folge: unter der Flut-Kamera Cut 4 ist der Spieler frei (Form der
   Pad-Sperre ROOM2030 sub02 @0x01E30 durch den Port gebrochen), das Plakat laesst sich in der Flut oeffnen; der Tod bleibt (am Landeplatz
-  erreicht das Wasser die Fuesse nach ~20 Bildern). Forderung: die Sperre der Flut darf durch das Plakat nicht aufgehoben werden (z. B.
+  Spritzer ~36, Tod ~61 Bilder nach dem Flutbeginn). Forderung: die Sperre der Flut darf durch das Plakat nicht aufgehoben werden (z. B.
   Plakat waehrend Zaehler/Flut nicht oeffnen oder beim Schliessen nur die eigene Sperre zuruecknehmen, wenn keine Flut laeuft) — Form mit
   Beleg, Riegel (Plakat offen bis in die Flut -> nach dem Schliessen player_mode bleibt 2 bis zum Tod).
 
