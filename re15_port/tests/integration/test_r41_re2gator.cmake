@@ -39,6 +39,11 @@
 #   F1119, "Kanister-Sitz F1388: angehaengt 270 Bilder, Abweichung max 0"; "GIER-WACHE bis F581: 300 Bildpaare CHASE/GUARD, max
 #   |Gier-Delta| 64 (ohne +1024), Spruenge > 0x60: 0, Befreiungen 0" (vorher E1 F426/458/490/522/546 +-1944..1984).
 #
+# Nachbesserung 5 (Abnahme 4 M1): Lauf "belagerung" laeuft bis F890 (nach dem toedlichen GUARD-Hochbiss F627 und dem ganzen
+#   RE2-Finisher P1-P3 bis F881) und prueft die Summenzeile "[gator-re2] Maul-Sitz Ende ..." (r41b_maul_sitz): 254 Bilder (14/120/
+#   120), Kopf an der Anker-Lage, Leon am gezeichneten Kiefer wie die authored Bahn (<= 8), Kopf/Leon im Bild der Finisher-Kamera
+#   (Leon nur oben hinaus beim Wurf), alles im Wasser; Lauf "nische" (CHASE-Tod) prueft dieselbe Messzeile bis EXIT_AT.
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_re2gator.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -78,6 +83,68 @@ endfunction()
 get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
 set(_exe_kopie "${_exe_dir}/re15_pc_r41b_${_lauf_id}.exe")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
+
+# Nachbesserung 5 (Abnahme 4 M1): Messzeile "[gator-re2] Maul-Sitz ..." des PC-Zeichners (gator_re2_pc.c) - je Finisher-Bild
+# Kopf (Bone 6) der gezeichneten Pose gegen die Anker-Lage (Abweichung), Abstand Leon <-> gezeichneter Kiefer (Part 7) gegen die
+# authored Bahn (Kiefer-Abstand), Kopf/Leon im Bild der gezeichneten Kamera (Leon darf nur oben hinaus: Wurf P2), beide im Wasser.
+# _ende = 1: die Summenzeile "Maul-Sitz Ende" (Finisher bis P3-Ende gelaufen) wird verlangt, sonst gilt die letzte Zeile.
+function(r41b_maul_sitz _dir _lauf _ende _out)
+    if(_ende)
+        file(STRINGS "${_dir}/debug.log" _ms REGEX "\\[gator-re2\\] Maul-Sitz Ende F[0-9]+: ")
+    else()
+        file(STRINGS "${_dir}/debug.log" _ms REGEX "\\[gator-re2\\] Maul-Sitz F[0-9]+: ")
+    endif()
+    if(NOT _ms)
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r41_re2gator: Lauf ${_lauf} - keine Messzeile Maul-Sitz (Summenzeile verlangt: ${_ende}) - Finisher nicht gelaufen bzw. nicht bis P3-Ende")
+    endif()
+    list(GET _ms -1 _l)
+    if(NOT _l MATCHES "Bilder ([0-9]+) \\(P1 ([0-9]+) P2 ([0-9]+) P3 ([0-9]+)\\), Abweichung max (-?[0-9]+) \\(F[0-9]+\\), Kiefer-Abstand max (-?[0-9]+) ")
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r41_re2gator: Lauf ${_lauf} - Maul-Sitz-Zeile unlesbar: ${_l}")
+    endif()
+    set(_n ${CMAKE_MATCH_1})
+    set(_p1 ${CMAKE_MATCH_2})
+    set(_p2 ${CMAKE_MATCH_3})
+    set(_p3 ${CMAKE_MATCH_4})
+    set(_abw ${CMAKE_MATCH_5})
+    set(_kie ${CMAKE_MATCH_6})
+    if(NOT _l MATCHES "Kopf im Bild ([0-9]+)/[0-9]+, Leon im Bild ([0-9]+)/[0-9]+ \\+ oben hinaus ([0-9]+) \\(Cut (-?[0-9]+)\\), im Wasser ([0-9]+)/[0-9]+")
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r41_re2gator: Lauf ${_lauf} - Maul-Sitz-Zeile unlesbar: ${_l}")
+    endif()
+    set(_kopf ${CMAKE_MATCH_1})
+    set(_leon ${CMAKE_MATCH_2})
+    set(_oben ${CMAKE_MATCH_3})
+    set(_cut ${CMAKE_MATCH_4})
+    set(_nass ${CMAKE_MATCH_5})
+    math(EXPR _leon_sicht "${_leon} + ${_oben}")
+    set(_fehl "")
+    # P1 = Clip-4-Bild 1..14 bis zum Anker (@0x801010fc-104), P2 = Clip 5 sf 1..120, P3 = Clip 11 120 Takte (gb FRESSEN)
+    if(NOT _p1 EQUAL 14)
+        string(APPEND _fehl " P1 ${_p1} statt 14;")
+    endif()
+    if(_ende AND (NOT _p2 EQUAL 120 OR NOT _p3 EQUAL 120))
+        string(APPEND _fehl " P2/P3 ${_p2}/${_p3} statt 120/120;")
+    endif()
+    if(_abw GREATER 4 OR _abw LESS 0)
+        string(APPEND _fehl " Kopf ${_abw} neben der Anker-Lage;")
+    endif()
+    if(_kie GREATER 8 OR _kie LESS 0)
+        string(APPEND _fehl " Leon ${_kie} neben dem gezeichneten Kiefer (authored Bahn);")
+    endif()
+    if(NOT _kopf EQUAL _n OR NOT _leon_sicht EQUAL _n OR NOT _nass EQUAL _n)
+        string(APPEND _fehl " Kopf im Bild ${_kopf}/${_n}, Leon im Bild/oben ${_leon_sicht}/${_n}, im Wasser ${_nass}/${_n};")
+    endif()
+    if(_cut LESS 0)
+        string(APPEND _fehl " keine Kamera;")
+    endif()
+    if(NOT "${_fehl}" STREQUAL "")
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r41_re2gator: Lauf ${_lauf} - Finisher: Leon nicht im Maul wie authored (Abnahme 4 M1):${_fehl} Zeile: ${_l}")
+    endif()
+    set(${_out} "Maul-Sitz ${_n} Bilder (P1 ${_p1} P2 ${_p2} P3 ${_p3}) Cut ${_cut}, Kopf ${_abw}, Kiefer-Abstand ${_kie}, Kopf/Leon im Bild ${_kopf}/${_leon}+${_oben} oben, Wasser ${_nass}" PARENT_SCOPE)
+endfunction()
 
 # ---------------------------------------------------------------- Lauf 1: Tuernische (Intro, Kamera, Finisher)
 set(_dir "${_basis}/nische")
@@ -248,8 +315,9 @@ if(_hp_min LESS 25000)
     file(REMOVE "${_exe_kopie}")
     message(FATAL_ERROR "r41_re2gator: HP unter dem RE2-Sockel (${_hp_min} < 25000) ohne Beschuss")
 endif()
+r41b_maul_sitz("${_basis}/nische" "nische" 0 _ms1)   # Nachbesserung 5: CHASE-Tod, Finisher bis EXIT_AT (P3 nicht ganz)
 r41b_gier_wache("${_basis}/nische" "nische" _gw1)
-set(_status1 "nische: RE2-Zeilen ${_re2}, Intro Lage/Start/Ende ${_intro_lage}/${_intro}/${_intro_ende} wand ${_intro_wand}, Clip 6/3 ${_mo6}/${_mo3}, Kamera ${_kam_folge}, Finisher Cut ${_fin_cut} ab F${_fin_bild} gehalten ${_fin_cam_bilder} Bilder / ${_fin_halt} Halt-Zeilen, HP min ${_hp_min}, kein Gier-Sprung")
+set(_status1 "nische: ${_ms1}, RE2-Zeilen ${_re2}, Intro Lage/Start/Ende ${_intro_lage}/${_intro}/${_intro_ende} wand ${_intro_wand}, Clip 6/3 ${_mo6}/${_mo3}, Kamera ${_kam_folge}, Finisher Cut ${_fin_cut} ab F${_fin_bild} gehalten ${_fin_cam_bilder} Bilder / ${_fin_halt} Halt-Zeilen, HP min ${_hp_min}, kein Gier-Sprung")
 
 # ---------------------------------------------------------------- Lauf 3: natuerlicher Zugang (B9: untergetaucht)
 set(_dir "${_basis}/natuerlich")
@@ -372,7 +440,7 @@ re15_start_spiel(_rv 300
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
     SDL_ASSERT=always_ignore
     RE15_DEBUG_JUMP=20A0@250 "RE15_FIRE_AOT=0@40#20A0" RE15_GB_TEST=1
-    "RE15_EXIT_AT=700#2090"
+    "RE15_EXIT_AT=890#2090"
     "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
     file(REMOVE "${_exe_kopie}")
@@ -389,7 +457,11 @@ if(_guard_n LESS 5)
     file(REMOVE "${_exe_kopie}")
     message(FATAL_ERROR "r41_re2gator: Lauf belagerung - Belagerung (GUARD) nicht erreicht (${_guard_n} GUARD-Zeilen)")
 endif()
-set(_status5 "belagerung: ${_gw5}, GUARD-Zeilen ${_guard_n}")
+# Nachbesserung 5 (Abnahme 4 M1): der dritte GUARD-Hochbiss (F627) toetet Leon; der RE2-Finisher laeuft bis zum P3-Ende (F881)
+# vor dem Raumwechsel nach dem Game Over (~F900) - Leon liegt in JEDEM P1-P3-Bild wie authored am gezeichneten Kiefer, im Bild
+# der Finisher-Kamera und im Wasser (vorher: Maul leer, Leon 2300-5300 hinter der Ostwand, Abnahme 4 §3.4).
+r41b_maul_sitz("${_dir}" "belagerung" 1 _ms5)
+set(_status5 "belagerung: ${_gw5}, GUARD-Zeilen ${_guard_n}, ${_ms5}")
 
 # ---------------------------------------------------------------- Lauf 2: Leon im Suedbecken (Dash, Putz)
 set(_dir "${_basis}/dash")

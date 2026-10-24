@@ -1630,17 +1630,22 @@ static int m_maulraum(const re15_skel_pose_t *gp, int32_t s)
 #define M_BILDER 400
 typedef struct { int n, pn[4], ph[M_BILDER]; int32_t kl[M_BILDER][3]; int pm[M_BILDER]; } m_bahn_t;
 /* Ein Lauf: Leon (lx,lz,ly) als Statue bis zum Tod, hp 30 (ein Biss = 50, dmg_table[5] @DAT_8006f418), danach fuehrt der
- * Finisher. gx/gz/gyaw >= 0 x: Gator nach dem Intro hinstellen (Bezug wie unit_gator_fress). Rueckgabe 1 = Tod + Finisher gemessen. */
-static int m_lauf(const char *was, int32_t lx, int32_t lz, int32_t ly, int setzen, int32_t gx, int32_t gz, int gyaw,
+ * Finisher. gx/gz/gyaw >= 0 x: Gator nach dem Intro hinstellen (Bezug wie unit_gator_fress). Rueckgabe 1 = Tod + Finisher gemessen.
+ * band = Leons Kollisionsband bis zum Tod (Spieler +0x82 = DAT_800acad6, oben auf Rampe/Plattform 1). Ab dem Bild nach dem Biss
+ * laeuft vor jedem Takt die Spieler-Wandklemme wie im Spiel (Dispatcher-Schwanz FUN_80031c44 `jal 0x8003b0a4` @0x80031d70, auch
+ * im Tod; Port re15_player_body_and_walls vor der Gegner-KI) - sie darf Leon im Finisher nie verschieben (exe-Lauf BL2: Band 1
+ * nach dem Sturz von der Plattform, P0 setzte Leon in die Band-1-Zelle SCA [8] noerdlich der Rampe, die Klemme schob ihn 951
+ * in die Rampe: P1 Kiefer-Abstand 949). */
+static int m_lauf(const char *was, int32_t lx, int32_t lz, int32_t ly, int band, int setzen, int32_t gx, int32_t gz, int gyaw,
                   int soll_phase, m_bahn_t *b, const m_bahn_t *bezug, char *zeile, size_t zn)
 {
     if (!setup(1)) return 0;
     memset(b, 0, sizeof *b);
     pl->hp = 100;
-    pl->x = lx; pl->z = lz; pl->y = ly; pl->floor = 0; pl->state = 0; pl->motion = 0; pl->hit_react = 0;
+    pl->x = lx; pl->z = lz; pl->y = ly; re15_collision_set_band(band); pl->state = 0; pl->motion = 0; pl->hit_react = 0;
     tick();
     for (int f = 0; f < 400 && (re15_gr2_im_intro(slot) || f < 2); f++) {
-        pl->x = lx; pl->z = lz; pl->y = ly; pl->floor = 0; pl->state = 0; pl->motion = 0; pl->hit_react = 0;
+        pl->x = lx; pl->z = lz; pl->y = ly; re15_collision_set_band(band); pl->state = 0; pl->motion = 0; pl->hit_react = 0;
         tick();
     }
     re15_gr2_biss_cd(slot, 0);
@@ -1648,9 +1653,17 @@ static int m_lauf(const char *was, int32_t lx, int32_t lz, int32_t ly, int setze
     pl->hp = 30;
     int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
     int tod = -1, ph_tod = -1, bild = 0, cut = -1;
-    int32_t kl_max = 0, pm_max = 0, ki_max = 0; int wasser_aus = 0, kopf_aus = 0, leon_aus = 0, oben = 0, ki_fehlt = 0;
+    int32_t kl_max = 0, pm_max = 0, ki_max = 0, klemm_max = 0; int wasser_aus = 0, kopf_aus = 0, leon_aus = 0, oben = 0, ki_fehlt = 0;
+    int klemm_n = 0, band_falsch = 0;
     for (int f = 0; f < 6000; f++) {
-        if (pl->hp >= 0) { pl->x = lx; pl->z = lz; pl->y = ly; pl->floor = 0; pl->state = 0; pl->motion = 0; pl->hit_react = 0; }
+        if (pl->hp >= 0) { pl->x = lx; pl->z = lz; pl->y = ly; re15_collision_set_band(band); pl->state = 0; pl->motion = 0; pl->hit_react = 0; }
+        if (tod >= 0) {                                   /* Spieler-Wandklemme vor der Gegner-KI, wie im Spiel */
+            int32_t nx = pl->x, nz = pl->z;
+            re15_collision_constrain(&g_room_rdt, pl->x, pl->z, &nx, &nz);
+            int32_t d = (nx > pl->x ? nx - pl->x : pl->x - nx) + (nz > pl->z ? nz - pl->z : pl->z - nz);
+            if (d && bild > 0) { klemm_n++; if (d > klemm_max) klemm_max = d; }   /* ab P1: Leon steht auf der P0-Lage */
+            pl->x = nx; pl->z = nz;
+        }
         int ph_vor = re15_gator_boss_phase(e);
         tick();
         int fr = re15_gator_boss_im_fressen(e);
@@ -1658,6 +1671,7 @@ static int m_lauf(const char *was, int32_t lx, int32_t lz, int32_t ly, int setze
         if (tod < 0) continue;
         if (!fr) break;
         int pidx = e->motion == 4 ? 1 : e->motion == 5 ? 2 : e->motion == 11 ? 3 : 0;
+        if (re15_collision_debug_band() != re15_collision_band_from_y(pl->y)) band_falsch++;   /* Band folgt Leons y (P0: Beckenboden) */
         re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
         int ov = (e->anim_flags & 0x04u) ? (int)e->motion : -1;
         int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, e, ov, (uint32_t)e->anim_frame);
@@ -1708,15 +1722,17 @@ static int m_lauf(const char *was, int32_t lx, int32_t lz, int32_t ly, int setze
     for (int i = 0; i < b->n; i++) if (b->pm[i] >= 500) im_maul[b->ph[i] & 3]++;
     snprintf(zeile, zn, "%-44s Tod Takt %d aus Phase %d, Finisher %d Bilder (P1 %d P2 %d P3 %d), Cut %d, Maul >= 50 %%: P1 %d P2 %d P3 %d, "
              "Kopf-lokal gegen Bezug max %d, Maulraum gegen Bezug max %d Promille, Kiefer-Abstand max %d (fehlt %d), nicht im Wasser %d, "
-             "Kopf nicht im Bild %d, Leon nicht im Bild %d (oben hinaus %d)",
+             "Kopf nicht im Bild %d, Leon nicht im Bild %d (oben hinaus %d), Wandklemme verschob Leon in %d Bildern (max %d), Band falsch %d",
              was, tod, ph_tod, b->n, b->pn[1], b->pn[2], b->pn[3], cut, im_maul[1], im_maul[2], im_maul[3], (int)kl_max, (int)pm_max,
-             (int)ki_max, ki_fehlt, wasser_aus, kopf_aus, leon_aus, oben);
+             (int)ki_max, ki_fehlt, wasser_aus, kopf_aus, leon_aus, oben, klemm_n, (int)klemm_max, band_falsch);
     CHECK(tod >= 0, "%s: kein toedlicher Biss in 6000 Takten", was);
     if (tod < 0) return 0;
     if (soll_phase >= 0) CHECK(ph_tod == soll_phase, "%s: Tod aus Phase %d statt %d", was, ph_tod, soll_phase);
     CHECK(b->pn[1] == 14 && b->pn[2] == 120 && b->pn[3] == 120, "%s: Finisher-Bilder P1 %d P2 %d P3 %d (14/120/120: Clip 4 Bild 1..14, "
           "Clip 5 sf 1..120, Clip 11 120 Takte)", was, b->pn[1], b->pn[2], b->pn[3]);
     CHECK(cut >= 0, "%s: keine Finisher-Buehne/Kamera (Rueckfall am Ort)", was);
+    CHECK(klemm_n == 0 && band_falsch == 0, "%s: Spieler-Wandklemme verschob Leon in %d Finisher-Bildern (max %d), Band nicht nach y in %d",
+          was, klemm_n, (int)klemm_max, band_falsch);
     CHECK(ki_fehlt == 0 && ki_max <= 8, "%s: Abstand Leon <-> gezeichneter Kiefer weicht bis %d von der authored Bahn ab (%d Bilder ohne Wert)",
           was, (int)ki_max, ki_fehlt);
     CHECK(wasser_aus == 0, "%s: %d Bilder mit Gator/Kopf/Kiefer/Leon ausserhalb des Wassers", was, wasser_aus);
@@ -1734,7 +1750,7 @@ static int teil_maul(void)
     static m_bahn_t bezug, b;
     char z[640];
     /* Bezug = Lage von unit_gator_fress: Leon (-4000,-22000) im Wasser, Gator nach dem Intro auf (-6000,-22000) mit Blick auf Leon */
-    if (!m_lauf("CHASE-Bezug (offenes Wasser, unit_gator_fress)", -4000, -22000, 0, 1, -6000, -22000, 0, -1, &bezug, NULL, z, sizeof z))
+    if (!m_lauf("CHASE-Bezug (offenes Wasser, unit_gator_fress)", -4000, -22000, 0, 0, 1, -6000, -22000, 0, -1, &bezug, NULL, z, sizeof z))
         return 1;
     printf("maul: %s\n", z);
     int im2 = 0, im3 = 0;
@@ -1747,16 +1763,20 @@ static int teil_maul(void)
         { "GUARD Plattformblock", 0, -16250 },
     };
     for (int i = 0; i < 4; i++) {
-        if (!m_lauf(k[i].was, k[i].x, k[i].z, -1800, 0, 0, 0, 0, 5, &b, &bezug, z, sizeof z)) continue;
+        if (!m_lauf(k[i].was, k[i].x, k[i].z, -1800, 1, 0, 0, 0, 0, 5, &b, &bezug, z, sizeof z)) continue;
         printf("maul: %s\n", z);
     }
+    /* exe-Lauf BL2 (Fortsetzung NB5): toedlicher CHASE-Biss, Leon nach dem Sturz von der Plattform im Wasser, aber noch auf Band 1;
+     * Gator-Lage beim Biss aus gator_boss.log ("von (4741,-11236) Gier 233"), Leon vor der Schnauze (6732,-11982). */
+    if (m_lauf("CHASE-Biss, Leon noch auf Band 1 (exe BL2)", 6732, -11982, 0, 1, 1, 4741, -11236, 233, -1, &b, &bezug, z, sizeof z))
+        printf("maul: %s\n", z);
     return fails ? 1 : 0;
 }
 /* buehne - Garantie der Finisher-Buehne (PORT-WAHL, Form = RE2-P0 @0x80101048-4c): fuer JEDE Gator-Lage, in der ein toedlicher Biss
  * fallen kann (Wurzel im Wasser ausserhalb der Wand-Klemmzone 1466, dazu Plattform/Rampe = CROSS-Biss), findet
  * re15_gr2_finisher_buehne eine Buehne (Raster 1000, 8 Gierwinkel). Je Buehne unabhaengig nachgeprueft: Wurzel im Wasser ausserhalb
- * der Klemmzone, Kamera ist eine Zonenkamera, Versatz <= 9000 (Suchgrenze). Sonde B41nb5c/probe_bsweep Raster 250: 24256 Lagen,
- * 0 ohne Buehne, Versatz max 8997. */
+ * der Klemmzone, Kamera ist eine Zonenkamera, Versatz <= 27000 (Suchgrenze = Becken-Diagonale). Sonde B41nb5c/probe_bsweep
+ * Raster 250: 24256 Lagen, 0 ohne Buehne, Versatz max 8997. */
 static int teil_buehne(void)
 {
     if (!setup(1)) return 1;
@@ -1776,7 +1796,7 @@ static int teil_buehne(void)
                 int64_t dx = bb.x - x, dz = bb.z - z;
                 int32_t v = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
                 if (v > vmax) vmax = v;
-                if (re15_gr2_becken_draussen(bb.x, bb.z, 1466) || c < 0 || zk < 2 || v > 9000) {
+                if (re15_gr2_becken_draussen(bb.x, bb.z, 1466) || c < 0 || zk < 2 || v > 27000) {
                     falsch++;
                     if (falsch <= 5) printf("  Buehne falsch: G=(%d,%d) Gier %d -> (%d,%d) Cut %d (Saetze %d) Versatz %d\n", x, z, yaw, bb.x, bb.z, c, zk, v);
                 }
@@ -1785,7 +1805,7 @@ static int teil_buehne(void)
            n, ohne, falsch, (int)vmax);
     CHECK(n >= 1500, "nur %d Lagen geprueft", n);
     CHECK(ohne == 0, "%d Lagen ohne Finisher-Buehne (Rueckfall am Ort = Maul leer, Abnahme 4 M1)", ohne);
-    CHECK(falsch == 0, "%d Buehnen ausserhalb des Wassers / ohne Zonenkamera / weiter als 9000", falsch);
+    CHECK(falsch == 0, "%d Buehnen ausserhalb des Wassers / ohne Zonenkamera / weiter als die Becken-Diagonale 27000", falsch);
     return fails ? 1 : 0;
 }
 

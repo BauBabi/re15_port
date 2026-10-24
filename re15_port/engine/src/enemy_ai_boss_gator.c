@@ -2480,6 +2480,13 @@ static void gb_takt(int slot)
              * bei y 0). RE2 P0 schreibt nur x/z (0x800cfc30 @0x80101084 / 0x800cfc38 @0x80101078) - im Korridor steht der Spieler
              * schon auf dem Boden; nach dem GUARD-Hochbiss stand Leon oben auf der Rampe (y -1800) und schwebte sonst in P1. */
             pl->y = 0;
+            /* Fortsetzung NB5: das Kollisionsband (Spieler +0x82 = DAT_800acad6) folgt der neuen Hoehe wie bei jedem Hoehenwechsel
+             * des Spielers (Band = -(y / 1800), Kletter-Landung @0x80038460-bc). Sonst klemmt die Spieler-Wandklemme, die im Original
+             * auch im Tod je Bild laeuft (Dispatcher-Schwanz FUN_80031c44 `jal 0x8003b0a4` @0x80031d70), Leon weiter gegen die Band-1-
+             * Zellen (SCA [7] Plattform, [8]/[9] Streifen noerdlich/suedlich der Rampe) - exe-Lauf BL2: Leon von P0 (2564,-14017) in
+             * P1 nach (2564,-14968) geschoben, Abstand zum Kiefer 949. Im Wasser (Band 0) sind die Waende genau die Beckenquelle der
+             * Buehne (SCA [0]-[5] = gb_becken_draussen). */
+            re15_collision_set_band(re15_collision_band_from_y(pl->y));
             /* Leon laeuft seit dem Biss-Abschluss im VICTIM-MODUS 4 auf Opfer-
              * Clip 0 (Hochheben) - kein pl->motion-Schreiben mehr noetig (die
              * Tod-FSM ist per Modus-4-Besitz pausiert). */

@@ -135,7 +135,8 @@ static void kanister_sitz(void)
  * oberen Bildrand bei Bild-x im Bild (der Wurf in P2 Bild 60-75 hebt ihn aus dem POS-Kanal bis y -9177 roh - in RE2 Cut 7 ebenso).
  * debug.log "[gator-re2] Maul-Sitz F<n>: Bilder <k> (P1 a P2 b P3 c), Abweichung max <m> (F..), Kiefer-Abstand max <j> (F..),
  * Kopf im Bild <h>/<k>, Leon im Bild <l>/<k> + oben hinaus <o> (Cut <c>), im Wasser <w>/<k> | jetzt ..." beim ersten Bild, bei
- * jedem neuen Hoechstwert, bei jedem Bild ausserhalb Bild/Wasser und alle 30 Bilder. Reine Messung. */
+ * jedem neuen Hoechstwert, bei jedem Bild ausserhalb Bild/Wasser und alle 30 Bilder; im ersten Bild nach dem Finisher die
+ * Summenzeile "[gator-re2] Maul-Sitz Ende F<n>: ..." (integration_r41_re2gator Lauf belagerung). Reine Messung. */
 static int fress_proj(const re15_camera_view_t *cam, int cx, int cy, const int32_t p[3], int *ox, int *oy)
 {
     if (ox) *ox = -1;
@@ -153,12 +154,25 @@ static int fress_proj(const re15_camera_view_t *cam, int cx, int cy, const int32
 }
 static void fress_sitz(const re15_camera_view_t *cam, int cx, int cy)
 {
-    static int s_n, s_pn[4], s_kopf_bild, s_leon_bild, s_leon_oben, s_wasser; static int32_t s_max = -1, s_kmax = -1;
+    static int s_n, s_pn[4], s_kopf_bild, s_leon_bild, s_leon_oben, s_wasser, s_ende; static int32_t s_max = -1, s_kmax = -1;
     static unsigned s_fmax = 0, s_fkmax = 0, s_raum = 0xffffffffu;
     if (s_raum != (unsigned)g_current_room_id) {
-        s_raum = (unsigned)g_current_room_id; s_n = 0; s_kopf_bild = 0; s_leon_bild = 0; s_leon_oben = 0; s_wasser = 0;
+        s_raum = (unsigned)g_current_room_id; s_n = 0; s_kopf_bild = 0; s_leon_bild = 0; s_leon_oben = 0; s_wasser = 0; s_ende = 0;
         s_max = -1; s_kmax = -1; s_fmax = 0; s_fkmax = 0;
         memset(s_pn, 0, sizeof s_pn);
+    }
+    int im_fressen = 0;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        re15_actor_t *a = &g_actors[i];
+        if (a->active && a->type == 0x23u && re15_gator_boss_im_fressen(a)) { im_fressen = 1; break; }
+    }
+    if (!im_fressen && s_n > 0 && !s_ende) {             /* Summenzeile am Ende des Finishers (P3 vorbei) */
+        s_ende = 1;
+        fprintf(stderr, "[gator-re2] Maul-Sitz Ende F%u: Bilder %d (P1 %d P2 %d P3 %d), Abweichung max %d (F%u), Kiefer-Abstand max %d (F%u), "
+                "Kopf im Bild %d/%d, Leon im Bild %d/%d + oben hinaus %d (Cut %d), im Wasser %d/%d\n",
+                (unsigned)g_engine.frame_count, s_n, s_pn[1], s_pn[2], s_pn[3], (int)s_max, s_fmax, (int)s_kmax, s_fkmax,
+                s_kopf_bild, s_n, s_leon_bild, s_n, s_leon_oben, (int)g_re15_active_cut, s_wasser, s_n);
+        return;
     }
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *a = &g_actors[i];

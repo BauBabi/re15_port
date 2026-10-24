@@ -1916,7 +1916,10 @@ int re15_gr2_kanister_sitz(re15_actor_t *e, int32_t *abw)
 #define GR2_FIN_P3    134
 #define GR2_SPIELER_R 450     /* Spielerradius 0x1c2 (Boss-Modul gb_koerper_kontakt, GR2_LEON_MIN) */
 #define GR2_FIN_RING  250     /* Suchraster der Buehne = Raster der Intro-Lage (d in 250er-Schritten) */
-#define GR2_FIN_WEIT  9000    /* groesster Versatz: halbe Becken-Diagonale (Pool 16100 x 21600, GB_AGGRO 9000 im Boss-Modul) */
+#define GR2_FIN_WEIT  27000   /* groesster Versatz = Becken-Diagonale (Aussenwaende gb_becken_draussen x[-8900..7200] = 16100,
+                               * z[-27000..-5400] = 21600 -> 26940, aufs Raster 250 aufgerundet): die Suche bricht ab, sobald
+                               * r >= beste Kosten, eine weitere Grenze waere nur ein Rueckfall-Risiko (Fortsetzung NB5: mit 9000
+                               * brauchte die Rampenmitte bis 8997, Sonde B41nb5c/probe_bsweep) */
 typedef struct {
     int     n;
     int32_t skala;
