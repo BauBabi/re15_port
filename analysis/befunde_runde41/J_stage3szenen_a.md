@@ -214,3 +214,48 @@ John ebenso (J_belege/o3061_ende_elza_zieht.png); Abblende -> ROOM30C1, Spieler 
   Mechanik, falsche Bank), **Bit 2 "deferred"**; Super_set/Super_reset fehlen.
 - Elza: Plc_motion(2,6) (log Zeile 796) -> PL04-Grundbank Clip 6 = **Knien** (J_belege/e3061_vor_ende_elza_kniet.png
   F1416..F1452), Original zieht die Waffe = W-Bank PL04W01 Clip 6 (§1.2). Dieselbe Ursache wie Punkt 1.
+
+### §2.5 Messung Original, Savestate-Reihe o3061_s2 (94 Slot-1-Staende im 2-s-Takt, ab Szenenstart; Auszuege
+`J_belege/o3061_s2_akteure.txt`, `J_belege/o3061_s2_sherry_gitter.txt`; Gitter = Objekt 0, Struktur 0x800b3f98 (lokal
++0x34, Rot +0x68, Vater +0x74, Welt-Translation +0x5c), Sherry = Gegner 0 @0x800acc2c)
+| Stand | Sherry Clip/Bild, +0x1c4 | Sherry (x,z) | Gitter lokal / Rot |
+|---|---|---|---|
+| t09 22 s | 0/20, 0x00 | (-18860,-26266) r1067 | (-19095,-495,-27045) / (0,3072,0), Vater 0x80072d4c |
+| t10 24 s | 0/78, 0x00 | (-18860,-26266) | (-18356,-266,-26788) / (72,3072,0) (rutscht) |
+| t11 26 s | 1/47, 0x22 | (-19054,-27044) | **(-18116,-266,-26788)** / (72,3072,0) = Endlage |
+| t12 28 s | 2/30, 0x06 | (-18792,-28234) | dto. |
+| t13 30 s | 2/22, 0x06 | (-18799,-29042) | dto. |
+| t14..t18 | 2/.., 0x04 / 0x24 | **(-18795,-30700)** | dto. |
+| t17 38 s | Spieler (Elza) cmd 4 / Sub 2 / Phase 2 / Clip 6; John Sub 2 Phase 2 Clip 6 | | |
+| t19 42 s | Raum 0x0C (30C1), Spieler Modell 0x0F (Sherry), Waffe 0 | | |
+Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
+
+### §2.6 Umsetzung Punkt 2
+- **Glied-Anker** `engine/src/fussanker_r41.c` + `include/re15_fussanker_r41.h` (Adressen je Zeile): feste Kette
+  E-0-1-(2|5)-(3|6)-(4|7) mit den lokalen Matrizen des aktuellen Bildes (Kanal je Sub wie @0x80050d40/e64/f88),
+  Vergleich gegen die Part-4/7-Welt-Lage des letzten Spielschritts (Hierarchie wie FUN_8001e8c8), x/z -= Differenz
+  (@0x80036ab4..aec). Haken: `enemy_ai_common.c` re15_npc_executor (alter Zweig Keyframe-Wurzelweg/"deferred" ersetzt,
+  2 Zeilen @0x80050c6c/@0x80050c94), `game_step_common.c` Ende re15_game_step `re15_fussanker_r41_merken()` (1 Zeile).
+  PORT-WAHL: ohne gemerkten Vorbild-Stand keine Verschiebung (Raumwechsel/erstes State-4-Bild; kein Lieferfall).
+- **Super_set/Super_reset** `engine/src/superobj_r41.c` + `include/re15_superobj_r41.h`: Vater-Art 0x80 + Part-Bit
+  (Gegner-Teil-Weltmatrix) und 0x00 (Welt); Reset uebernimmt die Welt-Lage, Rot = pc+2/4/6. Haken: `scd_vm.c`
+  register_opcodes (0x48/0x49, 1 Block), `platform/pc/main.c` pc_prop_world (4 Zeilen: angehaengtes Prop = Vater x lokal).
+  OFFEN (kein Lieferfall): Vater 0x40/0xc0, Gegner ausserhalb State 4 (ROOM4030/4031 sub07 `48 00 80 81`, Typ 0x2D:
+  dort wird der Opcode wie bisher uebersprungen, Messzeile `[superobj41] ... OFFEN`).
+- PSX-Plattform: kein Zeichner-Haken fuer angehaengte Props (asset/render_psx nicht gebaut) — OFFEN fuer die Paritaet.
+
+### §2.7 Messung Port NACHHER (Laeufe e3061_nach1 = Anker, e3061_nach2 = Anker + Super_set; Elza, RE15_FUSSANKER_LOG)
+- Anker-Takte (debug.log `[fussanker41]`): Clip 1: Kette 0 x22, Kette 1 x22, Kette 0 x11; Clip 2: (Kette 1 x26,
+  Kette 0 x24) x2 — = die Plc_flg-Folge von sub04.
+- Sherry-Lage Port gegen Original: Clip 1 Bild 47 **(-19055,-27019) / (-19054,-27044)**; Clip 2 Bild 30 (1. Runde)
+  **(-18791,-28248) / (-18792,-28234)**; Clip 2 Bild 22 (2. Runde) **(-18799,-29081) / (-18799,-29042)**.
+- Gitter: Super_reset F1040 Welt-Lage **(-18753,-266,-26778)** gegen Original-Loslass-Lage (-18756,-266,-26788);
+  Endlage Port (-18113,-266,-26778) gegen (-18116,-266,-26788).
+- Bild: Sherry zieht das Gitter mit beiden Haenden heraus, legt es links flach ab, kriecht hinein, bis nur die Beine
+  herausschauen, dann ist sie weg (J_belege/e3061_nach_gitter_kriechen.png, Seite an Seite mit dem Original:
+  J_belege/vergleich_3061_gitter_kriechen.png).
+- Rest-Abweichung (unsichtbar, Sherry steckt im Gebaeude): Original-Endlage (-18795,-30700), Port (-18792,-29716).
+  Das Original schiebt sie nach dem Schleifenende um ~984 weiter: SCA-Eintraege (Region 2/0 = #9, Region 3/1 = #17,
+  Rechteck x -31340..12792, z -30382..-26744) werden @0x01330..0x0133C wieder eingeschaltet, sie steht darin und wird
+  hinaus geschoben (-30382 - 318). Port: `re15_npc_wall_clamp` (Wurzel @0x8011cc64 `jal 0x8003b0a4`) loest nur die
+  Bewegung alt->neu, kein Herausschieben bei Stillstand. OFFEN (NPC-Kollision allgemein = Spur H; im Bild ohne Wirkung).
