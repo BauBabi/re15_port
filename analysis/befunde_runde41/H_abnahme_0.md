@@ -86,6 +86,14 @@ Stichproben (mehr als die geforderten 3), jeweils die Stelle selbst gelesen, nic
    `s7` @0x8002bd84, Gate 0x40 @0x8002ce1c, Schranke nOmodel @0x8002c048. Suche nach `deferred|tunable|interim|for now|
    faithful|plausibel|TODO` im Code-Diff (`git diff 7b59e297 -- re15_port`): kein Treffer. Env-Schalter sind nur Messhaken
    (`RE15_KOLLISION_LOG`, `RE15_KOLLISION_SETZE`), kein Abschluss ueber einen Schalter.
+7. Weitere Zitate der Spur nachgelesen: Spielerkasten PSX.EXE Datei 0x64694 = `00 00 06 fa 00 00 c2 01 fa 05 c2 01` (r 450);
+   Spieler-Tick `80031cb4 jalr v0` -> `80031cbc jal 0x8002b544` (Spieler aus allen Entitaeten, Gegenstueck re15_body_push_player);
+   Objekt-Pool nach obj-Nummer indiziert: Obj_model_set `8004093c lbu a3,1(a2)` (obj-Nummer) / `80040944-58` a3*148 + 0x800b3f98
+   (= `re15_kollision_r41_kisten_pass` sucht den Pool-Platz ueber `obj_id`); Hautabstand der Wandklemme `8003bce0 addiu t1,v0,18`.
+8. Erklaert der Fix den gemessenen Befund? Ja, beide: (1) der Port-NPC-Tick hatte nach dem Zustand NUR die Klemme
+   (`re15_npc_wall_clamp`), das Original hat davor aec4 + b544 — ohne sie schiebt nichts eine NPC aus einer anderen (vorher-Laeufe
+   4.1/4.4: Abstand 0); (2) `re15_prop_push_tick` fuehrte den Durchlauf @0x8002c03c-c0a8 nicht (alter Kopfkommentar "Nicht
+   portiert ... ROOM1090 ... verschiedene Baender"), also gab es keine Kiste-gegen-Kiste-Sperre (vorher-Laeufe 4.3/4.5/4.6).
 
 ## 4. Messungen an der exe (Fortsetzung, eigene Laeufe)
 Werkzeuge (Arbeitsordner `skripte/`): `lauf2.sh` (je Lauf eigener Ordner, alle RE15_* des Aufrufers geloescht, exe-Kopie
@@ -222,3 +230,42 @@ nach dem Tuerweg = nach dem Sprung (4.7), und die Schubkette haengt nur an Spiel
   unit_r37/r38/r39 NPC-Szenen).
 - Ausgeschlossen und NICHT gefahren: unit_r38_releaseskript_{version,bausteine,trocken,ablauf,fehler_bau,fehler_umfeld,cmd},
   unit_r35_android_pruefkette, unit_r35_android_bash_mutanten, unit_r39_titelversion_ablauf (kein Bezug zum Diff; Hinweis H3).
+
+### 5.2 Fremder Riegel `test_r39_dining1141_kampf.cmake` (Runde 39 Spur J), WARTE 60 -> 240 — Behauptung nachgemessen
+Die UNVERAENDERTE master-Fassung (`git show master:.../test_r39_dining1141_kampf.cmake`, WARTE 60) als Kopie im Arbeitsordner
+(`dining_orig/kampf_w60_{vor,nach}.cmake`, einzige Aenderung: eigener exe-Praefix `re15_pc_h41dk{v,n}_` statt `re15_pc_r39j_k_`, damit
+sich die Laeufe nicht gegenseitig die Kopie loeschen; `diff` nach Praefix-Normierung leer) gegen beide exe:
+- **vor** (`w60_vor.log`, rv=0): `12 Schuesse, 11 Treffer` / `ok   NB2 (a): 2 Treffer, waehrend Elza im Griff ist (gr=1); kein
+  Fehlschuss wegen des Opferzustands (0)`.
+- **nach** (`w60_nach.log`, rv=1): `12 Schuesse, 10 Treffer` / `FAIL NB2 (a): 0 Treffer, waehrend Elza im Griff ist (gr=1); kein
+  Fehlschuss wegen des Opferzustands (0)`; (b), (c), N4.3, Querungs-Wache gruen.
+=> Die Behauptung der Spur stimmt: rot wird der alte Riegel ERST durch Spur H, und nur Kriterium (a) (Zufallsdeckung Salve/Griff-
+Fenster), nicht durch einen Fehlschuss am Opferzustand. Dass John (0x49) jetzt aus den Gorillas geschoben wird, ist Original:
+b544 hat keinen Typfilter (RE-Gate 2), Gorilla-Kasten r 1600 vorbestehend (`re15_damage.c`, @0x80121350). Die geaenderte Fassung
+(WARTE 240) laeuft in der Integrationsgruppe 5.3 mit.
+
+## 6. Vertrag (VERTRAG.md)
+- Pfade (`git diff master...HEAD --name-only`, gegen die merge-base 7b59e297, weil master inzwischen weiter ist — ein plumpes
+  `git diff master` listet die pri/-Ersetzung 919cc1ed des Orchestrators, die NICHT von der Spur stammt): ausser `analysis/
+  befunde_runde41/H_*` und der Orchestrator-Synchronisation von AUFTRAG.md nur die 10 Dateien unter re15_port aus Abschnitt 1.
+  Keine Datei unter release/, platform/android/, shared_assets/PSX/, pri/, synchro/, kein CMakeLists.txt (Registrierung ueber
+  `tests/unit/probes/r41_kollision.cmake`). **haelt.**
+- Bank-9-Bits / Nachrichten-Ids / Slots / Ereignisse: keine belegt (grep im Code-Diff nach Bank 9, `re15_game_flag_set(9`,
+  Nachrichten-Ids: nichts). **haelt.**
+- Gemeinsame Dateien nur kleine Haken mit "Runde 41 Spur H": aot_common.c (1 Include + 1 Zeile + 1 Zweig + berichtigter Kopf-
+  kommentar), game_step_common.c (1 Include + 1 Zeile), enemy_ai_common.c (1 Include + 1 Zeile); 8 markierte Zeilen. **Klein: ja.**
+  **ABER enemy_ai_common.c ist in VERTRAG §1.3 nicht der Spur H zugeteilt** (dort A, L; seit I-E1 auch I) — Mangel V1 (formal).
+  Begruendung der Spur selbst geprueft: die Original-Reihenfolge Zustand -> aec4 @0x8011cc3c -> b544 @0x8011cc44 -> Wandklemme
+  @0x8011cc64 liegt IM NPC-Tick (RE-Gate 1); ein Haken in game_step_common.c nach dem Gegnerdurchlauf liefe hinter der Klemme und
+  hinter allen spaeteren Ticks. Technisch zwingend; Konfliktpruefung mit Spur I (`git -C r41_zombiefresser diff master`): I setzt
+  ihr Include hinter master-Zeile 60, H hinter Zeile 58 — zwei unveraenderte Zeilen dazwischen, kein Textkonflikt zu erwarten.
+- Fremder Riegel `tests/integration/test_r39_dining1141_kampf.cmake` (Runde 39 Spur J) geaendert (WARTE 60 -> 240, Kriterien
+  unveraendert, Kommentar "Runde 41 Spur H") — VERTRAG "nur eigene Pfade adden" -> Mangel V2 (formal). Inhaltlich nachgemessen
+  und begruendet (5.2): ohne die Aenderung waere der Riegel nach Spur H rot, und zwar nur an der Zufallsdeckung (a).
+- Riegel je Punkt vorhanden und messend: Punkt 1 `unit_r41_kollision_{npc,raum3070,raum3001}` + `integration_r41_kollision_
+  {npc3070,npc3001}` (Abstand je Bild, Kontakt-Pflicht gegen Vakuitaet), Punkt 2 `unit_r41_kollision_kiste` + `integration_r41_
+  kollision_{kiste,raetsel_leon,raetsel_elza}` (Lage statt Ziel, Grenze 1800/1801, Raetsel loesbar Leon UND Elza). Parallel-fest
+  (eigener `lauf_<zufall>`-Ordner, exe-Kopie `re15_pc_r41h_<teil>_*`, nur eigene Kopien geloescht, RE15_*-Umgebung geleert),
+  Linux-fest (`cmake_minimum_required` im -P-Skript, `m` gelinkt, keine .exe-/Backslash-Pfade, kein popen). Unit-Ausgaben selbst
+  gelesen (`test_r41_kollision.exe npc|raum3070|raum3001|kiste`: alle PASS, z.B. `|dX| = 1800 = hx+hx -> UEBERLAPPUNG`,
+  `|dX| = 1801 -> frei`, `min. Abstand 899 >= 880`, `min. Abstand 732 >= 730`). **haelt.**
