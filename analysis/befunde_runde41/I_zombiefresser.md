@@ -434,3 +434,40 @@ Slot 1: F1 WECKT, F2 P2-SAAT, F3 erstes P2-Bild `kf=400 af=0 frac=15`, die 4 fer
   Bild 0, +0x8f 15, genau einen Takt nach dem `P2-SAAT` des zf.log. Gemessen: `re15_2000: Pose Slot 3/4: 12 Bilder Keyframe
   301, erstes P2-Bild F12 Keyframe 400`, `re15_3000: Pose Slot 1: 3 Bilder ..., F3 Keyframe 400; Slots 3/5/6/7 je 360
   Bilder Halt 301`.
+
+### 8.6 Vertrag (Nachbesserung 1)
+
+- Neue Haken ausserhalb der Spur-I-Zuteilung (VERTRAG §1.3), je klein und markiert "Runde 41 Spur I":
+  - `engine/src/anim_select_common.c` (laut §1.3 Spur J/K): 3 Zeilen im Gegnerzweig von `re15_actor_anim_select` — die EINE
+    Auswahlstelle, die beide Renderer (platform/pc und platform/psx) fuer Gegner benutzen; die angezeigte Pose laesst sich
+    sonst nicht von +0x94 trennen, ohne +0x94 (RAM-treu) zu verbiegen. Bei der Integration mit J/K gegenlesen.
+  - `platform/pc/main.c` (laut §1.3 D/F/G): 2 Zeilen im Boot-/LADE-Pfad (I-E2 ist vom Orchestrator an Spur I gegeben;
+    die Ursache liegt genau dort). Bei der Integration mit D (Lautstaerke) und F/G (Szenen-Haken) gegenlesen.
+  - `engine/src/enemy_ai_common.c`: der in I-E1 angenommene Grid-[4..6]-Haken waechst von 2 auf 3 Zeilen.
+- Keine Bank-9-Bits, keine Nachrichten-Ids, kein shared_assets/pri/synchro/release/android.
+
+### 8.7 OFFEN (Stand Nachbesserung 1)
+
+1. (unveraendert, = Abnahme H1) RE2-KI im Kanal 2000/2001: Spieler direkt ueber dem Zombie (< 2000) -> RE2-Etagen-Schnapper
+   DECISION[2] Block A @0x8010205C-94 / EXEC[14] @0x80104D74 = RE2-Retail-Verhalten.
+2. ~~LADE-Weg 2000/2001~~ -> behoben (8.2/8.4, I-E2). Wirkung auch auf die anderen Raeume mit main00-Evt_exec beim Laden
+   (1021, 1031, 4010, 4031, 5011 — Zensus 8.2): dort startet sub00 jetzt ebenfalls wie im Original (FUN_8003ef6c); 1170
+   behaelt die Erzaehler-Halte (Port-Vorspann). Gegenproben: Integrationsgruppe 8.8.
+3. ~~RE1.5-KI Pose vor dem Wecken~~ -> behoben (M1).
+4. (unveraendert) RE2-KI: Aufstehen RE2-Clip 8/9 (80 Bilder) statt RE1.5-Clip 0x12 (98) — RE2-Praesentation der RE2-KI.
+5. (Abnahme H3, nicht Teil dieser Nachbesserung, nicht selbst disassembliert) nach dem Loesen aus dem RE2-Griff fallen
+   die Kanal-Zombies (`ss1=5`) und rutschen bis ~2 500 Einheiten (EXEC[9] Schub +0x144 = 400 @0x80103F60-64 laut
+   Port-Kommentar). Eigener Auftrag, falls gewuenscht.
+6. Messhinweis (kein Verhalten): `RE15_ANIM_TRACE` druckt waehrend des Halts `fc_render` 1 (Clip 0x0c) neben `fc_clock`
+   98 (+0x94 = 0x12); der Bildzaehler steht dort fest auf 0 (player_common.c Liege-Pin), die Uhr wirkt erst ab P2. Der
+   Blutanker-Zwilling `schuss_r36.c zeichen_bank` kennt den Halt nicht — Liegende sind in P0..P2 unschiessbar
+   (+0x93 Bit 0 @0x80103940-4c), es entsteht dort kein Treffer.
+
+### 8.9 Fuer den Nutzer (Nachbesserung 1)
+
+- Spielstand IN ROOM2000 (Leon) bzw. ROOM2001 (Elza) laden: die beiden Kanal-Zombies sind jetzt da, liegen flach und stehen
+  auf, wenn man naeher kommt — genau wie beim Betreten durch die Tuer (vorher fehlten sie nach dem Laden ganz).
+- Mit RE1.5-KI (Optionsmenue) liegen die Zombies in 2000/2001/3000/3010 (und die Liegenden in STAGE1, z.B. 1070/1140) vor
+  dem Aufstehen in der Original-Liegepose (flach, Arme abgespreizt) und gehen fliessend in das Aufstehen ueber; mit der
+  Standard-KI (RE2) aendert sich nichts.
+- Keine neuen Assets, keine Sprachdateien, keine Entscheidungsfragen.
