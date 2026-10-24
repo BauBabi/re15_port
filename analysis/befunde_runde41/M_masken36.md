@@ -523,6 +523,27 @@ gebaut ist (masken36_r37.c Kopf: "Bodenflaechen in der Auswahl (ROOM30E0 Cut 7, 
 Cuts im Spiel keine Generator-Maske zeichnen, ist richtig. Was dort fehlt, sind die GELAENDER (3050 C6, 30E0 C6/C7) - die hat der
 Generator nie gefunden; sie brauchen eine Freistellung (Restliste fuer den Nutzer).
 
+### NB2 Mangel 1 - echte Gegenstaende ohne automatisches Modell: Zelle von Hand (mit Beleg je Objekt)
+**Ursache (gemessen, `m41nb2/py/sichtung.py`):** die automatische Zuordnung (geometrie.zelle_zuordnen) verlangt, dass die MEHRHEIT der
+Bodenkontakte (unterste Regionszeile je Spalte, auf den Boden zurueckprojiziert) in EINER Sperrzelle liegt. Das scheitert an echten
+Gegenstaenden, deren Unterkante nicht der Boden ist: die X-Kiste 5020 C6 steht auf zwei Kufen (Anteil 0,19 - die Spalten zwischen
+den Kufen schauen auf den Boden HINTER der Kiste), die Buero-Trennwand 30A0 C0/C1 (0,49 / 0,46 - knapp unter der Mehrheit), Kisten
+mit angeschnittener Unterkante (5090 C13 0,41), Objekte am unteren Bildrand (5050 C1/C2, 30A0 C0: 0,00) und Teile ueber einem
+Hohlraum (5020 C0 Treppenwange, 3040 C0 Schaltkasten auf der Kiste: "kein Bodenkontakt").
+**Weg:** je solcher Gegenstand die Zelle VON HAND (`re15_port/tools/maske/zuordnung_r41.json`, 16 Eintraege; Werkzeug
+`zellen3d_r41.py --zuordnung`, `tiefe_zelle_r41.zelle_von_hand`/`koerper_geometrie`). Ausgewaehlt wurde je Objekt die Sperrzelle eines
+begehbaren Bands, deren Koerper-Silhouette (gemessene Hoehe, IoU-Maximum wie raum.py "zelle") den Gegenstand SELBST zeigt -
+Grundriss unter dem Fuss des Gegenstands, Vorderkante = Unterkante im Bild (Bild je Eintrag `M_bilder/NB2/NB2_zuordnung_*.png`:
+links Objekt gelb/rot, Mitte Kandidat 1, rechts Kandidat 2). Die Hoehe wird an ALLEN Objekten derselben Zelle im Cut gemessen
+(ein Gegenstand, den die Region in mehrere Komponenten teilt, hat eine Hoehe). Bei der X-Kiste lag Zelle 10 (IoU 0,63, Saeule)
+knapp vor Zelle 12 (0,61) - Zelle 10 steht aber HINTER der Kiste (Unterkante im Bild hoeher), die Kufen stehen in Zelle 12
+(Grundriss x -4875..-2275 z -15425..-12825, Bytes @RDT+0x00870 `28 0a 28 0a f5 ec bf c3 01 ff 00 03`). Nicht von Hand zugeordnet
+(kein passender Koerper, IoU <= 0,23 oder Hoehe 25 = Bodenplatte): 6000 C7/C8/C9 (Lok-Unterteil/Treppe), 5100 C7, 5050 C1 Schreibtisch
+links, 30A0 C3 Schraenke (Zelle 6/7 zeigen nicht den Schrank), 30A0 C1 Gegenstand am Boden. Ob ein Rechteck gezeichnet wird,
+entscheidet weiter der Ausschluss mit dem 3D-Urteil - die Zuordnung liefert nur Koerper und Tiefe.
+**3D-Urteil, Feinschliff:** ein Figurpunkt IM Koerper (Kamera draussen) zaehlt jetzt als verdeckt - die Strecke Kamera -> Punkt tritt
+vor ihm in den Koerper ein (vorher "kein Urteil"; betraf 5090 C11 R0/R5/R89, je 1..3 Punkte an der Dreieckszelle).
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
