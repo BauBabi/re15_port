@@ -18,6 +18,15 @@
  *      mit +0x1d0 >= 4000 -> 300 Bilder kein Wecken; groesster mit +0x1d0 < 4000 -> Wecken.
  *   E  WARTEZEIT ueber 48 Seeds: Abstand Wecken -> Latch frei in [1, 16], mindestens 10 verschiedene Werte.
  *   F  GEGENPROBE echter Fresser 0x86 (ROOM1140): RE2-KI weiter EXEC[8] (Sub 8), RE1.5-KI grid 0 / Sub 0xc.
+ *   G  LIEGEPOSE VOR DEM WECKEN (Nachbesserung 1, Abnahme-Mangel M1), gemessen am RENDERER-WEG (re15_actor_anim_select +
+ *      re15_compute_actor_kf, dieselben Funktionen wie platform/{pc,psx}/main.c): RE1.5-KI zeigt jeder Liegende
+ *      (0x84/0x87 -> Clip 0x0c, 0x85/0x88 -> Clip 0x0e) bis zum ersten P2-anim_set Keyframe 0x12d bzw. 0x149 (INIT-f314
+ *      @0x80100c34, Bank 1 Bild 0 = 0x0000012d / 0x00000149), waehrend +0x94 (motion) RAM-treu 0x12/0x13 bleibt
+ *      (FINAL @0x80100c7c/cc0, Original-RAM Dossier 2.1b). Ab P2 (+0x6 = 2, f314 @0x801039a8) zeigt der Renderer +0x94,
+ *      und die Blende (+0x8f = 0xf @0x80103998) startet aus der GEHALTENEN Pose: erstes P2-Bild naeher an Clip 0x0c als
+ *      am ungemischten Clip 0x12, nach 16 Bildern = ungemischter Clip. Raeume 2000 (0x84), 3010 (0x85), 3000 (0x84),
+ *      1070 (0x87/0x88, Skript-Wecken Member_set(12,0x89/0x8a) sub02 @0x016ae-ce); RE2-KI unberuehrt (Clip 23/22),
+ *      MIXED wie RE1.5.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -41,6 +50,8 @@
 #include "re2_ems.h"
 #include "re15_wasserzombie_r38.h"
 #include "re15_zombiefresser_r41.h"
+#include "re15_anim_select.h"
+#include "re15_skeleton.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -452,6 +463,184 @@ static void teil_f(void)
     }
 }
 
+/* ---- G: Liegepose vor dem Wecken (Nachbesserung 1, M1) ------------------------------------------------------------ */
+/* Was der Renderer zeichnet: dieselbe Auswahl wie platform/pc/main.c (re15_actor_anim_select -> clip_override ->
+ * re15_compute_actor_kf mit dem Bildzaehler anim_frame bei 30 fps). */
+static int g_render(const re15_actor_t *e, int *clip, int *kf, const re15_emd_skeleton_t **sk)
+{
+    re15_anim_banks_t banks; memset(&banks, 0, sizeof banks);
+    re15_anim_view_t av; memset(&av, 0, sizeof av);
+    re15_actor_anim_select(e, 0, &banks, &av);
+    if (!av.anim || !av.skel || av.anim->clip_count <= 0) return 0;
+    *clip = (av.clip_override >= 0) ? av.clip_override : (int)e->motion;
+    *kf = re15_compute_actor_kf(av.anim, av.skel, e, av.clip_override, (uint32_t)e->anim_frame);
+    if (sk) *sk = av.skel;
+    return 1;
+}
+/* Bild 0 eines Clips der Hauptbank (Bank 1, +0x170/+0x174) als Keyframe-Index. */
+static int g_kf0(uint8_t type, int clip)
+{
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
+    if (!eb || clip >= eb->anim.clip_count) return -1;
+    return (int)(eb->anim.frames[eb->anim.clips[clip].first_frame] & 0xFFFu);
+}
+/* Soll je Deskriptor: sel {4,7,9} -> Clip 0x0c (Keyframe 0x12d), sel {5,8,0xa} -> Clip 0x0e (0x149). */
+static int g_soll_clip(uint8_t grid) { uint8_t sel = grid & 0x1f; return (sel == 4 || sel == 7 || sel == 9) ? 0x0c : 0x0e; }
+static int g_soll_kf(uint8_t grid)   { return g_soll_clip(grid) == 0x0c ? 0x12d : 0x149; }
+static int g_final(uint8_t grid)     { return g_soll_clip(grid) == 0x0c ? 0x12 : 0x13; }
+static int g_liegend_deskr(const re15_actor_t *e)
+{
+    uint8_t sel = e->grid_id & 0x1f;
+    return e->active && e->type >= 0x10 && e->type <= 0x1f && (e->grid_id & 0x80) &&
+           (sel == 4 || sel == 5 || sel == 7 || sel == 8);
+}
+/* Summe der Knochen-Abstaende zweier Posen (Lage relativ zur Wurzel). */
+static long g_abstand(const re15_skel_pose_t *a, const re15_skel_pose_t *b, int n)
+{
+    long d = 0;
+    for (int i = 0; i < n; i++)
+        for (int k = 0; k < 3; k++) { long v = (long)a[i].trans[k] - (long)b[i].trans[k]; d += v < 0 ? -v : v; }
+    return d;
+}
+
+/* G1: Zensus in Ruhe (Spieler weit weg): Spawnbild (vor dem ersten KI-Takt) und nach 12 Bildern. */
+static void teil_g1(const raum_t *r, const char *name, re15_ai_flavor_t fl, int erwartet)
+{
+    const char *ki = fl == RE15_AI_FLAVOR_RE2 ? "RE2" : fl == RE15_AI_FLAVOR_MIXED ? "MIXED" : "RE1.5";
+    const int re2 = (fl == RE15_AI_FLAVOR_RE2);
+    raum_start(r, fl, 30000, 30000, 0, 0x2545f491u);
+    for (int pass = 0; pass < 2; pass++) {
+        if (pass == 1) for (int f = 0; f < 12; f++) { g_actors[0].x = 30000; g_actors[0].z = 30000; bild(); }
+        int n = 0, ok = 0;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+            const re15_actor_t *e = &g_actors[s];
+            if (!g_liegend_deskr(e)) continue;
+            n++;
+            int clip = -1, kf = -1;
+            if (!g_render(e, &clip, &kf, NULL)) { CHECK(0, "G1 %s %s: slot %d ohne Bank", name, ki, s); continue; }
+            int halt = re15_r41_liege_skelett_clip(e);
+            printf("  [G1 %s %s %s] slot %2d typ %02x grid %02x Wort %d/%d/%d +0x94 %d -> Renderer Clip %d Keyframe 0x%03x "
+                   "(Halt %d)\n", name, ki, pass ? "Ruhe" : "Spawnbild", s, e->type, e->grid_id, e->state, e->sub_state_1,
+                   e->sub_state_2, (int)e->motion, clip, kf, halt);
+            if (re2) {
+                if (halt == -1 && clip == (int)e->motion) ok++;            /* RE2-Hirn posiert selbst (EXEC[7]) */
+            } else {
+                if (clip == g_soll_clip(e->grid_id) && kf == g_soll_kf(e->grid_id) &&
+                    kf == g_kf0(e->type, g_soll_clip(e->grid_id)) &&
+                    (pass == 0 || (int)e->motion == g_final(e->grid_id)) && e->anim_frame == 0) ok++;
+            }
+        }
+        CHECK(n == erwartet, "G1 %s %s: %d Liegende statt %d", name, ki, n, erwartet);
+        CHECK(ok == n, "G1 %s %s %s: nur %d von %d zeigen die erwartete Pose (%s)", name, ki, pass ? "Ruhe" : "Spawnbild",
+              ok, n, re2 ? "RE2: Clip = motion, kein Halt" : "Clip 0x0c/0x0e, Keyframe 0x12d/0x149, +0x94 0x12/0x13");
+    }
+}
+
+/* G2: Wecken (RE1.5): Spieler 500..1500 vor einem Liegenden; bis P2 Halt, danach +0x94 mit Blende aus der Halt-Pose. */
+static void teil_g2(const raum_t *r, const char *name, int32_t zx, int32_t zz, int32_t px, int32_t pz, int16_t prot)
+{
+    static re15_skel_pose_t gez[RE15_EMD_MAX_BONES], roh[RE15_EMD_MAX_BONES], halt[RE15_EMD_MAX_BONES];
+    raum_start(r, RE15_AI_FLAVOR_RE15, 30000, 30000, prot, 0x0badf00du);
+    for (int f = 0; f < 3; f++) { g_actors[0].x = 30000; g_actors[0].z = 30000; bild(); }
+    int s = slot_bei(zx, zz);
+    CHECK(s > 0, "G2 %s: Zombie (%d,%d) fehlt", name, (int)zx, (int)zz);
+    if (s <= 0) return;
+    for (int o = 1; o < RE15_ACTOR_MAX; o++)
+        if (o != s && g_actors[o].active && g_actors[o].type >= 0x10 && g_actors[o].type <= 0x1f) {
+            g_actors[o].x = -30000; g_actors[o].z = -30000;
+        }
+    re15_actor_t *e = &g_actors[s];
+    const uint8_t grid0 = e->grid_id;
+    int n_halt = 0, halt_falsch = 0, p2 = -1, p2_clip = -1, p2_frac = -1, steht = -1, nb = 0;
+    long d_halt = -1, d_roh = -1, d_16 = -1;
+    for (int f = 0; f < 200 && steht < 0; f++) {
+        g_actors[0].x = px; g_actors[0].z = pz; g_actors[0].rot_y = prot;
+        bild();
+        int clip = -1, kf = -1; const re15_emd_skeleton_t *sk = NULL;
+        if (!g_render(e, &clip, &kf, &sk)) break;
+        nb = sk->bone_count < RE15_EMD_MAX_BONES ? sk->bone_count : RE15_EMD_MAX_BONES;
+        g_anim_pose_actor = e;                                   /* = Renderer: Blende aus der zuletzt gezeichneten Pose */
+        (void)re15_skel_compute_pose(sk, kf, gez);
+        g_anim_pose_actor = NULL;
+        if (e->state == 1 && e->sub_state_1 == 0 && e->sub_state_2 < 2) {
+            n_halt++;
+            if (clip != g_soll_clip(grid0) || kf != g_soll_kf(grid0)) halt_falsch++;
+            memcpy(halt, gez, sizeof halt);
+        } else if (p2 < 0 && e->sub_state_2 >= 2) {
+            p2 = f; p2_clip = clip; p2_frac = e->anim_frac;
+            (void)re15_skel_compute_pose(sk, kf, roh);           /* ungemischtes Bild desselben Keyframes */
+            d_halt = g_abstand(gez, halt, nb); d_roh = g_abstand(gez, roh, nb);
+        } else if (p2 >= 0 && f == p2 + 16) {
+            (void)re15_skel_compute_pose(sk, kf, roh);
+            d_16 = g_abstand(gez, roh, nb);
+        }
+        if (e->grid_id == 0 && e->state == 1 && e->sub_state_1 == 2) steht = f;
+    }
+    printf("  [G2 %s RE1.5] slot %d grid %02x: %d Bilder Halt (falsch %d), P2 ab F%d Renderer Clip %d +0x8f %d, "
+           "Blende: Abstand zur Halt-Pose %ld / zum ungemischten Bild %ld, nach 16 Bildern %ld, steht F%d\n",
+           name, s, grid0, n_halt, halt_falsch, p2, p2_clip, p2_frac, d_halt, d_roh, d_16, steht);
+    CHECK(n_halt >= 1 && halt_falsch == 0, "G2 %s: Halt-Pose vor P2 falsch (%d von %d Bildern)", name, halt_falsch, n_halt);
+    CHECK(p2 >= 0 && p2_clip == g_final(grid0), "G2 %s: P2 zeigt Clip %d statt +0x94 = %d", name, p2_clip, g_final(grid0));
+    CHECK(p2_frac >= 0xd && p2_frac <= 0xf, "G2 %s: +0x8f %d beim P2-Eintritt (0xf @0x80103998)", name, p2_frac);
+    CHECK(d_halt >= 0 && d_roh > 0 && d_halt < d_roh,
+          "G2 %s: erstes P2-Bild nicht aus der Halt-Pose geblendet (zur Halt-Pose %ld, zum Clip %ld)", name, d_halt, d_roh);
+    CHECK(d_16 == 0, "G2 %s: nach 16 Bildern noch Blende (Abstand %ld)", name, d_16);
+    CHECK(steht >= 0, "G2 %s: steht nicht auf", name);
+}
+
+/* G3: Skript-Wecken 0x87/0x88 -> 0x89/0x8a (ROOM1070 sub02 Member_set(12,..) @0x016ae-ce, `sb a2,9(a0)` @0x800411f4):
+ * DECIDE @0x80103a0c-30 setzt +0x6 = 2 / +0x8f = 0xf im selben Takt -> ab diesem Bild zeigt der Renderer +0x94. */
+static void teil_g3(void)
+{
+    raum_t r1070 = { "STAGE1/ROOM1070.RDT", 0x1070, 0, 0, {{0,0}}, 0 };
+    if (!raum_laden(r1070.rdt, r1070.room)) return;
+    raum_start(&r1070, RE15_AI_FLAVOR_RE15, 30000, 30000, 0, 0x2545f491u);
+    for (int f = 0; f < 12; f++) { g_actors[0].x = 30000; g_actors[0].z = 30000; bild(); }
+    int n = 0, n_halt = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        if (!g_liegend_deskr(e)) continue;
+        n++;
+        int clip = -1, kf = -1;
+        if (g_render(e, &clip, &kf, NULL) && clip == g_soll_clip(e->grid_id) && kf == g_soll_kf(e->grid_id)) n_halt++;
+        printf("  [G3 1070 RE1.5 Ruhe] slot %d typ %02x grid %02x +0x94 %d -> Renderer Clip %d Keyframe 0x%03x\n", s,
+               e->type, e->grid_id, (int)e->motion, clip, kf);
+        e->grid_id = (uint8_t)(((e->grid_id & 0x1f) == 8) ? 0x8a : 0x89);   /* Member_set(12, 0x8a/0x89) */
+    }
+    g_actors[0].x = 30000; g_actors[0].z = 30000; bild();
+    int ok = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *e = &g_actors[s];
+        if (!e->active || e->type < 0x10 || e->type > 0x1f || !(e->grid_id == 0x89 || e->grid_id == 0x8a)) continue;
+        int clip = -1, kf = -1;
+        if (!g_render(e, &clip, &kf, NULL)) continue;
+        printf("  [G3 1070 RE1.5 geweckt] slot %d grid %02x Wort %d/%d/%d +0x8f %d -> Renderer Clip %d (+0x94 %d)\n", s,
+               e->grid_id, e->state, e->sub_state_1, e->sub_state_2, e->anim_frac, clip, (int)e->motion);
+        if (e->sub_state_2 >= 2 && clip == (int)e->motion && clip == g_final(e->grid_id) && e->anim_frac >= 0xd) ok++;
+    }
+    CHECK(n == 5 && n_halt == n, "G3 1070: %d Liegende (Soll 5: 0x88 x3, 0x87 x2, sub00 @0x015ca-1a), %d mit INIT-Pose",
+          n, n_halt);
+    CHECK(ok == n, "G3 1070: nur %d von %d zeigen nach dem Skript-Wecken +0x94 mit Blende", ok, n);
+}
+
+static void teil_g(void)
+{
+    if (raum_laden(R2000.rdt, R2000.room)) {
+        teil_g1(&R2000, "2000", RE15_AI_FLAVOR_RE15, 2);
+        teil_g1(&R2000, "2000", RE15_AI_FLAVOR_MIXED, 2);
+        teil_g1(&R2000, "2000", RE15_AI_FLAVOR_RE2, 2);
+        teil_g2(&R2000, "2000", -22550, -10100, -21300, -10100, 0x800);
+    }
+    if (raum_laden(R3010.rdt, R3010.room)) {
+        teil_g1(&R3010, "3010", RE15_AI_FLAVOR_RE15, 6);
+        teil_g1(&R3010, "3010", RE15_AI_FLAVOR_RE2, 6);
+        teil_g2(&R3010, "3010-0x85", -12900, 9000, -12900, 8000, 0x400);   /* Skript-Slot 3 = 0x85 (main00 @0x021ac) */
+    }
+    if (raum_laden(R3000.rdt, R3000.room))
+        teil_g2(&R3000, "3000", -9900, -14800, -8700, -14800, 0x800);
+    teil_g3();
+}
+
 int main(void)
 {
     re15_r41_liegewecker_enable(1);
@@ -491,6 +680,7 @@ int main(void)
     teil_d();
     teil_e();
     teil_f();
+    teil_g();
     re15_wasserzombie_bank_vergessen();
     if (s_fails) { printf("== %d FEHLER ==\n", s_fails); return 1; }
     printf("== OK ==\n");

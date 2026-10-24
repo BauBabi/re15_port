@@ -4881,6 +4881,8 @@ re_title:;
      * held until it ends. If none spawned (flags already advanced), run sub00 now. */
     int s_preintro = 0, s_sub11_slot = -1, s_sub00_spawned = 0;
     for (int s = SCD_EVENT_SLOT_FIRST; s <= SCD_EVENT_SLOT_LAST; s++) {
+        if (g_current_room_id != 0x1170) break;   /* Runde 41 Spur I (I-E2): nur der 1170-Erzaehler wie am Tuerweg (Raumwechsel-
+                                                   * Block unten); sonst sub00 wie FUN_8003ef6c @0x8003efd4-d8 (LADEN @0x8001d5ac) */
         if (g_scd.threads[s].active) { s_sub11_slot = s; s_preintro = 1; break; }
     }
     if (!s_preintro && rdt_ok && rdt.sub_scd[0]) {

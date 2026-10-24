@@ -83,6 +83,27 @@ int  re15_r41_liegewecker_re2_tick(re15_actor_t *e, const re15_actor_t *pl);
  * im Aufrufer die Liege-Phasenmaschine (ANIMATE). 1 = zustaendig, 0 = nicht. */
 int  re15_r41_liegewecker_re15_decide(re15_actor_t *e);
 
+/* NACHBESSERUNG 1 (Abnahme 0, M1) — die LIEGEPOSE VOR DEM WECKEN (RE1.5-KI; gilt fuer 0x84/0x85 UND 0x87/0x88).
+ * Das Original posiert das Skelett nur in anim_set (FUN_8001f314); +0x94 ist nur der Clip fuer den NAECHSTEN Aufruf.
+ * Der INIT-Decoder (STAGE2; STAGE1/STAGE3 identisch verschoben) posiert die Liege-Pose und schreibt erst DANACH den
+ * Aufsteh-Clip:
+ *   80100b70/74  ori v0,zero,0xc / sb v0,148      sel {4,7,9}   -> +0x94 = 0x0c
+ *   80100bb4/b8  ori v0,zero,0xe / sb v0,148      sel {5,8,0xa} -> +0x94 = 0x0e
+ *   80100c0c  sb zero,149 ; 80100c1c  sb zero,143 -> +0x95 = 0, +0x8f = 0 (FUN_8001f3bc setzt den Keyframe DIREKT)
+ *   80100c34  jal 0x8001f314 (a0 = +0x170, a1 = +0x174, a2 = 0 @0x80100c28, a3 = 0x200 @0x80100c38)
+ *             (STAGE1 @0x80100da0, STAGE3 @0x80100e8c)
+ *   80100c7c / 80100cc0  sb 0x12 / 0x13,148       -> FINAL +0x94 OHNE anim_set
+ * P0 (@0x80103940-60) und P1 (@0x80103964-98) rufen kein anim_set; der erste nach der INIT ist P2 @0x801039a8 (mit
+ * +0x8f = 0xf @0x80103998: Ueberblendung aus der gehaltenen Pose). Script-geweckte 0x89/0x8a springen direkt nach P2
+ * (@0x80103a1c). Bank 1 (CDEMD0.EMS dir[3]/dir[4], alle Zombie-Typen 0x10/0x11/0x12/0x16/0x18 wortgleich): Clip 0x0c
+ * n=1 Bild 0 = 0x0000012d, Clip 0x0e n=1 Bild 0 = 0x00000149 (Clip 0x12 f0 = 0x190, Clip 0x13 f0 = 0x1c2).
+ * Der Port posiert jedes Bild aus (motion, anim_frame) = (+0x94, +0x95); diese Funktion liefert dem Renderer
+ * (anim_select_common.c, Gegnerzweig) den Clip, den das Skelett TATSAECHLICH traegt, solange er von +0x94 abweicht:
+ * 0x0c (sel 4/7/9) bzw. 0x0e (sel 5/8/0xa), sonst -1. +0x94 (motion) bleibt RAM-treu 0x12/0x13. */
+#define RE15_R41_INIT_POSE_A   0x0Cu   /* ori v0,zero,0xc / sb v0,148(v1) @0x80100b70-74 (STAGE2), sel {4,7,9} */
+#define RE15_R41_INIT_POSE_B   0x0Eu   /* ori v0,zero,0xe / sb v0,148(v1) @0x80100bb4-b8 (STAGE2), sel {5,8,0xa} */
+int  re15_r41_liege_skelett_clip(const re15_actor_t *a);
+
 /* Schalter fuer Tests (Standard AN). */
 void re15_r41_liegewecker_enable(int an);
 int  re15_r41_liegewecker_enabled(void);

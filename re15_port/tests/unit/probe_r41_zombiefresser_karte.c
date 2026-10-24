@@ -5,10 +5,12 @@
  * am LADE-Weg startet (Muster probe_r38_wasserzombie_karte.c + probe_r36_gegnerzahl_karte.c: Spielfigur, Band und
  * Story-Bits zusammen, die keines der beiden Werkzeuge allein kann).
  *
- * Aufruf: probe_r41_zombiefresser_karte <kartendatei> <raum-hex> <x> <z> <gierung> <band> <leon|elza> [bank:bit ...]
+ * Aufruf: probe_r41_zombiefresser_karte <kartendatei> <raum-hex> <x> <z> <gierung> <band> <leon|elza> [bank:bit ...] [cam=<n>]
  *   z.B.  ... re15_card.mcr 2001 -21300 -10100 2048 1 elza 3:0x45     (Elza auf dem Oststeg, Spawn-Bit 3:0x45)
  *         ... re15_card.mcr 3000 -8700 -14800 2048 0 leon 4:9 4:0xC6  (Spawn-Bit 4:9, Marvin-Szene aus)
  * Spieler-Y = -Band * 1800 (Bandhoehe 0x708, @0x8001d7b8-d4).
+ * cam=<n> (Nachbesserung 1): Kamera-Schnitt des Spielstands (re15_savedata_capture: camera_cut = g_scd.cam_id) — ein echter
+ * Spielstand traegt die Kamera des Speichermoments, CONTINUE stellt sie wieder her (main.c s_resume_cut). Ohne cam= Kamera 0.
  */
 #include "re15_actor.h"
 #include "re15_scd.h"
@@ -49,6 +51,7 @@ int main(int argc, char **argv)
     int gesetzt = 0;
     for (int a = 8; a < argc; a++) {
         char *p = argv[a];
+        if (strncmp(p, "cam=", 4) == 0) { g_scd.cam_id = (uint8_t)strtol(p + 4, NULL, 0); continue; }
         long bank = strtol(p, &p, 0);
         if (*p != ':') { printf("FAIL: '%s' ist kein bank:bit\n", argv[a]); return 2; }
         long bit = strtol(p + 1, &p, 0);
@@ -71,12 +74,13 @@ int main(int argc, char **argv)
     int zurueck = 0;
     for (int a = 8; a < argc; a++) {
         char *p = argv[a];
+        if (strncmp(p, "cam=", 4) == 0) continue;
         long bank = strtol(p, &p, 0);
         long bit = strtol(p + 1, &p, 0);
         zurueck += re15_game_flag_get((uint8_t)bank, (uint8_t)bit) ? 1 : 0;
     }
-    printf("Karte %s: Raum 0x%04X, Spieler (%d,%d,%d) Band %d Blick %d Figur %d, %d Bits gesetzt, %d nach dem Ruecklesen\n",
+    printf("Karte %s: Raum 0x%04X, Spieler (%d,%d,%d) Band %d Blick %d Figur %d, %d Bits gesetzt, %d nach dem Ruecklesen, Kamera %d\n",
            path, (unsigned)rr, (int)g_actors[0].x, (int)g_actors[0].y, (int)g_actors[0].z, (int)g_actors[0].floor,
-           (int)g_actors[0].rot_y, (int)g_gameflow.character, gesetzt, zurueck);
+           (int)g_actors[0].rot_y, (int)g_gameflow.character, gesetzt, zurueck, (int)back.camera_cut);
     return (rr == (uint16_t)room && zurueck == gesetzt) ? 0 : 1;
 }

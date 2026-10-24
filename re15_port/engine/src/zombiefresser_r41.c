@@ -5,6 +5,7 @@
 #include "re15_zombiefresser_r41.h"
 
 #include "re15_damage.h"      /* re15_engine_rand8 = FUN_8001af20 (RE1.5-Zufall) */
+#include "re15_ai_flavor.h"   /* re15_ai_re2_for_type / re15_re2z_owns_type (wer treibt den Zombie) */
 #include "re15_engine.h"      /* g_engine.frame_count (Messschiene) */
 #include <stddef.h>
 #ifdef RE15_PLATFORM_PC
@@ -107,4 +108,32 @@ int re15_r41_liegewecker_re15_decide(re15_actor_t *e)
                aktor_slot(e), (unsigned)e->ai_dist, (int)e->ai_timer);
     }
     return 1;
+}
+
+/* NACHBESSERUNG 1 (M1): Clip, den das Skelett eines RE1.5-Liegenden zeigt, solange er von +0x94 abweicht (Belege im
+ * Header). Zustandsabgeleitet, kein Merker: dieselbe Antwort fuer Renderer und Tests, ueberlebt Laden/Raumwechsel. */
+int re15_r41_liege_skelett_clip(const re15_actor_t *a)
+{
+    uint8_t t, sel;
+    int clip;
+    if (!s_an || !a) return -1;
+    t = a->type;
+    /* Zombie-Wurzel (Registrierung 0x80072bac + Typ*4; STAGE2 0x801002b8): 0x10/0x11/0x12/0x16/0x18/0x1c-0x1f
+     * — dieselbe Familie wie der Spawn-Posen-Decoder re15_enemy_spawn_action (scd_vm.c). */
+    if (!(t == 0x10u || t == 0x11u || t == 0x12u || t == 0x16u || t == 0x18u || (t >= 0x1cu && t <= 0x1fu)))
+        return -1;
+    if (re15_ai_re2_for_type(t) && re15_re2z_owns_type(t))
+        return -1;                                              /* RE2-Hirn: EXEC[7] posiert selbst (Clip 23/22,
+                                                                 * RE2 @0x801037CC-E4) */
+    if (!(a->grid_id & 0x80u)) return -1;                       /* Tor @0x80100b40-44 */
+    sel = (uint8_t)(a->grid_id & 0x1fu);                        /* andi v1,v1,0x1f @0x80100b48 */
+    if (sel == 4u || sel == 7u || sel == 9u)         clip = (int)RE15_R41_INIT_POSE_A;
+    else if (sel == 5u || sel == 8u || sel == 0xau)  clip = (int)RE15_R41_INIT_POSE_B;
+    else return -1;
+    if (a->state == 0) return clip;                             /* Sce_em_set ruft die Wurzel sofort einmal
+                                                                 * (@0x8004259c): INIT posiert schon im Spawnbild */
+    if (a->state == 1 && a->sub_state_1 == 0 && a->sub_state_2 < 2)
+        return clip;                                            /* P0/P1 ohne anim_set; ab P2 (+0x6 >= 2,
+                                                                 * f314 @0x801039a8) zeigt das Skelett +0x94 */
+    return -1;
 }
