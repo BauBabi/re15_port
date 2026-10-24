@@ -88,6 +88,10 @@ Begonnen 2026-10-24 11:55. Pruefer: Abnahme 3 (Opus). Der Bericht wird FORTLAUFE
   00` (Pult-Platz Band 3), @0x022E6 `2b 00 ff ff 02 00 06 00 d0 00 21 0c 1f 00` (Hebel sub04: Frage, Ja), @0x0201A `46 06 03 31 ff
   00 18 02 00 00` (Kisten -> Ereignis 2); ROOM2080 @0x00CC8 `2f 01 32 00 0d 00 06 00 94 00` (Rate +50, For 148). **Alles wie im
   Kopf zitiert.**
+* RE2-Uebernahmen des 2050-Pults (Stichprobe, RE2-Retail `info/re2leon/PL0/RDT/ROOM2130.RDT`, Hauptbaum gelesen): @0x0171C
+  `09 0a 1e 00` (sleep 30 = RE15_R41C_PANEL_RUHE), @0x01752 `23 00 05 00 50 00` (cmp(var5 == 80) = RE15_R41C_PANEL_ZIEL),
+  @0x01758 `2b 00 07 00 ff ff` ("Power supply OK."), @0x01762 `36 02 0c 01` (se_on 2/0x0C = Bestaetigung), @0x01192 `36 02 0a 01`
+  (se_on 2/0x0A = Klick) — wie in re15_panel_zeiger.h / im Kopf zitiert.
 * **Erklaert der Fix den Befund?** (Abnahme 2 L11): N2 — `ring_sperren()` prueft jetzt `zustand_2030() == GEFLUTET` (Bit 103 UND
   (3,126)=0, ventilkette_r41.c), vorher nur Bit 103 -> erklaert `ring_strom` (Flut + Strom -> Sperrtext 41); gemessen L6/L9 (mit
   Strom `DOOR FIRE`, ohne Strom Sperrtext). N3 — dritter Zustand RELING (Flaeche obj 4 y -3600 nur ueber der Schachtoeffnung,
@@ -96,6 +100,8 @@ Begonnen 2026-10-24 11:55. Pruefer: Abnahme 3 (Opus). Der Bericht wird FORTLAUFE
   liegt Band 1 an der Suedwand (vorher Band 3 am Ring) -> erklaert `ventile_ohne_102`; gemessen L2 (49 vor der Sicherung, 45
   danach). Rechner 2080: `install_2080` und die Ereignis-Abzweigung fuer 2080 sind entfernt (kein 2080-Zweig mehr in
   `re15_ventilkette_r41_ereignis`), Text 2080/40 nicht mehr in der Tabelle -> L6 `room=2080 id=0` Original, kein Port-Programm.
+* => **RE-Gate haelt** (eigene Disassembly 3 EXE-Stellen, eigene Byte-Lesung aller im Kopf zitierten RDT-Stellen, SCA-Zellen,
+  Netz; 0 Rate-Woerter im Diff; jede Verhaltenskonstante mit @0x.../Datei-Offset oder als NUTZER-VORGABE / PORT-WAHL benannt).
 
 ### G2 Vertrag (VERTRAG.md §1/§2)
 * Pfade (`git diff master...HEAD --name-only` ohne `analysis/`): engine/src/{ventilkette_r41.c, gen/ventilkette_r41_*.inc (4),
@@ -142,6 +148,16 @@ Begonnen 2026-10-24 11:55. Pruefer: Abnahme 3 (Opus). Der Bericht wird FORTLAUFE
 * Folge: Im Integrationsbaum A+C wird der Riegel registriert (`if(EXISTS .../wasser20b0_r41.c)`) und faellt — C-E1 verlangt "Ist er
   registriert, MUSS die ganze Kette durchlaufen". Auch der Dossier-Abschnitt §0b M2 beschreibt noch die Kette mit den Ventilen am
   Ring (Messung 06:37, vor Nachbesserung 3). => **Mangel 1** (§5).
+
+### G3 Nebenwirkungen (beide Szenarien, Nachbarraeume)
+* Jeder gemessene Punkt mit Leon UND Elza (ROOMxxx1): L1, L2, L2b, L3b, L3c, L4, L5b, L5c, L6, L8 (w1, w3) — gleiche Saetze,
+  gleiche Tuersaetze, `Spieler-Familie PL04`.
+* Nachbarraeume: 2010/2011 und 2050/2051 lenken nur NACH der Flut nach 20B0 um (L4), vor der Flut ist 2070 -> 2030 die Original-
+  Tuer (L2b); 2070 Ring-Tueren nur "geflutet" gesperrt (L9); 2060/2061 (Sicherung, Generator) und 2080/2081 (Rechner) laufen
+  Original (L6, L8); 2020/2021 Tuersaetze original (L8 w1/w3). Vor der Flut aendert der Installer in 2000 nur Slot 4 (L1).
+* Querbezugs-Riegel anderer Runden in denselben Raeumen (Integrationsgruppe, §3): dachkiste (2000/2050), itemband + itemband_lift
+  (2030), kistenregel/kiste/kiste2feld (2050), fahrstuhl_n1 (2030-Lifte), wasser/wasserzombie (20B0/2070), spinnen_echtlauf
+  (2030), gegnerzahl (20B0) — alle gruen.
 
 ## 1. Messungen an der exe (eigene Laeufe)
 Runner `<a3>/lauf.sh` (eigene exe-Kopie `re15_pc_abn3c_<lauf>.exe` je Lauf, danach geloescht; erbt keine RE15_-Variablen;
