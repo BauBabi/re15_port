@@ -338,3 +338,42 @@ sichtbarer Gator (untergetaucht/unsichtbar wie RE2, Lage frei), dann Pos_set auf
 neuen Szene der Spur F ("der Alligator springt aus dem Wasser"). Riegel: im natuerlichen Ablauf (Lauf N der Abnahme)
 kein Bild mit sichtbarem Gator vor dem Durchbruch und kein sichtbarer Lagesprung. Weitere Maengel M2/M3 der Abnahme B 2
 wie dort gefordert (RE2-Form, Adressen dort).
+
+## 2026-10-24 09:00 — Orchestrator-Entscheid C-E2c (Frage (j) der Nachbesserung C 2; der Nutzer kann widersprechen)
+
+Befund der Nachbesserung C 2 (Tuergraph C_belege/nb2_tuergraph_nach_flut.txt, zu Fuss gemessen): nach der Flut gibt es
+KEINEN Weg zum Rechner 2080. Die 2080-Tuer von 2030 liegt auf der Suedgalerie (nur per Lift B vom gefluteten Ring), und der
+Umweg 2040 -> 2070 -> 11A0 -> 20A0 -> 2090 -> 2080 endet an der ORIGINAL-Sperre ROOM11A0/11A1 Slot 4 (Ck(3,206)=0
+@0x00FEA -> msg 2 "It's locked from the other side." @0x00FEE; (3,206)=1 setzt nur 20A0/20A1 sub10 @0x01FF0). Die
+Reihenfolge der Kette ist durch den Nutzer-Auftrag erzwungen (Leiter 2000 bis zur Flut gesperrt -> 2050/2020/2060/Strom erst
+NACH der Flut; beide 2030-Lifte haengen am Generator 2060), also kann der Ring vor der Flut nicht der Weg sein.
+Entscheid j1: Mit dem Ende der Flut (Bits 103 + 100) wird (3,206) = 1 gesetzt — die 11A0/11A1-Tuer nach 20A0 ist danach
+offen (PORT-WAHL als Folge der Port-Flut; kein neuer Text, die Tuer oeffnet wie im Original nach sub10). Weg nach der Flut:
+20B0 -> Leiter -> 2050 -> 2020 -> 2030 Nordgalerie -> 2060 -> 2040 -> 2070 Nordgang -> 11A0 -> 20A0 -> Sprung ins Wasser ->
+2090 -> Tuer Slot 0 -> 2080 -> Rechner (Bit 107) -> 2030 entleert. Passt zur Geschichte der Spuren F/G (2090-Szene mit dem
+Alligator, dann 2080 mit Marvin/John, der Kanister fliegt zurueck ins 2090-Becken). j2 (Waten im gefluteten Ring) und j3
+(Flut erst nach 2080) verworfen: j2 widerspricht dem Ertrinken (Pegel 1800 ueber dem Ring), j3 widerspricht der vom Nutzer
+verlangten Leiter-Sperre bis zur Flut.
+Spur C setzt j1 um (Riegel: (3,206) vor der Flut 0, danach 1; zu Fuss gemessener Weg 11A0 -> 20A0 -> 2090 -> 2080 fuer Leon
+UND Elza, Alligator dabei per Testhaken ruhig/entfernt), Dossier §7 mit dem Weg fuer den Nutzer.
+
+## 2026-10-24 09:17 — Nachtrag 6 (Wortlaut; widerruft Entscheid C-E2c, betrifft Spur C und die Alligator-Spuren B/F/G)
+
+> Nein, du darfst keine zusätzliche Tür öffnen um die Kette zu lösen. Dann passt die Rätselkette so nicht, und wir müssen
+> sie anders machen.
+>
+> Betreff Aligator darfst du alles machen was du willst. Du darfst auch die Startposition des Aligators und die Position der
+> schwimmenden Zombie Leiche, die sichtbar den Schlüssel hat ändern, wenn das Inszenatorisch besser aussieht. Wichtig ist -
+> so stelle ich mir das vor - Leon kommt im Raum an, sieht die Zombie Leiche mit dem Schlüssel in der Cutscene. Dann kommen
+> oben in 2080 die Zombies rein. Dann erneut Kamera auf Zombie mit Schlüssel. Aligator kommt frisst den Zombie samt
+> Schlüssel. Macht danach Richtung Leon eine schrei und Schüttel Animation. Danach geht der Kampf los, mit der Kampfmusik
+> von Resident Evil 2.
+
+Folgen (Orchestrator):
+- **C-E2c ist WIDERRUFEN** (keine zusaetzliche Tuer; die Original-Sperre 11A0/11A1 Slot 4 bleibt). Die Kette nach der Flut
+  wird neu entworfen — Vorschlag an den Nutzer, Entscheid folgt als Nachtrag; bis dahin keine Umsetzung von j1.
+- **Alligator (B/F/G):** freie Hand bei Startlage des Alligators und Lage der schwimmenden Zombie-Leiche mit dem Schluessel
+  (Inszenierung). Szenenfolge der 2090-Ankunft (Spur F, mit Spur G): Leon kommt an -> Kamera auf die Zombie-Leiche mit dem
+  blinkenden Schluessel -> oben in 2080 kommen die Zombies herein (die 8 Zombies der Spur G) -> erneut Kamera auf den Zombie
+  mit dem Schluessel -> der Alligator kommt und frisst den Zombie samt Schluessel -> Schrei- und Schuettel-Animation in
+  Richtung Leon -> Kampfbeginn mit der Kampfmusik aus Resident Evil 2 (RE2-Alligator-BGM aus ROOM40A0 belegen).
