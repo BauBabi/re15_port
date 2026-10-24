@@ -1557,3 +1557,25 @@ Riegel auf die Lagen E1 und C3 ueber >= 300 Bilder; Bildbeleg) -> Bau -> gezielt
 - **M2** behoben: keine Gier-Aenderung > 0x60 je Bild in CHASE/GUARD ausser +1024 (Riegel gier E1/C3 je 800 Takte; exe E1n/C3n/
   A2n2/D2n/Nn/NZn und integration nische/natuerlich/kanister/belagerung/dash); Befreiung nur im echten Gefaengnis als Schub ohne
   Drehung (PORT-WAHL, Form = Wand-Klemme). Sweep-Garantie unveraendert (3342/0, 80/0). Bildbelege A2 F377-F381 und E1.
+
+## 13. Nachbesserung 5 (Abnahme 4, B_abnahme_4.md; Beginn 2026-10-24 13:16, HEAD 71192fbc)
+
+Neuer Agent (Nachbesserung 5). Baum sauber (`status --porcelain` leer), HEAD 71192fbc (= Code-Stand 7831a6d5/b20f1496 +
+Abnahmebericht 4 + AUFTRAG/VERTRAG Nachtrag 6-11). Der gebaute Stand ist der von der Abnahme 4 gemessene (re15_pc.exe 11:40,
+seither kein Code-Commit); ihre Laeufe (Pruefer-Scratchpad `B41abn4/mess/<Lauf>/`, `B41abn4f/`) gelten als "Messung vorher",
+sofern hier nicht neu gemessen. Eigene Laeufe/Sonden unter `.../scratchpad/B41nb5/`.
+Pflichtlektuere: B_abnahme_4.md (vollstaendig, M1 + H1-H3), AUFTRAG.md (Wortlaut, B1-B9, Nachtrag 6 "Betreff Aligator darfst du
+alles machen was du willst"), VERTRAG.md, Dossier §12, Memory reai-v2-gator-bosskampf.md (FRESS-Finisher, Klemm-Lehren).
+
+Mangel M1 (Punkt 1): nach einem toedlichen GUARD-Hochbiss liegt Leon im RE2-Finisher nicht im Maul (E1/RN Tuerweg-Ankunft
+Ostrampe, MN2 Rampenmitte; im Vorher-Bau MA2 ohne Gator im Bild). Verlangt: nach JEDEM toedlichen Biss (CHASE und GUARD: Rampe
+Ost, Rampenmitte, Plattformblock; Leon und Elza) liegt das Opfer ueber P1-P3 bis zum Game Over im Maul wie in A2, der gehaltene
+Finisher-Schnitt zeigt Gator und Opfer; Riegel unit_gator_fress um eine GUARD-Lage (gezeichneter Kiefer MIT pitch/jaw-Haken
+gegen Leon in jedem P1-P3-Bild), integration "belagerung" prueft nach dem Tod; Bildbeleg E1 vorher/nachher F628-F870.
+
+Plan: (1) MESSEN - Sonde mit dem echten Boss-Takt: je P1-P3-Bild Leons gezeichnete Wurzel/Koerper im GEZEICHNETEN Kopf-Rahmen
+(Part 6 mit allen Haken) gegen die authored Relation (CHASE-Tod im offenen Wasser = A2 = RE2-Korridor), dazu pitch_vz, Klemm-
+Versatz je Takt, Lage gegen die Waende - fuer CHASE, GUARD Ostrampe (6300,-16250), Rampenmitte (4000,-15000), Plattformblock.
+(2) Ursache(n) aus der Messung, RE2-Gegenstueck (FRESSEN P0-P3 @0x80100fbc-0x801011e0, Root @0x80100200-3a4) selbst lesen.
+(3) Umsetzung (PORT-WAHL nach Nachtrag 6, RE2-Teile mit @0x). (4) Riegel + Messzeile im Spiel. (5) exe E1/MN2/Plattform/Elza
+vorher/nachher, Bildbeleg F628-F870. (6) gezielte Tests, Abschluss.
