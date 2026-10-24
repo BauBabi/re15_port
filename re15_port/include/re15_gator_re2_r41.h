@@ -61,6 +61,16 @@ void re15_gr2_takt(int slot, re15_actor_t *e, re15_actor_t *pl, int im_chase);
 int  re15_gr2_chase_clip(int slot, re15_actor_t *e, int32_t dist, int32_t *vortrieb);
 void re15_gr2_biss_cd(int slot, int n);
 int  re15_gr2_biss_cd_rest(int slot);
+/* Nachbesserung 2 (Abnahme 1, M3) — Kanister-Aufnahme GENAU wie RE2:
+ *  - Beckenzone des Boss-Moduls (gb_zone) anmelden: Gegenstueck der RE2-Zonen (PORT-WAHL wie der Dash).
+ *  - hysterese_ruht: 1 = der RE2-Sub-1/2-Pre springt an der Paddel-Hysterese vorbei (Sub bleibt): Zone des
+ *    Kanisters + Raumflag Bank 5 Bit 0 (@0x80100ab8-c8, @0x80100aec, @0x80100afc) oder Stufe nicht 0/7
+ *    (@0x80100b20-30). Beim Aufnahmebeginn schaltet der Takt Paddeln -> Schwimmen (@0x80100b04-18 -> @0x80100c04).
+ *  - biss_erlaubt: 0 waehrend Stufe 1..6 (RE2 macht die Biss-Maschine T1 nur bei Stufe 0/7 scharf, FUN_801012fc
+ *    @0x80101360-70); das Boss-Modul fragt es vor jedem Biss-Start. */
+void re15_gr2_zonen_quelle(int (*zone_fn)(int32_t z));
+int  re15_gr2_hysterese_ruht(int slot, const re15_actor_t *e);
+int  re15_gr2_biss_erlaubt(int slot);
 
 /* RE2-LUNGE als Zonen-Dash: `zone` = aktuelle Beckenzone des Gators (gb_zone), `zone_leon` =
  * Leons Zone. Liefert 1, wenn eben eine neue Zone betreten wurde, in der Leon ist (RE2: Zonenlinie

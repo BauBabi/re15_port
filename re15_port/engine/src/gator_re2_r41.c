@@ -105,9 +105,17 @@ static struct {
     int32_t  rel[9];          /* relative Rotation zur Part-6-Matrix (angehaengt) */
     int32_t  welt[3];         /* zuletzt berechnete Weltlage (angehaengt) */
     int32_t  welt_rot[9];
+    int32_t  liege_z;         /* Nachbesserung 2 (M3): z beim Setzen = Lage, an der das Raumflag Bank 5 Bit 0
+                               * ("liegt im Wasser", ROOM40A0 sub10 `Set 22 05 00 01` @SCD 0x0712, nie geloescht)
+                               * gesetzt wird; ihre Beckenzone ist das Gegenstueck der RE2-Zone 1 (s. chase_clip) */
 } s_kan;
 
 static int s_env_geprueft;
+/* Nachbesserung 2 (M3): Beckenzone des Boss-Moduls (gb_zone: 0 Sued, 1 Nord, 2 Westkanal-Streifen, PORT-WAHL der
+ * RE2-Zonen wie beim Dash). Der Kanister-Block des RE2-Sub-1/2-Pre laeuft nur in RE2-Zone 1 (`lbu v1,538 / bne
+ * v1,1,0x80100b20` @0x801009c8-d0) = dem Korridorbein, in dem der Kanister liegt. */
+static int (*s_zone_fn)(int32_t z);
+void re15_gr2_zonen_quelle(int (*zone_fn)(int32_t z)) { s_zone_fn = zone_fn; }
 /* RE2-Bildtakt DAT_800dfc1a = VSync-Wert der Hauptschleife (FUN_8002b968: `lui a0,0x800e / lbu a0,-0x3e6(a0) /
  * jal VSync` @0x8002b990-98); im Spiel 2 (`li v0,0x2 / sb v0,0x800dfc1a` @0x8003b9a8-b0 = 30 Bilder/s), R1 P0 setzt 4
  * (`addiu v0,zero,4 / lui at,0x800e / sb v0,-998(at)` @0x8010235c-64 = 15 Bilder/s, Zeitlupe der Explosion), R1 P3
@@ -452,7 +460,16 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         int32_t qmax = (int32_t)e->hit_radius_min + 267;    /* Koerperradius (skaliert) + Kanisterradius (MD1) */
         if (laengs >= ab && laengs < ab + len && quer > -qmax && quer < qmax) {
             s_kan.stufe = 1;                                /* +0x226 = 1 @0x80100b08 */
-            re15_gr2_log("KANISTER Stufe 1 laengs=%d quer=%d", laengs, quer);
+            /* Nachbesserung 2 (Abnahme 1, M3): RE2 schaltet im selben Pre PADDELN (Sub 2) auf SCHWIMMEN (Sub 1):
+             * `lbu v1,5(s0) / sb v0(1),550(s0) / addiu v0,zero,2 / bne v1,v0,0x80100c08 / addiu v0,zero,257 /
+             * j 0x80100c04` @0x80100b04-18 -> `sw v0(0x101),4(s0)` @0x80100c04. Der Dispatcher liest +5 nach dem
+             * Pre neu (`lbu v0,5(a0)` @0x801007b8) und ruft im SELBEN Tick Sub-1-Main @0x80100c20 = FUN_8001a330(em,
+             * Clip 0, 32, 0) @0x80100c34-40 -> der Clipwechsel mit Bild 0 / Blend 32 passiert im naechsten
+             * re15_gr2_chase_clip dieses Ticks (letzter_clip 0 != motion 1). */
+            int sub_vor = g->letzter_clip ? 2 : 1;
+            if (g->letzter_clip == 1) g->letzter_clip = 0;
+            re15_gr2_log("KANISTER Stufe 1 laengs=%d quer=%d sub %d -> 1 F%u", laengs, quer, sub_vor,
+                         (unsigned)g_engine.frame_count);
         }
         return;
     }
@@ -792,6 +809,36 @@ static void gr2_kam_r1_start(const re15_actor_t *e)
                  (unsigned)g_engine.frame_count);
 }
 void re15_gr2_kamera_auto(int an) { s_kam_aus = (uint8_t)(an ? 0 : 1); }
+/* Nachbesserung 2 (Abnahme 1, M1 b) + Orchestrator-Entscheid B6 "Finisher-Kamera = RE2": RE2 FRESSEN P0 sperrt die
+ * Zonenkamera (`ori v0,v0,0x100 / sw v0,0(a0)` @0x80100fcc-d0 auf 0x800cfbd8) und setzt Cut 7/14 (`jal 0x8002c7ac`
+ * @0x80100ff4) - im ganzen Overlay gibt es danach keinen Freigabe-Pfad fuer Sub 4 (die einzigen `and ...,-257` stehen in
+ * Intro P2 @0x80100904-918 und R1 P3 @0x80102688-94): der Schnitt steht bis zum Game Over. Der Port startet ab dem
+ * Fress-Latch (Clip-4-Bild 13, RE2 @0x80101104-34) die RE1.5-Todes-Praesentation (game_step_common.c
+ * re15_gameover_fsm_tick = FUN_8001500c): Weissblende sub0/1 (FUN_800217b0/80021880), flacher Schwarzgrund
+ * (FUN_80021634(2,0)) und die kreisende Todeskamera (FUN_80015850, main.c g_death_cam) - gemessen Abnahme 1 Lauf A:
+ * F735-F745 weiss, ab F750 Orbit (F755 Kamera im Gator-Leib). B6: diese drei Teile entfallen fuer den Gator-Tod; die
+ * Game-Over-Folge des Ports (YOU-DIED-Buchstaben g_death_flyin, Schluss-Abblende g_death_fade, Titel) bleibt.
+ * Wirkung ohne Haken in gemeinsamen Dateien: die FSM laeuft am Anfang von re15_game_step (@0x8001cdfc-Zwilling,
+ * game_step_common.c:1137-1138), der Boss-Takt am Ende (Entity-Schleife) - hier zurueckgesetzt sieht der Zeichner
+ * die drei Werte nie. Die Sperre selbst (cut_auto_enabled = 0) wird dabei jedes Bild gehalten. */
+static unsigned s_fin_halt_log;
+static void gr2_kam_finisher_halten(void)
+{
+    if (!(s_kam.aktiv && s_kam.programm == GR2_KAM_FRESSEN)) { s_fin_halt_log = 0; return; }
+    int war = (g_death_cam != 0) | ((g_death_white != 0) << 1) | ((g_death_blackbg != 0) << 2);
+    g_death_cam = 0; g_death_white = 0; g_death_blackbg = 0; g_death_glow = 0;
+    g_scd.cut_auto_enabled = 0;                             /* RE2: 0x800cfbd8 Bit 0x100 bleibt (kein Freigabe-Pfad) */
+    unsigned f = (unsigned)g_engine.frame_count;
+    if (war && !(s_fin_halt_log & 0x80000000u)) {
+        s_fin_halt_log |= 0x80000000u;
+        re15_gr2_log("KAMERA FINISHER haelt Cut %d: RE1.5-Todesbild unterdrueckt (cam=%d weiss=%d schwarz=%d) ab F%u",
+                     (int)g_scd.cam_id, war & 1, (war >> 1) & 1, (war >> 2) & 1, f);
+    }
+    if ((s_fin_halt_log & 0xffffu) == 0 || f >= (s_fin_halt_log & 0xffffu) + 20u) {
+        s_fin_halt_log = (s_fin_halt_log & 0x80000000u) | (f & 0xffffu);
+        re15_gr2_log("KAMERA FINISHER Halt Cut %d F%u", (int)g_scd.cam_id, f);   /* B6-Messung: Cut je 20 Bilder */
+    }
+}
 void re15_gr2_kamera_finisher(int slot, const re15_actor_t *gator, const re15_actor_t *opfer)
 {
     (void)slot; (void)opfer;                                /* Opfer = Kiefer (s. k_blick), nicht die P0-Lage */
@@ -823,6 +870,7 @@ void re15_gr2_takt(int slot, re15_actor_t *e, re15_actor_t *pl, int im_chase)
     if (s_kam.aktiv && ((s_kam.programm == GR2_KAM_INTRO && !g->intro_phase)
                         || (s_kam.programm == GR2_KAM_R1 && !g->r1_phase)))
         gr2_kam_frei(e);
+    gr2_kam_finisher_halten();                              /* Nachbesserung 2 (M1 b, B6): Finisher-Schnitt bis Game Over */
     gr2_ereignis_takt(g);                                   /* Root @0x80100410 */
     gr2_schuettel_takt();                                   /* EXE je Bild */
     gr2_putz_takt(g);
@@ -843,7 +891,9 @@ int re15_gr2_chase_clip(int slot, re15_actor_t *e, int32_t dist, int32_t *vortri
 {
     gr2_t *g = &s_g[slot];
     int clip;
-    if (g->letzter_clip == 0) {                             /* Sub 1 */
+    if (re15_gr2_hysterese_ruht(slot, e)) {
+        clip = g->letzter_clip;                             /* Sub bleibt (Pre springt nach 0x80100c08) */
+    } else if (g->letzter_clip == 0) {                      /* Sub 1 */
         clip = (g->biss_cd == 0 && dist >= RE15_GR2_PADDEL_AB) ? 1 : 0;   /* @0x80100b5c-64, @0x80100b88-98 */
     } else {                                                /* Sub 2 */
         clip = (dist < RE15_GR2_SCHWIMM_AB || g->biss_cd != 0) ? 0 : 1;   /* @0x80100be4-c04 */
@@ -867,6 +917,35 @@ int re15_gr2_chase_clip(int slot, re15_actor_t *e, int32_t dist, int32_t *vortri
         *vortrieb = q12mul((int32_t)b[0] - a[0], gr2_scale(e));                /* +0x144 = dx, skaliert */
     }
     return clip;
+}
+/* Nachbesserung 2 (Abnahme 1, M3): wann die Paddel-Hysterese des RE2-Sub-1/2-Pre @0x80100964 NICHT laeuft
+ * (selbst disassembliert, EM23_OVL_0000.BIN):
+ *  (a) Zone 1 + Kanister liegt im Wasser (Raumflag 0x800d4874 Bank 5 Bit 0, `jal 0x80077360 / addu a1,zero,zero /
+ *      beq v0,zero,0x80100b20` @0x80100ab8-c8): Fenster verfehlt -> `beq v0,zero,0x80100c08` @0x80100aec, Fenster
+ *      getroffen bei Stufe != 0 -> `bne v0,zero,0x80100c08` @0x80100afc, Stufe 0 -> Stufe 1 (+ Sub 2 -> 1) und
+ *      ebenfalls 0x80100c08 - die Hysterese @0x80100b20 wird nie erreicht. Das Bit setzt ROOM40A0 sub10 einmal
+ *      (`Set 22 05 00 01` @SCD 0x0712), kein `Set 22 05 00 00` im Raumskript (Walker re2_scd_walk.py) -> es gilt,
+ *      solange der Kanister im Raum ist, auch beim Tragen. PORT-WAHL der Zone (wie beim Dash): RE2-Zone 1 = das
+ *      Korridorbein, in dem der Kanister liegt -> die Beckenzone (gb_zone) seiner Liegestelle.
+ *  (b) Stufe nicht 0 und nicht 7 (`lbu a0,550 / beq a0,zero,0x80100b38 / addiu v0,zero,7 / bne a0,v0,0x80100c08`
+ *      @0x80100b20-30), in jeder Zone: waehrend der Aufnahme bleibt der Sub stehen. */
+int re15_gr2_hysterese_ruht(int slot, const re15_actor_t *e)
+{
+    (void)slot;
+    if (!s_kan.aktiv || s_kan.stufe == 13) return 0;
+    if (s_kan.stufe != 0 && s_kan.stufe != 7) return 1;                              /* (b) */
+    if (e && s_zone_fn && s_zone_fn(e->z) == s_zone_fn(s_kan.liege_z)) return 1;     /* (a) */
+    return 0;
+}
+/* Nachbesserung 2 (Abnahme 1, M3): der RE2-Biss T1 wird nur bei Stufe 0 oder 7 scharf gemacht - FUN_801012fc
+ * `lbu v1,550(a0) / beq v1,zero,0x80101378 / addiu v0,zero,7 / bne v1,v0,0x80101380` @0x80101360-70 vor `sb v0(1),
+ * 548(a0)` @0x8010137c (+0x224 = 1 = Biss-Maschine an). Waehrend der Aufnahme (Stufe 1..6) beisst er nicht. Das
+ * Boss-Modul fragt das vor jedem Biss-Start (Schnapp/Hochbiss/Kletterbiss = Nutzer-Design-Biss). */
+int re15_gr2_biss_erlaubt(int slot)
+{
+    (void)slot;
+    if (!s_kan.aktiv) return 1;
+    return s_kan.stufe == 0 || s_kan.stufe == 7 || s_kan.stufe == 13;
 }
 void re15_gr2_biss_cd(int slot, int n) { if (slot >= 0 && slot < RE15_ACTOR_MAX) s_g[slot].biss_cd = (int16_t)n; }
 int  re15_gr2_biss_cd_rest(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].biss_cd : 0; }
@@ -1233,6 +1312,7 @@ void re15_gr2_kanister_setzen(int32_t x, int32_t y, int32_t z)
     memset(&s_kan, 0, sizeof s_kan);
     s_kan.aktiv = 1; s_kan.stufe = 0;
     s_kan.pos[0] = x; s_kan.pos[1] = y; s_kan.pos[2] = z;
+    s_kan.liege_z = z;                                      /* Bank 5 Bit 0 an dieser Stelle (sub10 @SCD 0x0712) */
     /* liegend wie nach dem Fall: Dir_set (0x690, 0, 0xfc00) ROOM40A0 sub05 @0x048C */
     re15_skel_euler_matrix(0x690, 0, (int)(int16_t)0xfc00, s_kan.rot);
     gr2_kan_welt_setzen(s_kan.rot, s_kan.pos);

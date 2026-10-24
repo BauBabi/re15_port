@@ -885,7 +885,96 @@ static int teil_kamera(void)
         CHECK(clip[fin] == 4 && bildn[fin] == 0, "FINISHER nicht bei Clip 4 Bild 0 (FRESSEN P0): clip %d bild %d", clip[fin], bildn[fin]);
         wahl_pruefen("FINISHER (FRESSEN P0)", RE15_GR2_BLICK_FINISHER, cut[fin], pl);
         CHECK(re15_gr2_kamera_gesperrt() && g_scd.cut_auto_enabled == 0, "FINISHER: keine Sperre (@0x80100fcc)");
+        /* Nachbesserung 2 (Abnahme 1, M1 b) + Entscheid B6: der Finisher-Schnitt steht bis zum Game Over (RE2 Sub 4 hat
+         * keinen Freigabe-Pfad, `and ...,-257` nur @0x80100904-918 / @0x80102688-94). Die RE1.5-Todes-Praesentation
+         * (game_step_common.c FSM, laeuft im Spiel VOR dem Boss-Takt) setzt Weissblende / Schwarzgrund / Orbit - hier
+         * je Takt so gesetzt, wie die FSM es taete; der Boss-Takt muss sie zuruecknehmen und die Sperre halten. */
+        int cam_fin = cut[fin] >= 0 ? cut[fin] : (int)g_scd.cam_id, halt = 0, pl_hp = pl->hp;
+        for (int f = 0; f < 400; f++) {
+            g_death_cam = 1; g_death_white = 200; g_death_blackbg = 1; g_death_glow = 255;
+            g_scd.cut_auto_enabled = 1;                  /* auch ein fremdes Freigeben haelt der Takt nicht aus */
+            tick();
+            if (!g_death_cam && !g_death_white && !g_death_blackbg && !g_death_glow && g_scd.cut_auto_enabled == 0
+                && (int)g_scd.cam_id == cam_fin && re15_gr2_kamera_gesperrt()) halt++;
+        }
+        printf("  FINISHER-Halt: %d/400 Takte Cut %d gesperrt, RE1.5-Todesbild (Orbit/Weiss/Schwarz) aus, Leon-HP %d
+",
+               halt, cam_fin, pl_hp);
+        CHECK(halt == 400, "FINISHER-Schnitt nicht bis zum Ende gehalten / RE1.5-Todesbild nicht unterdrueckt: %d/400 (B6)", halt);
     }
+    return fails ? 1 : 0;
+}
+
+/* ================================================================================================ */
+/* Nachbesserung 2 (Abnahme 1, M3): Kanister-Aufnahme IN DER VERFOLGUNG wie RE2 (EM23_OVL_0000.BIN, Sub-1/2-Pre
+ * @0x80100964): (1) Aufnahmebeginn schaltet PADDELN (Sub 2, Clip 1) auf SCHWIMMEN (Sub 1, Clip 0, Bild 0, Blend 32):
+ * @0x80100b04-18 -> `sw 0x101,4(s0)` @0x80100c04, Sub-1-Main FUN_8001a330(em,0,32,0) @0x80100c34-40 im selben Tick;
+ * (2) Stufe 1..6: keine Paddel-Hysterese (@0x80100b20-30) und kein Biss (T1 nur bei Stufe 0/7, FUN_801012fc
+ * @0x80101360-70); (3) in der Zone des Kanisters (RE2-Zone 1 + Raumflag Bank 5 Bit 0 @0x80100ab8-c8, nie geloescht)
+ * bleibt der Sub auch beim Tragen (Stufe 7) stehen (@0x80100aec / @0x80100afc -> 0x80100c08); (4) ausserhalb dieser
+ * Zone laeuft die Hysterese bei Stufe 7 wieder (@0x80100b20-30 laesst 7 durch) und der Biss ist wieder erlaubt. */
+static int teil_aufnahme(void)
+{
+    if (!setup(1)) return 1;
+    leon_statue(-6000, -18200);                /* Zone 0 wie teil_clips: Paddeln, kein Dash, kein Biss (6800) */
+    tick();
+    intro_abwarten();
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    int paddeln = 0;
+    for (int f = 0; f < 12; f++) {
+        leon_statue(-6000, -18200); e->x = -6000; e->z = -25000; e->y = -1200; e->rot_y = 0xC00;
+        tick();
+        if (e->motion == 1) paddeln++;
+    }
+    CHECK(e->motion == 1 && paddeln >= 10, "vor dem Kanister kein Paddeln (motion=%d, %d/12)", (int)e->motion, paddeln);
+    /* Kanister 8800 x Scale vor der Schnauze, Liegestelle in Zone 0 (z -19133 <= -18100) = Zone des Gators */
+    int32_t laengs = (int32_t)(((int64_t)8800 * s) >> 12);
+    re15_gr2_kanister_setzen(-6000, -1200, -25000 + laengs);
+    leon_statue(-6000, -18200); e->x = -6000; e->z = -25000; e->rot_y = 0xC00;
+    tick();
+    CHECK(re15_gr2_kanister_stufe() == 1, "Fenster nicht getroffen (Stufe %d, @0x80100ae4-ec)", re15_gr2_kanister_stufe());
+    CHECK(e->motion == 0 && e->anim_frame == 0 && e->anim_frac == 32,
+          "Aufnahmebeginn nicht Sub 2 -> Sub 1 (Clip 0, Bild 0, Blend 32 @0x80100b04-18/@0x80100c04/@0x80100c34-40): "
+          "motion=%d af=%u blend=%u", (int)e->motion, (unsigned)e->anim_frame, (unsigned)e->anim_frac);
+    CHECK(re15_gr2_hysterese_ruht(slot, e), "Hysterese ruht nicht bei Stufe 1 (@0x80100b20-30)");
+    CHECK(!re15_gr2_biss_erlaubt(slot), "Biss erlaubt bei Stufe 1 (FUN_801012fc @0x80101360-70)");
+    /* Stufen 1..6: Schwimmen ohne Hysterese, Leon direkt vor der Schnauze -> kein Biss */
+    int n16 = 0, clip0 = 0, biss = 0;
+    for (int f = 0; f < 80 && re15_gr2_kanister_stufe() != 7; f++) {
+        int st = re15_gr2_kanister_stufe();
+        if (st >= 2) leon_statue(-6000, -21600); else leon_statue(-6000, -18200);   /* Maulpunkt ~ -22267 */
+        e->x = -6000; e->z = -25000; e->rot_y = 0xC00;
+        tick();
+        if (re15_gr2_kanister_stufe() == 7) break;
+        n16++;
+        if (e->motion == 0) clip0++;
+        if (e->motion == 4 || e->motion == 2) biss++;
+        CHECK(re15_gr2_hysterese_ruht(slot, e), "Hysterese laeuft in Stufe %d (@0x80100b20-30)", re15_gr2_kanister_stufe());
+    }
+    CHECK(re15_gr2_kanister_stufe() == 7, "Kanister nicht getragen (Stufe %d)", re15_gr2_kanister_stufe());
+    CHECK(n16 >= 38 && clip0 == n16, "Stufe 1..6: %d/%d Bilder Clip 0 (Schwimmen) - RE2 ohne Hysterese", clip0, n16);
+    CHECK(biss == 0, "Biss waehrend der Aufnahme (%d Bilder Clip 4/2) - T1 nur bei Stufe 0/7 @0x80101360-70", biss);
+    /* Stufe 7 in der Kanister-Zone (Zone 0): Sub bleibt Schwimmen (Bank 5 Bit 0 @0x80100ab8-c8 -> 0x80100c08) */
+    int halt0 = 0;
+    for (int f = 0; f < 30; f++) {
+        leon_statue(-6000, -18200); e->x = -6000; e->z = -25000; e->rot_y = 0xC00;
+        tick();
+        if (e->motion == 0) halt0++;
+    }
+    CHECK(halt0 == 30, "Stufe 7 in der Kanister-Zone: nur %d/30 Bilder Clip 0 - RE2-Zone 1 + Bit 0 laesst keine "
+          "Hysterese zu (@0x80100aec/@0x80100afc)", halt0);
+    /* ausserhalb der Kanister-Zone (Westkanal-Streifen, Zone 2; Leon im Nordbecken = Zone 1 -> kein Dash):
+     * Hysterese wieder an (Stufe 7 @0x80100b20-30) -> Paddeln */
+    int pad2 = 0;
+    for (int f = 0; f < 12; f++) {
+        leon_statue(-6000, -8000); e->x = -6000; e->z = -16000; e->rot_y = 0xC00;
+        tick();
+        if (e->motion == 1) pad2++;
+    }
+    CHECK(pad2 >= 10, "ausserhalb der Kanister-Zone kein Paddeln bei Stufe 7 (%d/12) - Hysterese @0x80100b20", pad2);
+    CHECK(re15_gr2_biss_erlaubt(slot), "Biss bei Stufe 7 nicht erlaubt (FUN_801012fc laesst 7 durch @0x8010136c-70)");
+    printf("aufnahme: Paddeln %d/12 -> Stufe 1 Clip 0 Blend 32, Stufe 1..6 %d/%d Clip 0, Biss %d, Stufe 7 Zone 0 %d/30 "
+           "Clip 0, Zone 2 Paddeln %d/12\n", paddeln, clip0, n16, biss, halt0, pad2);
     return fails ? 1 : 0;
 }
 
@@ -903,6 +992,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "putz")) rc = teil_putz();
     else if (!strcmp(t, "wand")) rc = teil_wand();
     else if (!strcmp(t, "kamera")) rc = teil_kamera();
+    else if (!strcmp(t, "aufnahme")) rc = teil_aufnahme();
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);
     return rc;

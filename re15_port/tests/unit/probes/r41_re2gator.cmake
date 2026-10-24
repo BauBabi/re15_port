@@ -48,7 +48,12 @@ endif()
 #                                jede Wahl unabhaengig nachgerechnet (Projektion, frontal = cos Blickachse/Kamera)
 #                                Fortsetzung 3: Wahl nur unter der RE2-Massstab-Grenze (H*Skala/Tiefe <= RE2 Cut 0 257/8898);
 #                                R1-Fall 2 (Lage des exe-Laufs kam_k) pinnt, dass die Grenze die zu nahe Cut-2-Wahl verwirft
-foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera)
+#   unit_r41_re2gator_aufnahme   Nachbesserung 2 (Abnahme 1, M3): Kanister-Aufnahme in der Verfolgung wie RE2 -
+#                                Aufnahmebeginn Paddeln -> Schwimmen (Clip 0, Bild 0, Blend 32; @0x80100b04-18/@0x80100c04),
+#                                Stufe 1..6 ohne Hysterese (@0x80100b20-30) und ohne Biss (FUN_801012fc @0x80101360-70),
+#                                Stufe 7 in der Kanister-Zone weiter Schwimmen (Bank 5 Bit 0, @0x80100aec/@0x80100afc),
+#                                ausserhalb wieder Paddeln + Biss erlaubt
+foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera aufnahme)
     add_test(NAME unit_r41_re2gator_${_teil} COMMAND test_r41_re2gator ${_teil})
     set_tests_properties(unit_r41_re2gator_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()

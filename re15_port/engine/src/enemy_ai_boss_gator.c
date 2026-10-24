@@ -1078,6 +1078,7 @@ void re15_gator_boss_tick(int slot)
         e->hp = GB_HP;                        /* RE2 INIT schreibt HP unbedingt (@0x80100518-580) */
         g->prev_hp = e->hp;
         re15_gr2_reset(slot, gb_se);          /* Runde 41 Spur B: RE2-Bausteine je Aktor-Leben */
+        re15_gr2_zonen_quelle(gb_zone);       /* Nachbesserung 2 (M3): RE2-Zone 1 des Kanisters = Beckenzone */
         g->next_flinch_hp = (int16_t)(e->hp - GB_FLINCH_STEP);
         e->x = GB_START_X; e->z = GB_START_Z; e->y = GB_WATER_Y;
         /* Blick zur Leiter ueber die ENGINE-Peilung (steer mit Voll-Slew 0x800 =
@@ -1516,6 +1517,7 @@ void re15_gator_boss_tick(int slot)
                  * ab (Biss-Sweep: Leon kreiste bei dist~120 dauerhaft im
                  * toten Winkel, BISS-FAIL sz=2 NO/Nord-Ost). */
                 if (pl->hit_react == 0 && e->hit_stun == 0
+                    && re15_gr2_biss_erlaubt(slot)  /* R41 B NB2 M3: kein Biss in Kanister-Stufe 1..6 @0x80101360-70 */
                     && !gb_wand_dazwischen(e, pl)
                     && (dist < 3200 || gb_maul_dist(e, pl) < 2400
                         || g->maul_kontakt > 0)) {
@@ -1576,6 +1578,7 @@ void re15_gator_boss_tick(int slot)
          * 3 s reglos bei dist=623 vor Leon - das enge 0x180-Gate liess den
          * Schnapp nie zu, wenn Leon seitlich in der Nische stand). */
         if (pl->hit_react == 0 && e->hit_stun == 0
+            && re15_gr2_biss_erlaubt(slot)    /* R41 B NB2 M3: kein Biss in Kanister-Stufe 1..6 @0x80101360-70 */
             && !gb_wand_dazwischen(e, pl)
             && (dist < 3200 || gb_maul_dist(e, pl) < 2400 || g->maul_kontakt > 0)) {
             /* dist-Netz 2600->3200 (Biss-Sweep 2026-09-11): seitlich am
@@ -1953,7 +1956,8 @@ void re15_gator_boss_tick(int slot)
         g->pitch_vz = (int16_t)(-(350 * g->guard_t) / 24);
         g->arc_vz   = (int16_t)(-(220 * g->guard_t) / 24);
         /* Hochbiss im Schnapp-Takt: Clip 4, Fenster = gemessene Maul-offen-Phase. */
-        if (dist < 4200 && e->hit_stun == 0 && e->motion != 4) {
+        if (dist < 4200 && e->hit_stun == 0 && e->motion != 4
+            && re15_gr2_biss_erlaubt(slot)) {   /* R41 B NB2 M3: kein Biss in Kanister-Stufe 1..6 @0x80101360-70 */
             gb_se(4);                                  /* RE2 Lunge-P0 SE 4 @0x80100d64/d84 (Stufe B1) */
             gb_se(3); e->motion = 4; e->anim_frame = 0; g->bite_done = 0;
         }
@@ -2095,7 +2099,8 @@ void re15_gator_boss_tick(int slot)
         if (e->hit_stun == 0                  /* Mehrfach-Schnapp: hit_stun
                                                * 0x64 taktet die Rate (Anti-
                                                * Hilflosigkeit 2026-09-11) */
-            && pl->hit_react == 0 && gb_maul_dist(e, pl) <= 1500) {
+            && pl->hit_react == 0 && gb_maul_dist(e, pl) <= 1500
+            && re15_gr2_biss_erlaubt(slot)) {   /* R41 B NB2 M3: kein Biss in Kanister-Stufe 1..6 @0x80101360-70 */
                             gb_biss_abschluss(e, g, pl);
         }
         break; }
