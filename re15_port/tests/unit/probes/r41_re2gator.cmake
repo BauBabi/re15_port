@@ -73,7 +73,14 @@ endif()
 #   unit_r41_re2gator_gier       Nachbesserung 4 (Abnahme 3 M2): in CHASE/GUARD kein Gier-Delta > 0x60 je Bild ausser dem RE2-Knick
 #                                +1024 (@0x80100938-48 / @0x80100eb0-c0), je >= 300 Bildpaare in den Lagen E1 (Plattform-Belagerung,
 #                                Leon oben auf der Rampe) und C3 (Westwand vor der Tuernische); Wand-Druck = keine Befreiung
-foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera aufnahme lauer schleppen anschwimmen sitz gier)
+#   unit_r41_re2gator_maul       Nachbesserung 5 (Abnahme 4 M1): nach JEDEM toedlichen Biss liegt Leon ueber P1-P3 im GEZEICHNETEN
+#                                Maul wie im CHASE-Bezug (Lage unit_gator_fress): Maulraum (PL00-Koerper im AABB Mesh 6+7 der Pose MIT
+#                                pitch/arc/jaw/+0x22A-Haken), Wurzel im Kopf-Rahmen, Abstand zum gezeichneten Kiefer (Messzeile der
+#                                exe) je Bild, fuer vier GUARD-Hochbiss-Lagen (Rampe Ost 6300/6732, Rampenmitte, Plattformblock;
+#                                Leon y -1800); alles im Wasser, Kopf + Leon im Bild der Finisher-Kamera (RE2-P0 @0x80101048-4c,
+#                                Zusatzwinkel 0 @0x80101050-54, Anker-Paar ohne Wand FUN_80015cb8 @0x80101174/@0x801011cc)
+#   unit_r41_re2gator_buehne     Nachbesserung 5: Finisher-Buehne fuer jede Gator-Lage (Wasser + Plattform/Rampe, Raster 1000 x 8 Gier)
+foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera aufnahme lauer schleppen anschwimmen sitz gier maul buehne)
     add_test(NAME unit_r41_re2gator_${_teil} COMMAND test_r41_re2gator ${_teil})
     set_tests_properties(unit_r41_re2gator_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()

@@ -130,11 +130,16 @@ static void kanister_sitz(void)
  * gezeichneten Pose - Kopf an der Anker-Lage ohne Zusaetze| (re15_gr2_fress_sitz; RE2 FUN_80015cb8 setzt Gator und Opfer vom
  * gemeinsamen Anker, ohne Neigung und ohne Wand = Opfer im Maul wie authored), ob Kopf und Leons Wurzel im Bild der GEZEICHNETEN
  * Kamera liegen (Projektion wie der Zeichner: view x Welt, H/z) und ob beide im Wasser sind (Beckenquelle des Boss-Moduls).
- * debug.log "[gator-re2] Maul-Sitz F<n>: Bilder <k> (P1 a P2 b P3 c), Abweichung max <m> (F..), Kopf+Leon im Bild <j>/<k> (Cut <c>),
- * im Wasser <w>/<k> | jetzt ..." beim ersten Bild, bei jedem neuen Hoechstwert, bei jedem Bild ausserhalb Bild/Wasser und alle
- * 30 Bilder. Reine Messung. */
-static int fress_proj(const re15_camera_view_t *cam, int cx, int cy, const int32_t p[3])
+ * Dazu der Abstand Leon <-> gezeichneter Kiefer (Abnahme 4 M1): |(Leons Wurzel - Part 7) gezeichnet - dieselbe Groesse der
+ * authored Finisher-Bahn| (re15_gr2_fress_sitz, Bahn aus den Bankdaten relativ zur Buehne). "oben hinaus" = Leons Wurzel ueber dem
+ * oberen Bildrand bei Bild-x im Bild (der Wurf in P2 Bild 60-75 hebt ihn aus dem POS-Kanal bis y -9177 roh - in RE2 Cut 7 ebenso).
+ * debug.log "[gator-re2] Maul-Sitz F<n>: Bilder <k> (P1 a P2 b P3 c), Abweichung max <m> (F..), Kiefer-Abstand max <j> (F..),
+ * Kopf im Bild <h>/<k>, Leon im Bild <l>/<k> + oben hinaus <o> (Cut <c>), im Wasser <w>/<k> | jetzt ..." beim ersten Bild, bei
+ * jedem neuen Hoechstwert, bei jedem Bild ausserhalb Bild/Wasser und alle 30 Bilder. Reine Messung. */
+static int fress_proj(const re15_camera_view_t *cam, int cx, int cy, const int32_t p[3], int *ox, int *oy)
 {
+    if (ox) *ox = -1;
+    if (oy) *oy = -1;
     if (!cam) return 0;
     int64_t px = p[0], py = p[1], pz = p[2];
     int32_t vx = (int32_t)(((int64_t)cam->rot[0]*px + (int64_t)cam->rot[1]*py + (int64_t)cam->rot[2]*pz) >> 12) + cam->trans[0];
@@ -142,33 +147,46 @@ static int fress_proj(const re15_camera_view_t *cam, int cx, int cy, const int32
     int32_t vz = (int32_t)(((int64_t)cam->rot[6]*px + (int64_t)cam->rot[7]*py + (int64_t)cam->rot[8]*pz) >> 12) + cam->trans[2];
     if (vz <= 0) return 0;
     int x = cx + (int)(((int64_t)vx * cam->fov_screen_dist) / vz), y = cy + (int)(((int64_t)vy * cam->fov_screen_dist) / vz);
+    if (ox) *ox = x;
+    if (oy) *oy = y;
     return x >= 0 && x < 320 && y >= 0 && y < 240;
 }
 static void fress_sitz(const re15_camera_view_t *cam, int cx, int cy)
 {
-    static int s_n, s_pn[4], s_bild, s_wasser; static int32_t s_max = -1; static unsigned s_fmax = 0, s_raum = 0xffffffffu;
+    static int s_n, s_pn[4], s_kopf_bild, s_leon_bild, s_leon_oben, s_wasser; static int32_t s_max = -1, s_kmax = -1;
+    static unsigned s_fmax = 0, s_fkmax = 0, s_raum = 0xffffffffu;
     if (s_raum != (unsigned)g_current_room_id) {
-        s_raum = (unsigned)g_current_room_id; s_n = 0; s_bild = 0; s_wasser = 0; s_max = -1; s_fmax = 0;
+        s_raum = (unsigned)g_current_room_id; s_n = 0; s_kopf_bild = 0; s_leon_bild = 0; s_leon_oben = 0; s_wasser = 0;
+        s_max = -1; s_kmax = -1; s_fmax = 0; s_fkmax = 0;
         memset(s_pn, 0, sizeof s_pn);
     }
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *a = &g_actors[i];
         if (!a->active || a->type != 0x23u || !re15_gator_boss_im_fressen(a)) continue;
-        int32_t abw = 0, kopf[3], leon[3]; int ph = 0;
-        if (!re15_gr2_fress_sitz(a, &g_actors[RE15_ACTOR_SLOT_PLAYER], &abw, kopf, leon, &ph)) return;
+        int32_t abw = 0, kab = -1, kopf[3], leon[3]; int ph = 0;
+        if (!re15_gr2_fress_sitz(a, &g_actors[RE15_ACTOR_SLOT_PLAYER], &abw, kopf, leon, &kab, &ph)) return;
         unsigned f = (unsigned)g_engine.frame_count;
-        int bild = fress_proj(cam, cx, cy, kopf) && fress_proj(cam, cx, cy, leon);
+        int lx = -1, ly = -1;
+        int kb = fress_proj(cam, cx, cy, kopf, NULL, NULL);
+        int lb = fress_proj(cam, cx, cy, leon, &lx, &ly);
+        int lo = !lb && lx >= 0 && lx < 320 && ly < 0;
         int wasser = re15_gr2_becken_draussen(kopf[0], kopf[2], 0) == 0 && re15_gr2_becken_draussen(leon[0], leon[2], 0) == 0;
         s_n++; s_pn[ph & 3]++;
-        if (bild) s_bild++;
+        if (kb) s_kopf_bild++;
+        if (lb) s_leon_bild++;
+        if (lo) s_leon_oben++;
         if (wasser) s_wasser++;
         int neu = abw > s_max;
         if (neu) { s_max = abw; s_fmax = f; }
-        if (neu || s_n == 1 || (s_n % 30) == 0 || !bild || !wasser)
-            fprintf(stderr, "[gator-re2] Maul-Sitz F%u: Bilder %d (P1 %d P2 %d P3 %d), Abweichung max %d (F%u), Kopf+Leon im Bild %d/%d "
-                    "(Cut %d), im Wasser %d/%d | jetzt P%d %d kopf=(%d,%d,%d) leon=(%d,%d,%d)\n",
-                    f, s_n, s_pn[1], s_pn[2], s_pn[3], (int)s_max, s_fmax, s_bild, s_n, (int)g_re15_active_cut, s_wasser, s_n,
-                    ph, (int)abw, kopf[0], kopf[1], kopf[2], leon[0], leon[1], leon[2]);
+        int32_t kw = kab < 0 ? 0x7fffffff : kab;          /* nicht bestimmbar = Hoechstwert (faellt im Riegel auf) */
+        if (kw > s_kmax) { s_kmax = kw; s_fkmax = f; neu = 1; }
+        if (neu || s_n == 1 || (s_n % 30) == 0 || !kb || !(lb || lo) || !wasser)
+            fprintf(stderr, "[gator-re2] Maul-Sitz F%u: Bilder %d (P1 %d P2 %d P3 %d), Abweichung max %d (F%u), Kiefer-Abstand max %d (F%u), "
+                    "Kopf im Bild %d/%d, Leon im Bild %d/%d + oben hinaus %d (Cut %d), im Wasser %d/%d | jetzt P%d %d %d "
+                    "kopf=(%d,%d,%d) leon=(%d,%d,%d) leon_bild=(%d,%d)\n",
+                    f, s_n, s_pn[1], s_pn[2], s_pn[3], (int)s_max, s_fmax, (int)s_kmax, s_fkmax, s_kopf_bild, s_n, s_leon_bild, s_n,
+                    s_leon_oben, (int)g_re15_active_cut, s_wasser, s_n, ph, (int)abw, (int)kab,
+                    kopf[0], kopf[1], kopf[2], leon[0], leon[1], leon[2], lx, ly);
         return;
     }
 }

@@ -23,6 +23,11 @@
  *             liegende Kanister >= 8880 x Skala voraus in der Zone des Gators liegt; < 8880, hinter dem Gator, in einer
  *             anderen Zone oder ohne Kanister beisst er
  *
+ *   maul      Nachbesserung 5 (Abnahme 4 M1): nach JEDEM toedlichen Biss (CHASE-Bezug + vier GUARD-Hochbiss-Lagen mit Leon oben)
+ *             liegt Leon ueber P1-P3 im GEZEICHNETEN Maul wie im Bezug (Maulraum von unit_gator_fress mit Haken, Kopf-Rahmen,
+ *             Abstand zum gezeichneten Kiefer), alles im Wasser, Kopf + Leon im Bild der Finisher-Kamera
+ *   buehne    Nachbesserung 5: Finisher-Buehne (RE2-P0-Form @0x80101048-4c) fuer jede Gator-Lage gefunden (Raster 1000 x 8 Gier)
+ *
  * Seit Nachbesserung 3 ist der Gator im NATUERLICHEN Lauern untergetaucht (kein Kanister-Fenster, RE2 Sub-0-Pre leer):
  * Riegel, die einen ruhenden Gator den Kanister aufnehmen lassen, laufen mit RE15_GB_TEST=5 (Marker-Repro: aufgetaucht
  * wartend an der Marker-Lage, ohne Aggro) - setup(5).
@@ -49,6 +54,7 @@
 #include "re15_anim_select.h"   /* Nachtrag 4: re15_compute_actor_kf */
 #include <math.h>
 #include "re15_md1.h"
+#include "re15_math.h"       /* Nachbesserung 5: re15_squareroot0 (Riegel buehne) */
 #include "re15_tim.h"
 #include "re15_rumble.h"
 #include "re2_fx.h"
@@ -1491,6 +1497,298 @@ static int teil_gier(void)
     return fails ? 1 : 0;
 }
 
+/* ===== Nachbesserung 5 (Abnahme 4 M1) ============================================================================================
+ * maul - nach JEDEM toedlichen Biss liegt das Opfer ueber P1-P3 im GEZEICHNETEN Maul wie im CHASE-Bezug (A2 / unit_gator_fress).
+ * Maulraum-Messung von unit_gator_fress (Leons PL00-Koerper mit den Opfer-Keyframes und dem Fress-Massstab im AABB von Mesh 6+7,
+ * gator-lokal), hier mit der GEZEICHNETEN Pose (g_anim_pose_actor = Gator: Bone-0-Neigung pitch_vz, arc/jaw-Haken, RE2-Kopf/Kiefer-az
+ * +0x22A/+0x228) in JEDEM Bild ab P0, fuer den CHASE-Bezug (Leon im offenen Wasser, Biss frontal wie unit_gator_fress) und vier
+ * GUARD-Hochbiss-Lagen mit Leon OBEN (y -1800): Rampe Ost (6300,-16250) = Ankunft der 20A0-Tuer, E1-Lage (6732,-16250), Rampenmitte
+ * (4000,-15000), Plattformblock (0,-16250). Je Lage und Bild der Finisher-Bahn gegen den Bezug im selben Bild:
+ *   - Leons Wurzel im gezeichneten Kopf-Rahmen (Bone 6) gleich (<= 32 Modelleinheiten je Achse = ~21 Welteinheiten bei Skala 2/3:
+ *     Q12-Rundung der anderen Buehnen-Gier, gemessen bis 10; der Defekt vorher bis 5649),
+ *   - Anteil von Leons Koerper im Maulraum gleich (<= 2 Prozentpunkte),
+ *   - Abstand Leon <-> gezeichneter Kiefer gegen die authored Bahn (re15_gr2_fress_sitz, Messzeile der exe) <= 8,
+ *   - Gator-Wurzel, Hals/Kopf/Kiefer (Bones 1/5/6/7) und Leons Wurzel im Wasser (Beckenquelle des Boss-Moduls),
+ *   - Kopf im Bild der Finisher-Kamera, Leon im Bild oder oben hinaus (Wurf P2 Bild 60-75, in RE2 Cut 7 ebenso).
+ * RE2: P0 setzt den Gator um (@0x80101048-4c) und nullt die Zusatzwinkel (@0x80101050-54), P1-P3 setzen Gator und Opfer vom
+ * gemeinsamen Anker ohne Wand (FUN_80015cb8 @0x80101174/@0x801011cc). Vorher (Stand 7831a6d5, Sonde B41nb5/probe_maul):
+ * GUARD-Lagen Kopf-lokal bis 5649 daneben, Klemm-Versatz bis 1129, Bilder mit >= 50 % im Maul P2/P3 0/0 bzw. 17/82. */
+static re15_emd_skeleton_t s_m_pl00_skel;
+static re15_md1_t          s_m_pl00_md1;
+static int m_pl00_geladen(void)
+{
+    static int s_ok = -1;
+    size_t rsz = 0, msz = 0;
+    if (s_ok >= 0) return s_ok;
+    uint8_t *emr = slurp(RE15_ASSET_PSX_DIR "/PLD/PL00.EMR", &rsz);
+    uint8_t *md1 = slurp(RE15_ASSET_PSX_DIR "/PLD/PL00.MD1", &msz);
+    s_ok = (emr && md1 && re15_emd_parse_skeleton(emr, rsz, &s_m_pl00_skel) == 0 && re15_md1_parse(md1, (int)msz, &s_m_pl00_md1) == 0);
+    return s_ok;
+}
+static int m_kf(const re15_emd_animation_t *an, int clip, int fr)
+{
+    const re15_emd_clip_t *c = &an->clips[clip];
+    int fi = c->first_frame + (fr % c->frame_count);
+    int fend = c->first_frame + c->frame_count - 1;
+    while ((an->frames[fi] & 0x8000u) && fi < fend) fi++;
+    return (int)(an->frames[fi] & 0xFFFu);
+}
+/* Weltpunkt -> Gator-Modellrahmen (Umkehr von G + s x RotY x m) */
+static void m_welt_zu_modell(const int32_t w[3], int32_t s, int32_t m[3])
+{
+    int32_t d[3] = { w[0] - e->x, w[1] - e->y, w[2] - e->z };
+    int32_t cs = re15_cos_q12((int)e->rot_y), sn = re15_sin_q12((int)e->rot_y);
+    int64_t mx = ((int64_t)cs * d[0] - (int64_t)sn * d[2]) >> 12;
+    int64_t mz = ((int64_t)sn * d[0] + (int64_t)cs * d[2]) >> 12;
+    m[0] = (int32_t)(mx * 4096 / s); m[1] = (int32_t)((int64_t)d[1] * 4096 / s); m[2] = (int32_t)(mz * 4096 / s);
+}
+/* Modellpunkt -> Bone-Rahmen (Umkehr von trans + rot x b) */
+static void m_modell_zu_bone(const int32_t m[3], const re15_skel_pose_t *p, int32_t b[3])
+{
+    int32_t d[3] = { m[0] - p->trans[0], m[1] - p->trans[1], m[2] - p->trans[2] };
+    for (int r = 0; r < 3; r++)
+        b[r] = (int32_t)(((int64_t)p->rot[0*3+r] * d[0] + (int64_t)p->rot[1*3+r] * d[1] + (int64_t)p->rot[2*3+r] * d[2]) >> 12);
+}
+static void m_bone_welt(const re15_skel_pose_t *p, int32_t s, int32_t w[3])
+{
+    int32_t t[3] = { (int32_t)(((int64_t)p->trans[0] * s) >> 12), (int32_t)(((int64_t)p->trans[1] * s) >> 12),
+                     (int32_t)(((int64_t)p->trans[2] * s) >> 12) };
+    re15_skel_bone_to_world(t, e->rot_y, e->x, e->y, e->z, w);
+}
+/* Leons gezeichnete Wurzel (Welt) wie der Spieler-Zeichner im Opfer-Modus: pl + RotY(pl->rot_y) x render_scale x POS */
+static void m_leon_wurzel(int32_t w[3])
+{
+    re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+    int vkf = m_kf(&bk->anim_victim, pl->motion, (int)pl->anim_frame);
+    int16_t px = 0, py = 0, pz = 0; re15_emd_get_keyframe_position(&bk->skel_victim, vkf, &px, &py, &pz);
+    int32_t sp = pl->render_scale_q12 ? pl->render_scale_q12 : 4096;
+    int32_t P[3] = { (int32_t)(((int64_t)px * sp) >> 12), (int32_t)(((int64_t)py * sp) >> 12), (int32_t)(((int64_t)pz * sp) >> 12) };
+    re15_skel_bone_to_world(P, (int16_t)pl->rot_y, pl->x, pl->y, pl->z, w);
+}
+/* Anteil von Leons Koerper (PL00-Knochen + Opfer-Keyframes, wie main.c Spieler-Zweig) im Maulraum der Pose gp, in Promille */
+static int m_maulraum(const re15_skel_pose_t *gp, int32_t s)
+{
+    re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+    int32_t lo[3] = { 0x7fffffff, 0x7fffffff, 0x7fffffff }, hi[3] = { -0x7fffffff, -0x7fffffff, -0x7fffffff };
+    for (int mesh = 6; mesh <= 7; mesh++) {
+        const re15_md1_mesh_t *m = &bk->md1.meshes[mesh];
+        for (int pass = 0; pass < 2; pass++) {
+            const re15_md1_vertex_t *V = pass ? m->quad_vertices : m->tri_vertices;
+            int NV = pass ? m->quad_vertex_count : m->tri_vertex_count;
+            for (int i = 0; i < NV; i++) {
+                int32_t v[3] = { V[i].x, V[i].y, V[i].z };
+                for (int r = 0; r < 3; r++) {
+                    int64_t s2 = 0;
+                    for (int k = 0; k < 3; k++) s2 += (int64_t)gp[mesh].rot[r*3+k] * v[k];
+                    int32_t w = (int32_t)(s2 >> 12) + gp[mesh].trans[r];
+                    if (w < lo[r]) lo[r] = w;
+                    if (w > hi[r]) hi[r] = w;
+                }
+            }
+        }
+    }
+    int vkf = m_kf(&bk->anim_victim, pl->motion, (int)pl->anim_frame);
+    re15_emd_skeleton_t vs = s_m_pl00_skel;
+    vs.keyframe_data = bk->skel_victim.keyframe_data; vs.keyframe_data_size = bk->skel_victim.keyframe_data_size;
+    vs.keyframe_count = bk->skel_victim.keyframe_count; vs.keyframe_size_bytes = bk->skel_victim.keyframe_size_bytes;
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *sv = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    int r = re15_skel_compute_pose(&vs, vkf, poses);
+    g_anim_pose_actor = sv;
+    if (r != 0) return -1;
+    int32_t cs = re15_cos_q12((int)pl->rot_y), sn = re15_sin_q12((int)pl->rot_y);
+    int32_t yaw[9] = { cs, 0, sn, 0, 0x1000, 0, -sn, 0, cs };
+    int32_t s_pl = pl->render_scale_q12 ? pl->render_scale_q12 : 4096;
+    if (s_pl != 4096) for (int k = 0; k < 9; k++) yaw[k] = (yaw[k] * s_pl) >> 12;
+    int nb = s_m_pl00_skel.bone_count; if (nb > s_m_pl00_md1.mesh_count) nb = s_m_pl00_md1.mesh_count; if (nb > 15) nb = 15;
+    int n = 0, nin = 0;
+    for (int bi = 0; bi < nb; bi++) {
+        const re15_md1_mesh_t *m = &s_m_pl00_md1.meshes[bi];
+        int32_t yrot[9], ytr[3];
+        for (int rr = 0; rr < 3; rr++) for (int c = 0; c < 3; c++) { int64_t s2 = 0;
+            for (int k = 0; k < 3; k++) s2 += (int64_t)yaw[rr*3+k] * poses[bi].rot[k*3+c];
+            yrot[rr*3+c] = (int32_t)(s2 >> 12); }
+        for (int rr = 0; rr < 3; rr++) { int64_t s2 = 0;
+            for (int k = 0; k < 3; k++) s2 += (int64_t)yaw[rr*3+k] * poses[bi].trans[k];
+            ytr[rr] = (int32_t)(s2 >> 12); }
+        for (int pass = 0; pass < 2; pass++) {
+            const re15_md1_vertex_t *V = pass ? m->quad_vertices : m->tri_vertices;
+            int NV = pass ? m->quad_vertex_count : m->tri_vertex_count;
+            for (int i = 0; i < NV; i++) {
+                int32_t v[3] = { V[i].x, V[i].y, V[i].z }, w[3], mm[3];
+                for (int rr = 0; rr < 3; rr++) { int64_t s2 = 0;
+                    for (int k = 0; k < 3; k++) s2 += (int64_t)yrot[rr*3+k] * v[k];
+                    w[rr] = (int32_t)(s2 >> 12) + ytr[rr] + (rr == 0 ? pl->x : rr == 1 ? pl->y : pl->z); }
+                m_welt_zu_modell(w, s, mm);
+                n++;
+                if (mm[0] >= lo[0] && mm[0] <= hi[0] && mm[1] >= lo[1] && mm[1] <= hi[1] && mm[2] >= lo[2] && mm[2] <= hi[2]) nin++;
+            }
+        }
+    }
+    return n ? (int)((int64_t)nin * 1000 / n) : -1;
+}
+#define M_BILDER 400
+typedef struct { int n, pn[4], ph[M_BILDER]; int32_t kl[M_BILDER][3]; int pm[M_BILDER]; } m_bahn_t;
+/* Ein Lauf: Leon (lx,lz,ly) als Statue bis zum Tod, hp 30 (ein Biss = 50, dmg_table[5] @DAT_8006f418), danach fuehrt der
+ * Finisher. gx/gz/gyaw >= 0 x: Gator nach dem Intro hinstellen (Bezug wie unit_gator_fress). Rueckgabe 1 = Tod + Finisher gemessen. */
+static int m_lauf(const char *was, int32_t lx, int32_t lz, int32_t ly, int setzen, int32_t gx, int32_t gz, int gyaw,
+                  int soll_phase, m_bahn_t *b, const m_bahn_t *bezug, char *zeile, size_t zn)
+{
+    if (!setup(1)) return 0;
+    memset(b, 0, sizeof *b);
+    pl->hp = 100;
+    pl->x = lx; pl->z = lz; pl->y = ly; pl->floor = 0; pl->state = 0; pl->motion = 0; pl->hit_react = 0;
+    tick();
+    for (int f = 0; f < 400 && (re15_gr2_im_intro(slot) || f < 2); f++) {
+        pl->x = lx; pl->z = lz; pl->y = ly; pl->floor = 0; pl->state = 0; pl->motion = 0; pl->hit_react = 0;
+        tick();
+    }
+    re15_gr2_biss_cd(slot, 0);
+    if (setzen) { e->x = gx; e->z = gz; e->y = -1200; e->rot_y = (int16_t)gyaw; }
+    pl->hp = 30;
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    int tod = -1, ph_tod = -1, bild = 0, cut = -1;
+    int32_t kl_max = 0, pm_max = 0, ki_max = 0; int wasser_aus = 0, kopf_aus = 0, leon_aus = 0, oben = 0, ki_fehlt = 0;
+    for (int f = 0; f < 6000; f++) {
+        if (pl->hp >= 0) { pl->x = lx; pl->z = lz; pl->y = ly; pl->floor = 0; pl->state = 0; pl->motion = 0; pl->hit_react = 0; }
+        int ph_vor = re15_gator_boss_phase(e);
+        tick();
+        int fr = re15_gator_boss_im_fressen(e);
+        if (fr && tod < 0) { tod = f; ph_tod = ph_vor; continue; }   /* Biss-Bild: zeigt noch die alte Kamera (Schnitt-Auftrag) */
+        if (tod < 0) continue;
+        if (!fr) break;
+        int pidx = e->motion == 4 ? 1 : e->motion == 5 ? 2 : e->motion == 11 ? 3 : 0;
+        re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+        int ov = (e->anim_flags & 0x04u) ? (int)e->motion : -1;
+        int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, e, ov, (uint32_t)e->anim_frame);
+        re15_skel_pose_t gp[RE15_EMD_MAX_BONES];
+        void *save = g_anim_pose_actor; g_anim_pose_actor = e;      /* gezeichnet: mit allen Haken (NPC-Pass) */
+        int rv = re15_skel_compute_pose(&bk->skel, kf, gp);
+        g_anim_pose_actor = save;
+        if (rv != 0 || bild >= M_BILDER) { CHECK(0, "%s: Pose/Bildzahl in FRESSEN-Bild %d", was, bild); return 0; }
+        int32_t lw[3], lm[3], kl[3];
+        m_leon_wurzel(lw);
+        m_welt_zu_modell(lw, s, lm);
+        m_modell_zu_bone(lm, &gp[6], kl);
+        int pm = m_maulraum(gp, s);
+        /* Abstand Leon <-> gezeichneter Kiefer gegen die authored Bahn (Messzeile der exe) */
+        int32_t abw = 0, kab = -1, kopf[3], leon[3]; int ph2 = 0;
+        if (!re15_gr2_fress_sitz(e, pl, &abw, kopf, leon, &kab, &ph2) || kab < 0) ki_fehlt++;
+        else if (kab > ki_max) ki_max = kab;
+        /* Wasser: Wurzel, Bones 1/5/6/7, Leons Wurzel */
+        static const int kb[4] = { 1, 5, 6, 7 };
+        int nass = re15_gr2_becken_draussen(e->x, e->z, 0) == 0 && re15_gr2_becken_draussen(lw[0], lw[2], 0) == 0;
+        int32_t k6[3] = { 0, 0, 0 };
+        for (int i = 0; i < 4; i++) {
+            int32_t w[3]; m_bone_welt(&gp[kb[i]], s, w);
+            if (kb[i] == 6) memcpy(k6, w, sizeof w);
+            if (re15_gr2_becken_draussen(w[0], w[2], 0)) nass = 0;
+        }
+        if (!nass) { wasser_aus++; if (wasser_aus <= 3) printf("  %s: Bild %d P%d nicht im Wasser G=(%d,%d) Leon=(%d,%d)\n", was, bild, pidx, e->x, e->z, lw[0], lw[2]); }
+        /* Bild der Finisher-Kamera */
+        cut = re15_gr2_finisher_cut(slot);
+        int sx = -1, sy = -1, lx2 = -1, ly2 = -1;
+        int kopf_im = cut >= 0 && re15_gr2_im_bild_cut(cut, k6, &sx, &sy);
+        int leon_im = cut >= 0 && re15_gr2_im_bild_cut(cut, lw, &lx2, &ly2);
+        int leon_oben = !leon_im && cut >= 0 && lx2 >= 0 && lx2 < 320 && ly2 < 0;
+        if (!kopf_im) kopf_aus++;
+        if (!leon_im && !leon_oben) { leon_aus++; if (leon_aus <= 3) printf("  %s: Bild %d P%d Leon nicht im Bild von Cut %d: Bildlage (%d,%d), Welt (%d,%d,%d)\n", was, bild, pidx, cut, lx2, ly2, lw[0], lw[1], lw[2]); }
+        if (leon_oben) oben++;
+        b->ph[bild] = pidx; b->pm[bild] = pm; memcpy(b->kl[bild], kl, sizeof kl);
+        b->pn[pidx & 3]++;
+        if (bezug && bild < bezug->n) {
+            for (int i = 0; i < 3; i++) { int32_t d = kl[i] - bezug->kl[bild][i]; if (d < 0) d = -d; if (d > kl_max) kl_max = d; }
+            int32_t d = pm - bezug->pm[bild]; if (d < 0) d = -d; if (d > pm_max) pm_max = d;
+            if (pidx != bezug->ph[bild]) CHECK(0, "%s: Bild %d Phase P%d, Bezug P%d", was, bild, pidx, bezug->ph[bild]);
+        }
+        bild++;
+    }
+    b->n = bild;
+    int im_maul[4] = { 0, 0, 0, 0 };
+    for (int i = 0; i < b->n; i++) if (b->pm[i] >= 500) im_maul[b->ph[i] & 3]++;
+    snprintf(zeile, zn, "%-44s Tod Takt %d aus Phase %d, Finisher %d Bilder (P1 %d P2 %d P3 %d), Cut %d, Maul >= 50 %%: P1 %d P2 %d P3 %d, "
+             "Kopf-lokal gegen Bezug max %d, Maulraum gegen Bezug max %d Promille, Kiefer-Abstand max %d (fehlt %d), nicht im Wasser %d, "
+             "Kopf nicht im Bild %d, Leon nicht im Bild %d (oben hinaus %d)",
+             was, tod, ph_tod, b->n, b->pn[1], b->pn[2], b->pn[3], cut, im_maul[1], im_maul[2], im_maul[3], (int)kl_max, (int)pm_max,
+             (int)ki_max, ki_fehlt, wasser_aus, kopf_aus, leon_aus, oben);
+    CHECK(tod >= 0, "%s: kein toedlicher Biss in 6000 Takten", was);
+    if (tod < 0) return 0;
+    if (soll_phase >= 0) CHECK(ph_tod == soll_phase, "%s: Tod aus Phase %d statt %d", was, ph_tod, soll_phase);
+    CHECK(b->pn[1] == 14 && b->pn[2] == 120 && b->pn[3] == 120, "%s: Finisher-Bilder P1 %d P2 %d P3 %d (14/120/120: Clip 4 Bild 1..14, "
+          "Clip 5 sf 1..120, Clip 11 120 Takte)", was, b->pn[1], b->pn[2], b->pn[3]);
+    CHECK(cut >= 0, "%s: keine Finisher-Buehne/Kamera (Rueckfall am Ort)", was);
+    CHECK(ki_fehlt == 0 && ki_max <= 8, "%s: Abstand Leon <-> gezeichneter Kiefer weicht bis %d von der authored Bahn ab (%d Bilder ohne Wert)",
+          was, (int)ki_max, ki_fehlt);
+    CHECK(wasser_aus == 0, "%s: %d Bilder mit Gator/Kopf/Kiefer/Leon ausserhalb des Wassers", was, wasser_aus);
+    CHECK(kopf_aus == 0 && leon_aus == 0, "%s: Kopf in %d, Leon in %d Bildern nicht im Bild der Finisher-Kamera Cut %d", was, kopf_aus, leon_aus, cut);
+    if (bezug) {
+        CHECK(b->n == bezug->n, "%s: %d Finisher-Bilder, Bezug %d", was, b->n, bezug->n);
+        CHECK(kl_max <= 32, "%s: Leons Wurzel im gezeichneten Kopf-Rahmen bis %d neben dem CHASE-Bezug (<= 32)", was, (int)kl_max);
+        CHECK(pm_max <= 20, "%s: Leons Anteil im Maulraum bis %d Promille neben dem CHASE-Bezug (<= 20)", was, (int)pm_max);
+    }
+    return 1;
+}
+static int teil_maul(void)
+{
+    if (!m_pl00_geladen()) { printf("FAIL: PL00.EMR/MD1 nicht ladbar\n"); return 1; }
+    static m_bahn_t bezug, b;
+    char z[640];
+    /* Bezug = Lage von unit_gator_fress: Leon (-4000,-22000) im Wasser, Gator nach dem Intro auf (-6000,-22000) mit Blick auf Leon */
+    if (!m_lauf("CHASE-Bezug (offenes Wasser, unit_gator_fress)", -4000, -22000, 0, 1, -6000, -22000, 0, -1, &bezug, NULL, z, sizeof z))
+        return 1;
+    printf("maul: %s\n", z);
+    int im2 = 0, im3 = 0;
+    for (int i = 0; i < bezug.n; i++) { if (bezug.pm[i] >= 500 && bezug.ph[i] == 2) im2++; if (bezug.pm[i] >= 500 && bezug.ph[i] == 3) im3++; }
+    CHECK(im2 >= 100 && im3 == 120, "Bezug: Leon in P2 %d / P3 %d Bildern zu >= 50 %% im Maulraum (Sonde: 106 / 120)", im2, im3);
+    struct { const char *was; int32_t x, z; } k[4] = {
+        { "GUARD Rampe Ost (Ankunft 20A0-Tuer)", 6300, -16250 },
+        { "GUARD Rampe Ost (E1-Lage)", 6732, -16250 },
+        { "GUARD Rampenmitte (MN2)", 4000, -15000 },
+        { "GUARD Plattformblock", 0, -16250 },
+    };
+    for (int i = 0; i < 4; i++) {
+        if (!m_lauf(k[i].was, k[i].x, k[i].z, -1800, 0, 0, 0, 0, 5, &b, &bezug, z, sizeof z)) continue;
+        printf("maul: %s\n", z);
+    }
+    return fails ? 1 : 0;
+}
+/* buehne - Garantie der Finisher-Buehne (PORT-WAHL, Form = RE2-P0 @0x80101048-4c): fuer JEDE Gator-Lage, in der ein toedlicher Biss
+ * fallen kann (Wurzel im Wasser ausserhalb der Wand-Klemmzone 1466, dazu Plattform/Rampe = CROSS-Biss), findet
+ * re15_gr2_finisher_buehne eine Buehne (Raster 1000, 8 Gierwinkel). Je Buehne unabhaengig nachgeprueft: Wurzel im Wasser ausserhalb
+ * der Klemmzone, Kamera ist eine Zonenkamera, Versatz <= 9000 (Suchgrenze). Sonde B41nb5c/probe_bsweep Raster 250: 24256 Lagen,
+ * 0 ohne Buehne, Versatz max 8997. */
+static int teil_buehne(void)
+{
+    if (!setup(1)) return 1;
+    leon_statue(-4000, -22000); tick();
+    int n = 0, ohne = 0, falsch = 0; int32_t vmax = 0;
+    for (int32_t x = -8900 + 1466; x <= 7200 - 1466; x += 1000)
+        for (int32_t z = -27000 + 1466; z <= -5400 - 1466; z += 1000)
+            for (int yaw = 0; yaw < 4096; yaw += 512) {
+                e->x = x; e->z = z; e->y = -1200; e->rot_y = (int16_t)yaw;
+                n++;
+                if (!re15_gr2_finisher_buehne(slot, e)) { ohne++; if (ohne <= 5) printf("  keine Buehne: G=(%d,%d) Gier %d\n", x, z, yaw); continue; }
+                re15_actor_t bb = *e;
+                re15_gr2_finisher_setzen(slot, &bb);
+                int c = re15_gr2_finisher_cut(slot);
+                int zk = 0;
+                for (int i = 0; i < g_room_rdt.zone_count; i++) if ((int)g_room_rdt.zones[i].cam_from == c) zk++;
+                int64_t dx = bb.x - x, dz = bb.z - z;
+                int32_t v = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+                if (v > vmax) vmax = v;
+                if (re15_gr2_becken_draussen(bb.x, bb.z, 1466) || c < 0 || zk < 2 || v > 9000) {
+                    falsch++;
+                    if (falsch <= 5) printf("  Buehne falsch: G=(%d,%d) Gier %d -> (%d,%d) Cut %d (Saetze %d) Versatz %d\n", x, z, yaw, bb.x, bb.z, c, zk, v);
+                }
+            }
+    printf("buehne: %d Gator-Lagen (Raster 1000 x 8 Gierwinkel, Wasser + Plattform/Rampe), ohne Buehne %d, Buehne falsch %d, Versatz max %d\n",
+           n, ohne, falsch, (int)vmax);
+    CHECK(n >= 1500, "nur %d Lagen geprueft", n);
+    CHECK(ohne == 0, "%d Lagen ohne Finisher-Buehne (Rueckfall am Ort = Maul leer, Abnahme 4 M1)", ohne);
+    CHECK(falsch == 0, "%d Buehnen ausserhalb des Wassers / ohne Zonenkamera / weiter als 9000", falsch);
+    return fails ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "clips";
@@ -1511,6 +1809,8 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "anschwimmen")) rc = teil_anschwimmen();
     else if (!strcmp(t, "sitz")) rc = teil_sitz();
     else if (!strcmp(t, "gier")) rc = teil_gier();
+    else if (!strcmp(t, "maul")) rc = teil_maul();
+    else if (!strcmp(t, "buehne")) rc = teil_buehne();
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);
     return rc;

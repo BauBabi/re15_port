@@ -1992,15 +1992,14 @@ static const gr2_fin_t *gr2_fin_tabelle(const re15_actor_t *e)
     g_anim_pose_actor = save;
     return &s_fin;
 }
-/* (a) Bahn im Wasser: Wurzel ausserhalb der Klemmzone, Bones 1/5/6/7 im Wasser, Leons Wurzel mit Spielerradius im Wasser.
- * P1 ganz (Leon steht dort am weitesten voraus), P2/P3 jedes 2. Bild und das letzte. */
-static int gr2_fin_frei(const gr2_fin_t *t, int32_t gx, int32_t gz, int yaw)
+/* (a) Bahn im Wasser: Wurzel ausserhalb der Klemmzone, Bones 1/5/6/7 im Wasser, Leons Wurzel mit Spielerradius im Wasser - in JEDEM
+ * Bild der Bahn (Fortsetzung Nachbesserung 5: vorher P2/P3 nur jedes 2. Bild; der Riegel unit_r41_re2gator_maul prueft jedes Bild). */
+static int gr2_fin_frei(const gr2_fin_t *t, int32_t gx, int32_t gz, int yaw, int schritt)
 {
     int32_t wx, wz;
     gr2_dreh(yaw, t->l[GR2_FIN_P2 - 2][0], t->l[GR2_FIN_P2 - 2][2], &wx, &wz);     /* Vorpruefung: Leon in P1 */
     if (s_becken_fn(gx + wx, gz + wz, GR2_SPIELER_R)) return 0;
-    for (int k = 0; k < t->n; k++) {
-        if (k >= GR2_FIN_P2 && (k & 1) && k != t->n - 1) continue;
+    for (int k = 0; k < t->n; k = (k + schritt < t->n || k == t->n - 1) ? k + schritt : t->n - 1) {
         gr2_dreh(yaw, t->w[k][0], t->w[k][1], &wx, &wz);
         if (s_becken_fn(gx + wx, gz + wz, GR2_KLEMM_R)) return 0;
         for (int i = 0; i < 4; i++) {
@@ -2012,21 +2011,36 @@ static int gr2_fin_frei(const gr2_fin_t *t, int32_t gx, int32_t gz, int yaw)
     }
     return 1;
 }
-/* (c) Kopf (Bone 6) und Leons Wurzel im Bild der Kamera c, Kopf-Massstab <= RE2-Grenze; Stichproben: Koppelbild (P1 Ende), P2 und
- * P3 je 10. Bild. gy = Gator-y (Wasser), Leon steht in P1 auf dem Beckenboden (y 0, gb FRESSEN P0), ab P2 auf Gator-y (Anker-y,
- * SPEED-y 0). *kopf_bild / *leon_bild = Bildlage im Koppelbild (Logzeile). */
-static int gr2_fin_sicht(const gr2_fin_t *t, int c, int32_t gx, int32_t gy, int32_t gz, int yaw, int32_t grenze,
-                         int kopf_bild[2], int leon_bild[2], int32_t *m_max)
+/* (c) Kopf (Bone 6) und Leons Wurzel im Bild der Kamera c, Kopf-Massstab <= RE2-Grenze - in JEDEM Bild der Bahn (Fortsetzung
+ * Nachbesserung 5: vorher nur Koppelbild + jedes 10. Bild; der Riegel unit_r41_re2gator_maul fand im CHASE-Bezug P1 Bild 12 Leons
+ * Wurzel bei Bildlage (106,240), eine Zeile unter dem Bild). Projektion wie gr2_im_bild / gr2_massstab (FUN_80053ca4-Zwilling),
+ * die Kamera-Sicht einmal je Aufruf gebaut. gy = Gator-y (Wasser), Leon steht in P1 auf dem Beckenboden (y 0, gb FRESSEN P0), ab
+ * P2 auf Gator-y (Anker-y, SPEED-y 0). *kopf_bild / *leon_bild = Bildlage im Koppelbild (Logzeile). */
+static int gr2_fin_proj(const re15_camera_view_t *v, const int32_t p[3], int *sx, int *sy, int32_t *vz_aus)
 {
-    const re15_camera_cut_t *cut = &g_room_rdt.cuts[c];
+    int64_t px = p[0], py = p[1], pz = p[2];
+    int32_t vx = (int32_t)(((int64_t)v->rot[0]*px + (int64_t)v->rot[1]*py + (int64_t)v->rot[2]*pz) >> 12) + v->trans[0];
+    int32_t vy = (int32_t)(((int64_t)v->rot[3]*px + (int64_t)v->rot[4]*py + (int64_t)v->rot[5]*pz) >> 12) + v->trans[1];
+    int32_t vz = (int32_t)(((int64_t)v->rot[6]*px + (int64_t)v->rot[7]*py + (int64_t)v->rot[8]*pz) >> 12) + v->trans[2];
+    *vz_aus = vz;
+    if (vz <= 0) return 0;
+    *sx = 160 + (int)(((int64_t)vx * v->fov_screen_dist) / vz);
+    *sy = 120 + (int)(((int64_t)vy * v->fov_screen_dist) / vz);
+    return *sx >= 0 && *sx < 320 && *sy >= 0 && *sy < 240;
+}
+static int gr2_fin_sicht(const gr2_fin_t *t, int c, int32_t gx, int32_t gy, int32_t gz, int yaw, int32_t grenze,
+                         int kopf_bild[2], int leon_bild[2], int32_t *m_max, int schritt)
+{
+    re15_camera_view_t v;
+    if (re15_camera_build_view(&g_room_rdt.cuts[c], &v) != 0) return 0;
     *m_max = 0;
-    for (int k = GR2_FIN_P2 - 1; k < t->n; k += (k < GR2_FIN_P2 ? 1 : 10)) {
-        int32_t wx, wz, p[3];
+    for (int k = 0; k < t->n; k = (k + schritt < t->n || k == t->n - 1) ? k + schritt : t->n - 1) {
+        int32_t wx, wz, p[3], vz = 0;
         gr2_dreh(yaw, t->b[k][2][0], t->b[k][2][2], &wx, &wz);
         p[0] = gx + wx; p[1] = gy + t->b[k][2][1]; p[2] = gz + wz;
-        int ix = 0, iy = 0;
-        if (!gr2_im_bild(cut, p, &ix, &iy)) return 0;
-        int32_t m = gr2_massstab(cut, p, t->skala);
+        int ix = -1, iy = -1;
+        if (!gr2_fin_proj(&v, p, &ix, &iy, &vz)) return 0;
+        int32_t m = (int32_t)(((int64_t)v.fov_screen_dist * t->skala * 16) / vz);   /* = gr2_massstab */
         if (m > grenze) return 0;
         if (m > *m_max) *m_max = m;
         if (k == GR2_FIN_P2 - 1) { kopf_bild[0] = ix; kopf_bild[1] = iy; }
@@ -2034,9 +2048,9 @@ static int gr2_fin_sicht(const gr2_fin_t *t, int c, int32_t gx, int32_t gy, int3
         p[0] = gx + wx; p[1] = (k < GR2_FIN_P2 ? 0 : gy) + t->l[k][1]; p[2] = gz + wz;
         /* Leon: im Bild - nur oben hinaus darf er (der Wurf in P2 Bild 60..75 hebt ihn aus dem POS-Kanal bis y -9177 roh: in RE2
          * Cut 7 liegt er dort bei Tiefe ~5040 / H 231 rund 420 Bildpunkte ueber der Mitte, also ebenfalls oben ausserhalb). */
-        ix = 0; iy = 0;
-        int li = gr2_im_bild(cut, p, &ix, &iy);
-        if (!li && !(ix >= 0 && ix < 320 && iy < 0)) return 0;
+        ix = -1; iy = -1;
+        int li = gr2_fin_proj(&v, p, &ix, &iy, &vz);
+        if (!li && !(vz > 0 && ix >= 0 && ix < 320 && iy < 0)) return 0;
         if (k == GR2_FIN_P2 - 1) { leon_bild[0] = ix; leon_bild[1] = iy; }
     }
     return 1;
@@ -2064,9 +2078,11 @@ int re15_gr2_finisher_buehne(int slot, re15_actor_t *e)
                     int y2 = gr2_peilung(px, pz, g_room_rdt.cuts[c].pos_x, g_room_rdt.cuts[c].pos_z);
                     int64_t k = r + 4 * (int64_t)gr2_wdiff(y2, yaw0);
                     if (best >= 0 && k >= best) continue;
-                    if (!gr2_fin_frei(t, px, pz, y2)) continue;
+                    /* erst Stichproben (jedes 8. Bild + letztes), dann jedes Bild - gleiche Bedingungen, nur schneller verworfen */
+                    if (!gr2_fin_frei(t, px, pz, y2, 8)) continue;
                     int kb[2] = {0, 0}, lb[2] = {0, 0}; int32_t mm = 0;
-                    if (!gr2_fin_sicht(t, c, px, e->y, pz, y2, grenze, kb, lb, &mm)) continue;
+                    if (!gr2_fin_sicht(t, c, px, e->y, pz, y2, grenze, kb, lb, &mm, 8)) continue;
+                    if (!gr2_fin_frei(t, px, pz, y2, 1) || !gr2_fin_sicht(t, c, px, e->y, pz, y2, grenze, kb, lb, &mm, 1)) continue;
                     best = k; bx = px; bz = pz; by = y2; bc = c; bm = mm;
                     bkb[0] = kb[0]; bkb[1] = kb[1]; blb[0] = lb[0]; blb[1] = lb[1];
                 }
@@ -2116,9 +2132,17 @@ void re15_gr2_fressen_p0(int slot)
  * re15_gr2_kanister_sitz, mit allen Zusaetzen pitch/arc/jaw/+0x22A) gegen den Kopf, den die authored Finisher-Regeln verlangen:
  * Gator an der Anker-Lage dieses Bildes (P1: P0-Lage, P2/P3: re15_clip_root_motion_abs = FUN_80015cb8-Zwilling), Keyframe-Pose
  * ohne Zusaetze. *abw = |Kopf gezeichnet - Kopf authored|; kopf[]/leon[] = gezeichnete Weltlagen (Kopf, Leons Wurzel = Lage +
- * Gier x render_scale x POS des Opfer-Bildes) fuer die Bild-/Wasser-Pruefung; *phase = 1/2/3. 0 = kein Finisher-Bild. */
-int re15_gr2_fress_sitz(re15_actor_t *e, const re15_actor_t *pl, int32_t *abw, int32_t kopf[3], int32_t leon[3], int *phase)
+ * Gier x render_scale x POS des Opfer-Bildes) fuer die Bild-/Wasser-Pruefung; *phase = 1/2/3. 0 = kein Finisher-Bild.
+ * *kiefer_abw (Abnahme 4 M1: "Abstand Leon <-> gezeichneter Kiefer" je Bild) = |(Leons gezeichnete Wurzel - Part 7 der gezeichneten
+ * Pose) - (dieselbe Groesse der authored Finisher-Bahn)|; die authored Bahn kommt aus gr2_fin_tabelle (Bankdaten: Bild k relativ
+ * zur Buehne, gedreht um die Buehnen-Gier) - eine von der Platzierung im Boss-Modul (gb FRESSEN / gb_opfer_skalieren) getrennte
+ * Rechnung. RE2: P1 Leon fest vor dem Gator (@0x8010106c-84), P2/P3 beide vom gemeinsamen Anker (FUN_80015cb8 @0x80101174 /
+ * @0x801011cc) - die Relation Leon/Kiefer ist je Bild fest. Bild k: P1 Clip-4-Bild 1..14 -> k 0..13, P2 sf 1..120 -> 14..133,
+ * P3 Clip-11-Bild 0..58 -> 134..192. -1 = nicht bestimmbar. */
+int re15_gr2_fress_sitz(re15_actor_t *e, const re15_actor_t *pl, int32_t *abw, int32_t kopf[3], int32_t leon[3],
+                        int32_t *kiefer_abw, int *phase)
 {
+    if (kiefer_abw) *kiefer_abw = -1;
     if (!e || !pl || !e->anim_prev_valid) return 0;
     int slot = (int)(e - g_actors);
     if (slot < 0 || slot >= RE15_ACTOR_MAX || !s_g[slot].fin_aktiv) return 0;
@@ -2156,13 +2180,30 @@ int re15_gr2_fress_sitz(re15_actor_t *e, const re15_actor_t *pl, int32_t *abw, i
     for (int i = 0; i < 3; i++) { int64_t d = (int64_t)p6[i] - p6a[i]; q += d * d; }
     if (abw) *abw = (int32_t)re15_squareroot0((uint32_t)(q > 0xffffffffLL ? 0xffffffffLL : q));
     if (kopf) memcpy(kopf, p6, sizeof p6);
-    if (leon) {
+    int32_t lw[3];
+    {
         int vkf = gr2_kf(&bk->anim_victim, (int)pl->motion, (int)pl->anim_frame);
         int16_t px = 0, py = 0, pz = 0;
         if (vkf >= 0) re15_emd_get_keyframe_position(&bk->skel_victim, vkf, &px, &py, &pz);
         int32_t sp = pl->render_scale_q12 ? pl->render_scale_q12 : 4096;
         int32_t P[3] = { q12mul(px, sp), q12mul(py, sp), q12mul(pz, sp) };
-        re15_skel_bone_to_world(P, (int16_t)pl->rot_y, pl->x, pl->y, pl->z, leon);
+        re15_skel_bone_to_world(P, (int16_t)pl->rot_y, pl->x, pl->y, pl->z, lw);
+    }
+    if (leon) memcpy(leon, lw, sizeof lw);
+    if (kiefer_abw) {
+        const gr2_fin_t *t = gr2_fin_tabelle(e);
+        int k = ph == 1 ? (int)e->anim_frame - 1 : ph == 2 ? GR2_FIN_P2 - 1 + (int)e->anim_frame : GR2_FIN_P3 + (int)e->anim_frame;
+        if (t && k >= 0 && k < t->n) {
+            int32_t r7[9], p7[3], ax = 0, az = 0;
+            gr2_part_welt(e, &gp[7], r7, p7);
+            gr2_dreh(s_g[slot].fin_gier, t->l[k][0] - t->b[k][3][0], t->l[k][2] - t->b[k][3][2], &ax, &az);
+            /* y: P1 steht Leon auf dem Beckenboden (pl->y 0, gb FRESSEN P0), der Gator auf seiner Wasser-y (Buehne fin_y); ab P2
+             * stehen beide auf der Anker-y (SPEED-y 0 in allen Bildern, gb FRESSEN P1-Kommentar) */
+            int32_t ay = (ph == 1 ? -s_g[slot].fin_y : 0) + t->l[k][1] - t->b[k][3][1];
+            int64_t d0 = (int64_t)(lw[0] - p7[0]) - ax, d1 = (int64_t)(lw[1] - p7[1]) - ay, d2 = (int64_t)(lw[2] - p7[2]) - az;
+            int64_t q2 = d0 * d0 + d1 * d1 + d2 * d2;
+            *kiefer_abw = (int32_t)re15_squareroot0((uint32_t)(q2 > 0xffffffffLL ? 0xffffffffLL : q2));
+        }
     }
     if (phase) *phase = ph;
     return 1;
