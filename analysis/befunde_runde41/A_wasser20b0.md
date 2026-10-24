@@ -958,6 +958,10 @@ RE15_ACTOR_MAX-1 gekoppelt werden; Aktor-Masken mit 32 Bit (1u << slot) reichen 
    (se_play_layers, Schritte). Die Schritt-Lage folgt dieser Port-Einheit; eine Umstellung waere engine-weit.
 4. Stempel-Zeilen ohne Ton (106 Faelle, Raeume ohne WATER-Satz - dort gibt es keinen Stempel) und ROOM6030/6031 Boden 0x17 (keine
    Zeile mit Ton fuer NPC und Spieler): Daten des Originals, unveraendert stumm.
+5. Hinweis H2 der Abnahme 1 (PORT-WAHL-Cache in wassersprung_r41.c nach Zeiger/Clip/Bildzahl verschluesselt) unveraendert: wirkt nur
+   fuer Clips OHNE Marke (0x4b, 0x47 aus CDEMD1) und nur, wenn eine andere Bank desselben Typs an dieselbe Adresse geladen wird.
+6. N1.13 Punkte 1-4 (Schnittbild ohne Sprites, RVD-Zeitpunkt, Gegner-INIT-Takt, allgemeine Szenensperre) laut Orchestrator naechste
+   Runde; 5 (EM024 grid 2..4), 6 (PSX-BSS), 7 (PORT-WAHL 0x4b / Roy), 9 (RBJ -> Spur J, A-E5), 10 (Anim-Spur-Artefakt) gelten weiter.
 
 ### N2.8 Tests (gezielte Laeufe, KEINE volle Suite)
 PATH wie local_build.sh (msys64 zuerst) + `/c/Program Files/Git/cmd` am Ende (unit_r39_titelversion_cmake braucht git; ohne git
