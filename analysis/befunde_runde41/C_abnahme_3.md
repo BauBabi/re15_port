@@ -78,6 +78,16 @@ Begonnen 2026-10-24 11:55. Pruefer: Abnahme 3 (Opus). Der Bericht wird FORTLAUFE
   TODO/FIXME/approx/ungefaehr/geschaetzt/vermutlich/wahrscheinlich/sieht richtig: **0 Treffer**; "Platzhalter" nur als Nutzer-
   Wortlaut (Ventilraetsel als Platzhalter). Kein neues `getenv` in engine/include/platform.
 
+* Zusaetzliche Stichprobe der Fortsetzung (eigene Byte-Lesung `shared_assets/PSX/STAGE2`, Python): ROOM2000 @0x01B36 `0d 00 04 00
+  b4 00 02 00 0e 00` (For 180 { Evt_next } Next = Hintergrundfaden-Form des Zaehlers), @0x0169E `3b 04 02 31 01 00 30 94 48 26 e8 03
+  e8 03 ...` (Leiter-Tuer Slot 4, x -27600 z 9800 1000 x 1000), @0x0174C `3a 00 0b 00 ...` = 20B0 @0x01E96 (gleiche Strahl-Bytes);
+  20B0 @0x01FB2 `09 0a 3c 00` (Sleep 60), @0x01FBC `22 03 eb 01` (Set(3,235)), @0x019C2 `3b 03 02 31 01 00 4a 15 24 e1 e8 03 b8 0b
+  96 19 e8 ea 9c ff 00 08 01 03 ...` (Tuer -> Stage-Index 1 Raum 3, Ankunft (6550,-5400,-100)); ROOM2030 @0x01B6C `2d 00 00 00 00
+  00 0a 00 ...` (obj 0), @0x01ED2 `2e 03 01 00 2f 01 88 ff 0d 00 06 00 2d 00 30 02 02 00 0e 00 34 01 d0 d5` (Lift-Fahrt-Form),
+  @0x01EF2 `2f 01 78 00`, @0x01F02 `34 01 e8 ea` (Endlage -5400); ROOM2050 @0x01D38 `2c 08 03 31 03 00 a0 0f fe de 08 07 20 03 ff
+  00` (Pult-Platz Band 3), @0x022E6 `2b 00 ff ff 02 00 06 00 d0 00 21 0c 1f 00` (Hebel sub04: Frage, Ja), @0x0201A `46 06 03 31 ff
+  00 18 02 00 00` (Kisten -> Ereignis 2); ROOM2080 @0x00CC8 `2f 01 32 00 0d 00 06 00 94 00` (Rate +50, For 148). **Alles wie im
+  Kopf zitiert.**
 * **Erklaert der Fix den Befund?** (Abnahme 2 L11): N2 — `ring_sperren()` prueft jetzt `zustand_2030() == GEFLUTET` (Bit 103 UND
   (3,126)=0, ventilkette_r41.c), vorher nur Bit 103 -> erklaert `ring_strom` (Flut + Strom -> Sperrtext 41); gemessen L6/L9 (mit
   Strom `DOOR FIRE`, ohne Strom Sperrtext). N3 — dritter Zustand RELING (Flaeche obj 4 y -3600 nur ueber der Schachtoeffnung,
@@ -326,6 +336,18 @@ danach alles zu Fuss mit der Aktionstaste (Plan `nachflut4.txt`: 2010-Tuer nach 
 * `r2070s` (`FLAG (3,126) = 1`): AOTS `slot 1 typ 1` / `slot 2 typ 1` (Tueren) -> Aktion -> `DOOR FIRE slot=1 rect=(5500,-6400,
   hw=500,hh=1500) target_cut=0 spawn=(6550,-5400,-100)` -> `loaded room2030.rdt` -> `Strom (3,126) -> Wasser auf Relinghoehe`.
   => Ring-Sperre C-E2 nur "geflutet UND Strom aus" (Nachtrag 7), mit Strom offen.
+
+### L6b — Nachtrag 8 im Bild: 2030 vorher / geflutet / Relinghoehe (Serie 9, je ein Lauf, `RE15_FORCE_CUT` nur zur Bildwahl, F120)
+Drei Zustaende: vor der Flut (`9:101,9:102` + Spinnen), Flut ohne Strom (`3:235,9:103,9:100,...`), Flut + Strom (`... ,3:144,3:126`);
+Start an der Ost-Tuer auf dem Ring. Bildbogen **`<a3>/cuts_vorher_nachher.png`** (Cut 4 / 1 / 7). Log je Lauf: geflutet `ROOM2030:
+unter Wasser (y -7200) ...`, mit Strom `ROOM2030: Strom (3,126) -> Wasser auf Relinghoehe y -3600 ...`, vorher keiner der Saetze.
+* Mit Strom: Cut 4 (Draufsicht) Becken, Steg und Landeplaetze unter der Flaeche, die Waende mit 05/01/02 darueber; Cut 1 Ring-Reling
+  und Schilder 04/02 ueber dem Wasser, Tank und Schachtgrund darunter; Cut 7 Schilder 09/08/07/06 ueber dem Wasser, Ring trocken.
+  Deckt sich mit dem Bildbogen der Nachbesserung (`C_belege/nb3_pegel_vorher_nachher_sheet.png`, exe 10:27) am heutigen Stand.
+* Ohne Strom (nur der Vollstaendigkeit halber; mit diesem Zustand ist der Ring gesperrt und nicht betretbar, L7/L9): die Flaeche
+  y -7200 liegt im Bild ueber der Reling; in Cut 1 bleibt der untere Bildrand (Tank, 04/02) unbedeckt — der Ausschnitt der
+  Flaeche (x -10800..10800, z -12400..20000) reicht vor der Kamera nicht bis an den Bildrand. Im Spiel nicht sichtbar (Ring-Kameras
+  sind in diesem Zustand nicht erreichbar), kein Befund.
 
 ### L7 — Nach der Flut OHNE Strom: Ring-Sperre und Weg zur Leiter (Leon `ohne_strom`)
 Aufbau wie L6, aber ohne 3:144/3:126 (Wegplan F62 `FLAG (3,126) = 0`), Start vor der 20B0-Ost-Tuer, Plan `ohne_strom.txt`.
