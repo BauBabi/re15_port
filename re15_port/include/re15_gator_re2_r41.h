@@ -148,8 +148,18 @@ int  re15_gr2_kanister_stufe(void);                       /* +0x226: 0 frei .. 7
 /* Messhaken (Nachbesserung 3): Lokallage des angehaengten Kanisters zur Part-6-Matrix (1x-Rig, obj[1]+0x38/+0x3C/+0x40 nach
  * dem Anhaengen @0x801018f8-918); 0 = nicht angehaengt. */
 int  re15_gr2_kanister_lokal(int32_t l[3]);
-/* Lage fuer den Zeichner: 1 = sichtbar; pos = Welt, rot = Q12 3x3 (Welt). */
+/* Lage fuer den Zeichner: 1 = sichtbar; pos = Welt, rot = Q12 3x3 (Welt). Nachbesserung 4 (M1): angehaengt = Part-6-Matrix
+ * der GEZEICHNETEN Pose dieses Bildes x Lokallage (re15_gr2_nachtakt), nicht mehr die Pose am Takt-Anfang. */
 int  re15_gr2_kanister_welt(int32_t pos[3], int32_t rot[9]);
+/* Nachbesserung 4 (Abnahme 3, M1): Takt-ENDE des Boss-Takts (re15_gator_boss_tick nach der Wand-Klemme): Pose rechnen wie der
+ * NPC-Zeichner sie in diesem Bild zeichnet (Ueberblendung + Kopf/Kiefer-az +0x22A/+0x228, ohne den Ueberblend-Schnappschuss zu
+ * aendern), daraus Kanister-Anhaengen (FUN_8002d030 @0x801018f0 gegen die Part-6-Weltmatrix @0x801018d0-e0), Kanister-Weltlage
+ * und die Effekt-Quellmatrizen Part 6 / Part 7 / Kanister (Status-0x800-Kopie FUN_8001d894 @0x8001d8ac-fc). */
+void re15_gr2_nachtakt(int slot, re15_actor_t *e);
+/* Messhaken (Riegel unit_r41_re2gator_sitz): Part-6-Weltmatrix der letzten re15_gr2_nachtakt-Pose (Rotation ohne Skala, Lage
+ * mit Zeichen-Skala) und die Effekt-Quellpuffer (0 = Part 6, 1 = Part 7, 2 = Kanister; 32-Byte-MATRIX-Abbild). 0 = keine. */
+int  re15_gr2_part6_gezeichnet(int32_t rot[9], int32_t pos[3]);
+int  re15_gr2_fx_quelle(int i, uint8_t m[32]);
 /* Umgebungs-Haken einmal auswerten (RE15_GATOR_KANISTER). */
 void re15_gr2_kanister_env(void);
 

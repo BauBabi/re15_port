@@ -110,6 +110,8 @@ static struct {
     int32_t  rel[9];          /* relative Rotation zur Part-6-Matrix (angehaengt) */
     int32_t  welt[3];         /* zuletzt berechnete Weltlage (angehaengt) */
     int32_t  welt_rot[9];
+    uint8_t  anhaengen;       /* Nachbesserung 4 (M1): Stufe 2 hat t == 13 erreicht (@0x801018c4-cc) - die Lokallage zur
+                               * Part-6-Matrix rechnet re15_gr2_nachtakt aus der GEZEICHNETEN Pose dieses Bildes */
     int32_t  liege_z;         /* Nachbesserung 2 (M3): z beim Setzen = Lage, an der das Raumflag Bank 5 Bit 0
                                * ("liegt im Wasser", ROOM40A0 sub10 `Set 22 05 00 01` @SCD 0x0712, nie geloescht)
                                * gesetzt wird; ihre Beckenzone ist das Gegenstueck der RE2-Zone 1 (s. chase_clip) */
@@ -148,6 +150,21 @@ void re15_gr2_log(const char *fmt, ...)
 }
 
 static inline int32_t q12mul(int32_t a, int32_t b) { return (int32_t)(((int64_t)a * b) >> 12); }
+
+/* Nachbesserung 4 (Nebenbefund zu M1, Punkt 2 "gleiches Verhalten bei Animation"): RE2-UEBERBLENDUNG eines Clipwechsels
+ * FUN_8001a330(em, clip, n, 0) (EXE, selbst gelesen): Clipwechsel -> +0x14E = n (`sb s1,334(s0)` @0x8001a364), Gewichtsschritt
+ * = 4096 / (n + 1) im unteren Halbwort des 959c-Arguments (`addiu v1,s1,1 / addiu v0,zero,4096 / divu v0,v1 / mflo v0 / ...
+ * or a3,v0,a3` @0x8001a37c-ac); 0x80029614 mischt mit Vorbild-Gewicht = Schritt x Zaehler (`lbu t3,334(s2) / andi v0,a3,0xffff
+ * / mult v0,t3` @0x800296a8-bc, `subu v0,v0,t1` @0x800296ec) und zaehlt danach -1 (`lbu v0,334(s2) / addiu v0,v0,-1 /
+ * sb v0,334(s2)` @0x800299c0-cc). Port: anim_frac = n, anim_blend_rate = 4096 / (n + 1) (skeleton_common.c: wp = anim_frac x
+ * anim_blend_rate), der Abbau je Takt im Boss-Takt (re15_gator_boss_tick). Vorher stand nur anim_frac (Rate Default 0x200,
+ * kein Abbau, Typ 0x23 ist selbst-vorschiebend): frac 4 = dauerhaft 50 % Vorbild, frac 16/32 = Pose eingefroren (gemessen
+ * exe C3: Dash F645-F794 150 Bilder bitgleiche Pose). */
+static void gr2_blend(re15_actor_t *e, int n)
+{
+    e->anim_frac = (uint8_t)n;
+    e->anim_blend_rate = (uint16_t)(n > 0 ? 4096 / (n + 1) : 0);
+}
 static int32_t gr2_scale(const re15_actor_t *e) { return e->render_scale_q12 ? e->render_scale_q12 : 4096; }
 
 /* Keyframe-Index eines Clip-Bildes (0x8000-Marker = Tween-Wort, wie gb_clip_kf im Boss-Modul). */
@@ -285,6 +302,8 @@ static void gr2_mtx(uint8_t m[32], const int32_t rot[9], const int32_t t[3])
  * Zeiger. Jetzt: je Quelle ein statischer Puffer, den der Takt laufend nachfuehrt (wie RE2 den Modellblock). */
 enum { GR2_FXM_TEIL6, GR2_FXM_TEIL7, GR2_FXM_KANISTER, GR2_FXM_N };
 static uint8_t s_fx_mtx[GR2_FXM_N][32];
+static int     s_fx_ok;          /* Nachbesserung 4: Part-6/7-Puffer stammen aus einer gezeichneten Pose (re15_gr2_nachtakt) */
+static int32_t s_p6_rot[9], s_p6_pos[3];   /* Messhaken: Part-6-Weltmatrix der letzten gezeichneten Pose */
 static int gr2_fx(uint32_t a0, int16_t a1, const uint8_t mtx[32], const int16_t ofs[4])
 {
     return re2fx_spawn_sofort(a0, a1, mtx, ofs);             /* FUN_8001bf10 = sofort lebendig */
@@ -432,11 +451,12 @@ static void gr2_kan_welt_setzen(const int32_t rot[9], const int32_t pos[3])
     memcpy(s_kan.welt, pos, sizeof s_kan.welt);
 }
 
-/* Angehaengt: Welt = Part-6-Matrix x (rel, s*lokal). */
-static void gr2_kan_folgen(const re15_actor_t *e)
+/* Angehaengt: Welt = Part-6-Matrix x (rel, s*lokal). Nachbesserung 4 (M1): die Part-6-Matrix ist die der GEZEICHNETEN Pose
+ * dieses Bildes (re15_gr2_nachtakt, nach Bildvorschub, Wende, Vortrieb und Wand-Klemme) - RE2 haengt den Kanister als Kind an
+ * die Part-6-Weltmatrix (`addiu a0,s0,1104` @0x801018d0, `sw a0,128(s2)` @0x801018e0). Vorher rechnete der Takt-Anfang die
+ * Lage aus der Pose des VORBILDS (Abnahme 3: bis 637 Einheiten je Bild hinter dem Kopf). */
+static void gr2_kan_folgen(const re15_actor_t *e, const int32_t r6[9], const int32_t p6[3])
 {
-    int32_t r6[9], p6[3];
-    if (!gr2_bone_welt(e, 6, r6, p6)) return;
     int32_t s = gr2_scale(e);
     int32_t l[3] = { q12mul(s_kan.lokal[0], s), q12mul(s_kan.lokal[1], s), q12mul(s_kan.lokal[2], s) };
     int32_t pos[3], rot[9];
@@ -538,22 +558,12 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
             s_kan.pos[2] -= q12mul(sn, vh - laengs);
         }
         if (g->ease_t == 13) {                              /* @0x801018c4-cc */
-            int32_t r6[9], p6[3];
-            if (gr2_bone_welt(e, 6, r6, p6)) {
-                /* FUN_8002d030(Part-6-Matrix, Kanister-Matrix): rel = R6^T * Rk, lokal = R6^T * (p - p6) / s */
-                int32_t d[3] = { s_kan.pos[0] - p6[0], s_kan.pos[1] - p6[1], s_kan.pos[2] - p6[2] };
-                for (int r = 0; r < 3; r++) {
-                    int32_t v = (int32_t)(((int64_t)r6[0*3+r] * d[0] + (int64_t)r6[1*3+r] * d[1] + (int64_t)r6[2*3+r] * d[2]) >> 12);
-                    s_kan.lokal[r] = (int32_t)(((int64_t)v << 12) / s);
-                    for (int c = 0; c < 3; c++)
-                        s_kan.rel[r*3+c] = (int32_t)(((int64_t)r6[0*3+r] * s_kan.rot[0*3+c] + (int64_t)r6[1*3+r] * s_kan.rot[1*3+c]
-                                                    + (int64_t)r6[2*3+r] * s_kan.rot[2*3+c]) >> 12);
-                }
-                s_kan.angehaengt = 1;
-                g->ziel_bit = 0;                    /* NB3 (M3): `lbu v0,448(s1) / andi v0,v0,0xfb / sb v0,448(s1)` @0x801018e4-f4 */
-                re15_gr2_log("KANISTER angehaengt lokal=(%d,%d,%d) F%u", s_kan.lokal[0], s_kan.lokal[1], s_kan.lokal[2],
-                             (unsigned)g_engine.frame_count);
-            }
+            /* Nachbesserung 4 (M1): FUN_8002d030(Part-6-Matrix, Kanister-Matrix) @0x801018f0 rechnet RE2 gegen die Part-6-
+             * WELTmatrix (+0x48, `addiu a0,s0,1104` @0x801018d0) - im Port die Matrix der gezeichneten Pose DIESES Bildes, also
+             * erst am Takt-Ende (re15_gr2_nachtakt). Der Kanister liegt bis dahin unbewegt (s_kan.pos), im selben Bild
+             * gezeichnet = Part6(Bild) x lokal = s_kan.pos: kein Sprung beim Anhaengen. */
+            s_kan.anhaengen = 1;
+            g->ziel_bit = 0;                        /* NB3 (M3): `lbu v0,448(s1) / andi v0,v0,0xfb / sb v0,448(s1)` @0x801018e4-f4 */
             g->ease_t = 0; s_kan.stufe = 3;                 /* @0x801018dc, 0x80101964-6c */
         }
         break; }
@@ -604,7 +614,7 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         break;
     default: break;
     }
-    if (s_kan.angehaengt) gr2_kan_folgen(e);
+    /* Nachbesserung 4 (M1): die Weltlage folgt erst am Takt-Ende der gezeichneten Part-6-Matrix (re15_gr2_nachtakt). */
 }
 
 /* ==== Nachtrag 4: Kamera-Programme = das RE2-Kameraskript des Alligator-Kampfes (ROOM40A0) auf ROOM2090 ====
@@ -936,13 +946,8 @@ void re15_gr2_takt(int slot, re15_actor_t *e, re15_actor_t *pl, int im_chase)
     gr2_ereignis_takt(g);                                   /* Root @0x80100410 */
     gr2_schuettel_takt();                                   /* EXE je Bild */
     gr2_putz_takt(g);
-    {   /* Quell-Matrizen nachfuehren (Effekte mit Status 0x800 folgen ihnen je Bild, FUN_8001d894 @0x8001d8ac-fc) */
-        int32_t r[9], p[3];
-        if (gr2_bone_welt(e, 6, r, p)) gr2_mtx(s_fx_mtx[GR2_FXM_TEIL6], r, p);
-        if (gr2_bone_welt(e, 7, r, p)) gr2_mtx(s_fx_mtx[GR2_FXM_TEIL7], r, p);
-        int32_t kr[9];
-        if (re15_gr2_kanister_welt(p, kr)) gr2_mtx(s_fx_mtx[GR2_FXM_KANISTER], kr, p);
-    }
+    /* Nachbesserung 4 (M1): die Quell-Matrizen (Effekte mit Status 0x800 folgen ihnen je Bild, FUN_8001d894 @0x8001d8ac-fc)
+     * fuehrt re15_gr2_nachtakt am Takt-Ende aus der gezeichneten Pose nach - hier, am Takt-Anfang, waeren sie die des Vorbilds. */
     if (g->biss_cd > 0) g->biss_cd--;                       /* +0x238 @0x801004a8-b8 */
     if (g->r4_cd > 0) g->r4_cd--;                           /* +0x22E @0x80100494-a4 */
     gr2_kan_takt(g, e, im_chase && !g->tot);
@@ -962,7 +967,7 @@ int re15_gr2_chase_clip(int slot, re15_actor_t *e, int32_t dist, int32_t *vortri
     }
     if (clip != g->letzter_clip || e->motion != clip) {
         e->motion = (uint8_t)clip; e->anim_frame = 0;       /* FUN_8001a330: Clipwechsel -> Bild 0 @0x8001a34c-64 */
-        e->anim_frac = (uint8_t)(clip == 0 ? 32 : 4);      /* Blend 32 @0x80100c38 / 4 @0x80100cfc */
+        gr2_blend(e, clip == 0 ? 32 : 4);                   /* Blend 32 @0x80100c38 / 4 @0x80100cfc */
         g->letzter_clip = clip;
     } else {
         re15_enemy_bank_t *bk = gr2_bank(e);
@@ -1326,7 +1331,7 @@ int re15_gr2_dash_zonenwechsel(int slot, const re15_actor_t *e, int zone, int zo
 static void gr2_dash_los(gr2_t *g, re15_actor_t *e)
 {
     gr2_se(g, 4);                                           /* P0: `addiu a0,zero,4` @0x80100d64, jal @0x80100d84 */
-    e->motion = 2; e->anim_frame = 0; e->anim_frac = 16;    /* Clip 2 Blend 16 @0x80100dac-b4 */
+    e->motion = 2; e->anim_frame = 0; gr2_blend(e, 16);     /* Clip 2 Blend 16 @0x80100dac-b4 */
     g->im_dash = 1; g->dash_phase = 1;                      /* +0x225 = 1 @0x80100e04-0c */
     g->dash_vor = 0;
     g->putz_t = 1;
@@ -1583,9 +1588,13 @@ void re15_gr2_r1_start(int slot, re15_actor_t *e)
     g->ereignis = 1;                                        /* +0x227 = 1 @0x801022d0-d4 */
     g->kopf_az = 0; g->kiefer_az = 0; g->t1_stufe = 0;      /* @0x801022d8-e0 */
     g->r1_176 = 3678;                                       /* @0x801022c4-c8 */
-    /* Kanister loesen: Weltlage aus der Matrix (@0x80102300-24), 9 Bilder sichtbar (@0x80102394) */
+    /* Kanister loesen: Weltlage aus der Matrix (@0x80102300-24), 9 Bilder sichtbar (@0x80102394). Nachbesserung 4 (M1): die
+     * Matrix ist die zuletzt GEZEICHNETE (re15_gr2_nachtakt des Vorbilds) - die, auf die geschossen wurde; kein Nachrechnen
+     * aus der Pose am Takt-Anfang mehr. Ein noch ausstehendes Anhaengen (Treffer im selben Takt wie t == 13) faellt aus:
+     * der Kanister liegt dann noch, s_kan.pos gilt. */
     if (s_kan.aktiv) {
-        if (s_kan.angehaengt) gr2_kan_folgen(e);
+        s_kan.anhaengen = 0;
+        if (!s_kan.angehaengt) gr2_kan_welt_setzen(s_kan.rot, s_kan.pos);
         memcpy(s_kan.pos, s_kan.welt, sizeof s_kan.pos);
         memcpy(s_kan.rot, s_kan.welt_rot, sizeof s_kan.rot);
         s_kan.angehaengt = 0; s_kan.stufe = 13;
@@ -1620,10 +1629,11 @@ void re15_gr2_r1_start(int slot, re15_actor_t *e)
 static void gr2_fontaene_takt(gr2_t *g, re15_actor_t *e)
 {
     if (g->fontaene == 0) return;
-    int32_t r6[9], p6[3], r7[9], p7[3];
-    int ok6 = gr2_bone_welt(e, 6, r6, p6), ok7 = gr2_bone_welt(e, 7, r7, p7);
-    if (ok6) gr2_mtx(s_fx_mtx[GR2_FXM_TEIL6], r6, p6);        /* Part-Matrix 6 (RE2 `addiu a2,s2,1104` @0x80103f58) */
-    if (ok7) gr2_mtx(s_fx_mtx[GR2_FXM_TEIL7], r7, p7);
+    /* Part-Matrizen 6/7 (RE2 `addiu a2,s2,1104` @0x80103f58): Nachbesserung 4 (M1) - die Puffer fuehrt re15_gr2_nachtakt je Takt
+     * aus der gezeichneten Pose nach (beim Spawn hier = das zuletzt gezeichnete Bild, am Takt-Ende das neue); kein eigenes
+     * Nachrechnen aus der Pose am Takt-Anfang mehr. */
+    (void)e;
+    int ok6 = s_fx_ok, ok7 = s_fx_ok;
     int16_t ofs[4];
     if (g->fontaene == 1 && ok6) {                          /* @0x80103f20-70: 0x26032000 an Part 6 */
         ofs[0] = (int16_t)(rnd8() * 2 + 300); ofs[1] = (int16_t)(rnd8() * 2); ofs[2] = (int16_t)(rnd8() * 4 + 200); ofs[3] = 0;
@@ -1747,6 +1757,89 @@ void re15_gr2_kanister_env(void)
     int n = sscanf(v, "%d,%d,%d", &x, &z, &y);
     if (n >= 2) re15_gr2_kanister_setzen(x, y, z);
 }
+/* ==== Nachbesserung 4 (Abnahme 3, M1): Kanister und Effekt-Quellen aus der GEZEICHNETEN Pose ===================================
+ * RE2: der Kanister haengt als Kind an der Part-6-WELTmatrix (+0x48 des Part-Records 6: `addiu a0,s0,1104` @0x801018d0, `sw
+ * a0,128(s2)` @0x801018e0), die Fontaene an Part 6/7 (`addiu a2,s2,1104` @0x80103f58), der Spritzring an der Kanister-Matrix;
+ * Effekte mit Status 0x800 kopieren die Matrix je Bild (FUN_8001d894 @0x8001d8ac-fc). Diese Weltmatrix traegt die Pose des
+ * gezeichneten Bildes: Bildvorschub in der Routine (Root @0x80100200 `jalr v0`), Kopf-az +0x22A in die lokale Part-6-Matrix
+ * (@0x8010037c-90 `lhu v0,1140(s2) / lhu v1,554(s0) / addu / jal 0x8008e1f4`).
+ * Port: dieselbe Rechnung wie der NPC-Zeichner (main.c NPC-Pass: re15_actor_anim_select -> clip_override = (anim_flags & 4) ?
+ * motion : -1 (anim_select_common.c, Gegner-Zweig), re15_compute_actor_kf(.., anim_frame), re15_skel_compute_pose mit
+ * g_anim_pose_actor = Aktor = Ueberblendung + re15_gator_spine_arc_vz (+0x22A/+0x228, Bogen); Wurzel = Yaw x render_scale_q12
+ * + Lage) - aber mit gesichertem und zurueckgeschriebenem Ueberblend-Schnappschuss (prev_root/prev_angles/anim_prev_valid):
+ * der Zeichner rechnet im selben Bild aus demselben Schnappschuss genau diese Pose. Aufruf: re15_gator_boss_tick am Takt-Ende
+ * NACH der Wand-Klemme (Endlage des Bildes), vor der Effekt-Pumpe (re15_pc_fx_takt) und vor dem Zeichnen. */
+static int gr2_pose_gezeichnet(re15_actor_t *e, re15_skel_pose_t poses[RE15_EMD_MAX_BONES])
+{
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    if (!bk || bk->skel.bone_count <= 7 || bk->anim.clip_count <= 0) return 0;
+    int ov = (e->anim_flags & 0x04u) ? (int)e->motion : -1;
+    int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, e, ov, (uint32_t)e->anim_frame);
+    int32_t root[3]; int16_t ang[32][3]; uint8_t gueltig = e->anim_prev_valid;
+    memcpy(root, e->prev_root, sizeof root); memcpy(ang, e->prev_angles, sizeof ang);
+    void *save = g_anim_pose_actor; g_anim_pose_actor = e;
+    int rv = re15_skel_compute_pose(&bk->skel, kf, poses);
+    g_anim_pose_actor = save;
+    memcpy(e->prev_root, root, sizeof root); memcpy(e->prev_angles, ang, sizeof ang); e->anim_prev_valid = gueltig;
+    return rv == 0;
+}
+/* Weltmatrix eines Parts der Pose wie gr2_bone_welt (Rotation = Yaw x Part, ohne Skala; Lage = Wurzel + Yaw x Skala x Part). */
+static void gr2_part_welt(const re15_actor_t *e, const re15_skel_pose_t *p, int32_t rot[9], int32_t pos[3])
+{
+    int32_t s = gr2_scale(e);
+    int32_t tr[3] = { q12mul(p->trans[0], s), q12mul(p->trans[1], s), q12mul(p->trans[2], s) };
+    re15_skel_bone_to_world(tr, e->rot_y, e->x, e->y, e->z, pos);
+    int32_t ry[9]; re15_skel_euler_matrix(0, (int)e->rot_y, 0, ry);
+    for (int r = 0; r < 3; r++)
+        for (int c = 0; c < 3; c++)
+            rot[r*3 + c] = (int32_t)(((int64_t)ry[r*3+0] * p->rot[0*3+c] + (int64_t)ry[r*3+1] * p->rot[1*3+c]
+                                    + (int64_t)ry[r*3+2] * p->rot[2*3+c]) >> 12);
+}
+void re15_gr2_nachtakt(int slot, re15_actor_t *e)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return;
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    if (!gr2_pose_gezeichnet(e, poses)) return;
+    int32_t r6[9], p6[3], r7[9], p7[3];
+    gr2_part_welt(e, &poses[6], r6, p6);
+    gr2_part_welt(e, &poses[7], r7, p7);
+    memcpy(s_p6_rot, r6, sizeof s_p6_rot); memcpy(s_p6_pos, p6, sizeof s_p6_pos);
+    if (s_kan.aktiv && s_kan.anhaengen) {
+        /* FUN_8002d030(Part-6-Matrix, Kanister-Matrix) @0x801018f0: rel = R6^T * Rk, lokal = R6^T * (p - p6) / s
+         * (Lokallage `sw v0,56(s2) / sw v1,60(s2) / sw a3,64(s2)` @0x80101910-18) */
+        int32_t s = gr2_scale(e);
+        int32_t d[3] = { s_kan.pos[0] - p6[0], s_kan.pos[1] - p6[1], s_kan.pos[2] - p6[2] };
+        for (int r = 0; r < 3; r++) {
+            int32_t v = (int32_t)(((int64_t)r6[0*3+r] * d[0] + (int64_t)r6[1*3+r] * d[1] + (int64_t)r6[2*3+r] * d[2]) >> 12);
+            s_kan.lokal[r] = (int32_t)(((int64_t)v << 12) / s);
+            for (int c = 0; c < 3; c++)
+                s_kan.rel[r*3+c] = (int32_t)(((int64_t)r6[0*3+r] * s_kan.rot[0*3+c] + (int64_t)r6[1*3+r] * s_kan.rot[1*3+c]
+                                            + (int64_t)r6[2*3+r] * s_kan.rot[2*3+c]) >> 12);
+        }
+        s_kan.angehaengt = 1; s_kan.anhaengen = 0;
+        re15_gr2_log("KANISTER angehaengt lokal=(%d,%d,%d) F%u", s_kan.lokal[0], s_kan.lokal[1], s_kan.lokal[2],
+                     (unsigned)g_engine.frame_count);
+    }
+    if (s_kan.aktiv && s_kan.angehaengt) gr2_kan_folgen(e, r6, p6);
+    gr2_mtx(s_fx_mtx[GR2_FXM_TEIL6], r6, p6);
+    gr2_mtx(s_fx_mtx[GR2_FXM_TEIL7], r7, p7);
+    int32_t kp[3], kr[9];
+    if (re15_gr2_kanister_welt(kp, kr)) gr2_mtx(s_fx_mtx[GR2_FXM_KANISTER], kr, kp);
+    s_fx_ok = 1;
+}
+int re15_gr2_part6_gezeichnet(int32_t rot[9], int32_t pos[3])
+{
+    if (!s_fx_ok) return 0;
+    memcpy(rot, s_p6_rot, sizeof s_p6_rot); memcpy(pos, s_p6_pos, sizeof s_p6_pos);
+    return 1;
+}
+int re15_gr2_fx_quelle(int i, uint8_t m[32])
+{
+    if (i < 0 || i >= GR2_FXM_N || !s_fx_ok) return 0;
+    memcpy(m, s_fx_mtx[i], 32);
+    return 1;
+}
+
 int re15_gr2_geschwaecht(void) { for (int i = 0; i < RE15_ACTOR_MAX; i++) if (s_g[i].geschwaecht) return 1; return 0; }
 int re15_gr2_treffer(void)     { int n = 0; for (int i = 0; i < RE15_ACTOR_MAX; i++) n += s_g[i].treffer; return n; }
 int re15_gr2_tot(void)         { for (int i = 0; i < RE15_ACTOR_MAX; i++) if (s_g[i].tot) return 1; return 0; }

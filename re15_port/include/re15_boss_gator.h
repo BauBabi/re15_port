@@ -16,8 +16,9 @@ int  re15_gator_boss_active(const re15_actor_t *e);
 /* Der Boss-Tick — ersetzt re15_alligator_ai_tick fuer den Boss-Aktor. */
 void re15_gator_boss_tick(int slot);
 
-/* Waehrend der Plattform-Ueberquerung darf der SCA-Wand-Clamp den Gator nicht vom
- * Plattform-Block stossen: 1 = Clamp fuer diesen Aktor aussetzen. */
+/* 1 = der Dispatcher klemmt diesen Aktor NICHT. Runde 41 Spur B, Nachbesserung 4: der Boss klemmt sich am Ende seines
+ * eigenen Takts selbst (bitgleiche Rechnung, ausgesetzt waehrend der Plattform-Ueberquerung und der Selbst-Befreiung), damit
+ * der Kanister im Maul die Endlage des Bildes sieht - fuer einen aktiven Boss also immer 1. */
 int  re15_gator_boss_skip_clamp(const re15_actor_t *e);
 
 /* Wirbelsaeulen-Bogen (Nutzer-Punkt 8): zusaetzlicher vz-Winkel (Q12) fuer den

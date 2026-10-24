@@ -318,14 +318,19 @@ int re15_gator_boss_active(const re15_actor_t *e)
     return e && e->type == 0x23u && ((g_current_room_id & 0xFFFEu) == 0x2090u);
 }
 
+/* Klemme dieses Takts aussetzen? NUR die Bogen-Phase: der Anlauf laeuft seit GB_BAHN_M (Kante ausserhalb des Clamp-Radius)
+ * wieder MIT Wand-Klemme - das fruehere skip im Anlauf war der Durch-die-Insel-Tunnel (Nutzer 2026-09-10). */
+static int gb_klemme_aus(const gb_state_t *g)
+{
+    return g->phase == GBP_CROSS || g->befrei > 0;
+}
 int re15_gator_boss_skip_clamp(const re15_actor_t *e)
 {
-    if (!re15_gator_boss_active(e)) return 0;
-    const gb_state_t *g = &s_gb[(int)(e - g_actors)];
-    /* NUR die Bogen-Phase: der Anlauf laeuft seit GB_BAHN_M (Kante ausserhalb
-     * des Clamp-Radius) wieder MIT Wand-Klemme - das fruehere skip im Anlauf
-     * war der Durch-die-Insel-Tunnel (Nutzer 2026-09-10). */
-    return g->phase == GBP_CROSS || g->befrei > 0;
+    /* Runde 41 Spur B, Nachbesserung 4 (Abnahme 3, M1): der Boss wendet die Wand-Klemme seit dieser Nachbesserung am Ende
+     * seines eigenen Takts an (re15_gator_boss_tick, bitgleich zur bisherigen Dispatcher-Klemme, mit gb_klemme_aus), damit
+     * Kanister und Effekt-Quellen die ENDLAGE des Bildes sehen - fuer den Dispatcher (enemy_ai_common.c Typ 0x23) und die
+     * Sonden mit Dispatcher-Nachbau ist danach nichts mehr zu klemmen. */
+    return re15_gator_boss_active(e);
 }
 
 /* Schneidet die Strecke (x0,z0)->(x1,z1) das um `m` aufgeblasene Plattform-Rechteck?
@@ -806,6 +811,7 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
             g->phase = GBP_FLINCH; g->timer = 0;
             e->motion = 10; e->anim_frame = 0;   /* Clip 10 @0x80102c40-48 */
             e->anim_frac = 3;                    /* `addiu a2,zero,3` @0x80102c44 */
+            e->anim_blend_rate = 4096 / (3 + 1); /* NB4: Gewichtsschritt 4096/(n+1) `divu v0,v1` @0x8001a37c-94 (sonst Default 0x200) */
             {   re15_enemy_bank_t *bk = re15_enemy_find(e->type);
                 if (bk && bk->ok) re15_clip_anchor_set_pub(e, &bk->skel, &bk->anim, 10, 0); }
         }
@@ -1134,7 +1140,35 @@ int re15_gator_boss_untergetaucht(const re15_actor_t *e)
     return s_gb[slot].untergetaucht && !re15_gr2_im_intro(slot);
 }
 
+static void gb_takt(int slot);
+/* Runde 41 Spur B, Nachbesserung 4 (Abnahme 3, M1): BOSS-TAKT-HUELLE.
+ *  (1) Ueberblend-Zaehler -1 je Takt: RE2 0x80029614 zaehlt +0x14E nach dem Mischen herunter (`lbu v0,334(s2) / addiu
+ *      v0,v0,-1 / sb v0,334(s2)` @0x800299c0-cc); Typ 0x23 schiebt seine Bilder selbst vor (re15_type_self_advances_anim),
+ *      der globale Abbau (player_common.c) laeuft fuer ihn nicht. Der Abbau VOR dem Takt = das Bild eines Clipwechsels zeigt
+ *      den vollen Zaehler n (RE2: Mischung mit n, dann n-1), jedes weitere einen weniger.
+ *  (2) Wand-Klemme am Takt-Ende: dieselbe Rechnung, die der Dispatcher bisher nach dem Takt machte (enemy_ai_common.c Typ
+ *      0x23: re15_collision_constrain_enemy(&g_room_rdt, al_ox, al_oz, .., hit_radius_min, e->y, 4u) bei Bewegung und ohne
+ *      skip_clamp) - bitgleich, nur hier, damit (3) die Endlage sieht; re15_gator_boss_skip_clamp meldet danach 1.
+ *  (3) re15_gr2_nachtakt: Kanister-Weltlage und Effekt-Quellmatrizen aus der Pose, die der Zeichner in DIESEM Bild zeichnet
+ *      (RE2: Kanister = Kind der Part-6-Weltmatrix, `addiu a0,s0,1104` @0x801018d0 / `sw a0,128(s2)` @0x801018e0). Vorher
+ *      rechnete re15_gr2_takt das am Takt-ANFANG, vor Befreiung, Wende, re15_ai_advance, Bildvorschub und Klemme (Abnahme 3:
+ *      Kanister bis 637 Einheiten je Bild hinter dem Kopf). */
 void re15_gator_boss_tick(int slot)
+{
+    re15_actor_t *e = &g_actors[slot];
+    if (e->anim_frac > 0) e->anim_frac--;                     /* (1) @0x800299c0-cc */
+    int32_t ox = e->x, oz = e->z;
+    gb_takt(slot);
+    if (!re15_gator_boss_active(e)) return;
+    if (g_room_rdt_ok && (e->x != ox || e->z != oz) && !gb_klemme_aus(&s_gb[slot])) {   /* (2) */
+        int32_t nx = e->x, nz = e->z;
+        re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
+        e->x = nx; e->z = nz;
+    }
+    re15_gr2_nachtakt(slot, e);                               /* (3) */
+}
+
+static void gb_takt(int slot)
 {
     if (s_gb_stumm < 0) s_gb_stumm = (getenv("RE15_GB_STUMM") != NULL);
     re15_actor_t *e  = &g_actors[slot];
