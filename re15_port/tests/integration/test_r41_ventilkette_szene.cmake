@@ -7,7 +7,8 @@
 # aot_common.c `re15_wasser20b0_r41_auto_aot`: FUN_800436a8 wird @0x8001ce1c ohne Szenen-Gate gerufen). Ohne ihn
 # ueberspringt re15_aot_scan waehrend der Szene die AUTO-Zone Slot 7 (@0x01DF2 sce 3 Ereignis 5, aot_common.c
 # `if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH) continue;`), sub05 @0x01F5C startet nie und der Spieler
-# steht unter der Pad-Sperre von sub02 ((2,7) @0x01EF8, (1,27) @0x01EFC) im Westgang (Abnahme 0 L3, F109..F1100).
+# steht unter der Pad-Sperre von sub02 ((2,7) @0x01EF8 `22 02 07 01`, (1,28) @0x01EFC `22 01 1c 01`) im Westgang
+# (Abnahme 0 L3, F109..F1100).
 # Gate: fehlt der Haken im Quellbaum UND haengt die Szene genau so (kein sub05-Start), meldet der Riegel
 # "R41C-SKIP:" (ctest SKIP_REGULAR_EXPRESSION -> "Skipped", weder gruen noch rot); mit dem Haken (nach der
 # Integration) MUSS die ganze Kette durchlaufen. Laeuft die Szene ohne den Haken trotzdem durch (spaetere allgemeine
@@ -94,10 +95,12 @@ function(_danach _text _wort1 _wort2 _was)
     endif()
 endfunction()
 
-set(WORKDIR "${_basis}")
-file(MAKE_DIRECTORY "${WORKDIR}")
-# Wegplan ab ROOM20B0 (RAUM wartet, bis der Raum geladen UND der Spieler frei ist = Ende der Szene).
-file(WRITE "${WORKDIR}/kette.txt"
+# Ein Lauf der Kette; _exit = RE15_EXIT_AT. Wegplan ab ROOM20B0 (RAUM wartet, bis der Raum geladen UND der Spieler
+# frei ist = Ende der Szene). Setzt _dbg/_wp/_dbg20/_sub05 im Aufrufer.
+macro(_kette_lauf _name _exit _timeout)
+    set(WORKDIR "${_basis}_${_name}")
+    file(MAKE_DIRECTORY "${WORKDIR}")
+    file(WRITE "${WORKDIR}/kette.txt"
 "RAUM 20B0
 WARTE 30
 FLAG 3 235
@@ -121,25 +124,45 @@ RAUM 2050
 WARTE 30
 ENDE
 ")
-re15_start_spiel(_rv 420
-    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
-    RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
-    RE15_MSG_LOG=1 RE15_FLAG_CENSUS=1
-    RE15_DEBUG_JUMP=2030@240
-    "RE15_SET_FLAG=7:155,7:156,7:157"
-    "RE15_PLAYER_POS=6550,-100,2048"
-    RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330
-    "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W2.5,A0.1,W4,A0.1,W4,A0.1,W4,R0.7,W1,A0.1,U3"
-    "RE15_WEGPLAN=${WORKDIR}/kette.txt" RE15_WEGPLAN_LOG=wegplan.txt
-    "RE15_EXIT_AT=60#2050"
-    "${_exe_kopie}")
-if(NOT EXISTS "${WORKDIR}/debug.log")
-    _fehler("kein debug.log (exit=${_rv}, ${WORKDIR})")
-endif()
-file(READ "${WORKDIR}/debug.log" _dbg)
-set(_wp "")
-if(EXISTS "${WORKDIR}/wegplan.txt")
-    file(READ "${WORKDIR}/wegplan.txt" _wp)
+    re15_start_spiel(_rv ${_timeout}
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+        RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+        RE15_MSG_LOG=1 RE15_FLAG_CENSUS=1
+        RE15_DEBUG_JUMP=2030@240
+        "RE15_SET_FLAG=7:155,7:156,7:157"
+        "RE15_PLAYER_POS=6550,-100,2048"
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330
+        "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W2.5,A0.1,W4,A0.1,W4,A0.1,W4,R0.7,W1,A0.1,U3"
+        "RE15_WEGPLAN=${WORKDIR}/kette.txt" RE15_WEGPLAN_LOG=wegplan.txt
+        "RE15_EXIT_AT=${_exit}"
+        "${_exe_kopie}")
+    if(NOT EXISTS "${WORKDIR}/debug.log")
+        _fehler("[${_name}] kein debug.log (exit=${_rv}, ${WORKDIR})")
+    endif()
+    file(READ "${WORKDIR}/debug.log" _dbg)
+    set(_wp "")
+    if(EXISTS "${WORKDIR}/wegplan.txt")
+        file(READ "${WORKDIR}/wegplan.txt" _wp)
+    endif()
+    set(_dbg20 "")
+    set(_sub05 "")
+    string(FIND "${_dbg}" "[room] PC loaded room20b0.rdt" _p20)
+    if(NOT _p20 LESS 0)
+        string(SUBSTRING "${_dbg}" ${_p20} -1 _dbg20)
+        string(REGEX MATCH "thread start slot=[0-9]+ first_op=0x46" _sub05 "${_dbg20}")
+    endif()
+endmacro()
+
+if(_haken)
+    _kette_lauf(voll "60#2050" 420)
+else()
+    # Ohne den Haken der Spur A: kurzer Lauf bis Bild 400 in ROOM20B0 (die Szene ist mit dem Haken bei F242 frei,
+    # Messung kette3); haengt sie (kein sub05), ist das der bekannte Zustand -> SKIP. Laeuft sie trotzdem (spaetere
+    # allgemeine Loesung), folgt der volle Lauf.
+    _kette_lauf(kurz "400#20B0" 300)
+    if(NOT "${_sub05}" STREQUAL "")
+        _kette_lauf(voll "60#2050" 420)
+    endif()
 endif()
 
 # ---- 2030 -> Ost-Tuer zu Fuss -> 20B0 (wie integration_r41_ventilkette A, hier ohne RE15_FIRE_AOT) ------------------
@@ -152,9 +175,6 @@ _danach("${_dbg}" "[aot] DOOR FIRE slot=0 rect=(7350,-200" "[room] PC loaded roo
 _danach("${_dbg}" "[room] PC loaded room20b0.rdt" "Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100" "Bits 103 + 100 beim Verlassen")
 # ---- Szene sub02 -> Zone Slot 7 -> sub05 ------------------------------------------------------------------------
 _danach("${_dbg}" "[room] PC loaded room20b0.rdt" "Plc_dest(slot=0 mode=0x05 dest=(-15920,-6355)" "sub02: Plc_dest Modus 5 (@0x01F24)")
-string(FIND "${_dbg}" "[room] PC loaded room20b0.rdt" _p20)
-string(SUBSTRING "${_dbg}" ${_p20} -1 _dbg20)
-string(REGEX MATCH "thread start slot=[0-9]+ first_op=0x46" _sub05 "${_dbg20}")
 if("${_sub05}" STREQUAL "")
     if(NOT _haken)
         file(REMOVE "${_exe_kopie}")
@@ -176,7 +196,7 @@ _darf_nicht("${_wp}" "KLEMME" "der Weg zur Leiter klemmte")
 _darf_nicht("${_dbg20}" "-> Sperrtext 40" "mit Bit 100 ist die Leiter eine Tuer")
 _muss("${_dbg20}" "[aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)" "Leiter feuert")
 _danach("${_dbg20}" "[aot] DOOR FIRE slot=4" "[room] PC loaded room2050.rdt" "ROOM2050 geladen")
-_muss("${_dbg20}" "EXIT_AT: Bild" "Endbild in ROOM2050")
+_muss("${_dbg20}" "EXIT_AT: Bild 60 in Raum 2050" "Endbild in ROOM2050")
 
 file(REMOVE "${_exe_kopie}")
 message(STATUS "r41_ventilkette_szene: 2030 Ventile -> Ost-Tuer zu Fuss -> 20B0 Szene sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> ROOM2050 in einem Lauf (Haken der Spur A: ${_haken})")

@@ -118,7 +118,58 @@ Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "
     loesbar), E4 (Elza 2051, Kisten ohne Pult -> gesperrt). Ergebnis §5 "Nachbesserung 1".
 
 ### M2 (hoch, Punkte 3/4) — 20B0-Auswasch-Szene braucht den AUTO-Haken der Spur A
-(in Arbeit)
+* **Ursache (Port, nicht Spur C):** `re15_aot_scan` ueberspringt waehrend einer Szene jeden Platz ausser CAM_SWITCH
+  (aot_common.c:1169 `if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH) continue;`). Die Auswasch-Szene braucht
+  aber die AUTO-Zone Slot 7 WAEHREND der Pad-Sperre von sub02: ROOM20B0 sub00 @0x01DF2 `2c 07 03 41 01 00 08 bc 04 de
+  ca 08 f8 11 ff 00 18 05 00 00` (Slot 7, sce 3, sat 0x41 = AUTO, Band 1, Rechteck (-17400,-8700,2250,4600),
+  Ereignis 5 = sub05). sub02 setzt @0x01EF8 `22 02 07 01` Set(2,7)=1 und @0x01EFC `22 01 1c 01` Set(1,28)=1
+  (Korrektur zu §6: dort stand "(1,27)" — die Bytes sagen Bank 1 Bit 28); erst sub05 loescht @0x01FC0 `22 02 07 00`
+  und @0x01FC4 `22 01 1b 00` (Bank 1 Bit 27).
+* **Original (selbst disassembliert, PSX.EXE):** die AUTO-Auswertung steht in der UNBEDINGTEN Aufruffolge der
+  Hauptschleife @0x8001cdf4..@0x8001ce34 (`jal 0x8001a50c` Aktoren, `jal 0x80031c44` Spieler, `jal 0x8002bd44`
+  Objekte, **@0x8001ce1c `jal 0x800436a8`**, `jal 0x8004f0b0`, `jal 0x80019e20` Aktionstreiber); FUN_800436a8 ruft
+  als Erstes @0x800436bc-cc `ori a1,zero,0x1` / `jal 0x80042bac` mit dem Spieler — keine Szenen-Abfrage davor. Den
+  Port-Haken dafuer hat Spur A gebaut (Zweig r41/wasser20b0, b03b68b4 + 0636c300: `re15_wasser20b0_r41_auto_aot`).
+* **Messung vorher (ohne Haken):** Abnahme 0 L3 (`abn0/mess/osttuer`: ab F109 Cut 14, pm 2 bis F1100). Neu im Riegel
+  (Spurbaum, kurzer Lauf bis F400 in 20B0, `build/tests/integration/r41_ventilkette_szene/lauf_b2a8b015_kurz`):
+  `[scd] Plc_dest(slot=0 mode=0x05 dest=(-15920,-6355) ...)` @0x01F24, danach KEIN `first_op=0x46` (sub05) und kein
+  `letterbox closed` bis `EXIT_AT: Bild 400 in Raum 20b0`.
+* **Entscheidung im Baum:** der Haken der Spur A wird hier NICHT uebernommen (Orchestrator-Vorgabe der vierten
+  Fortsetzung: "der echte Haken kommt mit Spur A bei der Integration; NICHT in deinen Baum uebernehmen"). Ein
+  Cherry-Pick ginge auch technisch nicht sauber: b03b68b4 ist ein Sammel-Commit (EM024-Sequencer, Zeichenmaske,
+  AUTO-AOT), und 0636c300 aendert dieselbe Zeile erneut (WATER/RAMP) -> Teilstand gegen Endstand = Konflikt.
+* **Messung mit dem Haken — die GANZE Kette in EINEM exe-Lauf** (wortgleicher Haken aus 0636c300 als temporaerer
+  Messbau: `aot_common.c`-Zeile + `re15_wasser20b0_r41_auto_aot`-Rumpf aus wasser20b0_r41.c:171-176, Skript scratchpad
+  `r41c_nb1/haken_a.py`; danach Quelle zurueck (`git status --porcelain` leer) und ohne Haken neu gebaut).
+  Lauf scratchpad `r41c_nb1/mess/kette3` (05:53-05:55, Spinnen-Kill-Bits wie Abnahme L3, Eingabe wie L3 + Wegplan):
+  2030 Text 45 -> Ja -> Text 46 -> `Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)` -> Drehung + Aktionstaste ->
+  `[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11` (kein FIRE_AOT) -> `loaded room20b0.rdt` ->
+  `READ Ck zone=3 idx=235 exp=0 got=0` (@0x01AAA) -> `Cut_chg(11)` -> `Zaehler lief beim Verlassen von 2030 -> Bits 103 +
+  100` -> Plc_dest Modus 5 -> **`thread start slot=11 first_op=0x46`** (sub05) -> `[scd F105] Cut_chg(7)` ->
+  `[scd F146] Cut_chg(15)` -> `[scd F228] Cut_chg(6)` -> **`[flagcensus] room=20B0 WRITE Set zone=3 idx=235 op=1`**
+  (@0x01FBC) -> **`[scd F242] letterbox closed -> gameplay (player_mode=0)`** -> Wegplan `FLAG (3,235) = 1`,
+  `FLAG (9,103) = 1`, `FLAG (9,100) = 1` -> Mittelgang (-21101,-9618) Blick West + Aktion: Sprung in den Kanal (F334,
+  mo 230) -> (-24593,-9618) Blick West + Aktion: Aufstieg auf den Westgang (F493, mo 230) -> Leiter (-26014,10245)
+  Blick West + Aktion -> `[aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0
+  spawn=(9100,-5400,4100)` -> `loaded room2050.rdt` -> `EXIT_AT: Bild 60 in Raum 2050`. Bildbogen
+  `C_belege/nb1_kette_ein_lauf_mit_haken_a_sheet.png` (2030 Ost-Tuer, Westgang, Cut 7, Cut 15, Cut 6, frei, Sprung,
+  Kanal, Aufstieg, Westgang, Leiter ohne Strahl, 2050).
+  Weg zur Leiter: Mittelgang (Szenenende) und Westgang (Leiter) sind in Band 1 durch den Kanal getrennt (SCA ROOM20B0
+  Zelle 18 x -25200..-21650 Band-1-Wand u0 01, darin WATER-Zone Slot 5); hinueber geht es zu Fuss nur per Sprung/
+  Aufstieg an der Kante (Aktionstaste), sonst ueber 1260 (20B0 Slot 0 -> 1260 -> 20B0 Slot 1).
+* **Riegel `integration_r41_ventilkette_szene`** (neu, probes/r41_ventilkette.cmake): genau diese Kette in einem Lauf,
+  prueft Szenen-Abschluss (sub05-Start, Cut 7/15/6, Set(3,235), `letterbox closed`) und Leiter -> 2050. Gate: ohne den
+  Haken im Quellbaum UND mit haengender Szene -> `R41C-SKIP:` (ctest `SKIP_REGULAR_EXPRESSION`) nach einem kurzen Lauf;
+  mit dem Haken muss alles durchlaufen (sonst FAIL); laeuft die Szene ohne den Haken (spaetere allgemeine Loesung),
+  wird ebenfalls voll geprueft.
+  - mit Haken (`cmake -P` mit der Messbau-exe und einer Quellkopie mit Haken, scratchpad `r41c_nb1/riegel_mit_a*`):
+    `rc=0`, `-- r41_ventilkette_szene: 2030 Ventile -> Ost-Tuer zu Fuss -> 20B0 Szene sub02/sub05 -> (3,235)=1 -> frei ->
+    Kanal -> Leiter -> ROOM2050 in einem Lauf (Haken der Spur A: 1)` (zweimal: vor und nach dem Umbau auf den kurzen
+    SKIP-Lauf; Laufordner `riegel_mit_a/lauf_42874be5_voll`).
+  - Spurbaum ohne Haken: `ctest -R "^integration_r41_ventilkette_szene$"` -> `1/1 Test #1128:
+    integration_r41_ventilkette_szene ...***Skipped  61.97 sec` / `100% tests passed, 0 tests failed out of 1` /
+    `The following tests did not run: 1128 - integration_r41_ventilkette_szene (Skipped)`.
+  Nach der Integration der Spur A wird der Riegel ohne Zutun scharf (er liest aot_common.c zur Laufzeit).
 
 ### M3 (mittel) — Installer loeschte (5,0x1D)/(5,0x1E) in jedem Raum
 * **Ursache:** `re15_ventilkette_r41_install` loeschte die Port-Marker nach dem Init-Lauf in JEDEM Raum; in fremden
@@ -138,16 +189,67 @@ Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "
   in §5 "Nachbesserung 1".
 
 ### M4 (mittel) — Riegel C belegte die Farbe der Ertrink-Blende nicht
-(in Arbeit)
+* **Ursache:** Riegel C fuhr im Software-Renderer (`RE15_SOFTWARE_RENDER=1`) und pruefte vom Framedump F2750 nur, dass
+  die Datei existiert. SDLs Software-Renderer kennt die subtraktive Blende nicht (`[render] SDL-Renderer software ...
+  ABR2 (B-F) NICHT unterstuetzt -> Rueckfall BLEND`): die Kachel (160,160,0) wird dort DECKEND gelb gezeichnet.
+* **Messung vorher** (Abnahme 0 L3b): Software `abn0/mess/flut2` ab dem Todesbild (160,160,0); Direct3D
+  `abn0/mess/flut3` (0,0,30); alle Riegel-Laeufe seit 22:23 gelb.
+* **Beleg der Blende:** Form ROOM11F0 @0x174a `56 00 02 07 00 00` (Handler 0x56 @0x80042a58, ABR = Byte 2 = 2 = B-F,
+  OT-Fach `ori a3,zero,0x7` @0x80042a70), Maske Rot+Gruen 0x6 (FUN_800217b0 Config-Bits 2+1), Helligkeit
+  level >> 7 (`sra a0,v0,23` @0x800218d0) -> 0x5000 = 160 (PORT-WAHL, §6).
+* **Aenderung:** Lauf C laeuft im beschleunigten Renderer (direct3d unter Windows, opengl unter Linux — dort seit
+  81ee1efc ABR2-faehig, Memory reai-v2-sdl-gl-customblend); der Riegel verlangt `ABR2 (B-F) ok`, legt Framedumps
+  F2730-2770/2 an und misst mit dem neuen Werkzeug `test_r41_ventilkette ppm` die Bildmitte (120,80)..(200,160)
+  4 Bilder vor und 4-5 Bilder nach dem Todesbild: vorher Rot/Gruen >= 15 (unverschleiert), nachher Rot/Gruen <= 4 und
+  Blau >= 20. Schwellen aus der Messung: scratchpad `r41c_nb1/mess/flut_d3d` (direct3d, 05:43), Bildmitte F2700
+  (24,29,24), F2740 (30,37,30), **F2750 (0,0,30)**, F2760 (0,0,30), Vollbild F2750 (0,0,30); `[fade-log] config ch=0
+  abr=2 mask=6 step=0 bucket=7` / `kick ch=0 value=0x5000`.
+* **Messung nachher (Riegel):** __RIEGEL_C__
+* **Einschraenkung (auch §4/§5):** mit `RE15_SOFTWARE_RENDER=1` (nur Mess-/Testbetrieb) erscheint die Ertrink-Blende
+  deckend gelb; was der Nutzer sieht (direct3d/opengl/GLES2), ist der blaue Schleier. Eine B-F-Nachbildung im
+  SDL-Software-Renderer waere render_pc.c (Spur D) und betraefe alle ABR-2-Flaechen — nicht Teil dieser Spur.
 
 ### M5 (niedrig, Entscheidung) — geflutetes 2030 ueber den Ring betretbar (Frage f)
-(in Arbeit)
+* Bestaetigt (Abnahme L8, eigener Lauf ring_nach_flut): nach der Flut (Bit 103 ohne 107) fuehren 20B0 Slot 3
+  @0x019C2 und 2070 Slots 1/2 @0x00A5A/@0x00A7A auf den Ring (y -5400) unter die Flaeche y -7200; Leon watet, ertrinkt
+  aber nicht (Ertrinken nur waehrend der Flut). Innerhalb der Zuteilung nicht sauber loesbar: 20B0/20B1 hat nur Id 40
+  (Leiter), 2070/2071 keine Port-Id; 20B0 hat keine Texttabelle (msg_sec 0), 2070 nur msg 0 "You've opened the lock."
+  (rdt_msgdump.py), und `re15_aot_door_params_t` kennt kein Schloss.
+* **Entscheidungsfrage (f) an den Orchestrator** mit Vorschlag (a): (a) die drei Ring-Tueren sperren, solange 2030
+  geflutet ist (Bit 103 ohne 107), Sperrsatz in der Form der Leiter (sce 1, Form ROOM2030 @0x01B12), z. B. "I cannot
+  open the door because of the water pressure." -> braucht 20B0/20B1 Id 41 und 2070/2071 Id 40; (b) so lassen
+  (Waten bis zur Brust); (c) Ring-Eintritt in das geflutete 2030 = Ertrinken wie waehrend der Flut (Nutzerregel "Zeit
+  abgelaufen und noch im Raum: Tot"), ohne Warnung. Der Weg zum Rechner 2080 bleibt in allen drei Faellen offen
+  (2050 -> 2020 -> 2030 Tuerebene -> 2080).
 
 ### M6 (formal) — Haken in main.c / game_step_common.c, zwei fremde Riegel
-(in Arbeit)
+* VERTRAG §1.3 nennt C nur bei scd_room_setup.c, scd_vm.c und test_r36_kartenbits.c. Die uebrigen Haken (alle klein,
+  "Runde 41 Spur C" kommentiert, Muster der Vorrunden-Module feuerloescher_r37 / dining_r38 / johnruf_r39):
+  1. platform/pc/main.c `#include "re15_ventilkette_r41.h"` (1 Zeile).
+  2. platform/pc/main.c `pc_load_room_prop_set` (5 Zeilen): MD1/TIM der zwei Wasserflaechen obj 4/5 in 2030/2031
+     laden — Modelle/Texturen laedt nur die Plattform (Muster dining_r38 direkt darueber).
+  3. platform/pc/main.c Boot-/CONTINUE-Weg (1 Zeile): der Lade-Weg ruft scd_room_reenter nicht; ohne die Zeile fehlten
+     nach LOAD GAME Sperren/Plaetze (Muster johnruf_r39 direkt darueber).
+  4. platform/pc/main.c Zeichner (4 Zeilen): Zeiger + Hebelmarken des 2050-Pults mit re15_render_tile (die Engine-
+     Bibliothek hat keinen Zeichner; Muster 11F0-Zeiger direkt darunter).
+  5. engine/src/game_step_common.c (1 Zeile): der Spiel-Takt (Zaehler-Latch, Flut/Ertrinken, Pult). scd_vm.c waere
+     zugeteilt, aber der Takt laeuft dort an anderer Stelle des Bilds; die gemessenen Zeiten (Zaehler 1800 +- 3, Tod
+     125 +- 2 Bilder) haengen an dieser Stelle -> nicht verlegt.
+  6. Zwei fremde Riegel (test_r36_dachkiste.cmake +2 Zeilen `RE15_SET_FLAG=9:100`, test_r37_itemband.cmake
+     `RE15_SET_FLAG=9:101,9:102`): die neuen Sperren (Leiter 2000, Steg 2030) widerlegen deren alte Wege; die Laeufe
+     setzen den Spielzustand "Leiter frei" / "Bruecke unten" (Gegenstand der Riegel ist der Kisten-Record bzw. das
+     Itemband, nicht die Leiter/der Steg). Beide gruen (Abnahme 0, Querbezug 8/8).
+* **Entscheidungsfrage an den Orchestrator** (wie B5 / A-E3): diese Haken annehmen und in die Integrationsliste
+  aufnehmen. Kein Code geaendert.
 
 ### M7 (niedrig, Dossier) — 2070 nach der Flut nur ueber 2040
-(in Arbeit)
+* Richtig ist: nach der Flut (Bit 103) ist 2070 (mit der Tuer nach 11A0) nur noch ueber 2040 erreichbar — 2030 Slot 0
+  bleibt auch mit Bit 107 auf 20B0 Cut 11 umgelenkt (`tueren_umlenken`, unit E "mit Bit 107: Ost-Tuer bleibt -> 20B0",
+  Abnahme L6 `nach2030`), 20B0 hat (wie im Original-20B0, Slot 3 @0x019C2 -> 2030) keine Tuer nach 2070, und 2040
+  braucht den Aufzug mit Strom (Nutzer: "Der Umweg 2070 -> 2040 -> 2050 geht nicht, ... Aufzug der Strom braucht").
+  §6 und §3.6 sind korrigiert ("mit Bit 107 alles Original" galt nie fuer die Ost-Tuer).
+* **Entscheidungsfrage (g):** soll 2030 Slot 0 nach dem Entleeren (Bit 107) wieder nach 2070 fuehren (Original-Ziel,
+  2070 und 11A0 wieder direkt erreichbar), oder bleibt 2030 <-> 20B0 dauerhaft (Original-20B0 kennt 2070 nicht)?
 
 ### M8 (niedrig, Text) — Ventile melden nach dem Entleeren weiter "flooded"
 * **Ursache:** das Programm der Ventile waehlte nur zwischen Frage (vor der Flut) und `2030_ventile_zustand` (Bit 103).
@@ -430,7 +532,8 @@ Set(9,107) + msg 40 "The treatment pool is being drained as well." (Ifel-Laenge 
 schon gelaufen ((3,245)=1), legt der Installer Slot 4 (@0x00C1A) erneut an; dann nur Frage msg 0 + Slot aus + Set +
 Satz (kein zweites Senken). In 2030 gilt: Bit 103 ohne 107 = zwei Wasserflaechen bei y -7200 (1800 ueber dem Ring,
 Abstand wie ROOM2050 Wasser -3600 zum Steg -5400 @0x01F88) und die oberen Lift-Rufzonen (Slots 4/6, sub00 @0x01D20/
-@0x01DC2) = Original-Satz msg 1 "The elevator is not responding…" (Form sub01 @0x01E18); mit Bit 107 alles Original.
+@0x01DC2) = Original-Satz msg 1 "The elevator is not responding…" (Form sub01 @0x01E18); mit Bit 107 alles Original
+ausser der Ost-Tuer (Slot 0 bleibt 20B0 Cut 11, Bit 103 — Nachbesserung 1, M7) und dem Ventil-Satz (Id 49, M8).
 
 ### 3.7 Gemeinsame Dateien (Haken, je 1-6 Zeilen, "Runde 41 Spur C")
 scd_room_setup.c (Installer-Zeile am Blockende + include), scd_vm.c (Ereignis-Kette hinter nahaufnahmen_r40 +
@@ -669,8 +772,8 @@ shared_assets/PSX, pri/, synchro/, release/.
     `letterbox closed`). Ursache im Port: re15_aot_scan ueberspringt waehrend einer Szene jeden Platz ausser CAM_SWITCH
     (aot_common.c:1169 `if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH) continue;`; in_cinematic @1077 =
     player_mode 2 oder Balken schliessen noch, player_mode 2 setzt main.c:5795 solange re15_cine_active() = (1,27) ||
-    (2,7), game_state.c:256), und sub02 setzt (2,7)=1 @0x01EF8 / (1,27)=1 @0x01EFC, ohne sie zu loeschen — das tut erst sub05
-    @0x01FC0/@0x01FC4. Ohne den Haken bleibt der Spieler in 20B0 unter der Pad-Sperre stehen.
+    (2,7), game_state.c:256), und sub02 setzt (2,7)=1 @0x01EF8 (`22 02 07 01`) / (1,28)=1 @0x01EFC (`22 01 1c 01`;
+    Nachbesserung 1: nicht (1,27)); erst sub05 loescht (2,7) @0x01FC0 und (1,27) @0x01FC4 (`22 01 1b 00`). Ohne den Haken bleibt der Spieler in 20B0 unter der Pad-Sperre stehen.
   - MIT Haken (temporaerer Nachbau, NICHT committet: AUTO_EVENT in 20B0/20B1 trotz in_cinematic, Patch scratchpad
     r41c2/temp_haken_spur_a_aot_common.patch; Lauf scratchpad r41c2/mess/kette_mit_a, 00:56-00:58, Aufbau wie
     integration A ohne Kill-Bits, Ende F700#20B0, Bild C_belege/querbezug_a_20b0_szene_sheet.png): 2030 F900 Ost-Tuer
@@ -711,8 +814,10 @@ shared_assets/PSX, pri/, synchro/, release/.
   gilt die Flut ebenfalls als gelaufen (Bits 103 + 100); die 20B0-Szene laeuft dann beim naechsten Eintritt in 2000
   (= 20B0), gleich von welcher Tuer (die Original-Szene sub02 setzt den Spieler an die Ost-Tuer). PORT-WAHL, nicht
   vom Nutzer entschieden.
-* 2070 (der Gang) bleibt nach der Flut nur von 2030/2040 aus erreichbar; von 20B0 gibt es (wie im Original-20B0)
-  keine Tuer dorthin. 2070 -> 2000 landet in 20B0 am Westtor (die Szene erwartet den Ost-Eintritt).
+* 2070 (der Gang, mit der Tuer nach 11A0) ist nach der Flut NUR noch ueber 2040 (Aufzug mit Strom) erreichbar: 2030
+  Slot 0 bleibt auch mit Bit 107 auf 20B0 umgelenkt, und 20B0 hat (wie im Original-20B0) keine Tuer nach 2070
+  (Nachbesserung 1, M7; die fruehere Fassung "von 2030/2040 aus" war falsch). 2070 -> 2000 landet in 20B0 am Westtor
+  (die Szene erwartet den Ost-Eintritt). Frage §7 (g).
 * Die Wasserflaeche in 2030 ist das 2080-Modell (Ecke als Ursprung, zwei Flaechen); unter Cut 4 (nur ueber den Steg
   erreichbar, der unter Wasser steht) zeigt sich ein Rand der Flaeche (C_belege/flut_vergleich.png links).
 * Die Hebel des 2050-Pults sind gemalt (keine Modelle wie in 2060/11F0): Zustand = gruene Marke + Zeiger.
