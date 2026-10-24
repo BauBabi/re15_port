@@ -413,3 +413,16 @@ Folgen (Orchestrator, Umsetzung Spur C):
 - Der geflutete untere Bereich ist nicht begehbar (kein Weg unter Wasser; z. B. die Treppe zum Tank gesperrt wie die
   Steg-Sperre vor dem Pult) — Umsetzung mit Beleg, Riegel. Gegenstaende im unteren Bereich (z. B. Schrotpatronen am Steg)
   sind nach der Flut nicht mehr erreichbar: im Dossier fuer den Nutzer nennen.
+
+## 2026-10-24 09:26 — Nachtrag 9 (Wortlaut; Reihenfolge in 2030, Spur C)
+
+> und die brücke in 2030 muss man entsprechd vorher runtergelassen haben, damit man das valve rätsel vorher lösen kann.
+
+Folgen (Orchestrator, Umsetzung Spur C):
+- Reihenfolge in 2030: Bruecke herunterlassen (Pult + Ventil 13, Bit 102) -> erst DANN ist das Ventilraetsel loesbar -> Flut.
+- Wo liegen die nummerierten Ventile im Bild wirklich? Aus den Hintergruenden/Kameras von 2030 belegen (Bildbogen mit den
+  Ventil-Schildern und ihrer Lage in der Kollision). Liegen sie im unteren Bereich (ueber den Steg/die Bruecke erreichbar),
+  gehoert der Ausloeser des Ventilraetsels dorthin (dann ergibt sich die Reihenfolge aus dem Weg); liegen sie am Ring,
+  sperrt Bit 102 das Ventilraetsel (Aktionstaste vorher: vorhandene/Port-Nachricht aus den Ids 2030 40-49, Wortlaut als
+  Vorschlag fuer den Nutzer). Riegel: Ventilraetsel vor Bit 102 nicht ausloesbar, danach ja; Weg zu Fuss (Leon UND Elza).
+- Nach der Flut liegen die Ventile ggf. im gefluteten unteren Bereich (Nachtrag 8) — das ist gewollt.
