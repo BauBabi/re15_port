@@ -54,6 +54,7 @@
 #include "re15_spiderman_r38.h" /* Runde 38 Spur T: Typ 0x2B Schacht-Austritt + Griffe mit Anker */
 #include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: kein Angriff, solange die Szene den Spieler haelt */
 #include "re15_npckante_r38.h" /* Runde 38 Spur M: NPC-Kanten (Sonde FUN_8002d7d8, Subs 0x12/0x16/0x17/0x18) */
+#include "re15_kollision_r41.h"   /* Runde 41 Spur H: NPC-Wurzel-Schwanz aec4/b544 */
 #include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Hochziehen an der u1=1-Kante (ANIMATE[0x0A] 0x8010325c) */
 #include "re15_heliport1171_r39.h" /* Runde 39 Spur K: NPC-INIT-Pose = Loco-Paar Clip 2 Bild 0 (@0x8011de7c-c4) */
 void re15_victim_anchor_calibrate(int32_t stand_x, int32_t stand_z);   /* Runde 37 Spur J: unten definiert, vom Griff-Latch gerufen */
@@ -10700,6 +10701,7 @@ static void re15_npc_ai_tick(int slot)
     }
 
     re15_npckante_altlage(e, &npc_ox, &npc_oz);   /* Runde 38 Spur M: +0x40/+0x44 nach Kanten-Schub (@0x80052784/@0x80052de8) */
+    re15_kollision_r41_npc_schwanz(slot);     /* Runde 41 Spur H: aec4(Spieler,NPC) @0x8011cc3c + b544 @0x8011cc44 VOR der Klemme @0x8011cc64 */
     re15_npc_wall_clamp(e, npc_ox, npc_oz);   /* Root-Tail @0x8011e318 (alle States, s.o.) */
     re15_npckante_spur(e);                    /* Runde 38 Spur M: Messhaken RE15_NPCKANTE_LOG */
 }

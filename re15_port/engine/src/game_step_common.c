@@ -50,6 +50,7 @@
 #include "re15_objfall_r36.h"   /* Runde 36 Spur A: Objekt-Fall FUN_8002c444 (objfall_r36.c) */
 #include "re15_gegner_r39.h"    /* Runde 39 Spur E: Querungs-Wache im Gorilla-Wurf (re15_r39_wurf_querung) */
 #include "re15_zellschub_r36.h" /* Runde 36 Spur R: Ruhe-Zweig LAB_8002c0b8 ohne Spieler-Schub (zellschub_r36.c) */
+#include "re15_kollision_r41.h"  /* Runde 41 Spur H: Spiegel obj+0x42 fuer den Objekt-gegen-Objekt-Pass */
 #include "re15_aufschliessen_r36.h" /* Runde 36 Spur G: Aufschliess-Tonfolge (aufschliessen_r36.c) */
 #include "re15_beretta_r37.h"   /* Runde 37 Spur G: Feuerstoss 5/6 trifft je Kugel (beretta_r37.c) */
 #include "re15_rekorder_r38.h"  /* Runde 38 Spur J: Rekorder-Aufnahme ROOM1100/1101 (rekorder_r38.c) */
@@ -2447,6 +2448,7 @@ void re15_game_step(const re15_game_ctx_t *c)
         re15_zellschub_nach_pass(c->rdt);
     if (c->rdt_ok)   /* Runde 36 Spur A: Ende von FUN_8002bd44 (Ausloeser @0x8002c0fc-c14c, +0x88 @0x8002c154) + Wasser-Stempel @0x8001ce1c */
         re15_objfall_nach_pass(c->rdt);
+    re15_kollision_r41_objspiegel();   /* Runde 41 Spur H: Spiegel obj+0x42 = y am Ende des Objekt-Passes (@0x8002c0ec-c0f8) */
 
     /* ⛔ RE2-TREFFERFILTER AUCH FUER GEGNER, DEREN KI-TICK AUSFAELLT.
      * Im Original steht der Vier-Gate-Filter in der Kandidatenschleife des Angriffs-Aufloesers
