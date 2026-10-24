@@ -394,12 +394,13 @@ _darf_nicht("${_dbg}" "-> FALSCH: zurueckgesetzt" v2b "keine falsche Folge")
 message(STATUS "r41_ventilkette_weg[${FIGUR}] v2b: 09/07/02/01 zu Fuss -> RICHTIG -> 46 -> Zaehler -> zu Fuss zur Ost-Tuer -> 20B0 (103+100)")
 
 # ---- v2d: Dokument "Technician's Note" (Slot 20, Item 0x4E) -> Leser -> abgelegt, Bit (9,107) ----------------------------
+# (Framedump-Pfade relativ: die exe laeuft im Laufordner; ${WORKDIR} setzt erst das Makro _lauf.)
 # Spieler (-4600,6820) Blick +z -> Vorwaertspunkt (-4600,7440) im Rechteck x -5100..-4100 z 6650..7650. Leser wie
 # integration_r38_tagebuch: Viereck oeffnet, RECHTS x3 bis zur Ende-Stellung (Titel + 2 Seiten, max_page 2), Viereck
 # schliesst, Viereck bestaetigt "has been filed".
 _lauf(v2d 180 "" RE15_DEBUG_JUMP=2030@250 RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102 "RE15_PLAYER_POS=-4600,6820,3072,1"
       "RE15_PRESS=square@330,right@480,right@510,right@540,square@570,square@680"
-      "RE15_FRAMEDUMP=500:${WORKDIR}/f_dok_500.ppm" "RE15_EXIT_AT=820#203${S}")
+      "RE15_FRAMEDUMP=500:f_dok_500.ppm" "RE15_EXIT_AT=820#203${S}")
 _muss("${_dbg}" "[ventilkette41] ROOM203${S}: Ventile 01/02/03/07/08/09 (Slots 14-19), Plakat Slot 21, Dokument Slot 20 (Item 0x4E)" v2d "Dokument-Zone angelegt")
 _muss("${_dbg}" "[ventilkette41] Dokument 6 \"Technician's Note\" abgelegt: Bit (9,107) = 1" v2d "Dokument gelesen und abgelegt (Bit 107)")
 if(NOT EXISTS "${WORKDIR}/f_dok_500.ppm")
@@ -409,7 +410,7 @@ message(STATUS "r41_ventilkette_weg[${FIGUR}] v2d: Dokument Technician's Note ->
 
 # ---- v2p: Plakat-Nahaufnahme (Slot 21) ---------------------------------------------------------------------------------
 _lauf(v2p 180 "" RE15_DEBUG_JUMP=2030@250 RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102 "RE15_PLAYER_POS=-3650,7280,3072,1"
-      "RE15_PRESS=square@330,square@420" "RE15_FRAMEDUMP=380-460/80:${WORKDIR}/f_plakat_"
+      "RE15_PRESS=square@330,square@420" "RE15_FRAMEDUMP=380-460/80:f_plakat_"
       "RE15_EXIT_AT=480#203${S}")
 _danach("${_dbg}" "Ereignis 23 -> Port-Programm 2030_plakat" "[ventilkette41] Plakat-Nahaufnahme offen" v2p "Plakat oeffnet")
 _danach("${_dbg}" "Plakat-Nahaufnahme offen" "[ventilkette41] Plakat-Nahaufnahme zu" v2p "Viereck schliesst")
