@@ -276,9 +276,9 @@ I-E2: Laden IN 2000/2001 ohne Zombies -> Spur I). Vorliegende Messungen/Belege d
 
 | Mangel | Status |
 |---|---|
-| M1 RE1.5-KI: Liegepose vor dem Wecken Clip 0x12 f0 statt INIT-Pose 0x0c/0x0e f0 (auch 0x87/0x88) | Belege 8.1, Umsetzung folgt |
+| M1 RE1.5-KI: Liegepose vor dem Wecken Clip 0x12 f0 statt INIT-Pose 0x0c/0x0e f0 (auch 0x87/0x88) | behoben (8.1, 8.3, 8.4) + Zusatzbefund M1b (P2-Takt) |
 | V1 Vertrag | erledigt durch Orchestrator-Entscheid I-E1 |
-| I-E2 Laden in 2000/2001 -> keine Zombies | Belege 8.2, Umsetzung folgt |
+| I-E2 Laden in 2000/2001 -> keine Zombies | behoben (8.2, 8.3, 8.4) |
 
 ### 8.1 M1 — RE1.5-KI: Liegepose vor dem Wecken (gilt fuer 0x84/0x85 UND 0x87/0x88)
 
@@ -372,3 +372,65 @@ Pre-Intro -> sub00 zurueckhalten" (seit aa346af1, fuer den 1170-Erzaehler). Der 
 "PRE-INTRO-Kette UEBER Raeume") ist seit dem Irons-Befund bereits auf ROOM1170 eingegrenzt ("the sole room whose main00
 spawns the narrator sub11 into an event slot"); der Boot-Pfad nicht. In 2000/2001 startet main00 UNBEDINGT sub07/sub08
 -> Fehlerkennung -> sub00 nie (die Rueckfall-Neubetretung feuert erst beim Ende des Threads/Bildgrenze).
+
+### 8.3 Umsetzung (Nachbesserung 1)
+
+| Datei | Aenderung |
+|---|---|
+| `re15_port/engine/src/zombiefresser_r41.c` / `include/re15_zombiefresser_r41.h` | NEU `re15_r41_liege_skelett_clip(a)`: Clip, den das Skelett eines RE1.5-Liegenden traegt, solange er von +0x94 abweicht — 0x0c (sel 4/7/9) bzw. 0x0e (sel 5/8/0xa) bei Zustand 0 (Sce_em_set ruft die Wurzel sofort @0x8004259c, INIT posiert im Spawnbild) und bei Zustand 1 / Sub 0 / +0x6 < 2 sowie im P1->P2-Takt; sonst -1. Nur Zombie-Wurzel-Typen 0x10/0x11/0x12/0x16/0x18/0x1c-0x1f, nicht unter dem RE2-Hirn. NEU `re15_r41_liege_p2_saat(e, ph_vor)`: P1 -> P2 setzt `motion_init_delay = 1` (Port-Vokabular "Saat-Takt posiert Bild 0") — das erste P2-anim_set kommt wie im Original einen Takt spaeter. |
+| `re15_port/engine/src/anim_select_common.c` (Gegnerzweig von `re15_actor_anim_select`) | 1 Haken (3 Zeilen): `clip_override = re15_r41_liege_skelett_clip(a)`, wenn >= 0. Gilt fuer beide Renderer (platform/pc und platform/psx rufen dieselbe Auswahl). |
+| `re15_port/engine/src/enemy_ai_common.c` (Grid [4]/[5]/[6], Haken aus I-E1) | von 2 auf 3 Zeilen: +0x6 vor dem ANIMATE merken, danach `re15_r41_liege_p2_saat`. |
+| `re15_port/platform/pc/main.c` (Boot-/LADE-Pfad nach dem main00-Init-Takt) | 2 Zeilen: die Pre-Intro-Erkennung gilt nur noch fuer ROOM1170 (wie der Tuerweg); sonst startet sub00 wie FUN_8003ef6c. |
+| `re15_port/tests/unit/probe_r41_zombiefresser_karte.c` | Option `cam=<n>` (Kamera des Spielstands; `re15_savedata_capture` speichert `g_scd.cam_id`, CONTINUE stellt sie her). |
+
+Konstanten: 0x0C @0x80100b70-74, 0x0E @0x80100bb4-b8 (STAGE2; STAGE1/3 verschoben, f314 @0x80100da0/@0x80100e8c); Soll-
+Keyframes 0x12d/0x149 = Bankdaten (Bild 0 von Clip 0x0c/0x0e, kein Code-Literal); Raum 0x1170 = vorhandene Tuerweg-Regel
+(main.c Raumwechsel-Block), kein neuer Wert. +0x94 (`motion`) bleibt RAM-treu 0x12/0x13 (Original-RAM Dossier 2.1b).
+Gegenprobe der Rate: der P1->P2-Takt zeigt die Halt-Pose (Renderer-Halt), das erste P2-Bild mischt mit `anim_frac 0xf *
+anim_blend_rate 0x100` = 0xf00 (P2 setzt die Rate im selben Takt vor dem Zeichnen) = FUN_8001f3bc mit a3 = 0x100.
+
+### 8.4 Messung nachher (gebauter Stand, Messkopien `re15_pc_r41nb1_<lauf>.exe`, Laufordner `scratchpad/I41nb1/runs/`)
+
+**I-E2, LADEN in 2000 (Leon)** — Karte `2000 -20600 -10600 2048 1 leon cam=7`, `RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1`,
+Standard-KI (`I_belege/nb1_laden_logs.txt`, `nb1_laden2000_kontakt.png`, `nb1_laden2000_zoom.png`):
+```
+[scd] thread start slot=0 first_op=0x3B / [save] CONTINUE: resumed in room 2000 / [scd] thread start slot=10 first_op=0x3A
+[scd] thread start slot=1 first_op=0x06                         <- sub00 laeuft (vorher fehlte diese Zeile, Abnahme S8)
+F0 slot=3/4 INIT grid=84 Wort=1/7/0 f10e=4002 ; F1 WECKT d=3593/2011 warte=10/5 ; F6/F11 STEHT AUF
+state.log: F0 beide ss1=7 mo=23 (liegen), Clip 8 ab F7/F12, Gang F76/F84, Hochziehen F107.., Griff F319 (gr=1), HP 100->80->60
+```
+Bild: F0/F10 beide flach im Kanal, F30 richten sie sich auf, F90 stehen sie, F120 Kante, F280..F420 Griff — wie Tuerweg S1.
+**I-E2, LADEN in 2001 (Elza)** — Karte `2001 ... elza 3:0x45 cam=7`: `Spieler-Familie PL04`, sub00 startet (slot=1),
+F0 INIT Slots 1/2, F1 WECKT, F6/F11 STEHT AUF, Griff F319 — identisch (`nb1_laden2001_elza_kontakt.png`).
+
+**M1, RE1.5-KI, LADEN in 2000** (`RE15_AI_FLAVOR=re15`, `RE15_POSE_DUMP`, `I_belege/nb1_re15_2000_pose.txt`,
+`nb1_re15_2000_halt_blende.png`):
+```
+F0..F10  slot3/4 ss1=0 mo=18 af=0 frac=0  kf=301   (Halt: Clip 0x0c Bild 0; +0x94 = 18 = 0x12)
+F11      P2-SAAT                frac=15 kf=301   (P1 -> P2: Skelett unveraendert, wie Original ohne f314)
+F12      mo=18 af=0 frac=15 kf=400  b9(276,-75,-953) vs Halt b9(324,-83,-981)  (erstes P2-anim_set, Gewicht 0xf00)
+F13      af=1 frac=14 kf=401 ; ... ; ss2=2 F11..F108 = 98 Takte ; ss2=3 F109 ; F110 ss1=2 g=00 (P3, 0x201)
+```
+Vorher (Abnahme S5): `mo=18 af=0` = Keyframe 0x190 bis zum Wecken; Zwischenstand ohne Saat-Takt: F12 schon `af=1 frac=14`,
+P2 97 Takte. Bild: F0/F11 beide flach mit abgespreizten Armen (Clip 0x0c), ab F12 Blende in das Aufstehen 0x12.
+**M1, RE1.5-KI, LADEN in 3000** (Kamera 3, `nb1_re15_3000_kontakt.png`): 5 Liegende sichtbar, alle `kf=301`; der geweckte
+Slot 1: F1 WECKT, F2 P2-SAAT, F3 erstes P2-Bild `kf=400 af=0 frac=15`, die 4 fernen 200 Bilder `kf=301`.
+
+### 8.5 Tests (Nachbesserung 1)
+
+- `unit_r41_zombiefresser` NEU Teil G (Renderer-Weg `re15_actor_anim_select` + `re15_compute_actor_kf`, echte RDT/SCD):
+  G1 2000 (RE1.5, MIXED, RE2) und 3010 (RE1.5, RE2): Spawnbild und Ruhe — RE1.5/MIXED: Renderer-Clip 0x0c/0x0e, Keyframe
+  0x12d/0x149 (= Bankbild 0), +0x94 18/19, Bild 0; RE2: kein Halt, Clip 23/22. G2 Wecken 2000 (0x84), 3010 (0x85), 3000:
+  Halt bis zum Saat-Takt, erstes P2-Bild genau einen Takt danach mit Bild 0 / +0x8f 15, Blende aus der Halt-Pose (Abstand
+  335 zur Halt-Pose / 4612 zum ungemischten Bild, nach 16 Bildern 0), +0x6 = 2 fuer 98 bzw. 120 Takte (= Cliplaenge).
+  G3 1070 (0x87/0x88): Halt 0x12d/0x149, nach Member_set(12,0x89/0x8a) sofort +0x94 Bild 0 +0x8f 15 ohne Saat-Takt.
+  Gemessen (Auszug): `[G2 2000 RE1.5] slot 4 grid 84: 5 Bilder Halt (falsch 0), Saat-Takt F4, erstes P2-Bild F5 Clip 18
+  Bild 0 +0x8f 15, ... +0x6 = 2 fuer 98 Takte (Cliplaenge 98), steht F103`, `[G2 3010-0x85 RE1.5] ... Clip 19 ... 120 Takte`.
+- `integration_r41_zombiefresser_laden2000` / `_laden2001` (NEU, I-E2): LADE-Weg Leon/Elza mit Kamera 7: sub00 startet nach
+  dem CONTINUE, erstes Bild 2 Liegende grid 84, 2 INIT (RE2), Wecken d < 4000, Wartezeit <= 16, Aufstehen, Angriff
+  (gemessen F319), nie Fressen; laden2001 zusaetzlich `Spieler-Familie PL04`.
+- `integration_r41_zombiefresser_re15_2000` (NEU, M1) und `_re15_3000` (Kamera 3 + Pose): RE15_POSE_DUMP — jeder Liegende
+  zeigt bis zu seinem ersten P2-anim_set Keyframe 301 (0x12d) bzw. 329 (0x149); das erste P2-Bild ist Keyframe 400/450,
+  Bild 0, +0x8f 15, genau einen Takt nach dem `P2-SAAT` des zf.log. Gemessen: `re15_2000: Pose Slot 3/4: 12 Bilder Keyframe
+  301, erstes P2-Bild F12 Keyframe 400`, `re15_3000: Pose Slot 1: 3 Bilder ..., F3 Keyframe 400; Slots 3/5/6/7 je 360
+  Bilder Halt 301`.

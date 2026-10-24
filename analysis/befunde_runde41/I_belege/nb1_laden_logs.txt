@@ -1,0 +1,27 @@
+# debug.log LADEN ROOM2000 (Leon, Kamera 7) nach dem Fix: Slot 1 = sub00 startet
+49:[scd] thread start slot=0 first_op=0x3B
+50:[save] CONTINUE: resumed in room 2000 (hp=100)
+54:[scd] thread start slot=10 first_op=0x3A
+55:[scd] thread start slot=1 first_op=0x06
+161:[flow] EXIT_AT: Bild 500 in Raum 2000 erreicht -> exit
+# zf.log
+[r41-wecker] F0 slot=3 INIT grid=84 Wort=1/7/0 f10e=4002
+[r41-wecker] F0 slot=4 INIT grid=84 Wort=1/7/0 f10e=4002
+[r41-wecker] F1 slot=3 WECKT d=3593 warte=10
+[r41-wecker] F1 slot=4 WECKT d=2011 warte=5
+[r41-wecker] F6 slot=4 STEHT AUF (Latch frei) d=2011
+[r41-wecker] F11 slot=3 STEHT AUF (Latch frei) d=3593
+# debug.log LADEN ROOM2001 (Elza)
+31:[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+52:[scd] thread start slot=0 first_op=0x3B
+53:[save] CONTINUE: resumed in room 2001 (hp=100)
+57:[scd] thread start slot=10 first_op=0x3A
+58:[scd] thread start slot=1 first_op=0x06
+169:[flow] EXIT_AT: Bild 500 in Raum 2001 erreicht -> exit
+# zf.log
+[r41-wecker] F0 slot=1 INIT grid=84 Wort=1/7/0 f10e=4002
+[r41-wecker] F0 slot=2 INIT grid=84 Wort=1/7/0 f10e=4002
+[r41-wecker] F1 slot=1 WECKT d=3593 warte=10
+[r41-wecker] F1 slot=2 WECKT d=2011 warte=5
+[r41-wecker] F6 slot=2 STEHT AUF (Latch frei) d=2011
+[r41-wecker] F11 slot=1 STEHT AUF (Latch frei) d=3593
