@@ -471,28 +471,43 @@ Abweichungen des Ports (R2_geh, Abnahme 1, nicht wiederholt):
 ### Nachbesserung 2 — Umsetzung
 | Datei | Was | Beleg |
 |---|---|---|
-| NEU engine/src/kamerahalt_r41.c, include/re15_kamerahalt_r41.h | Entscheidung je Spielbild: Apply-Bild = `cam_change_pending` oder `work_vars[0x0A] != cam_id` am Bildende (= die Bedingung, mit der der Port-Apply im Folgebild nachzieht); nicht im ersten Bild eines Raums, nicht in der ROOM1240-Montage, nicht mit RE15_FORCE_CUT; Messschiene RE15_KAMERAHALT_LOG | Present FUN_8002137c @0x800214f4-@0x80021514, @0x80021530/@0x80021538, @0x80021558, @0x80021560 |
-| NEU platform/pc/src/bildhalt_r41_pc.c | Apply-Bild: Warteschlangen verwerfen, KEIN SDL_RenderPresent (das Fenster zeigt das vorige Bild); RE15_FRAMEDUMP bedient gehaltene Bilder aus dem gemerkten zuletzt gezeigten Bild ("(gehalten)") | @0x80021560 `j 0x800215fc` ueberspringt DrawOTag @0x800215bc/d0/e4 und den Pufferwechsel @0x800215f4/@0x800215f8 |
-| NEU engine/src/msgtakt_r41.c, include/re15_msgtakt_r41.h | Restore beim Schliessen im Nachrichten-Takt erst hinter dem Spiel-Takt; neue Nachricht im selben Bild holt ihn vorher nach; Auswahl-Message_on laeuft durch (pc += 4), wenn die Maske den Skript-Lauf anhaelt; message_query faellt mit dem Restore | Hauptschleife @0x80020de4 / @0x80020f3c / @0x80010044; Message_on @0x80040520; Skript-Freeze @0x8003f040-@0x8003f04c; Census 102/102 |
-| NEU engine/src/rennstopp_r41.c, include/re15_rennstopp_r41.h | Renn-Stopp: Einstieg aus dem Rennen ohne OBEN+RENNEN bzw. mit Zielen+Waffe, Clip 3 + Mischung 7, Tempo -40 je Bild, Vorschub inkl. negativem Schritt, Ende bei Tempo < 0, Abbruch durch OBEN/UNTEN/LINKS/RECHTS; im Skript-Modus mit leerem Pad. Start-Tempo = Port-Renntempo 200 (Tabelle @0x80073f24) | 0x80032604 @0x800326f4-@0x8003272c / @0x80032730-@0x80032760; 0x80032778 @0x800328f8-@0x8003295c |
+| NEU engine/src/kamerahalt_r41.c, include/re15_kamerahalt_r41.h | Entscheidung je Spielbild: Apply-Bild = `cam_change_pending` oder `work_vars[0x0A] != cam_id` am Bildende (= die Bedingung, mit der der Port-Apply `re15_cam_present_tick` im Folgebild nachzieht); nicht im ersten Bild eines Raums, nicht in der ROOM1240-Montage (RE2-Praesentation), nicht mit RE15_FORCE_CUT (Messhaken setzt jedes Bild pending); Messschiene RE15_KAMERAHALT_LOG | Present FUN_8002137c @0x800214f4-@0x80021514, @0x80021530/@0x80021538, @0x80021558, @0x80021560; Cut_chg @0x800402f4 ohne Vergleich |
+| NEU platform/pc/src/bildhalt_r41_pc.c | Apply-Bild: Warteschlangen verwerfen (re15_render_pc_clear_scene_overlays), KEIN SDL_RenderPresent — das Fenster zeigt das vorige Bild; RE15_FRAMEDUMP bedient gehaltene Bilder aus dem gemerkten zuletzt gezeigten Bild (Zeile "[framedump] ... (gehalten)"), ohne RE15_FRAMEDUMP kein Ruecklesen | @0x80021560 `j 0x800215fc` ueberspringt DrawOTag @0x800215bc/@0x800215d0/@0x800215e4 und den Pufferwechsel @0x800215f4/@0x800215f8 |
+| NEU engine/src/msgtakt_r41.c, include/re15_msgtakt_r41.h | Restore beim Schliessen im Nachrichten-Takt erst hinter dem Spiel-Takt (vor dem Item-Modal-Takt); eine neue Nachricht im selben Bild holt ihn vorher nach (sonst falscher Schnappschuss @0x80027ec8); Auswahl-Message_on laeuft durch (pc += 4, weiter mit Evt_next), wenn die Maske den Skript-Lauf anhaelt; message_query faellt mit dem Restore. Aktiv nur, wenn die Plattform `re15_msgtakt_r41_takt_beginn` ruft (PC) | Hauptschleife @0x80020de4 (Spiel-Task) vor @0x80020f3c/@0x80010044 (Nachrichten-Takt); Message_on @0x800404f4 Rueckgabe 1 @0x80040520; Skript-Freeze @0x8003f040-@0x8003f04c; Census 102/102 Auswahl-Message_on mit Skript-Bit, alle gefolgt von Evt_next |
 | Haken platform/pc/main.c (+7/-1) | `re15_msgtakt_r41_takt_beginn/_ende` um re15_msg_tick; `re15_msgtakt_r41_nach_spieltakt` hinter re15_pc_fx_takt (vor dem Item-Modal) und vor dem Bildende; `re15_kamerahalt_r41_haelt` -> `re15_render_pc_bild_halten` statt re15_render_end_frame | |
-| Haken engine/src/msg_common.c (+4/-1), scd_vm.c (+2), render_pc.c (+9: Auftrag-Abholer + 1 Haken), player_common.c (+7/-1: Renn-Stopp im Bewegungs-Block und im Skript-Zweig) | je "Runde 41 Spur E" | |
-PSX-Plattform: nicht verdrahtet (platform/psx/main.c ruft die neuen Engine-Haken nicht; PSn00bSDK fehlt hier zum Bauen) —
-ohne Aufruf verhalten sich msgtakt (inaktiv) und kamerahalt (nicht gerufen) wie vorher; der Renn-Stopp ist Engine-Code
-und wirkt auf beiden Plattformen.
+| Haken engine/src/msg_common.c (+4/-1), engine/src/scd_vm.c (+2), platform/pc/src/render_pc.c (+9: Auftrag-Abholer `re15_render_pc_abzug_nehmen` + 1 Haken vor dem Ruecklesen) | je "Runde 41 Spur E" | |
+Keine neue Konstante ausser denen mit Adresse oben. PSX-Plattform: nicht verdrahtet (platform/psx/main.c ruft die neuen
+Haken nicht, PSn00bSDK fehlt hier zum Bauen) — ohne Aufruf bleiben msgtakt (inaktiv) und kamerahalt (nicht gerufen) wie
+vorher.
 
-### Nachbesserung 2 — Messung nachher (exe-Kopie re15_pc_E41n2.exe, VORHER = re15_pc_E41a1.exe md5 beeca32b..., Laeufe `<sp>/E41n2/runs/`)
+RENN-STOPP — umgesetzt, gemessen und WIEDER HERAUSGENOMMEN (Commits 635be823 -> d4fa9074): engine/src/rennstopp_r41.c
+bildete 0x80032604/0x80032778 nach (Port-Tempo 200 -> Schritte 160,120,80,40,0,-40; Kurbel im Rennen F382..F387
+(3650,-3085/-3205/-3285/-3325/-3325/-3285)); damit faellt der fremde Riegel unit_r36_zombieki_affen_block (Runde 36 Spur F,
+Gorilla-Zufallsgang mit Rennen und Drehen auf der Stelle): "kein Seed mehr als 600 Bilder schlechter (schlechtester
+0x67be2dfd: +841)". Gegenprobe: mit abgeschaltetem Stopp (temporaer `return 0`) gruen. Ursache: der Zufallsgang wechselt
+alle 90 Bilder von OBEN+RENNEN auf Drehen auf der Stelle; das Original laeuft dabei EIN Bild aus (Tempo - 40 = 160) und
+bricht dann zum Drehen ab (@0x80032750) — die Bahnen aendern sich, die Port-Wahl "Umweg" der Gorillas wird fuer einen
+Seed schlechter. Die Sonde gehoert nicht dieser Spur -> OFFEN, Entscheid Orchestrator (unten).
+
+### Nachbesserung 2 — Messung nachher (exe-Kopie re15_pc_E41n2.exe md5 0844c59b61c16cbde6dff43d2ce39967, Stand d4fa9074; VORHER = re15_pc_E41a1.exe md5 beeca32b2e23c31edf7ad06a2073c5db = 753652fc; Laeufe `<sp>/E41n2/runs/`)
 - E-N1, Gang auf die Kante (`EN1w_nach`/`EN1w_vor`: (9375,-3200) Blick 2048, U 5 Bilder -> x 9000 bei F64, FRAMEDUMP
-  F56..F100): NACHHER 40/40 Folgebilder ab F64 pixelgleich (Bild von F63 steht), VORHER ab F64 je Bild ~29 900 Pixel
-  (Cut 0/2 im Wechsel). `cam=`-Spur in beiden 0,2,0,2 = Original (o_cam9000: req 0/2 je Durchlauf).
+  F56..F100): NACHHER 40/40 Folgebilder ab F64 pixelgleich (das Bild von F63 steht), VORHER ab F64 je Bild ~29 900 Pixel
+  (Hintergrund Cut 0/2 im Wechsel). `cam=`-Spur in beiden 0,2,0,2 — wie das Original (o_cam9000: angeforderter Cut 0/2 je
+  Durchlauf). Der Port haelt das Bild, solange der Spieler auf der Kante steht; das Original laeuft dort zusaetzlich mit
+  ~5 Durchlaeufen je Sekunde (CD-Laden je Durchlauf, VSync-Abstand 12/13) — Hardware-Zeit, im Port nicht nachgebildet.
   Hinweis: mit RE15_PLAYER_POS direkt auf die Kante (EN1_nach) steht das ERSTE Raumbild (nach dem Sprung schwarz mit dem
-  Vorspann-Text) — die Lage wird nie gezeichnet, im Original genauso (der Patch-Lauf zeigte das Bild VOR der Kante).
+  Vorspann-Text) — die Lage wird nie gezeichnet, im Original genauso (dort stand das Bild VOR dem Patch).
 - E-N2 Gehen (`R2_geh_nach`, Eingaben wie Abnahme 1 R2): F310..F381 Geh-Clip Bild 9 durch BEIDE Nachrichten (F328/F329
   af=9, vorher 9 -> 10), F381 Schliessen der Frage (Spieler angehalten, af=9), **F382 Ifel_ck @0x0A68 ... Pos_set
-  @0x0A8C ... Sleep @0x0A98 in EINEM Skript-Takt** (vorher F382 Message_on + F383 Rest), Spieler im selben Bild
-  mo 200 / Clip 3 / frac 7 an (3650,-3018), F382 gehalten (`[kamerahalt] F382 ... HALTEN`), F383 Cut 3, F402
-  Plc_motion = F382 + 20. Original (o_geh1): n94 Bestaetigung -> n95 Pos_set + Stopp (Apply-Bild) -> n115 Plc_motion.
-- Rennen (`R4_renn_nach`): Nachrichten ohne Luecke (Renn-Bild 6), F382 Pos_set + erster Stopp-Schritt (3650,-3085),
-  F383 -3205, F384 -3285, F385 -3325, F386 -3325, F387 -3285 (letzter Schritt -40), Plc_motion F402 bei (3650,-3285).
-  Original: 174..-26, Endlage -3369 — Unterschied allein durch das Port-Renntempo (200 statt clip-gekoppelt 214).
-- Freier Renn-Stopp (`RS_frei_nach`): Loslassen F72 -> 5160, 5280, 5360, 5400, 5400, 5360 (Schritte 160,120,80,40,0,-40).
+  @0x0A8C ... Sleep @0x0A98 in EINEM Skript-Takt** (vorher F382 Message_on + Evt_next, F383 der Rest), Spieler im selben
+  Bild mo 200 / Clip 3 / frac 7 an (3650,-3018), F382 gehalten (`[kamerahalt] F382 ... HALTEN`), F383 Cut 3, F402
+  Plc_motion = F382 + 20. Original (o_geh1): n94 Bestaetigung -> n95 Pos_set + Geh-Stopp (Apply-Bild) -> n115 Plc_motion.
+- Rennen (`R4_renn_nach`, erster Lauf vor dem Renn-Stopp-Versuch = Code-Stand d4fa9074): Renn-Bild 6 durch beide
+  Nachrichten, F382 Pos_set + Stehen (3650,-3018) im selben Bild, gehalten, Plc_motion F402. Original (o_renn2): Pos_set n93
+  und im selben Bild der Renn-STOPP 174..-26 bis (3650,-3369) — diesen Auslauf hat der Port nicht (OFFEN).
+- Stehen (`K_stand_nach`, wie E41n1 K_w3_stand): Idle-Clip (mo 212, W01 Clip 4) Bild 49 durch beide Nachrichten, Frage zu
+  F461, Pos_set F462 (+1) gehalten, danach laeuft der Idle-Clip weiter (af 50..69) bis Plc_motion F482 = F462 + 20.
+  Original (o_stand1): Sway Clip 2 laeuft nach dem Ja weiter, Pos_set im Bild nach der Bestaetigung — gleiche Folge.
+- Weg des Nutzers (`R1_weg2050_nach`: 2050 -Tuer-> 2020, Cut 3, gehen, Aktion): Geh-Clip Bild 125 von F186 (msg 0) bis
+  zur Frage ohne Luecke (VORHER F261 mo 200 = Luecken-Bild mit Stehen), Pos_set F342 im Bild nach dem Schliessen (VORHER
+  F343), F342 gehalten; dazu je Zonen-Kamerawechsel auf dem Weg ein gehaltenes Bild (F102 Cut 0 -> 2, F150 2 -> 3).
