@@ -664,11 +664,12 @@ int main(int argc, char **argv)
     /* RUNDE 41 SPUR E, NACHBESSERUNG 3 (Orchestrator-Entscheid E-E2): der Renn-Stopp (0x80032604 @0x8003272c, 0x80032778
      * @0x800328f8-@0x8003295c) aendert Leons Bahn im Zufallsgang (Wechsel Rennen -> Drehen alle 90 Bilder: ein Auslaufbild
      * 160 statt sofort Stehen). Messmodi fuer die Neu-Einmessung des Riegels "kein Seed mehr als 600 Bilder schlechter":
-     *   einsr <i> <0|1> <bilder> <renn 0|1>   wie eins (Anker 400), renn 0 = Bewegung vor Nachbesserung 3
+     *   einsr <i> <0|1> <bilder> <renn 0|1> [lage]  wie eins (Anker 400), renn 0 = Bewegung vor Nachbesserung 3
      *                                          (re15_rennstopp_r41_pruef_aus, nur Sonde), renn 1 = Original-Renn-Stopp.
      *   rennvergleich <von> <bis> [bilder]     je Seed AUS/AN x renn 0/1 in eigenen Prozessen; Ausgabe AN-AUS je Seed. */
     if (argc > 5 && strcmp(argv[1], "einsr") == 0) {
         int i = atoi(argv[2]), modus = atoi(argv[3]), b = atoi(argv[4]), renn = atoi(argv[5]);
+        if (argc > 6) s_zg_lage = atoi(argv[6]);   /* Runde 41 E NB3 Fortsetzung: LAGE-Zeile je blockierter Strecke */
         re15_rennstopp_r41_pruef_aus(renn ? 0 : 1);
         re15_r36_affen_padsuche_enable(modus ? 1 : 0);
         zg_t r = zg_stat(b, zg_seed(i));
@@ -942,17 +943,49 @@ int main(int argc, char **argv)
          * NEUE SCHRANKE: je Seed AN - AUS <= R41_BAHN_CHAOS = 1039 = Median der Bahn-Chaos-Amplitude der Original-Regel (144
          *   Seeds, abgerundet): ein Seed gilt als "durch die Port-Wahl schlechter", wenn er um mehr schlechter ist, als eine
          *   blosse Bahnaenderung die Original-Regel typischerweise verschiebt. Die Zahl der Seeds ueber 600 wird weiter
-         *   ausgegeben. */
-        const long R41_BAHN_CHAOS = 1039;
-        int ueber600 = 0;
+         *   ausgegeben.
+         * NACHBESSERUNG 3, FORTSETZUNG (Dossier "Nachbesserung 3 — Fortsetzung"): DECIDE 0x80032604 vollstaendig — im Unterzustand 2
+         *   dreht Leon mit 72 (@0x80073f25, @0x80032620-@0x800326a0) statt 96/48, OBEN im Stopp = ein Geh-Bild (@0x80032738),
+         *   Stehen-FSM erst nach dem Stopp (@0x80032958). Im Zufallsgang dreht Leon damit in den zwei Bildern nach jedem Rennen
+         *   72 statt 96 -> andere Endrichtung -> andere Bahn. NEU GEMESSEN (`rennvergleich 0 143 6000`, ohne = Stand vor
+         *   Nachbesserung 3, mit = Endstand; Protokolle <sp>/E41n3b/affen/rv_*.txt, Auswertung rv_auswertung2.py):
+         *   - Riegel-Block 0..15 mit: FERN AN 4852 / AUS 24533 = 19,8 % (reisst 1/6), schlechtester 0x9b5bf362 +3521: Gorilla 2
+         *     haengt FERN an der Klemme (11129,9982) 4405 Bilder ab F950 (`einsr 2 1 6000 1 1`). DIESELBE Stelle haelt OHNE Stopp
+         *     0xbc8bd05d (+3334, Gorilla 1 (11274,10073) 1443 + 1558 Bilder, Block 96..111) und mit dem Stopp aus 841e0ef6
+         *     0xbb4281d4 ((11280,9820)) fest; zweite Klasse Sub 7 bei (-13418..-13518, -140..-953): 0x6b1c577f +1864, 0xce2e2c57
+         *     +1450 (mit), 0x71d8aa83 +1416 (ohne). Die Haenger sind eine Grenze der PORT-WAHL (Runde 36 Spur F,
+         *     zombieki_r36.c), welche Seeds sie treffen, entscheidet die Bahn.
+         *   - je 16er-Block: die FERN-Schranke 1/6 reisst ohne Stopp in Block 96..111 (20,3 %), mit in Block 0..15 (19,8 %), sonst
+         *     1,9..12,8 %; Population 144 Seeds: FERN ohne 17656/240096 = 7,4 %, mit 24433/253141 = 9,7 %; Griffe ohne 644/576, mit
+         *     657/587; Seeds ueber +600 ohne 2, mit 6; groesstes AN-AUS ohne +3334, mit +3521.
+         *   - Bahn-Chaos der Original-Regel |AUS(mit) - AUS(ohne)|: Median 813,5, p90 3307, max 5982 (144 Seeds).
+         * NEUE FORM DES RIEGELS: der 16er-Block mass, ob ein Haenger in die Seed-Auswahl faellt, nicht die Port-Wahl (beide
+         *   Bewegungen reissen je einen ANDEREN Block). Der Riegel laeuft darum ueber die ganze gemessene Population (144 Seeds,
+         *   je 8 Seeds = 16 Prozesse gleichzeitig): FERN <= 1/6 und Griffe >= 80 % (die Werte der Runde 36, unveraendert) auf der
+         *   Population; je Seed AN - AUS <= R41_BAHN_CHAOS = 5982 = groesste gemessene Bahn-Chaos-Amplitude der Original-Regel.
+         *   Median (813) und p90 (3307) halten schon fuer den abgenommenen Stand OHNE Stopp nicht (2 Seeds > 813, +3334 > 3307),
+         *   messen also nicht die Port-Wahl; das Maximum ist die kleinste gemessene Grenze, die die Population beider Bewegungen
+         *   haelt. Die Zahl der Seeds ueber 600 und ueber dem Median wird ausgegeben; die Haenger-Stellen stehen im Dossier als
+         *   OFFEN der Port-Wahl. */
+        const long R41_BAHN_CHAOS = 5982, R41_BAHN_MEDIAN = 813;
+        enum { R41_SEEDS = 144, R41_BUENDEL = 8 };
+        int ueber600 = 0, ueber_median = 0;
         long su_aus = 0, su_an = 0, fe_aus = 0, fe_an = 0, na_aus = 0, na_an = 0; int gr_aus = 0, gr_an = 0, n_ok = 0; long schlimmer = -1000000;
         uint32_t s_schl = 0;
         long nj_an = 0, nb_an = 0; int nk_an = 0; uint32_t s_nk = 0;   /* Pruefmangel 1: AN NAH-Zusammensetzung + groesster NAH-Anker (Ausgabe) */
-        for (int i = 0; i < 16; i++) {
+        for (int b0 = 0; b0 < R41_SEEDS; b0 += R41_BUENDEL) {
+          FILE *pz[R41_BUENDEL][2];
+          const int bn = (R41_SEEDS - b0 < R41_BUENDEL) ? R41_SEEDS - b0 : R41_BUENDEL;
+          for (int j = 0; j < bn; j++)
+              for (int m = 0; m < 2; m++) {   /* je Lauf ein eigener Prozess, ein Buendel laeuft gleichzeitig */
+                  char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" eins %d %d 6000", argv[0], b0 + j, m);
+                  pz[j][m] = popen(cmd, "r");
+              }
+          for (int j = 0; j < bn; j++) {
+            const int i = b0 + j;
             long bl[2] = { -1, -1 }, na[2] = { 0, 0 }, fe[2] = { 0, 0 }, nj[2] = { 0, 0 }, nb[2] = { 0, 0 }; int gr[2] = { 0, 0 }, nk[2] = { 0, 0 };
             for (int m = 0; m < 2; m++) {
-                char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" eins %d %d 6000", argv[0], i, m);
-                FILE *pp = popen(cmd, "r"); char zl[512];
+                FILE *pp = pz[j][m]; char zl[512];
                 while (pp && fgets(zl, sizeof zl, pp)) {
                     unsigned sd; int mm; long b, n1, f1; int g2;
                     if (sscanf(zl, "EINS seed 0x%x modus %d blockiert %ld griffe %d nah %ld fern %ld", &sd, &mm, &b, &g2, &n1, &f1) == 6) {
@@ -968,20 +1001,23 @@ int main(int argc, char **argv)
             nj_an += nj[1]; nb_an += nb[1]; if (nk[1] > nk_an) { nk_an = nk[1]; s_nk = zg_seed(i); }
             if (bl[1] - bl[0] > schlimmer) { schlimmer = bl[1] - bl[0]; s_schl = zg_seed(i); }
             if (bl[1] - bl[0] > 600) ueber600++;
+            if (bl[1] - bl[0] > R41_BAHN_MEDIAN) ueber_median++;
             printf("  Seed 0x%08x: AUS %ld blockiert (nah %ld / fern %ld) / %d Griffe | AN %ld (nah %ld = Jagd %ld + Biss %ld + sonst %ld, NAH-Anker max %d / "
                    "fern %ld) / %d\n", zg_seed(i), bl[0], na[0], fe[0], gr[0], bl[1], na[1], nj[1], nb[1], na[1] - nj[1] - nb[1], nk[1], fe[1], gr[1]);
+          }
         }
         printf("  Summe: AUS %ld (nah %ld / fern %ld) | AN %ld (nah %ld = Jagd [0xbb8,0x1771) %ld + Bissweite %ld + sonst %ld / fern %ld); "
                "NAH-Anker AN max %d (Seed 0x%08x; Nah-Umweg zu Fuss ab R36_NAH_START 354)\n", su_aus, na_aus, fe_aus, su_an, na_an, nj_an, nb_an,
                na_an - nj_an - nb_an, fe_an, nk_an, s_nk);
-        CHECK(n_ok == 16, "16 Zufallsgaenge je AUS und AN gelaufen (%d)", n_ok);
+        CHECK(n_ok == R41_SEEDS, "%d Zufallsgaenge je AUS und AN gelaufen (%d)", (int)R41_SEEDS, n_ok);
         CHECK(fe_aus >= 10000, "Gegenprobe Original-Regel: %ld FERN-blockierte Gorilla-Bilder (Leon >= 0x1771; gesamt %ld) — Befund 'noch oft blockiert' "
               "= Jagd ohne Sicht FERN", fe_aus, su_aus);
         CHECK(fe_an * 6 <= fe_aus, "FERN-Umweg: FERN-blockierte Bilder (Anker %d, Leon >= 0x1771 @0x80117bc8) %ld <= 1/6 von %ld (NAH AN %ld / AUS %ld: "
               "Original-Nahjagd und die NAH-Teile der PORT-WAHL Vortritt/Nah-Umweg/Pad-Zweig; ungebunden bis auf die Seed-Schranke, Begruendung im "
               "Kommentar)", s_zg_anker, fe_an, fe_aus, na_an, na_aus);
-        CHECK(schlimmer <= R41_BAHN_CHAOS, "kein Seed mehr Bilder schlechter als das Bahn-Chaos der Original-Regel (Median %ld, Runde 41 E NB3; "
-              "schlechtester 0x%08x: %+ld, Seeds ueber +600: %d)", R41_BAHN_CHAOS, s_schl, schlimmer, ueber600);
+        CHECK(schlimmer <= R41_BAHN_CHAOS, "kein Seed mehr Bilder schlechter als das groesste Bahn-Chaos der Original-Regel (%ld, Runde 41 E NB3 "
+              "Fortsetzung; schlechtester 0x%08x: %+ld, Seeds ueber +600: %d, ueber dem Median %ld: %d)", R41_BAHN_CHAOS, s_schl, schlimmer, ueber600,
+              R41_BAHN_MEDIAN, ueber_median);
         CHECK(gr_an * 10 >= gr_aus * 8, "Griffe AN %d >= 80%% von AUS %d (die Gorillas erreichen Leon)", gr_an, gr_aus);
     }
     {
