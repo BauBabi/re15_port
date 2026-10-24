@@ -82,7 +82,8 @@ der Sicherung), Wegplan `<a4>/plaene/k2.txt` (91 Befehle). Leon und Elza Zeile f
   `FILE31_p02_page.png`, Titel `FILE31_title_page.png`, aus shared_assets/RE2/FILES/FILE31_*.TIM selbst dekodiert): gleich bis auf die
   zwei Gedankenstriche U+2014 -> '-' (RE2-Dokumentschrift ohne Gedankenstrich; dokument_satz.py nimmt den Text direkt aus AUFTRAG.md).
 * **Sichtbarkeit des Dokument-Blatts in der Welt** (eigene Messung, Paare mit/ohne Bit 107 bei gleicher Kamera, RE15_FORCE_CUT nur zur
-  Bildwahl, Spieler ausserhalb des Bilds): Cut 0/1/2/4/7/15 -> **0 Pixel Unterschied**; Cut 5 (die Kamera des Sued-Landeplatzes) ->
+  Bildwahl, Spieler ausserhalb des Bilds; alle 16 Cuts von ROOM2030, `<a4>/sicht_rest.sh`, `<a4>/sicht_rest.txt`): Cut 0/1/2/3/4/6/
+  7/8/9/10/11/12/13/14/15 -> **0 Pixel Unterschied**; Cut 5 (die Kamera des Sued-Landeplatzes) ->
   **39 Pixel** (Rahmen x 102..113 y 143..149, ein dunkelgrauer Fleck hinter dem Gelaender, `<a4>/bilder/sicht_c5_dok.png`,
   Ausschnitt 4x `<a4>/bilder/sicht_c5_dok_diff.png`). `[prop-render] pi=5 oid=0x06 pos=(-4600,-1800,7150)` wird gezeichnet, ist aber
   praktisch nicht zu sehen; in K1 steht der Spieler zum Aufheben der Sicherung (-4686,7144) genau auf dem Blatt. -> Mangel 1 (§5).
