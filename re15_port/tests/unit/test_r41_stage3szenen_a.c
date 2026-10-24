@@ -8,7 +8,8 @@
  *
  *   zensus    alle 240 RDTs (Work_set-Verfolgung je Sub): Spieler-Plc_motion(2,c) NUR ROOM3060 @0x010BE und ROOM3061
  *             @0x011DE (beide c = 6); Plc_flg mit Bit 1/2 NUR ROOM3061 sub04 (5 Stellen); Super_set NUR ROOM3061 @0x0127E
- *             und ROOM4030/4031 — der Umfang, fuer den die neuen Wege gelten
+ *             und ROOM4030/4031 — der Umfang, fuer den die neuen Wege gelten; kein anderer Schreiber von +0x1c4
+ *             (Member_set 0x34, Plc_motion pc[3], Member_set2 0x35 der Kriechtor-Maschine) setzt Bit 1/2
  *   anker     Glied-Anker FUN_800369f8 an Sherrys echter Bank (CDEMD1 Typ 0x4B + ROOM3061 RBJ rec1): Kriech-Takte aus sub04
  *             (SET 4/6/5/4) ab einem Original-Stand, Ziel = der naechste Original-Stand der dichten Reihe o3061_s3 —
  *             bytegleich (Abweichung 0)
@@ -67,6 +68,10 @@ static const char *stage_dir(unsigned room)
 
 /* ---------- zensus ---------- */
 typedef struct { unsigned room; long off; int wert; } fund_t;
+/* Andere Schreiber von +0x1c4 (Member 16, actor_common.c re15_actor_set_member case 16): Member_set 0x34 mit Bit 1/2,
+ * Plc_motion pc[3] (@0x80041bc8 `sh a1,452(v0)` = SET), Member_set2 0x35 aus einer Variable (Calc 0x26 op = pc[2],
+ * dst = pc[3], imm = pc[4..5]; Member_get 0x3D var = pc[1] <- Member pc[2], scd_vm.c op_member_get @0x80041238). */
+static int s_ms_10, s_pm_flags, s_ms2_10, s_ms2_10_unsicher;
 static int16_t les16(const uint8_t *p) { return (int16_t)le16(p); }
 /* Sprungziel vorwaerts wie tools/scd_dump_room.py fwd_target (Ifel 0x06, Else 0x07, For/For2 0x0D/0x1B, While/Do/Switch
  * 0x0F/0x11/0x13, 0x14, 0x17) — ein Evt_end beendet den Sub nur, wenn kein Sprung dahinter zeigt. */
@@ -87,6 +92,8 @@ static void zensus_sub(unsigned room, const re15_rdt_t *rdt, const uint8_t *p, l
 {
     int ws_kind = -1;
     long maxf = 0;
+    uint8_t vstat[256];                       /* 1 = aus Member 16 geladen und nur bit-erhaltend veraendert, 2 = unsicher */
+    memset(vstat, 0, sizeof vstat);
     for (long o = 0; o < grenze; ) {
         const uint8_t *q = p + o;
         if (q[0] >= 0x5F || q[0] == 0x1F) break;                                         /* unbekannt -> Ende */
@@ -102,6 +109,15 @@ static void zensus_sub(unsigned room, const re15_rdt_t *rdt, const uint8_t *p, l
             fl[*nfl].room = room; fl[*nfl].off = datei_off; fl[*nfl].wert = le16(q + 2); (*nfl)++; }
         if (q[0] == 0x48 && *nss < 16) {                                                 /* Super_set */
             ss[*nss].room = room; ss[*nss].off = datei_off; ss[*nss].wert = q[2] | (q[3] << 8); (*nss)++; }
+        if (q[0] == 0x34 && q[1] == 0x10 && (le16(q + 2) & 3u)) s_ms_10++;              /* Member_set(16, Bit 1/2) */
+        if (q[0] == 0x3F && (q[3] & 3u)) s_pm_flags++;                                   /* Plc_motion pc[3] Bit 1/2 */
+        if (q[0] == 0x3D) vstat[q[1]] = (uint8_t)(q[2] == 0x10 ? 1 : 0);                 /* Member_get var <- Member */
+        if (q[0] == 0x24) vstat[q[1]] = 0;                                                /* Save var = Wert */
+        if (q[0] == 0x25) vstat[q[1]] = vstat[q[2]];                                      /* Copy */
+        if (q[0] == 0x26 && vstat[q[3]] == 1 && !(q[2] == 6 || (q[2] == 5 && !(le16(q + 4) & 3u))))
+            vstat[q[3]] = 2;                                                              /* nur AND / OR ohne Bit 1/2 */
+        if (q[0] == 0x27 && vstat[q[2]] == 1) vstat[q[2]] = 2;                            /* Calc2 */
+        if (q[0] == 0x35 && q[1] == 0x10) { s_ms2_10++; if (vstat[q[2]] != 1) s_ms2_10_unsicher++; }
         if (q[0] == 0x01 && o + 2 > maxf) break;                                         /* Evt_end ohne Sprung dahinter */
         o += sz;
     }
@@ -150,6 +166,11 @@ static void t_zensus(void)
     }
     CHECK(nss == 3 && ss3061 == 1 && ss4030 == 2,
           "Super_set: %d Stellen (Soll 3: ROOM3061 @0x0127E Gegner 0 Teil 14, ROOM4030/4031 Gegner 0 Teil 1)", nss);
+    /* Damit wirkt der Executor-Wechsel (enemy_ai_common.c @0x80050c6c/@0x80050c94) nur in ROOM3061 sub04. */
+    CHECK(s_ms_10 == 0 && s_pm_flags == 0 && s_ms2_10 == 86 && s_ms2_10_unsicher == 0,
+          "andere Schreiber von +0x1c4 Bit 1/2: Member_set(16) %d, Plc_motion pc[3] %d, Member_set2(16) %d Stellen, davon %d "
+          "nicht bit-erhaltend (Soll 0/0/86/0: Kriechtor 1030/1031/1040/1041 = Member_get + AND 0x0FFF / OR 0x2000 / "
+          "OR 0x1000)", s_ms_10, s_pm_flags, s_ms2_10, s_ms2_10_unsicher);
 }
 
 /* ---------- gemeinsame Sherry-Bank ---------- */

@@ -224,7 +224,12 @@ J_belege/vergleich_3060_marvin_reihe.png (oben Original-Video 10 Bilder/s, unten
   Rot (pc+10/12/14) -> +0x68/+0x6a/+0x6c. Super_reset @0x80040cd0 (Kopie Welt +0x5c/+0x60/+0x64 -> +0x34.., Vater =
   0x80072d4c). Im Port beide nicht umgesetzt (RE15_SCD_OPCODES_REFERENCE.md: `—defer`, scd_vm.c nur Laengen 16/8).
 - Zensus Plc_flg mit Bit 1/2 in allen 240 RDTs: NUR ROOM3061 sub04 (5 Stellen: SET 1/2/1 @0x012EC/@0x012F4/@0x012FC,
-  SET 6 @0x01316, SET 5 @0x0131E; SET 4 @0x0130E/@0x01326 ohne Bit 1/2). Plc_motion-Flagbyte pc[3] ist in allen
+  SET 6 @0x01316, SET 5 @0x0131E; SET 4 @0x0130E/@0x01326 ohne Bit 1/2).
+- Andere Schreiber von +0x1c4 (Member 16, re15_actor_set_member case 16), Zensus aller 206 SCD-RDTs: Member_set 0x34 auf
+  Member 16 = 0; Plc_motion pc[3] (@0x80041bc8 `sh a1,452(v0)`) in allen Aufrufen 0; Member_set2 0x35 auf Member 16 = 86
+  Stellen, alle Kriechtor-Maschine ROOM1030/1031/1040/1041 = Member_get 0x3D (@0x80041238) + Calc 0x26 AND 0x0FFF / OR
+  0x2000 bzw. OR 0x1000 -> Bit 0x1/0x2 bleiben unberuehrt. Port-Code setzt +0x1c4 nur mit 0x04/0x20/0x80/0x1000. Der
+  Executor-Wechsel (§2.6) wirkt also nur in ROOM3061 sub04 (Riegel unit_r41_stage3szenen_a_zensus). Plc_motion-Flagbyte pc[3] ist in allen
   1359 Aufrufen 0.
 
 ### §2.3 Messung Original (DuckStation, MZD-Disc; Werkzeug `re15_port/tools/r41_j/j41_szene.py`)
@@ -340,13 +345,21 @@ bei (-3165,-25115) statt (-3500,-25500): Johns Einlauf (sub10) schiebt sie F131.
 ## §3 Tests (registriert NUR in re15_port/tests/unit/probes/r41_stage3szenen_a.cmake, + _rbj.cmake des Binders)
 | Test | misst | Ergebnis |
 |---|---|---|
-| unit_r41_stage3szenen_a_zensus | 206 RDTs mit SCD + 34 Platzhalter: Spieler-Plc_motion(2,c) nur 3060 @0x010BE / 3061 @0x011DE; Plc_flg Bit 1/2 nur 3061 (5 Stellen); Super_set nur 3061 @0x0127E + 4030/4031 | gruen |
+| unit_r41_stage3szenen_a_zensus | 206 RDTs mit SCD + 34 Platzhalter: Spieler-Plc_motion(2,c) nur 3060 @0x010BE / 3061 @0x011DE; Plc_flg Bit 1/2 nur 3061 (5 Stellen); Super_set nur 3061 @0x0127E + 4030/4031; andere Schreiber von +0x1c4 Bit 1/2: Member_set 0, Plc_motion pc[3] 0, Member_set2 86 alle bit-erhaltend | gruen |
 | unit_r41_stage3szenen_a_anker | Anker an Sherrys echter Bank, o3061_s3 t08->t10 und t09->t11: Abweichung **0** | gruen |
 | unit_r41_stage3szenen_a_superobj | Super_set/_reset am echten Bytestrom: Loslass-Lage = Original **(0,0,0)**, Vater ausserhalb State 4 -> uebersprungen | gruen |
 | unit_r41_stage3szenen_a_wclip | (2,6) -> W-Clip 6, Halten Bild 9, Schleife, Ende bei Befehl/Raumwechsel, Sub 0/1 und 1141 unberuehrt | gruen |
 | integration_r41_stage3szenen_a_3060 | echte exe: 3020-Szene -> PL0D -> Tuer 3040 -> 3060, W-Clip 6 / 10 Bilder, Bild 9 >= 25x | gruen |
 | integration_r41_stage3szenen_a_3061 | echte exe: Spielstand Elza (-3500,-25500) + CONTINUE ROOM3061, vor an die Wand + QUADRAT am Slot-1-AOT -> sub02 (Cut_chg 6 @0x01062, §2.11), Gitter-Lage, Anker-Takte, Sherry-Lagen (Rest (3,10)), Sherry im Schacht (-30700), Elza W-Clip 6 gehalten, Wechsel 30C1/PL0F | gruen |
 | unit_r41_stage3szenen_a_rbj_{mechanik,zensus,kanal} | Binder (§0, Vorgaenger) | gruen |
+
+Gezielte Laeufe (keine volle Suite; re15_pc.exe 20:31 = letzter Code-Stand, Test-exe 20:48 nach der Zensus-Erweiterung):
+- `ctest --test-dir re15_port/build -R "^(unit|probe)_(r41_stage3szenen_a|npc|marvin|1090_npc|1090_push|room1040|lane_b1|r33_tuer1120|r34n_d_adaruf|r35_affen|r35_cut1150|r35_cut10f0|r35_entladen|r36_elza|r36_szene|r36_szenenleon|r36_gegnerzahl|r36_schluessel|r36_zombieki_szenen|r37_elzaems|r37_roy|r37_szene11c0|r38_dining1141|r38_elzatoene|r38_heliport1171|r38_kleinkram|r38_npckante|r38_szenenschutz|r39_dining1141|r39_elzazombies|r39_funk10f1|r39_heliport1171|r39_johnruf1041|r16_tuer1040|room1140|anim)" -j 4 --timeout 600` ->
+  **`100% tests passed, 0 tests failed out of 218`**
+- `ctest --test-dir re15_port/build -R "^integration_(r41_stage3szenen_a|r39_dining1141|r37_elzaems_elza3091|r37_szene11c0|r36_szene1150)" -j 3 --timeout 1200`
+  -> **`100% tests passed, 0 tests failed out of 9`** (3061 dabei noch mit RE15_FIRE_AOT)
+- `ctest --test-dir re15_port/build -R "^integration_r41_stage3szenen_a_3061$" --timeout 1200` (Ausloesen per Quadrat, §2.11)
+  -> **`100% tests passed, 0 tests failed out of 1`**
 
 ## §4 OFFEN (je mit Adresse; keiner betrifft das, was der Nutzer in 3060/3061 sieht)
 1. Super_set-Vaterarten 0x40 (Spieler), 0xc0 (Objekt) und Gegner ausserhalb State 4 (Lieferfall nur ROOM4030/4031 sub07

@@ -9,7 +9,8 @@
 #
 # RIEGEL (Unit, Mechanik):
 #   unit_r41_stage3szenen_a_zensus    240 RDTs: Spieler-Plc_motion(2,c) nur 3060 @0x010BE / 3061 @0x011DE; Plc_flg Bit 1/2
-#                                     nur 3061 sub04 (5 Stellen); Super_set nur 3061 @0x0127E und 4030/4031
+#                                     nur 3061 sub04 (5 Stellen); Super_set nur 3061 @0x0127E und 4030/4031; andere
+#                                     Schreiber von +0x1c4 (Member_set/Plc_motion pc[3]/Member_set2) lassen Bit 1/2 stehen
 #   unit_r41_stage3szenen_a_anker     Glied-Anker an Sherrys echter Bank: von einem Original-Stand der Reihe o3061_s3 zum
 #                                     naechsten (Kriech-Takte aus sub04), Abweichung <= 40
 #   unit_r41_stage3szenen_a_superobj  Super_set/Super_reset am echten Bytestrom: Loslass-Lage des Gitters ~ Original
