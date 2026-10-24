@@ -11,8 +11,12 @@
  *   raum3070  echte ROOM3070.RDT, sub00 mit (4,215)/(4,236)/(3,180) = 1: Ada (0x42) + Marvin (0x40) spawnen als ESKORTE
  *             (Verhaltensbyte 0x00, sub00 @0x0343C/@0x03450) und laufen zum SELBEN Folgepunkt (FUN_8005070c, 1500
  *             hinter dem Spieler @0x8011ce78). Gemessen ueber re15_enemy_ai_run_all: sie treffen sich (Abstand < 1000
- *             = nicht vakuant), bleiben aber getrennt (Abstand >= 880 nach dem Einschwingen; Rest = Wandklemme NACH dem
- *             Schub @0x8011cc64) — vor Runde 41 gemessen: 14..23.
+ *             = nicht vakuant), bleiben aber getrennt: Abstand >= Radien-Summe - 20 nach dem Einschwingen. Die 20 sind
+ *             Mechanik, keine Toleranz nach Gefuehl: der Schub laesst je Achse < 1 Einheit Rest (div @0x8002b238 schneidet
+ *             zur Null, dist+1 im Nenner @0x8002b234), und die Wandklemme laeuft NACH dem Schub (@0x8011cc64) und schiebt
+ *             mit dem Hautabstand 18 aus der Zelle (`addiu t1,v0,18` @0x8003bce0 / `addiu a0,a0,-18` @0x8003bce8,
+ *             FUN_8003bca8) — eine an die Wand gedrueckte NPC kann so bis 18 zurueck Richtung Nachbar wandern.
+ *             Vor Runde 41 gemessen: 14..23 (3070) / 4 (3001).
  *   raum3001  dasselbe fuer Elza: ROOM3001 sub00 @0x015A2/@0x015B6 John (0x49) + Sherry (0x4b), (4,198)/(4,199) = 1.
  *   kiste     FUN_8002cdf4 (@0x8002cdf4-cfd0) an den echten ROOM2050-Kisten (sub00 @0x01DB4/@0x01DD6/@0x01DF8): Grenze
  *             |dX| <= hx+hx inklusiv (@0x8002ce80-8c), Gate Bit 0x40 (@0x8002ce0c-24), Y (@0x8002ced0-e0), vertikaler
@@ -29,6 +33,7 @@
 #include "re15_collision.h"
 #include "re15_damage.h"          /* re15_enemy_apply_hitbox */
 #include "re15_kollision_r41.h"
+#include "re15_math.h"            /* re15_squareroot0 = BIOS SquareRoot0 0x80065f60 (Abstand in FUN_8002aec4) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -39,8 +44,7 @@
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
 #endif
 
-extern void scd_register_current_rdt(const re15_rdt_t *rdt);
-extern void scd_thread_start(int slot, const uint8_t *pc);
+extern void scd_register_current_rdt(const re15_rdt_t *rdt);   /* scd_vm.c (Raum-RDT fuer Evt_exec) */
 
 static int fails = 0;
 #define CHECK(c, ...) do { if (!(c)) { printf("FAIL: " __VA_ARGS__); printf("\n"); fails++; } \
@@ -82,27 +86,34 @@ static void teil_npc(void)
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = 50000; pl->y = 0; pl->z = 50000;
     re15_player_apply_hitbox(pl);
 
-    /* (a) Ada (Slot 1) bei (0,0), Marvin (Slot 2) bei (500,0): R = 450+450 (Kasten @0x80121658 +6), dist 500 =
-     *     SquareRoot0(250000) @0x8002b1d8, pen 400 (@0x8002b1e4), Schub dX*pen/(dist+1) = 500*400/501 = 399 (div
-     *     @0x8002b238 schneidet zur Null) -> Marvin x 899; Ada bleibt (sie ist in Marvins Tick der SCHIEBER). */
+    /* (a) Ada (Slot 1) bei (0,0), Marvin (Slot 2) bei (500,0): R = 450+450 (Kasten @0x80121658 +6), dist =
+     *     SquareRoot0(250000) (`jal 0x80065f60` @0x8002b1d8, Tabellen-Naeherung = re15_squareroot0), pen = R - dist
+     *     (@0x8002b1e4), Schub dX*pen/(dist+1) (`mult s1,s0` / `addiu a2,a2,1` / `div v0,a2` @0x8002b22c-238, schneidet
+     *     zur Null); Ada bleibt (sie ist in Marvins Tick der SCHIEBER). */
+    const int32_t d5 = (int32_t)re15_squareroot0(250000u);
+    const int32_t xa = 500 + 500 * (900 - d5) / (d5 + 1);
+    printf("  SquareRoot0(250000) = %d -> erwartet x %d\n", (int)d5, (int)xa);
     npc_setzen(1, 0x42, 0, 0, 0);
     npc_setzen(2, 0x40, 500, 0, 0);
     CHECK(g_actors[1].hit_radius_min == 450 && g_actors[2].hit_radius_min == 450,
           "Kasten +6 = 450 fuer 0x42/0x40 (@0x80121658 `c2 01`)");
     re15_kollision_r41_npc_schwanz(2);
-    CHECK(g_actors[2].x == 899 && g_actors[2].z == 0,
-          "Marvin aus Ada geschoben: x 500 -> %d (erwartet 500 + 500*400/501 = 899), z %d", (int)g_actors[2].x,
-          (int)g_actors[2].z);
+    CHECK(g_actors[2].x == xa && g_actors[2].z == 0 && xa > 880,
+          "Marvin aus Ada geschoben: x 500 -> %d (erwartet 500 + 500*(900-%d)/(%d+1) = %d), z %d", (int)g_actors[2].x,
+          (int)d5, (int)d5, (int)xa, (int)g_actors[2].z);
     CHECK(g_actors[1].x == 0 && g_actors[1].z == 0, "Ada unbewegt (%d,%d) — FUN_8002aec4 bewegt nur a1",
           (int)g_actors[1].x, (int)g_actors[1].z);
 
-    /* (b) Spieler-Schub: Ada bei (0,0), Spieler bei (0,600): pen 300, dz -600 -> -600*300/601 = -299. Marvin steht
-     *     bei 899 (pen 1 -> -899*1/900 = 0, kein Versatz). */
+    /* (b) Spieler-Schub: Ada bei (0,0), Spieler bei (0,600): dz -600 -> -600*(900-d6)/(d6+1). Marvin steht danach
+     *     ausserhalb (wird weit weg gestellt). */
+    g_actors[2].x = 40000; g_actors[2].z = 40000;
     pl->x = 0; pl->z = 600;
+    const int32_t d6 = (int32_t)re15_squareroot0(360000u);
+    const int32_t za = -600 * (900 - d6) / (d6 + 1);
     re15_kollision_r41_npc_schwanz(1);
-    CHECK(g_actors[1].x == 0 && g_actors[1].z == -299,
-          "Ada aus dem SPIELER geschoben (aec4 a0 = 0x800aca54 @0x8011cc40): (%d,%d), erwartet (0,-299)",
-          (int)g_actors[1].x, (int)g_actors[1].z);
+    CHECK(g_actors[1].x == 0 && g_actors[1].z == za && za < -280,
+          "Ada aus dem SPIELER geschoben (aec4 a0 = 0x800aca54 @0x8011cc40): (%d,%d), erwartet (0,%d) (SquareRoot0 %d)",
+          (int)g_actors[1].x, (int)g_actors[1].z, (int)za, (int)d6);
     CHECK(pl->x == 0 && pl->z == 600, "der Spieler bleibt im NPC-Tick stehen (%d,%d)", (int)pl->x, (int)pl->z);
 
     /* (c) Gates: toter Spieler (Port-Abbild der Bit-Gates @0x8002af04-30, wie re15_enemy_selfpush_from_player). */
@@ -124,8 +135,7 @@ static void teil_npc(void)
     re15_kollision_r41_npc_schwanz(1);
     CHECK(g_actors[1].x < 0, "dy 3059 < 3060 -> Schub (x %d)", (int)g_actors[1].x);
 
-    /* (f) Eigene Kaesten: John 0x49 (450) gegen Sherry 0x4b (300 @0x801218c8): Summe 750, dist 600, pen 150 ->
-     *     Sherry x 600 + 600*150/601 = 749. */
+    /* (f) Eigene Kaesten: John 0x49 (450) gegen Sherry 0x4b (300 @0x801218c8): Summe 750, dist = SquareRoot0(360000). */
     re15_actor_init();
     pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->hp = 100; pl->x = 50000; pl->z = 50000; re15_player_apply_hitbox(pl);
@@ -133,11 +143,14 @@ static void teil_npc(void)
     npc_setzen(2, 0x4b, 600, 0, 0);
     CHECK(g_actors[2].hit_radius_min == 300, "Sherry-Kasten +6 = 300 (@0x801218c8 `2c 01`)");
     re15_kollision_r41_npc_schwanz(2);
-    CHECK(g_actors[2].x == 749, "Sherry aus John geschoben: x %d (erwartet 600 + 600*150/601 = 749)", (int)g_actors[2].x);
+    const int32_t xs = 600 + 600 * (750 - d6) / (d6 + 1);
+    CHECK(g_actors[2].x == xs && xs > 730, "Sherry aus John geschoben: x %d (erwartet 600 + 600*(750-%d)/(%d+1) = %d)",
+          (int)g_actors[2].x, (int)d6, (int)d6, (int)xs);
 }
 
 /* ------------------------------------------------------------------------------------------ raum ------ */
-static int raum_laden(const char *rel, unsigned id, const int (*flags)[2], int nflags, uint8_t **buf_out)
+static int raum_laden(const char *rel, unsigned id, const int (*flags)[2], int nflags, int32_t px, int32_t pz,
+                      int16_t prot, uint8_t **buf_out)
 {
     char path[600];
     snprintf(path, sizeof path, RE15_ASSET_PSX_DIR "/%s", rel);
@@ -151,20 +164,25 @@ static int raum_laden(const char *rel, unsigned id, const int (*flags)[2], int n
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     re15_collision_set_band(0);
     for (int i = 0; i < nflags; i++) re15_game_flag_set((uint8_t)flags[i][0], (uint8_t)flags[i][1], 1);
-    scd_register_current_rdt(&g_room_rdt);
-    if (g_room_rdt.main_scd) scd_thread_start(0, g_room_rdt.main_scd);
-    if (g_room_rdt.sub_scd[0]) scd_thread_start(1, g_room_rdt.sub_scd[0]);
-    for (int i = 0; i < 60; i++) scd_vm_tick();
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = px; pl->y = 0; pl->z = pz; pl->rot_y = prot;
+    re15_player_apply_hitbox(pl);
+    g_room_change.pending = 0;
+    scd_room_reenter(&g_room_rdt, px, pz, 0);          /* main00 + sub00 wie beim Raumstart (Debug-Sprung: Cut 0) */
+    for (int i = 0; i < 10; i++) scd_vm_tick();
     *buf_out = buf;
     return 0;
 }
 
+/* Spieler-Weg der Raum-Sonde: ab Bild <bild> steht der Spieler bei (x,z) mit Blick <rot>. */
+typedef struct { int bild; int32_t x, z; int16_t rot; } weg_t;
+
 static void teil_raum(const char *rel, unsigned id, const int (*flags)[2], int nflags, uint8_t ta, uint8_t tb,
-                      int32_t px, int32_t pz, int16_t prot, int32_t summe, int32_t min_soll)
+                      const weg_t *weg, int nweg, const int32_t *start_ab, int32_t summe, int32_t min_soll)
 {
     printf("=== (1) %s: zwei Eskorten (Typ 0x%02x + 0x%02x) folgen demselben Punkt ===\n", rel, ta, tb);
     uint8_t *buf = NULL;
-    if (raum_laden(rel, id, flags, nflags, &buf) != 0) return;
+    if (raum_laden(rel, id, flags, nflags, weg[0].x, weg[0].z, weg[0].rot, &buf) != 0) return;
     int sa = -1, sb = -1;
     for (int s = 1; s < RE15_ACTOR_MAX; s++) {
         if (!g_actors[s].active) continue;
@@ -173,16 +191,23 @@ static void teil_raum(const char *rel, unsigned id, const int (*flags)[2], int n
     }
     CHECK(sa > 0 && sb > 0, "beide NPC gespawnt (Slots %d/%d)", sa, sb);
     if (sa < 0 || sb < 0) { free(buf); return; }
-    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = px; pl->y = 0; pl->z = pz; pl->rot_y = prot;
-    re15_player_apply_hitbox(pl);
     re15_actor_t *a = &g_actors[sa], *b = &g_actors[sb];
-    printf("  Spawn: 0x%02x (%d,%d) / 0x%02x (%d,%d), Spieler (%d,%d) Blick %d\n", a->type, (int)a->x, (int)a->z,
-           b->type, (int)b->x, (int)b->z, (int)px, (int)pz, (int)prot);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    printf("  Spawn: 0x%02x (%d,%d) / 0x%02x (%d,%d)\n", a->type, (int)a->x, (int)a->z, b->type, (int)b->x, (int)b->z);
+    if (start_ab) {   /* Startlage aus der Messung VORHER (dort standen sie ineinander) */
+        a->x = start_ab[0]; a->z = start_ab[1]; b->x = start_ab[2]; b->z = start_ab[3];
+        printf("  Startlage gesetzt: (%d,%d) / (%d,%d), Abstand %d\n", (int)a->x, (int)a->z, (int)b->x, (int)b->z,
+               (int)abstand(a, b));
+    }
     int32_t ax0 = a->x, az0 = a->z, bx0 = b->x, bz0 = b->z;
     int32_t dmin = 0x7fffffff, dmin_f = -1, kontakt = 0, dend = 0;
-    int eskorte = 0;
+    int eskorte = 0, wi = 0;
     for (int f = 0; f < 900; f++) {
+        while (wi < nweg && weg[wi].bild <= f) {
+            pl->x = weg[wi].x; pl->z = weg[wi].z; pl->rot_y = weg[wi].rot;
+            printf("  Bild %d: Spieler (%d,%d) Blick %d\n", f, (int)pl->x, (int)pl->z, (int)pl->rot_y);
+            wi++;
+        }
         re15_enemy_ai_run_all(0);
         if (a->state == 1 && b->state == 1) eskorte++;
         int32_t d = abstand(a, b);
@@ -219,7 +244,7 @@ static void teil_kiste(void)
 {
     printf("=== (2) ROOM2050: Objekt-gegen-Objekt-Pass FUN_8002bd44 @0x8002c03c-c0a8 / FUN_8002cdf4 ===\n");
     uint8_t *buf = NULL;
-    if (raum_laden("STAGE2/ROOM2050.RDT", 0x2050, NULL, 0, &buf) != 0) return;
+    if (raum_laden("STAGE2/ROOM2050.RDT", 0x2050, NULL, 0, -2700, -64, 0, &buf) != 0) return;
     int p1 = prop_von_obj(1), p2 = prop_von_obj(2), p3 = prop_von_obj(3);
     CHECK(p1 >= 0 && p2 >= 0 && p3 >= 0, "Raetsel-Kisten obj 1/2/3 installiert (Pool-Plaetze %d/%d/%d)", p1, p2, p3);
     if (p1 < 0 || p2 < 0 || p3 < 0) { free(buf); return; }
@@ -276,10 +301,16 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "npc")) teil_npc();
     else if (!strcmp(teil, "raum3070")) {
         static const int fl[3][2] = { {4, 215}, {4, 236}, {3, 180} };
-        teil_raum("STAGE3/ROOM3070.RDT", 0x3070, fl, 3, 0x42, 0x40, -9701, -17922, 1440, 900, 880);
+        /* Spieler wie im exe-Lauf npc3070_nachher (Endlage F1450) */
+        static const weg_t w[1] = { {0, -9701, -17922, 1440} };
+        teil_raum("STAGE3/ROOM3070.RDT", 0x3070, fl, 3, 0x42, 0x40, w, 1, NULL, 900, 880);
     } else if (!strcmp(teil, "raum3001")) {
         static const int fl[2][2] = { {4, 198}, {4, 199} };
-        teil_raum("STAGE3/ROOM3001.RDT", 0x3001, fl, 2, 0x49, 0x4b, -23000, -16000, 0, 750, 730);
+        /* Spawn Fall 0 (sub00 Switch work_vars[0x0A] = 0 @0x015CE: John (-23363,-14359), Sherry (-23600,-15799)); der
+         * Spieler steht im Gang z -13378, den beide im exe-Lauf npc3001_vorher gemeinsam liefen (dort Abstand 4 bei F309),
+         * erst bei x -20000, ab Bild 400 bei x -16000 (Blick Ost) -> derselbe Folgepunkt 1500 hinter ihm. */
+        static const weg_t w[2] = { {0, -20000, -13378, 0}, {400, -16000, -13378, 0} };
+        teil_raum("STAGE3/ROOM3001.RDT", 0x3001, fl, 2, 0x49, 0x4b, w, 2, NULL, 750, 730);
     } else if (!strcmp(teil, "kiste")) teil_kiste();
     else { printf("unbekannter Teil '%s'\n", teil); return 2; }
     if (fails) { printf("\nR41 KOLLISION [%s]: FAIL (%d)\n", teil, fails); return 1; }

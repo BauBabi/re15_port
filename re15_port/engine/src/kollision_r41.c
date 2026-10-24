@@ -61,7 +61,8 @@ void re15_kollision_r41_npc_schwanz(int slot)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     if (pl->active && pl->hp >= 0 && pl->hit_radius_min != 0) {
         const int32_t vx = e->x, vz = e->z;
-        if (re15_body_push(pl, (int32_t)pl->hit_radius_min, e, (int32_t)e->hit_radius_min) && lf)
+        if (re15_body_push(pl, (int32_t)pl->hit_radius_min, e, (int32_t)e->hit_radius_min) && lf &&
+            (e->x != vx || e->z != vz))   /* Log nur bei echtem Versatz (pen 1 -> 0 Einheiten) */
             fprintf(lf, "F%u room=%04X NPC-SCHUB slot=%d typ=%02x von=SPIELER vor=(%d,%d) nach=(%d,%d)\n",
                     g_engine.frame_count, g_current_room_id, slot, (unsigned)e->type, (int)vx, (int)vz,
                     (int)e->x, (int)e->z);
@@ -74,7 +75,8 @@ void re15_kollision_r41_npc_schwanz(int slot)
         if (!z2->active || z2->hit_radius_min == 0) continue;          /* @0x8002b578 (+ Kasten) */
         if (z2->state == (uint8_t)RE15_AI_STATE_CORPSE) continue;      /* Port-Abbild Bit 2 (wie re15_enemy_body_push_tail) */
         const int32_t vx = e->x, vz = e->z;
-        if (re15_body_push(z2, (int32_t)z2->hit_radius_min, e, (int32_t)e->hit_radius_min) && lf)
+        if (re15_body_push(z2, (int32_t)z2->hit_radius_min, e, (int32_t)e->hit_radius_min) && lf &&
+            (e->x != vx || e->z != vz))
             fprintf(lf, "F%u room=%04X NPC-SCHUB slot=%d typ=%02x von=%d typ=%02x vor=(%d,%d) nach=(%d,%d) "
                         "andere=(%d,%d)\n",
                     g_engine.frame_count, g_current_room_id, slot, (unsigned)e->type, o, (unsigned)z2->type,
