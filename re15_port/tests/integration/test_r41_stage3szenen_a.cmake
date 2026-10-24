@@ -6,8 +6,10 @@
 #
 #   3060  Punkt 1 "Animation von Marvin ... am Ende seiner Abschnitte ... ROOM 3060": Leon -> ROOM3020, Szene sub02
 #         (RE15_FORCE_EVENT 2 = Aot slot 3 @0x00BE2 -> Evt_exec sub 2) macht ihn zu Marvin (Save 0x10 = 0x0D @0x00D7A),
-#         Tuer -> ROOM30C0; Sprung ROOM3040, dort die TUER Slot 0 (@0x0127E, 4:196 gesetzt) -> ROOM3060 = der Weg des
-#         Spiels. Erwartet: Marvin-Modell PL0D, Tuer-Ankunft (2063,-17192), sub03 Plc_motion(2,6) @0x010BE spielt
+#         Tuer -> ROOM30C0; Sprung ROOM3040 an den Ankunftspunkt der Gegentuer (ROOM3060 Slot 2 @0x00ED6 next_pos
+#         (-8900,0,-26300)), Blick 1024 zur Tuer, QUADRAT (kein RE15_FIRE_AOT; Nachbesserung 1, Hinweis H1 der Abnahme J 0)
+#         -> TUER Slot 0 (@0x0127E, 4:196 gesetzt) -> ROOM3060 = der Weg des Spiels.
+#         Erwartet: Marvin-Modell PL0D, Tuer-Ankunft (2063,-17192), sub03 Plc_motion(2,6) @0x010BE spielt
 #         W-Bank-Clip 6 (PL00W01, 10 Bilder) und haelt Bild 9 (@0x80050fec) — nie PL00-Clip 6 (50 Bilder = Knien).
 #   3061  Punkt 2 (Elza): Spielstand ROOM3061 (Elza (-3500,-25500) Blick 1024 = nach -z, Bits 4:244 + 3:160) + CONTINUE;
 #         nach Sherrys/Johns Einlauf (sub09/sub10) geht Elza nach -z bis an die Wand ins Ausloese-Rechteck von Slot 1
@@ -110,10 +112,11 @@ endfunction()
 if(TEIL STREQUAL "3060")
     set(WORKDIR "${_basisdir}/lauf")
     file(MAKE_DIRECTORY "${WORKDIR}")
+    unset(ENV{RE15_FIRE_AOT})   # Tuer nur per Quadrat (Nachbesserung 1, H1): keinen Abkuerzungs-Schalter des Aufrufers erben
     re15_start_spiel(_rv 900
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
         "RE15_SET_FLAG=4:199,4:196" RE15_GOTO_ROOM=3020 "RE15_FORCE_EVENT=2@150"
-        RE15_DEBUG_JUMP=3040@1150 "RE15_FIRE_AOT=0@1200#3040"
+        RE15_DEBUG_JUMP=3040@1150 "RE15_PLAYER_POS=-8900,-26300,1024,0"
         "RE15_INPUT_SCRIPT=${_druck}" "RE15_ANIM_TRACE=anim.txt" "RE15_EXIT_AT=104#3060"
         "${_exe}")
     if(NOT EXISTS "${WORKDIR}/debug.log")
@@ -130,10 +133,20 @@ if(TEIL STREQUAL "3060")
         else()
             fail("kein Wechsel auf PL0D vor ROOM3060")
         endif()
-        if(_d MATCHES "DOOR FIRE slot=0 [^\n]*spawn=\\(2063,0,-17192\\)")
-            ok("Tuer ROOM3040 Slot 0 -> ROOM3060 Ankunft (2063,0,-17192)")
+        if(_d MATCHES "JUMP-Spawn ersetzt durch RE15_PLAYER_POS \\(-8900,-26300\\) rot=1024")
+            ok("Sprung ROOM3040 an den Ankunftspunkt (-8900,-26300) der Gegentuer, Blick 1024 zur Tuer")
         else()
-            fail("keine Tuer ROOM3040 Slot 0 mit Ankunft (2063,0,-17192)")
+            fail("Sprung-Spawn ROOM3040 nicht (-8900,-26300) rot=1024")
+        endif()
+        if(_d MATCHES "DOOR FIRE slot=0 rect=\\(-8800,-26950,[^\n]*spawn=\\(2063,0,-17192\\)")
+            ok("Tuer ROOM3040 Slot 0 per Quadrat (Rechteck @0x0127E) -> ROOM3060 Ankunft (2063,0,-17192)")
+        else()
+            fail("keine Tuer ROOM3040 Slot 0 (Rechteck -8800,-26950) mit Ankunft (2063,0,-17192)")
+        endif()
+        if(_d MATCHES "\\[fire-aot\\]")
+            fail("[fire-aot]-Zeile im debug.log - die Tuer muss per Quadrat feuern, nicht per RE15_FIRE_AOT")
+        else()
+            ok("kein RE15_FIRE_AOT: die Tuer feuerte per Quadrat")
         endif()
         string(SUBSTRING "${_d}" ${_p60} -1 _d60)
         if(_d60 MATCHES "\\[wclip41\\] ROOM3060 F[0-9]+ Spieler Plc_motion\\(2,6\\) -> W-Bank-Clip 6 [^\n]*Waffe 1, 10 Bilder")

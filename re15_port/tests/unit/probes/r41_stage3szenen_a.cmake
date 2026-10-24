@@ -10,13 +10,17 @@
 # RIEGEL (Unit, Mechanik):
 #   unit_r41_stage3szenen_a_zensus    240 RDTs: Spieler-Plc_motion(2,c) nur 3060 @0x010BE / 3061 @0x011DE; Plc_flg Bit 1/2
 #                                     nur 3061 sub04 (5 Stellen); Super_set nur 3061 @0x0127E und 4030/4031; andere
-#                                     Schreiber von +0x1c4 (Member_set/Plc_motion pc[3]/Member_set2) lassen Bit 1/2 stehen
+#                                     Schreiber von +0x1c4 (Member_set/Plc_motion pc[3]/Member_set2) lassen Bit 1/2 stehen;
+#                                     Nachbesserung 1 (Abnahme J 0, M2): Gegner 0 bei 4030/4031 sub07 (Typ 0x2D bzw. John
+#                                     0x49 nur bei 3:88 = 0), Set 3:87 = 1 nur 4040/4041, Glieder der Aufzugs-Kette 4031
 #   unit_r41_stage3szenen_a_anker     Glied-Anker an Sherrys echter Bank: von einem Original-Stand der Reihe o3061_s3 zum
-#                                     naechsten (Kriech-Takte aus sub04), Abweichung <= 40
-#   unit_r41_stage3szenen_a_superobj  Super_set/Super_reset am echten Bytestrom: Loslass-Lage des Gitters ~ Original
+#                                     naechsten (Kriech-Takte aus sub04), bytegleich (Abweichung 0)
+#   unit_r41_stage3szenen_a_superobj  Super_set/Super_reset am echten Bytestrom: Loslass-Lage des Gitters = Original
+#                                     (Abweichung (0,0,0)); Vater ausserhalb State 4 -> uebersprungen
 #   unit_r41_stage3szenen_a_wclip     Plc_motion(2,6) -> W-Bank-Clip 6, Halten auf Bild 9, Ende bei Befehl/Raumwechsel
 # INTEGRATION (echte exe, tests/integration/test_r41_stage3szenen_a.cmake):
-#   integration_r41_stage3szenen_a_3060  Marvin ueber Szene 3020 + Tuer 3040 -> 3060: W-Bank-Clip 6 gehalten (kein Knien)
+#   integration_r41_stage3szenen_a_3060  Marvin ueber Szene 3020 + Tuer 3040 -> 3060 per QUADRAT an der Tuer (Nachbesserung 1,
+#                                        Hinweis H1): W-Bank-Clip 6 gehalten (kein Knien)
 #   integration_r41_stage3szenen_a_3061  Elza Spielstand + CONTINUE + Quadrat am AOT: Gitter, Anker-Takte, Sherry im
 #                                        Schacht, Elza W-Bank-Clip 6 gehalten, Wechsel nach 30C1 (PL0F)
 add_executable(test_r41_stage3szenen_a ${CMAKE_CURRENT_LIST_DIR}/../test_r41_stage3szenen_a.c)

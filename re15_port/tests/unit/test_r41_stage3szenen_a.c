@@ -9,7 +9,10 @@
  *   zensus    alle 240 RDTs (Work_set-Verfolgung je Sub): Spieler-Plc_motion(2,c) NUR ROOM3060 @0x010BE und ROOM3061
  *             @0x011DE (beide c = 6); Plc_flg mit Bit 1/2 NUR ROOM3061 sub04 (5 Stellen); Super_set NUR ROOM3061 @0x0127E
  *             und ROOM4030/4031 — der Umfang, fuer den die neuen Wege gelten; kein anderer Schreiber von +0x1c4
- *             (Member_set 0x34, Plc_motion pc[3], Member_set2 0x35 der Kriechtor-Maschine) setzt Bit 1/2
+ *             (Member_set 0x34, Plc_motion pc[3], Member_set2 0x35 der Kriechtor-Maschine) setzt Bit 1/2.
+ *             Nachbesserung 1 (Abnahme J 0, M2): Gegner 0 bei 4030/4031 sub07 (4030 @0x0052C Typ 0x2D; 4031 @0x00556
+ *             John 0x49 nur bei 3:88 = 0, sonst @0x00586 Typ 0x2D), Set 3:87 = 1 nur ROOM4040/4041 @0x01020, Set 3:78 = 1
+ *             nur sub06 4030/4031, Glieder der Aufzugs-Kette in ROOM4031 (Slot 5 nur bei 3:87 -> sub02 -> sub06 -> sub07)
  *   anker     Glied-Anker FUN_800369f8 an Sherrys echter Bank (CDEMD1 Typ 0x4B + ROOM3061 RBJ rec1): Kriech-Takte aus sub04
  *             (SET 4/6/5/4) ab einem Original-Stand, Ziel = der naechste Original-Stand der dichten Reihe o3061_s3 —
  *             bytegleich (Abweichung 0)
@@ -72,6 +75,15 @@ typedef struct { unsigned room; long off; int wert; } fund_t;
  * Plc_motion pc[3] (@0x80041bc8 `sh a1,452(v0)` = SET), Member_set2 0x35 aus einer Variable (Calc 0x26 op = pc[2],
  * dst = pc[3], imm = pc[4..5]; Member_get 0x3D var = pc[1] <- Member pc[2], scd_vm.c op_member_get @0x80041238). */
 static int s_ms_10, s_pm_flags, s_ms2_10, s_ms2_10_unsicher;
+/* Nachbesserung 1 (Abnahme J 0, Mangel M2): wer Gegner 0 ist, wenn ROOM4030/4031 sub07 Super_set `48 00 80 81` laeuft,
+ * und welche Raeume die Bits der Aufzugs-Kette setzen (SCD-Set-Zensus 0x22: Bank 3 Bit 87 / 78, Wert 1). */
+static fund_t s_set87[8], s_set78[8], s_em0[8];
+static int s_n87, s_n78, s_nem0;
+static int hat(const fund_t *f, int n, unsigned room, long off, int wert)
+{
+    for (int i = 0; i < n; i++) if (f[i].room == room && f[i].off == off && f[i].wert == wert) return 1;
+    return 0;
+}
 static int16_t les16(const uint8_t *p) { return (int16_t)le16(p); }
 /* Sprungziel vorwaerts wie tools/scd_dump_room.py fwd_target (Ifel 0x06, Else 0x07, For/For2 0x0D/0x1B, While/Do/Switch
  * 0x0F/0x11/0x13, 0x14, 0x17) — ein Evt_end beendet den Sub nur, wenn kein Sprung dahinter zeigt. */
@@ -109,6 +121,12 @@ static void zensus_sub(unsigned room, const re15_rdt_t *rdt, const uint8_t *p, l
             fl[*nfl].room = room; fl[*nfl].off = datei_off; fl[*nfl].wert = le16(q + 2); (*nfl)++; }
         if (q[0] == 0x48 && *nss < 16) {                                                 /* Super_set */
             ss[*nss].room = room; ss[*nss].off = datei_off; ss[*nss].wert = q[2] | (q[3] << 8); (*nss)++; }
+        if (q[0] == 0x22 && q[1] == 3 && q[3] == 1 && q[2] == 87 && s_n87 < 8) {         /* Set 3:87 = 1 */
+            s_set87[s_n87].room = room; s_set87[s_n87].off = datei_off; s_set87[s_n87].wert = 87; s_n87++; }
+        if (q[0] == 0x22 && q[1] == 3 && q[3] == 1 && q[2] == 78 && s_n78 < 8) {         /* Set 3:78 = 1 */
+            s_set78[s_n78].room = room; s_set78[s_n78].off = datei_off; s_set78[s_n78].wert = 78; s_n78++; }
+        if (q[0] == 0x44 && q[1] == 0 && (room == 0x4030 || room == 0x4031) && s_nem0 < 8) {   /* Sce_em_set Gegner 0 */
+            s_em0[s_nem0].room = room; s_em0[s_nem0].off = datei_off; s_em0[s_nem0].wert = q[2]; s_nem0++; }
         if (q[0] == 0x34 && q[1] == 0x10 && (le16(q + 2) & 3u)) s_ms_10++;              /* Member_set(16, Bit 1/2) */
         if (q[0] == 0x3F && (q[3] & 3u)) s_pm_flags++;                                   /* Plc_motion pc[3] Bit 1/2 */
         if (q[0] == 0x3D) vstat[q[1]] = (uint8_t)(q[2] == 0x10 ? 1 : 0);                 /* Member_get var <- Member */
@@ -166,6 +184,44 @@ static void t_zensus(void)
     }
     CHECK(nss == 3 && ss3061 == 1 && ss4030 == 2,
           "Super_set: %d Stellen (Soll 3: ROOM3061 @0x0127E Gegner 0 Teil 14, ROOM4030/4031 Gegner 0 Teil 1)", nss);
+    /* Nachbesserung 1 (Abnahme J 0, Mangel M2): Gegner 0 bei ROOM4030/4031 sub07 und die Erreichbarkeit des
+     * John-Falls (Kopf re15_superobj_r41.h, Dossier "Nachbesserung 1"). */
+    for (int i = 0; i < s_nem0; i++)
+        printf("        Sce_em_set Gegner 0 ROOM%04X @0x%05lX Typ 0x%02X\n", s_em0[i].room, s_em0[i].off, s_em0[i].wert);
+    CHECK(s_nem0 == 3 && hat(s_em0, s_nem0, 0x4030, 0x0052C, 0x2D) && hat(s_em0, s_nem0, 0x4031, 0x00556, 0x49) &&
+          hat(s_em0, s_nem0, 0x4031, 0x00586, 0x2D),
+          "Sce_em_set Gegner 0 in ROOM4030/4031: %d Stellen (Soll 3: 4030 @0x0052C Typ 0x2D; 4031 @0x00556 John 0x49 bei "
+          "3:88 = 0, @0x00586 Typ 0x2D bei 3:88 = 1)", s_nem0);
+    for (int i = 0; i < s_n87; i++) printf("        Set 3:87 = 1 ROOM%04X @0x%05lX\n", s_set87[i].room, s_set87[i].off);
+    for (int i = 0; i < s_n78; i++) printf("        Set 3:78 = 1 ROOM%04X @0x%05lX\n", s_set78[i].room, s_set78[i].off);
+    CHECK(s_n87 == 2 && hat(s_set87, s_n87, 0x4040, 0x01020, 87) && hat(s_set87, s_n87, 0x4041, 0x01020, 87),
+          "Set 3:87 = 1: %d Stellen (Soll 2: nur ROOM4040/4041 @0x01020 - erst danach setzt main00 von 4030/4031 den "
+          "Aufzugs-AOT Slot 5)", s_n87);
+    CHECK(s_n78 == 2 && hat(s_set78, s_n78, 0x4030, 0x0068C, 78) && hat(s_set78, s_n78, 0x4031, 0x006CE, 78),
+          "Set 3:78 = 1: %d Stellen (Soll 2: nur sub06 der Aufzugsfahrt, ROOM4030 @0x0068C / ROOM4031 @0x006CE)", s_n78);
+    {   /* Glieder der Kette in ROOM4031 (Datei-Offsets und Bytes wie tools/scd_dump_room.py) */
+        static const struct { long off; int len; uint8_t by[6]; const char *was; } g[] = {
+            { 0x004FA, 4, { 0x21, 0x03, 0x57, 0x00 }, "main00 Ck 3:87 = 0 (Ifel @0x004F6; dann nur Slot 6 sce 1)" },
+            { 0x00516, 4, { 0x2c, 0x05, 0x05, 0x31 }, "main00 Else: Aot_set Slot 5 sce 5 (Aufzug)" },
+            { 0x00552, 4, { 0x21, 0x03, 0x58, 0x00 }, "main00 Ck 3:88 = 0 (Ifel @0x0054E)" },
+            { 0x00620, 6, { 0x14, 0x00, 0x0a, 0x00, 0x05, 0x00 }, "sub01 Case 5" },
+            { 0x0062A, 4, { 0x04, 0xff, 0x18, 0x02 }, "sub01 Evt_exec sub02" },
+            { 0x0068E, 2, { 0x18, 0x06 }, "sub02 Gosub sub06" },
+            { 0x006DA, 4, { 0x04, 0xff, 0x18, 0x07 }, "sub06 Evt_exec sub07" },
+            { 0x00722, 4, { 0x48, 0x00, 0x80, 0x81 }, "sub07 Super_set Gegner 0 Teil 1" },
+            { 0x0075C, 4, { 0x22, 0x03, 0x58, 0x01 }, "sub08 Set 3:88 = 1 (erster Befehl)" },
+        };
+        char p[600]; snprintf(p, sizeof p, "%s/STAGE4/ROOM4031.RDT", RE15_ASSET_PSX_DIR);
+        long n = 0; uint8_t *b = datei(p, &n);
+        int gut = 0, ng = (int)(sizeof g / sizeof g[0]);
+        for (int i = 0; b && i < ng; i++) {
+            int ok1 = (g[i].off + g[i].len <= n) && !memcmp(b + g[i].off, g[i].by, (size_t)g[i].len);
+            if (ok1) gut++; else printf("        ROOM4031 @0x%05lX weicht ab: %s\n", g[i].off, g[i].was);
+        }
+        free(b);
+        CHECK(gut == ng, "ROOM4031 Glieder der Aufzugs-Kette: %d/%d Byte-Folgen wie belegt (Slot 5 nur bei 3:87, sub01 Case 5 "
+              "-> sub02 -> sub06 -> sub07, sub08 setzt 3:88)", gut, ng);
+    }
     /* Damit wirkt der Executor-Wechsel (enemy_ai_common.c @0x80050c6c/@0x80050c94) nur in ROOM3061 sub04. */
     CHECK(s_ms_10 == 0 && s_pm_flags == 0 && s_ms2_10 == 86 && s_ms2_10_unsicher == 0,
           "andere Schreiber von +0x1c4 Bit 1/2: Member_set(16) %d, Plc_motion pc[3] %d, Member_set2(16) %d Stellen, davon %d "
