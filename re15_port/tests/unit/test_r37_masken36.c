@@ -734,8 +734,13 @@ static int r41_form(int i, const r41_zellen_modell_t *k, double x, double z)
 }
 
 /* Koerper der Modellzelle von Rechteck `rect` vor dem Figurpunkt F (Welt)? A = Kameraort.
- * -> 1 ja; 0 kein Modell; -1 Kamera im Koerper; -3 Strecke verfehlt den Koerper. Liegt F IM Koerper (Kamera draussen), tritt
- * die Strecke vor F in den Koerper ein - F ist von dessen Oberflaeche verdeckt (1), wie jeder Punkt hinter ihm. */
+ * -> 1 ja; 0 kein Modell; -1 Kamera ueber/im Grundriss der Zelle (kein Urteil); -3 Strecke verfehlt den Koerper. Liegt F IM
+ * Koerper (Kamera draussen), tritt die Strecke vor F in den Koerper ein - F ist von dessen Oberflaeche verdeckt (1).
+ * Kein Urteil, wenn die Kamera UEBER dem Grundriss der Zelle steht (Nachbesserung 2, gemessen ROOM5050 Cut 2, Pult vorn: Kamera
+ * (-24301,-3719,-23493) ueber der Zelle x -27872..-24102 z -25960..-20835, Hoehe 3475): der Koerper liegt dann im Nahfeld, die
+ * Strahlen treten durch den Deckel ein - das Urteil haengt allein an der gemessenen Hoehe, und die Rechteck-Tiefe faellt gegen 0
+ * (Rechteck 55: Tiefe 6); die unabhaengige Gegenprobe fand dort 381 verdeckte Punkte ohne jeden Koerper davor. Solche Rechtecke
+ * entscheidet weiter das Grundriss-Netz allein (wie vor NB2). */
 static int r41_koerper_davor(unsigned raum, int cut, int rect, const double A[3], double fx, double fy, double fz)
 {
     int i = -1, n, kk; const r41_zellen_modell_t *k = r41_modell(raum, cut, rect, &i);
@@ -744,7 +749,7 @@ static int r41_koerper_davor(unsigned raum, int cut, int rect, const double A[3]
     y0 = -(double) k->band * BAND_Y; yhi = y0; ylo = k->saeule ? -1e12 : y0 + k->hoehe;
     B[0] = fx; B[1] = fy; B[2] = fz;
     D[0] = B[0] - A[0]; D[1] = B[1] - A[1]; D[2] = B[2] - A[2];
-    if (A[1] >= ylo && A[1] <= yhi && r41_form(i, k, A[0], A[2])) return -1;    /* Kamera im Koerper: kein Urteil */
+    if (A[0] >= k->x && A[0] <= k->x + k->w && A[2] >= k->z && A[2] <= k->z + k->d) return -1;   /* Kamera ueber/im Grundriss */
     {   /* Strecke gegen die drei Achsen-Schichten des Huellkoerpers */
         const double lo[3] = { (double) k->x, ylo, (double) k->z }, hi[3] = { (double) k->x + k->w, yhi, (double) k->z + k->d };
         int ax;
@@ -770,7 +775,7 @@ static int r41_koerper_davor(unsigned raum, int cut, int rect, const double A[3]
 }
 
 /* Werkzeug "warum" (kein Riegel): je Rechteck die Gruende der Fehlverdeckungen in der Runde, in der es ausgeschlossen wird:
- * [0] Punkt ohne Modell, [1] Kamera im Koerper, [2] Punkt im Koerper, [3] Strecke verfehlt den Koerper, [4] Schranke
+ * [0] Punkt ohne Modell, [1] Kamera ueber dem Grundriss, [2] (frei), [3] Strecke verfehlt den Koerper, [4] Schranke
  * "Kasten breiter als das Bild", [5] Schranke "Spalte halb hinter der Kamera". */
 static int g_r41_diag;
 static long g_r41_grund[RE15_PRI_MAX_MASKS_PER_CUT][6];
@@ -1162,7 +1167,7 @@ static void warum_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, const
     for (m = 0; m < pri->draw_count; m++) {
         int idx = -1; const r41_zellen_modell_t *k = r41_modell(raum, cut, m, &idx);
         if (k && E->aus[m] && !(raum & 1u)) {
-            printf("  WARUM %04X C%-2d R%-3d aus (Modell Typ %d Band %d Hoehe %d): ohneModell %ld KameraImKoerper %ld PunktImKoerper "
+            printf("  WARUM %04X C%-2d R%-3d aus (Modell Typ %d Band %d Hoehe %d): ohneModell %ld KameraUeberGrundriss %ld PunktImKoerper "
                    "%ld verfehlt %ld SchrankeBreit %ld SchrankeHalb %ld (Stehplaetze %ld)\n", raum, cut, m, k->typ, k->band, k->hoehe,
                    g_r41_grund[m][0], g_r41_grund[m][1], g_r41_grund[m][2], g_r41_grund[m][3], g_r41_grund[m][4], g_r41_grund[m][5],
                    E->stehplaetze);
@@ -1942,7 +1947,7 @@ int main(int argc, char **argv)
         saaten_sammeln();
         g_r41_diag = 1;
         alle_sektionen(1, 0, warum_zeile, summe);
-        printf("  Modell-Rechtecke (Leon): an %ld, aus %ld | Rechtecke mit Grund: ohneModell %ld KameraImKoerper %ld PunktImKoerper %ld "
+        printf("  Modell-Rechtecke (Leon): an %ld, aus %ld | Rechtecke mit Grund: ohneModell %ld KameraUeberGrundriss %ld PunktImKoerper %ld "
                "verfehlt %ld SchrankeBreit %ld SchrankeHalb %ld\nOK\n", summe[7], summe[6], summe[0], summe[1], summe[2], summe[3],
                summe[4], summe[5]);
         return 0;
