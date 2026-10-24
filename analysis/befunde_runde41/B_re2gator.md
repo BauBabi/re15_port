@@ -1308,3 +1308,17 @@ Anschwimm-Sperre +0x1C0 & 4, Hals-Zielmodus OFFEN mit Beleg) -> Bau -> gezielte 
   @0x8009db14/@0x8009daf4). Fuer die RE2-Kampfmusik (Spur F): ROOM40A0 sub11 startet die Musik mit dem Intro -
   `Sce_bgm_control 51 00 01 00 78 40` @SCD-main 0x071F (vor `Member_set2` @0x0730), weitere Aufrufe `51 00 05 00 00 00`
   @0x0762 / @0x078A (Walker re2_scd_walk.py; Bedeutung der Bytes nicht in dieser Spur belegt).
+
+## 12. Nachbesserung 4 (Abnahme 3, B_abnahme_3.md; Beginn 2026-10-24 10:14, HEAD d4e36ca6)
+
+Neuer Agent (Nachbesserung 4). Baum sauber (`status --porcelain` leer), HEAD d4e36ca6 (= 47efb932 + Abnahmebericht 3).
+Code-Stand = der von der Abnahme 3 gebaute und gemessene Stand (47efb932) - deren Messungen (Pruefer-Scratchpad
+`B41abn3/mess/<Lauf>/`, Sonde `B41abn3/probe/probe_abnahme3.c`) gelten als "Messung vorher", sofern hier nicht neu gemessen.
+Eigene Laeufe unter `.../scratchpad/B41nb4/`. Pflichtlektuere: B_abnahme_3.md (M1/M2), AUFTRAG.md (Wortlaut, B1-B9,
+Nachtrag 6), VERTRAG.md, Dossier §2/§10/§11, Memory reai-v2-gator-bosskampf.md (Selbst-Befreiung = Sweep-Klasse (3)
+v0.7.65, Garantie unit_gator_sweep 0/3286).
+
+Plan: M1 (Kanister-Weltlage + Effekt-Quellmatrizen aus der Pose des gezeichneten Bildes; Riegel "gezeichnete Lage =
+Part6(Bild) x lokal" bei Wende, Biss, Befreiung; Bildbeleg C3 F1276-F1284 vorher/nachher) -> M2 (Befreiung ohne
+Sofort-Snap, PORT-WAHL benannt; in CHASE/GUARD keine Gier-Aenderung > 0x60 je Bild ausser den RE2-Knicken +1024;
+Riegel auf die Lagen E1 und C3 ueber >= 300 Bilder; Bildbeleg) -> Bau -> gezielte Tests (Sweep!) -> exe nachher -> Abschluss.
