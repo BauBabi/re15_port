@@ -448,6 +448,30 @@ Bands kreuzt ODER (neu) die Strecke Kamera -> F den Koerper der Modell-Zelle des
 nicht im Koerper). Die Regel nimmt nur dazu - kein bisher gezeichnetes Rechteck faellt dadurch weg. Rechtecke mit Modell bekommen die
 Zellen-Tiefe (auch naeher als die alte); was danach weiter aus ist, bekommt die alte Tiefe zurueck (wie NB1 --zurueck).
 
+### NB2 Mangel 1 (a) - 3D-Urteil fuer Rechtecke mit Zellen-Modell (Umsetzung, Zwischenstand 18:4x)
+**Umsetzung:**
+* `re15_port/tools/maske/zellen3d_r41.py` (neu): Kandidaten = alle vor NB1 ausgeschlossenen Rechtecke (Tabelle 95b9f38d), Modell
+  wie NB1 Schritt 2 (`tiefe_zelle_r41.kandidaten`, ERBEN) und neu NAEHER (Zellen-Tiefe auch, wenn sie naeher als die alte liegt;
+  Flag in `tiefe_zelle_r41.py`, 5 Zeilen). Rechtecke ueber Objekte mit VERSCHIEDENEN Zellen bekommen kein Modell (das 3D-Urteil kennt
+  je Rechteck nur einen Koerper; gezaehlt: 1, ROOM5020 C6 R82). Schreibt MSK (nur Tiefenfelder) und die Modell-Tabelle
+  `re15_port/tests/unit/gen_r41_masken36_zellen.inc` (je Zeile Zelle, Typ, Band, Hoehe, Saeule, Tiefe, BELEG = RDT-Offset + die 12
+  SCA-Bytes dort, Kommentar IoU).
+* `re15_port/tests/unit/test_r37_masken36.c`: `r41_koerper_davor` - Strecke Kamera -> Figurpunkt gegen den Koerper (Huellkoerper
+  per Achsen-Schichten, Form ueber den Kollisions-Resolver `form_drin` mit den Original-Bytes, Raster 25 wie `form0`); Kamera bzw.
+  Figurpunkt im Koerper = kein Urteil. Im Ausschluss (`sektion_pruefen`) zaehlt ein verdeckter Figurpunkt als "Gegenstand davor",
+  wenn das Grundriss-Netz (unveraendert) ODER der Koerper des Modells des verdeckenden Rechtecks davor liegt. `figpt_t.h` = Hoehe des
+  Punkts ueber dem Bandboden (Spalten-Parameter t * 3000), `raum_t.raum`. Werkzeug-Modus `warum` (Gruende je ausgeschlossenem
+  Modell-Rechteck). Riegel-Ausgabe: Zahl der nur per 3D belegten Punkte je Stage.
+* Kette (Scratchpad `m41nb2/`): `zellen3d_r41.py` (605 Modelle) -> MASKS -> `erzeuge` t1 -> `zellen3d_r41.py --zurueck t1`
+  (446 Modelle, nur die gezeichneten) -> MASKS -> Neubau -> `erzeuge` t2: **t2 == t1 (stabil)**.
+**Ergebnis statisch (Leon; Elza bytegleich):** ausgeschlossen 1186 -> **1106**; **80 Rechtecke wieder drin (+80 Elza), 0 neu aus**;
+geaendert nur die Tiefenfelder dieser 80 (58 naeher, 22 ferner; 0 Bytes ausserhalb). Je Cut: 3040 C3 R9; 5050 C1 R1/R4/R47;
+6000 C5 26 (u.a. R0 = Lok 11 664 px, R1, R3, R23..R37 Gittertraeger), 6000 C7 12, 6000 C8 24, 6000 C9 14.
+**Warum der Rest der Modell-Rechtecke aus bleibt** (`test_r37_masken36 warum`): 159 (70 = 3050 C15 ohne Stehplatz); von den
+uebrigen 89 verfehlt bei 86 der Sehstrahl zu einem verdeckten Figurpunkt den Koerper (Modell erklaert nicht jeden Punkt des
+Rechtecks: geerbte Punkte, Typ-2-Rauten in 4040/4080, deren Tiefe der Python-Weg aus dem Huellrechteck rechnet), bei 3 (5090 C11
+Typ-6-Dreieck) liegt ein Figurpunkt im Koerper. Diese bleiben aus - die 3D-Regel nimmt nur, was der Koerper belegt.
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
