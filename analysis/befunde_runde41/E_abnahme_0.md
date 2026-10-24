@@ -203,7 +203,7 @@ Bilder: `ffmpeg -i orig_kurbel_w1b.mp4 -vsync 0 -vf scale=320:240:flags=area -st
   Kurbelposen. In keinem Bild verlaesst Leon den Boden, springt oder "fliegt" — weder im Original noch im Port.
 - **Schleife:** Leon-Fenster x50-106/y60-175, Abweichung Bild k zu Bild k+L (k=22..80): Original **L=40: 3,9 px** (L=39: 17,6;
   L=41: 19,0; L=36: 55,9; L=44: 60,0) — das Original kurbelt mit Periode 40 = Clip 0 der Raum-RBJ (40 Bilder). Port NACHHER
-  **L=40: 5,7 px** (L=39/41: 46,8/48,7). Die bewegungsarmen Bilder am Umlauf 39->0 liegen in beiden bei k=60 und k=100; Port-Trace
+  **L=40: 5,7 px** (L=39/41: 46,8/48,7). Die bewegungsarmsten Kurbelbilder (Fenster x40-140/y50-200, Pixel mit |diff|>24 zum Vorbild) liegen in beiden kurz nach dem Umlauf 39->0 bei k=60 und k=100 (Original je 3 px, Port je 8 px); Port-Trace
   `<sp>/runs_abn0/K_w1/anim.txt` Aktor 0: Wrap 39->0 bei F523/F563/F603/F643 (= k59/k99/k139/k179), F660 Bild 17, F661 Motion 211.
   Im Original bewegt sich Leon in jedem Spielbild von k19 bis k126 (nur der Nachlade-Stillstand v610..v621 steht).
 - **VORHER-exe** (Basis 116e8b0f, `<sp>/abn0_base/re15_port/build/platform/pc/re15_pc_abn0_basis.exe` md5
