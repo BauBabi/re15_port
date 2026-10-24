@@ -12,7 +12,8 @@
 #   unit_r41_re2gator_intro      Aggro -> Clip 6 (125) -> Clip 3 (150) -> Biss-Sperre 110 (@0x8010091c), dann CHASE Clip 0
 #   unit_r41_re2gator_sockel     HP 25300; 100 Pistolentreffer toeten nicht (Sockel), geschwaecht sobald HP < 25000;
 #                                Treffer-Reaktion nur 0 (SE 5) oder 4 (SE 0 + Clip 10, Sperre 120..183), nie beides
-#   unit_r41_re2gator_kanister   RE15_GATOR_KANISTER-Lage vor der Schnauze -> Stufe 1..7 (13+6+6+7+7 Bilder, Kopf/Kiefer-az
+#   unit_r41_re2gator_kanister   RE15_GATOR_KANISTER-Lage vor der Schnauze -> Stufe 1..7 (12+6+6+7+7 Bilder nach dem Fenster-Takt,
+#                                NB3: Stufe 1 + erster Stufe-2-Schritt im Fenster-Takt @0x8010183c-5c -> @0x80101860; Kopf/Kiefer-az
 #                                nach den Ease-Formeln 0x80101bac/0x80101c74, Anhaengen an Part 6, Lokallage -> (1750,-210));
 #                                Treffer beim Tragen -> R1: SE 4 + Raum-Satz 15 + Rumble (8,3)/(50,255->0) + Clip 9 (37) +
 #                                Kanister 9 Bilder spaeter weg + Leiche (Endpose), weitere Treffer wirkungslos
@@ -60,7 +61,9 @@ endif()
 #                                danach kein Schritt groesser als der groesste authored Wurzelschritt (Clip 6/3/0/1)
 #   unit_r41_re2gator_schleppen  Nachbesserung 3 (M2): Fenster -> Stufe 1 + erster Stufe-2-Schritt im selben Takt (@0x8010183c-5c ->
 #                                @0x80101860), keine Koerperlenkung bis zum Anhaengen (t = 13 @0x801018c4-cc; RE2 ohne Gier-Schreiber
-#                                in Sub 1/2/T2), Kanister-Weg in Stufe 2 <= Gator-Weg, Schub nur laengs (@0x801018a4-c0)
+#                                in Sub 1/2/T2), Kanister-Weg in Stufe 2 <= Gator-Weg, Schub nur laengs (@0x801018a4-c0);
+#                                Fall 3: seitlich aufgenommener Kanister endet auf der Kopfachse (1750,-210,0) - x/y wie RE2
+#                                @0x801019c4-0x80101b8c, z per Quer-Ausgleich (PORT-WAHL, Schritte wie x)
 #   unit_r41_re2gator_anschwimmen Nachbesserung 3 (M3): Zielmodus +0x1C0 & 4 (@0x80100a34-b4) sperrt den Biss (T1 @0x8010134c-58),
 #                                solange der Kanister >= 8880 x Skala voraus in der Zone des Gators liegt
 foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera aufnahme lauer schleppen anschwimmen)
