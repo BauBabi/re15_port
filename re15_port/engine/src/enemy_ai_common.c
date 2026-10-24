@@ -14787,6 +14787,7 @@ void re15_enemy_ai_run_all(int combat_active)
              * motion 0 (a T-pose, never invulnerable) — confirmed in ROOM11B0 (0x42/0x4b st=0 mo=0 vs
              * 0x40 st=4 mo=2) and ROOM6000 (0x4d st=0). The walk/look/dialogue VM stays Wave-2 deferred. */
             re15_npc_ai_tick(s);
+            re15_fussanker_r41_merken_aktor(e);   /* Runde 41 Spur J: Part+84/+92 des naechsten FUN_800369f8 (re15_fussanker_r41.h) */
         }
         else if (t == 0x13) {   /* ZOMBIE GIRL (type 0x13) — the standard-zombie phase FSM on her own
                                  * root FUN_8010a8c8 (audit wf_827f186d zombie-girl #1). Her root TAIL

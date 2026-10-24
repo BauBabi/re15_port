@@ -31,8 +31,11 @@
  *     Translation = TR + (Eltern-R x lokal-t) >> 12 (MVMVA cv=TR @0x80022eec, MAC1..3 -> swc2 @0x80022ef8..f00).
  *
  * Port: der alte Zweig in re15_npc_executor (Bit 1 -> re15_clip_root_motion_delta = Keyframe-Wurzelweg der eigenen Bank,
- * Bit 2 "deferred") ist durch diesen Anker ersetzt. "Letztes Zusammensetzen" = re15_fussanker_r41_merken() am Ende von
- * re15_game_step (nach KI, Spieler, Objekten; vor dem Zeichnen und vor dem SCD-Takt des naechsten Bildes).
+ * Bit 2 "deferred") ist durch diesen Anker ersetzt. "Letztes Zusammensetzen" = re15_fussanker_r41_merken_aktor() direkt
+ * nach dem NPC-Takt (enemy_ai_common.c, nach Executor + Wandklemme der Wurzel @0x8011cc64) — also nach jeder Bewegung des
+ * Bildes und vor dem SCD-Takt des naechsten (SCD @0x8001cdec laeuft vor den Entities @0x8001ce04, ein Add_speed des
+ * naechsten Bildes gehoert damit NICHT in den Vorbild-Stand, wie im Original). Nicht erfasst: ein spaeteres Objekt-
+ * Ausschieben desselben Bildes (FUN_8002bd44 @0x8002be0c) — in ROOM3061 ohne Fall (Gitter-Box 0).
  * PORT-WAHL: kein gemerkter Vorbild-Stand (Aktor erst in diesem Bild in State 4, Raumwechsel) -> keine Verschiebung.
  */
 #ifndef RE15_FUSSANKER_R41_H
@@ -47,7 +50,9 @@
 
 /* Executor-Bit: FUN_800369f8(0, kette) fuer den Aktor e (State 4). */
 void re15_fussanker_r41_anwenden(re15_actor_t *e, int kette);
-/* Ende des Spielschritts: Welt-Lage von Part 4 und 7 (Hierarchie wie das Zusammensetzen) je State-4-Aktor merken. */
+/* Nach dem NPC-Takt: Welt-Lage von Part 4 und 7 (Hierarchie wie das Zusammensetzen) des Aktors merken (State 4). */
+void re15_fussanker_r41_merken_aktor(const re15_actor_t *e);
+/* dasselbe fuer alle Aktoren (Riegel). */
 void re15_fussanker_r41_merken(void);
 
 /* Mess-/Test-Hilfen (gleiche Rechnung wie oben). 1 = ok. */

@@ -177,18 +177,23 @@ int re15_fussanker_r41_teil(const re15_actor_t *e, const re15_emd_skeleton_t *sk
     return re15_fussanker_r41_teil_matrix(e, sk, an, part, R, out);
 }
 
+void re15_fussanker_r41_merken_aktor(const re15_actor_t *e)
+{
+    if (!e) return;
+    int s = (int)(e - g_actors);
+    if (s <= 0 || s >= RE15_ACTOR_MAX) return;
+    s_alt[s].ok = 0;
+    if (!e->active) return;
+    const re15_emd_skeleton_t *sk; const re15_emd_animation_t *an;
+    if (!re15_fussanker_r41_kanal(e, &sk, &an)) return;
+    if (!re15_fussanker_r41_teil(e, sk, an, RE15_FUSSANKER_R41_KETTE_ENDE0, s_alt[s].w[0])) return;
+    if (!re15_fussanker_r41_teil(e, sk, an, RE15_FUSSANKER_R41_KETTE_ENDE1, s_alt[s].w[1])) return;
+    s_alt[s].ok = 1; s_alt[s].type = e->type; s_alt[s].room = g_current_room_id;
+}
+
 void re15_fussanker_r41_merken(void)
 {
-    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
-        re15_actor_t *e = &g_actors[s];
-        s_alt[s].ok = 0;
-        if (!e->active) continue;
-        const re15_emd_skeleton_t *sk; const re15_emd_animation_t *an;
-        if (!re15_fussanker_r41_kanal(e, &sk, &an)) continue;
-        if (!re15_fussanker_r41_teil(e, sk, an, RE15_FUSSANKER_R41_KETTE_ENDE0, s_alt[s].w[0])) continue;
-        if (!re15_fussanker_r41_teil(e, sk, an, RE15_FUSSANKER_R41_KETTE_ENDE1, s_alt[s].w[1])) continue;
-        s_alt[s].ok = 1; s_alt[s].type = e->type; s_alt[s].room = g_current_room_id;
-    }
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) re15_fussanker_r41_merken_aktor(&g_actors[s]);
 }
 
 void re15_fussanker_r41_anwenden(re15_actor_t *e, int kette)
