@@ -15,6 +15,8 @@ Baum: .claude/worktrees/r41_masken36 (Zweig r41/masken36, Basis b28c7236 = maste
       Umsetzung (1.3: Saum-Rechtecke + eigener Atlas, Ausschluss R37), Messung nachher (1.4), verworfener Weg (1.5)
 - [x] Punkt 2: Sichtpruefung 53 Masken (2.2), ROOM2020 Cut 3 = richtig (2.1), Fehler ROOM20A0 Cut 12 behoben (2.3)
 - [x] Tests (probes/r41_masken36.cmake), gezielte Laeufe 41/41
+- [x] Nachbesserung 1 (Abnahme 0) und Nachbesserung 2 (Abnahme 1): Abschnitte unten; NB2 = 3D-Urteil fuer Rechtecke mit
+      Zellen-Modell + Zuordnung von Hand (210 Rechtecke wieder drin, 962 144 Punkte), Restliste fuer den Nutzer
 
 ## Punkt 1 — STAGE3-6-Masken "ueberall Loecher"
 
