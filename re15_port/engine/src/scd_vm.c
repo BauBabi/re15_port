@@ -681,6 +681,7 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_hund1121_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur R: 1121/30 Hund */
     if (!pc) pc = re15_elzazombies_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur Q: 1041/1061/1031 Ereignis 30 */
     if (!pc) pc = re15_nahaufnahmen_r40_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 40: 11D0/1110/1100 Ereignis 31, 1110/3, 11F0/16 */
+    if (!pc) pc = re15_gatorszene_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur F: 2090/2091 + 2080/2081 Ereignis 18 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -759,6 +760,7 @@ void scd_vm_tick(void)
         scd_thread_reseed(1, s_current_rdt->sub_scd[1]);
     if (!s_vm_room_init) re15_irons_tod_tick();   /* Runde 35 Spur L: Signal (5,12) -> Irons' Arm faellt */
     if (!s_vm_room_init) re15_elza_r36_tick();    /* Runde 36 Spur L: verzoegerte Anker-Toene (re15_elza_r36.h) */
+    if (!s_vm_room_init) re15_gatorszene_r41_tick();   /* Runde 41 Spur F: Signale (5,28)/(5,29) der 2090-Szene */
     if (!s_vm_room_init) re15_elzazombies_r39_tick();   /* Runde 39 Spur Q: Flanke (9,97), Montage, Halten 1061 */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
