@@ -12,6 +12,10 @@
 #      ORIGINAL-SPERRE main00 @0x00FEA Ck(3,206)=0 -> @0x00FEE Text msg 2 "It's locked from the other side."; KEIN
 #      Raumwechsel nach 20A0, (3,206) bleibt 0 (setzt nur ROOM20A0/20A1 sub10 @0x01FF0).
 #   b  Elza: derselbe Weg in ROOM2041 / 2071 / 11A1.
+#   a/b: die zwei Spinnen des 2070-Nordgangs (Switch-Fall 9 = Eintritt aus 2040 / Fall 12 = aus 11A0: Sce_em_set
+#      @0x00C06/@0x00C1A bzw. @0x00C6C/@0x00C80, Kill-Bit pc[7] 0x62/0x63 -> (7,98)/(7,99), EM-Status-Gate FUN_800420a0
+#      @0x80042120-38, Zone 7 = STAGE1-3) gelten als schon getoetet — ohne das toeten sie Leon im Nordgang (gemessen:
+#      mo 9/214 -> mo 7 bei (-18939,-19818), danach Game Over); Gegenstand des Riegels ist der Weg, nicht der Kampf.
 #   c  Gegenprobe Leon: ROOM11A0 mit (3,206)=1 -> dieselbe Aktion -> DOOR FIRE slot 4 -> ROOM20A0 (die einzige Sperre).
 #   d  Leon: ROOM2050 nach dem Kisten-Raetsel ((3,109), sub02 @0x0221C; seit M1 erst nach dem Pult = Bit 106) ->
 #      Zelle 51 frei (sub00 @0x01FEE `37 0r 33 00`) -> Tasche -> slot 1 (@0x01C6A) -> ROOM2020.
@@ -183,14 +187,14 @@ endmacro()
 
 # ---- a: Leon 2040 -> 2070 -> 11A0 -> Sperre ------------------------------------------------------------------------
 _weg_plan(_pa 2040 2070 11A0)
-_lauf(a 420 "${_pa}" ${_leon} RE15_DEBUG_JUMP=2040@250 RE15_SET_FLAG=9:103,9:100,3:146,3:53
+_lauf(a 420 "${_pa}" ${_leon} RE15_DEBUG_JUMP=2040@250 RE15_SET_FLAG=9:103,9:100,3:146,3:53,7:98,7:99
       "RE15_PLAYER_POS=-12850,1600,1024,3" "RE15_EXIT_AT=1000#11A0")
 _weg_pruefen(a 2040 2070 11A0)
 message(STATUS "r41_ventilkette_weg a (Leon): 2040 Halle -> Treppe -> Galerie -> 2070 Nordgang -> 11A0 -> 'It's locked from the other side.' (Original-Sperre (3,206))")
 
 # ---- b: Elza 2041 -> 2071 -> 11A1 -> Sperre ------------------------------------------------------------------------
 _weg_plan(_pb 2041 2071 11A1)
-_lauf(b 420 "${_pb}" ${_elza} RE15_DEBUG_JUMP=2040@250 RE15_SET_FLAG=9:103,9:100,3:146,3:53
+_lauf(b 420 "${_pb}" ${_elza} RE15_DEBUG_JUMP=2040@250 RE15_SET_FLAG=9:103,9:100,3:146,3:53,7:98,7:99
       "RE15_PLAYER_POS=-12850,1600,1024,3" "RE15_EXIT_AT=1000#11A1")
 _muss("${_dbg}" "Spieler-Familie PL04" b "Elza gewaehlt")
 _weg_pruefen(b 2041 2071 11A1)

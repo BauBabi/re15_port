@@ -439,6 +439,17 @@ Die Messungen der Abnahme 1 (`C41abn1/mess/*`, im Bericht `<a1>`) werden NICHT w
   wer 20A0 schon von 2090 aus betreten hat — und 2090 erreicht man nur aus 2080 oder 20A0.** Bilder nb2_11a0/nb2_11a1. Keine
   Port-Sperre der Runde 41 steht auf diesem Weg -> **nichts erfunden, nichts geaendert; OFFEN fuer den Orchestrator**
   (§6, §7 Frage j). Der Ring-Weg (Lift B) bleibt nach C-E2 gesperrt.
+* **Aenderung:** KEINE Code-Aenderung am Spiel (C-E2b Punkt 2: die Sperre ist ORIGINAL -> nichts erfinden; eine
+  Port-Sperre der Runde 41 steht nicht auf dem Weg). Neu: das Werkzeug `tools/r41_ventilkette/tuergraph_nach_flut.py`
+  (+ Ausgabe C_belege/nb2_tuergraph_nach_flut.txt), die Riegel unit_r41_ventilkette Fall J und
+  integration_r41_ventilkette_weg, die Belegbilder nb2_11a0/nb2_11a1, die Richtigstellungen in §0b M5/M7, §6, §7 und
+  die Entscheidungsfrage §7 (j).
+* **Gegner auf dem Weg (kein Befund der Spur, fuer die Messung neutralisiert):** im 2070-Nordgang stehen beim Eintritt
+  aus 2040 (Switch-Fall 9) bzw. aus 11A0 (Fall 12) zwei Spinnen (Sce_em_set @0x00C06/@0x00C1A bzw. @0x00C6C/@0x00C80,
+  Typ 0x25, Kill-Bit pc[7] 0x62/0x63 = (7,98)/(7,99) ueber das EM-Status-Gate FUN_800420a0 @0x80042120-38, Zone 7 =
+  STAGE1-3, re15_em_status_zone). Ohne die Kill-Bits toeteten sie Leon im ersten Riegel-Lauf (`lauf_baaaad3f_a`: nach
+  dem Riegel mo 9/214 -> mo 7 bei (-18939,-19818), Game Over); der Riegel setzt sie als "schon getoetet" (wie die
+  2030-Spinnen 7:155..158 der Abnahme). 2050 laeuft mit GEGNERWEG (R36-Konvention), 2040/11A0 ohne Gegnerkontakt.
 * **Hinweis zur Annahme in C-E2b** ("Ring unter Wasser (bis -16200)"): der Port-Ruhepegel nach der Flut ist y -7200
   (`RE15_R41C_WASSER_Y_RUHE`, §3.6) = 1800 ueber dem Ring (y -5400); -16200 ist die Tuerebene. An der exe steht und laeuft
   Leon dort in Brusthoehe (Abnahme 0 L8, §4 "Eintritt in das geflutete 2030", Bild C_belege/ring_nach_flut_sheet.png).
