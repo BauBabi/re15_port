@@ -81,7 +81,7 @@ static int load_re2_bank(uint8_t type)
  * POSE_v, exakt re15_skel_bone_to_world) zurueck in den GATOR-LOKALEN Rahmen,
  * local = RotY(-yaw)*(root - G) / s. Im Original (kein Scale) ist das exakt
  * (off_v - off_g) + POS_v (RE2 Anker-Paar FUN_80015B94/CB8). Bestehen: bei P3 (Clip 11 f0
- * / Opfer f119) |local - Original| <= 5 je Achse UND local liegt in der lokalen AABB von
+ * / Opfer f119) |local - Original| <= 16 je Achse (bis Runde 41: 5, s. pin_leon_im_maul) UND local liegt in der lokalen AABB von
  * MD1-Mesh 7 (Unterkiefer) der geposten Kette (heute vor dem Fix: (7892,-1804,295), dRef
  * (2628,599,97), ausserhalb beider Kiefer - "er liegt darunter"). */
 static int kf_of(const re15_emd_animation_t *an, int clip, int fr)
@@ -161,8 +161,14 @@ static int pin_leon_im_maul(re15_enemy_bank_t *B, const re15_actor_t *e, const r
            pl->x, pl->y, pl->z, L[0], L[1], L[2], ref[0], ref[1], ref[2],
            L[0]-ref[0], L[1]-ref[1], L[2]-ref[2],
            lo7[0], hi7[0], lo7[1], hi7[1], lo7[2], hi7[2], in6, in7);
-    for (i = 0; i < 3; i++) if (L[i]-ref[i] > 5 || L[i]-ref[i] < -5) ok = 0;
-    if (!ok) printf("FAIL: Leons lokale Wurzel weicht > 5 vom Original-Sitz ab (Scale-Nachzug fehlt?)\n");
+    /* Runde 41 Spur B, Nachbesserung 5: Schranke 16 statt 5. Seit der Finisher-Buehne (RE2-P0 setzt den Gator um, @0x80101048-4c)
+     * steht der Gator im Finisher frontal zur Kamera (hier Cut 0, Gier 289) statt auf der Gier 0 dieses Riegels - bei Gier 0 ist die
+     * Drehung exakt (cos 4096, sin 0), bei jeder anderen runden die drei Q12-Drehungen (Opfer-Platzierung gb_opfer_skalieren,
+     * POS-Kanal, Rueckrechnung hier) je bis |v|/4096 + 1 = 3,6 Welteinheiten (|v| <= 10643), im lokalen Rahmen x 4096/2731:
+     * 3 x 3,6 x 1,5 = 16. Gemessen bei Gier 289: dRef (-8,-1,-2) (vorher bei Gier 0: (-2,-1,-1)); ein fehlender Scale-Nachzug
+     * (der Defekt, den der Pin faengt) laege 2628 daneben. */
+    for (i = 0; i < 3; i++) if (L[i]-ref[i] > 16 || L[i]-ref[i] < -16) ok = 0;
+    if (!ok) printf("FAIL: Leons lokale Wurzel weicht > 16 vom Original-Sitz ab (Scale-Nachzug fehlt?)\n");
     if (!in7) { printf("FAIL: Leons Wurzel liegt nicht im Unterkiefer (Mesh 7) - 'er liegt darunter'\n"); ok = 0; }
     return ok;
 }
@@ -418,7 +424,7 @@ int main(void)
     if (pl->motion != 1 || pl->anim_frame != 119) {
         printf("FAIL: Leon nicht im letzten Opfer-Frame geparkt (clip=%d af=%u)\n",
                (int)pl->motion, (unsigned)pl->anim_frame); return 1; }
-    /* PIN Phase 2: Leons Wurzel sitzt im Maul (Original-Relation +-5, in Mesh 7). */
+    /* PIN Phase 2: Leons Wurzel sitzt im Maul (Original-Relation +-16 = Q12-Rundung bei beliebiger Gier, in Mesh 7). */
     {   re15_enemy_bank_t *eb = re15_enemy_find(0x23u);
         if (!eb || !eb->victim_ok) { printf("FAIL: Opfer-Bank fehlt\n"); return 1; }
         if (!pin_leon_im_maul(eb, e, pl)) return 1;
