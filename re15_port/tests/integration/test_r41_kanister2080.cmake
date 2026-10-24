@@ -1,17 +1,23 @@
 # =============================================================================
 # Runde 41 Spur G "kanister2080" — die echte exe (Dossier analysis/befunde_runde41/G_kanister2080.md).
 #
-# Lauf "ankunft"  (Leon) ROOM2080 per Sprung mit Bit 110 (Spur F: 2090-Szene gesehen) und (3,245): der Installer spawnt die 8
-#                 Zombies (Sce_em_set Typ 0x16 Etage 8, y -14400) und spielt beim ersten Betreten den Tuer-Ton (DOOR06 Satz 1,
-#                 Door_exit @0x800141f0), Bit 114.
+# Lauf "ankunft"  (Leon) echter Tuerweg 2090 -> 2080 (ROOM2090 Tuer Slot 0 @0x0996, DOOR16) mit Bit 110 (Spur F: 2090-Szene
+#                 gesehen) und (3,245), Ton gemischt (RE15_AUDIO_CAP_SYNC, RE15_SE_DEBUG): beim ersten Betreten ERST der Knall
+#                 (Nachtrag 17: Knall-Bank Satz 0 = RE2 ROOM1060 Se_on 0x0a @0x0F48, zwei Lagen Tone 8/9 center 91 11025 Hz
+#                 direkt hinter der Ausloese-Zeile), DANN die 8 Zombies (Sce_em_set Typ 0x16 Etage 8, y -14400), Bit 114.
+# Lauf "ebene"    (Leon) Nachtrag 20: Leon oben am Treppenabsatz (-16000,-16700, Band 8, Blick nach Westen), die Zombies laufen
+#                 auf ihn zu, er steigt die Treppe @0x0BE2 hinab ([stair] START dir=DOWN 8 -> 5) und wartet unten: in JEDER
+#                 Messzeile "Ebene" stehen alle Zombies auf y -14400 und keiner westlich der Absatzwand @0x05C4 (x -16650);
+#                 die Verfolgung reicht bis an den Absatz (x <= -15000), Leon steht danach unten (y -9000).
 # Lauf "kanister" (Leon) ROOM2080 OHNE Bit 110 in Cut 5 (= Gas_Can.bmp): kein Zombie, der Kanister steht an der Reling - die
 #                 Messzeile des Zeichners traegt Lage (-6745,-14400,-17625) und den Bildkasten in Cut 5, der die Markenmitte
 #                 (167,156) enthaelt und vom Fuss (y ~155) bis ueber y 80 reicht.
 # Lauf "szene"    (Leon) ROOM2090 mitten im Kampf (RE15_GB_TEST=5), Bit 110, Messhaken RE15_K2080_GATOR_HP=24990 (Schwelle
 #                 HP < 25000 mit EINEM echten Pistolentreffer statt 43): Ausloeser -> ROOM2080 (Marvin 0x40, 8 Zombies) ->
-#                 Tuer-Ton -> 8 Kopfschuesse mit 8 x "Kopf ab" (RE2 FUN_801092C4) -> Aufheben -> Wurf (RE2 ROOM7020 sub13) ->
-#                 Aufschlag -> Rueckkehr ROOM2090 (Tot-Bits 8 von 8) -> Kanister im Becken; Schnitte in 2080 in der Folge
-#                 2 -> 5 -> 7 (state.log cam=), Nachricht 42 im Bild (state.log msg id=42).
+#                 Tuer-Ton (DOOR06 Satz 1: se=1 vag 2 center 79 16397 Hz) -> 8 Kopfschuesse mit 8 x "Kopf ab" (RE2
+#                 FUN_801092C4) -> Aufheben -> Wurf (RE2 ROOM7020 sub13) -> Aufschlag (KANISTER2080.VBS Satz 0: center 95
+#                 8193 Hz) -> Rueckkehr ROOM2090 (Tot-Bits 8 von 8) -> Kanister im Becken; Schnitte in 2080 in der Folge
+#                 2 -> 5 -> 7 (state.log cam=), Nachricht 42 im Bild (state.log msg id=42), keiner der Zombies auf der Treppe.
 # Lauf "elza"     dasselbe mit Elza (Spielerwahl RE15_PSELECT_AUTO_SWITCH): ROOM2091 -> ROOM2081, John 0x49.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_kanister2080.cmake
@@ -40,14 +46,38 @@ function(r41g_fehler _text)
     message(FATAL_ERROR "r41_kanister2080: ${_text}")
 endfunction()
 
+# Die Zeile DIREKT hinter der (jeder) Ausloese-Zeile des Moduls muss die "[se] Stimme:"-Zeile des erwarteten Satzes sein
+# (audio_pc.c se_play_layers, RE15_SE_DEBUG=1; gleicher Aufruf, gleicher Strom). Gezaehlt wird, wie oft das zutrifft.
+function(r41g_ton_folgt _datei _ausl _folge _soll _was)
+    file(STRINGS "${_datei}" _z REGEX "(${_ausl})|(\\[se\\] Stimme: )")
+    set(_n 0)
+    set(_warte 0)
+    foreach(_l IN LISTS _z)
+        if(_warte)
+            if(_l MATCHES "${_folge}")
+                math(EXPR _n "${_n} + 1")
+            endif()
+            set(_warte 0)
+        endif()
+        if(_l MATCHES "${_ausl}")
+            set(_warte 1)
+        endif()
+    endforeach()
+    if(NOT _n EQUAL ${_soll})
+        r41g_fehler("${_was}: ${_n} x '${_folge}' direkt hinter '${_ausl}' statt ${_soll}")
+    endif()
+endfunction()
+
 set(_basisenv RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore)
+set(_tonenv RE15_NO_INTRO=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_SE_DEBUG=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore)
 set(_leon RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2)
 set(_elza RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1)
+set(_ebene_ok "auf der Treppe \\(x < -16650\\) 0, nicht auf y -14400: 0 ")
 
 # ---------------------------------------------------------------- ankunft (echter Tuerweg 2090 -> 2080, Ton gemischt)
 set(WORKDIR "${_basis}/ankunft")
 file(MAKE_DIRECTORY "${WORKDIR}")
-re15_start_spiel(_rv 300 RE15_NO_INTRO=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore ${_leon}
+re15_start_spiel(_rv 300 ${_tonenv} ${_leon}
     RE15_DEBUG_JUMP=2090@250 "RE15_SET_FLAG=9:110,3:245" RE15_KEIN_GATOR=1 "RE15_PLAYER_POS=-8900,-25244,2048"
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=W1.0,A0.2,W6.0"
     RE15_SPAWN_DIAG=1 "RE15_EXIT_AT=90#2080" "${_exe_kopie}")
@@ -63,18 +93,69 @@ file(STRINGS "${WORKDIR}/debug.log" _sp REGEX "\\[k2080\\] F[0-9]+ ROOM2080 nach
 if(NOT _sp)
     r41g_fehler("Lauf ankunft: keine Zeile 'ROOM2080 nach Bit 110: 8 lebende Zombies'")
 endif()
-file(STRINGS "${WORKDIR}/debug.log" _tt REGEX "\\[k2080\\] F[0-9]+ Tuer-Ton DOOR06 Satz 1 .*erstes Betreten nach Bit 110, Bit 114 = 1")
-file(STRINGS "${WORKDIR}/debug.log" _tb REGEX "\\[k2080\\] F[0-9]+ Tuer-Ton: DOOR06-Tonteil 19608 B in der Tuerbank, Satz 1")
-file(STRINGS "${WORKDIR}/debug.log" _ts REGEX "\\[k2080\\] F[0-9]+ Tuer-Ton: [1-8] SE-Stimmen aktiv")
-if(NOT _tt OR NOT _tb OR NOT _ts)
-    r41g_fehler("Lauf ankunft: Tuer-Ton nicht gespielt (Anstoss ${_tt} / Tuerbank ${_tb} / Stimmen ${_ts})")
+file(STRINGS "${WORKDIR}/debug.log" _kn REGEX
+     "\\[k2080\\] F[0-9]+ Knall \\(Knall-Bank Satz 0 = RE2 ROOM1060 Se_on 0x0a @0x0F48, Tuerknall der Irons-/Elza-Szene\\) - erstes Betreten nach Bit 110, Bit 114 = 1")
+if(NOT _kn)
+    r41g_fehler("Lauf ankunft: kein Knall beim ersten Betreten")
+endif()
+# beide Lagen des Knalls (Tone 8/9 fein 0/1, center 91, 11025 Hz = RE2 ROOM1060 VAG 5) direkt hinter der Ausloese-Zeile
+set(_ausl "\\[k2080\\] F[0-9]+ Knall: Knall-Bank 19976 B in der Tuerbank, Satz 0 ")
+r41g_ton_folgt("${WORKDIR}/debug.log" "${_ausl}"
+    "\\[se\\] Stimme: se=0 layer=0 vag=0 note=67 fine=0 center=91 vol=127 pitch=0x400 \\(11025 Hz\\)" 1 "Lauf ankunft Knall Lage 0")
+file(STRINGS "${WORKDIR}/debug.log" _kl REGEX "\\[se\\] Stimme: se=0 layer=1 vag=0 note=67 fine=1 center=91 vol=127 pitch=0x400 \\(11025 Hz\\)")
+if(NOT _kl)
+    r41g_fehler("Lauf ankunft: zweite Lage des Knalls fehlt")
+endif()
+# ERST der Knall, DANN die Zombies (Reihenfolge im Strom)
+file(STRINGS "${WORKDIR}/debug.log" _rf REGEX "(${_ausl})|(\\[spawn-diag\\] Sce_em_set type=0x16)")
+list(GET _rf 0 _erste)
+if(NOT _erste MATCHES "Knall: Knall-Bank")
+    r41g_fehler("Lauf ankunft: Zombies vor dem Knall (${_erste})")
 endif()
 file(STRINGS "${WORKDIR}/debug.log" _em REGEX "\\[spawn-diag\\] Sce_em_set type=0x16 behavior=0x02 slot=[0-7] pos=\\(-?[0-9]+,-14400,-?[0-9]+\\)")
 list(LENGTH _em _n_em)
 if(NOT _n_em EQUAL 8)
     r41g_fehler("Lauf ankunft: ${_n_em} Zombie-Spawns auf Band 8 statt 8")
 endif()
-message(STATUS "r41_kanister2080 ankunft: Tuerweg 2090 -> 2080, Tuer-Ton gemischt (${_ts}), 8 Zombies Typ 0x16 auf y -14400")
+message(STATUS "r41_kanister2080 ankunft: Tuerweg 2090 -> 2080, Knall (2 Lagen) vor 8 Zombies Typ 0x16 auf y -14400")
+
+# ---------------------------------------------------------------- ebene (Nachtrag 20: oberhalb der Treppe, kein Abstieg)
+set(WORKDIR "${_basis}/ebene")
+file(MAKE_DIRECTORY "${WORKDIR}")
+re15_start_spiel(_rv 300 ${_basisenv} ${_leon}
+    RE15_DEBUG_JUMP=2080@250 "RE15_SET_FLAG=9:110,3:245" "RE15_PLAYER_POS=-16000,-16700,2048,8"
+    RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=W2.0,A0.2,W20.0" RE15_R39_MESS_SPIELER_HP=100
+    RE15_STAIR_DBG=1 "RE15_EXIT_AT=720#2080" "${_exe_kopie}")
+if(NOT _rv EQUAL 0)
+    r41g_fehler("Lauf ebene exe exit=${_rv}")
+endif()
+file(STRINGS "${WORKDIR}/stair_dbg.log" _ab REGEX "\\[stair\\] START dir=DOWN cur_band=8 target_band=5")
+if(NOT _ab)
+    r41g_fehler("Lauf ebene: kein Abstieg ueber die Treppe @0x0BE2 (Band 8 -> 5)")
+endif()
+file(STRINGS "${WORKDIR}/debug.log" _eb REGEX "\\[k2080\\] F[0-9]+ Ebene: ")
+file(STRINGS "${WORKDIR}/debug.log" _eb_ok REGEX "\\[k2080\\] F[0-9]+ Ebene: 8 Zombies x -?[0-9]+\\.\\.-?[0-9]+ y -14400\\.\\.-14400, ${_ebene_ok}")
+list(LENGTH _eb _n_eb)
+list(LENGTH _eb_ok _n_eb_ok)
+if(_n_eb LESS 20 OR NOT _n_eb EQUAL _n_eb_ok)
+    r41g_fehler("Lauf ebene: ${_n_eb_ok} von ${_n_eb} Ebene-Zeilen ohne Zombie auf der Treppe / ausserhalb y -14400 (mind. 20)")
+endif()
+set(_xmin 0)
+set(_unten 0)
+foreach(_l IN LISTS _eb)
+    if(_l MATCHES "Zombies x (-?[0-9]+)\\.\\.")
+        if(CMAKE_MATCH_1 LESS _xmin)
+            set(_xmin ${CMAKE_MATCH_1})
+        endif()
+    endif()
+    if(_l MATCHES "Spieler \\(-2[0-9][0-9][0-9][0-9],-9000,")
+        math(EXPR _unten "${_unten} + 1")
+    endif()
+endforeach()
+if(_xmin GREATER -15000 OR _unten LESS 10)
+    r41g_fehler("Lauf ebene: Verfolgung bis x ${_xmin} (soll <= -15000), Leon unten in ${_unten} Zeilen (soll >= 10)")
+endif()
+message(STATUS "r41_kanister2080 ebene: Abstieg 8 -> 5, ${_n_eb} Ebene-Zeilen ohne Zombie auf der Treppe, Verfolgung bis x ${_xmin}")
 
 # ---------------------------------------------------------------- kanister
 set(WORKDIR "${_basis}/kanister")
@@ -116,18 +197,15 @@ foreach(_wer leon elza)
         set(_r80 2080)
         set(_r90 2090)
         set(_npc "Marvin 0x40")
+        set(_env ${_tonenv})
     else()
         set(_wahl ${_elza})
         set(_r80 2081)
         set(_r90 2091)
         set(_npc "John 0x49")
+        set(_env ${_basisenv})
     endif()
-    if(_wer STREQUAL "leon")
-        set(_tonenv RE15_NO_INTRO=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore)
-    else()
-        set(_tonenv ${_basisenv})
-    endif()
-    re15_start_spiel(_rv 600 ${_tonenv} ${_wahl}
+    re15_start_spiel(_rv 600 ${_env} ${_wahl}
         RE15_DEBUG_JUMP=2090@250 "RE15_SET_FLAG=9:110,3:245" RE15_GB_TEST=5 "RE15_PLAYER_POS=6500,-25000,3072"
         "RE15_GIVE=3:15" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=W2.0,M0.3,MA0.1,M0.3,MA0.1,W1.0"
@@ -137,11 +215,10 @@ foreach(_wer leon elza)
         r41g_fehler("Lauf szene_${_wer} exe exit=${_rv}")
     endif()
     if(_wer STREQUAL "leon")
-        file(STRINGS "${WORKDIR}/debug.log" _as REGEX "\\[k2080\\] F[0-9]+ Aufschlag: [1-8] SE-Stimmen aktiv")
-        file(STRINGS "${WORKDIR}/debug.log" _ts REGEX "\\[k2080\\] F[0-9]+ Tuer-Ton: [1-8] SE-Stimmen aktiv")
-        if(NOT _as OR NOT _ts)
-            r41g_fehler("Lauf szene_leon: Aufschlag-/Tuer-Ton nicht gemischt (${_as} / ${_ts})")
-        endif()
+        r41g_ton_folgt("${WORKDIR}/debug.log" "\\[k2080\\] F[0-9]+ Tuer-Ton: DOOR06-Tonteil 19608 B in der Tuerbank, Satz 1 "
+            "\\[se\\] Stimme: se=1 layer=0 vag=2 note=61 fine=57 center=79 vol=127 pitch=0x5f3 \\(16397 Hz\\)" 1 "Lauf szene_leon Tuer-Ton")
+        r41g_ton_folgt("${WORKDIR}/debug.log" "\\[k2080\\] F[0-9]+ Aufschlag-Ton KANISTER2080\\.VBS Satz 0"
+            "\\[se\\] Stimme: se=0 layer=0 vag=0 note=65 fine=57 center=95 vol=127 pitch=0x2f9 \\(8193 Hz\\)" 1 "Lauf szene_leon Aufschlag")
     endif()
     foreach(_muster
             "AUSLOESER geschwaecht .*-> ROOM${_r80}"
@@ -163,6 +240,13 @@ foreach(_wer leon elza)
     list(LENGTH _sch _n_sch)
     if(NOT _n_ka EQUAL 8 OR NOT _n_sch EQUAL 8)
         r41g_fehler("Lauf szene_${_wer}: ${_n_sch} Kopfschuesse (zeile 5) und ${_n_ka} x Kopf ab statt je 8")
+    endif()
+    file(STRINGS "${WORKDIR}/debug.log" _eb REGEX "\\[k2080\\] F[0-9]+ Ebene: ")
+    file(STRINGS "${WORKDIR}/debug.log" _eb_ok REGEX "\\[k2080\\] F[0-9]+ Ebene: [0-9]+ Zombies x -?[0-9]+\\.\\.-?[0-9]+ y -14400\\.\\.-14400, ${_ebene_ok}")
+    list(LENGTH _eb _n_eb)
+    list(LENGTH _eb_ok _n_eb_ok)
+    if(_n_eb EQUAL 0 OR NOT _n_eb EQUAL _n_eb_ok)
+        r41g_fehler("Lauf szene_${_wer}: ${_n_eb_ok} von ${_n_eb} Ebene-Zeilen ohne Zombie auf der Treppe / ausserhalb y -14400")
     endif()
     # Schnittfolge in 2080 (Spieler auf dem Parkplatz -23200,-16700): erste Bilder je Cut
     file(STRINGS "${WORKDIR}/state.log" _st REGEX "PL\\(-23200,-16700,")

@@ -3,8 +3,9 @@
  * include/re15_kanister2080_r41.h und analysis/befunde_runde41/G_kanister2080.md.
  *
  * Aufbau:
- *   P1  ROOM2080/2081 nach Bit 110: Installer startet ein Port-Programm aus Original-Opcodes (8 x Sce_em_set, Form ROOM2020
- *       sub00 @0x008F6) und spielt beim ersten Betreten den Tuer-Ton (DOOR06 Satz 1, Door_exit @0x800141f0), Bit 114.
+ *   P1  ROOM2080/2081 nach Bit 110: beim ersten Betreten zuerst der KNALL (Nachtrag 17: Knall-Bank Satz 0 = der Tuerknall der
+ *       Irons-/Elza-Szene, RE2 ROOM1060 Se_on 0x0a @0x0F48), dann startet ein Port-Programm aus Original-Opcodes die 8 Zombies
+ *       (8 x Sce_em_set, Form ROOM2020 sub00 @0x008F6) auf Band 8 = oberhalb der Treppe (Nachtrag 20), Bit 114.
  *   P2  Kanister-Prop an der Reling (Rueckprojektion der Gas_Can.bmp-Marke, stehend wie RE2 ROOM40A0 @0x0452), bis die Szene
  *       ihn nimmt (Bit 115). Gezeichnet von platform/pc/src/kanister2080_pc.c ueber re15_k2080_kanister_lage.
  *   P3  ROOM2090/2091: Ausloeser = RE2-Schwaeche des Alligators (+0x218 & 0x20, HP < 25000 @0x80101ebc-dc,
@@ -41,6 +42,7 @@ extern int      re15_player_is_dead(void);
 
 #include "gen/kanister2080_r41_texte.inc"
 
+void (*re15_k2080_knall_hook)(void)   = NULL;
 void (*re15_k2080_tuerton_hook)(void) = NULL;
 void (*re15_k2080_platsch_hook)(void) = NULL;
 void (*re15_k2080_schuss_hook)(void)  = NULL;
@@ -529,6 +531,42 @@ static void messhaken_gator_hp(void)
 #endif
 }
 
+/* MESSHAKEN EBENE (Nachtrag 20, kein Verhalten): aktive 2080-Zombies, davon westlich der Band-8-Absatzwand (@0x05C4, x < -16650
+ * = auf der Treppe @0x0BE2) bzw. nicht auf der Hoehe ihres Bandes (y != -14400). */
+int re15_k2080_zombies_oben(int *aktiv, int *auf_treppe, int *falsche_hoehe)
+{
+    int n = 0, w = 0, h = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *e = &g_actors[s];
+        if (!e->active || e->type != RE15_K2080_ZOMBIE_TYP) continue;
+        n++;
+        if (e->x < RE15_K2080_ABSATZ_WAND_X) w++;
+        if (e->y != RE15_K2080_Y) h++;
+    }
+    if (aktiv) *aktiv = n;
+    if (auf_treppe) *auf_treppe = w;
+    if (falsche_hoehe) *falsche_hoehe = h;
+    return n;
+}
+static void messzeile_ebene(void)
+{
+    if ((g_engine.frame_count % 30u) != 0) return;
+    int n = 0, w = 0, h = 0;
+    if (re15_k2080_zombies_oben(&n, &w, &h) == 0) return;
+    int32_t x0 = 0x7fffffff, x1 = -0x7fffffff, y0 = 0x7fffffff, y1 = -0x7fffffff;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *e = &g_actors[s];
+        if (!e->active || e->type != RE15_K2080_ZOMBIE_TYP) continue;
+        if (e->x < x0) x0 = e->x;
+        if (e->x > x1) x1 = e->x;
+        if (e->y < y0) y0 = e->y;
+        if (e->y > y1) y1 = e->y;
+    }
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    K_LOG("Ebene: %d Zombies x %d..%d y %d..%d, auf der Treppe (x < %d) %d, nicht auf y %d: %d | Spieler (%d,%d,%d)", n,
+          (int)x0, (int)x1, (int)y0, (int)y1, RE15_K2080_ABSATZ_WAND_X, w, RE15_K2080_Y, h, (int)pl->x, (int)pl->y, (int)pl->z);
+}
+
 void re15_kanister2080_r41_tick(void)
 {
     const unsigned raum = (unsigned)g_current_room_id & 0xFFFFu;
@@ -545,6 +583,7 @@ void re15_kanister2080_r41_tick(void)
             ausloesen();
         return;
     }
+    if (raum_2080(raum)) messzeile_ebene();
     if (!raum_2080(raum) || s_phase != RE15_K2080_IN_2080) return;
     re15_actor_t *n = npc_aktor();
     /* KEIN Halt der Zombies (entity+0x9 |= 0x20): gemessen (Lauf p3f) spielte der angehaltene RE2-Steher seinen Clip 1 bis zum
@@ -635,17 +674,19 @@ void re15_kanister2080_r41_install(uint16_t room_id)
         }
         s_kan_zustand = 0;
         if (!bit(RE15_K2080_BIT_F_SZENE) || bit(RE15_K2080_BIT_SZENE)) return;
-        baue_spawn();
-        const int slot = starten(s_prog_spawn, s_prog_spawn_n);
-        K_LOG("ROOM%04X nach Bit 110: %d lebende Zombies (Tot-Bits %d..%d) Faden %d", raum, lebende_zombies(),
-              RE15_K2080_TOT0, RE15_K2080_TOT0 + RE15_K2080_N_ZOMBIES - 1, slot);
+        /* Nachtrag 17: ERST der Knall (Anstoss hier im Raumaufbau, vor dem ersten VM-Lauf), DANN die Zombies (Sce_em_set im
+         * ersten VM-Lauf des Raumaufbaus) - Reihenfolge wie Runde 36 K3 "Erst Tuerknallen, dann Zombie Spawnen". */
         if (!bit(RE15_K2080_BIT_ANKUNFT)) {
             bit_setzen(RE15_K2080_BIT_ANKUNFT, 1);
             s_zaehler[0]++;
-            if (re15_k2080_tuerton_hook) re15_k2080_tuerton_hook();
-            K_LOG("Tuer-Ton DOOR06 Satz 1 (Door_exit @0x800141f0) - erstes Betreten nach Bit 110, Bit %d = 1",
-                  RE15_K2080_BIT_ANKUNFT);
+            if (re15_k2080_knall_hook) re15_k2080_knall_hook();
+            K_LOG("Knall (Knall-Bank Satz 0 = RE2 ROOM1060 Se_on 0x0a @0x0F48, Tuerknall der Irons-/Elza-Szene) - erstes "
+                  "Betreten nach Bit 110, Bit %d = 1", RE15_K2080_BIT_ANKUNFT);
         }
+        baue_spawn();
+        const int slot = starten(s_prog_spawn, s_prog_spawn_n);
+        K_LOG("ROOM%04X nach Bit 110: %d lebende Zombies (Tot-Bits %d..%d) Faden %d, Band %d (oberhalb der Treppe @0x0BE2)", raum,
+              lebende_zombies(), RE15_K2080_TOT0, RE15_K2080_TOT0 + RE15_K2080_N_ZOMBIES - 1, slot, RE15_K2080_ETAGE);
         return;
     }
     if (raum_2090(raum)) {

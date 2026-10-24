@@ -17,6 +17,9 @@
  *              der Nennlage im 2090-Becken (Aussenwaende x[-8900..7200] z[-27000..-5400], ausserhalb Plattform-/Rampenblock).
  *   texte      2080/2081 Id 42 in der Form ROOM2000 msg 1 @0x1BFD / ROOM2001 msg 0 @0x1E0A (Kopf 04 00 05 07 + Sprecher +
  *              05 00, Ende 04 01 01 63), Wortlaut dekodiert.
+ *   ebene      Nachtrag 20: Treppen-Aot @0x0BE2 (sce 12, Band 0x80, x -22700..-16400, side 0, Bandsprung 3) und Absatzwand
+ *              @0x05C4 = Konstanten; Flutfuellung der Band-8-Freiflaeche (SCA) ab Zombie 0: geschlossen, alle 8 darin, nichts
+ *              westlich x -16650 / auf der Treppe, oberer Absatz erreichbar, Treppenfuss (Band 5) nicht.
  */
 #include "re15_kanister2080_r41.h"
 #include "re15_camera.h"
@@ -300,6 +303,100 @@ static int teil_texte(void)
     return fails != 0;
 }
 
+/* ---- ebene (Nachtrag 20) ------------------------------------------------------------------------------------------- */
+/* Raster ueber ROOM2080 (50er Zellen): frei = kein Band-8-Wandkoerper der SCA @RDT+0x20 (typ 1 Rechteck, typ 3 Kreis um die
+ * Mitte mit Radius w/2). Flutfuellung ab Zombie 0 mit Punktgroesse (strengste Form: was ein Punkt nicht erreicht, erreicht kein
+ * Zombie mit Radius). Erwartet: alle 8 in derselben Flaeche, Flaeche geschlossen (beruehrt den Rasterrand nicht), keine Zelle
+ * westlich der Absatzwand @0x05C4 (x -16650) = nichts von der Treppe @0x0BE2 (x -22700..-16400), der Treppenabsatz
+ * (-15500,-16500) gehoert dazu, der Treppenfuss an der 2030-Tuer (-23200,-16700, Band 5) nicht. */
+#define EB_X0     (-30000)
+#define EB_Z0     (-32000)
+#define EB_RASTER 50
+#define EB_NX     600
+#define EB_NZ     640
+static uint8_t s_eb_frei[EB_NX * EB_NZ];
+static uint8_t s_eb_flut[EB_NX * EB_NZ];
+static int     s_eb_q[EB_NX * EB_NZ];
+static int eb_index(int32_t x, int32_t z)
+{
+    int ix = (int)((x - EB_X0) / EB_RASTER), iz = (int)((z - EB_Z0) / EB_RASTER);
+    if (ix < 0 || ix >= EB_NX || iz < 0 || iz >= EB_NZ) return -1;
+    return iz * EB_NX + ix;
+}
+static int teil_ebene(void)
+{
+    if (!rdt_laden()) return 1;
+    const uint8_t *a = s_rdt + 0x0BE2;   /* ROOM2080 main00 Aot_set Slot 2 (Treppe) */
+    PRUEFE(a[0] == 0x2c && a[1] == 2 && a[2] == 12 && a[4] == 0x80, "Treppen-Aot @0x0BE2 Kopf %02x %02x %02x %02x %02x",
+           a[0], a[1], a[2], a[3], a[4]);
+    PRUEFE(rd16(a + 6) == RE15_K2080_TREPPE_X0 && rd16(a + 8) == RE15_K2080_TREPPE_Z0 &&
+           rd16(a + 6) + (int)(uint16_t)rd16(a + 10) == RE15_K2080_TREPPE_X1 &&
+           rd16(a + 8) + (int)(uint16_t)rd16(a + 12) == RE15_K2080_TREPPE_Z1, "Treppen-Rechteck @0x0BE2 != Konstanten");
+    PRUEFE(rd16(a + 14) == 0 && rd16(a + 16) == 3, "Treppe side %d / Bandsprung %d statt 0 / 3", rd16(a + 14), rd16(a + 16));
+    const uint8_t *w = s_rdt + 0x05C4;   /* Band-8-Absatzwand */
+    PRUEFE(w[8] == 1 && (w[11] >> 4) == RE15_K2080_ETAGE && rd16(w + 4) + (int)(uint16_t)rd16(w) == RE15_K2080_ABSATZ_WAND_X,
+           "Absatzwand @0x05C4: typ %d Band %d Ostkante %d", w[8], w[11] >> 4, rd16(w + 4) + (int)(uint16_t)rd16(w));
+    const uint32_t sca = rd32(s_rdt + 0x20);
+    int n = 0;
+    for (int g = 0; g < 5; g++) n += (int)rd32(s_rdt + sca + 4 + 4 * g);
+    int n8 = 0;
+    for (int i = 0; i < EB_NX * EB_NZ; i++) s_eb_frei[i] = 1;
+    for (int k = 0; k < n; k++) {
+        const uint8_t *e = s_rdt + sca + 24 + k * 12;
+        if ((e[11] >> 4) != RE15_K2080_ETAGE) continue;
+        n8++;
+        const int32_t ex = rd16(e + 4), ez = rd16(e + 6), ew = (uint16_t)rd16(e), ed = (uint16_t)rd16(e + 2);
+        PRUEFE(e[8] == 1 || e[8] == 3, "Band-8-Zelle %d typ %d (erwartet 1/3)", k, e[8]);
+        for (int iz = 0; iz < EB_NZ; iz++)
+            for (int ix = 0; ix < EB_NX; ix++) {
+                const int32_t x = EB_X0 + ix * EB_RASTER + EB_RASTER / 2, z = EB_Z0 + iz * EB_RASTER + EB_RASTER / 2;
+                int drin;
+                if (e[8] == 3) {
+                    const double dx = x - (ex + ew / 2.0), dz = z - (ez + ed / 2.0);
+                    drin = dx * dx + dz * dz < (ew / 2.0) * (ew / 2.0);
+                } else {
+                    drin = x >= ex && x < ex + ew && z >= ez && z < ez + ed;
+                }
+                if (drin) s_eb_frei[iz * EB_NX + ix] = 0;
+            }
+    }
+    int32_t zx, zz; re15_k2080_zombie_lage(0, &zx, &zz, NULL);
+    const int start = eb_index(zx, zz);
+    PRUEFE(start >= 0 && s_eb_frei[start], "Zombie 0 nicht auf freier Band-8-Flaeche");
+    if (start < 0 || !s_eb_frei[start]) return 1;
+    memset(s_eb_flut, 0, sizeof s_eb_flut);
+    int kopf = 0, ende = 0, rand = 0, west = 0, treppe = 0, zellen = 0;
+    int32_t bx0 = 0x7fffffff, bx1 = -0x7fffffff, bz0 = 0x7fffffff, bz1 = -0x7fffffff;
+    s_eb_flut[start] = 1; s_eb_q[ende++] = start;
+    while (kopf < ende) {
+        const int c = s_eb_q[kopf++], ix = c % EB_NX, iz = c / EB_NX;
+        const int32_t x = EB_X0 + ix * EB_RASTER + EB_RASTER / 2, z = EB_Z0 + iz * EB_RASTER + EB_RASTER / 2;
+        zellen++;
+        if (x < bx0) bx0 = x; if (x > bx1) bx1 = x; if (z < bz0) bz0 = z; if (z > bz1) bz1 = z;
+        if (ix == 0 || iz == 0 || ix == EB_NX - 1 || iz == EB_NZ - 1) rand++;
+        if (x < RE15_K2080_ABSATZ_WAND_X) west++;
+        if (x >= RE15_K2080_TREPPE_X0 && x < RE15_K2080_TREPPE_X1 - 300 && z >= RE15_K2080_TREPPE_Z0 && z < RE15_K2080_TREPPE_Z1)
+            treppe++;   /* Treppen-Rechteck ohne den 300 breiten Streifen ueber dem Absatz (x -16700..-16400 liegt im Absatz) */
+        const int nb[4] = { ix > 0 ? c - 1 : -1, ix < EB_NX - 1 ? c + 1 : -1, iz > 0 ? c - EB_NX : -1, iz < EB_NZ - 1 ? c + EB_NX : -1 };
+        for (int q = 0; q < 4; q++)
+            if (nb[q] >= 0 && s_eb_frei[nb[q]] && !s_eb_flut[nb[q]]) { s_eb_flut[nb[q]] = 1; s_eb_q[ende++] = nb[q]; }
+    }
+    printf("  SCA @0x%X: %d Zellen, davon %d auf Band %d; Flaeche ab Zombie 0: %d Raster, x %d..%d z %d..%d\n", (unsigned)sca, n, n8,
+           RE15_K2080_ETAGE, zellen, (int)bx0, (int)bx1, (int)bz0, (int)bz1);
+    printf("  Rasterrand %d, westlich der Absatzwand %d, auf der Treppe %d\n", rand, west, treppe);
+    PRUEFE(rand == 0, "Band-8-Flaeche nicht geschlossen (%d Randzellen)", rand);
+    PRUEFE(west == 0 && treppe == 0, "Band-8-Flaeche reicht auf die Treppe (%d westlich, %d im Rechteck)", west, treppe);
+    for (int i = 0; i < RE15_K2080_N_ZOMBIES; i++) {
+        int32_t x, z; re15_k2080_zombie_lage(i, &x, &z, NULL);
+        const int c = eb_index(x, z);
+        PRUEFE(c >= 0 && s_eb_flut[c], "Zombie %d (%d,%d) nicht in der Flaeche von Zombie 0", i, (int)x, (int)z);
+    }
+    const int absatz = eb_index(-15500, -16500), fuss = eb_index(RE15_K2080_PARK_X, RE15_K2080_PARK_Z);
+    PRUEFE(absatz >= 0 && s_eb_flut[absatz], "oberer Treppenabsatz (-15500,-16500) nicht erreichbar");
+    PRUEFE(fuss >= 0 && !s_eb_flut[fuss], "Treppenfuss (%d,%d) Band 5 von oben erreichbar", RE15_K2080_PARK_X, RE15_K2080_PARK_Z);
+    return fails != 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "lage";
@@ -310,6 +407,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "start")) rc = teil_start();
     else if (!strcmp(t, "bahn")) rc = teil_bahn();
     else if (!strcmp(t, "texte")) rc = teil_texte();
+    else if (!strcmp(t, "ebene")) rc = teil_ebene();
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);
     return rc;

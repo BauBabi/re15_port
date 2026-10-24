@@ -5,8 +5,12 @@
  *       Spur B (shared_assets/RE2/KANISTER40A0.MD1/.TIM = ROOM40A0 Modell 1), dieselbe Zeichenart wie ein RDT-Prop (main.c
  *       Prop-Pass: view x Welt, RTPT/NCLIP ueber objpoly_r38, Licht des aktiven Cuts) und derselbe TIM-Platz 53 wie
  *       gator_re2_pc.c (gleiche Textur, R41_KANISTER_TIM_SLOT).
- *   (2) der TUER-TON: Tonteil des RE2-Tuerarchivs DOOR06 (Stahltuer der 2030-Tuer, gen/tuer_zuordnung.inc S161 T075;
- *       Archiv-Tabelle @0x8009A568) in die RE2-Tuerbank, Satz 1 = Door_exit (@0x800141f0 `jal 0x8005ba28`, `lui a0,0x1`).
+ *   (2) der KNALL beim ersten Betreten nach Bit 110 (Nachtrag 17): dieselbe Knall-Bank wie die Szene nach Irons
+ *       (gen/knall_bank.inc, irons_tod_1150.c:1357 / elzazombies_r39.c:1123) in die RE2-Tuerbank, Satz 0 = KNALL_SE_TUER =
+ *       RE2 ROOM1060 sub05 Se_on @0x0F48 `36 02 0a 01 ..`, EDT[0x0a] @0x3F80 `00 00 85 20`, VAG 5 @0x066B8 (8768 B).
+ *       Der TUER-TON der Szene (Marvin/John kommt herein): Tonteil des RE2-Tuerarchivs DOOR06 (Stahltuer der 2030-Tuer,
+ *       gen/tuer_zuordnung.inc S161 T075; Archiv-Tabelle @0x8009A568) in die RE2-Tuerbank, Satz 1 = Door_exit
+ *       (@0x800141f0 `jal 0x8005ba28`, `lui a0,0x1`).
  *   (3) der AUFSCHLAG im Wasser: Mini-Bank KANISTER2080.VBS Satz 0 (RE2 ROOM40A0 Satz 11, sub10 Se_on @SCD 0x0686),
  *       Laderpaar wie gator_re2_pc.c (2).
  *   (4) der NPC-SCHUSS: der Partner-Schuss der Runde 38 Spur H (re15_elza_se_hook(RE15_ELZA_TON_SCHUSS) = RE2 ROOM4040
@@ -29,6 +33,7 @@
 #include "re15_elza_r36.h"      /* re15_elza_se_hook, RE15_ELZA_TON_SCHUSS */
 #include "asset_root_pc.h"      /* re15_pc_read_re2 */
 #include "../../../engine/src/gen/r41_kanister2080_bank.inc"
+#include "../../../engine/src/gen/knall_bank.inc"   /* k_knall_bank: Satz 0 Tuerknall (RE2 ROOM1060 Se_on 0x0a), Satz 1 ROOM1030 */
 
 #define K2080_TIM_SLOT   53    /* = R41_KANISTER_TIM_SLOT (gator_re2_pc.c): dieselbe Textur KANISTER40A0.TIM */
 #define K2080_TUER_NR    0x06  /* DOOR06 (gen/tuer_zuordnung.inc S161 ROOM2080 Slot 0 -> 2030: Archiv 0x06) */
@@ -39,18 +44,10 @@ extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
                                     const int *decoded_len, int satz);
 
-/* MESSZEILE (kein Verhalten): welche SE-Stimmen (SPU 16..23) nach dem Anstoss klingen - mit RE15_AUDIO_CAP_SYNC (Mischkette ohne
- * Geraet) der Beleg, dass der Ton wirklich gemischt wird (Messhaken re15_audio_se_stimme_aktiv, Riegel r31_tueren). */
-static const char *s_pruef_was;     /* zwei Bilder nach dem Anstoss pruefen (die Stimmen-Pumpe keyt im naechsten Audio-Takt) */
-static int          s_pruef_n;      /* gezeichnete Bilder seit dem Anstoss (der Bildzaehler springt beim Raumaufbau) */
-static void stimmen_log(const char *was)
-{
-    char b[64]; int n = 0, k = 0;
-    for (int v = 0; v < 8 && k < (int)sizeof b - 4; v++)
-        if (re15_audio_se_stimme_aktiv(v)) { k += snprintf(b + k, sizeof b - (size_t)k, " %d", v); n++; }
-    b[k] = 0;
-    fprintf(stderr, "[k2080] F%u %s: %d SE-Stimmen aktiv%s\n", (unsigned)g_engine.frame_count, was, n, n ? b : "");
-}
+/* MESSUNG der Toene (kein Verhalten): RE15_SE_DEBUG=1 -> audio_pc.c se_play_layers schreibt je gespielter Lage eine Zeile
+ * "[se] Stimme: se=.. layer=.. vag=.. note=.. fine=.. center=.. (.. Hz) -> SE-Stimme .." direkt hinter die Ausloese-Zeile dieses
+ * Moduls (gleicher Aufruf, gleicher Strom). Die fruehere Zaehlung der SE-Stimmen 16..23 war ein Proxy: Saetze mit
+ * (byte3 & 0x1f) < 0x10 laufen im Direkt-Zweig (FUN_80045024 @0x8004522c) auf einer Pool-Stimme ausserhalb von SPU 16..23. */
 
 /* ---- (1) Modell ------------------------------------------------------------------------------------------------------- */
 static int        s_modell;       /* 0 ungeprueft, 1 geladen, -1 fehlt */
@@ -83,7 +80,6 @@ static int modell_laden(void)
 
 void re15_k2080_pc_zeichnen(const void *cam_view_v, int cx, int cy)
 {
-    if (s_pruef_was && ++s_pruef_n >= 2) { stimmen_log(s_pruef_was); s_pruef_was = NULL; }
     int32_t pos[3], rot[9];
     if (!re15_k2080_kanister_lage(pos, rot)) return;
     if (!modell_laden()) return;
@@ -185,7 +181,18 @@ static void tuerton(void)
     fprintf(stderr, "[k2080] F%u Tuer-Ton: DOOR06-Tonteil %d B %s, Satz %d (Door_exit @0x800141f0)\n", (unsigned)g_engine.frame_count,
             s_tuer_ton, ok ? "in der Tuerbank" : "nicht geladen (kein Audiogeraet)", K2080_TUER_SATZ);
     if (ok) re15_audio_re2_tuer_se(K2080_TUER_SATZ);
-    s_pruef_was = "Tuer-Ton"; s_pruef_n = 0;
+}
+
+/* ---- (2b) Knall (Nachtrag 17): Knall-Bank in die RE2-Tuerbank, Satz 0 - derselbe Aufruf wie irons_tod_1150.c knallbank_laden
+ * + re15_audio_re2_tuer_se(KNALL_SE_TUER). Die Tuerbank ueberlebt re15_audio_load_room_banks und wird erst von der naechsten
+ * Tuersequenz ersetzt (irons_tod_1150.c:854-856). -------------------------------------------------------------------------- */
+static void knall(void)
+{
+    const int ok = re15_audio_re2_tuer_laden(k_knall_bank, (int)KNALL_BANK_SIZE);
+    fprintf(stderr, "[k2080] F%u Knall: Knall-Bank %u B %s, Satz %d (RE2 ROOM1060 Se_on 0x0a @0x0F48, wie die Szene nach Irons)\n",
+            (unsigned)g_engine.frame_count, (unsigned)KNALL_BANK_SIZE, ok ? "in der Tuerbank" : "nicht geladen (kein Audiogeraet)",
+            KNALL_SE_TUER);
+    if (ok) re15_audio_re2_tuer_se(KNALL_SE_TUER);
 }
 
 /* ---- (3) Aufschlag: Mini-Bank KANISTER2080.VBS ------------------------------------------------------------------------ */
@@ -229,7 +236,6 @@ static void platsch(void)
     fprintf(stderr, "[k2080] F%u Aufschlag-Ton KANISTER2080.VBS Satz %d%s\n", (unsigned)g_engine.frame_count,
             R41_K2080_SE_PLATSCH, ok ? "" : " (Bank fehlt, stumm)");
     if (ok) re15_audio_se_play_bank(s_edt, &s_vab, s_dec, s_dec_len, R41_K2080_SE_PLATSCH);
-    s_pruef_was = "Aufschlag"; s_pruef_n = 0;
 }
 
 /* ---- (4) NPC-Schuss ------------------------------------------------------------------------------------------------- */
@@ -240,6 +246,7 @@ static void schuss(void)
 
 void re15_pc_kanister2080_init(void)
 {
+    re15_k2080_knall_hook   = knall;
     re15_k2080_tuerton_hook = tuerton;
     re15_k2080_platsch_hook = platsch;
     re15_k2080_schuss_hook  = schuss;

@@ -18,6 +18,10 @@
  *       geplatzen Kiefer etc. vom Aligator soll genauso kommen wie im Original."
  *   Nachtrag 5: "Auch beim runterschmeissen des Gaskanisters - es gibt eine Szene in Resident Evil 2, wo Ada den Raketenwerfer
  *       runter wirft. GENAUSO wuerde ich das auch haben wollen von der Kamera."
+ *   Nachtrag 17 (zu P1): "Muss natuerlich ein knallen sein, als ob die Zombies rein brechen, so wie bei STAGE1 von Elza/Leon
+ *       am Ende in der Cutscene nach Irons."
+ *   Nachtrag 20: "In 2080, nachdem die Zombies durch die Tuer gebrochen sind, sollen sie oberhalb von der Treppe laufen,
+ *       nicht unten."
  *
  * FORMEN (Belege im Dossier §1):
  *   - Raumwechsel in der Szene = Door_aot_set (0x3B) + Aot_on (0x47) "fire now" (Port-Montage irons_tod_1150.c /
@@ -26,8 +30,15 @@
  *     Kanister landet in 2090 dort, wo seine Bahn in 2080 endet.
  *   - Zombies = Sce_em_set-Saetze (Form ROOM2020 sub00 @0x008F6 `44 00 16 02 01 00 00 bc ..`: Typ 0x16 "Steher" grid 0x02),
  *     Etage 8 (y = -8*1800, @0x800421d4), Tot-Bits Zone 7 (Gate @0x80042128-38).
- *   - Tuer-Ton = RE2-Tuerbank Satz 1 (Door_exit @0x800141f0 `jal 0x8005ba28`, `lui a0,0x1` @0x800141f4) des Tonteils
- *     DOOR06 (Stahltuer mit X-Kreuz; Tuer 2080 Slot 0 <-> 2030, gen/tuer_zuordnung.inc S161 T075; Tabelle @0x8009A568).
+ *   - KNALL (P1, Nachtrag 17) = derselbe Tuerknall wie nach Irons (irons_tod_1150.c:1357 / elzazombies_r39.c:1123):
+ *     Knall-Bank gen/knall_bank.inc Satz 0 = RE2 ROOM1060 sub05 Se_on @0x0F48 `36 02 0a 01 ..`, EDT[0x0a] @0x3F80
+ *     `00 00 85 20`, VAG 5 @0x066B8 (8768 B, "Zombies breaking in", RE2_SOUND_LISTE.md ROOM106).
+ *   - Tuer-Ton (P3 "erneut die Geraeusche einer schliessenden Tuer", Marvin/John kommt herein) = RE2-Tuerbank Satz 1
+ *     (Door_exit @0x800141f0 `jal 0x8005ba28`, `lui a0,0x1` @0x800141f4) des Tonteils DOOR06 (Stahltuer mit X-Kreuz; Tuer
+ *     2080 Slot 0 <-> 2030, gen/tuer_zuordnung.inc S161 T075; Tabelle @0x8009A568).
+ *   - EBENE (Nachtrag 20): die Zombies stehen auf Band 8 (oberhalb der Treppe Aot_set Slot 2 @0x0BE2, Band 5 -> 8); die
+ *     Band-8-Zellen der SCA @0x4BC umschliessen Laufgang/Absatz/Balkon, die Absatz-Westwand @0x05C4 endet bei x -16650 ->
+ *     Gegner (FUN_8003b0a4 Band-Vergleich @0x8003b228-3c) kommen nicht auf die Treppe.
  *   - NPC-Schuss = ROOM1021 sub02 (John 0x49): Plc_motion(2,6) @0x020C6, Sleep 110 @0x020CA, Plc_motion(2,7) @0x020CE,
  *     Sleep 30 @0x020D2, Senken Plc_motion(2,6)+Plc_flg 0x80 @0x020EA/@0x020EE, Sleep 20 @0x020F2.
  *   - Wurf = RE2 ROOM7020 sub12/sub13 (Adas Raketenwerfer, Zensus Item_aot_set 0x11): Cut_chg 7 @0x0726, Plc_motion
@@ -59,7 +70,7 @@
 /* ---- Bits (VERTRAG 1.1: G = Bank 9 Bits 114-119; Spur F = 110-113) ------------------------------------------------------ */
 #define RE15_K2080_BANK            9
 #define RE15_K2080_BIT_F_SZENE     110   /* Spur F: 2090-Ankunftsszene gesehen (nur gelesen) */
-#define RE15_K2080_BIT_ANKUNFT     114   /* P1: Tuer-Ton beim ersten Betreten von 2080/2081 nach Bit 110 gespielt */
+#define RE15_K2080_BIT_ANKUNFT     114   /* P1: Knall beim ersten Betreten von 2080/2081 nach Bit 110 gespielt */
 #define RE15_K2080_BIT_SZENE       115   /* P3: Marvin/John-Szene gelaufen (Kanister geworfen, Zombies tot, kein Prop mehr) */
 #define RE15_K2080_BIT_KANISTER    116   /* P3: Kanister liegt im Becken 2090/2091, bis der Alligator an ihm stirbt */
 
@@ -71,7 +82,7 @@
 #define RE15_K2080_SIG_AUFHEBEN    0x1A  /* Programm -> Takt: Kanister in die Haende */
 #define RE15_K2080_SIG_WURF        0x1B  /* Programm -> Takt: loslassen (Super_reset @0x078E) + Fall */
 #define RE15_K2080_SIG_GELANDET    0x1C  /* Takt -> Programm: Aufschlag (ROOM7020 Set(5,0x0e) @0x08B6) */
-#define RE15_K2080_SIG_TUERTON     0x1D  /* Programm -> Takt: Tuer-Ton (DOOR06 Satz 1) */
+#define RE15_K2080_SIG_TUERTON     0x1D  /* Programm -> Takt: Tuer-Ton der Szene (DOOR06 Satz 1, Marvin/John kommt herein) */
 #define RE15_K2080_SIG_ANKUNFT     0x17  /* Plc_dest-Ankunftsflag (+0x1c3 @0x80041c24; Form ROOM1170 `00 05 21`) */
 #define RE15_K2080_TUER_SLOT       21    /* AOT-Slot der Raumwechsel (frei in 2080 0..4 und 2090 0..5; Montage nutzt 20) */
 
@@ -82,6 +93,14 @@
 #define RE15_K2080_ETAGE           8     /* oberer Laufgang: Tuer Slot 1 nfloor 8, SCA floor-Byte 0x88 (@0x534..0x5C4) */
 #define RE15_K2080_Y               (-14400)  /* = -8 * 1800 (Sce_em_set +0x1ba @0x800421d4-8004220c) */
 #define RE15_K2080_TOT0            236   /* Zone-7-Tot-Bits 236..243 (Zensus Dossier 1.6: frei im Original und im Port) */
+/* Ebene (Nachtrag 20, Dossier 1.11): die Treppe = Aot_set Slot 2 sce 12 @0x0BE2 (Band-Byte 0x80, side 0, Bandsprung 3:
+ * unten Band 5 an der 2030-Tuer, oben Band 8), Rechteck x -22700..-16400 z -17850..-15550; die Band-8-Absatzwand SCA
+ * @0x05C4 (x -17650..-16650, z -19300..-13750) schliesst die obere Ebene nach Westen ab. */
+#define RE15_K2080_TREPPE_X0       (-22700)
+#define RE15_K2080_TREPPE_X1       (-16400)
+#define RE15_K2080_TREPPE_Z0       (-17850)
+#define RE15_K2080_TREPPE_Z1       (-15550)
+#define RE15_K2080_ABSATZ_WAND_X   (-16650)  /* Ostkante der Zelle @0x05C4: westlich davon ist kein Band-8-Boden */
 
 /* ---- Kanister (P2) ------------------------------------------------------------------------------------------------- */
 /* Rueckprojektion der Markenmitte (167,156) aus Gas_Can.bmp (= Cut 5, Bildvergleich 0,00) auf y -14400 (Dossier 1.5). */
@@ -155,7 +174,8 @@ void re15_kanister2080_r41_install(uint16_t room_id);
 /* HAKEN scd_vm.c Bildtakt (neben re15_elzazombies_r39_tick): Ausloeser, Signale, Wurfbahn. */
 void re15_kanister2080_r41_tick(void);
 /* Plattform-Haken (PC: platform/pc/src/kanister2080_pc.c). NULL = stumm. */
-extern void (*re15_k2080_tuerton_hook)(void);    /* Tonteil DOOR06 in die Tuerbank + Satz 1 */
+extern void (*re15_k2080_knall_hook)(void);      /* P1: Knall-Bank (gen/knall_bank.inc) in die Tuerbank + Satz 0 */
+extern void (*re15_k2080_tuerton_hook)(void);    /* P3: Tonteil DOOR06 in die Tuerbank + Satz 1 */
 extern void (*re15_k2080_platsch_hook)(void);    /* KANISTER2080.VBS Satz 0 (RE2 ROOM40A0 Satz 0x0b) */
 extern void (*re15_k2080_schuss_hook)(void);     /* NPC-Schuss = RE15_ELZA_TON_SCHUSS (RE2 ROOM4040 Satz 0x0A) */
 /* Zeichner: 1 = der Kanister ist in diesem Bild in 2080/2081 sichtbar; pos = Welt (Fuss-Ursprung des MD1), rot = Q12 3x3. */
@@ -166,7 +186,9 @@ int  re15_k2080_phase(void);
 int  re15_k2080_zombie_lage(int i, int32_t *x, int32_t *z, int16_t *gier);
 int  re15_k2080_landepunkt(int32_t *x, int32_t *z);       /* 1 = Wurfbahn gerechnet (Lage im 2090-Becken) */
 void re15_k2080_bahn_rechnen(const int32_t start[3], int16_t gier, int32_t wasser_y, int32_t ende[3], int *bilder);
-int  re15_k2080_zaehler(int was);   /* 0 Tuer-Toene, 1 Schuesse, 2 Kopf-Tode, 3 Ausloesungen, 4 Kanister gesetzt (2090) */
+int  re15_k2080_zaehler(int was);   /* 0 Knall/Tuer-Toene, 1 Schuesse, 2 Kopf-Tode, 3 Ausloesungen, 4 Kanister gesetzt (2090) */
+/* Messhaken Ebene: Zahl der aktiven 2080-Zombies (Typ 0x16) und davon westlich der Absatzwand bzw. nicht auf y -14400. */
+int  re15_k2080_zombies_oben(int *aktiv, int *auf_treppe, int *falsche_hoehe);
 uint8_t re15_k2080_npc_typ(void);   /* 0x40 Leon, 0x49 Elza */
 const uint8_t *re15_k2080_programm(int nr, int *out_len);   /* 0 Spawn 2080, 1 Szene 2080, 2 Start 2090, 3 Rueckkehr 2090 */
 void re15_k2080_reset(void);

@@ -9,6 +9,7 @@ G besitzt ROOM2080/2081; F besitzt 2090-Szene (Bit 110 = Szene gesehen). Kaniste
 
 Punkte (Wortlaut AUFTRAG.md):
 1. Nach dem Start der Alligator-Fress-Szene: in 2080 oben Metalltuer-Schliess-SE, dann 8 gespawnte Zombies im Hauptbereich.
+   Nachtrag 17: statt des Schliess-Tons der KNALL wie nach Irons; Nachtrag 20: die Zombies oberhalb der Treppe, nicht unten.
 2. Gaskanister (RE2) am Rand der Reling in 2080 (Gas_Can.bmp).
 3. Nach genug Treffern auf den Alligator: Szene — Tuer-SE, Marvin (Leon)/John (Elza) in 2080, 8 Kopfschuesse, Kanister
    aufnehmen (beide Haende), "Hey, Leon, try with this!", Wurf ueber die Reling (Kamera wie Adas Raketenwerfer-Wurf RE2,
@@ -16,6 +17,9 @@ Punkte (Wortlaut AUFTRAG.md):
 
 ## 0. Stand / Fortschritt
 - 2026-10-24: Pflichtlektuere (AUFTRAG/VERTRAG/UEBERGABE, B-Dossier §2.5/§7/§9), Raum-RE 2080/2090, RE2-Zensus Raketenwerfer.
+- 2026-10-24 23:xx: P1 (Knall nach Nachtrag 17, dann 8 Zombies oben nach Nachtrag 20), P2 (Kanister an der Reling) und P3
+  (Szene Marvin/John, Kopfschuesse, RE2-Wurf, Kanister im Becken) gebaut und an der exe gemessen (Abschnitte 4/4.1); Riegel
+  gezielt 34/34 gruen (Abschnitt 5). Offen: Abschnitt 6, Fragen: Abschnitt 7.
 
 ## 1. RE-Belege (selbst gelesen)
 
@@ -58,8 +62,6 @@ Punkte (Wortlaut AUFTRAG.md):
   Do { Evt_next, Add_speed, Add_aspeed } while Member_cmp(0x0c op 3 -800) @0x08A6-08B0, Set(5,0x0e) @0x08B6,
   **Se_on Satz 0x0e @0x08BA** (Aufprall), Pos_set (-24650,0,-21998) + Dir_set (0xfc00,0,0x0400) @0x08CA/08D2 (liegt).
 
-
-
 ### 1.3 RE2-Opcode-Semantik (selbst disassembliert, re2_disasm.py auf info/re2leon/PSX.EXE; Tafel @0x800a74c8)
 - Speed_set (0x2F) @0x80055a84: `lbu v1,1(v0)` / `lhu a1,2(v0)` / `sh a1,344(v1)` @0x80055a8c/90/ac -> Faden+0x158+Achse*2
   (Achse 0..5 = Geschwindigkeit x,y,z,rx,ry,rz; 6..11 = Beschleunigung) - wie RE1.5 (scd_vm.c op_speed_set).
@@ -97,6 +99,31 @@ Zensus scd_dump_room.py ueber alle RDTs STAGE1-3 (Sce_em_set pc[7] + Ck/Set Bank
 Work_set(2,0) @0x020C2; **Plc_motion(2,6) Zielen @0x020C6**, Sleep 110 @0x020CA, **Plc_motion(2,7) Feuer @0x020CE**, Sleep 30
 @0x020D2, Plc_motion(2,7) @0x020D6; Senken Plc_motion(2,6) + Plc_flg 0x80 @0x020EA/@0x020EE, Sleep 20 @0x020F2. Marvin (0x40)
 traegt dieselbe Eigenbank (Sub 2 = 0x80050f00 auf +0x170/+0x174, ROOM10D0 Plc_motion(2,6,0), enemy_ai_common.c:10069).
+
+### 1.8 Clip-Zensus Marvin 0x40 / John 0x49 (tools/r41_kanister2080/probe_npc_clips.c, Pose = re15_skel_compute_pose)
+CDEMD0.EMS Blob 0x40 @0x2CD800 / 0x49 @0x355800, je 9 Verzeichnis-Eintraege; Bank 0 (Loco, dir[1]/dir[2]) 24 Clips, Bank 1
+(Eigenbank dir[3]/dir[4], spielt Sub 2/4/5/6/9, re15_emd.h:226-232) 14 Clips; Clip-Struktur und Bewegung 0x40 = 0x49 (diff
+ohne Wurzelwerte leer). Armketten 0->9->10->11 / 0->12->13->14 (Haende = Bone 11/14), Kopf = Bone 8; Modell: +x = vorn,
+y < 0 = oben. Volltabelle G_belege/npc40_clipzensus.txt. Belegte Lesarten:
+- Eigen c6 (10 B.): Haende von der Huefte (-31,-1602) nach vorn/oben (764..917, -2534..-2458), Abstand 242 = beidhaendig
+  = **Anheben/Zielen**; Eigen c7 (16 B.) haelt vorn oben = **Feuern** (ROOM1021 sub02 Plc_motion(2,6)/(2,7) @0x020C6/@0x020CE);
+  c8 Halten; c9/c10 oben, c11/c12 unten.
+- Eigen c0 (22 B.): beide Haende vorn auf Brusthoehe (350..683, -1886..-1821), Abstand 722..1005 = **Tragen vor der Brust**.
+- Loco c2 (50 B.): Wurzel sinkt -1813 -> -1005 (f33), linke Hand am Boden (149,-328), dann zurueck = **Buecken + Aufheben**.
+- Eigen c5 (30 B.): Gehen (Haende pendeln).
+
+### 1.9 RE2-Ausloeser der Wurfszene (ROOM7020 sub10/sub11) und die Port-Form der Schwelle
+- RE2 loest Adas Wurf aus, wenn der Boss Mitglied 0x19 == 1 UND 0x1a == 1 meldet (sub11 @0x06BE/@0x06C4) oder 60 s
+  vergangen sind (sub10 Sleep 0x0708 @0x06AC -> (5,15)) und 0x1a == 1. Mitglied-Getter @0x800112f8: 0x19 = +0x1D8
+  (`lh v0,472(a0)` @0x800560a4), 0x1a = +0x1DA (`lh v0,474(a0)` @0x800560b0) = Skript-Arbeitsfelder des Tyrant. Die
+  Tyrant-Overlay-Datei liegt nicht in info/re2leon (COMMON/BIN hat nur EM23/EMOVL10/21/EMS25/26/EMZ0) -> wer +0x1D8/+0x1DA
+  setzt, ist OFFEN (Abschnitt 6).
+- NUTZER-VORGABE "oft genug angeschossen" -> Schwelle = die RE2-Schwaeche des Alligators (HURT-Selektor @0x80101ebc-dc:
+  HP < 25000 -> +0x218 |= 0x20, B: re15_gr2_geschwaecht) = Form "Boss meldet Schaden" (+0x1D8); "freie Lage" = Boss in
+  Verfolgung/Belagerung (re15_gator_boss_verfolgt), nicht im Biss/Finisher/R1/untergetaucht (Form +0x1DA). Den 60-s-Zweig
+  baut der Port NICHT (Nutzer-Wortlaut nennt nur Treffer). Trefferzahl bis zur Schwelle mit der RE1.5-Schadenszeile des
+  Alligators (re15_damage.c s_wpn_dmg_gator, Zeile @0x8006e0d0 + 0x23*0x58): Pistole 7 -> 43 Treffer, Schrotflinte 30 -> 11,
+  Magnum 50 -> 7, Granatwerfer 70 -> 5 (HP 25300, Sockel 25000) -> Entscheidungsfrage Abschnitt 7.
 
 ### 1.10 Nachtrag 17 (19:44): der KNALL beim Hereinkommen der Zombies - Original-Stelle und Port-Datei
 Wortlaut: "Muss natuerlich ein knallen sein, als ob die Zombies rein brechen, so wie bei STAGE1 von Elza/Leon am Ende in der
@@ -165,31 +192,6 @@ RE15_R39_MESS_SPIELER_HP=100, Bildserie 30..900/30, Auswertung `tools/r41_kanist
   Der Abstieg (L1.1 + A0.2) kam nicht zustande (Leon war gepackt, Gier unveraendert) -> Messung "Leon geht wieder hinunter" im
   Nachher-Lauf. Bilder: Cut 0 (Leon unten, Treppe leer), Cut 1 (auf der Treppe), Cut 2 (oben, Zombies im Hauptbereich).
 
-### 1.8 Clip-Zensus Marvin 0x40 / John 0x49 (tools/r41_kanister2080/probe_npc_clips.c, Pose = re15_skel_compute_pose)
-CDEMD0.EMS Blob 0x40 @0x2CD800 / 0x49 @0x355800, je 9 Verzeichnis-Eintraege; Bank 0 (Loco, dir[1]/dir[2]) 24 Clips, Bank 1
-(Eigenbank dir[3]/dir[4], spielt Sub 2/4/5/6/9, re15_emd.h:226-232) 14 Clips; Clip-Struktur und Bewegung 0x40 = 0x49 (diff
-ohne Wurzelwerte leer). Armketten 0->9->10->11 / 0->12->13->14 (Haende = Bone 11/14), Kopf = Bone 8; Modell: +x = vorn,
-y < 0 = oben. Volltabelle G_belege/npc40_clipzensus.txt. Belegte Lesarten:
-- Eigen c6 (10 B.): Haende von der Huefte (-31,-1602) nach vorn/oben (764..917, -2534..-2458), Abstand 242 = beidhaendig
-  = **Anheben/Zielen**; Eigen c7 (16 B.) haelt vorn oben = **Feuern** (ROOM1021 sub02 Plc_motion(2,6)/(2,7) @0x020C6/@0x020CE);
-  c8 Halten; c9/c10 oben, c11/c12 unten.
-- Eigen c0 (22 B.): beide Haende vorn auf Brusthoehe (350..683, -1886..-1821), Abstand 722..1005 = **Tragen vor der Brust**.
-- Loco c2 (50 B.): Wurzel sinkt -1813 -> -1005 (f33), linke Hand am Boden (149,-328), dann zurueck = **Buecken + Aufheben**.
-- Eigen c5 (30 B.): Gehen (Haende pendeln).
-
-### 1.9 RE2-Ausloeser der Wurfszene (ROOM7020 sub10/sub11) und die Port-Form der Schwelle
-- RE2 loest Adas Wurf aus, wenn der Boss Mitglied 0x19 == 1 UND 0x1a == 1 meldet (sub11 @0x06BE/@0x06C4) oder 60 s
-  vergangen sind (sub10 Sleep 0x0708 @0x06AC -> (5,15)) und 0x1a == 1. Mitglied-Getter @0x800112f8: 0x19 = +0x1D8
-  (`lh v0,472(a0)` @0x800560a4), 0x1a = +0x1DA (`lh v0,474(a0)` @0x800560b0) = Skript-Arbeitsfelder des Tyrant. Die
-  Tyrant-Overlay-Datei liegt nicht in info/re2leon (COMMON/BIN hat nur EM23/EMOVL10/21/EMS25/26/EMZ0) -> wer +0x1D8/+0x1DA
-  setzt, ist OFFEN (Abschnitt 6).
-- NUTZER-VORGABE "oft genug angeschossen" -> Schwelle = die RE2-Schwaeche des Alligators (HURT-Selektor @0x80101ebc-dc:
-  HP < 25000 -> +0x218 |= 0x20, B: re15_gr2_geschwaecht) = Form "Boss meldet Schaden" (+0x1D8); "freie Lage" = Boss in
-  Verfolgung/Belagerung (re15_gator_boss_verfolgt), nicht im Biss/Finisher/R1/untergetaucht (Form +0x1DA). Den 60-s-Zweig
-  baut der Port NICHT (Nutzer-Wortlaut nennt nur Treffer). Trefferzahl bis zur Schwelle mit der RE1.5-Schadenszeile des
-  Alligators (re15_damage.c s_wpn_dmg_gator, Zeile @0x8006e0d0 + 0x23*0x58): Pistole 7 -> 43 Treffer, Schrotflinte 30 -> 11,
-  Magnum 50 -> 7, Granatwerfer 70 -> 5 (HP 25300, Sockel 25000) -> Entscheidungsfrage Abschnitt 7.
-
 ## 3. Umsetzung
 
 ### 3.1 Dateien (alle neu ausser den markierten Haken)
@@ -197,15 +199,17 @@ y < 0 = oben. Volltabelle G_belege/npc40_clipzensus.txt. Belegte Lesarten:
 - `engine/src/kanister2080_r41.c` - Installer (2080/2081/2090/2091), Programme (Original-Opcode-Formen, zur Laufzeit gebaut
   wie elzazombies_r39.c), Bildtakt (Signale Bank 5 Wort 0, Anvisieren, Kopfschuss, Kanister in den Haenden, RE2-Wurfbahn),
   Zeichner-Abfrage, Messhaken RE15_K2080_GATOR_HP.
-- `platform/pc/src/kanister2080_pc.c` - Kanister-Zeichner (Modell/TIM-Platz 53 wie Spur B), Tuer-Ton (DOOR06-Tonteil ->
-  RE2-Tuerbank Satz 1), Aufschlag (KANISTER2080.VBS), NPC-Schuss (re15_elza_se_hook RE15_ELZA_TON_SCHUSS).
+- `platform/pc/src/kanister2080_pc.c` - Kanister-Zeichner (Modell/TIM-Platz 53 wie Spur B), Knall P1 (gen/knall_bank.inc Satz 0,
+  Nachtrag 17, Abschnitt 3.5), Tuer-Ton P3 (DOOR06-Tonteil -> RE2-Tuerbank Satz 1), Aufschlag (KANISTER2080.VBS), NPC-Schuss
+  (re15_elza_se_hook RE15_ELZA_TON_SCHUSS).
 - `engine/src/gen/kanister2080_r41_texte.inc` (tools/r41_kanister2080/texte_bauen.py), `engine/src/gen/r41_kanister2080_bank.inc`
   + NEUES ASSET `shared_assets/RE2/KANISTER2080.VBS` (9864 B, md5 848c40f6c077d937fb025df9ae1bc62b;
   tools/r41_kanister2080/kanister2080_se_cut.py = RE2 ROOM40A0 snd0 EDT-Satz 11 `00 01 83 00`, 1 VAG 6720 B).
 - Haken (je 1 Zeile, "Runde 41 Spur G"): `scd_room_setup.c` Ende des Installer-Blocks; `scd_vm.c` Bildtakt nach
   re15_elzazombies_r39_tick; `platform/pc/main.c` Init nach re15_pc_gator_re2_init + Zeichnen nach re15_gr2_pc_zeichnen;
   `tests/unit/test_r36_kartenbits.c` k_port[] Bits 114/115/116 (+ include).
-- Werkzeuge/Sonden: tools/r41_kanister2080/probe_kanister_lage.c, probe_lagen.c, probe_npc_clips.c.
+- Werkzeuge/Sonden: tools/r41_kanister2080/probe_kanister_lage.c, probe_lagen.c, probe_npc_clips.c, blick_wurf.py,
+  belege_n17_n20.py (Knall-/SCA-/state.log-Belege).
 
 ### 3.2 Lagen (PORT-WAHL mit Messung; probe_lagen.c auf ROOM2080.RDT)
 - Kanister (-6745,-14400,-17625) = Rueckprojektion der Markenmitte (1.5); in Cut 5 Fuss (168,155) Kopf (170,77) = Markenmitte.
@@ -246,27 +250,6 @@ Port-Gegenstueck); Adas Abgang Plc_dest @0x0812 (Marvin/John bleibt in 2080, der
 - Zombies im 2080-Teil: KEIN Halt (entity+0x9 |= 0x20) - gemessen (Lauf p3f): der angehaltene RE2-Steher spielte Clip 1 bis zum
   Ende und lag ab Bild 40 am Boden; ohne Halt bleiben die Steher stehen (Spieler-Parkplatz Band 5, >= 10000 entfernt).
 
-## 4. Messung nachher (exe-Kopie re15_pc_g41_mess.exe, Bau 2026-10-24)
-Grundumgebung: RE15_NO_INTRO=1 RE15_NOAUDIO=1 Titel-Autostart, RE15_WINDOW_SCALE=1.
-- P1 (Lauf p1a) `RE15_DEBUG_JUMP=2080@250 RE15_SET_FLAG=9:110,3:245 RE15_PLAYER_POS=-15000,-16500,0,8 RE15_FORCE_CUT=2`:
-  `[k2080] F250 ROOM2080 nach Bit 110: 8 lebende Zombies (Tot-Bits 236..243)`, `Tuer-Ton DOOR06 Satz 1 ... Bit 114 = 1`, 8 x
-  `[spawn-diag] Sce_em_set type=0x16 behavior=0x02 slot=0..7 pos=(.., -14400, ..)`; Bild G_belege/p1_2080_zombies_cut2.png
-  (8 Zombies im Laufgang, Leon am Treppenabsatz; F125 umringen sie ihn).
-- P3 Leon (Lauf p3h) `RE15_DEBUG_JUMP=2090@250 RE15_SET_FLAG=9:110,3:245 RE15_GB_TEST=5 RE15_PLAYER_POS=6500,-25000,3072
-  RE15_GIVE=3:15 RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990 RE15_INPUT_SCRIPT=W2.0,M0.3,MA0.1,..`:
-  echter Pistolentreffer -> `F100 AUSLOESER geschwaecht ... Treffer 1` -> ROOM2080 Szene (Marvin 0x40, 8 Zombies) -> Tuer-Ton ->
-  8 x `Schuss n: Treffer ... hp=-1 state=3 zeile=5` und 8 x `Kopf ab: Slot s (Part 8 Flagwort 0x4B ...)` (F149..F429, je 40
-  Bilder) -> `F550 Kanister aufgehoben (Loco c2 Bild 33)` -> `F620 Wurf: Start (-6328,-16896,-17627) ... Landung
-  (-2278,-3576,-17267) nach 36 Bildern` -> `F656 Aufschlag` -> `F671 ROOM2090 RUECKKEHR ... Zone-7-Tot-Bits 236..243 gesetzt:
-  8 von 8` -> `Kanister im Becken (-2278,-1200,-17267)`; B zeichnet ihn in Cut 0 (`[gator-re2] Kanister Stufe 0
-  pos=(-2278,-1200,-17267) Kasten=(254..317,98..120)`). Bildbogen G_belege/szene2080_bildbogen_p3g.png (Cut 2 Schuesse und
-  Kopfwolken, Cut 5 an der Reling, Cut 7 mit "Marvin: Hey, Leon, try with this!"), 2090 danach G_belege/rueckkehr_2090_cut0.png.
-- P3 Elza (Lauf p3e_elza) wie oben + RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1:
-  ROOM2091 -> ROOM2081 `SZENE (John 0x49 ...)`, 8 Kopf ab, Wurf -> Landung (-2250,-3545,-17276), RUECKKEHR ROOM2091;
-  Bild G_belege/szene2081_john_wurf_f600_x2.png ("John: Hey, Elza, try with this!").
-- Landepunkt (-2278,-17267) liegt im Becken: Aussenwaende x[-8900..7200] z[-27000..-5400], 578 westlich des Plattform-Blocks
-  x[-1700..1850] z[-20000..-12450] (gb_becken_draussen, enemy_ai_boss_gator.c) = Westkanal.
-
 ### 3.4 Kamera des Wurfs (Nachtrag 5 "GENAUSO ... von der Kamera") - Zuordnung RE2-Schnitt -> 2080/2090-Kamera
 RE2 ROOM7020 (RID @RDT+0x24, 32 B je Cut): Cut 7 pos (-22158,-3852,-15174) -> (-28368,-7434,-18234) fov 26684 = der Werfer-Schnitt
 (@0x0726, Ada steht bei (-28000,-7500,-17900) @0x0740 mit Gier 0x0e74 @0x0748); Cut 11 pos (-15948,-1584,-21978) ->
@@ -286,3 +269,139 @@ PORT-WAHL der Zuordnung: Cut 7 ist die einzige Kamera, die den Werfer von der Se
 zeigt; von unten wie RE2 sieht ihn keine vorhandene Kamera (keine neuen Hintergruende, Entscheid B8). RE2 Cut 11 (Schnitt auf den
 Fangenden 15 Bilder nach dem Aufschlag) = Rueckkehr nach 2090 auf die Kamera, die Leon beim Ausloesen hatte. Die RE2-Schnitte des
 Alligatorkampfes (Nachtrag 4: Aufnahme ohne Schnitt, Explosion R1 automatisch) laufen danach unveraendert in Spur B's Modul.
+
+### 3.5 Umsetzung Nachtrag 17 / Nachtrag 20 (Bau build16)
+- **Knall (P1, Nachtrag 17):** `kanister2080_r41.c` Installer, erstes Betreten von 2080/2081 nach Bit 110: ZUERST der neue Haken
+  `re15_k2080_knall_hook` (Anstoss im Raumaufbau, vor dem ersten VM-Lauf), DANN das Spawn-Programm (8 x Sce_em_set im ersten
+  VM-Lauf des Raumaufbaus) = Reihenfolge "erst Knall, dann Zombies" (Runde 36 K3). PC: `kanister2080_pc.c knall()` laedt
+  `engine/src/gen/knall_bank.inc` (19976 B, dieselbe Datei wie irons_tod_1150.c / elzazombies_r39.c) mit
+  `re15_audio_re2_tuer_laden` in die Tuerbank und spielt `re15_audio_re2_tuer_se(KNALL_SE_TUER)` = Satz 0 (Abschnitt 1.10).
+- **Szene (P3):** bleibt der Schliess-Ton DOOR06 Satz 1 (Door_exit @0x800141f0) beim Hereinkommen von Marvin/John (Abgrenzung 1.10,
+  Frage im Abschnitt 7).
+- **Ebene (Nachtrag 20):** die 8 Lagen (k_zombies) liegen schon auf Band 8 oestlich der Absatzwand (Messung vorher 2.1) - keine
+  Verhaltensaenderung. Neu im Header: `RE15_K2080_TREPPE_X0/X1/Z0/Z1` (Treppen-Aot @0x0BE2) und `RE15_K2080_ABSATZ_WAND_X`
+  (Zelle @0x05C4); Messhaken `re15_k2080_zombies_oben` und Messzeile `[k2080] F.. Ebene: n Zombies x a..b y c..d, auf der Treppe
+  (x < -16650) k, nicht auf y -14400: h | Spieler (x,y,z)` alle 30 Bilder in 2080/2081 (kein Verhalten).
+- **Ton-Messung ohne Proxy:** die Zeile "SE-Stimmen aktiv" (Zaehlung der gepumpten SE-Stimmen SPU 16..23 zwei Bilder nach dem
+  Anstoss) ist entfernt. Sie war ein Proxy: Saetze mit (byte3 & 0x1f) < 0x10 laufen im Direkt-Zweig FUN_80045024 (`SsUtKeyOnV`
+  @0x8004522c, audio_pc.c se_play_layers) auf einer Pool-Stimme AUSSERHALB von SPU 16..23 - der Knall (Bank-Satz `00 00 05 20`)
+  und der Aufschlag (`00 01 83 00`) gehoeren dazu; die fruehere Zeile "Aufschlag: n SE-Stimmen aktiv" zaehlte also fremde
+  Stimmen. Jetzt: mit RE15_SE_DEBUG=1 schreibt se_play_layers je gespielter Lage `[se] Stimme: se.. layer.. vag.. note.. fine..
+  center.. (.. Hz) -> SE-Stimme ..` direkt hinter die Ausloese-Zeile dieses Moduls (gleicher Aufruf, gleicher Strom).
+- Werkzeug `tools/r41_kanister2080/belege_n17_n20.py knall|sca|zlage` (Belege 1.10/1.11, Auswertung state.log).
+
+## 4. Messung nachher (exe-Kopie re15_pc_g41_mess.exe, Bau 2026-10-24)
+Grundumgebung: RE15_NO_INTRO=1 RE15_NOAUDIO=1 Titel-Autostart, RE15_WINDOW_SCALE=1.
+- P1 (Lauf p1a) `RE15_DEBUG_JUMP=2080@250 RE15_SET_FLAG=9:110,3:245 RE15_PLAYER_POS=-15000,-16500,0,8 RE15_FORCE_CUT=2`:
+  `[k2080] F250 ROOM2080 nach Bit 110: 8 lebende Zombies (Tot-Bits 236..243)`, `Tuer-Ton DOOR06 Satz 1 ... Bit 114 = 1` (Stand VOR Nachtrag 17; seit 3.5 der Knall, Abschnitt 4.1), 8 x
+  `[spawn-diag] Sce_em_set type=0x16 behavior=0x02 slot=0..7 pos=(.., -14400, ..)`; Bild G_belege/p1_2080_zombies_cut2.png
+  (8 Zombies im Laufgang, Leon am Treppenabsatz; F125 umringen sie ihn).
+- P3 Leon (Lauf p3h) `RE15_DEBUG_JUMP=2090@250 RE15_SET_FLAG=9:110,3:245 RE15_GB_TEST=5 RE15_PLAYER_POS=6500,-25000,3072
+  RE15_GIVE=3:15 RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990 RE15_INPUT_SCRIPT=W2.0,M0.3,MA0.1,..`:
+  echter Pistolentreffer -> `F100 AUSLOESER geschwaecht ... Treffer 1` -> ROOM2080 Szene (Marvin 0x40, 8 Zombies) -> Tuer-Ton ->
+  8 x `Schuss n: Treffer ... hp=-1 state=3 zeile=5` und 8 x `Kopf ab: Slot s (Part 8 Flagwort 0x4B ...)` (F149..F429, je 40
+  Bilder) -> `F550 Kanister aufgehoben (Loco c2 Bild 33)` -> `F620 Wurf: Start (-6328,-16896,-17627) ... Landung
+  (-2278,-3576,-17267) nach 36 Bildern` -> `F656 Aufschlag` -> `F671 ROOM2090 RUECKKEHR ... Zone-7-Tot-Bits 236..243 gesetzt:
+  8 von 8` -> `Kanister im Becken (-2278,-1200,-17267)`; B zeichnet ihn in Cut 0 (`[gator-re2] Kanister Stufe 0
+  pos=(-2278,-1200,-17267) Kasten=(254..317,98..120)`). Bildbogen G_belege/szene2080_bildbogen_p3g.png (Cut 2 Schuesse und
+  Kopfwolken, Cut 5 an der Reling, Cut 7 mit "Marvin: Hey, Leon, try with this!"), 2090 danach G_belege/rueckkehr_2090_cut0.png.
+- P3 Elza (Lauf p3e_elza) wie oben + RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1:
+  ROOM2091 -> ROOM2081 `SZENE (John 0x49 ...)`, 8 Kopf ab, Wurf -> Landung (-2250,-3545,-17276), RUECKKEHR ROOM2091;
+  Bild G_belege/szene2081_john_wurf_f600_x2.png ("John: Hey, Elza, try with this!").
+- Landepunkt (-2278,-17267) liegt im Becken: Aussenwaende x[-8900..7200] z[-27000..-5400], 578 westlich des Plattform-Blocks
+  x[-1700..1850] z[-20000..-12450] (gb_becken_draussen, enemy_ai_boss_gator.c) = Westkanal.
+
+### 4.1 Messung nachher Nachtrag 17 / 20 (Bau build16, exe-Kopie re15_pc_g41_mess.exe)
+- **Knall, echter Tuerweg 2090 -> 2080** (Lauf n20n_knall, RE15_AUDIO_CAP_SYNC=cap.raw, `RE15_INPUT_SCRIPT=W1.0,A0.2,W6.0` an der
+  Leiter-Tuer): `[tuer] Sequenz Archiv 2 DOOR16 ...`, dann `[k2080] F31 Knall: Knall-Bank 19976 B in der Tuerbank, Satz 0 (RE2
+  ROOM1060 Se_on 0x0a @0x0F48, wie die Szene nach Irons)`, `Knall (...) - erstes Betreten nach Bit 110, Bit 114 = 1`, erst
+  DANACH die 8 `[spawn-diag] Sce_em_set type=0x16 behavior=0x02 slot=0..7 pos=(..,-14400,..)`. Mitschnitt gegen die selbst
+  dekodierten Referenzen (`tools/r36_k/knall_im_mitschnitt.py cap.raw`, RE15_INFO_DIR = Hauptbaum, nur gelesen):
+  **`RE2_1060 (11025 Hz): t=15.57 s Bild 467 r=0.891 Huelle-max 6853`**, DOOR04 und R1030 kein Treffer >= 0,5; Bild 467 von 557
+  = das erste 2080-Bild (Ende EXIT_AT 90#2080: 557 - 90). Vergleich Runde 36 K (Ende der 1150-Szene): r 0,93, Huelle 6617.
+- **Lauf n20n_sedbg** (dasselbe + RE15_SE_DEBUG=1): direkt hinter der Ausloese-Zeile `[se] Stimme: se=0 layer=0 vag=0 note=67
+  fine=0 center=91 vol=127 pitch=0x400 (11025 Hz) -> SE-Stimme -16 (SPU 0)` und `... layer=1 vag=0 note=67 fine=1 center=91 ...`
+  = Tone 8/9 der ROOM1060-Bank (center 91 / min 67 -> 11025 Hz, wie Runde 36 K §K1.2), Direkt-Zweig.
+- **Szene Leon** (Lauf n20n_szene, CAP_SYNC + SE_DEBUG): Tuer-Ton `[se] Stimme: se=1 layer=0 vag=2 note=61 fine=57 center=79 vol=127
+  pitch=0x5f3 (16397 Hz) -> SE-Stimme 7 (SPU 23)`; Aufschlag `[se] Stimme: se=0 layer=0 vag=0 note=65 fine=57 center=95 vol=127
+  pitch=0x2f9 (8193 Hz) -> SE-Stimme -16 (SPU 0)`; alle Ebene-Zeilen F30..F660 `8 Zombies ... y -14400..-14400, auf der Treppe
+  (x < -16650) 0`.
+- **Ebene** (Lauf n20n_ebene: Leon oben am Absatz `RE15_PLAYER_POS=-16000,-16700,2048,8` Blick West, `W2.0,A0.2,W20.0`, Bilder
+  30..720/30): `[stair] START dir=DOWN cur_band=8 target_band=5`, ab Bild 180 steht Leon unten (-22918,-9000,-16715); alle 24
+  Messzeilen `Ebene: 8 Zombies ... y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0`; die Verfolgung
+  reicht bis x -15906 (Bild 180) an den Absatz, danach bleiben sie oben (x-Minimum -13920..-15791). Auswertung state.log
+  (`belege_n17_n20.py zlage`): 5720 Zombie-Saetze, x -15908..-9900, keiner westlich x -16650.
+- **Lage oben im Bild** (Laeufe n20n_cut7 / n20n_cut2: Leon unten am Treppenfuss, RE15_FORCE_CUT 7 bzw. 2, Bild 40):
+  G_belege/n20_oben_cut7_cut2_x2.png - Cut 7 (Totale): die Zombies stehen oben auf dem Laufgang ueber der Grube; Cut 2: die 8
+  im oberen Hauptbereich am Rechner. = die Lage, die Spur F fuer "oben in 2080 kommen die Zombies herein" zeigen soll
+  (Tabelle k_zombies, API `re15_k2080_zombie_lage`). Bild **G_belege/n20_nachher_abstieg_cut0_1.png**: Bilder 30/60 Cut 0
+  (Leon oben hinter der Kamera, Treppe leer), Bild 120 Cut 1 (Leon auf der Treppe, ein Zombie oben am Absatz), Bilder 180/390/600
+  Cut 0 (Leon unten, Treppe leer).
+
+## 5. Tests (gezielt, keine volle Suite; Bau build16 ueber local_build.sh, ctest mit msys64 zuerst im PATH)
+`ctest --test-dir re15_port/build -R "unit_r41_kanister2080|integration_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_" --timeout 1500 --output-on-failure`
+-> **`100% tests passed, 0 tests failed out of 34`** (Total Test time (real) = 288.33 sec; integration_r41_kanister2080 245.78 sec).
+- Eigene Riegel (tests/unit/probes/r41_kanister2080.cmake): unit_r41_kanister2080_{lage, spawn, szene, start, bahn, texte, ebene}
+  und integration_r41_kanister2080 (Laeufe ankunft / ebene / kanister / szene_leon / szene_elza, Kopf des Skripts).
+  - `ebene` (neu, Nachtrag 20): `SCA @0x4BC: 140 Zellen, davon 100 auf Band 8; Flaeche ab Zombie 0: 37695 Raster, x -16625..-6725
+    z -26875..-6775` / `Rasterrand 0, westlich der Absatzwand 0, auf der Treppe 0`; Treppen-Aot @0x0BE2 und Absatzwand @0x05C4
+    gegen die Header-Konstanten.
+  - integration `ankunft`: Knall statt Schliess-Ton, beide [se]-Lagen (center 91, 11025 Hz) direkt hinter der Ausloese-Zeile,
+    der Knall VOR den 8 Sce_em_set; `ebene` (neu): Abstieg 8 -> 5, 24 Ebene-Zeilen ohne Zombie auf der Treppe / ausserhalb
+    y -14400, Verfolgung bis x <= -15000, Leon unten; `szene_leon`: Tuer-Ton (center 79, 16397 Hz) und Aufschlag (center 95,
+    8193 Hz) ueber die [se]-Zeile statt der Stimmenzaehlung; in beiden Szenen alle Ebene-Zeilen ohne Zombie auf der Treppe.
+- Gruppen der beruehrten gemeinsamen Dateien: unit_r36_kartenbits (k_port[] Bits 114-116), unit_scd_* (7; Haken in
+  scd_room_setup.c / scd_vm.c), unit_r41_re2gator_* (18; Spur-B-API re15_gr2_*, Kanister im Becken).
+- Nicht gelaufen: integration_r41_re2gator (Spur B; dieser Zweig aendert B's Modul nicht, er ruft nur dessen API).
+
+## 6. OFFEN (gemessen bzw. benannt, nicht geraten)
+1. RE2-Ausloeser-Mitglieder +0x1D8/+0x1DA des Tyrant (ROOM7020 sub11 @0x06BE/@0x06C4, Getter @0x800560a4/@0x800560b0): der
+   Schreiber liegt im Tyrant-Overlay, das in info/re2leon nicht vorliegt (Abschnitt 1.9). Der Port nimmt die Alligator-Schwaeche
+   (@0x80101ebc-dc) als Form; den RE2-60-s-Zweig (sub10 Sleep 0x0708) baut er nicht.
+2. Wurf-Kamera von unten wie RE2 Cut 7 (43,6 Grad unter dem Werfer) gibt es in ROOM2080/2090 nicht (Abschnitt 3.4); Cut 7 von
+   der Grubenseite ist die naechste vorhandene (frontal 0,89). Neue Hintergruende werden nicht erfunden (Entscheid B8).
+3. Alligator nach der Rueckkehr: der Raum 2090 wird neu aufgebaut, Spur B's Boss startet wieder untergetaucht (B9) und taucht beim
+   naechsten Annaehern auf (Intro). Gemessen (Lauf p3h mit RE15_GB_TEST=5): Gator wieder aufgetaucht an der Marker-Lage, verfolgt
+   Leon. Die Aufnahme des Kanisters geschieht, wenn er an ihm vorbeischwimmt (Spur B's Fenster); im Riegel
+   integration_r41_kanister2080 nicht erzwungen (Spur B's Riegel decken Aufnahme/R1 ab).
+4. RE2-Form "Werfer laeuft danach weg" (Adas Plc_dest @0x0812) und RE2 sub12 `Sleep 1` + `Plc_dest 40 00 14 ..` (@0x0754/0x0758,
+   Mode 0x14) nicht uebernommen: Marvin/John bleibt in 2080, der Schnitt geht nach 2090 (Abschnitt 3.3).
+5. Der Kanister ist RE2-gross (MD1 2784 lang, r 267, ROOM40A0 Modell 1 unveraendert) - in Marvins/Johns Haenden quer vor der
+   Brust ragt er je 1392 zur Seite (Bild G_belege/szene2081_john_wurf_f600_x2.png). Kein Massstab erfunden.
+6. Ton: alle Laeufe ohne Audiogeraet (RE15_NOAUDIO bzw. RE15_AUDIO_CAP_SYNC); gehoert hat ihn keiner. Belege sind die [se]-Zeilen
+   der Mischkette (Satz, VAG, Tonhoehe) und fuer den Knall die Mitschnitt-Korrelation r 0,891 (Abschnitt 4.1).
+7. Nachtrag 20 "nachdem die Zombies durch die Tuer gebrochen sind": den Durchbruch selbst zeigt Spur F in der 2090-Szene
+   (FG-E1). In 2080 gibt es oben nur die Tuer zum Becken (Slot 1 @0x0BC2); die Zombies von Spur G stehen beim Betreten bereits
+   oben (Knall, dann Sce_em_set). Dass F dieselbe Lage (k_zombies) und denselben Ton (gen/knall_bank.inc Satz 0) nimmt, ist in
+   diesem Zweig nicht messbar (F's Modul liegt nicht hier).
+
+## 7. Fuer den Nutzer
+Neue Assets (Paket-Gate):
+- `re15_port/shared_assets/RE2/KANISTER2080.VBS` (9864 B, md5 848c40f6c077d937fb025df9ae1bc62b) = RE2 ROOM40A0 Raumbank Satz 11
+  (der Gaskanister faellt ins Wasser).
+- weiter benutzt (schon im Paket): `shared_assets/RE2/KANISTER40A0.MD1/.TIM` (Spur B), `shared_assets/RE2/DOOR/DOOR06.DO2`
+  (Schliess-Ton der Szene), ELZASE.VBS (Schuss), `engine/src/gen/knall_bank.inc` (der Knall, eingebacken).
+Ton-Dateien (Nachtrag 17: "Ton-Datei des Ports nennen"):
+- Knall beim Hereinkommen der Zombies = `re15_port/engine/src/gen/knall_bank.inc` Satz 0 (Generator `tools/r35_l/knall_cut.py`,
+  Quelle RE2 `PL0/RDT/ROOM1060.RDT` VAG 5 = "Zombies breaking in") - genau der Knall am Ende der Szene nach Irons (Leon und Elza).
+Sprachdateien (vom Nutzer aufzunehmen, die Zeile laeuft bis dahin ohne Stimme):
+- `synchro/STAGE2/room2080/main42.wav` = "Marvin: Hey, Leon, try with this!"
+- `synchro/STAGE2/room2081/main42.wav` = "John: Hey, Elza, try with this!"
+Bedienung / Ablauf im Spiel:
+- Nach der 2090-Szene (Spur F, Bit 110): beim ersten Betreten von 2080/2081 knallt es (wie nach Irons), oben im Hauptbereich
+  stehen 8 Zombies. Sie bleiben oben (Laufgang, Rechner, Balkon) - die Treppe zur 2030-Tuer gehen sie nicht hinunter, auch nicht,
+  wenn Leon/Elza oben war und wieder hinuntergeht. Der Gaskanister steht von Anfang an am Ende des Balkons (Gas_Can.bmp).
+- In 2090: hat der Alligator 300 Schaden genommen (RE2-Schwaeche), loest die Szene aus: Schnitt nach 2080, Schliess-Ton der Tuer
+  (Marvin/John kommt herein), Marvin (Leon) bzw. John (Elza) erschiesst die 8 Zombies (Kopf platzt), rennt zum Kanister, hebt ihn
+  auf, sagt die Zeile, wirft ihn ueber die Reling; Aufschlag im Wasser; zurueck nach 2090, der Kanister liegt im Westkanal neben
+  der Plattform (-2278,-17267). Schwimmt der Alligator vorbei, nimmt er ihn ins Maul (Spur B); ein Schuss auf den Kanister im
+  Maul -> RE2-Explosionstod mit Kiefer.
+- Messhaken nur fuer Messlaeufe: `RE15_K2080_GATOR_HP=<n>` setzt die HP des Alligators beim Raumeintritt (Schwelle mit einem
+  echten Treffer statt 43).
+Entscheidungsfragen:
+1. Schwelle "oft genug angeschossen" = RE2-Schwaeche (300 Schaden): mit der Pistole 43 Treffer, Schrotflinte 11, Magnum 7,
+   Granatwerfer 5. Passt das, oder soll es eine feste Trefferzahl (z. B. 10 Treffer jeder Waffe) sein?
+2. Soll der Alligator nach der Szene sofort wieder auftauchen (RE2: Tyrant wird am Szenenende neu gesetzt und kaempft weiter),
+   statt wie jetzt beim naechsten Annaehern?
+3. In der Szene (Punkt 3 "erneut die Geraeusche einer schliessenden Tuer") kommt Marvin/John herein: dort spielt der
+   Schliess-Ton der Stahltuer (DOOR06). Soll dort stattdessen ebenfalls der Knall kommen?
