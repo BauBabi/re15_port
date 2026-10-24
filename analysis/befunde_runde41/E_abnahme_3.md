@@ -195,3 +195,46 @@ RE15_FRAMEDUMP=0-700/10:fd_ RE15_EXIT_AT=700#11b1` (Flags = Zustand nach 10B1 su
 ### 5.3 Grenze
 Der Abschnitt 2001 -> 1261 ist wie in Abnahme 2 nicht gefahren (Zustand nach 2001 sub04 per RE15_SET_FLAG); 1261 -> 11B1 ist die
 echte Tuer. Code von Punkt 3 seit Abnahme 1 unveraendert. **Urteil Punkt 3: erfuellt.**
+
+## 6. Nebenwirkungen des spielweiten Renn-Stopps (NB3) — eigene Gegenproben
+### 6.1 Tuer im Stopp (`N1_tuer_im_stopp`): kein Rest-Rutschen
+ROOM1230 (96,14500) Blick 1024, XU 6 Bilder, dann Aktion (= Loslassen + Aktion im selben Bild) an der Ostkammer-Tuer: F306 Stopp-
+Schritt 171 (mo 200) und Tuer ausgeloest (`[tuer] Sequenz ... 301 Bilder`), `loaded room1190.rdt`; in 1190 F1..F12 steht Leon auf
+(19515,-12109) mo 210 (Eintrittspose `re15_player_room_entry_pose` setzt 210 -> das Modul bricht den Stopp ab, Bedingung
+`p->motion != s_steh`). In Ordnung.
+### 6.2 **Treppe im Stopp (`N2_treppe_im_stopp`, `N2_treppe_bild_{nach,vorher}`): Leon rutscht NACH der Treppe weiter — Regression**
+`RE15_STAIR_DBG=1 RE15_DEBUG_JUMP=2040@250 RE15_PLAYER_POS=-1350,-19200,3072,5 RE15_EQUIP=3
+RE15_INPUT_SCRIPT=XU0.4,A0.034,W0.034,A0.034,W0.034,A0.034,W0.034,A0.034,W5` (Start 300, Basis spiel; Galerie Band 5 -> Treppe sce 13
+Slot 5/6 = derselbe Weg wie Riegel `test_r36_dachkiste` treppe2040): F300..F311 Rennen (ab F304 an der Kante (−1350,−18368)), F312
+Loslassen + Aktion -> `[stair] START dir=DOWN cur_band=5 target_band=3`, mo 220 bis F374, F375 Treppen-Finalize (mo 200, z -13782).
+| Bild | NACHHER (HEAD) z | VORHER (11b8f867) z |
+|---|---|---|
+| F375 (Finalize) | -13782 | -13782 |
+| F376 | **-13665 (+117)** | -13782 |
+| F377 | **-13588 (+77)** | -13782 |
+| F378 | **-13551 (+37)** | -13782 |
+| F379.. | **-13554 (-3)**, dann Stand | -13782 |
+Die Schritte 117/77/37/-3 sind die Signatur des Renn-Stopps (Tempo - 40 je Bild, letzter negativer Schritt): der in F312
+begonnene Stopp (Modulzustand `s_aktiv`, rennstopp_r41.c:21) ueberlebt die Treppe, weil der Treppen-FSM den Spieler-Takt auslaesst
+(game_step_common.c:1504-1514, kein `re15_player_tick`) und im Finalize genau die Steh-Bewegung zurueckgibt
+(stair_common.c:149 `p->motion = RE15_PLAYER_MOTION_IDLE`) — das Modul bricht nur ab, wenn es in einem Spieler-Takt eine andere
+Bewegung oder `state != 1` SIEHT (rennstopp_r41.c:193). Leon gleitet nach der Treppe 228 Einheiten in der Steh-Pose weiter.
+Variante `N2b_treppe_nach_2_stoppbildern` (Loslassen 2 Bilder vor der Aktion): Rest +39 im Finalize-Bild und -1 danach — derselbe
+Rest-Stopp, je nach Zeitpunkt groesser oder kleiner.
+**Original (selbst disassembliert):** Treppen-Finalize LAB_80038e50 @0x80038ea8 `sb zero,0x800aca59` (+5 = Unterzustand 0) und
+@0x80038eb0 `sb zero,0x800aca5a` (+6 = 0) — der Renn-Stopp lebt nur in +5 = 2 / +6 = 2..3 (0x80032604 @0x800326e0-@0x800326ec, 0x80032778
+@0x800327b0-@0x800327bc) und ist nach der Treppe geloescht; Stehen-ANIMATE Fall 0 setzt das Tempo auf 0 (@0x800320a4). Ein
+Weiterrutschen nach der Treppe gibt es im Original nicht. -> **Mangel 1.**
+Dieselbe Klasse (Spieler-Takt ausgelassen, Rueckgabe mit Bewegung 200 / state 1) haben im Port auch die Opfer-Freigabe nach einem
+Griff (enemy_ai_common.c:2007 `player->motion = 200`) und Plc_ret (scd_vm.c:2860 `re15_actor_set_motion(pl, 200)`; Original
+@0x80041f88: @0x80041f90-@0x80041f9c `sb 1,4` / `sb zero,5/6/7` = Stopp geloescht) — dort nicht gemessen (Griff/Skriptende waehrend der 6 Stopp-Bilder).
+### 6.3 Elza (`E_elza_renn_{nach,vorher}`, ROOM2021 (4000,-3150) Blick 0, XU 12 Bilder)
+NACHHER: Renn-Tempo aus PL04W03 184 192 163 183 196 201 205 197 158 175 187 191, Stopp 151 111 71 31 -9; VORHER konstant 200, sofort
+Stand. Mechanismus wie Leon (Tabelle @0x80073f24 Figur 4..7 = 0x48D2, Fall 1 ueberschreibt mit dem Fussweg); fuer Elza KEIN
+Original-Vergleich gemessen (Hinweis H3).
+### 6.4 Wahrnehmung der Gegner waehrend des Stopps (Code gelesen, nicht gemessen)
+Der Hund (enemy_ai_common.c:7276-7291, Original DAT_800aca58 == 0x0201) und die RE2-Zombies/Kraehe/Spinne (`pl->motion == 100`
+-> cfbf6 0x04) lesen "Spieler rennt" aus der Port-Bewegung. Im Stopp ist die Port-Bewegung 200, im Original bleibt der Unterzustand
++5 = 2 (0x0201) bis zum Stopp-Ende — 6 Bilder lang "rennt" der Spieler fuer den Hund im Original, im Port nicht. Vor NB3 war es
+genauso (sofort Stehen); das Modul bietet `re15_rennstopp_r41_unterzustand2()`, die Praedikate nutzen es nicht (fremde Dateien) ->
+Hinweis H4.
