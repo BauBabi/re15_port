@@ -811,3 +811,61 @@ Raumzeile wie der Spieler (eigene Stimmen 2/3). Die leeren Beta-Zeilen sind die 
 **Weg (Regel Beta -> Retail):** NPC-Schritt = Original-Index (Boden - 8), WENN das Original dort hoerbar ist (Satz belegt und
 Stimme 0..7, s.o.); SONST die Retail-Zeile a0 + (Boden & 0x7f) (FUN_8005c040 @0x8005c44c/@0x8005c458); ist auch die leer, kein
 Ton (@0x8005c470). Damit bleiben die 93 hoerbaren Original-Faelle byte-gleich, die 421 stummen bekommen den Retail-Ton.
+**Nachtrag zu N2.1 (Ton-Existenz):** "hoerbar" heisst im Original zusaetzlich: der Ton des Satzes hat einen VAG. SsUtKeyOnV
+@0x80059d3c liest `lhu a0,22(v0)` (VagAtr +0x16) @0x80059f2c / `sh a0,21292(at)` @0x80059f34 und keyt nur bei `bne a0,zero`
+@0x80059f8c. Erster Zensus ohne diese Pruefung: 106 Faelle "Retail", deren Zeile keinen VAG hat (meist Stempel-Zeilen 26/27 in Raeumen
+ohne Wasser). Zensus 2 (`A_nb2/npc_ton_retail2.py` / `.txt`, mit VH-Pruefung wie re15_footstep_vag): ohne Stempel-Zweig (Gehen auf
+trockenem Boden / Wasserboden 0x80) **Original hoerbar 15 / Retail 257 / stumm 8** (die 8 = ROOM6030/6031 Boden 0x17, Zeilen 15/16
+und 23/24 ohne Ton - dort hat auch der Spieler keinen Ton); mit Stempel-Zweig 20 / 138 / 106 (Stempel nur in WATER-Saetzen).
+Im Original hoerten also 15 von 280 NPC-Schritt-Faellen, im Port jetzt 272.
+
+### N2.2 M2 (Entscheid A-E4) — Lautstaerke und Seite: RE-Belege
+**Messung vorher (Abnahme 1, 4.4):** re15_audio_footstep(foot, type) ohne Lage, `vol_r_q15 = 0` (mono); keine Messzeile.
+**Original (PSX.EXE, selbst disassembliert):**
+- Aufruf: `lw a0,-14460(a0)` (g_entity) / `jal 0x80045a64` / `addiu a0,a0,52` (Entity+0x34 = x/y/z) @0x8004582c-34.
+- FUN_80045a64: Kamerasatz = *(RDT+0x24) + DAT_800b0fe4*0x20 (`lh v0,4068(v0)` @0x80045a70, `lw v1,36(v1)` @0x80045a94, `sll v0,v0,5`
+  @0x80045a98); |dx|^2 + |dz|^2 (32 Bit) @0x80045aa0-e8; |Kamera.y - y| @0x80045ae0-b00; zweimal SquareRoot0 (`jal 0x80065f60`
+  @0x80045b04 / @0x80045b10, Delay `addu s1,v0,zero` @0x80045b14); Y-Term `subu v1,v1,s0` = Kamera.y - |..| @0x80045b20; r =
+  SquareRoot0(dyt^2 + r1*r2) @0x80045b24-38; /250 (`lui v1,0x1062` / `ori v1,v1,0x4dd3` / `multu` / `srl s4,v0,4` @0x80045b3c-4c);
+  Deckel `slti v0,s4,128` / `ori s4,zero,0x7f` @0x80045b50-5c. Richtungen FUN_80045d6c(Kamera->Entity) @0x80045b70, (Kamera->Ziel
+  +0x10/+0x18) @0x80045b88, zweimal (0,0 -> Kamera) @0x80045ba0 / @0x80045bb8, Differenzen @0x80045bbc / @0x80045bc0, rel @0x80045bd4-e8;
+  rel 0/0x1000/0x800 -> beide 0x89 @0x80045bf4-c1c; sonst Bit = rel & 0x800 @0x80045c08, Spiegel @0x80045c28-7c, PAN[i] (`addiu
+  at,at,18216` = 0x80074728) @0x80045c88-94; **DAT_800b2826 = Bit ? PAN : 0x89** (`sh a1,10278(at)` @0x80045cd4), **DAT_800b2824 = Bit
+  ? 0x89 : PAN** (`sh a0,10276(at)` @0x80045ce4); minus ATT[Abstand] (@0x800747a8, `addiu at,at,18344` @0x80045cf4) und `andi 0x7f`
+  @0x80045d28 / @0x80045d3c.
+- FUN_80045d6c: dx == 0 -> `blez a0` -> 0x400 / 0xc00 @0x80045dd8-e0; sonst (dz << 12) / dx (`sll a0,a0,12` / `div` @0x80045d84-88),
+  **catan = `jal 0x800658fc`** @0x80045db4, Ergebnis (dx >= 0 ? 0x1000 : 0x800) - catan, `andi 0xfff` @0x80045dc0-d4.
+- catan @0x800658fc = **CORDIC**: x = 0x1000 (`ori v0,zero,0x1000` @0x80065918), y = a, z = 0; 12 Stufen (`slti v0,a2,12` @0x800659b4)
+  mit `srav` je Stufe; y >= 0 (`bgez a0` @0x80065930): x += y>>i, y -= x>>i, z += W[i] (@0x8006596c-9c); sonst umgekehrt (@0x80065938-68);
+  Ergebnis z[12] (`lw v0,160(sp)` @0x800659c0). W @0x80078c90 = 511, 302, 159, 81, 41, 20, 10, 5, 3, 1, 0, 0 (`re15_disasm.py read
+  0x80078c90 12 --w 4`).
+- FUN_800458d4 (Stimmen-Pumpe, 8 Saetze @0x800b2420: `ori s4,zero,0x8` @0x800458dc): voll = Satz +0x0e = DAT_800b2824 (`addiu
+  at,at,9262` @0x8004598c, `sw v0,24(sp)` @0x8004599c), volr = Satz +0x10 = DAT_800b2826 (`addiu at,at,9264` @0x800459a4, `sw
+  v0,28(sp)` @0x800459b8), `jal 0x80059d3c` (SsUtKeyOnV) @0x800459b4.
+- SsUtKeyOnV @0x80059d3c: voll = `lw s0,88(sp)`, volr = `lw s1,92(sp)` (@0x80059d44/4c); gleich -> Tasten-Pan 0x40 (`ori v0,zero,0x40`
+  @0x80059e10), Pegel voll (@0x80059e20); volr < voll -> Pan (volr << 6) / voll (@0x80059e30-6c), Pegel voll (@0x80059e64); sonst Pan
+  0x7f - (voll << 6) / volr (@0x80059e78-bc), Pegel volr (`sb s6,21272(at)` @0x80059eb0).
+- SpuVmKeyOnNow @0x80055d10: Pegel * VH-Master * 0x3fff / 0x3f01 * Prog-mvol * Ton-vol / 0x3f01 (@0x80055d24-80); Ton-Pan
+  (@0x80055e68-ed8), Prog-Pan (@0x80055edc-f48), **Tasten-Pan** (`lbu v1,21273(v1)` @0x80055f50, `sltiu v0,v1,0x40` @0x80055f58): < 0x40
+  -> rechts * Pan / 63 (@0x80055f60-88), sonst links * (0x7f - Pan) / 63 (@0x80055f8c-...); /63 = `lui 0x410` / `ori 0x4105`.
+**Befund am Port (Nebenbefund):** rotor_common.c (re15_rotor_compute_pan, Rotor des Hubschraubers) bildet FUN_80045a64 nach, rechnet den
+Winkel aber mit einer ATAN-Tabelle statt mit dem CORDIC @0x800658fc: Abweichung bis +-7/4096 (`A_nb2/cordic_vgl.py`: ueber 40000
+Verhaeltnisse 690 gleich, Rest +-1..7) = bis eine Pan-Stufe (i = rel >> 3). Ausserdem heisst dort "L" = DAT_800b2826 (volr) und
+"R" = DAT_800b2824 (voll). Fuer den Rotor nicht geaendert (fremdes Modul) -> OFFEN N2.7.
+
+### N2.3 Umsetzung (Code)
+- `engine/src/wassersprung_r41.c` (eigene Datei):
+  - M1: `ton_spielt` (Satz + VAG wie re15_footstep_vag, VH +18/+22, VagAtr +0x16 @0x80059f2c), `ton_orig_hoerbar` (Stimme 0..7
+    @0x800457a0-b4 + Ton), im NPC-Schritt: Original-Zeile, sonst RE2-Retail-Zeile, sonst kein Ton (kein Aufruf). Konstanten
+    `RE15_WASSERSPRUNG_R41_STIMME_BASIS 16` (@0x800457ac), `_STIMMEN 8` (@0x800458dc).
+  - M2: `re15_wassersprung_r41_lage` = FUN_80045a64 byte-genau (eigene CORDIC-catan + FUN_80045d6c, Tabelle PAN/ATT 256 B =
+    PSX.EXE @0x80074728, Kamera = g_room_rdt.cuts[g_scd.work_vars[0x0A]] = DAT_800b0fe4), `re15_wassersprung_r41_lage_pegel`
+    (SsUtKeyOnV/SpuVmKeyOnNow im linearen Mischer-Modell des Ports, wie se_play_layers: ohne SPU-Quadrat; Konstanten
+    `_LAGE_MITTE 0x40` @0x80059e10, `_PAN_TEILER 0x3f` @0x80055f68-6c), `re15_wassersprung_r41_lage_nehmen` (Lage haengt NUR um den
+    re15_audio_footstep-Aufruf des NPC-Schritts; danach geloescht - Spieler-Schritte bleiben unveraendert, OFFEN N2.7).
+  - Messzeile RE15_NPCSCHRITT_LOG je Schritt zusaetzlich: `ton_orig= quelle=orig|retail|stumm cut= abstand= lage=voll/volr`;
+    RE15_FOOT_DEBUG: `[foot] NPC-Lage voll= volr= -> Pegel Pan -> L= R= (Q15, Ton)` (nur fuer gemischte NPC-Schritte).
+- `platform/pc/src/audio_pc.c` (Haken "Runde 41 Spur A", 1 Include + 2 Zeilen + 1 geaenderte Zeile; Datei der Spur D -> bei der
+  Integration zusammenfuehren, Entscheid A-E4): Lage abholen (oben in re15_audio_footstep), `vol_r = ..._lage_pegel(&vol, ...)`,
+  `s_active[slot].vol_r_q15 = vol_r` (0 = wie bisher mono).
+- `tests/integration/test_r35_granate.cmake` (M3): Alligator-Platz = RE15_ACTOR_MAX - 1, gelesen aus include/re15_actor.h.
