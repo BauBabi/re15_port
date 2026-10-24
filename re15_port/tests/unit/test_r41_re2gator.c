@@ -897,8 +897,7 @@ static int teil_kamera(void)
             if (!g_death_cam && !g_death_white && !g_death_blackbg && !g_death_glow && g_scd.cut_auto_enabled == 0
                 && (int)g_scd.cam_id == cam_fin && re15_gr2_kamera_gesperrt()) halt++;
         }
-        printf("  FINISHER-Halt: %d/400 Takte Cut %d gesperrt, RE1.5-Todesbild (Orbit/Weiss/Schwarz) aus, Leon-HP %d
-",
+        printf("  FINISHER-Halt: %d/400 Takte Cut %d gesperrt, RE1.5-Todesbild (Orbit/Weiss/Schwarz) aus, Leon-HP %d\n",
                halt, cam_fin, pl_hp);
         CHECK(halt == 400, "FINISHER-Schnitt nicht bis zum Ende gehalten / RE1.5-Todesbild nicht unterdrueckt: %d/400 (B6)", halt);
     }
@@ -942,7 +941,10 @@ static int teil_aufnahme(void)
     int n16 = 0, clip0 = 0, biss = 0;
     for (int f = 0; f < 80 && re15_gr2_kanister_stufe() != 7; f++) {
         int st = re15_gr2_kanister_stufe();
-        if (st >= 2) leon_statue(-6000, -21600); else leon_statue(-6000, -18200);   /* Maulpunkt ~ -22267 */
+        /* Stufe 2..4: Leon direkt vor der Schnauze (Maulpunkt ~ -22267); Stufe 5/6 (14 Bilder > 10 Bilder Abbau des
+         * Schnauzenkontakts g->maul_kontakt im Boss-Modul) wieder fern, damit der in Stufe 7 wieder erlaubte Biss
+         * (unten eigens geprueft) die Schwimm-Messung danach nicht ueberdeckt */
+        if (st >= 2 && st <= 4) leon_statue(-6000, -21600); else leon_statue(-6000, -18200);
         e->x = -6000; e->z = -25000; e->rot_y = 0xC00;
         tick();
         if (re15_gr2_kanister_stufe() == 7) break;
@@ -973,8 +975,16 @@ static int teil_aufnahme(void)
     }
     CHECK(pad2 >= 10, "ausserhalb der Kanister-Zone kein Paddeln bei Stufe 7 (%d/12) - Hysterese @0x80100b20", pad2);
     CHECK(re15_gr2_biss_erlaubt(slot), "Biss bei Stufe 7 nicht erlaubt (FUN_801012fc laesst 7 durch @0x8010136c-70)");
+    /* Stufe 7 + Leon vor der Schnauze: der Biss startet wieder (RE2 T1 bei Stufe 7 scharf) */
+    int biss7 = -1;
+    for (int f = 0; f < 10 && biss7 < 0; f++) {
+        leon_statue(-6000, -21600); e->x = -6000; e->z = -25000; e->rot_y = 0xC00;
+        tick();
+        if (e->motion == 4 || e->motion == 2) biss7 = f;
+    }
+    CHECK(biss7 >= 0, "Stufe 7: kein Biss-Start mit Leon vor der Schnauze (T1 bei Stufe 7 @0x8010136c-70)");
     printf("aufnahme: Paddeln %d/12 -> Stufe 1 Clip 0 Blend 32, Stufe 1..6 %d/%d Clip 0, Biss %d, Stufe 7 Zone 0 %d/30 "
-           "Clip 0, Zone 2 Paddeln %d/12\n", paddeln, clip0, n16, biss, halt0, pad2);
+           "Clip 0, Zone 2 Paddeln %d/12, Biss Stufe 7 nach %d Takten\n", paddeln, clip0, n16, biss, halt0, pad2, biss7);
     return fails ? 1 : 0;
 }
 
