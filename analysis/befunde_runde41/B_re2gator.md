@@ -10,6 +10,9 @@ Zeiten aus `date`. Jeder Schritt wird hier VOR dem Bau notiert.
 
 ## 0. Protokoll (neueste Eintraege oben)
 
+* 2026-10-24 (FORTSETZUNG 3 nach Sitzungslimit ~01:00, neuer Agent): Baum sauber, HEAD a6653809 (Kamera-Programme
+  Nachtrag 4, UNGEPRUEFT). Plan: configure + build -> gezielte Tests (Regex §8.7 + unit_r41_re2gator_kamera +
+  integration_r41_re2gator) -> Schnittfolge im echten Ablauf an der exe messen (§9.4) -> Dossier §9.3ff + §8 abschliessen.
 * 2026-10-23 22:0x-22:2x: Kiefer-Umbau gebaut (22:04, 783 Schritte, keine neue Warnung), Unit-Riegel 45/45 inkl.
   unit_r41_re2gator_kiefer, Integration r41_re2gator + r36_schuss 2/2 am neuen Stand. exe-Messungen (§4.3): Lauf A2
   (Verfolgung + RE2-Finisher, Clip-Folge 0/1/4/0/1/4/5/11 bitgleich in zwei Laeufen) und Laeufe B2/B3 (Kanister-
