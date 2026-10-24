@@ -9,10 +9,10 @@ Pruefer: Abnahme-Agent (glaubt nichts Ungemessenes). Bericht wird FORTLAUFEND ge
 - [x] gezielte Tests 34/34 (Regex des Bau-Agenten) + integration_r41_re2gator 1/1 (272 s) - alle gruen
 - [x] P1 gemessen (Leon + Elza, echter Leiterweg 2090 -> 2080/2091 -> 2081, Ton im Mitschnitt, Nachtrag 20 mit 66 s unten)
 - [x] P2 gemessen (Cut 5 gegen Gas_Can.bmp)
-- [x] P3 gemessen (Leon + Elza; Aufnahme/Explosion an G's Landepunkt; natuerlicher Ablauf ohne GB_TEST)
+- [x] P3 gemessen (Leon + Elza; Aufnahme/Explosion an G's Landepunkt; natuerlicher Ablauf ohne GB_TEST; Nachtraege 22-24b)
 - [x] RE-Gate (22 Stellen selbst gelesen/disassembliert)
 - [x] Vertrag
-- [x] Urteil: NICHT BESTANDEN (P3 teilweise)
+- [x] Urteil: NICHT BESTANDEN (P3: N24b Kletter-Animation, N23 keine Aufnahme im echten Ablauf, N5 teilweise)
 
 
 Bildbelege und Laufordner liegen NICHT im Baum (Auftrag: nur diese Datei committen), sondern unter
@@ -146,6 +146,31 @@ RE15_EXIT_AT=1500#2090` (kein GB_TEST: der Gator taucht wie im Spiel per Naehe a
 - Der Messlauf des Bau-Agenten (p3h) lief mit RE15_GB_TEST=5 - dieser Testhaken laesst den Gator aufgetaucht starten und VERDECKT genau
   dieses Verhalten.
 
+### 3.9 Nachtrag 24b (neu, 2026-10-25 00:24, nach dem Bau-Stand): "daemliche Kletter-Animation" vor dem Aufnehmen - Laeufe n24b_leon / n24b_elza
+Befehl wie 3.5 (Leon) bzw. 3.6 (Elza) mit `RE15_FRAMEDUMP=505-575/3:f_ RE15_EXIT_AT=580#2080` bzw. `#2081`.
+- debug.log: `Plc_dest(slot=9 mode=0x05 ...)` (Rennen), dann `Plc_motion(entity=1, motion=2)` = Loco-Bank Clip 2 (RE15_K2080_CLIP_AUFHEBEN),
+  `F550 Kanister aufgehoben (Loco c2 Bild 33)`.
+- Bildserie (alle 3 Bilder, Cut 5): <SP>/belege/n24b_marvin_aufheben_f514-562.png und n24b_john_aufheben_f526-562.png. Bild 532-544:
+  Marvin/John hebt ein Knie hoch und STEIGT nach oben - der Koerper ragt ueber die Reling, er klettert auf/ueber den stehenden Kanister;
+  Bild 547 springt er zurueck in die Hocke, ab 550 steht er mit dem Kanister quer. Das ist eine Kletter-Bewegung, kein Buecken/Aufheben.
+- Ursache: der Clip-Zensus des Dossiers (1.8, G_belege/npc40_clipzensus.txt) hat Loco c2 aus VIER Stichbildern (f0/f16/f33/f49) als
+  "Buecken + Aufheben" gelesen; f16 zeigt schon die linke Hand auf Schulterhoehe (HL y -1813) und die Wurzel HOEHER als im Stand
+  (W y -1957 statt -1813). Die Zuordnung ist also nicht belegt, sondern falsch gedeutet. Bestaetigt die Nutzer-Beobachtung, Leon UND Elza.
+
+### 3.10 Nachtrag 23 (neu): ganze Folge im echten Ablauf ohne Kanister-Testhaken - Laeufe n23_kanal / n23_kanal_ohne_ap
+Gemeinsam: `RE15_DEBUG_JUMP=2090@250 RE15_SET_FLAG=9:110,3:245 RE15_GIVE=3:30 RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100
+RE15_K2080_GATOR_HP=24990` (nur der Ausloeser-Messhaken, KEIN RE15_GB_TEST, KEIN RE15_GATOR_KANISTER), Zielen/Feuern alle ~4 s,
+`RE15_EXIT_AT=2700#2090` (90 s nach der Rueckkehr). n23_kanal: Leon pendelt per `RE15_AUTOPILOT` im Westkanal x -3500 zwischen z -24000
+und -11000 (RE15_AUTOPILOT_ROOM=2090); n23_kanal_ohne_ap: Leon steht bei (-3500,-14000).
+- Beide Laeufe: Szene echt ausgeloest (`F1010` bzw. `F1458 AUSLOESER ... Treffer 1`), Wurf, `ROOM2090 RUECKKEHR`, `Kanister im Becken
+  (-2278,-1200,-17267)`.
+- n23_kanal nach der Rueckkehr: `F1 R2090 GATOR VERSCHWUNDEN`, dann `RE2 AUFTAUCHEN F6` + `INTRO ende` = der Intro-Durchbruch spielt
+  ERNEUT; 2700 Bilder Kampf, KEINE Zeile `KANISTER Stufe 1`/`angehaengt`; naechste Annaeherung Gator-Wurzel -> Kanister 2506 (F1906).
+- n23_kanal_ohne_ap nach der Rueckkehr (Leon bei (-2156,-19938), > 9000 vom Lauerplatz): 2700 Bilder `ph=1` bei (-7200,-9200),
+  kein Auftauchen, keine Aufnahme.
+- Zusammen mit 3.7 (auf_A/auf_B ohne Aufnahme, auf_C nur bei Leon direkt hinter dem Kanister): der Kanister am Plattform-Westrand wird
+  im normalen Kampf NICHT verlaesslich aufgenommen; im echten Ablauf habe ich keine einzige Aufnahme gesehen. N23 nicht erfuellt.
+
 ## 4. Gates
 
 ### 4.1 RE-Gate
@@ -179,64 +204,76 @@ RE15_EXIT_AT=1500#2090` (kein GB_TEST: der Gator taucht wie im Spiel per Naehe a
 - Nebenwirkungen: integration_r41_re2gator auf diesem Zweig gruen; Elza-Varianten (2081/2091, John) gemessen; 2080 ohne Bit 110:
   keine Zombies, Kanister steht (Riegel kanister); nach Bit 115 keine Zombies/kein Kanister (Code).
 
-## 5. Urteile (gegen den Wortlaut, AUFTRAG.md; Aufteilung FG-E1)
+## 5. Nachtraege 22-24b (vom Orchestrator WAEHREND dieser Abnahme in AUFTRAG.md eingetragen, 2026-10-25 00:01-00:24)
+Der Bau-Stand 489c0756 (2026-10-24 23:23) ist aelter. AUFTRAG.md ist massgeblich, also werden sie hier mitbewertet; Maengel daraus sind
+Nachbesserungs-Auftraege, kein Versaeumnis des Bau-Agenten.
+- **Nachtrag 22** (Nutzer-Entscheide zu den Dossier-Fragen 1-3): RE2-Schwelle 300 Schaden, "Erst beim Annaehern", Stahltuer-Ton bleibt -
+  alles wie gebaut. Damit ist das Verhalten aus 3.8 (Gator nach der Szene untergetaucht bis zur Annaeherung) vom Nutzer gewaehlt.
+  Hinweis: die Frage nannte nicht, dass der Alligator dabei ein NEUER Aktor ist (HP wieder 25300, Intro-Durchbruch spielt erneut, 3.8).
+- **Nachtrag 23** (Abnahmepunkt G): "Kampf -> Treffer -> Kanister-Szene -> Kampf geht weiter -> Aufnahme irgendwann im Rundlauf -> Schuss ->
+  Kiefer", im ECHTEN Ablauf, ohne Testhaken fuer den Kanister, Leon UND Elza, Bild der Aufnahme + Zeit seit dem Wurf. Messung 3.10.
+- **Nachtrag 24 / 24b**: die "daemliche Kletter-Animation" ist Marvin/John vor dem Aufnehmen - gemessen und bestaetigt (3.9).
+
+## 6. Urteile (gegen den Wortlaut, AUFTRAG.md inkl. Nachtraege bis 24b; Aufteilung FG-E1)
 
 | Punkt | Urteil | Beleg |
 |---|---|---|
 | P1 Knall (N17), dann 8 Zombies oben im Hauptbereich | **erfuellt** | 3.1/3.2: echter Leiterweg, `Knall: Knall-Bank ... Satz 0` vor 8 x Sce_em_set y -14400, Mitschnitt RE2_1060 r 0,891 im ersten 2080/2081-Bild, Bild Cut 4 |
-| N20 Zombies oberhalb der Treppe | **erfuellt** | 3.3: 66 s Leon unten, 0 von 16760 Zombie-Saetzen westlich x -16650, 70/70 Ebene-Zeilen; Mechanismus @0x8003b228-3c / SCA @0x05C4 / Treppe @0x0BE2 selbst gelesen |
-| P2 Gaskanister an der Reling (Gas_Can.bmp) | **erfuellt** | 3.4: Cut 5 = Gas_Can.bmp, Kanister (RE2 ROOM40A0 Modell 1, @0x0452 stehend) steht an der Marke |
-| P3 Ausloeser, Tuer-Ton, Marvin/John, 8 Kopfschuesse, Kanister in beide Haende, Zeile, Wurf, liegt im Wasser | erfuellt (Teilschritte) | 3.5/3.6: Leon + Elza, Logs + Bildboegen |
-| P3 "Wenn der Aligator dran vorbei kommt, soll er ihn aufnehmen ... Sterbe-Animation" | **teilweise** | 3.7: Mechanik (Spur B) greift an G's Landepunkt (Aufnahme F1104, R1-Tod); 3.8: im natuerlichen Ablauf ist der Alligator nach der Szene ein frischer, untergetauchter Aktor am Lauerplatz (1500 Bilder `ph=1`), der Kampf beginnt mit erneutem Intro von vorn (M1); kein Riegel fuer Aufnahme/Tod nach der echten Szene (M3) |
-| N5 Kamera des Wurfs "GENAUSO" wie Adas Raketenwerfer-Wurf | **teilweise** | Struktur RE2 (Cut 7 Werfer + Zeile, Sleep 30/20, Loslassen, Aufschlag, Sleep 15, Schnitt auf den Fangenden) ja; Blick von unten/nah (RE2 Cut 7: 43,6 Grad, 8908) nein - 2080 Cut 7 Totale (6,4 Grad ueber, 17168). Eigene Projektion: keine 2080/2090-Kamera zeigt den Werfer von unten (2090 Cut 12: Balkonende 19-24 px ueber dem Bildrand) - offene Entscheidung (M2) |
-| N21 Zugang ueber die Leiter | **erfuellt** (keine Aenderung noetig) | Leiterweg 2090 Slot 0 @0x0996 -> 2080 Cut 4 in 3.1 gefahren; die Szene merkt sich Lage/Cut beim Ausloesen |
-| RE-Gate | haelt (mit kleinen Luecken M4) | Abschnitt 2 / 4.1 |
-| Vertrag | haelt | Abschnitt 4.2 |
-| Tests (34/34 + integration_r41_re2gator) | gruen, aber Luecke M3 | Abschnitt 1 |
+| N20 Zombies oberhalb der Treppe | **erfuellt** | 3.3: 66 s Leon unten, 0 von 16760 Zombie-Saetzen westlich x -16650, 70/70 Ebene-Zeilen; Mechanismus @0x8003b228-3c, SCA @0x05C4, Treppe @0x0BE2 selbst gelesen |
+| P2 Gaskanister an der Reling (Gas_Can.bmp) | **erfuellt** | 3.4: Cut 5 = Gas_Can.bmp, Kanister (RE2 ROOM40A0 Modell 1 @0x0452, stehend) an der Marke |
+| P3 Ausloeser, Tuer-Ton, Marvin/John, 8 Kopfschuesse (Kopf platzt, tot), Zeile 42, Wurf, liegt im Wasser | erfuellt (Teilschritte) | 3.5/3.6 Leon + Elza; N22: Schwelle/Stahltuer-Ton vom Nutzer bestaetigt |
+| P3 / N24b "rennt hin, nimmt ihn auf in beide Haende" | **nicht erfuellt** | 3.9: vor dem Aufnehmen spielt Loco c2 = Kletter-Bewegung (Bild 532-544, Leon + Elza); Clip-Zensus 1.8 falsch gedeutet |
+| P3 / N23 "Alligator nimmt ihn im weiteren Kampf auf -> Schuss -> Kiefer" | **nicht erfuellt** | 3.10: zwei echte Ablaeufe je 90 s nach der Szene ohne Aufnahme (Gator neu: Intro erneut bzw. untergetaucht); Mechanik an G's Landepunkt nur bei geradem Anschwimmen (3.7); kein Riegel |
+| N5 Kamera des Wurfs "GENAUSO" wie Adas Raketenwerfer-Wurf | **teilweise** | RE2-Struktur ja; Blick von unten/nah gibt es nicht (eigene Projektion, 2090 Cut 12 knapp daneben) - Entscheid offen |
+| N21 Zugang ueber die Leiter | **erfuellt** (keine Aenderung noetig) | Leiterweg 2090 Slot 0 @0x0996 -> 2080 Cut 4 in 3.1 gefahren |
+| RE-Gate | haelt bis auf M5 (klein); Clip-Zensus 1.8 falsch (M1) | 2 / 4.1 / 3.9 |
+| Vertrag | haelt | 4.2 |
+| Tests 34/34 + integration_r41_re2gator | gruen; Luecke: alle Szenen-Laeufe mit RE15_GB_TEST=5, keine Aufnahme/Explosion nach der echten Szene | 1 / 4.2 |
 
-**bestanden = false** (P3 und N5 nur teilweise).
+**bestanden = false.**
 
-## 6. Maengel (nummeriert, nachpruefbar)
+## 7. Maengel (nummeriert, nachpruefbar)
 
-**M1 (P3, schwer) - Nach der Szene beginnt der Alligator-Kampf von vorn.** Die Szene wechselt 2090 -> 2080 -> 2090; beim Rueckweg wird
-ROOM2090 neu aufgebaut und der Alligator neu gesetzt: HP 25300, untergetaucht am Lauerplatz (-7200,-9200) (B9), Auftauchen erst bei
-Abstand < 9000 / Treffer, dann spielt der Intro-Durchbruch ERNEUT (enemy_ai_boss_gator.c GBP_LURK -> re15_gr2_intro_start; kein Merkbit
-in gator_re2_r41.c / enemy_ai_boss_gator.c). Gemessen Lauf n3_natur (ohne RE15_GB_TEST): nach `F671 ROOM2090 RUECKKEHR` 1500 Bilder nur
-`TICK ph=1 pos=(-7200,-9200)`; Bild <SP>/belege/n3_rueckkehr_bogen.png (Becken leer bis auf den Kanister). RE2 (das Vorbild ROOM7020)
-setzt den Boss im selben Raum neu (Pos_set @0x07C4) und laesst ihn weiterkaempfen. Der Messlauf des Bau-Agenten (p3h) und alle
-Szenen-Laeufe des Riegels fahren mit RE15_GB_TEST=5, der genau dieses Verhalten verdeckt (Gator startet aufgetaucht); die Dossier-Aussage
-"Gemessen (Lauf p3h mit RE15_GB_TEST=5): Gator wieder aufgetaucht ..., verfolgt Leon" ist damit kein Beleg fuer das Spiel.
-Forderung: Kampfzustand ueber die Szene erhalten (kein erneutes Untertauchen/Intro, Gator nach der Rueckkehr in der Verfolgung, wie RE2)
-oder Orchestrator-/Nutzer-Entscheid (Dossier-Frage 2); Riegel OHNE RE15_GB_TEST.
+**M1 (P3 / Nachtrag 24b) - Kletter-Animation statt Aufheben.** `baue_szene` spielt vor dem Greifen `Plc_motion(1, RE15_K2080_CLIP_AUFHEBEN=2)`
+(Loco c2, 50 Bilder, Greifen bei Bild 33). Gemessen (n24b_leon / n24b_elza, Bilder <SP>/belege/n24b_marvin_aufheben_f514-562.png,
+n24b_john_aufheben_f526-562.png): Bild 532-544 hebt Marvin/John ein Knie und steigt ueber die Reling-Hoehe (klettert auf den stehenden
+Kanister), Bild 547 Sprung zurueck in die Hocke. Ursache: Dossier 1.8 deutet Loco c2 aus vier Stichbildern als "Buecken + Aufheben"
+(schon f16: Hand auf Schulterhoehe, Wurzel ueber dem Stand). Forderung (N24b): Clip belegen (Bank/EDD, Nummer, Original-Verwendung),
+durch Hinlaufen + echtes Aufheben mit beiden Haenden ersetzen (RE1.5-/RE2-Clip mit Beleg), Bildbogen vorher/nachher Leon UND Elza, Riegel.
 
-**M2 (N5) - Wurf-Kamera nicht "GENAUSO".** RE2 ROOM7020 Cut 7 zeigt Ada von unten (43,6 Grad unter dem Kopf, Abstand 8908); der Port
-zeigt Marvin/John in 2080 Cut 7 als kleine Figur in der Totale (6,4 Grad ueber dem Kopf, 17168; Bild <SP>/belege/p3a_bogen4.png). Eine
-Kamera von unten mit dem Werfer im Bild gibt es nicht (selbst projiziert: 2090 Cut 12 sieht die Wand unter dem Balkon, Balkonende
-(122.8,-24.3) knapp ueber dem Bild; die Fallbahn erreicht 2090-Kameras erst ab Bild 30 von 36). Der Bau-Agent hat das benannt (OFFEN 2),
-aber ohne Entscheid "fertig" gemeldet. Forderung: Orchestrator-/Nutzer-Entscheid (analog B8) - bis dahin teilweise.
+**M2 (P3 / Nachtrag 23) - Aufnahme im weiteren Kampf findet im echten Ablauf nicht statt.** Nach der Szene ist der Alligator ein neuer Aktor
+(HP 25300, untergetaucht am Lauerplatz, Intro-Durchbruch spielt bei Annaeherung erneut; kein Merkbit in gator_re2_r41.c /
+enemy_ai_boss_gator.c). In n23_kanal (Leon pendelt im Westkanal) 90 s Kampf ohne Aufnahme (naechste Annaeherung 2506), in
+n23_kanal_ohne_ap 90 s untergetaucht. B's Aufnahme-Fenster (laengs 8601..8999 x Skala, quer <= Koerperradius + 267) trifft den Kanister am
+Plattform-Westrand nur bei geradem Anschwimmen (3.7: auf_C ja, auf_A/auf_B nein). Alle Szenen-Messungen des Bau-Agenten und alle Laeufe
+von integration_r41_kanister2080 fahren mit RE15_GB_TEST=5 (Gator startet aufgetaucht, B9-Untertauchen aus) - das verdeckt beides.
+Forderung (N23): die ganze Folge im echten Ablauf (Leon UND Elza, ohne RE15_GB_TEST/RE15_GATOR_KANISTER) mit Bild der Aufnahme und Zeit
+seit dem Wurf; Kanister so legen bzw. Ablauf so fuehren, dass er auf dem Rundweg liegt; Riegel Szene -> Aufnahme -> Schuss -> R1-Tod.
+Ob der erneute Intro-Durchbruch nach der Szene zu "Kampf geht weiter" passt, mit dem Orchestrator klaeren (Hinweis H1).
 
-**M3 (P3, Riegel-Luecke) - Aufnahme und Kiefer-Tod nach der ECHTEN Szene sind nicht gesichert.** integration_r41_kanister2080 endet mit
-`Kanister im Becken`; Aufnahme/Explosion werden nur von Spur B's Riegel mit dessen Testhaken RE15_GATOR_KANISTER an einer anderen Stelle
-(-1500,-23400) geprueft. An G's Landepunkt nimmt der Gator den Kanister nur, wenn er gerade darauf zu schwimmt (Laeufe auf_A/auf_B je 1500
-Bilder ohne Aufnahme, auf_C mit Aufnahme F1104). Forderung: ein Riegel Szene -> Kanister im Becken -> Aufnahme (`KANISTER angehaengt`)
--> Schuss -> `R1 start`/`R1 ende`, im natuerlichen Ablauf (nach M1).
+**M3 (Nachtrag 5) - Wurf-Kamera nicht "GENAUSO".** RE2 ROOM7020 Cut 7: Ada von unten (43,6 Grad, Abstand 8908). Port: 2080 Cut 7 Totale
+(6,4 Grad ueber dem Kopf, 17168), Marvin/John als kleine Figur (<SP>/belege/p3a_bogen4.png). Eigene Projektion (<SP>/proj_bahn.c,
+probe_kanister_lage.c): keine 2080/2090-Kamera zeigt den Werfer von unten; 2090 Cut 12 sieht die Wand unter dem Balkon, das Balkonende
+liegt knapp ueber dem Bildrand (y -19..-24), die Fallbahn erreicht 2090-Kameras erst ab Bild 30 von 36. Vom Bau-Agenten als OFFEN 2
+benannt, ohne Entscheid. Forderung: Orchestrator-/Nutzer-Entscheid (analog B8); bis dahin teilweise.
 
-**M4 (RE-Gate, klein) - Dauern ohne eigenen Beleg und ohne PORT-WAHL-Vermerk** in kanister2080_r41.c: `OP_SLEEP(10)` zwischen zwei Zielen
-(baue_szene; zitiert nur 0xC8/Bild @0x80033f90), `OP_SLEEP(30)` nach dem Tuer-Ton (Wert von RE2 @0x076A, dort nach Message_on), `OP_SLEEP(30)`
-in baue_rueck (RE2 hat dort Wsleep @0x081A, keine 30). Ausserdem ist Adas Wurf-Clip (`3f 0a 12 40` @0x0750) durch Marvins Eigen c6
-ersetzt, ohne PORT-WAHL-Vermerk im Header. Forderung: herleiten oder als PORT-WAHL mit Begruendung kennzeichnen.
+**M4 (Doku/Beleg) - Messaussage auf Testhaken.** Dossier 6.3: "Gemessen (Lauf p3h mit RE15_GB_TEST=5): Gator wieder aufgetaucht an der
+Marker-Lage, verfolgt Leon" - GB_TEST=5 erzwingt genau das (enemy_ai_boss_gator.c: kein gb_untertauchen, Lage (4997,-20318)); fuer das
+Spiel ist es kein Beleg. Ausserdem k_port[] Bit 114 "Tuer-Ton beim ersten Betreten" (ist der Knall) und der main.c-Kommentar ohne Knall.
 
-**M5 (Doku, klein)** - test_r36_kartenbits.c k_port[] Bit 114: "2080: Tuer-Ton beim ersten Betreten nach Bit 110" (ist seit Nachtrag 17
-der Knall); main.c-Haken "Tuer-Ton DOOR06, Aufschlag, NPC-Schuss" ohne den Knall (vom Bau-Agenten selbst benannt).
+**M5 (RE-Gate, klein) - Dauern ohne eigenen Beleg und ohne PORT-WAHL-Vermerk** in kanister2080_r41.c: `OP_SLEEP(10)` zwischen zwei Zielen
+(zitiert nur die Drehrate 0xC8/Bild @0x80033f90), `OP_SLEEP(30)` nach dem Tuer-Ton (RE2-Wert @0x076A aus anderem Zusammenhang),
+`OP_SLEEP(30)` in baue_rueck (RE2 hat dort Wsleep @0x081A). Adas Wurf-Clip (`3f 0a 12 40` @0x0750) ist durch Marvins Eigen c6 ersetzt,
+ohne PORT-WAHL-Vermerk. Forderung: herleiten oder als PORT-WAHL kennzeichnen.
 
-## 7. Hinweise (kein Mangel dieser Spur)
-- H1 Integration mit F: der Knall faellt in F's 2090-Einstellung UND beim ersten Betreten von 2080 (FG-E1). Ob zweimal gewollt ist, bei der
-  Integration im Spiel pruefen.
-- H2 Zone-7-Tot-Bits 236..243 stehen nicht im VERTRAG (der teilt nur Bank 9 zu); F darf sie fuer seine 2080-Szenenfiguren nicht verwenden.
-- H3 In diesem Zweig sind die Spinnen (Typ 0x25) noch in 2090 (F entfernt sie): in den natuerlichen Laeufen n1/n2 traf die Zielhilfe die
-  Spinnen statt des Alligators.
-- H4 Schwelle 300 Schaden = 43 Pistolentreffer (Dossier-Frage 1) - durch "oft genug" gedeckt, Nutzer fragen.
-- H5 Der Kanister ist RE2-gross (2784): an der Reling ragt er weit ueber das Gelaender, in den Haenden 1392 zu jeder Seite (kein Massstab
-  erfunden, Dossier OFFEN 5). Im 2090-Becken zeichnet Spur B ihn sehr dunkel.
-- H6 Die Messkopien re15_pc_g41abn*.exe wurden nach der Abnahme geloescht; ein Lauf des Kanister-Schnittwerkzeugs (ohne --install) legte
-  build/r41_kanister2080/ im Baum an - bytegleich geprueft und wieder entfernt.
+## 8. Hinweise (kein Mangel dieser Spur)
+- H1 Nachtrag 22 Frage 2 ("Erst beim Annaehern") wurde ohne den Zusatz gestellt, dass der Alligator dann ein neuer Aktor ist (HP 25300,
+  Intro-Durchbruch erneut; n23_kanal `AUFTAUCHEN F6`/`INTRO ende` nach der Rueckkehr). Nachtrag 23 sagt "Kampf geht weiter" - bitte
+  bestaetigen lassen, dass der wiederholte Intro gewollt ist.
+- H2 Integration mit F: der Knall faellt in F's 2090-Einstellung UND beim ersten Betreten von 2080 (FG-E1) - im Spiel pruefen.
+- H3 Zone-7-Tot-Bits 236..243 stehen nicht im VERTRAG (nur Bank 9 zugeteilt); eigener Zensus: frei. F darf sie nicht nutzen.
+- H4 In diesem Zweig sind die Spinnen (0x25) noch in 2090 (F entfernt sie); die Zielhilfe traf in n1/n2 die Spinnen statt des Alligators.
+- H5 Kanister in RE2-Groesse (2784): ueberragt an der Reling das Gelaender deutlich, in den Haenden 1392 je Seite (Dossier OFFEN 5);
+  im 2090-Becken zeichnet Spur B ihn sehr dunkel.
+- H6 Aufraeumen: Messkopien re15_pc_g41abn*.exe geloescht; ein Lauf von kanister2080_se_cut.py (ohne --install) legte build/r41_kanister2080/
+  im Baum an - bytegleich zu KANISTER2080.VBS / gen/r41_kanister2080_bank.inc, wieder entfernt.
