@@ -37,16 +37,19 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
     set_tests_properties(integration_r41_ventilkette_b PROPERTIES TIMEOUT 1200 RUN_SERIAL TRUE)
 endif()
 
-# Nachbesserung 1 (Abnahme 0, M2): die ganze Kette in EINEM Lauf - 2030 Ventile -> Ost-Tuer zu Fuss -> 20B0-Szene
-# sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> 2050. Braucht den AUTO-Haken der Spur A (aot_common.c
-# re15_wasser20b0_r41_auto_aot); ohne ihn haengt die Szene -> "R41C-SKIP:" (Skipped), mit ihm muss sie durchlaufen.
+# Nachbesserung 1 (Abnahme 0, M2; Orchestrator-Entscheid C-E1 2026-10-24): die ganze Kette in EINEM Lauf - 2030 Ventile
+# -> Ost-Tuer zu Fuss -> 20B0-Szene sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> 2050. Braucht den AUTO-Haken
+# der Spur A (aot_common.c re15_wasser20b0_r41_auto_aot) -> NUR registriert, wenn A's Modul im Baum liegt.
 if(RE15_BUILD_PC AND TARGET re15_pc)
-    add_test(NAME integration_r41_ventilkette_szene
-             COMMAND ${CMAKE_COMMAND}
-                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
-                     -DRE15_SRC=${CMAKE_SOURCE_DIR}
-                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_szene
-                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_szene.cmake)
-    set_tests_properties(integration_r41_ventilkette_szene PROPERTIES TIMEOUT 900 RUN_SERIAL TRUE
-                         SKIP_REGULAR_EXPRESSION "R41C-SKIP:")
+    if(EXISTS ${CMAKE_SOURCE_DIR}/engine/src/wasser20b0_r41.c)
+        add_test(NAME integration_r41_ventilkette_kette
+                 COMMAND ${CMAKE_COMMAND}
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DRE15_SRC=${CMAKE_SOURCE_DIR}
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_kette
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_kette.cmake)
+        set_tests_properties(integration_r41_ventilkette_kette PROPERTIES TIMEOUT 900 RUN_SERIAL TRUE)
+    else()
+        message(STATUS "integration_r41_ventilkette_kette uebersprungen: Spur A fehlt (engine/src/wasser20b0_r41.c, AUTO-Haken re15_wasser20b0_r41_auto_aot)")
+    endif()
 endif()

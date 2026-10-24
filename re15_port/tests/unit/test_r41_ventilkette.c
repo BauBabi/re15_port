@@ -23,6 +23,9 @@
  *      schon gelaufen: Slot 4 erneut, nur Frage + Bit 107
  *   H  fremde Raeume: der Installer laesst (5,0x1D)/(5,0x1E) stehen (ROOM1171 sub02 @0x013B2 `22 05 1e 01` im
  *      Init-Takt bleibt 1), nur 2030/2031 loescht er (Nachbesserung 1, M3)
+ *   I  Ring-Zugaenge des gefluteten 2030 (Orchestrator-Entscheid C-E2, Abnahme 0 M5): 20B0/20B1 Slot 3 @0x019C2 und
+ *      2070/2071 Slot 1 @0x00A5A / Slot 2 @0x00A7A sind mit Bit 103 ohne 107 Sperrtexte (41 bzw. 40, Aktion zeigt ihn,
+ *      kein Raumwechsel), mit 107 wieder Tueren nach 2030; die Tuerebenen-Tueren (2080 Slot 0 @0x00BA2) bleiben offen
  *
  * Werkzeug (Riegel integration_r41_ventilkette C, Nachbesserung 1 M4): `test_r41_ventilkette ppm <datei.ppm> x0 y0 x1 y1`
  * gibt "MITTEL r g b" der Flaeche (P6-Framedump, x1/y1 ausschliesslich) aus.
@@ -262,6 +265,10 @@ static void fall_a(void)
     PRUEFE(text_ist(0x2050, 41, "Will you push them?"), "Text 2050/41 = 11F0 msg 1");
     PRUEFE(text_ist(0x2080, 40, "The treatment pool is being drained as well."), "Text 2080/40");
     PRUEFE(text_ist(0x2031, 49, "The valves are open. The pool has been drained."), "Text 2031/49 (Nachbesserung 1, M8)");
+    PRUEFE(text_ist(0x20B1, 41, "I cannot open the door because of the water pressure."), "Text 20B1/41 (C-E2)");
+    PRUEFE(text_ist(0x2071, 40, "I cannot open the door because of the water pressure."), "Text 2071/40 (C-E2)");
+    PRUEFE(re15_ventilkette_r41_text(0x2000, 41, NULL) == NULL && text_ist(0x20B0, 40, "I cannot climb up the ladder because of the water pressure."),
+           "Id 41 nur in 20B0 (VERTRAG §1.2), 20B0 traegt weiter den Leiter-Satz 40");
     /* Gewichte: genau eine der 16 Masken ergibt 80 */
     int treffer = 0, welche = -1;
     for (unsigned m = 0; m < 16; m++)
@@ -690,6 +697,49 @@ static void fall_g(uint16_t r)
            g_aot.slots[4].type, g_aot.slots[4].event_id, re15_game_flag_get(3, 245), bit(RE15_R41C_BIT_FLUT_GELAUFEN), bit(RE15_R41C_BIT_2030_LEER));
 }
 
+/* ---- I: Ring-Zugaenge des gefluteten 2030 (Orchestrator-Entscheid C-E2, Abnahme 0 M5) ---------------------------- */
+static void ring_pruefen(uint16_t raum, int slot, int msg, int32_t x, int32_t y, int32_t z, int rot, int band)
+{
+    /* geflutet: Bit 103 ohne 107 -> Sperrtext, Aktion zeigt ihn, kein Raumwechsel */
+    bits_leeren();
+    vorflag(3, 235); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_LEITER_FREI);
+    if (raum_hoch(raum, x, y, z) != 0) { PRUEFE(0, "ROOM%04X Parse", raum); return; }
+    const re15_aot_t *a = &g_aot.slots[slot];
+    PRUEFE(a->active && a->type == RE15_AOT_TYPE_MESSAGE && a->event_id == msg && a->band == band,
+           "ROOM%04X Slot %d geflutet: Sperrtext %d Band %d (Typ %d ev %d Band %d)", raum, slot, msg, band, a->type, a->event_id, a->band);
+    memset(&g_room_change, 0, sizeof g_room_change);
+    lauf_t L = druecken(x, z, rot, 0, 300); zeige("ring zu", raum, &L);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == msg && !g_room_change.pending,
+           "ROOM%04X Slot %d geflutet: Aktion zeigt nur Text %d, kein Raumwechsel (msgs %d, erste %d, pending %d)",
+           raum, slot, msg, L.n_msgs, L.n_msgs ? L.msgs[0] : -1, g_room_change.pending);
+    /* entleert: Bit 107 -> wieder die Original-Tuer nach 2030 (Stage 1 Raum 3) */
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_2030_LEER);
+    if (raum_hoch(raum, x, y, z) != 0) { PRUEFE(0, "ROOM%04X Parse", raum); return; }
+    PRUEFE(g_aot.slots[slot].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[slot].dest_stage == 1 &&
+           g_aot.door_params[slot].dest_room == RE15_R41C_RAUM_2030_ID,
+           "ROOM%04X Slot %d mit Bit 107: Tuer nach 2030 (Typ %d Raum %d)", raum, slot, g_aot.slots[slot].type, g_aot.door_params[slot].dest_room);
+}
+
+static void fall_i(uint16_t r20b0, uint16_t r2070, uint16_t r2080)
+{
+    /* 20B0 Slot 3 @0x019C2 Rechteck (5450,-7900,1000,3000) Band 1: Spieler (4900,-6400) Blick +x (Punkt 620 -> x 5520) */
+    ring_pruefen(r20b0, RE15_R41C_SLOT_20B0_RING, RE15_R41C_MSG_RING_20B0, 4900, -1800, -6400, 0, 1);
+    /* 2070 Slot 1 @0x00A5A Rechteck (5000,-7900,1000,3000) Band 0: Spieler (4400,-6400) Blick +x */
+    ring_pruefen(r2070, RE15_R41C_SLOT_2070_RING_A, RE15_R41C_MSG_RING_2070, 4400, 0, -6400, 0, 0);
+    /* 2070 Slot 2 @0x00A7A Rechteck (-19950,4900,1000,3000) Band 0: Struktur (gleiches Ziel) */
+    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN);
+    if (raum_hoch(r2070, 0, 0, 0) == 0)
+        PRUEFE(g_aot.slots[RE15_R41C_SLOT_2070_RING_B].type == RE15_AOT_TYPE_MESSAGE &&
+               g_aot.slots[RE15_R41C_SLOT_2070_RING_B].event_id == RE15_R41C_MSG_RING_2070 &&
+               g_aot.slots[0].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[0].dest_room == 0x0B,
+               "ROOM%04X geflutet: Slot 2 Sperrtext 40, Slot 0 bleibt Tuer (-> 20B0)", r2070);
+    /* Tuerebene bleibt offen: 2080 Slot 0 @0x00BA2 -> 2030 (-6950,-16200,6450) nfloor 9 */
+    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN);
+    if (raum_hoch(r2080, -11550, -14400, -6000) == 0)
+        PRUEFE(g_aot.slots[0].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[0].dest_room == RE15_R41C_RAUM_2030_ID,
+               "ROOM%04X geflutet: Tuerebenen-Tuer Slot 0 nach 2030 bleibt offen (Typ %d)", r2080, g_aot.slots[0].type);
+}
+
 /* ---- H: Bank-5-Marker nur in 2030 loeschen (Nachbesserung 1, M3) ------------------------------------------------ */
 static void fall_h(void)
 {
@@ -750,6 +800,7 @@ int main(int argc, char **argv)
                (uint16_t)(0x2050 + v), (uint16_t)(0x2070 + v), (uint16_t)(0x1260 + v));
         fall_f((uint16_t)(0x2050 + v));
         fall_g((uint16_t)(0x2080 + v));
+        fall_i((uint16_t)(0x20B0 + v), (uint16_t)(0x2070 + v), (uint16_t)(0x2080 + v));
     }
     /* fremd: ROOM2060 ohne Plaetze 12..14 / Wasser */
     bits_leeren();

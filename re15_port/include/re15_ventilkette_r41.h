@@ -154,6 +154,10 @@
 #define RE15_R41C_MSG_PULT_BESCHR     43
 #define RE15_R41C_MSG_PULT_ZUSTAND    44
 #define RE15_R41C_MSG_RECHNER_2030    40   /* 2080 */
+/* Orchestrator-Entscheid C-E2 (AUFTRAG.md 2026-10-24 05:25, Abnahme 0 M5): bis Bit 107 sind die Zugaenge in den
+ * gefluteten Ring von 2030 gesperrt (Aktionstaste -> Port-Text, kein Raumwechsel). Ids laut VERTRAG §1.2 (ergaenzt). */
+#define RE15_R41C_MSG_RING_20B0       41   /* 20B0/20B1 */
+#define RE15_R41C_MSG_RING_2070       40   /* 2070/2071 */
 #define RE15_R41C_MSG_LIFT_ORIGINAL    1   /* 2030 msg 1 "The elevator is not responding..." @0x2038 */
 
 /* ---- Ereignisse (Port-Ids < RE15_RDT_MAX_SUB_SCD, ausserhalb der Raum-Subs: 2030 hat sub00..06) ------------- */
@@ -181,6 +185,16 @@
 #define RE15_R41C_SLOT_2030_OSTTUER 0  /* main00 @0x01ACA */
 #define RE15_R41C_SLOT_2050_PULT  8    /* main00 @0x01D38 */
 #define RE15_R41C_SLOT_2080_RECHNER 4  /* sub00  @0x00C1A */
+/* Zugaenge in den Ring von 2030 (Tuer-Zensus aller ROOM*.RDT, Ziel Stage 1 Raum 3 mit Ankunft auf dem Ring
+ * (6550,-5400,-100) nfloor 3): 20B0/20B1 Slot 3 @0x019C2 `3b 03 02 31 01 00 4a 15 24 e1 ... 00 08 01 03 00 03`,
+ * 2070/2071 Slot 1 @0x00A5A `3b 01 02 31 00 00 88 13 24 e1 ... 00 08 01 03 00 03` und Slot 2 @0x00A7A
+ * `3b 02 02 31 00 00 12 b2 24 13 ... 00 08 01 03 00 03`. Alle uebrigen Tueren nach 2030 (2020/2021 Slot 1 @0x00866/
+ * @0x0088A, 2060/2061 Slot 0 @0x00D9A, 2080/2081 Slot 0 @0x00BA2) kommen auf der Tuerebene y -16200 (nfloor 9) an,
+ * also ueber dem Wasser y -7200 -> bleiben offen (Weg zum Rechner 2080). */
+#define RE15_R41C_SLOT_20B0_RING  3
+#define RE15_R41C_SLOT_2070_RING_A 1
+#define RE15_R41C_SLOT_2070_RING_B 2
+#define RE15_R41C_RAUM_2030_ID    0x03   /* Door_aot_set pc[23] (Stage 1 = STAGE2) */
 #define RE15_R41C_SAT            0x31  /* Vorwaertspunkt-Test wie alle Original-Plaetze dieser Raeume */
 #define RE15_R41C_PAUSE          0xFFFFu
 /* Rechtecke (x, z, Breite, Tiefe) + Band — Herleitung im Kopf. */

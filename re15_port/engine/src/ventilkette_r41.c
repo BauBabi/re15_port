@@ -76,10 +76,10 @@ static void text_einsetzen(uint8_t id, const uint8_t *m, int n)
 
 const uint8_t *re15_ventilkette_r41_text(uint16_t room_id, uint8_t id, int *out_len)
 {
-    uint16_t gruppe = (uint16_t)(room_id & 0xFFFEu);
-    if (gruppe == RE15_R41C_RAUM_20B0) gruppe = RE15_R41C_RAUM_2000;   /* Leiter-Satz gilt in beiden */
-    for (int i = 0; i < RE15_R41C_TEXTE_N; i++)
-        if (re15_r41c_texte[i].raum == gruppe && re15_r41c_texte[i].id == id) {
+    const uint16_t gruppe = (uint16_t)(room_id & 0xFFFEu);
+    for (int i = 0; i < RE15_R41C_TEXTE_N; i++)   /* eigene Texte der Raumgruppe (20B0: Id 41), dann 2000 (Leiter Id 40) */
+        if ((re15_r41c_texte[i].raum == gruppe ||
+             (gruppe == RE15_R41C_RAUM_20B0 && re15_r41c_texte[i].raum == RE15_R41C_RAUM_2000)) && re15_r41c_texte[i].id == id) {
             if (out_len) *out_len = re15_r41c_texte[i].n;
             return re15_r41c_texte[i].b;
         }
@@ -93,10 +93,10 @@ const uint8_t *re15_ventilkette_r41_text(uint16_t room_id, uint8_t id, int *out_
 
 static void texte_einsetzen(uint16_t room_id)
 {
-    uint16_t gruppe = (uint16_t)(room_id & 0xFFFEu);
-    if (gruppe == RE15_R41C_RAUM_20B0) gruppe = RE15_R41C_RAUM_2000;
-    for (int i = 0; i < RE15_R41C_TEXTE_N; i++)
-        if (re15_r41c_texte[i].raum == gruppe)
+    const uint16_t gruppe = (uint16_t)(room_id & 0xFFFEu);
+    for (int i = 0; i < RE15_R41C_TEXTE_N; i++)   /* 20B0 traegt den Leiter-Satz der 2000 (Id 40) und eigene (Id 41) */
+        if (re15_r41c_texte[i].raum == gruppe ||
+            (gruppe == RE15_R41C_RAUM_20B0 && re15_r41c_texte[i].raum == RE15_R41C_RAUM_2000))
             text_einsetzen(re15_r41c_texte[i].id, re15_r41c_texte[i].b, re15_r41c_texte[i].n);
     if (gruppe == RE15_R41C_RAUM_2050) {
         text_einsetzen(RE15_R41C_MSG_PULT_FRAGE, re15_r41c_org_11f0_msg1, (int)sizeof re15_r41c_org_11f0_msg1);
@@ -253,6 +253,22 @@ static void tueren_umlenken(uint16_t room_id)
         tuer_nach_20b0(RE15_R41C_SLOT_2030_OSTTUER, 5950, -1800, -6400, 2048, 11, "Ost-Tuer nach der Flut");
 }
 
+/* ---- Ring-Zugaenge des gefluteten 2030 (Orchestrator-Entscheid C-E2) --------------------------------------------- */
+/* Tuer -> Sperrtext, solange 2030 unter Wasser steht (Bit 103 ohne 107); Zensus und Bytes im Kopf
+ * (RE15_R41C_SLOT_20B0_RING / _2070_RING_A/B). Form wie die Leiter 2000 (Text-Platz sce 1 im Tuer-Rechteck, ROOM2030
+ * main00 @0x01B12); das Band der Tuer (Door_aot_set pc[4]) geht auf den Platz ueber wie in install_2000. */
+static void ring_sperren(uint16_t room_id, int slot, uint8_t msg)
+{
+    if (!bit(RE15_R41C_BIT_FLUT_GELAUFEN) || bit(RE15_R41C_BIT_2030_LEER)) return;
+    re15_aot_t *a = &g_aot.slots[slot];
+    const re15_aot_door_params_t *d = &g_aot.door_params[slot];
+    if (!a->active || a->type != RE15_AOT_TYPE_DOOR || d->dest_stage != 1 || d->dest_room != RE15_R41C_RAUM_2030_ID) return;
+    a->band = d->band;
+    sperrtext(slot, msg);
+    LOG("[ventilkette41] ROOM%04X: Ring-Tuer Slot %d nach 2030 gesperrt (geflutet) -> Sperrtext %d\n",
+        (unsigned)room_id, slot, msg);
+}
+
 /* ---- Install je Raum --------------------------------------------------------------------------------------- */
 static void install_2000(uint16_t room_id)
 {
@@ -269,6 +285,15 @@ static void install_2000(uint16_t room_id)
         }
     }
     tueren_umlenken(room_id);
+    if (ist(room_id, RE15_R41C_RAUM_20B0)) ring_sperren(room_id, RE15_R41C_SLOT_20B0_RING, RE15_R41C_MSG_RING_20B0);
+}
+
+static void install_2070(uint16_t room_id)
+{
+    texte_einsetzen(room_id);
+    tueren_umlenken(room_id);
+    ring_sperren(room_id, RE15_R41C_SLOT_2070_RING_A, RE15_R41C_MSG_RING_2070);
+    ring_sperren(room_id, RE15_R41C_SLOT_2070_RING_B, RE15_R41C_MSG_RING_2070);
 }
 
 static void install_2030(uint16_t room_id, const re15_rdt_t *rdt)
@@ -347,7 +372,8 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
     else if (ist(room_id, RE15_R41C_RAUM_2030)) install_2030(room_id, rdt);
     else if (ist(room_id, RE15_R41C_RAUM_2050)) install_2050(room_id);
     else if (ist(room_id, RE15_R41C_RAUM_2080)) install_2080(room_id);
-    else if (ist(room_id, RE15_R41C_RAUM_2010) || ist(room_id, RE15_R41C_RAUM_2070) || ist(room_id, RE15_R41C_RAUM_1260))
+    else if (ist(room_id, RE15_R41C_RAUM_2070)) install_2070(room_id);
+    else if (ist(room_id, RE15_R41C_RAUM_2010) || ist(room_id, RE15_R41C_RAUM_1260))
         tueren_umlenken(room_id);
 }
 

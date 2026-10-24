@@ -187,6 +187,10 @@ TEXTE = [
      "PORT-WAHL, Zustandssatz"),
     ("2080", 40, "rechner_2030", [["The treatment pool is", "being drained as well."]], False, None,
      "PORT-WAHL (Nutzer: \"der Rechner ... entleert danach auch 2030\")"),
+    ("20B0", 41, "ring_tuer", [["I cannot open the door", "because of the water pressure."]], False, None,
+     "PORT-WAHL (Orchestrator-Entscheid C-E2: Zugaenge ins geflutete 2030 gesperrt), Form der Leiter-Vorgabe Id 40"),
+    ("2070", 40, "ring_tuer", [["I cannot open the door", "because of the water pressure."]], False, None,
+     "PORT-WAHL (Orchestrator-Entscheid C-E2), wie 20B0 Id 41"),
 ]
 
 

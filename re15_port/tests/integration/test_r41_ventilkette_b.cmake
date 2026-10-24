@@ -33,6 +33,10 @@
 #      Wasserflaeche, kein "unter Wasser"-Satz (Raum wieder frei ohne Wasser).
 #   J  Elza (ROOM2051): D mit Elza bis "Power supply OK." und Original-Hebel.
 #   K  Elza (ROOM2001): Leiter = Sperrtext 40 woertlich, kein Raumwechsel nach ROOM2051.
+#   L/L2 Orchestrator-Entscheid C-E2 (Abnahme 0 M5): ROOM20B0 nach der Szene mit Bit 103 ohne 107 -> die Ost-Tuer Slot 3
+#      @0x019C2 (Ziel 2030-Ring (6550,-5400,-100)) ist Sperrtext 41, Aktionstaste -> Text, KEIN Raumwechsel; mit Bit 107
+#      feuert dieselbe Tuer und ROOM2030 wird geladen.
+#   M/M2 dasselbe fuer ROOM2070 Slot 1 @0x00A5A (Text 40; mit Bit 107 -> ROOM2030).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_ventilkette_b.cmake
 # =============================================================================
@@ -269,5 +273,41 @@ _muss("${_dbg}" "[msgtext] room=2001 id=40 \"I cannot climb up the ladder becaus
 _darf_nicht("${_dbg}" "loaded room2051.rdt" k "die Leiter darf nicht nach ROOM2051 fuehren")
 _muss("${_dbg}" "EXIT_AT: Bild" k "Endbild in ROOM2001 erreicht")
 
+# ---- L/L2/M/M2: Ring-Zugaenge des gefluteten 2030 (Entscheid C-E2) ---------------------------------------------
+_lauf(l 240 ${_leon}
+      RE15_DEBUG_JUMP=20B0@240 "RE15_PLAYER_POS=4900,-6400,0,1" "RE15_SET_FLAG=3:235,9:103,9:100"
+      RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W3"
+      "RE15_EXIT_AT=520#20B0")
+_muss("${_dbg}" "[ventilkette41] ROOM20B0: Ring-Tuer Slot 3 nach 2030 gesperrt (geflutet) -> Sperrtext 41" l "Ost-Tuer gesperrt")
+_muss("${_dbg}" "[msgtext] room=20B0 id=41 \"I cannot open the door because of the water pressure.\"" l "Sperrtext 41")
+_darf_nicht("${_dbg}" "DOOR FIRE slot=3" l "die Ost-Tuer darf im gefluteten Zustand nicht feuern")
+_darf_nicht("${_dbg}" "loaded room2030.rdt" l "kein Raumwechsel in das geflutete 2030")
+_muss("${_dbg}" "EXIT_AT: Bild" l "Endbild in ROOM20B0 erreicht")
+_lauf(l2 240 ${_leon}
+      RE15_DEBUG_JUMP=20B0@240 "RE15_PLAYER_POS=4900,-6400,0,1" "RE15_SET_FLAG=3:235,9:103,9:100,9:107"
+      RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W6"
+      "RE15_EXIT_AT=60#2030")
+_darf_nicht("${_dbg}" "Ring-Tuer Slot 3" l2 "mit Bit 107 keine Sperre")
+_muss("${_dbg}" "[aot] DOOR FIRE slot=3 rect=(5950,-6400" l2 "Ost-Tuer feuert nach dem Entleeren")
+_muss("${_dbg}" "loaded room2030.rdt" l2 "ROOM2030 geladen")
+_muss("${_dbg}" "EXIT_AT: Bild" l2 "Endbild in ROOM2030 erreicht")
+_lauf(m 240 ${_leon}
+      RE15_DEBUG_JUMP=2070@240 "RE15_PLAYER_POS=4400,-6400,0,0" "RE15_SET_FLAG=9:103,9:100"
+      RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W3"
+      "RE15_EXIT_AT=520#2070")
+_muss("${_dbg}" "[ventilkette41] ROOM2070: Ring-Tuer Slot 1 nach 2030 gesperrt (geflutet) -> Sperrtext 40" m "Slot 1 gesperrt")
+_muss("${_dbg}" "[ventilkette41] ROOM2070: Ring-Tuer Slot 2 nach 2030 gesperrt (geflutet) -> Sperrtext 40" m "Slot 2 gesperrt")
+_muss("${_dbg}" "[msgtext] room=2070 id=40 \"I cannot open the door because of the water pressure.\"" m "Sperrtext 40")
+_darf_nicht("${_dbg}" "loaded room2030.rdt" m "kein Raumwechsel in das geflutete 2030")
+_muss("${_dbg}" "EXIT_AT: Bild" m "Endbild in ROOM2070 erreicht")
+_lauf(m2 240 ${_leon}
+      RE15_DEBUG_JUMP=2070@240 "RE15_PLAYER_POS=4400,-6400,0,0" "RE15_SET_FLAG=9:103,9:100,9:107"
+      RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W6"
+      "RE15_EXIT_AT=60#2030")
+_darf_nicht("${_dbg}" "Ring-Tuer Slot" m2 "mit Bit 107 keine Sperre")
+_muss("${_dbg}" "[aot] DOOR FIRE slot=1" m2 "Slot 1 feuert nach dem Entleeren")
+_muss("${_dbg}" "loaded room2030.rdt" m2 "ROOM2030 geladen")
+_muss("${_dbg}" "EXIT_AT: Bild" m2 "Endbild in ROOM2030 erreicht")
+
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_ventilkette_b: D (Pult 2050 -> 80 V -> Hebel = Original), E (Hebel gesperrt), E2/E3/E4 (Kisten-Hebel ohne/mit Pult, Elza), F (2030-Pult ohne Ventil 13), G/H (Leitern 20B0 <-> 2050), I (2030 Flut / leer mit 107), J (Elza 2051), K (Elza Leiter 2001) bestanden")
+message(STATUS "r41_ventilkette_b: L/L2/M/M2 (Ring-Zugaenge 20B0/2070 gesperrt bis Bit 107), D (Pult 2050 -> 80 V -> Hebel = Original), E (Hebel gesperrt), E2/E3/E4 (Kisten-Hebel ohne/mit Pult, Elza), F (2030-Pult ohne Ventil 13), G/H (Leitern 20B0 <-> 2050), I (2030 Flut / leer mit 107), J (Elza 2051), K (Elza Leiter 2001) bestanden")

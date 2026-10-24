@@ -3,16 +3,16 @@
 # ZU FUSS durch die Ost-Tuer -> ROOM20B0 -> Auswasch-Szene des Originals bis zur Freigabe ((3,235)=1, Balken weg) ->
 # zu Fuss durch den Kanal an die Leiter -> ROOM2050. Dossier analysis/befunde_runde41/C_ventilkette.md §0b M2.
 #
+# Orchestrator-Entscheid C-E1 (AUFTRAG.md 2026-10-24 05:25): Name integration_r41_ventilkette_kette, registriert in
+# probes/r41_ventilkette.cmake NUR, wenn das Modul der Spur A im Baum liegt (engine/src/wasser20b0_r41.c); im Baum der
+# Spur C erscheint stattdessen beim Configure die Statuszeile "uebersprungen: Spur A fehlt".
 # ABHAENGIGKEIT SPUR A: die Szene laeuft im Port nur mit dem AUTO-Haken der Spur A (Zweig r41/wasser20b0,
 # aot_common.c `re15_wasser20b0_r41_auto_aot`: FUN_800436a8 wird @0x8001ce1c ohne Szenen-Gate gerufen). Ohne ihn
 # ueberspringt re15_aot_scan waehrend der Szene die AUTO-Zone Slot 7 (@0x01DF2 sce 3 Ereignis 5, aot_common.c
 # `if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH) continue;`), sub05 @0x01F5C startet nie und der Spieler
 # steht unter der Pad-Sperre von sub02 ((2,7) @0x01EF8 `22 02 07 01`, (1,28) @0x01EFC `22 01 1c 01`) im Westgang
 # (Abnahme 0 L3, F109..F1100).
-# Gate: fehlt der Haken im Quellbaum UND haengt die Szene genau so (kein sub05-Start), meldet der Riegel
-# "R41C-SKIP:" (ctest SKIP_REGULAR_EXPRESSION -> "Skipped", weder gruen noch rot); mit dem Haken (nach der
-# Integration) MUSS die ganze Kette durchlaufen. Laeuft die Szene ohne den Haken trotzdem durch (spaetere allgemeine
-# Loesung), wird ebenfalls voll geprueft.
+# Ist der Riegel registriert (Spur A im Baum), MUSS die ganze Kette durchlaufen; startet sub05 nicht, ist das ein FAIL.
 #
 # Gemessen 2026-10-24 05:53-05:55 mit dem wortgleichen Haken der Spur A (temporaerer Messbau, nicht committet;
 # scratchpad r41c_nb1/mess/kette3): Ventile Text 45 -> Ja -> Warnung 46 -> Zaehler -> Ost-Tuer zu Fuss (Drehung R0.7, Aktion,
@@ -26,17 +26,17 @@
 # Die Kill-Bits der drei Spinnen (Sce_em_set pc[7] 0x9b/0x9c/0x9d @0x01C18/@0x01C2C/@0x01C40) stehen fuer den
 # Spielzustand "schon getoetet" (Messmittel wie integration_r41_ventilkette C / Abnahme 0 L3).
 #
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_SRC=<re15_port> -DWORKDIR=<dir> -P test_r41_ventilkette_szene.cmake
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_SRC=<re15_port> -DWORKDIR=<dir> -P test_r41_ventilkette_kette.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
-    message(FATAL_ERROR "r41_ventilkette_szene: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")
+    message(FATAL_ERROR "r41_ventilkette_kette: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")
 endif()
 if(NOT RE15_SRC OR NOT EXISTS "${RE15_SRC}/engine/src/aot_common.c")
-    message(FATAL_ERROR "r41_ventilkette_szene: RE15_SRC (re15_port) fehlt: '${RE15_SRC}'")
+    message(FATAL_ERROR "r41_ventilkette_kette: RE15_SRC (re15_port) fehlt: '${RE15_SRC}'")
 endif()
 if(NOT WORKDIR)
-    message(FATAL_ERROR "r41_ventilkette_szene: WORKDIR fehlt")
+    message(FATAL_ERROR "r41_ventilkette_kette: WORKDIR fehlt")
 endif()
 
 file(READ "${RE15_SRC}/engine/src/aot_common.c" _aot_src)
@@ -52,23 +52,23 @@ include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_basis "${WORKDIR}/lauf_${_lauf_id}")
 
-# Eigener exe-Name (Praefix re15_pc_r41cs_; Teil A raeumt re15_pc_r41c_haken_*, Teil B re15_pc_r41cb_*).
+# Eigener exe-Name (Praefix re15_pc_r41ck_; Teil A raeumt re15_pc_r41c_haken_*, Teil B re15_pc_r41cb_*).
 get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
-file(GLOB _alte_kopien "${_exe_dir}/re15_pc_r41cs_*")
+file(GLOB _alte_kopien "${_exe_dir}/re15_pc_r41ck_*")
 foreach(_k IN LISTS _alte_kopien)
     file(REMOVE "${_k}")
 endforeach()
 get_filename_component(_exe_name "${RE15_PC_EXE}" NAME)
 if(_exe_name MATCHES "\\.exe$")
-    set(_exe_kopie "${_exe_dir}/re15_pc_r41cs_${_lauf_id}.exe")
+    set(_exe_kopie "${_exe_dir}/re15_pc_r41ck_${_lauf_id}.exe")
 else()
-    set(_exe_kopie "${_exe_dir}/re15_pc_r41cs_${_lauf_id}")
+    set(_exe_kopie "${_exe_dir}/re15_pc_r41ck_${_lauf_id}")
 endif()
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
 function(_fehler _was)
     file(REMOVE "${_exe_kopie}")
-    message(FATAL_ERROR "r41_ventilkette_szene: ${_was}")
+    message(FATAL_ERROR "r41_ventilkette_kette: ${_was}")
 endfunction()
 function(_muss _text _wort _was)
     string(FIND "${_text}" "${_wort}" _p)
@@ -153,17 +153,7 @@ ENDE
     endif()
 endmacro()
 
-if(_haken)
-    _kette_lauf(voll "60#2050" 420)
-else()
-    # Ohne den Haken der Spur A: kurzer Lauf bis Bild 400 in ROOM20B0 (die Szene ist mit dem Haken bei F242 frei,
-    # Messung kette3); haengt sie (kein sub05), ist das der bekannte Zustand -> SKIP. Laeuft sie trotzdem (spaetere
-    # allgemeine Loesung), folgt der volle Lauf.
-    _kette_lauf(kurz "400#20B0" 300)
-    if(NOT "${_sub05}" STREQUAL "")
-        _kette_lauf(voll "60#2050" 420)
-    endif()
-endif()
+_kette_lauf(voll "60#2050" 420)
 
 # ---- 2030 -> Ost-Tuer zu Fuss -> 20B0 (wie integration_r41_ventilkette A, hier ohne RE15_FIRE_AOT) ------------------
 _muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile" "Aktion an den Ventilen")
@@ -176,12 +166,7 @@ _danach("${_dbg}" "[room] PC loaded room20b0.rdt" "Zaehler lief beim Verlassen v
 # ---- Szene sub02 -> Zone Slot 7 -> sub05 ------------------------------------------------------------------------
 _danach("${_dbg}" "[room] PC loaded room20b0.rdt" "Plc_dest(slot=0 mode=0x05 dest=(-15920,-6355)" "sub02: Plc_dest Modus 5 (@0x01F24)")
 if("${_sub05}" STREQUAL "")
-    if(NOT _haken)
-        file(REMOVE "${_exe_kopie}")
-        message(STATUS "R41C-SKIP: die Auswasch-Szene ROOM20B0 haengt (sub05 @0x01F5C startet nicht) und aot_common.c traegt den AUTO-Haken der Spur A (re15_wasser20b0_r41_auto_aot, Zweig r41/wasser20b0) noch nicht - der Riegel wird mit der Integration der Spur A scharf (Dossier C §0b M2).")
-        return()
-    endif()
-    _fehler("sub05 @0x01F5C (Zone Slot 7, AUTO) startet nicht, obwohl der Haken der Spur A im Quellbaum steht")
+    _fehler("sub05 @0x01F5C (Zone Slot 7, AUTO) startet nicht - der AUTO-Haken der Spur A (aot_common.c re15_wasser20b0_r41_auto_aot, FUN_800436a8 @0x8001ce1c) fehlt oder wirkt nicht (Haken im Quelltext: ${_haken})")
 endif()
 _danach("${_dbg20}" "${_sub05}" "Cut_chg(7)" "sub05: Cut 7 (@0x01F6A)")
 _danach("${_dbg20}" "Cut_chg(7)" "Cut_chg(15)" "sub05: Cut 15 (@0x01F9C)")
@@ -199,4 +184,4 @@ _danach("${_dbg20}" "[aot] DOOR FIRE slot=4" "[room] PC loaded room2050.rdt" "RO
 _muss("${_dbg20}" "EXIT_AT: Bild 60 in Raum 2050" "Endbild in ROOM2050")
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_ventilkette_szene: 2030 Ventile -> Ost-Tuer zu Fuss -> 20B0 Szene sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> ROOM2050 in einem Lauf (Haken der Spur A: ${_haken})")
+message(STATUS "r41_ventilkette_kette: 2030 Ventile -> Ost-Tuer zu Fuss -> 20B0 Szene sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> ROOM2050 in einem Lauf (Haken der Spur A: ${_haken})")
