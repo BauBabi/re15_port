@@ -945,6 +945,26 @@ Landungen (Punkt 2a, unveraendert): landung_leon / landung_elza je 1 Landung, 10
 4. Stempel-Zeilen ohne Ton (106 Faelle, Raeume ohne WATER-Satz - dort gibt es keinen Stempel) und ROOM6030/6031 Boden 0x17 (keine
    Zeile mit Ton fuer NPC und Spieler): Daten des Originals, unveraendert stumm.
 
+### N2.8 Tests (gezielte Laeufe, KEINE volle Suite)
+PATH wie local_build.sh (msys64 zuerst) + `/c/Program Files/Git/cmd` am Ende (unit_r39_titelversion_cmake braucht git; ohne git
+rot mit "git fehlt" - Umgebung, kein Befund). `ctest --test-dir re15_port/build ...`, -R-Ausdruecke woertlich.
+
+Unit (Stand dd77ec7a = Code 5f1dce6d):
+```
+-R "^unit_r41_wasser20b0_" --timeout 600 -j 4
+100% tests passed, 0 tests failed out of 11
+-R "^(unit|probe|prop)_" --timeout 600 -j 4      (06:16-06:27)
+99% tests passed, 1 tests failed out of 927
+  rot nur unit_r39_titelversion_cmake ("git fehlt": git nicht im PATH dieses Laufs); einzeln mit git im PATH:
+-R "^unit_r39_titelversion_cmake$"
+100% tests passed, 0 tests failed out of 1
+```
+Integration (eigener Riegel, Stand 7e639adc; spaeter nur `file(REMOVE cap.raw)` ergaenzt, im Nebenwirkungslauf erneut):
+```
+-R "^integration_r41_wasser20b0_npc$" --timeout 1800
+100% tests passed, 0 tests failed out of 1      (217.37 s)
+```
+
 ### N2.9 Fuer den Nutzer (Stand Nachbesserung 2; ersetzt N1.14, s. Richtigstellung dort)
 - Keine neuen Assets, keine Sprachdateien, kein Patch an shared_assets/PSX: die NPC-Schritte spielen Toene aus der snd0-Bank des
   jeweiligen Raums (RDT +0x08..+0x10).
