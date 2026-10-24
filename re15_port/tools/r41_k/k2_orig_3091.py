@@ -33,6 +33,7 @@ ap.add_argument("--bilder", type=int, default=6000)
 ap.add_argument("--takt", type=int, default=40)
 ap.add_argument("--spieler", default="-24665,0,1000,3072")   # x,y,z,dir vor der Riegeltuer (Slot 1)
 ap.add_argument("--ohne_pad", action="store_true")
+ap.add_argument("--lb", default="")   # Szenenbilder fuer Slot-1-Spielstaende (LB = SaveSelectedSaveState), Bildbelege
 a = ap.parse_args()
 
 def md5(p):
@@ -47,6 +48,13 @@ res_md5 = md5(RES)
 res_kopie = a.out + ".resume_vorher.sav"
 if res_md5:
     shutil.copyfile(RES, res_kopie)
+SLOT1 = RES.replace("_resume.sav", "_1.sav"); SLOT1B = SLOT1[:-4] + ".bak"
+slot_kopien = {}
+for _p in (SLOT1, SLOT1B):
+    if os.path.exists(_p):
+        slot_kopien[_p] = (a.out + "." + os.path.basename(_p) + ".vorher", md5(_p))
+        shutil.copyfile(_p, slot_kopien[_p][0])
+LB_BILDER = [int(x) for x in a.lb.split(",") if x.strip()]
 open(INI, "wb").write(ini_alt.replace(b"EnableGDBServer = false", b"EnableGDBServer = true", 1)
                       .replace(b"ConfirmPowerOff = true", b"ConfirmPowerOff = false", 1))
 
@@ -109,6 +117,7 @@ gp = None
 if not a.ohne_pad:
     import vgamepad as vg
     gp = vg.VX360Gamepad(); time.sleep(2.0)
+    LB_BTN = vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER   # SaveSelectedSaveState = SDL-0/LeftShoulder (settings.ini)
     A_BTN = vg.XUSB_BUTTON.XUSB_GAMEPAD_A   # Kreuz: Nachricht schliessen (virt. 0x8000 <- raw CROSS, Preset @0x80073dbc)
     Q_BTN = vg.XUSB_BUTTON.XUSB_GAMEPAD_X   # Viereck: Untersuchen/AOT (raw 0x80 -> FUN_80042bac, virt. 0x4000)
 proc = None
@@ -132,6 +141,7 @@ try:
     BP = 0x8001ce04
     log("Z0 %08x" % BP, cmd("Z0,%08x,4" % BP))
     n = 0; angekommen = None; szene = None; gedrueckt = None; naechster = None; t0 = time.time()
+    lb_offen = None
     while n < a.bilder:
         send("c"); recv_pkt()
         n += 1
@@ -164,6 +174,19 @@ try:
         if szene is None and angekommen is not None and flag_get(0x800b1018, 16):
             szene = n; naechster = n + a.takt
             log("SZENE (4,16)=1 bei Bild %d (VSync %d)" % (n, u32(0x800787dc)))
+        if szene is not None and gp is not None and LB_BILDER:
+            sb = n - szene
+            if sb in LB_BILDER:
+                lb_m0 = os.path.getmtime(SLOT1) if os.path.exists(SLOT1) else 0
+                gp.press_button(button=LB_BTN); gp.update(); lb_offen = (sb, lb_m0)
+                log("LB (Slot-1-Spielstand) bei Szenenbild %d" % sb)
+            elif lb_offen is not None:
+                if sb - lb_offen[0] == 6:
+                    gp.release_button(button=LB_BTN); gp.update()
+                if os.path.exists(SLOT1) and os.path.getmtime(SLOT1) > lb_offen[1] and sb - lb_offen[0] > 6:
+                    time.sleep(0.3)
+                    ziel = a.out + ".lb_B%04d.sav" % lb_offen[0]
+                    shutil.copyfile(SLOT1, ziel); log("Slot 1 -> %s" % ziel); lb_offen = None
         if szene is not None:
             if gp is not None:
                 if n == naechster:
@@ -210,4 +233,7 @@ finally:
     if res_md5:
         shutil.copyfile(res_kopie, RES)
         log("resume.sav zurueck:", md5(RES) == res_md5)
+    for _p, (_k, _m) in slot_kopien.items():
+        shutil.copyfile(_k, _p)
+        log("%s zurueck:" % os.path.basename(_p), md5(_p) == _m)
     out.close()

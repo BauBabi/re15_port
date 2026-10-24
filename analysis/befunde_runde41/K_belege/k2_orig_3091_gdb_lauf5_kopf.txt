@@ -1,0 +1,31 @@
+Spielstand C:\Users\mjoedicke\AppData\Local\Temp\claude\c--workspace-git-reAi-v2\c41eae99-e724-4cb3-afb9-119709f20a9d\scratchpad\K41\orig\lauf5_30c1.sav md5 86737ee157a6429cd1e205b9d8240c75
+? S02
+EXE-Stub @0x80026e4c 0800e003 (sauber = 0800e003) Modell DAT_800aca5c 15 Waffe DAT_800aca5d 0
+Z0 8001ce04 OK
+FLAGS (4,8)=1 -> Wort 00e00000, (9,21)=1 -> Wort 00000400
+SPRUNG bei Bild 20: Raum 30C -> 3091, Nutzlast a79f0000e803000c02090000 @80120374
+ANKUNFT 3091 bei Bild 21 (VSync 11227)
+VIERECK an der Riegeltuer bei Bild 81
+Gier 3072 -> 0
+VIERECK an der Riegeltuer bei Bild 173
+SZENE (4,16)=1 bei Bild 175 (VSync 11534)
+LB (Slot-1-Spielstand) bei Szenenbild 300
+Slot 1 -> C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/K41/orig/k2_orig_3091_lauf5.log.lb_B0300.sav
+LB (Slot-1-Spielstand) bei Szenenbild 700
+Slot 1 -> C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/K41/orig/k2_orig_3091_lauf5.log.lb_B0700.sav
+LB (Slot-1-Spielstand) bei Szenenbild 1100
+Slot 1 -> C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/K41/orig/k2_orig_3091_lauf5.log.lb_B1100.sav
+LB (Slot-1-Spielstand) bei Szenenbild 1500
+Slot 1 -> C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/K41/orig/k2_orig_3091_lauf5.log.lb_B1500.sav
+LB (Slot-1-Spielstand) bei Szenenbild 1900
+Slot 1 -> C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/K41/orig/k2_orig_3091_lauf5.log.lb_B1900.sav
+LB (Slot-1-Spielstand) bei Szenenbild 2300
+Slot 1 -> C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/K41/orig/k2_orig_3091_lauf5.log.lb_B2300.sav
+LB (Slot-1-Spielstand) bei Szenenbild 2700
+Slot 1 -> C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/K41/orig/k2_orig_3091_lauf5.log.lb_B2700.sav
+RAUMWECHSEL nach 30C1 bei Szenenbild 2953 -> Ende
+RDT im RAM @8011f80c, +0x5C (RBJ) = 801208dc
+settings.ini zurueck: True
+resume.sav zurueck: True
+HASH-957757946319438E_1.sav zurueck: True
+HASH-957757946319438E_1.bak zurueck: True

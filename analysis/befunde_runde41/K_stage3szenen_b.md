@@ -225,3 +225,15 @@ Clipfolgen von Spieler, John und Elza-NPC sind im Port nachher IDENTISCH mit dem
 Reihenfolge, gleiche Vor-/Rueckwaerts-Paare, gleiche Schleife Clip 13); Bildzahlen je Clip gleich (rec2: 13=40,
 12=30, 11=15; Elza 4=30, 3=20, 9=24, 1=30, 0=20, 5=25, 2=30, 6=30; John rec1). Absolute Bildnummern weichen nur
 durch den Tastentakt der Nachrichten ab (Port 30, Original 40 Bilder). Bilder `K_belege/k2_nachher_zoom1.png`.
+
+### K2.6 Bild fuer Bild: Original-Spielstaende gegen Port (gleicher Szenenzustand)
+Zweiter Original-Lauf (`k2_orig_3091.py --lb 300,700,...,2700`, Protokoll-Kopf `K_belege/k2_orig_3091_gdb_lauf5_kopf.txt`):
+derselbe Ablauf (wieder 2953 Szenenbilder), dazu je ein Slot-1-Spielstand (LB = SaveSelectedSaveState) bei Szenenbild
+300/700/1100/1500/1900/2300/2700 (gespeichert ~6 Bilder spaeter); Slot-1-.sav/.bak und resume.sav danach bytegleich
+zurueck (md5). Aus jedem Stand der angezeigte VRAM-Puffer (y 240..479; Puffer 1 enthielt den halb gezeichneten
+naechsten Rahmen). Port-Gegenstueck = erstes Framedump-Bild (alle 20 Bilder, Lauf `r41k_laeufe/n3091t` ueber die
+echte Riegeltuer) mit DERSELBEN Clip-Kombination je Aktor (Spieler/John/Elza inkl. Rueckwaerts-Bit) in Reihenfolge.
+**`K_belege/k2_original_vs_port_3091.png`**: alle 7 Paare zeigen dieselbe Textzeile ("Yes, somehow!...", "What's your
+name, kid?", "You seem to have taken a liking to her.", "Your... dad...?", "I dunno. Sounds like somebody's in there."
+mit Elzas Pistolen-Pose = eigene Bank Clip 6, "Will do!", "Sherry: Good luck!"), dieselbe Aufstellung (Elza links,
+John Mitte, Sherry als Kind rechts) und dieselben Posen.
