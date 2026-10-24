@@ -123,13 +123,60 @@ Riegel frei -> Kampf-Gang (Bank0 Clip 2). Der ferne Zombie (d 30168) bleibt die 
 - RE1.5-KI: `re15_enemy_ai_live_feeding` (enemy_ai_common.c, case 4/5/6) spielt beim Wecken Clip 0x29
   (Aufstehen aus dem KNIEN, STAGE1-Sub-0xd) statt +0x94 = 0x12/0x13 (Aufstehen aus dem LIEGEN).
 
+### 2.3 RE2 — warum die RE2-KI hier nur den Executor, nicht den Zeitpunkt liefert
+RE2-INIT (EMZ0.BIN, `re2_disasm.py`), Deskriptor `+0x10E & 0x3F`: 2 -> Clip 22 + 0x701 + Seite B
+(@0x801009C4-F0), 4 -> Clip 23 + 0x701 (@0x801009F4-A10), 5/7 -> wie 2/4 PLUS Latch 0x4002/0x4004 und HP -1
+(@0x80100A14-60 / @0x80100A64-A4 = Leichen), 6 -> 0x101 Gang, 8 -> Clip 18 + 0x801 FRESSEN (@0x80100AC0-DC).
+EXEC[7] (0x80103780): P0 Clip 23/22 (@0x801037CC-E4), +0x1D3 |= 0x80 (@0x80103804-14), haelt bei
+`+0x10E & 0x4000` (@0x8010381C-28), P2 Boden-Aufstehclip 8/9 mit Zufallsbild + Stoehnen 12/10/11
+(@0x80103838-D4), P3 ausspielen (@0x801038D8-FC), P4 0x101 + `+0x1D3 &= 0x7f` (@0x80103900-2C).
+RE2 HAT KEINEN Naehe-Wecker fuer den Latch (einziger Clear @0x80104F0C, Skript-/EXE-seitig; RE2-Liegende ohne
+Latch stehen sofort auf). RE1.5 hat das System VOLLSTAENDIG (Wecker + Wartezeit + Aufsteh-Clip) -> RE1.5 bleibt
+massgeblich fuer den ZEITPUNKT; die RE2-KI liefert den Executor (Pose/Aufstehen/Ton). Einordnung nach
+Memory reai-v2-beta-zu-retail: "fertig und anders" -> RE1.5 halten.
+
 ## 3. Umsetzung
 
-(folgt)
+Neue Dateien: `re15_port/engine/src/zombiefresser_r41.c`, `re15_port/include/re15_zombiefresser_r41.h`
+(Belege im Kopf), Werkzeuge `re15_port/tools/r41_zombiefresser/` (fresser_zensus.py, scd_dump.py,
+clip_hoehe.py, orig_weck_film.py). Messschiene `RE15_ZOMBIEFRESSER_LOG=<datei>` (env, kein Verhalten).
 
-## 4. Messung nachher
+Haken (je 1-3 Zeilen, Kommentar "Runde 41 Spur I"):
+| Datei | Stelle | Haken |
+|---|---|---|
+| enemy_ai_re2_zombie.c | Include | `re15_zombiefresser_r41.h` |
+| enemy_ai_re2_zombie.c | re2z_init Fresser-Zweig | `sel == 6 || ((sel == 4 || sel == 5) && !re15_r41_liegewecker_deskriptor(beh))` |
+| enemy_ai_re2_zombie.c | re2z_init Liege-Zweig | `|| re15_r41_liegewecker_deskriptor(beh)` + `re15_r41_liegewecker_init(e)` nach `0x701` |
+| enemy_ai_re2_zombie.c | re2z_exec_lying Port-Wecker 0xBB8 | `!re15_r41_liegewecker_re2_tick(e, pl) &&` davor |
+| enemy_ai_re2_zombie.c | re15_re2z_hit_filter_apply | `passive_lyer ... || re15_r41_liegewecker_liegt(e)` |
+| enemy_ai_common.c | Grid-Zweig `case 5: case 6:` (case 4 faellt durch) | `re15_r41_liegewecker_re15_decide(e)` -> `re15_enemy_ai_lying_phase(e)` |
+| player_common.c | Pin-Freigabe der Liege-Phasenmaschine | `nib >= 7` -> `nib >= 4` |
 
-(folgt)
+Konstanten (alle mit Adresse): Wecker-Distanz 0xFA0 @0x8010382c (STAGE2) / @0x80103998 (STAGE1) /
+@0x80103a84 (STAGE3); Wartezeit `rand & 0xf` @0x80103858-60; Post-Dekrement @0x80103974; Stoehnen 1/4 SE 5
+@0x80103864-74 (nur RE1.5-KI); Latch-Clear 0x4000 @0x80104F0C (RE2); Sentinel -1 = 0xffff (Wert von +0x9c nach
+der Wartezeit im Original, @0x80103974).
+
+PORT-WAHL (RE2-KI): kein RE1.5-SE 5 beim Wecken; das RE2-Stoehnen aus EXEC[7] P2 (@0x80103884-D4) faellt beim
+Aufstehen (Vorbild: der Skript-Wecker D15.2 im selben Executor, ebenfalls ohne SE 5). Seite: sel 4 -> Clip 23/8,
+sel 5 -> Clip 22/9 (bestehende Abbildung re15_re2z_spawn_pose_seed, RE1.5-Spaltung 0x12/0x13).
+
+## 4. Messung nachher (gebauter Stand, Messkopie re15_pc_r41i_mess.exe)
+
+ROOM2000, RE2-KI, Leon Oststeg (-20300,-1800,-11600) (`I_belege/nachher_2000_zf.log`):
+```
+F6  slot=3/4 INIT grid=84 Wort=1/7/0 f10e=4002      (EXEC[7] liegend, nicht mehr 1/8 Fressen)
+F7  slot=3 WECKT d=3982 warte=10 ; slot=4 WECKT d=2684 warte=5
+F12 slot=4 STEHT AUF ; F17 slot=3 STEHT AUF          (Latch frei nach warte+1 Takten)
+F14 slot 4 ss2=3 Clip 8 (RE2-Aufstehen aus dem Liegen) ... F94 beide st=1 ss1=1 grid=00 (Gang)
+F114.. slot 4 ss1=10 Clip 22 = Hochziehen an der Kante (Runde 38 U) ... F294 oben auf dem Steg (-20913,-9408)
+```
+ROOM3000, RE2-KI, Leon (-8750,0,-14800) (`I_belege/nachher_3000_zf.log`): alle 7 Zombies INIT 1/7/0 f10e=4002;
+Slot 1 (d=1144) F7 WECKT warte=1, F8 STEHT AUF, Clip 8 bis ~F100, F114 st=1 ss1=3 = GRIFF (Leon hp 100->80->60);
+die 6 fernen (d 5992..14838) liegen 600 Bilder lang (Clip 23 Bild 0, Latch, unschiessbar).
+Bilder: `I_belege/vorher_nachher_3000.png` (oben vorher: kniend/fressend; unten nachher: flach liegend),
+`I_belege/vorher_nachher_2000.png` (Kamera 6/13/8, vorher Fress-Silhouetten am Bildrand, nachher flach im Kanal),
+`I_belege/nachher_2000_cut13_aufstehen.png` (Bild 10..130: Aufstehen und Gang).
 
 ## 5. Tests
 
