@@ -1579,3 +1579,60 @@ Versatz je Takt, Lage gegen die Waende - fuer CHASE, GUARD Ostrampe (6300,-16250
 (2) Ursache(n) aus der Messung, RE2-Gegenstueck (FRESSEN P0-P3 @0x80100fbc-0x801011e0, Root @0x80100200-3a4) selbst lesen.
 (3) Umsetzung (PORT-WAHL nach Nachtrag 6, RE2-Teile mit @0x). (4) Riegel + Messzeile im Spiel. (5) exe E1/MN2/Plattform/Elza
 vorher/nachher, Bildbeleg F628-F870. (6) gezielte Tests, Abschluss.
+
+### 13.0 RE-Belege (selbst gelesen, `re2_disasm.py --bin EM23_OVL_0000.BIN` bzw. info/re2leon/PSX.EXE)
+- **FRESSEN = Sub 4 @0x80100f58** (Phasenbyte +6: `lbu v1,6(s0)` @0x80100f74, 0 -> P0 @0x80100fbc, 1 -> P1 @0x801010e8,
+  2 -> P2 @0x80101168, 3 -> P3 @0x801011c4). Eingang nur aus Sub 7 am Korridorende (`addiu v0,zero,1025 / sw v0,4(s0)`
+  @0x801012e0-e4, §10.3).
+- **P0 @0x80100fbc-0x801010e4 inszeniert den Finisher:** Zonenkamera-Sperre `ori v0,v0,0x100 / sw v0,0(a0)` @0x80100fcc-d0,
+  Schnitt Cut 14/7 (`addiu a0,zero,14` @0x80100fec / `addiu a0,zero,7` @0x80100ff0, `jal 0x8002c7ac` @0x80100ff4); Kanister-Objekt
+  aus (`lui at,0x800d / sw zero,1308(at)` @0x80101008-0c = obj[1] word0 @0x800d051c); Spieler-HP -1 (`sh v0,-690(at)` @0x80101040);
+  **der GATOR wird umgesetzt**: `addiu v0,zero,-23078 / sw v0,56(s0)` @0x80101048-4c (x auf die Korridor-Achse); **die
+  Zusatzwinkel werden genullt**: `sh zero,554(s0)` @0x80101050 (+0x22A Kopf-az Part 6), `sh zero,552(s0)` @0x80101054 (+0x228
+  Kiefer-az Part 7), `sb zero,548(s0)` @0x80101058 (+0x224); Spieler x = Gator-x + 10643 (`lw v0,56(s0) / addiu v0,v0,10643 /
+  sw v0,-976(at)` @0x8010106c/7c/84), z = -915 (`addiu v1,zero,-915 / sw v1,-968(at)` @0x80101070-78), KEIN y-Schreiber (nur
+  0x800cfc30/0x800cfc38 = Spieler +0x38/+0x40). Die RE2-Finisherlage ist also fest: Gator auf der Korridor-Achse, Leon
+  10643 davor (-12435, -915), Cut 7 zeigt sie frontal (§9.2: frontal +1,00 (2 Grad), Kopf (204,118) Tiefe 11175, Leon VOR der
+  Kamera (186,186) Tiefe 5040).
+- **P1/P2/P3 platzieren das Paar absolut, ohne Wand:** P1 FUN_8001a330(em,4,0,0) @0x801010ec-f4, bei Bild 13 (@0x801010fc-104)
+  Anker FUN_80015b94 @0x80101130, Spieler-Gier = Gator-Gier @0x80101154-5c; P2 FUN_80015cb8 @0x80101174 + Clip 5 @0x80101188;
+  P3 FUN_80015cb8 @0x801011cc + FUN_8001a240(em,11) @0x801011e0. FUN_80015cb8 (EXE @0x80015cb8-dac): kf 0x80015db0, RotMatrixY
+  0x8008e8b4 (Gier +0x76), ApplyMatrix 0x8008dba4, Lage = Anker +356/+358/+360 + Versatz `sw v0,56(s1)` @0x80015d68 / `sw
+  v0,60(s1)` @0x80015d7c / `sw v0,64(s1)` @0x80015d90 - **keine Wandkollision**. Root des Gators @0x80100190-3a4: jal 0x8001a308
+  @0x8010020c, 0x80035408 @0x80100284 (= Trefferboxen nachfuehren, RE2_Quellcode_V2/FUN_80035408.c: Box-Lagen um die Gier, kein
+  SCA), 0x80034d0c @0x80100304 (Koerper-Push Entity gegen Entity, Schleife ueber 0x800ce334), T2 0x801017c4 @0x80100320,
+  0x80101388 @0x80100328, Hals 0x800177c0/0x80017d98, RotMatrix 0x8008e1f4 @0x8010038c - keine Wand-Klemme. Hauptschleife
+  0x800267c0-930: 0x8004fba0 (Bodenabfrage, `sh v0,450(s0)`) @0x80026850/6c VOR der KI, KI `jalr v0` @0x80026888, Zeichnen
+  0x80027160 @0x8002689c, danach 0x8002eaf8 / 0x800168b4 / `jalr` +520 - keine Wand-Klemme nach der KI.
+- **Port-Gegenstueck (gelesen):** FRESSEN P0 (enemy_ai_boss_gator.c `case GBP_FRESSEN`, timer == 1) setzt nur Leon
+  (Gator + RotY(Gier) x (10643 x s, -915), PORT-VERALLGEMEINERUNG), laesst den Gator, wo der Biss fiel, und nullt die
+  Zusatzwinkel NICHT: `pitch_vz` (GUARD -350 x guard_t/24, Z. 2232) bleibt durch P0-P3 (genullt erst am FRESSEN-Ende),
+  `gb_biss_abschluss` nullt nur `arc_vz`; die Takt-Huelle (NB4) klemmt den Gator auch in FRESSEN (`gb_klemme_aus` nur CROSS/
+  befrei) - Leon folgt dem UNgeklemmten Anker (gb_opfer_skalieren um e->x vor der Klemme).
+
+### 13.1 Messung vorher (eigene Sonde, gebauter Stand 7831a6d5)
+Sonde `B41nb5/probe/probe_maul.c` (Harness = Kopf von test_r41_re2gator.c: echter Boss-Takt mit Takt-Huelle, EM23-Bank,
+Leon-Statue bis zum Tod, danach fuehrt der Finisher Leon). Je FRESSEN-Bild: gezeichnete Pose wie der NPC-Pass
+(g_anim_pose_actor = Gator: pitch/arc/jaw + RE2-az), Leons Koerper (PL00-Knochen + Opfer-Keyframes, Gier x render_scale,
+776 Vertices), Maulraum = AABB Mesh 6+7 der gezeichneten Pose im Gator-Rahmen; "Kopf-lokal" = Leons gezeichnete Wurzel im
+Rahmen von Bone 6 gegen dieselbe Groesse authored (Keyframe-Pose ohne Haken, Gator an der Anker-Sollage); Klemm-Versatz =
+Gator-Lage - Anker-Sollage.
+
+| Lage | Tod (Takt) | Gator beim Tod | pitch | Kopf-lokal Abw. max (P1/P2/P3) | Klemm max | Bilder mit >= 50 % im Maul (P1/P2/P3) |
+|---|---|---|---|---|---|---|
+| A CHASE offen (Leon (-4000,-22000), = A2-Bezug) | 7 | (-5793,-22000) Gier 4095 | 0 | 0 / 541* / 0 | 0 | 0/15, 106/120, 120/120 |
+| B GUARD Ostrampe (6300,-16250,-1800) | 137 | (5716,-12428) Gier 151 | -291 | 4729 / 4651 / 2574 | 1129 | 0, 0, 0 |
+| E GUARD Ostrampe E1-Lage (6732,-16250,-1800) | 140 | (5716,-12498) Gier 89 | -350 | 5649 / 5290 / 3048 | 1116 | 0, 0, 0 |
+| C GUARD Rampenmitte (4000,-15000,-1800) | 97 | (5107,-11375) Gier 631 | -189 | 3088 / 2509 / 1525 | 281 | 0, 17, 82 |
+| D GUARD Plattformblock (0,-16250,-1800) | 325 | (-3647,-14997) Gier 1011 | -350 | 5651 / 4403 / 2718 | 110 | 0, 0, 0 |
+
+\* A: das eine Bild sf = 120 (Ruecksprung des Gators auf Clip-5-Bild 0 fuer EINEN Takt, Original `sb zero,333(s2)`
+@0x80029b48; Leon wird dort nicht neu gesetzt) - Bezugsartefakt, im Bild 100 % im Maul. P1 ist auch im Bezug nicht "im Maul":
+Leon steht 7096 vor der Wurzel (Hochheben, Opfer-Clip 0) bis zum Anker bei Bild 13.
+- **Ursache 1 (Neigung):** E P1 Takt 2: Leon kopf-lokal (5296,3937,-1496) gegen authored (5957,-1712,-1691) bei Klemm 0 - allein
+  die Wurzel-Neigung pitch -350 (~-31 Grad, Bone 0) hebt den Kopf ~5600 von Leon weg.
+- **Ursache 2 (Klemme):** E P2: Klemm-Versatz 62 (Takt 16) -> 985 (Takt 40) -> 385 (Takt 102), P3 326-337: der Gator schiebt
+  entlang des Clip-5-Versatzes in die Ostwand, die Takt-Klemme haelt ihn an der Linie x 5716, Leon (am ungeklemmten Anker) nicht.
+- **Ursache 3 (Ort):** auch ohne 1 und 2 liegt die authored Konfiguration in E1 HINTER der Ostwand (Leon P1 bei (12620,-14370),
+  P2 x 8800-11000, Wand x 7200; Offline-Suche `B41nb5/probe/probe_buehne.c` aus dem Bezugspfad A: "am Ort mit eigener Gier
+  passt=0") - die Kamera (E1: Cut 2, Rueckansicht frontal -1147) sieht Gator und Leon von hinten bzw. durch die Wand.
