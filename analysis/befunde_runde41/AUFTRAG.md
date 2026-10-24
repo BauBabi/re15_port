@@ -543,3 +543,22 @@ Haenger (blockierte Gorilla-Bilder an einer Klemme je Seed) wieder wirksam; die 
 Port-Code (zombieki_r36.c, Runde-36-PORT-WAHL) belegbar und klein zu beheben, behebt Spur E sie in dieser Nachbesserung
 (mit Riegel); sonst Folgeauftrag in UEBERGABE §3b. Mangel 1 (Renn-Stopp nach Treppe, Griff-Freigabe, Plc_ret: Original
 loescht +5/+6 @0x80038ea8/@0x80038eb0 bzw. @0x80041f90-9c) behebt Spur E wie gefordert.
+
+## 2026-10-24 17:36 — Nachtrag 14 (Nutzer-Antwort per Auswahl; Kurbel ROOM2020, Spur E)
+
+Frage (gekuerzt): "Was meintest du mit 'herumfliegend'?" — Optionen: das Einfrieren (behoben) / den Sprung an die Kurbel
+(Original macht ihn genauso, davor friert das Bild ~1/4 s ein) / etwas anderes. **Antwort des Nutzers:**
+
+> Ja, direkt am Anfang springt Leon so komisch zu der Kurbel. So halb fliegend.
+
+Folgen (Orchestrator, Umsetzung Spur E):
+- Gemeint ist der Sprung an die Kurbel (Cut_chg 3 @0x0A7E, Pos_set @0x0A8C, Gier @0x0A94, Sleep 20, Plc_motion @0x0A9C).
+  Im Original ist er nicht als "Fliegen" zu sehen, weil das Bild nach Cut_chg stehen bleibt, bis der Hintergrund von CD
+  geladen ist (Apply-Zweig @0x80021558/@0x80021560, Lader FUN_80013c50; im Original-Video ~8 Bilder). Im Port dauert dieses
+  Standbild 1 Bild -> der Uebergang (alte Lage/Pose -> Kurbel) wird sichtbar.
+- Ziel: Port Bild fuer Bild wie das Original-Video vom "Yes" bis Plc_motion (Leon erscheint erst an der Kurbel, kein
+  sichtbares Hinueberfliegen, keine sichtbare Ueberblendung von der alten Pose). Die Standbild-Dauer des Originals an
+  genau dieser Stelle aus dem Original-Video bzw. DuckStation-RAM MESSEN (nicht schaetzen) und als gemessenen Wert mit
+  Quelle (Video/Savestate, Bildnummern) einsetzen; pruefen, ob die Laenge vom Hintergrund-Laden abhaengt und ob sie fuer
+  alle Cut_chg mit Hintergrundwechsel gilt (dann spielweit, mit den Riegeln der Spur E-E1). Riegel + Bildvergleich
+  Port/Original (Gehen, Rennen, Stehen).
