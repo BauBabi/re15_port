@@ -682,3 +682,12 @@ Folgen (Orchestrator, Umsetzung Spur C in der naechsten Nachbesserung):
 Folgen (Orchestrator): Text 2030/2031 Id 46 = "WARNING: The water will rise in one minute. Please leave the room
 immediately!" (Wortlaut exakt; nur der Zeilenumbruch nach der Breite des Nachrichtenfensters). Die Sprachaufnahme des Nutzers
 kommt nach synchro/STAGE2/room2030/main46.wav bzw. room2031/main46.wav (Nachtrag 18 Punkt 4).
+
+## 2026-10-24 20:34 — Orchestrator-Entscheid E-E5 (Fragen der Nachbesserung E 4; der Nutzer kann widersprechen)
+
+- Der 2-Zeilen-Haken der Spur E in engine/src/game_step_common.c (vor der Zweig-Kette des Spieler-Dispatchers; Renn-Stopp
+  endet, wenn ein Durchlauf keinen Kommando-1-Schritt macht — Original +5/+6 @0x8003272c/@0x800328fc, Ueberschreiber
+  @0x80043544/@0x80043610/@0x80038ea8/@0x80041f90/@0x80041bb0/@0x80102640/@0x8011c38c) ist angenommen (Erweiterung von E-E1/E-E2).
+- Die dritte benannte Ausnahme der Gorilla-Sonde (WESTBLOCK x 3800..6200 / z 9900..12500) ist bestaetigt, weil dort auch die
+  Original-Regel haengt (AUS 5880 in 15 Seeds) — kein Rueckschritt der Spur E. Die drei Gorilla-Haenger (TASCHE, SUB7,
+  WESTBLOCK; zombieki_r36.c, Runde-36-PORT-WAHL) sind Folgeauftrag (UEBERGABE §3b).

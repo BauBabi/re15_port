@@ -59,6 +59,7 @@ siehe VERTRAG.md §0; Status je Spur wird hier nachgetragen (Bau / Abnahme N / b
 - **J/K:** RBJ-Binder (Entscheid A-E5) — J baut, K cherry-pickt; bei der Integration identischer Patch.
 
 ### 3b. Folgeauftraege nach der Integration (Orchestrator, nicht in den Spuren)
+- Gorilla-Haenger an drei Stellen (TASCHE, SUB7, WESTBLOCK) in zombieki_r36.c (Runde-36-PORT-WAHL; Befund Spur E NB4, nachstellbar mit test_r36_zombieki_affen_block eins <2|47|117> 1 6000 400 1).
 - Renn-Stopp spielweit (Spur E Nachbesserung 2: Original rutscht nach dem Rennen aus, 0x80032604 @0x8003272c/@0x80032730-760, 0x80032778 @0x800328f8-95c; Umsetzung 635be823 gebaut und gemessen, wieder entfernt d4fa9074, weil unit_r36_zombieki_affen_block (Seed 0x67be2dfd) ueber die Schranke faellt) -> spielweit einbauen, Gorilla-Sonde neu einmessen, volle Suite.
 - Spur A Hinweis H2: Bezeichnungen 0x40/0x42 in test_r41_wasser20b0_npc.cmake (Z. 7-9, 97, 124, 196) und Dossier A vertauscht (richtig 0x42 = Ada, 0x40 = Marvin laut re15_cut10f0.h) — nur Kommentare/Meldungen.
 - Spieler-Schritte mit Lage/Abstand (dieselbe FUN_80045a64 @0x80045830 wie die NPCs; Original nutzt sie fuer jede Entity) —
