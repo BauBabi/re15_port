@@ -25,7 +25,7 @@ Dazu die Maengel der Abnahme J 0: V1 (Vertrag) und M2 (Doku ROOM4031), Orchestra
 - [x] Punkt 2a gemessen (eigener Lauf p2, echter Tuerweg 3011 -> 3061 per Quadrat, Szene per Quadrat am AOT, Framedump)
 - [x] Punkt 2b gemessen (dto.)
 - [x] gezielte Riegel der beruehrten Module, Unit-Ebene: 227/227 (s. Gate T)
-- [ ] gezielte Integrationsriegel der beruehrten Module (31, laeuft)
+- [x] gezielte Integrationsriegel der beruehrten Module: 31/31 (s. Gate T)
 - [x] Vertrag (Pfade, Woerter, Env-Schalter, Bits/Ids) — s. Gate V
 - [x] Nebenwirkungen — s. Gate N
 
@@ -284,15 +284,42 @@ fehlten (Gitter blieb stehen).
    Runden 33-39; Regex `J41abn1/unit_regex.txt`): `ctest -R "<regex>" -j 4` -> **227/227 Passed** (22,8 s).
 3. Integrationsriegel der beruehrten Raeume/Module (dining1141-Haken, RBJ-Raeume 3091/1040/1041/10F0, NPC-Szenen 1150/11C0/Roy,
    Elza-Kette, STAGE3-Masken, Tuerweg; Regex `J41abn1/integ_regex.txt`, 31 Riegel, `-j 3`, Log `J41abn1/ctest_integ_modul.log`):
-   Stand beim Schreiben 9/9 Passed (story_elza, szenenleon, masken36_stage3, cut10f0, dining1141_s, r39_dining1141_d/_kampf/
-   _zielen/_zielen_nachladen), Rest laeuft (Ergebnis s. Schluss).
-4. Gegenprobe (master-exe, s. oben): Riegel 3060 **rot** (2 Fehler) — er misst den Nutzer-Befund.
+   **31/31 Passed** (`100% tests passed, 0 tests failed out of 31`, 1686 s, unter Fremdlast, kein Wiederholungslauf noetig):
+   r36_story_elza, r36_szenenleon, r36_szene1150, r37_masken36_stage3, r35_cut10f0, r37_szene11c0, r37_roy_szene1011/_szene1021/
+   _leon1170, r37_elzaems_elza3091, r38_szenenschutz, r38_dining1141_s/_w/_r/_z/_l/_a/_d, r39_dining1141_d/_kampf/_zielen/
+   _zielen_nachladen, r39_johnruf1041_a/_b/_tuer_t1041/_t1041o/_t1051/_t1051o/_t11b1/_t11b1d, door_traversal.
+4. Zusaetzlich: `unit_r30_tuer_r4000`, `unit_r39_heliport1171_binder`, `unit_r36_kartenbits` -> 3/3 Passed.
+5. Gegenprobe (master-exe, s. oben): Riegel 3060 **rot** (2 Fehler) — er misst den Nutzer-Befund.
 
-## Gesamturteil (vorlaeufig, wird am Ende ersetzt)
-| Punkt | Urteil |
-|---|---|
-| 1 ROOM3060 Marvin | erfuellt |
-| 2a ROOM3061 Sherry kriecht | erfuellt |
-| 2b ROOM3061 Elzas Ende | erfuellt |
-Gates: RE haelt, V haelt (V1 durch J-E1, M2 berichtigt und belegt), N ohne erreichbare Nebenwirkung, T offen bis zum Ende des
-Integrationslaufs.
+## Maengel
+Keine. (V1 und M2 der Abnahme J 0 sind erledigt: V1 durch Orchestrator-Entscheid J-E1, M2 durch den berichtigten Kopf
+`re15_superobj_r41.h` + Dossier NB1.M2, Bytes und Handler selbst nachgeprueft.)
+
+## Hinweise (keine Maengel der Spur)
+- **H-I1 Integration enemy_common.c:** der Merge in den heutigen master (6449eb43) erzeugt einen Code-Konflikt in
+  `rbj_resolve_slot` mit dem Spur-A-Haken d1809dbf (s. Integrations-Probe). Seite der Spur J nehmen (die master-Seite kompiliert
+  allein nicht), danach `unit_r39_heliport1171_binder` (mit RE15_ACTOR_MAX 36) und die Riegel `r41_stage3szenen_a` fahren;
+  Spur K trifft denselben Konflikt. AUFTRAG.md/VERTRAG.md: master-Fassung nehmen (die Aussage des Bau-Agenten "AUFTRAG.md ist
+  gleich master" galt fuer dba6ff8e, master ist seither um die Nachtraege 22-24b weiter).
+- **H-I2 Zweig-Basis:** Spur J wurde auf 4c667c97 gebaut und gemessen, ohne die seitdem integrierten Spuren A/B/D/I (u.a.
+  RE15_ACTOR_MAX 36, NPC-Schritte aus der OWN-Bank). `git merge-tree` meldet fuer enemy_ai_common.c / scd_vm.c / main.c keinen
+  Textkonflikt; die Riegel der Spur muessen nach dem Merge auf dem Integrationsstand erneut gruen sein (VERTRAG-Ablauf).
+- **Offen, nicht Teil der Nutzer-Punkte (Dossier §4.1):** Super_set in der Aufzugsfahrt ROOM4030/4031 sub07 (Gegner 0 = Typ
+  0x2D in State 1, im Spiel erreichbar) wird wie auf master uebersprungen; was Objekt 0 dort im Bild ausmacht, ist nicht
+  gemessen. Keine Verschlechterung gegenueber master (dort lief der Opcode ebenfalls leer).
+- **N1 (Abnahme J 0):** Hund am Ende der 3061-Szene laeuft im Port zu Elza statt nach rechts vorn — nicht Spur J, eigener
+  Auftrag empfohlen (Dossier §4.7); in meinem Lauf p2 unveraendert sichtbar (F1640-F1687).
+- Positiver Nebeneffekt des RBJ-Binders: ROOM4010 Marvin liegt jetzt verwundet auf der Liege statt im Vordergrund zu stehen
+  (Gate N).
+
+## Gesamturteil: **BESTANDEN**
+| Punkt | Urteil | Kernbeleg |
+|---|---|---|
+| 1 ROOM3060 Marvin (Ende seines Abschnitts, vor dem Wechsel zu Leon) | **erfuellt** | echter Tuerweg 3040 -> 3060 per Quadrat; W-Bank PL00W01 Clip 6 (10 Bilder) + 31 x Bild 9 bis zur Tuer (= Sleep 40 @0x010C2); Original o3060_s2_t03 cmd 4/Sub 2/Phase 2/Clip 6, +0x168 = PL00W01-Clip-6 Bild 9 (selbst gelesen); Bildfolge = Original-Video; danach Leon im Stand (Original t08 Clip 3); master-exe kniet (Riegel rot) |
+| 2a ROOM3061 Sherry kriecht in den Schacht | **erfuellt** | echter Tuerweg 3011 -> 3061 + Quadrat am AOT; Gitter per Super_set an Teil 14, Loslass (3,0,10) neben Original; Anker-Takte = sub04; Lagen je Takt Original + konstanter Rest (3,10); Endlage z -30700 = Original; Riegel `_anker` bytegleich gegen selbst gelesene o3061_s3-Staende; Bildfolge = Original-Video; master-exe: Sherry bleibt vor der Wand (z -26308) |
+| 2b ROOM3061 Elzas Animation am Ende der Szene | **erfuellt** | W-Bank PL04W01 Clip 6 + 56 x Bild 9 (= Sleep 5 + 60); Original o3061_s2_t17/t18 cmd 4/Sub 2/Phase 2/Clip 6, +0x168 = EDD+0x3e4 = PL04W01-Clip-6 Bild 9; Lage/Blick (-18510,-26206) 3651 exakt; Bildfolge = Original-Video; master-exe kniet |
+
+Gates: **RE haelt** (7 Adressbereiche selbst disassembliert, Original-RAM = PSX.EXE, Original-Werte selbst gelesen, Riegel-Sollwerte =
+Original); **V haelt** (Pfade, Woerter, Env-Schalter, Bits/Ids; V1 durch J-E1 erledigt; M2 berichtigt und belegt); **N** keine
+nachteilige erreichbare Nebenwirkung (Super_reset nur 3061, Anker-Bits nur 3061 sub04, W-Regel nur 3060/3061, Binder byte-true);
+**T** Riegel der Spur 9/9, Unit/Probe 227/227 + 3/3, Integration 31/31, Gegenprobe rot auf master.
