@@ -139,7 +139,9 @@ Kein Abheben, kein Gleiten, keine Fremdpose.
 ### 3.6 Weitere Anlaeufe (Riegel, selbst gefahren, §1)
 Gehen (`geh`: kein Luecken-Bild, Pos_set F382 = Frage zu + 1, gehalten), Weg 2050 -> Cut 3 gehend (`kurbel`: Lage (3650,-3018)
 197/197, 4 Umlaeufe, max 1 Bild auf Slot 39), Rennen nach o_renn2 (`renn`). Stand/Gehen/Cut-3/"No" sind seit Abnahme 2 unveraendert
-(der NB3-Code betrifft nur den Unterzustand 2 und den Blenden-Takt).
+(der NB3-Code betrifft nur den Unterzustand 2 und den Blenden-Takt). Stand selbst nachgefahren (`P1_stand`: (2600,-2800) Blick 1024,
+Quadrat @330/380/420/460): Frage zu F461, Pos_set F462 (3650,-3018) gehalten, Wiege-Clip mo 212 laeuft weiter (af 49 -> 50..69),
+Plc_motion F482 = Pos_set + 20 — wie Abnahme 2 §3.2 / Original o_stand1.
 
 ### 3.7 Urteil Punkt 1: **nicht_pruefbar**
 Alles Messbare ist original-gleich — einschliesslich der in Abnahme 2 offenen Renn-Varianten (§3.1, §3.3, §3.4) und einer neuen,
@@ -219,8 +221,9 @@ begonnene Stopp (Modulzustand `s_aktiv`, rennstopp_r41.c:21) ueberlebt die Trepp
 (game_step_common.c:1504-1514, kein `re15_player_tick`) und im Finalize genau die Steh-Bewegung zurueckgibt
 (stair_common.c:149 `p->motion = RE15_PLAYER_MOTION_IDLE`) — das Modul bricht nur ab, wenn es in einem Spieler-Takt eine andere
 Bewegung oder `state != 1` SIEHT (rennstopp_r41.c:193). Leon gleitet nach der Treppe 228 Einheiten in der Steh-Pose weiter.
-Variante `N2b_treppe_nach_2_stoppbildern` (Loslassen 2 Bilder vor der Aktion): Rest +39 im Finalize-Bild und -1 danach — derselbe
-Rest-Stopp, je nach Zeitpunkt groesser oder kleiner.
+Variante `N2b_treppe_nach_2_stoppbildern` (Loslassen 2 Bilder vor der Aktion, Leon an der Kante blockiert): Finalize F375 wie VORHER
+(-13782), danach nur noch der letzte Stopp-Schritt F376 -1 — wie viel nach der Treppe uebrig bleibt, haengt davon ab, wie viele der 6
+Stopp-Bilder vor dem Treppenstart verbraucht waren.
 **Original (selbst disassembliert):** Treppen-Finalize LAB_80038e50 @0x80038ea8 `sb zero,0x800aca59` (+5 = Unterzustand 0) und
 @0x80038eb0 `sb zero,0x800aca5a` (+6 = 0) — der Renn-Stopp lebt nur in +5 = 2 / +6 = 2..3 (0x80032604 @0x800326e0-@0x800326ec, 0x80032778
 @0x800327b0-@0x800327bc) und ist nach der Treppe geloescht; Stehen-ANIMATE Fall 0 setzt das Tempo auf 0 (@0x800320a4). Ein
