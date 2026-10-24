@@ -166,6 +166,26 @@ Stichproben der in Nachbesserung 4 NEU zitierten Stellen (alle selbst gelesen, r
   laufen ohne Haken).
 
 
+### G2 Vertrag (VERTRAG.md §1/§2)
+* Pfade (`git diff master...HEAD --name-only`, ohne analysis/): 32; KEIN Pfad unter release/, platform/android/, shared_assets/PSX/, pri/,
+  synchro/; keine Test-CMakeLists (nur die eigene probes/r41_ventilkette.cmake). Neue Assets nur unter shared_assets/RE2/FILES/
+  (FILE31_title_page/p00/p01/p02/title_paper.TIM), im Dossier §7 fuers Paket-Gate genannt.
+* Gemeinsame Dateien (Diff selbst gelesen, alle Zeilen "Runde 41 Spur C"): game_step_common.c +1 (Tick, C-E3), scd_room_setup.c +2
+  (include + Installer-Zeile am Ende des Blocks), scd_vm.c +4 (include, Ereignis-Kette, Strahlen-Haken in op_sce_espr_on; f3173450 nur
+  Kommentar "2030/17-27"), platform/pc/main.c +16 (include; Prop-Lader-Schleife jetzt k 0..3 = Wasser obj 4/5 + Blatt obj 6 + Aushang
+  obj 7; Boot-/CONTINUE-Install; Pult-Zeiger 2050; NEU der Plakat-Haken: 5 Zeilen re15_render_pc_show_fmv/hide_fmv, nur die eigene
+  Ebene), re15_files.c +10 (ein Tabelleneintrag s_docs[6] + Name; nicht in VERTRAG 1.3 gelistet, aber von AUFTRAG.md Nachtrag 13
+  Folge 2 "Dokument-System des Ports (re15_files, Ids ab 0x48)" verlangt), test_r36_kartenbits.c k_port +6 (C erlaubt),
+  test_r36_dachkiste.cmake +2 / test_r37_itemband.cmake +4 (Querbezug-Flags, C-E3). Klein und markiert -> haelt.
+* Bank-9-Bits: 100, 101, 102, 103, 106, 107 (= Zuteilung C); 107 jetzt Taken-Bit des Dokuments, in k_port eingetragen;
+  `unit_r36_kartenbits` gruen (Unit-Gruppe §3). Nachrichten-Ids: 2000/20B0 40, 2030 40-49 + 50-55 (Nachtrag 13 / VERTRAG 1.2), 2050
+  40-44, 20B0 41, 2070 40 — alle in der Zuteilung; 2080 keine (Nachtrag 7). Ereignisse 2030 17-27 und Plaetze 12-21 liegen ausserhalb
+  der Original-Subs/-Plaetze von 2030 (sub00..06, Slots 0-11; ROOM2030 gehoert nur Spur C).
+* Neue getenv im Engine-/Plattform-Diff: 0. Tests je Punkt vorhanden und messend (Unit M: Folge, Zuruecksetzen, Nein, Dokument-Zone,
+  Plakat; Integration `_weg`/`_weg_elza` v2a/v2b/v2d/v2p, Haupt A/C/D, `_b` i2/l2 Pegel -5350, `_kette` von Hand); eigene exe-Kopien je
+  Riegel; -P-Skripte mit `cmake_minimum_required`.
+* Kein SendMessage, kein Code ausserhalb des Baums (Pruefer).
+
 ## 3. Tests (gezielt, im Spurbaum; KEINE volle Suite)
 (folgt)
 
