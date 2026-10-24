@@ -381,6 +381,63 @@ Framedump-Dateien, die je Raum nummeriert sind — so geschehen in den ersten L�
 ## 8. Urteile je Nutzer-Punkt
 | Punkt (Wortlaut AUFTRAG.md) | Urteil | Beleg |
 |---|---|---|
-| 1. "den Finisher und fehlende Animationen aus Resident Evil 2 extrahierst" | **teilweise** | RE2-Clips im Spiel (A2 6/3/4/1/5/11, D2 2/3, K 9, E1 10), RE2-FRESSEN + Finisher-Kamera bis Game Over aus einem CHASE-Biss mit Leon im Maul (A2 F398–F659, `beleg_A2_finisher.png`). ABER: nach einem tödlichen GUARD-Hochbiss (Leon oben auf der Rampe = Ankunftsort der 20A0-Tür) liegt Leon nicht im Maul — E1/RN F628–F868 (Cut 2), MN2 F588–F700 (Cut 4), im Vorher-Bau MA2 sogar ohne Gator im Bild; seit der Nachbesserung 4 auf dem Türweg erreicht (§3.4, M1) |
+| 1. "den Finisher und fehlende Animationen aus Resident Evil 2 extrahierst" | **teilweise** | RE2-Clips im Spiel (A2 6/3/4/1/5/11, D2 2/3, K 9, Z 10 (R4 F70–F98)), RE2-FRESSEN + Finisher-Kamera bis Game Over aus einem CHASE-Biss mit Leon im Maul (A2 F398–F659, `beleg_A2_finisher.png`). ABER: nach einem tödlichen GUARD-Hochbiss (Leon oben auf der Rampe = Ankunftsort der 20A0-Tür) liegt Leon nicht im Maul — E1/RN F628–F868 (Cut 2), MN2 F588–F700 (Cut 4), im Vorher-Bau MA2 sogar ohne Gator im Bild; seit der Nachbesserung 4 auf dem Türweg erreicht (§3.4, M1) |
 | 2. Verfolgung wie RE2 (Animation, Schreie, Beschleunigung an gleichen Stellen), Wände wackeln + Putz, Klettern bleibt | **erfüllt** | Gier-Sprünge der Abnahme 3 (M2) weg: gier.py/GIER-WACHE in A2/C3/D2/E1/N/NZ/Z, Riegel gier, Sonden `probe_kopfwand`/`probe_sprung`/`probe_cross` gegen den Vorher-Bau (§3.2); Dash Clip 2/3 mit RE2-Planung, 27 Bank-17-SE, Schütteln Bild für Bild = Tafeln @0x8009db14/@0x8009daf4, Putz 6 × 9 = 54 (D2), Dash jetzt animiert, Klettern C3 `CROSS … frames=240` (§3.3); untergetaucht bis zum Durchbruch (N 201/201 bytegleich mit "ohne Gator", Elza gleich). Hinweis H2 (Belagerungsziel) gehört zur Ursachenkette von M1 |
 | 3. Kanister aufnehmen "GENAUSO wie im original", im Maul beschießbar, Sterbeanimation mit geplatztem Kiefer wie RE2 | **erfüllt** | M1 der Abnahme 3 behoben: Kanister-Sitz 0 in jedem gezeichneten Bild (C3 270, Z 420, K 30 Bilder; Riegel sitz (a)–(d)), Kanister dreht bei Wende/Biss mit dem Kopf zwischen den Kiefern (C3-Bögen); Aufnahme ohne Lenkung in 12 Bildern, Anschwimm-Sperre (Z); Schuss → R1 mit Zeitlupe 38 Bilder/2516 ms, Kiefer-Splitter F71–F80, Leiche mit geplatztem Unterkiefer ab F82 (K); RE2-Kind-Matrix und Bildreihenfolge selbst nachgelesen. Hinweis H1 (Hals-Zielmodus) wie in Abnahme 3 kein Mangel |
+
+## 9. Mängel (nummeriert, nachprüfbar)
+
+1. **M1 (Punkt 1, sichtbar; ALT im Finisher, seit der Nachbesserung 4 auf dem natürlichen Türweg erreicht): nach einem
+   tödlichen GUARD-Hochbiss liegt Leon im RE2-Finisher nicht im Maul.**
+   - Wortlaut: "Ich will das du den Finisher … aus Resident Evil 2 extrahierst!" — im RE2-Finisher hängt Leon im Maul (so auch hier
+     nach einem CHASE-Biss, A2 F416–F504). Nach dem Tod aus der Plattform-Belagerung bleibt das Maul leer, Leon schwebt getrennt neben
+     bzw. über dem Kopf oder ist gar nicht im Bild.
+   - Nachprüfung (Basis-Umgebung wie §3, eigene exe-Kopie, `timeout`):
+     (a) echter Türweg: `RE15_DEBUG_JUMP=20A0@250 RE15_FIRE_AOT=0@40#20A0 RE15_GB_TEST=1 RE15_EXIT_AT=900#2090` + Framedump →
+     Bisse F417/F522/F627 (state.log, Gier 169/13/115, Leon 67°/73°/64° daneben), `RE2 KAMERA FINISHER FINISHER RE2-Cut 7 -> Cut 2
+     F628`, Bilder F628–F696 und F736–F868 ohne Leon im Maul, F700–F728 Leons Körper neben dem Kopf am Rohr
+     (`B41abn4/beleg_E1_finisher.png`, `E1_fress_zoom2.png`, `E1_fress_p3_zoom.png`); dieselbe Folge mit
+     `RE15_DEBUG_JUMP=2090@250 RE15_PLAYER_POS=6300,-16250,2048,1` (`mess/RN`);
+     (b) Rampenmitte: `RE15_DEBUG_JUMP=2090@250 RE15_PLAYER_POS=4000,-15000,2048,1 RE15_GB_TEST=1 RE15_EXIT_AT=830#2090
+     RE15_FRAMEDUMP=540-830/2:fd/m_` → Tod F587 (Gier 3405, Leon 128° daneben), `-> Cut 4 F588`, Leon F610–F700 neben/über dem Kopf
+     (`B41abn4f/MN2_kopf_zoom.png`); (c) Vorher-Bau mit (b) (`B41abn4/probe/alt/re15_pc_alt.exe`, `EXIT_AT=850#2090`): Tod F608,
+     Cut 7 ohne Gator im Bild (`B41abn4f/MA2_kopf_zoom.png`) → der Defekt ist ALT.
+   - Code-Befunde (aus dem Code gelesen, Ursache nicht einzeln gemessen): GUARD-Hochbiss nur nach Abstand (`dist < 4200` / `< 3900`,
+     enemy_ai_boss_gator.c:2234-2251) — der tödliche Biss kommt mit der Gier 33…141° neben Leon; das GUARD-Ziel liegt hinter der
+     Ostwand-Klemmlinie, sobald Leon östlich x ≈ 5716 auf der Rampe steht (E1: (6500,−12600), Gier in die Wand); `pitch_vz` (−350 aus
+     GUARD, Z. 2232) wird beim tödlichen Biss nicht genullt (Z. 421 nur `arc_vz`) und vom Bone-0-Haken (Z. 2751) durch P0–P3
+     gezeichnet, der Opfer-Anker rechnet ohne sie; P0 setzt Leon 7096 entlang der Gator-Gier (Z. 2409-2423), in E1/MN2 hinter die
+     Ostwand.
+   - Verlangt: nach JEDEM tödlichen Biss — CHASE und GUARD (Rampe Ost wie E1, Rampenmitte, Plattformblock) — zeigt der Finisher
+     Leon (und Elza, ROOM2091) über P1–P3 bis zum Game Over im Maul wie in A2, und der gehaltene Finisher-Schnitt zeigt Gator und Opfer.
+     Die Form ist frei (Nachtrag 6: "Betreff Aligator darfst du alles machen was du willst"), z. B. Ausrichten auf Leon vor dem
+     tödlichen Biss, `pitch_vz` beim Eintritt in FRESSEN abbauen, erreichbares Belagerungsziel — als PORT-WAHL benennen; RE2-Teile mit
+     @0x. Riegel: der Maulraum-Messung von `unit_gator_fress` (heute nur CHASE-Lage, `Maulraum … 776/776 = 100.0%`) eine GUARD-Lage
+     hinzufügen (Leon oben auf der Rampe bei (6300,−16250) und (4000,−15000), Tod durch den Hochbiss, gezeichneter Kiefer MIT
+     pitch/jaw-Haken gegen Leons Körper in jedem P1–P3-Bild); integration "belagerung" bis nach dem Tod prüfen (Leon im Maul je
+     Bild bzw. Abstand Leon ↔ gezeichneter Kiefer); Bildbeleg E1-Türweg vorher/nachher F628–F870.
+
+Hinweise an den Orchestrator (keine Mängel dieser Abnahme):
+- **H1** (unverändert seit Abnahme 3): die RE2-Halsführung (Root @0x80100330-74 → FUN_80017d98 auf Leon, im Zielmodus
+  FUN_800177c0) fehlt; der Bau-Agent führt sie OFFEN mit Beleg, die Umsetzung braucht einen Part-5-Gier-Kanal außerhalb der
+  Spur-B-Dateien — Entscheid steht aus.
+- **H2:** seit der Nachbesserung 4 wartet der Gator in der Belagerung am E1-Ankunftsort dauerhaft an der Ostwand-Klemmlinie mit Blick
+  auf sein unerreichbares GUARD-Ziel (vorher drehte ihn der Snap alle 32 Bilder weg); Teil der Ursachenkette von M1, nach Nachtrag 6
+  frei gestaltbar.
+- **H3 (Spur F/G):** auf dem 20A0-Weg taucht der Gator ohne Testhebel nicht auf (EN, §6); der Kampf beginnt erst mit der Szene der
+  Spur F — M1 betrifft genau die Lage danach, wenn Leon auf der Rampe steht und schießt.
+
+## 10. Gesamturteil
+
+`bestanden = false`. Die beiden Mängel der Abnahme 3 sind am gebauten Spiel behoben und gegen den Vorher-Bau gegengeprüft: der
+getragene Kanister sitzt in jedem gezeichneten Bild im Maul (echte Zeichner-Messzeile 0 in 270/420/30 Bildern, Riegel sitz 0 in
+allen vier Lagen; die RE2-Reihenfolge Zeichnen vor Objekt-Schleife selbst nachgelesen), und die Gier springt in Verfolgung und
+Belagerung nicht mehr (alle Läufe und drei Prüfer-Sonden: 0 Sprünge außer den RE2-Knicken +1024). Alle selbst geprüften RE2-Stellen
+stimmen (§2), Diff ohne Rate-Wörter, Vertrag eingehalten, Unit 112/112, Integration 7/7. Punkt 2 und Punkt 3 sind erfüllt.
+Offen gegen den Wortlaut: **M1** — der RE2-Finisher zeigt nach einem tödlichen Belagerungsbiss Leon nicht im Maul; der Defekt ist
+ALT (im Vorher-Bau ebenso), wird aber seit dieser Nachbesserung auf dem natürlichen Türweg 20A0 → Ostrampe erreicht (vorher überlebte
+Leon dort 1500 Bilder, jetzt stirbt er bei F627 mit leerem Maul) — Punkt 1 teilweise.
+
+Neue Prüfer-Dateien dieser Fortsetzung (nicht im Baum): `B41abn4f/bisse.py` (Gier gegen Peilung je HP-Abzug), Bildbögen
+`B41abn4f/MA2_finisher.png`, `MA2_kopf_zoom.png`, `MN2_finisher.png`, `MN2_kopf_zoom.png`, Läufe `B41abn4/mess/RA|RN|BA|BN|MA|MN|MA2|
+MN2` (Rezepte in je `lauf.txt`), `B41abn4f/fr_47ef.c`/`fr_head.c` (FRESSEN-Fall beider Stände, bitgleich).
