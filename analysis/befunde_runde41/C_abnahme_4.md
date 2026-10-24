@@ -136,6 +136,26 @@ bucket=7` + `kick ch=0 value=0x5000` -> **`ERTRUNKEN: Wasser y -2700, Spieler y 
 Bildbogen `<a4>/bilder/fl_flut.png`: F3530..F3570 Draufsicht Cut 4, das Wasser steigt ueber den Steg, F3590/F3610 blauer Schleier,
 F3700 "YOU DIED" (F3650 ein heller Vollbild-Uebergang der Todeskette).
 
+### N12 — Nachtrag 12 (k) im Bild: Pegel mit Strom knapp unter der Absperrung (Leon `pg_<cut>` / `pt_<cut>`)
+Je Cut zwei Laeufe, RE15_FORCE_CUT nur zur Bildwahl, F150: `pg_<cut>` = nach der Flut mit Strom, Eintritt ueber die echte 20B0-Ost-Tuer
+(`Strom (3,126) -> Wasser knapp unter der Absperrung y -5350`, `[prop-render] pi=4 oid=0x04 pos=(0,-5350,0)`), `pt_<cut>` = trocken (vor
+der Flut, Sprung). Bildbogen `<a4>/bilder/pegel_sheet.png` (Zeilen Cut 1/2/7/15/4, links trocken, rechts mit Strom): in jeder Ring-Kamera
+fuellt die Wasserflaeche den Schacht bis unmittelbar unter den Ringboden; Ringboden (gruener Laufsteg) und Stabgelaender stehen ueber
+dem Wasser, nichts laeuft auf den Ring; Cut 4 (Draufsicht) zeigt den ganzen Schacht bedeckt. Zusammen mit P6 (Ring zu Fuss begehbar,
+Treppe = Text 48) und G1 Nr. 5 (Wasser-Rechtecke innerhalb der Absperrzellen) -> Nachtrag 12 (k) erfuellt.
+
+### KE — Abnahme-3-Mangel 1: `integration_r41_ventilkette_kette` von Hand am Endstand (C-E1)
+`cmake -DRE15_PC_EXE=<baum>/re15_port/build/platform/pc/re15_pc.exe -DRE15_SRC=<baum>/re15_port -DWORKDIR=<a4>/kette_hand -P
+<baum>/re15_port/tests/integration/test_r41_ventilkette_kette.cmake` (ohne RE15_-Umgebung) -> **rc=0**, Abschlusszeile `-- r41_ventilkette_kette:
+2030 richtige Folge 09/07/02/01 zu Fuss -> Warnung -> Ost-Tuer zu Fuss -> ROOM20B0, Bits 103 + 100; Teil ab der Szene uebersprungen: Haken
+der Spur A fehlt (aot_common.c re15_wasser20b0_r41_auto_aot)` (`<a4>/kette_hand/cmake_out.txt`). debug.log (lauf_365eb1cb_bis20b0):
+`Folge 09 07 02 01 -> RICHTIG` -> `Ereignis 26 -> 2030_ventile_flut` -> `id=46` -> `[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750)
+target_cut=11` (kein `[fire-aot]`) -> `loaded room20b0.rdt` -> `Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100` -> `EXIT_AT: Bild
+200 in Raum 20b0`. Keine liegengebliebene `re15_pc_r41ck_*`-Kopie. Der Riegel faehrt jetzt die heutige Kette (Sued-Landeplatz, Ventile
+zu Fuss, Flucht ueber Steg/Treppe/Ring); Registrierung unveraendert nur mit A's Modul. Merge-Probe: `git merge-tree --write-tree master
+HEAD` -> einzige Kollision `analysis/befunde_runde41/AUFTRAG.md` (Doku), game_step_common.c / scd_vm.c / main.c mergen automatisch
+-> im Integrationsbaum wird der Riegel registriert (master enthaelt engine/src/wasser20b0_r41.c). -> Mangel 1 der Abnahme 3 behoben.
+
 ## 2. Gates
 
 ### G1 RE-Gate (eigene Disassembly / eigene Byte-Lesung)
