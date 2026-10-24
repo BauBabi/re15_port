@@ -18,7 +18,8 @@ cmake_minimum_required(VERSION 3.16)
 #                 probe_r41_kollision_abstand): Kontakt (< 1000) ja, kein Bild < 850, min >= 880, Ende >= 895.
 #                 Original (H_belege/orig_3070_eskorte, DuckStation-GDB): min. 901 ueber 187 Proben; Port vorher: 3.
 #   npc3001       ROOM3001 Elza, (4,198)/(4,199): John (0x49) + Sherry (0x4b) als Eskorte (sub00 @0x015A2/@0x015B6),
-#                 Radien-Summe 750: Kontakt (< 850) ja, kein Bild < 700, min >= 730, Ende >= 745. Port vorher: 4.
+#                 Elza bei (-18000,-13378) Blick Ost (beide folgen von Westen), Radien-Summe 750: Kontakt (< 850) ja,
+#                 kein Bild < 700, min >= 730, Ende >= 745. Port vorher (derselbe Lauf): min 16.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_ABSTAND_TOOL=<probe_r41_kollision_abstand> -DWORKDIR=<dir> -DTEIL=<teil>
 #         -P test_r41_kollision.cmake
 # =============================================================================
@@ -274,6 +275,7 @@ elseif(TEIL STREQUAL "npc3070" OR TEIL STREQUAL "npc3001")
         set(_raum 3070)
         set(_wahl "")
         set(_flags "RE15_SET_FLAG=4:215,4:236,3:180")
+        set(_spieler_pos "")
         set(_summe 900)
         set(_min_soll 880)
         set(_ende_soll 895)
@@ -281,11 +283,15 @@ elseif(TEIL STREQUAL "npc3070" OR TEIL STREQUAL "npc3001")
         set(_raum 3001)
         set(_wahl RE15_PSELECT_AUTO_SWITCH=1)
         set(_flags "RE15_SET_FLAG=4:198,4:199")
+        # Elza steht im Gang z -13378 OESTLICH der beiden (Blick Ost): John und Sherry kommen von Westen und wollen zum
+        # selben Folgepunkt hinter ihr. Ohne Startlage stand Elza ZWISCHEN den beiden (Sherry kam von Osten) und hielt
+        # Sherry mit aec4(&Spieler,NPC) @0x8011cc3c auf (gemessen H_belege/npc3001_nachher: min 1308, Kontakt 0).
+        set(_spieler_pos "RE15_PLAYER_POS=-18000,-13378,0,0")
         set(_summe 750)
         set(_min_soll 730)
         set(_ende_soll 745)
     endif()
-    _lauf(600 ${_grund} ${_wahl} ${_flags} RE15_DEBUG_JUMP=${_raum}@250 RE15_STATE_LOG=state.txt
+    _lauf(600 ${_grund} ${_wahl} ${_flags} ${_spieler_pos} RE15_DEBUG_JUMP=${_raum}@250 RE15_STATE_LOG=state.txt
           RE15_KOLLISION_LOG=kollision.txt RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1
           "RE15_INPUT_SCRIPT=W25,U1.5,W12,U1.5,W12" "RE15_EXIT_AT=1700#${_raum}")
     _muss("loaded room${_raum}.rdt" _dbg "ROOM${_raum} nicht geladen")
