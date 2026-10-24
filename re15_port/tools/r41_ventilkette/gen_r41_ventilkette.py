@@ -105,20 +105,31 @@ def reling_netz(org):
     assert all(org[12 + h[13] + 16 * k:12 + h[13] + 16 * k + 16] == uv for k in range(108))
     q0 = struct.unpack_from("<8H", org, 12 + h[11])
     assert q0 == (0, 0, 0, 13, 0, 1, 0, 14), q0   # v0 (x0,z0), v1 (x0,z1), v2 (x1,z0), v3 (x1,z1)
-    ecken, vier = [], []
-    for (x0, x1, z0, z1) in RELING_RECHTECKE:
-        nx = -(-(x1 - x0) // ZELLE)
-        nz = -(-(z1 - z0) // ZELLE)
-        xs = [x0 + ((x1 - x0) * i) // nx for i in range(nx + 1)]
-        zs = [z0 + ((z1 - z0) * j) // nz for j in range(nz + 1)]
-        basis = len(ecken)
-        for z in zs:
-            for x in xs:
-                ecken.append((x, 0, z))
-        for j in range(nz):
-            for i in range(nx):
-                a = basis + j * (nx + 1) + i
-                vier.append((a, a + (nx + 1), a + 1, a + (nx + 1) + 1))
+    # EIN gemeinsames Gitter fuer alle Rechtecke (Kanten = alle Rechteckgrenzen, jedes Intervall in gleiche Teile
+    # <= 1800 geteilt): benachbarte Vierecke teilen ihre Kanten exakt -> keine T-Stoesse/Risse an den Rechteckgrenzen
+    # (gemessen 2026-10-24 10:30, Cut 4: Rissreihe entlang z -6400 bei getrennten Teilgittern).
+    def teile(grenzen):
+        g = sorted(set(grenzen))
+        aus = []
+        for a, e in zip(g, g[1:]):
+            n = -(-(e - a) // ZELLE)
+            aus += [a + ((e - a) * i) // n for i in range(n)]
+        return aus + [g[-1]]
+    xs = teile([v for r in RELING_RECHTECKE for v in r[0:2]])
+    zs = teile([v for r in RELING_RECHTECKE for v in r[2:4]])
+    def drin(x, z):
+        return any(r[0] <= x <= r[1] and r[2] <= z <= r[3] for r in RELING_RECHTECKE)
+    ecken, vier, index = [], [], {}
+    def ecke(x, z):
+        if (x, z) not in index:
+            index[(x, z)] = len(ecken)
+            ecken.append((x, 0, z))
+        return index[(x, z)]
+    for j in range(len(zs) - 1):
+        for i in range(len(xs) - 1):
+            if not drin((xs[i] + xs[i + 1]) / 2.0, (zs[j] + zs[j + 1]) / 2.0):
+                continue
+            vier.append((ecke(xs[i], zs[j]), ecke(xs[i], zs[j + 1]), ecke(xs[i + 1], zs[j]), ecke(xs[i + 1], zs[j + 1])))
     nv, nq = len(ecken), len(vier)
     tv = 56
     tn = tv + 8 * nv

@@ -563,6 +563,35 @@ BSS-Cuts mit den projizierten SCA-Bodenzellen, gruen = Band 1, cyan = Band 3):**
   Loescher. Das ist das Taken-Bit (sub06 legt kein Inventar-Item an); es bleibt 1, auch wenn die Sicherung in 2060
   eingesetzt ist. Bedingung des Ventilraetsels = Bit 102 UND (3,108); vorher Port-Text Id 49 (Vorschlag).
 
+### Umsetzung der Nachbesserung 3 (Dateien, Konstanten — je mit Beleg im Kopf von re15_ventilkette_r41.h)
+* `re15_ventilkette_r41_zustand_2030()`: TROCKEN (Bit 103 = 0) / GEFLUTET (103, (3,126)=0) / RELING (103, (3,126)=1);
+  `RE15_R41C_STROM_BANK/BIT` 3/126 (@0x012AE Setzer, @0x01E14 Leser), `RE15_R41C_SICHERUNG_BANK/BIT` 3/108 (@0x01FF2).
+* N2: `ring_sperren()` nur noch bei GEFLUTET; Lift-Rufzonen oben (Slots 4/6) = msg 1 nur bei GEFLUTET; `install_2080`,
+  die Programme `2080_rechner_erw`/`_nur2030` (programme.py) und Text 2080 Id 40 (gen_r41_ventilkette.py TEXTE) entfernt;
+  Bit 107 frei (Header, k_port[]-Zeile in tests/unit/test_r36_kartenbits.c entfernt).
+* N3: bei RELING EINE Flaeche obj 4 bei (0, -3600, 0) (`RE15_R41C_WASSER_Y_RELING`), Netz
+  `re15_r41c_wasser_reling_md1` (gen/ventilkette_r41_wasser.inc, Generator `reling_netz()`: MD1-Kopf/Normale/UV-Satz wie
+  ROOM2080 Prop 0, EIN gemeinsames Gitter ueber `RE15_R41C_RELING_RECHTECKE` = 117 Ecken, 95 Vierecke <= 1800 x 1800,
+  4052 B); `re15_ventilkette_r41_md1_bytes()`/`_obj_id()` liefern bei RELING dieses Netz und nur obj 4 (main.c-Haken
+  unveraendert). Treppe Slot 8 (@0x01B8E) -> Band 3 + Sperrtext 48. Ventil-Platz nur noch bei TROCKEN.
+  Erste Fassung mit getrennten Teilgittern je Rechteck zeigte im Bild eine Rissreihe entlang z -6400 (T-Stoesse;
+  scratchpad `r41c_nb3/probe_c4.png`) -> ein gemeinsames Gitter (Kanten = alle Rechteckgrenzen).
+* N4: Ventil-Platz Slot 14 an der Suedwand (`RE15_R41C_VENTILE_RECT` -3400, 7400, 5000, 1000, Band 1); Ereignis 26:
+  Zaehler laeuft -> `2030_ventile_laeuft` (Message_on 46), sonst Bit 102 UND (3,108) -> `2030_ventile`, sonst
+  `2030_ventile_vorher` (Id 49); nach der Flut kein Platz/kein Programm. Texte 48/49 neu (Vorschlag, §7).
+
+### Messung nachher (exe 10:27, beschleunigter Renderer direct3d, RE15_WINDOW_SCALE=1)
+* **Bilder vorher/nachher** (scratchpad `r41c_nb3/serie_bilder.sh`, je Lauf RE15_FORCE_CUT + Framedump F330, Spinnen-
+  Kill-Bits 7:155..157, Bits 101/102 + (3,108)): **C_belege/nb3_pegel_vorher_nachher_sheet.png** — Zeilen Cut 0/1/2/4/7/15,
+  Spalten "vor der Flut" / "Flut, ohne Strom" / "Flut + Strom (3,126)". Ohne Strom steht die Flaeche ueber dem Ring
+  (Leon in Cut 0/15 bis zu den Knien im Wasser). Mit Strom: Ring (gruenes Gitter) in Cut 0/1/2/7/15 trocken, Wasser nur
+  in der Schachtoeffnung bis knapp unter die Ventil-Schilder (Cut 1: Nord-Landeplatz mit Tank und Tuer unter Wasser;
+  Cut 7/15: 09/08/07/06 bzw. 06/05/04 ueber dem Wasser; Cut 4: Becken, Steg, Landeplaetze ueberflutet; Cut 2: der obere
+  Teil der Treppe ragt heraus). Log je Lauf: geflutet `[ventilkette41] ROOM2030: unter Wasser (y -7200), Lift-Rufzonen
+  4/6 -> msg 1` + `[prop-render] pi=4 oid=0x04 pos=(-10800,-7200,-12400)` / `pi=5 oid=0x05 pos=(-10800,-7200,3800)`;
+  mit Strom `[ventilkette41] ROOM2030: Strom (3,126) -> Wasser auf Relinghoehe y -3600 (Schachtoeffnung), Treppe Slot 8
+  -> Sperrtext 48, Ring frei` + `[prop-render] pi=4 oid=0x04 pos=(0,-3600,0)`, KEIN obj 5.
+
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
 Alle Datei-Offsets beziehen sich auf `re15_port/shared_assets/PSX/STAGE2/ROOMxxxx.RDT` (Leon); die Elza-Varianten
