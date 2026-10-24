@@ -412,3 +412,47 @@ Aufbau wie L6, aber ohne 3:144/3:126 (Wegplan F62 `FLAG (3,126) = 0`), Start vor
   -1800,10250)` -> `loaded room20b0.rdt`.
 * state.txt: `fx=0` in 3937 Zeilen, `fx=1` in 104 Zeilen (der Kanal-Sprung; keine 18 Strahlen-Effekte wie in 2000 vor der Flut,
   dort fx 21..33, L1) -> nach der Flut laeuft an der Leiter kein Wasser mehr herunter.
+
+## 3. Tests (gezielt, im Spurbaum; KEINE volle Suite)
+* Unit-Gruppe (erste Sitzung 12:02, Code-Stand seither unveraendert): 166 Tests `100% tests passed, 0 tests failed out of 166`
+  (`<a3>/ctest_unit.txt`); `test_r41_ventilkette.exe` direkt `PASS (376 Pruefungen)` (Leon + Elza, J1 `206 Raeume, 16 Funde`, L
+  `14 Stellen`).
+* Integrationsgruppe (Fortsetzung, 12:46 gestartet, `-j 2`, r41-Riegel `RUN_SERIAL`; Regex `<a3>/regex_integ.txt` = 5 r41-Riegel +
+  Raumgruppe 2000/2030/2050/20B0/2070 und die Querbezugs-Riegel dachkiste/itemband): Ergebnis unten (wird nachgetragen).
+* `integration_r41_ventilkette_kette`: im Spurbaum nicht registriert (C-E1); von Hand gefahren -> FAIL (G2b, Mangel 1).
+
+## 4. Urteil je Nutzer-Punkt (gegen den Wortlaut, AUFTRAG.md; gebauter Stand exe 11:03 = Code 2fb94b25)
+
+| Punkt | Urteil | Beleg (eigene Messung) |
+|---|---|---|
+| 1 Leiter 2000 -> 2050 mit herunterlaufendem Wasserstrom blockiert, "I cannot climb up the ladder because of the water pressure", bis die Flut gelaufen ist | **erfuellt** | L1 Leon + Elza zu Fuss: Aktion -> Text 40 woertlich (2x), kein Raumwechsel, Strahlen `fx=21/23`; L1b Bild: Strahl aus dem Gitterfenster neben der Leiter; nach der Flut (L4, L7, L1b) Leiter = Tuer -> 2050, `fx=0`, kein Strahl |
+| 2 2030: Bruecke zunaechst OBEN; Pult links (Kamera 2, Nordwand): zu wenig Druck / Ventil 13 zu -> Ventil 13 -> "Lower the bridge?" -> Bruecke faehrt herunter; nicht die Kurbel | **erfuellt** | L2 Leon + Elza (Sprung) und L2b Leon + Elza (echte Tuer 2070 -> Ring): Bruecke oben y -5400, Zelle 12 `u0 0xff`, Steg nicht begehbar; Pult Text 40 (cam 1/2, Schaltschrank = Nutzerbild); Ventil 13 Text 41/42 + Bit 101; Pult Text 43 "... Lower the bridge?" -> Cut 4, `prop[0] ... val=-1800`, Bit 102, Text 44, Zelle 12 `u0 0x00`, ueber den Steg |
+| 3 Ventilraetsel-Platzhalter -> Warnung (1 min, Raum verlassen) -> 60 s -> Wasser ueber die Ringebene; Ost-Tuer -> 20B0 (Auswasch-Szene); Zeit abgelaufen im Raum: Tod mit Ertrink-Effekt | **erfuellt** (20B0-Szene nach C-E1 mit dem Haken der Spur A; deren Ketten-Riegel ist kaputt -> Mangel 1) | L3 Leon unten: Warnung woertlich, 1800 Bilder, Flut, ein Spritzer, Tod + blaue Blende, YOU DIED; L3c Leon + Elza auf dem Ring: Wasser bis -6300 (ueber die Ringebene), Spritzer bei -5400, Tod; L3b Leon + Elza: zu Fuss zur Ost-Tuer in 1069 Bildern -> `loaded room20b0/20b1.rdt`, Bits 103 + 100, keine Flut; L2: Nachtraege 9/10 (Text 49 vor Bruecke/Sicherung, 45 danach) |
+| 4 Danach 20B0 statt 2000 (spaeter wieder frei ohne Wasser), Leiter frei (kein Wasser laeuft mehr herunter) | **erfuellt** | L4 Leon + Elza zu Fuss: 2010-Tuer -> 20B0/20B1 Cut 10 (nicht 2000), Leiter -> 2050 ohne Sperrtext, 2050-Leiter -> 20B0/20B1 Cut 9, `fx=0` in allen Bildern; L1b Bild ohne Strahl; L7 (Kanal -> Leiter -> 2050 -> 20B0); "spaeter wieder frei" = 2030 mit dem Strom (Punkt 6/Nachtraege 7/8) |
+| 5 2050: Wasserlevel (Hebel) erst nach dem Pult-Raetsel (80 V wie 11F0) | **erfuellt** | L5 Hebel vorher: Ereignis 4 -> `2050_hebel_sperre`, Text 40, `(3,104) = 0`; L5b Leon + Elza: Pult 43/41 -> Cut 15 -> 40/70/80 V -> "Power supply OK." -> Bit 106 (Bild: Zeiger im roten Feld, gruene Marken); L5c Leon + Elza: mit Bit 106 Original sub04 -> `Set zone=3 idx=104`, Cut 4/7, `(3,104) = 1` |
+| 6 2080-Rechner entleert danach auch 2030 — ERSETZT durch Nachtrag 7/8 ("Nach der Aktivierung des Stroms ist 2030 leer gelaufen", Pegel auf Relinghoehe, nur unterer Bereich geflutet; Rechner nur Original) | **erfuellt** | L6 Leon + Elza: mit (3,126) `Wasser auf Relinghoehe y -3600`, Ring-Tuer 20B0 offen, Treppe -> Text 48, Lift B (3,220), 2080 Rechner = Original msg 0 -> (3,245) -> Cut 7/3 -> 2090, kein Port-Programm, kein Bit 107; L6b Bilder (Ring trocken, nur Schacht geflutet); L7/L9 ohne Strom Sperrtexte 41/40; L8 Weg nach der Flut zu Fuss (w1, Sicherung, Generator, w3) Leon + Elza |
+| Nachtrag 6: keine zusaetzliche Tuer (C-E2c widerrufen) | **erfuellt** | kein Code setzt (3,206) (Diff-Suche); `_sperre` (Integrationsgruppe) |
+| Nachtraege 9/10: Ventilraetsel erst mit gesenkter Bruecke UND aufgehobener Sicherung, vorher kurzer Text | **erfuellt** | L2 Leon + Elza: Platz nur ueber den Steg erreichbar; vor der Sicherung `id=49`, nach `id=2/3` (Set(3,108) @0x01FF2) `id=45` |
+
+## 5. Maengel (nummeriert, nachpruefbar)
+* **Mangel 1 (mittel, Riegel / Entscheid C-E1, Punkt 3) — `integration_r41_ventilkette_kette` passt nicht mehr zur Kette und
+  faellt am heutigen Stand.** Ist: der Riegel loest die Ventile wie vor Nachbesserung 3 am Ring aus (Start (6550,-100) Ring, nur
+  Spinnen-Bits, Eingabeskript-Aktionen, test_r41_ventilkette_kette.cmake Z. 129-137); die Ventile liegen jetzt am Sued-Landeplatz
+  (Slot 14 Band 1) und brauchen Bit 102 + (3,108). Von Hand gefahren (G2b): `r41_ventilkette_kette: Aktion an den Ventilen —
+  '[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile' fehlt` (Z. 159), rc=1 — vor jedem Spur-A-Teil. Im
+  Integrationsbaum A+C wird er registriert und faellt; C-E1 ("Ist er registriert, MUSS die ganze Kette durchlaufen") ist damit nicht
+  mehr erfuellbar, und Dossier §0b M2 beschreibt die alte Kette als "auf dem Endstand rc=0". Forderung: Riegel auf die Kette der
+  Nachbesserung 3 umstellen (Bruecke + Sicherung zu Fuss oder als Zustand vorgesetzt wie `_weg` v2, Ventile am Sued-Landeplatz,
+  Flucht zu Fuss ueber Steg/Treppe/Ring zur Ost-Tuer per Wegplan), gegen den C-Baum bis zur 20B0-Ankunft (`loaded room20b0.rdt`,
+  `Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100`) nachweisen (z. B. `cmake -P` wie oben), Dossier §0b M2 / §6 nachziehen.
+* **Mangel 2 (niedrig, Doku fuer den Nutzer) — veraltete Saetze.** Dossier §7 Z. 1450 "Sichtprobe fuer den Nutzer: 2030 am Ring vor
+  den Ventilen die Aktionstaste ..." (die Ventile sind seit Nachbesserung 3 am Sued-Landeplatz und brauchen Bruecke + Sicherung) und
+  Z. 1459 "Der Rechner selbst senkt 2080 und leert 2030" (seit Nachtrag 7 leert der Strom 2030, der Rechner nur 2080);
+  tests/unit/probes/r41_ventilkette.cmake Z. 2 "Rechner 2080 entleert 2030" und Z. 30 "2030 mit Bit 107 ohne Wasser" (Kommentare;
+  die Riegel selbst pruefen den neuen Stand). Forderung: Saetze auf den Stand Nachbesserung 3 bringen.
+
+Hinweise (kein Mangel): (a) die Flutflaechen liegen ueber dem tiefenlosen BSS — im ersten Flutbild ist das Becken im Bild schon
+zugedeckt (L3c, unveraendert seit Abnahme 2, Platzhalter ohne Formvorgabe); (b) nach der Flut ist der 2070-Mittelgang nicht mehr
+betretbar (beide Zugaenge 2000 Slot 3 / 2030 Slot 0 fuehren nach 20B0) — Teil der offenen Frage (g), bekannt seit M7; (c) offene
+Nutzerfragen (k) Relinghoehe -3600 vs -5400, (l) Texte 48/49, (g), (h) sind keine Maengel der Spur; (d) PSX-Ziel ungebaut, Wasser-
+netze nur unter RE15_PLATFORM_PC (bekannt, H3).
