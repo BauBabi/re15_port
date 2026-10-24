@@ -562,3 +562,12 @@ Folgen (Orchestrator, Umsetzung Spur E):
   Quelle (Video/Savestate, Bildnummern) einsetzen; pruefen, ob die Laenge vom Hintergrund-Laden abhaengt und ob sie fuer
   alle Cut_chg mit Hintergrundwechsel gilt (dann spielweit, mit den Riegeln der Spur E-E1). Riegel + Bildvergleich
   Port/Original (Gehen, Rennen, Stehen).
+
+## 2026-10-24 17:38 — Orchestrator-Entscheid H-E1 (Abnahme H 0: beide Nutzer-Punkte erfuellt, nur Vertrag V1/V2)
+
+- **V1 angenommen** (wie B5/I-E1): Include + Aufruf `re15_kollision_r41_npc_schwanz(slot)` in enemy_ai_common.c
+  (re15_npc_ai_tick vor re15_npc_wall_clamp; Original-Reihenfolge aec4/b544 vor der Wandklemme @0x8011cc64).
+- **V2 angenommen** als belegter Querbezug ("neue Regel widerlegt alten Riegel"): test_r39_dining1141_kampf.cmake
+  `WARTE 60` -> `WARTE 240` ist durch die festen NPCs noetig (alt: vor-exe gruen / nach-exe rot nur ueber die Zufallsdeckung
+  Salve/Griff; neu: nach-exe gruen) — Messung steht in H_abnahme_0.md. Die Nachbesserung H 1 dokumentiert beides im Dossier;
+  sonst ist nichts zu tun. Die naechste Abnahme der Spur H bewertet V1/V2 nicht mehr als Mangel.
