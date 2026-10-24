@@ -1,0 +1,211 @@
+DuckStation gestartet {'34112'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+vor dem Sprung Flag (4,215): @800b1030 00000000 -> 00000100
+vor dem Sprung Flag (4,236): @800b1034 00000000 -> 00080000
+vor dem Sprung Flag (3,180): @800b100c 00000000 -> 00000800
+Menue vorher: Zeile 1 Stage 0 Index[2] 0
+Menue gesetzt: Zeile 1 Stage 2 Index[2] 7
+in der Menue-Zeile Flag (4,215): @800b1030 00000100 -> 00000100
+in der Menue-Zeile Flag (4,236): @800b1034 00080000 -> 00080000
+in der Menue-Zeile Flag (3,180): @800b100c 00000800 -> 00000800
+Square -> Laden, warte 20 s
+nach dem Laden: Spieler (-12500, -17003, 0) g_active_count 2 Raum/Stage 0x800b0fe0/fe2 = 2/7
+  Entity 0 aktiv=1 +4=1 +5=0 typ=0x42 lage=(-13382,-16785) +9=0x00
+  Entity 1 aktiv=1 +4=1 +5=1 typ=0x40 lage=(-12777,-16117) +9=0x00
+  Entity 2 aktiv=0 +4=0 +5=0 typ=0x00 lage=(0,0) +9=0x00
+  Entity 3 aktiv=0 +4=0 +5=0 typ=0x00 lage=(0,0) +9=0x00
+  Entity 4 aktiv=0 +4=0 +5=0 typ=0x00 lage=(0,0) +9=0x00
+  Entity 5 aktiv=0 +4=0 +5=0 typ=0x00 lage=(0,0) +9=0x00
+  Entity 6 aktiv=0 +4=0 +5=0 typ=0x00 lage=(0,0) +9=0x00
+  Entity 7 aktiv=0 +4=0 +5=0 typ=0x00 lage=(0,0) +9=0x00
+STEHEN 0.0s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 0.3s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 0.5s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 0.8s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 1.1s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 1.3s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 1.6s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 1.8s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 2.1s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 2.4s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 2.6s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 2.9s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 3.2s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 3.4s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 3.7s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 3.9s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 4.2s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 4.5s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 4.7s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 5.0s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 5.3s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 5.5s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 5.8s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 6.1s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 6.3s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 6.6s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 6.9s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 7.1s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 7.4s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 7.6s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 7.9s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 8.2s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 8.4s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 8.7s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 9.0s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 9.2s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 9.5s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 9.8s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 10.0s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 10.3s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 10.5s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 10.8s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 11.1s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 11.3s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 11.6s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 11.9s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 12.1s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 12.4s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 12.7s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 12.9s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 13.2s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 13.5s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 13.7s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 14.0s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 14.2s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 14.5s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 14.8s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 15.0s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 15.3s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 15.6s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 15.8s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 16.1s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 16.4s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 16.6s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 16.9s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 17.1s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 17.4s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 17.7s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 17.9s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 18.2s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 18.5s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 18.7s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 19.0s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 19.2s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 19.5s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 19.8s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 20.0s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 20.3s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 20.6s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 20.8s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 21.1s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 21.4s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 21.6s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 21.9s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 22.2s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 22.4s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 22.7s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 23.0s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 23.2s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 23.5s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 23.7s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 24.0s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 24.3s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 24.5s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+STEHEN 24.8s Spieler=(-12500,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901
+NACH WEG 0 0.0s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=1 (-12338,-16788) | E1 typ=0x40 st=1 sub=1 (-11150,-17922) | d=1642
+NACH WEG 0 0.3s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=1 (-11821,-16850) | E1 typ=0x40 st=1 sub=3 (-10813,-17922) | d=1471
+NACH WEG 0 0.5s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=3 (-11421,-16930) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1194
+NACH WEG 0 0.8s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 1.0s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 1.3s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 1.6s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 1.8s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 2.1s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 2.4s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 2.6s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 2.9s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 3.2s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 3.4s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 3.7s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 4.0s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 4.2s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 4.5s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 4.8s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 5.0s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 5.3s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 5.6s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 5.8s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 6.1s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 6.4s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 6.6s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 6.9s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 7.1s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 7.4s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 7.7s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 7.9s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 8.2s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 8.5s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 8.7s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 9.0s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 9.3s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 9.5s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 9.8s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 10.0s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 10.3s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 10.6s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 10.8s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 11.1s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 11.4s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 11.6s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 0 11.9s Spieler=(-9539,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-11313,-16951) | E1 typ=0x40 st=1 sub=0 (-10756,-17922) | d=1119
+NACH WEG 1 0.0s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=1 (-8776,-17003) | E1 typ=0x40 st=1 sub=1 (-8314,-17933) | d=1038
+NACH WEG 1 0.3s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=1 (-8251,-17003) | E1 typ=0x40 st=1 sub=1 (-7800,-17922) | d=1024
+NACH WEG 1 0.5s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=3 (-7803,-17003) | E1 typ=0x40 st=1 sub=3 (-7308,-17922) | d=1044
+NACH WEG 1 0.8s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 1.1s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 1.3s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 1.6s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 1.8s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 2.1s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 2.4s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 2.7s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 2.9s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 3.2s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 3.4s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 3.7s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 4.0s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 4.2s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 4.5s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 4.8s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 5.0s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 5.3s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 5.5s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 5.8s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 6.1s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 6.3s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 6.6s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 6.9s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 7.1s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 7.4s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 7.7s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 7.9s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 8.2s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 8.4s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 8.7s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 9.0s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 9.2s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 9.5s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 9.8s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 10.0s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 10.3s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 10.6s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 10.8s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 11.1s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 11.4s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 11.6s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+NACH WEG 1 11.9s Spieler=(-5966,-17003,r0) | E0 typ=0x42 st=1 sub=0 (-7766,-17003) | E1 typ=0x40 st=1 sub=0 (-7187,-17922) | d=1086
+ZUSAMMENFASSUNG: 187 Proben, min. Abstand 901, letzter 1086 (Radien-Summe 900)
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
