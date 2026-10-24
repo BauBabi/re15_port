@@ -904,6 +904,9 @@ Beispiel (Beleg `A_belege/nb2/npc2000_npc.log` / `npc2000_foot.txt`, Lauf integr
 `F886 slot=1 typ=0x42 clip=5 bild=8 fuss=7 boden=0x1d ... ton=29 ... ton_orig=21 quelle=retail cut=15 abstand=51 lage=86/99` ->
 `[foot] SE foot=7 type=29 vag=1` / `[foot] NPC-Lage voll=86 volr=99 -> Pegel 99 Pan 72 -> L=3072 R=3519 (Q15, Ton 4515)`
 (nachgerechnet: Pan = 127 - (86 << 6)/99 = 72; 4515 * 99 / 127 = 3519 rechts; 3519 * (127 - 72) / 63 = 3072 links).
+Elza 2001, John im Kanal (`A_belege/nb2/elza2001_npc.log`): F310..F374 `zweig=stempel ton=26 ton_orig=18 quelle=retail`, Lage
+68/99 -> 56/94 (entfernt sich) - Zeile 26 = Boden 0x1d - 3 (Stempel @0x800456ec) + a0 0, dieselbe Wat-Zeile wie beim Spieler und wie
+RE2s Wasserboden 0x1a (@0x8005c12c-30).
 Pegel je Abstand (max(voll, volr) = (0x89 - ATT[Abstand]) & 0x7f, ATT-Bytes PSX.EXE @0x800747a8):
 | Abstand (/250) | 10 | 20 | 30 | 41 | 50 | 60 | 80 | 100 | 125 | 127 |
 |---|---|---|---|---|---|---|---|---|---|---|
