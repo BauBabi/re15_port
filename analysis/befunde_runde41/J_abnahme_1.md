@@ -179,3 +179,51 @@ Schacht z -30700 = Original; Bildfolge am echten Tuerweg = Original-Video.
 Beleg: Plc_motion(2,6) @0x011DE spielt W-Bank PL04W01 Clip 6 (Tabelle @0x800741e8 Modell 4 -> 97), haelt Bild 9 (56 x) bis
 zum Wechsel; Original o3061_s2_t17/t18 cmd 4 / Sub 2 / Phase 2 / Clip 6, +0x168 = PL04W01-Clip-6 Bild 9 (EDD+0x3e4, selbst
 gelesen); Lage/Blick (-18510,-26206) 3651 gleich; Bildfolge (Drehen, Arme mit Waffe vor, Halten) = Original-Video.
+
+## Gegenprobe — der Riegel misst den Nutzer-Befund (master-exe ohne Spur J)
+Hauptbaum-exe (master-Stand 2026-10-24 19:03, ohne Spur J) als Kopie im Baum, derselbe Riegel `test_r41_stage3szenen_a.cmake`
+TEIL 3060 (Aufruf per `cmake -P`, Laufordner `J41abn1/gegenprobe/`): Tuer per Quadrat ok, dann
+`FAIL ... keine [wclip41]-Zeile ROOM3060 W-Bank-Clip 6 / 10 Bilder` und
+`FAIL ... RE15_ANIM_TRACE ROOM3060 Marvin: 40 Bilder Motion 6, davon 40 nicht Clip 6/10 Bilder (z.B. '6:6:50:0'), 0 x Bild 9
+gehalten` -> EXIT 1. Auf master spielt Marvin also den 50-Bilder-Clip 6 der PLD-Grundbank (Knien); mit Spur J W-Clip 6 /
+10 Bilder gehalten. Der Riegel schlaegt beim alten Verhalten an.
+
+## Gate V — Vertrag (VERTRAG.md) und Orchestrator-Entscheide
+- Pfade (`git diff master...HEAD --name-only`, 46 Dateien): keine release/, platform/android/, shared_assets/PSX/, pri/, synchro/,
+  kein CMakeLists.txt; Riegel nur in `tests/unit/probes/r41_stage3szenen_a.cmake` / `_rbj.cmake`. **ok**
+- Woerter in den `+`-Zeilen (`git diff master...HEAD -- re15_port`): deferred/tunable/interim/for now/faithful/plausib/TODO/FIXME/
+  approx/vermutlich/geschaetzt -> nur zwei "deferred" als Zitat des ERSETZTEN alten Executor-Zweigs. **ok**
+- Neue Env-Schalter: nur `RE15_FUSSANKER_LOG` (Messzeile, kein Verhalten). Kein Env-Schalter als Abschluss. **ok**
+- Konstanten mit Beleg: jede verhaltensrelevante Zahl im Code mit @0x... (Stichproben oben selbst disassembliert) bzw. als
+  PORT-WAHL gekennzeichnet (Schutzgrenzen RBJ 8 Records / 32 Gegner, "kein Vorbild-Stand -> keine Verschiebung"). **ok**
+- Bank-9-Bits / Nachrichten-Ids: keine neuen (kein game_flag-/Message-Eintrag im Diff, test_r36_kartenbits.c unberuehrt). **ok**
+- Gemeinsame Dateien: scd_vm.c (register_opcodes 0x48/0x49, 3 Zeilen) und platform/pc/main.c (pc_prop_world, 4 Zeilen) sind
+  durch den Orchestrator-Entscheid **J-E1** angenommen (AUFTRAG.md "2026-10-24 23:10", im Zweig = master dba6ff8e, selbst
+  gelesen) -> **Mangel V1 der Abnahme J 0 erledigt**. RBJ-Haken main.c (1 Zeile + include), enemy_common.c, asset_psx.c = A-E5;
+  enemy_ai_common.c = NPC-Code (J); dining_r39.c 3 Zeilen + include (keine andere Runde-41-Spur). **ok**
+- Riegel je Punkt vorhanden und messend: Punkt 1 `integration_..._3060` (Gegenprobe oben) + `unit_..._wclip`; Punkt 2a
+  `unit_..._anker` (bytegleich gegen Original-Staende), `unit_..._superobj`, `unit_..._zensus`, `integration_..._3061`;
+  Punkt 2b `integration_..._3061` + `unit_..._wclip`. Parallel-/Linux-fest: eigener Laufordner + exe-Kopie mit Zufalls-Id
+  je Lauf (Kopie auch bei Abbruch entfernt), `m` auf Nicht-WIN32, `cmake_minimum_required` im -P-Skript, keine .exe-/
+  Backslash-Pfade, 3060 setzt `unset(ENV{RE15_FIRE_AOT})`. **ok**
+- **Mangel M2 der Abnahme J 0 erledigt**: Kopf `re15_superobj_r41.h` + Dossier §2.6/§4.1/NB1.M2 berichtigt; jede Byte-Angabe
+  selbst nachgelesen (Gate M2), Handler-Aussage selbst disassembliert (Gate RE); Zensus-Riegel pinnt die Praemissen.
+
+## Gate N — Nebenwirkungen (beide Szenarien, Nachbarraeume)
+- Super_set/Super_reset-Zensus selbst (scd_dump_room.py ueber alle 240 RDTs von info/Re1.5/PSX): Super_set nur ROOM3061
+  @0x0127E, ROOM4030 @0x006E0, ROOM4031 @0x00722; **Super_reset nur ROOM3061 @0x0129E** -> der neue Reset-Weg wirkt nur in
+  3061; 4030/4031 bleiben beim Ueberspringen wie auf master (ausser dem unerreichbaren John-Fall, in dem der Port wie der
+  typ-blinde Original-Handler anhaengt).
+- Anker-Bits: Port-Schreiber von `anim_flags` selbst gesucht (grep `anim_flags |=/=/^=` in engine/ und platform/pc): nur
+  0x04/0x10/0x20/0x80/0x1000 bzw. Member 16 und Plc_motion pc[3] (Zensus: in allen 1359 Aufrufen 0) -> Glied-Anker wirkt nur
+  bei Plc_flg mit Bit 1/2 = ROOM3061 sub04.
+- W-Bank-Regel: Spieler-Plc_motion(2,c) nur 3060 @0x010BE / 3061 @0x011DE (Zensus-Riegel); ROOM1141 bleibt auf der Regel der
+  Runde 39 (`unit_..._wclip`). Nach dem Raumwechsel kein W-Clip (Lauf p1b, ROOM3020 ab F6 Stand).
+- RBJ-Binder (A-E5): eigene Nachrechnung der Schleife (aus dem selbst gelesenen Disasm) fuer 6030/3060/3061/3091/1040/2000/4001
+  aus den Original-RDTs = Port-Bindung (z.B. 6030 Marker 0x1/0x2/0x3 -> Spieler rec2, Gegner {0:1, 1:2}; 3060 0x1/0x2/0x4 ->
+  {0:1, 2:2}; 1040 0x7e -> Spieler -1). Laufzeit-Stichprobe (Lauf rbj_6030, Leon, DEBUG_JUMP 6030): `[rbj-binder] ROOM6030
+  Spieler rec2 (alt rec0) Gegner 0:rec1(alt rec1) 1:rec2(alt rec-1)`, `[rbj] room 6030 cinematic overlay: 22 clips, 762 kf`,
+  `Aktor 1 Typ 0x4D Marker-Slot 1 -> rec1 gebunden` (vorher 1 Platzhalter-Clip).
+- Beide Szenarien: Leon (3060/3020/6030) und Elza (3011 -> 3061 -> 30C1) selbst gefahren; Nachbarraeume 3020 (Rueckweg) und
+  30C1 (Wechsel zu Sherry, PL0F) ohne Auffaelligkeit in den Messzeilen.
+- Nebenbefund N1 (Hund am Ende der 3061-Szene) unveraendert vorhanden, nicht Spur J (Dossier §4.7, eigener Auftrag empfohlen).
