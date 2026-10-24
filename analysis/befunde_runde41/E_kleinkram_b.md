@@ -1026,9 +1026,9 @@ Standbild-Dauer nach Cut_chg (Original messen, Abhaengigkeit vom Hintergrund-Lad
 E-E4 Gorilla-Sonde misst den Haenger (benannte Ausnahmen, Ursache in zombieki_r36.c pruefen).
 
 ### Status Nachbesserung 4
-- [ ] Mangel 1 Renn-Stopp nach Uebernahme (Treppe/Griff/Plc_ret)
-- [ ] Punkt 1 / Nachtrag 14 Standbild nach Cut_chg (Sprung an die Kurbel)
-- [ ] Mangel 2 / E-E4 Gorilla-Sonde
+- [x] Mangel 1 Renn-Stopp nach Uebernahme (Treppe/Griff/Plc_ret) — Marke +6 = 3 + Dispatcher-Haken, Riegel takt_uebernahme, integration treppe/losl
+- [x] Punkt 1 / Nachtrag 14 Standbild nach Cut_chg — Original 14 VSyncs gemessen, Port 1 + 6 Bilddauern spielweit, Bildvergleich
+- [x] Mangel 2 / E-E4 Gorilla-Sonde — Haenger-Mass je Seed, drei benannte Stellen mit Beleg, Folgeauftrag
 - [ ] Bau, gezielte Tests, Abschluss
 
 ### Mangel 1 — Renn-Stopp endet bei einer Uebernahme (Treppe, Griff, Plc_ret)
@@ -1198,3 +1198,42 @@ ist; der Port haelt 1 Bild. Ziel: Standbild-Dauer an genau dieser Stelle messen,
   SUB7 (Blindsprung-Schleife vor #19), WESTBLOCK (Umweg im Sub 4 ohne Vortrieb). Nachstellbar: `test_r36_zombieki_affen_block
   eins <i> 1 6000 400 1` (i = 2 TASCHE, 47 SUB7, 117 WESTBLOCK), Spur je Bild `eins <i> 1 6000 400 0 1 1 1 <von> <bis>`. Nach
   einer Behebung die Stelle aus zg_ort nehmen; das Haenger-Mass greift dann dort.
+
+### Nachbesserung 4 — je Mangel (Ursache / Messung vorher / Beleg / Aenderung / Messung nachher)
+| Mangel | Ursache | Messung vorher | Beleg (Original) | Aenderung | Messung nachher |
+|---|---|---|---|---|---|
+| 1 Renn-Stopp nach Treppe/Griff/Plc_ret | Stopp-Zustand nur im Modul; Port-Zweige (Treppe, Griff, Plc_ret ...) gaben den Spieler mit der Steh-Bewegung zurueck, der Rest-Stopp lief weiter | Abnahme 3 §6.2: c3ba4317 F376..F379 z -13665 -13588 -13551 -13554 | Stopp nur in +5 = 2 / +6 = 3 (@0x8003272c, @0x800328fc; o_renn_losl `cmd=1/2/3/0`); Treppe sce 12/13 @0x80043544/@0x80043610 + Abschluss @0x80038ea8/@0x80038eb0, Plc_ret @0x80041f90-9c, Plc_motion @0x80041bb0-c4, Griff @0x80102640 / @0x8011c38c; gesperrt `bltz` @0x80031c78 | rennstopp_r41.c Marke +6 = 3, Dispatcher-Haken (game_step_common.c 2 Zeilen), msg_block-Zweig halten (player_common.c 1 Zeile) | N2 F376..F382 -13782 (stehend); N2b -13782; N1/N3/P1_frei/TA/TC/Elza/N2c zeilengleich; Kurbel o_renn2 + o_renn_losl unveraendert; Riegel takt_uebernahme 6/6 (vor NB4 T/R/G rot), integration treppe (c3ba4317 rot) / losl |
+| 2 Gorilla-Sonde "gruen gemacht" | Seed-Schranke 5982 nach dem Bestehen, liess den Haenger 0x9b5bf362 (4405 Bilder) durch | Abnahme 3 §8.2; NB4-Bau unveraendert (FERN 24433/253141) | Haenger-Stellen = Stellen, an denen die Original-Regel selbst haengt (AUS: TASCHE 6223/2 Seeds, SUB7 36710/57, WESTBLOCK 5880/15) | Haenger-Mass je Seed (groesste FERN-Klemmen-Strecke ausserhalb der benannten Stellen < 354 = R36_NAH_START), Gegenprobe Original-Regel, benannte Stellen ausgegeben, Schranke 5982 entfernt | AN max 103 (0 Seeds >= 354), AUS 76 Seeds >= 354; 81 Pruefungen 0 Fehler; Folgeauftrag zombieki_r36.c |
+| Punkt 1 / Nachtrag 14 "halb fliegend" | Port hielt das Apply-Bild 1 Spielbild; das Original steht, bis der Hintergrund von CD gelesen und dekodiert ist | Port-Bogen: Bild mit geschlossener Frage 4 VSyncs, dann Leon an der Kurbel | FUN_80021bbc @0x80021d2c (`jal 0x80013c50`, a1 = 0 blockierend) + @0x80021e34 MDEC; GDB o_kurbel_cut3 14 VSyncs (Lesen 8 + MDEC 4 + 2), Rennen 15, RVD 12-15; Video o_hg_cut3 v420..v436 | kamerahalt_r41.c standbilder() = 6, bildhalt_r41_pc.c Standbild-Dauer hinter dem Bildtakt, main.c 2 E-Zeilen | Bild mit geschlossener Frage 16 VSyncs wie das Video (P1_weg_vsync_bogen.png); `[standbild] F540 6 Bilder 198 ms`; Riegel geh/renn/losl pruefen die Dauer |
+
+### Gemeinsame Dateien (Stand Nachbesserung 4, je "Runde 41 Spur E")
+| Datei | Haken NB4 | Bisher |
+|---|---|---|
+| engine/src/game_step_common.c | NEU 2 Zeilen vor der Zweig-Kette des Spieler-Dispatchers (`re15_rennstopp_r41_dispatcher`, neben den Haken Zopf R38 D / Zustand R39 F / Giftkugel R41 D); Datei laut VERTRAG §1.3 bei Spur H -> Integration: beidseitig, Orchestrator-Entscheid noetig (Erweiterung von E-E1/E-E2 "spielweit") | — |
+| engine/src/player_common.c | +1 Zeile im msg_block-Zweig (`re15_rennstopp_r41_halten`) | NB0, NB3 (E-E1/E-E2) |
+| platform/pc/main.c | Apply-Haken um `re15_render_pc_standbild(...)` erweitert, +1 Zeile hinter dem Bildtakt (`re15_render_pc_standbild_warten`) | NB2, NB3 (E-E1) |
+| tests/unit/test_r36_zombieki_affen_block.c | Haenger-Mass, benannte Stellen, LAGE-Ausgabe (E-E2/E-E4) | NB3 |
+Eigene Dateien: rennstopp_r41.c/.h, kamerahalt_r41.c/.h, bildhalt_r41_pc.c, Tests r41_kleinkram_b.
+
+### OFFEN (Stand Nachbesserung 4)
+- Aktions-Pruefung im Renn-DECIDE (@0x800326a4-@0x800326dc) vor der Stopp-Entscheidung (Hinweis H2 der Abnahme 3): bei einer
+  Treppe (Handler-Rueckgabe 1 @0x800435c8) macht das Original im Aktionsbild KEINEN Stopp-Schritt, der Port einen (gemessene
+  Treppe ohne Wirkung: Kollision haelt Leon an der Kante). Port-Reihenfolge Spieler-Takt -> Treppe/Klettern/AOT in
+  game_step_common.c / aot_common.c (Katalog #14/#15) — nicht Spur E.
+- Standbild-Dauer: der Port nimmt einheitlich die an der Kurbel gemessenen 14 VSyncs. Im Original haengt sie am Kopfweg der CD
+  (RVD 12-15, nach einem weiten Lesen wie dem PLW-Laden beim Waffenwechsel 34) — den Kopfweg fuehrt der Port nicht.
+- Gorilla-Haenge-Stellen TASCHE / SUB7 / WESTBLOCK (Mangel 2) -> Folgeauftrag an die Port-Wahl der Runde 36 (oben).
+- Unveraendert aus NB3: Drehrate ausserhalb des Unterzustands 2 nach dem Pad, Geh-Tempo konstant 75 (Fussweg @0x800325c4),
+  Gegner-Wahrnehmung im Stopp (Hinweis H4), H1/H5/H6 der Abnahme 2 (H6 = Standbild-Dauer jetzt umgesetzt, Rest s. oben).
+- PSX-Plattform: kamerahalt/bildhalt/Standbild-Dauer nur auf PC (platform/psx/main.c ohne diese Haken, H5); der
+  Dispatcher-Haken des Renn-Stopps liegt in der Engine und gilt fuer beide.
+
+### Fuer den Nutzer (Stand Nachbesserung 4)
+- Keine neuen Assets, keine Sprachdateien.
+- Kurbel ROOM2020 ("halb fliegend"): nach dem "Yes" bleibt das Bild jetzt so lange stehen wie im Original (gut 1/4 s: das
+  Original laedt dabei den Hintergrund von CD), erst dann steht Leon an der Kurbel — Bild fuer Bild wie das Original-Video.
+- Spielweit: JEDER Kamerawechsel haelt das alte Bild kurz an (wie im Original, dort 0,2-0,25 s, nach einem Waffenwechsel auch
+  laenger); die Spiellogik laeuft dabei nicht weiter.
+- Renn-Stopp: nach einer Treppe, einem Griff oder einer Szene rutscht Leon nicht mehr nach.
+- Die Reling vor Leons Beinen an der Kurbel kommt von deiner Freistellung 03_01 (ROOM2020 Kamera 3; das Original hat dort keine
+  PRI) — Spur M hat sie als richtig bewertet (Leon steht von der Kamera aus hinter der Reling).
