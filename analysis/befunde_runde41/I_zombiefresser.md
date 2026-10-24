@@ -509,8 +509,10 @@ mit diesen Deskriptoren (Zensus `fresser_zensus.py`): 1020/1021, 1070/1071, 10E0
    (r35_entladen_d/e/f/h), Liege-Raeume 1100/1101/1141 (r37_elzaems_leon1100/elza1101/elza1141), room_probe_sweep:
    ```
    ctest -R "^integration_(r37_beretta|room_probe_sweep|r35_entladen_[defh]|r37_elzaems_(leon1100|elza1101|elza1141))$" -j 3 --timeout 600
-   (laeuft - Ergebnis folgt)
+   100% tests passed, 0 tests failed out of 9          (Total Test time (real) = 164.81 sec, exit=0)
    ```
+   Einzeln: r35_entladen_d 93.2 s, _e 39.2 s, _f 61.5 s, _h 23.7 s, r37_elzaems_elza1101 18.8 s, _elza1141 11.3 s,
+   _leon1100 19.4 s, room_probe_sweep 0.16 s (laedt die Raeume, Ausgabe gelesen), r37_beretta 164.8 s.
 
 ### 8.9 Fuer den Nutzer (Nachbesserung 1)
 
