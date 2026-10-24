@@ -497,3 +497,40 @@ Folgen (Orchestrator, Spur C):
   es keinen hoeheren Pegel unterhalb der Absperrung gibt. Bildbeleg vorher/nachher aus den Ring-Kameras.
 - (l) Beide Texte sind vorerst freigegeben (2030 Id 48 Treppe, Id 49 Ventile). Den Ventil-Text (Id 49) will der Nutzer
   spaeter aendern — in den Release Notes unter "Zu entscheiden" fuehren.
+
+## 2026-10-24 13:19 — Nachtrag 13 (Wortlaut; das echte Ventilraetsel in 2030, Spur C — Nutzer-Entscheid "Jetzt in v0.8.29")
+
+> Der Text: „Numbered valves. If I turn them, / this whole level will be flooded. | I should look around here first." ist
+> deshalb dämlich, weil sich die Frage stellt - woher weiß den der Spieler das, das dann alles flutet?
+>
+> Wenn denn würde ich beim Anklicken der Anlage oder bei einer Leiche oder so ein Dokument machen, wo so etwas drin steht wie:
+>
+> These amateurs—not only did they completely mess up the water ventilation, so that the water level not only rises up to
+> the railing but also goes beyond it until it has completely drained out—but they also made a complete mess of the valve
+> instructions.... They mixed up black, green, and red, and swapped the numbers for black! What are they? Colorblind? How
+> is anyone supposed to work with something like this....
+>
+> und dann würde ich ein Plakat machen mit der Anleitung in welcher Reihenfolge mit welchen Zahlen man die valves drehen muss,
+> nur eben genau falsch entsprechend dem Dokument.
+
+Frage des Orchestrators: "Soll Spur C das jetzt noch fuer v0.8.29 bauen, oder kommt es in die naechste Runde?" —
+**Antwort: "Jetzt in v0.8.29 (Empfohlen)"** (Option: Dokument mit dem Nutzer-Text bei einer Leiche am Steg-Suedlandeplatz,
+wo die Sicherung liegt, oder beim Untersuchen der Anlage; Plakat als Nahaufnahme mit der falschen Reihenfolge; echtes
+Dreh-Raetsel statt Platzhalter; Plakat-Inhalt und Loesung dem Nutzer zur Freigabe vorlegen).
+
+Folgen (Orchestrator, Umsetzung Spur C):
+1. Text 2030 Id 49 ersetzen: kein Wissen, das der Spieler nicht haben kann — neutral, z. B. nur "I should look around
+   here first." (Gate Nachtrag 9/10 bleibt: Bruecke unten UND Sicherung aufgehoben).
+2. Dokument: Inhalt = der Nutzer-Text oben WOERTLICH (nur Umbruch/Seiten fuer den Leser; Titel als Vorschlag). Fundort:
+   Leiche am Steg-Suedlandeplatz neben der Sicherung (bevorzugt, weil der Spieler dort ohnehin vorbeikommt) oder beim
+   Untersuchen der Ventil-Anlage — Wahl mit Begruendung. Dokument-System des Ports (re15_files, Ids ab 0x48), Item-/Taken-Bit
+   nach RDT-Zensus (Memory reai-v2-bank9-taken-bits; Bit 107 ist seit Nachtrag 7 frei und gehoert C).
+3. Plakat: Nahaufnahme (System der Runde 40 "nahaufnahmen") an einer Wand im unteren Bereich bei den Ventilen, mit der
+   Anleitung (Reihenfolge Farbe + Nummer) — genau so falsch, wie das Dokument es beschreibt: Farben schwarz/gruen/rot
+   vertauscht, die Nummern der schwarzen Ventile getauscht. Bild als Port-Asset (im Dossier und fuer das Paket-Gate nennen).
+4. Raetsel: die echten Ventile (Nummern/Farben aus den 2030-Hintergruenden belegen, C_belege/nb3_ventile_lage_sheet.png)
+   in der richtigen Reihenfolge drehen; falsche Reihenfolge -> zurueckgesetzt (Form wie die Original-Raetsel 2060/11F0 mit
+   Beleg); die Loesung muss aus Plakat + Dokument + den sichtbaren Ventilen eindeutig ableitbar sein. Richtige Loesung ->
+   Warnung -> Flut wie bisher.
+5. Fuer den Nutzer (Dossier §7): Plakat-Bild, Dokument-Text, Loesung und Ableitung als Vorschlag zur Freigabe.
+6. Nachrichten-Ids: 2030 Ids 40-49 sind C's; werden mehr gebraucht, 2030 Ids 50-55 (VERTRAG 1.2 ergaenzt).

@@ -44,7 +44,7 @@ die Spur in `tests/unit/test_r36_kartenbits.c` k_port[] ein (eine Zeile) — 104
 
 ### 1.2 Nachrichten-Ids (Port-Text-Plaetze)
 Port-Ids liegen hinter den Original-Nachrichten eines Raums (ab 40; vorhandene per grep `MSG_ID`/Ids in include/ und
-gen/ ausschliessen). Zuteilung: **C**: 2000/20B0 (+Elza-Varianten) Id 40 (Leiter), 2030 Ids 40-49, 2050 Ids 40-44,
+gen/ ausschliessen). Zuteilung: **C**: 2000/20B0 (+Elza-Varianten) Id 40 (Leiter), 2030 Ids 40-49 (+ 50-55 fuer das Ventilraetsel, Nachtrag 13), 2050 Ids 40-44,
 2080 Ids 40-41 (ENTFALLEN mit Nachtrag 7 2026-10-24 09:22), 20B0/20B1 Id 41 + 2070/2071 Id 40 (Sperre des gefluteten 2030, Entscheid C-E2 2026-10-24 05:25); **F**: 2090/2091 Ids 42-46; **G**: 2080/2081 Ids 42-47 (42 = "Hey, Leon/Elza, try with this!",
 Stimmen `synchro/STAGE2/room2080/main42.wav` und `room2081/main42.wav` — im Dossier fuer den Nutzer nennen);
 **D/E/H/I/J/K/L/M**: nur vorhandene Nachrichten. Nutzer-Dateien unter synchro/ und pri/ werden NIE veraendert.
