@@ -158,7 +158,10 @@
  *   Fehlerton 0x0B (Form oben).
  * - Dokument "Technician's Note" (Nachtrag 13 Folge 2): Dokument 6 = Item 0x4E (re15_files.c, Bildsatz FILE31, Satz
  *   tools/r41_ventilkette/dokument_satz.py aus dem Nutzer-Text), Blatt am Boden neben der Sicherung (in 2030 gibt es keine
- *   Leiche), Taken-Bit (9,107) (Zensus: frei im Original und im Port). Weltmodell = RE2-Blatt mesh01 (ROOM2020.RDT).
+ *   Leiche), Taken-Bit (9,107) (Zensus: frei im Original und im Port). Weltmodell seit Nachbesserung 5 (Abnahme 4 Mangel 1:
+ *   das RE2-Blatt mesh01 flach am Boden war in 15 von 16 Kameras unsichtbar, in Cut 5 39 Pixel) ein Zettel AUFRECHT an der
+ *   Suedwand neben dem Schrank mit der Sicherung (Schrank = SCA Zelle 8 x -6100..-5600, Sicherung Slot 9 @0x01BAA x -5900..
+ *   -5100): Form des Aushangs (ein Viereck, Normale zur Kamera), Lage per Projektion in Cut 5 gemessen (Dossier §0f B5-6).
  * - Plakat (Nachtrag 13 Folge 3): Aushang an der Suedwand (Weltmodell obj 7) + Nahaufnahme = Port-Bild
  *   (gen/ventilkette_r41_plakat.inc, tools/r41_ventilkette/plakat.py) ueber die Vollbild-Ebene (main.c); Form der
  *   Nahaufnahmen der Runde 40 (Pad-Sperre ROOM1051 sub03 @0x00DA4 .. @0x00DD2), schliessen mit der Bestaetigen-/
@@ -368,10 +371,15 @@
 #define RE15_R41C_DOK_NR          6      /* re15_files.c s_docs[6]                                           */
 #define RE15_R41C_DOK_ITEM        0x4E   /* 0x48 + 6 (RE2 @0x80071d04, RE1.5-Basis u8 @0x800c7370)          */
 #define RE15_R41C_DOK_OBJ         6      /* nOmodel 4, obj 4/5 = Wasser                                      */
-#define RE15_R41C_DOK_X           (-4600)
-#define RE15_R41C_DOK_Y           (-1800) /* Sued-Landeplatz Band 1 (Zelle 16)                               */
-#define RE15_R41C_DOK_Z           7150
-#define RE15_R41C_DOK_RECT        -5100, 6650, 1000, 1000   /* buendig neben der Sicherung Slot 9 (x -5900..-5100) */
+/* Nachbesserung 5 (Mangel 1): Zettel 500 x 700 an der Suedwand (Wandflaeche z 7900 = Innenkante SCA Zelle 7 @0x008EC) zwischen
+ * dem Schrank mit der Sicherung (x <= -5600) und dem Warnpfosten (x ~-4400), Mitte (-4850,-3950,7880): ueber dem Handlauf der
+ * unteren Reling wie der Aushang (Mitte y -3900); projiziert in Cut 5 (Kamera des Sued-Landeplatzes, RID @0x00100)
+ * Bild x 105..118 y 73..93, ueber dem Handlauf (Messung §0f B5-6). Platz = Wandflaeche +- 500 (Form der Ventil-/Pult-
+ * Plaetze), x -5100..-4600: grenzt an die Sicherung (x <= -5100) und laesst den Plakat-Platz (x >= -4100) frei. PORT-WAHL. */
+#define RE15_R41C_DOK_X           (-4850)
+#define RE15_R41C_DOK_Y           (-3950)
+#define RE15_R41C_DOK_Z           7880
+#define RE15_R41C_DOK_RECT        -5100, 7400, 500, 1000    /* Wandflaeche z 7900 +- 500, x -5100..-4600 */
 /* Plakat (Nachbesserung 4, Nachtrag 13 Folge 3; Dossier §0e B4-5). */
 #define RE15_R41C_PLAKAT_OBJ      7
 #define RE15_R41C_PLAKAT_X        (-3650)  /* Suedwand zwischen dem gelb-schwarzen Pfosten (x ~-4400) und Ventil 09 */

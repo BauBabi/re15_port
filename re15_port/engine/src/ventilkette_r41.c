@@ -797,8 +797,7 @@ const uint32_t *re15_ventilkette_r41_plakat_rgba(void)
     if (!s_plakat_offen) return NULL;
     if (!s_plakat_dekodiert) {
         for (int i = 0; i < RE15_R41C_PLAKAT_W * RE15_R41C_PLAKAT_H; i++) {
-            const uint8_t b = re15_r41c_plakat_4bpp[i >> 1];
-            const int v = (i & 1) ? (b >> 4) : (b & 15);
+            const int v = re15_r41c_plakat_8bpp[i];          /* Nachbesserung 5: 8 bpp, 256 Farben (Stil des Spiels) */
             const uint8_t *c = &re15_r41c_plakat_pal[v * 3];
             s_plakat_rgba[i] = ((uint32_t)c[0] << 24) | ((uint32_t)c[1] << 16) | ((uint32_t)c[2] << 8) | 0xFFu;
         }

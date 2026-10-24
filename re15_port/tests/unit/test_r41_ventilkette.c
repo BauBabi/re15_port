@@ -1374,18 +1374,18 @@ static void fall_m(uint16_t r)
     /* Dokument: Item-Zone Slot 20 (Item 0x4E, Bit 107, Weltmodell obj 6) neben der Sicherung -> der Leser wird angefordert */
     bits_leeren();
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
-    if (raum_hoch(r, -4600, -1800, 6400) != 0) { PRUEFE(0, "Parse"); return; }
+    if (raum_hoch(r, -4850, -1800, 7280) != 0) { PRUEFE(0, "Parse"); return; }
     const re15_aot_t *dz = &g_aot.slots[RE15_R41C_SLOT_DOKUMENT];
     const re15_aot_item_params_t *ip = &g_aot.item_params[RE15_R41C_SLOT_DOKUMENT];
     int pd = prop_von_obj(RE15_R41C_DOK_OBJ);
     PRUEFE(dz->active && dz->type == RE15_AOT_TYPE_ITEM && ip->item_type == RE15_R41C_DOK_ITEM && ip->taken_bit == RE15_R41C_BIT_DOKUMENT &&
-           ip->taken_prop == RE15_R41C_DOK_OBJ && dz->x == -4600 && dz->z == 7150 && dz->band == 1 &&
+           ip->taken_prop == RE15_R41C_DOK_OBJ && dz->x == -4850 && dz->z == 7900 && dz->band == 1 &&
            pd >= 0 && g_scd.props[pd].x == RE15_R41C_DOK_X && g_scd.props[pd].y == RE15_R41C_DOK_Y && g_scd.props[pd].z == RE15_R41C_DOK_Z,
            "ROOM%04X: Dokument-Zone Slot 20 (Item 0x%02X Bit %d obj %d, Mitte (%d,%d)) + Blatt obj 6", r, ip->item_type, ip->taken_bit,
            ip->taken_prop, (int)dz->x, (int)dz->z);
     if ((r & 1) == 0) {   /* der Menue-Lauf bleibt ohne Menue-Takt angefordert -> nur im ersten (Leon-)Durchgang messbar */
         const int vorher = re15_menu_doc_active();
-        L = druecken(-4600, 6400, 3072, 0, 30);
+        L = druecken(-4850, 7280, 3072, 0, 30);   /* Nachbesserung 5: Zettel an der Suedwand, Blick +z */
         PRUEFE(vorher == 0 && re15_menu_doc_active() == 1,
                "ROOM%04X: Aktion am Blatt fordert den Dokument-Leser an (Item 0x4E -> Dokument 6; vorher %d)", r, vorher);
     }
@@ -1394,13 +1394,15 @@ static void fall_m(uint16_t r)
     { int n = 0, t = 0;
       const uint8_t *m = re15_ventilkette_r41_md1_bytes_k(2, &n); const uint8_t *tb = re15_ventilkette_r41_tim_bytes_k(3, &t);
       re15_md1_t md; memset(&md, 0, sizeof md);
-      PRUEFE(m && n == 404 && tb && t > 20 && re15_md1_parse(m, n, &md) == 0, "Blatt-MD1 404 B (RE2 ROOM2020 mesh01) + Aushang-TIM");
+      PRUEFE(m && tb && t > 20 && re15_md1_parse(m, n, &md) == 0 && md.mesh_count == 1 && md.meshes[0].quad_count == 1 &&
+             md.meshes[0].quad_normals[0].z == -4096,
+             "Dokument-Zettel (Nachbesserung 5): ein aufrechtes Viereck, Normale (0,0,-4096) zur Kamera + Aushang-TIM");
       m = re15_ventilkette_r41_md1_bytes_k(3, &n); memset(&md, 0, sizeof md);
       PRUEFE(m && re15_md1_parse(m, n, &md) == 0 && md.mesh_count == 1 && md.meshes[0].quad_count == 1 && md.meshes[0].quad_normals[0].z == -4096,
              "Aushang-MD1: ein Viereck, Normale (0,0,-4096)"); }
     /* mit Bit 107 (genommen): weder Zone noch Blatt */
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DOKUMENT);
-    if (raum_hoch(r, -4600, -1800, 6400) != 0) { PRUEFE(0, "Parse"); return; }
+    if (raum_hoch(r, -4850, -1800, 7280) != 0) { PRUEFE(0, "Parse"); return; }
     PRUEFE(!g_aot.slots[RE15_R41C_SLOT_DOKUMENT].active && prop_von_obj(RE15_R41C_DOK_OBJ) < 0, "ROOM%04X mit Bit 107: kein Dokument mehr", r);
     /* Plakat: Slot 21 vor dem Aushang (Suedwand) -> Nahaufnahme offen, Pad-Sperre + KI steht; Bestaetigen schliesst */
     int pp = prop_von_obj(RE15_R41C_PLAKAT_OBJ);
