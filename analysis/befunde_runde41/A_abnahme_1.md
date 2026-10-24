@@ -23,7 +23,7 @@ scratchpad/A41abn1/` (Logs, Bilder, Sonden, Laufordner `mess/<lauf>/`; unten kur
 - `ctest -R "^unit_r41_wasser20b0_" --timeout 600` -> `100% tests passed, 0 tests failed out of 9`; Einzellaeufe des Binaers:
   bytes 49/0, modell 4/0, sequencer 16/0, raum 18/0, landung 6/0, npc 90/0, npc_wasser 30/0, stempel 7/0, npc_subs 9/0
   (Pruefungen/Fehler) = 229 Pruefungen, 0 Fehler.
-- (weitere Laeufe folgen unten)
+- (Integrationsketten der beruehrten Module: Abschnitte 5 und 7)
 - `ctest -R "^integration_r41_wasser20b0(_npc)?$" --timeout 1800 -V` (04:09-04:13, sequentiell) -> `100% tests passed, 0 tests failed
   out of 2`: integration_r41_wasser20b0_npc Passed 115.73 s (`npc2000: Spawns 0x42=1 0x40=1; Schritte Slot 1 (0x42, Clip 5) = 8,
   Slot 2 (0x40, Clip 5) = 8, Toene >= 0: 1`; `landung_leon: Landungen 1, fx-Zeilen id=6 sub=3: 104`; `landung_elza: Landungen 1,
@@ -223,7 +223,7 @@ gruen-weisser Spritzerkranz um Leon F82-F88 (Stempel -900 des WATER-Satzes < y 0
 - Parallel-/Linux-Festigkeit der neuen Riegel: eigene Laufordner + exe-Kopie mit Praefix (Muster test_r34n_b_cursor.cmake),
   cmake_minimum_required, probes-cmake linkt `m` ausser WIN32. OK.
 
-## 7. Nebenwirkungen: weitere Integrationslaeufe (selbst gefahren, 04:36-05:xx, Last durch parallele Agenten)
+## 7. Nebenwirkungen: weitere Integrationslaeufe (selbst gefahren, 04:36-05:31, Last durch parallele Agenten)
 - Kette 1 (Abschnitt 5, `-j 2`): Passed r38_rolltor20a0 282.95 s, r38_rolltor20a0_abe 194.94 s, r36_klettern 535.28 s,
   r36_szenenleon 161.71 s, r38_werkstatt11b0 154.36 s, r38_wasserzombie 125.97 s, r38_wasser 175.52 s, r37_szene11c0 120.61 s,
   r37_roy_leon1170 58.69 s (an d77bf72a rot, jetzt gruen), r36_gegnerzahl 88.06 s, r36_pri_schatten 27.81 s,
@@ -238,7 +238,8 @@ gruen-weisser Spritzerkranz um Leon F82-F88 (Stempel -900 des WATER-Satzes < y 0
 - Kette 3 (exakte Namen der Sammel-Riegel, `-j 1`): `-R "^integration_(r39_stimmen_1050|r39_stimmen_1150|r39_stimmen_11b0|
   r39_stimmen_1171|r39_johnruf1041_tuer_t1041|..._t1041o|..._t1051|..._t1051o|..._t11b1|..._t11b1d|r38_affen3_tor)$"` ->
   `100% tests passed, 0 tests failed out of 11`.
-- Kette 4 (lange Riegel mit 4-Werte-RE15_PLAYER_POS, `-j 2`): r37_itemband Passed 830.19 s; r36_dachkiste s.u.
+- Kette 4 (lange Riegel mit 4-Werte-RE15_PLAYER_POS, `-j 2`, 05:07-05:31): r37_itemband Passed 830.19 s, r36_dachkiste Passed
+  1391.86 s -> `100% tests passed, 0 tests failed out of 2`.
 
 ## 8. Urteile je Nutzer-Punkt (gegen den Wortlaut)
 ### Punkt 1 — "Runde 41 startet mit dem Wasserschwall in 20B0 im Original ... in unserem Port noch kaputt" -> ERFUELLT
@@ -269,8 +270,9 @@ per Orchestrator-Entscheid (04:01) in die naechste Runde verschoben.
 ## 9. Gates
 - RE-Gate: HAELT (2.; alle Stichproben enthalten das Behauptete; PORT-WAHL gekennzeichnet; keine Guess-Tells).
 - Vertrag: HAELT (6.; Pfade, Bits, Ids; Haken klein und markiert; main.c per A-E3).
-- Tests: 9/9 Spur-Units, 925/925 Unit/Probe/Prop, Spur-Integration 2/2 gruen; **eine Regression: integration_r35_granate rot**
-  (5., Ursache RE15_ACTOR_MAX 36 dieser Spur, deterministisch). Riegel fuer die Schritt-Toene messen nur den Index (6.).
+- Tests: 9/9 Spur-Units, 925/925 Unit/Probe/Prop, Spur-Integration 2/2, Nebenwirkungs-Integration 16/17 + 10/10 + 11/11 +
+  2/2 (r37_itemband, r36_dachkiste) = 39/40 gruen; **eine Regression: integration_r35_granate rot** (5., Ursache RE15_ACTOR_MAX 36
+  dieser Spur, einzeln reproduziert). Riegel fuer die Schritt-Toene messen nur den Index (6.).
 - Erklaert der Fix den Befund? Punkt 1 ja (Mechanik + Pool + FB). Punkt 2b-Toene nein: der Index wird gerechnet, der Ton spielt nicht.
 - **bestanden = NEIN.**
 
@@ -289,7 +291,10 @@ M2 (Entscheid A-E4, Abnahmepunkt der Spur A): Lautstaerke/Richtung der (NPC-)Sch
    Blickrichtung (Kamera->Ziel +0x10/+0x18) @0x80045b70-bc, vorn/hinten beide 0x89 @0x80045c0c-1c, sonst Tabelle @0x80074728
    @0x80045c88-94, Ablage DAT_800b2824/26 -> Stimmsatz +14/+16 @0x80045888-a4)
    nicht gebaut: re15_audio_footstep(foot, type) ohne Lage, `vol_r_q15 = 0` (mono), kein Haken in audio_pc.c, keine Messzeile je Schritt,
-   kein Pin in 2000. (Haengt an M1: in 2000 spielt fast kein NPC-Schritt.)
+   kein Pin in 2000. (Haengt an M1: in 2000 spielt fast kein NPC-Schritt.) Rechenbeispiel aus dem Disasm (NICHT gemessen; Annahme:
+   Cut 2 aktiv seit `Cut_chg(2)` F1565, RID @0x60 Cut 2 pos (1926,-4590,-25164)): Abstandsterm sqrt((cam.y-|dy|)^2 + dxz^2)/250 =
+   50 fuer den hoerbaren Schritt F1816 (Marvin bei x -8312) und 115 fuer F1908/F1979 (x -25900) - der Port spielt alle drei gleich
+   laut (Code: Lautstaerke nur aus dem Ton, alle drei = type 22 -> vag 5).
 M3 (Regression dieser Spur): integration_r35_granate rot - `r35_granate [gator]: Boss-Slot 20 fehlt im Zustandslog (Bild 59/60)`;
    main.c setzt den Alligator auf den hoechsten freien Platz ab RE15_ACTOR_MAX-1, seit RE15_ACTOR_MAX 36 = Slot 35 (debug.log
    `Alligator (0x23) in Wasserzone gesetzt, Slot 35`, state.log `[35 t=23 ...]`), der Riegel erwartet fest 20 (test_r35_granate.cmake
