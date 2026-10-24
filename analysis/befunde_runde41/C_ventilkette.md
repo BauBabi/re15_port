@@ -484,6 +484,85 @@ Messungen der Abnahme 2 (`C41abn2/mess/*`, im Bericht `<a2>`) und der Nachbesser
 * N1 (Nachtrag 7): der Weg nach der Flut zu Fuss (Leon UND Elza) mit Riegel; unit J und integration `_weg` neu fassen.
 * H-a: durch Nachtrag 10 entschieden (Nutzer: "Flut erst mit Sicherung") -> umgesetzt mit N4.
 
+### RE-Belege der Nachbesserung 3 (selbst aus den Bytes/Bildern gelesen, VOR dem Code)
+Werkzeuge scratchpad `r41c_nb3/`: `bits_nb3.py` (Flag-Zensus aller ROOM*.RDT mit dem Walker von tools/scd_dump_room.py +
+ROH-Gegenprobe), `sca2030.py` (SCA-Zellen + Kameras), `overlay2030.py` (SCA-Bodenzellen in die BSS-Bilder projiziert,
+Kameramathematik tools/maske/geom.build_view), `reling.py` (Gelaender-Hoehen), `md1_2080.py` (Wassermodell 2080).
+ROOM2031 ist mit ROOM2030 Byte fuer Byte gleich (282076 B, 0 Abweichungen) -> alle 2030-Offsets gelten fuer Elza.
+
+**B1 Strom (3,0x7E) — Zensus aller RDTs (`bits_nb3.py`, 0 ROH-Funde ausserhalb gewalkter Opcodes):**
+* Setzer NUR ROOM2060/2061 sub01 @0x012AE `22 03 7e 01` (hinter der Loesungspruefung @0x01296 `21 03 7e 00`, @0x0129A
+  `21 05 06 01`, @0x0129E `21 05 07 00`, @0x012A2 `21 05 08 01`, @0x012A6 `21 05 09 00` = Schalter 1,0,1,0, und Evt_exec
+  sub13 @0x012AA: msg 2 "It seems that the generator is working now."). **Kein Loescher** (kein `22 03 7e 00`/`07` in
+  irgendeinem Raum) -> einmal gesetzt bleibt (3,126) gesetzt.
+* Leser: ROOM2030/2031 sub01 @0x01E10 `06 00 1a 00` / @0x01E14 `21 03 7e 00` -> @0x01E18 `46 05 01 31 01 00 ff ff 00 00`
+  und @0x01E22 `46 07 01 31 01 00 ff ff 00 00` (ohne Strom sind die unteren Lift-Rufzonen Slot 5 (Lift A) und Slot 7
+  (Lift B) Text msg 1; sub01 laeuft jedes Spielbild, FUN_8003f038, Abnahme 2 G1); ROOM2060 sub00 @0x01066, sub01 @0x01296.
+* => **Wahl (Nachtrag 7 "Bit 107 mit dem Strom setzen ODER Zustand direkt an (3,0x7E)"): der Zustand haengt DIREKT an
+  (3,126)** — dasselbe Bit, mit dem das Original in 2030 die Lifte einschaltet; da es nie geloescht wird, ist es selbst
+  der Riegel. Bit 107 wird nicht mehr gebraucht (frei, k_port[]-Zeile entfaellt). Vor der Flut ist 2060 nie erreichbar
+  (Leiter-Sperre bis Bit 100, Abnahme 2 L10) -> bei der Flut gilt immer (3,126)=0; "geflutet" = Bit 103 und (3,126)=0,
+  "auf Relinghoehe" = Bit 103 und (3,126)=1.
+* Rechner 2080 = nur Original: sub00 @0x00C02 `21 03 f5 00` -> Slot 4 Ereignis 2 @0x00C1A, sub02 @0x00C86..@0x00CF1
+  (Frage msg 0, Set(3,245) @0x00C94, Tuer Slot 1 nach 2090 an @0x00CAC, Wasser For 148 @0x00CCC) — unveraendert; die
+  Port-Programme `2080_rechner_erw`/`_nur2030` und Text 2080 Id 40 entfallen.
+
+**B2 Relinghoehe (SCA ROOM2030 @0x880, Kopf `50 da 0e cb`, 5 Regionen x 76 Zellen, je 12 B w,d,x,z,typ,u0,u1,fl; Band = fl >> 4):**
+* Gelaender des UNTEREN Bereichs = Wandzellen Band 1 (fl 0x11, u1 00): Zelle 3 @0x008BC (Steg West x -2550..-2050),
+  Zelle 4 @0x008C8 (Steg Ost x -50..450), Zelle 5 @0x008D4 / Zelle 10 @0x00910 (Sued-Landeplatz, z 5850..6350), Zelle 11
+  @0x0091C (Nord-Landeplatz, z -6900..-6400). Boeden des unteren Bereichs (u1 01, fl 0x01 = Band 0..1): Zellen 13-17
+  @0x00934..@0x00964 (Nord-Landeplatz x -2550..5000 z -8500..-6900, Steg, Sued-Landeplatz x -5600..4800 z 6350..7900).
+* Ring = Bodenzellen u1 01 fl **0x23** (Band 2..3): Zellen 36-41 @0x00A48..@0x00A84 (NW-Balkon, Nord-, Ost-, Sued-Streifen,
+  SW, West-Gang zu Lift B); Ring-Reling = Wandzellen Band 3 (fl 0x33): 19 @0x0097C (Ost, x 5400..5900), 20 @0x00988 (Nord,
+  z -9000..-8500), 21 @0x00994 (Sued, z 8150..8650), 22 @0x009A0 (SW, x -6350..-5850), 31 @0x00A0C / 32 @0x00A18 (NW-Balkon).
+* Hoehe der unteren Gelaender im BILD gemessen (`reling.py`, Bildbogen **C_belege/nb3_reling_hoehe_sheet.png**): die
+  Wandzellen 11 (Cut 3), 10 (Cut 5) und 5 (Cut 6) bei 0/600/900/1200/1500/1800 ueber dem Landeplatz y -1800 projiziert —
+  der Fuss liegt auf 0 (weiss), der obere Handlauf auf **+1800** (magenta) = **y -3600 = Band 2**.
+* Dasselbe Mass im selben Stage, Original: ROOM2050 Wasser obj 0 nach dem Kisten-Raetsel y **-3600** @0x01F88 (Laufebene
+  dort -5400) = 1800 unter dem Steg. Und die Ring-Bodenzellen beginnen bei Band 2 (fl 0x23).
+* => **Ruhepegel nach dem Strom y -3600** (Oberkante der unteren Reling = Band 2): Ring (-5400) 1800 darueber trocken,
+  Landeplaetze/Steg/Tank (-1800) 1800 unter Wasser (Kopfhoehe) = "nur noch der untere Bereich geflutet".
+* Die Wasserflaeche darf nur die SCHACHTOEFFNUNG decken (das BSS hat keine Tiefe — unter dem Ring gezeichnet laege sie
+  im Bild auf dem Ringboden): Innenkanten der Ring-Reling: R1 x -4200..5400 z -8500..-6400 (Nordwand z -8500 = Zelle 20,
+  Ost x 5400 = Zelle 19; West bis x -4200, weil dort die Treppe Slot 8 (x -6050..-2350, von -5400 auf -1800) UEBER dem
+  Pegel liegt), R1b x -5400..-4200 z -6900..-6400 (suedlich der Treppe bis zur Balkon-Reling Zellen 31/32), R2 x -7700..5400
+  z -6400..2450 (West bis zur Aussenwand x -7700 = Zellen 26/27, Zelle 31 Suedkante z -6400, Zelle 23 Nordkante z 2450),
+  R3 x -5850..5400 z 2450..8150 (Zelle 22 Innenkante x -5850, Zelle 21 Innenkante z 8150). Vorschau der Flaeche in den
+  Kameras (Projektion, nicht das Spiel): scratchpad `r41c_nb3/poly_a.png`/`poly_d.png`.
+* Modell der Flaeche = ROOM2080 Prop 0 (MD1 @0x000D98, `md1_2080.py`): 1 Netz, 130 Ecken (13 x 10 Gitter, Schritt 1800),
+  108 Vierecke, 1 Normale (0,-4096,0), EIN gemeinsamer UV-Satz `7f 7e 00 78 7f 00 80 00 00 7e 00 00 00 00 00 00` (eine
+  Kachel je 1800 x 1800-Viereck, Seite 0x0080, CLUT 0x7800). Fuer die Oeffnung wird ein Netz im SELBEN Format erzeugt
+  (gen/*.inc, Generator): Vierecke <= 1800 x 1800 ueber R1/R1b/R2/R3, je eine Kachel mit diesem UV-Satz, dieselbe TIM.
+* Unterer Bereich gesperrt: der EINZIGE Weg vom Ring hinab ist die Treppe Slot 8 @0x01B8E `2c 08 0c 31 80 00 5e e8 30 df
+  74 0e 78 05 01 00 02 00 00 00` (sce 12, Band 0x80 = jedes Band, FUN_80042cac); einziger sce-12-Satz in 2030; Lift A
+  faehrt Ring <-> Buero (Band 6), Lift B Ring <-> Suedgalerie (Band 9). Sperre = Text-Platz im Treppen-Rechteck (Form der
+  Leiter 2000 / ROOM2030 @0x01B12), Band 3 (nur vom Ring aus).
+* Gegenstaende im unteren Bereich (fuer den Nutzer): Slot 9 @0x01BAA Ereignis 6 = die **Sicherung** (nur solange
+  (3,108)=0, @0x01BA6) und Slot 10 @0x01BC0 `50 0a 09 31 01 00 fe 10 fa 19 20 03 e8 03 16 00 0e 00 6c 00 ff 00` =
+  Item_aot_set **Item 0x16 "Shotgun Shells" x14** (Taken-Bit (9,108) = pc[18] 0x6c; Name re15_inhalt_r35.h, DEBUG.BIN
+  @0x4988), beide Band 1 am Sued-Landeplatz. Slot 11 @0x01BD6 (Item 0x0d x12) liegt im Buero (Band 6), nicht unten.
+
+**B3 Lage der nummerierten Ventile (Nachtrag 9) — aus den Hintergruenden (Bildbogen C_belege/nb3_ventile_lage_sheet.png:
+BSS-Cuts mit den projizierten SCA-Bodenzellen, gruen = Band 1, cyan = Band 3):**
+* Cut 3/14 (Kamera (-2805,-4065,187), Blick Nord): Schilder **01 02 03** mit Ventilraedern an der Nordwand des Schachts,
+  UEBER dem Nord-Landeplatz (Zelle 13), unter dem Ring (Zellen 20/37 oben im Bild). Cut 4 (Draufsicht) und Cut 1 dasselbe.
+* Cut 0/15 (Ring, Blick Ost): **04 05 06** an der Ostwand UNTER der Ring-Reling (Zelle 19), ueber dem Becken.
+* Cut 5/6/7: **07 08 09** mit Ventilraedern an der Suedwand UEBER dem Sued-Landeplatz (Zelle 16); Rueckprojektion auf die
+  Wandflaeche z 7900 (Zelle 7 Innenkante): Schild 09 x ~-2500, rotes Rad x ~-2670, gruenes Rad x ~200..420, 08 x ~1300,
+  07 x ~4400 (`ruecks.py`).
+* Cut 2: **13** am Tank neben dem Treppenfuss (= Ventil 13, Zelle 2).
+* => Die Ventile liegen ALLE im unteren Bereich, keines am Ring. Der bisherige Platz (Ring-Ost-Streifen x 4900..6300
+  z -2000..1500 Band 3 = UEBER den Schildern 04/05/06) lag falsch. **Nachtrag 9: der Ausloeser gehoert dorthin** — an die
+  Suedwand vor 09/08 (Sued-Landeplatz, nur ueber den Steg = mit gesenkter Bruecke erreichbar; die Nordwand 01-03 erreicht
+  man ueber die Treppe auch ohne Bruecke). Rechteck x -3400..1600 z 7400..8400 Band 1 (Wandflaeche z 7900 +- 500 wie der
+  Pult-Platz an der Nordwand; frei von Slot 9 x -5900..-5100 und Slot 10 x 4350..5150).
+* Nachtrag 10: Sicherung aufgehoben = **(3,108)** — Setzer nur ROOM2030/2031 sub06 @0x01FF2 `22 03 6c 01` (Ja auf msg 2
+  "Will you take the Fuse?", dann Aot_reset Slot 9 @0x01FF6 + msg 3 "You've taken the Fuse."), Leser 2030 main00
+  @0x01BA6 (Platz nur bei 0) und ROOM2060 sub00 @0x010A2 (Sicherungskasten: ohne (3,108) msg 3 "One of the fuses is
+  missing...", mit (3,108) und ohne (3,144) Ereignis 18 "Will you use the Fuse?", sub19 @0x0169E Set(3,144)); kein
+  Loescher. Das ist das Taken-Bit (sub06 legt kein Inventar-Item an); es bleibt 1, auch wenn die Sicherung in 2060
+  eingesetzt ist. Bedingung des Ventilraetsels = Bit 102 UND (3,108); vorher Port-Text Id 49 (Vorschlag).
+
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
 Alle Datei-Offsets beziehen sich auf `re15_port/shared_assets/PSX/STAGE2/ROOMxxxx.RDT` (Leon); die Elza-Varianten
