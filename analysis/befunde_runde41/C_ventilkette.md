@@ -121,6 +121,11 @@ Riegel unit J, integration_r41_ventilkette_weg.
 Generator 2060 bis auf Relinghoehe (y -3600, nur Schachtoeffnung) leer, Ring-Tueren dann offen, Treppe hinab gesperrt (Text 48),
 Rechner 2080 nur Original; Ventilraetsel am Sued-Landeplatz erst mit Bruecke (Bit 102) und Sicherung (3,108), sonst Text 49;
 der ganze Weg nach der Flut zu Fuss mit Leon und Elza. Riegel unit K/L (+E/G/I neu), integration _weg/_weg_elza/_sperre.
+**Nachbesserung 4 (§0e, Nachtraege 12/13):** Punkt 3 = das echte Ventilraetsel (sechs Ventile an den Raedern, Folge 09/07/02/01,
+Pruefung nach der vierten Drehung, falsch -> zurueck + Text 45; Dokument "Technician's Note" + Plakat mit der falschen
+Anleitung; Text 49 neutral); Punkt 6 / Nachtrag 12 (k): Pegel mit Strom y -5350 knapp unter der Absperrung; Ketten-Riegel
+auf der heutigen Kette (Mangel 1). Riegel unit M (+A/C/D/E/K/L angepasst), integration Haupt A/C/D, _weg/_weg_elza
+v2a/v2b/v2d/v2p, _b i2/l2, _kette.
 
 ## 0b. Nachbesserung 1 (Abnahme 0 vom 2026-10-24, `C_abnahme_0.md` §4) — je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher
 
@@ -917,6 +922,24 @@ Dokument, weiss Sicherung).
 **Mangel 2 (niedrig, Doku) — veraltete Saetze.** §7 "Sichtprobe ... am Ring vor den Ventilen" und "Der Rechner selbst senkt
 2080 und leert 2030" berichtigt (§7), probes/r41_ventilkette.cmake Kopf (Z. 2) und Teil-B-Kommentar (Z. 30) auf den Stand
 Nachtraege 7/8/12/13 gebracht.
+
+### Tests der Nachbesserung 4 (gezielt, im Spurbaum; KEINE volle Suite)
+* Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)` (zuletzt nach 56b0eaa8; keine neue .c-Datei,
+  also kein configure noetig; die probes-Datei zieht ninja selbst nach).
+* `unit_r41_ventilkette` direkt: `PASS (446 Pruefungen)` (Leon + Elza; neu Fall M, angepasst A/C/D/D2/E/K/L).
+* Unit-Gruppe: `ctest --test-dir re15_port/build -R "<scratchpad nb4/regex_unit.txt>" --timeout 600 -j 4` (Regex der
+  Nachbesserung 3 + die Gruppen der beruehrten Module re15_files.c / Dokumente / Inventar / Klettern:
+  `unit_inv_fsm|unit_r26_inventar|unit_r30_.*|unit_r35_inhalt_.*|unit_r36_schluessel_.*|unit_r36_story_.*|unit_r37_feuerloescher_.*|
+  unit_r38_itemorte.*|unit_r39_inventar.*|unit_re2doc_bildebene|unit_climb.*|unit_r36_klettern.*`) ->
+  **`100% tests passed, 0 tests failed out of 228`** (Total Test time (real) = 68.25 sec).
+* Integration r41, erster Lauf (16:14-16:58, `-R "^(integration_r41_ventilkette|integration_r41_ventilkette_b|
+  integration_r41_ventilkette_weg|integration_r41_ventilkette_weg_elza|integration_r41_ventilkette_sperre)$" --timeout 2700`):
+  `integration_r41_ventilkette_b Passed 538.96 sec`, `integration_r41_ventilkette_sperre Passed 301.53 sec`; Haupt-Riegel und
+  `_weg`/`_weg_elza` scheiterten an zwei Fehlern IM RIEGEL (nicht im Spiel): C endete erst nach dem Titel-Neustart (Tod F3650,
+  Todesschirm F3762, Titel nach F3911 -> das Ende F3960 wurde nie erreicht und das zweite Spiel ueberschrieb die Dumps
+  F3400..F3898), v2d/v2p schrieben ihre Framedumps mit `${WORKDIR}` des VORIGEN Laufs. Bis dahin bestanden: A, B, C bis
+  "ERTRUNKEN" (Zaehler 1801 / Tod 125 aus state.txt nachgerechnet), v1/v2a/v2b je Leon und Elza, v2d "abgelegt: Bit (9,107) = 1".
+  Korrigiert (f3173450, 56b0eaa8): Ende F3850, Dump-Fenster F3500..F3840, relative Dump-Pfade.
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
