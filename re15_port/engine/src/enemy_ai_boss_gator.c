@@ -1409,7 +1409,13 @@ static void gb_takt(int slot)
      *      dann als SCHUB: je Takt GB_SWIM_SPEED (der Schritt der bisherigen Befreiung) zum Ausgang, Gier unveraendert, Klemme
      *      ausgesetzt (befrei), bis der Ausgang erreicht ist. Form = die Wand-Klemme selbst (verschiebt nur die Lage). */
     if (g->befrei > 0) g->befrei--;
-    if (g->befrei_schub && gb_befrei_schritt(e, g)) return;
+    if (g->befrei_schub) {                    /* laufender Schub nur in denselben Lagen, in denen er beginnen darf (s.u.) - ein
+                                              * Treffer (R1/R4), das Untertauchen oder die Kanister-Aufnahme bricht ihn ab */
+        if (!g->untergetaucht && !re15_gr2_aufnahme_lenksperre(slot)
+            && (g->phase == GBP_LURK || g->phase == GBP_CHASE || g->phase == GBP_GUARD)) {
+            if (gb_befrei_schritt(e, g)) return;
+        } else g->befrei_schub = 0;
+    }
     if (!g->untergetaucht                     /* Nachbesserung 3 (B9): RE2 Sub 0 P0 bewegt nichts */
         && !re15_gr2_aufnahme_lenksperre(slot)   /* Nachbesserung 3 (M2): kein Snap der Gier vor dem Anhaengen */
         && (g->phase == GBP_LURK || g->phase == GBP_CHASE || g->phase == GBP_GUARD)) {
