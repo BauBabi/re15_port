@@ -170,3 +170,25 @@ int re15_spinnenanim_r41_letzte_pose(const re15_actor_t *e, int *clip, int *bild
     if (bild) *bild = m->bild;
     return 1;
 }
+
+/* ---- Schatten der Spinne -------------------------------------------------------------------------------------
+ * INIT: FUN_8001af5c(0, 0, 0x514, 0x578, Figur+0xb0, 0x00808080) — `ori a2,zero,0x514` @0x80110d78, `ori a3,zero,0x578`
+ * @0x80110d84, `addiu v0,v0,176` @0x80110d8c, `jal 0x8001af5c` @0x80110d90 -> Record+0xc/+0xe = 1300/1400
+ * (RE_15_Quellcode_V2/FUN_8001af5c.c: `*(param_5+0xc) = param_3`, `*(param_5+0xe) = param_4`).
+ * Je Takt am Ende der Wurzel: `lh a1,442(v0)` @0x80110b4c / `jal 0x8001b064` @0x80110b50 (a0 = Figur+0xb0)
+ * -> FUN_8001b064 zeichnet das Viereck +-Record+0xc x +-Record+0xe auf der Hoehe a1 = +0x1ba (Boden-Referenz), nicht
+ * auf der Figur-Hoehe. Gemessen (DuckStation-GDB, Figur+0xb0..+0xbf): Takt 1..150 [.., 1300, 1400] unveraendert,
+ * +0x1ba -3600 im Schacht, 0 ab Phase 2 (Takt 93) -> der Schatten faellt beim Uebergang auf die Wand auf den Boden. */
+#define SPINNE_SCHATTEN_X 0x514   /* @0x80110d78 */
+#define SPINNE_SCHATTEN_Z 0x578   /* @0x80110d84 */
+void re15_spinnenanim_r41_schatten_groesse(const re15_actor_t *e, int32_t *hx, int32_t *hz)
+{
+    if (!e || e->type != SPINNE_TYP) return;
+    if (hx) *hx = SPINNE_SCHATTEN_X;
+    if (hz) *hz = SPINNE_SCHATTEN_Z;
+}
+void re15_spinnenanim_r41_schatten_y(const re15_actor_t *e, int32_t *y)
+{
+    if (!e || e->type != SPINNE_TYP || !y) return;
+    *y = (int32_t)e->dog_floor_y;   /* +0x1ba (Sce_em_set `sh v0,442(s0)` @0x80042210, Phase 2 `sh zero,442` @0x80115044) */
+}

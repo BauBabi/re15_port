@@ -174,6 +174,7 @@ try:
             rx, ry, rz = struct.unpack_from("<3h", e, 0x68)
             m = struct.unpack_from("<9h", e, 0x20)
             parts = struct.unpack_from("<I", e, 0x188)[0]
+            zeile += " w0=%08x sh[%s]" % (struct.unpack_from("<I", e, 0)[0], ",".join(str(v) for v in struct.unpack_from("<8h", e, 0xb0)))
             zeile += " | e%d t%02x s%d/%d/%d/%d g%02x @%d,%d,%d r%d,%d,%d c%d/%d f8f=%d gy%d M[%s]" % (
                 a.slot, e[8], e[4], e[5], e[6], e[7], e[9], x, y, z, rx, ry, rz, e[0x94], e[0x95], e[0x8f],
                 struct.unpack_from("<h", e, 0x1ba)[0], ",".join(str(v) for v in m))

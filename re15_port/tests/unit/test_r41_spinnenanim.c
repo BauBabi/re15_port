@@ -14,6 +14,8 @@
  *          belegt (Dossier 4/5)
  *       A4 Gegenprobe: der Zeichenweg VOR Runde 41 (nur Gier, ohne Massstab, Bild nach dem Vorschub) verfehlt das
  *          Original in den Wand-Takten 93..132 und im Umbruchtakt 93 (Beweis, dass A1-A3 die Mechanik messen)
+ *       A5 Schatten +-1300 x +-1400 (FUN_8001af5c @0x80110d90) auf der Boden-Referenz +0x1ba (@0x80110b4c): an der Wand
+ *          auf dem Boden (vorher 500 x 600 auf der Figur-Hoehe, also in der Luft)
  *  B  Spucken nach der Landung (RE1.5-KI): Spawnlage des Giftklumpens == Original (5741,-320,4049)
  *     (R38 orig_2060_schacht_gift.txt Bild 136: Teil-0-Weltmatrix *(+0x188)+0x40 @0x80112770 + (500,0,0) @0x80118ee8)
  *  pruef_log <datei>: Auswerter fuer die Messzeilen der echten exe (RE15_SPINNENANIM_LOG, integration_r41_spinnenanim).
@@ -82,6 +84,7 @@ typedef struct {
     int32_t pos[3];
     int16_t rot[3];
     int     clip, bild_nach, f8f_nach;
+    int     boden;                 /* +0x1ba (Boden-Referenz, Schatten-Hoehe @0x80110b4c) */
     int16_t M[9], P0W[9];
     int32_t P0T[3];
     int16_t root[3];
@@ -316,6 +319,7 @@ static void teil_a(re15_ai_flavor_t fl, const char *name)
     int m_gleich = 0, b_gleich = 0, n_cmp = 0, wand_m = 0, wand_n = 0;
     int w_max = 0, t_max = 0, r_max = 0, w_K = -1, t_K = -1;
     int alt_wand_falsch = 0, alt_bild_falsch_93 = 0, alt_frac_falsch = 0, lage_gleich = 0;
+    int schatten_gleich = 0, schatten_boden_wand = 0, alt_schatten_luft = 0;
     for (int i = 0; i < n; i++) {
         const int K = K_von[i];
         const orig_t *o = orig_takt(K);
@@ -352,6 +356,16 @@ static void teil_a(re15_ai_flavor_t fl, const char *name)
         if (dw > w_max) { w_max = dw; w_K = K; }
         if (dt > t_max) { t_max = dt; t_K = K; }
         if (dr > r_max) r_max = dr;
+        /* A5 Schatten: Viereck +-1300 x +-1400 (FUN_8001af5c @0x80110d90, Record+0xc/+0xe; Messung
+         * L_belege/orig_2060_gdb_schatten.log: Takt 1..140 unveraendert 1300/1400) auf +0x1ba (@0x80110b4c). */
+        {   int32_t hx = 500, hz = 600, sy = es[i].y;               /* main.c-Standard vorher: 500 x 600 auf Figur-y */
+            re15_spinnenanim_r41_schatten_groesse(&es[i], &hx, &hz);
+            re15_spinnenanim_r41_schatten_y(&es[i], &sy);
+            if (hx == 1300 && hz == 1400 && sy == o->boden) schatten_gleich++;
+            else printf("   Takt %d: Schatten %dx%d y %d / Original 1300x1400 y %d\n", K, hx, hz, sy, o->boden);
+            if (o->rot[2] == 1024 && sy == 0) schatten_boden_wand++;
+            if (o->rot[2] == 1024 && es[i].y != o->boden) alt_schatten_luft++;   /* vorher: Figur-y = in der Luft */
+        }
         /* A4 Gegenprobe alter Zeichenweg */
         int32_t Ma[9]; matrix_alt(&es[i], Ma);
         int ag = 1; for (int k = 0; k < 9; k++) if (Ma[k] != o->M[k]) ag = 0;
@@ -373,6 +387,9 @@ static void teil_a(re15_ai_flavor_t fl, const char *name)
     CHECK(w_max <= RE15_R41_TOL_W && t_max <= RE15_R41_TOL_T,
           "%s: A3 Wurzelteil wie gezeichnet == Original Teil 0 (Weltmatrix max %d <= %d, Weltlage max %d <= %d)",
           name, w_max, RE15_R41_TOL_W, t_max, RE15_R41_TOL_T);
+    CHECK(schatten_gleich == n_cmp && schatten_boden_wand == 40 && alt_schatten_luft == 40,
+          "%s: A5 Schatten in %d/%d Takten == Original (1300 x 1400 auf +0x1ba); an der Wand %d/40 auf dem Boden y 0 "
+          "(vorher %d/40 auf Figur-y in der Luft)", name, schatten_gleich, n_cmp, schatten_boden_wand, alt_schatten_luft);
     CHECK(alt_wand_falsch == 40 && alt_bild_falsch_93 && alt_frac_falsch > 0,
           "%s: A4 Gegenprobe: alter Zeichenweg verfehlt das Original (Wand-Takte %d/40 falsche Matrix, Takt 93 Bild falsch %d, "
           "Ueberblendung falsch in %d Takten)", name, alt_wand_falsch, alt_bild_falsch_93, alt_frac_falsch);

@@ -62,6 +62,11 @@ void re15_spinnenanim_r41_zeichnen_ende(const re15_actor_t *ec);
  * und Massstab). Schreibt nur fuer Typ 0x25 und nur mit gesetzter Umgebungsvariable. */
 void re15_spinnenanim_r41_log_matrix(const re15_actor_t *e, const int32_t m[9]);
 
+/* Schatten-Haken (main.c, Charakter-Schatten der Gegner): Viereck +-1300 x +-1400 (INIT FUN_8001af5c @0x80110d90,
+ * a2/a3 @0x80110d78/@0x80110d84) auf der Boden-Referenz +0x1ba (Wurzel `lh a1,442` @0x80110b4c -> FUN_8001b064). */
+void re15_spinnenanim_r41_schatten_groesse(const re15_actor_t *e, int32_t *hx, int32_t *hz);
+void re15_spinnenanim_r41_schatten_y(const re15_actor_t *e, int32_t *y);
+
 /* Pose des letzten Zeichnens (Clip, Bild) fuer Weltanker wie *(+0x188)+0x40 (Teil-0-Weltmatrix des vorigen Takts,
  * FUN_8001e9ec @0x8001ea24). 1 = Merker aus dem vorigen Takt vorhanden. */
 int re15_spinnenanim_r41_letzte_pose(const re15_actor_t *e, int *clip, int *bild);

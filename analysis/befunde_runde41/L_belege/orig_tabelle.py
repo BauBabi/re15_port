@@ -32,7 +32,8 @@ out = []
 out.append('/* ERZEUGT von analysis/befunde_runde41/L_belege/orig_tabelle.py aus L_belege/orig_2060_gdb.log')
 out.append(' * (Original RE1.5, MZD-Disc, DuckStation-GDB, ROOM2060 Spinne e0, Haltepunkt 0x8001a50c je Takt).')
 out.append(' * Je Zeile: Takt K (Stand NACH Takt K = Logzeile n(K+1)); Phase +0x7; Lage; rot; Clip +0x94, Bild +0x95,')
-out.append(' * Ueberblendung +0x8f NACH dem Takt; Figur-Matrix +0x20; Teil-0-Weltmatrix +0x40; Teil-0-Weltlage +0x54;')
+out.append(' * Ueberblendung +0x8f NACH dem Takt; Boden-Referenz +0x1ba; Figur-Matrix +0x20; Teil-0-Weltmatrix +0x40;')
+out.append(' * Teil-0-Weltlage +0x54;')
 out.append(' * Wurzel-Versatz Teil 0 +0x38. Nicht von Hand aendern. */')
 anz = 0
 for K in range(61, 138):
@@ -40,8 +41,8 @@ for K in range(61, 138):
     if not z:
         continue
     anz += 1
-    out.append('    { %3d, %d, %d, {%d,%d,%d}, {%d,%d,%d}, %2d, %2d, %d, {%s}, {%s}, {%s}, {%s} },' % (
-        K, z['st'], z['s3'], *z['pos'], *z['rot'], z['clip'], z['bild'], z['f8f'],
+    out.append('    { %3d, %d, %d, {%d,%d,%d}, {%d,%d,%d}, %2d, %2d, %d, %d, {%s}, {%s}, {%s}, {%s} },' % (
+        K, z['st'], z['s3'], *z['pos'], *z['rot'], z['clip'], z['bild'], z['f8f'], z['gy'],
         ','.join(str(v) for v in z['M']), ','.join(str(v) for v in z['P0W']),
         ','.join(str(v) for v in z['P0T']), ','.join(str(v) for v in z['root'])))
 open(dst, 'w', newline='\n').write('\n'.join(out) + '\n')

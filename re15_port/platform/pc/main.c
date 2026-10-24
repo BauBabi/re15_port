@@ -9866,6 +9866,7 @@ re_title:;
                             crow_tinted = 1;
                         }
                     }
+                    re15_spinnenanim_r41_schatten_groesse(npc, &nhx, &nhz);   /* Runde 41 Spur L: Spinne +-1300 x +-1400 (FUN_8001af5c @0x80110d90) */
                     int32_t nsh_c[4][3] = {
                         { -nhx, 0,  nhz }, { -nhx, 0, -nhz },
                         {  nhx, 0,  nhz }, {  nhx, 0, -nhz },
@@ -9893,6 +9894,7 @@ re_title:;
                     { int32_t ky; if (re15_npckante_schatten_y(npc, &ky)) nsh_y = ky; }   /* Runde 38 Spur M: +0x1ba @0x8011dd78 */
                     re15_wasserzombie_schatten_y(npc, &nsh_y);   /* Runde 38 Spur U: Hochziehen -> +0x1ba (`lh a1,442` @0x801004fc) */
                     re15_r39_schatten_y(npc, &nsh_y);            /* Runde 39 Spur E: Gorilla 0x27 / Affe 0x29 -> +0x1ba (`lh a1,442` @0x80116f30 / @0x80110c78) */
+                    re15_spinnenanim_r41_schatten_y(npc, &nsh_y); /* Runde 41 Spur L: Spinne -> +0x1ba (`lh a1,442` @0x80110b4c) */
                     if (npc->type == 0x21)
                         nsh_y = re15_ai_re2_for_type(npc->type)
                                   ? (int32_t)npc->dog_floor_y      /* +0x1C2 @0x80100414 */
