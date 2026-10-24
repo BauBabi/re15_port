@@ -301,8 +301,11 @@ ausgeschlossen, 0 alte Ausschluesse ohne Kandidat entfallen** - 29 Cuts, groesst
 mit der staerksten Ueberdeckung ohne verdeckten Figurpunkt und, wo es eine gibt, die HINTER-Stelle mit den meisten neu verdeckten
 Punkten - Python-Figurraster wie test_r37_masken36 auf den `plaetze`; Leon-Dreiecke per RE15_TRILOG, "neu" = Leon-Punkte, die
 NUR ein wieder aufgenommenes Rechteck verdeckt):
-* DAVOR, 39 Szenen in 29 Cuts: **neu uebermalte Leon-Punkte 0 in allen 39**; Altbestand (vor NB1 gleich): 3040 C5 4, 30A0 C4 2,
-  5100 C2 9 Punkte (alte Rechtecke).
+* DAVOR, 39 Szenen in 29 Cuts: **neu uebermalte Leon-Punkte 0 in allen 39**. Altbestand (vor NB1 gleich, Leon-Rand 1-2 Spalten
+  breit): 3040 C5 (-7500,-2000) Band 1 4 Punkte unter dem ALTEN Rechteck 50 (Tiefe 76); 30A0 C4 (-22243,17763) 2 Punkte am
+  unteren Bildrand unter dem SAUM-Rechteck 41 (Tiefe 47); 5100 C2 (-19830,-23600) 9 Punkte unter dem alten Rechteck 8 (2) und den
+  SAUM-Rechtecken 52/55 (7, Tiefe 64). Die Saum-Rechtecke stammen aus Runde 41 (vor NB1): der Ausschluss rechnet mit dem
+  Figurkasten 3000 x +-350 (R37), Leons Arm/Hand ragt dort 1-2 Bildspalten darueber hinaus -> OFFEN 7.
 * HINTER, 10 Szenen: neu verdeckt 3050 C5 893 + 166, 5100 C7 982, 5020 C7 668, 5090 C12 184, 30A0 C3 151, 4040 C6 124,
   6010 C6 69, 5100 C3 64, 4040 C11 2 = 3 303 Leon-Punkte (Bilder `M_bilder/NB1_M1_*.png`).
 
