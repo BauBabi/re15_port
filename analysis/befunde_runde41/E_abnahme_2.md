@@ -61,7 +61,10 @@ Status dieses Berichts: IN ARBEIT (fortlaufend gespeichert).
    Auslauf, der Port nicht.**
 5. **Blenden-Takt FUN_80021880** (`dis 0x80021880 100`): @0x8002191c `lhu` Pegel / @0x80021920 `lhu` Schritt / @0x80021928
    `addu` / @0x8002192c `sh` — der Pegel jedes aktiven Kanals laeuft JEDEN Durchlauf weiter, auch im Apply-Bild (Aufruf
-   @0x80020f44 liegt VOR dem Present @0x80020f4c). Siehe Mangel 3.
+   @0x80020f44 liegt VOR dem Present @0x80020f4c; die Raum-Einblendung wartet darauf: Zustand 5 @0x8001cc70 `jal 0x8002178c` /
+   @0x8001cc78 `beq`, Freigabe @0x8001cc94; beide Zustaende 4/5 laufen danach @0x8001cc98 weiter bis zum RVD-Scan @0x8001ccec).
+   Im Port steckt `re15_fade_tick()` in `re15_render_end_frame()` (render_pc.c:1290) — und genau das ruft main.c:11427-11429 im
+   gehaltenen Bild NICHT auf. Folge gemessen in §3.7 -> Mangel 4.
 - Wortsuche im Diff: §6.
 
 ## 4. Punkt 2 — Karte B1, vordere Tuer der "Waffen Armory" (ROOM1230 -> ROOM1190 Ostkammer) — neu gemessen
@@ -82,6 +85,27 @@ Tuer bis 16 px zur Hallen-Seite (= "Sprung zum hinteren Teil, obwohl man gar nic
 Ostkammer, Leon und Elza gleich, nach dem Durchgang (145,108). Bild `<sp>/E41a2/P2_karte_vor_nach.png` (Ausschnitt x3; links
 BASIS U0.6/U1.0, rechts NACHHER U0.6/U1.0). Die Nachbesserung 2 (Bildhalt/Nachrichten-Takt) aendert daran nichts.
 **Urteil Punkt 2: erfuellt.**
+
+### 3.7 Nebenwirkung des Bildhalts: Raum-Einblendung waehrend Dauer-Apply = Softlock (NEU, selbst gemessen)
+Lauf `EN1_spawn_kante_{nach,vorher}`: `RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_PLAYER_POS=9000,-3200,2048,1
+RE15_INPUT_SCRIPT=W2.0,D1.0,W1.0 (Start 10, Basis spiel) RE15_STATE_LOG RE15_KAMERAHALT_LOG RE15_FADE_LOG RE15_FRAMEDUMP=0-200/5:fd_
+RE15_EXIT_AT=200#2020` (Raum betreten mit der Spielerlage genau auf der Kante x 9000; `[debug-menu] JUMP -> 202 ZOMBIE TUNNEL
+(ROOM2020) spawn=(9000,-1800,-3200) cut=0`, `[fade-log] F240 room=2020 TUER-EINTRITTS-FADE kick`, Schritt -6144).
+- NACHHER: `[kamerahalt]` F0 zeigen, **ab F1 jedes Bild HALTEN**; state.txt **F1..F199 `pf=FF000007`** (Transitions-Freeze der
+  Einblendung, room_common.c Zustand 5) — die Einblendung wird nie fertig, weil `re15_fade_tick()` im gehaltenen Bild nicht laeuft;
+  der Spieler reagiert nicht (F70..F90 `pad=0040`, Lage bleibt (9000,-3200)), alle 41 Abzuege schwarz (mittlere Helligkeit 5,0).
+  Das Spiel steht, solange niemand die Lage aendert — und aendern kann sie niemand (Spieler eingefroren). **Softlock.**
+- VORHER (753652fc): F1 `pf=FF000007`, **F10 `pf=00000007`** (Einblendung fertig), Spieler laeuft (F70 9070 -> F100 11100),
+  Helligkeit 14,2 -> 29,9.
+- Original: der Blenden-Takt @0x80020f44 laeuft in jedem Durchlauf vor dem Present (§2 Nr. 5), Zustand 5 gibt nach dem Ende der
+  Blende frei (@0x8001cc70-@0x8001cc94) — dort steht nur das Bild, die Blende laeuft weiter; kein Softlock.
+- Reichweite: Zensus aller 653 Door_aot_set-Ankuenfte (next_x/z/cut/floor) gegen das RVD des Zielraums mit der Port-Regel
+  (Anker ausgenommen, erste enthaltende Zone, Kante innen; Skript `<sp>/E41a2/tools/rvd_kante_zensus.py`, Selbsttest ROOM2020
+  (9000,-3200) -> Folge 0,2,0,2,...): **keine** Tuer-Ankunft liegt auf einer wechselnden Kante. Betroffen sind also Raumeintritte
+  ohne Tuer-Ankunft (Debug-Sprung mit eigener Lage, Spielstand-Lage beim CONTINUE) und grundsaetzlich jede Rampe (Schritt != 0,
+  Raum-/Menue-Blenden; die 5 Skript-Blenden 11F0/11F1/3080/3091 sind statisch, Zensus Op 0x56 Schritt 0 in 5/5), die ueber ein
+  Apply-Bild laeuft: jede gehaltene Bildnummer kostet sie einen Schritt. Tuer-Einblendungen 2050 -> 2020 und 1230 -> 1190 ohne
+  gehaltenes Bild (`FADE_tuer*`). -> Mangel 4.
 
 ## 5. Punkt 3 — Werkstatt-Tuer ROOM11B1 bei Elza dauerhaft zu — neu gemessen
 ### 5.1 P3a — ECHTER Tuerweg: Elza ROOM1261 -> Tuer Slot 0 -> ROOM11B1, Szene "Sherry!? / Where has she gone!?"
@@ -209,3 +233,67 @@ ist in keinem Lauf (Port VORHER/NACHHER, Original) gefunden, der Fix erklaert es
 | Nebenwirkungen beide Szenarien | haelt (gemessen) | Leon + Elza in Punkt 2/3 neu gemessen; Inventar auf der Kamera-Kante (§3.5); Tuer-Einblendungen 2050 -> 2020 und 1230 -> 1190 mit `RE15_FADE_LOG` + `RE15_KAMERAHALT_LOG`: kein gehaltenes Bild waehrend der 6-Bild-Einblendung (`<sp>/E41a2/runs/FADE_tuer*`); Integrations-Auswahl §6.1 |
 | PSX | Hinweis | platform/psx/main.c ruft weder msgtakt noch kamerahalt (Bau-Agent: PSn00bSDK fehlt); msgtakt faellt ohne `takt_beginn` auf das alte Verhalten zurueck (Riegel takt_msgtakt "ohne takt_beginn ... Restore sofort", "inaktiv: Auswahl parkt wie vorher") -> PC und PSX verhalten sich verschieden. Andere Spuren haben Haken in beiden main.c gesetzt (z.B. 370793fe "Haken main.c PC/PSX") |
 
+## 7. Maengel
+1. **Punkt 1 — Renn-Anlauf an die Kurbel weiterhin nicht original-gleich, Nutzer-Symptom unbelegt.** Port (`P1_renn_nach`,
+   state.txt F382): Pos_set und im selben Bild Stehen `(3650,-3018) mo 200`, kein Auslauf. Original (`<sp>/E41n2/o_renn2.txt`
+   n93..n99, Mechanismus 0x80032604 @0x8003272c / 0x80032778 @0x800328f8-@0x8003295c selbst disassembliert, §2 Nr. 4): Renn-Stopp
+   ueber 6 Bilder (z -3099 .. -3395 -> -3369), Leon kurbelt bei (3650,-3369). Nach dem Orchestrator-Hinweis 2026-10-24 03:21 ist die
+   Rueckfrage an den Nutzer erst zulaessig, wenn ALLE Anlauf-Varianten original-gleich sind; der Renn-Stopp ist gebaut und gemessen
+   (635be823), aber wieder entfernt (d4fa9074, Querbezug unit_r36_zombieki_affen_block Seed 0x67be2dfd +841 > 600). Ein
+   Orchestrator-Entscheid dazu steht nicht in AUFTRAG.md (master af7e0e8a) — die Behauptung "Entscheid des Orchestrators:
+   Renn-Stopp spielweit einbauen ..." ist ein Vorschlag des Bau-Agenten, kein Entscheid. Nachpruefbar: §3.4, §3.6.
+2. **Riegel `integration_r41_kleinkram_b_renn` pinnt den bekannten Nicht-Original-Zustand als "wie das Original".**
+   tests/integration/test_r41_kleinkram_b.cmake TEIL renn ruft seit d4fa9074 den Auswerter `takt` (test_r41_kleinkram_b_exe.c
+   `takt()`), der im Pos_set-Bild `x == 3650 && z == -3018 && mo == 200` verlangt und "Kurbel-Anlauf renn: Bildfolge wie das
+   Original" meldet. Das Original hat dort den Renn-Stopp (o_renn2 n94: (3650,-3099) `cmd 1/2/3/0 mo=3/0`); mit dem gemessenen
+   Renn-Stopp des Bau-Agenten (635be823: F382 z -3085) faellt der Riegel. Er schuetzt damit die Abweichung und blockiert den Fix von
+   Mangel 1. Erwartet: fuer `renn` nur die original-gleichen Teile pruefen (kein Luecken-Bild, Pos_set = Schliessen + 1, gehalten) und
+   die Lage/den Auslauf entweder mit den Original-Werten (alter Auswerter `renn`) oder ausdruecklich als OFFEN/erwartet-rot fuehren.
+3. **Vertrag §1.3 — spielweite Aenderung in fremden gemeinsamen Dateien ohne Orchestrator-Entscheid.** scd_vm.c (+2; C/F/G),
+   platform/pc/main.c (+9/-1 an drei Stellen; D/F/G), render_pc.c (+9; D), msg_common.c (+4/-1; niemandem zugeteilt), dazu
+   player_common.c / re15_inv_screen.c aus Nachbesserung 0/1. Wirkung im ganzen Spiel: jedes Apply-Bild wird gehalten, jede Nachricht
+   gibt den Spieler ein Bild spaeter frei, alle 102 Auswahl-Message_on laufen ohne Parken. Das ist inhaltlich belegt (§2), aber fuer
+   B/C/A wurden solche Haken per Entscheid angenommen (B5, C-E3, A-E3); fuer E fehlt er. Bei der Integration: main.c (D-Lautstaerke,
+   F/G-Szenen), scd_vm.c op_message_on (C/F/G-Ereignisketten), render_pc.c (D-Blinken) — und alle Riegel anderer Spuren, die
+   Bildnummern um Kamerawechsel oder Nachrichtenenden zaehlen, laufen mit der neuen Bildreihenfolge (Gate "gezielte Integration
+   Querbezug").
+4. **Bildhalt laesst den Blenden-Takt aus — Softlock beim Raumeintritt auf einer wechselnden RVD-Kante.** main.c:11427-11429 ruft im
+   gehaltenen Bild `re15_render_pc_bild_halten()` statt `re15_render_end_frame()`; der Blenden-Takt `re15_fade_tick()` (FUN_80021880)
+   steckt aber in `re15_render_end_frame()` (render_pc.c:1290). Im Original laeuft er in JEDEM Durchlauf vor dem Present
+   (@0x80020f44 vor @0x80020f4c; Pegel += Schritt @0x8002191c-@0x8002192c), auch im Apply-Bild. Gemessen (§3.7): Raumeintritt
+   ROOM2020 mit der Lage (9000,-3200) — NACHHER bleibt der Einblendungs-Freeze `pf=FF000007` F1..F199, der Spieler reagiert nicht,
+   das Bild bleibt schwarz (Softlock); VORHER ist die Einblendung bei F10 fertig und der Spieler laeuft. Tuer-Ankuenfte (653) und
+   Debug-Menue-Sprungziele (101) liegen auf keiner wechselnden Kante (Zensus), der Fall ist im normalen Spiel also selten — aber jede
+   Rampe (Raum-/Menue-Blende, kuenftige Port-Blenden der Spuren B/C/F/G) verliert je gehaltenem Bild einen Schritt. Erwartet: der
+   Blenden-Takt laeuft auch im gehaltenen Bild (z.B. `re15_fade_tick()` in `re15_render_pc_bild_halten()` oder vor die Entscheidung
+   ziehen), Riegel: Einblendung auf der Kante endet nach 6 Schritten wie VORHER, Bild bleibt stehen.
+
+## 8. Hinweise (keine Maengel, fuer Bau/Integration)
+- H1 (Bildreihenfolge, nicht im Modell): FUN_80010000 laeuft nur nach einem Pufferwechsel (@0x8001001c/@0x80010020/@0x80010028,
+  Merker @0x80010040) — im Durchlauf NACH einem Apply-Bild faellt der Nachrichten-Takt @0x80010044 im Original aus (Schreibmaschine
+  steht ein Bild). Der Port taktet Nachrichten jedes Bild. In den Kurbel-Faellen ohne Wirkung (keine Nachricht offen nach dem
+  Apply-Bild); bei Kamerawechseln waehrend eines laufenden Textes (Szenen) weicht der Port um 1 Bild je Wechsel ab.
+- H2 (Present-Tore): @0x8002151c `lbu 0x800b536c` (Bildschirm-Modus, FUN_80021634) und @0x80021544-@0x80021550 (`aca38 &
+  0x200000`) unterdruecken den Apply; kamerahalt_r41.c kennt sie nicht. Im Spiel 0 (Freigabe FUN_80021634(0,0) @0x8001dadc; kein
+  Schreiber von Bit 0x200000 im EXE-Dump gefunden).
+- H3 (Kommentar main.c:7789 "Restore wie @0x80010044 hinter @0x8001ce2c, vor dem Modal"): im Original liegt der Nachrichten-Takt
+  @0x80010044 NACH dem Modal @0x8001ce34 (beide im selben Durchlauf, Modal im Spiel-Task). Ohne beobachtbare Folge, weil das
+  Port-Modal (item_modal_common.c) seine Aufnahme-Frage selbst fuehrt und g_pauseflags nicht liest.
+- H4 (Kommentar): include/re15_kamerahalt_r41.h beschreibt noch `re15_render_pc_standbild_wiederholen` (Standbild wiederholen);
+  umgesetzt ist "nicht praesentieren" (bildhalt_r41_pc.c).
+- H5 (PSX): platform/psx/main.c ohne msgtakt/kamerahalt — PSX behaelt die alte Reihenfolge (konsistent, aber anders als PC).
+- H6 (Dauer): das Apply-Standbild dauert im Port 1 Spielbild, im Original die CD-Ladezeit (o_geh1 n95 -> n96: 34 VSyncs; Kante
+  12/13 VSyncs je Durchlauf) — Hardware-Zeit, vom Bau-Agenten offen genannt.
+- H7 (Testhaken): mit RE15_FORCE_CUT haelt kamerahalt nie (Absicht: der Haken setzt jedes Bild pending) — Riegel mit FORCE_CUT
+  messen die alte Praesentation.
+
+## 9. Urteil
+| Punkt | Urteil | Kern |
+|---|---|---|
+| 1 Kurbel ROOM2020 (mit E-N1/E-N2) | **teilweise** | Geh-/Stand-/Cut-3-Anlauf jetzt original-gleich (Bildfolge, Lage, Takt), Kamera-Flackern auf der Kante weg; Renn-Anlauf ohne Renn-Stopp (Mangel 1, Riegel pinnt die Abweichung: Mangel 2); "herumfliegend" weiter nicht reproduziert |
+| 2 Karte B1, vordere Tuer 1190 | **erfuellt** | BASIS-Sprung zur Hallen-Seite (137/130 px) an derselben Stelle reproduziert, NACHHER 145 an der Ostkammer, Leon + Elza + echte Tuer |
+| 3 Werkstatt-Tuer 11B1 (Elza) | **erfuellt** | echter Tuerweg 1261 -> 11B1 mit Szene: Tuer zu (Bild), blockiert von Garage und Werkstatt, "The door is locked.", kein Raumwechsel |
+
+Gates: Bau haelt, RE-Gate haelt (Stichproben bestaetigt; Mechanismus-Luecken H1/H2, Mangel 4), Vertrag haelt nicht ohne Entscheid
+(Mangel 3), Riegel vorhanden und messend (VORHER-Gegenprobe rot), aber `renn` pinnt eine Abweichung (Mangel 2), Nebenwirkung
+Softlock (Mangel 4). **Gesamt: NICHT bestanden.**
