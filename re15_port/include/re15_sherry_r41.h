@@ -33,10 +33,16 @@ void re15_sherry_r41_messhaken(void);
 int  re15_sherry_r41_modell(void);
 /* Boot/Laden: Modell setzen, ohne Waffen-Logik. */
 void re15_sherry_r41_modell_init(int modell);
-/* Modellwechsel (Raumlader -> FUN_800314b0): Modell setzen + Waffe wie @0x800316c4 (0x0F -> 0). Beim Verlassen von 0x0F
- * PORT-WAHL: die vorher ausgeruestete Waffe kommt zurueck (wie der Westen-Weg des Ports; Original setzt hier die
- * DEBUG.BIN-Tabelle @0x800c00d4[Modell] = 1, Messer — Dossier K1 OFFEN). */
+/* Modellwechsel (Raumlader -> FUN_800314b0). FIGUREN-Wechsel (Leon<->Marvin 0x0D, Elza<->Sherry 0x0F): der Schwanz von
+ * FUN_800314b0 wie im Original bei JEDEM Neuladen - Waffe := DEBUG.BIN-Tabelle @0x800c00d4[Modell] (1 = Messer, 0x0F -> 0;
+ * @0x80031680-90, @0x800316c4), Wunden := 0 (@0x800316c8), HP := 100 (@0x80031710/@0x80031718), Status +0x98 := 0
+ * (@0x80031720). RUESTUNGS-Wechsel derselben Figur (R.P.D.-Weste ROOM1190/1191 sub15, U.S.S.-Ruestung ROOM40A0/40A1
+ * sub06: Leon 0/1/2, Elza 4/5/6) bleiben beim Port-Weg (Nutzer-Entscheid 2026-08-30 "Weste soll nicht heilen",
+ * scd_room_setup.c re15_vest_hp_on_model_reload). Runde 41 Spur K, Nachbesserung 1 (M2). */
 void re15_sherry_r41_modell_setzen(int modell);
+/* 1 = Ruestungs-Wechsel derselben Figur (beide Modelle 0..3 oder beide 4..7: Waffen-Basis @0x800741e8 76/97, Figuren-Bit
+ * 2 @0x80012088) oder gleiches Modell; 0 = Figuren-Wechsel. */
+int  re15_sherry_r41_ruestungswechsel(int alt, int neu);
 /* 1, solange Sherry die Figur ist: Ausruesten gesperrt (RE2-Retail: Sherry fuehrt keine Waffe; das Original wuerde
  * Datei 118+Waffe laden = keine PLW, Beta-Luecke). */
 int  re15_sherry_r41_waffe_gesperrt(void);

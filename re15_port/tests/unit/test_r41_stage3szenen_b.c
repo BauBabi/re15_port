@@ -7,8 +7,11 @@
  *            @0x80036c08, Bewegungs-Zeile 15 @0x80073ec2/@0x80073ee2/@0x80073f02/@0x80073f42, Ziel-Sperren
  *            @0x80032014/@0x80032430/@0x80032720/@0x80032a80/@0x80032cb4), ROOM3061 @0x011F6 Save 0x10=0x0F,
  *            ROOM3091 @0x01D9C/@0x01DA8 zurueck auf Elza, RBJ 3091 rec2 Clips 11..13 Kindhoehe / 0..10 Erwachsen.
- *   waffe    Engine: Modellwechsel 4 -> 0x0F setzt Waffe 0 (@0x800316c4), Ausruesten gesperrt, Tabelle Zeile 15;
- *            zurueck -> vorherige Waffe (PORT-WAHL), Leon/Elza-Werte unveraendert.
+ *   waffe    Engine: Figurwechsel 4 -> 0x0F setzt Waffe 0 (@0x800316c4), HP 100 (@0x80031718), Status 0 (@0x80031720),
+ *            Ausruesten gesperrt, Tabelle Zeile 15; zurueck -> Waffe 1 = DEBUG.BIN @0x800c00d4 (Nachbesserung 1, M2);
+ *            Leon/Elza-Tabellenwerte unveraendert; Ruestungswechsel (Weste, U.S.S.) = Port-Weg (Nutzer-Entscheid 2026-08-30).
+ *   marvin   Nachbesserung 1 (M3): Koerper bei JEDEM Neuladen (@0x8003154c/@0x80031578) - Leon -> Marvin 0x0D (PL0D,
+ *            gleiche W-Familie 76) bindet EDD/EMR + W-Verbund-Bindelagen, zurueck auf Leon wieder PL00; Weste bleibt Port-Weg.
  *   koerper  PC-Modul am echten PL04/PL0F: Koerper (EDD/EMR) + W00-Bank + Hand-Meshes aus, Wunden geloescht, CORE 0x0F;
  *            zurueck auf Elza stellt alles wieder her; gleiche Familie (Elza 4->5, Leon 0->1 Weste) aendert nichts.
  *   sherry <debug.log> <state.txt>   Auswertung integration_r41_stage3szenen_b_sherry (echte exe, Schacht-Tuer 3061 -> 30C1):
@@ -152,24 +155,51 @@ static void t_pins(void)
 /* ---------- waffe ---------- */
 static void t_waffe(void)
 {
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    /* Original-Bytes: DEBUG.BIN (resident ab 0x800c0000) Funktion @0x800c00a8 + Tabelle @0x800c00d4, FUN_800314b0-Schwanz */
+    { long n = 0; uint8_t *d = psx("BIN/DEBUG.BIN", &n);
+      static const uint8_t code[12] = { 0x0b,0x80,0x09,0x3c, 0x5c,0xca,0x29,0x91, 0x0c,0x80,0x08,0x3c };   /* lui t1 / lbu t1,aca5c / lui t0 */
+      static const uint8_t tab[16]  = { 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1, 0 };
+      CHECK(d && n > 0xe4 && memcmp(d + 0xa8, code, 12) == 0 && d[0xb4] == 0xd4 && memcmp(d + 0xd4, tab, 16) == 0,
+            "DEBUG.BIN @0x800c00a8 lbu aca5c / addiu 0x800c00d4, Tabelle @0x800c00d4 = 01 x15, 00 (Waffe je Modell)");
+      free(d);
+      long xn = 0; uint8_t *x = datei(RE15_PSX_EXE, &xn);
+      CHECK(x && bytes_gleich(x, xn, 0x80031680, "2a 00 03 0c") && bytes_gleich(x, xn, 0x80031690, "5d ca 22 a0") &&
+            bytes_gleich(x, xn, 0x80031710, "64 00 02 34") && bytes_gleich(x, xn, 0x80031718, "ee ca 22 a4") &&
+            bytes_gleich(x, xn, 0x80031720, "ec ca 20 a4") && bytes_gleich(x, xn, 0x800316c8, "07 df 00 0c"),
+            "FUN_800314b0: jal 0x800c00a8 @0x80031680, sb aca5d @0x80031690, jal 0x80037c1c @0x800316c8, "
+            "ori v0,0x64 @0x80031710, sh HP @0x80031718, sh zero +0x98 @0x80031720");
+      free(x); }
     re15_sherry_r41_modell_init(4);
     re15_player_set_equipped_weapon(3);
-    CHECK(re15_player_equipped_weapon() == 3, "Elza traegt Waffe 3 (Vorbedingung)");
+    pl->hp = 61; pl->status_flags = 0x2;
+    CHECK(re15_player_equipped_weapon() == 3, "Elza traegt Waffe 3, HP 61, Gift (Vorbedingung)");
     CHECK(re15_sherry_r41_tabelle(3, 0, 200) == 200 && re15_sherry_r41_tabelle(2, 1, 96) == 96,
           "Elza: Port-Werte unveraendert (Rennen 200, Drehen 96)");
     re15_sherry_r41_modell_setzen(15);
     CHECK(re15_sherry_r41_modell() == 15, "Modell 0x0F gebunden");
-    CHECK(re15_player_equipped_weapon() == 0, "Waffe 0 nach dem Wechsel (@0x800316c4)");
+    CHECK(re15_player_equipped_weapon() == 0 && pl->hp == 100 && pl->status_flags == 0,
+          "Figurwechsel 4 -> 0x0F: Waffe 0 (@0x800316c4), HP 100 (@0x80031710/18), Status 0 (@0x80031720) - HP %d", pl->hp);
     re15_player_set_equipped_weapon(3);
     CHECK(re15_player_equipped_weapon() == 0 && re15_sherry_r41_waffe_gesperrt(), "Ausruesten gesperrt solange Sherry");
     CHECK(re15_sherry_r41_tabelle(0, 0, 75) == 50 && re15_sherry_r41_tabelle(1, 0, 70) == 35 &&
           re15_sherry_r41_tabelle(2, 1, 96) == 80 && re15_sherry_r41_tabelle(3, 0, 200) == 120 &&
           re15_sherry_r41_tabelle(3, 1, 72) == 64 && re15_sherry_r41_tabelle(0, 1, 48) == 48,
           "Zeile 15: Gehen 50, Rueck 35, Drehen 80, Rennen 120/64, Geh-Drehung 48");
-    re15_sherry_r41_modell_setzen(4);
-    CHECK(re15_player_equipped_weapon() == 3 && !re15_sherry_r41_waffe_gesperrt(), "zurueck auf Elza: Waffe 3 wieder da (PORT-WAHL)");
+    pl->hp = 40; pl->status_flags = 0x2;
+    re15_sherry_r41_modell_setzen(4);   /* ROOM3091 @0x01D9C */
+    CHECK(re15_player_equipped_weapon() == 1 && pl->hp == 100 && pl->status_flags == 0 && !re15_sherry_r41_waffe_gesperrt(),
+          "zurueck auf Elza: Waffe 1 = Messer (DEBUG.BIN @0x800c00d4[4]), HP 100, Status 0 (wie Original, keine Port-Wahl mehr)");
+    re15_player_set_equipped_weapon(3); pl->hp = 55; pl->status_flags = 0x2;
     re15_sherry_r41_modell_setzen(5);
-    CHECK(re15_player_equipped_weapon() == 3, "Elza 4 -> 5 (gleiche Familie): Waffe bleibt");
+    CHECK(re15_player_equipped_weapon() == 3 && pl->hp == 55 && pl->status_flags == 0x2,
+          "Elza 4 -> 5 (Weste, Nutzer-Entscheid 2026-08-30): Waffe/HP/Status bleiben (Port-Weg)");
+    re15_sherry_r41_modell_init(0); re15_player_set_equipped_weapon(3); pl->hp = 66;
+    re15_sherry_r41_modell_setzen(2);
+    CHECK(re15_player_equipped_weapon() == 3 && pl->hp == 66, "Leon 0 -> 2 (U.S.S.-Ruestung ROOM40A0 sub06): Port-Weg unveraendert");
+    re15_sherry_r41_modell_setzen(13);
+    CHECK(re15_player_equipped_weapon() == 1 && pl->hp == 100 && !re15_sherry_r41_waffe_gesperrt(),
+          "Leon -> Marvin 0x0D (ROOM3020 @0x00D7A): Waffe 1 (@0x800c00d4[13]), HP 100, Ausruesten frei");
 }
 
 /* ---------- koerper ---------- */
@@ -261,7 +291,8 @@ static void t_koerper(void)
       CHECK(r == 1 && g_pl00_skel.bone_relative_pos[0][1] == -1709 && clips_sind(&g_pl00_anim, soll, 3) &&
             g_skel.bone_relative_pos[0][1] == -1709 && nach_ok == vor_ok,
             "zurueck auf Elza: Bind -1709, Clips {34,34,50,...}, alle %d W-Banken/Meshes wieder da", vor_ok); }
-    CHECK(re15_player_equipped_weapon() == 3 && g_core_idx == 4, "Waffe 3 zurueck, CORE04");
+    CHECK(re15_player_equipped_weapon() == 1 && g_core_idx == 4,
+          "zurueck: Waffe 1 = Messer (DEBUG.BIN @0x800c00d4[4], Nachbesserung 1 M2), CORE04 (@0x800316e8)");
     free(f);
     /* gleiche Familie: Elza 4 -> 5 (EDD/EMR md5-gleich) */
     f = psx("PLD/PL05.PLD", &n);
@@ -277,6 +308,53 @@ static void t_koerper(void)
     r = re15_sherry_pc_r41_koerper(1, f, (int)n);
     CHECK(r == 0 && g_pl00_skel.bone_relative_pos[0][1] == y0 && g_bank_ok[3] == 1,
           "Leon 0 -> 1 (Weste): Koerper/W-Banken unveraendert (Bind y %d)", y0);
+    free(f);
+}
+
+/* ---------- marvin (Nachbesserung 1, M3): Koerper bei JEDEM Neuladen (@0x8003154c/@0x80031578) ---------- */
+static void t_marvin(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    CHECK(boot("PL00"), "Leon-Boot aus PL00.PLD + PL00W00..14.PLW");
+    anmelden(0);
+    re15_player_set_equipped_weapon(3);
+    pl->hp = 70;
+    int16_t leon_y10 = g_pl00_skel.bone_relative_pos[10][1];
+    int leon_c1 = g_pl00_anim.clips[1].frame_count;
+    long n = 0; uint8_t *f = psx("PLD/PL0D.PLD", &n);
+    unsigned long eo = 0, el = 0, mo = 0, ml = 0;
+    CHECK(f && re15_pld_part(f, n, RE15_PLD_EDD, &eo, &el) && re15_pld_part(f, n, RE15_PLD_EMR, &mo, &ml) &&
+          el == 3152 && ml == 56976, "PL0D.PLD: EDD %lu B / EMR %lu B (Soll 3152 / 56976; PL00 3160 / 57136)", el, ml);
+    g_core_idx = -1;
+    int r = re15_sherry_pc_r41_koerper(13, f, (int)n);   /* ROOM3020 @0x00D7A `24 10 0d 00` */
+    CHECK(r == 1, "Leon -> Marvin 0x0D (gleiche W-Familie 76) bindet den Koerper neu (Rueckgabe %d)", r);
+    CHECK(leon_y10 == 422 && g_pl00_skel.bone_relative_pos[10][1] == 485 && g_skel.bone_relative_pos[10][1] == 485,
+          "Koerper-EMR = PL0D: Knochen 10 y %d (Leon %d, Soll 485 / 422)", g_pl00_skel.bone_relative_pos[10][1], leon_y10);
+    CHECK(leon_c1 == 34 && g_pl00_anim.clips[1].frame_count == 32,
+          "Koerper-EDD = PL0D: Clip 1 %d Bilder (Leon %d, Soll 32 / 34)", g_pl00_anim.clips[1].frame_count, leon_c1);
+    { int ok = 1;
+      for (int w = 0; w < WMAX; w++)
+          if (g_bank_ok[w] && g_wpn_skel[w].bone_relative_pos[10][1] != 485) ok = 0;
+      CHECK(ok && g_w01_skel.bone_relative_pos[10][1] == 485 && g_bank_ok[1] && g_wpn_skel[1].keyframe_count == g_w01_skel.keyframe_count,
+            "W-Verbunde (PL00W**) mit Marvins Bindelage, Keyframes der PLW bleiben; alle Banken der Familie 76 bleiben"); }
+    CHECK(re15_player_equipped_weapon() == 1 && pl->hp == 100 && g_core_idx == 13,
+          "Figurwechsel: Waffe 1 (@0x800c00d4[13]), HP 100 (@0x80031718), CORE0D (@0x800316e8)");
+    free(f);
+    /* zurueck auf Leon mit Weste (ROOM3060 @0x010DE `24 10 01 00`) */
+    f = psx("PLD/PL01.PLD", &n);
+    pl->hp = 30;
+    r = re15_sherry_pc_r41_koerper(1, f, (int)n);
+    CHECK(r == 1 && g_pl00_skel.bone_relative_pos[10][1] == 422 && g_pl00_anim.clips[1].frame_count == 34 &&
+          g_wpn_skel[3].bone_relative_pos[10][1] == 422 && pl->hp == 100,
+          "Marvin -> Leon (PL01): Koerper wieder Leons (Knochen 10 y %d, Clip 1 %d), W-Verbunde zurueck, HP 100",
+          g_pl00_skel.bone_relative_pos[10][1], g_pl00_anim.clips[1].frame_count);
+    free(f);
+    /* Ruestung bleibt Port-Weg: Leon 1 -> 0 (Weste ab) */
+    f = psx("PLD/PL00.PLD", &n);
+    re15_player_set_equipped_weapon(3); pl->hp = 44; g_core_idx = -1;
+    r = re15_sherry_pc_r41_koerper(0, f, (int)n);
+    CHECK(r == 0 && re15_player_equipped_weapon() == 3 && pl->hp == 44 && g_core_idx == -1,
+          "Leon 1 -> 0 (Weste ab, Nutzer-Entscheid 2026-08-30): nichts neu, Waffe/HP bleiben");
     free(f);
 }
 
@@ -512,6 +590,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil_, "waffe")   || !strcmp(teil_, "alle")) t_waffe();
     if (!strcmp(teil_, "koerper") || !strcmp(teil_, "alle")) t_koerper();
     if (!strcmp(teil_, "schleife") || !strcmp(teil_, "alle")) t_schleife();
+    if (!strcmp(teil_, "marvin")   || !strcmp(teil_, "alle")) t_marvin();
     if (!strcmp(teil_, "sherry") && argc > 3) t_sherry(argv[2], argv[3]);
     if (!strcmp(teil_, "szene")  && argc > 3) t_szene(argv[2], argv[3]);
     printf("%s (%d Fehler)\n", g_fail ? "FEHLGESCHLAGEN" : "BESTANDEN", g_fail);
