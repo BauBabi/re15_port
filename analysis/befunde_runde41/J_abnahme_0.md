@@ -1,0 +1,178 @@
+# Runde 41 — Spur J "stage3szenen_a": Abnahme 0 (unabhaengig)
+
+Baum `.claude/worktrees/r41_stage3szenen_a`, Zweig `r41/stage3szenen_a`, Kopf ed8b1457, Merge-Basis master 4c667c97.
+Pruefer: Abnahme 0, 2026-10-24 (abends). Arbeitsordner (Laeufe, Logs, Bilder): Scratchpad `J41abn0/`
+(Sitzung c41eae99). Nichts am Code geaendert; nur diese Datei committet.
+
+## Punkte (Wortlaut AUFTRAG.md, Zeilen 83-85)
+1. "Auch die Animation von Marvin, am Ende seine Abschnitten in STAGE3, bevor zurueck gewechselt wird zu Leon ist falsch in ROOM 3060."
+2. "In Elzas Szenario, in ROOM 3061 in der cutscene klappt das rein krabbeln von Sherry in den Schacht nicht. Am Ende von
+   dieser Cutscene hat Elza auch erneut eine falsche Animation."
+0. (Orchestrator-Entscheid A-E5) RBJ-Binder FUN_8001b3f8 byte-true als eigener Commit `rbj-binder`.
+
+## Stand der Pruefung (fortlaufend)
+- [x] Diff gelesen (git diff master...HEAD, 45 Dateien; Code-Diff vollstaendig gelesen, s. Gate V)
+- [x] Bau (local_build.sh configure + build: LOCAL-BUILD-OK, "ninja: no work to do" = exe 20:31 entspricht HEAD ed8b1457;
+      Baum sauber, `git status` leer)
+- [ ] Riegel der Spur + Nachbargruppen
+- [ ] Punkt 1 gemessen
+- [ ] Punkt 2a gemessen
+- [ ] Punkt 2b gemessen
+- [ ] RE-Gate (3 Adressen selbst disassembliert)
+- [ ] Vertrag
+
+
+## Gate RE — selbst disassembliert (info/Re1.5/PSX.EXE, `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`)
+Alle zitierten Stellen enthalten das Behauptete (Auszug, Bytes/Instruktionen aus dem eigenen Lauf):
+| Stelle | eigene Disasm | Behauptung im Code/Dossier |
+|---|---|---|
+| Plc_motion 0x80041b90 | `80041b98 lbu a2,1(v0)`, `80041ba8 sb a1,148(v0)`, `80041bb0 sb v1(=4),4(v0)`, `80041bc4 sb a2,5(v0)`, `80041bc8 sh a1,452(v0)` (a1 = pc[2..3]>>8) | +0x94 Clip, +0x4 = 4, **+0x5 = pc[1]**, +0x1c4 = pc[3] — stimmt |
+| Tabelle 0x80073f90 / 0x80073e30 | [4] = 0x80030660; 0x80073e30: [0] 0x80050cb8, [1] 0x80050ddc, **[2] 0x80050f00**, [3] 0x80051024 | stimmt |
+| Spieler-Executor 0x80030660 | `8003068c lbu v0,-13735(v0)` (0x800aca59 = +0x5), `8003069c addiu at,at,15920` (0x80073e30), `800306cc andi v0,v0,0x1` -> `800306d8 jal 0x800369f8` (a1 = 0), `800306e8 andi 0x2` -> `800306f4 jal 0x800369f8` (`ori a1,zero,0x1`) | stimmt (auch §4.4 OFFEN: Spieler hat dieselben Anker-Bits) |
+| Sub 2 0x80050f00 | `80050f34 sb v0(=1),6(a0)`, `80050f44 sb v0(=7),143(v1)`, `80050f54 sb zero,149(v0)`, `+0x1c4&0x40 -> +0x8f = 0`, **`80050f88 lw a0,368(v0)` / `80050f90 lw a1,372(v0)` / `80050f94 jal 0x8001f314`**, Rueckgabe != 0 -> **`80050fec sb v0(=2),6(v1)`**, `80051004 andi 0x4` -> `80051010 +0x6 = 1` | Kanal +0x170/+0x174, Halten Phase 2, Schleife nur mit Bit 4 — stimmt |
+| Waffen-Lader 0x80036b68 | `80036b84 lbu 0x800aca5c`, `80036bac 0x800741e8`, `80036bc4 addu a0,v0,a0` (+ Waffe 0x800aca5d), **`80036be4 sw v0,-13368(at)` = 0x800acbc8 (+0x174)**, **`80036c04 sw v0,-13372(at)` = 0x800acbc4 (+0x170)**; Tabelle 0x800741e8 = [76,76,76,76,97,97,97,97,76,76,76,76,76,76,76,118] | Modell 0x0D -> 76 (PL00Wxx), Modell 4 -> 97 (PL04Wxx) — stimmt |
+| NPC-Executor 0x80050be8 | Sub-Tabelle `80050c24 addiu at,at,27808` = 0x80076ca0 (= dieselben 4 Subs), `80050c50 xori 0x20`, **`80050c6c andi 0x1` -> `80050c78 jal 0x800369f8` (a1 = 0)**, **`80050c94 andi 0x2` -> `80050ca0 jal 0x800369f8` (`80050ca4 ori a1,zero,0x1`)** | stimmt |
+| FUN_800369f8 | `80036a30 lw s3,392(v0)` (+0x188), `80036a34 jal 0x80068098` (RotMatrix +0x68 -> +0x20), `80036a48/58 jal 0x80022da0` (s3+24, s3+196), `80036a60..70` s3 += a1*516 + 688, `80036a78/88/98` s3-320 / s3-148 / s3+24, Modus 0: **`80036ab4..ac8` x(+0x34) -= sp+36 - Part+84**, **`80036ad4..aec` z(+0x3c) -= sp+44 - Part+92** | feste Kette 0-1-2-3-4 / 0-1-5-6-7, x/z -= Differenz — stimmt |
+| Super_set 0x80040b20 / Super_reset 0x80040cd0 | Art `andi v1,a1,0xc0`; 0x80 + Part-Bit: `80040c18 addiu at,at,-11340` (0x8009d3b4) + pc[2]*500 (= Gegner+0x188 fuer pc[2]-0x80), Part*172 + 64; `80040c74 sw v0,116(a2)`; `80040c78..cbc` lokal pc+4/6/8, Rot pc+10/12/14; Reset `80040cd8..ce0` +0x5c/60/64 -> `80040cf0..cf8` +0x34/38/3c, `80040cec` Vater 0x80072d4c | stimmt |
+| RBJ-Binder 0x8001b3f8 | `8001b404 lw a2,92(v0)`, `8001b410 addu a3,zero,zero` (einmal), `8001b440 andi 0x1` -> `8001b450/460` Spieler-Kanal (jeder Bit-0-Record, letzter gewinnt), `8001b4a0/4bc` Gegner-Kanal 0x800acdac/b0 + (a3&0xff)*500, **`8001b4c4 addiu a3,a3,1` im Delay-Slot je Bitposition**; Aufrufer `80039a08 jal 0x8001b3f8` | stimmt; 3060-Rechnung Marker 1/2/4 -> Gegner {0:1, 2:2} nachgerechnet |
+| Bild-Zaehler 0x8001f314/0x8001f3bc | `8001f36c sw a2,360(t0)` (+0x168 = Eintrag Bild +0x95), `8001f5f0 jal 0x80068098` (lokale Part-Matrizen), **`8001f618 addiu v0,v0,1` / `8001f61c sb v0,149(v1)`**, `8001f63c sb zero` + Rueckgabe 1 | "+0x95 = gezeichnetes Bild + 1" — stimmt |
+
+| Plc_flg 0x80041fb8 | `80041fc8 beq a1(pc[1]),1 -> 80042008 sh a2,452(v0)` (SET), pc[1] = 0 -> `80041ffc or`, 2 -> `8004201c xor` | stimmt |
+
+Ergebnis: alle 11 geprueften Adressbereiche stimmen (richtige Datei PSX.EXE, Sprungziele/Tabellen nachgeschlagen).
+Suche im Diff (`git diff master...HEAD -- re15_port`, nur `+`-Zeilen) nach deferred/tunable/interim/for now/faithful/plausibel/
+TODO/FIXME/approx/vermutlich: nur zwei Treffer "deferred" = Zitat des ERSETZTEN alten Zweigs. Einziger neuer Env-Schalter
+`RE15_FUSSANKER_LOG` (nur Messzeile, kein Verhalten). Konstanten: jede mit @0x... bzw. als PORT-WAHL gekennzeichnet
+(RE15_RBJ_BINDER_MAX_REC 8 / _MAX_GEGNER 32 = Schutzgrenzen; "kein Vorbild-Stand -> keine Verschiebung"). Der Fix erklaert
+die gemessenen Befunde: Knien = PLD-Grundbank-Clip 6 statt W-Bank-Clip 6 (Punkte 1/2b); Liegenbleiben = Bit 1 fuehrte den
+Keyframe-Wurzelweg der eigenen Bank aus (No-op), Bit 2 war "deferred", Super_set/Super_reset fehlten (Punkt 2a).
+
+### Original-Daten selbst gelesen (Savestates des Bau-Agenten, eigenes Leseskript `J41abn0/py/*.py` auf re15_ss.Ram)
+- MZD-Disc = Auslieferungs-EXE: in o3060_s2_t03 / o3061_s2_t17 / o3061_s3_t08 sind die RAM-Bytes an 0x80026e4c (Stub `08 00 e0 03`,
+  kein Patch-Build), 0x80041b90, 0x80050f00, 0x800369f8, 0x80040b20, 0x8001b3f8, 0x80030660, 0x80036b68, 0x80050be8,
+  0x8001f314 **gleich** PSX.EXE. ROOM3060/3061-SCD (sub02-Ende, sub03, sub04) im RAM gleich den Dateien in shared_assets
+  (Unterschiede nur in relokierten Zeigern und den zur Laufzeit beschriebenen AOT-Datensaetzen).
+- o3060_s2_t03 (6,5 s): Raum 3060, Modell 0x0D, Waffe 1, Spieler **cmd 4 / Sub 2 / Phase 2 / Clip 6 / +0x95 0**, +0x168 0x801d7a10 =
+  +0x174 (0x801d7708) + 0x308 = PL00W01-EDD Clip 6 letztes Bild (eigene PLW-Lesung: Clip 6 = 10 Bilder ab EDD+0x2e4). t04 (8,0 s):
+  ROOM3020, Modell 0, cmd 0 / Sub 0.
+- o3061_s2_t17 (38 s): Modell 4, Waffe 1, Spieler **cmd 4 / Sub 2 / Phase 2 / Clip 6**, +0x168 = 0x801d7708 + 0x3e4 = PL04W01 Clip 6
+  letztes Bild; John (Gegner 1) Sub 2 Phase 2 Clip 6; Sherry (Gegner 0) (-18795,-30700). t19: ROOM30C1, Modell 0x0F, Waffe 0.
+- o3061_s3: t08 Clip 2 +0x95 19 (-18780,-28017), t09 +0x95 44 (-18791,-28390), t10 +0x95 12 (-18783,-28806), t11 +0x95 39
+  (-18810,-29279), t12 (-18795,-30700); Gitter t03 lokal (252,192,-153) Rot (0,1024,3072) Vater 0x8014046c, t04 lokal (-18276,..)
+  Rot (72,3072,0) Vater 0x80072d4c, ab t05 (-18116,-266,-26788). = die Sollwerte in den Riegeln (keine erfundenen Zahlen).
+
+## Punkt 1 — ROOM3060, Marvins Animation am Ende seines Abschnitts (Leon-Szenario)
+
+### Messung (eigene Laeufe, eigene exe-Kopie `re15_pc_abnJ0_*.exe`, Laufordner `J41abn0/laeufe/`)
+**Lauf p1a_3060_tuer** — wie der Riegel, aber die Tuer ROOM3040 -> ROOM3060 per **echtem Quadrat-Druck** statt RE15_FIRE_AOT:
+`RE15_SET_FLAG=4:199,4:196 RE15_GOTO_ROOM=3020 RE15_FORCE_EVENT=2@150 RE15_DEBUG_JUMP=3040@1150
+RE15_PLAYER_POS=-8900,-26300,1024,0` (= Ankunftspunkt der 3060->3040-Tuer, ROOM3060 @0x00ED6, Blick nach -z auf die Tuer),
+Quadrat alle 1,5 s (`A0.1,W1.4` x 70), RE15_ANIM_TRACE, RE15_STATE_LOG.
+debug.log (Auszug):
+```
+[force-event] scd_event_fire(2) at F150                      (ROOM3020 sub02 = Szene, Spieler -> Marvin)
+[pld] Spielermodell -> PLD/PL0D.PLD
+[debug-menu] JUMP -> 304 FACTORY LINE A (ROOM3040) spawn=(-8900,0,-26300) cut=0
+[aot] DOOR FIRE slot=0 rect=(-8800,-26950,hw=1850,hh=350) target_cut=4 spawn=(2063,0,-17192)   <- Quadrat an der Tuer (F39)
+[room] PC loaded room3060.rdt
+[wclip41] ROOM3060 F65 Spieler Plc_motion(2,6) -> W-Bank-Clip 6 (0x80073e30[2] = 0x80050f00, Kanal +0x170/+0x174, Waffe 1, 10 Bilder)
+[aot] DOOR FIRE slot=3 ... spawn=(-11250,0,-13250)            (@0x010E4 Aot_on 3)
+[room] PC loaded room3020.rdt
+[pld] Spielermodell -> PLD/PL00.PLD
+```
+RE15_ANIM_TRACE Spieler im ROOM3060-Block (Bild Motion Clip Bildzahl Slot): F25-27 `105 5 30` (Drehbeginn), F28-43 `1 1 16`
+(W-Clip 1), F44-64 `2 2 52` (W-Clip 2), **F65-74 `6 6 10` Slot 0..9 je einmal, F75-F104 `6 6 10` Slot 9 (30 Bilder; zusammen 31 x
+Bild 9)** = Phase 2 Halten (@0x80050fec) bis zur Tuer. Kein Bild mit PL00-Clip 6 (50 Bilder = Knien).
+Erster Block ROOM3020 danach: F0-F5 `210 1 16`, F6.. `200 3 1` (Leon-Stand) — **kein W-Clip-6-Bild nach dem Wechsel**; Original
+o3060_s2_t04 dort cmd 0 / Sub 0, Modell 0 (selbst gelesen) — gleich.
+Original (selbst gelesen, s. oben): o3060_s2_t03 Spieler cmd 4 / Sub 2 / Phase 2 / Clip 6, +0x168 = PL00W01-Clip-6 Bild 9.
+
+Riegel `integration_r41_stage3szenen_a_3060` (eigener Lauf): Passed 214,6 s — `40 Bilder Motion 6, davon 0 nicht Clip 6/10 Bilder,
+31 x Bild 9 gehalten`.
+
+**Lauf p1b_3060_bilder** (gleicher Weg, echte Tuer, RE15_FRAMEDUMP 20-100/2, RE15_EXIT_AT=100#3060): Bildbogen
+`J41abn0/p1b_3060_marvin_zoom.png` (Ausschnitt 62,85-112,165, 3-fach): F56-F68 Marvin steht, F70-F74 hebt er den Arm vor die
+Brust, F76-F100 haelt er diese Haltung. Original-Video selbst ausgeschnitten (`J41b/orig/o3060_v4.mp4`, ffmpeg fps=10,
+`J41abn0/o3060v4_marvin_zoom.png`, Ausschnitt 124,170-224,330): o21-o32 steht, o33 Arm vor die Brust, o33-o43 gehalten, o44
+Abblende. **Gleicher Bewegungsablauf, gleiche Endhaltung; kein Knien.**
+
+### Urteil Punkt 1: **erfuellt**
+Beleg: Ursache (Spieler-Plc_motion(2,6) lief auf der PLD-Grundbank statt +0x170/+0x174) und Mechanismus (Sub 2 0x80050f00,
+W-Bank-Lader 0x80036b68/Tabelle 0x800741e8, Halten @0x80050fec) selbst disassembliert; Port spielt am echten Tuerweg W-Clip 6
+(10 Bilder) und haelt Bild 9 bis zum Wechsel, erstes ROOM3020-Bild ohne W-Clip; Bild = Original-Video.
+
+## Punkt 2 — ROOM3061 (Elza): (a) Sherry kriecht in den Schacht, (b) Elzas Animation am Ende der Szene
+
+### Messung (eigene Laeufe)
+**Riegel `integration_r41_stage3szenen_a_3061`** (eigener ctest-Lauf, Passed 93,9 s, Laufordner
+`re15_port/build/r41_stage3szenen_a_wd_3061_18a3b040/lauf`): Spielstand Elza (-3500,-25500) Blick 1024 + Bits 4:244/3:160
+(probe_r36_elza_karte), CONTINUE, ab Spielbild 420 vor an die Wand und **Quadrat** (kein RE15_FIRE_AOT):
+`[scd F497] Cut_chg(6)` (sub02 laeuft), `[superobj41] F1049 Super_set Objekt 0 Art 0x80 Teil-Byte 0x8E lokal (252,192,-153)
+Rot (0,1024,3072) -> angehaengt`, `F1075 Super_reset ... -> lokal (-18753,-266,-26778) Rot (72,3072,0)` (Original-Loslass-Lage
+(-18756,-266,-26788)), Anker-Takte `0/1x22 1/1x22 0/1x11 1/2x26 0/2x24 1/2x26 0/2x24` (= Plc_flg-Folge sub04), Sherry-Lagen je
+(3,10) neben dem Original, Sherry-Endlage (-18792,-30700) (Original (-18795,-30700)), `[wclip41] ROOM3061 F1456 Spieler
+Plc_motion(2,6) -> W-Bank-Clip 6 (... Waffe 1, 10 Bilder)`, 56 x Bild 9, Wechsel ROOM30C1 als PL0F.
+
+**Lauf p2a_3061_bilder** (gleicher Weg + RE15_FRAMEDUMP 1000-1520/4, RE15_STATE_LOG, RE15_ANIM_TRACE, RE15_FUSSANKER_LOG):
+dieselben Zeilen (Super_set F1049, Super_reset F1075 (-18753,-266,-26778), 155 Anker-Zeilen mit derselben Takt-Folge,
+state.txt Sherry F1200 (-18781,-28058) ... F1299 (-18792,-29716) -> F1300 (-18792,-30700), danach unveraendert).
+Elza (state.txt): F1400 (-18510,-26206) rot 1939, F1520 rot 3651 — **Original o3061_s2 t16/t17 (selbst gelesen): (-18510,-26206)
+rot 1939 / 3651**. RE15_ANIM_TRACE Elza: F1438-F1455 `105 5 30` (Drehen, Plc_dest 9), **F1456-F1465 `6 6 10` Slot 0..9,
+F1465-F1520 Slot 9 (56 x)** bis zum Tuerwechsel; ROOM30C1 F0/F1 `210 1 16`.
+
+Bilder (Port, 320x240 Framedump) gegen das selbst ausgeschnittene Original-Video `J41b/orig/o3061_v3.mp4` (ffmpeg ab 10 s, 5 B./s):
+- Kriechen: `J41abn0/p2a_3061_kriechen.png` / `J41abn0/o3061v3_kriechen.png`: Sherry kniet am Gitter (Port F1040 / Orig o57),
+  zieht es mit der Hand heraus (F1048-F1064 / o59-o62), legt es links ab (F1072-F1112 / o63-o70), geht auf alle Viere und kriecht
+  hinein (F1120-F1136 / o70-o73), nur noch die Beine schauen heraus, Elzas ausgestreckter Arm ("Sherry, wait!") oben rechts im
+  Bild (F1140-F1172 / o74-o78), dann Elza im Vordergrund (F1176+ / o79+). Ablauf und Gitter-Ablage gleich.
+- Elzas Ende: `J41abn0/p2a_3061_ende_zoom.png` / `J41abn0/o3061v3_ende_zoom.png` / `J41abn0/vergleich_3061_ende_voll.png`:
+  Elza steht (F1396-F1436 / o117-o124), dreht sich (F1440-F1452 / o125-o127), hebt die Arme mit der Waffe nach vorn
+  (F1456-F1465 / o128) und haelt (F1468-F1516 / o129-o137); John ebenso. Kein Knien mehr (vorher: J_belege/e3061_vor_ende_elza_kniet.png).
+
+**Lauf d3_3011_tuer_szene — der echte Weg durch die Tuer** (statt CONTINUE im Raum): Spielstand Elza in **ROOM3011** vor der Tuer
+Slot 1 (ROOM3011 @0x01FF2, Ziel ROOM3060/3061) bei (-7578,10065) Blick 0, Bits 4:244/3:160; Eingaben ab Spielbild 30
+(`RE15_INPUT_SCRIPT_BASIS=spiel`): Quadrat an der Tuer, 14 s warten (Einlauf sub09/sub10), 3,8 s rennen nach +x, 0,35 s rechts
+drehen (Blick ~1072 = nach -z), 1,2 s rennen bis an die Wand, dann Quadrat alle 1,5 s.
+```
+[aot] DOOR FIRE slot=1 rect=(-6563,9810,hw=705,hh=900) target_cut=0 spawn=(-26027,0,-22532)   (ROOM3011 -> ROOM3061)
+[scd F703] Cut_chg(6)                                                                         (Quadrat am Slot-1-AOT -> sub02)
+[superobj41] F1255 Super_set Objekt 0 Art 0x80 Teil-Byte 0x8E lokal (252,192,-153) Rot (0,1024,3072) -> angehaengt
+[superobj41] F1281 Super_reset Objekt 0 Welt-Lage uebernommen -> lokal (-18753,-266,-26778) Rot (72,3072,0)
+[wclip41] ROOM3061 F1662 Spieler Plc_motion(2,6) -> W-Bank-Clip 6 (... Waffe 1, 10 Bilder)
+[aot] DOOR FIRE slot=3 ... spawn=(-19100,0,-1350) / [pld] Spielermodell -> PLD/PL0F.PLD
+```
+Anker-Takte `0/1x22 1/1x22 0/1x11 1/2x26 0/2x24 1/2x26 0/2x24`, Sherry tiefste Lage (-18792,-30700), Elza letzte ROOM3061-Zeile
+(-18510,-26206) rot 3651, ANIM_TRACE Elza `6 6 10` Slot 0..8 je 1x, **Slot 9 56x**. Ergebnis identisch mit dem CONTINUE-Weg.
+
+### Urteil Punkt 2a (Sherry kriecht in den Schacht): **erfuellt**
+Beleg: Glied-Anker FUN_800369f8 und Super_set/Super_reset selbst disassembliert (s. Gate RE); Riegel `unit_r41_stage3szenen_a_anker`
+trifft die selbst gelesenen Original-Staende o3061_s3 t08->t10 / t09->t11 **bytegleich** (Abweichung (0,0)); Gitter-Loslass-Lage
+im Riegel bytegleich (-18756,-266,-26788), im Spiellauf (-18753,-266,-26778) (Rest (3,10) aus Sherrys Lage vor dem Kriechen,
+NPC-Gang, s. Dossier §4.3); Sherry erreicht (-18792,-30700) (Original (-18795,-30700)); Bildfolge Kriechen = Original-Video.
+
+### Urteil Punkt 2b (Elzas Animation am Ende der Szene): **erfuellt**
+Beleg: Plc_motion(2,6) @0x011DE spielt W-Bank PL04W01 Clip 6 (Tabelle @0x800741e8 Modell 4 -> 97), haelt Bild 9 bis zum Wechsel;
+Original o3061_s2_t17 cmd 4 / Sub 2 / Phase 2 / Clip 6, +0x168 = PL04W01-Clip-6 letztes Bild; Lage/Blick (-18510,-26206) 3651 gleich;
+Bildfolge (Drehen, Arme mit Waffe vor, Halten) = Original-Video; kein Knien mehr.
+
+## Gate V — Vertrag (VERTRAG.md)
+- Pfade (`git diff master...HEAD --name-only`, 45 Dateien): keine release/, platform/android/, shared_assets/PSX/, pri/, synchro/,
+  keine Test-CMakeLists (Riegel nur in `tests/unit/probes/r41_stage3szenen_a.cmake` / `_rbj.cmake`). **ok**
+- Bank-9-Bits / Nachrichten-Ids: keine neuen (kein Eintrag in test_r36_kartenbits.c, kein game_flag/Message im Diff). **ok**
+- Gemeinsame Dateien (VERTRAG 1.3): enemy_ai_common.c = "NPC-Code (J, K)" (2 Zeilen Executor + 1 Zeile Vorbild-Stand + include,
+  alter 20-Zeilen-Zweig ersetzt) **ok**; enemy_common.c / platform/psx/src/asset_psx.c (RBJ-Binder) = Auftrag A-E5 **ok**;
+  dining_r39.c (3 Zeilen + include) nicht in der Liste, keine andere Runde-41-Spur **ok**.
+  **ABER: scd_vm.c (register_opcodes 0x48/0x49, 3 Zeilen) ist laut 1.3 nur C, F, G zugeteilt; platform/pc/main.c
+  (pc_prop_world 4 Zeilen) nur D und F/G** — klein, markiert "Runde 41 Spur J", technisch ohne Alternative (Opcode-Tabelle,
+  PC-Zeichner), aber ohne Orchestrator-Entscheid (Vorbild B5 / A-E3 / E-E1). Der RBJ-Spieler-Haken in main.c (1 Zeile +
+  include) ist durch A-E5 gedeckt. -> **Mangel V1 (formal)**.
+- Doku-Stand im Zweig: AUFTRAG.md/VERTRAG.md im Stand Nachtrag 11 (Commit 1d19b24b); master ist weiter (Nachtrag 16+). Bei der
+  Integration die master-Fassung nehmen (vom Bau-Agenten selbst vermerkt) — kein Mangel der Spur.
+- Riegel je Punkt vorhanden und messend: Punkt 1 `integration_r41_stage3szenen_a_3060` + `unit_..._wclip`; Punkt 2a
+  `unit_..._anker` (bytegleich gegen Original-Staende), `unit_..._superobj`, `unit_..._zensus`, `integration_..._3061`
+  (Gitter, Anker-Takte, Lagen, Schacht); Punkt 2b `integration_..._3061` (W-Clip 6, >= 40 x Bild 9) + `unit_..._wclip`.
+  Alle Riegel schlagen bei altem Verhalten an (Clip 6 mit 50 Bildern / Sherry z > -29500 / fehlende Messzeilen).
+  Parallel-/Linux-fest: eigener Laufordner + exe-Kopie je Lauf (Zufalls-Id), Kopie auch bei Abbruch entfernt (ed8b1457),
+  `m` auf Nicht-WIN32, `cmake_minimum_required` im -P-Skript, keine .exe-/Backslash-Pfade. **ok**
+  Kleinigkeit: der Kopf von `probes/r41_stage3szenen_a.cmake` nennt fuer `_anker` noch "Abweichung <= 40" und fuer `_superobj`
+  "~ Original", die Riegel pruefen inzwischen strenger auf 0 (Kommentar veraltet, kein Mangel).
