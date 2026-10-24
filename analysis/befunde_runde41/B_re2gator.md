@@ -10,6 +10,11 @@ Zeiten aus `date`. Jeder Schritt wird hier VOR dem Bau notiert.
 
 ## 0. Protokoll (neueste Eintraege oben)
 
+* 2026-10-24 16:3x-18:0x (NACHBESSERUNG 6, Abnahme 5 M1-M3): M1 P3 ohne Ende (RE2 @0x801011c4-e4, Leon-Handler Phase 3 @0x80102f24-28) -
+  Opfer im Maul bis zum Raumwechsel; M2 Buehne nie auf der laufenden Kamera (work_vars[0x0A] @0x80021bfc / cam_id @0x80014300);
+  M3 Buehne meidet Raum-Objekte im Sichtstrahl, Leon in P1 auf Gator-Hoehe (vorher unter der Wasseroberflaeche obj 1), Ordnung nach
+  dem RE2-Finisher-Massstab 1354; Nebenbefund Elza-Zopf im Maul-Massstab (1 Haken main.c). Riegel maul/buehne/kamera + integration
+  belagerung bis zum letzten 2090-Bild; Unit 121/121, Integration 7/7 + 1/1; D2/C3/K/N bitgleich. §14.
 * 2026-10-24 10:14-11:4x (NACHBESSERUNG 4, Abnahme 3 M1/M2): M1 Kanister + Effekt-Quellen aus der GEZEICHNETEN Pose am
   Takt-Ende (Takt-Huelle: Wand-Klemme bitgleich in den Boss-Takt, re15_gr2_nachtakt; RE2 Kind der Part-6-Weltmatrix
   @0x801018d0-e0), Nebenbefund RE2-Ueberblendung (Rate 4096/(n+1) @0x8001a37c-ac, Abbau @0x800299c0-cc; Dash war eingefroren);
@@ -2097,3 +2102,24 @@ Uebergabe-Bild mit dem Opfer im Maul). Raum-Spinnen stehen in BL F522-F526 (alte
   Koppelbild m (RE2-Finisher 1354)`.
 - Hinweis an Spur F (2090-Szene): frisst der Alligator die treibende Leiche obj 3, faellt sie aus der Sicht-Pruefung von selbst heraus
   (nur aktive Objekte zaehlen); sonst meidet die Buehne sie.
+
+### 14.9 Abschluss Nachbesserung 6 (je Mangel)
+- **M1 behoben.** Ursache: FRESSEN endete nach 120 P3-Takten (victim_force_end, render_scale 0, CHASE), der Raumwechsel kam ~20 Bilder
+  spaeter. Beleg: RE2 P3 @0x801011c4-e4 ohne Phasen-Schreiber, Leon-Handler Phase 3 @0x80102f24-28 (+0x1D3 = 0x80 je Bild, kein Anim/
+  keine Lage). Aenderung: P3 ohne Ende, Opfer-Modus + Maul-Massstab bis zum Raumwechsel. Nachher: E1/A2/MN/BL/Elza je 275 Bilder bis zur
+  Game-Over-Uebergabe mit dem Opfer im Maul (gehalten 275/275, Kiefer-Abstand 2), state.log gr=1 F627-F902 bis zum Bildzaehler-Reset,
+  Bildbelege E1 F870-F902 (`E1_nachher_ende_zoom.png`) gegen `B41abn5/E1_ende2.png`. Riegel maul (P3 300 Bilder) + integration belagerung
+  (bis zum letzten 2090-Bild).
+- **M2 behoben.** Ursache: die Buehnen-Suche schloss die laufende Kamera nicht aus. Beleg: RE2 P0 Umsetzen @0x80101048-4c im Takt des
+  Schnitts @0x80100ff4; RE1.5 angezeigt/angefordert DAT_800b0fe4 @0x80021bfc / DAT_800afbb5 @0x80014300. Aenderung: beide Cuts als
+  Buehnen-Kamera ausgeschlossen (auch im Rueckfall). Nachher: G1F Cut 0 -> Schnitt auf Cut 6 (F399 -> F400), G2F Cut 6 -> Cut 1 (F440 ->
+  F441), E1 2 -> 6; Bildbelege `G1_nachher.png` gegen `B41abn5/G1_gleiche_kamera.png`. Riegel buehne (2240 Suchen, jede Zonenkamera als
+  laufende, 0 gleich), kamera (c), maul, integration nische/belagerung.
+- **M3 behoben.** Ursachen: (1) Raum-Leiche obj 3 im Sichtstrahl der NB5-Cut-4-Buehne, (2) - neu gemessen - Leon stand in P1 im Maul-
+  Massstab auf dem Beckenboden und damit ganz unter der Wasseroberflaeche (obj 1, Typ 3, y -1620). Belege: RE2 P0 Kanister aus
+  @0x80101008-0c, RE1.5 Objekt-Zeichner Typ 3 @0x8002c2bc-c8 / Regions-Cull @0x8002c2d8-e4, RE2 P0 nur x/z @0x8010106c-84, Anker-y
+  @0x80015d7c. Aenderung: Buehne meidet gezeichnete Mesh-Objekte im Sichtstrahl zu Leons Knochen/Kopf/Kiefer in jedem Bild, Leon in P1 auf
+  Gator-Hoehe, Buehnen-Ordnung nach dem RE2-Finisher-Massstab 1354. Nachher: alle Laeufe "Opfer frei 275/275", P1 Leon gross und frei vor
+  dem Gator (`E1_nachher_schnitt_p1.png` gegen `B41abn5/E1_p1_zoom4.png`); Riegel maul unabhaengig 0 verdeckte Vertices, P1 >= 762 Promille
+  ueber der Wasserlinie, Gegenproben 196 verdeckt / 36 Promille. Dossier §13.7 berichtigt (Verdecker = Raum-Leiche, nicht Spinne).
+- Nebenbefund Elza-Zopf behoben (§14.4). Punkte 2/3 unberuehrt: D2/C3/K/N state.log bitgleich mit Abnahme 5.
