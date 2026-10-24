@@ -120,6 +120,7 @@ static inline int RNDI(float f) {
 #include "re15_g5_skin.h"     /* G5-Endkampf: Skinning/Augen-UV (Phase 2 birkin-g5.md) */
 extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c */
 #include "re2_ems.h"          /* WELLE A: RE2-Flavor-Asset-Loader (CDEMD0.EMS-TOC, PC-only) */
+#include "re15_gator_re2_r41.h" /* Runde 41 Spur B: RE2-Schuetteln (Hintergrund-Versatz) + Kanister-Zeichner */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
 #include "re15_bissarm_r37.h"  /* Runde 37 Spur J: Handkontakt im Griff */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
@@ -4016,6 +4017,7 @@ re_title:;
     { extern void re15_pc_w11b0_init(void); re15_pc_w11b0_init(); }   /* Runde 38 Spur C: Schiebe-Ton ROOM11B0 (Satz 7 aus ROOM1171) */
     { extern void re15_pc_dining_r38_init(void); re15_pc_dining_r38_init(); }     /* Runde 38 Spur F: Port-Banken 0x3B/0x3C/0x3D */
     { extern void re15_pc_toene_r39_init(void); re15_pc_toene_r39_init(); }   /* Runde 39 Spur B: TOENE39.VBS-Haken (Schublade 11F0, Gitter/Schrank 1190) */
+    { extern void re15_pc_gator_re2_init(void); re15_pc_gator_re2_init(); }   /* Runde 41 Spur B: GATOR40A0.VBS-Haken + Kanister-Modell */
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -5612,7 +5614,9 @@ re_title:;
                                      re15_montage_fx_prev_base_zoom()
                                          + re15_montage_fx_prev_zoom_px());
             } else {
-                re15_bg_blit(0, 0);
+                int r41_sx = 0, r41_sy = 0;   /* Runde 41 Spur B: RE2-Schuetteln FUN_8002aa6c = Hintergrund um (-dx,-dy) */
+                re15_gr2_schuettel_offset(&r41_sx, &r41_sy);
+                re15_bg_blit(-r41_sx, -r41_sy);
             }
             /* DER ROTE LEISTUNGS-ZEIGER des Boiler-Room-Bedienfelds (ROOM11F0, Cut 10).
              * Direkt nach dem Hintergrund und vor dem 3D-Pass, weil er zur ANZEIGE des
@@ -9157,6 +9161,7 @@ re_title:;
                 if (bi >= n_bones) {   /* Runde 38 Spur D: Zopfglied = Weltmatrix aus FUN_80024e40 (Teil+0x40) */
                     mi = RE15_ZOPF_ERSTES_TEIL + (bi - n_bones);
                     (void)re15_zopf_r38_welt(bi - n_bones, yawed_rot, bone_world_trans);
+                    re15_gr2_zopf_massstab(player_ref, yawed_rot, bone_world_trans);   /* Runde 41 Spur B NB6: Zopf im Maul-Massstab (gator_re2_r41.c) */
                 }
                 /* (Knochen-11-Fuetterung re15_player_set_hand_world/_rot: seit der NACHBESSERUNG
                  * M-HE-1 VOR diesem Loop, jedes Bild aus derselben Pose — s. "BLADE/HAND WORLD POINT"
@@ -9752,6 +9757,7 @@ re_title:;
                  * keinen sichtbaren Part). Das generische no_draw darunter laesst den
                  * Schatten stehen (Feuer-Emitter 0x26), deshalb der eigene Ausstieg HIER. */
                 if (npc->type == 0x1Au && npc->no_draw && re15_re2arm_owns(npc)) continue;
+                if (re15_gr2_pc_untergetaucht(npc, npc_region_culled)) continue;   /* Runde 41 Spur B (Entscheid B9): Boss-Alligator vor dem Durchbruch untergetaucht wie RE2 (Sce_em_set y=+3000 @RDT 0x25A0) - Mesh UND Schatten aus */
 
                 /* RE1.5 character shadow for this NPC — FUN_8001b064 is called
                  * PER-ENTITY (corners from param_1+0xc/+0xe), so each on-stage
@@ -11111,6 +11117,8 @@ re_title:;
                 (void)pi;
             }
 
+            re15_gr2_pc_zeichnen(&cam_view, cx, cy);   /* Runde 41 Spur B: Kanister-Prop (ROOM40A0 Modell 1) */
+
             /* Cut/player HUD + projection marker silenced. */
             (void)active_cut_count;
 
@@ -11498,10 +11506,11 @@ re_title:;
          * pacing. Override via RE15_FPS env var (option-menu hook). */
         {
             static uint32_t last_tick = 0;
+            uint32_t budget = re15_gr2_pc_bildbudget(frame_budget_ms);   /* Runde 41 Spur B: RE2 VSync(4) in R1 @0x8010235c */
             uint32_t now = SDL_GetTicks();
             uint32_t elapsed = now - last_tick;
-            if (elapsed < frame_budget_ms && last_tick != 0) {
-                SDL_Delay(frame_budget_ms - elapsed);
+            if (elapsed < budget && last_tick != 0) {
+                SDL_Delay(budget - elapsed);
             }
             last_tick = SDL_GetTicks();
         }

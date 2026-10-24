@@ -1166,6 +1166,16 @@ static void teil_zensus(void)
                         e->grid_id = 0x13;
                         for (int f = 0; f < 3; f++) zensus_bild();
                     }
+                    if (zt->raum == 0x2090) {
+                        /* Runde 41 Spur B, Nachbesserung 3 (Orchestrator-Entscheid B9): der ROOM2090-Boss liegt im
+                         * natuerlichen Lauern UNTERGETAUCHT wie RE2 (Sce_em_set y=+3000 @RDT 0x25A0 ROOM40A0) - ohne
+                         * Trefferbox bis zum Durchbruch (enemy_ai_boss_gator.c gb_untertauchen). Der Zensus misst die
+                         * HURT-/DEATH-Behandlung des AUFGETAUCHTEN Bosses: Leon einmal 6000 vor den Lauerplatz (Aggro
+                         * < GB_AGGRO 9000) -> RE2-Intro (Auftauchen), dann zurueck in die Ferne. */
+                        pl->x = e->x; pl->z = e->z - 6000;
+                        zensus_bild();
+                        pl->x = 0; pl->z = 40000;
+                    }
                     /* Lauf 0: die HP des INIT (erreichbar = was der echte Schaden daraus macht), Lauf 1:
                      * HP 1 (ein vorher angeschossener Gegner) -> Tod. */
                     if (zt->typ < 0x40 && tod) e->hp = 1;

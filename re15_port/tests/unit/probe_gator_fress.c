@@ -30,6 +30,7 @@
 #include "re15_damage.h"
 #include "re15_collision.h"
 #include "re15_boss_gator.h"
+#include "re15_gator_re2_r41.h"   /* Runde 41 Spur B: re15_gr2_im_intro / re15_gr2_biss_cd (Intro abwarten) */
 #include "re15_emd.h"
 #include "re15_md1.h"
 #include "re15_skeleton.h"
@@ -80,7 +81,7 @@ static int load_re2_bank(uint8_t type)
  * POSE_v, exakt re15_skel_bone_to_world) zurueck in den GATOR-LOKALEN Rahmen,
  * local = RotY(-yaw)*(root - G) / s. Im Original (kein Scale) ist das exakt
  * (off_v - off_g) + POS_v (RE2 Anker-Paar FUN_80015B94/CB8). Bestehen: bei P3 (Clip 11 f0
- * / Opfer f119) |local - Original| <= 5 je Achse UND local liegt in der lokalen AABB von
+ * / Opfer f119) |local - Original| <= 16 je Achse (bis Runde 41: 5, s. pin_leon_im_maul) UND local liegt in der lokalen AABB von
  * MD1-Mesh 7 (Unterkiefer) der geposten Kette (heute vor dem Fix: (7892,-1804,295), dRef
  * (2628,599,97), ausserhalb beider Kiefer - "er liegt darunter"). */
 static int kf_of(const re15_emd_animation_t *an, int clip, int fr)
@@ -160,8 +161,14 @@ static int pin_leon_im_maul(re15_enemy_bank_t *B, const re15_actor_t *e, const r
            pl->x, pl->y, pl->z, L[0], L[1], L[2], ref[0], ref[1], ref[2],
            L[0]-ref[0], L[1]-ref[1], L[2]-ref[2],
            lo7[0], hi7[0], lo7[1], hi7[1], lo7[2], hi7[2], in6, in7);
-    for (i = 0; i < 3; i++) if (L[i]-ref[i] > 5 || L[i]-ref[i] < -5) ok = 0;
-    if (!ok) printf("FAIL: Leons lokale Wurzel weicht > 5 vom Original-Sitz ab (Scale-Nachzug fehlt?)\n");
+    /* Runde 41 Spur B, Nachbesserung 5: Schranke 16 statt 5. Seit der Finisher-Buehne (RE2-P0 setzt den Gator um, @0x80101048-4c)
+     * steht der Gator im Finisher frontal zur Kamera (hier Cut 0, Gier 289) statt auf der Gier 0 dieses Riegels - bei Gier 0 ist die
+     * Drehung exakt (cos 4096, sin 0), bei jeder anderen runden die drei Q12-Drehungen (Opfer-Platzierung gb_opfer_skalieren,
+     * POS-Kanal, Rueckrechnung hier) je bis |v|/4096 + 1 = 3,6 Welteinheiten (|v| <= 10643), im lokalen Rahmen x 4096/2731:
+     * 3 x 3,6 x 1,5 = 16. Gemessen bei Gier 289: dRef (-8,-1,-2) (vorher bei Gier 0: (-2,-1,-1)); ein fehlender Scale-Nachzug
+     * (der Defekt, den der Pin faengt) laege 2628 daneben. */
+    for (i = 0; i < 3; i++) if (L[i]-ref[i] > 16 || L[i]-ref[i] < -16) ok = 0;
+    if (!ok) printf("FAIL: Leons lokale Wurzel weicht > 16 vom Original-Sitz ab (Scale-Nachzug fehlt?)\n");
     if (!in7) { printf("FAIL: Leons Wurzel liegt nicht im Unterkiefer (Mesh 7) - 'er liegt darunter'\n"); ok = 0; }
     return ok;
 }
@@ -323,7 +330,28 @@ int main(void)
     pl->x = -4000; pl->z = -22000; pl->y = 0; pl->floor = 0;
 
     re15_gator_boss_tick(slot);           /* Frame 0 = Boss-INIT (setzt Lauerplatz) */
+    /* Runde 41 Spur B, Nachbesserung 1: seit dem Wegfall des Bahn-Gates zuendet der RE2-Intro (Clip 6 ->
+     * Clip 3, 275 Bilder, RE2 Sub 0 @0x8010086c-948) bei JEDEM Aggro - vorher lief er am Lauerplatz nie
+     * (gb_bahn_frei scheiterte dort). Er wird hier abgewartet, damit der Riegel wie bisher den Biss in
+     * OFFENEM Wasser misst: mit dem Intro landete der Gator an der Suedwand (z -24781), die Dispatcher-
+     * Klemme hielt ihn dort waehrend der FRESSEN-Anker-Bahn fest, Leon folgte dem ungeklemmten Anker ->
+     * Sitz-Abweichung 11 statt <= 5 (gemessen 2026-10-23). Die Pins selbst bleiben unveraendert. */
+    for (int f = 0; f < 400 && (re15_gr2_im_intro(slot) || f < 2); f++) {
+        int32_t ox = e->x, oz = e->z;
+        re15_gator_boss_tick(slot);
+        if ((e->x != ox || e->z != oz) && !re15_gator_boss_skip_clamp(e)) {
+            int32_t nx = e->x, nz = e->z;
+            re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
+            e->x = nx; e->z = nz;
+        }
+    }
+    re15_gr2_biss_cd(slot, 0);            /* Intro-Biss-Sperre 110 (@0x8010091c) weg: der Biss soll sofort kommen */
     e->x = -6000; e->z = -22000; e->y = -1200;
+    /* Nachbesserung 2 (Abnahme 1 M2, Entscheid B7): der Intro endet jetzt mit der Gier, die auf Leon zeigt (Startlage
+     * gr2_intro_lage) statt immer mit 2113 - der Riegel stellt den Gator darum mit Blick auf Leon (Ost, Gier 0) neu hin,
+     * damit der Biss wie bisher frontal in offenem Wasser faellt (gemessen ohne diese Zeile: Biss bei Gier 208 waehrend
+     * der Wende, Sitz-Abweichung dRef (-8,-1,-4) > 5). Die Pins bleiben unveraendert. */
+    e->rot_y = 0;
 
     int fress_gesehen = 0;
     /* ⛔ WANN STARTET DIE TODES-PRAESENTATION? (Nutzer 2026-09-13, zweite Meldung:
@@ -396,7 +424,7 @@ int main(void)
     if (pl->motion != 1 || pl->anim_frame != 119) {
         printf("FAIL: Leon nicht im letzten Opfer-Frame geparkt (clip=%d af=%u)\n",
                (int)pl->motion, (unsigned)pl->anim_frame); return 1; }
-    /* PIN Phase 2: Leons Wurzel sitzt im Maul (Original-Relation +-5, in Mesh 7). */
+    /* PIN Phase 2: Leons Wurzel sitzt im Maul (Original-Relation +-16 = Q12-Rundung bei beliebiger Gier, in Mesh 7). */
     {   re15_enemy_bank_t *eb = re15_enemy_find(0x23u);
         if (!eb || !eb->victim_ok) { printf("FAIL: Opfer-Bank fehlt\n"); return 1; }
         if (!pin_leon_im_maul(eb, e, pl)) return 1;
