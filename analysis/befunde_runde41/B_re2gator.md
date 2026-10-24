@@ -10,6 +10,10 @@ Zeiten aus `date`. Jeder Schritt wird hier VOR dem Bau notiert.
 
 ## 0. Protokoll (neueste Eintraege oben)
 
+* 2026-10-24 08:1x- (NACHBESSERUNG 3, Abnahme 2 M1-M3, Entscheid B9): M1 Gator vor dem Durchbruch untergetaucht wie RE2
+  (Sce_em_set y = 3000 @RDT 0x25A0, Pos_set erst im Intro @SCD 0x0736); M2 keine Koerperlenkung von Stufe 1 bis zum
+  Anhaengen (kein Gier-Schreiber in Sub 1/2/T2, Schub nur laengs @0x801018a4-c0); M3 Anschwimm-Sperre +0x1C0 & 4
+  (@0x80100a34-b4, T1 @0x8010134c-58). §11.
 * 2026-10-24 05:23-07:2x (NACHBESSERUNG 2, Abnahme 1 M1-M4, Entscheide B6-B8): M4 Belegpflege; M3 Kanister-Aufnahme
   wie RE2 (Sub 2 -> 1, Hysterese-Ruhe, kein Biss in Stufe 1..6); M1 b Finisher-Schnitt bis Game Over (RE1.5-Todesbild
   im Boss-Takt zurueckgenommen), M1 a mit RVD-Beleg widerlegt; M2 RE2-Wende im Becken (Intro-Startlage Pos_set-Zwilling,
@@ -1038,3 +1042,52 @@ Messungen nachher -> Abschluss-Commit.
   Over stehen, keine Weissblende und keine kreisende Todeskamera mehr, YOU DIED erscheint ueber dem Fress-Bild.
 - gator_boss.log: neue Zeilen `RE2 INTRO Lage ...`, `RE2 DASH Planung/Vordrehung/entfaellt ...`, `... wand_draussen_max=`,
   `RE2 KAMERA FINISHER Halt Cut n Fm`, `KANISTER Stufe 1 ... sub a -> 1`.
+
+## 11. Nachbesserung 3 (Abnahme 2, B_abnahme_2.md; Beginn 2026-10-24 08:1x, HEAD 0a90a394)
+
+Neuer Agent (Nachbesserung 3). Baum sauber (`status --porcelain` leer), HEAD 0a90a394 (= 06bc6578 + Abnahmebericht 2
+65cd71c7 + AUFTRAG-Entscheid B9). Code-Stand = der von der Abnahme 2 gebaute und gemessene Stand (06bc6578, nur Doku
+danach) - deren Messungen (Prüfer-Scratchpad `B41abn2/mess/<Lauf>/`) gelten als "Messung vorher" und werden nicht
+wiederholt. Pflichtlektüre: AUFTRAG.md (inkl. B9 08:06: vor dem Intro KEIN sichtbarer Gator, RE2-Form "untergetaucht",
+Lage frei, dann Pos_set auf die B7-Startlage; Riegel: im natürlichen Ablauf Lauf N kein Bild mit sichtbarem Gator vor
+dem Durchbruch, kein sichtbarer Lagesprung), VERTRAG.md, B_abnahme_2.md (M1-M3), dieses Dossier §2, §9.1, §10, Memory
+reai-v2-gator-bosskampf.md. Eigene Läufe unter `.../scratchpad/B41nb3/`.
+
+Plan: M1 (B9: untergetaucht bis zum Durchbruch) -> M2 (keine Körperlenkung von Stufe 1 bis zum Anhängen) -> M3 (RE2-
+Anschwimm-Sperre +0x1C0 & 4, Hals-Zielmodus OFFEN mit Beleg) -> Bau -> gezielte Tests -> exe-Messungen nachher -> Abschluss.
+
+### 11.0 RE-Belege (selbst gelesen: `re2_disasm.py` / `B41abn1/em23_full.dis` aus EM23_OVL_0000.BIN, ROOM40A0.RDT mit
+`re15_port/tools/r41_re2gator/re2_scd_walk.py`)
+- **Vor dem Intro (M1, B9):** SCD-init @RDT 0x2500, Satz @0x00A0 (= Datei 0x25A0)
+  `44 00 00 23 00 00 01 16 00 00 4a 16 b8 0b 3c eb 00 04 00 00 00 00` = Sce_em_set Em_no 0, Id 0x23, nFloor 1, Bank 0x16,
+  Pos (0x164a, **0x0bb8 = +3000**, 0xeb3c) = (5706, 3000, -5316), Cdir 0x400: der Gator steht 3000 UNTER dem Boden
+  (Leons Ebene y = 0, das Wassergitter Modell 0 liegt bei y = 0, §2.5). Sub 0 P0 (@0x80100854-68: `lh v0,468(s0) / beq
+  v0,zero,0x80100950 / addiu v0,a0,1 / ... sb v0,6(s0)`) wartet NUR auf +0x1D4 - kein FUN_8001a330 (keine Animation, also
+  keine Bildwort-SE/-Stroke), der Sub-0-Pre ist leer (Tafel @0x8010463c[0] = 0x801007fc = `jr ra`: kein Kanister-Fenster,
+  kein T1-Schärfen FUN_801012fc). Auftauchen: sub11 `Member_set2 35 17 10` @SCD-main 0x0730 (+0x1D4 -> P1), `Evt_next`
+  @0x0734, im NÄCHSTEN Bild `Pos_set 32 00 cd 11 f8 f8 c3 b8` @0x0736 = (4557, -1800, -18237) - der Sprung von
+  (5706,3000,-5316) dorthin (13 000 Einheiten) ist in RE2 unsichtbar, weil der Gator vorher unter dem Boden steht.
+  P1 (@0x8010086c-b8) startet im selben Bild Clip 6 (`FUN_8001a330(em,6,0,0)`).
+- **Kanister-Aufnahme ohne Lenkung (M2):** Gier-Schreiber `sh ...,118(...)` im Overlay nur @0x80100280/2a0 (Root,
+  Rückschreiben um FUN_80035408), Intro-Knick @0x80100948, Dash-Knick @0x80100ec0, R1 @0x80102404/@0x80102440, R2/R3
+  @0x801027c8/@0x80102a34 (Abnahme 2 §3.3 c) - in Sub 1/2 (Pre @0x80100964-c1c, Main @0x80100c20/@0x80100cdc) und T2
+  (@0x801017c4-0x80101d40) keiner. T2-Stufentafel @0x80100024 (`table`): [1] 0x8010183c, [2] 0x80101860 - Stufe 1
+  (`jal 0x8007730c` a1 = 29, `sh zero,346(s1)`, `lbu/addiu/sb v0,550(s1)` @0x8010183c-5c) läuft OHNE Sprung in den
+  Stufe-2-Code @0x80101860 weiter (selbes Bild, t = 0). Stufe 2 schiebt NUR die Korridor-Achse: `lw v0,64(s2) / lw
+  v1,64(s1) / subu / slti v0,v0,8100 / beq v0,zero,+ / addiu v0,v1,8100 / sw v0,64(s2)` @0x801018a4-c0 (obj[1].z =
+  z + 8100, x unberührt); Anhängen bei t == 13 (`lh v1,346 / addiu v0,zero,13 / bne` @0x801018c4-cc), dabei Zielmodus
+  aus (`lbu v0,448(s1) / andi v0,v0,0xfb / ... sb v0,448(s1)` @0x801018e4-f4).
+- **Anschwimm-Sperre (M3):** Sub-1/2-Pre @0x80100964 nur in Zone 1 (`lbu v1,538 / bne v1,1,0x80100b20` @0x801009c8-d0),
+  vor der Zone-2-Linie (@0x801009d8-e4) und bei +0x22C == 0 (`lbu v0,556 / bne v0,zero,0x80100c08` @0x80100a0c-14):
+  (a) Bank 5 Bit 1 (`jal 0x80077360` a0 = 0x800d4874, a1 = 1 @0x80100a1c-2c; ROOM40A0 sub10 `Set 22 05 01 01` @SCD 0x0659,
+  Kanister fällt) und Stufe < 2 (`lbu v0,550 / sltiu v0,v0,0x2 / beq` @0x80100a34-40) -> `+0x1C0 |= 4` (@0x80100a48-5c),
+  Ziel +0x170/+0x172/+0x174 = (x, y - 800, obj[1].z) (@0x80100a4c-70); (b) DANACH, unabhängig von (a): obj[1].z - z
+  - 9000 < -120 (= obj[1].z - z < 8880; `lw v0,0x800d055c / lw v1,64(s0) / subu / addiu v0,v0,-9000 / slti v0,v0,-120`
+  @0x80100a74-8c) UND Stufe 0 (`lbu v0,550 / bne v0,zero` @0x80100a98-a0) -> `+0x1C0 &= 0xfb` (@0x80100aa8-b4). FUN_801012fc
+  schärft T1 (+0x224 = 1 @0x80101378-7c) nur bei [0x800cfc06] != 0, (0x800cfbd8 & 0x10) == 0, [0x800cfdcb] == 0, +0x224 == 0,
+  **(+0x1C0 & 4) == 0** (`lbu v0,448(a0) / andi v0,v0,0x4 / bne v0,zero,0x80101380` @0x8010134c-58) und Stufe 0/7
+  (@0x80101360-70). Hals: Root @0x80100330-74 ruft bei +0x218 & 4 (nach dem Intro gesetzt @0x80100944-4c) mit +0x1C0 & 4
+  `FUN_800177c0(em, yaw)` (Ziel = Punkt +0x170.., RE2_Quellcode_V2/FUN_800177c0.c Zweig `(*(byte*)(p+0x1c0) & 4) != 0`),
+  sonst `FUN_80017d98(em, yaw)` (nicht dekompiliert, ghidra_re2_Leon.txt Z. 85839 Rohbytes); Hals-Part +0x1C1 = 5 (@0x801001c4-cc
+  `sb v0(5),449(s0)`), Grenzen aus dem INIT: Part 5 +0x9C/+0x9E = 20 (Rate), +0xA0 = 560 (Gier), +0xA2 = 312 (Neigung)
+  (`sh v0,1016/1018/1020/1022(v1)` @0x801005a0-c4, 1012 = 5 x 172 + 152).
