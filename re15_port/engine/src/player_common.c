@@ -1379,6 +1379,7 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
             p->anim_frac = 7;   /* crossfade into the dialog idle stance (FUN_8001f3bc) */
         }
         p->walk_active = 0;
+        re15_rennstopp_r41_halten();   /* Runde 41 Spur E NB4: Nachricht ohne Spieler-Bit ist keine Uebernahme (re15_rennstopp_r41.h) */
     } else if (g_scd.player_mode == 2) {
         /* 2026-06-17: SCRIPTED cutscene. The SCD drives Leon via Plc_motion/Plc_dest; if it
          * has NOT (he's still in a LEFTOVER pad-walk/run sentinel carried in from gameplay —

@@ -16,9 +16,12 @@
 #define RS_GEWICHT   0x200   /* @0x80032888 / @0x8003292c `ori a3,zero,0x200` = anim_set a3 (Gewicht je Zaehlerstufe) */
 #define RS_SOCKEL    150     /* @0x800328ec `addiu v0,v0,150` */
 #define RS_TEILE_MIN 8       /* Kette 0,1,2..4 / 5..7 (@0x80036a48-@0x80036a9c) */
+#define RS_FALL3     3       /* @0x800328f8 `ori v0,zero,0x3` / @0x800328fc `sb v0,0(a1)`, a1 = 0x800aca5a (@0x8003277c/
+                              * @0x80032780) -> Spieler +6 = 3 ab dem ersten Stopp-Bild (Nachbesserung 4, Uebernahme-Marke) */
 
 /* ---------------------------------------------------------------------------------------------- Zustand */
 static int     s_aktiv;      /* Stopp: +6 >= 2 im Unterzustand Rennen */
+static int     s_takt_offen; /* NB4: der letzte ungesperrte Dispatcher-Durchlauf wartet auf den Kommando-1-Schritt */
 static int     s_steh;       /* die Bewegung, die der Stopp gesetzt hat (Fremdeingriff erkennen) */
 static int32_t s_tempo;      /* Spieler +0x8c (DAT_800acae0), int16 */
 static int     s_tempo_ok;   /* ein Renn-Tempo wurde gerechnet bzw. aus Fall 0 gesetzt */
@@ -179,6 +182,7 @@ static void vorschub(re15_actor_t *p)
 static int schritt(re15_actor_t *p, uint16_t pad_bits, int lauf_motion, int steh_motion, int32_t tabelle, int waffe)
 {
     if (s_pruef_aus) return 0;                        /* Sonden-Gegenprobe: Stand vor Nachbesserung 3 (sofort Stehen) */
+    s_takt_offen = 0;                                 /* NB4: dieser Durchlauf lief durch Kommando 1 (0x80031de8) */
     if (s_stand_neu) {
         /* Stehen-ANIMATE 0x80032038 Fall 0 im Bild NACH dem Stopp-Ende (@0x80032074-@0x8003209c): Clip 3 bleibt,
          * Bild +0x95 = 0, Mischung +0x8f = 7. Waehlt der Aufrufer in diesem Bild eine neue Bewegung (Stehen-DECIDE
@@ -190,7 +194,9 @@ static int schritt(re15_actor_t *p, uint16_t pad_bits, int lauf_motion, int steh
             p->anim_frac         = RS_MISCHUNG;       /* @0x8003208c/@0x8003209c `sb 7,+0x8f` */
         }
     }
-    if (s_aktiv && (p->motion != s_steh || p->state != 1)) s_aktiv = 0;   /* Skript/Treffer/Treppe hat uebernommen */
+    /* Skript/Treffer hat uebernommen. NB4: auch wenn ein anderer Zustand +6 neu geschrieben hat (Plc_ret @0x80041f98,
+     * Plc_motion @0x80041bb4, Raumeintritt, Treffer, Flinch-Ende) — der Stopp lebt im Original nur in +5 = 2 / +6 = 3. */
+    if (s_aktiv && (p->motion != s_steh || p->state != 1 || p->sub_state_2 != RS_FALL3)) s_aktiv = 0;
     if (!s_aktiv) {
         if (p->motion != lauf_motion || p->state != 1) return 0;          /* nur aus dem Rennen (+6 < 2) */
         const int oben_rennen = (pad_bits & RE15_PAD_BIT_UP) && (pad_bits & RE15_PAD_BIT_CROSS);   /* & 0x201 == 0x201 */
@@ -203,6 +209,7 @@ static int schritt(re15_actor_t *p, uint16_t pad_bits, int lauf_motion, int steh
         p->anim_frame        = 0;
         p->motion_init_delay = 0;
         p->anim_frac         = RS_MISCHUNG;           /* @0x80032908/@0x80032910 +0x8f = 7 */
+        p->sub_state_2       = RS_FALL3;              /* @0x800328fc +6 = 3 (NB4: Marke, die fremde Schreiber loeschen) */
     } else {
         /* @0x80032730-@0x80032760: OBEN -> Gehen 0x0101 (@0x80032738, auch mit RENNEN: Rennen erst aus dem Gehen-DECIDE
          * des Folgebilds @0x80032444-@0x80032454), UNTEN -> Rueckwaerts 0x0401 (@0x80032744), LINKS/RECHTS -> Drehen
@@ -210,15 +217,20 @@ static int schritt(re15_actor_t *p, uint16_t pad_bits, int lauf_motion, int steh
          * DIESEM Bild, der Aufrufer waehlt die Bewegung jetzt. */
         if (pad_bits & RE15_PAD_BIT_UP) {
             s_aktiv = 0;
+            p->sub_state_2 = 0;                       /* Wort 0x0101 @0x80032760 `sw`: +6 = 0 */
             return 2;                                 /* Gehen erzwingen */
         }
         if (pad_bits & (RE15_PAD_BIT_DOWN | RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT)) {
             s_aktiv = 0;
+            p->sub_state_2 = 0;                       /* Wort 0x0401/0x0301 @0x80032760 `sw`: +6 = 0 */
             return 0;
         }
     }
     s_tempo = (int16_t)(s_tempo - RS_ABZUG);          /* @0x80032930-@0x80032944 */
-    if (s_tempo < 0) { s_aktiv = 0; s_stand_neu = 1; }   /* @0x8003294c `bgez` / @0x80032958 Kommandowort 0x0001 -> Stehen */
+    if (s_tempo < 0) {                                /* @0x8003294c `bgez` / @0x80032958 Kommandowort 0x0001 -> Stehen */
+        s_aktiv = 0; s_stand_neu = 1;
+        p->sub_state_2 = 0;                           /* `sw 1` @0x80032958 = +4..+7 = 1,0,0,0 */
+    }
     vorschub(p);                                      /* auch der letzte, negative Schritt */
     return 1;
 }
@@ -243,12 +255,39 @@ int re15_rennstopp_r41_unterzustand2(const re15_actor_t *p, int lauf_motion)
     return p->motion == lauf_motion;                    /* Rennen: +6 < 2 */
 }
 
-void    re15_rennstopp_r41_pruef_aus(int aus) { s_pruef_aus = aus ? 1 : 0; s_aktiv = 0; s_stand_neu = 0; }
+/* NB4 (Abnahme 3 Mangel 1, Entscheid E-E4): UEBERNAHME. Der Stopp lebt im Original ausschliesslich in den Spieler-Bytes
+ * +5 = 2 / +6 = 3 unter Kommando 1 (DECIDE 0x80032604 @0x8003272c, ANIMATE 0x80032778 @0x800328fc). Jeder andere Zustand
+ * schreibt sie neu, bevor er den Spieler zurueckgibt — die Treppe beim Start (sce-12/13-Handler @0x80043540/@0x80043544
+ * `sb 0xb,5(a1)`, @0x80043594 `sb v0,6(v1)`) und im Abschluss LAB_80038e50 (@0x80038ea8 `sb zero,0x800aca59`, @0x80038eb0
+ * `sb zero,0x800aca5a`), Plc_ret (@0x80041f90-@0x80041f9c), Plc_motion (@0x80041bb0-@0x80041bc4), der Griff (STAGE1
+ * FUN_80102548 @0x80102640 `sw v0,0x800aca58` = Wort Kommando 5; Freigabe z.B. @0x8011c38c `sw 1,0x800aca58`), Treffer/Tod
+ * (@0x80012ef4-@0x80012efc). Der Port fuehrt diese Zustaende in eigenen
+ * Zweigen des Spieler-Dispatchers (game_step_common.c: Klettern, Treppe, Tod, Griff, Knockdown, Flinch) bzw. im
+ * Schiebe-FSM (Unterzustand 8, @0x80031340), die den Kommando-1-Schritt auslassen und die Bytes nicht schreiben. Darum:
+ * laeuft ein UNGESPERRTER Durchlauf des Dispatchers ohne den Kommando-1-Schritt dieses Moduls, hatte ein anderer Zustand
+ * den Spieler — der Stopp ist geloescht wie im Original. Gesperrte Durchlaeufe (`bltz` @0x80031c78 auf g_pauseflags,
+ * Bit 0x80000000) lassen +4..+7 unberuehrt (Kurbel ROOM2020: Stopp im Aktionsbild, eingefroren waehrend der Fragen, Auslauf
+ * nach Pos_set — o_renn_losl n94..n98, Abnahme 3 §3.2). Gerufen VOR der Zweig-Kette, laeuft = rdt_ok && kein Spieler-Bit. */
+void re15_rennstopp_r41_dispatcher(re15_actor_t *p, int laeuft)
+{
+    if (!laeuft || s_pruef_aus) return;
+    if (s_takt_offen) {
+        s_aktiv = 0; s_stand_neu = 0;
+        if (p && p->sub_state_2 == RS_FALL3) p->sub_state_2 = 0;   /* Port-Zweige schreiben +6 nicht selbst */
+    }
+    s_takt_offen = (s_aktiv || s_stand_neu);
+}
+
+/* NB4: Nachricht OHNE Spieler-Bit (player_common.c msg_block-Zweig): das Original laesst Kommando 1 dann weiterlaufen —
+ * keine Uebernahme. Der Port haelt die Bewegung in diesem Zweig an (vorbestehend); der Stopp bleibt stehen wie vor NB4. */
+void re15_rennstopp_r41_halten(void) { s_takt_offen = 0; }
+
+void    re15_rennstopp_r41_pruef_aus(int aus) { s_pruef_aus = aus ? 1 : 0; s_aktiv = 0; s_stand_neu = 0; s_takt_offen = 0; }
 int     re15_rennstopp_r41_aktiv(void) { return s_aktiv; }
 int32_t re15_rennstopp_r41_tempo(void) { return s_tempo; }
 void    re15_rennstopp_r41_zuruecksetzen(void)
 {
-    s_aktiv = 0; s_tempo = 0; s_tempo_ok = 0; s_steh = 0; s_pose_ok = 0; s_stand_neu = 0;
+    s_aktiv = 0; s_tempo = 0; s_tempo_ok = 0; s_steh = 0; s_pose_ok = 0; s_stand_neu = 0; s_takt_offen = 0;
     memset(s_winkel, 0, sizeof s_winkel);
     memset(s_wurzel, 0, sizeof s_wurzel);
 }
