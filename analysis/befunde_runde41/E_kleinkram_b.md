@@ -513,6 +513,8 @@ Seed schlechter. Die Sonde gehoert nicht dieser Spur -> OFFEN, Entscheid Orchest
 - Weg des Nutzers (`R1_weg2050_nach`: 2050 -Tuer-> 2020, Cut 3, gehen, Aktion): Geh-Clip Bild 125 von F186 (msg 0) bis
   zur Frage ohne Luecke (VORHER F261 mo 200 = Luecken-Bild mit Stehen), Pos_set F342 im Bild nach dem Schliessen (VORHER
   F343), F342 gehalten; dazu je Zonen-Kamerawechsel auf dem Weg ein gehaltenes Bild (F102 Cut 0 -> 2, F150 2 -> 3).
+  Bildbogen `<sp>/E41n2/R1_nach_339_344.png`: F339/F340 Frage, F341 Frage zu (Leon noch in der Geh-Pose an der alten
+  Stelle), F342 = F341 (gehalten), F343 Leon an der Kurbel, Balken setzen ein.
 
 #### DuckStation (Nachbesserung 2)
 Messungen nur per GDB-Server (Port 2345, `<sp>/E41n2/gdb_cam*.py`, `gdb_geh*.py`; EnableGDBServer nur fuer den Lauf true).
@@ -552,7 +554,12 @@ exe md5 486f77a7d870cf73c1bdf542bf40cbfb).
   (`<sp>/E41n2/vorher_riegel/`): kante DURCHGEFALLEN ("GLEICH 0 von 24", kein "(gehalten)"), geh DURCHGEFALLEN (1 Posen-
   wechsel zwischen den Nachrichten, Pos_set F383 = Schliessen + 2, nicht gehalten). unit_r41_kleinkram_b_takt_frage
   prueft die Gegenprobe (alte Reihenfolge: Luecke 1, Pos_set + 2) selbst.
-REST_PLATZHALTER
+- Restliche Integration (die 95 nicht in der Auswahl, darunter integration_r35_entladen_a..l und die 15 ohne -P-Skript),
+  Endstand 11b8f867: `ctest -R "$(cat integ_rest_regex.txt)" -j 4 --timeout 900`: **100% tests passed, 0 tests failed
+  out of 95** (2474 s, `<sp>/E41n2/ctest_integ_rest.log`). Damit lief jeder Integrations-Riegel des Baums einmal gegen die
+  geaenderte Bildreihenfolge (Auswahl 127 auf d4fa9074 + 17 und 95 auf 11b8f867); die 126 gruenen der Auswahl wurden nach
+  11b8f867 nicht wiederholt (die Aenderung betrifft nur den Abzug gehaltener Bilder fuer Nicht-FRAMEDUMP-Leser).
+- Kein Fenster-Haken rot, keine Nachlaeufe noetig.
 
 ### OFFEN (Stand Nachbesserung 2)
 - RENN-STOPP fehlt dem Port allgemein (jeder Halt nach dem Rennen). Original gemessen (o_rennstopp: 157,117,77,37,-3;
@@ -582,6 +589,8 @@ REST_PLATZHALTER
   waehrend der Hintergrund von CD laedt (~1/4 s), der Port haelt jetzt ein Bild.
 - Kamera ROOM2020: bleibt Leon genau auf der Grenze zweier Kamerazonen stehen (z.B. x 9000 im Gang), steht das Bild jetzt
   still wie im Original, statt zwischen zwei Kameras zu flackern.
+- Im RENNEN an die Kurbel: im Original rutscht Leon nach dem "Yes" an der Kurbel noch ein Stueck weiter (Renn-Stopp) und
+  kurbelt etwa 35 cm daneben; diesen Auslauf hat der Port noch nicht (offen, siehe oben).
 - Allgemein: bei jedem Kamerawechsel steht fuer ein Bild das alte Bild (wie im Original, dort laenger: CD-Ladezeit); nach
   jedem Text kann Leon ein Bild spaeter wieder laufen (wie im Original).
 - Frage: Was genau war das "Herumfliegen"? Moeglich sind (a) der Sprung an die Kurbel nach dem "Yes" (im Original genauso,
