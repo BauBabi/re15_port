@@ -41,9 +41,14 @@
 #include "re15_wasser_r38.h"
 #include "re15_roy_r37.h"      /* re15_ems_toc / re15_ems_archiv_datei: beide Archive */
 #include "re15_enemy_ai.h"
+#include "re15_vab.h"          /* Nachbesserung 2: re15_vab_parse / re15_footstep_vag = Ton-Aufloesung wie audio_pc.c */
+#include "re15_math.h"         /* Nachbesserung 2: re15_squareroot0 = SquareRoot0 (Abstand der Lage) */
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
+#endif
+#ifndef RE15_R41A_PSX_EXE
+#define RE15_R41A_PSX_EXE "../info/Re1.5/PSX.EXE"
 #endif
 
 static int s_fails = 0, s_checks = 0;
@@ -261,6 +266,17 @@ static void bild(void)
     scd_vm_tick();
     re15_game_step(&s_ctx);
     re15_esp_fx_tick(re15_esp_room_bank());
+}
+
+/* Nachbesserung 2 (M1/M4): SPIELT der Schritt-Ton? Dieselbe Aufloesung wie audio_pc.c re15_audio_footstep: EDT-Satz idx der
+ * snd0-Bank des Raums (RDT +0x08) -> Programm/Ton -> VAG-Index der VH (RDT +0x0C) ueber re15_footstep_vag (vab_common.c).
+ * >= 0 = ein Mischer-Ton (die Abnahme mass an der exe "SE unterdrueckt: type=21 -> vag=-1"). */
+static re15_vab_t s_vab_snd0;
+static int ton_vag(int idx)
+{
+    if (idx < 0 || !g_room_rdt.snd_vh[0] || !g_room_rdt.snd_edt[0]) return -1;
+    if (re15_vab_parse(g_room_rdt.snd_vh[0], (size_t)g_room_rdt.snd_vh_size[0], &s_vab_snd0) != 0) return -2;
+    return re15_footstep_vag(g_room_rdt.snd_edt[0], &s_vab_snd0, idx);
 }
 
 static int pool_0f(int *out_max_sub, uint32_t *out_skalen)
@@ -603,19 +619,26 @@ static int teil_npc(void)
     int idx = re15_wassersprung_r41_npc_schritt(e, 0, 7, &g_room_rdt);
     const re15_wassersprung_r41_mess_t *m = re15_wassersprung_r41_mess();
     int n5 = pool_code(0x06, 0x05, 0x0D00, NULL, 0);
-    CHECK(idx == (0x97 & 0x7f) - 8 && m->npc_boden == 1 && n5 >= 1,
-          "Wasserboden: Ton %d (erwartet 0x17-8 = 15, `addiu s3,a0,-8` @0x8004575c), Zweig boden %u, Plaetze 0x06050D00: %d", idx, m->npc_boden, n5);
+    /* Nachbesserung 2 (M1): Original-Zeile 0x17-8 = 15 (`addiu s3,a0,-8` @0x8004575c) ist in ROOM2000 leer -> stumm im Original;
+     * RE2-Retail FUN_8005c040 nimmt a0 + (Boden & 0x7f) = 23 (@0x8005c44c/@0x8005c458), Satz 00007312 -> VAG >= 0. */
+    CHECK(m->letzter_ton_orig == (0x97 & 0x7f) - 8 && idx == (0x97 & 0x7f) && m->letzte_quelle == 1 && ton_vag(idx) >= 0
+          && m->npc_boden == 1 && n5 >= 1,
+          "Wasserboden: Original-Zeile %d (0x17-8 = 15, leer) -> gespielt %d (Retail 0x17 = 23, VAG %d), Zweig boden %u, Plaetze 0x06050D00: %d",
+          m->letzter_ton_orig, idx, ton_vag(idx), m->npc_boden, n5);
     re15_esp_fx_reset(); re15_wassersprung_r41_reset();
     e->x = -1500; e->water_y = -1620;
     boden = re15_rdt_floor_sound(&g_room_rdt, e->x, e->z);
     idx = re15_wassersprung_r41_npc_schritt(e, 1, 4, &g_room_rdt);
     int n3 = pool_code(0x06, 0x03, 0x2000, NULL, 0);
-    CHECK(boden == 0x17 && idx == 1 + (0x17 - 3) - 8 && m->npc_stempel == 1 && n3 >= 1,
-          "Stempel: Boden %#x, Ton %d (erwartet a0 1 + 0x17-3 - 8 = 13), Zweig stempel %u, Plaetze 0x06032000: %d", boden, idx, m->npc_stempel, n3);
+    /* Satz 13 = 0000a111: Stimme (0x11 & 0x1f) - 16 + (Fuss 4 != 4) = 1 -> im ORIGINAL hoerbar -> bleibt (Quelle 0) */
+    CHECK(boden == 0x17 && idx == 1 + (0x17 - 3) - 8 && m->letzte_quelle == 0 && ton_vag(idx) >= 0 && m->npc_stempel == 1 && n3 >= 1,
+          "Stempel: Boden %#x, Ton %d (Original a0 1 + 0x17-3 - 8 = 13, Satz 0000a111 Stimme 1 = hoerbar, Quelle %u, VAG %d), Zweig stempel %u, Plaetze 0x06032000: %d",
+          boden, idx, (unsigned)m->letzte_quelle, ton_vag(idx), m->npc_stempel, n3);
     re15_esp_fx_reset(); re15_wassersprung_r41_reset();
     e->water_y = 0;
     idx = re15_wassersprung_r41_npc_schritt(e, 0, 7, &g_room_rdt);
-    CHECK(idx == 0x17 - 8 && re15_esp_fx_count() == 0, "trocken: Ton %d (0x17-8 = 15), keine Plaetze (%d)", idx, re15_esp_fx_count());
+    CHECK(m->letzter_ton_orig == 0x17 - 8 && idx == 0x17 && m->letzte_quelle == 1 && ton_vag(idx) >= 0 && re15_esp_fx_count() == 0,
+          "trocken: Original-Zeile %d (0x17-8 leer) -> Retail %d (VAG %d), keine Plaetze (%d)", m->letzter_ton_orig, idx, ton_vag(idx), re15_esp_fx_count());
     /* Takt: Bildwort der OWN-Bank (Geh-Sub 4 -> re15_actor_uses_own_bank): Bild 7 = Marke, Bild 8 = keine */
     re15_esp_fx_reset(); re15_wassersprung_r41_reset();
     e->x = -4300; e->water_y = 0; e->state = 4; e->sub_state_1 = 4; e->motion = 5; e->anim_frame = 7;
@@ -656,9 +679,15 @@ static int npc_wasser_einer(int archiv, uint8_t typ, int erw_portwahl)
            re15_ems_archiv_datei(archiv), typ, z0, e->z, boden, m->npc_schritte, m->npc_boden, m->npc_stempel, m->portwahl_schritte, m->plaetze, max_pool, m->letzter_ton,
            m->letztes_bild, m->letzter_clip);
     CHECK(e->z < z0 - 2000, "%s Typ 0x%02x: der Geh-Sub bewegt den NPC durch den Fleck (z %d -> %d)", re15_ems_archiv_datei(archiv), typ, z0, e->z);
-    CHECK(m->npc_schritte >= 4 && m->npc_boden >= 4, "%s Typ 0x%02x: >= 4 Schritte im Wasser (FLR 0x97 -> Zweig boden): %u/%u", re15_ems_archiv_datei(archiv), typ, m->npc_schritte, m->npc_boden);
-    CHECK(m->plaetze >= 4 && max_pool >= 1, "%s Typ 0x%02x: Wasser-Spritzer 0x06050D00 gespawnt (%u Plaetze, max %d gleichzeitig)", re15_ems_archiv_datei(archiv), typ, m->plaetze, max_pool);
-    CHECK(m->letzter_ton == (0x97 & 0x7f) - 8, "%s Typ 0x%02x: Schritt-Ton 0x17-8 = 15 (a0 = 0 im Sub 4 @0x80051290): %d", re15_ems_archiv_datei(archiv), typ, m->letzter_ton);
+    /* Roy (0x47 aus CDEMD1): OWN-Clip 5 ohne Marke -> PORT-WAHL 2 Aufsetzer je Umlauf des laengeren Clips (N1.10d) -> >= 2 */
+    const unsigned min_s = (typ == 0x47 && archiv == 1) ? 2u : 4u;
+    CHECK(m->npc_schritte >= min_s && m->npc_boden >= min_s, "%s Typ 0x%02x: >= %u Schritte im Wasser (FLR 0x97 -> Zweig boden): %u/%u", re15_ems_archiv_datei(archiv), typ, min_s, m->npc_schritte, m->npc_boden);
+    CHECK(m->plaetze >= min_s && max_pool >= 1, "%s Typ 0x%02x: Wasser-Spritzer 0x06050D00 gespawnt (%u Plaetze, max %d gleichzeitig)", re15_ems_archiv_datei(archiv), typ, m->plaetze, max_pool);
+    /* Nachbesserung 2 (M1/M4): nicht nur der Index - der Ton muss SPIELEN (VAG >= 0) und KEIN Schritt darf stumm sein */
+    CHECK(m->letzter_ton_orig == (0x97 & 0x7f) - 8 && m->letzter_ton == (0x97 & 0x7f) && m->npc_ton_stumm == 0
+          && m->npc_ton_retail == m->npc_schritte && ton_vag(m->letzter_ton) >= 0,
+          "%s Typ 0x%02x: Schritt-Ton gespielt: Original 0x17-8 = 15 (a0 = 0 @0x80051290, leer) -> Retail %d (VAG %d), %u/%u Schritte Retail, %u stumm",
+          re15_ems_archiv_datei(archiv), typ, m->letzter_ton, ton_vag(m->letzter_ton), m->npc_ton_retail, m->npc_schritte, m->npc_ton_stumm);
     CHECK((m->portwahl_schritte > 0) == (erw_portwahl != 0), "%s Typ 0x%02x: Schritte aus der PORT-WAHL-Regel %u (erwartet %s)", re15_ems_archiv_datei(archiv), typ, m->portwahl_schritte, erw_portwahl ? ">0" : "0");
     return 1;
 }
@@ -671,6 +700,8 @@ static int teil_npc_wasser(void)
     npc_wasser_einer(1, 0x49, 0);   /* Elza-Archiv           */
     npc_wasser_einer(1, 0x4b, 1);   /* Kind: PORT-WAHL-Regel */
     npc_wasser_einer(1, 0x4d, 0);
+    npc_wasser_einer(0, 0x47, 0);   /* Elliot (Leon-Archiv): OWN c5 Marken 7/22 - Nachbesserung 2, M4 */
+    npc_wasser_einer(1, 0x47, 1);   /* Roy (Elza-Archiv): OWN c5 ohne Marke -> PORT-WAHL */
     return 1;
 }
 
@@ -738,6 +769,10 @@ static int teil_stempel(void)
  * Kurs/Vorschub (@0x800512d4 / @0x80051640), Bildwort *(+0x168) und Part (+0x188) des GEZEICHNETEN Bilds (Sub 5 Phase 1 setzt
  * +0x94/+0x95 @0x8005157c-8c VOR dem Test @0x800515e4). Typ 0x40 (CDEMD0), OWN-Clip 5 Marken Bild 7 (Fuss 7) / 22 (Fuss 4),
  * OWN-Clip 0 Marken Bild 0 / 12 (Tabelle Dossier N1.3). Ort: Wasserfleck FLR 0x97 in ROOM2000 -> Zweig boden, Ton 0x17-8 = 15. */
+/* Nachbesserung 2 (M1/M4): Wasserfleck 0x97, a0 = 0: Original-Zeile 0x17 - 8 = 15 ist in ROOM2000 leer (EDT Satz 15 = 00000000,
+ * im Original stumm) -> RE2-Retail-Zeile 0x17 = 23 (FUN_8005c040 @0x8005c44c/@0x8005c458) - und die SPIELT (VAG >= 0). */
+#define TON_WASSER(m) ((m)->letzter_ton_orig == 15 && (m)->letzter_ton == 23 && (m)->letzte_quelle == 1 && ton_vag((m)->letzter_ton) >= 0)
+
 static re15_actor_t *npc_sub_setzen(uint8_t typ, int sub, int phase, int clip, int bild_, int32_t x, int32_t z, int16_t rot,
                                      int32_t zx, int32_t zz)
 {
@@ -772,8 +807,8 @@ static int teil_npc_subs(void)
     bild();
     int32_t erw[3] = { 0, 0, 0 };
     int rv = re15_wasser_r38_anker(&b->skel_own, &b->anim_own, &vor, -1, 7u, 7, erw);
-    CHECK(m->npc_schritte == 1 && m->npc_boden == 1 && m->letzter_ton == 15 && m->letzter_fuss == 7,
-          "Sub 9 (Drehen, @0x80051e88): 1 Schritt aus dem gezeichneten Bild 7, Zweig boden, Ton %d (15 = a0 0 @0x80051e70), Fuss %u (schritte %u)",
+    CHECK(m->npc_schritte == 1 && m->npc_boden == 1 && TON_WASSER(m) && m->letzter_fuss == 7,
+          "Sub 9 (Drehen, @0x80051e88): 1 Schritt aus dem gezeichneten Bild 7, Zweig boden, Ton %d (Original 15 leer -> Retail 23; a0 0 @0x80051e70), Fuss %u (schritte %u)",
           m->letzter_ton, (unsigned)m->letzter_fuss, m->npc_schritte);
     CHECK(rv == 0 && e->rot_y != vor.rot_y && m->letzter_anker[0] == erw[0] && m->letzter_anker[1] == erw[1] && m->letzter_anker[2] == erw[2],
           "Sub 9: Anker = Part 7 der GEZEICHNETEN Pose (Gier %d, nach dem Kurs %d): (%d,%d,%d) vs (%d,%d,%d)", (int)vor.rot_y, (int)e->rot_y,
@@ -782,14 +817,14 @@ static int teil_npc_subs(void)
     /* (2) Kante 0x12 Phase 1 (@0x80052598): Schritt vor anim_set @0x800525f0 */
     e = npc_sub_setzen(0x40, 0x12, 1, 5, 7, wx, wz, 0x200, wx, wz - 3000);
     bild();
-    CHECK(m->npc_schritte == 1 && m->npc_boden == 1 && m->letzter_ton == 15,
-          "Kante 0x12 Phase 1 (@0x800525d4): 1 Schritt, Zweig boden, Ton %d (15 = a0 0 @0x800525bc), schritte %u", m->letzter_ton, m->npc_schritte);
+    CHECK(m->npc_schritte == 1 && m->npc_boden == 1 && TON_WASSER(m),
+          "Kante 0x12 Phase 1 (@0x800525d4): 1 Schritt, Zweig boden, Ton %d (Original 15 leer -> Retail 23; a0 0 @0x800525bc), schritte %u", m->letzter_ton, m->npc_schritte);
 
     /* (3) Schub 0x13 Phase 1 (@0x800528f4): Schritt vor anim_set @0x8005294c */
     e = npc_sub_setzen(0x40, 0x13, 1, 5, 7, wx, wz, 0x200, wx, wz - 3000);
     bild();
-    CHECK(m->npc_schritte == 1 && m->npc_boden == 1 && m->letzter_ton == 15,
-          "Schub 0x13 Phase 1 (@0x80052930): 1 Schritt, Zweig boden, Ton %d (15 = a0 0 @0x80052918), schritte %u", m->letzter_ton, m->npc_schritte);
+    CHECK(m->npc_schritte == 1 && m->npc_boden == 1 && TON_WASSER(m),
+          "Schub 0x13 Phase 1 (@0x80052930): 1 Schritt, Zweig boden, Ton %d (Original 15 leer -> Retail 23; a0 0 @0x80052918), schritte %u", m->letzter_ton, m->npc_schritte);
 
     /* (4) Sub 5 LAUFEN aus dem Stand, Ziel geradeaus (sofort ausgerichtet): Takt 1 setzt +0x94 = 0 / +0x95 = 0 (@0x8005157c-8c)
      *     VOR dem Test @0x800515e4 -> gelesen wird das gezeichnete Clip-5-Bild 0 (keine Marke) -> KEIN Schritt (der Port las
@@ -800,7 +835,7 @@ static int teil_npc_subs(void)
     unsigned s1 = m->npc_schritte;
     int m1 = (int)e->motion;
     bild();
-    CHECK(s1 == 0 && m1 == 0 && m->npc_schritte == 1 && m->letzter_ton == 15,
+    CHECK(s1 == 0 && m1 == 0 && m->npc_schritte == 1 && TON_WASSER(m),
           "Sub 5 Laufbeginn: Takt 1 %u Schritte (Clip danach %d), Takt 2 gesamt %u, Ton %d (erwartet 0 / 0 / 1 / 15)", s1, m1, m->npc_schritte, m->letzter_ton);
 
     /* (5) Sub 4 Phase 2: der Schritt liegt VOR Kurs und Vorschub (@0x800512d4-308 vor @0x8005133c/@0x80051344). Lage am
@@ -813,9 +848,241 @@ static int teil_npc_subs(void)
     e = npc_sub_setzen(0x40, 4, 2, 5, 7, wx, zr, 1024, wx, zr - 6000);
     e->crow_speed = 400;                                     /* ein Vorschub ueber den Rand (pos_advance +0x8c) */
     bild();
-    CHECK(m->npc_schritte == 1 && m->npc_boden == 1 && m->letzter_ton == 15 && e->z < zr - 300,
-          "Sub 4 Phase 2 am Fleckrand: Zweig boden %u, Ton %d (15 = Boden VOR dem Vorschub; danach trocken %#x), z %d -> %d",
+    CHECK(m->npc_schritte == 1 && m->npc_boden == 1 && TON_WASSER(m) && e->z < zr - 300,
+          "Sub 4 Phase 2 am Fleckrand: Zweig boden %u, Ton %d (Original 15 leer -> Retail 23; Boden VOR dem Vorschub; danach trocken %#x), z %d -> %d",
           m->npc_boden, m->letzter_ton, trocken, (int)zr, (int)e->z);
+
+    /* (6) RUECKWAERTS-Subs 7/8 (Nachbesserung 2, M4): INIT +0x94 = 1 (`sb v1,148(v0)` @0x8005196c / @0x80051b64), dann je Takt Kurs
+     *     (`jal 0x8001aac4` @0x800519c0 / @0x80051bb8), Vorschub pos_advance(0x800) (@0x800519c8 / @0x80051bc0) und ERST DANACH der
+     *     Bildwort-Test (@0x800519dc / @0x80051bd4) mit Schritt (@0x80051a0c / @0x80051c04, a0 = 0 @0x800519f8); Bank = LOCO-Paar
+     *     +0x84/+0x16c (@0x80051a20-24 / @0x80051c18-1c; Port: Container, Clip 1, Marken 7/22). Lauf rueckwaerts durch den
+     *     Wasserfleck: Blick +z (Gier 3072), Ziel -z. */
+    for (int sub = 7; sub <= 8; sub++) {
+        e = npc_sub_setzen(0x40, sub, 0, 1, 0, wx, wz + 2500, 3072, wx, wz - 6000);
+        const int32_t z0 = e->z;
+        int takte = 0;
+        for (; takte < 90; takte++) {
+            bild();
+            if (e->state != 4 || e->sub_state_1 != (uint8_t)sub) break;
+        }
+        printf("     Sub %d: %d Takte, z %d -> %d, Clip %d, Schritte %u (boden %u), letzter Clip %u Bild %u Fuss %u, Ton %d (Original %d), Lage %d/%d\n",
+               sub, takte, (int)z0, (int)e->z, (int)e->motion, m->npc_schritte, m->npc_boden, (unsigned)m->letzter_clip,
+               (unsigned)m->letztes_bild, (unsigned)m->letzter_fuss, m->letzter_ton, m->letzter_ton_orig, m->letzte_lage[0], m->letzte_lage[1]);
+        CHECK(e->z < z0 - 500 && m->npc_schritte >= 2 && m->npc_boden == m->npc_schritte && m->letzter_clip == 1
+              && (m->letztes_bild == 7 || m->letztes_bild == 22) && TON_WASSER(m) && m->npc_ton_stumm == 0,
+              "Sub %d rueckwaerts (Schritt @0x%08x NACH dem Vorschub): z %d -> %d, %u Schritte Clip %u (Bild %u), Zweig boden %u, Ton %d gespielt",
+              sub, sub == 7 ? 0x80051a0cu : 0x80051c04u, (int)z0, (int)e->z, m->npc_schritte, (unsigned)m->letzter_clip,
+              (unsigned)m->letztes_bild, m->npc_boden, m->letzter_ton);
+    }
+    return 1;
+}
+
+/* ============================ ton: Schritt-Ton aller NPC-Raeume ueber den ECHTEN Schritt (Nachbesserung 2, M1/M4) ============================
+ * Die 52 Raeume mit NPC-Sce_em_set (Typ 0x40..0x4f; Zensus Abnahme 1 A41abn1/npc_ton_zensus.txt). Je Raum jeder FLR-Bodentyp an einer
+ * Stelle dieses Typs, Zweig ohne/mit Stempel (Boden - 3 @0x800456ec), a0 0/1, Fuss 7/4 -> re15_wassersprung_r41_npc_schritt. Erwartung
+ * UNABHAENGIG aus den EDT-Bytes + der Ton-Aufloesung von audio_pc.c (re15_footstep_vag): Original-Zeile (Boden & 0x7f) + a0 - 8
+ * hoerbar, wenn Stimme (e[3] & 0x1f) - 16 + (Fuss != 4) in 0..7 (@0x800457a0-b4, 8 Saetze @0x800458dc) UND der Ton einen VAG hat
+ * (SsUtKeyOnV keyt nur vag != 0: `lhu a0,22(v0)` @0x80059f2c, `bne a0,zero` @0x80059f8c); sonst Retail-Zeile (Boden & 0x7f) + a0
+ * (FUN_8005c040 @0x8005c44c/@0x8005c458) mit VAG; sonst stumm. Nur erreichbare Bodentypen (FLR-Suche mit Ende x == 0 wie
+ * FUN_800437d4 / re15_rdt_floor_sound: ROOM10D0 Boden 0x1d liegt hinter dem Ende). Zaehlung: N2.4 im Dossier. */
+static const char *const k_npc_raeume[52] = {
+    "1011","1021","1050","1090","10B1","10D0","1141","1150","1151","1170","1171","11A0","11A1","11B0","11B1","11C0","1211",
+    "1260","1261","2000","2001","2011","3000","3001","3010","3011","3020","3021","3060","3061","3070","3071","3080","3081",
+    "3091","30C1","30E0","30E1","4000","4001","4010","4031","5011","5021","5031","5090","50B0","6000","6020","6021","6030","6031" };
+
+/* Zaehlung (je Fall unabhaengig erwartet, s.o.; dieselbe Zahl liefert A_nb2/npc_ton_retail2.py ohne ROOM10D0 0x1d): 35 Original /
+ * 387 Retail / 114 stumm; ohne Stempel-Zweig (Gehen auf trockenem Boden / Wasserboden 0x80): 15 / 257 / 8, die 8 stummen = ROOM6030/6031
+ * Boden 0x17 (Zeilen 15/16 und 23/24 ohne Ton - dort ist auch der Spieler stumm). Original vorher: 15 von 280 hoerbar. */
+#define K_TON_ORIG   35
+#define K_TON_RETAIL 387
+#define K_TON_STUMM  114
+#define K_TON_STUMM_OHNE_STEMPEL 8
+static int flr_stelle(uint8_t typ, int32_t *x, int32_t *z)
+{
+    const uint8_t *f = g_room_rdt.flr;
+    if (!f) return 0;
+    const int n = f[0] | (f[1] << 8);
+    static const int fr[5][2] = { {1,2}, {1,4}, {3,4}, {1,8}, {7,8} };
+    for (int k = 0; k < n; k++) {
+        const uint8_t *e = f + 2 + 12 * k;
+        if (e[8] != typ) continue;
+        const int32_t ex = (int16_t)(e[0] | (e[1] << 8)), ez = (int16_t)(e[2] | (e[3] << 8));
+        const int32_t w  = (int16_t)(e[4] | (e[5] << 8)), d  = (int16_t)(e[6] | (e[7] << 8));
+        for (int a = 0; a < 5; a++) for (int b = 0; b < 5; b++) {
+            const int32_t px = ex + w * fr[a][0] / fr[a][1], pz = ez + d * fr[b][0] / fr[b][1];
+            if (re15_rdt_floor_sound(&g_room_rdt, px, pz) == typ) { *x = px; *z = pz; return 1; }
+        }
+    }
+    return 0;
+}
+
+static int teil_ton(void)
+{
+    printf("\n== ton (Nachbesserung 2: Schritt-Ton der NPCs in allen 52 NPC-Raeumen, Original oder RE2-Retail, und er SPIELT)\n");
+    unsigned n_orig = 0, n_retail = 0, n_stumm = 0, n_falsch = 0, n_vag = 0, n_typ_fehlt = 0, n_faelle = 0, n_stumm_trocken = 0;
+    g_scd.work_vars[0x0A] = 0;
+    for (int ri = 0; ri < 52; ri++) {
+        char p[512]; size_t n = 0;
+        snprintf(p, sizeof p, "%s/STAGE%c/ROOM%s.RDT", RE15_ASSET_PSX_DIR, k_npc_raeume[ri][0], k_npc_raeume[ri]);
+        free(s_rdt_buf); s_rdt_buf = slurp(p, &n);
+        memset(&g_room_rdt, 0, sizeof g_room_rdt);
+        if (!s_rdt_buf || re15_rdt_parse(s_rdt_buf, n, &g_room_rdt) != 0) { CHECK(0, "ROOM%s nicht ladbar", k_npc_raeume[ri]); continue; }
+        g_room_rdt_ok = 1;
+        re15_esp_set_room_bank(NULL);
+        const uint8_t *edt = g_room_rdt.snd_edt[0];
+        const int nedt = g_room_rdt.snd_edt_size[0] / 4;
+        uint8_t typen[64]; int nt = 0;
+        const uint8_t *f = g_room_rdt.flr;
+        const int nf = f ? (f[0] | (f[1] << 8)) : 0;
+        for (int k = 0; k < nf; k++) {
+            const uint8_t t = f[2 + 12 * k + 8];
+            int da = 0; for (int j = 0; j < nt; j++) if (typen[j] == t) da = 1;
+            if (!da && nt < 64) typen[nt++] = t;
+        }
+        unsigned r_orig = 0, r_retail = 0, r_stumm = 0;
+        for (int ti = 0; ti < nt; ti++) {
+            const uint8_t t = typen[ti];
+            int32_t x = 0, z = 0;
+            if (!flr_stelle(t, &x, &z)) { n_typ_fehlt++; printf("     ROOM%s: keine Stelle fuer Boden 0x%02x\n", k_npc_raeume[ri], t); continue; }
+            for (int stempel = 0; stempel < 2; stempel++) {
+                if (stempel && (t & 0x80)) continue;
+                for (int a0 = 0; a0 < 2; a0++) for (int fi = 0; fi < 2; fi++) {
+                    const int fuss = fi ? 4 : 7;
+                    re15_actor_t *e = &g_actors[3];
+                    memset(e, 0, sizeof *e);
+                    e->active = 1; e->type = 0x40; e->hp = 100; e->x = x; e->y = -1800; e->z = z; e->floor = 1;
+                    e->water_y = stempel ? -900 : 0;
+                    re15_wassersprung_r41_reset();
+                    const int idx = re15_wassersprung_r41_npc_schritt(e, a0, fuss, &g_room_rdt);
+                    const re15_wassersprung_r41_mess_t *m = re15_wassersprung_r41_mess();
+                    /* unabhaengige Erwartung aus den Bytes */
+                    const int boden = (t & 0x7f) - (stempel ? 3 : 0);
+                    const int io = boden + a0 - 8, ir = boden + a0;
+                    int q, soll;
+                    int hoerbar = 0;
+                    if (io >= 0 && io < nedt) { const int v = (edt[io * 4 + 3] & 0x1f) - 16 + (fuss != 4); hoerbar = (v >= 0 && v <= 7) && ton_vag(io) >= 0; }
+                    if (hoerbar) { q = 0; soll = io; }
+                    else if (ir >= 0 && ir < nedt && ton_vag(ir) >= 0) { q = 1; soll = ir; }
+                    else { q = 2; soll = -1; }
+                    n_faelle++;
+                    if (q == 0) { n_orig++; r_orig++; } else if (q == 1) { n_retail++; r_retail++; } else { n_stumm++; r_stumm++; }
+                    if (q == 2 && !stempel) {
+                        n_stumm_trocken++;
+                        printf("     stumm ohne Stempel: ROOM%s Boden 0x%02x a0=%d Fuss %d (Zeilen %d / %d ohne Ton)\n", k_npc_raeume[ri], t, a0, fuss, io, ir);
+                    }
+                    if (idx != soll || m->letzte_quelle != q || m->letzter_ton_orig != io) {
+                        n_falsch++;
+                        printf("     FALSCH ROOM%s Boden 0x%02x%s a0=%d Fuss %d: Port %d (Quelle %u, Original %d), Soll %d (Quelle %d)\n",
+                               k_npc_raeume[ri], t, stempel ? "/Stempel" : "", a0, fuss, idx, (unsigned)m->letzte_quelle, m->letzter_ton_orig, soll, q);
+                    }
+                    if (q != 2) {
+                        const int vag = ton_vag(idx);
+                        if (vag < 0) { n_vag++; printf("     KEIN VAG ROOM%s Boden 0x%02x Zeile %d -> %d\n", k_npc_raeume[ri], t, idx, vag); }
+                    }
+                }
+            }
+        }
+        printf("     ROOM%s: %d Bodentypen, Original %u / Retail %u / stumm %u\n", k_npc_raeume[ri], nt, r_orig, r_retail, r_stumm);
+    }
+    CHECK(n_falsch == 0, "Zeile + Quelle des Ports = Erwartung aus den EDT-Bytes in allen %u Faellen (%u falsch)", n_faelle, n_falsch);
+    CHECK(n_vag == 0, "jeder nicht stumme NPC-Schritt hat einen VAG (der Ton spielt): %u ohne", n_vag);
+    CHECK(n_typ_fehlt == 1 && n_orig == K_TON_ORIG && n_retail == K_TON_RETAIL && n_stumm == K_TON_STUMM,
+          "Zaehlung 52 Raeume: Original %u / Retail %u / stumm %u (Soll %d / %d / %d, Dossier N2.4), unerreichbare Bodentypen %u (Soll 1: ROOM10D0 0x1d)",
+          n_orig, n_retail, n_stumm, K_TON_ORIG, K_TON_RETAIL, K_TON_STUMM, n_typ_fehlt);
+    CHECK(n_stumm_trocken == K_TON_STUMM_OHNE_STEMPEL,
+          "ohne Stempel-Zweig stumm: %u (Soll %d = ROOM6030/6031 Boden 0x17, wo auch der Spieler keinen Ton hat)", n_stumm_trocken, K_TON_STUMM_OHNE_STEMPEL);
+    /* Einzelstiche (Dossier N2.1): ROOM2000 Boden 0x1d a0 = 1 Fuss 7 -> Original 22 (0000b111, Stimme 2); ROOM6020 0x1d a0 = 0 -> Satz
+     * 21 = 86001f0e hat Stimme -2/-1 (im Original stumm) -> Retail 29 */
+    return 1;
+}
+
+/* ============================ lage: FUN_80045a64 + SsUtKeyOnV/SpuVmKeyOnNow (Nachbesserung 2, M2 / Entscheid A-E4) ============================ */
+static int teil_lage(void)
+{
+    printf("\n== lage (Nachbesserung 2, M2: Lage des NPC-Schritts nach FUN_80045a64 @0x80045a64, Pegel nach SsUtKeyOnV @0x80059d3c / SpuVmKeyOnNow @0x80055d10)\n");
+    /* (1) Bytes: PAN @0x80074728 / ATT @0x800747a8 und die CORDIC-Winkel @0x80078c90 = PSX.EXE (Ladeadresse = Kopf +0x18, Daten ab 0x800) */
+    size_t n = 0; uint8_t *exe = slurp(RE15_R41A_PSX_EXE, &n);
+    CHECK(exe && n > 0x800, "PSX.EXE geladen (%s, %zu B)", RE15_R41A_PSX_EXE, n);
+    if (exe) {
+        const uint32_t t_addr = u32(exe, 0x18);
+        const size_t ot = 0x80074728u - t_addr + 0x800u, ow = 0x80078c90u - t_addr + 0x800u;
+        CHECK(ot + 256 <= n && memcmp(exe + ot, re15_wassersprung_r41_lage_tabelle(), 256) == 0,
+              "PAN/ATT der Nachbildung = PSX.EXE @0x80074728..0x80074827 (t_addr 0x%08x)", t_addr);
+        static const uint32_t W[12] = { 511, 302, 159, 81, 41, 20, 10, 5, 3, 1, 0, 0 };
+        int ok = (ow + 48 <= n);
+        for (int i = 0; ok && i < 12; i++) ok = (u32(exe, ow + 4 * (size_t)i) == W[i]);
+        CHECK(ok, "CORDIC-Winkel @0x80078c90 = 511,302,159,81,41,20,10,5,3,1,0,0 (catan @0x800658fc)");
+        free(exe);
+    }
+    /* (2) Von Hand aus dem Disasm gerechnet: Kamera (0,-2000,0) -> Ziel (0,-2000,10000) (Blick +z), Satz *(RDT+0x24) + Cut*0x20. */
+    static re15_camera_cut_t cut[1];
+    memset(cut, 0, sizeof cut);
+    cut[0].pos_x = 0; cut[0].pos_y = -2000; cut[0].pos_z = 0; cut[0].target_x = 0; cut[0].target_y = -2000; cut[0].target_z = 10000;
+    re15_rdt_t fake; memset(&fake, 0, sizeof fake); fake.cuts = cut; fake.cut_count = 1;
+    g_scd.work_vars[0x0A] = 0;
+    int lage[2] = { -1, -1 }, ab = -1;
+    /* Abstand mit der BIOS-Wurzel SquareRoot0 (`jal 0x80065f60` @0x80045b04/@0x80045b10/@0x80045b34; re15_squareroot0 = dieselbe
+     * Rechnung, sie unterschaetzt die Wurzel): r = SR0((Kamera.y - |Kamera.y - y|)^2 + SR0(dx^2+dz^2)^2), /250. */
+#define R41A_ABSTAND(dxz2, dyt) ((int)(re15_squareroot0((uint32_t)((dyt) * (dyt)) + re15_squareroot0(dxz2) * re15_squareroot0(dxz2)) / 250u))
+    const int ab_a = R41A_ABSTAND(100000000u, -4000), ab_b = R41A_ABSTAND(125000000u, -4000), ab_c = R41A_ABSTAND(625000000u, -4000);
+    printf("     SquareRoot0: SR0(1e8) = %u, Abstaende a/b/c = %d/%d/%d (exakte Wurzel: 43/47/101)\n", re15_squareroot0(100000000u), ab_a, ab_b, ab_c);
+    /* (a) geradeaus (0,0,10000): exakt sqrt(4000^2 + 10000^2) = 10770 -> 43, mit SquareRoot0 42; ATT[42] = ATT[43] = 34 (ATT[k] = 26 +
+     *     (k-26)/2 ab k 26, Bytes @0x800747a8); Richtung = Blick (FUN_80045d6c dx 0 -> 0xc00 beide) -> rel 0 -> beide 0x89 (@0x80045c0c-1c)
+     *     -> (0x89 - 34) & 0x7f = 103. */
+    const int32_t pa[3] = { 0, 0, 10000 };
+    int rv = re15_wassersprung_r41_lage(&fake, pa, lage, &ab);
+    CHECK(rv == 1 && ab == ab_a && (ab == 42 || ab == 43) && lage[0] == 103 && lage[1] == 103,
+          "geradeaus 10000 vor der Kamera: Abstand %d (SquareRoot0: %d), voll/volr %d/%d (103/103)", ab, ab_a, lage[0], lage[1]);
+    /* (b) seitlich (5000,0,10000): (10000 << 12) / 5000 = 8192 -> CORDIC 721 -> Richtung (0x1000 - 721) & 0xfff = 3375; Blick 0xc00,
+     *     Ursprung 0x400 -> rel = 2351 - 2048 = 303, Bit 0x800 frei, kein Spiegel -> i = 303 >> 3 = 37, PAN[37] = 119: voll = PAN
+     *     (`sh a0` @0x80045ce4), volr = 0x89 (@0x80045cd4); Abstand sqrt(4000^2 + 11180^2) = 11874 -> 47, ATT[47] = 36 -> 83 / 101. */
+    const int32_t pb[3] = { 5000, 0, 10000 };
+    rv = re15_wassersprung_r41_lage(&fake, pb, lage, &ab);
+    {   const int att = 26 + (ab_b - 26) / 2;   /* ATT[46] = ATT[47] = 36 */
+        CHECK(rv == 1 && ab == ab_b && att == 36 && lage[0] == 119 - att && lage[1] == 0x89 - att,
+              "seitlich +x: Abstand %d (SquareRoot0: %d, ATT %d), voll/volr %d/%d (PAN[37] 119 - 36 = 83 / 0x89 - 36 = 101)", ab, ab_b, att, lage[0], lage[1]); }
+    /* (c) weiter weg geradeaus (0,0,25000): sqrt(4000^2 + 25000^2) = 25317 -> 101, ATT[101] = 26 + (101-26)/2 = 63 -> 0x89 - 63 = 74/74 (leiser) */
+    const int32_t pc[3] = { 0, 0, 25000 };
+    rv = re15_wassersprung_r41_lage(&fake, pc, lage, &ab);
+    {   const int att = 26 + (ab_c - 26) / 2;   /* ATT[100] = ATT[101] = 63 */
+        CHECK(rv == 1 && ab == ab_c && att == 63 && lage[0] == 0x89 - att && lage[1] == 0x89 - att,
+              "geradeaus 25000: Abstand %d (SquareRoot0: %d, ATT %d), voll/volr %d/%d (74/74) - leiser als 103", ab, ab_c, att, lage[0], lage[1]); }
+    /* (d) ohne Kamera (Cut ausserhalb) -> keine Lage */
+    g_scd.work_vars[0x0A] = 5;
+    rv = re15_wassersprung_r41_lage(&fake, pa, lage, &ab);
+    CHECK(rv == 0, "Cut 5 bei 1 Kamerasatz -> keine Lage (%d)", rv);
+    g_scd.work_vars[0x0A] = 0;
+    /* (3) Pegel (Port-Q15 des Tons bei Tastenpegel 0x7f = 8192): SsUtKeyOnV volr > voll -> Pegel volr, Pan 0x7f - (voll<<6)/volr
+     *     (@0x80059e78-bc) = 127 - 5312/101 = 75 -> links * (0x7f - 75) / 63 (@0x80055f8c), rechts voll. 8192*101/127 = 6514 -> L 5376 R 6514. */
+    int vol = 8192; const int l1[2] = { 83, 101 };
+    int r = re15_wassersprung_r41_lage_pegel(&vol, l1, 0);
+    CHECK(vol == 5376 && r == 6514, "Pegel voll/volr 83/101 -> L/R %d/%d (5376/6514)", vol, r);
+    vol = 8192; const int l2[2] = { 101, 83 };
+    r = re15_wassersprung_r41_lage_pegel(&vol, l2, 0);
+    CHECK(vol == 6514 && r == 5376, "Pegel voll/volr 101/83 (Pan (83<<6)/101 = 52 @0x80059e30-6c) -> L/R %d/%d (6514/5376)", vol, r);
+    vol = 8192; const int l3[2] = { 103, 103 };
+    r = re15_wassersprung_r41_lage_pegel(&vol, l3, 0);
+    CHECK(vol == 6643 && r == 6643, "Pegel 103/103 (Pan 0x40 @0x80059e10) -> L/R %d/%d (6643/6643)", vol, r);
+    vol = 8192; const int l4[2] = { 74, 74 };
+    r = re15_wassersprung_r41_lage_pegel(&vol, l4, 0);
+    CHECK(vol == 4773 && r == 4773, "Pegel 74/74 (weiter weg) -> L/R %d/%d (4773/4773, leiser als 6643)", vol, r);
+    /* (4) Im Raum: NPC-Schritt in ROOM2000 traegt die Lage (Messzeile) und gibt sie NICHT an einen spaeteren Schritt weiter */
+    if (!raum("STAGE2/ROOM2000.RDT", 0x2000u, 4350, -1800, -20500, 0, 0)) { s_fails++; return 0; }
+    re15_actor_t *e = &g_actors[3];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = 0x40; e->hp = 100; e->x = -4300; e->y = -1800; e->z = -5000; e->floor = 1;
+    re15_wassersprung_r41_reset();
+    const int cut_raum = (int)g_scd.work_vars[0x0A];
+    (void)re15_wassersprung_r41_npc_schritt(e, 0, 7, &g_room_rdt);
+    const re15_wassersprung_r41_mess_t *m = re15_wassersprung_r41_mess();
+    int erw[2] = { -1, -1 }, erw_ab = -1;
+    const int32_t pe[3] = { e->x, e->y, e->z };
+    (void)re15_wassersprung_r41_lage(&g_room_rdt, pe, erw, &erw_ab);
+    int rest[2];
+    CHECK(m->letzte_lage[0] >= 0 && m->letzte_lage[0] == erw[0] && m->letzte_lage[1] == erw[1] && m->letzter_abstand == erw_ab
+          && re15_wassersprung_r41_lage_nehmen(rest) == 0,
+          "ROOM2000 Cut %d: Schritt bei (-4300,-1800,-5000) -> Lage %d/%d Abstand %d; danach keine haengende Lage",
+          cut_raum, m->letzte_lage[0], m->letzte_lage[1], m->letzter_abstand);
     return 1;
 }
 
@@ -832,6 +1099,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "npc_wasser")) teil_npc_wasser();
     if (alle || !strcmp(teil, "stempel"))   teil_stempel();
     if (alle || !strcmp(teil, "npc_subs"))  teil_npc_subs();
+    if (alle || !strcmp(teil, "ton"))       teil_ton();
+    if (alle || !strcmp(teil, "lage"))      teil_lage();
     printf("\n%s: %d Pruefungen, %d Fehler\n", teil, s_checks, s_fails);
     return s_fails ? 1 : 0;
 }

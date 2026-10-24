@@ -336,22 +336,36 @@ static const uint8_t *edt_satz(const re15_rdt_t *rdt, int idx)
     return rdt->snd_edt[0] + (size_t)idx * 4;
 }
 
+/* Hat die EDT-Zeile idx einen TON? Satz nicht leer (RE2 FUN_8005c040 `beq v0,v1` @0x8005c470; RE1.5-Daten: leer = 00000000), Programm
+ * e[1] & 0x7f / Ton e[2] >> 4 in der VH der Raumbank (RDT +0x0C; FUN_80045630 prog*0x200 + 0x820 + Ton*0x20 @0x800457dc) mit VAG != 0:
+ * SsUtKeyOnV keyt nur dann (`lhu a0,22(v0)` @0x80059f2c, `bne a0,zero` @0x80059f8c). Dieselben Grenzen wie re15_footstep_vag
+ * (vab_common.c: Programm < Zahl der Programme in der VH +18, VAG 1..Zahl der VAGs in der VH +22) - direkt auf den VH-Bytes. */
+static int ton_spielt(const re15_rdt_t *rdt, int idx)
+{
+    const uint8_t *e = edt_satz(rdt, idx);
+    const uint8_t *vh = rdt ? rdt->snd_vh[0] : NULL;
+    const int vh_n = rdt ? rdt->snd_vh_size[0] : 0;
+    if (!e || !vh || vh_n < 0x820 || (e[2] == 0 && e[3] == 0)) return 0;
+    const int prog = e[1] & 0x7f, ton = e[2] >> 4;
+    int progs = vh[18] | (vh[19] << 8);
+    if (progs > 128) progs = 128;
+    if (progs > (vh_n - 0x820) / 0x200) progs = (vh_n - 0x820) / 0x200;
+    if (prog >= progs) return 0;
+    const int off = 0x820 + prog * 0x200 + ton * 0x20 + 0x16;
+    if (off + 2 > vh_n) return 0;
+    const int vag = vh[off] | (vh[off + 1] << 8);
+    const int vags = vh[22] | (vh[23] << 8);
+    return vag != 0 && vag <= vags;
+}
+
 /* Im ORIGINAL hoerbar: Stimme (e[3] & 0x1f) - 16 + (fuss != 4) liegt in den 8 gepumpten Saetzen (@0x800457a0-b4, FUN_800458d4
- * `ori s4,zero,0x8` @0x800458dc). Ein leerer Satz (00000000) gibt Stimme -16/-15. */
+ * `ori s4,zero,0x8` @0x800458dc) - ein leerer Satz (00000000) gibt Stimme -16/-15 - und der Ton hat einen VAG (ton_spielt). */
 static int ton_orig_hoerbar(const re15_rdt_t *rdt, int idx, int fuss)
 {
     const uint8_t *e = edt_satz(rdt, idx);
     if (!e) return 0;
     const int stimme = (e[3] & 0x1f) - RE15_WASSERSPRUNG_R41_STIMME_BASIS + (fuss != 4 ? 1 : 0);
-    return stimme >= 0 && stimme < RE15_WASSERSPRUNG_R41_STIMMEN;
-}
-
-/* RE2-Retail FUN_8005c040: leerer Satz -> kein Ton (`lw v0,0(s4)` / `beq v0,v1` @0x8005c468-70; RE1.5-Daten: leer = Ton 0 und
- * Kopf 0, dieselbe Pruefung wie re15_footstep_vag in vab_common.c). */
-static int satz_belegt(const re15_rdt_t *rdt, int idx)
-{
-    const uint8_t *e = edt_satz(rdt, idx);
-    return e && !(e[2] == 0 && e[3] == 0);
+    return stimme >= 0 && stimme < RE15_WASSERSPRUNG_R41_STIMMEN && ton_spielt(rdt, idx);
 }
 
 /* FUN_80045a64 byte-genau (Kopf (f)). Die Tabellen PAN @0x80074728 (128 B) und ATT @0x800747a8 (128 B) liegen im Original
@@ -504,7 +518,7 @@ int re15_wassersprung_r41_npc_schritt(re15_actor_t *e, int a0, int fuss, const v
     int idx = ton_orig, quelle = 0;
     if (rdt && rdt->snd_edt[0] && !ton_orig_hoerbar(rdt, ton_orig, fuss)) {
         idx = a0 + (s0 & 0x7f);
-        quelle = satz_belegt(rdt, idx) ? 1 : 2;
+        quelle = ton_spielt(rdt, idx) ? 1 : 2;
     }
     if (quelle == 2 || idx < 0) idx = -1;
     /* M2 (Entscheid A-E4): Lage fuer den Ton = FUN_80045a64(Entity+0x34) @0x80045830-34 */
