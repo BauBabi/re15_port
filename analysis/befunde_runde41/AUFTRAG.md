@@ -571,3 +571,11 @@ Folgen (Orchestrator, Umsetzung Spur E):
   `WARTE 60` -> `WARTE 240` ist durch die festen NPCs noetig (alt: vor-exe gruen / nach-exe rot nur ueber die Zufallsdeckung
   Salve/Griff; neu: nach-exe gruen) — Messung steht in H_abnahme_0.md. Die Nachbesserung H 1 dokumentiert beides im Dossier;
   sonst ist nichts zu tun. Die naechste Abnahme der Spur H bewertet V1/V2 nicht mehr als Mangel.
+
+## 2026-10-24 19:01 — Nachtrag 15 (Nutzer-Entscheid per Auswahl: Ventilraetsel freigegeben, Spur C)
+
+Vorgelegt (Nachbesserung C 4): echte Ventile Nordwand 03 rot / 02 gruen / 01 schwarz, Suedwand 09 rot / 08 gruen / 07
+schwarz; Plakat (absichtlich falsch) "1. GREEN 09 - 2. RED 01 - 3. BLACK 02 - 4. RED 07"; Dokument "Technician's Note"
+(Nutzer-Text woertlich) neben der Sicherung; Loesung 09 -> 07 -> 02 -> 01; falsche Folge -> "The valves turned back to
+their original position."; Frage am Rad "Valve 09, red wheel. Will you turn it?". **Antwort: "Freigeben"** — Plakat,
+Loesung, Titel und Texte bleiben so (Fragen (m) und (n) der Spur C damit beantwortet).
