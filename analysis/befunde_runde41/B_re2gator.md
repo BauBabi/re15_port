@@ -849,3 +849,17 @@ unit_r41_re2gator_kanister: "Zeitlupe VSync 4 ueber 38 Takte (R1 P0 .. vor P3)".
 - Finisher -> RE1.5-Todeskamera (Lauf KF): s. §9.4, Entscheidungsfrage §7.
 - Der Port zeichnet den Gator 2/3 gross (Nutzer-Design v0.7.36, +0x166 = 2731): alle Port-Massstaebe liegen unter den RE2-Werten
   (0,36..1,24-fach); die Grenze verwirft nur zu NAHE Kameras.
+
+## 10. Nachbesserung 2 (Abnahme 1, B_abnahme_1.md; Beginn 2026-10-24 05:23, HEAD 393bb59b)
+
+Neuer Agent (Nachbesserung 2). Baum sauber (`status --porcelain` leer), HEAD 393bb59b (= c59802b5 + AUFTRAG-Entscheide
+B6-B8 d53a6305 + Abnahmebericht). Pflichtlektuere: AUFTRAG.md (inkl. B6 Finisher-Kamera = RE2 bis Game Over, B7 Intro ohne
+Wanddurchdringung, B8 seitliche Sicht bleibt), VERTRAG.md, B_abnahme_1.md (M1-M4), dieses Dossier §0-§9, Memory
+reai-v2-gator-bosskampf.md / reai-v2-death-camera.md. Messdaten der Abnahme 1 liegen im selben Scratchpad
+(`.../scratchpad/B41abn1/mess/<Lauf>/`, gator_boss.log/state.log/debug.log/fd) und werden NICHT wiederholt; eigene Laeufe
+unter `.../scratchpad/B41nb2/`.
+
+Plan: M4 (Beleg-Pflege) -> M3 (Kanister: Sub-2 -> Sub-1 + Hysterese-Ruhe, RE2 @0x80100964-0x80100c1c selbst lesen) ->
+M1 (Finisher: sichtbarer Schnitt + Sperre bis Game Over, RE1.5-Todeskamera im Gator-Finisher aus, B6) -> M2 (Intro-/Dash-
+Wende: PORT-WAHL der Startlage/-gier mit Rechnung, B7; Riegel auf die Kopflage Bone 6) -> Bau -> gezielte Tests -> exe-
+Messungen nachher -> Abschluss-Commit.
