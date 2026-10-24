@@ -1212,8 +1212,18 @@ shared_assets/PSX, pri/, synchro/, release/.
     2/2 Passed auf genau dieser exe), Heliport 5/5, Querbezuege dachkiste/itemband/kistenregel (Abnahme 0/1).
 
 ## 6. OFFEN
-* **Nachbesserung 2 (2026-10-24, Abnahme 1 Mangel N1, Entscheid C-E2b): der Weg zum Rechner 2080 nach der Flut
-  existiert nicht** — blockiert an der ORIGINAL-Sperre ROOM11A0/11A1 Slot 4 ((3,206); main00 @0x00FEA/@0x00FEE; nur
+* **Nachbesserung 3 (2026-10-24, Abnahme 2 N1-N4, Nachtraege 7-10):**
+  - Lesart "Relinghoehe": umgesetzt ist y -3600 = Oberkante der UNTEREN Reling (Bildmessung +1800 ueber dem Landeplatz,
+    Band 2 der Ring-Bodenzellen, ROOM2050 -3600). Moegliche andere Lesart "Wasser bis an die Ring-Reling" waere y -5400
+    (Band der Ring-Reling-Zellen fl 0x33; Vorschau scratchpad `r41c_nb3/poly_bc.png` obere Reihe). Entscheidungsfrage §7 (k).
+  - 2060: der Weg Tuer -> Sicherungskasten/Generator ist als Gang ueber x -4500 / x 6000 nur in EINER Richtung als ein Lauf
+    gegangen (w3: Generator -> Tuer); die zwei Raetsel laufen ueber RE15_INPUT_SCRIPT ab der Stelle (g1/g2), weil der
+    Wegplan-Treiber kein Steuerkreuz fuer Cursor kennt.
+  - Die 20B0-Szene (Ankunft ueber die Ost-Tuer) braucht weiter den AUTO-Haken der Spur A (C-E1); w1 startet am Ende der
+    Szene ((3,235)=1, Lage (-20620,-9705)).
+  - Port-Texte 48/49 (neu) und alle frueheren bleiben Vorschlag bis zur Freigabe (§7).
+* (erledigt mit Nachbesserung 3, Nachtrag 7) ~~Nachbesserung 2 (2026-10-24, Abnahme 1 Mangel N1, Entscheid C-E2b): der Weg zum Rechner 2080 nach der Flut
+  existiert nicht~~ — blockiert an der ORIGINAL-Sperre ROOM11A0/11A1 Slot 4 ((3,206); main00 @0x00FEA/@0x00FEE; nur
   ROOM20A0/20A1 sub10 @0x01FF0 setzt das Bit), gemessen zu Fuss mit Leon und Elza (§0c Glied 7, Bilder nb2_11a0/nb2_11a1).
   Keine Port-Sperre der Runde 41 auf dem Weg -> nichts erfunden, kein Code geaendert. Entscheidungsfrage §7 (j) an den
   Orchestrator. Riegel unit_r41_ventilkette J + integration_r41_ventilkette_weg halten den Befund fest (sie fallen,
@@ -1358,7 +1368,15 @@ shared_assets/PSX, pri/, synchro/, release/.
   Vorbild) oder so lassen?
   **(i) (Abnahme M6):** die kleinen Haken der Spur C in main.c / game_step_common.c und die Querbezug-Flags ->
   **Orchestrator-Entscheid C-E3: angenommen.**
-  **(j) NEU (Nachbesserung 2, Abnahme 1 N1 / Entscheid C-E2b) — an den Orchestrator:** Nach der Flut (Bits 103+100
+  **(k) NEU (Nachbesserung 3, Nachtrag 8):** Der Ruhepegel nach dem Strom steht auf y -3600 = Oberkante der unteren
+  Reling (Steg/Landeplaetze): der Ring ist trocken, alles darunter 1800 tief unter Wasser (Bildbogen
+  C_belege/nb3_pegel_vorher_nachher_sheet.png). Gemeint "bis an die Ring-Reling" (y -5400, das Wasser stuende buendig mit
+  dem Ring)? Dann nur die Konstante RE15_R41C_WASSER_Y_RELING (und der Riegel) zu aendern.
+  **(l) NEU (Nachbesserung 3):** Texte 48 "I cannot go down the stairs because of the water." (Treppe nach dem Strom) und
+  49 "Numbered valves. If I turn them, this whole level will be flooded. I should look around here first." (Ventile vor
+  Bruecke/Sicherung) — Wortlaut freigeben oder aendern.
+  **(j) ERLEDIGT (Nachtrag 7: "Nach der Aktivierung des Stroms ist 2030 leer gelaufen"; Weg gemessen §0d N1):**
+  ~~(Nachbesserung 2, Abnahme 1 N1 / Entscheid C-E2b) — an den Orchestrator:~~ Nach der Flut (Bits 103+100
   ohne 107) erreicht der Spieler den Rechner 2080 NICHT; 2030 bleibt geflutet, 2080/2090/20A0 (Alligator, Kanister-
   Szene der Spuren F/G) sind unerreichbar. Gemessen (§0c): bis 11A0 ist alles mit den Original-Raetseln zu Fuss
   begehbar; der Weg nach 20A0 endet an der ORIGINAL-Sperre ROOM11A0/11A1 Slot 4 (main00 @0x00FEA Ck(3,206)=0 ->
