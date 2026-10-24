@@ -468,3 +468,106 @@ Ventilraetsel, mit Sicherung ja; ganzer Ablauf zu Fuss (Leon UND Elza).
    Erledigt vom Orchestrator auf master 919cc1ed: 204 von 214 pri/STAGE3-6/*_port.png aus M_bilder/uebersicht/ ersetzt.
    Ohne berichtigtes Gegenstueck (Spur M liefert sie nach, Ersatz bei der Integration): pri/STAGE3/3040+3041/01,
    3050+3051/06+15, 30E0+30E1/06+07.
+
+## 2026-10-24 12:43 — Orchestrator-Entscheide I-E1/I-E2 (Abnahme I 0; der Nutzer kann widersprechen)
+
+- **I-E1 (V1, Vertrag):** Die Haken der Spur I in enemy_ai_common.c (Include + 2 Zeilen, RE1.5-Grid-Dispatcher
+  0x80117910[4..6]) und player_common.c (1 Zeile, Pin-Freigabe der geteilten Phasenmaschine) sind angenommen (wie B5);
+  bei der Integration mit A (enemy_ai_common.c) gegenlesen.
+- **I-E2 (Hinweis H2 der Abnahme I 0):** Laden eines Spielstands IN ROOM2000/2001 (CONTINUE) zeigt keine Zombies (300 Bilder
+  ohne Zombie-Aktor) — vorbestehend, aber genau die Raeume des Nutzer-Punkts der Spur I. Spur I behebt es (Ursache im
+  Boot-/Lade-Pfad belegen, Riegel: Laden in 2000 und 2001 -> Zombies liegen wie beim Tuerweg).
+
+## 2026-10-24 13:11 — Nachtrag 12 (Wortlaut; Antworten auf die Fragen (k) und (l) der Spur C)
+
+Fragen (gekuerzt): (k) "Umgesetzt ist die Unterkante: Wasser bis zur Oberkante der unteren Reling (y -3600). Der Ring ist
+trocken, Steg und Landeplaetze stehen 1800 unter Wasser. Oder meintest du direkt buendig an die Ring-Reling (y -5400)?"
+(l) Zwei neue Texte zur Freigabe: "I cannot go down the stairs / because of the water." und "Numbered valves. If I turn
+them, / this whole level will be flooded. | I should look around here first."
+
+> (k) Wasserstand nach dem Strom:: unterhalb der Absperrung, sodass es nicht drüber "rein" laufen würde.
+> zu (l) Zwei neue Texte zur Freigabe: Für den Moment ok, aber „Numbered valves. If I turn them, / this whole level will be
+> flooded. | I should look around here first." würde ich später noch ändern wollen.
+
+Folgen (Orchestrator, Spur C):
+- (k) Der Ruhepegel nach dem Strom steht so hoch wie moeglich, aber UNTERHALB der Absperrung am inneren Ringrand, so dass
+  kein Wasser auf den Ring laeuft (nicht buendig mit dem Ring). Die Absperrung (Bruestung/Gelaender am Ringrand, Hoehe und
+  Art) aus der Geometrie belegen (SCA-Zellen mit Offsets + Hintergrundbild); ist sie ein durchsichtiges Gelaender, gilt die
+  Ringboden-Kante (y -5400) als Grenze und der Pegel liegt knapp darunter. y -3600 bleibt nur, wenn die Geometrie zeigt, dass
+  es keinen hoeheren Pegel unterhalb der Absperrung gibt. Bildbeleg vorher/nachher aus den Ring-Kameras.
+- (l) Beide Texte sind vorerst freigegeben (2030 Id 48 Treppe, Id 49 Ventile). Den Ventil-Text (Id 49) will der Nutzer
+  spaeter aendern — in den Release Notes unter "Zu entscheiden" fuehren.
+
+## 2026-10-24 13:19 — Nachtrag 13 (Wortlaut; das echte Ventilraetsel in 2030, Spur C — Nutzer-Entscheid "Jetzt in v0.8.29")
+
+> Der Text: „Numbered valves. If I turn them, / this whole level will be flooded. | I should look around here first." ist
+> deshalb dämlich, weil sich die Frage stellt - woher weiß den der Spieler das, das dann alles flutet?
+>
+> Wenn denn würde ich beim Anklicken der Anlage oder bei einer Leiche oder so ein Dokument machen, wo so etwas drin steht wie:
+>
+> These amateurs—not only did they completely mess up the water ventilation, so that the water level not only rises up to
+> the railing but also goes beyond it until it has completely drained out—but they also made a complete mess of the valve
+> instructions.... They mixed up black, green, and red, and swapped the numbers for black! What are they? Colorblind? How
+> is anyone supposed to work with something like this....
+>
+> und dann würde ich ein Plakat machen mit der Anleitung in welcher Reihenfolge mit welchen Zahlen man die valves drehen muss,
+> nur eben genau falsch entsprechend dem Dokument.
+
+Frage des Orchestrators: "Soll Spur C das jetzt noch fuer v0.8.29 bauen, oder kommt es in die naechste Runde?" —
+**Antwort: "Jetzt in v0.8.29 (Empfohlen)"** (Option: Dokument mit dem Nutzer-Text bei einer Leiche am Steg-Suedlandeplatz,
+wo die Sicherung liegt, oder beim Untersuchen der Anlage; Plakat als Nahaufnahme mit der falschen Reihenfolge; echtes
+Dreh-Raetsel statt Platzhalter; Plakat-Inhalt und Loesung dem Nutzer zur Freigabe vorlegen).
+
+Folgen (Orchestrator, Umsetzung Spur C):
+1. Text 2030 Id 49 ersetzen: kein Wissen, das der Spieler nicht haben kann — neutral, z. B. nur "I should look around
+   here first." (Gate Nachtrag 9/10 bleibt: Bruecke unten UND Sicherung aufgehoben).
+2. Dokument: Inhalt = der Nutzer-Text oben WOERTLICH (nur Umbruch/Seiten fuer den Leser; Titel als Vorschlag). Fundort:
+   Leiche am Steg-Suedlandeplatz neben der Sicherung (bevorzugt, weil der Spieler dort ohnehin vorbeikommt) oder beim
+   Untersuchen der Ventil-Anlage — Wahl mit Begruendung. Dokument-System des Ports (re15_files, Ids ab 0x48), Item-/Taken-Bit
+   nach RDT-Zensus (Memory reai-v2-bank9-taken-bits; Bit 107 ist seit Nachtrag 7 frei und gehoert C).
+3. Plakat: Nahaufnahme (System der Runde 40 "nahaufnahmen") an einer Wand im unteren Bereich bei den Ventilen, mit der
+   Anleitung (Reihenfolge Farbe + Nummer) — genau so falsch, wie das Dokument es beschreibt: Farben schwarz/gruen/rot
+   vertauscht, die Nummern der schwarzen Ventile getauscht. Bild als Port-Asset (im Dossier und fuer das Paket-Gate nennen).
+4. Raetsel: die echten Ventile (Nummern/Farben aus den 2030-Hintergruenden belegen, C_belege/nb3_ventile_lage_sheet.png)
+   in der richtigen Reihenfolge drehen; falsche Reihenfolge -> zurueckgesetzt (Form wie die Original-Raetsel 2060/11F0 mit
+   Beleg); die Loesung muss aus Plakat + Dokument + den sichtbaren Ventilen eindeutig ableitbar sein. Richtige Loesung ->
+   Warnung -> Flut wie bisher.
+5. Fuer den Nutzer (Dossier §7): Plakat-Bild, Dokument-Text, Loesung und Ableitung als Vorschlag zur Freigabe.
+6. Nachrichten-Ids: 2030 Ids 40-49 sind C's; werden mehr gebraucht, 2030 Ids 50-55 (VERTRAG 1.2 ergaenzt).
+
+## 2026-10-24 17:32 — Orchestrator-Entscheid E-E4 (Abnahme E 3, Mangel 2; der Nutzer kann widersprechen)
+
+unit_r36_zombieki_affen_block darf nicht durch eine nachtraeglich gewaehlte Schranke gruen werden. Die Sonde misst den
+Haenger (blockierte Gorilla-Bilder an einer Klemme je Seed) wieder wirksam; die zwei bekannten Haenger-Stellen (u. a. Klemme
+(11129,9982), Seed 0x9b5bf362: 4405/6000 Bilder) werden als BENANNTE Ausnahmen mit Beleg gefuehrt. Ist die Ursache im
+Port-Code (zombieki_r36.c, Runde-36-PORT-WAHL) belegbar und klein zu beheben, behebt Spur E sie in dieser Nachbesserung
+(mit Riegel); sonst Folgeauftrag in UEBERGABE §3b. Mangel 1 (Renn-Stopp nach Treppe, Griff-Freigabe, Plc_ret: Original
+loescht +5/+6 @0x80038ea8/@0x80038eb0 bzw. @0x80041f90-9c) behebt Spur E wie gefordert.
+
+## 2026-10-24 17:36 — Nachtrag 14 (Nutzer-Antwort per Auswahl; Kurbel ROOM2020, Spur E)
+
+Frage (gekuerzt): "Was meintest du mit 'herumfliegend'?" — Optionen: das Einfrieren (behoben) / den Sprung an die Kurbel
+(Original macht ihn genauso, davor friert das Bild ~1/4 s ein) / etwas anderes. **Antwort des Nutzers:**
+
+> Ja, direkt am Anfang springt Leon so komisch zu der Kurbel. So halb fliegend.
+
+Folgen (Orchestrator, Umsetzung Spur E):
+- Gemeint ist der Sprung an die Kurbel (Cut_chg 3 @0x0A7E, Pos_set @0x0A8C, Gier @0x0A94, Sleep 20, Plc_motion @0x0A9C).
+  Im Original ist er nicht als "Fliegen" zu sehen, weil das Bild nach Cut_chg stehen bleibt, bis der Hintergrund von CD
+  geladen ist (Apply-Zweig @0x80021558/@0x80021560, Lader FUN_80013c50; im Original-Video ~8 Bilder). Im Port dauert dieses
+  Standbild 1 Bild -> der Uebergang (alte Lage/Pose -> Kurbel) wird sichtbar.
+- Ziel: Port Bild fuer Bild wie das Original-Video vom "Yes" bis Plc_motion (Leon erscheint erst an der Kurbel, kein
+  sichtbares Hinueberfliegen, keine sichtbare Ueberblendung von der alten Pose). Die Standbild-Dauer des Originals an
+  genau dieser Stelle aus dem Original-Video bzw. DuckStation-RAM MESSEN (nicht schaetzen) und als gemessenen Wert mit
+  Quelle (Video/Savestate, Bildnummern) einsetzen; pruefen, ob die Laenge vom Hintergrund-Laden abhaengt und ob sie fuer
+  alle Cut_chg mit Hintergrundwechsel gilt (dann spielweit, mit den Riegeln der Spur E-E1). Riegel + Bildvergleich
+  Port/Original (Gehen, Rennen, Stehen).
+
+## 2026-10-24 17:38 — Orchestrator-Entscheid H-E1 (Abnahme H 0: beide Nutzer-Punkte erfuellt, nur Vertrag V1/V2)
+
+- **V1 angenommen** (wie B5/I-E1): Include + Aufruf `re15_kollision_r41_npc_schwanz(slot)` in enemy_ai_common.c
+  (re15_npc_ai_tick vor re15_npc_wall_clamp; Original-Reihenfolge aec4/b544 vor der Wandklemme @0x8011cc64).
+- **V2 angenommen** als belegter Querbezug ("neue Regel widerlegt alten Riegel"): test_r39_dining1141_kampf.cmake
+  `WARTE 60` -> `WARTE 240` ist durch die festen NPCs noetig (alt: vor-exe gruen / nach-exe rot nur ueber die Zufallsdeckung
+  Salve/Griff; neu: nach-exe gruen) — Messung steht in H_abnahme_0.md. Die Nachbesserung H 1 dokumentiert beides im Dossier;
+  sonst ist nichts zu tun. Die naechste Abnahme der Spur H bewertet V1/V2 nicht mehr als Mangel.
