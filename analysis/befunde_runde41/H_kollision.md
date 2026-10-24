@@ -10,7 +10,8 @@ Baum `.claude/worktrees/r41_kollision`, Zweig `r41/kollision`, Basis master-HEAD
 - 2026-10-24: Dossier angelegt, Pflichtlektuere AUFTRAG/VERTRAG/UEBERGABE gelesen.
 - Punkt 2: Messung vorher + RE-Belege (FUN_8002bd44 @0x8002c03c-c0a8, FUN_8002cdf4), Umsetzung, Messung nachher.
 - Punkt 1: Messung vorher (3070 Leon, 3001 Elza), RE (28 NPC-Wurzeln), Umsetzung, Messung nachher.
-- Naechster Schritt: Riegel (probes/r41_kollision.cmake), Kisten-Raetsel loesbar, Regressionen der Szenen.
+- Riegel probes/r41_kollision.cmake gruen, Kisten-Raetsel loesbar (Leon + Elza), Original-Messungen beider Punkte,
+  Regressionen gefahren (ein Querbezug R39 J angepasst), master (A + D) gemergt und nachgemessen.
 
 ## Punkt 1 — NPC <-> NPC
 ### Messung vorher (exe dieses Baums, Stand 4c667c97 = re15_pc_h41_vorher.exe: Haken abgeschaltet, sonst gleich)
@@ -278,6 +279,27 @@ tests/unit/probe_r41_kollision_abstand.c, tests/integration/test_r41_kollision.c
 - `integration_r41_kollision_npc3070` (Leon) / `_npc3001` (Elza) — exe: Kontakt ja, kein Bild < Summe-50, min >=
   Summe-20, Ende >= Summe-5, NPC-SCHUB im Log.
 Gezielte Laeufe (Summenzeilen woertlich): s. unten "Ergebnisse".
+
+### Ergebnisse der gezielten Laeufe (ctest-Summenzeilen woertlich)
+Stand vor dem master-Merge (Commit 5f7dca2e, Build = dieser Stand):
+- `ctest -R "^(unit_|prop_|probe_)" -j 6 --timeout 600` -> `100% tests passed, 0 tests failed out of 920`
+  (`Total Test time (real) = 798.36 sec`; enthaelt unit_r41_kollision_npc/raum3070/raum3001/kiste).
+- `ctest -R "^integration_r41_kollision" -j 3` -> erster Lauf 3/5 (kiste: Pruefung las das ZIEL statt der LAGE — eine
+  SCHUB-OK-Zeile ausserhalb Substate 8 wird @0x8002c0b8 zurueckgesetzt; npc3001: Elza stand zwischen den Eskorten, s. o.),
+  nach den Riegel-Korrekturen `-R "^integration_r41_kollision_(kiste|npc3001)$"` -> `100% tests passed, 0 tests failed out of 2`.
+- NPC-/Kisten-Regressionen, `-R "^integration_(r35_cut10f0|r35_cut1150|r36_szene1150|r36_szenenleon|r37_szene11c0|
+  r37_sperre1050|r39_parkplatz11c0_[kwnei]|r37_roy_szene1011|r37_roy_szene1021|r37_roy_leon1170|r38_dining1141_[wzdlsra]|
+  r39_dining1141_.*|r38_heliport1171_.*|r39_heliport1171_.*|r39_johnruf1041_.*|r39_funk10f1_.*|r38_werkstatt11b0|
+  r39_stimmen_.*|r38_elzatoene_szene1021|r39_toene_szene.*|r36_elza_irons|r38_kleinkram_irons|r38_szenenschutz|
+  r30_irons_tisch_.*|r30_cut_blitz|r34n_g_schrift1150|r35_inventar1050|r39_elzazombies_oben|r36_dachkiste|r36_klettern|
+  r37_kiste|r37_kiste2feld|r37_kistenregel)$" -j 3` -> `98% tests passed, 1 tests failed out of 64`
+  (`Total Test time (real) = 2987.37 sec`; rot nur integration_r39_dining1141_kampf, s. Querbezug R39 J), danach
+  `-R "^integration_r39_dining1141_kampf$"` -> `100% tests passed, 0 tests failed out of 1`.
+Nach dem Merge von master (370d8c31: Spur A + D integriert), neu gebaut:
+- `ctest -R "^unit_r41_" -j 4 --timeout 600` -> `100% tests passed, 0 tests failed out of 16`.
+- `ctest -R "^integration_r41_" -j 3 --timeout 1800` -> `100% tests passed, 0 tests failed out of 10`
+  (`Total Test time (real) = 1071.69 sec`; Spur H 5 + Spur A integration_r41_wasser20b0(_npc) + Spur D 3 — der NPC-Schub
+  vertraegt sich mit Spur A's NPC-Wasserschritten).
 
 ## OFFEN
 1. **Entity-Durchlauf der Schubkette @0x8002bfec-c038** (FUN_8002cabc(Entitaet, obj, 1) fuer jede aktive Entitaet:
