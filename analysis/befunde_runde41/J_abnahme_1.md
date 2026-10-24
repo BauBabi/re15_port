@@ -258,7 +258,9 @@ fehlten (Gitter blieb stehen).
   RE15_RBJ_BINDER_MAX_GEGNER, kein `1u << 32..35`); die master-Seite allein kompiliert nicht (`int rec = -1;` entfaellt im
   Merge-Ergebnis). Nach dem Merge `unit_r39_heliport1171_binder` (Riegel der Spur A zu RE15_ACTOR_MAX 36) und die Riegel
   `r41_stage3szenen_a` fahren. Spur K (cherry-pick 299b6deb des Binders) trifft denselben Konflikt.
-- scd_vm.c, platform/pc/main.c, enemy_ai_common.c mergen ohne Konflikt.
+- scd_vm.c, platform/pc/main.c, enemy_ai_common.c mergen ohne Konflikt. Behauptung "kein anderer Runde-41-Zweig aendert
+  register_opcodes" nachgeprueft (`git diff master...r41/<zweig> -- scd_vm.c`, alle 13 anderen Zweige): Hunks nur @32/@48/@78/
+  @680/@758/@759/@1820/@3865/@4560, keiner beruehrt `s_op_table[0x48]/[0x49]` — stimmt.
 
 ## Gate T — gezielte Tests (eigene Laeufe, keine volle Suite; Logs `J41abn1/ctest_*.log`)
 1. Riegel der Spur: `ctest -R "^unit_r41_stage3szenen_a" -V` -> **7/7 Passed** (zensus mit den NB1-Pruefungen 4030/4031/4040/4041
@@ -267,4 +269,16 @@ fehlten (Gitter blieb stehen).
 2. Unit-/Probe-Ebene der beruehrten Module (NPC-Executor, RBJ-Bindung, SCD-Opcodes, Zeichner-/Raum-Module, Szenen-Riegel der
    Runden 33-39; Regex `J41abn1/unit_regex.txt`): `ctest -R "<regex>" -j 4` -> **227/227 Passed** (22,8 s).
 3. Integrationsriegel der beruehrten Raeume/Module (dining1141-Haken, RBJ-Raeume 3091/1040/1041/10F0, NPC-Szenen 1150/11C0/Roy,
-   Elza-Kette, STAGE3-Masken, Tuerweg; Regex `J41abn1/integ_regex.txt`, 31 Riegel, `-j 3`): Stand s. unten.
+   Elza-Kette, STAGE3-Masken, Tuerweg; Regex `J41abn1/integ_regex.txt`, 31 Riegel, `-j 3`, Log `J41abn1/ctest_integ_modul.log`):
+   Stand beim Schreiben 9/9 Passed (story_elza, szenenleon, masken36_stage3, cut10f0, dining1141_s, r39_dining1141_d/_kampf/
+   _zielen/_zielen_nachladen), Rest laeuft (Ergebnis s. Schluss).
+4. Gegenprobe (master-exe, s. oben): Riegel 3060 **rot** (2 Fehler) — er misst den Nutzer-Befund.
+
+## Gesamturteil (vorlaeufig, wird am Ende ersetzt)
+| Punkt | Urteil |
+|---|---|
+| 1 ROOM3060 Marvin | erfuellt |
+| 2a ROOM3061 Sherry kriecht | erfuellt |
+| 2b ROOM3061 Elzas Ende | erfuellt |
+Gates: RE haelt, V haelt (V1 durch J-E1, M2 berichtigt und belegt), N ohne erreichbare Nebenwirkung, T offen bis zum Ende des
+Integrationslaufs.
