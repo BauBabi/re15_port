@@ -600,3 +600,36 @@ gegenseitig ueberschreiben:
   API (re15_gr2_kanister_setzen) -> Aufnahme/Explosion/Kiefer-Tod (Spur B, fertig).
 - Gemeinsame Beruehrungspunkte nur ueber Bits/APIs (F: Bits 110-113, Text-Ids 2090/2091 42-46; G: Bits 114-119, Ids 2080/2081
   42-47), keine Aenderung im Modul der anderen Spur; Treffer-Zaehler fuer G's Ausloeser liest G aus B's API.
+
+## 2026-10-24 19:31 — Nachtrag 16 (Wortlaut + Auswahl-Antwort; Ventil-Sicherungskasten in ROOM2010, Spur C — ersetzt Nachtrag 10)
+
+> Das einzige was ich noch reichlich schlecht finde ist das der Charakter so etwas sagen muss wie - "Ich muss mich vorher
+> noch umschauen" bis er die SIcherung genommen hat. So etwas gibt es im ganzen Spiel nicht und ist komisch.... Kannst du
+> evtl. noch einen zweiten Sicherungskasten irgendwo einbauen - außerhalb des Raumes, wo man die Sicherung zuerst einsetzen
+> muss. Macht man das geht die Kamera auf die Ventile und man hört ein unlock geräusch, das man sie dann drehen kann. Und
+> dann kann man die Sicherung aus dem Kasten wieder raus nehmen und in den 2. Sicherungskasten packen? Irgendwie sowas? Das
+> mach insgesamt viel mehr sinn....
+
+Frage des Orchestrators: Wo soll der Kasten hin (angeboten: 2070 vor der Ring-Tuer / 2030 am Ring)? Antwort:
+
+> Nein, weder 2070 noch 2030, denn man muss ja, nachdem man das Rätsel gelöst hat, und der Raum geflutet wurde die
+> Sicherung heraus nehmen können, um danach damit zum anderen Generator zu gehen. Ist sie raus, sollen die valves wieder
+> blockiert werden. Nein, ich glaube im ROOM 2010 wäre das vielleicht am günstigsten?
+
+Folgen (Orchestrator, Umsetzung Spur C):
+1. Neuer Ventil-Sicherungskasten in ROOM2010/2011 (Lage an einer passenden Wand aus den 2010-Hintergruenden belegen;
+   Kasten-Modell/Bild wie der Original-Kasten in 2060, falls vorhanden — Beleg). 2010 ist vor UND nach der Flut ueber
+   2000/20B0 Slot 2 erreichbar -> kein Softlock.
+2. Sicherung einsetzen (Frage im Original-Stil, Sicherung verlaesst das Inventar) -> "Kamera auf die Ventile" + Unlock-
+   Geraeusch (RE2/RE1.5-Ton mit Beleg): als kurze Einstellung der 2030-Ventil-Kamera (z. B. Hintergrund der Ventil-Kamera als
+   Standbild wie die Nahaufnahmen der Runde 40, oder kurzer Raumwechsel hin und zurueck — Form mit Beleg/Begruendung im
+   Dossier) -> Ventile in 2030 sind frei, solange die Sicherung im Kasten steckt.
+3. Sicherung herausnehmen (jederzeit, auch nach der Flut) -> zurueck ins Inventar, Ventile wieder blockiert. Danach geht
+   sie wie im Original in den Generator-Kasten 2060 ((3,144) sub19 @0x0169E).
+4. Die Ventile ohne Sicherung im 2010-Kasten: neutraler Text OHNE erfundenes Wissen und OHNE "look around" (z. B. "The
+   valve won't turn." / "It's locked." — Vorschlag). Der Gate-Text Id 49 und die Bedingung "Sicherung aufgehoben" aus
+   Nachtrag 10 entfallen; Nachtrag 9 (Bruecke vorher unten) bleibt (die Ventile liegen im unteren Bereich).
+5. Nachrichten-Ids: 2010/2011 Ids 40-44 fuer C (VERTRAG 1.2). Bits: aus C's Zuteilung (z. B. 107 ist mit dem Dokument
+   belegt -> naechste freie nach Zensus, im VERTRAG nachtragen).
+6. Riegel: ohne Kasten-Sicherung kein Ventil; mit ja; nach der Flut Herausnehmen moeglich und Generator 2060 erreichbar
+   (ganzer Weg zu Fuss, Leon UND Elza).
