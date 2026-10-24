@@ -260,11 +260,20 @@ static void gr2_mtx(uint8_t m[32], const int32_t rot[9], const int32_t t[3])
         m[22 + i*4] = (uint8_t)(v >> 16); m[23 + i*4] = (uint8_t)(v >> 24);
     }
 }
-static const int32_t k_einheit[9] = { 4096,0,0, 0,4096,0, 0,0,4096 };
-static int gr2_fx(uint32_t a0, int16_t a1, const int32_t rot[9], const int32_t pos[3], const int16_t ofs[4])
+/* QUELL-MATRIZEN der Effekte (Nachbesserung 1 M2, Fortsetzung 3 - gemessen: die Putz-Teilchen lagen bei
+ * (67,-2000,2) .. (-634,-4000,-722) statt um Leon (-8438,0,-25538), quads 85/Bild, gezeichnet 0):
+ * FUN_8001bf10 merkt sich den Matrix-ZEIGER a2 (`sw a2,108(t0)` @0x8001cd6c = re2_fx.c spawn_kern mtx_src) und
+ * FUN_8001d894 kopiert ihn bei Status-Bit 0x800 JE BILD nach +0x4C (@0x8001d8ac-fc). RE2 uebergibt darum nur
+ * DAUERHAFTE Matrizen: Sce_espr_on die Einheitsmatrix 0x8009db44 (FUN_80056a38(0) -> Tafel @0x80011470[0] ->
+ * `lui v0,0x800a / addiu v0,v0,-9404` @0x80056a78-7c) und die Lage als Versatz a3 (`addiu a3,sp,16` @0x80056618,
+ * SCD-Bytes 8..13 @0x800565ec-0c), die Fontaene die Part-Matrix des Modellblocks (`addiu a2,s2,1104` @0x80103f58),
+ * der Spritzring die Kanister-Matrix. Der Port reichte einen STACK-Puffer (gr2_fx: lokales m[32]) -> haengender
+ * Zeiger. Jetzt: je Quelle ein statischer Puffer, den der Takt laufend nachfuehrt (wie RE2 den Modellblock). */
+enum { GR2_FXM_TEIL6, GR2_FXM_TEIL7, GR2_FXM_KANISTER, GR2_FXM_N };
+static uint8_t s_fx_mtx[GR2_FXM_N][32];
+static int gr2_fx(uint32_t a0, int16_t a1, const uint8_t mtx[32], const int16_t ofs[4])
 {
-    uint8_t m[32]; gr2_mtx(m, rot ? rot : k_einheit, pos);
-    return re2fx_spawn_sofort(a0, a1, m, ofs);               /* FUN_8001bf10 = sofort lebendig */
+    return re2fx_spawn_sofort(a0, a1, mtx, ofs);             /* FUN_8001bf10 = sofort lebendig */
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -372,7 +381,9 @@ static void gr2_putz_takt(gr2_t *g)
         if (k_putz[i].bild != bild) continue;
         int32_t pos[3] = { g->putz_x + k_putz[i].dx, g->putz_y + k_putz[i].y, g->putz_z + k_putz[i].dz };
         uint32_t a0 = 0x04000000u | ((uint32_t)k_putz[i].typ << 16) | k_putz[i].param;
-        if (gr2_fx(a0, (int16_t)k_putz[i].dir, NULL, pos, NULL) >= 0) {
+        /* Sce_espr_on: FUN_8001bf10(a0, Richtung, 0x8009db44, &{x,y,z}) @0x800565a4-0x80056618 */
+        int16_t ofs[4] = { (int16_t)pos[0], (int16_t)pos[1], (int16_t)pos[2], 0 };
+        if (gr2_fx(a0, (int16_t)k_putz[i].dir, re2fx_einheitsmatrix, ofs) >= 0) {
             s_putz_spawns++;
             memcpy(s_putz_letzt, pos, sizeof s_putz_letzt);
         }
@@ -814,6 +825,13 @@ void re15_gr2_takt(int slot, re15_actor_t *e, re15_actor_t *pl, int im_chase)
     gr2_ereignis_takt(g);                                   /* Root @0x80100410 */
     gr2_schuettel_takt();                                   /* EXE je Bild */
     gr2_putz_takt(g);
+    {   /* Quell-Matrizen nachfuehren (Effekte mit Status 0x800 folgen ihnen je Bild, FUN_8001d894 @0x8001d8ac-fc) */
+        int32_t r[9], p[3];
+        if (gr2_bone_welt(e, 6, r, p)) gr2_mtx(s_fx_mtx[GR2_FXM_TEIL6], r, p);
+        if (gr2_bone_welt(e, 7, r, p)) gr2_mtx(s_fx_mtx[GR2_FXM_TEIL7], r, p);
+        int32_t kr[9];
+        if (re15_gr2_kanister_welt(p, kr)) gr2_mtx(s_fx_mtx[GR2_FXM_KANISTER], kr, p);
+    }
     if (g->biss_cd > 0) g->biss_cd--;                       /* +0x238 @0x801004a8-b8 */
     if (g->r4_cd > 0) g->r4_cd--;                           /* +0x22E @0x80100494-a4 */
     gr2_kan_takt(g, e, im_chase && !g->tot);
@@ -1104,7 +1122,11 @@ void re15_gr2_r1_start(int slot, re15_actor_t *e)
     g->fontaene = 1;                                        /* Callback +0x234 = FUN_80103eb4 @0x80102368 */
     /* Spritzring @0x80102374 -> 0x8010338c: 6 Effekte an der Kanister-Matrix */
     if (s_kan.aktiv)
-        for (int k = 0; k < 6; k++) gr2_fx(k_ring_a0[k], 0, s_kan.rot, s_kan.pos, k_ring[k]);
+    {   /* Kanister-Matrix = aktuelle Weltlage (im Maul: Part 6 x Lokallage), dauerhafter Puffer (s.o.) */
+        int32_t kp[3], kr[9];
+        if (re15_gr2_kanister_welt(kp, kr)) gr2_mtx(s_fx_mtx[GR2_FXM_KANISTER], kr, kp);
+        for (int k = 0; k < 6; k++) gr2_fx(k_ring_a0[k], 0, s_fx_mtx[GR2_FXM_KANISTER], k_ring[k]);
+    }
     if (re15_gr2_raum_se_hook) re15_gr2_raum_se_hook(15);   /* Se_on(0x020f0001) @0x8010237c-88 */
     g->r1_zielyaw = (uint16_t)((e->rot_y + 160) & 0xfff);  /* @0x8010239c-a4 */
     g->r1_speed = -500; g->r1_schritt = 40;                 /* @0x8010246c-70, @0x8010247c-84 */
@@ -1120,21 +1142,23 @@ static void gr2_fontaene_takt(gr2_t *g, re15_actor_t *e)
     if (g->fontaene == 0) return;
     int32_t r6[9], p6[3], r7[9], p7[3];
     int ok6 = gr2_bone_welt(e, 6, r6, p6), ok7 = gr2_bone_welt(e, 7, r7, p7);
+    if (ok6) gr2_mtx(s_fx_mtx[GR2_FXM_TEIL6], r6, p6);        /* Part-Matrix 6 (RE2 `addiu a2,s2,1104` @0x80103f58) */
+    if (ok7) gr2_mtx(s_fx_mtx[GR2_FXM_TEIL7], r7, p7);
     int16_t ofs[4];
     if (g->fontaene == 1 && ok6) {                          /* @0x80103f20-70: 0x26032000 an Part 6 */
         ofs[0] = (int16_t)(rnd8() * 2 + 300); ofs[1] = (int16_t)(rnd8() * 2); ofs[2] = (int16_t)(rnd8() * 4 + 200); ofs[3] = 0;
-        gr2_fx(0x26032000u, 0, r6, p6, ofs);
+        gr2_fx(0x26032000u, 0, s_fx_mtx[GR2_FXM_TEIL6], ofs);
     } else if (g->fontaene >= 2 && g->fontaene < 9) {       /* @0x80103f74-40a8 */
         if (ok7) {
             ofs[0] = (int16_t)(rnd8() * 4 + 300); ofs[1] = (int16_t)(rnd8() * 2); ofs[2] = (int16_t)(rnd8() * 2 + 200); ofs[3] = 0;
-            gr2_fx(0x00064000u, (int16_t)(rnd8() * 16), r7, p7, ofs);
+            gr2_fx(0x00064000u, (int16_t)(rnd8() * 16), s_fx_mtx[GR2_FXM_TEIL7], ofs);
         }
         if (ok6) {
             ofs[0] = (int16_t)(rnd8() * 2 + 300); ofs[1] = (int16_t)(rnd8() * 2); ofs[2] = (int16_t)(rnd8() * 4 + 200); ofs[3] = 0;
-            gr2_fx(0x00034000u, (int16_t)(rnd8() * 16), r6, p6, ofs);
+            gr2_fx(0x00034000u, (int16_t)(rnd8() * 16), s_fx_mtx[GR2_FXM_TEIL6], ofs);
             ofs[0] = (int16_t)(rnd8() * 2 + 300); ofs[1] = (int16_t)(rnd8() * 2); ofs[2] = (int16_t)(rnd8() * 2 + 200); ofs[3] = 0;
-            gr2_fx(0x08024000u, (int16_t)(rnd8() * 16), r6, p6, ofs);
-            gr2_fx(0x08024000u, (int16_t)(rnd8() * 16), r6, p6, ofs);
+            gr2_fx(0x08024000u, (int16_t)(rnd8() * 16), s_fx_mtx[GR2_FXM_TEIL6], ofs);
+            gr2_fx(0x08024000u, (int16_t)(rnd8() * 16), s_fx_mtx[GR2_FXM_TEIL6], ofs);
         }
     }
     if (g->fontaene == 64) g->fontaene = 0;                 /* @0x801040ac-bc: Callback aus */

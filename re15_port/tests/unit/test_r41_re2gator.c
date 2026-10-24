@@ -513,7 +513,27 @@ static int teil_putz(void)
     }
     (void)f_start; (void)n2; (void)n3;
     CHECK(gestartet, "kein Dash");
-    for (int f = 0; f < 120; f++) { leon_statue(-6500, -8000); tick(); re2fx_tick(); }
+    /* Fortsetzung 3: WIRKSAME Lage der lebenden Putz-Teilchen (Pool-Platz +0x34/+0x36/+0x38 nach FUN_8001d894,
+     * Bank 4 in +0x1C) - vorher lagen sie bei (67,-2000,2) .. (-634,-4000,-722) um den Ursprung, weil die Lage nur in
+     * einer Stack-Matrix stand (haengender Zeiger +0x6C, @0x8001cd6c) statt als Versatz zur Einheitsmatrix 0x8009db44
+     * (Sce_espr_on @0x800565a4-0x80056618). */
+    int lebend_max = 0, weit_max = 0, gesehen = 0;
+    for (int f = 0; f < 120; f++) {
+        leon_statue(-6500, -8000); tick(); re2fx_tick();
+        int lebend = 0;
+        for (int i = 0; i < RE2FX_PLAETZE; i++) {
+            const uint8_t *pb = re2fx_platz(i);
+            if (!pb || !(pb[0x18] | pb[0x19]) || (pb[0x1C] | (pb[0x1D] << 8)) != 4) continue;
+            int wx = (int16_t)(pb[0x34] | (pb[0x35] << 8)), wz = (int16_t)(pb[0x38] | (pb[0x39] << 8));
+            int dx = wx - (-6500), dz = wz - (-8000), d = (int)sqrt((double)dx * dx + (double)dz * dz);
+            if (d > weit_max) weit_max = d;
+            lebend++; gesehen++;
+        }
+        if (lebend > lebend_max) lebend_max = lebend;
+    }
+    CHECK(gesehen > 0 && weit_max <= 3000,
+          "Putz-Teilchen nicht um Leon: %d Beobachtungen, groesster xz-Abstand %d (Soll <= 3000; RE2-Versaetze <= 1122)", gesehen, weit_max);
+    printf("putz: lebende Teilchen max %d/Bild, groesster xz-Abstand zu Leon %d\n", lebend_max, weit_max);
     int spawns = re15_gr2_putz_spawns() - spawns0;
     CHECK(spawns == 54, "Putz-Spawns %d statt 54 (6 x 9, ROOM40A0 sub13/sub14)", spawns);
     CHECK(re2fx_op_unbekannt() == 0, "re2fx meldet %u unbekannte Ops fuer Effekt 4", re2fx_op_unbekannt());

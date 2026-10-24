@@ -27,6 +27,8 @@
 #include "asset_root_pc.h"      /* re15_pc_read_re2 */
 #include "../../../engine/src/gen/r41_gator40a0_bank.inc"
 #include <SDL_timer.h>   /* SDL_GetTicks (Messzeile der Zeitlupe) */
+#include "re2_fx.h"       /* re2fx_quads (Messzeile Putz-Sicht) */
+#include "re2fx_pc.h"     /* re2fx_pc_letzte_quads */
 
 #define R41_KANISTER_TIM_SLOT 53
 
@@ -64,8 +66,41 @@ static int modell_laden(void)
     return 1;
 }
 
+/* (4) MESSZEILE Putz-Sicht (Nachbesserung 1 M2, Fortsetzung 3): ab dem ersten Putz-Spawn 120 Bilder lang je
+ * 5. Bild die RE2-FX-Quads des Pools in der angezeigten Kamera (re2fx_quads ohne Regions-Test), wie viele davon
+ * den Filter des Zeichners passieren (re2fx_pc.c: TPage 0x1E/0x1F, CLUT-Spalte 0x11, Zeilen 480..484) und die
+ * im Vorbild tatsaechlich gezeichneten (re2fx_pc_letzte_quads, mit Regions-Test). Reine Messung. */
+static void putz_sicht(const re15_camera_view_t *cam, int cx, int cy)
+{
+    static int s_aktiv = 0; static unsigned s_f0 = 0;
+    if (!cam || re15_gr2_putz_spawns() <= 0) return;
+    if (!s_aktiv) { s_aktiv = 1; s_f0 = (unsigned)g_engine.frame_count; }
+    unsigned df = (unsigned)g_engine.frame_count - s_f0;
+    if (df > 120 || (df % 5u) != 0) return;
+    static re2fx_quad_t q[384];
+    extern int pc_fx_camf(void);
+    int n = re2fx_quads(cam, cx, cy, pc_fx_camf(), 0, NULL, NULL, q, 384), ok = 0, ix = -1;
+    for (int i = 0; i < n; i++) {
+        unsigned seite = q[i].tpage & 0x1Fu, zeile = (q[i].clut >> 6) & 0x1FFu;
+        if ((seite == 0x1E || seite == 0x1F) && (q[i].clut & 0x3Fu) == 0x11u && zeile >= 480 && zeile < 485) ok++;
+        if (ix < 0 || q[i].y0 < q[ix].y0) ix = i;                  /* hoechstes Quad (Putz faellt von oben) */
+    }
+    if (ix >= 0) {
+        const uint8_t *pb = re2fx_platz(q[ix].platz);
+        int wx = pb ? (int16_t)(pb[0x34] | (pb[0x35] << 8)) : 0, wy = pb ? (int16_t)(pb[0x36] | (pb[0x37] << 8)) : 0;
+        int wz = pb ? (int16_t)(pb[0x38] | (pb[0x39] << 8)) : 0;
+        fprintf(stderr, "[gator-re2] Putz-Sicht F%u spawns=%d quads=%d filter_ok=%d gezeichnet_vorbild=%d hoechstes=(%d,%d)-(%d,%d) tpage=%x clut=%x platz=%d welt=(%d,%d,%d)\n",
+                (unsigned)g_engine.frame_count, re15_gr2_putz_spawns(), n, ok, re2fx_pc_letzte_quads(),
+                q[ix].x0, q[ix].y0, q[ix].x1, q[ix].y1, q[ix].tpage, q[ix].clut, q[ix].platz, wx, wy, wz);
+    }
+    else
+        fprintf(stderr, "[gator-re2] Putz-Sicht F%u spawns=%d quads=0 gezeichnet_vorbild=%d\n",
+                (unsigned)g_engine.frame_count, re15_gr2_putz_spawns(), re2fx_pc_letzte_quads());
+}
+
 void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
 {
+    putz_sicht((const re15_camera_view_t *)cam_view_v, cx, cy);   /* Messzeile (M2) */
     int32_t pos[3], rot[9];
     if (!re15_gr2_kanister_welt(pos, rot)) return;
     if (!modell_laden()) return;
