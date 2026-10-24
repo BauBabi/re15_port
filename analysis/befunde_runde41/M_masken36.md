@@ -61,3 +61,56 @@ Maskenwirkung).
 Das Spiel zeichnet also 57 % der platzierten Kuenstler-Silhouetten (727 561 von 1 280 674); die Objektkanten sind
 Treppen aus Vollrechtecken, und wo ein Teil der Rechtecke eines Objekts ausgeschlossen ist, bleibt ein loechriges Objekt.
 
+### 1.2 Ansatz und Belege (2026-10-24 08:40-10:30)
+
+Die Loecher, die im Spiel WIRKLICH zu sehen sind, sind (a) die Treppenkanten/Saeume der Generator-Masken und (b) die
+ausgeschlossenen Rechtecke, die Objekte in Splittern stehen lassen. Beides ist aus den vorhandenen Daten schliessbar:
+
+**(a) Saum = verifizierte Generator-Region ohne Rechteck.** Der Generator (analysis/esp_masken_2026-09-03/gen_masken.py
+build_cut) findet je Verschiebung eine Region im Kuenstler-Atlas (gen_region.find_blocks block 16 / stride 4 / NCC >= 0.97
+als Saat, region_grow tol 0.55 entlang der Silhouette; gemessene Praezision 99,39 % gegen die Kuenstler-Masken, Kopf
+gen_masken.py) und ueberdeckt sie mit den groessten VOLLEN Rechtecken (`rects_from_mask`, "Kleinkram < 16 lohnt kein
+eigenes Rechteck", Rechtecke halb ausserhalb des Bildes verworfen). Der Rest der Region wurde nie gezeichnet.
+Nachbau (Scratchpad `m41/py/b2_grown.py`, `b3_tiefe.py`; im Repo `re15_port/tools/maske/schliessen_r41.py`):
+* Region mit dem Generator-Code selbst (gen_region unveraendert), Atlas = Engine-Entpacker, Hintergrund = probe_bg_dump:
+  **3239 von 3239 vorhandenen Rechtecken liegen vollstaendig in der Region ihrer Verschiebung, keine Verschiebung fehlt.**
+* Tiefenregel des Generators (depth_map_for_cut: je Bildspalte Bodenkontakt der Komponente auf y = 0, DEPTH_SAFETY 0.90,
+  Rechteck = int(Median der Fenstertiefen)) mit geom.build_view/vz_at_floor: **3239 von 3239 Rechtecktiefen bitgleich**.
+* Saum = Regionspunkte unter keinem vorhandenen Rechteck: **107 118 Bildpunkte** in 108 Sektionen (Region 1 233 573
+  Atlaspunkte gegen 1 125 178 Rechteckflaeche). Klassifikation Loch/Zwischenraum: ein Punkt wird nur geschlossen, wenn er
+  zur verifizierten Region gehoert (Kuenstler-Atlas Index != 0 UND passt in Farbe zur Verschiebung, zusammenhaengend mit
+  einem NCC-belegten Block); alles andere bleibt offen - Gelaender-/Gitterluecken haben im Kuenstler-Atlas Index 0.
+  Von den 4 584 eingeschlossenen Lochpunkten der heutigen Deckung liegen 3 285 im Saum (werden geschlossen), 1 299
+  ausserhalb der Region (bleiben offen: echte Zwischenraeume oder nicht belegt).
+* Warum nicht die ganze Kuenstler-Komponente: eine Atlas-Komponente traegt oft mehrere Verschiebungen (20 Komponenten,
+  z.B. ROOM6010 Cut 12 Komponente 13: drei Verschiebungen, Farbabweichung 58/125/128 je Verschiebung) - nur die
+  verifizierte Region ist sicher richtig platziert (Saum-Abweichung zum Hintergrund: Median 14, 90 % <= 33, gegen
+  gedeckte Punkte Median 11, 90 % <= 24; `a8_abweichung.py`).
+
+**(b) Tiefe aus der Erreichbarkeit statt Ausschluss.** Der Ausschluss (R37 masken36_r37.c) nimmt ein Rechteck GANZ weg,
+sobald es an einem erreichbaren Stehplatz einen Figurpunkt ohne solide Zelle davor verdeckt. Gemessen (`b6_teilobjekte.py`):
+398 Objekte (>= 64 px), 247 ganz gezeichnet, 57 ganz aus, **94 teilweise ausgeschlossen (358 358 px) = loechrige Objekte**.
+Original-Urteil (R37 §3.3): verdeckt gdw. `depth < (1023*vz)>>16` (Figur-OT otz>>4 @0x8002565c, ZSF3 = 341 @0x80066c70,
+Masken-OT = depth @0x80039650..60). Je Rechteck m ueber ALLE seine deckenden Punkte und alle erreichbaren Figurpunkte
+darunter: falsch = keine Zelle davor (darf nicht verdecken -> depth >= bucket), echt = Zelle davor (soll verdecken ->
+depth < bucket). Neue Tiefe = max bucket(falsch), wenn groesser als die Generator-Tiefe: verdeckt keinen falsch-Punkt und
+jeden Punkt mit groesserem Bucket - also nie weniger als der Ausschluss (der verdeckt gar nichts). Wo das Figurraster
+nicht pixelgenau ist (Kasten breiter als das Bild, Spalte halb hinter der Kamera) dieselbe Schranke wie R37 NB2 M2 als
+Untergrenze. Werkzeug `test_r37_masken36 erzeuge_tiefe`, Laufzeit-Tabelle `engine/src/gen/masken36_tiefe_r41.inc`.
+
+### 1.3 Umsetzung
+
+| Datei | Inhalt |
+|---|---|
+| `re15_port/tools/maske/schliessen_r41.py` (neu) | baut je Raumpaar xxx0/xxx1 MSK + 216 `_PRIcc.TIM`. Probe 1: Rechteck in der Region; Probe 2: Deckung == alte Rechtecke + Region bitgenau; Probe 3: alter Teil jeder Sektion bytegleich (Gruppen + Rechtecke, nur Kopfzahlen und Anhang neu). Saum-Rechtecke: Grundstuecke = 8-zusammenhaengende Saumpunkte gleicher Spaltentiefe, gierig zusammengelegt (gleiche Verschiebung, Tiefenspanne <= Stufe, kleinster Flaechenzuwachs) bis 105 Rechtecke je Cut (RE15_PRI_MAX_MASKS_PER_CUT, re15_pri.h) erreicht sind; feinste Stufe aus (0, 1, 2, 3, 4, 6, 8, 12, 16) wie bau_p2.bau_cut. Ergebnis: 87 von 108 Sektionen Stufe 0 (jede Spaltentiefe genau), groesste Abweichung 12 Buckets (1 Sektion). Atlas: alte Rechtecke an ihrer BSS-Stelle (Texel = Hintergrund an der Zielstelle), Saum-Rechtecke an der ersten freien Stelle, je eine Gruppe (Anker = Ziel - Quelle), deckend nur an ihren Saumpunkten; 255 Farben Median-Schnitt, CLUT wie atlas.tim_aus (0,480, STP fuer Schwarz). |
+| `re15_port/shared_assets/PSX/MASKS/ROOM3040..ROOM6031.MSK` + `ROOMxxxx_PRIcc.TIM` | 30 MSK (bytegleiche Paare Leon/Elza wie bisher), 216 TIM neu. 4300 Saum-Rechtecke (15 078 Rechtecke gesamt). |
+| `re15_port/engine/src/masken36_r41.c`, `include/re15_masken36_r41.h` (neu) | Tiefen-Tabelle anwenden (Index vor dem Ausschluss) |
+| `re15_port/engine/src/gen/masken36_tiefe_r41.inc` (neu, erzeugt) | 2966 Zeilen |
+| `re15_port/engine/src/masken36_r37.c` | Haken (1 Zeile + include) am Anfang von re15_masken36_filter: Tiefe vor Ausschluss |
+| `re15_port/engine/src/gen/masken36_ausschluss_r37.inc` (neu erzeugt) | nur noch ROOM3050/3051 Cut 15 (kein Stehplatz = Original-NULL-Sektion, R37 NB2 M1) |
+| `re15_port/tests/unit/test_r37_masken36.c` | Generator-Sektion = Stage 3..6 (`generator_sektion`/`atlas_generator`, vorher "ohne eigenen Atlas"); Tiefen-Tabelle in der Nachrechnung wie der Lader; Gegenprobe "ohne Ausschluss" jetzt auch ohne Tiefen-Tabelle; Zensus: Stages 3..6 eigener Atlas (vorher BSS), Trennschaerfe-Gegenprobe nur fuer Freistellungen (der alte Teil der Generator-Sektionen passt durch beide Atlanten, Probe 3); Werkzeug `erzeuge_tiefe`, Riegel `tiefe` |
+| `re15_port/tests/unit/probes/r41_masken36.cmake` (neu) | `unit_r41_masken36_tiefe` |
+| `re15_port/tools/maske/original.py` | Entpacker-Fix (1.1) |
+
+Der Lader braucht keine Aenderung: R15M MIT eigenem Atlas -> eigener Atlas (re15_pri_atlas_quelle, bg_pc.c), die Zeile
+"Port-Masken ohne eigenen Atlas -> BSS-Atlas des Cuts (Runde 37 Spur P)" erscheint fuer die Stages 3..6 nicht mehr.
