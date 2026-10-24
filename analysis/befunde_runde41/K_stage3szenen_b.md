@@ -94,3 +94,48 @@ K1.1/K1.2 oben haben die Rollen verwechselt. Belege (eigene Dumps, Datei-Offsets
   `pc_sync_player_model` (platform/pc/main.c ~Z.1394) tauscht beim Modellwechsel NUR MD1 + TIM aus PL<n>.PLD und
   behaelt Skelett (EMR) und Animation (EDD) der bisherigen Figur sowie deren Waffe — fuer die Weste (PL00<->PL01: EDD
   und EMR bytegleich) richtig, fuer Sherry (Kind-Skelett, eigene Clips, eigene Waffendatei) falsch. Messung folgt.
+
+### K1.4 Messung vorher (Port, Bau 750bfe36 = Basis + rbj-binder J + Messhaken)
+Lauf `re15_port/tools/r41_k/lauf.sh v30c1s` (Elza-Neuspiel RE15_PSELECT_AUTO(_SWITCH), RE15_SET_FLAG=4:244,
+RE15_DEBUG_JUMP=3060@250 -> ROOM3061, **RE15_WORKVAR_AT=0x10:15@30#3061** = was ROOM3061 @0x011F6 schreibt,
+**RE15_FIRE_AOT=3@60#3061** = die Schacht-Tuer @0x00EF8, also der Tuerweg der Szene -> ROOM30C1 Cut 10,
+RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1). debug.log: `[workvar-at] Bild 30 Raum 3061: work_vars[0x10] = 15`,
+`[fire-aot] slot=3 at F60`, `[room] PC loaded room30c1.rdt`, **`[pld] Spielermodell -> PLD/PL0F.PLD (Mesh 15 Teile,
+Textur 256x256)`** — nur Mesh+Textur getauscht.
+Bilder: `K_belege/k1_vorher_30c1_bogen.png`, Zoom `k1_vorher_30c1_zoom.png`, Vergleich
+**`K_belege/k1_original_vs_port_vorher_30c1.png`**:
+* ORIGINAL (Nutzer-/Spur-J-Stand HASH-957757946319438E_1.sav, sauber: Stub 08 00 e0 03; RAM DAT_800aca5c = **0x0F**,
+  DAT_800aca5d = **0x00**, work_vars[0x10] = 0x000F, Lage (-19100,-1350) = Cut 10 der Schacht-Tuer; Framebuffer aus dem
+  VRAM, `K_belege/k1_original_30c1_sherry_fb.png`): Sherry steht als Kind mit geschlossenen Gliedern, Schuhe im
+  Schatten, KEINE Waffe.
+* PORT vorher: Sherrys Teile haengen am ERWACHSENEN Elza-Skelett (PL04-Bindelagen/-Animation): Beine auseinander-
+  gerissen, Fuesse schweben, Schuhe liegen getrennt im Schatten; in der rechten Hand ein grauer Stab = Elzas Messer-Hand
+  (wpn_md1[0] = PL04W00 dir[2], gezeichnet weil main.c ~Z.9555 `vis = wpn_md1_ok[wi]` auch fuer Waffe 0 zeichnet).
+  => Nutzer-Befund "voellig falsch und kaputt" + "Waffe" am Port reproduziert.
+
+### K1.5 RE-Beleg Original: Modellwechsel FUN_800314b0 + Waffenlader FUN_80036b68 (selbst disassembliert)
+Aufruf: Raumlader FUN_800396fc @0x80039788 `jal 0x800314b0` (wenn Nibble != work_vars[0x10], s. K1.3).
+FUN_800314b0 (ghidra1_V2.txt Z.~126300, RE_15_Quellcode_V2/FUN_800314b0.c, re15_disasm.py):
+* @0x800314d4 `lbu v0,DAT_800aca5c`, @0x80031500 Tabelle **@0x80073f70** (u16 je Modell: `3c 00 3d 00 ... 4b 00`) ->
+  @0x8003151c `jal 0x80013b60` laedt die PLD nach 0x801bd814. Modell 15 -> Datei 0x4B = PL0F.PLD (CD-Dateitabelle
+  @0x8006f440, Eintrag 74: Groesse 126892 = PLD/PL0F.PLD; Eintrag 59 = 189108 = PL00.PLD).
+* ALLE VIER Teile werden gebunden: @0x8003154c `sw v0,DAT_800acbc0` = dir[0] **EDD** (Spieler +0x16c), @0x80031578
+  `sw v0,DAT_800acad8` = dir[1] **EMR** (+0x84), @0x800315a0 `sw v0,DAT_800aca64` = dir[2] **MD1**
+  (@0x800315c8 `jal 0x80022150`), @0x800315b0 `jal 0x8004ee78` = dir[3] **TIM**; @0x80031614 `jal 0x8001e56c` +
+  @0x80031624 `jal 0x8001e5b0` = Skelett-Aufbau aus dem neuen EMR. => Skelett + Animation + Mesh + Textur der Figur.
+* Waffe: @0x8003167c `lbu v1,DAT_800aca5c`, @0x80031680 `jal 0x800c00a8` (DEBUG.BIN, resident @0x800c0000: Datei-
+  Offset 0xa8; liest Byte-Tabelle @0x800c00d4[Modell] = `01 x15, 00` -> 1 fuer Modell 0..14, 0 fuer 15),
+  @0x80031690 `sb v0,DAT_800aca5d`; @0x80031694 `ori v0,zero,0xf` / @0x800316b8 `bne v1,v0` / **@0x800316c4
+  `sb zero,DAT_800aca5d` = Modell 0x0F -> Waffe 0** (Bytes `03 00 62 14` / `5d ca 20 a0`).
+* Danach @0x800316e8 `jal 0x800440c4(Modell)` (CORE-Klangbank je Modell, Tabelle @0x80073a88/@0x80073ab0),
+  @0x800316f0 `jal 0x80036b68` (Waffe), @0x80031708 `jal 0x80043d8c(Waffe)` (ARMS-Klangbank), @0x80031718
+  `sh 100,DAT_800acaee` (HP = 100).
+FUN_80036b68 (Waffenlader): @0x80036b84/@0x80036b8c Modell/Waffe, Tabelle **@0x800741e8** (u16 je Modell:
+`4c x4, 61 x4, 4c x7, 76 00`) -> Datei Basis + Waffe; Modell 15 -> 118 = PL0FW00.PLW (Eintrag 117: 14696 B).
+@0x80036be4 `sw ..,DAT_800acbc8` = dir[0] W-EDD (+0x174), @0x80036c04 `sw ..,DAT_800acbc4` = dir[1] W-EMR (+0x170);
+**@0x80036bf8 `lbu v1,DAT_800aca5d` / @0x80036c08 `beq v1,zero,0x80036da0` (Bytes `65 00 60 10`): Waffe 0 ->
+KEIN Hand-/Waffen-Mesh, keine Waffen-TIM** (der ganze Anhang @0x80036c10..@0x80036d9c entfaellt).
+PLD-Inhalt (`K_belege`, eigener Schnitt ueber die Verzeichnistabelle): PL0F.PLD EDD 24 Clips
+{28,28,133,30,20,38,1x11,45,31,1x5}, EMR 15 Knochen Hierarchie wie PL04, Bind Wurzel (0,-1268,0) (Kind; PL04 -1709),
+MD1 15 Meshes, TIM 256x256 8bpp. PL0FW00.PLW: EDD 9 Clips {20,1,40,1,1,28,15,1,8}, EMR 15 Knochen 115 Keyframes,
+MD1 1 Mesh, dir[3] 2336 B.
