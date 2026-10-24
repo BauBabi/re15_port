@@ -143,9 +143,16 @@ je Sektion 10,66 / 765 (eigener Atlas = Hintergrund an der Zielstelle).
   | DAVOR, Punkte uebermalt | 53 | 2 Szenen: v4080_07 9, v5100_07 25 | 3 Szenen: v4040_11 1, v4080_07 11, v5100_07 27 |
   | HINTER, verdeckte Figurpunkte | 44 | 11 782 von 28 457 | 12 664 von 28 457 (+882) |
 
-  Die DAVOR-Punkte sind keine Figur-Fehler von Runde 41: v4080_07/v4040_11 = Kanten des 3D-Tuermodells im Tuerrahmen (der
-  Rahmen deckte die Tuer-Oberkante schon vorher), v5100_07 = Leons Hand am unteren Bildrand unter einem ALTEN Rechteck
-  (vorher 25). HINTER: kein Szenenwert sinkt (h6000_04 128 -> 127 = Rauschen), groesste Gewinne h6000_07 626 -> 838,
+  DAVOR (berichtigt in Nachbesserung 1, Abnahme 0 Mangel 5d - die fruehere Aussage "keine neue Uebermalung" war so nicht
+  belegt): v4080_07 (+2) und v4040_11 (+1) sind Kanten des 3D-Tuermodells im Tuerrahmen, keine Figur; v5100_07 25 -> 27 ist
+  Leons Hand am unteren Bildrand. Mechanik-Messung NB1 (RE15_TRILOG, Leon-Dreiecke gegen die Masken-Schluessel): die Hand liegt
+  unter dem ALTEN Generator-Rechteck 0 (Tiefe 64, x 0..43 y 154..240), auch die zwei Abnahme-Punkte (38,236)/(39,237) liegen
+  NUR unter Rechteck 0 (kein Saum-Rechteck dort); Leon-Dreiecke z 3062..4615 gegen Schluessel 4164 -> 120 Leon-Rasterpunkte
+  verdeckt, vor NB1 und nach NB1 gleich (neu 0). Die +2 im Bildvergleich |A-B| > 24 entstehen, weil Rechteck 0 seit Runde 41
+  durch den eigenen Atlas (Texel = Hintergrund an der Zielstelle) statt den BSS-Atlas gezeichnet wird - andere Farbe, dieselbe
+  Verdeckung. Die Verdeckung der Hand selbst ist ALTBESTAND (Generator 2026-09-03, Tiefe mit DEPTH_SAFETY 0.90 = 10 % naeher
+  als der Bodenkontakt); ob die Hand dort vor oder hinter dem Objekt liegt, ist nicht gemessen (Rechteck 0 hat keine
+  Zellen-Tiefe) - OFFEN 6, Bild `M_bilder/NB1_M5_ROOM5100_C07_hand.png`. HINTER: kein Szenenwert sinkt (h6000_04 128 -> 127 = Rauschen), groesste Gewinne h6000_07 626 -> 838,
   h3050_02 1116 -> 1237, h3040_02 1057 -> 1169, h3040_13 613 -> 687.
 
 ### 1.5 Verworfen: Tiefe aus der Erreichbarkeit statt Ausschluss (gebaut 2cfb1158, gemessen, zurueckgenommen 6871f2a5)
