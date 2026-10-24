@@ -13,6 +13,19 @@
  *   putz      Dash-Start -> 54 Putz-Partikel (RE2 CORE00.ESP id 4) ohne unbekannte re2fx-Ops, Lage um Leon
  *   wand      Nachbesserung 1 (M1): Intro ohne Bahn-Gate + Dash auf der Westwand-Klemmlinie nach Sueden (Klemme
  *             nimmt den RE2-Korridor-Seitversatz), yaw += 1024 nach Clip 3 (@0x80100938-48 / @0x80100eb0-c0)
+ *   lauer     Nachbesserung 3 (Abnahme 2 M1, Entscheid B9): bis zum Durchbruch untergetaucht wie RE2 (Sce_em_set y=+3000
+ *             @RDT 0x25A0): nicht zeichnen, keine Trefferbox/kein Ziel, keine Animation; Auftauchen im Intro-Start-Takt
+ *             auf der Pos_set-Lage (Clip 6 Bild 0), danach kein Schritt groesser als der groesste authored Wurzelschritt
+ *   schleppen Nachbesserung 3 (M2): Fenstertreffer -> Stufe 1 + erster Stufe-2-Schritt im selben Takt (@0x8010183c-5c ->
+ *             @0x80101860), bis zum Anhaengen (t = 13 @0x801018c4-cc) keine Koerperlenkung, Kanister-Weg <= Gator-Weg,
+ *             Schub nur laengs (@0x801018a4-c0); danach lenkt die Verfolgung wieder
+ *   anschwimmen Nachbesserung 3 (M3): Zielmodus +0x1C0 & 4 (@0x80100a34-b4) sperrt den Biss (T1 @0x8010134c-58), solange der
+ *             liegende Kanister >= 8880 x Skala voraus in der Zone des Gators liegt; < 8880, hinter dem Gator, in einer
+ *             anderen Zone oder ohne Kanister beisst er
+ *
+ * Seit Nachbesserung 3 ist der Gator im NATUERLICHEN Lauern untergetaucht (kein Kanister-Fenster, RE2 Sub-0-Pre leer):
+ * Riegel, die einen ruhenden Gator den Kanister aufnehmen lassen, laufen mit RE15_GB_TEST=5 (Marker-Repro: aufgetaucht
+ * wartend an der Marker-Lage, ohne Aggro) - setup(5).
  *
  * Seit Nachbesserung 1 zuendet der RE2-Intro bei JEDEM Aggro (RE2 Sub 0; vorher nur bei freier Bahn, was am
  * Lauerplatz nie galt): Riegel, die das Verhalten DANACH messen, warten ihn mit intro_abwarten() ab.
@@ -116,11 +129,11 @@ static void intro_abwarten(void)
 static int setup(int gb_test)
 {
 #ifdef _WIN32
-    _putenv(gb_test ? "RE15_GB_TEST=1" : "RE15_GB_TEST=");
+    _putenv(gb_test == 5 ? "RE15_GB_TEST=5" : gb_test ? "RE15_GB_TEST=1" : "RE15_GB_TEST=");
     if (!getenv("R41B_LOG")) _putenv("RE15_GB_STUMM=1");   /* R41B_LOG=1: gator_boss.log schreiben (Diagnose) */
     _putenv("RE15_GATOR_KANISTER=");
 #else
-    if (gb_test) setenv("RE15_GB_TEST", "1", 1); else unsetenv("RE15_GB_TEST");
+    if (gb_test) setenv("RE15_GB_TEST", gb_test == 5 ? "5" : "1", 1); else unsetenv("RE15_GB_TEST");
     if (!getenv("R41B_LOG")) setenv("RE15_GB_STUMM", "1", 1);
     unsetenv("RE15_GATOR_KANISTER");
 #endif
@@ -350,8 +363,8 @@ static int teil_sockel(void)
 /* ================================================================================================ */
 static int teil_kanister(void)
 {
-    if (!setup(0)) return 1;
-    leon_statue(-6000, 2000);                   /* kein Aggro: LURK, Kanister-Vorpass laeuft auch dort */
+    if (!setup(5)) return 1;                    /* NB3: GB_TEST=5 = aufgetaucht wartend (das natuerliche Lauern ist untergetaucht) */
+    leon_statue(-6000, 2000);                   /* kein Aggro: LURK (aufgetaucht), Kanister-Vorpass laeuft dort */
     tick();
     e->x = -6000; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
     int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
@@ -369,7 +382,10 @@ static int teil_kanister(void)
         if (st == 7 && f7 < 0) f7 = f;
     }
     CHECK(f7 >= 0, "Kanister nie getragen (Stufe 7)");
-    CHECK(stufe_bilder[2] == 13, "Stufe 2 %d Bilder statt 13 (@0x801018c4)", stufe_bilder[2]);
+    /* Nachbesserung 3 (M2): Stufe 1 laeuft im Fenster-Takt ohne Sprung in den ersten Stufe-2-Schritt (t = 0, Tafel @0x80100024:
+     * [1] 0x8010183c -> [2] 0x80101860), Anhaengen beim Schritt t = 12 -> 13 (@0x801018c4-cc): Stufe 2 steht nach 12 Takten. */
+    CHECK(stufe_bilder[1] == 0 && stufe_bilder[2] == 12, "Stufe 1/2 %d/%d Bilder statt 0/12 (@0x8010183c-5c -> @0x80101860, "
+          "t = 13 @0x801018c4)", stufe_bilder[1], stufe_bilder[2]);
     CHECK(stufe_bilder[3] == 6 && stufe_bilder[4] == 6, "Stufe 3/4 %d/%d Bilder statt 6/6", stufe_bilder[3], stufe_bilder[4]);
     CHECK(stufe_bilder[5] == 7 && stufe_bilder[6] == 7, "Stufe 5/6 %d/%d Bilder statt 7/7", stufe_bilder[5], stufe_bilder[6]);
     CHECK(kopf2 > 150 && kopf2 <= 240, "Kopf-az nach Stufe 2 = %d (ease-in 13 x 240 @0x80101860)", kopf2);
@@ -428,7 +444,7 @@ static int teil_kanister(void)
  * treibt die Port-Bruecke so, wie main.c sie je Bild ruft (re15_re2z_gore_part_matrix, dann _part_burst). */
 static int teil_kiefer(void)
 {
-    if (!setup(0)) return 1;
+    if (!setup(5)) return 1;                    /* NB3: aufgetaucht wartend (s. teil_kanister) */
     leon_statue(-6000, 2000);
     tick();
     e->x = -6000; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
@@ -845,7 +861,7 @@ static int teil_kamera(void)
     /* (b) R1 Kanister-Explosion aus zwei Ausgangs-Cuts: 7 zeigt den Kopf (RE2: Cut 3/4/5 -> nur Sperre),
      * 2 zeigt ihn nicht (RE2: Cut 6/13, Kopf bei Bild-x -2 -> Cut 5 @0x80102218-6c, zurueck @0x801024a4-ec). */
     for (int fall = 0; fall < 2; fall++) {
-        if (!setup(0)) return 1;
+        if (!setup(5)) return 1;                /* NB3: aufgetaucht wartend (s. teil_kanister) */
         leon_statue(-6000, 2000); tick();
         e->x = -6000; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
         int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
@@ -885,7 +901,7 @@ static int teil_kamera(void)
      * Kopf 3201 vor der Linse (exe: Cut 2, m 2839 * 2^-16 = 2,5-facher RE2-Cut-5-Massstab); die RE2-Grenze (groesster
      * RE2-Schnittmassstab, Cut 0 H 257 / Tiefe 8898) muss sie verwerfen und eine Kamera unter der Grenze waehlen. */
     {
-        if (!setup(0)) return 1;
+        if (!setup(5)) return 1;                /* NB3: aufgetaucht wartend = die Lage des exe-Laufs kam_k (GB_TEST=5) */
         leon_statue(-6000, 2000); tick();
         e->x = 4997; e->z = -20318; e->y = -1200; e->rot_y = 1024;
         int32_t s2 = e->render_scale_q12 ? e->render_scale_q12 : 4096;
@@ -973,7 +989,10 @@ static int teil_aufnahme(void)
     re15_gr2_kanister_setzen(-6000, -1200, -25000 + laengs);
     leon_statue(-6000, -18200); e->x = -6000; e->z = -25000; e->rot_y = 0xC00;
     tick();
-    CHECK(re15_gr2_kanister_stufe() == 1, "Fenster nicht getroffen (Stufe %d, @0x80100ae4-ec)", re15_gr2_kanister_stufe());
+    /* Nachbesserung 3 (M2): Fenster (Pre @0x80100ae4-b08) und T2 Stufe 1 + erster Stufe-2-Schritt (@0x8010183c-5c -> @0x80101860)
+     * im selben Takt -> nach dem Takt Stufe 2 */
+    CHECK(re15_gr2_kanister_stufe() == 2, "Fenster nicht getroffen bzw. Stufe 1 nicht im selben Takt (Stufe %d, @0x80100ae4-ec, "
+          "@0x8010183c-5c)", re15_gr2_kanister_stufe());
     CHECK(e->motion == 0 && e->anim_frame == 0 && e->anim_frac == 32,
           "Aufnahmebeginn nicht Sub 2 -> Sub 1 (Clip 0, Bild 0, Blend 32 @0x80100b04-18/@0x80100c04/@0x80100c34-40): "
           "motion=%d af=%u blend=%u", (int)e->motion, (unsigned)e->anim_frame, (unsigned)e->anim_frac);
@@ -996,7 +1015,9 @@ static int teil_aufnahme(void)
         CHECK(re15_gr2_hysterese_ruht(slot, e), "Hysterese laeuft in Stufe %d (@0x80100b20-30)", re15_gr2_kanister_stufe());
     }
     CHECK(re15_gr2_kanister_stufe() == 7, "Kanister nicht getragen (Stufe %d)", re15_gr2_kanister_stufe());
-    CHECK(n16 >= 38 && clip0 == n16, "Stufe 1..6: %d/%d Bilder Clip 0 (Schwimmen) - RE2 ohne Hysterese", clip0, n16);
+    /* nach dem Fenster-Takt: Stufe 2 t = 2..12 (11), Stufe 3 (6), 4 (6), 5 (7), 6 (7) = 37 Takte (NB3: Stufe 1 + t = 0 im
+     * Fenster-Takt, @0x8010183c-5c -> @0x80101860) */
+    CHECK(n16 == 37 && clip0 == n16, "Stufe 1..6: %d/%d Bilder Clip 0 (Schwimmen, soll 37/37) - RE2 ohne Hysterese", clip0, n16);
     CHECK(biss == 0, "Biss waehrend der Aufnahme (%d Bilder Clip 4/2) - T1 nur bei Stufe 0/7 @0x80101360-70", biss);
     /* Stufe 7 in der Kanister-Zone (Zone 0): Sub bleibt Schwimmen (Bank 5 Bit 0 @0x80100ab8-c8 -> 0x80100c08) */
     int halt0 = 0;
@@ -1032,6 +1053,217 @@ static int teil_aufnahme(void)
     return fails ? 1 : 0;
 }
 
+/* ================================================================================================ */
+/* Nachbesserung 3 (Abnahme 2 M1, Orchestrator-Entscheid B9): UNTERGETAUCHT bis zum Durchbruch wie RE2. RE2: Sce_em_set
+ * `44 00 00 23 00 00 01 16 00 00 4a 16 b8 0b 3c eb ...` @RDT 0x25A0 (ROOM40A0) = y +3000 unter dem Boden, Sub 0 P0
+ * @0x80100854-68 ohne FUN_8001a330, Pre leer (@0x8010463c[0] = 0x801007fc `jr ra`); Pos_set @SCD 0x0736 erst mit dem
+ * Intro (sub11 Member_set2 @0x0730 -> P1 Clip 6 @0x801008ac-b8). Natuerlicher Zugang wie Abnahme-2-Lauf N: Leon geht aus
+ * der Tuernische im Westkanal nach Norden, Aggro bei dist < 9000 zum Lauerplatz (Nutzer-Design GB_AGGRO). */
+extern int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz);   /* re15_damage.c (FUN_8003703c) */
+static int32_t max_schritt(int clip, int32_t s)
+{
+    re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+    const re15_emd_clip_t *c = &bk->anim.clips[clip];
+    int32_t m = 0;
+    for (int f = 1; f < c->frame_count; f++) {
+        int16_t a[3] = {0,0,0}, b[3] = {0,0,0};
+        re15_emd_get_keyframe_speed(&bk->skel, (int)(bk->anim.frames[c->first_frame + f] & 0xfffu), &b[0], &b[1], &b[2]);
+        re15_emd_get_keyframe_speed(&bk->skel, (int)(bk->anim.frames[c->first_frame + f - 1] & 0xfffu), &a[0], &a[1], &a[2]);
+        double dx = (double)(b[0] - a[0]) * s / 4096.0, dz = (double)(b[2] - a[2]) * s / 4096.0;
+        int32_t d = (int32_t)(sqrt(dx * dx + dz * dz) + 0.999);
+        if (d > m) m = d;
+    }
+    return m;
+}
+static int teil_lauer(void)
+{
+    if (!setup(0)) return 1;                    /* kein GB_TEST: natuerliches Lauern */
+    CHECK(re15_gator_boss_untergetaucht(e) == 1, "Spawn-Bild (state 0, vor dem Boss-INIT) nicht untergetaucht");
+    leon_statue(-8200, -25550);                 /* Tuer-A-Spawn in der Nische (16 600 vom Lauerplatz) */
+    tick();                                     /* INIT -> LURK */
+    int32_t box_soll = (int32_t)((2200u * 2731u) >> 12);   /* byte-true Box @0x80118b98 x GB_SCALE_Q12 */
+    CHECK(re15_gator_boss_untergetaucht(e) == 1 && e->hit_radius_min == 0 && e->hit_radius_max == 0,
+          "nach dem INIT nicht untergetaucht (u %d, Box %d/%d)", re15_gator_boss_untergetaucht(e), (int)e->hit_radius_min,
+          (int)e->hit_radius_max);
+    int32_t lx = e->x, lz = e->z; int lyaw = (int)e->rot_y & 0xfff;
+    uint16_t af0 = e->anim_frame; uint8_t mo0 = e->motion;
+    int32_t tx = 0, tz = 0;
+    int ziel = re15_player_aim_target(30000, &tx, &tz);
+    CHECK(ziel == 0, "Zielhilfe (FUN_8003703c, Radius 30000) waehlt den untergetauchten Gator (%d,%d)", tx, tz);
+    /* Leon geht im Westkanal (x -8440) nach Norden, 60 je Bild; je Takt: Lage, Sichtbarkeit, Box */
+    int f_auf = -1, unter_n = 0, sprung_max = 0, f_sprung = -1, schritte = 0;
+    int32_t ax = 0, az = 0, vx = 0, vz = 0;
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    int32_t m6 = max_schritt(6, s), m3 = max_schritt(3, s), m0 = max_schritt(0, s), m1 = max_schritt(1, s);
+    int32_t grenze = m6; if (m3 > grenze) grenze = m3; if (m0 > grenze) grenze = m0; if (m1 > grenze) grenze = m1;
+    int32_t z = -25550;
+    for (int f = 0; f < 700; f++) {
+        if (z < -5900) z += 60;
+        leon_statue(-8440, z);
+        int32_t ox = e->x, oz = e->z;
+        tick();
+        int u = re15_gator_boss_untergetaucht(e);
+        if (u) {
+            unter_n++;
+            CHECK(e->x == lx && e->z == lz && ((int)e->rot_y & 0xfff) == lyaw && e->motion == mo0 && e->anim_frame == af0,
+                  "untergetaucht bewegt/animiert (Takt %d: (%d,%d) yaw %d mo %d af %u)", f, e->x, e->z, (int)e->rot_y & 0xfff,
+                  (int)e->motion, (unsigned)e->anim_frame);
+            CHECK(e->hit_radius_min == 0, "untergetaucht mit Trefferbox %d (Takt %d)", (int)e->hit_radius_min, f);
+            continue;
+        }
+        if (f_auf < 0) {
+            f_auf = f; ax = e->x; az = e->z;
+            CHECK(re15_gr2_im_intro(slot) && e->motion == 6 && e->anim_frame == 0,
+                  "Auftauchen nicht im Intro-Start-Takt (im_intro %d, Clip %d Bild %u) - RE2 P1 Clip 6 @0x801008ac-b8",
+                  re15_gr2_im_intro(slot), (int)e->motion, (unsigned)e->anim_frame);
+            CHECK(e->hit_radius_min == box_soll, "Trefferbox nach dem Auftauchen %d statt %d", (int)e->hit_radius_min, (int)box_soll);
+            vx = ox; vz = oz;                   /* letzte untergetauchte Lage (Lauerplatz) */
+            continue;
+        }
+        if (!re15_gr2_im_intro(slot)) break;    /* nur der Intro (Clip 6 + Clip 3), danach Verfolgung */
+        int64_t dx = (int64_t)e->x - ox, dz = (int64_t)e->z - oz;
+        int32_t d = (int32_t)(sqrt((double)(dx * dx + dz * dz)) + 0.5);
+        schritte++;
+        if (d > sprung_max) { sprung_max = d; f_sprung = f; }
+    }
+    CHECK(f_auf > 0, "kein Durchbruch im natuerlichen Zugang (Aggro dist < 9000)");
+    {   int64_t dx = (int64_t)ax - vx, dz = (int64_t)az - vz;
+        printf("lauer: untergetaucht %d Takte am Lauerplatz (%d,%d), Auftauchen Takt %d auf der Intro-Lage (%d,%d) - Pos_set-"
+               "Sprung %d im untergetauchten Takt; Intro %d Schritte, groesster %d (Takt %d), Grenze %d (authored Clip 6/3/0/1 "
+               "%d/%d/%d/%d x Skala)\n", unter_n, lx, lz, f_auf, ax, az, (int)sqrt((double)(dx * dx + dz * dz)), schritte,
+               sprung_max, f_sprung, grenze, m6, m3, m0, m1); }
+    CHECK(schritte >= 250 && sprung_max <= grenze, "sichtbarer Lagesprung im Intro: %d > groesster authored Schritt %d (Takt %d, "
+          "%d Schritte)", sprung_max, grenze, f_sprung, schritte);
+    return fails ? 1 : 0;
+}
+
+/* Nachbesserung 3 (Abnahme 2 M2): Kanister-Aufnahme ohne Koerperlenkung. RE2 hat in Sub 1/2 und T2 keinen Gier-Schreiber
+ * (`sh ...,118(...)` nur @0x80100280/2a0/948/ec0/2404/2440/27c8/2a34); Stufe 2 schiebt den Kanister nur laengs
+ * (`obj[1].z = z + 8100` @0x801018a4-c0) bis zum Anhaengen (t = 13 @0x801018c4-cc). Lage wie die Pruefer-Sonde 'schleppen'
+ * der Abnahme 2: Gator (-3000,-24000) Blick Ost, Kanister im Fenster, Leon im Norden (die Verfolgung wuerde nach Norden
+ * drehen). Fall 2 schiebt den Gator zusaetzlich 300 je Takt laengs der Gier (schneller als jeder Clip), damit der Stufe-2-
+ * Schub selbst greift: er muss auf der Blickachse bleiben (quer unveraendert). */
+static int lauf_schleppen(int schub, int *ok_dreh, int32_t *kweg, int32_t *gweg, int *takte, int32_t *quer_d)
+{
+    if (!setup(1)) return 0;
+    leon_statue(-3000, -19000);
+    tick();
+    intro_abwarten();
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    e->x = -3000; e->z = -24000; e->y = -1200; e->rot_y = 0;
+    int32_t laengs = (int32_t)(((int64_t)8800 * s) >> 12);
+    re15_gr2_kanister_setzen(-3000 + laengs, -1200, -24000);
+    int32_t kp[3], kr[9], kalt[3]; re15_gr2_kanister_welt(kalt, kr);
+    int32_t q0 = kalt[2] - e->z;                /* Gier 0 = Ost: quer = z-Abstand */
+    int fenster = -1, anh = -1; int16_t yaw_f = 0;
+    *kweg = 0; *gweg = 0; *ok_dreh = 1; *quer_d = 0;
+    for (int f = 0; f < 60; f++) {
+        leon_statue(-3000, -19000);
+        int st_vor = re15_gr2_kanister_stufe();
+        int32_t gx = e->x, gz = e->z;
+        if (schub && st_vor == 2) {             /* Fall 2: schneller voran als jeder Clip (Schub muss greifen) */
+            e->x += (int32_t)(((int64_t)re15_cos_q12((int)e->rot_y) * 300) >> 12);
+            e->z -= (int32_t)(((int64_t)re15_sin_q12((int)e->rot_y) * 300) >> 12);
+        }
+        tick();
+        int st = re15_gr2_kanister_stufe();
+        if (fenster < 0 && st > 0) {
+            fenster = f; yaw_f = e->rot_y;
+            CHECK(st == 2, "Fenster-Takt endet in Stufe %d statt 2 (Stufe 1 faellt in Stufe 2 @0x8010183c-5c -> @0x80101860)", st);
+            re15_gr2_kanister_welt(kalt, kr);
+            continue;
+        }
+        if (fenster < 0) continue;
+        if (st == 2) {                          /* bis zum Anhaengen: keine Lenkung, Wege messen */
+            if (e->rot_y != yaw_f) *ok_dreh = 0;
+            CHECK(re15_gr2_aufnahme_lenksperre(slot), "Lenksperre aus in Stufe 2 vor dem Anhaengen (Takt %d)", f);
+            re15_gr2_kanister_welt(kp, kr);
+            int64_t kx = (int64_t)kp[0] - kalt[0], kz = (int64_t)kp[2] - kalt[2];
+            int64_t dgx = (int64_t)e->x - gx, dgz = (int64_t)e->z - gz;
+            *kweg += (int32_t)(sqrt((double)(kx * kx + kz * kz)) + 0.5);
+            *gweg += (int32_t)(sqrt((double)(dgx * dgx + dgz * dgz)) + 0.5);
+            int32_t qd = (kp[2] - e->z) - q0; if (qd < 0) qd = -qd; if (qd > *quer_d) *quer_d = qd;
+            memcpy(kalt, kp, sizeof kalt);
+            continue;
+        }
+        if (st >= 3 && anh < 0) { anh = f; break; }
+    }
+    *takte = (fenster >= 0 && anh >= 0) ? anh - fenster : -1;
+    CHECK(fenster >= 0 && anh > fenster, "Fenster %d / Anhaengen %d nicht erreicht", fenster, anh);
+    CHECK(!re15_gr2_aufnahme_lenksperre(slot), "Lenksperre nach dem Anhaengen noch an");
+    /* danach lenkt die Verfolgung wieder (Leon im Norden, Gier 0 = Ost) */
+    int dreht = 0;
+    for (int f = 0; f < 40 && !dreht; f++) { int16_t y0 = e->rot_y; leon_statue(-3000, -19000); tick(); if (e->rot_y != y0) dreht = 1; }
+    CHECK(dreht, "nach dem Anhaengen keine Lenkung mehr (Verfolgung tot)");
+    return 1;
+}
+static int teil_schleppen(void)
+{
+    int ok_dreh = 0, takte = 0; int32_t kweg = 0, gweg = 0, quer_d = 0;
+    if (!lauf_schleppen(0, &ok_dreh, &kweg, &gweg, &takte, &quer_d)) return 1;
+    CHECK(ok_dreh, "Gier aendert sich zwischen Fenster und Anhaengen (RE2 ohne Gier-Schreiber in Sub 1/2/T2)");
+    CHECK(kweg <= gweg && gweg > 0, "Fall 1: Kanister-Weg %d > Gator-Weg %d in Stufe 2 (@0x801018a4-c0)", kweg, gweg);
+    CHECK(takte == 12, "Fall 1: Anhaengen %d Takte nach dem Fenster-Takt statt 12 (t = 1..12 -> 13 @0x801018c4-cc)", takte);
+    printf("schleppen: Fall 1 (Clip 0): Gier fest %d, Gator-Weg %d, Kanister-Weg %d, Anhaengen %d Takte nach dem Fenster\n",
+           ok_dreh, gweg, kweg, takte);
+    int ok2 = 0, t2 = 0; int32_t kw2 = 0, gw2 = 0, q2 = 0;
+    if (!lauf_schleppen(1, &ok2, &kw2, &gw2, &t2, &q2)) return 1;
+    CHECK(ok2, "Fall 2: Gier aendert sich vor dem Anhaengen");
+    CHECK(kw2 > 0 && kw2 <= gw2, "Fall 2: Schub greift nicht oder Kanister-Weg %d > Gator-Weg %d (@0x801018a4-c0)", kw2, gw2);
+    CHECK(q2 <= 2, "Fall 2: Kanister verlaesst die Blickachse (quer %d) - RE2 schiebt nur laengs (x unberuehrt)", q2);
+    printf("schleppen: Fall 2 (+300 je Takt): Gier fest %d, Gator-Weg %d, Kanister-Weg %d (laengs, quer-Abweichung %d)\n",
+           ok2, gw2, kw2, q2);
+    return fails ? 1 : 0;
+}
+
+/* Nachbesserung 3 (Abnahme 2 M3): RE2-Anschwimm-Sperre. Gator (-6000,-25000) Blick Nord (Zone 0), Leon 2000 voraus (er
+ * wuerde sofort beissen), Kanister liegend voraus: >= 8880 x Skala (und ausserhalb des Fensters 8601..8999) -> Zielmodus
+ * +0x1C0 & 4 (@0x80100a34-5c) -> kein T1 (@0x8010134c-58); < 8880 (@0x80100a74-b4), hinter dem Gator, in einer anderen Zone
+ * (PORT-WAHL) oder ohne Kanister -> Biss. Lage wie die Pruefer-Sonde 'anschwimmen' der Abnahme 2. */
+static int lauf_ansch(int32_t gz, int32_t kan_x, int32_t kan_z, int mit, int *bit)
+{
+    if (!setup(1)) return -2;
+    leon_statue(-6000, -18200);
+    tick();
+    intro_abwarten();
+    if (mit) re15_gr2_kanister_setzen(kan_x, -1200, kan_z);
+    int biss = -1; *bit = -1;
+    for (int f = 0; f < 40 && biss < 0; f++) {
+        leon_statue(-6000, gz + 2000);
+        e->x = -6000; e->z = gz; e->y = -1200; e->rot_y = 0xC00;
+        tick();
+        if (f == 0) *bit = re15_gr2_zielmodus(slot);
+        if (e->motion == 4 || e->motion == 2) biss = f;
+    }
+    return biss;
+}
+static int teil_anschwimmen(void)
+{
+    int32_t s = 2731;                           /* GB_SCALE_Q12 (Boss-INIT) */
+    /* Zone 0 (Suedbecken) = z <= -18100 (gb_zone, GB_RAMP_Z0): mit dem Gator bei -25000 reicht sie 6900 voraus (RE2 10349),
+     * bei -26500 8400 (RE2 12594). 14000 RE2 voraus (z -15666) laege im Westkanal-Streifen (Zone 2) = andere Zone. */
+    struct { int32_t gz; int32_t re2; int mit; int sperre; const char *was; } k[] = {
+        { -25000, 10000, 1, 1, "Kanister 10000 voraus (>= 8880), gleiche Zone" },
+        { -26500, 12000, 1, 1, "Kanister 12000 voraus (>= 8880), gleiche Zone" },
+        { -25000,  8000, 1, 0, "Kanister 8000 voraus (< 8880, vor dem Fenster 8601)" },
+        { -25000, -1500, 1, 0, "Kanister hinter dem Gator" },
+        { -25000, 14000, 1, 0, "Kanister 14000 voraus im Westkanal (andere Zone)" },
+        { -25000, 10000, 0, 0, "ohne Kanister" },
+    };
+    int n = (int)(sizeof k / sizeof k[0]);
+    for (int i = 0; i < n; i++) {
+        int32_t kz = k[i].gz + (int32_t)(((int64_t)k[i].re2 * s) >> 12);
+        int bit = -1;
+        int b = lauf_ansch(k[i].gz, -6000, kz, k[i].mit, &bit);
+        printf("anschwimmen: %-52s laengs %6d: Zielmodus %d, Biss-Start %s%d\n", k[i].was, (int)(kz - k[i].gz), bit,
+               b < 0 ? "nie (40 Takte) " : "nach ", b < 0 ? 40 : b);
+        if (k[i].sperre) CHECK(b < 0 && bit == 1, "%s: Biss nach %d Takten / Zielmodus %d (RE2 +0x1C0 & 4 @0x80100a34-5c sperrt T1 "
+                               "@0x8010134c-58)", k[i].was, b, bit);
+        else             CHECK(b >= 0 && bit == 0, "%s: kein Biss (%d) / Zielmodus %d", k[i].was, b, bit);
+    }
+    return fails ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "clips";
@@ -1047,6 +1279,9 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "wand")) rc = teil_wand();
     else if (!strcmp(t, "kamera")) rc = teil_kamera();
     else if (!strcmp(t, "aufnahme")) rc = teil_aufnahme();
+    else if (!strcmp(t, "lauer")) rc = teil_lauer();
+    else if (!strcmp(t, "schleppen")) rc = teil_schleppen();
+    else if (!strcmp(t, "anschwimmen")) rc = teil_anschwimmen();
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);
     return rc;

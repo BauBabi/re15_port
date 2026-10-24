@@ -1260,6 +1260,7 @@ void re15_gator_boss_tick(int slot)
      * Klemme fuer das Fenster ausgesetzt (skip_clamp liest g->befrei). */
     if (g->befrei > 0) g->befrei--;
     if (!g->untergetaucht                     /* Nachbesserung 3 (B9): RE2 Sub 0 P0 bewegt nichts */
+        && !re15_gr2_aufnahme_lenksperre(slot)   /* Nachbesserung 3 (M2): kein Snap der Gier vor dem Anhaengen */
         && (g->phase == GBP_LURK || g->phase == GBP_CHASE || g->phase == GBP_GUARD)) {
         /* Gefangen = im Slab (Kante+radius+60) UND Totalstand (<8 Bewegung
          * seit dem Vortick): echte Gefangene bewegen sich EXAKT null (die
@@ -1420,6 +1421,19 @@ void re15_gator_boss_tick(int slot)
         if (g->cross_cd > 0) g->cross_cd--;
         {   const char *tv6 = getenv("RE15_GB_TEST");
             if (tv6 && *tv6 == '6') player_on_platform = 1;
+        }
+        if (re15_gr2_aufnahme_lenksperre(slot)) {
+            /* Runde 41 Spur B, Nachbesserung 3 (Abnahme 2 M2): Kanister-Aufnahme vom Fenstertreffer bis zum Anhaengen OHNE
+             * Koerperlenkung - RE2 Sub 1 (Main @0x80100c20: nur `FUN_8001a330(em, 0, 32, 0)` @0x80100c34-40) und T2
+             * (@0x801017c4-0x80101d40) schreiben die Gier +0x76 nie (Schreiber nur @0x80100280/2a0/948/ec0/2404/2440/
+             * 27c8/2a34); der Gator schwimmt geradeaus (Wurzelversatz Clip 0), Stufe 2 schiebt den Kanister laengs
+             * (@0x801018a4-c0). Kein GUARD-Wechsel, kein Dash, keine Wende/Steuerung, kein Biss (Stufe 1..6 @0x80101360-70)
+             * fuer die 13 Bilder bis t = 13 (@0x801018c4-cc). */
+            int32_t v = 0;
+            re15_gr2_chase_clip(slot, e, dist, &v);
+            re15_ai_advance(e, v);
+            e->y = GB_WATER_Y;
+            break;
         }
         if (player_on_platform) {
             /* Nutzer 2026-09-10: solange Leon OBEN steht -> BELAGERN und nach

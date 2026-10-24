@@ -85,6 +85,7 @@ typedef struct {
     uint8_t  tot;
     int      treffer;
     int      letzter_clip;    /* Hysterese-Latch: 0 = Sub 1, 1 = Sub 2 */
+    uint8_t  ziel_bit;        /* Nachbesserung 3 (M3): +0x1C0 & 4 = Zielmodus "Kanister" (Anschwimm-Sperre), s. gr2_zielmodus_takt */
     /* Putz */
     int      putz_t;          /* 0 = aus, sonst Bild der Sequenz (1..90) */
     int32_t  putz_x, putz_y, putz_z;
@@ -448,8 +449,41 @@ static void gr2_kan_folgen(const re15_actor_t *e)
     gr2_kan_welt_setzen(rot, pos);
 }
 
+/* Nachbesserung 3 (Abnahme 2 M3): RE2-ANSCHWIMM-SPERRE = Zielmodus +0x1C0 & 4 (EM23_OVL_0000.BIN, Sub-1/2-Pre, selbst gelesen):
+ * nur in Zone 1 (`lbu v1,538 / bne v1,1,0x80100b20` @0x801009c8-d0, vor der Zone-2-Linie @0x801009d8-e4, bei +0x22C == 0
+ * @0x80100a0c-14):
+ *   (a) Bank 5 Bit 1 (`jal 0x80077360` a0 = 0x800d4874, a1 = 1 @0x80100a1c-2c; ROOM40A0 sub10 `Set 22 05 01 01` @SCD 0x0659 =
+ *       Kanister faellt/liegt, nie geloescht) und Stufe < 2 (`lbu v0,550 / sltiu v0,v0,0x2` @0x80100a34-3c) -> `+0x1C0 |= 4`
+ *       (`ori v0,v0,0x4 / sb v0,448(s0)` @0x80100a54-5c), Hals-Ziel (x, y - 800, obj[1].z) @0x80100a4c-70;
+ *   (b) danach, auch ohne (a): obj[1].z - z < 8880 (`addiu v0,v0,-9000 / slti v0,v0,-120` @0x80100a88-8c) UND Stufe 0
+ *       (`lbu v0,550 / bne v0,zero` @0x80100a98-a0) -> `+0x1C0 &= 0xfb` (@0x80100aa8-b4);
+ *   (c) beim Anhaengen geloescht (@0x801018e4-f4, gr2_kan_takt Stufe 2).
+ * Solange das Bit steht, schaerft FUN_801012fc die Biss-Maschine T1 nicht (`lbu v0,448(a0) / andi v0,v0,0x4 / bne v0,zero,
+ * 0x80101380` @0x8010134c-58) -> re15_gr2_biss_erlaubt. Port: Zone 1 = Beckenzone der Liegestelle (PORT-WAHL wie Fenster
+ * und Hysterese-Ruhe, gb_zone), obj[1].z - z = Lage laengs der Blickachse (gr2_kan_vor), 8880 x Zeichen-Skala wie das
+ * Fenster 8601/0x18f; Bank 5 Bit 1 = Kanister im Raum (re15_gr2_kanister_setzen legt ihn liegend hin). PORT-WAHL: ausserhalb
+ * der Kanister-Zone ist das Bit aus - RE2 verlaesst Zone 1 nur ueber die Zone-2-Linie z >= -7322 (@0x801009e0), dort liegt
+ * der Kanister (z -9500, sub05 Pos_set @SCD 0x0484) laengst HINTER der 8880-Grenze, d.h. RE2 traegt das Bit nie aus Zone 1
+ * hinaus; im Becken fuehrt die Verfolgung den Gator zurueck in andere Zonen. Der Hals-Zielmodus selbst (Root @0x80100344-60
+ * -> FUN_800177c0 statt FUN_80017d98) ist OFFEN (Dossier §11.3): der Port fuehrt die RE2-Halsfuehrung des Gators nicht. */
+static void gr2_zielmodus_takt(gr2_t *g, const re15_actor_t *e, int im_chase)
+{
+    if (!s_kan.aktiv || s_kan.stufe == 13) { g->ziel_bit = 0; return; }
+    if (!im_chase) { g->ziel_bit = 0; return; }              /* PORT-WAHL: nur in der Schwimm-Verfolgung (RE2 Sub 1/2) - die
+                                                               * Nutzer-Design-Phasen GUARD/CROSS haben kein RE2-Gegenstueck */
+    if (!s_zone_fn || s_zone_fn(e->z) != s_zone_fn(s_kan.liege_z)) { g->ziel_bit = 0; return; }
+    int32_t laengs, quer; gr2_kan_vor(e, &laengs, &quer);
+    int alt = g->ziel_bit;
+    if (s_kan.stufe < 2) g->ziel_bit = 1;                                              /* (a) @0x80100a34-5c */
+    if (s_kan.stufe == 0 && laengs < q12mul(9000 - 120, gr2_scale(e))) g->ziel_bit = 0;   /* (b) @0x80100a74-b4 */
+    if (g->ziel_bit != alt)
+        re15_gr2_log("KANISTER Zielmodus %d (Anschwimm-Sperre) laengs=%d Stufe %d F%u", (int)g->ziel_bit, (int)laengs,
+                     (int)s_kan.stufe, (unsigned)g_engine.frame_count);
+}
+
 static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
 {
+    gr2_zielmodus_takt(g, e, im_chase);
     if (!s_kan.aktiv) return;
     if (s_kan.stufe == 13) {                                /* R1 P1 @0x8010255c-78: `lb v0,363; blez -> word0 = 0; sonst -1` */
         if (s_kan.entfern_ctr <= 0) s_kan.aktiv = 0; else s_kan.entfern_ctr--;
@@ -475,19 +509,27 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
             if (g->letzter_clip == 1) g->letzter_clip = 0;
             re15_gr2_log("KANISTER Stufe 1 laengs=%d quer=%d sub %d -> 1 F%u", laengs, quer, sub_vor,
                          (unsigned)g_engine.frame_count);
-        }
-        return;
+            /* Nachbesserung 3 (M2): KEIN return - RE2 ruft T2 im selben Takt nach dem Pre (Root: Routine @0x80100200,
+             * dann `jal 0x801017c4` @0x80100320), Stufe 1 laeuft dort gleich mit (unten). */
+        } else return;
     }
     int32_t s = gr2_scale(e);
-    switch (s_kan.stufe) {
-    case 1:                                                 /* @0x8010183c: Raumflag 29, t = 0 */
+    if (s_kan.stufe == 1) {
+        /* Stufe 1 @0x8010183c-5c: Raumflag 29 (`jal 0x8007730c` a1 = 29), t = 0 (`sh zero,346(s1)`), Stufe 2 (`lbu/addiu/sb
+         * v0,550(s1)`) und OHNE Sprung weiter in den Stufe-2-Code @0x80101860 (Tafel @0x80100024: [1] 0x8010183c, [2]
+         * 0x80101860) = der erste Stufe-2-Schritt (t = 0) im selben Takt. Nachbesserung 3 (M2): vorher ein eigener Takt
+         * (break) - die Aufnahme dauerte zwei Bilder laenger als RE2. */
         g->ease_t = 0; s_kan.stufe = 2;
-        break;
+    }
+    switch (s_kan.stufe) {
     case 2: {                                               /* @0x80101860 */
         g->kopf_az   = (int16_t)(g->kopf_az   + gr2_ease_in(13, g->ease_t, 240));   /* @0x80101860-6c */
         g->kiefer_az = (int16_t)(g->kiefer_az + gr2_ease_in(13, g->ease_t, -320));  /* @0x80101870-88 */
         g->ease_t++;
-        /* Kanister bleibt >= 8100 (x Scale) vor der Wurzel (@0x801018a4-c0: obj[1].z = z + 8100). */
+        /* Kanister bleibt >= 8100 (x Scale) vor der Wurzel (@0x801018a4-c0: `lw v0,64(s2) / lw v1,64(s1) / subu / slti v0,v0,
+         * 8100 / beq v0,zero,+ / addiu v0,v1,8100 / sw v0,64(s2)` = obj[1].z = z + 8100, NUR die Korridor-Achse, x
+         * unberuehrt). Nachbesserung 3 (M2): der Schub laeuft laengs der Gier, die seit dem Fenstertreffer GESPERRT ist
+         * (re15_gr2_aufnahme_lenksperre: RE2 hat in Sub 1/2 und T2 keinen Gier-Schreiber) - also geradeaus. */
         int32_t laengs, quer; gr2_kan_vor(e, &laengs, &quer);
         int32_t vh = q12mul(RE15_GR2_KAN_VORHALT, s);
         if (laengs < vh) {
@@ -508,7 +550,9 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
                                                     + (int64_t)r6[2*3+r] * s_kan.rot[2*3+c]) >> 12);
                 }
                 s_kan.angehaengt = 1;
-                re15_gr2_log("KANISTER angehaengt lokal=(%d,%d,%d)", s_kan.lokal[0], s_kan.lokal[1], s_kan.lokal[2]);
+                g->ziel_bit = 0;                    /* NB3 (M3): `lbu v0,448(s1) / andi v0,v0,0xfb / sb v0,448(s1)` @0x801018e4-f4 */
+                re15_gr2_log("KANISTER angehaengt lokal=(%d,%d,%d) F%u", s_kan.lokal[0], s_kan.lokal[1], s_kan.lokal[2],
+                             (unsigned)g_engine.frame_count);
             }
             g->ease_t = 0; s_kan.stufe = 3;                 /* @0x801018dc, 0x80101964-6c */
         }
@@ -949,9 +993,22 @@ int re15_gr2_hysterese_ruht(int slot, const re15_actor_t *e)
  * Boss-Modul fragt das vor jedem Biss-Start (Schnapp/Hochbiss/Kletterbiss = Nutzer-Design-Biss). */
 int re15_gr2_biss_erlaubt(int slot)
 {
-    (void)slot;
+    /* Nachbesserung 3 (M3): Zielmodus +0x1C0 & 4 sperrt T1 (`lbu v0,448(a0) / andi v0,v0,0x4 / bne` @0x8010134c-58) */
+    if (slot >= 0 && slot < RE15_ACTOR_MAX && s_g[slot].ziel_bit) return 0;
     if (!s_kan.aktiv) return 1;
     return s_kan.stufe == 0 || s_kan.stufe == 7 || s_kan.stufe == 13;
+}
+int re15_gr2_zielmodus(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].ziel_bit : 0; }
+/* Nachbesserung 3 (Abnahme 2 M2): vom Fenstertreffer (Stufe 1) bis zum Anhaengen (Stufe 2, t = 13 @0x801018c4-cc) keine
+ * Koerperlenkung. RE2 hat in Sub 1/2 und in T2 keinen Gier-Schreiber (`sh ...,118(...)` im Overlay nur @0x80100280/2a0 (Root,
+ * Rueckschreiben um FUN_80035408), Intro @0x80100948, Dash @0x80100ec0, R1 @0x80102404/2440, R2/R3 @0x801027c8/2a34) - der
+ * Gator schwimmt die Aufnahme geradeaus (Clip 0, Wurzelversatz), Stufe 2 schiebt den Kanister laengs (@0x801018a4-c0).
+ * Das Boss-Modul fragt das im CHASE (kein Steuern, keine Wende, kein Dash, kein Wechsel in GUARD) und in der Selbst-
+ * Befreiung ab. */
+int re15_gr2_aufnahme_lenksperre(int slot)
+{
+    (void)slot;
+    return s_kan.aktiv && (s_kan.stufe == 1 || s_kan.stufe == 2) && !s_kan.angehaengt;
 }
 void re15_gr2_biss_cd(int slot, int n) { if (slot >= 0 && slot < RE15_ACTOR_MAX) s_g[slot].biss_cd = (int16_t)n; }
 int  re15_gr2_biss_cd_rest(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].biss_cd : 0; }

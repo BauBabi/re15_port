@@ -53,7 +53,17 @@ endif()
 #                                Stufe 1..6 ohne Hysterese (@0x80100b20-30) und ohne Biss (FUN_801012fc @0x80101360-70),
 #                                Stufe 7 in der Kanister-Zone weiter Schwimmen (Bank 5 Bit 0, @0x80100aec/@0x80100afc),
 #                                ausserhalb wieder Paddeln + Biss erlaubt
-foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera aufnahme)
+#   unit_r41_re2gator_lauer      Nachbesserung 3 (Abnahme 2 M1, Entscheid B9): im natuerlichen Zugang (Leon aus der Tuernische
+#                                durch den Westkanal) bis zum Durchbruch UNTERGETAUCHT wie RE2 (Sce_em_set y=+3000 @RDT 0x25A0,
+#                                Sub 0 P0 @0x80100854-68): keine Trefferbox, kein Ziel der Zielhilfe, keine Bewegung/Animation;
+#                                Auftauchen im Intro-Start-Takt (Clip 6 Bild 0 @0x801008ac-b8) auf der Pos_set-Lage (@SCD 0x0736),
+#                                danach kein Schritt groesser als der groesste authored Wurzelschritt (Clip 6/3/0/1)
+#   unit_r41_re2gator_schleppen  Nachbesserung 3 (M2): Fenster -> Stufe 1 + erster Stufe-2-Schritt im selben Takt (@0x8010183c-5c ->
+#                                @0x80101860), keine Koerperlenkung bis zum Anhaengen (t = 13 @0x801018c4-cc; RE2 ohne Gier-Schreiber
+#                                in Sub 1/2/T2), Kanister-Weg in Stufe 2 <= Gator-Weg, Schub nur laengs (@0x801018a4-c0)
+#   unit_r41_re2gator_anschwimmen Nachbesserung 3 (M3): Zielmodus +0x1C0 & 4 (@0x80100a34-b4) sperrt den Biss (T1 @0x8010134c-58),
+#                                solange der Kanister >= 8880 x Skala voraus in der Zone des Gators liegt
+foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera aufnahme lauer schleppen anschwimmen)
     add_test(NAME unit_r41_re2gator_${_teil} COMMAND test_r41_re2gator ${_teil})
     set_tests_properties(unit_r41_re2gator_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()

@@ -71,6 +71,14 @@ int  re15_gr2_biss_cd_rest(int slot);
 void re15_gr2_zonen_quelle(int (*zone_fn)(int32_t z));
 int  re15_gr2_hysterese_ruht(int slot, const re15_actor_t *e);
 int  re15_gr2_biss_erlaubt(int slot);
+/* Nachbesserung 3 (Abnahme 2):
+ *  - aufnahme_lenksperre (M2): 1 vom Fenstertreffer (Stufe 1) bis zum Anhaengen (Stufe 2, t = 13 @0x801018c4-cc) - RE2 hat in
+ *    Sub 1/2 und T2 keinen Gier-Schreiber; das Boss-Modul steuert dann nicht (CHASE geradeaus, keine Wende/Dash/GUARD,
+ *    keine Selbst-Befreiung) und Stufe 2 schiebt den Kanister laengs dieser Gier (@0x801018a4-c0).
+ *  - zielmodus (M3, Messhaken): +0x1C0 & 4 = Anschwimm-Sperre (@0x80100a34-b4, geloescht @0x801018e4-f4); sperrt den Biss
+ *    (T1-Schaerfen FUN_801012fc @0x8010134c-58) - Teil von re15_gr2_biss_erlaubt. */
+int  re15_gr2_aufnahme_lenksperre(int slot);
+int  re15_gr2_zielmodus(int slot);
 
 /* RE2-LUNGE als Zonen-Dash: `zone` = aktuelle Beckenzone des Gators (gb_zone), `zone_leon` =
  * Leons Zone. Liefert 1, wenn eben eine neue Zone betreten wurde, in der Leon ist (RE2: Zonenlinie
