@@ -691,3 +691,12 @@ kommt nach synchro/STAGE2/room2030/main46.wav bzw. room2031/main46.wav (Nachtrag
 - Die dritte benannte Ausnahme der Gorilla-Sonde (WESTBLOCK x 3800..6200 / z 9900..12500) ist bestaetigt, weil dort auch die
   Original-Regel haengt (AUS 5880 in 15 Seeds) — kein Rueckschritt der Spur E. Die drei Gorilla-Haenger (TASCHE, SUB7,
   WESTBLOCK; zombieki_r36.c, Runde-36-PORT-WAHL) sind Folgeauftrag (UEBERGABE §3b).
+
+## 2026-10-24 21:41 — Nachtrag 20 (Wortlaut; Lage der Zombies in 2080, Spuren G und F)
+
+> In 2080, nachdem die Zombies durch die Tür gebrochen sind, sollen sie oberhalb von der Treppe laufen, nicht unten.
+
+Folgen (Orchestrator): Die 8 Zombies (Spur G, ROOM2080/2081) brechen durch die Tuer herein und laufen auf der OBEREN Ebene
+(oberhalb der Treppe), nicht unten. Ebene/Band und Tuer aus der Geometrie belegen (SCA-Zellen/Baender, Tuer-Satz), Wege der
+Zombies auf der oberen Ebene halten (kein Abstieg ueber die Treppe), Bildbeleg aus den 2080-Kameras. Spur F zeigt in der
+2090-Einstellung "oben in 2080 kommen die Zombies herein" dieselbe Lage.
