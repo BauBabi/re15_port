@@ -9,6 +9,8 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-24 ab 05:40 (Nachbesserung 1 nach Abnahme 0, `C_abnahme_0.md`, Opus). Baum sauber (`status --porcelain`
+  leer, HEAD 4af8fa3d). Arbeitsplan je Mangel M1-M9 + H1-H3 in §0b; Messordner scratchpad `nb1/`.
 * 2026-10-24 02:51-03:10 (vierte Fortsetzung, Opus; Vorgaenger vom Sitzungslimit ~01:00 beendet). Baum sauber
   (`status --porcelain` leer, HEAD 271b05ea): der TEMPORAERE Nachbau des Spur-A-Hakens in aot_common.c war schon
   zurueckgenommen, die exe 00:56 aber MIT ihm gebaut -> `local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`
@@ -71,6 +73,41 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 unit = unit_r41_ventilkette (Abschnitte A-G, D2), _b = integration_r41_ventilkette_b. Offen nach Messung: §6
 (Querbezug A; Ring-Eintritt in das geflutete 2030 = Frage §7 f).
+
+## 0b. Nachbesserung 1 (Abnahme 0 vom 2026-10-24, `C_abnahme_0.md` §4) — je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher
+
+Messordner: scratchpad `nb1/` (`C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/nb1`).
+Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "vorher" zitiert.
+
+### M1 (hoch, Punkt 5) — Kisten im Becken: Hebel = Ereignis 2 hebt das Wasser ohne das Pult
+(in Arbeit)
+
+### M2 (hoch, Punkte 3/4) — 20B0-Auswasch-Szene braucht den AUTO-Haken der Spur A
+(in Arbeit)
+
+### M3 (mittel) — Installer loeschte (5,0x1D)/(5,0x1E) in jedem Raum
+(in Arbeit)
+
+### M4 (mittel) — Riegel C belegte die Farbe der Ertrink-Blende nicht
+(in Arbeit)
+
+### M5 (niedrig, Entscheidung) — geflutetes 2030 ueber den Ring betretbar (Frage f)
+(in Arbeit)
+
+### M6 (formal) — Haken in main.c / game_step_common.c, zwei fremde Riegel
+(in Arbeit)
+
+### M7 (niedrig, Dossier) — 2070 nach der Flut nur ueber 2040
+(in Arbeit)
+
+### M8 (niedrig, Text) — Ventile melden nach dem Entleeren weiter "flooded"
+(in Arbeit)
+
+### M9 (niedrig, Doku) — Kopf des Unit-Riegels nannte (5,0x3D)/(5,0x3E)
+(in Arbeit)
+
+### H1-H3 (Hinweise)
+(in Arbeit)
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
