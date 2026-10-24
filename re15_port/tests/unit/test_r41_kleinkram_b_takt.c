@@ -12,6 +12,15 @@
  *               Quadrat: mit der Original-Reihenfolge kein Luecken-Bild zwischen Message_on 0 @0x0A5C und 1 @0x0A62
  *               (Geh-Bild bleibt, Original n9..n94 Clip 5 Bild 9) und Pos_set @0x0A8C im ERSTEN Bild nach dem
  *               Schliessen der Frage (Original n94 -> n95); Gegenprobe alte Reihenfolge: Luecke + ein Bild spaeter.
+ * Nachbesserung 3 (Abnahme 2 Maengel 1/2, Orchestrator-Entscheid E-E2), Modul engine/src/rennstopp_r41.c:
+ *   rennstopp   Renn-Stopp 0x80032604 @0x8003272c / 0x80032778 @0x800328f8-@0x8003295c ohne gerechnetes Renn-Tempo
+ *               (Tabelle @0x80073f24 = 200 -> Schritte 160,120,80,40,0,-40), Clip 3 + Mischung 7, Abbruch
+ *               OBEN/UNTEN/LINKS/RECHTS, kein Einstieg bei OBEN+RENNEN, Einstieg bei Zielen mit Waffe, Skript-Zweig.
+ *   renntempo   Renn-Tempo = SquareRoot0(Fussweg)/4 + 150 (FUN_800369f8 Modus 1, @0x800328cc-@0x800328f4) gegen die
+ *               GDB-Werte des Originals (Dossier "Nachbesserung 3"): o_renn2 198 210 171 182 204 211 214, o_rennstopp ab
+ *               Bild 2 210 170 182 205 210 214 210 188 159 176 197; ueber den Spieler-Pfad (lauftempo + Skript-Stopp) die
+ *               Kurbel-Lagen n94..n99 z -3099 -3233 -3327 -3381 -3395 -3369; Gegenprobe ohne Bank (Tempo 200): -3285;
+ *               kein Tween-Bild (0x8000) im Renn-Clip 0 einer Waffen-Bank PL00Wxx/PL04Wxx.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -33,6 +42,9 @@
 #include "re15_montage_fx.h"
 #include "re15_msgtakt_r41.h"
 #include "re15_kamerahalt_r41.h"
+#include "re15_rennstopp_r41.h"
+#include "re15_emd.h"
+#include "re15_md1.h"          /* re15_pld_part (PLW-Verzeichnis) */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -118,7 +130,6 @@ static void teil_kamerahalt(void)
     g_scd.cam_change_pending = 0;
 }
 
-/* ============================================================================================ frage */
 static uint8_t *slurp(const char *p, size_t *n)
 {
     FILE *f = fopen(p, "rb"); if (!f) return NULL;
@@ -128,6 +139,194 @@ static uint8_t *slurp(const char *p, size_t *n)
     if (!b || fread(b, 1, (size_t)sz, f) != (size_t)sz) { free(b); fclose(f); return NULL; }
     fclose(f); *n = (size_t)sz; return b;
 }
+
+/* ============================================================================================ rennstopp */
+static void teil_rennstopp(void)
+{
+    printf("== rennstopp ==\n");
+    re15_actor_t a; memset(&a, 0, sizeof a);
+    const int RUN = 100, IDLE = 200;
+    re15_rennstopp_r41_zuruecksetzen();
+    a.state = 1; a.motion = RUN; a.x = 0; a.z = 0; a.rot_y = 0;
+    PRUEF(re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP | RE15_PAD_BIT_CROSS, RUN, IDLE, 200, 0) == 0 && a.x == 0,
+          "OBEN+RENNEN gehalten (& 0x201 == 0x201 @0x800326fc): kein Stopp");
+    static const int soll[6] = { 160, 280, 360, 400, 400, 360 };
+    int ok = 1, r = 0;
+    for (int i = 0; i < 6; i++) {
+        r = re15_rennstopp_r41_takt(&a, 0, RUN, IDLE, 200, 0);
+        if (r != 1 || a.x != soll[i]) ok = 0;
+        if (i == 0 && (a.motion != IDLE || a.anim_frac != 7 || a.anim_frame != 0)) ok = 0;
+    }
+    PRUEF(ok, "Loslassen ohne gerechnetes Renn-Tempo (Tabelle 200): Clip 3 + Mischung 7 (@0x80032904/@0x80032910), "
+              "x 160,280,360,400,400,360 (Tempo -40 @0x8003293c, letzter Schritt -40 @0x8003295c): x=%d", a.x);
+    r = re15_rennstopp_r41_takt(&a, 0, RUN, IDLE, 200, 0);
+    PRUEF(r == 0 && !re15_rennstopp_r41_aktiv() && a.x == 360, "Tempo < 0 -> Stehen (@0x80032958), danach kein Schritt");
+    re15_rennstopp_r41_zuruecksetzen();
+    a.motion = RUN; a.x = 0;
+    re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP, RUN, IDLE, 200, 0);          /* RENNEN losgelassen, OBEN gehalten */
+    PRUEF(re15_rennstopp_r41_aktiv() && a.x == 160, "nur RENNEN losgelassen: Stopp-Bild (+6 = 2 im Rennen-DECIDE)");
+    r = re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP, RUN, IDLE, 200, 0);
+    PRUEF(r == 0 && !re15_rennstopp_r41_aktiv() && a.x == 160, "OBEN im Stopp -> Gehen (0x0101 @0x80032738), kein Stopp-Schritt");
+    re15_rennstopp_r41_zuruecksetzen();
+    a.motion = RUN; a.x = 0;
+    re15_rennstopp_r41_takt(&a, 0, RUN, IDLE, 200, 0);
+    r = re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_LEFT, RUN, IDLE, 200, 0);
+    PRUEF(r == 0 && !re15_rennstopp_r41_aktiv(), "LINKS im Stopp -> Drehen (0x0301 @0x80032750)");
+    re15_rennstopp_r41_zuruecksetzen();
+    a.motion = RUN; a.x = 0;
+    r = re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP | RE15_PAD_BIT_CROSS | RE15_PAD_BIT_R1, RUN, IDLE, 200, 1);
+    PRUEF(r == 1 && a.x == 160, "Zielen mit Waffe aus dem Rennen (@0x80032708-@0x80032720): erst der Stopp");
+    re15_rennstopp_r41_zuruecksetzen();
+    a.motion = RUN; a.x = 0;
+    r = re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP | RE15_PAD_BIT_CROSS | RE15_PAD_BIT_R1, RUN, IDLE, 200, 0);
+    PRUEF(r == 0, "R1 ohne Waffe: weiter rennen");
+    re15_rennstopp_r41_zuruecksetzen();
+    a.motion = RUN; a.x = 0; a.state = 1;
+    int n = 0;
+    while (re15_rennstopp_r41_skript(&a, RUN, IDLE, 200)) n++;
+    PRUEF(n == 6 && a.x == 360 && a.motion == IDLE, "Skript-Zweig (Pad gesperrt, Set(2,7)): derselbe Stopp, %d Schritte, x=%d", n, a.x);
+    re15_rennstopp_r41_zuruecksetzen();
+    a.motion = RUN; a.x = 0;
+    re15_rennstopp_r41_skript(&a, RUN, IDLE, 200);
+    a.state = 4;                                                               /* Plc_motion uebernimmt */
+    r = re15_rennstopp_r41_skript(&a, RUN, IDLE, 200);
+    PRUEF(r == 0 && !re15_rennstopp_r41_aktiv() && a.x == 160, "Kommandowort 4 (Plc_motion) beendet den Stopp");
+    re15_rennstopp_r41_zuruecksetzen();
+}
+
+/* ============================================================================================ renntempo */
+static re15_emd_skeleton_t  s_rt_bind, s_rt_roh, s_rt_sk;
+static re15_emd_animation_t s_rt_an;
+/* PL00-Bindepose + Keyframe-Vorrat der Bank = der Verbund des Ports (platform/pc/main.c, "w03-composite"). */
+static int rt_laden(const char *bank)
+{
+    char p[600]; size_t n0 = 0, n1 = 0, n2 = 0;
+    snprintf(p, sizeof p, "%s/PLD/PL00.EMR", RE15_ASSET_PSX_DIR); uint8_t *b0 = slurp(p, &n0);
+    snprintf(p, sizeof p, "%s/PLD/%s.EMR", RE15_ASSET_PSX_DIR, bank); uint8_t *b1 = slurp(p, &n1);
+    snprintf(p, sizeof p, "%s/PLD/%s.EDD", RE15_ASSET_PSX_DIR, bank); uint8_t *b2 = slurp(p, &n2);
+    if (!b0 || !b1 || !b2) return 0;
+    if (re15_emd_parse_skeleton(b0, n0, &s_rt_bind) != 0 || re15_emd_parse_skeleton(b1, n1, &s_rt_roh) != 0 ||
+        re15_emd_parse_animation(b2, n2, &s_rt_an) != 0) return 0;
+    s_rt_sk = s_rt_bind;
+    s_rt_sk.keyframe_data       = s_rt_roh.keyframe_data;
+    s_rt_sk.keyframe_data_size  = s_rt_roh.keyframe_data_size;
+    s_rt_sk.keyframe_count      = s_rt_roh.keyframe_count;
+    s_rt_sk.keyframe_size_bytes = s_rt_roh.keyframe_size_bytes;
+    return 1;                                       /* Puffer bleiben bis Prozessende (keyframe_data aliast b1) */
+}
+/* ungemischte Pose eines Bilds (Stehclip vor dem Rennen; das Original steht dort mit Zaehler 0) */
+static void rt_stehpose(int clip, int bild, int16_t w[][3], int32_t wurzel[3])
+{
+    const int kf = (int)(re15_emd_get_frame_entry(&s_rt_an, clip, bild) & 0xfffu);
+    for (int b = 0; b < s_rt_sk.bone_count; b++) re15_emd_get_keyframe_angles(&s_rt_sk, kf, b, &w[b][0], &w[b][1], &w[b][2]);
+    int16_t px = 0, py = 0, pz = 0; re15_emd_get_keyframe_position(&s_rt_sk, kf, &px, &py, &pz);
+    wurzel[0] = px; wurzel[1] = py; wurzel[2] = pz;
+}
+/* Folge ab dem Rennbeginn: Bild k mit Zaehler 7-k (Fall 0 @0x800327fc, FUN_8001f3bc zaehlt je Bild einen ab). */
+static int rt_folge(int stehbild, int gier, int n, int32_t *aus)
+{
+    int16_t w[RE15_EMD_MAX_BONES][3]; int32_t wu[3];
+    rt_stehpose(2, stehbild, w, wu);
+    for (int k = 0; k < n; k++) {
+        int32_t t = 0;
+        if (!re15_rennstopp_r41_fussrechnung(&s_rt_sk, &s_rt_an, 0, k, k < 7 ? 7 - k : 0, gier, gier, k == 0,
+                                             (const int16_t (*)[3])w, wu, &t, NULL)) return 0;
+        aus[k] = t;
+    }
+    return 1;
+}
+static int rt_gleich(const int32_t *ist, const int *soll, int von, int bis, char *txt, size_t m)
+{
+    int ok = 1; size_t o = 0;
+    for (int k = von; k < bis; k++) {
+        if (ist[k] != soll[k]) ok = 0;
+        o += (size_t)snprintf(txt + o, o < m ? m - o : 0, "%s%d", k == von ? "" : " ", (int)ist[k]);
+        if (o >= m) o = m - 1;
+    }
+    return ok;
+}
+static void teil_renntempo(void)
+{
+    printf("== renntempo ==\n");
+    if (!rt_laden("PL00W03")) { PRUEF(0, "PL00.EMR / PL00W03.EDD/.EMR nicht lesbar"); return; }
+    PRUEF(s_rt_sk.bone_count >= 8 && s_rt_sk.bone_parent[2] == 1 && s_rt_sk.bone_parent[5] == 1 && s_rt_sk.bone_parent[4] == 3 &&
+          s_rt_sk.bone_parent[7] == 6, "Fusskette 0-1-2-3-4 / 0-1-5-6-7 = Knochenbaum des Spielers (Eltern 2<-1, 5<-1, 4<-3, 7<-6)");
+    char txt[400];
+    int32_t ist[16];
+    /* o_renn2: Kurbel ROOM2020, Blick 1024, Stehclip 2 `mo=2/44` (zuletzt Bild 43). */
+    static const int o_renn2[7] = { 198, 210, 171, 182, 204, 211, 214 };
+    re15_rennstopp_r41_zuruecksetzen();
+    int ok = rt_folge(43, 1024, 7, ist) && rt_gleich(ist, o_renn2, 0, 7, txt, sizeof txt);
+    PRUEF(ok, "o_renn2 (Original-GDB 198 210 171 182 204 211 214): %s", txt);
+    /* o_rennstopp: freie Strecke, Blick 0, `mo=2/40` (zuletzt Bild 39); Bild 1 (269) = GDB-Lageversatz, s. Header. */
+    static const int o_rennstopp[12] = { 269, 210, 170, 182, 205, 210, 214, 210, 188, 159, 176, 197 };
+    re15_rennstopp_r41_zuruecksetzen();
+    ok = rt_folge(39, 0, 12, ist) && rt_gleich(ist, o_rennstopp, 1, 12, txt, sizeof txt);
+    PRUEF(ok, "o_rennstopp ab Bild 2 (Original-GDB 210 170 182 205 210 214 210 188 159 176 197): %s (Bild 1 %d, Original 269 nach "
+              "GDB-Lageversatz)", txt, (int)ist[0]);
+
+    /* Spieler-Pfad: lauftempo wie player_common.c (Bild 1: erstes_bild, danach anim_frame++ / anim_frac-- am Takt-Anfang),
+     * dann Pos_set @0x0A8C (3650,-2925) und der Stopp im Skript-Zweig (Pad gesperrt) = Original n93..n99. */
+    re15_player_set_w_banks(&s_rt_sk, &s_rt_an);
+    re15_rennstopp_r41_zuruecksetzen();
+    re15_actor_t a; memset(&a, 0, sizeof a);
+    a.state = 1; a.motion = 211; a.rot_y = 1024; a.x = 2600; a.z = -3018; a.anim_prev_valid = 1;
+    { int16_t w[RE15_EMD_MAX_BONES][3]; int32_t wu[3]; rt_stehpose(2, 43, w, wu);
+      for (int b = 0; b < s_rt_sk.bone_count; b++) { a.prev_angles[b][0] = w[b][0]; a.prev_angles[b][1] = w[b][1]; a.prev_angles[b][2] = w[b][2]; }
+      a.prev_root[0] = wu[0]; a.prev_root[1] = wu[1]; a.prev_root[2] = wu[2]; }
+    for (int k = 0; k < 7; k++) {
+        if (k > 0) { a.anim_frame++; if (a.anim_frac > 0) a.anim_frac--; }
+        ist[k] = re15_rennstopp_r41_lauftempo(&a, a.motion != 100, a.rot_y, 200);
+        if (k == 0) { a.motion = 100; a.anim_frame = 0; a.anim_frac = 7; a.motion_init_delay = 0; }   /* player_common.c Clipwechsel */
+    }
+    ok = rt_gleich(ist, o_renn2, 0, 7, txt, sizeof txt);
+    PRUEF(ok, "Spieler-Pfad re15_rennstopp_r41_lauftempo (Bank gespiegelt, prev_angles = Stehbild 43): %s", txt);
+    a.x = 3650; a.z = -2925;                                                   /* Pos_set @0x0A8C */
+    static const int o_z[6] = { -3099, -3233, -3327, -3381, -3395, -3369 };    /* o_renn2 n94..n99 */
+    int32_t zz[8]; int n = 0;
+    while (n < 8 && re15_rennstopp_r41_skript(&a, 100, 200, 200)) zz[n++] = a.z;
+    ok = (n == 6);
+    for (int k = 0; k < 6 && ok; k++) if (zz[k] != o_z[k]) ok = 0;
+    PRUEF(ok && a.x == 3650 && a.motion == 200,
+          "Kurbel nach dem Rennen: Stopp ab Tempo 214, z %d %d %d %d %d %d (Original n94..n99 -3099 -3233 -3327 -3381 -3395 -3369), %d Schritte",
+          n > 0 ? (int)zz[0] : 0, n > 1 ? (int)zz[1] : 0, n > 2 ? (int)zz[2] : 0, n > 3 ? (int)zz[3] : 0, n > 4 ? (int)zz[4] : 0,
+          n > 5 ? (int)zz[5] : 0, n);
+    /* Gegenprobe: ohne Bank bleibt das Tabellen-Tempo 200 (wie vor Nachbesserung 3) -> der Riegel unterscheidet. */
+    re15_player_set_w_banks(NULL, NULL);
+    re15_rennstopp_r41_zuruecksetzen();
+    a.motion = 211; a.anim_frame = 0; a.anim_frac = 0; a.x = 2600; a.z = -3018;
+    for (int k = 0; k < 7; k++) {
+        if (k > 0) { a.anim_frame++; if (a.anim_frac > 0) a.anim_frac--; }
+        ist[k] = re15_rennstopp_r41_lauftempo(&a, a.motion != 100, a.rot_y, 200);
+        if (k == 0) { a.motion = 100; a.anim_frame = 0; a.anim_frac = 7; }
+    }
+    a.x = 3650; a.z = -2925;
+    while (re15_rennstopp_r41_skript(&a, 100, 200, 200)) { }
+    PRUEF(ist[6] == 200 && a.z == -3285, "Gegenprobe ohne Waffen-Bank: Tempo 200, Kurbel bei z %d (Stand 635be823: -3285)", (int)a.z);
+    re15_rennstopp_r41_zuruecksetzen();
+
+    /* Tween-Bilder (0x8000, FUN_8001f8b4) im Renn-Clip 0 der Waffen-Baenke (EDD = PLW-Verzeichnis 0): keine. */
+    int marken = 0, geprueft = 0;
+    static const char *const fam[2] = { "PL00", "PL04" };
+    for (int f = 0; f < 2; f++)
+        for (int wi = 0; wi <= 0x14; wi++) {
+            char p[600]; size_t nb = 0;
+            snprintf(p, sizeof p, "%s/PLD/%sW%02X.PLW", RE15_ASSET_PSX_DIR, fam[f], wi);
+            uint8_t *bb = slurp(p, &nb);
+            unsigned long off = 0, len = 0;
+            re15_emd_animation_t an;
+            if (bb && re15_pld_part(bb, (long)nb, RE15_PLD_EDD, &off, &len) && len > 0 &&
+                re15_emd_parse_animation(bb + off, len, &an) == 0 && an.clip_count > 0) {
+                geprueft++;
+                for (int k = 0; k < an.clips[0].frame_count; k++)
+                    if (re15_emd_get_frame_entry(&an, 0, k) & 0x8000u) marken++;
+            }
+            free(bb);
+        }
+    PRUEF(geprueft >= 2 && marken == 0, "Renn-Clip 0 ohne Tween-Bild in %d Waffen-Baenken PL00Wxx/PL04Wxx (%d Marken)", geprueft, marken);
+}
+
+/* ============================================================================================ frage */
 
 static uint8_t           *s_raw = NULL;
 static size_t             s_rawsz = 0;
@@ -260,6 +459,8 @@ int main(int argc, char **argv)
     const char *teil = argc > 1 ? argv[1] : "alle";
     if (!strcmp(teil, "msgtakt")    || !strcmp(teil, "alle")) teil_msgtakt();
     if (!strcmp(teil, "kamerahalt") || !strcmp(teil, "alle")) teil_kamerahalt();
+    if (!strcmp(teil, "rennstopp")  || !strcmp(teil, "alle")) teil_rennstopp();
+    if (!strcmp(teil, "renntempo")  || !strcmp(teil, "alle")) teil_renntempo();
     if (!strcmp(teil, "frage")      || !strcmp(teil, "alle")) teil_frage();
     printf("%s: %d/%d bestanden\n", g_fail ? "FAIL" : "OK", g_n - g_fail, g_n);
     return g_fail ? 1 : 0;

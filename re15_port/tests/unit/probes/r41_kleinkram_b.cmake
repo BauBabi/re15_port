@@ -69,9 +69,12 @@ if(TARGET re15_pc)
         set_tests_properties(integration_r41_kleinkram_b_${_teil} PROPERTIES TIMEOUT 900)
     endforeach()
 endif()
-# Nachbesserung 2 (Abnahme 1 Maengel 1-3, master-AUFTRAG E-N1/E-N2) - engine/src/msgtakt_r41.c, kamerahalt_r41.c
-# (Renn-Stopp: nicht umgesetzt, Dossier "Nachbesserung 2" OFFEN):
+# Nachbesserung 2 (Abnahme 1 Maengel 1-3, master-AUFTRAG E-N1/E-N2) - engine/src/msgtakt_r41.c, kamerahalt_r41.c:
 #   unit_r41_kleinkram_b_takt_{msgtakt,kamerahalt,frage}
+# Nachbesserung 3 (Abnahme 2 Maengel 1/2, Orchestrator-Entscheid E-E2) - engine/src/rennstopp_r41.c:
+#   unit_r41_kleinkram_b_takt_rennstopp  Renn-Stopp 0x80032604/0x80032778 (Tabellen-Tempo, Abbruch, Skript-Zweig)
+#   unit_r41_kleinkram_b_takt_renntempo  Renn-Tempo FUN_800369f8 Modus 1 gegen die GDB-Werte o_renn2 / o_rennstopp,
+#                                        Kurbel-Lagen n94..n99 ueber den Spieler-Pfad, Gegenprobe ohne Bank
 add_executable(test_r41_kleinkram_b_takt ${CMAKE_CURRENT_LIST_DIR}/../test_r41_kleinkram_b_takt.c)
 target_link_libraries(test_r41_kleinkram_b_takt PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_kleinkram_b_takt PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -80,7 +83,7 @@ target_compile_definitions(test_r41_kleinkram_b_takt PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_kleinkram_b_takt PRIVATE m)
 endif()
-foreach(_teil msgtakt kamerahalt frage)
+foreach(_teil msgtakt kamerahalt frage rennstopp renntempo)
     add_test(NAME unit_r41_kleinkram_b_takt_${_teil} COMMAND test_r41_kleinkram_b_takt ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_kleinkram_b_takt_${_teil} PROPERTIES TIMEOUT 300)
