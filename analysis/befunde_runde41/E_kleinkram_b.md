@@ -907,3 +907,42 @@ work to do", `LOCAL-BUILD-OK (build)` (exe md5 9de3bd488e72334278224893f65b136d 
 | 2 Riegel renn pinnte die Abweichung | Auswerter `takt` verlangte (3650,-3018) mo 200 und meldete "wie das Original" | test_r41_kleinkram_b_exe.c:314 (Stand d4fa9074) | o_renn2 n94..n99 | Auswerter `renn`: erstes Renn-Bild z -3216 (Tempo 198), Bild 6 eingefroren, Auslauf z -3099 -3233 -3327 -3381 -3395 -3369, Stand (3650,-3369) bis Plc_motion (1a8113cc) | NACHHER bestanden, VORHER-exe 11b8f867 durchgefallen (erstes Bild -3218, kein Auslauf) |
 | 3 Vertrag §1.3 | spielweite Haken in fremden gemeinsamen Dateien ohne Entscheid | Abnahme 2 §6.3 | — (Vertragsfrage) | Orchestrator-Entscheid E-E1 (AUFTRAG 2026-10-24 10:50) nimmt die Haken an; Fortsetzung aendert nur player_common.c (E-E2 "spielweit", Haken markiert) | Bedingung E-E1 erfuellt: Nachrichten-/Szenen-/Tuer-/Karten-Riegel im gezielten Lauf mitgefahren (Abschnitt "Fortsetzung — Tests") |
 | 4 Softlock Raumeintritt auf der Kante | re15_fade_tick (FUN_80021880) lief im gehaltenen Bild nicht | Abnahme 2 §3.6 EN1_spawn_kante_nach: pf=FF000007 F1..F199 | Hauptschleife @0x80020f44 `jal 0x80021880` vor @0x80020f4c Present; Pegel @0x8002191c-@0x8002192c | bildhalt_r41_pc.c ruft re15_fade_tick im gehaltenen Bild (256ee155) | EN1_spawn_kante_n3a: Freeze faellt F6 (= VORHER 753652fc), x 9070 -> 11100; Riegel integration_..._spawn_kante (VORHER-exe rot) |
+
+### OFFEN (Stand Nachbesserung 3)
+- Aktions-Pruefung im Renn-DECIDE (@0x800326a4-@0x800326dc: `lw 0x800ac76c & 0x80` -> FUN_8002d474 / FUN_80042bac(Spieler, 1,
+  0x10), bei Treffer `bne` @0x800326c4/@0x800326d8 zum Ende OHNE Stopp-Entscheidung): wird im selben Bild RENNEN losgelassen und
+  mit der Aktionstaste ein Aktions-AOT ausgeloest, laeuft das Original noch ein Renn-Bild (Fall 1), der Port beginnt den Stopp.
+  Der Port prueft Aktions-AOTs erst nach dem Spieler-Takt (game_step_common.c `re15_aot_scan`, Spieler + Flanke; Katalog
+  RE15_FUN_CATALOG.md Z. 150/151, Umbau #14/#15 in aot_common.c) — nicht Spur E. An der Kurbel ohne Folge, solange RENNEN beim
+  Druecken gehalten ist (o_renn2: Aktion im 7. Renn-Bild mit OBEN+RENNEN).
+- Drehrate ausserhalb des Unterzustands 2: der Port waehlt sie nach dem Pad, das Original nach dem Unterzustand am Bildanfang —
+  Stehen dreht im Wechselbild nicht (0x80031f38 ohne Drehung, @0x80031f78-@0x80032020), Gehen 48 (@0x80032344-@0x800323b8,
+  @0x80073ea5), Drehen 96 (@0x800329ac-@0x80032a20, @0x80073ee5). Abweichung je ein Bild beim Wechsel Stehen -> Gehen/Rennen
+  mit LINKS/RECHTS (Port 48/72, Original 0) und Gehen -> Rennen (Port 72, Original 48). Ausserhalb des Renn-Stopps (E-E2),
+  betrifft jede Bewegung — eigene Spur.
+- Geh-Tempo: der Port geht konstant 75 (@0x80073ea4); das Original rechnet wie beim Rennen den Fussweg ((roh >> 1) + 50,
+  @0x800325c4-@0x800325e8, Fuss-Zuordnung @0x800325a8-@0x800325c0). Ausserhalb E-E2.
+- Tabellen-Tempo je Figur: @0x80073f24 Rennen (210, 72) und @0x80073ea4 Gehen (70, 48) fuer Figur 4..7 (Elza) statt (200/75);
+  im Spiel ohne Wirkung, weil Fall 1 das Tabellen-Tempo im selben Bild durch die Fussrechnung ersetzt; der Port nimmt die
+  Tabelle nur ohne gespiegelte Bank (Sonden).
+- Gorilla-Haenger der PORT-WAHL der Runde 36 (zombieki_r36.c, nicht Spur E): Klemme (11129..11280, 9820..10073) — Seeds
+  0x9b5bf362 (mit Stopp, 4405 Bilder FERN), 0xbc8bd05d (ohne Stopp, 1443 + 1558), 0xbb4281d4; Sub-7-Stelle (-13418..-13518,
+  -140..-953) — 0x6b1c577f, 0xce2e2c57 (mit), 0x71d8aa83 (ohne). Nachstellbar mit `test_r36_zombieki_affen_block einsr <i> 1 6000
+  <renn> 1`.
+- H1 (Nachrichten-Takt-Tor @0x80010028 im Bild nach einem Apply-Bild), H5 (platform/psx/main.c ohne msgtakt/kamerahalt), H6
+  (Dauer des Apply-Standbilds = CD-Ladezeit) — unveraendert, s. "Hinweise der Abnahme 2".
+- Punkt 1 "herumfliegend": in keinem Lauf (Port vorher/nachher, Original) gefunden — Rueckfrage an den Nutzer (unten).
+
+### Fuer den Nutzer (Stand Nachbesserung 3)
+- Keine neuen Assets, keine Sprachdateien.
+- Rennen im ganzen Spiel jetzt wie im Original: das Renn-Tempo folgt dem Schritt (im Mittel 196 statt 200 je Bild); laesst man
+  RENNEN (oder die Richtung) los, rutscht Leon bis zu 6 Bilder aus (zusammen etwa 400-450 Einheiten) statt sofort zu stehen;
+  dreht man direkt aus dem Rennen, dreht er die ersten zwei Bilder etwas langsamer (72 statt 96); drueckt man waehrend des
+  Ausrutschens wieder OBEN+RENNEN, geht er ein Bild, bevor er wieder rennt.
+- Kurbel ROOM2020 im Rennen: nach dem "Yes" rutscht Leon noch sechs Bilder weiter und kurbelt etwa 35 cm neben der Stelle, an
+  der er im Gehen/Stehen kurbelt — so auch das Original (gemessen).
+- Raumeintritt genau auf einer Kamera-Grenze: das Bild bleibt ruhig, die Einblendung laeuft wie vorher (kein Haenger mehr).
+- Frage: Was genau war das "Herumfliegen" an der Kurbel? Moeglich sind (a) der Sprung an die Kurbel nach dem "Yes" (Original,
+  dort hinter einem kurzen Standbild), (b) das Einfrieren nach einer Kurbel-Umdrehung (behoben in Nachbesserung 1), (c) die
+  Waffe, die beim Kurbeln mit der Hand mitkreist (Original), (d) das Ausrutschen nach dem Rennen (Original, jetzt auch im Port),
+  (e) etwas anderes — dann bitte: gerannt/gegangen/gestanden, welche Waffe, oder ein Bild (F9).
