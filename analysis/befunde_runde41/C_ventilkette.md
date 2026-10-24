@@ -665,6 +665,26 @@ Messungen an der exe 10:27 bzw. 10:31 (Quellstand = Commit 6a51727b ff.), Laeufe
     target_cut=5 spawn=(-5150,-5400,3450)` -> 2050 -> `DOOR FIRE slot=0 rect=(9100,5700,hw=1000,hh=1000) target_cut=9
     spawn=(-26450,-1800,10250)` -> `loaded room20b0.rdt`. Erste Fassung lief in 2060 direkt nach Norden und schob den
     Tritt obj 2 (-3143,2075) bzw. blieb an Zelle 8 (x 6300..8400 z -7750..-5250) haengen -> Weg ueber x -4500 / x 6000.
+  - w4 (Leon): 20B0 (Leiter-Ankunft (-26450,10250)) -> Kanal in Gegenrichtung (Sprung hinab bei x -25700 Blick Ost,
+    Aufstieg bei -22250, mo 230) -> Mittelgang -> Ost-Tuer **`DOOR FIRE slot=3 rect=(5950,-6400,hw=500,hh=1500)
+    target_cut=0 spawn=(6550,-5400,-100)`** (mit Strom KEIN "Ring-Tuer Slot 3 ... gesperrt") -> 2030 Ring (`Strom (3,126) ->
+    Wasser auf Relinghoehe ...`) zu Fuss Ost -> Sued -> SW -> West-Gang -> Lift B Kabine (-9800,3600): FLAG (3,220) 0 ->
+    Aktion -> `Cut_chg(9)` (Fahrt) -> FLAG (3,220) = 1 -> Suedgalerie -> **`DOOR FIRE slot=1 rect=(-7700,6400,hw=500,hh=900)
+    target_cut=0 spawn=(-23200,-9000,-16700)`** -> 2080 -> Treppe (Slot 2 sce 12, Aktion an der Ankunft Blick Ost) ->
+    Rechner (-11160,-7315): `[msgtext] room=2080 id=0 "From here maybe I can control the water level.Will you operate the
+    computer?"` -> Ja -> `Cut_chg(7)` -> `Cut_chg(3)`, FLAG (3,245) 0 -> 1, **kein Port-Programm, kein Text 40** ->
+    **`DOOR FIRE slot=1 rect=(-9150,-25650,hw=500,hh=500) target_cut=0 spawn=(-8200,0,-25550)`** -> `loaded room2090.rdt`.
+    (Erste Fassungen: Ost-Tuer-Zielpunkt x 4900 tol 150 endete bei x 4804 -> Vorwaertspunkt 5424 knapp vor dem Rechteck
+    x 5450 -> kein Feuer; 2090-Tuer von Sueden blockiert bei x -9668 -> von Westen (Blick Ost) angefahren.)
+  - **Elza** (ROOM20B1/2051/2021/2031/2061/2081/2091, `Spieler-Familie PL04`): v1, v2, g1, g2, w1, w3, w4 dieselben Saetze
+    (scratchpad `r41c_nb3/mess/*_elza`): v1 Zelle 12 0xff -> 41/42 -> 43 -> Cut 4 -> obj 0 -1800 -> Zelle 12 0x00; v2 49 ->
+    Sicherung -> 45/46 -> Zaehler -> Ost-Tuer -> `loaded room20b1.rdt` + Bits 103/100, keine Flut; g1 `room=2061 WRITE Set
+    zone=3 idx=144`; g2 `room=2061 ... idx=126`; w1 bis `loaded room2061.rdt` mit `ROOM2031: unter Wasser (y -7200)`; w3
+    `ROOM2031: Strom (3,126) -> Wasser auf Relinghoehe ...` bis `loaded room20b1.rdt`; w4 bis `loaded room2091.rdt` mit
+    `[msgtext] room=2081 id=0 "From here maybe I can control the water level..."` und FLAG (3,245) 0 -> 1.
+* Riegel (neu gefasst, H-d der Abnahme 2): **integration_r41_ventilkette_weg** (Leon) und **_weg_elza** (Elza) = Glieder
+  v1/v2/g1/g2/w1/w3/w4 mit den Saetzen oben; **integration_r41_ventilkette_sperre** = die frueheren Laeufe a/b/c (die
+  Original-Sperre 11A0 Slot 4 bleibt, Nachtrag 6); unit_r41_ventilkette J (Zensus + Sperre) bleibt, K/L neu.
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
