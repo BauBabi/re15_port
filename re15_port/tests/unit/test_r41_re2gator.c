@@ -397,11 +397,16 @@ static int teil_kanister(void)
     CHECK(re15_rumble_belegt(0) > 0 && re15_rumble_belegt(1) > 0, "R1 ohne Rumble (8,3)/(50,255->0) @0x80102328-44");
     CHECK(e->motion == 9, "R1 spielt nicht Clip 9 (motion=%d)", (int)e->motion);
     CHECK(re15_gr2_kanister_stufe() == 13, "Kanister nicht auf Stufe 13 (+0x226 = 13 @0x801022b8)");
-    int sichtbar = 0, hp_r1 = e->hp;
+    /* Fortsetzung 3: RE2-Bildtakt DAT_800dfc1a = 4 ab R1 P0 (@0x8010235c-64), 2 ab P3 (@0x80102668/7c) */
+    CHECK(re15_gr2_vsync() == 4, "R1 P0 ohne VSync 4 (Zeitlupe, sb 0x800dfc1a @0x8010235c-64): %d", re15_gr2_vsync());
+    int sichtbar = 0, hp_r1 = e->hp, zeitlupe = 1;
     for (int f = 0; f < 60; f++) {
         if (re15_gr2_kanister_welt(kp, kr)) sichtbar++;
         tick();
+        if (re15_gr2_vsync() == 4) { CHECK(!re15_gr2_tot(), "VSync 4 noch im Endzustand P3 (@0x8010267c setzt 2)"); zeitlupe++; }
     }
+    CHECK(re15_gr2_vsync() == 2, "nach P3 nicht zurueck auf VSync 2 (@0x80102668/7c): %d", re15_gr2_vsync());
+    printf("kanister: Zeitlupe VSync 4 ueber %d Takte (R1 P0 .. vor P3)\n", zeitlupe);
     CHECK(sichtbar == 10, "Kanister nach R1 %d Bilder sichtbar statt 10 (P0 + 9 P1-Bilder, +0x16B = 9 @0x80102394, Abbau @0x8010255c-78)", sichtbar);
     CHECK(re15_gr2_tot(), "Leiche nicht erreicht (P3 @0x80102654)");
     CHECK(e->motion == 9, "Leiche haelt nicht die Clip-9-Pose (motion=%d)", (int)e->motion);

@@ -159,7 +159,14 @@ void re15_gr2_kamera_finisher(int slot, const re15_actor_t *gator, const re15_ac
  * blick[i] = RE15_GR2_BLICK_*, 0 = frei/zurueck; clip/bild = Gator-Clip und -Bild beim Ereignis). */
 int  re15_gr2_kamera_folge(int max, int *cut, int *blick, int *clip, int *bild);
 
+/* RE2-Bildtakt (VSync-Wert der Hauptschleife DAT_800dfc1a, FUN_8002b968 @0x8002b990-98): 2 im Spiel, 4 von R1 P0
+ * (@0x8010235c-64) bis R1 P3 (@0x80102668/7c) = halbe Bildrate waehrend der Kiefer-Explosion. */
+int  re15_gr2_vsync(void);
+
 /* ---- PC-Haken ------------------------------------------------------------------------------ */
+/* platform/pc/src/gator_re2_pc.c: Bildbudget der Hauptschleife (main.c Bild-Deckel) = Grundbudget x VSync / 2;
+ * schreibt jeden Wechsel mit SDL_GetTicks nach debug.log ("[gator-re2] VSync ..."). */
+unsigned re15_gr2_pc_bildbudget(unsigned grund_ms);
 extern void (*re15_gr2_raum_se_hook)(int satz);   /* ROOM40A0-Raumbank: 15 = Explosionsbrueller (@0x8010237c-88) */
 /* platform/pc/src/gator_re2_pc.c: Kanister-Prop zeichnen (Aufruf aus dem Prop-Pass von main.c). */
 struct re15_camera_view_s;

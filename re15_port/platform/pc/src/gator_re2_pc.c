@@ -26,6 +26,7 @@
 #include "re15_vab.h"
 #include "asset_root_pc.h"      /* re15_pc_read_re2 */
 #include "../../../engine/src/gen/r41_gator40a0_bank.inc"
+#include <SDL_timer.h>   /* SDL_GetTicks (Messzeile der Zeitlupe) */
 
 #define R41_KANISTER_TIM_SLOT 53
 
@@ -222,4 +223,19 @@ static void raum_se(int satz_re2)
 void re15_pc_gator_re2_init(void)
 {
     re15_gr2_raum_se_hook = raum_se;
+}
+
+/* (3) RE2-Zeitlupe der Kiefer-Explosion: die RE2-Hauptschleife wartet VSync(DAT_800dfc1a) (FUN_8002b968
+ * @0x8002b990-98); R1 setzt 4 statt 2 (@0x8010235c-64 / zurueck @0x80102668/7c) = doppelte Bilddauer. Der Port-
+ * Deckel (main.c, 1000/RE15_FPS ms je Bild = VSync(2)) wird im selben Verhaeltnis gestreckt. */
+unsigned re15_gr2_pc_bildbudget(unsigned grund_ms)
+{
+    static int s_alt = 2;
+    int v = re15_gr2_vsync();
+    if (v != s_alt) {
+        fprintf(stderr, "[gator-re2] VSync %d (Bildbudget %u ms) ab F%u t=%u ms\n", v, grund_ms * (unsigned)v / 2u,
+                (unsigned)g_engine.frame_count, (unsigned)SDL_GetTicks());
+        s_alt = v;
+    }
+    return grund_ms * (unsigned)v / 2u;
 }

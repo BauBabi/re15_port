@@ -11480,10 +11480,11 @@ re_title:;
          * pacing. Override via RE15_FPS env var (option-menu hook). */
         {
             static uint32_t last_tick = 0;
+            uint32_t budget = re15_gr2_pc_bildbudget(frame_budget_ms);   /* Runde 41 Spur B: RE2 VSync(4) in R1 @0x8010235c */
             uint32_t now = SDL_GetTicks();
             uint32_t elapsed = now - last_tick;
-            if (elapsed < frame_budget_ms && last_tick != 0) {
-                SDL_Delay(frame_budget_ms - elapsed);
+            if (elapsed < budget && last_tick != 0) {
+                SDL_Delay(budget - elapsed);
             }
             last_tick = SDL_GetTicks();
         }

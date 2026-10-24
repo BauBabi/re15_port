@@ -107,6 +107,11 @@ static struct {
 } s_kan;
 
 static int s_env_geprueft;
+/* RE2-Bildtakt DAT_800dfc1a = VSync-Wert der Hauptschleife (FUN_8002b968: `lui a0,0x800e / lbu a0,-0x3e6(a0) /
+ * jal VSync` @0x8002b990-98); im Spiel 2 (`li v0,0x2 / sb v0,0x800dfc1a` @0x8003b9a8-b0 = 30 Bilder/s), R1 P0 setzt 4
+ * (`addiu v0,zero,4 / lui at,0x800e / sb v0,-998(at)` @0x8010235c-64 = 15 Bilder/s, Zeitlupe der Explosion), R1 P3
+ * wieder 2 (`addiu v0,zero,2` @0x80102668, `sb v0,-998(at)` @0x8010267c). */
+static uint8_t s_vsync = 2;
 /* Nachtrag 4: Kamera-Programme (Definitionen vor dem Takt) */
 static void gr2_kam_reset(void);
 static int  gr2_kam_schnitt(int programm, int blick, const re15_actor_t *e, const re15_actor_t *opfer);
@@ -271,6 +276,7 @@ void re15_gr2_reset(int slot, re15_gr2_se_fn se)
     s_g[slot].zone_alt = -1;
     s_g[slot].letzter_clip = 0;
     s_cfbd8 = 0;                                            /* Raumstart: keine Schuettel-Bits */
+    s_vsync = 2;                                            /* Raumstart: Spieltakt VSync(2) @0x8003b9a8-b0 */
     gr2_kam_reset();                                        /* Nachtrag 4: keine offene Kamera-Sperre (Raum neu geladen) */
     re15_gr2_kanister_env();
 }
@@ -780,6 +786,8 @@ void re15_gr2_kamera_finisher(int slot, const re15_actor_t *gator, const re15_ac
     if (s_kam_aus) return;
     gr2_kam_schnitt(GR2_KAM_FRESSEN, RE15_GR2_BLICK_FINISHER, gator, NULL);   /* @0x80100fbc-ff4, kein Ende */
 }
+int re15_gr2_vsync(void) { return s_vsync; }
+
 int re15_gr2_kamera_folge(int max, int *cut, int *blick, int *clip, int *bild)
 {
     int n = s_kam.n < max ? s_kam.n : max;
@@ -1091,6 +1099,8 @@ void re15_gr2_r1_start(int slot, re15_actor_t *e)
     re15_rumble_small(8, 3);                                /* FUN_8003947c(8,3) @0x80102328-30 */
     re15_rumble_ramp(50, 255, 0, 0);                        /* FUN_800395b8(50,255,0,0) @0x80102334-44 */
     gr2_kiefer_platzen(e); g->kiefer_rot = 1;               /* FUN_80104318(em, Part 7) @0x80102354-58 */
+    s_vsync = 4;                                            /* `addiu v0,zero,4 / sb v0,0x800dfc1a` @0x8010235c-64 */
+    re15_gr2_log("R1 VSync 4 (Zeitlupe) F%u", (unsigned)g_engine.frame_count);
     g->fontaene = 1;                                        /* Callback +0x234 = FUN_80103eb4 @0x80102368 */
     /* Spritzring @0x80102374 -> 0x8010338c: 6 Effekte an der Kanister-Matrix */
     if (s_kan.aktiv)
@@ -1171,6 +1181,8 @@ int re15_gr2_r1_tick(int slot, re15_actor_t *e)
     /* P3 @0x80102654: +0x10E |= 0x4000, Raumflag 30 — Endzustand, Pose bleibt (Clip 9 letztes Bild) */
     if (!g->tot) {
         g->tot = 1; re15_gr2_log("R1 ende (Leiche) pos=(%d,%d)", e->x, e->z);
+        s_vsync = 2;                                        /* `addiu v0,zero,2` @0x80102668, `sb` @0x8010267c */
+        re15_gr2_log("R1 VSync 2 F%u", (unsigned)g_engine.frame_count);
         if (s_kam.aktiv && s_kam.programm == GR2_KAM_R1) gr2_kam_frei(e);   /* P3 `&= ~0x100` @0x80102688-94 */
     }
     e->motion = 9; e->anim_frame = bk->anim.clips[9].frame_count - 1;
