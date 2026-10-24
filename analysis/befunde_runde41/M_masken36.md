@@ -297,17 +297,22 @@ aus bleibt, behaelt seine alte Tiefe (`--zurueck`). Nur das Tiefenfeld (+4 im 12
 tz3 (50c72950), Tabelle = `erzeuge` darauf (13803d3e, bitgleich zu tz3_aus.inc): **236 Rechtecke wieder drin (37 286 px), 0 neu
 ausgeschlossen, 0 alte Ausschluesse ohne Kandidat entfallen** - 29 Cuts, groesste ROOM3050 C5 (Maschine links, 11 Rechtecke
 10 399 px), 5020 C6/C7, 5100 C7, 5090 C12, 30A0 C3.
-**Messung an der exe (Schritt 1)** (`m41nb1c/m1_szenen.py` + `m1_ana.py`; je wieder aufgenommenem Objekt die DAVOR-Stelle
-mit der staerksten Ueberdeckung ohne verdeckten Figurpunkt und, wo es eine gibt, die HINTER-Stelle mit den meisten neu verdeckten
-Punkten - Python-Figurraster wie test_r37_masken36 auf den `plaetze`; Leon-Dreiecke per RE15_TRILOG, "neu" = Leon-Punkte, die
-NUR ein wieder aufgenommenes Rechteck verdeckt):
-* DAVOR, 39 Szenen in 29 Cuts: **neu uebermalte Leon-Punkte 0 in allen 39**. Altbestand (vor NB1 gleich, Leon-Rand 1-2 Spalten
-  breit): 3040 C5 (-7500,-2000) Band 1 4 Punkte unter dem ALTEN Rechteck 50 (Tiefe 76); 30A0 C4 (-22243,17763) 2 Punkte am
-  unteren Bildrand unter dem SAUM-Rechteck 41 (Tiefe 47); 5100 C2 (-19830,-23600) 9 Punkte unter dem alten Rechteck 8 (2) und den
-  SAUM-Rechtecken 52/55 (7, Tiefe 64). Die Saum-Rechtecke stammen aus Runde 41 (vor NB1): der Ausschluss rechnet mit dem
-  Figurkasten 3000 x +-350 (R37), Leons Arm/Hand ragt dort 1-2 Bildspalten darueber hinaus -> OFFEN 7.
-* HINTER, 10 Szenen: neu verdeckt 3050 C5 893 + 166, 5100 C7 982, 5020 C7 668, 5090 C12 184, 30A0 C3 151, 4040 C6 124,
-  6010 C6 69, 5100 C3 64, 4040 C11 2 = 3 303 Leon-Punkte (Bilder `M_bilder/NB1_M1_*.png`).
+**Messung an der exe (Schritt 1 und 2)** (`m41nb1c/m1_szenen.py`, `m2_kette.py`, `sicht_alle.py`; je wieder aufgenommenem
+Objekt die DAVOR-Stelle mit der staerksten Ueberdeckung ohne verdeckten Figurpunkt und, wo es eine gibt, die HINTER-Stelle mit
+den meisten neu verdeckten Punkten - Python-Figurraster wie test_r37_masken36 auf den `plaetze`; an der exe Bild 120, Dreiecke
+des letzten Bilds per RE15_TRILOG. Mass: Punkte, an denen Leon das VORDERSTE Dreieck ist und eine gezeichnete Maske mit
+Schluessel (depth+1)*65536/1023 <= Dreieck-z liegt = sichtbar uebermalt (render_pc.c pc_masken_schatten_flush: die Maske wird
+nach dem Dreieck gezogen). "vor NB1" = Tabelle 95b9f38d auf denselben Dateien. Hinweis: die erste Auswertung zaehlte ALLE
+Leon-Dreiecke (auch von Leon selbst verdeckte Rueckseiten) - das ueberschaetzte; massgeblich ist das vorderste Dreieck):
+* **DAVOR, 88 Szenen (39 Schritt 1, 49 Schritt 2) in 42 Cuts: neu sichtbar uebermalte Leon-Punkte 0** (und 0 weggefallen).
+  Altbestand (schon vor NB1 gezeichnete Masken, am Leon-Rand 1-2 Spalten): 3040 C5 (-7500,-2000) Band 1 4 Punkte (altes
+  Rechteck 50, Tiefe 76); 30A0 C4 (-22243,17763) 2 (Saum-Rechteck 41, Runde 41); 5100 C2 (-19830,-23600) 1; 4080 C8 (-225,-2010)
+  2; 5050 C1 (-18100,-22950) 23 (alte Rechtecke 35/36 + Saum 64/72, Tiefe 68) -> OFFEN 7.
+* **HINTER, 21 Szenen: sichtbar verdeckte Leon-Punkte vor NB1 389 -> nach NB1 6 190**; z.B. 3050 C5 (-11600,-11668) 2 -> 740
+  (Maschine links), 5100 C7 (-14030,-2500) 0 -> 1085, 5100 C2 (-23730,-21100) 34 -> 756, 5020 C7 (-13533,-14125) 98 -> 770,
+  5100 C3 13 -> 350, 4040 C9 (-14800,-12722) 0 -> 278, 4040 C7 8 -> 201, 6010 C6 0 -> 198, 30A0 C3 185 -> 336; ohne Wirkung an
+  der gewaehlten Stelle: 5090 C12, 4040 C11 (-1500,5778) (Leon dort nicht vorn).
+* Bilder `M_bilder/NB1_M1_*.png` (oben ganz: mit | ohne Masken | rot = veraendert; unten Ausschnitt).
 
 **Schritt 2 (wie raum.py "zelle": Fehltreffer erben, `--erben`):** Schritt 1 verlangte, dass die Zelle JEDEN Punkt eines
 Rechtecks direkt trifft (262 Rechtecke / 133 733 px scheiterten nur daran). raum.py baut die Nutzer-Freistellungen mit
