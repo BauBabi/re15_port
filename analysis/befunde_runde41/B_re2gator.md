@@ -1982,3 +1982,61 @@ ohne Ende, bis 600 Bilder), buehne (jede laufende Kamera, Raum-Objekte), integra
 - **Dossier-Berichtigung zu §13.5/§13.7:** der Verdecker in P1 der Cut-4-Buehne war die Raum-Leiche Obj_model_set[3] (und, durch die
   P1-Hoehe, die Wasseroberflaeche), **nicht** eine Raum-Spinne - die Spinnen standen bei x 6182 (Abnahme 5 §3.3 c). Spur F muss diese
   Leiche nicht entfernen; die Buehne meidet sie selbst.
+
+### 14.4 Nebenbefund Elza: Zopf flog im Finisher neben dem Kopf (behoben)
+- **Messung:** Elza-Tuerweg 20A1 -> 2091 (`B41nb6/mess/EZT2`, lauf_elza.sh: `RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1`,
+  `RE15_DEBUG_JUMP=20A0@250 RE15_FIRE_AOT=0@40#20A1 RE15_GB_TEST=1 RE15_EXIT_AT=902#2091`): in P1 der neuen, nahen Buehne flog ein
+  gelber Fetzen links ueber Elza (`B41nb6/EZT2_gelb_zoom.png` F628-F642). RE15_TRILOG im Fenster (40..110, 0..40) F630
+  (`B41nb6/mess/EZtri`): Spieler-Platz 0 -> Teil des Spieler-Zeichners ausserhalb des Koerpers = Elzas Zopf (Teile 17..20). Schon in
+  der NB5-Buehne als kleiner gelber Punkt neben dem Kopf zu sehen (`B41nb6/EZT2_vorher_p1.png` aus Abnahme 5 EZT2, F634/F638).
+- **Ursache:** der Maul-Massstab (render_scale_q12, Port-Entscheidung Phase 3) liegt im Spieler-Zeichner auf der Wurzel-3x3
+  (yaw_rot_q12; Form ScaleMatrix @0x8001e904-40 vor der Knochen-Schleife) - die Zopf-Teile haben eine EIGENE Weltmatrix (zopf_r38.c =
+  FUN_80024c30/FUN_80024e40, im Original Teil + 0x40 mit Flag 0x40 -> FUN_8001e9ec @0x8001ea10) und blieben unskaliert.
+- **Aenderung (PORT-WAHL als Folge derselben Massstab-Entscheidung; im Original wird der Spieler nie skaliert):**
+  re15_gr2_zopf_massstab (gator_re2_r41.c) skaliert die Zopf-Weltmatrix um pl->(x,y,z) mit demselben Massstab; **1 Haken in
+  platform/pc/main.c** (Spieler-Zeichner, Zopf-Zweig nach re15_zopf_r38_welt, Kommentar "Runde 41 Spur B NB6"). Ohne render_scale_q12
+  (jeder Spielzustand ausser dem Gator-Finisher) wirkungslos.
+- **Messung nachher:** debug.log `Maul-Sitz Ende F902: ... Zopf-Glied 0 zum Kopf-Knochen max 244 (ohne Massstab 3207) ...` (Messzeile
+  rechnet beides: so weit lag das 1. Zopfglied vorher vom gezeichneten Kopf-Knochen 8 entfernt); Bild `B41nb6/EZT2_nachher.png`: Zopf am
+  Hinterkopf F628-F640, kein Fetzen; F642 gepackt, F700 Wurf, F880 YOU DIED, **F902 ungeblendet Elza im Maul**.
+
+### 14.5 Tests (gebauter Stand 5d9e6026, keine volle Suite)
+- Riegel (tests/unit/test_r41_re2gator.c, registriert in tests/unit/probes/r41_re2gator.cmake):
+  - `unit_r41_re2gator_maul` (erweitert): je Lage P1 14 + P2 120 + **P3 300** Bilder - FRESSEN endet nie, Opfer in jedem Bild gehalten
+    (re15_player_is_grabbed = +0x1D3 & 0x80), in P3 auf Opfer-Clip 1 Bild 119 geparkt, Maul-Massstab bleibt; laufende Kamera je Lage
+    (Bezug 0, Rampe Ost 2, E1-Lage 2, Rampenmitte 3, Plattformblock 6 = erzwungene Ausweich-Buehne, BL2 3) und Buehnen-Kamera != laufende;
+    **unabhaengige Sicht-Pruefung**: Leons 776 Koerper-Vertices (PL00 + Opfer-Posen + Maul-Massstab) gegen die Huellquader der Raum-
+    Objekte (eigene Gleitkomma-Rechnung, Objekte aus ROOM2090 main00 per SCD) - 0 verdeckte Vertices in jedem Bild; P1 >= 500 Promille
+    ueber der Wasserlinie (Typ-3-Objekt y -1620). Ergebnis: alle 6 Lagen `FRESSEN-Ende -1, Opfer nicht gehalten 0, P3 nicht geparkt 0,
+    Massstab falsch 0, von Raum-Objekten verdeckt 0 Bilder, P1 ueber der Wasserlinie min 762 Promille`, Kiefer-Abstand max 2, Kopf-lokal
+    gegen Bezug max 6, Maulraum max 10 Promille. **Gegenproben im selben Riegel:** NB5-Buehne E1 (5638,-12546) Gier 2323 Cut 4 ->
+    `verdeckt 196` von 776 Vertices (die Leiche obj 3); NB5-Hoehe (Leon P1 auf y 0) -> `36 Promille ueber der Wasserlinie` (Schranke 500
+    verwirft).
+  - `unit_r41_re2gator_buehne` (erweitert): 280 Bisslagen (Raster 2000 x 4 Gier) x jede Zonenkamera als laufende Kamera = 2240 Suchen +
+    Paar angezeigt/angefordert: `ohne Buehne 0, Buehne = laufende Kamera 0, Buehne falsch 0, angezeigt/angefordert-Paar falsch 0, ...
+    Ausschluss von c0 wirkte 280 mal; Buehnen-Kameras 0..7: 0 280 0 0 0 0 1960 0` (frei Cut 6, bei laufender 6 Cut 1). Mit Raum-Objekten und
+    Leons PL00-Knochen.
+  - `unit_r41_re2gator_kamera` (c) angepasst: FINISHER-Cut != Kamera des Biss-Bildes (0/0 -> Cut 6), Wahl an der BUEHNE nachgerechnet (ein
+    Takt nach dem Biss, P0 setzt um).
+- integration_r41_re2gator (tests/integration/test_r41_re2gator.cmake): Lauf "belagerung" mit RE15_STATE_LOG und `RE15_EXIT_AT=251#1240`
+  (durch das Game Over): gr=1 in JEDEM Bild vom Biss bis zum letzten 2090-Bild (Bildzaehler-Reset), Summenzeile `Maul-Sitz Ende` im Bild
+  der Game-Over-Uebergabe = letztes 2090-Bild, P3 > 120, Opfer gehalten/frei N/N; "nische" + "belagerung": Finisher-Kamera != laufende
+  Kamera (r41b_kamera_wechsel). Gemessen (lauf_c644fe92): belagerung `Maul-Sitz Ende F902: Bilder 275 (P1 14 P2 120 P3 141) ... Opfer
+  gehalten 275/275, Opfer frei 275/275 ..., letztes Finisher-Bild F902 (Game-Over-Uebergabe)`, nische Cut 6 (Biss-Bild 0/0).
+- Laeufe:
+  - `ctest --test-dir re15_port/build -R "^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|sca_wall_hit|
+    re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_.*|re2_hit_repeat_crow_spider|
+    re2_crow_.*|crow_ai|crow_fixes|crow_death_corpse|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|r35_fenster_kraehe|r37_re2zombie_.*|
+    r34_re2fx.*|montage_fx|r35_cut1150_montage.*|r38_montage.*|r38_wasser.*|r38_wasserzombie|r39_heliport1171_kraehen|r30_granate|
+    r35_granate|r36_granate|r36_kartenbits|text_freeze|r34_reaktion|r34_schaden|g5_boss|load_after_death|r35_affen_finisher|r36_tueren_.*|
+    r37_itemband|r36_kartenitems|irons_mittelmodell|r36_story_sweep|re2_zombie_.*|re15_zombie_death_anim)$|^probe_(re2z_stomp|crow_kill)$|
+    ^r31_trefferboxen.*$" --timeout 600 -j 6 --output-on-failure` -> **100% tests passed, 0 tests failed out of 121** (17:50:21-17:51:26,
+    Stand 5d9e6026; unit_gator_sweep 79 s, unit_r41_re2gator_buehne 30 s).
+  - `ctest --test-dir re15_port/build -R "^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate|r37_itemband|r36_tueren|
+    r37_re2zombie)$" --timeout 1800 -j 3 --output-on-failure` -> **100% tests passed, 0 tests failed out of 7** (17:30:17-17:43:33, Stand
+    ac569fb1 = alles ausser dem Zopf-Haken, der nur bei render_scale_q12 != 0 = Gator-Finisher wirkt); danach `-R "^integration_r41_re2gator$"`
+    am Endstand -> **100% tests passed, 0 tests failed out of 1** (17:51:32-17:55:20).
+- Regression Punkte 2/3 (exe, Rezepte der Abnahmen 4/5): state.log **bitgleich** mit Abnahme 5 (`cmp`): D2 (1351 Zeilen; `DASH Planung ...
+  Start-Gier 624`, `PUTZ runde 6/6 spawns=9 gesamt=54`, `DASH ende ... wand_draussen_max=0`), C3 (`angehaengt lokal=(4614,-253,616) F1119`,
+  `Kanister-Sitz F1388: angehaengt 270 Bilder, Abweichung max 0`, `GIER-WACHE ... Spruenge > 0x60: 0`), K (`R1 VSync 4 (Zeitlupe) F70`,
+  `R1 ende (Leiche)`), N (`Sicht F1 untergetaucht`, `Sicht F201 aufgetaucht`).
