@@ -536,7 +536,10 @@ static void teil_g1(const raum_t *r, const char *name, re15_ai_flavor_t fl, int 
     }
 }
 
-/* G2: Wecken (RE1.5): Spieler 500..1500 vor einem Liegenden; bis P2 Halt, danach +0x94 mit Blende aus der Halt-Pose. */
+/* G2: Wecken (RE1.5): Spieler 500..1500 vor einem Liegenden. Halt bis zum ersten P2-anim_set (einschliesslich des
+ * P1->P2-Takts, P1 kehrt ohne anim_set zurueck @0x80103994-98); das erste P2-Bild ist Bild 0 mit +0x8f = 0xf und
+ * blendet aus der Halt-Pose (Gewicht 0xf00, a3 = 0x100 @0x801039ac); P2 dauert wie im Original Cliplaenge Takte
+ * (+0x6 = 2 von T bis T+fc-1, Wrap im fc-ten anim_set). */
 static void teil_g2(const raum_t *r, const char *name, int32_t zx, int32_t zz, int32_t px, int32_t pz, int16_t prot)
 {
     static re15_skel_pose_t gez[RE15_EMD_MAX_BONES], roh[RE15_EMD_MAX_BONES], halt[RE15_EMD_MAX_BONES];
@@ -551,9 +554,10 @@ static void teil_g2(const raum_t *r, const char *name, int32_t zx, int32_t zz, i
         }
     re15_actor_t *e = &g_actors[s];
     const uint8_t grid0 = e->grid_id;
-    int n_halt = 0, halt_falsch = 0, p2 = -1, p2_clip = -1, p2_frac = -1, steht = -1, nb = 0;
+    int n_halt = 0, halt_falsch = 0, p2 = -1, p2_clip = -1, p2_frac = -1, p2_af = -1, steht = -1, nb = 0, n_p2 = 0;
+    int fc = -1, saat = -1;
     long d_halt = -1, d_roh = -1, d_16 = -1;
-    for (int f = 0; f < 200 && steht < 0; f++) {
+    for (int f = 0; f < 260 && steht < 0; f++) {
         g_actors[0].x = px; g_actors[0].z = pz; g_actors[0].rot_y = prot;
         bild();
         int clip = -1, kf = -1; const re15_emd_skeleton_t *sk = NULL;
@@ -562,12 +566,16 @@ static void teil_g2(const raum_t *r, const char *name, int32_t zx, int32_t zz, i
         g_anim_pose_actor = e;                                   /* = Renderer: Blende aus der zuletzt gezeichneten Pose */
         (void)re15_skel_compute_pose(sk, kf, gez);
         g_anim_pose_actor = NULL;
-        if (e->state == 1 && e->sub_state_1 == 0 && e->sub_state_2 < 2) {
+        if (e->state == 1 && e->sub_state_1 == 0 && e->sub_state_2 == 2) {
+            n_p2++;
+            if (saat < 0 && e->motion_init_delay > 0) saat = f;  /* P1 -> P2: Saat-Takt (re15_r41_liege_p2_saat) */
+        }
+        if (re15_r41_liege_skelett_clip(e) >= 0) {
             n_halt++;
             if (clip != g_soll_clip(grid0) || kf != g_soll_kf(grid0)) halt_falsch++;
             memcpy(halt, gez, sizeof halt);
         } else if (p2 < 0 && e->sub_state_2 >= 2) {
-            p2 = f; p2_clip = clip; p2_frac = e->anim_frac;
+            p2 = f; p2_clip = clip; p2_frac = e->anim_frac; p2_af = e->anim_frame; fc = re15_actor_clip_len(e);
             (void)re15_skel_compute_pose(sk, kf, roh);           /* ungemischtes Bild desselben Keyframes */
             d_halt = g_abstand(gez, halt, nb); d_roh = g_abstand(gez, roh, nb);
         } else if (p2 >= 0 && f == p2 + 16) {
@@ -576,15 +584,21 @@ static void teil_g2(const raum_t *r, const char *name, int32_t zx, int32_t zz, i
         }
         if (e->grid_id == 0 && e->state == 1 && e->sub_state_1 == 2) steht = f;
     }
-    printf("  [G2 %s RE1.5] slot %d grid %02x: %d Bilder Halt (falsch %d), P2 ab F%d Renderer Clip %d +0x8f %d, "
-           "Blende: Abstand zur Halt-Pose %ld / zum ungemischten Bild %ld, nach 16 Bildern %ld, steht F%d\n",
-           name, s, grid0, n_halt, halt_falsch, p2, p2_clip, p2_frac, d_halt, d_roh, d_16, steht);
+    printf("  [G2 %s RE1.5] slot %d grid %02x: %d Bilder Halt (falsch %d), Saat-Takt F%d, erstes P2-Bild F%d Clip %d "
+           "Bild %d +0x8f %d, Blende: Abstand zur Halt-Pose %ld / zum ungemischten Bild %ld, nach 16 Bildern %ld; "
+           "+0x6 = 2 fuer %d Takte (Cliplaenge %d), steht F%d\n",
+           name, s, grid0, n_halt, halt_falsch, saat, p2, p2_clip, p2_af, p2_frac, d_halt, d_roh, d_16, n_p2, fc, steht);
     CHECK(n_halt >= 1 && halt_falsch == 0, "G2 %s: Halt-Pose vor P2 falsch (%d von %d Bildern)", name, halt_falsch, n_halt);
+    CHECK(saat >= 0 && p2 == saat + 1, "G2 %s: erstes P2-Bild F%d statt einen Takt nach dem P1->P2-Takt F%d "
+          "(P1 ohne anim_set @0x80103994-98)", name, p2, saat);
     CHECK(p2 >= 0 && p2_clip == g_final(grid0), "G2 %s: P2 zeigt Clip %d statt +0x94 = %d", name, p2_clip, g_final(grid0));
-    CHECK(p2_frac >= 0xd && p2_frac <= 0xf, "G2 %s: +0x8f %d beim P2-Eintritt (0xf @0x80103998)", name, p2_frac);
-    CHECK(d_halt >= 0 && d_roh > 0 && d_halt < d_roh,
+    CHECK(p2_af == 0 && p2_frac == 0xf, "G2 %s: erstes P2-Bild Bild %d / +0x8f %d statt Bild 0 / 0xf (@0x80103998, "
+          "f3bc posiert vor +0x95++)", name, p2_af, p2_frac);
+    CHECK(d_halt > 0 && d_roh > 0 && d_halt < d_roh,
           "G2 %s: erstes P2-Bild nicht aus der Halt-Pose geblendet (zur Halt-Pose %ld, zum Clip %ld)", name, d_halt, d_roh);
     CHECK(d_16 == 0, "G2 %s: nach 16 Bildern noch Blende (Abstand %ld)", name, d_16);
+    CHECK(fc > 10 && n_p2 == fc, "G2 %s: +0x6 = 2 fuer %d Takte statt Cliplaenge %d (98 anim_set, Wrap @0x801039c4-cc)",
+          name, n_p2, fc);
     CHECK(steht >= 0, "G2 %s: steht nicht auf", name);
 }
 
@@ -614,9 +628,13 @@ static void teil_g3(void)
         if (!e->active || e->type < 0x10 || e->type > 0x1f || !(e->grid_id == 0x89 || e->grid_id == 0x8a)) continue;
         int clip = -1, kf = -1;
         if (!g_render(e, &clip, &kf, NULL)) continue;
-        printf("  [G3 1070 RE1.5 geweckt] slot %d grid %02x Wort %d/%d/%d +0x8f %d -> Renderer Clip %d (+0x94 %d)\n", s,
-               e->grid_id, e->state, e->sub_state_1, e->sub_state_2, e->anim_frac, clip, (int)e->motion);
-        if (e->sub_state_2 >= 2 && clip == (int)e->motion && clip == g_final(e->grid_id) && e->anim_frac >= 0xd) ok++;
+        printf("  [G3 1070 RE1.5 geweckt] slot %d grid %02x Wort %d/%d/%d +0x8f %d Saat %d -> Renderer Clip %d Bild %d (+0x94 %d)\n",
+               s, e->grid_id, e->state, e->sub_state_1, e->sub_state_2, e->anim_frac, e->motion_init_delay, clip,
+               (int)e->anim_frame, (int)e->motion);
+        /* Skript-Weckung: DECIDE @0x801039fc setzt +0x6 = 2 und ANIMATE (P2) posiert IM SELBEN Takt Bild 0 mit +0x8f 0xf
+         * -> kein Saat-Takt (motion_init_delay 0), Renderer zeigt sofort +0x94 Bild 0. */
+        if (e->sub_state_2 >= 2 && clip == (int)e->motion && clip == g_final(e->grid_id) && e->anim_frac == 0xf &&
+            e->anim_frame == 0 && e->motion_init_delay == 0) ok++;
     }
     CHECK(n == 5 && n_halt == n, "G3 1070: %d Liegende (Soll 5: 0x88 x3, 0x87 x2, sub00 @0x015ca-1a), %d mit INIT-Pose",
           n, n_halt);

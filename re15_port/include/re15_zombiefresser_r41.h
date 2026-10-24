@@ -104,6 +104,15 @@ int  re15_r41_liegewecker_re15_decide(re15_actor_t *e);
 #define RE15_R41_INIT_POSE_B   0x0Eu   /* ori v0,zero,0xe / sb v0,148(v1) @0x80100bb4-b8 (STAGE2), sel {5,8,0xa} */
 int  re15_r41_liege_skelett_clip(const re15_actor_t *a);
 
+/* NACHBESSERUNG 1 (M1b) — der ERSTE P2-Takt. P1 setzt +0x6 = 2 (@0x80103984) und +0x8f = 0xf (@0x80103998, Delay-Slot
+ * von `j 0x80103a10` @0x80103994) und kehrt OHNE anim_set zurueck; P2 ist ein eigener Fall der +0x6-Weiche
+ * (@0x80103928 -> 0x8010399c), sein anim_set (@0x801039a8, a3 = 0x100) laeuft erst im NAECHSTEN Takt und posiert dort
+ * Bild 0 (Gewicht 0xf00). Der Port-Vorschub (player_common.c) liefe aber schon in diesem naechsten Takt vor -> P2 zeigte
+ * Bild 1 / +0x8f 14 und endete einen Takt zu frueh. Abhilfe im Port-Vokabular: motion_init_delay = 1 ("Saat-Takt posiert
+ * Bild 0", re15_npc_seed_clip / game_step_common.c), NUR beim Uebergang P1 -> P2 (ph_vor = +0x6 vor dem ANIMATE == 1).
+ * Die Skript-Weckung 9/10 (DECIDE @0x801039fc setzt +0x6 = 2, ANIMATE im selben Takt) bleibt unberuehrt. */
+void re15_r41_liege_p2_saat(re15_actor_t *e, uint8_t ph_vor);
+
 /* Schalter fuer Tests (Standard AN). */
 void re15_r41_liegewecker_enable(int an);
 int  re15_r41_liegewecker_enabled(void);

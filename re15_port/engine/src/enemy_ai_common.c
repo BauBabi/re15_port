@@ -4904,7 +4904,8 @@ int re15_enemy_ai_live_active(int slot)
                                * default-Zweig und bekam GAR KEINEN Tick. */
             case 5: case 6:   /* feeding (@0x8011f80c[5]/[6]=0x801018f8) -> the dist-gated wake-up */
                 if (re15_r41_liegewecker_re15_decide(e))   /* Runde 41 Spur I: DECIDE 0x80103980 + */
-                    { re15_enemy_ai_lying_phase(e); break; } /* ANIMATE 0x80103a58 (spielt +0x94 = 0x12/0x13) */
+                    { uint8_t r41p = e->sub_state_2; re15_enemy_ai_lying_phase(e); /* ANIMATE 0x80103a58 (spielt +0x94) */
+                      re15_r41_liege_p2_saat(e, r41p); break; }   /* NB1: P1 -> P2 ohne anim_set (@0x80103994-98) */
                 re15_enemy_ai_live_feeding(e);
                 break;
             case 7: case 8:   /* lying (@0x8011f80c[7]/[8]=0x80101974). CITATION CORRECTED (audit

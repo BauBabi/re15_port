@@ -132,8 +132,23 @@ int re15_r41_liege_skelett_clip(const re15_actor_t *a)
     else return -1;
     if (a->state == 0) return clip;                             /* Sce_em_set ruft die Wurzel sofort einmal
                                                                  * (@0x8004259c): INIT posiert schon im Spawnbild */
-    if (a->state == 1 && a->sub_state_1 == 0 && a->sub_state_2 < 2)
-        return clip;                                            /* P0/P1 ohne anim_set; ab P2 (+0x6 >= 2,
-                                                                 * f314 @0x801039a8) zeigt das Skelett +0x94 */
+    if (a->state == 1 && a->sub_state_1 == 0 &&
+        (a->sub_state_2 < 2 || (a->sub_state_2 == 2 && a->motion_init_delay > 0)))
+        return clip;                                            /* P0/P1 ohne anim_set, und der P1->P2-Takt (P2s
+                                                                 * erstes f314 @0x801039a8 kommt einen Takt spaeter,
+                                                                 * re15_r41_liege_p2_saat); danach zeigt das
+                                                                 * Skelett +0x94 */
     return -1;
+}
+
+void re15_r41_liege_p2_saat(re15_actor_t *e, uint8_t ph_vor)
+{
+    if (!s_an || !e) return;
+    if (ph_vor == 1 && e->sub_state_2 == 2) {                   /* P1 -> P2: `sb 2,6` @0x80103984, zurueck
+                                                                 * ueber `j 0x80103a10` @0x80103994 */
+        e->motion_init_delay = 1;                               /* naechster Takt: anim_set posiert Bild 0 mit
+                                                                 * +0x8f = 0xf, erst danach +0x95++ (FUN_8001f3bc) */
+        ZF_LOG("[r41-wecker] F%u slot=%d P2-SAAT clip=%d frac=%d\n", (unsigned)g_engine.frame_count, aktor_slot(e),
+               (int)e->motion, (int)e->anim_frac);
+    }
 }

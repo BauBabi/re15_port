@@ -10,7 +10,10 @@
 #                                 grid 0x84/0x85, Clip 0x12/0x13), keiner frisst; B Ruhe d >= 4000: 300 Bilder liegend +
 #                                 unschiessbar; C je Raum Spieler 500..1500 vor einem Zombie: Wecken im ersten Takt,
 #                                 Wartezeit <= 16, Aufsteh-Clip ganz (RE2 8/9, RE1.5 0x12/0x13), steht, greift an;
-#                               D Grenze 0xFA0 (4000 nein / 3999 ja); E Wartezeit ueber 48 Seeds; F Fresser 0x86 (1140) bleibt.
+#                               D Grenze 0xFA0 (4000 nein / 3999 ja); E Wartezeit ueber 48 Seeds; F Fresser 0x86 (1140) bleibt;
+#                               G (Nachbesserung 1, M1) Renderer-Weg: RE1.5-Liegende zeigen bis zum ersten P2-anim_set die
+#                                 INIT-Pose (Keyframe 0x12d/0x149, f314 @0x80100c34), +0x94 bleibt 0x12/0x13; erstes P2-Bild
+#                                 Bild 0 / +0x8f 0xf aus der Halt-Pose geblendet, P2 dauert Cliplaenge Takte; 0x87/0x88 (1070).
 add_executable(test_r41_zombiefresser ${CMAKE_CURRENT_LIST_DIR}/../test_r41_zombiefresser.c)
 target_link_libraries(test_r41_zombiefresser PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_zombiefresser PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -34,12 +37,16 @@ endif()
 #     elza2001   ECHTER WEG als Elza: Debug-Sprung 2071 + Spawn-Bit 3:0x45, Wegplan durch die Tuer nach ROOM2001
 #     leon3000   Spielstand Leon ROOM3000 (4:9, 4:0xC6) + CONTINUE, 1200 vor dem Zombie (-9900,-14800)
 #     leon3010   Spielstand Leon ROOM3010 (4:0x0A) + CONTINUE, 1100 vor dem Zombie (-9100,-19800)
-#     re15_3000  wie leon3000 mit RE1.5-KI (Clip 0x12 statt RE2-Clip 8)
+#     re15_3000  wie leon3000 mit RE1.5-KI (Clip 0x12 statt RE2-Clip 8), Kamera 3, POSE-Pruefung (Nachbesserung 1, M1)
+#     laden2000  NB1 (I-E2): Spielstand Leon IN ROOM2000 (Oststeg, Kamera 7) + CONTINUE: sub00 startet, beide 0x84 liegen,
+#                wecken, stehen auf, greifen an (wie der Tuerweg; Original FUN_8003ef6c Slot 1 @0x8003efd4-d8)
+#     laden2001  NB1 (I-E2): dasselbe als ELZA in ROOM2001 (Spawn-Bit 3:0x45)
+#     re15_2000  NB1 (M1): wie laden2000 mit RE1.5-KI + POSE-Pruefung (Keyframe 0x12d bis zum ersten P2-anim_set)
 #   Je Teil: INIT 1/7/0 f10e=4002 (RE2) bzw. grid 84 (RE1.5); WECKT mit d < 4000; STEHT AUF <= 16 Bilder danach;
 #   Zombie aufrecht (st=1 ss1=1 bzw. 2, g=00); Angriff (gr=1 oder Spieler-HP sinkt); NIE ss1=8 (Fressen); ferne
 #   Zombies liegen den ganzen Lauf.
 if(TARGET re15_pc)
-    foreach(_teil tuer2000 elza2001 leon3000 leon3010 re15_3000)
+    foreach(_teil tuer2000 elza2001 leon3000 leon3010 re15_3000 laden2000 laden2001 re15_2000)
         add_test(NAME integration_r41_zombiefresser_${_teil}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
