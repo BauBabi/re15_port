@@ -1,15 +1,25 @@
 # Runde 41 — Spur C "ventilkette" — Abnahme 3 (unabhaengig)
 
 Baum `.claude/worktrees/r41_ventilkette`, Zweig `r41/ventilkette`, gepruefter Stand HEAD 2fb94b25 (Basis master 116e8b0f;
-master selbst steht inzwischen auf 7b59e297 mit Spur A — die Integration ist nicht Gegenstand dieser Abnahme).
-Massstab: die sechs Punkte des Auftragstexts und AUFTRAG.md (massgeblich) mit den Nachtraegen 6-13 (12 und 13 kamen 13:11/13:19, nach dem Bau) und den Entscheiden
-C-a..e, C-E1..C-E3, C-E2b (C-E2c widerrufen durch Nachtrag 6). Vorlage: Abnahme 2 (`C_abnahme_2.md`, Maengel N1-N4 + H-a),
+master selbst steht inzwischen (14:2x) auf ee626242 und enthaelt Spur A (`engine/src/wasser20b0_r41.c`) — die Integration ist
+nicht Gegenstand dieser Abnahme).
+Massstab: die sechs Punkte des Auftragstexts und AUFTRAG.md (massgeblich) mit den Nachtraegen 6-13 (12 und 13 kamen
+13:11/13:19, nach dem Bau) und den Entscheiden C-a..e, C-E1..C-E3, C-E2b (C-E2c widerrufen durch Nachtrag 6). Vorlage: Abnahme 2 (`C_abnahme_2.md`, Maengel N1-N4 + H-a),
 Nachbesserung 3 (Dossier §0d).
 Begonnen 2026-10-24 11:55. Pruefer: Abnahme 3 (Opus). Der Bericht wird FORTLAUFEND geschrieben. Messordner scratchpad
 `C41abn3/` (unten `<a3>` =
 `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/C41abn3`).
 
+**Ergebnis (abgeschlossen 2026-10-24 14:2x): NICHT bestanden.** Punkte 1, 2, 4, 5 erfuellt; Punkt 3 teilweise (Platzhalter durch
+Nachtrag 13 ersetzt, nicht gebaut) und Punkt 6 teilweise (Ruhepegel widerspricht Nachtrag 12 (k)); Nachtrag 12 (k) und Nachtrag 13
+nicht erfuellt (beide kamen 13:11/13:19, nach dem letzten Code-Commit 11:01); Nachtraege 6, 9/10, 12 (l) erfuellt. Gates: RE-Gate,
+Vertrag, Nebenwirkungen halten; der Ketten-Riegel `_kette` (C-E1) faellt am heutigen Stand (G2b). Tests: Unit 166/166 + `PASS (376
+Pruefungen)`, Integration 16/16 gruen. Maengel §5: 3 (hoch, Nachtrag 13), 4 (hoch, Nachtrag 12 (k)), 1 (mittel, `_kette`), 2 (niedrig, Doku).
+
 ## 0. Stand / Protokoll (neueste zuerst)
+* 14:18-14:2x ABSCHLUSS: `integration_r41_ventilkette Passed 252.28 sec`, `integration_r41_ventilkette_b Passed 508.61 sec` ->
+  `100% tests passed, 0 tests failed out of 2` (`<a3>/ctest_integ3.txt`) -> Integration 16/16 (§3). Nachtraege 12/13 als Punkte
+  bewertet (§1 N12/N13, §4), Maengel 3/4 (§5), Hinweis (c) nachgezogen. Kein Code geaendert; nur dieser Bericht committet.
 * 14:0x FORTSETZUNG 3 (dritte Pruefer-Sitzung nach dem Kontowechsel; die zweite endete ~13:5x am Wochenlimit). HEAD 8d7df414,
   seit 2fb94b25 nur `analysis/` (AUFTRAG.md +93 = E-E1..3, Nachtrag 11, I-E1/2, **Nachtrag 12 (13:11)**, **Nachtrag 13 (13:19)**;
   VERTRAG.md 1.2 +"2030 Ids 50-55"; dieser Bericht) -> gepruefter Code-Stand unveraendert, letzter re15_port-Commit 97fb1d18 (11:01),
@@ -448,7 +458,9 @@ unterhalb der Absperrung gibt; Bildbeleg vorher/nachher aus den Ring-Kameras. (l
   (Schachtoeffnung), Treppe Slot 8 -> Sperrtext 48, Ring frei`, `[prop-render] pi=4 oid=0x04 pos=(0,-3600,0)`; Leon geht auf dem
   Ring bei `pl pos=(-6605,-5400,-7722)` -> Wasser **1800 unter dem Ringboden**. Quelle: `RE15_R41C_WASSER_Y_RELING (-3600)` "Oberkante
   der unteren Reling" (include/re15_ventilkette_r41.h Z. 275) = die Lesart der Nachbesserung 3 VOR der Antwort (k).
-* Absperrung am inneren Ringrand: SCA-Wandzellen 19/20/21/22 und 31/32 fl 0x33 (Band 3 = Ringebene, selbst geparst, G1); im Bild
+* Absperrung am inneren Ringrand: SCA-Wandzellen 19/20/21/22 und 31/32 fl 0x33 (Band 3 = Ringebene) @0x0097C/@0x00988/@0x00994/
+  @0x009A0/@0x00A0C/@0x00A18 (eigene Parse `<a3>/py/sca2030.py`, je 12 B w,d,x,z,typ,u0,u1,fl; z. B. Zelle 19 `f4 01 f2 44 18 15 d8
+  dc 01 ff 00 33` = w 500, d 17650, x 5400, z -9000 -> Ostkante x 5400..5900; Ring-Boden 36-41 fl 0x23 u1 01); im Bild
   (`<a3>/cuts_vorher_nachher.png` Spalte "vor der Flut" Cut 1/7, `C_belege/nb3_pegel_vorher_nachher_sheet.png` Cut 1/2/7/15) ein
   Stabgelaender mit Handlauf, durch dessen Staebe der untere Bereich (Schilder 04/02 bzw. 09/08/07/06, Tank 13) zu sehen ist =
   durchsichtiges Gelaender, keine Bruestung. Nach der Regel der Folgen (k) ist damit die Ringboden-Kante y -5400 die Grenze.
@@ -483,6 +495,7 @@ Massstab: AUFTRAG.md Nachtrag 13, Folgen 1-6 (der Platzhalter des Punkts 3 wird 
   "Dokument" -> **nicht erfuellt**. Folge 6 (Ids 2030 50-55): nicht benutzt (kein Verstoss).
 * Die Warnung/Flut/Flucht/Ertrinken hinter dem Raetsel (Punkt 3, L3/L3b/L3c) bleibt gueltig und ist weiter das, was nach der
   richtigen Loesung laufen soll.
+
 ## 3. Tests (gezielt, im Spurbaum; KEINE volle Suite)
 * Unit-Gruppe (erste Sitzung 12:02, Code-Stand seither unveraendert): 166 Tests `100% tests passed, 0 tests failed out of 166`
   (`<a3>/ctest_unit.txt`); `test_r41_ventilkette.exe` direkt `PASS (376 Pruefungen)` (Leon + Elza, J1 `206 Raeume, 16 Funde`, L
@@ -499,7 +512,25 @@ Massstab: AUFTRAG.md Nachtrag 13, Folgen 1-6 (der Platzhalter des Punkts 3 wird 
   `2030_ventile` -> 45 -> 46 -> `DOOR FIRE slot=0 ... target_cut=11` -> `loaded room20b1.rdt` -> `Bits 103 + 100`; w4 `loaded
   room20b1.rdt` -> `DOOR FIRE slot=3 rect=(5950,-6400,...)` -> `ROOM2031: Strom (3,126) -> Wasser auf Relinghoehe` -> `DOOR FIRE
   slot=1 rect=(-7700,6400,...)` -> `loaded room2081.rdt` -> `id=0 "From here maybe I can control the water level..."` -> `DOOR
-  FIRE slot=1 rect=(-9150,-25650,...)` -> `loaded room2091.rdt`). Rest (`_sperre`, `_weg`, `_b`, Hauptriegel) laeuft.
+  FIRE slot=1 rect=(-9150,-25650,...)` -> `loaded room2091.rdt`), **`integration_r41_ventilkette_sperre Passed 315.30 sec`**
+  (lauf_c14aae1e a/b: 2070/2071 Ring-Tueren `gesperrt (geflutet) -> Sperrtext 40`; c: 11A0 Slot 4 feuert nur mit (3,206)),
+  **`integration_r41_ventilkette_weg Passed 928.39 sec`** (lauf_777352b0, Leon: v1 Pult 40 -> Ventil 13 41/42 -> 43 -> 44; v2 49 ->
+  Sicherung 2/3 -> 45 -> 46 -> Ost-Tuer `target_cut=11` -> `loaded room20b0.rdt`; w1 20B0-Leiter -> 2050 -> 2020 -> 2030 `unter Wasser
+  (y -7200)` -> 2060; g1 `Set zone=3 idx=144`; g2 `Set zone=3 idx=126`; w3 2060 -> 2030 `Relinghoehe y -3600` -> 2020 -> 2050 -> 20B0;
+  w4 20B0 -> 2030 -> Lift B (Wegplan `FLAG (3,220)` 0 -> 1) -> 2080 msg 0 (`FLAG (3,245)` 0 -> 1) -> 2090). Danach brach die
+  Sitzung (Wochenlimit, ~13:5x) mitten in `_b` ab (gestartet 14:01).
+* Fortsetzung 3 (14:05-14:18, `<a3>/integ3.sh`, Protokoll `<a3>/ctest_integ3.txt`, ohne fremde Last in diesem Baum):
+  `ctest --test-dir re15_port/build -R "^(integration_r41_ventilkette|integration_r41_ventilkette_b)$" --timeout 2700
+  --output-on-failure` -> **`integration_r41_ventilkette Passed 252.28 sec`** (lauf_243ba606: a Ventile 45 -> 46 -> Zaehler -> Ost-Tuer
+  `target_cut=11` -> 20B0 `Bits 103 + 100`; b 2000 Leiter Text 40; c Flut `SPRITZER: Wasser y -5400` -> `ERTRUNKEN: Wasser y -6300`;
+  d Text 49), **`integration_r41_ventilkette_b Passed 508.61 sec`** (lauf_dc5b81e8 d..m2: Pult 2050 43/41/40-70-80 V, Hebel-Sperre 40,
+  Kisten-Hebel, Elza 2051, 2030-Pult ohne Ventil 13, Leitern 20B0 <-> 2050, i1 `unter Wasser (y -7200)`, i2 `Relinghoehe y -3600`,
+  Elza-Leiter 2001, Ring-Zugaenge L/L2/M/M2) -> **`100% tests passed, 0 tests failed out of 2`**, `Total Test time (real) = 760.94 sec`.
+* **Summe Integration: 16/16 gruen** (14 aus `<a3>/ctest_integ2.txt` + 2 aus `<a3>/ctest_integ3.txt`; die r41-Riegel einzeln:
+  Haupt 252.28 s, `_b` 508.61 s, `_weg` 928.39 s, `_weg_elza` 916.85 s, `_sperre` 315.30 s). Kein roter Riegel in der Gruppe,
+  also kein Nachfahren unter Last noetig (der rote `_kette` ist nicht registriert und faellt deterministisch, G2b). Die Riegel
+  pinnen den Stand VOR den Nachtraegen 12/13 (-3600, Text 49, Ja/Nein-Frage 45) — gruen heisst hier nicht "Nachtraege 12/13
+  erfuellt" (§1 N12/N13).
 * `integration_r41_ventilkette_kette`: im Spurbaum nicht registriert (C-E1); von Hand gefahren -> FAIL (G2b, Mangel 1).
 
 ## 4. Urteil je Nutzer-Punkt (gegen den Wortlaut, AUFTRAG.md; gebauter Stand exe 11:03 = Code 2fb94b25)
@@ -524,7 +555,8 @@ Massstab: AUFTRAG.md Nachtrag 13, Folgen 1-6 (der Platzhalter des Punkts 3 wird 
   Spinnen-Bits, Eingabeskript-Aktionen, test_r41_ventilkette_kette.cmake Z. 129-137); die Ventile liegen jetzt am Sued-Landeplatz
   (Slot 14 Band 1) und brauchen Bit 102 + (3,108). Von Hand gefahren (G2b): `r41_ventilkette_kette: Aktion an den Ventilen —
   '[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile' fehlt` (Z. 159), rc=1 — vor jedem Spur-A-Teil. Im
-  Integrationsbaum A+C wird er registriert und faellt; C-E1 ("Ist er registriert, MUSS die ganze Kette durchlaufen") ist damit nicht
+  Integrationsbaum A+C wird er registriert und faellt (master ee626242 enthaelt `engine/src/wasser20b0_r41.c` -> beim Merge der
+  Spur C greift `if(EXISTS ...)`); C-E1 ("Ist er registriert, MUSS die ganze Kette durchlaufen") ist damit nicht
   mehr erfuellbar, und Dossier §0b M2 beschreibt die alte Kette als "auf dem Endstand rc=0". Forderung: Riegel auf die Kette der
   Nachbesserung 3 umstellen (Bruecke + Sicherung zu Fuss oder als Zustand vorgesetzt wie `_weg` v2, Ventile am Sued-Landeplatz,
   Flucht zu Fuss ueber Steg/Treppe/Ring zur Ost-Tuer per Wegplan), gegen den C-Baum bis zur 20B0-Ankunft (`loaded room20b0.rdt`,
@@ -534,7 +566,6 @@ Massstab: AUFTRAG.md Nachtrag 13, Folgen 1-6 (der Platzhalter des Punkts 3 wird 
   Z. 1459 "Der Rechner selbst senkt 2080 und leert 2030" (seit Nachtrag 7 leert der Strom 2030, der Rechner nur 2080);
   tests/unit/probes/r41_ventilkette.cmake Z. 2 "Rechner 2080 entleert 2030" und Z. 30 "2030 mit Bit 107 ohne Wasser" (Kommentare;
   die Riegel selbst pruefen den neuen Stand). Forderung: Saetze auf den Stand Nachbesserung 3 bringen.
-
 * **Mangel 3 (hoch, Nutzer-Punkt Nachtrag 13 / Punkt 3) — das echte Ventilraetsel fehlt (Nachtrag 13, 13:19, nach dem Bau).**
   Ist (N13): Text 2030/49 traegt weiter das Wissen "If I turn them, this whole level will be flooded." (L2, gen/ventilkette_r41_texte.inc
   Z. 75/76); kein Dokument (Nutzer-Text 0 Treffer in re15_port, kein Dokument-/Leichen-Platz in der AOT-Liste 2030), kein Plakat
@@ -561,6 +592,7 @@ Massstab: AUFTRAG.md Nachtrag 13, Folgen 1-6 (der Platzhalter des Punkts 3 wird 
   liegt dann bis auf die oberste Stufe UNTER dem Pegel, Kopf Z. 88/89 "dort keine Flaeche" gilt nicht mehr; Treppe/Sperrtext 48 und die
   Erreichbarkeit pruefen); Bildbogen vorher/nachher aus den Ring-Kameras (Cut 1/2/7/15); Riegel (`_b` Z. 250/251, `_weg` Z. 429/431,
   Unit Z. 597/676) auf den neuen Pegel, Leon UND Elza.
+
 Hinweise (kein Mangel): (a) die Flutflaechen liegen ueber dem tiefenlosen BSS — im ersten Flutbild ist das Becken im Bild schon
 zugedeckt (L3c, unveraendert seit Abnahme 2, Platzhalter ohne Formvorgabe); (b) nach der Flut ist der 2070-Mittelgang nicht mehr
 betretbar (beide Zugaenge 2000 Slot 3 / 2030 Slot 0 fuehren nach 20B0) — Teil der offenen Frage (g), bekannt seit M7; (c) die Fragen
