@@ -2,7 +2,8 @@
 
 Baum `.claude/worktrees/r41_ventilkette`, Zweig `r41/ventilkette`, gepruefter Stand HEAD b08bb0c4 (Basis = merge-base master
 116e8b0f; master selbst steht auf 200184bc und enthaelt fremde Spuren — Gegenstand ist nur der Spur-Diff `git diff master...HEAD`).
-Massstab: die sechs Punkte des Auftragstexts und AUFTRAG.md (massgeblich) mit den Nachtraegen 6-13 und den Entscheiden C-a..e,
+Massstab: die sechs Punkte des Auftragstexts und AUFTRAG.md (massgeblich) mit den Nachtraegen 6-13 (+ Nachtrag 15 = Freigabe, im
+master seit 19:01) und den Entscheiden C-a..e,
 C-E1..C-E3, C-E2b (C-E2c widerrufen durch Nachtrag 6). Vorlage: Abnahme 3 (`C_abnahme_3.md`, Maengel 1-4), Nachbesserung 4
 (Dossier §0e, Commits a5830413..b08bb0c4).
 Begonnen 2026-10-24 ~18:4x. Pruefer: Abnahme 4 (Opus). Der Bericht wird FORTLAUFEND geschrieben. Messordner scratchpad
@@ -178,6 +179,8 @@ Wie FL, nach der Warnung zu Fuss ueber Treppe und Ring vor die Ost-Tuer (6606,-5
 -5400)`** -> **`ERTRUNKEN: Wasser y -6300, Spieler y -5400 -> hp -1, blaue Blende`** (Wasser 900 ueber der Ringebene). Bildbogen
 `<a4>/bilder/flr_ring.png`: F3540 Wasser ueber dem Steg, F3580/F3620 der Ring unter der Flaeche, F3660 blauer Schleier, F3800 "YOU DIED"
 (F3700/F3740 Todes-Kamera der Engine).
+Elza `flr_elza` gleich: `Spieler-Familie PL04` -> `RICHTIG` -> `ROOM2031: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)` -> `FLUT` ->
+`SPRITZER: Wasser y -5400 ...` -> `[fade-log] config ch=0 abr=2 mask=6 step=0 bucket=7` -> `ERTRUNKEN: Wasser y -6300, Spieler y -5400`.
 
 ### PK — Randfall Plakat waehrend des Zaehlers bis in die Flut (Leon `pk`)
 Plan `<a4>/plaene/pk.txt` (richtige Folge, Warnung, zurueck zum Plakat, Aktion) + `RE15_PRESS=square@3540`: `Plakat-Nahaufnahme offen` (F2118)
@@ -249,7 +252,7 @@ Stichproben der in Nachbesserung 4 NEU zitierten Stellen (alle selbst gelesen, r
 * Kein SendMessage, kein Code ausserhalb des Baums (Pruefer).
 
 ### G3 Nebenwirkungen (beide Szenarien, Nachbarraeume)
-* Beide Szenarien gemessen: K1/K2/D/P/P1/P4/P5/P6 je mit Leon UND Elza (`Spieler-Familie PL04`, Raeume 20x1), FL/FLR Leon (FLR Elza s. u.);
+* Beide Szenarien gemessen: K1/K2/D/P/P1/P4/P5/P6 je mit Leon UND Elza (`Spieler-Familie PL04`, Raeume 20x1), FL Leon, FLR Leon UND Elza;
   Unit-Fall M fuer 2030 UND 2031.
 * Nachbarraeume: 2000/2001 (Leiter), 2010/2011 (Tuer -> 20B0 erst nach der Flut), 20B0/20B1, 2050/2051, 2070/2071 (Ring-Sperre, `_sperre`
   gruen), 2080/2081 (Rechner Original, P6), 2090/2091 (Ankunft P6) — alle wie vorgesehen; 1260 (Tuer nach 2000 -> 20B0 nur mit Bit 103)
