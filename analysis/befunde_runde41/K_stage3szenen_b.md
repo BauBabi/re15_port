@@ -19,7 +19,20 @@ cherry-pick und misst 3091 darauf. Bits: J/K = 121-124 bei Bedarf. Nachrichten: 
 6. Gezielte Tests, Abschluss.
 
 ## Protokoll (neueste unten)
-- 2026-10-24: Dossier angelegt.
+- 2026-10-24 20:03: Dossier angelegt.
+- 2026-10-24: rbj-binder der Spur J (e4a9f39c) UNVERAENDERT per cherry-pick uebernommen (hier 299b6deb, A-E5).
+- 2026-10-24: K1 (Spielfigur Sherry) gebaut, gemessen, Riegel; K2 (3091) am Original per GDB gemessen, Port gleich.
+
+## Kurzfassung
+* K1 "Ab 30C1 ... Sherrys Charakter Modell ist voellig falsch und kaputt ... keine Waffe": ab der Schacht-Tuer 3061 -> 30C1
+  spielt man SHERRY (ROOM3061 @0x011F6 `24 10 0f 00`). Der Port tauschte nur Mesh+Textur auf Elzas Skelett/Animation/
+  Waffe. Jetzt wie FUN_800314b0 (@0x8003154c EDD, @0x80031578 EMR) + FUN_80036b68 (@0x800741e8[15] = PL0FW00, Waffe 0
+  @0x800316c4, kein Hand-Mesh @0x80036c08), kein Zielen ohne Waffe (@0x80032014 ff.), Tempo Zeile 15 (@0x80073ec2/
+  @0x80073f42), Kletter-Ausloesebild 0x63 (@0x8003818c). Original-Bild + Original-Tempo gemessen, Port gleich.
+* K2 "3091 STAENDIG falsche Animationen": Spieler spielte den rec0-Platzhalter (2 Bilder), Elza-NPC war ungebunden
+  (Bank-0-Clips). Mit J's Binder + K1 sind die Clipfolgen aller drei Figuren = Original (GDB-Mitschrift 2953 Bilder)
+  und 7 Original-Szenenbilder = Port-Bilder.
+
 
 ## K1 — Sherry ab 30C1 (Modell falsch/kaputt, Waffe)
 
@@ -64,10 +77,7 @@ Ansichtsblaetter (Port-Leser `re15_port/tools/emd_ansichtsblatt.py`, nur EMS_PFA
 * Runde 37 N §5 hatte genau dieses Modell als "blonde Figur in Rot/Weiss wie das Original" in den Port geholt
   (`N_belege/n5_sherry3091_original_vorher_nachher.png`: auch im ORIGINAL steht in 3091 ein zweites Elza-Bild neben Elza).
 
-=> Einordnung (Memory reai-v2-beta-zu-retail): Das Original zeigt in ROOM3091 fuer Sherry einen **Platzhalter des
-Prototyps** (Elza-NPC-Modell mit Pistole unter Typ 0x42) — in jedem anderen Sherry-Raum des Elza-Szenarios steht das
-fertige Sherry-Modell 0x4B. Das ist UNFERTIG, nicht "fertig und anders" -> Ziel = Sherrys fertiges Modell (0x4B), ohne
-Waffe (Nutzer-Wortlaut). Mechanik der Umsetzung siehe K1.4 (nach der Messung).
+=> **UEBERHOLT durch K1.3** (erste Lesart, hier stehen gelassen): das 0x42-Modell ist nicht "Sherry-Platzhalter", sondern ELZA als NPC — in 3091 ist Sherry die SPIELFIGUR (Modell 0x0F). Massgeblich sind K1.3 ff.
 
 ### K1.3 KORREKTUR (2026-10-24 ~21:00): in 3091 ist SHERRY DER SPIELER, das 0x42-Modell ist ELZA als NPC
 K1.1/K1.2 oben haben die Rollen verwechselt. Belege (eigene Dumps, Datei-Offsets):
@@ -237,3 +247,65 @@ echte Riegeltuer) mit DERSELBEN Clip-Kombination je Aktor (Spieler/John/Elza ink
 name, kid?", "You seem to have taken a liking to her.", "Your... dad...?", "I dunno. Sounds like somebody's in there."
 mit Elzas Pistolen-Pose = eigene Bank Clip 6, "Will do!", "Sherry: Good luck!"), dieselbe Aufstellung (Elza links,
 John Mitte, Sherry als Kind rechts) und dieselben Posen.
+
+### K1.9 Gehen/Rennen der Spielfigur Sherry - Original gegen Port (je Bild)
+* ORIGINAL (`re15_port/tools/r41_k/k1_orig_tempo.py`, Spielstand 30C1, Steuerkreuz hoch bzw. hoch+Kreuz per vgamepad,
+  Lage 0x800aca88/0x800aca90 + Tempo DAT_800acae0 je Bild): Gehen **50 je Bild**, DAT_800acae0 = 50, W-Clip 5;
+  Rennen **120 je Bild**, DAT_800acae0 = 120, W-Clip 0 (20 Bilder); Wand bei z -3632 (`K_belege/k1_orig_tempo_30c1.txt`,
+  `k1_orig_rennen_30c1.txt`).
+* PORT nachher (gleicher Ort, RE15_PAD_AT, RE15_STATE_LOG): Gehen 50 je Bild, Rennen 18 x 120 + 2 bis z -3632 - dieselbe
+  Folge wie das Original (-1350 -> -3630 -> -3632). R1 gehalten: kein Zielen (mo bleibt Ruhe-Sentinel).
+* Nebenbefund (nicht Spur K): nach dem Loslassen bremst das Original ab (DAT_800acae0 80/40/0/-40, Schritt zurueck,
+  B52-B55) = Renn-Stopp @0x80032918-4c, spielweit Spur E (Entscheid E-E2); der Port haelt hier sofort.
+
+## Tests (gezielt, keine volle Suite)
+Neue Riegel (`re15_port/tests/unit/probes/r41_stage3szenen_b.cmake`, Quelle `tests/unit/test_r41_stage3szenen_b.c`,
+`tests/integration/test_r41_stage3szenen_b_{sherry,3091}.cmake`; eigene exe-Kopien re15_pc_r41ks_/r41kz_ + Laufordner,
+RE15_*-Umgebung des Aufrufers geloescht, `cmake_minimum_required` in jedem -P-Skript, libm unter Linux):
+| Riegel | misst | Punkt |
+|---|---|---|
+| unit_r41_stage3szenen_b_pins | Original-Bytes PSX.EXE (@0x80073f70[15], @0x800741e8[15], CD-Eintraege 74/117 = Dateigroessen, @0x80031694/b8/c4, @0x80036bf8/c08, Zeile 15 der vier Tabellen, 5 Ziel-Sperren), ROOM3061 @0x011F6, ROOM3091 @0x01D9C/@0x01DA8, RBJ rec2 Kind-/Erwachsenenhoehe | K1, K2 |
+| unit_r41_stage3szenen_b_waffe | Modellwechsel -> Waffe 0, Ausruesten gesperrt, Tabelle Zeile 15, zurueck -> Waffe wieder da, Elza 4->5 unveraendert | K1 |
+| unit_r41_stage3szenen_b_koerper | PC-Modul an echten Dateien: PL0F-Koerper (15 Knochen, Bind -1268, 24 Clips), W00 (9 Clips, 115 Keyframes), keine Hand-Meshes, Wunden 0, CORE 0x0F; zurueck auf PL04 (alle 42 Banken/Meshes); Weste/Elza-Varianten aendern nichts | K1 |
+| integration_r41_stage3szenen_b_sherry | echte exe, Schacht-Tuer 3061 -> 30C1: Raumlader-Zeilen, Knochenlage Bild 60 (Huefte -1261, Brust -1726, Knoechel -71), Gehen 8/8 x 50, Rennen 10/10 x 120, R1 40/40 ohne Zielen | K1 |
+| integration_r41_stage3szenen_b_3091 | echte exe, Viereck an der Riegeltuer (sce-5-Scan) -> sub07: Binder-Zeilen + Sub-0-Clipfolge Spieler/John/Elza = Original | K2 |
+
+Gezielte Laeufe (Bau 2ac553ef + Dossier; Regex = eigene Riegel + Gruppen der beruehrten Module player_common/re15_damage/
+climb_common/enemy_common+rbj_binder (J)/main.c-Haken: Zielen, Waffen, Inventar, Weste, Kleidung/Wunden, Klettern,
+Raumwechsel, RBJ-/NPC-Szenen):
+* `ctest --test-dir re15_port/build -R "^(unit|probe|prop)_(r41_stage3szenen_b|r41_stage3szenen_a_rbj|damage|weapon_select|inv_fsm|aim_|savedata|weste_effekt|re2_room1190_ab|wound_accumulator|room_transition_cmd|anim_|re2_weapon_rows|1090_climb_pin|rvd_scan_ungated_by_climb|1190_|autofire_pin|r17_waffen_loop_pin|r26_inventar|r30_android_n3_plc_aim|r30_granate|r35_granate|r35_inventar1050|r35_werfer|r36_elza_schuss|r36_granate|r36_inventar|r36_karte_r1190|r36_kleidung|r36_klettern|r36_schuss|r36_ziel1190|r37_beretta|r37_elzaems|r38_kleinkram|r39_elza_klettern|r39_inventar|r39_treffer|r39_zustand|tank_controls|npc|marvin|room1040|lane_b1|r35_cut1150|r35_cut10f0|r35_entladen|r36_szene|r37_roy|r37_szene11c0|r38_dining1141|r38_heliport1171|r38_npckante|r38_szenenschutz|r39_dining1141|r39_heliport1171|r39_johnruf1041|room1140|r36_zombieki_szenen|r38_elzatoene|r33_tuer1120|r34n_d_adaruf|r35_affen|r36_elza|r36_szenenleon|r36_gegnerzahl|r36_schluessel|r39_elzazombies|r39_funk10f1|r16_tuer1040)|^(r28_messer_dauerschlag|r29_1d3_doppelabzug|r31_trefferboxen)$" -j 6 --timeout 600 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 275`**
+* `ctest --test-dir re15_port/build -R "^integration_(r41_stage3szenen_b_sherry|r41_stage3szenen_b_3091|r37_elzaems_elza3091|r37_elzaems_elza3071|weste_load_pin|r36_kleidung_bild|r36_kleidung_spielweg|r39_zustand_kleidung|r39_dining1141_zielen|r36_klettern|room_transition|r36_elza_schuss|r36_schuss|r36_ziel1190_scheiben|r39_inventar_status|r37_szene11c0|r36_szene1150)$" -j 3 --timeout 2400 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 17`** (Total Test time (real) = 918.56 sec)
+
+## OFFEN (mit Adresse, nicht erfunden)
+1. Rueckwechsel auf Elza (3091-Ende): das Original setzt bei JEDEM Modell-Neuladen die Waffe auf die DEBUG.BIN-Tabelle
+   @0x800c00d4[Modell] (= 1, Messer; @0x80031680-90) und HP := 100 (@0x80031710/@0x80031718). Der Port gibt die vorher
+   ausgeruestete Waffe zurueck und laesst die HP stehen — wie sein Westen-Weg (Nutzer-Entscheid 2026-08-30 "Weste soll
+   nicht heilen"). Fuer Sherry nicht entschieden -> Frage an den Nutzer (unten).
+2. Elzas Bewegungswerte: Tabellen-Zeile 4 ist [70,48]/[65,48]/[0,96]/[210,72] (Gehen/Rueck/Drehen/Rennen), der Port
+   faehrt fuer Leon UND Elza die Leon-Werte 75/70/96/200 (player_common.c Konstanten). Nicht Spur K (ausserhalb des
+   Auftrags, aendert Elzas Spielgefuehl spielweit) -> Orchestrator.
+3. Renn-Stopp (Abbremsen 80/40/0/-40 @0x80032918-4c, am Original gemessen B52-B55) fehlt im Port fuer alle Figuren —
+   Spur E (E-E2), nicht K.
+4. Wunden beim Westen-Wechsel: FUN_80037c1c (@0x800316c8) loescht im Original bei JEDEM Modell-Neuladen; der Port tut es
+   nur beim Familienwechsel (Sherry hin/zurueck). Wund-Zeile 15 (Sherry) liegt im Original hinter der 8-Zeilen-Tabelle
+   (@0x800742f8, Fremddaten) -> Port: keine Wund-Stempel fuer Sherry (Beta -> Retail).
+5. Ausruesten waehrend Sherry ist gesperrt (PORT-WAHL, Form = RE2-Retail: Sherry fuehrt keine Waffe). Das Original
+   wuerde Datei 118 + Waffe laden (FUN_80036b68 @0x80036bb4-c4) = keine PLW (Beta-Luecke).
+6. PSX-Ziel: der Koerper-Tausch steckt im PC-Modul (platform/pc/src/sherry_pc_r41.c); platform/psx tauscht weiter nur
+   MD1/TIM (PSX hier nicht gebaut).
+7. Die Kriech-Szene ROOM3061 sub02 selbst (Sherry kriecht in den Schacht) ist Spur J; per RE15_SUBSTART=2 gestartet blieb
+   sie im Port haengen (Lauf v30c1a, Plc_motion(1,22) + Gosub-Warten) — an J gemeldet (hier nur vermerkt). Meine Riegel
+   nehmen deshalb den Tuerweg der Szene (Save 0x10 = 0x0F + Schacht-Tuer Slot 3) ohne die Szene.
+
+## Fuer den Nutzer
+* Keine neuen Assets (kein shared_assets/RE2), keine Sprachdateien; synchro/ und pri/ unveraendert.
+* Was sich aendert: Nach der Kriech-Szene in 3061 spielt man in Elzas Szenario Sherry (wie im Original). Sherry ist jetzt
+  das echte Kind-Modell mit eigenem Skelett und eigenen Bewegungen (PL0F.PLD + PL0FW00.PLW), traegt KEINE Waffe, kann
+  nicht zielen und laeuft so schnell wie im Original (Gehen 50, Rennen 120 je Bild; Elza 70/210). In der 3091-Szene ist
+  Sherry die Spielfigur, Elza steht als NPC mit ihrer Pistole daneben (so baut es das Original: Gegner 1 = Typ 0x42 aus
+  CDEMD1 = Elza-Modell); alle drei Figuren spielen jetzt dieselben Gesten in derselben Reihenfolge wie das Original.
+* Entscheidungsfragen: (a) Nach der 3091-Szene setzt das Original Elzas Waffe auf das Messer und fuellt die Energie auf
+  100 — soll der Port das uebernehmen oder (wie jetzt) Elzas vorherige Waffe und Energie behalten? (b) Elzas Lauf-/
+  Gehtempo im Port entspricht Leon (200/75) statt Elzas Original-Werten (210/70) — angleichen?
