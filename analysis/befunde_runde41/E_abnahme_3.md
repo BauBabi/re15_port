@@ -5,7 +5,7 @@ Pruefer: Abnahme-Agent 3, 2026-10-24 (Beginn 16:21 laut `date`). Baum `.claude/w
 `C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad`;
 eigene Laeufe unter `<sp>/E41a3/` (Helfer `<sp>/E41a3/run.sh`: exe-Kopie, eigener Laufordner, geerbte RE15_* geloescht).
 
-Status dieses Berichts: IN ARBEIT (fortlaufend gespeichert).
+Status dieses Berichts: ABGESCHLOSSEN (fortlaufend gespeichert; §0-§10). Ergebnis: NICHT bestanden (Maengel 1-2, Punkt 1 nicht pruefbar).
 
 ## 0. Gelesen
 - AUFTRAG.md (Wortlaut; fuer Spur E: Orchestrator-Hinweise 2026-10-24 03:21, Auftraege E-N1/E-N2 04:52, Entscheide E-E1..E-E3
@@ -250,3 +250,103 @@ Hinweis H4.
 F68 Stopp-Schritt 170, F69 START (`[r38q] F69 Inventar-Ton Satz 6 (Oeffnen)`), Schirm offen bis F130 (`Satz 5 (Abbruch)`), danach
 steht Leon (5778,-3150); F137 mo 210 (Port-Eintrittspose wie nach einem Raumeintritt) -> das Modul bricht den Rest-Stopp ab. Kein
 Weiterrutschen, kein Sprung. Wie das Original den Stopp ueber den Statusschirm fuehrt, ist nicht gemessen (Hinweis, kein Mangel).
+
+## 7. Gates / Vertrag / Tests
+### 7.1 Tests (gezielt, keine volle Suite)
+- Spur: 21/21 (§1). Gegenprobe der NB3-Riegel mit der VORHER-exe (re15_pc_E41a2.exe = 11b8f867; `cmake -DRE15_PC_EXE=... -DTEIL=<t>
+  -P tests/integration/test_r41_kleinkram_b.cmake`, `<sp>/E41a3/vorher_riegel/{renn,spawn_kante}.log`): **renn DURCHGEFALLEN**
+  ("erstes Renn-Bild F157 z -3218", "F287 (3650,-3018) nach dem Auslauf", "Plc_motion nicht im Stand (3650,-3369)"), **spawn_kante
+  DURCHGEFALLEN** ("FREI F-1 GEHALTEN 200 ... X100 9000"). Die Riegel messen den Mechanismus.
+- Alle unit_/prop_/probe_ ausser Release-/Android-Skripten (`ctest -R "^(unit_|prop_|probe_)" -E "releaseskript|android|r35_android|
+  release_" -j 3 --timeout 900`, 16:40-16:50): **100% tests passed, 0 tests failed out of 913** (`<sp>/E41a3/ctest_unit.log`) — darin
+  alle Spieler-, Renn-, Szenen-, Nachrichten-, Karten-, Tuer-Sonden und unit_r36_zombieki_affen_block.
+- Integration (echte exe), Auswahl nach Beruehrung durch NB3 (`<sp>/E41a3/tools/auswahl.py`, Liste `<sp>/E41a3/integ_auswahl.txt`):
+  alle Skripte mit Renn-Eingaben (XU / cross@: r34_granaten, r34n_b_cursor, r36_kleidung_spielweg, r36_klettern, r36_ziel1190_scheiben,
+  r37_feuerloescher, r37_kistenregel, r38_zopf, r39_hund1121, r39_optik_schluessel, r36_schluessel(+_befreiung)), alle mit Blenden-
+  Messung (boot_bg_pin, dark_start_pin, elza_vollstart, r30_cut_blitz, r30_titel_puls, r32_tor_hell, r34n_g_schrift1150,
+  r35_inventar1050, r36_szene1150, r37_zombieaktiv, r39_elza_*, r39_elzazombies_* (8), r39_funk10f1_* (3), r39_titelversion_titel) und
+  Tuer/Karte (door_lock, door_traversal, keydoor, map_raum_live, map_uebergang, r35_karte(_fahrstuhl), r36_karte, r36_kartenitems_bild,
+  r36_tueren, r39_karten): `ctest -R "$(cat <sp>/E41a3/integ_regex.txt)" -j 2 --timeout 1500 --output-on-failure` ->
+  **100% tests passed, 0 tests failed out of 48** (16:50-17:29, 2373 s, CTEST_EXIT=0; kein Fenster-Haken rot, keine
+  Nachlaeufe noetig) (`<sp>/E41a3/ctest_integ.log`).
+- Logs des Bau-Agenten (nicht wiederholt, Zahlen geprueft): `<sp>/E41n3b/ctest_ziel.log` 266/266, `ctest_spieler.log` 376/376,
+  `ctest_rest.log` 101/101 — wie behauptet.
+
+### 7.2 RE-Gate
+| Pruefung | Urteil | Beleg |
+|---|---|---|
+| Adressen der neuen Konstanten/Mechanik stimmen | haelt | §2: sechs Stichproben selbst disassembliert (0x80032604, 0x80032778, FUN_800369f8, Hauptschleife/FUN_80021880, Tabellen/Dispatcher/Stehen-ANIMATE/Gehen-DECIDE, FUN_80020510 @0x80020520-@0x8002055c + LoadAverageShort12 GPF @0x80066508 / GPL @0x80066538); jede NB3-Konstante in rennstopp_r41.c traegt ihre Adresse (40 @0x8003293c, 7 @0x800327f4/@0x80032908, 0x200 @0x80032888/@0x8003292c, 150 @0x800328ec, Kette @0x80036a48-@0x80036a9c, 0x2000 @0x800328b4); Drehrate 72 = @0x80073f25 (`read` selbst) |
+| Mechanismus am Original gemessen | haelt | o_renn2 / o_rennstopp (Bau-Agent, selbst gelesen) + NEU o_renn_losl (§3.2, selbst gemessen) Bild fuer Bild = Port |
+| Kein Raten | haelt | `+`-Zeilen des Code-Diffs (3294) auf deferred/tunable/interim/for now/faithful/plausib/TODO/FIXME/hack/vermutlich/ungefaehr/approx/geschaetzt/"sieht .. aus"/Platzhalter: **0 Treffer**; neue getenv nur RE15_FORCE_CUT (Messhaken-Ausnahme), RE15_KAMERAHALT_LOG (Log), RE15_FRAMEDUMP (Abzug); karte_r41 als PORT-WAHL, werkstatt11b1 als NUTZER-VORGABE/PORT-WAHL gekennzeichnet |
+| Fix erklaert den Befund | Punkt 2/3 ja; Punkt 1 nicht belegbar | Punkt 2: Zug auf die Ankunftszone (BASIS 130/137 -> 145); Punkt 3: Ereignis 24 kehrt sub00 @0x0110E..@0x0111A um; Punkt 1: Symptom nicht reproduzierbar (§3.7) |
+| Mechanismus vollstaendig | **haelt nicht** | Renn-Stopp-Zustand ueberlebt eine Uebernahme durch die Treppe (§6.2, Mangel 1); Aktions-Pruefung @0x800326a4 offen (Hinweis H2) |
+| Riegel nicht "gruen gemacht" (E-E2) | **haelt nicht** | unit_r36_zombieki_affen_block: Seed-Schranke 5982 nach dem Bestehen gewaehlt (Mangel 2) |
+
+### 7.3 Vertrag
+| Pruefung | Urteil | Beleg |
+|---|---|---|
+| Pfade | haelt | `git diff master...HEAD --name-only` (34): analysis/befunde_runde41 (AUFTRAG/VERTRAG vom master, Abnahmen, Dossier), engine/src (kamerahalt_r41, karte_r41, msgtakt_r41, plcloop_r41, rennstopp_r41, werkstatt11b1_r41 neu; Haken msg_common, player_common, re15_inv_screen, scd_room_setup, scd_vm), include (6 neue Header), platform/pc (bildhalt_r41_pc.c neu; Haken main.c, render_pc.c), tests/integration/test_r41_kleinkram_b.cmake, tests/unit/probes/r41_kleinkram_b.cmake (GLOB), 5 eigene Test-Quellen, tests/unit/test_r36_zombieki_affen_block.c (E-E2). Nichts unter release/, platform/android/, shared_assets/PSX/, pri/, synchro/; keine Test-CMakeLists |
+| Ressourcen | haelt | kein Bank-9-Bit (120 ungenutzt, test_r36_kartenbits.c unberuehrt), keine neue Nachricht (msg 12 = Original @0x179F), kein Asset |
+| Gemeinsame Dateien | haelt (E-E1) | NB3 neu nur player_common.c: 7 Stellen je 1-5 Zeilen, alle "Runde 41 Spur E" (include, Drehrate s2_41, Gier-Bedingung, Stopp-Takt, want_motion, Renn-Tempo, Skript-Zweig) — von E-E1/E-E2 gedeckt; fremder Test test_r36_zombieki_affen_block.c von E-E2 gedeckt |
+| Riegel je Punkt | haelt | Punkt 1: unit kurbel_{laenge,schleife}, takt_* (6), integration kurbel/geh/renn/kante/spawn_kante; Punkt 2: unit karte_pin + integration karte; Punkt 3: unit 11b1_* + integration werkstatt_{szene,tuer}; parallel-fest (Zufalls-Laufordner, exe-Kopie je Lauf, geerbte RE15_* geloescht) |
+| Integrations-Bedingung E-E1 | haelt | Nachrichten-/Szenen-/Tuer-/Karten-Riegel: Bau-Agent 151 (Zahlen geprueft) + eigene Auswahl §7.1 |
+| Nebenwirkungen beide Szenarien | **haelt nicht** | Treppe im Stopp (§6.2, Mangel 1); sonst Leon und Elza in Punkt 2/3 neu gemessen, Elza-Rennen §6.3, Tuer im Stopp §6.1 |
+
+## 8. Maengel
+1. **Renn-Stopp laeuft nach einer Treppe weiter (Regression der NB3, spielweit).** Wird die Treppe (Aktions-Treppe sce 13) waehrend der
+   6 Stopp-Bilder ausgeloest — typisch: Rennen loslassen und Quadrat an der Treppe —, rutscht Leon NACH der Treppe den Rest des Stopps
+   in der Steh-Pose weiter. Gemessen ROOM2040 Galerie -> Halle (`<sp>/E41a3/runs/N2_treppe_im_stopp`, `N2_treppe_bild_{nach,vorher}`,
+   Befehl §6.2; dreimal gleich, zuletzt `N2_treppe_wdh`): NACHHER F375 Finalize z -13782, dann **F376 -13665 / F377 -13588 / F378 -13551 / F379 -13554** (+117 +77 +37 -3 =
+   Tempo-40-Folge); VORHER (11b8f867) steht Leon ab F375 still. Ursache: `s_aktiv` (rennstopp_r41.c:21) wird nur abgebrochen, wenn der
+   Spieler-Takt eine fremde Bewegung SIEHT (rennstopp_r41.c:193); der Treppen-FSM laesst den Spieler-Takt aus (game_step_common.c
+   1504-1514) und gibt im Finalize genau die Steh-Bewegung 200 zurueck (stair_common.c:149). Original: Finalize LAB_80038e50
+   @0x80038ea8 `sb zero,0x800aca59` / @0x80038eb0 `sb zero,0x800aca5a` loescht Unterzustand und Fall — kein Rest-Stopp (der Stopp lebt
+   nur in +5 = 2 / +6 = 2..3, 0x80032604 @0x800326e0-@0x800326ec, 0x80032778 @0x800327b0-@0x800327bc). Gleiche Klasse ungemessen:
+   Opfer-Freigabe nach einem Griff (enemy_ai_common.c:2007 `motion = 200`) und Plc_ret (scd_vm.c:2860; Original @0x80041f90-@0x80041f9c
+   `sb 1,4` / `sb zero,5/6/7`). Erwartet: der Stopp endet, wenn ein anderer Zustand den Spieler uebernimmt (wie das Ueberschreiben von
+   +5/+6 im Original), mit Riegel (Treppe im Stopp: nach dem Finalize keine Lageaenderung; Endstand c3ba4317 rot) und Gegenproben:
+   der Kurbel-Auslauf nach Pos_set bleibt (o_renn2 n94..n99, Riegel renn, §3.2), Tuer und Statusschirm wie gemessen (§6.1, §6.5).
+2. **unit_r36_zombieki_affen_block: neue Seed-Schranke "gruen gemacht" (E-E2 verlangt das Gegenteil).** Testkommentar
+   (test_r36_zombieki_affen_block.c, Block "NEUE FORM DES RIEGELS"): je Seed AN - AUS <= 5982, weil "das Maximum ... die kleinste gemessene
+   Grenze [ist], die die Population beider Bewegungen haelt" — die Schranke ist nach dem Bestehen gewaehlt (erster Versuch Median 1039
+   aus 20cb777b, nach der DECIDE-Fortsetzung rot, dann Maximum). Wirkung, selbst gemessen (`ctest -R "^unit_r36_zombieki_affen_block$"
+   -V`, `<sp>/E41a3/ctest_affen_V.log`): Seed 0x9b5bf362 besteht mit **AN 4914 blockierten Gorilla-Bildern, davon FERN 4765** (AUS 1393)
+   = +3521 — ein Gorilla haengt 4405 der 6000 Bilder an der Klemme (11129,9982) (Dossier "Fortsetzung — unit_r36_zombieki_affen_block").
+   Die Seed-Pruefung ist damit wirkungslos (fast jede Einzel-Blockade unter 6000 Bildern besteht); der Riegel meldet einen gemessenen
+   Haenger der Port-Wahl der Runde 36 nicht mehr. Positiv: Population 144 statt 16 Seeds fuer FERN/Griffe, Begruendung WAS gemessen
+   wird und WARUM sich der Wert aendert, ist belegt. Erwartet: ein Seed-Mass, das den Haenger der Port-Wahl misst (z.B. FERN-Blockade AN
+   gegen AUS je Seed), die zwei bekannten Haenger-Stellen (Klemme 11129..11280/9820..10073, Sub-7 -13418..-13518/-140..-953) als belegte,
+   benannte Ausnahme mit Folgeauftrag an die Port-Wahl (zombieki_r36.c) — oder ein Orchestrator-Entscheid, der die Schwaechung
+   ausdruecklich annimmt.
+
+## 9. Hinweise (keine Maengel)
+- H1 Punkt 1: kein Bau-Mangel offen; die Rueckfrage an den Nutzer (Dossier "Fuer den Nutzer (Stand NB3)", a-e) ist der naechste Schritt.
+  Hinweis fuer die Frage: der Nutzer kam laut befund.log RENNEND aus 2050, stoppte, drehte auf der Stelle und loeste im STAND aus (§3.5).
+- H2 Aktions-Pruefung @0x800326a4-@0x800326dc (OFFEN des Bau-Agenten): an der Kurbel ohne Wirkung (§3.2 gemessen: das Original beginnt
+  den Stopp im Aktionsbild wie der Port). Fuer Tueren/Treppen (FUN_80042bac-Zonen mit Rueckgabe != 0) nicht gemessen; bei der Treppe
+  ist die Folge jedenfalls Mangel 1, unabhaengig davon.
+- H3 Elza: Renn-Tempo (PL04W03) und Stopp laufen (§6.3), ohne Original-Vergleich.
+- H4 Gegner-Wahrnehmung: Hund (DAT_800aca58 == 0x0201) und RE2-Gegner (`motion == 100`) sehen im Stopp "steht", das Original 6 Bilder
+  lang noch Unterzustand 2 (§6.4) — vor NB3 gleich, aber Teil von "Renn-Stopp spielweit"; `re15_rennstopp_r41_unterzustand2()` steht
+  bereit (fremde Dateien -> Integration/Orchestrator).
+- H5 vorbestehend, vom Bau-Agenten genannt: Geh-Tempo konstant 75 statt Fussweg (@0x800325c4-@0x800325e8, §3.4 TC), Drehrate ausserhalb
+  des Unterzustands 2 nach dem Pad statt nach dem Unterzustand; H1/H5/H6 der Abnahme 2 (Nachrichten-Takt-Tor @0x80010028, PSX ohne
+  msgtakt/kamerahalt, Dauer des Apply-Standbilds) unveraendert offen.
+- H6 Werkzeug: `gdb_geh2.py` schreibt DuckStations settings.ini mit CRLF zurueck (Inhalt gleich, Bytes nicht) — hier per Sicherung
+  bytegleich zurueckgestellt (md5 b3e220606abe9b06da203ba9d0fcf133).
+
+## 10. Urteil
+| Punkt | Urteil | Kern |
+|---|---|---|
+| 1 Kurbel ROOM2020 "herumfliegend" | **nicht_pruefbar** | alle Anlaeufe (Stand, Gehen, Cut 3, Rennen nach o_renn2, Loslassen+Aktion NEU am Original gemessen, Weg des Nutzers aus seinem befund.log) original-gleich, einzige Port-Abweichung (Standbild nach einem Umlauf) seit NB0 behoben; das Symptom ist in keinem Lauf zu finden -> Rueckfrage an den Nutzer (kein Bau-Mangel) |
+| 2 Karte B1, vordere Tuer 1190 | **erfuellt** | BASIS-Sprung zur Hallen-Seite (137/130) reproduziert, NACHHER 145 an der Ostkammer; Leon, Elza, rennend, echte Tuer |
+| 3 Werkstatt-Tuer 11B1 (Elza) | **erfuellt** | echter Tuerweg 1261 -> 11B1 mit Szene: Tuer zu (Bild F690), nie Cut 7/8; blockiert von Garage und Werkstatt, "The door is locked." |
+| E-N1 Kamera-Flackern 2020 | **erfuellt** | Riegel kante gruen (Bild steht), spawn_kante: kein Softlock mehr (E-E3) |
+| E-N2 Geh-Stopp waehrend der Frage | **erfuellt** | unveraendert seit Abnahme 2; Riegel geh gruen |
+| E-E2 Renn-Stopp spielweit | **teilweise** | Renn-Tempo, Stopp, Drehen 72, OBEN im Stopp, Stehen nach dem Stopp = Original (o_renn2, o_rennstopp, o_renn_losl, Disasm); aber der Stopp ueberlebt die Treppe (Mangel 1); Gorilla-Sonde gruen gemacht (Mangel 2) |
+| E-E3 Blenden-Takt im gehaltenen Bild | **erfuellt** | spawn_kante FREI F6, X100 11100; VORHER-exe rot |
+| E-E1 Vertrag | **erfuellt** | Haken markiert und klein, Integrations-Riegel gefahren (§7.1) |
+
+Gates: Bau haelt (LOCAL-BUILD-OK, md5 1f38e025...), RE-Gate-Stichproben bestaetigt, Riegel messend (VORHER-Gegenproben rot), Vertrag
+(Pfade/Ressourcen/Haken) haelt — aber Nebenwirkung Treppe (Mangel 1) und Riegel-Integritaet Gorilla-Sonde (Mangel 2) halten nicht;
+Punkt 1 ist ohne den Nutzer nicht pruefbar. **Gesamt: NICHT bestanden.**
