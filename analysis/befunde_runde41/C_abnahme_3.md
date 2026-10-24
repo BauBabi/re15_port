@@ -10,6 +10,14 @@ Begonnen 2026-10-24 11:55. Pruefer: Abnahme 3 (Opus). Der Bericht wird FORTLAUFE
 `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/C41abn3`).
 
 ## 0. Stand / Protokoll (neueste zuerst)
+* 12:5x FORTSETZUNG (zweite Pruefer-Sitzung, Abnahme 3; die erste endete ~12:23 am Sitzungslimit). HEAD jetzt c8655d74
+  (nur `analysis/befunde_runde41/AUFTRAG.md` +27 Zeilen = Nachtrag 11 fuer Spur M, kein Code) -> gepruefter Code-Stand
+  unveraendert 2fb94b25. `local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)` (Zeile 180 `_kette uebersprungen:
+  Spur A fehlt`), `local_build.sh build` -> `ninja: no work to do.` (`<a3>/configure2.txt`, `<a3>/build2.txt`), exe 11:03
+  7803557 B. Die Integrationsgruppe der ersten Sitzung (12:00) ist nie ueber den ersten Riegel hinausgekommen
+  (`<a3>/ctest_integ.txt` endet bei `Start 574`) -> neu gestartet (`-j 2`, Protokoll `<a3>/ctest_integ2.txt`), Ergebnis §3.
+  Rohdaten der ersten Sitzung, die im Bericht noch fehlten (`<a3>/mess/*`: leiter3, kette_b, hebel_vorher, pult2050, r2070,
+  generator, sicherung2060, w3 ...), werden ausgewertet, nicht wiederholt.
 * 12:05 Integrationsgruppe (16 Riegel, seriell: r41 x5 + Raumgruppe 2030/2050/2000/20B0/2070) im Hintergrund gestartet
   (`<a3>/regex_integ.txt`, Protokoll `<a3>/ctest_integ.txt`); Ergebnis §3.
 * 12:03 `test_r41_ventilkette.exe` direkt: `== Leon` / `== Elza`, `J1 Zensus: 206 Raeume, 16 Funde`, `L Zensus: 14 Stellen
@@ -156,6 +164,72 @@ alles zu Fuss mit der Aktionstaste.
   because of the water."` -> `[scd F1847] Cut_chg(9)` + `room=2031 WRITE Set zone=3 idx=220 op=1` -> `DOOR FIRE slot=1 rect=(-7700,
   6400,...)` -> `loaded room2081.rdt` -> `[msgtext] room=2081 id=0 "From here maybe I can control the water level..."` ->
   `room=2081 WRITE Set zone=3 idx=245 op=1` -> `Cut_chg(7)` -> `Cut_chg(3)`.
+
+### L1 — Punkt 1: Leiter 2000 vor der Flut (Leon `leiter3`, Elza `leiter3_elza`; Rohdaten der ersten Sitzung, Serie 4)
+Aufbau: `RE15_DEBUG_JUMP=2000@250`, `RE15_PLAYER_POS=-25500,10300,2048,1`, keine Kettenbits (Wegplan F61 `FLAG (9,100) = 0`),
+Plan `leiter3.txt` (zu Fuss an die Leiter (-26150,10300) Blick 2048, dreimal Aktion).
+* Leon debug.log: `[ventilkette41] ROOM2000: Leiter Slot 4 (@0x0169E) -> Sperrtext 40 (Form ROOM2030 @0x01B12)` -> Aktion F104
+  -> **`[msgtext] room=2000 id=40 "I cannot climb up the ladder because of the water pressure."`** -> Aktion F257 schliesst ->
+  Aktion F350 -> derselbe Satz erneut; kein `DOOR FIRE`, kein `loaded room2050` bis `EXIT_AT` F1000; Wegplan F413 `FLAG (9,100)
+  = 0`. state.txt: Strahlen-Effekte aktiv in allen Spielbildern (`fx=21` 338 Bilder, `fx=23` 662 Bilder).
+* Elza: `Spieler-Familie PL04` -> `loaded room2001.rdt` -> `ROOM2001: Leiter Slot 4 ... -> Sperrtext 40` -> `[msgtext] room=2001
+  id=40 "I cannot climb up the ladder because of the water pressure."` (2x), kein Raumwechsel, `fx=21/23` (338/762 Bilder).
+* Bild: der Lauf stand in Cut 0 (Leiter links im Bild, Satz zweizeilig, `<a3>/leiter3_leon.png`, `<a3>/leiter3_f600_x2.png`);
+  den Leiter-Schnitt mit dem Strahl misst L1b (unten).
+
+### L3b — Punkt 3 Flucht: Sicherung -> Ventile -> Warnung -> zu Fuss zur Ost-Tuer -> 20B0 (Leon `kette_b`, Elza `kette_b_elza`)
+Aufbau: Bruecke unten vorgesetzt (`RE15_SET_FLAG=7:155..158,9:101,9:102`; die Bruecke selbst misst L2), Start am Suedende des
+Stegs `RE15_PLAYER_POS=-1100,5900,3072,1`, Plan `kette_b.txt` (Sicherung am Westende, Ventile, dann gehend Steg -> Nord-
+Landeplatz -> Treppe -> Ring Nord -> Ring Ost -> Ost-Tuer).
+* Leon debug.log (woertlich, Reihenfolge): `id=2 "Will you take the Fuse?"` -> `id=3 "You've taken the Fuse."` (Wegplan F61
+  `FLAG (3,108) = 0`, F552 `= 1`) -> `ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile` -> `id=45 "Numbered valves. They control
+  the flood gates of the treatment pool.Will you turn them?"` -> `id=46 "WARNING: The water will rise in one minute. Leave the
+  room!"` -> `[flagcensus] room=2030 WRITE Set zone=5 idx=29 op=1` -> `ROOM2030: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)`
+  / `Zaehler laeuft: 1800 Takte` -> `[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11 spawn=(5950,-1800,-6400)`
+  -> `loaded room20b0.rdt` -> `[scd F2191] Cut_chg(11)` -> **`Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100`** ->
+  `ROOM20B0: Ring-Tuer Slot 3 nach 2030 gesperrt (geflutet)`. Kein `FLUT`, kein `ERTRUNKEN`.
+* Zeit: Warnung 46 zu F1122 (state.txt `msg(a=0 ... id=46)`; Set(5,0x1D) im selben Bild) -> Tuer-Aktion F2191 = **1069 Bilder
+  (35,6 s) gehend**, Rest 731 Bilder auf die 1800.
+* Elza: `PL04`, `room=2031` dieselben Saetze (2, 3, 45, 46), `ROOM2031: Tuer Slot 0 -> ROOM20B0 Cut 11`, `DOOR FIRE slot=0
+  rect=(7350,-200,...) target_cut=11` -> **`loaded room20b1.rdt`** -> `Bits 103 + 100`, ebenfalls ohne Flut.
+* Bild `<a3>/kette_b_leon.png`: die Kamera blieb in diesem Lauf auf Cut 0 (Start per PLAYER_POS mitten im Raum; die Kamera-Zonen
+  schalten erst beim Ueberqueren ihrer Grenzen aus dem passenden Cut) — Satz 46 zweizeilig, F2170 Leon an der Ost-Tuer. Die
+  Kameras auf dem Weg zeigt der Bildbogen der Nachbesserung (`C_belege/nb3_ventile_zu_fuss_leon_sheet.png`); fuer das Urteil ohne
+  Belang (gemessen sind Weg, Zeit und Raumwechsel).
+* Die 20B0-Auswasch-Szene startet im Spurbaum nicht (AUTO-Haken der Spur A fehlt, Entscheid C-E1); `_kette` ist vorhanden und
+  sauber uebersprungen (Configure Z. 180), siehe G2.
+
+### L5 — Punkt 5 vor dem Pult: Hebel gesperrt (Leon `hebel_vorher`, Rohdaten der ersten Sitzung, Serie 2)
+Aufbau: `RE15_DEBUG_JUMP=2050@250`, `RE15_PLAYER_POS=4900,-7100,1024,3`, Plan `hebel_vorher.txt` (GEGNERWEG, zu Fuss
+(1900,-7300) -> (1900,-10300) -> (4300,-11150) Blick 0, Aktion).
+* debug.log: `ROOM2050: Pult Slot 8 (@0x01D38) angelegt, Ereignis 9` / `Cursor obj 8 (@0x01D4C) angelegt` -> Aktion am Hebel ->
+  **`ROOM2050 Ereignis 4 -> Port-Programm 2050_hebel_sperre`** -> **`[msgtext] room=2050 id=40 "The pump has no power. The
+  switchboard must be set first."`**; kein `Cut_chg(4)`, Wegplan F63 `FLAG (3,104) = 0` -> F532 `FLAG (3,104) = 0`, F533
+  `FLAG (9,106) = 0` (das Wasser steigt nicht).
+* Messfehler der ersten Sitzung (verworfen, kein Befund): `pult2050` (Eingabeskript ohne GEGNERWEG) — der Zombie in 2050 toetete
+  Leon vor dem Pult (`mo=7`, danach Neustart ab ROOM1240), rc=124. Neu gemessen in L5b.
+
+### L8 — Weg nach der Flut, Glieder 2060 (Original-Raetsel) und 2060 -> 2030 Nordgalerie -> 2020 (Rohdaten der ersten Sitzung)
+* `sicherung2060` (Leon, Zustand "Flut gelaufen", Start vor dem Sicherungskasten, Eingabeskript): `[msgtext] room=2060 id=3
+  "One of the fuses is missing..."` -> `id=4 "Will you use the Fuse?"` -> `[scd F519] Cut_chg(8)` -> Cursor -> **`WRITE Set zone=3
+  idx=144 op=1`** -> `Cut_chg(9)` -> `id=5 "You've used the Fuse."` (Original sub18/sub19 @0x0169E, kein Port-Programm).
+* `generator` (Leon, (3,144) gesetzt): `id=0 "The generator does not appear to be on.There are four switches...Will you push
+  them?"` -> `Cut_chg(7)` -> Schalter 1 (`zone=5 idx=6 op=1`), Schalter 3 (`zone=5 idx=8 op=1`) -> **`WRITE Set zone=3 idx=126
+  op=1`** -> `Cut_chg(10)` -> `id=2 "It seems that the generator is working now."` (Original sub01 @0x012AE).
+* `w3` (Leon, Flut + (3,144) + (3,126), Start in 2060, Plan `w3.txt` zu Fuss): `DOOR FIRE slot=0 rect=(8450,3950,hw=500,hh=1000)
+  target_cut=13 spawn=(-6950,-16200,-7200)` -> `loaded room2030.rdt` -> **`ROOM2030: Strom (3,126) -> Wasser auf Relinghoehe y
+  -3600 (Schachtoeffnung), Treppe Slot 8 -> Sperrtext 48, Ring frei`** / `Tuer Slot 0 -> ROOM20B0 Cut 11 (Ost-Tuer nach der
+  Flut)` -> Nordgalerie zu Fuss -> `DOOR FIRE slot=2 rect=(-450,-10400,hw=900,hh=500) target_cut=5 spawn=(-14200,-1800,2450)` ->
+  `loaded room2020.rdt`. Elza `w3_elza`: `PL04`, `loaded room2061.rdt` -> `loaded room2031.rdt` -> `ROOM2031: Strom (3,126) ->
+  ... Relinghoehe ...` -> `loaded room2021.rdt`.
+
+### L9 — Ring-Zugaenge aus 2070 (Leon `r2070` ohne Strom, `r2070s` mit Strom; Zustand "Flut gelaufen")
+* `r2070` (`FLAG (9,103) = 1`, `FLAG (3,126) = 0`): `ROOM2070: Tuer Slot 0/3 -> ROOM20B0 Cut 7 (Ziel ROOM2000)`, `Ring-Tuer Slot
+  1/2 nach 2030 gesperrt (geflutet) -> Sperrtext 40`, AOTS `slot 1 typ 5 ev 40` / `slot 2 typ 5 ev 40` -> Aktion ->
+  `[msgtext] room=2070 id=40 "I cannot open the door because of the water pressure."`, kein Raumwechsel.
+* `r2070s` (`FLAG (3,126) = 1`): AOTS `slot 1 typ 1` / `slot 2 typ 1` (Tueren) -> Aktion -> `DOOR FIRE slot=1 rect=(5500,-6400,
+  hw=500,hh=1500) target_cut=0 spawn=(6550,-5400,-100)` -> `loaded room2030.rdt` -> `Strom (3,126) -> Wasser auf Relinghoehe`.
+  => Ring-Sperre C-E2 nur "geflutet UND Strom aus" (Nachtrag 7), mit Strom offen.
 
 ### L7 — Nach der Flut OHNE Strom: Ring-Sperre und Weg zur Leiter (Leon `ohne_strom`)
 Aufbau wie L6, aber ohne 3:144/3:126 (Wegplan F62 `FLAG (3,126) = 0`), Start vor der 20B0-Ost-Tuer, Plan `ohne_strom.txt`.
