@@ -156,6 +156,19 @@ zu Fuss, Flucht ueber Steg/Treppe/Ring); Registrierung unveraendert nur mit A's 
 HEAD` -> einzige Kollision `analysis/befunde_runde41/AUFTRAG.md` (Doku), game_step_common.c / scd_vm.c / main.c mergen automatisch
 -> im Integrationsbaum wird der Riegel registriert (master enthaelt engine/src/wasser20b0_r41.c). -> Mangel 1 der Abnahme 3 behoben.
 
+### P5 — Punkt 5: 2050 Hebel erst nach dem Pult-Raetsel (Leon `p5v`/`p5p`/`p5h`, Elza `p5v_elza`/`p5p_elza`/`p5h_elza`)
+(Code fuer 2050 seit Abnahme 3 unveraendert: `git diff 2fb94b25..HEAD` ohne 2050-Zeilen in ventilkette_r41.c/programme.inc; trotzdem neu
+gemessen.) Gegner per GEGNERWEG weg, Start (4900,-7100) Ring Band 3:
+* vorher: Hebel Slot 6 -> `Ereignis 4 -> 2050_hebel_sperre` -> **`id=40 "The pump has no power. The switchboard must be set first."`**,
+  `FLAG (3,104) = 0` vorher/nachher, `FLAG (9,106) = 0` (Leon `room=2050`, Elza `room=2051`).
+* Pult (RE15_INPUT_SCRIPT der Abnahme 3, Spielbild-Achse): `Ereignis 9 -> 2050_pult_ein` -> `id=43 "A high voltage switchboard. The pump
+  needs 80 volts."` -> `id=41 "Will you push them?"` -> `[scd F504] Cut_chg(15)` -> `Hebel 3 -> EIN, ... 40 V` -> `Hebel 1 -> EIN, ...
+  70 V` -> `Hebel 4 -> EIN, Schalter 0xD, 80 V` -> **`id=42 "Power supply OK."`** -> `Pult 2050 GELOEST: 80 V -> Bit 106` -> Ausstieg ->
+  erneut: `2050_pult_zustand` -> `id=44 "The switchboard is set to 80 volts. The pump is powered."` (Leon und Elza gleich). Bild
+  `<a4>/bilder/p5_pult.png`: Pult "DANGER High voltage", Skala 0..90 (80 rot), Zeiger, gruene Marken unter den EIN-Hebeln, "Power supply OK.".
+* nachher (Bit 106): Hebel -> Original `id=0 "A lever to fill and drain water. Will you move it?"` -> Ja -> `Cut_chg(4)` -> `Cut_chg(7)` ->
+  `FLAG (3,104)` 0 -> 1 (Original sub04, Wasser steigt), Leon und Elza.
+
 ## 2. Gates
 
 ### G1 RE-Gate (eigene Disassembly / eigene Byte-Lesung)
@@ -245,7 +258,7 @@ Ventilraetsel freigegeben ("Freigeben" — Plakat, Loesung 09 -> 07 -> 02 -> 01,
 | 2 2030: Bruecke zunaechst OBEN; Pult links (Kamera 2, Nordwand): zu wenig Druck / Ventil 13 zu -> Ventil 13 -> "Lower the bridge?" -> Bruecke faehrt herunter; nicht die Kurbel | **erfuellt** | K1 Leon + Elza ueber die echte Tuer 2070 -> 2030: Bruecke oben y -5400, Zelle 12 u0 0xff; Pult Text 40; Ventil 13 41/42, Bit 101; Pult 43 -> Ja -> Cut 4, Bruecke -> -1800, Bit 102, 44; Zelle 12 u0 0x00, ueber den Steg (`k1_teil1.png`) |
 | 3 Ventilraetsel -> Warnung (1 min, Raum verlassen) -> 60 s -> Wasser ueber die Ringebene; Ost-Tuer -> 20B0 (Auswasch-Szene); Zeit abgelaufen im Raum: Tod mit Ertrink-Effekt | **erfuellt** (20B0-Szene selbst nach C-E1 mit dem Haken der Spur A, Riegel `_kette` vorhanden und im C-Baum bis zur 20B0-Ankunft gruen) | K2 Leon + Elza: richtige Folge -> 46 woertlich -> Zaehler 1800 -> zu Fuss zur Ost-Tuer -> `loaded room20b0/20b1.rdt`, Bits 103 + 100; FL: im Raum -> Cut 4, Flut, Spritzer, `ERTRUNKEN` + blaue Blende, YOU DIED; FLR (Ring): siehe §1 FLR; KE `_kette` rc=0 |
 | 4 Danach 20B0 statt 2000 (spaeter wieder frei ohne Wasser), Leiter frei (kein Wasser laeuft mehr herunter) | **erfuellt** | P4 Leon + Elza: 2010-Tuer -> `ROOM20B0 Cut 10` -> `loaded room20b0/20b1.rdt`, Leiter -> 2050 ohne Sperrtext, 2050-Leiter -> 20B0; Bild Cut 9 ohne Strahl (`p4_20b0.png`) |
-| 5 2050: Wasserlevel (Hebel) erst nach dem Pult-Raetsel (80 V wie 11F0) | (folgt) | P5 |
+| 5 2050: Wasserlevel (Hebel) erst nach dem Pult-Raetsel (80 V wie 11F0) | **erfuellt** | P5 Leon + Elza: Hebel vorher Text 40, (3,104) bleibt 0; Pult 43/41 -> Cut 15 -> 40/70/80 V -> "Power supply OK." -> Bit 106 (Bild `p5_pult.png`); danach Hebel = Original msg 0 -> Cut 4/7 -> (3,104) = 1 |
 | 6 2080-Rechner entleert danach auch 2030 — ERSETZT durch Nachtraege 7/8/12 (k) (Strom leert 2030 bis knapp unter die Absperrung, Rechner nur Original) | **erfuellt** | P6 Leon + Elza ueber die echte 20B0-Ost-Tuer: `Wasser knapp unter der Absperrung y -5350`, `pos=(0,-5350,0)`, Treppe Text 48, Ring zu Fuss, Lift B (3,220), 2080 Rechner = Original msg 0 -> (3,245) -> 2090; N12 Bildbogen `pegel_sheet.png` |
 | Nachtrag 12 (k): Pegel nach dem Strom "unterhalb der Absperrung, sodass es nicht drueber 'rein' laufen wuerde" | **erfuellt** | y -5350 = Ringboden -5400 + 50 (G1 Nr. 5 SCA-Belege, PORT-WAHL mit Mass @0x00CC8), Bilder Cut 1/2/7/15/4 (Ring trocken, Gelaender ueber dem Wasser) |
 | Nachtrag 13 (+ Freigabe Nachtrag 15): echtes Ventilraetsel — (1) Text 49 neutral, (2) Dokument mit dem Nutzer-Text woertlich, (3) Plakat als Nahaufnahme mit der falschen Anleitung, (4) Dreh-Raetsel mit Reihenfolge und Zuruecksetzen, Loesung -> Warnung -> Flut, (5) Dossier §7 zur Freigabe | **teilweise** | (1) K1 `id=49 "I should look around here first."`; (2) Leser Leon + Elza: Text woertlich (nur U+2014 -> '-'), Bit 107 — ABER das Blatt ist in der Welt nicht zu sehen (15 von 16 Cuts 0 Pixel, Cut 5 39 dunkle Pixel; Mangel 1); (3) Plakat-Nahaufnahme Leon + Elza, Aushang an der Suedwand sichtbar; (4) K2 Leon + Elza falsch -> 45 + zurueck, richtig -> 46; Ableitung eindeutig (§1 D/P); (5) Dossier §7 + Freigabe Nachtrag 15 |
