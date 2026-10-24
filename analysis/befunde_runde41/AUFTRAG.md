@@ -674,3 +674,11 @@ Folgen (Orchestrator, Umsetzung Spur C in der naechsten Nachbesserung):
    Timer-UI belegen), dazu der Alarm wie am Spielende (Original-Ton belegen), und beim Warntext die Sprachausgabe des Nutzers.
    Datei-Platz fuer die Aufnahme des Nutzers: synchro/STAGE2/room2030/main46.wav (Elza: room2031/main46.wav; fehlt die Datei,
    kein Ton — der Port darf sie nicht erzeugen). Wortlaut des Textes Id 46 wird dem Nutzer genannt.
+
+## 2026-10-24 19:55 — Nachtrag 19 (Wortlaut; Warntext 2030 Id 46, Spur C)
+
+> Ändere den Text zu: WARNING: The water will rise in one minute. Please leave the room immediately!
+
+Folgen (Orchestrator): Text 2030/2031 Id 46 = "WARNING: The water will rise in one minute. Please leave the room
+immediately!" (Wortlaut exakt; nur der Zeilenumbruch nach der Breite des Nachrichtenfensters). Die Sprachaufnahme des Nutzers
+kommt nach synchro/STAGE2/room2030/main46.wav bzw. room2031/main46.wav (Nachtrag 18 Punkt 4).
