@@ -433,8 +433,19 @@ Aufbau wie L6, aber ohne 3:144/3:126 (Wegplan F62 `FLAG (3,126) = 0`), Start vor
 * Unit-Gruppe (erste Sitzung 12:02, Code-Stand seither unveraendert): 166 Tests `100% tests passed, 0 tests failed out of 166`
   (`<a3>/ctest_unit.txt`); `test_r41_ventilkette.exe` direkt `PASS (376 Pruefungen)` (Leon + Elza, J1 `206 Raeume, 16 Funde`, L
   `14 Stellen`).
-* Integrationsgruppe (Fortsetzung, 12:46 gestartet, `-j 2`, r41-Riegel `RUN_SERIAL`; Regex `<a3>/regex_integ.txt` = 5 r41-Riegel +
-  Raumgruppe 2000/2030/2050/20B0/2070 und die Querbezugs-Riegel dachkiste/itemband): Ergebnis unten (wird nachgetragen).
+* Integrationsgruppe (Fortsetzung, 12:46 gestartet, `ctest --test-dir re15_port/build -R "<regex>" --timeout 2700
+  --output-on-failure -j 2`, r41-Riegel `RUN_SERIAL`; Regex `<a3>/regex_integ.txt` = 5 r41-Riegel + Raumgruppe; Protokoll
+  `<a3>/ctest_integ2.txt`, unter Parallel-Last anderer Spuren und meiner Messlaeufe):
+  `integration_r36_dachkiste Passed 1343.74 sec`, `integration_r37_itemband_lift Passed 1373.85 sec`, `integration_r38_wasser
+  Passed 165.02 sec`, `integration_r37_kistenregel Passed 307.71 sec`, `integration_r37_fahrstuhl_n1 Passed 140.20 sec`,
+  `integration_r38_wasserzombie Passed 125.81 sec`, `integration_r37_itemband Passed 871.67 sec`, `integration_r38_spinnen_echtlauf
+  Passed 113.86 sec`, `integration_r37_kiste Passed 44.79 sec`, `integration_r36_gegnerzahl Passed 89.56 sec`,
+  `integration_r37_kiste2feld Passed 41.12 sec`, **`integration_r41_ventilkette_weg_elza Passed 916.85 sec`** (Laufordner
+  `build/tests/integration/r41_ventilkette_weg_elza/lauf_9f150a88_*` selbst gelesen: v2 `room=2031 id=49` -> `id=2/3` (Sicherung) ->
+  `2030_ventile` -> 45 -> 46 -> `DOOR FIRE slot=0 ... target_cut=11` -> `loaded room20b1.rdt` -> `Bits 103 + 100`; w4 `loaded
+  room20b1.rdt` -> `DOOR FIRE slot=3 rect=(5950,-6400,...)` -> `ROOM2031: Strom (3,126) -> Wasser auf Relinghoehe` -> `DOOR FIRE
+  slot=1 rect=(-7700,6400,...)` -> `loaded room2081.rdt` -> `id=0 "From here maybe I can control the water level..."` -> `DOOR
+  FIRE slot=1 rect=(-9150,-25650,...)` -> `loaded room2091.rdt`). Rest (`_sperre`, `_weg`, `_b`, Hauptriegel) laeuft.
 * `integration_r41_ventilkette_kette`: im Spurbaum nicht registriert (C-E1); von Hand gefahren -> FAIL (G2b, Mangel 1).
 
 ## 4. Urteil je Nutzer-Punkt (gegen den Wortlaut, AUFTRAG.md; gebauter Stand exe 11:03 = Code 2fb94b25)
