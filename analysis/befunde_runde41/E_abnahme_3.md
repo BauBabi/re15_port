@@ -14,7 +14,7 @@ Status dieses Berichts: IN ARBEIT (fortlaufend gespeichert).
 - `git log --oneline master..HEAD` (Nachbesserung 3: 6af253d8 .. c3ba4317, 22 Commits), `git diff master...HEAD --stat`
   (= `git diff 116e8b0f HEAD`, 34 Dateien; `git diff master --stat` zeigt zusaetzlich die seither auf master gemergten
   Spuren A/D als "Loeschungen" — nicht Spur E). Code-Diff `re15_port` vollstaendig gelesen (`<sp>/E41a3/code.diff`, 3665 Zeilen),
-  NB3-Teil `git diff 5c27360b HEAD -- re15_port` (11 Dateien): rennstopp_r41.c/.h (neu), player_common.c (4 Haken),
+  NB3-Teil `git diff 5c27360b HEAD -- re15_port` (11 Dateien): rennstopp_r41.c/.h (neu), player_common.c (7 Haken-Stellen),
   bildhalt_r41_pc.c (+re15_fade_tick), main.c (nur Kommentar), re15_kamerahalt_r41.h (Kommentar), Tests.
 - Bau: `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`; getrennt `build` -> "ninja: no work
   to do.", `=== LOCAL-BUILD-OK (build)` (`<sp>/E41a3/configure.log`, `build.log`). re15_pc.exe md5
@@ -67,8 +67,8 @@ Status dieses Berichts: IN ARBEIT (fortlaufend gespeichert).
    ANIMATE. Stehen-ANIMATE Fall 0 @0x80032074-@0x800320bc (+6 = 1, Clip 3, Bild 0, +0x8f = 7, Tempo 0, `jal 0x8001af20` & 0x1f + 90);
    Gehen-DECIDE @0x80032444 `andi 0x201` / @0x80032454 `sw` (Rennen erst hier). **Bestaetigt.**
 6. Gegenprobe Mechanismus am Original (eigene Messung, §3.2): die Aktions-Pruefung @0x800326a4 haelt den Stopp an der Kurbel
-   NICHT auf — die Kurbel-Zone wird nicht ueber FUN_80042bac(…,0x10) im DECIDE ausgeloest; Port und Original starten den Stopp im
-   Aktionsbild gleich.
+   NICHT auf (Original n7 `cmd=1/2/3/0 spd=171` im Aktionsbild); ob FUN_80042bac die Zone dort meldet und 0 liefert oder die Zone erst im
+   AOT-Takt @0x8001ce1c faellt, ist nicht unterschieden — Port und Original starten den Stopp im Aktionsbild gleich.
 
 ## 3. Punkt 1 — Kurbel ROOM2020 ("komische herumfliegende Animation ... am Anfang wenn er die Kurbel nutzt")
 Laeufe `<sp>/E41a3/runs/<lauf>/` (cmd.txt, debug.log, state.txt, anim.txt, fd_*.ppm), gemeinsam `RE15_NO_INTRO=1 RE15_NOAUDIO=1
@@ -107,8 +107,8 @@ schrieb CRLF statt LF, Inhalt gleich; Sicherung `<sp>/E41a3/tools/settings.ini.v
 | Stehen / Kurbel | F287 frac 7, Plc_motion F302, Kurbel (3650,-3180) | n99 e3 6, Plc_motion n113, (3650,-3180) |
 
 Bild fuer Bild gleich. Der Bau-Agent fuehrt die Aktions-Pruefung @0x800326a4-@0x800326dc als OFFEN ("das Original rennt ein Bild
-weiter"); an der Kurbel trifft das NICHT zu — die Kurbel-Zone wird im Original nicht ueber FUN_80042bac(…,0x10) im DECIDE ausgeloest,
-der Stopp beginnt im Aktionsbild wie im Port. Fuer Tueren/0x10-Zonen nicht gemessen (Hinweis H2).
+weiter"); an der Kurbel trifft das NICHT zu — das Original beginnt den Stopp im Aktionsbild wie der Port (ob die Zone im DECIDE mit Rueckgabe 0
+oder erst im AOT-Takt @0x8001ce1c faellt, ist nicht unterschieden). Fuer Tueren/0x10-Zonen nicht gemessen (Hinweis H2).
 
 ### 3.3 Freie Strecke (Renn-Tempo + Stopp spielweit), `P1_rennstopp_frei`
 (2600,-3200) Blick 0, Start 153 (Stehclip 2 Bild 39 wie o_rennstopp `mo=2/40`), 12 Bilder XU, dann loslassen.
