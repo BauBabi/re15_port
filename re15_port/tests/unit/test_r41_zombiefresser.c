@@ -3,7 +3,7 @@
  * man ihnen naeher kommt (RE1.5 Wecker 0x80103814 + Liege-Phasenmaschine 0x801038ec, STAGE2). Beide KI-Varianten,
  * echte RDT/SCD/SCA, game_step. Dossier analysis/befunde_runde41/I_zombiefresser.md, Code engine/src/zombiefresser_r41.c.
  *
- *   A  ZENSUS je Raum (2000, 2001 Elza-Fall, 3000, 3010): jeder 0x84/0x85-Spawn liegt nach dem INIT —
+ *   A  ZENSUS je Raum (2000, 3000, 3010 und die Elza-Raeume 2001, 3001, 3011): jeder 0x84/0x85-Spawn liegt nach dem INIT —
  *      RE2-KI: Zustand 1 / Sub 7 (EXEC[7], RE2 0x701 @0x801009E8-0x80100A84), Latch +0x10E & 0x4000, Clip 23/22, KEIN
  *      Sub 8 (EXEC[8] Fressen); RE1.5-KI: grid bleibt 0x84/0x85, Sub 0, Phase 0, Clip 0x12/0x13 (@0x80100c7c/cc0).
  *   B  RUHE: Spieler weiter als 4000 von allen -> 300 Bilder keiner steht auf, alle unschiessbar (+0x93 Bit 0 —
@@ -150,6 +150,9 @@ static const raum_t R2000 = { "STAGE2/ROOM2000.RDT", 0x2000, 0, 1, {{0,0}}, 0 };
 static const raum_t R2001 = { "STAGE2/ROOM2001.RDT", 0x2001, 1, 1, {{3,0x45}}, 1 };
 static const raum_t R3000 = { "STAGE3/ROOM3000.RDT", 0x3000, 0, 0, {{4,0x09},{4,0xC6}}, 2 };
 static const raum_t R3010 = { "STAGE3/ROOM3010.RDT", 0x3010, 0, 0, {{4,0x0A}}, 1 };
+/* Elza-Varianten: dieselben Saetze und Bedingungen (3001 main00 @0x014b6 Ck(4,9,0); 3011 main00 @0x02112 Ck(4,0x0A,0)) */
+static const raum_t R3001 = { "STAGE3/ROOM3001.RDT", 0x3001, 1, 0, {{4,0x09},{4,0xC6}}, 2 };
+static const raum_t R3011 = { "STAGE3/ROOM3011.RDT", 0x3011, 1, 0, {{4,0x0A}}, 1 };
 
 static void raum_start(const raum_t *r, re15_ai_flavor_t fl, int32_t px, int32_t pz, int16_t prot, uint32_t seed)
 {
@@ -163,6 +166,7 @@ static void raum_start(const raum_t *r, re15_ai_flavor_t fl, int32_t px, int32_t
     re15_wasserzombie_reset();
     re15_wasserzombie_bank_vergessen();
     g_gameflow.character = r->elza ? 4 : 0;
+    re15_game_state_init();                          /* Flags je Lauf frisch (Teile unabhaengig) */
     for (int i = 0; i < r->nflags; i++) re15_game_flag_set(r->flags[i][0], r->flags[i][1], 1);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
@@ -475,6 +479,14 @@ int main(void)
     if (raum_laden(R3010.rdt, R3010.room)) {
         teil_a(&R3010, "3010", 6);
         teil_c(&R3010, "3010", -9100, -19800, -9100, -18700, 0x400, 500u, 1500u, 3);
+    }
+    if (raum_laden(R3001.rdt, R3001.room)) {
+        teil_a(&R3001, "3001", 7);
+        teil_c(&R3001, "3001", -9900, -14800, -8700, -14800, 0x800, 500u, 1500u, 3);
+    }
+    if (raum_laden(R3011.rdt, R3011.room)) {
+        teil_a(&R3011, "3011", 6);
+        teil_c(&R3011, "3011", -9100, -19800, -9100, -18700, 0x400, 500u, 1500u, 3);
     }
     teil_d();
     teil_e();

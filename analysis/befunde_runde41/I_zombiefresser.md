@@ -209,7 +209,32 @@ Nachgezogene alte Pins (ihre Praemisse "Grid [4]/[5]/[6] = Fresser" ist durch §
 - `integration_r38_wasserzombie` Teil e: Endbild 406 -> 560 (das Partner-Domino-Zwischenbild liegt mit dem
   Liege-Aufstehen bei Bild 461/462; gemessen `F461 ... zwischenbild st=1/9/0 mo=22 af=59`, `F462 abbruch af=60`).
 
-Gezielte Laeufe (Ergebnisse woertlich in §5.1).
+Zusatz: A/C auch fuer die Elza-Raeume 3001 (7 Liegende) und 3011 (6), gleiche Saetze und Bedingungen
+(3001 main00 @0x014b6 `Ck(4,9,0)`, 3011 main00 @0x02112 `Ck(4,0x0A,0)`); `[C 3001 RE2] steht F73 angriff F76`,
+`[C 3011 RE2] steht F82 angriff F128`. Jeder Teil startet mit frischen Flags (re15_game_state_init).
+
+### 5.1 Gezielte Laeufe (KEINE volle Suite; Baum = Spurzweig + master-Merge ce430484)
+
+Diff gegen die Merge-Basis: enemy_ai_common.c, enemy_ai_re2_zombie.c, player_common.c (+ eigene Dateien und die vier
+nachgezogenen Tests). Weil enemy_ai_common.c/player_common.c in fast jedem Unit-Test stecken, lief die GANZE
+Unit-Ebene (ohne Integrationstests) mit:
+
+```
+ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_|r[23][0-9]b?_)" -j 6 --timeout 600
+100% tests passed, 0 tests failed out of 937
+```
+Integrationstests der beruehrten Zombie-Module/Raeume:
+```
+ctest --test-dir re15_port/build -R "^integration_(r41_zombiefresser|r38_wasserzombie|r37_zombieaktiv|r39_elzazombies|r36_gegnerzahl|r36_schuss|r37_re2zombie|r36_zombieki|r39_gegner|r37_beretta|r34_granaten)" -j 4 --timeout 600
+100% tests passed, 0 tests failed out of 23
+```
+Nach der letzten Aenderung am eigenen Riegel (Elza-Raeume 3001/3011, frische Flags):
+```
+ctest --test-dir re15_port/build -R "^unit_(r41_zombiefresser|anim_rate|room1140_combat|p3_restposten_pin|r38_wasserzombie|re2_lyer_1140|r16_liegende_unschiessbar|re2z_spawn_seed)$" -j 4 --timeout 600
+100% tests passed, 0 tests failed out of 8
+```
+Erster Lauf der Integrationsgruppe (vor dem Nachziehen von r38 Teil e): `99% tests passed, 1 tests failed out of 162`
+(integration_r38_wasserzombie e, Zeitfenster — §5), danach einzeln `100% tests passed, 0 tests failed out of 1`.
 
 ## 6. OFFEN
 
