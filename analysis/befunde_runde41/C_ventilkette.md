@@ -592,6 +592,76 @@ BSS-Cuts mit den projizierten SCA-Bodenzellen, gruen = Band 1, cyan = Band 3):**
   mit Strom `[ventilkette41] ROOM2030: Strom (3,126) -> Wasser auf Relinghoehe y -3600 (Schachtoeffnung), Treppe Slot 8
   -> Sperrtext 48, Ring frei` + `[prop-render] pi=4 oid=0x04 pos=(0,-3600,0)`, KEIN obj 5.
 
+### Nachbesserung 3 je Mangel (Ursache / Messung vorher / Beleg / Aenderung / Messung nachher)
+Messungen an der exe 10:27 bzw. 10:31 (Quellstand = Commit 6a51727b ff.), Laeufe scratchpad `r41c_nb3/mess/<lauf>`
+(Runner `lauf.sh`, eigene exe-Kopie `re15_pc_nb3c_<lauf>.exe` je Lauf, danach geloescht; Serien `serie_bilder.sh`,
+`serie_ventile.sh`, `serie_2060.sh`, `serie_weg.sh`; Wegplaene `plaene/`).
+
+**N2 (hoch, Nachtrag 7) — Entleeren am Strom statt am Rechner**
+* Ursache: der Zustand "2030 trocken" hing an Bit 107, das nur das Port-Programm `2080_rechner_erw` setzte; die Ring-Sperre
+  C-E2 und die Wasserflaeche fragten Bit 107, nicht den Strom.
+* Messung vorher: Abnahme 2 L11 `ring_strom` (Flut + (3,126): 20B0-Ring-Tuer weiter Text 41), `galerie_strom` (mit Strom
+  "unter Wasser (y -7200)"), L6 `rechner`/`rechner2` (`2080_rechner_erw`, Set(9,107), Text 40) — nicht wiederholt.
+* Beleg: B1 oben ((3,126) nur 2060/2061 sub01 @0x012AE gesetzt, nie geloescht; Leser 2030 sub01 @0x01E14).
+* Aenderung: §0d Umsetzung (Zustand GEFLUTET/RELING an (3,126); Ring-Sperre und Lift-Rufzonen nur GEFLUTET; 2080 = Original).
+* Messung nachher: unit_r41_ventilkette E/G/I (Leon + Elza): mit Strom Zustand RELING, Ring-Tueren 20B0 Slot 3 / 2070
+  Slot 1 sind Tueren nach 2030 und die Aktion loest den Raumwechsel aus, Lift B unten Slot 7 = Ereignis 4; 2080 in drei
+  Zustaenden (ohne Flut / Flut / Flut + Strom) Ereignis 2 ohne Port-Programm -> Original sub02: msg 0, Cut 7 -> 3,
+  (3,245)=1, Wasser -3400, kein Bit 107. exe g2 (Leon): der Generator setzt (3,126) ueber das ORIGINAL-Raetsel
+  (`[flagcensus] room=2060 WRITE Set zone=5 idx=6 op=1` Schalter 1 -> `zone=5 idx=8 op=1` Schalter 3 -> `zone=3
+  idx=126 op=1` -> `[msgtext] room=2060 id=2 "It seems that the generator is working now."`); exe w3 (Leon): danach in
+  2030 `Strom (3,126) -> Wasser auf Relinghoehe y -3600 ...`, KEIN "unter Wasser (y -7200)".
+
+**N3 (hoch, Nachtrag 8) — Relinghoehe, unterer Bereich gesperrt**
+* Ursache: es gab nur "geflutet -7200" oder "ganz trocken" (Bit 107).
+* Messung vorher: Abnahme 2 L11; Bildbogen nb3_pegel_vorher_nachher_sheet.png Spalte "Flut, ohne Strom".
+* Beleg: B2 oben (untere Reling Oberkante +1800 = y -3600 im Bild, Band 2 der Ring-Bodenzellen fl 0x23, ROOM2050 -3600
+  @0x01F88; Schachtoeffnung aus den Ring-Reling-Zellen; Treppe Slot 8 @0x01B8E einziger Weg hinab; Gegenstaende unten).
+* Aenderung: §0d Umsetzung (eine Flaeche obj 4 mit dem Netz der Schachtoeffnung auf y -3600, Treppe -> Text 48 Band 3).
+* Messung nachher: Bildbogen **C_belege/nb3_pegel_vorher_nachher_sheet.png** (Ring trocken, nur die Schachtoeffnung unter
+  Wasser); unit E: Treppen-Aktion vom NW-Balkon = Text 48, Spieler bleibt auf y -5400; ohne Flut bleibt Slot 8 Treppe.
+
+**N4 (mittel, Nachtraege 9/10) — Ventilraetsel erst mit Bruecke UND Sicherung**
+* Ursache: der Ventil-Platz lag am Ring-Ost-Streifen (ueber den Schildern 04/05/06, ohne Bedingung).
+* Messung vorher: Abnahme 2 L11 `ventile_ohne_102` (ohne Bruecke Frage 45 -> Warnung 46 -> Zaehler).
+* Beleg: B3 oben (alle nummerierten Ventile im unteren Bereich, Bildbogen nb3_ventile_lage_sheet.png; (3,108) nur 2030
+  sub06 @0x01FF2).
+* Aenderung: §0d Umsetzung (Platz an der Suedwand vor 09/08, Bedingung Bit 102 UND (3,108), sonst Text 49).
+* Messung nachher: unit K (Leon + Elza) und exe v2 (Leon, Wegplan zu Fuss): `AOT slot 14 typ 0 ev 26 flags 0x31 band 1 mitte
+  (-900,7900) halb (2500,500)` -> Aktion an den Ventilen ohne Sicherung -> `Port-Programm 2030_ventile_vorher` + `[msgtext]
+  room=2030 id=49 "Numbered valves. If I turn them, this whole level will be flooded.I should look around here first."`,
+  FLAG (3,108) = 0, kein Zaehler -> Sicherung (Original Slot 9 -> sub06) `[msgtext] room=2030 id=2 "Will you take the
+  Fuse?"` -> `id=3 "You've taken the Fuse."`, FLAG (3,108) = 1 -> Ventile `Port-Programm 2030_ventile` -> 45 -> 46 ->
+  `Zaehler laeuft: 1800 Takte` -> zu Fuss zurueck (Steg, Treppe mo 221, Ring) -> `[aot] DOOR FIRE slot=0 rect=(7350,-200,
+  hw=500,hh=1750) target_cut=11` -> `loaded room20b0.rdt` -> `Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100`;
+  keine Flut, kein Ertrinken. Zeit: Warnung zu F1702 -> Tuer-Aktion F2776 = **1074 Bilder (36 s) GEHEND**, also
+  726 Bilder Reserve auf die 60 s (Wegplan geht nur; laufen ist schneller). Ohne Bruecke ist der Platz nicht erreichbar
+  (Steg-Zelle 12 u0 0xff; exe v1 `ZELLE r0[12] ... u0 0xff`), mit Bit 102 ohne Sicherung Text 49 (unit K, exe D).
+
+**N1 (hoch, Nachtrag 7) — der Weg nach der Flut zu Fuss**
+* Ursache: der Weg hing am Rechner 2080, den man nach der Flut nicht erreicht (Abnahme 2 L9/L10).
+* Messung vorher: Abnahme 2 L9 (`weg_leon`/`weg_elza` bis zur 11A0-Sperre), L10 (Zensus) — nicht wiederholt.
+* Beleg: B1 (Strom), Tuersaetze und Lifte 2030 (§1.3, Abnahme 2 L10: Lift B Slot 6/7 @0x01D74..@0x01DD6 je nach (3,220),
+  Strom-Pruefung sub01 @0x01E14; Suedgalerie-Tuer Slot 1 @0x01AEA nach 2080; 2080 Tuer Slot 1 @0x00BC2 nach 2090 erst
+  nach sub02 @0x00CAC).
+* Aenderung: keine eigene — der Weg folgt aus N2/N3 (Ring mit Strom offen und trocken, Lift B mit Strom original).
+* Messung nachher (zu Fuss, Wegplan; Raetsel ausserhalb der Kette als geloest gesetzt, Spinnen als getoetet):
+  - w1 (Leon): 20B0 (Ende der Szene (-20620,-9705)) -> Kanal (Sprung hinab bei x -21150, Aufstieg bei -24600) -> Leiter
+    `DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500)` -> 2050 -> `DOOR FIRE slot=1 rect=(-5150,4450,...)` -> 2020 ->
+    `DOOR FIRE slot=1 rect=(-14200,3300,hw=1000,hh=500) target_cut=13 spawn=(-450,-16200,-9700)` -> 2030 Nordgalerie
+    (`unter Wasser (y -7200)` = ohne Strom) -> `DOOR FIRE slot=3 rect=(-7700,-7250,hw=500,hh=900)` -> `loaded room2060.rdt`.
+  - g1 (Leon): Sicherungskasten 2060 -> msg 3 "One of the fuses is missing..." -> msg 4 "Will you use the Fuse?" -> Ja ->
+    `Cut_chg(8)` -> Cursor obj 4 RIGHT 6 Bilder in Zone 7 -> SQUARE -> `WRITE Set zone=3 idx=144 op=1` -> msg 5 "You've
+    used the Fuse." (Original sub18/sub19 @0x0169E).
+  - g2 (Leon): s. N2 (Generator-Raetsel: Cursor LEFT 23 + DOWN 17 -> SQUARE Schalter 1, RIGHT 30 -> SQUARE Schalter 3 ->
+    (3,126)).
+  - w3 (Leon): 2060 -> `DOOR FIRE slot=0 rect=(8450,3950,hw=500,hh=1000) target_cut=13 spawn=(-6950,-16200,-7200)` ->
+    2030 Nordgalerie (`Strom (3,126) -> Wasser auf Relinghoehe y -3600 ...`) -> `DOOR FIRE slot=2 rect=(-450,-10400,
+    hw=900,hh=500) target_cut=5 spawn=(-14200,-1800,2450)` -> 2020 -> `DOOR FIRE slot=0 rect=(11400,-3850,hw=1000,hh=500)
+    target_cut=5 spawn=(-5150,-5400,3450)` -> 2050 -> `DOOR FIRE slot=0 rect=(9100,5700,hw=1000,hh=1000) target_cut=9
+    spawn=(-26450,-1800,10250)` -> `loaded room20b0.rdt`. Erste Fassung lief in 2060 direkt nach Norden und schob den
+    Tritt obj 2 (-3143,2075) bzw. blieb an Zelle 8 (x 6300..8400 z -7750..-5250) haengen -> Weg ueber x -4500 / x 6000.
+
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
 Alle Datei-Offsets beziehen sich auf `re15_port/shared_assets/PSX/STAGE2/ROOMxxxx.RDT` (Leon); die Elza-Varianten
