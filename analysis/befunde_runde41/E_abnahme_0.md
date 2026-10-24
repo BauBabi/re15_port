@@ -8,9 +8,11 @@ exe 23:23). Messkopie `re15_port/build/platform/pc/re15_pc_abn0.exe`; jeder Lauf
 `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1`, Elza-Laeufe
 zusaetzlich `RE15_TITLE_SHOT_CHAR=1`; Bilder als PPM-Framedump (RE15_FRAMEDUMP) zu Kontaktbogen-PNG gewandelt.
 
-Status dieses Berichts: FORTLAUFEND (nach jedem gemessenen Punkt gespeichert). §0-§3.4 und §5 vom ersten Pruefer
-(Fable-Limit 2026-10-23 ~23:45, Commit 0e6c9a70); §3.5ff, §4, §6-§8 Fortsetzung 2026-10-24 (zweiter Pruefer, Stand HEAD
-5ef6329b = ed7bd4ff + Doku, Code unveraendert).
+Status dieses Berichts: ABGESCHLOSSEN (fortlaufend gespeichert). §0-§3.4 und §5 vom ersten Pruefer (Fable-Limit
+2026-10-23 ~23:45, Commit 0e6c9a70); §3.5, §3.6 (Vorbereitung) und §4 vom zweiten Pruefer (Sitzungslimit 2026-10-24 ~01:00,
+Commit 0ce76f13); §1 Integration, §3.6 Nachtrag, §3.6a, §3.7, §3.8 und §6-§8 vom dritten Pruefer 2026-10-24 (Stand HEAD
+0ce76f13 = ed7bd4ff + Doku, Code unveraendert). `<sp>` = Scratchpad
+`C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad`.
 
 ## 0. Gelesen
 AUFTRAG.md (Baum), VERTRAG.md, Dossier E_kleinkram_b.md, `git log master..HEAD` (11 Commits), `git diff master --stat`,
@@ -38,7 +40,23 @@ Beruehrte Dateien (git diff master --name-only, nur re15_port):
   marvin_render_pose, zombie_pose, zombie_idle_clip, re2_zombie_pose_bank, npc_back_walk, npc_wall_clamp,
   r36_schluessel, r30/r31_tuer, r36_tueren, r35_zgirl, eintritt_pose_einmal; -j 4): **157/157 bestanden**
   (`<scratchpad>/ctest_grp2.log`).
-- Integrationsgruppe (echte exe-Kopien, -j 2): s. §6 (Ergebnis dort nachgetragen).
+- Integrationsgruppe (echte exe, -j 2): Regex des zweiten Pruefers `^(unit_r41_kleinkram_b|integration_(r35_karte|
+  r35_karte_fahrstuhl|r36_karte|r36_kartenitems_bild|r38_tagebuch_karte|r39_elza_karte|r39_karten|map_uebergang|map_raum_live|
+  r36_szenenleon|r37_elzaems_elza11b1|r38_werkstatt11b0|r39_johnruf1041_tuer_t11b1|r39_johnruf1041_tuer_t11b1d|r39_stimmen_11b0|
+  r35_cut1150|r36_szene1150|r37_roy_szene1011|r37_roy_szene1021|r38_elzatoene_szene1021|r36_elza_fenster|r36_elza_irons|
+  r36_elza_unlock|r36_elza_schuss|r36_elza_stoehnen|r37_elzaems_elza3091|r39_stimmen_1150)$)` (aus seinem Protokoll
+  rekonstruiert, `ctest -N` = 33 Tests). **33/33 bestanden:**
+  Lauf 1 (zweiter Pruefer, nach 15/33 vom Sitzungslimit beendet): 15/15 gruen — 6 unit_r41_kleinkram_b, integration_r35_karte
+  82 s, r35_karte_fahrstuhl 172 s, r36_elza_fenster/irons/unlock/schuss/stoehnen, r35_cut1150 577 s, r36_karte 237 s
+  (`<sp>/abn0_ctest_integ.log`; der Dateiname wird auch von einer anderen Abnahme benutzt, daher Kopie
+  `<sp>/E41a0/abn0_ctest_integ_15von33_kopie.log`, md5 02f5e96025788d905a39dc2ffa87b812).
+  Lauf 2 (dritter Pruefer) die restlichen 18, nicht die 15 wiederholt (Regex `<sp>/E41a0_integ_rest_regex.txt`,
+  `ctest --test-dir re15_port/build -R <regex> -j 2 --timeout 900 --output-on-failure`): **100% tests passed, 0 tests failed
+  out of 18**, 813 s, CTEST_EXIT=0 (`<sp>/E41a0_ctest_integ_rest.log`): r36_kartenitems_bild 475 s, r36_szene1150, r36_szenenleon,
+  r37_elzaems_elza3091, r37_elzaems_elza11b1, r37_roy_szene1011, r37_roy_szene1021, r38_elzatoene_szene1021, r38_tagebuch_karte,
+  r38_werkstatt11b0, r39_elza_karte, r39_johnruf1041_tuer_t11b1, r39_johnruf1041_tuer_t11b1d, r39_karten, r39_stimmen_1150,
+  r39_stimmen_11b0, map_uebergang (einzeln mit -V nachgesehen: 214 Tueren, 151 Uebergaenge auf 12 Blaettern, 4x PASS),
+  map_raum_live. Kein roter Fenster-Haken, nichts nachzufahren.
 
 ## 2. RE-Gate (Stichproben SELBST disassembliert / gelesen)
 Werkzeug `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` (PSX.EXE, Auslieferungsstand) und `ghidra1_V2.txt`.
@@ -104,7 +122,7 @@ Klemmung bleibt dahinter (player_common.c).
 2001, 2020/2021, 3000/3001, 3061, 3091, 4000/4001, 4010, 5011, 5021, 50B0, 6030/6031): dort laeuft ein Spieler-Clip im
 Kommandowort 4 jetzt als Schleife statt Standbild — byte-true nach §2. Gezielte Tests dieser Szenen gruen (§1: 157/157,
 darunter r36_szenenleon 11B0, r35_cut1150, r36_elza 1011/1021/1031, 1090_push, r38_npckante 2001). Integration s. §6.
-### 3.4 Urteil Punkt 1: **teilweise**
+### 3.4 Zwischenurteil Punkt 1 (vor der Original-Auswertung): teilweise — abgeloest durch §3.8
 Die einzige am Port messbare Abweichung (Standbild nach einem Umlauf) ist belegt behoben und am echten Weg gemessen.
 Das vom Nutzer beschriebene "Herumfliegen" ist aber weder vom Bau-Agenten (7 Laeufe) noch von mir (Lauf A, echter Weg,
 Leon) reproduziert worden; eine Original-Gegenprobe (DuckStation-Savestate der Kurbelszene) fehlt. Ob der Nutzer-Befund
@@ -141,7 +159,79 @@ Ergebnis bisher (Laeufe v1..v4): DuckStation startet und beendet sauber (playtim
 SaveStateOnExit (resume.sav) NOCH der LB-Hotkey (Slot 1) schreiben einen Zustand. Befund dazu: die aktuelle settings.ini
 steht auf `ConfirmPowerOff = true` (die Sicherung `settings.ini.vor_ffmpeg_2026-10-23` von 17:25 hatte `false`; der Skill
 re15-room-capture verlangt `false`); das DuckStation-Fenster war in der Desktop-Aufnahme (`<sp>/abn0_orig/diag/desk.mp4`)
-nicht im Vordergrund. -> siehe 3.7 (wird ergaenzt).
+nicht im Vordergrund.
+**Nachtrag (dritter Pruefer, 2026-10-24):** Nach `ConfirmPowerOff = false` (Orchestrator; Sicherung
+`settings.ini.vor_confirmpoweroff_2026-10-24`) gelangen die Laeufe v5..v10, w1 und w1b des zweiten Pruefers. Ausgewertet wird
+`<sp>/abn0_orig/orig_kurbel_w1b.mp4` (VP9 640x480, 59,82 fps, 28,42 s, **1701 Bilder** laut `ffprobe -count_frames`); w1
+(13,7 s, 820 Bilder) zeigt nur Debug-Menue, Laden und ROOM2020 Cut 0, keine Szene. Der dritte Pruefer hat DuckStation nicht
+gestartet, nichts aufgenommen und `settings.ini` nicht angefasst (Hotkeys/Backend unveraendert).
+
+### 3.6a Herkunft der Aufnahme und ausgeruestete Waffe (RAM der Savestates)
+Werkzeuge `<sp>/E41a0/ram_read.py`, `<sp>/E41a0/rdt_cmp.py`, `<sp>/E41a0/rdt_9b0.py` (Ram-Klasse aus re15-savestate-ghidra,
+RAM-Basis per PSX.EXE-Signatur):
+- **Waffe: DAT_800aca5d = 1 = Combat Knife** in ALLEN Staenden (menu_kurbel.sav, v9_jump2020(_slot1), v10_kurbel(_slot1),
+  orig_kurbel_w1(_slot1), orig_kurbel_w1b(_slot1)); Ausruest-Platz DAT_800b25c8 = 0; Inventar 0x800b10ac+4*i: Platz 0 Id 1
+  (Messer, Menge 0), Platz 1 Id 3 x15 (Browning HP), Platz 2 Id 0x15 x50 (Munition). Der Original-Lauf entspricht damit dem
+  Port-Lauf **K_w1 (RE15_EQUIP=1, `[equip] W-bank -> W01`)**.
+- **Raum = ROOM2020 (Leon), Skript und Spieler-RBJ = Auslieferungsstand:** das RDT liegt ab 0x80119330 (Segment 0x0A5C.. bei
+  0x80119d8c). Im Bereich [0x900, 0x18F4) (sub02 + RBJ @0xBB0, total 0xD3C, 1 Record) ist der RAM **bytegleich zu
+  info/Re1.5/PSX/STAGE2/ROOM2020.RDT** bis auf 5 Bytes in 0x9B0..0x9BF = Aot_set der Kurbel (`2c 03 03 31 ... ff 00 18 02`):
+  in w1b zu `00 00` / `00 00 00 00` genullt = Wirkung von `Aot_reset` Slot 3 @0x00A70, in menu_kurbel/w1 unversehrt. Auf den 2581
+  Bytes, in denen ROOM2020.RDT und ROOM2021.RDT sich unterscheiden (ab 0xBC6, also die RBJ), trifft der RAM 2581/2581 ROOM2020
+  und 0/2581 ROOM2021. Die MZD-Disc fuehrt hier dasselbe Skript und dieselbe Spieler-RBJ wie der Auslieferungsstand.
+- **Spieler nach der Szene** (w1b Slot 1 und resume): `PL x=3650 z=-3018 y=-1800 rot=1024`, `+0x1c4 = 0x0004` (Plc_flg(0,4)
+  steht noch), Kommandowort `+0x4 = 1` (nach Plc_ret). Port state.txt K_w1 ab F463: `PL(3650,-3018,rot=1024)` — dieselbe Lage
+  (Pos_set @0x00A8C `32 00 42 0e f8 f8 93 f4` schreibt z -2925; Original und Port stehen danach beide bei z -3018).
+
+### 3.7 Original gegen Port, Bild fuer Bild (K_w1 = Messer, NACHHER-exe; dazu VORHER-exe)
+Bilder: `ffmpeg -i orig_kurbel_w1b.mp4 -vsync 0 -vf scale=320:240:flags=area -start_number 0 o_%04d.png` ->
+`<sp>/E41a0/w1b/` (1701 PNG, Original-Videobild vN = o_N); Port-Framedumps `<sp>/runs_abn0/K_w1/fd_000455..700.ppm` ->
+`<sp>/E41a0/p_w1/`. Skripte `<sp>/E41a0/cuts.py`, `pairs.py`, `sheet.py`.
+- **Takt und Schnitte:** im Video steht jedes Spielbild zweimal (1027 von 1700 Folgebildern bitgleich, neu/gleich im Wechsel):
+  ein Spielbild = 2 Videobilder. Schnitte (mittlere Abweichung > 12): **v356** (-> Cut 3), **v622** (-> Cut 4), **v775**
+  (-> Cut 3); vor v622 und v775 je ein Stillstand v610..v621 (12 gleiche Videobilder) bzw. v765..v774 (10) = Nachladen des
+  Hintergrunds. Port: `[scd F463] Cut_chg(3)`, das Bild F463 zeigt noch Cut 0 (F462 -> F463: 0 geaenderte Pixel), **erstes
+  Cut-3-Bild F464**; Cut_chg(4) F591 (Bild F592), Cut_chg(3)/Plc_ret F661 (Bild F662). Zuordnung: Original-Spielbild
+  k = v(356+2k) <-> **F(464+k)**. Cut 3 dauert im Original k0..k126 (+6 Stillstandsbilder), im Port F464..F591 = k0..k127.
+- **Bildlage:** das Original-Bild liegt 5 px hoeher (Hintergrundabgleich o_0384/p_0476, x160-310/y20-200: mittlere Abweichung
+  5,38 bei dy=-5 gegen 8,77 ohne Versatz); alle Vergleiche mit Port +5 px.
+- **Die ersten 25 Bilder nach Cut_chg 3 / Pos_set @0x0A8C** (`<sp>/E41a0/pr464_k00.png`, `pr464_k08.png`, `pr464_k16.png`,
+  `pr464_k24.png`, `pr464_k32.png`: oben Original, unten Port, Leon-Ausschnitt x2): k0..k18 <-> F464..F482 Leon steht mit dem
+  Ruecken zur Kamera an der Reling und wiegt leicht (Bewegung im Leon-Fenster 0..10 px je Spielbild im Original, 0..18 px im
+  Port); k19/k20 <-> F483/F484 Uebergang in den Kurbel-Clip (149/214 px gegen 177/228 px) — **k20 und F484 zeigen dieselbe
+  Zwischenpose** (Beine auseinander, linker Arm aus), k21 <-> F485 die vorgebeugte Kurbelpose, k22..k31 <-> F486..F495 dieselben
+  Kurbelposen. In keinem Bild verlaesst Leon den Boden, springt oder "fliegt" — weder im Original noch im Port.
+- **Schleife:** Leon-Fenster x50-106/y60-175, Abweichung Bild k zu Bild k+L (k=22..80): Original **L=40: 3,9 px** (L=39: 17,6;
+  L=41: 19,0; L=36: 55,9; L=44: 60,0) — das Original kurbelt mit Periode 40 = Clip 0 der Raum-RBJ (40 Bilder). Port NACHHER
+  **L=40: 5,7 px** (L=39/41: 46,8/48,7). Die bewegungsarmen Bilder am Umlauf 39->0 liegen in beiden bei k=60 und k=100; Port-Trace
+  `<sp>/runs_abn0/K_w1/anim.txt` Aktor 0: Wrap 39->0 bei F523/F563/F603/F643 (= k59/k99/k139/k179), F660 Bild 17, F661 Motion 211.
+  Im Original bewegt sich Leon in jedem Spielbild von k19 bis k126 (nur der Nachlade-Stillstand v610..v621 steht).
+- **VORHER-exe** (Basis 116e8b0f, `<sp>/abn0_base/re15_port/build/platform/pc/re15_pc_abn0_basis.exe` md5
+  2310696431b26d115bc00f3796663c01, dieselben K_w1-Parameter, Lauf `<sp>/E41a0/runs/K_w1_vorher/`): anim.txt Aktor 0
+  F483..F522 Bild 0..39, dann **F523..F660 `cur` 40..177 bei Slot 39** = 138 Bilder Standbild; Leon-Fenster F523..F556
+  0 px Bewegung — Leon erstarrt in der Kurbelpose, waehrend die Buehne hinter ihm faehrt (`<sp>/E41a0/s_vor_518_590.png`).
+  Das ist die einzige gemessene Abweichung vom Original; NACHHER ist sie weg.
+- **Szenenende** (`<sp>/E41a0/pr_end_k00.png`, `pr_end_k08.png`: Original v(775+2j) <-> F(662+j); Einzelbilder
+  `<sp>/E41a0/s_w1b_774_797_crop.png`): j0..j3 <-> F662..F665 Leon noch tief vorgebeugt ueber der Reling, j4 <-> F666 aufrecht,
+  danach Stehen — in beiden gleich. Diese steile Pose ist die auffaelligste Haltung der Szene; sie gehoert zum Kurbel-Clip und
+  steht im Original genauso.
+- **Nebenbefund (nicht Spur E): Reling vor Leon.** Im Port verdeckt in Cut 3 die Reling Leons Beine bis zur Huefte
+  (`<sp>/E41a0/zoom_legs.png`: Original v358/v790 gegen Port F465/F672), im Original steht Leon ganz vor der Reling. Ursache
+  gemessen: mit `RE15_NO_PRI=1` (Lauf `<sp>/E41a0/runs/K_w1_nopri/`, Messkopie re15_pc_E41a0.exe) zeichnet der Port Leon wie das
+  Original (`<sp>/E41a0/zoom_legs_nopri.png`). Das RDT fuehrt fuer Cut 3 KEINE Maske (PRI-Sektion @0x3FC = `ff ff ff ff`); die
+  104 Rechtecke (`[pri] cut=3 pri_offset=0x3FC masks=104 fg_atlas=1`) stammen aus dem nachgezeichneten Container
+  MASKS/ROOM2020.MSK (platform/pc/main.c:6046-6060; Nutzer-Freistellungen 5924939d, "naechste Version", nicht in v0.8.28). Ob die
+  Reling raeumlich vor Leon liegt, entscheidet das Original nicht (es zeichnet dort keine Maske) — Sichtpruefung der neuen Masken
+  ist Spur M. Den Nutzer-Befund (2026-10-23 16:3x, nach dem Release v0.8.28 ohne diese Masken) erklaert das nicht.
+
+### 3.8 Urteil Punkt 1 (abschliessend): **teilweise**
+Gemessen und belegt: (a) das Original kurbelt mit Periode 40 (Plc_flg(0,4)-Schleife, Disasm §2 Nr. 1-3 und §6 Stichprobe), der
+Port VORHER hielt 138 Bilder Bild 39, NACHHER kurbelt er mit Periode 40 im selben Takt wie das Original (Umlauf-Bilder k60/k100
+in beiden); (b) Start (k0..k31 <-> F464..F495) und Ende (v775+2j <-> F662+j) sind Bild fuer Bild deckungsgleich; (c) die Original-
+Waffe war das Messer wie in K_w1, den Port gibt es zusaetzlich mit SIG/Magnum/Schrotflinte (§3.5) und Browning (Dossier w9c) ohne
+Auffaelligkeit. NICHT belegt: ein "Herumfliegen" zeigt weder das Original noch der Port VORHER noch NACHHER. Der Fix behebt die
+einzige messbare Abweichung und macht die Szene original-gleich; dass das vom Nutzer gesehene Symptom dieses Standbild war, ist
+nicht nachgewiesen. Bleibt das Symptom beim Nutzer, braucht es seinen Weg (Spielstand/Raum davor) und ein Bild.
 
 ## 4. Punkt 2 — Karte B1, Ostkammer-Tuer ROOM1230 -> ROOM1190
 (Fortsetzung 2026-10-24, Abnahme 0 zweiter Pruefer; `<sp>` = Scratchpad
@@ -251,10 +341,48 @@ Echter Weg (Tuer aus 1261, Szene) gemessen: Tuerblatt im Bild zu (Cut 2 statt 8)
 "The door is locked.", kein Raumwechsel; Wiederbetreten im Riegel geprueft (unit_r41_kleinkram_b_11b1_zu).
 
 ## 6. Vertrag / Gates
-(wird ergaenzt)
+(dritter Pruefer, 2026-10-24; Bau erneut geprueft: `bash re15_port/tools/local_build.sh configure` und getrennt `build` ->
+"ninja: no work to do", `=== LOCAL-BUILD-OK`; re15_pc.exe md5 757da3a9132018190427a32a39b67d96 = Messkopien re15_pc_abn0b.exe und
+re15_pc_E41a0.exe; Logs `<sp>/E41a0_configure.log`, `<sp>/E41a0_build.log`.)
+
+| Gate | Urteil | Beleg |
+|---|---|---|
+| Bau | haelt | s. oben; Code seit ed7bd4ff unveraendert (`git diff --stat ed7bd4ff HEAD -- re15_port` leer), master seit der Basis 116e8b0f ohne re15_port-Aenderung |
+| Tests | haelt | 6/6 Spur-Riegel, 66/66 Gruppe des Bau-Agenten, 157/157 Szenen/Posen/Tueren, 33/33 Integration (15 + 18), §1 |
+| RE-Gate | haelt | §2 Nr. 1-7. Eigene Stichprobe des dritten Pruefers (`re15_disasm.py`, PSX.EXE Auslieferungsstand): `table 0x80073e30 4` -> [0] 0x80050cb8; `dis 0x80050d94 14` -> `@0x80050da4 sb v0(=2),6(v1)` (Halten), `@0x80050db4 lhu v0,452(v1)` (+0x1c4), `@0x80050dbc andi v0,v0,0x4`, `@0x80050dc0 beq v0,zero,0x80050dcc`, `@0x80050dc8 sb v0(=1),6(v1)` (Schleife); `dis 0x80041ba8 8` -> `@0x80041bb0 sb v1,4(v0)`, `@0x80041bc4 sb a2,5(v0)`. Dynamisch bestaetigt: Original-RAM +0x1c4 = 0x0004 nach der Szene, Bildperiode 40 (§3.7) |
+| Kein Raten | haelt | Branch-Diff (`git diff $(git merge-base HEAD master) HEAD -- re15_port`) auf deferred/tunable/interim/for now/faithful/plausib/TODO/FIXME/hack/vermutlich/ungefaehr/approx/geschaetzt/"sieht ... aus": 0 Treffer; jede Konstante mit @0x.../Byte-Offset oder NUTZER-VORGABE/PORT-WAHL (§2) |
+| Fix erklaert Befund | Punkt 2, 3 ja; Punkt 1 nur teilweise | Punkt 2 quantitativ (§4.2: 137/130 px vorhergesagt = gemessen), Punkt 3 reproduziert und umgekehrt (§5); Punkt 1 erklaert das gemessene Standbild, nicht das "Fliegen" (§3.8) |
+| Pfade | haelt | `git diff --name-only $(git merge-base HEAD master) HEAD`: engine/src karte_r41.c, plcloop_r41.c, werkstatt11b1_r41.c (neu), player_common.c, re15_inv_screen.c, scd_room_setup.c, scd_vm.c (Haken); include re15_karte_r41.h, re15_plcloop_r41.h, re15_werkstatt11b1_r41.h; tests/unit test_r41_kleinkram_b_{11b1,karte,kurbel}.c + probes/r41_kleinkram_b.cmake (per GLOB); analysis/befunde_runde41 (AUFTRAG vom master, Dossier, diese Abnahme). Nichts unter release/, platform/android/, shared_assets/, pri/, synchro/, keine Test-CMakeLists |
+| Ressourcen | haelt | kein Bank-9-Bit (Zuteilung E = 120 ungenutzt), keine neue Nachricht (msg 12 ist Original @0x179F), Port-Ereignis 24 nur in ROOM11B1 (RDT-Subs 0..6; sonst kein Modul mit 0x11B1-Ereignis: grep), kein Asset |
+| Gemeinsame Dateien | haelt, mit Hinweis | alle Haken 1-4 Zeilen mit "Runde 41 Spur E": scd_room_setup.c +2 (E zugeteilt); scd_vm.c +2 (VERTRAG §1.3 nennt dort nur C, F, G); player_common.c +2 und re15_inv_screen.c +4/-1 (in §1.3 nicht gelistet). Form wie Runde 36 J / Runde 40 (Ereigniskette scd_event_fire) |
+| Riegel je Punkt | haelt | Punkt 1 unit_r41_kleinkram_b_kurbel_{laenge,schleife}; Punkt 2 unit_r41_kleinkram_b_karte_pin (17 Pruefungen, vorher 13/17); Punkt 3 unit_r41_kleinkram_b_11b1_{programm,zu,original}. Linux-fest (`m` bei NOT WIN32, kein popen/getenv, keine .exe-/Backslash-Pfade), eigener Arbeitsordner, TIMEOUT 300 |
+| Nebenwirkungen beide Szenarien | haelt | Punkt 1: 29 RDTs mit Plc_flg(0,4) (§3.3), Szenen 157/157 und Integration (1011/1021/1150/11B0/3091, Leon und Elza) gruen; anim_flags (+0x1c4) wird wie im Original bei Raumeintritt (@0x8003197c, player_common.c:267) und Plc_dest (@0x80041c4c, scd_vm.c:2656) geloescht, die Schleife bleibt also auf die Szene begrenzt. Punkt 2: alle 214 Tueren unveraendert (§4.3), Leon und Elza gemessen. Punkt 3: nur 0x11B1 bei (3,0x83)=1, Leon 11B0 unberuehrt |
 
 ## 7. Maengel
-(wird ergaenzt)
+1. **Punkt 1 — das Nutzer-Symptom ist nicht nachgewiesen.** "Herumfliegen" zeigt weder der Port VORHER (Basis 116e8b0f,
+   `<sp>/E41a0/runs/K_w1_vorher/`) noch NACHHER (`<sp>/runs_abn0/K_w1`, K_w4/7/8) noch das Original (`<sp>/abn0_orig/orig_kurbel_w1b.mp4`,
+   Messer wie im Original-RAM). Behoben ist das gemessene Standbild (VORHER F523..F660 Slot 39, 138 Bilder); NACHHER ist die Szene
+   Bild fuer Bild original-gleich (§3.7). Nachpruefbar: §3.7 (Zahlen, Bildpfade). Folge: Urteil "teilweise"; den Rest kann nur der
+   Weg bzw. ein Bild des Nutzers klaeren (Rueckfrage steht im Dossier "Fuer den Nutzer").
+
+Hinweise (keine Maengel des Codes dieser Spur):
+- H1 Vertrag §1.3: der Haken in scd_vm.c (scd_event_fire, hinter `re15_nahaufnahmen_r40_ereignis`) liegt in einer Datei, die
+  §1.3 nur C, F, G zuteilt, und genau an der Stelle, an der C/F/G ihre Ereignis-Haken anhaengen — bei der Integration die
+  Reihenfolge der Kette abstimmen (Textkonflikt moeglich, inhaltlich unabhaengig: jede Zeile prueft ihren Raum).
+  player_common.c / re15_inv_screen.c stehen nicht in §1.3.
+- H2 fuer Spur M / den Nutzer: ROOM2020 Cut 3 — die nachgezeichnete Maske (MASKS/ROOM2020.MSK, 104 Rechtecke, 5924939d) legt die
+  Reling ueber Leons Beine an der Kurbel; das Original zeichnet in Cut 3 keine Maske (PRI-Sektion @0x3FC = ff ff ff ff), Leon steht
+  dort ganz vor der Reling (`<sp>/E41a0/zoom_legs.png`, `zoom_legs_nopri.png`).
+- H3 (vom Bau-Agenten selbst genannt): kein Integrations-Riegel mit echter exe fuer die drei Punkte; die exe-Messungen stehen im
+  Dossier und in dieser Abnahme.
 
 ## 8. Urteil
-(wird ergaenzt)
+| Punkt | Urteil | Kern |
+|---|---|---|
+| 1 Kurbel ROOM2020 | **teilweise** | Schleife statt Standbild belegt und gegen das Original gemessen (Periode 40, Start/Ende deckungsgleich); "Herumfliegen" nirgends reproduziert (§3.7, §3.8) |
+| 2 Karte B1, vordere Tuer 1190 | **erfuellt** | VORHER-Sprung zur Hallen-Tuer (bis 15 px) an der exe reproduziert, NACHHER weg, Leon und Elza, echte Tuer (§4) |
+| 3 Werkstatt-Tuer 11B1 (Elza) | **erfuellt** | echter Weg 1261 -> 11B1 mit Szene: Tuerblatt zu, Zelle solid, "The door is locked.", kein Raumwechsel (§5) |
+
+Gates: halten (Hinweis H1 zu gemeinsamen Dateien). **Gesamt: nicht bestanden** — Punkt 1 ist nicht "erfuellt" (Mangel 1).
+Die drei Aenderungen zeigen keine Regression (33/33 Integration, 157/157 + 66/66 gezielt) und machen die Kurbelszene
+original-gleich; fuer ein "erfuellt" fehlt allein der Nachweis, dass das vom Nutzer gesehene Symptom das behobene Standbild war.
