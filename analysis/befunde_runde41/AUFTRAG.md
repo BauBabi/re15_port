@@ -773,3 +773,5 @@ Folgen (Orchestrator, ersetzt die Folgen von Nachtrag 24; FG-E2 ist WIDERRUFEN, 
   Reling, Stufe), und ersetzt ihn durch passende Animationen: Hinlaufen (Lauf-Clip des NPC) und Aufnehmen mit beiden Haenden
   (Original-/RE2-Clip mit Beleg — z. B. eine Aufheb-/Trage-Animation aus RE1.5-NPC- oder RE2-Banken; Herkunft im Dossier).
   Bildbogen der Szene vorher/nachher, Leon UND Elza.
+
+Nachsatz des Nutzers zu 24b (Wortlaut): "marvin" — gesehen bei Marvin (Leons Szenario); John (Elza) gleich pruefen.
