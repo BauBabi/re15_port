@@ -269,3 +269,18 @@ b544 hat keinen Typfilter (RE-Gate 2), Gorilla-Kasten r 1600 vorbestehend (`re15
   Linux-fest (`cmake_minimum_required` im -P-Skript, `m` gelinkt, keine .exe-/Backslash-Pfade, kein popen). Unit-Ausgaben selbst
   gelesen (`test_r41_kollision.exe npc|raum3070|raum3001|kiste`: alle PASS, z.B. `|dX| = 1800 = hx+hx -> UEBERLAPPUNG`,
   `|dX| = 1801 -> frei`, `min. Abstand 899 >= 880`, `min. Abstand 732 >= 730`). **haelt.**
+
+### 5.3 Integrationsgruppe (laeuft; Ergebnis folgt unten in 5.4)
+Auswahl = alle Integrationsriegel mit NPC-Szenen (der Schub wirkt in jedem NPC-Tick, auch in Szenen), alle mit Kisten/Objekten
+(Schubkette, Spiegel +0x42) und die breiten Raumlauf-Riegel; 81 Tests:
+`ctest --test-dir re15_port/build -R "^integration_(r35_cut10f0|r35_cut1150|r36_szene1150|r36_szenenleon|r36_story_leon|
+r36_story_elza|r37_szene11c0|r37_roy_szene1011|r37_roy_szene1021|r37_roy_leon1170|r37_sperre1050|r38_heliport1171_.*|
+r39_heliport1171_.*|r38_werkstatt11b0|r38_szenenschutz|r38_kleinkram_irons|r36_elza_irons|r39_johnruf1041_a|r39_johnruf1041_b|
+r39_funk10f1_.*|r39_parkplatz11c0_.*|r38_dining1141_.*|r39_dining1141_.*|r39_stimmen_.*|r39_toene_szene.*|r38_elzatoene_.*|
+r30_irons_tisch_.*|r30_cut_blitz|r37_elzaems_.*|r41_wasser20b0.*|r39_gegner_1141|r36_dachkiste|r36_klettern|r37_kiste.*|
+r37_itemband.*|r38_wasser.*|room_transition|cross_stage|door_traversal|room_probe_sweep)$" -j 3 --timeout 2700
+--output-on-failure` (`ctest_integ.log`).
+Nicht gefahren: die ROOM1260-Parallelszene (Ada + Marvin, Switch case 7 @0x0124E, sub04/sub05) — mein Tuerweg 11B0 slot 5 kam
+nicht an die Tuer (Spieler blieb bei (-62,-18308) haengen, Laeufe `p1_1260_*` abgebrochen). Statisch: die Wegpunkte der beiden
+liegen paarweise 1498/1543 auseinander, die Endlagen (-7500,-6250)/(-8900,-4600) 2164 — kein Plc_dest-Ziel innerhalb der
+Radien-Summe 900 einer anderen Figur; die Spur mass dort vorher min 971.
