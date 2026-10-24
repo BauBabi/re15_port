@@ -9142,6 +9142,7 @@ re_title:;
                 if (bi >= n_bones) {   /* Runde 38 Spur D: Zopfglied = Weltmatrix aus FUN_80024e40 (Teil+0x40) */
                     mi = RE15_ZOPF_ERSTES_TEIL + (bi - n_bones);
                     (void)re15_zopf_r38_welt(bi - n_bones, yawed_rot, bone_world_trans);
+                    re15_gr2_zopf_massstab(player_ref, yawed_rot, bone_world_trans);   /* Runde 41 Spur B NB6: Zopf im Maul-Massstab (gator_re2_r41.c) */
                 }
                 /* (Knochen-11-Fuetterung re15_player_set_hand_world/_rot: seit der NACHBESSERUNG
                  * M-HE-1 VOR diesem Loop, jedes Bild aus derselben Pose — s. "BLADE/HAND WORLD POINT"

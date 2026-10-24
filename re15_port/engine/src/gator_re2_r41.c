@@ -2231,6 +2231,22 @@ int re15_gr2_raum_verdeckt(int c, const int32_t p[][3], int n, int *im_bild)
     }
     return verdeckt;
 }
+/* Nachbesserung 6 (Elza-Lauf EZT2, B41nb6/EZT2_gelb_zoom.png): Elzas Zopf (Teile 17..20, eigene Weltmatrix aus zopf_r38.c =
+ * FUN_80024c30/FUN_80024e40, gezeichnet ueber Flag 0x40 -> FUN_8001e9ec @0x8001ea10) haengt nicht an der Wurzel-3x3 des Spielers. Der
+ * Maul-Massstab des Finishers (render_scale_q12, PORT-WAHL Phase 3: ScaleMatrix-Pfad @0x8001e904-40 auf der Wurzel-3x3, skaliert
+ * Knochen und Vertices um pl->(x,y,z)) traf deshalb den Koerper, aber nicht den Zopf: der Zopf flog in P1 als gelber Fetzen bis ~900
+ * Einheiten neben Elzas Kopf (TRILOG B41nb6/mess/EZtri: Spieler-Platz 0 im Fenster ueber dem Kopf). PORT-WAHL (Folge derselben
+ * Massstab-Entscheidung, im Original wird der Spieler nie skaliert): die Zopf-Weltmatrix um denselben Mittelpunkt mit demselben
+ * Massstab skalieren. Ohne render_scale_q12 (jeder andere Spielzustand) wirkungslos. */
+void re15_gr2_zopf_massstab(const re15_actor_t *pl, int32_t rot[9], int32_t t[3])
+{
+    if (!pl || !pl->render_scale_q12) return;
+    int32_t s = pl->render_scale_q12;
+    for (int i = 0; i < 9; i++) rot[i] = q12mul(rot[i], s);
+    t[0] = pl->x + q12mul(t[0] - pl->x, s);
+    t[1] = pl->y + q12mul(t[1] - pl->y, s);
+    t[2] = pl->z + q12mul(t[2] - pl->z, s);
+}
 /* Leons gezeichnete Knochen-Ursprunge im Opfer-Modus (PL00 + Posen der Opfer-Bank, Gier, Zeichen-Skala; wie gr2_fin_tabelle) -
  * Messzeile Maul-Sitz. Rueckgabe Anzahl (0 = kein Skelett / keine Opfer-Bank). */
 int re15_gr2_leon_knochen(const re15_actor_t *gator, const re15_actor_t *pl, int32_t out[][3], int max)

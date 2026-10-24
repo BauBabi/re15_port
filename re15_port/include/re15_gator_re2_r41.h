@@ -237,6 +237,9 @@ int  re15_gr2_im_bild_cut(int c, const int32_t p[3], int *sx, int *sy);
  *    Skala) -> out[0..], Rueckgabe Anzahl (0 = kein Skelett). */
 int  re15_gr2_raum_verdeckt(int c, const int32_t p[][3], int n, int *im_bild);
 int  re15_gr2_leon_knochen(const re15_actor_t *gator, const re15_actor_t *pl, int32_t out[][3], int max);
+/* Nachbesserung 6: Elzas Zopf-Weltmatrix im Maul-Massstab des Finishers (render_scale_q12) um pl->(x,y,z) skalieren (main.c Spieler-
+ * Zeichner, Zopf-Zweig); ohne render_scale_q12 wirkungslos. */
+void re15_gr2_zopf_massstab(const re15_actor_t *pl, int32_t rot[9], int32_t t[3]);
 /* Messhaken: Schnittfolge seit dem Boss-INIT (cut[i] = gewaehlter Cut, -1 = Sperre ohne Schnitt, -2 = frei;
  * blick[i] = RE15_GR2_BLICK_*, 0 = frei/zurueck; clip/bild = Gator-Clip und -Bild beim Ereignis). */
 int  re15_gr2_kamera_folge(int max, int *cut, int *blick, int *clip, int *bild);
