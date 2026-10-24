@@ -735,3 +735,21 @@ in 3 von 7 bzw. 4 von 11 Bildern um 1 ab, mit exaktem isqrt in 1 von 7. Damit is
   wenn er um mehr schlechter ist, als eine blosse Bahnaenderung die Original-Regel typischerweise verschiebt). Die Zahl der
   Seeds ueber +600 wird weiter ausgegeben. Alle anderen Schranken unveraendert. Lauf: `ctest -R "^unit_r36_zombieki_affen_block$"`
   -> 100% tests passed, 0 tests failed out of 1 (schlechtester 0x67be2dfd +841, Seeds ueber +600: 1; FERN 1523 <= 17487/6).
+
+### Mangel 3 / E-E1 — Vertrag (gemeinsame Dateien)
+Orchestrator-Entscheid E-E1 (AUFTRAG.md 2026-10-24 10:50): die spielweiten Haken der Spur E sind angenommen (Bildreihenfolge
+@0x80020de4 vor @0x80020f3c/@0x80010044, Message_on @0x80040520 / Freeze @0x8003f040, Apply-Bild @0x80021558/@0x80021560), Bedingung:
+bei der Integration laufen alle Nachrichten-/Szenen-/Tuer-Riegel mit. Stand der gemeinsamen Dateien nach Nachbesserung 3
+(`git diff 116e8b0f --stat`, je "Runde 41 Spur E"):
+| Datei | Haken | Runde |
+|---|---|---|
+| engine/src/player_common.c | include plcloop + Takt hinter `p->anim_frame++` (NB0); include rennstopp + Renn-Stopp-Takt hinter `r1_held`, Renn-Tempo statt `RUN_SPEED_PER_FRAME`, Skript-Zweig (NB3, E-E2 "spielweit") | NB0, NB3 |
+| engine/src/re15_inv_screen.c | Kartenmarke ueber die Ankunftszone (tuer_anziehen) | NB0 |
+| engine/src/scd_room_setup.c | Installer werkstatt11b1 (Init-Lauf) | NB0 |
+| engine/src/scd_vm.c | include msgtakt + Auswahl-Message_on ohne Parken (@0x80040520) | NB2 |
+| engine/src/msg_common.c | include msgtakt + vor_oeffnen + aufgeschobener Restore | NB2 |
+| platform/pc/main.c | msgtakt takt_beginn/_ende, nach_spieltakt (2x), kamerahalt -> bild_halten; NB3 nur Kommentar (H3) | NB2, NB3 |
+| platform/pc/src/render_pc.c | Abzug-Abholer + Merker-Haken | NB2 |
+Neu in NB3 nur in eigenen Dateien: rennstopp_r41.c/.h, bildhalt_r41_pc.c (Blenden-Takt), Tests. Konflikt-Hinweis fuer die
+Integration: player_common.c (Spur H aendert game_step_common.c/re15_collision.c, nicht player_common.c; der Renn-Stopp
+verschiebt Leons Bahn nach jedem Rennen um den Auslauf), main.c (D/F/G), scd_vm.c op_message_on (C/F/G), render_pc.c (D).
