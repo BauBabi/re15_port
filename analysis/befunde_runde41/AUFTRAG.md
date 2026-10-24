@@ -282,3 +282,189 @@ Umsetzung B6/B7 in der naechsten Nachbesserung der Spur B (oder, falls B vorher 
     gleichen Patch konfliktfrei) und misst 3091 darauf. Abweichungen am Binder meldet K im Dossier an J (nicht selbst aendern).
 - Engine-weite Restpunkte der Spur A (OFFEN 1 ESP-Sprites im ersten Bild nach dem Kamerawechsel, OFFEN 2 RVD-Schaltzeitpunkt,
   OFFEN 3 Gegner-INIT-Takt, OFFEN 4 allgemeine Szenensperre AUTO/FLAG_CHG) bleiben fuer die naechste Runde (UEBERGABE).
+
+## 2026-10-24 04:52 — Orchestrator-Auftraege nach Nachbesserung E 1 (kein Nutzer-Wortlaut; Spur E)
+
+- **E-N1 Kamera-Flackern ROOM2020 (Nebenbefund der Nachbesserung E 1, Lauf g2):** steht der Spieler bei (9000,-3200), wechselt
+  der Port JEDES Bild zwischen Cut 0 und Cut 2 (F1..F299); im Original-Video steht dieselbe Lage ruhig auf Cut 0. Das ist ein
+  sichtbarer Port-Fehler in einem Raum der Spur E und wird von Spur E behoben: Mechanismus der Zonen-Umschaltung im Original
+  belegen (RVD-Pruefung, Reihenfolge/Hysterese, Adressen), Ursache im Port finden, beheben, vorher/nachher an genau dieser
+  Lage messen (Cut je Bild), dazu ein Riegel. Abnahmepunkt der Spur E.
+- **E-N2 Geh-Stopp waehrend der Frage (Punkt Kurbel):** "Mechanismus nicht gefunden = NICHT fertig". Der Port wechselt beim
+  Anlauf im Gehen zwischen Message_on 0 und 1 ein Bild lang auf Stehen 200, das Original-RAM zeigt waehrend der Frage noch
+  Gehen. Den Geh-Stopp (Kommando 1, 0x80031de8) disassemblieren, das Original nach dem Ja im Geh-Fall messen (DuckStation,
+  Ja-Eingabe zuverlaessig machen) und den Port angleichen oder mit Messung + Adresse als gleich belegen.
+
+## 2026-10-24 05:25 — Orchestrator-Entscheide C-E1..C-E3 (Abnahme C 0; der Nutzer kann widersprechen)
+
+- **C-E1 (Mangel M2, Abhaengigkeit von Spur A):** Der AUTO-AOT-Haken bleibt Code der Spur A (aot_common.c +
+  re15_wasser20b0_r41_auto_aot); Spur C uebernimmt ihn NICHT (auch nicht per cherry-pick — er haengt an A's Modul). Spur C
+  baut stattdessen den Ketten-Riegel `integration_r41_ventilkette_kette` (Ventile -> Ost-Tuer zu Fuss -> 20B0-Szene bis
+  Szenen-Ende/letterbox zu und (3,235)=1 -> Leiter -> 2050) und registriert ihn in probes/r41_ventilkette.cmake NUR, wenn
+  A's Modul im Baum liegt (`if(EXISTS ${...}/engine/src/wasser20b0_r41.c)`), sonst mit einer Statuszeile "uebersprungen: Spur A
+  fehlt". Der Orchestrator misst die ganze Kette im Integrationsbaum A+C; M2 gilt fuer die Abnahme der Spur C als erfuellt,
+  wenn der Riegel existiert, im C-Baum sauber uebersprungen wird und sein Ablauf im Dossier beschrieben ist.
+- **C-E2 (Mangel M5, geflutetes 2030):** Bis der Rechner 2080 entleert hat (Bit 107), sind die Zugaenge ins geflutete 2030
+  (20B0 Ost-Tuer, 2070 Slots 1/2, jede weitere Tuer in den Ring) gesperrt: Aktionstaste -> Port-Text, kein Raumwechsel.
+  Id-Zuteilung (VERTRAG 1.2 ergaenzt): 20B0/20B1 Id 41, 2070/2071 Id 40 (Wortlaut englisch wie das Spiel, Vorschlag bis zur
+  Freigabe durch den Nutzer). Nach Bit 107 wieder offen. Riegel: Sperre vor 107, offen nach 107, je Zugang.
+- **C-E3 (Mangel M6, Vertrag):** Die Haken in platform/pc/main.c (4 Stellen) und game_step_common.c (1 Zeile) sowie die
+  Querbezugs-Flags in test_r36_dachkiste.cmake / test_r37_itemband.cmake sind angenommen (wie B5), weil sie klein,
+  markiert und durch die neue Sperre noetig sind. Kein Mangel mehr.
+
+## 2026-10-24 07:49 — Orchestrator-Entscheid C-E2b (Revision von C-E2 nach Abnahme C 1, Mangel N1; der Nutzer kann widersprechen)
+
+Befund der Abnahme C 1: Die in C-E2 vorausgesetzte Route "2050 -> 2020 -> 2030 oben -> 2080" existiert nicht (Nord- und
+Suedgalerie von 2030 sind durch Wand 66 getrennt, SCA @0x880; die 2080-Tuer liegt auf der Suedgalerie und ist nur per
+Lift B vom gefluteten Ring erreichbar). Nach der Flut steht der Ring unter Wasser (bis -16200) und ist nicht begehbar —
+daran aendert sich nichts (Tod durch Ertrinken setzt Wasser ueber Kopfhoehe voraus).
+Entscheid: Der Weg zum Rechner 2080 fuehrt nach der Flut ueber das Alligator-Becken: ... -> 20A0 -> Sprung ins Wasser
+-> 2090 -> Tuer 2090 Slot 0 -> 2080 (passt zur Geschichte: Marvin/John wirft den Kanister von 2080 ueber das Gelaender
+in das 2090-Becken). Spur C (Nachbesserung 2):
+1. Tuergraph aller STAGE2-Raeume fuer den Zustand "nach der Flut" (Bits 103+100, ohne 107; Strom/Generator und
+   Aufzug 2040 wie im Normalspiel zu diesem Zeitpunkt) aus den Door_aot_set-Zielen + Sperrbedingungen (SCD-Offsets)
+   aufstellen und den Weg 20B0/2050 -> 2080 zu Fuss messen (Leon UND Elza), Riegel dazu. C-E2 (Ring-Sperre) bleibt.
+2. Steht auf diesem Weg nur eine PORT-Sperre (ein Bit/Haken der Runde 41) im Weg, diese so anpassen, dass der Weg
+   frei ist (mit Beleg). Steht eine ORIGINAL-Sperre im Weg oder gibt es den Weg nicht: NICHTS erfinden — den
+   blockierenden Punkt (Tuer, Bit, SCD-Offset, Bild) im Dossier benennen und als OFFEN fuer den Orchestrator melden.
+3. Dossier §7 und §0b (M5) richtigstellen.
+
+## 2026-10-24 08:06 — Orchestrator-Entscheid B9 (Abnahme B 2, Mangel M1; der Nutzer kann widersprechen)
+
+M1 der Abnahme B 2: die Intro-Startlage teleportiert den SICHTBAR lauernden Gator ueber ~16000 Einheiten. Form = RE2:
+vor dem Intro ist der Gator NICHT sichtbar (RE2: Sce_em_set mit y = 3000 @RDT 0x25A0, also unter der Wasserlinie;
+Pos_set erst im Intro @SCD 0x0736); er bricht aus dem Wasser. Fuer ROOM2090/2091 heisst das: bis zum Intro-Ausloeser kein
+sichtbarer Gator (untergetaucht/unsichtbar wie RE2, Lage frei), dann Pos_set auf die Intro-Startlage nach B7. Passt zur
+neuen Szene der Spur F ("der Alligator springt aus dem Wasser"). Riegel: im natuerlichen Ablauf (Lauf N der Abnahme)
+kein Bild mit sichtbarem Gator vor dem Durchbruch und kein sichtbarer Lagesprung. Weitere Maengel M2/M3 der Abnahme B 2
+wie dort gefordert (RE2-Form, Adressen dort).
+
+## 2026-10-24 09:00 — Orchestrator-Entscheid C-E2c (Frage (j) der Nachbesserung C 2; der Nutzer kann widersprechen)
+
+Befund der Nachbesserung C 2 (Tuergraph C_belege/nb2_tuergraph_nach_flut.txt, zu Fuss gemessen): nach der Flut gibt es
+KEINEN Weg zum Rechner 2080. Die 2080-Tuer von 2030 liegt auf der Suedgalerie (nur per Lift B vom gefluteten Ring), und der
+Umweg 2040 -> 2070 -> 11A0 -> 20A0 -> 2090 -> 2080 endet an der ORIGINAL-Sperre ROOM11A0/11A1 Slot 4 (Ck(3,206)=0
+@0x00FEA -> msg 2 "It's locked from the other side." @0x00FEE; (3,206)=1 setzt nur 20A0/20A1 sub10 @0x01FF0). Die
+Reihenfolge der Kette ist durch den Nutzer-Auftrag erzwungen (Leiter 2000 bis zur Flut gesperrt -> 2050/2020/2060/Strom erst
+NACH der Flut; beide 2030-Lifte haengen am Generator 2060), also kann der Ring vor der Flut nicht der Weg sein.
+Entscheid j1: Mit dem Ende der Flut (Bits 103 + 100) wird (3,206) = 1 gesetzt — die 11A0/11A1-Tuer nach 20A0 ist danach
+offen (PORT-WAHL als Folge der Port-Flut; kein neuer Text, die Tuer oeffnet wie im Original nach sub10). Weg nach der Flut:
+20B0 -> Leiter -> 2050 -> 2020 -> 2030 Nordgalerie -> 2060 -> 2040 -> 2070 Nordgang -> 11A0 -> 20A0 -> Sprung ins Wasser ->
+2090 -> Tuer Slot 0 -> 2080 -> Rechner (Bit 107) -> 2030 entleert. Passt zur Geschichte der Spuren F/G (2090-Szene mit dem
+Alligator, dann 2080 mit Marvin/John, der Kanister fliegt zurueck ins 2090-Becken). j2 (Waten im gefluteten Ring) und j3
+(Flut erst nach 2080) verworfen: j2 widerspricht dem Ertrinken (Pegel 1800 ueber dem Ring), j3 widerspricht der vom Nutzer
+verlangten Leiter-Sperre bis zur Flut.
+Spur C setzt j1 um (Riegel: (3,206) vor der Flut 0, danach 1; zu Fuss gemessener Weg 11A0 -> 20A0 -> 2090 -> 2080 fuer Leon
+UND Elza, Alligator dabei per Testhaken ruhig/entfernt), Dossier §7 mit dem Weg fuer den Nutzer.
+
+## 2026-10-24 09:17 — Nachtrag 6 (Wortlaut; widerruft Entscheid C-E2c, betrifft Spur C und die Alligator-Spuren B/F/G)
+
+> Nein, du darfst keine zusätzliche Tür öffnen um die Kette zu lösen. Dann passt die Rätselkette so nicht, und wir müssen
+> sie anders machen.
+>
+> Betreff Aligator darfst du alles machen was du willst. Du darfst auch die Startposition des Aligators und die Position der
+> schwimmenden Zombie Leiche, die sichtbar den Schlüssel hat ändern, wenn das Inszenatorisch besser aussieht. Wichtig ist -
+> so stelle ich mir das vor - Leon kommt im Raum an, sieht die Zombie Leiche mit dem Schlüssel in der Cutscene. Dann kommen
+> oben in 2080 die Zombies rein. Dann erneut Kamera auf Zombie mit Schlüssel. Aligator kommt frisst den Zombie samt
+> Schlüssel. Macht danach Richtung Leon eine schrei und Schüttel Animation. Danach geht der Kampf los, mit der Kampfmusik
+> von Resident Evil 2.
+
+Folgen (Orchestrator):
+- **C-E2c ist WIDERRUFEN** (keine zusaetzliche Tuer; die Original-Sperre 11A0/11A1 Slot 4 bleibt). Die Kette nach der Flut
+  wird neu entworfen — Vorschlag an den Nutzer, Entscheid folgt als Nachtrag; bis dahin keine Umsetzung von j1.
+- **Alligator (B/F/G):** freie Hand bei Startlage des Alligators und Lage der schwimmenden Zombie-Leiche mit dem Schluessel
+  (Inszenierung). Szenenfolge der 2090-Ankunft (Spur F, mit Spur G): Leon kommt an -> Kamera auf die Zombie-Leiche mit dem
+  blinkenden Schluessel -> oben in 2080 kommen die Zombies herein (die 8 Zombies der Spur G) -> erneut Kamera auf den Zombie
+  mit dem Schluessel -> der Alligator kommt und frisst den Zombie samt Schluessel -> Schrei- und Schuettel-Animation in
+  Richtung Leon -> Kampfbeginn mit der Kampfmusik aus Resident Evil 2 (RE2-Alligator-BGM aus ROOM40A0 belegen).
+
+## 2026-10-24 09:22 — Nachtrag 7 (Wortlaut; Antwort auf die Frage "Wie soll 2030 nach der Flut wieder trocken werden?"; Spur C)
+
+Frage des Orchestrators (gekuerzt): 2080 erreicht man nur ueber die 2030-Suedgalerie (Lift B vom Ring; beide Lifte brauchen
+den Generator 2060) oder aus 2090; wegen der Leiter-Sperre kommen 2050/2020/2060 und damit der Strom erst nach der Flut.
+Angeboten: "Pumpe in 2050" oder "2030 laeuft durch 20B0 leer". Antwort des Nutzers:
+
+> Nach der Aktivierung des Stroms ist 2030 leer gelaufen.
+
+Folgen (Orchestrator, Umsetzung Spur C):
+- Ausloeser der Entleerung = Strom aktiviert (Generator 2060, Original-Ergebnisbit (3,0x7E) aus 2060; Setzer und Leser mit
+  SCD-Offsets belegen). Ist die Flut gelaufen (Bits 103 + 100) und der Strom an, ist 2030 beim naechsten Betreten trocken
+  (Zustand wie bisher nach Bit 107; Bit 107 wird mit dem Strom gesetzt, oder der Zustand haengt direkt an (3,0x7E) — Wahl mit
+  Beleg im Dossier). Kein neuer Text noetig.
+- Der Rechner in 2080 macht nur noch seine ORIGINAL-Aufgabe (Wasser in 2080 senken, Tuer nach 2090 frei, (3,245)); die
+  Port-Erweiterung "2080_rechner_erw" und die Texte 2080 Id 40-41 entfallen (VERTRAG 1.2 entsprechend).
+- Ring-Sperre C-E2 (20B0 Ost-Tuer, 2070 Slots 1/2) gilt nur, solange 2030 geflutet ist (Flut gelaufen UND Strom aus).
+- Weg nach der Flut (zu Fuss messen, Leon UND Elza, Riegel): 20B0 -> Leiter -> 2050 -> (Kisten-Raetsel) -> 2020 -> Kurbel
+  (3,219) -> 2030 Nordgalerie -> 2060 Generator -> Strom -> 2030 trocken -> Lift -> Ring -> Lift B -> Suedgalerie -> 2080
+  -> Rechner -> 2090. Keine zusaetzliche Tuer, keine Original-Sperre umgehen.
+
+## 2026-10-24 09:24 — Nachtrag 8 (Wortlaut; ergaenzt Nachtrag 7, Spur C)
+
+> der Wasser pegel in 2030 kann dann noch auf reling höhe sein. also quasi nur noch der untere bereich geflutet nach strom
+> aktivierungüber generator.
+
+Folgen (Orchestrator, Umsetzung Spur C):
+- Nach der Stromaktivierung (Generator 2060) sinkt das Wasser in 2030 NICHT ganz ab, sondern bleibt auf Relinghoehe stehen:
+  nur der untere Bereich (Schachtgrund, Steg/Bruecke auf Band 1, Tank mit Ventil 13) bleibt geflutet, der Ring ist trocken
+  und begehbar (Lift A/B, Ring-Tueren 20B0-Ost und 2070 Slots 1/2 wieder offen).
+- "Relinghoehe" aus der Geometrie belegen (Gelaender-Zellen der SCA mit Offsets, z. B. Steg-Gelaender Zellen 3/4 und die
+  Ring-Reling; Hoehe so, dass der Ring trocken bleibt und der untere Bereich unter Wasser steht) und mit Bildern aus den
+  Kameras des Rings und der Draufsicht zeigen (vorher/nachher).
+- Der geflutete untere Bereich ist nicht begehbar (kein Weg unter Wasser; z. B. die Treppe zum Tank gesperrt wie die
+  Steg-Sperre vor dem Pult) — Umsetzung mit Beleg, Riegel. Gegenstaende im unteren Bereich (z. B. Schrotpatronen am Steg)
+  sind nach der Flut nicht mehr erreichbar: im Dossier fuer den Nutzer nennen.
+
+## 2026-10-24 09:26 — Nachtrag 9 (Wortlaut; Reihenfolge in 2030, Spur C)
+
+> und die brücke in 2030 muss man entsprechd vorher runtergelassen haben, damit man das valve rätsel vorher lösen kann.
+
+Folgen (Orchestrator, Umsetzung Spur C):
+- Reihenfolge in 2030: Bruecke herunterlassen (Pult + Ventil 13, Bit 102) -> erst DANN ist das Ventilraetsel loesbar -> Flut.
+- Wo liegen die nummerierten Ventile im Bild wirklich? Aus den Hintergruenden/Kameras von 2030 belegen (Bildbogen mit den
+  Ventil-Schildern und ihrer Lage in der Kollision). Liegen sie im unteren Bereich (ueber den Steg/die Bruecke erreichbar),
+  gehoert der Ausloeser des Ventilraetsels dorthin (dann ergibt sich die Reihenfolge aus dem Weg); liegen sie am Ring,
+  sperrt Bit 102 das Ventilraetsel (Aktionstaste vorher: vorhandene/Port-Nachricht aus den Ids 2030 40-49, Wortlaut als
+  Vorschlag fuer den Nutzer). Riegel: Ventilraetsel vor Bit 102 nicht ausloesbar, danach ja; Weg zu Fuss (Leon UND Elza).
+- Nach der Flut liegen die Ventile ggf. im gefluteten unteren Bereich (Nachtrag 8) — das ist gewollt.
+
+## 2026-10-24 09:55 — Nachtrag 10 (Nutzer-Entscheid per Auswahl; Sicherung vor der Flut, Spur C)
+
+Frage des Orchestrators (Hinweis H-a der Abnahme C 2): Der Generator 2060 braucht die Sicherung ((3,144), 2060 sub19
+@0x0169E; ohne sie msg 3 "One of the fuses is missing..."); die Sicherung liegt in 2030 im UNTEREN Bereich (Slot 9 @0x01BAA,
+Steg-Suedlandeplatz, Band 1), der nach der Flut geflutet bleibt -> wer sie vor der Flut nicht aufhebt, bekommt nie Strom.
+Angeboten: "Flut erst mit Sicherung" / "Sicherung wird nach 20B0 gespuelt" / "Sicherung woanders hinlegen".
+**Gewaehlt vom Nutzer: "Flut erst mit Sicherung (Empfohlen)"** — Beschreibung der Option: "Die Ventile lassen sich erst
+drehen, wenn die Sicherung aufgehoben ist (vorher ein kurzer Text am Ventil). Die Sicherung bleibt am Original-Platz; man
+kommt nach Nachtrag 9 ohnehin ueber die Bruecke an ihr vorbei. Kein Softlock moeglich."
+
+Folgen (Umsetzung Spur C): Bedingung des Ventilraetsels = Bruecke unten (Bit 102, Nachtrag 9) UND Sicherung aufgehoben
+(Item-Taken-Bit der Sicherung aus dem RDT-Zensus belegen — nicht "im Inventar", denn sie kann schon in 2060 eingesetzt
+sein). Vorher an den Ventilen ein kurzer Port-Text (Id aus 2030 40-49, Wortlaut als Vorschlag). Riegel: ohne Sicherung kein
+Ventilraetsel, mit Sicherung ja; ganzer Ablauf zu Fuss (Leon UND Elza).
+
+## 2026-10-24 10:50 — Orchestrator-Entscheide E-E1..E-E3 (Abnahme E 2; der Nutzer kann widersprechen)
+
+- **E-E1 (Mangel 3, Vertrag):** Die spielweit wirkenden Haken der Spur E (Bildreihenfolge Spiel-Task @0x80020de4 vor
+  Nachrichten-Takt @0x80020f3c/@0x80010044; Message_on kehrt zurueck @0x80040520, Freeze ueber @0x8003f040; Apply-Bild nicht
+  praesentiert @0x80021558/@0x80021560) sind angenommen, weil sie das Original nachbilden — in scd_vm.c, main.c, render_pc.c,
+  msg_common.c, player_common.c, re15_inv_screen.c je klein und markiert. Bedingung: Bei der Integration laufen alle
+  Nachrichten-/Szenen-/Tuer-Riegel (msg, scd, cut, door, szene, karte) mit; Konflikte mit C/F/G (op_message_on) und D
+  (render_pc.c, main.c) werden dort beidseitig geloest.
+- **E-E2 (Maengel 1/2, Renn-Stopp):** Der Renn-Stopp des Originals (0x80032604 @0x8003272c/@0x80032730-760, 0x80032778
+  @0x800328f8-95c) wird SPIELWEIT eingebaut (Stand 635be823 als Ausgang). unit_r36_zombieki_affen_block (Runde 36 Spur F,
+  Seed 0x67be2dfd) ist neu einzumessen: erst belegen, WAS die Sonde misst und warum der Renn-Stopp den Wert aendert; die neue
+  Schranke nur aus einer Messung mit Beleg, nicht "gruen gemacht". Der Riegel integration_r41_kleinkram_b_renn wird auf die
+  Original-Lage nach dem Auslaufen umgestellt (Original o_renn2 n93-n99: 6 Bilder, Kurbeln bei (3650,-3369)).
+- **E-E3 (Mangel 4, Softlock):** Im gehaltenen Apply-Bild laeuft der Blenden-Takt weiter (Original: @0x80020f44 vor dem
+  Present @0x80020f4c) — re15_fade_tick auch im gehaltenen Bild; Riegel: Raumeintritt ROOM2020 auf der Kante (9000,-3200)
+  blendet ein (pf-Rampe wie VORHER bis F10), Spieler steuerbar.
+
+## 2026-10-24 12:42 — Nachtrag 11 (Nutzer-Entscheide per Auswahl, 11:4x; Spur M)
+
+1. Frage: "ROOM20A0 Kamera 12, Datei 12_02, ist ein Bodenstreifen vor der Ziegelwand. Wer darauf stand, verlor im Spiel die
+   Fuesse; sie wird deshalb vorerst nicht gebaut (deine PNG bleibt unveraendert, 12_01 bleibt aktiv). Was soll damit
+   passieren?" — **Antwort: "Weglassen ist ok"** (12_02 bleibt aus dem Bau; Mangel 2 der Abnahme M 0 ist damit erledigt).
+2. Frage: "Soll ich die alten _port.png in pri/ durch die berichtigten ersetzen?" — **Antwort: "Ja, ersetzen"**.
+   Erledigt vom Orchestrator auf master 919cc1ed: 204 von 214 pri/STAGE3-6/*_port.png aus M_bilder/uebersicht/ ersetzt.
+   Ohne berichtigtes Gegenstueck (Spur M liefert sie nach, Ersatz bei der Integration): pri/STAGE3/3040+3041/01,
+   3050+3051/06+15, 30E0+30E1/06+07.
