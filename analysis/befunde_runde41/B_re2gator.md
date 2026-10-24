@@ -1904,3 +1904,22 @@ ohne Ende, bis 600 Bilder), buehne (jede laufende Kamera, Raum-Objekte), integra
   obj 0 Typ 0 (5750,-1800,-16300) Huelle 143 x 18 x 144 (Kleinteil auf der Rampe); obj 1 **Typ 3** (-9000,-1620,-5400) Huelle 21600 x 0 x
   16200 = **Wasseroberflaeche**; obj 2 Typ 0 (-1725,-1740,-21723) Gier 685 und obj 3 Typ 0 (-25,-1740,-7423) Gier 1656 = die zwei
   treibenden Leichen (Huelle ~3070 x 1300 x 1900). Der Verdecker der Abnahme 5 (E1 P1) ist obj 3.
+
+### 14.1 M1 - Opfer steht nach dem P3-Ende auf (behoben)
+- **Ursache (Code, gelesen):** enemy_ai_boss_gator.c FRESSEN `} else if (g->timer <= 340) {` (P3 = 120 Takte) und danach
+  `re15_player_victim_force_end(); pl->render_scale_q12 = 0; ... g->phase = GBP_CHASE;` - der Port-Game-Over wechselt den Raum erst
+  ~20 Bilder spaeter, so lange stand Leon (Opfer-Modus aus, voller Massstab) aufrecht neben dem Gator.
+- **Messung vorher** (Abnahme 5, nicht wiederholt): E1E state.log F881 `gr=1` -> F882 `gr=0`, Bilder F882-F902 Leon aufrecht
+  (`B41abn5/E1_ende2.png`), ebenso A2 F652-F670, MN ab F842, BL ab F782, Elza F882-F902.
+- **Beleg:** RE2 P3 @0x801011c4-e4 ohne Phasen-Schreiber; Leon-Handler Phase 3 @0x80102f24-28 setzt je Bild Spieler +0x1D3 = 0x80
+  ("gehalten") und tut sonst nichts (§14.0).
+- **Aenderung:** P3 laeuft ohne Ende (Takt-Zaehler im Clip-11-Kreis 59 Bilder, EDD1-Clip-Tabelle EM23.EMD @0x38); Opfer-Modus 4
+  (= +0x1D3 & 0x80, re15_player_is_grabbed) und Maul-Massstab bleiben bis zum Raumwechsel - den raeumt der Raumlader (re15_enemy_reset
+  -> re15_player_victim_reset, re15_actor_init setzt render_scale_q12 = 0, room_common.c:261). Messzeile: `Maul-Sitz Ende` jetzt im
+  Bild der Game-Over-Uebergabe (g_gameover_active, letztes Bild des Raums) bzw. beim Raumwechsel, mit "Opfer gehalten N/N".
+- **Messung nachher** (exe `B41nb6/mess/E1`, Tuerweg 20A0 -> 2090, `EXIT_AT=251#1240` = durch das Game Over bis in den neu gestarteten
+  Raum): state.log `gr=1` von F627 bis F902 in allen 276 Bildern, danach Bildzaehler-Reset (Raum 1240); debug.log `Maul-Sitz Ende F902:
+  Bilder 275 (P1 14 P2 120 P3 141), ... Kiefer-Abstand max 2 ..., Opfer gehalten 275/275, Opfer frei 275/275 ..., letztes Finisher-Bild
+  F902 (Game-Over-Uebergabe)`. Bilder `B41nb6/E1_nachher_ende.png` (F760-F902) und `E1_nachher_ende_zoom.png` (x3, Aufhellung x2,5):
+  F870-F898 Gator aufgerichtet mit Leon (blau) im Maul unter YOU DIED, **F902 ungeblendet: Leon im offenen Maul** - kein Bild mit
+  stehendem Opfer. Vorher `B41abn5/E1_ende2.png`.
