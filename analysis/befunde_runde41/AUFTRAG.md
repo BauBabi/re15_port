@@ -241,3 +241,56 @@ an der Kurbel (Spielerlage nach `Pos_set` @0x0A8C = (3650,-1800,-2925)), obwohl 
 Original hat in Cut 3 keine PRI (RDT @0x3FC = ff ff ff ff). Tiefe/Ebene dieser Freistellung belegen und korrigieren
 (Nutzer-Dateien unter pri/ nicht aendern — nur Zuordnung/Tiefe im Maskenbau), Vorher/Nachher-Bild genau an dieser Stelle,
 und dieselbe Pruefung (Spielfigur an begehbaren Stellen VOR der Freistellung) fuer alle 53 neuen Masken.
+
+## 2026-10-24 03:58 — Orchestrator-Entscheide B6-B8 (Fragen aus Nachbesserung B 1, c59802b5; der Nutzer kann widersprechen)
+
+Massstab: Nutzer-Auftrag "RE2-Alligator-Finisher" + Nachtrag 4 "RE2-artige Kameraschnitte"; Regel Beta -> Retail (wo RE1.5
+nichts vorgibt, gilt RE2).
+- **B6 Finisher-Kamera = RE2.** Im Alligator-Finisher bleibt der Finisher-Schnitt (FRESSEN P0, Sperre + Cut @0x80100fbc-ff4,
+  kein Ende) bis zum Game Over stehen; die RE1.5-Todeskamera (FUN_80015850: Weissblende, kreisende Kamera) wird fuer diesen
+  Tod NICHT gezeigt. Die Game-Over-Folge danach bleibt die des Ports. Messung: Finisher-Lauf bis Game Over, Cut und Bild je 20
+  Bilder, kein Kamerawechsel nach F658.
+- **B7 Intro ohne Wanddurchdringung.** Der Kopf darf im Westkanal nicht ueber die Wand ragen (gemessen F160-F279 Cut 7,
+  Kopf x -9574 / Wand x -8900). Form = RE2 (Clip 6 -> Clip 3, Knick yaw += 1024 @0x80100938-48 unveraendert); die
+  Startlage/-gier des Intros in ROOM2090 wird so gewaehlt, dass der Knick auf Leons Angriffslinie endet (PORT-WAHL, im Dossier
+  mit Rechnung). Messung: Kopf-x je Bild F160-F279 innerhalb der Wand, Bildbogen.
+- **B8 Seitliche Sicht bleibt.** ROOM2090 hat keine frontale Zonenkamera in Explosions-/Finisher-Lage; neue Hintergruende
+  werden nicht erfunden. Die Massstabsgrenze (groesster RE2-Schnitt) bleibt.
+Umsetzung B6/B7 in der naechsten Nachbesserung der Spur B (oder, falls B vorher besteht, als eigener Auftrag vor Spur F).
+
+## 2026-10-24 04:01 — Orchestrator-Entscheide nach Nachbesserung A 1 (7db5a6b2 / 0636c300; der Nutzer kann widersprechen)
+
+- **A-E3 main.c-Haken der Spur A angenommen** (wie B5): Schatten-Bedingung Typ 0x24 und 4. Wert von RE15_PLAYER_POS = Band
+  (Tuer-Landungsriegel). Kein Mangel.
+- **A-E4 NPC-Schrittgeraeusche mit Lautstaerke und Richtung (Nachtrag 3 "Fussschritt-Sounds ... auch fuer die NPCs"):** die
+  Abstands-/Seiten-Regel des Originals (FUN_80045a64, Aufruf @0x80045830) wird an re15_audio_footstep angebunden (Spur A;
+  1-5-Zeilen-Haken in audio_pc.c, die Spur D ist integriert -> Konflikt bei der Integration aufloesen). Abnahmepunkt der
+  Spur A: ein NPC-Schritt in 2000 ist leiser/seitlich je nach Abstand und Lage zur Kamera wie im Original (Werte je Abstand
+  aus FUN_80045a64 mit Adressen, Messzeile je Schritt).
+- **A-E5 RBJ-Binder (A OFFEN 9, Beleg A_belege/nb1d/rbj_a3_zensus.txt) gehoert Spur J.** Statisch bindet das Original
+  (FUN_8001b3f8: a3 kumulativ ueber die Records, spaetere Records ueberschreiben, Spieler = letzter Record mit Bit 0) in 12
+  Raeumen anders als der Port (rbj_resolve_slot / re15_emd_parse_rbj): 2000, 3091, 30E0, 4000, 4001, 4010, 5011, 6030,
+  6031 (Spieler orig rec2, Port rec0; Gegner-Slot 1 orig rec2, Port ungebunden), 3060 (Gegner orig {0:1, 2:2}, Port
+  {0:1, 1:2}), 1040/1041 (Spieler orig rec-1). Das ist sehr wahrscheinlich die Ursache der Nutzer-Punkte "3060 Marvins
+  Animation" (Spur J) und "3091-Szene mit staendig falschen Animationen" (Spur K).
+  * **Spur J** baut den Binder byte-true als ERSTEN Schritt (Disasm FUN_8001b3f8 selbst lesen, Adressen im Kopf), misst ihn
+    zur Laufzeit in allen 12 Raeumen (welcher Record spielt je Slot, vorher/nachher) und committet ihn SOFORT als eigenen
+    Commit mit `rbj-binder` in der ersten Zeile der Nachricht. Danach die eigenen Punkte (3060/3061).
+  * **Spur K** aendert den Binder NICHT selbst. Sie beginnt mit den Punkten, die ihn nicht brauchen (30C1 Sherry Modell +
+    Waffe, Analyse der 3091-Szene); sobald J den Commit hat (`git -C <ROOT>/.claude/worktrees/r41_stage3szenen_a log --oneline
+    --grep rbj-binder`), uebernimmt K ihn UNVERAENDERT per `git cherry-pick <hash>` (bei der Integration loest git den
+    gleichen Patch konfliktfrei) und misst 3091 darauf. Abweichungen am Binder meldet K im Dossier an J (nicht selbst aendern).
+- Engine-weite Restpunkte der Spur A (OFFEN 1 ESP-Sprites im ersten Bild nach dem Kamerawechsel, OFFEN 2 RVD-Schaltzeitpunkt,
+  OFFEN 3 Gegner-INIT-Takt, OFFEN 4 allgemeine Szenensperre AUTO/FLAG_CHG) bleiben fuer die naechste Runde (UEBERGABE).
+
+## 2026-10-24 04:52 — Orchestrator-Auftraege nach Nachbesserung E 1 (kein Nutzer-Wortlaut; Spur E)
+
+- **E-N1 Kamera-Flackern ROOM2020 (Nebenbefund der Nachbesserung E 1, Lauf g2):** steht der Spieler bei (9000,-3200), wechselt
+  der Port JEDES Bild zwischen Cut 0 und Cut 2 (F1..F299); im Original-Video steht dieselbe Lage ruhig auf Cut 0. Das ist ein
+  sichtbarer Port-Fehler in einem Raum der Spur E und wird von Spur E behoben: Mechanismus der Zonen-Umschaltung im Original
+  belegen (RVD-Pruefung, Reihenfolge/Hysterese, Adressen), Ursache im Port finden, beheben, vorher/nachher an genau dieser
+  Lage messen (Cut je Bild), dazu ein Riegel. Abnahmepunkt der Spur E.
+- **E-N2 Geh-Stopp waehrend der Frage (Punkt Kurbel):** "Mechanismus nicht gefunden = NICHT fertig". Der Port wechselt beim
+  Anlauf im Gehen zwischen Message_on 0 und 1 ein Bild lang auf Stehen 200, das Original-RAM zeigt waehrend der Frage noch
+  Gehen. Den Geh-Stopp (Kommando 1, 0x80031de8) disassemblieren, das Original nach dem Ja im Geh-Fall messen (DuckStation,
+  Ja-Eingabe zuverlaessig machen) und den Port angleichen oder mit Messung + Adresse als gleich belegen.
