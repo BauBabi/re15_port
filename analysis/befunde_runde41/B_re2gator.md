@@ -1356,3 +1356,53 @@ Riegel auf die Lagen E1 und C3 ueber >= 300 Bilder; Bildbeleg) -> Bau -> gezielt
   546 Ostwand (GUARD-Ziel GPAT (6500,-12600) liegt 700 vor der Ostwand = hinter der Klemmlinie 7200-1466), dazu C3 F634 nach der
   CROSS-Landung (Plattform-Slab). Ausgenommen (kein CHASE/GUARD-Bild bzw. RE2-Knick): Intro-Start (Pos_set-Zwilling, unsichtbar
   davor), CROSS-Start (Bahn-Blick, Nutzer-Design), +1024 am Clip-3-Ende (@0x80100938-48 / @0x80100eb0-c0, Lunge-Ende ebenso).
+
+### 12.1 M1 (Punkt 3): der getragene Kanister lief dem Kopf ein Bild hinterher - behoben
+- **Ursache (bestaetigt, zwei Teile):** (1) ZEITPUNKT - `gr2_kan_folgen` lief in `re15_gr2_takt` am ANFANG des Boss-Takts, vor
+  Befreiung, Wende, `re15_ai_advance`, Bildvorschub und Dispatcher-Klemme; gezeichnet wurde diese Lage zur Pose NACH dem Takt.
+  (2) POSE - `gr2_bone_welt` rechnet die Keyframe-Pose ohne Zusaetze (g_anim_pose_actor = NULL): ohne Kopf-az +0x22A (in Stufe
+  2..7 bis ~+204) und ohne Ueberblendung, waehrend der Zeichner beides zeichnet. Dieselben zwei Fehler trugen die Effekt-
+  Quellmatrizen Part 6 / Part 7 / Kanister (nachgefuehrt am Takt-Anfang aus der Keyframe-Pose).
+- **Messung vorher:** Abnahme 3 (Pruefer-Sonde 'nachlauf': Wende 0x60/Bild 619-637 je Bild, Biss bis 409, > 300 in 51/240 Bildern;
+  exe C3 F1206->F1207, F1278->F1282, F1337->F1338). Eigener Lauf `B41nb4/mess/C3v` (Stand 47efb932, Abnahme-Rezept C3 +
+  RE15_POSE_DUMP, Framedump F1090-F1345): Kanister F1280-F1284 als grauer Zylinder AUF/HINTER dem Kopf (Bild unten, obere Reihe).
+  Nebenbefund (§12.0): gezeichnete Pose im Dash 150 Bilder eingefroren, sonst dauerhaft 50 % Vorbild.
+- **RE-Beleg:** §12.0 (Kind der Part-6-Weltmatrix @0x801018d0/@0x801018e0, FUN_8002d030 @0x801018f0, Lokallage @0x80101910-18,
+  Root-Reihenfolge @0x80100200 -> @0x80100284 -> @0x80100320 -> Kopf-az @0x8010037c-90; Ueberblendung @0x8001a34c-ac,
+  @0x800296a8-ec, @0x800299c0-cc).
+- **Aenderung:**
+  - enemy_ai_boss_gator.c `re15_gator_boss_tick` = Takt-HUELLE um den bisherigen Takt (`gb_takt`): (1) Ueberblend-Zaehler -1 je
+    Takt VOR dem Takt (@0x800299c0-cc; das Bild eines Clipwechsels zeigt den vollen Zaehler n wie RE2), (2) die Wand-Klemme, die
+    bisher der Dispatcher nach dem Takt rechnete (enemy_ai_common.c Typ 0x23, re15_collision_constrain_enemy(&g_room_rdt, al_ox,
+    al_oz, .., hit_radius_min, y, 4)), BITGLEICH am Takt-Ende (gleiche Funktion, gleiche Argumente, gleiche Ausnahme CROSS/befrei);
+    `re15_gator_boss_skip_clamp` meldet fuer den aktiven Boss jetzt 1 (der Dispatcher und die Sonden-Nachbauten klemmen nicht
+    doppelt; enemy_ai_common.c unveraendert), (3) `re15_gr2_nachtakt` (gator_re2_r41.c).
+  - `re15_gr2_nachtakt`: Pose wie der NPC-Zeichner in diesem Bild (main.c NPC-Pass: clip_override = (anim_flags & 4) ? motion : -1,
+    re15_compute_actor_kf, re15_skel_compute_pose mit g_anim_pose_actor = Aktor -> Ueberblendung + re15_gator_spine_arc_vz
+    (+0x22A/+0x228/Bogen)), Ueberblend-Schnappschuss prev_root/prev_angles/anim_prev_valid gesichert und zurueckgeschrieben
+    (der Zeichner rechnet danach aus demselben Schnappschuss genau diese Pose). Daraus: Anhaengen (t == 13 markiert in Stufe 2,
+    FUN_8002d030 gegen die GEZEICHNETE Part-6-Matrix dieses Bildes -> kein Sprung), Kanister-Weltlage = Part6 x Skala x Lokallage,
+    Effekt-Quellen Part 6 / Part 7 / Kanister (Status-0x800-Kopie FUN_8001d894 @0x8001d8ac-fc in re2fx_tick NACH dem Spielschritt).
+  - R1-Start (`re15_gr2_r1_start`) nimmt die zuletzt GEZEICHNETE Kanister-Matrix (@0x80102300-24), Fontaene (FUN_80103eb4,
+    `gr2_fontaene_takt`) die von `re15_gr2_nachtakt` gefuehrten Puffer (kein Nachrechnen am Takt-Anfang mehr).
+  - Ueberblendung (Nebenbefund): `gr2_blend(e, n)` setzt anim_frac = n UND anim_blend_rate = 4096 / (n + 1) (@0x8001a37c-ac) fuer
+    Clip 0/1 (32/4 @0x80100c38/@0x80100cfc) und Dash-Clip 2 (16 @0x80100dac-b4); Grossreaktion Clip 10 (3, @0x80102c44) Rate 1024.
+  - Messzeile (PC, gator_re2_pc.c nach dem NPC-Pass, `re15_gr2_kanister_sitz`): aus dem Ueberblend-Schnappschuss, den der Zeichner
+    eben geschrieben hat (Vorbild-Gewicht 0x1000 = genau die gezeichneten Winkel, Zusaetze unveraendert), Part6(gezeichnet) x
+    Lokallage gegen die gezeichnete Kanister-Lage; debug.log `[gator-re2] Kanister-Sitz F<n>: angehaengt <k> Bilder, Abweichung
+    max <m> ...` alle 30 Bilder und bei jedem neuen Hoechstwert. Ohne Wirkung auf den Aktor.
+- **Messung nachher:**
+  - Riegel `unit_r41_re2gator_sitz` (NEU; Lage der Pruefer-Sonde, Zeichner-Nachbau nach jedem Takt): `(a) Aufnahme Stufe 3..7 + 40:
+    66 angehaengte Bilder, groesster Abstand zu Part6(Bild) x lokal 0` | `(b) 240 Bilder, Wende 105 (max 0), Biss 43 (max 0),
+    groesster Abstand 0` | `(c) Befreiung 17 Schub-Bilder, Gier fest 1, groesster Abstand 0` | `(d) Ueberblendung 16 Bilder (Zaehler
+    bis 16), groesster Abstand 0; Effekt-Quelle Part 6 falsch in 0 Bildern`.
+  - GEGENPROBE (Riegel scharf?): derselbe Riegel gegen einen Bau, der `re15_gr2_nachtakt` am Takt-ANFANG ruft (= alter Zeitpunkt):
+    `Wende max 626, Biss max 342` (Abnahme 3: 619-637 / 409), Befreiung 52, Ueberblendung 583, Effekt-Quelle Part 6 falsch in 424
+    Bildern -> 5 Fehler. Danach zurueckgebaut (Datei-Kopie), neu gebaut.
+  - exe, NUR-M1-Messbau (die M2-Befreiung voruebergehend auf den alten Snap zurueckgesetzt, nicht eingecheckt) `B41nb4/mess/C3m1`,
+    Rezept C3: Zustandslog F1-F1400 BITGLEICH mit C3v (Leon, Gator-Clip/Bild/Lage/Gier - `vgl_bahn.py`: 1400/1400), also derselbe
+    Ablauf; `[gator-re2] Kanister-Sitz F1379: angehaengt 270 Bilder, Abweichung max 0 (F1110)` - in jedem gezeichneten Bild sitzt der
+    Kanister an Part6(Bild) x Lokallage, auch in den Wenden, Bissen und den (in diesem Messbau noch alten) Befreiungs-Snaps.
+    Bild `bilder_r41b/nb4_m1_C3_F1276-1284_vorher_nachher_x3_gain2.png` (Ausschnitt 3x, Aufhellung 2,2): oben vorher (C3v) der
+    Zylinder auf/hinter dem Kopf ab F1280, unten nachher (C3m1) das gelbe Kanister-Ende zwischen den Kiefern, ab F1282 vom Kiefer
+    verdeckt (er steckt im Maul).
