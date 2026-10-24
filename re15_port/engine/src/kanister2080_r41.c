@@ -111,6 +111,7 @@ static int      s_lande_ok;
 static int      s_ziel_slot = -1;     /* Aktor, den der NPC gerade anvisiert */
 static int      s_ziel_n;             /* abgegebene Schuesse */
 static int      s_set_2090;           /* 1 = Kanister in 2090 gesetzt (beim Verlassen wieder entfernen) */
+static uint64_t s_kopf_ab;            /* Aktor-Bits: Kopf-ab gemeldet */
 
 #ifdef RE15_PLATFORM_PC
 #define K_LOG(...) do { fprintf(stderr, "[k2080] F%u ", (unsigned)g_engine.frame_count); fprintf(stderr, __VA_ARGS__); \
@@ -476,7 +477,6 @@ static void schuss(re15_actor_t *n)
     const int getroffen = r > 0 ? r - 1 : -1;
     if (getroffen > 0) {
         const re15_actor_t *t = &g_actors[getroffen];
-        if (t->hp < 0 || t->state == 3) s_zaehler[2]++;
         K_LOG("Schuss %d: Treffer Slot %d (Ziel %d) hp=%d state=%d zeile=%d", s_ziel_n, getroffen, s_ziel_slot,
               (int)t->hp, (int)t->state, (int)t->sub_state_1);
     } else {
@@ -508,7 +508,7 @@ static void ausloesen(void)
     const int slot = starten(s_prog_start, s_prog_start_n);
     s_zaehler[3]++;
     s_phase = RE15_K2080_NACH_2080;
-    K_LOG("AUSLOESER geschwaecht (RE2 +0x218&0x20 @0x80101ebc-dc), Treffer %d: Leon (%d,%d,%d) Gier %d Cut %d -> ROOM%04X "
+    K_LOG("AUSLOESER geschwaecht (RE2 +0x218&0x20 @0x80101ebc-dc), Treffer %d: Spieler (%d,%d,%d) Gier %d Cut %d -> ROOM%04X "
           "(Programm START Faden %d)", re15_gr2_treffer(), (int)s_leon[0], (int)s_leon[1], (int)s_leon[2], (int)s_leon[3],
           s_leon_cut, (unsigned)(RE15_K2080_RAUM_2080 | (unsigned)re15_char_variant()), slot);
 }
@@ -562,6 +562,17 @@ void re15_kanister2080_r41_tick(void)
         s_zaehler[0]++;
         if (re15_k2080_tuerton_hook) re15_k2080_tuerton_hook();
         K_LOG("Tuer-Ton DOOR06 Satz 1 (Door_exit @0x800141f0) - Szene");
+    }
+    /* MESSZEILE "Kopf platzt": RE2 FUN_801092C4 stempelt Part 8 (Kopf) mit Flagwort |= 0x4A (eigene Matrix + Drift,
+     * @0x80109460-98) - je Zombie einmal, sobald der Kopf vom Rumpf ist. */
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *e = &g_actors[s];
+        if (!e->active || e->type != RE15_K2080_ZOMBIE_TYP || (s_kopf_ab & (1ull << s))) continue;
+        if ((e->re2z_part_flags[8] & 0x40u) && (e->re2z_part_flags[8] & 0x08u)) {
+            s_kopf_ab |= (1ull << s); s_zaehler[2]++;
+            K_LOG("Kopf ab: Slot %d (Part 8 Flagwort 0x%X, RE2 FUN_801092C4 @0x80109460-98), %d von %d", s,
+                  (unsigned)e->re2z_part_flags[8], s_zaehler[2], s_ziel_n);
+        }
     }
     if (n && sig(RE15_K2080_SIG_ZIEL)) { sig_setzen(RE15_K2080_SIG_ZIEL, 0); ziel_waehlen(n); }
     if (n && s_ziel_slot > 0 && s_kan_zustand == 0) nachfuehren(n);
@@ -618,7 +629,7 @@ void re15_kanister2080_r41_install(uint16_t room_id)
         }
         if (s_phase == RE15_K2080_NACH_2080) {
             s_phase = RE15_K2080_IN_2080;
-            s_kan_zustand = 0; s_ziel_slot = -1; s_ziel_n = 0;
+            s_kan_zustand = 0; s_ziel_slot = -1; s_ziel_n = 0; s_kopf_ab = 0;
             baue_szene();
             const int slot = starten(s_prog_szene, s_prog_szene_n);
             bit_setzen(RE15_K2080_BIT_ANKUNFT, 1);
@@ -648,8 +659,10 @@ void re15_kanister2080_r41_install(uint16_t room_id)
             bit_setzen(RE15_K2080_BIT_KANISTER, 1);
             baue_rueck();
             const int slot = starten(s_prog_rueck, s_prog_rueck_n);
-            K_LOG("ROOM%04X RUECKKEHR: Leon (%d,%d,%d), Programm Faden %d, Bits %d/%d = 1", raum, (int)s_leon[0],
-                  (int)s_leon[1], (int)s_leon[2], slot, RE15_K2080_BIT_SZENE, RE15_K2080_BIT_KANISTER);
+            K_LOG("ROOM%04X RUECKKEHR: Spieler (%d,%d,%d), Programm Faden %d, Bits %d/%d = 1, Zone-7-Tot-Bits %d..%d gesetzt: %d von %d",
+                  raum, (int)s_leon[0], (int)s_leon[1], (int)s_leon[2], slot, RE15_K2080_BIT_SZENE, RE15_K2080_BIT_KANISTER,
+                  RE15_K2080_TOT0, RE15_K2080_TOT0 + RE15_K2080_N_ZOMBIES - 1, RE15_K2080_N_ZOMBIES - lebende_zombies(),
+                  RE15_K2080_N_ZOMBIES);
         }
         if (bit(RE15_K2080_BIT_KANISTER)) {
             if (!s_lande_ok) {                           /* Spielstand geladen: dieselbe Bahn aus der Nennlage (Dossier 3.4) */
