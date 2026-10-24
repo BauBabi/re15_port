@@ -192,3 +192,34 @@ Spinnen heraus (Messung der Schubkette ohne Gegner).
 (Im nach-Lauf hielt der Plan danach UP bis zum Bildlimit; Leon glitt an obj 1 vorbei und schob obj 3 nach Sueden bis an die Zelle
 — `F2706 ... obj=3 SCHUB-GESPERRT ... lage=(4248,3344)`, eine Zellsperre, keine Kistenberuehrung; 0 Ueberlappungszeilen bis F3600.)
 => Der Nutzer-Befund ist auf dem echten Weg (Tuer + Abstieg) reproduziert (vor) und behoben (nach).
+
+### 4.5 Punkt 1, ELZA, ROOM3001 John + Sherry, ECHTER Story-Weg OHNE Flag-Vorgabe (`laeufe/p1c_3001_{vor,nach}`)
+Spur und Abnahme 0 setzten (4,198)/(4,199) per Flag. Hier setzt das Spiel sie selbst: Elza (`RE15_PSELECT_AUTO_SWITCH=1`, debug.log
+`[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`) springt nach ROOM3011 vor die Tuer (`RE15_DEBUG_JUMP=3011@250
+RE15_PLAYER_POS=-23168,11769,2048`), Plan `plaene/p1c_3001.txt`, dazu `RE15_INPUT_SCRIPT` (Basis Spielbild, Quadrat 3 Bilder je
+Sekunde) — der Wegplan laesst waehrend `RAUM`-Wartezeiten (Szene, player_mode 2) das Skript durch, das Quadrat schliesst die
+Szenentexte (msg_common.c `Cross|Square @0x80028698`). Ablauf (debug.log woertlich, beide exe gleich):
+`[aot] DOOR FIRE slot=0 rect=(-24200,11530,hw=800,hh=910) target_cut=3 spawn=(-6544,0,-17239)` -> `[room] PC loaded room3001.rdt`
+(1. Besuch: sub00 (4,198)=0 -> John/Sherry Verhaltensbyte 0x40 + Szene sub03 @0x016A6, die (4,198)/(4,199) setzt) -> zu Fuss an die
+Ost-Tuer -> `[aot] DOOR FIRE slot=1 rect=(-5555,-17520,hw=335,hh=750) target_cut=1 spawn=(-23168,0,11769)` -> `loaded room3011.rdt`
+-> zurueck `DOOR FIRE slot=0 ...` -> `loaded room3001.rdt` (2. Besuch: sub00 (4,199)=1 -> John 0x49 + Sherry 0x4b mit
+Verhaltensbyte 0x00 = Eskorte @0x015A2/@0x015B6) -> Elza wartet, geht nach (-12000,-16000), (-20000,-15500), (-14000,-13600),
+(-22000,-17000) mit Pausen -> `[flow] EXIT_AT: Bild 4000 in Raum 3001 erreicht -> exit`. Auswertung je Raumbesuch
+(`segmente.py` teilt state.txt an den Bildzaehler-Ruecksetzern; seg3 = 1. Besuch 3001, seg5 = 2. Besuch 3001).
+
+| exe | Besuch | John/Sherry (Summe 750): min | Bilder < 700 | Bilder < 750 | Ende |
+|---|---|---|---|---|---|
+| vor | 1. (Szene, danach folgen sie) | **8** (F1198) | **343 / 1283** | 344 | 260 |
+| nach | 1. | **749** (F1047) | **0** | 10 | 788 |
+| vor | 2. (Eskorte) | **13** (F979) | **3917 / 4000** | 3917 | **195** |
+| nach | 2. | **722** (F1331) | **0** | 93 | **752** |
+
+`kollision.txt` (nach): 4150 `NPC-SCHUB`, davon 3123 `slot=1 typ=49 von=2 typ=4b` (John aus Sherry), 782 `slot=2 typ=4b von=1 typ=49`;
+am Minimum `F1331 room=3001 NPC-SCHUB slot=2 typ=4b von=1 typ=49 vor=(-15670,-13178) nach=(-15789,-13135)`. Die 93 Bilder zwischen
+700 und 750 sind wie bei Leon die Wandklemme nach dem Schub (Hautabstand 18 @0x8003bce0, b0a4 nach b544, RE-Gate 1).
+Bild `zoom_p1c_3001_f2000.png` (2. Besuch F2000, beide Laeufe Kamera 1, gleicher Ausschnitt): **vor** steckt Sherry in John (Beine und
+Haar ineinander, d = 195), **nach** steht John allein, Sherry 752 dahinter; Bogen `bild_p1c_3001_vor_nach.png`.
+=> Nutzer-Befund fuer Elza auf dem echten Story-Weg (ohne Flag-Vorgabe, zwei Tuerdurchgaenge) reproduziert und behoben.
+Beobachtung (kein Mangel, s. Hinweis H3): am Anfang des 2. Besuchs laufen beide Eskorten zu einem Folgepunkt OESTLICH von Elza (sie
+steht mit Blick West an der Tuer) — vor laeuft Sherry durch Elza hindurch (Elza wird dabei in 12 Bildern 530 nach Westen gestossen,
+F73 -> F85), nach kommt Sherry nicht durch Elza und schiebt sie ueber ~100 Bilder 570 nach Osten, bevor sie seitlich vorbeigleitet.
