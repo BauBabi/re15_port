@@ -9,11 +9,10 @@
 #         Tuer -> ROOM30C0; Sprung ROOM3040, dort die TUER Slot 0 (@0x0127E, 4:196 gesetzt) -> ROOM3060 = der Weg des
 #         Spiels. Erwartet: Marvin-Modell PL0D, Tuer-Ankunft (2063,-17192), sub03 Plc_motion(2,6) @0x010BE spielt
 #         W-Bank-Clip 6 (PL00W01, 10 Bilder) und haelt Bild 9 (@0x80050fec) — nie PL00-Clip 6 (50 Bilder = Knien).
-#   3061  Punkt 2 (Elza): Spielstand ROOM3061 (Elza (-3500,-26276) Blick 0, Bits 4:244 + 3:160) + CONTINUE; das
-#         Ereignis des Aktions-AOT Slot 1 (sub00 @0x00F3A -> sub02) feuert RE15_FIRE_AOT bei Bild 450, Quadrat schaltet
-#         die Nachrichten weiter. (Gemessen: Johns Einlauf sub10 Plc_dest @0x013B2/@0x013BC laeuft bei z -26306 durch das
-#         Ausloese-Rechteck und schiebt eine dort wartende Elza bis x 262 — im Original stand die Figur erst NACH dem
-#         Einlauf im Rechteck, Savestate o3061_a; Elzas Lage spielt fuer die Szene keine Rolle, sub02 @0x01052 Pos_set.)
+#   3061  Punkt 2 (Elza): Spielstand ROOM3061 (Elza (-3500,-25500) Blick 1024 = nach -z, Bits 4:244 + 3:160) + CONTINUE;
+#         nach Sherrys/Johns Einlauf (sub09/sub10) geht Elza nach -z bis an die Wand ins Ausloese-Rechteck von Slot 1
+#         (main00 @0x00E96 (-4500,-27300) 2600x1300) und drueckt QUADRAT (Vorwaerts-620-Punkt im Rechteck, Flags 0x31) ->
+#         sub00 @0x00F3A Aot_reset sce 3 -> sub02; Quadrat im 1,5-s-Takt schaltet die Nachrichten weiter.
 #         Erwartet: Gitter an Sherrys Teil 14 (Super_set @0x0127E),
 #         Loslass-Lage (Super_reset @0x0129E) ~ Original (-18756,-266,-26788); Anker-Takte 22/22/11 (Clip 1) und 2 x 26/24
 #         (Clip 2) = Plc_flg-Folge von sub04; Sherry-Lagen gegen die Original-Reihe (o3061_s2/s3); Sherry am Ende im
@@ -151,16 +150,16 @@ elseif(TEIL STREQUAL "3061")
     endif()
     set(WORKDIR "${_basisdir}/lauf")
     file(MAKE_DIRECTORY "${WORKDIR}")
-    execute_process(COMMAND "${RE15_KARTE_ELZA}" "re15_card.mcr" 3061 -3500 -26276 0 4:244 3:160
+    execute_process(COMMAND "${RE15_KARTE_ELZA}" "re15_card.mcr" 3061 -3500 -25500 1024 4:244 3:160
                     WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 60 RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
     if(NOT _rvk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")
         message(FATAL_ERROR "${_tag}: Kartenwerkzeug exit=${_rvk}\n${_outk}")
     endif()
+    # ab Spielbild 420 (Einlauf vorbei): 0,5 s vor (nach -z an die Wand), dann Quadrat alle 1,5 s
     re15_start_spiel(_rv 900
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
         RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
-        "RE15_FIRE_AOT=1@450#3061"
-        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=460 "RE15_INPUT_SCRIPT=${_druck}"
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=420 "RE15_INPUT_SCRIPT=U0.5,W0.5,${_druck}"
         RE15_FUSSANKER_LOG=1 "RE15_STATE_LOG=state.txt" "RE15_ANIM_TRACE=anim.txt" "RE15_EXIT_AT=1#30C1"
         "${_exe}")
     if(NOT EXISTS "${WORKDIR}/debug.log")
@@ -171,6 +170,11 @@ elseif(TEIL STREQUAL "3061")
         ok("Spielstand ROOM3061 geladen (CONTINUE)")
     else()
         fail("CONTINUE nicht in ROOM3061 (exit=${_rv})")
+    endif()
+    if(_d MATCHES "\\[scd F[0-9]+\\] Cut_chg\\(6\\)")
+        ok("Quadrat am Ausloese-AOT: sub02 laeuft (Cut_chg 6 @0x01062)")
+    else()
+        fail("sub02 nicht gestartet (kein Cut_chg(6)) — Quadrat am AOT Slot 1 ohne Wirkung")
     endif()
     # Gitter (Super_set / Super_reset)
     if(_d MATCHES "\\[superobj41\\] F[0-9]+ Super_set Objekt 0 Art 0x80 Teil-Byte 0x8E lokal \\(252,192,-153\\) Rot \\(0,1024,3072\\) -> angehaengt")

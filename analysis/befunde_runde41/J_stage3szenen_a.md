@@ -174,6 +174,11 @@ im Spiel setzt es ROOM3040 sub02 @0x014EE beim Aufschliessen);
 F44 W-Clip 2 wie das Original (t=5,0 s Sub 6 W-Clip 1). Danach Tuer -> ROOM3020 als PL00 (Leon). Bild:
 J_belege/vergleich_3060_marvin_reihe.png (oben Original-Video 10 Bilder/s, unten Port-Framedump Lauf m3060_tuer3 alle
 5 Bilder: Stehen, Arm vor die Brust, Halten — gleich) und J_belege/vergleich_3060_marvin.png.
+- Wechsel zurueck zu Leon (Lauf m3060_wechsel, gleicher Weg, RE15_EXIT_AT 1250#3020, RE15_ANIM_TRACE): letztes ROOM3060-Bild
+  F104 Spieler Motion 6 / Clip 6 / 10 Bilder / Bild 9; `[aot] DOOR FIRE slot=3 ... spawn=(-11250,0,-13250)` (ROOM3060
+  @0x010E4 Aot_on 3), `[pld] Spielermodell -> PLD/PL00.PLD`; erstes ROOM3020-Bild **F0 Motion 210** (Port-Leerlauf
+  W01-Clip 1, 16 Bilder, player_common.c RE15_MOTION_IDLE_SETTLE), F6 Motion 200 (W01-Clip 3 Stand), danach der Leerlauf-
+  Wechsel 211/212 — kein W-Clip-6-Bild in 3020 (40 Clip-6-Zeilen, alle in 3060, davon 31x Bild 9). Original o3060_s2 t=8,0 s: ROOM3020 cut 6, Modell 0, cmd 0/Sub 0 bei (-11250,-13250) — gleich.
 
 ## §2 ROOM3061 — Sherry kriecht in den Schacht, Elzas Ende (Punkt 2)
 
@@ -218,7 +223,8 @@ J_belege/vergleich_3060_marvin_reihe.png (oben Original-Video 10 Bilder/s, unten
   `sw v0,116(a2)` (Objekt+0x74 = Vater-Zeiger); @0x80040c78..cbc lokal pos (pc+4/6/8) -> +0x34/+0x38/+0x3c,
   Rot (pc+10/12/14) -> +0x68/+0x6a/+0x6c. Super_reset @0x80040cd0 (Kopie Welt +0x5c/+0x60/+0x64 -> +0x34.., Vater =
   0x80072d4c). Im Port beide nicht umgesetzt (RE15_SCD_OPCODES_REFERENCE.md: `—defer`, scd_vm.c nur Laengen 16/8).
-- Zensus Plc_flg mit Bit 1/2 in allen 240 RDTs: NUR ROOM3061 sub04 (6 Stellen). Plc_motion-Flagbyte pc[3] ist in allen
+- Zensus Plc_flg mit Bit 1/2 in allen 240 RDTs: NUR ROOM3061 sub04 (5 Stellen: SET 1/2/1 @0x012EC/@0x012F4/@0x012FC,
+  SET 6 @0x01316, SET 5 @0x0131E; SET 4 @0x0130E/@0x01326 ohne Bit 1/2). Plc_motion-Flagbyte pc[3] ist in allen
   1359 Aufrufen 0.
 
 ### §2.3 Messung Original (DuckStation, MZD-Disc; Werkzeug `re15_port/tools/r41_j/j41_szene.py`)
@@ -285,7 +291,7 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
   gelesen: genau 2 Runden) schaltet sub04 @0x01330..0x0133C die SCA-Eintraege Region 2/0 (#9) und 3/1 (#17) wieder ein
   (Rechteck x -31340..12792, z -30382..-26744); Sherry steht darin und wird von der NPC-Wandklemme (Wurzel @0x8011cc64
   `jal 0x8003b0a4`, Port `re15_npc_wall_clamp`) herausgeschoben. GEMESSEN Port (integration_r41_stage3szenen_a_3061,
-  state.txt): **F1310 Sprung (-18792,-29716) -> (-18792,-30700)**; Original o3061_s2/s3 ab t14 bzw. t12 **(-18795,-30700)**.
+  state.txt, Ausloesen per Quadrat §2.11): **F1299 -> F1300 Sprung (-18792,-29716) -> (-18792,-30700)**; Original o3061_s2/s3 ab t14 bzw. t12 **(-18795,-30700)**.
   Gleiche Endlage — keine Rest-Abweichung (die frueheren Laeufe e3061_nach1/2 lasen nur die letzte Anker-Zeile).
 
 ### §2.8 Dichte Original-Reihe o3061_s3 (Slot-1 alle 0,4 s, `J_belege/o3061_s3_dicht.txt`)
@@ -312,13 +318,24 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
   (-18860,-26266), Ende des Plc_dest-Gangs in sub02/sub04 — nicht Teil dieser Punkte, OFFEN notiert).
 
 ### §2.10 Messung Port NACHHER — Elzas Ende (Punkt 2b) und John
-- `[wclip41] ROOM3061 F1421 Spieler Plc_motion(2,6) -> W-Bank-Clip 6 (... Waffe 1, 10 Bilder)` (PL04W01, Modell 4 ->
+- `[wclip41] ROOM3061 F1456 Spieler Plc_motion(2,6) -> W-Bank-Clip 6 (... Waffe 1, 10 Bilder)` (PL04W01, Modell 4 ->
   Tabelle @0x800741e8 = 97 = PL04Wxx); RE15_ANIM_TRACE: Clip 6 / 10 Bilder, Bild 9 gehalten (Riegel: 56x bis zum Wechsel).
   Original o3061_s2 t17: Spieler cmd 4 / Sub 2 / Phase 2 / Clip 6.
 - John (Typ 0x49) Plc_motion(2,6) @0x011EA: eigene Bank 1 Clip 6, 10 Bilder, Bild 9 gehalten (60 Zeilen im Trace) —
   Original t17: Gegner 1 Sub 2 Phase 2 Clip 6. (Port-Weg unveraendert, war schon richtig.)
 - Bild: J_belege/vergleich_3061_elza_ende.png (oben Original-Video 6 Bilder/s, unten Port alle 8 Bilder): Drehen zum Hund,
   Arme vor (W-Clip 6), Halten — gleich; vorher kniete Elza (J_belege/e3061_vor_ende_elza_kniet.png).
+
+### §2.11 Ausloesen wie im Spiel (Quadrat am AOT statt Abkuerzungs-Schalter)
+Der Riegel integration_r41_stage3szenen_a_3061 loest die Szene jetzt so aus wie der Spieler (vorher RE15_FIRE_AOT 1@450):
+Spielstand Elza (-3500,-25500) Blick 1024 + Bits 4:244/3:160 (probe_r36_elza_karte), CONTINUE; ab Spielbild 420 0,5 s
+vor, dann Quadrat im 1,5-s-Takt. Gemessen (Lauf `re15_port/build/r41_stage3szenen_a_wd_3061_c42fad07/lauf`, debug.log +
+state.txt): F420 vor -> **F434 Elza an der Wand (-3165,-26240)**, Vorwaerts-620-Punkt (-3165,-26860) im Slot-1-Rechteck
+x -4500..-1900 / z -27300..-26000 (main00 @0x00E96; FORWARD-Test @0x80042ea0, aot_common.c); **F450 Quadrat ->
+`[scd] thread start slot=10 first_op=0x22` = sub02** (sub00 @0x00F3A Aktions-AOT); **F497 Cut_chg(6) @0x01062**; F1049
+Super_set / F1075 Super_reset (-18753,-266,-26778); Anker-Takte 22/22/11 + 2 x 26/24; Sherry-Lagen je (3,10) neben dem
+Original; F1300 Sherry (-18792,-30700); F1456 Elza W-Clip 6, 56 x Bild 9; Wechsel 30C1 als PL0F. Elza steht ab F136
+bei (-3165,-25115) statt (-3500,-25500): Johns Einlauf (sub10) schiebt sie F131..F136 (§4.6, Spur H).
 
 ## §3 Tests (registriert NUR in re15_port/tests/unit/probes/r41_stage3szenen_a.cmake, + _rbj.cmake des Binders)
 | Test | misst | Ergebnis |
@@ -328,7 +345,7 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
 | unit_r41_stage3szenen_a_superobj | Super_set/_reset am echten Bytestrom: Loslass-Lage = Original **(0,0,0)**, Vater ausserhalb State 4 -> uebersprungen | gruen |
 | unit_r41_stage3szenen_a_wclip | (2,6) -> W-Clip 6, Halten Bild 9, Schleife, Ende bei Befehl/Raumwechsel, Sub 0/1 und 1141 unberuehrt | gruen |
 | integration_r41_stage3szenen_a_3060 | echte exe: 3020-Szene -> PL0D -> Tuer 3040 -> 3060, W-Clip 6 / 10 Bilder, Bild 9 >= 25x | gruen |
-| integration_r41_stage3szenen_a_3061 | echte exe: Spielstand + CONTINUE ROOM3061 (Elza), Gitter-Lage, Anker-Takte, Sherry-Lagen (Rest (3,10)), Sherry im Schacht (-30700), Elza W-Clip 6 gehalten, Wechsel 30C1/PL0F | gruen |
+| integration_r41_stage3szenen_a_3061 | echte exe: Spielstand Elza (-3500,-25500) + CONTINUE ROOM3061, vor an die Wand + QUADRAT am Slot-1-AOT -> sub02 (Cut_chg 6 @0x01062, §2.11), Gitter-Lage, Anker-Takte, Sherry-Lagen (Rest (3,10)), Sherry im Schacht (-30700), Elza W-Clip 6 gehalten, Wechsel 30C1/PL0F | gruen |
 | unit_r41_stage3szenen_a_rbj_{mechanik,zensus,kanal} | Binder (§0, Vorgaenger) | gruen |
 
 ## §4 OFFEN (je mit Adresse; keiner betrifft das, was der Nutzer in 3060/3061 sieht)
@@ -348,14 +365,17 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
 5. Vorbild-Stand des Ankers nach dem NPC-Takt: ein spaeteres Objekt-Ausschieben desselben Bildes (FUN_8002bd44 @0x8002be0c)
    waere nicht enthalten — in ROOM3061 kein Fall (Gitter ohne Box).
 6. Beobachtung ohne Bewertung: Johns Einlauf (sub10) schiebt im Port eine im Ausloese-Rechteck wartende Elza bis x 262; im
-   Original stand die Figur erst nach dem Einlauf dort (o3061_a). NPC-Spieler-Kollision = Spur H.
+   Original stand die Figur erst nach dem Einlauf dort (o3061_a). NPC-Spieler-Kollision = Spur H. Der Riegel 3061 wartet
+   deshalb ausserhalb des Rechtecks ((-3500,-25500), dort F131..F136 nur auf (-3165,-25115) geschoben) und geht erst nach
+   dem Einlauf selbst an die Wand (§2.11) — kein Abkuerzungs-Schalter mehr.
 
 ## §5 Fuer den Nutzer
 - Sehen: **Leon**, STAGE3, Ende von Marvins Abschnitt (ROOM3020-Szene -> als Marvin ueber 30C0 ... 3040 -> Tuer -> ROOM3060):
-  Marvin dreht sich zu den Hunden und hebt das Messer vor die Brust und haelt es (vorher: er kniete sich hin); dann Wechsel
-  zurueck zu Leon in ROOM3020. **Elza**, ROOM3061-Szene: Sherry zieht das Gitter mit beiden Haenden heraus, legt es links ab,
-  geht auf alle Viere und kriecht in die Oeffnung, bis sie verschwunden ist (vorher: sie lag vor der Wand); am Ende dreht
-  sich Elza zum Hund und hebt das Messer (vorher: Knien), John hebt die Pistole; dann ROOM30C1 als Sherry.
+  Marvin dreht sich zu den Hunden, hebt die Arme mit der Waffe vor die Brust und haelt die Haltung (Waffen-Bank PL00W01
+  Clip 6; vorher: er kniete sich hin); dann Wechsel zurueck zu Leon in ROOM3020. **Elza**, ROOM3061 (an der Wand beim
+  Gitter Quadrat druecken): Sherry zieht das Gitter mit beiden Haenden heraus, legt es links ab, geht auf alle Viere und
+  kriecht in die Oeffnung, bis sie verschwunden ist (vorher: sie lag vor der Wand); am Ende dreht sich Elza zum Hund und
+  hebt die Arme mit der Waffe (PL04W01 Clip 6; vorher: Knien), John ebenso (eigene Bank Clip 6); dann ROOM30C1 als Sherry.
 - Keine neuen Assets (shared_assets/RE2 unveraendert), keine Sprachdateien, keine neuen Bits/Nachrichten-Ids.
 - Ueberschneidung Spur K: Sherrys MODELL ab 30C1 (PL0F) und die 3091-Szene gehoeren K; hier nur die Schacht-Bewegung der
   NPC-Sherry (Typ 0x4B, EM4B aus CDEMD1) in 3061. Der RBJ-Binder (§0, e4a9f39c) wird von K per cherry-pick uebernommen.
