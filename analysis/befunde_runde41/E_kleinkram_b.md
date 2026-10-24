@@ -753,3 +753,32 @@ bei der Integration laufen alle Nachrichten-/Szenen-/Tuer-Riegel mit. Stand der 
 Neu in NB3 nur in eigenen Dateien: rennstopp_r41.c/.h, bildhalt_r41_pc.c (Blenden-Takt), Tests. Konflikt-Hinweis fuer die
 Integration: player_common.c (Spur H aendert game_step_common.c/re15_collision.c, nicht player_common.c; der Renn-Stopp
 verschiebt Leons Bahn nach jedem Rennen um den Auslauf), main.c (D/F/G), scd_vm.c op_message_on (C/F/G), render_pc.c (D).
+
+### Punkt 1 "herumfliegend" — Stand nach Nachbesserung 3
+Alle Anlauf-Varianten sind jetzt am Original gemessen UND im Port original-gleich: Stand (o_stand1, Abnahme 2 §3.2), Gehen
+(o_geh1, §3.1), Weg des Nutzers 2050 -> 2020 in Cut 3 (o_hg_cut3, §3.3), "No" (§3.3a), Rennen (o_renn2: erstes Renn-Bild
+Tempo 198, Auslauf n94..n99 bis (3650,-3369), oben). In keinem Lauf (Port vorher/nachher, Original) "fliegt" Leon. Damit ist
+die Rueckfrage an den Nutzer nach dem Orchestrator-Hinweis 2026-10-24 03:21 zulaessig (Abschnitt "Fuer den Nutzer").
+Neu sichtbar durch E-E2: im RENNEN rutscht Leon nach dem "Yes" sechs Bilder lang weiter (444 Einheiten) und kurbelt bei
+(3650,-3369) statt (3650,-3018) — so auch das Original (o_renn2); die Kurbel-Pose (Raum-RBJ Clip 0) passt dort nicht an den
+Griff, das ist Original-Verhalten.
+
+### Hinweise der Abnahme 2 (H1-H7) — Stand
+- H1 (Nachrichten-Takt nach einem Apply-Bild): selbst nachgelesen `dis 0x80010000 80`: FUN_80010000 ist die Nacharbeit NACH
+  einem Pufferwechsel — @0x8001001c `lbu 0x800a73a4` / @0x80010020 `lbu 0x800aca34` / @0x80010028 `beq` -> @0x8001012c; sonst
+  @0x80010030 FUN_80010140, Stack auf den Scratchpad (@0x8001003c FUN_8004f090 / @0x8001004c FUN_8004f0b0), @0x80010044
+  Nachrichten-Takt FUN_800280b4 (-> @0x800280dc FUN_80028134, @0x800280e4 FUN_8002918c, @0x80028118 FUN_80029560) und
+  @0x80010054-@0x80010128 Umschalten der Prim-Puffer 0x800a7394/0x800a7398 auf den naechsten Puffer. Im Bild nach einem
+  Apply-Bild faellt das alles aus. Nicht nachgebildet: ob dabei der Text im Folgebild fehlt (Zeichnen in FUN_8002918c/
+  FUN_80029560?) ist ohne Messung im Original nicht belegt -> OFFEN (unten).
+- H2 (Present-Tore @0x8002151c/@0x80021544): im Spiel 0 (Abnahme 2), keine Aenderung.
+- H3 (Kommentar main.c Restore-Haken): berichtigt (984e0b1e), Reihenfolge unveraendert (Port-Modal liest g_pauseflags nicht,
+  `grep pauseflags engine/src/item_modal_common.c` = 0 Treffer).
+- H4 (Kommentar re15_kamerahalt_r41.h): berichtigt (256ee155).
+- H5 (PSX): OFFEN (unten).
+- H6 (Dauer Apply-Standbild = CD-Ladezeit): Hardware-Zeit, unveraendert.
+- H7 (RE15_FORCE_CUT haelt nie): Messhaken-Ausnahme, unveraendert.
+- Nachgerechnet (Sonde `<sp>/E41n3/probe/renntempo_probe.c`, ohne Mischung, Blick 0, re15_squareroot0): Renn-Clip 0 (22 Bilder)
+  im Dauerlauf 208 208 205 204 204 202 203 188 159 176 197 207 208 205 205 203 200 199 186 170 182 194 = Mittel 196,0 je Bild
+  (vorher konstant 200); Elza (PL04-Bindepose + PL04W03, Lauf `<sp>/E41n3/runs/elza_renn2`): erstes Renn-Bild 190, Stopp mit
+  Rueckschritt an der Stegkante wie Leon.
