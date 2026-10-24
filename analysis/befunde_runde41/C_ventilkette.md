@@ -9,6 +9,11 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-24 ab 07:50 **Nachbesserung 2** (Abnahme 1 `C_abnahme_1.md`, Mangel N1; Orchestrator-Entscheid C-E2b
+  07:49 als Commit 8933352d direkt in diesem Zweig). Baum sauber (`status --porcelain` leer), exe 06:37 = Code-Stand
+  HEAD (seit 5ddd98c0 nur analysis/). Der FORTSETZUNGS-Block des Auftrags (exe 00:56 mit Spur-A-Haken, Unit-Gruppe am
+  Stand 271b05ea, Dossier 4-7) ist seit der vierten Fortsetzung (63e30719) und 49606c0e erledigt -> nicht wiederholt.
+  Arbeitsplan und Ergebnis in §0c.
 * 2026-10-24 06:30-07:10 Nachbesserung 1, Nachtrag: die Orchestrator-Entscheide **C-E1..C-E3** (AUFTRAG.md 05:25,
   Commit 10332fb6 direkt in diesem Zweig, beim Start uebersehen und um 06:30 im `git log` gefunden) umgesetzt: C-E2 Ring-
   Zugaenge des gefluteten 2030 gesperrt (M5, Code + Riegel), C-E1 Ketten-Riegel heisst `integration_r41_ventilkette_kette`
@@ -326,6 +331,22 @@ Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "
 * **H3** PSX-Ziel: in diesem Baum weder gebaut noch gemessen (keine PSn00bSDK-Kette in der Spur); die Wasserflaechen-
   Daten sind nur `RE15_PLATFORM_PC` (Laufzeitbudget), Bits/Zaehler/Flut/Tod/Sperren sind plattformneutral. Bleibt OFFEN
   fuer die Integration (§6).
+
+## 0c. Nachbesserung 2 (Abnahme 1 `C_abnahme_1.md` Mangel N1; Orchestrator-Entscheid C-E2b vom 2026-10-24 07:49)
+
+Messordner: scratchpad `r41c_nb2/` (`C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/r41c_nb2`).
+Die Messungen der Abnahme 1 (`C41abn1/mess/*`, im Bericht `<a1>`) werden NICHT wiederholt, sondern zitiert.
+
+### N1 (hoch, Punkt 6) — Weg zum Rechner 2080 nach der Flut
+* **Auftrag (C-E2b, AUFTRAG.md 07:49):** Tuergraph aller STAGE2-Raeume fuer "nach der Flut" (Bits 103+100, ohne 107)
+  aus den Door_aot_set-Zielen + Sperrbedingungen (SCD-Offsets); den Weg 20B0/2050 -> 2080 zu Fuss messen (Leon UND Elza),
+  Riegel. C-E2 (Ring-Sperre) bleibt. Steht nur eine PORT-Sperre der Runde 41 im Weg -> anpassen; steht eine ORIGINAL-
+  Sperre im Weg oder gibt es den Weg nicht -> nichts erfinden, den blockierenden Punkt (Tuer, Bit, SCD-Offset, Bild)
+  benennen und als OFFEN melden. Dossier §7 und §0b M5 richtigstellen.
+* **Ursache des Mangels:** der in §7 / Frage f genannte Weg "2050 -> 2020 -> 2030 Tuerebene -> 2080" war aus den
+  Tuersaetzen abgeleitet, aber nie gegangen; die Tuerebene von 2030 besteht aus zwei getrennten Galerien (Abnahme 1 L9,
+  SCA @0x880 Wand 66). Er existiert nicht.
+* (Arbeitsstand, wird fortlaufend ergaenzt: Tuergraph, Messungen, Riegel, Ergebnis.)
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
