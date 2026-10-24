@@ -12,6 +12,10 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 * 2026-10-24 ab 10:00 **Nachbesserung 3** (Abnahme 2 `C_abnahme_2.md`, Maengel N1-N4 + Hinweis H-a; Nachtraege 6-10 des
   Nutzers, AUFTRAG.md 09:17-09:55). Baum sauber (`status --porcelain` leer, HEAD 4abf0500). Arbeitsplan und Ergebnis in §0d.
   Messordner scratchpad `r41c_nb3/`.
+* 2026-10-24 11:04 Bau `local_build.sh configure` (neue Riegel registriert: #1128 integration_r41_ventilkette_weg,
+  #1129 _weg_elza, #1130 _sperre; `_kette` "uebersprungen: Spur A fehlt") + `build` -> `=== LOCAL-BUILD-OK`. Gezielte
+  Unit-Gruppe (Regex der Abnahme 2, scratchpad `r41c_nb3/regex_unit.txt`): `100% tests passed, 0 tests failed out of 164`
+  (34.55 s); unit_r41_ventilkette `PASS (376 Pruefungen)`.
 * 2026-10-24 07:50-09:00 **Nachbesserung 2 abgeschlossen** (§0c): Tuergraph (Werkzeug + C_belege/nb2_tuergraph_nach_flut.txt),
   Weg zu Fuss gemessen (2050 -> 2020, 2030 Nordgalerie -> 2060, 2040 -> Treppe -> Galerie -> 2070 Nordgang -> 11A0 bis
   zur Sperre, Leon + Elza; Gegenprobe (3,206); 2080 ab 2090 -> Rechner -> Bit 107). Ergebnis: Weg existiert nicht,
