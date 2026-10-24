@@ -114,7 +114,10 @@ static int rbj_resolve_slot(int slot)
     int rec = -1;
     int mslot = s_rbj_alias[slot] ? (int)s_rbj_alias[slot] : slot;   /* Runde 35 Spur L: Alias */
     for (int r = 0; r < 8; r++)
-        if (rbj_record_marker(r) & (1u << mslot)) { rec = r; break; }
+        if (mslot < 32 && (rbj_record_marker(r) & (1u << mslot))) { rec = r; break; }   /* Runde 41 Spur A: Markerwort u32
+                     * (`lw a0,0(v1)` @0x8001b438), FUN_8001b3f8 schiebt es bitweise (`srl a0,a0,1` @0x8001b448/@0x8001b478)
+                     * bis Null (`bne a0,zero` @0x8001b4c0): Bits 1..31 = Gegner 0..30. Slots >= 32 (RE15_ACTOR_MAX 36) haben
+                     * KEIN Markerbit; vorher `1u << 32..35` = undefiniert (x86: Bits 0..3 -> fremder Record im Cache). */
     /* Runde 35 Spur K: geliehener Block (ROOM10F0 <- ROOM11B0) hat nur Marker-Bits 0/1 — der zweite NPC
      * (Aktor 2, Marvin) liest denselben NPC-Record 1 (re15_cut10f0.h). Sonst -1 = unveraendert. */
     if (rec < 0) rec = re15_cut10f0_rbj_record_alias(slot);

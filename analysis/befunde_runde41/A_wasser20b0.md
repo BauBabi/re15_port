@@ -551,3 +551,55 @@ Laeufe B/D/E2. Konfliktrisiko mit Spur D gering (andere Stellen); zur Integratio
   `schritte 0`, Anker (0,0,0), Kante `schritte 0`, Schub `schritte 0`, Sub 5 `Takt 1 1 Schritte ... Takt 2 gesamt 2`, Sub 4
   `Zweig boden 0, Ton 21` (trocken nach dem Vorschub). Mit dem neuen Stand `npc_subs: 9 Pruefungen, 0 Fehler`.
   npc_wasser unveraendert: 0x40/0x42/0x45/0x49/0x4d je 6 Schritte (Plaetze 6), 0x4b 9 (PORT-WAHL), Ton 15.
+
+### N1.10b Fortsetzung 2026-10-24: der NPC-Stempel +0x88 ist ein Pro-Bild-Wert (eigener Befund)
+- **Befund (Code + Riegel-Gegenprobe).** Der Port-AOT-Scan (aot_common.c, WATER-Schleife) SCHREIBT +0x88 nur; geloescht wurde er
+  nur fuer den Spieler (wasser_r38.c @0x80031da4). Ein NPC, der einmal durch einen WATER-Satz ging, blieb fuer den Rest des Raums
+  gestempelt und haette auf jedem trockenen Boden den Stempel-Zweig 0x06032000 gespritzt (Riegel-Gegenprobe ohne Loeschen:
+  `Takt B ausserhalb: 1 Schritt, Zweig trocken (stempel 1, boden 0), +0x88 = -900` = FAIL; `A_belege/nb1c/gegenproben.txt`).
+- **RE (PSX.EXE, re15_disasm.py, am 2026-10-24 nachgeprueft).** Entity-Takt FUN_8001a50c: `jalr v0` @0x8001a588 (Typ-Handler),
+  danach `lw v0,-14460(v0)` @0x8001a594 (g_entity) / `sh zero,136(v0)` @0x8001a59c - +0x88 wird je Entity NACH ihrem Handler
+  geloescht; der AUTO-Pass FUN_800436a8 (@0x8001ce1c) stempelt neu, wer im Satz steht. Der Wert, den ein Schritt liest, ist also
+  immer der des letzten AUTO-Passes.
+- **Aenderung.** wassersprung_r41.c re15_wassersprung_r41_bildanfang: `e->water_y = 0` fuer jeden aktiven Nicht-Spieler-Aktor.
+  Lage: der Port-Scan laeuft im Schritt NACH dem Bildanfang und VOR den KI-Takten (game_step_common.c) - Loeschen am Bildanfang,
+  Stempeln im Scan, Lesen im KI-Takt ergibt dieselbe Folge wie Handler -> Loeschen -> AUTO-Pass im Original. Leser von +0x88 eines
+  Nicht-Spielers (grep water_y in engine/src, include, platform/pc): nur die NPC-Schritte (wassersprung_r41.c); aot_common.c
+  schreibt, wasser_r38.c behandelt den Spieler. Die RE2-Spinne fuehrt ihren eigenen Stempel +0x10C (re2s_water_stamp, eigener
+  Scan); `unit_re2_spider_water_2090` prueft water_y direkt nach re15_aot_scan und bleibt gruen (Unit-Gruppe N1.12).
+- **Riegel** `unit_r41_wasser20b0_stempel` (erweitert): Takt A im WATER-Satz 5 von ROOM20B0 (p0 -900, Bild ohne Marke) -> +0x88 =
+  -900; Takt B derselbe NPC bei (-26200,-5400) ausserhalb aller WATER-Saetze, trockener Boden, gezeichnetes Bild 7 (Marke) -> 1
+  Schritt, Zweig trocken, +0x88 = 0. Mit dem Loeschen `stempel: 7 Pruefungen, 0 Fehler`, ohne `1 Fehler` (s.o.).
+
+### N1.10c Dritte Fortsetzung 2026-10-24: RBJ-Marker-Binder bei RE15_ACTOR_MAX 36 (eigener Befund, Regression DIESES Diffs)
+- **Messung vorher (Stand d77bf72a, gebaut: `ninja: no work to do.`).** Die Unit-Gruppe der Vorgaengerin (128 Tests) enthielt nicht
+  alle Tests der beruehrten Module. Nachgezogen: (a) `git grep -l` der Stammnamen szenenleon / npckante / climb_common in
+  re15_port/tests -> test_r39_heliport1171.c, test_r36_kartenbits.c, test_r38_werkstatt11b0.c, test_r39_stimmen.c,
+  probe_r20_birkin_push.c (21 ctest-Eintraege); (b) ALLE ctest-Eintraege ausser integration_*, deren Quelle RE15_ACTOR_MAX nennt
+  (Abbildung Quelle -> ctest ueber `ctest --show-only=json-v1`, 383 Eintraege, Liste `--tests-from-file`). Ergebnis (a)
+  `95% tests passed, 1 tests failed out of 21`, (b) `99% tests passed, 1 tests failed out of 383` - in beiden derselbe eine Test,
+  `unit_r39_heliport1171_binder`, woertlich:
+  ```
+  FEHLER: John nach 34 abgefragten Slots ohne Record: RBJ rec1 (-1 Clips)
+  FEHLER: Skelett-Kanal +0x180 (EMR rec1) ebenfalls gebunden
+  FEHLER: ROOM10D0: Marvin (Aktor 1) nach den Zombies an rec1 gebunden (-1 Clips, Marker 0x2)
+  ```
+- **Ursache.** enemy_common.c rbj_resolve_slot prueft `rbj_record_marker(r) & (1u << mslot)`. Der Riegel belegt ALLE Slots 2 ..
+  RE15_ACTOR_MAX-1 mit Kraehen ohne Record; seit RE15_ACTOR_MAX 36 (diese Spur, Entscheid E2) also auch 32..35. `1u << 32..35`
+  ist in C undefiniert, x86 `shl` maskiert die Weite auf 5 Bit -> Bits 0..3: die Kraehe in Slot 32 trifft rec0 (Marker 0x1),
+  die in Slot 33 rec1 (Marker 0x2); beide belegen die zwei Cache-Plaetze (RE15_RBJ_CACHE_MAX 2) vor John -> John ohne RBJ-Kanal.
+  Dieselbe Fehlerklasse wie M7 (s_dog_noclamp_mask); weder die Abnahme noch die Vorgaengerin hatten sie hier gefunden.
+- **Beleg (PSX.EXE, re15_disasm.py `dis 0x8001b3f8 80`, 2026-10-24).** FUN_8001b3f8: `lw a0,0(v1)` @0x8001b438 = Markerwort
+  (u32); Spieler-Bit `andi v0,a0,0x1` @0x8001b440 / `srl a0,a0,1` @0x8001b448; Gegner-Schleife `andi v0,a0,0x1` @0x8001b470 /
+  `srl a0,a0,1` @0x8001b478, Index `andi v0,a3,0xff` @0x8001b47c, Stride (sll 5 / subu / sll 2 / addu / sll 2) = i * 0x1F4
+  @0x8001b480-90, Ziel +0x180 `sw t1,0(at)` @0x8001b4a0 (0x800acdac) / +0x184 `sw v0,0(at)` @0x8001b4bc (0x800acdb0), Ende
+  `bne a0,zero,0x8001b470` @0x8001b4c0 mit `addiu a3,a3,1` @0x8001b4c4 im Verzoegerungsplatz. Das Markerwort hat 32 Bit, die
+  Schleife endet, wenn es leer geschoben ist: Bits 1..31 = Gegner 0..30. Ein Gegner-Slot >= 32 hat im Original KEIN Markerbit
+  und wird nie gebunden.
+- **Aenderung** (enemy_common.c, gemeinsame Datei ohne Eigentuemer in VERTRAG §1.3, 1-Zeilen-Haken "Runde 41 Spur A"):
+  `if (mslot < 32 && (rbj_record_marker(r) & (1u << mslot)))` + Kommentar mit den Adressen oben.
+- **Nebenbefund (nicht geaendert, Hinweis an den Orchestrator).** a3 (Gegner-Index) wird in FUN_8001b3f8 nur EINMAL auf 0 gesetzt
+  (`addu a3,zero,zero` @0x8001b410, Verzoegerungsplatz von `beq` @0x8001b40c) und in der Record-Schleife (@0x8001b42c ..
+  `bne` @0x8001b4d4) nicht zurueckgesetzt: im Original zaehlt der Gegner-Index von Record r+1 hinter den geschobenen Bits von
+  Record r weiter; der Port wertet jeden Record ab Bit 1 aus. Ob ein ausgeliefertes RBJ davon betroffen ist (mehrere Records mit
+  Gegner-Bits), ist NICHT gemessen -> OFFEN 9.
