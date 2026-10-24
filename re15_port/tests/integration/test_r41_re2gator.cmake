@@ -44,6 +44,14 @@
 #   120), Kopf an der Anker-Lage, Leon am gezeichneten Kiefer wie die authored Bahn (<= 8), Kopf/Leon im Bild der Finisher-Kamera
 #   (Leon nur oben hinaus beim Wurf), alles im Wasser; Lauf "nische" (CHASE-Tod) prueft dieselbe Messzeile bis EXIT_AT.
 #
+# Nachbesserung 6 (Abnahme 5 M1-M3): Lauf "belagerung" laeuft durch das Game Over bis in den neu gestarteten Raum 1240
+#   (RE15_EXIT_AT=251#1240: der Debug-Sprung @250 setzt den Bildzaehler im ersten 1240 zurueck, also endet der Lauf erst nach dem
+#   Game Over). Verlangt: (a) state.log - vom ersten Bild mit Opfer-Modus (gr=1, toedlicher Biss) bis zum letzten Bild vor dem
+#   Raumwechsel (Bildzaehler faellt auf 0) steht in JEDEM Bild gr=1 (RE2 P3 @0x801011c4-e4 ohne Ende, Leon-Handler Phase 3
+#   @0x80102f24-28 = Spieler +0x1D3 |= 0x80); (b) die Summenzeile "Maul-Sitz Ende" steht im Bild der Game-Over-Uebergabe = letztes
+#   2090-Bild, P3 laenger als die alten 120 Bilder, Opfer gehalten und frei von Raum-Objekten in allen Bildern; (c) die Finisher-Kamera
+#   ist nicht die Kamera des Biss-Bildes (Abnahme 5 M2). Lauf "nische" prueft (c) ebenso.
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_re2gator.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -120,12 +128,30 @@ function(r41b_maul_sitz _dir _lauf _ende _out)
     set(_nass ${CMAKE_MATCH_5})
     math(EXPR _leon_sicht "${_leon} + ${_oben}")
     set(_fehl "")
-    # P1 = Clip-4-Bild 1..14 bis zum Anker (@0x801010fc-104), P2 = Clip 5 sf 1..120, P3 = Clip 11 120 Takte (gb FRESSEN)
+    # Nachbesserung 6: Opfer gehalten (+0x1D3 & 0x80) und frei von Raum-Objekten in jedem Bild
+    if(NOT _l MATCHES "Opfer gehalten ([0-9]+)/[0-9]+, Opfer frei ([0-9]+)/[0-9]+")
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r41_re2gator: Lauf ${_lauf} - Maul-Sitz-Zeile ohne 'Opfer gehalten/frei' (Nachbesserung 6): ${_l}")
+    endif()
+    set(_gehalten ${CMAKE_MATCH_1})
+    set(_frei ${CMAKE_MATCH_2})
+    if(NOT _gehalten EQUAL _n OR NOT _frei EQUAL _n)
+        string(APPEND _fehl " Opfer gehalten ${_gehalten}/${_n}, frei von Raum-Objekten ${_frei}/${_n};")
+    endif()
+    # P1 = Clip-4-Bild 1..14 bis zum Anker (@0x801010fc-104), P2 = Clip 5 sf 1..120, P3 = Clip 11 ohne Ende (RE2 @0x801011c4-e4)
     if(NOT _p1 EQUAL 14)
         string(APPEND _fehl " P1 ${_p1} statt 14;")
     endif()
-    if(_ende AND (NOT _p2 EQUAL 120 OR NOT _p3 EQUAL 120))
-        string(APPEND _fehl " P2/P3 ${_p2}/${_p3} statt 120/120;")
+    set(_ende_bild -1)
+    if(_ende)
+        if(NOT _p2 EQUAL 120 OR _p3 LESS 121)
+            string(APPEND _fehl " P2/P3 ${_p2}/${_p3} statt 120/>120 (P3 endet nicht mehr nach 120 Bildern);")
+        endif()
+        if(NOT _l MATCHES "letztes Finisher-Bild F([0-9]+) \\(Game-Over-Uebergabe\\)")
+            string(APPEND _fehl " Summenzeile nicht im Bild der Game-Over-Uebergabe;")
+        else()
+            set(_ende_bild ${CMAKE_MATCH_1})
+        endif()
     endif()
     if(_abw GREATER 4 OR _abw LESS 0)
         string(APPEND _fehl " Kopf ${_abw} neben der Anker-Lage;")
@@ -143,7 +169,30 @@ function(r41b_maul_sitz _dir _lauf _ende _out)
         file(REMOVE "${_exe_kopie}")
         message(FATAL_ERROR "r41_re2gator: Lauf ${_lauf} - Finisher: Leon nicht im Maul wie authored (Abnahme 4 M1):${_fehl} Zeile: ${_l}")
     endif()
-    set(${_out} "Maul-Sitz ${_n} Bilder (P1 ${_p1} P2 ${_p2} P3 ${_p3}) Cut ${_cut}, Kopf ${_abw}, Kiefer-Abstand ${_kie}, Kopf/Leon im Bild ${_kopf}/${_leon}+${_oben} oben, Wasser ${_nass}" PARENT_SCOPE)
+    set(${_out} "Maul-Sitz ${_n} Bilder (P1 ${_p1} P2 ${_p2} P3 ${_p3}) Cut ${_cut}, Kopf ${_abw}, Kiefer-Abstand ${_kie}, Kopf/Leon im Bild ${_kopf}/${_leon}+${_oben} oben, Wasser ${_nass}, gehalten ${_gehalten}, frei ${_frei}" PARENT_SCOPE)
+    set(r41b_ende_bild ${_ende_bild} PARENT_SCOPE)
+endfunction()
+# Nachbesserung 6 (Abnahme 5 M2): die Finisher-Kamera ist nicht die Kamera des Biss-Bildes - gator_boss.log "RE2 FINISHER Buehne ...
+# NB6: laufende Kamera a/b ausgeschlossen" + "RE2 KAMERA FINISHER ... -> Cut c ... (Buehne)": c != a und c != b.
+function(r41b_kamera_wechsel _dir _lauf _out)
+    file(STRINGS "${_dir}/gator_boss.log" _bu REGEX "^RE2 FINISHER Buehne .*laufende Kamera (-?[0-9]+)/(-?[0-9]+) ausgeschlossen")
+    file(STRINGS "${_dir}/gator_boss.log" _ka REGEX "^RE2 KAMERA FINISHER FINISHER RE2-Cut -?[0-9]+ -> Cut (-?[0-9]+) .*\\(Buehne\\)")
+    if(NOT _bu OR NOT _ka)
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r41_re2gator: Lauf ${_lauf} - keine Buehne/Finisher-Kamera in gator_boss.log ('${_bu}' / '${_ka}')")
+    endif()
+    list(GET _bu -1 _b)
+    string(REGEX MATCH "laufende Kamera (-?[0-9]+)/(-?[0-9]+) ausgeschlossen" _m "${_b}")
+    set(_la ${CMAKE_MATCH_1})
+    set(_lb ${CMAKE_MATCH_2})
+    list(GET _ka -1 _k)
+    string(REGEX MATCH "-> Cut (-?[0-9]+) " _m "${_k}")
+    set(_c ${CMAKE_MATCH_1})
+    if(_c EQUAL _la OR _c EQUAL _lb)
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r41_re2gator: Lauf ${_lauf} - Finisher-Kamera Cut ${_c} = laufende Kamera ${_la}/${_lb}: kein Schnitt, Umsetzen sichtbar (Abnahme 5 M2)")
+    endif()
+    set(${_out} "Finisher Cut ${_c} (Biss-Bild ${_la}/${_lb})" PARENT_SCOPE)
 endfunction()
 
 # ---------------------------------------------------------------- Lauf 1: Tuernische (Intro, Kamera, Finisher)
@@ -316,7 +365,9 @@ if(_hp_min LESS 25000)
     message(FATAL_ERROR "r41_re2gator: HP unter dem RE2-Sockel (${_hp_min} < 25000) ohne Beschuss")
 endif()
 r41b_maul_sitz("${_basis}/nische" "nische" 0 _ms1)   # Nachbesserung 5: CHASE-Tod, Finisher bis EXIT_AT (P3 nicht ganz)
+r41b_kamera_wechsel("${_basis}/nische" "nische" _kw1)   # Nachbesserung 6 (M2)
 r41b_gier_wache("${_basis}/nische" "nische" _gw1)
+set(_ms1 "${_ms1}, ${_kw1}")
 set(_status1 "nische: ${_ms1}, RE2-Zeilen ${_re2}, Intro Lage/Start/Ende ${_intro_lage}/${_intro}/${_intro_ende} wand ${_intro_wand}, Clip 6/3 ${_mo6}/${_mo3}, Kamera ${_kam_folge}, Finisher Cut ${_fin_cut} ab F${_fin_bild} gehalten ${_fin_cam_bilder} Bilder / ${_fin_halt} Halt-Zeilen, HP min ${_hp_min}, kein Gier-Sprung")
 
 # ---------------------------------------------------------------- Lauf 3: natuerlicher Zugang (B9: untergetaucht)
@@ -440,7 +491,8 @@ re15_start_spiel(_rv 300
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
     SDL_ASSERT=always_ignore
     RE15_DEBUG_JUMP=20A0@250 "RE15_FIRE_AOT=0@40#20A0" RE15_GB_TEST=1
-    "RE15_EXIT_AT=890#2090"
+    RE15_STATE_LOG=state.log
+    "RE15_EXIT_AT=251#1240"
     "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
     file(REMOVE "${_exe_kopie}")
@@ -461,7 +513,45 @@ endif()
 # vor dem Raumwechsel nach dem Game Over (~F900) - Leon liegt in JEDEM P1-P3-Bild wie authored am gezeichneten Kiefer, im Bild
 # der Finisher-Kamera und im Wasser (vorher: Maul leer, Leon 2300-5300 hinter der Ostwand, Abnahme 4 §3.4).
 r41b_maul_sitz("${_dir}" "belagerung" 1 _ms5)
-set(_status5 "belagerung: ${_gw5}, GUARD-Zeilen ${_guard_n}, ${_ms5}")
+r41b_kamera_wechsel("${_dir}" "belagerung" _kw5)   # Nachbesserung 6 (M2)
+# Nachbesserung 6 (M1): Opfer-Modus gr=1 in JEDEM Bild vom toedlichen Biss bis zum letzten 2090-Bild vor dem Raumwechsel (Bildzaehler
+# faellt nach dem Game Over auf 0), und dieses letzte Bild ist das der Summenzeile (Game-Over-Uebergabe).
+file(STRINGS "${_dir}/state.log" _zl5)
+set(_gr_an -1)
+set(_gr_bilder 0)
+set(_gr_los "")
+set(_letzt -1)
+set(_vor -1)
+foreach(_l IN LISTS _zl5)
+    if(NOT _l MATCHES "^F([0-9]+) .* gr=([01])")
+        continue()
+    endif()
+    set(_f ${CMAKE_MATCH_1})
+    set(_g ${CMAKE_MATCH_2})
+    if(_gr_an GREATER_EQUAL 0 AND _f LESS _vor)
+        break()                                     # Raumwechsel nach dem Game Over: neuer Bildzaehler
+    endif()
+    set(_vor ${_f})
+    if(_gr_an LESS 0 AND _g EQUAL 1)
+        set(_gr_an ${_f})
+    endif()
+    if(_gr_an GREATER_EQUAL 0)
+        math(EXPR _gr_bilder "${_gr_bilder} + 1")
+        set(_letzt ${_f})
+        if(_g EQUAL 0 AND "${_gr_los}" STREQUAL "")
+            set(_gr_los "F${_f}")
+        endif()
+    endif()
+endforeach()
+if(_gr_an LESS 0 OR NOT "${_gr_los}" STREQUAL "" OR _gr_bilder LESS 250)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf belagerung - Opfer nicht bis zum Raumwechsel gehalten (Abnahme 5 M1): gr=1 ab F${_gr_an}, ${_gr_bilder} Bilder, erstes gr=0 '${_gr_los}', letztes 2090-Bild F${_letzt}")
+endif()
+if(NOT _letzt EQUAL r41b_ende_bild)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf belagerung - Summenzeile Maul-Sitz Ende F${r41b_ende_bild} ist nicht das letzte 2090-Bild F${_letzt}")
+endif()
+set(_status5 "belagerung: ${_gw5}, GUARD-Zeilen ${_guard_n}, ${_ms5}, ${_kw5}, Opfer gehalten F${_gr_an}-F${_letzt} (${_gr_bilder} Bilder bis zum Raumwechsel)")
 
 # ---------------------------------------------------------------- Lauf 2: Leon im Suedbecken (Dash, Putz)
 set(_dir "${_basis}/dash")
