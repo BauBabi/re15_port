@@ -431,6 +431,32 @@ Keine Messung der Abnahme wird wiederholt; ihre Zahlen werden zitiert. Punkt 2 (
 - [x] Mangel 1 (b): Restliste fuer den Nutzer `M_bilder/NB2_rest/` + Liste echter Gegenstaende ("Fuer den Nutzer")
 - [x] exe-Messung nachher (DAVOR 0 neu sichtbar uebermalt; Randpunkte hinter dem Koerper nachgerechnet), gezielte Tests, Abschluss-Commit
 
+### NB2 Zusammenfassung Mangel 1 (Abnahme 1) - Ursache, Messung vorher, Beleg, Aenderung, Messung nachher
+* **Ursache:** (1) Das Grundriss-Netz der Spur P (test_r37_masken36.c `zelle_dazwischen`) urteilt ohne Hoehe und nur mit Zellen
+  DESSELBEN Bands; Zellen, in deren Grundriss die Kamera steht, zaehlen nicht - Rechtecke mit Zellen-Tiefe fielen deshalb weiter
+  weg (135), und NB1 schrieb Zellen-Tiefen nur, wenn sie FERNER als die Generator-Tiefe lagen (104 "nicht ferner": u.a. die Lok
+  6000 C5). (2) Die automatische Zuordnung (Mehrheit der Bodenkontakte in einer Sperrzelle) scheitert an Gegenstaenden auf Kufen,
+  mit angeschnittener Unterkante, am Bildrand oder knapp unter der Mehrheit (X-Kiste 5020 C6 0,19; Trennwand 30A0 C0/C1 0,49/0,46).
+  (3) Die vier Cuts ohne Maske zeigen in der Generator-Region nur Boden/Rueckwand (gemessen, Bild NB2_vier_cuts_region.png).
+* **Messung vorher (Abnahme 1, eigene Zaehler bitgleich nachgerechnet):** 1186 Rechtecke (Leon) aus, 889 591 Punkte gezeichnet,
+  341 352 nur in ausgeschlossenen Rechtecken, Kerben 11 494 von 62 432 (18,4 %); X-Kiste 5020 C6 ganz aus (fehlte im Uebersichtsbild),
+  Lok 6000 C5 groesstenteils aus.
+* **Beleg (Adressen/Bytes):** Urteil "verdeckt" wie im Original: Figur-OT = otz>>4 @0x8002565c (`sra v1,v1,4`) mit ZSF3 = 341
+  @0x80066c70 (`addiu t0,zero,341` / `ctc2 t0,$29`) -> bucket(vz) = (1023*vz)>>16; Masken-OT = depth @0x80039650 (`lh a0,2(s3)` ->
+  AddPrim @0x8006b538), Masken zuletzt im Bild @0x8001ce54 (`jal 0x80039590`) -> verdeckt gdw. depth < bucket(vz) (re15_pri.h). Die
+  Koerper sind SCA-Zellen der RDT (je Zeile der Modell-Tabelle die 12 Bytes mit RDT-Offset, vom Riegel byte-genau geprueft), ihre Form
+  fragt der Kollisions-Resolver des Ports (re15_collision.c, FUN_8003b0a4), Spielerradius 450 (DAT_80073e94[6]). Die Hoehe ist eine
+  Messung (IoU-Maximum der Koerper-Silhouette gegen den Gegenstand, wie raum.py "zelle" fuer die Nutzer-Freistellungen) - keine
+  Spielkonstante. Original: die Stages 3..6 haben fuer diese Cuts KEINE Masken (NULL-Sektion, @0x80039324/@0x80039338) - die
+  Generator-Masken sind eine Port-Ergaenzung (PORT-WAHL seit R37); Ziel ist "keine Figur VOR dem Gegenstand uebermalen".
+* **Aenderung:** 3D-Urteil im Ausschluss-Generator (`r41_koerper_davor`, nur zusaetzlich zum Grundriss-Netz), Zellen-Tiefe auch
+  naeher als die alte (`tiefe_zelle_r41.NAEHER`), Zuordnung von Hand fuer 16 Gegenstaende (`zuordnung_r41.json`), Kette k2 mit
+  `--zurueck` (stabil). Nur Tiefenfelder von 210 Rechtecken in 10 MSK-Paaren + Ausschluss-Tabelle + Modell-Tabelle (Test-Daten).
+* **Messung nachher:** 976 aus, **962 144 gezeichnet (+72 553)**, 268 799 nur ausgeschlossen, Kerben **10 612 von 64 654 (16,4 %)**;
+  0 Rechtecke neu ausgeschlossen; unabhaengige 3D-Gegenprobe 0 Verdeckungen ohne Koerper davor; exe DAVOR 0 neu sichtbar uebermalt
+  (Randpunkte in 30A0 C0/5020 C0 nachgerechnet hinter dem Koerper), HINTER verdeckt; FREI-Stellen der R37 (30A0/30A1 C0, "Haar"):
+  exe 0 Leon-Punkte uebermalt. X-Kiste 5020 C6 und Lok 6000 C5 gezeichnet (Uebersichtsbilder neu). Rest: Restliste fuer den Nutzer.
+
 ### NB2 Ausgangslage (Lektuere, keine neue Messung)
 Stand nach NB1 (Bericht `m41nb1c/tz4b/tiefe_zelle_r41.json` des Bau-Agenten, eigene Auszaehlung): von 1317 Rechtecken, die vor NB1
 ausgeschlossen waren, haben 370 ein Zellen-Modell (Zelle + gemessene Hoehe): 131 wieder drin (Schritt 2), **135 trotz Zellen-Tiefe
