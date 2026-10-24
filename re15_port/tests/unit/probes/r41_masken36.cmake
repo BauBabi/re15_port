@@ -55,12 +55,12 @@ endif()
 # Nachbesserung 2 (Abnahme 1, Mangel 1, Weg (a)): Generator-Rechtecke mit Zellen-Modell (tests/unit/gen_r41_masken36_zellen.inc,
 # tools/maske/zellen3d_r41.py) - der Ausschluss urteilt fuer sie in 3D (Koerper der Modellzelle vor dem Figurpunkt).
 #   unit_r41_masken36_zellen3d  jede Modell-Zeile byte-genau im RDT, MSK-Tiefe == Zeile, Engine zeichnet sie; Ausschluss MIT 3D-Urteil
-#                             == Engine-Tabelle in jedem Modell-Cut, Gegenprobe OHNE 3D-Urteil: >= 125 Rechtecke fielen weg (gemessen 125),
-#                             alle mit Modell-Zeile. Modelle auch aus der Zuordnung von Hand (tools/maske/zuordnung_r41.json, 16 Objekte).
+#                             == Engine-Tabelle in jedem Modell-Cut, Gegenprobe OHNE 3D-Urteil: >= 79 Rechtecke fielen weg (gemessen 79),
+#                             alle mit Modell-Zeile. Modelle auch aus der Zuordnung von Hand (tools/maske/zuordnung_r41.json, 12 Objekte).
 add_test(NAME unit_r41_masken36_zellen3d COMMAND test_r37_masken36 zellen3d WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r41_masken36_zellen3d PROPERTIES TIMEOUT 1500)
-#   integration_r41_masken36_zellen3d  echte exe: die in NB2 gezeichneten Objekte (ROOM6000 Lok/Traeger, 5050 C1, 3040 C0/C3, X-Kiste
-#                             5020 C6, Treppenraum 5020 C0, Trennwand 30A0 C1, Kistenstapel 5090 C13)
+#   integration_r41_masken36_zellen3d  echte exe: die in NB2 gezeichneten Objekte (ROOM6000 Lok/Traeger, 3040 C0, X-Kiste 5020 C6,
+#                             Treppenraum 5020 C0, Trennwand 30A0 C1, Kistenstapel 5090 C13)
 #                             verdecken Leon HINTER ihnen (H >= Haelfte bzw. H > 0) und uebermalen ihn DAVOR nicht (H == 0);
 #                             Szenen test_r41_masken36_zellen3d_szenen.cmake, Laeufer wie integration_r41_masken36_stage2.
 if(TARGET re15_pc)
