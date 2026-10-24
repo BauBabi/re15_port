@@ -100,8 +100,13 @@
  * Kanister = 700 vor der Markenmitte (Koerper 400 + Kanister 267, SCA-Balkon @0x528). */
 #define RE15_K2080_NPC_X           (-14800)
 #define RE15_K2080_NPC_Z           (-16500)
-#define RE15_K2080_NPC_STAND_X     (-7445)
+#define RE15_K2080_NPC_STAND_X     (-7245)   /* Aufheben: 500 vor der Markenmitte (Haende Loco c2 Bild 33 bei +149..+-73) */
 #define RE15_K2080_NPC_STAND_Z     (-17625)
+#define RE15_K2080_LAUF_UEBER      250       /* RUN-Ankunft bei d < 300 (`slti 300` @0x80051764): Ziel 250 hinter dem Stand */
+/* Wurf an der Reling: die Reling-Zelle @0x5A0 beginnt bei x -6700; Koerperradius 400 (+0x78-Satz +6) -> Mitte -7100. Die
+ * Haende (Eigen c6 Ende +822 vorn) liegen dann jenseits der Relingstange (Bodenlinie x -6350 aus Cut 5, Pfosten (139,151)/
+ * (200,151) Rueckprojektion) - die RE2-Bahn faellt frei (Dossier 3.4). Gehen (Sub 4, Ankunft d < 100 @0x800513f8). */
+#define RE15_K2080_NPC_WURF_X      (-7100)
 /* Clips (Zensus Dossier 1.8, CDEMD0.EMS 0x40/0x49): Eigenbank (Sub 2) c6 Anheben/Zielen 10 B., c7 Feuern 16 B., c0 Tragen
  * 22 B.; Loco (Sub 1) c2 Buecken+Aufheben 50 B. (tiefster Punkt Bild 33). */
 #define RE15_K2080_CLIP_ZIELEN     6

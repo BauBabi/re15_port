@@ -32,6 +32,7 @@
 #include <math.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
+#include <stdlib.h>
 #endif
 
 extern unsigned g_current_room_id;
@@ -235,13 +236,18 @@ static void baue_szene(void)
     }
     PUT(s_prog_szene, n, OP_CUT(RE15_K2080_CUT_KANISTER));
     PUT(s_prog_szene, n, OP_SET(RE15_K2080_SIG_BANK, RE15_K2080_SIG_ANKUNFT, 0));
-    {   const uint8_t s[8] = { 0x40, 0x00, 0x05, RE15_K2080_SIG_ANKUNFT, LE16(RE15_K2080_NPC_STAND_X), LE16(RE15_K2080_NPC_STAND_Z) };
+    {   const uint8_t s[8] = { 0x40, 0x00, 0x05, RE15_K2080_SIG_ANKUNFT, LE16(RE15_K2080_NPC_STAND_X + RE15_K2080_LAUF_UEBER),
+                               LE16(RE15_K2080_NPC_STAND_Z) };
         n = put(b, n, cap, s, 8); }                                      /* Plc_dest RUN ("Rennt zu den Gas Kanister") */
     PUT(s_prog_szene, n, OP_POLL(RE15_K2080_SIG_ANKUNFT));
     PUT(s_prog_szene, n, OP_MOTION(1, RE15_K2080_CLIP_AUFHEBEN));        /* Loco c2: Buecken + Aufheben */
     PUT(s_prog_szene, n, OP_SLEEP(RE15_K2080_AUFHEBEN_GRIFF));
     PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_AUFHEBEN));
     PUT(s_prog_szene, n, OP_SLEEP(RE15_K2080_AUFHEBEN_BILDER - RE15_K2080_AUFHEBEN_GRIFF));
+    PUT(s_prog_szene, n, OP_SET(RE15_K2080_SIG_BANK, RE15_K2080_SIG_ANKUNFT, 0));
+    {   const uint8_t s[8] = { 0x40, 0x00, 0x04, RE15_K2080_SIG_ANKUNFT, LE16(RE15_K2080_NPC_WURF_X), LE16(RE15_K2080_NPC_STAND_Z) };
+        n = put(b, n, cap, s, 8); }                                      /* Plc_dest WALK an die Reling */
+    PUT(s_prog_szene, n, OP_POLL(RE15_K2080_SIG_ANKUNFT));
     PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_TRAGEN));          /* Eigen c0: Tragen vor der Brust */
     /* ---- RE2 ROOM7020 sub12 ---- */
     PUT(s_prog_szene, n, OP_CUT(RE15_K2080_CUT_WURF));                   /* Cut_chg 7 @0x0726 */
@@ -400,11 +406,17 @@ static void kanister_in_haenden(const re15_actor_t *n)
     /* RotY(g) = [c 0 s; 0 1 0; -s 0 c], RotX(90) = [1 0 0; 0 0 -1; 0 1 0] -> M = RotY*RotX = [c s 0; 0 0 -1; -s c 0] */
     const double m[9] = { c, s, 0.0,  0.0, 0.0, -1.0,  -s, c, 0.0 };
     for (int i = 0; i < 9; i++) s_kan_rot[i] = (int32_t)lround(m[i] * 4096.0);
-    /* Lage = Haende - M * (0, -1392, 0) */
-    const double halb = -(double)RE15_K2080_KAN_LAENGE / 2.0;
-    s_kan_pos[0] = h[0] - (int32_t)lround(m[1] * halb);
-    s_kan_pos[1] = h[1] - (int32_t)lround(m[4] * halb);
-    s_kan_pos[2] = h[2] - (int32_t)lround(m[7] * halb);
+    /* s_kan_pos = MITTE des Kanisters = Mitte der Haende (die Wurfbahn laeuft auf der Mitte, RE2: Super_reset uebernimmt die
+     * Weltlage des angehaengten Objekts @0x800558b8-d8); der MD1-Ursprung (Fuss) folgt in kanister_ursprung. */
+    memcpy(s_kan_pos, h, sizeof s_kan_pos);
+}
+/* MD1-Ursprung (Fuss, y 0 des Modells) zur Mitte c: o = c - M * (0, -1392, 0). */
+static void kanister_ursprung(const int32_t c[3], const int32_t rot[9], int32_t o[3])
+{
+    const int32_t halb = -RE15_K2080_KAN_LAENGE / 2;
+    o[0] = c[0] - (int32_t)(((int64_t)rot[1] * halb) >> 12);
+    o[1] = c[1] - (int32_t)(((int64_t)rot[4] * halb) >> 12);
+    o[2] = c[2] - (int32_t)(((int64_t)rot[7] * halb) >> 12);
 }
 
 int re15_k2080_kanister_lage(int32_t pos[3], int32_t rot[9])
@@ -417,7 +429,7 @@ int re15_k2080_kanister_lage(int32_t pos[3], int32_t rot[9])
         return 1;
     }
     if (s_kan_zustand == 1 || s_kan_zustand == 2) {
-        memcpy(pos, s_kan_pos, 3 * sizeof(int32_t)); memcpy(rot, s_kan_rot, 9 * sizeof(int32_t));
+        kanister_ursprung(s_kan_pos, s_kan_rot, pos); memcpy(rot, s_kan_rot, 9 * sizeof(int32_t));
         return 1;
     }
     return 0;
@@ -472,16 +484,6 @@ static void schuss(re15_actor_t *n)
     }
 }
 
-static void zombies_halten(int an)
-{
-    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
-        re15_actor_t *e = &g_actors[s];
-        if (!e->active || e->type != RE15_K2080_ZOMBIE_TYP) continue;
-        if (an && zombie_lebt(e) && e->state != 0) e->grid_id = (uint8_t)(e->grid_id | RE15_AI_GRID_SKIP);   /* nach dem INIT */
-        if (!an) e->grid_id = (uint8_t)(e->grid_id & ~RE15_AI_GRID_SKIP);
-    }
-}
-
 static int gator_frei(int *slot_out)
 {
     for (int s = 1; s < RE15_ACTOR_MAX; s++) {
@@ -511,10 +513,31 @@ static void ausloesen(void)
           s_leon_cut, (unsigned)(RE15_K2080_RAUM_2080 | (unsigned)re15_char_variant()), slot);
 }
 
+/* MESSHAKEN RE15_K2080_GATOR_HP=<n> (env-gegatet, KEIN Spielverhalten; Muster RE15_R39_MESS_SPIELER_HP): setzt die HP des
+ * Boss-Alligators EINMAL je Raumeintritt auf n, damit ein Messlauf die Schwelle (HP < 25000 @0x80101ebc-dc) mit wenigen ECHTEN
+ * Treffern erreicht statt mit 43 Pistolenschuessen (Dossier 4). */
+static void messhaken_gator_hp(void)
+{
+#ifdef RE15_PLATFORM_PC
+    static int s_n = -2; static unsigned s_raum_gesetzt = 0xffffffffu;
+    if (s_n == -2) { const char *e = getenv("RE15_K2080_GATOR_HP"); s_n = (e && *e) ? atoi(e) : -1; }
+    if (s_n < 0 || s_raum_gesetzt == g_current_room_id) return;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        if (!e->active || e->type != 0x23 || !re15_gator_boss_active(e) || e->state == 0) continue;
+        e->hp = (int16_t)s_n;
+        s_raum_gesetzt = g_current_room_id;
+        K_LOG("MESSHAKEN RE15_K2080_GATOR_HP: Slot %d hp = %d", s, s_n);
+        break;
+    }
+#endif
+}
+
 void re15_kanister2080_r41_tick(void)
 {
     const unsigned raum = (unsigned)g_current_room_id & 0xFFFFu;
     if (raum_2090(raum)) {
+        messhaken_gator_hp();
         /* Kanister verbraucht: Explosion = Tod des Alligators (B: R1-Endzustand) */
         if (bit(RE15_K2080_BIT_KANISTER) && re15_gr2_tot()) {
             bit_setzen(RE15_K2080_BIT_KANISTER, 0);
@@ -528,7 +551,12 @@ void re15_kanister2080_r41_tick(void)
     }
     if (!raum_2080(raum) || s_phase != RE15_K2080_IN_2080) return;
     re15_actor_t *n = npc_aktor();
-    zombies_halten(1);
+    /* KEIN Halt der Zombies (entity+0x9 |= 0x20): gemessen (Lauf p3f) spielte der angehaltene RE2-Steher seinen Clip 1 bis zum
+     * Ende weiter und lag ab Bild 40 am Boden. Die Steher (grid 0x02) bleiben von selbst stehen, solange der Spieler fern ist:
+     * der Parkplatz liegt auf Band 5 >= 10000 entfernt (Form: Montage-Steher irons_tod_1150.c "standen still", re15_montage_r38.h). */
+    if (n && (n->sub_state_1 == 4 || n->sub_state_1 == 5) && (g_engine.frame_count % 15u) == 0)   /* Messzeile Lauf */
+        K_LOG("NPC Lauf Sub %d Phase %d (%d,%d) Gier %d Ziel (%d,%d)", (int)n->sub_state_1, (int)n->sub_state_2, (int)n->x,
+              (int)n->z, (int)n->rot_y, (int)n->steer_x, (int)n->steer_z);
     if (sig(RE15_K2080_SIG_TUERTON)) {
         sig_setzen(RE15_K2080_SIG_TUERTON, 0);
         s_zaehler[0]++;
@@ -537,7 +565,7 @@ void re15_kanister2080_r41_tick(void)
     }
     if (n && sig(RE15_K2080_SIG_ZIEL)) { sig_setzen(RE15_K2080_SIG_ZIEL, 0); ziel_waehlen(n); }
     if (n && s_ziel_slot > 0 && s_kan_zustand == 0) nachfuehren(n);
-    if (n && sig(RE15_K2080_SIG_SCHUSS)) { sig_setzen(RE15_K2080_SIG_SCHUSS, 0); schuss(n); }
+    if (n && sig(RE15_K2080_SIG_SCHUSS)) { sig_setzen(RE15_K2080_SIG_SCHUSS, 0); schuss(n); s_ziel_slot = -1; }   /* Anvisieren endet mit dem Schuss */
     if (n && sig(RE15_K2080_SIG_AUFHEBEN)) {
         sig_setzen(RE15_K2080_SIG_AUFHEBEN, 0);
         s_kan_zustand = 1;
@@ -626,9 +654,8 @@ void re15_kanister2080_r41_install(uint16_t room_id)
         if (bit(RE15_K2080_BIT_KANISTER)) {
             if (!s_lande_ok) {                           /* Spielstand geladen: dieselbe Bahn aus der Nennlage (Dossier 3.4) */
                 int32_t start[3]; int nb = 0;
-                const double halb = (double)RE15_K2080_KAN_LAENGE / 2.0;
-                start[0] = RE15_K2080_NPC_STAND_X + RE15_K2080_HAND_VOR; start[1] = RE15_K2080_Y + RE15_K2080_HAND_HOCH;
-                start[2] = RE15_K2080_NPC_STAND_Z + (int32_t)lround(halb);   /* Mitte quer in den Haenden: z + 1392 (M*(0,-1392,0)) */
+                start[0] = RE15_K2080_NPC_WURF_X + RE15_K2080_HAND_VOR; start[1] = RE15_K2080_Y + RE15_K2080_HAND_HOCH;
+                start[2] = RE15_K2080_NPC_STAND_Z;   /* Mitte = Haende (Gier 0: Haende auf der Koerperachse) */
                 int32_t ende[3];
                 re15_k2080_bahn_rechnen(start, 0, RE15_K2080_WASSER_TIEF, ende, &nb);
                 s_lande[0] = ende[0]; s_lande[1] = ende[2]; s_lande_ok = 1;
