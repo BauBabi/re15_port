@@ -1,0 +1,118 @@
+{
+ "welle": [
+  "E"
+ ],
+ "slots": 1,
+ "basis": "116e8b0f (Welle-1-Baum r41_kleinkram_b)",
+ "max_nach": 2,
+ "modus": {
+  "E": "nachbesserung"
+ },
+ "runde0": {
+  "E": 2
+ },
+ "bau": {
+  "E": {
+   "status": "teilweise",
+   "zusammenfassung": "Gemessen am Original mit dem DuckStation-GDB (Savestate hg_ready, Haltepunkte im Spiel-Task, Pad-Eingabe direkt in die virtuellen Worte bei @0x80030638), Ergebnisse in E41n2/o_*.txt:\nE-N1: Auf der RVD-Kante x 9000 (z1 @0x016C, z5 @0x01BC) wechselt auch das Original den angeforderten Cut in jedem Durchlauf (FUN_800142f4 aus @0x800142b4). Es zeigt das Bild aber nicht: 39 von 40 Durchläufen gehen über den Apply-Zweig @0x80021558 und springen mit @0x80021560 `j 0x800215fc` an DrawOTag (@0x800215bc/d0/e4) und am Pufferwechsel (@0x800215f4/f8) vorbei. Das Bild steht also still.\nE-N2: Beim Anlauf im Gehen gibt es zwischen Message_on @0x0A5C und @0x0A62 kein Lückenbild (n9..n94 Clip 5 Bild 9). Pos_set @0x0A8C kommt im ersten Bild nach dem Schließen der Frage (n94 -> n95). Den Geh-Stopp (0x800322e8 @0x80032328/@0x80032480, Stehen 0x80032038) hatte der Port schon richtig.\nUrsache im Port: Er hatte die Reihenfolge Skript -> Nachrichten -> Spiel, das Original Spiel-Task @0x80020de4 vor Nachrichten-Takt @0x80020f3c/@0x80010044. Außerdem parkte der Port Auswahl-Nachrichten am Opcode, das Original kehrt zurück (@0x80040520) und hält über den Skript-Freeze (@0x8003f040). Alle 102 Auswahl-Message_on tragen das Skript-Bit.\nGebaut: kamerahalt_r41.c + bildhalt_r41_pc.c (das Apply-Bild wird nicht präsentiert) und msgtakt_r41.c (Restore erst hinter dem Spiel-Takt, Auswahl ohne Parken). Dazu kleine Haken in main.c, msg_common.c, scd_vm.c und render_pc.c.\nNachher: Gang auf die Kante -> 40/40 Bilder pixelgleich. Gehen, Rennen, Stehen und der Weg ab 2050 jetzt ohne Lückenbild, Pos_set = Schließen + 1, Apply-Bild gehalten.\nRenn-Stopp gebaut und gemessen, dann wieder entfernt: Er bricht unit_r36_zombieki_affen_block. Bleibt OFFEN.",
+   "commits": [
+    "d7c57d7d wip: Dossier-Abschnitt, RVD ROOM2020 z1/z5",
+    "2ed74e99 wip: Original gemessen (GDB) Kante 9000 + Geh-Anlauf, Frame-Ordnung",
+    "facdf2ca wip: Apply-Bild/Nachrichten-Restore/Auswahl ohne Parken (ungebaut)",
+    "9195208b wip: Apply-Bild ohne Present (bildhalt_r41_pc.c), E-N1 gemessen",
+    "635be823 wip: Renn-Stopp (spaeter entfernt)",
+    "098ff9ab wip: Dossier Renn-Stopp/Umsetzung/Messung",
+    "607d2a66 wip: Riegel unit_r41_kleinkram_b_takt_*",
+    "7ece47fb wip: Integrations-Riegel kante/geh/renn (VORHER-exe rot)",
+    "d4fa9074 wip: Renn-Stopp wieder heraus (Querbezug unit_r36_zombieki_affen_block)",
+    "aeead96b wip: Dossier Umsetzung/Messung nachher",
+    "df18b896 wip: Dossier Status, Rennen nachgemessen",
+    "91afb6df wip: Dossier DuckStation bytegleich zurueck",
+    "11b8f867 wip: gehaltenes Bild bedient jeden Ruecklese-Auftrag (dining1141_s)",
+    "40d01dac wip: Dossier je Mangel/Tests/OFFEN/Nutzer",
+    "82cd04ec fix(r41-kleinkram_b): Nachbesserung 2 - Apply-Bild steht (E-N1), Nachrichten-Takt hinter dem Spiel-Takt + Auswahl ohne Parken (E-N2), alle Kurbel-Anlaeufe am Original gemessen"
+   ],
+   "suite": "-R \"^(unit_|prop_|probe_)\" -j 2: \"100% tests passed, 0 tests failed out of 925\" | Integrations-Auswahl -R \"$(cat integ_regex2.txt)\" (127 Riegel mit FRAMEDUMP/PRESS/MSG_LOG/msgtext/XU/CROSS/CAM_TRACE) -j 4: \"99% tests passed, 1 tests failed out of 127\" (integration_r38_dining1141_s, behoben in 11b8f867) + integration_r36_szenenleon Passed | -R \"^(integration_r38_dining1141_s|integration_r35_entladen|unit_r41_kleinkram_b_.*|integration_r41_kleinkram_b_.*)$\" -j 3: \"100% tests passed, 0 tests failed out of 17\" | restliche Integration -R \"$(cat integ_rest_regex.txt)\" -j 4: \"100% tests passed, 0 tests failed out of 95\"",
+   "offene_punkte": [
+    "Renn-Stopp fehlt dem Port allgemein. Original gemessen (frei 157,117,77,37,-3; an der Kurbel 174..-26 bis (3650,-3369)), Mechanismus disassembliert (0x80032604 @0x8003272c/@0x80032730-@0x80032760, 0x80032778 @0x800328f8-@0x8003295c), Umsetzung 635be823 gebaut und gemessen. Wieder entfernt in d4fa9074, weil unit_r36_zombieki_affen_block (Runde 36 Spur F) fuer Seed 0x67be2dfd ueber die Schranke 600 faellt (+841). Ohne Stopp ist der Test gruen. Entscheid des Orchestrators: Renn-Stopp spielweit einbauen und die Gorilla-Sonde neu einmessen.",
+    "Das Renn-Tempo des Ports ist konstant 200 (@0x80073f24), im Original haengt es am Clip (159..269). Die Auslauflaenge waere darum auch mit Renn-Stopp nur im Mechanismus gleich.",
+    "Das Apply-Standbild dauert im Port 1 Spielbild. Im Original haelt es, solange der Hintergrund von CD laedt (FUN_80013c50, ca. 8 Bilder). Das ist Hardware-Zeit, keine Konstante.",
+    "PSX-Plattform: platform/psx/main.c ruft msgtakt und kamerahalt nicht auf (PSn00bSDK fehlt hier zum Bauen).",
+    "Gemeinsame Dateien ohne Vertragszuteilung fuer Spur E (main.c, msg_common.c, scd_vm.c, render_pc.c), je 1-9 Zeilen mit Kommentar 'Runde 41 Spur E'. Bei der Integration beachten.",
+    "Die GDB-Treiber nach dem Muster gdb_affen.py schreiben settings.ini im Textmodus zurueck (CRLF statt LF). Hier per Byte-Kopie aus E41n2/ds_backup korrigiert.",
+    "Der FORTSETZUNG-Block im Auftrag (Abnahme-0-Rest) war veraltet: Abnahme 0 und Abnahme 1 sind abgeschlossen (b5ae3037, 29b7a8a7). Nicht bearbeitet."
+   ],
+   "fragen_an_nutzer": [
+    "Kurbel ROOM2020: Was genau war das 'Herumfliegen'? (a) Der Sprung an die Kurbel nach dem 'Yes'? Den macht das Original genauso, dort steht davor nur ca. 1/4 s ein Standbild, waehrend die CD laedt; der Port haelt jetzt 1 Bild. (b) Das Einfrieren nach einer Kurbel-Umdrehung? Das ist seit Nachbesserung 1 behoben. (c) Etwas anderes? Dann bitte die Stelle (gerannt, gegangen oder gestanden, welche Waffe) oder ein Bild (F9).",
+    "Rennen: Im Original rutscht Leon nach dem Rennen aus (Renn-Stopp); an der Kurbel kurbelt er dadurch etwa 35 cm neben der Kurbel. Der Port hat das noch nicht, weil der Einbau einen Gorilla-Test der Runde 36 aendert. Die Entscheidung liegt beim Orchestrator."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/platform/pc/main.c (+7/-1: msgtakt um re15_msg_tick, Restore nach re15_pc_fx_takt und vor dem Bildende, Apply-Bild statt re15_render_end_frame)",
+    "re15_port/engine/src/msg_common.c (+4/-1: vor_oeffnen, Schliessen aufschieben)",
+    "re15_port/engine/src/scd_vm.c (+2: Auswahl-Message_on ohne Parken)",
+    "re15_port/platform/pc/src/render_pc.c (+9: re15_render_pc_abzug_nehmen + 1 Haken vor dem Ruecklesen)",
+    "aus frueheren Staenden unveraendert: engine/src/player_common.c (+2 plcloop), engine/src/re15_inv_screen.c, engine/src/scd_room_setup.c"
+   ],
+   "neue_assets": [],
+   "sprachdateien": []
+  }
+ },
+ "abn": {
+  "E": {
+   "bestanden": false,
+   "suite": "Gezielt im Spurbaum, ohne volle Suite: ctest -R \"r41_kleinkram_b\" -j 2: 16 von 16 bestanden. Unit/Prop/Probe der berührten Module (Regex <sp>/E41a2/unit_regex.txt): 135 von 135. Integrations-Auswahl (Auswahl-Nachrichten, Item-Aufnahme, Kartenabzug, 11B0/11B1, Szenen mit Nachricht und Kamerawechsel, Leon und Elza; <sp>/E41a2/integ_liste.txt) -j 3: 35 von 35, darunter integration_r38_dining1141_s, das beim Bau-Agenten rot war. Gegenprobe der neuen Riegel kante/geh/renn mit der VORHER-exe 753652fc: alle 3 rot, und zwar aus dem Mechanismus. Die Logs des Bau-Agenten (925, 127 mit 1 rot, 17, 95) habe ich gelesen, die Zahlen stimmen.",
+   "urteile": [
+    {
+     "punkt": "1 Kurbel ROOM2020: 'komische herumfliegende Animation am Anfang, wenn er die Kurbel nutzt'",
+     "urteil": "teilweise",
+     "beleg": "Selbst gemessen mit re15_pc_E41a2.exe (md5 486f77a7…) gegen VORHER 753652fc. Gehen (P1_geh): Bild 9 bleibt durch beide Nachrichten stehen, Frage zu F381, Ifel_ck..Pos_set..Sleep in einem Takt F382, Bild gehalten, Plc_motion F402. Das ist Bild für Bild dieselbe Folge wie das Original-RAM o_geh1 (n9..n94 mo=5/9, n95 Pos_set, n115 Plc_motion). Stand (P1_stand), Weg des Nutzers 2050->2020 in Cut 3 (P1_weg2050) und die Antwort 'No' (P1_nein) verhalten sich ebenfalls wie das Original. Rennen (P1_renn_nach): F382 Pos_set und im selben Bild Stehen bei (3650,-3018), mo 200. Das Original (o_renn2 n93-n99) läuft dagegen 6 Bilder aus, bis (3650,-3369). Den Renn-Stopp habe ich selbst disassembliert (0x80032604 @0x8003272c, 0x80032778 @0x8003293c/@0x8003295c), er fehlt dem Port. Das Symptom 'herumfliegend' tritt in keinem Lauf auf."
+    },
+    {
+     "punkt": "E-N1 Kamera-Flackern ROOM2020 bei x 9000 (Orchestrator-Auftrag)",
+     "urteil": "teilweise",
+     "beleg": "Lauf EN1_kante: Der Spieler steht ab F64 auf der Kante. cam= wechselt weiter 2/0 wie im Original (o_cam9000_draw2: 39x RELOAD ohne DrawOTag). NACHHER sind die Bilder F64..F200 pixelgleich (137 gehaltene Bilder, md5 a44654161d), VORHER unterscheiden sich aufeinanderfolgende Bilder um je ~68 000 px. Das Flackern ist also weg. Die Umsetzung erzeugt aber einen Softlock: Wird der Raum mit der Spielerlage auf der Kante betreten (EN1_spawn_kante_nach), bleibt der Freeze pf=FF000007 von F1 bis F199 stehen, der Spieler reagiert nicht und das Bild bleibt schwarz. VORHER ist die Einblendung bei F10 fertig. Mehr dazu in Mangel 4."
+    },
+    {
+     "punkt": "E-N2 Geh-Stopp während der Frage (Orchestrator-Auftrag)",
+     "urteil": "erfuellt",
+     "beleg": "Selbst disassembliert: Message_on @0x800404f4 gibt bei @0x80040520 eine 1 zurück, der Skript-Freeze sitzt bei @0x8003f040-@0x8003f04c. Die Bildreihenfolge @0x80020de4 / @0x80020f3c / @0x80010044 stimmt. Geh-Stopp: @0x80032328 -> @0x80032334 -> @0x80032480, Stehen-Fall 0 @0x80032088/@0x8003209c. Die Zählung von 102 Auswahl-Message_on (Masken 69x 0xffff0000 und 33x 0xff800000, Folge-Opcode 102x 0x02) habe ich nachgefahren. Die Port-Messung stimmt mit o_geh1 überein: kein Lückenbild, Pos_set eins nach dem Schließen, Plc_motion +20. Der 'No'-Zweig ist intakt (F472 Evt_end, Spieler läuft danach)."
+    },
+    {
+     "punkt": "2 Karte B1: Sprung zum hinteren Teil vor der vorderen Tür der Waffen Armory 1090/1190",
+     "urteil": "erfuellt",
+     "beleg": "P2-Läufe: BASIS 116e8b0f zeigt MARKER 137 109 bzw. 130 112, also wandert der Marker zur Hallen-Marke (127,115). NACHHER bleibt er bei 145 106 / 145 107 (Ostkammer-Marke 146,109), für Leon und für Elza (ROOM1231). Durch die echte Tür nach 1190 steht er bei 145 108. Bild: <sp>/E41a2/P2_karte_vor_nach.png"
+    },
+    {
+     "punkt": "3 Werkstatt-Tür ROOM11B1 bleibt bei Elza dauerhaft zu",
+     "urteil": "erfuellt",
+     "beleg": "P3a, echter Türweg 1261->11B1 mit der Szene: '[wk11b1-r41] … Ereignis 24', msg 10/11. Kameras 2,3,4,5,6, am Ende Cut 2; BASIS endet auf Cut 8. Bild <sp>/E41a2/P3a_tuer_zoom.png: BASIS mit offenem Türblatt, NACHHER geschlossen. P3b: Von der Garagenseite wird Elza bei x -20942 gestoppt, es kommt msg 12 'The door is locked.', kein Raumwechsel. P3c: Von der Werkstattseite wird sie bei x -22618 gestoppt; BASIS läuft dort durch."
+    },
+    {
+     "punkt": "Gate Bau / RE-Belege / kein Raten",
+     "urteil": "teilweise",
+     "beleg": "local_build.sh configure und build laufen OK ('ninja: no work to do'). 6 Stichproben habe ich selbst disassembliert: Present @0x80021558/@0x80021560, Message_on, Bildreihenfolge, Renn-Stopp, Blenden-Takt @0x80020f44, Geh-Stopp. Die Wortsuche nach Rate-Begriffen im Diff ergibt 0 Treffer. Der Mechanismus ist aber unvollständig: Der Blenden-Takt läuft im gehaltenen Bild nicht (Mangel 4). Nicht modelliert sind außerdem das Tor @0x80010028 (der Nachrichten-Takt fällt im Bild nach einem Apply aus, H1) und zwei Present-Tore @0x8002151c/@0x80021544 (H2)."
+    },
+    {
+     "punkt": "Gate Vertrag: gemeinsame Dateien",
+     "urteil": "nicht_erfuellt",
+     "beleg": "Die Haken in scd_vm.c (zugeteilt C/F/G), platform/pc/main.c (D/F/G), render_pc.c (D) und msg_common.c (nicht zugeteilt) wirken im ganzen Spiel. Für Spur E fehlt dafür ein Orchestrator-Entscheid, wie es ihn für B5, C-E3 und A-E3 gab. Pfade, Bits und Nachrichten-IDs sind in Ordnung."
+    },
+    {
+     "punkt": "Gate Riegel / Nebenwirkungen",
+     "urteil": "nicht_erfuellt",
+     "beleg": "Für jeden Punkt gibt es einen Riegel, und alle neuen Riegel sind mit der VORHER-exe rot. Aber der Riegel 'renn' (test_r41_kleinkram_b_exe.c:314) verlangt die bekannte Nicht-Original-Lage (3650,-3018) mo 200 und meldet das als 'wie das Original'. Dazu kommt als Nebenwirkung der Softlock beim Raumeintritt auf der Kante. Inventar auf der Kante und Tür-Einblendungen 2050->2020 und 1230->1190 sind ohne Befund."
+    }
+   ],
+   "maengel": [
+    "1 (Punkt 1): Der Renn-Anlauf an die Kurbel ist weiterhin nicht wie im Original. Im Port steht Leon in F382 sofort bei (3650,-3018) mo 200 (P1_renn_nach). Im Original läuft er 6 Bilder aus und kurbelt bei (3650,-3369) (o_renn2 n93-n99; Mechanismus 0x80032604 @0x8003272c, 0x80032778 @0x800328f8-@0x8003295c). Nach dem Orchestrator-Hinweis von 03:21 ist die Rückfrage an den Nutzer erst zulässig, wenn alle Anlauf-Varianten original-gleich sind. Den 'Entscheid des Orchestrators' zum Renn-Stopp gibt es in AUFTRAG.md nicht (master af7e0e8a); das ist ein Vorschlag des Bau-Agenten. Das Symptom 'herumfliegend' ist weiter nicht reproduziert.",
+    "2 (Riegel): integration_r41_kleinkram_b_renn nutzt seit d4fa9074 den Auswerter 'takt' (test_r41_kleinkram_b.cmake:261/265, test_r41_kleinkram_b_exe.c:314). Dieser verlangt im Pos_set-Bild (3650,-3018) mo 200 und meldet ':273 Bildfolge wie das Original'. Das Original hat dort den Renn-Stopp (n94 (3650,-3099), cmd 1/2/3/0). Mit dem gemessenen Renn-Stopp aus 635be823 (F382 z -3085) würde der Riegel rot. Er schützt also die Abweichung und blockiert den Fix von Mangel 1.",
+    "3 (Vertrag §1.3): Nachbesserung 2 ändert spielweit wirksam fremde gemeinsame Dateien: scd_vm.c +2 (zugeteilt C/F/G), platform/pc/main.c +9/-1 (D/F/G), render_pc.c +9 (D), msg_common.c +4/-1 (nicht zugeteilt), dazu player_common.c und re15_inv_screen.c. Damit wird jedes Apply-Bild gehalten, jede Nachricht gibt den Spieler ein Bild später frei, und 102 Auswahl-Nachrichten laufen ohne Parken. Ein Orchestrator-Entscheid wie B5/C-E3/A-E3 fehlt. Bei der Integration sind die Konflikte mit D/F/G (main.c), C/F/G (op_message_on) und D (render_pc.c) zu lösen.",
+    "4 (Nebenwirkung, Softlock): Im gehaltenen Bild ruft main.c:11427-11429 re15_render_pc_bild_halten() statt re15_render_end_frame() auf. re15_fade_tick() (FUN_80021880) steckt aber in re15_render_end_frame() (render_pc.c:1290) und läuft dann nicht. Im Original läuft der Blenden-Takt in jedem Durchlauf vor dem Present (@0x80020f44 vor @0x80020f4c). Messung EN1_spawn_kante_nach (Raumeintritt ROOM2020 mit Lage (9000,-3200)): pf=FF000007 bleibt von F1 bis F199 stehen, der Spieler reagiert nicht auf pad 0040, alle Abzüge sind schwarz. VORHER ist die Einblendung bei F10 fertig. Keine der 653 Tür-Ankünfte und keines der 101 Debug-Sprungziele liegt auf einer wechselnden Kante (Zählung mit <sp>/E41a2/tools/rvd_kante_zensus.py). Trotzdem verliert jede Blenden-Rampe pro gehaltenem Bild einen Schritt. Fix: den Blenden-Takt auch im gehaltenen Bild ausführen und dafür einen Riegel anlegen."
+   ],
+   "bericht": "Abnahme 2 für Spur E (kleinkram_b): NICHT bestanden.\n\nDen Bericht habe ich als C:/workspace/git/reAi_v2/.claude/worktrees/r41_kleinkram_b/analysis/befunde_runde41/E_abnahme_2.md geschrieben und im Zweig r41/kleinkram_b committet, nur diese Datei. Commit 5c27360b mit der Nachricht 'doc(r41-kleinkram_b): Abnahme 2'; davor gab es zwei Zwischenstände (23603fc5, 7d63ff2a). Den Code habe ich nicht verändert, der Baum ist sauber.\n\nGemessen habe ich mit der Kopie re15_pc_E41a2.exe (HEAD 82cd04ec, Code-Stand 11b8f867). Verglichen wurde mit re15_pc_E41a1.exe (VORHER, 753652fc) und der Basis-exe 116e8b0f. Alle Läufe liegen unter C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/E41a2/runs/.\n\nUrteile:\n- **Punkt 2 (Karte B1):** erfüllt. Den Sprung in der Basis habe ich reproduziert (Marker 130/137 px), NACHHER bleibt der Marker bei 145, für Leon, Elza und den Weg durch die echte Tür.\n- **Punkt 3 (11B1, Elza):** erfüllt. Auf dem echten Türweg mit der Szene ist die Tür zu, sie sperrt von beiden Seiten und zeigt 'The door is locked.'.\n- **E-N2 (Geh-Stopp, Orchestrator):** erfüllt. Gehen, Stehen und die Antwort 'No' laufen Bild für Bild wie das Original-RAM.\n- **Punkt 1 (Kurbel):** teilweise.\n  - Gehen, Stehen und der Weg von 2050 her sind jetzt original-gleich.\n  - Im Rennen fehlt der Auslauf (Renn-Stopp) des Originals; Leon kurbelt 351 Einheiten neben der Original-Stelle.\n  - Das 'Herumfliegen' habe ich nicht gefunden.\n- **E-N1 (Kamera-Flackern):** teilweise. Das Flackern ist weg.\n\nNeuer Befund dieser Abnahme: Der Bildhalt überspringt re15_fade_tick(). Betritt Leon einen Raum mit der Lage auf einer wechselnden Kamerakante, wird die Einblendung nie fertig, das Spiel bleibt eingefroren und das Bild schwarz. Das ist ein Softlock; VORHER und im Original gibt es ihn nicht. Bei normalen Tür-Ankünften und Debug-Sprungzielen tritt der Fall nicht auf, das habe ich gezählt.\n\nWas zum Bestehen noch fehlt:\n1. Ein Orchestrator-Entscheid zum Renn-Stopp. Er bricht sonst unit_r36_zombieki_affen_block; danach den Renn-Stopp einbauen.\n2. Den Riegel 'renn' so umbauen, dass er die bekannte Abweichung nicht mehr festschreibt.\n3. Ein Vertragsentscheid für die Haken in den gemeinsamen Dateien main.c, render_pc.c, scd_vm.c und msg_common.c.\n4. Den Blenden-Takt auch im gehaltenen Bild laufen lassen, mit einem Riegel dazu.\n\nErst danach ist die Rückfrage an den Nutzer zum 'Herumfliegen' zulässig. Die Hinweise H1 bis H7 im Bericht (§8) sind keine Mängel."
+  }
+ },
+ "stand": {
+  "E": "Neue Runde nach Abnahme E 2 (E_abnahme_2.md) und den Orchestrator-Entscheiden E-E1..E-E3 (AUFTRAG.md 10:50): E-E1 = deine spielweiten Haken sind angenommen (Bedingung: Integration mit allen Nachrichten-/Szenen-/Tuer-Riegeln); E-E2 = Renn-Stopp des Originals SPIELWEIT einbauen (Ausgang 635be823, entfernt in d4fa9074), unit_r36_zombieki_affen_block mit Beleg neu einmessen (erst klaeren, was die Sonde misst), Riegel integration_r41_kleinkram_b_renn auf die Original-Lage nach dem Auslaufen (3650,-3369) umstellen; E-E3 = Blenden-Takt (re15_fade_tick, Original @0x80020f44 vor @0x80020f4c) auch im gehaltenen Apply-Bild, Riegel Raumeintritt 2020 auf der Kante (9000,-3200). Danach Punkt 1 (Kurbel) mit allen Anlauf-Varianten original-gleich -> erst dann bleibt die Rueckfrage an den Nutzer (Weg/Bild) als einziger offener Rest."
+ }
+}
