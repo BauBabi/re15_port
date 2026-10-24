@@ -940,3 +940,23 @@ Landungen (Punkt 2a, unveraendert): landung_leon / landung_elza je 1 Landung, 10
    (se_play_layers, Schritte). Die Schritt-Lage folgt dieser Port-Einheit; eine Umstellung waere engine-weit.
 4. Stempel-Zeilen ohne Ton (106 Faelle, Raeume ohne WATER-Satz - dort gibt es keinen Stempel) und ROOM6030/6031 Boden 0x17 (keine
    Zeile mit Ton fuer NPC und Spieler): Daten des Originals, unveraendert stumm.
+
+### N2.9 Fuer den Nutzer (Stand Nachbesserung 2; ersetzt N1.14, s. Richtigstellung dort)
+- Keine neuen Assets, keine Sprachdateien, kein Patch an shared_assets/PSX: die NPC-Schritte spielen Toene aus der snd0-Bank des
+  jeweiligen Raums (RDT +0x08..+0x10).
+- Hoerbar: die NPCs (Ada 0x40, Marvin 0x42, Irons 0x45, Elliot/Roy 0x47, John 0x49, Sherry 0x4b, 0x4d) machen beim Gehen, Laufen,
+  Rueckwaertsgehen und Drehen auf der Stelle Schrittgeraeusche - in Szenen und im freien Lauf, in beiden Szenarien. Der Ton ist der
+  NPC-Ton des Originals, wo der Raum einen hat (15 von 280 Boden-Faellen der 52 NPC-Raeume), sonst - wie in der Retail-Fassung RE2,
+  die keine eigenen NPC-Zeilen mehr kennt - derselbe Bodenton wie beim Spieler (257 Faelle). Stumm bleiben nur Bodenstellen, an denen
+  auch der Spieler keinen Ton hat (ROOM6030/6031 Boden 0x17).
+- Lautstaerke und Seite folgen der Kamera wie im Original: ein NPC weit hinten im Bild ist leiser (Beispiel ROOM2000: Abstand 41 ->
+  Pegel 104, Abstand 125 -> Pegel 56 von 127), ein NPC links/rechts der Blickrichtung klingt staerker auf dieser Seite. Die eigenen
+  Schritte des Spielers sind (noch) unveraendert mittig und unabhaengig vom Abstand (OFFEN N2.7 Punkt 1, braucht einen Entscheid).
+- Im Wasser spritzen die NPCs wie der Spieler (unveraendert seit Nachbesserung 1); beim Sprung von der Kante ins Becken (2090/2091,
+  2000-Kanal) 8 Spritzer an der Landestelle; die 20B0/20B1-Flut wie im Original.
+- Bedienhinweise (Messung): RE15_NPCSCHRITT_LOG=<datei> (je NPC-Schritt: Bild, Slot, Typ, Clip, Bild, Fuss, Boden, Stempel, Zweig,
+  gespielte Zeile, Plaetze, PORT-WAHL, Lage, Original-Zeile, Quelle orig/retail/stumm, Cut, Abstand, voll/volr); RE15_FOOT_DEBUG=1
+  zeigt je gemischtem NPC-Schritt "[foot] NPC-Lage voll= volr= -> Pegel Pan -> L= R=".
+- An den Orchestrator: (1) audio_pc.c traegt jetzt 4 Zeilen der Spur A (Entscheid A-E4) - bei der Integration mit Spur D
+  zusammenfuehren. (2) Alligator-Platz 35 an die Spuren B/F/G weitergeben (N2.6). (3) Entscheid: Lage auch fuer die Spieler-Schritte
+  (Original ja, gleiche Funktion @0x80045830; aendert jeden Raum) und CORDIC-Winkel fuer den Rotor (N2.7).
