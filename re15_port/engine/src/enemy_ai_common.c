@@ -46,6 +46,7 @@
 #include "re15_gegner_r39.h"   /* Runde 39 Spur E: Gorillas 0x27 (HP x2, Flinch-Schwelle; alle Raeume), Hunde-Riegel-Tick */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
 #include "re15_spinnen_r38.h" /* Runde 38 Spur R: Schacht-Ausstieg + Gift der Stage-2-Spinne */
+#include "re15_spinnenanim_r41.h"  /* Runde 41 Spur L: Zeichnen der Adultspinne */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: Phase-4-Wundstempel der Opfer-FSM (@0x8010a4e8) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
@@ -11023,6 +11024,7 @@ static const uint8_t s_aspider_idle_next[16] =
 static void re15_aspider_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
 static int re15_aspider_anim(re15_actor_t *e)
 {
+    re15_spinnenanim_r41_vor_anim(e);   /* Runde 41 Spur L: posiertes Bild VOR dem Vorschub (FUN_8001f3bc @0x8001f610-1c) */
     re15_enemy_bank_t *bb = re15_enemy_find(e->type);   /* real EM025 clip lengths from the loaded bank */
     int fc = 30;                                        /* fallback when the bank is absent (unit test) */
     if (bb && bb->ok && e->motion < bb->anim.clip_count && bb->anim.clips[e->motion].frame_count > 0)
@@ -11036,6 +11038,7 @@ static void re15_adult_spider_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_spinnenanim_r41_init(e);   /* Runde 41 Spur L: Flag 0x800 + +0x166 = 0xccc @0x80110de8-dfc (Zeichen-Massstab) */
 
     /* PORT OPTION (WELLE E): unter dem RE2-Flavor uebernimmt das RE2-Spinnen-Brain den GANZEN
      * Dispatch (re15_re2spider_tick, enemy_ai_re2_spider.c — Root @0x801000C8, Zustandstabelle
