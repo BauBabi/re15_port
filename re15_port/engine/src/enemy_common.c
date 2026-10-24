@@ -10,6 +10,7 @@
 #include "re15_entladen.h"   /* Runde 35 Spur I: Generation je Bank */
 #include "re15_cut10f0.h"    /* Runde 35 Spur K: Record-Alias fuer den geliehenen Gestenblock */
 #include "re15_roy_r37.h"    /* Runde 37 Spur K: Elzas Typ 0x47 (Roy) bindet ohne Elliot-Ausnahme */
+#include "re15_rbj_binder_r41.h"   /* Runde 41 Spur J: Marker-Binder byte-true FUN_8001b3f8 */
 
 re15_enemy_bank_t g_enemy[RE15_ENEMY_MAX];
 
@@ -77,6 +78,7 @@ void re15_rbj_set_alias(int slot, int marker_slot)
 void re15_rbj_bind_room(const uint8_t *rbj, size_t size)
 {
     s_room_rbj = rbj; s_room_rbj_size = size;
+    if (rbj) re15_rbj_binder_raum_protokoll(rbj, size);   /* Runde 41 Spur J: Bindung orig/alt je Raum (Messzeile) */
     memset(s_rbj_alias, 0, sizeof s_rbj_alias);   /* Runde 35 Spur L */
     for (int i = 0; i < RE15_RBJ_CACHE_MAX; i++) { s_rbj_cache[i].slot = -1; s_rbj_cache[i].valid = 0; }
 }
@@ -111,10 +113,9 @@ static int rbj_resolve_slot(int slot)
     if (!e->active || re15_typ47_ist_elliot(e->type)) return -1;   /* Elliot-Ausnahme (O3) — Runde 37 Spur K: nur Leons 0x47;
                                                    * Elzas Roy bindet wie jeder NPC (ROOM1011 rec1, @0x8001b498) */
     /* Marker-Bit (1 + Enemy-Index); Port-Aktor-Slot = 1 + Enemy-Index -> Bit == slot. */
-    int rec = -1;
     int mslot = s_rbj_alias[slot] ? (int)s_rbj_alias[slot] : slot;   /* Runde 35 Spur L: Alias */
-    for (int r = 0; r < 8; r++)
-        if (rbj_record_marker(r) & (1u << mslot)) { rec = r; break; }
+    int rec = re15_rbj_binder_gegner(s_room_rbj, s_room_rbj_size, mslot - 1);   /* Runde 41 Spur J: byte-true FUN_8001b3f8
+                               * (a3 kumulativ @0x8001b4c4, spaeterer Record ueberschreibt @0x8001b4a0) statt erstem Bit-Record */
     /* Runde 35 Spur K: geliehener Block (ROOM10F0 <- ROOM11B0) hat nur Marker-Bits 0/1 — der zweite NPC
      * (Aktor 2, Marvin) liest denselben NPC-Record 1 (re15_cut10f0.h). Sonst -1 = unveraendert. */
     if (rec < 0) rec = re15_cut10f0_rbj_record_alias(slot);
@@ -133,6 +134,7 @@ static int rbj_resolve_slot(int slot)
                                       &s_rbj_cache[ci].skel, &s_rbj_cache[ci].anim) == 0)
             s_rbj_cache[ci].valid = 1;
     }
+    re15_rbj_binder_aktor_protokoll(slot, e->type, mslot, rec, s_rbj_cache[ci].valid);   /* Runde 41 Spur J: Messzeile */
     return ci;
 }
 
@@ -188,7 +190,9 @@ void re15_apply_room_cinematic(const uint8_t *rbj, size_t rbj_size, unsigned roo
 
     /* (1) Leon's cinematic-gesture overlay (Plc_motion clip indices = this room's bank). */
     if (pl00_base && leon_skel && leon_anim) {
-        if (re15_emd_parse_rbj(rbj, rbj_size, pl00_base, s, a) == 0) {
+        int pr = re15_rbj_binder_spieler(rbj, rbj_size);   /* Runde 41 Spur J: Spieler = LETZTER Record mit Marker-Bit 0
+                                                            * (@0x8001b450, nicht Record 0); -1 = Kanal nicht geschrieben */
+        if (pr >= 0 && re15_emd_parse_rbj_record(rbj, rbj_size, pr, pl00_base, s, a) == 0) {
             *leon_skel = *s; *leon_anim = *a;
         }
     }
