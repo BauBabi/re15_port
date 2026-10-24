@@ -254,8 +254,19 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
 - Bild: Sherry zieht das Gitter mit beiden Haenden heraus, legt es links flach ab, kriecht hinein, bis nur die Beine
   herausschauen, dann ist sie weg (J_belege/e3061_nach_gitter_kriechen.png, Seite an Seite mit dem Original:
   J_belege/vergleich_3061_gitter_kriechen.png).
-- Rest-Abweichung (unsichtbar, Sherry steckt im Gebaeude): Original-Endlage (-18795,-30700), Port (-18792,-29716).
-  Das Original schiebt sie nach dem Schleifenende um ~984 weiter: SCA-Eintraege (Region 2/0 = #9, Region 3/1 = #17,
-  Rechteck x -31340..12792, z -30382..-26744) werden @0x01330..0x0133C wieder eingeschaltet, sie steht darin und wird
-  hinaus geschoben (-30382 - 318). Port: `re15_npc_wall_clamp` (Wurzel @0x8011cc64 `jal 0x8003b0a4`) loest nur die
-  Bewegung alt->neu, kein Herausschieben bei Stillstand. OFFEN (NPC-Kollision allgemein = Spur H; im Bild ohne Wirkung).
+- Rest-Abweichung (im Bild ohne Wirkung, Sherry steckt dann im Gebaeude): Original-Endlage (-18795,-30700) ab t14,
+  Port (-18792,-29716) am Ende der 2. Clip-2-Runde (For-Zaehler 2 @0x01308 `0d 00 22 00 02 00`, For/Next @0x8003f540/
+  @0x8003f674 selbst gelesen: genau 2 Runden). Bis Runde 2 Bild 22 decken sich Port und Original (s.o.). URSACHE NOCH
+  NICHT BELEGT. Gepruefte Spur: nach der Schleife schaltet sub04 @0x01330..0x0133C die SCA-Eintraege Region 2/0 (#9) und
+  3/1 (#17) wieder ein (Rechteck x -31340..12792, z -30382..-26744); Herausschieben auf die Kante minus Radius ergaebe
+  -30382 - 300 = -30682 (Radius = +0x78-Box +6 = 300, im RAM gelesen) — nicht -30700, also so nicht bestaetigt. Port:
+  `re15_npc_wall_clamp` (NPC-Wurzel @0x8011cc64 `jal 0x8003b0a4`). Dichte Original-Reihe o3061_s3 folgt (§2.8).
+
+### §2.8 Dichte Original-Reihe o3061_s3 (Slot-1 alle 0,4 s, `J_belege/o3061_s3_dicht.txt`)
+- t03 Clip 0 Bild 52: Gitter lokal **(252,192,-153) Rot (0,1024,3072)** = Super_set-Werte (angehaengt); t04 Bild 79:
+  rutscht (-18276); ab t05 Endlage (-18116,-266,-26788).
+- t05 Clip 1 Bild 17: Sherry x **-18980 = -18860 - 24*5** (sub05 Speed_set(0,-5), 7+17 Bilder vor dem ersten Anker-Bild 20).
+- Clip 2: t08 Bild 19 +0x1c4 0x26 (SET 6), t09 Bild 44 0x05, t10 Bild 12 0x06, t11 Bild 39 0x25 (SET 5), **t13 Bild 29
+  0x24 = nur SET 4** -> die Schleife ist nach 2 Runden zu Ende (For-Zaehler 2 bestaetigt).
+- Lagen: t11 Runde 2 Bild 39 **(-18810,-29279)** — Port F1244 (-18807,-29269); t12 Bild 5 nach Schleifenende
+  **(-18795,-30700)**. Der Sprung von ~-974 zwischen Runde-2-Ende und t12 ist der Rest aus §2.7 (OFFEN, im Bild ohne Wirkung).
