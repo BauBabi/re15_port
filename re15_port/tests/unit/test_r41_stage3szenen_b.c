@@ -15,13 +15,22 @@
  *            Koerper-/Waffen-Zeilen, Knochenlage (Kind), Gehen 50 / Rennen 120 je Bild (= Original-Messung
  *            K_belege/k1_orig_tempo_30c1.txt / k1_orig_rennen_30c1.txt), kein Zielen mit R1.
  *   szene <anim.txt> <debug.log>     Auswertung integration_r41_stage3szenen_b_3091 (echte exe, Szene ueber die Riegeltuer):
- *            Sub-0-Clipfolge je Aktor = ORIGINAL (DuckStation-GDB, K_belege/k2_orig_3091_gdb_lauf2.log.gz).
+ *            Sub-0-Clipfolge je Aktor = ORIGINAL (DuckStation-GDB, K_belege/k2_orig_3091_gdb_lauf2.log.gz); Nachbesserung 1
+ *            (M1): Sherrys Schleifen-Clip 13 (Plc_flg 0x04) Bild fuer Bild = Original (6 Abschnitte 779/504/233/160/416/164,
+ *            Bild = i % 40, 19/12/5/3/10/4 Umlaeufe; FUN_80050cb8 @0x80050dbc-c8).
+ *   schleife Nachbesserung 1 (M1): Spieler-Clip-Ende im Kommandowort 4 (plcloop_r41.c, Spur E) mit der Clip-Laenge des
+ *            BINDER-Records (FUN_8001b3f8 @0x8001b450: letzter Record mit Marker-Bit 0) an der echten ROOM3091/ROOM2020-RBJ.
  */
 #include "re15_sherry_r41.h"
 #include "sherry_pc_r41.h"
 #include "re15_emd.h"
 #include "re15_md1.h"
 #include "re15_damage.h"
+#include "re15_plcloop_r41.h"      /* Nachbesserung 1 (M1): Spur-E-Modul, Record = Binder */
+#include "re15_rbj_binder_r41.h"
+#include "re15_rdt.h"
+#include "re15_enemy.h"            /* re15_rbj_bind_room */
+#include "re15_actor.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -271,6 +280,62 @@ static void t_koerper(void)
     free(f);
 }
 
+/* ---------- schleife (Nachbesserung 1, M1) ---------- */
+/* Raum-RBJ binden wie der Raumlader (RDT +0x5C, re15_rbj_bind_room); liefert den RDT-Puffer (freigeben). */
+static uint8_t *rbj_binden(const char *rel, re15_rdt_t *rdt)
+{
+    long n = 0; uint8_t *b = psx(rel, &n);
+    if (!b || re15_rdt_parse(b, (size_t)n, rdt) != 0 || !rdt->animation || rdt->animation_size <= 0) { free(b); return NULL; }
+    re15_rbj_bind_room(rdt->animation, (size_t)rdt->animation_size);
+    return b;
+}
+static void t_schleife(void)
+{
+    re15_rdt_t rdt; memset(&rdt, 0, sizeof rdt);
+    uint8_t *b = rbj_binden("STAGE3/ROOM3091.RDT", &rdt);
+    CHECK(b != NULL, "ROOM3091.RDT + RBJ (+0x5C) gebunden");
+    if (!b) return;
+    const uint8_t *rbj = rdt.animation; size_t rs = (size_t)rdt.animation_size;
+    /* Marker der Records (Trailer @u32[0] + 8*r -> EMR-Praefix): rec0 = 1, rec1 = 2, rec2 = 3 */
+    uint32_t tot = le32(rbj); int nrec = rbj[4];
+    uint32_t m0 = le32(rbj + le32(rbj + tot)), m2 = nrec > 2 ? le32(rbj + le32(rbj + tot + 16)) : 0;
+    uint32_t e0 = le32(rbj + tot + 4);
+    CHECK(nrec == 3 && (m0 & 1) && (m2 & 1) && le16(rbj + e0 + 2) / 4 == 1,
+          "ROOM3091-RBJ: %d Records, rec0 Marker %u (1 Clip), rec2 Marker %u - beide mit Bit 0", nrec, m0, m2);
+    CHECK(re15_rbj_binder_spieler(rbj, rs) == 2, "Binder FUN_8001b3f8: Spieler-Kanal = rec2 (letzter Record mit Bit 0, @0x8001b450)");
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    memset(pl, 0, sizeof *pl);
+    pl->active = 1; pl->motion = 13; pl->anim_use_pl00 = 0;
+    CHECK(re15_plcloop_r41_clip_len(pl) == 40, "Clip 13 im Kommandowort 4: %d Bilder (Soll 40 = rec2; erster Record rec0 haette 1 Clip)",
+          re15_plcloop_r41_clip_len(pl));
+    /* Vorschub wie player_common.c (anim_frame++, dann Takt): Plc_motion(0,13) + Plc_flg 43 00 04 00 (@0x0170E/@0x01712) */
+    pl->state = 4; pl->sub_state_1 = 0; pl->walk_active = 0; pl->anim_flags = 0x04; pl->anim_frame = 0;
+    unsigned u0 = re15_plcloop_r41_umlaeufe();
+    int abw = 0;
+    for (int i = 1; i < 779; i++) {                       /* Original-Abschnitt B1-779 */
+        pl->anim_frame++;
+        re15_plcloop_r41_takt(pl);
+        if ((int)pl->anim_frame != i % 40) abw++;
+    }
+    CHECK(abw == 0 && re15_plcloop_r41_umlaeufe() - u0 == 19,
+          "Schleife 779 Bilder: Bild = i %% 40 (%d Abweichungen), %u Umlaeufe (Original B1-779: 19, @0x80050dbc-c8 / @0x8001f63c)",
+          abw, re15_plcloop_r41_umlaeufe() - u0);
+    pl->anim_flags = 0; pl->anim_frame = 39;
+    for (int i = 0; i < 5; i++) { pl->anim_frame++; re15_plcloop_r41_takt(pl); }
+    CHECK(pl->anim_frame == 39, "ohne Plc_flg 0x04: Halten auf Bild 39 (Phase 2 @0x80050da4), anim_frame %d", (int)pl->anim_frame);
+    free(b);
+    /* Spur E (ROOM2020, ein Record): unveraendert 40 */
+    memset(&rdt, 0, sizeof rdt);
+    b = rbj_binden("STAGE2/ROOM2020.RDT", &rdt);
+    if (b) {
+        pl->motion = 0; pl->anim_use_pl00 = 0;
+        CHECK(re15_rbj_binder_spieler(rdt.animation, (size_t)rdt.animation_size) == 0 && re15_plcloop_r41_clip_len(pl) == 40,
+              "ROOM2020 (Kurbel, Spur E): Spieler-Record rec0, Clip 0 = %d Bilder (Soll 40)", re15_plcloop_r41_clip_len(pl));
+        free(b);
+    } else CHECK(0, "ROOM2020.RDT lesbar");
+    re15_rbj_bind_room(NULL, 0);
+}
+
 /* ---------- Auswertungen der Integrationslaeufe ---------- */
 static char *text(const char *pfad) { long n = 0; uint8_t *b = datei(pfad, &n); if (b) b[n] = 0; return (char *)b; }
 
@@ -369,6 +434,39 @@ static int folge(const char *anim, int wer, int *out, int cap)
     }
     return n;
 }
+/* Nachbesserung 1 (M1): Spieler-Abschnitte Clip 13 / 40 Bilder im 3091-Block - Laenge, Abweichungen von Bild = i % 40,
+ * Spruenge 39 -> 0. Soll = Original-GDB-Protokoll (k2_orig_3091_gdb_lauf2): B1-779, B880-1383, B1484-1716, B1817-1976,
+ * B2077-2492, B2714-2877 mit 19/12/5/3/10/4 Spruengen und 0 Abweichungen. */
+static const int k_soll_c13_len[6] = { 779, 504, 233, 160, 416, 164 };
+static int schleife13(const char *anim, int *len, int *abw, int *spr, int cap)
+{
+    const char *beg = NULL, *q = anim; long last = -1; const char *abschnitt = anim; int hat42 = 0;
+    for (; q && *q; ) {
+        long f = strtol(q, NULL, 10);
+        if (f < last - 5) { if (hat42) { beg = abschnitt; break; } abschnitt = q; }
+        last = f;
+        long fr, ak, ty; if (sscanf(q, "%ld %ld %ld", &fr, &ak, &ty) == 3 && ak == 2 && ty == 0x42) hat42 = 1;
+        const char *nl = strchr(q, '\n'); q = nl ? nl + 1 : NULL;
+    }
+    if (!beg) beg = hat42 ? abschnitt : NULL;
+    if (!beg) return 0;
+    int n = -1; long lfr = -10, lsl = -1; last = -1;
+    for (q = beg; q && *q; ) {
+        long fr, ak, ty, mo, clip, fc, cur, slot;
+        if (sscanf(q, "%ld %ld %ld %ld %ld %ld %ld %ld", &fr, &ak, &ty, &mo, &clip, &fc, &cur, &slot) == 8) {
+            if (fr < last - 5) break;
+            last = fr;
+            if (ak == 0 && ty == 0 && clip == 13 && fc == 40) {
+                if (fr != lfr + 1) { if (n + 1 >= cap) break; n++; len[n] = 0; abw[n] = 0; spr[n] = 0; lsl = -1; }
+                if (slot != len[n] % 40) abw[n]++;
+                if (lsl >= 0 && slot < lsl) spr[n]++;
+                len[n]++; lsl = slot; lfr = fr;
+            }
+        }
+        const char *nl = strchr(q, '\n'); q = nl ? nl + 1 : NULL;
+    }
+    return n + 1;
+}
 static int gleich(const int *a, int na, const int *b, int nb) { if (na != nb) return 0; for (int i = 0; i < na; i++) if (a[i] != b[i]) return 0; return 1; }
 static void drucke(const char *t, const int *a, int n)
 {
@@ -393,6 +491,16 @@ static void t_szene(const char *anim_p, const char *dlog)
     na = folge(anim, 2, a, 64); drucke("Elza PORT", a, na);
     CHECK(gleich(a, na, k_soll_elza, (int)(sizeof k_soll_elza / sizeof k_soll_elza[0])),
           "Gegner 1 (Elza-NPC): Sub-0-Clipfolge = Original (%d Abschnitte)", na);
+    /* Nachbesserung 1 (M1): Schleifen-Clip 13 Bild fuer Bild (FUN_80050cb8 @0x80050dbc-c8, Plc_flg 43 00 04 00 @0x01712 ff.) */
+    int ln[8], ab[8], sp[8];
+    int ns = schleife13(anim, ln, ab, sp, 8);
+    int ok = (ns == 6);
+    for (int i = 0; i < ns && i < 6; i++) {
+        printf("    Clip 13 Abschnitt %d: %d Bilder (Original %d), %d Spruenge 39->0, %d Abweichungen von i%%40\n",
+               i + 1, ln[i], k_soll_c13_len[i], sp[i], ab[i]);
+        if (ln[i] != k_soll_c13_len[i] || ab[i] != 0 || sp[i] != (k_soll_c13_len[i] - 1) / 40) ok = 0;
+    }
+    CHECK(ok, "Spieler (Sherry) Clip 13: %d Abschnitte, Bild = i %% 40 und Laengen = Original (19/12/5/3/10/4 Umlaeufe)", ns);
     free(anim); free(d);
 }
 
@@ -403,6 +511,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil_, "pins")    || !strcmp(teil_, "alle")) t_pins();
     if (!strcmp(teil_, "waffe")   || !strcmp(teil_, "alle")) t_waffe();
     if (!strcmp(teil_, "koerper") || !strcmp(teil_, "alle")) t_koerper();
+    if (!strcmp(teil_, "schleife") || !strcmp(teil_, "alle")) t_schleife();
     if (!strcmp(teil_, "sherry") && argc > 3) t_sherry(argv[2], argv[3]);
     if (!strcmp(teil_, "szene")  && argc > 3) t_szene(argv[2], argv[3]);
     printf("%s (%d Fehler)\n", g_fail ? "FEHLGESCHLAGEN" : "BESTANDEN", g_fail);

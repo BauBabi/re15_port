@@ -9,7 +9,10 @@
 #   unit_r41_stage3szenen_b_koerper  PC-Modul am echten PL04/PL0F: Koerper + W00 + keine Hand-Meshes + Wunden + CORE; zurueck
 #   integration_r41_stage3szenen_b_sherry  echte exe, Schacht-Tuer 3061 -> 30C1: Koerper, Knochen, Gehen 50, Rennen 120,
 #                                          kein Zielen (Original K_belege/k1_orig_*_30c1.txt)
-#   integration_r41_stage3szenen_b_3091    echte exe, Riegeltuer 3091 -> sub07: Clipfolge je Aktor = Original (GDB-Lauf)
+#   integration_r41_stage3szenen_b_3091    echte exe, Riegeltuer 3091 -> sub07: Clipfolge je Aktor = Original (GDB-Lauf);
+#                                          Nachbesserung 1 (M1): Sherrys Schleifen-Clip 13 Bild fuer Bild = Original
+#   unit_r41_stage3szenen_b_schleife Nachbesserung 1 (M1): Spieler-Clip-Ende im Kommandowort 4 (plcloop_r41.c, Spur E)
+#                                    mit der Laenge des Binder-Records (@0x8001b450), echte RBJ ROOM3091/ROOM2020
 add_executable(test_r41_stage3szenen_b
     ${CMAKE_CURRENT_LIST_DIR}/../test_r41_stage3szenen_b.c
     ${CMAKE_SOURCE_DIR}/platform/pc/src/sherry_pc_r41.c)
@@ -21,7 +24,7 @@ target_compile_definitions(test_r41_stage3szenen_b PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_stage3szenen_b PRIVATE m)
 endif()
-foreach(_teil pins waffe koerper)
+foreach(_teil pins waffe koerper schleife)
     add_test(NAME unit_r41_stage3szenen_b_${_teil} COMMAND test_r41_stage3szenen_b ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_stage3szenen_b_${_teil} PROPERTIES TIMEOUT 300)
