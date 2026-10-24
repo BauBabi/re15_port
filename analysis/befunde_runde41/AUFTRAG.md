@@ -534,3 +534,12 @@ Folgen (Orchestrator, Umsetzung Spur C):
    Warnung -> Flut wie bisher.
 5. Fuer den Nutzer (Dossier §7): Plakat-Bild, Dokument-Text, Loesung und Ableitung als Vorschlag zur Freigabe.
 6. Nachrichten-Ids: 2030 Ids 40-49 sind C's; werden mehr gebraucht, 2030 Ids 50-55 (VERTRAG 1.2 ergaenzt).
+
+## 2026-10-24 17:32 — Orchestrator-Entscheid E-E4 (Abnahme E 3, Mangel 2; der Nutzer kann widersprechen)
+
+unit_r36_zombieki_affen_block darf nicht durch eine nachtraeglich gewaehlte Schranke gruen werden. Die Sonde misst den
+Haenger (blockierte Gorilla-Bilder an einer Klemme je Seed) wieder wirksam; die zwei bekannten Haenger-Stellen (u. a. Klemme
+(11129,9982), Seed 0x9b5bf362: 4405/6000 Bilder) werden als BENANNTE Ausnahmen mit Beleg gefuehrt. Ist die Ursache im
+Port-Code (zombieki_r36.c, Runde-36-PORT-WAHL) belegbar und klein zu beheben, behebt Spur E sie in dieser Nachbesserung
+(mit Riegel); sonst Folgeauftrag in UEBERGABE §3b. Mangel 1 (Renn-Stopp nach Treppe, Griff-Freigabe, Plc_ret: Original
+loescht +5/+6 @0x80038ea8/@0x80038eb0 bzw. @0x80041f90-9c) behebt Spur E wie gefordert.
