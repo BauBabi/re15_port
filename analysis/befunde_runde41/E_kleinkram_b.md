@@ -983,3 +983,11 @@ RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72
   _story_leon/_szene1150/_szenenleon/_tueren/_ziel1190_scheiben, r37_bissarm_echtlauf/_re2zombie/_roy_szene1011/_1021/_szene11c0,
   r38_elzatoene_szene1021/_spinnen_echtlauf/_szenenschutz/_tagebuch_karte/_zopf, r39_elza_karte/_hund1121/_johnruf1041_tuer_*
   (6)/_karten/_toene_szene(_elza)) und unit_r36_zombieki_affen_block, unit_r41_kleinkram_b_takt_rennpfad.
+- Gezielter Lauf 2 (15:38-15:41), alle uebrigen Unit-/Prop-Tests, deren Programm den Spieler treibt (Quelle ruft
+  re15_player_tick / re15_game_step oder nennt player_common/rennstopp; Zuordnung Quelle -> Test ueber `ctest -N -V`, 505 Tests,
+  davon 376 nicht in Lauf 1; Liste `<sp>/E41n3b/spieler_rest.txt`):
+  `ctest --test-dir re15_port/build -R "$(cat <sp>/E41n3b/spieler_regex.txt)" -j 2 --timeout 900 --output-on-failure`
+  -> **100% tests passed, 0 tests failed out of 376** (168,5 s, CTEST_EXIT=0, `<sp>/E41n3b/ctest_spieler.log`).
+- Nachtrag Tests, die `motion = 100` (Rennen) direkt setzen (grep in tests/unit):
+  `ctest -R "^(unit_ai_flavor_mixed|unit_r35_raeume_trage.*|unit_r16_liegende.*|unit_plc_back.*|unit_re2_dog.*)$" -j 2`
+  -> **100% tests passed, 0 tests failed out of 10**.
