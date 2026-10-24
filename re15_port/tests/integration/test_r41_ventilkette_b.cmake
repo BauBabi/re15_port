@@ -30,8 +30,9 @@
 #      Tuer nach ROOM2050 (kein Sperrtext); in 2050 lenkt Slot 0 (Ziel ROOM2000) nach ROOM20B0 Cut 9 um.
 #   H  Punkt 4: 2050-Leiter hinab (Slot 0 @0x01C4A, Ziel ROOM2000 Cut 10) mit Bit 103 -> ROOM20B0 Cut 9, nicht ROOM2000.
 #   I  Nachtraege 7/8 (Nachbesserung 3): ROOM2030 mit Bit 103 ohne Strom -> Wasserflaechen obj 4/5 bei y -7200
-#      (Gegenprobe); MIT Strom (3,126) (Setzer ROOM2060 sub01 @0x012AE) -> EINE Flaeche obj 4 bei (0,-3600,0) ueber der
-#      Schachtoeffnung (Relinghoehe), kein obj 5, kein "unter Wasser"-Satz, Treppe Slot 8 = Sperrtext 48.
+#      (Gegenprobe); MIT Strom (3,126) (Setzer ROOM2060 sub01 @0x012AE) -> EINE Flaeche obj 4 bei (0,-5350,0) ueber der
+#      Schachtoeffnung (Nachbesserung 4, Nachtrag 12 (k): knapp unter der Absperrung = Ringboden -5400 + 50 @0x00CC8), kein
+#      obj 5, kein "unter Wasser"-Satz, Treppe Slot 8 = Sperrtext 48.
 #   J  Elza (ROOM2051): D mit Elza bis "Power supply OK." und Original-Hebel.
 #   K  Elza (ROOM2001): Leiter = Sperrtext 40 woertlich, kein Raumwechsel nach ROOM2051.
 #   L/L2 Orchestrator-Entscheid C-E2 (Abnahme 0 M5), seit Nachtrag 7 nur "geflutet ohne Strom": ROOM20B0 nach der Szene
@@ -247,8 +248,8 @@ _lauf(i2 180 ${_leon}
       RE15_DEBUG_JUMP=2030@240 "RE15_SET_FLAG=9:101,9:102,9:103,9:100,3:126"
       "RE15_EXIT_AT=60#2030")
 _darf_nicht("${_dbg}" "unter Wasser" i2 "mit Strom steht 2030 nicht mehr ueber dem Ring unter Wasser")
-_muss("${_dbg}" "[ventilkette41] ROOM2030: Strom (3,126) -> Wasser auf Relinghoehe y -3600 (Schachtoeffnung), Treppe Slot 8 -> Sperrtext 48, Ring frei" i2 "Relinghoehe")
-_muss_re("${_dbg}" "oid=0x04 pos=[(]0,-3600,0[)]" i2 "EINE Wasserflaeche (obj 4) auf -3600")
+_muss("${_dbg}" "[ventilkette41] ROOM2030: Strom (3,126) -> Wasser knapp unter der Absperrung y -5350 (Schachtoeffnung), Treppe Slot 8 -> Sperrtext 48, Ring frei" i2 "Pegel knapp unter der Absperrung (Nachtrag 12 (k))")
+_muss_re("${_dbg}" "oid=0x04 pos=[(]0,-5350,0[)]" i2 "EINE Wasserflaeche (obj 4) auf -5350")
 _darf_nicht("${_dbg}" "oid=0x04 pos=(-10800" i2 "keine Flutflaeche A mit Strom")
 _darf_nicht("${_dbg}" "oid=0x05" i2 "keine zweite Flaeche mit Strom")
 _muss("${_dbg}" "[ventilkette41] ROOM2030: Tuer Slot 0 -> ROOM20B0 Cut 11 (Ost-Tuer nach der Flut)" i2 "Ost-Tuer bleibt 20B0")
@@ -292,7 +293,7 @@ _lauf(l2 240 ${_leon}
       "RE15_EXIT_AT=60#2030")
 _darf_nicht("${_dbg}" "Ring-Tuer Slot 3" l2 "mit Strom keine Sperre")
 _muss("${_dbg}" "[aot] DOOR FIRE slot=3 rect=(5950,-6400" l2 "Ost-Tuer feuert mit Strom (Nachtrag 7)")
-_muss("${_dbg}" "[ventilkette41] ROOM2030: Strom (3,126) -> Wasser auf Relinghoehe" l2 "Ring trocken (Relinghoehe)")
+_muss("${_dbg}" "[ventilkette41] ROOM2030: Strom (3,126) -> Wasser knapp unter der Absperrung" l2 "Ring trocken (Pegel unter der Absperrung)")
 _muss("${_dbg}" "loaded room2030.rdt" l2 "ROOM2030 geladen")
 _muss("${_dbg}" "EXIT_AT: Bild" l2 "Endbild in ROOM2030 erreicht")
 _lauf(m 240 ${_leon}
@@ -314,4 +315,4 @@ _muss("${_dbg}" "loaded room2030.rdt" m2 "ROOM2030 geladen")
 _muss("${_dbg}" "EXIT_AT: Bild" m2 "Endbild in ROOM2030 erreicht")
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_ventilkette_b: L/L2/M/M2 (Ring-Zugaenge 20B0/2070 gesperrt ohne Strom, offen mit (3,126)), D (Pult 2050 -> 80 V -> Hebel = Original), E (Hebel gesperrt), E2/E3/E4 (Kisten-Hebel ohne/mit Pult, Elza), F (2030-Pult ohne Ventil 13), G/H (Leitern 20B0 <-> 2050), I (2030 Flut ohne Strom / Relinghoehe mit Strom), J (Elza 2051), K (Elza Leiter 2001) bestanden")
+message(STATUS "r41_ventilkette_b: L/L2/M/M2 (Ring-Zugaenge 20B0/2070 gesperrt ohne Strom, offen mit (3,126)), D (Pult 2050 -> 80 V -> Hebel = Original), E (Hebel gesperrt), E2/E3/E4 (Kisten-Hebel ohne/mit Pult, Elza), F (2030-Pult ohne Ventil 13), G/H (Leitern 20B0 <-> 2050), I (2030 Flut ohne Strom / Pegel -5350 mit Strom), J (Elza 2051), K (Elza Leiter 2001) bestanden")

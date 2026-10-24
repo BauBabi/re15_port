@@ -1,5 +1,7 @@
-# Runde 41 Spur C "ventilkette" — STAGE2-Kette: Leiter 2000 (Text 40), Bruecke + Pult + Ventil 13 + Ventile 2030,
-# Zaehler/Flut/Ertrinken, 20B0 statt 2000, Schaltpult 2050 (80 V) sperrt den Hebel, Rechner 2080 entleert 2030.
+# Runde 41 Spur C "ventilkette" — STAGE2-Kette: Leiter 2000 (Text 40), Bruecke + Pult + Ventil 13, das Ventilraetsel 2030
+# (sechs Ventile, Reihenfolge, Dokument + Plakat; Nachtrag 13), Zaehler/Flut/Ertrinken, 20B0 statt 2000, Schaltpult 2050
+# (80 V) sperrt den Hebel; mit dem Strom (Generator 2060, (3,126)) steht 2030 knapp unter der Absperrung (Nachtraege 7/8/12),
+# der Rechner 2080 bleibt Original.
 # Herleitung include/re15_ventilkette_r41.h, Dossier analysis/befunde_runde41/C_ventilkette.md.
 #
 # Mechanik-Riegel (echte RDTs, Leon + Elza, Raumaufbau wie im Spiel, Aktion vor jeder Stelle, Takt fuer Takt):
@@ -11,10 +13,10 @@ target_compile_definitions(test_r41_ventilkette PRIVATE
 add_test(NAME unit_r41_ventilkette COMMAND test_r41_ventilkette)
 set_tests_properties(unit_r41_ventilkette PROPERTIES TIMEOUT 300)
 
-# Echter Weg mit der exe (nur PC-Ziel): Sprung nach 2030 (Ost-Tuer), Ventile -> Frage -> Ja -> Warnung, Zaehler,
-# Tuer Slot 0 feuert -> ROOM20B0 geladen (Umlenkung), Szene sub02 (Cut 11), Bits 103 + 100; zweiter Lauf: 2000 mit
-# Leiter-Text, dritter Lauf: Zaehler abgelaufen -> Flut -> tot (Nachbesserung 1, M4: beschleunigter Renderer, Farbe der
-# Ertrink-Blende ueber das ppm-Werkzeug von test_r41_ventilkette).
+# Echter Weg mit der exe (nur PC-Ziel): A Sprung nach 2030 (Sued-Landeplatz), die richtige Ventil-Folge zu Fuss -> Warnung,
+# Zaehler, Tuer Slot 0 feuert -> ROOM20B0 geladen (Umlenkung), Bits 103 + 100; B 2000 mit Leiter-Text; C Zaehler abgelaufen
+# -> Flut -> tot (Nachbesserung 1, M4: beschleunigter Renderer, Farbe der Ertrink-Blende ueber das ppm-Werkzeug von
+# test_r41_ventilkette); D Ventil ohne Sicherung = Text 49.
 if(RE15_BUILD_PC AND TARGET re15_pc)
     add_test(NAME integration_r41_ventilkette
              COMMAND ${CMAKE_COMMAND}
@@ -26,8 +28,9 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
 endif()
 
 # Teil B (dritte Fortsetzung 2026-10-24): die Glieder, die Teil A nicht faehrt — Pult 2050 -> 80 V -> Hebel = Original
-# sub04 (Leon + Elza), Hebel vorher gesperrt, 2030-Pult ohne Ventil 13, Leitern 20B0 <-> 2050 nach der Flut, 2030 mit
-# Bit 107 ohne Wasser (Gegenprobe ohne 107), Elza-Leiter 2001. Eigener exe-Kopie-Praefix re15_pc_r41cb_.
+# sub04 (Leon + Elza), Hebel vorher gesperrt, 2030-Pult ohne Ventil 13, Leitern 20B0 <-> 2050 nach der Flut, 2030 nach der
+# Flut ohne Strom (y -7200) und mit Strom (3,126) (y -5350, knapp unter der Absperrung; Nachtraege 7/8/12), Ring-Zugaenge,
+# Elza-Leiter 2001. Eigener exe-Kopie-Praefix re15_pc_r41cb_.
 if(RE15_BUILD_PC AND TARGET re15_pc)
     add_test(NAME integration_r41_ventilkette_b
              COMMAND ${CMAKE_COMMAND}
@@ -37,9 +40,10 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
     set_tests_properties(integration_r41_ventilkette_b PROPERTIES TIMEOUT 1200 RUN_SERIAL TRUE)
 endif()
 
-# Nachbesserung 1 (Abnahme 0, M2; Orchestrator-Entscheid C-E1 2026-10-24): die ganze Kette in EINEM Lauf - 2030 Ventile
-# -> Ost-Tuer zu Fuss -> 20B0-Szene sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> 2050. Braucht den AUTO-Haken
-# der Spur A (aot_common.c re15_wasser20b0_r41_auto_aot) -> NUR registriert, wenn A's Modul im Baum liegt.
+# Nachbesserung 1 (Abnahme 0, M2; Orchestrator-Entscheid C-E1 2026-10-24), seit Nachbesserung 4 auf der heutigen Kette: die
+# ganze Kette in EINEM Lauf - 2030 richtige Ventil-Folge zu Fuss -> Ost-Tuer zu Fuss -> 20B0-Szene sub02/sub05 -> (3,235)=1
+# -> frei -> Kanal -> Leiter -> 2050. Braucht den AUTO-Haken der Spur A (aot_common.c re15_wasser20b0_r41_auto_aot) -> NUR
+# registriert, wenn A's Modul im Baum liegt (ohne den Haken prueft der Riegel von Hand nur bis zur 20B0-Ankunft).
 if(RE15_BUILD_PC AND TARGET re15_pc)
     if(EXISTS ${CMAKE_SOURCE_DIR}/engine/src/wasser20b0_r41.c)
         add_test(NAME integration_r41_ventilkette_kette
@@ -54,10 +58,12 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
     endif()
 endif()
 
-# Nachbesserung 3 (Abnahme 2 N1/N2/N4; Nachtraege 7/9/10): die Kette in 2030 und der Weg nach der Flut zu Fuss, je Figur -
-# v1 Bruecke, v2 Ventile erst mit Sicherung + Flucht in 60 s, g1/g2 Sicherung + Generator 2060 (Original-Raetsel, (3,126)),
-# w1 20B0 -> 2050 -> 2020 -> 2030 Nordgalerie (geflutet) -> 2060, w3 2060 -> 2030 (Relinghoehe) -> 2020 -> 2050 -> 20B0,
-# w4 20B0 -> Ost-Tuer -> 2030 Ring -> Lift B -> 2080 -> Rechner (Original) -> 2090. Eigene exe-Praefixe re15_pc_r41cw<figur>_.
+# Nachbesserung 3/4 (Abnahme 2 N1/N2/N4, Abnahme 3 Maengel 3/4; Nachtraege 7/9/10/12/13): die Kette in 2030 und der Weg nach
+# der Flut zu Fuss, je Figur - v1 Bruecke, v2a Ventil ohne Sicherung = 49 + Sicherung + Plakat-Folge = falsch -> zurueck,
+# v2b richtige Folge -> Warnung -> Flucht in 60 s -> 20B0, v2d Dokument -> Leser -> Bit 107, v2p Plakat-Nahaufnahme,
+# g1/g2 Sicherung + Generator 2060 (Original-Raetsel, (3,126)), w1 20B0 -> 2050 -> 2020 -> 2030 Nordgalerie (geflutet) -> 2060,
+# w3 2060 -> 2030 (Pegel -5350) -> 2020 -> 2050 -> 20B0, w4 20B0 -> Ost-Tuer -> 2030 Ring -> Lift B -> 2080 -> Rechner
+# (Original) -> 2090. Eigene exe-Praefixe re15_pc_r41cw<figur>_.
 if(RE15_BUILD_PC AND TARGET re15_pc)
     foreach(_r41c_fig leon elza)
         set(_r41c_name integration_r41_ventilkette_weg)
@@ -67,6 +73,7 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
         add_test(NAME ${_r41c_name}
                  COMMAND ${CMAKE_COMMAND}
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DRE15_R41C_WERKZEUG=$<TARGET_FILE:test_r41_ventilkette>
                          -DFIGUR=${_r41c_fig}
                          -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_weg_${_r41c_fig}
                          -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_weg.cmake)

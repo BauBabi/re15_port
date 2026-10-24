@@ -1,7 +1,9 @@
 # =============================================================================
-# VENTILKETTE IN EINEM EXE-LAUF (Runde 41 Spur C, Nachbesserung 1 — Abnahme 0, Mangel M2): 2030 Ventile -> Warnung ->
-# ZU FUSS durch die Ost-Tuer -> ROOM20B0 -> Auswasch-Szene des Originals bis zur Freigabe ((3,235)=1, Balken weg) ->
-# zu Fuss durch den Kanal an die Leiter -> ROOM2050. Dossier analysis/befunde_runde41/C_ventilkette.md §0b M2.
+# VENTILKETTE IN EINEM EXE-LAUF (Runde 41 Spur C, Nachbesserung 1 — Abnahme 0, Mangel M2; Nachbesserung 4 — Abnahme 3,
+# Mangel 1: auf die Kette der Nachbesserungen 3/4 umgestellt): 2030 Sued-Landeplatz (Bruecke unten, Sicherung genommen =
+# Bedingung der Nachtraege 9/10) -> die richtige Ventil-Folge 09/07/02/01 ZU FUSS (Nachtrag 13) -> Warnung -> ZU FUSS ueber
+# Steg, Treppe und Ring durch die Ost-Tuer -> ROOM20B0 -> Auswasch-Szene des Originals bis zur Freigabe ((3,235)=1, Balken
+# weg) -> zu Fuss durch den Kanal an die Leiter -> ROOM2050. Dossier analysis/befunde_runde41/C_ventilkette.md §0b M2, §0e.
 #
 # Orchestrator-Entscheid C-E1 (AUFTRAG.md 2026-10-24 05:25): Name integration_r41_ventilkette_kette, registriert in
 # probes/r41_ventilkette.cmake NUR, wenn das Modul der Spur A im Baum liegt (engine/src/wasser20b0_r41.c); im Baum der
@@ -13,10 +15,12 @@
 # steht unter der Pad-Sperre von sub02 ((2,7) @0x01EF8 `22 02 07 01`, (1,28) @0x01EFC `22 01 1c 01`) im Westgang
 # (Abnahme 0 L3, F109..F1100).
 # Ist der Riegel registriert (Spur A im Baum), MUSS die ganze Kette durchlaufen; startet sub05 nicht, ist das ein FAIL.
+# Von Hand im Baum der Spur C (cmake -P, ohne den Haken im Quelltext): der Teil bis zur 20B0-Ankunft wird voll geprueft
+# ("loaded room20b0.rdt", "Bits 103 + 100"), der Teil ab der Szene meldet "uebersprungen: Haken der Spur A fehlt".
 #
 # Gemessen 2026-10-24 05:53-05:55 mit dem wortgleichen Haken der Spur A (temporaerer Messbau, nicht committet;
-# scratchpad r41c_nb1/mess/kette3): Ventile Text 45 -> Ja -> Warnung 46 -> Zaehler -> Ost-Tuer zu Fuss (Drehung R0.7, Aktion,
-# `[aot] DOOR FIRE slot=0 ... target_cut=11`) -> loaded room20b0.rdt -> sub02: Cut 11 (@0x01F00), Plc_dest Modus 5
+# scratchpad r41c_nb1/mess/kette3; damals noch der Platzhalter am Ring): Warnung 46 -> Zaehler -> Ost-Tuer zu Fuss
+# (`[aot] DOOR FIRE slot=0 ... target_cut=11`) -> loaded room20b0.rdt -> sub02: Cut 11 (@0x01F00), Plc_dest Modus 5
 # (-15920,-6355) (@0x01F24) -> Zone Slot 7 -> `thread start ... first_op=0x46` = sub05 @0x01F5C (Aot_reset) ->
 # Cut 7 (@0x01F6A), Cut 15 (@0x01F9C), Cut 6 (@0x01FB6) -> `WRITE Set zone=3 idx=235 op=1` (@0x01FBC) ->
 # `letterbox closed -> gameplay` -> Wegplan: Kante Mittelgang (-21150,-9629) Blick West + Aktion = Sprung in den
@@ -95,13 +99,61 @@ function(_danach _text _wort1 _wort2 _was)
     endif()
 endfunction()
 
-# Ein Lauf der Kette; _exit = RE15_EXIT_AT. Wegplan ab ROOM20B0 (RAUM wartet, bis der Raum geladen UND der Spieler
-# frei ist = Ende der Szene). Setzt _dbg/_wp/_dbg20/_sub05 im Aufrufer.
+# Ein Lauf der Kette; _exit = RE15_EXIT_AT. EIN Wegplan fuer beide Raeume: 2030 die Ventile und die Flucht, dann RAUM 20B0
+# (wartet, bis der Raum geladen UND der Spieler frei ist = Ende der Szene), Kanal, Leiter, RAUM 2050. Setzt _dbg/_wp/_dbg20/
+# _sub05 im Aufrufer.
 macro(_kette_lauf _name _exit _timeout)
     set(WORKDIR "${_basis}_${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     file(WRITE "${WORKDIR}/kette.txt"
-"RAUM 20B0
+"RAUM 2030
+WARTE 30
+GEHE -2650 7280 100
+BLICK 3072
+WARTE 10
+AKTION
+WARTE 150
+AKTION
+WARTE 90
+GEHE 2600 7280 100
+BLICK 3072
+WARTE 10
+AKTION
+WARTE 150
+AKTION
+WARTE 90
+GEHE -1050 6900 100
+GEHE -1050 6000
+GEHE -1050 -6400
+GEHE -1050 -7400 100
+GEHE 150 -7880 100
+BLICK 1024
+WARTE 10
+AKTION
+WARTE 150
+AKTION
+WARTE 90
+GEHE -1350 -7880 100
+BLICK 1024
+WARTE 10
+AKTION
+WARTE 150
+AKTION
+WARTE 150
+AKTION
+WARTE 30
+GEHE -1900 -7700 80
+BLICK 2048
+WARTE 20
+AKTION
+WARTE 300
+GEHE -6800 -9675
+GEHE 6575 -9675
+GEHE 6550 -200
+BLICK 0
+WARTE 10
+AKTION
+RAUM 20B0
 WARTE 30
 FLAG 3 235
 FLAG 9 103
@@ -128,11 +180,9 @@ ENDE
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
         RE15_MSG_LOG=1 RE15_FLAG_CENSUS=1
-        RE15_DEBUG_JUMP=2030@240
-        "RE15_SET_FLAG=7:155,7:156,7:157"
-        "RE15_PLAYER_POS=6550,-100,2048"
-        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330
-        "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W2.5,A0.1,W4,A0.1,W4,A0.1,W4,R0.7,W1,A0.1,U3"
+        RE15_DEBUG_JUMP=2030@250
+        "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108"
+        "RE15_PLAYER_POS=-2650,7280,3072,1"
         "RE15_WEGPLAN=${WORKDIR}/kette.txt" RE15_WEGPLAN_LOG=wegplan.txt
         "RE15_EXIT_AT=${_exit}"
         "${_exe_kopie}")
@@ -153,16 +203,32 @@ ENDE
     endif()
 endmacro()
 
-_kette_lauf(voll "60#2050" 420)
+# Ohne den Haken der Spur A haengt die Szene (Spieler nie frei) -> dann nur bis zur 20B0-Ankunft (200 Bilder in 20B0).
+if(_haken)
+    _kette_lauf(voll "60#2050" 480)
+else()
+    _kette_lauf(bis20b0 "200#20B0" 420)
+endif()
 
-# ---- 2030 -> Ost-Tuer zu Fuss -> 20B0 (wie integration_r41_ventilkette A, hier ohne RE15_FIRE_AOT) ------------------
-_muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile" "Aktion an den Ventilen")
-_muss("${_dbg}" "[msg] room=2030 id=46" "Warnung 46 (Ja gewaehlt)")
+# ---- 2030: richtige Folge zu Fuss -> Warnung -> Flucht zu Fuss -> Ost-Tuer -> 20B0 (ohne RE15_FIRE_AOT) ----------------
+_danach("${_dbg}" "Ventil 09 gedreht (Drehung 1/4)" "Ventil 07 gedreht (Drehung 2/4)" "09, dann 07 (Suedwand)")
+_danach("${_dbg}" "Ventil 07 gedreht (Drehung 2/4)" "Ventil 02 gedreht (Drehung 3/4)" "dann 02 (Nordwand)")
+_danach("${_dbg}" "Ventil 02 gedreht (Drehung 3/4)" "Ventil 01 gedreht (Drehung 4/4)" "dann 01")
+_danach("${_dbg}" "Ventil 01 gedreht (Drehung 4/4)" "[ventilkette41] Folge 09 07 02 01 -> RICHTIG: Warnung, Zaehler, Flut" "richtige Folge")
+_muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile_flut" "Warnung + Zaehler (Ereignis 26)")
+_muss("${_dbg}" "[msg] room=2030 id=46" "Warnung 46")
 _muss("${_dbg}" "[ventilkette41] ROOM2030: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)" "Ost-Tuer umgelenkt")
 _darf_nicht("${_dbg}" "[fire-aot]" "die Ost-Tuer muss zu Fuss (Aktionstaste) feuern, nicht per RE15_FIRE_AOT")
 _muss("${_dbg}" "[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11" "Ost-Tuer zu Fuss gefeuert")
 _danach("${_dbg}" "[aot] DOOR FIRE slot=0 rect=(7350,-200" "[room] PC loaded room20b0.rdt" "ROOM20B0 geladen")
 _danach("${_dbg}" "[room] PC loaded room20b0.rdt" "Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100" "Bits 103 + 100 beim Verlassen")
+_darf_nicht("${_dbg}" "FLUT: Wasser steigt" "der Weg zur Tuer passt in die 60 s")
+if(NOT _haken)
+    _muss("${_dbg20}" "EXIT_AT: Bild 200 in Raum 20b0" "200 Bilder in ROOM20B0")
+    file(REMOVE "${_exe_kopie}")
+    message(STATUS "r41_ventilkette_kette: 2030 richtige Folge 09/07/02/01 zu Fuss -> Warnung -> Ost-Tuer zu Fuss -> ROOM20B0, Bits 103 + 100; Teil ab der Szene uebersprungen: Haken der Spur A fehlt (aot_common.c re15_wasser20b0_r41_auto_aot)")
+    return()
+endif()
 # ---- Szene sub02 -> Zone Slot 7 -> sub05 ------------------------------------------------------------------------
 _danach("${_dbg}" "[room] PC loaded room20b0.rdt" "Plc_dest(slot=0 mode=0x05 dest=(-15920,-6355)" "sub02: Plc_dest Modus 5 (@0x01F24)")
 if("${_sub05}" STREQUAL "")
@@ -184,4 +250,4 @@ _danach("${_dbg20}" "[aot] DOOR FIRE slot=4" "[room] PC loaded room2050.rdt" "RO
 _muss("${_dbg20}" "EXIT_AT: Bild 60 in Raum 2050" "Endbild in ROOM2050")
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_ventilkette_kette: 2030 Ventile -> Ost-Tuer zu Fuss -> 20B0 Szene sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> ROOM2050 in einem Lauf (Haken der Spur A: ${_haken})")
+message(STATUS "r41_ventilkette_kette: 2030 richtige Folge zu Fuss -> Ost-Tuer zu Fuss -> 20B0 Szene sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> ROOM2050 in einem Lauf (Haken der Spur A: ${_haken})")
