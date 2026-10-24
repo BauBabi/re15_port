@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-24 08:07: Rest-Lauf 3 (wf_36a36152-cc2) Zwischenstand: B nach Abnahme 2 NICHT bestanden (M1 sichtbarer Intro-Teleport, M2 Kanister kreist in Stufe 2, M3 Anschwimm-Biss-Sperre) -> eigener Lauf **wf_078dc9d4-f28** (args orchestrator/args_b_nb3.json, runde0 2 -> Nachbesserung 3 + Abnahme 3, max_nach 2), weil B auf dem kritischen Pfad zu F/G liegt (vorübergehend 5 Agenten). Entscheide seit 02:50 in AUFTRAG.md: E/M-Hinweise 03:21, B6-B8 03:58, A-E3..A-E5 04:01 (RBJ-Binder an J, K cherry-pickt), E-N1/E-N2 04:52, C-E1..C-E3 05:25, C-E2b 07:49 (Weg zum Rechner 2080 nach der Flut ueber 20A0 -> 2090 -> 2080), B9 08:06 (Gator vor dem Intro unsichtbar wie RE2). Integrationsbaum r41_integration = master-Doku + D (608cddc2); Integrations-Workflow orchestrator/r41-integration.js (args {spuren:[{id,thema}], kette_ac}). Stand je Spur: A Abnahme 2 laeuft; C Nachbesserung 2 (letzte) laeuft; E Nachbesserung 2 (letzte) laeuft; M Bau laeuft; H I J K L warten.
+
 * 2026-10-24 02:50: SITZUNGSLIMIT ~01:00 (reset 02:30) brach Rest-Lauf 2 ab (wf_a8b604c5-d10: 10 Agenten, 0 fertig; A/B/C/E arbeiteten bis 00:58 und committeten selbst; M/H/I/J/K/L starben beim Start ohne Arbeit, Baeume unveraendert 4c667c97). Gesichert: alle Baeume sauber bis auf einen TEMP-Haken in r41_ventilkette/aot_common.c (Nachbau des AUTO-AOT-Hakens der Spur A, vom Agenten als 'NICHT committen' markiert) -> als Patch scratchpad/r41c2/temp_haken_spur_a_aot_common.patch abgelegt und zurueckgenommen (die exe dort war MIT dem Haken gebaut; Stand-Text verlangt Neubau). DuckStation settings.ini: ConfirmPowerOff stand auf true -> false (Sicherung settings.ini.vor_confirmpoweroff_2026-10-24; sonst bytegleich, FFmpeg/mp4 bleibt). Stand je Spur: A Nachbesserung 1 fast fertig (d77bf72a; Unit-Gruppe 128/128; Abschlusstext liegt fertig im Scratch A_nb1c/dossier_schluss.md, Integrationsgruppe erst 1/17); B Nachtrag-4-Kamera-Programme a6653809 UNGEPRUEFT; C fertig bis auf Dossier-Abschluss (271b05ea, integration_r41_ventilkette(_b) 2/2 gruen; Kette 2030->20B0 nur MIT Spur-A-Haken gemessen); E Abnahme 0 Teilbericht 0ce76f13 (Punkte 2/3 erfuellt; Original-Video der Kurbel aufgenommen, Auswertung fehlt; Integrationsgruppe 15/33 gruen). REST-LAUF 3 gestartet 02:50: wf_36a36152-cc2 ueber einen Wrapper (orchestrator/mk_lauf.py args_rest3.json <wrapper.js> -> der Wrapper ruft r41-runde.js als Kind-Lauf mit den args; die ~40 KB args muessen nicht mehr von Hand in den Workflow-Aufruf), args orchestrator/args_rest3.json (welle A B C E M H I J K L, slots 4, A/B nachbesserung, E abnahme, C Bau-Fortsetzung, M H I J K L neu). Waechter scratchpad/waechter41b.sh (Label je Agent, LIMIT-Meldung).
 
 * 2026-10-24 00:06: FABLE-LIMIT ~23:45 brach Rest-Lauf 1 ab (wf_4d79520c-fba: 10 Agenten, 5 fertig, 5 abgebrochen, 4,37 Mio Token). Ergebnisse: D Abnahme 0 BESTANDEN (-> r41_integration gemergt, db7205c2); A Abnahme 0 nicht bestanden (M1-M7), Nachbesserung 1 fast fertig (35860e86/42fbd21f, integration_r41_wasser20b0_npc rot in landung_lauf); B Fortsetzung fertig (c2404c61), Abnahme 0 nicht bestanden (M1 Dash/Intro zuenden nicht, M2 Putz, M4-M6), Nachbesserung 1 halb (93f62b6c + 591041e9 gesichert); C zweite Fortsetzung abgebrochen (Flut am Spiel gemessen 76fdeca4, Dossier 19276bbe, Bilder 55f511a8 gesichert); E Bau fertig (ed7bd4ff), Abnahme 0 TEILSTAND (0e6c9a70: P1 teilweise, P3 erfuellt, P2 fehlt); M nicht begonnen. Nutzer-Nachtraege 4 (RE2-Kameraschnitte Alligator, 22:37) und 5 (Kanister-Wurf wie Adas Raketenwerfer-Wurf in RE2, 23:27). Nutzer stellte auf Opus um. REST-LAUF 2 gestartet: wf_a8b604c5-d10 (args orchestrator/args_rest2.json; A/B nachbesserung mit stand, C stand, E abnahme mit Teilbericht, M neu, dazu H/I/J/K/L neu; slots 4, max_nach 2). Neue Baeume r41_kollision/zombiefresser/stage3szenen_a/stage3szenen_b/spinnenanim auf 4c667c97; AUFTRAG/VERTRAG in allen Baeumen = master. F/G folgen auf dem integrierten B.
@@ -35,6 +37,27 @@ siehe VERTRAG.md §0; Status je Spur wird hier nachgetragen (Bau / Abnahme N / b
    (Muster `analysis/befunde_runde36/orchestrator/args_rest*.json`; Skript `analysis/befunde_runde41/orchestrator/r41-runde.js`).
 
 ## 3. Integration (wenn Spuren bestanden sind)
+
+### 3a. Integrations-Checkliste Runde 41 (Querbezuege, laufend gepflegt; Stand 2026-10-24 07:12)
+- **A <-> B/F/G:** RE15_ACTOR_MAX 21 -> 36 (Spur A) verschiebt den Alligator auf Slot 35 (main.c setzt RE15_ACTOR_MAX-1).
+  Nach dem Merge A+B alle Gator-Riegel greppen (`20` als Slot, `Slot 20`, `boss slot`) und an RE15_ACTOR_MAX-1 koppeln;
+  F/G-Prompts/Baeume vom integrierten Stand starten. test_r35_granate ist in A bereits gekoppelt.
+- **A <-> C:** C's 20B0-Kette braucht A's AUTO-AOT-Haken (aot_common.c + re15_wasser20b0_r41_auto_aot). C-Riegel
+  `integration_r41_ventilkette_kette` wird nur mit A's Modul registriert -> im Integrationsbaum MUSS er laufen und gruen
+  sein (Ventile -> Ost-Tuer -> Szene bis (3,235)=1 -> Leiter -> 2050). Entscheid C-E1.
+- **A <-> D:** audio_pc.c (D: Lautstaerke-Option; A: 4-Zeilen-Haken Schritt-Lage FUN_80045a64, Entscheid A-E4) -> beide Seiten.
+- **B/C/D/E main.c-Haken:** B 4, C 4, A 2 (+D) markierte Haken -> beim Merge beide Seiten, danach Bau + Fenster-Riegel.
+- **E:** scd_vm.c wieder bytegleich (H1 erledigt); Haken in player_common.c / re15_inv_screen.c.
+- **J/K:** RBJ-Binder (Entscheid A-E5) — J baut, K cherry-pickt; bei der Integration identischer Patch.
+
+### 3b. Folgeauftraege nach der Integration (Orchestrator, nicht in den Spuren)
+- Spieler-Schritte mit Lage/Abstand (dieselbe FUN_80045a64 @0x80045830 wie die NPCs; Original nutzt sie fuer jede Entity) —
+  engine-weit, trifft 23 Mitschnitt-Riegel -> eigener Auftrag + volle Suite.
+- rotor_common.c: Pan-Winkel per ATAN-Tabelle statt CORDIC @0x800658fc (bis +-7/4096) und L/R vertauscht gegen den
+  Verbraucher SsUtKeyOnV (voll = DAT_800b2824) — Beleg Spur A A_belege/nb2/cordic_vgl.py.
+- SpuVmKeyOnNow quadriert die Lautstaerke (v*v/0x3fff), der Port-Mischer ist linear — engine-weit (spaetere Runde).
+- Spur A OFFEN 1-4 (ESP-Sprites im ersten Bild nach dem Kamerawechsel, RVD-Schaltzeitpunkt, Gegner-INIT-Takt, allgemeine
+  Szenensperre AUTO/FLAG_CHG) — spaetere Runde.
 Integrationsbaum `.claude/worktrees/r41_integration` von master; je bestandene Spur `git merge --no-ff r41/<x>`; Konflikte
 mit `analysis/befunde_runde36/orchestrator/konflikt_beide.py <dateien>` (beide Seiten); dann `bash re15_port/tools/local_build.sh
 configure && ... build`; gezielte Tests je Spur + `ctest -j 6 -R '^(unit_|prop_|probe_)'` (Querbezüge, Memory

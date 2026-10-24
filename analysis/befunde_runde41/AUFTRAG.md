@@ -311,3 +311,30 @@ Umsetzung B6/B7 in der naechsten Nachbesserung der Spur B (oder, falls B vorher 
 - **C-E3 (Mangel M6, Vertrag):** Die Haken in platform/pc/main.c (4 Stellen) und game_step_common.c (1 Zeile) sowie die
   Querbezugs-Flags in test_r36_dachkiste.cmake / test_r37_itemband.cmake sind angenommen (wie B5), weil sie klein,
   markiert und durch die neue Sperre noetig sind. Kein Mangel mehr.
+
+## 2026-10-24 07:49 — Orchestrator-Entscheid C-E2b (Revision von C-E2 nach Abnahme C 1, Mangel N1; der Nutzer kann widersprechen)
+
+Befund der Abnahme C 1: Die in C-E2 vorausgesetzte Route "2050 -> 2020 -> 2030 oben -> 2080" existiert nicht (Nord- und
+Suedgalerie von 2030 sind durch Wand 66 getrennt, SCA @0x880; die 2080-Tuer liegt auf der Suedgalerie und ist nur per
+Lift B vom gefluteten Ring erreichbar). Nach der Flut steht der Ring unter Wasser (bis -16200) und ist nicht begehbar —
+daran aendert sich nichts (Tod durch Ertrinken setzt Wasser ueber Kopfhoehe voraus).
+Entscheid: Der Weg zum Rechner 2080 fuehrt nach der Flut ueber das Alligator-Becken: ... -> 20A0 -> Sprung ins Wasser
+-> 2090 -> Tuer 2090 Slot 0 -> 2080 (passt zur Geschichte: Marvin/John wirft den Kanister von 2080 ueber das Gelaender
+in das 2090-Becken). Spur C (Nachbesserung 2):
+1. Tuergraph aller STAGE2-Raeume fuer den Zustand "nach der Flut" (Bits 103+100, ohne 107; Strom/Generator und
+   Aufzug 2040 wie im Normalspiel zu diesem Zeitpunkt) aus den Door_aot_set-Zielen + Sperrbedingungen (SCD-Offsets)
+   aufstellen und den Weg 20B0/2050 -> 2080 zu Fuss messen (Leon UND Elza), Riegel dazu. C-E2 (Ring-Sperre) bleibt.
+2. Steht auf diesem Weg nur eine PORT-Sperre (ein Bit/Haken der Runde 41) im Weg, diese so anpassen, dass der Weg
+   frei ist (mit Beleg). Steht eine ORIGINAL-Sperre im Weg oder gibt es den Weg nicht: NICHTS erfinden — den
+   blockierenden Punkt (Tuer, Bit, SCD-Offset, Bild) im Dossier benennen und als OFFEN fuer den Orchestrator melden.
+3. Dossier §7 und §0b (M5) richtigstellen.
+
+## 2026-10-24 08:06 — Orchestrator-Entscheid B9 (Abnahme B 2, Mangel M1; der Nutzer kann widersprechen)
+
+M1 der Abnahme B 2: die Intro-Startlage teleportiert den SICHTBAR lauernden Gator ueber ~16000 Einheiten. Form = RE2:
+vor dem Intro ist der Gator NICHT sichtbar (RE2: Sce_em_set mit y = 3000 @RDT 0x25A0, also unter der Wasserlinie;
+Pos_set erst im Intro @SCD 0x0736); er bricht aus dem Wasser. Fuer ROOM2090/2091 heisst das: bis zum Intro-Ausloeser kein
+sichtbarer Gator (untergetaucht/unsichtbar wie RE2, Lage frei), dann Pos_set auf die Intro-Startlage nach B7. Passt zur
+neuen Szene der Spur F ("der Alligator springt aus dem Wasser"). Riegel: im natuerlichen Ablauf (Lauf N der Abnahme)
+kein Bild mit sichtbarem Gator vor dem Durchbruch und kein sichtbarer Lagesprung. Weitere Maengel M2/M3 der Abnahme B 2
+wie dort gefordert (RE2-Form, Adressen dort).
