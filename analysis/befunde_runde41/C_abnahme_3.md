@@ -209,6 +209,47 @@ Aufbau: `RE15_DEBUG_JUMP=2050@250`, `RE15_PLAYER_POS=4900,-7100,1024,3`, Plan `h
 * Messfehler der ersten Sitzung (verworfen, kein Befund): `pult2050` (Eingabeskript ohne GEGNERWEG) — der Zombie in 2050 toetete
   Leon vor dem Pult (`mo=7`, danach Neustart ab ROOM1240), rc=124. Neu gemessen in L5b.
 
+### L5b — Punkt 5: Pult loesen (Leon `pult5`, Elza `pult5_elza`; neu in der Fortsetzung, Serie 8 `<a3>/serie8.sh`)
+Aufbau: `RE15_DEBUG_JUMP=2050@250`, Wegplan `pult5.txt` (GEGNERWEG, zu Fuss vor das Pult (4900,-7150) Blick 1024, ENDE),
+danach Eingabeskript ab Spielbild 300 (`RE15_INPUT_SCRIPT_BASIS=spiel`): Aktion, Aktion, Ja, Steuerkreuz rechts 0,25 s / Viereck /
+links 1,2 s / Viereck / rechts 2,0 s / Viereck, warten, Aktion — dieselbe Folge wie Abnahme 2 L5. Bilder `<a3>/pult5_leon.png`.
+* Leon: Wegplan F62 `FLAG (9,106) = 0`, F63 `FLAG (3,104) = 0`, AOTS F64 `AOT slot 8 typ 0 ev 9 flags 0x31 band 3 mitte
+  (4900,-8050) halb (900,400)` (= main00 @0x01D38 (4000,-8450,1800,800)). debug.log: `ROOM2050 Ereignis 9 -> Port-Programm
+  2050_pult_ein` -> `[msgtext] room=2050 id=43 "A high voltage switchboard. The pump needs 80 volts."` -> `id=41 "Will you push
+  them?"` -> `[scd F504] Cut_chg(15)` -> `Pult 2050: Hebel 3 -> EIN, Schalter 0x4, 40 V` -> `Hebel 1 -> EIN, Schalter 0x5, 70 V`
+  -> `Hebel 4 -> EIN, Schalter 0xD, 80 V` -> (30 Ruhebilder) **`[msgtext] room=2050 id=42 "Power supply OK."`** / **`Pult 2050
+  GELOEST: 80 V -> Bit 106`** -> `Pult 2050 verlassen (Schalter 0xD, 80 V)`; erneute Aktion F992 -> `2050_pult_zustand` -> `id=44
+  "The switchboard is set to 80 volts. The pump is powered."`.
+* Bild: Cut 15 = Original-Hintergrund des Schaltpults (DANGER High voltage, Skala mit roter 80), roter Zeiger F525 auf 0, F600 40,
+  F690 70, F735 80 (im roten Feld), gruene Marken unter den EIN-Hebeln, F765 "Power supply OK.", F1035 Raumbild mit Satz 44.
+
+### L5c — Punkt 5: Hebel nach dem Pult = Original (Leon `hebel5`, Elza `hebel5_elza`; Serie 8)
+Aufbau: wie `hebel_vorher`, aber `RE15_SET_FLAG=9:106` (= das Bit, das L5b am Spiel setzt), Plan `hebel5.txt` (GEGNERWEG, zu Fuss
+an den Hebel, Aktion, Ja).
+* Leon: Wegplan F62 `FLAG (9,106) = 1`, F63 `FLAG (3,104) = 0` -> Aktion F286 -> KEIN Port-Programm -> Original sub04 `[msgtext]
+  room=2050 id=0 "A lever to fill and drain water. Will you move it?"` -> Ja F439 -> `[flagcensus] room=2050 WRITE Set zone=3
+  idx=104 op=1` -> `[prop-member F443] prop[5] obj=0x04 m=1 -> val=-1400` -> `[scd F463] Cut_chg(4)` -> `[prop-member F643]
+  prop[6] obj=0x05 m=1 -> val=-5000` -> `Cut_chg(7)`; Wegplan F1257 **`FLAG (3,104) = 1`** (das Wasser ist gestiegen). Bilder
+  `<a3>/hebel5_leon.png` (Frage, Cut 4 Becken, Cut 7 Leon am Hebel).
+* Elza `pult5_elza`: `Spieler-Familie PL04` -> `loaded room2051.rdt` -> `ROOM2051: Pult Slot 8 ... angelegt` -> `ROOM2051 Ereignis
+  9 -> Port-Programm 2050_pult_ein` -> `id=43` -> `id=41` -> `Cut_chg(15)` -> 40 / 70 / 80 V -> `[msgtext] room=2051 id=42 "Power
+  supply OK."` / `GELOEST: 80 V -> Bit 106` -> `verlassen` -> `id=44`. `hebel5_elza`: `FLAG (9,106) = 1` -> `[msgtext] room=2051
+  id=0 "A lever to fill and drain water. Will you move it?"` -> `WRITE Set zone=3 idx=104 op=1` -> `Cut_chg(4)` -> `Cut_chg(7)`.
+
+### L4 — Punkt 4: nach der Flut 20B0 statt 2000, Leiter frei (Leon `nachflut4`, Elza `nachflut4_elza`; Serie 8)
+Aufbau: Zustand "Szene gelaufen" `RE15_SET_FLAG=3:235,9:103,9:100` (die Szene selbst gehoert Spur A, C-E1), Sprung nach 2010,
+danach alles zu Fuss mit der Aktionstaste (Plan `nachflut4.txt`: 2010-Tuer nach "2000" -> Leiter -> 2050 -> 2050-Leiter).
+* Leon: Wegplan F61/F62 `FLAG (9,103) = 1`, `FLAG (9,100) = 1` -> `ROOM2010: Tuer Slot 0 -> ROOM20B0 Cut 10 (Ziel ROOM2000)` ->
+  `DOOR FIRE slot=0 rect=(-5300,-4925,hw=500,hh=875) target_cut=10 spawn=(-26450,-1800,-2700)` -> **`loaded room20b0.rdt`** (nicht
+  2000) -> AOTS `slot 4 typ 1 ev 0 ... mitte (-27100,10300)` (Leiter = Tuer, kein Sperrtext) -> Aktion -> **`DOOR FIRE slot=4
+  rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)`** -> `loaded room2050.rdt` -> `ROOM2050: Tuer Slot 0 ->
+  ROOM20B0 Cut 9 (Ziel ROOM2000)` -> Aktion an der 2050-Leiter -> `DOOR FIRE slot=0 rect=(9100,5700,hw=1000,hh=1000)
+  target_cut=9 spawn=(-26450,-1800,10250)` -> `loaded room20b0.rdt` -> `EXIT_AT: Bild 700 in Raum 20b0`. state.txt **`fx=0` in
+  allen 1047 Spielbildern** (in 2000 vor der Flut `fx=21/23`, L1) = kein Wasserstrahl mehr an der Leiter.
+* Elza: `PL04` -> `loaded room2011.rdt` -> `ROOM2011: Tuer Slot 0 -> ROOM20B0 Cut 10` -> **`loaded room20b1.rdt`** -> `DOOR FIRE
+  slot=4 ...` -> `loaded room2051.rdt` -> `ROOM2051: Tuer Slot 0 -> ROOM20B0 Cut 9` -> `DOOR FIRE slot=0 ... target_cut=9` ->
+  `loaded room20b1.rdt`; `fx=0` in allen 812 Bildern.
+
 ### L8 — Weg nach der Flut, Glieder 2060 (Original-Raetsel) und 2060 -> 2030 Nordgalerie -> 2020 (Rohdaten der ersten Sitzung)
 * `sicherung2060` (Leon, Zustand "Flut gelaufen", Start vor dem Sicherungskasten, Eingabeskript): `[msgtext] room=2060 id=3
   "One of the fuses is missing..."` -> `id=4 "Will you use the Fuse?"` -> `[scd F519] Cut_chg(8)` -> Cursor -> **`WRITE Set zone=3
