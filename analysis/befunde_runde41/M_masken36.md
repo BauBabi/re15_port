@@ -696,6 +696,12 @@ Laeufe (Spurbaum, Bau `local_build.sh build` nach der letzten Aenderung; KEINE v
    Riegel angepasst), danach `100% tests passed, 0 tests failed out of 31`; **Endstand k3 (Nahfeld-Sperre, nach Neubau):
    `100% tests passed, 0 tests failed out of 31`** (695 s); nach der Messwert-Zeile in test_r41_masken36.c neu gebaut und
    `ctest -R "unit_r41_masken36_loecher"` -> `100% tests passed, 0 tests failed out of 1`.
+2. `ctest --test-dir re15_port/build -R "integration_r41_masken36|integration_r37_masken36|integration_pri_masken|integration_r36_pri|integration_r37_pri1100|integration_r38_itemorte|integration_r39_optik|integration_r34n_e_dokumente|integration_r35_zgirl_5090|integration_r38_affen3|integration_r35_granate" -j 2 --timeout 1800 --output-on-failure`
+   (Endstand k3; die Mask-Riegel R37/R41 aller Stages, PRI-/Optik-/Itemorte-Riegel, die Verhaltens-Riegel der durch NB2 geaenderten
+   Raeume 3040 (affen3 x3) und 5090 (granate, zgirl_5090); 30A0/5020/6000 haben keine eigenen Riegel ausser den Masken-Riegeln)
+   -> **`100% tests passed, 0 tests failed out of 21`** (integration_r41_masken36_zellen3d 662 s, _stage2 536 s, _zelle 480 s).
+   Ein frueherer Integrationslauf am Stand k2 wurde nach dem Befund 5050 C2 abgebrochen (bis dahin integration_r37_itemband_lift
+   1457 s und integration_r36_dachkiste 1648 s gruen - beide Raeume hat NB2 nicht geaendert).
 Determinismus: zweiter Lauf von `zellen3d_r41.py` (letzter Schritt der Kette, Stand k2) -> 30 MSK und Modell-Tabelle bitgleich; Kette k3
 selbst: zweites erzeuge bitgleich zum ersten.
 
