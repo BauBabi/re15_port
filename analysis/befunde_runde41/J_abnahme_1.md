@@ -115,6 +115,8 @@ Original (selbst gelesen): o3060_s2 t04-t07 (8,0-12,5 s) Modell 0, cmd 0 (Raumwe
 Sub 0 / Clip 3 (+0x168 = EDD+0x1a0 = W-Clip 3 = Stand)** bei (-11250,-13250) ry 3072 — Lage, Blick und Stand-Clip wie im Port.
 Riegel `integration_r41_stage3szenen_a_3060` (eigener ctest-Lauf): Passed 114,1 s — Tuer per Quadrat, `40 Bilder Motion 6, davon
 0 nicht Clip 6/10 Bilder, 31 x Bild 9 gehalten`.
+Takt: Plc_motion(2,6) F65 -> Tuer nach F104 = 40 Bilder = `Sleep 40` @0x010C2 (`09 0a 28 00`) vor dem Modellwechsel @0x010D2 und
+Aot_on 3 @0x010E4 (ROOM3060 sub03, Dump J41abn0/scd3060.txt); Halten 31 Bilder = 40 - 9.
 
 ### Urteil Punkt 1: **erfuellt**
 Beleg: Port spielt am echten Tuerweg W-Bank PL00W01 Clip 6 (10 Bilder; Tabelle @0x800741e8 Modell 0x0D -> 76, Kanal
@@ -158,7 +160,8 @@ Der Rest (3,10) entsteht vor dem Kriechen und wird vom Anker unveraendert mitget
 `unit_r41_stage3szenen_a_anker` von Original-Stand zu Original-Stand, eigener Lauf: Abweichung (0,0) / (0,0)).
 
 Elza RE15_ANIM_TRACE: F1595-1604 `2/2/52`, F1605-1622 `105/5/30` (Drehen), **F1623-1632 `6/6/10` Slot 0..9, F1632-1687 Slot 9
-(56 x)**, 0 Zeilen Motion 6 mit anderem Clip/Bildzahl; ROOM30C1 F0/F1 `210/1/16` (Modell PL0F).
+(56 x)**, 0 Zeilen Motion 6 mit anderem Clip/Bildzahl; ROOM30C1 F0/F1 `210/1/16` (Modell PL0F). Takt: F1623 -> letztes 3061-Bild
+F1687 = 65 Bilder = `Sleep 5` + `Sleep 60` hinter Plc_motion(2,6) @0x011DE / John @0x011EA (sub02, Dossier §2.1).
 
 Bilder (Port 320x240) gegen das selbst ausgeschnittene Original-Video `J41b/orig/o3061_v3.mp4` (ffmpeg ab 10 s, 5 B./s):
 - Kriechen `J41abn1/p2_kriechen_zoom.png` / `J41abn1/o3061v3_kriechen_zoom.png` / zusammen `J41abn1/vergleich_p2a_kriechen.png`:
