@@ -228,8 +228,8 @@ AUF dem Streifen (14000,-7200,-19300): 50 von 678 (Bein und Schatten weg) - exe 
 "HINTER-Rest" (4,14000,-19300) 0,53 / (4,13600,-19700) 0,92 - als Figur HINTER der Kante, obwohl dort Boden ist.
 **Beleg:** 12_02 = Streifen BODEN vor dem Fuss der Ziegelwand: Lage fein gemessen (94,126) Fehler 1,65 (zweitbeste 2,24 - die
 grobe R40-Messung hatte "237 gleich gute Lagen"); die Projektion der Vorderkante der Zelle x 8000..14700 z -21000..-20500
-(Band 4) auf y -7200 verlaeuft genau an der OBERKANTE des Streifens (Bild Scratchpad `20a0_c12_kante.png`, kontrastverstaerkt
-`20a0_c12_streifen.png`: Bodenfliesen unter dem Streifen). Die Profil-Tiefe des Baus (119..151) setzt den Bodenkontakt an
+(Band 4) auf y -7200 verlaeuft genau an der OBERKANTE des Streifens (Bild `M_bilder/P2_ROOM20A0_C12_wandkante.png`, kontrastverstaerkt
+`M_bilder/P2_ROOM20A0_C12_streifen_kontrast.png`: Bodenfliesen unter dem Streifen). Die Profil-Tiefe des Baus (119..151) setzt den Bodenkontakt an
 die UNTERKANTE des Streifens, ~1400 vor der Wand (Bildpunkt (110,148) -> Boden (13814,-19080)). Eine Maske auf der
 Bodenebene verdeckt nichts richtig - wer auf ihr steht, verliert die Fuesse (Regel ROOM10E0 C7, Nutzer-Marke F1585, Memory
 reai-v2-flache-maske-verdeckt-nichts).
