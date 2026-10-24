@@ -19,6 +19,8 @@ elzazombies_r39.c, test_r36_kartenbits.c k_port[] (nur falls Bit 120 belegt).
   Bild fuer Bild gleich, integration_r41_kleinkram_b_kurbel; Rueckfrage an den Nutzer bleibt
 - [x] Punkt 2 Karte B1 / 1090-Vordertuer — karte_r41.c, unit_r41_kleinkram_b_karte_pin 17/17
 - [x] Punkt 3 Werkstatt-Tuer 11B1 (Elza) — Ereignis 24, unit_r41_kleinkram_b_11b1 3/3
+- [x] Nachbesserung 2 (Abnahme 1): E-N1 Apply-Bild steht (kamerahalt_r41.c/bildhalt_r41_pc.c), E-N2 Nachrichten-Takt hinter dem
+  Spiel-Takt + Auswahl ohne Parken (msgtakt_r41.c); alle Anlauf-Varianten am Original (GDB) gemessen; Renn-Stopp OFFEN
 
 ## Protokoll
 - (Start) Baum sauber auf 116e8b0f, Dossier angelegt.
@@ -502,7 +504,7 @@ Seed schlechter. Die Sonde gehoert nicht dieser Spur -> OFFEN, Entscheid Orchest
   @0x0A8C ... Sleep @0x0A98 in EINEM Skript-Takt** (vorher F382 Message_on + Evt_next, F383 der Rest), Spieler im selben
   Bild mo 200 / Clip 3 / frac 7 an (3650,-3018), F382 gehalten (`[kamerahalt] F382 ... HALTEN`), F383 Cut 3, F402
   Plc_motion = F382 + 20. Original (o_geh1): n94 Bestaetigung -> n95 Pos_set + Geh-Stopp (Apply-Bild) -> n115 Plc_motion.
-- Rennen (`R4_renn_nach`, erster Lauf vor dem Renn-Stopp-Versuch = Code-Stand d4fa9074): Renn-Bild 6 durch beide
+- Rennen (`R4_renn_nach2`, Code-Stand d4fa9074, Eingaben wie Abnahme 1 R4): Renn-Bild 6 durch beide
   Nachrichten, F382 Pos_set + Stehen (3650,-3018) im selben Bild, gehalten, Plc_motion F402. Original (o_renn2): Pos_set n93
   und im selben Bild der Renn-STOPP 174..-26 bis (3650,-3369) — diesen Auslauf hat der Port nicht (OFFEN).
 - Stehen (`K_stand_nach`, wie E41n1 K_w3_stand): Idle-Clip (mo 212, W01 Clip 4) Bild 49 durch beide Nachrichten, Frage zu
