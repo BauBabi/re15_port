@@ -21,6 +21,8 @@ Status dieses Berichts: IN ARBEIT (fortlaufend gespeichert).
   1f38e02535c6259e6f99619bba2917ab (= behaupteter Endstand) -> Messkopie `re15_pc_E41a3.exe`. VORHER-exe = `re15_pc_E41a2.exe`
   (11b8f867 = Stand Abnahme 2, md5 486f77a7d870cf73c1bdf542bf40cbfb), BASIS = `<sp>/abn0_base/.../re15_pc_E41a1_basis.exe`
   (116e8b0f, md5 2310696431b26d115bc00f3796663c01).
+- Elza-Laeufe mit `RE15_TITLE_SHOT_CHAR=1` (Runde-36-Messhaken, Start als Elza): debug.log jeweils `[pl] Spieler-Familie PL04
+  (character=4, Elza-Bit=1)`, Raeume room1231/room1261/room11b1/room2021 geladen.
 - Last: waehrend der Abnahme liefen Laeufe anderer Spuren (re15_pc_r41c_*, _h41abn0*, _r41m*, ctest/cmake) — Fenster-Haken
   werden bei Rot einzeln nachgefahren.
 
@@ -112,8 +114,9 @@ der Stopp beginnt im Aktionsbild wie im Port. Fuer Tueren/0x10-Zonen nicht gemes
 (2600,-3200) Blick 0, Start 153 (Stehclip 2 Bild 39 wie o_rennstopp `mo=2/40`), 12 Bilder XU, dann loslassen.
 Port dx je Bild: 199, **210 170 182 205 210 214 210 188 159 176 197**, Stopp **157 117 77 37 -3**, dann Stand.
 Original `<sp>/E41n2/o_rennstopp.txt` (selbst gelesen): 269, **210 170 182 205 210 214 210 188 159 176 197**, **157 117 77 37 -3**.
-Gleich ab Bild 2; Bild 1 (269) = der vom Bau-Agenten benannte Lage-Versatz des GDB-Laufs (Port und Sonde rechnen 199). VORHER: konstant
-200, sofort Stehen.
+Gleich ab Bild 2; Bild 1 (269) = der vom Bau-Agenten benannte Lage-Versatz des GDB-Laufs (Port und Sonde rechnen 199). Mischzaehler:
+Port F165..F169 frac 7..3, F170 frac 7 (Stehen-Fall 0 im Bild NACH dem Stopp-Ende) = Original n13..n17 e3 6..2, n18 e3 6 (Port +1 wie
+§3.1). VORHER: konstant 200, sofort Stehen.
 
 ### 3.4 Drehen aus dem Rennen und OBEN+RENNEN im Stopp
 `TA_links_{nach,vorher}`: (4000,-3150) Blick 0, XU 8 Bilder, dann nur LINKS. NACHHER: F68 Gier -72 + Stopp-Schritt 169 (mo 200), F69 -72
