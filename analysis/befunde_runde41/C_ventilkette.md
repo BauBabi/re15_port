@@ -346,7 +346,92 @@ Die Messungen der Abnahme 1 (`C41abn1/mess/*`, im Bericht `<a1>`) werden NICHT w
 * **Ursache des Mangels:** der in §7 / Frage f genannte Weg "2050 -> 2020 -> 2030 Tuerebene -> 2080" war aus den
   Tuersaetzen abgeleitet, aber nie gegangen; die Tuerebene von 2030 besteht aus zwei getrennten Galerien (Abnahme 1 L9,
   SCA @0x880 Wand 66). Er existiert nicht.
-* (Arbeitsstand, wird fortlaufend ergaenzt: Tuergraph, Messungen, Riegel, Ergebnis.)
+* **Messung vorher:** Abnahme 1 L9 (`C41abn1/mess/tuerebene3`): 2020 Slot 1 -> 2030 (-450,-16200,-9700) -> Nordgalerie ->
+  `KLEMME ... Rest 3918` bei (-6983,-3918); SCA ROOM2030 @0x880 Wand 66. Nicht wiederholt.
+* **Tuergraph (statisch, C-E2b Punkt 1)** — Werkzeug `re15_port/tools/r41_ventilkette/tuergraph_nach_flut.py`
+  (Walker = tools/scd_dump_room.py, alle Door_aot_set aus main UND subs aller 240 RDTs, Ifel/Else-Kontext mit Ck-Offset,
+  Setzer jedes Bedingungs-Bits aus allen RDTs, Elza-Saetze Byte fuer Byte verglichen: alle "Elza gleich"); Ausgabe
+  `C_belege/nb2_tuergraph_nach_flut.txt`. Ergebnisse, die den Weg entscheiden:
+  - **Zugaenge ROOM2080:** nur ROOM2030/2031 Slot 1 @0x01AEA (floor 9 = Suedgalerie der Tuerebene) und ROOM2090/2091
+    Slot 0 @0x00996 (Ankunft (-9950,-14400,-25700) nfloor 8). **Zugaenge ROOM2090:** nur 2080 Slot 1 @0x00BC2 (floor 8; bis
+    (3,245)=1 inert, davor Text msg 1 "The water level is very high..." sub00 @0x00C06 / Aot_reset @0x00C50) und 20A0 Slot 0
+    @0x01746. **Zugaenge ROOM20A0:** nur 2090 Slot 1 @0x009B6 und **ROOM11A0/11A1 Slot 4 @0x01006 — nur im Sonst-Zweig von
+    `06 00 1c 00` @0x00FE6 / `21 03 ce 00` Ck(3,206)=0 @0x00FEA; sonst steht dort @0x00FEE `2c 04 01 31 01 00 54 6f c8 00
+    e8 03 98 08 02 00 ff ff 00 00` = Text-Platz msg 2 "It's locked from the other side."** (msg @0x142C). **(3,206)=1 setzen
+    nur ROOM20A0/20A1 sub10 @0x01FF0 `22 03 ce 01`** (von innen: @0x01FE6 Aot_reset 10, @0x01FF4 Message_on 2 "You've
+    opened the lock.", @0x01FFA Aot_reset 2 sce 2 = Tuer nach 11A0) — dieselbe Form "von der anderen Seite verschlossen"
+    wie 11A0/2070 mit (3,151) (2070 sub02 @0x00CE4).
+  - **2030 Suedgalerie (Tuer nach 2080)** nur ueber Lift B vom Ring (Abnahme 1 L9, SCA); Lift B: Zone oben Slot 6 / unten
+    Slot 7 @0x01D74..@0x01DD6 je nach (3,220); Strom Ck(3,126) @0x01E14 = Generator 2060 Set(3,126) @0x012AE, der die
+    Sicherung braucht (2060 sub00 Ck(3,108) @0x010A2 / Ck(3,144) @0x010C2); die Sicherung liegt in 2030 Slot 9 @0x01BAA
+    (Ck(3,108)=0 @0x01BA6) auf dem Steg-Suedlandeplatz (Band 1). Ring nach der Flut: gesperrt (C-E2, bleibt) und geflutet.
+  - **ROOM2070 = drei getrennte Gaenge** (SCA ROOM2070 @0x714, 12 Zellen je Region): Mittelgang z -8200..-4600 (Zellen 0-3;
+    Slot 0 -> 2000, Slot 1 -> Ring), Suedgang z 4650..8100 (Zellen 4-7; Slot 2 -> Ring, Slot 3 -> 2000), Nordgang
+    z -21000..-17450 (Zellen 8-11; Slot 4 -> 11A0, Slot 5 -> 2040). In den Nordgang fuehren nur 2040 Slot 4 @0x0131C und
+    11A0 Slot 0 @0x00F5A (nur mit (3,151), das nur 2070/2071 sub02 @0x00CE4 IM Nordgang setzt; R36 R_dachkiste N1).
+  - **Vor der Flut** ist die Menge {2050, 2020, 2030-Nordgalerie, 2060, 2040, 2070-Nordgang, 11A0, 20A0, 2090, 2080,
+    2030-Suedgalerie} von aussen nur ueber die Leiter 2000 Slot 4 (bis Bit 100 Sperrtext 40, Punkt 1) und Lift B (Strom aus
+    2060, das selbst in der Menge liegt) erreichbar -> **bei der Flut gilt in JEDER Spielreihenfolge (3,206)=0, (3,245)=0,
+    (3,126)=0.** Nach der Flut erreicht man von 20B0 aus: 2050 -> 2020 -> 2030 Nordgalerie -> 2060 -> 2040 -> 2070 Nordgang
+    -> 11A0 (-> STAGE3 ueber 11A0 Slot 1 @0x00F7C, unbedingt). Nicht: Ring/Steg/Buero/Suedgalerie von 2030, 2070 Mittel-/
+    Suedgang, 20A0, 2090, 2080.
+  - **Port-Eingriffe der Runde 41** (Abschnitt C der Ausgabe): Leiter (nur vor Bit 100), Tueren nach 2000 -> 20B0, 2030
+    Ost-Tuer -> 20B0, Ring-Tueren 20B0 Slot 3 / 2070 Slots 1/2 (C-E2), Lift-Rufzonen oben. **Keine Port-Sperre auf dem Weg
+    2050 -> ... -> 11A0 -> 20A0 -> 2090 -> 2080** (C-E2b Punkt 2: nichts anzupassen).
+* **Messung nachher — der Weg zu Fuss** (exe 06:37 = HEAD-Code, Bits 103+100 ohne 107; Laeufe scratchpad
+  `r41c_nb2/mess/<lauf>`, Skript `r41c_nb2/lauf.sh`, eigene exe-Kopie je Lauf, Wegplan-Treiber RE15_WEGPLAN):
+  1. 20B0 -> Leiter -> 2050: Abnahme 1 L4 (nicht wiederholt).
+  2. 2050 -> 2020 (`h2050_2020`, Leon; Zustand nach dem 2050-Raetsel (3,109)=1, das seit M1 erst nach dem Pult (Bit 106)
+     geht): `ZELLE r0[51] LAUFZEIT: x -7550..-6150 z -4500..850 typ 1 u0 0x00` (RDT-Grundzustand u0 0xff; sub00
+     @0x01FEE..@0x01FFE `37 0r 33 00` im (3,109)-Zweig oeffnet sie), Leiter-Ankunft (9100,4100) -> Nordsteg (9100,-6175) ->
+     (-6712,-6338) -> durch Zelle 51 (-6886,2386) -> (-5240,3529) Blick Sued -> Aktion -> `[aot] DOOR FIRE slot=1
+     rect=(-5150,4450,hw=1000,hh=500) target_cut=0 spawn=(11350,-1800,-3150)` -> `loaded room2020.rdt`.
+  3. 2020 -> 2030 Nordgalerie: R36 `integration_r36_dachkiste` weg2020 (Hinweis 2010 (3,114), Szene, Luecke r*[15],
+     Slot 1 mit (3,219)) und Abnahme 1 L9 (nach der Flut) — nicht wiederholt.
+  4. 2030 Nordgalerie -> 2060 (`h2030n_2060`, Leon, + Spinnen-Kill-Bits 7:155..158 wie L9, (3,219)): (-450,-9700) ->
+     (-6874,-9664) -> (-6955,-7368) Blick West -> Aktion -> `[aot] DOOR FIRE slot=3 rect=(-7700,-7250,hw=500,hh=900)
+     target_cut=0 spawn=(7600,0,3950)` -> `loaded room2060.rdt`; im Log davor `ROOM2030: unter Wasser (y -7200)`.
+  5. 2060 -> 2040 Halle: R36 tritt2060 (Tritt (3,172), Slot 1 @0x00DBA -> (-12850,-5400,1600)) — nicht wiederholt.
+  6. 2040 Halle -> Galerie -> 2070 Nordgang (`w2040_leon`, Zeitbombe benutzt: (3,146)+(3,53) gesetzt): Suedgang
+     (-14626,1672) -> Verbinder (-14715,-5290) -> Nordgang (4961,-5418) -> durch die Rost-Tuer (Zelle 19 x 4150..5950)
+     (5061,-7194) -> (5020,-10382) -> (-1342,-10490) -> (-1356,-13782) Blick Nord -> Aktion -> mo 221 (Treppe sce 13
+     @0x0133C) -> (-1363,-9000,-18368) Band 5 -> (-2132,-19815) Blick West -> `DOOR FIRE slot=2` -> (-3900,-19850) ->
+     (-19646,-19806) -> `[aot] DOOR FIRE slot=4 rect=(-20450,-19800,hw=500,hh=1000) target_cut=9 spawn=(4650,0,-19200)` ->
+     `loaded room2070.rdt`. Gegenprobe `t2040_ohne53` (ohne (3,53)): `KLEMME ... Rest 1618` bei (5050,-5582) vor der
+     Rost-Tuer, Aktion -> `[msgtext] room=2040 id=0 "Notice of damage door: ..."` (Slot 8 @0x01456 Ereignis 7 -> sub07
+     @0x016E8: msg 0, msg 5 "Will you use the Time Bomb?"; Zeitbombe = ROOM1110 sub03 Set(3,146) @0x00D32; Sprengung sub02
+     @0x01604 Set(3,53) @0x01624 + Sca_id_set Zelle 19 frei @0x01684). **Einen "Aufzug 2040" gibt es nicht** (C-E2b nahm
+     einen an): Halle <-> Galerie = Treppe sce 13 Slot 5/6 @0x0133C/@0x01350, Halle Sued <-> Nord = Rost-Tuer (Original-
+     Raetsel Zeitbombe, sub00 @0x01432/@0x014A0 sperrt Zelle 19 bis (3,53)).
+  7. 2070 Nordgang -> 11A0 -> Slot 4 (`w11a0_leon` Leon; `w11a1_elza` Elza 2071/11A1): (-16000,-19300) -> (-18471,-19256)
+     Blick West -> Aktion -> `[msgtext] room=2070 id=0 "You've opened the lock."`, FLAG (3,151) 0 -> 1 -> Aktion ->
+     `[aot] DOOR FIRE slot=4 rect=(-19400,-19250,hw=500,hh=1000) target_cut=7 spawn=(6500,0,-3200)` -> `loaded room11a0.rdt`
+     (Kanal, Wasser-Platz Slot 7) -> Kante (6500,-693) Blick Sued -> Aktion -> mo 230/231 (Aufstieg) -> (6500,-1800,455)
+     Band 1 -> Steg nach Osten (Cut 9) -> (28457,-1800,1319) Blick Ost -> Aktion -> **`[msgtext] room=11a0 id=2 "It's locked
+     from the other side."`**, FLAG (3,206) = 0 vorher und nachher, kein `loaded room20a0`. Elza: `Spieler-Familie PL04`,
+     `loaded room2071.rdt`, `room=2071 id=0 "You've opened the lock."`, `loaded room11a1.rdt`, **`[msgtext] room=11a1 id=2
+     "It's locked from the other side."`**. Bilder **C_belege/nb2_11a0_sperre_leon_sheet.png** und
+     **C_belege/nb2_11a1_sperre_elza_sheet.png** (Ankunft im Kanal, Aufstieg, Steg Cut 9, der Satz an der Tuer).
+  8. Gegenprobe `g11a0_206` ((3,206)=1, Leon, vor Slot 4): `[aot] DOOR FIRE slot=4 rect=(29000,1300,hw=500,hh=1100)
+     target_cut=8 spawn=(25800,-3600,-800)` -> `loaded room20a0.rdt` = (3,206) ist an dieser Stelle die einzige Sperre.
+  9. Rest des C-E2b-Wegs, NUR wenn (3,206)=1 waere: 20A0 Slot 0 -> 2090 und 2090 Slot 0 -> 2080 feuern (Abnahme 1
+     weg20a0/weg2090, nicht wiederholt); NEU `w2080_von2090` (Leon): Ankunft aus 2090 (-9950,-25700) Band 8 ->
+     (-10496,-24008) -> (-10541,-8106) -> (-11140,-7350) Blick Sued -> Aktion -> `ROOM2080 Ereignis 2 -> Port-Programm
+     2080_rechner_erw` -> msg 0 -> `Cut_chg(7)` -> `Cut_chg(3)` -> `[msgtext] room=2080 id=40 "The treatment pool is being
+     drained as well."` -> FLAG (9,107) = 1, (3,245) = 1. Nicht gefahren: die Strecke im Kanalraum 20A0 (11A0-Tuer -> Slot 0)
+     und durch das Alligator-Becken 2090 (Gebiet der Spuren B/F/G).
+* **Ergebnis (C-E2b Punkt 2):** Den Weg 20B0/2050 -> 2080 nach der Flut gibt es im Port NICHT. Alles bis 11A0 ist mit den
+  Original-Raetseln (2050 Pult/Kisten/Hebel, 2010-Hinweis + 2020-Szene, 2060-Tritt, 2040-Zeitbombe, 2070-Riegel) zu Fuss
+  begehbar (Glieder 1-7); **blockierender Punkt = ORIGINAL-Sperre ROOM11A0/11A1 Slot 4: main00 @0x00FEA Ck(3,206)=0 ->
+  @0x00FEE Text-Platz msg 2 "It's locked from the other side."; (3,206) setzt nur ROOM20A0/20A1 sub10 @0x01FF0, also nur,
+  wer 20A0 schon von 2090 aus betreten hat — und 2090 erreicht man nur aus 2080 oder 20A0.** Bilder nb2_11a0/nb2_11a1. Keine
+  Port-Sperre der Runde 41 steht auf diesem Weg -> **nichts erfunden, nichts geaendert; OFFEN fuer den Orchestrator**
+  (§6, §7 Frage j). Der Ring-Weg (Lift B) bleibt nach C-E2 gesperrt.
+* **Hinweis zur Annahme in C-E2b** ("Ring unter Wasser (bis -16200)"): der Port-Ruhepegel nach der Flut ist y -7200
+  (`RE15_R41C_WASSER_Y_RUHE`, §3.6) = 1800 ueber dem Ring (y -5400); -16200 ist die Tuerebene. An der exe steht und laeuft
+  Leon dort in Brusthoehe (Abnahme 0 L8, §4 "Eintritt in das geflutete 2030", Bild C_belege/ring_nach_flut_sheet.png).
+* **Riegel:** unit_r41_ventilkette Fall J (Zugangs-Zensus + 11A0-Sperre an der Engine, Leon + Elza) und
+  integration_r41_ventilkette_weg (die Glieder 2/4/6/7/8/9 an der exe, Glied 7 mit Leon und Elza) — §5 "Nachbesserung 2".
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
