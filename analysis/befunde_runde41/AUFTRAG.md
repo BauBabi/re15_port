@@ -356,3 +356,24 @@ Alligator, dann 2080 mit Marvin/John, der Kanister fliegt zurueck ins 2090-Becke
 verlangten Leiter-Sperre bis zur Flut.
 Spur C setzt j1 um (Riegel: (3,206) vor der Flut 0, danach 1; zu Fuss gemessener Weg 11A0 -> 20A0 -> 2090 -> 2080 fuer Leon
 UND Elza, Alligator dabei per Testhaken ruhig/entfernt), Dossier §7 mit dem Weg fuer den Nutzer.
+
+## 2026-10-24 09:17 — Nachtrag 6 (Wortlaut; widerruft Entscheid C-E2c, betrifft Spur C und die Alligator-Spuren B/F/G)
+
+> Nein, du darfst keine zusätzliche Tür öffnen um die Kette zu lösen. Dann passt die Rätselkette so nicht, und wir müssen
+> sie anders machen.
+>
+> Betreff Aligator darfst du alles machen was du willst. Du darfst auch die Startposition des Aligators und die Position der
+> schwimmenden Zombie Leiche, die sichtbar den Schlüssel hat ändern, wenn das Inszenatorisch besser aussieht. Wichtig ist -
+> so stelle ich mir das vor - Leon kommt im Raum an, sieht die Zombie Leiche mit dem Schlüssel in der Cutscene. Dann kommen
+> oben in 2080 die Zombies rein. Dann erneut Kamera auf Zombie mit Schlüssel. Aligator kommt frisst den Zombie samt
+> Schlüssel. Macht danach Richtung Leon eine schrei und Schüttel Animation. Danach geht der Kampf los, mit der Kampfmusik
+> von Resident Evil 2.
+
+Folgen (Orchestrator):
+- **C-E2c ist WIDERRUFEN** (keine zusaetzliche Tuer; die Original-Sperre 11A0/11A1 Slot 4 bleibt). Die Kette nach der Flut
+  wird neu entworfen — Vorschlag an den Nutzer, Entscheid folgt als Nachtrag; bis dahin keine Umsetzung von j1.
+- **Alligator (B/F/G):** freie Hand bei Startlage des Alligators und Lage der schwimmenden Zombie-Leiche mit dem Schluessel
+  (Inszenierung). Szenenfolge der 2090-Ankunft (Spur F, mit Spur G): Leon kommt an -> Kamera auf die Zombie-Leiche mit dem
+  blinkenden Schluessel -> oben in 2080 kommen die Zombies herein (die 8 Zombies der Spur G) -> erneut Kamera auf den Zombie
+  mit dem Schluessel -> der Alligator kommt und frisst den Zombie samt Schluessel -> Schrei- und Schuettel-Animation in
+  Richtung Leon -> Kampfbeginn mit der Kampfmusik aus Resident Evil 2 (RE2-Alligator-BGM aus ROOM40A0 belegen).
