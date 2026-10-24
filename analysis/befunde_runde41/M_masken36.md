@@ -278,6 +278,34 @@ Fortsetzung 2026-10-24 ~14:1x (Vorgaenger vom Wochenlimit ~13:5x beendet; Commit
 - [ ] Auflage Nachtrag 11: 10 Uebersichtsbilder (3040/3041 01, 3050/3051 06+15, 30E0/30E1 06+07)
 - [ ] Bau, gezielte Tests, Commit fix(r41-masken36): Nachbesserung 1
 
+### NB1 Mangel 1 - ausgeschlossene Objektteile mit der Tiefe ihrer Kollisionszelle
+
+**Ursache (Abnahme 0, Dossier OFFEN 1):** der Ausschluss der Spur P (R37) nimmt Generator-Rechtecke (alt und Saum) GANZ weg, die
+an einem erreichbaren Stehplatz einen Figurpunkt ohne solide Zelle davor verdecken wuerden. Grund ist die Tiefe des Generators
+(gen_masken.depth_map_for_cut: Bodenkontakt der untersten Regionszeile auf y = 0, DEPTH_SAFETY 0.90) - nicht das Objekt.
+**Messung vorher** (Stand vor NB1 = 95b9f38d, Leon-Dateien, `m41nb1c/m1_stat.py`; Objekt = 8-Komponente der Generator-Region je
+Verschiebung >= 64 px): ausgeschlossen 722 von 3239 alten und 831 von 4300 Saum-Rechtecken (Leon + Elza: 1662 von 8600 Saum);
+gezeichnet 780 626 px, nur in ausgeschlossenen Rechtecken 450 317 px; Objekte 419: 217 ganz gezeichnet, 147 teilweise, 55 gar nicht.
+**Weg (wie raum.py "zelle", nicht aus der Erreichbarkeit):** `re15_port/tools/maske/tiefe_zelle_r41.py` (f00fbf3e, Kopf = Regel):
+Objekt -> Sperrzelle des Bands, die die Mehrheit seiner Bodenkontakte traegt (geometrie.zelle_zuordnen), Hoehe per IoU
+(geometrie.hoehe_messen), Kamera-z je Punkt = Sehstrahl gegen den Quader (geometrie.quader_auf_band); Rechteck-Tiefe = max
+bucket(vz) seiner Punkte, bucket(vz) = (1023*vz)>>16 (Figur-OT @0x8002565c `sra v1,v1,4`, ZSF3 = 341 @0x80066c70; Maske verdeckt
+gdw. depth < bucket, Masken-OT = depth @0x80039650). Nicht bei Saeulen mit schraeger Zelle und nicht, wenn die Kamera in der
+Zelle steht. Danach rechnet `test_r37_masken36 erzeuge` den Ausschluss neu (das Netz der Spur P bleibt); was trotz Zellen-Tiefe
+aus bleibt, behaelt seine alte Tiefe (`--zurueck`). Nur das Tiefenfeld (+4 im 12-Byte-Satz) aendert sich, Atlas/Lage/Gruppen nicht.
+**Schritt 1 (alle Punkte direkt getroffen):** 3 Iterationen im Scratchpad (`m41nb1/tz1..tz3`, tz2_aus == tz3_aus), MASKS =
+tz3 (50c72950), Tabelle = `erzeuge` darauf (13803d3e, bitgleich zu tz3_aus.inc): **236 Rechtecke wieder drin (37 286 px), 0 neu
+ausgeschlossen, 0 alte Ausschluesse ohne Kandidat entfallen** - 29 Cuts, groesste ROOM3050 C5 (Maschine links, 11 Rechtecke
+10 399 px), 5020 C6/C7, 5100 C7, 5090 C12, 30A0 C3.
+**Messung an der exe (Schritt 1)** (`m41nb1c/m1_szenen.py` + `m1_ana.py`; je wieder aufgenommenem Objekt die DAVOR-Stelle
+mit der staerksten Ueberdeckung ohne verdeckten Figurpunkt und, wo es eine gibt, die HINTER-Stelle mit den meisten neu verdeckten
+Punkten - Python-Figurraster wie test_r37_masken36 auf den `plaetze`; Leon-Dreiecke per RE15_TRILOG, "neu" = Leon-Punkte, die
+NUR ein wieder aufgenommenes Rechteck verdeckt):
+* DAVOR, 39 Szenen in 29 Cuts: **neu uebermalte Leon-Punkte 0 in allen 39**; Altbestand (vor NB1 gleich): 3040 C5 4, 30A0 C4 2,
+  5100 C2 9 Punkte (alte Rechtecke).
+* HINTER, 10 Szenen: neu verdeckt 3050 C5 893 + 166, 5100 C7 982, 5020 C7 668, 5090 C12 184, 30A0 C3 151, 4040 C6 124,
+  6010 C6 69, 5100 C3 64, 4040 C11 2 = 3 303 Leon-Punkte (Bilder `M_bilder/NB1_M1_*.png`).
+
 ### NB1 Mangel 3 - ROOM2030/2031 Cut 15 (4400,3850) Band 3: die "uebermalten Leon-Punkte" sind die Spinne (widerlegt)
 
 **Ursache der Abnahme-Zahl:** das Mass S = |B - Hintergrund| > 24 im Figurfenster zaehlt JEDE Figur. Direkt hinter Leon (und
