@@ -4,7 +4,9 @@ Baum `.claude/worktrees/r41_wasser20b0`, Zweig `r41/wasser20b0`, HEAD fe9d44d4 (
 Orchestrator-Entscheide A-E3..A-E5 fe9d44d4), Merge-Basis master 116e8b0f. Massstab: AUFTRAG.md (Wortlaut Punkt 1/2, Nachtraege 2/3,
 Entscheide E1/E2, **A-E3/A-E4/A-E5 vom 2026-10-24 04:01**), VERTRAG.md §2, Maengel M1..M7 aus `A_abnahme_0.md`.
 Der Bau-Agent wird nicht geglaubt; nur selbst Gemessenes zaehlt. Bericht FORTLAUFEND geschrieben (Stand je Abschnitt).
-Scratch: `%TEMP%/claude/.../scratchpad/A41abn1/` (Logs, Bilder, Sonden; Pfade unten als `A41abn1/...`).
+Scratch (nicht versioniert): `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/
+scratchpad/A41abn1/` (Logs, Bilder, Sonden, Laufordner `mess/<lauf>/`; unten kurz `A41abn1/...`). Messfahrten mit `A41abn1/lauf.sh`
+(exe-Kopie `re15_pc_a41abn1_<lauf>.exe` neben der exe, `env -i`, timeout, Kopie danach geloescht).
 
 ## 0. Baustand (selbst gebaut)
 - `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`; `... build` -> `ninja: no work to do.`,
@@ -63,7 +65,8 @@ Scratch: `%TEMP%/claude/.../scratchpad/A41abn1/` (Logs, Bilder, Sonden; Pfade un
 - Guess-Tell-Suche im Diff (`git diff master...HEAD -- re15_port`, ohne Belegbilder): "deferred"/"for now"/"TODO" nur in
   Kontextzeilen des Altbestands (aot_common.c Include-Kommentar "deferred grant", scd_vm.c "deferred until"); "plausibel",
   "tunable", "interim", "faithful": keine Treffer. Neue Konstanten ohne @0x: keine gefunden; PORT-WAHL gekennzeichnet
-  (Aufsetzer-Regel 0x4b / 0x47-CDEMD1, Zehntel-/Halbe-Spanne-Schwelle - Form an den markierten Typen belegt, s. 4.3).
+  (Aufsetzer-Regel 0x4b / 0x47-CDEMD1, Zehntel-/Halbe-Spanne-Schwelle - Form an den markierten Typen belegt: unit npc
+  "Regel an Typ 0x40 Clip 5: 7/20 gegen Marken 7/22", "0x42: 5/18 gegen 8/22", |Abstand| <= 4).
 
 ## 3. Punkt 1 — 20B0-Wasserschwall (eigene Messung)
 ### 3.1 Weg
@@ -102,6 +105,8 @@ den vorhandenen Mitteln nicht kalibrierbar. Massgeblich bleibt damit der Framebu
 (@0x80072ecc, 2.), das Video ist der Overscan-Ausschnitt (Abgleich gestreckt 2.64 vs Identitaet 8.83); die Port-Balken F5-F14
 nach dem Sprung stammen aus dem Startraum des Harness (ROOM1240.RDT @0x0055e = `22 01 1b 01` = Set(1,0x1b,1), selbst gelesen) -
 bestaetigt.
+Zeitachse: Port F7 = Takt 1 (Pool wie tf_8), Port F54 = Takt 48 (Pool wie tf_7) -> Port-Bild = Takt + 6; der "spaetere erste Schub"
+der Abnahme 0 (Video o5-o9 gegen Port F11-F15) ist derselbe Takt 5-9 (+-1; o1 = erstes helles Bild nach Takt 1), nur nach 5 schwarzen Sprungbildern + 1 INIT-Takt (OFFEN 3).
 Restabweichungen OFFEN 1-3 (erstes Bild nach Kamerawechsel ohne Sprites, RVD 12->13 2-3 Bilder, EM024-INIT +1 Takt) sind laut
 Orchestrator-Entscheid (AUFTRAG 2026-10-24 04:01, letzter Punkt) engine-weit und "bleiben fuer die naechste Runde" -> kein Mangel A.
 ### 3.5 Urteil Punkt 1: ERFUELLT
@@ -114,8 +119,10 @@ RE15_EXIT_AT=360#2090` (+ NO_INTRO/NOAUDIO/WINDOW_SCALE=1/TITLE_SHOT): `[aot] DO
 `PC loaded room2090.rdt`, climb.log `T459 room=2090 ... pos=(6363,-640,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=4`; fx.log 104
 Zeilen `id=6 sub=3` ab F192 bei w(6363,-640,-14032), `-> sx=96 sy=148 S=8` (im Bild). Bilder `A41abn1/landung_leon_zoom.png`,
 `landung_f198_hell.png`: kleine weiss-gruenliche Spritzer um Leons Fuesse F196-F204. Elza 2091: integration_r41_wasser20b0_npc
-(1.) `landung_elza: Landungen 1, fx-Zeilen id=6 sub=3: 104`. Mechanik @0x80038730-d0 von Abnahme 0 selbst disassembliert (8 x
-0x06033000, Gate `slt` @0x8003874c). NPC-Gegenstueck: die NPC-Kante 0x80052508.. und der Schub 0x80052864.. rufen KEIN
+(1.) `landung_elza: Landungen 1, fx-Zeilen id=6 sub=3: 104`. Mechanik selbst nachdisassembliert: `lh v0,442(v1)`/`sw v0,56(v1)` @0x80038724-2c, Stempel `lh v1,-13604(v1)` (0x800acadc)
+@0x8003873c, y `lw a0,-13684(a0)` @0x80038744, `slt v1,v1,a0` @0x8003874c, `beq v1,zero,0x800387d4` @0x80038758, `ori s1,zero,0x4`
+@0x8003875c, `lui a0,0x603`/`ori a0,a0,0x3000` @0x8003876c-70 und @0x8003879c-a0, `addiu s0,s0,-2`/`sll s0,s0,8` @0x80038788/90,
+`jal 0x80019700` @0x80038794 und @0x800387bc mit `addiu a1,a1,2048` @0x800387c0, Schleife `bne` @0x800387cc/`addiu s1,s1,-1`. NPC-Gegenstueck: die NPC-Kante 0x80052508.. und der Schub 0x80052864.. rufen KEIN
 `jal 0x80019700` (eigener Scan), also auch im Original keine NPC-Landungsspritzer. **2a: erfuellt** (ohne Original-Bild der Landung;
 Mechanismus belegt).
 ### 4.2 Punkt 2b NPC-Wasser-EFFEKTE an der exe
@@ -125,7 +132,8 @@ Mechanismus belegt).
   davon 7 im Kanal y=0 unter dem WATER-Satz (`stempel=-900 zweig=stempel ton=18 plaetze=1`, z.B. `F1637 slot=1 typ=0x42 clip=5
   bild=8 fuss=7 ... pos=(-5866,0,-22509)`, `F1762 slot=2 typ=0x40 ...`). fx.log zeichnet den Platz `id=6 sub=3 ... F=1640 -> sx=159
   sy=143`; Bild `A41abn1/npc2000_wasser_bogen.png` (F1640/F1660 Ada, F1780 Marvin im Kanal, gruenliche Spritzer an den Fuessen).
-  Diese Stempel entstehen waehrend der Szene (player_mode 2) - die M3-Aufhebung wirkt.
+  Diese Stempel entstehen waehrend der Szene (player_mode 2) - die M3-Aufhebung wirkt. Folge-Platz (fl=07, Bit 0x04): der Anker
+  wandert mit dem Bein, F1637 w(-5638,-799,-22425) -> F1649 w(-6397,-788,-23500) (13 Bilder, frame 0..12).
 - Lauf elza2001 (Elza: RE15_TITLE_SHOT_CHAR=1, `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`, `RE15_SET_FLAG=3:65
   RE15_DEBUG_JUMP=2001@240`): John 0x49 spawnt (`Sce_em_set type=0x49 ... (-26003,-1800,-26062)`), laeuft per Plc_dest (Sub 9/5/4/5/9):
   23 Schritte, davon 5 im Kanal `zweig=stempel plaetze=1` (F310..F374). Sichtbar nicht pruefbar: Kamera Cut 0 zeigt Elza an der
@@ -179,6 +187,9 @@ Mechanismus belegt).
   mit 36 liegt er auf Slot 35, der Riegel erwartet fest 20 (`r35_boss(gator 2090 20 23 60 1000)` Z.403). Kein Flattern
   (deterministisch, Ursache im Log). Der Diff dieser Spur verschiebt den Boss-Platz, passt den Riegel aber nicht an; die
   Riegelauswahl des Bau-Agenten (N1.12: "keiner dieser Riegel ... hat mehr als 31 Aktoren") hat r35_granate nicht gefahren.
+  Gegenprobe (eigener Lauf granate_gator35, dieselbe Umgebung wie der Riegel, aber `RE15_FORCE_EXPLOSION=2@60:35`): state.log
+  `F59 [35 t=23 st=1 ...] hp=3000` -> `F60 [35 t=23 st=2 ss1=9 ...] hp=2000` = Schaden 1000 wie vom Riegel verlangt - das Spiel ist
+  in Ordnung, der Riegel ist durch den neuen Platz rot (Riegel-Regression, muss mit dieser Spur repariert werden).
   Zugleich Hinweis fuer B/F/G: der Alligator-Platz ist jetzt 35 (Aktor-Masken mit 32 Bit beachten; eigener grep: die verbliebenen
   `1u << idx`-Masken sind auf < 16 bzw. `ai < 32` begrenzt, s_dog_noclamp_mask ist 64 Bit, RBJ-Haken `mslot < 32`).
 
@@ -207,9 +218,16 @@ Mechanismus belegt).
   r36_szenenleon 161.71 s, r38_werkstatt11b0 154.36 s, r38_wasserzombie 125.97 s, r38_wasser 175.52 s, r37_szene11c0 120.61 s,
   r37_roy_leon1170 58.69 s (an d77bf72a rot, jetzt gruen), r36_gegnerzahl 88.06 s, r36_pri_schatten 27.81 s,
   r34_plattform_esp_eintritt 9.17 s, r39_gegner_schatten 58.66 s, r36_tueren 37.93 s, r36_kartenitems_bild 444.66 s;
-  **Failed r35_granate 49.37 s** (Abschnitt 5).
+  r37_itemband_lift 1372.20 s; **Failed r35_granate 49.37 s** (Abschnitt 5) -> `94% tests passed, 1 tests failed out of 17`.
+  r35_granate einzeln nachgefahren (05:07, geringere Last): `0% tests passed, 1 tests failed out of 1`, wieder `Boss-Slot 20 fehlt
+  im Zustandslog (Bild 59/60)` (50.17 s) - reproduzierbar, kein Last-Flattern.
 - Kette 2 (Riegel mit 4-Werte-RE15_PLAYER_POS, `-j 2`): Passed r35_inventar1050 71.54 s, r35_zgirl_5090 143.21 s,
-  r37_fahrstuhl 164.08 s, r37_fahrstuhl_n1 132.26 s (weitere unten).
+  r37_fahrstuhl 164.08 s, r37_fahrstuhl_n1 132.26 s, r37_kistenregel 270.12 s, r37_feuerloescher 362.10 s, r38_affen3 84.29 s,
+  r37_sperre1050 221.95 s, r38_affen3_decke 91.03 s, r38_spinnen_echtlauf 113.93 s -> `100% tests passed, 0 tests failed out
+  of 10` (Boot-Teleport mit Band ohne Nebenwirkung in diesen Riegeln).
+- Kette 3 (exakte Namen der Sammel-Riegel, `-j 1`): `-R "^integration_(r39_stimmen_1050|r39_stimmen_1150|r39_stimmen_11b0|
+  r39_stimmen_1171|r39_johnruf1041_tuer_t1041|..._t1041o|..._t1051|..._t1051o|..._t11b1|..._t11b1d|r38_affen3_tor)$"` ->
+  `100% tests passed, 0 tests failed out of 11`.
 
 ## 8. Urteile je Nutzer-Punkt (gegen den Wortlaut)
 ### Punkt 1 — "Runde 41 startet mit dem Wasserschwall in 20B0 im Original ... in unserem Port noch kaputt" -> ERFUELLT
@@ -251,7 +269,8 @@ M2 (Entscheid A-E4, Abnahmepunkt der Spur A): Lautstaerke/Richtung der (NPC-)Sch
 M3 (Regression dieser Spur): integration_r35_granate rot - `r35_granate [gator]: Boss-Slot 20 fehlt im Zustandslog (Bild 59/60)`;
    main.c setzt den Alligator auf den hoechsten freien Platz ab RE15_ACTOR_MAX-1, seit RE15_ACTOR_MAX 36 = Slot 35 (debug.log
    `Alligator (0x23) in Wasserzone gesetzt, Slot 35`, state.log `[35 t=23 ...]`), der Riegel erwartet fest 20 (test_r35_granate.cmake
-   Z.403). Riegel an RE15_ACTOR_MAX-1 koppeln (bzw. den Platz aus dem Log lesen) und die uebrigen Annahmen "letzter Platz = 20"
+   Z.403); mit Slot 35 trifft die erzwungene Explosion korrekt (hp 3000 -> 2000, Abschnitt 5) - also Riegel-Regression.
+   Riegel an RE15_ACTOR_MAX-1 koppeln (bzw. den Platz aus dem Log lesen) und die uebrigen Annahmen "letzter Platz = 20"
    pruefen; Spuren B/F/G auf den neuen Alligator-Platz hinweisen.
 M4 (Riegel): Typ 0x47 (Elliot CDEMD0 / Roy CDEMD1) ohne Wasser-Lauf-Pin (unit npc_wasser: 6 Typen); die Ton-Pruefungen in unit npc /
    npc_wasser / npc_subs ("Schritt-Ton 0x17-8 = 15") und integration npc2000 (`ton >= 0`) pruefen nur den Index - sie bleiben gruen,
@@ -263,3 +282,6 @@ Hinweise (keine Maengel dieser Spur): H1 RBJ-Haken `mslot < 32` passt zum (abwei
 die Records weiter (@0x8001b410/@0x8001b4c4) -> Spur J (A-E5). H2 portwahl-Cache (wassersprung_r41.c, Ring 32) ist nach Zeiger/
 Clip/Bildzahl verschluesselt - nach einem Bankwechsel auf dieselbe Adresse koennte ein alter Eintrag greifen (nur 0x4b/0x47-CDEMD1).
 H3 OFFEN 1-4 (Schnittbild ohne Sprites, RVD-Zeitpunkt, Gegner-INIT-Takt, allgemeine Szenensperre) laut Orchestrator naechste Runde.
+H4 OFFEN 5: `sb v1,-13300(at)` @0x8010ef34 (EM024-INIT, DAT_800acc0c := 1, selbst disassembliert) speist FUN_80024c30 (Aufruf aus
+dem Spielertakt FUN_80031c44 mit &DAT_800aca54) - die Feder-Nebenbewegung ist im Port insgesamt ungebaut (enemy_ai_common.c-Kopf
+"dormant #3"), der fehlende Schreibzugriff hat dort keine Wirkung; Altbestand, kein Mangel A.
