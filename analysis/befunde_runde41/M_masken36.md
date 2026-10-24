@@ -10,10 +10,11 @@ Auftrag (AUFTRAG.md, Wortlaut massgeblich):
 Baum: .claude/worktrees/r41_masken36 (Zweig r41/masken36, Basis b28c7236 = master-HEAD 4c667c97 + AUFTRAG-Hinweise).
 
 ## Stand
-- [ ] Schritt 0: Pflichtlektuere (AUFTRAG, VERTRAG, UEBERGABE R40, P_masken36 R37, Memory Masken)
-- [ ] Punkt 1: Messung vorher (Loecher je Cut), Ansatz, Umsetzung, Messung nachher
-- [ ] Punkt 2: Sichtpruefung 53 Masken (11A0 + STAGE2), ROOM2020 Cut 3
-- [ ] Tests (probes/r41_masken36.cmake), gezielte Laeufe
+- [x] Schritt 0: Pflichtlektuere (AUFTRAG, VERTRAG, UEBERGABE R40, P_masken36 R37, Memory Masken)
+- [x] Punkt 1: Messung vorher (1.1: Loecher der Uebersicht = Entpacker-Fehler; im Spiel Treppenkanten), Ansatz (1.2),
+      Umsetzung (1.3: Saum-Rechtecke + eigener Atlas, Ausschluss R37), Messung nachher (1.4), verworfener Weg (1.5)
+- [x] Punkt 2: Sichtpruefung 53 Masken (2.2), ROOM2020 Cut 3 = richtig (2.1), Fehler ROOM20A0 Cut 12 behoben (2.3)
+- [x] Tests (probes/r41_masken36.cmake), gezielte Laeufe 41/41
 
 ## Punkt 1 — STAGE3-6-Masken "ueberall Loecher"
 
@@ -240,3 +241,78 @@ Rechtecke; Bau-Schiene VOR 354 verdeckt 0, teil 0). ROOM20A1 nutzt die Masken vo
 **Messung nachher:** (14000,-18900) 0 von 698, (14000,-19300) 0 von 678; Riegel integration_r41_masken36_stage2 mit Leon
 und Elza (20A1) 0.
 **Frage an den Nutzer:** was sollte 12_02 verdecken? Als Bodenstreifen kann es keine Figur richtig verdecken.
+
+## Tests (gezielt, KEINE volle Suite)
+
+Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
+| Test | misst | Ergebnis |
+|---|---|---|
+| `unit_r41_masken36_loecher` | Punkt 1, Mechanik an allen 216 Generator-Sektionen ueber die Engine-Leser: eigener Atlas da und vom Lader gewaehlt; offene Kerben (Kuenstler-Atlas deckend + farbgleich an der Kante eines alten Rechtecks, nicht gezeichnet) VORHER 61 672 -> NACHHER 15 498 (<= 30 % verlangt, Gegenprobe VORHER > 10 000); Blit eigener Atlas max Mittel 10,66 (<= 12) | PASS |
+| `unit_r41_masken36_kurbel` | Punkt 2, ROOM2020 Cut 3: Original-NULL-Sektion (+0x3FC FF FF FF FF), Sichtlinie Kamera -> Leon (3650,-2925) kreuzt SCA-Zelle 11 (Suedreling), Reling-Maske verdeckt 31 von 101 Beinpunkten | PASS |
+| `integration_r41_masken36_stage2` | Punkt 2, echte exe, 13 Szenen Leon + Elza: Kurbel 2020/2021 C3 (86/779, 124/648), VOR 11A0 C1, 2030 C11, 2040 C9, 2050 C0 = 0 uebermalt, HINTER 11A0/11A1 C1, 2040 C9, 2080 C3 >= Haelfte, 20A0/20A1 C12 an der Wand und auf dem frueheren Bodenstreifen 0 (Gegenprobe Basisstand: 50) | PASS |
+
+Angepasst (mit Beleg, Dossier 1.3): `unit_r37_masken36_zensus` (Stages 3..6 jetzt eigener Atlas), `unit_r37_masken36_ausschluss`
+(Generator-Sektion = Stage 3..6; Schranke NB2 M2 als Ausschluss-Grund, gezaehlt am Endzustand: 0/0), `unit_r37_masken36_verdeckung`
+(unveraendert gruen), `integration_r37_masken36_stage3..6` (Spur-P-Zeile darf nicht mehr kommen): Stage 3 HINTER 1208/1238
+(R37 1123/1234), Elza 1221/1267, Stage 4 880/883, Stage 5 222/320 (R37 199/322), Stage 6 844/1440 (R37 820/1440), DAVOR
+ueberall 0, FREI 0, WEG M1 0; `integration_r37_masken36_nb2` Cut 15 Cursor 0.
+
+Gezielter Lauf (Bau `local_build.sh configure` + `build`, Endstand):
+`ctest --test-dir re15_port/build -R "masken36|_pri|pri_|sld_atlas|itemorte|optik|dokumente" -j 4 --timeout 900 --output-on-failure`
+-> **`100% tests passed, 0 tests failed out of 41`** (unit_r37_masken36_* 3, integration_r37_masken36_* 5, unit_r41_masken36_* 2,
+integration_r41_masken36_stage2, unit_pri_* 5, unit_sld_atlas, unit_r36_pri_* 2, integration_r36_pri_schatten,
+unit_r37_pri1100_* 4, integration_r37_pri1100_* 2, integration_pri_masken, unit_r38_itemorte_* 4, integration_r38_itemorte,
+unit_r39_optik_* 5, integration_r39_optik_* 2, unit_r34n_e_dokumente, integration_r34n_e_dokumente_bild).
+Linux: neue Tests ohne .exe-/Backslash-Pfade, `m` gelinkt, cmake_minimum_required in jedem -P-Skript, eigene Laufordner und
+exe-Kopie je Lauf (`re15_pc_r41m2_<id>`).
+
+## OFFEN
+
+1. **Teilweise ausgeschlossene Objekte (Punkt 1):** der Ausschluss der Spur P (R37) nimmt weiter ganze Rechtecke weg, die an
+   einer erreichbaren Stelle eine Figur VOR dem Objekt verdecken wuerden - in 94 Objekten der Stages 3..6 bleiben dadurch
+   Stuecke offen (gemessen vor Runde 41: 358 358 Bildpunkte in teilweise ausgeschlossenen Objekten), und 1662 der 8600
+   Saum-Rechtecke bleiben aus (Kerben-Mass 25,1 % von vorher). Ursache sind die Tiefen und die Auswahl des Generators vom
+   2026-09-03 (Bodenkontakt auf y = 0 je Spalte, DEPTH_SAFETY 0.90, Hintergrund in der Region - R37 §3.2). Der Weg, der das
+   sicher schliesst, ist derselbe wie in STAGE1/2: Freistellungen des Nutzers fuer die Objekte, hinter die man wirklich
+   laufen kann (raum.py --p2 baut sie mit Zellen-/Profil-Tiefe). Eine Tiefe aus der Erreichbarkeit (1.5) ist gemessen und
+   verworfen: das Grundriss-Urteil "Zelle davor" ist fuer echte Verdeckung nicht hinreichend.
+2. **Masken wirken auch auf 3D-Objekte und Effekte**, nicht nur auf Figuren: die Erreichbarkeits-Pruefung (R37) und die
+   Standplatz-Schiene (R40) kennen nur Figuren. Gemessen: Kanten der 3D-Tuermodelle in 4040 C11 / 4080 C7 werden vom
+   Tuerrahmen gedeckt (vorher schon 448 Punkte an der Tuer-Oberkante, nachher +1/+2), in ROOM2020 C3 liegt die rechte
+   Reling-Freistellung ueber dem Rand des dunklen 3D-Objekts in der Beckenmitte (obj 1, Obj_model_set[1]
+   pos=(-1452,-1784,-584)) und ueber einer hellen Wolke rechts davon. Ob das Objekt dort vor oder hinter der Reling liegt, ist
+   nicht gemessen.
+3. **ROOM2030 C15 (4400,3850) Band 3:** bis 8 Punkte Handlauf an Leons Schulterkante, wenn er direkt (1 Bucket) vor der
+   Reling steht - Bucket-Rundung der Freistellungs-Tiefe, nicht behoben.
+4. **PSX:** platform/psx/src/pri_psx.c kennt keinen eigenen Atlas (R37 OFFEN 5). Die alten Rechtecke der Stages 3..6 liegen
+   im eigenen Atlas an ihrer BSS-Stelle und taeten dort weiter das Richtige, die Saum-Rechtecke nicht. PSX-Ziel ungebaut.
+5. **Uebersichtsbilder pri/STAGE3-6/<raum>/<cc>_port.png** (a8be31a7) sind mit dem fehlerhaften Entpacker gebaut und zeigen
+   Loecher, die es im Spiel nie gab. Berichtigte Bilder liegen in `M_bilder/uebersicht/` (Leon-Ordner; Elza bytegleich) -
+   pri/ ist fuer die Spur tabu (VERTRAG §1.3), das Ersetzen bleibt dem Orchestrator/Nutzer.
+
+## Fuer den Nutzer
+
+- **Die Loecher in den STAGE3-6-Uebersichtsbildern waren ein Fehler meines Werkzeugs**, nicht der Masken: der Python-Entpacker
+  fuer die Vordergrund-Grafik (tools/maske/original.py) las jeden langen Rueckverweis 65536 Byte zu weit vorn und machte so
+  Teile der Objekte "durchsichtig" - in 359 von 359 Atlanten aller Stages (behoben, jetzt bytegleich mit dem Spiel). Im Spiel
+  hatten die Masken diese Loecher nie (0 von 1,1 Mio Rechteckpunkten). Bitte die Bilder `pri/STAGE3-6/*/*_port.png` durch
+  `analysis/befunde_runde41/M_bilder/uebersicht/...` ersetzen (gleiches Format, gleiche Namen) - oder der Orchestrator macht
+  es bei der Integration.
+- **Was im Spiel wirklich offen war und jetzt zu ist:** die Kanten der automatisch erzeugten Masken (Stages 3..6) waren
+  Treppen aus Rechtecken, Kerben und kleine Inseln fehlten - dort schien Leon/Elza hinter einem Objekt durch. Diese Raender
+  sind jetzt gezeichnet (+53 000 Bildpunkte in 108 Kamerawinkeln, z.B. die Konsole in FACTORY LINE B, die Treppe am
+  Bahnsteig MAIN PLATFORM), nur dort, wo sie sicher zum Objekt gehoeren (Farbabgleich der Original-Grafik). Was vorher
+  gezeichnet wurde, ist unveraendert. Echte Zwischenraeume (Gelaender, Gitter, unter der Treppe) bleiben offen.
+- **Nicht geschlossen** sind Objekte, deren Masken-Stuecke eine Figur VOR dem Objekt uebermalen wuerden (sie bleiben wie
+  bisher weg - sonst verschwindet Leon wieder, wie in Ihrer Meldung vom 2026-09-03). Wo Ihnen dort eine Verdeckung fehlt,
+  ist eine Freistellung wie in STAGE1/2 der sichere Weg (F9-Marke oder PNG unter pri/).
+- **Ihre 53 STAGE2-Masken** sind an der exe geprueft (je Kamerawinkel eine Stelle VOR und HINTER der Freistellung, Leon und
+  Elza-Stichproben, Bilder `M_bilder/P2_*.png`). Ein Fehler: **ROOM20A0 Kamera 12, Freistellung 12_02** ist ein Streifen
+  BODEN vor der Ziegelwand - wer darauf stand, verlor die Fuesse. 12_02 wird nicht mehr gebaut (Ihre PNG bleibt liegen),
+  12_01 (Mauerecke) bleibt. **Frage:** was sollte 12_02 verdecken?
+- **ROOM2020 Kamera 3 an der Kurbel:** dass die Reling ueber Leons Beinen liegt, ist richtig - die Kamera haengt ueber dem
+  Becken, Leon steht an der Kurbel HINTER der Reling (Kollisionszelle der Reling liegt auf der Sichtlinie). Das Original
+  hat fuer diesen Winkel gar keine Masken und zeichnet ihn deshalb obenauf. Keine Aenderung.
+- Assets fuer das Paket: `re15_port/shared_assets/PSX/MASKS/` - 30 geaenderte ROOM3040..6031.MSK, 216 neue
+  ROOMxxxx_PRIcc.TIM, ROOM20A0.MSK + ROOM20A0_PRI12.TIM/.PBM/.STAND. Keine neuen Quelldateien in der Engine (Android: kein
+  neuer GLOB-Eintrag). Keine Sprachdateien, keine neuen Schalter.
