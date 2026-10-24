@@ -126,6 +126,23 @@ Begonnen 2026-10-24 11:55. Pruefer: Abnahme 3 (Opus). Der Bericht wird FORTLAUFE
   2030") und Z. 30 ("2030 mit Bit 107 ohne Wasser (Gegenprobe ohne 107)") beschreiben noch den Stand vor Nachtrag 7; der Code
   der Riegel prueft den neuen Stand (`_b` I2/L2/M2 mit (3,126), Unit G `bit(107) == 0`).
 
+### G2b Ketten-Riegel `integration_r41_ventilkette_kette` (Entscheid C-E1) — am heutigen Stand NICHT lauffaehig
+* Der Riegel (zuletzt geaendert in 74fb9fae, Nachbesserung 1) startet `RE15_DEBUG_JUMP=2030@240`, `RE15_SET_FLAG=7:155,7:156,7:157`
+  (nur Spinnen), `RE15_PLAYER_POS=6550,-100,2048` (Ring vor der Ost-Tuer) und drueckt per Eingabeskript `A0.1,W4,A0.1,W2.5,...`
+  die Aktionstaste am Ring (test_r41_ventilkette_kette.cmake Z. 129-137) — also am ALTEN Ventil-Platz (Ring-Ost-Streifen, Band 3),
+  ohne Bruecke (Bit 102) und ohne Sicherung ((3,108)). Seit Nachbesserung 3 liegt der Platz Slot 14 im Band 1 an der Suedwand
+  (L2b AOTS `slot 14 ... band 1 mitte (-900,7900)`) und verlangt Bit 102 UND (3,108).
+* Selbst gefahren (nicht registriert, deshalb von Hand: `cmake -DRE15_PC_EXE=<exe> -DRE15_SRC=<baum>/re15_port
+  -DWORKDIR=<a3>/kette_riegel -P re15_port/tests/integration/test_r41_ventilkette_kette.cmake`, 13:09-13:16, `<a3>/kette_riegel.txt`):
+  debug.log `ROOM2030: Bruecke obj 0 oben y -5400, Zelle 12 gesperrt` -> fuenf Aktionen ohne Ereignis -> `DOOR FIRE slot=0
+  rect=(7350,-200,hw=500,hh=1750) target_cut=0 spawn=(4800,0,-6300)` (Ost-Tuer ORIGINAL nach 2070, kein Zaehler) ->
+  **`CMake Error at .../test_r41_ventilkette_kette.cmake:71 (message): r41_ventilkette_kette: Aktion an den Ventilen —
+  '[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile' fehlt`** (Aufruf Z. 159), rc=1. Der Fehler liegt VOR dem
+  Teil, der den Haken der Spur A braucht; der Lauf `kette_alt` der ersten Sitzung (gleiche Eingaben) zeigt dasselbe.
+* Folge: Im Integrationsbaum A+C wird der Riegel registriert (`if(EXISTS .../wasser20b0_r41.c)`) und faellt — C-E1 verlangt "Ist er
+  registriert, MUSS die ganze Kette durchlaufen". Auch der Dossier-Abschnitt §0b M2 beschreibt noch die Kette mit den Ventilen am
+  Ring (Messung 06:37, vor Nachbesserung 3). => **Mangel 1** (§5).
+
 ## 1. Messungen an der exe (eigene Laeufe)
 Runner `<a3>/lauf.sh` (eigene exe-Kopie `re15_pc_abn3c_<lauf>.exe` je Lauf, danach geloescht; erbt keine RE15_-Variablen;
 Arbeitsordner `<a3>/mess/<lauf>/` mit debug.log, state.txt, wegplan.txt, bilder/), Serien `<a3>/serie1.sh` .. `serie4.sh`, eigene
