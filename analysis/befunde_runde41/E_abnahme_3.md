@@ -226,7 +226,9 @@ begonnene Stopp (Modulzustand `s_aktiv`, rennstopp_r41.c:21) ueberlebt die Trepp
 Bewegung oder `state != 1` SIEHT (rennstopp_r41.c:193). Leon gleitet nach der Treppe 228 Einheiten in der Steh-Pose weiter.
 Variante `N2b_treppe_nach_2_stoppbildern` (Loslassen 2 Bilder vor der Aktion, Leon an der Kante blockiert): Finalize F375 wie VORHER
 (-13782), danach nur noch der letzte Stopp-Schritt F376 -1 — wie viel nach der Treppe uebrig bleibt, haengt davon ab, wie viele der 6
-Stopp-Bilder vor dem Treppenstart verbraucht waren.
+Stopp-Bilder vor dem Treppenstart verbraucht waren. Gegenprobe `N2c_treppe_rennend_gehalten` (Aktion bei GEHALTENEM OBEN+RENNEN,
+pad c010 in F312): nach dem Finalize F375..F382 steht Leon auf -13782 — der Fehler tritt nur auf, wenn der Stopp beim Treppenstart
+laeuft.
 **Original (selbst disassembliert):** Treppen-Finalize LAB_80038e50 @0x80038ea8 `sb zero,0x800aca59` (+5 = Unterzustand 0) und
 @0x80038eb0 `sb zero,0x800aca5a` (+6 = 0) — der Renn-Stopp lebt nur in +5 = 2 / +6 = 2..3 (0x80032604 @0x800326e0-@0x800326ec, 0x80032778
 @0x800327b0-@0x800327bc) und ist nach der Treppe geloescht; Stehen-ANIMATE Fall 0 setzt das Tempo auf 0 (@0x800320a4). Ein
