@@ -63,6 +63,7 @@
 #include "re15_scd.h"
 #include "re15_aot.h"
 #include "re15_masken36_r37.h"
+#include "re15_masken36_r41.h"   /* Runde 41 Spur M: Tiefe aus der Erreichbarkeit */
 #include "re15_pri1100_r37.h"
 #include "re15_collision.h"
 
@@ -179,6 +180,24 @@ static int atlas_eigen(unsigned raum, int cut, atlas_t *a)
     }
     free(a->roh); a->roh = NULL;
     return 0;
+}
+
+/* Runde 41 Spur M: Generator-Sektion = Sektion einer der 30 MSK-Dateien der Stages 3..6 (b8db7b2b/02c62294; Zensus R37
+ * §1.1: "Stages 3..6: alle 30 Dateien, 216 Sektionen", Freistellungen des Nutzers gibt es nur in Stage 1/2). Bis Runde 40
+ * erkannte dieser Riegel sie am FEHLENDEN eigenen Atlas; seit Runde 41 tragen sie einen eigenen, geschlossenen Atlas
+ * (tools/maske/schliessen_r41.py) - Ausschluss und Tiefen-Tabelle gelten fuer sie weiter, Freistellungen bleiben aussen vor. */
+static int generator_sektion(unsigned raum) { return (raum >> 12) >= 3; }
+
+/* Der Atlas, mit dem der Lader eine Generator-Sektion zeichnet (bg_pc.c re15_pri_load_cut_atlas_ex: eigener Atlas, sonst
+ * BSS-Atlas); Freistellung (eigener Atlas ausserhalb der Stages 3..6) -> 0 = nicht Gegenstand. */
+static int atlas_generator(unsigned raum, int cut, atlas_t *a)
+{
+    if (atlas_eigen(raum, cut, a)) {
+        if (generator_sektion(raum)) return 1;
+        free(a->roh); a->roh = NULL; a->da = 0;
+        return 0;
+    }
+    return atlas_bss(raum, cut, a);
 }
 
 /* Blit wie pruef_gen.py / der Zeichner (SDL_RenderCopy klippt je Punkt): Masken durch den Atlas auf den Hintergrund.
@@ -875,6 +894,7 @@ static void sektion_pruefen(raum_t *R, int cut, const re15_pri_cut_t *pri, const
 /* Fuer jede MSK-Datei und jede Sektion OHNE eigenen Atlas (BSS-Atlas, Generator) den Ausschluss rechnen.
  * fn(raum, cut, pri, E) bekommt das Ergebnis. */
 typedef void (*sektion_fn)(unsigned raum, int cut, const re15_pri_cut_t *pri, const ergebnis_t *E, void *ctx);
+static int g_mit_tiefe = 1;   /* Runde 41: Tiefen-Tabelle (masken36_r41.c) anwenden wie der Lader; 0 = Gegenprobe mit Rohtiefen */
 
 static void alle_sektionen(int iterieren, int mit_tabelle, sektion_fn fn, void *ctx)
 {
@@ -890,11 +910,11 @@ static void alle_sektionen(int iterieren, int mit_tabelle, sektion_fn fn, void *
                 if (!msk) continue;
                 ncut = (mn >= 12) ? (int) (msk[8] | (msk[9] << 8)) : 0;
                 for (c = 0; c < ncut; c++) {
-                    re15_pri_cut_t pri; atlas_t eig, bss; ergebnis_t E; uint32_t off; int vorgabe[RE15_PRI_MAX_MASKS_PER_CUT], m;
+                    re15_pri_cut_t pri; atlas_t bss; ergebnis_t E; uint32_t off; int vorgabe[RE15_PRI_MAX_MASKS_PER_CUT], m;
                     off = re15_pri_msk_section_offset(msk, mn, c);
                     if (!off || re15_pri_parse_section(msk, mn, off, &pri) <= 0) continue;
-                    if (atlas_eigen(raum, c, &eig)) { free(eig.roh); continue; }     /* Freistellung: nicht Gegenstand */
-                    if (!atlas_bss(raum, c, &bss)) continue;
+                    if (!atlas_generator(raum, c, &bss)) continue;     /* Freistellung: nicht Gegenstand (Runde 41: eigener Atlas) */
+                    if (g_mit_tiefe) re15_masken36_tiefe_r41(re15_pri_masken_raum(raum), c, &pri);   /* wie der Lader (R41) */
                     if (!geladen) { geladen = raum_laden(&R, raum) ? 1 : -1; }
                     if (geladen < 0 || c >= R.rdt.cut_count) { free(bss.roh); continue; }
                     for (m = 0; m < RE15_PRI_MAX_MASKS_PER_CUT; m++)
@@ -935,6 +955,210 @@ static void teil_erzeuge(const char *pfad)
     printf("  Figurraster: %ld Kaesten pixelgenau, breitester %.1f Bildpunkte, breiter als %d: %ld (davon Maske koennte "
            "verdecken: %ld), Spalten halb hinter der Kamera: %ld (davon Maske koennte verdecken: %ld)\n", g_sp_kaesten,
            g_sp_breit_max, SP_MAX - 1, g_sp_gekappt, g_sp_gekappt_offen, g_sp_halb, g_sp_halb_offen);
+}
+
+
+/* ---- Runde 41 Spur M: Tiefe aus der Erreichbarkeit (Werkzeug erzeuge_tiefe, Riegel tiefe) ------------------------- */
+/* Je Rechteck m einer Generator-Sektion ueber ALLE deckenden Punkte von m (nicht nur dort, wo m vorderste Maske ist) und
+ * alle erreichbaren Figurpunkte darunter (Stehplaetze, Figurraster und Zelle-davor-Urteil wie sektion_pruefen):
+ *   falsch = keine solide Zelle zwischen Kamera und Figurpunkt -> m darf ihn nicht verdecken: depth >= bucket
+ *   echt   = solide Zelle dazwischen                          -> m soll ihn verdecken:      depth <  bucket
+ * (Original-Urteil re15_pri_mask_occludes: depth < bucket(vz) = (1023*vz)>>16.) Neue Tiefe = max bucket(falsch), wenn sie
+ * groesser ist als die Generator-Tiefe; das verdeckt keinen falsch-Punkt und jeden echt-Punkt mit groesserem Bucket - nie
+ * weniger als der Ausschluss (der das Rechteck ganz wegnimmt). Unabhaengig von der Tiefe des Rechtecks selbst. */
+typedef struct { long n_falsch, n_echt; int maxb_falsch, minb_echt; } fenster_t;
+
+static long fenster_rechnen(raum_t *R, int cut, const re15_pri_cut_t *pri, const atlas_t *a, fenster_t *F)
+{
+    static uint32_t cov[240][320][4];
+    static int sat[241][321];
+    static figpt_t pt[FIGPT_MAX];
+    static uint8_t dvc[SP_MAX];
+    re15_camera_view_t v; double cam[3], lx, lz, ll; int16_t qx[4], qz[4]; int has_q, m, x, y, b, gx, gz;
+    const uint8_t *idx = (const uint8_t *) a->tim.pixels;
+    long steh = 0;
+    for (m = 0; m < RE15_PRI_MAX_MASKS_PER_CUT; m++) { F[m].n_falsch = F[m].n_echt = 0; F[m].maxb_falsch = -1; F[m].minb_echt = 0x7FFF; }
+    if (re15_camera_build_view(&R->rdt.cuts[cut], &v) != 0) return 0;
+    kamera_ort(&v, cam);
+    has_q = re15_rdt_get_region_quad(&R->rdt, cut, qx, qz);
+    lx = v.rot[0] / 4096.0; lz = v.rot[2] / 4096.0; ll = sqrt(lx * lx + lz * lz);
+    if (ll > 0) { lx /= ll; lz /= ll; }
+    memset(cov, 0, sizeof cov);
+    for (m = 0; m < pri->draw_count && m < 128; m++) {
+        const re15_pri_mask_t *q = &pri->masks[m];
+        int dx = (int16_t) q->dstX, dy = (int16_t) q->dstY, xx, yy;
+        for (yy = 0; yy < q->height; yy++)
+            for (xx = 0; xx < q->width; xx++) {
+                int ax = q->srcX + xx, ay = q->srcY + yy, tx = dx + xx, ty = dy + yy;
+                if (ax >= a->tim.width || ay >= a->tim.height || tx < 0 || ty < 0 || tx >= 320 || ty >= 240) continue;
+                if (!idx[ay * a->tim.width + ax]) continue;
+                cov[ty][tx][m >> 5] |= 1u << (m & 31);
+            }
+    }
+    for (y = 0; y <= 240; y++) sat[y][0] = 0;
+    for (x = 0; x <= 320; x++) sat[0][x] = 0;
+    for (y = 0; y < 240; y++)
+        for (x = 0; x < 320; x++)
+            sat[y + 1][x + 1] = sat[y][x + 1] + sat[y + 1][x] - sat[y][x]
+                              + ((cov[y][x][0] | cov[y][x][1] | cov[y][x][2] | cov[y][x][3]) != 0);
+    for (b = 0; b < 16; b++)
+        for (gx = 0; gx < R->nx; gx++)
+            for (gz = 0; gz < R->nz; gz++) {
+                int wx = R->x0 + gx * SCHRITT, wz = R->z0 + gz * SCHRITT, np, nsp, ges, i;
+                if (!R->err[b][gx][gz]) continue;
+                if (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz)) continue;   /* Akteur-Cull (FUN_8002c18c) */
+                steh++;
+                {   /* Grobsprung wie sektion_pruefen: keine Maske im Bildrechteck des Kastens -> nichts zu tun */
+                    double sx, sy, vz, x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; int e, alle = 1, X0, Y0, X1, Y1;
+                    for (e = 0; e < 4; e++) {
+                        double o = (e & 1) ? FIGUR_HALB : -FIGUR_HALB, hy = -(double) b * BAND_Y - ((e & 2) ? FIGUR_HOCH : 0.0);
+                        if (!proj(&v, wx + o * lx, hy, wz + o * lz, &sx, &sy, &vz)) { alle = 0; break; }
+                        if (sx < x0) x0 = sx; if (sx > x1) x1 = sx; if (sy < y0) y0 = sy; if (sy > y1) y1 = sy;
+                    }
+                    if (alle) {
+                        X0 = (int) floor(x0) - 1; Y0 = (int) floor(y0) - 1; X1 = (int) floor(x1) + 1; Y1 = (int) floor(y1) + 1;
+                        if (X0 < 0) X0 = 0; if (Y0 < 0) Y0 = 0; if (X1 > 319) X1 = 319; if (Y1 > 239) Y1 = 239;
+                        if (X0 > X1 || Y0 > Y1) continue;
+                        if (sat[Y1 + 1][X1 + 1] - sat[Y0][X1 + 1] - sat[Y1 + 1][X0] + sat[Y0][X0] == 0) continue;
+                    }
+                }
+                np = figur_raster(&v, wx, wz, b, lx, lz, pt, &nsp, &ges);
+                /* Wo das Raster NICHT pixelgenau ist, dieselbe Schranke wie sektion_pruefen (NB2 M2), hier als Tiefen-
+                 * Untergrenze: (a) Kasten breiter als das Bild -> jedes Rechteck mit deckenden Punkten im Bildrechteck des
+                 * Kastens bekommt mindestens bucket(vz der fernsten Kastenecke); (b) Spalte halb hinter der Kamera -> jedes
+                 * Rechteck der Sektion mindestens bucket(groesstes vz dieser Spalten). Ohne Zelle-davor-Urteil (konservativ
+                 * wie die Schranke). */
+                if (g_raster_gekappt) {
+                    double c3[3], vzmax = 0, sx, sy, vz, x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+                    int e, alle = 1, X0 = 0, Y0 = 0, X1 = 319, Y1 = 239, xx, yy, k, thr; uint32_t ww[4] = {0, 0, 0, 0};
+                    for (e = 0; e < 4; e++) {
+                        double o = (e & 1) ? FIGUR_HALB : -FIGUR_HALB, hy = -(double) b * BAND_Y - ((e & 2) ? FIGUR_HOCH : 0.0);
+                        ansicht(&v, wx + o * lx, hy, wz + o * lz, c3);
+                        if (c3[2] > vzmax) vzmax = c3[2];
+                        if (!proj(&v, wx + o * lx, hy, wz + o * lz, &sx, &sy, &vz)) { alle = 0; continue; }
+                        if (sx < x0) x0 = sx; if (sx > x1) x1 = sx; if (sy < y0) y0 = sy; if (sy > y1) y1 = sy;
+                    }
+                    if (alle) {
+                        X0 = (int) floor(x0) - 1; Y0 = (int) floor(y0) - 1; X1 = (int) floor(x1) + 1; Y1 = (int) floor(y1) + 1;
+                        if (X0 < 0) X0 = 0; if (Y0 < 0) Y0 = 0; if (X1 > 319) X1 = 319; if (Y1 > 239) Y1 = 239;
+                    }
+                    thr = re15_pri_bucket_of_vz((long) vzmax);
+                    for (yy = Y0; yy <= Y1; yy++)
+                        for (xx = X0; xx <= X1; xx++) { ww[0] |= cov[yy][xx][0]; ww[1] |= cov[yy][xx][1]; ww[2] |= cov[yy][xx][2]; ww[3] |= cov[yy][xx][3]; }
+                    for (k = 0; k < 128; k++)
+                        if ((ww[k >> 5] >> (k & 31)) & 1u) { F[k].n_falsch++; if (thr > F[k].maxb_falsch) F[k].maxb_falsch = thr; }
+                }
+                if (g_raster_halb_vz > 64) {
+                    int k, thr = re15_pri_bucket_of_vz((long) g_raster_halb_vz);
+                    for (k = 0; k < pri->draw_count && k < 128; k++) { F[k].n_falsch++; if (thr > F[k].maxb_falsch) F[k].maxb_falsch = thr; }
+                }
+                memset(dvc, 0, sizeof dvc);
+                for (i = 0; i < np; i++) {
+                    int px_ = pt[i].x, py_ = pt[i].y, k, bk; const uint32_t *w;
+                    if (px_ < 0 || px_ >= 320 || py_ < 0 || py_ >= 240) continue;
+                    w = cov[py_][px_];
+                    if (!(w[0] | w[1] | w[2] | w[3])) continue;
+                    if (!dvc[pt[i].spalte]) {
+                        double o = spalte_o(pt[i].spalte, nsp);
+                        dvc[pt[i].spalte] = zelle_dazwischen(&R->zel, b, cam[0], cam[2], wx + o * lx, wz + o * lz) ? 1 : 2;
+                    }
+                    bk = re15_pri_bucket_of_vz((long) pt[i].vz);
+                    for (k = 0; k < 128; k++) {
+                        if (!((w[k >> 5] >> (k & 31)) & 1u)) continue;
+                        if (dvc[pt[i].spalte] == 2) { F[k].n_falsch++; if (bk > F[k].maxb_falsch) F[k].maxb_falsch = bk; }
+                        else { F[k].n_echt++; if (bk < F[k].minb_echt) F[k].minb_echt = bk; }
+                    }
+                }
+            }
+    return steh;
+}
+
+/* Fuer jede Generator-Sektion (Rohtiefen aus der MSK, ohne Tabelle) die Zeilen der Tiefen-Tabelle; fn je Zeile. */
+typedef void (*tiefe_fn)(unsigned raum, int cut, int m, int alt, const fenster_t *f, void *ctx);
+static void alle_fenster(tiefe_fn fn, void *ctx, long *sektionen, long *rechtecke)
+{
+    static raum_t R; static fenster_t F[RE15_PRI_MAX_MASKS_PER_CUT];
+    int stage, rr, var;
+    for (stage = 3; stage <= 6; stage++)
+        for (rr = 0; rr < 0x40; rr++)
+            for (var = 0; var < 2; var++) {
+                unsigned raum = ((unsigned) stage << 12) | ((unsigned) rr << 4) | (unsigned) var;
+                char p[700]; uint8_t *msk; size_t mn = 0; int c, ncut, geladen = 0;
+                snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, raum);
+                msk = slurp(p, &mn);
+                if (!msk) continue;
+                ncut = (mn >= 12) ? (int) (msk[8] | (msk[9] << 8)) : 0;
+                for (c = 0; c < ncut; c++) {
+                    re15_pri_cut_t pri; atlas_t a; uint32_t off; long steh; int m;
+                    off = re15_pri_msk_section_offset(msk, mn, c);
+                    if (!off || re15_pri_parse_section(msk, mn, off, &pri) <= 0) continue;
+                    if (!atlas_generator(raum, c, &a)) continue;
+                    if (!geladen) geladen = raum_laden(&R, raum) ? 1 : -1;
+                    if (geladen < 0 || c >= R.rdt.cut_count) { free(a.roh); continue; }
+                    steh = fenster_rechnen(&R, c, &pri, &a, F);
+                    if (sektionen) (*sektionen)++;
+                    if (rechtecke) *rechtecke += pri.draw_count;
+                    /* Sektion ohne Stehplatz: ganz aus (Ausschluss, NB2 M1) - keine Tiefen-Zeile */
+                    for (m = 0; steh > 0 && m < pri.draw_count && m < 128; m++)
+                        if (F[m].n_falsch > 0 && F[m].maxb_falsch > (int) pri.masks[m].depth)
+                            fn(raum, c, m, (int) pri.masks[m].depth, &F[m], ctx);
+                    free(a.roh);
+                }
+                free(R.roh); R.roh = NULL;
+                free(msk);
+            }
+}
+
+static void tiefe_zeile_schreiben(unsigned raum, int cut, int m, int alt, const fenster_t *f, void *ctx)
+{
+    FILE *fp = (FILE *) ctx;
+    fprintf(fp, "    { 0x%04X, %2d, %3d, %4d },   /* alt %d, falsch %ld (max Bucket %d), echt %ld (min Bucket %d)%s */\n",
+            raum, cut, m, f->maxb_falsch, alt, f->n_falsch, f->maxb_falsch, f->n_echt, f->n_echt ? f->minb_echt : -1,
+            (f->n_echt && f->minb_echt <= f->maxb_falsch) ? ", echt teils nicht mehr verdeckt" : "");
+}
+
+static void teil_erzeuge_tiefe(const char *pfad)
+{
+    FILE *f = fopen(pfad, "w"); long sek = 0, re = 0;
+    if (!f) { printf("  FEHLER: %s nicht schreibbar\n", pfad); g_fail = 1; return; }
+    saaten_sammeln();
+    fprintf(f, "/* Erzeugt von tests/unit/test_r37_masken36.c (Modus \"erzeuge_tiefe\") - NICHT von Hand aendern.\n"
+               " * Runde 41 Spur M: Generator-Rechtecke, die an einem erreichbaren Stehplatz einen Figurpunkt ohne solide Zelle\n"
+               " * davor verdecken wuerden, bekommen die Tiefe max bucket(solcher Punkte) (include/re15_masken36_r41.h).\n"
+               " * Spalten: Raum der MSK-Datei, Cut, Rechteck, neue Tiefe. */\n"
+               "static const re15_masken36_tiefe_zeile_t re15_masken36_tiefe_zeilen[] = {\n");
+    alle_fenster(tiefe_zeile_schreiben, f, &sek, &re);
+    fprintf(f, "    { 0x0000, 0xFF, 0xFF, 0 }   /* Ende */\n};\n");
+    fclose(f);
+    printf("  geschrieben: %s (Sektionen %ld, Rechtecke %ld, Saaten %d)\n", pfad, sek, re, g_saat_n);
+}
+
+typedef struct { long zeilen, abweichungen, echt_verloren; } tiefe_ctx;
+static void tiefe_zeile_pruefen(unsigned raum, int cut, int m, int alt, const fenster_t *f, void *vctx)
+{
+    tiefe_ctx *x = (tiefe_ctx *) vctx; int tab = re15_masken36_tiefe_r41_wert(re15_pri_masken_raum(raum), cut, m);
+    (void) alt;
+    x->zeilen++;
+    if (tab != f->maxb_falsch) {
+        x->abweichungen++;
+        printf("  ABWEICHUNG ROOM%04X Cut %d Rechteck %d: Nachrechnung %d, Tabelle %d\n", raum, cut, m, f->maxb_falsch, tab);
+    }
+    if (f->n_echt && f->minb_echt <= f->maxb_falsch) x->echt_verloren++;
+}
+
+static void teil_tiefe(void)
+{
+    tiefe_ctx x; long sek = 0, re = 0;
+    printf("== r41_masken36 tiefe: Tiefen-Tabelle (masken36_r41.c) aus den Dateien nachgerechnet ==\n");
+    saaten_sammeln();
+    memset(&x, 0, sizeof x);
+    alle_fenster(tiefe_zeile_pruefen, &x, &sek, &re);
+    printf("  Sektionen %ld, Rechtecke %ld | Zeilen nachgerechnet %ld, Tabelle %d (ohne Endzeile) | Abweichungen %ld | "
+           "Rechtecke, deren Fenster leer ist (echt-Punkt mit Bucket <= neue Tiefe): %ld\n",
+           sek, re, x.zeilen, re15_masken36_tiefe_r41_zeilen() - 1, x.abweichungen, x.echt_verloren);
+    CHECK("Tiefen-Tabelle == Nachrechnung (Rechteck fuer Rechteck)", sek == 216 && x.abweichungen == 0);
+    CHECK("keine verwaiste Zeile in der Tiefen-Tabelle", x.zeilen == re15_masken36_tiefe_r41_zeilen() - 1);
+    CHECK("Gegenprobe: ohne die Tabelle wuerden Rechtecke Figuren VOR dem Objekt verdecken (Zeilen > 0)", x.zeilen > 0);
 }
 
 /* ---- ausschluss (Riegel) ---------------------------------------------------------------------------------------- */
@@ -1071,7 +1295,9 @@ static void teil_ausschluss(void)
            re15_masken36_zeilen_zahl() - 1, nach_zeilen);
     memset(&a, 0, sizeof a);
     alle_sektionen(0, 1, pruefe_zeile, &a);            /* mit der Engine-Tabelle: keine Fehlverdeckung bleibt */
-    alle_sektionen(0, 0, ohne_zeile, &o);              /* Gegenprobe ohne Ausschluss */
+    g_mit_tiefe = 0;                                   /* Runde 41: Gegenprobe ohne Ausschluss UND ohne Tiefen-Tabelle */
+    alle_sektionen(0, 0, ohne_zeile, &o);
+    g_mit_tiefe = 1;
     for (s = 3; s <= 6; s++) {
         printf("  Stage %d: mit Ausschluss Figurpunkte HINTER Zellen verdeckt %ld | ohne Ausschluss Fehlverdeckungen %ld\n",
                s, a.echt_stage[s], o.falsch_ohne[s]);
@@ -1090,7 +1316,8 @@ static void teil_ausschluss(void)
           bytegleich > 0 && bytegleich_gleich == bytegleich);
     CHECK("jedes Raumpaar mit MSK hat dieselben Tabellenzeilen (Saaten je Raumpaar)", paare > 0 && paare_gleich == paare);
     CHECK("je Stage 3..6 verdecken die Masken weiterhin Figuren HINTER Zellen", stages_echt);
-    CHECK("Gegenprobe: ohne Ausschluss gaebe es Fehlverdeckungen (Stage 3, 5)", o.falsch_ohne[3] > 0 && o.falsch_ohne[5] > 0);
+    CHECK("Gegenprobe: ohne Ausschluss und ohne Tiefen-Tabelle (Runde 41) gaebe es Fehlverdeckungen (Stage 3, 5)",
+          o.falsch_ohne[3] > 0 && o.falsch_ohne[5] > 0);
 }
 
 /* ---- zensus ----------------------------------------------------------------------------------------------------- */
@@ -1098,7 +1325,7 @@ static void teil_zensus(void)
 {
     static uint8_t rgb[320 * 240 * 3];
     int stage, rr, var, dateien = 0, sekt = 0, tot = 0, passt = 0, nicht_null = 0, n_eigen = 0, n_bss = 0;
-    int s36_dateien = 0, s36_sekt = 0, s36_bss = 0, alt_tot = 0, s36_alt_tot = 0, gegen_n = 0, gegen_faellt = 0;
+    int s36_dateien = 0, s36_sekt = 0, s36_bss = 0, s36_eigen = 0, alt_tot = 0, s36_alt_tot = 0, gegen_n = 0, gegen_faellt = 0;
     double max_mittel_bss = 0, max_mittel_eigen = 0;
     printf("== r37_masken36 zensus: alle MASKS/ROOM*.MSK, Atlas-Quelle nach re15_pri_atlas_quelle + Blit-Pruefung ==\n");
     for (stage = 1; stage <= 6; stage++)
@@ -1137,7 +1364,7 @@ static void teil_zensus(void)
                     if (!eigen_da) { alt_tot++; if (stage >= 3) s36_alt_tot++; }   /* alte Regel 53741fe5: tot */
                     quelle = re15_pri_atlas_quelle(1, eigen_da);
                     wahl = (quelle == RE15_PRI_ATLAS_EIGEN) ? &eig : &bss;
-                    if (quelle == RE15_PRI_ATLAS_EIGEN) { n_eigen++; d_eigen++; }
+                    if (quelle == RE15_PRI_ATLAS_EIGEN) { n_eigen++; d_eigen++; if (stage >= 3) s36_eigen++; }
                     else { n_bss++; d_bss++; if (stage >= 3) s36_bss++; }
                     if (!wahl->da) {
                         tot++; d_tot++;
@@ -1153,7 +1380,9 @@ static void teil_zensus(void)
                             if (!ok_blit)
                                 printf("  BLIT FAELLT: ROOM%04X Cut %d Atlas %s: %d Punkte, Mittel %.2f, Anteil>48 %.1f %%\n",
                                        raum, c, wahl->quelle, gm, mi, 100.0 * an);
-                            if (eig.da && bss.da) {                       /* Gegenprobe: der andere Atlas faellt durch */
+                            if (eig.da && bss.da && !generator_sektion(raum)) {   /* Gegenprobe: der andere Atlas faellt durch
+                                 * (Runde 41: nur Freistellungen - in den Generator-Sektionen liegen die alten Rechtecke im eigenen
+                                 * Atlas an ihrer BSS-Stelle, ihr Teil passt durch beide Atlanten; schliessen_r41.py Probe 3) */
                                 double mi2 = 0, an2 = 0;
                                 const atlas_t *anders = (wahl == &eig) ? &bss : &eig;
                                 int gm2 = blit(&pri, anders, rgb, &mi2, &an2);
@@ -1177,14 +1406,17 @@ static void teil_zensus(void)
            dateien, sekt, n_eigen, n_bss, tot, passt, nicht_null);
     printf("  Blit Mittel max: BSS %.2f, eigen %.2f (Grenze %.0f)\n", max_mittel_bss, max_mittel_eigen, MITTEL_MAX);
     printf("  alte Regel (53741fe5, R15M nur mit eigenem Atlas): %d Sektionen tot, davon Stages 3..6 %d\n", alt_tot, s36_alt_tot);
-    printf("  Stages 3..6: %d Dateien, %d Sektionen, BSS-Atlas %d\n", s36_dateien, s36_sekt, s36_bss);
+    printf("  Stages 3..6: %d Dateien, %d Sektionen, eigener Atlas %d, BSS-Atlas %d\n", s36_dateien, s36_sekt, s36_eigen, s36_bss);
     CHECK("jede R15M-Sektion steht auf einer NULL-Sektion des Originals", nicht_null == 0);
     CHECK("kein toter Cut: jede R15M-Sektion hat ihren Atlas (eigener oder BSS)", sekt > 0 && tot == 0);
     CHECK("Blit-Pruefung: jede Sektion passt zu dem Atlas, den der Lader waehlt", passt == sekt);
-    CHECK("Stages 3..6: 30 Dateien, 216 Sektionen, alle mit dem BSS-Atlas",
-          s36_dateien == 30 && s36_sekt == 216 && s36_bss == 216);
-    CHECK("Gegenprobe alte Regel: die 216 Stage-3..6-Sektionen waeren ohne eigenen Atlas tot", s36_alt_tot == 216);
-    CHECK("Gegenprobe Trennschaerfe: wo beide Atlanten vorliegen, faellt der falsche durch (>= 5 Sektionen)",
+    /* Runde 41 Spur M: die 216 Generator-Sektionen tragen jetzt ihren eigenen, geschlossenen Atlas (schliessen_r41.py) -
+     * vorher (R37..R40) zeichnete der Lader sie mit dem BSS-Atlas. Die alte Regel 53741fe5 (R15M nur mit eigenem Atlas)
+     * liesse damit keine mehr tot. */
+    CHECK("Stages 3..6: 30 Dateien, 216 Sektionen, alle mit dem eigenen (geschlossenen) Atlas (Runde 41)",
+          s36_dateien == 30 && s36_sekt == 216 && s36_eigen == 216 && s36_bss == 0);
+    CHECK("alte Regel 53741fe5 liesse keine Stage-3..6-Sektion mehr tot (eigener Atlas vorhanden)", s36_alt_tot == 0);
+    CHECK("Gegenprobe Trennschaerfe: wo beide Atlanten vorliegen, faellt der falsche durch (Freistellungen, >= 5 Sektionen)",
           gegen_n >= 5 && gegen_faellt == gegen_n);
 }
 
@@ -1311,7 +1543,7 @@ static void such_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri0, const
     (void) E0; (void) ctx;
     if ((raum & 1u) || (raum >> 12) < 3 || (g_such_stage && (int) (raum >> 12) != g_such_stage)) return;
     re15_masken36_filter(raum, cut, &pri);
-    if (!atlas_bss(raum, cut, &bss)) return;
+    if (!atlas_generator(raum, cut, &bss)) return;
     if (!raum_laden(&R2, raum) || re15_camera_build_view(&R2.rdt.cuts[cut], &v) != 0) { free(bss.roh); free(R2.roh); return; }
     kamera_ort(&v, cam);
     has_q = re15_rdt_get_region_quad(&R2.rdt, cut, qx, qz);
@@ -1377,7 +1609,7 @@ static int teil_punkt(unsigned r, int c, int x, int z, int b)
     snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, re15_pri_masken_raum(r));
     msk = slurp(p, &mn);
     if (!msk || !(off = re15_pri_msk_section_offset(msk, mn, c)) || re15_pri_parse_section(msk, mn, off, &pri) <= 0
-        || !atlas_bss(r, c, &bss) || !raum_laden(&R, r) || re15_camera_build_view(&R.rdt.cuts[c], &v) != 0) {
+        || !atlas_generator(r, c, &bss) || !raum_laden(&R, r) || re15_camera_build_view(&R.rdt.cuts[c], &v) != 0) {
         printf("FEHLER\n"); return 1;
     }
     idx = (const uint8_t *) bss.tim.pixels;
@@ -1394,7 +1626,9 @@ static int teil_punkt(unsigned r, int c, int x, int z, int b)
                     int ax = q->srcX + u, ay = q->srcY + w, tx = dx + u, ty = dy + w;
                     if (ax >= bss.tim.width || ay >= bss.tim.height || tx < 0 || ty < 0 || tx >= 320 || ty >= 240) continue;
                     if (!idx[ay * bss.tim.width + ax]) continue;
-                    if (q->depth < tief[g][ty][tx]) { tief[g][ty][tx] = q->depth; welch[g][ty][tx] = (int16_t) m; }
+                    {   int dq = q->depth, t41 = g == 1 ? re15_masken36_tiefe_r41_wert(re15_pri_masken_raum(r), c, m) : -1;
+                        if (t41 >= 0) dq = t41;   /* Runde 41: "Tabelle" = wie der Lader (Tiefe + Ausschluss) */
+                        if (dq < tief[g][ty][tx]) { tief[g][ty][tx] = (uint16_t) dq; welch[g][ty][tx] = (int16_t) m; } }
                 }
         }
     }
@@ -1467,7 +1701,8 @@ int main(int argc, char **argv)
                     for (c = 0; c < ncut; c++) {
                         re15_pri_cut_t pri; atlas_t eig; uint32_t off = re15_pri_msk_section_offset(msk, mn, c); int roh;
                         if (!off || re15_pri_parse_section(msk, mn, off, &pri) <= 0) continue;
-                        if (atlas_eigen(raum, c, &eig)) { free(eig.roh); continue; }
+                        if (!atlas_generator(raum, c, &eig)) continue;
+                        free(eig.roh);
                         roh = pri.draw_count;
                         re15_masken36_filter(re15_pri_masken_raum(raum), c, &pri);
                         printf("SOLL %04X %d %d %d\n", raum, c, roh, pri.draw_count);
@@ -1507,7 +1742,7 @@ int main(int argc, char **argv)
         snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, re15_pri_masken_raum(r));
         msk = slurp(p, &mn);
         if (!msk || !(off = re15_pri_msk_section_offset(msk, mn, c)) || re15_pri_parse_section(msk, mn, off, &pri) <= 0
-            || !atlas_bss(r, c, &bss) || !raum_laden(&R, r) || re15_camera_build_view(&R.rdt.cuts[c], &v) != 0) {
+            || !atlas_generator(r, c, &bss) || !raum_laden(&R, r) || re15_camera_build_view(&R.rdt.cuts[c], &v) != 0) {
             printf("FEHLER\n"); return 1;
         }
         idx = (const uint8_t *) bss.tim.pixels;
@@ -1580,7 +1815,7 @@ int main(int argc, char **argv)
         snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, re15_pri_masken_raum(r));
         msk = slurp(p, &mn);
         if (!msk || !(off = re15_pri_msk_section_offset(msk, mn, c)) || re15_pri_parse_section(msk, mn, off, &pri) <= 0
-            || mz < 0 || mz >= pri.draw_count || !atlas_bss(r, c, &bss) || !raum_laden(&R, r)
+            || mz < 0 || mz >= pri.draw_count || !atlas_generator(r, c, &bss) || !raum_laden(&R, r)
             || re15_camera_build_view(&R.rdt.cuts[c], &v) != 0) {
             printf("FEHLER\n"); return 1;
         }
@@ -1671,6 +1906,8 @@ int main(int argc, char **argv)
     else if (!strcmp(teil, "ausschluss")) teil_ausschluss();
     else if (!strcmp(teil, "verdeckung")) teil_verdeckung();
     else if (!strcmp(teil, "erzeuge") && argc > 2) teil_erzeuge(argv[2]);
+    else if (!strcmp(teil, "erzeuge_tiefe") && argc > 2) teil_erzeuge_tiefe(argv[2]);   /* Runde 41 Spur M (Werkzeug) */
+    else if (!strcmp(teil, "tiefe")) teil_tiefe();                                        /* Runde 41 Spur M (Riegel) */
     else { teil_zensus(); teil_ausschluss(); teil_verdeckung(); }
     printf(g_fail ? "FAIL\n" : "OK\n");
     return g_fail;

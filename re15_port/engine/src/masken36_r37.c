@@ -24,6 +24,7 @@
 #include <string.h>
 #include "re15_pri.h"
 #include "re15_masken36_r37.h"
+#include "re15_masken36_r41.h"   /* Runde 41 Spur M */
 
 typedef struct {
     uint16_t raum;        /* Raum-Id der MSK-Datei (re15_pri_masken_raum) */
@@ -50,6 +51,7 @@ int re15_masken36_filter(unsigned masken_raum, int cut, re15_pri_cut_t *pri)
 {
     int i, n = 0, d = 0;
     if (!pri) return 0;
+    re15_masken36_tiefe_r41(masken_raum, cut, pri);   /* Runde 41 Spur M: Tiefe aus der Erreichbarkeit (masken36_r41.c), VOR dem Ausschluss */
     for (i = 0; i < pri->mask_count; i++) {
         if (re15_masken36_ausgeschlossen(masken_raum, cut, i)) continue;
         if (i < pri->draw_count) d++;
