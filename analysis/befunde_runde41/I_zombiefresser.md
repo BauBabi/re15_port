@@ -276,6 +276,78 @@ I-E2: Laden IN 2000/2001 ohne Zombies -> Spur I). Vorliegende Messungen/Belege d
 
 | Mangel | Status |
 |---|---|
-| M1 RE1.5-KI: Liegepose vor dem Wecken Clip 0x12 f0 statt INIT-Pose 0x0c/0x0e f0 (auch 0x87/0x88) | in Arbeit |
+| M1 RE1.5-KI: Liegepose vor dem Wecken Clip 0x12 f0 statt INIT-Pose 0x0c/0x0e f0 (auch 0x87/0x88) | Belege 8.1, Umsetzung folgt |
 | V1 Vertrag | erledigt durch Orchestrator-Entscheid I-E1 |
-| I-E2 Laden in 2000/2001 -> keine Zombies | in Arbeit |
+| I-E2 Laden in 2000/2001 -> keine Zombies | Belege 8.2, Umsetzung folgt |
+
+### 8.1 M1 — RE1.5-KI: Liegepose vor dem Wecken (gilt fuer 0x84/0x85 UND 0x87/0x88)
+
+**Ursache (Port):** der Port hat fuer +0x94 und die angezeigte Pose EIN Feld (`motion`) und posiert jedes Bild aus
+(`motion`, `anim_frame`). Im Original ist die Pose aber der Zustand des Skeletts, den nur ein `f314`-Aufruf aendert:
+INIT posiert per `f314` Clip 0x0c/0x0e Bild 0 und schreibt DANACH `+0x94 = 0x12/0x13` OHNE `f314`; P0/P1 rufen kein
+`f314` — das Skelett bleibt bis zum ersten `f314` in P2 auf Clip 0x0c/0x0e Bild 0. Der Port zeigte Clip 0x12/0x13 Bild 0.
+
+**Messung vorher:** Abnahme S5 (`abn/s5_re15_3000`, state.log `st=1 ss1=0 ss2=0 g=84 mo=18 af=0` = Keyframe 0x190) —
+nicht wiederholt.
+
+**Belege** (STAGE2-Zitate selbst disassembliert von der Abnahme, I_abnahme_0.md §2 / §6.2 M1; hier NEU dazu):
+```
+STAGE2 (re15_disasm.py --bin STAGE2.BIN dis 0x80100b20):
+80100b24  jal 0x8001f314 (a1 = lw 364 = +0x16c, a3 = 0x100)       ; Vor-Pose aus Bank 0 (vor dem Decoder)
+80100b40  andi v0,v1,0x80 / 80100b44 beq v0,zero,0x80100cc4       ; Tor Bit 0x80
+80100b4c..b74  sel {4,7,9}  -> ori v0,zero,0xc / sb v0,148(v1)     ; +0x94 = 0x0c
+80100b90..bb8  sel {5,8,a}  -> ori v0,zero,0xe / sb v0,148(v1)     ; +0x94 = 0x0e
+80100bd4..bfc  sel {1,3}    -> +0x94 = 0x0c, +0x5 = 5               ; (kein FINAL -> nicht betroffen)
+80100c0c  sb zero,149 / 80100c1c sb zero,143                      ; +0x95 = 0, +0x8f = 0
+80100c28  addu a2,zero,zero / c2c lw a0,368 / c30 lw a1,372 / c34 jal 0x8001f314 / c38 ori a3,zero,0x200
+80100c54..c7c  sel {4,7,9}  -> sb 0x12,148 ; 80100c98..cc0 sel {5,8,a} -> sb 0x13,148   (FINAL, ohne f314)
+STAGE1 dieselbe Folge: 80100d78 sb zero,149 / 80100d88 sb zero,143 / 80100d94 addu a2,zero,zero /
+       80100d98 lw a0,368 / 80100d9c lw a1,372 / 80100da0 jal 0x8001f314 / 80100da4 ori a3,zero,0x200; FINAL ab 80100dbc
+STAGE3: 80100e64 sb zero,149 / 80100e74 sb zero,143 / 80100e8c jal 0x8001f314 / 80100e90 ori a3,zero,0x200; FINAL ab 80100ea8
+```
+- FUN_8001f3bc (RE_15_Quellcode_V2/FUN_8001f3bc.c): `+0x8f == 0` -> Keyframe DIREKT (Wurzel + Winkel kopiert, RotMatrix);
+  danach `+0x95 += 1`, `if (param_4 <= +0x95) +0x95 = 0` -> bei einem 1-Bild-Clip steht +0x95 wieder auf 0 (passt zum
+  Original-RAM in Ruhe `+0x95 = 0`, Dossier 2.1b). P1 setzt `+0x8f = 0xf` (@0x80103998), P2 ruft `f314(+0x170,+0x174,0,0x100)`
+  (@0x801039a8): Zweig `+0x8f != 0` mischt Alt-Pose (Gewicht `0x100 * +0x8f` = 0xf00/0x1000) mit dem neuen Bild und
+  zaehlt +0x8f herunter (FUN_80020510) — der Aufsteh-Clip blendet also aus Clip 0x0c/0x0e Bild 0 heraus.
+- Bankdaten (CDEMD0.EMS, Bank 1 = dir[3]/dir[4], `tools/r41_zombiefresser/clip_hoehe.py lade(typ,1)`, eigener Lauf), fuer
+  ALLE Zombie-Typen 0x10/0x11/0x12/0x16/0x18 wortgleich:
+  `Clip 0x0c n=1 f0 = 0x0000012d (Hoehe -234)`, `Clip 0x0e n=1 f0 = 0x00000149 (-437)`,
+  `Clip 0x12 n=98 f0 = 0x00000190 (-457)`, `Clip 0x13 n=120 f0 = 0x000001c2 (-590)`.
+  => Soll vor dem ersten P2-`f314`: Keyframe 0x12d (sel 4/7/9 = 0x84/0x87/0x89) bzw. 0x149 (sel 5/8/a = 0x85/0x88/0x8a).
+- Port-Blende: skeleton_common.c `re15_skel_compute_pose` mischt `prev_angles` (= zuletzt GEZEICHNETE Pose) mit
+  Gewicht `anim_frac * anim_blend_rate` — dieselbe Formel wie FUN_8001f3bc; zeigt der Port bis P2 Clip 0x0c/0x0e Bild 0,
+  blendet P2 (anim_frac 0xf, Rate 0x100) automatisch aus dieser Pose heraus.
+
+### 8.2 I-E2 — LADEN in ROOM2000/2001: keine Zombies
+
+**Messung vorher** (Abnahme S8, nicht wiederholt; debug.log selbst gelesen): `abn/s8_laden2000/debug.log`
+```
+[scd] thread start slot=0 first_op=0x3B      ; main00
+[save] CONTINUE: resumed in room 2000 (hp=100)
+[scd] thread start slot=10 first_op=0x3A     ; sub07 (Sce_espr_on), gestartet von main00 Evt_exec @0x0177c
+                                             ; KEIN slot=1 -> sub00 (Spawns @0x017cc/@0x017e0) laeuft nie
+```
+Tuerweg (Abnahme S1, `abn/s1_tuer2000/debug.log`): `slot=0 first_op=0x3B`, `slot=1 first_op=0x06` (sub00 @0x01794 `If`),
+`slot=10 first_op=0x3A`.
+
+**Zensus** (eigenes Skript `scratchpad/I41nb1/main00_evt.py`, Walker aot_sce_census.py): Evt_exec im main00 haben nur
+1021 (@0x01e1e, in If), 1031 (@0x0200e/02072/020a2/020b2, in If), 1170 (@0x012bc sub03, @0x012ec sub11 = Erzaehler),
+**2000 (@0x0177c `04 ff 18 07`, UNBEDINGT)**, **2001 (@0x0177c `04 ff 18 08`, UNBEDINGT)**, 4010, 4031, 5011 (je in If).
+
+**Original** (ghidra1_V2.txt FUN_8003ef6c = SCD-Raum-Init, einziger Aufrufer FUN_800396fc @0x80039a00):
+```
+8003efa0 lw v0,0x40(v0) / 8003efac sw v0,DAT_800b3f70 / 8003efb0 jal FUN_8003ee3c (a0 = 0 @8003ef94, a1 = 0 @8003efb4) ; Slot 0 = main00
+8003efc0 ori a0,zero,0x1 / 8003efc4 lw v0,0x44(v0) / 8003efd0 sw v0,DAT_800b3f70
+8003efd4 jal FUN_8003ee3c / 8003efd8 _clear a1                                                          ; Slot 1 = sub00
+8003f018 jal FUN_8003f0a0                                                                               ; Init-Lauf
+```
+ohne jede Bedingung zwischen Slot 0 und Slot 1. FUN_800396fc hat genau zwei Aufrufer: LADEN/Session-Start
+`8001d5ac: jal 0x800396fc` (eigener Lauf `re15_disasm.py dis 0x8001d594`, Ghidra hat den Bereich nur als Daten) und Tuer
+`8001d988 jal FUN_800396fc` (ghidra1_V2.txt:95878). => Im Original laeuft sub00 beim LADEN genau wie beim Tuerweg.
+
+**Port-Ursache:** platform/pc/main.c, Boot-/LADE-Pfad nach dem main00-Init-Tick: "laeuft irgendein Ereignis-Thread ->
+Pre-Intro -> sub00 zurueckhalten" (seit aa346af1, fuer den 1170-Erzaehler). Der Tuerweg (main.c, Raumwechsel-Block
+"PRE-INTRO-Kette UEBER Raeume") ist seit dem Irons-Befund bereits auf ROOM1170 eingegrenzt ("the sole room whose main00
+spawns the narrator sub11 into an event slot"); der Boot-Pfad nicht. In 2000/2001 startet main00 UNBEDINGT sub07/sub08
+-> Fehlerkennung -> sub00 nie (die Rueckfall-Neubetretung feuert erst beim Ende des Threads/Bildgrenze).
