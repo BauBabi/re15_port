@@ -441,3 +441,20 @@ Folgen (Umsetzung Spur C): Bedingung des Ventilraetsels = Bruecke unten (Bit 102
 (Item-Taken-Bit der Sicherung aus dem RDT-Zensus belegen — nicht "im Inventar", denn sie kann schon in 2060 eingesetzt
 sein). Vorher an den Ventilen ein kurzer Port-Text (Id aus 2030 40-49, Wortlaut als Vorschlag). Riegel: ohne Sicherung kein
 Ventilraetsel, mit Sicherung ja; ganzer Ablauf zu Fuss (Leon UND Elza).
+
+## 2026-10-24 10:50 — Orchestrator-Entscheide E-E1..E-E3 (Abnahme E 2; der Nutzer kann widersprechen)
+
+- **E-E1 (Mangel 3, Vertrag):** Die spielweit wirkenden Haken der Spur E (Bildreihenfolge Spiel-Task @0x80020de4 vor
+  Nachrichten-Takt @0x80020f3c/@0x80010044; Message_on kehrt zurueck @0x80040520, Freeze ueber @0x8003f040; Apply-Bild nicht
+  praesentiert @0x80021558/@0x80021560) sind angenommen, weil sie das Original nachbilden — in scd_vm.c, main.c, render_pc.c,
+  msg_common.c, player_common.c, re15_inv_screen.c je klein und markiert. Bedingung: Bei der Integration laufen alle
+  Nachrichten-/Szenen-/Tuer-Riegel (msg, scd, cut, door, szene, karte) mit; Konflikte mit C/F/G (op_message_on) und D
+  (render_pc.c, main.c) werden dort beidseitig geloest.
+- **E-E2 (Maengel 1/2, Renn-Stopp):** Der Renn-Stopp des Originals (0x80032604 @0x8003272c/@0x80032730-760, 0x80032778
+  @0x800328f8-95c) wird SPIELWEIT eingebaut (Stand 635be823 als Ausgang). unit_r36_zombieki_affen_block (Runde 36 Spur F,
+  Seed 0x67be2dfd) ist neu einzumessen: erst belegen, WAS die Sonde misst und warum der Renn-Stopp den Wert aendert; die neue
+  Schranke nur aus einer Messung mit Beleg, nicht "gruen gemacht". Der Riegel integration_r41_kleinkram_b_renn wird auf die
+  Original-Lage nach dem Auslaufen umgestellt (Original o_renn2 n93-n99: 6 Bilder, Kurbeln bei (3650,-3369)).
+- **E-E3 (Mangel 4, Softlock):** Im gehaltenen Apply-Bild laeuft der Blenden-Takt weiter (Original: @0x80020f44 vor dem
+  Present @0x80020f4c) — re15_fade_tick auch im gehaltenen Bild; Riegel: Raumeintritt ROOM2020 auf der Kante (9000,-3200)
+  blendet ein (pf-Rampe wie VORHER bis F10), Spieler steuerbar.
