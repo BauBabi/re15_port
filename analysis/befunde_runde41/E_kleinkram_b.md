@@ -596,3 +596,18 @@ exe md5 486f77a7d870cf73c1bdf542bf40cbfb).
 - Frage: Was genau war das "Herumfliegen"? Moeglich sind (a) der Sprung an die Kurbel nach dem "Yes" (im Original genauso,
   dort hinter ~1/4 s Standbild), (b) das Einfrieren nach einer Kurbel-Umdrehung (behoben in Nachbesserung 1), (c) etwas
   anderes. Wenn (c): bitte die Stelle (gerannt/gegangen/gestanden, welche Waffe) oder ein Bild (F9).
+
+## Nachbesserung 3 (nach Abnahme 2, 2026-10-24)
+Grundlage: `E_abnahme_2.md` §7 Maengel 1-4 (+ Hinweise H1-H7) und die Orchestrator-Entscheide E-E1..E-E3 (AUFTRAG.md
+2026-10-24 10:50). Stand bei Beginn: HEAD 96f1f7f2 (Code = 11b8f867, exe md5 486f77a7...). Laeufe unter `<sp>/E41n3/`
+(`<sp>` = Scratchpad dieser Sitzung). Vorliegende Messungen (Abnahme 2 §3, Dossier Nachbesserung 2) werden zitiert, nicht
+wiederholt.
+
+Reihenfolge: (1) Mangel 4 / E-E3 Blenden-Takt im gehaltenen Bild (Softlock), (2) Mangel 1/2 / E-E2 Renn-Stopp spielweit +
+Gorilla-Sonde neu eingemessen + Riegel renn auf (3650,-3369), (3) Mangel 3 / E-E1 Vertrag (Entscheid liegt vor) +
+Integrations-Bedingung (msg/scd/cut/door/szene/karte-Riegel mitgefahren).
+
+### Status Nachbesserung 3
+- [ ] Mangel 4 / E-E3 Blenden-Takt im gehaltenen Bild
+- [ ] Mangel 1/2 / E-E2 Renn-Stopp spielweit, Gorilla-Sonde, Riegel renn
+- [ ] Mangel 3 / E-E1 Vertrag + Integrations-Riegel
