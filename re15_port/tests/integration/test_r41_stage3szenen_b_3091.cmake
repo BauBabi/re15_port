@@ -10,6 +10,10 @@
 # = Slot 1 (@0x80042f3c) -> sub01 Cmp == 1 -> sub02 -> Ck(9,21) -> sub07. Nachrichten mit Kreuz alle 30 Bilder.
 # Ausgewertet von test_r41_stage3szenen_b szene <anim.txt> <debug.log>: Binder-Zeilen (Spieler rec2 / John rec1 / Elza-NPC
 # rec2) und die Sub-0-Clipfolge je Aktor gegen das ORIGINAL (DuckStation-GDB, K_belege/k2_orig_3091_gdb_lauf2.log.gz).
+# Nachbesserung 1: Sherrys Schleifen-Clip 13 Bild fuer Bild (M1). M2: Elza traegt vorher die Pistole (RE15_EQUIP=3) und
+# bekommt in jedem Raum bei Bild 100 Gift (RE15_R39_GIFT_AT, Messhaken zustand_r39.c) - beim Wechsel auf Sherry und beim
+# Rueckwechsel muss FUN_800314b0 wie im Original Waffe := @0x800c00d4[Modell] (0 / 1 Messer), HP := 100 (@0x80031718),
+# Status := 0 (@0x80031720) setzen.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_WERKZEUG=<test_r41_stage3szenen_b> -DWORKDIR=<dir> -P <diese Datei>
 # =============================================================================
 cmake_minimum_required(VERSION 3.16)
@@ -50,6 +54,7 @@ foreach(_versuch 1 2)
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
         RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1
         "RE15_SET_FLAG=4:8,9:21" "RE15_WORKVAR_AT=0x10:15@200" "RE15_DEBUG_JUMP=3090@250"
+        "RE15_EQUIP=3" "RE15_R39_GIFT_AT=100"
         "RE15_PLAYER_POS=-24665,1000,3072"
         "RE15_PAD_AT=${_pad}" RE15_ANIM_TRACE=anim.txt
         "RE15_EXIT_AT=30#30C1"

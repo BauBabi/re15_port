@@ -13,6 +13,8 @@
 #   integration_r41_stage3szenen_b_3091    echte exe, Riegeltuer 3091 -> sub07: Clipfolge je Aktor = Original (GDB-Lauf);
 #                                          Nachbesserung 1 (M1): Sherrys Schleifen-Clip 13 Bild fuer Bild = Original
 #   unit_r41_stage3szenen_b_marvin   Nachbesserung 1 (M3): Koerper bei jedem Neuladen (PL0D Marvin, gleiche W-Familie)
+#   integration_r41_stage3szenen_b_marvin  echte exe, ROOM3020 -> 30C0 als Marvin: Koerper PL0D (Knochen 10 = 485),
+#                                          Waffe 1 / HP 100 / Status 0 (Nachbesserung 1, M2/M3)
 #   unit_r41_stage3szenen_b_schleife Nachbesserung 1 (M1): Spieler-Clip-Ende im Kommandowort 4 (plcloop_r41.c, Spur E)
 #                                    mit der Laenge des Binder-Records (@0x8001b450), echte RBJ ROOM3091/ROOM2020
 add_executable(test_r41_stage3szenen_b
@@ -49,4 +51,13 @@ if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_stag
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_stage3szenen_b_3091_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_stage3szenen_b_3091.cmake)
     set_tests_properties(integration_r41_stage3szenen_b_3091 PROPERTIES TIMEOUT 2400)
+endif()
+if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_stage3szenen_b_marvin.cmake)
+    add_test(NAME integration_r41_stage3szenen_b_marvin
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_WERKZEUG=$<TARGET_FILE:test_r41_stage3szenen_b>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_stage3szenen_b_marvin_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_stage3szenen_b_marvin.cmake)
+    set_tests_properties(integration_r41_stage3szenen_b_marvin PROPERTIES TIMEOUT 900)
 endif()

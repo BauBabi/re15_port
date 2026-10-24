@@ -84,6 +84,8 @@ int re15_sherry_r41_ruestungswechsel(int alt, int neu)
 void re15_sherry_r41_modell_setzen(int modell)
 {
     int alt = s_modell;
+    int w0 = re15_player_equipped_weapon(), hp0 = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp;
+    unsigned st0 = (unsigned)g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags;
     s_modell = modell & 0x0F;
     if (alt >= 0 && !re15_sherry_r41_ruestungswechsel(alt, s_modell)) {
         /* FIGUREN-WECHSEL (Leon <-> Marvin ROOM3020 @0x00D7A / ROOM3060 @0x010D2, Elza <-> Sherry ROOM3061 @0x011F6 /
@@ -99,8 +101,9 @@ void re15_sherry_r41_modell_setzen(int modell)
         g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 100;
         g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags = 0;
     }
-    fprintf(stderr, "[sherry-r41] Spielermodell %d -> %d, Waffe (aca5d) %d, HP %d\n", alt, s_modell,
-            re15_player_equipped_weapon(), (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp);
+    fprintf(stderr, "[sherry-r41] Spielermodell %d -> %d, Waffe (aca5d) %d, HP %d, Status %04x (vorher Waffe %d, HP %d, "
+            "Status %04x)\n", alt, s_modell, re15_player_equipped_weapon(), (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp,
+            (unsigned)g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags, w0, hp0, st0);
 }
 
 int re15_sherry_r41_waffe_gesperrt(void) { return s_modell == RE15_SHERRY_R41_MODELL; }

@@ -465,6 +465,33 @@ static void t_sherry(const char *dlog, const char *slog)
     free(d); free(st);
 }
 
+/* Nachbesserung 1 (M2/M3): Leon -> Marvin 0x0D ueber den Raumlader (ROOM3020 @0x00D7A + Tuer Slot 2 @0x00B6E -> 30C0). */
+static void t_marvinlauf(const char *dlog)
+{
+    char *d = text(dlog);
+    CHECK(d != NULL, "debug.log lesbar");
+    if (!d) return;
+    int w, hp, w0, hp0, nk, nc, nw, y; unsigned st, st0;
+    const char *z = strstr(d, "[sherry-r41] Spielermodell 0 -> 13, ");
+    int n1 = z ? sscanf(z, "[sherry-r41] Spielermodell 0 -> 13, Waffe (aca5d) %d, HP %d, Status %x (vorher Waffe %d, HP %d, Status %x)",
+                        &w, &hp, &st, &w0, &hp0, &st0) : 0;
+    CHECK(n1 == 6 && w == 1 && hp == 100 && st == 0 && w0 == 3 && hp0 < 100 && (st0 & 2),
+          "Leon -> Marvin: Waffe %d (vorher %d; @0x800c00d4[13] = 1), HP %d (vorher %d; @0x80031718), Status %x (vorher %x; @0x80031720)",
+          n1 == 6 ? w : -1, n1 == 6 ? w0 : -1, n1 == 6 ? hp : -1, n1 == 6 ? hp0 : -1, n1 == 6 ? st : 0xffffu, n1 == 6 ? st0 : 0xffffu);
+    z = strstr(d, "[sherry-r41] Koerper -> Familie 76 (PL00): ");
+    int n2 = z ? sscanf(z, "[sherry-r41] Koerper -> Familie 76 (PL00): %d Knochen, %d Clips, W00 %d Clips, Wurzel-Bind y %d (Modell 13)",
+                        &nk, &nc, &nw, &y) : 0;
+    CHECK(n2 == 4 && nk == 15, "Raumlader bindet Marvins Koerper (EDD/EMR @0x8003154c/@0x80031578, PL0D) - %d Felder", n2);
+    /* letzter [bone]-Block (Bild 60 in ROOM30C0): Knochen 10 Bindelage (PL0D 485, Leon PL00 422) */
+    int rel10 = 99999;
+    for (char *p = strstr(d, "[bone] "); p; p = strstr(p + 1, "[bone] ")) {
+        int bi, rx, ry, rz;
+        if (sscanf(p, "[bone] %d: rel=(%d,%d,%d)", &bi, &rx, &ry, &rz) == 4 && bi == 10) rel10 = ry;
+    }
+    CHECK(rel10 == 485, "Knochen 10 in 30C0: rel y %d (Marvin PL0D 485, Leons Skelett 422)", rel10);
+    free(d);
+}
+
 /* Sub-0-Clipfolgen des ORIGINALS (k2_orig_3091.py, Lauf 2, 2953 Szenenbilder): Clip*2 (+1 = rueckwaerts, Plc_flg 0x80) */
 #define R(c) ((c) * 2 + 1)
 static const int k_soll_spieler[] = { 26, 24, R(12), 26, 22, R(11), 26, 22, R(11), 26, 24, R(12), 26, 24, R(12), 22, R(11), 26 };
@@ -559,6 +586,22 @@ static void t_szene(const char *anim_p, const char *dlog)
           strstr(d, "Typ 0x49 Marker-Slot 1 -> rec1") != NULL,
           "Binder (Spur J, FUN_8001b3f8): Spieler rec2, John rec1, Elza-NPC rec2 (= Original-RAM w180/w184)");
     CHECK(strstr(d, "[sherry-r41] Koerper -> Familie 118 (PL0F)") != NULL, "Spielfigur Sherry gebunden");
+    /* Nachbesserung 1 (M2): FUN_800314b0-Schwanz bei beiden Figurwechseln (Riegel: Pistole + Gift vorher) */
+    { int w, hp, w0, hp0; unsigned st, st0;
+      const char *z = strstr(d, "[sherry-r41] Spielermodell 4 -> 15, ");
+      int n1 = z ? sscanf(z, "[sherry-r41] Spielermodell 4 -> 15, Waffe (aca5d) %d, HP %d, Status %x (vorher Waffe %d, HP %d, Status %x)",
+                          &w, &hp, &st, &w0, &hp0, &st0) : 0;
+      CHECK(n1 == 6 && w == 0 && hp == 100 && st == 0 && w0 == 3 && hp0 < 100 && (st0 & 2),
+            "Elza -> Sherry: Waffe %d (vorher %d), HP %d (vorher %d), Status %x (vorher %x) - Soll 0 / 100 / 0 (@0x800316c4, "
+            "@0x80031718, @0x80031720)", n1 == 6 ? w : -1, n1 == 6 ? w0 : -1, n1 == 6 ? hp : -1, n1 == 6 ? hp0 : -1,
+            n1 == 6 ? st : 0xffffu, n1 == 6 ? st0 : 0xffffu);
+      z = strstr(d, "[sherry-r41] Spielermodell 15 -> 4, ");
+      int n2 = z ? sscanf(z, "[sherry-r41] Spielermodell 15 -> 4, Waffe (aca5d) %d, HP %d, Status %x (vorher Waffe %d, HP %d, Status %x)",
+                          &w, &hp, &st, &w0, &hp0, &st0) : 0;
+      CHECK(n2 == 6 && w == 1 && hp == 100 && st == 0 && w0 == 0 && hp0 < 100 && (st0 & 2),
+            "Sherry -> Elza (ROOM3091 @0x01D9C): Waffe %d = Messer (DEBUG.BIN @0x800c00d4[4]; vorher %d), HP %d (vorher %d), "
+            "Status %x (vorher %x)", n2 == 6 ? w : -1, n2 == 6 ? w0 : -1, n2 == 6 ? hp : -1, n2 == 6 ? hp0 : -1,
+            n2 == 6 ? st : 0xffffu, n2 == 6 ? st0 : 0xffffu); }
     int a[64], na;
     na = folge(anim, 0, a, 64); drucke("Spieler PORT", a, na);
     CHECK(gleich(a, na, k_soll_spieler, (int)(sizeof k_soll_spieler / sizeof k_soll_spieler[0])),
@@ -591,6 +634,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil_, "koerper") || !strcmp(teil_, "alle")) t_koerper();
     if (!strcmp(teil_, "schleife") || !strcmp(teil_, "alle")) t_schleife();
     if (!strcmp(teil_, "marvin")   || !strcmp(teil_, "alle")) t_marvin();
+    if (!strcmp(teil_, "marvinlauf") && argc > 2) t_marvinlauf(argv[2]);
     if (!strcmp(teil_, "sherry") && argc > 3) t_sherry(argv[2], argv[3]);
     if (!strcmp(teil_, "szene")  && argc > 3) t_szene(argv[2], argv[3]);
     printf("%s (%d Fehler)\n", g_fail ? "FEHLGESCHLAGEN" : "BESTANDEN", g_fail);
