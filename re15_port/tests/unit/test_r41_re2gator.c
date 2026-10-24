@@ -1213,6 +1213,31 @@ static int teil_schleppen(void)
     CHECK(q2 <= 2, "Fall 2: Kanister verlaesst die Blickachse (quer %d) - RE2 schiebt nur laengs (x unberuehrt)", q2);
     printf("schleppen: Fall 2 (+300 je Takt): Gier fest %d, Gator-Weg %d, Kanister-Weg %d (laengs, quer-Abweichung %d)\n",
            ok2, gw2, kw2, q2);
+    /* Fall 3 - Kanister SEITLICH im Fenster (quer 1200 < Koerperradius 1466 + 267): RE2 fuehrt nach dem Anhaengen nur x/y heran
+     * (Stufen 3-7 @0x801019b4-0x80101b8c), im Korridor liegt der Kanister 262 neben der Achse (sub05 Pos_set x -22816 @SCD 0x0484
+     * gegen Bein 2 x -23078 @0x80101048); der Port-Quer-Ausgleich fuehrt z mit den x-Schritten (70/145/100/100) auf 0 - am Ende
+     * liegt der Kanister wie in RE2 auf der Kopfachse (1750, -210, 0). */
+    {
+        if (!setup(1)) return 1;
+        leon_statue(-3000, -19000); tick(); intro_abwarten();
+        int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+        e->x = -3000; e->z = -24000; e->y = -1200; e->rot_y = 0;
+        re15_gr2_kanister_setzen(-3000 + (int32_t)(((int64_t)8800 * s) >> 12), -1200, -24000 + 1200);
+        int32_t l_anh[3] = {0, 0, 0}, l[3] = {0, 0, 0}; int anh = 0, nach7 = 0;
+        for (int f = 0; f < 200 && nach7 < 40; f++) {
+            leon_statue(-3000, -19000);
+            tick();
+            if (!anh && re15_gr2_kanister_lokal(l_anh)) anh = 1;
+            if (re15_gr2_kanister_stufe() == 7) nach7++;
+        }
+        int ok = re15_gr2_kanister_lokal(l);
+        CHECK(anh && (l_anh[2] > 1000 || l_anh[2] < -1000), "Fall 3: beim Anhaengen keine Querlage (lokal z %d)", l_anh[2]);
+        CHECK(ok && l[0] == RE15_GR2_KAN_LOKAL_X && l[1] == RE15_GR2_KAN_LOKAL_Y && l[2] == 0,
+              "Fall 3: Lokallage nach Stufe 7 + 40 Takte (%d,%d,%d) statt (1750,-210,0) - x/y @0x801019c4-0x80101b8c, z Quer-Ausgleich",
+              l[0], l[1], l[2]);
+        printf("schleppen: Fall 3 (quer 1200): Lokallage beim Anhaengen (%d,%d,%d) -> nach Stufe 7 + 40 Takte (%d,%d,%d)\n",
+               l_anh[0], l_anh[1], l_anh[2], l[0], l[1], l[2]);
+    }
     return fails ? 1 : 0;
 }
 

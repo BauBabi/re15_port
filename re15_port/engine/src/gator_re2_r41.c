@@ -557,11 +557,20 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
             g->ease_t = 0; s_kan.stufe = 3;                 /* @0x801018dc, 0x80101964-6c */
         }
         break; }
+    /* Nachbesserung 3 - QUER-AUSGLEICH (PORT-WAHL): RE2 fuehrt nach dem Anhaengen nur die Lokallage x
+     * (+0x38 -> 1750) und y (+0x3C -> -210) heran (Stufen 3-7 @0x801019b4-0x80101b8c, kein Schreiber auf +0x40) - die
+     * Querlage z bleibt, wie sie beim Anhaengen war. Im RE2-Korridor ist sie klein: der Kanister liegt nach dem Fall bei
+     * x -22816 (sub05 Pos_set @SCD 0x0484), der Gator schwimmt Bein 2 auf x -23078 (@0x80101048) = 262 neben der Achse, und
+     * das Fenster fragt nur laengs ab (@0x80100ae4-ec). Das Port-Fenster laesst den Kanister bis Koerperradius + 267 seitlich
+     * zu (s. Fenster oben, "dran vorbei kommt") - ohne Ausgleich hing er dann bis ~1600 neben dem Kopf (gemessen exe C3 NB3:
+     * lokal z 2372 = 1581 Welt). Port: z wird mit DENSELBEN Schritten wie x (70/145/100/100) auf die Symmetrieebene des
+     * Kopfes (z 0) gefuehrt, so endet der Kanister wie in RE2 zwischen den Kiefern. */
     case 3:                                                 /* @0x80101970: ease-in 6 (-140, -60) */
         g->kopf_az   = (int16_t)(g->kopf_az   + gr2_ease_in(6, g->ease_t, -140));
         g->kiefer_az = (int16_t)(g->kiefer_az + gr2_ease_in(6, g->ease_t, -60));
         g->ease_t++;
         gr2_annaehern(&s_kan.lokal[0], RE15_GR2_KAN_LOKAL_X, 70);             /* @0x801019c4-cc */
+        gr2_annaehern(&s_kan.lokal[2], 0, 70);                                /* NB3 Quer-Ausgleich (PORT-WAHL, s. Quer-Ausgleich vor case 3) */
         if (g->ease_t == 6) { g->ease_t = 0; s_kan.stufe = 4; }               /* @0x801019d0-d8, 0x80101b3c-54 */
         break;
     case 4:                                                 /* @0x801019dc: ease-out 6 */
@@ -569,6 +578,7 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         g->kiefer_az = (int16_t)(g->kiefer_az + gr2_ease_out(6, g->ease_t, -60));
         g->ease_t++;
         gr2_annaehern(&s_kan.lokal[0], RE15_GR2_KAN_LOKAL_X, 145);            /* @0x80101a30-38 */
+        gr2_annaehern(&s_kan.lokal[2], 0, 145);                               /* NB3 Quer-Ausgleich, Schritt wie x */
         gr2_annaehern(&s_kan.lokal[1], RE15_GR2_KAN_LOKAL_Y, 25);             /* @0x80101a4c-54 */
         if (g->ease_t == 6) { g->ease_t = 0; s_kan.stufe = 5; }
         break;
@@ -577,6 +587,7 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         g->kiefer_az = (int16_t)(g->kiefer_az + gr2_ease_in(7, g->ease_t, 100));
         g->ease_t++;
         gr2_annaehern(&s_kan.lokal[0], RE15_GR2_KAN_LOKAL_X, 100);            /* @0x80101ab8-c0 */
+        gr2_annaehern(&s_kan.lokal[2], 0, 100);                               /* NB3 Quer-Ausgleich, Schritt wie x */
         gr2_annaehern(&s_kan.lokal[1], RE15_GR2_KAN_LOKAL_Y, 55);             /* @0x80101ad4-dc */
         if (g->ease_t == 7) { g->ease_t = 0; s_kan.stufe = 6; }
         break;
@@ -588,6 +599,7 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         break;
     case 7:                                                 /* @0x80101b58: halten */
         gr2_annaehern(&s_kan.lokal[0], RE15_GR2_KAN_LOKAL_X, 100);            /* @0x80101b68-70 */
+        gr2_annaehern(&s_kan.lokal[2], 0, 100);                               /* NB3 Quer-Ausgleich, Schritt wie x */
         gr2_annaehern(&s_kan.lokal[1], RE15_GR2_KAN_LOKAL_Y, 30);             /* @0x80101b84-8c */
         break;
     default: break;
@@ -1708,6 +1720,12 @@ void re15_gr2_kanister_setzen(int32_t x, int32_t y, int32_t z)
 }
 void re15_gr2_kanister_entfernen(void) { memset(&s_kan, 0, sizeof s_kan); }
 int  re15_gr2_kanister_stufe(void) { return s_kan.aktiv ? (int)s_kan.stufe : -1; }
+int  re15_gr2_kanister_lokal(int32_t l[3])
+{
+    if (!s_kan.aktiv || !s_kan.angehaengt) return 0;
+    l[0] = s_kan.lokal[0]; l[1] = s_kan.lokal[1]; l[2] = s_kan.lokal[2];
+    return 1;
+}
 int  re15_gr2_kanister_welt(int32_t pos[3], int32_t rot[9])
 {
     if (!s_kan.aktiv) return 0;

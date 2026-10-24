@@ -145,6 +145,9 @@ uint8_t re15_gr2_ereignis(int slot);                      /* +0x227 (Messhaken) 
 void re15_gr2_kanister_setzen(int32_t x, int32_t y, int32_t z);
 void re15_gr2_kanister_entfernen(void);
 int  re15_gr2_kanister_stufe(void);                       /* +0x226: 0 frei .. 7 getragen, 13 explodiert, -1 keiner */
+/* Messhaken (Nachbesserung 3): Lokallage des angehaengten Kanisters zur Part-6-Matrix (1x-Rig, obj[1]+0x38/+0x3C/+0x40 nach
+ * dem Anhaengen @0x801018f8-918); 0 = nicht angehaengt. */
+int  re15_gr2_kanister_lokal(int32_t l[3]);
 /* Lage fuer den Zeichner: 1 = sichtbar; pos = Welt, rot = Q12 3x3 (Welt). */
 int  re15_gr2_kanister_welt(int32_t pos[3], int32_t rot[9]);
 /* Umgebungs-Haken einmal auswerten (RE15_GATOR_KANISTER). */
