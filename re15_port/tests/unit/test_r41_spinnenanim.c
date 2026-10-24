@@ -16,6 +16,8 @@
  *          Original in den Wand-Takten 93..132 und im Umbruchtakt 93 (Beweis, dass A1-A3 die Mechanik messen)
  *       A5 Schatten +-1300 x +-1400 (FUN_8001af5c @0x80110d90) auf der Boden-Referenz +0x1ba (@0x80110b4c): an der Wand
  *          auf dem Boden (vorher 500 x 600 auf der Figur-Hoehe, also in der Luft)
+ *  C  ROOM20A0 (zweite Schachtspinne, RE1.5- und RE2-KI) gegen die Runde-38-Messung orig_20a0_schacht.txt: Logik,
+ *     gezeichnetes Bild, Figur-Matrix (RotMatrix(rot Original) x 0xccc), Schatten-Hoehe je Takt
  *  B  Spucken nach der Landung (RE1.5-KI): Spawnlage des Giftklumpens == Original (5741,-320,4049)
  *     (R38 orig_2060_schacht_gift.txt Bild 136: Teil-0-Weltmatrix *(+0x188)+0x40 @0x80112770 + (500,0,0) @0x80118ee8)
  *  pruef_log <datei>: Auswerter fuer die Messzeilen der echten exe (RE15_SPINNENANIM_LOG, integration_r41_spinnenanim).
@@ -98,6 +100,12 @@ static const orig_t *orig_takt(int K)
     for (int i = 0; i < s_orig_n; i++) if (s_orig[i].takt == K) return &s_orig[i];
     return NULL;
 }
+/* ROOM20A0 (zweite Schachtspinne, floor 3, Runde-38-Messung orig_20a0_schacht.txt): rel Takt seit Phase 1. */
+typedef struct { int rel, zustand, phase; int16_t rot[3]; int clip, bild_nach; int32_t y; int boden; } orig20a0_t;
+static const orig20a0_t s_o20a0[] = {
+#include "test_r41_spinnenanim_20a0.inc"
+};
+static const int s_o20a0_n = (int)(sizeof s_o20a0 / sizeof s_o20a0[0]);
 /* EM025-Cliplaengen (spinnen_r38.c, CDEMD0.EMS Blob 10): Clip 16 = 32, 13 = 32, 2 = 16, 0 = 16. */
 static int clip_laenge(int c) { return (c >= 0 && c < 17) ? re15_spinnen_r38_em025_clip_len[c] : 1; }
 /* Original: gezeichnetes Bild = +0x95 VOR dem Takt = (Bild nach - 1) mod Laenge (FUN_8001f3bc @0x8001f610-3c). */
@@ -167,12 +175,15 @@ static int bank_re15(uint8_t type)
     return 1;
 }
 
-static int raum2060(re15_ai_flavor_t fl)
+static int raum_laden(const char *datei, unsigned id, re15_ai_flavor_t fl, int32_t px, int32_t py, int32_t pz,
+                      int16_t prot, uint8_t band, uint8_t cut)
 {
     size_t n = 0;
+    char pfad[512];
+    snprintf(pfad, sizeof pfad, "%s/%s", RE15_ASSET_PSX_DIR, datei);
     free(s_rdt_buf);
-    s_rdt_buf = slurp(RE15_ASSET_PSX_DIR "/STAGE2/ROOM2060.RDT", &n);
-    if (!s_rdt_buf) { printf("RDT fehlt\n"); return 0; }
+    s_rdt_buf = slurp(pfad, &n);
+    if (!s_rdt_buf) { printf("RDT fehlt: %s\n", pfad); return 0; }
     memset(&g_room_rdt, 0, sizeof g_room_rdt);
     if (re15_rdt_parse(s_rdt_buf, n, &g_room_rdt) != 0) return 0;
     g_room_rdt_ok = 1;
@@ -194,19 +205,24 @@ static int raum2060(re15_ai_flavor_t fl)
     re15_spinnen_r38_reset();
     re15_spinnenanim_r41_reset();
     g_engine.frame_count = 0;
-    g_current_room_id = 0x2060;
+    g_current_room_id = id;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0; pl->status_flags = 0;
-    pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
-    pl->x = 7600; pl->z = 3950; pl->rot_y = 2048;
+    pl->state = 0; pl->motion = 0; pl->floor = band; pl->y = py;
+    pl->x = px; pl->z = pz; pl->rot_y = prot;
     re15_player_apply_hitbox(pl);
-    re15_collision_set_band(0);
+    re15_collision_set_band(band);
     re15_inv_load_briefing();
-    scd_room_reenter(&s_rdt, 7600, 3950, 0);
-    pl->x = 7600; pl->y = 0; pl->z = 3950; pl->rot_y = 2048;
+    scd_room_reenter(&s_rdt, px, pz, cut);
+    pl->x = px; pl->y = py; pl->z = pz; pl->rot_y = prot;
     if (fl == RE15_AI_FLAVOR_RE2) { (void)bank_re2(0x25); (void)bank_re2(0x26); }
     else                          { (void)bank_re15(0x25); }
     return 1;
+}
+/* ROOM2060 wie Tuer 2030 -> 2060 (Lage (7600,0,3950), Cut 0). */
+static int raum2060(re15_ai_flavor_t fl)
+{
+    return raum_laden("STAGE2/ROOM2060.RDT", 0x2060, fl, 7600, 0, 3950, 2048, 0, 0);
 }
 
 /* Gezeichneter Wurzelteil der Spinne wie platform/pc/main.c (Pose-Klammer + Figur-Matrix): Weltmatrix W = M x R0,
@@ -396,6 +412,63 @@ static void teil_a(re15_ai_flavor_t fl, const char *name)
     (void)re2; (void)halt_e;
 }
 
+/* ============================== C ============================== */
+/* ROOM20A0: dieselbe Phasenmaschine @0x80114ec8 an der zweiten Schachtspinne (floor 3, y -5400, Gier -1024), Original
+ * R38 orig_20a0_schacht.txt (Spieler (21500,-3600,-24000), Cut 4). Je Takt: Logik (Phase/Drehung/Clip/Bild) == Original,
+ * gezeichnetes Bild = +0x95 vor dem Takt, Figur-Matrix = RotMatrix(rot des Originals) x 0xccc (Regel FUN_8001e8c8, in
+ * ROOM2060 gegen das RAM belegt: A1), Schatten-Hoehe == +0x1ba des Originals. */
+static void teil_c(re15_ai_flavor_t fl, const char *name)
+{
+    printf("\n== C %s: ROOM20A0, zweite Schachtspinne (Original R38 orig_20a0_schacht.txt, %d Takte)\n", name, s_o20a0_n);
+    if (!raum_laden("STAGE2/ROOM20A0.RDT", 0x20A0, fl, 21500, -3600, -24000, 0, 2, 0)) { s_fails++; return; }
+    re15_actor_t *e = spinne_bei(22600, -29000);
+    CHECK(e != NULL && e->grid_id == 0x41, "%s: Schachtspinne (22600,-5400,-29000) grid 0x41 gespawnt (Sce_em_set ROOM20A0)", name);
+    if (!e) return;
+    zug_t z;
+    for (int f = 0; f < 40; f++) { bild(); (void)zeichnen(e, &z); g_engine.frame_count++; }
+    g_scd.work_vars[0x0A] = 4;                                  /* angezeigter Cut 4 wie die Original-Messung */
+    int T = -1, n = 0, logik = 0, bild_gl = 0, mat_gl = 0, schatten_gl = 0, wand = 0;
+    for (int f = 0; f < 140; f++) {
+        bild();
+        int ok = zeichnen(e, &z);
+        g_engine.frame_count++;
+        if (T < 0 && e->sub_state_3 == 1) T = f;
+        if (T < 0 || !ok) continue;
+        int rel = f - T;
+        if (rel >= s_o20a0_n) break;
+        const orig20a0_t *o = &s_o20a0[rel];
+        if (o->rel != rel) continue;
+        n++;
+        int clip_port = e->motion;
+        if (fl == RE15_AI_FLAVOR_RE2) clip_port = (clip_port == 15) ? 16 : (clip_port == 14) ? 13 : clip_port;
+        if (((e->rot_x & 0xfff) == (o->rot[0] & 0xfff)) && ((e->rot_y & 0xfff) == (o->rot[1] & 0xfff))
+            && ((e->rot_z & 0xfff) == (o->rot[2] & 0xfff)) && (o->zustand != 4 || (e->sub_state_3 == o->phase
+            && clip_port == o->clip && e->anim_frame == o->bild_nach)))
+            logik++;
+        else printf("   20A0 rel %d: Port Phase %d Clip %d Bild %d rot (%d,%d,%d) / Original Phase %d Clip %d Bild %d rot (%d,%d,%d)\n",
+                    rel, e->sub_state_3, clip_port, e->anim_frame, e->rot_x, e->rot_y, e->rot_z, o->phase, o->clip,
+                    o->bild_nach, o->rot[0], o->rot[1], o->rot[2]);
+        if (o->zustand == 4 || rel == s_o20a0_n - 1) {           /* bis einschliesslich Landetakt (Phase 8) */
+            int fc = clip_laenge(o->clip), ob = (o->bild_nach + fc - 1) % fc;
+            if (z.bild == ob) bild_gl++;
+            else printf("   20A0 rel %d: gezeichnet Bild %d / Original %d\n", rel, z.bild, ob);
+        } else bild_gl++;
+        int32_t R[9]; re15_skel_euler_matrix(o->rot[0], o->rot[1], o->rot[2], R);   /* RotMatrix-Zwilling (unit_rotmatrix) */
+        int mg = 1; for (int k = 0; k < 9; k++) if (z.M[k] != ((R[k] * RE15_SPINNENANIM_R41_MASSSTAB) >> 12)) mg = 0;
+        if (mg) mat_gl++;
+        if ((o->rot[2] & 0xfff) == 1024 && mg) wand++;
+        int32_t sy = e->y; re15_spinnenanim_r41_schatten_y(e, &sy);
+        if (sy == o->boden) schatten_gl++;
+    }
+    int wand_soll = 0; for (int i = 0; i < s_o20a0_n; i++) if ((s_o20a0[i].rot[2] & 0xfff) == 1024) wand_soll++;
+    CHECK(T >= 0 && n == s_o20a0_n, "%s: 20A0-Ablauf erfasst (%d/%d Takte)", name, n, s_o20a0_n);
+    CHECK(logik == n, "%s: 20A0 Logik (Phase, Drehung, Clip, Bild nach dem Takt) in %d/%d Takten == Original", name, logik, n);
+    CHECK(bild_gl == n, "%s: 20A0 gezeichnetes Bild in %d/%d Takten == Original (+0x95 vor dem Takt)", name, bild_gl, n);
+    CHECK(mat_gl == n && wand == wand_soll && wand_soll > 0,
+          "%s: 20A0 Figur-Matrix in %d/%d Takten == RotMatrix(rot Original) x 0xccc (Wand %d/%d)", name, mat_gl, n, wand, wand_soll);
+    CHECK(schatten_gl == n, "%s: 20A0 Schatten-Hoehe in %d/%d Takten == +0x1ba Original", name, schatten_gl, n);
+}
+
 /* ============================== B ============================== */
 static void teil_b(void)
 {
@@ -466,6 +539,8 @@ int main(int argc, char **argv)
     teil_a(RE15_AI_FLAVOR_RE15, "RE1.5-KI");
     teil_a(RE15_AI_FLAVOR_RE2, "RE2-KI");
     teil_b();
+    teil_c(RE15_AI_FLAVOR_RE15, "RE1.5-KI");
+    teil_c(RE15_AI_FLAVOR_RE2, "RE2-KI");
     printf("\n%s (%d FAIL)\n", s_fails ? "FEHLER" : "OK", s_fails);
     return s_fails ? 1 : 0;
 }
