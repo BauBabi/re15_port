@@ -1029,7 +1029,7 @@ E-E4 Gorilla-Sonde misst den Haenger (benannte Ausnahmen, Ursache in zombieki_r3
 - [x] Mangel 1 Renn-Stopp nach Uebernahme (Treppe/Griff/Plc_ret) — Marke +6 = 3 + Dispatcher-Haken, Riegel takt_uebernahme, integration treppe/losl
 - [x] Punkt 1 / Nachtrag 14 Standbild nach Cut_chg — Original 14 VSyncs gemessen, Port 1 + 6 Bilddauern spielweit, Bildvergleich
 - [x] Mangel 2 / E-E4 Gorilla-Sonde — Haenger-Mass je Seed, drei benannte Stellen mit Beleg, Folgeauftrag
-- [ ] Bau, gezielte Tests, Abschluss
+- [x] Bau, gezielte Tests, Abschluss (914 unit/prop/probe, 54 Integration, Spur 14, Gorilla 6)
 
 ### Mangel 1 — Renn-Stopp endet bei einer Uebernahme (Treppe, Griff, Plc_ret)
 - Ursache (Abnahme 3 §6.2, bestaetigt): `s_aktiv` (rennstopp_r41.c) war ein Modul-Zustand, den nur der eigene Schritt abbrach,
@@ -1261,8 +1261,24 @@ Eigene Dateien: rennstopp_r41.c/.h, kamerahalt_r41.c/.h, bildhalt_r41_pc.c, Test
 - Fokus-Auswahl (33 Tests, -j 2, `<sp>/E41n4/integ_regex2.txt`): alle integration_r41_kleinkram_b_* (10), Renn-Eingaben (r36_klettern,
   r34n_b_cursor, r36_kleidung_spielweg, r36_ziel1190_scheiben, r38_zopf, r39_hund1121, r36_schluessel(_befreiung)), Tuer/Karte/Szene/
   Blende (door_lock, door_traversal, keydoor, map_raum_live, map_uebergang, r35_karte, r36_karte, r36_tueren, r39_karten,
-  r30_cut_blitz, r36_szene1150, elza_vollstart, boot_bg_pin, dark_start_pin, r36_story_elza): laeuft.
+  r30_cut_blitz, r36_szene1150, elza_vollstart, boot_bg_pin, dark_start_pin, r36_story_elza):
+  `ctest --test-dir re15_port/build -R "$(cat <sp>/E41n4/integ_regex2.txt)" -j 2 --timeout 1800 --output-on-failure` ->
+  **100% tests passed, 0 tests failed out of 33** (1690 s, CTEST_EXIT=0, `<sp>/E41n4/ctest_integ2.log`); darin integration_r36_klettern
+  einzeln nachgefahren BESTANDEN (656 s) — der Abbruch im ersten Lauf war die Wanduhr unter Last.
+- Zusammen: 54 Integrations-Riegel mit der echten exe gruen (21 + 33, klettern im Nachlauf), 914 unit/prop/probe gruen; keine volle Suite.
 - Gegenproben mit der VORHER-exe re15_pc_E41a3.exe (c3ba4317 = Stand Abnahme 3; `cmake -DRE15_PC_EXE=... -DTEIL=<t> -P
   tests/integration/test_r41_kleinkram_b.cmake`, `<sp>/E41n4/vorher_riegel/`): **treppe DURCHGEFALLEN** ("F376 (-1359,-13665) ...
   8 Lageaenderungen in 8 Bildern"), **geh DURCHGEFALLEN** ("Standbild F382: 0 Bilder 0 ms" — sonst alles wie das Original), losl
   BESTANDEN (Verhalten unveraendert, Gegenprobe der Uebernahme-Regel). Unit takt_uebernahme: Gegenprobe vor NB4 T/R/G rot.
+
+### Nachbesserung 4 — Abschluss
+- Mangel 1 (Renn-Stopp nach einer Uebernahme): behoben — der Stopp endet, wenn ein anderer Zustand den Spieler hat (Treppe, Klettern,
+  Griff, Tod, Knockdown, Flinch, Schieben ueber den Dispatcher-Haken; Plc_ret/Plc_motion/Treffer/Raumeintritt ueber die Marke +6 = 3),
+  gesperrte Durchlaeufe (Fragen an der Kurbel) nicht. Treppe ROOM2040: nach dem Abschluss steht Leon (vorher +117 +77 +37 -3).
+  Riegel unit takt_uebernahme (vor NB4 rot), integration treppe (c3ba4317 rot), losl (Kurbel o_renn_losl unveraendert).
+- Mangel 2 (Gorilla-Sonde): behoben im Sinne von E-E4 — die Sonde misst den Klemmen-Haenger je Seed (< 354 = R36_NAH_START,
+  Gegenprobe Original-Regel 76 Seeds darueber), drei benannte Stellen mit Beleg (TASCHE, SUB7, WESTBLOCK — an allen haengt schon
+  die Original-Regel), Schranke 5982 entfernt; Folgeauftrag an zombieki_r36.c fuer UEBERGABE §3b (Abschnitt Mangel 2).
+- Punkt 1 / Nachtrag 14: das Apply-Bild steht jetzt 14 VSyncs wie der gemessene Original-Durchlauf (Lesen 8 + MDEC 4 + 2),
+  spielweit; Bildvergleich in VSync-Zeit gegen das Original-Video desselben Wegs gleich (v420..v436 / F539, v438 / F541).
+- Punkte 2/3 unveraendert gruen (integration karte, werkstatt_szene, werkstatt_tuer; unit karte_pin, 11b1_*).
