@@ -10,7 +10,8 @@
  *             @0x011DE (beide c = 6); Plc_flg mit Bit 1/2 NUR ROOM3061 sub04 (5 Stellen); Super_set NUR ROOM3061 @0x0127E
  *             und ROOM4030/4031 — der Umfang, fuer den die neuen Wege gelten
  *   anker     Glied-Anker FUN_800369f8 an Sherrys echter Bank (CDEMD1 Typ 0x4B + ROOM3061 RBJ rec1): Kriech-Takte aus sub04
- *             (SET 4/6/5/4) ab einem Original-Stand, Ziel = der naechste Original-Stand der dichten Reihe o3061_s3
+ *             (SET 4/6/5/4) ab einem Original-Stand, Ziel = der naechste Original-Stand der dichten Reihe o3061_s3 —
+ *             bytegleich (Abweichung 0)
  *   superobj  Super_set/Super_reset am echten Opcode-Bytestrom (ROOM3061 @0x0127E / @0x0129E): Gitter an Sherrys Teil 14,
  *             Loslass-Lage gegen die Original-Lage (-18756,-266,-26788); Vater ausserhalb State 4 -> uebersprungen
  *   wclip     Plc_motion(2,c) des Spielers -> W-Bank-Clip c, Halten auf dem letzten Bild (@0x80050fec), Ende bei anderem
@@ -23,6 +24,8 @@
 #include "re15_actor.h"
 #include "re15_enemy.h"
 #include "re15_emd.h"
+#include "re15_md1.h"
+#include "re15_tim.h"
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_room.h"
@@ -64,14 +67,33 @@ static const char *stage_dir(unsigned room)
 
 /* ---------- zensus ---------- */
 typedef struct { unsigned room; long off; int wert; } fund_t;
+static int16_t les16(const uint8_t *p) { return (int16_t)le16(p); }
+/* Sprungziel vorwaerts wie tools/scd_dump_room.py fwd_target (Ifel 0x06, Else 0x07, For/For2 0x0D/0x1B, While/Do/Switch
+ * 0x0F/0x11/0x13, 0x14, 0x17) — ein Evt_end beendet den Sub nur, wenn kein Sprung dahinter zeigt. */
+static long vorwaerts(const uint8_t *q)
+{
+    switch (q[0]) {
+    case 0x06: return 4 + le16(q + 2);
+    case 0x07: return les16(q + 2);
+    case 0x0D: case 0x1B: return 6 + les16(q + 2);
+    case 0x0F: case 0x11: case 0x13: return 4 + les16(q + 2);
+    case 0x14: return 6 + le16(q + 2);
+    case 0x17: { int o = les16(q + 4); return o > 0 ? o : 0; }
+    default: return 0;
+    }
+}
 static void zensus_sub(unsigned room, const re15_rdt_t *rdt, const uint8_t *p, long grenze,
                        fund_t *pm, int *npm, fund_t *fl, int *nfl, fund_t *ss, int *nss)
 {
     int ws_kind = -1;
+    long maxf = 0;
     for (long o = 0; o < grenze; ) {
-        int sz = scd_opcode_size_at(p + o);
-        if (sz <= 0) break;
         const uint8_t *q = p + o;
+        if (q[0] >= 0x5F || q[0] == 0x1F) break;                                         /* unbekannt -> Ende */
+        int sz = scd_opcode_size_at(q);
+        if (sz <= 0 || o + sz > grenze) break;
+        long t = vorwaerts(q);
+        if (t > 0 && o + t > maxf) maxf = o + t;
         long datei_off = (long)(q - rdt->raw);
         if (q[0] == 0x2E) ws_kind = q[1];                                                /* Work_set kind */
         if (q[0] == 0x3F && q[1] == 2 && ws_kind == 1 && *npm < 16) {                    /* Plc_motion(2,c) Spieler */
@@ -80,19 +102,22 @@ static void zensus_sub(unsigned room, const re15_rdt_t *rdt, const uint8_t *p, l
             fl[*nfl].room = room; fl[*nfl].off = datei_off; fl[*nfl].wert = le16(q + 2); (*nfl)++; }
         if (q[0] == 0x48 && *nss < 16) {                                                 /* Super_set */
             ss[*nss].room = room; ss[*nss].off = datei_off; ss[*nss].wert = q[2] | (q[3] << 8); (*nss)++; }
+        if (q[0] == 0x01 && o + 2 > maxf) break;                                         /* Evt_end ohne Sprung dahinter */
         o += sz;
     }
 }
 static void t_zensus(void)
 {
-    fund_t pm[16], fl[16], ss[16]; int npm = 0, nfl = 0, nss = 0, n_raum = 0;
+    fund_t pm[16], fl[16], ss[16]; int npm = 0, nfl = 0, nss = 0, n_raum = 0, n_stub = 0;
     for (int i = 0; i < RE15_ROOM_COUNT; i++) {
         unsigned room = re15_room_ids[i];
         char p[600]; snprintf(p, sizeof p, "%s/%s/ROOM%04X.RDT", RE15_ASSET_PSX_DIR, stage_dir(room), room);
         long n = 0; uint8_t *b = datei(p, &n);
-        if (!b) continue;
+        if (!b) { printf("        %s nicht lesbar\n", p); continue; }
+        if (n < 0x60) { n_stub++; free(b); continue; }                 /* 4-Byte-Platzhalter ohne SCD (z.B. ROOM1270, 20C0) */
         re15_rdt_t rdt;
-        if (re15_rdt_parse(b, (size_t)n, &rdt) < 0) { free(b); continue; }
+        int prc = re15_rdt_parse(b, (size_t)n, &rdt);
+        if (prc < 0) { printf("        ROOM%04X: re15_rdt_parse %d\n", room, prc); free(b); continue; }
         n_raum++;
         if (rdt.main_scd) zensus_sub(room, &rdt, rdt.main_scd, (long)rdt.main_scd_size, pm, &npm, fl, &nfl, ss, &nss);
         for (int s = 0; s < rdt.sub_scd_count && s < RE15_RDT_MAX_SUB_SCD; s++) {
@@ -106,7 +131,7 @@ static void t_zensus(void)
         }
         free(b);
     }
-    CHECK(n_raum == 240, "%d Raeume gelesen", n_raum);
+    CHECK(n_raum + n_stub == 240 && n_stub == 34, "%d Raeume mit SCD + %d Platzhalter (4 Bytes) = 240", n_raum, n_stub);
     CHECK(npm == 2 && pm[0].room == 0x3060 && pm[0].off == 0x010BE && pm[0].wert == 6 &&
           pm[1].room == 0x3061 && pm[1].off == 0x011DE && pm[1].wert == 6,
           "Spieler-Plc_motion(2,c): %d Stellen (Soll 2: ROOM3060 @0x010BE, ROOM3061 @0x011DE, c = 6)%s", npm,
@@ -132,6 +157,8 @@ static uint8_t *s_ems, *s_rdt3061;
 static long s_rdt3061_n;
 static re15_emd_skeleton_t s_basis;
 static re15_emd_animation_t s_basis_anim;
+static re15_md1_t s_basis_md1;
+static re15_tim_t s_basis_tim;
 static const uint8_t *s_rbj; static size_t s_rbj_n;
 
 static int sherry_laden(void)
@@ -143,7 +170,7 @@ static int sherry_laden(void)
         uint32_t sek = 0, len = 0;
         if (!re15_ems_toc(RE15_EMS_ARCHIV_ELZA, 0x4B, &sek, &len) || (long)sek * 2048 + (long)len > n) {
             CHECK(0, "CDEMD1-TOC Typ 0x4B"); return 0; }
-        if (re15_emd_parse_container(s_ems + (size_t)sek * 2048u, len, NULL, &s_basis, &s_basis_anim, NULL) != 0) {
+        if (re15_emd_parse_container(s_ems + (size_t)sek * 2048u, len, &s_basis_md1, &s_basis, &s_basis_anim, &s_basis_tim) != 0) {
             CHECK(0, "Sherry-EMD (CDEMD1 Sektor %u, %u B) parsebar", sek, len); return 0; }
         printf("        Sherry Typ 0x4B: CDEMD1 Sektor %u, %u B, %d Knochen, Eltern:", sek, len, s_basis.bone_count);
         for (int b = 0; b < s_basis.bone_count; b++) printf(" %d", (int)s_basis.bone_parent[b]);
@@ -178,10 +205,12 @@ static void t_anker(void)
 {
     if (!sherry_laden()) return;
     re15_actor_t *e = &g_actors[1];
-    /* Original-Staende der dichten Reihe o3061_s3 (J_belege/o3061_s3_dicht.txt): Clip 2, Sherry r1067, +0x1c4 im Stand. */
+    /* Original-Staende der dichten Reihe o3061_s3 (J_belege/o3061_s3_dicht.txt): Clip 2, Sherry r1067. Gezeichnetes Bild =
+     * +0x95 - 1: FUN_8001f3bc setzt die Pose von +0x95 und zaehlt DANACH hoch (@0x8001f618/@0x8001f61c, Ende -> 0
+     * @0x8001f63c); +0x168 zeigt auf den gezeichneten Eintrag (@0x8001f36c). t08 +0x95 19 -> Bild 18 usw. */
     static const struct { const char *name; int r0, f0, x0, z0, r1, f1, x1, z1; } fall[] = {
-        { "t08 (Runde 1 Bild 19) -> t10 (Runde 2 Bild 12)", 0, 19, -18780, -28017, 1, 12, -18783, -28806 },
-        { "t09 (Runde 1 Bild 44) -> t11 (Runde 2 Bild 39)", 0, 44, -18791, -28390, 1, 39, -18810, -29279 },
+        { "t08 (Runde 1, +0x95 19 = Bild 18) -> t10 (Runde 2, +0x95 12 = Bild 11)", 0, 18, -18780, -28017, 1, 11, -18783, -28806 },
+        { "t09 (Runde 1, +0x95 44 = Bild 43) -> t11 (Runde 2, +0x95 39 = Bild 38)", 0, 43, -18791, -28390, 1, 38, -18810, -29279 },
     };
     for (unsigned k = 0; k < sizeof fall / sizeof fall[0]; k++) {
         e->motion = 2; e->x = fall[k].x0; e->y = 0; e->z = fall[k].z0; e->rot_y = 1067; e->rot_x = 0; e->rot_z = 0;
@@ -200,8 +229,8 @@ static void t_anker(void)
             re15_fussanker_r41_merken();
         }
         int dx = e->x - fall[k].x1, dz = e->z - fall[k].z1;
-        CHECK(alt_ok && n_ruhe_bewegt == 0 && dx >= -40 && dx <= 40 && dz >= -40 && dz <= 40,
-              "Anker %s: Start (%d,%d), Port-Ende (%d,%d), Original (%d,%d), Abweichung (%d,%d) [Soll |d| <= 40], "
+        CHECK(alt_ok && n_ruhe_bewegt == 0 && dx == 0 && dz == 0,
+              "Anker %s: Start (%d,%d), Port-Ende (%d,%d), Original (%d,%d), Abweichung (%d,%d) [Soll 0 = bytegleich], "
               "%d Anker-Bilder, %d SET-4-Bilder mit Bewegung (Soll 0)", fall[k].name, fall[k].x0, fall[k].z0, e->x, e->z,
               fall[k].x1, fall[k].z1, dx, dz, n_anker, n_ruhe_bewegt);
     }
@@ -247,11 +276,11 @@ static void t_superobj(void)
     t.pc = rst;
     rc = re15_superobj_r41_op_reset(&t);
     int dx = g_scd.props[0].x - (-18756), dy = g_scd.props[0].y - (-266), dz = g_scd.props[0].z - (-26788);
-    CHECK(rc == 1 && t.pc == rst + 8 && dx >= -15 && dx <= 15 && dy >= -6 && dy <= 6 && dz >= -15 && dz <= 15 &&
+    CHECK(rc == 1 && t.pc == rst + 8 && dx == 0 && dy == 0 && dz == 0 &&
           g_scd.props[0].rot_x == 72 && g_scd.props[0].rot_y == 3072 && g_scd.props[0].rot_z == 0 &&
           !re15_superobj_r41_welt(0, r, w),
           "Super_reset: Loslass-Lage (%d,%d,%d) gegen Original (-18756,-266,-26788) = Endlage (-18116,-266,-26788) - 640, "
-          "Abweichung (%d,%d,%d) [Soll |d| <= 15/6/15], Rot (%d,%d,%d) [Soll (72,3072,0)], danach Welt-Vater",
+          "Abweichung (%d,%d,%d) [Soll 0 = bytegleich], Rot (%d,%d,%d) [Soll (72,3072,0)], danach Welt-Vater",
           g_scd.props[0].x, g_scd.props[0].y, g_scd.props[0].z, dx, dy, dz,
           g_scd.props[0].rot_x, g_scd.props[0].rot_y, g_scd.props[0].rot_z);
     /* Vater ausserhalb State 4 (ROOM4030-Fall): Opcode uebersprungen, Prop unveraendert. */

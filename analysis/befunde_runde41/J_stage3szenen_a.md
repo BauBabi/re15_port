@@ -270,3 +270,17 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
   0x24 = nur SET 4** -> die Schleife ist nach 2 Runden zu Ende (For-Zaehler 2 bestaetigt).
 - Lagen: t11 Runde 2 Bild 39 **(-18810,-29279)** — Port F1244 (-18807,-29269); t12 Bild 5 nach Schleifenende
   **(-18795,-30700)**. Der Sprung von ~-974 zwischen Runde-2-Ende und t12 ist der Rest aus §2.7 (OFFEN, im Bild ohne Wirkung).
+
+### §2.9 Bild-Zaehler des Originals und bytegleicher Riegel
+- FUN_8001f314 setzt +0x168 = Eintrag des Bildes +0x95 (@0x8001f36c) und ruft FUN_8001f3bc; dort wird NACH dem Setzen der
+  Pose hochgezaehlt (@0x8001f618 `addiu v0,v0,1` / @0x8001f61c `sb v0,149(v1)`, Clip-Ende -> 0 @0x8001f63c, Rueckgabe 1).
+  Ein Savestate traegt also +0x95 = gezeichnetes Bild + 1 (3060: Phase 2 mit +0x95 = 0 und +0x168 = Clip-6-Bild 9).
+- Mit dieser Zuordnung trifft der Port-Anker die Original-Reihe o3061_s3 **bytegleich**: Start t08 (Runde 1 Bild 18,
+  (-18780,-28017)) -> nach 43 Anker-Bildern **(-18783,-28806) = t10**; Start t09 (Bild 43, (-18791,-28390)) -> nach 45
+  Anker-Bildern **(-18810,-29279) = t11** (Riegel unit_r41_stage3szenen_a_anker, Abweichung 0).
+- Gitter: Sherry (-18860,0,-26266) r1067 Clip 0 Bild 58 -> Super_reset-Lage **(-18756,-266,-26788)** = Original-Loslass-Lage
+  bytegleich (unit_r41_stage3szenen_a_superobj).
+- Sherrys Knochen-Eltern (CDEMD1 Typ 0x4B, Sektor 1776): `-1 0 1 2 3 1 5 6 0 0 9 10 0 12 13` — die feste Kette
+  0-1-2-3-4 / 0-1-5-6-7 von FUN_800369f8 IST die Hierarchie; Teil 14 (Gitter-Hand) haengt an 13-12-0.
+- Im Spiellauf bleibt ein konstanter Rest (3,10) aus Sherrys Lage VOR dem Kriechen (Port (-18857,-26256), Original
+  (-18860,-26266), Ende des Plc_dest-Gangs in sub02/sub04 — nicht Teil dieser Punkte, OFFEN notiert).
