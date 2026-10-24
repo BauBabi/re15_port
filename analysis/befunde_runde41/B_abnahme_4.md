@@ -294,20 +294,7 @@ Türweg. **Der Ablauf am Ankunftsort ändert sich also durch die Nachbesserung 4
   FRESSEN-Fall). In A2 (Tod aus dem CHASE-Biss, pitch 0, Biss mit Blick auf Leon: F397 Gier 2569 / Peilung 2571) liegt Leon
   sichtbar im Maul, obwohl er dort ebenfalls 1100–2650 hinter der Westwand steht (FSYNC2 x −10041…−11556); in E1/RN liegt er
   3200–3900 hinter der Ostwand (FSYNC2 x 10374…11062). Das ist eine aus dem Code gelesene Ursache, nicht gemessen — die Messung
-  des Abstands "gezeichneter Kiefer ↔ Leon" je Bild ist Teil des Mangels (§8).
-
-## 5. Integration (gezielt, am gebauten Stand)
-- Lauf der Vorgängerin (12:09, `-R "^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate|r37_itemband|r36_tueren|
-  r37_re2zombie)$"`, `B41abn4/ctest_integ.log`): 6 von 7 grün (r38_wasser 162,7 s, r35_granate 163,4 s, r37_re2zombie 51,9 s,
-  r36_tueren 27,5 s, r36_schuss 143,2 s, r41_re2gator 203,7 s); r37_itemband lief beim Sitzungslimit noch.
-- `ctest --test-dir re15_port/build -R "^integration_r37_itemband$" --timeout 1800 --output-on-failure` einzeln
-  (12:47:32–13:01:00, `B41abn4/ctest_itemband.log`): **Passed 807,18 s** → zusammen **7/7 grün**. Die beim Abbruch
-  liegengebliebene Kopie `re15_pc_r37d_haken_2b5e9bd5.exe` hat der Test selbst entfernt; kein Prozess aus diesem Baum lief
-  mehr (geprüft per Get-Process, nur fremde Prozesse aus r41_ventilkette).
-- Unit-Riegel: 112/112 (§1), dazu `unit_gator_sweep` (`gator-sweep: 3342 Paare, 0 nicht konvergiert`, `gator-biss: 80 Faelle,
-  0 ohne Treffer`) und `unit_gator_fress` (`PIN P3 … dRef=(-2,-1,-1)`, `Maulraum … 776/776 = 100.0%`) einzeln mit -V
-  (`B41abn4/unit_sweep_V.txt`). Der Fress-Riegel misst den Finisher nur aus einer CHASE-Lage (Gier 4095, pitch 0) — die
-  GUARD-Lage aus §3.4 deckt er nicht ab.
+  des Abstands "gezeichneter Kiefer ↔ Leon" je Bild ist Teil des Mangels M1 (§9).
 
 **(d) Tödlicher GUARD-Biss im Vorher-Bau: der Finisher ist dort ebenso kaputt (ALT, gemessen).** Leon mittig-nord auf der
 Rampe, wo das GUARD-Ziel erreichbar ist: `RE15_DEBUG_JUMP=2090@250 RE15_PLAYER_POS=4000,-15000,2048,1 RE15_GB_TEST=1`, Dump
@@ -341,6 +328,19 @@ Framedump-Dateien, die je Raum nummeriert sind — so geschehen in den ersten L�
 - **Einordnung:** ALT, aber sichtbar, gegen den Wortlaut von Punkt 1 ("den Finisher … aus Resident Evil 2": im RE2-Finisher liegt
   Leon im Maul, so wie hier in A2) und seit der Nachbesserung 4 auf dem natürlichen Weg (20A0-Tür → Ostrampe, wo der Spieler steht
   und schießt) erreicht. Nach dem Maßstab der Abnahme 3 (deren M2 war ebenfalls ALT) ist das ein **Mangel dieser Abnahme (M1, §9)**.
+
+## 5. Integration (gezielt, am gebauten Stand)
+- Lauf der Vorgängerin (12:09, `-R "^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate|r37_itemband|r36_tueren|
+  r37_re2zombie)$"`, `B41abn4/ctest_integ.log`): 6 von 7 grün (r38_wasser 162,7 s, r35_granate 163,4 s, r37_re2zombie 51,9 s,
+  r36_tueren 27,5 s, r36_schuss 143,2 s, r41_re2gator 203,7 s); r37_itemband lief beim Sitzungslimit noch.
+- `ctest --test-dir re15_port/build -R "^integration_r37_itemband$" --timeout 1800 --output-on-failure` einzeln
+  (12:47:32–13:01:00, `B41abn4/ctest_itemband.log`): **Passed 807,18 s** → zusammen **7/7 grün**. Die beim Abbruch
+  liegengebliebene Kopie `re15_pc_r37d_haken_2b5e9bd5.exe` hat der Test selbst entfernt; kein Prozess aus diesem Baum lief
+  mehr (geprüft per Get-Process, nur fremde Prozesse aus r41_ventilkette).
+- Unit-Riegel: 112/112 (§1), dazu `unit_gator_sweep` (`gator-sweep: 3342 Paare, 0 nicht konvergiert`, `gator-biss: 80 Faelle,
+  0 ohne Treffer`) und `unit_gator_fress` (`PIN P3 … dRef=(-2,-1,-1)`, `Maulraum … 776/776 = 100.0%`) einzeln mit -V
+  (`B41abn4/unit_sweep_V.txt`). Der Fress-Riegel misst den Finisher nur aus einer CHASE-Lage (Gier 4095, pitch 0) — die
+  GUARD-Lage aus §3.4 deckt er nicht ab.
 
 ## 6. Nebenbefunde (keine Mängel dieser Abnahme, zur Kenntnis)
 - **Türweg 20A0 → 2090 ohne Testhebel (EN):** der Gator bleibt 2400 Bilder untergetaucht am Lauerplatz (−7200,−9200), obwohl Leon
