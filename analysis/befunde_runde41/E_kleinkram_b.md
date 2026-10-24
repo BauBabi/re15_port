@@ -451,3 +451,48 @@ Abweichungen des Ports (R2_geh, Abnahme 1, nicht wiederholt):
    — ALLE mit dem Skript-Bit 0x02000000, d.h. im Original haelt die Pause den Faden, nicht der Opcode.
 3. Folge im Port: nach der Frage zwei Bilder (F381/F382) Stehen 200 an der ALTEN Stelle, Sprung erst F383; im Original
    Sprung + Stopp im selben Bild (n95), und dieses Bild ist ein Apply-Bild (Cut_chg @0x0A7E) -> stehendes Bild (E-N1).
+
+#### Renn-Anlauf und Renn-Stopp im Original (DuckStation-GDB `gdb_geh2.py --run`, Laeufe `o_renn2.txt`, `o_rennstopp.txt`)
+- Kurbel im RENNEN (`o_renn2.txt`): Nachrichten wie im Gehen (kein Luecken-Bild, Renn-Clip 0 Bild 7 durch beide Fragen);
+  Bild n93 Pos_set (3650,-2925), im Spieler-Takt desselben Bilds `cmd 1/2/3/0` Clip 3 und Schritte 174, 134, 94, 54, 14,
+  -26 (Tempo +0x8c 214 -> -26), n99 `cmd 1/0/0/0`, Leon steht und kurbelt bei **(3650,-3369)** (Plc_motion n113).
+- Freie Strecke (`o_rennstopp.txt`, (2600,-3200) Blick 0, 12 Bilder Rennen): Tempo je Bild 269, 210, 170, 182, 205, 210,
+  214, 210, 188, 159, 176, 197 (clip-gekoppelt), loslassen -> 157, 117, 77, 37, -3, dann Stehen. Der Renn-Stopp ist
+  allgemein, nicht kurbel-spezifisch.
+- Mechanismus (selbst disassembliert): DECIDE 0x80073fb0[2] = 0x80032604: +6 < 2 und nicht (gehalten & 0x201) == 0x201
+  (@0x800326f4-@0x80032700) bzw. Zielen 0x100 mit Waffe (@0x80032708-@0x80032720) -> @0x8003272c `sb 2,+6`; +6 >= 2:
+  @0x80032738 OBEN -> 0x0101, @0x80032744 UNTEN -> 0x0401, @0x80032750 LINKS/RECHTS -> 0x0301 (@0x80032760 `sw
+  DAT_800aca58`). ANIMATE 0x80073ff0[2] = 0x80032778: Fall 2 @0x800328f8 +6 = 3, @0x80032904 Clip 3, @0x80032910 +0xe3 = 7;
+  Fall 3 @0x80032918 anim_set, @0x8003293c Tempo -= 40, @0x8003294c `bgez` / @0x80032958 `sw 1,DAT_800aca58` (Stehen),
+  @0x8003295c `jal 0x800245d8` Vorschub (auch mit negativem Tempo). Der Port kannte keinen Renn-Stopp.
+- Stehen-Anlauf (`o_stand1.txt`, Kontrolle): Idle-Sway Clip 2 laeuft nach dem Ja an der Kurbel weiter (Bild 37..51, 0..),
+  Pos_set n89 im Bild nach der Bestaetigung — dieselbe Reihenfolge.
+
+### Nachbesserung 2 — Umsetzung
+| Datei | Was | Beleg |
+|---|---|---|
+| NEU engine/src/kamerahalt_r41.c, include/re15_kamerahalt_r41.h | Entscheidung je Spielbild: Apply-Bild = `cam_change_pending` oder `work_vars[0x0A] != cam_id` am Bildende (= die Bedingung, mit der der Port-Apply im Folgebild nachzieht); nicht im ersten Bild eines Raums, nicht in der ROOM1240-Montage, nicht mit RE15_FORCE_CUT; Messschiene RE15_KAMERAHALT_LOG | Present FUN_8002137c @0x800214f4-@0x80021514, @0x80021530/@0x80021538, @0x80021558, @0x80021560 |
+| NEU platform/pc/src/bildhalt_r41_pc.c | Apply-Bild: Warteschlangen verwerfen, KEIN SDL_RenderPresent (das Fenster zeigt das vorige Bild); RE15_FRAMEDUMP bedient gehaltene Bilder aus dem gemerkten zuletzt gezeigten Bild ("(gehalten)") | @0x80021560 `j 0x800215fc` ueberspringt DrawOTag @0x800215bc/d0/e4 und den Pufferwechsel @0x800215f4/@0x800215f8 |
+| NEU engine/src/msgtakt_r41.c, include/re15_msgtakt_r41.h | Restore beim Schliessen im Nachrichten-Takt erst hinter dem Spiel-Takt; neue Nachricht im selben Bild holt ihn vorher nach; Auswahl-Message_on laeuft durch (pc += 4), wenn die Maske den Skript-Lauf anhaelt; message_query faellt mit dem Restore | Hauptschleife @0x80020de4 / @0x80020f3c / @0x80010044; Message_on @0x80040520; Skript-Freeze @0x8003f040-@0x8003f04c; Census 102/102 |
+| NEU engine/src/rennstopp_r41.c, include/re15_rennstopp_r41.h | Renn-Stopp: Einstieg aus dem Rennen ohne OBEN+RENNEN bzw. mit Zielen+Waffe, Clip 3 + Mischung 7, Tempo -40 je Bild, Vorschub inkl. negativem Schritt, Ende bei Tempo < 0, Abbruch durch OBEN/UNTEN/LINKS/RECHTS; im Skript-Modus mit leerem Pad. Start-Tempo = Port-Renntempo 200 (Tabelle @0x80073f24) | 0x80032604 @0x800326f4-@0x8003272c / @0x80032730-@0x80032760; 0x80032778 @0x800328f8-@0x8003295c |
+| Haken platform/pc/main.c (+7/-1) | `re15_msgtakt_r41_takt_beginn/_ende` um re15_msg_tick; `re15_msgtakt_r41_nach_spieltakt` hinter re15_pc_fx_takt (vor dem Item-Modal) und vor dem Bildende; `re15_kamerahalt_r41_haelt` -> `re15_render_pc_bild_halten` statt re15_render_end_frame | |
+| Haken engine/src/msg_common.c (+4/-1), scd_vm.c (+2), render_pc.c (+9: Auftrag-Abholer + 1 Haken), player_common.c (+7/-1: Renn-Stopp im Bewegungs-Block und im Skript-Zweig) | je "Runde 41 Spur E" | |
+PSX-Plattform: nicht verdrahtet (platform/psx/main.c ruft die neuen Engine-Haken nicht; PSn00bSDK fehlt hier zum Bauen) —
+ohne Aufruf verhalten sich msgtakt (inaktiv) und kamerahalt (nicht gerufen) wie vorher; der Renn-Stopp ist Engine-Code
+und wirkt auf beiden Plattformen.
+
+### Nachbesserung 2 — Messung nachher (exe-Kopie re15_pc_E41n2.exe, VORHER = re15_pc_E41a1.exe md5 beeca32b..., Laeufe `<sp>/E41n2/runs/`)
+- E-N1, Gang auf die Kante (`EN1w_nach`/`EN1w_vor`: (9375,-3200) Blick 2048, U 5 Bilder -> x 9000 bei F64, FRAMEDUMP
+  F56..F100): NACHHER 40/40 Folgebilder ab F64 pixelgleich (Bild von F63 steht), VORHER ab F64 je Bild ~29 900 Pixel
+  (Cut 0/2 im Wechsel). `cam=`-Spur in beiden 0,2,0,2 = Original (o_cam9000: req 0/2 je Durchlauf).
+  Hinweis: mit RE15_PLAYER_POS direkt auf die Kante (EN1_nach) steht das ERSTE Raumbild (nach dem Sprung schwarz mit dem
+  Vorspann-Text) — die Lage wird nie gezeichnet, im Original genauso (der Patch-Lauf zeigte das Bild VOR der Kante).
+- E-N2 Gehen (`R2_geh_nach`, Eingaben wie Abnahme 1 R2): F310..F381 Geh-Clip Bild 9 durch BEIDE Nachrichten (F328/F329
+  af=9, vorher 9 -> 10), F381 Schliessen der Frage (Spieler angehalten, af=9), **F382 Ifel_ck @0x0A68 ... Pos_set
+  @0x0A8C ... Sleep @0x0A98 in EINEM Skript-Takt** (vorher F382 Message_on + F383 Rest), Spieler im selben Bild
+  mo 200 / Clip 3 / frac 7 an (3650,-3018), F382 gehalten (`[kamerahalt] F382 ... HALTEN`), F383 Cut 3, F402
+  Plc_motion = F382 + 20. Original (o_geh1): n94 Bestaetigung -> n95 Pos_set + Stopp (Apply-Bild) -> n115 Plc_motion.
+- Rennen (`R4_renn_nach`): Nachrichten ohne Luecke (Renn-Bild 6), F382 Pos_set + erster Stopp-Schritt (3650,-3085),
+  F383 -3205, F384 -3285, F385 -3325, F386 -3325, F387 -3285 (letzter Schritt -40), Plc_motion F402 bei (3650,-3285).
+  Original: 174..-26, Endlage -3369 — Unterschied allein durch das Port-Renntempo (200 statt clip-gekoppelt 214).
+- Freier Renn-Stopp (`RS_frei_nach`): Loslassen F72 -> 5160, 5280, 5360, 5400, 5400, 5360 (Schritte 160,120,80,40,0,-40).
