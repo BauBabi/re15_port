@@ -96,3 +96,43 @@ Grenze 1800/1801, Flags (5,0..2) und Endlagen fuer Leon UND Elza), parallel-fest
    s3,0(s0)` / `800422ac ori v0,zero,0x2001` / `800422b0 sw v0,0(s0)` (Sce_em_set); STAGE1 `8011beac ori v0,v0,0x2 / 8011beb0
    sw v0,0(v1)`, Tabelle `0x801213c8[7] = 0x8011be54`; `8011ac34 ori v0,v0,0x1000` / `8011ad8c addiu v1,zero,-4097` + `and`.
    Alle wie zitiert.
+7. **Rate-Woerter / Schalter:** `git diff master...HEAD -- re15_port | grep -ciE "deferred|tunable|interim|for now|faithful|
+   plausib|TODO"` -> **0**. Neue Konstanten im Code-Diff: keine Zahl ohne Adresse (Zaehler 10 = s7 @0x8002bd84, Gate 0x40
+   @0x8002ce1c, Schranke nOmodel @0x8002c048, Radien = vorhandenes `hit_radius_min` = Kasten +6). Env-Schalter nur Messhaken
+   (`RE15_KOLLISION_LOG`, `RE15_KOLLISION_SETZE`), kein Abschluss ueber einen Schalter.
+8. **Erklaert der Fix den Befund?** Ja (an meinen eigenen vor/nach-Laeufen, Abschnitt 4): der NPC-Tick des Ports hatte nach
+   dem Zustand nur die Klemme; mit aec4/b544 davor (Reihenfolge 1.) erscheinen in `kollision.txt` genau die b544-Schuebe
+   (`NPC-SCHUB slot=2 typ=40 von=1 typ=42`), und der Abstand springt von 1 auf >= 899. Bei den Kisten fehlte der Durchlauf
+   @0x8002c03c-c0a8; mit ihm erscheint `OBJEKT-GESPERRT ... gegen ... obj=<andere>` genau an der inklusiven Grenze.
+
+## 4. Messungen an der exe (eigene Laeufe, eigene Plaene, eigener Auswerter)
+Werkzeuge im Arbeitsordner: `lauf.sh` (je Lauf eigener Ordner `laeufe/<name>_<vor|nach>`, alle RE15_* des Aufrufers geloescht,
+Grundumgebung wie die Riegel: RE15_NO_INTRO=1 RE15_NOAUDIO=1 SDL_AUDIODRIVER=dummy RE15_WINDOW_SCALE=1 RE15_TITLE_CONFIRM_MS=1500
+RE15_PSELECT_AUTO=1, exe-Kopie unter eigenem Namen, `timeout`), Wegplaene `plaene/*.txt` (RE15_WEGPLAN = echte Pad-Bits aus
+Spieler-/Objektlage, dachkiste_r36.c), Auswerter `npcpaare.py` (NICHT der Auswerter der Spur: je Bild alle NPC-Paare (Typ
+0x40..0x4d) und Spieler/NPC aus RE15_STATE_LOG, Radien aus den Kaesten 450/500/300, Spieler 450), Bildbogen `bogen.py`.
+
+### 4.1 Punkt 1, LEON, ROOM3070 Eskorte, ECHTER Tuerweg 30E0 -> 3070, EIGENER Laufweg (`laeufe/p1a_3070_{vor,nach}`)
+Befehl: `lauf.sh p1a_3070 <vor|nach> 400 RE15_SET_FLAG=4:215,4:236,3:180 RE15_DEBUG_JUMP=30E0@250
+RE15_PLAYER_POS=-25660,-22130,3072 RE15_WEGPLAN=plaene/p1a_3070.txt RE15_STATE_LOG=state.txt RE15_KOLLISION_LOG=kollision.txt
+RE15_EXIT_AT=4800#3070 RE15_FRAMEDUMP=600-4800/150:f`. Story-Stand per Flag (nach G-Birkin (4,215)/(4,236) und der 30E0-Szene
+(3,180), ROOM30E0 sub03 @0x00E66); der Raum wird ueber die Tuer betreten: debug.log `[aot] DOOR FIRE slot=1
+rect=(-25750,-21200,hw=1350,hh=600) target_cut=0 spawn=(-11840,0,-18140)` -> `[room] PC loaded room3070.rdt` -> sub00
+@0x0343C/@0x03450 setzt Ada (0x42) + Marvin (0x40) mit Verhaltensbyte 0x00 (Eskorte). Mein Weg (anders als Spur und Abnahme 0):
+Leon geht nach Suedosten (-9000,-12000), steht 240, geht zurueck DURCH die Folgenden nach (-12600,-16600), steht 300, nach Osten
+(-7000,-17200), steht 150, nach Sueden (-9800,-10400), steht 300, nach (-11000,-16000), steht bis F4800 (`[flow] EXIT_AT: Bild
+4800 in Raum 3070 erreicht -> exit`, beide exe exit=0).
+
+| exe | Ada/Marvin (Summe 900): min | Bilder < 850 | Bilder < 900 | Ende F4800 | Spieler/Ada min | Spieler/Marvin min |
+|---|---|---|---|---|---|---|
+| vor | **1** (F1331) | **4539 / 4800** | 4569 | **6** | 716 | 707 |
+| nach | **899** (F1416) | **0** | 150 (alle 850..899) | **901** | 813 | 863 |
+
+`npcpaare.py`-Zeilen woertlich: vor `Paar 1(0x42)/2(0x40) Summe 900: Bilder 4800 (F1..F4800), MIN 1 bei F1331, <Summe-50: 4539,
+<Summe: 4569, Ende 6`; nach `... MIN 899 bei F1416, <Summe-50: 0, <Summe: 150, Ende 901`. `kollision.txt` (nach): 5017
+`NPC-SCHUB`-Zeilen, davon 4082 `slot=2 typ=40 von=1` (Marvin aus Ada, b544), 862 `slot=1 typ=42 von=2` (Ada aus Marvin), 57/16 vom
+Spieler (aec4); am Minimum `F1416 ... NPC-SCHUB slot=2 typ=40 von=1 typ=42 vor=(-9009,-11141) nach=(-9047,-11080)`.
+Bild `zoom_p1a_3070_f1350.png` (F1350, in BEIDEN Laeufen Kamera 1, gleicher Ausschnitt, RE15_WINDOW_SCALE=1): **vor** sind nur
+Marvin und Leon zu sehen — Ada steckt in Marvin (state.txt `Ada(-9464,-12287) Marvin(-9464,-12288)`, d = 1); **nach** stehen Ada,
+Marvin und Leon als drei getrennte Figuren (d = 900). Dazu `zoom_p1a_3070_f2550.png` (vor: eine Mischfigur Marvin/Ada, d = 6) und
+Bogen `bild_p1a_3070_vor_nach.png`. => Nutzer-Befund am echten Tuerweg mit meinem Laufweg reproduziert (vor) und behoben (nach).
