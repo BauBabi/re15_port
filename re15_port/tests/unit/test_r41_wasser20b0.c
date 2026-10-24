@@ -490,9 +490,14 @@ static int teil_landung(void)
     return 1;
 }
 
+/* Roy (0x47 CDEMD1) Clip 5 (61 Bilder) ohne Marke: Aufsetzer nach der PORT-WAHL-Regel = Bild 19 (Teil 4 erreicht das unterste
+ * Zehntel nach dem Schwung, Tiefstlage y -213 bei Bild 21) und Bild 50 (Teil 7, Tiefstlage -214 bei Bild 52); Pose-Reihe Sonde
+ * roy_c5.txt, Dossier N1.10d. Ohne Hysterese lieferte die Regel 4 Aufsetzer (Zittern des stehenden Teils 4 um die Schwelle). */
+#define K_ROY_C5_A 19
+#define K_ROY_C5_B 50
 static int teil_npc(void)
 {
-    printf("\n== npc (Nachbesserung 1: Aufsetzer der OWN-Bank +0x170/+0x174, beide Archive, PORT-WAHL nur 0x4b)\n");
+    printf("\n== npc (Nachbesserung 1: Aufsetzer der OWN-Bank +0x170/+0x174, beide Archive, PORT-WAHL nur fuer Fortbewegungs-Clips ohne Marke)\n");
     /* Erwartung je Typ (Sonde npc_own.txt, Dossier Nachbesserung 1): Clip 5 = Gehen (30 Bilder), Clip 0 = Laufen (22) */
     static const struct { uint8_t typ; int c5[2]; int f5[2]; int c0[2]; int f0[2]; int portwahl; } k_erw[6] = {
         { 0x40, {7, 22}, {7, 4}, {0, 12}, {4, 4}, 0 },
@@ -529,10 +534,58 @@ static int teil_npc(void)
                 CHECK(nr == 2 && d0 >= -4 && d0 <= 4 && d1 >= -4 && d1 <= 4,
                       "Regel an Typ 0x%02x Clip 5: %d/%d gegen Marken %d/%d (|Abstand| <= 4)", typ, rb[0], rb[1], k_erw[ti].c5[0], k_erw[ti].c5[1]);
             }
-            /* Container-Bank Clip 5 (20-Bild-Kniebeuge, 0x4b: 38) traegt KEINE Marke - der Bau-Fehler (falsche Bank) */
+            /* Container-Bank Clip 5 (20-Bild-Kniebeuge, 0x4b: 38) traegt KEINE Marke - der Bau-Fehler (falsche Bank). Seit der
+             * dritten Fortsetzung: kein Fortbewegungs-Clip (nur OWN c0/c5, LOCO/Container c0/c1 tragen Marken, Sonde
+             * npc_marken.txt) -> auch keine PORT-WAHL, also kein Schritt - wie im Original (`andi 0x4000` @0x80051288). */
             int kb[4] = {0,0,0,0}, kf[4] = {0,0,0,0}, kpw = 0;
-            (void)re15_wassersprung_r41_aufsetzer(&b->anim, &b->skel, typ, 5, kb, kf, &kpw);
-            CHECK(kpw == 1, "%s Typ 0x%02x: Container-Clip 5 (%d Bilder) ohne Marke (nur PORT-WAHL-Pfad)", re15_ems_archiv_datei(arch), typ, b->anim.clips[5].frame_count);
+            int kn = re15_wassersprung_r41_aufsetzer(&b->anim, &b->skel, typ, 5, kb, kf, &kpw);
+            CHECK(kn == 0 && kpw == 0, "%s Typ 0x%02x: Container-Clip 5 (%d Bilder) ohne Marke und kein Fortbewegungs-Clip -> %d Aufsetzer, portwahl=%d (erwartet 0/0)",
+                  re15_ems_archiv_datei(arch), typ, b->anim.clips[5].frame_count, kn, kpw);
+            /* INIT-Pose: LOCO Clip 2 (f314(+0x84,+0x16c) @0x8011d978, Bild 0) traegt keine Marke -> kein Schritt (vorher leitete
+             * der Port hier eine PORT-WAHL ab - integration_r37_roy_leon1170 rot an den Fremdzeilen der Ableitung). */
+            if (b->loco_ok && b->anim_loco.clip_count > 2) {
+                int lb[4] = {0,0,0,0}, lf[4] = {0,0,0,0}, lpw = 0;
+                int ln = re15_wassersprung_r41_aufsetzer(&b->anim_loco, &b->skel_loco, typ, 2, lb, lf, &lpw);
+                CHECK(ln == 0 && lpw == 0, "%s Typ 0x%02x: LOCO-Clip 2 (INIT-Pose, %d Bilder) -> %d Aufsetzer, portwahl=%d (erwartet 0/0)",
+                      re15_ems_archiv_datei(arch), typ, b->anim_loco.clips[2].frame_count, ln, lpw);
+            }
+            /* Rueckwaerts (Sub 7/8 posieren das LOCO-Paar +0x84/+0x16c @0x80051a20-24 / @0x80051c18-1c, Clip 1; der Port zeichnet
+             * dort den Container, Clip 1 mit denselben Marken): Marken 7/22 an den markierten Typen, PORT-WAHL nur 0x4b. */
+            {
+                int rb[4] = {0,0,0,0}, rf[4] = {0,0,0,0}, rpw = 0;
+                int rn = re15_wassersprung_r41_aufsetzer(&b->anim, &b->skel, typ, 1, rb, rf, &rpw);
+                CHECK(rpw == k_erw[ti].portwahl && (rpw ? rn >= 1 : (rn == 2 && rb[0] == 7 && rb[1] == 22)),
+                      "%s Typ 0x%02x: Container-Clip 1 (Rueckwaerts, %d Bilder) -> Aufsetzer %d/%d (n=%d) portwahl=%d (erwartet Marken 7/22 bzw. PORT-WAHL fuer 0x4b)",
+                      re15_ems_archiv_datei(arch), typ, b->anim.clips[1].frame_count, rb[0], rb[1], rn, rpw);
+            }
+        }
+    }
+    /* Typ 0x47 (Leon: Elliot, CDEMD0; Elza: Roy, CDEMD1 - re15_typ47_ist_elliot): CDEMD0 OWN c5 Marken 7/22 wie die
+     * 0x40-Familie; CDEMD1 OWN c5 OHNE Marke (c0 markiert 0/12, Sonde npc_marken.txt) -> der einzige markierte Typ, dessen
+     * Geh-Clip die PORT-WAHL braucht (NUTZER-VORGABE "alle NPCs"). */
+    for (int arch = 0; arch < 2; arch++) {
+        re15_enemy_reset();
+        if (!bank_npc(arch, 0x47)) { CHECK(0, "%s Typ 0x47: Bank nicht ladbar", re15_ems_archiv_datei(arch)); continue; }
+        re15_enemy_bank_t *b = re15_enemy_find(0x47);
+        if (!b || !b->own_ok) { CHECK(0, "%s Typ 0x47: OWN-Bank fehlt", re15_ems_archiv_datei(arch)); continue; }
+        int bi[4] = {0,0,0,0}, fu[4] = {0,0,0,0}, pw = 0;
+        int n5 = re15_wassersprung_r41_aufsetzer(&b->anim_own, &b->skel_own, 0x47, 5, bi, fu, &pw);
+        printf("     %s Typ 0x47 OWN Clip 5 (%d Bilder): Aufsetzer %d -> Bilder %d/%d Fuesse %d/%d portwahl=%d\n", re15_ems_archiv_datei(arch),
+               b->anim_own.clips[5].frame_count, n5, bi[0], bi[1], fu[0], fu[1], pw);
+        if (arch == 0)
+            CHECK(n5 == 2 && pw == 0 && bi[0] == 7 && bi[1] == 22 && fu[0] == 7 && fu[1] == 4,
+                  "CDEMD0 Typ 0x47 (Elliot) Clip 5: Marken 7/22 Fuesse 7/4 (%d/%d %d/%d portwahl=%d)", bi[0], bi[1], fu[0], fu[1], pw);
+        else
+            CHECK(n5 == 2 && pw == 1 && bi[0] == K_ROY_C5_A && bi[1] == K_ROY_C5_B && fu[0] == 7 && fu[1] == 4,
+                  "CDEMD1 Typ 0x47 (Roy) Clip 5 ohne Marke -> PORT-WAHL %d/%d Fuesse %d/%d (erwartet %d/%d, 7/4, portwahl=%d)", bi[0], bi[1], fu[0], fu[1],
+                  K_ROY_C5_A, K_ROY_C5_B, pw);
+        int n0 = re15_wassersprung_r41_aufsetzer(&b->anim_own, &b->skel_own, 0x47, 0, bi, fu, &pw);
+        CHECK(n0 == 2 && pw == 0 && bi[0] == 0 && bi[1] == 12,
+              "%s Typ 0x47 Clip 0: Marken 0/12 (%d/%d, portwahl=%d)", re15_ems_archiv_datei(arch), bi[0], bi[1], pw);
+        if (b->loco_ok && b->anim_loco.clip_count > 2) {
+            int ln = re15_wassersprung_r41_aufsetzer(&b->anim_loco, &b->skel_loco, 0x47, 2, bi, fu, &pw);
+            CHECK(ln == 0 && pw == 0, "%s Typ 0x47 LOCO-Clip 2 (INIT-Pose @0x8011d978): %d Aufsetzer, portwahl=%d (erwartet 0/0)",
+                  re15_ems_archiv_datei(arch), ln, pw);
         }
     }
     /* Zweige von FUN_80045630 am Riegel-Aktor (wie bisher): Fleck 0x97, Stempel, trocken */

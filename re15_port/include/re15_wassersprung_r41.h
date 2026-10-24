@@ -39,7 +39,7 @@
  *        gestempelt — der Schritt sieht den Stempel des Vorbilds, wie beim Spieler.
  *
  *  (c) NACHBESSERUNG 1 (M2): +0x168 zeigt auf das Bildwort der Bank, mit der der Sub anim_set (f314) ruft. Die
- *        NPC-Geh-Subs {4,5,7,8} und die Executor-Subs {2,6,9} laden das Paar +0x170/+0x174 (`lw a0,368(v0)` /
+ *        NPC-Subs {4,5,9} und die Executor-Subs {2,6} laden das Paar +0x170/+0x174 (`lw a0,368(v0)` /
  *        `lw a1,372(v0)` vor `jal 0x8001f314` @0x800512bc-c0, @0x80051714-18, @0x80051884-88) = die OWN-Bank
  *        (dir[3]/dir[4], FUN_80022300 @0x800224b8/@0x800224c8; Port b->anim_own, re15_actor_uses_own_bank). Deren
  *        Geh-Clip 5 (30 Bilder) TRAEGT Aufsetzer: Typen 0x40/0x45/0x49 Bild 7 (Wort 0x6xxx -> Fuss 7) und 22
@@ -50,6 +50,15 @@
  *        (NUTZER-VORGABE Nachtrag 3 / E1 "alle NPCs"): Aufsetzer = Bild, in dem der Fuss-Teil 4/7 nach der
  *        Schwungphase erstmals seine Tiefstlage erreicht (Pose-y im obersten Zehntel der Spanne) — an den
  *        markierten Typen belegt (0x40-Familie Clip 5: Marken 7/22, Regel 7/20; Clip 0: Marken 0/12, Regel 0/11).
+ *        Die Rueckwaerts-Subs 7/8 laden das LOCO-Paar +0x84/+0x16c (`lw a0,132(v0)` / `lw a1,364(v0)` @0x80051a20-24 /
+ *        @0x80051c18-1c), Clip 1 (+0x94 = 1 @0x8005196c).
+ *
+ *  (e) NACHBESSERUNG 1, dritte Fortsetzung 2026-10-24: Marken tragen in den ausgelieferten Baenken NUR die
+ *        Fortbewegungs-Clips (Sonde npc_marken.txt, alle NPC-Typen 0x40/0x42/0x45/0x47/0x49/0x4b/0x4d, beide
+ *        Archive): OWN c0 + c5, LOCO/Container c0 + c1. Die PORT-WAHL ersetzt nur FEHLENDE Marken eines solchen
+ *        Clips: 0x4b (alle) und 0x47 aus CDEMD1 (OWN c5). Jeder andere Clip ohne Marke (INIT-Pose LOCO c2 @0x8011d978,
+ *        Gesten, Kante/Schub) gibt wie im Original keinen Schritt. Die Ableitung liest den Keyframe direkt aus dem
+ *        Bildwort - re15_compute_actor_kf schriebe je Bild eine RE15_ANIM_TRACE-Zeile (integration_r37_roy_leon1170).
  *
  *  (d) NACHBESSERUNG 1, Fortsetzung 2026-10-24: ALLE Aufrufe von FUN_80045630 aus den NPC-Subs (Tabelle @0x80076ca0;
  *        ghidra1_V2 XREF[24] von FUN_80045630): Sub 4 @0x800512a8 (Phase 1) / @0x80051304 (Phase 2), Sub 5 @0x80051614 /
@@ -93,7 +102,8 @@ int re15_wassersprung_r41_npc_takt(re15_actor_t *e, int a0);
 const void *re15_wassersprung_r41_npc_bank(const re15_actor_t *e, const void **out_skel);
 
 /* Aufsetzer-Bilder eines Clips: aus den Marken (Bit 0x4000; Fuss 7 - 3*((Wort>>12)&1)) oder - nur wenn der Clip
- * KEINE Marke traegt - aus der PORT-WAHL-Regel (Kopf (c)); *portwahl_out = 1 im zweiten Fall. Liefert die Zahl. */
+ * KEINE Marke traegt UND ein Fortbewegungs-Clip ist (Kopf (e)) - aus der PORT-WAHL-Regel (Kopf (c)); *portwahl_out = 1
+ * im zweiten Fall. Liefert die Zahl (0 fuer jeden anderen Clip ohne Marke). */
 int re15_wassersprung_r41_aufsetzer(const void *anim, const void *skel, uint8_t type, int clip,
                                     int bilder[4], int fuesse[4], int *portwahl_out);
 /* Nur fuer Riegel: die PORT-WAHL-Regel UNABHAENGIG von den Marken auf einen Clip anwenden (Regelpruefung). */

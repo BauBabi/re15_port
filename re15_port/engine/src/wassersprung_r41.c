@@ -11,7 +11,6 @@
 #include "re15_wassersprung_r41.h"
 #include "re15_wasser_r38.h"     /* Codes des Schritts, re15_wasser_r38_anker (Part-Weltmatrix * (0,100,0)) */
 #include "re15_actor.h"
-#include "re15_anim_select.h"    /* re15_compute_actor_kf (PORT-WAHL-Ableitung aus der Pose)                  */
 #include "re15_audio.h"          /* re15_audio_footstep                                                     */
 #include "re15_emd.h"            /* re15_emd_get_frame_entry = *(+0x168)                                    */
 #include "re15_enemy.h"          /* re15_enemy_find (Baenke: Container / Loco / Own)                        */
@@ -133,10 +132,12 @@ int re15_wassersprung_r41_landung(const re15_actor_t *p, int16_t stempel, int32_
 /* ---- (b) NPC-Schritt = FUN_80045630(a0, fuss) fuer Typ >= 0x40 ---------------------------------- */
 
 /* Die Bank des Kanals, den der laufende Sub spielt: anim_set (f314) setzt +0x168 auf das Bildwort GENAU der
- * Bank, mit der der Sub es ruft - die NPC-Geh-Subs {4,5,7,8} und die Executor-Subs {2,6,9} laden das Paar
- * +0x170/+0x174 (`lw a0,368(v0)` / `lw a1,372(v0)` vor `jal 0x8001f314` @0x800512bc-c0 u.a.) = die OWN-Bank
- * (dir[3]/dir[4], FUN_80022300 @0x800224b8/c8; Port b->anim_own). Die Container-Bank (dir[1]) traegt dagegen in
- * Clip 5 die 20-Bild-Kniebeuge ohne Aufsetzer - DAS war der Bau-Fehler ("kein NPC-Typ traegt Aufsetzer"). */
+ * Bank, mit der der Sub es ruft - die NPC-Subs {4,5,9} und die Executor-Subs {2,6} laden das Paar +0x170/+0x174
+ * (`lw a0,368(v0)` / `lw a1,372(v0)` vor `jal 0x8001f314` @0x800512bc-c0 u.a.) = die OWN-Bank (dir[3]/dir[4],
+ * FUN_80022300 @0x800224b8/c8; Port b->anim_own). Die Rueckwaerts-Subs 7/8 laden das LOCO-Paar +0x84/+0x16c
+ * (`lw a0,132(v0)` / `lw a1,364(v0)` @0x80051a20-24 / @0x80051c18-1c, Clip 1; der Port zeichnet dort die
+ * Container-Bank, deren Clip 1 dieselben Marken 7/22 traegt - Sonde npc_marken.txt). Die Container-Bank (dir[1])
+ * traegt in Clip 5 die 20-Bild-Kniebeuge ohne Aufsetzer - DAS war der Bau-Fehler ("kein NPC-Typ traegt Aufsetzer"). */
 const void *re15_wassersprung_r41_npc_bank(const re15_actor_t *e, const void **out_skel)
 {
     if (out_skel) *out_skel = NULL;
@@ -160,12 +161,30 @@ static int clip_hat_marken(const re15_emd_animation_t *an, int clip)
     return 0;
 }
 
-/* PORT-WAHL (NUTZER-VORGABE Nachtrag 3 / Entscheid E1: Schritte fuer ALLE NPC-Typen) fuer Clips OHNE Marke:
- * Aufsetzer-Bild = das Bild, in dem der Fuss-Teil (4 bzw. 7) nach der Schwungphase erstmals wieder seine
- * Tiefstlage erreicht (Pose-y im obersten Zehntel seiner Spanne; PSX-y: groesser = tiefer). Die FORM ist an den
- * markierten Typen belegt: 0x40-Familie Clip 5 Marken 7/22 -> Regel 7/20, Clip 0 Marken 0/12 -> 0/11; 0x42-
- * Familie Clip 5 Marken 8/22 -> 5/18 (Dossier). Fuss-Code wie in den Original-Daten: Teil 4 landet -> Code 7
- * (Bit 0x1000 frei), Teil 7 landet -> Code 4. */
+/* FORTBEWEGUNGS-CLIPS (Nachbesserung 1, dritte Fortsetzung): in den ausgelieferten Baenken tragen NUR sie Aufsetzer-
+ * Marken - Sonde npc_marken.txt (Bildwort-Bit 0x4000 je Bank und Clip, alle NPC-Typen 0x40/0x42/0x45/0x47/0x49/0x4b/
+ * 0x4d, CDEMD0 und CDEMD1): OWN c0 (Laufen, 22 Bilder) + c5 (Gehen, 30), LOCO/Container c0 (34) + c1 (Rueckwaerts,
+ * 32; Sub 7/8 posieren LOCO Clip 1, +0x94 = 1 @0x8005196c). Das Original schreitet nur an Marken (`andi 0x4000` vor
+ * jedem `jal 0x80045630`, z.B. @0x80051288 / @0x800519ec) - ein anderer Clip ohne Marke (INIT-Pose LOCO c2 @0x8011d978,
+ * Gesten, Kante/Schub) gibt dort keinen Schritt. Die PORT-WAHL (NUTZER-VORGABE "alle NPCs") ersetzt deshalb nur
+ * FEHLENDE Marken eines Fortbewegungs-Clips: Typ 0x4b (keine Marke in keiner Bank) und 0x47 aus CDEMD1 (OWN c5 ohne
+ * Marke, c0 markiert). */
+static int fortbewegungs_clip(const re15_emd_animation_t *an, uint8_t type, int clip)
+{
+    const re15_enemy_bank_t *b = re15_enemy_find(type);
+    if (b && b->own_ok && an == &b->anim_own) return clip == 0 || clip == 5;
+    return clip == 0 || clip == 1;
+}
+
+/* PORT-WAHL (NUTZER-VORGABE Nachtrag 3 / Entscheid E1: Schritte fuer ALLE NPC-Typen) fuer Fortbewegungs-Clips OHNE
+ * Marke: Aufsetzer-Bild = das Bild, in dem der Fuss-Teil (4 bzw. 7) nach der Schwungphase erstmals wieder seine
+ * Tiefstlage erreicht (Pose-y im obersten Zehntel seiner Spanne; PSX-y: groesser = tiefer). "Nach der Schwungphase"
+ * heisst: der Fuss war seit dem letzten Aufsetzer ueber der halben Spanne (Hysterese; ohne sie zaehlte das Zittern
+ * eines stehenden Fusses um die Zehntel-Schwelle als weiterer Aufsetzer - gemessen an Roys Clip 5, CDEMD1 0x47:
+ * Teil 4 steht in den Bildern 22..50 bei y -224..-230 um die Schwelle -226). Zwei Umlaeufe, gezaehlt im zweiten:
+ * der Zustand am Clip-Ende traegt in den Anfang (Schleife). Die FORM ist an den markierten Typen belegt: 0x40-Familie
+ * Clip 5 Marken 7/22 -> Regel 7/20, Clip 0 Marken 0/12 -> 0/11; 0x42-Familie Clip 5 Marken 8/22 -> 5/18 (Dossier).
+ * Fuss-Code wie in den Original-Daten: Teil 4 landet -> Code 7 (Bit 0x1000 frei), Teil 7 landet -> Code 4. */
 typedef struct { const void *anim; int clip; int fc; int n; uint8_t bild[4]; uint8_t fuss[4]; } portwahl_t;
 #define PORTWAHL_MAX 32
 static portwahl_t s_portwahl[PORTWAHL_MAX];
@@ -179,15 +198,35 @@ static void portwahl_ableiten(const re15_emd_animation_t *an, const re15_emd_ske
     memset(out, 0, sizeof *out);
     out->anim = an; out->clip = clip; out->fc = fc;
     if (!sk || fc <= 0 || fc > 256 || sk->bone_count <= 7) return;
+    (void)type;
     for (int f = 0; f < fc; f++) {
-        re15_actor_t a; memset(&a, 0, sizeof a);
-        a.active = 1; a.type = type; a.motion = (int16_t)clip; a.anim_frame = (uint16_t)f;
-        int kf = re15_compute_actor_kf(an, sk, &a, -1, (uint32_t)f);
+        /* Bild f -> Keyframe wie re15_compute_actor_kf vorwaerts (Slot f < fc; anim_select_common.c), aber OHNE dessen
+         * RE15_ANIM_TRACE-Zeile: die Ableitung ist keine Pose des Spiels (gemessen: integration_r37_roy_leon1170 rot,
+         * 50 Fremdzeilen Typ 0x47 Clip 2 im Bild 890 = diese Schleife ueber re15_compute_actor_kf). 0x8000-Zwischenbild
+         * wie dort (FUN_8001f314 @0x8001f370-f37c -> FUN_8001f8b4): A = erstes echtes Bild rueckwaerts, B = erstes echtes
+         * Bild vorwaerts, Gewicht = Wort & 0xfff (Roys Clip 5 traegt solche Bilder: 9/25/41/57, Sonde roy_c5.txt). */
+        re15_kf_tween_t tw = {0, 0, 0};
+        int slot = f;
+        uint32_t w = re15_emd_get_frame_entry(an, clip, slot);
+        if (w & 0x8000u) {
+            int vor = slot, nach = slot;
+            for (int k = 0; k < fc && (re15_emd_get_frame_entry(an, clip, vor) & 0x8000u); k++) vor = (vor + fc - 1) % fc;
+            for (int k = 0; k < fc && (re15_emd_get_frame_entry(an, clip, nach) & 0x8000u); k++) nach = (nach + 1) % fc;
+            int kf_von = (int)(re15_emd_get_frame_entry(an, clip, vor) & 0xFFFu);
+            if (kf_von >= sk->keyframe_count) kf_von = sk->keyframe_count > 0 ? sk->keyframe_count - 1 : 0;
+            tw.active = 1; tw.kf_from = kf_von; tw.weight = (int)(w & 0xFFFu);
+            slot = nach;
+        }
+        int kf = (int)(re15_emd_get_frame_entry(an, clip, slot) & 0xFFFu);
+        if (kf >= sk->keyframe_count) kf = sk->keyframe_count > 0 ? sk->keyframe_count - 1 : 0;
         re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
-        void *save = g_anim_pose_actor;
+        void *save = g_anim_pose_actor;            /* Abfrage: keinen Crossfade-Zustand und keinen anstehenden */
+        re15_kf_tween_t save_tw = g_anim_kf_tween; /* Zwischenbild-Kanal des Zeichners veraendern (wie affen_11c0.c) */
         g_anim_pose_actor = NULL;
+        g_anim_kf_tween = tw;
         int ok = re15_skel_compute_pose(sk, kf, poses);
         g_anim_pose_actor = save;
+        g_anim_kf_tween = save_tw;
         if (ok != 0) return;
         y[0][f] = poses[4].trans[1];
         y[1][f] = poses[7].trans[1];
@@ -195,13 +234,20 @@ static void portwahl_ableiten(const re15_emd_animation_t *an, const re15_emd_ske
     for (int p = 0; p < 2; p++) {
         int32_t mx = y[p][0], mn = y[p][0];
         for (int f = 1; f < fc; f++) { if (y[p][f] > mx) mx = y[p][f]; if (y[p][f] < mn) mn = y[p][f]; }
-        int32_t thr = mx - (mx - mn) / 10;
-        for (int f = 0; f < fc && out->n < 4; f++) {
-            int32_t prev = y[p][(f + fc - 1) % fc];
-            if (y[p][f] >= thr && prev < thr) {
-                out->bild[out->n] = (uint8_t)f;
-                out->fuss[out->n] = (uint8_t)(p == 0 ? 7 : 4);
-                out->n++;
+        if (mx == mn) continue;
+        int32_t thr   = mx - (mx - mn) / 10;       /* unterstes Zehntel der Fusshoehe = Aufsetzen        */
+        int32_t mitte = mx - (mx - mn) / 2;        /* ueber der halben Spanne = Schwungphase (Hysterese)  */
+        int scharf = 0;
+        for (int k = 0; k < 2 * fc && out->n < 4; k++) {
+            int f = k % fc;
+            if (y[p][f] < mitte) scharf = 1;
+            else if (scharf && y[p][f] >= thr) {
+                scharf = 0;
+                if (k >= fc) {
+                    out->bild[out->n] = (uint8_t)f;
+                    out->fuss[out->n] = (uint8_t)(p == 0 ? 7 : 4);
+                    out->n++;
+                }
             }
         }
     }
@@ -233,6 +279,7 @@ int re15_wassersprung_r41_aufsetzer(const void *anim_v, const void *skel_v, uint
         }
         return n;
     }
+    if (!fortbewegungs_clip(an, type, clip)) return 0;   /* kein Fortbewegungs-Clip: wie im Original kein Schritt */
     const portwahl_t *pw = portwahl(an, sk, type, clip);
     if (portwahl_out) *portwahl_out = 1;
     for (int i = 0; i < pw->n; i++) { bilder[i] = pw->bild[i]; fuesse[i] = pw->fuss[i]; }
@@ -347,7 +394,7 @@ int re15_wassersprung_r41_npc_takt(re15_actor_t *e, int a0)
     uint32_t wort = re15_emd_get_frame_entry(an, clip, (int)bild);
     int fuss = 0; unsigned pw_treffer = 0;
     if (wort & 0x4000u) fuss = (wort & 0x1000u) ? 4 : 7;
-    else if (!clip_hat_marken(an, clip)) {
+    else if (!clip_hat_marken(an, clip) && fortbewegungs_clip(an, e->type, clip)) {   /* PORT-WAHL nur Fortbewegung */
         const portwahl_t *pw = portwahl(an, (const re15_emd_skeleton_t *)sk_v, e->type, clip);
         for (int i = 0; i < pw->n; i++) if (pw->bild[i] == bild) { fuss = pw->fuss[i]; pw_treffer = 1; break; }
     }

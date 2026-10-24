@@ -603,3 +603,41 @@ Laeufe B/D/E2. Konfliktrisiko mit Spur D gering (andere Stellen); zur Integratio
   `bne` @0x8001b4d4) nicht zurueckgesetzt: im Original zaehlt der Gegner-Index von Record r+1 hinter den geschobenen Bits von
   Record r weiter; der Port wertet jeden Record ab Bit 1 aus. Ob ein ausgeliefertes RBJ davon betroffen ist (mehrere Records mit
   Gegner-Bits), ist NICHT gemessen -> OFFEN 9.
+
+### N1.10d Dritte Fortsetzung 2026-10-24: PORT-WAHL nur fuer Fortbewegungs-Clips, Ableitung ohne Anim-Spur (eigener Befund)
+- **Messung vorher (Stand d77bf72a).** Integrationskette (N1.12) `94% tests passed, 1 tests failed out of 17`: rot nur
+  `integration_r37_roy_leon1170` - `FEHLER: Elliot Clip 2 = 52 Bilder (EM047-Bank 1 CDEMD0) bzw. INIT-Pose Loco Clip 2 Bild 0
+  (@0x8011d978): 6/56 Zeilen, davon INIT-Pose 6`. Die 50 fremden Zeilen der Anim-Spur stehen alle im Bild 890, Aktor-Index
+  1218860271 (kein g_actors-Platz), Typ 0x47, Clip 2, cur 0..49 (`A_belege/nb1d/roy_leon1170_rot.txt`): Elliot steht bis Bild
+  889 in der INIT-Pose (LOCO Clip 2 Bild 0), im ersten Sub-Takt las der NPC-Schritt dieses gezeichnete Bild, Clip 2 traegt keine
+  Marke -> die PORT-WAHL-Ableitung lief ueber alle 50 Bilder des Clips - mit re15_compute_actor_kf an einem Stapel-Aktor, und
+  das schreibt je Aufruf eine RE15_ANIM_TRACE-Zeile.
+- **Zwei Defekte.** (1) Die PORT-WAHL griff fuer JEDEN Clip ohne Marke (Code: `else if (!clip_hat_marken(...))`), obwohl das
+  Dossier (N1.3) und der Riegel "PORT-WAHL nur 0x4b" sagen: auch INIT-Pose, Kniebeuge (Container c5), Gesten. (2) Die Ableitung
+  schrieb in die Anim-Spur (Mess-Artefakt, aber es macht jeden Spur-Riegel einer NPC-Szene rot).
+- **Beleg - Daten.** Sonde `A_belege/nb1d/sonde_npc_marken.c` -> `npc_marken.txt` (Bildwort-Bit 0x4000 je Bank und Clip, ALLE
+  NPC-Typen der Archive: 0x40/0x42/0x45/0x47/0x49/0x4b/0x4d, CDEMD0 und CDEMD1): Marken tragen ausschliesslich OWN c0 (22 Bilder)
+  + c5 (30) und LOCO/Container c0 (34, Bilder 8/25) + c1 (32, Bilder 7/22). 0x4b: keine Marke in keiner Bank. **0x47 aus CDEMD1
+  (Roy, re15_typ47_ist_elliot nur fuer Leon): OWN c5 (61 Bilder) OHNE Marke, c0 markiert 0/12** - in Nachbesserung 1 noch nicht
+  gezaehlt (die Sonde der Vorgaengerin kannte nur sechs Typen).
+- **Beleg - Code (PSX.EXE, re15_disasm.py).** Jeder Schritt der NPC-Subs haengt am Bit 0x4000 des gezeichneten Bildworts
+  (`andi v0,v1,0x4000` @0x80051288 Sub 4, @0x800519ec Sub 7 usw., N1.8/N1.10). Die Rueckwaerts-Subs posieren das LOCO-Paar:
+  Sub 7 `sb v1,148(v0)` (+0x94 = 1) @0x8005196c, `lw a0,132(v0)` / `lw a1,364(v0)` @0x80051a20-24, `jal 0x8001f314` @0x80051a28;
+  Sub 8 `lw a0,132(v0)` / `lw a1,364(v0)` @0x80051c18-1c, `jal 0x8001f314` @0x80051c20 (Kommentar im Bau-Stand "Subs {4,5,7,8}
+  laden +0x170/+0x174" war fuer 7/8 falsch; der Port zeichnet dort den Container, dessen Clip 1 dieselben Marken 7/22 traegt).
+- **Aenderung** (wassersprung_r41.c, Kopf (e) in include/re15_wassersprung_r41.h): `fortbewegungs_clip()` = OWN c0/c5 bzw.
+  LOCO/Container c0/c1 (genau die Clips mit Marken laut Sonde); PORT-WAHL nur fuer einen Fortbewegungs-Clip ohne Marke (0x4b alle,
+  0x47 CDEMD1 OWN c5), jeder andere Clip ohne Marke gibt wie im Original keinen Schritt (npc_takt und re15_wassersprung_r41_aufsetzer).
+  Ableitung: Bild -> Keyframe wie re15_compute_actor_kf vorwaerts, aber ohne dessen Spur-Zeile; 0x8000-Zwischenbilder wie dort
+  (A/B/Gewicht, FUN_8001f314 @0x8001f370-f37c -> FUN_8001f8b4; Roys c5 traegt sie in den Bildern 9/25/41/57), g_anim_kf_tween und
+  g_anim_pose_actor gesichert (Muster affen_11c0.c). Regel-Hysterese "nach der Schwungphase": ein Aufsetzer zaehlt erst, nachdem der
+  Fuss seit dem letzten ueber der halben Spanne war; zwei Umlaeufe, gezaehlt im zweiten. Gemessen an Roys c5 (`roy_c5.txt`): Teil 4
+  steht in den Bildern 22..50 bei y -224..-230 um die Zehntel-Schwelle -226 - ohne Hysterese 4 Aufsetzer (19/45 + 2), mit ihr 2:
+  **Bild 19 (Teil 4, Fuss 7) und Bild 50 (Teil 7, Fuss 4)** = je ein Aufsetzen pro Fuss im 61-Bild-Zyklus (Tiefstlagen -213 bei 21,
+  -214 bei 52). Die Ergebnisse aller uebrigen Typen bleiben gleich (0x4b c5 5/19, c0 0/10; Regel 0x40-Familie 7/20, 0x42-Familie
+  5/18; npc_wasser 6 bzw. 9 Schritte).
+- **Riegel** `unit_r41_wasser20b0_npc` (erweitert): je Typ und Archiv Container-Clip 5 -> 0 Aufsetzer / keine PORT-WAHL, LOCO-Clip 2
+  (INIT-Pose) -> 0/0, Container-Clip 1 (Rueckwaerts) -> Marken 7/22 bzw. PORT-WAHL fuer 0x4b; Typ 0x47: CDEMD0 Clip 5 Marken 7/22
+  Fuss 7/4, CDEMD1 Clip 5 PORT-WAHL 19/50 Fuss 7/4, Clip 0 Marken 0/12, LOCO-Clip 2 0/0. **Gegenprobe** (alter Schritt-Code d1809dbf,
+  neuer Riegel; `A_belege/nb1d/gegenprobe_portwahl.txt`): `npc: 90 Pruefungen, 27 Fehler` (Container-Clip 5 und INIT-Pose je 2..4
+  erfundene Aufsetzer bei jedem Typ, Roy 19/45 Fuss 7/7); neuer Code `npc: 90 Pruefungen, 0 Fehler`.
