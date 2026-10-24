@@ -6,7 +6,7 @@ Pruefer: Abnahme-Agent 4, 2026-10-24 (Beginn 20:34 laut `date`). Baum `.claude/w
 eigene Laeufe unter `<sp>/E41a4/` (Helfer `<sp>/E41a4/run.sh` / `run2.sh` / `batch.sh` / `grab.sh`: exe-Kopie, eigener Laufordner, geerbte
 RE15_* geloescht; Werkzeuge `<sp>/E41a4/tools/`).
 
-Status dieses Berichts: IN ARBEIT (fortlaufend gespeichert).
+Status dieses Berichts: ABGESCHLOSSEN (fortlaufend gespeichert; §0-§11). Ergebnis: BESTANDEN (Punkte 1-3 erfuellt, Maengel 1-2 der Abnahme 3 behoben, Gates halten).
 
 ## 0. Gelesen / Bau
 - AUFTRAG.md (Wortlaut; fuer Spur E: Hinweise 03:21, E-N1/E-N2 04:52, E-E1..E-E3 10:50, **E-E4 17:32**, **Nachtrag 14 17:36**;
@@ -188,6 +188,10 @@ ihn nicht). **Urteil Punkt 2: erfuellt.**
   msg 10 "Elza: Sherry!?" (@0x1480 F84), msg 11 "Elza: Where has she gone!?" (@0x14CE F372), Plc_ret @0x14E6 F473; Kameras 6,5,4,3,**2**, Ende (-18192,
   -20453) Cut 2. BASIS: dieselbe Szene, Kameras 6,5,4,3,**8**, Ende Cut 8 (gemaltes offenes Tuerblatt). Bild F690 `<sp>/E41a4/P3a_ende_basis_nach.png`:
   links BASIS Tuerblatt offen (hell), rechts NACHHER geschlossene Tuer.
+- Elza ueber die Spielerwahl (VERTRAG: `RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1`, `RE15_TITLE_CONFIRM_MS=1500`, ohne TITLE_SHOT; `<sp>/E41a4/run3.sh`,
+  Lauf `N_P3a_pselect`, sonst wie P3a): `PL04 (character=4, Elza-Bit=1)`, room1261 -> Tuer (331 Bilder) -> room11b1, `[wk11b1-r41] ... bleibt zu`, msg 10/11,
+  Kameras 6,5,4,3,**2**, Ende (-18192,-20453) Cut 2 — gleich wie mit `RE15_TITLE_SHOT_CHAR=1` (das ruft dieselbe `re15_gameflow_new_game(1)` wie das
+  Ende der Spielerwahl, main.c:3762-3766).
 - **Dauerhaft**: Garagenseite (`P3b_garage`, `RE15_PLAYER_POS=-20200,-16230,2048,0`, `U1.5,W0.3,A0.1`): ab F272 **(-20942,-16230) blockiert**, `"The door is
   locked."`, Raum bleibt 11b1. Werkstattseite (`P3c_werkstatt`, (-24000,-16230) Blick 0, `U2.0`): NACHHER ab F280 **(-22618,-16230) blockiert**, Cut 0,
   msg 12; BASIS laeuft durch (F290 -21825, F300 -21075, F320 -19768, Kameras 7 -> 8). Wiederbetreten nach der Szene ueber die echte Tuer (`P3d_wieder`,
@@ -218,7 +222,7 @@ ihn nicht). **Urteil Punkt 2: erfuellt.**
   r39_funk10f1_echt, r37_zombieaktiv. Kein Fenster-Haken rot, keine Nachlaeufe noetig.
 - Klettern/Treppe/Kisten/Tueren (Uebernahme-Zweige Klettern + Treppe des Dispatchers, Riegel mit Renn-Eingaben): `ctest -R "^(integration_r36_klettern|
   integration_r36_dachkiste|integration_r37_kistenregel|integration_r36_tueren)$" -j 2 --timeout 1800` (`<sp>/E41a4/ctest_integ2.log`):
-  ERGEBNIS_ZWEITE_GRUPPE
+  **100% tests passed, 0 tests failed out of 4** (21:37-22:04, CTEST_EXIT=0): klettern 587 s, kistenregel 349 s, tueren 51 s, dachkiste 1693 s (Wanduhr unter Fremdlast; keine Nachlaeufe noetig).
 
 ### 8.2 RE-Gate
 | Pruefung | Urteil | Beleg |
@@ -238,3 +242,35 @@ ihn nicht). **Urteil Punkt 2: erfuellt.**
 | Gemeinsame Dateien | haelt | alle Haken je 1-5 Zeilen, markiert "Runde 41 Spur E" (Diff gelesen); NB4 neu: game_step_common.c 2 Zeilen (**angenommen per E-E5**), player_common.c +1, main.c +1/+2 (E-E1) |
 | Riegel je Punkt / messend | haelt | Punkt 1: unit kurbel_*, takt_* (7), integration kurbel/geh/renn/losl/kante/spawn_kante (geh/renn/losl pruefen die Standbild-Dauer); Punkt 2: unit karte_pin + integration karte; Punkt 3: unit 11b1_* + integration werkstatt_{szene,tuer}; Mangel 1: unit takt_uebernahme + integration treppe/losl — Gegenproben rot (§8.1) |
 | Nebenwirkungen beide Szenarien | haelt | Leon/Elza in Punkt 1-3 und im Renn-Stopp gemessen (§3-§7); NACHHER = VORHER zeilengleich in N1/N3/P1_frei/TA/TC/Elza/losl/renn_a2; Leon 11B0 = BASIS |
+
+## 9. Maengel
+Keine.
+
+## 10. Hinweise (keine Maengel)
+- H1 Standbild-Dauer: der Port haelt jedes Apply-Bild einheitlich 2 + 6 Bilddauern (~264 ms, gemessen 250-267 ms am Fenster); das Original schwankt
+  mit dem CD-Kopfweg (12-15 VSyncs RVD, 14/15 an der Kurbel, 34-36 nach einem PLW-Laden — o_w03_stand selbst gemessen: 36 Videobilder = 602 ms).
+  Vom Bau-Agenten als OFFEN gefuehrt; die Dauer haengt am Bildtakt (`bilder * frame_budget_ms`: bei RE15_FPS=60 nur 96 ms Zusatz).
+- H2 Bildvergleich gegen ein Original-VIDEO gibt es nur fuer Gehen (o_hg_cut3) und Stehen (o_w03_stand, mit PLW-Kopfweg); der Renn-Anlauf ist ueber
+  die GDB-Folge (o_renn2, o_kurbel_cut3_renn 15 VSyncs) belegt. Eine eigene DuckStation-Aufnahme habe ich nicht gemacht, weil waehrend der Abnahme
+  eine fremde DuckStation-Instanz lief (pid 68572 ab 21:20; virtuelles Pad/settings.ini nicht teilen).
+- H3 (Abnahme 3 H2, OFFEN des Bau-Agenten) Aktions-Pruefung im Renn-DECIDE @0x800326a4-@0x800326dc: im Aktionsbild einer Treppe macht der Port einen
+  Stopp-Schritt (N2 F312 ps2 = 3), das Original nicht (Rueckgabe 1 @0x800435c8); ohne gemessene Lagewirkung (Kollision an der Kante).
+- H4 msg_block-Zweig (Nachricht ohne Spieler-Bit): der Port haelt die Bewegung und damit den Stopp an (`re15_rennstopp_r41_halten`), das Original
+  laesst Kommando 1 weiterlaufen — vorbestehend, vom Bau-Agenten benannt.
+- H5 PSX-Plattform ohne Standbild-Dauer/Bildhalt (platform/psx/main.c ohne Haken); der Dispatcher-Haken des Renn-Stopps gilt fuer beide Plattformen.
+- H6 Werkzeug/Doku: der Basis-Baum `<sp>/abn0_base` hat kein shared_assets mehr (BASIS-Laeufe nur mit RE15_ASSET_ROOT, `run2.sh`); das Dossier
+  fuehrt die losl-Gegenprobe mit der VORHER-exe als BESTANDEN — mit dem End-Auswerter faellt sie an der Standbild-Pruefung (§8.1), was den Riegel
+  staerker macht.
+
+## 11. Urteil
+| Punkt | Urteil | Kern |
+|---|---|---|
+| 1 Kurbel ROOM2020 "herumfliegend" (Nachtrag 14: Sprung an die Kurbel) | **erfuellt** | am echten Fenster gemessen: Bild nach "Ja" steht 250-267 ms (Original-Video 284 ms, VORHER 75 ms), dann Leon an der Kurbel ohne Zwischenbild; gleiche Pose-/Blenden-/Letterbox-Folge und Kurbelbeginn (651 / 635 ms) wie o_hg_cut3; Gehen, Stehen, Rennen, Weg des Nutzers, Elza |
+| 2 Karte B1, vordere Tuer 1190 | **erfuellt** | BASIS-Sprung zur Hallen-Seite (137/130) reproduziert, NACHHER 145 an der Ostkammer; Leon, Elza, rennend, echte Tuer |
+| 3 Werkstatt-Tuer 11B1 (Elza) | **erfuellt** | echter Tuerweg 1261 -> 11B1 mit Szene: Ende Cut 2 statt 8 (Bild F690), blockiert von Garage und Werkstatt, "The door is locked.", Wiederbetreten zu, Leon 11B0 unveraendert |
+| Mangel 1 (Abnahme 3) Renn-Stopp nach Uebernahme | **behoben** | Treppe ROOM2040: NACHHER steht ab F375 (-13782), VORHER +117 +77 +37 -3; Tuer/Statusschirm/freie Strecke/Drehen/Elza/Kurbel zeilengleich |
+| Mangel 2 (Abnahme 3) / E-E4 Gorilla-Sonde | **behoben** (E-E5) | Haenger-Mass je Seed < 354 (AN max 103), Gegenprobe Original-Regel 76 Seeds, drei benannte Stellen (WESTBLOCK per E-E5 bestaetigt), Folgeauftrag |
+
+Gates: Bau haelt (LOCAL-BUILD-OK, md5 732dbebc = behauptet), RE-Gate-Stichproben bestaetigt (§2), keine Rate-Woerter, Riegel messend (Gegenproben rot),
+Vertrag (Pfade/Ressourcen/Haken; game_step_common.c per E-E5) haelt, Tests: Spur 29/29, unit/prop/probe 914/914, Integration 30/30 + 4/4 (klettern, dachkiste, kistenregel, tueren).
+**Gesamt: BESTANDEN.**
