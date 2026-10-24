@@ -16,6 +16,9 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
   #1129 _weg_elza, #1130 _sperre; `_kette` "uebersprungen: Spur A fehlt") + `build` -> `=== LOCAL-BUILD-OK`. Gezielte
   Unit-Gruppe (Regex der Abnahme 2, scratchpad `r41c_nb3/regex_unit.txt`): `100% tests passed, 0 tests failed out of 164`
   (34.55 s); unit_r41_ventilkette `PASS (376 Pruefungen)`.
+* 2026-10-24 11:05-11:33 gezielte Integrationsgruppe (laufend, exe 11:03): `1/5 Test #1126: integration_r41_ventilkette
+  ... Passed 257.45 sec`, `2/5 Test #1127: integration_r41_ventilkette_b ... Passed 505.60 sec`, `3/5 Test #1128:
+  integration_r41_ventilkette_weg ... Passed 897.27 sec` (Leon, alle sieben Glieder v1/v2/g1/g2/w1/w3/w4).
 * 2026-10-24 07:50-09:00 **Nachbesserung 2 abgeschlossen** (§0c): Tuergraph (Werkzeug + C_belege/nb2_tuergraph_nach_flut.txt),
   Weg zu Fuss gemessen (2050 -> 2020, 2030 Nordgalerie -> 2060, 2040 -> Treppe -> Galerie -> 2070 Nordgang -> 11A0 bis
   zur Sperre, Leon + Elza; Gegenprobe (3,206); 2080 ab 2090 -> Rechner -> Bit 107). Ergebnis: Weg existiert nicht,
