@@ -372,8 +372,9 @@ Tiefe 391/392, Leon z 2713..3169 = Bucket 42..49); 2030 C7 (4500,9150): 297 unte
 186..256 an der Ecke, Leon Bucket 179..193; sichtbares Mass - Leon vorderstes Dreieck - 20 von 297). Ursache: Profil-Tiefe (geometrie.tiefe_profil) - der Handlauf hat im Bild keinen
 Bodenkontakt, seine Spalten erbten den Bodenpunkt weit hinten (2040 C7 "Profil-Tiefe 43..631"; 2030 C7 07_01 "83..202" fuer
 Nord- UND Ostgelaender zusammen). **Aenderung** (auswahl.json, `"r41"`-Vermerk; Nutzer-PNG unveraendert): 2040 C7 `"zelle"`
-[-18250,-6500,22400,450]; 2030 C7 07_01 an der Ecke (Bildspalte 173..186, Projektion der Zellenecke) bei Spalte 179 in zwei
-Objekte geteilt (`"minus"`), Nordgelaender `"zelle"` [-6350,8150,12250,500], Ostgelaender [5400,-9000,500,17650]; `raum.py ROOMxxxx 7
+[-18250,-6500,22400,450]; 2030 C7 07_01 an der Ecke (Bildspalte 173..186 = Projektion des Eckblocks x 5400..5900 z 8150..8650,
+den BEIDE Zellen enthalten; die Teilung bei Spalte 179 liegt innerhalb dieser Ecke, links/rechts davon gehoert jede Spalte nur
+zu einer Zelle) in zwei Objekte geteilt (`"minus"`), Nordgelaender `"zelle"` [-6350,8150,12250,500], Ostgelaender [5400,-9000,500,17650]; `raum.py ROOMxxxx 7
 --p2 --stufe 16 --statistik max --dump build/p2/dump_klemmpfad_r40.txt` -> 2040 C7 33 Rechtecke Tiefe 35..50 (2898 von 2981
 Punkten direkt getroffen), 2030 C7 105 Rechtecke Tiefe 78..258 (Nord 130..183, Ost 77..181, 07_02 unveraendert 246..258);
 Bau-Schiene VOR verdeckt 0 / teil 0. Bilder vorher `M_bilder/NB1_M4_ROOM2030_C07_hinter.png`, `NB1_M4_ROOM2040_C07_hinter.png`.
@@ -444,6 +445,19 @@ Neu/geaendert (nur tests/unit/probes/r41_masken36.cmake + eigene Dateien):
 | `integration_r41_masken36_stage2` (erweitert) | + Mangel 3: v2030_15/v2031_15 Leon/Elza VOR der Reling mit weggestellter Spinne (G=1,...) H == 0, Gegenprobe m2030_15 (Spinne hinter der Reling verdeckt, H > 0); + Mangel 4: m2030_07/m2040_07 Leon HINTER dem Gelaender verdeckt (H > 0) | s. Lauf unten |
 | `unit_r41_masken36_loecher` (Messwert) | Kerben NACHHER 11 494 von 62 432 = 18,4 % (vor NB1 25,1 %), Schranke <= 30 % unveraendert | PASS |
 | `unit_r37_masken36_ausschluss` (unveraendert) | rechnet die Tabelle aus den Dateien nach (== gen/masken36_ausschluss_r37.inc nach Schritt 2), Schranke NB2 M2 0/0 | PASS |
+
+Gezielte Laeufe Nachbesserung 1 (Bau `local_build.sh configure` + `build` nach der letzten Asset-/Tabellen-Aenderung,
+Spurbaum, KEINE volle Suite; alle Laeufe auf demselben Endstand der Assets):
+1. `ctest -R "unit_r41_masken36|unit_r37_masken36|unit_pri_|unit_r36_pri|unit_r37_pri1100|unit_sld_atlas|unit_r38_itemorte|unit_r39_optik|unit_r34n_e_dokumente|unit_r37_fahrstuhl_lift2030" -j 3 --timeout 1200 --output-on-failure`
+   -> **`100% tests passed, 0 tests failed out of 28`**; nach dem Neubau von test_r41_masken36 (nur Messwert-Text)
+   `ctest -R "unit_r41_masken36" --timeout 900 --output-on-failure` -> **`100% tests passed, 0 tests failed out of 2`**
+2. `ctest -R "integration_r37_masken36" -j 2 --timeout 1500 --output-on-failure` -> **`100% tests passed, 0 tests failed out of 5`**
+   (stage3..6 + nb2: R37-DAVOR 0 / HINTER-Schranken / Cursor 15 auf dem Endstand)
+3. `ctest -R "integration_r41_masken36_stage2|bss|itemorte|optik|dokumente|r34n_g|r34n_b_cursor|r19|r22_10f0|stage6_hintergrund|rolltor20a0|zgirl_5090|elza5091|elza50b1|boot_bg_pin|r30_cut_blitz|integration_pri_masken|integration_r36_pri|integration_r37_pri1100" -j 2 --timeout 1500 --output-on-failure`
+   -> **`100% tests passed, 0 tests failed out of 41`** (darin integration_r41_masken36_stage2 mit den NB1-Szenen, 520 s)
+4. `ctest -R "integration_r41_masken36_zelle" --timeout 1500 -V` -> ZELLE_ERGEBNIS
+Linux/parallel: neue Szenen nur ueber das bestehende -P-Skript (cmake_minimum_required, keine .exe-/Backslash-Pfade,
+LAST_EXT), eigenes exe-Praefix je Riegel (`re15_pc_r41m2_*` / `re15_pc_r41m3_*`), eigene Laufordner.
 
 ## OFFEN
 
