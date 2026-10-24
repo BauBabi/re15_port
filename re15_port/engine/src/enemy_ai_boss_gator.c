@@ -775,8 +775,10 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
      * (Nutzer Runde 8); er wirkt auch dann, wenn keine Reaktion gewaehlt wird. */
     if (e->anim_frame >= 2u) e->anim_frame -= 2u;
     if (!g->aggro) g->aggro = 1;        /* Fernschuss startet den Kampf */
-    /* Blut bei JEDEM Treffer (Punkt 5): Burst 0x1500 am vorderen Rumpf (Bone 1). */
-    {
+    /* Blut bei JEDEM Treffer (Punkt 5): Burst 0x1500 am vorderen Rumpf (Bone 1). Runde 41 Spur B NB3 (B9): untergetaucht
+     * kein Blut - ohne Trefferbox erreicht ihn nur der Granaten-Kasten (re15_re2_gl_kandidat nimmt eine Null-Box als 1),
+     * der Treffer weckt ihn (aggro) und der Durchbruch folgt im naechsten Takt. */
+    if (!g->untergetaucht) {
         int32_t bp[3];
         re15_enemy_bone_world_pos(e, 1, bp);
         re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
@@ -789,14 +791,16 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
          * Port-Kadenz (10 %-Schwellen / 6 Treffer) ist damit durch die RE2-Kadenz ersetzt. */
         int slot = (int)(e - g_actors);
         int gesperrt = (g->phase == GBP_CROSS || g->phase == GBP_DIE || g->phase == GBP_RE2_INTRO
-                        || g->phase == GBP_FRESSEN);
+                        || g->phase == GBP_FRESSEN
+                        || g->untergetaucht);   /* NB3 (B9): keine Reaktion (R4/Clip 10) aus dem Versteck - erst der
+                                                 * Durchbruch (RE2 Sub 0: Treffer laufen erst ab Sub 1/2) */
         int r = re15_gr2_hurt_reaktion(slot, e, &g_actors[RE15_ACTOR_SLOT_PLAYER], gesperrt);
         if (r == 1) {
             re15_gr2_r1_start(slot, e);
             g->phase = GBP_RE2_TOD; g->timer = 0; g->arc_vz = 0; g->pitch_vz = 0; g->jaw_vz = 0;
             return;
         }
-        if (s_gb_brull_cd == 0) gb_se(r == 4 ? 0 : 5);
+        if (s_gb_brull_cd == 0 && !g->untergetaucht) gb_se(r == 4 ? 0 : 5);   /* NB3 (B9): kein Ruf aus dem Versteck */
         if (r == 4) {
             g->hit_zaehler = 0;
             g->phase = GBP_FLINCH; g->timer = 0;

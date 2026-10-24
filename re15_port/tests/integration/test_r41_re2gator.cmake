@@ -19,6 +19,16 @@
 #     Kopf/Rumpf im Wasser ("DASH ende ... wand_draussen_max=0"). Gemessen 2026-10-24 (Lauf D2): Dash ab (-6052,-18113),
 #     End-Gier 1648 = Peilung zu Leon (Abw. 5), Kopf x min -8642, Putz 54, gezeichnet 27..98 Quads/Bild.
 #
+# Nachbesserung 3 (Abnahme 2 M1, Orchestrator-Entscheid B9): DRITTER Lauf "natuerlich" = Abnahme-2-Lauf N (ohne GB_TEST,
+#   Leon geht aus der Tuernische im Westkanal nach Norden, Aggro bei dist < 9000 zum Lauerplatz). RE2-Form: der Gator ist bis
+#   zum Durchbruch UNTERGETAUCHT (Sce_em_set y=+3000 @RDT 0x25A0, Pos_set erst im Intro @SCD 0x0736). Gemessen am NPC-
+#   Zeichner (debug.log "[gator-re2] Sicht ...", gator_re2_pc.c): erste Sicht-Zeile "untergetaucht", Auftauchen genau mit dem
+#   Intro-Start (Clip 6 Bild 0, = "RE2 AUFTAUCHEN F<n>" in gator_boss.log), erstes gezeichnetes Bild im Intro, kein
+#   erneutes Untertauchen, groesster Bildschritt danach <= 340 = groesster authored Wurzelschritt der Clips 6/3/0/1 x Skala
+#   2731 (unit_r41_re2gator_lauer: Clip 6 340, 3 72, 0 104, 1 259). Gemessen 2026-10-24 (B41nb3/mess/N): untergetaucht
+#   F1-F200, Auftauchen F201 auf (5085,-19880) Clip 6 Bild 0, groesster Schritt 338 (Clip 6 Bild 28); Bilder F1-F201
+#   pixelgleich mit einem Lauf ohne Gator (RE15_KEIN_GATOR=1).
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_re2gator.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -32,7 +42,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
 
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_basis "${WORKDIR}/lauf_${_lauf_id}")
-file(MAKE_DIRECTORY "${_basis}/nische" "${_basis}/dash")
+file(MAKE_DIRECTORY "${_basis}/nische" "${_basis}/dash" "${_basis}/natuerlich")
 # EIGENER EXE-NAME (Muster test_r34n_b_cursor.cmake): parallele Bauten beenden re15_pc.exe per Namen.
 # Nachbesserung 1 (Abnahme 0, M5): KEIN file(GLOB)+REMOVE fremder re15_pc_r41b_*.exe mehr - nur die eigene Kopie.
 get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
@@ -210,6 +220,81 @@ if(_hp_min LESS 25000)
 endif()
 set(_status1 "nische: RE2-Zeilen ${_re2}, Intro Lage/Start/Ende ${_intro_lage}/${_intro}/${_intro_ende} wand ${_intro_wand}, Clip 6/3 ${_mo6}/${_mo3}, Kamera ${_kam_folge}, Finisher Cut ${_fin_cut} ab F${_fin_bild} gehalten ${_fin_cam_bilder} Bilder / ${_fin_halt} Halt-Zeilen, HP min ${_hp_min}")
 
+# ---------------------------------------------------------------- Lauf 3: natuerlicher Zugang (B9: untergetaucht)
+set(_dir "${_basis}/natuerlich")
+set(WORKDIR "${_dir}")
+re15_start_spiel(_rv 300
+    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
+    SDL_ASSERT=always_ignore
+    RE15_DEBUG_JUMP=2090@250
+    "RE15_PLAYER_POS=-8200,-25550,3072" RE15_R39_MESS_SPIELER_HP=100
+    RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=W2,U12,W40"
+    "RE15_EXIT_AT=520#2090"
+    "${_exe_kopie}")
+if(NOT _rv EQUAL 0)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf natuerlich exe exit=${_rv} (erwartet 0 bis RE15_EXIT_AT), ${_dir}")
+endif()
+file(STRINGS "${_dir}/debug.log" _sicht REGEX "\\[gator-re2\\] Sicht ")
+set(_s_erst "")
+set(_s_auf -1)
+set(_s_auf_clip "")
+set(_s_gez -1)
+set(_s_gez_clip "")
+set(_s_wieder 0)
+set(_s_sprung -1)
+foreach(_l IN LISTS _sicht)
+    if(_l MATCHES "Sicht F([0-9]+) (untergetaucht|aufgetaucht) pos=\\(.*\\) clip=([0-9]+) bild=([0-9]+)")
+        if("${_s_erst}" STREQUAL "")
+            set(_s_erst "${CMAKE_MATCH_2}")
+        endif()
+        if("${CMAKE_MATCH_2}" STREQUAL "aufgetaucht" AND _s_auf LESS 0)
+            set(_s_auf ${CMAKE_MATCH_1})
+            set(_s_auf_clip "${CMAKE_MATCH_3}/${CMAKE_MATCH_4}")
+        elseif("${CMAKE_MATCH_2}" STREQUAL "untergetaucht" AND _s_auf GREATER 0)
+            set(_s_wieder 1)
+        endif()
+    elseif(_l MATCHES "Sicht erstes Bild F([0-9]+) gezeichnet .* clip=([0-9]+) bild=([0-9]+)")
+        set(_s_gez ${CMAKE_MATCH_1})
+        set(_s_gez_clip "${CMAKE_MATCH_2}")
+    elseif(_l MATCHES "Sicht Lagesprung max ([0-9]+) F")
+        set(_s_sprung ${CMAKE_MATCH_1})
+    endif()
+endforeach()
+file(STRINGS "${_dir}/gator_boss.log" _gb3)
+set(_g_auf -1)
+set(_g_lage "")
+foreach(_l IN LISTS _gb3)
+    if(_l MATCHES "^RE2 AUFTAUCHEN F([0-9]+) ")
+        set(_g_auf ${CMAKE_MATCH_1})
+    endif()
+    if(_l MATCHES "^RE2 INTRO Lage \\(Pos_set-Zwilling.*von \\((-?[0-9]+),(-?[0-9]+)\\)")
+        set(_g_lage "${CMAKE_MATCH_1},${CMAKE_MATCH_2}")
+    endif()
+endforeach()
+if(NOT "${_s_erst}" STREQUAL "untergetaucht" OR _s_auf LESS 1 OR NOT "${_s_auf_clip}" STREQUAL "6/0")
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf natuerlich - vor dem Durchbruch nicht untergetaucht bzw. Auftauchen nicht mit Clip 6 Bild 0 "
+                        "(erste Sicht '${_s_erst}', aufgetaucht F${_s_auf} Clip/Bild ${_s_auf_clip}; RE2 Sce_em_set y=+3000 @RDT 0x25A0, "
+                        "Sub 0 P1 Clip 6 @0x801008ac-b8)")
+endif()
+if(NOT _g_auf EQUAL _s_auf OR "${_g_lage}" STREQUAL "")
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf natuerlich - Auftauchen F${_s_auf} (Zeichner) != RE2 AUFTAUCHEN F${_g_auf} (Boss) oder keine "
+                        "Intro-Lage (Pos_set-Zwilling) '${_g_lage}'")
+endif()
+if(_s_gez LESS _s_auf OR NOT "${_s_gez_clip}" STREQUAL "6" OR _s_wieder)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf natuerlich - erstes gezeichnetes Bild F${_s_gez} (Clip ${_s_gez_clip}) vor/ausserhalb des "
+                        "Durchbruchs F${_s_auf} oder erneut untergetaucht (${_s_wieder})")
+endif()
+if(_s_sprung LESS 1 OR _s_sprung GREATER 340)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf natuerlich - sichtbarer Lagesprung ${_s_sprung} > 340 (groesster authored Wurzelschritt "
+                        "Clip 6/3/0/1 x 2731/4096, unit_r41_re2gator_lauer)")
+endif()
+set(_status3 "natuerlich: untergetaucht bis F${_s_auf} (Lauerplatz ${_g_lage}), Auftauchen Clip/Bild ${_s_auf_clip}, erstes Bild F${_s_gez} Clip ${_s_gez_clip}, groesster Bildschritt ${_s_sprung}")
+
 # ---------------------------------------------------------------- Lauf 2: Leon im Suedbecken (Dash, Putz)
 set(_dir "${_basis}/dash")
 set(WORKDIR "${_dir}")
@@ -306,4 +391,4 @@ endforeach()
 if(_mo2 LESS 145 OR _mo3 LESS 290)
     message(FATAL_ERROR "r41_re2gator: Lauf dash Clip-Bilder Clip 2 ${_mo2} / Clip 3 ${_mo3} (erwartet 150 / 300)")
 endif()
-message(STATUS "r41_re2gator: ok — ${_status1} | dash: DASH ${_dash}/${_dash_ende} wand ${_dash_wand}, Putz ${_putz_runden} x 9 = ${_putz_gesamt}, gezeichnet bis ${_ps_gez} Quads/Bild in ${_ps_n} Messbildern, Clip 2/3 ${_mo2}/${_mo3}")
+message(STATUS "r41_re2gator: ok — ${_status1} | ${_status3} | dash: DASH ${_dash}/${_dash_ende} wand ${_dash_wand}, Putz ${_putz_runden} x 9 = ${_putz_gesamt}, gezeichnet bis ${_ps_gez} Quads/Bild in ${_ps_n} Messbildern, Clip 2/3 ${_mo2}/${_mo3}")
