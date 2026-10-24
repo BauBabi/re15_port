@@ -936,9 +936,9 @@ work to do", `LOCAL-BUILD-OK (build)` (exe md5 9de3bd488e72334278224893f65b136d 
 ### Fuer den Nutzer (Stand Nachbesserung 3)
 - Keine neuen Assets, keine Sprachdateien.
 - Rennen im ganzen Spiel jetzt wie im Original: das Renn-Tempo folgt dem Schritt (im Mittel 196 statt 200 je Bild); laesst man
-  RENNEN (oder die Richtung) los, rutscht Leon bis zu 6 Bilder aus (zusammen etwa 400-450 Einheiten) statt sofort zu stehen;
-  dreht man direkt aus dem Rennen, dreht er die ersten zwei Bilder etwas langsamer (72 statt 96); drueckt man waehrend des
-  Ausrutschens wieder OBEN+RENNEN, geht er ein Bild, bevor er wieder rennt.
+  RENNEN (oder die Richtung) los, rutscht Leon 6 Bilder aus (zusammen etwa 360-450 Einheiten, je nach letztem Schritt) statt
+  sofort zu stehen; dreht man direkt aus dem Rennen, gilt in den ersten zwei Bildern die Renn-Drehrate 72 (statt 96 auf der
+  Stelle bzw. 48 im Gehen); drueckt man waehrend des Ausrutschens wieder OBEN+RENNEN, geht er ein Bild, bevor er wieder rennt.
 - Kurbel ROOM2020 im Rennen: nach dem "Yes" rutscht Leon noch sechs Bilder weiter und kurbelt etwa 35 cm neben der Stelle, an
   der er im Gehen/Stehen kurbelt — so auch das Original (gemessen).
 - Raumeintritt genau auf einer Kamera-Grenze: das Bild bleibt ruhig, die Einblendung laeuft wie vorher (kein Haenger mehr).
