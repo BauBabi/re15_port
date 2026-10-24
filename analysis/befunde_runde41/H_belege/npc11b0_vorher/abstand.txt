@@ -1,0 +1,3 @@
+Paar Slot1(t=40)-Slot2(t=42): min 971 bei F2648 (-1563, -21581) (-1490, -22549) (Summe 900)
+Paar Slot1(t=42)-Slot2(t=40): min 2372 bei F1 (26750, 11800) (25400, 9850) (Summe 900)
+Bilder mit Abstand < Radien-Summe: 0

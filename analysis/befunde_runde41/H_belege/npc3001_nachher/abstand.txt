@@ -1,0 +1,2 @@
+Paar Slot1(t=49)-Slot2(t=4b): min 837 bei F12 (-23270, -15208) (-22737, -15854) (Summe 750)
+Bilder mit Abstand < Radien-Summe: 0

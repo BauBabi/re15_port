@@ -8,17 +8,99 @@ Baum `.claude/worktrees/r41_kollision`, Zweig `r41/kollision`, Basis master-HEAD
 
 ## Stand
 - 2026-10-24: Dossier angelegt, Pflichtlektuere AUFTRAG/VERTRAG/UEBERGABE gelesen.
-- Punkt 2: Messung vorher + RE-Belege (FUN_8002bd44 @0x8002c03c-c0a8, FUN_8002cdf4) — Umsetzung folgt.
+- Punkt 2: Messung vorher + RE-Belege (FUN_8002bd44 @0x8002c03c-c0a8, FUN_8002cdf4), Umsetzung, Messung nachher.
+- Punkt 1: Messung vorher (3070 Leon, 3001 Elza), RE (24 NPC-Wurzeln), Umsetzung, Messung nachher.
+- Naechster Schritt: Riegel (probes/r41_kollision.cmake), Kisten-Raetsel loesbar, Regressionen der Szenen.
 
 ## Punkt 1 — NPC <-> NPC
-### Messung vorher
-(offen)
-### RE-Belege
-(offen)
+### Messung vorher (exe dieses Baums, Stand 4c667c97 = re15_pc_h41_vorher.exe: Haken abgeschaltet, sonst gleich)
+Werkzeug: RE15_STATE_LOG (Lage aller Aktoren je Bild) + `H_belege/npcdist.py` (Paarabstand der NPC-Familie
+0x40..0x4d je Bild gegen die Radien-Summe; geparkte NPC (-30000,-30000) ausgenommen).
+
+Wo laufen zwei NPC frei nebeneinander? Zensus aller Sce_em_set mit Typ 0x40..0x4d (scd_dump_room.py ueber alle 240 RDTs):
+Ada (0x42) + Marvin (0x40) gemeinsam in 11B0, 1260, 2000, 3070, 3080, 30E0, 4000; als ESKORTE (Verhaltensbyte 0x00 ->
+INIT `sb 1,4(v1)` @0x8011ccc0 = Zustand 1, folgt dem Spieler) BEIDE nur in **ROOM3070** sub00 @0x0343C/@0x03450
+(`44 00 42 00 ...` Ada (-13350,-16780), `44 01 40 00 ...` Marvin (-13250,-15410), Bedingung Ck(3,180)=1 nach
+(4,215)=1 und (4,236)=1). Elza-Gegenstueck: **ROOM3001** sub00 @0x015A2/@0x015B6 John 0x49 + Sherry 0x4b, beide
+Verhaltensbyte 0x00, Bedingung Ck(4,199)=1 (nach (4,198)=1).
+Beide Eskorten rechnen DENSELBEN Folgepunkt: Wurzel 0x8011ce54 `ori a0,zero,0x5dc` (1500) @0x8011ce78 ->
+FUN_8005070c(1500, w, -w) @0x8011ce80/@0x8011ceb0 — 1500 hinter dem Spieler, fuer beide gleich. Getrennt werden sie
+im Original NUR durch den Koerper-Schub des Wurzel-Schwanzes (s. RE-Belege).
+
+| Lauf | Werkzeug/Weg | Paar | min. Abstand | Bilder < Radien-Summe |
+|---|---|---|---|---|
+| `npc3070_vorher` (Leon) | JUMP 3070@250, SET_FLAG 4:215,4:236,3:180, Skript W8,U3,W6,R0.5,U3,W8, 1500 Bilder | Ada/Marvin (Summe 900) | **14** (F644), Ende F1450 **23** | **1471** |
+| `npc3001_vorher` (Elza, PSELECT_AUTO_SWITCH) | JUMP 3001@250, SET_FLAG 4:198,4:199, dasselbe Skript | John/Sherry (Summe 750) | **4** (F309) | **1449** |
+| `npc10f0_vorher` (Leon, echte Tuer 10D0->10F0, Szene Runde 35) | Karte + CONTINUE, A0.2 | Ada/Marvin | 2724 | 0 |
+| `npc11b0_vorher` (Leon, sub06 Ada+Marvin+Kanaldeckel) | JUMP 11B0, SET_FLAG 3:0x43,3:0x82,4:0xf3 bis ROOM1260 | Ada/Marvin | 971 | 0 |
+
+Bild `H_belege/npc3070_vorher/f1450_vorher.png` (RE15_FRAMEDUMP=1450, WINDOW_SCALE=1): Ada und Marvin stehen als EINE
+Figur ineinander (State F1450: Ada (-8510,-16750), Marvin (-8533,-16746)). **Nutzer-Befund reproduziert** (Eskorten-Paar,
+beide Szenarien); in den Szenen 10F0/11B0 kommen sich die beiden zufaellig nicht nahe genug.
+
+### RE-Belege (selbst disassembliert)
+Port vorher: die NPC-Familie lief in `re15_enemy_ai_run_all` nur ueber `re15_npc_ai_tick` (enemy_ai_common.c), dessen
+Schwanz NUR die Wandklemme hat (`re15_npc_wall_clamp`, @0x8011cc64). Spieler-Pass (re15_body_push_player) und
+Gegner-Schwanz (re15_enemy_body_push_tail) schieben Spieler/Gegner aus den NPCs — die NPC selbst wurde nie geschoben.
+
+Original: ALLE 24 NPC-Wurzeln (Registrierung `sw v0,0x2cXX(at)` auf 0x80072bac+typ*4, Scanner ueber STAGE1..6.BIN)
+tragen nach dem Zustands-`jalr` dieselbe Kette (Ausgabe des Scans, alle `jal`/`jalr` in Reihenfolge):
+```
+STAGE1 0x40 0x8011c5a0: jalr, b498, aec4 @8011c66c (Delay: addiu a0,s0,20 @8011c670), b544 @8011c674, b0a4
+STAGE1 0x42 0x8011cb70: jalr, b498, aec4 @8011cc3c (Delay @8011cc40), b544 @8011cc44, b0a4 @8011cc64
+STAGE1 0x45/0x47/0x49/0x4b: aec4 @8011d248/@8011d7dc/@8011dd28/@8011e2f0, b544 je +8, b0a4 @8011d270/d804/dd50/e318
+STAGE2 0x40 0x80115750 aec4 @8011581c b544 @80115824 | 0x42 0x80115d20 @80115dec/@80115df4 | 0x49 @801163b0 | 0x4b @80116978
+STAGE3 0x40 0x8011b724 aec4 @8011b7f0 b544 @8011b7f8 | 0x42 0x8011bcf4 @8011bdc0/@8011bdc8 | 0x49 @8011c384 | 0x4b @8011c94c
+STAGE4 0x40 @80116cb0 | 0x42 @80117280 | 0x49 @80117844 | 0x4b @80117e0c   (jeweils aec4; b544 +8)
+STAGE5 0x40 @8011c004 | 0x42 @8011c5d4 | 0x49 @8011cb98 | 0x4b @8011d160 | 0x4d 0x8011d6d4 @8011d7dc
+STAGE6 0x40 0x80100004 @801000d0 | 0x42 @801006a0 | 0x49 @80100c64 | 0x4b @8010122c | 0x4d 0x801017a0 @801018a8
+```
+Ada STAGE1 im Wortlaut:
+```
+8011cc1c: jalr v0                      Zustand (+0x4) aus 0x80121668
+8011cc2c: jal 0x8002b498               Kasten-Versatz/Kontakt
+8011cc34: lui a1,0x800b / lw a1,-14460(a1)   a1 = g_entity(cur) = die NPC
+8011cc3c: jal 0x8002aec4
+8011cc40: addiu a0,s0,20               a0 = 0x800aca40+20 = 0x800aca54 = SPIELER
+8011cc44: jal 0x8002b544               NPC aus allen anderen Entitaeten
+8011cc58: lw v0,120(a0) / 8011cc60: lhu a1,6(v0) / 8011cc64: jal 0x8003b0a4   Wandklemme (Radius Kasten+6)
+```
+Freeze-Tore davor: `lui v1,0x2000 / and / bne v0,zero,0x8011cc7c` @0x8011cb88-90 und `lbu +9 / andi 0x20 / bne
+0x8011cc7c` @0x8011cba4-b0 springen ueber den GANZEN Schwanz.
+FUN_8002b544 @0x8002b544-b5c8: `lbu s1,-13746(s1)` (g_active_count 0x800aca4e) @0x8002b550, s0 = 0x800acc2c @0x8002b564,
+`andi v0,v0,0x1` @0x8002b578 (aktiv), `beq a1,s0` @0x8002b590 (nicht sich selbst), `jal 0x8002aec4` @0x8002b598 mit
+`addu a0,s0,zero` im Delay-Slot (a0 = die ANDERE, a1 = g_entity) — KEIN Typfilter.
+FUN_8002aec4 BEWEGT a1: Gates `or/andi 0x2` @0x8002af04-0c (Bit 2 an einem), `and/andi 0x1000` @0x8002af14-1c (beide),
+`andi v1,0x4` @0x8002af24 (Geschobener); Radien Kasten+6 (`lhu t4,6(s6)` @0x8002af40, `lhu t4,6(s5)` @0x8002af4c);
+dist = SquareRoot0(dX^2+dZ^2) `jal 0x80065f60` @0x8002b1d8; pen = R - dist `subu s0,s0,a2` @0x8002b1e4, `blez` @0x8002b1e8;
+Y-Band @0x8002b1f0-b228 (Kasten +2/+8 beider Seiten); Schub `mult s1,s0` / `addiu a2,a2,1` / `div v0,a2` @0x8002b22c-238
+= dX*pen/(dist+1) (Port: re15_body_push, seit Runde 7 byte-true).
+Kasten der NPC: 0x42 `lw v0,5732(v0)` @0x8011ccec -> 0x80121658 = `00 00 06 fa 00 00 c2 01 fa 05 c2 01` = r 450 / h 1530;
+0x45 r 500 @0x80121728; 0x4b r 300 @0x801218c8 (re15_damage.c re15_enemy_apply_hitbox).
 ### Umsetzung
-(offen)
-### Messung nachher
-(offen)
+- NEU `engine/src/kollision_r41.c` + `include/re15_kollision_r41.h`: `re15_kollision_r41_npc_schwanz(slot)` =
+  aec4(&Spieler, NPC) (`re15_body_push(pl, pl->hit_radius_min, npc, npc->hit_radius_min)`, Gate: Spieler aktiv und
+  hp >= 0 wie re15_enemy_selfpush_from_player) + b544 (aufsteigend ueber alle anderen aktiven Aktoren mit Kasten,
+  Leichen ausgenommen = dieselbe Port-Abbildung des Bit-2-Gates wie re15_enemy_body_push_tail). Keine neue Konstante:
+  Radien = hit_radius_min (Kasten +6), Formel = re15_body_push.
+- Haken (1 Zeile) in `enemy_ai_common.c` re15_npc_ai_tick zwischen `re15_npckante_altlage` und `re15_npc_wall_clamp`
+  (= nach dem Zustands-`jalr`, vor der Klemme @0x8011cc64, hinter den Freeze-/SCD-Yield-Ruecksprungen).
+  ⛔ ABWEICHUNG VOM AUFTRAGSTEXT ("nur Haken in game_step_common.c"): die Reihenfolge Dispatch -> Schub -> Wandklemme
+  liegt INNERHALB des NPC-Ticks; aus game_step_common.c (nach run_all) liefe der Schub nach der Klemme und nach allen
+  anderen Ticks (Waende verloeren, andere Verzahnung). Die Zeile beruehrt keine Stelle der Spur A (deren NPC-Haken sitzen
+  in re15_npc_sub_turn/re15_npc_sub_walk); Include-Zeile hinter re15_npckante_r38.h (nicht neben A's Include).
+- NICHT im Schwanz: die Yield-Zweige des Ports (walk_active = Elliot 0x47 Altweg; SCD-besessener Slot ausserhalb der
+  Executor-Subs) kehren VOR dem Schwanz zurueck, wie schon bisher fuer die Wandklemme — s. OFFEN.
+### Messung nachher (re15_pc_h41_mess.exe = Stand mit Haken, sonst identisch)
+| Lauf | Paar | min. Abstand | Bilder < Radien-Summe | Ende |
+|---|---|---|---|---|
+| `npc3070_nachher` (Leon, gleicher Weg) | Ada/Marvin (900) | **884** (F609) | 307 (alle 884..899) | F1450 Ada (-8496,-16912) / Marvin (-9233,-16393) = 901 |
+| `npc3001_nachher` (Elza, gleicher Weg) | John/Sherry (750) | **837** | **0** | — |
+
+Die Restunterschreitung in 3070 (min 884) ist die Wandklemme NACH dem Schub, wie im Original (b0a4 @0x8011cc64 hinter
+b544 @0x8011cc44): F609 Schub Marvin (-5776,-16595) -> (-5723,-16588) (`kollision.txt`), danach Klemme auf (-5741,-16588)
+(state.txt) = 18 Einheiten zurueck Richtung Ada. Und dX*pen/(dist+1) laesst je Schub < 1 Einheit Rest (899 statt 900).
+Bild `H_belege/npc3070_nachher/f1450_nachher.png`: zwei getrennte Figuren nebeneinander.
 
 ## Punkt 2 — Kisten 2050
 ### Messung vorher (exe dieses Baums, Stand 4c667c97, Kopie re15_pc_h41_mess.exe)
@@ -78,9 +160,24 @@ x/z bleibt also ohne Wirkung, nur die Rueckgabe zaehlt. Port: `re15_prop_push_ti
 Durchlauf @0x8002c03c-c0a8 nicht (Kommentar dort: "Objekt-gegen-Objekt-Pass FUN_8002cdf4 ... Nicht portiert", mit der
 1090-Begruendung zweier Kisten in verschiedenen Baendern — fuer 2050 mit drei Kisten in Band 0 falsch).
 ### Umsetzung
-(offen)
-### Messung nachher
-(offen)
+- `kollision_r41.c`: `re15_kollision_r41_8002cdf4(a, b, bx, bz, alt_ya, alt_yb, &neu_yb)` = FUN_8002cdf4 Zeile fuer Zeile
+  (Gate 0x40 @0x8002ce0c-24, AABB mit Halbmass-Summen inklusive @0x8002ce80-a0, Y @0x8002ced0-e0, vertikaler Eintritt aus
+  dem Spiegel +0x42 @0x8002cee8-cf3c, sonst 1 @0x8002cfb8); `re15_kollision_r41_kisten_pass(rdt, p, nx, nz)` = Durchlauf
+  @0x8002c03c-c0a8 ueber obj-Nummer 0..nOmodel-1 (RDT-Kopf +2), erster Treffer gewinnt.
+- Haken `aot_common.c` re15_prop_push_tick: `objgesperrt` nur nach angenommenem Zellentest und im Schub-Substate (wie
+  @0x8002bfb8/@0x8002bfe4); Treffer -> Zaehler 10 + Ruhe-Zweig (= @0x8002c0b0 -> @0x8002c0b8-d4), Kontaktbit bleibt
+  gesetzt (@0x8002bfd4 lief vorher). RE15_PUSH_LOG meldet den gesperrten Schub als SCHUB-GESPERRT (der Wegplan-Treiber
+  zaehlt damit die Sperre); Detailzeile OBJEKT-GESPERRT in RE15_KOLLISION_LOG.
+- Spiegel +0x42 (y): `re15_kollision_r41_objspiegel()` per Haken in game_step_common.c nach dem Objekt-Pass des Bildes
+  (nach re15_objfall_nach_pass) — "y am Ende des letzten Passes" (@0x8002c0f8).
+- Kommentar in aot_common.c berichtigt (der Pass hiess dort "nicht portiert", Begruendung nur fuer 1090).
+### Messung nachher (re15_pc_h41_mess.exe, derselbe Wegplan, `H_belege/kiste_nachher/`)
+`F260 ... lage=(2405,-64) ziel=(2414,-64)` ... `F261 ... SCHUB-OK ... ziel=(2434,-64)`, dann
+`F262 room=2050 p=3 obj=2 SCHUB-GESPERRT spieler=(1112,-25) rot=0 lage=(2434,-64) ziel=(2462,-64) band=0` und
+`F262 room=2050 OBJEKT-GESPERRT p=3 obj=2 ziel=(2462,-64) gegen p=4 obj=3 lage=(4248,0,1400) dX=-1786 dZ=-1464 sumX=1800
+sumZ=1800` (|dX| 1786 <= 1800 und |dZ| 1464 <= 1800 -> Treffer). Endlage `p3 (2434,0,-64) | p4 (4248,0,1400)`:
+|dX| = 1814 > 1800 = die Kisten beruehren sich nicht. 190 SCHUB-OK, 1 SCHUB-GESPERRT; danach steht der Zaehler auf 10
+und laeuft bei gehaltenem UP weiter (11, 12, ... — kein neuer Versuch, bis UP losgelassen wird: @0x8002bf60-74).
 
 ## Tests
 (offen)
