@@ -331,7 +331,7 @@ static int gb_klemme_aus(const gb_state_t *g)
     /* Runde 41 Spur B, Nachbesserung 5 (Abnahme 4, M1): auch FRESSEN - RE2 setzt Gator und Opfer in P1-P3 absolut vom gemeinsamen
      * Anker (FUN_80015cb8 @0x80101174 / @0x801011cc, Lage `sw v0,56(s1)` @0x80015d68 / `sw v0,64(s1)` @0x80015d90) ohne Wand-
      * kollision; die Klemme hielt den Gator an der Wand, Leon folgte dem ungeklemmten Anker (Sonde probe_maul: Versatz bis 1129). */
-    return g->phase == GBP_CROSS || g->befrei > 0 || g->phase == GBP_FRESSEN;
+    return g->phase == GBP_CROSS || g->befrei > 0 || (g->phase == GBP_FRESSEN && g->timer > 0);   /* ab P0; der Biss-Takt klemmt */
 }
 int re15_gator_boss_skip_clamp(const re15_actor_t *e)
 {
@@ -422,6 +422,13 @@ static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl)
          * das Maul erst ~F54 oeffnet - Peak faellt MIT dem Biss zusammen. */
         gb_se(3); e->motion = 4; e->anim_frame = 0;     /* Schnapp-Clip als Zubeissen */
         g->arc_vz = 0;
+        /* Runde 41 Spur B, Nachbesserung 5 (Abnahme 4, M1): Finisher-Buehne planen und JETZT schneiden - RE2 P0 setzt den Gator um
+         * (@0x80101048-4c) und schneidet auf Cut 7/14 (@0x80100fec-ff4) im selben Takt; im Port zeigt der Zeichner einen Schnitt erst
+         * im naechsten Bild (Kamera-Apply am Bildanfang, re15_cam_present_tick = FUN_8002137c @0x800214f4-514). Darum steht der
+         * Schnitt-Auftrag im Bild des Bisses (es zeigt noch den Biss in der alten Kamera) und das Umsetzen in P0 (erstes Bild der
+         * neuen Kamera) - sonst sprang der Gator ein Bild lang sichtbar in der alten Kamera (gemessen E1 F628). */
+        re15_gr2_finisher_buehne((int)(e - g_actors), e);
+        re15_gr2_kamera_finisher((int)(e - g_actors), e, pl);
     } else {
         re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
         re15_gr2_biss_cd((int)(e - g_actors), RE15_GR2_BISS_CD_BISS);   /* Runde 41 Spur B: +0x238 = 70 @0x801016b0-b4 */
@@ -2420,12 +2427,13 @@ static void gb_takt(int slot)
              *    Aufrichten (pitch -350) blieb sonst durch P0-P3 stehen und hob den Kopf ~5600 von Leon weg (Sonde probe_maul).
              *  - keine Ueberblendung: P1 wechselt mit FUN_8001a330(em,4,0,0) (`addu a2,zero,zero` @0x801010f0 -> +0x14E = 0
              *    @0x8001a364), der Finisher zeigt die Clip-Posen ohne Rest des Vorbilds.
-             *  - Kanister-Objekt aus (@0x80101008-0c) + Gator umsetzen (@0x80101048-4c): re15_gr2_fressen_p0 / re15_gr2_finisher_buehne
-             *    (PORT-WAHL der Lage, s. dort); Leon kommt danach wie bisher vor den (umgesetzten) Gator. */
+             *  - Kanister-Objekt aus (@0x80101008-0c) + Gator umsetzen (@0x80101048-4c): re15_gr2_fressen_p0 / re15_gr2_finisher_setzen
+             *    auf die im Biss-Bild geplante Buehne (PORT-WAHL der Lage, gator_re2_r41.c); Leon kommt danach wie bisher vor den
+             *    (umgesetzten) Gator. */
             g->pitch_vz = 0; g->arc_vz = 0; g->jaw_vz = 0;
             e->anim_frac = 0;
             re15_gr2_fressen_p0(slot);
-            re15_gr2_finisher_buehne(slot, e);
+            re15_gr2_finisher_setzen(slot, e);           /* geplant im Biss-Bild (gb_biss_abschluss) */
             int32_t fc0 = re15_cos_q12((int)e->rot_y), fs0 = re15_sin_q12((int)e->rot_y);
             /* ⛔ ORIGINAL (selbst disassembliert, EM23_OVL_0000.BIN): `lw v0,56(s0)` @0x8010106c
              * / `addiu v0,v0,10643` @0x8010107c / `sw v0,0x800cfc30` @0x80101084 = Spieler-x
@@ -2477,8 +2485,8 @@ static void gb_takt(int slot)
              * Tod-FSM ist per Modus-4-Besitz pausiert). */
             e->motion = 4; e->anim_frame = 0;          /* Gator-Clip 4 (45 F) */
             g->gefressen = 0;
-            /* Runde 41 Spur B, Nachtrag 4: RE2 FRESSEN P0 Sperre + Cut 7/14 (@0x80100fbc-ff4) -> Blick FINISHER */
-            re15_gr2_kamera_finisher((int)(e - g_actors), e, pl);
+            /* Runde 41 Spur B, Nachtrag 4: RE2 FRESSEN P0 Sperre + Cut 7/14 (@0x80100fbc-ff4) -> Blick FINISHER. Nachbesserung 5: der
+             * Schnitt-Auftrag steht seither im Biss-Bild (gb_biss_abschluss), damit er mit dem Umsetzen zusammen angezeigt wird. */
         }
         if (!g->gefressen) {                           /* ---- P1: Clip 4 bis f13 ---- */
             if (pl->anim_frame < 29) pl->anim_frame++;    /* Opfer-Clip 0 (30 F), HOLD */

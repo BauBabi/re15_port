@@ -90,7 +90,8 @@ typedef struct {
     int      putz_t;          /* 0 = aus, sonst Bild der Sequenz (1..90) */
     int32_t  putz_x, putz_y, putz_z;
     /* Nachbesserung 5 (Abnahme 4, M1): Finisher-Buehne der FRESSEN-P0 (re15_gr2_finisher_buehne) */
-    uint8_t  fin_aktiv;       /* P0 gelaufen: fin_x/z/y/gier = Gator-Lage des Finishers (Bezug der Messzeile Maul-Sitz) */
+    uint8_t  fin_geplant;     /* Buehne gewaehlt (toedlicher Biss): fin_x/z/gier/cut */
+    uint8_t  fin_aktiv;       /* P0 gelaufen: Gator steht auf fin_x/z/gier (Bezug der Messzeile Maul-Sitz) */
     int8_t   fin_cut;         /* Kamera der Buehne (-1 = keine Buehne gefunden, Wahl wie bisher) */
     int16_t  fin_gier;
     int32_t  fin_x, fin_y, fin_z;
@@ -930,9 +931,13 @@ void re15_gr2_kamera_finisher(int slot, const re15_actor_t *gator, const re15_ac
         gr2_kam_cut_chg(c);
         gr2_kam_merken(c, RE15_GR2_BLICK_FINISHER, gator);
         int32_t kopf[3], achse[2], m = 0; int f = 0;
-        if (gator && gr2_kopf_achse(gator, kopf, achse)) {
-            m = gr2_massstab(&g_room_rdt.cuts[c], kopf, gr2_scale(gator));
-            f = gr2_frontal(kopf, achse, &g_room_rdt.cuts[c]);
+        if (gator) {
+            re15_actor_t b = *gator;                        /* Kopf/Blickachse an der geplanten Buehne (Clip 4 Bild 0) */
+            b.x = s_g[slot].fin_x; b.z = s_g[slot].fin_z; b.rot_y = s_g[slot].fin_gier;
+            if (gr2_kopf_achse(&b, kopf, achse)) {
+                m = gr2_massstab(&g_room_rdt.cuts[c], kopf, gr2_scale(gator));
+                f = gr2_frontal(kopf, achse, &g_room_rdt.cuts[c]);
+            }
         }
         re15_gr2_log("KAMERA %s %s RE2-Cut %d -> Cut %d F%u clip=%d bild=%d frontal=%d soll=%d massstab=%d re2_m=%d grenze=%d (Buehne)",
                      k_kam_prog[GR2_KAM_FRESSEN], k_blick[RE15_GR2_BLICK_FINISHER].name, (int)k_blick[RE15_GR2_BLICK_FINISHER].re2_cut,
@@ -2072,16 +2077,28 @@ int re15_gr2_finisher_buehne(int slot, re15_actor_t *e)
                          "Versatz %d Drehung %d | Koppelbild Kopf (%d,%d) Leon (%d,%d) Massstab max %d (Grenze %d) F%u",
                          e->x, e->z, yaw0, bx, bz, by, bc, gr2_abstand(bx, bz, e->x, e->z), gr2_wdiff(by, yaw0),
                          bkb[0], bkb[1], blb[0], blb[1], (int)bm, (int)grenze, (unsigned)g_engine.frame_count);
-            e->x = bx; e->z = bz; e->rot_y = (int16_t)by;
+            g->fin_x = bx; g->fin_z = bz; g->fin_gier = (int16_t)by;
             g->fin_cut = (int8_t)bc;
             gefunden = 1;
         }
     }
-    if (!gefunden)
+    if (!gefunden) {
         re15_gr2_log("FINISHER Buehne: keine Lage im Wasser mit frontaler Zonenkamera bis %d - am Ort (%d,%d) Gier %d F%u",
                      GR2_FIN_WEIT, e->x, e->z, yaw0, (unsigned)g_engine.frame_count);
-    g->fin_aktiv = 1; g->fin_x = e->x; g->fin_y = e->y; g->fin_z = e->z; g->fin_gier = e->rot_y;
+        g->fin_x = e->x; g->fin_z = e->z; g->fin_gier = e->rot_y;
+    }
+    g->fin_geplant = 1; g->fin_aktiv = 0;
     return gefunden;
+}
+/* P0 (Zeitpunkt RE2 @0x80101048-4c): den Gator auf die geplante Buehne setzen; ab hier gilt die Messzeile Maul-Sitz. */
+int re15_gr2_finisher_setzen(int slot, re15_actor_t *e)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !e || !s_g[slot].fin_geplant) return 0;
+    gr2_t *g = &s_g[slot];
+    int bewegt = (e->x != g->fin_x || e->z != g->fin_z || e->rot_y != g->fin_gier);
+    e->x = g->fin_x; e->z = g->fin_z; e->rot_y = g->fin_gier;
+    g->fin_y = e->y; g->fin_aktiv = 1;
+    return bewegt;
 }
 int re15_gr2_finisher_cut(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].fin_cut : -1; }
 /* RE2 FRESSEN P0: Zusatzwinkel +0x22A/+0x228 = 0 (`sh zero,554(s0)` @0x80101050 / `sh zero,552(s0)` @0x80101054), Kanister-Objekt
