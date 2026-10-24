@@ -720,6 +720,97 @@ erfuellt bewertet hat (1, 2, 4, 5, Nachtraege 6/9/10), bleiben unveraendert; ihr
    (`cmake -P`) bis `loaded room20b0.rdt` + "Bits 103 + 100"; Dossier §0b M2 / §6.
 4. Mangel 2 (niedrig): veraltete Saetze (§7 Z. 1450/1459, probes/r41_ventilkette.cmake Z. 2/30).
 
+### RE-Belege der Nachbesserung 4 (selbst aus den Bytes/Bildern gelesen, VOR dem Code)
+
+**B4-1 Absperrung am inneren Ringrand (Mangel 4, Nachtrag 12 (k)).** SCA ROOM2030 @0x00880 (Kopf 24 B, 5 x 76 Zellen, 12 B je
+Zelle w,d,x,z,typ,u0,u1,fl; Band = fl >> 4; Liste scratchpad `nb4/sca.py`):
+* Ringboden = die Bodenzellen mit u1 01, fl 0x23 (Boden des Bands 3 = y -5400): 36 @0x00A48 `08 07 7a 0d ec e1 92 d7 01 ff 01 23`
+  (x -7700..-5900 z -10350..-6900, NW-Balkon), 37 @0x00A54 (x -5900..5900 z -10350..-9000), 38 @0x00A60 (x 5900..7250
+  z -10350..12800), 39 @0x00A6C (x -6350..5900 z 8650..10000), 40 @0x00A78 (x -7700..-6350 z 4300..10000), 41 @0x00A84
+  (x -10500..-6350 z 2950..4300, Gang zu Lift B). Ankunft der Ring-Tueren auf y -5400 nfloor 3 (20B0 Slot 3 @0x019C2,
+  2070 Slot 1/2 @0x00A5A/@0x00A7A, Kopf re15_ventilkette_r41.h).
+* Absperrung = Wandzellen Band 3 fl 0x33 typ 1 am inneren Rand dieser Boeden: 19 @0x0097C `f4 01 f2 44 18 15 d8 dc 01 ff 00 33`
+  (x 5400..5900 z -9000..8650, Ost), 20 @0x00988 (x -5900..5900 z -9000..-8500, Nord), 21 @0x00994 (x -6350..5900 z 8150..8650,
+  Sued), 22 @0x009A0 (x -6350..-5850 z 2450..8650, SW), 31 @0x00A0C (x -8150..-5400 z -6900..-6400, Balkon Sued),
+  32 @0x00A18 (x -5900..-5400 z -9000..-6400, Balkon Ost = Treppenkopf). Sie sperren nur Band 3 (Spieler auf dem Ring),
+  keine Hoehe.
+* Bild (C_belege/nb4_absperrung_sheet.png, Cut 1/2/7/15, Werkzeug `nb4/absperrung.py`: cyan Ringbodenzellen auf y -5400,
+  magenta die Sperrzellen am Fuss und 900 darueber, gelb der neue Pegel): an den Sperrzellen steht ein Stabgelaender mit
+  Handlauf, durch dessen Staebe der untere Bereich (Schilder 04/02, 09/08/07/06, Tank 13) sichtbar ist = durchsichtiges
+  Gelaender, keine Bruestung. Nach den Folgen (k) ist damit die Ringboden-Kante y -5400 die Grenze.
+* Neuer Ruhepegel: **y -5350** = Ringboden -5400 (Grenze, Bodenzellen 36-41 fl 0x23 / Ankunft nfloor 3) + **50**. Der Abstand 50
+  ist PORT-WAHL mit Mass aus dem Original: ein Schritt der Wasserrate, mit der das Original Wasser bewegt (ROOM2080 sub02
+  @0x00CC8 `2f 01 32 00` Speed_set 50 je Takt; dieselbe Rate steigt die Port-Flut, RE15_R41C_WASSER_SCHRITT) - das Wasser bleibt
+  einen Schritt unter der Ringkante stehen, laeuft also nicht auf den Ring.
+* Flaeche/Netz neu: Innenkanten der Sperrzellen wie bisher (Ost x 5400 Z.19, Nord z -8500 Z.20, Sued z 8150 Z.21, SW x -5850
+  Z.22, Balkon z -6400 Z.31 / x -5400 Z.32, West bis zur Aussenwand x -7700 Z.26/27 zwischen z -6400 und 2450 Z.23). NEU: der
+  Treppenschacht x -5400..-4200 z -8500..-6900 liegt jetzt unter dem Pegel (Treppe Slot 8 @0x01B8E von -5400 bei x -6050 auf
+  -1800 bei x -2350: bei -5350 steht nur die oberste Stufe x < -5999 trocken) -> drei Rechtecke (x0,x1,z0,z1)
+  { -5400,5400,-8500,-6400 }, { -7700,5400,-6400,2450 }, { -5850,5400,2450,8150 } (gelb im Bogen). Treppe Slot 8 bleibt
+  Sperrtext 48 im Band 3 (der Weg hinab fuehrt ins Wasser).
+
+**B4-2 Die nummerierten Ventile, ihre Raeder und Farben (Mangel 3, Nachtrag 13 Folge 4).** BSS-Hintergruende (probe_bg_dump),
+Rueckprojektion der Bildpunkte auf die Wandflaeche (`r41c_nb3/ruecks.py`, Ebene z -8500 Nordwand = Zelle 6 @0x008E0 Innenkante,
+z 7900 Suedwand = Zelle 7 @0x008EC Innenkante); Bildbogen C_belege/nb4_ventile_raeder_sheet.png:
+* Nordwand (Cut 3 = Cut 14 byte-gleich; Nord-Landeplatz Zelle 13 x -2550..5000): Schild 03 x 4422 | **rotes Rad x 2367 y -3788** |
+  Schild 02 x 1413 | **gruenes Rad x 171 y -4264** | **schwarzes Rad x -1360 y -3195** | Schild 01 x -2584.
+* Suedwand (Cut 7, Gegenprobe Cut 5/6 +- 110; Sued-Landeplatz Zelle 16 x -5600..4800): Schild 09 x -2465 | **rotes Rad x -2637
+  y -3888** | **gruenes Rad x 453 (377/423) y -4350** | Schild 08 x 1358 | **schwarzes Rad x 2675 (2567) y -3148** | Schild 07 x 4335.
+* Ostwand 04/05/06 (Cut 0/15): keine Raeder im Bild, ueber dem Becken (nicht erreichbar). Ventil 13 = Tank (Bruecken-Raetsel).
+* Zuordnung Rad -> Nummer: je Wand drei Schilder und drei Raeder in derselben Reihenfolge (hohe Nummer zuerst: rot, gruen,
+  schwarz). Das naechste Schild ist nicht eindeutig (rotes Rad Nord: 02 954 / 03 2055 entfernt; schwarzes Rad Sued: 08 1317 /
+  07 1660) -> PORT-WAHL "ein Rad je Schild in Wandreihenfolge": **03 rot, 02 gruen, 01 schwarz; 09 rot, 08 gruen, 07 schwarz**.
+  Die Fragetexte der Ventile nennen Nummer UND Farbe, damit der Spieler die Zuordnung sieht.
+
+**B4-3 Form "falsche Reihenfolge -> zurueckgesetzt" (Nachtrag 13 Folge 4).**
+* RE1.5 ROOM11F0 sub17 @0x015FA..@0x016F4 (selbst aus scd_dump_room.py gelesen) = Zuruecksetzen des Notstrom-Pults: Cursor obj 0
+  zurueck (`32 00 9e b3 00 00 9c 58` @0x01602), alle zehn Hebel obj 2..11 in die Grundstellung (`33 00 00 00 00 00 00 02`
+  Dir_set @0x0160E..@0x0167A), **die Schalterbits (5,13..22) := 0** (`22 05 0d 00` .. `22 05 16 00` @0x016C0..@0x016E4, mit
+  (5,0..12) @0x0168C..@0x016BC), Pad frei `22 02 00 00`/`22 02 02 00` @0x016E8/@0x016EC, Cut_old @0x016F0, Cut_auto 1 @0x016F2.
+  Der Raetselzustand liegt also im Raum-Scratch Bank 5 (wie ROOM2060 sub01 @0x01296..@0x012A6 Ck(5,6..9) -> @0x012AE Set(3,126);
+  Bank 5 Wort 0 wischt das Raumladen, FUN_8003ecec @0x8003ed74).
+* RE2 ROOM2130 sub04 (info/re2leon/PL0/RDT, `re2_scd_dump.py ROOM2130 MAIN 4`): die Schalter werden NACHEINANDER gestellt, das
+  Ergebnis erst am Ende geprueft - @0x01752 `23 00 05 00 50 00` cmp(var5 == 80) -> geloest; sonst @0x017D6/@0x017E8 Vergleich ->
+  Meldung `2b 00 09/06/08 00 ff ff` + **Fehlerton `36 02 0b 01 ...` @0x01800** (se_on Gruppe 2 Satz 0x0B); der naechste Versuch
+  beginnt mit dem Zuruecksetzen @0x01138 `24 05 00 00` (var5 = 0), @0x01140 (Zeiger), @0x01144..@0x0117C Dir_set der fuenf
+  Schalter, @0x01180..@0x01188 Lampen aus. Ton: Satz 0x0B liegt in der vorhandenen Bank shared_assets/RE2/PANEL2130.* (snd0 von
+  ROOM2130, re15_audio.h), Klick 0x0A @0x01192, Bestaetigung 0x0C @0x01762.
+* => Umsetzung: jede Drehung (Frage -> Ja) wird im Raum-Scratch Bank 5 Bits 0x10..0x13 vermerkt (2030 benutzt Bank 5 sonst nicht:
+  0 Treffer `21 05`/`22 05` in ROOM2030.RDT; 0x1D/0x1E sind die Marker der Flut), Klick 0x0A; nach der VIERTEN Drehung wird
+  geprueft (RE2-Form: keine Rueckmeldung je Schritt, sonst waere die Folge durchprobierbar): richtig -> Warnung 46 -> Zaehler ->
+  Flut wie bisher; falsch -> Bits 0x10..0x13 := 0 (Form 11F0 sub17), Fehlerton 0x0B (RE2 @0x01800), Text 45.
+
+**B4-4 Dokument (Nachtrag 13 Folge 2).**
+* Dokument-System des Ports: re15_files.c s_docs[] fuehrt 0..5 (Item 0x48..0x4D, Bildsaetze 25..30); naechste Nummer **6 = Item
+  0x4E** (RE2 `addiu a0,a3,-104` @0x80071d04 mit RE1.5-Basis 0x48 u8 @0x800c7370), **Bildsatz 31** (FILE31_*, erster freier hinter
+  FILE30 in shared_assets/RE2/FILES). Zensus: Item 0x4E in keinem der 416 Item_aot_set- und 52 Aot_reset-sce-9-Muster der 240 RDTs
+  (Brute-Force wie r34n_e/id_zensus.py).
+* Taken-Bit **(9,107)**: `bank9_zensus.py original` -> "FREI im Original ... 100..103, 106..107 ..."; `... port` -> kein
+  Port-Zugriff auf 107 (der Fund "dining_r38_schluessel.inc:2017 Bit 103" sind TIM-Pixel `21 09 67`, kein Programm). VERTRAG 1.1:
+  107 gehoert C.
+* Vorlage RE2 FILE17 "SEWER MANAGER DIARY" (re2_doc_satz.transkription(17); RE2-Record @0x800AA144 + 17*4 -> {9,176}, H 176):
+  das Tagebuch des Kanal-/Klaeranlagen-Verwalters, thematisch die Anlage von 2030 (PORT-WAHL wie FILE16 fuer Roys Diary).
+* Schrift: der Nutzer-Text enthaelt zweimal U+2014; die RE2-Dokumentschrift hat KEINEN Gedankenstrich (Atlas `atlas_bauen`, 85
+  Zeichen: nur '-'), RE2 setzt Gedankenstriche selbst als '-' (FILE22 S01 " -This report demands" / "immediate attention-",
+  FILE24 S11 "-VAM-") -> EINZIGE Zeichen-Abbildung U+2014 -> '-' (wie U+2019 -> ASCII-Apostroph bei Roys Diary, Runde 38).
+* Fundort: in 2030 gibt es KEINE Leiche (Sce_em_set nur Typ 0x25 @0x01C18..@0x01CA0, die Hintergruende zeigen keine) -> das
+  Dokument liegt als Blatt am Sued-Landeplatz neben der Sicherung (Slot 9 @0x01BAA, x -5900..-5100 z 6650..7650): Mitte
+  (-4600,-1800,7150), Rechteck 1000 x 1000 (x -5100..-4100 z 6650..7650, buendig neben der Sicherung; Form/Groesse der Original-Plaetze, re15_dokumente.h
+  "69 von 162"), Band 1, Slot 20; Weltmodell = RE2-Blatt mesh01 (ROOM2020.RDT MD1 @0x003254 404 B / TIM @0x01A160 34848 B,
+  dasselbe wie Runde 34 Dok 3), obj 6 (nOmodel 4, obj 4/5 = Wasser). Begruendung: der Spieler kommt nach Nachtrag 9/10 ohnehin
+  ueber die Bruecke zur Sicherung (bevorzugter Ort des Orchestrators).
+
+**B4-5 Plakat (Nachtrag 13 Folge 3).** Form der Nahaufnahmen der Runde 40 (re15_nahaufnahmen_r40.h): Pad-Sperre `22 02 07 01`
+(ROOM1051 sub03 @0x00DA4), Nahaufnahme, Warten auf die Taste, `22 02 07 00` (@0x00DD2). 2030 hat keine Kamera, die eine Wand im
+unteren Bereich aus der Naehe zeigt (16 Cuts, Bildbogen nb3_ventile_lage_sheet.png) -> die Nahaufnahme ist ein Port-Bild
+(320 x 240, gen/ventilkette_r41_plakat.inc, Vorschau C_belege/nb4_plakat.png), gezeigt ueber die Vollbild-Ebene des PC-Renderers
+(re15_render_pc_show_fmv, dieselbe wie STR-Filme); geschlossen wird mit der Bestaetigen-/Abbrechen-Flanke (virtuell 0x4000/0x8000
+= die Tasten, mit denen das Original eine Nachricht schliesst, andi 0xc000 @0x80028698). Im Raum haengt das Plakat als Blatt an der
+Suedwand zwischen dem gelb-schwarzen Pfosten und Ventil 09 (Mitte (-3650,-3900,7880), hochkant rot_x 1024; RE2-Blatt mesh01 mit
+dem verkleinerten Plakat in der UV-Flaeche), Untersuchen-Platz Slot 21 (x -4100..-3200 z 7380..8380 Band 1, Ereignis 23; buendig zwischen Dokument und Ventil 09).
+Bildbogen der Plaetze: C_belege/nb4_plaetze_sheet.png (gelb Ventil-Plaetze 1000 x 1000 vor den Raedern, cyan Plakat, magenta
+Dokument, weiss Sicherung).
+
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
 Alle Datei-Offsets beziehen sich auf `re15_port/shared_assets/PSX/STAGE2/ROOMxxxx.RDT` (Leon); die Elza-Varianten
