@@ -77,6 +77,18 @@ Y-Band @0x8002b1f0-b228 (Kasten +2/+8 beider Seiten); Schub `mult s1,s0` / `addi
 = dX*pen/(dist+1) (Port: re15_body_push, seit Runde 7 byte-true).
 Kasten der NPC: 0x42 `lw v0,5732(v0)` @0x8011ccec -> 0x80121658 = `00 00 06 fa 00 00 c2 01 fa 05 c2 01` = r 450 / h 1530;
 0x45 r 500 @0x80121728; 0x4b r 300 @0x801218c8 (re15_damage.c re15_enemy_apply_hitbox).
+
+**Original-Messung (dynamisch, DuckStation-GDB, `H_belege/orig_3070_eskorte.py`, Log `H_belege/orig_3070_eskorte/log.txt`):**
+Spielstand stage_saves/mzd_debugmenu.sav (Auslieferungs-EXE: `@0x80026e4c = 0800e003`), Flags per RAM gesetzt (Bank-Tabelle
+0x80074664: Bank 3 -> 0x800b0ff8, Bank 4 -> 0x800b1018; (4,215) @0x800b1030 |= 0x100, (4,236) @0x800b1034 |= 0x80000,
+(3,180) @0x800b100c |= 0x800), Debug-Menue-Cursor direkt gesetzt (Stage 0x800BBE5E = 2, Index 0x800BBE61 = 7 -> 0x307;
+Lauf 1 mit Tastenzaehlen landete in 0x306 = ROOM3060, `orig_3070_eskorte_lauf1_0x306/`), Square -> Laden.
+Ergebnis: `Raum/Stage 0x800b0fe0/fe2 = 2/7`, Entity 0 Typ 0x42 Zustand 1, Entity 1 Typ 0x40 Zustand 1 (= die beiden
+Eskorten); Leon steht 25 s, geht zweimal 1,5 s: **187 Proben, min. Abstand 901, letzter 1086** (Radien-Summe 900) —
+z.B. `STEHEN 0.0s ... E0 typ=0x42 st=1 sub=0 (-13382,-16785) | E1 typ=0x40 st=1 sub=1 (-12777,-16117) | d=901`:
+Marvin will weiter (Sub 1 = gehen), steht aber bei 901 an Ada. **Im Original sind beide fest.**
+Port-Spiegel desselben Ablaufs (JUMP 3070, gleiche Flags, Skript W25,U1.5,W12,U1.5,W12, `H_belege/npc3070_wieorig_*`):
+vorher **min 3** (1671 Bilder < 900, F1690 Ada (-7527,-17130) / Marvin (-7528,-17133)), nachher **min 897** (Ende 901).
 ### Umsetzung
 - NEU `engine/src/kollision_r41.c` + `include/re15_kollision_r41.h`: `re15_kollision_r41_npc_schwanz(slot)` =
   aec4(&Spieler, NPC) (`re15_body_push(pl, pl->hit_radius_min, npc, npc->hit_radius_min)`, Gate: Spieler aktiv und
@@ -159,6 +171,22 @@ Der Aufrufer setzt danach x/z auf die gesicherte Lage zurueck (@0x8002c0bc-d4) �
 x/z bleibt also ohne Wirkung, nur die Rueckgabe zaehlt. Port: `re15_prop_push_tick` (aot_common.c) fuehrte den
 Durchlauf @0x8002c03c-c0a8 nicht (Kommentar dort: "Objekt-gegen-Objekt-Pass FUN_8002cdf4 ... Nicht portiert", mit der
 1090-Begruendung zweier Kisten in verschiedenen Baendern — fuer 2050 mit drei Kisten in Band 0 falsch).
+
+**Original-Messung (dynamisch, DuckStation-GDB, `H_belege/orig_2050_kiste.py`, Log `H_belege/orig_2050_kiste/log.txt`):**
+Spielstand analysis/befunde_runde36/R_belege/room2050_orig.sav (Auslieferungs-EXE `0800e003`), Spinnen aus (Aktiv-Bit +
+g_active_count), Raetsel-Kiste obj 1 per RAM SUEDLICH vor die Band-3-Kiste obj 6 gesetzt (Pool 0x800b3f98+0x94: +0x34/
++0x38/+0x3C = (-1600,-5400,-6948), +0x82 = 3, Spiegel +0x40..+0x44), Kaesten beider (0,-900,0,900,900,900) aus *(+0x78)
+gelesen; Leon hinter obj 6, Schub nach Sueden in drei Runden. Haltepunkte @0x8002bfc0 / @0x8002c0b0 / @0x8002cfb8 /
+@0x8003da78. Ergebnis: `SUMME: Schub angenommen 83, gesperrt 3, davon Objekt-Treffer 3, Zellen-Treffer 0`; jeder
+gesperrte Schub ist `OBJEKT-TREFFER @0x8002cfb8 t2(anderes)=800b402c a3(geschoben)=800b4310` (= Pool + 0x94*1 = obj 1,
+Pool + 0x94*6 = obj 6), danach `SCHUB-GESPERRT` @0x8002c0b0; obj 6 bleibt bei z -8760 / -8757 / -8753 stehen (|dZ| 1812 /
+1809 / 1805 > 1800). (Die am Haltepunkt gelesene Lage -8749 ist schon die Ausschiebung von FUN_8002cdf4 —
+`sw v0,60(a3)` @0x8002cfb4 liegt VOR `ori v0,zero,0x1` @0x8002cfb8 — und wird von @0x8002c0bc-d4 wieder verworfen.)
+**Im Original sperrt eine Kiste die andere.**
+Port-Gegenstueck mit derselben Aufstellung (Messhaken RE15_KOLLISION_SETZE=1:-1600,-5400,-6948,3@5, Wegplan SCHIEB
+3072, `H_belege/kiste_obj6_port/`): 69 SCHUB-OK, 3 SCHUB-GESPERRT, alle drei `OBJEKT-GESPERRT p=0 obj=6 ... gegen p=2
+obj=1 lage=(-1600,-5400,-6948) dZ=-1787/-1791/-1782`, obj 6 bleibt bei -8768 / -8759 / -8750 (|dZ| 1820 / 1811 / 1802)
+— **Port = Original** (gleiche Mechanik, gleicher Endabstand 1802..1820).
 ### Umsetzung
 - `kollision_r41.c`: `re15_kollision_r41_8002cdf4(a, b, bx, bz, alt_ya, alt_yb, &neu_yb)` = FUN_8002cdf4 Zeile fuer Zeile
   (Gate 0x40 @0x8002ce0c-24, AABB mit Halbmass-Summen inklusive @0x8002ce80-a0, Y @0x8002ced0-e0, vertikaler Eintritt aus
@@ -178,6 +206,15 @@ Durchlauf @0x8002c03c-c0a8 nicht (Kommentar dort: "Objekt-gegen-Objekt-Pass FUN_
 sumZ=1800` (|dX| 1786 <= 1800 und |dZ| 1464 <= 1800 -> Treffer). Endlage `p3 (2434,0,-64) | p4 (4248,0,1400)`:
 |dX| = 1814 > 1800 = die Kisten beruehren sich nicht. 190 SCHUB-OK, 1 SCHUB-GESPERRT; danach steht der Zaehler auf 10
 und laeuft bei gehaltenem UP weiter (11, 12, ... — kein neuer Versuch, bis UP losgelassen wird: @0x8002bf60-74).
+
+**Raetsel bleibt loesbar (exe, Wegplan, `H_belege/raetsel_leon/`, `H_belege/raetsel_elza/`):** obj 2 nach Westen in Kerbe 5
+(z -64), obj 3 nach Norden bis z <= -1880 und nach Westen in Kerbe 4, obj 1 nach Sueden bis z >= -3740 und nach Westen in
+Kerbe 3 -> `FLAG (5,0) = 1`, `(5,1) = 1`, `(5,2) = 1`; Endlagen Leon `p2 (-6636,0,-3718) | p3 (-6614,0,-64) | p4
+(-6644,0,-1887)`, Elza ROOM2051 `p2 (-6608,0,-3730) | p3 (-6617,0,-64) | p4 (-6622,0,-1883)` (|dZ| 1831/1823 bzw.
+1847/1819). Ein erster Versuch mit obj 1 bei z -3668 wurde vom Pass gesperrt (`OBJEKT-GESPERRT p=2 obj=1 ziel=(-4845,-3668)
+gegen p=4 obj=3 ... dX=1799 dZ=-1781`): die Kerben liegen im Raster 1900/1850, die Kisten sind 1800 tief — dazwischen
+bleiben 100/50 Einheiten Spiel, genau wie im Original (FUN_8002cdf4 ist dieselbe Pruefung). Fenster fuer obj 1:
+z in (-3750, z3 - 1800) (r0[0] @0x00910 sperrt die Kiste bei z < -3750, Zellentest FUN_8003b558).
 
 ## Tests
 (offen)
