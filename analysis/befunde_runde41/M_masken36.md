@@ -355,6 +355,22 @@ Objekte geteilt (`"minus"`), Nordgelaender `"zelle"` [-6350,8150,12250,500], Ost
 Punkten direkt getroffen), 2030 C7 105 Rechtecke Tiefe 78..258 (Nord 130..183, Ost 77..181, 07_02 unveraendert 246..258);
 Bau-Schiene VOR verdeckt 0 / teil 0. Bilder vorher `M_bilder/NB1_M4_ROOM2030_C07_hinter.png`, `NB1_M4_ROOM2040_C07_hinter.png`.
 
+### NB1 Mangel 2 - ROOM20A0 C12, 12_02 (erledigt durch Nutzer-Entscheid)
+
+Nutzer (AUFTRAG.md Nachtrag 11): "Weglassen ist ok" - 12_02 bleibt aus dem Bau. Die Begruendung ist berichtigt (a24e2389,
+Abschnitt 2.3 und auswahl.json `"r41"`): 12_02 ist der Boden vor der Schwelle unter dem ROLLADEN obj 1 (Obj_model_set @0x01932,
+(7942,-7200,-20510)), Zelle 32 x 8000..14700 z -21000..-20500 Band 4, dahinter der Schacht (Runde 38 W_rolltor20a0.md) - nicht
+"Ziegelwand". Keine weitere Aenderung.
+
+### NB1 Mangel 5 - Doku/Nebenbefunde
+
+(a) original.py-Kommentar: "0 von 359 / Stage 3..6 0 von 222 / Generator-Raeume 0 von 116" (a24e2389). (b) Kopf von
+schliessen_r41.py ohne den verworfenen Weg (a24e2389). (c) `M_bilder/P1_exe_*.png` -> `P1_verworfen_erreichbarkeit_*.png`
+(a24e2389, Vermerk in 1.5). (d) Dossier 1.4 DAVOR-Aussage berichtigt (d5a9201c): 4040 C11 +1 / 4080 C7 +2 = Tuermodell-Kanten;
+5100 C7 = Leons Hand unter dem ALTEN Rechteck 0 (Tiefe 64), die Abnahme-Punkte (38,236)/(39,237) liegen nur unter Rechteck 0
+(kein Saum-Rechteck), Leon-Dreiecke gegen Schluessel: 120 Rasterpunkte verdeckt vor und nach NB1; +2 im Bildvergleich = andere
+Texelfarbe des eigenen Atlas. Altbestand -> OFFEN 6.
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
