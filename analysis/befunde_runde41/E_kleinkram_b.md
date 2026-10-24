@@ -522,3 +522,68 @@ Windows CRLF statt LF (11702 statt 11177 Bytes); ihre Pruefung "settings.ini zur
 den Laeufen beide Dateien per Byte-Kopie aus der Sicherung zurueckgesetzt (md5 wieder b3e22060... / 54717c88...; Slot 1
 unveraendert). ConfirmPowerOff = false, ToggleMediaCapture = Keyboard/F12, SaveSelectedSaveState = SDL-0/LeftShoulder,
 EnableGDBServer = false wie vorher.
+
+### Nachbesserung 2 — je Mangel (Ursache / Messung vorher / Beleg / Aenderung / Messung nachher)
+| Mangel | Ursache | Messung vorher | Beleg (Original) | Aenderung | Messung nachher |
+|---|---|---|---|---|---|
+| 3 / E-N1 Kamera-Flackern (9000,-3200) | Der Port zeichnete und zeigte JEDES Bild, auch das Apply-Bild eines Kamerawechsels (main.c: "Bewusst NICHT nachgebaut"). Auf der gemeinsamen Kante x 9000 von z1 @0x016C / z5 @0x01BC ist jedes Bild ein Apply-Bild. | Abnahme 1 §6.1: 299 Wechsel in 300 Bildern; EN1w_vor: ab F64 je Bild ~29 900 Pixel anders | GDB o_cam9000*: angeforderter Cut wechselt auch im Original jeden Durchlauf (FUN_800142f4 aus @0x800142b4), 39/40 Durchlaeufe Apply @0x80021558, 1 DrawOTag; Present @0x800214f4-@0x80021514, @0x80021530/@0x80021538, @0x80021560 `j 0x800215fc` (kein DrawOTag @0x800215bc/d0/e4, kein Pufferwechsel @0x800215f4/f8) | kamerahalt_r41.c + bildhalt_r41_pc.c (Apply-Bild nicht praesentieren) | EN1w_nach: 40/40 Folgebilder pixelgleich, cam-Spur weiter 0/2 wie das Original; Riegel integration_r41_kleinkram_b_kante (VORHER-exe: GLEICH 0 von 24 -> rot) |
+| 2 / E-N2 Geh-/Renn-Anlauf | (a) Port-Reihenfolge SKRIPT -> NACHRICHTEN -> SPIEL: der Spieler war im Schliess-Bild schon frei (Luecken-Bild). (b) op_message_on parkte eine Auswahl-Nachricht AUF dem Opcode und lief ein Bild spaeter weiter. | Abnahme 1 R2/R4: Luecken-Bild F328 (Geh-Bild 9 -> 10) bzw. Renn-Bild 6 -> 7, Pos_set F383 = Schliessen + 2 | GDB o_geh1/o_renn2/o_stand1: kein Luecken-Bild (n46/n47), Pos_set im Bild nach der Bestaetigung (n94 -> n95), dort Geh-Stopp an der Kurbel (`cmd 1/0/1/0` Clip 3 Bild 0 = 0x800322e8 @0x80032328/@0x80032480 + 0x80032038 Fall 0 @0x80032074-@0x800320a4); Frame-Ordnung @0x80020de4 / @0x80020f3c / @0x80010044; Message_on @0x80040520; Skript-Freeze @0x8003f040-@0x8003f04c | msgtakt_r41.c (Restore hinter dem Spiel-Takt; Auswahl ohne Parken) | R2_geh_nach / R1_weg2050_nach / K_stand_nach: kein Luecken-Bild, Pos_set = Schliessen + 1, Apply-Bild gehalten; Riegel integration_r41_kleinkram_b_geh/_renn + unit_r41_kleinkram_b_takt_frage (Gegenprobe alte Reihenfolge: Luecke 1, Pos_set +2) |
+| 1 "herumfliegend" | Alle Anlauf-Varianten sind jetzt am Original gemessen (Stand, Gehen, Rennen, Cut-3-Weg von 2050; Waffen in Abnahme 0). Abweichung, die bleibt: der Renn-STOPP (Auslauf nach dem Rennen) fehlt dem Port allgemein. In keinem Port- und keinem Original-Lauf "fliegt" Leon. | — | Original Rennen: nach Pos_set laeuft Leon 444 Einheiten nach -z aus und kurbelt bei (3650,-3369) — 351 Einheiten neben der Stelle des Geh-/Stand-Falls (3650,-3018). Original Cut_chg-Standbild ~8 Spielbilder (CD-Laden), Port 1 Bild. | — (Renn-Stopp siehe OFFEN) | Frage an den Nutzer unten, jetzt mit allen Varianten |
+
+### Nachbesserung 2 — Tests (gezielt, keine volle Suite)
+Bau: `bash re15_port/tools/local_build.sh configure` + getrennt `build` -> `=== LOCAL-BUILD-OK (build)` (Endstand 11b8f867,
+exe md5 486f77a7d870cf73c1bdf542bf40cbfb).
+- Alle Unit-/Prop-/Sonden (Code d4fa9074; die spaetere Aenderung 11b8f867 betrifft nur platform/pc, nicht re15_engine):
+  `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -j 2 --timeout 600`:
+  **100% tests passed, 0 tests failed out of 925** (1403 s, `<sp>/E41n2/ctest_unit_alle2.log`). Darin
+  unit_r36_zombieki_affen_block gruen (mit dem Renn-Stopp rot, s. Umsetzung) und die neuen
+  unit_r41_kleinkram_b_takt_{msgtakt,kamerahalt,frage}.
+- Integration, Auswahl = alle Riegel, deren Skript RE15_FRAMEDUMP / RE15_PRESS / RE15_MSG_LOG / msgtext / XU / CROSS /
+  RE15_CAM_TRACE enthaelt (128 von 223; Liste `<sp>/E41n2/integ_auswahl.txt`, Regex `integ_regex.txt`), Code d4fa9074:
+  Teil 1 (-j 2, nach 1 Test abgebrochen und mit -j 4 neu gestartet): integration_r36_szenenleon Passed;
+  Teil 2 `ctest -R "$(cat integ_regex2.txt)" -j 4 --timeout 900`: **99% tests passed, 1 tests failed out of 127**
+  (4213 s, `<sp>/E41n2/ctest_integ_auswahl2.log`). Der eine: integration_r38_dining1141_s "R0 Bilder: 5787 verglichen,
+  14 fehlen" = die 14 gehaltenen Bilder (Kamerawechsel) ohne Abzug, weil der Merker nur mit RE15_FRAMEDUMP lief und die
+  Sonde RE15_R38F_SICHT ueber re15_render_pc_request_readback liest -> 11b8f867 (Merker ab dem ersten Auftrag).
+- Nach 11b8f867: `ctest -R "^(integration_r38_dining1141_s|integration_r35_entladen|unit_r41_kleinkram_b_.*|integration_r41_kleinkram_b_.*)$" -j 3 --timeout 1200`:
+  **100% tests passed, 0 tests failed out of 17** (`<sp>/E41n2/ctest_nach_fix.log`; integration_r35_entladen traf
+  keinen Test, die heissen _a.._l, s. naechster Lauf).
+- Neue Riegel gegen die VORHER-exe (re15_pc_E41a1.exe = 753652fc) per `cmake -P tests/integration/test_r41_kleinkram_b.cmake`
+  (`<sp>/E41n2/vorher_riegel/`): kante DURCHGEFALLEN ("GLEICH 0 von 24", kein "(gehalten)"), geh DURCHGEFALLEN (1 Posen-
+  wechsel zwischen den Nachrichten, Pos_set F383 = Schliessen + 2, nicht gehalten). unit_r41_kleinkram_b_takt_frage
+  prueft die Gegenprobe (alte Reihenfolge: Luecke 1, Pos_set + 2) selbst.
+REST_PLATZHALTER
+
+### OFFEN (Stand Nachbesserung 2)
+- RENN-STOPP fehlt dem Port allgemein (jeder Halt nach dem Rennen). Original gemessen (o_rennstopp: 157,117,77,37,-3;
+  o_renn2 an der Kurbel 174..-26), Mechanismus disassembliert (0x80032604 @0x800326f4-@0x8003272c, @0x80032730-@0x80032760;
+  0x80032778 @0x800328f8-@0x8003295c), Umsetzung gebaut und gemessen (635be823: frei 160,120,80,40,0,-40; Kurbel F382..F387
+  bis (3650,-3285)), wieder heraus (d4fa9074), weil sie die Bahnen des Gorilla-Zufallsgangs aendert und
+  unit_r36_zombieki_affen_block (Runde 36 Spur F) fuer Seed 0x67be2dfd ueber die Schranke 600 bringt (+841; ohne Stopp gruen).
+  Entscheid Orchestrator: Renn-Stopp spielweit einbauen und die Gorilla-Sonde (Port-Wahl Umweg) neu einmessen lassen.
+  Folge bis dahin: im Renn-Anlauf an der Kurbel bleibt Leon nach dem Ja bei (3650,-3018) stehen, das Original laeuft bis
+  (3650,-3369) aus.
+- Renn-Tempo des Ports konstant 200 (Tabelle @0x80073f24); das Original fuehrt es clip-gekoppelt (o_rennstopp: 269, 210,
+  170, 182, 205, 210, 214, 210, 188, 159, 176, 197; ANIMATE @0x800328d4-@0x800328f4 + FUN_800369f8 @0x800328cc). Mit dem
+  Renn-Stopp waere die Auslauflaenge darum nur im Mechanismus gleich (Port 360, Original 385 bzw. 444).
+- Dauer des Apply-Standbilds: Port 1 Spielbild (die Logik eines Durchlaufs), Original so lange, wie FUN_80021bbc den
+  Hintergrund von CD laedt (FUN_80013c50 @0x80021d2c; gemessen ~8 Spielbilder bei Cut_chg, auf der RVD-Kante 12/13 VSyncs
+  je Durchlauf) — Hardware-Zeit, keine Konstante.
+- PSX-Plattform: platform/psx/main.c ruft msgtakt/kamerahalt nicht (PSn00bSDK fehlt hier zum Bauen und Pruefen).
+- Nebenbefund (unveraendert, nicht Spur E): player_common.c "msg_block -> IDLE"-Zweig stellt den Spieler bei einer Nachricht
+  OHNE Spieler-Pause (Maske ohne 0x80000000) auf Stehen; das Original laesst ihn dann frei laufen.
+
+### Fuer den Nutzer (Stand Nachbesserung 2)
+- Keine neuen Assets, keine Sprachdateien.
+- Kurbel ROOM2020: Leon bleibt waehrend beider Texte ("It's a square hole." / "Will you use the Crank?") in der Pose stehen,
+  in der er angekommen ist, und nach dem "Yes" springt er im naechsten Bild an die Kurbel — beides jetzt Bild fuer Bild wie im
+  Original (vorher: ein Zwischenbild zwischen den Texten und zwei Bilder Stehen an der alten Stelle vor dem Sprung). Der
+  Sprung selbst ist Original (das Spiel setzt Leon per Skript an die Kurbel); im Original verdeckt ihn ein kurzes Standbild,
+  waehrend der Hintergrund von CD laedt (~1/4 s), der Port haelt jetzt ein Bild.
+- Kamera ROOM2020: bleibt Leon genau auf der Grenze zweier Kamerazonen stehen (z.B. x 9000 im Gang), steht das Bild jetzt
+  still wie im Original, statt zwischen zwei Kameras zu flackern.
+- Allgemein: bei jedem Kamerawechsel steht fuer ein Bild das alte Bild (wie im Original, dort laenger: CD-Ladezeit); nach
+  jedem Text kann Leon ein Bild spaeter wieder laufen (wie im Original).
+- Frage: Was genau war das "Herumfliegen"? Moeglich sind (a) der Sprung an die Kurbel nach dem "Yes" (im Original genauso,
+  dort hinter ~1/4 s Standbild), (b) das Einfrieren nach einer Kurbel-Umdrehung (behoben in Nachbesserung 1), (c) etwas
+  anderes. Wenn (c): bitte die Stelle (gerannt/gegangen/gestanden, welche Waffe) oder ein Bild (F9).
