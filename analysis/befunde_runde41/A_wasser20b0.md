@@ -944,6 +944,9 @@ und setzt Slot = RE15_ACTOR_MAX - 1 (Kopf des Riegels ergaenzt). Weitere feste "
 **An den Orchestrator (Spuren B/F/G, kein SendMessage aus der Spur):** der Alligator liegt seit Runde 41 Spur A auf Slot 35
 (RE15_ACTOR_MAX 36). Riegel/Haken, die den Alligator-Platz fest annehmen (z.B. RE15_FORCE_EXPLOSION=..:20, `[20 t=23`), muessen an
 RE15_ACTOR_MAX-1 gekoppelt werden; Aktor-Masken mit 32 Bit (1u << slot) reichen fuer Slot 35 nicht (s. N1.10c, Hundemaske M7).
+**Messung nachher:** integration_r35_granate im Nebenwirkungslauf (N2.8) Passed 174.79 s; Lauf `lauf_3878d255/gator`: debug.log
+`[enemy] ROOM2090: Alligator (0x23) in Wasserzone gesetzt, Slot 35`, state.log F59 `[35 t=23 st=1 ...] hp=3000` -> F60 `[35 t=23 st=2
+ss1=9 ...] hp=2000` (Schaden 1000 = RE1.5 Art 2 @0x8006f41c, wie vom Riegel verlangt).
 
 ### N2.7 OFFEN (Stand Nachbesserung 2; N1.13 gilt weiter, Punkt 8 ist fuer die NPCs erledigt)
 1. **Lage der SPIELER-Schritte:** FUN_80045630 ruft FUN_80045a64 fuer JEDE Entity (`jal 0x80045a64` @0x80045830, kein Typ-Gate davor),
