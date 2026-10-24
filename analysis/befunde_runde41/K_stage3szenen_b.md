@@ -68,3 +68,29 @@ Ansichtsblaetter (Port-Leser `re15_port/tools/emd_ansichtsblatt.py`, nur EMS_PFA
 Prototyps** (Elza-NPC-Modell mit Pistole unter Typ 0x42) — in jedem anderen Sherry-Raum des Elza-Szenarios steht das
 fertige Sherry-Modell 0x4B. Das ist UNFERTIG, nicht "fertig und anders" -> Ziel = Sherrys fertiges Modell (0x4B), ohne
 Waffe (Nutzer-Wortlaut). Mechanik der Umsetzung siehe K1.4 (nach der Messung).
+
+### K1.3 KORREKTUR (2026-10-24 ~21:00): in 3091 ist SHERRY DER SPIELER, das 0x42-Modell ist ELZA als NPC
+K1.1/K1.2 oben haben die Rollen verwechselt. Belege (eigene Dumps, Datei-Offsets):
+* ROOM3061 sub02 (Kriech-Szene) endet mit `2e 01 00` Work_set Spieler, **`24 10 0f 00` @0x011F6 = Save
+  work_vars[0x10] = 0x0F**, `47 03` @0x011FA = Aot_on 3 = Door_aot_set Slot 3 @0x00EF8 (Rechteck 0, Ziel Raum 0x0C
+  = 30C, Cut 10, Lage (-19100,-,-1350)). Raumlader FUN_800396fc @0x80039760-8c (Kommentar platform/pc/main.c "SPIELER-
+  MODELL-WECHSEL", Runde 2026-08-26): Modell-Nibble von DAT_800aca5c != work_vars[0x10] (0x800b0ff0) -> neues Modell
+  -> FUN_800314b0 laedt PL0<n>.PLD (Datei-Id-Tabelle @0x80073f70). **Modell 0x0F = PL0F.PLD = Sherry als SPIELFIGUR**
+  (PLD/PL0F.PLD 126892 B, Waffen-Datei PL0FW00.PLW 14696 B; Waffen-Tabelle @0x800741e8[15] = 118 = PL0FW00, Spur J
+  §1.2). => **"Ab 30C1" = ab der Ankunft in 30C1 Cut 10 spielt man SHERRY.**
+* ROOM3091 sub07 endet mit `24 10 04 00` @0x01D9C bzw. `24 10 05 00` @0x01DA8 (je Ck(3,117)) = Spielermodell zurueck
+  auf Elza (4/5), dann `47 00` Aot_on 0 -> 30C1 Cut 1 (Marvin-Szene "Elza: Who are you?").
+* In der 3091-Szene spricht der SPIELER die Sherry-Zeilen (msg 15 "Sherry: It's Sherry..." nach Work_set 1,0
+  @0x018EA, Plc_motion(0,12) @0x018EE) und Gegner 1 (Typ 0x42) die Elza-Zeilen (msg 11 "Elza: Yes, somehow!" nach
+  Work_set 2,1 @0x01808, Plc_motion(0,4) @0x0181A). Das CDEMD1-0x42-Modell (Elza-Anzug, Pistole) ist also ELZA als
+  NPC — richtig so, Elza traegt ihre Pistole.
+* Wurzelhoehen der Raum-Animation 3091 (`K_belege/k1_rbj_clips.py 3 3091 2`): rec2 (Marker 0x3 = Spieler + Gegner 1,
+  FUN_8001b3f8) Clips 0..10 Wurzel-y -1678..-1723 (Erwachsene: Elza), **Clips 11..13 Wurzel-y -1257..-1261 (Kind:
+  Sherry; 0x4B-Eigenbank Median -1255, Bind -1268)**. Das Skript spielt 11/12/13 auf dem SPIELER (Work_set 1,0:
+  @0x0170E (0,13), @0x018EE (0,12), @0x01A1E (0,11) ...) und 0..9 auf Gegner 1 (Elza-NPC). Gegenprobe ROOM4001
+  (Elza ist dort Spielerin, Sherry 0x4B Gegner 1): dort spielt Gegner 1 die Kind-Clips 11..13 und der Spieler 0..9.
+  => Die Clips sind fuer genau diese Rollen gebaut: Spieler = Sherry-Skelett, Gegner 1 = Elza-Skelett.
+* K1 ist damit: **die SPIELFIGUR Sherry (Modell 0x0F) ist im Port falsch/kaputt und traegt eine Waffe.** Port-Stand:
+  `pc_sync_player_model` (platform/pc/main.c ~Z.1394) tauscht beim Modellwechsel NUR MD1 + TIM aus PL<n>.PLD und
+  behaelt Skelett (EMR) und Animation (EDD) der bisherigen Figur sowie deren Waffe — fuer die Weste (PL00<->PL01: EDD
+  und EMR bytegleich) richtig, fuer Sherry (Kind-Skelett, eigene Clips, eigene Waffendatei) falsch. Messung folgt.
