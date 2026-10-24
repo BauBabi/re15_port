@@ -168,7 +168,9 @@ Der Rest (3,10) entsteht vor dem Kriechen und wird vom Anker unveraendert mitget
 
 Elza RE15_ANIM_TRACE: F1595-1604 `2/2/52`, F1605-1622 `105/5/30` (Drehen), **F1623-1632 `6/6/10` Slot 0..9, F1632-1687 Slot 9
 (56 x)**, 0 Zeilen Motion 6 mit anderem Clip/Bildzahl; ROOM30C1 F0/F1 `210/1/16` (Modell PL0F). Takt: F1623 -> letztes 3061-Bild
-F1687 = 65 Bilder = `Sleep 5` + `Sleep 60` hinter Plc_motion(2,6) @0x011DE / John @0x011EA (sub02, Dossier §2.1).
+F1687 = 65 Bilder = `Sleep 5` + `Sleep 60` hinter Plc_motion(2,6) @0x011DE / John @0x011EA (sub02, Bytes `09 0a 05 00` @0x011E2
+und `09 0a 3c 00` @0x011EE selbst gelesen). John (Aktor 2, Typ 0x49): F1628 (= F1623 + 5) `6/6/10` Slot 0..9, ab F1637 Slot 9
+gehalten bis F1687 — wie Original t17 (Gegner 1 Sub 2 Phase 2 Clip 6).
 
 Bilder (Port 320x240) gegen das selbst ausgeschnittene Original-Video `J41b/orig/o3061_v3.mp4` (ffmpeg ab 10 s, 5 B./s):
 - Kriechen `J41abn1/p2_kriechen_zoom.png` / `J41abn1/o3061v3_kriechen_zoom.png` / zusammen `J41abn1/vergleich_p2a_kriechen.png`:
