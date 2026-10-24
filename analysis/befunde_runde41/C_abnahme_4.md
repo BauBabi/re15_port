@@ -56,6 +56,61 @@ Gemessen (debug.log / wegplan.txt, Leon; Elza Zeile fuer Zeile gleich mit `room=
   bridge? Yes/No", Cut 4 Bruecke in der Fahrt (F2740/F2770), Spieler auf dem Steg (F3820), Ventil 09 Satz 49 (F4090), Sicherungsfrage.
 
 
+### K2 — Punkt 3 / Nachtrag 13 Teil 2: falsche Folge (Plakat) -> zurueck, richtige Folge -> Warnung -> zu Fuss zur Ost-Tuer -> 20B0 (Leon `k2`, Elza `k2_elza`)
+Fortsetzung von K1 ab genau dem dort gemessenen Zustand (Bits 101/102 + (3,108); Start am Sued-Landeplatz (-4686,7144) = Standort nach
+der Sicherung), Wegplan `<a4>/plaene/k2.txt` (91 Befehle). Leon und Elza Zeile fuer Zeile gleich (Elza `room=2031`, `room20b1.rdt`):
+* Plakat-Folge zu Fuss (Sued 09, Nord 01, Nord 02, Sued 07): `Ereignis 22 -> 2030_ventil_09` -> `id=55 "Valve 09, red wheel. Will you turn
+  it?"` -> Ja -> `Ventil 09 gedreht (Drehung 1/4)`; `id=50 "Valve 01, black wheel. ..."` -> `Drehung 2/4`; `id=51 "Valve 02, green
+  wheel. ..."` -> `Drehung 3/4`; `id=53 "Valve 07, black wheel. ..."` -> `Drehung 4/4` -> **`Folge 09 01 02 07 -> FALSCH: zurueckgesetzt`**
+  -> `Ereignis 27 -> 2030_ventile_falsch` -> **`id=45 "The valves turned back to their original position."`**; danach `FLAG (5,16) = 0`,
+  `FLAG (5,19) = 0` (Drehbits zurueck). Keine Rueckmeldung je Schritt (die ersten drei Drehungen ohne Text).
+* Richtige Folge (Sued 09, Sued 07, Nord 02, Nord 01): Drehung 1/4..4/4 -> **`Folge 09 07 02 01 -> RICHTIG: Warnung, Zaehler, Flut`** ->
+  `Ereignis 26 -> 2030_ventile_flut` -> **`id=46 "WARNING: The water will rise in one minute. Leave the room!"`** -> `ROOM2030: Tuer Slot 0
+  -> ROOM20B0 Cut 11 (Zaehler laeuft)` -> `Zaehler laeuft: 1800 Takte, Ost-Tuer -> 20B0, Wasser geparkt`; `FLAG (5,29) = 1`.
+* Flucht zu Fuss (Treppe hinauf ~F3960 `pos=(-4488,-3549,-7704)`, Ring Nord -> Ost): `[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,
+  hh=1750) target_cut=11 spawn=(5950,-1800,-6400)` (~F4650, ~960 Bilder = 32 s nach dem Zaehlerstart) -> `loaded room20b0.rdt` ->
+  **`Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100 (Flut gelaufen, Leiter frei)`** -> `ROOM20B0: Ring-Tuer Slot 3 nach 2030
+  gesperrt (geflutet) -> Sperrtext 41`; keine `FLUT`/`ERTRUNKEN`-Zeile; `EXIT_AT: Bild 300 in Raum 20b0`.
+* Fehlerton: `re15_audio_re2_panel_se(0x0B)` (ventilkette_r41.c) -> Bank PANEL2130.EDT (192 B = 48 Saetze) Satz 0x0B = `00 00 83 01`
+  (nicht leer; 0x0A `00 00 74 00`, 0x0C `00 00 93 01`). Laeufe mit RE15_NOAUDIO -> Ton nicht mitgeschnitten (nur Code + Bank geprueft).
+
+### D/P — Dokument und Plakat (Nachtrag 13 Folgen 2/3; Leon `dok`/`plakat`, Elza `dok_elza`/`plakat_elza`, RE15_PRESS wie die Riegel)
+* Dokument (Platz Slot 20, Spieler (-4600,6820) Blick +z): Viereck F330 -> Leser: Titel "TECHNICIAN'S NOTE" 1/3, Seite 2/3 und 3/3 mit
+  dem Nutzertext, EXIT, "The Technician's Note has been filed." -> `[ventilkette41] Dokument 6 "Technician's Note" abgelegt: Bit (9,107)
+  = 1` (Leon und Elza). Bildbogen `<a4>/bilder/dok_leon.png`, Textseite 2x `<a4>/bilder/dok_leon_s2.png`. Text gegen den Nutzerwortlaut
+  (AUFTRAG.md Nachtrag 13) Wort fuer Wort gelesen — im Spielbild und in den Assets (`<a4>/bilder/FILE31_p01_page.png`,
+  `FILE31_p02_page.png`, Titel `FILE31_title_page.png`, aus shared_assets/RE2/FILES/FILE31_*.TIM selbst dekodiert): gleich bis auf die
+  zwei Gedankenstriche U+2014 -> '-' (RE2-Dokumentschrift ohne Gedankenstrich; dokument_satz.py nimmt den Text direkt aus AUFTRAG.md).
+* **Sichtbarkeit des Dokument-Blatts in der Welt** (eigene Messung, Paare mit/ohne Bit 107 bei gleicher Kamera, RE15_FORCE_CUT nur zur
+  Bildwahl, Spieler ausserhalb des Bilds): Cut 0/1/2/4/7/15 -> **0 Pixel Unterschied**; Cut 5 (die Kamera des Sued-Landeplatzes) ->
+  **39 Pixel** (Rahmen x 102..113 y 143..149, ein dunkelgrauer Fleck hinter dem Gelaender, `<a4>/bilder/sicht_c5_dok.png`,
+  Ausschnitt 4x `<a4>/bilder/sicht_c5_dok_diff.png`). `[prop-render] pi=5 oid=0x06 pos=(-4600,-1800,7150)` wird gezeichnet, ist aber
+  praktisch nicht zu sehen; in K1 steht der Spieler zum Aufheben der Sicherung (-4686,7144) genau auf dem Blatt. -> Mangel 1 (§5).
+* Plakat (Platz Slot 21, Spieler (-3650,7280) Blick +z): `Ereignis 23 -> 2030_plakat` -> `Plakat-Nahaufnahme offen` -> Vollbild (F340/F400:
+  "VALVE OPERATION / FLOOD GATES - POOL / 1. GREEN 09 / 2. RED 01 / 3. BLACK 02 / 4. RED 07 / Turn the valves in this order.") -> Viereck
+  F420 -> `Plakat-Nahaufnahme zu (nach 89 Bildern)` -> Raum (F430). Waehrend offen: `up` an F360/F370/F380 -> Lage unveraendert
+  (-3650,-1800,7280); kein Klettern (mo 212/211, y -1800; mit Band 2 greift die Sonde @0x8002d370 nicht). Leon und Elza gleich.
+  Bildbogen `<a4>/bilder/plakat.png`. Der Aushang an der Suedwand ist im Spielbild (Cut 5) deutlich zu sehen (weisses Blatt mit
+  Punkten links vom roten Rad unter "09", `<a4>/bilder/k1_sued.png`).
+* Ableitung der Loesung (selbst nachvollzogen): Raeder in der Welt 09 rot, 07 schwarz, 02 gruen, 01 schwarz (BSS Cut 3/5/7 + Fragetexte
+  50-55). Plakat 09 GREEN / 01 RED / 02 BLACK / 07 RED -> Farbtausch einheitlich (Plakat-GRUEN = rot, -ROT = schwarz, -SCHWARZ = gruen,
+  "They mixed up black, green, and red"), die zwei schwarzen Ventile 01/07 vertauscht ("swapped the numbers for black") -> 09, 07, 02, 01
+  = RE15_R41C_LOESUNG. Die Lesart "Farben stimmen" fuehrt zu keinem eindeutigen Ventil (zwei gruene 02/08) -> eindeutig.
+
+### P1 — Punkt 1: Leiter 2000 vor der Flut (Leon `p1`/`p1r`, Elza `p1_elza`/`p1r_elza`)
+* Echter Weg `p1r`: 2010 -> `[aot] DOOR FIRE slot=0 rect=(-5300,-4925,hw=500,hh=875) target_cut=14 spawn=(-26450,-1800,-2700)` ->
+  `loaded room2000.rdt` (Elza `room2001.rdt`) -> `ROOM2000: Leiter Slot 4 (@0x0169E) -> Sperrtext 40` -> zu Fuss an die Leiter (Cut 14 ->
+  9 -> 10) -> Aktion -> **`id=40 "I cannot climb up the ladder because of the water pressure."`** (2x), kein Raumwechsel, `FLAG (9,100) = 0`
+  vorher und nachher. Bild (`<a4>/bilder/p1r_leiter.png`, Cut 10 wie im Spiel): Wasserstrahl aus dem Gitterfenster neben der Leiter, Leon
+  bzw. Elza an der Leiter, Text. Sprunglauf `p1` (Cut 0, Kamera folgt nach dem Sprung nicht) gleiches Protokoll.
+
+### P4 — Punkt 4: nach der Flut 20B0 statt 2000, Leiter frei (Leon `p4`, Elza `p4_elza`; Bits 103/100 + (3,235) vorgesetzt)
+* 2010: `ROOM2010: Tuer Slot 0 -> ROOM20B0 Cut 10 (Ziel ROOM2000)` -> `DOOR FIRE slot=0 ... target_cut=10` -> **`loaded room20b0.rdt`**
+  (Elza `room20b1.rdt`) -> zu Fuss zur Leiter -> **`[aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0
+  spawn=(9100,-5400,4100)`** (kein Sperrtext) -> `loaded room2050.rdt` -> 2050-Leiter: `ROOM2050: Tuer Slot 0 -> ROOM20B0 Cut 9 (Ziel
+  ROOM2000)` -> `loaded room20b0.rdt`. Bild `<a4>/bilder/p4_20b0.png` (Cut 9): Gitterfenster OHNE Strahl, Spieler an der Leiter.
+  (Laufende per Zeitlimit, weil mein EXIT_AT auf 2050 zielte und der Plan vorher nach 20B0 zurueckging — kein Spielbefund.)
+
 ## 2. Gates
 
 ### G1 RE-Gate (eigene Disassembly / eigene Byte-Lesung)
