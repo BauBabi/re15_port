@@ -1158,3 +1158,43 @@ ist; der Port haelt 1 Bild. Ziel: Standbild-Dauer an genau dieser Stelle messen,
   RDT @0x3FC `ff ff ff ff`); laut Spur M (M_masken36.md §2.1, M_abnahme_0 §2a) richtig, Leon steht von der Kamera aus HINTER der
   Reling — Nutzer-Maske, nicht Spur E. Der Stand-Lauf vom Sprung (`P1_stand_cut3`, Leon per Lage auf (3012,-3200) ohne den Weg)
   zeigte die Frage in einer anderen Kamera (RVD-Zonen haengen am vorigen Cut) — fuer den Bildvergleich darum der gegangene Weg.
+
+### Mangel 2 / E-E4 — unit_r36_zombieki_affen_block misst den Haenger wieder
+- Ursache (Abnahme 3 §8.2, bestaetigt): die Seed-Schranke "AN - AUS <= 5982" war nach dem Bestehen gewaehlt; sie liess Seed
+  0x9b5bf362 (ein Gorilla 4405 von 6000 Bildern an der Klemme (11129,9982)) durch. Die Seed-Differenz der blockierten Bilder misst
+  das Bahn-Chaos (welche Seeds in eine Haenge-Stelle laufen), nicht die Port-Wahl.
+- Messung vorher (NB4-Bau, `<sp>/E41n4/affen/riegel_nb4a.txt`): unveraendert gegen NB3 (Summe AUS 304898 / FERN 253141, AN 73926
+  / FERN 24433) — Mangel 1 (Uebernahme) aendert die Bahn der Sonde nicht. Neue Sonden-Ausgabe (Testhaken, kein Engine-Code): je
+  blockierter Strecke die FERN-Bilder und die FERN-Bilder AN DER KLEMME (`LAGE ... fern <n> fklemme <k> [offen]`, auch die am
+  Laufende offene Strecke), 144 Seeds x AUS/AN, je Lauf eigener Prozess (`<sp>/E41n4/affen/lage3/`, Auswertung
+  `lage_auswertung3.py`).
+- Befund (gemessen):
+  | Stelle | AUS (Original-Regel) FERN-Klemmen-Bilder | AN (PORT-WAHL Umweg) | Natur |
+  |---|---|---|---|
+  | TASCHE x 10500..11400, z 9700..11400 (Haenger der Abnahme) | 6223 in 2 Seeds (0xe1e5634a 2833+1289, 0xb718cbe2 1531+286+284) | 6583 in 2 Seeds (0x9b5bf362 4393, 0x88ee0af8 1555) | geschlossene Tasche (Raster `raster 200 1600`: frei x 9200..11000 / z 9800..11200, Zeile z 11400 ganz Klemme); der Gorilla springt hinein (Spur: Sub 7 F900..F950), der Umweg findet keinen Weg hinaus (uw 0 F950..F5355, fest bis 393, +0x1de bis 522) |
+  | SUB7 x -13800..-13300, z -1300..200 | 36710 in 57 Seeds | 12637 in 20 Seeds | Blindsprung-Schleife des Originals vor dem 0x20-Pad #19 (+0x7 = 3 @0x80117fe4-@0x80118024) |
+  | WESTBLOCK x 3800..6200, z 9900..12500 | 5880 in 15 Seeds | 3590 in 6 Seeds | beide Gorillas Sub 4 mit Sicht an den Wandbloecken z <= 9800 / x 6000..6400, Leon fern im Sueden; Umweg zu Fuss AKTIV (uw 1, Ziele (7000,10500) / (9400,6500)), der Gorilla dreht zum Ziel (rot 3989) und bewegt sich 742 Bilder nicht (0xae479de5 F4615..F5357) |
+  Ausserhalb dieser drei Stellen je Seed die groesste FERN-Klemmen-Strecke: AUS Median 411, p90 2377, max 5313 ((6418,-3617)
+  = Ostgasse, (320,-10846), ...; 76 Seeds >= 354, 122 >= 90); AN Median 0, p90 46, max 103 (0x6394780b (-13592,11847); 0 Seeds
+  >= 354, 5 >= 90). An allen drei Stellen haengt schon die Original-Regel; die Port-Wahl hat dort keinen Ausweg.
+- Ursache in zombieki_r36.c belegt, aber NICHT klein: (1) TASCHE: r36_uw_route -> 0 (kein gerade erreichbarer Startknoten bzw.
+  keine Kante aus der Tasche: r36_uw_knoten(.., 3*r/2, r, 4) / A*), Ausweg nur per Sprung — neue Umweg-Art; (2) SUB7: die
+  Original-Blindsprung-Schleife (Port-Wahl greift dort nicht ein); (3) WESTBLOCK: Umweg zu Fuss im Sub 4 aktiv, aber kein
+  Vortrieb — ob B[4] (FERN mit Sicht, Steuerung @0x801181e0) hier nicht laeuft oder die Klemme jeden Schritt aufhebt, ist nicht
+  untersucht. Jede Aenderung verschiebt die Bahnen aller Seeds und muss gegen die 81 Pruefungen + Spur-J-Fenster gefahren werden
+  -> Folgeauftrag (unten), keine Aenderung an zombieki_r36.c in Spur E.
+- Aenderung (tests/unit/test_r36_zombieki_affen_block.c, von E-E2/E-E4 gedeckt): zg_haenger/zg_ort (benannte Stellen TASCHE, SUB7,
+  WESTBLOCK mit Beleg im Kommentar); EINS-Zeile + `fkmax fkx fkz ort a b c`; Riegel: (a) NEU je Seed AN groesste FERN-Klemmen-
+  Strecke ausserhalb der benannten Stellen < R41_WARTE_MAX = 354 = R36_NAH_START (laengste Klemmen-Wartezeit des kanonischen
+  Original-Kampfs, Runde 36 J GDB: Slot 2 wartet 353 Bilder — vorab begruendet, nicht aus dem Bestehen), (b) NEU Gegenprobe: die
+  Original-Regel (AUS) loest das Mass aus (76 Seeds), (c) benannte Stellen je Modus ausgegeben, (d) Seed-Differenz AN - AUS nur
+  noch ausgegeben; FERN <= 1/6 und Griffe >= 80 % unveraendert. Die alte Schranke 5982 ist entfernt.
+- Messung nachher (`<sp>/E41n4/affen/riegel_nb4b.txt`): `ok: HAENGER ... groesste AN 103 (0x6394780b bei (-13592,11847))`,
+  `ok: Gegenprobe Original-Regel: das Haenger-Mass schlaegt ohne Umweg an (76 Seeds >= 354)`, benannte Stellen TASCHE AUS 6223/2 |
+  AN 6583/2, SUB7 36710/57 | 12637/20, WESTBLOCK 5880/15 | 3590/6; 81 Pruefungen, 0 Fehler.
+  `ctest -R "^unit_r36_zombieki_.*$"`: 100% tests passed, 0 tests failed out of 6.
+- Fuer den Orchestrator (Folgeauftrag UEBERGABE §3b, Port-Wahl Runde 36 zombieki_r36.c): drei Haenge-Stellen der Gorillas in
+  ROOM11C0, an denen auch die Original-Regel haengt und der Umweg keinen Ausweg hat — TASCHE (Sprung aus der geschlossenen Tasche),
+  SUB7 (Blindsprung-Schleife vor #19), WESTBLOCK (Umweg im Sub 4 ohne Vortrieb). Nachstellbar: `test_r36_zombieki_affen_block
+  eins <i> 1 6000 400 1` (i = 2 TASCHE, 47 SUB7, 117 WESTBLOCK), Spur je Bild `eins <i> 1 6000 400 0 1 1 1 <von> <bis>`. Nach
+  einer Behebung die Stelle aus zg_ort nehmen; das Haenger-Mass greift dann dort.
