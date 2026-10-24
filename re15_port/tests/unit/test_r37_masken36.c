@@ -1472,9 +1472,10 @@ typedef struct { const char *name; unsigned raum; int cut; int x, z, band; int h
 
 static void teil_verdeckung(void)
 {
-    static uint8_t deck[240][320];
-    static uint16_t tief[240][320];
+    static uint8_t deck[240][320], modell[240][320];
+    static uint16_t tief[240][320], tief_m[240][320];
     static figpt_t pt[FIGPT_MAX];
+    static re15_pri_cut_t pri_roh;
     int i, n_ok = 0, n = (int) (sizeof SZENEN / sizeof SZENEN[0]), np = 0, nsp = 9, ges = 0, n_kf = 0, kopf_alt_30A0 = -1;
     int stage_h[8] = {0}, stage_v[8] = {0};
     printf("== r37_masken36 verdeckung: Figur hinter / vor dem Objekt (Lader-Atlas, nach dem Ausschluss) ==\n");
@@ -1482,7 +1483,7 @@ static void teil_verdeckung(void)
         const szene_t *s = &SZENEN[i];
         char p[700]; uint8_t *roh, *msk; size_t rn = 0, mn = 0; re15_rdt_t rdt; re15_camera_view_t v;
         re15_pri_cut_t pri; atlas_t eig, bss, *a; uint32_t off; int m, x, y, k, on = 0, cov = 0, occ = 0, fuss_occ = 0;
-        int fuss_cov = 0, ok, durch, occ_roh = 0;
+        int fuss_cov = 0, ok, durch, occ_roh = 0, cov_modell = 0;
         double lx, lz, ll;
         unsigned mraum = re15_pri_masken_raum(s->raum);
         snprintf(p, sizeof p, "%s/STAGE%u/ROOM%04X.RDT", PSX, s->raum >> 12, s->raum);
@@ -1501,6 +1502,7 @@ static void teil_verdeckung(void)
         if (ll > 0) { lx /= ll; lz /= ll; }
         /* FREI (Nachbesserung 1): erst UNGEFILTERT zaehlen - die Szene muss ohne den Ausschluss fehlverdeckt sein, sonst
          * prueft sie den Ausschluss nicht (Gegenprobe). Danach wie der Lader (main.c) gefiltert. */
+        pri_roh = pri;                                            /* R41 NB2: ungefiltert fuer die Modell-Karte unten */
         for (durch = (s->hinter == 2) ? 0 : 1; durch <= 1; durch++) {
         if (durch == 1) re15_masken36_filter(mraum, s->cut, &pri);  /* wie der Lader (main.c) */
         on = cov = occ = fuss_occ = fuss_cov = 0;
@@ -1532,6 +1534,33 @@ static void teil_verdeckung(void)
         }
         if (durch == 0) occ_roh = occ;
         }
+        if (s->hinter == 2 && a->da) {
+            /* Runde 41 Spur M, Nachbesserung 2: Figurpunkte auf Maskenpunkten, deren VORDERSTE gezeichnete Maske ein Rechteck mit
+             * Zellen-Modell ist (gen_r41_masken36_zellen.inc). Die Rechtecke, die der Ausschluss hier frueher nahm (die Trennwand
+             * ROOM30A0 Cut 0: Generator-Tiefe 10 % vor ihrem Bodenkontakt), zeichnet der Lader seit NB2 mit der Tiefe ihrer Zelle;
+             * sie verdecken die Figur VOR der Trennwand nicht mehr - auch ungefiltert. Die FREI-Szene belegt dann: die Figur steht
+             * auf der gezeichneten Modell-Maske und bleibt frei (die Zellen-Tiefe schuetzt sie, nicht mehr der Ausschluss). */
+            const uint8_t *idx = (const uint8_t *) a->tim.pixels;
+            memset(modell, 0, sizeof modell);
+            for (y = 0; y < 240; y++) for (x = 0; x < 320; x++) tief_m[y][x] = 0xFFFF;
+            for (m = 0; m < pri_roh.draw_count; m++) {
+                const re15_pri_mask_t *q = &pri_roh.masks[m];
+                int dx = (int16_t) q->dstX, dy = (int16_t) q->dstY, mi = -1;
+                uint8_t hat = r41_modell(mraum, s->cut, m, &mi) != NULL;
+                if (re15_masken36_ausgeschlossen(mraum, s->cut, m)) continue;
+                for (y = 0; y < q->height; y++)
+                    for (x = 0; x < q->width; x++) {
+                        int ax = q->srcX + x, ay = q->srcY + y, tx = dx + x, ty = dy + y;
+                        if (ax >= a->tim.width || ay >= a->tim.height || tx < 0 || ty < 0 || tx >= 320 || ty >= 240) continue;
+                        if (!idx[ay * a->tim.width + ax]) continue;
+                        if (q->depth < tief_m[ty][tx]) { tief_m[ty][tx] = q->depth; modell[ty][tx] = hat; }
+                    }
+            }
+            for (k = 0; k < np; k++) {
+                int sx = pt[k].x, sy = pt[k].y;
+                if (sx >= 0 && sy >= 0 && sx < 320 && sy < 240 && modell[sy][sx]) cov_modell++;
+            }
+        }
         {   /* NB2 M2: das Raster tastet Kopfoberkante und Fuss ab - die mittlere Spalte hat Punkte in den Bildzeilen
              * floor(y_kopf) und floor(y_fuss) (soweit im Bild). Gegenprobe: die alte Abtastung (Zeilenmitten 167..2833)
              * verfehlt in f30A0c0k die Zeile der Kopfoberkante. */
@@ -1558,12 +1587,13 @@ static void teil_verdeckung(void)
         }
         if (s->hinter == 1)      ok = a->da && fuss_occ && occ * 2 >= on && on > 0;
         else if (s->hinter == 0) ok = a->da && on > 0 && !fuss_cov && cov >= 10 && occ == 0;   /* cov: Punkte auf der Maske */
-        else                     ok = a->da && on > 0 && occ == 0 && occ_roh > 0;   /* FREI: ungefiltert verdeckt, jetzt nicht */
+        else                     ok = a->da && on > 0 && occ == 0 && (occ_roh > 0 || cov_modell > 0);   /* FREI: ungefiltert verdeckt
+                                                                    * (Ausschluss schuetzt) oder auf Modell-Maske frei (R41 NB2) */
         printf("  %s ROOM%04X Cut %d (%d,%d) %s: Atlas %s, im Bild %d/%d Figurpunkten, auf Maske %d, verdeckt %d, Fuss %s",
                s->name, s->raum, s->cut, s->x, s->z, s->hinter == 1 ? "HINTER" : (s->hinter == 0 ? "DAVOR" : "FREI"),
                a->da ? a->quelle : "FEHLT", on, ges, cov,
                occ, fuss_occ ? "verdeckt" : (fuss_cov ? "auf Maske" : "frei"));
-        if (s->hinter == 2) printf(" | ungefiltert verdeckt %d", occ_roh);
+        if (s->hinter == 2) printf(" | ungefiltert verdeckt %d, auf Modell-Maske %d", occ_roh, cov_modell);
         printf(" -> %s\n", ok ? "ok" : "FALSCH");
         if (ok) { n_ok++; if (s->hinter == 1) stage_h[s->raum >> 12]++; else if (s->hinter == 0) stage_v[s->raum >> 12]++; }
         free(eig.roh); free(bss.roh); free(roh); free(msk);
