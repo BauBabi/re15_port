@@ -907,6 +907,11 @@ Pegel je Abstand (max(voll, volr) = (0x89 - ATT[Abstand]) & 0x7f, ATT-Bytes PSX.
 | ATT | 10 | 20 | 28 | 33 | 38 | 43 | 53 | 63 | 81 | 83 |
 | Pegel | 127 | 117 | 109 | 104 | 99 | 94 | 84 | 74 | 56 | 54 |
 Landungen (Punkt 2a, unveraendert): landung_leon / landung_elza je 1 Landung, 104 fx-Zeilen id=6 sub=3.
+**Gegenprobe Lage (unabhaengig, Python):** `A_belege/nb2/lage_gegenprobe.py` rechnet FUN_80045a64 aus der Disasm-Lesung neu - Kamera =
+RID-Satz (RDT +0x24) des geloggten Cuts, CORDIC mit W @0x80078c90, SquareRoot0 mit der BIOS-Tabelle @0x8007d984 (192 x u16, direkt aus
+PSX.EXE), PAN/ATT @0x80074728 aus PSX.EXE. Ergebnis gegen die Messzeilen der exe: **npc2000 64/64, elza2001 23/23, npc11c0 8/8 gleich**
+(Lage UND Abstand). Mit exakter Wurzel statt SquareRoot0 wichen 14 Schritte um genau eine ATT-Stufe ab (Abstand +1) - die
+BIOS-Wurzel unterschaetzt (SR0(1e8) = 9980), die Nachbildung rechnet wie das Original.
 
 ### N2.5 M4 — Riegel (messen jetzt das Abspielen)
 - `unit_r41_wasser20b0_ton` (neu): alle 52 NPC-Raeume (Liste = Zensus der Abnahme), je erreichbarer FLR-Bodentyp eine Stelle dieses
