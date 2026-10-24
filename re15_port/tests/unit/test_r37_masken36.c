@@ -732,7 +732,8 @@ static int r41_form(int i, const r41_zellen_modell_t *k, double x, double z)
     return g_r41_ras[i][jj * g_r41_rw[i] + ii];
 }
 
-/* Koerper der Modellzelle von Rechteck `rect` vor dem Figurpunkt F (Welt)? A = Kameraort. */
+/* Koerper der Modellzelle von Rechteck `rect` vor dem Figurpunkt F (Welt)? A = Kameraort.
+ * -> 1 ja; 0 kein Modell; -1 Kamera im Koerper; -2 Figurpunkt im Koerper; -3 Strecke verfehlt den Koerper. */
 static int r41_koerper_davor(unsigned raum, int cut, int rect, const double A[3], double fx, double fy, double fz)
 {
     int i = -1, n, kk; const r41_zellen_modell_t *k = r41_modell(raum, cut, rect, &i);
@@ -741,13 +742,13 @@ static int r41_koerper_davor(unsigned raum, int cut, int rect, const double A[3]
     y0 = -(double) k->band * BAND_Y; yhi = y0; ylo = k->saeule ? -1e12 : y0 + k->hoehe;
     B[0] = fx; B[1] = fy; B[2] = fz;
     D[0] = B[0] - A[0]; D[1] = B[1] - A[1]; D[2] = B[2] - A[2];
-    if (A[1] >= ylo && A[1] <= yhi && r41_form(i, k, A[0], A[2])) return 0;     /* Kamera im Koerper: kein Urteil */
-    if (B[1] >= ylo && B[1] <= yhi && r41_form(i, k, B[0], B[2])) return 0;     /* Figurpunkt im Koerper: kein Urteil */
+    if (A[1] >= ylo && A[1] <= yhi && r41_form(i, k, A[0], A[2])) return -1;    /* Kamera im Koerper: kein Urteil */
+    if (B[1] >= ylo && B[1] <= yhi && r41_form(i, k, B[0], B[2])) return -2;    /* Figurpunkt im Koerper: kein Urteil */
     {   /* Strecke gegen die drei Achsen-Schichten des Huellkoerpers */
         const double lo[3] = { (double) k->x, ylo, (double) k->z }, hi[3] = { (double) k->x + k->w, yhi, (double) k->z + k->d };
         int ax;
         for (ax = 0; ax < 3; ax++) {
-            if (fabs(D[ax]) < 1e-9) { if (A[ax] < lo[ax] || A[ax] > hi[ax]) return 0; continue; }
+            if (fabs(D[ax]) < 1e-9) { if (A[ax] < lo[ax] || A[ax] > hi[ax]) return -3; continue; }
             {
                 double u0 = (lo[ax] - A[ax]) / D[ax], u1 = (hi[ax] - A[ax]) / D[ax];
                 if (u0 > u1) { double t = u0; u0 = u1; u1 = t; }
@@ -756,7 +757,7 @@ static int r41_koerper_davor(unsigned raum, int cut, int rect, const double A[3]
             }
         }
     }
-    if (!(s0 < s1)) return 0;
+    if (!(s0 < s1)) return -3;
     if (k->typ == 1) return 1;
     len = (s1 - s0) * sqrt(D[0] * D[0] + D[2] * D[2]);
     n = (int) (len / RASTER) + 1;
@@ -764,8 +765,14 @@ static int r41_koerper_davor(unsigned raum, int cut, int rect, const double A[3]
         double s = s0 + (s1 - s0) * kk / n;
         if (r41_form(i, k, A[0] + s * D[0], A[2] + s * D[2])) return 1;
     }
-    return 0;
+    return -3;
 }
+
+/* Werkzeug "warum" (kein Riegel): je Rechteck die Gruende der Fehlverdeckungen in der Runde, in der es ausgeschlossen wird:
+ * [0] Punkt ohne Modell, [1] Kamera im Koerper, [2] Punkt im Koerper, [3] Strecke verfehlt den Koerper, [4] Schranke
+ * "Kasten breiter als das Bild", [5] Schranke "Spalte halb hinter der Kamera". */
+static int g_r41_diag;
+static long g_r41_grund[RE15_PRI_MAX_MASKS_PER_CUT][6];
 
 typedef struct {
     re15_rdt_t rdt; uint8_t *roh; size_t n;
@@ -964,7 +971,10 @@ static void sektion_pruefen(raum_t *R, int cut, const re15_pri_cut_t *pri, const
                                 if (iterieren) {
                                     for (yy = Y0; yy <= Y1; yy++)
                                         for (xx = X0; xx <= X1; xx++)
-                                            if (welch[yy][xx] >= 0 && tief[yy][xx] < thr) falsch_m[welch[yy][xx]]++;
+                                            if (welch[yy][xx] >= 0 && tief[yy][xx] < thr) {
+                                                falsch_m[welch[yy][xx]]++;
+                                                if (g_r41_diag) g_r41_grund[welch[yy][xx]][4]++;
+                                            }
                                     if (si <= n_steh) nochmal[si - 1] = 1;
                                 }
                             }
@@ -981,7 +991,10 @@ static void sektion_pruefen(raum_t *R, int cut, const re15_pri_cut_t *pri, const
                             if (iterieren) {
                                 int mm;
                                 for (mm = 0; mm < pri->draw_count; mm++)
-                                    if (!E->aus[mm] && (int) pri->masks[mm].depth < thr_h) falsch_m[mm]++;
+                                    if (!E->aus[mm] && (int) pri->masks[mm].depth < thr_h) {
+                                        falsch_m[mm]++;
+                                        if (g_r41_diag) g_r41_grund[mm][5]++;
+                                    }
                                 if (si <= n_steh) nochmal[si - 1] = 1;
                             }
                         }
@@ -999,10 +1012,14 @@ static void sektion_pruefen(raum_t *R, int cut, const re15_pri_cut_t *pri, const
                                 dv = zelle_dazwischen(&R->zel, b, cam[0], cam[2], wx + o * lx, wz + o * lz) ? 1 : 2;
                                 if (d) *d = dv;
                             }
+                            int k3 = dv == 1 ? 0 : r41_koerper_davor(R->raum, cut, mi, cam, wx + o * lx,
+                                                                      -(double) b * BAND_Y - pt[i].h, wz + o * lz);
                             if (dv == 1) E->echt++;
-                            else if (r41_koerper_davor(R->raum, cut, mi, cam, wx + o * lx, -(double) b * BAND_Y - pt[i].h,
-                                                       wz + o * lz)) { E->echt++; E->echt3d++; }   /* R41 NB2: Koerper davor */
-                            else { E->falsch++; falsch_m[mi]++; if (si <= n_steh) nochmal[si - 1] = 1; }
+                            else if (k3 > 0) { E->echt++; E->echt3d++; }   /* R41 NB2: Koerper des Zellen-Modells davor */
+                            else {
+                                E->falsch++; falsch_m[mi]++; if (si <= n_steh) nochmal[si - 1] = 1;
+                                if (g_r41_diag) g_r41_grund[mi][k3 == 0 ? 0 : -k3]++;
+                            }
                         }
                     }
                 }
@@ -1056,6 +1073,25 @@ static void alle_sektionen(int iterieren, int mit_tabelle, sektion_fn fn, void *
                 free(R.roh); R.roh = NULL;
                 free(msk);
             }
+}
+
+/* ---- warum (Werkzeug R41 NB2) ----------------------------------------------------------------------------------- */
+static void warum_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, const ergebnis_t *E, void *ctx)
+{
+    int m, i; long *summe = (long *) ctx;
+    for (m = 0; m < pri->draw_count; m++) {
+        int idx = -1; const r41_zellen_modell_t *k = r41_modell(raum, cut, m, &idx);
+        if (k && E->aus[m] && !(raum & 1u)) {
+            printf("  WARUM %04X C%-2d R%-3d aus (Modell Typ %d Band %d Hoehe %d): ohneModell %ld KameraImKoerper %ld PunktImKoerper "
+                   "%ld verfehlt %ld SchrankeBreit %ld SchrankeHalb %ld (Stehplaetze %ld)\n", raum, cut, m, k->typ, k->band, k->hoehe,
+                   g_r41_grund[m][0], g_r41_grund[m][1], g_r41_grund[m][2], g_r41_grund[m][3], g_r41_grund[m][4], g_r41_grund[m][5],
+                   E->stehplaetze);
+            for (i = 0; i < 6; i++) summe[i] += g_r41_grund[m][i] > 0;
+            summe[6]++;
+        }
+        if (k && !E->aus[m] && !(raum & 1u)) summe[7]++;
+    }
+    memset(g_r41_grund, 0, sizeof g_r41_grund);
 }
 
 /* ---- erzeuge ---------------------------------------------------------------------------------------------------- */
@@ -1789,6 +1825,16 @@ int main(int argc, char **argv)
                "(im Bild %d von %d)\nOK\n", r, c, mz, re15_masken36_ausgeschlossen(re15_pri_masken_raum(r), c, mz) ? "aus" : "an",
                best_x, best_z, best_b, best_f, best_s, best_g);
         free(bss.roh); free(msk);
+        return 0;
+    }
+    if (!strcmp(teil, "warum")) {                       /* Werkzeug (R41 NB2): Gruende je ausgeschlossenem Rechteck mit Zellen-Modell */
+        long summe[8] = {0};
+        saaten_sammeln();
+        g_r41_diag = 1;
+        alle_sektionen(1, 0, warum_zeile, summe);
+        printf("  Modell-Rechtecke (Leon): an %ld, aus %ld | Rechtecke mit Grund: ohneModell %ld KameraImKoerper %ld PunktImKoerper %ld "
+               "verfehlt %ld SchrankeBreit %ld SchrankeHalb %ld\nOK\n", summe[7], summe[6], summe[0], summe[1], summe[2], summe[3],
+               summe[4], summe[5]);
         return 0;
     }
     if (!strcmp(teil, "cut") && argc > 3) {             /* Werkzeug: warum hat ein Cut keinen Stehplatz? */

@@ -1,18 +1,19 @@
 /* Erzeugt von tests/unit/test_r37_masken36.c (Modus "erzeuge") - NICHT von Hand aendern.
  * Runde 37 Spur P: Generator-Rechtecke (R15M ohne eigenen Atlas), die an einem erreichbaren Stehplatz einen
- * Figurpunkt ohne solide Zelle davor verdecken. Grundlagen und Messaufbau: Kopf von test_r37_masken36.c,
+ * Figurpunkt ohne solide Zelle davor verdecken (Runde 41 NB2: und ohne den Koerper ihres Zellen-Modells davor,
+ * tests/unit/gen_r41_masken36_zellen.inc). Grundlagen und Messaufbau: Kopf von test_r37_masken36.c,
  * Dossier analysis/befunde_runde37/P_masken36.md. Spalten: Raum der MSK-Datei, Cut, Zahl, Bitfeld je Rechteck. */
 static const re15_masken36_zeile_t re15_masken36_zeilen[] = {
     { 0x3040,  0,  14, { 0x1B00057Fu, 0x00000010u, 0x00000000u, 0x00000000u } },   /* 14 von 49 Masken, Stehplaetze 2710 */
     { 0x3040,  1,  19, { 0x0007FFFFu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 19 von 19 Masken, Stehplaetze 4716 */
-    { 0x3040,  3,  21, { 0x00302600u, 0x2F800000u, 0x000027FAu, 0x00000000u } },   /* 21 von 105 Masken, Stehplaetze 4451 */
+    { 0x3040,  3,  20, { 0x00302400u, 0x2F800000u, 0x000027FAu, 0x00000000u } },   /* 20 von 105 Masken, Stehplaetze 4451 */
     { 0x3040,  7,   1, { 0x00000000u, 0x00000400u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 3817 */
     { 0x3040,  8,   4, { 0x00000000u, 0x88080000u, 0x00008000u, 0x00000000u } },   /* 4 von 105 Masken, Stehplaetze 2923 */
     { 0x3040,  9,   4, { 0x00800008u, 0x00000000u, 0x00500000u, 0x00000000u } },   /* 4 von 105 Masken, Stehplaetze 4955 */
     { 0x3040, 10,   1, { 0x00000040u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 15 Masken, Stehplaetze 5140 */
     { 0x3041,  0,  14, { 0x1B00057Fu, 0x00000010u, 0x00000000u, 0x00000000u } },   /* 14 von 49 Masken, Stehplaetze 2710 */
     { 0x3041,  1,  19, { 0x0007FFFFu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 19 von 19 Masken, Stehplaetze 4716 */
-    { 0x3041,  3,  21, { 0x00302600u, 0x2F800000u, 0x000027FAu, 0x00000000u } },   /* 21 von 105 Masken, Stehplaetze 4451 */
+    { 0x3041,  3,  20, { 0x00302400u, 0x2F800000u, 0x000027FAu, 0x00000000u } },   /* 20 von 105 Masken, Stehplaetze 4451 */
     { 0x3041,  7,   1, { 0x00000000u, 0x00000400u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 3817 */
     { 0x3041,  8,   4, { 0x00000000u, 0x88080000u, 0x00008000u, 0x00000000u } },   /* 4 von 105 Masken, Stehplaetze 2923 */
     { 0x3041,  9,   4, { 0x00800008u, 0x00000000u, 0x00500000u, 0x00000000u } },   /* 4 von 105 Masken, Stehplaetze 4955 */
@@ -86,10 +87,10 @@ static const re15_masken36_zeile_t re15_masken36_zeilen[] = {
     { 0x5021, 11,   2, { 0x00000003u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 2 von 105 Masken, Stehplaetze 4089 */
     { 0x5021, 12,   3, { 0x00030001u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 3 von 28 Masken, Stehplaetze 1050 */
     { 0x5050,  0,   5, { 0x00010708u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 5 von 22 Masken, Stehplaetze 5464 */
-    { 0x5050,  1,  20, { 0x00402EDFu, 0x0100A800u, 0x84000000u, 0x00000042u } },   /* 20 von 105 Masken, Stehplaetze 5464 */
+    { 0x5050,  1,  17, { 0x00402ECDu, 0x01002800u, 0x84000000u, 0x00000042u } },   /* 17 von 105 Masken, Stehplaetze 5464 */
     { 0x5050,  2,  86, { 0xFFFFFFFFu, 0xFF8001FFu, 0xFFFF2BFEu, 0x000001FFu } },   /* 86 von 105 Masken, Stehplaetze 5464 */
     { 0x5051,  0,   5, { 0x00010708u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 5 von 22 Masken, Stehplaetze 5464 */
-    { 0x5051,  1,  20, { 0x00402EDFu, 0x0100A800u, 0x84000000u, 0x00000042u } },   /* 20 von 105 Masken, Stehplaetze 5464 */
+    { 0x5051,  1,  17, { 0x00402ECDu, 0x01002800u, 0x84000000u, 0x00000042u } },   /* 17 von 105 Masken, Stehplaetze 5464 */
     { 0x5051,  2,  86, { 0xFFFFFFFFu, 0xFF8001FFu, 0xFFFF2BFEu, 0x000001FFu } },   /* 86 von 105 Masken, Stehplaetze 5464 */
     { 0x5090, 11,   3, { 0x00000021u, 0x00000000u, 0x02000000u, 0x00000000u } },   /* 3 von 105 Masken, Stehplaetze 7892 */
     { 0x5090, 13,  11, { 0x00045441u, 0x22001400u, 0x00010000u, 0x00000000u } },   /* 11 von 105 Masken, Stehplaetze 7892 */
@@ -114,15 +115,15 @@ static const re15_masken36_zeile_t re15_masken36_zeilen[] = {
     { 0x5101,  6,  41, { 0x03FF8000u, 0x06FF8100u, 0xFFEE0000u, 0x0000000Fu } },   /* 41 von 105 Masken, Stehplaetze 5844 */
     { 0x5101,  7,  19, { 0xF0003F00u, 0x000001FFu, 0x00000000u, 0x00000000u } },   /* 19 von 41 Masken, Stehplaetze 5045 */
     { 0x6000,  3,   1, { 0x00000080u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 11 Masken, Stehplaetze 31514 */
-    { 0x6000,  5,  49, { 0x22FFE00Bu, 0x00000276u, 0xFF5D1246u, 0x000001FFu } },   /* 49 von 105 Masken, Stehplaetze 49536 */
-    { 0x6000,  7,  38, { 0x104139B7u, 0x00DF5C00u, 0x48519C00u, 0x0000011Du } },   /* 38 von 105 Masken, Stehplaetze 15663 */
-    { 0x6000,  8,  51, { 0x3FCFFC00u, 0x065CF360u, 0x7910B800u, 0x000001FFu } },   /* 51 von 105 Masken, Stehplaetze 46983 */
-    { 0x6000,  9,  30, { 0xFFC3F7FFu, 0x00000007u, 0x00000000u, 0x00000000u } },   /* 30 von 35 Masken, Stehplaetze 38470 */
+    { 0x6000,  5,  23, { 0x007FE000u, 0x00000040u, 0xC1580004u, 0x000001F0u } },   /* 23 von 105 Masken, Stehplaetze 49536 */
+    { 0x6000,  7,  26, { 0x004139B7u, 0x00015C00u, 0x48500000u, 0x0000011Du } },   /* 26 von 105 Masken, Stehplaetze 15663 */
+    { 0x6000,  8,  27, { 0x00000000u, 0x065CF360u, 0x4010B800u, 0x000001DDu } },   /* 27 von 105 Masken, Stehplaetze 46983 */
+    { 0x6000,  9,  16, { 0x3A8001FFu, 0x00000003u, 0x00000000u, 0x00000000u } },   /* 16 von 35 Masken, Stehplaetze 38470 */
     { 0x6001,  3,   1, { 0x00000080u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 11 Masken, Stehplaetze 31514 */
-    { 0x6001,  5,  49, { 0x22FFE00Bu, 0x00000276u, 0xFF5D1246u, 0x000001FFu } },   /* 49 von 105 Masken, Stehplaetze 49536 */
-    { 0x6001,  7,  38, { 0x104139B7u, 0x00DF5C00u, 0x48519C00u, 0x0000011Du } },   /* 38 von 105 Masken, Stehplaetze 15663 */
-    { 0x6001,  8,  51, { 0x3FCFFC00u, 0x065CF360u, 0x7910B800u, 0x000001FFu } },   /* 51 von 105 Masken, Stehplaetze 46983 */
-    { 0x6001,  9,  30, { 0xFFC3F7FFu, 0x00000007u, 0x00000000u, 0x00000000u } },   /* 30 von 35 Masken, Stehplaetze 38470 */
+    { 0x6001,  5,  23, { 0x007FE000u, 0x00000040u, 0xC1580004u, 0x000001F0u } },   /* 23 von 105 Masken, Stehplaetze 49536 */
+    { 0x6001,  7,  26, { 0x004139B7u, 0x00015C00u, 0x48500000u, 0x0000011Du } },   /* 26 von 105 Masken, Stehplaetze 15663 */
+    { 0x6001,  8,  27, { 0x00000000u, 0x065CF360u, 0x4010B800u, 0x000001DDu } },   /* 27 von 105 Masken, Stehplaetze 46983 */
+    { 0x6001,  9,  16, { 0x3A8001FFu, 0x00000003u, 0x00000000u, 0x00000000u } },   /* 16 von 35 Masken, Stehplaetze 38470 */
     { 0x6010, 11,   3, { 0x00002000u, 0x00120000u, 0x00000000u, 0x00000000u } },   /* 3 von 65 Masken, Stehplaetze 9151 */
     { 0x6010, 12,   4, { 0x00000000u, 0x42200000u, 0x00000001u, 0x00000000u } },   /* 4 von 105 Masken, Stehplaetze 9030 */
     { 0x6010, 13,  10, { 0x00000000u, 0x1F400800u, 0x00003008u, 0x00000000u } },   /* 10 von 105 Masken, Stehplaetze 9151 */
