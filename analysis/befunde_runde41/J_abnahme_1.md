@@ -187,6 +187,16 @@ TEIL 3060 (Aufruf per `cmake -P`, Laufordner `J41abn1/gegenprobe/`): Tuer per Qu
 `FAIL ... RE15_ANIM_TRACE ROOM3060 Marvin: 40 Bilder Motion 6, davon 40 nicht Clip 6/10 Bilder (z.B. '6:6:50:0'), 0 x Bild 9
 gehalten` -> EXIT 1. Auf master spielt Marvin also den 50-Bilder-Clip 6 der PLD-Grundbank (Knien); mit Spur J W-Clip 6 /
 10 Bilder gehalten. Der Riegel schlaegt beim alten Verhalten an.
+Vorher-Bilder mit derselben master-exe (eigene Laeufe, Erklaerung des Nutzer-Befunds):
+- Lauf m3060_master (Weg wie p1a): ANIM_TRACE F65-F104 `6/6/50` Slot 0..39 (laeuft durch), Bild `J41abn1/m3060_master_zoom.png`:
+  ab F68 beugt sich Marvin vor und **kniet** (F72-F104) — der Nutzer-Befund; mit Spur J (p1a) Arm vor der Brust wie im Original.
+- Lauf m3061_master (CONTINUE in 3061 + Quadrat am AOT wie der Riegel): Sherry tiefste Lage **(-19041,-26308)** — sie bleibt vor
+  der Wand; Elza Motion 6 = **Clip 6 mit 50 Bildern** (65 Zeilen). Bilder `J41abn1/m3061_master_kriechen.png` (das Gitter bleibt
+  in der Oeffnung, Sherry liegt davor) und `J41abn1/m3061_master_ende.png` (Elza **kniet** neben der liegenden Sherry) — beide
+  Nutzer-Befunde reproduziert; mit Spur J (p2) Gitter abgelegt, Sherry bei z -30700 im Schacht, Elza W-Clip 6.
+Der Fix erklaert damit die Befunde: (1)/(2b) Plc_motion(2,6) lief auf der PLD-Grundbank statt auf +0x170/+0x174 (W-Bank);
+(2a) Bit 1 fuehrte den Keyframe-Wurzelweg der eigenen Bank aus (keine Bewegung), Bit 2 war "deferred", Super_set/Super_reset
+fehlten (Gitter blieb stehen).
 
 ## Gate V — Vertrag (VERTRAG.md) und Orchestrator-Entscheide
 - Pfade (`git diff master...HEAD --name-only`, 46 Dateien): keine release/, platform/android/, shared_assets/PSX/, pri/, synchro/,
@@ -227,3 +237,17 @@ gehalten` -> EXIT 1. Auf master spielt Marvin also den 50-Bilder-Clip 6 der PLD-
 - Beide Szenarien: Leon (3060/3020/6030) und Elza (3011 -> 3061 -> 30C1) selbst gefahren; Nachbarraeume 3020 (Rueckweg) und
   30C1 (Wechsel zu Sherry, PL0F) ohne Auffaelligkeit in den Messzeilen.
 - Nebenbefund N1 (Hund am Ende der 3061-Szene) unveraendert vorhanden, nicht Spur J (Dossier §4.7, eigener Auftrag empfohlen).
+
+## Integrations-Probe (ohne Aenderung am Baum: `git merge-tree --write-tree --name-only --messages master HEAD`, master 6449eb43)
+- Konflikte: `analysis/befunde_runde41/AUFTRAG.md`, `VERTRAG.md` (Doku; master-Fassung nehmen — fuer VERTRAG vom Bau-Agenten
+  vermerkt, fuer AUFTRAG neu: master hat seit dba6ff8e die Nachtraege 22-24b) und **`re15_port/engine/src/enemy_common.c`
+  `rbj_resolve_slot`** (Code). Ursache: master enthaelt seit der Integration der Spur A (5705fafb/fa883caa, 2026-10-24 morgens)
+  deren Haken d1809dbf `if (mslot < 32 && (rbj_record_marker(r) & (1u << mslot)))` (RE15_ACTOR_MAX 36), die Spur J ersetzt
+  dieselbe Schleife durch `int rec = re15_rbj_binder_gegner(s_room_rbj, s_room_rbj_size, mslot - 1);`. Die Zweig-Basis 4c667c97
+  liegt vor der Integration der Spur A (`git merge-base --is-ancestor d1809dbf 4c667c97` -> nein); der Bau-Agent hat nur andere
+  Runde-41-Zweige auf register_opcodes geprueft, nicht master auf enemy_common.c.
+  Aufloesung: **Seite der Spur J nehmen** — der Binder deckt die Absicht von Spur A ab (Gegner-Index >= 32 -> -1 ueber
+  RE15_RBJ_BINDER_MAX_GEGNER, kein `1u << 32..35`); die master-Seite allein kompiliert nicht (`int rec = -1;` entfaellt im
+  Merge-Ergebnis). Nach dem Merge `unit_r39_heliport1171_binder` (Riegel der Spur A zu RE15_ACTOR_MAX 36) und die Riegel
+  `r41_stage3szenen_a` fahren. Spur K (cherry-pick 299b6deb des Binders) trifft denselben Konflikt.
+- scd_vm.c, platform/pc/main.c, enemy_ai_common.c mergen ohne Konflikt.
