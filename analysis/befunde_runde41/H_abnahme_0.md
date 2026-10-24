@@ -182,6 +182,9 @@ Sherry (0x4b) als Eskorte; Elza steht 450, geht in den Gang (-11250,-13378), nac
 `kollision.txt` nach: 4180 `NPC-SCHUB`-Zeilen. Rest bis zur Summe (min 737 = 13 unter 750) = Wandklemme nach dem Schub; den
 Hautabstand 18 der Klemme selbst nachgelesen: `8003bce0 addiu t1,v0,18` / `8003bce8 addiu a0,a0,-18`. => Nutzer-Befund fuer
 Elza am echten Weg reproduziert (vor: beide stehen ineinander) und behoben (nach: getrennt).
+Bild: `zoom_3001_f2400.png` links VOR F2400 (Sherry steckt halb in John, Abstand 196 laut state.txt), rechts NACH F2400
+(nur John im Bild — Sherry steht 737 oestlich an der Zaunwand ausserhalb des sichtbaren Bereichs dieser Kamera; Beleg dort
+die Lagen `[1 t=49 ... @(-13122,-13623)]` / `[2 t=4b ... @(-12385,-13769)]`), Bogen `bild_p1_3001_vor_nach.png`.
 Nebenbeobachtung (vorbestehend, kein Punkt der Spur): Spieler/John direkt nach dem Eintritt F55-110 53 Bilder < 850 in BEIDEN exe
 (John an der Ostwand x -6140 geklemmt) — gleiche Zahl vor/nach, nicht NPC-gegen-NPC.
 Bildbeleg zu 4.3 (`laeufe/k1cut13_{vor,nach}`, derselbe Lauf mit `RE15_FORCE_CUT=13` = Beckenkamera, nur Bild; Lagen und
@@ -294,3 +297,45 @@ liegen paarweise 1498/1543 auseinander, die Endlagen (-7500,-6250)/(-8900,-4600)
 Radien-Summe 900 einer anderen Figur. Beleg der Spur (`H_belege/npc11b0_vorher/abstand.txt`, Lauf ueber die 11B0-Szene bis
 ROOM1260): `Paar Slot1(t=42)-Slot2(t=40): min 2372 bei F1 (26750, 11800) (25400, 9850)` = die case-7-Startlagen @0x01254/@0x01268,
 danach nie naeher — in 1260 beruehren sich die beiden schon vorher nicht, der Schub greift dort nicht (nicht selbst gemessen).
+
+## 7. Urteile je Nutzer-Punkt (gegen den Wortlaut)
+| Punkt (Wortlaut) | Urteil | Beleg |
+|---|---|---|
+| 1 "Die NPCs z.B. Ada und Marvin koennen ineinander rein laufen, das ist falsch, die sind beide fest." | **erfuellt** | 4.1 Leon, ROOM3070-Eskorte ueber die echte Tuer 30E0 -> 3070: vor min **0**, 4012/4600 Bilder < 850, Ende 0 (eine Figur) -> nach min **882**, 0 Bilder < 850, Ende 1034; Bildbogen `bild_p1_3070_vor_nach.png`. 4.4 Elza, ROOM3001-Eskorte ueber die echte Tuer 3011 -> 3001: vor min **0**, 3917/4000 Bilder < 700 -> nach min **737**, 0 Bilder < 700. RE-Gate 1/2/3: aec4 @0x8011cc3c + b544 @0x8011cc44 vor b0a4 @0x8011cc64 in allen 28 Wurzeln selbst gescannt, b544 ohne Typfilter @0x8002b544-b5c8. 4.2: STAGE2-Szene ROOM2000 (Ada + Marvin auf derselben Strecke) unveraendert (vor = nach, Szenenende F1926/F2010). Riegel unit/integration npc3070/npc3001 gruen. |
+| 2 "In ROOM 2050 lassen sich die Kisten in einander schieben, das ist falsch" | **erfuellt** | 4.3 X-Achse (obj 3 nach Westen gegen obj 2): vor **142** Ueberlappungszeilen, Eindringung **1751** -> nach **0**, `OBJEKT-GESPERRT ... gegen p=3 obj=2 ... dX=1792`; Bildbogen `bild_k1cut13_vor_nach.png`. 4.5 Z-Achse (obj 3 nach Norden gegen obj 1): vor 130 / 420 -> nach 0, `dZ=1799` gesperrt. 4.6 Elza ROOM2051: vor 141 / 1781 -> nach 0. 4.7 Raumzustand nach dem echten Tuerweg (Leiter 2000 -> 2050) = nach dem Sprung. RE-Gate 4/5: Durchlauf @0x8002c03c-c0a8 und FUN_8002cdf4 Zeile fuer Zeile. Raetsel bleibt loesbar (integration raetsel_leon/raetsel_elza: `(5,0..2) = 1`). |
+
+## 8. Gates
+- **RE-Gate: haelt.** Jede neue verhaltensrelevante Zahl hat ihre Adresse; 8 Stellen selbst disassembliert/gelesen (Abschnitt 3),
+  alle stimmen mit dem Behaupteten ueberein; keine Rate-Woerter im Code-Diff; der Fix erklaert beide gemessenen Befunde.
+- **Tests: halten** (Spur 9/9 + 5/5 mit -V; unit_/prop_/probe_ 922/922 ohne 10 Bash-Riegel ohne Diff-Bezug; Integrationsgruppe
+  s. 5.4).
+- **Vertrag: haelt mit zwei formalen Abweichungen** (V1 Haken in enemy_ai_common.c ausserhalb der Zuteilung §1.3, V2 fremder
+  Riegel geaendert). Beide sind technisch begruendet und nachgemessen, brauchen aber einen Orchestrator-Entscheid (Muster B5 /
+  C-E3 / E-E1 / I-E1).
+
+## 9. Maengel (nummeriert)
+- **V1 (Vertrag, formal, kein Code-Umbau noetig):** `re15_port/engine/src/enemy_ai_common.c` ist laut VERTRAG §1.3 nicht der Spur
+  H zugeteilt (A, L; seit I-E1 auch I). Spur H setzt dort `#include "re15_kollision_r41.h"` (Z. 59) und
+  `re15_kollision_r41_npc_schwanz(slot);` (Z. 10710, in `re15_npc_ai_tick` vor `re15_npc_wall_clamp`). Nachpruefbar:
+  `git diff master...HEAD -- re15_port/engine/src/enemy_ai_common.c`. Begruendung haelt (RE-Gate 1: aec4/b544 liegen im NPC-Tick
+  vor der Klemme @0x8011cc64), Textkonflikt mit Spur I nicht zu erwarten (Abschnitt 6). Benoetigt: Entscheid "angenommen".
+- **V2 (Vertrag, formal, kein Code-Umbau noetig):** Fremder Riegel `re15_port/tests/integration/test_r39_dining1141_kampf.cmake`
+  (Runde 39 Spur J) geaendert: `WARTE 60` -> `WARTE 240` vor dem letzten GEHE (+6 Kommentarzeilen). VERTRAG: "nur eigene Pfade
+  adden". Nachgemessen (5.2): alte Fassung vor gruen (2 Treffer im Griff) / nach rot (0, nur Kriterium (a)), neue Fassung nach
+  gruen (5.4). Benoetigt: Entscheid "angenommen" (oder Uebergabe an den Eigentuemer des Riegels).
+
+## 10. Hinweise (kein Mangel, fuer Orchestrator/Integration)
+- H1 (Dossier OFFEN 4): Die Yield-Zweige von `re15_npc_ai_tick` (SCD-besessener Slot ausserhalb Pose/Executor; `walk_active` ist fuer
+  NPC-Typen tot, weil Plc_dest sie immer in die Sub-VM legt, scd_vm.c "npc_subvm") kehren vor dem Schwanz zurueck; das Original
+  laeuft ihn ausser an den Freeze-Toren @0x8011cb90/@0x8011cbb0 jedes Bild. Wirkt nur, wenn zwei stehende, vom SCD gehaltene
+  NPCs ineinander gesetzt werden — beim Gehen (Eskorte Zustand 1, Executor-Walk Zustand 4) laeuft der Schwanz.
+- H2 (Dossier OFFEN 1/2/3): Entity-Durchlauf der Schubkette @0x8002bfec-c038 nicht portiert; Zaehler obj+0x8C saettigt bei 255
+  statt Byte-Ueberlauf; Spiegel +0x42 als Bild-Schnappschuss. Ausserhalb des Nutzer-Befunds, im Dossier benannt.
+- H3: 10 Bash-Riegel (unit_r38_releaseskript_*, unit_r35_android_pruefkette/_bash_mutanten, unit_r39_titelversion_ablauf) liefen unter
+  der Agentenlast in ihre Zeitgrenzen und wurden nicht gewertet (kein Bezug zum Diff) — im Release-Container mitlaufen lassen.
+- H4: Abstieg ins 2050-Becken zu Fuss nicht nachgefahren (4.7); Kistenmessungen mit Sprung-Spawn im Becken, Raumzustand gleich.
+- H5 (Integration, Dossier OFFEN 5): Der Schub wirkt in JEDEM NPC-Tick, auch in Szenen. Nach dem Merge die NPC-Szenen der Spuren G
+  (2080: Marvin/John + 8 Zombies + Kanister) und J/K (3060/3061/30C1/3091) nachfahren; ein Plc_dest-Ziel naeher als die
+  Radien-Summe an einer anderen Figur wird nie erreicht (wie im Original).
+- H6: ROOM3001 direkt nach dem Eintritt Spieler/John 53 Bilder < 850 in BEIDEN exe (vorbestehend, Spieler-gegen-NPC, nicht Teil
+  des Punkts).
