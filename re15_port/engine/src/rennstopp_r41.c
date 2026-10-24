@@ -25,6 +25,7 @@ static int     s_tempo_ok;   /* ein Renn-Tempo wurde gerechnet bzw. aus Fall 0 g
 static int16_t s_winkel[RE15_EMD_MAX_BONES][3];   /* Teil+0x60 je Teil = letzte Pose aus anim_set (FUN_8001f3bc) */
 static int32_t s_wurzel[3];                        /* Wurzel-Kopie +0x38/+0x3a/+0x3c (int16) */
 static int     s_pose_ok;
+static int     s_pruef_aus;  /* NUR Sonden-Gegenprobe (re15_rennstopp_r41_pruef_aus), kein Spielweg */
 
 /* ---------------------------------------------------------------------------------------------- Fusskette */
 typedef struct { int32_t m[9]; int32_t t[3]; } rs_mat_t;
@@ -150,6 +151,7 @@ int re15_rennstopp_r41_fussrechnung(const re15_emd_skeleton_t *sk, const re15_em
 int32_t re15_rennstopp_r41_lauftempo(re15_actor_t *p, int erstes_bild, int gier_vorher, int32_t tabelle)
 {
     if (!p) return tabelle;
+    if (s_pruef_aus) return tabelle;                /* Sonden-Gegenprobe: Stand vor Nachbesserung 3 */
     s_aktiv = 0;                                    /* Rennen = Unterzustand 1, kein Stopp */
     if (erstes_bild || !s_tempo_ok) { s_tempo = tabelle; s_tempo_ok = 1; }   /* Fall 0 @0x800327cc-@0x80032830 */
     int32_t t = 0;
@@ -175,6 +177,7 @@ static void vorschub(re15_actor_t *p)
 
 static int schritt(re15_actor_t *p, uint16_t pad_bits, int lauf_motion, int steh_motion, int32_t tabelle, int waffe)
 {
+    if (s_pruef_aus) return 0;                        /* Sonden-Gegenprobe: Stand vor Nachbesserung 3 (sofort Stehen) */
     if (s_aktiv && (p->motion != s_steh || p->state != 1)) s_aktiv = 0;   /* Skript/Treffer/Treppe hat uebernommen */
     if (!s_aktiv) {
         if (p->motion != lauf_motion || p->state != 1) return 0;          /* nur aus dem Rennen (+6 < 2) */
@@ -215,6 +218,7 @@ int re15_rennstopp_r41_skript(re15_actor_t *p, int lauf_motion, int steh_motion,
     return schritt(p, 0, lauf_motion, steh_motion, tabelle, 0);
 }
 
+void    re15_rennstopp_r41_pruef_aus(int aus) { s_pruef_aus = aus ? 1 : 0; s_aktiv = 0; }
 int     re15_rennstopp_r41_aktiv(void) { return s_aktiv; }
 int32_t re15_rennstopp_r41_tempo(void) { return s_tempo; }
 void    re15_rennstopp_r41_zuruecksetzen(void)

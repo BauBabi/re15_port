@@ -704,3 +704,34 @@ in 3 von 7 bzw. 4 von 11 Bildern um 1 ab, mit exaktem isqrt in 1 von 7. Damit is
   Renn-Bild z -3216, Bild 6 eingefroren, Auslauf n94..n99, Stand (3650,-3369) bis Plc_motion). NACHHER BESTANDEN; Gegenprobe
   VORHER-exe (11b8f867, `<sp>/E41n3/vorher_riegel/renn.log`): erstes Bild z -3218 (Tempo 200), Pos_set-Bild (3650,-3018) ohne
   Auslauf -> DURCHGEFALLEN.
+
+### Mangel 1/2 / E-E2 — unit_r36_zombieki_affen_block neu eingemessen (Teil 3)
+- WAS die Sonde misst (test_r36_zombieki_affen_block.c zg_stat, Riegel-Teil): blockierte Gorilla-Bilder (lebt, kein Angriff,
+  >= 90 Bilder im Anker 400) im deterministischen Zufallsgang (Leon rennt UP+CROSS, alle 90 Bilder neue Zielrichtung, bei
+  Abweichung > 48 Drehen auf der Stelle; HP je Bild 100), Original-Regel A[3] (AUS) gegen PORT-WAHL Umweg (AN), 16 Seeds,
+  je Lauf eigener Prozess; Schranken: FERN AN <= 1/6 AUS, Griffe AN >= 80 % AUS, je Seed AN - AUS <= 600.
+- WARUM der Renn-Stopp den Wert aendert: bei jedem Wechsel Rennen -> Drehen laeuft Leon im Original EIN Bild aus (DECIDE
+  0x80032604 @0x8003272c +6 = 2, ANIMATE Fall 3 Tempo - 40 @0x8003293c, Vorschub @0x8003295c; danach LINKS/RECHTS -> 0x0301
+  @0x80032750); der Port blieb sofort stehen. ~66 Wechsel je Lauf verschieben die Bahn, ab der ersten Abweichung laufen die
+  Gorillas anders. Die Sonde hat keine gespiegelte Waffen-Bank -> dort wirkt nur der Stopp, das Renn-Tempo bleibt 200.
+- Messung (neuer Sondenmodus `rennvergleich <von> <bis>` = je Seed AUS/AN x ohne/mit Renn-Stopp, eigene Prozesse; "ohne" ueber
+  den Sonden-Haken re15_rennstopp_r41_pruef_aus; `<sp>/E41n3/affen/rv_0_143.txt`, Auswertung `<sp>/E41n3/affen/rv_auswertung.py`):
+  | Seeds | ohne Stopp: schlechtester AN-AUS (> +600) | mit Stopp | Summen AN/AUS ohne -> mit |
+  |---|---|---|---|
+  | 0..15 (Riegel) | +84 (0) | +841 0x67be2dfd (1) | 5835/21172 -> 6507/22602 |
+  | 16..47 | +224 (0) | +636 0xbb4281d4 (1) | 12452/68831 -> 14471/82677 |
+  | 48..143 | +3334 0xbc8bd05d, +1416 0x71d8aa83 (2) | +3266, +2357, +1350, +726, +640 (5) | 45207/193073 -> 54078/212672 |
+  Bahn-Chaos der Original-Regel allein |AUS(mit) - AUS(ohne)| je Seed: Median 1039,5, Mittel 1421, p90 3286, max 6650 (144
+  Seeds); Port-Wahl |AN(mit) - AN(ohne)|: Median 272,5. FERN-Schranke 1/6 je 16er-Block: ohne und mit Stopp 8 von 9 (ohne
+  reisst 96..111, mit 112..127), Riegel-Block beide; Griffe >= 80 % in allen 9 Bloecken beider Bewegungen.
+- 0x67be2dfd (+841): AUS 839 -> 112, AN 187 -> 953 = 949 NAH-Jagd [0xbb8,0x1771) + 4 Biss, NAH-Anker max 334 < R36_NAH_START
+  354 -> der Nah-Umweg der Port-Wahl greift nie; die Bilder sind die Original-Nahjagd A[3] (Gorilla 2 bei (-23302,13100..13486),
+  Leon an der Nordwest-Wand (-26000,14578..17268), LAGE-Zeilen `eins 13 1 6000 400 1`). 0xbb4281d4 (+636, nicht im Riegel):
+  FERN-Haenger von Gorilla 2 bei (11280,9820) ab ~F4100 (Klemme, Umweg ohne Wirkung) — dieselbe Klasse wie die FERN-Haenger
+  ohne Stopp (0xbc8bd05d +3334), eine Grenze der Port-Wahl der Runde 36, nicht des Stopps.
+- Ergebnis: die Schranke "je Seed <= 600" galt nur fuer diesen Seed-Satz (ohne Stopp schon 2 von 144 darueber, Runde 36 F
+  Abnahme 2: 0x179803a8 +825 auf 52 Seeds). NEUE SCHRANKE = Median der Bahn-Chaos-Amplitude der Original-Regel unter genau
+  dieser Bahnaenderung: AN - AUS <= 1039 je Seed (abgerundet aus 1039,5; ein Seed zaehlt als "durch die Port-Wahl schlechter",
+  wenn er um mehr schlechter ist, als eine blosse Bahnaenderung die Original-Regel typischerweise verschiebt). Die Zahl der
+  Seeds ueber +600 wird weiter ausgegeben. Alle anderen Schranken unveraendert. Lauf: `ctest -R "^unit_r36_zombieki_affen_block$"`
+  -> 100% tests passed, 0 tests failed out of 1 (schlechtester 0x67be2dfd +841, Seeds ueber +600: 1; FERN 1523 <= 17487/6).

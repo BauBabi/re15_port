@@ -71,6 +71,9 @@ int re15_rennstopp_r41_takt(re15_actor_t *p, uint16_t pad_bits, int lauf_motion,
 int re15_rennstopp_r41_skript(re15_actor_t *p, int lauf_motion, int steh_motion, int32_t tabelle);
 
 /* Pruefhaken */
+/* NUR fuer Sonden-Gegenproben (Messung des Einflusses auf fremde Sonden, z.B. unit_r36_zombieki_affen_block): 1 = Renn-Tempo
+ * und Renn-Stopp aus = Bewegung wie vor Nachbesserung 3 (Tabellen-Tempo, sofort Stehen). Kein Spielweg, keine Umgebung. */
+void    re15_rennstopp_r41_pruef_aus(int aus);
 int     re15_rennstopp_r41_aktiv(void);
 int32_t re15_rennstopp_r41_tempo(void);
 void    re15_rennstopp_r41_zuruecksetzen(void);

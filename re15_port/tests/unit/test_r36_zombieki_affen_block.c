@@ -34,6 +34,7 @@
 #include "re15_emd.h"
 #include "re15_ems.h"
 #include "re15_zombieki_r36.h"
+#include "re15_rennstopp_r41.h"   /* Runde 41 Spur E NB3: Gegenprobe Renn-Tempo/-Stopp (einsr / rennvergleich) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -660,6 +661,55 @@ int main(int argc, char **argv)
                r.nah_anker);
         return 0;
     }
+    /* RUNDE 41 SPUR E, NACHBESSERUNG 3 (Orchestrator-Entscheid E-E2): der Renn-Stopp (0x80032604 @0x8003272c, 0x80032778
+     * @0x800328f8-@0x8003295c) aendert Leons Bahn im Zufallsgang (Wechsel Rennen -> Drehen alle 90 Bilder: ein Auslaufbild
+     * 160 statt sofort Stehen). Messmodi fuer die Neu-Einmessung des Riegels "kein Seed mehr als 600 Bilder schlechter":
+     *   einsr <i> <0|1> <bilder> <renn 0|1>   wie eins (Anker 400), renn 0 = Bewegung vor Nachbesserung 3
+     *                                          (re15_rennstopp_r41_pruef_aus, nur Sonde), renn 1 = Original-Renn-Stopp.
+     *   rennvergleich <von> <bis> [bilder]     je Seed AUS/AN x renn 0/1 in eigenen Prozessen; Ausgabe AN-AUS je Seed. */
+    if (argc > 5 && strcmp(argv[1], "einsr") == 0) {
+        int i = atoi(argv[2]), modus = atoi(argv[3]), b = atoi(argv[4]), renn = atoi(argv[5]);
+        re15_rennstopp_r41_pruef_aus(renn ? 0 : 1);
+        re15_r36_affen_padsuche_enable(modus ? 1 : 0);
+        zg_t r = zg_stat(b, zg_seed(i));
+        printf("EINSR seed 0x%08x modus %d renn %d blockiert %ld griffe %d nah %ld fern %ld nah_anker %d\n", zg_seed(i), modus, renn,
+               r.blockiert, r.griffe, r.nah, r.fern, r.nah_anker);
+        return 0;
+    }
+    if (argc > 3 && strcmp(argv[1], "rennvergleich") == 0) {
+        int von = atoi(argv[2]), bis = atoi(argv[3]), b = (argc > 4) ? atoi(argv[4]) : 6000;
+        long max_d[2] = { -1000000, -1000000 }; uint32_t s_max[2] = { 0, 0 }; int ueber600[2] = { 0, 0 }, n_ok = 0;
+        long su[2][2] = { { 0, 0 }, { 0, 0 } }, fe[2][2] = { { 0, 0 }, { 0, 0 } };
+        for (int i = von; i <= bis; i++) {
+            long bl[2][2] = { { -1, -1 }, { -1, -1 } }, f1[2][2] = { { 0, 0 }, { 0, 0 } }, n1[2][2] = { { 0, 0 }, { 0, 0 } }; int g1[2][2] = { { 0, 0 }, { 0, 0 } };
+            for (int r = 0; r < 2; r++)
+                for (int m = 0; m < 2; m++) {
+                    char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" einsr %d %d %d %d", argv[0], i, m, b, r);
+                    FILE *pp = popen(cmd, "r"); char zl[512];
+                    while (pp && fgets(zl, sizeof zl, pp)) {
+                        unsigned sd; int mm, rr; long bb, nn, ff; int gg;
+                        if (sscanf(zl, "EINSR seed 0x%x modus %d renn %d blockiert %ld griffe %d nah %ld fern %ld", &sd, &mm, &rr, &bb, &gg, &nn, &ff) == 7) {
+                            bl[r][m] = bb; g1[r][m] = gg; n1[r][m] = nn; f1[r][m] = ff; }
+                    }
+                    if (pp) pclose(pp);
+                }
+            if (bl[0][0] < 0 || bl[0][1] < 0 || bl[1][0] < 0 || bl[1][1] < 0) { printf("Seed-Index %d: Lauf fehlt\n", i); continue; }
+            n_ok++;
+            for (int r = 0; r < 2; r++) {
+                const long d = bl[r][1] - bl[r][0];
+                if (d > max_d[r]) { max_d[r] = d; s_max[r] = zg_seed(i); }
+                if (d > 600) ueber600[r]++;
+                su[r][0] += bl[r][0]; su[r][1] += bl[r][1]; fe[r][0] += f1[r][0]; fe[r][1] += f1[r][1];
+            }
+            printf("RV %2d 0x%08x | ohne Stopp AUS %5ld (nah %5ld fern %5ld) AN %5ld (nah %5ld fern %5ld) d %+6ld | mit Stopp AUS %5ld (nah %5ld fern %5ld) AN %5ld "
+                   "(nah %5ld fern %5ld) d %+6ld | Griffe %d/%d %d/%d\n", i, zg_seed(i), bl[0][0], n1[0][0], f1[0][0], bl[0][1], n1[0][1], f1[0][1], bl[0][1] - bl[0][0],
+                   bl[1][0], n1[1][0], f1[1][0], bl[1][1], n1[1][1], f1[1][1], bl[1][1] - bl[1][0], g1[0][0], g1[0][1], g1[1][0], g1[1][1]);
+        }
+        printf("RV SUMME %d Seeds | ohne Stopp: max AN-AUS %+ld (0x%08x), %d Seeds > +600, AUS %ld AN %ld, FERN AUS %ld AN %ld | mit Stopp: max %+ld (0x%08x), "
+               "%d Seeds > +600, AUS %ld AN %ld, FERN AUS %ld AN %ld\n", n_ok, max_d[0], s_max[0], ueber600[0], su[0][0], su[0][1], fe[0][0], fe[0][1],
+               max_d[1], s_max[1], ueber600[1], su[1][0], su[1][1], fe[1][0], fe[1][1]);
+        return 0;
+    }
     if (argc > 3 && strcmp(argv[1], "stat") == 0) {   /* stat <seeds> <bilder> [0|1|2 = nur AUS | nur AN | beide] */
         int n = atoi(argv[2]), b = atoi(argv[3]), modus = (argc > 4) ? atoi(argv[4]) : 2;
         if (argc > 5) s_zg_lage = atoi(argv[5]);
@@ -866,6 +916,35 @@ int main(int argc, char **argv)
          *  (4) Den Nah-Umweg pinnen die Szenen mit stehendem Leon unten, jede mit Gegenprobe: Nahwarten O3b/O5 (Modus 4 = ohne
          *      Nah-Umweg: fest >= 810, kein Angriff), Nachruecken (Stand NB4/NB5), Ostgasse/Gasse einzeln und Stelle 8 verkeilt (Stand
          *      NB5), Stau mit Vortritt (Stand NB3); das J-Fenster pinnt, dass er den kanonischen Original-Kampf nicht beruehrt. */
+        /* RUNDE 41 SPUR E, NACHBESSERUNG 3 (Orchestrator-Entscheid E-E2: Renn-Stopp spielweit, Sonde neu einmessen) — die
+         * Schranke "je Seed AN - AUS" NEU EINGEMESSEN (Dossier analysis/befunde_runde41/E_kleinkram_b.md "Nachbesserung 3"):
+         * WAS GEMESSEN WIRD: blockierte Gorilla-Bilder (lebt, kein Angriff, >= 90 Bilder im Anker 400) im Zufallsgang (Leon
+         *   rennt UP+CROSS, alle 90 Bilder neue Zielrichtung, bei Abweichung > 48 Drehen auf der Stelle), Original-Regel A[3]
+         *   (AUS) gegen PORT-WAHL Umweg (AN), je Lauf ein eigener Prozess.
+         * WARUM DER RENN-STOPP DEN WERT AENDERT: bei jedem Wechsel Rennen -> Drehen (alle 90 Bilder) laeuft Leon im Original EIN
+         *   Bild aus (DECIDE 0x80032604: (gehalten & 0x201) != 0x201 -> +6 = 2 @0x8003272c; ANIMATE 0x80032778 Fall 3: Tempo
+         *   - 40 @0x8003293c, Vorschub @0x8003295c; im naechsten Bild LINKS/RECHTS -> 0x0301 @0x80032750), der Port blieb
+         *   sofort stehen. ~66 Wechsel je Lauf verschieben Leons Bahn; ab der ersten Abweichung laufen beide Gorillas anders.
+         * MESSUNG (`test_r36_zombieki_affen_block rennvergleich 0 143 6000`, je Seed AUS/AN x ohne/mit Renn-Stopp in eigenen
+         *   Prozessen; ohne = re15_rennstopp_r41_pruef_aus, nur Sonde; Protokoll <sp>/E41n3/affen/rv_0_143.txt):
+         *   - Riegel-Seeds 0..15: schlechtester ohne Stopp +84, mit Stopp +841 (0x67be2dfd: AUS 839 -> 112, AN 187 -> 953 =
+         *     949 NAH-Jagd [0xbb8,0x1771) + 4 Biss, NAH-Anker max 334 < R36_NAH_START 354 -> der Nah-Umweg greift nie: die
+         *     953 Bilder sind die Original-Nahjagd A[3] an der Nordwest-Wand, Leon (-26000,14578..17268)).
+         *   - 144 Seeds: auch OHNE Stopp liegen 2 Seeds ueber +600 (0xbc8bd05d +3334, 0x71d8aa83 +1416; Runde 36 F Abnahme 2
+         *     mass auf 52 Seeds schon 0x179803a8 +825), mit Stopp 7. Die Schranke 600 galt also nur fuer diesen Seed-Satz.
+         *   - Bahn-Chaos der ORIGINAL-REGEL allein, |AUS(mit Stopp) - AUS(ohne)| je Seed (dieselbe Regel, nur Leons Bahn
+         *     anders): Median 1039,5 (144 Seeds), Mittel 1421, p90 3286, max 6650; Riegel-Seeds Median 925,5. Port-Wahl
+         *     |AN(mit) - AN(ohne)|: Median 272,5.
+         *   - Summen bleiben: AN/AUS ohne 63494/283076 (22,4 %), mit 75056/317951 (23,6 %); FERN 17656/240096 (7,4 %) bzw.
+         *     26358/269367 (9,8 %); die FERN-Schranke 1/6 haelt ohne und mit Stopp in 8 von 9 16er-Bloecken (ohne reisst
+         *     Block 96..111, mit Block 112..127 — je durch FERN-Haenger einzelner Seeds), im Riegel-Block 0..15 in beiden;
+         *     Griffe AN >= 80 % AUS in allen 9 Bloecken beider Bewegungen.
+         * NEUE SCHRANKE: je Seed AN - AUS <= R41_BAHN_CHAOS = 1039 = Median der Bahn-Chaos-Amplitude der Original-Regel (144
+         *   Seeds, abgerundet): ein Seed gilt als "durch die Port-Wahl schlechter", wenn er um mehr schlechter ist, als eine
+         *   blosse Bahnaenderung die Original-Regel typischerweise verschiebt. Die Zahl der Seeds ueber 600 wird weiter
+         *   ausgegeben. */
+        const long R41_BAHN_CHAOS = 1039;
+        int ueber600 = 0;
         long su_aus = 0, su_an = 0, fe_aus = 0, fe_an = 0, na_aus = 0, na_an = 0; int gr_aus = 0, gr_an = 0, n_ok = 0; long schlimmer = -1000000;
         uint32_t s_schl = 0;
         long nj_an = 0, nb_an = 0; int nk_an = 0; uint32_t s_nk = 0;   /* Pruefmangel 1: AN NAH-Zusammensetzung + groesster NAH-Anker (Ausgabe) */
@@ -888,6 +967,7 @@ int main(int argc, char **argv)
             fe_aus += fe[0]; fe_an += fe[1]; na_aus += na[0]; na_an += na[1];
             nj_an += nj[1]; nb_an += nb[1]; if (nk[1] > nk_an) { nk_an = nk[1]; s_nk = zg_seed(i); }
             if (bl[1] - bl[0] > schlimmer) { schlimmer = bl[1] - bl[0]; s_schl = zg_seed(i); }
+            if (bl[1] - bl[0] > 600) ueber600++;
             printf("  Seed 0x%08x: AUS %ld blockiert (nah %ld / fern %ld) / %d Griffe | AN %ld (nah %ld = Jagd %ld + Biss %ld + sonst %ld, NAH-Anker max %d / "
                    "fern %ld) / %d\n", zg_seed(i), bl[0], na[0], fe[0], gr[0], bl[1], na[1], nj[1], nb[1], na[1] - nj[1] - nb[1], nk[1], fe[1], gr[1]);
         }
@@ -898,9 +978,10 @@ int main(int argc, char **argv)
         CHECK(fe_aus >= 10000, "Gegenprobe Original-Regel: %ld FERN-blockierte Gorilla-Bilder (Leon >= 0x1771; gesamt %ld) — Befund 'noch oft blockiert' "
               "= Jagd ohne Sicht FERN", fe_aus, su_aus);
         CHECK(fe_an * 6 <= fe_aus, "FERN-Umweg: FERN-blockierte Bilder (Anker %d, Leon >= 0x1771 @0x80117bc8) %ld <= 1/6 von %ld (NAH AN %ld / AUS %ld: "
-              "Original-Nahjagd und die NAH-Teile der PORT-WAHL Vortritt/Nah-Umweg/Pad-Zweig; ungebunden bis auf +600 je Seed, Begruendung im "
+              "Original-Nahjagd und die NAH-Teile der PORT-WAHL Vortritt/Nah-Umweg/Pad-Zweig; ungebunden bis auf die Seed-Schranke, Begruendung im "
               "Kommentar)", s_zg_anker, fe_an, fe_aus, na_an, na_aus);
-        CHECK(schlimmer <= 600, "kein Seed mehr als 600 Bilder schlechter (schlechtester 0x%08x: %+ld)", s_schl, schlimmer);
+        CHECK(schlimmer <= R41_BAHN_CHAOS, "kein Seed mehr Bilder schlechter als das Bahn-Chaos der Original-Regel (Median %ld, Runde 41 E NB3; "
+              "schlechtester 0x%08x: %+ld, Seeds ueber +600: %d)", R41_BAHN_CHAOS, s_schl, schlimmer, ueber600);
         CHECK(gr_an * 10 >= gr_aus * 8, "Griffe AN %d >= 80%% von AUS %d (die Gorillas erreichen Leon)", gr_an, gr_aus);
     }
     {
