@@ -9,6 +9,9 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-24 ab 10:00 **Nachbesserung 3** (Abnahme 2 `C_abnahme_2.md`, Maengel N1-N4 + Hinweis H-a; Nachtraege 6-10 des
+  Nutzers, AUFTRAG.md 09:17-09:55). Baum sauber (`status --porcelain` leer, HEAD 4abf0500). Arbeitsplan und Ergebnis in §0d.
+  Messordner scratchpad `r41c_nb3/`.
 * 2026-10-24 07:50-09:00 **Nachbesserung 2 abgeschlossen** (§0c): Tuergraph (Werkzeug + C_belege/nb2_tuergraph_nach_flut.txt),
   Weg zu Fuss gemessen (2050 -> 2020, 2030 Nordgalerie -> 2060, 2040 -> Treppe -> Galerie -> 2070 Nordgang -> 11A0 bis
   zur Sperre, Leon + Elza; Gegenprobe (3,206); 2080 ab 2090 -> Rechner -> Bit 107). Ergebnis: Weg existiert nicht,
@@ -464,6 +467,22 @@ Die Messungen der Abnahme 1 (`C41abn1/mess/*`, im Bericht `<a1>`) werden NICHT w
   Pruefungen)`) und integration_r41_ventilkette_weg (die Glieder 2/4/6/7/8/9 an der exe, Glied 6+7 mit Leon und Elza;
   `Passed 439.47 sec`) — §5 "Nachbesserung 2". Beide halten den Befund fest und fallen, sobald jemand die Sperre oder
   die Zugaenge aendert (dann mit dem Entscheid zu Frage (j) neu fassen).
+
+## 0d. Nachbesserung 3 (Abnahme 2 `C_abnahme_2.md` N1-N4 + H-a; Nachtraege 6-10, AUFTRAG.md 2026-10-24 09:17-09:55)
+
+Messordner: scratchpad `r41c_nb3/` (`C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/r41c_nb3`).
+Messungen der Abnahme 2 (`C41abn2/mess/*`, im Bericht `<a2>`) und der Nachbesserung 2 werden zitiert, nicht wiederholt.
+
+### Arbeitsplan (Massstab = N1-N4 + H-a der Abnahme 2; Nutzer-Wortlaut Nachtraege 6-10)
+* N2 (Nachtrag 7): Entleeren haengt am Strom (3,0x7E) aus 2060 (Setzer 2060 sub01 @0x012AE, Leser 2030 sub01 @0x01E14),
+  nicht am Rechner. Ring-Sperre C-E2 nur bei "Flut gelaufen UND Strom aus". Rechner 2080 = nur Original (sub02, (3,245));
+  Port-Programme `2080_rechner_erw`/`2080_rechner_nur2030` und Text 2080 Id 40 entfernen (VERTRAG 1.2: entfallen).
+* N3 (Nachtrag 8): Ruhepegel nach dem Strom auf Relinghoehe (aus der SCA belegt), Ring trocken und begehbar, unterer
+  Bereich geflutet und gesperrt; Bilder vorher/nachher (Ring-Kameras, Draufsicht Cut 4); Gegenstandsliste unten.
+* N4 (Nachtraege 9 + 10): Ventilraetsel erst mit Bruecke unten (Bit 102) UND aufgehobener Sicherung (Taken-Bit aus dem
+  RDT-Zensus); Lage der nummerierten Ventile aus den Hintergruenden belegen; vorher Port-Text (Id aus 2030 40-49).
+* N1 (Nachtrag 7): der Weg nach der Flut zu Fuss (Leon UND Elza) mit Riegel; unit J und integration `_weg` neu fassen.
+* H-a: durch Nachtrag 10 entschieden (Nutzer: "Flut erst mit Sicherung") -> umgesetzt mit N4.
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
