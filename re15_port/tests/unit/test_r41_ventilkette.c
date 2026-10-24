@@ -472,7 +472,7 @@ static void fall_d(uint16_t r)
         }
         if (tot_bei > 0 && takte > tot_bei + 400) break;
     }
-    printf("  ROOM%04X Flut bei Takt %d (nach druecken +600), tot bei %d, Wasser y %d, Spieler y %d\n", r, flut_bei, tot_bei,
+    printf("  ROOM%04X Flut bei Takt %d (nach den druecken-Laeufen +900), tot bei %d, Wasser y %d, Spieler y %d\n", r, flut_bei, tot_bei,
            pa >= 0 ? (int)g_scd.props[pa].y : 0, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].y);
     /* 1800 Takte Sleep ab dem Schliessen der Warnung; davor Frage (2 Seiten) + Warnung im druecken-Lauf (je 8 Takte
      * Tastentakt + Schreibmaschine), gemessen ~300 Takte -> Flut zwischen 1800 und 1800 + 450 nach der Aktion */
