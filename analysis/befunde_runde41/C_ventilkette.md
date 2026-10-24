@@ -220,7 +220,9 @@ Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "
   - mit dem wortgleichen Haken auf dem ENDSTAND dieses Baums (Messbau 06:37 aus 74fb9fae + Haken, `cmake -P` mit einer
     Quellkopie mit Haken, scratchpad `r41c_nb1/riegel_kette_mit_a/lauf_9c9a636d_voll`): `-- r41_ventilkette_kette: 2030
     Ventile -> Ost-Tuer zu Fuss -> 20B0 Szene sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> ROOM2050 in einem
-    Lauf (Haken der Spur A: 1)`, `rc=0`.
+    Lauf (Haken der Spur A: 1)`, `rc=0`. **⛔ Stand Nachbesserung 1; mit Nachbesserung 3 veraltet (die Ventile liegen nicht
+    mehr am Ring; Abnahme 3 Mangel 1: FAIL Z. 159). Seit Nachbesserung 4 faehrt der Riegel die heutige Kette (richtige
+    Folge zu Fuss, §0e Mangel 1); von Hand ohne Haken rc=0 bis zur 20B0-Ankunft.**
   - Vorlaeufer (vor dem Fund von C-E1): derselbe Ablauf als `integration_r41_ventilkette_szene` mit Laufzeit-SKIP —
     ohne Haken `***Skipped 61.97 sec`, mit Haken zweimal PASS; durch die Registrier-Regel C-E1 ersetzt.
   Der Orchestrator misst die Kette im Integrationsbaum A+C (C-E1).
@@ -811,6 +813,111 @@ dem verkleinerten Plakat in der UV-Flaeche), Untersuchen-Platz Slot 21 (x -4100.
 Bildbogen der Plaetze: C_belege/nb4_plaetze_sheet.png (gelb Ventil-Plaetze 1000 x 1000 vor den Raedern, cyan Plakat, magenta
 Dokument, weiss Sicherung).
 
+### Umsetzung der Nachbesserung 4 (Dateien, Konstanten — je mit Beleg im Kopf von re15_ventilkette_r41.h)
+* **Pegel mit Strom (Mangel 4):** `RE15_R41C_WASSER_Y_RELING = RE15_R41C_RINGBODEN_Y (-5400) + RE15_R41C_PEGEL_ABSTAND (50)` =
+  -5350; `RE15_R41C_RELING_RECHTECKE` = 3 Rechtecke (Treppenschacht jetzt mit Flaeche), `RE15_R41C_RELING_N 3`;
+  Generator `RELING_RECHTECKE` -> gen/ventilkette_r41_wasser.inc neu (Netz 3644 B, 106 Ecken, 85 Vierecke <= 1800 x 1800,
+  Flaeche 202 740 000 = Summe der drei Rechtecke; UV-Satz und Normale weiter Byte fuer Byte aus ROOM2080 Prop 0 @0x000D98).
+  Protokollzeile `Strom (3,126) -> Wasser knapp unter der Absperrung y -5350 (Schachtoeffnung), Treppe Slot 8 -> Sperrtext 48`.
+* **Ventilraetsel (Mangel 3, Nachtrag 13):** `install_2030` legt im Zustand TROCKEN sechs Ereignis-Plaetze an
+  (Slots 14..19, Ereignisse 17..22 = Ventil 01/02/03/07/08/09, Mitte = Radmitte x, Wand +- 500, 1000 x 1000, Band 1;
+  `RE15_R41C_VENTIL_X/_WAND_Z/_NUMMERN/_FARBE`); der fruehere Platzhalter (Slot 14 vor 09/08, Ereignis 26, Frage 45) ist
+  weg. `re15_ventilkette_r41_ereignis`: Ventil -> ohne Bit 102 oder ohne (3,108) `2030_ventile_vorher` (Text 49), waehrend
+  des Zaehlers `2030_ventile_laeuft` (46), sonst `2030_ventil_NN` (Frage 50..55 -> Ja -> Set(5,0x1B)=1). C-Takt
+  `ventile_tick`: Handshake (5,0x1B) -> Drehung n in (5,0x10+n) + Klick 0x0A; nach der vierten Pruefung gegen
+  `RE15_R41C_LOESUNG {5,3,1,0}` = 09/07/02/01: richtig -> `scd_event_fire(26)` = `2030_ventile_flut` (Warnung 46 ->
+  Set(5,0x1D) -> Sleep 1800 -> Flut, unveraendert aus dem frueheren Programm); falsch -> Fehlerton 0x0B (RE2 ROOM2130
+  @0x01800, Bank PANEL2130) + `scd_event_fire(27)` = `2030_ventile_falsch` (`22 05 10 00`..`22 05 13 00` = Form ROOM11F0
+  sub17 @0x016C0, dann Text 45). Programme in tools/r41_ventilkette/programme.py (jede Zeile mit Vorbild).
+* **Texte (gen/ventilkette_r41_texte.inc, Generator):** 2030 Id 45 "The valves turned back / to their original position."
+  (frueher die Platzhalter-Frage), Id 49 "I should look around here first." (Nachtrag 13 Folge 1, Wortlaut des
+  Orchestrator-Vorschlags), Ids 50..55 "Valve NN, <farbe> wheel. / Will you turn it?" (Ja/Nein, Form ROOM2050 msg 0
+  @0x2446). Keine weiteren Ids (VERTRAG 1.2: 2030 40-49 + 50-55).
+* **Dokument (Nachtrag 13 Folge 2):** re15_files.c `s_docs[6] = { 0x4E, 31, 2, 176, "Technician's Note" }` (Name kodiert wie
+  "Chris' Diary" @0x800c4e04); Seiten FILE31_title_page/p00/p01/p02/title_paper.TIM gesetzt von
+  tools/r41_ventilkette/dokument_satz.py (Vorlage FILE17, Rueckleseprobe "WORTGLEICH 71 Woerter", Titel zurueckgelesen,
+  title_paper == FILE17; md5 im Satzbericht) und nach shared_assets/RE2/FILES installiert. Zone Slot 20 =
+  `re15_aot_set_item_tk_prop` (Item 0x4E, Menge 1, Taken-Bit (9,107), Modell obj 6) -> aot_common.c `aot_item_dokument`
+  -> Leser (Runde-30-Weg, RE2 FUN_80071ba0); Blatt obj 6 = RE2 ROOM2020 mesh01 (md5-geprueft) bei (-4600,-1800,7150).
+  Bit 107 in test_r36_kartenbits.c k_port[] eingetragen (VERTRAG 1.1). Protokollzeile der Ablage (Flanke von Bit 107).
+* **Plakat (Nachtrag 13 Folge 3):** tools/r41_ventilkette/plakat.py -> gen/ventilkette_r41_plakat.inc: Nahaufnahme 320 x 240
+  (4 bpp, 16 Farben, RE2-Dokumentschrift + eigene 5x7-Ziffern fuer die Schilder), Aushang-MD1 (ein Viereck 700 x 816 in der
+  MD1-Form der Wasserflaeche, Normale (0,0,-4096)) + Aushang-TIM (8 bpp 64 x 64, das verkleinerte Blatt, CLUT (0,480)),
+  Dokument-Blatt (RE2 mesh01). Platz Slot 21 (Ereignis 23) -> `2030_plakat` (Set(2,7)=1, Set(2,2)=1, Set(5,0x1C)=1);
+  `plakat_tick`: offen ab dem Marker, zu mit der Flanke 0x4000/0x8000 (Wegdruecken einer Nachricht @0x80028698), dann
+  (2,7)/(2,2)/(5,0x1C) := 0. main.c (Haken, Runde 41 Spur C): Vollbild-Ebene `re15_render_pc_show_fmv` mit
+  `re15_ventilkette_r41_plakat_rgba()`, solange offen (nur die eigene Ebene wird wieder versteckt).
+* **Blaetter in Band 2 (Messbefund dieser Nachbesserung):** mit Band 1 griff die Kletter-Sonde FUN_8002d2c0 (@0x8002d370
+  Objekt-Band == Spielerband) das Plakat: Lauf v2_leon (erster Versuch) F1858 Aktion vor dem Plakat -> mo 230/231, y -1800 ->
+  -3600 -> -5400, Leon stand auf dem Ring. `RE15_R41C_BLATT_BAND 2` (weder Spielerband 1 noch Standtest-Band 0 @0x80031cfc);
+  Riegel unit M prueft das Band.
+* **main.c:** Prop-Lader-Schleife `vk < RE15_R41C_PROPS_N` mit `re15_ventilkette_r41_md1_bytes_k/_tim_bytes_k` (Wasser obj
+  4/5, Blatt obj 6, Aushang obj 7) und der Plakat-Haken (5 Zeilen). Keine weitere gemeinsame Datei ausser re15_files.c
+  (ein Tabelleneintrag + Name) und test_r36_kartenbits.c (k_port-Zeile).
+
+### Messung nachher (exe 15:0x-15:4x, scratchpad `nb4/mess/*`)
+* **Mangel 4:** Serie `pegel_c0/1/2/4/7/15` (Bits 103/100 + (3,126), RE15_FORCE_CUT, F330, direct3d): `[ventilkette41] ROOM2030:
+  Strom (3,126) -> Wasser knapp unter der Absperrung y -5350 (Schachtoeffnung), Treppe Slot 8 -> Sperrtext 48, Ring frei`,
+  `[prop-render] pi=4 oid=0x04 pos=(0,-5350,0)`. Bildbogen **C_belege/nb4_pegel_vorher_nachher_sheet.png** (Spalten: vor der
+  Flut / Strom VORHER y -3600 (Nachbesserung 3) / Strom NACHHER y -5350): in Cut 1/2/7/15 steht das Wasser jetzt unmittelbar
+  unter dem Ringboden, die Schachtwand mit den Schildern, die Treppe und der Tank 13 sind bedeckt, das Stabgelaender steht
+  ueber dem Wasser; Cut 4 (Draufsicht) zeigt den ganzen Schacht unter Wasser bis an den Ringrand.
+* **Mangel 3, Leon zu Fuss** (Lauf `v2_leon`, vom Ring, Bildbogen **C_belege/nb4_ventile_zu_fuss_leon_sheet.png**):
+  Treppe -> Steg -> Ventil 09 ohne Sicherung `Ereignis 22 -> Port-Programm 2030_ventile_vorher`, `[msgtext] room=2030 id=49 "I
+  should look around here first."` -> Sicherung (msg 2/3) -> Plakat-Folge 09 (F1881) / 01 (F2487) / 02 (F2808) / 07 (F3446):
+  `Ventil 09 gedreht (Drehung 1/4)` .. `Ventil 07 gedreht (Drehung 4/4)` -> `Folge 09 01 02 07 -> FALSCH: zurueckgesetzt` ->
+  `Ereignis 27 -> Port-Programm 2030_ventile_falsch` -> `[msgtext] room=2030 id=45 "The valves turned back to their original
+  position."`. Lauf `v2b_leon` (Sued-Landeplatz, Sicherung genommen): 09/07/02/01 -> `Folge 09 07 02 01 -> RICHTIG: Warnung,
+  Zaehler, Flut` -> `Ereignis 26 -> Port-Programm 2030_ventile_flut` -> `id=46 "WARNING: ..."` -> `Zaehler laeuft` (~F1728)
+  -> zu Fuss Treppe/Ring -> `[aot] DOOR FIRE slot=0 rect=(7350,-200,...) target_cut=11` (Aktion F2552, ~824 Bilder = 27 s nach
+  dem Wegdruecken) -> `loaded room20b0.rdt` -> `Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100`.
+* **Dokument** (Lauf `dok_leon`, RE15_PRESS): Titelseite "TECHNICIAN'S NOTE" (1/3), Seite 2/3 mit dem Nutzertext, Seite 3/3
+  "...something like this....", EXIT, "The Technician's Note has been filed." -> `[ventilkette41] Dokument 6 "Technician's Note"
+  abgelegt: Bit (9,107) = 1`. **Plakat** (Lauf `plakat_leon`, direct3d): `Ereignis 23 -> Port-Programm 2030_plakat` ->
+  `Plakat-Nahaufnahme offen` -> Vollbild (F360) -> Viereck -> `Plakat-Nahaufnahme zu (nach 89 Bildern)` -> Raum (F440).
+  Bildbogen **C_belege/nb4_dokument_plakat_sheet.png**; das Plakat allein **C_belege/nb4_plakat.png** (2x).
+* **Mangel 1:** `cmake -DRE15_PC_EXE=... -DRE15_SRC=<baum>/re15_port -DWORKDIR=scratchpad/nb4/kette_hand -P
+  tests/integration/test_r41_ventilkette_kette.cmake` (ohne Haken der Spur A im Quelltext) -> rc=0, 1 min 58 s, Abschlusszeile
+  `-- r41_ventilkette_kette: 2030 richtige Folge 09/07/02/01 zu Fuss -> Warnung -> Ost-Tuer zu Fuss -> ROOM20B0, Bits 103 + 100;
+  Teil ab der Szene uebersprungen: Haken der Spur A fehlt (aot_common.c re15_wasser20b0_r41_auto_aot)` (Laufordner
+  `kette_hand/lauf_75f43f48_bis20b0`).
+
+### Nachbesserung 4 je Mangel (Ursache / Messung vorher / Beleg / Aenderung / Messung nachher)
+**Mangel 3 (hoch, Nachtrag 13) — das echte Ventilraetsel fehlte.**
+* Ursache: Nachtrag 13 (13:19) kam nach dem Bau der Nachbesserung 3; der Platzhalter (EIN Platz, Ja/Nein-Frage 45) blieb.
+* Messung vorher: Abnahme 3 N13 (Text 49 mit dem Flut-Wissen, kein Dokument, kein Plakat, Frage 45).
+* Beleg: §0e B4-2 (Raeder/Farben/Nummern aus den BSS-Bildern), B4-3 (Form ROOM11F0 sub17 + RE2 ROOM2130 sub04), B4-4
+  (Dokument 6 / Item 0x4E / Bit 107, Vorlage FILE17, U+2014 -> '-'), B4-5 (Nahaufnahme-Form Runde 40).
+* Aenderung: s. Umsetzung (Folgen 1-6: Text 49 neutral; Dokument woertlich am Sued-Landeplatz; Plakat mit der falschen
+  Anleitung als Nahaufnahme + Aushang; sechs Ventile, Pruefung nach der vierten Drehung, falsch -> zurueck; §7 zur Freigabe;
+  Texte nur 45/49/50-55).
+* Messung nachher: oben (v2_leon, v2b_leon, dok_leon, plakat_leon); Riegel unit M (Leon + Elza), integration _weg/_weg_elza
+  v2a/v2b/v2d/v2p, Haupt-Riegel A/C/D.
+
+**Mangel 4 (hoch, Nachtrag 12 (k)) — Ruhepegel -3600 statt knapp unter der Absperrung.**
+* Ursache: Nachtrag 12 (13:11) kam nach dem Bau; umgesetzt war die Lesart "Oberkante der unteren Reling".
+* Messung vorher: Abnahme 3 L6/w3 `Wasser auf Relinghoehe y -3600`, 1800 unter dem Ringboden; Bildbogen
+  nb3_pegel_vorher_nachher_sheet.png (Schachtwand zwischen Wasser und Ringrand frei).
+* Beleg: §0e B4-1 (Absperrung = Wandzellen 19/20/21/22/31/32 fl 0x33, im Bild durchsichtiges Stabgelaender, Grenze = Ring-
+  boden -5400; Abstand 50 = Wasserschritt @0x00CC8).
+* Aenderung: -5350, drei Rechtecke (Treppenschacht), Netz neu; Kopf-Satz "Treppe westlich x -4200 ueber dem Pegel -> keine
+  Flaeche" ersetzt; Riegel `_b` i2/l2, `_weg` w3/w4, unit E/A/L auf -5350 bzw. das neue Netz.
+* Messung nachher: oben (Serie pegel_*, Bildbogen nb4_pegel_vorher_nachher_sheet.png); unit E fuer 2030 UND 2031.
+
+**Mangel 1 (mittel) — `integration_r41_ventilkette_kette` passte nicht mehr zur Kette.**
+* Ursache: der Riegel fuhr seit Nachbesserung 1 unveraendert den Platz am Ring an; Nachbesserung 3 verlegte die Ventile.
+* Messung vorher: Abnahme 3 G2b `FAIL Z. 159`, rc=1.
+* Aenderung: EIN Wegplan fuer beide Raeume (2030: richtige Folge 09/07/02/01 zu Fuss, Flucht ueber Steg/Treppe/Ring,
+  Ost-Tuer mit der Aktionstaste; 20B0: Szene, Kanal, Leiter); Start am Sued-Landeplatz mit Bits 101/102 + (3,108) (Zustand
+  nach Bruecke + Sicherung wie `_weg` v2b). Ohne den Haken der Spur A im Quelltext prueft der Lauf bis "loaded room20b0.rdt"
+  + "Bits 103 + 100" (Ende 200 Bilder in 20B0) und meldet den Rest als uebersprungen; mit dem Haken (Integrationsbaum A+C)
+  die ganze Kette wie bisher. Registrierung unveraendert (nur mit A's Modul, C-E1).
+* Messung nachher: `cmake -P` rc=0 (oben). §0b M2 und §5 tragen den Hinweis auf diesen Stand.
+
+**Mangel 2 (niedrig, Doku) — veraltete Saetze.** §7 "Sichtprobe ... am Ring vor den Ventilen" und "Der Rechner selbst senkt
+2080 und leert 2030" berichtigt (§7), probes/r41_ventilkette.cmake Kopf (Z. 2) und Teil-B-Kommentar (Z. 30) auf den Stand
+Nachtraege 7/8/12/13 gebracht.
+
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
 Alle Datei-Offsets beziehen sich auf `re15_port/shared_assets/PSX/STAGE2/ROOMxxxx.RDT` (Leon); die Elza-Varianten
@@ -1328,7 +1435,7 @@ shared_assets/PSX, pri/, synchro/, release/.
     2050_hebel_sperre` + `[msgtext] room=2051 id=40 ...`.
   - Ketten-Riegel (M2, Entscheid C-E1): im C-Baum nicht registriert, Configure-Zeile `-- integration_r41_ventilkette_kette
     uebersprungen: Spur A fehlt (...)`; mit dem wortgleichen Haken auf dem Endstand (`cmake -P`) `rc=0` + Abschlusszeile
-    (§0b M2). (Vorlaeufer `_szene` mit Laufzeit-SKIP: `***Skipped 61.97 sec`, ersetzt.)
+    (§0b M2) - Stand Nachbesserung 1, seit Nachbesserung 4 auf die heutige Kette umgestellt (§0e Mangel 1). (Vorlaeufer `_szene` mit Laufzeit-SKIP: `***Skipped 61.97 sec`, ersetzt.)
   - Querbezug M3 (Heliport 1171, Bank-5-Bits der Kraehenszene):
     `ctest --test-dir re15_port/build -R "^integration_r3[89]_heliport1171_.*$" --timeout 900 --output-on-failure`
     -> `integration_r38_heliport1171_weg_re2 Passed 74.47 sec`, `_weg_re15 Passed 69.53 sec`, `_laden Passed 46.40 sec`,
@@ -1378,16 +1485,22 @@ shared_assets/PSX, pri/, synchro/, release/.
   - `integration_r41_ventilkette_kette` weiter nur mit Spur A registriert (Configure: "uebersprungen: Spur A fehlt", C-E1).
 
 ## 6. OFFEN
+* **Nachbesserung 4 (2026-10-24, Abnahme 3 Maengel 1-4, Nachtraege 12/13):**
+  - Loesung, Plakat-Inhalt, Dokument-Titel, Rad-Zuordnung und die Texte 45/49/50-55 sind Vorschlaege zur Freigabe (§7 (m)/(n)).
+  - Die Plakat-Nahaufnahme ist ein Port-Bild ueber die Vollbild-Ebene des PC-Renderers (main.c); waehrend sie offen ist,
+    liegt (2,7) wie bei den Nahaufnahmen der Runde 40 -> player_mode 2; der Wegplan-Treiber (dachkiste_r36.c @353) drueckt
+    dort keine Tasten, die Riegel fahren Plakat und Dokument deshalb mit RE15_PRESS an der Stelle (v2d/v2p), die Ventile
+    zu Fuss. PSX: keine Vollbild-Ebene, Bild nur unter RE15_PLATFORM_PC (wie die Wasserflaechen, H3).
+  - Die 20B0-Szene (Ost-Tuer) braucht weiter den AUTO-Haken der Spur A (C-E1); `_kette` prueft ohne ihn bis zur Ankunft.
 * **Nachbesserung 3 (2026-10-24, Abnahme 2 N1-N4, Nachtraege 7-10):**
-  - Lesart "Relinghoehe": umgesetzt ist y -3600 = Oberkante der UNTEREN Reling (Bildmessung +1800 ueber dem Landeplatz,
-    Band 2 der Ring-Bodenzellen, ROOM2050 -3600). Moegliche andere Lesart "Wasser bis an die Ring-Reling" waere y -5400
-    (Band der Ring-Reling-Zellen fl 0x33; Vorschau scratchpad `r41c_nb3/poly_bc.png` obere Reihe). Entscheidungsfrage §7 (k).
+  - (erledigt mit Nachtrag 12 (k) / Nachbesserung 4: y -5350) ~~Lesart "Relinghoehe": umgesetzt ist y -3600 = Oberkante der
+    UNTEREN Reling. Moegliche andere Lesart "Wasser bis an die Ring-Reling" waere y -5400. Entscheidungsfrage §7 (k).~~
   - 2060: der Weg Tuer -> Sicherungskasten/Generator ist als Gang ueber x -4500 / x 6000 nur in EINER Richtung als ein Lauf
     gegangen (w3: Generator -> Tuer); die zwei Raetsel laufen ueber RE15_INPUT_SCRIPT ab der Stelle (g1/g2), weil der
     Wegplan-Treiber kein Steuerkreuz fuer Cursor kennt.
   - Die 20B0-Szene (Ankunft ueber die Ost-Tuer) braucht weiter den AUTO-Haken der Spur A (C-E1); w1 startet am Ende der
     Szene ((3,235)=1, Lage (-20620,-9705)).
-  - Port-Texte 48/49 (neu) und alle frueheren bleiben Vorschlag bis zur Freigabe (§7).
+  - Port-Texte 48/49 (neu) und alle frueheren bleiben Vorschlag bis zur Freigabe (§7); 49 seit Nachbesserung 4 neutral.
 * (erledigt mit Nachbesserung 3, Nachtrag 7) ~~Nachbesserung 2 (2026-10-24, Abnahme 1 Mangel N1, Entscheid C-E2b): der Weg zum Rechner 2080 nach der Flut
   existiert nicht~~ — blockiert an der ORIGINAL-Sperre ROOM11A0/11A1 Slot 4 ((3,206); main00 @0x00FEA/@0x00FEE; nur
   ROOM20A0/20A1 sub10 @0x01FF0 setzt das Bit), gemessen zu Fuss mit Leon und Elza (§0c Glied 7, Bilder nb2_11a0/nb2_11a1).
@@ -1465,7 +1578,47 @@ shared_assets/PSX, pri/, synchro/, release/.
   RE2-Panel-Klick 0x0A wie lift2030_r37/hebetisch.
 
 ## 7. Fuer den Nutzer
-* **Stand Nachbesserung 3 (Nachtraege 7-10):** So laeuft die Kette jetzt: 2030 Pult (zu wenig Druck) -> Treppe hinab ->
+* **Stand Nachbesserung 4 (Nachtraege 12/13) — zur Freigabe:**
+  - **Das Ventilraetsel (Vorschlag, Nachtrag 13).** Im unteren Bereich von 2030 gibt es sechs drehbare Ventile, je ein Rad
+    unter einem Nummernschild (aus den Hintergruenden, C_belege/nb4_ventile_raeder_sheet.png): Nordwand **03 rot, 02 gruen,
+    01 schwarz**, Suedwand **09 rot, 08 gruen, 07 schwarz** (04-06 an der Ostwand haben kein Rad und haengen ueber dem
+    Becken). Vor dem Rad die Aktionstaste: "Valve 09, red wheel. Will you turn it?" (die Frage nennt Nummer und Farbe).
+    Vier Drehungen; erst nach der vierten wird geprueft (wie RE2s Strom-Pult): richtig -> die Warnung (60 s) wie bisher;
+    falsch -> "The valves turned back to their original position." + Fehlerton, alle Drehungen zurueck.
+  - **Das Dokument** "Technician's Note" (Titel = Vorschlag) liegt als Blatt am Sued-Landeplatz direkt neben der Sicherung
+    (in 2030 gibt es keine Leiche; der Spieler kommt wegen der Sicherung ohnehin dort vorbei). Inhalt = Ihr Text woertlich,
+    nur umbrochen; der Gedankenstrich ist in der RE2-Dokumentschrift ein Bindestrich (so schreibt RE2 selbst):
+    "These amateurs-not only did they completely mess up the water ventilation, so that the water level not only rises up to
+    the railing but also goes beyond it until it has completely drained out-but they also made a complete mess of the valve
+    instructions.... They mixed up black, green, and red, and swapped the numbers for black! What are they? Colorblind? How
+    is anyone supposed to work with something like this...."
+    (2 Seiten im RE2-Leser, Vorlage "Sewer manager diary"; Bild C_belege/nb4_dokument_plakat_sheet.png).
+  - **Das Plakat** haengt an der Suedwand zwischen dem gelb-schwarzen Pfosten und Ventil 09 (im Raum ein helles Blatt, bei
+    der Aktionstaste die Nahaufnahme, Viereck/Kreuz schliesst). Gedruckt ist (C_belege/nb4_plakat.png):
+    "VALVE OPERATION / FLOOD GATES - POOL: 1. GREEN 09 · 2. RED 01 · 3. BLACK 02 · 4. RED 07 · Turn the valves in this order."
+  - **Loesung (Vorschlag): 09 -> 07 -> 02 -> 01.** Ableitung: das Plakat nennt bei 09 "GREEN", im Raum ist 09 rot; bei 02
+    "BLACK", im Raum ist 02 gruen -> die Farben auf dem Plakat sind vertauscht (Dokument: "mixed up black, green, and red";
+    gedruckt GREEN = rot, BLACK = gruen, RED = schwarz). Die zwei als "RED" gedruckten Schritte sind also die schwarzen
+    Ventile - im Raum sind 01 und 07 tatsaechlich schwarz -, und deren Nummern sind getauscht (Dokument: "swapped the numbers
+    for black"): Schritt 2 ist 07, Schritt 4 ist 01. Die Nummern der anderen Farben stimmen. Wer dem Plakat woertlich folgt
+    (09, 01, 02, 07), bekommt nach der vierten Drehung das Zuruecksetzen. Der Weg: 09 und 07 an der Suedwand, ueber den
+    Steg zu 02 und 01 an der Nordwand; die Flucht von dort ueber Treppe und Ring zur Ost-Tuer dauert zu Fuss ~27 s.
+  - **Texte neu/geaendert (Vorschlag):** 2030 45 "The valves turned back / to their original position." · 49 "I should look
+    around here first." (vor Bruecke/Sicherung, statt des Satzes mit "flooded"; Nachtrag 13 Folge 1) · 50 "Valve 01, black
+    wheel. / Will you turn it?" · 51 "Valve 02, green wheel. ..." · 52 "Valve 03, red wheel. ..." · 53 "Valve 07, black
+    wheel. ..." · 54 "Valve 08, green wheel. ..." · 55 "Valve 09, red wheel. ..." (alle Ja/Nein). Die Ja/Nein-Frage 45 des
+    Platzhalters entfaellt.
+  - **Pegel nach dem Strom (Nachtrag 12 (k)):** das Wasser steht jetzt 50 unter dem Ringboden (y -5350), also knapp unter
+    der Absperrung (Stabgelaender); der ganze untere Bereich samt Treppe und Tank liegt unter Wasser, der Ring ist trocken.
+    Bildbogen vorher/nachher C_belege/nb4_pegel_vorher_nachher_sheet.png.
+  - **Neue Assets (Paket-Gate):** `re15_port/shared_assets/RE2/FILES/FILE31_title_page.TIM`, `FILE31_p00_page.TIM`,
+    `FILE31_p01_page.TIM`, `FILE31_p02_page.TIM`, `FILE31_title_paper.TIM` (gesetzt von tools/r41_ventilkette/
+    dokument_satz.py; title_paper = Kopie von FILE17). Das Plakat-Bild und die zwei Blatt-Modelle sind eingebacken
+    (gen/ventilkette_r41_plakat.inc, tools/r41_ventilkette/plakat.py) - keine Datei im Paket. Keine Sprachdateien.
+  - **Fragen:** (m) Loesung 09/07/02/01, Plakat-Inhalt, Dokument-Titel "Technician's Note" und die neuen Texte freigeben oder
+    aendern? (n) Die Zuordnung Rad -> Nummer (je Wand "rot, gruen, schwarz" in der Reihenfolge der Schilder) ist eine Wahl -
+    zwei Raeder liegen naeher am Nachbarschild; die Fragetexte nennen deshalb Nummer und Farbe. So lassen?
+* **Stand Nachbesserung 3 (Nachtraege 7-10; Ventile und Pegel seit Nachbesserung 4 wie oben):** So lief die Kette: 2030 Pult (zu wenig Druck) -> Treppe hinab ->
   Ventil 13 am Tank -> Pult "Lower the bridge?" -> Bruecke unten -> ueber den Steg zum Sued-Landeplatz -> dort liegt die
   Sicherung (aufheben!) -> die nummerierten Ventile 09/08 an der Suedwand (ohne Sicherung: "Numbered valves. If I turn
   them, this whole level will be flooded. I should look around here first.") -> Ventile drehen -> Warnung -> 60 s ->
@@ -1474,13 +1627,15 @@ shared_assets/PSX, pri/, synchro/, release/.
   zurueck: 2030 Nordgalerie (jetzt nur noch der untere Bereich unter Wasser) -> 2020 -> 2050 -> Leiter -> 20B0 -> Kanal ->
   Ost-Tuer (jetzt offen) -> 2030 Ring (trocken) -> Lift B -> Suedgalerie -> 2080 -> Treppe -> Rechner (Original) -> 2090.
   Zu Fuss gemessen mit Leon und Elza (§0d, Riegel integration_r41_ventilkette_weg / _weg_elza).
-* Nach dem Strom bleibt der untere Bereich geflutet (Pegel y -3600 = Oberkante der unteren Reling, Bildbogen
-  C_belege/nb3_pegel_vorher_nachher_sheet.png) und ist gesperrt: die Treppe sagt "I cannot go down the stairs because of
+* Nach dem Strom bleibt der untere Bereich geflutet (seit Nachbesserung 4 Pegel y -5350 knapp unter der Absperrung,
+  Bildbogen C_belege/nb4_pegel_vorher_nachher_sheet.png; vorher y -3600, nb3_pegel_vorher_nachher_sheet.png) und ist gesperrt: die Treppe sagt "I cannot go down the stairs because of
   the water." **Dort liegen und sind danach verloren:** die Sicherung (2030 Slot 9 @0x01BAA — wird vor der Flut
   zwingend aufgehoben, weil die Ventile erst danach gehen) und **Shotgun Shells x14** (2030 Slot 10 @0x01BC0, Item 0x16,
-  Sued-Landeplatz Ostende), dazu Ventil 13 und die Bruecke. Wer die Patronen will, nimmt sie vor dem Ventilraetsel mit.
-* Keine neuen Assets im Paket-Gate (alles eingebacken in gen/*.inc aus den vorhandenen RDTs; das Netz der Relinghoehe ist
-  aus ROOM2080 Prop 0 abgeleitet); keine Sprachdateien.
+  Sued-Landeplatz Ostende), dazu Ventil 13, die Bruecke und (Nachbesserung 4) das Dokument, falls nicht gelesen, sowie das
+  Plakat. Wer die Patronen will, nimmt sie vor dem Ventilraetsel mit.
+* (Stand Nachbesserung 3, ueberholt: seit Nachbesserung 4 gibt es neue Assets FILE31_*, s. oben) Keine neuen Assets im
+  Paket-Gate (alles eingebacken in gen/*.inc aus den vorhandenen RDTs; das Netz der Relinghoehe ist aus ROOM2080 Prop 0
+  abgeleitet); keine Sprachdateien.
 * (Historie) Nach der Flut sind die Tueren aus 20B0 (Ost) und 2070 in den Ring von 2030 zu ("I cannot open the door
   because of the water pressure.") — seit Nachtrag 7 nur noch, bis der Strom an ist. **⛔ BERICHTIGT (Nachbesserung 2):** den frueher
   hier genannten Weg "2050 -> 2020 -> 2030 oben -> 2080" gibt es nicht (die Tuerebene von 2030 hat zwei getrennte
@@ -1488,20 +1643,21 @@ shared_assets/PSX, pri/, synchro/, release/.
   11A0: "It's locked from the other side." (§0c, Bilder C_belege/nb2_11a0_sperre_leon_sheet.png /
   nb2_11a1_sperre_elza_sheet.png). Nach der Flut ist der Rechner 2080 derzeit NICHT erreichbar -> Frage (j).
 * Bedienung: 2030 Ring-Nordwand (Cut 1/2) = Pult; Treppe hinab, am Tank rechts (Zelle 2) = Ventil 13; ueber den Steg
-  zum Sued-Landeplatz: Westende = Sicherung, Suedwand vor 09/08 = die Ventile (Platzhalter des spaeteren Raetsels;
-  Nachbesserung 3, vorher am Ring-Ost-Streifen ueber den Schildern 04/05/06). 2050: Pult an der Saeule
+  zum Sued-Landeplatz: Westende = Sicherung (daneben das Dokument), Suedwand = Plakat und die Ventile 09/08/07, Nordwand
+  (ueber den Steg) = Ventile 03/02/01 (Nachbesserung 4; vorher EIN Platzhalter vor 09/08, davor am Ring-Ost-Streifen). 2050: Pult an der Saeule
   (Slot 8), Cursor mit dem Steuerkreuz, SQUARE kippt einen Hebel, CROSS verlaesst das Pult; Loesung 30 + 40 + 10 V.
 * Port-Texte zur Freigabe (englisch wie das Spiel; NUTZER-VORGABE = Wortlaut aus dem Auftrag):
   2000/20B0 40 "I cannot climb up the ladder / because of the water pressure." (VORGABE)
   2030 40 "A control panel for the bridge. / The pressure gauge reads zero. | Intake valve 13 is closed."
   2030 41 "Intake valve 13. / Will you open it?" (Ja/Nein) · 42 "You've opened valve 13. / The pressure is rising."
   2030 43 "The pressure gauge reads 80. / Lower the bridge?" (VORGABE "Lower the bridge?") · 44 "The bridge is down."
-  2030 45 "Numbered valves. They control the / flood gates of the treatment pool. | Will you turn them?"
+  2030 45 (seit Nachbesserung 4) "The valves turned back / to their original position." (frueher die Platzhalter-Frage
+  "Numbered valves. They control the / flood gates of the treatment pool. | Will you turn them?")
   2030 46 "WARNING: The water will rise / in one minute. Leave the room!" (VORGABE sinngemaess)
   2030 47 "Intake valve 13 is open." · 48 "I cannot go down the stairs / because of the water." (NEU, Nachbesserung 3:
-  Treppe nach dem Strom) · 49 "Numbered valves. If I turn them, / this whole level will be flooded. | I should look
-  around here first." (NEU, Nachbesserung 3: Ventile vor Bruecke/Sicherung); waehrend des Zaehlers zeigen die Ventile die
-  Warnung 46 erneut (die frueheren Saetze 48 "... flooded" / 49 "... drained" entfallen)
+  Treppe nach dem Strom) · 49 (seit Nachbesserung 4, Nachtrag 13 Folge 1) "I should look around here first." (Ventile vor
+  Bruecke/Sicherung; die Fassung der Nachbesserung 3 nannte die Flut) · 50..55 die Ventil-Fragen (oben); waehrend des
+  Zaehlers zeigen die Ventile die Warnung 46 erneut
   2050 40 "The pump has no power. / The switchboard must be set first." · 41 = 11F0 "Will you push them? " ·
   42 = 11F0 "Power supply OK." · 43 "A high voltage switchboard. / The pump needs 80 volts." ·
   44 "The switchboard is set to 80 volts. / The pump is powered."
@@ -1534,13 +1690,14 @@ shared_assets/PSX, pri/, synchro/, release/.
   Vorbild) oder so lassen?
   **(i) (Abnahme M6):** die kleinen Haken der Spur C in main.c / game_step_common.c und die Querbezug-Flags ->
   **Orchestrator-Entscheid C-E3: angenommen.**
-  **(k) NEU (Nachbesserung 3, Nachtrag 8):** Der Ruhepegel nach dem Strom steht auf y -3600 = Oberkante der unteren
+  **(k) BEANTWORTET (Nachtrag 12 (k) "unterhalb der Absperrung") -> umgesetzt in Nachbesserung 4 (y -5350):**
+  ~~(Nachbesserung 3, Nachtrag 8)~~ Der Ruhepegel nach dem Strom steht auf y -3600 = Oberkante der unteren
   Reling (Steg/Landeplaetze): der Ring ist trocken, alles darunter 1800 tief unter Wasser (Bildbogen
   C_belege/nb3_pegel_vorher_nachher_sheet.png). Gemeint "bis an die Ring-Reling" (y -5400, das Wasser stuende buendig mit
   dem Ring)? Dann nur die Konstante RE15_R41C_WASSER_Y_RELING (und der Riegel) zu aendern.
-  **(l) NEU (Nachbesserung 3):** Texte 48 "I cannot go down the stairs because of the water." (Treppe nach dem Strom) und
+  **(l) BEANTWORTET (Nachtrag 12 (l): beide vorerst frei; 49 durch Nachtrag 13 ersetzt, Nachbesserung 4):** ~~Texte 48 "I cannot go down the stairs because of the water." (Treppe nach dem Strom) und
   49 "Numbered valves. If I turn them, this whole level will be flooded. I should look around here first." (Ventile vor
-  Bruecke/Sicherung) — Wortlaut freigeben oder aendern.
+  Bruecke/Sicherung) — Wortlaut freigeben oder aendern.~~
   **(j) ERLEDIGT (Nachtrag 7: "Nach der Aktivierung des Stroms ist 2030 leer gelaufen"; Weg gemessen §0d N1):**
   ~~(Nachbesserung 2, Abnahme 1 N1 / Entscheid C-E2b) — an den Orchestrator:~~ Nach der Flut (Bits 103+100
   ohne 107) erreicht der Spieler den Rechner 2080 NICHT; 2030 bleibt geflutet, 2080/2090/20A0 (Alligator, Kanister-
@@ -1560,8 +1717,9 @@ shared_assets/PSX, pri/, synchro/, release/.
   (j3) die Flut erst zulassen, wenn 2080 schon besucht ist, o. ae. (aendert die Reihenfolge des Nutzer-Designs).
   Ohne Entscheid bleibt Punkt 6 ("entleert danach auch 2030") im Spielablauf nach der Flut unerreichbar; die Mechanik des
   Rechners selbst ist gemessen (L6, §0c Glied 9).
-* Sichtprobe fuer den Nutzer: 2030 am Ring vor den Ventilen die Aktionstaste, Ja, Warnung wegdruecken, 60 s stehen
-  bleiben -> Draufsicht, Wasser steigt ueber die Bruecke und den Ring, Spritzer, Tod mit blauem Schleier
+* Sichtprobe fuer den Nutzer (Stand Nachbesserung 4): 2030 mit gesenkter Bruecke und aufgehobener Sicherung die Ventile in
+  der Folge 09, 07 (Suedwand), 02, 01 (Nordwand) drehen, Warnung wegdruecken, 60 s im Raum bleiben (z. B. ueber die Treppe
+  auf den Ring) -> Draufsicht, Wasser steigt ueber die Bruecke und den Ring, Spritzer, Tod mit blauem Schleier
   (C_belege/flut_echt_sheet.png). Mit den drei Spinnen im Raum (ohne Kill-Bits) stirbt man vorher an den Spinnen;
   im Spiel also erst die Spinnen erledigen oder den Raum durch die Ost-Tuer verlassen (-> 20B0).
 * Nach der Flut: in 20B0 laeuft die Auswasch-Szene des Originals erst mit dem Haken der Spur A bis zur Freigabe (§6
@@ -1569,9 +1727,10 @@ shared_assets/PSX, pri/, synchro/, release/.
   -> frei im Mittelgang -> an der Kante zum Kanal die Aktionstaste (Sprung hinunter), durch den Kanal, an der anderen
   Kante die Aktionstaste (Aufstieg) -> Westgang -> Leiter -> 2050 (Bild C_belege/nb1_kette_ein_lauf_mit_haken_a_sheet.png).
   **⛔ BERICHTIGT (Nachbesserung 2):** "Zum Rechner 2080 geht es ueber 2050 -> 2020 -> die Tuerebene von 2030 -> 2080"
-  war falsch; nach der Flut gibt es derzeit keinen Weg zum Rechner (§0c, Frage j). Der Rechner selbst senkt 2080 und leert
-  2030 (gemessen per Sprung und von der 2090-Tuer aus: Bild C_belege/rechner2080_sheet.png, raum2030_leer_vergleich.png,
-  §0c Glied 9).
+  war falsch; der Weg zum Rechner fuehrt seit Nachtrag 7 ueber den Strom (2060 -> 2030 trocken -> Lift B -> Suedgalerie ->
+  2080, §0d N1). Der Rechner senkt nur noch das Wasser in 2080 (Original sub02 @0x00C86, (3,245)); 2030 leert seit
+  Nachtrag 7 der Strom (Generator 2060, (3,126)) bis knapp unter die Absperrung (Nachtrag 12 (k)). (Historie: in den
+  Nachbesserungen 0-2 leerte der Rechner 2030, Bild C_belege/rechner2080_sheet.png, raum2030_leer_vergleich.png.)
 * Neue Belegbilder dieser Fortsetzung: C_belege/querbezug_a_20b0_szene_sheet.png (Szene mit dem Haken der Spur A),
   C_belege/ring_nach_flut_sheet.png (Frage f). Nachbesserung 1: C_belege/nb1_kette_ein_lauf_mit_haken_a_sheet.png (die
   ganze Kette in einem Lauf mit dem Haken der Spur A), C_belege/nb1_kisten_hebel_sheet.png (Kisten-Hebel gesperrt),
