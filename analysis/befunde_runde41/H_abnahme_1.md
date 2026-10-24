@@ -223,3 +223,18 @@ Haar ineinander, d = 195), **nach** steht John allein, Sherry 752 dahinter; Boge
 Beobachtung (kein Mangel, s. Hinweis H3): am Anfang des 2. Besuchs laufen beide Eskorten zu einem Folgepunkt OESTLICH von Elza (sie
 steht mit Blick West an der Tuer) — vor laeuft Sherry durch Elza hindurch (Elza wird dabei in 12 Bildern 530 nach Westen gestossen,
 F73 -> F85), nach kommt Sherry nicht durch Elza und schiebt sie ueber ~100 Bilder 570 nach Osten, bevor sie seitlich vorbeigleitet.
+
+### 4.6 Nebenwirkungen: Nachbarszenen 3080 (Leon) / 3081 (Elza) und die Folgeraeume 4000/4001 (`laeufe/s3080_*`, `laeufe/s3081_*`)
+Fuer diese Raeume gibt es keinen Riegel (`ctest -N | grep -iE "3080|3081|4000|4001"`: nur `unit_r30_tuer_r4000`); dort stehen
+die NPCs der beiden Punkte (3080 sub00 @0x007AC/@0x007C0 Ada 0x42 + Marvin 0x40 + G-Birkin 0x36 @0x007D4, Szene sub02; 3081 sub00
+@0x007A0/@0x007B4 Sherry + John, Szene sub02). Befehl: `lauf.sh s3080 <vor|nach> 400 RE15_DEBUG_JUMP=3080@250` (bzw. `s3081` mit
+`RE15_PSELECT_AUTO_SWITCH=1 RE15_DEBUG_JUMP=3081@250`), Quadrat je Sekunde ueber RE15_INPUT_SCRIPT (Szenentexte), `RE15_EXIT_AT=3000`.
+- 3080: die Szene laeuft in BEIDEN exe 912 Bilder und endet mit dem Aufzug `[aot] DOOR FIRE slot=0 ... spawn=(-7600,0,-6760)` ->
+  `loaded room4000.rdt` (444 Bilder) -> (Quadrat im freien Spiel) `loaded room4010.rdt`; **alle 912 Szenenbilder bitgleich** (Spieler-
+  und Aktorlagen je Bild vor = nach, 0 abweichende Bilder), Ada/Marvin min 1144 (beide exe), 4000: min 1500; `kollision.txt` nach:
+  0 `NPC-SCHUB` (kein Kontakt, also auch keine Aenderung). Der Schub haengt die Szene nicht.
+- 3081: Szene 285 Bilder in beiden exe, -> `loaded room4001.rdt`; Sherry/John in 3081 min 1214 (beide). In 4001 setzt das Skript am
+  Szenenende beide NPC per `Pos_set 32 00 d5 fb 00 00 41 ab` (@0x01B2A, wieder @0x01C44) auf DENSELBEN Parkpunkt (-1067,-21695)
+  ausserhalb des Bildes (Framedump F1300/F2000: nur Elza im Aufzug) — Abstand 0 in BEIDEN exe. Das ist kein Befund der Spur: bei dX =
+  dZ = 0 liefert auch die Original-Formel `dX*pen/(dist+1)` (@0x8002b22c-238) 0, die beiden bleiben auch im Original deckungsgleich;
+  zu sehen ist es nicht (Hinweis H4).
