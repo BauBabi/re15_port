@@ -172,3 +172,29 @@ Auszuege: `A41abn2/dis_45700.txt`, `dis_45a64.txt`, `dis_59d3c.txt`, `dis_55d10.
 - Leiser mit dem Abstand: ROOM2000 Abstand 41 -> Pegel 104, Abstand 125 -> Pegel 56 (= (0x89 - ATT[Abstand]) & 0x7f, ATT @0x800747a8);
   seitlich: alle 64/23/8 Schritte L != R, Seite wechselt mit der Lage (z.B. ROOM2000 F886 86/99 -> L 3072 / R 3519, F1999 L 2346 / R 1861).
 - **A-E4: erfuellt.** Die Spieler-Schritte bleiben mittig (Dossier N2.7 Punkt 1; A-E4 nennt nur NPC-Schritte) -> Hinweis H1.
+
+## 5. Vertrag (VERTRAG.md) und Riegel
+- Pfade (`git diff master...HEAD --name-only`): keine release/, platform/android/, shared_assets/PSX/, pri/, synchro/, keine CMakeLists.txt
+  (Filter leer). Bank-9-Bits / Nachrichten-Ids: keine (`flag_set|game_flag|bank9|MSG_ID|re15_msg_|message_id` in den hinzugefuegten
+  Zeilen: 0). Neue Umgebungsvariablen im Spielcode: nur `RE15_NPCSCHRITT_LOG` (Messzeile, kein Schalter fuer Verhalten).
+- Gemeinsame Dateien im Delta: audio_pc.c (Datei der Spur D) +1 Include, +2 Zeilen, 1 geaenderte Zeile, alle mit "Runde 41 Spur A" -
+  genau der 1-5-Zeilen-Haken aus Entscheid A-E4; test_r35_granate.cmake (+10/-1, Riegel-Reparatur M3, kein CMakeLists). Uebrige
+  gemeinsame Dateien unveraendert gegenueber Abnahme 1 (dort geprueft und per A-E3 angenommen).
+- Guess-Tells in den hinzugefuegten Zeilen (`deferred|tunable|interim|for now|faithful|plausibel|TODO|FIXME|geschaetzt|ungefaehr|approx`):
+  0 Treffer.
+- Riegel je Punkt (selbst gefahren, Abschnitt 1): Punkt 1 unit bytes/modell/sequencer/raum/stempel + integration_r41_wasser20b0 (Leon +
+  Elza); Punkt 2a unit landung + integration _npc landung_leon/landung_elza (Tuerweg); Punkt 2b Effekte unit npc/npc_wasser (jetzt auch
+  0x47 beider Archive)/npc_subs (jetzt mit Lauf-Pins Sub 7/8) + integration npc2000/elza2001; Punkt 2b Toene unit ton (536 Faelle, Zeile
+  + Quelle + VAG), npc*/npc_subs pruefen "gespielt", integration zaehlt `[foot] NPC-Lage` == Schritte (= gemischte Stimmen) und 0 stumm;
+  A-E4 unit lage (PSX.EXE-Bytes, Hand-Lagen) + integration (L != R, naeher = lauter). Messend. Parallel-/Linux-Festigkeit: eigene
+  Laufordner, exe-Kopie mit Praefix `re15_pc_r41a_npc_`, cmake_minimum_required; PSX.EXE liegt auch im Linux-Container
+  (release/build_linux_deck.sh KOPIE `info/Re1.5/PSX.EXE`).
+
+## 6. Stand der Abnahme-1-Maengel
+| Abnahme 1 | Stand (selbst geprueft) |
+|---|---|
+| M1 NPC-Schritt-Toene stumm | behoben: 64/64, 23/23, 8/8 gemischt, 0 unterdrueckt; im Mitschnitt mit Pegel L/R nachgewiesen (4.3); Weg Beta -> Retail RE2 FUN_8005c040 selbst disassembliert (2.) |
+| M2 Lage A-E4 | behoben: FUN_80045a64 Instruktion fuer Instruktion nachgebaut (2.), eigene Nachrechnung 95/95 gleich, Mitschnitt-Pegel = Log (4.3/4.4) |
+| M3 integration_r35_granate | behoben: Passed 174.59 s, `23 Slot 35: HP 3000 -> 2000` (1.) |
+| M4 Riegel | behoben: unit ton/lage, Ton-Pruefungen auf "gespielt", 0x47 beide Archive, Sub-7/8-Lauf-Pins, integration elza2001/npc11c0 (1., 4.2) |
+| M5 Dossier N1.14 | behoben (Richtigstellung steht in N1.14); neuer Bezeichnungsfehler 0x40/0x42 -> Hinweis H2 |
