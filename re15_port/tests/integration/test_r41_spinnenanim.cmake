@@ -7,10 +7,13 @@ cmake_minimum_required(VERSION 3.16)
 # im Spielschritt; dieser Riegel misst die ECHTE exe: die Messschiene RE15_SPINNENANIM_LOG schreibt je Takt die Matrix,
 # die der Gegner-Zeichner in platform/pc/main.c WIRKLICH benutzt (nach Drehung und Massstab), und das gezeichnete Bild.
 #
-#   Lauf L2  Leon, ROOM2060 (Debug-Sprung, Spieler an der Tuerlage aus 2030), ab Raumbild 150 gleitet der Spieler auf
-#            (6000,3000) = Cut 1 (RE15_POCC_TP, dieselbe Lage wie die Original-Messung), KI = Standard (RE2).
-#   Lauf L15 derselbe Lauf mit RE15_AI_FLAVOR=re15 (RE1.5-Gehirn, anim_set-Zwilling re15_aspider_anim).
-#   Lauf E2  derselbe Lauf als ELZA (RE15_TITLE_SHOT_CHAR=1, ROOM2061 = gleiche Sce_em_set-Zeilen, R38 1.1).
+#   ECHTER WEG: Debug-Sprung nach ROOM2030 auf den oberen Steg vor die Tuer nach 2060 (RE15_PLAYER_POS -7700,-7250 Band
+#   9), die Tuer feuert (RE15_FIRE_AOT=3@30 = Door_aot_set slot 3 @RDT 0x01B4C: Ziel Stage 2 Raum 6, Lage (7600,0,3950),
+#   Blick 2048), in ROOM2060 geht der Spieler 1,2 s geradeaus (RE15_INPUT_SCRIPT=U1.2) in den Cut-1-Bereich -> sub02
+#   oeffnet das Gitter, die Spinne kriecht heraus und klettert an der Wand herunter.
+#   Lauf L2  Leon, KI = Standard (RE2).
+#   Lauf L15 derselbe Weg mit RE15_AI_FLAVOR=re15 (RE1.5-Gehirn, anim_set-Zwilling re15_aspider_anim).
+#   Lauf E2  derselbe Weg als ELZA (RE15_TITLE_SHOT_CHAR=1: ROOM2031 -> ROOM2061, gleiche Sce_em_set-Zeilen, R38 1.1).
 #
 # Auswerter `test_r41_spinnenanim pruef_log <log>`: Takte 62..133 der Spinne e0 gegen die Original-Tabelle
 # (Figur-Matrix +0x20, gezeichnetes Bild +0x95-1, Ueberblendung +0x8f vor dem Takt).
@@ -45,15 +48,17 @@ file(COPY_FILE "${RE15_PC_EXE}" "${_exe}")
 
 set(_fehler "")
 
-function(r41l_lauf _name _sprung _raum)
+function(r41l_lauf _name _tuerraum _raum)
     set(WORKDIR "${_basis}_${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     re15_start_spiel(_rv 300
         SDL_ASSERT=always_ignore RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${ARGN}
-        RE15_DEBUG_JUMP=${_sprung}@100 "RE15_POCC_TP=150,6000,3000,1024"
+        RE15_DEBUG_JUMP=2030@100 "RE15_PLAYER_POS=-7700,-7250,1024,9"
+        "RE15_FIRE_AOT=3@30#${_tuerraum}"
+        "RE15_INPUT_SCRIPT=U1.2,W8" RE15_INPUT_SCRIPT_START=60 RE15_INPUT_SCRIPT_BASIS=spiel
         RE15_SPINNENANIM_LOG=spinnenanim.log
-        "RE15_EXIT_AT=250#${_raum}"
+        "RE15_EXIT_AT=260#${_raum}"
         "${_exe}")
     if(NOT EXISTS "${WORKDIR}/spinnenanim.log")
         set(_fehler "${_fehler}\n[${_name}] kein spinnenanim.log (exit=${_rv})" PARENT_SCOPE)
@@ -67,9 +72,9 @@ function(r41l_lauf _name _sprung _raum)
     endif()
 endfunction()
 
-r41l_lauf(L2 2060 2060 RE15_AI_FLAVOR=re2 RE15_AI_MODELS=re2)
-r41l_lauf(L15 2060 2060 RE15_AI_FLAVOR=re15 RE15_AI_MODELS=re2)
-r41l_lauf(E2 2060 2061 RE15_TITLE_SHOT_CHAR=1 RE15_AI_FLAVOR=re2 RE15_AI_MODELS=re2)   # Elza: Sprungziel 2060 -> Raum 2061 (Leon-RDT + 1, wie R38 Lauf E)
+r41l_lauf(L2 2030 2060 RE15_AI_FLAVOR=re2 RE15_AI_MODELS=re2)
+r41l_lauf(L15 2030 2060 RE15_AI_FLAVOR=re15 RE15_AI_MODELS=re2)
+r41l_lauf(E2 2031 2061 RE15_TITLE_SHOT_CHAR=1 RE15_AI_FLAVOR=re2 RE15_AI_MODELS=re2)   # Elza: Sprungziel 2030 -> 2031, Tuer -> 2061
 
 file(REMOVE "${_exe}")
 if(NOT _fehler STREQUAL "")
