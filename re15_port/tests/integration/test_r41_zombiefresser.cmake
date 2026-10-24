@@ -399,7 +399,11 @@ if(_pose)
                     set(_p2ok 0)
                     if(_kf EQUAL "${_kf0_${_s}}" AND _af EQUAL 0 AND _fr EQUAL 15)
                         set(_p2ok 1)
-                        if(DEFINED _saat_${_s})
+                        # Grid 0x84/0x85 erreichen P2 ueber P1 -> der Saat-Takt muss im zf.log stehen (P1 kehrt ohne
+                        # anim_set zurueck @0x80103994-98), und das erste P2-Bild kommt genau einen Takt danach
+                        if(NOT DEFINED _saat_${_s})
+                            set(_p2ok 0)
+                        else()
                             math(EXPR _soll_f "${_saat_${_s}} + 1")
                             if(NOT _f EQUAL _soll_f)
                                 set(_p2ok 0)
