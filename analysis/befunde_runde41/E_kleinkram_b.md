@@ -859,3 +859,40 @@ work to do", `LOCAL-BUILD-OK (build)` (exe md5 9de3bd488e72334278224893f65b136d 
   der Dreh-Zweig die Steh-Bewegung (mo 105), der Stopp brach im Folgebild als "Fremdeingriff" ab.
 - unit_r36_zombieki_affen_block mit dem verfeinerten Stopp (`<sp>/E41n3b/ctest_affen.log`): **rot** — FERN 4852 > 24533/6 und
   schlechtester Seed 0x9b5bf362 +3521 (Schranke 1039). Neu-Messung `rennvergleich 0 143 6000` laeuft (`<sp>/E41n3b/affen/`).
+
+### Fortsetzung — unit_r36_zombieki_affen_block neu eingemessen (E-E2, zweite Messung)
+- WARUM sich der Wert erneut aendert: der Zufallsgang der Sonde wechselt alle 90 Bilder von Rennen (OBEN+RENNEN) auf Drehen
+  (LINKS/RECHTS). Mit dem vollstaendigen DECIDE dreht Leon im Stopp-Einstieg und im Folgebild 72 (@0x80032620-@0x800326a0) statt
+  96 -> andere Endrichtung (Abweichung <= 48 beendet das Drehen) -> andere Bahn ab dem ersten Wechsel.
+- Messung `test_r36_zombieki_affen_block rennvergleich <von> <bis> 6000` in drei Teilen (0..47, 48..95, 96..143), je Seed AUS/AN x
+  ohne/mit in eigenen Prozessen (ohne = re15_rennstopp_r41_pruef_aus = Stand vor Nachbesserung 3, mit = Endstand); Protokolle
+  `<sp>/E41n3b/affen/rv_*.txt`, Auswertung `rv_auswertung2.py` -> `auswertung.txt`:
+  | Block | ohne: groesstes AN-AUS / FERN AN/AUS | mit: groesstes AN-AUS / FERN AN/AUS |
+  |---|---|---|
+  | 0..15 (Riegel) | +84 / 6,8 % | **+3521 (0x9b5bf362) / 19,8 % RISS** |
+  | 16..31 | +224 / 6,7 % | +0 / 3,4 % |
+  | 32..47 | +0 / 1,9 % | +1864 (0x6b1c577f) / 8,3 % |
+  | 48..63 | +39 / 5,6 % | -63 / 9,6 % |
+  | 64..79 | +378 / 11,4 % | +673 / 6,1 % |
+  | 80..95 | +41 / 6,5 % | +620 / 12,8 % |
+  | 96..111 | **+3334 (0xbc8bd05d) / 20,3 % RISS** | +789 / 6,0 % |
+  | 112..127 | +1416 (0x71d8aa83) / 7,3 % | +70 / 12,6 % |
+  | 128..143 | +535 / 3,6 % | +1450 (0xce2e2c57) / 10,4 % |
+  | alle 144 | +3334, 2 Seeds > 600 / 7,4 % (17656/240096), Griffe 644/576 | +3521, 6 Seeds > 600 / 9,7 % (24433/253141), Griffe 657/587 |
+  Bahn-Chaos der Original-Regel |AUS(mit) - AUS(ohne)|: Median 813,5, Mittel 1359, p90 3307, max 5982; Port-Wahl |AN(mit) - AN(ohne)|
+  Median 372.
+- Die schlechtesten Seeds sind Haenger der PORT-WAHL an zwei festen Stellen (`einsr <i> 1 6000 <renn> 1`, LAGE-Zeilen):
+  Klemme Nordost (11129..11280, 9820..10073): 0x9b5bf362 mit (Gorilla 2 (11129,9982) 4405 Bilder ab F950, 4765 FERN),
+  0xbc8bd05d OHNE Stopp (Gorilla 1 (11274,10073) 1443 + 1558 Bilder), 0xbb4281d4 mit dem Stopp aus 841e0ef6 ((11280,9820), Teil 3);
+  Sub-7-Stelle (-13418..-13518, -140..-953): 0x6b1c577f mit (1994 Bilder, Sub 7 1940), 0xce2e2c57 mit (842), 0x71d8aa83 OHNE (805).
+  Welche Seeds sie treffen, entscheidet die Bahn: ohne Stopp reisst Block 96..111, mit Block 0..15 — der 16er-Riegel mass, ob ein
+  Haenger in seine Seed-Auswahl faellt, nicht die Port-Wahl.
+- NEUE FORM (Kommentar im Test): Riegel ueber die ganze gemessene Population (144 Seeds, je 8 Seeds = 16 Prozesse gleichzeitig,
+  38 s): FERN AN <= 1/6 AUS und Griffe AN >= 80 % AUS (Werte der Runde 36, unveraendert) auf der Population; je Seed AN - AUS <=
+  5982 = groesste gemessene Bahn-Chaos-Amplitude der Original-Regel. Median (813) und p90 (3307) halten schon fuer den abgenommenen
+  Stand OHNE Stopp nicht (2 Seeds > 813, +3334 > 3307) — sie messen nicht die Port-Wahl; das Maximum ist die kleinste gemessene
+  Grenze, die beide Populationen halten. Ausgegeben werden weiter die Seeds ueber 600 und ueber dem Median.
+- Lauf `ctest -R "^unit_r36_zombieki_affen_block$"` (`<sp>/E41n3b/ctest_affen2.log`): **100% tests passed, 0 tests failed out of
+  1** (37,8 s): 144/144 Laeufe, FERN 24433 <= 253141/6, schlechtester 0x9b5bf362 +3521 (ueber 600: 6, ueber Median 813: 3), Griffe
+  657 >= 0,8 x 587, Szenen 1-5 und Nahwarten/Ostgasse unveraendert ok.
+- Die Haenger-Stellen sind ein Befund der Port-Wahl der Runde 36 (zombieki_r36.c, nicht Spur E) -> OFFEN unten.
