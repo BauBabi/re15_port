@@ -459,8 +459,8 @@ static void gr2_kan_folgen(const re15_actor_t *e)
  *       (`lbu v0,550 / bne v0,zero` @0x80100a98-a0) -> `+0x1C0 &= 0xfb` (@0x80100aa8-b4);
  *   (c) beim Anhaengen geloescht (@0x801018e4-f4, gr2_kan_takt Stufe 2).
  * Solange das Bit steht, schaerft FUN_801012fc die Biss-Maschine T1 nicht (`lbu v0,448(a0) / andi v0,v0,0x4 / bne v0,zero,
- * 0x80101380` @0x8010134c-58) -> re15_gr2_biss_erlaubt. Port: Zone 1 = Beckenzone der Liegestelle (PORT-WAHL wie Fenster
- * und Hysterese-Ruhe, gb_zone), obj[1].z - z = Lage laengs der Blickachse (gr2_kan_vor), 8880 x Zeichen-Skala wie das
+ * 0x80101380` @0x8010134c-58) -> re15_gr2_biss_erlaubt. Port: Zone 1 = Beckenzone der Liegestelle (PORT-WAHL wie die
+ * Hysterese-Ruhe, gb_zone), obj[1].z - z = Lage laengs der Blickachse (gr2_kan_vor), 8880 x Zeichen-Skala wie das
  * Fenster 8601/0x18f; Bank 5 Bit 1 = Kanister im Raum (re15_gr2_kanister_setzen legt ihn liegend hin). PORT-WAHL: ausserhalb
  * der Kanister-Zone ist das Bit aus - RE2 verlaesst Zone 1 nur ueber die Zone-2-Linie z >= -7322 (@0x801009e0), dort liegt
  * der Kanister (z -9500, sub05 Pos_set @SCD 0x0484) laengst HINTER der 8880-Grenze, d.h. RE2 traegt das Bit nie aus Zone 1

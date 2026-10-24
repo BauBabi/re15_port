@@ -10,10 +10,12 @@ Zeiten aus `date`. Jeder Schritt wird hier VOR dem Bau notiert.
 
 ## 0. Protokoll (neueste Eintraege oben)
 
-* 2026-10-24 08:1x- (NACHBESSERUNG 3, Abnahme 2 M1-M3, Entscheid B9): M1 Gator vor dem Durchbruch untergetaucht wie RE2
-  (Sce_em_set y = 3000 @RDT 0x25A0, Pos_set erst im Intro @SCD 0x0736); M2 keine Koerperlenkung von Stufe 1 bis zum
-  Anhaengen (kein Gier-Schreiber in Sub 1/2/T2, Schub nur laengs @0x801018a4-c0); M3 Anschwimm-Sperre +0x1C0 & 4
-  (@0x80100a34-b4, T1 @0x8010134c-58). §11.
+* 2026-10-24 08:1x-09:3x (NACHBESSERUNG 3, Abnahme 2 M1-M3, Entscheid B9): M1 Gator vor dem Durchbruch untergetaucht wie RE2
+  (Sce_em_set y = 3000 @RDT 0x25A0, Pos_set erst im Intro @SCD 0x0736) - Lauf N F1-F201 pixelgleich mit "ohne Gator",
+  main.c +1 Haken; M2 keine Koerperlenkung von Stufe 1 bis zum Anhaengen (kein Gier-Schreiber in Sub 1/2/T2, Schub nur laengs
+  @0x801018a4-c0), Stufe 1 im Fenster-Takt (@0x8010183c-5c -> @0x80101860), Quer-Ausgleich (PORT-WAHL) nach Messung C3;
+  M3 Anschwimm-Sperre +0x1C0 & 4 (@0x80100a34-b4, T1 @0x8010134c-58), Hals-Zielmodus OFFEN mit Beleg. Riegel lauer/
+  schleppen/anschwimmen + exe Lauf 3 "natuerlich"; Zensus r34 angepasst. §11.
 * 2026-10-24 05:23-07:2x (NACHBESSERUNG 2, Abnahme 1 M1-M4, Entscheide B6-B8): M4 Belegpflege; M3 Kanister-Aufnahme
   wie RE2 (Sub 2 -> 1, Hysterese-Ruhe, kein Biss in Stufe 1..6); M1 b Finisher-Schnitt bis Game Over (RE1.5-Todesbild
   im Boss-Takt zurueckgenommen), M1 a mit RVD-Beleg widerlegt; M2 RE2-Wende im Becken (Intro-Startlage Pos_set-Zwilling,
@@ -1139,3 +1141,143 @@ Anschwimm-Sperre +0x1C0 & 4, Hals-Zielmodus OFFEN mit Beleg) -> Bau -> gezielte 
   K-Rezept §7); probe_r34_reaktion (unit_r34_reaktion, Zensus B12) laesst den Boss vor der Messung auftauchen (Leon einmal
   6000 vor den Lauerplatz) - Zeile `Gator-Boss 0x23@2090 HT HT HT HT` (ohne das: `?? ?? ?? ??` = unerwartet nicht
   getroffen, 16 Fehler).
+
+### 11.2 M2 (Punkt 3): der Kanister wurde beim Aufnehmen im Kreis geschleppt - behoben
+- **Ursache:** vom Fenstertreffer (Stufe 1) bis zum Anhaengen (Stufe 2, t = 13) lenkte der Boss-Takt weiter - CHASE-Wende
+  0x60/Bild bzw. Steuerung 0x30 und an der Westwand die Selbst-Befreiung (Sofort-Snap der Gier, Saegezahn r4095 -> r95 ...
+  r575 -> r4095) - und `gr2_kan_takt` Stufe 2 schob den Kanister laengs der JEWEILIGEN Blickachse nach.
+- **Messung vorher** (Abnahme 2, nicht wiederholt): C3 F1098 `KANISTER Stufe 1 laengs=5868 quer=1593 sub 2 -> 1`; state.log
+  F1097 r1487 -> r4095 (Befreiung an der Westwand, x -7416 im Klemm-Slab) -> F1098 r95, r191, r239 ... F1107 r575, F1108 r4095
+  (selbst nachgerechnet mit `B41nb3/aufnahme_auswerten.py` auf `B41abn2/mess/C3`); der Kanister rutscht vor die Kamera
+  (Abnahme-Bild C3_stufe2.png), beim Anhaengen `lokal=(7611,1258,1513)`, Stufe 3 in der Welt bei (843,-25116) = 2900 von der
+  Liegestelle. Pruefer-Sonde 'schleppen': Gier 4000 -> 2992, Gator-Weg 101, Kanister-Weg 6157.
+- **RE-Beleg:** §11.0 (kein Gier-Schreiber in Sub 1/2/T2; Stufe 1 faellt ohne Sprung in den Stufe-2-Code; Schub nur
+  `obj[1].z = z + 8100` @0x801018a4-c0; Anhaengen t == 13 @0x801018c4-cc). Zusaetzlich gelesen (Stufen 3-7 @0x80101970-
+  0x80101b8c): nach dem Anhaengen stehen in obj[1]+0x38/+0x3C/+0x40 die LOKALLAGE zur Part-6-Matrix (`sw v0,56(s2) / sw
+  v1,60(s2) / sw a3,64(s2)` @0x80101910-18 nach FUN_8002d030); RE2 fuehrt nur +0x38 (x -> 1750, Schritt 70/145/100/100
+  @0x801019c4/@0x80101a30/@0x80101ab8/@0x80101b68) und +0x3C (y -> -210, 25/55/30 @0x80101a4c/@0x80101ad4/@0x80101b84)
+  heran, +0x40 (z) nie.
+- **Aenderung:**
+  - Lenksperre: gator_re2_r41.c `re15_gr2_aufnahme_lenksperre(slot)` = Kanister in Stufe 1/2 und noch nicht angehaengt;
+    enemy_ai_boss_gator.c CHASE: solange sie gilt, nur `re15_gr2_chase_clip` (Clip 0, Sub 1) + Vortrieb geradeaus - kein
+    GUARD-Wechsel, kein Dash, keine Routen-/Wendelogik, keine Steuerung; die Selbst-Befreiung ist in dieser Zeit aus.
+    Stufe 2 schiebt damit laengs der festen Gier = RE2 "nur die Korridorachse".
+  - Stufen-Zeit byte-genau: das Fenster laeuft im selben Takt in Stufe 1 und den ersten Stufe-2-Schritt (t = 0) weiter (RE2:
+    Routine @0x80100200, dann T2 `jal 0x801017c4` @0x80100320 im selben Root-Takt; Stufe 1 @0x8010183c-5c faellt in
+    @0x80101860, Tafel @0x80100024). Vorher kostete der Port zwei Takte mehr. Pins angepasst: kanister `Stufe 1/2 0/12`
+    (vorher 13 in Stufe 2), aufnahme `Stufe 1..6 37/37` (vorher 39), Fenster-Takt endet in Stufe 2; K/kiefer/kamera
+    unveraendert gruen.
+  - Quer-Ausgleich (PORT-WAHL, aus der Messung): ohne Lenkung bleibt die Querlage des Fenstertreffers erhalten - exe C3:
+    `angehaengt lokal=(4277,1187,2372)`, der getragene Kanister hing ~1600 neben dem Kopf (Bild unten). RE2 braucht keinen
+    Ausgleich: der Kanister liegt nach dem Fall bei x -22816 (sub05 Pos_set @SCD 0x0484), der Gator schwimmt Bein 2 auf
+    x -23078 (@0x80101048) = 262 neben der Achse, das Fenster prueft nur laengs (@0x80100ae4-ec). Das Port-Fenster laesst bis
+    Koerperradius + 267 seitlich zu ("dran vorbei kommt", PORT-WAHL seit Abnahme 0). Port: z wird in Stufe 3/4/5/7 mit
+    DENSELBEN Schritten wie x (70/145/100/100) auf die Symmetrieebene des Kopfes (z 0) gefuehrt - der Kanister endet wie in
+    RE2 zwischen den Kiefern.
+- **Messung nachher** (exe, Rezept C3 der Abnahme 2, `B41nb3/mess/C3` ohne / `C3b` mit Quer-Ausgleich, Framedump 1-1400):
+  `KANISTER Stufe 1 laengs=5868 quer=1593 sub 2 -> 1 F1098`, `KANISTER angehaengt lokal=(4277,1187,2372) F1110` (12 Takte nach
+  dem Fenster = RE2); state.log Gier F1097-F1110 durchgehend r4095, Wurzel nur laengs x (z bleibt -24993), Gator-Weg 208
+  (Clip-0-Schwimmzyklus vor/zurueck); Kanister bis zum Anhaengen unbewegt bei (-1500,-1200,-23400), beim Anhaengen in der
+  Welt bei (-1512,-1206,-23410) = kein Sprung; erst danach (Stufe 3-7) wandert er in den Kopf. Bilder
+  `bilder_r41b/nb3_m2_C3_stufe2_vorher_nachher_x2.png` (F1098-F1110: oben vorher - Kanister vor die Kamera geschoben, unten
+  nachher - liegt still, der Gator oeffnet das Maul) und `bilder_r41b/nb3_m2_C3_getragen_quer_ohne_mit_x3.png` (F1215/F1260:
+  ohne Quer-Ausgleich neben dem Kopf, mit Ausgleich zwischen den Kiefern). Klettern unveraendert (`CROSS start=(4450,-11900)
+  ende=(3350,-20700) frames=240`), Dash + Putz 54 unveraendert. K (GB_TEST=5): Fenster F6, angehaengt F18 (`lokal=(4212,1187,
+  11)`), R1 F70, Cut 1, Leiche, VSync 4 -> 2 F108 - wie Abnahme 2.
+- **Riegel:** unit_r41_re2gator_schleppen (NEU): `Fall 1 (Clip 0): Gier fest 1, Gator-Weg 198, Kanister-Weg 0, Anhaengen 12 Takte
+  nach dem Fenster` | `Fall 2 (+300 je Takt): Gier fest 1, Gator-Weg 3248, Kanister-Weg 2861 (laengs, quer-Abweichung 0)` |
+  `Fall 3 (quer 1200): Lokallage beim Anhaengen (4199,1186,1783) -> nach Stufe 7 + 40 Takte (1750,-210,0)`; dazu
+  "Lenksperre aus nach dem Anhaengen" und "danach lenkt die Verfolgung wieder".
+
+### 11.3 M3 (Punkt 3): RE2-Anschwimm-Sperre (Zielmodus +0x1C0 & 4) - Biss-Sperre umgesetzt, Hals-Zielmodus OFFEN mit Beleg
+- **Ursache:** `re15_gr2_biss_erlaubt` bildete aus FUN_801012fc nur die Stufen-Bedingung (@0x80101360-70) ab, nicht das
+  Zielmodus-Bit (@0x8010134c-58), das der Sub-1/2-Pre in der Kanister-Zone setzt.
+- **Messung vorher** (Pruefer-Sonde 'anschwimmen' der Abnahme 2, nicht wiederholt): Kanister 10000 / 14000 RE2-Einheiten
+  voraus, Leon 2000 vor der Wurzel -> `Biss-Start nach 0 Takten, Stufe 0, biss_erlaubt 1` (ohne Kanister ebenso).
+- **RE-Beleg:** §11.0 (Setzen @0x80100a34-5c bei Bank 5 Bit 1 + Stufe < 2, Loeschen @0x80100a74-b4 bei Stufe 0 und
+  obj[1].z - z < 9000 - 120 = 8880, beim Anhaengen @0x801018e4-f4; T1 nicht scharf bei Bit 2 @0x8010134c-58).
+- **Aenderung** (gator_re2_r41.c `gr2_zielmodus_takt`, je Takt vor dem Kanister-Takt): in der Beckenzone der Liegestelle
+  (PORT-WAHL "RE2-Zone 1" wie die Hysterese-Ruhe) bei liegendem Kanister: Stufe < 2 -> Bit an; Stufe 0 und laengs
+  < (9000 - 120) x Skala = 5920 -> Bit aus; Anhaengen -> Bit aus. `re15_gr2_biss_erlaubt` liefert 0, solange das Bit steht
+  (wirkt auf alle vier Biss-Starts des Boss-Moduls). Logzeile `RE2 KANISTER Zielmodus 0|1 (Anschwimm-Sperre) laengs=.. Stufe ..
+  F..`. PORT-WAHLEN: ausserhalb der Kanister-Zone und ausserhalb der Schwimm-Verfolgung (GUARD/CROSS, Nutzer-Design ohne
+  RE2-Gegenstueck) ist das Bit aus - RE2 verlaesst Zone 1 nur ueber die Zone-2-Linie z >= -7322 (@0x801009e0), der Kanister
+  liegt dort bei z -9500 (sub05 Pos_set @SCD 0x0484), also laengst hinter der 8880-Grenze: RE2 traegt das Bit nie aus Zone 1
+  hinaus. Folge fuer den Abnahme-Fall "14000 voraus": vom Gator bei z -25000 aus liegt der Kanister bei z -15666 =
+  Westkanal-Streifen (gb_zone 2), nicht in der Zone des Gators (0) -> keine Sperre (wie die Hysterese-Ruhe).
+- **Messung nachher:** unit_r41_re2gator_anschwimmen (NEU, Lage wie die Pruefer-Sonde): `Kanister 10000 voraus (>= 8880),
+  gleiche Zone: Zielmodus 1, Biss-Start nie (40 Takte)` | `12000 voraus (Gator bei -26500), gleiche Zone: Zielmodus 1, nie` |
+  `8000 voraus (< 8880, vor dem Fenster 8601): Zielmodus 0, Biss nach 0` | `hinter dem Gator: 0, nach 0` | `14000 voraus im
+  Westkanal (andere Zone): 0, nach 0` | `ohne Kanister: 0, nach 0`. Im exe-Lauf C3 entstand die Lage nicht (der Gator naeherte
+  sich dem Kanister mit laengs 5868 < 5920 direkt ins Fenster, keine `Zielmodus`-Zeile im Log).
+- **Hals-Zielmodus = OFFEN (Beleg):** Root @0x80100330-74: bei +0x218 & 4 (gesetzt am Intro-Ende @0x80100944-4c) ruft RE2 mit
+  +0x1C0 & 4 `FUN_800177c0(em, yaw)` (Hals-Part +0x1C1 = 5 @0x801001c4-cc, Ziel = Punkt +0x170/+0x172/+0x174 = (x, y - 800,
+  obj[1].z) @0x80100a4c-70 - also geradeaus laengs der Korridorachse auf Hoehe des Kanisters; RE2_Quellcode_V2/FUN_800177c0.c
+  Zweig `(*(byte*)(p+0x1c0) & 4) != 0`, Rate Part 5 +0x9C/+0x9E = 20, Grenzen +0xA0 = 560 Gier / +0xA2 = 312 Neigung aus dem
+  INIT @0x801005a0-c4) und sonst `FUN_80017d98(em, yaw)` (nicht dekompiliert, ghidra_re2_Leon.txt Z. 85839 Rohbytes). Der Port
+  fuehrt die RE2-Halsfuehrung des Gators NICHT (auch nicht die normale FUN_80017d98 auf Leon, Abnahme 2 §5): der Boss-Haken
+  re15_gator_spine_arc_vz liefert nur einen az-Zuschlag je Bone (skeleton_common.c), ein Gier-Zuschlag (ay) auf Part 5
+  braeuchte den globalen g_anim_bone_angle_hook (gehoert dem G5-Endkampf, enemy_ai_boss_g5.c) oder einen neuen Haken in
+  skeleton_common.c (keine Spur-B-Datei, VERTRAG §1.3); ausserdem verschoebe ein Halswinkel Bone 5/6/7 und damit die gepinnten
+  Kopf-Messungen (wand, kamera-Wahl, Maulpunkt des Finishers). Naechster Schritt (Folge-Runde): FUN_80017d98 disassemblieren
+  (FUN_8001820c liegt dekompiliert vor), beide Halsmodi ueber einen eigenen ay/az-Kanal fuer Part 5 bauen, Kopf-Riegel
+  nachziehen.
+
+### 11.4 Tests (gebauter Stand 8fd08bdc, keine volle Suite)
+- NEU: unit_r41_re2gator_lauer, _schleppen, _anschwimmen (tests/unit/test_r41_re2gator.c, registriert in
+  tests/unit/probes/r41_re2gator.cmake); integration_r41_re2gator Lauf 3 "natuerlich".
+- Mit Beleg angepasst: unit_r41_re2gator_kanister/_kiefer/_kamera (R1-Faelle) auf RE15_GB_TEST=5 (aufgetaucht wartend, §11.1),
+  kanister Stufe-Pins 13 -> 12, aufnahme 39 -> 37 und Fenster-Takt endet in Stufe 2 (§11.2); probe_r34_reaktion Zensus laesst
+  den Boss vor der Messung auftauchen (§11.1).
+- `ctest --test-dir re15_port/build -R "^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|
+  sca_wall_hit|re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_.*|
+  re2_hit_repeat_crow_spider|re2_crow_.*|crow_ai|crow_fixes|crow_death_corpse|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|
+  r35_fenster_kraehe|r37_re2zombie_.*|r34_re2fx.*|montage_fx|r35_cut1150_montage.*|r38_montage.*|r38_wasser.*|r38_wasserzombie|
+  r39_heliport1171_kraehen|r30_granate|r35_granate|r36_granate|r36_kartenbits|text_freeze|r34_reaktion|r34_schaden|g5_boss|
+  load_after_death|r35_affen_finisher|r36_tueren_.*|r37_itemband|r36_kartenitems)$|^probe_(re2z_stomp|crow_kill)$|
+  ^r31_trefferboxen.*$" --timeout 600 -j 6` -> **100% tests passed, 0 tests failed out of 108** (Endstand, 211 s; mit dem
+  ersten Stand 1 Fehler unit_r34_reaktion Zensus `Gator-Boss ?? ?? ?? ??` -> behoben, s. §11.1).
+
+### 11.5 OFFEN (gemessen, benannt)
+- **Hals-Zielmodus** (RE2 FUN_800177c0 bei +0x1C0 & 4) und die normale RE2-Halsfuehrung FUN_80017d98: nicht gebaut, Beleg und
+  Weg in §11.3 (kein ay-Kanal fuer Part 5 in Spur-B-Dateien, Kopf-Riegel betroffen).
+- **Granate erreicht den untergetauchten Gator:** re15_re2_gl_kandidat (Granaten-Kasten, re15_damage.c) nimmt eine Null-Box als 1
+  und hat kein Gegenstueck zur RE2-Lage 3000 unter dem Boden; Folge: ein Granaten-Treffer am Lauerplatz weckt ihn (aggro ->
+  Durchbruch), ohne Reaktion/Blut/Ruf aus dem Versteck (§11.1). Gemessen gruen: integration_r35_granate Lauf "gator"
+  (RE15_FORCE_EXPLOSION am Gator, Schaden 1000) - der Riegel misst genau diese Zustellung.
+- **Intro-Startlage im natuerlichen Westkanal-Zugang** (aus §10.6): der Durchbruch liegt im Suedostbecken (5085,-19880),
+  16 000 vom Lauerplatz; der Sprung ist jetzt unsichtbar (B9), der Durchbruch beginnt hinter Leon, Leon bleibt waehrend
+  der 275 Intro-Bilder steuerbar (PORT-WAHL seit Abnahme 0: keine Spieler-Sperre Bit 0x10). Unveraendert.
+- **Nicht nahe am Lauerplatz = kein Kampf:** wer 2090 nur ueber die Osttuer/Plattform begeht und nie naeher als 9000 an den
+  Lauerplatz (-7200,-9200) kommt (Abnahme-2-Laeufe E3/E4), sieht den Gator jetzt gar nicht (vorher lag er sichtbar am
+  Lauerplatz). Form = B9; Spur F setzt den Auftritt ueber ihre Szene ("springt aus dem Wasser", re15_gr2_intro_start).
+- Wie §10.6/§9.8/§6: Raum-Effekt 0x26 fehlt, Frame-Wort-Latenz 1 Bild, Waffenschaden ueber die RE1.5-Zeile, Kanister im
+  dunklen Becken kaum sichtbar, GUARD/CROSS spielen Clip 0, Dash-Ausrichtung nur Gleichstands-Regel.
+
+### 11.6 Fuer den Nutzer (Nachbesserung 3)
+- Keine neuen Assets, keine Sprachdateien. Gemeinsame Datei: platform/pc/main.c +1 markierte Zeile (NPC-Zeichner,
+  `re15_gr2_pc_untergetaucht`, Kommentar "Runde 41 Spur B (Entscheid B9)"); tests/unit/probe_r34_reaktion.c (Zensus-Zeile des
+  Gator-Bosses, +10 Zeilen mit Beleg).
+- Was sich im Spiel aendert:
+  1. Der Alligator ist vor dem Kampf nicht mehr zu sehen (wie RE2: er liegt "unter Wasser"), auch kein Aufblitzen beim
+     Betreten; er bricht erst aus dem Wasser, wenn Leon/Elza naeher als ~9000 an seine Ecke kommen (oder per Szene von Spur F).
+     Vorher kann man ihn weder anvisieren noch anschiessen.
+  2. Beim Aufnehmen des Kanisters schwimmt er geradeaus darauf zu, der Kanister liegt still bis er ihn packt (kein Kreisen mehr),
+     danach liegt der Kanister zwischen den Kiefern (auch wenn er seitlich aufgenommen wurde). Die Aufnahme ist 2 Bilder kuerzer
+     (RE2-Takt).
+  3. Liegt der Kanister in seiner Zone vor ihm (weiter als ~5900), schnappt er nicht nach Leon (RE2-Anschwimm-Sperre); er
+     verfolgt dabei weiter wie bisher (RE2 lenkt den Koerper nicht zum Kanister, nur den Hals - der Hals ist OFFEN, §11.3).
+- Messzeilen: debug.log `[gator-re2] Sicht ...` (untergetaucht/aufgetaucht, erstes Bild, Lagesprung), gator_boss.log
+  `RE2 AUFTAUCHEN F<n> ...`, `RE2 KANISTER Zielmodus 0|1 ...`, `RE2 KANISTER angehaengt ... F<n>`.
+- Testhaken: RE15_GB_TEST=5 (Marker-Repro) laesst den Gator aufgetaucht an der Marker-Lage warten (fuer Kanister-Rezepte ohne
+  Kampf, z.B. das K-Rezept §7) - das natuerliche Lauern taucht unter.
+- Entscheidungsfragen: (1) Granaten-Treffer am Lauerplatz weckt den untergetauchten Gator (RE2 kennt den Fall nicht) - so lassen?
+  (2) Soll der Gator auch ohne Annaeherung irgendwann auftauchen (z.B. bei Betreten ueber die Osttuer), oder bleibt das Spur F
+  (Szene) vorbehalten?
+
+### 11.7 Abschluss Nachbesserung 3 (je Mangel)
+- **M1** behoben (B9): untergetaucht bis zum Durchbruch, Lauf N F1-F201 pixelgleich mit "ohne Gator", Auftauchen F201 auf der
+  Pos_set-Lage mit Clip 6 Bild 0, kein Bildschritt > 338 (authored 340); Elza (ROOM2091) identisch. Riegel lauer + exe Lauf 3.
+- **M2** behoben: Gier fest vom Fenster bis zum Anhaengen (C3 F1097-F1110 r4095), Kanister unbewegt bis zum Anhaengen, Anhaengen
+  12 Takte nach dem Fenster wie RE2, Quer-Ausgleich -> Kanister zwischen den Kiefern. Riegel schleppen (3 Faelle).
+- **M3** Biss-Sperre umgesetzt (Riegel anschwimmen, 6 Faelle), Hals-Zielmodus OFFEN mit Beleg (§11.3).
