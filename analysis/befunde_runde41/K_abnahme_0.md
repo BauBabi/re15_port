@@ -3,6 +3,8 @@
 Pruefer: Abnahme-Agent 0 (2026-10-24/25). Baum `.claude/worktrees/r41_stage3szenen_b`, Zweig `r41/stage3szenen_b`,
 HEAD `0661fc6e`, merge-base mit master `4c667c97`. Nichts am Code geaendert; einzig diese Datei wird committet.
 Bericht wird fortlaufend geschrieben (Stand je Abschnitt).
+Messdateien (Skripte, Logs, Bilder) dieser Abnahme: `C:\Users\MJOEDI~1\AppData\Local\Temp\claude\c--workspace-git-reAi-v2\c41eae99-e724-4cb3-afb9-119709f20a9d\scratchpad\k0\` (im Text kurz `scratchpad/k0/...`); Original-Spielstaende und GDB-Protokolle des Bau-Agenten im selben Scratchpad
+unter `K41\orig\` (im Text `K41/orig/...`), von der Abnahme selbst dekodiert.
 
 ## 0. Gegenstand (Wortlaut AUFTRAG.md, 2026-10-23 16:3x)
 * K1: "Ab 30C1 wird es richtig wild... Sherrys Charakter Modell ist völlig falsch und kaputt. Außerdem sollte sie keine
@@ -12,7 +14,7 @@ Bericht wird fortlaufend geschrieben (Stand je Abschnitt).
 
 ## 1. Diff (git diff master...HEAD, nur Zweig-eigene Aenderungen)
 Code: `engine/src/sherry_r41.c` + `include/re15_sherry_r41.h` (neu), `platform/pc/src/sherry_pc_r41.c/.h` (neu),
-Haken in `platform/pc/main.c` (5 Stellen), `engine/src/player_common.c` (4 Haken), `engine/src/re15_damage.c` (2 Zeilen),
+Haken in `platform/pc/main.c` (6 Stellen), `engine/src/player_common.c` (4 Haken), `engine/src/re15_damage.c` (2 Zeilen),
 `engine/src/climb_common.c` (1 Zeile); J-Binder (cherry-pick 299b6deb): `engine/src/rbj_binder_r41.c`,
 `include/re15_rbj_binder_r41.h`, `engine/src/enemy_common.c`, `platform/pc/main.c` (+3), `platform/psx/src/asset_psx.c`.
 Tests: `tests/unit/test_r41_stage3szenen_b.c`, `tests/unit/probes/r41_stage3szenen_b.cmake`,
@@ -114,8 +116,8 @@ Port haelt sofort. Gilt fuer alle Figuren (Dossier OFFEN 3, Spur E / E-E2).
 Koerper (EDD/EMR PL0F, Kind-Skelett Wurzel -1268/-1261, W00-Bank) wie FUN_800314b0/FUN_80036b68; das Bild deckt sich
 mit dem Original-Puffer; Gehen/Rennen/Drehen/Rueckwaerts in Tempo und Clip = Original. Waffe: aca5d = 0 wie @0x800316c4,
 kein Hand-Mesh (@0x80036c08), R1 zielt nicht (@0x80032014 ff.), Ausruesten gesperrt (Nutzer-Wortlaut "sollte keine
-Waffe haben"; Form RE2). Nebenbefunde -> Maengel M2/M3 unten (nicht Wortlaut, aber Original-Abweichungen im selben
-Lader).
+Waffe haben"; Form RE2). Nebenbefunde -> Maengel M2/M3 unten (nicht Wortlaut, aber Original-Abweichungen im
+selben Lader).
 
 ## 5. K2 — "Die Cutscene im ROOM 3091 hat STÄNDIG falsche Animationen...."
 
@@ -155,9 +157,9 @@ Original (`orig_folge_lauf2.txt`), ALLE Subs (nicht nur Kanal 0), Abschnittslaen
   12r(71) 11(50) 11r(50) 13(164), dann Gang W-Clip 5/0/5/0/5/0 (6/9/2/10/5/29) + W-Clip 1/2 — **Folge UND Laengen
   bildgenau = Original** (Original-Abtastung hat 1 Takt Etikettenversatz bei Sub-Wechseln).
 * John (0x49): 2/0/1 (Gang), 3 3r 2 0 0r 8 0 0r 8 1 1r 8 4 4r 3 3r 8 1 1r 0 0r 8 (435), Wende 5/1/2, eigene Bank Clip 6
-  (125) 6r (20), 4 4r 0 0r 8 (165), 5/1/2 (125), 3 3r 0 0r 8 (383), Gang — **= Original, Laengen gleich**.
+  (125) 6r (20), 4 4r 0 0r 8 (165), 5/1/2 (125), 3 3r 0 0r 8 (383), Gang — **= Original, Laengen gleich (+-1 Takt Abtastversatz an Sub-Wechseln)**.
 * Elza-NPC (0x42): 2 (27) 0/5/0/5 (Gang) 1, 2 (209), 4 4r 3 3r 9 1 1r 0 0r 9 4 4r 9 1 1r 0 0r 9 4 4r 9, 5/1, eigene Bank
-  Clip 6 (390) 6r (20), 5/1, 5 5r 2 9 (482) 6 6r 9 (41), Gang — **= Original, Laengen gleich**.
+  Clip 6 (390) 6r (20), 5/1, 5 5r 2 9 (482) 6 6r 9 (41), Gang — **= Original, Laengen gleich (+-1 Takt Abtastversatz an Sub-Wechseln)**.
 
 **ABER — bildgenau innerhalb der Clips:** Spieler-Clip 13 (40 Bilder, rec2) mit Plc_flg 0x04:
 ```
@@ -171,8 +173,9 @@ B2306 f29; Bild `scratchpad/k0/orig_sherry_clip13_phasen.png`: Kopf-/Armhaltung 
 Clip-13-Abschnitten (779+504+233+160+416+164 = 2256 von 2878 Szenenbildern, ~78 %) **dieselbe eingefrorene Pose
 (Bild 39)**. Ursache im Port: der Spieler-Pfad (`anim_select_common.c re15_compute_actor_kf`, HOLD-LAST bei
 `cur >= frame_count`) wertet anim_flags & 0x04 fuer den Spieler-Kanal 0 nicht aus; der NPC-Pfad
-(`enemy_ai_common.c:9852`, @0x80050dbc) tut es. Derselbe Fehler ist im K-Baum auch bei Elza in 3061 messbar
-(Lauf A: `Plc_motion(0,10)` + `Plc_flg 0x04` @F805 -> Slot haelt 19 von F825 bis F928) — also kein neuer Fehler der
+(`enemy_ai_common.c:9852`, @0x80050dbc) tut es. Derselbe Port-Pfad haelt im K-Baum auch Elza in 3061
+(Lauf A: `Plc_motion(0,10)` + `Plc_flg 0x04` @F805 -> Slot haelt 19 von F825 bis F928; Original dort nicht
+mitgeschrieben, gleicher Handler FUN_80050cb8) — also kein neuer Fehler der
 Spur K, aber er sitzt mitten in der vom Nutzer beanstandeten Szene, und der Riegel `integration_r41_stage3szenen_b_3091`
 prueft nur die Clip-FOLGE (Wechsel), nicht die Wiedergabe im Clip -> er bleibt gruen.
 
@@ -247,33 +250,39 @@ Slot 39 bei cur 40..778 (anim.txt `1798 0 0 13 13 40 40 39`), obwohl `[scd F1758
 slot=0 anim_flags=0x0004` geloggt ist -> 2256 von 2878 Szenenbildern eingefroren; Pixelvergleich Sherry-Ausschnitt Port
 0/0/0 gegen Original 26/117/48 (Bild `k0_k2_sherry_clip13_orig_vs_port.png`). Ursache: Spieler-Posenpfad
 (`anim_select_common.c` HOLD-LAST bei `cur >= frame_count`) wertet anim_flags & 0x04 fuer den Spieler nicht aus; der
-NPC-Pfad tut es (`enemy_ai_common.c:9852`). Derselbe Fehler bei Elza in 3061 (Lauf A: Plc_motion(0,10) + Plc_flg 4
-@F805, Slot haelt 19 bis F928; Querbezug Spur J). Riegel `integration_r41_stage3szenen_b_3091` verdichtet auf
+NPC-Pfad tut es (`enemy_ai_common.c:9852`). Derselbe Port-Pfad haelt auch Elza in 3061 (Lauf A: Plc_motion(0,10) + Plc_flg 4
+@F805, Slot haelt 19 bis F928; Original dort nicht mitgeschrieben, gleicher Handler; Querbezug Spur J). Riegel `integration_r41_stage3szenen_b_3091` verdichtet auf
 Clip-Wechsel und bleibt dabei gruen -> braucht eine Pruefung "Spieler-Slot springt im Clip-13-Abschnitt nach 39 auf 0"
 (Soll aus dem Original-Protokoll).
 
 **M2 (K1-Umfeld, Regel "Original oder nicht") — FUN_800314b0 nur teilweise portiert, Rest als Wahlfrage.**
 Original setzt bei jedem Modell-Neuladen `ori v0,zero,0x64` @0x80031710 / `sh v0,player.hp` @0x80031718 (HP := 100;
 Original-Spielstand 30C1: HP 100) und die Waffe aus DEBUG.BIN @0x800c00d4[Modell] (Elza = 1, Messer). Der Port laesst
-die HP beim Wechsel auf Sherry und zurueck stehen (Sherry erbt Elzas Energie) und gibt beim Rueckwechsel die vorige
+die HP beim Wechsel auf Sherry und zurueck stehen (sherry_r41.c/sherry_pc_r41.c schreiben keine HP; Dossier OFFEN 1
+bestaetigt; Sherry erbt damit Elzas Energie) und gibt beim Rueckwechsel die vorige
 Waffe zurueck (PORT-WAHL). Das Dossier legt das dem Nutzer als "Entscheidungsfrage (a)" vor — die Projektregel
 (Memory reai-v2-original-oder-nicht) verbietet genau diese Wahlfrage; der einzige Nutzer-Entscheid (2026-08-30,
 scd_room_setup.c) betrifft die WESTE, nicht Sherry. Gefordert: Original (HP 100 bei jedem Wechsel, Messer beim
 Rueckwechsel) oder eine mit RE2-Adressen belegte Retail-Form (Beta -> Retail) — nicht offen lassen. Kein Wortlaut-Punkt,
 aendert das Urteil K1 nicht.
 
+**M3 (Code-Behauptung nicht belegt, Querbezug J) — Familienregel "gleiche Waffen-Basis = bytegleicher Koerper".**
+sherry_pc_r41.c bindet EDD/EMR nur bei neuer Waffen-Familie (@0x800741e8: 76/97/118) und begruendet das im Kopf mit
+"EDD/EMR/W-Banken bleiben (bytegleich, Westen-Weg unveraendert)". Eigener md5-Vergleich der PLD-Teile: bytegleich nur
+PL00/01/02 und PL04-07; PL03 (EMR) und PL08-PL0E (EDD+EMR) weichen ab. Im Spiel genutzt: Modell 0x0D = Marvin als
+Spielfigur (ROOM3020 @0x00D7A `24 10 0d 00`, Census aller RDT-`24 10 xx 00`): PL0D EDD 3152 B / EMR 56976 B gegen PL00
+3160/57136; Bindlagen Rumpf/Arme (Knochen 8-14) laenger, z.B. Knochen 10 y 485 statt 422, Knochen 11 454 statt 408, Clip 1
+32 statt 34 Bilder -> Marvin behaelt Leons Skelett/Animation (vorbestehend, K aendert es nicht, behauptet aber
+Bytegleichheit). Original bindet EDD/EMR bei JEDEM Neuladen (@0x8003154c/@0x80031578). Gehoert zu Spur J (Marvin
+3060) bzw. in K's Modul (Bindung bei abweichenden Teilen statt nach Familie).
+
 ## 10. Hinweise (kein Mangel der Spur K)
 * H1 Integration: `enemy_common.c` kollidiert beim Probemerge zwischen J's Binder (Cherry-pick 299b6deb) und Spur A
   d1809dbf (`mslot < 32`-Schutz in rbj_resolve_slot) — bei der J/K-Integration zusammenfuehren (Schutz in den Binder-
   Aufruf uebernehmen).
-* H2 Familienregel: sherry_pc_r41.c nimmt "gleiche Waffen-Basis @0x800741e8 = gleicher Koerper (bytegleich)" an. Das gilt
-  fuer PL00/01/02 und PL04-07, NICHT fuer PL03 und PL08-PL0E (eigener md5-Vergleich der EDD/EMR-Teile). Betroffen im
-  Spiel: Modell 0x0D = Marvin als Spielfigur (ROOM3020 @0x00D7A `24 10 0d 00`): PL0D EDD 3152 B/EMR 56976 B gegen PL00
-  3160/57136 (Bind-Wurzel -1810 statt -1804, Clip 1 32 statt 34 Bilder) — er behaelt Leons Koerper. Das Original bindet
-  EDD/EMR bei JEDEM Neuladen (@0x8003154c/@0x80031578). Kleine Wirkung, Querbezug Spur J (Marvin 3060).
-* H3 Licht 3091: im Original tragen Elza/John/Sherry einen gelb-gruenen Lichtton, im Port neutral (Vergleichsbilder 5.3).
+* H2 Licht 3091: im Original tragen Elza/John/Sherry einen gelb-gruenen Lichtton, im Port neutral (Vergleichsbilder 5.3).
   Nicht Wortlaut K2.
-* H4 Die vom Bau-Agenten gemeldete "haengende Kriech-Szene" war ein RE15_SUBSTART-Artefakt: ueber den echten AOT-Ausloeser
+* H3 Die vom Bau-Agenten gemeldete "haengende Kriech-Szene" war ein RE15_SUBSTART-Artefakt: ueber den echten AOT-Ausloeser
   laeuft sub02 im K-Baum durch und nimmt die Schacht-Tuer (Lauf A).
-* H5 Bekannt/offen laut Dossier und nicht K: Renn-Stopp (Spur E, E-E2), Elzas Tempo-Zeile 4 (70/65/210) gegen Port
+* H4 Bekannt/offen laut Dossier und nicht K: Renn-Stopp (Spur E, E-E2), Elzas Tempo-Zeile 4 (70/65/210) gegen Port
   75/70/200, Wund-Reset beim Westen-Wechsel, PSX-Ziel ohne Koerper-Tausch.
