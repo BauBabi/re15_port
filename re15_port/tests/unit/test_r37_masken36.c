@@ -46,6 +46,11 @@
  *     VOR der Trennwand das Haar ab), Schranke fuer die nicht pixelgenauen Faelle (Kasten breiter als das Bild, Spalte halb
  *     hinter der Kamera); Sektion OHNE Stehplatz -> alle Rechtecke aus (= Original-NULL-Sektion; ROOM3050/3051 Cut 15:
  *     die Masken uebermalten den Konsolen-Cursor).
+ *   - Runde 41 Spur M, Nachbesserung 2 (Abnahme 1 M1, Dossier analysis/befunde_runde41/M_masken36.md "Nachbesserung 2"):
+ *     fuer Generator-Rechtecke MIT Zellen-Modell (gen_r41_masken36_zellen.inc, tools/maske/zellen3d_r41.py) zaehlt ein
+ *     verdeckter Figurpunkt auch dann als "Gegenstand davor", wenn die 3D-Strecke Kamera -> Figurpunkt den Koerper der
+ *     Modellzelle (Form wie der Resolver, Hoehe gemessen) vor ihm schneidet (r41_koerper_davor); figpt_t traegt dafuer die
+ *     Hoehe des Punkts ueber dem Bandboden.
  *   Werkzeug-Modi (kein Riegel): saaten <raum> | cut <raum> <cut> | fehl <raum> <cut> [x z] | proj <raum> <cut> <x> <z> [band]
  *   | punkt <raum> <cut> <x> <z> [band] | zeuge <raum> <cut> <rechteck> | soll | suche [prozent] [stage]
  *   | erzeuge <datei.inc>; Optionen --alt (alte Abtastung) / --zeilen=N [--spalten=M] (festes Gitter).
@@ -273,7 +278,7 @@ static void kamera_ort(const re15_camera_view_t *v, double c[3])
  * Spaltenzahl: hoechstens SP_MAX = 321 = eine Spalte je Bildspalte ueber die volle Bildbreite 320 (Messaufbau, keine
  * Spielkonstante; vorher 129 - ein Kasten breiter als 128 Bildpunkte waere mit Abstand > 1 Punkt abgetastet worden).
  * g_sp_gekappt zaehlt Kaesten, die breiter als das Bild sind (Ausgabe in ausschluss/erzeuge). */
-typedef struct { int16_t x, y; double vz; uint16_t spalte; uint8_t fuss; } figpt_t;
+typedef struct { int16_t x, y; double vz; uint16_t spalte; uint8_t fuss; float h; } figpt_t;   /* h: Hoehe ueber dem Bandboden (R41 NB2) */
 #define SP_MAX    321
 #define FIGPT_MAX (SP_MAX * 240)
 static int g_fz, g_fs = 9, g_fz_alt;     /* g_fz == 0 und !g_fz_alt: pixelgenau (Riegel und Tabelle) */
@@ -314,7 +319,7 @@ static int figur_raster(const re15_camera_view_t *v, double wx, double wz, int b
             if (!proj(v, wx + o * lx, boden - h, wz + o * lz, &sx, &sy, &vz)) continue;
             (*gesamt)++;
             if (sy < 0 || sy >= 240 || sx < -1000 || sx > 1000) continue;
-            pt[n].x = (int16_t) floor(sx); pt[n].y = (int16_t) sy; pt[n].vz = vz;
+            pt[n].x = (int16_t) floor(sx); pt[n].y = (int16_t) sy; pt[n].vz = vz; pt[n].h = (float) h;
             pt[n].spalte = (uint16_t) sp; pt[n].fuss = (k == (ns - 1) / 2); n++;
         }
         return n;
@@ -366,7 +371,7 @@ static int figur_raster(const re15_camera_view_t *v, double wx, double wz, int b
             vz = p0[2] + t * d[2];
             sx = 160 + (p0[0] + t * d[0]) * f / vz;
             if (sx < -1000 || sx > 1000) continue;
-            pt[n].x = (int16_t) floor(sx); pt[n].y = (int16_t) iy; pt[n].vz = vz;
+            pt[n].x = (int16_t) floor(sx); pt[n].y = (int16_t) iy; pt[n].vz = vz; pt[n].h = (float) (t * FIGUR_HOCH);
             pt[n].spalte = (uint16_t) j; pt[n].fuss = (j == (nc - 1) / 2 && iy == ifuss); n++;
         }
     }
@@ -661,12 +666,114 @@ static int zelle_dazwischen(zellen_t *Z, int band, double ax, double az, double 
     return 0;
 }
 
+/* ---- Runde 41 Spur M, Nachbesserung 2 (Abnahme 1, Mangel 1, Weg (a)): 3D-Urteil fuer Rechtecke MIT Zellen-Modell ----------
+ * Das Grundriss-Netz oben (zelle_dazwischen) kennt nur Zellen DESSELBEN Bands, laesst Zellen aus, in deren Grundriss die Kamera
+ * steht, und kennt keine Hoehe. Fuer ein Generator-Rechteck, dessen Objekt ein Zellen-Modell hat (Kollisionszelle mit der
+ * Mehrheit der Bodenkontakte, Hoehe als IoU-Maximum der Koerper-Silhouette gegen das Objekt - wie raum.py "zelle" fuer die
+ * Nutzer-Freistellungen; Tabelle gen_r41_masken36_zellen.inc, geschrieben von tools/maske/zellen3d_r41.py, je Zeile die 12
+ * SCA-Bytes mit RDT-Offset), ist die richtige Frage die 3D-Frage: schneidet die Strecke Kamera -> Figurpunkt den KOERPER des
+ * eigenen Objekts (Zellform x [Bandboden + Hoehe, Bandboden]) vor dem Figurpunkt? Dann zeigt der Hintergrund dort das Objekt
+ * VOR der Figur - die Verdeckung ist richtig. Weder Kamera noch Figurpunkt duerfen im Koerper liegen (sonst kein Urteil).
+ * Die Form fragt wie oben der Kollisions-Resolver des Ports (form_drin, Radius 0), mit den Original-Bytes der Zelle.
+ * Das Urteil kommt ZUSAETZLICH zum Grundriss-Netz: ein Punkt ohne Zelle davor im Grundriss UND ohne Koerper davor bleibt
+ * eine Fehlverdeckung. */
+typedef struct {
+    uint16_t raum;       /* Raum-Id der Leon-Datei (Elza xxx1: dieselbe Zeile, MSK bytegleich) */
+    uint8_t  cut, rect;  /* Sektion und Rechteck (Reihenfolge re15_pri_parse_section) */
+    int16_t  x, z;
+    uint16_t w, d;
+    uint8_t  typ, band;
+    int16_t  hoehe;      /* gemessen, negativ = nach oben (PSX-Y nach unten) */
+    uint8_t  saeule;     /* 1: Koerper ohne Deckel (IoU waechst bis zum Rand des Messbereichs) */
+    uint16_t tiefe;      /* Zellen-Tiefe im MSK (max bucket ueber die Punkte des Rechtecks) */
+    uint32_t rdt_off;    /* Beleg: Offset des SCA-Eintrags in ROOMxxxx.RDT */
+    uint8_t  sca[12];    /* Beleg: die 12 Bytes dort (u16 breite, u16 tiefe, s16 x, s16 z, typ, u0, u1, floor) */
+} r41_zellen_modell_t;
+#include "gen_r41_masken36_zellen.inc"
+#define R41_MODELLE ((int) (sizeof r41_masken36_zellen / sizeof r41_masken36_zellen[0]) - 1)
+static uint8_t *g_r41_ras[4096];     /* Formraster je Modellzeile (wie form0, Weite RASTER), lazy */
+static int g_r41_rw[4096], g_r41_rd[4096];
+static long g_r41_echt3d;            /* Figurpunkte, die NUR das 3D-Urteil als "Gegenstand davor" belegt (Zaehler) */
+
+static const r41_zellen_modell_t *r41_modell(unsigned raum, int cut, int rect, int *idx)
+{
+    int i;
+    for (i = 0; i < R41_MODELLE && i < 4096; i++) {
+        const r41_zellen_modell_t *k = &r41_masken36_zellen[i];
+        if (k->raum == (uint16_t) (raum & ~1u) && k->cut == (uint8_t) cut && k->rect == (uint8_t) rect) { *idx = i; return k; }
+    }
+    return NULL;
+}
+
+static void r41_eintrag(const r41_zellen_modell_t *k, re15_sca_entry_t *e)
+{
+    memcpy(e, k->sca, sizeof *e < sizeof k->sca ? sizeof *e : sizeof k->sca);
+}
+
+/* Punkt (x,z) in der Form der Modellzelle (Radius 0)? Rechteck = Kasten; sonst Raster aus form_drin (wie form0). */
+static int r41_form(int i, const r41_zellen_modell_t *k, double x, double z)
+{
+    int ii, jj;
+    if (x < k->x || x >= k->x + k->w || z < k->z || z >= k->z + k->d) return 0;
+    if (k->typ == 1) return 1;
+    if (!g_r41_ras[i]) {
+        re15_sca_entry_t e; int a, b;
+        r41_eintrag(k, &e);
+        g_r41_rw[i] = k->w / RASTER + 1; g_r41_rd[i] = k->d / RASTER + 1;
+        g_r41_ras[i] = (uint8_t *) malloc((size_t) g_r41_rw[i] * (size_t) g_r41_rd[i]);
+        if (!g_r41_ras[i]) return form_drin(&e, (int) floor(x + 0.5), (int) floor(z + 0.5), 0);
+        for (b = 0; b < g_r41_rd[i]; b++)
+            for (a = 0; a < g_r41_rw[i]; a++)
+                g_r41_ras[i][b * g_r41_rw[i] + a] = (uint8_t) form_drin(&e, k->x + a * RASTER, k->z + b * RASTER, 0);
+    }
+    ii = (int) ((x - k->x) / RASTER + 0.5); jj = (int) ((z - k->z) / RASTER + 0.5);
+    if (ii >= g_r41_rw[i]) ii = g_r41_rw[i] - 1;
+    if (jj >= g_r41_rd[i]) jj = g_r41_rd[i] - 1;
+    return g_r41_ras[i][jj * g_r41_rw[i] + ii];
+}
+
+/* Koerper der Modellzelle von Rechteck `rect` vor dem Figurpunkt F (Welt)? A = Kameraort. */
+static int r41_koerper_davor(unsigned raum, int cut, int rect, const double A[3], double fx, double fy, double fz)
+{
+    int i = -1, n, kk; const r41_zellen_modell_t *k = r41_modell(raum, cut, rect, &i);
+    double y0, ylo, yhi, s0 = 0.0, s1 = 1.0, B[3], D[3], len;
+    if (!k) return 0;
+    y0 = -(double) k->band * BAND_Y; yhi = y0; ylo = k->saeule ? -1e12 : y0 + k->hoehe;
+    B[0] = fx; B[1] = fy; B[2] = fz;
+    D[0] = B[0] - A[0]; D[1] = B[1] - A[1]; D[2] = B[2] - A[2];
+    if (A[1] >= ylo && A[1] <= yhi && r41_form(i, k, A[0], A[2])) return 0;     /* Kamera im Koerper: kein Urteil */
+    if (B[1] >= ylo && B[1] <= yhi && r41_form(i, k, B[0], B[2])) return 0;     /* Figurpunkt im Koerper: kein Urteil */
+    {   /* Strecke gegen die drei Achsen-Schichten des Huellkoerpers */
+        const double lo[3] = { (double) k->x, ylo, (double) k->z }, hi[3] = { (double) k->x + k->w, yhi, (double) k->z + k->d };
+        int ax;
+        for (ax = 0; ax < 3; ax++) {
+            if (fabs(D[ax]) < 1e-9) { if (A[ax] < lo[ax] || A[ax] > hi[ax]) return 0; continue; }
+            {
+                double u0 = (lo[ax] - A[ax]) / D[ax], u1 = (hi[ax] - A[ax]) / D[ax];
+                if (u0 > u1) { double t = u0; u0 = u1; u1 = t; }
+                if (u0 > s0) s0 = u0;
+                if (u1 < s1) s1 = u1;
+            }
+        }
+    }
+    if (!(s0 < s1)) return 0;
+    if (k->typ == 1) return 1;
+    len = (s1 - s0) * sqrt(D[0] * D[0] + D[2] * D[2]);
+    n = (int) (len / RASTER) + 1;
+    for (kk = 0; kk <= n; kk++) {
+        double s = s0 + (s1 - s0) * kk / n;
+        if (r41_form(i, k, A[0] + s * D[0], A[2] + s * D[2])) return 1;
+    }
+    return 0;
+}
+
 typedef struct {
     re15_rdt_t rdt; uint8_t *roh; size_t n;
     int x0, z0, nx, nz;
     uint8_t err[16][GMAX][GMAX];
     uint8_t fm[16][GMAX][GMAX];      /* frei-Merker je Gitterpunkt: 0 unbekannt, 1 frei, 2 belegt */
     zellen_t zel;
+    unsigned raum;                   /* Raum-Id der RDT (R41 NB2: Zellen-Modell der Rechtecke, r41_koerper_davor) */
 } raum_t;
 
 static int frei_g(raum_t *R, int band, int gx, int gz)
@@ -709,6 +816,7 @@ static int raum_laden(raum_t *R, unsigned raum)
     char p[700]; int i, X1 = -(1 << 30), Z1 = -(1 << 30);
     zellen_frei(&R->zel);
     memset(R, 0, sizeof *R);
+    R->raum = raum;
     snprintf(p, sizeof p, "%s/STAGE%u/ROOM%04X.RDT", PSX, raum >> 12, raum);
     R->roh = slurp(p, &R->n);
     if (!R->roh || re15_rdt_parse(R->roh, R->n, &R->rdt) < 0) return 0;
@@ -735,11 +843,12 @@ static int raum_laden(raum_t *R, unsigned raum)
 }
 
 /* ---- Ausschluss einer Sektion ------------------------------------------------------------------------------------ */
-typedef struct { long stehplaetze, echt, falsch; int aus[RE15_PRI_MAX_MASKS_PER_CUT], n_aus; } ergebnis_t;
+typedef struct { long stehplaetze, echt, falsch, echt3d; int aus[RE15_PRI_MAX_MASKS_PER_CUT], n_aus; } ergebnis_t;   /* echt3d: R41 NB2 */
 
 /* Fehlverdeckung = ein Figurpunkt an einem erreichbaren Stehplatz liegt unter einem Maskenpunkt mit depth < bucket(vz)
  * (Original-Urteil re15_pri_mask_occludes: @0x8002565c otz>>4, ZSF3 @0x80066c70, Masken-OT = depth @0x80039650), ohne
- * dass die Grundriss-Strecke Kamera -> Figurpunkt eine solide Zelle des Bands kreuzt. mit_ausschluss: Iteration bis keine
+ * dass die Grundriss-Strecke Kamera -> Figurpunkt eine solide Zelle des Bands kreuzt (Runde 41 NB2: oder - fuer ein Rechteck
+ * mit Zellen-Modell - die 3D-Strecke den Koerper seines Objekts vor dem Figurpunkt schneidet, r41_koerper_davor). mit_ausschluss: Iteration bis keine
  * Fehlverdeckung bleibt (Rechteck = vorderste Maske an diesem Punkt raus). aus_vorgabe: feste Liste statt Iteration. */
 static void sektion_pruefen(raum_t *R, int cut, const re15_pri_cut_t *pri, const atlas_t *a, int iterieren,
                             const int *aus_vorgabe, ergebnis_t *E)
@@ -884,13 +993,15 @@ static void sektion_pruefen(raum_t *R, int cut, const re15_pri_cut_t *pri, const
                         if (mi < 0 || !re15_pri_mask_occludes(tief[py_][px_], (long) pt[i].vz)) continue;
                         {
                             uint8_t *d = (davor && si <= n_steh) ? &davor[(si - 1) * SP_MAX + pt[i].spalte] : NULL, dv;
+                            double o = spalte_o(pt[i].spalte, nsp);
                             if (d && *d) dv = *d;
                             else {
-                                double o = spalte_o(pt[i].spalte, nsp);
                                 dv = zelle_dazwischen(&R->zel, b, cam[0], cam[2], wx + o * lx, wz + o * lz) ? 1 : 2;
                                 if (d) *d = dv;
                             }
                             if (dv == 1) E->echt++;
+                            else if (r41_koerper_davor(R->raum, cut, mi, cam, wx + o * lx, -(double) b * BAND_Y - pt[i].h,
+                                                       wz + o * lz)) { E->echt++; E->echt3d++; }   /* R41 NB2: Koerper davor */
                             else { E->falsch++; falsch_m[mi]++; if (si <= n_steh) nochmal[si - 1] = 1; }
                         }
                     }
@@ -964,7 +1075,8 @@ static void teil_erzeuge(const char *pfad)
     saaten_sammeln();
     fprintf(f, "/* Erzeugt von tests/unit/test_r37_masken36.c (Modus \"erzeuge\") - NICHT von Hand aendern.\n"
                " * Runde 37 Spur P: Generator-Rechtecke (R15M ohne eigenen Atlas), die an einem erreichbaren Stehplatz einen\n"
-               " * Figurpunkt ohne solide Zelle davor verdecken. Grundlagen und Messaufbau: Kopf von test_r37_masken36.c,\n"
+               " * Figurpunkt ohne solide Zelle davor verdecken (Runde 41 NB2: und ohne den Koerper ihres Zellen-Modells davor,\n"
+               " * tests/unit/gen_r41_masken36_zellen.inc). Grundlagen und Messaufbau: Kopf von test_r37_masken36.c,\n"
                " * Dossier analysis/befunde_runde37/P_masken36.md. Spalten: Raum der MSK-Datei, Cut, Zahl, Bitfeld je Rechteck. */\n"
                "static const re15_masken36_zeile_t re15_masken36_zeilen[] = {\n");
     alle_sektionen(1, 0, erzeuge_zeile, f);
@@ -980,7 +1092,7 @@ static void teil_erzeuge(const char *pfad)
 /* ---- ausschluss (Riegel) ---------------------------------------------------------------------------------------- */
 typedef struct {
     int sektionen, abweichungen, rest_falsch, aus_masken, masken, stehplatz_los, soll_zeilen, zeige_leer, leer_offen;
-    long echt_stage[7], falsch_ohne[7];
+    long echt_stage[7], falsch_ohne[7], echt3d_stage[7];
     unsigned leer_raum[64]; int leer_cut[64];
 } ausschluss_ctx;
 
@@ -1023,6 +1135,7 @@ static void pruefe_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, cons
                                   pri->draw_count, an);
     }
     x->echt_stage[(raum >> 12) & 7] += E->echt;
+    x->echt3d_stage[(raum >> 12) & 7] += E->echt3d;
 }
 
 static void ohne_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, const ergebnis_t *E, void *vctx)
@@ -1117,8 +1230,8 @@ static void teil_ausschluss(void)
            "hinter der Kamera - Maske koennte verdecken %ld\n", g_sp_gekappt_offen, g_sp_halb_offen);
     alle_sektionen(0, 0, ohne_zeile, &o);              /* Gegenprobe ohne Ausschluss */
     for (s = 3; s <= 6; s++) {
-        printf("  Stage %d: mit Ausschluss Figurpunkte HINTER Zellen verdeckt %ld | ohne Ausschluss Fehlverdeckungen %ld\n",
-               s, a.echt_stage[s], o.falsch_ohne[s]);
+        printf("  Stage %d: mit Ausschluss Figurpunkte HINTER Zellen verdeckt %ld (davon nur per 3D-Koerper des Zellen-Modells, "
+               "R41 NB2: %ld) | ohne Ausschluss Fehlverdeckungen %ld\n", s, a.echt_stage[s], a.echt3d_stage[s], o.falsch_ohne[s]);
         if (a.echt_stage[s] <= 0) stages_echt = 0;
     }
     CHECK("Ausschluss-Tabelle == Nachrechnung aus MSK/BSS/RDT (Rechteck fuer Rechteck)", nach_sekt > 0 && nach_abw == 0);

@@ -62,6 +62,8 @@ import original                  # noqa: E402
 import schliessen_r41 as SR      # noqa: E402
 
 ERBEN = False                    # --erben (Nachbesserung 1, Schritt 2), s. Kopf Regel 4b
+NAEHER = False                   # Nachbesserung 2 (zellen3d_r41.py): Zellen-Tiefe auch dann, wenn sie NAEHER als die alte
+                                 # liegt - die 3D-Regel des Ausschlusses (test_r37_masken36.c) urteilt dann je Figurpunkt
 
 REPO = SR.REPO
 PSX = SR.PSX
@@ -236,7 +238,9 @@ def kandidaten(room, cut, blob, sek, aus, rdt, cam, cache):
             r["vz_min"] = int(G.rastern(vz[d]).min())
             if neu <= dep:
                 r["grund"] = "Zellen-Tiefe %d nicht ferner als %d" % (neu, dep)
-                continue
+                if not NAEHER:
+                    continue
+                r["naeher"] = True
             r["neu"] = neu
     return out
 
