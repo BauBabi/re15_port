@@ -10,6 +10,11 @@ Zeiten aus `date`. Jeder Schritt wird hier VOR dem Bau notiert.
 
 ## 0. Protokoll (neueste Eintraege oben)
 
+* 2026-10-24 10:14-11:4x (NACHBESSERUNG 4, Abnahme 3 M1/M2): M1 Kanister + Effekt-Quellen aus der GEZEICHNETEN Pose am
+  Takt-Ende (Takt-Huelle: Wand-Klemme bitgleich in den Boss-Takt, re15_gr2_nachtakt; RE2 Kind der Part-6-Weltmatrix
+  @0x801018d0-e0), Nebenbefund RE2-Ueberblendung (Rate 4096/(n+1) @0x8001a37c-ac, Abbau @0x800299c0-cc; Dash war eingefroren);
+  M2 Befreiung nur im echten Gefaengnis, als Schub ohne Drehung (PORT-WAHL; RE2 ohne Gier-Schreiber in Sub 1/2). Riegel sitz +
+  gier (Gegenproben schlagen an), integration Laeufe kanister + belagerung, Messzeilen Kanister-Sitz / GIER-WACHE. §12.
 * 2026-10-24 08:1x-09:3x (NACHBESSERUNG 3, Abnahme 2 M1-M3, Entscheid B9): M1 Gator vor dem Durchbruch untergetaucht wie RE2
   (Sce_em_set y = 3000 @RDT 0x25A0, Pos_set erst im Intro @SCD 0x0736) - Lauf N F1-F201 pixelgleich mit "ohne Gator",
   main.c +1 Haken; M2 keine Koerperlenkung von Stufe 1 bis zum Anhaengen (kein Gier-Schreiber in Sub 1/2/T2, Schub nur laengs
@@ -1456,3 +1461,99 @@ Riegel auf die Lagen E1 und C3 ueber >= 300 Bilder; Bildbeleg) -> Bau -> gezielt
 - **Nebenwirkung K (Kanister-Tod, GB_TEST=5) geprueft:** Kn `KANISTER Stufe 1 ... F6`, `angehaengt ... F18`, `R1 VSync 4 F70`,
   Raum-SE 15, `R1 ende (Leiche)`, `VSync 2 F108` (2521 ms), Explosionsbilder F70-F88 wie Abnahme 3 (Blitz/Scherben am Kopf, Leiche);
   `Kanister-Sitz F47: angehaengt 30 Bilder, Abweichung max 0`.
+- **Nebenwirkung (gemessen, erwuenscht):** das Wand-Klemm-Zittern (Abnahme 3 §6: Wurzel an der Westwand springt je Bild 30-60
+  hin und her) kam von der Befreiung (befrei = 2 setzt die Klemme aus, die Verfolgung schob ungeklemmt zurueck). C3 vorher
+  (`B41abn3/mess/C3`): 251 Bilder an der Westwand (x < -7300), 7 Richtungswechsel von z >= 20 (max 50); nachher (`B41nb4/mess/C3n`):
+  155 Bilder, 0 Richtungswechsel.
+- **Nachtrag im Code (nach den exe-Laeufen, 7831a6d5):** ein laufender Befreiungs-Schub gilt nur in denselben Lagen, in denen er
+  beginnen darf (LURK/CHASE/GUARD, nicht untergetaucht, keine Kanister-Lenksperre) - ein Treffer (R1/R4) waehrend des Schubs bricht
+  ihn ab, statt den Takt (und damit den R1-Ablauf) zu verschlucken. In allen Messlaeufen trat kein Schub auf (Befreiungen 0), die
+  Riegel sitz (c) / gier und der Sweep liefen nach dem Neubau erneut (§12.3).
+
+### 12.3 Tests (gebauter Stand, keine volle Suite)
+- NEU: `unit_r41_re2gator_sitz` (M1: Kanister = Part6(gezeichnet) x Lokallage bei Aufnahme, Wende, Biss, Befreiung, Ueberblendung;
+  Effekt-Quelle Part 6 = dieselbe Matrix), `unit_r41_re2gator_gier` (M2: E1 + C3 je 800 Takte, kein Delta > 0x60 ausser +1024,
+  keine Befreiung an der Wand) - beide in tests/unit/test_r41_re2gator.c, registriert in tests/unit/probes/r41_re2gator.cmake;
+  integration_r41_re2gator Laeufe 4 "kanister" (Kanister-Sitz max 0 ueber >= 200 Bilder) und 5 "belagerung" (Tuerweg 20A0,
+  GIER-WACHE 300 Paare ohne Sprung/Befreiung, GUARD erreicht) + GIER-SPRUNG-Pruefung in allen fuenf Laeufen.
+- Mit Beleg angepasst: unit_r41_re2gator_schleppen Fall 3 - die Querlage beim Anhaengen bezieht sich jetzt auf die GEZEICHNETE
+  Part-6-Matrix (mit Kopf-az +0x22A ~+204 nach Stufe 2, @0x8010037c-90): `Lokallage beim Anhaengen (4430,959,487)` statt
+  (4199,1186,1783); Pruefung "Querlage != 0" statt "> 1000", Endlage (1750,-210,0) unveraendert gepinnt.
+- Gegenproben (Riegel schlagen gegen den alten Stand an): §12.1 (sitz: 5 Fehler, Wende 626) und §12.2 (gier: 5 Fehler, +-1984).
+- Laeufe (gebauter Stand, eigener Baum re15_port/build):
+  - `ctest --test-dir re15_port/build -R "^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|
+    sca_wall_hit|re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_.*|
+    re2_hit_repeat_crow_spider|re2_crow_.*|crow_ai|crow_fixes|crow_death_corpse|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|
+    r35_fenster_kraehe|r37_re2zombie_.*|r34_re2fx.*|montage_fx|r35_cut1150_montage.*|r38_montage.*|r38_wasser.*|r38_wasserzombie|
+    r39_heliport1171_kraehen|r30_granate|r35_granate|r36_granate|r36_kartenbits|text_freeze|r34_reaktion|r34_schaden|g5_boss|
+    load_after_death|r35_affen_finisher|r36_tueren_.*|r37_itemband|r36_kartenitems)$|^probe_(re2z_stomp|crow_kill)$|
+    ^r31_trefferboxen.*$" --timeout 600 -j 6` -> **100% tests passed, 0 tests failed out of 110** (11:12-11:13, Stand 9fd7d545;
+    nach dem Neubau mit 7831a6d5 erneut 11:30-11:31: **100% tests passed, 0 tests failed out of 110**, 103.79 s). Darin
+    unit_gator_sweep (`3342 Paare, 0 nicht konvergiert`, `80 Faelle, 0 ohne Treffer`), unit_gator_fress, unit_r34_reaktion,
+    unit_g5_boss und alle 16 unit_r41_re2gator_*.
+  - `ctest --test-dir re15_port/build -R "^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate|r37_itemband|r36_tueren|
+    r37_re2zombie)$" --timeout 1500 -j 3 --output-on-failure` -> **100% tests passed, 0 tests failed out of 7** (11:13-11:29,
+    Stand 9fd7d545; r41_re2gator 263,8 s, r35_granate 214,5 s, r38_wasser 169,4 s, r36_schuss 142,3 s, r37_re2zombie 54,6 s,
+    r36_tueren 51,8 s, r37_itemband 935,5 s).
+  - nach dem Neubau mit 7831a6d5: `ctest --test-dir re15_port/build -R "^integration_(r41_re2gator|r35_granate)$" --timeout 1500
+    -j 2 -V` -> **100% tests passed, 0 tests failed out of 2** (212,39 s). Status-Zeile integration_r41_re2gator: `nische: RE2-Zeilen
+    57, Intro Lage/Start/Ende 1/1/1 wand 0, Clip 6/3 125/150, Kamera DURCHBRUCH:6/0;SEITE:6/70;ANGRIFF:6/124;FREI:3/149;FINISHER:4/0,
+    Finisher Cut 6 ab F398 gehalten 253 Bilder / 13 Halt-Zeilen, HP min 25300, kein Gier-Sprung | natuerlich: untergetaucht bis F201
+    (Lauerplatz -7200,-9200), Auftauchen Clip/Bild 6/0, erstes Bild F201 Clip 6, groesster Bildschritt 338, kein Gier-Sprung |
+    kanister: 270 angehaengte Bilder, Abweichung max 0, GIER-WACHE bis F1302: 300 Bildpaare CHASE/GUARD, max |Gier-Delta| 96 (ohne
+    +1024), Spruenge > 0x60: 0, Befreiungen 0 | belagerung: GIER-WACHE bis F581: 300 Bildpaare CHASE/GUARD, max |Gier-Delta| 64 (ohne
+    +1024), Spruenge > 0x60: 0, Befreiungen 0, GUARD-Zeilen 11 | dash: DASH 1/1 wand 0, Putz 6 x 9 = 54, gezeichnet bis 98 Quads/Bild
+    in 20 Messbildern, Clip 2/3 150/300, GIER-WACHE bis F980: 300 Bildpaare CHASE/GUARD, max |Gier-Delta| 96 (ohne +1024), Spruenge >
+    0x60: 0, Befreiungen 0`. (Finisher-Schnitt jetzt F398 statt F403: ohne den Befreiungs-Snap F379 und seine Rueckdrehung kommt
+    der Biss 5 Bilder frueher; Kamerafolge, Halt bis zum Raumende und HP-Sockel unveraendert.)
+- Bau: `local_build.sh build` (keine neue .c-Datei, kein configure noetig; CMake hat sich wegen der Riegel-Dateien selbst neu
+  erzeugt), EXIT 0, Warnungen nur die drei bekannten in main.c (8803/10133/10513, Altbestand), keine in Spur-B-Dateien.
+
+### 12.4 OFFEN (gemessen, benannt)
+- **Hals-Zielmodus / RE2-Halsfuehrung** (FUN_80017d98 / FUN_800177c0, Root @0x80100330-74): unveraendert OFFEN wie §11.3/§11.5 -
+  Entscheid des Orchestrators zum Part-5-Gier-Kanal ausserhalb der Spur-B-Dateien steht aus (Abnahme 3 §3.3 e).
+- **Wand-Druck statt Abprall (Folge von M2, PORT-WAHL):** wo das Ziel hinter einer Wand liegt (Leon in der Tuernische; GUARD-Ziel
+  GPAT (6500,-12600) 700 vor der Ostwand bei Leon auf der Rampe), bleibt der Gator jetzt an der Wand und lenkt mit seiner
+  Wenderate weiter auf das Ziel (vorher: Snap weg, Rueckdrehung, erneuter Snap). Die Belagerungs-Zielwahl selbst (Nutzer-Design
+  v0.7.54-63) ist unveraendert; dass ihr Ziel hinter der Klemmlinie liegt, ist ALT (gemessen E1: GPAT-Zeilen 6500,-12600).
+- **Befreiungs-Schub:** im echten Gefaengnis (Zentrum im Plattform-/Rampen-Slab, nur nach CROSS-Landungen erreichbar) gleitet der
+  Gator ohne Drehung mit 48 je Bild aus dem Slab (Riegel sitz (c): 17 Bilder). In keinem exe-Lauf dieser Nachbesserung aufgetreten
+  (Befreiungen 0 in C3n/E1n/D2n/A2n2/Nn/NZn/Kn); Sichtpruefung dieses Falls im Spiel offen.
+- **Effekt-Quellmatrizen:** der Port fuehrt sie jetzt aus der Pose desselben gezeichneten Bildes (Abnahme-Forderung). Ob RE2s Pumpe
+  (@0x80026980, hinter der Gegner-Schleife) die Part-Weltmatrix (+0x48) dieses oder des vorigen Bildes kopiert, ist nicht belegt
+  (der Zeitpunkt der Modellmatrix-Komposition im RE2-Zeichenpfad wurde nicht disassembliert).
+- **RE15_FPS != 30** (Entwickler-Schalter, main.c: "RE15_FPS=60 still available for future re-tuning"): der NPC-Zeichner posiert
+  dann anim_frame >> 1, re15_gr2_nachtakt anim_frame - der Kanister saesse dort neben dem Kopf (die Messzeile Kanister-Sitz zeigte es).
+  Im Spiel (30 Bilder/s) nicht erreichbar.
+- Unveraendert aus §11.5 / Abnahme 3 §6 (Nebenbefunde, nicht Teil von M1/M2): Granate erreicht den untergetauchten Gator, Intro-
+  Startlage beim Westkanal-Zugang im Suedostbecken, Zielmodus-Messzeile ohne "Zielmodus 0" beim Loeschen im !im_chase-Zweig/beim
+  Anhaengen, Kanister in Stufe 3-6 noch vor der Schnauze (C3 F1136 hinter der Suedwand - RE2 zieht ihn erst mit den Lokallage-
+  Schritten @0x801019c4-0x80101b8c ins Maul), E1-Wurzelsprung nach R4 (861), Raum-Effekt 0x26, Frame-Wort-Latenz 1 Bild,
+  Waffenschaden ueber die RE1.5-Zeile, Kanister im dunklen Becken kaum sichtbar, GUARD/CROSS spielen Clip 0.
+- Behoben als Nebenwirkung: Wand-Klemm-Zittern an der Westwand (Abnahme 3 §6) - §12.2.
+
+### 12.5 Fuer den Nutzer (Nachbesserung 4)
+- Keine neuen Assets, keine Sprachdateien, keine neuen Umgebungsschalter. Gemeinsame Dateien: KEINE neuen Haken (main.c,
+  enemy_ai_common.c, skeleton_common.c unveraendert); geaendert nur Spur-B-Dateien (enemy_ai_boss_gator.c, gator_re2_r41.c,
+  platform/pc/src/gator_re2_pc.c, re15_boss_gator.h, re15_gator_re2_r41.h, Riegel).
+- Was sich im Spiel aendert:
+  1. Der Kanister im Maul des Alligators sitzt in jedem Bild zwischen den Kiefern - auch wenn er sich dreht, zubeisst oder
+     schwimmt (vorher hing er beim Drehen ein Bild hinterher und stand neben/auf dem Kopf).
+  2. Der Alligator dreht sich in der Verfolgung und an der Plattform nicht mehr ruckartig um (vorher bis 180 Grad in einem Bild,
+     an der Plattform alle ~1 s). Wo er Leon nicht erreicht (Tuernische, oben auf der Rampe), bleibt er an der Wand und schaut zu ihm.
+  3. Die RE2-Ueberblendung der Animation laeuft wie in RE2: der Beschleunigungs-Ansturm (Dash, Clip 2) ist jetzt sichtbar animiert
+     (vorher 150 Bilder eingefroren), die Wechsel Schwimmen/Paddeln blenden in 32 bzw. 4 Bildern ueber statt dauerhaft halb verzoegert.
+- Messzeilen: debug.log `[gator-re2] Kanister-Sitz F<n>: angehaengt <k> Bilder, Abweichung max <m> ...`; gator_boss.log
+  `GIER-WACHE bis F<n>: ...`, `GIER-SPRUNG F<n> d=...` (sollte nie erscheinen), `BEFREI start/ende ...`.
+- Entscheidungsfrage: Soll der Alligator, wenn Leon unerreichbar hinter einer Wand steht (Tuernische, Rampe oben), an der Wand
+  bleiben (jetzt, ohne Drehruck) oder sich - wie vorher, aber weich - immer wieder abwenden und neu anschwimmen?
+
+### 12.6 Abschluss Nachbesserung 4 (je Mangel)
+- **M1** behoben: Kanister-Weltlage und Effekt-Quellmatrizen werden am Takt-Ende nach Wand-Klemme aus der Pose gerechnet, die der
+  Zeichner in diesem Bild zeichnet (samt Kopf-az +0x22A und RE2-Ueberblendung); Anhaengen gegen dieselbe Matrix (kein Sprung).
+  Riegel sitz: 0 Abweichung bei Aufnahme/Wende/Biss/Befreiung/Ueberblendung (Gegenprobe alter Zeitpunkt: Wende 626). exe C3m1
+  (bitgleicher Ablauf) und C3n/Kn/integration "kanister": Kanister-Sitz max 0 in 270 bzw. 52 Bildern. Bildbeleg C3 F1276-F1284.
+  Mit behoben: RE2-Ueberblendung (Rate 4096/(n+1), Abbau je Bild) - Dash nicht mehr eingefroren.
+- **M2** behoben: keine Gier-Aenderung > 0x60 je Bild in CHASE/GUARD ausser +1024 (Riegel gier E1/C3 je 800 Takte; exe E1n/C3n/
+  A2n2/D2n/Nn/NZn und integration nische/natuerlich/kanister/belagerung/dash); Befreiung nur im echten Gefaengnis als Schub ohne
+  Drehung (PORT-WAHL, Form = Wand-Klemme). Sweep-Garantie unveraendert (3342/0, 80/0). Bildbelege A2 F377-F381 und E1.
