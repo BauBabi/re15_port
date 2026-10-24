@@ -458,3 +458,13 @@ Ventilraetsel, mit Sicherung ja; ganzer Ablauf zu Fuss (Leon UND Elza).
 - **E-E3 (Mangel 4, Softlock):** Im gehaltenen Apply-Bild laeuft der Blenden-Takt weiter (Original: @0x80020f44 vor dem
   Present @0x80020f4c) — re15_fade_tick auch im gehaltenen Bild; Riegel: Raumeintritt ROOM2020 auf der Kante (9000,-3200)
   blendet ein (pf-Rampe wie VORHER bis F10), Spieler steuerbar.
+
+## 2026-10-24 12:42 — Nachtrag 11 (Nutzer-Entscheide per Auswahl, 11:4x; Spur M)
+
+1. Frage: "ROOM20A0 Kamera 12, Datei 12_02, ist ein Bodenstreifen vor der Ziegelwand. Wer darauf stand, verlor im Spiel die
+   Fuesse; sie wird deshalb vorerst nicht gebaut (deine PNG bleibt unveraendert, 12_01 bleibt aktiv). Was soll damit
+   passieren?" — **Antwort: "Weglassen ist ok"** (12_02 bleibt aus dem Bau; Mangel 2 der Abnahme M 0 ist damit erledigt).
+2. Frage: "Soll ich die alten _port.png in pri/ durch die berichtigten ersetzen?" — **Antwort: "Ja, ersetzen"**.
+   Erledigt vom Orchestrator auf master 919cc1ed: 204 von 214 pri/STAGE3-6/*_port.png aus M_bilder/uebersicht/ ersetzt.
+   Ohne berichtigtes Gegenstueck (Spur M liefert sie nach, Ersatz bei der Integration): pri/STAGE3/3040+3041/01,
+   3050+3051/06+15, 30E0+30E1/06+07.
