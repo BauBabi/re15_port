@@ -93,8 +93,43 @@ void re15_kollision_r41_npc_schwanz(int slot)
  * (fallende Kiste im selben Bild) — Dossier OFFEN. */
 static int16_t s_spiegel_y[RE15_SCD_MAX_PROPS];
 
+/* MESSHAKEN (kein Spielverhalten) RE15_KOLLISION_SETZE="<obj>:<x>,<y>,<z>,<band>@<bild>": setzt das Pool-Objekt mit der
+ * obj-Nummer einmal je Raum ab dem Raumbild <bild> auf die Lage — das Gegenstueck zur RAM-Schreibung der Original-
+ * Messung (H_belege/orig_2050_kiste.py: +0x34/+0x38/+0x3C, +0x82, Spiegel +0x40/+0x42/+0x44 per GDB). */
+static void kollision_setze_messhaken(void)
+{
+    static int init = 0, an = 0, obj = -1, band = 0;
+    static long bild = 0;
+    static int32_t x = 0, y = 0, z = 0;
+    static unsigned raum = 0xffffffffu;
+    if (!init) {
+        init = 1;
+        const char *e = getenv("RE15_KOLLISION_SETZE");
+        long lx, ly, lz;
+        if (e && sscanf(e, "%d:%ld,%ld,%ld,%d@%ld", &obj, &lx, &ly, &lz, &band, &bild) == 6) {
+            an = 1; x = (int32_t)lx; y = (int32_t)ly; z = (int32_t)lz;
+        }
+    }
+    if (!an || raum == g_current_room_id || (long)g_engine.frame_count < bild) return;
+    for (int p = 0; p < RE15_SCD_MAX_PROPS && p < (int)g_scd.prop_count; p++) {
+        if (!g_scd.props[p].active || (int)g_scd.props[p].obj_id != obj) continue;
+        g_scd.props[p].x = x; g_scd.props[p].y = y; g_scd.props[p].z = z;
+        g_scd.props[p].band = (uint8_t)band;
+        { extern void re15_zellschub_spiegel(int); re15_zellschub_spiegel(p); }   /* Spiegel +0x40/+0x44 */
+        raum = g_current_room_id;
+        FILE *lf = kollision_log();
+        if (lf) {
+            fprintf(lf, "F%u room=%04X SETZE p=%d obj=%d lage=(%d,%d,%d) band=%d\n", g_engine.frame_count,
+                    g_current_room_id, p, obj, (int)x, (int)y, (int)z, band);
+            fflush(lf);
+        }
+        break;
+    }
+}
+
 void re15_kollision_r41_objspiegel(void)
 {
+    kollision_setze_messhaken();
     for (int p = 0; p < RE15_SCD_MAX_PROPS && p < (int)g_scd.prop_count; p++)
         if (g_scd.props[p].active)                                     /* @0x8002bdcc: nur aktive Runden */
             s_spiegel_y[p] = (int16_t)g_scd.props[p].y;                /* sh v1,66(s2) @0x8002c0f8 */

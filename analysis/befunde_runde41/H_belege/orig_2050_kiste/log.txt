@@ -1,0 +1,43 @@
+DuckStation gestartet {'41228'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Spieler: (9100, -5400, 4100, 0, 3, 0) obj6: (-1600, -5400, -9348, 0, 0, 3, 0, 257) obj1: (2052, 0, -5552, 0, 0, 0, 0, 257)
+Entity 0 @800acc2c: w0 0801 typ 0x25 -> w0 0800
+Entity 1 @800ace20: w0 0801 typ 0x25 -> w0 0800
+g_active_count @0x800aca4e: 2 -> 0
+obj1 gesetzt: (-1600, -5400, -6948, 0, 0, 3, 0, 257) Kasten-Zeiger +0x78 = 8011b0fa
+obj1 Kasten: (0, -900, 0, 900, 900, 900)
+obj6 Kasten: (0, -900, 0, 900, 900, 900)
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002cfb8: b'OK'
+Z0 8003da78: b'OK'
+Drehsinn: R 0.4 s -> dBlick = 1152
+START spieler=(9100,-5400,4100) blick=2400 band=3 sub=3 | obj6=(-1600,-5400,-9348) band=3 n=0 | obj1=(-1600,-5400,-6948) band=3
+  GEHE (9100,-6300): angekommen bei (9099,-6496)
+  GEHE (-100,-6300): angekommen bei (-100,-6329)
+  GEHE (-100,-8400): angekommen bei (-45,-8378)
+  GEHE (-100,-11200): angekommen bei (-7,-11116)
+  GEHE (-1000,-10798): angekommen bei (-964,-10885)
+SUED Runde 0 VOR spieler=(-964,-5400,-10885) blick=3024 band=3 sub=3 | obj6=(-1600,-5400,-9348) band=3 n=0 | obj1=(-1600,-5400,-6948) band=3
+  SCHUB-OK obj6=(-1600, -5400, -9274) spieler=(-1018, -5400, -10624) (OK bisher 1)
+  SCHUB-OK obj6=(-1600, -5400, -9127) spieler=(-1040, -5400, -10477) (OK bisher 26)
+  OBJEKT-TREFFER @0x8002cfb8 t2(anderes)=800b402c a3(geschoben)=800b4310 | obj6=(-1600, -5400, -8749) obj1=(-1600, -5400, -6948) spieler=(-990, -5400, -10081)
+  SCHUB-GESPERRT obj6=(-1600, -5400, -8749) spieler=(-990, -5400, -10081) (OK bisher 47)
+SUED Runde 0 NACH (Stillstand) spieler=(-850,-5400,-10110) blick=3099 band=3 sub=1 | obj6=(-1600,-5400,-8760) band=3 n=69 | obj1=(-1600,-5400,-6948) band=3
+  GEHE (-1000,-10210): angekommen bei (-1024,-10195)
+SUED Runde 1 VOR spieler=(-1024,-5400,-10195) blick=3051 band=3 sub=3 | obj6=(-1600,-5400,-8760) band=3 n=0 | obj1=(-1600,-5400,-6948) band=3
+  SCHUB-OK obj6=(-1600, -5400, -8760) spieler=(-1050, -5400, -10110) (OK bisher 51)
+  OBJEKT-TREFFER @0x8002cfb8 t2(anderes)=800b402c a3(geschoben)=800b4310 | obj6=(-1600, -5400, -8749) obj1=(-1600, -5400, -6948) spieler=(-1077, -5400, -10094)
+  SCHUB-GESPERRT obj6=(-1600, -5400, -8749) spieler=(-1077, -5400, -10094) (OK bisher 69)
+SUED Runde 1 NACH (Stillstand) spieler=(-984,-5400,-10107) blick=3096 band=3 sub=1 | obj6=(-1600,-5400,-8757) band=3 n=69 | obj1=(-1600,-5400,-6948) band=3
+  GEHE (-1000,-10207): angekommen bei (-984,-10107)
+SUED Runde 2 VOR spieler=(-984,-5400,-10107) blick=3096 band=3 sub=0 | obj6=(-1600,-5400,-8757) band=3 n=0 | obj1=(-1600,-5400,-6948) band=3
+  SCHUB-OK obj6=(-1600, -5400, -8757) spieler=(-962, -5400, -10107) (OK bisher 76)
+  OBJEKT-TREFFER @0x8002cfb8 t2(anderes)=800b402c a3(geschoben)=800b4310 | obj6=(-1600, -5400, -8749) obj1=(-1600, -5400, -6948) spieler=(-988, -5400, -10090)
+  SCHUB-GESPERRT obj6=(-1600, -5400, -8749) spieler=(-988, -5400, -10090) (OK bisher 83)
+SUED Runde 2 NACH (Stillstand) spieler=(-878,-5400,-10103) blick=3090 band=3 sub=1 | obj6=(-1600,-5400,-8753) band=3 n=84 | obj1=(-1600,-5400,-6948) band=3
+SUMME: Schub angenommen 83, gesperrt 3, davon Objekt-Treffer 3, Zellen-Treffer 0
+ENDE spieler=(-878,-5400,-10103) blick=3090 band=3 sub=0 | obj6=(-1600,-5400,-8753) band=3 n=0 | obj1=(-1600,-5400,-6948) band=3
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
