@@ -294,11 +294,20 @@ Ventilraetsel freigegeben ("Freigeben" — Plakat, Loesung 09 -> 07 -> 02 -> 01,
   Zone weiter neben der Sicherung erreichbar; Messung wie oben (Pixel-Unterschied mit/ohne Bit 107 in Cut 5 deutlich > 39, Bild 1x/4x),
   Riegel mit Leon UND Elza; Dossier §7 fuer den Nutzer nachziehen.
 
+* **Mangel 2 (niedrig, Nebenwirkung des Plakats auf Punkt 3) — Schliessen der Plakat-Nahaufnahme hebt die Pad-Sperre der Flut auf.**
+  Ist (Lauf `pk`, Leon, `<a4>/plaene/pk.txt` + RE15_PRESS square@3540): richtige Folge -> Warnung -> zurueck zum Plakat, Nahaufnahme offen
+  (F2118) -> Zaehler laeuft ab -> `[scd F3524] Cut_chg(4)` / `FLUT: Wasser steigt` (das Flut-Programm setzt Set(2,7)=1/Set(2,2)=1) ->
+  Viereck F3540 -> `Plakat-Nahaufnahme zu (nach 1421 Bildern)` -> **`[scd F3555] letterbox closed -> gameplay (player_mode=0)` mitten in der
+  Flut** -> der noch offene AKTION-Befehl des Wegplan-Treibers (der waehrend player_mode 2 wartet) loest `Ereignis 23 -> 2030_plakat`
+  erneut aus -> `Plakat-Nahaufnahme offen` waehrend der Flut -> `SPRITZER` -> `ERTRUNKEN` (F3585). Ursache im Code: `plakat_tick`
+  (ventilkette_r41.c) setzt beim Schliessen (2,7) und (2,2) unbedingt auf 0, und `re15_ventilkette_r41_ereignis` laesst das Plakat auch
+  waehrend Zaehler/Flut zu (nur `!s_plakat_offen && !bit(103)`). Folge: unter der Flut-Kamera Cut 4 ist der Spieler frei (Form der
+  Pad-Sperre ROOM2030 sub02 @0x01E30 durch den Port gebrochen), das Plakat laesst sich in der Flut oeffnen; der Tod bleibt (am Landeplatz
+  erreicht das Wasser die Fuesse nach ~20 Bildern). Forderung: die Sperre der Flut darf durch das Plakat nicht aufgehoben werden (z. B.
+  Plakat waehrend Zaehler/Flut nicht oeffnen oder beim Schliessen nur die eigene Sperre zuruecknehmen, wenn keine Flut laeuft) — Form mit
+  Beleg, Riegel (Plakat offen bis in die Flut -> nach dem Schliessen player_mode bleibt 2 bis zum Tod).
+
 Hinweise (kein Mangel):
-* (a) Plakat waehrend des Zaehlers: `2030_plakat` ist auch waehrend der 60 s ausloesbar (ventilkette_r41.c `re15_ventilkette_r41_ereignis`:
-  nur `!s_plakat_offen && !bit(103)`), und `plakat_tick` loescht beim Schliessen (2,7)/(2,2) unbedingt. Laeuft der Zaehler ab, waehrend die
-  Nahaufnahme offen ist, gibt das Schliessen die Pad-Sperre der Flut frei (Spieler beweglich unter Cut 4). Nicht gemessen (Randfall;
-  am Landeplatz erreicht das Wasser die Fuesse nach ~36 Takten, ein Entkommen ist nicht moeglich).
 * (b) Fehlerton 0x0B: Aufruf und Bank-Eintrag (PANEL2130.EDT Satz 0x0B `00 00 83 01`) geprueft, nicht mitgeschnitten (RE15_NOAUDIO).
 * (c) PSX-Ziel ungebaut: Plakat-Nahaufnahme ueber die PC-Vollbild-Ebene, Wassernetze/Blaetter nur unter RE15_PLATFORM_PC (bekannt, H3).
 * (d) Ein Messlauf (sv_6_mit) blieb nach `[flow] EXIT_AT ... -> exit` haengen und endete erst am 200-s-Zeitlimit (allgemeiner
