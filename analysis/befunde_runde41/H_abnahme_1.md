@@ -5,7 +5,7 @@ Code-Stand seit 103563cc unveraendert: `git diff 103563cc HEAD -- re15_port` lee
 `git diff 7b59e297 master -- re15_port` ist leer, d.h. master-Code = Zweig-Code ohne Spur H.
 Arbeitsordner der Abnahme (Skripte, Logs, Bilder): `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/H41abn1/`.
 
-Status: IN ARBEIT (wird fortlaufend gespeichert).
+Status: ABGESCHLOSSEN (Ergebnis Abschnitt 11).
 
 ## 0. Bau (selbst)
 - `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)` (17:57)
@@ -216,7 +216,8 @@ Verhaltensbyte 0x00 = Eskorte @0x015A2/@0x015B6) -> Elza wartet, geht nach (-120
 
 `kollision.txt` (nach): 4150 `NPC-SCHUB`, davon 3123 `slot=1 typ=49 von=2 typ=4b` (John aus Sherry), 782 `slot=2 typ=4b von=1 typ=49`;
 am Minimum `F1331 room=3001 NPC-SCHUB slot=2 typ=4b von=1 typ=49 vor=(-15670,-13178) nach=(-15789,-13135)`. Die 93 Bilder zwischen
-700 und 750 sind wie bei Leon die Wandklemme nach dem Schub (Hautabstand 18 @0x8003bce0, b0a4 nach b544, RE-Gate 1).
+700 und 750 entstehen wie bei Leon durch die Wandklemme hinter dem Schub (b0a4 nach b544, RE-Gate 1; die Klemme rechnet mit
+Hautabstand 18, selbst nachgelesen `8003bce0 addiu t1,v0,18` / `8003bce8 addiu a0,a0,-18`).
 Bild `zoom_p1c_3001_f2000.png` (2. Besuch F2000, beide Laeufe Kamera 1, gleicher Ausschnitt): **vor** steckt Sherry in John (Beine und
 Haar ineinander, d = 195), **nach** steht John allein, Sherry 752 dahinter; Bogen `bild_p1c_3001_vor_nach.png`.
 => Nutzer-Befund fuer Elza auf dem echten Story-Weg (ohne Flag-Vorgabe, zwei Tuerdurchgaenge) reproduziert und behoben.
@@ -302,7 +303,14 @@ r39_funk10f1_.*|r39_parkplatz11c0_.*|r38_dining1141_.*|r39_dining1141_.*|r39_sti
 r30_irons_tisch_.*|r30_cut_blitz|r37_elzaems_.*|r41_wasser20b0.*|r39_gegner_1141|r36_dachkiste|r36_klettern|r37_kiste.*|
 r37_itemband.*|r38_wasser.*|room_transition|cross_stage|door_traversal|room_probe_sweep|...)$`, `-j 3 --timeout 2700
 --output-on-failure` (`ctest_integ.log`).
-Stand beim Speichern: LAEUFT (gestartet 18:27, 4/81 bisher gruen) — Ergebnis wird hier nachgetragen.
+**`100% tests passed, 0 tests failed out of 81`** (`Total Test time (real) = 5406.36 sec`, -j 3 bei voller Maschinenlast durch
+andere Agenten — 16 logische Kerne zu 100 %, zahlreiche fremde re15_pc-Instanzen). Darin u.a. integration_r36_dachkiste `Passed
+1393.74 sec`, r36_klettern 506.06 s, r37_kiste 83.43 s, r37_kiste2feld 72.94 s, r37_kistenregel 268.71 s, r39_dining1141_kampf
+(Fassung WARTE 240) 370.57 s, r41_wasser20b0_npc 450.29 s (NPC-Wasserschritte der Spur A mit dem Schub), r41_wasser20b0 170.43 s,
+r36_story_leon 370.36 s, r36_story_elza 231.82 s, r35_cut10f0 470.91 s, r36_szenenleon 185.56 s, r38_werkstatt11b0 166.00 s,
+r36_szene1150, r37_szene11c0, r39_parkplatz11c0_*, r39_heliport1171_*, r38_heliport1171_*, r39_johnruf1041_a/b, r39_funk10f1_*,
+r30_irons_tisch_*, r37_elzaems_* (u.a. elza3071/elza5081/elza5091), room_transition, cross_stage, door_traversal, room_probe_sweep.
+Kein Fenster-Haken rot, nichts nachzufahren.
 
 ## 6. Vertrag (VERTRAG.md)
 - **Pfade** (`git diff master...HEAD --name-only`; das 2-Punkt-Diff gegen das inzwischen weitere master listet fremde pri/-/
@@ -328,7 +336,7 @@ Stand beim Speichern: LAEUFT (gestartet 18:27, 4/81 bisher gruen) — Ergebnis w
 ## 7. Urteile je Nutzer-Punkt (gegen den Wortlaut)
 | Punkt (Wortlaut) | Urteil | Beleg |
 |---|---|---|
-| 1 "Die NPCs z.B. Ada und Marvin koennen ineinander rein laufen, das ist falsch, die sind beide fest." | **erfuellt** | Eigene Laeufe, je vor/nach: **3070 Leon** (echte Tuer 30E0 -> 3070, eigener Laufweg) Ada/Marvin min **1 -> 899**, Bilder < 850 **4539 -> 0** (4.1, `zoom_p1a_3070_f1350.png`: vor nur zwei Figuren, nach drei); **30E0 Leon** (nach der Ada/Marvin-Szene, von niemandem vorher gemessen) min **12 -> 884**, < 850 **1881 -> 0** (4.7, `bild_s30e0_vor_nach.png`); **3001 Elza** auf dem echten Story-Weg ohne Flag-Vorgabe (Szene setzt (4,198)/(4,199) selbst, zwei Tuerdurchgaenge) 1. Besuch **8 -> 749**, 2. Besuch **13 -> 722**, < 700 **343/3917 -> 0/0** (4.5, `zoom_p1c_3001_f2000.png`); **3011 Elza** echter Weg **3 -> 749**, < 700 **2382 -> 0** (4.8). Mechanik selbst disassembliert: aec4 + b544 vor b0a4 in **28/28** NPC-Wurzeln (eigener Scanner), b544 ohne Typfilter (RE-Gate 1-3). Nachbarszenen 3080/3081 unveraendert (4.6). Riegel gruen (2). |
+| 1 "Die NPCs z.B. Ada und Marvin koennen ineinander rein laufen, das ist falsch, die sind beide fest." | **erfuellt** | Eigene Laeufe, je vor/nach: **3070 Leon** (echte Tuer 30E0 -> 3070, eigener Laufweg) Ada/Marvin min **1 -> 899**, Bilder < 850 **4539 -> 0** (4.1, `zoom_p1a_3070_f1350.png`: vor nur zwei Figuren, nach drei); **30E0 Leon** (nach der Ada/Marvin-Szene, von niemandem vorher gemessen) min **12 -> 884**, < 850 **1881 -> 0** (4.7, `bild_s30e0_vor_nach.png`); **3001 Elza** auf dem echten Story-Weg ohne Flag-Vorgabe (Szene setzt (4,198)/(4,199) selbst, zwei Tuerdurchgaenge) 1. Besuch **8 -> 749**, 2. Besuch **13 -> 722**, < 700 **343/3917 -> 0/0** (4.5, `zoom_p1c_3001_f2000.png`); **3011 Elza** echter Weg **3 -> 749**, < 700 **2382 -> 0** (4.8). Mechanik selbst disassembliert: aec4 + b544 vor b0a4 in **28/28** NPC-Wurzeln (eigener Scanner), b544 ohne Typfilter (RE-Gate 1-3). Szenen 2000/3080/3081 unveraendert (4.6). Riegel gruen (2). |
 | 2 "In ROOM 2050 lassen sich die Kisten in einander schieben, das ist falsch" | **erfuellt** | Eigene Paarung obj 1 -> obj 2 (Z-Achse, von niemandem vorher gefahren), je vor/nach: **Leon 2050** Ueberlappungszeilen **115 -> 0**, `OBJEKT-GESPERRT ... dZ=-1798` (4.2, `bild_ka_cut12.png`: vor schiebt sich die Kiste in die andere, nach Kante an Kante); **Elza 2051** **116 -> 0** (4.3); **Leon ECHTER WEG** (Leiter 2000 -> Tuer -> drei Absprunge 3->2->1->0 ins Becken) **109 -> 0** (4.4; Abnahme 0 H4 damit geschlossen); **Elza ECHTER WEG** 2001 -> 2051 **109 -> 0** (4.9). Mechanik: Durchlauf @0x8002c03c-c0a8 und FUN_8002cdf4 Zeile fuer Zeile (RE-Gate 4/5). Raetsel bleibt loesbar (Riegel raetsel_leon/raetsel_elza gruen, (5,0..2) = 1). |
 
 ## 8. Gates
@@ -337,8 +345,9 @@ Stand beim Speichern: LAEUFT (gestartet 18:27, 4/81 bisher gruen) — Ergebnis w
   FUN_8002bd44 (inkl. s7 = 10, fp = Pool, Ruecksetzung, Spiegel), FUN_8002cdf4 vollstaendig, Pool-Indizierung @0x8004093c-58 und
   die neuen V2-Belege der Nachbesserung 1 (@0x8011ddbc-c8, @0x80042284-b0, @0x8011beac, @0x801213c8[7], @0x8011ac34, @0x8011ad8c) —
   alle stimmen mit dem Zitierten ueberein. Rate-Woerter im Code-Diff: 0. Der Fix erklaert beide gemessenen Befunde (RE-Gate 8).
+  Keine RE2-Uebernahme in dieser Spur (nur RE1.5-Adressen), daher keine RE2-Stichprobe noetig.
 - **Tests: halten** — Spur 10/10 (346 s), unit_/prop_/probe_ 922/922 (ohne 10 Bash-Riegel ohne Diff-Bezug), Integrationsgruppe
-  s. 5.2.
+  81/81 (5.2).
 - **Vertrag: haelt** (Abschnitt 6; V1/V2 per H-E1 angenommen, hier nicht mehr bewertet).
 
 ## 9. Maengel (nummeriert)
@@ -361,7 +370,21 @@ Keine.
   b544 @0x80031cbc (vorbestehend) + NPC-Tick aec4 @0x8011cc3c (neu); gegen das Original nicht gemessen.
 - **H4 (Integration, wie Abnahme 0 H5):** Der Schub wirkt in jedem NPC-Tick, auch in Szenen. Nach dem Merge die NPC-Szenen der Spuren
   G (2080 Marvin/John + 8 Zombies) und J/K (3060/3061/30C1/3091) nachfahren. Ein Plc_dest-Ziel naeher als die Radien-Summe an einer
-  anderen Figur wird nie erreicht — die hier gefahrenen Szenen (3080, 3081, 30E0, 3001) enden alle im selben Bild wie vorher.
+  anderen Figur wird nie erreicht — die hier gefahrenen Szenen (2000, 3080, 3081, 30E0, 3001) enden alle im selben Bild wie vorher.
 - **H5:** Im Baum liegen fremde exe-Kopien `build/platform/pc/re15_pc_r35e_haken_bce82682.exe` (10:14) und
   `re15_pc_r37d_lift_7c28d838.exe` (17:11) aus Laeufen anderer Riegel (nicht von Spur H, nicht versioniert); harmlos.
 - **H6:** Die 10 Bash-Riegel (release/, Android) sind nicht gefahren (kein Diff-Bezug) — im Release-Container mitlaufen lassen.
+
+Aufraeumen: meine Messkopien `re15_pc_h41abn1.exe` / `re15_pc_h41abn1_vor.exe` aus build/platform/pc entfernt (kein Prozess lief mehr).
+
+## 11. Ergebnis
+- Punkt 1 (NPCs laufen ineinander): **erfuellt** — an vier Orten mit eigenen Wegen vorher reproduziert und nachher getrennt: 3070
+  Leon (echte Tuer, min 1 -> 899), 30E0 Leon (nach der Szene, 12 -> 884), 3001 Elza auf dem echten Story-Weg ohne Flags (13 -> 722,
+  1. Besuch 8 -> 749), 3011 Elza echter Weg (3 -> 749); die Restunterschreitung der Radien-Summe ist die Wandklemme hinter dem Schub
+  (Original-Reihenfolge, 28/28 Wurzeln selbst gescannt). Nachbarszenen 2000, 3080, 3081 bitgleich bzw. ohne Kontakt.
+- Punkt 2 (Kisten 2050 ineinander): **erfuellt** — eigene Paarung obj 1 -> obj 2 fuer Leon und Elza, per Sprung UND auf dem echten Weg
+  (Leiter-Tuer + drei Absprunge ins Becken): vorher 109-116 Lagezeilen mit Ueberlappung (Kiste ganz durch die andere), nachher 0 mit
+  `OBJEKT-GESPERRT` an der inklusiven Grenze 1800 (FUN_8002cdf4, Durchlauf @0x8002c03c-c0a8); Raetsel bleibt loesbar.
+- RE-Gate haelt, Tests halten (Spur 10/10, unit_/prop_/probe_ 922/922, Integrationsgruppe 81/81), Vertrag haelt (V1/V2 per H-E1
+  angenommen). Keine Maengel; Hinweise H1-H6.
+- **bestanden = JA** (alle Punkte erfuellt, alle Gates halten, keine Maengel).
