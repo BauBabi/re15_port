@@ -976,10 +976,12 @@ ss1=9 ...] hp=2000` (Schaden 1000 = RE1.5 Art 2 @0x8006f41c, wie vom Riegel verl
 PATH wie local_build.sh (msys64 zuerst) + `/c/Program Files/Git/cmd` am Ende (unit_r39_titelversion_cmake braucht git; ohne git
 rot mit "git fehlt" - Umgebung, kein Befund). `ctest --test-dir re15_port/build ...`, -R-Ausdruecke woertlich.
 
-Unit (Stand dd77ec7a = Code 5f1dce6d):
+Unit (Code 5f1dce6d; gebaut 06:1x):
 ```
 -R "^unit_r41_wasser20b0_" --timeout 600 -j 4
 100% tests passed, 0 tests failed out of 11
+  Pruefungen je Teil (Einzellauf des Binaers): bytes 49, modell 4, sequencer 16, raum 18, landung 6, npc 90, npc_wasser 40,
+  stempel 7, npc_subs 11, ton 4, lage 12 - je 0 Fehler; "alle" in EINEM Prozess: 257 Pruefungen, 0 Fehler (Abnahme 1: 229).
 -R "^(unit|probe|prop)_" --timeout 600 -j 4      (06:16-06:27)
 99% tests passed, 1 tests failed out of 927
   rot nur unit_r39_titelversion_cmake ("git fehlt": git nicht im PATH dieses Laufs); einzeln mit git im PATH:
