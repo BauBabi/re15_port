@@ -217,3 +217,12 @@ shared_assets/PSX.
   items (re15_inv_screen.c), szenenleon/werkstatt11b0/johnruf1041_tuer (scd_room_setup.c, scd_vm.c, 11B0/11B1),
   plc-Riegel (player_common.c)).
 - Letzter exe-Lauf (re15_pc_r41e4.exe, Endstand, echter Weg mit Aktionstaste): Kurbel-Clip wrappt bei F498/538/578/618.
+
+## Nachbesserung 1 (nach Abnahme 0, 2026-10-24)
+Grundlage: `E_abnahme_0.md` §7 (Mangel 1, Hinweise H1-H3) und die Orchestrator-Hinweise in AUFTRAG.md (2026-10-24 03:21:
+Anlauf im Gehen/Rennen, alle Seiten der Zone Slot 3 @0x009AE, Zielhaltung/Schuss, Add_speed-Ziel @0x0AA8-0x0ACC).
+Stand bei Beginn: HEAD 88bfae38 (Code = ed7bd4ff), exe md5 757da3a9132018190427a32a39b67d96. Laeufe unter
+`<sp>/E41n1/runs/<lauf>/` (`<sp>` = Scratchpad dieser Sitzung), Messkopie `re15_pc_E41n1.exe`, VORHER-exe =
+`<sp>/abn0_base/re15_port/build/platform/pc/re15_pc_abn0_basis.exe` (Basis 116e8b0f, md5 2310696431b26d115bc00f3796663c01).
+
+### Mangel 1 — "Herumfliegen" an der Kurbel 2020: Anlauf-Varianten (in Arbeit)
