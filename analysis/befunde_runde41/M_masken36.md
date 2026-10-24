@@ -306,6 +306,21 @@ NUR ein wieder aufgenommenes Rechteck verdeckt):
 * HINTER, 10 Szenen: neu verdeckt 3050 C5 893 + 166, 5100 C7 982, 5020 C7 668, 5090 C12 184, 30A0 C3 151, 4040 C6 124,
   6010 C6 69, 5100 C3 64, 4040 C11 2 = 3 303 Leon-Punkte (Bilder `M_bilder/NB1_M1_*.png`).
 
+**Schritt 2 (wie raum.py "zelle": Fehltreffer erben, `--erben`):** Schritt 1 verlangte, dass die Zelle JEDEN Punkt eines
+Rechtecks direkt trifft (262 Rechtecke / 133 733 px scheiterten nur daran). raum.py baut die Nutzer-Freistellungen mit
+geometrie.tiefe_zelle: Punkte ohne Treffer erben den naechsten Treffer desselben Objekts (geometrie._erben). Dieselbe Regel
+fuer die noch ausgeschlossenen Rechtecke (`m41nb1c/tz4`, `tz4b`, `tz4_kette.sh`): 266 Kandidaten (240 mit geerbten Punkten,
+39 578 geerbte Punkte), `erzeuge` -> **131 wieder drin (71 783 px), 0 neu ausgeschlossen**; `--zurueck` gibt den 135 weiter
+ausgeschlossenen ihre alte Tiefe, zweiter `erzeuge` bitgleich (stabil); geaendert nur Tiefenfelder (308 Bytes in 24 Dateien,
+0 ausserhalb der Tiefenfelder). 38 Cuts, groesste 4040 C9 (7 046 px), 30A0 C0 (6 888), 4080 C8 (6 268), 30A0 C1 (5 204), 4040 C6.
+**Ergebnis statisch (Leon-Dateien, Elza bytegleich):**
+| | vor NB1 | nach Schritt 1 | nach Schritt 2 |
+|---|---|---|---|
+| ausgeschlossene alte / Saum-Rechtecke | 722 / 831 | 607 / 710 | 530 / 656 (Leon + Elza Saum 1 312 von 8 600) |
+| gezeichnete Generator-Punkte | 780 626 | 817 808 | 889 591 (+14,0 %) |
+| Punkte nur in ausgeschlossenen Rechtecken | 450 317 | 413 135 | 341 352 (-24,2 %) |
+| Objekte ganz / teilweise / gar nicht gezeichnet (von 419) | 217 / 147 / 55 | 230 / 138 / 51 | 273 / 99 / 47 |
+
 ### NB1 Mangel 3 - ROOM2030/2031 Cut 15 (4400,3850) Band 3: die "uebermalten Leon-Punkte" sind die Spinne (widerlegt)
 
 **Ursache der Abnahme-Zahl:** das Mass S = |B - Hintergrund| > 24 im Figurfenster zaehlt JEDE Figur. Direkt hinter Leon (und
