@@ -631,6 +631,22 @@ des groben Gitters am Bildrand; **0 in jedem durch NB2 geaenderten Cut** (3040 C
 "DAVOR" nimmt den Figurkasten +-350; Leons echte Silhouette ist breiter (OFFEN 7) - deshalb zeigen d30A0_00/d5020_00 Randpunkte, und
 jeder davon liegt nachgerechnet hinter dem Koerper.
 
+## Nachbesserung 3 (2026-10-25, nach Abnahme 2 = analysis/befunde_runde41/M_abnahme_2.md)
+
+Grundlage: Abnahme 2 (Urteil "nicht bestanden": Punkt 1 teilweise, Punkt 2 erfuellt). Mangel 1 = ROOM30A0/30A1 Cut 0 (Cut 1
+gleiches Muster): die oberen Trennwandfelder (C0 R4/R5/R19, C1 R4) tragen seit NB1 die Tiefe einer Zelle HINTER der Trennwand -
+Figur hinter der Trennwand als Halbfigur; dazu fehlt ein Riegel gegen zu FERNE Tiefe, Verdachtsliste `m41abn2/scan_fern_alle.txt`
+(127 Modell-Rechtecke). Mangel 2 = Punkt 1 weiter nicht geschlossen (1022 Rechtecke aus, 273 961 Punkte; Restliste; OFFEN 9
+"Atlaspunkte ausserhalb des Koerpers durchsichtig / Rechteck teilen" nicht gegangen). Keine Messung der Abnahme wird wiederholt,
+ihre Zahlen werden zitiert. Punkt 2 (erfuellt) wird nicht angefasst.
+
+### Stand Nachbesserung 3
+- [x] Lektuere (AUFTRAG inkl. Nachtrag 11, VERTRAG, Abnahme 2, Dossier NB1/NB2, git log master..HEAD = 99f85a92)
+- [ ] Mangel 1: Ursache an den Daten nachrechnen (Zellen-Tiefe R4/R5/R19 gegen Zelle 6), Weg, Umsetzung, exe-Messung, Riegel "zu fern"
+- [ ] Mangel 1: Verdachtsliste scan_fern_alle.txt (127) systematisch sichten
+- [ ] Mangel 2: OFFEN 9 gehen (Rechteck teilen / Punkte ausserhalb des Koerpers durchsichtig), Restliste weiter schliessen
+- [ ] Bau, gezielte Tests, Abschluss-Commit
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
