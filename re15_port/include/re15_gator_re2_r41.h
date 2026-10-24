@@ -203,6 +203,24 @@ int  re15_gr2_kamera_gesperrt(void);                      /* 1 = ein Programm ha
 void re15_gr2_kamera_auto(int an);
 /* Finisher (FRESSEN P0, Haken in enemy_ai_boss_gator.c NACH der Opfer-Platzierung): Sperre + FINISHER-Wahl. */
 void re15_gr2_kamera_finisher(int slot, const re15_actor_t *gator, const re15_actor_t *opfer);
+/* Nachbesserung 5 (Abnahme 4, M1) - FRESSEN P0 wie RE2 (@0x80100fbc-0x801010e4, Dossier §13):
+ *  - fressen_p0: Zusatzwinkel +0x22A/+0x228 = 0 (`sh zero,554(s0)` @0x80101050 / `sh zero,552(s0)` @0x80101054), Kanister-Objekt
+ *    aus (`sw zero,1308(at)` @0x80101008-0c).
+ *  - finisher_buehne (PORT-WAHL, Form = RE2-Umsetzen `sw v0,56(s0)` @0x80101048-4c + Schnitt Cut 7/14 @0x80100fec-ff4): Gator auf
+ *    die naechste Lage + Gier setzen, bei der die authored Finisher-Bahn P1-P3 (Wurzel, Hals/Kopf/Kiefer, Leons Wurzel) im Wasser
+ *    liegt und der Gator FRONTAL zu einer Zonenkamera steht, die Kopf und Leon zeigt (RE2 Cut 7: frontal +1,00, Leon vor der
+ *    Kamera); diese Kamera nimmt re15_gr2_kamera_finisher. 1 = umgesetzt, 0 = keine Lage (Gator bleibt, Kamera wie bisher).
+ *  - finisher_cut: Messhaken, Kamera der Buehne (-1 = keine).
+ *  - fress_sitz: Messhaken (PC-Zeichner nach dem NPC-Pass / Riegel): |Kopf (Bone 6) der gezeichneten Pose - Kopf an der Anker-
+ *    Lage ohne Zusaetze| = Opfer im Maul wie authored (RE2: FUN_80015cb8 setzt beide vom Anker, ohne Neigung/Wand); kopf[]/leon[]
+ *    gezeichnete Weltlagen, *phase 1/2/3. 0 = kein Finisher-Bild.
+ *  - becken_draussen / im_bild_cut: Wasser (Beckenquelle des Boss-Moduls) und Projektion wie der Zeichner, fuer die Messzeile. */
+void re15_gr2_fressen_p0(int slot);
+int  re15_gr2_finisher_buehne(int slot, re15_actor_t *e);
+int  re15_gr2_finisher_cut(int slot);
+int  re15_gr2_fress_sitz(re15_actor_t *e, const re15_actor_t *pl, int32_t *abw, int32_t kopf[3], int32_t leon[3], int *phase);
+int32_t re15_gr2_becken_draussen(int32_t x, int32_t z, int32_t m);
+int  re15_gr2_im_bild_cut(int c, const int32_t p[3], int *sx, int *sy);
 /* Messhaken: Schnittfolge seit dem Boss-INIT (cut[i] = gewaehlter Cut, -1 = Sperre ohne Schnitt, -2 = frei;
  * blick[i] = RE15_GR2_BLICK_*, 0 = frei/zurueck; clip/bild = Gator-Clip und -Bild beim Ereignis). */
 int  re15_gr2_kamera_folge(int max, int *cut, int *blick, int *clip, int *bild);

@@ -45,6 +45,7 @@ int  re15_gator_boss_untergetaucht(const re15_actor_t *e);
 int  re15_gator_boss_befreiungen(void);
 int  re15_gator_boss_verfolgt(const re15_actor_t *e);
 int  re15_gator_boss_phase(const re15_actor_t *e);   /* Messhaken: Boss-Phase (2 = CHASE, 5 = GUARD, 7 = CROSS; -1 = kein Boss) */
+int  re15_gator_boss_im_fressen(const re15_actor_t *e);   /* Nachbesserung 5: 1 = Fress-Finisher (FRESSEN P0-P3) laeuft */
 /* Messhaken GIER-WACHE (NB4, M2): Bildpaare mit beiden Takten in CHASE/GUARD, groesstes |Gier-Delta| (ohne den RE2-Knick +1024),
  * Zahl der Deltas > 0x60 (Port-Wenderate). gator_boss.log: "GIER-SPRUNG ..." je Verstoss, "GIER-WACHE ..." alle 300 Paare. */
 int  re15_gator_boss_gier_wache(int slot, int *paare, int *max_delta, int *spruenge);

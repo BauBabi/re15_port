@@ -126,10 +126,58 @@ static void kanister_sitz(void)
     }
 }
 
+/* (7) MESSZEILE Maul-Sitz (Nachbesserung 5, Abnahme 4 M1): je Bild des Fress-Finishers (FRESSEN P1-P3) |Kopf (Bone 6) der
+ * gezeichneten Pose - Kopf an der Anker-Lage ohne Zusaetze| (re15_gr2_fress_sitz; RE2 FUN_80015cb8 setzt Gator und Opfer vom
+ * gemeinsamen Anker, ohne Neigung und ohne Wand = Opfer im Maul wie authored), ob Kopf und Leons Wurzel im Bild der GEZEICHNETEN
+ * Kamera liegen (Projektion wie der Zeichner: view x Welt, H/z) und ob beide im Wasser sind (Beckenquelle des Boss-Moduls).
+ * debug.log "[gator-re2] Maul-Sitz F<n>: Bilder <k> (P1 a P2 b P3 c), Abweichung max <m> (F..), Kopf+Leon im Bild <j>/<k> (Cut <c>),
+ * im Wasser <w>/<k> | jetzt ..." beim ersten Bild, bei jedem neuen Hoechstwert, bei jedem Bild ausserhalb Bild/Wasser und alle
+ * 30 Bilder. Reine Messung. */
+static int fress_proj(const re15_camera_view_t *cam, int cx, int cy, const int32_t p[3])
+{
+    if (!cam) return 0;
+    int64_t px = p[0], py = p[1], pz = p[2];
+    int32_t vx = (int32_t)(((int64_t)cam->rot[0]*px + (int64_t)cam->rot[1]*py + (int64_t)cam->rot[2]*pz) >> 12) + cam->trans[0];
+    int32_t vy = (int32_t)(((int64_t)cam->rot[3]*px + (int64_t)cam->rot[4]*py + (int64_t)cam->rot[5]*pz) >> 12) + cam->trans[1];
+    int32_t vz = (int32_t)(((int64_t)cam->rot[6]*px + (int64_t)cam->rot[7]*py + (int64_t)cam->rot[8]*pz) >> 12) + cam->trans[2];
+    if (vz <= 0) return 0;
+    int x = cx + (int)(((int64_t)vx * cam->fov_screen_dist) / vz), y = cy + (int)(((int64_t)vy * cam->fov_screen_dist) / vz);
+    return x >= 0 && x < 320 && y >= 0 && y < 240;
+}
+static void fress_sitz(const re15_camera_view_t *cam, int cx, int cy)
+{
+    static int s_n, s_pn[4], s_bild, s_wasser; static int32_t s_max = -1; static unsigned s_fmax = 0, s_raum = 0xffffffffu;
+    if (s_raum != (unsigned)g_current_room_id) {
+        s_raum = (unsigned)g_current_room_id; s_n = 0; s_bild = 0; s_wasser = 0; s_max = -1; s_fmax = 0;
+        memset(s_pn, 0, sizeof s_pn);
+    }
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        re15_actor_t *a = &g_actors[i];
+        if (!a->active || a->type != 0x23u || !re15_gator_boss_im_fressen(a)) continue;
+        int32_t abw = 0, kopf[3], leon[3]; int ph = 0;
+        if (!re15_gr2_fress_sitz(a, &g_actors[RE15_ACTOR_SLOT_PLAYER], &abw, kopf, leon, &ph)) return;
+        unsigned f = (unsigned)g_engine.frame_count;
+        int bild = fress_proj(cam, cx, cy, kopf) && fress_proj(cam, cx, cy, leon);
+        int wasser = re15_gr2_becken_draussen(kopf[0], kopf[2], 0) == 0 && re15_gr2_becken_draussen(leon[0], leon[2], 0) == 0;
+        s_n++; s_pn[ph & 3]++;
+        if (bild) s_bild++;
+        if (wasser) s_wasser++;
+        int neu = abw > s_max;
+        if (neu) { s_max = abw; s_fmax = f; }
+        if (neu || s_n == 1 || (s_n % 30) == 0 || !bild || !wasser)
+            fprintf(stderr, "[gator-re2] Maul-Sitz F%u: Bilder %d (P1 %d P2 %d P3 %d), Abweichung max %d (F%u), Kopf+Leon im Bild %d/%d "
+                    "(Cut %d), im Wasser %d/%d | jetzt P%d %d kopf=(%d,%d,%d) leon=(%d,%d,%d)\n",
+                    f, s_n, s_pn[1], s_pn[2], s_pn[3], (int)s_max, s_fmax, s_bild, s_n, (int)g_re15_active_cut, s_wasser, s_n,
+                    ph, (int)abw, kopf[0], kopf[1], kopf[2], leon[0], leon[1], leon[2]);
+        return;
+    }
+}
+
 void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
 {
     putz_sicht((const re15_camera_view_t *)cam_view_v, cx, cy);   /* Messzeile (M2) */
     kanister_sitz();                                               /* Messzeile Nachbesserung 4 (M1) */
+    fress_sitz((const re15_camera_view_t *)cam_view_v, cx, cy);   /* Messzeile Nachbesserung 5 (M1) */
     int32_t pos[3], rot[9];
     if (!re15_gr2_kanister_welt(pos, rot)) return;
     if (!modell_laden()) return;

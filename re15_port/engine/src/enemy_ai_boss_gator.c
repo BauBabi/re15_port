@@ -328,7 +328,10 @@ int re15_gator_boss_active(const re15_actor_t *e)
  * wieder MIT Wand-Klemme - das fruehere skip im Anlauf war der Durch-die-Insel-Tunnel (Nutzer 2026-09-10). */
 static int gb_klemme_aus(const gb_state_t *g)
 {
-    return g->phase == GBP_CROSS || g->befrei > 0;
+    /* Runde 41 Spur B, Nachbesserung 5 (Abnahme 4, M1): auch FRESSEN - RE2 setzt Gator und Opfer in P1-P3 absolut vom gemeinsamen
+     * Anker (FUN_80015cb8 @0x80101174 / @0x801011cc, Lage `sw v0,56(s1)` @0x80015d68 / `sw v0,64(s1)` @0x80015d90) ohne Wand-
+     * kollision; die Klemme hielt den Gator an der Wand, Leon folgte dem ungeklemmten Anker (Sonde probe_maul: Versatz bis 1129). */
+    return g->phase == GBP_CROSS || g->befrei > 0 || g->phase == GBP_FRESSEN;
 }
 int re15_gator_boss_skip_clamp(const re15_actor_t *e)
 {
@@ -1153,6 +1156,10 @@ int re15_gator_boss_befreiungen(void) { return s_gb_befreiungen; }
 int re15_gator_boss_phase(const re15_actor_t *e)
 {
     return re15_gator_boss_active(e) ? (int)s_gb[(int)(e - g_actors)].phase : -1;
+}
+int re15_gator_boss_im_fressen(const re15_actor_t *e)   /* Nachbesserung 5: Messzeile Maul-Sitz (gator_re2_pc.c) */
+{
+    return re15_gator_boss_active(e) && s_gb[(int)(e - g_actors)].phase == GBP_FRESSEN;
 }
 int re15_gator_boss_verfolgt(const re15_actor_t *e)
 {
@@ -2407,6 +2414,18 @@ static void gb_takt(int slot)
         g->timer++;
         e->y = GB_WATER_Y;
         if (g->timer == 1) {                           /* ---- P0 @0x80100FBC-10E4 ---- */
+            /* Runde 41 Spur B, Nachbesserung 5 (Abnahme 4, M1) - RE2 P0 inszeniert den Finisher (Dossier §13.0):
+             *  - Zusatzwinkel aus: RE2 nullt +0x22A/+0x228 (`sh zero,554(s0)` @0x80101050 / `sh zero,552(s0)` @0x80101054); der
+             *    Port-Zusatz derselben Haken (pitch_vz Bone 0 / arc_vz / jaw_vz, re15_gator_spine_arc_vz) ebenso - das GUARD-
+             *    Aufrichten (pitch -350) blieb sonst durch P0-P3 stehen und hob den Kopf ~5600 von Leon weg (Sonde probe_maul).
+             *  - keine Ueberblendung: P1 wechselt mit FUN_8001a330(em,4,0,0) (`addu a2,zero,zero` @0x801010f0 -> +0x14E = 0
+             *    @0x8001a364), der Finisher zeigt die Clip-Posen ohne Rest des Vorbilds.
+             *  - Kanister-Objekt aus (@0x80101008-0c) + Gator umsetzen (@0x80101048-4c): re15_gr2_fressen_p0 / re15_gr2_finisher_buehne
+             *    (PORT-WAHL der Lage, s. dort); Leon kommt danach wie bisher vor den (umgesetzten) Gator. */
+            g->pitch_vz = 0; g->arc_vz = 0; g->jaw_vz = 0;
+            e->anim_frac = 0;
+            re15_gr2_fressen_p0(slot);
+            re15_gr2_finisher_buehne(slot, e);
             int32_t fc0 = re15_cos_q12((int)e->rot_y), fs0 = re15_sin_q12((int)e->rot_y);
             /* ⛔ ORIGINAL (selbst disassembliert, EM23_OVL_0000.BIN): `lw v0,56(s0)` @0x8010106c
              * / `addiu v0,v0,10643` @0x8010107c / `sw v0,0x800cfc30` @0x80101084 = Spieler-x
@@ -2449,6 +2468,10 @@ static void gb_takt(int slot)
             pl->z = e->z + (int32_t)((-(int64_t)fs0 * vx + (int64_t)fc0 * (-915)) >> 12);
             pl->rot_y = e->rot_y;                      /* Yaw-Kopie @0x80101154-5C */
             pl->rot_x = 0;
+            /* Nachbesserung 5: Leon steht vor dem Gator auf dem Beckenboden wie nach jedem Biss im Wasser (A2: y 0, Leon watet
+             * bei y 0). RE2 P0 schreibt nur x/z (0x800cfc30 @0x80101084 / 0x800cfc38 @0x80101078) - im Korridor steht der Spieler
+             * schon auf dem Boden; nach dem GUARD-Hochbiss stand Leon oben auf der Rampe (y -1800) und schwebte sonst in P1. */
+            pl->y = 0;
             /* Leon laeuft seit dem Biss-Abschluss im VICTIM-MODUS 4 auf Opfer-
              * Clip 0 (Hochheben) - kein pl->motion-Schreiben mehr noetig (die
              * Tod-FSM ist per Modus-4-Besitz pausiert). */
