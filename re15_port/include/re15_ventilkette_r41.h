@@ -288,11 +288,12 @@
 #define RE15_R41C_SLOT_2000_LEITER 4   /* main00 @0x0169E */
 /* 2010 Ventil-Sicherungskasten (Nachbesserung 5, Nachtrag 16, Dossier §0f B5-1): Lage = der Schaltschrank mit dem kleinen
  * Anzeigefeld (3 x 3 Tasten) an der Ostwand im Hintergrund ROOM2010 Cut 3 (BSS-Bild x 229..252 y 66..86, Rueckprojektion auf
- * die Ostwand x 5400 = Innenkante SCA Zelle 3 (5400,-9550,2000,16650) -> Mitte z -2770, y -2650..-2970). Platz in der Form
- * des Original-Kastens ROOM2060 Slot 9 @0x010A6 (1400 x 1000, die lange Seite an der Wand): x 4400..5400, z -3470..-2070,
- * Band 0 (alle Plaetze von 2010 tragen Band 0, main00 @0x00746..@0x007D0). Platz 8 = erster freier (0-7 belegt). */
+ * die Ostwand x 5400 = Innenkante SCA Zelle 3 (5400,-9550,2000,16650) -> Mitte z -2770, y -2650..-2970). Platz in der Groesse
+ * des Original-Kastens ROOM2060 Slot 9 @0x010A6 (1400 x 1000, die lange Seite an der Wand) und in der Lage "Wandflaeche +- 500"
+ * wie Pult- und Ventil-Plaetze dieses Moduls (der Vorwaertspunkt eines Spielers an der Wand liegt in der Wand): x 4900..5900,
+ * z -3470..-2070, Band 0 (alle Plaetze von 2010 tragen Band 0, main00 @0x00746..@0x007D0). Platz 8 = erster freier (0-7). */
 #define RE15_R41C_SLOT_KASTEN      8
-#define RE15_R41C_KASTEN_RECT      4400, -3470, 1000, 1400
+#define RE15_R41C_KASTEN_RECT      4900, -3470, 1000, 1400
 #define RE15_R41C_KASTEN_BAND      0
 #define RE15_R41C_SLOT_2060_KASTEN 9   /* ROOM2060 sub00 @0x010A6/@0x010C6/@0x010DE (Sicherungskasten des Generators) */
 #define RE15_R41C_MSG_2060_FEHLT   3   /* ROOM2060 msg 3 "One of the fuses is missing..." (Else-Zweig @0x010A6) */
