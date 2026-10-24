@@ -472,6 +472,42 @@ uebrigen 89 verfehlt bei 86 der Sehstrahl zu einem verdeckten Figurpunkt den Koe
 Rechtecks: geerbte Punkte, Typ-2-Rauten in 4040/4080, deren Tiefe der Python-Weg aus dem Huellrechteck rechnet), bei 3 (5090 C11
 Typ-6-Dreieck) liegt ein Figurpunkt im Koerper. Diese bleiben aus - die 3D-Regel nimmt nur, was der Koerper belegt.
 
+**Messung nachher (a), statisch** (eigener Zaehler `m41nb2/py/zaehlen.py`, wie stat_nb1 der Abnahme; Ausgangszahlen der Abnahme
+bitgleich nachgerechnet): gezeichnete Generator-Punkte (Leon Stage 3..6) **889 591 -> 920 514** (+30 923), nur in ausgeschlossenen
+Rechtecken **341 352 -> 310 429**; ausgeschlossene Rechtecke 1186 -> 1106.
+**Unabhaengige 3D-Gegenprobe** (`m41nb2/py/statisch.py`, Python, NICHT der C-Code: alle erreichbaren Stehplaetze aus
+`test_r37_masken36 plaetze`, Figur 15 Spalten x 31 Hoehen, Sehstrahl abgetastet; (A) eigener Modellkoerper, (B) irgendein solider
+Zellkoerper aller Baender mit Form und pauschal 2400 hoch wie Abnahme 1 scan_form): fuer die NB2-Rechtecke 3040 C3 14 verdeckte
+Punkte / 0 ohne Koerper davor, 5050 C1 3 979 / 0, 6000 C5 1 249 905 / 0, 6000 C8 757 365 / 0, 6000 C9 545 122 / 0, 6000 C7
+392 073 / **2** (Rechteck 28, Fusspunkt am unteren Bildrand (303,223) an (21633,-20084) Band 0 unter dem Band-2-Bahnsteig, 2 Punkte
+des groben Gitters; der pixelgenaue C-Riegel sieht dort keinen). Nebenbefund Altbestand NB1 (unveraendert): 4040 C6 5 094 / 4040 C7
+5 608 Punkte, an denen der Kopf ueber der GEMESSENEN Hoehe 3025 des Mittelblocks liegt (Kamera y -3527, Strahl bei s 0,7 auf
+y -3110..-3200) - die Masken-Region zeigt dort den Block (Kunst hoeher als das IoU-Modell); Abnahme 1 hatte die Stelle an der exe
+(ih4040_06) als "Leon hinter dem Block" bestaetigt. Kein NB2-Rechteck.
+**Messung nachher (a), exe** (Spurbaum-exe 18:17, Bild 120, RE15_WINDOW_SCALE=1, A mit / B ohne Masken (RE15_NO_PRI), Leon-Dreiecke
+per RE15_TRILOG; sichtbar uebermalt = Leon vorderstes Dreieck UND Masken-Schluessel (depth+1)*65536/1023 <= z, render_pc.c
+pc_masken_schatten_flush; vorher = Tabelle vor NB2 auf denselben Laeufen; Szenen `m41nb2/py/szenen.py`: je Cut die Stehplaetze mit
+den meisten NEU verdeckten Punkten (HINTER) bzw. der groessten Ueberlappung ohne neue Verdeckung (DAVOR)):
+| Szene | Platz (Band) | Leon vorne | sichtbar uebermalt/verdeckt vorher -> nachher |
+|---|---|---|---|
+| d6000_05_0 DAVOR | (12133,-10084) B2 | 2730 | 0 -> **0** |
+| d6000_05_1 DAVOR | (15433,-4184) B2 | 2540 | 0 -> **0** |
+| d6000_07_0 DAVOR | (15133,-18684) B2 | 6192 | 0 -> **0** |
+| d6000_08_0 / _1 DAVOR | (12733,-18684) / (12033,-19484) B2 | 3054 / 3349 | 0 -> **0** / 0 -> **0** |
+| d6000_09_0 / _1 DAVOR | (7233,-18684) / (8833,-18684) B2 | 1101 / 744 | 0 -> **0** / 0 -> **0** |
+| h6000_05_0 / _1 HINTER | (14233,-15484) / (14533,-14284) B0 | 1417 / 1321 | 0 -> 1387 / 0 -> 1229 |
+| h6000_07_0 / _1 HINTER | (15133,-10584) / (15233,-9184) B0 | 1085 / 958 | 0 -> 925 / 0 -> 921 |
+| h6000_08_0 / _1 HINTER | (15033,-12784) / (15333,-14484) B0 | 964 / 936 | 0 -> 925 / 0 -> 910 |
+| h6000_09_0 / _1 HINTER | (14033,-14984) / (15233,-14484) B0 | 471 / 396 | 0 -> 437 / 0 -> 385 |
+| h5050_01_0 / _1 HINTER | (-21600,-24450) / (-22900,-24050) B0 | 2513 / 1811 | 0 -> 76 / 9 -> 78 |
+| h3040_03_0 HINTER | (-21200,-12600) B1 | 1177 | 0 -> 20 |
+Die HINTER-Stellen in 6000 liegen auf Band 0 (Gleisebene) im Grundriss der Lok (Zelle x -7857..16380 z -18219..-10574 Band 2,
+RDT-Beleg in der Tabelle): Leon steht unter/hinter dem Lokkoerper. **Props:** die neuen Lok-Rechtecke verdecken in C5/C9 einen Teil des
+3D-Tors (Slot 5, Obj_model_set[1] (20916,0,-18540), debug.log): der Sehstrahl Kamera C5 (8794,-9403,-7278) -> Tor-Ursprung in den
+Hoehen 0..5400 schneidet den Lokkoerper (gerechnet), das Tor steht 4 500 hinter der Lokfront (x 20916 gegen 16380) - die
+Verdeckung ist geometrisch richtig (vorher zeichnete das Spiel das Tor ueber die Lok; Bilder `M_bilder/NB2/NB2_M1_d6000_0*_tor.png`).
+Bilder: `M_bilder/NB2/NB2_M1_<szene>.png` (oben: mit | ohne Masken | rot = veraendert; unten Ausschnitt).
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
