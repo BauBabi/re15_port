@@ -14,10 +14,11 @@
  *   re15_render_pc_clear_scene_overlays; den Rest setzt das naechste re15_render_begin_frame zurueck) und KEIN
  *   SDL_RenderPresent. Das Standbild der Tuerszene (s_sb_*) wird nur in re15_render_end_frame gefuehrt und bleibt
  *   damit das zuletzt GEZEIGTE Bild.
- *   Messabzug: RE15_FRAMEDUMP liest den Backbuffer im Normalpfad VOR dem Present; ein gehaltenes Bild hat keinen
- *   neuen Backbuffer. Darum wird bei gesetztem RE15_FRAMEDUMP jedes gezeigte Bild hier zusaetzlich gemerkt und ein
- *   Abzug-Auftrag fuer ein gehaltenes Bild mit diesem Bild bedient (Zeile "[framedump] ... (gehalten)"). Ohne
- *   RE15_FRAMEDUMP: kein Ruecklesen, keine Kosten.
+ *   Messabzug: ein Ruecklese-Auftrag (re15_render_pc_request_readback: RE15_FRAMEDUMP, RE15_R38F_SICHT, ...) liest den
+ *   Backbuffer im Normalpfad VOR dem Present; ein gehaltenes Bild hat keinen neuen Backbuffer. Darum wird ab dem ersten
+ *   Auftrag (oder mit gesetztem RE15_FRAMEDUMP) jedes gezeigte Bild hier zusaetzlich gemerkt und ein Auftrag fuer ein
+ *   gehaltenes Bild mit diesem Bild bedient (Zeile "[framedump] ... (gehalten)"). Ohne Rueckleser: kein Ruecklesen,
+ *   keine Kosten.
  */
 #include <SDL.h>
 
@@ -34,9 +35,10 @@ static int       s_w, s_h;
 static int       s_an = -1;
 static unsigned  s_gehalten;
 
-void re15_bildhalt_r41_merken(void)
+void re15_bildhalt_r41_merken(int auftrag)
 {
     if (s_an < 0) { const char *e = getenv("RE15_FRAMEDUMP"); s_an = (e && *e) ? 1 : 0; }
+    if (auftrag) s_an = 1;                   /* ab dem ersten Ruecklese-Auftrag jedes gezeigte Bild merken */
     if (!s_an) return;
     SDL_Renderer *r = re15_render_pc_renderer();
     if (!r) return;

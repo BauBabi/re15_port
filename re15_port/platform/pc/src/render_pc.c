@@ -1693,7 +1693,7 @@ void re15_render_end_frame(void)
      * RE15_FBDUMP wiederum dumpt nur die 2D-Ebene (BG-Blit), NICHT die ueber
      * SDL_RenderGeometry gezeichneten 3D-Props. Dieser Haken liefert beides zusammen.
      * Rein env-/aufruf-gegatet; der Normalpfad ist unberuehrt. */
-    { extern void re15_bildhalt_r41_merken(void); re15_bildhalt_r41_merken(); }   /* Runde 41 Spur E: Abzug fuer gehaltene Bilder (nur RE15_FRAMEDUMP) */
+    { extern void re15_bildhalt_r41_merken(int auftrag); re15_bildhalt_r41_merken(s_readback_pending); }   /* Runde 41 Spur E: Abzug fuer gehaltene Bilder (nur mit Rueckleser) */
     if (s_readback_pending) {
         s_readback_pending = 0;
         int rw = 0, rh = 0;
