@@ -12,6 +12,9 @@ Begonnen 2026-10-24 ~18:4x. Pruefer: Abnahme 4 (Opus). Der Bericht wird FORTLAUF
 **Ergebnis: (in Arbeit)**
 
 ## 0. Stand / Protokoll (neueste zuerst)
+* 19:3x Messungen K1/K2/D/P/P1/P4/P5/P6/FL/FLR/N12/KE abgeschlossen (Leon + Elza wo verlangt); Integration r41 4/5 gruen, Haupt-Riegel
+  und Raum-/Dokument-Gruppe laufen (`<a4>/ctest_integ_r41.txt`, `<a4>/ctest_integ_raum.txt`). Neu im master (nach dem Start dieser
+  Abnahme): AUFTRAG.md **Nachtrag 15 (19:01)** = Freigabe des Ventilraetsels durch den Nutzer (§4).
 * 18:5x Bau: `local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)` (Zeile 180 `integration_r41_ventilkette_kette
   uebersprungen: Spur A fehlt`), `local_build.sh build` -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)` (`<a4>/configure.txt`,
   `<a4>/build.txt`); Unit-Gruppe 241/241 (§3); Integrationsgruppen im Hintergrund (`<a4>/integ.sh`); K1 gemessen (§1).
