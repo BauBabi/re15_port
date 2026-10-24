@@ -806,10 +806,14 @@ Index **`andi v1,t0,0x7f` @0x8005c44c / `addu s5,s5,v1` @0x8005c458 = a0 + (Bode
 (-1) -> kein Ton (`lw v0,0(s4)` / `li v1,-1` / `beq v0,v1` @0x8005c468-70). Der Typ waehlt nur die STIMME: `lbu v0,8(s3)` /
 `sltiu v0,v0,0x10` @0x8005c0e0-ec -> Typ < 0x10 Stimme `fuss != 4` (@0x8005c110-18), sonst Stimme 3 bzw. 2 fuer Fuss 4
 (`li s6,0x3` @0x8005c104, `li s6,0x2` @0x8005c10c). Die Lage geht mit (+0x38/+0x3c/+0x40 in den Stimmsatz, Abstand/Seite in
-FUN_8005c970 = /0xfa wie RE1.5 FUN_80045a64). Aufrufer im Scripted-Walk wie RE1.5-Sub 4: LAB_80061bbc (Tabelle @0x800a86b0)
-liest das Anim-Paar +0x180/+0x184 (`lw a1,0x180(s0)` / `lw a2,0x184(s0)` @0x80061c48-4c), das Bildwort `lw v0,0x178(s0)` /
-`andi v0,v1,0x4000` @0x80061c6c-7c, Fuss `andi 0x2000` / `srl 0xd` / *3 + 4 @0x80061c88-98, a0 = 0 (`clear a0` @0x80061c84),
-`jal 0x8005c040` @0x80061c9c; ebenso FUN_80066afc (Plc_dest-Walker, Ziel +0x1c4/+0x1c6, `jal 0x8005c040`).
+FUN_8005c970 = /0xfa wie RE1.5 FUN_80045a64). Aufrufer (XREF in ghidra_re2_Leon.txt): der Plc-Walker FUN_80066afc (Ziel
++0x1c4/+0x1c6, Bildwort `**(+0x178) & 0x4000`, Fuss aus Bit 0x2000, `jal 0x8005c040` @0x80066b78) haengt am Plc-Handler
+LAB_80065c88; der steht in ZWEI Routinentabellen (@0x800a4040 = Spieler-Tabelle @0x800a4030[4], gelesen @0x8003c19c; @0x800a83c8 =
+Tabelle @0x800a83b8[4]) und hat eigene Zweige fuer Typ >= 0x10 (`sltiu v0,v0,0x10` @0x80065cac, `addiu v0,v0,-0x10` / `sltiu
+v0,v0,0x10` @0x80065d10-14). LAB_80061bbc (Tabelle @0x800a86b0 des Spieler-Handlers FUN_80060650; Anim-Paar +0x180/+0x184
+@0x80061c48-4c, Bildwort `andi v0,v1,0x4000` @0x80061c7c, a0 = 0 @0x80061c84, `jal 0x8005c040` @0x80061c9c) ist ein SPIELER-Schritt.
+Welche RE2-Typen die Tabelle @0x800a83b8 fuehren, ist nicht ausgelesen; der Beleg fuer die Retail-Form ist FUN_8005c040 selbst:
+eigene Stimmen (2/3) fuer Nicht-Spieler, aber dieselbe Zeile fuer jeden Typ.
 => In der Retail-Fassung gibt es die NPC-Zeilen (Boden - 8) nicht mehr: jeder Nicht-Spieler schreitet mit derselben
 Raumzeile wie der Spieler (eigene Stimmen 2/3). Die leeren Beta-Zeilen sind die unfertige Stelle.
 **Weg (Regel Beta -> Retail):** NPC-Schritt = Original-Index (Boden - 8), WENN das Original dort hoerbar ist (Satz belegt und
