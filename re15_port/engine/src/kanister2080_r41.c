@@ -29,6 +29,7 @@
 #include "re15_damage.h"
 #include "re15_gator_re2_r41.h"
 #include "re15_boss_gator.h"
+#include "re15_anim_select.h"   /* re15_actor_playback_slot (Rueckwaerts-Clip, @0x8001f34c-54) */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -220,16 +221,19 @@ static void baue_szene(void)
     PUT(s_prog_szene, n, OP_RIEGEL);                                     /* ROOM2080 sub02 @0x0CB6/@0x0CBA */
     PUT(s_prog_szene, n, OP_CUT(RE15_K2080_CUT_SCHUSS));
     PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_TUERTON));                /* "erneut die Geraeusche einer schliessenden Tuer" */
-    PUT(s_prog_szene, n, OP_SLEEP(30));                                  /* RE2 ROOM7020 sub12 Sleep 30 @0x076A (Form) */
+    /* Nachbesserung 1 (M5): KEIN eigenes Warten nach dem Ton - die ROOM1021-Form legt direkt an (Plc_motion(2,6) @0x020C6, dann
+     * Sleep 110 @0x020CA); der Ton laeuft in diesen 110 Bildern. Das fruehere Sleep 30 war der RE2-Wert @0x076A aus einem anderen
+     * Zusammenhang (dort nach Message_on). */
     PUT(s_prog_szene, n, OP_WORK(2, RE15_K2080_NPC_SLOT));
     if (schuesse > 0) {
         PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_ZIEL));               /* erstes Ziel waehrend des Anlegens */
         PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_ZIELEN));      /* ROOM1021 @0x020C6 */
         PUT(s_prog_szene, n, OP_SLEEP(110));                             /* ROOM1021 @0x020CA */
         for (int i = 0; i < schuesse; i++) {
-            if (i > 0) {
+            if (i > 0) {   /* Nachbesserung 1 (M5): statt Sleep 10 warten, bis das Nachdrehen (0xC8/Bild @0x80033f90) am Ziel ist */
+                PUT(s_prog_szene, n, OP_SET(RE15_K2080_SIG_BANK, RE15_K2080_SIG_AUSGERICHTET, 0));
                 PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_ZIEL));
-                PUT(s_prog_szene, n, OP_SLEEP(10));                      /* Nachdrehen 0xC8/Bild (@0x80033f90) */
+                PUT(s_prog_szene, n, OP_POLL(RE15_K2080_SIG_AUSGERICHTET));
             }
             PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_FEUER));   /* ROOM1021 @0x020CE */
             PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_SCHUSS));
@@ -244,21 +248,26 @@ static void baue_szene(void)
                                LE16(RE15_K2080_NPC_STAND_Z) };
         n = put(b, n, cap, s, 8); }                                      /* Plc_dest RUN ("Rennt zu den Gas Kanister") */
     PUT(s_prog_szene, n, OP_POLL(RE15_K2080_SIG_ANKUNFT));
-    PUT(s_prog_szene, n, OP_MOTION(1, RE15_K2080_CLIP_AUFHEBEN));        /* Loco c2: Buecken + Aufheben */
-    PUT(s_prog_szene, n, OP_SLEEP(RE15_K2080_AUFHEBEN_GRIFF));
+    /* Nachbesserung 1 (M1, Nachtrag 24b): "nimmt ihn auf in beide Haende" = Marvins Original-Hinknien/Aufstehen ROOM11B0 sub06
+     * (Dossier 8.1): Plc_motion(1,11) @0x01650, Sleep 60 @0x01654, Plc_motion(1,11) + Plc_flg 0x80 @0x01658/@0x0165C, Sleep 30
+     * @0x01660. Griff im tiefsten Bild (Loco c11 Bild 24, beide Haende seitlich am Kanister), das Aufstehen traegt ihn hoch. Der
+     * Kanister steht schon an der Reling - kein Gang danach (vorher Loco c2 = PL00-KLETTERN @0x80038134, dann Plc_dest WALK und
+     * Eigen c0 = RUN-Gait @0x8005157c als "Tragen"). */
+    PUT(s_prog_szene, n, OP_MOTION(1, RE15_K2080_CLIP_KNIEN));           /* @0x01650 `3f 01 0b 00` */
+    PUT(s_prog_szene, n, OP_SLEEP(RE15_K2080_KNIEN_GRIFF));               /* bis Bild 24 (25 Bilder) ... */
     PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_AUFHEBEN));
-    PUT(s_prog_szene, n, OP_SLEEP(RE15_K2080_AUFHEBEN_BILDER - RE15_K2080_AUFHEBEN_GRIFF));
-    PUT(s_prog_szene, n, OP_SET(RE15_K2080_SIG_BANK, RE15_K2080_SIG_ANKUNFT, 0));
-    {   const uint8_t s[8] = { 0x40, 0x00, 0x04, RE15_K2080_SIG_ANKUNFT, LE16(RE15_K2080_NPC_WURF_X), LE16(RE15_K2080_NPC_STAND_Z) };
-        n = put(b, n, cap, s, 8); }                                      /* Plc_dest WALK an die Reling */
-    PUT(s_prog_szene, n, OP_POLL(RE15_K2080_SIG_ANKUNFT));
-    PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_TRAGEN));          /* Eigen c0: Tragen vor der Brust */
+    PUT(s_prog_szene, n, OP_SLEEP(RE15_K2080_KNIEN_HALT - RE15_K2080_KNIEN_GRIFF));   /* ... zusammen Sleep 60 @0x01654 */
+    PUT(s_prog_szene, n, OP_MOTION(1, RE15_K2080_CLIP_KNIEN), OP_FLG_REV);   /* @0x01658/@0x0165C: aufstehen */
+    PUT(s_prog_szene, n, OP_SLEEP(RE15_K2080_AUFSTEHEN_HALT));            /* @0x01660 */
     /* ---- RE2 ROOM7020 sub12 ---- */
     PUT(s_prog_szene, n, OP_CUT(RE15_K2080_CUT_WURF));                   /* Cut_chg 7 @0x0726 */
-    PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_ZIELEN));          /* Plc_motion @0x0750 */
+    /* Plc_motion @0x0750: RE2 spielt Adas Wurf-Clip `3f 0a 12 40` (Sub 0x0a, Clip 0x12 IHRER Bank). PORT-WAHL (Nachbesserung 1,
+     * M5): Marvin/John haben keinen Wurf-Clip; ihr Eigen c6 hebt beide Haende von der Huefte nach vorn oben ((-31,-1602) ->
+     * (764..917,-2534..-2458), Dossier 1.8/8.1) = das Hochstemmen ueber die Reling, dieselbe Bank wie ROOM1021 @0x020C6. */
+    PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_ZIELEN));
     PUT(s_prog_szene, n, OP_MSG(42));                                    /* Xa_on 0 + Message_on 5 @0x0760/@0x0764 */
     PUT(s_prog_szene, n, OP_SLEEP(30));                                  /* @0x076A */
-    PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_ZIELEN));          /* @0x0782 */
+    PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_ZIELEN));          /* @0x0782 (PORT-WAHL Clip wie @0x0750) */
     PUT(s_prog_szene, n, OP_SLEEP(20));                                  /* @0x0786 */
     PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_WURF));                   /* Super_reset @0x078E + Evt_exec sub13 @0x0796 */
     PUT(s_prog_szene, n, OP_POLL(RE15_K2080_SIG_GELANDET));              /* Do/Edwhile Ck(5,0x0e) @0x079C-07A4 */
@@ -286,7 +295,10 @@ static void baue_rueck(void)
     int n = 0;
     PUT(s_prog_rueck, n, OP_SLEEP(1));                                   /* Abschnittsende */
     PUT(s_prog_rueck, n, OP_RIEGEL);
-    PUT(s_prog_rueck, n, OP_SLEEP(30));                                  /* RE2: Leon (Cut 11) bis zum Rueckschnitt, Wsleep @0x081A */
+    /* Nachbesserung 1 (M5): kein Sleep 30. RE2 wartet auf Cut 11 mit Wsleep/Wsleeping @0x081A/@0x081B - Wsleeping (@0x80053ac0)
+     * gibt ab, solange 0x800cfbd8 & 0x20 (@0x80053acc) oder 0x800e873c & 0x80 (@0x80053ae4) steht; 0x800e873c = 0x80 setzt der
+     * Nachrichten-Start FUN_8002fe38 (@0x8002fe80/88) fuer Leons Zeile @0x07E6/@0x07F4. Der Port hat diese Zeile nicht -> das
+     * Warten ist 0 Bilder. */
     PUT(s_prog_rueck, n, OP_WORK(1, 0), 0x42, 0x00);                     /* sub18 @0x0A2C/@0x0A2F */
     PUT(s_prog_rueck, n, OP_RIEGEL_LOS);                                 /* @0x0A30/@0x0A34 */
     PUT(s_prog_rueck, n, 0x3c, 0x01);                                    /* Cut_auto 1 @0x0A38 */
@@ -382,6 +394,8 @@ static int haende_welt(const re15_actor_t *n, int32_t out[3])
         if (sk && an && c >= 0 && c < an->clip_count && an->clips[c].frame_count > 0) {
             int f = (int)n->anim_frame;
             if (f >= an->clips[c].frame_count) f = an->clips[c].frame_count - 1;
+            /* Nachbesserung 1: der GEZEICHNETE Slot (rueckwaerts fc-1-f @0x8001f34c-54, Plc_flg 0x80 beim Aufstehen) */
+            f = re15_actor_playback_slot(n, (uint32_t)f, an->clips[c].frame_count);
             const int kf = (int)(an->frames[an->clips[c].first_frame + f] & 0xfffu);
             re15_skel_pose_t p[RE15_EMD_MAX_BONES];
             if (sk->bone_count > 14 && re15_skel_compute_pose(sk, kf, p) == 0) {
@@ -451,6 +465,7 @@ static void ziel_waehlen(re15_actor_t *n)
         const long d = dx + dz;
         if (d < best) { best = d; s_ziel_slot = s; }   /* naechster zuerst (Gun-FSM-Zielsuche FUN_80037250, Form) */
     }
+    if (s_ziel_slot <= 0) sig_setzen(RE15_K2080_SIG_AUSGERICHTET, 1);   /* kein Ziel mehr: nicht warten */
     K_LOG("Ziel %d: Slot %d", s_ziel_n + 1, s_ziel_slot);
 }
 static void nachfuehren(re15_actor_t *n)
@@ -459,9 +474,14 @@ static void nachfuehren(re15_actor_t *n)
     const re15_actor_t *e = &g_actors[s_ziel_slot];
     int soll = ((int)re15_atan2_q12(e->z - n->z, e->x - n->x) - 0x400) & 0xfff;   /* Mesh-Gier zum Ziel (re15_actor.h:1196) */
     int d = ((soll - (int)n->rot_y + 0x800) & 0xfff) - 0x800;
+    const int fertig = (d >= -RE15_K2080_NACHFUEHREN && d <= RE15_K2080_NACHFUEHREN);   /* dieser Schritt erreicht das Ziel */
     if (d > RE15_K2080_NACHFUEHREN) d = RE15_K2080_NACHFUEHREN;
     if (d < -RE15_K2080_NACHFUEHREN) d = -RE15_K2080_NACHFUEHREN;
     n->rot_y = (int16_t)((n->rot_y + d) & 0xfff);
+    if (fertig && !sig(RE15_K2080_SIG_AUSGERICHTET)) {     /* Nachbesserung 1 (M5): Ende des Wartens = Ende des Nachdrehens */
+        sig_setzen(RE15_K2080_SIG_AUSGERICHTET, 1);
+        K_LOG("Ziel Slot %d ausgerichtet (Gier %d)", s_ziel_slot, (int)n->rot_y);
+    }
 }
 /* Kopfschuss: der Anwender des Spielerschusses mit der Magnum-Kritklasse (w7) aus der Lage des NPC. */
 static void schuss(re15_actor_t *n)
@@ -622,7 +642,7 @@ void re15_kanister2080_r41_tick(void)
     if (n && sig(RE15_K2080_SIG_AUFHEBEN)) {
         sig_setzen(RE15_K2080_SIG_AUFHEBEN, 0);
         s_kan_zustand = 1;
-        K_LOG("Kanister aufgehoben (Loco c2 Bild %d)", (int)n->anim_frame);
+        K_LOG("Kanister aufgehoben (Loco c%d Bild %d, Hinknien ROOM11B0 sub06 @0x01650)", (int)n->motion, (int)n->anim_frame);
     }
     if (n && s_kan_zustand == 1) {
         n->rot_y = 0;                                    /* Blick nach Osten ueber die Reling (Gier 0 = +x) */

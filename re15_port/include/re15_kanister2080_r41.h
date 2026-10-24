@@ -40,9 +40,12 @@
  *     Band-8-Zellen der SCA @0x4BC umschliessen Laufgang/Absatz/Balkon, die Absatz-Westwand @0x05C4 endet bei x -16650 ->
  *     Gegner (FUN_8003b0a4 Band-Vergleich @0x8003b228-3c) kommen nicht auf die Treppe.
  *   - NPC-Schuss = ROOM1021 sub02 (John 0x49): Plc_motion(2,6) @0x020C6, Sleep 110 @0x020CA, Plc_motion(2,7) @0x020CE,
- *     Sleep 30 @0x020D2, Senken Plc_motion(2,6)+Plc_flg 0x80 @0x020EA/@0x020EE, Sleep 20 @0x020F2.
+ *     Sleep 30 @0x020D2, Senken Plc_motion(2,6)+Plc_flg 0x80 @0x020EA/@0x020EE, Sleep 20 @0x020F2; zwischen zwei Zielen wartet
+ *     das Programm, bis das Nachdrehen (0xC8/Bild @0x80033f90) am Ziel ist (Signal AUSGERICHTET, kein festes Sleep).
+ *   - Aufnehmen (Nachtrag 24b) = Marvins Hinknien/Aufstehen ROOM11B0 sub06 @0x01650-0x01660 (Loco c11 vor/rueckwaerts).
  *   - Wurf = RE2 ROOM7020 sub12/sub13 (Adas Raketenwerfer, Zensus Item_aot_set 0x11): Cut_chg 7 @0x0726, Plc_motion
- *     @0x0750, Message_on @0x0764, Sleep 30 @0x076A, Plc_motion @0x0782, Sleep 20 @0x0786, Super_reset @0x078E, Fall
+ *     @0x0750 (Adas Clip `3f 0a 12 40` -> PORT-WAHL Marvins/Johns Eigen c6, sie haben keinen Wurf-Clip, Dossier 8.5),
+ *     Message_on @0x0764, Sleep 30 @0x076A, Plc_motion @0x0782, Sleep 20 @0x0786, Super_reset @0x078E, Fall
  *     Speed_set 2/1/0 = 10/20/25 + 8/7/6 = 0/20/5 @0x088E-08A2 mit Add_speed/Add_aspeed (@0x80055ab0/@0x80055b2c) bis
  *     y >= Boden - 800 (Member_cmp 0x0c Op 3 @0x08B0 -> @0x80056008/@0x80055f10), Aufschlag-Se_on @0x08BA, Sleep 15
  *     @0x07A8, Schnitt auf den Fangenden (Cut_chg 11 @0x07D4), Ende Plc_ret/Set(2,7,0)/Set(1,27,0)/Cut_auto (sub18
@@ -83,6 +86,7 @@
 #define RE15_K2080_SIG_WURF        0x1B  /* Programm -> Takt: loslassen (Super_reset @0x078E) + Fall */
 #define RE15_K2080_SIG_GELANDET    0x1C  /* Takt -> Programm: Aufschlag (ROOM7020 Set(5,0x0e) @0x08B6) */
 #define RE15_K2080_SIG_TUERTON     0x1D  /* Programm -> Takt: Tuer-Ton der Szene (DOOR06 Satz 1, Marvin/John kommt herein) */
+#define RE15_K2080_SIG_AUSGERICHTET 0x1E /* Takt -> Programm: NPC steht auf dem Ziel (Nachdrehen 0xC8/Bild @0x80033f90 fertig) */
 #define RE15_K2080_SIG_ANKUNFT     0x17  /* Plc_dest-Ankunftsflag (+0x1c3 @0x80041c24; Form ROOM1170 `00 05 21`) */
 #define RE15_K2080_TUER_SLOT       21    /* AOT-Slot der Raumwechsel (frei in 2080 0..4 und 2090 0..5; Montage nutzt 20) */
 
@@ -119,21 +123,31 @@
  * Kanister = 700 vor der Markenmitte (Koerper 400 + Kanister 267, SCA-Balkon @0x528). */
 #define RE15_K2080_NPC_X           (-14800)
 #define RE15_K2080_NPC_Z           (-16500)
-#define RE15_K2080_NPC_STAND_X     (-7245)   /* Aufheben: 500 vor der Markenmitte (Haende Loco c2 Bild 33 bei +149..+-73) */
+#define RE15_K2080_NPC_STAND_X     (-7245)   /* Aufheben: 500 vor der Markenmitte (Haende Loco c11 Bild 24 bei +249..+593, Dossier 8.1) */
 #define RE15_K2080_NPC_STAND_Z     (-17625)
 #define RE15_K2080_LAUF_UEBER      250       /* RUN-Ankunft bei d < 300 (`slti 300` @0x80051764): Ziel 250 hinter dem Stand */
-/* Wurf an der Reling: die Reling-Zelle @0x5A0 beginnt bei x -6700; Koerperradius 400 (+0x78-Satz +6) -> Mitte -7100. Die
- * Haende (Eigen c6 Ende +822 vorn) liegen dann jenseits der Relingstange (Bodenlinie x -6350 aus Cut 5, Pfosten (139,151)/
- * (200,151) Rueckprojektion) - die RE2-Bahn faellt frei (Dossier 3.4). Gehen (Sub 4, Ankunft d < 100 @0x800513f8). */
+/* Wurf an der Reling: die Reling-Zelle @0x5A0 beginnt bei x -6700; Koerperradius 400 (+0x78-Satz +6) -> Mitte -7100 = Nennlage des
+ * Werfers fuer die Rechnung ohne Laufzeit-Landepunkt (Spielstand). Seit Nachbesserung 1 wirft er dort, wo er den Kanister
+ * aufgehoben hat (Ankunft RUN d < 300 @0x80051764 vor STAND_X + LAUF_UEBER, der Kanister steht schon an der Reling): die Haende
+ * (Eigen c6 Ende +840 vorn) liegen dann 1450 ueber der Relingstange (Bodenlinie x -6350 aus Cut 5, Pfosten (139,151)/(200,151)
+ * Rueckprojektion, Oberkante ~ -15443), die RE2-Bahn faellt frei darueber (Dossier 3.4/8.1). */
 #define RE15_K2080_NPC_WURF_X      (-7100)
-/* Clips (Zensus Dossier 1.8, CDEMD0.EMS 0x40/0x49): Eigenbank (Sub 2) c6 Anheben/Zielen 10 B., c7 Feuern 16 B., c0 Tragen
- * 22 B.; Loco (Sub 1) c2 Buecken+Aufheben 50 B. (tiefster Punkt Bild 33). */
+/* Clips (Nachbesserung 1, Dossier 8.1: JEDES Bild mit tools/r41_kanister2080/probe_npc_clip_bilder.c, G_belege/nb1_clipbilder_40_49.txt;
+ * Original-Verwendung tools/r41_kanister2080/plc_motion_zensus.py, G_belege/nb1_plc_motion_zensus.txt):
+ *   Eigenbank (Sub 2) c6 = beidhaendiges Anheben/Zielen (10 B.), c7 = Feuern (16 B.) - ROOM1021 sub02 @0x020C6/@0x020CE;
+ *   Loco (Sub 1) c11 = HINKNIEN (25 B., Wurzel -1810 -> -761, beide Haende vorn unten), rueckwaerts (Plc_flg 0x80) = AUFSTEHEN -
+ *   Marvin ROOM11B0 sub06 `3f 01 0b 00` @0x01650, Sleep 60 @0x01654, `3f 01 0b 00` + `43 00 80 00` @0x01658/@0x0165C, Sleep 30
+ *   @0x01660 (John ROOM1021 sub02 @0x02102). NICHT mehr: Loco c2 = PL00-KLETTERN (Aufstieg, `ori v0,zero,0x2` @0x80038134 -
+ *   Nachtrag 24b "Kletter-Animation") und Eigen c0 = RUN-Gait (Sub 5 `sb zero,148` @0x8005157c, kein "Tragen"). */
 #define RE15_K2080_CLIP_ZIELEN     6
 #define RE15_K2080_CLIP_FEUER      7
-#define RE15_K2080_CLIP_TRAGEN     0
-#define RE15_K2080_CLIP_AUFHEBEN   2
-#define RE15_K2080_AUFHEBEN_GRIFF  33    /* Loco c2 Bild 33: Wurzel -1005, Hand am Boden (Zensus) */
-#define RE15_K2080_AUFHEBEN_BILDER 50
+#define RE15_K2080_CLIP_KNIEN      11    /* Loco c11 = Plc_motion(1,11) ROOM11B0 sub06 @0x01650 */
+#define RE15_K2080_KNIEN_BILDER    25    /* Bildzahl Loco c11 (EDD 0x40 und 0x49, Schluesselbilder kf 236..260) */
+#define RE15_K2080_KNIEN_HALT      60    /* Sleep 60 `09 0a 3c 00` ROOM11B0 sub06 @0x01654 (Knien bis zum Aufstehen) */
+#define RE15_K2080_AUFSTEHEN_HALT  30    /* Sleep 30 `09 0a 1e 00` ROOM11B0 sub06 @0x01660 (nach dem Aufstehen) */
+/* Griff = letztes Bild des Hinkniens (Bild 24): beide Haende liegen seitlich am Kanister (HR (249,-668,-509), HL (593,-312,318) zur
+ * Wurzel; Kanister-Achse 500..550 vor der Wurzel, Radius 267) - von dort traegt der Rueckwaerts-Clip ihn mit hoch. */
+#define RE15_K2080_KNIEN_GRIFF     (RE15_K2080_KNIEN_BILDER - 1)
 #define RE15_K2080_NACHFUEHREN     0xC8  /* Gier je Bild beim Anvisieren = Gun-FSM Sub 5 `ori a1,zero,0xc8` @0x80033f90 */
 
 /* ---- Wurf (RE2 ROOM7020 sub12/sub13) ------------------------------------------------------------------------------- */
