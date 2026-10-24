@@ -4,7 +4,10 @@
 
   1. gen/ventilkette_r41_wasser.inc   Wasserflaeche = ROOM2080.RDT Prop 0 (MD1 + TIM) UNVERAENDERT
                                       (RDT+0x30-Tabelle, Scheibe bis zur naechsten Grenze wie rdt_common.c
-                                      parse_props / r35_inhalt/schrot_export.py).
+                                      parse_props / r35_inhalt/schrot_export.py); dazu (Nachbesserung 3,
+                                      Nachtrag 8) das Netz der Relinghoehe: dieselbe MD1-Form (1 Netz, 1 Normale
+                                      (0,-4096,0), EIN UV-Satz = eine Kachel je Viereck), Vierecke <= 1800 x 1800
+                                      nur ueber der Schachtoeffnung von ROOM2030 (RE15_R41C_RELING_RECHTECKE).
   2. gen/ventilkette_r41_texte.inc    Port-Nachrichten (Ids laut VERTRAG), kodiert mit der Glyphentabelle des
                                       Ports (engine/src/msg_common.c re15_msg_glyph) in der Satzform der
                                       Original-Nachrichten (Kopf `04 02`, Satzende 0x57 + `01 00`, Frage
@@ -75,10 +78,67 @@ def wasser():
             " *   TIM ROOM2080.RDT @0x%06X %d B md5 %s\n"
             " * Prop 0 der RDT+0x30-Tabelle. */\n"
             % (mo, len(mb), hashlib.md5(mb).hexdigest(), to, len(tb), hashlib.md5(tb).hexdigest()))
+    rb, rk = reling_netz(mb)
     ziel = os.path.join(GEN, "ventilkette_r41_wasser.inc")
     open(ziel, "w", newline="\n").write(kopf + inc_array("re15_r41c_wasser_md1", mb) + "\n" +
-                                        inc_array("re15_r41c_wasser_tim", tb) + "\n")
-    print("geschrieben:", ziel, "MD1 @0x%06X %d B, TIM @0x%06X %d B" % (mo, len(mb), to, len(tb)))
+                                        inc_array("re15_r41c_wasser_tim", tb) + "\n" + rk +
+                                        inc_array("re15_r41c_wasser_reling_md1", rb) + "\n")
+    print("geschrieben:", ziel, "MD1 @0x%06X %d B, TIM @0x%06X %d B, Reling-Netz %d B" % (mo, len(mb), to, len(tb), len(rb)))
+
+
+# Schachtoeffnung ROOM2030 (x0, x1, z0, z1) = include/re15_ventilkette_r41.h RE15_R41C_RELING_RECHTECKE (Belege dort und
+# im Dossier §0d B2: Innenkanten der Ring-Reling-Zellen 19/20/21/22/31/32, Aussenwand 26/27, Treppe Slot 8 ausgespart).
+RELING_RECHTECKE = [(-4200, 5400, -8500, -6400), (-5400, -4200, -6900, -6400),
+                    (-7700, 5400, -6400, 2450), (-5850, 5400, 2450, 8150)]
+ZELLE = 1800   # Gitterschritt des Originals (ROOM2080 MD1: x 0..21600, z 0..16200 in 1800er Schritten)
+
+
+def reling_netz(org):
+    """Netz der Relinghoehe in der MD1-Form von ROOM2080 Prop 0 (org = die 4572 Original-Bytes)."""
+    laenge, unbek, oc = struct.unpack_from("<III", org, 0)
+    h = struct.unpack_from("<14I", org, 12)
+    assert oc == 2 and h[5] == 0 and h[10] == 1 and h[12] == 108, (oc, h)
+    normale = org[12 + h[2]:12 + h[2] + 8]
+    assert normale == bytes([0, 0, 0, 0xf0, 0, 0, 0, 0]), normale.hex()
+    uv = org[12 + h[13]:12 + h[13] + 16]
+    # alle 108 Vierecke tragen denselben UV-Satz (eine Kachel je Viereck)
+    assert all(org[12 + h[13] + 16 * k:12 + h[13] + 16 * k + 16] == uv for k in range(108))
+    q0 = struct.unpack_from("<8H", org, 12 + h[11])
+    assert q0 == (0, 0, 0, 13, 0, 1, 0, 14), q0   # v0 (x0,z0), v1 (x0,z1), v2 (x1,z0), v3 (x1,z1)
+    ecken, vier = [], []
+    for (x0, x1, z0, z1) in RELING_RECHTECKE:
+        nx = -(-(x1 - x0) // ZELLE)
+        nz = -(-(z1 - z0) // ZELLE)
+        xs = [x0 + ((x1 - x0) * i) // nx for i in range(nx + 1)]
+        zs = [z0 + ((z1 - z0) * j) // nz for j in range(nz + 1)]
+        basis = len(ecken)
+        for z in zs:
+            for x in xs:
+                ecken.append((x, 0, z))
+        for j in range(nz):
+            for i in range(nx):
+                a = basis + j * (nx + 1) + i
+                vier.append((a, a + (nx + 1), a + 1, a + (nx + 1) + 1))
+    nv, nq = len(ecken), len(vier)
+    tv = 56
+    tn = tv + 8 * nv
+    tf = tn + 8
+    tu = tf + 16 * nq
+    kopf = struct.pack("<III", 12 + tu, 0, 2) + struct.pack("<14I", tv, nv, tn, 1, tf, 0, tu, tv, nv, tn, 1, tf, nq, tu)
+    b = bytearray(kopf)
+    for (x, y, z) in ecken:
+        b += struct.pack("<hhhh", x, y, z, 0)
+    b += normale
+    for (a, c, d, e) in vier:
+        b += struct.pack("<8H", 0, a, 0, c, 0, d, 0, e)
+    for _ in vier:
+        b += uv
+    assert len(b) == 12 + tu + 16 * nq
+    k = ("/* Netz der Relinghoehe fuer ROOM2030/2031 (Nachbesserung 3, Nachtrag 8): MD1-Form von ROOM2080 Prop 0 (oben),\n"
+         " * %d Ecken, %d Vierecke (<= %d x %d), Normale und UV-Satz (%s) Byte fuer Byte aus dem Original, Ursprung = Weltursprung\n"
+         " * von ROOM2030; Rechtecke (x0,x1,z0,z1) %s. md5 %s */\n"
+         % (nv, nq, ZELLE, ZELLE, uv.hex(), RELING_RECHTECKE, hashlib.md5(bytes(b)).hexdigest()))
+    return bytes(b), k
 
 
 # ---- 2. Texte --------------------------------------------------------------------------------------------------
@@ -175,18 +235,17 @@ TEXTE = [
     ("2030", 46, "warnung", [["WARNING: The water will rise", "in one minute. Leave the room!"]], False, None,
      "NUTZER-VORGABE (sinngemaess: \"Warnung, dass das Wasser in einer Minute steigt und man den Raum verlassen soll\")"),
     ("2030", 47, "ventil13_zustand", [["Intake valve 13 is open."]], False, None, "PORT-WAHL, Zustandssatz"),
-    ("2030", 48, "ventile_zustand", [["The valves are open.", "The pool has been flooded."]], False, None,
-     "PORT-WAHL, Zustandssatz"),
-    ("2030", 49, "ventile_leer", [["The valves are open.", "The pool has been drained."]], False, None,
-     "PORT-WAHL, Zustandssatz nach dem Rechner 2080 (Bit 107; Nachbesserung 1, M8), Form wie Id 48"),
+    ("2030", 48, "treppe_flut", [["I cannot go down the stairs", "because of the water."]], False, None,
+     "PORT-WAHL (Nachbesserung 3, Nachtrag 8: unterer Bereich nach dem Strom geflutet und gesperrt), Form der Leiter-Vorgabe Id 40"),
+    ("2030", 49, "ventile_vorher", [["Numbered valves. If I turn them,", "this whole level will be flooded."],
+                                     ["I should look around here first."]], False, None,
+     "PORT-WAHL (Nachbesserung 3, Nachtraege 9/10: Ventilraetsel erst mit gesenkter Bruecke und aufgehobener Sicherung)"),
     ("2050", 40, "hebel_ohne_strom", [["The pump has no power.", "The switchboard must be set first."]], False, None,
      "PORT-WAHL (Nutzer: Wasserlevel erst nach dem Pult-Raetsel), Form ROOM2060 msg 1 @0x15D0 Sperrsatz"),
     ("2050", 43, "pult_beschreibung", [["A high voltage switchboard.", "The pump needs 80 volts."]], False, None,
      "PORT-WAHL (Nutzer: \"Ziel 80 V wie 11F0 Notstrom\")"),
     ("2050", 44, "pult_zustand", [["The switchboard is set to 80 volts.", "The pump is powered."]], False, None,
      "PORT-WAHL, Zustandssatz"),
-    ("2080", 40, "rechner_2030", [["The treatment pool is", "being drained as well."]], False, None,
-     "PORT-WAHL (Nutzer: \"der Rechner ... entleert danach auch 2030\")"),
     ("20B0", 41, "ring_tuer", [["I cannot open the door", "because of the water pressure."]], False, None,
      "PORT-WAHL (Orchestrator-Entscheid C-E2: Zugaenge ins geflutete 2030 gesperrt), Form der Leiter-Vorgabe Id 40"),
     ("2070", 40, "ring_tuer", [["I cannot open the door", "because of the water pressure."]], False, None,
@@ -242,6 +301,16 @@ SCHEIBEN = [
      "ROOM2030 main00 @0x01B6C Obj_model_set obj 0 = Bruecke (-1075,-1800,-275) - 34 B"),
     ("STAGE2/ROOM2080.RDT", 0x00C1A, 0x14, "re15_r41c_org_2080_slot4",
      "ROOM2080 sub00 @0x00C1A Aot_set Slot 4 sce 3 Ereignis 2 = Rechner (-12050,-7250,1000,1000) Band 8 - 20 B"),
+    ("STAGE2/ROOM2030.RDT", 0x01B8E, 0x14, "re15_r41c_org_2030_slot8",
+     "ROOM2030 main00 @0x01B8E Aot_set Slot 8 sce 12 = Treppe Ring -> Nord-Landeplatz (-6050,-8400,3700,1400) Band 0x80 - 20 B"),
+    ("STAGE2/ROOM2030.RDT", 0x01BA6, 0x30, "re15_r41c_org_2030_unten",
+     "ROOM2030 main00 @0x01BA6..@0x01BD5 Ck(3,108)=0, Slot 9 Sicherung (Ereignis 6, Band 1), Endif, Slot 10 Item 0x16 x14 (Band 1) - 48 B"),
+    ("STAGE2/ROOM2030.RDT", 0x01E10, 0x20, "re15_r41c_org_2030_sub01",
+     "ROOM2030 sub01 @0x01E10..@0x01E2F Ck(3,126)=0 -> Lift-Rufzonen unten Slot 5/7 = Text msg 1 - 32 B"),
+    ("STAGE2/ROOM2030.RDT", 0x01FE4, 0x26, "re15_r41c_org_2030_sub06",
+     "ROOM2030 sub06 @0x01FE4..@0x02009 Frage msg 2, Ja -> Set(3,108) @0x01FF2, Slot 9 aus, msg 3 - 38 B"),
+    ("STAGE2/ROOM2060.RDT", 0x01292, 0x20, "re15_r41c_org_2060_strom",
+     "ROOM2060 sub01 @0x01292..@0x012B1 Ck(3,126)=0 + Schalter (5,6..9)=1,0,1,0 -> Evt_exec sub13 + Set(3,126) @0x012AE - 32 B"),
     ("STAGE1/ROOM11F0.RDT", 0x018D8, 0x19, "re15_r41c_org_11f0_msg1",
      "ROOM11F0 msg 1 @0x18D8 \"Will you push them? \" - 25 B"),
     ("STAGE1/ROOM11F0.RDT", 0x018F1, 0x18, "re15_r41c_org_11f0_msg2",

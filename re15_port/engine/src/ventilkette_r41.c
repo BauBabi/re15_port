@@ -1,6 +1,6 @@
 /*
  * RE1.5 Rebuilt — Runde 41 Spur C "ventilkette": Leiter 2000 / Bruecke + Ventile 2030 / Flut -> 20B0 /
- * Schaltpult 2050 / Rechner 2080.
+ * Schaltpult 2050 / Strom 2060 -> 2030 auf Relinghoehe (Nachbesserung 3).
  *
  * Herleitung, Belege und alle Konstanten: include/re15_ventilkette_r41.h; Dossier
  * analysis/befunde_runde41/C_ventilkette.md. Kein Asset-Patch: die RDTs bleiben byte-true. Die Port-Programme
@@ -65,6 +65,16 @@ static const int32_t k_zone_x0[RE15_R41C_PANEL_N] = RE15_R41C_PANEL_X0;
 static int ist(uint16_t room, uint16_t leon) { return (room & 0xFFFEu) == leon; }
 static int bit(int b) { return re15_game_flag_get(RE15_R41C_BANK, (uint8_t)b) ? 1 : 0; }
 static void bit_setzen(int b) { re15_game_flag_set(RE15_R41C_BANK, (uint8_t)b, 1); }
+static int strom(void) { return re15_game_flag_get(RE15_R41C_STROM_BANK, RE15_R41C_STROM_BIT) ? 1 : 0; }   /* (3,126) @0x012AE */
+static int sicherung(void) { return re15_game_flag_get(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT) ? 1 : 0; } /* (3,108) @0x01FF2 */
+
+/* Zustand von 2030 nach der Flut (Nachbesserung 3, Nachtraege 7/8): haengt direkt am Original-Bit (3,126), das nur
+ * ROOM2060 sub01 @0x012AE setzt und kein Skript loescht (Zensus, Kopf). */
+int re15_ventilkette_r41_zustand_2030(void)
+{
+    if (!bit(RE15_R41C_BIT_FLUT_GELAUFEN)) return RE15_R41C_2030_TROCKEN;
+    return strom() ? RE15_R41C_2030_RELING : RE15_R41C_2030_GEFLUTET;
+}
 
 /* ---- Texte ------------------------------------------------------------------------------------------------- */
 static void text_einsetzen(uint8_t id, const uint8_t *m, int n)
@@ -182,7 +192,9 @@ static int prop_anlegen_satz(const uint8_t *pc)
 }
 
 /* Wasserflaeche k (0/1) als Prop obj 4/5 anlegen (Felder = ROOM2080 @0x00C2E, Lage nach Kopf). */
-static int wasser_anlegen(int k, int32_t y, int32_t z)
+static int wasser_anlegen_bei(int k, int32_t x, int32_t y, int32_t z);
+static int wasser_anlegen(int k, int32_t y, int32_t z) { return wasser_anlegen_bei(k, RE15_R41C_WASSER_X, y, z); }
+static int wasser_anlegen_bei(int k, int32_t x, int32_t y, int32_t z)
 {
     const int obj = k ? RE15_R41C_WASSER_OBJ_B : RE15_R41C_WASSER_OBJ_A;
     int p = prop_von_obj(obj);
@@ -198,7 +210,7 @@ static int wasser_anlegen(int k, int32_t y, int32_t z)
         g_scd.props[p].flags      = RE15_R41C_WASSER_FLAGS;
         g_scd.props[p].attr       = RE15_R41C_WASSER_ATTR;
     }
-    g_scd.props[p].x = RE15_R41C_WASSER_X; g_scd.props[p].y = y; g_scd.props[p].z = z;
+    g_scd.props[p].x = x; g_scd.props[p].y = y; g_scd.props[p].z = z;
     g_scd.props[p].rot_x = g_scd.props[p].rot_y = g_scd.props[p].rot_z = 0;
     s_wasser_prop[k] = p;
     return p;
@@ -254,12 +266,13 @@ static void tueren_umlenken(uint16_t room_id)
 }
 
 /* ---- Ring-Zugaenge des gefluteten 2030 (Orchestrator-Entscheid C-E2) --------------------------------------------- */
-/* Tuer -> Sperrtext, solange 2030 unter Wasser steht (Bit 103 ohne 107); Zensus und Bytes im Kopf
+/* Tuer -> Sperrtext, solange 2030 ueber dem Ring unter Wasser steht ("geflutet" = Bit 103 ohne Strom (3,126),
+ * Nachtrag 7: mit dem Strom ist der Ring wieder trocken und offen); Zensus und Bytes im Kopf
  * (RE15_R41C_SLOT_20B0_RING / _2070_RING_A/B). Form wie die Leiter 2000 (Text-Platz sce 1 im Tuer-Rechteck, ROOM2030
  * main00 @0x01B12); das Band der Tuer (Door_aot_set pc[4]) geht auf den Platz ueber wie in install_2000. */
 static void ring_sperren(uint16_t room_id, int slot, uint8_t msg)
 {
-    if (!bit(RE15_R41C_BIT_FLUT_GELAUFEN) || bit(RE15_R41C_BIT_2030_LEER)) return;
+    if (re15_ventilkette_r41_zustand_2030() != RE15_R41C_2030_GEFLUTET) return;
     re15_aot_t *a = &g_aot.slots[slot];
     const re15_aot_door_params_t *d = &g_aot.door_params[slot];
     if (!a->active || a->type != RE15_AOT_TYPE_DOOR || d->dest_stage != 1 || d->dest_room != RE15_R41C_RAUM_2030_ID) return;
@@ -306,12 +319,15 @@ static void install_2030(uint16_t room_id, const re15_rdt_t *rdt)
         steg_zelle(rdt, 0xFF);
         LOG("[ventilkette41] ROOM%04X: Bruecke obj 0 oben y %d, Zelle 12 gesperrt\n", (unsigned)room_id, RE15_R41C_BRUECKE_Y_OBEN);
     }
-    /* Die drei Stellen. */
+    /* Die Stellen: Pult (Ring) und Ventil 13 (Tank) immer; die Ventile nur vor der Flut — danach liegen sie im
+     * gefluteten unteren Bereich (Nachtrag 9: "das ist gewollt"). */
+    const int zustand = re15_ventilkette_r41_zustand_2030();
     ereignis_platz(RE15_R41C_SLOT_PULT,     RE15_R41C_PULT_RECT,     RE15_R41C_PULT_BAND,     RE15_R41C_EV_PULT);
     ereignis_platz(RE15_R41C_SLOT_VENTIL13, RE15_R41C_VENTIL13_RECT, RE15_R41C_VENTIL13_BAND, RE15_R41C_EV_VENTIL13);
-    ereignis_platz(RE15_R41C_SLOT_VENTILE,  RE15_R41C_VENTILE_RECT,  RE15_R41C_VENTILE_BAND,  RE15_R41C_EV_VENTILE);
-    /* Nach der Flut: Wasser 1800 ueber dem Ring, Lift-Rufzonen oben = Original-Satz 1, bis der Rechner lief. */
-    if (bit(RE15_R41C_BIT_FLUT_GELAUFEN) && !bit(RE15_R41C_BIT_2030_LEER)) {
+    if (zustand == RE15_R41C_2030_TROCKEN)
+        ereignis_platz(RE15_R41C_SLOT_VENTILE, RE15_R41C_VENTILE_RECT, RE15_R41C_VENTILE_BAND, RE15_R41C_EV_VENTILE);
+    if (zustand == RE15_R41C_2030_GEFLUTET) {
+        /* Nach der Flut ohne Strom: Wasser 1800 ueber dem Ring, Lift-Rufzonen oben = Original-Satz 1. */
         wasser_anlegen(0, RE15_R41C_WASSER_Y_RUHE, RE15_R41C_WASSER_ZA);
         wasser_anlegen(1, RE15_R41C_WASSER_Y_RUHE, RE15_R41C_WASSER_ZB);
         static const int k_ruf[2] = { 4, 6 };   /* sub00 @0x01D20 (Band 6) / @0x01DC2 (Band 9) */
@@ -319,6 +335,18 @@ static void install_2030(uint16_t room_id, const re15_rdt_t *rdt)
             if (g_aot.slots[k_ruf[i]].active && g_aot.slots[k_ruf[i]].type != RE15_AOT_TYPE_NONE)
                 sperrtext(k_ruf[i], RE15_R41C_MSG_LIFT_ORIGINAL);
         LOG("[ventilkette41] ROOM%04X: unter Wasser (y %d), Lift-Rufzonen 4/6 -> msg 1\n", (unsigned)room_id, RE15_R41C_WASSER_Y_RUHE);
+    } else if (zustand == RE15_R41C_2030_RELING) {
+        /* Nach der Flut mit Strom (Nachtraege 7/8): EINE Flaeche ueber der Schachtoeffnung auf der Oberkante der unteren
+         * Reling (y -3600, Kopf), Ring trocken (Tueren/Lifte = Original), der einzige Weg hinab = Treppe Slot 8
+         * (@0x01B8E sce 12) wird Sperrtext 48 im Band 3 (Form der Leiter 2000; Band wie install_2000 auf den Platz). */
+        wasser_anlegen_bei(0, 0, RE15_R41C_WASSER_Y_RELING, 0);
+        re15_aot_t *t = &g_aot.slots[RE15_R41C_SLOT_2030_TREPPE];
+        if (t->active && t->type == RE15_AOT_TYPE_STAIR) {
+            t->band = RE15_R41C_TREPPE_BAND;
+            sperrtext(RE15_R41C_SLOT_2030_TREPPE, RE15_R41C_MSG_TREPPE_FLUT);
+        }
+        LOG("[ventilkette41] ROOM%04X: Strom (3,126) -> Wasser auf Relinghoehe y %d (Schachtoeffnung), Treppe Slot 8 -> Sperrtext %d, Ring frei\n",
+            (unsigned)room_id, RE15_R41C_WASSER_Y_RELING, RE15_R41C_MSG_TREPPE_FLUT);
     }
     tueren_umlenken(room_id);
 }
@@ -336,15 +364,6 @@ static void install_2050(uint16_t room_id)
         if (satz_anlegen(re15_r41c_org_2050_slot8)) sperrtext(RE15_R41C_SLOT_2050_PULT, RE15_R41C_MSG_PULT_ZUSTAND);
     }
     tueren_umlenken(room_id);
-}
-
-static void install_2080(uint16_t room_id)
-{
-    texte_einsetzen(room_id);
-    if (bit(RE15_R41C_BIT_FLUT_GELAUFEN) && !bit(RE15_R41C_BIT_2030_LEER) && re15_game_flag_get(3, 245)) {
-        if (satz_anlegen(re15_r41c_org_2080_slot4))
-            LOG("[ventilkette41] ROOM%04X: Rechner Slot 4 (@0x00C1A) erneut angelegt (2030 entleeren)\n", (unsigned)room_id);
-    }
 }
 
 void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
@@ -371,7 +390,6 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
     if (ist(room_id, RE15_R41C_RAUM_2000) || ist(room_id, RE15_R41C_RAUM_20B0)) install_2000(room_id);
     else if (ist(room_id, RE15_R41C_RAUM_2030)) install_2030(room_id, rdt);
     else if (ist(room_id, RE15_R41C_RAUM_2050)) install_2050(room_id);
-    else if (ist(room_id, RE15_R41C_RAUM_2080)) install_2080(room_id);
     else if (ist(room_id, RE15_R41C_RAUM_2070)) install_2070(room_id);
     else if (ist(room_id, RE15_R41C_RAUM_2010) || ist(room_id, RE15_R41C_RAUM_1260))
         tueren_umlenken(room_id);
@@ -395,9 +413,11 @@ const uint8_t *re15_ventilkette_r41_ereignis(uint16_t room_id, uint8_t event_id)
                  : bit(RE15_R41C_BIT_VENTIL13)      ? "2030_pult_senken" : "2030_pult_ohne";
         else if (event_id == RE15_R41C_EV_VENTIL13)
             name = bit(RE15_R41C_BIT_VENTIL13) ? "2030_v13_zustand" : "2030_v13_frage";
-        else if (event_id == RE15_R41C_EV_VENTILE)
-            name = bit(RE15_R41C_BIT_2030_LEER) ? "2030_ventile_leer"      /* Nachbesserung 1 (M8): nach dem Rechner */
-                 : (bit(RE15_R41C_BIT_FLUT_GELAUFEN) || s_timer) ? "2030_ventile_zustand" : "2030_ventile";
+        else if (event_id == RE15_R41C_EV_VENTILE && !bit(RE15_R41C_BIT_FLUT_GELAUFEN))
+            /* Nachtraege 9/10: erst mit gesenkter Bruecke (Bit 102) UND aufgehobener Sicherung ((3,108), Setzer 2030
+             * sub06 @0x01FF2); waehrend des Zaehlers die Warnung erneut. Nach der Flut gibt es den Platz nicht mehr. */
+            name = s_timer ? "2030_ventile_laeuft"
+                 : (bit(RE15_R41C_BIT_BRUECKE_UNTEN) && sicherung()) ? "2030_ventile" : "2030_ventile_vorher";
     } else if (ist(room_id, RE15_R41C_RAUM_2050)) {
         /* Hebel-Platz Slot 6: Ereignis 4 (sub00 @0x01E28 -> sub04 @0x022E6) UND Ereignis 2 (Kisten im Becken, sub01
          * @0x0201A -> sub02 @0x0220E, Speed -20 For 180 @0x0227C) heben das Wasser -> beide erst nach dem Pult
@@ -406,10 +426,7 @@ const uint8_t *re15_ventilkette_r41_ereignis(uint16_t room_id, uint8_t event_id)
             name = "2050_hebel_sperre";
         else if (event_id == RE15_R41C_EV_2050_PULT)
             name = bit(RE15_R41C_BIT_PULT2050) ? "2050_pult_zustand" : "2050_pult_ein";
-    } else if (ist(room_id, RE15_R41C_RAUM_2080)) {
-        if (event_id == RE15_R41C_EV_2080_RECHNER && bit(RE15_R41C_BIT_FLUT_GELAUFEN) && !bit(RE15_R41C_BIT_2030_LEER))
-            name = re15_game_flag_get(3, 245) ? "2080_rechner_nur2030" : "2080_rechner_erw";
-    }
+    }   /* 2080: Rechner = nur Original (Nachtrag 7) */
     if (!name) return NULL;
     const uint8_t *p = re15_ventilkette_r41_programm(name, NULL);
     LOG("[ventilkette41] ROOM%04X Ereignis %u -> Port-Programm %s\n", (unsigned)room_id, (unsigned)event_id, name);
@@ -565,21 +582,35 @@ void re15_ventilkette_r41_tick(void)
 }
 
 /* ---- main.c: Wasserflaeche + Zeichner ---------------------------------------------------------------------- */
+/* Relinghoehe (Nachtrag 8): nur obj 4 mit dem Netz der Schachtoeffnung; sonst obj 4/5 mit ROOM2080 Prop 0. */
+static int reling_jetzt(void)
+{
+    return ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2030) && re15_ventilkette_r41_zustand_2030() == RE15_R41C_2030_RELING;
+}
+
 int re15_ventilkette_r41_obj_id(uint16_t room_id, int k)
 {
     if (!ist(room_id, RE15_R41C_RAUM_2030)) return -1;
+    if (k == 1 && reling_jetzt()) return -1;
     return k == 0 ? RE15_R41C_WASSER_OBJ_A : (k == 1 ? RE15_R41C_WASSER_OBJ_B : -1);
+}
+
+const uint8_t *re15_ventilkette_r41_md1_bytes_fuer(int reling, int *out_size)
+{
+#ifdef RE15_PLATFORM_PC
+    if (reling) { if (out_size) *out_size = (int)sizeof re15_r41c_wasser_reling_md1; return re15_r41c_wasser_reling_md1; }
+    if (out_size) *out_size = (int)sizeof re15_r41c_wasser_md1;
+    return re15_r41c_wasser_md1;
+#else
+    (void)reling;
+    if (out_size) *out_size = 0;
+    return NULL;
+#endif
 }
 
 const uint8_t *re15_ventilkette_r41_md1_bytes(int *out_size)
 {
-#ifdef RE15_PLATFORM_PC
-    if (out_size) *out_size = (int)sizeof re15_r41c_wasser_md1;
-    return re15_r41c_wasser_md1;
-#else
-    if (out_size) *out_size = 0;
-    return NULL;
-#endif
+    return re15_ventilkette_r41_md1_bytes_fuer(reling_jetzt(), out_size);
 }
 
 const uint8_t *re15_ventilkette_r41_tim_bytes(int *out_size)

@@ -14,7 +14,15 @@
  *    Bruecken-Pult: Irgendein kleines Raetsel waere gut ... Wasser in 2030: Ueber die Ringebene ...
  *    Ventilraetsel: einverstanden. Zeit abgelaufen und noch im Raum: Tot mit ertrink Effekt. Ventil 13 als
  *    Bruecken-Raetsel: Einverstanden."
- *   Punkt 6 (VERTRAG): "ROOM 2080: der Rechner, der das Wasser in 2080 senkt, entleert danach auch 2030".
+ *   Punkt 6 (VERTRAG): "ROOM 2080: der Rechner, der das Wasser in 2080 senkt, entleert danach auch 2030" —
+ *   ERSETZT durch die Nachtraege 7-10 (AUFTRAG.md 2026-10-24, Wortlaut):
+ *   Nachtrag 7: "Nach der Aktivierung des Stroms ist 2030 leer gelaufen." (Rechner 2080 nur Original)
+ *   Nachtrag 8: "der Wasser pegel in 2030 kann dann noch auf reling hoehe sein. also quasi nur noch der untere
+ *                bereich geflutet nach strom aktivierung ueber generator."
+ *   Nachtrag 9: "und die bruecke in 2030 muss man entsprechd vorher runtergelassen haben, damit man das valve
+ *                raetsel vorher loesen kann."
+ *   Nachtrag 10 (Auswahl): "Flut erst mit Sicherung" — die Ventile lassen sich erst drehen, wenn die Sicherung
+ *                aufgehoben ist (vorher ein kurzer Text am Ventil).
  *
  * Dossier: analysis/befunde_runde41/C_ventilkette.md (RE-Belege §1, Umsetzung §3). Kein Asset-Patch: die RDTs
  * bleiben byte-true; alles hier wird nach dem Init-Lauf des Raums angelegt (scd_room_setup.c / main.c Boot-Weg).
@@ -52,8 +60,33 @@
  * ROOM2030 Stelle Ventil 13: der Tank rechts der Treppe (schaltschrank.png) = SCA Zelle 2 Band 1 (-3050,-6900,
  *   1000,500) am Fuss der Treppe (Zone Slot 8 sce 12 @0x01B8E (-6050,-8400,3700,1400)); Landeplatz Band 1
  *   x -2550..-50, z -8500..-6900 (Zellen 1/6/11 ringsum).
- * ROOM2030 Stelle Ventile (Platzhalter): Ost-Streifen des Rings x 5900..7250 (Zellen 18/19) an der Ost-Tuer
- *   (Slot 0 @0x01ACA Rechteck (6850,-1950,1000,3500)); Cut 15 (@0x00240, flag 1) zeigt dort die Schilder 04/05/06.
+ * ROOM2030 Stelle Ventile (Nachbesserung 3, Nachtrag 9): die nummerierten Ventile liegen ALLE im unteren Bereich
+ *   (BSS-Cuts mit projizierten SCA-Bodenzellen, Dossier §0d B3, C_belege/nb3_ventile_lage_sheet.png): 01/02/03 an der
+ *   Nordwand ueber dem Nord-Landeplatz (Zelle 13, Cut 3/14), 04/05/06 an der Ostwand unter der Ring-Reling (Cut 0/15),
+ *   07/08/09 an der Suedwand ueber dem Sued-Landeplatz (Zelle 16 x -5600..4800 z 6350..7900, Cut 5/6/7), 13 am Tank.
+ *   Der Platz liegt vor 09/08 an der Suedwand (Wandflaeche z 7900 = Zelle 7 @0x008EC Innenkante, +- 500 wie der
+ *   Pult-Platz) = nur ueber den Steg erreichbar (Bruecke unten); frei von Slot 9 @0x01BAA (x -5900..-5100) und
+ *   Slot 10 @0x01BC0 (x 4350..5150). Der fruehere Platz am Ring-Ost-Streifen lag UEBER den Schildern 04/05/06.
+ * ROOM2030 Sicherung aufgehoben = (3,108): Setzer NUR ROOM2030/2031 sub06 @0x01FF2 `22 03 6c 01` (Ja auf msg 2
+ *   "Will you take the Fuse?"), Leser main00 @0x01BA6 `21 03 6c 00` (Platz Slot 9 nur bei 0) und ROOM2060 sub00
+ *   @0x010A2 (Sicherungskasten); kein Loescher in irgendeinem RDT (Zensus, Dossier §0d B3). Taken-Bit, kein Inventar.
+ * ROOM2060 Strom = (3,0x7E): Setzer NUR ROOM2060/2061 sub01 @0x012AE `22 03 7e 01` (Loesung @0x01296..@0x012A6
+ *   Schalter (5,6..9) = 1,0,1,0); kein Loescher (Zensus aller RDTs). Leser ROOM2030/2031 sub01 @0x01E14 `21 03 7e 00`
+ *   -> @0x01E18/@0x01E22 untere Lift-Rufzonen Slot 5/7 = Text msg 1 ohne Strom (sub01 laeuft jedes Bild, FUN_8003f038).
+ * ROOM2030 Treppe = main00 @0x01B8E Aot_set Slot 8 sce 12 `2c 08 0c 31 80 00 5e e8 30 df 74 0e 78 05 01 00 02 00 00 00`
+ *   (-6050,-8400,3700,1400), Band 0x80 = jedes Band (FUN_80042cac); der EINZIGE Weg vom Ring (Band 3) hinab zum
+ *   Nord-Landeplatz (Band 1): Lift A faehrt Ring <-> Buero (Band 6, sub00 @0x01CD2/@0x01CE6), Lift B Ring <->
+ *   Suedgalerie (Band 9, @0x01D74/@0x01D88).
+ * ROOM2030 Relinghoehe (Nachtrag 8): SCA @0x880 (12 B je Zelle w,d,x,z,typ,u0,u1,fl; Band = fl >> 4). Untere Reling =
+ *   Wandzellen Band 1 fl 0x11 (Steg 3/4 @0x008BC/@0x008C8, Landeplaetze 5/10/11 @0x008D4/@0x00910/@0x0091C); ihr oberer
+ *   Handlauf liegt im BSS-Bild (Cut 3 Zelle 11, Cut 5 Zelle 10, Cut 6 Zelle 5) 1800 ueber dem Landeplatz y -1800 =
+ *   y -3600 = Band 2 (C_belege/nb3_reling_hoehe_sheet.png); die Ring-Bodenzellen 36-41 @0x00A48..@0x00A84 tragen fl 0x23
+ *   (Band 2..3); ROOM2050 haelt sein Wasser auf demselben Mass y -3600 @0x01F88 (1800 unter der Laufebene -5400).
+ *   Schachtoeffnung (Innenkanten der Ring-Reling Band 3 fl 0x33): Nord z -8500 (Zelle 20 @0x00988), Ost x 5400 (Zelle 19
+ *   @0x0097C), Sued z 8150 (Zelle 21 @0x00994), SW x -5850 (Zelle 22 @0x009A0), NW-Balkon x -5400 / z -6400 (Zellen 32/31
+ *   @0x00A18/@0x00A0C), West bis zur Aussenwand x -7700 (Zellen 26/27 @0x009D0/@0x009DC) zwischen z -6400 und 2450
+ *   (Zelle 23 @0x009AC). Die Treppe (Slot 8, von -5400 bei x -6050 auf -1800 bei x -2350) liegt westlich von x -4200
+ *   UEBER dem Pegel -> dort keine Flaeche.
  * ROOM2030 Kameras: Cut 4 @0x000E0 (-4253,-9340,7013)->(-1841,-4606,2549) = Draufsicht auf Becken + Steg
  *   (Projektion des Stegs: Bild x 100..210, y 73..221) = Fahrt-Kamera der Bruecke und der Flut (PORT-WAHL).
  * ROOM2050 Hebel = Slot 6 sce 3 Ereignis 4 (sub00 @0x01E28), sub04 @0x022E6 (Frage msg 0, Set(3,104),
@@ -85,7 +118,8 @@
  * - Bruecke OBEN = Ringebene y -5400 (die naechste Ebene ueber Band 1 in diesem Raum; Fahrt 30 x 120 = 3600 in der
  *   Lift-Form sub03). Solange oben: Steg-Zelle 12 gesperrt (Sca_id_set-Form), Pult meldet msg 40 (Druck null,
  *   Ventil 13 zu); Ventil 13 (am Tank) oeffnen -> Pult fragt "Lower the bridge?" -> Fahrt unter Cut 4.
- * - Ventilraetsel-Platzhalter: EIN Platz an den Ventilen 04/05/06 (Ost-Streifen), Frage -> Ja -> Warnung ->
+ * - Ventilraetsel-Platzhalter: EIN Platz an den Ventilen 09/08 (Sued-Landeplatz, Nachbesserung 3), erst mit Bit 102
+ *   UND (3,108) (Nachtraege 9/10; vorher Satz 49), Frage -> Ja -> Warnung ->
  *   Sleep 1800 (= 60 s bei 30 Takten) im selben Faden (Form ROOM2000 sub07 @0x01B36: For/Evt_next-Schleife eines
  *   Hintergrundfadens) -> Pad-Sperre, Cut 4, Wasser steigt 324 x 50 (Rate des Rechners @0x00CC8) vom Beckengrund
  *   y 0 bis zur Tuerebene y -16200; der C-Takt ertraenkt den Spieler, sobald die Flaeche 900 ueber seinen Fuessen
@@ -97,10 +131,15 @@
  * - Verlassen waehrend des Zaehlers (jede Tuer) = Flut gelaufen: Bits 103 + 100. Ost-Tuer Slot 0 (-> 2070) wird
  *   dabei auf ROOM20B0 Cut 11 umgelenkt (Ziel der Szene @0x01F00/@0x01F08) — der Gegenweg der 20B0-Tuer Slot 3
  *   @0x019C2, die 2070 ebenfalls ueberspringt. Danach dauerhaft (Bit 103).
- * - Nach der Flut (103, nicht 107): 2030 steht bis 1800 ueber dem Ring unter Wasser (y -7200; Abstand wie
- *   ROOM2050 Wasser -3600 zum Steg -5400 @0x01F88), Lift-Rufzonen oben (Slots 4/6) = Text msg 1 (Original-Satz
- *   "The elevator is not responding...", Form sub01 @0x01E18). 2000 -> 20B0 fuer jede Tuer nach 2000 (Cut-
- *   Zuordnung oben), in 20B0 die drei Strahlen @0x01E96.. unterdrueckt (Nutzer: "kein Wasser mehr runter laufen").
+ * - Nach der Flut OHNE Strom (Bit 103, (3,126)=0; "geflutet"): 2030 steht bis 1800 ueber dem Ring unter Wasser
+ *   (y -7200; Abstand wie ROOM2050 Wasser -3600 zum Steg -5400 @0x01F88), Lift-Rufzonen oben (Slots 4/6) = Text msg 1
+ *   (Original-Satz "The elevator is not responding...", Form sub01 @0x01E18), Ring-Tueren 20B0/2070 gesperrt (C-E2).
+ * - Nach der Flut MIT Strom (Bit 103, (3,126)=1; Nachtraege 7/8 "auf Relinghoehe"): EINE Wasserflaeche (obj 4) nur ueber
+ *   der Schachtoeffnung auf y -3600 (Netz im Format von ROOM2080 Prop 0, Generator), Ring trocken (Tueren, Lifte =
+ *   Original), Treppe Slot 8 = Sperrtext 48 im Band 3 (Form der Leiter 2000), Ventil-Platz entfaellt (unter Wasser).
+ *   Der Zustand haengt DIREKT an (3,126) (nie geloescht, s. o.); Bit 107 ist frei.
+ * - 2000 -> 20B0 fuer jede Tuer nach 2000 (Cut-Zuordnung oben), in 20B0 die drei Strahlen @0x01E96.. unterdrueckt
+ *   (Nutzer: "kein Wasser mehr runter laufen").
  * - 2050: Hebel (Ereignis 4) vor der Loesung = Sperrsatz msg 40 (Form ROOM2060 sub12 @0x015D0). Pult: Slot 8 +
  *   Cursor wie @0x01D38/@0x01D4C angelegt, Einstieg = Beschreibung + "Will you push them? " (ROOM11F0 msg 1
  *   Bytes) + sub09-Bytes ohne (5,5) (sonst beendet SQUARE das Pult, sub01 @0x021E2); Kippen = SQUARE auf einer
@@ -108,8 +147,7 @@
  *   einzige Loesung 30+40+10 = 80 (alle 16 Kombinationen gezaehlt, Riegel). Loesung -> 30 Ruhebilder (RE2
  *   @0x0171C) -> Bit 106, se 0x0C (RE2 @0x01762), "Power supply OK." (ROOM11F0 msg 2 Bytes), Ausstieg sub10.
  *   Zeiger = roter Laeufer auf der Schiene y 70..73 (RE2 ROOM2130: Zeiger unter der waagerechten Skala).
- * - 2080: Rechner (Ereignis 2) nach der Flut = Original sub02 + Set(9,107) + msg 40 im Ja-Zweig; war der Rechner
- *   schon gelaufen ((3,245)=1), bleibt die Stelle fuer 2030 bedienbar (nur Frage + Set + Satz).
+ * - 2080: Rechner = nur Original (Nachtrag 7; Port-Programme und Text 2080 Id 40 entfernt, Nachbesserung 3).
  */
 #ifndef RE15_VENTILKETTE_R41_H
 #define RE15_VENTILKETTE_R41_H
@@ -124,7 +162,16 @@
 #define RE15_R41C_BIT_BRUECKE_UNTEN  102   /* 2030: Bruecke gesenkt (y -1800, Zelle 12 offen)               */
 #define RE15_R41C_BIT_FLUT_GELAUFEN  103   /* 2030: Ventile geoeffnet und Raum verlassen -> 2000 wird 20B0  */
 #define RE15_R41C_BIT_PULT2050       106   /* 2050: Schaltpult auf 80 V                                     */
-#define RE15_R41C_BIT_2030_LEER      107   /* 2080-Rechner gelaufen -> 2030 wieder ohne Wasser              */
+/* Bit 107 (frueher "2080-Rechner -> 2030 leer") ist seit Nachtrag 7 frei: der Zustand haengt direkt an (3,0x7E). */
+/* Original-Bits, die die Kette liest (Belege im Kopf): */
+#define RE15_R41C_STROM_BANK         3
+#define RE15_R41C_STROM_BIT          126   /* (3,0x7E) Generator 2060: Set nur sub01 @0x012AE, Leser 2030 sub01 @0x01E14 */
+#define RE15_R41C_SICHERUNG_BANK     3
+#define RE15_R41C_SICHERUNG_BIT      108   /* (3,0x6C) Sicherung aufgehoben: Set nur 2030 sub06 @0x01FF2            */
+/* Zustand von 2030 nach der Flut (Messhaken re15_ventilkette_r41_zustand_2030) */
+#define RE15_R41C_2030_TROCKEN       0     /* Bit 103 = 0                                                    */
+#define RE15_R41C_2030_GEFLUTET      1     /* Bit 103 = 1, (3,126) = 0: Wasser y -7200, Ring gesperrt         */
+#define RE15_R41C_2030_RELING        2     /* Bit 103 = 1, (3,126) = 1: Wasser y -3600 in der Schachtoeffnung */
 
 /* ---- Raeume (Leon; Elza = |1) -------------------------------------------------------------------------------- */
 #define RE15_R41C_RAUM_2000   0x2000u
@@ -132,7 +179,6 @@
 #define RE15_R41C_RAUM_2030   0x2030u
 #define RE15_R41C_RAUM_2050   0x2050u
 #define RE15_R41C_RAUM_2070   0x2070u
-#define RE15_R41C_RAUM_2080   0x2080u
 #define RE15_R41C_RAUM_20B0   0x20B0u
 #define RE15_R41C_RAUM_1260   0x1260u
 
@@ -146,16 +192,18 @@
 #define RE15_R41C_MSG_VENTILE_FRAGE   45
 #define RE15_R41C_MSG_WARNUNG         46
 #define RE15_R41C_MSG_V13_ZUSTAND     47
-#define RE15_R41C_MSG_VENTILE_ZUSTAND 48
-#define RE15_R41C_MSG_VENTILE_LEER    49   /* Nachbesserung 1 (M8): Zustandssatz nach dem Entleeren (Bit 107) */
+/* Nachbesserung 3: Id 48 (frueher "valves are open ... flooded") und 49 (frueher "... drained", Bit 107) neu belegt —
+ * nach der Flut liegen die Ventile unter Wasser (Nachtrag 9), den Zustand waehrend des Zaehlers zeigt die Warnung 46. */
+#define RE15_R41C_MSG_TREPPE_FLUT     48   /* Treppe Slot 8 bei "auf Relinghoehe" (Nachtrag 8) */
+#define RE15_R41C_MSG_VENTILE_VORHER  49   /* Ventile ohne Bruecke/Sicherung (Nachtraege 9/10)  */
 #define RE15_R41C_MSG_HEBEL_OHNE      40   /* 2050 */
 #define RE15_R41C_MSG_PULT_FRAGE      41   /* = ROOM11F0 msg 1 "Will you push them? " @0x18D8 */
 #define RE15_R41C_MSG_PULT_OK         42   /* = ROOM11F0 msg 2 "Power supply OK." @0x18F1     */
 #define RE15_R41C_MSG_PULT_BESCHR     43
 #define RE15_R41C_MSG_PULT_ZUSTAND    44
-#define RE15_R41C_MSG_RECHNER_2030    40   /* 2080 */
-/* Orchestrator-Entscheid C-E2 (AUFTRAG.md 2026-10-24 05:25, Abnahme 0 M5): bis Bit 107 sind die Zugaenge in den
- * gefluteten Ring von 2030 gesperrt (Aktionstaste -> Port-Text, kein Raumwechsel). Ids laut VERTRAG §1.2 (ergaenzt). */
+/* Orchestrator-Entscheid C-E2 (AUFTRAG.md 2026-10-24 05:25, Abnahme 0 M5), seit Nachtrag 7 nur "geflutet" (Bit 103 ohne
+ * Strom (3,126)): die Zugaenge in den gefluteten Ring von 2030 sind gesperrt (Aktionstaste -> Port-Text, kein
+ * Raumwechsel). Ids laut VERTRAG §1.2 (ergaenzt). */
 #define RE15_R41C_MSG_RING_20B0       41   /* 20B0/20B1 */
 #define RE15_R41C_MSG_RING_2070       40   /* 2070/2071 */
 #define RE15_R41C_MSG_LIFT_ORIGINAL    1   /* 2030 msg 1 "The elevator is not responding..." @0x2038 */
@@ -175,7 +223,6 @@
 #define RE15_R41C_EV_2050_KISTEN 2  /* sub01 @0x0201A -> sub02 @0x0220E (Hebel mit den Kisten im Becken) */
 #define RE15_R41C_EV_2050_PULT  9   /* Original-Ereignis des Pults (main00 @0x01D38)  */
 #define RE15_R41C_EV_2050_AUS  10   /* Original sub10 = Ausstieg aus dem Pult          */
-#define RE15_R41C_EV_2080_RECHNER 2 /* Original-Ereignis des Rechners (sub00 @0x00C1A) */
 
 /* ---- Plaetze 2030 (frei: 0-3 Tueren, 4-7 Lifte, 8 Treppe, 9 Sicherung, 10/11 Items, 51-63 RVD) --------------- */
 #define RE15_R41C_SLOT_PULT      12
@@ -184,13 +231,14 @@
 #define RE15_R41C_SLOT_2000_LEITER 4   /* main00 @0x0169E */
 #define RE15_R41C_SLOT_2030_OSTTUER 0  /* main00 @0x01ACA */
 #define RE15_R41C_SLOT_2050_PULT  8    /* main00 @0x01D38 */
-#define RE15_R41C_SLOT_2080_RECHNER 4  /* sub00  @0x00C1A */
+#define RE15_R41C_SLOT_2030_TREPPE 8   /* main00 @0x01B8E sce 12 (Band 0x80) */
+#define RE15_R41C_TREPPE_BAND     3    /* Sperre nur vom Ring aus (Ring = Band 3, Zellen 36-41 fl 0x23) */
 /* Zugaenge in den Ring von 2030 (Tuer-Zensus aller ROOM*.RDT, Ziel Stage 1 Raum 3 mit Ankunft auf dem Ring
  * (6550,-5400,-100) nfloor 3): 20B0/20B1 Slot 3 @0x019C2 `3b 03 02 31 01 00 4a 15 24 e1 ... 00 08 01 03 00 03`,
  * 2070/2071 Slot 1 @0x00A5A `3b 01 02 31 00 00 88 13 24 e1 ... 00 08 01 03 00 03` und Slot 2 @0x00A7A
  * `3b 02 02 31 00 00 12 b2 24 13 ... 00 08 01 03 00 03`. Alle uebrigen Tueren nach 2030 (2020/2021 Slot 1 @0x00866/
  * @0x0088A, 2060/2061 Slot 0 @0x00D9A, 2080/2081 Slot 0 @0x00BA2) kommen auf der Tuerebene y -16200 (nfloor 9) an,
- * also ueber dem Wasser y -7200 -> bleiben offen (Weg zum Rechner 2080). */
+ * also ueber dem Wasser y -7200 -> bleiben offen. */
 #define RE15_R41C_SLOT_20B0_RING  3
 #define RE15_R41C_SLOT_2070_RING_A 1
 #define RE15_R41C_SLOT_2070_RING_B 2
@@ -202,8 +250,8 @@
 #define RE15_R41C_PULT_BAND      3
 #define RE15_R41C_VENTIL13_RECT  -3050, -6900, 1300, 1000
 #define RE15_R41C_VENTIL13_BAND  1
-#define RE15_R41C_VENTILE_RECT   4900, -2000, 1400, 3500
-#define RE15_R41C_VENTILE_BAND   3
+#define RE15_R41C_VENTILE_RECT   -3400, 7400, 5000, 1000   /* Suedwand z 7900 +- 500 vor 09/08 (Kopf) */
+#define RE15_R41C_VENTILE_BAND   1                         /* Sued-Landeplatz Zelle 16 fl 0x01           */
 
 /* ---- Bruecke (obj 0 @0x01B6C) ------------------------------------------------------------------------------- */
 #define RE15_R41C_BRUECKE_OBJ      0
@@ -223,7 +271,13 @@
 #define RE15_R41C_WASSER_PARK_Z    60000     /* ausserhalb jeder Kamera, bis die Flut laeuft: PORT-WAHL des Parkplatzes, */
 #define RE15_R41C_WASSER_PARK_Y    1800      /* Form = ROOM2050 Wasser obj 0 "ausser Sicht" bei y -16200 @0x01D92       */
 #define RE15_R41C_WASSER_Y_BODEN   0         /* Beckengrund Band 0                              */
-#define RE15_R41C_WASSER_Y_RUHE    (-7200)   /* nach der Flut: 1800 ueber dem Ring (-5400)       */
+#define RE15_R41C_WASSER_Y_RUHE    (-7200)   /* nach der Flut ohne Strom: 1800 ueber dem Ring (-5400) */
+#define RE15_R41C_WASSER_Y_RELING  (-3600)   /* nach der Flut mit Strom: Oberkante der unteren Reling = Band 2 (Kopf) */
+/* Schachtoeffnung fuer die Relinghoehe (x0, x1, z0, z1; Innenkanten der Ring-Reling, Kopf) — das Netz erzeugt
+ * tools/r41_ventilkette/gen_r41_ventilkette.py (gen/ventilkette_r41_wasser.inc re15_r41c_wasser_reling_md1) im Format
+ * von ROOM2080 Prop 0 (Vierecke <= 1800 x 1800, je eine Kachel mit dem UV-Satz des Originals); Ursprung = Weltursprung. */
+#define RE15_R41C_RELING_RECHTECKE { { -4200, 5400, -8500, -6400 }, { -5400, -4200, -6900, -6400 }, \
+                                     { -7700, 5400, -6400, 2450 }, { -5850, 5400, 2450, 8150 } }
 #define RE15_R41C_WASSER_Y_ENDE    (-16200)  /* Tuerebene Band 9                                 */
 #define RE15_R41C_WASSER_SCHRITT   50        /* ROOM2080 sub02 @0x00CC8 `2f 01 32 00`           */
 #define RE15_R41C_WASSER_SCHRITTE  324       /* 324 x 50 = 16200                                 */
@@ -312,5 +366,7 @@ int      re15_ventilkette_r41_cut_20b0(int cut_2000);             /* Cut-Zuordnu
 const uint8_t *re15_ventilkette_r41_programm(const char *name, int *out_len);
 const uint8_t *re15_ventilkette_r41_text(uint16_t room_id, uint8_t id, int *out_len);
 int      re15_ventilkette_r41_wasser_prop(int k);                 /* Pool-Index der Flaeche k oder -1 */
+int      re15_ventilkette_r41_zustand_2030(void);                 /* RE15_R41C_2030_TROCKEN/_GEFLUTET/_RELING */
+const uint8_t *re15_ventilkette_r41_md1_bytes_fuer(int reling, int *out_size);  /* Riegel: Netz je Zustand */
 
 #endif /* RE15_VENTILKETTE_R41_H */

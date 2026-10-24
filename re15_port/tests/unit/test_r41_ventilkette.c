@@ -5,31 +5,39 @@
  * ECHTER WEG je Raum (Leon + Elza): RDT laden, Raum wie im Spiel hochfahren (scd_room_reenter = Installer-Block),
  * Spieler vor die Stelle, Blick hin, Aktion -> re15_aot_scan (Vorwaertspunkt 620) -> scd_event_fire -> Programm;
  * je Bild scd_vm_tick + re15_ventilkette_r41_tick (der Spiel-Takt-Haken). Geprueft:
- *   A  Original-Scheiben Byte fuer Byte gegen die RDTs; Port-Texte dekodiert; 2080-Programm = sub02 + Schwanz
+ *   A  Original-Scheiben Byte fuer Byte gegen die RDTs; Port-Texte dekodiert; 2080 ohne Port-Programme/-Texte
+ *      (Nachtrag 7); Netz der Relinghoehe (Nachtrag 8) = MD1-Form von ROOM2080 Prop 0 ueber der Schachtoeffnung
  *   B  2000/2001: Leiter Slot 4 = Sperrtext 40 (Aktion zeigt ihn), mit Bit 100 = Tuer
  *   C  2030/2031: Bruecke oben + Zelle 12 zu; Pult "kein Druck"; Ventil 13 (Frage, Ja, Bit 101, Klick-Zustand);
  *      Pult "Lower the bridge?" -> Fahrt 30 x 120 unter Cut 4 -> y -1800, Bit 102, Zelle 12 offen; mit 102 unten
- *   D  Ventile: Frage, Warnung, Zaehler (5,0x1D) -> Ost-Tuer -> 20B0, Wasser geparkt; 1800 Takte -> Flut (5,0x1E),
- *      Wasser steigt 50/Takt, Spieler ertrinkt (hp -1, Blende), Zeit abgelaufen = tot
+ *   D  Ventile (Sued-Landeplatz, Bits 101/102 + Sicherung (3,108)): Frage, Warnung, Zaehler (5,0x1D) -> Ost-Tuer -> 20B0,
+ *      Wasser geparkt; waehrend des Zaehlers zeigen die Ventile die Warnung 46 erneut; 1800 Takte -> Flut (5,0x1E),
+ *      Wasser steigt 50/Takt, Spieler (zurueck am Ring) ertrinkt (hp -1, Blende), Zeit abgelaufen = tot
  *   E  Verlassen waehrend des Zaehlers -> Bits 103 + 100; 20B0: Leiter = Tuer, Strahlen unterdrueckt (0 statt 3);
- *      Tueren nach 2000 -> 20B0 mit Cut-Zuordnung; 2030 nach der Flut unter Wasser, Lift-Rufzone = msg 1; mit 107 leer,
- *      Ventile danach = Zustandssatz 49 (Nachbesserung 1, M8)
+ *      Tueren nach 2000 -> 20B0 mit Cut-Zuordnung; 2030 nach der Flut ohne Strom unter Wasser (y -7200), Lift-Rufzone =
+ *      msg 1, kein Ventil-Platz mehr; MIT Strom (3,126) (Nachtraege 7/8): eine Flaeche y -3600 (Schachtoeffnung), Treppe
+ *      Slot 8 = Sperrtext 48 im Band 3 (Aktion vom NW-Balkon zeigt ihn), Lifte unten = Original-Ereignisse 2/4
  *   F  2050/2051: Hebel ohne Strom = msg 40, (3,104) bleibt; Pult: Slot 8 + Cursor, Frage, Cut 15, Cursor faehrt
  *      (Original sub07), SQUARE kippt Hebel (Zonen), 30+40+10 = 80 -> 30 Ruhebilder -> Bit 106, "Power supply OK.",
  *      Ausstieg sub10; danach Hebel = Original sub04 ((3,104)=1); alle 16 Masken: nur 0xD = 80;
  *      Kisten im Becken (sub01 @0x0201A -> Ereignis 2 = sub02 @0x0220E): ohne Bit 106 Sperrsatz 40, Wasser bleibt;
  *      mit Bit 106 Original sub02 (Wasser steigt) (Nachbesserung 1, M1)
- *   G  2080/2081: ohne Flut Original; mit Flut: sub02 + Set(9,107) + msg 40, Wasser obj 0 -> -3420; war der Rechner
- *      schon gelaufen: Slot 4 erneut, nur Frage + Bit 107
+ *   G  2080/2081: Rechner = nur Original (Nachtrag 7) in JEDEM Zustand (ohne Flut, mit Flut, mit Flut + Strom):
+ *      kein Port-Programm, msg 0, (3,245)=1, Wasser obj 0 -> -3400, kein Bit 107, kein Port-Text; danach Slot 4 aus
  *   H  fremde Raeume: der Installer laesst (5,0x1D)/(5,0x1E) stehen (ROOM1171 sub02 @0x013B2 `22 05 1e 01` im
  *      Init-Takt bleibt 1), nur 2030/2031 loescht er (Nachbesserung 1, M3)
  *   I  Ring-Zugaenge des gefluteten 2030 (Orchestrator-Entscheid C-E2, Abnahme 0 M5): 20B0/20B1 Slot 3 @0x019C2 und
- *      2070/2071 Slot 1 @0x00A5A / Slot 2 @0x00A7A sind mit Bit 103 ohne 107 Sperrtexte (41 bzw. 40, Aktion zeigt ihn,
- *      kein Raumwechsel), mit 107 wieder Tueren nach 2030; die Tuerebenen-Tueren (2080 Slot 0 @0x00BA2) bleiben offen
- *   J  Weg zum Rechner 2080 nach der Flut (Nachbesserung 2, N1 / Orchestrator-Entscheid C-E2b): J1 Zugangs-Zensus
- *      aller RDTs (Tueren nach 2080/2090/20A0 und Setzer von (3,206) genau wie der Tuergraph), J2 die ORIGINAL-Sperre
+ *      2070/2071 Slot 1 @0x00A5A / Slot 2 @0x00A7A sind mit Bit 103 ohne Strom Sperrtexte (41 bzw. 40, Aktion zeigt ihn,
+ *      kein Raumwechsel), mit Strom (3,126) (Nachtrag 7) wieder Tueren nach 2030; die Tuerebenen-Tueren bleiben offen
+ *   J  Zugaenge 2080/2090/20A0 (Nachbesserung 2; seit Nachtrag 6 bleibt die Original-Sperre): J1 Zugangs-Zensus aller
+ *      RDTs (Tueren nach 2080/2090/20A0 und Setzer von (3,206) genau wie der Tuergraph), J2 die ORIGINAL-Sperre
  *      ROOM11A0/11A1 Slot 4 (@0x00FEA Ck(3,206)=0 -> @0x00FEE msg 2) an der Engine: Aktion = nur msg 2, kein
- *      Raumwechsel; mit (3,206)=1 Tuer nach 20A0
+ *      Raumwechsel; mit (3,206)=1 Tuer nach 20A0 — der Weg zu 2080 fuehrt seit Nachtrag 7 ueber den Strom (K/L)
+ *   K  Ventilraetsel erst mit Bruecke UND Sicherung (Nachbesserung 3, Nachtraege 9/10): der Platz liegt am Sued-
+ *      Landeplatz (Band 1) vor den Ventilen 09/08, am alten Ring-Platz feuert nichts; ohne Bit 102 oder ohne (3,108)
+ *      Satz 49 und kein Zaehler; die Sicherung (Slot 9, Original sub06 @0x01FE4) setzt (3,108), danach Frage 45
+ *   L  Strom-Zensus + Zustand (Nachtrag 7): (3,126) nur 2060/2061 sub01 @0x012AE gesetzt, nie geloescht; (3,108) nur
+ *      2030/2031 sub06 @0x01FF2; SCA-Belege der Relinghoehe (Band-1-Reling fl 0x11, Ring-Boden fl 0x23)
  *
  * Werkzeug (Riegel integration_r41_ventilkette C, Nachbesserung 1 M4): `test_r41_ventilkette ppm <datei.ppm> x0 y0 x1 y1`
  * gibt "MITTEL r g b" der Flaeche (P6-Framedump, x1/y1 ausschliesslich) aus.
@@ -47,6 +55,7 @@
 #include "re15_ventilkette_r41.h"
 #include "gen/ventilkette_r41_original.inc"
 #include "re15_room_list.h"
+#include "re15_md1.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -193,6 +202,7 @@ static void zeige(const char *was, uint16_t raum, const lauf_t *L)
 }
 
 static int bit(int b) { return re15_game_flag_get(RE15_R41C_BANK, (uint8_t)b) ? 1 : 0; }
+static int sicherung_bit(void) { return re15_game_flag_get(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT) ? 1 : 0; }
 static void bits_leeren(void) { re15_game_state_init(); re15_ventilkette_r41_reset(); s_nvf = 0; }
 
 static int prop_von_obj(int obj)
@@ -244,6 +254,11 @@ static void fall_a(void)
         { 0x2080, RE15_R41C_ORG_2080_SLOT4_OFF, re15_r41c_org_2080_slot4, (int)sizeof re15_r41c_org_2080_slot4, "2080 Slot 4" },
         { 0x11F0, RE15_R41C_ORG_11F0_MSG1_OFF,  re15_r41c_org_11f0_msg1,  (int)sizeof re15_r41c_org_11f0_msg1,  "11F0 msg 1" },
         { 0x11F0, RE15_R41C_ORG_11F0_MSG2_OFF,  re15_r41c_org_11f0_msg2,  (int)sizeof re15_r41c_org_11f0_msg2,  "11F0 msg 2" },
+        { 0x2030, RE15_R41C_ORG_2030_SLOT8_OFF, re15_r41c_org_2030_slot8, (int)sizeof re15_r41c_org_2030_slot8, "2030 Slot 8 Treppe" },
+        { 0x2030, RE15_R41C_ORG_2030_UNTEN_OFF, re15_r41c_org_2030_unten, (int)sizeof re15_r41c_org_2030_unten, "2030 Sicherung + Shotgun Shells" },
+        { 0x2030, RE15_R41C_ORG_2030_SUB01_OFF, re15_r41c_org_2030_sub01, (int)sizeof re15_r41c_org_2030_sub01, "2030 sub01 Strom -> Lifte" },
+        { 0x2030, RE15_R41C_ORG_2030_SUB06_OFF, re15_r41c_org_2030_sub06, (int)sizeof re15_r41c_org_2030_sub06, "2030 sub06 Sicherung (3,108)" },
+        { 0x2060, RE15_R41C_ORG_2060_STROM_OFF, re15_r41c_org_2060_strom, (int)sizeof re15_r41c_org_2060_strom, "2060 sub01 Loesung + Set(3,126)" },
     };
     for (unsigned i = 0; i < sizeof k / sizeof k[0]; i++) {
         for (int v = 0; v < 2; v++) {
@@ -254,13 +269,49 @@ static void fall_a(void)
             free(d);
         }
     }
-    /* 2080-Programm = sub02 Byte fuer Byte mit 10-Byte-Schwanz im Ja-Zweig */
-    int n = 0;
-    const uint8_t *p = re15_ventilkette_r41_programm("2080_rechner_erw", &n);
-    PRUEFE(p && n == 118 && memcmp(p, re15_r41c_org_2080_sub02, 6) == 0 &&
-           memcmp(p + 10, re15_r41c_org_2080_sub02 + 10, 0x5E) == 0 && p[8] == 0x6A &&
-           memcmp(p + 0x68, "\x22\x09\x6b\x01\x2b\x28\xff\xff\x02\x00\x08\x00\x01\x00", 14) == 0,
-           "2080_rechner_erw: nicht sub02 @0x00C86 + Schwanz (n=%d, Ifel %02x)", n, p ? p[8] : 0);
+    /* Nachtrag 7: 2080 nur Original — keine Port-Programme, kein Port-Text 2080 Id 40/41 (VERTRAG 1.2) */
+    PRUEFE(re15_ventilkette_r41_programm("2080_rechner_erw", NULL) == NULL && re15_ventilkette_r41_programm("2080_rechner_nur2030", NULL) == NULL,
+           "2080: keine Port-Programme mehr (Nachtrag 7)");
+    PRUEFE(re15_ventilkette_r41_text(0x2080, 40, NULL) == NULL && re15_ventilkette_r41_text(0x2081, 41, NULL) == NULL,
+           "2080/2081: keine Port-Texte 40/41 (VERTRAG 1.2: entfallen)");
+    PRUEFE(re15_ventilkette_r41_programm("2030_ventile_leer", NULL) == NULL && re15_ventilkette_r41_programm("2030_ventile_zustand", NULL) == NULL &&
+           re15_ventilkette_r41_programm("2030_ventile_laeuft", NULL) != NULL && re15_ventilkette_r41_programm("2030_ventile_vorher", NULL) != NULL,
+           "2030: Ventil-Programme laeuft/vorher statt zustand/leer (Nachbesserung 3)");
+    { int n = 0; const uint8_t *p = re15_ventilkette_r41_programm("2030_ventile_laeuft", &n);
+      PRUEFE(p && n >= 4 && p[0] == 0x2b && p[1] == RE15_R41C_MSG_WARNUNG, "2030_ventile_laeuft: Message_on 46 (die Warnung)"); }
+    /* Netz der Relinghoehe: MD1-Form von ROOM2080 Prop 0, nur ueber der Schachtoeffnung (Nachbesserung 3, N3) */
+    { int n = 0; const uint8_t *m = re15_ventilkette_r41_md1_bytes_fuer(1, &n); int nv = 0;
+      if (m && n > 0) {
+          re15_md1_t md; memset(&md, 0, sizeof md);
+          int ok = re15_md1_parse(m, n, &md) == 0 && md.mesh_count == 1 && md.meshes[0].quad_count > 0;
+          PRUEFE(ok, "Reling-Netz: MD1 parsebar (1 Netz, Vierecke)");
+          if (ok) {
+              static const int32_t rr[4][4] = RE15_R41C_RELING_RECHTECKE;
+              long long flaeche_soll = 0, flaeche_ist = 0; int alle_drin = 1, uv_gleich = 1;
+              for (int i = 0; i < 4; i++) flaeche_soll += (long long)(rr[i][1] - rr[i][0]) * (rr[i][3] - rr[i][2]);
+              const re15_md1_mesh_t *ms = &md.meshes[0];
+              nv = ms->quad_vertex_count;
+              int ow = 0; const uint8_t *org = re15_ventilkette_r41_md1_bytes_fuer(0, &ow);
+              re15_md1_t mo; memset(&mo, 0, sizeof mo);
+              (void)re15_md1_parse(org, ow, &mo);
+              for (int q = 0; q < ms->quad_count; q++) {
+                  const re15_md1_quad_t *f = &ms->quads[q];
+                  const re15_md1_vertex_t *a = &ms->quad_vertices[f->v0], *d = &ms->quad_vertices[f->v3];
+                  if (a->y != 0 || d->y != 0) alle_drin = 0;
+                  int drin = 0;
+                  for (int i = 0; i < 4; i++)
+                      if (a->x >= rr[i][0] && d->x <= rr[i][1] && a->z >= rr[i][2] && d->z <= rr[i][3]) drin = 1;
+                  if (!drin || d->x - a->x > 1800 || d->z - a->z > 1800) alle_drin = 0;
+                  flaeche_ist += (long long)(d->x - a->x) * (d->z - a->z);
+                  if (memcmp(&ms->quad_uvs[q], &mo.meshes[0].quad_uvs[0], sizeof ms->quad_uvs[q]) != 0) uv_gleich = 0;
+              }
+              PRUEFE(alle_drin && flaeche_ist == flaeche_soll, "Reling-Netz: %d Vierecke <= 1800 in den Rechtecken, Flaeche %lld == %lld",
+                     ms->quad_count, flaeche_ist, flaeche_soll);
+              PRUEFE(uv_gleich && ms->quad_normal_count == 1 && ms->quad_normals[0].y == -4096,
+                     "Reling-Netz: UV-Satz und Normale = ROOM2080 Prop 0 (@0x000D98)");
+              printf("  Reling-Netz: %d B, %d Ecken, %d Vierecke, Flaeche %lld\n", n, nv, ms->quad_count, flaeche_ist);
+          }
+      } else PRUEFE(0, "Reling-Netz fehlt (nur PC-Ziel)"); }
     /* Texte (Port-Ids, Glyphen des Ports) */
     PRUEFE(text_ist(0x2000, 40, "I cannot climb up the ladder because of the water pressure."), "Text 2000/40");
     PRUEFE(text_ist(0x20B1, 40, "I cannot climb up the ladder because of the water pressure."), "Text 20B1/40 (= 2000)");
@@ -268,8 +319,9 @@ static void fall_a(void)
     PRUEFE(text_ist(0x2030, 46, "WARNING: The water will rise in one minute. Leave the room!"), "Text 2030/46");
     PRUEFE(text_ist(0x2050, 42, "Power supply OK."), "Text 2050/42 = 11F0 msg 2");
     PRUEFE(text_ist(0x2050, 41, "Will you push them?"), "Text 2050/41 = 11F0 msg 1");
-    PRUEFE(text_ist(0x2080, 40, "The treatment pool is being drained as well."), "Text 2080/40");
-    PRUEFE(text_ist(0x2031, 49, "The valves are open. The pool has been drained."), "Text 2031/49 (Nachbesserung 1, M8)");
+    PRUEFE(text_ist(0x2031, 48, "I cannot go down the stairs because of the water."), "Text 2031/48 (Treppe, Nachtrag 8)");
+    PRUEFE(text_ist(0x2030, 49, "Numbered valves. If I turn them, this whole level will be flooded.I should look around here first."),
+           "Text 2030/49 (Ventile vorher, Nachtraege 9/10)");
     PRUEFE(text_ist(0x20B1, 41, "I cannot open the door because of the water pressure."), "Text 20B1/41 (C-E2)");
     PRUEFE(text_ist(0x2071, 40, "I cannot open the door because of the water pressure."), "Text 2071/40 (C-E2)");
     PRUEFE(re15_ventilkette_r41_text(0x2000, 41, NULL) == NULL && text_ist(0x20B0, 40, "I cannot climb up the ladder because of the water pressure."),
@@ -367,17 +419,23 @@ static void fall_c(uint16_t r)
 }
 
 /* ---- D: Ventile, Zaehler, Flut, Ertrinken ------------------------------------------------------------------ */
+/* Ventil-Platz am Sued-Landeplatz (Nachbesserung 3, Nachtrag 9): Rechteck x -3400..1600 z 7400..8400 Band 1; Spieler
+ * (-1000,-1800,7300) Blick +z (3072) -> Vorwaertspunkt (-1000, 7920). */
+#define VX (-1000)
+#define VZ 7300
+#define VROT 3072
 static void fall_d(uint16_t r)
 {
     bits_leeren();
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
-    if (raum_hoch(r, 6500, -5400, -200) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
-    lauf_t L = druecken(6500, -200, 2048, 1, 400); zeige("ventile nein", r, &L);
+    vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
+    if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+    lauf_t L = druecken(VX, VZ, VROT, 1, 400); zeige("ventile nein", r, &L);
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_FRAGE && !re15_ventilkette_r41_timer_laeuft() && !g_scd.message_active,
            "ROOM%04X Ventile Nein: nur Frage, kein Zaehler (msgs %d, timer %d)", r, L.n_msgs, re15_ventilkette_r41_timer_laeuft());
     /* Ja: Frage + Warnung, dann schlaeft der Faden (druecken bricht nach 600 Takten ab) */
-    L = druecken(6500, -200, 2048, 0, 600); zeige("ventile ja", r, &L);
+    L = druecken(VX, VZ, VROT, 0, 600); zeige("ventile ja", r, &L);
     PRUEFE(L.n_msgs == 2 && L.msgs[0] == RE15_R41C_MSG_VENTILE_FRAGE && L.msgs[1] == RE15_R41C_MSG_WARNUNG,
            "ROOM%04X Ventile Ja: Frage 45 + Warnung 46 (msgs %d)", r, L.n_msgs);
     PRUEFE(re15_ventilkette_r41_timer_laeuft() && re15_game_flag_get(5, RE15_R41C_FLAG_TIMER) == 1, "ROOM%04X: Zaehler laeuft ((5,0x3D)=1)", r);
@@ -389,7 +447,14 @@ static void fall_d(uint16_t r)
     PRUEFE(pa >= 0 && pw >= 0 && g_scd.props[pa].z == RE15_R41C_WASSER_PARK_Z && g_scd.props[pa].obj_type == 3,
            "ROOM%04X: Wasserflaechen angelegt und geparkt (z %d)", r, pa >= 0 ? (int)g_scd.props[pa].z : 0);
     PRUEFE(re15_ventilkette_r41_programm("2030_ventile", NULL) != NULL, "Programm 2030_ventile");
-    /* Zaehler bis zum Ende: 1800 Takte Sleep (600 liefen schon in druecken) */
+    /* waehrend des Zaehlers: die Ventile zeigen die Warnung erneut (Programm 2030_ventile_laeuft), kein zweiter Zaehler */
+    L = druecken(VX, VZ, VROT, 0, 300); zeige("ventile zust", r, &L);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_WARNUNG && re15_ventilkette_r41_timer_laeuft(),
+           "ROOM%04X: Ventile waehrend des Zaehlers = Warnung 46 (msgs %d, erste %d)", r, L.n_msgs, L.n_msgs ? L.msgs[0] : -1);
+    /* zurueck zum Ring (im Spiel: Steg -> Treppe -> Ring), dort laeuft die Flut ab */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].x = 6500; g_actors[RE15_ACTOR_SLOT_PLAYER].y = -5400; g_actors[RE15_ACTOR_SLOT_PLAYER].z = -200;
+    band_aus_y(-5400);
+    /* Zaehler bis zum Ende: 1800 Takte Sleep (900 liefen schon in den druecken-Laeufen) */
     int takte = 0, flut_bei = -1, tot_bei = -1, spritz_bei = -1;
     int32_t wy_vorher = 0, wy_tot = 0, wy_spritz = 0;
     PRUEFE(re15_ventilkette_r41_spritzer() == 0, "ROOM%04X: vor der Flut kein Spritzer", r);
@@ -411,8 +476,8 @@ static void fall_d(uint16_t r)
            pa >= 0 ? (int)g_scd.props[pa].y : 0, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].y);
     /* 1800 Takte Sleep ab dem Schliessen der Warnung; davor Frage (2 Seiten) + Warnung im druecken-Lauf (je 8 Takte
      * Tastentakt + Schreibmaschine), gemessen ~300 Takte -> Flut zwischen 1800 und 1800 + 450 nach der Aktion */
-    PRUEFE(flut_bei > 0 && flut_bei + 600 >= RE15_R41C_ZAEHLER_BILDER && flut_bei + 600 <= RE15_R41C_ZAEHLER_BILDER + 450,
-           "ROOM%04X: Flut nach 1800 Takten Sleep (gemessen %d + 600 nach der Aktion)", r, flut_bei);
+    PRUEFE(flut_bei > 0 && flut_bei + 900 >= RE15_R41C_ZAEHLER_BILDER && flut_bei + 900 <= RE15_R41C_ZAEHLER_BILDER + 450,
+           "ROOM%04X: Flut nach 1800 Takten Sleep (gemessen %d + 900 nach der Aktion)", r, flut_bei);
     PRUEFE(re15_game_flag_get(2, 7) == 1 || tot_bei > 0, "ROOM%04X: Pad-Sperre waehrend der Flut", r);
     PRUEFE(g_scd.cam_id == RE15_R41C_FAHRT_CUT, "ROOM%04X: Flut unter Cut 4 (cam %d)", r, g_scd.cam_id);
     PRUEFE(tot_bei > 0 && re15_ventilkette_r41_ertrunken() && g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0,
@@ -437,9 +502,9 @@ static void fall_d(uint16_t r)
     PRUEFE(!re15_ventilkette_r41_timer_laeuft(), "ROOM%04X: nach dem Tod kein Zaehler mehr (keine Flut-Bits beim Neustart)", r);
     PRUEFE(bit(RE15_R41C_BIT_FLUT_GELAUFEN) == 0, "ROOM%04X: Bit 103 nach dem Tod nicht gesetzt", r);
     /* Neustart (CONTINUE) nach dem Tod: Blende weg, Zaehler weg, Ventile wieder fragbar */
-    if (raum_hoch(r, 6500, -5400, -200) != 0) { PRUEFE(0, "Parse"); return; }
+    if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "Parse"); return; }
     PRUEFE((g_fade_ch[RE15_R41C_FADE_KANAL].level & 0x8000) != 0, "ROOM%04X Neustart: Blende aus", r);
-    L = druecken(6500, -200, 2048, 1, 300);
+    L = druecken(VX, VZ, VROT, 1, 300);
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_FRAGE, "ROOM%04X Neustart: Ventile wieder fragbar", r);
 }
 
@@ -449,8 +514,9 @@ static void fall_d2(uint16_t r)
     bits_leeren();
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
-    if (raum_hoch(r, 6500, -5400, -200) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
-    lauf_t L = druecken(6500, -200, 2048, 0, 600);
+    vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
+    if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+    lauf_t L = druecken(VX, VZ, VROT, 0, 600);
     PRUEFE(L.n_msgs == 2 && re15_ventilkette_r41_timer_laeuft(), "ROOM%04X D2: Zaehler laeuft", r);
     /* dann hinauf zur Tuerebene (im Spiel per Lift B); hier gesetzt */
     g_actors[RE15_ACTOR_SLOT_PLAYER].y = -16200; g_actors[RE15_ACTOR_SLOT_PLAYER].x = -8000; g_actors[RE15_ACTOR_SLOT_PLAYER].z = -5000;
@@ -483,8 +549,9 @@ static void fall_e(uint16_t r2030, uint16_t r20b0, uint16_t r2000, uint16_t r201
     bits_leeren();
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
-    if (raum_hoch(r2030, 6500, -5400, -200) != 0) { PRUEFE(0, "Parse"); return; }
-    lauf_t L = druecken(6500, -200, 2048, 0, 600);
+    vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
+    if (raum_hoch(r2030, VX, -1800, VZ) != 0) { PRUEFE(0, "Parse"); return; }
+    lauf_t L = druecken(VX, VZ, VROT, 0, 600);
     PRUEFE(re15_ventilkette_r41_timer_laeuft(), "ROOM%04X: Zaehler laeuft", r2030);
     /* Raumwechsel waehrend des Zaehlers (= Tuer): Installer des naechsten Raums setzt 103 + 100 */
     vorflag(3, 235);   /* 20B0 nach der Auswasch-Szene (sub05 @0x01FBC), damit der Else-Zweig laeuft */
@@ -518,20 +585,42 @@ static void fall_e(uint16_t r2030, uint16_t r20b0, uint16_t r2000, uint16_t r201
     PRUEFE(g_aot.door_params[0].dest_room == 0x0B && g_aot.door_params[0].target_cut == 11, "ROOM%04X nach der Flut: Ost-Tuer -> 20B0", r2030);
     PRUEFE(g_aot.slots[4].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[4].event_id == RE15_R41C_MSG_LIFT_ORIGINAL,
            "ROOM%04X nach der Flut: Lift-A-Rufzone Slot 4 = msg 1 (Typ %d msg %d)", r2030, g_aot.slots[4].type, g_aot.slots[4].event_id);
-    g_actors[RE15_ACTOR_SLOT_PLAYER].y = -5400;   /* Band 3 fuer das Band-Gate der Stelle (im Spiel unter Wasser, hier nur der Satz) */
-    L = druecken(6500, -200, 2048, 0, 300);
-    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_ZUSTAND, "ROOM%04X nach der Flut: Ventile = Zustandssatz 48", r2030);
-    /* mit Bit 107: leer */
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_2030_LEER);
-    if (raum_hoch(r2030, 0, -16200, -3000) != 0) { PRUEFE(0, "Parse"); return; }
-    PRUEFE(prop_von_obj(RE15_R41C_WASSER_OBJ_A) < 0 && prop_von_obj(RE15_R41C_WASSER_OBJ_B) < 0, "ROOM%04X mit Bit 107: kein Wasser", r2030);
-    PRUEFE(g_aot.slots[4].type != RE15_AOT_TYPE_MESSAGE, "ROOM%04X mit Bit 107: Lift-Rufzone wieder Original", r2030);
-    PRUEFE(g_aot.door_params[0].dest_room == 0x0B, "ROOM%04X mit Bit 107: Ost-Tuer bleibt -> 20B0 (Bit 103)", r2030);
-    /* Nachbesserung 1 (M8): nach dem Entleeren sagen die Ventile nicht mehr "flooded", sondern Zustandssatz 49 */
-    g_actors[RE15_ACTOR_SLOT_PLAYER].y = -5400;
-    L = druecken(6500, -200, 2048, 0, 300);
-    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_LEER, "ROOM%04X mit Bit 107: Ventile = Zustandssatz 49 (msgs %d, erste %d)",
-           r2030, L.n_msgs, L.n_msgs ? L.msgs[0] : -1);
+    PRUEFE(re15_ventilkette_r41_zustand_2030() == RE15_R41C_2030_GEFLUTET, "ROOM%04X nach der Flut ohne Strom: Zustand geflutet", r2030);
+    PRUEFE(!g_aot.slots[RE15_R41C_SLOT_VENTILE].active || g_aot.slots[RE15_R41C_SLOT_VENTILE].type == RE15_AOT_TYPE_NONE,
+           "ROOM%04X nach der Flut: kein Ventil-Platz mehr (Ventile unter Wasser, Nachtrag 9)", r2030);
+    PRUEFE(re15_ventilkette_r41_obj_id(r2030, 1) == RE15_R41C_WASSER_OBJ_B, "ROOM%04X geflutet: zwei Flaechen (obj 4/5)", r2030);
+    /* MIT Strom (3,126) (Nachtraege 7/8): Relinghoehe — eine Flaeche ueber der Schachtoeffnung, Treppe gesperrt */
+    vorflag(RE15_R41C_STROM_BANK, RE15_R41C_STROM_BIT);
+    if (raum_hoch(r2030, -6600, -5400, -7700) != 0) { PRUEFE(0, "Parse"); return; }
+    pa = prop_von_obj(RE15_R41C_WASSER_OBJ_A);
+    PRUEFE(re15_ventilkette_r41_zustand_2030() == RE15_R41C_2030_RELING, "ROOM%04X mit Strom: Zustand Relinghoehe", r2030);
+    PRUEFE(pa >= 0 && g_scd.props[pa].y == RE15_R41C_WASSER_Y_RELING && g_scd.props[pa].x == 0 && g_scd.props[pa].z == 0 &&
+           prop_von_obj(RE15_R41C_WASSER_OBJ_B) < 0,
+           "ROOM%04X mit Strom: EINE Flaeche obj 4 bei (0,-3600,0), keine obj 5 (y %d)", r2030, pa >= 0 ? (int)g_scd.props[pa].y : 0);
+    PRUEFE(re15_ventilkette_r41_obj_id(r2030, 0) == RE15_R41C_WASSER_OBJ_A && re15_ventilkette_r41_obj_id(r2030, 1) == -1,
+           "ROOM%04X mit Strom: Modell nur fuer obj 4", r2030);
+    { int n = 0, m = 0; const uint8_t *b = re15_ventilkette_r41_md1_bytes(&n); const uint8_t *br = re15_ventilkette_r41_md1_bytes_fuer(1, &m);
+      PRUEFE(b && b == br && n == m, "ROOM%04X mit Strom: main.c laedt das Netz der Relinghoehe (%d B)", r2030, n); }
+    const re15_aot_t *tr = &g_aot.slots[RE15_R41C_SLOT_2030_TREPPE];
+    PRUEFE(tr->active && tr->type == RE15_AOT_TYPE_MESSAGE && tr->event_id == RE15_R41C_MSG_TREPPE_FLUT && tr->band == RE15_R41C_TREPPE_BAND,
+           "ROOM%04X mit Strom: Treppe Slot 8 = Sperrtext 48 Band 3 (Typ %d ev %d Band %d)", r2030, tr->type, tr->event_id, tr->band);
+    PRUEFE(g_aot.slots[4].type != RE15_AOT_TYPE_MESSAGE, "ROOM%04X mit Strom: Lift-Rufzone oben wieder Original", r2030);
+    PRUEFE(g_aot.slots[7].type == RE15_AOT_TYPE_GENERIC && g_aot.slots[7].event_id == 4,
+           "ROOM%04X mit Strom: Lift B unten Slot 7 = Ereignis 4 (sub00 @0x01D88, sub01 @0x01E14 mit Strom ohne Reset; Typ %d ev %d)",
+           r2030, g_aot.slots[7].type, g_aot.slots[7].event_id);
+    PRUEFE(g_aot.door_params[0].dest_room == 0x0B, "ROOM%04X mit Strom: Ost-Tuer bleibt -> 20B0 (Bit 103)", r2030);
+    PRUEFE(!g_aot.slots[RE15_R41C_SLOT_VENTILE].active || g_aot.slots[RE15_R41C_SLOT_VENTILE].type == RE15_AOT_TYPE_NONE,
+           "ROOM%04X mit Strom: kein Ventil-Platz (unten geflutet)", r2030);
+    /* Aktion vom NW-Balkon (Band 3) Richtung Treppe (Blick +x, Punkt 620 -> x -5980 im Treppen-Rechteck x -6050..-2350) */
+    memset(&g_room_change, 0, sizeof g_room_change);
+    L = druecken(-6600, -7700, 0, 0, 300); zeige("treppe zu", r2030, &L);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_TREPPE_FLUT && g_actors[RE15_ACTOR_SLOT_PLAYER].y == -5400,
+           "ROOM%04X mit Strom: Aktion an der Treppe = Text 48, Spieler bleibt am Ring (msgs %d, erste %d, y %d)", r2030,
+           L.n_msgs, L.n_msgs ? L.msgs[0] : -1, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].y);
+    /* Gegenprobe ohne Flut: die Treppe ist die Original-Treppe */
+    bits_leeren();
+    if (raum_hoch(r2030, -6600, -5400, -7700) != 0) { PRUEFE(0, "Parse"); return; }
+    PRUEFE(g_aot.slots[RE15_R41C_SLOT_2030_TREPPE].type == RE15_AOT_TYPE_STAIR, "ROOM%04X ohne Flut: Treppe Slot 8 bleibt Treppe", r2030);
 }
 
 /* ---- F: 2050 Hebel + Pult ----------------------------------------------------------------------------------- */
@@ -667,45 +756,38 @@ static void fall_f(uint16_t r)
     fall_f_kisten(r);
 }
 
-/* ---- G: 2080 Rechner ---------------------------------------------------------------------------------------- */
+/* ---- G: 2080 Rechner = nur Original (Nachtrag 7) ---------------------------------------------------------------- */
 static void fall_g(uint16_t r)
 {
-    /* ohne Flut: Original */
-    bits_leeren();
-    if (raum_hoch(r, -11550, -14400, -6000) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
-    lauf_t L = druecken(-11550, -6000, 1024, 0, 900); zeige("rechner", r, &L);
-    int p0 = prop_von_obj(0);
-    /* Wasser obj 0: -10800 (@0x00C2E) + 148 x 50 (@0x00CC8/@0x00CCC) = -3400 */
-    PRUEFE(L.n_msgs == 1 && L.msgs[0] == 0 && re15_game_flag_get(3, 245) == 1 && bit(RE15_R41C_BIT_2030_LEER) == 0 && p0 >= 0 && g_scd.props[p0].y == -3400,
-           "ROOM%04X ohne Flut: Original sub02 ((3,245)=%d, Bit 107=%d, Wasser y %d)", r, re15_game_flag_get(3, 245), bit(107), p0 >= 0 ? (int)g_scd.props[p0].y : 0);
-    /* mit Flut, Rechner noch nicht gelaufen: sub02 + Schwanz */
-    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN);
-    if (raum_hoch(r, -11550, -14400, -6000) != 0) { PRUEFE(0, "Parse"); return; }
-    L = druecken(-11550, -6000, 1024, 0, 900); zeige("rechner+2030", r, &L);
-    p0 = prop_von_obj(0);
-    PRUEFE(L.n_msgs == 2 && L.msgs[0] == 0 && L.msgs[1] == RE15_R41C_MSG_RECHNER_2030 && re15_game_flag_get(3, 245) == 1 &&
-           bit(RE15_R41C_BIT_2030_LEER) == 1 && p0 >= 0 && g_scd.props[p0].y == -3400,
-           "ROOM%04X mit Flut: msg 0 + 40, (3,245)=1, Bit 107, Wasser -3400 (msgs %d, y %d)", r, L.n_msgs, p0 >= 0 ? (int)g_scd.props[p0].y : 0);
-    PRUEFE(g_scd.cam_id == 3 && re15_game_flag_get(2, 7) == 0, "ROOM%04X: Ende wie Original (Cut 3, frei)", r);
-    /* mit Flut, Rechner schon gelaufen ((3,245)=1): Slot 4 erneut, nur Frage + Bit 107 */
+    /* drei Zustaende: ohne Flut / Flut ohne Strom / Flut mit Strom — ueberall dasselbe Original sub02 @0x00C86 */
+    for (int z = 0; z < 3; z++) {
+        bits_leeren();
+        if (z >= 1) vorflag(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN);
+        if (z >= 2) vorflag(RE15_R41C_STROM_BANK, RE15_R41C_STROM_BIT);
+        if (raum_hoch(r, -11550, -14400, -6000) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+        PRUEFE(re15_ventilkette_r41_ereignis(r, 2) == NULL, "ROOM%04X Zustand %d: Ereignis 2 = kein Port-Programm", r, z);
+        PRUEFE(g_aot.slots[4].type == RE15_AOT_TYPE_GENERIC && g_aot.slots[4].event_id == 2,
+               "ROOM%04X Zustand %d: Rechner Slot 4 = Original sub00 @0x00C1A", r, z);
+        lauf_t L = druecken(-11550, -6000, 1024, 0, 900); zeige("rechner", r, &L);
+        int p0 = prop_von_obj(0);
+        /* Wasser obj 0: -10800 (@0x00C2E) + 148 x 50 (@0x00CC8/@0x00CCC) = -3400 */
+        PRUEFE(L.n_msgs == 1 && L.msgs[0] == 0 && re15_game_flag_get(3, 245) == 1 && bit(107) == 0 && p0 >= 0 && g_scd.props[p0].y == -3400,
+               "ROOM%04X Zustand %d: Original sub02 (msgs %d, (3,245)=%d, Bit 107=%d, Wasser y %d)", r, z, L.n_msgs,
+               re15_game_flag_get(3, 245), bit(107), p0 >= 0 ? (int)g_scd.props[p0].y : 0);
+        PRUEFE(g_scd.cam_id == 3 && re15_game_flag_get(2, 7) == 0, "ROOM%04X Zustand %d: Ende wie Original (Cut 3, frei)", r, z);
+        PRUEFE(g_aot.slots[1].type == RE15_AOT_TYPE_DOOR, "ROOM%04X Zustand %d: Tuer Slot 1 nach 2090 an (@0x00CAC)", r, z);
+    }
+    /* Wiedereintritt mit (3,245)=1: Slot 4 bleibt aus (Original sub00 Else @0x00C5E), auch nach der Flut */
     bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN); vorflag(3, 245);
     if (raum_hoch(r, -11550, -14400, -6000) != 0) { PRUEFE(0, "Parse"); return; }
-    PRUEFE(g_aot.slots[4].active && g_aot.slots[4].type == RE15_AOT_TYPE_GENERIC && g_aot.slots[4].event_id == 2,
-           "ROOM%04X Rechner gelaufen + Flut: Slot 4 erneut (Typ %d ev %d)", r, g_aot.slots[4].type, g_aot.slots[4].event_id);
-    L = druecken(-11550, -6000, 1024, 0, 400); zeige("nur 2030", r, &L);
-    PRUEFE(L.n_msgs == 2 && L.msgs[0] == 0 && L.msgs[1] == RE15_R41C_MSG_RECHNER_2030 && bit(RE15_R41C_BIT_2030_LEER) == 1 &&
-           g_aot.slots[4].type != RE15_AOT_TYPE_GENERIC, "ROOM%04X nur 2030: Frage + Satz, Bit 107, Slot 4 aus", r);
-    /* mit Bit 107: keine Stelle mehr */
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_2030_LEER);
-    if (raum_hoch(r, -11550, -14400, -6000) != 0) { PRUEFE(0, "Parse"); return; }
-    PRUEFE(!g_aot.slots[4].active || g_aot.slots[4].type != RE15_AOT_TYPE_GENERIC, "ROOM%04X mit Bit 107: Slot 4 bleibt aus (Typ %d ev %d, (3,245)=%d, Bit 103=%d 107=%d)", r,
-           g_aot.slots[4].type, g_aot.slots[4].event_id, re15_game_flag_get(3, 245), bit(RE15_R41C_BIT_FLUT_GELAUFEN), bit(RE15_R41C_BIT_2030_LEER));
+    PRUEFE(!g_aot.slots[4].active || g_aot.slots[4].type != RE15_AOT_TYPE_GENERIC, "ROOM%04X (3,245)=1 + Flut: Slot 4 aus (Typ %d)", r,
+           g_aot.slots[4].type);
 }
 
 /* ---- I: Ring-Zugaenge des gefluteten 2030 (Orchestrator-Entscheid C-E2, Abnahme 0 M5) ---------------------------- */
 static void ring_pruefen(uint16_t raum, int slot, int msg, int32_t x, int32_t y, int32_t z, int rot, int band)
 {
-    /* geflutet: Bit 103 ohne 107 -> Sperrtext, Aktion zeigt ihn, kein Raumwechsel */
+    /* geflutet: Bit 103 ohne Strom -> Sperrtext, Aktion zeigt ihn, kein Raumwechsel */
     bits_leeren();
     vorflag(3, 235); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_LEITER_FREI);
     if (raum_hoch(raum, x, y, z) != 0) { PRUEFE(0, "ROOM%04X Parse", raum); return; }
@@ -717,12 +799,18 @@ static void ring_pruefen(uint16_t raum, int slot, int msg, int32_t x, int32_t y,
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == msg && !g_room_change.pending,
            "ROOM%04X Slot %d geflutet: Aktion zeigt nur Text %d, kein Raumwechsel (msgs %d, erste %d, pending %d)",
            raum, slot, msg, L.n_msgs, L.n_msgs ? L.msgs[0] : -1, g_room_change.pending);
-    /* entleert: Bit 107 -> wieder die Original-Tuer nach 2030 (Stage 1 Raum 3) */
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_2030_LEER);
+    /* Strom (3,126) (Nachtrag 7: "Nach der Aktivierung des Stroms ist 2030 leer gelaufen") -> wieder die Original-Tuer
+     * nach 2030 (Stage 1 Raum 3); Aktion -> Raumwechsel nach 2030 */
+    vorflag(RE15_R41C_STROM_BANK, RE15_R41C_STROM_BIT);
     if (raum_hoch(raum, x, y, z) != 0) { PRUEFE(0, "ROOM%04X Parse", raum); return; }
     PRUEFE(g_aot.slots[slot].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[slot].dest_stage == 1 &&
            g_aot.door_params[slot].dest_room == RE15_R41C_RAUM_2030_ID,
-           "ROOM%04X Slot %d mit Bit 107: Tuer nach 2030 (Typ %d Raum %d)", raum, slot, g_aot.slots[slot].type, g_aot.door_params[slot].dest_room);
+           "ROOM%04X Slot %d mit Strom: Tuer nach 2030 (Typ %d Raum %d)", raum, slot, g_aot.slots[slot].type, g_aot.door_params[slot].dest_room);
+    memset(&g_room_change, 0, sizeof g_room_change);
+    L = druecken(x, z, rot, 0, 60);
+    PRUEFE(g_room_change.pending && (g_room_change.room_id & 0xFFFEu) == 0x2030u,
+           "ROOM%04X Slot %d mit Strom: Aktion -> Raumwechsel nach 2030 (pending %d Raum %04X)", raum, slot, g_room_change.pending,
+           g_room_change.room_id);
 }
 
 static void fall_i(uint16_t r20b0, uint16_t r2070, uint16_t r2080)
@@ -894,6 +982,128 @@ static void fall_j2(uint16_t r11a0)
            g_room_change.room_id);
 }
 
+/* ---- K: Ventilraetsel erst mit Bruecke UND Sicherung (Nachbesserung 3, Nachtraege 9/10) ----------------------------- */
+static void fall_k(uint16_t r)
+{
+    /* Bruecke oben, keine Sicherung: der Platz liegt am Sued-Landeplatz (Band 1), nicht mehr am Ring */
+    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
+    if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+    const re15_aot_t *a = &g_aot.slots[RE15_R41C_SLOT_VENTILE];
+    PRUEFE(a->active && a->type == RE15_AOT_TYPE_GENERIC && a->event_id == RE15_R41C_EV_VENTILE && a->band == RE15_R41C_VENTILE_BAND &&
+           a->x == -900 && a->z == 7900, "ROOM%04X: Ventil-Platz am Sued-Landeplatz Mitte (-900,7900) Band 1 (Mitte (%d,%d) Band %d)",
+           r, (int)a->x, (int)a->z, a->band);
+    lauf_t L = druecken(VX, VZ, VROT, 0, 300); zeige("ohne 102", r, &L);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_VORHER && !re15_ventilkette_r41_timer_laeuft(),
+           "ROOM%04X ohne Bit 102 und ohne Sicherung: Satz 49, kein Zaehler (msgs %d, erste %d)", r, L.n_msgs, L.n_msgs ? L.msgs[0] : -1);
+    /* der alte Ring-Platz (Ost-Streifen (6500,-200) Blick -x, Band 3) loest nichts mehr aus */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].y = -5400;
+    L = druecken(6500, -200, 2048, 0, 120);
+    PRUEFE(L.n_msgs == 0 && !re15_ventilkette_r41_timer_laeuft(), "ROOM%04X: am alten Ring-Platz kein Ventilraetsel (msgs %d)", r, L.n_msgs);
+    g_actors[RE15_ACTOR_SLOT_PLAYER].y = -1800;
+    /* Bruecke unten, Sicherung noch nicht aufgehoben: weiter Satz 49 */
+    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "Parse"); return; }
+    L = druecken(VX, VZ, VROT, 0, 300); zeige("ohne 108", r, &L);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_VORHER && !re15_ventilkette_r41_timer_laeuft(),
+           "ROOM%04X Bit 102 ohne Sicherung: Satz 49, kein Zaehler", r);
+    /* Sicherung aufheben = Original Slot 9 (@0x01BAA, Ereignis 6) -> sub06: msg 2 (Frage), Ja -> Set(3,108) @0x01FF2, msg 3.
+     * Rechteck x -5900..-5100 z 6650..7650 Band 1; Spieler (-5350,6400) Blick +z -> Punkt (-5350,7020). */
+    PRUEFE(g_aot.slots[9].active && g_aot.slots[9].type == RE15_AOT_TYPE_GENERIC && g_aot.slots[9].event_id == 6,
+           "ROOM%04X: Sicherung Slot 9 = Ereignis 6 (Typ %d ev %d)", r, g_aot.slots[9].type, g_aot.slots[9].event_id);
+    L = druecken(-5350, 6400, 3072, 0, 400); zeige("sicherung", r, &L);
+    PRUEFE(L.n_msgs == 2 && L.msgs[0] == 2 && L.msgs[1] == 3 && sicherung_bit() == 1,
+           "ROOM%04X: Sicherung aufgehoben (msg 2 + 3, (3,108)=%d)", r, sicherung_bit());
+    /* jetzt das Ventilraetsel: Frage 45 (Nein -> nichts) */
+    L = druecken(VX, VZ, VROT, 1, 300); zeige("mit 108", r, &L);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_FRAGE && !re15_ventilkette_r41_timer_laeuft(),
+           "ROOM%04X Bit 102 + Sicherung: Frage 45 (msgs %d, erste %d)", r, L.n_msgs, L.n_msgs ? L.msgs[0] : -1);
+    /* Sicherung ohne Bruecke (Spielstand-Kombination nicht erreichbar, aber eindeutig): weiter Satz 49 */
+    bits_leeren(); vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
+    if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "Parse"); return; }
+    L = druecken(VX, VZ, VROT, 0, 300);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_VORHER, "ROOM%04X Sicherung ohne Bit 102: Satz 49", r);
+}
+
+/* ---- L: Zensus der Original-Bits (3,126) Strom und (3,108) Sicherung + SCA-Belege der Relinghoehe -------------------- */
+typedef struct { uint16_t raum; uint32_t off; uint8_t op, bit, wert; } bitfund_t;
+static bitfund_t s_bf[64];
+static int s_nbf = 0;
+static void bits_laufen(uint16_t raum, const uint8_t *d, uint32_t n, uint32_t s0)
+{
+    if (s0 == 0 || s0 + 2 > n) return;
+    unsigned first = le16u(d + s0);
+    if (first < 2 || (first & 1) || s0 + first > n) return;
+    uint32_t se = abschnitt_ende(d, n, s0);
+    unsigned offs[64]; int k = 0;
+    for (unsigned i = 0; i < first / 2 && k < 64; i++) {
+        unsigned o = le16u(d + s0 + 2 * i);
+        if (!o || s0 + o >= n) continue;
+        int dup = 0;
+        for (int j = 0; j < k; j++) if (offs[j] == o) dup = 1;
+        if (!dup) offs[k++] = o;
+    }
+    for (int i = 0; i < k; i++)
+        for (int j = i + 1; j < k; j++) if (offs[j] < offs[i]) { unsigned t = offs[i]; offs[i] = offs[j]; offs[j] = t; }
+    for (int i = 0; i < k; i++) {
+        uint32_t a = s0 + offs[i], e = (i + 1 < k) ? s0 + offs[i + 1] : se;
+        if (e > se) e = se;
+        for (uint32_t pc = a; pc < e; ) {
+            int sz = scd_opcode_size_at(d + pc);
+            if (sz <= 0 || pc + (uint32_t)sz > e) break;
+            if ((d[pc] == 0x21 || d[pc] == 0x22) && d[pc + 1] == 3 && (d[pc + 2] == 126 || d[pc + 2] == 108) && s_nbf < 64) {
+                s_bf[s_nbf].raum = raum; s_bf[s_nbf].off = pc; s_bf[s_nbf].op = d[pc]; s_bf[s_nbf].bit = d[pc + 2]; s_bf[s_nbf].wert = d[pc + 3];
+                s_nbf++;
+            }
+            pc += (uint32_t)sz;
+        }
+    }
+}
+
+static void fall_l(void)
+{
+    s_nbf = 0;
+    for (int r = 0; r < RE15_ROOM_COUNT; r++) {
+        long sz = 0;
+        uint8_t *d = rdt_lesen((uint16_t)re15_room_ids[r], &sz);
+        if (!d) continue;
+        if (sz >= 0x60) {
+            bits_laufen((uint16_t)re15_room_ids[r], d, (uint32_t)sz, le32(d + 0x40));
+            bits_laufen((uint16_t)re15_room_ids[r], d, (uint32_t)sz, le32(d + 0x44));
+        }
+        free(d);
+    }
+    int set126 = 0, loesch126 = 0, set108 = 0, loesch108 = 0, ort126 = 1, ort108 = 1;
+    for (int i = 0; i < s_nbf; i++) {
+        if (s_bf[i].op != 0x22) continue;
+        if (s_bf[i].bit == 126) {
+            if (s_bf[i].wert == 1) { set126++; if ((s_bf[i].raum & 0xFFFEu) != 0x2060u || s_bf[i].off != 0x012AE) ort126 = 0; }
+            else loesch126++;
+        } else {
+            if (s_bf[i].wert == 1) { set108++; if ((s_bf[i].raum & 0xFFFEu) != 0x2030u || s_bf[i].off != 0x01FF2) ort108 = 0; }
+            else loesch108++;
+        }
+    }
+    printf("  L Zensus: %d Stellen (3,126)/(3,108); Set(3,126) %d (geloescht %d), Set(3,108) %d (geloescht %d)\n",
+           s_nbf, set126, loesch126, set108, loesch108);
+    PRUEFE(set126 == 2 && ort126 && loesch126 == 0, "L: (3,126) nur ROOM2060/2061 sub01 @0x012AE gesetzt, nie geloescht");
+    PRUEFE(set108 == 2 && ort108 && loesch108 == 0, "L: (3,108) nur ROOM2030/2031 sub06 @0x01FF2 gesetzt, nie geloescht");
+    /* SCA-Belege der Relinghoehe (Kopf): untere Reling = Band-1-Wandzellen fl 0x11, Ring-Boden = fl 0x23 (Band 2..3) */
+    bits_leeren();
+    if (raum_hoch(0x2030, 0, -5400, 0) != 0) { PRUEFE(0, "ROOM2030 Parse"); return; }
+    static const int k_reling[5] = { 3, 4, 5, 10, 11 };
+    for (int i = 0; i < 5; i++)
+        PRUEFE(s_rdt.sca[k_reling[i]].floor == 0x11 && s_rdt.sca[k_reling[i]].u1 == 0,
+               "SCA 2030 Zelle %d: untere Reling Band 1 (fl %02x)", k_reling[i], s_rdt.sca[k_reling[i]].floor);
+    for (int c = 36; c <= 41; c++)
+        PRUEFE(s_rdt.sca[c].floor == 0x23 && s_rdt.sca[c].u1 == 1, "SCA 2030 Zelle %d: Ring-Boden fl 0x23 (fl %02x)", c, s_rdt.sca[c].floor);
+    static const int k_ring[4][2] = { { 19, 5400 }, { 20, -8500 }, { 21, 8150 }, { 22, -5850 } };
+    PRUEFE(s_rdt.sca[19].x == 5400 && s_rdt.sca[20].z + (int)s_rdt.sca[20].density == -8500 && s_rdt.sca[21].z == 8150 &&
+           s_rdt.sca[22].x + (int)s_rdt.sca[22].width == -5850 && s_rdt.sca[19].floor == 0x33,
+           "SCA 2030: Innenkanten der Ring-Reling = Rand der Schachtoeffnung (19 x %d, 20 z %d, 21 z %d, 22 x %d)",
+           s_rdt.sca[19].x, s_rdt.sca[20].z + (int)s_rdt.sca[20].density, s_rdt.sca[21].z, s_rdt.sca[22].x + (int)s_rdt.sca[22].width);
+    (void)k_ring;
+}
+
 /* ---- H: Bank-5-Marker nur in 2030 loeschen (Nachbesserung 1, M3) ------------------------------------------------ */
 static void fall_h(void)
 {
@@ -956,6 +1166,7 @@ int main(int argc, char **argv)
         fall_g((uint16_t)(0x2080 + v));
         fall_i((uint16_t)(0x20B0 + v), (uint16_t)(0x2070 + v), (uint16_t)(0x2080 + v));
         fall_j2((uint16_t)(0x11A0 + v));
+        fall_k((uint16_t)(0x2030 + v));
     }
     /* fremd: ROOM2060 ohne Plaetze 12..14 / Wasser */
     bits_leeren();
@@ -968,6 +1179,7 @@ int main(int argc, char **argv)
     }
     fall_h();
     fall_j1();
+    fall_l();
     printf("%s (%d Pruefungen)\n", s_fail ? "FAIL" : "PASS", s_pruef);
     free(s_daten);
     return s_fail;

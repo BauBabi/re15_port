@@ -114,10 +114,13 @@ def bauen(cd):
                ("09 0a 3c 00", "Sleep 60 (Form ROOM20B0 sub05 @0x01FB2)"),
                ("ENDIF", ""), ENDE]
     P.append(("re15_r41c_prg_2030_ventile", ventile))
-    P.append(("re15_r41c_prg_2030_ventile_zustand",
-              [msg_on(48, "The valves are open. The pool has been flooded."), EVT_NEXT, ENDE]))
-    P.append(("re15_r41c_prg_2030_ventile_leer",
-              [msg_on(49, "The valves are open. The pool has been drained. (Nachbesserung 1, M8: nach Bit 107)"), EVT_NEXT, ENDE]))
+    # Nachbesserung 3: waehrend des Zaehlers zeigen die Ventile die Warnung 46 erneut (Zustand = die Warnung selbst);
+    # vor der Bruecke (Bit 102) bzw. ohne die Sicherung ((3,108), Setzer 2030 sub06 @0x01FF2) Satz 49 (Nachtraege 9/10).
+    P.append(("re15_r41c_prg_2030_ventile_laeuft",
+              [msg_on(46, "WARNING: The water will rise in one minute. Leave the room! (Zustand waehrend des Zaehlers)"), EVT_NEXT, ENDE]))
+    P.append(("re15_r41c_prg_2030_ventile_vorher",
+              [msg_on(49, "Numbered valves. If I turn them, this whole level will be flooded. I should look around here first."),
+               EVT_NEXT, ENDE]))
     # ---- 2050 ------------------------------------------------------------------------------------------------
     P.append(("re15_r41c_prg_2050_hebel_sperre",
               [msg_on(40, "The pump has no power. The switchboard must be set first. (Form ROOM2060 sub12 @0x015D0)"),
@@ -133,24 +136,7 @@ def bauen(cd):
                ("ENDIF", ""), ENDE]))
     P.append(("re15_r41c_prg_2050_pult_zustand",
               [msg_on(44, "The switchboard is set to 80 volts. The pump is powered."), EVT_NEXT, ENDE]))
-    # ---- 2080 Rechner ----------------------------------------------------------------------------------------
-    d2080 = open(os.path.join(cd, "STAGE2", "ROOM2080.RDT"), "rb").read()
-    org = d2080[0x00C86:0x00C86 + 0x6C]
-    assert org[6:10] == bytes([0x06, 0x00, 0x60, 0x00]) and org[0x68:0x6C] == bytes([0x08, 0x00, 0x01, 0x00])
-    erw = [(" ".join("%02x" % x for x in org[0:6]), "ROOM2080 sub02 @0x00C86 Message_on 0 + Evt_next (Byte fuer Byte)"),
-           ("IF", "= @0x00C8C Ifel_ck, Laenge 0x60 + 10 Byte Schwanz = 0x6A"),
-           (" ".join("%02x" % x for x in org[10:0x68]),
-            "@0x00C90..@0x00CED Byte fuer Byte: Ja, Set(3,245), Slots, Pad-Sperre, Cut 7, Wasser sinkt For 148, Cut 3, Freigabe, Plc_ret"),
-           ("22 09 6b 01", "Set(9,107)=1 2030 entleert (Port-Bit)"),
-           msg_on(40, "The treatment pool is being drained as well."), EVT_NEXT,
-           ("ENDIF", "= @0x00CEE"), ENDE]
-    P.append(("re15_r41c_prg_2080_rechner_erw", erw))
-    P.append(("re15_r41c_prg_2080_rechner_nur2030",
-              [("2b 00 ff ff", "Message_on 0 = ROOM2080 sub02 @0x00C86 (Frage)"), EVT_NEXT,
-               ("IF", "Ja-Zweig"), JA,
-               ("46 04 00 00 00 00 00 00 00 00", "Aot_reset Slot 4 sce 0 = sub02 @0x00C98"),
-               ("22 09 6b 01", "Set(9,107)=1"), msg_on(40, "The treatment pool is being drained as well."), EVT_NEXT,
-               ("ENDIF", ""), ENDE]))
+    # ---- 2080 Rechner: seit Nachtrag 7 nur Original (sub02 @0x00C86), keine Port-Programme mehr (Nachbesserung 3) -----
     return P
 
 

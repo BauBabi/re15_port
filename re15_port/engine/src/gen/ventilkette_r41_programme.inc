@@ -100,16 +100,16 @@ static const unsigned char re15_r41c_prg_2030_ventile[112] = {
     /* +06E */ 0x01,0x00, /* Evt_end */
 };
 
-/* re15_r41c_prg_2030_ventile_zustand (8 B) */
-static const unsigned char re15_r41c_prg_2030_ventile_zustand[8] = {
-    /* +000 */ 0x2b,0x30,0xff,0xff, /* Message_on 48, Maske ffff - The valves are open. The pool has been flooded. */
+/* re15_r41c_prg_2030_ventile_laeuft (8 B) */
+static const unsigned char re15_r41c_prg_2030_ventile_laeuft[8] = {
+    /* +000 */ 0x2b,0x2e,0xff,0xff, /* Message_on 46, Maske ffff - WARNING: The water will rise in one minute. Leave the room! (Zustand waehrend des Zaehlers) */
     /* +004 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
     /* +006 */ 0x01,0x00, /* Evt_end */
 };
 
-/* re15_r41c_prg_2030_ventile_leer (8 B) */
-static const unsigned char re15_r41c_prg_2030_ventile_leer[8] = {
-    /* +000 */ 0x2b,0x31,0xff,0xff, /* Message_on 49, Maske ffff - The valves are open. The pool has been drained. (Nachbesserung 1, M8: nach Bit 107) */
+/* re15_r41c_prg_2030_ventile_vorher (8 B) */
+static const unsigned char re15_r41c_prg_2030_ventile_vorher[8] = {
+    /* +000 */ 0x2b,0x31,0xff,0xff, /* Message_on 49, Maske ffff - Numbered valves. If I turn them, this whole level will be flooded. I should look around here first. */
     /* +004 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
     /* +006 */ 0x01,0x00, /* Evt_end */
 };
@@ -144,32 +144,6 @@ static const unsigned char re15_r41c_prg_2050_pult_zustand[8] = {
     /* +006 */ 0x01,0x00, /* Evt_end */
 };
 
-/* re15_r41c_prg_2080_rechner_erw (118 B) */
-static const unsigned char re15_r41c_prg_2080_rechner_erw[118] = {
-    /* +000 */ 0x2b,0x00,0xff,0xff,0x02,0x00, /* ROOM2080 sub02 @0x00C86 Message_on 0 + Evt_next (Byte fuer Byte) */
-    /* +006 */ 0x06,0x00,0x6a,0x00, /* Ifel_ck (Laenge automatisch) = @0x00C8C Ifel_ck, Laenge 0x60 + 10 Byte Schwanz = 0x6A */
-    /* +00A */ 0x21,0x0c,0x1f,0x00,0x22,0x03,0xf5,0x01,0x46,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x46,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x46,0x01,0x02,0x31,0xf8,0xdf,0x00,0x00,0x32,0x9c,0x22,0x02,0x07,0x01,0x22,0x01,0x1b,0x01,0x09,0x0a,0x14,0x00,0x29,0x07,0x2e,0x03,0x00,0x00,0x2f,0x01,0x32,0x00,0x0d,0x00,0x06,0x00,0x94,0x00,0x30,0x02,0x02,0x00,0x0e,0x00,0x09,0x0a,0x14,0x00,0x29,0x03,0x3c,0x01,0x22,0x02,0x07,0x00,0x22,0x01,0x1b,0x00,0x2e,0x01,0x00,0x00,0x42,0x00, /* @0x00C90..@0x00CED Byte fuer Byte: Ja, Set(3,245), Slots, Pad-Sperre, Cut 7, Wasser sinkt For 148, Cut 3, Freigabe, Plc_ret */
-    /* +068 */ 0x22,0x09,0x6b,0x01, /* Set(9,107)=1 2030 entleert (Port-Bit) */
-    /* +06C */ 0x2b,0x28,0xff,0xff, /* Message_on 40, Maske ffff - The treatment pool is being drained as well. */
-    /* +070 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +072 */ 0x08,0x00, /* Endif = @0x00CEE */
-    /* +074 */ 0x01,0x00, /* Evt_end */
-};
-
-/* re15_r41c_prg_2080_rechner_nur2030 (38 B) */
-static const unsigned char re15_r41c_prg_2080_rechner_nur2030[38] = {
-    /* +000 */ 0x2b,0x00,0xff,0xff, /* Message_on 0 = ROOM2080 sub02 @0x00C86 (Frage) */
-    /* +004 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +006 */ 0x06,0x00,0x1a,0x00, /* Ifel_ck (Laenge automatisch) Ja-Zweig */
-    /* +00A */ 0x21,0x0c,0x1f,0x00, /* Ck(12,31)=0 = Ja (ROOM2050 sub04 @0x022F0) */
-    /* +00E */ 0x46,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* Aot_reset Slot 4 sce 0 = sub02 @0x00C98 */
-    /* +018 */ 0x22,0x09,0x6b,0x01, /* Set(9,107)=1 */
-    /* +01C */ 0x2b,0x28,0xff,0xff, /* Message_on 40, Maske ffff - The treatment pool is being drained as well. */
-    /* +020 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +022 */ 0x08,0x00, /* Endif  */
-    /* +024 */ 0x01,0x00, /* Evt_end */
-};
-
 typedef struct { const char *name; const unsigned char *b; int n; } re15_r41c_programm_t;
 static const re15_r41c_programm_t re15_r41c_programme[] = {
     { "2030_pult_ohne", re15_r41c_prg_2030_pult_ohne, 8 },
@@ -178,12 +152,10 @@ static const re15_r41c_programm_t re15_r41c_programme[] = {
     { "2030_v13_frage", re15_r41c_prg_2030_v13_frage, 28 },
     { "2030_v13_zustand", re15_r41c_prg_2030_v13_zustand, 8 },
     { "2030_ventile", re15_r41c_prg_2030_ventile, 112 },
-    { "2030_ventile_zustand", re15_r41c_prg_2030_ventile_zustand, 8 },
-    { "2030_ventile_leer", re15_r41c_prg_2030_ventile_leer, 8 },
+    { "2030_ventile_laeuft", re15_r41c_prg_2030_ventile_laeuft, 8 },
+    { "2030_ventile_vorher", re15_r41c_prg_2030_ventile_vorher, 8 },
     { "2050_hebel_sperre", re15_r41c_prg_2050_hebel_sperre, 8 },
     { "2050_pult_ein", re15_r41c_prg_2050_pult_ein, 44 },
     { "2050_pult_zustand", re15_r41c_prg_2050_pult_zustand, 8 },
-    { "2080_rechner_erw", re15_r41c_prg_2080_rechner_erw, 118 },
-    { "2080_rechner_nur2030", re15_r41c_prg_2080_rechner_nur2030, 38 },
 };
 #define RE15_R41C_PROGRAMME_N ((int)(sizeof re15_r41c_programme / sizeof re15_r41c_programme[0]))
