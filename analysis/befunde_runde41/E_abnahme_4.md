@@ -94,6 +94,14 @@ VORHER (c3ba4317): dieselben HALTEN-Zeilen, kein `[standbild]`.
   Leon in 6 Bildern in die Stehpose aus (`<sp>/E41a4/P1_G3_renn_zoom.png`) — wie die GDB-Folge des Originals (Lage, Clip 3, Mischzaehler; Abnahme 3
   §3.1). Ein Original-VIDEO des Renn-Anlaufs gibt es nicht; Original-Dauer dieses Apply auf dem Renn-Weg 15 VSyncs (`o_kurbel_cut3_renn.txt`).
 
+- Weg des Nutzers aus seinem befund.log (Abnahme 3 §3.5: Tuer 2050 -> 2020, gerannt, gestoppt, gedreht, Aktion im Stand), Fenster-Aufnahme
+  `G4_nutzerweg` (`RE15_DEBUG_JUMP=2050@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_FIRE_AOT=1@30#2050 RE15_INPUT_SCRIPT=L0.36,XU1.47,W0.3,L0.4,U0.4,
+  A0.034,W5.0` Start 60, Quadrat @200/240/280/320): `[standbild] F83 / F100 / F282 / F410 6 Bilder 198 ms`; Frage zu g1209 (t=22,823) -> Leon an der
+  Kurbel g1223 (t=23,090) = **267 ms**, dazwischen 0 px; Bogen `<sp>/E41a4/P1_G4_nutzerweg_zoom.png` (Frage / zu / steht / Kurbel / Blende /
+  Kurbelpose) — dieselbe Folge wie das Original-Video.
+- Elza (`N_P1_elza_stand`, ROOM2021, `RE15_TITLE_SHOT_CHAR=1`, Stand wie 3.2): `PL04 (character=4, Elza-Bit=1)`, `[kamerahalt] F462 raum=2021 ...
+  HALTEN`, `[standbild] F462 6 Bilder 199 ms`, Pos_set F462 (2600,-3018) -> (3650,-3018), Plc_motion F482 — wie Leon.
+
 ### 3.3 Urteil Punkt 1: **erfuellt**
 Gegen den Massstab des Nachtrags 14 gemessen am echten Fenster: zwischen "Frage zu" und "Leon an der Kurbel" steht das Bild jetzt
 250-267 ms (Original auf dem Weg des Nutzers 284 ms; VORHER 75 ms), kein Zwischenbild, kein Hinueberfliegen, dieselbe Pose/Blende/Letterbox-
@@ -150,3 +158,41 @@ Laeufe `<sp>/E41a4/runs/{M,V}_<lauf>/` (M = NACHHER re15_pc_E41a4.exe, V = VORHE
 - Die dritte Ausnahme WESTBLOCK ging ueber E-E4 (zwei Stellen) hinaus; **Orchestrator-Entscheid E-E5 (master 6fc20609, 20:34) bestaetigt sie**
   ("dort haengt auch die Original-Regel (AUS 5880 in 15 Seeds)" — von mir bestaetigt) und fuehrt die drei Haenger als Folgeauftrag (UEBERGABE §3b).
 **Urteil Mangel 2: behoben im Sinne von E-E4/E-E5** (Sonde misst den Haenger wieder; drei benannte, belegte Ausnahmen; Folgeauftrag gestellt).
+
+## 6. Punkt 2 — Karte B1, vordere Tuer der "Waffen Armory" (Gang ROOM1230 -> Ostkammer ROOM1190) — neu gemessen
+Gemeinsam `RE15_DEBUG_JUMP=1230@240 RE15_PLAYER_POS=96,14500,1024,0 RE15_SET_FLAG=4:0xf3,3:0x89,7:0x88,7:0x89 RE15_INPUT_SCRIPT=<anlauf>,W0.2,S0.1,
+W1.0,Q0.1 RE15_INPUT_SCRIPT_START=300 RE15_INPUT_SCRIPT_BASIS=spiel RE15_STATE_LOG=state.txt RE15_INV_FB_SHOT=map.bmp RE15_INV_FB_SHOT_AT=120
+RE15_MAP_SHOT_PAGE=0 RE15_EXIT_AT=560`, Marker per `test_r41_kleinkram_b_exe marker map.bmp`. NACHHER = HEAD, BASIS = 116e8b0f (`run2.sh`: der
+Basis-Baum hat kein shared_assets mehr -> `RE15_ASSET_ROOT` = shared_assets/PSX des Spurbaums; `git diff 116e8b0f HEAD -- re15_port/shared_assets` leer).
+Laeufe `<sp>/E41a4/runs/{N,B}_P2_*`.
+
+| Lauf | Spieler F399 | BASIS | NACHHER |
+|---|---|---|---|
+| Leon U0.2 (weit weg) | (96,14050) | — | MARKER 145 104 |
+| Leon U0.6 | (96,13150) | **MARKER 137 109** | MARKER 145 106 |
+| Leon U1.0 (vor der Tuer) | (96,12779) | **MARKER 130 112** | MARKER 145 107 |
+| Elza `RE15_TITLE_SHOT_CHAR=1` (room1231.rdt, PL04), U1.0 | (96,12779) | **MARKER 130 112** | MARKER 145 107 |
+| Leon RENNEND `XU0.25,W0.5` (Stopp ps2 = 3 an der Tuer) | (96,12799) | — | MARKER 145 107 |
+| Leon echte Tuer `U1.0,W0.3,A0.1` + `RE15_INV_OPEN_AT=60#1190` (`[tuer] Sequenz fertig: 301 Bilder`, room1190.rdt, (19515,-12109)) | 1190 | — | MARKER 145 108 |
+
+Ostkammer-Marke (146,109), Hallen-Marke (127,115). BASIS wandert beim Herantreten an die vordere Tuer bis 15 px zur Hallen-Tuer (Nutzer-Befund
+reproduziert), NACHHER bleibt der Marker an der Ostkammer-Tuer — Leon und Elza, gehend und rennend, nach dem Durchgang in der Ostkammer.
+Ausschnitt x6 `<sp>/E41a4/P2_karte_basis_nach.png`. Code (karte_r41.c, Haken re15_inv_screen.c) seit Abnahme 1 unveraendert (NB4-Diff beruehrt
+ihn nicht). **Urteil Punkt 2: erfuellt.**
+
+## 7. Punkt 3 — Werkstatt-Tuer ROOM11B1 bei Elza dauerhaft zu — neu gemessen
+- **Echter Tuerweg mit Szene** (`P3a_szene`: `RE15_TITLE_SHOT_CHAR=1 RE15_DEBUG_JUMP=1261@240 RE15_SET_FLAG=3:0x83,3:0x46,4:0xf3
+  RE15_PLAYER_POS=27650,9450,1024,1 RE15_PRESS=square@300,square@310 ... RE15_FRAMEDUMP=690:fd_690.ppm RE15_EXIT_AT=700#11b1`; Flags = Zustand nach
+  10B1 sub04 @0x0195E und 2001 sub04 @0x01958 `22 03 46 01`, selbst gelesen `scd_dump_room.py ROOM2001.RDT`): NACHHER `loaded room1261.rdt` ->
+  `[tuer] Sequenz fertig: 331 Bilder` -> `loaded room11b1.rdt` -> `[wk11b1-r41] ROOM11B1 (3,0x83)=1: Ereignis 24 ... Werkstatt-Tuer bleibt zu`,
+  msg 10 "Elza: Sherry!?" (@0x1480 F84), msg 11 "Elza: Where has she gone!?" (@0x14CE F372), Plc_ret @0x14E6 F473; Kameras 6,5,4,3,**2**, Ende (-18192,
+  -20453) Cut 2. BASIS: dieselbe Szene, Kameras 6,5,4,3,**8**, Ende Cut 8 (gemaltes offenes Tuerblatt). Bild F690 `<sp>/E41a4/P3a_ende_basis_nach.png`:
+  links BASIS Tuerblatt offen (hell), rechts NACHHER geschlossene Tuer.
+- **Dauerhaft**: Garagenseite (`P3b_garage`, `RE15_PLAYER_POS=-20200,-16230,2048,0`, `U1.5,W0.3,A0.1`): ab F272 **(-20942,-16230) blockiert**, `"The door is
+  locked."`, Raum bleibt 11b1. Werkstattseite (`P3c_werkstatt`, (-24000,-16230) Blick 0, `U2.0`): NACHHER ab F280 **(-22618,-16230) blockiert**, Cut 0,
+  msg 12; BASIS laeuft durch (F290 -21825, F300 -21075, F320 -19768, Kameras 7 -> 8). Wiederbetreten nach der Szene ueber die echte Tuer (`P3d_wieder`,
+  1261 -> 11B1 mit (3,0x83) = 1, (3,0x46) = 0): `[wk11b1-r41] ... Werkstatt-Tuer bleibt zu`, Elza (-195,-21821) Cut 6, keine Szene.
+- **Leon unberuehrt**: `P3e_leon11b0` (ROOM11B0, (3,0x83) = 1, Werkstattseite, `U2.0`): NACHHER gegen BASIS **661/661 Zeilen gleich** (Leon geht durch,
+  Szene "Leon: H-hey!"), kein `[wk11b1-r41]`.
+- Grenze wie Abnahme 3: der Abschnitt 2001 -> 1261 ist nicht gefahren (Flags gesetzt); 1261 -> 11B1 ist die echte Tuer. Code von Punkt 3 seit Abnahme 1
+  unveraendert. **Urteil Punkt 3: erfuellt.**
