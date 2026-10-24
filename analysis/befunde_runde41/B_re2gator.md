@@ -2040,3 +2040,60 @@ ohne Ende, bis 600 Bilder), buehne (jede laufende Kamera, Raum-Objekte), integra
   Start-Gier 624`, `PUTZ runde 6/6 spawns=9 gesamt=54`, `DASH ende ... wand_draussen_max=0`), C3 (`angehaengt lokal=(4614,-253,616) F1119`,
   `Kanister-Sitz F1388: angehaengt 270 Bilder, Abweichung max 0`, `GIER-WACHE ... Spruenge > 0x60: 0`), K (`R1 VSync 4 (Zeitlupe) F70`,
   `R1 ende (Leiche)`), N (`Sicht F1 untergetaucht`, `Sicht F201 aufgetaucht`).
+
+### 14.6 exe-Laeufe nachher (gebauter Stand, eigene Kopien re15_pc_b41n6(z)_<Lauf>.exe, Ordner `B41nb6/mess/<Lauf>`)
+Basis wie Abnahme 5 (`B41nb6/lauf.sh`, Elza `lauf_elza.sh`); `EXIT_AT=251#1240` = durch das Game Over bis in den neu gestarteten Raum.
+
+| Lauf | Rezept (zusaetzlich) | Tod | laufend -> Buehne (Massstab Koppelbild) | Maul-Sitz Ende | Bild |
+|---|---|---|---|---|---|
+| E1 | `DEBUG_JUMP=20A0@250 FIRE_AOT=0@40#20A0 GB_TEST=1 EXIT_AT=251#1240` | F627 GUARD | 2/2 -> (-5650,-16000) Gier 2929 Cut 6 (1357) | F902 Uebergabe: 275 (14/120/141), Kiefer 2, gehalten 275, frei 275 | E1_nachher_schnitt_p1/_ende/_ende_zoom.png |
+| A2 | `DEBUG_JUMP=2090@250 GB_TEST=1 EXIT_AT=251#1240` | F397 CHASE | 0/0 -> Cut 6 (1357) | F672 Uebergabe: 275, Kiefer 2, gehalten/frei 275 | A2_nachher.png, A2_nachher_ende.png |
+| MN | `PLAYER_POS=4000,-15000,2048,1` | F587 GUARD | 0/0 -> Cut 6 | F862 Uebergabe: 275, Kiefer 2, gehalten/frei 275 | MN_nachher.png |
+| BL | `PLAYER_POS=0,-13200,2048,1` | F526 CHASE (Band 1) | 0/0 -> Cut 6 | F801 Uebergabe: 275, Kiefer 2, gehalten/frei 275 | BL_nachher.png |
+| G1F | `PLAYER_POS=-7950,-25050,2048 EXIT_AT=430#2090` | F399 CHASE | 0/0 -> Cut 6 | (bis F429) 30 Bilder, gehalten/frei 30 | G1_nachher.png |
+| G2F | `PLAYER_POS=-5950,-20550,2048 EXIT_AT=470#2090` | F440 CHASE | 6/6 -> (2100,-24500) Gier 1951 Cut 1 (1350) | (bis F470) 30 Bilder, gehalten/frei 30 | G2_nachher.png |
+| EZT2 (Elza) | Tuerweg 20A1 -> 2091, `EXIT_AT=902#2091` | F627 GUARD | 2/2 -> Cut 6 | F902 Uebergabe: 275, gehalten/frei 275, Zopf 244 (ohne Massstab 3207) | EZT2_nachher.png |
+
+In allen Bildbogen: Biss im alten Cut, im naechsten Bild Schnitt auf die Buehne; P1 Opfer gross und frei vor dem frontalen Gator; P2
+Schuetteln/Wurf; P3 aufgerichtete Kauschleife mit dem Opfer im Maul bis zum letzten Bild vor dem Titel (E1/MN/A2/Elza ungeblendetes
+Uebergabe-Bild mit dem Opfer im Maul). Raum-Spinnen stehen in BL F522-F526 (alte Kamera) und F620 am Rand - Spur F entfernt sie.
+
+### 14.7 OFFEN (gemessen, benannt)
+- **H1 Hals-Zielmodus / RE2-Halsfuehrung** (FUN_80017d98 / FUN_800177c0, Root @0x80100330-74): unveraendert OFFEN, Entscheid zum
+  Part-5-Gier-Kanal steht aus.
+- **H2 GUARD-Hochbiss ohne Blick auf Leon** (Nutzer-Design v0.7.42): unveraendert; der Finisher haengt nicht davon ab.
+- **H3 erledigt:** die Buehne zeigt den Kopf jetzt im Massstab des RE2-Finisher-Schnitts (Koppelbild 1350-1357 gegen RE2 1354; vorher
+  573-1318). Die Entscheidungsfrage §13.8 ist damit beantwortet (das Umsetzen faellt seit M2 immer in einen Schnitt).
+- **H4 erledigt:** Leon steht in P1 auf der Gator-Hoehe (RE2 P0 nur x/z @0x8010106c-84, Anker-y @0x80015d7c), nicht mehr y 0.
+- **Masken (PRI) in der Buehnen-Wahl:** die Sicht-Pruefung kennt die Raum-Objekte (Obj_model_set), nicht die Vordergrund-Masken der
+  Kamera-Hintergruende (ROOM2090 Cut 0-7: 50-105 Masken, MASKS/ROOM2090.MSK). Gemessen: in keinem der Laeufe E1/A2/MN/BL/G1/G2/Elza
+  verdeckt eine Maske das Opfer (A/B `RE15_NO_PRI=1` im Zwischenstand E1 ohne Unterschied; Bildbogen §14.6). Eine Masken-Pruefung in der
+  Buehne braeuchte die MSK-Daten in der Engine (heute nur PC-Seite) - nicht gebaut.
+- **Buehne ist (fast) ortsfest:** mit der RE2-Massstab-Ordnung waehlt die Suche fuer jeden Biss dieselbe beste Lage (Westkanal
+  (-5650,-16000), Cut 6; laeuft Cut 6, dann (2100,-24500) Cut 1) - wie RE2, das den Finisher an einem festen Ort spielt (Korridor-Achse
+  x -23078 @0x80101048-4c). Laufzeit der Suche im Biss-Bild 12,7 ms (PC, Riegel-Mittel).
+- **Raum-Spinnen** im Bild (BL F620, G2 F452/F456 am Rand) - Spur F entfernt sie (AUFTRAG); sie verdecken das Opfer nicht.
+- **Szene haelt die Kamera** (re15_gr2_kamera_auto(0), Spur F/G): faellt dort ein toedlicher Biss, waehlt die Buehne trotzdem eine Lage,
+  aber re15_gr2_kamera_finisher schneidet nicht (s_kam_aus) - F/G duerfen waehrend ihrer Szenen keinen toedlichen Biss zulassen oder
+  muessen die Automatik vorher wieder einschalten. Hinweis an F/G, im Spiel heute nicht erreichbar.
+- Unveraendert aus §12.4/§13.7: Befreiungs-Schub nur im Riegel, RE15_FPS != 30, Altbestand-Liste (Band nach Niederschlag, Plattformblock
+  mit Band 1 kein Standort usw.).
+
+### 14.8 Fuer den Nutzer (Nachbesserung 6)
+- Keine neuen Assets, keine Sprachdateien, keine neuen Umgebungsschalter. Geaendert: Spur-B-Dateien (enemy_ai_boss_gator.c,
+  gator_re2_r41.c, platform/pc/src/gator_re2_pc.c, re15_gator_re2_r41.h), **1 Zeile in platform/pc/main.c** (Elzas Zopf im Maul-Massstab,
+  Kommentar "Runde 41 Spur B NB6"), Riegel (test_r41_re2gator.c, probes/r41_re2gator.cmake, integration/test_r41_re2gator.cmake).
+- Was sich im Spiel aendert:
+  1. Stirbt Leon (oder Elza) durch den Alligator, bleibt er bis zum Titelbild im Maul - der Alligator kaut aufgerichtet weiter (wie in RE2,
+     dessen Finisher nicht endet). Vorher stand Leon nach etwa 4 Sekunden wieder neben dem Alligator.
+  2. Der Finisher beginnt IMMER mit einem Kameraschnitt; Alligator und Opfer springen nie sichtbar an ihren Platz.
+  3. Der Finisher-Schnitt zeigt die Szene wie RE2: der Alligator frontal und nah, das Opfer gross davor; der Ort ist fest (Westkanal,
+     Kamera 6, sonst Kamera 1) - wie in RE2 am Ende des Korridors. Leon/Elza stehen sichtbar bis zur Huefte aus dem Wasser, bevor der
+     Alligator zuschnappt; keine treibende Leiche steht mehr davor.
+  4. Elzas Zopf bleibt im Finisher am Kopf.
+- Messzeilen: debug.log `[gator-re2] Maul-Sitz F<n>: ... Opfer gehalten a/b, Opfer frei c/b ...` und `[gator-re2] Maul-Sitz Ende F<n>: ...,
+  Zopf-Glied 0 zum Kopf-Knochen max .. (ohne Massstab ..), letztes Finisher-Bild F<n> (Game-Over-Uebergabe)`; gator_boss.log `RE2 FINISHER
+  Buehne ... NB6: laufende Kamera a/b ausgeschlossen, Raum-Objekte n, Leon-Stichpunkte n, wegen Verdeckung verworfen n ..., Massstab
+  Koppelbild m (RE2-Finisher 1354)`.
+- Hinweis an Spur F (2090-Szene): frisst der Alligator die treibende Leiche obj 3, faellt sie aus der Sicht-Pruefung von selbst heraus
+  (nur aktive Objekte zaehlen); sonst meidet die Buehne sie.
