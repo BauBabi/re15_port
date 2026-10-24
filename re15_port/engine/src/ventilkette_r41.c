@@ -77,6 +77,7 @@ static int      s_standbild_offen = 0;          /* 2010: Standbild der Ventile (
 static int      s_standbild_takte = 0;
 static unsigned s_ton_n[3];                     /* gespielte Toene je RE15_R41C_TON_* (Riegel)                   */
 static int      s_kasten_vorher = -1;           /* Flanke von Bit 125 (Protokoll)                                 */
+static int      s_zaehler_takte = 0;            /* Countdown: Takte seit dem Zaehlerstart (Sleep 1800)            */
 void (*re15_ventilkette_r41_ton_hook)(int ton) = NULL;
 
 static const int     k_ventil_nr[RE15_R41C_VENTILE_N]     = RE15_R41C_VENTIL_NUMMERN;
@@ -500,7 +501,7 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
     s_ventil_gewaehlt = -1; s_ventile_geloest = 0; s_falsch_offen = 0; s_plakat_offen = 0; s_plakat_takte = 0;
-    s_standbild_offen = 0; s_standbild_takte = 0;
+    s_standbild_offen = 0; s_standbild_takte = 0; s_zaehler_takte = 0;
     for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
     if (ist(room_id, RE15_R41C_RAUM_2010))            /* Nachbesserung 5: ROOM2010/2011 benutzen Bank 5 nicht (scd_dump_room.py) */
@@ -537,7 +538,7 @@ void re15_ventilkette_r41_reset(void)
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
     s_ventil_gewaehlt = -1; s_ventile_geloest = 0; s_falsch_offen = 0; s_plakat_offen = 0; s_plakat_takte = 0;
-    s_standbild_offen = 0; s_standbild_takte = 0; s_kasten_vorher = -1;
+    s_standbild_offen = 0; s_standbild_takte = 0; s_kasten_vorher = -1; s_zaehler_takte = 0;
     for (int i = 0; i < 3; i++) s_ton_n[i] = 0;
     for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
 }
@@ -825,6 +826,34 @@ int re15_ventilkette_r41_standbild(unsigned *raum, int *cut)
 unsigned re15_ventilkette_r41_ton_zaehler(int t) { return (t >= 1 && t <= 2) ? s_ton_n[t] : 0u; }
 int re15_ventilkette_r41_ventil_rbj(unsigned room_id) { return ist((uint16_t)room_id, RE15_R41C_RAUM_2030); }
 
+/* Countdown (Nachbesserung 5, Nachtrag 18 Punkt 4): sichtbar, solange in 2030 der Zaehler laeuft und die Flut noch nicht
+ * begonnen hat; Restbilder = 1800 - Takte seit dem Zaehlerstart (der Sleep 1800 desselben Fadens, Kopf). */
+int re15_ventilkette_r41_countdown(int *rest_bilder)
+{
+    if (!s_timer || s_flut || s_ertrunken || !ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2030)) return 0;
+    int rest = RE15_R41C_ZAEHLER_BILDER - s_zaehler_takte;
+    if (rest < 0) rest = 0;
+    if (rest_bilder) *rest_bilder = rest;
+    return 1;
+}
+
+int re15_ventilkette_r41_countdown_text(int rest, uint8_t *out, int cap)
+{
+    if (!out || cap < 14) return 0;
+    if (rest < 0) rest = 0;
+    const int min = rest / (60 * 30), sek = (rest / 30) % 60, hund = (rest % 30) * 100 / 30;
+    const int z[6] = { min / 10, min % 10, sek / 10, sek % 10, hund / 10, hund % 10 };
+    int n = 0;
+    out[n++] = 0x05; out[n++] = RE15_R41C_COUNTDOWN_FARBE;              /* Farbe 2 wie ROOM2040 msg 4 @0x19A6 */
+    for (int i = 0; i < 6; i++) {
+        if (i == 2 || i == 4) out[n++] = 0x16;                           /* ':' */
+        out[n++] = (uint8_t)(0x0C + z[i]);                               /* '0'..'9' */
+    }
+    out[n++] = 0x05; out[n++] = 0x00;
+    out[n++] = 0x01; out[n++] = 0x00;
+    return n;
+}
+
 int re15_ventilkette_r41_timer_laeuft(void) { return s_timer; }
 int re15_ventilkette_r41_flut_laeuft(void)  { return s_flut; }
 int re15_ventilkette_r41_ertrunken(void)    { return s_ertrunken; }
@@ -846,6 +875,7 @@ void re15_ventilkette_r41_tick(void)
         if (!s_timer_gesehen && re15_game_flag_get(5, RE15_R41C_FLAG_TIMER)) {
             s_timer_gesehen = 1;
             s_timer = 1;
+            s_zaehler_takte = 0;
             if (g_aot.slots[RE15_R41C_SLOT_2030_OSTTUER].type == RE15_AOT_TYPE_DOOR)
                 tuer_nach_20b0(RE15_R41C_SLOT_2030_OSTTUER, 5950, -1800, -6400, 2048, 11, "Zaehler laeuft");
             wasser_anlegen(0, RE15_R41C_WASSER_PARK_Y, RE15_R41C_WASSER_PARK_Z);
@@ -861,7 +891,11 @@ void re15_ventilkette_r41_tick(void)
         { const int dok = bit(RE15_R41C_BIT_DOKUMENT);  /* Ablage durch den Dokument-Leser (menu_common.c, Bit (9,107)) */
           if (s_dok_vorher == 0 && dok) LOG("[ventilkette41] Dokument 6 \"Technician's Note\" abgelegt: Bit (9,107) = 1\n");
           s_dok_vorher = dok; }
-        if (!s_flut && re15_game_flag_get(5, RE15_R41C_FLAG_FLUT)) { s_flut = 1; LOG("[ventilkette41] FLUT: Wasser steigt\n"); }
+        if (s_timer && !s_flut) s_zaehler_takte++;     /* Countdown (Nachbesserung 5) */
+        if (!s_flut && re15_game_flag_get(5, RE15_R41C_FLAG_FLUT)) {
+            s_flut = 1;
+            LOG("[ventilkette41] FLUT: Wasser steigt (Countdown-Takte %d von %d)\n", s_zaehler_takte, RE15_R41C_ZAEHLER_BILDER);
+        }
         if (s_flut) flut_tick();
         if (g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0) s_timer = 0;
     } else if (ist(room, RE15_R41C_RAUM_2050)) {

@@ -31,6 +31,7 @@
 #include "asset_root_pc.h"        /* re15_pc_read_cd / re15_pc_read_re2 */
 
 extern void re15_render_pc_show_fmv(const uint32_t *rgba, int w, int h);
+extern int  re15_render_pc_msg_text(int x, int y, const unsigned char *raw, int len);   /* render_pc.c: TEX.TIM-Schrift */
 extern void re15_render_pc_hide_fmv(void);
 extern void re15_audio_re2_karte_se(int se_id);                              /* audio_pc.c (Runde 36 Spur G) */
 extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
@@ -172,4 +173,13 @@ void re15_ventilkette_r41_pc_bild(void)
     }
     if (bild) { re15_render_pc_show_fmv(bild, 320, 240); s_vollbild = 1; }
     else if (s_vollbild) { re15_render_pc_hide_fmv(); s_vollbild = 0; }
+
+    /* Countdown der 60 s in 2030 (Nachtrag 18 Punkt 4): Nachrichtenschrift, Farbe 2, oben rechts (Kopf des Moduls);
+     * Text-Ebene (nach dem 3D, wie Untertitel). */
+    int rest = 0;
+    if (re15_ventilkette_r41_countdown(&rest)) {
+        uint8_t t[24];
+        const int n = re15_ventilkette_r41_countdown_text(rest, t, (int)sizeof t);
+        if (n > 0) re15_render_pc_msg_text(RE15_R41C_COUNTDOWN_X, RE15_R41C_COUNTDOWN_Y, t, n);
+    }
 }

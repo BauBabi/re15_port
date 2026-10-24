@@ -354,6 +354,16 @@
  * (Raeder 09/08/07 + Plakat, Dossier §0e B4-2), BSS/ROOM2030/BG07.BSS (= ROOM2031/BG07.BSS bytegleich). */
 #define RE15_R41C_STANDBILD_RAUM  0x2030u
 #define RE15_R41C_STANDBILD_CUT   7
+/* Countdown der 60 s (Nachbesserung 5, Nachtrag 18 Punkt 4, Dossier §0f B5-4): die verbleibenden Bilder des Sleep 1800
+ * (RE15_R41C_ZAEHLER_BILDER, 30 Takte je Sekunde), angezeigt als MM:SS:HH in der Nachrichtenschrift des Spiels (TEX.TIM,
+ * Glyphen 0x0C..0x15 = 0..9, 0x16 = ':', Vorschub DEBUG.BIN @0x4416: Ziffer 8 px ('1' 7), ':' 4 px) in Farbe 2 - die Farbe,
+ * mit der das Original eine ablaufende Frist hervorhebt (ROOM2040 msg 4 @0x19A6 "Bomb activated, I have `05 02`10
+ * seconds`05 00` before it detonates!", die Zeitbombe). Ein Countdown-Bild hat weder RE1.5 noch die vorliegenden RE2-Daten
+ * (Suche im Dossier §0f B5-4) -> Format und Lage PORT-WAHL: oben rechts, rechter Rand wie der Rand der Nachrichtenbox
+ * links (x 34, re15_render_pc_msg_text(34, 180, ...) in main.c) -> x 286 - 56 = 230, y 20. */
+#define RE15_R41C_COUNTDOWN_X     230
+#define RE15_R41C_COUNTDOWN_Y     20
+#define RE15_R41C_COUNTDOWN_FARBE 2
 /* Dokument (Nachbesserung 4, Nachtrag 13 Folge 2; Dossier §0e B4-4). */
 #define RE15_R41C_DOK_NR          6      /* re15_files.c s_docs[6]                                           */
 #define RE15_R41C_DOK_ITEM        0x4E   /* 0x48 + 6 (RE2 @0x80071d04, RE1.5-Basis u8 @0x800c7370)          */
@@ -505,6 +515,9 @@ int      re15_ventilkette_r41_ventil_nummer(int i);               /* 1, 2, 3, 7,
 int      re15_ventilkette_r41_standbild(unsigned *raum, int *cut);  /* 1 = Standbild der Ventile offen (2010), Quelle   */
 unsigned re15_ventilkette_r41_ton_zaehler(int ton);               /* gespielte Toene je RE15_R41C_TON_* (Riegel)      */
 int      re15_ventilkette_r41_ventil_rbj(unsigned room_id);       /* 1 = Raum bindet das RE2-RBJ VENTIL1080 (2030/2031) */
+int      re15_ventilkette_r41_countdown(int *rest_bilder);        /* 1 = Countdown sichtbar (2030, Zaehler laeuft)      */
+/* Countdown als Nachrichten-Bytes (`05 02` Ziffern/':' `05 00` `01 00`) fuer re15_render_pc_msg_text; Rueckgabe Laenge. */
+int      re15_ventilkette_r41_countdown_text(int rest_bilder, uint8_t *out, int cap);
 /* Plattform-Haken fuer die Toene (PC setzt ihn; ohne Haken nur gezaehlt). */
 extern void (*re15_ventilkette_r41_ton_hook)(int ton);
 
