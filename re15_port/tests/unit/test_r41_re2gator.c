@@ -650,9 +650,12 @@ static int teil_wand(void)
 /* ================================================================================================ */
 /* Nachtrag 4: RE2-Kameraschnitte. Unabhaengige Nachrechnung der Wahl (Projektion re15_camera_build_view,
  * Kopf = Bone 6 mit Entity-Scale, Blickachse Bone 1 -> Bone 6, frontal = cos in xz, gleitkomma) gegen das
- * Modul: der gewaehlte Cut ist eine Zonenkamera mit dem Kopf im Bild, und keine andere solche Kamera liegt
- * naeher am Soll (Toleranz 8/4096 fuer Integer-gegen-Gleitkomma). Soll je Blick = RE2-Messung (Dossier §9.2). */
+ * Modul: der gewaehlte Cut ist eine Zonenkamera mit dem Kopf im Bild und einem Bildmassstab H * Skala / Tiefe
+ * nicht groesser als der groesste RE2-Schnittmassstab (Cut 0, Clip-6-Bild 70: H 257 / Tiefe 8898, Fortsetzung 3),
+ * und keine andere solche Kamera liegt naeher am Soll (Toleranz 8/4096 fuer Integer-gegen-Gleitkomma). Soll je
+ * Blick = RE2-Messung (Dossier §9.2, probe_kamera_re2.c). */
 static const int k_soll[6] = { 0, 4092, 1445, 3386, 4046, 4094 };
+static const double k_re2_grenze = 257.0 / 8898.0;   /* RE2 RID 0 fov 32946 >> 7 = 257, Kopf-Tiefe 8898 */
 static void kopf_welt(int bone, int32_t out[3])
 {
     re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
@@ -688,19 +691,26 @@ static void wahl_pruefen(const char *was, int blick, int gewaehlt, const re15_ac
     double ax = k6[0] - k1[0], az = k6[2] - k1[2], la = sqrt(ax*ax + az*az);
     int best = -1; double best_d = 1e9;
     printf("  %s: Kopf (%d,%d,%d) Achse (%.0f,%.0f), gewaehlt Cut %d\n", was, k6[0], k6[1], k6[2], ax, az, gewaehlt);
-    for (int pass = (opfer ? 0 : 1); pass < 2 && best < 0; pass++) {
+    double skala = (e->render_scale_q12 ? e->render_scale_q12 : 4096) / 4096.0;
+    for (int stufe = (opfer ? 0 : 2); stufe < 4 && best < 0; stufe++) {   /* wie das Modul: (Opfer, Grenze) abwaerts */
+        int mit_o = stufe < 2, mit_g = !(stufe & 1);
         for (int k = 0; k < g_room_rdt.cut_count; k++) {
             if (!zonenkamera(k)) continue;
             int sx, sy, ox = 0, oy = 0;
             int im = bild(k, k6, &sx, &sy);
-            int oim = opfer ? bild(k, opfer, &ox, &oy) : 1;
+            int oim = (opfer && mit_o) ? bild(k, opfer, &ox, &oy) : 1;
             const re15_camera_cut_t *c = &g_room_rdt.cuts[k];
+            re15_camera_view_t v; re15_camera_build_view(c, &v);
+            double vz = (v.rot[6] * (double)k6[0] + v.rot[7] * (double)k6[1] + v.rot[8] * (double)k6[2]) / 4096.0 + v.trans[2];
+            double m = vz > 0 ? v.fov_screen_dist * skala / vz : 1e9;
+            int gok = !mit_g || m <= k_re2_grenze + 1.0 / 65536.0;
             double cx = c->pos_x - k6[0], cz = c->pos_z - k6[2], lc = sqrt(cx*cx + cz*cz);
             double f = (la > 0 && lc > 0) ? (ax*cx + az*cz) / (la*lc) * 4096.0 : 0;
-            if (pass == (opfer ? 0 : 1))
-                printf("    Cut %d: Kopf-Bild (%5d,%5d) %s%s frontal %+5.0f |f-soll| %4.0f dist %5.0f\n", k, sx, sy,
-                       im ? "im Bild" : "draussen", opfer ? (oim ? " +Kiefer" : " -Kiefer") : "", f, fabs(f - k_soll[blick]), lc);
-            if (!im || (pass == 0 && !oim)) continue;
+            if (stufe == (opfer ? 0 : 2))
+                printf("    Cut %d: Kopf-Bild (%5d,%5d) %s%s frontal %+5.0f |f-soll| %4.0f dist %5.0f massstab %.4f%s\n", k, sx, sy,
+                       im ? "im Bild" : "draussen", opfer ? (oim ? " +Kiefer" : " -Kiefer") : "", f, fabs(f - k_soll[blick]), lc,
+                       m, gok ? "" : " >Grenze");
+            if (!im || !oim || !gok) continue;
             double d = fabs(f - k_soll[blick]);
             if (d < best_d - 8.0) { best = k; best_d = d; }
             else if (fabs(d - best_d) <= 8.0 && best >= 0) { /* Gleichstand im Rauschen: Modulwahl zulassen */
@@ -708,6 +718,26 @@ static void wahl_pruefen(const char *was, int blick, int gewaehlt, const re15_ac
         }
     }
     CHECK(best == gewaehlt, "%s: Wahl Cut %d, Nachrechnung Cut %d (Blick %d, soll %d)", was, gewaehlt, best, blick, k_soll[blick]);
+}
+/* Reine Winkelwahl OHNE die Massstab-Grenze (die Wahl vor Fortsetzung 3): bester |frontal - soll| unter den
+ * Zonenkameras mit dem Kopf im Bild; *m_out = deren Bildmassstab H * Skala / Tiefe. */
+static int winkel_bester(int blick, double *m_out)
+{
+    int32_t k6[3], k1[3]; kopf_welt(6, k6); kopf_welt(1, k1);
+    double ax = k6[0] - k1[0], az = k6[2] - k1[2], la = sqrt(ax*ax + az*az);
+    double skala = (e->render_scale_q12 ? e->render_scale_q12 : 4096) / 4096.0, best_d = 1e9;
+    int best = -1; *m_out = 0;
+    for (int k = 0; k < g_room_rdt.cut_count; k++) {
+        if (!zonenkamera(k)) continue;
+        int sx, sy; if (!bild(k, k6, &sx, &sy)) continue;
+        const re15_camera_cut_t *c = &g_room_rdt.cuts[k];
+        re15_camera_view_t v; re15_camera_build_view(c, &v);
+        double vz = (v.rot[6] * (double)k6[0] + v.rot[7] * (double)k6[1] + v.rot[8] * (double)k6[2]) / 4096.0 + v.trans[2];
+        double cx = c->pos_x - k6[0], cz = c->pos_z - k6[2], lc = sqrt(cx*cx + cz*cz);
+        double f = (la > 0 && lc > 0) ? (ax*cx + az*cz) / (la*lc) * 4096.0 : 0;
+        if (fabs(f - k_soll[blick]) < best_d) { best_d = fabs(f - k_soll[blick]); best = k; *m_out = vz > 0 ? v.fov_screen_dist * skala / vz : 1e9; }
+    }
+    return best;
 }
 static int teil_kamera(void)
 {
@@ -781,6 +811,34 @@ static int teil_kamera(void)
                   "R1 aus Cut 2: Folge Schnitt -> zurueck (Clip 9 Bild 36, @0x801024a4-ec) -> frei erwartet (n %d)", n - n0);
         else
             CHECK(n == n0 + 2 && cut[n0+1] == -2, "R1 aus Cut 7: Folge Sperre -> frei erwartet (n %d)", n - n0);
+    }
+
+    /* (b2) Fortsetzung 3 - die Lage des exe-Laufs kam_k (GB_TEST=5: Gator parkt bei (4997,-20318) Richtung Sueden,
+     * Kanister davor, Leons Zonenkamera Cut 0 zeigt den Kopf nicht): die reine Winkelwahl naehme die Kamera mit dem
+     * Kopf 3201 vor der Linse (exe: Cut 2, m 2839 * 2^-16 = 2,5-facher RE2-Cut-5-Massstab); die RE2-Grenze (groesster
+     * RE2-Schnittmassstab, Cut 0 H 257 / Tiefe 8898) muss sie verwerfen und eine Kamera unter der Grenze waehlen. */
+    {
+        if (!setup(0)) return 1;
+        leon_statue(-6000, 2000); tick();
+        e->x = 4997; e->z = -20318; e->y = -1200; e->rot_y = 1024;
+        int32_t s2 = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+        re15_gr2_kanister_setzen(4997, -1200, -20318 - (int32_t)(((int64_t)8800 * s2) >> 12));
+        for (int f = 0; f < 120 && !re15_gr2_traegt(); f++) { leon_statue(-6000, 2000); e->x = 4997; e->z = -20318; e->rot_y = 1024; tick(); }
+        CHECK(re15_gr2_traegt(), "R1-Fall 2: Kanister nicht getragen");
+        g_scd.cam_id = 0; g_scd.work_vars[0x0A] = 0; g_scd.cut_auto_enabled = 1;
+        int n0 = re15_gr2_kamera_folge(24, cut, blick, clip, bildn);
+        (void)re15_enemy_take_damage(e, 0);
+        tick();
+        n = re15_gr2_kamera_folge(24, cut, blick, clip, bildn);
+        CHECK(n == n0 + 1 && blick[n0] == RE15_GR2_BLICK_EXPLOSION && cut[n0] >= 0,
+              "R1-Fall 2: kein EXPLOSION-Schnitt aus Cut 0 (n %d -> %d, cut %d)", n0, n, n > n0 ? cut[n0] : -9);
+        if (n > n0 && cut[n0] >= 0) {
+            wahl_pruefen("EXPLOSION (R1 P0, Lage kam_k, aus Cut 0)", RE15_GR2_BLICK_EXPLOSION, cut[n0], NULL);
+            double m_w = 0; int w = winkel_bester(RE15_GR2_BLICK_EXPLOSION, &m_w);
+            printf("  R1-Fall 2: Winkelwahl ohne Grenze Cut %d (massstab %.4f, Grenze %.4f), gewaehlt Cut %d\n", w, m_w, k_re2_grenze, cut[n0]);
+            CHECK(w >= 0 && w != cut[n0] && m_w > k_re2_grenze,
+                  "R1-Fall 2: die Grenze war nicht entscheidend (Winkelwahl %d massstab %.4f, gewaehlt %d)", w, m_w, cut[n0]);
+        }
     }
 
     /* (c) FINISHER: toedlicher Biss in der Tuernische -> FRESSEN P0 (Haken in enemy_ai_boss_gator.c nach der

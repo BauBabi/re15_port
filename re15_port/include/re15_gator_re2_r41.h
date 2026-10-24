@@ -131,9 +131,10 @@ int  re15_gr2_traegt(void);          /* Stufe 7 */
  * @0x80026394-ac) = RE1.5 DAT_800aca3c Bit 0x100 = Port g_scd.cut_auto_enabled = 0; Schnitt = RE1.5
  * Cut_chg-Zwilling (scd_vm.c op_cut_chg), Rueckkehr = Cut_old-Zwilling (FUN_8004032c).
  * ZUORDNUNG = PORT-WAHL: je RE2-Schnitt die ZONENKAMERA des Raums (RVD-Gruppen, ROOM2090: Cuts 0..7), die den
- * Kopf (Bone 6) zeigt und deren "frontal"-Wert = cos(Blickachse Bone 1 -> Bone 6, Kopf -> Kamera) dem des
- * RE2-Schnitts am naechsten kommt (Soll je Blick in Q12, gemessen mit tools/r41_re2gator/probe_kamera_re2.c
- * an der RE2-Lage des Schnittbilds, Dossier §9.2). */
+ * Kopf (Bone 6) zeigt, deren Bildmassstab H * Skala / Tiefe nicht groesser ist als der groesste RE2-Schnittmassstab
+ * (Cut 0 bei Clip-6-Bild 70: H 257 / Tiefe 8898 - RE2 schneidet nie naeher heran) und deren "frontal"-Wert =
+ * cos(Blickachse Bone 1 -> Bone 6, Kopf -> Kamera) dem des RE2-Schnitts am naechsten kommt (Soll je Blick in Q12,
+ * gemessen mit tools/r41_re2gator/probe_kamera_re2.c an der RE2-Lage des Schnittbilds, Dossier §9.2/§9.3). */
 #define RE15_GR2_BLICK_DURCHBRUCH 1   /* RE2 Cut 10: Clip 6 Bild 0..69 (SCD sub02 `29 0a` @0x00E0), soll +4092 */
 #define RE15_GR2_BLICK_SEITE      2   /* RE2 Cut 0: Clip-6-Bild 70 (@0x80100894-a4), soll +1445 */
 #define RE15_GR2_BLICK_ANGRIFF    3   /* RE2 Cut 1: Clip-6-Ende -> Clip 3 (@0x801008bc-c8), soll +3386 */

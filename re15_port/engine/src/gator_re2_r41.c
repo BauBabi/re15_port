@@ -527,20 +527,28 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
  * ZUORDNUNG = PORT-WAHL (Nutzer-Nachtrag 4: "je RE2-Schnitt die 2090-Kamera mit gleicher Blickbeziehung"):
  *   Kandidaten = die ZONENKAMERAS des Raums (Cuts mit RVD-Gruppe; ROOM2090: 0..7, die einzigen mit Masken -
  *   die Sonderkameras 8..12 sind Nahaufnahmen ohne Zonen); Bedingung = Kopf (Bone 6) im Bild (Projektion wie
- *   der Zeichner, re15_camera_build_view, sx = 160 + H*x/z in 0..319, sy in 0..239, Tiefe > 0); Wahl = kleinster
- *   Abstand |frontal - soll|, frontal = cos(Blickachse Bone 1 -> Bone 6, Kopf -> Kamera) in Q12. Das Soll je
+ *   der Zeichner, re15_camera_build_view, sx = 160 + H*x/z in 0..319, sy in 0..239, Tiefe > 0) UND Bildmassstab
+ *   m = H * Skala / Tiefe des Kopfes nicht groesser als der groesste RE2-Schnittmassstab (Cut 0 bei Clip-6-Bild 70:
+ *   H 257 / Tiefe 8898; die sechs RE2-Schnittbilder liegen bei 927..1892 in m * 65536) - RE2 schneidet an keiner
+ *   Stelle auf eine naehere Aufnahme (Nachbesserung 1 Fortsetzung 3, gemessen: ohne die Grenze schnitt die
+ *   EXPLOSION im Spiel auf Cut 2 mit dem Kopf 3201 vor der Linse, m 2839 = 2,5-facher RE2-Cut-5-Massstab, der Leib
+ *   fuellte das Bild); Wahl = kleinster Abstand |frontal - soll|, frontal = cos(Blickachse Bone 1 -> Bone 6,
+ *   Kopf -> Kamera) in Q12. Findet sich unter der Grenze keine Kamera, entfaellt sie (dann erst das Opfer). Das Soll je
  *   RE2-Schnitt ist an der RE2-Lage des Schnittbildes gemessen (tools/r41_re2gator/probe_kamera_re2.c; Lagen:
  *   Pos_set sub11 @SCD 0x0736 + R*off6[f] (FUN_80015e7c/152c8), Clip-3-Anker z -21212 @0x801008d0, R1 Bein 2 mit
  *   Kanister-Fenster @0x80100ae4-ec, FRESSEN x -23078 @0x80101048 / Leon x+10643, -915 @0x8010106c-84).
  *   Rueckkehr am Programm-Ende = Cut_old-Zwilling (FUN_8004032c) auf den Zonen-Cut VOR dem Programm (RE2 kehrt
  *   in R1 genauso auf 6/13 zurueck; im Intro war Cut 1 dort selbst die Zonenkamera fuer Leon). */
-static const struct { int16_t re2_cut; int16_t soll; uint8_t opfer; const char *name; } k_blick[6] = {
-    { -1,    0, 0, "-" },
-    { 10, 4092, 0, "DURCHBRUCH" },   /* Probe: Clip 6 f0, Cut 10: frontal +1.00 (3 Grad), Kopf bei Bild (140,126) */
-    {  0, 1445, 0, "SEITE" },        /* Clip 6 f70, Cut 0: +0.35 (69 Grad), Bild (145,116) */
-    {  1, 3386, 0, "ANGRIFF" },      /* Clip 6 f124, Cut 1: +0.83 (34 Grad), Bild (183,109); in Clip 3 bis +0.99 */
-    {  5, 4046, 0, "EXPLOSION" },    /* R1 Clip 9 f0, Cut 5: +0.99 (9 Grad), Bild (170,111) */
-    {  7, 4094, 1, "FINISHER" },     /* FRESSEN P0 Clip 4 f13, Cut 7: +1.00 (2 Grad), Leon im Bild (186,186) */
+/* soll = frontal (Q12) des RE2-Schnittbildes; re2_h/re2_tiefe = Projektionsabstand H (RID fov >> 7) und Kopf-Tiefe
+ * des RE2-Schnittbildes -> RE2-Bildmassstab m = H * 1 / Tiefe (RE2 zeichnet den EM23 1x); alles gemessen mit
+ * tools/r41_re2gator/probe_kamera_re2.c (gcc -std=c11 -DRE15_PLATFORM_PC=1 gegen libre15_engine.a, Dossier §9.2/§9.3). */
+static const struct { int16_t re2_cut; int16_t soll; int16_t re2_h; int16_t re2_tiefe; uint8_t opfer; const char *name; } k_blick[6] = {
+    { -1,    0,   0,     1, 0, "-" },
+    { 10, 4092, 208, 11734, 0, "DURCHBRUCH" },   /* Clip 6 f0, Cut 10: frontal +1.00 (3 Grad), Kopf bei Bild (140,126), RID 10 fov 26684 */
+    {  0, 1445, 257,  8898, 0, "SEITE" },        /* Clip 6 f70, Cut 0: +0.35 (69 Grad), Bild (145,116), RID 0 fov 32946 */
+    {  1, 3386, 231, 16318, 0, "ANGRIFF" },      /* Clip 6 f124, Cut 1: +0.83 (34 Grad), Bild (183,109), RID 1 fov 29623; in Clip 3 bis +0.99 */
+    {  5, 4046, 231, 13113, 0, "EXPLOSION" },    /* R1 Clip 9 f0, Cut 5: +0.99 (9 Grad), Bild (170,111), RID 5 fov 29623 */
+    {  7, 4094, 231, 11175, 1, "FINISHER" },     /* FRESSEN P0 Clip 4 f13, Cut 7: +1.00 (2 Grad), Leon im Bild (186,186), RID 7 fov 29623 */
 };
 /* FINISHER: das Opfer haengt ab P1 ueber das Anker-Paar im Maul (@0x80101110-34, Port gb FRESSEN P1/P2), also
  * muss neben dem Kopf der KIEFER (Part 7) im Bild liegen. Leons P0-Lage (Gator + R*(10643 x s, -915) @0x8010106c-84)
@@ -605,6 +613,32 @@ static int gr2_zonenkamera(int cut)
     return n >= 2;
 }
 
+/* Bildmassstab m des Punkts p in Kamera c (Bildpunkte je Modelleinheit, hier als m * 65536):
+ * H * Skala / Tiefe, H = fov_screen_dist (FUN_80053ca4-Zwilling), Skala = Zeichen-Skala des Gators (Q12). 0 = hinter
+ * der Kamera. RE2: H * 1 / Tiefe (EM23 1x). */
+static int32_t gr2_massstab(const re15_camera_cut_t *c, const int32_t p[3], int32_t skala_q12)
+{
+    re15_camera_view_t v;
+    if (re15_camera_build_view(c, &v) != 0) return 0;
+    int32_t vz = (int32_t)(((int64_t)v.rot[6]*p[0] + (int64_t)v.rot[7]*p[1] + (int64_t)v.rot[8]*p[2]) >> 12) + v.trans[2];
+    if (vz <= 0) return 0;
+    return (int32_t)(((int64_t)v.fov_screen_dist * skala_q12 * 16) / vz);   /* (H * s/4096) / vz * 65536 */
+}
+static int32_t gr2_massstab_soll(int blick)
+{
+    return (int32_t)(((int64_t)k_blick[blick].re2_h * 65536) / k_blick[blick].re2_tiefe);
+}
+/* Groesster RE2-Schnittmassstab (m * 65536) = Cut 0 bei Clip-6-Bild 70: H 257 (RID 0 fov 32946 >> 7) / Kopf-Tiefe
+ * 8898 (probe_kamera_re2.c) -> 1892; die uebrigen RE2-Schnittbilder: Cut 10 1161, Cut 1 927, Cut 5 1154, Cut 7 1354. */
+static int32_t gr2_massstab_grenze(void)
+{
+    int32_t g = 0;
+    for (int b = RE15_GR2_BLICK_DURCHBRUCH; b <= RE15_GR2_BLICK_FINISHER; b++)
+        if (gr2_massstab_soll(b) > g) g = gr2_massstab_soll(b);
+    return g;
+}
+static uint8_t s_kam_log;        /* gr2_kam_schnitt: Kandidatenzeilen in gator_boss.log (Messzeilen, Dossier §9.4) */
+
 int re15_gr2_kamera_wahl(int blick, const re15_actor_t *gator, const re15_actor_t *opfer, int *frontal)
 {
     if (frontal) *frontal = 0;
@@ -615,16 +649,26 @@ int re15_gr2_kamera_wahl(int blick, const re15_actor_t *gator, const re15_actor_
     int32_t kiefer[3] = { 0, 0, 0 }, op[3] = { 0, 0, 0 }, r[9];
     int mit_opfer = k_blick[blick].opfer && gr2_bone_welt(gator, 7, r, kiefer);
     if (opfer) { op[0] = opfer->x; op[1] = opfer->y; op[2] = opfer->z; }   /* Szene: Opfer-Fusspunkt zusaetzlich */
-    for (int pass = (mit_opfer || opfer) ? 0 : 1; pass < 2; pass++) {   /* 0: Kopf + Kiefer/Opfer, 1: nur Kopf */
+    int32_t skala = gr2_scale(gator), grenze = gr2_massstab_grenze();
+    /* Stufen: 0 = Kopf (+ Kiefer/Opfer) im Bild + Massstab-Grenze, 1 = ohne Grenze, 2 = nur Kopf + Grenze, 3 = nur Kopf */
+    for (int stufe = (mit_opfer || opfer) ? 0 : 2; stufe < 4; stufe++) {
+        int mit_o = stufe < 2, mit_g = !(stufe & 1);
         int best = -1, best_d = 0x7fffffff, best_f = 0;
         for (int k = 0; k < g_room_rdt.cut_count; k++) {
             if (!gr2_zonenkamera(k)) continue;
             const re15_camera_cut_t *c = &g_room_rdt.cuts[k];
-            if (!gr2_im_bild(c, kopf, NULL, NULL)) continue;
-            if (pass == 0 && mit_opfer && !gr2_im_bild(c, kiefer, NULL, NULL)) continue;
-            if (pass == 0 && opfer && !gr2_im_bild(c, op, NULL, NULL)) continue;
+            int sx = -9999, sy = -9999, im = gr2_im_bild(c, kopf, &sx, &sy);
+            int kim = (mit_o && mit_opfer) ? gr2_im_bild(c, kiefer, NULL, NULL) : 1;
+            int oim = (mit_o && opfer) ? gr2_im_bild(c, op, NULL, NULL) : 1;
+            int32_t m = gr2_massstab(c, kopf, skala);
+            int gok = !mit_g || m <= grenze;
             int f = gr2_frontal(kopf, achse, c);
             int d = f - k_blick[blick].soll; if (d < 0) d = -d;
+            if (s_kam_log)
+                re15_gr2_log("KAMERA-KANDIDAT %s stufe=%d Cut %d kopf_bild=(%d,%d)%s%s%s massstab=%d%s frontal=%d |f-soll|=%d",
+                             k_blick[blick].name, stufe, k, sx, sy, im ? "" : " draussen", kim ? "" : " -Kiefer",
+                             oim ? "" : " -Opfer", (int)m, gok ? "" : " >grenze", f, d);
+            if (!im || !kim || !oim || !gok) continue;
             if (d < best_d) { best = k; best_d = d; best_f = f; }   /* Gleichstand: kleinerer Cut */
         }
         if (best >= 0) { if (frontal) *frontal = best_f; return best; }
@@ -660,13 +704,17 @@ static void gr2_kam_sperre(int programm)
 static int gr2_kam_schnitt(int programm, int blick, const re15_actor_t *e, const re15_actor_t *opfer)
 {
     gr2_kam_sperre(programm);
+    s_kam_log = 1;                                             /* Kandidatenzeilen (Messung §9.4) */
     int f = 0, cut = re15_gr2_kamera_wahl(blick, e, opfer, &f);
+    s_kam_log = 0;
     if (cut >= 0) gr2_kam_cut_chg(cut);
     gr2_kam_merken(cut, blick, e);
-    re15_gr2_log("KAMERA %s %s RE2-Cut %d -> Cut %d F%u clip=%d bild=%d frontal=%d soll=%d",
+    int32_t kopf[3], achse[2], m = 0;
+    if (cut >= 0 && e && gr2_kopf_achse(e, kopf, achse)) m = gr2_massstab(&g_room_rdt.cuts[cut], kopf, gr2_scale(e));
+    re15_gr2_log("KAMERA %s %s RE2-Cut %d -> Cut %d F%u clip=%d bild=%d frontal=%d soll=%d massstab=%d re2_m=%d grenze=%d",
                  k_kam_prog[programm], k_blick[blick].name, (int)k_blick[blick].re2_cut, cut,
                  (unsigned)g_engine.frame_count, e ? (int)e->motion : -1, e ? (int)e->anim_frame : -1,
-                 f, (int)k_blick[blick].soll);
+                 f, (int)k_blick[blick].soll, (int)m, (int)gr2_massstab_soll(blick), (int)gr2_massstab_grenze());
     return cut;
 }
 /* Cut_old-Zwilling (FUN_8004032c: cam_id = gemerkter Cut, Work-Vars) auf den Zonen-Cut VOR dem Programm. */
