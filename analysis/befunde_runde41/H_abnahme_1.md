@@ -269,5 +269,13 @@ gemessen. Geskriptete Paare (0x40) u.a. in 11B0, 11B1, 1260, 2000, 2001, 3080, 3
   15 000 Einheiten von Elza. John bleibt F37-F167 an einer Wand bei (-7238,9268) haengen, Sherry laeuft je Bild ~200 auf ihn zu,
   b544 schiebt sie heraus (`F42 ... NPC-SCHUB slot=2 typ=4b von=1 typ=49 vor=(-7761,8967) nach=(-7891,8892)`), die Wandklemme
   danach (b0a4 @0x8011c974 hinter b544, RE-Gate 1) setzt sie auf z 9118 zurueck -> stehender Kreislauf mit **d = 664..670 (Summe 750)
-  ueber 128 Bilder** (vor: d = 212, spaeter 4). Danach (Elza geht los) min 751. Bild `zoom_p1d_3011_f110.png`. Auf dem echten Weg
+  ueber 128 Bilder** (vor: d = 212, spaeter 4). Ab F168 (Elza geht los) min 723, 0 Bilder < 700. Bild `zoom_p1d_3011_f110.png`. Auf dem echten Weg
   tritt der Aufbau nicht auf (s. oben); Bewertung in Hinweis H2.
+
+### 4.9 Punkt 2, ELZA, ECHTER WEG ROOM2001 -> ROOM2051 (Tuer + drei Absprunge) (`laeufe/kc2_2051_{vor,nach}`)
+Wie 4.4 mit `RE15_PSELECT_AUTO_SWITCH=1 RE15_DEBUG_JUMP=2001@250` (Plan `plaene/kc2_2051.txt` = kc2_2050 mit RAUM 2001/2051):
+debug.log `[pl] Spieler-Familie PL04`, `loaded room2001.rdt`, `[aot] DOOR FIRE slot=4 ... spawn=(9100,-5400,4100)`, `loaded
+room2051.rdt`; Baender in Folge `band=1` -> `band=3` (T313) -> `band=2` (T754) -> `band=1` (T951) -> `band=0` (T1139), beide exe gleich.
+vor **109 / 240** Lagezeilen mit Kisten-Ueberlappung (obj 1 bis z 1032 durch obj 2), 0 gesperrt — nach **0 / 240**,
+`F1978 room=2051 OBJEKT-GESPERRT p=2 obj=1 ziel=(2052,-1852) gegen p=3 obj=2 lage=(659,0,-64) dX=1393 dZ=-1788 sumX=1800 sumZ=1800`,
+obj 1 bleibt bei z -1884 (\|dZ\| 1820).
