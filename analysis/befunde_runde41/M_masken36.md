@@ -422,11 +422,14 @@ gemessener Hoehe entscheiden; (b) die uebrigen echten Gegenstaende dem Nutzer zu
 Keine Messung der Abnahme wird wiederholt; ihre Zahlen werden zitiert. Punkt 2 (erfuellt) wird nicht angefasst.
 
 ### Stand Nachbesserung 2
-- [ ] Lektuere (AUFTRAG, VERTRAG, Abnahme 1, Dossier, git log master..HEAD) - Werkzeuge tiefe_zelle_r41.py, test_r37_masken36.c
-- [ ] Mangel 1 (a): Ausschluss-Urteil der 135 Rechtecke formgenau in 3D
-- [ ] Mangel 1: die vier Cuts ohne Maske (3040 C1, 3050 C6, 30E0 C6/C7) und die genannten Gegenstaende (3050 C6, 5020 C6, 6000 C5)
-- [ ] Mangel 1 (b): Restliste fuer den Nutzer (Freistellung je Kamera)
-- [ ] exe-Messung nachher, gezielte Tests, Abschluss-Commit
+- [x] Lektuere (AUFTRAG, VERTRAG, Abnahme 1, Dossier, git log master..HEAD) - Werkzeuge tiefe_zelle_r41.py, test_r37_masken36.c
+- [x] Mangel 1 (a): Ausschluss-Urteil fuer Rechtecke mit Zellen-Modell formgenau in 3D (r41_koerper_davor), auch fuer die "nicht
+      ferner"-Modelle - 80 Rechtecke (Leon) wieder drin, u.a. die Lok 6000 C5/C7/C8/C9
+- [x] Mangel 1: die vier Cuts ohne Maske = Boden/Wand-Regionen (gemessen, richtig ohne Maske); 3050 C6 "Treppengelaender" = Boden vor
+      dem Gelaender; X-Kiste 5020 C6 per Zuordnung von Hand geschlossen; 6000 C5 Lok + Gittertraeger oben geschlossen
+- [x] Zuordnung von Hand fuer 16 Objekte (zuordnung_r41.json) -> zusammen 210 Rechtecke wieder drin, 962 144 statt 889 591 Punkte
+- [x] Mangel 1 (b): Restliste fuer den Nutzer `M_bilder/NB2_rest/` + Liste echter Gegenstaende ("Fuer den Nutzer")
+- [x] exe-Messung nachher (DAVOR 0 neu sichtbar uebermalt; Randpunkte hinter dem Koerper nachgerechnet), gezielte Tests, Abschluss-Commit
 
 ### NB2 Ausgangslage (Lektuere, keine neue Messung)
 Stand nach NB1 (Bericht `m41nb1c/tz4b/tiefe_zelle_r41.json` des Bau-Agenten, eigene Auszaehlung): von 1317 Rechtecken, die vor NB1
@@ -635,6 +638,12 @@ LAST_EXT), eigenes exe-Praefix je Riegel (`re15_pc_r41m2_*` / `re15_pc_r41m3_*`)
 
 ## OFFEN
 
+0. **Stand Nachbesserung 2 (ersetzt die Zahlen von 1):** 976 Rechtecke (Leon, Elza gleich) bleiben aus, 268 799 Punkte liegen nur in
+   ausgeschlossenen Rechtecken (NB1: 341 352). Gruende: 616 kein Modell (keine Sperrzelle mit der Mehrheit der Bodenkontakte -
+   ueberwiegend Waende/Boeden/Decken), 125 Modell aber ein verdeckter Figurpunkt nicht hinter dem Koerper, 70 Sektion ohne Stehplatz
+   (3050 C15), 66 Zelle trifft bei keiner Hoehe, 62 kein Bodenkontakt, 37 Saeule mit schraeger Zelle. Restliste mit Bildern:
+   `M_bilder/NB2_rest/NB2_rest_ROOMxxxx.png` (gruen gezeichnet, blau durch NB2, rot weiter aus, Nummern = Objekte) und
+   `NB2_rest_liste.txt` (Cuts >= 300 rote Punkte, 267 134 Punkte). Die echten Gegenstaende darunter stehen unter "Fuer den Nutzer".
 1. **Weiter ausgeschlossene Objektteile (Punkt 1, Stand Nachbesserung 1):** nach der Zellen-Tiefe (Schritt 1 + 2) bleiben
    530 von 3239 alten und 656 von 4300 Saum-Rechtecken (Leon; mit Elza 1 312 von 8 600 Saum) aus, 341 352 Bildpunkte liegen nur in
    ausgeschlossenen Rechtecken (vor NB1 450 317), 99 Objekte teilweise und 47 gar nicht gezeichnet (vor NB1 147 / 55).
@@ -671,6 +680,18 @@ LAST_EXT), eigenes exe-Praefix je Riegel (`re15_pc_r41m2_*` / `re15_pc_r41m3_*`)
    (groesste Mengen 11A0 C6 96 gegen 64, 20A0 C5 64/58, 2030 C2 56/51, 2050 C3 70/62, 2050 C1 63/52, 20A0 C12 164/141) - also
    kein Fall wie der Handlauf 2030/2040 C7 (Tiefe 391 gegen Leon 42..49). Ob an diesen Stellen Leon tatsaechlich HINTER dem
    Gegenstand steht (Standlinien-Modell) oder davor (Maskentiefe), ist nicht je Stelle mit einer Kollisionszelle belegt.
+9. **NB2 - Modell da, Rechteck trotzdem aus (125 Rechtecke, 20 778 px):** der Koerper erklaert nicht jeden Punkt des Rechtecks (die
+   Generator-Rechtecke sind voll, die Region reicht ueber den Koerper hinaus); ein verdeckter Figurpunkt an einem solchen Punkt liegt
+   nicht hinter dem Koerper -> das ganze Rechteck bleibt aus. Groesster Fall 6000 C5 unterer Gittertraeger (Zelle x -7862..12578
+   z -5674..-1634 Band 2, IoU 0,86; R13 4 020 px, davon 165 ausserhalb). Weg: die Atlas-Punkte ausserhalb des Koerpers je Rechteck
+   durchsichtig machen bzw. das Rechteck teilen - aendert Atlas/Rechtecke (nicht nur Tiefen); nicht in NB2.
+10. **NB2 - Band-0-Stehplaetze in ROOM6000:** das Netz der Spur P saet Band 0 aus Aot_set-Saetzen mit Band 0 ((2800,2750),
+    (-4900,-8350), (1763,-10677), `test_r37_masken36 saaten 6000`) und fuellt die Gleisebene (40 044 Plaetze); ob der Spieler dort je
+    steht, ist nicht gemessen. Die HINTER-Szenen 6000 (Band 0, im Grundriss der Lok) pruefen deshalb die Mechanik; im Spiel wirken
+    die neuen Lok-Masken vor allem auf das 3D-Tor (OFFEN 2: Tor 4 500 hinter der Lokfront, Verdeckung geometrisch richtig).
+11. **Beobachtung Altbestand NB1 (unveraendert):** 4040 C6/C7 - an Stehplaetzen hinter dem Mittelblock liegt Leons Kopf ueber der
+    gemessenen Hoehe 3025 des Blocks (Strahl bei y -3110..-3200), die Maske deckt ihn trotzdem (die Region zeigt dort den Block,
+    die Kunst ist hoeher als das IoU-Modell); 5 094 / 5 608 Gitterpunkte der strengen Gegenprobe `m41nb2/py/statisch.py`.
 
 ## Fuer den Nutzer
 
@@ -685,10 +706,29 @@ LAST_EXT), eigenes exe-Praefix je Riegel (`re15_pc_r41m2_*` / `re15_pc_r41m3_*`)
   ROOM3050 Kamera 5; die meisten Punkte in 3050, 5020, 5100, 4040, 30A0). An der exe geprueft: an 21 Stellen hinter diesen
   Objekten ist Leon jetzt verdeckt (6 190 statt 389 Punkte), an 88 Stellen davor wird er an keiner zusaetzlich uebermalt.
   Insgesamt zeichnet das Spiel jetzt 889 591 Maskenpunkte der Generator-Masken (Runde 40: 727 561), weggenommen wurde nichts.
-- **Was weiter offen ist:** die roten Flaechen in `M_bilder/NB1_rest/NB1_rest_ROOMxxxx.png` (14 Raeume). Viel davon sind Waende,
-  Boeden und Hintergrund, die der Generator 2026-09-03 faelschlich ausgewaehlt hat - die bleiben zu Recht weg. Wenn Sie dort an
-  einem ECHTEN Gegenstand eine Verdeckung vermissen (Leon laeuft hinter etwas durch und bleibt sichtbar), ist eine Freistellung
-  wie in STAGE1/2 der sichere Weg (PNG unter pri/ oder F9-Marke) - bitte die Kamera nennen.
+- **Was weiter offen ist (Restliste `analysis/befunde_runde41/M_bilder/NB2_rest/NB2_rest_ROOMxxxx.png`, rot = ohne Maske):** das
+  meiste davon sind Waende, Boeden und Decken, die der Generator 2026-09-03 faelschlich ausgewaehlt hat - die bleiben zu Recht weg.
+  ECHTE Gegenstaende ohne Maske, fuer die die Daten keine sichere Tiefe hergeben (keine passende Kollisionszelle oder der
+  Gegenstand ragt ueber seine Zelle hinaus) - hier braeuchte es Ihre Freistellung wie in STAGE1/2 (PNG unter pri/STAGEn/<raum>/):
+  * ROOM30A0 Kamera 3: die hohen grauen Spinde rechts (groesster Rest, ~10 000 Punkte)
+  * ROOM6000 Kamera 5: unterer Teil des Gittertraegers vorn links; Kamera 7: unterer Teil der Lok links
+  * ROOM5050 Kamera 1: Schreibtisch mit Monitor und Stuhl links; Kamera 2: Pult vorn unten (Rest)
+  * ROOM5090 Kamera 13: oberer Teil des Kistenstapels in der Mitte
+  * ROOM3040 Kamera 0: Schaltkasten oben / Kiste unten (Reste); Kamera 9: Kiste vorn
+  * ROOM30A0 Kamera 0: Lampe/Stuhl vorn links am Bildrand
+  * ROOM50B0 Kamera 1/3: der Roboterarm oben
+  * ROOM5020 Kamera 7: Kiste rechts oben; Kamera 12: Unterseite der Kiste
+  * Gelaender, die der Generator nie erfasst hat: ROOM3050 Kamera 6, ROOM30E0 Kamera 6/7/8/9, ROOM3040 Kamera 3 (Stueck)
+- **Masken STAGE3-6, Nachbesserung 2:** weitere Gegenstaende sind jetzt geschlossen - die Lok in ROOM6000 (Kameras 5, 7, 8, 9) samt
+  oberem Gittertraeger, die rechte X-Kiste mit Kufen in ROOM5020 Kamera 6 (fehlte im Uebersichtsbild), der Treppenraum in ROOM5020
+  Kamera 0, die Buero-Trennwand in ROOM30A0 Kamera 0/1, Kisten in ROOM5090 Kamera 11/13, der Schaltkasten in ROOM3040 Kamera 0, die
+  Pulte vorn in ROOM5050 Kamera 1/2. Regel: eine Maske wird gezeichnet, wenn jeder Figurpunkt, den sie verdeckt, vom Kamerablick aus
+  HINTER dem Koerper ihres Gegenstands liegt (Kollisionszelle des Raums, Hoehe am Bild gemessen); fuer 16 Gegenstaende, deren Zelle
+  die Automatik nicht fand, habe ich die Zelle von Hand zugeordnet (mit Bild und Zellbytes: `re15_port/tools/maske/zuordnung_r41.json`).
+  Im Spiel geprueft: VOR diesen Gegenstaenden wird Leon nirgends sichtbar uebermalt, dahinter ist er verdeckt. Zusammen zeichnet das
+  Spiel jetzt 962 144 Maskenpunkte der Generator-Masken (Nachbesserung 1: 889 591, Runde 40: 727 561).
+- **Kameras ohne Maske (3040 C1, 3050 C6, 30E0 C6, 30E0 C7):** dort hatte der Generator nur Boden bzw. die Rueckwand gefunden - als
+  Maske nutzlos, deshalb zu Recht nichts. Die GELAENDER dort (3050 C6, 30E0 C6/C7/C8/C9) hat der Generator nie erfasst.
 - **Ihre 53 STAGE2-Masken:** an der exe geprueft. Zwei Fehler gefunden und behoben: in **ROOM2040 Kamera 7** und **ROOM2030
   Kamera 7** verdeckte der Handlauf des Gelaenders Leon/Elza HINTER dem Gelaender nicht (der Handlauf bekam eine viel zu ferne
   Tiefe); jetzt kommt die Tiefe aus der Gelaenderzelle, Leon hinter dem Gelaender ist verdeckt (Bilder
