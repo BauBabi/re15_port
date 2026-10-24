@@ -9,10 +9,15 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-24 06:30-07:10 Nachbesserung 1, Nachtrag: die Orchestrator-Entscheide **C-E1..C-E3** (AUFTRAG.md 05:25,
+  Commit 10332fb6 direkt in diesem Zweig, beim Start uebersehen und um 06:30 im `git log` gefunden) umgesetzt: C-E2 Ring-
+  Zugaenge des gefluteten 2030 gesperrt (M5, Code + Riegel), C-E1 Ketten-Riegel heisst `integration_r41_ventilkette_kette`
+  und wird nur mit A's Modul registriert (vorher: `_szene` mit Laufzeit-SKIP), C-E3 Haken angenommen (M6). Fragen f/i
+  damit beantwortet; offen bleiben g (M7) und h (H2).
 * 2026-10-24 05:40-06:40 **Nachbesserung 1** (Abnahme 0 `C_abnahme_0.md`; Opus): §0b je Mangel. Code: M1 (Kisten-Hebel
   Ereignis 2 gesperrt), M3 (Bank-5-Marker nur in 2030), M8 (Text 49); Riegel: unit +16 Pruefungen (255), _b E2/E3/E4,
-  C misst die Blendenfarbe im beschleunigten Renderer (M4), neuer Riegel `integration_r41_ventilkette_szene` (M2,
-  ohne den Haken der Spur A `Skipped`). Die ganze Kette in EINEM exe-Lauf mit dem wortgleichen Haken der Spur A
+  C misst die Blendenfarbe im beschleunigten Renderer (M4), neuer Ketten-Riegel (M2; seit C-E1
+  `integration_r41_ventilkette_kette`, nur mit Spur A registriert). Die ganze Kette in EINEM exe-Lauf mit dem wortgleichen Haken der Spur A
   gemessen (temporaerer Messbau, nicht committet, Quelle danach zurueck, ohne Haken neu gebaut). Entscheidungsfragen
   f/g/h/i (§7) an den Orchestrator (M5, M7, H2, M6). Tests §5 "Nachbesserung 1".
 * 2026-10-24 ab 05:40 (Nachbesserung 1 nach Abnahme 0, `C_abnahme_0.md`, Opus). Baum sauber (`status --porcelain`
@@ -77,10 +82,11 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 | 5 2050: Hebel erst nach dem Pult-Raetsel (80 V) | §2 (Hebel immer bedienbar) | §1.4 sub04 @0x022E6, Slot 8 @0x01D38, Cursor @0x01D4C, 2060/11F0/RE2 ROOM2130 | §3.5 | §4 "Pult 2050", "P5 Pult -> Hebel", "P5 Hebel vorher" | unit F; _b Laeufe D/E/J (Elza 2051) |
 | 6 2080-Rechner leert auch 2030 | §2 ((3,245) Raum-Merkflag) | §1.5 sub02 @0x00C86..@0x00CF1 | §3.6 | §4 "Punkt 6 am Spiel", "P6 2030 nach dem Rechner" | unit G; _b Lauf I |
 
-unit = unit_r41_ventilkette (Abschnitte A-H, D2), _b = integration_r41_ventilkette_b, _szene =
-integration_r41_ventilkette_szene. Offen nach Messung: §6 (Querbezug A; Ring-Eintritt in das geflutete 2030 = Frage
+unit = unit_r41_ventilkette (Abschnitte A-I, D2), _b = integration_r41_ventilkette_b, _kette =
+integration_r41_ventilkette_kette (nur mit Spur A registriert, Entscheid C-E1). Offen nach Messung: §6 (Querbezug A; Ring-Eintritt in das geflutete 2030 = Frage
 §7 f). **Nachbesserung 1 (§0b):** Punkt 5 + Kisten-Hebel (M1, unit F, _b E2/E3/E4), Punkte 3/4 ganze Kette in einem
-Lauf mit dem Haken der Spur A (M2, _szene), Blendenfarbe (M4, integration C), Bank 5 (M3, unit H), Text 49 (M8).
+Lauf mit dem Haken der Spur A (M2, _kette), Blendenfarbe (M4, integration C), Bank 5 (M3, unit H), Text 49 (M8),
+Ring-Zugaenge des gefluteten 2030 gesperrt (M5 / C-E2, unit I, _b L/L2/M/M2).
 
 ## 0b. Nachbesserung 1 (Abnahme 0 vom 2026-10-24, `C_abnahme_0.md` §4) — je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher
 
@@ -170,19 +176,20 @@ Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "
   Weg zur Leiter: Mittelgang (Szenenende) und Westgang (Leiter) sind in Band 1 durch den Kanal getrennt (SCA ROOM20B0
   Zelle 18 x -25200..-21650 Band-1-Wand u0 01, darin WATER-Zone Slot 5); hinueber geht es zu Fuss nur per Sprung/
   Aufstieg an der Kante (Aktionstaste), sonst ueber 1260 (20B0 Slot 0 -> 1260 -> 20B0 Slot 1).
-* **Riegel `integration_r41_ventilkette_szene`** (neu, probes/r41_ventilkette.cmake): genau diese Kette in einem Lauf,
-  prueft Szenen-Abschluss (sub05-Start, Cut 7/15/6, Set(3,235), `letterbox closed`) und Leiter -> 2050. Gate: ohne den
-  Haken im Quellbaum UND mit haengender Szene -> `R41C-SKIP:` (ctest `SKIP_REGULAR_EXPRESSION`) nach einem kurzen Lauf;
-  mit dem Haken muss alles durchlaufen (sonst FAIL); laeuft die Szene ohne den Haken (spaetere allgemeine Loesung),
-  wird ebenfalls voll geprueft.
-  - mit Haken (`cmake -P` mit der Messbau-exe und einer Quellkopie mit Haken, scratchpad `r41c_nb1/riegel_mit_a*`):
-    `rc=0`, `-- r41_ventilkette_szene: 2030 Ventile -> Ost-Tuer zu Fuss -> 20B0 Szene sub02/sub05 -> (3,235)=1 -> frei ->
-    Kanal -> Leiter -> ROOM2050 in einem Lauf (Haken der Spur A: 1)` (zweimal: vor und nach dem Umbau auf den kurzen
-    SKIP-Lauf; Laufordner `riegel_mit_a/lauf_42874be5_voll`).
-  - Spurbaum ohne Haken: `ctest -R "^integration_r41_ventilkette_szene$"` -> `1/1 Test #1128:
-    integration_r41_ventilkette_szene ...***Skipped  61.97 sec` / `100% tests passed, 0 tests failed out of 1` /
-    `The following tests did not run: 1128 - integration_r41_ventilkette_szene (Skipped)`.
-  Nach der Integration der Spur A wird der Riegel ohne Zutun scharf (er liest aot_common.c zur Laufzeit).
+* **Riegel `integration_r41_ventilkette_kette`** (Orchestrator-Entscheid C-E1, AUFTRAG.md 2026-10-24 05:25): genau diese
+  Kette in einem Lauf; prueft den Szenen-Abschluss (sub05-Start, Cut 7/15/6, Set(3,235), `letterbox closed`), den Weg
+  durch den Kanal und Leiter -> 2050. Registriert in probes/r41_ventilkette.cmake NUR, wenn A's Modul im Baum liegt
+  (`if(EXISTS ${CMAKE_SOURCE_DIR}/engine/src/wasser20b0_r41.c)`); sonst Configure-Zeile
+  `-- integration_r41_ventilkette_kette uebersprungen: Spur A fehlt (engine/src/wasser20b0_r41.c, AUTO-Haken
+  re15_wasser20b0_r41_auto_aot)` (gemessen: `r41c_nb1/configure2.log` Zeile 180; `ctest -N -R r41_ventilkette` listet
+  dann nur unit/integration/_b). Ist er registriert, muss die Kette durchlaufen (startet sub05 nicht -> FAIL).
+  - mit dem wortgleichen Haken auf dem ENDSTAND dieses Baums (Messbau 06:37 aus 74fb9fae + Haken, `cmake -P` mit einer
+    Quellkopie mit Haken, scratchpad `r41c_nb1/riegel_kette_mit_a/lauf_9c9a636d_voll`): `-- r41_ventilkette_kette: 2030
+    Ventile -> Ost-Tuer zu Fuss -> 20B0 Szene sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> ROOM2050 in einem
+    Lauf (Haken der Spur A: 1)`, `rc=0`.
+  - Vorlaeufer (vor dem Fund von C-E1): derselbe Ablauf als `integration_r41_ventilkette_szene` mit Laufzeit-SKIP —
+    ohne Haken `***Skipped 61.97 sec`, mit Haken zweimal PASS; durch die Registrier-Regel C-E1 ersetzt.
+  Der Orchestrator misst die Kette im Integrationsbaum A+C (C-E1).
 
 ### M3 (mittel) — Installer loeschte (5,0x1D)/(5,0x1E) in jedem Raum
 * **Ursache:** `re15_ventilkette_r41_install` loeschte die Port-Marker nach dem Init-Lauf in JEDEM Raum; in fremden
@@ -226,18 +233,42 @@ Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "
   deckend gelb; was der Nutzer sieht (direct3d/opengl/GLES2), ist der blaue Schleier. Eine B-F-Nachbildung im
   SDL-Software-Renderer waere render_pc.c (Spur D) und betraefe alle ABR-2-Flaechen — nicht Teil dieser Spur.
 
-### M5 (niedrig, Entscheidung) — geflutetes 2030 ueber den Ring betretbar (Frage f)
-* Bestaetigt (Abnahme L8, eigener Lauf ring_nach_flut): nach der Flut (Bit 103 ohne 107) fuehren 20B0 Slot 3
-  @0x019C2 und 2070 Slots 1/2 @0x00A5A/@0x00A7A auf den Ring (y -5400) unter die Flaeche y -7200; Leon watet, ertrinkt
-  aber nicht (Ertrinken nur waehrend der Flut). Innerhalb der Zuteilung nicht sauber loesbar: 20B0/20B1 hat nur Id 40
-  (Leiter), 2070/2071 keine Port-Id; 20B0 hat keine Texttabelle (msg_sec 0), 2070 nur msg 0 "You've opened the lock."
-  (rdt_msgdump.py), und `re15_aot_door_params_t` kennt kein Schloss.
-* **Entscheidungsfrage (f) an den Orchestrator** mit Vorschlag (a): (a) die drei Ring-Tueren sperren, solange 2030
-  geflutet ist (Bit 103 ohne 107), Sperrsatz in der Form der Leiter (sce 1, Form ROOM2030 @0x01B12), z. B. "I cannot
-  open the door because of the water pressure." -> braucht 20B0/20B1 Id 41 und 2070/2071 Id 40; (b) so lassen
-  (Waten bis zur Brust); (c) Ring-Eintritt in das geflutete 2030 = Ertrinken wie waehrend der Flut (Nutzerregel "Zeit
-  abgelaufen und noch im Raum: Tot"), ohne Warnung. Der Weg zum Rechner 2080 bleibt in allen drei Faellen offen
-  (2050 -> 2020 -> 2030 Tuerebene -> 2080).
+### M5 — geflutetes 2030 ueber den Ring betretbar (Frage f; Orchestrator-Entscheid C-E2, umgesetzt)
+* **Ursache:** nach der Flut (Bit 103 ohne 107) fuehrten die Ring-Tueren unveraendert in das geflutete 2030; Leon watete
+  dort bis zur Brust (Ertrinken nur waehrend der Flut).
+* **Messung vorher:** Abnahme 0 L8 (`abn0/mess/ring`, 20B0 Ost-Tuer -> `DOOR FIRE slot=3 ... spawn=(6550,-5400,-100)` ->
+  `ROOM2030: unter Wasser (y -7200)`, Bild `ring_nach_flut_sheet.png`); eigener Lauf ring_nach_flut (§4).
+* **Entscheid C-E2** (AUFTRAG.md 2026-10-24 05:25): bis Bit 107 sind die Zugaenge in den gefluteten Ring gesperrt
+  (Aktionstaste -> Port-Text, kein Raumwechsel); Ids 20B0/20B1 41, 2070/2071 40 (VERTRAG §1.2 ergaenzt); nach Bit 107
+  wieder offen.
+* **Beleg — Tuer-Zensus aller ROOM*.RDT** (Skript scratchpad `r41c_nb1/tuer_zensus_2030.py` ueber scd_dump_room.py,
+  Door_aot_set mit Ziel pc[22]=1 / pc[23]=3 = ROOM2030):
+  - Ring (Ankunft (6550,-5400,-100) Richtung 2048, Cut 0, nfloor 3): **20B0/20B1 Slot 3 @0x019C2** `3b 03 02 31 01 00 4a 15
+    24 e1 e8 03 b8 0b 96 19 e8 ea 9c ff 00 08 01 03 00 03` (Rechteck (5450,-7900,1000,3000), Band 1), **2070/2071 Slot 1
+    @0x00A5A** `3b 01 02 31 00 00 88 13 24 e1 e8 03 b8 0b 96 19 e8 ea 9c ff 00 08 01 03 00 03` (Rechteck (5000,-7900,
+    1000,3000), Band 0) und **Slot 2 @0x00A7A** `3b 02 02 31 00 00 12 b2 24 13 ...` (Rechteck (-19950,4900,1000,3000)).
+  - Tuerebene (Ankunft y -16200, nfloor 9 = ueber dem Wasser y -7200): 2020/2021 Slot 1 @0x00866/@0x0088A, 2060/2061
+    Slot 0 @0x00D9A, 2080/2081 Slot 0 @0x00BA2 -> bleiben offen (Weg zum Rechner 2080).
+  - 2070 hat nur msg 0 "You've opened the lock." (Port-Id 40 frei), 20B0 keine Texttabelle (Id 40 = Leiter, Id 41 frei).
+* **Aenderung:** `ring_sperren()` (ventilkette_r41.c): bei Bit 103 ohne 107 wird die Tuer (nur wenn sie wirklich nach
+  Stage 1 Raum 3 fuehrt) zum Text-Platz sce 1 im Tuer-Rechteck — Form der Leiter 2000 (ROOM2030 main00 @0x01B12), Band aus
+  Door_aot_set pc[4] auf den Platz uebertragen; 20B0 Slot 3 -> Id 41, 2070 Slots 1/2 -> Id 40 (neues `install_2070`).
+  Wortlaut (PORT-WAHL, Form der Leiter-Vorgabe, zur Freigabe): "I cannot open the door / because of the water pressure."
+  Texttabelle: 20B0 traegt jetzt den Leiter-Satz der 2000 (Id 40) UND den eigenen Satz (Id 41); 2000 hat keine Id 41.
+  Konstanten im Kopf: `RE15_R41C_SLOT_20B0_RING 3`, `RE15_R41C_SLOT_2070_RING_A/B 1/2`, `RE15_R41C_RAUM_2030_ID 0x03`
+  (Door_aot_set pc[23]), `RE15_R41C_MSG_RING_20B0 41`, `RE15_R41C_MSG_RING_2070 40` — je mit den Bytes oben.
+* **Messung nachher:**
+  - unit_r41_ventilkette Fall I (Leon + Elza): `ROOM20B0 ring zu msgs: 41@Cut0`, `ROOM2070 ring zu msgs: 40@Cut0`,
+    `ROOM20B1 ... 41`, `ROOM2071 ... 40`, je kein Raumwechsel (`g_room_change.pending` 0); mit Bit 107 wieder Tuer nach
+    Stage 1 Raum 3; 2070 Slot 2 gesperrt, Slot 0 bleibt Tuer (-> 20B0); 2080 Slot 0 (Tuerebene) bleibt Tuer. Texte 20B1/41
+    und 2071/40 dekodiert, 2000 ohne Id 41. `PASS (274 Pruefungen)`.
+  - integration_r41_ventilkette_b, neue Laeufe (Laufordner `build/tests/integration/r41_ventilkette_b/lauf_54f814b2_*`):
+    L (20B0, Bits 103+100+(3,235)) `[ventilkette41] ROOM20B0: Ring-Tuer Slot 3 nach 2030 gesperrt (geflutet) -> Sperrtext
+    41` + `[msgtext] room=20b0 id=41 "I cannot open the door because of the water pressure."`, kein `DOOR FIRE slot=3`,
+    kein `loaded room2030.rdt`; L2 (+Bit 107) `[aot] DOOR FIRE slot=3 rect=(5950,-6400,hw=500,hh=1500) target_cut=0
+    spawn=(6550,-5400,-100)` -> `loaded room2030.rdt`; M (2070, Bit 103) Slot 1 und Slot 2 gesperrt + `[msgtext] room=2070
+    id=40 "I cannot open the door because of the water pressure."`, kein Raumwechsel; M2 (+107) `[aot] DOOR FIRE slot=1
+    rect=(5500,-6400,...)` -> `loaded room2030.rdt`. `Passed 512.29 sec`.
 
 ### M6 (formal) — Haken in main.c / game_step_common.c, zwei fremde Riegel
 * VERTRAG §1.3 nennt C nur bei scd_room_setup.c, scd_vm.c und test_r36_kartenbits.c. Die uebrigen Haken (alle klein,
@@ -256,8 +287,9 @@ Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "
      `RE15_SET_FLAG=9:101,9:102`): die neuen Sperren (Leiter 2000, Steg 2030) widerlegen deren alte Wege; die Laeufe
      setzen den Spielzustand "Leiter frei" / "Bruecke unten" (Gegenstand der Riegel ist der Kisten-Record bzw. das
      Itemband, nicht die Leiter/der Steg). Beide gruen (Abnahme 0, Querbezug 8/8).
-* **Entscheidungsfrage an den Orchestrator** (wie B5 / A-E3): diese Haken annehmen und in die Integrationsliste
-  aufnehmen. Kein Code geaendert.
+* **Orchestrator-Entscheid C-E3** (AUFTRAG.md 2026-10-24 05:25): die Haken in main.c (4 Stellen) und game_step_common.c
+  (1 Zeile) sowie die Querbezugs-Flags in test_r36_dachkiste.cmake / test_r37_itemband.cmake sind angenommen (wie B5).
+  Kein Mangel mehr; kein Code geaendert. (Die Ring-Sperre C-E2 kam ohne neue Haken aus: sie liegt im Installer.)
 
 ### M7 (niedrig, Dossier) — 2070 nach der Flut nur ueber 2040
 * Richtig ist: nach der Flut (Bit 103) ist 2070 (mit der Tuer nach 11A0) nur noch ueber 2040 erreichbar — 2030 Slot 0
@@ -790,7 +822,17 @@ shared_assets/PSX, pri/, synchro/, release/.
     unit_r41_ventilkette `PASS (255 Pruefungen)` (vorher 239; neu: Scheibe @0x0201A, Text 49, Fall F Kisten,
     Fall E Text 49, Fall H Bank 5). Gegenprobe am alten Modul: `FAIL (255 Pruefungen)` mit genau den 6 neuen Pruefungen
     (M1 x2, M3 x2, M8 x2), Protokoll `r41c_nb1/unit_gegen.txt`.
-  - r41-Integrationsriegel (C jetzt im beschleunigten Renderer mit Farbmessung, _b mit E2/E3/E4):
+  - **Endstand (nach C-E2, exe/Test-exe 06:37 = Stand 74fb9fae + Riegel-Korrektur):** Unit-Gruppe (Regex wie unten,
+    `r41c_nb1/ctest_unit2.txt`) -> **`100% tests passed, 0 tests failed out of 67`** (`Total Test time (real) =   9.12 sec`),
+    unit_r41_ventilkette `PASS (274 Pruefungen)`;
+    `ctest --test-dir re15_port/build -R "^integration_r41_ventilkette(_b)?$" --timeout 1200 --output-on-failure` ->
+    `integration_r41_ventilkette ...... Passed 230.63 sec`, `integration_r41_ventilkette_b ....***Failed 422.49 sec`
+    (Lauf L: der Riegel suchte `[msgtext] room=20B0`, das Log schreibt die Raum-Id klein `room=20b0`; der Text stand
+    da) -> Riegelzeile korrigiert -> `ctest ... -R "^integration_r41_ventilkette_b$"` -> `1/1 Test #1127:
+    integration_r41_ventilkette_b ....   Passed  512.29 sec` / **`100% tests passed, 0 tests failed out of 1`**
+    (EXIT=0, `r41c_nb1/ctest_integ_b3.txt`).
+  - Erste Runde der Nachbesserung (vor C-E2, exe 05:45 = def5ff47) — r41-Integrationsriegel (C jetzt im beschleunigten
+    Renderer mit Farbmessung, _b mit E2/E3/E4):
     `ctest --test-dir re15_port/build -R "^integration_r41_ventilkette(_b)?$" --timeout 1200 --output-on-failure`
     -> `1/2 Test #1126: integration_r41_ventilkette ......   Passed  213.05 sec`,
     `2/2 Test #1127: integration_r41_ventilkette_b ....   Passed  444.40 sec`,
@@ -800,11 +842,9 @@ shared_assets/PSX, pri/, synchro/, release/.
     E3 `[msg] room=2050 id=0`, `[prop-member F456] prop[2] obj=0x01 m=0 → val=-17700`, Cut_chg(4),
     `[prop-member F657] prop[6] obj=0x05 m=1 → val=-5000`; E4 `loaded room2051.rdt` + `ROOM2051 Ereignis 2 -> ...
     2050_hebel_sperre` + `[msgtext] room=2051 id=40 ...`.
-  - Neuer Riegel `integration_r41_ventilkette_szene` (M2): Spurbaum ohne Haken
-    `ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_szene$" --timeout 900 --output-on-failure`
-    -> `1/1 Test #1128: integration_r41_ventilkette_szene ...***Skipped  61.97 sec` / **`100% tests passed, 0 tests failed
-    out of 1`** / `The following tests did not run: 1128 - integration_r41_ventilkette_szene (Skipped)`; mit dem
-    wortgleichen Haken der Spur A (Messbau, `cmake -P`) `rc=0` + Abschlusszeile (§0b M2).
+  - Ketten-Riegel (M2, Entscheid C-E1): im C-Baum nicht registriert, Configure-Zeile `-- integration_r41_ventilkette_kette
+    uebersprungen: Spur A fehlt (...)`; mit dem wortgleichen Haken auf dem Endstand (`cmake -P`) `rc=0` + Abschlusszeile
+    (§0b M2). (Vorlaeufer `_szene` mit Laufzeit-SKIP: `***Skipped 61.97 sec`, ersetzt.)
   - Querbezug M3 (Heliport 1171, Bank-5-Bits der Kraehenszene):
     `ctest --test-dir re15_port/build -R "^integration_r3[89]_heliport1171_.*$" --timeout 900 --output-on-failure`
     -> `integration_r38_heliport1171_weg_re2 Passed 74.47 sec`, `_weg_re15 Passed 69.53 sec`, `_laden Passed 46.40 sec`,
@@ -814,11 +854,11 @@ shared_assets/PSX, pri/, synchro/, release/.
     Abnahme 0 — das Loeschen war fuer sie unsichtbar, s. M3).
 
 ## 6. OFFEN
-* **Nachbesserung 1 (2026-10-24):** M2 bleibt eine Integrationsabhaengigkeit von Spur A — mit dem wortgleichen Haken
-  laeuft die ganze Kette in EINEM exe-Lauf (§0b M2, `r41c_nb1/mess/kette3`), der neue Riegel
-  `integration_r41_ventilkette_szene` prueft sie und meldet im Spurbaum ohne Haken `Skipped`; nach der Integration der
-  Spur A wird er scharf. M5 (Frage f), M6 (Haken, Frage i), M7 (Ost-Tuer nach Bit 107, Frage g) und H2 (Frage h)
-  brauchen Orchestrator-Entscheide; M1, M3, M4, M8, M9, H1 sind behoben (§0b). H3 (PSX) unten.
+* **Nachbesserung 1 (2026-10-24):** M2 bleibt eine Integrationsabhaengigkeit von Spur A (Entscheid C-E1) — mit dem
+  wortgleichen Haken laeuft die ganze Kette in EINEM exe-Lauf (§0b M2, `r41c_nb1/mess/kette3`, Riegel-Lauf auf dem
+  Endstand); der Ketten-Riegel `integration_r41_ventilkette_kette` wird nur mit A's Modul registriert (C-Baum:
+  Configure-Zeile "uebersprungen: Spur A fehlt"). M5 umgesetzt (C-E2), M6 angenommen (C-E3). Offen als Fragen: M7
+  (Ost-Tuer nach Bit 107, Frage g) und H2 (Frage h); M1, M3, M4, M8, M9, H1 behoben (§0b). H3 (PSX) unten.
 * **Querbezug A — die 20B0-Szene haengt ohne den Haken der Spur A, mit ihm laeuft sie** (ausgewertet 2026-10-24 02:52):
   - OHNE Haken (integration A, Lauf build/tests/integration/r41_ventilkette/lauf_912f1ca0_a/debug.log, 00:47, exe
     00:41 = Quellstand 271b05ea): `[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11
@@ -884,6 +924,9 @@ shared_assets/PSX, pri/, synchro/, release/.
 
 ## 7. Fuer den Nutzer
 * Keine neuen Assets im Paket-Gate (alles eingebacken in gen/*.inc aus den vorhandenen RDTs); keine Sprachdateien.
+* Nach der Flut sind die Tueren aus 20B0 (Ost) und 2070 in den Ring von 2030 zu ("I cannot open the door because of the
+  water pressure."), bis der Rechner 2080 das Becken geleert hat; der Weg zum Rechner fuehrt ueber die Tuerebene
+  (2050 -> 2020 -> 2030 oben -> 2080).
 * Bedienung: 2030 Ring-Nordwand (Cut 1/2) = Pult; Treppe hinab, am Tank rechts (Zelle 2) = Ventil 13; Ring Ost-Streifen
   an der Tuer (Schilder 04/05/06) = die Ventile (Platzhalter des spaeteren Raetsels). 2050: Pult an der Saeule
   (Slot 8), Cursor mit dem Steuerkreuz, SQUARE kippt einen Hebel, CROSS verlaesst das Pult; Loesung 30 + 40 + 10 V.
@@ -900,6 +943,8 @@ shared_assets/PSX, pri/, synchro/, release/.
   42 = 11F0 "Power supply OK." · 43 "A high voltage switchboard. / The pump needs 80 volts." ·
   44 "The switchboard is set to 80 volts. / The pump is powered."
   2080 40 "The treatment pool is / being drained as well."
+  20B0 41 = 2070 40 "I cannot open the door / because of the water pressure." (NEU, Entscheid C-E2: Ring-Tueren in das
+  geflutete 2030 bis zum Entleeren gesperrt)
 * Entscheidungsfragen: (a) Hebelgewichte 30/20/40/10 (Loesung Hebel 1 + 3 + klein) — anderes Muster gewuenscht?
   (b) Bruecke "oben" = Ringebene y -5400 — hoeher gewuenscht? (c) Flut auch beim Verlassen ueber die oberen Tueren
   (jetzt: ja, siehe §6). (d) Lift-Rufzonen oben nutzen nach der Flut den Original-Satz 1 ("not responding") —
@@ -912,16 +957,16 @@ shared_assets/PSX, pri/, synchro/, release/.
   z. B. "I cannot open the door because of the water pressure." (Mechanik wie die Leiter: Sperrtext-Satz sce 1, Form
   ROOM2030 @0x01B12). Braucht Port-Id 41 in 20B0/20B1 und Id 40 in 2070/2071 — VERTRAG §1.2 teilt C dort nur 20B0 Id 40
   zu, deshalb nicht gebaut. Der Weg zum Rechner bleibt offen (2050 -> 2020 -> 2030 Tuerebene -> 2080, ueber dem Wasser).
-  Alternative: so lassen (Waten in Brusthoehe). Nachbesserung 1 (M5): dritte Moeglichkeit (c) Ring-Eintritt = Ertrinken
-  wie waehrend der Flut; Abwaegung §0b M5. Braucht in jedem Fall einen Orchestrator-Entscheid (+ Id-Zuteilung fuer a).
+  Alternative: so lassen (Waten in Brusthoehe). -> **Orchestrator-Entscheid C-E2 (05:25): Vorschlag angenommen, Ids
+  zugeteilt, umgesetzt** (§0b M5).
   **(g) NEU (Nachbesserung 1, M7):** 2030 Slot 0 (Ost-Tuer) bleibt auch nach dem Entleeren (Bit 107) auf 20B0 umgelenkt;
   damit ist 2070 (mit der Tuer nach 11A0) nach der Flut nur ueber 2040 (Aufzug mit Strom) erreichbar. Soll die Ost-Tuer
   mit Bit 107 wieder nach 2070 fuehren (Original-Ziel)? Ohne Entscheid bleibt 2030 <-> 20B0.
   **(h) NEU (Hinweis H2):** steht Leon waehrend der Flut an den Ventilen, liegt sein Spritzer ausserhalb der Flut-Kamera
   Cut 4; sichtbar sind Wasser, blauer Schleier, Tod. Kamera vor dem Tod auf Leons Zone zurueckschalten (neue Regel ohne
   Vorbild) oder so lassen?
-  **(i) NEU (Abnahme M6):** die kleinen Haken der Spur C in platform/pc/main.c (4 Stellen) und game_step_common.c
-  (1 Zeile) sowie die Querbezug-Flags in zwei fremden Riegeln annehmen (wie B5 / A-E3)? Liste §0b M6.
+  **(i) (Abnahme M6):** die kleinen Haken der Spur C in main.c / game_step_common.c und die Querbezug-Flags ->
+  **Orchestrator-Entscheid C-E3: angenommen.**
 * Sichtprobe fuer den Nutzer: 2030 am Ring vor den Ventilen die Aktionstaste, Ja, Warnung wegdruecken, 60 s stehen
   bleiben -> Draufsicht, Wasser steigt ueber die Bruecke und den Ring, Spritzer, Tod mit blauem Schleier
   (C_belege/flut_echt_sheet.png). Mit den drei Spinnen im Raum (ohne Kill-Bits) stirbt man vorher an den Spinnen;

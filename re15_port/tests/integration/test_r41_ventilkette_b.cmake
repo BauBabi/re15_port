@@ -279,7 +279,7 @@ _lauf(l 240 ${_leon}
       RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W3"
       "RE15_EXIT_AT=520#20B0")
 _muss("${_dbg}" "[ventilkette41] ROOM20B0: Ring-Tuer Slot 3 nach 2030 gesperrt (geflutet) -> Sperrtext 41" l "Ost-Tuer gesperrt")
-_muss("${_dbg}" "[msgtext] room=20B0 id=41 \"I cannot open the door because of the water pressure.\"" l "Sperrtext 41")
+_muss("${_dbg}" "[msgtext] room=20b0 id=41 \"I cannot open the door because of the water pressure.\"" l "Sperrtext 41")
 _darf_nicht("${_dbg}" "DOOR FIRE slot=3" l "die Ost-Tuer darf im gefluteten Zustand nicht feuern")
 _darf_nicht("${_dbg}" "loaded room2030.rdt" l "kein Raumwechsel in das geflutete 2030")
 _muss("${_dbg}" "EXIT_AT: Bild" l "Endbild in ROOM20B0 erreicht")
