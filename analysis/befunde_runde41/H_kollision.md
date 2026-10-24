@@ -108,11 +108,18 @@ vorher **min 3** (1671 Bilder < 900, F1690 Ada (-7527,-17130) / Marvin (-7528,-1
 |---|---|---|---|---|
 | `npc3070_nachher` (Leon, gleicher Weg) | Ada/Marvin (900) | **884** (F609) | 307 (alle 884..899) | F1450 Ada (-8496,-16912) / Marvin (-9233,-16393) = 901 |
 | `npc3001_nachher` (Elza, gleicher Weg) | John/Sherry (750) | **837** | **0** | — |
+| `npc3001b_vorher` / `_nachher` (Elza bei (-18000,-13378) Blick Ost, Skript W25,U1.5,W12,U1.5,W12 — der Riegel-Lauf) | John/Sherry (750) | vorher **16** -> nachher **740** | vorher 1671 -> nachher 0 Bilder < 700 | nachher 752 |
 
 Die Restunterschreitung in 3070 (min 884) ist die Wandklemme NACH dem Schub, wie im Original (b0a4 @0x8011cc64 hinter
 b544 @0x8011cc44): F609 Schub Marvin (-5776,-16595) -> (-5723,-16588) (`kollision.txt`), danach Klemme auf (-5741,-16588)
 (state.txt) = 18 Einheiten zurueck Richtung Ada. Und dX*pen/(dist+1) laesst je Schub < 1 Einheit Rest (899 statt 900).
 Bild `H_belege/npc3070_nachher/f1450_nachher.png`: zwei getrennte Figuren nebeneinander.
+
+Nebenbefund am Lauf `npc3001_nachher` (Elza stand ZWISCHEN den beiden, Sherry kam von Osten): John und Sherry bleiben
+1300-1700 auseinander, Sherry "geht auf der Stelle" vor Elza — aec4(&Spieler, NPC) @0x8011cc3c schiebt sie radial aus
+Elza heraus, sie kommt nicht durch Elza hindurch (vorher lief sie durch Elza durch und stand mit John ineinander).
+Das ist die Original-Mechanik (der Schub wirkt auf den Spieler und die NPC gegenseitig: Spieler-Tick b544 @0x80031cbc,
+NPC-Tick aec4 @0x8011cc3c), kein Fehler; der Riegel npc3001 stellt Elza deshalb oestlich der beiden auf.
 
 ## Punkt 2 — Kisten 2050
 ### Messung vorher (exe dieses Baums, Stand 4c667c97, Kopie re15_pc_h41_mess.exe)
