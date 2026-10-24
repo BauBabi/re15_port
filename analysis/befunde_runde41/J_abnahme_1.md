@@ -251,6 +251,11 @@ fehlten (Gitter blieb stehen).
   {0:1, 2:2}; 1040 0x7e -> Spieler -1). Laufzeit-Stichprobe (Lauf rbj_6030, Leon, DEBUG_JUMP 6030): `[rbj-binder] ROOM6030
   Spieler rec2 (alt rec0) Gegner 0:rec1(alt rec1) 1:rec2(alt rec-1)`, `[rbj] room 6030 cinematic overlay: 22 clips, 762 kf`,
   `Aktor 1 Typ 0x4D Marker-Slot 1 -> rec1 gebunden` (vorher 1 Platzhalter-Clip).
+  Sichtbare Stichprobe ROOM4010 (Leon, DEBUG_JUMP 4010, Laeufe rbj_4010 / rbj_4010_master, Bilder `J41abn1/rbj_4010_uebersicht.png`
+  / `J41abn1/rbj_4010_master.png`): mit Spur J `[rbj-binder] ROOM4010 Aktor 2 Typ 0x40 Marker-Slot 2 -> rec2 gebunden`, Marvin
+  spielt Clip 25 aus rec2 (36 Bilder, ANIM_TRACE `25/25/36`) und **liegt verwundet auf der Liege**, Ada (Typ 0x42, rec1) daneben;
+  mit der master-exe spielt derselbe Aktor `25/1/32/0` (fremde Bank, Bild 0 eingefroren) und **steht riesig im Vordergrund auf
+  der Liege**. Die byte-true Bindung behebt dort also einen sichtbaren Fehler; keine nachteilige Nebenwirkung gefunden.
 - Beide Szenarien: Leon (3060/3020/6030) und Elza (3011 -> 3061 -> 30C1) selbst gefahren; Nachbarraeume 3020 (Rueckweg) und
   30C1 (Wechsel zu Sherry, PL0F) ohne Auffaelligkeit in den Messzeilen.
 - Nebenbefund N1 (Hund am Ende der 3061-Szene) unveraendert vorhanden, nicht Spur J (Dossier §4.7, eigener Auftrag empfohlen).
