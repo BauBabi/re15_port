@@ -16,9 +16,11 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
   #1129 _weg_elza, #1130 _sperre; `_kette` "uebersprungen: Spur A fehlt") + `build` -> `=== LOCAL-BUILD-OK`. Gezielte
   Unit-Gruppe (Regex der Abnahme 2, scratchpad `r41c_nb3/regex_unit.txt`): `100% tests passed, 0 tests failed out of 164`
   (34.55 s); unit_r41_ventilkette `PASS (376 Pruefungen)`.
-* 2026-10-24 11:05-11:33 gezielte Integrationsgruppe (laufend, exe 11:03): `1/5 Test #1126: integration_r41_ventilkette
-  ... Passed 257.45 sec`, `2/5 Test #1127: integration_r41_ventilkette_b ... Passed 505.60 sec`, `3/5 Test #1128:
-  integration_r41_ventilkette_weg ... Passed 897.27 sec` (Leon, alle sieben Glieder v1/v2/g1/g2/w1/w3/w4).
+* 2026-10-24 11:05-11:53 gezielte Integrationsgruppe (exe 11:03): `100% tests passed, 0 tests failed out of 5`
+  (Haupt 257.45 s, _b 505.60 s, _weg 897.27 s, _weg_elza 908.15 s, _sperre 344.98 s), §5 "Nachbesserung 3".
+* 2026-10-24 11:55 **Nachbesserung 3 abgeschlossen** (§0d): N1 Weg nach der Flut ueber den Strom zu Fuss (Leon + Elza),
+  N2 Entleeren am Strom (3,126) / Rechner 2080 Original, N3 Relinghoehe y -3600 + unterer Bereich gesperrt + Bilder, N4
+  Ventilraetsel am Sued-Landeplatz erst mit Bruecke und Sicherung; H-a durch Nachtrag 10 erledigt.
 * 2026-10-24 07:50-09:00 **Nachbesserung 2 abgeschlossen** (§0c): Tuergraph (Werkzeug + C_belege/nb2_tuergraph_nach_flut.txt),
   Weg zu Fuss gemessen (2050 -> 2020, 2030 Nordgalerie -> 2060, 2040 -> Treppe -> Galerie -> 2070 Nordgang -> 11A0 bis
   zur Sperre, Leon + Elza; Gegenprobe (3,206); 2080 ab 2090 -> Rechner -> Bit 107). Ergebnis: Weg existiert nicht,
@@ -1244,6 +1246,23 @@ shared_assets/PSX, pri/, synchro/, release/.
     Ergebnis gewertet); danach Kill-Bits (7,98)/(7,99) in a/b (§0c "Gegner auf dem Weg").
   - Nicht erneut gefahren (Spiel-Code und exe unveraendert seit 06:37): integration_r41_ventilkette / _b (Abnahme 1 §3:
     2/2 Passed auf genau dieser exe), Heliport 5/5, Querbezuege dachkiste/itemband/kistenregel (Abnahme 0/1).
+
+* **Nachbesserung 3 (2026-10-24; Bau `local_build.sh configure` + `build` -> `=== LOCAL-BUILD-OK`, exe 11:03 = Quellstand
+  97fb1d18 ff., seitdem nur Dossier):**
+  - `test_r41_ventilkette.exe` direkt: `PASS (376 Pruefungen)` (Leon + Elza; neu K Ventilraetsel erst mit Bruecke und
+    Sicherung + Sicherung ueber Original sub06, L Zensus (3,126)/(3,108) + SCA-Belege, E Strom -> Relinghoehe / Treppe 48,
+    G 2080 Original in drei Zustaenden, I Ring-Tueren mit Strom offen, A Netz der Relinghoehe + Texte 48/49).
+  - Unit-Gruppe (Regex der Abnahme 2 woertlich, scratchpad `r41c_nb3/regex_unit.txt`, `ctest --test-dir re15_port/build -R
+    "<regex>" --timeout 600 --output-on-failure -j 4`): **`100% tests passed, 0 tests failed out of 164`** (34.55 s).
+  - Integration (`ctest --test-dir re15_port/build -R "^integration_r41_ventilkette(_b|_weg|_weg_elza|_sperre)?$"
+    --timeout 2700 --output-on-failure`, 11:05-11:53, unter Fremdlast anderer Spuren):
+    `1/5 Test #1126: integration_r41_ventilkette ............   Passed  257.45 sec`,
+    `2/5 Test #1127: integration_r41_ventilkette_b ..........   Passed  505.60 sec`,
+    `3/5 Test #1128: integration_r41_ventilkette_weg ........   Passed  897.27 sec`,
+    `4/5 Test #1129: integration_r41_ventilkette_weg_elza ...   Passed  908.15 sec`,
+    `5/5 Test #1130: integration_r41_ventilkette_sperre .....   Passed  344.98 sec`,
+    **`100% tests passed, 0 tests failed out of 5`** (`Total Test time (real) = 2913.54 sec`).
+  - `integration_r41_ventilkette_kette` weiter nur mit Spur A registriert (Configure: "uebersprungen: Spur A fehlt", C-E1).
 
 ## 6. OFFEN
 * **Nachbesserung 3 (2026-10-24, Abnahme 2 N1-N4, Nachtraege 7-10):**
