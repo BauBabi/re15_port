@@ -700,3 +700,18 @@ Folgen (Orchestrator): Die 8 Zombies (Spur G, ROOM2080/2081) brechen durch die T
 (oberhalb der Treppe), nicht unten. Ebene/Band und Tuer aus der Geometrie belegen (SCA-Zellen/Baender, Tuer-Satz), Wege der
 Zombies auf der oberen Ebene halten (kein Abstieg ueber die Treppe), Bildbeleg aus den 2080-Kameras. Spur F zeigt in der
 2090-Einstellung "oben in 2080 kommen die Zombies herein" dieselbe Lage.
+
+## 2026-10-24 22:25 — Nachtrag 21 (Wortlaut; Zugang zum Alligator und Zweck des Schluessels, Spuren F und G)
+
+> Nur für den fall das du es falsch hast - man kommt über die Leiter zum Aligator, nicht über das Tor. Das Tor soll
+> verschlossen sein, und dann mit den Schlüssel den man vom Aligator bekommt geöffnet werden!
+
+Folgen (Orchestrator):
+- Zugang zu ROOM2090/2091 im Spielablauf: ueber die LEITER aus 2080 (ROOM2080 Slot 1 @0x00BC2 -> 2090 (-8200,0,-25550), frei
+  nach dem Original-Rechner (3,245)); die 2090-Ankunftsszene (Spur F) beginnt bei dieser Ankunft.
+- Das TOR zwischen 2090 und 20A0 (2090 Slot 1 @0x009B6 <-> 20A0 Slot 0 @0x01746, Rolltor-Bereich 20A0) ist VERSCHLOSSEN
+  und oeffnet sich erst mit dem Schluessel, den man vom Alligator bekommt (Spur F: Schluessel nach dem Tod blinkend bei der
+  Leiche; Tuer-Sperre/Schluessel-Item in Original-Form mit Beleg, Item-/Taken-Bit nach Zensus, Bits aus F's Zuteilung
+  110-113). Damit ist die offene Frage "welche Tuer oeffnet der 2090-Schluessel" beantwortet. Weg danach: 2090 -> Tor -> 20A0
+  -> (Original sub10 (3,206)) -> 11A0 -> STAGE3.
+- Spur G: die Kanister-Szene setzt voraus, dass der Spieler ueber die Leiter in 2090 ist (nicht ueber 20A0).
