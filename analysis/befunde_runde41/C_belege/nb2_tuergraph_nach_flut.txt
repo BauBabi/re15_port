@@ -1,5 +1,5 @@
 # Tuergraph STAGE2 nach der Flut - erzeugt von re15_port/tools/r41_ventilkette/tuergraph_nach_flut.py
-# Quelle: 240 RDTs unter shared_assets/PSX (Auslieferungsstand).
+# Quelle: 240 RDT-Dateien unter shared_assets/PSX (Auslieferungsstand), davon 206 Raeume mit Kopf (der Rest sind Platzhalter < 0x60 B).
 # Zeile: Raum Region @Offset slot sce floor Rechteck -> Ziel (Ankunft x,y,z) Cut nfloor | Bedingung | Setzer | Elza
 
 ## A  Tueren der STAGE2-Raeume (Leon-Variante; Elza = ROOMxxx1 Byte fuer Byte verglichen) + ROOM11A0

@@ -9,6 +9,12 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-24 07:50-09:00 **Nachbesserung 2 abgeschlossen** (§0c): Tuergraph (Werkzeug + C_belege/nb2_tuergraph_nach_flut.txt),
+  Weg zu Fuss gemessen (2050 -> 2020, 2030 Nordgalerie -> 2060, 2040 -> Treppe -> Galerie -> 2070 Nordgang -> 11A0 bis
+  zur Sperre, Leon + Elza; Gegenprobe (3,206); 2080 ab 2090 -> Rechner -> Bit 107). Ergebnis: Weg existiert nicht,
+  ORIGINAL-Sperre ROOM11A0 Slot 4 ((3,206) @0x00FEA/@0x00FEE, nur 20A0 sub10 @0x01FF0 setzt es) -> nichts erfunden,
+  kein Spiel-Code geaendert, OFFEN Frage §7 (j). Riegel unit J (286 Pruefungen) + integration_r41_ventilkette_weg
+  (Passed 439.47 s); Unit-Gruppen 67/67 und 164/164. Dossier §0b M5/M7, §6, §7 richtiggestellt.
 * 2026-10-24 ab 07:50 **Nachbesserung 2** (Abnahme 1 `C_abnahme_1.md`, Mangel N1; Orchestrator-Entscheid C-E2b
   07:49 als Commit 8933352d direkt in diesem Zweig). Baum sauber (`status --porcelain` leer), exe 06:37 = Code-Stand
   HEAD (seit 5ddd98c0 nur analysis/). Der FORTSETZUNGS-Block des Auftrags (exe 00:56 mit Spur-A-Haken, Unit-Gruppe am
@@ -361,7 +367,8 @@ Die Messungen der Abnahme 1 (`C41abn1/mess/*`, im Bericht `<a1>`) werden NICHT w
 * **Messung vorher:** Abnahme 1 L9 (`C41abn1/mess/tuerebene3`): 2020 Slot 1 -> 2030 (-450,-16200,-9700) -> Nordgalerie ->
   `KLEMME ... Rest 3918` bei (-6983,-3918); SCA ROOM2030 @0x880 Wand 66. Nicht wiederholt.
 * **Tuergraph (statisch, C-E2b Punkt 1)** — Werkzeug `re15_port/tools/r41_ventilkette/tuergraph_nach_flut.py`
-  (Walker = tools/scd_dump_room.py, alle Door_aot_set aus main UND subs aller 240 RDTs, Ifel/Else-Kontext mit Ck-Offset,
+  (Walker = tools/scd_dump_room.py, alle Door_aot_set aus main UND subs aller 206 Raum-RDTs (240 Dateien, davon 34
+  Platzhalter < 0x60 B ohne Kopf), Ifel/Else-Kontext mit Ck-Offset,
   Setzer jedes Bedingungs-Bits aus allen RDTs, Elza-Saetze Byte fuer Byte verglichen: alle "Elza gleich"); Ausgabe
   `C_belege/nb2_tuergraph_nach_flut.txt`. Ergebnisse, die den Weg entscheiden:
   - **Zugaenge ROOM2080:** nur ROOM2030/2031 Slot 1 @0x01AEA (floor 9 = Suedgalerie der Tuerebene) und ROOM2090/2091
@@ -453,8 +460,10 @@ Die Messungen der Abnahme 1 (`C41abn1/mess/*`, im Bericht `<a1>`) werden NICHT w
 * **Hinweis zur Annahme in C-E2b** ("Ring unter Wasser (bis -16200)"): der Port-Ruhepegel nach der Flut ist y -7200
   (`RE15_R41C_WASSER_Y_RUHE`, §3.6) = 1800 ueber dem Ring (y -5400); -16200 ist die Tuerebene. An der exe steht und laeuft
   Leon dort in Brusthoehe (Abnahme 0 L8, §4 "Eintritt in das geflutete 2030", Bild C_belege/ring_nach_flut_sheet.png).
-* **Riegel:** unit_r41_ventilkette Fall J (Zugangs-Zensus + 11A0-Sperre an der Engine, Leon + Elza) und
-  integration_r41_ventilkette_weg (die Glieder 2/4/6/7/8/9 an der exe, Glied 7 mit Leon und Elza) — §5 "Nachbesserung 2".
+* **Riegel:** unit_r41_ventilkette Fall J (Zugangs-Zensus + 11A0-Sperre an der Engine, Leon + Elza; `PASS (286
+  Pruefungen)`) und integration_r41_ventilkette_weg (die Glieder 2/4/6/7/8/9 an der exe, Glied 6+7 mit Leon und Elza;
+  `Passed 439.47 sec`) — §5 "Nachbesserung 2". Beide halten den Befund fest und fallen, sobald jemand die Sperre oder
+  die Zugaenge aendert (dann mit dem Entscheid zu Frage (j) neu fassen).
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
@@ -981,6 +990,29 @@ shared_assets/PSX, pri/, synchro/, release/.
     out of 5`** (`Total Test time (real) = 300.91 sec`, EXIT=0). Damit ist der Original-Zustand der Kraehenszene
     ((5,0x1E) bleibt im Init-Takt stehen) mit den Heliport-Riegeln vertraeglich (sie liefen auch mit dem Loeschen gruen,
     Abnahme 0 — das Loeschen war fuer sie unsichtbar, s. M3).
+
+* **Nachbesserung 2 (2026-10-24; Spiel-Code unveraendert, exe 06:37 = 5ddd98c0; neu gebaut `local_build.sh build` ->
+  `[2/3] Linking C executable tests\unit\test_r41_ventilkette.exe` / `=== LOCAL-BUILD-OK (build)`; Protokolle scratchpad
+  `r41c_nb2/`):**
+  - `unit_r41_ventilkette` direkt: `J1 Zensus: 206 Raeume, 16 Funde (Tueren nach 2080/2090/20A0 + Set(3,206)=1)`,
+    `ROOM11A0 11A0 zu msgs: 2@Cut0`, `ROOM11A1 11A0 zu msgs: 2@Cut0`, **`PASS (286 Pruefungen)`** (vorher 274; neu: J1
+    Zensus + Bytes 11A0/11A1, J2 Leon + Elza je Sperre/Aktion/Gegenprobe (3,206) -> Tuer + Raumwechsel nach 20A0).
+  - Unit-Gruppe der Nachbesserung 1 (67 Tests, Regex woertlich wie oben unter "Nachbesserung 1"):
+    **`100% tests passed, 0 tests failed out of 67`** (`Total Test time (real) =  11.61 sec`, `r41c_nb2/ctest_unit67.txt`).
+  - Unit-Gruppe der Abnahme 1 (164 Tests, Regex `C41abn1/regex_unit.txt` = `r41c_nb2/regex_unit164.txt`):
+    **`100% tests passed, 0 tests failed out of 164`** (`Total Test time (real) =  18.67 sec`, `r41c_nb2/ctest_unit164.txt`).
+  - Neuer Riegel: `ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_weg$" --timeout 1800
+    --output-on-failure` -> `1/1 Test #1128: integration_r41_ventilkette_weg ...   Passed  439.47 sec`,
+    **`100% tests passed, 0 tests failed out of 1`** (`Total Test time (real) = 439.52 sec`, EXIT=0, `r41c_nb2/ctest_weg2.txt`;
+    Laufordner `build/tests/integration/r41_ventilkette_weg/lauf_48e0a9dc_{a..f}`): a `[msgtext] room=11a0 id=2 "It's locked
+    from the other side."`, b `Spieler-Familie PL04` ... `[msgtext] room=11a1 id=2 ...`, beide `FLAG (3,206) = 0`, kein
+    `loaded room20a`; c `DOOR FIRE slot=4 rect=(29000,1300,...)` -> `loaded room20a0.rdt`; d `ZELLE r0[51] ... u0 0x00` ->
+    `loaded room2020.rdt`; e `unter Wasser (y -7200)` -> `DOOR FIRE slot=3 ...` -> `loaded room2060.rdt`; f
+    `2080_rechner_erw` -> `id=40` -> `FLAG (9,107) = 1`. Der erste Lauf desselben Riegels (`lauf_baaaad3f_a`, ohne die
+    Spinnen-Kill-Bits des 2070-Nordgangs) endete mit Leons Tod im Nordgang und wurde von mir abgebrochen (kein
+    Ergebnis gewertet); danach Kill-Bits (7,98)/(7,99) in a/b (§0c "Gegner auf dem Weg").
+  - Nicht erneut gefahren (Spiel-Code und exe unveraendert seit 06:37): integration_r41_ventilkette / _b (Abnahme 1 §3:
+    2/2 Passed auf genau dieser exe), Heliport 5/5, Querbezuege dachkiste/itemband/kistenregel (Abnahme 0/1).
 
 ## 6. OFFEN
 * **Nachbesserung 2 (2026-10-24, Abnahme 1 Mangel N1, Entscheid C-E2b): der Weg zum Rechner 2080 nach der Flut

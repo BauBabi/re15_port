@@ -113,7 +113,8 @@ def main():
                 if op == 0x22 and d[pc + 3] == 1:
                     setzer.setdefault((d[pc + 1], d[pc + 2]), []).append("%s %s @0x%05X" % (name, lbl, pc))
     p("# Tuergraph STAGE2 nach der Flut - erzeugt von re15_port/tools/r41_ventilkette/tuergraph_nach_flut.py")
-    p("# Quelle: %d RDTs unter shared_assets/PSX (Auslieferungsstand)." % len(rdts))
+    p("# Quelle: %d RDT-Dateien unter shared_assets/PSX (Auslieferungsstand), davon %d Raeume mit Kopf (der Rest sind"
+      " Platzhalter < 0x60 B)." % (len(rdts), len(walks)))
     p("# Zeile: Raum Region @Offset slot sce floor Rechteck -> Ziel (Ankunft x,y,z) Cut nfloor | Bedingung | Setzer | Elza")
     p("")
     p("## A  Tueren der STAGE2-Raeume (Leon-Variante; Elza = ROOMxxx1 Byte fuer Byte verglichen) + ROOM11A0")
