@@ -9,6 +9,13 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-24 18:2x **Nachbesserung 4 abgeschlossen** (§0e): Mangel 3 = das echte Ventilraetsel (sechs Ventile 01/02/03 +
+  07/08/09 an den Raedern der Hintergruende, Folge 09/07/02/01 erst nach der vierten Drehung geprueft, falsch -> zurueck +
+  Text 45; Dokument "Technician's Note" mit dem Nutzertext woertlich, Bit (9,107); Plakat-Nahaufnahme mit der falschen
+  Anleitung; Text 49 neutral); Mangel 4 = Pegel mit Strom y -5350 knapp unter der Absperrung (Netz mit Treppenschacht);
+  Mangel 1 = `_kette` auf der heutigen Kette (von Hand am Endstand rc=0 bis `loaded room20b0.rdt` + `Bits 103 + 100`);
+  Mangel 2 = veraltete Saetze. Tests (§0e "Tests der Nachbesserung 4"): Unit-Gruppe 228/228, r41-Riegel zweiter Lauf 3/3
+  (+ `_b`/`_sperre` aus dem ersten Lauf), Raum-/Dokument-Gruppe 17/17. Vorschlaege zur Freigabe §7 (m)/(n).
 * 2026-10-24 ab 14:3x **Nachbesserung 4** (Abnahme 3 `C_abnahme_3.md`, Maengel 1-4; Nachtraege 12/13 des Nutzers, AUFTRAG.md
   13:11/13:19). Baum sauber (`status --porcelain` leer, HEAD a4f68cff = Abnahme 3 vollstaendig: Urteile, Maengel, Integration
   16/16). Der FORTSETZUNGS-Block des Auftrags ("Abnahme-3-Fortsetzung ... Kein Code aendern") gehoert zur Abnahme 3 und ist mit
@@ -940,6 +947,36 @@ Nachtraege 7/8/12/13 gebracht.
   F3400..F3898), v2d/v2p schrieben ihre Framedumps mit `${WORKDIR}` des VORIGEN Laufs. Bis dahin bestanden: A, B, C bis
   "ERTRUNKEN" (Zaehler 1801 / Tod 125 aus state.txt nachgerechnet), v1/v2a/v2b je Leon und Elza, v2d "abgelegt: Bit (9,107) = 1".
   Korrigiert (f3173450, 56b0eaa8): Ende F3850, Dump-Fenster F3500..F3840, relative Dump-Pfade.
+* Integration r41, zweiter Lauf am Endstand (exe 16:59 = Bau nach 56b0eaa8; 16:59:53-17:41:46, `-R
+  "^(integration_r41_ventilkette|integration_r41_ventilkette_weg|integration_r41_ventilkette_weg_elza)$" --timeout 2700`):
+  `1/3 Test #1126: integration_r41_ventilkette ............   Passed  413.31 sec`,
+  `2/3 Test #1128: integration_r41_ventilkette_weg ........   Passed  968.11 sec`,
+  `3/3 Test #1129: integration_r41_ventilkette_weg_elza ...   Passed  1130.84 sec` ->
+  **`100% tests passed, 0 tests failed out of 3`** (Total Test time (real) = 2512.31 sec). Zusammen mit `_b`/`_sperre` aus dem
+  ersten Lauf (seitdem nur Riegel-Skripte und EIN Kommentar in scd_vm.c geaendert: f3173450, 56b0eaa8) sind alle fuenf
+  r41-Riegel am Endstand gruen. Kernzeilen aus den Laufordnern (build/tests/integration/r41_ventilkette_weg_leon/lauf_17e53d87_*,
+  _weg_elza/lauf_3fd35d82_*), je Leon UND Elza: v2a `Folge 09 01 02 07 -> FALSCH: zurueckgesetzt` -> `Ereignis 27 ->
+  Port-Programm 2030_ventile_falsch` -> Text 45; v2b `Folge 09 07 02 01 -> RICHTIG: Warnung, Zaehler, Flut` -> `Zaehler lief
+  beim Verlassen von 2030 -> Bits 103 + 100`; v2d `Dokument 6 "Technician's Note" abgelegt: Bit (9,107) = 1`; v2p
+  `Plakat-Nahaufnahme offen` / `Plakat-Nahaufnahme zu (nach 89 Bildern)`; w3/w4 `Strom (3,126) -> Wasser knapp unter der
+  Absperrung y -5350` (ROOM2030 Leon, ROOM2031 Elza).
+* `_kette` von Hand am Endstand (Mangel 1; exe 16:59, 17:42:28-17:44:15, `cmake -DRE15_PC_EXE=<baum>/re15_port/build/platform/pc/
+  re15_pc.exe -DRE15_SRC=<baum>/re15_port -DWORKDIR=scratchpad/nb4/kette_final -P tests/integration/
+  test_r41_ventilkette_kette.cmake`): `rc=0`, Abschlusszeile `-- r41_ventilkette_kette: 2030 richtige Folge 09/07/02/01 zu
+  Fuss -> Warnung -> Ost-Tuer zu Fuss -> ROOM20B0, Bits 103 + 100; Teil ab der Szene uebersprungen: Haken der Spur A fehlt
+  (aot_common.c re15_wasser20b0_r41_auto_aot)`; debug.log (lauf_18e7655f_bis20b0): `Folge 09 07 02 01 -> RICHTIG`, `[aot] DOOR
+  FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11 spawn=(5950,-1800,-6400)`, `[room] PC loaded room20b0.rdt (201460
+  bytes)`, `Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100 (Flut gelaufen, Leiter frei)`.
+* Raum-/Dokument-Gruppe (Nachbar-Riegel der beruehrten Module: Raeume 2030/2050/2080, Kisten, Wasser, Itemband/Lift,
+  Dokument-Leser und re15_files.c, Prop-Lader in main.c; exe 16:59; 17:00:05-18:23:45, parallel zum zweiten r41-Lauf und
+  unter der Last anderer Spurbaeume; `-R "^(integration_r37_fahrstuhl_n1|integration_r38_spinnen_echtlauf|
+  integration_r37_itemband|integration_r37_itemband_lift|integration_r36_gegnerzahl|integration_r38_wasser|
+  integration_r38_wasserzombie|integration_r37_kiste|integration_r37_kiste2feld|integration_r37_kistenregel|
+  integration_r36_dachkiste|integration_r34n_e_dokumente_bild|integration_r38_tagebuch_lesen|integration_r38_tagebuch_karte|
+  integration_r38_tagebuch_leon|integration_r30_irons_tisch_laden|integration_r30_irons_tisch_bild)$" --timeout 2700`) ->
+  **`100% tests passed, 0 tests failed out of 17`** (Total Test time (real) = 5019.29 sec; laengste: r37_itemband_lift
+  1391.40 s, r36_dachkiste 1378.61 s, r37_itemband 795.90 s).
+* Keine volle Suite (Auftrag).
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
