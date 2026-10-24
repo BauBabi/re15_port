@@ -77,8 +77,9 @@
  *        `addu a0,s3,v0` @0x80045718-24) und zieht fuer Typ >= 0x40 acht ab (`sltiu v0,v0,0x40` @0x80045730, `addiu s3,a0,-8`
  *        @0x8004575c). Hoerbar ist ein Satz nur mit Stimme (e[3] & 0x1f) - 16 + (fuss != 4) in 0..7 (`lbu v0,3(a2)` @0x800457a0,
  *        `andi s1,v0,0x1f` @0x800457a8, `addiu s1,s1,-16` @0x800457ac, `xori v0,v0,0x4` @0x800457b4; FUN_800458d4 pumpt 8 Saetze
- *        @0x800b2420: `ori s4,zero,0x8` @0x800458dc, `addiu s1,s1,-18` @0x8004590c, `bne s4,zero` @0x800459e4). Die Beta-Raeume
- *        fuellen die NPC-Zeilen fast nie (52 NPC-Raeume: 93 von 544 Faellen hoerbar, Dossier N2.1). BETA -> RETAIL: das
+ *        @0x800b2420: `ori s4,zero,0x8` @0x800458dc, `addiu s1,s1,-18` @0x8004590c, `bne s4,zero` @0x800459e4) und mit einem Ton,
+ *        dessen VAG != 0 ist (SsUtKeyOnV `lhu a0,22(v0)` @0x80059f2c, `bne a0,zero` @0x80059f8c). Die Beta-Raeume fuellen die
+ *        NPC-Zeilen fast nie (52 NPC-Raeume ohne Stempel-Zweig: 15 von 280 Faellen hoerbar, Dossier N2.1). BETA -> RETAIL: das
  *        RE2-Gegenstueck FUN_8005c040 (RE2 Leon) indiziert JEDEN Typ mit a0 + (Boden & 0x7f) - ohne Typ-Versatz (`andi v1,t0,0x7f`
  *        @0x8005c44c, `addu s5,s5,v1` @0x8005c458; der Typ waehlt nur die Stimme, `sltiu v0,v0,0x10` @0x8005c0ec) - und spielt
  *        einen leeren Satz nicht (`beq v0,v1` @0x8005c470). Port: Original-Zeile, wenn sie im Original hoerbar ist, sonst die
@@ -94,7 +95,7 @@
  *        (0x7f - Pan) / 63 (@0x80055f8c-...). Port: eigene byte-genaue Nachbildung von FUN_80045a64 in wassersprung_r41.c
  *        mit dem Winkel des Originals: FUN_80045d6c ruft catan @0x800658fc = CORDIC (12 Stufen, Winkel @0x80078c90 =
  *        511,302,159,81,41,20,10,5,3,1,0,0). rotor_common.c (Rotor) rechnet den Winkel mit einer ATAN-Tabelle (Abweichung bis
- *        +-7/4096 = eine Pan-Stufe, gemessen A_nb2/cordic_vgl.py) - dort nicht geaendert (OFFEN, Dossier N2.2). Pegel im
+ *        +-7/4096 = eine Pan-Stufe, gemessen A_nb2/cordic_vgl.py) - dort nicht geaendert (OFFEN, Dossier N2.7). Pegel im
  *        linearen Mischer-Modell des Ports (wie se_play_layers, ohne SPU-Quadrat).
  */
 #ifndef RE15_WASSERSPRUNG_R41_H

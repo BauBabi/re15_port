@@ -9,7 +9,8 @@
 #   (a) NPC-Schritte im Spiel: ROOM2000 (Leon) mit Flag (4,244)=1 -> sub00 spawnt Marvin (Typ 0x42, Slot 1) und Ada
 #       (Typ 0x40, Slot 2), sub02 fuehrt beide per Plc_dest (Sub-VM-Walk, OWN-Bank Clip 5) ~13000 Einheiten durch den
 #       Raum. Das Mess-Log RE15_NPCSCHRITT_LOG (wassersprung_r41.c) muss Schritte BEIDER Slots zeigen (Bildwort-Marken
-#       Bild 7/22 bzw. 8/22 der OWN-Bank, Ton = (Boden & 0x7f) - 8 @0x8004575c, Zweig trocken = nur Ton).
+#       Bild 7/22 bzw. 8/22 der OWN-Bank; Ton = Original-Zeile (Boden & 0x7f) - 8 @0x8004575c, wenn sie im Original klingt,
+#       sonst die RE2-Retail-Zeile (Boden & 0x7f) + a0 @0x8005c458 (Nachbesserung 2); Zweig trocken = nur Ton).
 #   (b) Landung ueber den ECHTEN Weg: Tuer 20A0 -> 2090 (Leon) bzw. 20A1 -> 2091 (Elza; Satz @0x1754 byte-gleich:
 #       Rect (3450,4500) 3000x1000, Ziel (6300,-1800,-16250), rot 0x800, Cut 2, Band 1), Steg, Drehung auf rot 3072,
 #       Kante: Kletter-Sub 9/10 -> Landung @0x80038730-d0 -> 8 x FUN_80019700(0x06033000) = fx.log "id=6 sub=3".

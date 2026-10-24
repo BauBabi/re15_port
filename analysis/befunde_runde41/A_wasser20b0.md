@@ -790,7 +790,7 @@ Abnahme werden NICHT wiederholt (Laeufe `A41abn1/mess/<lauf>`), sie sind die "Me
 |---|---|---|---|---|---|
 | M1 Ton stumm | NPC-Zeile Boden - 8 (@0x8004575c) leer/ohne Stimme 0..7/ohne VAG | 61/64, 8/8, 23/23 unterdrueckt | N2.1 (RE1.5 + RE2 FUN_8005c040 @0x8005c458) | Original-Zeile sonst Retail-Zeile (N2.3) | 64/64, 8/8, 23/23 gemischt (N2.4) |
 | M2 Lage (A-E4) | re15_audio_footstep ohne Lage | mono | N2.2 (FUN_80045a64, CORDIC, SsUtKeyOnV, SpuVmKeyOnNow) | eigene Nachbildung + 4 Zeilen audio_pc.c (N2.3) | Abstand 41 -> 104, 125 -> 56, 95/95 L != R (N2.4) |
-| M3 r35_granate | Riegel fest Slot 20, Alligator seit E2 auf 35 | rot | main.c Rueckwaertssuche ab RE15_ACTOR_MAX-1 | Slot aus re15_actor.h (N2.6) | N2.8 |
+| M3 r35_granate | Riegel fest Slot 20, Alligator seit E2 auf 35 | rot | main.c Rueckwaertssuche ab RE15_ACTOR_MAX-1 | Slot aus re15_actor.h (N2.6) | Passed 174.79 s, Slot 35 hp 3000 -> 2000 (N2.6) |
 | M4 Riegel | nur Index geprueft, 0x47 / Sub 7/8 ohne Lauf-Pin | gruen trotz Stille | - | unit ton/lage, npc*/npc_subs, integration _npc (N2.5) | N2.8 |
 | M5 Dossier | N1.14 behauptete hoerbare Schritte | widerlegt | Abnahme 1, 4.3 | Richtigstellung in N1.14, neu N2.9 | - |
 
@@ -992,6 +992,25 @@ Integration (eigener Riegel, Stand 7e639adc; spaeter nur `file(REMOVE cap.raw)` 
 ```
 -R "^integration_r41_wasser20b0_npc$" --timeout 1800
 100% tests passed, 0 tests failed out of 1      (217.37 s)
+```
+
+Integration - Nebenwirkungen: eigene Riegel, r35_granate (M3) und ALLE Mitschnitt-Riegel (RE15_AUDIO_CAP_SYNC, 24 Testdateien
+= 66 Eintraege: dort werden NPC-Schritte jetzt hoerbar), `--timeout 1800 -j 3`, Stand dd77ec7a (Code 5f1dce6d):
+```
+-R "^integration_(r41_wasser20b0|r41_wasser20b0_npc|r35_granate|r35_werfer_ton|r36_elza_fenster|r36_elza_irons|r36_elza_unlock|r36_elza_schuss|r36_elza_stoehnen|r36_tueren|r37_codepanel|r37_fahrstuhl|r37_fahrstuhl_n1|r38_dining1141_w|r38_dining1141_z|r38_dining1141_d|r38_dining1141_l|r38_dining1141_s|r38_dining1141_r|r38_dining1141_a|r38_elzaintro_stimme|r38_elzaintro_schwarz|r38_elzatoene_gunshot1041|r38_elzatoene_szene1021|r38_kleinkram_inventar|r38_kleinkram_irons|r38_kleinkram_flammenwerfer|r38_rekorder|r38_wasser|r38_wasserzombie|r38_werkstatt11b0|r39_dining1141_d|r39_dining1141_kampf|r39_dining1141_zielen|r39_dining1141_zielen_nachladen|r39_elzazombies_kette|r39_elzazombies_knall|r39_elzazombies_treppe|r39_elzazombies_durch|r39_elzazombies_ohne|r39_elzazombies_leon|r39_elzazombies_altstand|r39_elzazombies_oben|r39_funk10f1_echt|r39_funk10f1_zweit|r39_funk10f1_leon|r39_gegner_1141|r39_hund1121|r39_johnruf1041_a|r39_johnruf1041_b|r39_johnruf1041_tuer_t1041|r39_johnruf1041_tuer_t1041o|r39_johnruf1041_tuer_t1051|r39_johnruf1041_tuer_t1051o|r39_johnruf1041_tuer_t11b1|r39_johnruf1041_tuer_t11b1d|r39_parkplatz11c0_k|r39_parkplatz11c0_w|r39_parkplatz11c0_n|r39_parkplatz11c0_e|r39_parkplatz11c0_i|r39_stimmen_1050|r39_stimmen_1150|r39_stimmen_11b0|r39_stimmen_1171|r39_toene_schublade|r39_toene_schublade_elza|r39_toene_szene|r39_toene_szene_elza)$"
+100% tests passed, 0 tests failed out of 69
+Total Test time (real) = 2512.58 sec      (06:28-07:09, parallel zu anderen Spur-Agenten)
+```
+Darin u.a.: integration_r35_granate Passed 174.79 s (M3), integration_r41_wasser20b0_npc Passed 251.51 s (Stand dd77ec7a),
+integration_r41_wasser20b0 Passed 98.13 s, r39_stimmen_1050/1150/11b0/1171, r39_johnruf1041_a/b + 6 Tuer-Varianten, r38_elzaintro_stimme/
+_schwarz, r38_elzatoene_szene1021/_gunshot1041, r39_toene_szene(_elza)/_schublade(_elza), r39_parkplatz11c0_k/w/n/e/i, r38_dining1141_*,
+r39_dining1141_*, r39_elzazombies_* (8), r38_wasser, r38_werkstatt11b0 - alle gruen (die Pegel-/RMS-Riegel der Sprachzeilen halten mit hoerbaren
+NPC-Schritten). Laengste: r38_dining1141_s 641.14 s.
+Nach dem Lauf nur noch Kommentar-Aenderungen (include/re15_wassersprung_r41.h Kopf (f), test_r41_wasser20b0_npc.cmake Kopf): neu gebaut
+(`=== LOCAL-BUILD-OK (build)`, re15_pc.exe 07:10:00), danach:
+```
+-R "^unit_r41_wasser20b0_" --timeout 600 -j 4
+100% tests passed, 0 tests failed out of 11
 ```
 
 ### N2.9 Fuer den Nutzer (Stand Nachbesserung 2; ersetzt N1.14, s. Richtigstellung dort)
