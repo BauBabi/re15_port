@@ -441,52 +441,68 @@ Neu/geaendert (nur tests/unit/probes/r41_masken36.cmake + eigene Dateien):
 
 ## OFFEN
 
-1. **Teilweise ausgeschlossene Objekte (Punkt 1):** der Ausschluss der Spur P (R37) nimmt weiter ganze Rechtecke weg, die an
-   einer erreichbaren Stelle eine Figur VOR dem Objekt verdecken wuerden - in 94 Objekten der Stages 3..6 bleiben dadurch
-   Stuecke offen (gemessen vor Runde 41: 358 358 Bildpunkte in teilweise ausgeschlossenen Objekten), und 1662 der 8600
-   Saum-Rechtecke bleiben aus (Kerben-Mass 25,1 % von vorher). Ursache sind die Tiefen und die Auswahl des Generators vom
-   2026-09-03 (Bodenkontakt auf y = 0 je Spalte, DEPTH_SAFETY 0.90, Hintergrund in der Region - R37 §3.2). Der Weg, der das
-   sicher schliesst, ist derselbe wie in STAGE1/2: Freistellungen des Nutzers fuer die Objekte, hinter die man wirklich
-   laufen kann (raum.py --p2 baut sie mit Zellen-/Profil-Tiefe). Eine Tiefe aus der Erreichbarkeit (1.5) ist gemessen und
-   verworfen: das Grundriss-Urteil "Zelle davor" ist fuer echte Verdeckung nicht hinreichend.
+1. **Weiter ausgeschlossene Objektteile (Punkt 1, Stand Nachbesserung 1):** nach der Zellen-Tiefe (Schritt 1 + 2) bleiben
+   530 von 3239 alten und 656 von 4300 Saum-Rechtecken (Leon; mit Elza 1 312 von 8 600 Saum) aus, 341 352 Bildpunkte liegen nur in
+   ausgeschlossenen Rechtecken (vor NB1 450 317), 99 Objekte teilweise und 47 gar nicht gezeichnet (vor NB1 147 / 55).
+   Restliste mit Bildern: `M_bilder/NB1_rest/NB1_rest_ROOMxxxx.png` (je Raum die Cuts mit >= 300 roten Punkten: gruen =
+   gezeichnet, blau = durch NB1 wieder gezeichnet, rot = weiter aus) und `NB1_rest_liste.txt` (52 Cuts, 339 719 Punkte).
+   Gruende (tiefe_zelle_r41.json): keine Sperrzelle traegt die Mehrheit der Bodenkontakte (697 Rechtecke) - vor allem Waende,
+   Boeden und Hintergrund, die der Generator in seine Region nahm (R37 §3.2; z.B. 4040/4080 Gangwaende, 3050 C7 Bodenflaeche):
+   die bleiben zu Recht aus; Zelle trifft das Objekt bei keiner Hoehe / kein Bodenkontakt / Saeule mit schraeger Zelle / Kamera in
+   der Zelle; Zellen-Tiefe nicht ferner als die alte; und 135 Rechtecke mit Zellen-Tiefe, die der Ausschluss trotzdem nimmt.
+   Wo im Spiel eine Verdeckung an einem echten Objekt fehlt, ist eine Freistellung des Nutzers wie in STAGE1/2 der Weg
+   (s. "Fuer den Nutzer"). Eine Tiefe aus der Erreichbarkeit bleibt verworfen (1.5).
 2. **Masken wirken auch auf 3D-Objekte und Effekte**, nicht nur auf Figuren: die Erreichbarkeits-Pruefung (R37) und die
    Standplatz-Schiene (R40) kennen nur Figuren. Gemessen: Kanten der 3D-Tuermodelle in 4040 C11 / 4080 C7 werden vom
-   Tuerrahmen gedeckt (vorher schon 448 Punkte an der Tuer-Oberkante, nachher +1/+2), in ROOM2020 C3 liegt die rechte
-   Reling-Freistellung ueber dem Rand des dunklen 3D-Objekts in der Beckenmitte (obj 1, Obj_model_set[1]
-   pos=(-1452,-1784,-584)) und ueber einer hellen Wolke rechts davon. Ob das Objekt dort vor oder hinter der Reling liegt, ist
-   nicht gemessen.
-3. **ROOM2030 C15 (4400,3850) Band 3:** bis 8 Punkte Handlauf an Leons Schulterkante, wenn er direkt (1 Bucket) vor der
-   Reling steht - Bucket-Rundung der Freistellungs-Tiefe, nicht behoben.
-4. **PSX:** platform/psx/src/pri_psx.c kennt keinen eigenen Atlas (R37 OFFEN 5). Die alten Rechtecke der Stages 3..6 liegen
-   im eigenen Atlas an ihrer BSS-Stelle und taeten dort weiter das Richtige, die Saum-Rechtecke nicht. PSX-Ziel ungebaut.
-5. **Uebersichtsbilder pri/STAGE3-6/<raum>/<cc>_port.png** (a8be31a7) sind mit dem fehlerhaften Entpacker gebaut und zeigen
-   Loecher, die es im Spiel nie gab. Berichtigte Bilder liegen in `M_bilder/uebersicht/` (Leon-Ordner; Elza bytegleich) -
-   pri/ ist fuer die Spur tabu (VERTRAG §1.3), das Ersetzen bleibt dem Orchestrator/Nutzer.
+   Tuerrahmen gedeckt (vorher schon 448 Punkte an der Tuer-Oberkante, Runde 41 +1/+2). ROOM2020 C3 rechte Reling ueber der hellen
+   Wolke: von der Abnahme 0 nachgerechnet (Wolke hinter der Reling, kein Fehlerbild).
+3. ~~ROOM2030 C15 Handlauf an Leons Schulter~~ - widerlegt (NB1 Mangel 3): es war die Spinne hinter Leon.
+4. **PSX:** die Abnahme 0 hat gezeigt, dass platform/psx MASKS/*.MSK gar nicht liest (nur entladen_pc.c) - keine PSX-Folge
+   der Saum-Rechtecke oder der Zellen-Tiefen; der PSX-Weg der Port-Masken ist unveraendert offen (R37 OFFEN 5).
+5. **Uebersichtsbilder pri/STAGE3-6:** 204 von 214 vom Orchestrator ersetzt (master 919cc1ed); die 10 fehlenden liegen jetzt
+   unter `M_bilder/uebersicht/` (durchsichtig, NB1 Auflage). Durch NB1 Mangel 1 haben sich die Uebersichtsbilder der Cuts mit
+   wieder aufgenommenen Rechtecken geaendert (git diff --stat analysis/befunde_runde41/M_bilder/uebersicht) - pri/ ist fuer die
+   Spur tabu, das Ersetzen bleibt dem Orchestrator.
+6. **ROOM5100 C7, Leons Hand am unteren Bildrand** (-12030,-5300): das ALTE Generator-Rechteck 0 (Tiefe 64, x 0..43 y 154..240)
+   verdeckt Leon-Dreiecke mit z 4164..4615 (120 Rasterpunkte; Altbestand R37, vor/nach Runde 41 gleich). Ob die Hand dort vor
+   oder hinter dem Objekt liegt, ist nicht gemessen (keine Zellen-Tiefe fuer Rechteck 0, es ist nicht ausgeschlossen).
+7. **Figurkasten 3000 x +-350 des Ausschlusses (R37) ist am Figurrand zu schmal:** an fuenf der 88 DAVOR-Stellen der
+   NB1-Pruefung sind 1..23 Leon-Punkte (1-2 Bildspalten am Rand: Arm/Hand) von Masken uebermalt, die schon VOR NB1 gezeichnet
+   wurden: 3040 C5 4 (altes Rechteck 50), 30A0 C4 2 (Saum-Rechteck 41, Runde 41), 5100 C2 1, 4080 C8 2, 5050 C1 23 (alte Rechtecke
+   35/36 + Saum 64/72). NB1 hat daran nichts geaendert (neu 0, weg 0). Ein breiterer Kasten oder die Leon-Dreiecke selbst
+   (RE15_TRILOG) im Ausschluss waeren der Weg; nicht in NB1 (die Tabelle aendert sich dann fuer alle 216 Sektionen).
+8. **HINTER-Deckung der 53 Nutzer-Masken, Nachpruefung (NB1):** an den 43 HINTER-Stellen des Bau-Agenten (e4_c, Leon im Bild)
+   mit den Leon-Dreiecken (RE15_TRILOG, alle Dreiecke, `m41nb1c/hinter_ana.py`): 21 Stellen ganz verdeckt (darunter jetzt 2040 C7
+   878/878 und 2030 C7 312/312); an den uebrigen liegt die Maskentiefe der offenen Punkte im Median 2..44 Buckets HINTER Leon
+   (groesste Mengen 11A0 C6 96 gegen 64, 20A0 C5 64/58, 2030 C2 56/51, 2050 C3 70/62, 2050 C1 63/52, 20A0 C12 164/141) - also
+   kein Fall wie der Handlauf 2030/2040 C7 (Tiefe 391 gegen Leon 42..49). Ob an diesen Stellen Leon tatsaechlich HINTER dem
+   Gegenstand steht (Standlinien-Modell) oder davor (Maskentiefe), ist nicht je Stelle mit einer Kollisionszelle belegt.
 
 ## Fuer den Nutzer
 
-- **Die Loecher in den STAGE3-6-Uebersichtsbildern waren ein Fehler meines Werkzeugs**, nicht der Masken: der Python-Entpacker
-  fuer die Vordergrund-Grafik (tools/maske/original.py) las jeden langen Rueckverweis 65536 Byte zu weit vorn und machte so
-  Teile der Objekte "durchsichtig" - in 359 von 359 Atlanten aller Stages (behoben, jetzt bytegleich mit dem Spiel). Im Spiel
-  hatten die Masken diese Loecher nie (0 von 1,1 Mio Rechteckpunkten). Bitte die Bilder `pri/STAGE3-6/*/*_port.png` durch
-  `analysis/befunde_runde41/M_bilder/uebersicht/...` ersetzen (gleiches Format, gleiche Namen) - oder der Orchestrator macht
-  es bei der Integration.
-- **Was im Spiel wirklich offen war und jetzt zu ist:** die Kanten der automatisch erzeugten Masken (Stages 3..6) waren
-  Treppen aus Rechtecken, Kerben und kleine Inseln fehlten - dort schien Leon/Elza hinter einem Objekt durch. Diese Raender
-  sind jetzt gezeichnet (+53 000 Bildpunkte in 108 Kamerawinkeln, z.B. die Konsole in FACTORY LINE B, die Treppe am
-  Bahnsteig MAIN PLATFORM), nur dort, wo sie sicher zum Objekt gehoeren (Farbabgleich der Original-Grafik). Was vorher
-  gezeichnet wurde, ist unveraendert. Echte Zwischenraeume (Gelaender, Gitter, unter der Treppe) bleiben offen.
-- **Nicht geschlossen** sind Objekte, deren Masken-Stuecke eine Figur VOR dem Objekt uebermalen wuerden (sie bleiben wie
-  bisher weg - sonst verschwindet Leon wieder, wie in Ihrer Meldung vom 2026-09-03). Wo Ihnen dort eine Verdeckung fehlt,
-  ist eine Freistellung wie in STAGE1/2 der sichere Weg (F9-Marke oder PNG unter pri/).
-- **Ihre 53 STAGE2-Masken** sind an der exe geprueft (je Kamerawinkel eine Stelle VOR und HINTER der Freistellung, Leon und
-  Elza-Stichproben, Bilder `M_bilder/P2_*.png`). Ein Fehler: **ROOM20A0 Kamera 12, Freistellung 12_02** ist der Streifen
-  BODEN vor der Schwelle unter dem Rolladen (dahinter der Schacht, in den die Kiste faellt) - wer darauf stand, verlor die
-  Fuesse. 12_02 wird nicht gebaut (Ihre PNG bleibt liegen), 12_01 (Mauerecke) bleibt - Ihr Entscheid "Weglassen ist ok"
-  (Nachtrag 11).
-- **ROOM2020 Kamera 3 an der Kurbel:** dass die Reling ueber Leons Beinen liegt, ist richtig - die Kamera haengt ueber dem
-  Becken, Leon steht an der Kurbel HINTER der Reling (Kollisionszelle der Reling liegt auf der Sichtlinie). Das Original
-  hat fuer diesen Winkel gar keine Masken und zeichnet ihn deshalb obenauf. Keine Aenderung.
-- Assets fuer das Paket: `re15_port/shared_assets/PSX/MASKS/` - 30 geaenderte ROOM3040..6031.MSK, 216 neue
-  ROOMxxxx_PRIcc.TIM, ROOM20A0.MSK + ROOM20A0_PRI12.TIM/.PBM/.STAND. Keine neuen Quelldateien in der Engine (Android: kein
-  neuer GLOB-Eintrag). Keine Sprachdateien, keine neuen Schalter.
+- **Die Loecher in den STAGE3-6-Uebersichtsbildern waren ein Fehler meines Werkzeugs**, nicht der Masken (Entpacker las jeden
+  langen Rueckverweis 65536 Byte zu weit vorn; behoben, 359 von 359 Atlanten bytegleich mit dem Spiel). Die 204 Bilder sind
+  ersetzt; die letzten 10 (3040/3041 01, 3050/3051 06 und 15, 30E0/30E1 06 und 07) liegen unter
+  `analysis/befunde_runde41/M_bilder/uebersicht/` - dort zeichnet das Spiel gar keine Maske, deshalb sind sie leer (durchsichtig).
+  Die Uebersichtsbilder der Cuts, in denen Nachbesserung 1 Masken dazugenommen hat, sind ebenfalls neu (gleicher Ordner).
+- **Masken STAGE3-6 weiter geschlossen (Nachbesserung 1):** Stuecke von Objekten, deren Masken bisher ganz wegfielen (weil die
+  automatische Tiefe eine Figur VOR dem Objekt uebermalt haette), tragen jetzt die Tiefe ihrer Kollisionszelle - so wie Ihre
+  STAGE1/2-Freistellungen gebaut werden. 367 Rechtecke sind wieder drin (+109 000 Bildpunkte, z.B. die Maschine links in
+  ROOM3050 Kamera 5; die meisten Punkte in 3050, 5020, 5100, 4040, 30A0). An der exe geprueft: an 21 Stellen hinter diesen
+  Objekten ist Leon jetzt verdeckt (6 190 statt 389 Punkte), an 88 Stellen davor wird er an keiner zusaetzlich uebermalt.
+  Insgesamt zeichnet das Spiel jetzt 889 591 Maskenpunkte der Generator-Masken (Runde 40: 727 561), weggenommen wurde nichts.
+- **Was weiter offen ist:** die roten Flaechen in `M_bilder/NB1_rest/NB1_rest_ROOMxxxx.png` (14 Raeume). Viel davon sind Waende,
+  Boeden und Hintergrund, die der Generator 2026-09-03 faelschlich ausgewaehlt hat - die bleiben zu Recht weg. Wenn Sie dort an
+  einem ECHTEN Gegenstand eine Verdeckung vermissen (Leon laeuft hinter etwas durch und bleibt sichtbar), ist eine Freistellung
+  wie in STAGE1/2 der sichere Weg (PNG unter pri/ oder F9-Marke) - bitte die Kamera nennen.
+- **Ihre 53 STAGE2-Masken:** an der exe geprueft. Zwei Fehler gefunden und behoben: in **ROOM2040 Kamera 7** und **ROOM2030
+  Kamera 7** verdeckte der Handlauf des Gelaenders Leon/Elza HINTER dem Gelaender nicht (der Handlauf bekam eine viel zu ferne
+  Tiefe); jetzt kommt die Tiefe aus der Gelaenderzelle, Leon hinter dem Gelaender ist verdeckt (Bilder
+  `M_bilder/NB1_M4_ROOM2040_C07_nachher.png`, `NB1_M4_ROOM2030_C07_nachher.png`). In ROOM2030 Kamera 7 ist Ihre Freistellung 07_01
+  dafuer an der Gelaenderecke in zwei Teile geteilt (Nord- und Ostgelaender, Ihre PNG bleibt unveraendert). ROOM2030 Kamera 15:
+  die Reling uebermalt Leon/Elza NICHT - was die Abnahme dort gezaehlt hatte, war die Spinne hinter Leon. ROOM20A0 Kamera 12,
+  12_02 bleibt weg (Ihr Entscheid "Weglassen ist ok"). ROOM2020 Kamera 3 an der Kurbel: Reling ueber Leons Beinen ist richtig.
+- Assets fuer das Paket: `re15_port/shared_assets/PSX/MASKS/` - die 30 ROOM3040..6031.MSK (nur Tiefenwerte geaendert, NB1),
+  216 ROOMxxxx_PRIcc.TIM (Runde 41), ROOM2030.MSK + ROOM2030_PRI07.TIM/.STAND, ROOM2040.MSK + ROOM2040_PRI07.TIM/.STAND (NB1),
+  ROOM20A0.MSK + ROOM20A0_PRI12.TIM/.PBM/.STAND (Runde 41). Keine neuen Quelldateien in der Engine (Android: kein neuer
+  GLOB-Eintrag), keine Sprachdateien, keine neuen Schalter.
