@@ -316,4 +316,63 @@ DEBUG.BIN-Tabelle beim Rueckwechsel, keine Wahlfrage), M3 (EDD/EMR bei jedem Neu
 Marvin 0x0D). Basis: HEAD cb51ec29 (Stand der Abnahme 0661fc6e + Abnahme-Doku). Messdateien dieser Nachbesserung:
 Scratchpad `K41nb1/` (im Text `K41nb1/...`).
 
-### NB1.M1 Spielfigur-Schleife (Plc_flg 0x04) — in Arbeit
+### NB1.M1 Spielfigur-Schleife Clip 13 (Plc_flg 0x04) — behoben
+**Ursache.** Der Spieler-Vorschub (player_common.c `p->anim_frame++`) kannte das Clip-Ende nicht, der Zeichner hielt bei
+`cur >= fc` das letzte Bild (anim_select_common.c HOLD-LAST). Plc_flg 0x04 wurde fuer den Spieler nie ausgewertet.
+
+**Messung vorher** (selbst, Bau = Abnahme-Stand, Weg des Riegels `integration_r41_stage3szenen_b_3091`, Lauf
+`build/tests/integration/r41_stage3szenen_b_3091_wd/lauf_7d91e6dc`, Auswerter `K_belege/nb1_m1_clip13.py`): 6 Clip-13-
+Abschnitte F363-1141 (779), F1242-1745 (504), F1846-2078 (233), F2179-2338 (160), F2439-2854 (416), F3076-3239 (164) =
+2256 Bilder, **0 Spruenge 39 -> 0, 2016 Bilder auf Slot 39 gehalten** (739/464/193/120/376/124). = Abnahme-Befund.
+
+**Original** (selbst: `re15_disasm.py dis 0x80050cb8 80`, `dis 0x8001f600 20`, `read 0x80073e30 8`, `dis 0x8001b3f8 40`):
+* Spieler-Sub-Tabelle @0x80073e30[0] = 0x80050cb8 (= NPC-Tabelle @0x80076ca0[0]). Phase 1 ruft f314 mit dem KANAL
+  +0x180/+0x184: `lw a0,384(v0)` @0x80050d40, `lw a1,388(v0)` @0x80050d48, `jal 0x8001f314` @0x80050d4c.
+* f314 posiert und schiebt danach vor: `lbu v0,149(v1)` @0x8001f610, `addiu v0,v0,1` @0x8001f618, `sltu v0,v0,s4`
+  @0x8001f624, am Clip-Ende `sb zero,149(v1)` @0x8001f63c + Rueckgabe 1.
+* Clip-Ende in 0x80050cb8: `ori v0,zero,0x2` / `sb v0,6(v1)` @0x80050da4 (Phase 2 = Halten), dann `lhu v0,452(v1)`
+  @0x80050db4, **`andi v0,v0,0x4` @0x80050dbc, `beq v0,zero,0x80050dcc` @0x80050dc0, `sb v0(=1),6(v1)` @0x80050dc8**
+  (Bytes ab 0x80050dbc: `04 00 42 30 02 00 40 10 01 00 02 34 06 00 62 a0`) = mit +0x1c4 & 4 bleibt Phase 1, der naechste
+  Takt posiert Bild 0.
+* Binder FUN_8001b3f8: `andi v0,a0,0x1` @0x8001b440, `beq` @0x8001b444, `sw v0,0(t3)` @0x8001b450, `sw v0,4(t3)`
+  @0x8001b460 (t3 = 0x800acbd4 = Spieler +0x180): JEDER Record mit Marker-Bit 0 schreibt den Kanal, der LETZTE gewinnt.
+* Original-GDB-Protokoll (`K_belege/k2_orig_3091_gdb_lauf2.log.gz`, eigener Zerleger): die 6 Clip-13-Abschnitte B1-779,
+  B880-1383, B1484-1716, B1817-1976, B2077-2492, B2714-2877 laufen Bild = i % 40 (0 Abweichungen), **19/12/5/3/10/4
+  Spruenge 39 -> 0**, fl 0x04/0x24 (0x20 = Halbtakt-Kippbit).
+* Zensus aller RDTs (`K_belege/nb1_m1_zensus_plcflg04.txt`, `nb1_m1_zensus_spieler_schleife.txt`, Skripte daneben):
+  Spieler-Plc_flg 0x04 in ROOM1011 @0x00D9E, ROOM1031 @0x029A8/@0x02A10, ROOM2020/2021 @0x00AA0 (Kurbel, Spur E), ROOM3061
+  @0x010F8/@0x01126 (Spur J), ROOM3091 @0x01712/@0x01906/@0x01A36/@0x01B0E/@0x01B7A/@0x01CA0, ROOM6031 @0x0104E - jedes Mal
+  im selben Takt direkt nach Plc_motion(0,n) und nie vor dem naechsten Spieler-Plc_motion/Plc_dest/Plc_ret geloescht
+  (ROOM11B0 sub04 setzt 0x04 nach Plc_dest = Geh-Sub, nicht Sub 0).
+
+**Befund am Port-Bestand.** Spur E hat denselben Mechanismus fuer die Kurbel ROOM2020 gebaut (`engine/src/plcloop_r41.c`,
+abgenommen, in `r41/integration`, NICHT im master). Dessen Clip-Laenge nimmt den ERSTEN Record mit Marker-Bit 0. In
+ROOM3091 ist das rec0 (Marker 1, 1 Clip, Platzhalter) -> Clip 13 ausser Bereich -> Rueckfall PL00-Bank = fuer Sherry
+PL0F-EDD Clip 13 = 1 Bild -> Wrap in JEDEM Takt (Slot 0 eingefroren). Ohne Korrektur haette die Integration E+J+K den
+Fehler nur verschoben; eine zweite, eigene Schleife der Spur K haette doppelt gewrappt.
+
+**Aenderung** (2 Commits):
+1. dbea1cd2 - Spur-E-Modul UNVERAENDERT uebernommen (Blobs `plcloop_r41.c` c5a86597, `re15_plcloop_r41.h` 8c6a15f2 =
+   Stand r41/kleinkram_b f63b4fb2 = r41/integration; Haken player_common.c 2 Zeilen wortgleich zu 871826e7).
+2. 576e6ac7 - `rbj_spieler_clip_len`: Record = `re15_rbj_binder_spieler` (Spur J, @0x8001b450), +9 Zeilen mit Kommentar
+   "Runde 41 Spur K (Nachbesserung 1, M1)". ROOM2020 (ein Record) unveraendert.
+
+**Integrationshinweis.** `plcloop_r41.c` meldet git beim Zusammenfuehren mit r41/integration als add/add; die K-Fassung
+ist E's Fassung + Binder-Record (Obermenge) -> K-Fassung nehmen. Der player_common.c-Haken ist wortgleich (kein
+Konflikt). Querbezug: dieselbe Schleife greift jetzt auch fuer Elza in ROOM3061 sub02 (@0x010F8/@0x01126, Spur J) und in
+ROOM1011/1031/6031 (byte-true, derselbe Handler 0x80050cb8).
+
+**Messung nachher** (Bau 576e6ac7, gleicher Weg, Lauf `lauf_627ebc8b`): 6 Abschnitte 779/504/233/160/416/164, **Spruenge
+19/12/5/3/10/4, 0 Abweichungen von Bild = i % 40, kein gehaltenes Bild**; letzte Bilder je Abschnitt = Original
+(16,17,18 / 21,22,23 / 30,31,32 / 37,38,39 / 13,14,15 / 1,2,3). Clipfolgen aller drei Figuren unveraendert = Original.
+Bildlauf (`K41nb1/lauf_bild3091.sh`, RE15_FRAMEDUMP an den Original-Takten, Port-Bild = 362 + B): Slots an B306/B1106/
+B1506/B1906/B2306 = 25/26/22/9/29 = Original f25/f26/f22/f9/f29. Sherry-Ausschnitt 52x100 @ (180,80), Schwelle 24, gegen
+das jeweils erste Bild: **Port nachher 32/11/95/49 Pixel** (vorher laut Abnahme 0/0/0), Original 28/22/123/51. Bilder
+`K_belege/nb1_m1_sherry_clip13_orig_vs_port.png` (Zoom) und `K_belege/nb1_m1_3091_orig_vs_port_voll.png` (gleiche
+Textzeilen, gleiche Gesten; der Lichtton ist H2 der Abnahme, nicht Teil von K2).
+
+**Riegel.** `unit_r41_stage3szenen_b_schleife` (echte RBJ ROOM3091: Binder rec2, Clip 13 = 40, 779 Takte -> Bild = i % 40,
+19 Umlaeufe; ohne 0x04 Halten auf 39; ROOM2020 = 40) und `integration_r41_stage3szenen_b_3091` mit erweiterter Auswertung
+`szene` (6 Abschnitte, Laengen = Original, Bild = i % 40, Spruenge = (Laenge-1)/40). Gegenprobe am Vorher-Lauf
+lauf_7d91e6dc: `FAIL` (0 Spruenge, 721/453/189/117/367/121 Abweichungen).
+
