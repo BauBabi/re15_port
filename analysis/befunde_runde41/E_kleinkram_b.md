@@ -226,3 +226,35 @@ Stand bei Beginn: HEAD 88bfae38 (Code = ed7bd4ff), exe md5 757da3a9132018190427a
 `<sp>/abn0_base/re15_port/build/platform/pc/re15_pc_abn0_basis.exe` (Basis 116e8b0f, md5 2310696431b26d115bc00f3796663c01).
 
 ### Mangel 1 — "Herumfliegen" an der Kurbel 2020: Anlauf-Varianten (in Arbeit)
+Werkzeug: `<sp>/E41n1/run.sh` (exe-Kopie, eigener Laufordner), Bildboegen `<sp>/E41n1/sheet.py` / `pairs.py` (oben Original
+v(b+2k), unten Port F(b'+k), Port +5 px wie Abnahme §3.7). Gemeinsam: `RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72
+RE15_INPUT_SCRIPT_START=300 RE15_INPUT_SCRIPT_BASIS=spiel RE15_SCD_TRACE=1 RE15_ANIM_TRACE RE15_MOTRACE RE15_STATE_LOG
+RE15_FRAMEDUMP` (Dialog-Tasten per RE15_PRESS). Gelaendeform (RE15_FLOOR_DUMP, Lauf `floor2020`, Bild `<sp>/E41n1/floor2020_kurbel.png`):
+der Steg auf Band 1 laeuft in x (x >= -300), die Spielermitte bleibt bei x 2600 in z -3018..-3382 (gemessen a1: Lauf in -z
+endet bei z -3382); die Zone Slot 3 (2200..3000 / -4150..-3350, `Aot_set` @0x009AE, sat 0x31 = nur Vorwaertspunkt 620) liegt
+an der Suedkante -> erreichbar von Westen, Osten und frontal (Gier um 1024); "Norden" ist Reling/Abgrund.
+
+| Lauf | Anlauf | Ausloesung | waehrend Message_on @0x0A5C/@0x0A62 | Pos_set @0x0A8C .. Plc_motion @0x0A9C |
+|---|---|---|---|---|
+| a1_walk_s | Gehen frontal (2600,-1500 -> Steg), A beim Gehen | F309 (2600,-3382) Gier 1024 | Geh-Pose eingefroren (Clip 5 Slot 9/10, Pause) | F383 -> (3650,-3018) Gier 1024, mo 200 (Clip 3) 20 Bilder, F403 Clip 0 |
+| a2_run_s | Rennen frontal | F307 (2600,-3382) | Renn-Pose eingefroren (Clip 0 Slot 6/7) | wie a1 |
+| b1_west_geh | Gehen von Westen, Rechtsbogen, A | F309 (1971,-3232) Gier 144 | Geh-Pose eingefroren | F453 wie a1 |
+| b2_ost_geh | Gehen von Osten, Linksbogen, A | F309 (3229,-3231) Gier 1904 | Geh-Pose eingefroren | F453 wie a1 |
+| b3_west_renn | Rennen von Westen, Bogen, A | F308 (2182,-3330) Gier 216 | Renn-Pose eingefroren | F453 wie a1 |
+| b4_dreh | Drehen auf der Stelle (R), A | F310 (2600,-3200) Gier 960 | | F403, HUD (RE15_POS_HUD) y -1800 durchgehend |
+| c1_aim_a | Zielen R1 1 s, Schuss, loslassen, A | A waehrend des Senkens (F342) loest NICHT aus; F355 nach Senken (Clip 6 rueckwaerts bis F350) | Stehen 200 | wie a1 |
+| c2_schuss_a | Schuss, sofort loslassen, A | F340 nicht, F350 | Stehen 200 | wie a1 |
+| e1_ost_cut3 | von (9000,-3200) nach Westen, Linksdrehung, A | F381 (3150,-3200) Gier 1760, **Kamera Cut 3 schon aktiv** | Leon sichtbar | F523 Sprung (3150,-3200)/1760 -> (3650,-3018)/1024 im selben Bild |
+| t2_weg2050_nach / _vor | ECHTER Weg: ROOM2050 Tuer Slot 1 (RE15_FIRE_AOT=1@30#2050, Tuerfahrt 301 Bilder) -> 2020 (11350,-3150) Gier 3072, links drehen, 3,8 s gehen, A | F186 (2914,-3388) Gier 1920; Kamera 0 -> 2 (x 8390) -> 3 (x 5430) | Geh-Pose eingefroren, F270 Stehen 200 | F343 Sprung -> (3650,-3018)/1024, F363 Clip 0; NACHHER 4 Umlaeufe, VORHER Standbild |
+
+In ALLEN Laeufen ist der Ablauf ab dem Ja derselbe wie im Stand (Abnahme §3.5): `Pos_set`, Gier 1024 aus `34 04 00 04`
+@0x0A94, 20 Bilder Stehen, Plc_motion(0,0,0) -> Raum-RBJ Clip 0 mit 7-Bild-Blende (@0x80050cfc), Kurbeln. Kein Abheben,
+kein Gleiten, keine Fremdpose: Spielerlage x/z/y bleibt (3650,-1800,-3018) bis Plc_ret (state.txt, HUD b4).
+(d) Add_speed-Ziel, selbst disassembliert: Work_set LAB_80040d2c loescht die 6 Geschwindigkeitsworte (thread+0x158,
+Schleife @0x80040d34-3c), Art pc[1]: 1 -> @0x80040da4 `addiu v0,v0,-13740` = Spieler 0x800aca54 -> `sw v0,340(a0)`
+(thread+0x154); 3 -> @0x80040dd4..@0x80040df0 Objekt 0x800b3f98 + idx*148. Add_speed LAB_80040f40 `lw a1,340(a0)` addiert
++0x158/+0x15a/+0x15c auf +0x34/+0x38/+0x3c dieses Ziels. sub02 bindet @0x0AA8 `2e 03 01` = Objekt 1 -> der Spieler wird
+im Original NIE bewegt; Port scd_work_bind Art 3 = Prop-Pool obj_id (scd_vm.c), Add_speed nur auf t->work_slot/
+work_prop_idx — Spielerlage im Port unveraendert (oben), Buehne faellt in Cut 4 (Bildbogen `<sp>/E41n1/pr_w03_cut4.png`).
+Nebenbefund Kamera (nicht Spur E): Port-Lauf g2 (Stand bei (9000,-3200), Kamera-Spur state.txt) springt F1..F299 JEDES
+Bild zwischen Cut 0 und Cut 2; im Original-Video `o_hg_ost.mp4` steht derselbe Ort ~100 Videobilder ruhig auf Cut 0.
