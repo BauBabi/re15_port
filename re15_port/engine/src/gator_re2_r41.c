@@ -995,6 +995,7 @@ void re15_gr2_koerper_quelle(int (*kontakt)(int32_t x, int32_t z, int yaw, int32
 static const int k_bahn_bone[GR2_BAHN_BONES] = { 0, 1, 5, 6, 7 };   /* Rumpf 0/1, Hals 5, Kopf 6, Kiefer 7 */
 typedef struct {
     int     n;
+    int     n_a;                                      /* Bilder der ersten Clip (Clip 6 bzw. 2) */
     int32_t skala;
     int32_t w[GR2_BAHN_MAX][2];                       /* Wurzelschritt DIESES Bildes im Rig (x laengs, z quer), skaliert
                                                        * wie gr2_wurzel_schritt (q12mul je Komponente), 0 ohne Schritt */
@@ -1035,6 +1036,7 @@ static const gr2_bahn_t *gr2_bahn(const re15_actor_t *e, int art)
             b->knick[b->n] = (uint8_t)(k == 1 && f == n - 1);
             b->n++;
         }
+        if (k == 0) b->n_a = b->n;
     }
     g_anim_pose_actor = save;
     return b;
@@ -1074,56 +1076,112 @@ static int gr2_bahn_frei(const gr2_bahn_t *b, int32_t sx, int32_t sz, int y0, co
             int32_t bx, bz; gr2_dreh(yaw, b->b[t][i][0], b->b[t][i][1], &bx, &bz);
             bx += rx; bz += rz;
             if (s_becken_fn(bx, bz, 0)) return 0;
-            if (pl && gr2_abstand(bx, bz, pl->x, pl->z) < GR2_LEON_MIN) return 0;
+            if (pl) { int64_t qx = bx - pl->x, qz = bz - pl->z;
+                      if (qx * qx + qz * qz < (int64_t)GR2_LEON_MIN * GR2_LEON_MIN) return 0; }
             if (t == b->n - 1 && i == 3 && kopf_ende) *kopf_ende = pl ? gr2_abstand(bx, bz, pl->x, pl->z) : 0;
         }
     }
     if (ende) { ende[0] = rx; ende[1] = rz; }
     return 1;
 }
-/* Bahnende (Wurzel im letzten Bild) ab (sx,sz) mit Gier y0, Schritt fuer Schritt wie gr2_bahn_frei. */
-static void gr2_bahn_ende(const gr2_bahn_t *b, int32_t sx, int32_t sz, int y0, int32_t ende[2])
+/* Wurzel nach den ersten n_bis Bildern ab (sx,sz) mit Gier y0, Schritt fuer Schritt wie gr2_bahn_frei. */
+static void gr2_bahn_bis(const gr2_bahn_t *b, int n_bis, int32_t sx, int32_t sz, int y0, int32_t ende[2])
 {
     int32_t c = re15_cos_q12(y0), sn = re15_sin_q12(y0);
     int32_t rx = sx, rz = sz;
-    for (int t = 0; t < b->n; t++) {
+    for (int t = 0; t < n_bis; t++) {
         rx += (int32_t)(((int64_t)c * b->w[t][0] + (int64_t)sn * b->w[t][1]) >> 12);
         rz += (int32_t)((-(int64_t)sn * b->w[t][0] + (int64_t)c * b->w[t][1]) >> 12);
     }
     ende[0] = rx; ende[1] = rz;
 }
+static void gr2_bahn_ende(const gr2_bahn_t *b, int32_t sx, int32_t sz, int y0, int32_t ende[2]) { gr2_bahn_bis(b, b->n, sx, sz, y0, ende); }
 static int gr2_peilung(int32_t fx, int32_t fz, int32_t tx, int32_t tz)
 {
     return ((int)re15_atan2_q12(tz - fz, tx - fx) - 0x400) & 0xfff;    /* Boss-Konvention: Ost 0, Sued 1024 */
 }
 static int gr2_wdiff(int a, int b) { int d = ((a - b + 0x800) & 0xfff) - 0x800; return d < 0 ? -d : d; }
 
+/* Ergebnis-Speicher: die Lage haengt nur von (Gator x/z/Gier, Leon x/z, Skala) ab (Bahn, Becken und Push-Kreise sind
+ * feste Daten) - gleiche Eingabe, gleiche Lage. Im Spiel einmal je Raumeintritt; die Sweep-Riegel (probe_gator_sweep:
+ * 3342 Paare, 31 Leon-Lagen, Gator immer am Lauerplatz) rechnen so jede Eingabe nur einmal. */
+#define GR2_LAGE_SPEICHER 32
+static struct { uint8_t ok, gefunden; int16_t yaw_in, yaw_aus; int32_t gx, gz, lx, lz, s, ax, az; } s_lage[GR2_LAGE_SPEICHER];
+static void gr2_intro_lage_rechnen(re15_actor_t *e, const re15_actor_t *pl);
 void re15_gr2_intro_lage(int slot, re15_actor_t *e, const re15_actor_t *pl)
 {
     (void)slot;
+    if (!pl) { re15_gr2_log("INTRO Lage: kein Leon - Start am Ort"); return; }
+    int32_t s = gr2_scale(e);
+    unsigned h = ((unsigned)(e->x ^ (e->z << 3) ^ (pl->x << 7) ^ (pl->z << 11) ^ ((int)e->rot_y << 5))) % GR2_LAGE_SPEICHER;
+    if (s_lage[h].ok && s_lage[h].gx == e->x && s_lage[h].gz == e->z && s_lage[h].yaw_in == (int16_t)e->rot_y
+        && s_lage[h].lx == pl->x && s_lage[h].lz == pl->z && s_lage[h].s == s) {
+        if (s_lage[h].gefunden) {
+            re15_gr2_log("INTRO Lage (Speicher): von (%d,%d) yaw %d -> (%d,%d) yaw %d", e->x, e->z, (int)e->rot_y & 0xfff,
+                         s_lage[h].ax, s_lage[h].az, (int)s_lage[h].yaw_aus & 0xfff);
+            e->x = s_lage[h].ax; e->z = s_lage[h].az; e->rot_y = s_lage[h].yaw_aus;
+        }
+        return;
+    }
+    s_lage[h].ok = 1; s_lage[h].gx = e->x; s_lage[h].gz = e->z; s_lage[h].yaw_in = (int16_t)e->rot_y;
+    s_lage[h].lx = pl->x; s_lage[h].lz = pl->z; s_lage[h].s = s;
+    int32_t x0 = e->x, z0 = e->z; int16_t y0 = e->rot_y;
+    gr2_intro_lage_rechnen(e, pl);
+    s_lage[h].gefunden = (uint8_t)(e->x != x0 || e->z != z0 || e->rot_y != y0);
+    s_lage[h].ax = e->x; s_lage[h].az = e->z; s_lage[h].yaw_aus = e->rot_y;
+}
+static void gr2_intro_lage_rechnen(re15_actor_t *e, const re15_actor_t *pl)
+{
     const gr2_bahn_t *b = gr2_bahn(e, 0);
-    if (!b || !pl || !s_becken_fn) { re15_gr2_log("INTRO Lage: keine Bahn/Becken - Start am Ort"); return; }
+    if (!b || !s_becken_fn) { re15_gr2_log("INTRO Lage: keine Bahn/Becken - Start am Ort"); return; }
     static const int k_tol[3] = { 128, 256, 512 };
     int yaw_jetzt = (int)e->rot_y & 0xfff;
     for (int st = 0; st < 3; st++) {
         int64_t best = -1; int32_t bx = 0, bz = 0, bk = 0; int by = 0, bdl = 0;
-        for (int y0 = 0; y0 < 4096; y0 += 32) {
+        int y_basis = yaw_jetzt & ~31;                      /* Raster 32, von der aktuellen Gier nach aussen */
+        for (int yi = 0; yi < 128; yi++) {
+            int y0 = (y_basis + ((yi & 1) ? (yi + 1) / 2 : -(yi / 2)) * 32) & 0xfff;
+            if (best >= 0 && 4 * (int64_t)gr2_wdiff(y0, yaw_jetzt) >= best) break;   /* jede weitere Gier dreht mehr */
             int ye = (y0 + 1024) & 0xfff;
             int32_t e0[2]; gr2_bahn_ende(b, 0, 0, y0, e0);
             int32_t ex = e0[0], ez = e0[1];
+            int32_t m0[2]; gr2_bahn_bis(b, b->n_a, 0, 0, y0, m0);     /* Wurzel am Ende von Clip 6 (relativ) */
             for (int dl = -k_tol[st]; dl <= k_tol[st]; dl += 32) {
                 int32_t ux, uz; gr2_dreh((ye + dl) & 0xfff, 4096, 0, &ux, &uz);   /* Richtung Ende -> Leon, Q12 */
-                for (int32_t d = 1000; d <= 24000; d += 250) {
-                    int32_t sx = pl->x - (int32_t)(((int64_t)ux * d) >> 12) - ex;
-                    int32_t sz = pl->z - (int32_t)(((int64_t)uz * d) >> 12) - ez;
-                    if (s_becken_fn(sx, sz, GR2_KLEMM_R)) continue;
-                    int64_t k = (int64_t)gr2_abstand(sx, sz, e->x, e->z) + 4 * gr2_wdiff(y0, yaw_jetzt) + 16 * (dl < 0 ? -dl : dl);
-                    if (best >= 0 && k >= best) continue;
+                int64_t rest = 4 * (int64_t)gr2_wdiff(y0, yaw_jetzt) + 16 * (int64_t)(dl < 0 ? -dl : dl);
+                if (best >= 0 && rest >= best) continue;
+                /* S(d) = Leon - d*u - e0; |S(d) - G| ist am kleinsten bei d* = (Leon - e0 - G).u und waechst monoton
+                 * mit |d - d*| -> die Abstaende (Raster 250 in [1000, 24000]) von d* nach aussen ablaufen */
+                int64_t axv = (int64_t)pl->x - ex - e->x, azv = (int64_t)pl->z - ez - e->z;
+                int64_t dstern = (axv * ux + azv * uz) >> 12;
+                int i0 = (int)((dstern - 1000 + 125) / 250);
+                if (i0 < 0) i0 = 0; else if (i0 > 92) i0 = 92;
+                int lo = i0, hi = i0 + 1;
+                while (lo >= 0 || hi <= 92) {
+                    int i;
+                    if (lo < 0) i = hi++;
+                    else if (hi > 92) i = lo--;
+                    else {
+                        int64_t dlo = dstern - (1000 + 250 * lo), dhi = (1000 + 250 * hi) - dstern;
+                        if (dlo < 0) dlo = -dlo;
+                        if (dhi < 0) dhi = -dhi;
+                        i = (dlo <= dhi) ? lo-- : hi++;
+                    }
+                    int32_t d = 1000 + 250 * i;
+                    int32_t enx = pl->x - (int32_t)(((int64_t)ux * d) >> 12);    /* Bahnende (Wurzel) */
+                    int32_t enz = pl->z - (int32_t)(((int64_t)uz * d) >> 12);
+                    int32_t sx = enx - ex, sz = enz - ez;
+                    int64_t qx = (int64_t)sx - e->x, qz = (int64_t)sz - e->z, q2 = qx * qx + qz * qz;
+                    if (best >= 0) { int64_t lim = best - rest; if (lim <= 0 || q2 >= lim * lim) break; }   /* weitere d weiter weg */
+                    /* billige Vorpruefung: Wurzel am Bahnende, am Start und am Clip-6-Ende im Wasser ausserhalb der Klemmzone */
+                    if (s_becken_fn(enx, enz, GR2_KLEMM_R) || s_becken_fn(sx, sz, GR2_KLEMM_R)
+                        || s_becken_fn(sx + m0[0], sz + m0[1], GR2_KLEMM_R)) continue;
                     int32_t kopf = 0, ende[2];
                     if (!gr2_bahn_frei(b, sx, sz, y0, pl, &kopf, ende)) continue;
                     int abw = gr2_wdiff(ye, gr2_peilung(ende[0], ende[1], pl->x, pl->z));
                     if (abw > k_tol[st]) continue;                 /* am echten Bahnende nachgeprueft */
-                    best = k; bx = sx; bz = sz; by = y0; bk = kopf; bdl = abw;
+                    best = (int64_t)gr2_abstand(sx, sz, e->x, e->z) + rest; bx = sx; bz = sz; by = y0; bk = kopf; bdl = abw;
+                    break;                                          /* weitere d dieser Gier/Toleranz nur teurer */
                 }
             }
         }
@@ -1145,9 +1203,12 @@ int re15_gr2_dash_planen(int slot, const re15_actor_t *e, const re15_actor_t *pl
     if (!b || !pl || !s_becken_fn) return 0;
     int yaw_jetzt = (int)e->rot_y & 0xfff, best_y = -1, best_a = 0, best_k = 0;
     int64_t best = -1;
-    for (int y0 = 0; y0 < 4096; y0 += 16) {
+    int y_basis = yaw_jetzt & ~15;                          /* Raster 16, von der aktuellen Gier nach aussen */
+    for (int yi = 0; yi < 256; yi++) {
+        int y0 = (y_basis + ((yi & 1) ? (yi + 1) / 2 : -(yi / 2)) * 16) & 0xfff;
         int dreh = gr2_wdiff(y0, yaw_jetzt);
         if (dreh > 0x400) continue;                         /* hoechstens eine Vierteldrehung vor dem Dash */
+        if (best >= 0 && 4 * (int64_t)dreh >= best) break;  /* jede weitere Gier dreht mehr */
         int32_t en[2]; gr2_bahn_ende(b, e->x, e->z, y0, en);
         int a = gr2_wdiff((y0 + 1024) & 0xfff, gr2_peilung(en[0], en[1], pl->x, pl->z));
         int64_t k = 4 * (int64_t)dreh + (int64_t)a;         /* kleinste Drehung, dann Ausrichtung auf Leon */

@@ -341,6 +341,11 @@ int main(void)
     }
     re15_gr2_biss_cd(slot, 0);            /* Intro-Biss-Sperre 110 (@0x8010091c) weg: der Biss soll sofort kommen */
     e->x = -6000; e->z = -22000; e->y = -1200;
+    /* Nachbesserung 2 (Abnahme 1 M2, Entscheid B7): der Intro endet jetzt mit der Gier, die auf Leon zeigt (Startlage
+     * gr2_intro_lage) statt immer mit 2113 - der Riegel stellt den Gator darum mit Blick auf Leon (Ost, Gier 0) neu hin,
+     * damit der Biss wie bisher frontal in offenem Wasser faellt (gemessen ohne diese Zeile: Biss bei Gier 208 waehrend
+     * der Wende, Sitz-Abweichung dRef (-8,-1,-4) > 5). Die Pins bleiben unveraendert. */
+    e->rot_y = 0;
 
     int fress_gesehen = 0;
     /* ⛔ WANN STARTET DIE TODES-PRAESENTATION? (Nutzer 2026-09-13, zweite Meldung:
