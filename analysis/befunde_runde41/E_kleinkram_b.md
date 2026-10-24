@@ -386,3 +386,68 @@ Messung vorher (Abnahme 1 §6.1, nicht wiederholt): `cam=` wechselt F1..F300 299
 RVD ROOM2020 (RDT-Header +0x28 = 0x158, selbst gedumpt `<sp>/E41n2/rvd.py`): z1 @0x016C `01 ff 00 02` Cut 0 -> 2,
 Viereck (8000,-4500)(8000,-2000)(9000,-2000)(9000,-4500); z5 @0x01BC `01 ff 02 00` Cut 2 -> 0, Viereck
 (9000,-4500)(9000,-2000)(10000,-2000)(10000,-4500). Beide teilen die Kante x = 9000 — der Messpunkt liegt GENAU darauf.
+
+#### E-N1 Original gemessen (DuckStation-GDB, `<sp>/E41n2/gdb_cam.py` / `gdb_cam2.py`, Muster F_nb4/gdb_affen.py)
+Haltepunkte 0x8001ccf4 (Spiel-Task direkt hinter dem RVD-Scan-Aufruf @0x8001ccec, einmal je Durchlauf), 0x800142f4
+(FUN_800142f4 = einziger Schreiber des angeforderten Cuts DAT_800afbb5 @0x80014300), 0x80021558 (Present FUN_8002137c:
+`jal FUN_80021bbc` = Apply/Hintergrund neu laden), 0x800215bc (erstes DrawOTag). Start `hg_ready.sav` (Handgun, Cut 0),
+Spielerlage beim ersten Halt per GDB auf (9000,-3200) Gier 2048 (+0x34/+0x3c int32, +0x40/+0x44 int16).
+- `o_cam9000.txt` (240 Durchlaeufe): `req` (DAT_800afbb5) **2,0,2,0,... jeden Durchlauf** (120x 0, 120x 2), FUN_800142f4 je
+  Durchlauf genau einmal aus `ra=800142b4` (= Ruecksprung hinter `jal 0x800142f4` @0x800142ac im RVD-Scan), `disp`
+  (DAT_800b0fe4) laeuft einen Durchlauf hinterher. VSync-Abstand je Durchlauf **12/13** statt 2: jeder Durchlauf laedt
+  den Hintergrund von CD.
+- `o_cam9000_draw2.txt`: 40 Durchlaeufe auf der Kante: **39x RELOAD (@0x80021558), 1x DrawOTag** (nur der erste nach dem
+  Patch); danach Lage (8990,-3200) (nur in z1): 1 Cut-Wechsel, 2 RELOAD, dann **38x DrawOTag**, VSync-Abstand 2.
+=> Das Original schaltet auf der gemeinsamen Kante GENAUSO jedes Bild 0 <-> 2 wie der Port (FUN_80014230: erste
+   enthaltende Zone gewinnt, @0x80014298 `jal 0x80014368` / @0x800142ac `jal 0x800142f4` / @0x800142b4 `j 0x800142d8`,
+   keine Hysterese; FUN_80014368 zaehlt die Kante zu beiden Vierecken: alle vier Pruefungen `slt` @0x800143ac/@0x800143c8/
+   @0x80014408/@0x80014424 sind bei Produkt 0 falsch). Was das Original NICHT tut, ist ZEICHNEN: Present FUN_8002137c
+   @0x800214f4-@0x80021514 (angezeigt != angefordert -> `sb 1,DAT_800b5457`), @0x80021530/@0x80021538 dirty ->
+   @0x80021558 `jal FUN_80021bbc` + @0x80021560 `j 0x800215fc` ueberspringt die drei DrawOTag @0x800215bc/@0x800215d0/
+   @0x800215e4 UND den Pufferwechsel @0x800215f4 `xori`/@0x800215f8 `sb DAT_800aca34`. Das Bild bleibt stehen, solange jeder
+   Durchlauf ein Apply ist — "steht ruhig auf Cut 0" im Video `o_hg_ost.mp4` (Bilder 0..99 ohne ein geaendertes Pixel) ist
+   ein EINGEFRORENES Bild, kein ruhiger Cut.
+- Ursache im Port: platform/pc/main.c (Kopfkommentar vor `s_last_cut_idx`) "Bewusst NICHT nachgebaut ... das Original zeigt
+  im Anforderungsbild das VORIGE Bild noch einmal (@0x80021560 ueberspringt DrawOTag und den Pufferwechsel), der Port zeigt
+  das mit dem alten Cut gezeichnete Bild N". Auf der Kante ist JEDES Bild ein Anforderungsbild -> der Port zeigt
+  abwechselnd Cut 0 und Cut 2, das Original ein stehendes Bild.
+
+### Mangel 2 / E-N2 — Geh-Anlauf: Original gemessen (DuckStation-GDB, `<sp>/E41n2/gdb_geh.py`, Lauf `o_geh1.txt`)
+Eingabe ohne Pad: am Ende der Pad-Routine FUN_80030444 (@0x80030638 `jr ra`) die virtuellen Worte 0x800ac768 (gehalten) /
+0x800ac76c (Flanke) / 0x800ac770 (Vorbild) geschrieben, Pad-Pause wie das Original (@0x800304f4-@0x8003051c: g_pauseflags &
+0x01000000 -> gehalten &= 0xf000). Protokoll am Eingang des Spieler-Dispatchers FUN_80031c44 (vor dem Spieler-Takt
+@0x8001ce0c). Start `hg_ready.sav` (2600,-3018) Gier 1024, UP gehalten (virt. Bit 0), Aktion (virt. 0x80|0x40|0x4000) in
+Pad-Bild 8, danach Bestaetigung virt. 0x4000 alle 12 Bilder. Die Ja-Eingabe ist damit zuverlaessig (1 Lauf, kein Fehlversuch).
+| Bild | Zustand (vor dem Spieler-Takt) |
+|---|---|
+| n1..n8 | Gehen `cmd 1/1/1/0`, Clip 5 Bild 1..8, z -3077 -> -3382 (Kante) |
+| n8 | Aktions-Flanke |
+| n9 | msg 0 offen (`pause ffff0007`, `msg 00800080`), Faden t2 @0A61 (Message_on 0 @0x0A5C + Evt_next @0x0A60 im selben Takt); Clip 5 Bild **9** |
+| n46 | Bestaetigung -> der Nachrichten-Takt dieses Bilds schliesst msg 0 |
+| n47 | msg 1 (Frage) schon offen (`msg 00800080`), t2 @0A67: Message_on 1 @0x0A62 + Evt_next @0x0A66 liefen im SKRIPT-Takt dieses Bilds VOR dem Spieler; Clip 5 Bild **9** (kein Luecken-Bild) |
+| n94 | Bestaetigung im Auswahl-Zustand 4 (`msg 00800480`) -> @0x80028570 `andi 0x4000` -> @0x800285a4 Restore |
+| n95 | `pause 01000007` (Set(2,7) @0x0A80), Frage zu, t2 @0A99 (Ifel_ck @0x0A68 ... Pos_set @0x0A8C ... Sleep @0x0A98 alles im Skript-Takt dieses Bilds), Lage **(3650,-2925)** = Pos_set, noch Gehen 1/1/1/0 Clip 5 Bild 9 |
+| n96..n113 | `cmd 1/0/1/0`, **Clip 3 Bild 0**, Lage (3650,-3018) — der Spieler-Takt von n95 hat das Gehen beendet |
+| n114/n115 | Sleep 20 aus -> Plc_motion @0x0A9C: `cmd 4/0/0/0` Clip 0 Bild 0, dann 1..39, n155 wieder 0 (Schleife) |
+Geh-Stopp (selbst disassembliert): Kommando 1 = 0x80073f90[1] = 0x80031de8, Unterzustand +5 ueber DECIDE-Tabelle
+@0x80073fb0 / ANIMATE @0x80073ff0; Gehen = [1] 0x800322e8: @0x80032328 `andi v0,a2,0xf` (keine Richtung im virt. Wort) ->
+@0x80032334 `j 0x8003247c` mit `ori v0,zero,0x1` -> @0x80032480 `sw v0,DAT_800aca58` (+4..+7 = 1,0,0,0); Stehen-ANIMATE
+[0] 0x80032038 Fall 0: @0x80032080/@0x80032088 +0x94 = 3, @0x80032094 +0x95 = 0, @0x8003208c/@0x8003209c +0xe3 = 7. Der Port
+bildet das schon ab (player_common.c:740 / :897-937: mo 200 Clip 3, frac 7) — der Stopp selbst ist gleich.
+Frame-Ordnung des Originals (selbst disassembliert): Hauptschleife @0x80020c88 `jal 0x80030444` (Pad) -> @0x80020de4
+`jal 0x800298b0` (Task-Plan -> Spiel-Task FUN_8001c958: @0x8001ccec RVD, @0x8001cdec `jal 0x8003f038` SKRIPT, @0x8001ce0c
+`jal 0x80031c44` SPIELER, @0x8001ce1c AOT, @0x8001ce2c ESP, @0x8001ce34 Item-Modal) -> @0x80020f3c `jal 0x80010000` ->
+@0x80010044 `jal 0x800280b4` NACHRICHTEN-TAKT (-> @0x800280dc FUN_80028134) -> @0x80020f4c Present. Der Skript-Lauf ist
+mit @0x8003f040-@0x8003f04c (g_pauseflags & 0x02000000) angehalten, solange eine Nachricht offen ist; Message_on
+@0x800404f4 kehrt sofort mit 1 zurueck (@0x80040520), die Pause-Maske ist pc[2..3] << 16 (@0x80040508/@0x8004051c).
+Abweichungen des Ports (R2_geh, Abnahme 1, nicht wiederholt):
+1. LUECKEN-BILD: Port-Reihenfolge SKRIPT (main.c `scd_vm_tick`) -> NACHRICHTEN (`re15_msg_tick`) -> SPIEL (`re15_game_step`).
+   Schliesst msg 0 im Nachrichten-Takt, ist der Spieler im SELBEN Bild frei (F328 Clip 5 Bild 9 -> 10). Im Original laeuft
+   der Spieler-Takt VOR dem Nachrichten-Takt -> kein Luecken-Bild (n46/n47 Bild 9).
+2. FRAGE PARKT: op_message_on haelt den Faden bei einer Auswahl-Nachricht AUF dem Opcode (return 2) und laeuft erst im Bild
+   nach dem Schliessen weiter (F382 @0x0A62 -> @0x0A66 Evt_next), Pos_set erst F383. Im Original stand der Faden schon seit
+   dem Oeffnen hinter Evt_next (n47 @0A67) und laeuft im ersten Bild nach dem Schliessen bis Sleep (n95). Census der
+   ausgelieferten RDTs (`<sp>/E41n2/choice_census.py`): 102 Auswahl-Message_on, Masken 0xffff0000 (69) und 0xff800000 (33)
+   — ALLE mit dem Skript-Bit 0x02000000, d.h. im Original haelt die Pause den Faden, nicht der Opcode.
+3. Folge im Port: nach der Frage zwei Bilder (F381/F382) Stehen 200 an der ALTEN Stelle, Sprung erst F383; im Original
+   Sprung + Stopp im selben Bild (n95), und dieses Bild ist ein Apply-Bild (Cut_chg @0x0A7E) -> stehendes Bild (E-N1).
