@@ -9,6 +9,12 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-24 05:40-06:40 **Nachbesserung 1** (Abnahme 0 `C_abnahme_0.md`; Opus): §0b je Mangel. Code: M1 (Kisten-Hebel
+  Ereignis 2 gesperrt), M3 (Bank-5-Marker nur in 2030), M8 (Text 49); Riegel: unit +16 Pruefungen (255), _b E2/E3/E4,
+  C misst die Blendenfarbe im beschleunigten Renderer (M4), neuer Riegel `integration_r41_ventilkette_szene` (M2,
+  ohne den Haken der Spur A `Skipped`). Die ganze Kette in EINEM exe-Lauf mit dem wortgleichen Haken der Spur A
+  gemessen (temporaerer Messbau, nicht committet, Quelle danach zurueck, ohne Haken neu gebaut). Entscheidungsfragen
+  f/g/h/i (§7) an den Orchestrator (M5, M7, H2, M6). Tests §5 "Nachbesserung 1".
 * 2026-10-24 ab 05:40 (Nachbesserung 1 nach Abnahme 0, `C_abnahme_0.md`, Opus). Baum sauber (`status --porcelain`
   leer, HEAD 4af8fa3d). Arbeitsplan je Mangel M1-M9 + H1-H3 in §0b; Messordner scratchpad `r41c_nb1/`.
 * 2026-10-24 02:51-03:10 (vierte Fortsetzung, Opus; Vorgaenger vom Sitzungslimit ~01:00 beendet). Baum sauber
@@ -71,8 +77,10 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 | 5 2050: Hebel erst nach dem Pult-Raetsel (80 V) | §2 (Hebel immer bedienbar) | §1.4 sub04 @0x022E6, Slot 8 @0x01D38, Cursor @0x01D4C, 2060/11F0/RE2 ROOM2130 | §3.5 | §4 "Pult 2050", "P5 Pult -> Hebel", "P5 Hebel vorher" | unit F; _b Laeufe D/E/J (Elza 2051) |
 | 6 2080-Rechner leert auch 2030 | §2 ((3,245) Raum-Merkflag) | §1.5 sub02 @0x00C86..@0x00CF1 | §3.6 | §4 "Punkt 6 am Spiel", "P6 2030 nach dem Rechner" | unit G; _b Lauf I |
 
-unit = unit_r41_ventilkette (Abschnitte A-G, D2), _b = integration_r41_ventilkette_b. Offen nach Messung: §6
-(Querbezug A; Ring-Eintritt in das geflutete 2030 = Frage §7 f).
+unit = unit_r41_ventilkette (Abschnitte A-H, D2), _b = integration_r41_ventilkette_b, _szene =
+integration_r41_ventilkette_szene. Offen nach Messung: §6 (Querbezug A; Ring-Eintritt in das geflutete 2030 = Frage
+§7 f). **Nachbesserung 1 (§0b):** Punkt 5 + Kisten-Hebel (M1, unit F, _b E2/E3/E4), Punkte 3/4 ganze Kette in einem
+Lauf mit dem Haken der Spur A (M2, _szene), Blendenfarbe (M4, integration C), Bank 5 (M3, unit H), Text 49 (M8).
 
 ## 0b. Nachbesserung 1 (Abnahme 0 vom 2026-10-24, `C_abnahme_0.md` §4) — je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher
 
@@ -113,9 +121,14 @@ Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "
     has no power. The switchboard must be set first."`; kein Cut_chg(4), kein Member_set der Kisten/des Wassers.
     (Der Plan wartet danach 600 Bilder in der Nische; ohne die Wasser-Szene greifen die Gegner des Raums an und
     toeten Leon — Messmittel, kein Befund; deshalb endet dieser Lauf im Timeout.)
+  - Kurzlauf scratchpad `r41c_nb1/mess/kisten2` (Aufbau wie Riegel E2, Framedumps F290-520/10): Aktion F330 ->
+    `[ventilkette41] ROOM2050 Ereignis 2 -> Port-Programm 2050_hebel_sperre` -> `[msgtext] room=2050 id=40 ...`, 0x
+    Cut_chg(4), Ende `EXIT_AT: Bild 520 in Raum 2050`. Bildbogen `C_belege/nb1_kisten_hebel_sheet.png` (Text 40, kein
+    Wasser-Cut; die Sprung-Kamera Cut 0 zeigt die Nische nicht).
   - Riegel integration_r41_ventilkette_b, neue Laeufe E2 (Leon, Kisten ohne Pult -> gesperrt), E3 (Gegenprobe mit
-    Bit 106 -> Original sub02: msg 0, Kisten -17700, Cut 4, obj 5 -5000 = das Kistenraetsel bleibt nach dem Pult
-    loesbar), E4 (Elza 2051, Kisten ohne Pult -> gesperrt). Ergebnis §5 "Nachbesserung 1".
+    Bit 106 -> Original sub02: `[msg] room=2050 id=0`, `obj=0x01 m=0 → val=-17700` F456, Cut_chg(4), `obj=0x05 m=1 →
+    val=-5000` F657 = das Kistenraetsel bleibt nach dem Pult loesbar), E4 (Elza 2051, Kisten ohne Pult -> gesperrt):
+    `Passed 444.40 sec` (§5 "Nachbesserung 1").
 
 ### M2 (hoch, Punkte 3/4) — 20B0-Auswasch-Szene braucht den AUTO-Haken der Spur A
 * **Ursache (Port, nicht Spur C):** `re15_aot_scan` ueberspringt waehrend einer Szene jeden Platz ausser CAM_SWITCH
@@ -204,7 +217,11 @@ Die Messungen der Abnahme (`abn0/mess/*`) werden NICHT wiederholt, sondern als "
   Blau >= 20. Schwellen aus der Messung: scratchpad `r41c_nb1/mess/flut_d3d` (direct3d, 05:43), Bildmitte F2700
   (24,29,24), F2740 (30,37,30), **F2750 (0,0,30)**, F2760 (0,0,30), Vollbild F2750 (0,0,30); `[fade-log] config ch=0
   abr=2 mask=6 step=0 bucket=7` / `kick ch=0 value=0x5000`.
-* **Messung nachher (Riegel):** __RIEGEL_C__
+* **Messung nachher (Riegel):** `integration_r41_ventilkette` (ctest unten, `Passed 213.05 sec`), Lauf C
+  `build/tests/integration/r41_ventilkette/lauf_6b7e0e00_c`: `[render] SDL-Renderer direct3d, Videotreiber windows, ABR2
+  (B-F) ok`; Flut F2621 (cam 4), Tod F2746 (hp -1) = 125 Bilder; Bildmitte (Werkzeug nachgerechnet) F2740 (29,36,29),
+  F2742 (30,37,30), F2744 (30,37,30), **F2746 (0,0,30)** (die Blende steht im Todesbild selbst), F2748..F2752 (0,0,30).
+  Der Riegel wertet F2742 (vorher) gegen F2750 (nachher). Bildbogen `C_belege/nb1_blende_d3d.png` (Messlauf flut_d3d).
 * **Einschraenkung (auch §4/§5):** mit `RE15_SOFTWARE_RENDER=1` (nur Mess-/Testbetrieb) erscheint die Ertrink-Blende
   deckend gelb; was der Nutzer sieht (direct3d/opengl/GLES2), ist der blaue Schleier. Eine B-F-Nachbildung im
   SDL-Software-Renderer waere render_pc.c (Spur D) und betraefe alle ABR-2-Flaechen — nicht Teil dieser Spur.
@@ -592,6 +609,10 @@ shared_assets/PSX, pri/, synchro/, release/.
     (render_pc.c:1282 kennt nur ABR 1 additiv / 2 subtraktiv, 0/3 fallen auf subtraktiv zurueck -> "minus Blau");
     mit ABR 2 + Maske Rot+Gruen: (0,0,30) = Blau bleibt (C_belege/flut_blende_vergleich.png). Die Form ist auf der PSX
     dieselbe (GPU B-F je Kanal, Kachel-RGB = Helligkeit & Maske @0x800218d0).
+    **Renderer-Einschraenkung (Nachbesserung 1, M4):** diese Farbe gilt fuer Renderer mit subtraktiver Blende
+    (direct3d, opengl seit 81ee1efc, GLES2). SDLs Software-Renderer (`RE15_SOFTWARE_RENDER=1`, nur Mess-/Testbetrieb)
+    kennt ABR 2 nicht und zeichnet die Kachel deckend (160,160,0) gelb (Abnahme 0 L3b); Riegel C misst die Farbe
+    deshalb seit Nachbesserung 1 im beschleunigten Renderer (§0b M4, §5).
   - **Spritzer nachgemessen** (Vorgaenger 00:43-00:45, exe 00:41 = Stand ddb65cfc, gleicher Aufbau wie oben,
     Skript scratchpad r41c2/mess_flut.sh, Log r41c2/mess/flut_spritzer/debug.log + state.txt, von mir gelesen):
     `FLUT: Wasser steigt` (F2621) -> F2728 `[ventilkette41] SPRITZER: Wasser y -5400 erreicht die Fuesse (Spieler y
@@ -760,7 +781,44 @@ shared_assets/PSX, pri/, synchro/, release/.
     Schrotpatronen; der Steg ist bis zum Pult-Raetsel gesperrt -> Lauf setzt `RE15_SET_FLAG=9:101,9:102`.
   Beide Aenderungen sind Kommentar-belegt in den cmake-Dateien.
 
+* **Nachbesserung 1 (2026-10-24; exe/Test-exe 05:45 = Engine-Stand def5ff47, danach nur Riegel/Dossier; ctest aus Git-Bash,
+  Protokolle scratchpad `r41c_nb1/`):**
+  - Unit-Gruppe (37 des Vorgaengers + Heliport 1171 + Kraehen wegen M3), Regex woertlich
+    (`r41c_nb1/regex_unit.txt`):
+    `ctest --test-dir re15_port/build -j 6 --timeout 600 --output-on-failure -R "^(unit_r41_ventilkette|unit_r36_kartenbits|unit_scd_.*|unit_aot_.*|unit_r40_nahaufnahmen|unit_r40_untersuchen1120|unit_r37_kistenregel_.*|unit_r36_dachkiste_.*|unit_r37_kiste.*|unit_r37_itemband|unit_r37_fahrstuhl_lift2030|unit_r36_gegnerzahl_raum20b0|unit_r38_npckante_j2000|unit_r34n_a_rolltor|unit_r36_kartenitems|unit_r38_wasser_.*|unit_r38_wasserzombie|unit_r38_spinnen|unit_r38_heliport1171_.*|unit_r39_heliport1171_.*|unit_crow_.*|unit_re2_crow_.*|probe_crow_kill|unit_r35_fenster_kraehe|unit_r36_kleidung_kraehe|unit_r36_schuss_kraehe)$"`
+    -> **`100% tests passed, 0 tests failed out of 67`** (`Total Test time (real) =   7.83 sec`, EXIT=0);
+    unit_r41_ventilkette `PASS (255 Pruefungen)` (vorher 239; neu: Scheibe @0x0201A, Text 49, Fall F Kisten,
+    Fall E Text 49, Fall H Bank 5). Gegenprobe am alten Modul: `FAIL (255 Pruefungen)` mit genau den 6 neuen Pruefungen
+    (M1 x2, M3 x2, M8 x2), Protokoll `r41c_nb1/unit_gegen.txt`.
+  - r41-Integrationsriegel (C jetzt im beschleunigten Renderer mit Farbmessung, _b mit E2/E3/E4):
+    `ctest --test-dir re15_port/build -R "^integration_r41_ventilkette(_b)?$" --timeout 1200 --output-on-failure`
+    -> `1/2 Test #1126: integration_r41_ventilkette ......   Passed  213.05 sec`,
+    `2/2 Test #1127: integration_r41_ventilkette_b ....   Passed  444.40 sec`,
+    **`100% tests passed, 0 tests failed out of 2`** (`Total Test time (real) = 657.49 sec`, EXIT=0). Laufordner
+    `build/tests/integration/r41_ventilkette/lauf_6b7e0e00_*`, `.../r41_ventilkette_b/lauf_5c01b5fb_*`: E2
+    `[ventilkette41] ROOM2050 Ereignis 2 -> Port-Programm 2050_hebel_sperre` + `[msgtext] room=2050 id=40 ...`, 0x Cut_chg(4);
+    E3 `[msg] room=2050 id=0`, `[prop-member F456] prop[2] obj=0x01 m=0 → val=-17700`, Cut_chg(4),
+    `[prop-member F657] prop[6] obj=0x05 m=1 → val=-5000`; E4 `loaded room2051.rdt` + `ROOM2051 Ereignis 2 -> ...
+    2050_hebel_sperre` + `[msgtext] room=2051 id=40 ...`.
+  - Neuer Riegel `integration_r41_ventilkette_szene` (M2): Spurbaum ohne Haken
+    `ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_szene$" --timeout 900 --output-on-failure`
+    -> `1/1 Test #1128: integration_r41_ventilkette_szene ...***Skipped  61.97 sec` / **`100% tests passed, 0 tests failed
+    out of 1`** / `The following tests did not run: 1128 - integration_r41_ventilkette_szene (Skipped)`; mit dem
+    wortgleichen Haken der Spur A (Messbau, `cmake -P`) `rc=0` + Abschlusszeile (§0b M2).
+  - Querbezug M3 (Heliport 1171, Bank-5-Bits der Kraehenszene):
+    `ctest --test-dir re15_port/build -R "^integration_r3[89]_heliport1171_.*$" --timeout 900 --output-on-failure`
+    -> `integration_r38_heliport1171_weg_re2 Passed 74.47 sec`, `_weg_re15 Passed 69.53 sec`, `_laden Passed 46.40 sec`,
+    `integration_r39_heliport1171_weg Passed 64.24 sec`, `_laden Passed 46.18 sec` -> **`100% tests passed, 0 tests failed
+    out of 5`** (`Total Test time (real) = 300.91 sec`, EXIT=0). Damit ist der Original-Zustand der Kraehenszene
+    ((5,0x1E) bleibt im Init-Takt stehen) mit den Heliport-Riegeln vertraeglich (sie liefen auch mit dem Loeschen gruen,
+    Abnahme 0 — das Loeschen war fuer sie unsichtbar, s. M3).
+
 ## 6. OFFEN
+* **Nachbesserung 1 (2026-10-24):** M2 bleibt eine Integrationsabhaengigkeit von Spur A — mit dem wortgleichen Haken
+  laeuft die ganze Kette in EINEM exe-Lauf (§0b M2, `r41c_nb1/mess/kette3`), der neue Riegel
+  `integration_r41_ventilkette_szene` prueft sie und meldet im Spurbaum ohne Haken `Skipped`; nach der Integration der
+  Spur A wird er scharf. M5 (Frage f), M6 (Haken, Frage i), M7 (Ost-Tuer nach Bit 107, Frage g) und H2 (Frage h)
+  brauchen Orchestrator-Entscheide; M1, M3, M4, M8, M9, H1 sind behoben (§0b). H3 (PSX) unten.
 * **Querbezug A — die 20B0-Szene haengt ohne den Haken der Spur A, mit ihm laeuft sie** (ausgewertet 2026-10-24 02:52):
   - OHNE Haken (integration A, Lauf build/tests/integration/r41_ventilkette/lauf_912f1ca0_a/debug.log, 00:47, exe
     00:41 = Quellstand 271b05ea): `[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11
@@ -837,6 +895,7 @@ shared_assets/PSX, pri/, synchro/, release/.
   2030 45 "Numbered valves. They control the / flood gates of the treatment pool. | Will you turn them?"
   2030 46 "WARNING: The water will rise / in one minute. Leave the room!" (VORGABE sinngemaess)
   2030 47 "Intake valve 13 is open." · 48 "The valves are open. / The pool has been flooded."
+  2030 49 "The valves are open. / The pool has been drained." (NEU, Nachbesserung 1 M8: nach dem Rechner 2080)
   2050 40 "The pump has no power. / The switchboard must be set first." · 41 = 11F0 "Will you push them? " ·
   42 = 11F0 "Power supply OK." · 43 "A high voltage switchboard. / The pump needs 80 volts." ·
   44 "The switchboard is set to 80 volts. / The pump is powered."
@@ -853,14 +912,27 @@ shared_assets/PSX, pri/, synchro/, release/.
   z. B. "I cannot open the door because of the water pressure." (Mechanik wie die Leiter: Sperrtext-Satz sce 1, Form
   ROOM2030 @0x01B12). Braucht Port-Id 41 in 20B0/20B1 und Id 40 in 2070/2071 — VERTRAG §1.2 teilt C dort nur 20B0 Id 40
   zu, deshalb nicht gebaut. Der Weg zum Rechner bleibt offen (2050 -> 2020 -> 2030 Tuerebene -> 2080, ueber dem Wasser).
-  Alternative: so lassen (Waten in Brusthoehe).
+  Alternative: so lassen (Waten in Brusthoehe). Nachbesserung 1 (M5): dritte Moeglichkeit (c) Ring-Eintritt = Ertrinken
+  wie waehrend der Flut; Abwaegung §0b M5. Braucht in jedem Fall einen Orchestrator-Entscheid (+ Id-Zuteilung fuer a).
+  **(g) NEU (Nachbesserung 1, M7):** 2030 Slot 0 (Ost-Tuer) bleibt auch nach dem Entleeren (Bit 107) auf 20B0 umgelenkt;
+  damit ist 2070 (mit der Tuer nach 11A0) nach der Flut nur ueber 2040 (Aufzug mit Strom) erreichbar. Soll die Ost-Tuer
+  mit Bit 107 wieder nach 2070 fuehren (Original-Ziel)? Ohne Entscheid bleibt 2030 <-> 20B0.
+  **(h) NEU (Hinweis H2):** steht Leon waehrend der Flut an den Ventilen, liegt sein Spritzer ausserhalb der Flut-Kamera
+  Cut 4; sichtbar sind Wasser, blauer Schleier, Tod. Kamera vor dem Tod auf Leons Zone zurueckschalten (neue Regel ohne
+  Vorbild) oder so lassen?
+  **(i) NEU (Abnahme M6):** die kleinen Haken der Spur C in platform/pc/main.c (4 Stellen) und game_step_common.c
+  (1 Zeile) sowie die Querbezug-Flags in zwei fremden Riegeln annehmen (wie B5 / A-E3)? Liste §0b M6.
 * Sichtprobe fuer den Nutzer: 2030 am Ring vor den Ventilen die Aktionstaste, Ja, Warnung wegdruecken, 60 s stehen
   bleiben -> Draufsicht, Wasser steigt ueber die Bruecke und den Ring, Spritzer, Tod mit blauem Schleier
   (C_belege/flut_echt_sheet.png). Mit den drei Spinnen im Raum (ohne Kill-Bits) stirbt man vorher an den Spinnen;
   im Spiel also erst die Spinnen erledigen oder den Raum durch die Ost-Tuer verlassen (-> 20B0).
 * Nach der Flut: in 20B0 laeuft die Auswasch-Szene des Originals erst mit dem Haken der Spur A bis zur Freigabe (§6
-  Querbezug A); ohne ihn bleibt Leon im Westgang (Cut 14) stehen. Zum Rechner 2080 geht es ueber 2050 -> 2020 -> die
+  Querbezug A); ohne ihn bleibt Leon im Westgang (Cut 14) stehen. Mit dem Haken (gemessen, ein Lauf, §0b M2): Szene
+  -> frei im Mittelgang -> an der Kante zum Kanal die Aktionstaste (Sprung hinunter), durch den Kanal, an der anderen
+  Kante die Aktionstaste (Aufstieg) -> Westgang -> Leiter -> 2050 (Bild C_belege/nb1_kette_ein_lauf_mit_haken_a_sheet.png). Zum Rechner 2080 geht es ueber 2050 -> 2020 -> die
   Tuerebene von 2030 (ueber dem Wasser) -> 2080; der Rechner senkt 2080 und leert 2030 (Bild C_belege/rechner2080_sheet.png,
   raum2030_leer_vergleich.png).
 * Neue Belegbilder dieser Fortsetzung: C_belege/querbezug_a_20b0_szene_sheet.png (Szene mit dem Haken der Spur A),
-  C_belege/ring_nach_flut_sheet.png (Frage f).
+  C_belege/ring_nach_flut_sheet.png (Frage f). Nachbesserung 1: C_belege/nb1_kette_ein_lauf_mit_haken_a_sheet.png (die
+  ganze Kette in einem Lauf mit dem Haken der Spur A), C_belege/nb1_kisten_hebel_sheet.png (Kisten-Hebel gesperrt),
+  C_belege/nb1_blende_d3d.png (Ertrink-Blende im beschleunigten Renderer vor/nach dem Tod).
