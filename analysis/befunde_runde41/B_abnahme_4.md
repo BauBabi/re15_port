@@ -308,3 +308,36 @@ Türweg. **Der Ablauf am Ankunftsort ändert sich also durch die Nachbesserung 4
   0 ohne Treffer`) und `unit_gator_fress` (`PIN P3 … dRef=(-2,-1,-1)`, `Maulraum … 776/776 = 100.0%`) einzeln mit -V
   (`B41abn4/unit_sweep_V.txt`). Der Fress-Riegel misst den Finisher nur aus einer CHASE-Lage (Gier 4095, pitch 0) — die
   GUARD-Lage aus §3.4 deckt er nicht ab.
+
+**(d) Tödlicher GUARD-Biss im Vorher-Bau: der Finisher ist dort ebenso kaputt (ALT, gemessen).** Leon mittig-nord auf der
+Rampe, wo das GUARD-Ziel erreichbar ist: `RE15_DEBUG_JUMP=2090@250 RE15_PLAYER_POS=4000,-15000,2048,1 RE15_GB_TEST=1`, Dump
+nur im Finisher-Fenster und `EXIT_AT` VOR dem Raumwechsel (sonst überschreibt der Neustart in ROOM1170 nach dem Game Over die
+Framedump-Dateien, die je Raum nummeriert sind — so geschehen in den ersten Läufen `mess/MA`/`mess/MN`):
+- Vorher-Bau `mess/MA2` (`EXIT_AT=850#2090`, `FRAMEDUMP=560-850/2`): Bisse F377 (50°), F484 (−79°), **F608 (Gier 1911, Leon
+  33° daneben) → Tod**, `GUARD … pitch=-350 arc=-220` davor, `RE2 KAMERA FINISHER … RE2-Cut 7 -> Cut 7 F609` (Kandidatenzeile
+  `Cut 7 kopf_bild=(265,105) massstab=627`), FSYNC2 `pl=(27,-1200,-12222)`, `(19,-1200,-14008)`, `(-357,-1200,-13104)` = am bzw. im
+  Plattformblock (x −1700…1850, z −20000…−12450). Bild (`B41abn4f/MA2_finisher.png`, `MA2_kopf_zoom.png`): in Cut 7 ist von F609
+  bis zum YOU DIED **kein Gator zu sehen**; Leon steht F610/F620 noch klein links der Maschine und ist ab F630 verschwunden.
+- Neuer Bau `mess/MN2` (`EXIT_AT=830#2090`, `FRAMEDUMP=540-830/2`): F377 (50°), F482 (Gier 83, 61°), **F587 (Gier 3405, Leon 128°
+  daneben) → Tod**, Gator an der Klemmlinie (5716,−12583), `RE2-Cut 7 -> Cut 4 F588`, FSYNC2 `pl=(9100,-1200,-8831)`,
+  `(7762,-1200,-7648)`, `(8689,-1200,-7960)` = hinter der Ostwand. Bild (`MN2_finisher.png`, `MN2_kopf_zoom.png`): der Gator bäumt
+  sich sichtbar auf und schüttelt, das Maul ist leer; Leon schwebt F610–F650 klein links unter dem Kopf, F660/F670 über dem Kopf,
+  F680–F700 neben dem Hals.
+- Die ersten Läufe `mess/MA`/`mess/MN` (gleiches Rezept, `EXIT_AT=1500`) sind für den Ablauf bitgleich (gleiche Biss-Bilder), ihre
+  Bilder ab ~F580 zeigen aber schon den Neustart.
+
+**(e) Antwort auf die Frage der Fortsetzung — Regression der Nachbesserung 4?**
+- **Im Ablauf ja:** am Ankunftsort der 20A0-Tür (E1 Tür, RN Sprung) überlebte Leon im Vorher-Bau 1500 Bilder (2 Bisse), jetzt
+  stirbt er bei F627 — Folge der M2-Änderung (kein Snap: der Gator bleibt an der Klemmlinie auf das GUARD-Ziel gerichtet und beißt
+  weiter).
+- **Im Defekt nein:** der Finisher nach einem tödlichen GUARD-Biss zeigt Leon schon im Vorher-Bau nicht im Maul (MA2: Kamera ohne
+  Gator, Leon verschwindet); FRESSEN, `gb_biss_abschluss` und GUARD sind seit 47efb932 unverändert (c). Abnahme 1–3 haben den Fall
+  nicht gesehen, weil alle Todesläufe aus einem CHASE-Biss kamen (A2) und E1 nur 900 Bilder ohne dritten Biss lief; auch der Fress-
+  Riegel misst nur eine CHASE-Lage (§5).
+- **Der Bau-Agent hätte es sehen können:** alle drei Läufe des Integrationsriegels "belagerung" (`EXIT_AT=700#2090`, Rezept E1;
+  `build/tests/integration/r41_re2gator_wd/lauf_e6c7aac8` 11:21, `lauf_afc79e09` 11:34 — beide vom Bau-Agenten —, `lauf_cd8d5830`
+  12:16) enthalten `RE2 KAMERA FINISHER FINISHER RE2-Cut 7 -> Cut 2 F628` und `Halt Cut 2 F629`; der Riegel prüft nur GIER-WACHE und
+  die Zahl der GUARD-Zeilen.
+- **Einordnung:** ALT, aber sichtbar, gegen den Wortlaut von Punkt 1 ("den Finisher … aus Resident Evil 2": im RE2-Finisher liegt
+  Leon im Maul, so wie hier in A2) und seit der Nachbesserung 4 auf dem natürlichen Weg (20A0-Tür → Ostrampe, wo der Spieler steht
+  und schießt) erreicht. Nach dem Maßstab der Abnahme 3 (deren M2 war ebenfalls ALT) ist das ein **Mangel dieser Abnahme (M1, §9)**.
