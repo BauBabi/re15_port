@@ -687,16 +687,20 @@ int main(void)
         if (!bank) { fprintf(stderr, "FAIL: (13b) could not alloc a mock bank\n"); fail = 1; }
         else {
             bank->anim.clip_count = 0x30;
-            bank->anim.clips[0x27].frame_count = 6;   /* feeding loop clip */
-            bank->anim.clips[0x29].frame_count = 6;   /* the byte-true GET-UP clip 0x29 (FUN_80104a50) */
+            bank->anim.clips[0x12].frame_count = 6;   /* the lying GET-UP clip 0x12 (mock length) */
             bank->ok = 1;
-            /* feeding zombie, near the player, wake wait-timer already elapsed (sub_state_2=1, ai_timer=0). */
-            z->state = RE15_AI_STATE_ACTIVE; z->grid_id = 6; z->sub_state_1 = 0;
-            z->sub_state_2 = 1; z->ai_timer = 0; z->motion = 0x27; z->anim_frame = 4; z->x = 1000; z->z = 0;
-            re15_enemy_ai_run_all(1);                  /* case1 (timer 0) -> enter case2: set the get-up clip 0x29, restart */
-            if (z->sub_state_2 != 2 || z->anim_frame != 0 || z->motion != 0x29) {
-                fprintf(stderr, "FAIL: (13b) wake must enter stand-up case2 + play GET-UP clip 0x29, +0x6=%d frame=%d mo=%d\n",
-                        z->sub_state_2, z->anim_frame, z->motion); fail = 1; }
+            /* Runde 41 Spur I: hier stand ein Grid-6-"Fresser" mit Clip 0x27, der beim Wecken Clip 0x29
+             * bekam. Praemisse widerlegt: Grid [4]/[5]/[6] ist die Liege-Phasenmaschine FUN_80103a58, P2
+             * spielt das VORHANDENE +0x94 aus (`jal 0x8001f314` @0x80103b14, kein Clip-Wechsel, +0x8f = 0xf
+             * @0x80103a28-30); der echte Fresser (sel 6) laeuft ueber grid 0 / Sub 0xc (@0x80100eb0).
+             * Ausgeliefert erreicht nur 0x84/0x85 diesen Zweig — INIT-Pose +0x94 = 0x12 (@0x80100dc0-e8).
+             * Liegender, nah am Spieler, Wartezeit abgelaufen (sub_state_2=1, ai_timer=0). */
+            z->state = RE15_AI_STATE_ACTIVE; z->grid_id = 0x84; z->sub_state_1 = 0;
+            z->sub_state_2 = 1; z->ai_timer = 0; z->motion = 0x12; z->anim_frame = 0; z->x = 1000; z->z = 0;
+            re15_enemy_ai_run_all(1);                  /* P1 (Zaehler 0) -> P2: derselbe Clip 0x12, +0x8f = 0xf */
+            if (z->sub_state_2 != 2 || z->motion != 0x12 || z->anim_frac != 0xf) {
+                fprintf(stderr, "FAIL: (13b) wake must enter P2 with the spawn clip 0x12 (+0x8f 0xf), +0x6=%d mo=%d frac=%d\n",
+                        z->sub_state_2, z->motion, z->anim_frac); fail = 1; }
             z->anim_frame = 3;                          /* mid-clip (3 < 6-1): must HOLD */
             re15_enemy_ai_run_all(1);
             if (z->sub_state_2 != 2 || z->grid_id == 0) {
@@ -709,7 +713,7 @@ int main(void)
                 fprintf(stderr, "FAIL: (13b) stand-up clip-end must commit to engage, grid=%d +0x5=%d\n",
                         z->grid_id, z->sub_state_1); fail = 1; }
             if (!fail)
-                printf("  (13b) feeding stand-up: HELD case2 through the 6-frame clip, then committed to engage (grid 0, +0x5=2)\n");
+                printf("  (13b) lying stand-up (0x84): HELD P2 through the 6-frame clip 0x12, then committed to engage (grid 0, +0x5=2)\n");
         }
         re15_enemy_reset();
     }

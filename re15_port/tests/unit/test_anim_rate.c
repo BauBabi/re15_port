@@ -248,10 +248,16 @@ int main(void)
         pl->x = 0; pl->y = 0; pl->z = 0;
         re15_actor_t *e = &g_actors[1];
         e->active = 1; e->type = 0x10; e->hp = 100;
-        e->state = 1; e->grid_id = 0x05;      /* Nibble 5 = feeding (@0x8011f80c[5]) */
-        e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        /* Runde 41 Spur I: hier stand `grid_id = 0x05` ("Nibble 5 = feeding @0x8011f80c[5]"). Das war
+         * falsch: der Fresser (sel 6) verlaesst den Grid-Dispatch im INIT (`sb zero,9` @0x80100eb0
+         * STAGE1 / @0x80100d44 STAGE2) und frisst in Modus-0-Sub 0xc; Grid [4]/[5]/[6] ist die
+         * Liege-Phasenmaschine (Paar 0xf/0x100 oben). Darum jetzt der echte Fresser-Spawn
+         * (+0x4 = 0x20c01 @0x80100e60, grid 0) — Clip 0x29 laedt sein Aufstehen (decide[0xc]
+         * dist < 0xbb8 @0x801048bc -> 0xd01, +0x8f = 7 @0x80104ac8). */
+        e->state = 1; e->grid_id = 0x00;
+        e->sub_state_1 = 0x0c; e->sub_state_2 = 2; e->sub_state_3 = 0;
         e->motion = 0x27; e->anim_frame = 0; e->anim_frac = 0;
-        e->x = 700; e->y = 0; e->z = 0;       /* dist < 4000 -> Wake-Stufe A */
+        e->x = 700; e->y = 0; e->z = 0;       /* dist < 0xbb8 -> decide[0xc] weckt */
 
         int frac_at_standup = -1;
         for (int t = 0; t < 200; t++) {

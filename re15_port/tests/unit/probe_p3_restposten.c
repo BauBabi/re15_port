@@ -21,13 +21,18 @@
  *      RE2 erst am Pose-Ausgang (EXEC[7] P4 `andi 0x7f` @0x80103914-18 / EXEC[8] P3
  *      @0x80103CE4-FC). Der Port gab den Gebumpten frueher im Bump-Bild frei.
  *
- *  [D] NIBBLE 4 / 5  (liegende-zombies.md §5 Punkt 1)
+ *  [D] NIBBLE 4 / 5  (liegende-zombies.md §5 Punkt 1; KORRIGIERT Runde 41 Spur I)
  *      In ALLEN FUENF STAGE-Overlays laden die Dispatcher fuer Nibble 4 und fuer Nibble 5/6
  *      dieselbe DECIDE- und dieselbe ANIMATE-Zeile (eigener Dump der Tabellenpaare:
  *      STAGE1 0x8011F9C8/CC == 0x8011F9D0/D4 -> 0x80103980 / 0x80103A58; STAGE2
  *      0x80117ACC/D0 == 0x80117AD4/D8; STAGE3 0x8011DB18/1C == 0x8011DB20/24; STAGE4
  *      0x80118EF0/F4 == 0x80118EF8/FC; STAGE5 0x8011EA58/5C == 0x8011EA60/64).
- *      0x84 und 0x85 gehoeren also in dieselbe Familie wie 0x86 — der Fresser.
+ *      Die Familie ist aber NICHT der Fresser: der sel-6-Fresser verlaesst den Grid-Dispatch im
+ *      INIT (`sb zero,9` @0x80100eb0 STAGE1 / @0x80100d44 STAGE2, Modus-0-Sub 0xc), und
+ *      0x80103A58 ist die LIEGE-Phasenmaschine (P2 spielt +0x94 = 0x12/0x13 = Aufstehen aus dem
+ *      Liegen, INIT-FINAL @0x80100dc0-e8). DuckStation ROOM2000: +0x94 = 0x12, +0x6 = 0, +0x93 = 1
+ *      (analysis/befunde_runde41/I_zombiefresser.md §2.1b). 0x84/0x85 sind LIEGENDE mit
+ *      Naehe-Wecker -> RE2-Liege-Executor EXEC[7]; nur 0x86 ist Fresser (EXEC[8]).
  *
  * Aufruf: probe_p3_restposten [pin]
  */
@@ -266,10 +271,10 @@ int main(int argc, char **argv)
     }
 
     /* ------------------------------------------------------------------ [D] NIBBLE 4/5 */
-    printf("\n=== [D] Deskriptoren 0x84 / 0x85 (Fresser-Familie) ===\n");
+    printf("\n=== [D] Deskriptoren 0x84 / 0x85 (Liegende mit Naehe-Wecker) / 0x86 (Fresser) ===\n");
     {   re15_actor_t base = *e;
         static const uint8_t DESC[3] = { 0x84u, 0x85u, 0x86u };
-        int sub[3];
+        int sub[3]; unsigned latch[3];
         for (int i = 0; i < 3; i++) {
             *e = base;
             re15_damage_seed_rng(0x0badf00du);
@@ -277,13 +282,14 @@ int main(int argc, char **argv)
             e->grid_id = DESC[i];
             e->re2z_f10e = 0; e->re2z_flags21a = 0; e->re2z_self1d3 = 0;
             re15_re2z_tick(slot);
-            sub[i] = e->sub_state_1;
+            sub[i] = e->sub_state_1; latch[i] = e->re2z_f10e & 0x4000u;
             printf("  0x%02X -> st=%d sub=%d/%d f10e=%04x clip=%d\n", DESC[i],
                    e->state, e->sub_state_1, e->sub_state_2, e->re2z_f10e, (int)e->motion);
         }
-        expect(sub[0] == sub[2] && sub[1] == sub[2],
-               "0x84 und 0x85 landen im selben Executor wie 0x86 (Tabellenpaare identisch "
-               "in allen fuenf Overlays, s. Dateikopf)");
+        expect(sub[0] == 7 && sub[1] == 7 && latch[0] && latch[1],
+               "0x84 und 0x85 liegen: EXEC[7] mit Latch 0x4000 (RE1.5 grid [4]/[5] = Liege-"
+               "Phasenmaschine, Runde 41 Spur I)");
+        expect(sub[2] == 8, "0x86 frisst: EXEC[8] (sel 6, Modus-0-Sub 0xc @0x80100e60)");
         *e = base;
     }
 

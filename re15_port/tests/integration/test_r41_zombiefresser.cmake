@@ -1,0 +1,267 @@
+# =============================================================================
+# RUNDE 41 SPUR I (zombiefresser) — die 0x84/0x85-Zombies LIEGEN und stehen auf, wenn man naeher kommt. ECHTE EXE.
+#
+# Dossier analysis/befunde_runde41/I_zombiefresser.md. Original (RE1.5 STAGE2): Tor 0x80 @0x80100b44, Pose 0x0c
+# @0x80100b74 + f314 @0x80100c34, FINAL +0x94 = 0x12 @0x80100c7c; Wecker @0x80103814 (d < 0xfa0 @0x8010382c, +0x9c =
+# rand&0xf @0x80103858-60), Phasenmaschine @0x801038ec (P2 Aufstehen @0x801039a8, P3 0x201 @0x801039e0). DuckStation:
+# I_belege/orig_2000_wecker_film.txt.
+#
+# TEIL (je ein Lauf, eigene Messkopie re15_pc_r41i_<TEIL>, eigener Laufordner):
+#   tuer2000   ECHTER WEG: Debug-Sprung 2070, Wegplan (RE15_WEGPLAN, engine/src/dachkiste_r36.c) durch die Tuer
+#              nach ROOM2000 und auf den Oststeg (-20600,-10600) vor die beiden Kanal-Zombies (Muster
+#              test_r38_wasserzombie.cmake Teil e). Leon, Standard-KI (RE2).
+#   elza2001   Spielstand Elza ROOM2001 (Spawn-Bit 3:0x45, sub00 @0x01826) + CONTINUE, Oststeg (-21300,-1800,-10100).
+#   leon3000   Spielstand Leon ROOM3000 (4:9 main00 @0x014b6, 4:0xC6 = Marvin-Szene aus) + CONTINUE, 1200 vor (-9900,-14800).
+#   leon3010   Spielstand Leon ROOM3010 (4:0x0A main00 @0x0210e) + CONTINUE, 1100 vor (-9100,-19800).
+#   re15_3000  wie leon3000, RE15_AI_FLAVOR=re15 (RE1.5-Liege-Phasenmaschine, Aufsteh-Clip 0x12).
+# Geprueft (RE15_ZOMBIEFRESSER_LOG + RE15_STATE_LOG):
+#   - INIT der 0x84/0x85: RE2 "Wort=1/7/0 f10e=4002" (EXEC[7] liegend); RE1.5 liegt mit grid 84/85, Sub 0
+#   - WECKT nur mit d < 4000; "STEHT AUF" 0..16 Bilder nach dem WECKT desselben Slots (Wartezeit rand&0xf)
+#   - der geweckte Zombie steht danach aufrecht (RE2 st=1 ss1=1 g=00, RE1.5 st=1 ss1=2 g=00)
+#   - danach Angriff: Spieler gegriffen (gr=1) oder Spieler-HP sinkt
+#   - KEIN Zombie frisst je (st=1 ss1=8 = RE2-EXEC[8]); jeder Zombie mit grid 84/85 liegt (RE2 ss1=7, RE1.5 ss1=0)
+# Parallel-/Linux-fest: Messkopie mit eigenem Namen, eigener Laufordner, geerbte RE15_*-Umgebung geloescht, keine
+# .exe-/Backslash-Pfade.
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r41_zombiefresser_karte> -DWORKDIR=<dir> -DTEIL=<teil> -P ...
+# =============================================================================
+cmake_minimum_required(VERSION 3.16)
+foreach(_v RE15_PC_EXE RE15_KARTE_TOOL WORKDIR TEIL)
+    if(NOT DEFINED ${_v})
+        message(FATAL_ERROR "r41_zombiefresser: ${_v} fehlt")
+    endif()
+endforeach()
+if(NOT EXISTS "${RE15_PC_EXE}")
+    message(FATAL_ERROR "r41_zombiefresser: RE15_PC_EXE fehlt: '${RE15_PC_EXE}'")
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+
+# Keine Umgebungsvariablen des Aufrufers erben (Muster test_r39_elzazombies.cmake).
+function(r41i_geerbte_namen _out)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -E environment OUTPUT_VARIABLE _envdump)
+    string(REGEX MATCHALL "(^|\n)[Rr][Ee]15_[A-Za-z0-9_]*=" _treffer "${_envdump}")
+    set(_namen "")
+    foreach(_t IN LISTS _treffer)
+        string(REGEX REPLACE "^\n?([Rr][Ee]15_[A-Za-z0-9_]*)=$" "\\1" _n "${_t}")
+        list(APPEND _namen "${_n}")
+    endforeach()
+    set(${_out} "${_namen}" PARENT_SCOPE)
+endfunction()
+r41i_geerbte_namen(_geerbt)
+foreach(_n IN LISTS _geerbt)
+    unset(ENV{${_n}})
+endforeach()
+r41i_geerbte_namen(_rest)
+if(_rest)
+    message(FATAL_ERROR "r41_zombiefresser[${TEIL}]: geerbte Umgebung laesst sich nicht loeschen: ${_rest}")
+endif()
+
+set(_tag "r41_zombiefresser[${TEIL}]")
+string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
+set(WORKDIR "${WORKDIR}/${TEIL}_${_lauf_id}")
+file(MAKE_DIRECTORY "${WORKDIR}")
+get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
+get_filename_component(_exe_ext "${RE15_PC_EXE}" EXT)
+file(GLOB _alte "${_exe_dir}/re15_pc_r41i_${TEIL}_*")
+foreach(_k IN LISTS _alte)
+    file(REMOVE "${_k}")
+endforeach()
+set(_exe "${_exe_dir}/re15_pc_r41i_${TEIL}_${_lauf_id}${_exe_ext}")
+file(COPY_FILE "${RE15_PC_EXE}" "${_exe}")
+
+# ---- Lauf je TEIL ------------------------------------------------------------------------------------------------
+set(_re2 1)
+set(_ki "")
+if(TEIL STREQUAL "tuer2000")
+    set(_raum 2000)
+    set(_ende 700)
+    file(WRITE "${WORKDIR}/plan.txt" "RAUM 2070\nWARTE 20\nBLICK 2048\nWARTE 10\nAKTION\nRAUM 2000\nWARTE 10\n"
+                                     "GEHE -20600 -10600 200\nBLICK 2048\nWARTE 1500\nENDE\n")
+    re15_start_spiel(_rv 400
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+        RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+        "RE15_DEBUG_JUMP=2070@250" "RE15_PLAYER_POS=-18500,-6400,2048,0"
+        "RE15_WEGPLAN=${WORKDIR}/plan.txt"
+        RE15_ZOMBIEFRESSER_LOG=zf.log RE15_STATE_LOG=state.log
+        "RE15_EXIT_AT=${_ende}#${_raum}"
+        "${_exe}")
+    set(_marke "PC loaded room2000.rdt")
+else()
+    if(TEIL STREQUAL "elza2001")
+        set(_raum 2001)
+        set(_karte 2001 -21300 -10100 2048 1 elza 3:0x45)
+    elseif(TEIL STREQUAL "leon3000" OR TEIL STREQUAL "re15_3000")
+        set(_raum 3000)
+        set(_karte 3000 -8700 -14800 2048 0 leon 4:9 4:0xC6)
+        if(TEIL STREQUAL "re15_3000")
+            set(_re2 0)
+            set(_ki "RE15_AI_FLAVOR=re15")
+        endif()
+    elseif(TEIL STREQUAL "leon3010")
+        set(_raum 3010)
+        set(_karte 3010 -9100 -18700 1024 0 leon 4:0x0A)
+    else()
+        message(FATAL_ERROR "${_tag}: unbekannter TEIL")
+    endif()
+    set(_ende 600)
+    execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" ${_karte}
+                    WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 60 RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
+    if(NOT _rvk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")
+        file(REMOVE "${_exe}")
+        message(FATAL_ERROR "${_tag}: Kartenwerkzeug exit=${_rvk}\n${_outk}")
+    endif()
+    re15_start_spiel(_rv 400
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+        RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
+        RE15_ZOMBIEFRESSER_LOG=zf.log RE15_STATE_LOG=state.log
+        "RE15_EXIT_AT=${_ende}#${_raum}"
+        ${_ki}
+        "${_exe}")
+    set(_marke "CONTINUE: resumed in room ${_raum}")
+endif()
+file(REMOVE "${_exe}")
+
+if(NOT EXISTS "${WORKDIR}/debug.log")
+    message(FATAL_ERROR "${_tag}: kein debug.log (exit=${_rv}, ${WORKDIR})")
+endif()
+file(READ "${WORKDIR}/debug.log" _dbg)
+foreach(_m "${_marke}" "EXIT_AT: Bild ${_ende} in Raum ${_raum}")
+    string(FIND "${_dbg}" "${_m}" _p)
+    if(_p LESS 0)
+        message(FATAL_ERROR "${_tag}: fehlt im debug.log: '${_m}' (exit=${_rv}, ${WORKDIR})")
+    endif()
+endforeach()
+if(NOT EXISTS "${WORKDIR}/zf.log" OR NOT EXISTS "${WORKDIR}/state.log")
+    message(FATAL_ERROR "${_tag}: kein zf.log/state.log (${WORKDIR})")
+endif()
+
+set(_fehler "")
+macro(fail _text)
+    list(APPEND _fehler "${_text}")
+    message(STATUS "FAIL ${_tag}: ${_text}")
+endmacro()
+macro(ok _text)
+    message(STATUS "ok   ${_tag}: ${_text}")
+endmacro()
+
+# ---- zf.log: INIT / WECKT / STEHT AUF -----------------------------------------------------------------------------
+file(STRINGS "${WORKDIR}/zf.log" _zf)
+set(_n_init 0)
+set(_weck_slot "")
+set(_weck_f "")
+set(_weck_d "")
+set(_frei_f "")
+foreach(_z IN LISTS _zf)
+    if(_z MATCHES "F([0-9]+) slot=([0-9]+) INIT grid=(8[45]) Wort=([0-9]+)/([0-9]+)/([0-9]+) f10e=([0-9a-f]+)")
+        math(EXPR _n_init "${_n_init} + 1")
+        if(_re2 AND NOT (CMAKE_MATCH_4 STREQUAL "1" AND CMAKE_MATCH_5 STREQUAL "7" AND CMAKE_MATCH_7 STREQUAL "4002"))
+            fail("INIT Slot ${CMAKE_MATCH_2}: Wort ${CMAKE_MATCH_4}/${CMAKE_MATCH_5} f10e ${CMAKE_MATCH_7} statt 1/7 4002")
+        endif()
+    elseif(_z MATCHES "F([0-9]+) slot=([0-9]+) WECKT[^ ]* d=([0-9]+)")
+        if(_weck_slot STREQUAL "")
+            set(_weck_f "${CMAKE_MATCH_1}")
+            set(_weck_slot "${CMAKE_MATCH_2}")
+            set(_weck_d "${CMAKE_MATCH_3}")
+        endif()
+        if(CMAKE_MATCH_3 GREATER_EQUAL 4000)
+            fail("WECKT Slot ${CMAKE_MATCH_2} mit d=${CMAKE_MATCH_3} >= 4000 (`sltiu 0xfa0` @0x8010382c)")
+        endif()
+    elseif(_z MATCHES "F([0-9]+) slot=([0-9]+) STEHT AUF")
+        if(CMAKE_MATCH_2 STREQUAL "${_weck_slot}" AND _frei_f STREQUAL "")
+            set(_frei_f "${CMAKE_MATCH_1}")
+        endif()
+    endif()
+endforeach()
+if(_re2 AND _n_init LESS 1)
+    fail("kein INIT eines 0x84/0x85-Zombies im zf.log")
+endif()
+if(_weck_slot STREQUAL "")
+    fail("kein Zombie geweckt")
+else()
+    ok("Slot ${_weck_slot} weckt in Bild ${_weck_f} bei d=${_weck_d}")
+endif()
+if(_re2)
+    if(_frei_f STREQUAL "")
+        fail("Slot ${_weck_slot}: kein STEHT AUF")
+    else()
+        math(EXPR _warte "${_frei_f} - ${_weck_f}")
+        if(_warte LESS 0 OR _warte GREATER 16)
+            fail("Wartezeit ${_warte} Bilder ausserhalb 0..16 (rand&0xf @0x80103858-60)")
+        else()
+            ok("Wartezeit ${_warte} Bilder (Wecken F${_weck_f} -> Latch frei F${_frei_f})")
+        endif()
+    endif()
+endif()
+
+# ---- state.log: liegend / aufrecht / Angriff / nie Fressen -----------------------------------------------------------
+file(STRINGS "${WORKDIR}/state.log" _zeilen REGEX "^F[0-9]+ ")
+set(_steht "")
+set(_angriff "")
+set(_fressen 0)
+set(_liege_bruch 0)
+set(_hp0 "")
+if(_re2)
+    set(_auf_rx "st=1 ss1=1 ss2=[0-9]+ ss3=[0-9]+ g=00 ")
+    set(_liege_rx "t=1[0-6a-f] st=1 ss1=7 ss2=[0-9]+ ss3=[0-9]+ g=8[45] ")
+else()
+    set(_auf_rx "st=1 ss1=2 ss2=[0-9]+ ss3=[0-9]+ g=00 ")
+    set(_liege_rx "t=1[0-6a-f] st=1 ss1=0 ss2=[0-9]+ ss3=[0-9]+ g=8[45] ")
+endif()
+foreach(_l IN LISTS _zeilen)
+    string(REPLACE "[" "<" _l "${_l}")
+    string(REPLACE "]" ">" _l "${_l}")
+    string(REGEX MATCH "^F([0-9]+) " _m "${_l}")
+    set(_f "${CMAKE_MATCH_1}")
+    if(_l MATCHES "<[0-9]+ t=1[0-6a-f] st=1 ss1=8 ")
+        math(EXPR _fressen "${_fressen} + 1")
+    endif()
+    # jeder Zombie, der grid 84/85 noch traegt, liegt (RE2 EXEC[7], RE1.5 Sub 0; Zustand 0 = Spawnbild vor dem INIT
+    # zaehlt nicht) — beide Originale halten den
+    # Deskriptor bis zum Pose-Ausgang (RE2 P4, RE1.5 P3 `sb zero,9` @0x801039d0)
+    string(REGEX MATCHALL "<[0-9]+ t=1[0-6a-f] st=[1-9][0-9]* ss1=[0-9]+ ss2=[0-9]+ ss3=[0-9]+ g=8[45] " _g84 "${_l}")
+    foreach(_e IN LISTS _g84)
+        if(NOT _e MATCHES "${_liege_rx}")
+            math(EXPR _liege_bruch "${_liege_bruch} + 1")
+        endif()
+    endforeach()
+    if(NOT _weck_slot STREQUAL "")
+        if(_steht STREQUAL "" AND _l MATCHES "<${_weck_slot} t=1[0-6a-f] ${_auf_rx}")
+            set(_steht "${_f}")
+        endif()
+        if(NOT _steht STREQUAL "" AND _angriff STREQUAL "")
+            string(REGEX MATCH "hp=(-?[0-9]+)\\) " _hm "${_l}")
+            set(_hp "${CMAKE_MATCH_1}")
+            if(_hp0 STREQUAL "")
+                set(_hp0 "${_hp}")
+            endif()
+            if(_l MATCHES " gr=1" OR (_hp LESS _hp0))
+                set(_angriff "${_f}")
+            endif()
+        endif()
+    endif()
+endforeach()
+if(_fressen GREATER 0)
+    fail("${_fressen} Bilder mit einem FRESSENDEN Zombie (st=1 ss1=8)")
+else()
+    ok("kein Zombie frisst")
+endif()
+if(_liege_bruch GREATER 0)
+    fail("${_liege_bruch} Eintraege mit grid 84/85 ausserhalb der Liege-Pose")
+else()
+    ok("jeder Zombie mit grid 84/85 liegt")
+endif()
+if(_steht STREQUAL "")
+    fail("Slot ${_weck_slot} steht nie aufrecht (${_auf_rx})")
+else()
+    ok("Slot ${_weck_slot} steht ab Bild ${_steht}")
+endif()
+if(_angriff STREQUAL "")
+    fail("Slot ${_weck_slot} greift bis Bild ${_ende} nicht an")
+else()
+    ok("Angriff ab Bild ${_angriff}")
+endif()
+
+if(_fehler)
+    list(LENGTH _fehler _nf)
+    message(FATAL_ERROR "${_tag}: ${_nf} Fehler (${WORKDIR})")
+endif()
+message(STATUS "${_tag}: bestanden (${WORKDIR})")
