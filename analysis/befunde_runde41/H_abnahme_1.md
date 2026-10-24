@@ -166,3 +166,29 @@ Laeufe `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`, `[room] PC loaded 
 | nach | **0 / 160** | — | 205 / 2 | **2** (gegen obj 2) | (2052,0,-1880) / (626,0,-64): \|dZ\| 1816 > 1800 |
 
 => Elza-Szenario wie Leon: vorher ineinander, nachher gesperrt.
+Bildbeleg zu 4.2: `bild_ka_cut12.png` (Bildlauf `laeufe/ka_2050_cut12_{vor,nach}` = derselbe Plan mit `RE15_FORCE_CUT=12`
+(Beckenkamera), nur fuer das Bild; Lagen bitgleich zum Messlauf: obj 1 bei F1200 vor `(2052,0,1043)` / nach `(2052,0,-1873)` wie
+in 4.2, 322/203 SCHUB-OK, 0/2 gesperrt; push.txt der cut13-Laeufe in den ersten 400 Zeilen identisch zum Lauf ohne Kamera):
+**vor** schiebt sich ab F800 die rechte Kiste (obj 1) in die vordere linke (obj 2), F900/F1200 sind nur noch zwei Umrisse da;
+**nach** stehen ab F700 drei Kisten, obj 1 Kante an Kante neben obj 2.
+
+### 4.4 Punkt 2, LEON, ECHTER WEG in ROOM2050 bis ins Becken (Tuer + drei Absprunge) und dieselbe Paarung (`laeufe/kc2_2050_{vor,nach}`)
+Abnahme 0 hatte den Abstieg ins Becken nicht nachgefahren (dort H4). Hier vollstaendig an der exe: `RE15_DEBUG_JUMP=2000@250
+RE15_PLAYER_POS=-26450,10250,2048,1` (an der Leiter in ROOM2000), Plan `plaene/kc2_2050.txt`: Aktionstaste -> debug.log `[aot] DOOR
+FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)` -> `[room] PC loaded room2050.rdt` (Ankunft
+Band 3). Weg: nach Norden/Westen bis vor die Absprungzelle r0[49] (Band 3, Wort 0x3202, x 6350..8750 z -13950..-12150; der
+Durchgang r0[50] ist im ersten Besuch per `Sca_id_set 37 0x 32 00` @0x01E94-01EA4 offen), Blick Nord, Aktion -> Herunterspringen
+(climb.txt `sub=10 kind=0x02`, danach `band=2`, Lage (7595,-3600,-12618)); an die Zelle r0[23] (Band 2, Wort 0x2102), Blick West,
+Aktion -> `band=1` (5882,-13036); an r0[77] (Band 1, Wort 0x1002), Blick Sued, Aktion -> `band=0` (5878,-11682); zu Fuss ins Becken
+nach (-2701,-92). climb.txt-Baender in Folge: `312 band=1` (ROOM2000) `441 band=3` `197 band=2` `188 band=1` `2774 band=0` — in
+BEIDEN exe gleich. Danach derselbe Kistenweg wie 4.2 (obj 2 nach Osten bis x >= 600, obj 1 nach Sueden). `GEGNERWEG` nimmt die zwei
+Spinnen heraus (Messung der Schubkette ohne Gegner).
+
+| exe | Lagezeilen mit Ueberlappung | tiefste Eindringung | obj 1 SCHUB-OK / GESPERRT | OBJEKT-GESPERRT | Endlage obj 1 / obj 2 |
+|---|---|---|---|---|---|
+| vor | **109 / 240** (ab F1980) | 390 (obj 1 durch obj 2 bis **z 1000**, `SCHIEB: Bedingung erfuellt`) | 324 / 0 | — | (2052,0,1000) / (642,0,-64) = ineinander |
+| nach | **0 / 240** | — | 192 / 1 | `F1975 room=2050 OBJEKT-GESPERRT p=2 obj=1 ziel=(2052,-1842) gegen p=3 obj=2 lage=(642,0,-64) dX=1410 dZ=-1778 sumX=1800 sumZ=1800` | (2052,0,-1879) / (642,0,-64): \|dZ\| 1815 > 1800 |
+
+(Im nach-Lauf hielt der Plan danach UP bis zum Bildlimit; Leon glitt an obj 1 vorbei und schob obj 3 nach Sueden bis an die Zelle
+— `F2706 ... obj=3 SCHUB-GESPERRT ... lage=(4248,3344)`, eine Zellsperre, keine Kistenberuehrung; 0 Ueberlappungszeilen bis F3600.)
+=> Der Nutzer-Befund ist auf dem echten Weg (Tuer + Abstieg) reproduziert (vor) und behoben (nach).
