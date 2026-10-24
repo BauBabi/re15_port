@@ -477,3 +477,23 @@ Ventilraetsel, mit Sicherung ja; ganzer Ablauf zu Fuss (Leon UND Elza).
 - **I-E2 (Hinweis H2 der Abnahme I 0):** Laden eines Spielstands IN ROOM2000/2001 (CONTINUE) zeigt keine Zombies (300 Bilder
   ohne Zombie-Aktor) — vorbestehend, aber genau die Raeume des Nutzer-Punkts der Spur I. Spur I behebt es (Ursache im
   Boot-/Lade-Pfad belegen, Riegel: Laden in 2000 und 2001 -> Zombies liegen wie beim Tuerweg).
+
+## 2026-10-24 13:11 — Nachtrag 12 (Wortlaut; Antworten auf die Fragen (k) und (l) der Spur C)
+
+Fragen (gekuerzt): (k) "Umgesetzt ist die Unterkante: Wasser bis zur Oberkante der unteren Reling (y -3600). Der Ring ist
+trocken, Steg und Landeplaetze stehen 1800 unter Wasser. Oder meintest du direkt buendig an die Ring-Reling (y -5400)?"
+(l) Zwei neue Texte zur Freigabe: "I cannot go down the stairs / because of the water." und "Numbered valves. If I turn
+them, / this whole level will be flooded. | I should look around here first."
+
+> (k) Wasserstand nach dem Strom:: unterhalb der Absperrung, sodass es nicht drüber "rein" laufen würde.
+> zu (l) Zwei neue Texte zur Freigabe: Für den Moment ok, aber „Numbered valves. If I turn them, / this whole level will be
+> flooded. | I should look around here first." würde ich später noch ändern wollen.
+
+Folgen (Orchestrator, Spur C):
+- (k) Der Ruhepegel nach dem Strom steht so hoch wie moeglich, aber UNTERHALB der Absperrung am inneren Ringrand, so dass
+  kein Wasser auf den Ring laeuft (nicht buendig mit dem Ring). Die Absperrung (Bruestung/Gelaender am Ringrand, Hoehe und
+  Art) aus der Geometrie belegen (SCA-Zellen mit Offsets + Hintergrundbild); ist sie ein durchsichtiges Gelaender, gilt die
+  Ringboden-Kante (y -5400) als Grenze und der Pegel liegt knapp darunter. y -3600 bleibt nur, wenn die Geometrie zeigt, dass
+  es keinen hoeheren Pegel unterhalb der Absperrung gibt. Bildbeleg vorher/nachher aus den Ring-Kameras.
+- (l) Beide Texte sind vorerst freigegeben (2030 Id 48 Treppe, Id 49 Ventile). Den Ventil-Text (Id 49) will der Nutzer
+  spaeter aendern — in den Release Notes unter "Zu entscheiden" fuehren.
