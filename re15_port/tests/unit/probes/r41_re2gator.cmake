@@ -80,6 +80,14 @@ endif()
 #                                Leon y -1800); alles im Wasser, Kopf + Leon im Bild der Finisher-Kamera (RE2-P0 @0x80101048-4c,
 #                                Zusatzwinkel 0 @0x80101050-54, Anker-Paar ohne Wand FUN_80015cb8 @0x80101174/@0x801011cc)
 #   unit_r41_re2gator_buehne     Nachbesserung 5: Finisher-Buehne fuer jede Gator-Lage (Wasser + Plattform/Rampe, Raster 1000 x 8 Gier)
+#                                Nachbesserung 6 (Abnahme 5 M2): Raster 2000 x 4 Gier x JEDE Zonenkamera als laufende Kamera (angezeigt
+#                                work_vars[0x0A] @0x80021bfc / angefordert cam_id @0x80014300) + Paar angezeigt/angefordert: Buehne immer,
+#                                nie auf der laufenden Kamera (RE2 P0: Umsetzen @0x80101048-4c im Takt des Schnitts @0x80100ff4);
+#                                mit den Raum-Objekten aus ROOM2090 main00 (Obj_model_set) und Leons PL00-Knochen
+#                                maul (NB6, Abnahme 5 M1/M3): P3 ohne Ende (300 Bilder, RE2 @0x801011c4-e4), Opfer gehalten/geparkt
+#                                (+0x1D3 & 0x80 @0x80102f24-28), laufende Kamera je Lage, Leons Koerper (776 Vertices) unabhaengig gegen die
+#                                Raum-Objekte (Huellquader, Strahl von der Kamera) und ueber der Wasserlinie in P1; Gegenproben NB5-Buehne
+#                                (Leiche verdeckt 196 Vertices) und NB5-Hoehe y 0 (unter der Wasserlinie)
 foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera aufnahme lauer schleppen anschwimmen sitz gier maul buehne)
     add_test(NAME unit_r41_re2gator_${_teil} COMMAND test_r41_re2gator ${_teil})
     set_tests_properties(unit_r41_re2gator_${_teil} PROPERTIES TIMEOUT 240)

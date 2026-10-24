@@ -1929,6 +1929,16 @@ static int m_gegenprobe_nb5(void)
     printf("maul: Gegenprobe NB5-Buehne E1 (5638,-12546) Gier 2323 Cut 4, Leon P1 (%d,%d): Koerper %d Vertices, im Bild %d, von Raum-Objekten "
            "verdeckt %d\n", pl->x, pl->z, s_mv_n, s_mv_im, s_mv_verd);
     CHECK(s_mv_verd > 0, "Gegenprobe: die Raum-Leiche verdeckt in der NB5-Buehne keine Vertices - der Riegel waere blind fuer M3");
+    /* Gegenprobe Wasserlinie: NB5 stellte Leon in P1 auf den Beckenboden (pl->y = 0) - mit dem Maul-Massstab liegt er dann unter der
+     * Wasseroberflaeche (Typ-3-Raster obj 1 y -1620); die Schranke ">= 500 Promille ueber der Wasserlinie" muss das verwerfen */
+    pl->y = 0;
+    s_mv_cut = 4;
+    m_maulraum(gp, s);
+    s_mv_cut = -1;
+    int pro = s_mv_n ? s_mv_ueber * 1000 / s_mv_n : 0;
+    printf("maul: Gegenprobe NB5-Hoehe (Leon P1 auf y 0): %d Promille des Koerpers ueber der Wasserlinie y %d\n", pro, (int)s_wasser_y);
+    CHECK(s_wasser_ok && pro < 500, "Gegenprobe: auf y 0 liegen %d Promille ueber der Wasserlinie - die Schranke waere blind fuer die "
+          "Wasser-Verdeckung", pro);
     return 1;
 }
 static int teil_maul(void)

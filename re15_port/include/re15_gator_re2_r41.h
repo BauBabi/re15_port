@@ -211,7 +211,8 @@ void re15_gr2_kamera_finisher(int slot, const re15_actor_t *gator, const re15_ac
  *    liegt und der Gator FRONTAL zu einer Zonenkamera steht, die Kopf und Leon zeigt (RE2 Cut 7: frontal +1,00, Leon vor der
  *    Kamera); diese Kamera nimmt re15_gr2_kamera_finisher. Aufruf im Bild des toedlichen Bisses (der Schnitt wird erst im
  *    naechsten Bild angezeigt, Kamera-Apply am Bildanfang), finisher_setzen in P0 = Umsetzen im ersten Bild der neuen Kamera.
- *    1 = Buehne gefunden, 0 = keine (Gator bleibt, Kamera wie bisher).
+ *    1 = Buehne gefunden, 0 = keine (Gator bleibt, Kamera wie bisher). Nachbesserung 6: Ordnung erst nach dem RE2-Finisher-Massstab
+ *    (Cut 7 1354 im Koppelbild), dann Versatz + Drehung; nie die laufende Kamera; keine verdeckenden Raum-Objekte (s. u.).
  *  - finisher_cut: Messhaken, Kamera der Buehne (-1 = keine).
  *  - fress_sitz: Messhaken (PC-Zeichner nach dem NPC-Pass / Riegel): |Kopf (Bone 6) der gezeichneten Pose - Kopf an der Anker-
  *    Lage ohne Zusaetze| = Opfer im Maul wie authored (RE2: FUN_80015cb8 setzt beide vom Anker, ohne Neigung/Wand); kopf[]/leon[]

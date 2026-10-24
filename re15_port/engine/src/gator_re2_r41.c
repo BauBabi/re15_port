@@ -1917,7 +1917,10 @@ int re15_gr2_kanister_sitz(re15_actor_t *e, int32_t *abw)
  * im Wasser - dieselben Massstaebe wie die Intro-Lage gr2_bahn_frei), (b) der Gator wie in RE2 Cut 7 FRONTAL zu einer
  * Zonenkamera steht (Gier = Peilung Wurzel -> Kamera) und (c) Kopf (Bone 6) und Leons Wurzel in P1-P3 im Bild dieser Kamera
  * liegen, unter der RE2-Massstabsgrenze (gr2_massstab_grenze). Kosten wie die Intro-Lage: Versatz + 4 x Gier-Drehung. Das
- * Umsetzen faellt wie in RE2 in den Finisher-Schnitt (P0: Umsetzen @0x80101048-4c und Schnitt @0x80100ff4 im selben Bild). */
+ * Umsetzen faellt wie in RE2 in den Finisher-Schnitt (P0: Umsetzen @0x80101048-4c und Schnitt @0x80100ff4 im selben Bild).
+ * Nachbesserung 6 (Abnahme 5 M2/M3, Dossier §14): (d) nie die laufende Kamera des Biss-Bildes (gr2_fin_laufend), (e) kein gezeichnetes
+ * Raum-Objekt im Sichtstrahl zu Leon/Kopf/Kiefer (gr2_fin_unverdeckt), Ordnung erst nach dem RE2-Finisher-Massstab 1354, dann
+ * Versatz + 4 x Drehung (gr2_fin_fenster, Kopf der Suche). */
 #define GR2_FIN_N     193     /* P1 14 Bilder (Clip 4 Bild 1..14) + P2 120 (sf 1..120) + P3 59 (Clip 11 Bild 0..58), s. gb FRESSEN */
 #define GR2_FIN_P2    14
 #define GR2_FIN_P3    134
