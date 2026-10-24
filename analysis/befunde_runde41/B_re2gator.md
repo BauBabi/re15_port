@@ -1322,3 +1322,37 @@ Plan: M1 (Kanister-Weltlage + Effekt-Quellmatrizen aus der Pose des gezeichneten
 Part6(Bild) x lokal" bei Wende, Biss, Befreiung; Bildbeleg C3 F1276-F1284 vorher/nachher) -> M2 (Befreiung ohne
 Sofort-Snap, PORT-WAHL benannt; in CHASE/GUARD keine Gier-Aenderung > 0x60 je Bild ausser den RE2-Knicken +1024;
 Riegel auf die Lagen E1 und C3 ueber >= 300 Bilder; Bildbeleg) -> Bau -> gezielte Tests (Sweep!) -> exe nachher -> Abschluss.
+
+### 12.0 RE-Belege (selbst gelesen, `re2_disasm.py` auf info/re2leon/PSX.EXE bzw. `--bin EM23_OVL_0000.BIN`)
+- **Kanister = Kind der GEZEICHNETEN Part-6-Matrix (M1).** T2 @0x801018c4-cc `lh v1,346(s1) / addiu v0,zero,13 / bne` (t == 13),
+  @0x801018d0 `addiu a0,s0,1104` (s0 = Part-Tafel +0x198, 1104 = 6 x 172 + 0x48 = Weltmatrix des Part-Records 6), @0x801018e0
+  `sw a0,128(s2)` (obj[1]+0x80 = Eltern-Zeiger), @0x801018f0 `jal 0x8002d030` (a0 Part-6-Matrix, a1 = obj[1]+84, a2 = sp+16 =
+  Lokalmatrix), @0x80101910-18 `sw v0,56(s2) / sw v1,60(s2) / sw a3,64(s2)` (Lokallage). Root-Reihenfolge je Bild @0x80100200
+  `jalr v0` (Routine: Sub-Pre/Main mit FUN_8001a330 = Bildvorschub + Wurzelschritt) -> @0x80100284 `jal 0x80035408` -> @0x80100320
+  `jal 0x801017c4` (T2) -> @0x8010037c-90 `lhu v0,1140(s2) / lhu v1,554(s0) / addiu a1,s2,1056 / addu / jal 0x8008e1f4` (Part 6
+  az += +0x22A, RotMatrix in die LOKALE Part-6-Matrix +0x18, danach Winkel zurueck @0x80100394-a4). Die Weltmatrix +0x48, an der
+  der Kanister haengt, enthaelt also die Pose DIESES Bildes samt +0x22A - der Kanister steht in jedem Bild an der gezeichneten
+  Kopf-Matrix x Lokallage, ohne Nachlauf.
+- **Ueberblendung FUN_8001a330 (EXE), fuer die gezeichnete Pose.** @0x8001a34c-64 `lbu v0,332(s0) / beq v0,a1 / sb a1,332(s0) /
+  sb zero,333(s0) / sb s1,334(s0)` (Clipwechsel: +0x14E = Blend-Argument), @0x8001a37c-ac `addiu v1,s1,1 / addiu v0,zero,4096 /
+  divu v0,v1 / mflo v0 / sll a3,s2,16 / ... jal 0x8002959c / or a3,v0,a3` (Rate = 4096 / (Blend + 1) im unteren Halbwort);
+  0x80029614 @0x800296a8-ec `lbu t3,334(s2) / beq t3,zero / andi v0,a3,0xffff / mult v0,t3 / ... addiu v0,zero,4096 / mflo t1 /
+  subu v0,v0,t1` (Vorbild-Gewicht = Rate x Zaehler, GTE-Lerp), @0x80029994 `bne t3,zero,0x800299c0`, @0x800299c0-cc `lbu v0,334(s2)
+  / addiu v0,v0,-1 / sb v0,334(s2)` (Zaehler -1 je Aufruf). Der Port-Zeichner rechnet dasselbe (skeleton_common.c: wp =
+  anim_frac x anim_blend_rate), der Gator setzte aber nur anim_frac (32/4/16/3) - ohne Rate (Default 0x200) und ohne Abbau
+  (Typ 0x23 ist in re15_type_self_advances_anim, der globale Abbau laeuft nicht). GEMESSEN (exe C3, RE15_POSE_DUMP,
+  `B41nb4/mess/C3v/pose.log`): frac 4 ab F390 bis F644 und ab F946 bis Laufende (= dauerhaft 50 % Vorbild), frac 16 F645-F794 =
+  wp 0x2000 -> 0x1000 = Pose EINGEFROREN: Bone 9/13 in allen 150 Dash-Bildern F645-F794 bitgleich (2072,-813,1455)/(-3781,-588,494),
+  obwohl kf 176..325 laeuft - der RE2-Dash (Clip 2) war im Spiel nie zu sehen. Nebenbefund dieser Nachbesserung (Punkt 2
+  "gleiches Verhalten bei Animation"), mit behoben.
+- **Keine Koerperdrehung in der RE2-Verfolgung (M2).** Gier-Schreiber im ganzen EM23-Overlay (Abnahme 3 §2, selbst
+  nachgesehen @0x80100280 `sh zero,118(s0)` / @0x801002a0 `sh v0,118(s0)` = Sichern/Rueckschreiben um FUN_80035408 @0x80100284):
+  @0x80100280/2a0/948/ec0/2404/2440/27c8/2a34 - keiner in Sub 1/2 (Pre @0x80100964, Main @0x80100c20/@0x80100cdc) oder T2. Die
+  Selbst-Befreiung (Sofort-Snap re15_enemy_steer_point(.., 0x800), enemy_ai_boss_gator.c) ist Port-Design (probe_gator_sweep
+  2026-09-11, Klasse (3) "Klemm-Slab-Gefaengnis"); ihr Zweck laut Kommentar: das ZENTRUM steckt im Slab und die Box-Klemme
+  verwirft von innen JEDE Bewegung. Gemessen (Abnahme 3, gier.py > 0x60): alle Spruenge in CHASE/GUARD sind Befreiungen an einer
+  WAND, an der die Klemme Bewegung nach aussen sehr wohl zulaesst (Wand-Druck, kein Gefaengnis): C3 F1097/1116/1207/1218/1327/1338/
+  1344 Westwand (Ziel Leon in der Tuernische), A2 F379 Westwand, D2 F1004/1075/1083 Westwand, N F1057 Nordwand, E1 F426/458/490/522/
+  546 Ostwand (GUARD-Ziel GPAT (6500,-12600) liegt 700 vor der Ostwand = hinter der Klemmlinie 7200-1466), dazu C3 F634 nach der
+  CROSS-Landung (Plattform-Slab). Ausgenommen (kein CHASE/GUARD-Bild bzw. RE2-Knick): Intro-Start (Pos_set-Zwilling, unsichtbar
+  davor), CROSS-Start (Bahn-Blick, Nutzer-Design), +1024 am Clip-3-Ende (@0x80100938-48 / @0x80100eb0-c0, Lunge-Ende ebenso).
