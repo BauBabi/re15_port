@@ -256,10 +256,12 @@ Anpassung (Kommentar "Runde 41 Spur H" im Riegel): WARTE 60 -> 240, Kriterien un
   @0x8011cc64) liegt INNERHALB des NPC-Ticks; ein Haken nach run_all in game_step_common.c liefe hinter der Klemme
   (eine geschobene NPC stuende in der Wand) und hinter allen anderen Ticks. Keine Ueberschneidung mit Spur A (deren
   NPC-Haken sitzen in re15_npc_sub_turn/re15_npc_sub_walk, Include hinter re15_esp.h) — fuer die Integration vermerkt.
+  **Angenommen:** Orchestrator-Entscheid H-E1 (2026-10-24 17:38, Abnahme H 0 Mangel V1; s. 'Nachbesserung 1').
 - `engine/src/aot_common.c`: 1 Include (hinter re15_zellschub_r36.h, nicht neben Spur A's Include) + Objekt-Pass in
   re15_prop_push_tick (3 Zeilen + berichtigter Kopfkommentar).
 - `engine/src/game_step_common.c`: 1 Include + 1 Zeile `re15_kollision_r41_objspiegel()` nach re15_objfall_nach_pass.
 - `tests/integration/test_r39_dining1141_kampf.cmake` (Riegel der Spur J R39): WARTE 60 -> 240 (s. Querbezug oben).
+  **Angenommen:** Orchestrator-Entscheid H-E1 (Abnahme H 0 Mangel V2, belegter Querbezug; s. 'Nachbesserung 1').
 - Keine Bank-9-Bits, keine Nachrichten-Ids, keine Assets, kein Eingriff in shared_assets/pri/synchro/release.
 - Messhaken (kein Spielverhalten, env): `RE15_KOLLISION_LOG=<datei>` (NPC-SCHUB / OBJEKT-GESPERRT / SETZE),
   `RE15_KOLLISION_SETZE="<obj>:<x>,<y>,<z>,<band>@<bild>"` (Objekt einmal je Raum versetzen = Gegenstueck der
@@ -347,7 +349,7 @@ Ausgangslage: Abnahme H 0 (`H_abnahme_0.md`, 46b38db9) — beide Nutzer-Punkte *
 formalen Vertragsabweichungen V1/V2. Orchestrator-Entscheid **H-E1** (AUFTRAG.md "2026-10-24 17:38", master 200184bc, vom
 Orchestrator in diesen Zweig gespiegelt mit 91e19ffa): V1 und V2 **angenommen**; "Die Nachbesserung H 1 dokumentiert beides im
 Dossier; sonst ist nichts zu tun." Deshalb: kein Code geaendert, keine Messung der Abnahme wiederholt. Neu ist nur ein Beleg zu
-V2 (die aec4-Gates fuer das Paar NPC/Gorilla), den die Abnahme in RE-Gate 3 offen gelassen hatte ("Bewertung s. Mangelliste").
+V2 (die aec4-Gates fuer das Paar NPC/Gorilla), zu dem die Abnahme in RE-Gate 3 nur "(Bewertung s. Mangel-/Hinweisliste)" vermerkt hatte.
 Arbeitsordner (Skripte, Logs): `scratchpad/H41nb1/`; Belege im Zweig: `H_belege/nb1_*`.
 
 ### V1 — Haken in enemy_ai_common.c (nicht in der Zuteilung VERTRAG §1.3)
@@ -413,4 +415,18 @@ Arbeitsordner (Skripte, Logs): `scratchpad/H41nb1/`; Belege im Zweig: `H_belege/
 - **Messung nachher:** `integration_r39_dining1141_kampf` (Fassung WARTE 240) im gezielten Lauf unten.
 
 ### Bau und gezielte Tests (Nachbesserung 1)
-(laeuft)
+- `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`; `bash re15_port/tools/local_build.sh build`
+  -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)`. `re15_pc.exe` 11:28:49, sha1
+  `3da1c0f4c3df7fbabd91679e961d93e6f10df207` = die von der Abnahme H 0 gepruefte exe (Abnahme 0a) — der Code-Stand ist
+  unveraendert (seit 103563cc nur Doku/Belege).
+- Gezielter Lauf (eigene Riegel beider Punkte + der Riegel aus V2), `ctest --test-dir re15_port/build -R
+  "r41_kollision|^integration_r39_dining1141_kampf$" -j 3 --timeout 900 --output-on-failure` ->
+  **`100% tests passed, 0 tests failed out of 10`** (`Total Test time (real) = 309.72 sec`): unit_r41_kollision_npc/raum3070/
+  raum3001/kiste, integration_r41_kollision_kiste (69.44 s), _raetsel_leon (126.75 s), _raetsel_elza (126.66 s), _npc3070
+  (82.38 s), _npc3001 (82.51 s), integration_r39_dining1141_kampf (Fassung WARTE 240, 309.65 s). Keine Messkopie der exe
+  zurueckgeblieben (`build/platform/pc` ohne re15_pc_r41h_* / re15_pc_r39j_*).
+- Breitere Gruppen nicht erneut gefahren (Code unveraendert): unit_/prop_/probe_ 922/922 und Integrationsgruppe 81/81 stehen in
+  der Abnahme H 0 (5.1/5.4) fuer denselben Code-Stand.
+
+### OFFEN nach Nachbesserung 1
+- Unveraendert die Punkte 1-5 aus "OFFEN" oben und die Hinweise H1-H6 der Abnahme H 0 (keine Maengel). Neu: keine.
