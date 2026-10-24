@@ -270,3 +270,41 @@ die Peilung Gator → Leon, Konvention wie `relativ.py`):
   (Z. 2409-2423): 9b6e0b35 (2026-09-12) / e3fb82bb (2026-09-19), in master unverändert. Das GUARD-Ziel (Z. 2052-2061,
   `gx = pl->x` geklemmt, `gz = Rampenkante ± GB_GPAT_M`) ist ebenfalls ALT; es liegt in E1 bei (6500,−12600), östlich der
   Klemmlinie x 5716 — der Gator steuert mit 0x40/Bild auf dieses unerreichbare Ziel (Gier 13…115) statt auf Leon (Peilung ~840).
+
+**(b) Vorher/nachher am selben Ankunftsort (exe, Sprung statt Tür, sonst E1).** `RE15_DEBUG_JUMP=2090@250
+RE15_PLAYER_POS=6300,-16250,2048,1` (Band 1 = y −1800, Leon steht wie nach der 20A0-Tür oben auf der Ostrampe)
+`RE15_GB_TEST=1 RE15_EXIT_AT=1500#2090`: Vorher-Bau `mess/RA` (`lauf_alt.sh`): Bisse F417 (Gier 169, 67°) und F528 (Gier 2431,
+−141°), danach keiner bis F1500 — Leon überlebt (HP 0); neuer Bau `mess/RN`: F417, F522 (Gier 13, 73°), **F627 (Gier 115, 64°)
+→ Tod**, `GUARD … pitch=-350 arc=-220 … pos=(5763,-12583)` vor dem Tod, Finisher-Kamera Cut 7 → Cut 2 wie E1. Beide Läufe
+treffen die Biss-Bilder von E1alt_lang bzw. E1/E1neu_lang Bild für Bild — der Sprung-Weg ist für diese Frage gleichwertig zum
+Türweg. **Der Ablauf am Ankunftsort ändert sich also durch die Nachbesserung 4 von "überlebt" zu "stirbt mit leerem Maul".**
+
+**(c) Was die Nachbesserung 4 dabei geändert hat — und was nicht (Code, `git show 47efb932:… / HEAD:…`).**
+- Unverändert seit 47efb932 (Stand der Abnahme 3): der ganze `case GBP_FRESSEN` (187 Zeilen bitgleich), `gb_biss_abschluss`
+  (gegen master nur `re15_gr2_biss_cd` im NICHT-tödlichen Zweig) und der ganze `case GBP_GUARD` (gegen master nur
+  `re15_gr2_biss_erlaubt`, NB2). Geändert hat die Nachbesserung 4 die Befreiung (kein Sofort-Snap mehr, nur noch Schub im
+  echten Gefängnis), den Zeitpunkt der Wand-Klemme (Takt-Ende) und die Überblendung.
+- Folge in E1/RN: ohne den 32-Bild-Snap bleibt der Gator an der Klemmlinie x 5716 auf sein unerreichbares GUARD-Ziel
+  (6500,−12600) gerichtet (Gier 13…115) und beißt im 105-Bild-Takt weiter (F417/F522/F627) — der dritte Biss tötet.
+- Warum das Maul leer ist (Code-Befund, ALT, nicht von Spur B): im GUARD wird je Bild `g->pitch_vz = -(350*guard_t)/24` und
+  `g->arc_vz = -(220*guard_t)/24` gesetzt (Z. 2232-2233, 68f37634 2026-09-10); der tödliche Biss (`gb_biss_abschluss`, Z. 421,
+  12d3b0c3 2026-09-11) nullt nur `arc_vz`; `pitch_vz` bleibt durch P0–P3 stehen und wird erst am FRESSEN-Ende genullt
+  (Z. 2564). Der Zeichner neigt damit die Wurzel (`re15_gator_spine_arc_vz` Bone 0 → `pitch_vz`, Z. 2751) um −350
+  (≈ −31°), während P0/P2/P3 Leon aus dem ungeneigten Rig setzen (`gb_opfer_skalieren`, Anker-Paar; kein `pitch_vz` im
+  FRESSEN-Fall). In A2 (Tod aus dem CHASE-Biss, pitch 0, Biss mit Blick auf Leon: F397 Gier 2569 / Peilung 2571) liegt Leon
+  sichtbar im Maul, obwohl er dort ebenfalls 1100–2650 hinter der Westwand steht (FSYNC2 x −10041…−11556); in E1/RN liegt er
+  3200–3900 hinter der Ostwand (FSYNC2 x 10374…11062). Das ist eine aus dem Code gelesene Ursache, nicht gemessen — die Messung
+  des Abstands "gezeichneter Kiefer ↔ Leon" je Bild ist Teil des Mangels (§8).
+
+## 5. Integration (gezielt, am gebauten Stand)
+- Lauf der Vorgängerin (12:09, `-R "^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate|r37_itemband|r36_tueren|
+  r37_re2zombie)$"`, `B41abn4/ctest_integ.log`): 6 von 7 grün (r38_wasser 162,7 s, r35_granate 163,4 s, r37_re2zombie 51,9 s,
+  r36_tueren 27,5 s, r36_schuss 143,2 s, r41_re2gator 203,7 s); r37_itemband lief beim Sitzungslimit noch.
+- `ctest --test-dir re15_port/build -R "^integration_r37_itemband$" --timeout 1800 --output-on-failure` einzeln
+  (12:47:32–13:01:00, `B41abn4/ctest_itemband.log`): **Passed 807,18 s** → zusammen **7/7 grün**. Die beim Abbruch
+  liegengebliebene Kopie `re15_pc_r37d_haken_2b5e9bd5.exe` hat der Test selbst entfernt; kein Prozess aus diesem Baum lief
+  mehr (geprüft per Get-Process, nur fremde Prozesse aus r41_ventilkette).
+- Unit-Riegel: 112/112 (§1), dazu `unit_gator_sweep` (`gator-sweep: 3342 Paare, 0 nicht konvergiert`, `gator-biss: 80 Faelle,
+  0 ohne Treffer`) und `unit_gator_fress` (`PIN P3 … dRef=(-2,-1,-1)`, `Maulraum … 776/776 = 100.0%`) einzeln mit -V
+  (`B41abn4/unit_sweep_V.txt`). Der Fress-Riegel misst den Finisher nur aus einer CHASE-Lage (Gier 4095, pitch 0) — die
+  GUARD-Lage aus §3.4 deckt er nicht ab.
