@@ -168,3 +168,57 @@ Hautabstand 18 der Klemme selbst nachgelesen: `8003bce0 addiu t1,v0,18` / `8003b
 Elza am echten Weg reproduziert (vor: beide stehen ineinander) und behoben (nach: getrennt).
 Nebenbeobachtung (vorbestehend, kein Punkt der Spur): Spieler/John direkt nach dem Eintritt F55-110 53 Bilder < 850 in BEIDEN exe
 (John an der Ostwand x -6140 geklemmt) — gleiche Zahl vor/nach, nicht NPC-gegen-NPC.
+Bildbeleg zu 4.3 (`laeufe/k1cut13_{vor,nach}`, derselbe Lauf mit `RE15_FORCE_CUT=13` = Beckenkamera, nur Bild; Lagen und
+F480-Sperre bitgleich zu k1_*): Bildbogen `bild_k1cut13_vor_nach.png` (F450/F550/F650/F1000, RE15_WINDOW_SCALE=1): **vor**
+schiebt sich die vordere Kiste ab F550 in die hintere, ab F650 ist nur noch EINE Kiste zu sehen (beide an derselben Stelle);
+**nach** stehen ab F550 zwei Kisten Kante an Kante, die geschobene bleibt an der anderen haengen. (Die Kamerasuche
+`laeufe/cut2050_<n>` / `cutsurvey_[ab].png`: Cut 11/12/13 zeigen das Becken.)
+
+### 4.5 Punkt 2, Leon, ROOM2050, zweite Achse (Z) und dritte Kistenpaarung (`laeufe/k2_{vor,nach}`)
+Befehl `skripte/k.sh k2 <vor|nach>`: Spawn (600,-5552) Blick Ost, Band 0; Wegplan `plaene/k2.txt`: obj 1 (2052,0,-5552) nach
+OSTEN auf x 2868 (dann \|dX\| zu obj 3 = 1380 < 1800), Weg ueber (1350,-3000)/(5700,-3000)/(5700,2850) suedlich vor obj 3, obj 3
+nach NORDEN gegen obj 1 (`SCHIEB 1024 Z <= -6000`).
+
+| exe | Zeilen mit Ueberlappung | tiefste Eindringung | SCHUB-GESPERRT / OBJEKT-GESPERRT | Lage obj 3 nach dem Nordschub |
+|---|---|---|---|---|
+| vor | **130** | **420** (F690: obj 1 (2868,0,-5552) / obj 3 (4248,0,-4386), \|dX\| 1380 \|dZ\| 1166) | 0 / — | bis **z -6041** (Bedingung `obj.z = -6041` erfuellt), obj 1 mitgeschoben |
+| nach | **0** | — | 2 / **1**: `F654 OBJEKT-GESPERRT p=4 obj=3 ziel=(4248,-3753) gegen p=2 obj=1 lage=(2868,0,-5552) dX=1380 dZ=1799` | **z -3706** (\|dZ\| 1846 > 1800) |
+
+(Die zweite Sperre nach F1429 ist eine Zellsperre an obj 1, das Leon nach dem Abgleiten an obj 3 selbst nach Norden schob — keine
+Kistenberuehrung, 0 Ueberlappungszeilen.) => auch die Z-Pruefung (@0x8002ce94-a0) sperrt, Grenze inklusive (dZ 1799 gesperrt).
+
+### 4.6 Punkt 2, ELZA, ROOM2051 (`laeufe/k1_elza_{vor,nach}`)
+Befehl `skripte/k.sh k1_elza nach` (= k1 mit `RE15_PSELECT_AUTO_SWITCH=1`, `RE15_DEBUG_JUMP=2051@250`): debug.log `[pl] Spieler-Familie
+PL04 (character=4, Elza-Bit=1)`, `[room] PC loaded room2051.rdt`; `F486 room=2051 OBJEKT-GESPERRT p=4 obj=3 ziel=(521,-45) gegen p=3
+obj=2 lage=(-1256,0,-64) dX=1777 dZ=19`, obj 3 bleibt bei x 552 (\|dX\| 1808), **0 Ueberlappungszeilen**.
+**vor** (`k.sh k1_elza vor`, ebenfalls PL04 + room2051): **141** Ueberlappungszeilen, tiefste Eindringung **1781** (F585:
+obj 3 (-1396,0,-45) IN obj 2 (-1396,0,-64), \|dX\| 0), Ende beide bei x -3015, 0 SCHUB-GESPERRT. => Elza-Szenario wie Leon:
+vorher ineinander, nachher gesperrt.
+
+### 4.7 Punkt 2, echter Weg IN den Raum (`laeufe/tuer2000_nach`)
+`skripte/tuer2050.sh nach 2000`: Sprung nach 2000 an die Leiter, Aktionstaste -> debug.log `[aot] DOOR FIRE slot=4
+rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)` -> `[room] PC loaded room2050.rdt`. Die Kisten stehen nach
+dem Tuerweg auf denselben Records wie nach dem Sprung (objfall F15 und F300: `p2 (2052,0,-5552) b0 | p3 (-1256,0,-64) b0 | p4
+(4248,0,1400) b0`, obj 6 `(-1600,-5400,-9348) b3`) — der Sprung ins Becken (`RE15_PLAYER_POS` Band 0) in 4.3/4.5/4.6 aendert also
+nichts am Raumzustand; er erspart nur den Abstieg von der Ankunft (Band 3, y -5400) ins Becken (Band 0).
+Abstieg ins Becken zu Fuss (`laeufe/becken_nach`, Plan `plaene/becken.txt`): nach dem Tuerweg (Ankunft (9100,-5400,4100), Band 3)
+Aktionstaste in den Randzonen `AOT slot 62 typ 3 ev 0 mitte (9050,1150)` und `slot 63 typ 3 ev 1 mitte (9050,-350)` (Liste `AOTS`
+im Wegplan-Log) -> Spieler bleibt auf Band 3 (objfall F240/F465/F690 `spieler=(9056,-5400,...) band=3`). Den Weg hinunter ins
+Becken (vermutlich ueber den Objekt-Fall von obj 6 und Klettern) habe ich NICHT nachgefahren; die Kisten-Messungen 4.3-4.6 beginnen
+deshalb mit dem Sprung-Spawn im Becken (wie die Riegel der Spur). Begruendung, warum das den Befund nicht verfaelscht: Raumzustand
+nach dem Tuerweg = nach dem Sprung (4.7), und die Schubkette haengt nur an Spielerlage, Blick, Pad und den Pool-Objekten.
+
+## 5. Gezielte Testgruppen (selbst gefahren, Spurbaum, keine volle Suite)
+### 5.1 unit_/prop_/probe_ (der Diff aendert den NPC-Tick aller NPC-Typen, die Schubkette aller Kisten und den Bildablauf)
+- Erster Lauf `-R "^(unit_|prop_|probe_)" -j 5 --timeout 600` (`ctest_unit_alle.log`): die vier zuerst gestarteten Bash-Release-/
+  Android-Riegel liefen in ihre eigenen Zeitgrenzen (`unit_r35_android_pruefkette ***Timeout 900.21 sec`,
+  `unit_r38_releaseskript_fehler_umfeld/fehler_bau/ablauf ***Timeout 1200.2x sec`; die Spur hatte sie in 246/371 s gruen) — unter
+  der Last mehrerer paralleler Agenten haengen deren Git-/Bash-Fixtures. Diese Riegel pruefen `release/` und die Android-Kette,
+  die der Diff nicht beruehrt. Lauf abgebrochen (eigene Prozesse per PID, kein /IM), Fixtures aufgeraeumt.
+- Zweiter Lauf ohne diese 10 Bash-Riegel: `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -E
+  "releaseskript|android_pruefkette|android_bash_mutanten|titelversion_ablauf" -j 4 --timeout 600 --output-on-failure` ->
+  **`100% tests passed, 0 tests failed out of 922`** (`Total Test time (real) = 692.26 sec`, `ctest_unit_alle2.log`; enthaelt
+  unit_r41_kollision_*, unit_r41_wasser20b0_* (NPC-Wasserschritte der Spur A), unit_r36_* Kisten/Zellschub/Objfall,
+  unit_r37/r38/r39 NPC-Szenen).
+- Ausgeschlossen und NICHT gefahren: unit_r38_releaseskript_{version,bausteine,trocken,ablauf,fehler_bau,fehler_umfeld,cmd},
+  unit_r35_android_pruefkette, unit_r35_android_bash_mutanten, unit_r39_titelversion_ablauf (kein Bezug zum Diff; Hinweis H3).
