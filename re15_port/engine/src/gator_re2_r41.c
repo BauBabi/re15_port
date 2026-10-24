@@ -2052,8 +2052,8 @@ static int gr2_fin_frei(const gr2_fin_t *t, int32_t gx, int32_t gz, int yaw, int
 /* (c) Kopf (Bone 6) und Leons Wurzel im Bild der Kamera c, Kopf-Massstab <= RE2-Grenze - in JEDEM Bild der Bahn (Fortsetzung
  * Nachbesserung 5: vorher nur Koppelbild + jedes 10. Bild; der Riegel unit_r41_re2gator_maul fand im CHASE-Bezug P1 Bild 12 Leons
  * Wurzel bei Bildlage (106,240), eine Zeile unter dem Bild). Projektion wie gr2_im_bild / gr2_massstab (FUN_80053ca4-Zwilling),
- * die Kamera-Sicht einmal je Aufruf gebaut. gy = Gator-y (Wasser), Leon steht in P1 auf dem Beckenboden (y 0, gb FRESSEN P0), ab
- * P2 auf Gator-y (Anker-y, SPEED-y 0). *kopf_bild / *leon_bild = Bildlage im Koppelbild (Logzeile). */
+ * die Kamera-Sicht einmal je Aufruf gebaut. gy = Gator-y (Wasser); Leon steht in P1-P3 auf Gator-y (Nachbesserung 6: P0 setzt
+ * pl->y = Gator-y, ab P2 Anker-y, SPEED-y 0). *kopf_bild / *leon_bild = Bildlage im Koppelbild (Logzeile). */
 static int gr2_fin_proj(const re15_camera_view_t *v, const int32_t p[3], int *sx, int *sy, int32_t *vz_aus)
 {
     int64_t px = p[0], py = p[1], pz = p[2];
@@ -2083,7 +2083,7 @@ static int gr2_fin_sicht(const gr2_fin_t *t, int c, int32_t gx, int32_t gy, int3
         if (m > *m_max) *m_max = m;
         if (k == GR2_FIN_P2 - 1) { kopf_bild[0] = ix; kopf_bild[1] = iy; }
         gr2_dreh(yaw, t->l[k][0], t->l[k][2], &wx, &wz);
-        p[0] = gx + wx; p[1] = (k < GR2_FIN_P2 ? 0 : gy) + t->l[k][1]; p[2] = gz + wz;
+        p[0] = gx + wx; p[1] = gy + t->l[k][1]; p[2] = gz + wz;   /* NB6: Leon auch in P1 auf der Gator-Hoehe (gb FRESSEN P0) */
         /* Leon: im Bild - nur oben hinaus darf er (der Wurf in P2 Bild 60..75 hebt ihn aus dem POS-Kanal bis y -9177 roh: in RE2
          * Cut 7 liegt er dort bei Tiefe ~5040 / H 231 rund 420 Bildpunkte ueber der Mitte, also ebenfalls oben ausserhalb). */
         ix = -1; iy = -1;
@@ -2139,6 +2139,10 @@ static int gr2_raum_objekte(void)
     if (!g_room_rdt_ok) return 0;
     for (int pi = 0; pi < (int)g_scd.prop_count && pi < RE15_SCD_MAX_PROPS; pi++) {
         if (!g_scd.props[pi].active || g_scd.props[pi].parent_obj >= 0) continue;
+        /* Typ 3 = Raster-Sprite (FUN_8002c18c -> FUN_8003e64c, eigene Zellen-Verdeckung): in ROOM2090 ist das obj 1, die Wasser-
+         * oberflaeche (MD1-Huelle 21600 x 16200, flach y 0, Lage y -1620; Sonde B41nb6/probe_aabb) - durchscheinend, kein Verdecker:
+         * jeder Strahl zu Leon im Wasser kreuzt sie (erster Lauf E1/G1: 2164 bzw. 1780 Lagen verworfen, keine Buehne). */
+        if (g_scd.props[pi].obj_type == 3) continue;
         int oid = (int)g_scd.props[pi].obj_id;
         if (oid >= RE15_RDT_MAX_PROPS || !g_room_rdt.prop_md1[oid]) continue;
         if (re15_md1_parse(g_room_rdt.prop_md1[oid], g_room_rdt.prop_md1_size[oid], &s_obj_md1) != 0) continue;
@@ -2257,7 +2261,7 @@ static int gr2_fin_unverdeckt(const gr2_fin_t *t, int c, int32_t gx, int32_t gy,
     const re15_camera_cut_t *cc = &g_room_rdt.cuts[c];
     int32_t a[3] = { cc->pos_x, cc->pos_y, cc->pos_z };
     for (int k = 0; k < t->n; k = (k + schritt < t->n || k == t->n - 1) ? k + schritt : t->n - 1) {
-        int32_t basis = k < GR2_FIN_P2 ? 0 : gy;
+        int32_t basis = gy;                                     /* Leon in P1-P3 auf der Gator-Hoehe (gb FRESSEN P0, NB6) */
         int np = (t->nlk > 0 ? t->nlk : 1) + 2;
         for (int j = 0; j < np; j++) {
             const int32_t *q; int32_t y0;
@@ -2420,9 +2424,9 @@ int re15_gr2_fress_sitz(re15_actor_t *e, const re15_actor_t *pl, int32_t *abw, i
             int32_t r7[9], p7[3], ax = 0, az = 0;
             gr2_part_welt(e, &gp[7], r7, p7);
             gr2_dreh(s_g[slot].fin_gier, t->l[k][0] - t->b[k][3][0], t->l[k][2] - t->b[k][3][2], &ax, &az);
-            /* y: P1 steht Leon auf dem Beckenboden (pl->y 0, gb FRESSEN P0), der Gator auf seiner Wasser-y (Buehne fin_y); ab P2
-             * stehen beide auf der Anker-y (SPEED-y 0 in allen Bildern, gb FRESSEN P1-Kommentar) */
-            int32_t ay = (ph == 1 ? -s_g[slot].fin_y : 0) + t->l[k][1] - t->b[k][3][1];
+            /* y: Leon steht seit Nachbesserung 6 auch in P1 auf der Gator-Hoehe (gb FRESSEN P0, RE2 P0 schreibt nur x/z
+             * @0x8010106c-84); ab P2 stehen beide auf der Anker-y (SPEED-y 0 in allen Bildern, gb FRESSEN P1-Kommentar) */
+            int32_t ay = t->l[k][1] - t->b[k][3][1];         /* NB6: Leon auch in P1 auf der Gator-Hoehe (gb FRESSEN P0) */
             int64_t d0 = (int64_t)(lw[0] - p7[0]) - ax, d1 = (int64_t)(lw[1] - p7[1]) - ay, d2 = (int64_t)(lw[2] - p7[2]) - az;
             int64_t q2 = d0 * d0 + d1 * d1 + d2 * d2;
             *kiefer_abw = (int32_t)re15_squareroot0((uint32_t)(q2 > 0xffffffffLL ? 0xffffffffLL : q2));

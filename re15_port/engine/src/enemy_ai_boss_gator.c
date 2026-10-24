@@ -2479,10 +2479,16 @@ static void gb_takt(int slot)
             pl->z = e->z + (int32_t)((-(int64_t)fs0 * vx + (int64_t)fc0 * (-915)) >> 12);
             pl->rot_y = e->rot_y;                      /* Yaw-Kopie @0x80101154-5C */
             pl->rot_x = 0;
-            /* Nachbesserung 5: Leon steht vor dem Gator auf dem Beckenboden wie nach jedem Biss im Wasser (A2: y 0, Leon watet
-             * bei y 0). RE2 P0 schreibt nur x/z (0x800cfc30 @0x80101084 / 0x800cfc38 @0x80101078) - im Korridor steht der Spieler
-             * schon auf dem Boden; nach dem GUARD-Hochbiss stand Leon oben auf der Rampe (y -1800) und schwebte sonst in P1. */
-            pl->y = 0;
+            /* Nachbesserung 6 (Abnahme 5 M3): Leon steht in P1 auf der BASISHOEHE DES GATORS (Schwimmhoehe e->y = GB_WATER_Y).
+             * RE2 P0 schreibt nur Leons x/z (0x800cfc30 @0x80101084 / 0x800cfc38 @0x80101078) - Leon behaelt die Hoehe des
+             * Korridorbodens, auf dem auch der Gator steht; ab P2 setzt FUN_80015cb8 beide auf die Anker-Hoehe (`sw v0,60(s1)`
+             * @0x80015d7c, Anker +358 vom Gator kopiert @0x80101110-34). NB5 stellte Leon in P1 auf den Beckenboden (y 0): mit dem
+             * Maul-Massstab (render_scale_q12 = Gator-Skala 2/3, P0) liegt sein ganzer Koerper dann unter der Wasseroberflaeche
+             * (ROOM2090 obj 1, Typ-3-Raster bei y -1620; gemessen exe E1 Nachbesserung 6: gezeichnete Wurzel y -1186, F636-F640 nur
+             * Einzelpixel, TRILOG: Wasser-Dreiecke TIM-Platz 5 z 7243.. vor Leons Platz 0 z 10208-11080) - der zweite Verdecker
+             * in P1 neben der Raum-Leiche. Auf der Gator-Hoehe ragt er wie ein watender Leon aus dem Wasser, und P1 -> P2 springt
+             * nicht mehr um 1200 nach oben (gezeichnete Wurzel P1 -1186 -> P2 -2141 vorher). */
+            pl->y = e->y;
             /* Fortsetzung NB5: das Kollisionsband (Spieler +0x82 = DAT_800acad6) folgt der neuen Hoehe wie bei jedem Hoehenwechsel
              * des Spielers (Band = -(y / 1800), Kletter-Landung @0x80038460-bc). Sonst klemmt die Spieler-Wandklemme, die im Original
              * auch im Tod je Bild laeuft (Dispatcher-Schwanz FUN_80031c44 `jal 0x8003b0a4` @0x80031d70), Leon weiter gegen die Band-1-
