@@ -200,7 +200,19 @@ Stichproben der in Nachbesserung 4 NEU zitierten Stellen (alle selbst gelesen, r
 * Kein SendMessage, kein Code ausserhalb des Baums (Pruefer).
 
 ## 3. Tests (gezielt, im Spurbaum; KEINE volle Suite)
-(folgt)
+* Unit-Gruppe (Regex `<a4>/regex_unit.txt` = Regex der Nachbesserung 4 + Dokument-/Asset-Riegel unit_r38_dining.*, unit_r37_dining.*,
+  unit_files.*, unit_.*dokument.*, unit_r34_dok.*, unit_r40_.*nahaufnahme.*, unit_r34a_.*, probe_r16_objekte_paket; 241 Tests):
+  `ctest --test-dir re15_port/build -R "<regex>" --timeout 600 --output-on-failure -j 4` -> **`100% tests passed, 0 tests failed out of
+  241`** (32.35 s, `<a4>/ctest_unit.txt`). `test_r41_ventilkette.exe` direkt: `PASS (446 Pruefungen)`, rc=0 (`<a4>/unit_r41_v.txt`;
+  Fall M fuer 2030 und 2031: falsche Folge -> 45 + zurueck, falsches Ventil mitten in der Folge, Nein vermerkt nichts, richtige Folge ->
+  46 + Zaehler, Dokument-Zone Slot 20 (Item 0x4E, Bit 107, obj 6), Leser angefordert, Aushang Band 2, Plakat offen/zu).
+* Integration r41 (`<a4>/integ.sh`, `-j 2`, alle RUN_SERIAL, Protokoll `<a4>/ctest_integ_r41.txt`, unter Last fremder Abnahmen und meiner
+  Messlaeufe): `integration_r41_ventilkette_weg_elza Passed 1203.69 sec`, `integration_r41_ventilkette_weg Passed 1032.25 sec`,
+  `integration_r41_ventilkette_sperre Passed 688.48 sec`, (Rest folgt). Laufordner selbst gelesen, z. B. `_weg` lauf_e25cc082_v2b:
+  `Folge 09 07 02 01 -> RICHTIG` -> `DOOR FIRE slot=0 ... target_cut=11` -> `loaded room20b0.rdt` -> `Bits 103 + 100`; w3: `Wasser knapp
+  unter der Absperrung y -5350`, `[prop-render] pi=4 oid=0x04 pos=(0,-5350,0)`.
+* (folgt: Haupt, `_b`, Raum-/Dokument-Gruppe, `_kette` von Hand)
+
 
 ## 4. Urteil je Nutzer-Punkt
 (folgt)
