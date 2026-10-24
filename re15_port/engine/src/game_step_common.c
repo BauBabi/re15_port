@@ -2550,6 +2550,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * Notch-Stempel, damit die Schalterbits des laufenden Bildes schon stehen.
      * Belege: include/re15_panel_zeiger.h. */
     re15_panel_zeiger_tick();
+    { extern void re15_fussanker_r41_merken(void); re15_fussanker_r41_merken(); }   /* Runde 41 Spur J: Part+84/+92 des naechsten
+                                       * FUN_800369f8 = Welt-Lage nach allen Bewegungen des Bildes (re15_fussanker_r41.h) */
     schritt_station(RE15_SCHRITT_ENDE, pl->x, pl->z);
 }
 
