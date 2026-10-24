@@ -58,6 +58,7 @@
 #include "re15_npckante_r38.h" /* Runde 38 Spur M: NPC-Kanten (Sonde FUN_8002d7d8, Subs 0x12/0x16/0x17/0x18) */
 #include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Hochziehen an der u1=1-Kante (ANIMATE[0x0A] 0x8010325c) */
 #include "re15_heliport1171_r39.h" /* Runde 39 Spur K: NPC-INIT-Pose = Loco-Paar Clip 2 Bild 0 (@0x8011de7c-c4) */
+#include "re15_zombiefresser_r41.h" /* Runde 41 Spur I: Grid [4]/[5]/[6] = Wecker + Liege-Phasenmaschine */
 void re15_victim_anchor_calibrate(int32_t stand_x, int32_t stand_z);   /* Runde 37 Spur J: unten definiert, vom Griff-Latch gerufen */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
@@ -4902,6 +4903,9 @@ int re15_enemy_ai_live_active(int slot)
                                * ROOM3000/3001, ROOM3010/3011) fiel bisher in den deferrten
                                * default-Zweig und bekam GAR KEINEN Tick. */
             case 5: case 6:   /* feeding (@0x8011f80c[5]/[6]=0x801018f8) -> the dist-gated wake-up */
+                if (re15_r41_liegewecker_re15_decide(e))   /* Runde 41 Spur I: DECIDE 0x80103980 + */
+                    { uint8_t r41p = e->sub_state_2; re15_enemy_ai_lying_phase(e); /* ANIMATE 0x80103a58 (spielt +0x94) */
+                      re15_r41_liege_p2_saat(e, r41p); break; }   /* NB1: P1 -> P2 ohne anim_set (@0x80103994-98) */
                 re15_enemy_ai_live_feeding(e);
                 break;
             case 7: case 8:   /* lying (@0x8011f80c[7]/[8]=0x80101974). CITATION CORRECTED (audit

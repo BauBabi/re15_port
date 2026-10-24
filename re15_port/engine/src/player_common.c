@@ -1505,7 +1505,7 @@ void re15_actors_anim_advance(void)
         { uint8_t nib = (uint8_t)(a->grid_id & 0x0f); uint8_t t = a->type;
           if (!getup && (t==0x10||t==0x11||t==0x12||t==0x16||t==0x18)
               && a->state == 1 && a->sub_state_1 == 0 && a->sub_state_2 >= 2
-              && nib >= 7 && nib <= 10)
+              && nib >= 4 && nib <= 10)   /* Runde 41 Spur I: [4]/[5]/[6] teilen die Phasenmaschine (P2 @0x801039a8 STAGE2) */
               getup = 1; }
         if ((mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13) && !getup && !re2z_owned)
             { a->anim_frame = 0; continue; }

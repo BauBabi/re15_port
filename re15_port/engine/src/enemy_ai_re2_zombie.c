@@ -94,6 +94,7 @@ const re15_emd_animation_t *re15_re2z_re15_pose_anim(void) { return s_re2z_re15_
 #include "re15_gameflow.h"   /* g_gameflow.character — Port-Zwilling von DAT_800ACA5C (@0x80104008) */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: RE1.5-Phase-4-Wundstempel (@0x8010a4e8) am RE2-Abwurf */
 #include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: RE1.5-Hochziehen an der Wasserkante statt Zustands-Dispatch */
+#include "re15_zombiefresser_r41.h" /* Runde 41 Spur I: 0x84/0x85 = Liegender mit Naehe-Wecker, kein Fresser */
 #include <stdio.h>
 FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
 
@@ -2781,7 +2782,8 @@ static void re2z_exec_lying(re15_actor_t *e, const re15_actor_t *pl)
      * INIT auf 0 @0x80100FD4 und weckt bei dist < 0xBB8) — aber NICHT mehr fuer Nibble 7/8.
      * Der Deskriptor steht hier garantiert noch: 0x701 wird NUR vom INIT geschrieben (einziger
      * Produzent in dieser Datei), und P4 unten loescht grid_id erst BEIM Aufstehen. */
-    if ((e->grid_id & 0x0fu) != 7u && (e->grid_id & 0x0fu) != 8u &&
+    if (!re15_r41_liegewecker_re2_tick(e, pl) &&                   /* Runde 41 Spur I: 0x84/0x85 = Wecker 0xFA0 */
+        (e->grid_id & 0x0fu) != 7u && (e->grid_id & 0x0fu) != 8u &&
         (e->re2z_f10e & 0x4000u) && e->ai_dist < 0xbb8u && pl->hp >= 0) {
         e->re2z_f10e    &= (uint16_t)~0x4000u;                     /* andi 0xbfff @0x80104F0C (MAPPED
                                                                     * hierher verlegt) */
@@ -8736,7 +8738,9 @@ static void re2z_init(int slot, re15_actor_t *e)
                                                                     * nachziehen: sonst sieht der
                                                                     * HURT-Vergleich (:8104) die
                                                                     * Halbierung als Schaden */
-    } else if (sel == 6 || sel == 4 || sel == 5) {                  /* feeding -> ACTIVE sub 8
+    } else if (sel == 6 || ((sel == 4 || sel == 5) && !re15_r41_liegewecker_deskriptor(beh))) {
+                                                                   /* Runde 41 Spur I: 0x84/0x85 -> Liege-Zweig */
+                                                                   /* feeding -> ACTIVE sub 8
                                                                     * (4/5/6 = EINE Familie,
                                                                     * s. lying_family oben) */
         e->re2z_f10e = 0x4004u;                                    /* sh 0x4004,270 @0x80100A88-8C */
@@ -8746,7 +8750,8 @@ static void re2z_init(int slot, re15_actor_t *e)
                                                                     * @0x80100AD0-DC) — EXEC[8] P0
                                                                     * zieht naechsten Tick neu */
     } else if (sel == 8 || sel == 0x0b || sel == 0x0e ||
-               (lying_family && (beh & 0x80u))) {                   /* lying -> ACTIVE sub 7 */
+               (lying_family && (beh & 0x80u)) ||
+               re15_r41_liegewecker_deskriptor(beh)) {             /* lying -> ACTIVE sub 7 (Runde 41 Spur I) */
         /* ⛔ D15.1 — Nutzer-Report ROOM1100 "Zombies nicht komplett korrekt positioniert":
          * sel 7 (= behavior 0x87, die Slots 1/3 des Evidence-Korridors) fiel in den else-Zweig
          * und STAND aufrecht zwischen den liegenden 0x88ern (2 von 5 "Leichen").
@@ -8801,6 +8806,7 @@ static void re2z_init(int slot, re15_actor_t *e)
             e->re2z_flags21a |= 0x4u;
         e->re2z_f10e = 0x4002u;                                    /* sh 0x4002,270 @0x80100A34-38 */
         re15_ai_set_state_word(e, 0x701);                          /* @0x801009E8-0x80100A84 */
+        re15_r41_liegewecker_init(e);                              /* Runde 41 Spur I: Wecker unscharf */
     } else if (sel == 0x0d) {                                      /* pre-engaged -> WALK */
         re15_ai_set_state_word(e, 0x101);
     } else if (re15_r37_re2_gang(slot, e)) {                       /* Runde 37 Spur H: RE1.5 grid 0x00 = aktiv */
@@ -9304,7 +9310,8 @@ void re15_re2z_hit_filter_apply(int slot)
          * in P3 @0x80103CE4-FC. Weil der Pose-Ausgang im Port beide Bytes selbst raeumt
          * (re2z_exec_lying default / re2z_exec_feeding case 3), reicht es, die Ausnahme fuer
          * 9/10 NICHT zu gewaehren — danach faellt sie ueber `grid_id = 0` ohnehin weg. */
-        int passive_lyer = (e->grid_id & 0x80u) != 0u && (nib >= 7u && nib <= 10u);
+        int passive_lyer = ((e->grid_id & 0x80u) != 0u && (nib >= 7u && nib <= 10u))
+                        || re15_r41_liegewecker_liegt(e);          /* Runde 41 Spur I: P0 +0x93|=1 @0x80103940-4c */
         /* Runde 36 Spur C (Nutzer: "Alle Schusswaffen treffen ... fressende Zombies. Im Original geht
          * beides nicht -> angehen"): die v0.3.5-Ausnahme gilt NICHT mehr fuer den FRESSER (EXEC[8]).
          * RE2 FUN_800410CC (alle Schusswaffen, `jal 0x800410CC` @0x80043AFC) wirft ihn in der

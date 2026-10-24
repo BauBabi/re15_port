@@ -1,0 +1,6 @@
+[r41-wecker] F6 slot=3 INIT grid=84 Wort=1/7/0 f10e=4002
+[r41-wecker] F6 slot=4 INIT grid=84 Wort=1/7/0 f10e=4002
+[r41-wecker] F7 slot=3 WECKT d=3982 warte=10
+[r41-wecker] F7 slot=4 WECKT d=2684 warte=5
+[r41-wecker] F12 slot=4 STEHT AUF (Latch frei) d=2684
+[r41-wecker] F17 slot=3 STEHT AUF (Latch frei) d=3982

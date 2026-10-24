@@ -1,0 +1,24 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_zombiefresser/re15_port/build
+    Start  680: integration_r37_beretta
+    Start  519: integration_r35_entladen_d
+    Start  520: integration_r35_entladen_e
+1/9 Test  #520: integration_r35_entladen_e .........   Passed   39.22 sec
+    Start  521: integration_r35_entladen_f
+2/9 Test  #519: integration_r35_entladen_d .........   Passed   93.19 sec
+    Start  523: integration_r35_entladen_h
+3/9 Test  #521: integration_r35_entladen_f .........   Passed   61.52 sec
+    Start  704: integration_r37_elzaems_elza1101
+4/9 Test  #523: integration_r35_entladen_h .........   Passed   23.65 sec
+    Start  705: integration_r37_elzaems_leon1100
+5/9 Test  #704: integration_r37_elzaems_elza1101 ...   Passed   18.79 sec
+    Start  711: integration_r37_elzaems_elza1141
+6/9 Test  #711: integration_r37_elzaems_elza1141 ...   Passed   11.29 sec
+    Start 1156: integration_room_probe_sweep
+7/9 Test #1156: integration_room_probe_sweep .......   Passed    0.16 sec
+8/9 Test  #705: integration_r37_elzaems_leon1100 ...   Passed   19.38 sec
+9/9 Test  #680: integration_r37_beretta ............   Passed  164.76 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) = 164.81 sec
+exit=0

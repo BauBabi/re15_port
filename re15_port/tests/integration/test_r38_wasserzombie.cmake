@@ -202,7 +202,10 @@ wz_invariante(d "${_gy}")
 # Pflicht: wz.log "zwischenbild" (Bank/Uhr fragen im Zwischenbild die RE1.5-Bank, Clip 22, fremdes Wort 1/9) und der
 # folgende "abbruch" desselben Slots mit Bild + 1 (Advancer auf Clip 0x16 = 159 Bilder; vorher a4809c35: RE2-Clip 22 =
 # 10 Bilder -> af 49 -> 9, Bild F400 bis auf ein Bein leer).
-wz_lauf(e 2000 "tuer" "" 406 _wz _gy)
+# Runde 41 Spur I: die 0x84-Zombies liegen jetzt und stehen nach Naehe-Wecker + Wartezeit (rand&0xf @0x80103858-60)
+# mit dem RE2-Liege-Aufstehen (Clip 8) auf statt aus der Fress-Pose (Clip 0x15) - das Zwischenbild nach dem fremden
+# 0x901 liegt dadurch bei Bild 461/462 (gemessen, I_zombiefresser.md Abschnitt 5) statt vor Bild 406.
+wz_lauf(e 2000 "tuer" "" 560 _wz _gy)
 string(REGEX MATCH "slot=([0-9]+) t=16 zwischenbild st=1/9/[0-9]+ mo=22 af=([0-9]+)" _zw "${_wz}")
 if(NOT _zw)
     message(FATAL_ERROR "r38_wasserzombie[e]: kein Zwischenbild mit RE1.5-Bank nach fremdem 0x901 (Szenario der Abnahme 0 M5) "

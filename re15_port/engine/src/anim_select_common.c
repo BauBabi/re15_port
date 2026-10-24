@@ -289,6 +289,9 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
              * lying RBJ clip 3 loops = the wounded breathing. (bit 0x80 reverse is decoded in
              * re15_compute_actor_kf; the playback-MODE is entirely the 0x04 gate.) */
             out->clip_override = (a->anim_flags & 0x04) ? (int)a->motion : -1;
+            { extern int re15_r41_liege_skelett_clip(const re15_actor_t *);   /* Runde 41 Spur I (NB1 M1): RE1.5-Liegender */
+              int r41 = re15_r41_liege_skelett_clip(a);   /* zeigt bis P2 die INIT-Pose 0x0c/0x0e Bild 0 (f314 @0x80100c34) */
+              if (r41 >= 0) out->clip_override = r41; }
         }
     }
 
