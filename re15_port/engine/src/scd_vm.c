@@ -78,6 +78,7 @@
 #include "re15_elzazombies_r39.h" /* Runde 39 Spur Q: Elza-Zombie-Durchbrueche, Ereignis 30 (elzazombies_r39.c) */
 #include "re15_johnruf_r39.h"  /* Runde 39 Spur P: RE2 Xa_vol 0x5F + Sprach-/Warte-Zeilen 1041/1131 (johnruf_r39.c) */
 #include "re15_tuersperre_r39.h" /* Runde 39 Spur P: Tuersperren 1041/1051 (Panikphase), Kanaldeckel 10B1 (tuersperre_r39.c) */
+#include "re15_gatorszene_r41.h" /* Runde 41 Spur F: ROOM2090/2091 ohne Spinnen, Ankunftsszene (gatorszene_r41.c) */
 
 scd_vm_t g_scd;
 
@@ -3865,6 +3866,7 @@ static int op_sce_em_set(scd_thread_t *t)
     extern uint8_t re15_em_status_zone(void);
     uint8_t  persist  = t->pc[7];
     int      suppress = (persist != 0xFF) && re15_game_flag_get(re15_em_status_zone(), persist);
+    if (re15_gatorszene_r41_spawn_weg((uint16_t)g_current_room_id, type, x, z)) suppress = 1;   /* Runde 41 Spur F: Spinnen 2090/2091 verworfen wie am Kill-Flag-Tor @0x80042120-38 (re15_gatorszene_r41.h) */
 
     /* GLEICHZEITIG-LIMIT (byte-true @0x80042214-3c) — der Grund, warum ROOM1030 im Original nur
      * SECHS Zombies zeigt, obwohl 20 Records im RDT stehen:
