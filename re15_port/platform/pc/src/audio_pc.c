@@ -45,6 +45,7 @@
 #include "re15_werkstatt11b0_r38.h" /* Runde 38 Spur C: Schiebe-Ton ROOM11B0 (re15_w11b0_snd0_hook) */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
+#include "re15_wassersprung_r41.h" /* Runde 41 Spur A: Lage des NPC-Schritts (FUN_80045a64, Entscheid A-E4) */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 
@@ -521,6 +522,10 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
         }
     }
 
+    /* Runde 41 Spur D: Lautstaerke-Endstufe — EINE Stelle fuer SE/Stimmen/FMV/BGM/Ambience, nach der Mono-
+     * Faltung; Q15, 100 % = 0x8000 = unveraendert (include/re15_lautstaerke_r41.h). */
+    { extern int re15_lautstaerke_r41_q15(void); const int q = re15_lautstaerke_r41_q15();
+      if (q != 0x8000) for (int i = 0; i < frames * 2; i++) out[i] = (int16_t)(((int32_t)out[i] * q) >> 15); }
     if (s_audio_cap) fwrite(stream, 1, (size_t)len, s_audio_cap);   /* RE15_AUDIO_CAP verify hook */
 }
 
@@ -3811,6 +3816,7 @@ void re15_audio_footstep(int foot, int sound_type)
     (void)foot;
     static int diag = -1;
     if (diag < 0) diag = getenv("RE15_FOOT_DEBUG") ? 1 : 0;
+    int lage[2], mit_lage = re15_wassersprung_r41_lage_nehmen(lage);   /* Runde 41 Spur A: NPC-Schritt FUN_80045a64 @0x80045830 */
     if (!s_foot_loaded) {
         if (diag) fprintf(stderr, "[foot] SE unterdrueckt: Bank snd0 nicht geladen\n");
         return;
@@ -3844,6 +3850,7 @@ void re15_audio_footstep(int foot, int sound_type)
     int vol = (tvol * 0x4000 / 127) >> 1;
     if (vol > 0x4000) vol = 0x4000;
     if (vol < 0) vol = 0;
+    int vol_r = mit_lage ? re15_wassersprung_r41_lage_pegel(&vol, lage, diag) : 0;   /* Runde 41 Spur A: SsUtKeyOnV/SpuVmKeyOnNow */
 
     SDL_LockAudioDevice(s_audio_dev);
     int slot = mixer_alloc_free_slot();
@@ -3854,7 +3861,7 @@ void re15_audio_footstep(int foot, int sound_type)
     s_active[slot].step_q16   = step;
     s_active[slot].pos_frac   = 0;
     s_active[slot].volume_q15 = vol;
-    s_active[slot].vol_r_q15  = 0;   /* legacy mono (Slot-Reuse: kein Pan-Rest) */
+    s_active[slot].vol_r_q15  = vol_r;   /* 0 = legacy mono (Slot-Reuse: kein Pan-Rest); Runde 41 Spur A: NPC-Schritt L/R */
     s_active[slot].active     = 1;
     SDL_UnlockAudioDevice(s_audio_dev);
 }

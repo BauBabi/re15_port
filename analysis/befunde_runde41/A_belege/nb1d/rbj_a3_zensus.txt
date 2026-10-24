@@ -1,0 +1,17 @@
+# rbj_a3_zensus.py (2026-10-24, Spur A Nachbesserung 1): Marker-Binder FUN_8001b3f8 (Original, a3 kumulativ ueber die Records,
+# spaetere Records ueberschreiben; Spieler = letzter Record mit Bit 0) gegen Port (rbj_resolve_slot: erster Record mit Bit 1+i;
+# Spieler = Record 0 via re15_emd_parse_rbj). Statische Auswertung der RDT-Daten, NICHT zur Laufzeit gemessen.
+# Quelle: re15_port/shared_assets/PSX/STAGE*/ROOM*.RDT, Leser re15_port/tools/r34n_d/rbj_zensus.py records().
+ROOM1040.RDT Marker ['0x7e'] Spieler orig rec-1 port rec0 Gegner orig {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0} port {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+ROOM1041.RDT Marker ['0x7e'] Spieler orig rec-1 port rec0 Gegner orig {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0} port {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+ROOM2000.RDT Marker ['0x1', '0x2', '0x3'] Spieler orig rec2 port rec0 Gegner orig {0: 1, 1: 2} port {0: 1}
+ROOM3060.RDT Marker ['0x1', '0x2', '0x4'] Spieler orig rec0 port rec0 Gegner orig {0: 1, 2: 2} port {0: 1, 1: 2}
+ROOM3091.RDT Marker ['0x1', '0x2', '0x3'] Spieler orig rec2 port rec0 Gegner orig {0: 1, 1: 2} port {0: 1}
+ROOM30E0.RDT Marker ['0x1', '0x2', '0x3'] Spieler orig rec2 port rec0 Gegner orig {0: 1, 1: 2} port {0: 1}
+ROOM4000.RDT Marker ['0x1', '0x2', '0x3'] Spieler orig rec2 port rec0 Gegner orig {0: 1, 1: 2} port {0: 1}
+ROOM4001.RDT Marker ['0x1', '0x2', '0x3'] Spieler orig rec2 port rec0 Gegner orig {0: 1, 1: 2} port {0: 1}
+ROOM4010.RDT Marker ['0x1', '0x2', '0x3'] Spieler orig rec2 port rec0 Gegner orig {0: 1, 1: 2} port {0: 1}
+ROOM5011.RDT Marker ['0x1', '0x2', '0x3'] Spieler orig rec2 port rec0 Gegner orig {0: 1, 1: 2} port {0: 1}
+ROOM6030.RDT Marker ['0x1', '0x2', '0x3'] Spieler orig rec2 port rec0 Gegner orig {0: 1, 1: 2} port {0: 1}
+ROOM6031.RDT Marker ['0x1', '0x2', '0x3'] Spieler orig rec2 port rec0 Gegner orig {0: 1, 1: 2} port {0: 1}
+Raeume 240 mit RBJ 47 abweichend 12

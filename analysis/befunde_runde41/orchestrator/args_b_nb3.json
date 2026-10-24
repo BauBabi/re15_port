@@ -1,0 +1,92 @@
+{
+ "welle": [
+  "B"
+ ],
+ "slots": 1,
+ "basis": "116e8b0f (Welle-1-Baum r41_re2gator)",
+ "max_nach": 2,
+ "modus": {
+  "B": "nachbesserung"
+ },
+ "runde0": {
+  "B": 2
+ },
+ "bau": {
+  "B": {
+   "status": "fertig",
+   "zusammenfassung": "Measured with the Abnahme-1 runs (A/C3/N) and probe_wende.c (calibrated: head at x -9574 = Lauf A). Disassembled myself: Sub-1/2-Pre @0x80100964 (sub switch @0x80100b04-18, write @0x80100c04, hysteresis rest @0x80100b20-30 / @0x80100ab8-c8 / @0x80100aec / @0x80100afc), T1 @0x80101360-70, FRESSEN P0 @0x80100fbc-ff4 and the -257 sites @0x80100910/@0x80102688/@0x801028ac/@0x80102b1c.\nM3 fixed: on pickup the gator switches from paddling to swimming (Clip 0, Blend 32), no hysteresis in stages 1..6 or in the canister zone, no bite in stages 1..6. exe C3: Stufe 1 F1098 \"sub 2 -> 1\", Clip 0 F1096-F1162, first bite F1163 (stage 7). Lauf K unchanged.\nM1b fixed (B6): the boss tick takes back the RE1.5 white fade, black background and death orbit while the FRESSEN lock holds. exe A: Cut 6 from F403 to F672 with no change, 13 hold lines (one every 20 frames), YOU DIED over the finisher shot. Elza (ROOM2091) identical.\nM1a refuted with evidence: Leon's RE2 finisher position (@0x8010106c-84) lies in RVD zone 6->7 (@RDT 0x3EC), so Cut 7 is Leon's own zone camera there; in the new run the finisher now cuts visibly (Cut 0 to Cut 6).\nM2 fixed (B7): the Clip-3 right turn (@0x80100938-48 / @0x80100eb0-c0) is unchanged. PORT-WAHL: intro start position chosen like RE2 Pos_set (sub11 @SCD 0x0736) so head and torso stay in the water, the end heading points at Leon and there is no push contact; the dash first turns 0x60/frame to the smallest yaw with a free turn. exe A/N/D2/EZ: wand_draussen_max=0, putz 54 with 27..98 quads, climbing over the ramp still happens.\nM4 fixed: Op 73 slot @0x8009d98c, outdated PORT-WAHL texts, cause of death is the bite at F656.\nNew test unit_r41_re2gator_aufnahme. Rewritten: wand, kamera (c), integration_r41_re2gator (two runs). probe_gator_fress adjusted with evidence. Image sheets in bilder_r41b/nb2_*.",
+   "commits": [
+    "193542bc wip(r41-re2gator): Nachbesserung 2 - Dossier §10 angelegt (Plan M1-M4)",
+    "67697da4 wip(r41-re2gator): Nachbesserung 2 M4 - Belegpflege (Op-73-Tafelplatz @0x8009d98c, ueberholte PORT-WAHLEN, Todesursache Biss F656)",
+    "b5516dda wip(r41-re2gator): Nachbesserung 2 M3 + M1b - Aufnahme Sub 2 -> 1, Hysterese-Ruhe, Biss-Sperre; Finisher-Schnitt bis Game Over (UNGEPRUEFT)",
+    "b0a1b8e9 wip(r41-re2gator): Nachbesserung 2 - Riegel aufnahme gruen",
+    "349a3070 wip(r41-re2gator): Nachbesserung 2 M2 - RE2-Wende im Becken: Intro-Startlage (Pos_set-Zwilling) + Dash-Vordrehung, Riegel wand",
+    "1ece3416 wip(r41-re2gator): Nachbesserung 2 M2 - Intro-Lage schnell (d* nach aussen, Vorpruefungen, Ergebnis-Speicher), Riegel gator_fress angepasst",
+    "43c9d189 wip(r41-re2gator): Nachbesserung 2 - Messzeilen wand_draussen_max (Intro/Dash), exe-Riegel zwei Laeufe",
+    "06bc6578 fix(r41-re2gator): Nachbesserung 2 - Kanister-Aufnahme wie RE2, Finisher-Schnitt bis Game Over, RE2-Wende im Becken ohne Wand"
+   ],
+   "suite": "ctest -R \"^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|sca_wall_hit|re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_.*|re2_hit_repeat_crow_spider|re2_crow_.*|crow_ai|crow_fixes|crow_death_corpse|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|r35_fenster_kraehe|r37_re2zombie_.*|r34_re2fx.*|montage_fx|r35_cut1150_montage.*|r38_montage.*|r38_wasser.*|r38_wasserzombie|r39_heliport1171_kraehen|r30_granate|r35_granate|r36_granate|r36_kartenbits)$|^probe_(re2z_stomp|crow_kill)$\" -> \"100% tests passed, 0 tests failed out of 91\"; ctest -R \"^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate)$\" -> \"100% tests passed, 0 tests failed out of 4\"; after the last comment-only change: ctest -R \"^unit_r41_re2gator_\" -> \"100% tests passed, 0 tests failed out of 11\"",
+   "offene_punkte": [
+    "Intro start position when Leon is at the south end of the west channel (natural approach from the Tuernische): it lies in the south-east basin, about 16000 units from the lurk spot, so the gator breaks out behind Leon. From near the lurk spot no free right turn ends on Leon (probe_wende.c mode nah); the rule puts alignment on Leon (B7) ahead of closeness.",
+    "Dash: where the corridor counterpart turns left, the RE2 right turn does not end on Leon (Lauf D: deviation 2039). Alignment only breaks ties there; turning away from the wall comes first.",
+    "unit_gator_sweep takes 27 s alone and 114 s under parallel load (timeout 300). The result cache keeps the intro search cheap.",
+    "Unchanged from §9.8/§6: room effect 0x26 missing, 1-frame frame-word latency, weapon damage still via the RE1.5 row instead of RE2 (17 @0x800A4A28), canister hard to see in the dark pool, GUARD/CROSS still play Clip 0.",
+    "For integration: Spur B still has the 4 hooks in platform/pc/main.c; Nachbesserung 2 adds no new line in a shared file. Check conflicts with D/F/G."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/enemy_ai_boss_gator.c (owner Spur B): SEG table moved to file level (k_gb_seg), plus gb_becken_draussen, gb_koerper_kontakt, zone/pool/contact registration, re15_gr2_intro_lage hook, re15_gr2_dash_planen instead of gb_seg_frei, bite gate re15_gr2_biss_erlaubt on all 4 bite starts",
+    "re15_port/engine/src/re2_fx.c (accepted under B5): comment only (Op 73 table slot @0x8009d98c)",
+    "re15_port/tests/unit/probe_gator_fress.c: test setup adjusted with evidence (gator placed facing Leon after the intro)",
+    "No new line in platform/pc/main.c or game_step_common.c; M1b runs through the boss tick"
+   ],
+   "neue_assets": [],
+   "sprachdateien": [],
+   "fragen_an_nutzer": []
+  }
+ },
+ "abn": {
+  "B": {
+   "bestanden": false,
+   "urteile": [
+    {
+     "punkt": "1 - Finisher und fehlende Animationen aus RE2 extrahieren",
+     "urteil": "erfuellt",
+     "beleg": "Lauf A2/EZ (RE15_DEBUG_JUMP=2090@250 RE15_GB_TEST=1, EXIT_AT 676): Clips 6 F6-F130, 3 F131-F280, 4, 1, 5 F417-F536, 11 F537-F656 (RE2-FRESSEN); D2 Clip 2/3 (Dash), K Clip 9 (R1), E1 Clip 10 (R4) jetzt auch im Spiel. Finisher-Kamera nach B6: 'RE2 KAMERA FINISHER ... -> Cut 6 F403', state.log cam=6 F403-F676 ohne Wechsel, 14 Halt-Zeilen, 'RE1.5-Todesbild unterdrueckt ab F467'. Bildbogen B41abn2/A2_finisher.png: YOU DIED ab F524, Abblende F660-F676, keine Weissblende, kein Orbit. Elza (ROOM2091) identisch. M1a mit RVD-Beleg widerlegt: Leon-Lage (-12435,-915) @0x8010106c-84 liegt in RVD 0x3EC (6->7), nicht in 0x428/0x414 - selbst gelesen."
+    },
+    {
+     "punkt": "Nachtrag 4 - RE2-artige Kameraschnitte",
+     "urteil": "erfuellt",
+     "beleg": "A2: Schnitte F6 Cut 0 / F76 Cut 1 / F130 Cut 7 / F280 frei / F403 Finisher Cut 6, bis Game Over gehalten; K: R1 Cut 1 F70-F106; integration_r41_re2gator pinnt DURCHBRUCH:6/0;SEITE:6/70;ANGRIFF:6/124;FREI:3/149;FINISHER:4/0 und 248 Haltebilder (gruen, -V-Lauf 81 s)."
+    },
+    {
+     "punkt": "2 - Verfolgung wie RE2 (Animation, Schreie, Beschleunigung an gleichen Stellen), Waende wackeln + Putz, Klettern bleibt",
+     "urteil": "teilweise",
+     "beleg": "Erfuellt: Intro/Dash ohne Wand (wand_draussen_max 0 in A2/EZ/N/D2/E1, C3 2 Einheiten; Bildbogen A2_intro.png); Dash D2 mit SE 4 Bank 17 F486, Clip 2 F487-F636 / Clip 3 F637-F786; Schuetteln D2 F542-F556 Bild fuer Bild = RE2-Tafeln @0x8009db14 (Index 0-4) und @0x8009daf4 (Index 5-14); Putz 54, 27..98 Quads um Leon; Klettern C3 'CROSS start=(4450,-11900) ende=(3350,-20700)'. Mangel M1: Lauf N (natuerlicher Aggro aus der Tuernische, ohne GB_TEST) 'RE2 INTRO Lage von (-7200,-9200) -> (5085,-19880)' = Sprung 16278; der lauernde Gator ist F190/F200 in Cut 7 sichtbar, F201 verschwunden, F202+ bricht er im Suedostbecken hinter Leon aus (B41abn2/N_teleport.png). RE2 setzt den Gator vorher unsichtbar bei y=3000 (Sce_em_set @RDT 0x25A0) und hebt ihn erst per Pos_set @SCD 0x0736."
+    },
+    {
+     "punkt": "3 - Kanister aufnehmen GENAUSO wie RE2, beim Tragen beschiessbar, Kiefer-Tod wie RE2",
+     "urteil": "teilweise",
+     "beleg": "Erfuellt: C3 'KANISTER Stufe 1 ... sub 2 -> 1 F1098', Clip 0 F1096-F1162 ohne Biss, erster Biss F1163 (Stufe 7); K: Stufe 7 -> R1 VSync 4 F70 (66,4 ms/Bild), Raum-SE 15, Clip 9, Kiefer-Scherben, Leiche (K_bogen.png). Mangel M2: der Kanister wird in Stufe 2 mit der Gier des lenkenden Gators im Kreis geschleppt - C3-Bilder F1100-F1114 (C3_stufe2.png), Pruefer-Sonde 'schleppen' 6157 Einheiten bei 101 Gator-Weg; RE2 hat keinen Gier-Schreiber in Sub 1/2/T2 (Overlay-Suche sh ...,118) und schiebt nur geradeaus @0x801018a4-c0. Mangel M3: die Anschwimm-Sperre (+0x1C0&4 @0x80100a34-70/@0x8010134c-58) fehlt - Sonde 'anschwimmen': Biss nach 0 Takten bei Kanister 10000/14000 RE2-Einheiten voraus, Stufe 0."
+    },
+    {
+     "punkt": "RE-Gate",
+     "urteil": "erfuellt",
+     "beleg": "Diff der Nachbesserung 2 ohne deferred/tunable/interim/for now/plausib/TODO, kein neues getenv im Engine-Code; Such-Parameter als PORT-WAHL im Block-Kommentar; selbst disassembliert und bestaetigt: Sub-1/2-Pre @0x80100964-c1c, Dispatcher @0x801007b8, Sub-1-Main @0x80100c34-40, T1 @0x80101360-7c, FRESSEN P0 @0x80100fbc-ff4, alle -257 nur @0x80100910/2688/28ac/2b1c, Leon-Lage @0x8010106c-84 + RVD, Op-73-Tafel 0x8009d98c, SCD sub10 0x0659/0x0712, sub11 Pos_set 0x0736, Schuetteltafeln. Keine falsche Adresse."
+    },
+    {
+     "punkt": "Vertrag + Tests",
+     "urteil": "erfuellt",
+     "beleg": "Keine Bank-9-Bits/Nachrichten-Ids, keine verbotenen Pfade/CMakeLists; Nachbesserung 2 aendert keine gemeinsame Datei ausser einem re2_fx.c-Kommentar. Bau local_build.sh configure+build OK (785 Schritte). ctest Unit-Regex 101/101 gruen, integration (r41_re2gator|r36_schuss|r38_wasser|r35_granate|r37_itemband|r36_tueren) 6/6 gruen. Neuer Riegel unit_r41_re2gator_aufnahme, wand/kamera/integration neu gefasst; kein Riegel deckt M1/M2 ab."
+    }
+   ],
+   "maengel": [
+    "M1 (Punkt 2, sichtbar, neu durch Nachbesserung 2): Die Intro-Startlage (gr2_intro_lage, Pos_set-Zwilling) teleportiert den sichtbar lauernden Gator. Natuerlicher Ablauf (Lauf N: RE15_DEBUG_JUMP=2090@250 RE15_PLAYER_POS=-8200,-25550,3072 RE15_R39_MESS_SPIELER_HP=100, Skript W2,U12,W40, ohne GB_TEST): 'RE2 INTRO Lage von (-7200,-9200) yaw 1089 -> (5085,-19880) yaw 1536' = 16278 Einheiten. Gator F190/F200 in Cut 7 am Kanalende sichtbar, F201 im selben Bild weg, ab F202 Durchbruch im Suedostbecken hinter Leon (B41abn2/N_teleport.png). Fuer Leon im Westkanal 15100-16848 Sprung (Sonde lagezeit). Der Sprung erreicht nicht einmal sein Ziel: Leon bleibt steuerbar, der Intro endet 18750 Einheiten von ihm entfernt. RE2 verdeckt seinen Pos_set: der Gator steht vorher unsichtbar bei y=3000 (Sce_em_set @RDT 0x25A0), Pos_set erst im Intro @SCD 0x0736. Verlangt: kein sichtbarer Sprung im natuerlichen Ablauf, Bildbeleg Lauf N, Riegel auf Sprungabstand bzw. Sichtbarkeit.",
+    "M2 (Punkt 3, sichtbar): Bei der Kanister-Aufnahme lenkt der Gator weiter (Nutzer-Design-Wende 0x60/Bild bzw. Wand-Saegezahn), und gr2_kan_takt Stufe 2 schiebt den Kanister laengs der jeweiligen Blickachse nach. Der Kanister laeuft dadurch auf einem Kreis mit Radius 5400 um den Gator: exe C3 F1100-F1114 (B41abn2/C3_stufe2.png); Pruefer-Sonde 'schleppen': Gier 4000 -> 2992, Gator-Weg 101, Kanister-Weg 6157 bis zum Anhaengen. RE2 hat in Sub 1/2/T2 keinen Gier-Schreiber (Schreiber auf +0x76 nur @0x80100280/2a0/948/ec0/2404/2440/27c8/2a34) und schiebt nur geradeaus (obj[1].z = z + 8100 @0x801018a4-c0), bis zum Anhaengen @0x801018c4-f4. Verlangt: bis zum Anhaengen keine Koerperlenkung (oder Schub nur entlang der Gier des Fenstertreffers) und ein Riegel 'Kanister-Weg in Stufe 2 <= Gator-Weg'.",
+    "M3 (Punkt 3, klein): Die RE2-Anschwimm-Sperre und der Zielmodus fehlen. RE2 setzt mit Bank 5 Bit 1 (ROOM40A0 sub10 @SCD 0x0659) in der Kanister-Zone bei Stufe < 2 '+0x1C0 |= 4' (@0x80100a34-70). Geloescht wird es erst bei Stufe 0 und obj[1].z - z < 8880 (@0x80100a74-b4) oder beim Anhaengen (@0x801018e4-f4). Solange es steht, wird T1 nicht scharf (@0x8010134c-58), und der Root ruft FUN_800177c0 statt FUN_80017d98 (@0x80100344-74). Der Port bildet nur die Stufen-Bedingung @0x80101360-70 ab. Pruefer-Sonde 'anschwimmen': Kanister 10000 bzw. 14000 RE2-Einheiten voraus, Leon 2000 vor der Wurzel -> 'Biss-Start nach 0 Takten, Stufe 0, biss_erlaubt 1'. Verlangt: dieselbe Biss-Sperre mit Riegel; den Hals-Zielmodus umsetzen oder mit Beleg als OFFEN fuehren."
+   ],
+   "bericht": "Spur B (re2gator) besteht Abnahme 2 nicht: Punkt 1 und Nachtrag 4 sind erfüllt, Punkte 2 und 3 nur teilweise, mit drei neuen Mängeln.\n\nBericht: C:/workspace/git/reAi_v2/.claude/worktrees/r41_re2gator/analysis/befunde_runde41/B_abnahme_2.md, committet als 65cd71c7 (\"doc(r41-re2gator): Abnahme 2\", nur diese Datei).\nMessdaten: C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/B41abn2/ (Läufe unter mess/, Bildbögen, Prüfer-Sonde unter probe/probe_abnahme2.c, nicht im Baum).\n\n**Bau und Tests**\n- HEAD 06bc6578 gebaut mit local_build.sh configure + build, 785 Schritte, nur die alten main.c-Warnungen.\n- Unit-Riegel 101/101 grün, Integration 6/6 grün (r41_re2gator, r36_schuss, r38_wasser, r35_granate, r37_itemband, r36_tueren).\n\n**Was nachgebessert und gemessen ist (die vier Mängel der Abnahme 1)**\n- **Finisher-Kamera:** Der Schnitt steht bis zum Game Over (A2: Cut 6 von F403 bis F676), ohne Weißblende und ohne kreisende Todeskamera. Elza in ROOM2091 verhält sich identisch.\n- **Finisher-Schnitt:** Der Einwand \"kein sichtbarer Schnitt\" ist mit dem RVD-Beleg widerlegt. In RE2 ist Cut 7 an Leons Finisher-Lage seine eigene Zonenkamera.\n- **Intro und Dash:** Kopf und Rumpf bleiben im Wasser (wand 0 in A2, EZ, N, D2 und E1; in C3 zwei unsichtbare Einheiten).\n- **Kanister-Aufnahme:** Der Gator schaltet wie RE2 von Paddeln auf Schwimmen, ohne Hysterese und ohne Biss in Stufe 1 bis 6 (C3).\n- **Belege:** Die Dokumentation der Abnahme 1 ist korrigiert.\n- **Weiter funktionierend:** Wandwackeln Bild für Bild nach den RE2-Tafeln (D2), Putz, Schreie, Klettern über die Rampe (C3) und der Kiefer-Tod mit Zeitlupe (K).\n- **Adressen:** Alle Stichproben habe ich selbst disassembliert, keine Adresse war falsch.\n\n**Neue Mängel**\n- **M1 (Punkt 2, sichtbar, neu durch diese Nachbesserung):** Die neue Intro-Startlage lässt den sichtbar lauernden Gator springen. Im natürlichen Ablauf aus der Türnische (Lauf N, ohne Testhaken) springt er 16 278 Einheiten. Er verschwindet in Cut 7 zwischen F200 und F201 und bricht danach hinter Leon aus. Der Sprung erreicht nicht einmal sein Ziel: Leon bleibt während des Intros steuerbar, der Intro endet 18 750 Einheiten von ihm entfernt. RE2 setzt den Gator vor dem Intro unsichtbar bei y = 3000 und hebt ihn erst im Intro an.\n- **M2 (Punkt 3, sichtbar):** Der Gator lenkt während der Aufnahme weiter. Dadurch wird der Kanister in Stufe 2 im Kreis über das Becken geschleppt: im Spiel in C3 F1100–F1114, in der Sonde 6157 Einheiten bei 101 Einheiten Gator-Weg. RE2 lenkt den Körper dort nie und schiebt den Kanister nur geradeaus.\n- **M3 (Punkt 3, klein):** Die RE2-Anschwimm-Sperre fehlt. In RE2 schnappt der Gator nicht, solange der Kanister noch weit vor ihm liegt; im Port beißt er sofort (Sonde: Biss nach 0 Takten).\n\n**Nebenbefunde**\nDiese sind keine Mängel der Nachbesserung, ich habe sie nur notiert.\n- Der Gier-Sägezahn des Gators an den Wänden war schon in den Läufen der Abnahme 1 da und macht M2 sichtbarer.\n- Der Gator blitzt vor dem INIT ein Bild lang an seiner Spawn-Lage auf.\n- Die RE2-Halsführung in der Verfolgung ist nicht portiert; für den Hund steht dieselbe Funktion als OPEN.\n- Der echte Leiterweg von 2080 nach 2090 ließ sich mit FIRE_AOT nicht auslösen. Ich habe den Nischenzugang deshalb über den Sprung-Spawn an der Leiter gemessen.",
+   "suite": "ctest -R \"^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|sca_wall_hit|re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_.*|re2_hit_repeat_crow_spider|re2_crow_.*|crow_ai|crow_fixes|crow_death_corpse|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|r35_fenster_kraehe|r37_re2zombie_.*|r34_re2fx.*|montage_fx|r35_cut1150_montage.*|r38_montage.*|r38_wasser.*|r38_wasserzombie|r39_heliport1171_kraehen|r30_granate|r35_granate|r36_granate|r36_kartenbits|text_freeze|r34_reaktion|load_after_death|r35_affen_finisher|r36_tueren_.*|r37_itemband|r36_kartenitems)$|^probe_(re2z_stomp|crow_kill)$\" -> 100% tests passed, 0 tests failed out of 101; ctest -R \"^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate|r37_itemband|r36_tueren)$\" -> 100% tests passed, 0 tests failed out of 6; ctest -R \"^unit_r41_re2gator_\" -V -> 11/11"
+  }
+ },
+ "stand": {}
+}

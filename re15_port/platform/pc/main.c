@@ -76,6 +76,7 @@ static inline int RNDI(float f) {
 #include "re15_affen.h"         /* Runde 35 Spur J: Parts ohne Knochen weltfest (FUN_8001e5b0) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
+#include "re15_blink_r41.h"   /* Runde 41 Spur D: Helligkeitspuls aufnehmbarer Port-Gegenstaende */
 #include "re15_pri.h"
 #include "re15_pri_schatten_r36.h"   /* Runde 36 Spur O: Schatten-Tag fuer die OT-Ordnung */
 #include "re15_nclip_r38.h"          /* Runde 38 Spur A: Rueckseiten-Verwurf der Objekt-Zeichner */
@@ -2493,6 +2494,13 @@ static const unsigned char s_config_preset[3][16] = {
 };
 /* SOUND setting: 1 = stereo, 0 = mono (byte-true scene S[7] / persisted DAT_800b0fce; default stereo). */
 static int s_config_sound = 1;
+/* Runde 41 Spur D: VOLUME-Zeile im SOUND-Schirm + re15_options.cfg (platform/pc/src/lautstaerke_r41_pc.c,
+ * engine/src/lautstaerke_r41.c; Belege include/re15_lautstaerke_r41.h). */
+extern void re15_lautstaerke_r41_pc_zeichnen(const re15_tim_t *tim);
+extern int  re15_lautstaerke_r41_pc_eingabe(uint16_t pad_pressed);
+extern int  re15_lautstaerke_r41_pc_eintritt(void);
+extern int  re15_lautstaerke_r41_bestaetigen(int stereo);
+extern void re15_lautstaerke_r41_verwerfen(void);
 
 /* the 16 grid-slot / action-label box positions (DAT_80073d2c) — shared by the labels + the EDIT slot cursor. */
 static const struct { int x, y; } k_cfg_box[16] = {
@@ -2729,6 +2737,7 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
           re15_render_pc_config_text(119, 53, b, n, s_config_sound ? 0 : 3); }
         { unsigned char b[8]; int n = 0; const char *s = "MONO";   for (const char *p = s; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
           re15_render_pc_config_text(131, 71, b, n, s_config_sound ? 3 : 0); }
+        re15_lautstaerke_r41_pc_zeichnen(tim);   /* Runde 41 Spur D: VOLUME-Zeile, dritte Kachel y 89 im Raster @0x8002f128/@0x8002f17c */
     } else if (screen == CFG_EDIT) {
         /* EDIT is a sub-state of the KEY/picker screen, so the picker bar stays visible with EDIT
          * highlighted (the "TYPE A B C" + "EDIT" tiles over the baked tabs, blue cursor on EDIT). */
@@ -2816,7 +2825,7 @@ static void pc_run_config(void)
           int t = atoi(pt);
           if (t <= 2)      { screen = CFG_TOP;    cur = t; }
           else if (t == 3) { screen = CFG_PICKER; cur = 0; }
-          else if (t == 4) { screen = CFG_SOUND;  }
+          else if (t == 4) { screen = CFG_SOUND; s_config_sound = re15_lautstaerke_r41_pc_eintritt(); }   /* Runde 41 Spur D: wie der TOP->SOUND-Eintritt */
           else if (t == 8) { screen = CFG_AI;     cur = 3; }
       } }
     int fade_level = 0x7fff;   /* brightness = fade_level>>7; fade IN from black */
@@ -2862,7 +2871,7 @@ static void pc_run_config(void)
                 if (pp & RE15_PAD_BIT_RIGHT) { if (++cur > 3) cur = 0; }
                 if (confirm) {
                     if (cur == 0)      { screen = CFG_PICKER; cur = 0; }   /* CONFIG -> preset picker (cursor 0) */
-                    else if (cur == 1) { screen = CFG_SOUND; }             /* SOUND  -> sound screen */
+                    else if (cur == 1) { screen = CFG_SOUND; s_config_sound = re15_lautstaerke_r41_pc_eintritt(); }   /* SOUND -> sound screen; Runde 41 Spur D: Arbeitskopie aus dem Gespeicherten (@0x8002f244-4c) */
                     else if (cur == 2) { fading_out = 1; }                 /* EXIT   -> leave config */
                     else               { screen = CFG_AI; }                /* AI (port extension) */
                 }
@@ -2885,8 +2894,9 @@ static void pc_run_config(void)
                 if (confirm || cancel) { screen = CFG_TOP; cur = 3; }
             } else if (screen == CFG_SOUND) {
                 if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) s_config_sound ^= 1;   /* raw 0x5000 toggle */
-                if (confirm)     { re15_audio_set_mono(!s_config_sound); screen = CFG_TOP; cur = 1; }  /* save+apply */
-                else if (cancel) { screen = CFG_TOP; cur = 1; }           /* back to top (SOUND), no save */
+                (void)re15_lautstaerke_r41_pc_eingabe(pp);                 /* Runde 41 Spur D: LEFT/RIGHT = Lautstaerke (0x8000/0x2000 im Original ungelesen) */
+                if (confirm)     { re15_audio_set_mono(!s_config_sound); (void)re15_lautstaerke_r41_bestaetigen(s_config_sound); screen = CFG_TOP; cur = 1; }  /* save+apply (@0x8002f2c0; Runde 41 Spur D: + re15_options.cfg) */
+                else if (cancel) { re15_lautstaerke_r41_verwerfen(); screen = CFG_TOP; cur = 1; }           /* back to top (SOUND), no save (@0x8002f27c; Runde 41 Spur D: Arbeitskopie verworfen) */
             } else if (screen == CFG_EDIT) {
                 if (s_edit_phase == 0) {   /* slot-select: byte-true grid-jump LUTs, confirm -> panel, cancel -> picker */
                     if (pp & RE15_PAD_BIT_UP)    s_edit_slot = k_edit_up[s_edit_slot];
@@ -3236,6 +3246,7 @@ int main(int argc, char *argv[])
      * GUI-Subsystem: stderr ist tot, der Trace kam beim Nutzer bisher nirgendwo an. */
     re15_re2_trace_dir_set(re15_pc_exe_dir());
     (void)re15_re2_trace_out();   /* gleich anlegen: der Nutzer sieht, dass der Schalter greift */
+    { extern void re15_lautstaerke_r41_pc_start(void); re15_lautstaerke_r41_pc_start(); }   /* Runde 41 Spur D: re15_options.cfg lesen (Lautstaerke + Sound-Modus) */
     (void) argc; (void) argv;
 
 #ifdef _WIN32
@@ -3511,6 +3522,7 @@ re_title:;
                       int screen = (t == 8) ? CFG_AI
                                  : (t <= 2) ? CFG_TOP
                                  : (t == 3) ? CFG_PICKER : (t == 4 ? CFG_SOUND : CFG_EDIT);
+                      if (t == 4) s_config_sound = re15_lautstaerke_r41_pc_eintritt();   /* Runde 41 Spur D: Shot zeigt den gespeicherten Sound-Modus (@0x8002f244-4c) */
                       int cur = (t == 8) ? 3
                               : (t <= 2) ? t : atoi(getenv("RE15_CONFIG_CUR")?getenv("RE15_CONFIG_CUR"):"0");
                       if (t >= 5 && t <= 7) { s_config_type = 3; s_edit_phase = t - 5; s_edit_slot = cur;
@@ -4681,11 +4693,16 @@ re_title:;
      * parity from the (fuzzy vgamepad) input-replay. Reusable parity tool (memory: parity-oracle). */
     {
         const char *pp = getenv("RE15_PLAYER_POS");
-        int px = 0, pz = 0, prot = 0;
-        if (pp && *pp && sscanf(pp, "%d,%d,%d", &px, &pz, &prot) >= 2) {
+        int px = 0, pz = 0, prot = 0, pband = -1;
+        int pn = (pp && *pp) ? sscanf(pp, "%d,%d,%d,%d", &px, &pz, &prot, &pband) : 0;
+        if (pn >= 2) {
             g_actors[RE15_ACTOR_SLOT_PLAYER].x     = px;
             g_actors[RE15_ACTOR_SLOT_PLAYER].z     = pz;
             g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = (int16_t)prot;
+            if (pn >= 4 && pband >= 0) {   /* Runde 41 Spur A: 4. Wert = Band wie am Debug-Sprung (Runde 33): y = -Band*0x708 */
+                g_actors[RE15_ACTOR_SLOT_PLAYER].y     = -pband * 0x708;
+                g_actors[RE15_ACTOR_SLOT_PLAYER].floor = (uint8_t)pband;
+                re15_collision_set_band(pband); }
             fprintf(stderr, "[parity] player teleported to (%d,%d) rot=%d\n", px, pz, prot);
         }
     }
@@ -9737,8 +9754,12 @@ re_title:;
                 /* RE1.5 character shadow for this NPC — FUN_8001b064 is called
                  * PER-ENTITY (corners from param_1+0xc/+0xe), so each on-stage
                  * actor gets one. Actor-position center + CAMERA-yaw rotation
-                 * (same corrected scheme as the player). Gecullt: kein Schatten (wie bisher). */
-                if (!npc_region_culled) {
+                 * (same corrected scheme as the player). Gecullt: kein Schatten (wie bisher).
+                 * Runde 41 Spur A: der Schatten ist KEIN Automatismus des Zeichners, sondern ein Aufruf aus dem
+                 * Typ-Code des Overlays (`jal 0x8001b064`, z.B. Feuer-Emitter 0x26 @0x80116740; STAGE2.BIN: 8 Stellen
+                 * 0x80100500/0x8010a9a4/0x8010c550/0x80110b50/0x80115870/0x80115e40/0x80116404/0x801169cc). Der
+                 * EM024-Code 0x8010ee9c..0x80110a00 (Flut 20B0/20B1) ruft ihn NIE -> kein Schatten fuer Typ 0x24. */
+                if (!npc_region_culled && npc->type != 0x24u) {
                     /* byte-true actor-yaw shadow matrix = RotMatrixY(npc->rot_y) via the trig LUT. */
                     int32_t nyaw[9];
                     re15_camera_yaw_matrix_angle(npc->rot_y, nyaw);
@@ -10920,6 +10941,7 @@ re_title:;
                     } else {
                         memset(&lctx_prop, 0, sizeof(lctx_prop));
                     }
+                    re15_blink_r41_lichtctx((uint16_t)g_current_room_id, oid, (unsigned)g_engine.frame_count, &lctx_prop);   /* Runde 41 Spur D: Helligkeitspuls aufnehmbarer Port-Gegenstaende (include/re15_blink_r41.h) */
 
                     /* ⛔ TIEFEN-KLEMME — PORT-ZUSATZ OHNE ORIGINAL-GEGENSTUECK (Runde 30, E2).
                      * Nur Irons Diary (obj 5) und Memory Card (obj 6) in ROOM1150/1151, nur im

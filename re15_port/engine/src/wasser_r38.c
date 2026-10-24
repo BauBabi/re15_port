@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "re15_wasser_r38.h"
+#include "re15_wassersprung_r41.h"   /* Runde 41 Spur A: NPC-Folge-Plaetze je Bild */
 #include "re15_actor.h"
 #include "re15_anim_select.h"   /* re15_actor_anim_select / re15_compute_actor_kf (Rueckfall-Pose) */
 #include "re15_audio.h"         /* re15_audio_footstep = Ton-Teil von FUN_80045630                */
@@ -65,6 +66,7 @@ static FILE *wasser_log(void)
 }
 
 const re15_wasser_r38_mess_t *re15_wasser_r38_mess(void) { return &s_mess; }
+int16_t re15_wasser_r38_stempel(void) { return s_stempel; }   /* Runde 41 Spur A: Stempel des Vorbild-Scans fuer die Landung @0x8003873c */
 
 void re15_wasser_r38_reset(void)
 {
@@ -235,6 +237,7 @@ void re15_wasser_r38_bildanfang(const re15_game_ctx_t *c)
     s_vor    = *pl;                                    /* Lage/Gier/Pose des gezeichneten Bilds   */
     s_vor_ok = 1;
     s_stempel = pl->water_y;                           /* Stempel des Vorbild-Scans (@0x8001ce1c) */
+    re15_wassersprung_r41_bildanfang();                /* Runde 41 Spur A: Folge-Plaetze der NPC-Schritte (@0x80019f54-a4) */
     pl->water_y = 0;                                   /* `sh zero,-0x3524(at)` @0x80031da4      */
     s_objekt = (re15_climb_dbg_standing() >= 0) ? 1 : 0;
 

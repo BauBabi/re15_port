@@ -1,0 +1,24 @@
+# Lauf A_nb1c/w20b0 (Stand e6e6869b): Leon, RE15_DEBUG_JUMP=20b0@250, RE15_WASSER_LOG=w.log, RE15_EXIT_AT=320#20b0
+44:[scd F0] Cut_chg(0)
+56:[scd F161] Cut_chg(1)
+83:[scd F250] Cut_chg(11)
+132:[scd F105] Cut_chg(7)
+140:[scd F146] Cut_chg(15)
+148:[scd F228] Cut_chg(6)
+153:[scd F242] letterbox closed -> gameplay (player_mode=0)
+156:[flow] EXIT_AT: Bild 320 in Raum 20b0 erreicht -> exit
+# w.log (je Spielerschritt):
+F17 room=20B0 schritt fuss=4 a0=0 bild=0 akt=1 lage=(2380,-1800,-6355) zustand=gezeichnet vor=(2180,-6355) gier=2047 boden=0x97 stempel=0 objekt=0 zweig=boden code=0x06050d00 part=4 anker=(2377,-1850,-6122) quelle=zeichner plaetze=1 edt=0x17 fx=23
+F29 room=20B0 schritt fuss=4 a0=0 bild=12 akt=13 lage=(-20,-1800,-6355) zustand=gezeichnet vor=(-220,-6355) gier=2047 boden=0x1d stempel=0 objekt=0 zweig=trocken code=0000000000 part=-1 anker=(-20,-1800,-6355) quelle=- plaetze=0 edt=0x1d fx=13
+F39 room=20B0 schritt fuss=4 a0=0 bild=22 akt=23 lage=(-2020,-1800,-6355) zustand=gezeichnet vor=(-2220,-6355) gier=2047 boden=0x17 stempel=0 objekt=0 zweig=trocken code=0000000000 part=-1 anker=(-2020,-1800,-6355) quelle=- plaetze=0 edt=0x17 fx=6
+F51 room=20B0 schritt fuss=4 a0=0 bild=34 akt=35 lage=(-4420,-1800,-6355) zustand=gezeichnet vor=(-4620,-6355) gier=2047 boden=0x97 stempel=0 objekt=0 zweig=boden code=0x06050d00 part=4 anker=(-3617,-2875,-6160) quelle=zeichner plaetze=1 edt=0x17 fx=19
+F61 room=20B0 schritt fuss=4 a0=0 bild=44 akt=45 lage=(-6420,-1800,-6355) zustand=gezeichnet vor=(-6620,-6355) gier=2047 boden=0x97 stempel=0 objekt=0 zweig=boden code=0x06050d00 part=4 anker=(-6941,-1891,-6300) quelle=zeichner plaetze=1 edt=0x17 fx=20
+F73 room=20B0 schritt fuss=4 a0=0 bild=56 akt=57 lage=(-8820,-1800,-6355) zustand=gezeichnet vor=(-9020,-6355) gier=2047 boden=0x1d stempel=0 objekt=0 zweig=trocken code=0000000000 part=-1 anker=(-8820,-1800,-6355) quelle=- plaetze=0 edt=0x1d fx=7
+F83 room=20B0 schritt fuss=4 a0=0 bild=66 akt=67 lage=(-10820,-1800,-6355) zustand=gezeichnet vor=(-11020,-6355) gier=2047 boden=0x1d stempel=0 objekt=0 zweig=trocken code=0000000000 part=-1 anker=(-10820,-1800,-6355) quelle=- plaetze=0 edt=0x1d fx=8
+F95 room=20B0 schritt fuss=4 a0=0 bild=78 akt=79 lage=(-13220,-1800,-6355) zustand=gezeichnet vor=(-13420,-6355) gier=2047 boden=0x1d stempel=0 objekt=0 zweig=trocken code=0000000000 part=-1 anker=(-13220,-1800,-6355) quelle=- plaetze=0 edt=0x1d fx=22
+F105 room=20B0 schritt fuss=4 a0=0 bild=88 akt=89 lage=(-15220,-1800,-6355) zustand=gezeichnet vor=(-15599,-7283) gier=2047 boden=0x1d stempel=0 objekt=0 zweig=trocken code=0000000000 part=-1 anker=(-15220,-1800,-6355) quelle=- plaetze=0 edt=0x1d fx=8
+F107 room=20B0 schritt fuss=4 a0=0 bild=0 akt=1 lage=(-15599,-1800,-7283) zustand=gezeichnet vor=(-15799,-7284) gier=2045 boden=0x1d stempel=0 objekt=0 zweig=trocken code=0000000000 part=-1 anker=(-15599,-1800,-7283) quelle=- plaetze=0 edt=0x1d fx=12
+F119 room=20B0 schritt fuss=4 a0=0 bild=12 akt=13 lage=(-17999,-1800,-7295) zustand=gezeichnet vor=(-18199,-7296) gier=2045 boden=0x1d stempel=0 objekt=0 zweig=trocken code=0000000000 part=-1 anker=(-17999,-1800,-7295) quelle=- plaetze=0 edt=0x1d fx=14
+F129 room=20B0 schritt fuss=4 a0=1 bild=22 akt=23 lage=(-19999,-1800,-7304) zustand=gezeichnet vor=(-20199,-7304) gier=2045 boden=0x1d stempel=0 objekt=0 zweig=trocken code=0000000000 part=-1 anker=(-19999,-1800,-7304) quelle=- plaetze=0 edt=0x1e fx=28
+F136 room=20B0 schritt fuss=4 a0=0 bild=0 akt=1 lage=(-20199,-1800,-7304) zustand=gezeichnet vor=(-20308,-7472) gier=1471 boden=0x1d stempel=0 objekt=0 zweig=trocken code=0000000000 part=-1 anker=(-20199,-1800,-7304) quelle=- plaetze=0 edt=0x1d fx=18
+F154 room=20B0 schritt fuss=7 a0=0 bild=7 akt=8 lage=(-20950,-1800,-9156) zustand=gezeichnet vor=(-20950,-9156) gier=2017 boden=0x1d stempel=0 objekt=0 zweig=trocken code=0000000000 part=-1 anker=(-20950,-1800,-9156) quelle=- plaetze=0 edt=0x1d fx=6

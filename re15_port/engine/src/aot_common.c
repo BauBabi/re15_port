@@ -31,6 +31,7 @@
 #include "re15_player.h"     /* RE15_PAD_BIT_UP + re15_player_push_substate (Schiebe-Handshake) */
 #include "re15_item_modal.h" /* item pickup PRESENTATION modal (FUN_8001db28) — deferred grant */
 #include "re15_itemband_r37.h" /* Runde 37 Spur D: Band-Gate @0x80042cac-ccc auch fuer ITEM */
+#include "re15_wasser20b0_r41.h"   /* Runde 41 Spur A: AUTO-Ereignis in 20B0/20B1 unter Pad-Sperre */
 #include "re15_files.h"      /* Runde 30: Dokument-Ids ab 0x48 (RE15_FILES_FIRST_ITEM_ID) */
 #include "re15_menu.h"       /* Runde 30: re15_menu_request_doc — Aufheben oeffnet den Leser */
 #include "re15_ziel1190.h"   /* Runde 36 Spur H: Scheiben-Text-Plaetze haengen an ihrer Scheibe */
@@ -1167,7 +1168,13 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * Tuer-Sub sub10, Etagen-Flags, eigene Panel-Kamera) — also bleibt RE1.5
          * massgeblich, RE2-Retail ist NICHT das Ziel. */
         /* Suppress non-RVD AOTs during cinematic. */
-        if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH) continue;
+        if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH
+            && a->type != RE15_AOT_TYPE_WATER && a->type != RE15_AOT_TYPE_RAMP   /* Runde 41 Spur A (Nachbesserung 1, M3): die ENV-
+                                                            * Stempel sce 7/8 laufen im Original ohne Szenen-Gate: FUN_800436a8 wird
+                                                            * @0x8001ce1c unbedingt gerufen (Spieler-Pool @0x800436bc-cc, Gegner-
+                                                            * Schleife sltu @0x80043740) -> NPC-/Spieler-Stempel auch in Szenen */
+            && !re15_wasser20b0_r41_auto_aot(g_current_room_id, a->type)) continue;   /* Runde 41 Spur A: AUTO-Pass
+                                                            * FUN_800436a8 @0x8001ce1c laeuft ohne Gate (20B0/20B1 sub05) */
         /* cam_from filter: RVD CAM_SWITCH zones only fire when the
          * active cut matches. Other types use 0xFF (always active).
          *

@@ -1,0 +1,27 @@
+# Lauf A_nb1c/elza2 (Stand e6e6869b, Fix: RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_TITLE_SHOT_CHAR=1, sonst wie elza1)
+7:[input-script] RE15_INPUT_SCRIPT="W9,A0.2,W4,R0.37,W0.3,U0.7,W0.2,A0.2,W0.3,A0.2,W0.3,A0.2,W0.3,A0.2,W4" -> 614 ticks @ 30 fps, start frame 0
+27:[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+66:[debug-menu] AUTO-JUMP -> ROOM20A1 (Frame 240)
+70:[room] PC loaded room20a1.rdt (300176 bytes)
+101:[input-script] Tick 270 -> F27 Tasten 0x8000
+102:[aot] DOOR FIRE slot=0 rect=(4950,5000,hw=1500,hh=500) target_cut=2 spawn=(6300,-1800,-16250)
+105:[room] PC loaded room2091.rdt (311024 bytes)
+162:[input-script] Tick 396 -> F126 Tasten 0x0020
+163:[input-script] Tick 416 -> F146 Tasten 0x0010
+165:[input-script] Tick 443 -> F173 Tasten 0x8000
+167:[input-script] Tick 458 -> F188 Tasten 0x8000
+170:[input-script] Tick 473 -> F203 Tasten 0x8000
+172:[input-script] Tick 488 -> F218 Tasten 0x8000
+178:[flow] EXIT_AT: Bild 360 in Raum 2091 erreicht -> exit
+# climb.log (Landung = sub=10 kind=0x02 ph=4 @0x800386d4):
+T459 room=2091 pm=0 pad=8000 pos=(6363,-640,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=4 obj=-1 stand=-1 mo=233 af=3 frac=0 push=-1 rc_b8=0 rc_bnd=0 t4=-1 t4pos=(0,0) t4fl=0x0000
+# fx.log Zeilen id=6 sub=3: 104
+id=6 sub=3 eidx=0 frame=0 w(6363,-640,-14032) phys=1 xlat=(117,-50,0) drift=(114,-40,0) slot=36 q=2736 wpos=(6363,-640,-14032) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=192
+id=6 sub=3 eidx=0 frame=0 w(6363,-640,-14032) phys=1 xlat=(117,-50,0) drift=(114,-40,0) slot=36 q=2736 wpos=(6363,-640,-14032) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=192
+id=6 sub=3 eidx=0 frame=0 w(6363,-640,-14032) phys=1 xlat=(117,-50,0) drift=(114,-40,0) slot=36 q=2736 wpos=(6363,-640,-14032) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=192
+id=6 sub=3 eidx=0 frame=0 w(6363,-640,-14032) phys=1 xlat=(117,-50,0) drift=(114,-40,0) slot=36 q=2736 wpos=(6363,-640,-14032) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=192
+id=6 sub=3 eidx=0 frame=0 w(6363,-640,-14032) phys=1 xlat=(117,-50,0) drift=(114,-40,0) slot=36 q=2736 wpos=(6363,-640,-14032) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=192
+id=6 sub=3 eidx=0 frame=0 w(6363,-640,-14032) phys=1 xlat=(117,-50,0) drift=(114,-40,0) slot=36 q=2736 wpos=(6363,-640,-14032) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=192
+id=6 sub=3 eidx=0 frame=0 w(6363,-640,-14032) phys=1 xlat=(117,-50,0) drift=(114,-40,0) slot=36 q=2736 wpos=(6363,-640,-14032) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=192
+id=6 sub=3 eidx=0 frame=0 w(6363,-640,-14032) phys=1 xlat=(117,-50,0) drift=(114,-40,0) slot=36 q=2736 wpos=(6363,-640,-14032) A=0 B=0 zuender=0 zaehler=0 fl=07 art=0 F=192
+exit=0 dauer=27s

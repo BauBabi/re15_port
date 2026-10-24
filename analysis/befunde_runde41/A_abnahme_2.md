@@ -1,0 +1,269 @@
+# Runde 41 — Spur A "wasser20b0": ABNAHME 2 (unabhaengig, 2026-10-24)
+
+Baum `.claude/worktrees/r41_wasser20b0`, Zweig `r41/wasser20b0`, HEAD 9171a10e (Code-Endstand der Nachbesserung 2), Merge-Basis
+master 116e8b0f (master-HEAD 71b52f4c traegt seitdem nur Doku unter analysis/befunde_runde41/ - `git diff --name-only 116e8b0f master`).
+Massstab: AUFTRAG.md (Wortlaut Punkt 1/2, Nachtraege 2/3, Entscheide E1/E2, A-E3/A-E4/A-E5), VERTRAG.md §1/§2, Maengel M1..M5 aus
+`A_abnahme_1.md`. Der Bau-Agent wird nicht geglaubt; nur selbst Gemessenes zaehlt. Bericht FORTLAUFEND (Stand je Abschnitt).
+Scratch (nicht versioniert): `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/
+scratchpad/A41abn2/` (unten kurz `A41abn2/...`; Logs, Disasm-Auszuege, Laufordner `mess/<lauf>/`). Messfahrten mit `A41abn2/lauf.sh`
+(exe-Kopie `re15_pc_a41abn2_<lauf>.exe` neben der exe, `env -i`, timeout, Kopie danach geloescht); ctest mit `A41abn2/ct.sh`
+(PATH msys64 zuerst, git am Ende).
+
+## 0. Baustand (selbst gebaut)
+- `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`; `... build` -> `ninja: no work to do.`,
+  `=== LOCAL-BUILD-OK (build)` (07:13). exe `re15_port/build/platform/pc/re15_pc.exe` mtime 2026-10-24 07:10:00 ist juenger als jede
+  Quelle des Diffs (juengste: re15_wassersprung_r41.h 06:39:28, test_r41_wasser20b0.c 06:10:34, wassersprung_r41.c 06:08:04,
+  audio_pc.c 05:56:49); `git status` sauber -> die exe ist der Code-Stand 9171a10e.
+- Delta seit Abnahme 1 (`git diff d8c7334b HEAD --stat -- re15_port`): wassersprung_r41.c (+192), re15_wassersprung_r41.h (+49),
+  audio_pc.c (+5/-1: 1 Include, 2 Zeilen, 1 geaenderte Zeile), test_r35_granate.cmake (+10/-1), test_r41_wasser20b0_npc.cmake (+155),
+  probes/r41_wasser20b0.cmake (+14), test_r41_wasser20b0.c (+303). Gesamt-Diff gegen die Basis (`git diff master...HEAD --stat --
+  re15_port`): 23 Dateien, +2722/-41 (Pfade und Haken: Abschnitt 5).
+
+
+## 1. Gezielte Tests (selbst gefahren)
+- `ct.sh -R "^unit_r41_wasser20b0_" --timeout 600 -j 4` (07:14) -> `100% tests passed, 0 tests failed out of 11`. Einzellaeufe der
+  neuen Teile: `test_r41_wasser20b0.exe ton` -> `ton: 4 Pruefungen, 0 Fehler` ("Zeile + Quelle des Ports = Erwartung aus den EDT-Bytes in
+  allen 536 Faellen", "Zaehlung 52 Raeume: Original 35 / Retail 387 / stumm 114", "ohne Stempel-Zweig stumm: 8 (ROOM6030/6031 Boden
+  0x17)"); `... lage` -> `lage: 12 Pruefungen, 0 Fehler` (PAN/ATT = PSX.EXE @0x80074728..0x80074827, CORDIC-Winkel @0x80078c90, drei
+  Lagen von Hand, Pegel, "ROOM2000 Cut 0 ... danach keine haengende Lage"). Die Riegel lesen PSX.EXE ueber `RE15_R41A_PSX_EXE`
+  (`ok : PSX.EXE geladen ... 718848 B`).
+- `ct.sh -R "^integration_(r41_wasser20b0|r41_wasser20b0_npc|r35_granate)$" --timeout 1800 -V -j 3` (07:17-07:21) -> `100% tests passed,
+  0 tests failed out of 3`: integration_r41_wasser20b0 Passed 99.11 s (Leon und Elza `EM024-Spawns=35 fx-Zeilen id=15: 2408 Cut7=1
+  Cut6=1 frei(mo=1)=1 zeichnet0x24=0`), integration_r35_granate Passed 174.59 s (`r35_granate [gator]: ok — 23 Slot 35: HP 3000 -> 2000,
+  Zustand 2`), integration_r41_wasser20b0_npc Passed 229.03 s (`npc2000: Schritte 64 ... Ton: Original 3, Retail 61, stumm 0;
+  Mischer-Stimmen mit Lage (NPC-Lage) 64, davon seitlich 64; [foot] SE unterdrueckt 0`, `naechster Abstand 41 -> Pegel 104, fernster
+  Abstand 125 -> Pegel 56`; `elza2001: Schritte 23 (Typ 0x49: 23, im Wasser 5) ... Retail 23 ... NPC-Lage 23, davon seitlich 23`;
+  `npc11c0: Schritte 8 ... Retail 8 ... NPC-Lage 8`; `landung_leon/landung_elza: Landungen 1, fx-Zeilen id=6 sub=3: 104`).
+
+## 2. RE-Gate (Stichproben selbst disassembliert; `re15_disasm.py` = RE1.5 PSX.EXE, `re2_disasm.py` = info/re2leon/PSX.EXE)
+Auszuege: `A41abn2/dis_45700.txt`, `dis_45a64.txt`, `dis_59d3c.txt`, `dis_55d10.txt`, `re2_dis_5c040.txt`.
+- **NPC-Zeile (M1, RE1.5 FUN_80045630):** `andi v0,s0,0x7f` @0x80045718, `addu a0,s3,v0` @0x80045724, `lbu v0,8(v1)` (Typ) @0x80045728,
+  `sltiu v0,v0,0x40` @0x80045730, `bne v0,zero,0x80045760` @0x80045734, NPC: `lw a2,8(v0)` (EDT = *(DAT_800ac778+8)) @0x80045754,
+  `j 0x80045794` @0x80045758 / `addiu s3,a0,-8` @0x8004575c (Verzoegerungsplatz). Stimme: `lbu v0,3(a2)` @0x800457a0, `andi s1,v0,0x1f`
+  @0x800457a8, `addiu s1,s1,-16` @0x800457ac, `xori v0,v0,0x4` / `sltu v0,zero,v0` / `addu s1,s1,v0` @0x800457b4-bc. Satz =
+  0x800b2420 + Stimme*18 (@0x80045838-4c); FUN_800458d4 pumpt genau 8 Saetze (`ori s4,zero,0x8` @0x800458dc, Zeiger ab 0x800b24b0,
+  `addiu s1,s1,-18` @0x8004590c, `bne s4,zero,0x8004590c` @0x800459e4) -> eine Stimme ausserhalb 0..7 (leerer Satz: -16/-15) wird nie
+  gekeyt. VAG-Pruefung in SsUtKeyOnV: `lhu a0,22(v0)` @0x80059f2c, `bne a0,zero,0x80059fa4` @0x80059f8c (sonst Rueckgabe -1). BELEGT.
+- **Beta -> Retail (RE2 Leon FUN_8005c040):** der Typ waehlt die Stimme: `lbu v0,8(s3)` @0x8005c0e0, `sltiu v0,v0,0x10` @0x8005c0ec,
+  Spieler `xori/sltu` @0x8005c110-18, sonst `addiu s6,zero,3` @0x8005c104 bzw. `addiu s6,zero,2` (Fuss 4) @0x8005c10c; Wasser
+  `lh v0,268(s3)` @0x8005c11c -> Boden 26 @0x8005c12c. Zeile: `lhu t0,24(sp)` @0x8005c43c, `andi v1,t0,0x7f` @0x8005c44c,
+  `addu s5,s5,v1` @0x8005c458 (a0 + Boden, KEIN Typ-Versatz); leer: `lw v0,0(s4)` / `addiu v1,zero,-1` / `beq v0,v1,0x8005c5b0`
+  @0x8005c468-70. Aufrufer FUN_80066afc: Bildwort `lw v0,376(s0)` ... `andi v0,v1,0x4000` @0x80066b48-58, Fuss 4 + 3*Bit 0x2000
+  @0x80066b64-74, `jal 0x8005c040` @0x80066b78; `table 0x800a83b8`[4] = 0x80065c88 und `table 0x800a4030`[4] = 0x80065c88. BELEGT.
+  (Welche RE2-Typen die Tabelle @0x800a83b8 fuehren, ist auch hier nicht ausgelesen - Ghidra kennt keinen XREF auf die Basis; der Beleg
+  "jeder Typ dieselbe Zeile" ist FUN_8005c040 selbst mit seinem eigenen Nicht-Spieler-Zweig. Ausreichend fuer die Regel Beta -> Retail.)
+- **Lage (M2/A-E4, FUN_80045a64), Zeile fuer Zeile gegen wassersprung_r41.c gelesen:** Kamera `lh v0,4068(v0)` (DAT_800b0fe4 =
+  work_vars[0x0A], re15_scd.h:592) @0x80045a70, `lw v1,36(v1)` (RDT+0x24) @0x80045a94, `sll v0,v0,5` @0x80045a98; |dx|^2 @0x80045aa0-c8,
+  |dz|^2 @0x80045ac0-e8, |Kamera.y - y| @0x80045aec-b00; `jal 0x80065f60` (SquareRoot0) @0x80045b04 und @0x80045b10 (a0 = Summe vor dem
+  Verzoegerungsplatz `addu s1,v0,zero` -> zweimal dieselbe Wurzel); `subu v1,v1,s0` @0x80045b20; dritte Wurzel @0x80045b34; `lui v1,0x1062`
+  / `ori v1,v1,0x4dd3` / `multu` / `mfhi` / `srl s4,v0,4` @0x80045b3c-4c (/250); `slti v0,s4,128` / `ori s4,zero,0x7f` @0x80045b50-5c;
+  vier `jal 0x80045d6c` @0x80045b70/88/a0/b8, `subu s0,s0,v0` @0x80045bbc, `subu a0,s1,v0` @0x80045bc0; int16-Vergleich `slt v1,v1,v0`
+  @0x80045bd4 -> `addiu v0,s0,4096` / `subu a1,v0,a0` bzw. `subu a1,s0,a0` @0x80045bdc-e8; rel 0 / 0x1000 / 0x800 -> beide 0x89
+  @0x80045bf4-c1c; Bit `andi v0,a1,0x800` @0x80045c08; a0/v1 = Bit / nicht Bit @0x80045c28-3c; `addiu v0,a1,-1025` / `andi v0,v0,0xffff`
+  / `sltiu v0,v0,0x7ff` @0x80045c40-48; `srl a2,v0,3` @0x80045c54/64; `ori v0,zero,0x89` / `subu a1,v0,a2` @0x80045c78-7c; PAN `addiu
+  at,at,18216` (0x80074728) / `lbu s1,0(at)` @0x80045c8c-94 (Index bis 0x89 liest in ATT - der Port fuehrt deshalb EIN 256-B-Feld);
+  DAT_800b2826 = Bit ? PAN : 0x89 (`sh a1,10278(at)` @0x80045cd4), DAT_800b2824 = Bit ? 0x89 : PAN (`sh a0,10276(at)` @0x80045ce4);
+  ATT `addiu at,at,18344` (0x800747a8) @0x80045cf4, `subu` + `andi v0,v0,0x7f` @0x80045d08-28 und @0x80045d30-3c (kein Deckel; der
+  Ueberlauf `& 0x7f` ist der des Originals). FUN_80045d6c: dx == 0 -> `blez a0` 0x400 / 0xc00 @0x80045dd8-e0; `sll a0,a0,12` / `div a0,s0`
+  @0x80045d84-88; `jal 0x800658fc` @0x80045db4; `bgez s0` 0x1000/0x800, `subu`, `andi v0,v0,0xfff` @0x80045dc0-d4. catan @0x800658fc:
+  x = 0x1000 (`ori v0,zero,0x1000` @0x80065918), `bgez a0` @0x80065930, `srav` je Stufe (Worte 0x00c41807 / 0x00c21007 / 0x00c41007),
+  x/y gleichzeitig aus den alten Werten (Felder sp+0/sp+56), `slti v0,a2,12` @0x800659b4, Rueckgabe `lw v0,160(sp)` = z[12] @0x800659c0;
+  `read 0x80078c90 12 --w 4` = [511, 302, 159, 81, 41, 20, 10, 5, 3, 1, 0, 0] = W[] im Port. SquareRoot0 @0x80065f60: GTE-LZC
+  (Worte 0x4884f000 / 0x4802f800), Tabelle `lh t5,-9852(t5)` = 0x8007d984. BELEGT - die Nachbildung ist Instruktion fuer Instruktion gleich.
+- **Pegel (SsUtKeyOnV / SpuVmKeyOnNow):** FUN_800458d4 reicht Satz +14 (= DAT_800b2824) / +16 (= DAT_800b2826) als 7./8. Argument
+  (`addiu at,at,9262` @0x8004598c / `sw v0,24(sp)` @0x8004599c; `addiu at,at,9264` @0x800459a4 / `sw v0,28(sp)` @0x800459b8; `jal
+  0x80059d3c` @0x800459b4). SsUtKeyOnV: `lw s0,88(sp)` (voll) @0x80059d44, `lw s1,92(sp)` (volr) @0x80059d4c; gleich -> `ori v0,zero,0x40`
+  @0x80059e10, Pegel voll @0x80059e20; `slt v0,v1,a0` (volr < voll) @0x80059e0c -> Pan (volr<<6)/voll @0x80059e30-6c, Pegel voll
+  @0x80059e64; sonst 0x7f - (voll<<6)/volr, Pegel volr (@0x80059e78-bc, `sb s6,21272(at)` @0x80059eb0). SpuVmKeyOnNow: Tastenpan
+  `lbu v1,21273(v1)` @0x80055f50, `sltiu v0,v1,0x40` @0x80055f58 -> a1 * Pan / 63 (`lui v1,0x410` / `ori v1,v1,0x4105` @0x80055f68-6c,
+  `srl a1,v1,5` @0x80055f88), sonst a2 * (0x7f - Pan) / 63 @0x80055f8c-b8; a2 = links (`sh a2,0(v0)`, SPU-Stimme +0, @0x80056058),
+  a1 = rechts (`sh a1,0(v1)`, +2, @0x80056070). BELEGT. Das SPU-Quadrat (`mult a2,a2` @0x80055fcc / `mult a1,a1` @0x80056008) ist im
+  Port fuer alle SE-Pfade linear (vorbestehende Port-Einheit; Dossier N2.7 Punkt 3) -> Hinweis, kein Mangel dieser Spur. Die Schritt-Toene
+  der gemessenen Raeume haben Ton-Pan 64 und Programm-Pan 64 (`A41abn2/py/tonpan.py`: ROOM2000/2001 Zeilen 22/26/29, ROOM11C0 Zeile 29),
+  der im Port fehlende Ton-/Programm-Pan (@0x80055e68-f48) aendert dort also nichts.
+- **Unabhaengige Nachrechnung (eigene Implementierung aus MEINER Lesung oben, nicht das Python des Bau-Agenten):**
+  `A41abn2/py/lage_abn2.py` (SquareRoot0 mit LZC + Tabelle @0x8007d984, catan, FUN_80045d6c, FUN_80045a64, PAN/ATT aus PSX.EXE; Kamera aus
+  RDT +0x24; Zeile/Quelle aus EDT +0x08 / VH +0x0C; Pegel nach SsUtKeyOnV + Tastenpan) gegen npc.log/debug.log meiner Laeufe (4.3):
+  ROOM2000 `Schritte 64: Zeile+Quelle gleich 64/64, Lage+Abstand gleich 64/64, Pegel L/R gleich 64/64 (NPC-Lage-Zeilen 64), L!=R 64`;
+  ROOM2001 (Elza/John) 23/23, 23/23, 23/23; ROOM11C0 (Marvin) 8/8, 8/8, 8/8.
+- Konstanten des Deltas (re15_wassersprung_r41.h/.c): `_STIMME_BASIS 16` @0x800457ac, `_STIMMEN 8` @0x800458dc, `_LAGE_MITTE 0x40`
+  @0x80059e10, `_PAN_TEILER 0x3f` @0x80055f68-6c, k_pan_att = PSX.EXE @0x80074728 (256 B, Riegel `lage` gegen die Datei), W[] @0x80078c90,
+  0x89 @0x80045c0c/@0x80045c78, /250 @0x80045b3c-4c, Deckel 0x7f @0x80045b5c, `& 0x7f` @0x80045d28/@0x80045d3c. Alle mit Adresse, alle
+  selbst nachgeprueft (oben).
+
+## 3. Punkt 1 — 20B0-Wasserschwall (eigene Messung an der exe; Code seit Abnahme 1 unveraendert, wasser20b0_r41.c 2026-10-23 17:35)
+- Laeufe `p20b0` (Leon) / `p20b1` (Elza, `RE15_TITLE_SHOT_CHAR=1` -> `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`), je
+  `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_DEBUG_JUMP=20b0@250 (20b1@250)
+  RE15_FX_LOG=fx.log RE15_SPAWN_DIAG=1 RE15_FRAMEDUMP=0-330 RE15_EXIT_AT=340#20b0`, rc 0: `PC loaded room20b0.rdt` / `room20b1.rdt`,
+  je 35 x `Sce_em_set type=0x24`, `[scd F105] Cut_chg(7)`, `[scd F146] Cut_chg(15)`, `[scd F228] Cut_chg(6)`, `[scd F242] letterbox
+  closed -> gameplay (player_mode=0)`; fx.log je 1735 Zeilen `id=15`.
+- **Zeitachse gegen die Original-Savestates (eigene Lesung, `A41abn2/py/orig_takt.py` auf scratchpad/orig/*.sav; Takt n aus der
+  EM024-Drift +0x8c = 120 + n bzw. 161 + (+0x8c - 225) nach dem Umbruch)** gegen `RE15_STATE_LOG` des Laufs `p20b0_state`:
+  | Takt n | Original (Cut, Spieler x/z, Gier, +4) | Port F = n + 5 (cam, PL x/z, rot, pst) |
+  |---|---|---|
+  | 1 (tf_5/tf_8) | 11, (2380,-6355), 2048, 1 | F6/F7: 11, (2380,-6355), 2048, 1 |
+  | 48 (tf_7) | 13, (-5020,-6355), 2047, 4 | F53: 13, (-5020,-6355), 2047, 4 |
+  | 100 (tf_9) | 7, (-15599,-7283), 2120, 4 | F105: 7, (-15599,-7283), 2120, 4 |
+  | 131 (ts_10) | 7, (-20308,-7472), 1399, 4 | F136: 7, (-20308,-7472), 1399, 4 |
+  | 181 (ts_12) | 15, (-20657,-9629), 2779, 4 | F186: 15, (-20657,-9629), 2779, 4 |
+  | 233 (ts_14) | 6, (-20657,-9629), 2779, 1 | F238: 6, (-20657,-9629), 2779, 1 |
+  Lauf, Schnitte und Spielerzustand der Szene sind an allen sechs Original-Zeitpunkten gleich (fester Versatz +5 = Sprungbilder).
+- **Partikel-Pool:** `A41abn1/pool_vgl.py` (Original-ESP-Pool 0x800a73b8, Stride 0x84) gegen meinen fx.log: tf_7 (Takt 48) `22 aktive
+  0x0f-Plaetze` / Port F54 `22 gezeichnete`, (sub, anim) Original = Port = {(0,5):4, (0,8):6, (0,11):4, (0,14):2, (7,7):6}; tf_8 (Takt 1)
+  8 / Port F7 8. Der Emitter laeuft 1 Takt hinter dem Spieler (F = n + 6; Abnahme-1-OFFEN 3, Orchestrator 04:01: naechste Runde).
+- **Video (Nachtrag 2):** Bogen `A41abn2/bogen_20b0_a.png` (o008/F8, o014/F14, o026/F26, o036/F36, o048/F48) und `bogen_20b0_b.png`
+  (o075 ... o240): Wolke an der Osttuer und hinter Leon an gleicher Stelle und in gleicher Form/Textur; ab ~o100 laeuft das VIDEO hinter
+  dem Port her (o120 noch im Gang, F120 schon Cut 7; o160 Cut 7, F160 Cut 15). Das ist die Aufnahme: die Savestates zeigen Cut 7 schon bei
+  Takt 100 und Cut 15 bei Takt 181 - genau wie der Port (Tabelle oben). Die Videozeitachse ist durch Aufnahmestaus gedehnt (identische
+  Folgebilder, Dossier 1.9 "F16-23 sind acht identische Videobilder"; flut_d.txt: Aufnahme 50 s, Datei 19,98 s - als Zeitmass
+  unzuverlaessig). Massgeblich sind Savestate-RAM und Framebuffer (so auch Abnahme 1, 3.4).
+- **Urteil Punkt 1: ERFUELLT** (Original gemessen, Port repariert: Szene, Schnitte, Spielerweg und Partikelpool gleich; Restversatz
+  Emitter +1 Takt / erstes Bild nach dem Sprung = OFFEN 1-3, per Orchestrator-Entscheid 04:01 naechste Runde).
+
+## 4. Punkt 2 — Sprung von der Kante ins Wasser; NPCs teilen die Wasser-Effekte (+ Nachtrag 3, E1, A-E4)
+### 4.1 Punkt 2a Landung (eigene Laeufe, echter Weg Tuer 20A0 -> 2090 bzw. 20A1 -> 2091)
+- `landung_leon`: `RE15_DEBUG_JUMP=20a0@240 RE15_PLAYER_POS=4950,5000,2048,2 RE15_INPUT_SCRIPT=W9,A0.2,W4,R0.37,W0.3,U0.7,W0.2,A0.2,W0.3,
+  A0.2,W0.3,A0.2,W0.3,A0.2,W4 RE15_INPUT_SCRIPT_START=0 RE15_CLIMB_TRACE=climb.log RE15_FX_LOG=fx.log RE15_KEIN_GATOR=1
+  RE15_FRAMEDUMP=180-215 RE15_EXIT_AT=360#2090`: `[aot] DOOR FIRE slot=0 ... spawn=(6300,-1800,-16250)`, `PC loaded room2090.rdt`,
+  climb.log `T459 room=2090 ... pos=(6363,-640,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=4`, fx.log 104 Zeilen `id=6 sub=3` ab F192
+  `w(6363,-640,-14032)` `-> sx=96 sy=148`. Bild `A41abn2/landung2090_bogen.png`: Spritzer um Leons Fuesse F196-F202, F206 verklungen.
+- `landung_elza` (dieselbe Eingabe, `RE15_TITLE_SHOT_CHAR=1`, `20a1@240`, `#2091`): `Spieler-Familie PL04 ... Elza-Bit=1`, `PC loaded
+  room2091.rdt`, `T459 room=2091 ... sub=10 kind=0x02 ph=4`, 104 Zeilen `id=6 sub=3`; Bild `A41abn2/landung2091_bogen.png`.
+- `kante2000` (Gehweg -> Kanal ROOM2000, `RE15_PLAYER_POS=-4321,-21100,1024,1 RE15_PRESS=square@60`): `T319 ... pos=(-4321,-640,-22068)
+  ... sub=10 kind=0x02 ph=4`, 104 Zeilen `id=6 sub=3` ab F79 (`-> sx=191 sy=168`); Bild `A41abn2/kante2000_bogen.png`: deutlicher
+  gruen-weisser Spritzerkranz F81-F89. Mechanik @0x80038724-d0 hat Abnahme 1 selbst disassembliert (unveraendert).
+- **2a: erfuellt.**
+### 4.2 Punkt 2b NPC-Wasser-EFFEKTE (eigener Lauf `npc2000`)
+- `RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_FOOT_DEBUG=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+  RE15_SET_FLAG=4:244 RE15_DEBUG_JUMP=2000@240 RE15_PLAYER_POS=4350,-20500,0,1 RE15_NPCSCHRITT_LOG=npc.log RE15_SPAWN_DIAG=1
+  RE15_FX_LOG=fx.log RE15_FRAMEDUMP=1500-2100/20 RE15_EXIT_AT=2100#2000`, rc 0: `Sce_em_set type=0x42 ... slot=0 pos=(550,-1800,-20800)`,
+  `type=0x40 ... slot=1 pos=(2450,-1800,-20400)`; npc.log 64 Schritte (typ 0x42: 31, 0x40: 33; Clip 5: 34, Clip 0: 30), davon 7
+  `zweig=stempel` im Kanal (F1637/1651/1667 Slot 1, F1762/1777/1792/1809 Slot 2, `stempel=-900 ... plaetze=1`); fx.log zeichnet je
+  Schritt den Platz `id=6 sub=3` 13 Bilder lang (F1637-1649, F1651-1663, F1667-1679, F1762-...).
+- Bild `A41abn2/npc2000_wasser_bogen.png` / Zoom `npc2000_zoom.png`: F1640/F1660 die Frau im weissen Mantel (Slot 1, Typ 0x42) im
+  Kanal, F1780/F1800 der Polizist (Slot 2, Typ 0x40) im Kanal - beide mit gruenen Spritzern an den Fuessen.
+- Unit `npc_wasser` (selbst gefahren): alle Typen beider Archive (0x40/0x42/0x45/0x47 CDEMD0+CDEMD1/0x49/0x4b/0x4d) durch den Fleck FLR
+  0x97 -> `Wasser-Spritzer 0x06050D00 gespawnt`, Schritt-Ton gespielt (`Retail 23 (VAG 7)`); `npc_subs`: Sub 7/8 rueckwaerts
+  `Schritt @0x80051a0c / @0x80051c04 NACH dem Vorschub ... Zweig boden 6, Ton 23 gespielt`.
+- Elza-Szenario: John (0x49) schreitet in ROOM2001 fuenfmal durch den Kanal (`zweig=stempel ... plaetze=1`, F310..F374) - im Bild
+  nicht pruefbar, die Stellen liegen hinter der Kamera Cut 4 (H6, Bild `A41abn2/elza2001_bogen.png`).
+- **NPC-Wasser-Effekte: erfuellt** (Ada und Marvin im Bild, John im Elza-Szenario per Log, alle Typen beider Archive im Riegel).
+### 4.3 Punkt 2b NPC-SCHRITT-TOENE (Abnahme-1-Mangel M1) - jetzt HOERBAR, im Mitschnitt nachgewiesen
+- npc2000 (Leon): debug.log `[foot] NPC-Lage voll=.. volr=.. -> Pegel .. Pan .. -> L=.. R=..` **64** Zeilen = 64 NPC-Schritte, **0**
+  `[foot] SE unterdrueckt` (Abnahme 1: 61 von 64 unterdrueckt); Quelle `orig` 3 (Zeile 22, a0 = 1 auf Boden 0x1d), `retail` 61 (Zeile 29
+  trocken 54, Zeile 26 Stempel 7). Code-Weg nach der Zeile: `mixer_alloc_free_slot()` liefert immer einen Platz, danach `volume_q15 = L`,
+  `vol_r_q15 = R`, `active = 1` (audio_pc.c re15_audio_footstep) - die Messzeile steht also nur fuer gemischte Schritte.
+- elza2001 (`RE15_TITLE_SHOT_CHAR=1 RE15_SET_FLAG=3:65 RE15_DEBUG_JUMP=2001@240 RE15_EXIT_AT=700#2001`): `Spieler-Familie PL04 ...
+  Elza-Bit=1`, `Sce_em_set type=0x49 ... (-26003,-1800,-26062)`; 23 Schritte (John), 23 NPC-Lage, 0 unterdrueckt, `retail` 23, 5 im Kanal.
+- npc11c0 (`RE15_DEBUG_JUMP=11c0@240 RE15_EXIT_AT=1200#11c0`): `Sce_em_set type=0x42 ... (-8965,0,-14347)`; 8 Schritte, 8 NPC-Lage,
+  0 unterdrueckt, `retail` 8 (Boden 0x1d: Zeile 21 leer -> Spielerzeile 29).
+- **Im Ton-Mitschnitt selbst (nicht nur im Log)** - `A41abn2/py/schritt_im_mitschnitt.py`: Referenz = VAG des gespielten EDT-Satzes
+  (eigene ADPCM-Dekodierung, Kopie von knall_zensus.adpcm/vab), auf 44,1 kHz gebracht; Lage des Schritts im cap.raw = Takt (F + 244) *
+  1470, Feinlage +-1 Takt per normierter Korrelation; Pegel L/R = Kleinste-Quadrate-Amplitude der Referenz im linken/rechten Kanal.
+  Ergebnis (Versatz F + 244 gefunden, Nachbarversatz -1/+1 ohne Korrelation): ROOM2001 `23` Schritte, Feinlage +2..+6 Abtastwerte,
+  Schaetzung L/R innerhalb 15 % des Log-Pegels **23/23**, Korrelation Schaetzung~Log L 0.989 / R 0.987, Seitenrichtung 23/23 (z.B. F506
+  Log 1584/2772 -> Mitschnitt 1555/2656); ROOM2000 64 Schritte, 53/64 innerhalb 15 % (Rest von Musik/ueberlappenden Schritten gestoert),
+  Korrelation 0.890 / 0.908, Seitenrichtung 62/64 (z.B. F1999 Log 2346/1861 -> 2324/1858); ROOM11C0 8 Schritte, 5/8 innerhalb 15 %,
+  Seitenrichtung 7/8. Die NPC-Schritte liegen also mit dem geloggten Links/Rechts-Pegel im ausgegebenen Ton.
+- Zensus (eigenes Skript `A41abn2/py/zensus_abn2.py`, 52 NPC-Raeume aus dem Abnahme-1-Zensus, FLR +0x34 / EDT +0x08 / VH +0x0C, je
+  Bodentyp x a0 0/1 x Fuss 7/4 ohne Stempel): `orig 15, retail 257, stumm 8` = 280, stumm nur ROOM6030/6031 Boden 0x17 (auch die
+  Spielerzeilen 15/16 und 23/24 ohne Ton) - deckt sich mit der Behauptung des Bau-Agenten.
+- **NPC-Schritt-Toene: erfuellt** (Original-Zeile, wo das Original klingt; sonst Retail-Zeile nach RE2 FUN_8005c040, Abschnitt 2).
+### 4.4 Entscheid A-E4 (NPC-Schritt leiser/seitlich nach Abstand und Lage zur Kamera wie FUN_80045a64)
+- Messzeile je Schritt: npc.log `cut= abstand= lage=voll/volr` + debug.log `-> Pegel Pan -> L= R=`. Unabhaengig nachgerechnet (2.):
+  64/64, 23/23, 8/8 gleich (Zeile, Quelle, Lage, Abstand, Pegel).
+- Leiser mit dem Abstand: ROOM2000 Abstand 41 -> Pegel 104, Abstand 125 -> Pegel 56 (= (0x89 - ATT[Abstand]) & 0x7f, ATT @0x800747a8);
+  seitlich: alle 64/23/8 Schritte L != R, Seite wechselt mit der Lage (z.B. ROOM2000 F886 86/99 -> L 3072 / R 3519, F1999 L 2346 / R 1861).
+- **A-E4: erfuellt.** Die Spieler-Schritte bleiben mittig (Dossier N2.7 Punkt 1; A-E4 nennt nur NPC-Schritte) -> Hinweis H1.
+
+## 5. Vertrag (VERTRAG.md) und Riegel
+- Pfade (`git diff master...HEAD --name-only`): keine release/, platform/android/, shared_assets/PSX/, pri/, synchro/, keine CMakeLists.txt
+  (Filter leer). Bank-9-Bits / Nachrichten-Ids: keine (`flag_set|game_flag|bank9|MSG_ID|re15_msg_|message_id` in den hinzugefuegten
+  Zeilen: 0). Neue Umgebungsvariablen im Spielcode: nur `RE15_NPCSCHRITT_LOG` (Messzeile, kein Schalter fuer Verhalten).
+- Gemeinsame Dateien im Delta: audio_pc.c (Datei der Spur D) +1 Include, +2 Zeilen, 1 geaenderte Zeile, alle mit "Runde 41 Spur A" -
+  genau der 1-5-Zeilen-Haken aus Entscheid A-E4; test_r35_granate.cmake (+10/-1, Riegel-Reparatur M3, kein CMakeLists). Uebrige
+  gemeinsame Dateien unveraendert gegenueber Abnahme 1 (dort geprueft und per A-E3 angenommen).
+- Guess-Tells in den hinzugefuegten Zeilen (`deferred|tunable|interim|for now|faithful|plausibel|TODO|FIXME|geschaetzt|ungefaehr|approx`):
+  0 Treffer.
+- Riegel je Punkt (selbst gefahren, Abschnitt 1): Punkt 1 unit bytes/modell/sequencer/raum/stempel + integration_r41_wasser20b0 (Leon +
+  Elza); Punkt 2a unit landung + integration _npc landung_leon/landung_elza (Tuerweg); Punkt 2b Effekte unit npc/npc_wasser (jetzt auch
+  0x47 beider Archive)/npc_subs (jetzt mit Lauf-Pins Sub 7/8) + integration npc2000/elza2001; Punkt 2b Toene unit ton (536 Faelle, Zeile
+  + Quelle + VAG), npc*/npc_subs pruefen "gespielt", integration zaehlt `[foot] NPC-Lage` == Schritte (= gemischte Stimmen) und 0 stumm;
+  A-E4 unit lage (PSX.EXE-Bytes, Hand-Lagen) + integration (L != R, naeher = lauter). Messend. Parallel-/Linux-Festigkeit: eigene
+  Laufordner, exe-Kopie mit Praefix `re15_pc_r41a_npc_`, cmake_minimum_required; PSX.EXE liegt auch im Linux-Container
+  (release/build_linux_deck.sh KOPIE `info/Re1.5/PSX.EXE`).
+
+## 6. Stand der Abnahme-1-Maengel
+| Abnahme 1 | Stand (selbst geprueft) |
+|---|---|
+| M1 NPC-Schritt-Toene stumm | behoben: 64/64, 23/23, 8/8 gemischt, 0 unterdrueckt; im Mitschnitt mit Pegel L/R nachgewiesen (4.3); Weg Beta -> Retail RE2 FUN_8005c040 selbst disassembliert (2.) |
+| M2 Lage A-E4 | behoben: FUN_80045a64 Instruktion fuer Instruktion nachgebaut (2.), eigene Nachrechnung 95/95 gleich, Mitschnitt-Pegel = Log (4.3/4.4) |
+| M3 integration_r35_granate | behoben: Passed 174.59 s, `23 Slot 35: HP 3000 -> 2000` (1.) |
+| M4 Riegel | behoben: unit ton/lage, Ton-Pruefungen auf "gespielt", 0x47 beide Archive, Sub-7/8-Lauf-Pins, integration elza2001/npc11c0 (1., 4.2) |
+| M5 Dossier N1.14 | behoben (Richtigstellung steht in N1.14); neuer Bezeichnungsfehler 0x40/0x42 -> Hinweis H2 |
+
+## 7. Nebenwirkungen (selbst gefahren)
+- `ct.sh -R "^(unit|probe|prop)_" --timeout 600 -j 3` (07:26-07:41, git im PATH) -> `100% tests passed, 0 tests failed out of 927`
+  (893.35 s; darin unit_r39_titelversion_cmake gruen).
+- Spieler-Schritte bleiben ohne Lage (kein Durchreichen): npc2000 71 `[foot] SE foot=` gegen 64 `NPC-Lage` (7 Spielerschritte mono),
+  elza2001 24/23, npc11c0 28/8.
+- Mitschnitt-Riegel (alle 24 Testdateien mit RE15_AUDIO_CAP_SYNC = 69 Eintraege, dieselbe Liste wie der Bau-Agent, `A41abn2/
+  regex_mitschnitt.txt`), `ct.sh ... --timeout 1800 -j 4` (07:45-08:14, parallel zu anderen Spur-Agenten) -> `100% tests passed,
+  0 tests failed out of 69` (1783.70 s). Darin u.a. r39_stimmen_1050/1150/11b0/1171, r39_johnruf1041_a/b + 6 Tuer-Varianten,
+  r39_parkplatz11c0_k/w/n/e/i (11C0 mit Ada), r38_elzaintro_stimme/_schwarz, r39_toene_szene(_elza)/_schublade(_elza),
+  r39_elzazombies_* (8), r38_wasser, r38_wasserzombie, r38_werkstatt11b0, r37_fahrstuhl(_n1), r39_funk10f1_*, r35_granate,
+  integration_r41_wasser20b0(_npc) - die Pegel-/RMS-Riegel der Sprachzeilen halten mit hoerbaren NPC-Schritten.
+  integration_r38_dining1141_d/_a bestehen in 0,1 s, weil sie stillgelegt sind (`ersetzt durch integration_r39_dining1141_d`,
+  einzeln mit -V gelesen); der Ersatz r39_dining1141_d lief 346.72 s gruen.
+
+## 8. Urteile je Nutzer-Punkt (gegen den Wortlaut)
+### Punkt 1 — "Runde 41 startet mit dem Wasserschwall in 20B0 im Original ... in unseren Port noch kaputt" -> ERFUELLT
+Original gemessen (Spur: Video + Savestate-Reihe; Abnahme: eigene Lesung der Savestates tf_5..ts_14), Port repariert: an sechs
+Original-Zeitpunkten (Takt 1/48/100/131/181/233) sind Schnitt, Spielerlage, Gier und Spielerzustand gleich (3.), der Partikelpool bei
+Takt 48 ist nach Zahl und (sub, anim) gleich (22 = 22), Leon und Elza, Szene laeuft durch, Spieler frei. Restversatz (Emitter +1 Takt,
+erstes Bild nach dem Sprung) = OFFEN 1-3, per Orchestrator-Entscheid 04:01 naechste Runde.
+### Punkt 2 — "Wassereffekt vom rein springen von der Kante in das Wasser. Auch die NPCs teilen die gleichen Effekte ..."
+### (+ Nachtrag 3 "Effekte wenn sie sich im Wasser bewegen fussschritt sounds wenn sie laufen ... auch fuer die NPCs", E1, A-E4) -> ERFUELLT
+- 2a Landung: erfuellt (4.1; Tuerweg 20A0 -> 2090 Leon, 20A1 -> 2091 Elza, 2000-Kante; 8 x 0x06033000, im Bild).
+- 2b NPC-Wasser-Effekte: erfuellt (4.2; Ada 0x42 und Marvin 0x40 im 2000-Kanal mit Spritzern im Bild, John 0x49 im Elza-Szenario per
+  Log, alle Typen beider Archive im Riegel).
+- 2b NPC-Schritt-Toene: erfuellt (4.3; 64/64, 23/23, 8/8 gemischt, 0 unterdrueckt; im Mitschnitt mit dem geloggten L/R-Pegel gefunden;
+  Weg = Original-Zeile, wo das Original klingt, sonst Retail-Zeile RE2 FUN_8005c040, selbst disassembliert).
+- A-E4 Lautstaerke/Seite nach FUN_80045a64: erfuellt (2., 4.4; Instruktion fuer Instruktion gleich, unabhaengige Nachrechnung 95/95,
+  naeher = lauter, L != R).
+
+## 9. Gates
+- RE-Gate: HAELT (2.: jede neue Konstante mit Adresse, Stichproben in RE1.5 PSX.EXE UND RE2-Leon selbst disassembliert - die zitierten
+  Stellen enthalten das Behauptete; Sprungziele 0x80045a64 / 0x80045d6c / 0x800658fc / 0x80065f60 / 0x80059d3c / 0x8005c040 / 0x80066afc
+  selbst gelesen; PAN/ATT 256 B = PSX.EXE; keine Guess-Tells; kein Verhaltens-Schalter per Umgebungsvariable).
+- Vertrag: HAELT (5.: Pfade, keine Bits/Ids, audio_pc.c-Haken genau nach A-E4, markiert).
+- Erklaert der Fix den Befund? JA: Abnahme 1 mass `SE unterdrueckt: type=21 -> vag=-1` (Zeile Boden - 8 leer); der Fix waehlt bei
+  leerer/stummer Original-Zeile die Raumzeile Boden + a0 (Retail) -> an der exe 0 unterdrueckt und der Ton liegt im Mitschnitt (4.3).
+- Tests: Spur-Units 11/11, unit/probe/prop 927/927, integration r41_wasser20b0 + _npc + r35_granate 3/3, alle 69 Mitschnitt-Riegel
+  69/69 - alles selbst gefahren, keine Regression (Abnahme-1-Regression r35_granate behoben).
+- **bestanden = JA.**
+
+## 10. Maengel
+Keine.
+
+Hinweise (nicht blockierend; fuer Orchestrator/Integration):
+- H1 Spieler-Schritte ohne Lage: das Original ruft FUN_80045a64 fuer JEDE Entity (`jal 0x80045a64` @0x80045830 nach dem Typ-Zweig),
+  der Port spielt Leon/Elza weiter mittig (Dossier N2.7 Punkt 1). Entscheid A-E4 nennt nur NPC-Schritte -> Orchestrator-Entscheid.
+- H2 Bezeichnungen 0x40/0x42 vertauscht: Typ 0x42 = Ada, Typ 0x40 = Marvin (re15_cut10f0.h:86 "Ada Typ 0x42 ... Marvin Typ 0x40";
+  enemy_ai_common.c:10230 "Ada ist Entity-Typ 0x42 (Dispatch-Eintrag @0x80072cb4 -> Root 0x8011cb70 ...)"; Bild `A41abn2/npc2000_zoom.png`:
+  Slot 1 / Typ 0x42 = die Frau im weissen Mantel, Slot 2 / Typ 0x40 = der Polizist). Dossier N1.14/N2.4/N2.9 ("Ada 0x40, Marvin 0x42",
+  "11C0 (Leon, Marvin 0x42)") und die Meldungen/Kopfzeilen von test_r41_wasser20b0_npc.cmake ("Marvin (Typ 0x42, Slot 1) und Ada
+  (Typ 0x40, Slot 2)") nennen es umgekehrt. Ohne Wirkung auf Code/Riegel - bei der Integration richtigstellen (in 11C0 ist der NPC Ada).
+- H3 Mono-Option: das Original setzt bei Mono (DAT_800b2678 == 1) BEIDE Kanaele auf max(L, R) (`sltu v0,a2,a1` / `addu a2,a1,zero` /
+  `addu a1,a2,zero` @0x80055fd0-e4), der Port faltet die ganze Mischung zu (L + R) / 2 (audio_pc.c "OPTIONS SOUND = Mono"). Mit den jetzt
+  seitlichen NPC-Schritten klingt ein stark seitlicher Schritt in Mono leiser als im Original. Vorbestehend, engine-weit, nicht Spur A.
+- H4 SPU-Quadrat (`mult a2,a2` / `mult a1,a1` @0x80055fcc / @0x80056008) im Port fuer alle SE linear (N2.7 Punkt 3), engine-weit.
+- H5 rotor_common.c: ATAN-Tabelle statt CORDIC @0x800658fc und vertauschte L/R-Benennung (N2.7 Punkt 2), fremdes Modul.
+- H6 Elza-Szenario: Johns Kanal-Schritte in 2001 liegen hinter der Kamera (Cut 4 pos (-16218,-5364,-25848) -> Ziel (-24786,-2556,-21294);
+  Schrittorte unter 131..141 Grad zur Blickrichtung) - Spritzer dort nicht sichtbar (Bild `A41abn2/elza2001_bogen.png`), per npc.log
+  (`zweig=stempel ... plaetze=1`) und Riegel belegt; im Bild belegt ist die NPC-Wirkung im Leon-Szenario (Ada/Marvin).
+- H7 Original-VIDEO als Zeitmass: die Aufnahme flut_d enthaelt Staus (identische Folgebilder; 50 s Aufnahme, 19,98 s Datei); ab ~o100
+  laeuft das Video hinter den Savestates her. Zeitvergleiche nur gegen Savestate-RAM (3.).
+- H8 Unveraendert aus Abnahme 1/Dossier: Alligator-Platz 35 an B/F/G (N2.6), PORT-WAHL-Cache-Schluessel (Abnahme-1-H2), N1.13 OFFEN 1-10
+  (naechste Runde bzw. andere Spuren), audio_pc.c-Haken bei der Integration mit Spur D zusammenfuehren (Spur D aendert audio_pc.c nur am
+  Ende von audio_callback - keine Ueberlappung mit den 4 Zeilen in re15_audio_footstep, `git diff 116e8b0f r41/kleinkram_a`).

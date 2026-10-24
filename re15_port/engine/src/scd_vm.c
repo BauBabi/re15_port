@@ -3916,6 +3916,8 @@ static int op_sce_em_set(scd_thread_t *t)
          * anim_flags). This alternate REPLACES the normal state/motion setup, so wiring it means a
          * conditional restructure of this handler — deferred until a stage authors pc[18]!=0.) */
         a->grid_id = behavior;   /* +0x9 (sub-dispatch + pose-sel + flags) */
+        if (type == 0x24) a->no_draw = 1;   /* Runde 41 Spur A: EM024 (20B0/20B1) wird nie gezeichnet - INIT 0x8010ef1c loescht
+                                             * Bit 0 des Part-Worts @0x8010efe4 VOR dem ersten Zeichnen (Original-RAM tf_5/tf_8 Bild 1: Wort 0) */
         a->state   = 0;          /* +0x4 = INIT */
         a->repath_timer = (uint8_t)(slot & 7);   /* +0x91 = spawn_index & 7 (@0x80042244) — staggers
                                                   * the per-tick nav-DFS across the spawned enemies */

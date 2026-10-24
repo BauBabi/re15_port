@@ -52,8 +52,13 @@
 
 void re15_actor_step_all_walkers(void);
 
-_Static_assert(RE15_ACTOR_MAX == 21, "Spieler + 20 Gegner-Plaetze (FUN_80037250 sltiu 0x14 @0x800372b4)");
-_Static_assert(RE15_ACTOR_MAX <= 32, "Aktor-Masken dieses Riegels sind uint32_t");
+/* Runde 41 Spur A (A_wasser20b0.md 1.5): RE15_ACTOR_MAX 21 -> 36. Das 20er-Feld (sltiu 0x14 @0x800372b4) ist die
+ * Schleife von FUN_80037250, NICHT die Grenze der Sce_em_set-Ablage: ROOM20B0 legt die Saetze 20..34 OHNE Grenzpruefung
+ * hinter 0x800af33c ab, und der Entity-Takt (FUN_8001a50c, Zaehler DAT_800aca4e = 35) fuehrt sie ALLE — Original-RAM
+ * DuckStation flut_a.sav/ts_10.sav: Slot 26 (grid 1, z=-5550) lebt, driftet mit (x/+0x8c gleich Slot 0) und spawnt
+ * Effekt-0x0f-Plaetze (Versatz (400,1800,-600) bei z=-6150 = -5550-600). "Hinter dem 20er-Feld verworfen" war falsch. */
+_Static_assert(RE15_ACTOR_MAX == 36, "Spieler + 35 Plaetze (ROOM20B0 sub00 35 x Sce_em_set, Original-RAM flut_a.sav)");
+_Static_assert(RE15_ACTOR_MAX <= 64, "Aktor-Masken dieses Riegels sind uint64_t");
 
 static int g_fail = 0;
 #define PRUEF(c, ...) do { if (!(c)) { printf("  FEHLER: "); printf(__VA_ARGS__); printf("\n"); g_fail++; } \
@@ -162,27 +167,27 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t
 }
 
 /* Bitmaske der aktiven Aktoren eines Typs (Bit s = Aktor s). */
-static uint32_t maske(uint8_t typ)
+static uint64_t maske(uint8_t typ)
 {
-    uint32_t m = 0;
+    uint64_t m = 0;
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
-        if (g_actors[s].active && g_actors[s].type == typ) m |= 1u << s;
+        if (g_actors[s].active && g_actors[s].type == typ) m |= (uint64_t)1u << s;
     return m;
 }
-static int bits(uint32_t m) { int n = 0; while (m) { n += (int)(m & 1u); m >>= 1; } return n; }
-static void maske_text(uint32_t m, char *out, size_t n)
+static int bits(uint64_t m) { int n = 0; while (m) { n += (int)(m & 1u); m >>= 1; } return n; }
+static void maske_text(uint64_t m, char *out, size_t n)
 {
     size_t o = 0; out[0] = 0;
-    for (int s = 1; s < 32 && o + 4 < n; s++)
-        if (m & (1u << s)) o += (size_t)snprintf(out + o, n - o, "%s%d", o ? "," : "", s);
+    for (int s = 1; s < 64 && o + 4 < n; s++)
+        if (m & ((uint64_t)1u << s)) o += (size_t)snprintf(out + o, n - o, "%s%d", o ? "," : "", s);
 }
 
 /* ---- Teil: feld --------------------------------------------------------------------------------------- */
 static void teil_feld(void)
 {
     printf("== feld ==\n");
-    PRUEF(RE15_ACTOR_MAX == 21, "RE15_ACTOR_MAX = %d = Spieler + 20 Gegner-Plaetze (@0x800372b4 sltiu 0x14)", RE15_ACTOR_MAX);
-    PRUEF(sizeof g_actors / sizeof g_actors[0] == 21, "g_actors fuehrt %u Plaetze", (unsigned)(sizeof g_actors / sizeof g_actors[0]));
+    PRUEF(RE15_ACTOR_MAX == 36, "RE15_ACTOR_MAX = %d = Spieler + 35 Plaetze (Runde 41 Spur A: ROOM20B0, Original-RAM flut_a.sav)", RE15_ACTOR_MAX);
+    PRUEF(sizeof g_actors / sizeof g_actors[0] == 36, "g_actors fuehrt %u Plaetze", (unsigned)(sizeof g_actors / sizeof g_actors[0]));
 }
 
 /* ---- Teile: raum1030 / raum1031 / raum1040 / raum1041 ---------------------------------------------------
@@ -207,9 +212,9 @@ static void raum_reihe(const raum_t *r, int tor_bit /* -1 = keins, sonst (4,tor_
         if (room_boot(r->raum, r->px, r->pz, r->rot, r->cut) != 0) return;
         frame();
         int n = (20 - k < r->limit) ? 20 - k : r->limit;
-        uint32_t soll = 0;
+        uint64_t soll = 0;
         for (int i = 0; i < n; i++) soll |= 1u << (k + 1 + i);
-        uint32_t ist = maske(0x16);
+        uint64_t ist = maske(0x16);
         char ts[96], ss[96]; maske_text(ist, ts, sizeof ts); maske_text(soll, ss, sizeof ss);
         PRUEF(ist == soll, "ROOM%04X%s k=%2d (Records 0..%d tot): %d Zombies, Aktoren {%s} (soll %d: {%s}; Zaehler 0x11=%d)",
               r->raum, tor_bit >= 0 ? " Tor offen" : "", k, k - 1, bits(ist), ts, n, ss, (int)g_scd.work_vars[0x11]);
@@ -253,13 +258,14 @@ static void teil_raum20b0(void)
         re15_irons_tod_zustand_setzen(RE15_IT_AUS);
         /* Standplatz: re15_room_spawns.h ROOM20B0 (-12635,0,-2905) */
         if (room_boot(raeume[r], -12635, -2905, 0, 0) != 0) return;
-        uint32_t m = 0;
-        for (int f = 0; f < 30 && m != 0x1ffffeu; f++) { frame(); m = maske(0x24); }
+        uint64_t m = 0;
+        const uint64_t soll = 0x0000000FFFFFFFFEull;   /* Aktor 1..35 = Slots 0..34 */
+        for (int f = 0; f < 30 && m != soll; f++) { frame(); m = maske(0x24); }
         int fremd = 0;
         for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type != 0x24) fremd++;
         char ts[96]; maske_text(m, ts, sizeof ts);
-        PRUEF(m == 0x1ffffeu && fremd == 0,
-              "ROOM%04X: Slots 0..19 erscheinen als Aktor 1..20 (Typ 0x24), Slots 20..34 hinter dem 20er-Feld verworfen: {%s}, fremde %d",
+        PRUEF(m == soll && fremd == 0,
+              "ROOM%04X: alle 35 Slots erscheinen als Aktor 1..35 (Typ 0x24; Runde 41 Spur A, Original-RAM flut_a.sav): {%s}, fremde %d",
               raeume[r], ts, fremd);
     }
 }

@@ -30,7 +30,11 @@
  * (scd_vm.c SCRIPT_SLOT_TO_ACTOR). Bis Runde 35 stand hier 16 (= 15 Gegner): ROOM1030/1031/1040/1041
  * (Slots 0..19) verloren damit ihre Records 15..19. Slots >= 20 (nur ROOM20B0/20B1, FX-Emitter 0x24,
  * Slots 0..34) liegen im Original HINTER dem Feld (Ueberlauf ins NPC-Feld) und bleiben verworfen. */
-#define RE15_ACTOR_MAX        21
+#define RE15_ACTOR_MAX        36   /* Runde 41 Spur A: Spieler + 35. Der groesste ausgelieferte Sce_em_set-Satz
+                                    * ohne Save(0x12)-Deckel ist ROOM20B0/20B1 (35 EM024, sub00 @0x1AAE..0x1D56); das
+                                    * Original fuehrt alle 35 (DAT_800aca4e = 35, Savestates ts_10..flut_a). Mit 21
+                                    * fielen die Saetze 20..34 weg, darunter der zweite grid-1-Emitter (Satz 0x1A).
+                                    * Zensus 2026-10-23: 1040/1041 = 40 Saetze (Deckel 5), 1030/1031 = 20 (Deckel 6). */
 #define RE15_ACTOR_SLOT_PLAYER 0   /* Slot 0 is always the player (RE2-pure) */
 
 /* T-round (2026-05-25): RE2 actor flag bits at +0x1c4 — control anim FSM. */

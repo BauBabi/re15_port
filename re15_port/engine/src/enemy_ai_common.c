@@ -24,6 +24,8 @@
 #include "re15_audio.h"    /* re15_audio_room_se — zombie combat SEs on snd1 (func_0x800453d0):
                             * grab-start 4, grab-release 7 (FUN_80102548), death groan 5/8 (FUN_80107cb0 f7) */
 #include "re15_esp.h"      /* re15_esp_fx_spawn — the collapse frame-0x37 blood burst */
+#include "re15_wasser20b0_r41.h"   /* Runde 41 Spur A: EM024-Partikel-Sequencer (grid 0/1) + Zeichenmaske */
+#include "re15_wassersprung_r41.h"  /* Runde 41 Spur A: NPC-Wasser-Schritte (FUN_80045630 Typ >= 0x40) */
 #include "re15_collision.h" /* re15_collision_constrain — the enemy SCA wall clamp (m0 root
                              * @0x8010062c jal 0x8003b0a4, runs per tick after the state handler) */
 #include "re15_room.h"      /* g_room_rdt + g_current_room_id (em-status stage zone) */
@@ -7266,10 +7268,10 @@ static uint16_t s_dog_pack_alert;
  * (@0x801104e0-0x8011052c) so the SCA sweep does NOT clamp the hop back off the obstacle.
  * The port's equivalent sweep is the run_all constrain from the tick-start pos — this mask
  * skips it for the burst frame. */
-static uint32_t s_dog_noclamp_mask;
+static uint64_t s_dog_noclamp_mask;   /* Runde 41 Spur A (Nachbesserung 1, M7): 64 Bit - seit RE15_ACTOR_MAX 36 reicht 1u << slot nicht */
 static int re15_dog_consume_noclamp(int slot)
 {
-    uint32_t b = 1u << (unsigned)slot;
+    uint64_t b = (uint64_t)1u << (unsigned)slot;
     int r = (s_dog_noclamp_mask & b) != 0;
     s_dog_noclamp_mask &= ~b;
     return r;
@@ -7364,7 +7366,7 @@ static void re15_dog_reroute13(re15_actor_t *e, int slot)   /* FUN_801102dc */
             e->y -= 0x708;                              /* +0x38 -= 1800 (one level UP) @0x801104b4 */
             e->crow_speed = 0xc1c;                      /* +0x8c = 3100 @0x801104c8 */
             re15_dog_advance_ofs(e, 0);                 /* func_0x800245d8(0) burst @0x801104d4 */
-            s_dog_noclamp_mask |= 1u << (unsigned)slot; /* old-pos snap +0x40/+0x42/+0x44 @0x801104e0-52c */
+            s_dog_noclamp_mask |= (uint64_t)1u << (unsigned)slot; /* old-pos snap +0x40/+0x42/+0x44 @0x801104e0-52c */
             e->sub_state_2 = 4;                         /* -> step 4 @0x80110534 */
         }
         break;
@@ -9882,6 +9884,7 @@ static void re15_npc_sub_turn(re15_actor_t *e)
         if (e->anim_flags & 4) { e->sub_state_1 = 9; e->sub_state_2 = 2; }   /* re-arm (@0x80051df4) */
     }
     re15_enemy_steer_point(e, e->steer_x, e->steer_z, cone); /* yaw-slew (@0x80051e44) */
+    (void)re15_wassersprung_r41_npc_takt(e, 0);              /* Runde 41 Spur A: Schritt @0x80051e4c-88 (a0 = 0 @0x80051e70) */
     re15_npc_anim(e);                                        /* advance the turn clip (motion 5) */
 }
 
@@ -9994,7 +9997,7 @@ static void re15_npc_sub_walk(re15_actor_t *e)
         /* PHASE-1-BODY — laeuft in BEIDEN Faellen (aligned wie nicht-aligned) und beendet den Tick. */
         re15_enemy_steer_point(e, e->steer_x, e->steer_z,
                                re15_npc_type_cone(e->type));  /* Slew 96/80 @0x80076c41 */
-        /* OPEN (Footstep-SE der Phase 1, byte-genau lokalisiert, NICHT portiert): Frame-Flag-Test
+        /* Runde 41 Spur A: PORTIERT (wassersprung_r41.c, Ton -8 dort vor re15_audio_footstep). Frame-Flag-Test
          * `lw v0,360(entity)`(+0x168) / `lw v1,0(v0)` / `andi 0x4000` @0x80051278-88 (Sub 4) bzw.
          * @0x800515e4-f4 (Sub 5) -> `jal 0x80045630(a0, 7-3*((flag>>12)&1))` @0x800512a8 / @0x80051614
          * (a0=0 Sub 4 @0x80051290, a0=1 Sub 5 @0x800515fc; Phase 2 @0x800512d4-308 / @0x800519dc-a10 /
@@ -10003,6 +10006,7 @@ static void re15_npc_sub_walk(re15_actor_t *e)
          * DAT_800aca3c&0x4000-Override @0x80045788-90; das Port-API re15_audio_footstep(foot,type)
          * maskiert &0x7f erst NACH der Addition (audio_pc.c:2448) — der -8-Shift ist damit nicht
          * abbildbar, ohne audio_pc.c anzufassen (gehoert einer anderen Lane). */
+        (void)re15_wassersprung_r41_npc_takt(e, (sub == 5) ? 1 : 0);   /* Runde 41 Spur A: Schritt @0x80051278-a8 / @0x800515e4-614 */
         re15_npc_anim(e);                                    /* f314 @0x800512c4/@0x80051630 */
         return;                                              /* EXIT @0x800512cc/@0x80051638 */
     }
@@ -10010,11 +10014,13 @@ static void re15_npc_sub_walk(re15_actor_t *e)
      * Die Slew-Tabellen sind fuer beide Faelle 48 an allen 16 Typ-Positionen (@0x80076c01 fuer
      * Sub 4/5/8, @0x80076c21 fuer Sub 7) — der Unterschied ist ausschliesslich das VORZEICHEN
      * (`subu a2,zero,a2` @0x800519c4 / @0x80051bbc) und der pos_advance-Yaw-Offset. */
+    if (!backward) (void)re15_wassersprung_r41_npc_takt(e, 0);   /* Runde 41 Spur A: Schritt VOR Kurs/Vorschub @0x800512d4-308 / @0x80051640-74 */
     re15_enemy_steer_point(e, e->steer_x, e->steer_z, backward ? -48 : 48);
     if (backward) re15_dog_advance_ofs(e, 0x800);            /* `ori a0,zero,0x800` @0x800519cc /
                                                               * @0x80051bc4 — 180 Grad rueckwaerts */
     else          re15_dog_advance(e, e->crow_speed);        /* pos_advance(a0=0) @0x80051344/@0x800516b0 */
     if (sub == 5 && re15_npckante_nach_schritt(e)) return;  /* Runde 38 Spur M: Sonde VOR anim_set @0x800516c4 */
+    if (backward) (void)re15_wassersprung_r41_npc_takt(e, 0);    /* Runde 41 Spur A: Sub 7/8 NACH dem Vorschub @0x800519dc-a10 / @0x80051bd4-c08 */
     re15_npc_anim(e);
     if (sub == 4 && re15_npckante_nach_schritt(e)) return;  /* Runde 38 Spur M: Sonde NACH anim_set @0x80051374 */
     {
@@ -13603,6 +13609,7 @@ static void re15_fx_emitter_ai_tick(int slot)
         e->ai_timer = 0x78;                      /* +0x8c drift timer = 120 @0x8010ef6c */
         e->sub_state_1 = e->grid_id;             /* +0x5 = grid @0x8010f00c */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
+        re15_wasser20b0_r41_init(e);             /* Runde 41 Spur A: Zeichenmaske *(+0x188)&=~1 @0x8010efe4, +0x95 = 1 */
         e->state = 1;                            /* +0x4 = 1 @0x8010eff4 */
         break;
     case 1:   /* ACTIVE 0x8010f020: accelerating leftward X-drift. No damage. */
@@ -13610,10 +13617,11 @@ static void re15_fx_emitter_ai_tick(int slot)
          * spawns) it is the `jr ra` NOP @0x8011084c, so drift-only is byte-true here. The grid-0/grid-1
          * particle-burst sequencer (0x80019700 ESP FX) is render-side ambience only -> OPEN (dormant #1).
          * The +0x1d4 SquareRoot0 dist cache (sh @0x8010f078) feeds only that sequencer -> also OPEN. */
+        (void)re15_wasser20b0_r41_sub(e);        /* Runde 41 Spur A: jalr @0x80118d58[+0x5] @0x8010f0a8 - grid 0/1 Spawns 0x80019700 */
         e->ai_timer++;                           /* timer++ @0x8010f0c8 */
         e->x -= e->ai_timer;                     /* X -= timer @0x8010f0e8 */
         if (e->x < -25000) { e->x = 20000; e->ai_timer = 0xe1; }   /* wrap @0x8010f100-11c (0x4e20/0xe1) */
-        e->anim_frame++;                         /* clip frame advance (billboard); no burst modeled (OPEN) */
+        /* Runde 41 Spur A: KEIN Bildvorschub - +0x95 bleibt 1 (Original-RAM ts_10..flut_a), Mesh nie gezeichnet. */
         break;
     default:
         e->state = 1;
