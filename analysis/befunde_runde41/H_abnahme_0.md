@@ -35,6 +35,14 @@ beendet); geprueft wird jetzt HEAD **4616305a** (= 103563cc + Abnahme-Anfang 755
 `ctest --test-dir re15_port/build -R "r41_kollision" -j 3 --timeout 900 --output-on-failure` ->
 `100% tests passed, 0 tests failed out of 9` (`Total Test time (real) = 221.80 sec`; unit npc/raum3070/raum3001/kiste,
 integration kiste/raetsel_leon/raetsel_elza/npc3070/npc3001). Log: Arbeitsordner `ctest_r41_kollision.log`.
+Zweiter Lauf der fuenf exe-Riegel mit `-V` (`ctest_r41_kollision_V.log`, `100% tests passed, 0 tests failed out of 5`),
+Statuszeilen woertlich:
+- `r41_kollision[kiste]: 217 SCHUB-OK (max. Lage x 2443 < 2448), 3 gesperrt, 3 Objekt-Sperren gegen obj 3; Ende '... p3 (2443,0,-64)
+  b0 ... p4 (4248,0,1400) b0 ...'`
+- `r41_kollision[raetsel_leon]: Raetsel geloest, (5,0..2) = 1, Endlage '... p2 (-6636,0,-3718) ... p3 (-6614,0,-64) ... p4
+  (-6644,0,-1887) ...' (dZ 1831 / 1823)`; `r41_kollision[raetsel_elza]: Raetsel geloest, (5,0..2) = 1, ... (dZ 1847 / 1819)`
+- `r41_kollision[npc3070]: 1671 Paarbilder, min 897 (F63), Kontakt 1671, unter Summe-50: 0, Ende 901 (Radien-Summe 900)`
+- `r41_kollision[npc3001]: 1671 Paarbilder, min 740 (F197), Kontakt 1669, unter Summe-50: 0, Ende 752 (Radien-Summe 750)`
 
 ## 3. RE-Gate (selbst disassembliert, `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` auf `info/Re1.5/PSX.EXE`
 ## bzw. `info/Re1.5/PSX/BIN/STAGEn.BIN`)
@@ -283,4 +291,6 @@ r37_itemband.*|r38_wasser.*|room_transition|cross_stage|door_traversal|room_prob
 Nicht gefahren: die ROOM1260-Parallelszene (Ada + Marvin, Switch case 7 @0x0124E, sub04/sub05) — mein Tuerweg 11B0 slot 5 kam
 nicht an die Tuer (Spieler blieb bei (-62,-18308) haengen, Laeufe `p1_1260_*` abgebrochen). Statisch: die Wegpunkte der beiden
 liegen paarweise 1498/1543 auseinander, die Endlagen (-7500,-6250)/(-8900,-4600) 2164 — kein Plc_dest-Ziel innerhalb der
-Radien-Summe 900 einer anderen Figur; die Spur mass dort vorher min 971.
+Radien-Summe 900 einer anderen Figur. Beleg der Spur (`H_belege/npc11b0_vorher/abstand.txt`, Lauf ueber die 11B0-Szene bis
+ROOM1260): `Paar Slot1(t=42)-Slot2(t=40): min 2372 bei F1 (26750, 11800) (25400, 9850)` = die case-7-Startlagen @0x01254/@0x01268,
+danach nie naeher — in 1260 beruehren sich die beiden schon vorher nicht, der Schub greift dort nicht (nicht selbst gemessen).
