@@ -98,12 +98,72 @@ Work_set(2,0) @0x020C2; **Plc_motion(2,6) Zielen @0x020C6**, Sleep 110 @0x020CA,
 @0x020D2, Plc_motion(2,7) @0x020D6; Senken Plc_motion(2,6) + Plc_flg 0x80 @0x020EA/@0x020EE, Sleep 20 @0x020F2. Marvin (0x40)
 traegt dieselbe Eigenbank (Sub 2 = 0x80050f00 auf +0x170/+0x174, ROOM10D0 Plc_motion(2,6,0), enemy_ai_common.c:10069).
 
+### 1.10 Nachtrag 17 (19:44): der KNALL beim Hereinkommen der Zombies - Original-Stelle und Port-Datei
+Wortlaut: "Muss natuerlich ein knallen sein, als ob die Zombies rein brechen, so wie bei STAGE1 von Elza/Leon am Ende in der
+Cutscene nach Irons." (Bezug: Punkt 1, "Metalltuer-Ton und 8 Zombies").
+- Die Szene nach Irons im Port: Leon `irons_tod_1150.c` k_p_szene endet mit `OP_KNALL(RE15_IT_SIG_KNALL_TUER)` + Sleep 45 + Tuer
+  ("der Knall (aus dem Buero gehoert)"), Signal (5,28) -> Takt `re15_audio_re2_tuer_se(KNALL_SE_TUER)` (irons_tod_1150.c:1357);
+  Elza `elzazombies_r39.c` Programm A (Auftakt ROOM1041) `OP_KNALL(RE15_R39Q_SIG_KNALL_TUER)` -> `re15_audio_re2_tuer_se(KNALL_SE_TUER)`
+  (elzazombies_r39.c:1123). Beide laden vorher `re15_audio_re2_tuer_laden(k_knall_bank, KNALL_BANK_SIZE)` =
+  `engine/src/gen/knall_bank.inc` (19976 B, Generator `tools/r35_l/knall_cut.py`, Runde 36 Spur K: Nutzer verwarf damals den
+  Door_exit-Schliesston "Das ist kein Tuerknallen, das ist einfach nur der Sound von Tuer schliessen").
+- **Satz 0 = KNALL_SE_TUER = RE2 ROOM1060** (info/re2leon/PL0/RDT/ROOM1060.RDT, 150996 B), selbst nachgelesen
+  (`tools/r41_kanister2080/belege_n17_n20.py knall`): sub05 **@0x0F48 `36 02 0a 01 00 00 dc 88 f8 f8 3d 05`** = Se_on Bank 2 Satz 0x0a (der Schlag gegen
+  die Huettentuer, hinter der die Zombies stehen); Raumbank-Kopf +0x08/+0x0C/+0x10 = EDT @0x3F58 / VH @0x4018 / VB @0x4C38;
+  **EDT[0x0a] @0x3F80 `00 00 85 20`** (Programm 0, Tone 8 + Zusatzlage Tone 9); **VAG 5 @Datei 0x066B8, 8768 B, sha1
+  192e09df824ba47854001928662ec82e9fd33522** = bytegleich die Bank-VB @0xC38 in knall_bank.inc (SE-Map Satz 0 `00 00 05 20`).
+  RE2_SOUND_LISTE.md Z.122: "ROOM106.SAP - Cabin sounds - **Zombies breaking in**".
+- Satz 1 (KNALL_SE_1030 = RE1.5 ROOM1030 sub08 @0x02776 Se_on 0x0c) ist der Rolltor-Knall der Montage (1040/1030), nicht der
+  Tuer-Einbruch -> nicht genommen.
+- Port: derselbe Ton = dieselbe Datei/derselbe Satz: kanister2080_pc.c laedt `gen/knall_bank.inc` in die Tuerbank und spielt
+  Satz 0 (Abschnitt 3.5). Spur F soll fuer die 2090-Einstellung denselben Aufruf nehmen (VERTRAG: nur ueber Dateien/APIs).
+- Abgrenzung Punkt 3: "Es gibt erneut die Geraeusche einer schliessenden Tuer. Marvin ... ist im ROOM 2080" = Marvin/John kommt
+  durch die Tuer herein (kein Einbruch). Nachtrag 17 ist mit "Ton beim Hereinkommen der Zombies" ueberschrieben -> in der Szene
+  bleibt der Schliess-Ton DOOR06 Satz 1 (Door_exit @0x800141f0); Entscheidungsfrage im Abschnitt 7.
+
+### 1.11 Nachtrag 20 (21:41): Ebene der Zombies - "oberhalb von der Treppe, nicht unten"
+Wortlaut: "In 2080, nachdem die Zombies durch die Tuer gebrochen sind, sollen sie oberhalb von der Treppe laufen, nicht unten."
+- **Die Treppe** = ROOM2080 main00 **@0x0BE2 `2c 02 0c 31 80 00 54 a7 46 ba 9c 18 fc 08 00 00 03 00 00 00`**: Aot_set Slot 2
+  sce 12 (Treppe in x), Band-Byte 0x80 = Wildcard (`andi v0,v0,0x80` @0x80042cac-cd4), Rechteck x -22700..-16400 z -17850..-15550,
+  side 0 (rec+0xC: die Haelfte x < -19550 ist das UNTERE Ende, @0x80043500), Bandsprung 3 (rec+0xE) -> **unten Band 5
+  (y -9000) an der 2030-Tuer, oben Band 8 (y -14400)**. Laufzeit: `[STAIRREG] slot=2 type=12 chain=128 side=0 count=3
+  corner=-22700 extent=6300` und `[stair] START dir=UP cur_band=5 target_band=8` (Lauf n20v, stair_dbg.log).
+- **Tueren** (main00): Slot 0 @0x0BA2 -> ROOM2030 auf Band 5 (Rechteck (-24400,-17700)) = Fuss der Treppe, RE2-Tuerarchiv DOOR06
+  (gen/tuer_zuordnung.inc S161); Slot 1 @0x0BC2 -> ROOM2090 auf Band 8 (Rechteck (-9650,-26150)) = Sued-Ende des Laufgangs.
+  Bilder (extracted ROOM208/ROOM20800..09): Cut 0 = Treppe von oben zur 2030-Tuer, Cut 1 = Treppe von unten, Cut 2 = oberer
+  Hauptbereich mit Rechner, der rote Rahmen hinten = Oeffnung zum oberen Treppenabsatz.
+- **SCA @0x4BC** (5 Gruppen je 28 Zellen, Dump `tools/r41_kanister2080/belege_n17_n20.py sca`): Band 8 (floor 0x88) umschliesst die OBERE Ebene vollstaendig:
+  Laufgang x -14300..-9200 z -26900..-6750, Treppenabsatz x -16650..-14300 z -18300..-14750 (Westwand **@0x05C4 x -17650..-16650
+  z -19300..-13750**, Sued @0x05AC, Nord @0x05B8), Balkon x -9200..-6700 z -18600..-16550 (Reling @0x05A0); Band 5 (0x55)
+  umschliesst den Treppenfuss x -23900..-22450 z -17950..-15400 (@0x04E0..@0x0504). Die Treppe (x -22700..-16400) liegt westlich
+  der Absatz-Westwand bei x -16650 -> fuer Band 8 nicht begehbar.
+- **Gegner kollidieren mit den Zellen ihres Bandes**: FUN_8003b0a4 vergleicht das Zustandsbyte +0x82 mit floor>>4 jeder Zelle
+  (`lbu v1,130(a3)` + `bne` @0x8003b228-3c; Port collision_constrain_impl, Band aus e->y ueber re15_collision_constrain_enemy in
+  enemy_ai_common.c), Zombie-Maske 4 (`lbu a2,471(a0)` @0x80100624) trifft u0 0xff aller 2080-Zellen. Die 8 Zombies stehen mit Sce_em_set pc[4] = 8
+  (y = -8*1800 @0x800421d4) auf Band 8 -> sie laufen nur oben (Laufgang/Absatz/Balkon), ein Abstieg ueber die Treppe ist
+  geometrisch ausgeschlossen (Riegel unit_r41_kanister2080_ebene: Flutfuellung der Band-8-Freiflaeche ab jedem Zombie).
+- "durch die Tuer gebrochen": die einzige Tuer, durch die Zombies von aussen kommen, ist Slot 0 am Treppenfuss (Slot 1 fuehrt ins
+  Alligator-Becken 2090); oben ist die Oeffnung zum Treppenabsatz. Die Lage der 8 (Tabelle k_zombies, API
+  `re15_k2080_zombie_lage`) ist die "dieselbe Lage" fuer Spur F's Einstellung.
+
 ## 2. Messung vorher (Stand 2adca3bf, Bau local_build.sh, exe-Kopie re15_pc_g41_mess.exe)
 Lauf vorher1: `RE15_DEBUG_JUMP=2080@250 RE15_SET_FLAG=9:110,3:245 RE15_FORCE_CUT=5 RE15_FRAMEDUMP=20-60/20 RE15_SPAWN_DIAG=1
 RE15_EXIT_AT=60#2080` (Titel-Autostart wie die r41-Riegel).
 - Punkt 1: debug.log 0 Zeilen `[spawn-diag]` in ROOM2080 (kein Gegner), kein Tuer-Ton (Bit 110 gesetzt, 2080 aendert sich nicht).
 - Punkt 2: Cut 5 Bild 40 (G_belege/vorher_2080_cut5_f40_x2.png, 2x vergroessert): Balkon leer, kein Kanister.
 - Punkt 3: kein Ausloeser, keine Szene (kein Code ausser B's Testhaken RE15_GATOR_KANISTER).
+
+### 2.1 Messung vorher zu Nachtrag 17/20 (Stand 17ee51a6, exe-Kopie re15_pc_g41_mess.exe)
+Lauf n20v: `RE15_DEBUG_JUMP=2080@250 RE15_SET_FLAG=9:110,3:245 RE15_PLAYER_POS=-23200,-16700,0,5` (Leon am Treppenfuss vor der
+2030-Tuer, Band 5), `RE15_INPUT_SCRIPT=W6.0,A0.2,W10.0,L1.1,A0.2,W8.0` (Basis Spiel), RE15_STATE_LOG, RE15_STAIR_DBG,
+RE15_R39_MESS_SPIELER_HP=100, Bildserie 30..900/30, Auswertung `tools/r41_kanister2080/belege_n17_n20.py zlage state.log`.
+- Ton (Nachtrag 17): `[k2080] F250 Tuer-Ton: DOOR06-Tonteil 19608 B ... Satz 1 (Door_exit @0x800141f0)` = der Schliess-Ton, nicht
+  der Knall.
+- Ebene (Nachtrag 20): bis Bild 180 (Leon unten, Cut 0) stehen alle 8 still an ihren Plaetzen; Bild 181 `[stair] START dir=UP
+  cur_band=5 target_band=8`, ab Bild ~300 ist Leon oben im Durchgang (Cut 2), die Zombies laufen auf ihn zu und umringen ihn im
+  oberen Hauptbereich. 7160 Zombie-Saetze: **x -16120..-9556, z -20000..-14700, 0 westlich der Absatz-Westwand x -16650**.
+  Der Abstieg (L1.1 + A0.2) kam nicht zustande (Leon war gepackt, Gier unveraendert) -> Messung "Leon geht wieder hinunter" im
+  Nachher-Lauf. Bilder: Cut 0 (Leon unten, Treppe leer), Cut 1 (auf der Treppe), Cut 2 (oben, Zombies im Hauptbereich).
 
 ### 1.8 Clip-Zensus Marvin 0x40 / John 0x49 (tools/r41_kanister2080/probe_npc_clips.c, Pose = re15_skel_compute_pose)
 CDEMD0.EMS Blob 0x40 @0x2CD800 / 0x49 @0x355800, je 9 Verzeichnis-Eintraege; Bank 0 (Loco, dir[1]/dir[2]) 24 Clips, Bank 1
