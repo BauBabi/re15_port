@@ -238,3 +238,18 @@ die NPCs der beiden Punkte (3080 sub00 @0x007AC/@0x007C0 Ada 0x42 + Marvin 0x40 
   ausserhalb des Bildes (Framedump F1300/F2000: nur Elza im Aufzug) — Abstand 0 in BEIDEN exe. Das ist kein Befund der Spur: bei dX =
   dZ = 0 liefert auch die Original-Formel `dX*pen/(dist+1)` (@0x8002b22c-238) 0, die beiden bleiben auch im Original deckungsgleich;
   zu sehen ist es nicht (Hinweis H4).
+
+### 4.7 Punkt 1, LEON, ROOM30E0 Ada + Marvin nach ihrer Szene (zweiter Befund-Ort, von Spur und Abnahme 0 nicht gemessen) (`laeufe/s30e0_*`)
+ROOM30E0 sub11 (`Ck (3,75)=1` @0x01088) setzt Ada (0x42) + Marvin (0x40) mit Verhaltensbyte 0x40 @0x0108C/@0x010A0 und startet die Szene
+sub03 (@0x00E62: (3,75)=0, (3,180)=1, Texte 9-13). Befehl: `lauf.sh s30e0 <vor|nach> 400 RE15_SET_FLAG=3:75
+RE15_DEBUG_JUMP=30E0@250`, Quadrat je Sekunde (Szenentexte), `RE15_EXIT_AT=2500`. Die Szene endet in BEIDEN exe bei F654 (`pm=2` ->
+`pm=0` im selben Bild); danach folgen beide Leon als Eskorte (Zustand 1).
+
+| exe | Ada/Marvin (Summe 900): min | Bilder < 850 | Ende F2500 | Spielerlage F600 -> F650 |
+|---|---|---|---|---|
+| vor | **12** (F649) | **1881 / 2500** | **12** | (-23730,-22800) -> (-24003,-22223): 637 weggestossen, als die beiden durch Leon liefen |
+| nach | **884** (F810) | **0** | **902** | (-23730,-22800) -> (-23735,-22797) |
+
+`kollision.txt` nach: 296 `NPC-SCHUB`. Bild `bild_s30e0_vor_nach.png` (F500-F2500, Kamera 1 in beiden Laeufen): **vor** ab F900 nur
+noch Marvin und Leon zu sehen — Ada steckt in Marvin; **nach** drei getrennte Figuren (Marvin, Ada, Leon). => Ein zweiter echter
+Befund-Ort fuer "Ada und Marvin laufen ineinander", vorher reproduziert, nachher behoben; Szenenablauf (Ende F654) unveraendert.
