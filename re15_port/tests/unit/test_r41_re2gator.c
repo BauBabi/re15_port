@@ -1413,9 +1413,26 @@ static int teil_sitz(void)
     CHECK(re15_gator_boss_befreiungen() == b0 + 1, "Gefaengnis: %d Befreiungen statt 1", re15_gator_boss_befreiungen() - b0);
     CHECK(n_schub >= 1 && gier_fest, "Befreiung: %d Schub-Bilder, Gier fest %d (NB4 M2: Schub ohne Drehung)", n_schub, gier_fest);
     CHECK(m_schub == 0, "Befreiung: Kanister %d neben Part6(Bild) x lokal", m_schub);
+    printf("sitz: (c) Befreiung %d Schub-Bilder, Gier fest %d, groesster Abstand %d\n", n_schub, gier_fest, m_schub);
+    /* (d) mit UEBERBLENDUNG: der tragende Gator wechselt ins Nordbecken, in dem Leon ist -> RE2-Zonen-Dash mit Clip 2 und
+     *     Blend 16 (@0x80100dac-b4); RE2-Gewicht 4096/(n+1) @0x8001a37c-ac, Abbau -1 je Bild @0x800299c0-cc - 16 Bilder, in
+     *     denen die gezeichnete Pose eine Mischung aus Vorbild und Keyframe ist. */
+    e->x = 3000; e->z = -9000; e->rot_y = 0x800;
+    int n_bl = 0, frac_max = 0; int32_t m_bl = 0;
+    for (int f = 0; f < 70; f++) {
+        leon_statue(-6000, -7000); pl->hp = 100;
+        tick();
+        if (!zeichnen_nachbau(r6, p6)) { CHECK(0, "Zeichner-Nachbau ohne Pose (Ueberblendung %d)", f); return 1; }
+        int32_t d = sitz_fehler(r6, p6, &fx_ok);
+        if (d < 0) { CHECK(0, "Kanister bei der Ueberblendung nicht angehaengt"); return 1; }
+        if (!fx_ok) fx_falsch++;
+        if (e->anim_frac > 0) { n_bl++; if (d > m_bl) m_bl = d; if (e->anim_frac > frac_max) frac_max = e->anim_frac; }
+    }
+    CHECK(n_bl >= 15 && frac_max == 16, "Ueberblendung nicht abgedeckt: %d Bilder, groesster Zaehler %d (Dash-Blend 16 erwartet)", n_bl, frac_max);
+    CHECK(m_bl == 0, "Ueberblendung: Kanister %d neben Part6(Bild) x lokal", m_bl);
     CHECK(fx_falsch == 0, "Effekt-Quelle Part 6 in %d Bildern nicht die gezeichnete Part-6-Matrix", fx_falsch);
-    printf("sitz: (c) Befreiung %d Schub-Bilder, Gier fest %d, groesster Abstand %d; Effekt-Quelle Part 6 falsch in %d Bildern\n",
-           n_schub, gier_fest, m_schub, fx_falsch);
+    printf("sitz: (d) Ueberblendung %d Bilder (Zaehler bis %d), groesster Abstand %d; Effekt-Quelle Part 6 falsch in %d Bildern\n",
+           n_bl, frac_max, m_bl, fx_falsch);
     return fails ? 1 : 0;
 }
 
@@ -1426,7 +1443,7 @@ static int teil_sitz(void)
  *   E1  Plattform-Belagerung: Leon OBEN auf der Rampe (6732,-16250, y -1800), GUARD-Ziel (6500,-12600) vor der Ostwand - vorher
  *       Befreiungs-Snap +-1944..1984 alle 32 Bilder an der Ostwand (x 5716 > 7200 - 1526).
  *   C3  Westwand vor der Tuernische: Leon in der Nische (-8200,-25550) - vorher 1300..1650 (C3 F1097/1207/1327, A2 F379, D2 F1075).
- * Beide sind Wand-DRUCK (der Schritt hinaus ist frei) -> keine Befreiung mehr. Messwerte: Paare, groesstes |Delta|, Spruenge. */
+ * Beide sind Wand-DRUCK (der Schritt hinaus ist frei) -> keine Befreiung mehr. 800 Takte je Lage, Leon haelt seine Lage. */
 static int lauf_gier(int32_t lx, int32_t lz, int32_t ly, int takte, int *paare, int *maxd, int *spr, int *bef, int *guard, int *wand)
 {
     if (!setup(1)) return 0;
@@ -1458,11 +1475,11 @@ static int teil_gier(void)
 {
     struct { const char *was; int32_t x, z, y; } k[2] = {
         { "E1 Plattform-Belagerung (Leon oben auf der Rampe)", 6732, -16250, -1800 },
-        { "C3 Westwand vor der Tuernische (Leon in der Nische)", -8200, -25550, 0 },
+        { "C3 Westwand vor der Tuernische (Leon in der Nische)", -8400, -26130, 0 },   /* C3 F1096: Leon (-8389,-26134) */
     };
     for (int i = 0; i < 2; i++) {
         int pa = 0, md = 0, sp = 0, bf = 0, gu = 0, wa = 0;
-        if (!lauf_gier(k[i].x, k[i].z, k[i].y, 400, &pa, &md, &sp, &bf, &gu, &wa)) return 1;
+        if (!lauf_gier(k[i].x, k[i].z, k[i].y, 800, &pa, &md, &sp, &bf, &gu, &wa)) return 1;
         printf("gier: %-52s %d Bildpaare CHASE/GUARD (GUARD %d, an der Wand %d), max |Gier-Delta| %d (ohne +1024), Spruenge > 0x60 %d, "
                "Befreiungen %d\n", k[i].was, pa, gu, wa, md, sp, bf);
         CHECK(pa >= 300, "%s: nur %d Bildpaare CHASE/GUARD (>= 300 verlangt)", k[i].was, pa);
