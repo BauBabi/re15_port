@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "re15_player.h"
+#include "re15_plcloop_r41.h"   /* Runde 41 Spur E: Spieler-Clip-Ende im Kommandowort 4 (plcloop_r41.c) */
 #include "re15_elza_r39.h"   /* Runde 39 Spur H: Eintritts-Latch vs. Kommandowort 4 (@0x80041bb0) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"   /* WELLE B: RE2-Flavor-Gates im Anim-Advancer (Clip-Pin-Konflikte) */
@@ -863,6 +864,7 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         p->motion_init_delay--;
     } else {
         p->anim_frame++;
+        re15_plcloop_r41_takt(p);   /* Runde 41 Spur E: Clip-Ende im Kommandowort 4 - Schleife +0x1c4&4 / Halten (re15_plcloop_r41.h) */
         if (p->anim_frac > 0) p->anim_frac--;
         /* W-bank clips are ONE-SHOTS (raise/hold/recoil hold their terminal pose): clamp after
          * the advance so the render's %fc wrap can never replay them. Uses LAST tick's clip
