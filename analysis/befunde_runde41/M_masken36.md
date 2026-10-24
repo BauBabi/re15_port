@@ -276,7 +276,7 @@ Fortsetzung 2026-10-24 ~14:1x (Vorgaenger vom Wochenlimit ~13:5x beendet; Commit
 - [x] Mangel 1 Zellen-Tiefe Schritt 1 (236 Rechtecke, exe 39 DAVOR / 10 HINTER) + Schritt 2 (131 Rechtecke, Erben wie raum.py
       "zelle"), Restliste mit Bildern `M_bilder/NB1_rest/`
 - [x] Auflage Nachtrag 11: 10 Uebersichtsbilder (durchsichtig, Leon + Elza), alle Uebersichtsbilder/Boegen neu erzeugt
-- [ ] exe-Pruefung Schritt 2, gezielte Tests, Abschluss-Commit
+- [x] exe-Pruefung Schritt 2 (49 DAVOR neu 0, HINTER +), gezielte Tests (28 + 2 + 5 + 41 + 1, alle gruen), Abschluss-Commit
 
 ### NB1 Mangel 1 - ausgeschlossene Objektteile mit der Tiefe ihrer Kollisionszelle
 
@@ -441,7 +441,7 @@ exe-Kopie je Lauf (`re15_pc_r41m2_<id>`).
 Neu/geaendert (nur tests/unit/probes/r41_masken36.cmake + eigene Dateien):
 | Test | misst | Ergebnis |
 |---|---|---|
-| `integration_r41_masken36_zelle` (neu) | Mangel 1, echte exe: Objekte mit Zellen-Tiefe - HINTER-Stellen verdeckt (H >= Haelfte bzw. H > 0), DAVOR-Stellen 0 uebermalt; Szenen `test_r41_masken36_zelle_szenen.cmake`, Laeufer = stage2-Skript (SZENEN/PRAEFIX r41m3, Stages aus den Szenen) | s. Lauf unten |
+| `integration_r41_masken36_zelle` (neu) | Mangel 1, echte exe: Objekte mit Zellen-Tiefe - HINTER-Stellen verdeckt (H >= Haelfte bzw. H > 0), DAVOR-Stellen 0 uebermalt; Szenen `test_r41_masken36_zelle_szenen.cmake`, Laeufer = stage2-Skript (SZENEN/PRAEFIX r41m3, Stages aus den Szenen). Gemessen (S/H): HINTER 3050 C5 546/531, 5100 C7 1436/865, 5020 C7 615/401, 4040 C6 152/72, 30A0 C3 1333/318, 4040 C9 231/177, 5100 C2 496/338, 4040 C7 56/55; DAVOR 3050 C5 5731/0, 5100 C7 3704/0, 5020 C7 8777/0, 30A0 C3 5925/0, 4040 C9 1387/0, 5100 C2 2826/0, 4040 C7 1943/0, 30A0 C0 3809/0 | PASS (Lauf 4) |
 | `integration_r41_masken36_stage2` (erweitert) | + Mangel 3: v2030_15/v2031_15 Leon/Elza VOR der Reling mit weggestellter Spinne (G=1,...) H == 0 (gemessen S 1225 / 1017, H 0 / 0), Gegenprobe m2030_15 (Spinne hinter der Reling verdeckt: S 1762, H 166); + Mangel 4: m2030_07 / m2040_07 Leon HINTER dem Gelaender verdeckt (S 362 / 5398, H 77 / 377) | PASS (Lauf 3) |
 | `unit_r41_masken36_loecher` (Messwert) | Kerben NACHHER 11 494 von 62 432 = 18,4 % (vor NB1 25,1 %), Schranke <= 30 % unveraendert | PASS |
 | `unit_r37_masken36_ausschluss` (unveraendert) | rechnet die Tabelle aus den Dateien nach (== gen/masken36_ausschluss_r37.inc nach Schritt 2), Schranke NB2 M2 0/0 | PASS |
@@ -455,7 +455,9 @@ Spurbaum, KEINE volle Suite; alle Laeufe auf demselben Endstand der Assets):
    (stage3..6 + nb2: R37-DAVOR 0 / HINTER-Schranken / Cursor 15 auf dem Endstand)
 3. `ctest -R "integration_r41_masken36_stage2|bss|itemorte|optik|dokumente|r34n_g|r34n_b_cursor|r19|r22_10f0|stage6_hintergrund|rolltor20a0|zgirl_5090|elza5091|elza50b1|boot_bg_pin|r30_cut_blitz|integration_pri_masken|integration_r36_pri|integration_r37_pri1100" -j 2 --timeout 1500 --output-on-failure`
    -> **`100% tests passed, 0 tests failed out of 41`** (darin integration_r41_masken36_stage2 mit den NB1-Szenen, 520 s)
-4. `ctest -R "integration_r41_masken36_zelle" --timeout 1500 -V` -> ZELLE_ERGEBNIS
+4. `ctest -R "integration_r41_masken36_zelle" --timeout 1500 -V` -> **`100% tests passed, 0 tests failed out of 1`**
+   ("16 Szenen OK"; ein erster Lauf scheiterte nur an der Plausibilitaet S > 50 der Szene 4040 C6 (-23600,-422): Leon dort
+   44 Punkte klein - ersetzt durch die HINTER-Stelle (-15000,-7722) aus Schritt 2, keine Schranke geaendert)
 Linux/parallel: neue Szenen nur ueber das bestehende -P-Skript (cmake_minimum_required, keine .exe-/Backslash-Pfade,
 LAST_EXT), eigenes exe-Praefix je Riegel (`re15_pc_r41m2_*` / `re15_pc_r41m3_*`), eigene Laufordner.
 
