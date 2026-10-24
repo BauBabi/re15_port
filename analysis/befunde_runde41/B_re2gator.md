@@ -254,8 +254,9 @@ Kiefers gelesen — falsch; beides ist ersetzt (§3.1).
   Biss-/Schadens-Mechanik (Clip-4-Schnapp, Fenster 6..34, 50 Schaden, Knockdown, FRESSEN bei hp<0),
   Render-Scale 2/3 (GB_SCALE_Q12; alle Rig-Versaetze mit s skaliert).
 - PORT-WAHL (keine RE2-Adresse, je begruendet im Code): Zonenlinien = die drei sce-8-Wasserzonen des RDT statt
-  x<-17877/z>=-7322; Dash/Intro nur bei freier Bahn (gb_bahn_frei); kein `yaw += 0x400` nach Clip 3 (Korridor-
-  Ecke; Root-Yaw der Clips 2/3 endet bei 0, EMR selbst geparst); Putz-Bursts beim Dash-Start um Leon (RE2:
+  x<-17877/z>=-7322; ~~Dash/Intro nur bei freier Bahn (gb_bahn_frei); kein `yaw += 0x400` nach Clip 3~~ (UEBERHOLT
+  seit Nachbesserung 1, Abnahme 1 M4: kein Bahn-Gate mehr, der Knick `yaw += 1024` ist RE2 @0x80100eb0-c0 /
+  @0x80100938-48, §8 M1; Intro-Startlage Nachbesserung 2 §10); Putz-Bursts beim Dash-Start um Leon (RE2:
   Kamera 9 am Korridorende, Hoehen -2000..-4400 ueber dem Steg = ueber Leons Watt-Ebene y=0); Kanister-
   Aufnahme laengs der Blickachse mit seitlicher Koerperbreite (RE2: Korridor); R1 auch aus dem Schwimm-Sub
   (RE2-Ausnahme +0x230 == 1 @0x80101f04 bewusst weggelassen - Nutzer: "sobald er den Kanister im Maul hat");
@@ -863,3 +864,14 @@ Plan: M4 (Beleg-Pflege) -> M3 (Kanister: Sub-2 -> Sub-1 + Hysterese-Ruhe, RE2 @0
 M1 (Finisher: sichtbarer Schnitt + Sperre bis Game Over, RE1.5-Todeskamera im Gator-Finisher aus, B6) -> M2 (Intro-/Dash-
 Wende: PORT-WAHL der Startlage/-gier mit Rechnung, B7; Riegel auf die Kopflage Bone 6) -> Bau -> gezielte Tests -> exe-
 Messungen nachher -> Abschluss-Commit.
+
+### 10.1 M4 (Beleg-Pflege) — erledigt
+- re2_fx.c Op 73: Tafelplatz selbst nachgelesen (re2_disasm.py read, info/re2leon/PSX.EXE): `0x8009d98c: 0x8002387c`
+  (= Op-Tabelle @0x8009d868 + 73 x 4) und `0x8009d99c: 0x80023c70` (= Platz [77]); Op 11 `0x8009d894: 0x8001e4b4`.
+  Kommentar korrigiert auf @0x8009d98c.
+- gator_re2_r41.c Kopf + Dossier §3.2: die ueberholten PORT-WAHLEN ("kein yaw += 0x400", "nur bei freier Bahn") als
+  ueberholt markiert (Knick = RE2 @0x80100eb0-c0 / @0x80100938-48, kein Bahn-Gate seit Nachbesserung 1).
+- test_r41_re2gator.cmake: Todesursache korrigiert (Abnahme-1-Lauf A, state.log selbst ausgewertet mit
+  B41abn1/statelog.py: Leon-HP F57 100->80, F175 ->60, F387 ->40, F499 ->20 (Spinnen-Gift), F656 20 -> -30 = BISS,
+  FRESSEN ab F657).
+

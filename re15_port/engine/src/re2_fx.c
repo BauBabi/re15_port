@@ -1576,7 +1576,8 @@ static void op_11(void)
         wr16(b, o, (uint16_t)(int16_t)(((int32_t)rds16(b, o) * s) / 3000));
 }
 
-/* Op 73 = FUN_8002387c (Tabelle @0x8009d99c): nur wenn Anim-Index +0x21 == step[2] (`lbu v1,33 /
+/* Op 73 = FUN_8002387c (Tafelplatz [73] @0x8009d98c der Op-Tabelle @0x8009d868 = 0x8002387c; Nachbesserung 2,
+ * Abnahme 1 M4: hier stand @0x8009d99c - das ist Platz [77] -> 0x80023c70): nur wenn Anim-Index +0x21 == step[2] (`lbu v1,33 /
  * lbu v0,2 / bne` @0x80023888-94): step[9] := -1 (@0x80023898-9c), step[8] := -3 (@0x800238a8-ac),
  * step[0] := 0 (`sb zero,0` @0x800238c0 = Op A aus), step[0xC] := step[0xC] / 2 (sll/sra 16,
  * srl 31, addu, sra 1 @0x800238c4-d8 = vorzeichenbehaftet mit Abschneiden). */

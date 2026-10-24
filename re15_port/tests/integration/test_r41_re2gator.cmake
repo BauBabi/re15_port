@@ -43,9 +43,11 @@ re15_start_spiel(_rv 300
 # Nachbesserung 1 (Abnahme 0, M1/M2): der natuerliche Ablauf aus der Tuernische (-8200,-25550) ist jetzt
 # (gemessen 2026-10-23, Lauf A nb1): F6-130 Clip 6 (RE2-Intro), F131-280 Clip 3 (+ yaw 1024), F281-340 Clip 0
 # (Biss-Sperre 110, Wende), F341 Zonenwechsel 2 -> 0 = RE2-Dash Clip 2 (F341-490) + Clip 3 (F491-640) mit
-# 6 x 9 Putz um Leon, F641 Clip 0. Leon (Statue) stirbt dabei durch die SPINNEN der RDT (Spinne 2 sitzt bei
-# (-7882,-25018), 650 von der Nische; Gift-Ticks ab F57, hp < 0 bei F628) - das Paddeln (Clip 1) zum Biss
-# kommt im exe-Lauf deshalb nicht mehr vor (Spur F/G entfernt die Spinnen; Mechanik-Pin: unit_r41_re2gator_clips).
+# 6 x 9 Putz um Leon, F641 Clip 0. Leon (Statue) verliert dabei Leben an die SPINNEN der RDT (Spinne 2 sitzt bei
+# (-7882,-25018), 650 von der Nische; Gift-Ticks F57/F175/F387/F499: 100 -> 20) und stirbt am BISS F656 (20 -> -30,
+# FRESSEN ab F657; Abnahme 1 Lauf A, KORRIGIERT Nachbesserung 2 M4 - vorher stand hier "hp < 0 bei F628
+# (Spinnen)") - das Paddeln (Clip 1) zum Biss kommt im exe-Lauf deshalb nicht vor (Spur F/G entfernt die
+# Spinnen; Mechanik-Pin: unit_r41_re2gator_clips).
 # 700 Bilder liegen VOR dem Game-Over-Titel (ein spaeteres RE15_EXIT_AT #2090 griffe nie, Memory
 # reai-v2-gator-bosskampf: "Design-Schaden + Biss = Leon in <2 s tot -> Game Over -> Title").
 file(REMOVE "${_exe_kopie}")
