@@ -11,6 +11,7 @@
 #include "re15_engine.h"     /* g_engine.frame_count = Spieltakt (main.c zaehlt ihn am Ende des Takts hoch) */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 #define SPINNE_TYP 0x25u
@@ -106,8 +107,11 @@ int re15_spinnenanim_r41_zeichenbild(const re15_actor_t *e, int *bild, int *frac
 static uint16_t s_frac_spiel[RE15_ACTOR_MAX];
 static uint8_t  s_frac_init = 0;
 
-void re15_spinnenanim_r41_zeichnen_beginn(re15_actor_t *e, uint32_t *ncur, int fps)
+void re15_spinnenanim_r41_zeichnen_beginn(const re15_actor_t *ec, uint32_t *ncur, int fps)
 {
+    /* Der Zeichner haelt die Figur const; der Ueberblendzaehler wird nur fuer die Pose-Rechnung getauscht und in
+     * ..._zeichnen_ende zurueckgestellt (wie g_anim_pose_actor = npc im Zeichner). */
+    re15_actor_t *e = (re15_actor_t *)(uintptr_t)ec;
     if (!s_frac_init) { for (int i = 0; i < RE15_ACTOR_MAX; i++) s_frac_spiel[i] = 0xffffu; s_frac_init = 1; }
     int s = platz_von(e);
     if (s < 0) return;
@@ -118,10 +122,35 @@ void re15_spinnenanim_r41_zeichnen_beginn(re15_actor_t *e, uint32_t *ncur, int f
     e->anim_frac = (uint8_t)frac;
 }
 
-void re15_spinnenanim_r41_zeichnen_ende(re15_actor_t *e)
+void re15_spinnenanim_r41_zeichnen_ende(const re15_actor_t *ec)
 {
+    re15_actor_t *e = (re15_actor_t *)(uintptr_t)ec;
     int s = platz_von(e);
     if (s < 0 || !s_frac_init || s_frac_spiel[s] == 0xffffu) return;
     e->anim_frac = (uint8_t)s_frac_spiel[s];
     s_frac_spiel[s] = 0xffffu;
+}
+
+/* ---- Messschiene RE15_SPINNENANIM_LOG (env-gegatet, kein Spielverhalten) --------------------------------------
+ * main.c ruft das NACH dem Aufbau seiner Figur-Matrix (nyaw inkl. Massstab) je gezeichneter Figur; geschrieben wird
+ * nur fuer Typ 0x25: "L41 F<takt> s<platz> st<zustand>/<+0x5>/<+0x7> c<clip> b<gezeichnetes Bild> f<Ueberblendung>
+ * M<9 Eintraege der Matrix, die der Zeichner WIRKLICH benutzt>". Auswerter: test_r41_spinnenanim pruef_log. */
+#include <stdio.h>
+#include <stdlib.h>
+void re15_spinnenanim_r41_log_matrix(const re15_actor_t *e, const int32_t m[9])
+{
+    static FILE *s_fp = NULL;
+    static int s_init = 0;
+    if (!s_init) {
+        s_init = 1;
+        const char *p = getenv("RE15_SPINNENANIM_LOG");
+        if (p && *p) s_fp = fopen(p, "w");
+    }
+    if (!s_fp || !e || !m || e->type != SPINNE_TYP) return;
+    int bild = (int)e->anim_frame, frac = (int)e->anim_frac;
+    (void)re15_spinnenanim_r41_zeichenbild(e, &bild, &frac);
+    fprintf(s_fp, "L41 F%u s%d st%d/%d/%d c%d b%d f%d M%d,%d,%d,%d,%d,%d,%d,%d,%d\n", (unsigned)g_engine.frame_count,
+            platz_von(e), (int)e->state, (int)e->sub_state_1, (int)e->sub_state_3, (int)e->motion, bild, frac,
+            (int)m[0], (int)m[1], (int)m[2], (int)m[3], (int)m[4], (int)m[5], (int)m[6], (int)m[7], (int)m[8]);
+    fflush(s_fp);
 }

@@ -11,6 +11,8 @@ Baum `.claude/worktrees/r41_spinnenanim`, Zweig `r41/spinnenanim`, Basis e5c914f
 - 2026-10-24 ~22:00: Start (kein Vorgaenger-Stand in diesem Zweig). Dossier angelegt (c5c244b7).
 - 22:30 Bau des Spurbaums (local_build.sh configure + build, OK). Port-Messung ROOM2060 (1.1/1.2).
 - 22:55 RE-Belege Zeichenweg (2.1-2.3) — Original-Messung mit Bildern folgt (1.3).
+- 23:00-23:25 Original gemessen (GDB-Zahlen + Video, 1.3/1.4); Massstab 0xccc gefunden (2.2).
+- 23:45 Umsetzung (3) committet 380cf999 (ungebaut), Bau laeuft.
 
 ## 1. Messung vorher
 
@@ -54,6 +56,53 @@ liegt NICHT in der Logik, sondern im ZEICHNEN (1.2, 2.x).
   Bild 0 (kf 208) statt Bild 31 (kf 239) beim Absprung von der Wand. (Bilder: Kontaktbogen `L_belege/v2_port_vorher.png`.)
 - **(c) Ueberblendung:** +0x8f = 7 wird beim Clipwechsel gesetzt (Phase 0/3/5); der Port zaehlt anim_frac im selben Takt
   schon auf 6 herunter (F155/F187/F195 frac = 6). Wirkung auf die Pose: 2.3.
+- **(d) Massstab fehlt:** main.c skaliert mit render_scale_q12 (+0x166), die Spinne setzt ihn nie (enemy_ai_common.c INIT-
+  Kommentar "+0x166=0xccc ... unidentified consumer, no port field, OPEN"). Beleg 2.2.
+### 1.3 Original: GDB-Zahlen je Takt + Video (DuckStation, MZD-Disc, ROOM2060)
+Werkzeuge `L_belege/gdb_shots.py` (Sprung + Teleport wie R38 `gdb_spinne.py`, je Takt Haltepunkt 0x8001a50c, Zeile mit
+Zustand/Lage/Drehung/Clip/+0x95/+0x8f, **Figur-Matrix +0x20**, **Weltmatrix Teil 0 (+0x188)+0x40**, Wurzel-Versatz Teil 0
++0x38) und `L_belege/gdb_video.py` (dasselbe + Media Capture FFmpeg/mp4, Hotkey ToggleMediaCapture voruebergehend auf
+SDL-0/LeftShoulder; settings.ini byte-genau zurueck, "settings.ini zurueck: True" in jedem Lauf).
+- Zahlen: `L_belege/orig_2060_gdb.log` (Takt 1..150). Zwei Laeufe (orig1/orig2) in 141 von 141 Zeilen byte-gleich
+  (deterministisch). Zeile nK = Stand NACH Takt K-1 (Haltepunkt am Anfang der Gegner-Schleife); Port-Takt = Original-Takt + 93.
+- Video: `L_belege/orig_2060_schachtspinne.mp4` (201 Bilder = 201 VSyncs von Takt 56 bis 150, je VSync genau ein
+  Videobild auch im Haltepunkt-Betrieb: `L_belege/orig_2060_video.log` VSync 5628 -> 5829). Zuordnung belegt: Bildwechsel
+  nur an geraden Videobildern (2 VSyncs je Takt), erstes Cut-1-Bild = Videobild 30, Phase-2-Sprung (Takt 93) = Videobild 92
+  -> Videobild k zeigt das Bild von Takt 62 + (k - 30)/2.
+- Screenshots im Haltepunkt (Hotkey Screenshot, beide ScreenshotModes) zeigen den HALB gezeichneten Puffer (Hintergrund +
+  Schatten, ohne Figuren; Gegenprobe Savestate-VRAM: Puffer y=0 halb, y=256 voll) - als Beleg verworfen, nur das Video zaehlt.
+
+Original-Werte (Auszug; M = Figur-Matrix +0x20 zeilenweise, P0root = Wurzel-Versatz des posierten Keyframes):
+
+| Takt | Phase | Clip/+0x95 nach | +0x8f nach | Lage | rot | M (+0x20) | P0root |
+|---|---|---|---|---|---|---|---|
+| 61 (Halten) | 0 | 16/1 | 0 | (5800,-3600,6400) | (0,1024,0) | [0,0,3276, 0,3276,0, -3276,0,0] | (0,-358,0) |
+| 62 | 1 | 16/1 | 6 | (5800,-3600,6200) | (0,1024,0) | dto. | (0,-359,0) |
+| 91 | 1 | 16/30 | 0 | (5975,-3600,4325) | (0,1024,0) | dto. | (0,606,0) |
+| 92 | 1->2 | 16/31 | 0 | dto. | (0,1024,0) | dto. | (0,606,0) |
+| 93 | 2 | 16/0 | 0 | (5975,-2600,4625) | (0,1024,1024) | **[0,0,3276, 3276,0,0, 0,3276,0]** | (0,-487,0) |
+| 94 | 3/4 | 2/1 | 6 | (5975,-2489,4625) | (0,1024,1024) | dto. | (-19,-488,0) |
+| 132 | 6->7 | 13/31 | 0 | (5975,-428,4625) | (0,1024,1024) | dto. | (-81,-1355,0) |
+| 133 | 7 | 13/0 | 0 | (5740,0,4332) | (0,1024,0) | [0,0,3276, 0,3276,0, -3276,0,0] | (0,-487,0) |
+| 134 | 8 | 0/1 | 0 | (5740,0,4333) | (0,1024,0) | dto. | (-146,-400,2) |
+
+=> (a) **Massstab 0.8**: alle Eintraege 3276 = 0xccc = 0.8 x 4096 in jedem Takt 2..150. (b) **rot_z wird gezeichnet**: von Takt
+93 bis 132 ist M = 0.8 x RotMatrix(0,1024,1024) (Kopf nach unten, Bauch zur Wand). (c) Die Wurzel des Clips 0x10 kippt schon
+in Bild ~12..30 selbst ueber die Kante (P0W Takt 91: Wurzel lokal um Z gedreht, P0root y +606), Bild 31 ist wieder die
+ungekippte Grundpose, die erst ZUSAMMEN mit rot_z (Takt 93) die Wandlage ergibt; Clip 0x0d kippt am Ende zurueck (P0W Takt 132 =
+Gier-Lage bei rot_z 1024), Takt 133 nimmt rot_z wieder heraus.
+
+### 1.4 Vergleich Bild fuer Bild (Original-Video gegen Port-Framedump, vorher)
+`L_belege/vgl_vorher_takt62-100.png` und `L_belege/vgl_vorher_takt104-136.png` (links Original-Videobild 30+2(T-62), rechts
+Port `v2_2060` Bild T+93, Ausschnitt um das Gitter, 2x):
+- Port-Spinne durchgehend ~1,25x zu gross (Beine bis weit ueber das Gitter hinaus; Original passt in den Gitterrahmen).
+- Takt 92 (Port F185): Port springt fuer ein Bild in eine WAAGRECHTE Pose oben am Gitter (Bild 31 einen Takt zu frueh),
+  Original haengt noch kopfueber (Bild 30).
+- Takt 93..132 (F186..F225): Port zeichnet die Spinne waagrecht vor der Wand auf Brust-/Kopfhoehe von Leon (Beine sternfoermig,
+  "schwebt" herab); Original: Spinne kopfueber an der Wand, Unterleib oben, klettert hinter Leon an der Wand herunter bis zum
+  Boden.
+- Takt 133 (F226): Port Bild 0 des Clips 14 (Startpose des Wand-Boden-Uebergangs) statt Bild 31.
+
 
 ## 2. RE-Belege (Adressen, Bytes)
 
@@ -74,6 +123,39 @@ RotMatrix(+0x68)-Matrix, die ganze Figur dreht mit rot_x/rot_z.
 => Port-Abweichung 1.2(a): main.c nimmt fuer Typ 0x25 nur RotMatrix(0, Gier, 0). Der Port hat den byte-true
 RotMatrix-Zwilling bereits (`re15_skel_euler_matrix` = mat3_from_euler, Riegel test_rotmatrix gegen
 RE_15_Quellcode_V2/RotMatrix.c) und nutzt ihn fuer Typ 0x37 (G5-Tentakel).
+### 2.2 Massstab 0xccc (STAGE2.BIN INIT + PSX.EXE Zeichner, selbst disassembliert)
+
+| Adresse | Bytes/Instruktion | Bedeutung |
+|---|---|---|
+| STAGE2 0x80110de0 / 0x80110de8 / 0x80110dec | `lw v0,0(v1)` / `ori v0,v0,0x800` / `sw v0,0(v1)` | INIT: Figur-Wort0 oder 0x800 |
+| STAGE2 0x80110df8 / 0x80110dfc | `ori v0,zero,0xccc` / `sh v0,358(v1)` | INIT: +0x166 = 0xccc |
+| PSX.EXE 0x8001e904 | `andi v0,v0,0x800` | FUN_8001e8c8: Flag-Tor |
+| PSX.EXE 0x8001e91c / 0x8001e928 / 0x8001e938 | `lh v0,358(v1)` (3x) | VECTOR (+0x166, +0x166, +0x166) |
+| PSX.EXE 0x8001e940 | `fc 97 01 0c` = `jal 0x80065ff0` ScaleMatrix | Figur+0x20 mal 0.8 (RE_15_Quellcode_V2/ScaleMatrix.c: m[i][j] = m[i][j]*v[j] >> 12) |
+
+Zensus aller `sh rt,358(rs)` in STAGE1..5.BIN: in STAGE2 ausser dem gemeinsamen Block @0x80109650-850 (anderer Figur-Code)
+nur @0x80110dfc, also im Spinnen-Bereich 0x801109e4-0x801158a0 der einzige Schreiber -> der Massstab gilt das ganze Leben der
+Spinne. Laufzeit: M mit 3276-Eintraegen in Takt 2..150 (1.3). RE2 (EMS25.BIN/EMS26.BIN gescannt): kein Zugriff auf +0x176
+(RE2-Massstabsfeld: RE2 PSX.EXE `lh v0,0x176(s1)` @0x80027308 vor `jal ScaleMatrix` @0x80027328) und kein `ori 0x800`
+-> RE2 setzt fuer seine Spinne keinen Massstab (Entscheid siehe 3).
+
+### 2.3 Gezeichnetes Bild und Ueberblendung (PSX.EXE FUN_8001f314 / FUN_8001f3bc, selbst disassembliert)
+
+| Adresse | Instruktion | Bedeutung |
+|---|---|---|
+| 0x8001f324 / 0x8001f330 | `lbu v0,148(t0)` / `addu a2,a1,v0` | Clip +0x94 -> Clip-Kopf |
+| 0x8001f35c / 0x8001f36c | `lbu v0,149(t0)` / `sw a2,360(t0)` | Bild = +0x95 (VOR dem Hochzaehlen) -> +0x168 |
+| 0x8001f38c | `jal 0x8001f3bc` | Pose rechnen |
+| 0x8001f408 | `lbu s0,143(v1)` | Ueberblendzaehler +0x8f lesen |
+| 0x8001f534 | `jal 0x8001f664` | Keyframe des Bilds +0x95 entpacken |
+| 0x8001f598 / 0x8001f5b0-b4 | `mult v0,v1` (0x200 x +0x8f) / `addiu v0,v0,-1; sb v0,143(v1)` | Mischgewicht mit +0x8f VOR dem Herunterzaehlen |
+| 0x8001f5d0 | `jal 0x80020510` | Winkel mischen (Gewicht 0x1000 - 0x200 x +0x8f) |
+| 0x8001f610-1c | `lbu v0,149 / addiu 1 / sb v0,149` | +0x95 ERST JETZT hochzaehlen |
+| 0x8001f624-3c | `sltu v0,v0,s4` / `sb zero,149` | Umbruch auf 0 (Rueckgabe 1) |
+
+=> gezeichnet wird in Takt T das Bild (+0x95 vor dem Takt) mit dem Mischgewicht (+0x8f vor dem Takt). Gegenprobe Laufzeit:
+Takt 92 (+0x95 nach = 31) P0root (0,606,0) = Keyframe Bild 30; Takt 93 (+0x95 nach = 0) P0root (0,-487,0) = Bild 31 (1.3).
+
 
 ## 3. Umsetzung (Dateien, Konstanten)
 

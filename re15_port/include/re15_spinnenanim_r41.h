@@ -55,8 +55,12 @@ int re15_spinnenanim_r41_zeichenbild(const re15_actor_t *e, int *bild, int *frac
 
 /* Zeichner-Klammer um re15_skel_compute_pose (main.c): beginn setzt *ncur (30-Bilder-Takt: Bild, 60: Bild>>1)
  * und den Ueberblendzaehler des gezeichneten Bilds, ende stellt anim_frac des Spielstands wieder her. */
-void re15_spinnenanim_r41_zeichnen_beginn(re15_actor_t *e, uint32_t *ncur, int fps);
-void re15_spinnenanim_r41_zeichnen_ende(re15_actor_t *e);
+void re15_spinnenanim_r41_zeichnen_beginn(const re15_actor_t *ec, uint32_t *ncur, int fps);
+void re15_spinnenanim_r41_zeichnen_ende(const re15_actor_t *ec);
+
+/* Messschiene RE15_SPINNENANIM_LOG: main.c ruft das mit der Figur-Matrix, die es WIRKLICH zeichnet (nach Drehung
+ * und Massstab). Schreibt nur fuer Typ 0x25 und nur mit gesetzter Umgebungsvariable. */
+void re15_spinnenanim_r41_log_matrix(const re15_actor_t *e, const int32_t m[9]);
 
 /* Test/Messschiene: alle Merker loeschen (Raumwechsel/Testanfang). */
 void re15_spinnenanim_r41_reset(void);

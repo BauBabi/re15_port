@@ -10189,6 +10189,7 @@ re_title:;
                     for (k = 0; k < 9; k++)
                         nyaw[k] = (nyaw[k] * (int32_t)npc->render_scale_q12) >> 12;
                 }
+                re15_spinnenanim_r41_log_matrix(npc, nyaw);   /* Runde 41 Spur L: Messschiene RE15_SPINNENANIM_LOG (env) */
 
                 /* Canonical (2026-05-29): eval_pos = the NPC's own world
                  * position, matching PSX FUN_80053fc0 / FUN_80039ca0
