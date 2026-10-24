@@ -45,6 +45,8 @@ Scratch: `%TEMP%/claude/.../scratchpad/A41abn1/` (Logs, Bilder, Sonden; Pfade un
   [18]=[22]=0x80052508 [19]=0x80052864. BELEGT.
 - Sub 9: `jal 0x8001aac4` (Kurs) @0x80051e44, Bildwort `lw v0,360(v0)`/`lw v1,0(v0)`/`andi v0,v1,0x4000` @0x80051e58-68,
   `addu a0,zero,zero` @0x80051e70, Fuss 7-3*bit @0x80051e74-8c, `jal 0x80045630` @0x80051e88. BELEGT (Haken nach dem Kurs, a0 = 0).
+- Sub 4 Phase 2: `lw v0,360(a0)` @0x800512d4, `andi v0,v1,0x4000` @0x800512e4, `addu a0,zero,zero` @0x800512f0, `jal 0x80045630`
+  @0x80051304, DANACH Kurs `jal 0x8001aac4` @0x8005133c und `jal 0x800245d8` @0x80051344 - der Port-Haken steht vor Kurs/Vorschub. BELEGT.
 - Kante 0x12/0x16: `andi v0,v1,0x4000` @0x800525b4, `addu a0,zero,zero` @0x800525bc, `jal 0x80045630` @0x800525d4, danach anim_set
   mit +0x170/+0x174 `lw a0,368(v0)`/`lw a1,372(v0)` @0x800525e8-ec. BELEGT.
 - Sub 7: `jal 0x800245d8` (pos_advance, a0 = 0x800) @0x800519c8 VOR dem Test @0x800519dc-ec, `jal 0x80045630` @0x80051a0c, danach
@@ -90,14 +92,16 @@ Original tf_7 oben :  5  21  40 236 308 393 826 673 906   (Summe 3414)
 Port F52 (Cut 12)  :  5  22  57 236 322 447 835 709 632   (Summe 3268)
 ```
 Bild `A41abn1/vgl_tf7_F52_zoom.png` (links Original-FB, rechts Port): dieselbe Wolke, gleiche Lage, gleiche Textur/Loecher.
-"Gruenlich" (G>=100, G>R+8, G>B+8) in derselben Region: Original-FB 21, **Original-VIDEO o052 (= tf_7, Videostau beim Sichern,
-bester Abgleich "Zeilen 8..232 gestreckt" mittl. |Diff| 2.64) 220**, Port-FB F52 19. Dasselbe Original zeigt im Video also die
+"Gruenlich" (G>=100, G>R+8, G>B+8) in derselben Region: Original-FB 21, **Original-VIDEO o052 (bester Abgleich aller Videobilder o030..o069 mit tf_7:
+"Zeilen 8..232 gestreckt" mittl. |Diff| 2.64, Identitaet 8.83 -> derselbe Takt) 220**, Port-FB F52 19. Dasselbe Original zeigt im Video also die
 10-fache Zahl "gruenlicher" Pixel wie in seinem eigenen Framebuffer - der Massstab der Abnahme 0 (Pixelzahl im Video) mass die
 Aufnahmekette. Eigene Nachbildung der Kette (crop 8..232, bilinear 640x480, VP9 6000k yuv420p, area 320x240; `port_20b0_vp9.mp4`)
 erreicht die DuckStation-Glaettung nicht (tf_7 durch meine Kette: 54-60 statt 220) - ein Video-gegen-Video-Vergleich ist mit
 den vorhandenen Mitteln nicht kalibrierbar. Massgeblich bleibt damit der Framebuffer: dort sind Pool und Bild gleich.
 => M1 (Abnahme 0) als Zeichner-Mangel WIDERLEGT (unabhaengig bestaetigt). M4 (Letterbox): 24 px sind die Original-Primitive
-(@0x80072ecc, 2.), das Video ist der Overscan-Ausschnitt (Abgleich gestreckt 2.64 vs Identitaet 8.83) - bestaetigt.
+(@0x80072ecc, 2.), das Video ist der Overscan-Ausschnitt (Abgleich gestreckt 2.64 vs Identitaet 8.83); die Port-Balken F5-F14
+nach dem Sprung stammen aus dem Startraum des Harness (ROOM1240.RDT @0x0055e = `22 01 1b 01` = Set(1,0x1b,1), selbst gelesen) -
+bestaetigt.
 Restabweichungen OFFEN 1-3 (erstes Bild nach Kamerawechsel ohne Sprites, RVD 12->13 2-3 Bilder, EM024-INIT +1 Takt) sind laut
 Orchestrator-Entscheid (AUFTRAG 2026-10-24 04:01, letzter Punkt) engine-weit und "bleiben fuer die naechste Runde" -> kein Mangel A.
 ### 3.5 Urteil Punkt 1: ERFUELLT
@@ -127,6 +131,8 @@ Mechanismus belegt).
   23 Schritte, davon 5 im Kanal `zweig=stempel plaetze=1` (F310..F374). Sichtbar nicht pruefbar: Kamera Cut 0 zeigt Elza an der
   Leiter, John ausser Bild (Bogen `A41abn1/elza2001_bogen.png`) - die Spawns sind im Log.
 - Unit npc_wasser (1.): alle Typen ausser 0x47 durch den FLR-0x97-Fleck (Zweig boden 0x06050D00).
+- Kein Doppelschritt (eigene Auswertung der drei npc.log): npc2000_lang 64 Schritte, npc11c0 8, elza2001 23 - kein Abstand <= 2
+  Bilder je Slot; Takt 10-16 Bilder (Laufen ~11, Gehen ~15).
 - => NPC-Wasser-EFFEKTE: erfuellt (beide Szenarien, Szene + Riegel).
 ### 4.3 Punkt 2b NPC-SCHRITT-TOENE an der exe (Nachtrag 3: "fussschritt sounds wenn sie laufen ... muss auch fuer die NPCs gelten")
 - npc2000_lang, debug.log (RE15_FOOT_DEBUG, audio_pc.c re15_audio_footstep): **`[foot] SE unterdrueckt: type=21 -> vag=-1
@@ -146,6 +152,10 @@ Mechanismus belegt).
   der Nutzer-Wortlaut verlangt aber hoerbare NPC-Schritte (Beta-Luecke: nach der Projektregel Beta -> Retail RE2 pruefen bzw. eine
   gekennzeichnete NUTZER-VORGABE-Abbildung; nicht gebaut). Der Riegel prueft nur den Index (`ton >= 0` in npc.log,
   unit "Schritt-Ton 0x17-8 = 15"), nicht ob ein VAG spielt - Index 15 ist in ROOM2000 ebenfalls leer.
+- Zensus der 52 Raeume mit NPC-Sce_em_set (Typ 0x40..0x4f; FLR @RDT+0x34, 12-B-Saetze, Typbyte +8; EDT @RDT+0x08;
+  `A41abn1/npc_ton_zensus.txt`): der Hauptboden 0x1d hat in KEINEM dieser Raeume einen Eintrag bei Index 21 (a0 = 0); nur 11 von
+  70 (Raum, Bodentyp)-Paaren haben einen belegten NPC-Eintrag (z.B. 0x17/0x1a in 4000/6030). Ohne Abbildung bleiben NPC-Schritte
+  damit praktisch im ganzen Spiel stumm (hoerbar nur der Laufbeginn a0 = 1 auf 0x1d in 1260/1261/2000/2001).
 - Das Dossier (N1.14 "Hoer-/sichtbar: alle NPCs ... machen beim Gehen, Laufen ... Schrittgeraeusche") ist damit an der exe WIDERLEGT.
 - => NPC-Schritt-TOENE: **nicht erfuellt**.
 ### 4.4 Entscheid A-E4 (Abnahmepunkt der Spur A): NPC-Schritt leiser/seitlich nach Abstand und Lage zur Kamera wie FUN_80045a64
@@ -191,3 +201,65 @@ Mechanismus belegt).
   (Index 15 und 21 sind in ROOM2000 leere EDT-Eintraege). Kein Riegel fuer A-E4.
 - Parallel-/Linux-Festigkeit der neuen Riegel: eigene Laufordner + exe-Kopie mit Praefix (Muster test_r34n_b_cursor.cmake),
   cmake_minimum_required, probes-cmake linkt `m` ausser WIN32. OK.
+
+## 7. Nebenwirkungen: weitere Integrationslaeufe (selbst gefahren, 04:36-05:xx, Last durch parallele Agenten)
+- Kette 1 (Abschnitt 5, `-j 2`): Passed r38_rolltor20a0 282.95 s, r38_rolltor20a0_abe 194.94 s, r36_klettern 535.28 s,
+  r36_szenenleon 161.71 s, r38_werkstatt11b0 154.36 s, r38_wasserzombie 125.97 s, r38_wasser 175.52 s, r37_szene11c0 120.61 s,
+  r37_roy_leon1170 58.69 s (an d77bf72a rot, jetzt gruen), r36_gegnerzahl 88.06 s, r36_pri_schatten 27.81 s,
+  r34_plattform_esp_eintritt 9.17 s, r39_gegner_schatten 58.66 s, r36_tueren 37.93 s, r36_kartenitems_bild 444.66 s;
+  **Failed r35_granate 49.37 s** (Abschnitt 5).
+- Kette 2 (Riegel mit 4-Werte-RE15_PLAYER_POS, `-j 2`): Passed r35_inventar1050 71.54 s, r35_zgirl_5090 143.21 s,
+  r37_fahrstuhl 164.08 s, r37_fahrstuhl_n1 132.26 s (weitere unten).
+
+## 8. Urteile je Nutzer-Punkt (gegen den Wortlaut)
+### Punkt 1 — "Runde 41 startet mit dem Wasserschwall in 20B0 im Original ... in unserem Port noch kaputt" -> ERFUELLT
+Original gemessen (Spur: Savestates + Video; Abnahme: eigene Pool- und VRAM-Lesung tf_8/tf_7), Port repariert: 35 EM024 unsichtbar,
+Sequencer byte-gleich (Pool Takt 1 und Takt 48 gleich, 3.3), Wolke am exakten Framebuffer gleich (CLUT-Histogramm, Bild, 3.4), Szene
+laeuft durch (Cut 7/15/6, Spieler frei F242), Leon und Elza. Der Abnahme-0-Mangel M1 (Dichte im Video) ist die Aufnahmekette
+(Original-FB 21 vs Original-Video 220 am selben Takt), M4 der Overscan-Ausschnitt. Die Rest-Zeitabweichungen OFFEN 1-3 sind
+per Orchestrator-Entscheid (04:01) in die naechste Runde verschoben.
+### Punkt 2 — "Wassereffekt vom rein springen von der Kante in das Wasser. Auch die NPCs teilen die gleichen Effekte ..."
+### (+ Nachtrag 3 "Effekte wenn sie sich im Wasser bewegen, fussschritt sounds wenn sie laufen ... auch fuer die NPCs") -> TEILWEISE
+- 2a Landung: erfuellt (4.1; Leon 2090 + Elza 2091 ueber den Tuerweg, 8 x 0x06033000, im Bild).
+- 2b NPC-Wasser-Effekte: erfuellt (4.2; Ada/Marvin im 2000-Kanal waehrend der Szene, John 2001 im Elza-Szenario, Unit je Typ).
+- 2b NPC-Schritt-Toene: NICHT erfuellt (4.3; an der exe 61/64 in 2000, 8/8 in 11C0, 23/23 in 2001 stumm - leere EDT-Eintraege
+  Boden-8; das Dossier behauptet das Gegenteil).
+- A-E4 Lautstaerke/Richtung nach FUN_80045a64: NICHT erfuellt (4.4; nicht gebaut, kein Haken in audio_pc.c).
+
+## 9. Gates
+- RE-Gate: HAELT (2.; alle Stichproben enthalten das Behauptete; PORT-WAHL gekennzeichnet; keine Guess-Tells).
+- Vertrag: HAELT (6.; Pfade, Bits, Ids; Haken klein und markiert; main.c per A-E3).
+- Tests: 9/9 Spur-Units, 925/925 Unit/Probe/Prop, Spur-Integration 2/2 gruen; **eine Regression: integration_r35_granate rot**
+  (5., Ursache RE15_ACTOR_MAX 36 dieser Spur, deterministisch). Riegel fuer die Schritt-Toene messen nur den Index (6.).
+- Erklaert der Fix den Befund? Punkt 1 ja (Mechanik + Pool + FB). Punkt 2b-Toene nein: der Index wird gerechnet, der Ton spielt nicht.
+- **bestanden = NEIN.**
+
+## 10. Maengel (nummeriert, nachpruefbar)
+M1 (Punkt 2b, NUTZER-VORGABE Nachtrag 3 "fussschritt sounds wenn sie laufen ... auch fuer die NPCs"): NPC-Schritt-Toene sind an
+   der exe stumm. Nachweis: `RE15_FOOT_DEBUG=1` (Audio an) -> debug.log `[foot] SE unterdrueckt: type=21 -> vag=-1` / `type=18 ->
+   vag=-1`: ROOM2000 (Leon, `RE15_SET_FLAG=4:244`, Marvin/Ada) 61 von 64 Schritten, ROOM11C0 (Marvin) 8/8, ROOM2001 (Elza,
+   `RE15_SET_FLAG=3:65`, John) 23/23. Ursache: NPC-Index Boden-8 (@0x8004575c) trifft leere snd0-EDT-Eintraege (ROOM2000/2001 15..21
+   leer; in KEINEM der 52 NPC-Raeume ist Index 21 fuer den Hauptboden 0x1d belegt). Das Original ist dort ebenfalls stumm (Stimme
+   -16/-15 ausserhalb der 8 Saetze @0x800b2420; FUN_800458d4) - die Nutzer-Vorgabe verlangt aber hoerbare NPC-Schritte. Noetig:
+   Entscheid/Belegung des Weges (Beta -> Retail: RE2-NPC-Schrittton pruefen und uebernehmen, sonst gekennzeichnete NUTZER-VORGABE-
+   Abbildung, z.B. Rueckfall auf den Spieler-Eintrag Boden+a0 bei leerem NPC-Eintrag) und ein Riegel, der das ABSPIELEN misst
+   (VAG >= 0 / Mischer-Stimme je NPC-Schritt, je Typ, beide Szenarien), nicht nur den Index.
+M2 (Entscheid A-E4, Abnahmepunkt der Spur A): Lautstaerke/Richtung der (NPC-)Schritte nach FUN_80045a64 (`jal 0x80045a64` @0x80045830;
+   Abstand Kamera->Entity+0x34 /250 @0x80045b3c-4c, Deckel 0x7f @0x80045b50-5c, Seite FUN_80045d6c, Stimmsatz +14/+16 @0x80045888-a4)
+   nicht gebaut: re15_audio_footstep(foot, type) ohne Lage, `vol_r_q15 = 0` (mono), kein Haken in audio_pc.c, keine Messzeile je Schritt,
+   kein Pin in 2000. (Haengt an M1: in 2000 spielt fast kein NPC-Schritt.)
+M3 (Regression dieser Spur): integration_r35_granate rot - `r35_granate [gator]: Boss-Slot 20 fehlt im Zustandslog (Bild 59/60)`;
+   main.c setzt den Alligator auf den hoechsten freien Platz ab RE15_ACTOR_MAX-1, seit RE15_ACTOR_MAX 36 = Slot 35 (debug.log
+   `Alligator (0x23) in Wasserzone gesetzt, Slot 35`, state.log `[35 t=23 ...]`), der Riegel erwartet fest 20 (test_r35_granate.cmake
+   Z.403). Riegel an RE15_ACTOR_MAX-1 koppeln (bzw. den Platz aus dem Log lesen) und die uebrigen Annahmen "letzter Platz = 20"
+   pruefen; Spuren B/F/G auf den neuen Alligator-Platz hinweisen.
+M4 (Riegel): Typ 0x47 (Elliot CDEMD0 / Roy CDEMD1) ohne Wasser-Lauf-Pin (unit npc_wasser: 6 Typen); die Ton-Pruefungen in unit npc /
+   npc_wasser / npc_subs ("Schritt-Ton 0x17-8 = 15") und integration npc2000 (`ton >= 0`) pruefen nur den Index - sie bleiben gruen,
+   obwohl der Ton unterdrueckt wird (Index 15 und 21 sind in ROOM2000 leer).
+M5 (Dossier): N1.14 "alle NPCs ... machen beim Gehen, Laufen, Rueckwaertsgehen und Drehen ... Schrittgeraeusche" ist an der exe
+   widerlegt (M1) - richtigstellen.
+
+Hinweise (keine Maengel dieser Spur): H1 RBJ-Haken `mslot < 32` passt zum (abweichenden) Port-Modell; das Original zaehlt a3 ueber
+die Records weiter (@0x8001b410/@0x8001b4c4) -> Spur J (A-E5). H2 portwahl-Cache (wassersprung_r41.c, Ring 32) ist nach Zeiger/
+Clip/Bildzahl verschluesselt - nach einem Bankwechsel auf dieselbe Adresse koennte ein alter Eintrag greifen (nur 0x4b/0x47-CDEMD1).
+H3 OFFEN 1-4 (Schnittbild ohne Sprites, RVD-Zeitpunkt, Gegner-INIT-Takt, allgemeine Szenensperre) laut Orchestrator naechste Runde.
