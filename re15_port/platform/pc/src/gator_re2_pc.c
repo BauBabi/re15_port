@@ -32,6 +32,8 @@
 #include "re15_boss_gator.h"  /* Nachbesserung 3: re15_gator_boss_untergetaucht */
 #include "re15_room.h"        /* Nachbesserung 3: g_current_room_id (Messzeilen je Raumeintritt) */
 #include "re15_math.h"        /* Nachbesserung 3: re15_squareroot0 (Messzeile Lagesprung) */
+#include "re15_zopf_r38.h"    /* Nachbesserung 6: Elzas Zopf-Glied 0 (Messzeile Maul-Sitz) */
+#include "re15_gameflow.h"    /* Nachbesserung 6: re15_char_variant (Elza) */
 
 #define R41_KANISTER_TIM_SLOT 53
 
@@ -160,21 +162,22 @@ static int fress_proj(const re15_camera_view_t *cam, int cx, int cy, const int32
 static void fress_sitz(const re15_camera_view_t *cam, int cx, int cy)
 {
     static int s_n, s_pn[4], s_kopf_bild, s_leon_bild, s_leon_oben, s_wasser, s_ende, s_gehalten, s_frei, s_vpkt_max, s_cut = -1;
-    static int32_t s_max = -1, s_kmax = -1;
+    static int32_t s_max = -1, s_kmax = -1, s_zopf_neu = -1, s_zopf_alt = -1;
     static unsigned s_fmax = 0, s_fkmax = 0, s_fvpkt = 0, s_raum = 0xffffffffu, s_fletzt = 0;
     extern int re15_player_is_grabbed(void);   /* enemy_ai_common.c: Opfer-Modus 4 = Spieler +0x1D3 & 0x80 */
 #define R41_MAUL_ENDE(grund) \
     do { s_ende = 1; \
          fprintf(stderr, "[gator-re2] Maul-Sitz Ende F%u: Bilder %d (P1 %d P2 %d P3 %d), Abweichung max %d (F%u), Kiefer-Abstand max %d (F%u), " \
                  "Kopf im Bild %d/%d, Leon im Bild %d/%d + oben hinaus %d (Cut %d), im Wasser %d/%d, Opfer gehalten %d/%d, Opfer frei %d/%d " \
-                 "(Punkte verdeckt max %d F%u), letztes Finisher-Bild F%u (%s)\n", \
+                 "(Punkte verdeckt max %d F%u), Zopf-Glied 0 zum Kopf-Knochen max %d (ohne Massstab %d), letztes Finisher-Bild F%u (%s)\n", \
                  (unsigned)g_engine.frame_count, s_n, s_pn[1], s_pn[2], s_pn[3], (int)s_max, s_fmax, (int)s_kmax, s_fkmax, \
                  s_kopf_bild, s_n, s_leon_bild, s_n, s_leon_oben, s_cut, s_wasser, s_n, s_gehalten, s_n, s_frei, s_n, \
-                 s_vpkt_max, s_fvpkt, s_fletzt, (grund)); } while (0)
+                 s_vpkt_max, s_fvpkt, (int)s_zopf_neu, (int)s_zopf_alt, s_fletzt, (grund)); } while (0)
     if (s_raum != (unsigned)g_current_room_id) {
         if (s_n > 0 && !s_ende) R41_MAUL_ENDE("Raumwechsel");   /* NB6: Finisher bis zum letzten Bild des Raums */
         s_raum = (unsigned)g_current_room_id; s_n = 0; s_kopf_bild = 0; s_leon_bild = 0; s_leon_oben = 0; s_wasser = 0; s_ende = 0;
         s_max = -1; s_kmax = -1; s_fmax = 0; s_fkmax = 0; s_gehalten = 0; s_frei = 0; s_vpkt_max = 0; s_fvpkt = 0; s_cut = -1;
+        s_zopf_neu = -1; s_zopf_alt = -1;
         memset(s_pn, 0, sizeof s_pn);
     }
     int im_fressen = 0;
@@ -204,6 +207,24 @@ static void fress_sitz(const re15_camera_view_t *cam, int cx, int cy)
         if (np <= 0) { memcpy(pk[0], leon, sizeof leon); np = 1; }
         memcpy(pk[np], kopf, sizeof kopf); np++;
         int nverd = re15_gr2_raum_verdeckt((int)g_re15_active_cut, (const int32_t (*)[3])pk, np, &nim);
+        /* NB6 (Elza): Zopf-Glied 0 (Weltmatrix zopf_r38.c, gezeichnet mit re15_gr2_zopf_massstab) gegen Elzas gezeichneten Kopf-Knochen
+         * (Teil 8 = RE15_ZOPF_KOPF_TEIL, Elternteil des 1. Glieds @0x80024c98) - "ohne Massstab" = was der Zeichner vor NB6 zeigte */
+        if (re15_char_variant() && np - 1 > RE15_ZOPF_KOPF_TEIL) {
+            int32_t zr[9], zt[3], zs[3], zr2[9];
+            if (re15_zopf_r38_welt(0, zr, zt)) {
+                memcpy(zs, zt, sizeof zt); memcpy(zr2, zr, sizeof zr);
+                re15_gr2_zopf_massstab(pl, zr2, zs);
+                int64_t q1 = 0, q2 = 0;
+                for (int i = 0; i < 3; i++) {
+                    int64_t d1 = (int64_t)zs[i] - pk[RE15_ZOPF_KOPF_TEIL][i], d2 = (int64_t)zt[i] - pk[RE15_ZOPF_KOPF_TEIL][i];
+                    q1 += d1 * d1; q2 += d2 * d2;
+                }
+                int32_t a1 = (int32_t)re15_squareroot0((uint32_t)(q1 > 0xffffffffLL ? 0xffffffffLL : q1));
+                int32_t a2 = (int32_t)re15_squareroot0((uint32_t)(q2 > 0xffffffffLL ? 0xffffffffLL : q2));
+                if (a1 > s_zopf_neu) s_zopf_neu = a1;
+                if (a2 > s_zopf_alt) s_zopf_alt = a2;
+            }
+        }
         s_n++; s_pn[ph & 3]++; s_cut = (int)g_re15_active_cut; s_fletzt = f;
         if (kb) s_kopf_bild++;
         if (lb) s_leon_bild++;
