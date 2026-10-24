@@ -34,7 +34,7 @@ Status dieses Berichts: IN ARBEIT (fortlaufend gespeichert).
   GEHALTEN 70 (F1..F5: 5) X1 9000 X100 11100`; kurbel `4 Umlaeufe, laengster Halt auf Slot 39: 1`; geh `Pos_set F382 = Frage zu
   F381 + 1`. `-V` takt_rennstopp 17/17, takt_renntempo 7/7 (o_renn2 198 210 171 182 204 211 214, o_rennstopp ab Bild 2 11/11,
   Kurbel z -3099..-3369), takt_rennpfad 6/6 inkl. Gegenprobe "ohne Modul A-E fallen durch" (`<sp>/E41a3/takt_renn_V.log`).
-- Weitere Gruppen (unit/prop/probe, Integrations-Auswahl Renn-Eingaben/Blenden/Tueren/Karte): §6.1.
+- Weitere Gruppen (unit/prop/probe, Integrations-Auswahl Renn-Eingaben/Blenden/Tueren/Karte): §7.1.
 
 ## 2. RE-Gate — Stichproben SELBST disassembliert (re15_disasm.py, info/Re1.5/PSX.EXE = Auslieferungsstand)
 1. **DECIDE Rennen 0x80032604** (`dis 0x80032604 95`): @0x80032618 `lw a0,0(s0)` (gehalten 0x800ac768); @0x80032620 `andi 0x2` ->
@@ -238,3 +238,7 @@ Der Hund (enemy_ai_common.c:7276-7291, Original DAT_800aca58 == 0x0201) und die 
 +5 = 2 (0x0201) bis zum Stopp-Ende — 6 Bilder lang "rennt" der Spieler fuer den Hund im Original, im Port nicht. Vor NB3 war es
 genauso (sofort Stehen); das Modul bietet `re15_rennstopp_r41_unterzustand2()`, die Praedikate nutzen es nicht (fremde Dateien) ->
 Hinweis H4.
+### 6.5 Statusschirm im Stopp (`N3_inventar_im_stopp`, Tunnel (4000,-3150) Blick 0, XU 8 Bilder, 1 Stopp-Bild, dann START)
+F68 Stopp-Schritt 170, F69 START (`[r38q] F69 Inventar-Ton Satz 6 (Oeffnen)`), Schirm offen bis F130 (`Satz 5 (Abbruch)`), danach
+steht Leon (5778,-3150); F137 mo 210 (Port-Eintrittspose wie nach einem Raumeintritt) -> das Modul bricht den Rest-Stopp ab. Kein
+Weiterrutschen, kein Sprung. Wie das Original den Stopp ueber den Statusschirm fuehrt, ist nicht gemessen (Hinweis, kein Mangel).
