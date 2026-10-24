@@ -15,6 +15,15 @@
 
 static unsigned s_raum = 0xFFFFFFFFu;   /* Raum des zuletzt durchgereichten Spielbilds */
 static unsigned s_zahl;
+static int      s_letzt;                /* Nachbesserung 4: letzte Entscheidung (1 = Apply-Bild) */
+
+/* Nachbesserung 4 (Nachtrag 14): DAUER des Apply-Durchlaufs in Port-Bildern zu je 2 VSyncs, ueber das gehaltene Bild hinaus.
+ * GEMESSEN (DuckStation-GDB `<sp>/E41n4/orig/o_kurbel_cut3.txt`, Weg des Nutzers: Cut 0 -> 2 -> 3 gelaufen, Kurbel, Ja):
+ * Durchlauf n104 -> n105 = 14 VSyncs (sonst 2) = 2 + Lesen 8 (FUN_80021bbc @0x80021d2c `jal 0x80013c50`, a1 = 0
+ * @0x80021d30 = blockierend; vs10460 -> vs10468) + MDEC 4 (@0x80021e34 `jal 0x80053a8c`; -> vs10472). 14 VSyncs = 7 Port-
+ * Bilder: das gehaltene Bild + 6. Gilt fuer jedes Apply mit Lesen (RVD-Wechsel 2020 gemessen 13/12/15); die Laenge haengt im
+ * Original am Kopfweg der CD (nach einem PLW-Laden 34) — der Port nimmt den gemessenen Wert dieser Stelle. */
+#define KH_STANDBILDER 6
 
 static int entscheiden(unsigned raum, unsigned vorher)
 {
@@ -34,6 +43,7 @@ int re15_kamerahalt_r41_haelt(unsigned raum)
     s_raum = raum;
     const int h = entscheiden(raum, vorher);
     if (h) s_zahl++;
+    s_letzt = h;
     {   static int s_log = -1;   /* Messschiene RE15_KAMERAHALT_LOG (kein Verhalten) */
         if (s_log < 0) { const char *e = getenv("RE15_KAMERAHALT_LOG"); s_log = (e && *e) ? 1 : 0; }
         if (s_log) fprintf(stderr, "[kamerahalt] F%u raum=%04x vorher=%04x pend=%d wv0A=%d cam=%d -> %s\n",
@@ -43,3 +53,5 @@ int re15_kamerahalt_r41_haelt(unsigned raum)
 }
 
 unsigned re15_kamerahalt_r41_zahl(void) { return s_zahl; }
+
+int re15_kamerahalt_r41_standbilder(void) { return s_letzt ? KH_STANDBILDER : 0; }

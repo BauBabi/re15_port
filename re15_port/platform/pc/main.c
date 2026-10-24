@@ -11425,7 +11425,9 @@ re_title:;
 
         re15_msgtakt_r41_nach_spieltakt();   /* Runde 41 Spur E: Absicherung (Bild ohne Spiel-Takt) */
         { extern void re15_render_pc_bild_halten(void);   /* Runde 41 Spur E: Apply-Bild @0x80021560 - kein DrawOTag, kein Pufferwechsel */
-          if (md1_ok && re15_kamerahalt_r41_haelt((unsigned)g_current_room_id)) re15_render_pc_bild_halten();
+          extern void re15_render_pc_standbild(int bilder, uint32_t budget_ms, unsigned bild_nr);   /* NB4: Dauer @0x80021d2c/@0x80021e34 */
+          if (md1_ok && re15_kamerahalt_r41_haelt((unsigned)g_current_room_id)) { re15_render_pc_bild_halten();
+              re15_render_pc_standbild(re15_kamerahalt_r41_standbilder(), frame_budget_ms, (unsigned)g_engine.frame_count); }
           else re15_render_end_frame(); }
         pc_cut_sync_log();   /* Messschiene RE15_CUT_SYNC_LOG (env-gegatet, kein Verhalten) */
 
@@ -11487,6 +11489,7 @@ re_title:;
             if (elapsed < frame_budget_ms && last_tick != 0) {
                 SDL_Delay(frame_budget_ms - elapsed);
             }
+            { extern void re15_render_pc_standbild_warten(void); re15_render_pc_standbild_warten(); }   /* Runde 41 Spur E NB4: Apply-Dauer */
             last_tick = SDL_GetTicks();
         }
         /* AUTO-SCREENSHOT for ablauf diff (2026-05-24). When env

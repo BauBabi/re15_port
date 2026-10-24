@@ -93,3 +93,34 @@ void re15_render_pc_bild_halten(void)
 }
 
 unsigned re15_bildhalt_r41_zahl(void) { return s_gehalten; }
+
+/* NACHBESSERUNG 4 (Nachtrag 14): die DAUER des Apply-Durchlaufs. Das Original liest im Apply den Cut-Hintergrund blockierend
+ * von CD und dekodiert ihn (FUN_80021bbc @0x80021d2c `jal 0x80013c50` mit a1 = 0, @0x80021e34 `jal 0x80053a8c`); so lange
+ * steht der Bildschirm und KEIN Spieltakt laeuft (gemessen o_kurbel_cut3.txt: 14 VSyncs statt 2). Hier: `bilder` weitere
+ * Bilddauern (re15_kamerahalt_r41_standbilder) Wanduhr warten, Fenster-Ereignisse pumpen (Fenster bleibt bedienbar),
+ * nichts zeichnen, nichts praesentieren. Bildzaehler und Logik unberuehrt (das Apply ist EIN Durchlauf). Ohne Bildtakt
+ * (budget_ms 0) kein Warten. Messschiene RE15_KAMERAHALT_LOG: "[standbild] F<n> <bilder> Bilder <ms> ms".
+ * Zeitpunkt: re15_render_pc_standbild merkt die Dauer im gehaltenen Bild vor, re15_render_pc_standbild_warten wartet HINTER
+ * dem Bildtakt der Hauptschleife — so dauert das gehaltene Bild 1 + `bilder` Bilddauern (Original: Durchlauf n104 14 VSyncs
+ * = 7 x 2; das vorige Bild steht n104 + n105 = 16 VSyncs, Port: 2 Bilddauern + 6 = 8 x 2). */
+static uint32_t s_stand_ms;
+static unsigned s_stand_nr;
+static int      s_stand_bilder;
+void re15_render_pc_standbild(int bilder, uint32_t budget_ms, unsigned bild_nr)
+{
+    if (bilder <= 0 || budget_ms == 0) return;
+    s_stand_ms = (uint32_t)bilder * budget_ms;
+    s_stand_bilder = bilder;
+    s_stand_nr = bild_nr;
+}
+
+void re15_render_pc_standbild_warten(void)
+{
+    if (!s_stand_ms) return;
+    const uint32_t t0 = SDL_GetTicks(), soll = s_stand_ms;
+    s_stand_ms = 0;
+    while (SDL_GetTicks() - t0 < soll) { SDL_PumpEvents(); SDL_Delay(1); }
+    static int s_log = -1;
+    if (s_log < 0) { const char *e = getenv("RE15_KAMERAHALT_LOG"); s_log = (e && *e) ? 1 : 0; }
+    if (s_log) fprintf(stderr, "[standbild] F%u %d Bilder %u ms\n", s_stand_nr, s_stand_bilder, (unsigned)(SDL_GetTicks() - t0));
+}

@@ -18,8 +18,14 @@
  *   Original am Ende dieses Durchlaufs den Apply-Zweig nimmt. In diesem Bild praesentiert der Port darum nichts
  *   (re15_render_pc_bild_halten, platform/pc/src/bildhalt_r41_pc.c): das Fenster zeigt das vorige Bild weiter. Der
  *   Blenden-Takt FUN_80021880 laeuft dabei weiter (@0x80020f44 vor dem Present @0x80020f4c; Nachbesserung 3, Abnahme 2
- *   Mangel 4). Die Dauer des Standbilds im Original (CD-Ladezeit von FUN_80013c50)
- *   ist Hardware-Zeit und bleibt weg: der Port haelt genau EIN Spielbild — die Logik eines Durchlaufs.
+ *   Mangel 4). Die Logik laeuft genau EIN Spielbild lang (ein Durchlauf).
+ * NACHBESSERUNG 4 (Nachtrag 14, "halb fliegender" Sprung an die Kurbel): die DAUER des Apply-Durchlaufs. Das Original
+ *   liest im Apply den Cut-Hintergrund BLOCKIEREND von CD (FUN_80021bbc @0x80021d2c `jal 0x80013c50`, a1 = 0 @0x80021d30;
+ *   Bytes @0x80021cb8, LBA = Datei-LBA + Cut*0x20 @0x80021cd8-@0x80021d28) und dekodiert ihn (@0x80021e34 `jal 0x80053a8c`);
+ *   der Bildschirm steht so lange. Gemessen auf dem Weg des Nutzers (o_kurbel_cut3.txt): 14 VSyncs statt 2 (Lesen 8 + MDEC 4).
+ *   Port: das gehaltene Bild + re15_kamerahalt_r41_standbilder() weitere Bilddauern Wanduhr ohne Spieltakt
+ *   (platform/pc/src/bildhalt_r41_pc.c re15_render_pc_standbild). Bildzaehler, Skripte und Logik bleiben unberuehrt — wie
+ *   im Original zaehlt der Apply als EIN Durchlauf.
  * Ausnahmen: erstes Bild eines Raums (Raum gewechselt: kein Bild dieses Raums zum Halten), die ROOM1240-Montage
  *   (RE2-Praesentation des Ports), RE15_FORCE_CUT (Messhaken: setzt jedes Bild pending).
  */
@@ -31,5 +37,9 @@ int re15_kamerahalt_r41_haelt(unsigned raum);
 
 /* Pruefhaken: Zahl der gehaltenen Bilder seit Start. */
 unsigned re15_kamerahalt_r41_zahl(void);
+
+/* Nachbesserung 4: weitere Bilddauern (je 2 VSyncs), die das zuletzt entschiedene Apply-Bild stehen bleibt (0 = kein Apply).
+ * 6 = gemessene 14 VSyncs des Apply-Durchlaufs (o_kurbel_cut3.txt n104 -> n105) minus das gehaltene Bild selbst. */
+int re15_kamerahalt_r41_standbilder(void);
 
 #endif /* RE15_KAMERAHALT_R41_H */

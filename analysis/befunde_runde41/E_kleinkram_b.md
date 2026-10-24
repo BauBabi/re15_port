@@ -1119,3 +1119,42 @@ ist; der Port haelt 1 Bild. Ziel: Standbild-Dauer an genau dieser Stelle messen,
   16 VSyncs (+1 Abtastung).
 - Gilt fuer JEDEN Kamerawechsel mit Hintergrund (Cut_chg auch auf denselben Cut, RVD-Zonen): Apply = dieselbe Funktion
   FUN_80021bbc; gemessen 12-15 VSyncs auf dem natuerlichen Weg durch 2020.
+- Rennen auf demselben Weg (`<sp>/E41n4/orig/o_kurbel_cut3_renn.txt`, links drehen, 5 Bilder OBEN+RENNEN, Quadrat im Rennen):
+  Apply n103 -> n104 **15 VSyncs** (Lesen vs10476 -> 10485 = 9, MDEC -> 10489 = 4), danach der Renn-Stopp wie o_renn2.
+- Original-Video desselben Wegs (o_hg_cut3.mp4, 59,82 Bilder/s = 1 Bild je VSync; `<sp>/E41n4/vid_cut3/` v395..v470, Pixel-Diff
+  je Folgebild): v420 Frage weg (6346 Pixel), **v421..v436 unveraendert**, v437 Leon an der Kurbel (Vollbild), danach Wechsel
+  im 2-VSync-Takt (Balken). Das Bild mit geschlossener Frage steht 17 VSyncs.
+
+### Punkt 1 / Nachtrag 14 — Umsetzung, Messung nachher, Bildvergleich
+- Umsetzung (Port-Bildtakt 1000/30 ms = 2 VSyncs): das Apply-Bild bleibt wie bisher ungezeichnet (bildhalt_r41_pc.c) und
+  steht jetzt 1 + 6 Bilddauern = 14 VSyncs wie der gemessene Original-Durchlauf (o_kurbel_cut3 n104 -> n105).
+  - engine/src/kamerahalt_r41.c / include/re15_kamerahalt_r41.h: `re15_kamerahalt_r41_standbilder()` = 6 (`KH_STANDBILDER`,
+    Beleg im Kommentar: 14 VSyncs = 2 + Lesen 8 @0x80021d2c->@0x80021d34 + MDEC 4 @0x80021e34->@0x80021e3c) nach einem
+    HALTEN, sonst 0 (erstes Bild des Raums: FUN_8001d600 laedt den Hintergrund vor, 0x800aca38 |= 0x20000000, FUN_80021bbc
+    @0x80021c48 liest dann nicht; Montage 1240; RE15_FORCE_CUT).
+  - platform/pc/src/bildhalt_r41_pc.c: `re15_render_pc_standbild(bilder, budget_ms, nr)` merkt die Dauer im gehaltenen Bild
+    vor, `re15_render_pc_standbild_warten()` wartet HINTER dem Bildtakt (Wanduhr, Fenster-Ereignisse gepumpt, kein Spieltakt,
+    kein Zeichnen); Messschiene RE15_KAMERAHALT_LOG `[standbild] F<n> 6 Bilder <ms> ms`. Bildzaehler/Skripte/Logik unberuehrt:
+    wie im Original ist das Apply EIN Durchlauf.
+  - platform/pc/main.c (E-Haken, E-E1): Zeile am Apply-Haken (`re15_render_pc_standbild(re15_kamerahalt_r41_standbilder(),
+    frame_budget_ms, ...)`) und eine Zeile hinter dem Bildtakt (`re15_render_pc_standbild_warten()`).
+  - Spielweit: jeder Kamerawechsel mit Hintergrund (Cut_chg, RVD) steht wie im Original; dort 12-15 VSyncs gemessen, nach weitem
+    CD-Kopfweg 34 — der Port nimmt einheitlich den an der Kurbel gemessenen Wert 14 (den Kopfweg fuehrt der Port nicht).
+- Messung nachher (exe re15_pc_E41n4b.exe md5 732dbebc...; Lauf `<sp>/E41n4/runs/P1_weg_cut3`: Leon (9100,-3200) Blick 2048
+  nach Westen gegangen wie p_x9000 (Cut 0 -> 2 F301 -> 3 F347), links drehen, Quadrat, Fragen, Ja): `[standbild] F301 6 Bilder
+  198 ms`, `F347 ... 198 ms`, Kurbel: Frage zu F539, Cut_chg/Pos_set F540 gehalten `[standbild] F540 6 Bilder 198 ms`, F541 Leon
+  an der Kurbel, Plc_motion F560. Riegel-Laeufe: geh F382 202 ms, renn F282 199 ms, losl F282 198 ms, spawn_kante F1..F70 je
+  ~199 ms.
+- Bildvergleich in VSync-Zeit (`<sp>/E41n4/sheet_vsync.py`: Port-Abzug je Spielbild = 2 VSyncs, gehaltenes Bild = voriges Bild,
+  + 2 x Standbilder): `<sp>/E41n4/P1_weg_vsync_bogen.png` (Spalte = 2 VSyncs; Original v418..v444 gegen Port F538..):
+  | | Frage offen | Frage zu, Bild steht | erstes Bild an der Kurbel |
+  |---|---|---|---|
+  | Original o_hg_cut3 | v418 | v420 .. v436 (Spalten 1-8) | v438 (Spalte 9) |
+  | Port NB4 | F538 | F539 (Spalten 1-8: F539, gehaltenes F540, 12 VSyncs Standbild) | F541 (Spalte 9) |
+  | Port vorher (1 Bild halten) | F538 | F539 (Spalten 1-2) | F541 (Spalte 3) |
+  Zoom um Leon/Kurbel `<sp>/E41n4/P1_weg_zoom.png` (v418/v420/v436/v438/v440/v444 gegen F538/F539/F539/F541/F542/F544): gleiche
+  Folge — Leon steht bis zum Ende des Standbilds an der alten Stelle und erscheint dann an der Kurbel; kein Zwischenbild. Rest-
+  unterschied im Bild: die Reling-Freistellung 03_01 des Nutzers liegt in Cut 3 ueber Leons Beinen (Original: Cut 3 ohne PRI,
+  RDT @0x3FC `ff ff ff ff`); laut Spur M (M_masken36.md §2.1, M_abnahme_0 §2a) richtig, Leon steht von der Kamera aus HINTER der
+  Reling — Nutzer-Maske, nicht Spur E. Der Stand-Lauf vom Sprung (`P1_stand_cut3`, Leon per Lage auf (3012,-3200) ohne den Weg)
+  zeigte die Frage in einer anderen Kamera (RVD-Zonen haengen am vorigen Cut) — fuer den Bildvergleich darum der gegangene Weg.

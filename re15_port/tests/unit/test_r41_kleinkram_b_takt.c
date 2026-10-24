@@ -133,13 +133,20 @@ static void teil_kamerahalt(void)
     g_scd.cam_change_pending = 0; g_scd.work_vars[0x0A] = 0; g_scd.cam_id = 0;
     PRUEF(re15_kamerahalt_r41_haelt(0x2020) == 0, "erstes Bild des Raums: zeigen");
     PRUEF(re15_kamerahalt_r41_haelt(0x2020) == 0, "angezeigt == angefordert, nicht pending: zeigen");
+    PRUEF(re15_kamerahalt_r41_standbilder() == 0, "NB4: gezeigtes Bild ohne Standbild-Dauer");
     g_scd.cam_id = 2;
     PRUEF(re15_kamerahalt_r41_haelt(0x2020) == 1, "angefordert 2 != angezeigt 0 (@0x80021508/@0x80021514): halten");
+    PRUEF(re15_kamerahalt_r41_standbilder() == 6, "NB4: RVD-Apply steht 1 + 6 Bilder = 14 VSyncs (o_kurbel_cut3 n104->n105, "
+                                                   "Lesen @0x80021d2c 8 + MDEC @0x80021e34 4 + 2)");
     g_scd.cam_id = 0; g_scd.cam_change_pending = 1;
     PRUEF(re15_kamerahalt_r41_haelt(0x2020) == 1, "Cut_chg auf denselben Cut (@0x800402f4 ohne Vergleich): halten");
+    PRUEF(re15_kamerahalt_r41_standbilder() == 6, "NB4: Cut_chg-Apply (Kurbel nach dem Ja) steht 1 + 6 Bilder");
     PRUEF(re15_kamerahalt_r41_haelt(0x2021) == 0, "Raumwechsel: zeigen");
+    PRUEF(re15_kamerahalt_r41_standbilder() == 0, "NB4: erstes Bild des Raums ohne Standbild (FUN_8001d600 laedt vor, "
+                                                   "0x800aca38 |= 0x20000000, @0x80021c48 ohne Lesen)");
     re15_montage_fx_set_active(1);
     PRUEF(re15_kamerahalt_r41_haelt(0x2021) == 0, "ROOM1240-Montage aktiv: zeigen");
+    PRUEF(re15_kamerahalt_r41_standbilder() == 0, "NB4: Montage ohne Standbild");
     re15_montage_fx_set_active(0);
     g_scd.cam_change_pending = 0;
 }

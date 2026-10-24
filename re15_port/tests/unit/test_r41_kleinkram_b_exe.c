@@ -38,6 +38,8 @@
  *                                       (+5/+6 = 0 @0x80038ea8/@0x80038eb0) 8 Bilder keine Lageaenderung.
  *   losl <debug.log> <state.txt>       Gegenprobe Kurbel o_renn_losl: Stopp im Aktionsbild, eingefroren waehrend der
  *                                       Fragen, nach Pos_set z -3056 -3147 -3198 -3209 -3180 (Original n94..n98).
+ *   takt/renn/losl zusaetzlich (Nachtrag 14): das gehaltene Pos_set-Bild steht 1 + 6 Bilddauern ("[standbild] F<n> 6
+ *                                       Bilder >= 198 ms") = 14 VSyncs wie der Original-Durchlauf (o_kurbel_cut3 n104->n105).
  * Rueckgabe 0 = bestanden, 1 = durchgefallen, 2 = Eingabefehler.
  */
 #define _DEFAULT_SOURCE
@@ -290,9 +292,11 @@ static int zustand_lesen(const char *state)
 
 /* [mot]-Spur (RE15_MOTRACE): "[mot] F<n> cut=<c> mo=<m> af=<a> ..." und [kamerahalt]-Spur — letzter Raum. */
 static int s_mo[MAXF], s_af[MAXF], s_mv[MAXF], s_halt[MAXF];
+static int s_stand_b[MAXF], s_stand_ms[MAXF];   /* Nachbesserung 4: [standbild] F<n> <bilder> Bilder <ms> ms */
 static void mot_lesen(const char *log)
 {
     memset(s_mv, 0, sizeof s_mv); memset(s_halt, 0, sizeof s_halt);
+    memset(s_stand_b, 0, sizeof s_stand_b); memset(s_stand_ms, 0, sizeof s_stand_ms);
     FILE *f = fopen(log, "rb");
     if (!f) return;
     char line[1024];
@@ -303,6 +307,9 @@ static void mot_lesen(const char *log)
             s_mo[fr] = mo; s_af[fr] = af; s_mv[fr] = 1;
         }
         if (sscanf(line, "[kamerahalt] F%ld", &fr) == 1 && fr >= 0 && fr < MAXF && strstr(line, "HALTEN")) s_halt[fr] = 1;
+        { int b = 0; unsigned ms = 0;
+          if (sscanf(line, "[standbild] F%ld %d Bilder %u ms", &fr, &b, &ms) == 3 && fr >= 0 && fr < MAXF) {
+              s_stand_b[fr] = b; s_stand_ms[fr] = (int)ms; } }
     }
     fclose(f);
 }
@@ -340,6 +347,11 @@ static int takt_gemein(const char *dlog, const char *state, long *pos_bild)
     if (f_zu < 0 || f_pos != f_zu + 1) { printf("FAIL Pos_set nicht im ersten Bild nach dem Schliessen (Original n94 -> n95)\n"); ok = 0; }
     if (f_if != f_pos) { printf("FAIL Ifel_ck und Pos_set nicht im selben Skript-Takt\n"); ok = 0; }
     if (!s_halt[f_pos]) { printf("FAIL Pos_set-Bild (Cut_chg @0x0A7E) nicht gehalten\n"); ok = 0; }
+    /* Nachbesserung 4 (Nachtrag 14): das Apply-Bild steht 1 + 6 Bilddauern = 14 VSyncs (Original o_kurbel_cut3 n104 -> n105:
+     * Lesen @0x80021d2c 8 + MDEC @0x80021e34 4 + 2); Bildtakt 1000/30 = 33 ms -> mindestens 6 x 33 ms Wanduhr. */
+    printf("Standbild F%ld: %d Bilder %d ms\n", *pos_bild, s_stand_b[f_pos], s_stand_ms[f_pos]);
+    if (s_stand_b[f_pos] != 6 || s_stand_ms[f_pos] < 6 * 33) {
+        printf("FAIL Apply-Bild steht nicht 1 + 6 Bilddauern (Original 14 VSyncs, Nachtrag 14)\n"); ok = 0; }
     return ok;
 }
 
