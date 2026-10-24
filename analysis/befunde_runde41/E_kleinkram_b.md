@@ -1237,3 +1237,16 @@ Eigene Dateien: rennstopp_r41.c/.h, kamerahalt_r41.c/.h, bildhalt_r41_pc.c, Test
 - Renn-Stopp: nach einer Treppe, einem Griff oder einer Szene rutscht Leon nicht mehr nach.
 - Die Reling vor Leons Beinen an der Kurbel kommt von deiner Freistellung 03_01 (ROOM2020 Kamera 3; das Original hat dort keine
   PRI) — Spur M hat sie als richtig bewertet (Leon steht von der Kamera aus hinter der Reling).
+
+### Nachbesserung 4 — Tests (gezielt, keine volle Suite)
+- Bau: `bash re15_port/tools/local_build.sh configure` (neue Tests) -> `LOCAL-BUILD-OK (configure)`; `... build` -> `LOCAL-BUILD-OK
+  (build)` (Endstand Code d3dc34ee; Warnungen main.c:8804/10133/10513 vorbestehend, schon in `<sp>/E41n2/build.log`).
+- Spur-Riegel: `ctest -R "^(unit_r41_kleinkram_b_takt_.*|integration_r41_kleinkram_b_(geh|renn|losl|kante|spawn_kante|kurbel|treppe))$"
+  -j 4 --timeout 1200` -> **100% tests passed, 0 tests failed out of 14** (`<sp>/E41n4/ctest_p1.log`).
+- Gorilla-Sonde: `ctest -R "^unit_r36_zombieki_.*$" -j 4 --timeout 900` -> **100% tests passed, 0 tests failed out of 6**.
+- Alle unit_/prop_/probe_ ausser Release-/Android-Skripten (Spieler-, Renn-, Szenen-, Nachrichten-, Karten-, Tuer-Sonden):
+  `ctest -R "^(unit_|prop_|probe_)" -E "releaseskript|android|r35_android|release_" -j 3 --timeout 900` -> **100% tests passed,
+  0 tests failed out of 914** (311 s, CTEST_EXIT=0, `<sp>/E41n4/ctest_unit_alle.log`).
+- Integration (echte exe; Bedingung E-E1 Nachrichten-/Szenen-/Tuer-/Karten-Riegel + Renn-Eingaben + die zwei neuen): Auswahl der
+  NB3-Laeufe 1/3 (`<sp>/E41n3b/ziel_regex.txt` + `rest_regex.txt`, nur integration_*) + treppe/losl = 153 Tests,
+  `<sp>/E41n4/integ_regex.txt`: laeuft.
