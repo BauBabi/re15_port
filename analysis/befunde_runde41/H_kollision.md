@@ -300,6 +300,8 @@ Nach dem Merge von master (370d8c31: Spur A + D integriert), neu gebaut:
 - `ctest -R "^integration_r41_" -j 3 --timeout 1800` -> `100% tests passed, 0 tests failed out of 10`
   (`Total Test time (real) = 1071.69 sec`; Spur H 5 + Spur A integration_r41_wasser20b0(_npc) + Spur D 3 — der NPC-Schub
   vertraegt sich mit Spur A's NPC-Wasserschritten).
+- `ctest -R "^integration_(r36_szenenleon|r35_cut10f0|r39_parkplatz11c0_k|r39_dining1141_kampf|r37_szene11c0|r36_dachkiste)$"
+  -j 3 --timeout 2700` -> `100% tests passed, 0 tests failed out of 6` (`Total Test time (real) = 1441.11 sec`).
 
 ## OFFEN
 1. **Entity-Durchlauf der Schubkette @0x8002bfec-c038** (FUN_8002cabc(Entitaet, obj, 1) fuer jede aktive Entitaet:
