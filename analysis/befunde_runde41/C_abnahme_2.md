@@ -1,13 +1,22 @@
 # Runde 41 — Spur C "ventilkette" — Abnahme 2 (unabhaengig)
 
-Baum `.claude/worktrees/r41_ventilkette`, Zweig `r41/ventilkette`, HEAD 1498d1c8 (Basis master 116e8b0f; master-Tip
-d370db3c aendert seit der Basis nur analysis/ — darunter NEU der Orchestrator-Entscheid **C-E2c** 09:00, siehe §5).
-Begonnen 2026-10-24 09:05. Pruefer: Abnahme 2 (Opus). Der Bericht wird FORTLAUFEND geschrieben. Messordner: scratchpad
+Baum `.claude/worktrees/r41_ventilkette`, Zweig `r41/ventilkette`, gepruefter Stand HEAD 1498d1c8 (Basis master 116e8b0f).
+Um den Beginn dieser Abnahme und waehrend ihr kamen neue Vorgaben: Orchestrator-Entscheid **C-E2c** (09:00) und die
+**Nachtraege 6-9 (Nutzer-Wortlaut, 09:17-09:26)**, vom Orchestrator auf master UND direkt in diesen Zweig committet
+(master d370db3c/88c56f55/0ca69e2e/8a8360b0/af7e0e8a, Zweig ac23d023/10ded329/fae852df/71f1ca27/3962544f; nur
+analysis/AUFTRAG.md + VERTRAG.md; der gepruefte Code-Stand bleibt 1498d1c8).
+Nachtrag 6 WIDERRUFT C-E2c. Der Bericht urteilt ueber die sechs Punkte des Auftragstexts UND (AUFTRAG.md ist massgeblich)
+ueber die Nachtraege 6-9 — deren Ist-Stand ist in §1 L11 gemessen.
+Begonnen 2026-10-24 gegen 09:00. Pruefer: Abnahme 2 (Opus). Der Bericht wird FORTLAUFEND geschrieben. Messordner: scratchpad
 `C41abn2/` (Pfade unten abgekuerzt als `<a2>` =
 `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/C41abn2`).
 Vorlage: Abnahme 1 (`C_abnahme_1.md`, Mangel N1), Nachbesserung 2 (Dossier §0c), Entscheid C-E2b.
 
 ## 0. Stand / Protokoll (neueste zuerst)
+* 09:36-09:42 Nach dem ersten Commit (41643f25) im Zweig die Nachtraege 6-9 gefunden (Commits 09:17-09:26, waehrend meiner
+  Messungen). Serie 4 (`<a2>/serie4.sh`) misst den Ist-Stand dagegen (§1 L11): Ventilraetsel ohne Bruecke ausloesbar, mit Strom
+  nach der Flut bleibt 2030 bei y -7200 geflutet und die 20B0-Ring-Tuer gesperrt. §4-§6 nachgezogen, Maengel N2-N4 neu,
+  N1-Forderung (C-E2c) durch Nachtrag 6 ersetzt.
 * 09:35 Bericht abgeschlossen (§2-§6). Aufraeumen: keine exe-Kopien `re15_pc_abn2c_*` mehr in `build/platform/pc`
   (die zwei Kopien `re15_pc_r36e_haken_*`/`re15_pc_r37d_lift_*` dort stammen vom 23.10. 22:48/23:05, nicht von mir), Baum:
   nur dieser Bericht neu (`git status --porcelain`).
@@ -18,7 +27,7 @@ Vorlage: Abnahme 1 (`C_abnahme_1.md`, Mangel N1), Nachbesserung 2 (Dossier §0c)
   exe-Kopien je Lauf, nie per Bildname beendet.
 * 09:03-09:35 Statik (§1 L10, §2 G1): eigener Tuer-/Bit-Zensus + ROH-Scan, Erreichbarkeit vor der Flut, SCA 2070, Lift-SCD
   2030, Byte-Nachlese aller zitierten RDT-Offsets, drei EXE-Funktionen selbst disassembliert (FUN_800420a0, LAB_8003fdd0,
-  FUN_8003f038). Neu auf master gefunden: Orchestrator-Entscheid C-E2c (09:00, j1) — nicht im Zweig, s. §5.
+  FUN_8003f038). Neu auf master gefunden: Orchestrator-Entscheid C-E2c (09:00, j1; auch im Zweig als ac23d023) — um 09:17 durch Nachtrag 6 widerrufen, s. §5.
 * 09:09 Integrationsriegel `^integration_r41_ventilkette(_b|_weg)?$` im Hintergrund gestartet (Ergebnis §3).
 * 09:08 Unit-Gruppe (Regex `<a2>/regex_unit.txt` = Abnahme-1-Regex, 164 Tests): `100% tests passed, 0 tests failed out of 164`
   (44.54 s, `<a2>/ctest_unit.txt`). `test_r41_ventilkette.exe` direkt: `== Leon` ... `ROOM11A0 11A0 zu msgs: 2@Cut0`,
@@ -205,6 +214,38 @@ in 11A0 und zwei weitere Aktionsdruecke an der Sperre).
   4650..8100 (Zellen 4-7), Nordgang x -19400..5450 / z -21000..-17450 (Zellen 8-11). Zwischen den Gaengen liegt keine Flaeche
   => drei getrennte Gaenge, wie der Bau-Agent schreibt (§0b M7 berichtigt); meine Erreichbarkeits-Teilung oben folgt dem.
 
+### L11 — Ist-Stand gegen die Nachtraege 6-9 (Wortlaut 09:17-09:26; Serie 4 `<a2>/serie4.sh`, Laeufe 09:36-09:38)
+* **Nachtrag 9** ("die bruecke in 2030 muss man entsprechd vorher runtergelassen haben, damit man das valve raetsel vorher
+  loesen kann"): Lauf `ventile_ohne_102` (Spinnen-Kill-Bits, vor den Ventilen (6550,-100) Blick 2048 Band 3, Wegplan
+  `ventile_ohne_102.txt`): Wegplan F61-F63 `FLAG (9,101) = 0`, `FLAG (9,102) = 0`, `FLAG (9,103) = 0`; AOTS F64 `slot 14 typ 0
+  ev 26 ... band 3 mitte (5600,-250)` (Ventile am Ring-Ost-Streifen) -> Aktion -> `[ventilkette41] ROOM2030 Ereignis 26 ->
+  Port-Programm 2030_ventile` -> `id=45 "Numbered valves. ..."` -> `id=46 "WARNING: The water will rise in one minute. Leave the
+  room!"` -> `Zaehler laeuft: 1800 Takte` — das Ventilraetsel ist OHNE heruntergelassene Bruecke loesbar (ebenso in `flut`
+  und `osttuer`, die nur die Spinnen-Bits setzen). **Widerspricht Nachtrag 9.**
+* **Nachtrag 7** ("Nach der Aktivierung des Stroms ist 2030 leer gelaufen"; Orchestrator-Folgen: Ausloeser = Generator 2060
+  (3,0x7E), Ring-Sperre C-E2 nur solange geflutet UND ohne Strom, Rechner 2080 nur noch Original-Aufgabe, Port-Texte 2080
+  Id 40-41 entfallen):
+  - `ring_strom` (`RE15_SET_FLAG=3:235,9:103,9:100,3:126` = Flut gelaufen + Strom an): Wegplan `FLAG (3,126) = 1`, `FLAG (9,103)
+    = 1`, `FLAG (9,107) = 0`; AOTS `slot 3 typ 5 ev 41 ... band 1 mitte (5950,-6400)` -> Aktion -> `[ventilkette41] ROOM20B0:
+    Ring-Tuer Slot 3 nach 2030 gesperrt (geflutet) -> Sperrtext 41` / `[msgtext] room=20b0 id=41 "I cannot open the door because
+    of the water pressure."` -> kein Raumwechsel. **Widerspricht Nachtrag 7** (mit Strom muss der Ring wieder offen sein).
+  - `galerie_strom` (Flut + Strom + (3,219), Nordgalerie (-450,-9700) Band 9): `[ventilkette41] ROOM2030: unter Wasser (y
+    -7200), Lift-Rufzonen 4/6 -> msg 1` — mit Strom bleibt 2030 bis 1800 ueber dem Ring geflutet; die Original-Lift-Zonen
+    unten sind mit Strom zwar Ereignisse (AOTS `slot 5 typ 0 ev 2`, `slot 7 typ 0 ev 4`, sub01 @0x01E14), liegen aber im
+    gefluteten, von aussen gesperrten Ring. **Widerspricht Nachtrag 7/8.**
+  - Rechner: `rechner`/`rechner2` (L6) zeigen die Port-Erweiterung `2080_rechner_erw` mit `WRITE Set zone=9 idx=107` und Text
+    2080 Id 40 — laut Nachtrag 7 entfallen sie. Der Zustand "2030 trocken" haengt im Code an Bit 107 (gesetzt nur von diesem
+    Programm), nicht an (3,126).
+* **Nachtrag 8** ("der Wasser pegel in 2030 kann dann noch auf reling hoehe sein. also quasi nur noch der untere bereich
+  geflutet nach strom aktivierung ueber generator"): nicht umgesetzt — es gibt nur "geflutet" (y -7200, Ring unter Wasser,
+  Ring-Tueren zu) und "trocken" (nach Bit 107, keine Wasserflaeche, `nach2030`); eine Relinghoehe, ein gesperrter unterer
+  Bereich und die Liste der dort liegenden Gegenstaende fehlen. Dort liegen laut RDT: die **Sicherung** (2030 Slot 9 @0x01BAA
+  `2c 09 03 31 01 00 f4 e8 fa 19 ...`, Band 1, x -5900..-5100 z 6650..7650, Ereignis sub06: msg 2 "Will you take the Fuse?" /
+  msg 3 "You've taken the Fuse." @0x208B/@0x20AC, Set(3,108) @0x01FF2) und ein Gegenstand Typ 0x16 Anzahl 14 (Slot 10
+  @0x01BC0 `50 0a 09 31 01 00 fe 10 fa 19 ...`, Band 1, x 4350..5150 z 6650..7650).
+* **Nachtrag 6** ("du darfst keine zusaetzliche Tuer oeffnen um die Kette zu loesen"): erfuellt — C-E2c (j1) ist nicht
+  umgesetzt, die 11A0-Sperre haelt (L9: `It's locked from the other side.`, Leon + Elza; unit J2; Riegel `_weg` a/b).
+
 ## 2. Gates
 
 ### G1 RE-Gate
@@ -256,12 +297,12 @@ meinem unabhaengigen Zensus ueberein (L10).
 * C-E2b verlangte den Weg "Leon UND Elza": Elza ist im entscheidenden Abschnitt (2041 -> 2071 -> 11A1 -> Sperre) gemessen
   (Riegel b, mein Lauf `weg_elza`); die Glieder 2050 -> 2020, 2030N -> 2060 und 2080 ab 2090 nur mit Leon (Tuersaetze der
   Elza-Raeume byte-gleich, eigener Zensus). Fuer das Ergebnis ohne Belang (der Weg endet fuer beide an derselben Sperre);
-  bei der Umsetzung von C-E2c ist der GANZE Weg mit beiden zu messen (steht so in C-E2c).
+  den neuen Weg nach Nachtrag 7 ist GANZ mit beiden zu messen (steht so in den Folgen zu Nachtrag 7).
 
 ### G3 Nebenwirkungen
 * Keine neuen: kein Spiel-Code geaendert. Die r41-Riegel laufen auf derselben exe gruen (§3), Elza-Laeufe gleich (L1, L9).
-* Die neuen Riegel (unit J, `_weg` a/b) schreiben den BLOCKIERTEN Zustand fest ("Sperre in 11A0 haelt"); mit C-E2c j1 sind
-  sie umzudrehen (der Bau-Agent weist selbst darauf hin).
+* Die neuen Riegel (unit J, `_weg` a/b) schreiben den BLOCKIERTEN Zustand fest ("Sperre in 11A0 haelt"). Die 11A0-Sperre
+  bleibt nach Nachtrag 6 richtig; den neuen Weg ueber den Strom (Nachtrag 7, N1/N2) muessen eigene Riegel belegen.
 
 ## 3. Tests (gezielt, im Spurbaum; KEINE volle Suite)
 * Unit-Gruppe 164 Tests (Regex `<a2>/regex_unit.txt` = Abnahme 1): `100% tests passed, 0 tests failed out of 164` (44.54 s,
@@ -290,54 +331,73 @@ meinem unabhaengigen Zensus ueberein (L10).
 | 3 Ventilraetsel-Platzhalter -> Warnung (1 min, Raum verlassen) -> 60 s -> Wasser ueber die Ringebene; Ost-Tuer -> 20B0 (Auswasch-Szene); Zeit abgelaufen im Raum: Tod mit Ertrink-Effekt | **erfuellt** (Szene 20B0 mit dem Spur-A-Haken, Entscheid C-E1) | L3: Warnung woertlich, 1801 Bilder bis zur Flut, Wasser ueber den Ring (Bild), ein Spritzer, Tod +125 Bilder, Blende (0,0,30) im beschleunigten Renderer, YOU DIED; Ost-Tuer zu Fuss -> 20B0 + Bits 103/100; die Auswasch-Szene haengt im Spurbaum ohne den AUTO-Haken der Spur A (C-E1; Riegel `_kette` vorhanden, sauber uebersprungen; mit Haken von Abnahme 1 auf demselben Code gemessen) |
 | 4 Danach 20B0 statt 2000 (spaeter wieder frei ohne Wasser), Leiter frei (kein Wasser laeuft mehr herunter) | **erfuellt** | L4: 2010-Tuer -> 20B0 Cut 10, 20B0-Leiter -> 2050 ohne Text, 2050-Leiter -> 20B0 Cut 9, `fx=0` in allen 1423 Bildern (kein Strahl) |
 | 5 2050: Wasserlevel (Hebel) erst nach dem Pult-Raetsel (80 V wie 11F0) | **erfuellt** | L5: Hebel Ereignis 2 (Kisten) und 4 ohne Bit 106 = Text 40, kein Cut 4, (3,104)=0/(3,109)=0; Pult per Steuerkreuz 40/70/80 V -> "Power supply OK." -> Bit 106; danach Original sub04 -> (3,104)=1 (Wasser steigt) |
-| 6 2080: der Rechner senkt das Wasser in 2080 und entleert danach auch 2030 (Raum wieder frei ohne Wasser) | **teilweise** | Mechanik erfuellt (L6: Frage -> Cut 7, Pegel 2080 sinkt -> `WRITE Set zone=9 idx=107 op=1` -> Text 40; 2030 mit Bit 107 ohne Wasserflaeche). ABER im Spielablauf nicht erreichbar: nach der Flut fuehren nach 2080 nur die 2030-Suedgalerie (Lift B vom gefluteten, nach C-E2 gesperrten Ring) und 2090; nach 2090/20A0 nur ueber die 11A0-Tuer, die die ORIGINAL-Sperre Ck(3,206)=0 @0x00FEA -> msg 2 @0x00FEE haelt ((3,206) setzt nur 20A0 sub10 @0x01FF0) — zu Fuss gemessen mit Leon und Elza (L9), statisch belegt (L10); vor der Flut ebenso unerreichbar (L10). "2030 wieder frei" tritt in keinem Spielablauf ein. Der Orchestrator-Entscheid C-E2c (j1, master 09:00) ist im Zweig NICHT umgesetzt |
+| 6 2080: der Rechner senkt das Wasser in 2080 und entleert danach auch 2030 (Raum wieder frei ohne Wasser) | **teilweise** | Mechanik erfuellt (L6: Frage -> Cut 7, Pegel 2080 sinkt -> `WRITE Set zone=9 idx=107 op=1` -> Text 40; 2030 mit Bit 107 ohne Wasserflaeche). ABER im Spielablauf nicht erreichbar: nach der Flut fuehren nach 2080 nur die 2030-Suedgalerie (Lift B vom gefluteten, nach C-E2 gesperrten Ring) und 2090; nach 2090/20A0 nur ueber die 11A0-Tuer, die die ORIGINAL-Sperre Ck(3,206)=0 @0x00FEA -> msg 2 @0x00FEE haelt ((3,206) setzt nur 20A0 sub10 @0x01FF0) — zu Fuss gemessen mit Leon und Elza (L9), statisch belegt (L10); vor der Flut ebenso unerreichbar (L10). "2030 wieder frei" tritt in keinem Spielablauf ein. C-E2c (j1) ist durch Nachtrag 6 widerrufen; Nachtrag 7 ersetzt diesen Punkt (Zeile Nachtrag 7) |
+| Nachtrag 6 (09:17): keine zusaetzliche Tuer oeffnen, um die Kette zu loesen (C-E2c widerrufen) | **erfuellt** | Keine Tuer geoeffnet: 11A0/11A1 Slot 4 bleibt "It's locked from the other side." (L9 Leon + Elza, `_weg` a/b, unit J2); j1 nicht umgesetzt |
+| Nachtrag 7 (09:22): "Nach der Aktivierung des Stroms ist 2030 leer gelaufen" (Ausloeser Generator 2060 (3,0x7E); Ring-Sperre nur solange geflutet UND ohne Strom; Rechner 2080 nur Original-Aufgabe, Texte 2080 Id 40-41 entfallen) | **nicht_erfuellt** | L11 `ring_strom`: Flut + (3,126)=1 -> 20B0-Ring-Tuer weiter Sperrtext 41; `galerie_strom`: mit Strom `unter Wasser (y -7200)`; L6: `2080_rechner_erw` setzt Bit 107 und zeigt Text 40 (soll entfallen); "trocken" haengt nur an Bit 107 |
+| Nachtrag 8 (09:24): nach der Stromaktivierung Wasser in 2030 auf Relinghoehe, nur der untere Bereich geflutet | **nicht_erfuellt** | L11: nur zwei Zustaende (y -7200 mit Ring unter Wasser / ganz trocken nach Bit 107); keine Relinghoehe, kein gesperrter unterer Bereich, keine Gegenstandsliste (unten liegen u. a. die Sicherung Slot 9 @0x01BAA und Typ 0x16 x14 Slot 10 @0x01BC0) |
+| Nachtrag 9 (09:26): Bruecke muss vorher heruntergelassen sein, damit man das Ventilraetsel loesen kann | **nicht_erfuellt** | L11 `ventile_ohne_102`: (9,101)=(9,102)=0 -> Ereignis 26 -> `2030_ventile` -> Text 45/46 -> Zaehler 1800 = Ventilraetsel ohne Bruecke loesbar (ebenso `flut`, `osttuer`) |
+
+Zu Punkt 6: Der Wortlaut des Auftragstexts ("der Rechner ... entleert danach auch 2030") ist durch Nachtrag 7 ERSETZT (Entleeren
+durch den Strom, Rechner nur Original). Gegen den alten Wortlaut: teilweise (Mechanik da, im Spiel unerreichbar); gegen den
+neuen: nicht erfuellt (Zeile Nachtrag 7).
 
 ## 5. Maengel (nummeriert, nachpruefbar)
-Stand der Abnahme-1-Maengel: **N1 offen** (unten). Die Nachbesserung 2 hat den Auftrag C-E2b vollstaendig ausgefuehrt
-(Tuergraph, Weg zu Fuss bis zur Sperre mit Leon und Elza, blockierender Punkt mit Tuer/Bit/SCD-Offset/Bild benannt, nichts
-erfunden, §7/§0b M5/M7 richtiggestellt, Riegel) — und ihr Ergebnis ist unabhaengig bestaetigt (L9, L10, G1). Erfuellt ist
-Punkt 6 damit trotzdem nicht; die Entscheidung dazu liegt seit 09:00 vor (C-E2c).
+Die Nachbesserung 2 hat den Auftrag C-E2b vollstaendig ausgefuehrt (Tuergraph, Weg zu Fuss bis zur Sperre mit Leon und Elza,
+blockierender Punkt mit Tuer/Bit/SCD-Offset/Bild benannt, nichts erfunden, §7/§0b M5/M7 richtiggestellt, Riegel) — ihr
+Ergebnis ist unabhaengig bestaetigt (L9, L10, G1). Offen bleibt N1; durch die Nachtraege 6-9 (Nutzer-Wortlaut waehrend dieser
+Abnahme) kommen N2-N4 hinzu. N1-N4 haengen zusammen und sind EIN Umbau der Kette in 2030.
 
-* **N1 (hoch, Punkt 6; offen, Entscheid C-E2c j1 liegt vor, Umsetzung fehlt)** Der Rechner 2080 ist im Spiel nicht
-  erreichbar, also wird 2030 nie wieder frei, und 2080/2090/20A0 (Alligator, Szenen der Spuren B/F/G) sind in keinem
-  Spielablauf erreichbar.
-  - Messung: L9 `weg_leon`/`weg_elza` (2040 -> Treppe -> 2070-Nordgang -> Riegel -> 11A0/11A1 -> Steg Ost -> Aktion ->
-    `[msgtext] room=11a0/11a1 id=2 "It's locked from the other side."`, `FLAG (3,206) = 0`, kein Raumwechsel; Bildboegen
-    `<a2>/weg_leon_11a0_sheet.png`, `<a2>/weg_elza_11a1_sheet.png`); Gegenprobe `g206` -> 20A0; Riegel `_weg` a-f gruen.
-  - Beleg: 11A0/11A1 main00 @0x00FEA `21 03 ce 00` / @0x00FEE Text-Platz msg 2 / @0x01006 Tuer nur im Sonst-Zweig; einziger
-    Setzer von (3,206) ist 20A0/20A1 sub10 @0x01FF0; einzige Zugaenge zu 2080/2090/20A0 laut eigenem Zensus (L10); Lifte 2030
-    ohne Strom nur Text (sub01 @0x01E14, jedes Bild FUN_8003f038), Strom (3,126) nur 2060 @0x012AE, 2060 vor der Flut
-    unerreichbar (Leiter-Sperre; Erreichbarkeit L10).
-  - Forderung (= Orchestrator-Entscheid C-E2c, AUFTRAG.md auf master d370db3c): mit dem Ende der Flut (Bits 103 + 100)
-    (3,206) = 1 setzen (PORT-WAHL als Folge der Port-Flut, kein neuer Text); Riegel "(3,206) vor der Flut 0, danach 1"; den
-    Weg 11A0 -> 20A0 -> 2090 -> 2080 -> Rechner -> Bit 107 -> 2030 entleert zu Fuss messen, Leon UND Elza (Alligator per
-    Testhaken ruhig/entfernt) — insbesondere die noch nie gegangenen Strecken IN 20A0 (Ankunft aus 11A0 (25800,-3600,-800)
-    nfloor 2 -> Slot 0 Rechteck x 3450..6450 z 4500..5500 floor 2; 20A0 hat ein Rolltor, sub00 @0x01A3E Ck(3,11) mit
-    Sca_id_set der Zellen 0x20, und Gegner-Plaetze unter (3,170)/(3,171) @0x018CA/@0x01900) und DURCH 2090 (Ankunft
-    (6300,-1800,-16250) nfloor 1 -> Slot 0 x -9400..-8400 z -26000..-25000 floor 0); unit J2 und `_weg` a/b auf den neuen
-    Zustand umstellen; Dossier §7 mit dem Weg fuer den Nutzer.
+* **N1 (hoch, Punkt 6 / Nachtrag 7) — kein Weg zum Rechner 2080 nach der Flut (bestaetigt), Loesung jetzt per Strom statt
+  C-E2c.** Ist: nach der Flut fuehren nach 2080 nur die 2030-Suedgalerie (Lift B vom gefluteten, gesperrten Ring) und 2090;
+  nach 2090/20A0 nur die 11A0-Tuer mit der Original-Sperre Ck(3,206)=0 @0x00FEA -> msg 2 @0x00FEE ((3,206) nur 20A0 sub10
+  @0x01FF0) — gemessen L9 (Leon + Elza), statisch L10; vor der Flut ebenso unerreichbar (L10). Der Orchestrator-Entscheid
+  C-E2c (j1, Tuer oeffnen) ist durch **Nachtrag 6 widerrufen** und darf NICHT umgesetzt werden. Forderung (Nachtrag 7): Weg
+  nach der Flut 20B0 -> Leiter -> 2050 (Kisten) -> 2020 (Kurbel (3,219)) -> 2030 Nordgalerie -> 2060 Generator (Sicherung
+  (3,144), Set(3,126) @0x012AE) -> 2030 bis Relinghoehe leer (N3) -> Ring -> Lift B -> Suedgalerie -> 2080 -> Rechner -> 2090
+  zu Fuss messen, Leon UND Elza, mit Riegel. (Hinweis: die Nordgalerie hat keinen Lift; den Ring erreicht man dann ueber die
+  wieder offene 20B0-Ost-Tuer oder 2070 — Weg im Dossier belegen.)
+* **N2 (hoch, Nachtrag 7) — Entleeren am Strom statt am Rechner.** Ist (L11, L6): mit Flut + (3,126)=1 bleibt 2030 bei y -7200
+  geflutet und die Ring-Tueren (20B0 Slot 3, 2070 Slots 1/2) sind gesperrt; der Rechner 2080 fuehrt `2080_rechner_erw` aus
+  (Set(9,107), Text 40). Forderung: Ausloeser der (Teil-)Entleerung = Strom (3,0x7E) aus 2060 (Setzer @0x012AE, Leser 2030
+  sub01 @0x01E14 — mit SCD-Offsets im Dossier); Ring-Sperre C-E2 nur bei "Flut gelaufen UND Strom aus"; Rechner 2080 nur
+  Original (sub02, (3,245)); Port-Programm `2080_rechner_erw` und Texte 2080 Id 40-41 entfernen (VERTRAG 1.2: entfallen);
+  Riegel: mit Strom Ring-Tueren offen / 2030 nicht mehr auf -7200, ohne Strom gesperrt; Rechner = Original-Ablauf.
+* **N3 (hoch, Nachtrag 8) — Relinghoehe und gesperrter unterer Bereich.** Ist: nur "geflutet -7200" oder "ganz trocken".
+  Forderung: Ruhepegel nach der Stromaktivierung auf Relinghoehe, aus der Geometrie belegt (SCA-Zellen der Gelaender mit
+  Offsets), Ring trocken und begehbar (Lifte A/B, Ring-Tueren), unterer Bereich (Schachtgrund, Steg/Bruecke Band 1, Tank mit
+  Ventil 13) geflutet und nicht begehbar (z. B. Treppe hinab gesperrt wie die Steg-Sperre), Bilder vorher/nachher (Ring-
+  Kameras + Draufsicht Cut 4), Riegel; Gegenstaende unten fuer den Nutzer nennen (mindestens Sicherung Slot 9 @0x01BAA und
+  Slot 10 @0x01BC0 Typ 0x16 x14).
+* **N4 (mittel, Nachtrag 9) — Ventilraetsel erst nach der Bruecke.** Ist (L11 `ventile_ohne_102`): ohne Bit 102 loest Ereignis
+  26 das Raetsel samt Flut aus. Forderung: Ventilraetsel erst mit Bit 102 (oder, falls die nummerierten Ventile im Bild im
+  unteren Bereich liegen, den Ausloeser dorthin legen — Lage aus den Hintergruenden/Kameras belegen, Bildbogen); vorher
+  Aktionstaste = Port-Text aus den Ids 2030 40-49 (Vorschlag fuer den Nutzer); Riegel: vor Bit 102 nicht ausloesbar, danach
+  ja; Weg zu Fuss Leon UND Elza.
 
-Hinweise (kein Mangel):
-* H-a (Einordnung N1): "ORIGINAL-Sperre" stimmt fuer den in C-E2b angenommenen Umweg. Der Original-Zugang zu 2080 (Ring ->
-  Lift B mit Strom aus 2060 -> Suedgalerie -> 2030 Slot 1) ist durch Port-Eingriffe der Runde 41 zu: Leiter-Sperre bis zur
-  Flut (damit 2060/Strom vor der Flut unerreichbar), danach Flut + Ring-Sperre C-E2 + Lift-Rufzonen-Text. C-E2c benennt das
-  richtig als Folge der Port-Flut.
-* H-b: Die Sicherung (3,108) liegt in 2030 Slot 9 @0x01BAA auf dem Steg-Suedlandeplatz (Band 1, y -1800). Wer sie vor der
-  Flut nicht holt, kommt erst nach dem Entleeren wieder hin (Ruhepegel -7200); bis dahin bleiben die 2030-Lifte ohne Strom.
-  Der j1-Weg braucht keinen Strom (gemessen: Rechner mit nur 103/100 in `rechner2`, mit 103/100/206 in `_weg` f). Zur
-  Kenntnis fuer Nutzer und Orchestrator.
+Hinweise (kein Mangel, aber fuer die Umsetzung von N1-N4 wichtig):
+* **H-a (Softlock-Gefahr N2/N3 + Sicherung):** Der Generator 2060 braucht die Sicherung ((3,144) sub19 @0x0169E, ohne sie
+  2060 msg 3 "One of the fuses is missing..."), und die liegt in 2030 im UNTEREN Bereich (Slot 9 @0x01BAA, Band 1, Steg-
+  Suedlandeplatz, erreichbar erst mit heruntergelassener Bruecke; 2030 msg 2/3 "Will you take the Fuse?" / "You've taken the
+  Fuse."). Bleibt der untere Bereich nach der Flut geflutet und gesperrt (Nachtrag 8), dann gilt: wer die Sicherung vor der
+  Flut nicht holt, bekommt nie Strom -> 2030 bleibt geflutet -> 2080/2090/20A0 unerreichbar. Nachtrag 9 macht die Sicherung vor
+  der Flut ERREICHBAR, erzwingt das Mitnehmen aber nicht. Das braucht eine Entscheidung (z. B. Ventilraetsel erst mit (3,108),
+  oder die Sicherung an anderer Stelle) — vor der Umsetzung dem Orchestrator/Nutzer vorlegen, nichts erfinden.
+* H-b (Einordnung N1): "ORIGINAL-Sperre" stimmt fuer den in C-E2b angenommenen Umweg; der Original-Zugang zu 2080 (Ring ->
+  Lift B mit Strom -> Suedgalerie) ist durch die Port-Kette der Runde 41 zu (Leiter-Sperre bis zur Flut, danach Flut +
+  Ring-Sperre). Nachtrag 7 oeffnet genau diesen Original-Zugang wieder.
 * H-c: Das Werkzeug `tuergraph_nach_flut.py` zaehlt als Setzer nur `Set ... 01` (nicht op 7) und listet Zugaenge nur fuer
   2080/2090/20A0/2070/2040/11A0; mein Zensus (op 1 + 7, alle Ziele, ROH-Scan) findet nichts Zusaetzliches — ohne Folge.
-* H-d: Fragen (g) (Ost-Tuer 2030 nach Bit 107) und (h) (Spritzer ausserhalb Cut 4) sind in AUFTRAG.md (master) weiter ohne
-  Entscheid; Punkt 3 haengt fuer die 20B0-Szene an Spur A (C-E1); PSX-Ziel ungebaut (H3); Port-Texte Vorschlag bis zur
-  Freigabe des Nutzers.
+* H-d: Die Riegel unit J und `_weg` schreiben den heutigen (blockierten) Zustand fest; mit N1/N2 sind sie neu zu fassen.
+  Fragen (g) (Ost-Tuer 2030 nach dem Entleeren) und (h) (Spritzer ausserhalb Cut 4) weiter ohne Entscheid; Punkt 3 haengt
+  fuer die 20B0-Szene an Spur A (C-E1); PSX-Ziel ungebaut (H3); Port-Texte Vorschlag bis zur Freigabe.
 
 ## 6. Fazit
-**Nicht bestanden.** Punkte 1-5 sind am gebauten Stand erfuellt (Punkt 3 mit der Spur-A-Abhaengigkeit laut C-E1), RE-Gate und
-Vertrag halten, alle gefahrenen Riegel sind gruen (Unit 164/164, `unit_r41_ventilkette` 286 Pruefungen, r41-Integration 3/3
-inklusive des neuen `_weg`). Das Ergebnis der Nachbesserung 2 ist unabhaengig bestaetigt: nach der Flut gibt es keinen Weg zum
-Rechner 2080 (die letzte Sperre ist die Original-Einbahntuer 11A0 Slot 4, (3,206), nur von 20A0 aus zu oeffnen), und vor der
-Flut auch nicht — in jeder Spielreihenfolge. Die Spur hat das gemaess C-E2b korrekt als OFFEN gemeldet und nichts erfunden.
-Der Orchestrator hat um 09:00 entschieden (C-E2c, j1: (3,206) = 1 mit dem Ende der Flut); solange das nicht umgesetzt und der
-Weg 11A0 -> 20A0 -> 2090 -> 2080 mit Leon und Elza gemessen ist, bleibt Punkt 6 ("entleert danach auch 2030") im Spiel
-unerreichbar: teilweise, Mangel N1.
+**Nicht bestanden.** Gegen die sechs Punkte des Auftragstexts sind 1-5 am gebauten Stand erfuellt (Punkt 3 mit der Spur-A-
+Abhaengigkeit laut C-E1), Punkt 6 nur teilweise: die Mechanik des Rechners ist da, aber nach der Flut (und davor) ist 2080 in
+keinem Spielablauf erreichbar — das Ergebnis der Nachbesserung 2 ist unabhaengig bestaetigt (Zensus, Erreichbarkeit, Weg zu
+Fuss mit Leon und Elza bis zur Original-Sperre 11A0 Slot 4), und die Spur hat es gemaess C-E2b korrekt als OFFEN gemeldet,
+ohne etwas zu erfinden. RE-Gate und Vertrag halten, alle gefahrenen Riegel sind gruen (Unit 164/164, `unit_r41_ventilkette`
+286 Pruefungen, r41-Integration 3/3 inklusive `_weg`). Waehrend der Abnahme hat der Nutzer die Kette neu festgelegt
+(Nachtraege 6-9: keine zusaetzliche Tuer; 2030 laeuft mit dem Strom aus dem Generator bis auf Relinghoehe leer; Rechner 2080
+nur Original; Ventilraetsel erst nach der Bruecke). Der gebaute Stand erfuellt 7, 8 und 9 nicht (gemessen L11) — Maengel
+N1-N4; vor der Umsetzung ist die Sicherungs-Frage (H-a) zu entscheiden.
