@@ -1670,3 +1670,93 @@ Bibliothek 13:56:57, Gator-Wurzel im Raster, 8 Gierwinkel je Lage):
 Offen fuer diesen Agenten: Riegel `maul` (Maulraum mit gezeichnetem Kiefer, GUARD-Lagen gegen den CHASE-Bezug je Bild) und
 `buehne` (Garantie), Messzeile um den Abstand Leon <-> gezeichneter Kiefer erweitern, integration "belagerung" bis nach dem Tod
 pruefen, exe-Laeufe E1/MN2/Plattformblock/Elza/A2 am Endstand, Abschluss.
+
+### 13.3 RE-Belege der Fortsetzung (selbst gelesen)
+- Stichprobe der Vorgaenger-Zitate (`re2_disasm.py --bin EM23_OVL_0000.BIN` bzw. PSX.EXE): @0x801010e8-f8 `addu a0,s0,zero / addiu
+  a1,zero,4 / addu a2,zero,zero / jal 0x8001a330 / addu a3,zero,zero` = FUN_8001a330(em,4,0,0); @0x8001a34c-64 `lbu v0,332(s0) /
+  beq v0,a1,0x8001a368 / sb a1,332(s0) / sb zero,333(s0) / sb s1,334(s0)` (Blend-Zaehler +0x14E = a2 nur bei Clip-Wechsel);
+  @0x80101048-58 `addiu v0,zero,-23078 / sw v0,56(s0) / sh zero,554(s0) / sh zero,552(s0) / sb zero,548(s0)`. Stimmt.
+- **Die Spieler-Wandklemme laeuft auch im Tod:** FUN_80031c44 (im Port-Kopf von re15_player_body_and_walls, game_step_common.c,
+  selbst disassembliert dokumentiert) ruft nach JEDEM Kommando-Handler (Tabelle @0x80073f90, [3]/[7] = Tod) den Koerper-Schub
+  `jal 0x8002b544` @0x80031cbc und die Wandklemme `jal 0x8003b0a4` @0x80031d70 (a2 = Solid-Maske 1, Radius 0x1c2); geklemmt wird am
+  Spieler-Band +0x82 (= DAT_800acad6). Im Port laeuft sie vor der Gegner-KI (exe BL2: das P0-Bild zeigt Leon noch auf der P0-Lage,
+  erst das naechste verschoben).
+- **Das Band folgt der Hoehe:** Kletter-Landung `mult 0x91a2b3c5 / mfhi / sra 10 / subu` = Band -(h / 1800) @0x80038460-bc
+  (climb_common.c:506), ebenso der Tuer-Spawn (aot_common.c:777, band_from_y(spawn_y)).
+- **SCA ROOM2090** (Sonde `B41nb5c/probe_sca.c`, 50 Eintraege = 5 Quadranten-Gruppen x 10): Band 0 (floor >> 4 = 0) = [0]-[3]
+  Aussenwaende x[-8900..7200] z[-27000..-5400], [4] Plattform x[-1700..1850] z[-20000..-12450], [5] Rampe x[1850..7200]
+  z[-18100..-14500] - **genau die Beckenquelle gb_becken_draussen** der Buehne; Band 1 zusaetzlich [6] Ostwand, [7] Plattform, [8]
+  Streifen x[1850..7200] z[-14500..-13500] (u1 02), [9] Streifen z[-19100..-18100] (u1 02). Sonde `probe_klemme.c`
+  (re15_collision_constrain_contact_band, Radius 450, Maske 1, alt = neu): Band 1 schiebt (2564,-14017) -> (2564,-14968), Band 0
+  laesst (2564,-14017) stehen.
+
+### 13.4 Umsetzung (Endstand)
+Vom Vorgaenger (0c101dd8, a06c52e0; Belege §13.0):
+- enemy_ai_boss_gator.c: `gb_klemme_aus` auch in FRESSEN ab P0 (RE2 FUN_80015cb8 ohne Wand, @0x80015d68/@0x80015d90); P0: pitch/arc/
+  jaw = 0 (RE2 +0x22A/+0x228 = 0 @0x80101050-54), anim_frac = 0 (FUN_8001a330(em,4,0,0) @0x801010ec-f4), Kanister-Objekt aus
+  (@0x80101008-0c), Gator auf die Buehne (Form @0x80101048-4c), Leon auf den Beckenboden (pl->y = 0); Buehne planen und
+  Schnitt-Auftrag im Biss-Bild (gb_biss_abschluss), Messhaken re15_gator_boss_im_fressen.
+- gator_re2_r41.c: authored Finisher-Bahn gr2_fin_tabelle (P1 Clip 4 Bild 1..14, P2 sf 1..120, P3 Clip 11 Bild 0..58),
+  Buehnen-Suche re15_gr2_finisher_buehne (**PORT-WAHL** nach Nachtrag 6; Form = RE2-P0, das den Gator auf die Korridor-Achse setzt und
+  auf Cut 7 schneidet, dessen Bild die Lage frontal zeigt, §9.2): naechste Lage + Gier nach Kosten Versatz + 4 x Drehung (wie die
+  Intro-Lage), bei der die ganze Bahn im Wasser liegt (Wurzel ausserhalb der Klemmzone 1466, Bones 1/5/6/7, Leons Wurzel mit
+  Spielerradius 0x1c2), der Gator frontal zu einer Zonenkamera steht und Kopf + Leon im Bild sind (Leon nur oben hinaus), Kopf-
+  Massstab <= RE2-Grenze 1892; re15_gr2_kamera_finisher schneidet auf die Buehnen-Kamera; Messhaken re15_gr2_fress_sitz.
+Dieser Agent (242ac48f, 2c2bbcdd, f605f433 + Abschluss):
+- **Band-Haken P0** (enemy_ai_boss_gator.c): nach `pl->y = 0` `re15_collision_set_band(re15_collision_band_from_y(pl->y))`
+  (Band -(y/1800) @0x80038460-bc). Ursache des exe-Befunds BL2 (§13.5).
+- **Buehne prueft jedes Bild** (gr2_fin_frei/gr2_fin_sicht): vorher Stichproben (Sicht erst ab dem Koppelbild, dann jedes 10. Bild,
+  Wasser ab P2 jedes 2.); der Riegel `maul` fand im CHASE-Bezug P1 Bild 12 Leons Wurzel bei Bildlage (106,240), eine Zeile unter dem
+  Bild. Jetzt erst Stichprobe (jedes 8. + letztes Bild), dann jedes Bild - dieselben Bedingungen; in der Raster-Sonde ist das
+  Ergebnis gleich der reinen Jedes-Bild-Pruefung (Versatz-Verteilung 16609/2946/1339/337/89), 1,35 statt 2,97 ms je Suche.
+- **GR2_FIN_WEIT 9000 -> 27000** = Becken-Diagonale der Aussenwaende (16100 x 21600 -> 26940, aufs Raster 250 aufgerundet). Der alte
+  Wert (Kommentar "halbe Becken-Diagonale", die rechnerisch 13470 ist) lag mit 9000 nur knapp ueber dem gemessenen Bedarf 8997
+  (Wurzel mitten auf der Rampe); die Suche bricht bei r >= besten Kosten ab - Wasserlagen unveraendert (Sonde: gleiche Verteilung,
+  max 7494), Plattform/Rampe max 9996.
+- re15_gr2_fress_sitz liefert `*kiefer_abw` = |(Leons Wurzel - Part 7) gezeichnet - dieselbe Groesse der authored Bahn| (Bahnbild k:
+  P1 Clip-4-Bild 1..14 -> 0..13, P2 sf 1..120 -> 14..133, P3 Clip-11-Bild 0..58 -> 134..192; y: P1 Leon auf 0, Gator auf Buehnen-y).
+- gator_re2_pc.c Messzeile `[gator-re2] Maul-Sitz F<n>: Bilder .. (P1 P2 P3), Abweichung max .., Kiefer-Abstand max .., Kopf im Bild
+  ../.., Leon im Bild ../.. + oben hinaus .. (Cut ..), im Wasser ../..` und die Summenzeile `Maul-Sitz Ende` im ersten Bild nach P3.
+- Keine neue Datei, keine neuen Assets, kein getenv. Gemeinsame Dateien: keine (enemy_ai_boss_gator.c = Eigentuemer B); der Riegel
+  probe_gator_fress.c (unit_gator_fress, im Zweig seit NB1 angepasst) mit Beleg angepasst (§13.6).
+
+### 13.5 Messung nachher (Laeufe `B41nb5c/mess/<Lauf>`, eigene exe-Kopien re15_pc_b41n5c(z)_<Lauf>.exe)
+Riegel `unit_r41_re2gator_maul` (echter Boss-Takt, Spieler-Wandklemme vor jedem Takt wie im Spiel, Leon-Band bis zum Tod wie gesetzt;
+je Bild ab P0 gegen den CHASE-Bezug im selben Bahnbild):
+
+| Lage | Tod aus | Cut | P1/P2/P3 | Maul >= 50 % P1/P2/P3 | Kopf-lokal / Maulraum gg. Bezug | Kiefer-Abstand | Wasser / Bild aus | Klemme / Band falsch |
+|---|---|---|---|---|---|---|---|---|
+| CHASE-Bezug (-4000,-22000) | LUNGE Takt 7 | 0 | 14/120/120 | 0/106/120 | 0 / 0 | 3 | 0 / 0 (18 oben) | 0 / 0 |
+| GUARD Rampe Ost (6300,-16250) | GUARD Takt 135 | 4 | 14/120/120 | 0/106/120 | 5 / 10 Promille | 2 | 0 / 0 (10 oben) | 0 / 0 |
+| GUARD E1-Lage (6732,-16250) | GUARD Takt 138 | 4 | 14/120/120 | 0/106/120 | 5 / 10 | 2 | 0 / 0 (10 oben) | 0 / 0 |
+| GUARD Rampenmitte (4000,-15000) | GUARD Takt 95 | 2 | 14/120/120 | 0/106/120 | 9 / 11 | 3 | 0 / 0 | 0 / 0 |
+| GUARD Plattformblock (0,-16250) | GUARD Takt 323 | 7 | 14/120/120 | 0/106/120 | 8 / 11 | 2 | 0 / 0 (14 oben) | 0 / 0 |
+| CHASE, Leon noch Band 1 (exe BL2) | LUNGE Takt 7 | 2 | 14/120/120 | 0/106/120 | 14 / 13 | 2 | 0 / 0 | 0 / 0 |
+
+Vorher (Stand 7831a6d5, §13.1, gleiche Groessen): GUARD Kopf-lokal bis 5649, Maul P2/P3 0/0 bzw. 17/82. Gegenprobe Band-Haken
+(Riegel gegen den Stand 242ac48f ohne Haken): BL2-Lage Klemme 930, Leon ausserhalb des Wassers, Band falsch in 254 Bildern -> 10 Fehler.
+P1 = 0/14 auch im Bezug: Leon steht dort wie in RE2 (@0x8010106c-84) 7096 vor der Wurzel und wird in Bild 13 gepackt (@0x801010fc-104).
+`unit_r41_re2gator_buehne`: 2128 Gator-Lagen (Raster 1000 x 8 Gier, Wasser + Plattform/Rampe), 0 ohne Buehne, 0 falsch, Versatz max 8984.
+
+exe (Endstand; "Bau 14:31" = vor Band-Haken und Suchradius, an diesen Lagen gleich, da Leons Bahn dort in keiner Band-1-Zelle liegt und
+die Kosten unter 9000 bleiben):
+
+| Lauf | Rezept (Basis wie Abnahme 4 §3) | Tod | Buehne Versatz/Drehung -> Cut | Maul-Sitz Ende |
+|---|---|---|---|---|
+| E1 (Bau 14:31) | Tuerweg `DEBUG_JUMP=20A0@250 FIRE_AOT=0@40#20A0 GB_TEST=1 EXIT_AT=890#2090` | F627 GUARD | 249/1888 -> Cut 4 | F882: 254 (14/120/120), Abw. 0, Kiefer 2, Kopf 254/254, Leon 244/254 + 10 oben, Wasser 254/254 |
+| MN3 | `DEBUG_JUMP=2090@250 PLAYER_POS=4000,-15000,2048,1 GB_TEST=1` | F587 GUARD | 0/1082 -> Cut 4 | F842: 254, Abw. 0, Kiefer 2, Kopf 254/254, Leon 244 + 10 oben, Wasser 254/254 |
+| EZ3 (Elza, ROOM2091) | `PSELECT_AUTO(_SWITCH)`, `PLAYER_POS=6300,-16250,2048,1 GB_TEST=1` | F627 GUARD | 249/1888 -> Cut 4 | F882: wie E1 |
+| A2 | Tuernische `DEBUG_JUMP=2090@250 GB_TEST=1` | F397 LUNGE | 749/458 -> Cut 6 | F652: 254, Abw. 0, Kiefer 2, Kopf/Leon 254/254, Wasser 254/254 |
+| BL2 (Bau 14:31, OHNE Band-Haken) | `PLAYER_POS=0,-13200,2048,1 GB_TEST=1` | F526 LUNGE | 4222/850 -> Cut 2 | F781: **Kiefer 949 (F528), Wasser 241/254** - Leon (Band 1) von der Wandklemme aus SCA [8] in die Rampe geschoben |
+| BL3 (Endstand) | wie BL2 | F526 LUNGE | 4222/850 -> Cut 2 | F781: 254, Abw. 0, **Kiefer 2**, Kopf/Leon 254/254, **Wasser 254/254** |
+| BL1 | `PLAYER_POS=0,-16250,2048,1 GB_TEST=1`, 1500 Bilder | - | - | kein Tod: eine Raum-Spinne warf Leon ~F300 nieder, die Band-1-Klemme schob ihn aus der Plattformzelle [7] nach (-2168,-16250), der Gator blieb in CHASE (Altbestand, Spinnen = Spur F); der GUARD-Tod auf dem Plattformblock ist im Riegel `maul` (Lage D) gemessen |
+
+Bildbelege (Framedump, RE15_WINDOW_SCALE=1, Ausschnitte 2x, Aufhellung nur zur Sichtung): **E1 vorher** = Abnahme 4
+`B41abn4/beleg_E1_finisher.png`, `E1_fress_zoom2.png`, `E1_fress_p3_zoom.png` (Maul leer, Leon hinter der Ostwand); **E1 nachher**
+`B41nb5c/E1_nachher_maul.png` (F626-F870) und `B41nb5c/E1_nachher_kopf.png` (F640 Schnapp, F650-F690 Leon im Maul, F700-F740 Wurf
+und wieder im Maul, F750-F880 aufgerichtet kauend). Ebenso `MN3_nachher_kopf.png` (vorher Abnahme `B41abn4f/MN2_kopf_zoom.png`: Leon
+neben/ueber dem Kopf), `BL3_nachher_kopf.png`, `EZ3_nachher_kopf.png` (Elza rot im Maul F650-F690, F740/F800), `A2_nachher_kopf.png`
+(CHASE-Tod: Leon F398-F404 vor dem Gator, F416-F456 im Maul, F488-F504 im aufgerichteten Maul). In P1 steht Leon wie in RE2 vor dem
+Gator; bei E1/MN3/EZ3 verdeckt eine Raum-Spinne im Vordergrund Teile von ihm (Spinnen entfernt Spur F).
+A2 zeigt seit der Buehne die Frontalansicht (Cut 6, frontal 4118) statt der Schraegsicht (vorher Cut 6, frontal 2541) bei aehnlichem
+Kopf-Massstab (712 gegen 691) - der RE2-Finisher-Schnitt Cut 7 ist frontal (+1,00, §9.2).
