@@ -41,6 +41,7 @@
 #include "re15_files.h"          /* Runde 30: die dynamische FILE-Liste (RE2 @0x800D4B68) */
 #include "re15_karte_fahrstuhl.h" /* Runde 35 Spur G: Klemmfenster der Fahrstuhlkabine */
 #include "re15_karte_r39.h"      /* Runde 39 Spur G: Kachel-Korrekturen nach den Nutzer-Vorlagen */
+#include "re15_karte_r41.h"   /* Runde 41 Spur E: Tuer-Zug auf die Zone der Ankunft (karte_r41.c) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Name + CHECK-Text der Ids 0x42/0x45 */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: "Empty Fire Extinguisher" (Nachtrag 4c) */
 #include "re15_dining_r38.h"     /* Runde 38 Spur F: Name + CHECK-Text der Id 0x43 (Dining Room Key) */
@@ -716,6 +717,7 @@ static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
                           | ((unsigned)g_aot.door_params[k].dest_room << 4)
                           | (g_current_room_id & 0x000Fu);
             int einzeln = -1;
+            int zielzone = re15_karte_r41_tuer_zielzone(k, ziel);   /* Runde 41 Spur E: Zone der Tuer-ANKUNFT (re15_karte_r41.h) */
             for (mk = 0; mk < mn; mk++) {
                 int mpg, mrc, smx, smy, kind, za, zb, andere, gefunden = 0, ix;
                 if (!re15_map_mark_get(mk, &mpg, &mrc, &smx, &smy, &kind)) continue;
@@ -728,7 +730,8 @@ static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
                     continue;
                 }
                 /* Gehoert die andere Zone zum ZIELRAUM dieser Tuer? */
-                for (ix = 0; ix < 8 && !gefunden; ix++) {
+                if (zielzone >= 0) { gefunden = (andere == zielzone); }   /* Runde 41 Spur E: nur die Zone der ANKUNFT */
+                else for (ix = 0; ix < 8 && !gefunden; ix++) {
                     const re15_map_zone_t *zt = re15_map_zone_fuer(ziel, ix, (unsigned)seite);
                     if (!zt) continue;
                     if (zt->zid == andere) gefunden = 1;

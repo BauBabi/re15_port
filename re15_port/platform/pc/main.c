@@ -83,6 +83,8 @@ static inline int RNDI(float f) {
 #include "re15_collision.h"
 #include "re15_stair.h"
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
+#include "re15_msgtakt_r41.h"    /* Runde 41 Spur E: Nachrichten-Takt hinter dem Spiel-Takt */
+#include "re15_kamerahalt_r41.h" /* Runde 41 Spur E: Apply-Bild des Kamerawechsels stehen lassen */
 #include "re15_map_hint.h"    /* re15_host_clock_set_us — Wanduhr fuer den Kartenhinweis */
 #include "re15_cut10f0.h"     /* Runde 35 Spur K: Gestenblock-Leihe ROOM10F0 <- ROOM11B0 */
 #include "re15_menu.h"        /* re15_menu_* — inventory/weapon-select overlay (8.20) */
@@ -5861,7 +5863,9 @@ re_title:;
             extern int re15_render_pc_msg_text(int, int, const unsigned char *, int);
             const unsigned char *raw = 0;
             int raw_len = 0, msg_id = 0;
+            re15_msgtakt_r41_takt_beginn();   /* Runde 41 Spur E: Schliessen im Nachrichten-Takt wirkt erst hinter dem Spiel-Takt (re15_msgtakt_r41.h) */
             int live = re15_msg_tick(&raw, &raw_len, &msg_id);
+            re15_msgtakt_r41_takt_ende();     /* Runde 41 Spur E */
             if (live) {
                 /* Render the raw .msg body with the real TEX.TIM glyph font in the
                  * per-speaker colour (0x05 code → CLUT row), at the RE'd box origin
@@ -7805,6 +7809,7 @@ re_title:;
                     }
                 }
                 re15_pc_fx_takt();
+                re15_msgtakt_r41_nach_spieltakt();   /* Runde 41 Spur E: Restore hinter dem Spiel-Takt wie @0x80010044 (Original: auch hinter dem Modal @0x8001ce34; ohne Wirkung, das Port-Modal liest g_pauseflags nicht - re15_msgtakt_r41.h) */
                 /* ITEM-GET-MODAL-FSM — NACH dem Spieler-Step, byte-true zur Frame-Ordnung des
                  * Originals (Hauptloop FUN_8001c6e8: Dispatcher @0x8001ce0c `jal 0x80031c44` ->
                  * ... -> Modal-FSM @0x8001ce34 `jal 0x8001db28`; selbst nachdisassembliert
@@ -11450,7 +11455,12 @@ re_title:;
                   re15_render_pc_request_readback(p);
               } } }
 
-        re15_render_end_frame();
+        re15_msgtakt_r41_nach_spieltakt();   /* Runde 41 Spur E: Absicherung (Bild ohne Spiel-Takt) */
+        { extern void re15_render_pc_bild_halten(void);   /* Runde 41 Spur E: Apply-Bild @0x80021560 - kein DrawOTag, kein Pufferwechsel */
+          extern void re15_render_pc_standbild(int bilder, uint32_t budget_ms, unsigned bild_nr);   /* NB4: Dauer @0x80021d2c/@0x80021e34 */
+          if (md1_ok && re15_kamerahalt_r41_haelt((unsigned)g_current_room_id)) { re15_render_pc_bild_halten();
+              re15_render_pc_standbild(re15_kamerahalt_r41_standbilder(), frame_budget_ms, (unsigned)g_engine.frame_count); }
+          else re15_render_end_frame(); }
         pc_cut_sync_log();   /* Messschiene RE15_CUT_SYNC_LOG (env-gegatet, kein Verhalten) */
 
         /* DEBUG-HARNESS: RE15_EXIT_AT="<bild>[#<raum-hex>]" beendet den Prozess am ENDE des
@@ -11512,6 +11522,7 @@ re_title:;
             if (elapsed < budget && last_tick != 0) {
                 SDL_Delay(budget - elapsed);
             }
+            { extern void re15_render_pc_standbild_warten(void); re15_render_pc_standbild_warten(); }   /* Runde 41 Spur E NB4: Apply-Dauer */
             last_tick = SDL_GetTicks();
         }
         /* AUTO-SCREENSHOT for ablauf diff (2026-05-24). When env

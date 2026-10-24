@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "re15_player.h"
+#include "re15_plcloop_r41.h"   /* Runde 41 Spur E: Spieler-Clip-Ende im Kommandowort 4 (plcloop_r41.c) */
+#include "re15_rennstopp_r41.h"  /* Runde 41 Spur E: Renn-Tempo + Renn-Stopp (rennstopp_r41.c) */
 #include "re15_elza_r39.h"   /* Runde 39 Spur H: Eintritts-Latch vs. Kommandowort 4 (@0x80041bb0) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"   /* WELLE B: RE2-Flavor-Gates im Anim-Advancer (Clip-Pin-Konflikte) */
@@ -863,6 +865,7 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         p->motion_init_delay--;
     } else {
         p->anim_frame++;
+        re15_plcloop_r41_takt(p);   /* Runde 41 Spur E: Clip-Ende im Kommandowort 4 - Schleife +0x1c4&4 / Halten (re15_plcloop_r41.h) */
         if (p->anim_frac > 0) p->anim_frac--;
         /* W-bank clips are ONE-SHOTS (raise/hold/recoil hold their terminal pose): clamp after
          * the advance so the render's %fc wrap can never replay them. Uses LAST tick's clip
@@ -973,7 +976,8 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         /* Byte-true turn rate (see the constants block): TURNING IN PLACE (no forward/back) pivots at
          * 96/frame (DAT_80073ee5, MEASURED); turning WHILE walking forward curves at 48 (DAT_80073ea5).
          * The old model used walk/run (CROSS) here — that was wrong and made in-place pivots half-speed. */
-        int turn_rate = !moving ? TURN_RATE_IN_PLACE_PER_FRAME
+        const int s2_41 = re15_rennstopp_r41_unterzustand2(p, RE15_MOTION_RUN);   /* Runde 41 Spur E: Unterzustand 2 dreht mit 72 (0x80032604 @0x80032620-@0x800326a0) */
+        int turn_rate = s2_41 ? TURN_RATE_RUN_PER_FRAME : !moving ? TURN_RATE_IN_PLACE_PER_FRAME
                                 : (run ? TURN_RATE_RUN_PER_FRAME : TURN_RATE_WALK_PER_FRAME);
         if (pad_bits & RE15_PAD_BIT_LEFT)  yaw_delta -= turn_rate;
         if (pad_bits & RE15_PAD_BIT_RIGHT) yaw_delta += turn_rate;
@@ -985,7 +989,7 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * die Lauf-Drehung darf dann nicht zusaetzlich wirken. Vorher liefen beide: -96 (Stehen,
          * Rate @0x80073ee4) + 24 (Rueckstoss, falsches Vorzeichen) = -72 je Bild statt -24. */
         int zielt_schon = ((pad_bits & RE15_PAD_BIT_R1) != 0) || (s_player_aim_phase != RE15_AIM_NONE);
-        if (yaw_delta != 0 && !zielt_schon) {
+        if (yaw_delta != 0 && (!zielt_schon || s2_41)) {   /* Runde 41 Spur E: im Unterzustand 2 auch mit R1 (Drehen @0x80032620 vor Zielen @0x80032708) */
             p->rot_y = (int16_t)((int)p->rot_y + yaw_delta);
         }
 
@@ -1005,6 +1009,11 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * RELOAD->READY->next-tick-LOWER is the same observable order). Raise/slash/reload
          * themselves never test R1 and play out first. */
         int r1_held = (pad_bits & RE15_PAD_BIT_R1) != 0;
+        int rs41;   /* Runde 41 Spur E: Renn-Stopp 0x80032604/0x80032778 (re15_rennstopp_r41.h): 1 Stopp-Bild, 2 Gehen @0x80032738 */
+        { extern int re15_player_equipped_weapon(void);
+          rs41 = re15_rennstopp_r41_takt(p, pad_bits, RE15_MOTION_RUN, RE15_MOTION_IDLE, RUN_SPEED_PER_FRAME,
+                                         re15_player_equipped_weapon() != 0);
+          if (rs41 == 1) { r1_held = 0; move_dir = 0; } else if (rs41 == 2) run = 0; }
         if (!r1_held && s_player_aim_phase != RE15_AIM_NONE &&
             s_player_aim_phase != RE15_AIM_LOWER) {
             int enter_lower = 0;
@@ -1260,8 +1269,10 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                 re15_audio_weapon_se(3);                            /* 0x01030001 @0x80033ec8-d4 */
             }
             s_idle_phase = -1;
+        } else if (rs41 == 1) { want_motion = p->motion;   /* Runde 41 Spur E: Stopp-Bild, Stehen-FSM erst nach dem Stopp (@0x80032958 -> 0x80032038 Fall 0) */
         } else if (move_dir > 0) {
-            if (run) { want_motion = RE15_MOTION_RUN;  speed = RUN_SPEED_PER_FRAME;  }
+            if (run) { want_motion = RE15_MOTION_RUN;  speed = re15_rennstopp_r41_lauftempo(p, p->motion != RE15_MOTION_RUN,   /* Runde 41 Spur E: */
+                           (int)p->rot_y - ((yaw_delta != 0 && (!zielt_schon || s2_41)) ? yaw_delta : 0), RUN_SPEED_PER_FRAME); }   /* Fussweg-Tempo @0x800328cc-@0x800328f4 */
             else     { want_motion = RE15_MOTION_WALK; speed = WALK_SPEED_PER_FRAME; }
             s_idle_phase = -1;
         } else if (move_dir < 0) {
@@ -1368,6 +1379,7 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
             p->anim_frac = 7;   /* crossfade into the dialog idle stance (FUN_8001f3bc) */
         }
         p->walk_active = 0;
+        re15_rennstopp_r41_halten();   /* Runde 41 Spur E NB4: Nachricht ohne Spieler-Bit ist keine Uebernahme (re15_rennstopp_r41.h) */
     } else if (g_scd.player_mode == 2) {
         /* 2026-06-17: SCRIPTED cutscene. The SCD drives Leon via Plc_motion/Plc_dest; if it
          * has NOT (he's still in a LEFTOVER pad-walk/run sentinel carried in from gameplay —
@@ -1378,7 +1390,9 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * (other clip ids), in-progress Plc_dest walks, and the byte-true post-walk hold are
          * all left untouched. */
         extern int re15_r39k_reach_wartet(void);   /* Runde 39 Spur K NB1: im Ankunftsbild steht die Gang-Pose (f314 @0x80030c78) */
-        if ((p->motion == 105 || p->motion == 100) && !p->walk_active && !p->anim_freeze && !re15_r39k_reach_wartet()) {
+        if (!p->walk_active && !p->anim_freeze && !re15_r39k_reach_wartet() &&   /* Runde 41 Spur E: Renn-Stopp mit leerem Pad */
+            re15_rennstopp_r41_skript(p, RE15_MOTION_RUN, RE15_MOTION_IDLE, RUN_SPEED_PER_FRAME)) {
+        } else if ((p->motion == 105 || p->motion == 100) && !p->walk_active && !p->anim_freeze && !re15_r39k_reach_wartet()) {
             p->motion = RE15_MOTION_IDLE;
             p->anim_frame = 0;
             p->motion_init_delay = 0;

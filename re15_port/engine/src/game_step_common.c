@@ -1462,6 +1462,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * @0x8001ce1c); nur die ACTION-Klasse wird ueber das Press-Flag entwaffnet — alle
      * ACTION-Fire-Pfade in aot_common.c sind auf g_aot_action_pressed gegatet. Gemessen
      * (test_action_msg_gate, vor dem Fix): Knockdown/Flinch/Tod/Aim-LOWER feuerten Examine. */
+    { extern void re15_rennstopp_r41_dispatcher(re15_actor_t *, int);   /* Runde 41 Spur E NB4: Renn-Stopp endet, wenn ein */
+      re15_rennstopp_r41_dispatcher(pl, c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PLAYER)); }   /* anderer Zweig uebernimmt */
     { extern void re15_zopf_r38_takt(int);   /* Runde 38 Spur D: Zopf im Spieler-Dispatcher hinter `bltz` @0x80031c78 */
       re15_zopf_r38_takt(c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PLAYER)); }
     { extern int re15_zustand_r39_spieler_takt(re15_actor_t *, int);   /* Runde 39 Spur F: Spieler-Takt hinter dem */

@@ -10,6 +10,7 @@
  */
 #include "re15_msg.h"
 #include "re15_scd.h"   /* g_scd — shared subtitle-tick state */
+#include "re15_msgtakt_r41.h"   /* Runde 41 Spur E */
 #include "re15_audio.h"     /* re15_audio_core_se -- die Toene der Ja/Nein-Auswahl */
 #include "re15_msg_select.h" /* re15_msg_select_blink_tick — Blink-Gatter @0x800285d4/f0 */
 #include <string.h>     /* memset — re15_msg_clear_room_block (Per-Raum-Teardown) */
@@ -381,6 +382,7 @@ void re15_dialog_open_mask(int msg_id, int blocking, uint32_t pause_mask)
      * bzw. den Examine-AOT; gemessen 2200x) und der Restore koennte den Freeze nie aufheben.
      * Die verbleibende Differenz — zweiter Text erscheint mit der Maske des ersten — braucht
      * eine eigene Runde MIT Cutscene-Regressionstests (CLAUDE.md-Lektion "Message-Clear-Fix"). */
+    re15_msgtakt_r41_vor_oeffnen();   /* Runde 41 Spur E: aufgeschobener Restore vor dem neuen Schnappschuss (@0x80027ec8) */
     re15_pauseflags_open(pause_mask);
     g_scd.message_id          = (uint8_t)msg_id;
     g_scd.message_active      = 1;
@@ -618,7 +620,8 @@ static void re15_dialog_step(void)
          * NICHT `= 0`: der Snapshot ist wichtig, weil das Item-Modal seinen eigenen
          * 0xff000000-Freeze bereits gesetzt haben kann (@0x8001dbb8/@0x8001dbc8) und der
          * Text-Close ihn nicht mitloeschen darf. */
-        re15_pauseflags_close();
+        if (!re15_msgtakt_r41_schliessen_aufschieben())   /* Runde 41 Spur E: im Hauptloop wirkt der Restore hinter dem Spiel-Takt */
+            re15_pauseflags_close();
         g_scd.message_select         = 0;
         g_scd.message_display_frames = 0;  /* msg_block (player_common.c) gates the player on
                                             * this — leaving it >0 froze Leon forever after a

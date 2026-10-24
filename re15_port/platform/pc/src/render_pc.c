@@ -878,6 +878,14 @@ void re15_render_pc_request_readback(const char *path)
     snprintf(s_readback_path, sizeof s_readback_path, "%s", path);
     s_readback_pending = 1;
 }
+/* Runde 41 Spur E: offenen Ruecklese-Auftrag abholen, fuer ein gehaltenes Bild (platform/pc/src/bildhalt_r41_pc.c). */
+int re15_render_pc_abzug_nehmen(char *pfad, int n)
+{
+    if (!s_readback_pending || !pfad || n <= 0) return 0;
+    s_readback_pending = 0;
+    snprintf(pfad, (size_t)n, "%s", s_readback_path);
+    return 1;
+}
 
 /* MESSSCHIENE: die Zeilenregion der aktiven Titelzeile zuruecklesen (s. s_trow_*). Nur mit
  * RE15_TITLE_PULSE_LOG. Logische Koordinaten -> Ausgabepixel ueber Viewport und Massstab des
@@ -1685,6 +1693,7 @@ void re15_render_end_frame(void)
      * RE15_FBDUMP wiederum dumpt nur die 2D-Ebene (BG-Blit), NICHT die ueber
      * SDL_RenderGeometry gezeichneten 3D-Props. Dieser Haken liefert beides zusammen.
      * Rein env-/aufruf-gegatet; der Normalpfad ist unberuehrt. */
+    { extern void re15_bildhalt_r41_merken(int auftrag); re15_bildhalt_r41_merken(s_readback_pending); }   /* Runde 41 Spur E: Abzug fuer gehaltene Bilder (nur mit Rueckleser) */
     if (s_readback_pending) {
         s_readback_pending = 0;
         int rw = 0, rh = 0;
