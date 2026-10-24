@@ -20,7 +20,7 @@
  *
  *   Sub 0x12/0x16 = 0x80052508 KANTE (Phasen +0x6 ueber @0x800112e4):
  *     [0] @0x80052548  +0x8c=0x4b, +0x6=1, +0x94=5, +0x95=0, +0x8f=7                         -> faellt in [1]
- *     [1] @0x80052598  (Schritt-SE: Bildwort & 0x4000 -> FUN_80045630, s. OFFEN) anim_set(+0x170,+0x174,0,0x200)
+ *     [1] @0x80052598  (Schritt: Bildwort & 0x4000 -> FUN_80045630 @0x800525d4, Runde 41 Spur A) anim_set(+0x170,+0x174,0,0x200)
  *                      @0x800525f0; Kurs rasten @0x80052604-2c (Bit 0x200 ? +((k>>2)&0xff) : -((k>>2)&0xff));
  *                      (Kurs & 0x3e0) == 0 @0x80052644 -> +0x6 = 2 @0x80052650; dann +0x9f == 2 @0x80052660-68
  *                      -> +0x5 = (+0x5 == 0x12) ? 0x18 : 0x17, +0x6 = 0 @0x80052670-850
@@ -55,6 +55,7 @@
 #include "re15_room.h"
 #include "re15_scd.h"
 #include "re15_skeleton.h"     /* re15_cos_q12 / re15_sin_q12 */
+#include "re15_wassersprung_r41.h"   /* Runde 41 Spur A: NPC-Schritt FUN_80045630 im Kanten-Sub [1] */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -215,6 +216,7 @@ static void sub_kante(re15_actor_t *e, int s)
         clip_start(e, RE15_NPK_KANTE_CLIP_RAST, 1);             /* +0x94=5 / +0x95=0 / +0x8f=7 @0x80052570-594 */
         /* fall through */
     case 1:                                                     /* @0x80052598 */
+        (void)re15_wassersprung_r41_npc_takt(e, 0);             /* Runde 41 Spur A: Schritt @0x80052598-d4 (a0 = 0 @0x800525bc) */
         (void)clip_schritt(e, 0);                               /* anim_set(+0x170,+0x174) @0x800525f0 */
         kurs_rasten(e);                                         /* @0x80052604-2c */
         if ((((int)(uint16_t)e->rot_y) & 0x3e0) == 0) {         /* @0x80052644-48 */

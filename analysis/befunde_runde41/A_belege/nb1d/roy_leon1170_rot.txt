@@ -1,0 +1,35 @@
+# integration_r37_roy_leon1170 am Stand d77bf72a (Kette integ1.log): ROT
+12/17 Test  #774: integration_r37_roy_leon1170 .............***Failed   91.19 sec
+-- r37_roy[leon1170]:
+== spur 1170 (C:/workspace/git/reAi_v2/.claude/worktrees/r41_wasser20b0/re15_port/build/r37_roy_wd/lauf_leon1170_9af4e5cc/anim.log) ==
+  ok: Spur lesbar
+  ok: Elliot: 383 Spurzeilen (Uhr != Bild in 297 Zeilen = Leon-Stand vor Runde 37, unveraendert)
+  ok: Elliot-Geste Clip 15 = 20 Bilder (RBJ-REC0 auf ELLIOT, 281/281 Zeilen)
+  FEHLER: Elliot Clip 2 = 52 Bilder (EM047-Bank 1 CDEMD0) bzw. INIT-Pose Loco Clip 2 Bild 0 (@0x8011d978): 6/56 Zeilen, davon INIT-Pose 6
+test_r37_roy spur: FEHLER (1 Fehler)
+
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_wasser20b0/re15_port/tests/integration/test_r37_roy.cmake:31 (message):
+  r37_roy[leon1170]: Spur-Auswertung exit=1
+  (C:/workspace/git/reAi_v2/.claude/worktrees/r41_wasser20b0/re15_port/build/r37_roy_wd/lauf_leon1170_9af4e5cc)
+Call Stack (most recent call first):
+  C:/workspace/git/reAi_v2/.claude/worktrees/r41_wasser20b0/re15_port/tests/integration/test_r37_roy.cmake:70 (fail)
+
+# anim.log desselben Laufs (lauf_leon1170_9af4e5cc), Zeilen Typ 71 (0x47) Clip 2, Spalten: bild aktor typ motion clip fc cur slot fc_uhr loco rev
+884 1 71 2 2 50 0 0 50 1 0
+885 1 71 2 2 50 0 0 50 1 0
+886 1 71 2 2 50 0 0 50 1 0
+887 1 71 2 2 50 0 0 50 1 0
+888 1 71 2 2 50 0 0 50 1 0
+889 1 71 2 2 50 0 0 50 1 0
+890 1218860271 71 2 2 50 0 0 50 0 0
+890 1218860271 71 2 2 50 1 1 50 0 0
+890 1218860271 71 2 2 50 2 2 50 0 0
+890 1218860271 71 2 2 50 3 3 50 0 0
+...
+890 1218860271 71 2 2 50 44 44 50 0 0
+890 1218860271 71 2 2 50 45 45 50 0 0
+890 1218860271 71 2 2 50 46 46 50 0 0
+890 1218860271 71 2 2 50 47 47 50 0 0
+890 1218860271 71 2 2 50 48 48 50 0 0
+890 1218860271 71 2 2 50 49 49 50 0 0
+... (50 Zeilen im Bild 890 mit Aktor-Index 1218860271 = Stapel-Aktor der PORT-WAHL-Ableitung, cur 0..49)

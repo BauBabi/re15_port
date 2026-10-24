@@ -1,0 +1,20 @@
+Kennlinie exakter Framebuffer tf_7 (Takt 47, Cut 12, oberer Puffer) -> Videobild o045 (Rohindex), Region rechte Wand x 220..320:
+  FB G   0.. 15: n= 1245 -> Video G mittel 14.0
+  FB G  16.. 31: n= 5344 -> Video G mittel 25.1
+  FB G  32.. 47: n= 5163 -> Video G mittel 35.0
+  FB G  48.. 63: n= 2698 -> Video G mittel 52.9
+  FB G  64.. 79: n= 1834 -> Video G mittel 70.1
+  FB G  80.. 95: n= 1678 -> Video G mittel 88.9
+  FB G  96..111: n= 2063 -> Video G mittel 102.0
+  FB G 112..127: n= 2089 -> Video G mittel 117.0
+  FB G 128..143: n= 1349 -> Video G mittel 130.2
+  FB G 144..159: n=  452 -> Video G mittel 144.7
+  FB G 160..175: n=   81 -> Video G mittel 152.0
+Wolkenregion x 60..200 / y 70..170: CLUT-Texel im FB -> Video:
+  FB (32, 41, 24) (n=906) -> Video mittel (70.2, 75.5, 63.5)
+  FB (57, 65, 49) (n=826) -> Video mittel (73.5, 79.4, 67.0)
+  FB (65, 74, 57) (n=393) -> Video mittel (79.0, 85.1, 72.7)
+  FB (82, 90, 74) (n=308) -> Video mittel (79.1, 84.7, 72.2)
+  FB (98, 106, 90) (n=236) -> Video mittel (84.2, 91.3, 78.0)
+  FB (123, 131, 115) (n=40) -> Video mittel (66.8, 70.8, 58.4)
+gruenlich (G>=thr, G>R+8, G>B+8, R>60) in der Wolkenregion: FB G>=100: 21, G>=150: 5 | Video G>=100: 1477, G>=150: 271

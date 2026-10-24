@@ -1,0 +1,15 @@
+('stempel', 'orig') 20
+('stempel', 'retail') 138
+('stempel', 'stumm') 106
+('trocken/boden', 'orig') 15
+('trocken/boden', 'retail') 257
+('trocken/boden', 'stumm') 8
+stumm ohne Stempel: 8
+   ROOM6030 0x17 a0=0 fuss=7 npc[15] pl[23]
+   ROOM6030 0x17 a0=0 fuss=4 npc[15] pl[23]
+   ROOM6030 0x17 a0=1 fuss=7 npc[16] pl[24]
+   ROOM6030 0x17 a0=1 fuss=4 npc[16] pl[24]
+   ROOM6031 0x17 a0=0 fuss=7 npc[15] pl[23]
+   ROOM6031 0x17 a0=0 fuss=4 npc[15] pl[23]
+   ROOM6031 0x17 a0=1 fuss=7 npc[16] pl[24]
+   ROOM6031 0x17 a0=1 fuss=4 npc[16] pl[24]

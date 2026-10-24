@@ -36,6 +36,8 @@
 #include "re15_room.h"       /* g_room_rdt / g_room_rdt_ok / g_current_room_id — Trace */
 #include "re15_scd.h"
 #include "re15_skeleton.h"
+#include "re15_wasser_r38.h"        /* Runde 41 Spur A: re15_wasser_r38_stempel (Landungs-Gate) */
+#include "re15_wassersprung_r41.h"  /* Runde 41 Spur A: Landungs-Spritzer @0x80038758-cc */
 
 extern scd_vm_t g_scd;
 
@@ -553,9 +555,11 @@ static void climb_sub10(const re15_rdt_t *rdt, re15_actor_t *p,
         s_frac  = 0; p->anim_frac = 0;          /* @0x80038720 `sb zero,-13597(at)` = +0x8f = 0
                                                  * (fehlte; wirkte bisher nicht, weil der Decay
                                                  * ganz fehlte und +0x8f auf 7 stand) */
+        { int32_t t_y = p->y;                   /* Entity-Matrix +0x20: zuletzt gezeichnete Lage (vor @0x8003872c) */
         p->y = (int32_t)s_floor_y;              /* @0x80038724-2c */
         p->hit_react &= (uint8_t)0xfe;          /* @0x80038748-54 */
-        /* @0x80038758-cc der Landestaub (FUN_80019700 x8) = OPEN (siehe Dateikopf) */
+        /* Runde 41 Spur A: @0x80038758-cc = der WASSER-Spritzer (8 x FUN_80019700(0x06033000), nur Stempel < y) */
+        (void)re15_wassersprung_r41_landung(p, re15_wasser_r38_stempel(), t_y); }
         /* fallthrough */
     case 5:                                     /* @0x800387d4 */
         anim_sample(p);

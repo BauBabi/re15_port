@@ -4693,11 +4693,16 @@ re_title:;
      * parity from the (fuzzy vgamepad) input-replay. Reusable parity tool (memory: parity-oracle). */
     {
         const char *pp = getenv("RE15_PLAYER_POS");
-        int px = 0, pz = 0, prot = 0;
-        if (pp && *pp && sscanf(pp, "%d,%d,%d", &px, &pz, &prot) >= 2) {
+        int px = 0, pz = 0, prot = 0, pband = -1;
+        int pn = (pp && *pp) ? sscanf(pp, "%d,%d,%d,%d", &px, &pz, &prot, &pband) : 0;
+        if (pn >= 2) {
             g_actors[RE15_ACTOR_SLOT_PLAYER].x     = px;
             g_actors[RE15_ACTOR_SLOT_PLAYER].z     = pz;
             g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = (int16_t)prot;
+            if (pn >= 4 && pband >= 0) {   /* Runde 41 Spur A: 4. Wert = Band wie am Debug-Sprung (Runde 33): y = -Band*0x708 */
+                g_actors[RE15_ACTOR_SLOT_PLAYER].y     = -pband * 0x708;
+                g_actors[RE15_ACTOR_SLOT_PLAYER].floor = (uint8_t)pband;
+                re15_collision_set_band(pband); }
             fprintf(stderr, "[parity] player teleported to (%d,%d) rot=%d\n", px, pz, prot);
         }
     }
@@ -9749,8 +9754,12 @@ re_title:;
                 /* RE1.5 character shadow for this NPC — FUN_8001b064 is called
                  * PER-ENTITY (corners from param_1+0xc/+0xe), so each on-stage
                  * actor gets one. Actor-position center + CAMERA-yaw rotation
-                 * (same corrected scheme as the player). Gecullt: kein Schatten (wie bisher). */
-                if (!npc_region_culled) {
+                 * (same corrected scheme as the player). Gecullt: kein Schatten (wie bisher).
+                 * Runde 41 Spur A: der Schatten ist KEIN Automatismus des Zeichners, sondern ein Aufruf aus dem
+                 * Typ-Code des Overlays (`jal 0x8001b064`, z.B. Feuer-Emitter 0x26 @0x80116740; STAGE2.BIN: 8 Stellen
+                 * 0x80100500/0x8010a9a4/0x8010c550/0x80110b50/0x80115870/0x80115e40/0x80116404/0x801169cc). Der
+                 * EM024-Code 0x8010ee9c..0x80110a00 (Flut 20B0/20B1) ruft ihn NIE -> kein Schatten fuer Typ 0x24. */
+                if (!npc_region_culled && npc->type != 0x24u) {
                     /* byte-true actor-yaw shadow matrix = RotMatrixY(npc->rot_y) via the trig LUT. */
                     int32_t nyaw[9];
                     re15_camera_yaw_matrix_angle(npc->rot_y, nyaw);
