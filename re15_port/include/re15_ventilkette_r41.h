@@ -27,6 +27,12 @@
  *   Nachtrag 13: das echte Ventilraetsel — Dokument mit dem Nutzer-Text ("These amateurs ... They mixed up black, green,
  *                and red, and swapped the numbers for black! ..."), ein Plakat mit der Anleitung, "nur eben genau falsch
  *                entsprechend dem Dokument" (Nachbesserung 4, Dossier §0e).
+ *   Nachtrag 16 (ersetzt Nachtrag 10): "einen zweiten Sicherungskasten ... ausserhalb des Raumes, wo man die Sicherung
+ *                zuerst einsetzen muss. Macht man das geht die Kamera auf die Ventile und man hoert ein unlock geraeusch
+ *                ... Ist sie raus, sollen die valves wieder blockiert werden ... im ROOM 2010" (Nachbesserung 5, §0f).
+ *   Nachtrag 18: Plakat im Stil des Spiels; 2050-Hebel gehen beim Umlegen runter; Ventil-Dreh-Animation aus RE2;
+ *                Timer der 60 s + Alarm + Sprachausgabe beim Warntext.
+ *   Nachtrag 19: Text 46 = "WARNING: The water will rise in one minute. Please leave the room immediately!"
  *
  * Dossier: analysis/befunde_runde41/C_ventilkette.md (RE-Belege §1, Umsetzung §3). Kein Asset-Patch: die RDTs
  * bleiben byte-true; alles hier wird nach dem Init-Lauf des Raums angelegt (scd_room_setup.c / main.c Boot-Weg).
@@ -193,11 +199,16 @@
 #define RE15_R41C_BIT_PULT2050       106   /* 2050: Schaltpult auf 80 V                                     */
 #define RE15_R41C_BIT_DOKUMENT       107   /* 2030: "Technician's Note" genommen (Taken-Bit, Nachbesserung 4; bis Nachtrag 7
                                             * "2080-Rechner -> 2030 leer", seitdem frei; Zensus bank9_zensus.py original+port) */
+#define RE15_R41C_BIT_KASTEN        125   /* 2010: Sicherung steckt im Ventil-Sicherungskasten (Nachtrag 16 Folge 5: 107 ist
+                                            * belegt -> naechstes freies Bit nach Zensus: bank9_zensus.py original "FREI im
+                                            * Original ... 110..133", port ohne Zugriff auf 125; 110-124 sind F/G/E/J/K
+                                            * zugeteilt; VERTRAG 1.1 nachgetragen, k_port[] in test_r36_kartenbits.c) */
 /* Original-Bits, die die Kette liest (Belege im Kopf): */
 #define RE15_R41C_STROM_BANK         3
 #define RE15_R41C_STROM_BIT          126   /* (3,0x7E) Generator 2060: Set nur sub01 @0x012AE, Leser 2030 sub01 @0x01E14 */
 #define RE15_R41C_SICHERUNG_BANK     3
 #define RE15_R41C_SICHERUNG_BIT      108   /* (3,0x6C) Sicherung aufgehoben: Set nur 2030 sub06 @0x01FF2            */
+#define RE15_R41C_GENERATOR_BIT      144   /* (3,0x90) Sicherung im Generator-Kasten 2060: Set nur sub19 @0x0169E    */
 /* Zustand von 2030 nach der Flut (Messhaken re15_ventilkette_r41_zustand_2030) */
 #define RE15_R41C_2030_TROCKEN       0     /* Bit 103 = 0                                                    */
 #define RE15_R41C_2030_GEFLUTET      1     /* Bit 103 = 1, (3,126) = 0: Wasser y -7200, Ring gesperrt         */
@@ -208,6 +219,7 @@
 #define RE15_R41C_RAUM_2010   0x2010u
 #define RE15_R41C_RAUM_2030   0x2030u
 #define RE15_R41C_RAUM_2050   0x2050u
+#define RE15_R41C_RAUM_2060   0x2060u
 #define RE15_R41C_RAUM_2070   0x2070u
 #define RE15_R41C_RAUM_20B0   0x20B0u
 #define RE15_R41C_RAUM_1260   0x1260u
@@ -225,8 +237,16 @@
 /* Nachbesserung 3: Id 48 (frueher "valves are open ... flooded") und 49 (frueher "... drained", Bit 107) neu belegt —
  * nach der Flut liegen die Ventile unter Wasser (Nachtrag 9), den Zustand waehrend des Zaehlers zeigt die Warnung 46. */
 #define RE15_R41C_MSG_TREPPE_FLUT     48   /* Treppe Slot 8 bei "auf Relinghoehe" (Nachtrag 8) */
-#define RE15_R41C_MSG_VENTILE_VORHER  49   /* Ventile ohne Bruecke/Sicherung (Nachtraege 9/10; Wortlaut Nachtrag 13 Folge 1) */
+#define RE15_R41C_MSG_VENTILE_VORHER  49   /* Ventile ohne Bruecke (Nachtrag 9) oder ohne Kasten-Sicherung (Nachtrag 16): seit
+                                            * Nachbesserung 5 = Original "It's locked." (ROOM20A0 msg 1 @0x203C, Nachtrag 16
+                                            * Folge 4 "neutraler Text ohne look around") */
 #define RE15_R41C_MSG_VENTIL0         50   /* 50..55 = Frage an Ventil 01/02/03/07/08/09 (VERTRAG 1.2, Nachtrag 13 Folge 6) */
+/* 2010/2011 Ventil-Sicherungskasten (Nachtrag 16, VERTRAG 1.2 Ids 40-44): 41/42/44 sind Original-Saetze (Scheiben). */
+#define RE15_R41C_MSG_KASTEN_LEER     40   /* "A fuse box for the valve controls." | ROOM2060 msg 3 @0x1833        */
+#define RE15_R41C_MSG_KASTEN_FRAGE    41   /* = ROOM2060 msg 4 @0x1855 "Will you use the Fuse? "                    */
+#define RE15_R41C_MSG_KASTEN_BENUTZT  42   /* = ROOM2060 msg 5 @0x1875 "You've used the Fuse."                      */
+#define RE15_R41C_MSG_KASTEN_DRIN     43   /* ROOM2060 msg 6 @0x1892 | ROOM2030 msg 2 @0x208B (Frage)              */
+#define RE15_R41C_MSG_KASTEN_GENOMMEN 44   /* = ROOM2030 msg 3 @0x20AC "You've taken the Fuse."                     */
 #define RE15_R41C_MSG_HEBEL_OHNE      40   /* 2050 */
 #define RE15_R41C_MSG_PULT_FRAGE      41   /* = ROOM11F0 msg 1 "Will you push them? " @0x18D8 */
 #define RE15_R41C_MSG_PULT_OK         42   /* = ROOM11F0 msg 2 "Power supply OK." @0x18F1     */
@@ -257,6 +277,7 @@
 #define RE15_R41C_EV_2050_KISTEN 2  /* sub01 @0x0201A -> sub02 @0x0220E (Hebel mit den Kisten im Becken) */
 #define RE15_R41C_EV_2050_PULT  9   /* Original-Ereignis des Pults (main00 @0x01D38)  */
 #define RE15_R41C_EV_2050_AUS  10   /* Original sub10 = Ausstieg aus dem Pult          */
+#define RE15_R41C_EV_KASTEN    20   /* 2010: Ventil-Sicherungskasten (2010 hat nur sub00..sub03) */
 
 /* ---- Plaetze 2030 (frei: 0-3 Tueren, 4-7 Lifte, 8 Treppe, 9 Sicherung, 10/11 Items, 51-63 RVD) --------------- */
 #define RE15_R41C_SLOT_PULT      12
@@ -265,6 +286,16 @@
 #define RE15_R41C_SLOT_DOKUMENT  20   /* Item-Zone "Technician's Note"                                 */
 #define RE15_R41C_SLOT_PLAKAT    21   /* Untersuchen des Plakats                                       */
 #define RE15_R41C_SLOT_2000_LEITER 4   /* main00 @0x0169E */
+/* 2010 Ventil-Sicherungskasten (Nachbesserung 5, Nachtrag 16, Dossier §0f B5-1): Lage = der Schaltschrank mit dem kleinen
+ * Anzeigefeld (3 x 3 Tasten) an der Ostwand im Hintergrund ROOM2010 Cut 3 (BSS-Bild x 229..252 y 66..86, Rueckprojektion auf
+ * die Ostwand x 5400 = Innenkante SCA Zelle 3 (5400,-9550,2000,16650) -> Mitte z -2770, y -2650..-2970). Platz in der Form
+ * des Original-Kastens ROOM2060 Slot 9 @0x010A6 (1400 x 1000, die lange Seite an der Wand): x 4400..5400, z -3470..-2070,
+ * Band 0 (alle Plaetze von 2010 tragen Band 0, main00 @0x00746..@0x007D0). Platz 8 = erster freier (0-7 belegt). */
+#define RE15_R41C_SLOT_KASTEN      8
+#define RE15_R41C_KASTEN_RECT      4400, -3470, 1000, 1400
+#define RE15_R41C_KASTEN_BAND      0
+#define RE15_R41C_SLOT_2060_KASTEN 9   /* ROOM2060 sub00 @0x010A6/@0x010C6/@0x010DE (Sicherungskasten des Generators) */
+#define RE15_R41C_MSG_2060_FEHLT   3   /* ROOM2060 msg 3 "One of the fuses is missing..." (Else-Zweig @0x010A6) */
 #define RE15_R41C_SLOT_2030_OSTTUER 0  /* main00 @0x01ACA */
 #define RE15_R41C_SLOT_2050_PULT  8    /* main00 @0x01D38 */
 #define RE15_R41C_SLOT_2030_TREPPE 8   /* main00 @0x01B8E sce 12 (Band 0x80) */
@@ -303,6 +334,25 @@
 #define RE15_R41C_FLAG_GEDREHT    0x1B   /* Handshake Programm -> C-Takt (Ja auf die Ventil-Frage)              */
 #define RE15_R41C_FLAG_PLAKAT     0x1C   /* Plakat-Nahaufnahme offen                                           */
 #define RE15_R41C_SE_FEHLER       0x0B   /* RE2 ROOM2130 sub04 @0x01800 `36 02 0b 01` (Bank PANEL2130, Satz 0x0B) */
+#define RE15_R41C_FLAG_TON        0x1A   /* 2030: Ventil-Ton jetzt (Programm statt RE2 se_on(2,5) @0x02168..)    */
+#define RE15_R41C_FLAG_STANDBILD  0x1F   /* 2010: Standbild der Ventile offen (2010/2011 benutzen Bank 5 nicht)   */
+/* Ventil-Dreh-Animation (Nachbesserung 5, Nachtrag 18 Punkt 3, Dossier §0f B5-3): RE2 ROOM1080 (Hubschrauber-Landeplatz,
+ * msg 0 @0x267A "A water pressure valve") sub08 @0x0210A..@0x0221E, Clips 15/16/17 aus dem RBJ @0x39AC derselben RDT
+ * (13128 B, 1 Record, EMR 15 Knochen x 80 B, EDD 19 Clips: 15 = 30, 16 = 50, 17 = 40 Bilder) = shared_assets/RE2/
+ * VENTIL1080.RBJ; Ton = RE2 ROOM1080 snd0 Satz 5 (EDT-Eintrag `00 00 54 16`) = shared_assets/RE2/VENTIL1080.EDT/.VH/.VB
+ * (tools/r41_ventilkette/re2_ventil_export.py, bytegleich mit der RDT). Abstand Spieler - Wandflaeche 816 = RE2 pos_set
+ * @0x02116 (z -21250) bis zur SCA-Flaeche in Blickrichtung (Element 12, z -22066). */
+#define RE15_R41C_VENTIL_RBJ_RAUM 0x1080u   /* RE2-Quellraum (nur Protokoll/Riegel)                                 */
+#define RE15_R41C_DREH_ABSTAND    816
+#define RE15_R41C_DREH_CLIP0      15       /* RBJ Clip 15 Hand zum Rad, 16 fassen, 17 Drehtakt                    */
+#define RE15_R41C_VENTIL_SE       5        /* RE2 ROOM1080 snd0 Satz 5 (se_on `36 02 05 01 ...` @0x02168)          */
+/* Toene, die der C-Takt ueber den Plattform-Haken spielt (PC: platform/pc/src/ventilkette_r41_pc.c). */
+#define RE15_R41C_TON_VENTIL      1        /* RE2 ROOM1080 Satz 5 (Bank VENTIL1080)                                */
+#define RE15_R41C_TON_AUF         2        /* RE2 "You unlocked it." Satz 0x26 (EXE @0x800515f8; KARTSE AUF_HIER)  */
+/* Standbild beim Einsetzen (Nachtrag 16 Folge 2 "Kamera auf die Ventile"): die Ventil-Kamera der Suedwand ROOM2030 Cut 7
+ * (Raeder 09/08/07 + Plakat, Dossier §0e B4-2), BSS/ROOM2030/BG07.BSS (= ROOM2031/BG07.BSS bytegleich). */
+#define RE15_R41C_STANDBILD_RAUM  0x2030u
+#define RE15_R41C_STANDBILD_CUT   7
 /* Dokument (Nachbesserung 4, Nachtrag 13 Folge 2; Dossier §0e B4-4). */
 #define RE15_R41C_DOK_NR          6      /* re15_files.c s_docs[6]                                           */
 #define RE15_R41C_DOK_ITEM        0x4E   /* 0x48 + 6 (RE2 @0x80071d04, RE1.5-Basis u8 @0x800c7370)          */
@@ -450,5 +500,11 @@ int      re15_ventilkette_r41_drehungen(void);                    /* vermerkte D
 int      re15_ventilkette_r41_folge(int i);                       /* Ventil-Index der Drehung i oder -1               */
 int      re15_ventilkette_r41_plakat_offen(void);                 /* 1 = Nahaufnahme offen                            */
 int      re15_ventilkette_r41_ventil_nummer(int i);               /* 1, 2, 3, 7, 8, 9                                 */
+/* Nachbesserung 5 */
+int      re15_ventilkette_r41_standbild(unsigned *raum, int *cut);  /* 1 = Standbild der Ventile offen (2010), Quelle   */
+unsigned re15_ventilkette_r41_ton_zaehler(int ton);               /* gespielte Toene je RE15_R41C_TON_* (Riegel)      */
+int      re15_ventilkette_r41_ventil_rbj(unsigned room_id);       /* 1 = Raum bindet das RE2-RBJ VENTIL1080 (2030/2031) */
+/* Plattform-Haken fuer die Toene (PC setzt ihn; ohne Haken nur gezaehlt). */
+extern void (*re15_ventilkette_r41_ton_hook)(int ton);
 
 #endif /* RE15_VENTILKETTE_R41_H */

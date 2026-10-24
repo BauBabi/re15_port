@@ -244,14 +244,13 @@ TEXTE = [
     ("2030", 45, "ventile_zurueck", [["The valves turned back", "to their original position."]], False, None,
      "PORT-WAHL (Nachbesserung 4, Nachtrag 13 Folge 4: falsche Reihenfolge -> zurueckgesetzt; Form ROOM11F0 sub17 "
      "@0x016C0..@0x016E4 Schalterbits := 0, RE2 ROOM2130 sub04 @0x017D6/@0x01800 Meldung + Fehlerton)"),
-    ("2030", 46, "warnung", [["WARNING: The water will rise", "in one minute. Leave the room!"]], False, None,
-     "NUTZER-VORGABE (sinngemaess: \"Warnung, dass das Wasser in einer Minute steigt und man den Raum verlassen soll\")"),
+    ("2030", 46, "warnung", [["WARNING: The water will rise", "in one minute. Please leave", "the room immediately!"]], False, None,
+     "NUTZER-VORGABE Nachtrag 19 (AUFTRAG.md 2026-10-24 19:55) woertlich: \"WARNING: The water will rise in one minute. "
+     "Please leave the room immediately!\" - nur umbrochen: drei Zeilen auf EINER Seite wie ROOM10D0 msg 17 @0x21BD (zwei "
+     "0x08 in einer Seite), jede Zeile <= 286 px = breiteste Original-Zeile (ROOM1070 msg 1, Breiten DEBUG.BIN @0x4416)"),
     ("2030", 47, "ventil13_zustand", [["Intake valve 13 is open."]], False, None, "PORT-WAHL, Zustandssatz"),
     ("2030", 48, "treppe_flut", [["I cannot go down the stairs", "because of the water."]], False, None,
      "PORT-WAHL (Nachbesserung 3, Nachtrag 8: unterer Bereich nach dem Strom geflutet und gesperrt), Form der Leiter-Vorgabe Id 40"),
-    ("2030", 49, "ventile_vorher", [["I should look around here first."]], False, None,
-     "Nachtrag 13 Folge 1 (Vorschlag des Orchestrators woertlich: kein Wissen, das der Spieler nicht haben kann; Gate der "
-     "Nachtraege 9/10 bleibt: Bruecke unten UND Sicherung aufgehoben)"),
     ("2030", 50, "ventil_01", [["Valve 01, black wheel.", "Will you turn it"]], True, None,
      "PORT-WAHL (Nachtrag 13 Folge 4; Nummer + Farbe aus dem Hintergrund, Dossier §0e B4-2), Frageform ROOM2050 msg 0 @0x2446"),
     ("2030", 51, "ventil_02", [["Valve 02, green wheel.", "Will you turn it"]], True, None, "PORT-WAHL wie Id 50"),
@@ -272,6 +271,79 @@ TEXTE = [
 ]
 
 
+# Nachbesserung 5 (Nachtrag 16): Ventil-Sicherungskasten ROOM2010/2011 (VERTRAG 1.2: 2010/2011 Ids 40-44).
+# Zusammengesetzte Saetze in der Mehrseiten-Form ROOM2060 msg 0 @0x1766 / ROOM2080 msg 0 @0x0CF8 (Seiten `02 00`,
+# Frage-Schluss `1b 03 02 01 00`): je Teil entweder PORT-Text oder der KOERPER einer Original-Nachricht (ohne Kopf
+# `04 02` und ohne `01 00`). Ids 41/42/44 sind reine Original-Saetze (Scheiben unten, kein Eintrag hier).
+ZUSAMMEN = [
+    ("2010", 40, "kasten_leer",
+     [("PORT", ["A fuse box for the valve controls."]),
+      ("ORIG", "STAGE2/ROOM2060.RDT", 0x01833, 34, "One of the fuses is missing...")],
+     "PORT-WAHL Seite 1 (Nachtrag 16: Kasten benennen, kein erfundenes Wissen) + Seite 2 = ROOM2060 msg 3 @0x1833 "
+     "woertlich (der Original-Kasten 2060 ohne Sicherung, Aot_set Slot 9 @0x010A6)"),
+    ("2010", 43, "kasten_drin",
+     [("ORIG", "STAGE2/ROOM2060.RDT", 0x01892, 25, "The fuse is in place."),
+      ("ORIG", "STAGE2/ROOM2030.RDT", 0x0208B, 33, "Will you take the Fuse?")],
+     "Seite 1 = ROOM2060 msg 6 @0x1892 (Kasten mit Sicherung, @0x010DE), Seite 2 = ROOM2030 msg 2 @0x208B (Frage der "
+     "Original-Sicherung, sub06 @0x01FE4) - beide woertlich"),
+]
+
+
+def koerper(datei, off, n):
+    b = open(os.path.join(CD, datei), "rb").read()[off:off + n]
+    assert b[:2] == bytes([0x04, 0x02]), (datei, hex(off), b[:4].hex())
+    if b[-5:] == bytes([0x1B, 0x03, 0x02, 0x01, 0x00]):      # Frage-Schluss (ROOM2060 msg 0 @0x17BF)
+        return b[2:], True
+    assert b[-2:] == bytes([0x01, 0x00]), (datei, hex(off), b[-6:].hex())
+    return b[2:-2], False
+
+
+def zusammensetzen(teile):
+    out = bytearray([0x04, 0x02])
+    frage = False
+    for i, t in enumerate(teile):
+        if i:
+            out += bytes([0x02, 0x00])
+        if t[0] == "PORT":
+            out += kodieren([t[1]])[2:-2]
+        else:
+            k, frage = koerper(t[1], t[2], t[3])
+            assert not frage or i == len(teile) - 1, "Frage nur als letzter Teil"
+            out += k
+    if not frage:
+        out += bytes([0x01, 0x00])
+    return bytes(out), frage
+
+
+# Zeilenbreite: Vorschub je Glyphe = DEBUG.BIN @0x4416 (RAM 0x800c4416, FUN_80028868; render_pc.c s_msgfont_w).
+# Grenze 286 px = breiteste Zeile aller Original-Nachrichten (ROOM1070/1071 msg 1, gemessen ueber 2435 Zeilen).
+BREITE_MAX = 286
+
+
+def zeilenbreiten(b):
+    w = open(os.path.join(CD, "BIN", "DEBUG.BIN"), "rb").read()[0x4416:0x4416 + 256]
+    aus, cur, i = [], 0, 0
+    while i < len(b):
+        c = b[i]
+        if c == 0x01 or c == 0x03:
+            break
+        if c in (0x02, 0x04, 0x05, 0x06, 0x09, 0x0A, 0x0B):
+            if c == 0x02:
+                aus.append(cur); cur = 0
+            i += 2
+            continue
+        if c == 0x07:
+            i += 1
+            continue
+        if c == 0x08:
+            aus.append(cur); cur = 0; i += 1
+            continue
+        cur += w[c]
+        i += 1
+    aus.append(cur)
+    return aus
+
+
 def texte():
     zeilen = ["/* AUTOMATISCH ERZEUGT von re15_port/tools/r41_ventilkette/gen_r41_ventilkette.py - nicht von Hand aendern.",
               " * Port-Nachrichten der Ventilkette (Runde 41 Spur C). Glyphen = msg_common.c re15_msg_glyph (umgekehrt),",
@@ -285,7 +357,23 @@ def texte():
         soll = " | ".join(" / ".join(s) for s in seiten) + ("?" if frage else "")
         assert txt == soll and f == frage, (name, txt, soll, f, frage)
         sym = "re15_r41c_msg_%s_%d_%s" % (raum, mid, name)
-        zeilen.append("/* ROOM%s Id %d \"%s\" - %s */" % (raum, mid, soll, herkunft))
+        br = zeilenbreiten(b)
+        assert max(br) <= BREITE_MAX, (name, br)
+        zeilen.append("/* ROOM%s Id %d \"%s\" - %s (Zeilen %s px <= %d) */" % (raum, mid, soll, herkunft,
+                                                                                "/".join(str(x) for x in br), BREITE_MAX))
+        zeilen.append(inc_array(sym, b, 24))
+        zeilen.append("")
+        tabelle.append((raum, mid, sym, len(b)))
+    for raum, mid, name, teile, herkunft in ZUSAMMEN:
+        b, frage = zusammensetzen(teile)
+        txt, f = dekodieren(b)
+        soll = " | ".join(t[4] if t[0] == "ORIG" else " / ".join(t[1]) for t in teile)
+        assert txt == soll and f == frage, (name, txt, soll, f, frage)
+        br = zeilenbreiten(b)
+        assert max(br) <= BREITE_MAX, (name, br)
+        sym = "re15_r41c_msg_%s_%d_%s" % (raum, mid, name)
+        zeilen.append("/* ROOM%s Id %d \"%s\" - %s (Zeilen %s px <= %d) */" % (raum, mid, soll, herkunft,
+                                                                                "/".join(str(x) for x in br), BREITE_MAX))
         zeilen.append(inc_array(sym, b, 24))
         zeilen.append("")
         tabelle.append((raum, mid, sym, len(b)))
@@ -334,6 +422,15 @@ SCHEIBEN = [
      "ROOM11F0 msg 1 @0x18D8 \"Will you push them? \" - 25 B"),
     ("STAGE1/ROOM11F0.RDT", 0x018F1, 0x18, "re15_r41c_org_11f0_msg2",
      "ROOM11F0 msg 2 @0x18F1 \"Power supply OK.\" - 24 B"),
+    # Nachbesserung 5 (Nachtrag 16): Original-Saetze fuer den Ventil-Sicherungskasten 2010 und das gesperrte Ventil 2030.
+    ("STAGE2/ROOM2060.RDT", 0x01855, 0x20, "re15_r41c_org_2060_msg4",
+     "ROOM2060 msg 4 @0x1855 \"Will you use the Fuse? \" (Frage, Kasten 2060 sub18 @0x0167E) - 32 B = 2010 Id 41"),
+    ("STAGE2/ROOM2060.RDT", 0x01875, 0x1D, "re15_r41c_org_2060_msg5",
+     "ROOM2060 msg 5 @0x1875 \"You've used the Fuse.\" (sub19 @0x016C8) - 29 B = 2010 Id 42"),
+    ("STAGE2/ROOM2030.RDT", 0x020AC, 0x1E, "re15_r41c_org_2030_msg3",
+     "ROOM2030 msg 3 @0x20AC \"You've taken the Fuse.\" (sub06 @0x02000) - 30 B = 2010 Id 44"),
+    ("STAGE2/ROOM20A0.RDT", 0x0203C, 0x10, "re15_r41c_org_20a0_msg1",
+     "ROOM20A0 msg 1 @0x203C \"It's locked.\" - 16 B = 2030 Id 49 (Ventil ohne Kasten-Sicherung, Nachtrag 16 Folge 4)"),
 ]
 
 

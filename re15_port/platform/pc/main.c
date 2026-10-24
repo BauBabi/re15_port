@@ -4294,6 +4294,8 @@ re_title:;
      * (platform/pc/src/cut10f0_pc.c; NULL = keine Leihe). */
     { uint8_t *kb = rbj_buf ? NULL : re15_cut10f0_pc_rbj_leihen(boot_room, &rbj_size);
       if (kb) { rbj_buf = kb; rbj_borrowed = 1; } }
+    { extern uint8_t *re15_ventilkette_r41_pc_rbj(unsigned, int *);   /* Runde 41 Spur C: 2030/2031 -> RE2 ROOM1080 RBJ */
+      uint8_t *vb = rbj_buf ? NULL : re15_ventilkette_r41_pc_rbj(boot_room, &rbj_size); if (vb) { rbj_buf = vb; rbj_borrowed = 1; } }
     if (rbj_buf && !rbj_borrowed) re15_entladen_rbj_halten(rbj_buf, rbj_size, boot_room);   /* Runde 35 Spur I (N2): frei an jeder Grenze */
     fprintf(stderr, "[rbj] loading cinematic bank: %s (%d bytes%s)\n",
             rbj_path, rbj_size, rbj_borrowed ? ", from RDT@0x5C" : "");
@@ -5602,15 +5604,8 @@ re_title:;
             } else {
                 re15_bg_blit(0, 0);
             }
-            { int vx0, vy0, vw, vh;   /* Runde 41 Spur C: Zeiger (rot) + Hebelmarken (gruen) des 2050-Pults, Cut 15 (re15_ventilkette_r41.h) */
-              if (re15_ventilkette_r41_sicht(0, &vx0, &vy0, &vw, &vh)) re15_render_tile(vx0, vy0, vw, vh, 0, 208, 24, 40);
-              for (int vn = 1; vn <= 4; vn++)
-                  if (re15_ventilkette_r41_sicht(vn, &vx0, &vy0, &vw, &vh)) re15_render_tile(vx0, vy0, vw, vh, 0, 40, 200, 60); }
-            { extern void re15_render_pc_show_fmv(const uint32_t *rgba, int w, int h); extern void re15_render_pc_hide_fmv(void);
-              static int s_r41c_plakat = 0;   /* Runde 41 Spur C (Nachbesserung 4): Plakat-Nahaufnahme 2030 ueber die Vollbild-Ebene */
-              const uint32_t *r41c_pr = re15_ventilkette_r41_plakat_rgba();
-              if (r41c_pr) { re15_render_pc_show_fmv(r41c_pr, 320, 240); s_r41c_plakat = 1; }
-              else if (s_r41c_plakat) { re15_render_pc_hide_fmv(); s_r41c_plakat = 0; } }
+            { extern void re15_ventilkette_r41_pc_bild(void);   /* Runde 41 Spur C: 2050-Pult, Plakat 2030, Standbild 2010 */
+              re15_ventilkette_r41_pc_bild(); }                 /* (platform/pc/src/ventilkette_r41_pc.c)                 */
             /* DER ROTE LEISTUNGS-ZEIGER des Boiler-Room-Bedienfelds (ROOM11F0, Cut 10).
              * Direkt nach dem Hintergrund und vor dem 3D-Pass, weil er zur ANZEIGE des
              * Bedienfelds gehoert (die Skala selbst steckt im BSS). Er liegt bei x 282,
@@ -8309,6 +8304,8 @@ re_title:;
                              * leihen (platform/pc/src/cut10f0_pc.c; NULL = keine Leihe). */
                             { uint8_t *kb = (rbuf && rsz > 0) ? NULL : re15_cut10f0_pc_rbj_leihen(dest_room, &rsz);
                               if (kb) { rbuf = kb; rbj_borrowed = 1; } }
+                            { extern uint8_t *re15_ventilkette_r41_pc_rbj(unsigned, int *);   /* Runde 41 Spur C: 2030/2031 -> RE2 ROOM1080 RBJ */
+                              uint8_t *vb = (rbuf && rsz > 0) ? NULL : re15_ventilkette_r41_pc_rbj(dest_room, &rsz); if (vb) { rbuf = vb; rbj_borrowed = 1; } }
                             if (rbuf && rsz > 0) {
                                 re15_entladen_rbj_halten(rbj_borrowed ? NULL : rbuf, rsz, dest_room);   /* Runde 35 Spur I (N2) */
                                 s_rbj_room = dest_room;

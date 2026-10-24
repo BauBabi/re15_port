@@ -4,6 +4,9 @@
  *
  * Nachbesserung 4 (Nachtraege 12/13): Pegel mit Strom knapp unter der Absperrung (y -5350), das echte Ventilraetsel
  * (sechs Ventile, Reihenfolge, falsch -> zurueck), Dokument "Technician's Note" und Plakat mit der falschen Anleitung.
+ * Nachbesserung 5 (Nachtraege 16/18/19, Abnahme 4): Ventil-Sicherungskasten ROOM2010 (Bit (9,125)) statt der "look
+ * around"-Sperre, Standbild der Ventile + Aufschliess-Ton beim Einsetzen, Ventil-Dreh-Animation aus RE2 ROOM1080 sub08,
+ * Text 46 im Wortlaut des Nutzers; Plakat waehrend Zaehler/Flut gesperrt (Abnahme 4 Mangel 2).
  * Herleitung, Belege und alle Konstanten: include/re15_ventilkette_r41.h; Dossier
  * analysis/befunde_runde41/C_ventilkette.md. Kein Asset-Patch: die RDTs bleiben byte-true. Die Port-Programme
  * (SCD-Bytecode, jede Zeile mit Vorbild) liegen in gen/ventilkette_r41_programme.inc, die Texte in
@@ -69,6 +72,12 @@ static int      s_falsch_offen = 0;             /* falsche Folge -> Ereignis 27 
 static int      s_plakat_offen = 0;
 static int      s_plakat_takte = 0;
 static int      s_dok_vorher = -1;              /* Flanke von Bit 107 (Protokoll der Ablage)                    */
+/* Nachbesserung 5 */
+static int      s_standbild_offen = 0;          /* 2010: Standbild der Ventile (2030 Cut 7) offen                */
+static int      s_standbild_takte = 0;
+static unsigned s_ton_n[3];                     /* gespielte Toene je RE15_R41C_TON_* (Riegel)                   */
+static int      s_kasten_vorher = -1;           /* Flanke von Bit 125 (Protokoll)                                 */
+void (*re15_ventilkette_r41_ton_hook)(int ton) = NULL;
 
 static const int     k_ventil_nr[RE15_R41C_VENTILE_N]     = RE15_R41C_VENTIL_NUMMERN;
 static const int32_t k_ventil_x[RE15_R41C_VENTILE_N]      = RE15_R41C_VENTIL_X;
@@ -85,6 +94,14 @@ static int bit(int b) { return re15_game_flag_get(RE15_R41C_BANK, (uint8_t)b) ? 
 static void bit_setzen(int b) { re15_game_flag_set(RE15_R41C_BANK, (uint8_t)b, 1); }
 static int strom(void) { return re15_game_flag_get(RE15_R41C_STROM_BANK, RE15_R41C_STROM_BIT) ? 1 : 0; }   /* (3,126) @0x012AE */
 static int sicherung(void) { return re15_game_flag_get(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT) ? 1 : 0; } /* (3,108) @0x01FF2 */
+static int generator(void) { return re15_game_flag_get(RE15_R41C_SICHERUNG_BANK, RE15_R41C_GENERATOR_BIT) ? 1 : 0; } /* (3,144) @0x0169E */
+
+/* Ton ueber den Plattform-Haken (PC: platform/pc/src/ventilkette_r41_pc.c); gezaehlt wird immer (Riegel). */
+static void ton(int t)
+{
+    if (t >= 1 && t <= 2) s_ton_n[t]++;
+    if (re15_ventilkette_r41_ton_hook) re15_ventilkette_r41_ton_hook(t);
+}
 
 /* Zustand von 2030 nach der Flut (Nachbesserung 3, Nachtraege 7/8): haengt direkt am Original-Bit (3,126), das nur
  * ROOM2060 sub01 @0x012AE setzt und kein Skript loescht (Zensus, Kopf). */
@@ -111,6 +128,14 @@ const uint8_t *re15_ventilkette_r41_text(uint16_t room_id, uint8_t id, int *out_
             if (out_len) *out_len = re15_r41c_texte[i].n;
             return re15_r41c_texte[i].b;
         }
+    {   /* Nachbesserung 5: Original-Saetze (Scheiben, gen/ventilkette_r41_original.inc) */
+        const uint8_t *o = NULL; int n = 0;
+        if (gruppe == RE15_R41C_RAUM_2010 && id == RE15_R41C_MSG_KASTEN_FRAGE)    { o = re15_r41c_org_2060_msg4; n = (int)sizeof re15_r41c_org_2060_msg4; }
+        if (gruppe == RE15_R41C_RAUM_2010 && id == RE15_R41C_MSG_KASTEN_BENUTZT)  { o = re15_r41c_org_2060_msg5; n = (int)sizeof re15_r41c_org_2060_msg5; }
+        if (gruppe == RE15_R41C_RAUM_2010 && id == RE15_R41C_MSG_KASTEN_GENOMMEN) { o = re15_r41c_org_2030_msg3; n = (int)sizeof re15_r41c_org_2030_msg3; }
+        if (gruppe == RE15_R41C_RAUM_2030 && id == RE15_R41C_MSG_VENTILE_VORHER)  { o = re15_r41c_org_20a0_msg1; n = (int)sizeof re15_r41c_org_20a0_msg1; }
+        if (o) { if (out_len) *out_len = n; return o; }
+    }
     if (gruppe == RE15_R41C_RAUM_2050 && id == RE15_R41C_MSG_PULT_FRAGE) {
         if (out_len) *out_len = (int)sizeof re15_r41c_org_11f0_msg1; return re15_r41c_org_11f0_msg1; }
     if (gruppe == RE15_R41C_RAUM_2050 && id == RE15_R41C_MSG_PULT_OK) {
@@ -130,6 +155,13 @@ static void texte_einsetzen(uint16_t room_id)
         text_einsetzen(RE15_R41C_MSG_PULT_FRAGE, re15_r41c_org_11f0_msg1, (int)sizeof re15_r41c_org_11f0_msg1);
         text_einsetzen(RE15_R41C_MSG_PULT_OK,    re15_r41c_org_11f0_msg2, (int)sizeof re15_r41c_org_11f0_msg2);
     }
+    if (gruppe == RE15_R41C_RAUM_2010) {   /* Nachbesserung 5 (Nachtrag 16): Kasten, Original-Saetze 2060/2030 */
+        text_einsetzen(RE15_R41C_MSG_KASTEN_FRAGE,    re15_r41c_org_2060_msg4, (int)sizeof re15_r41c_org_2060_msg4);
+        text_einsetzen(RE15_R41C_MSG_KASTEN_BENUTZT,  re15_r41c_org_2060_msg5, (int)sizeof re15_r41c_org_2060_msg5);
+        text_einsetzen(RE15_R41C_MSG_KASTEN_GENOMMEN, re15_r41c_org_2030_msg3, (int)sizeof re15_r41c_org_2030_msg3);
+    }
+    if (gruppe == RE15_R41C_RAUM_2030)      /* Nachbesserung 5: Ventil ohne Kasten-Sicherung = "It's locked." */
+        text_einsetzen(RE15_R41C_MSG_VENTILE_VORHER, re15_r41c_org_20a0_msg1, (int)sizeof re15_r41c_org_20a0_msg1);
 }
 
 /* ---- Programme --------------------------------------------------------------------------------------------- */
@@ -415,6 +447,32 @@ static void install_2030(uint16_t room_id, const re15_rdt_t *rdt)
     tueren_umlenken(room_id);
 }
 
+/* Nachbesserung 5 (Nachtrag 16): der Ventil-Sicherungskasten in ROOM2010/2011 (Lage/Form im Kopf). Vor UND nach der Flut
+ * erreichbar (2000 bzw. 20B0 Slot 2 -> 2010), kein Softlock. */
+static void install_2010(uint16_t room_id)
+{
+    texte_einsetzen(room_id);
+    const int32_t r[4] = { RE15_R41C_KASTEN_RECT };
+    if (ereignis_platz(RE15_R41C_SLOT_KASTEN, r[0], r[1], r[2], r[3], RE15_R41C_KASTEN_BAND, RE15_R41C_EV_KASTEN))
+        LOG("[ventilkette41] ROOM%04X: Ventil-Sicherungskasten Slot %d (x %d..%d z %d..%d), Sicherung %s\n", (unsigned)room_id,
+            RE15_R41C_SLOT_KASTEN, (int)r[0], (int)(r[0] + r[2]), (int)r[1], (int)(r[1] + r[3]),
+            bit(RE15_R41C_BIT_KASTEN) ? "steckt (Bit 125)" : "fehlt");
+    tueren_umlenken(room_id);
+}
+
+/* Nachbesserung 5 (Nachtrag 16 Folge 3): steckt die Sicherung im Ventilkasten 2010, hat der Spieler sie nicht - der
+ * Generator-Kasten 2060 zeigt dann den Satz seines Else-Zweigs @0x010A6 (Text 3 "One of the fuses is missing...") statt
+ * Ereignis 18 (@0x010C6, sub18 "Will you use the Fuse?"). Nach dem Herausnehmen (Bit 125 = 0) gilt wieder das Original. */
+static void install_2060(uint16_t room_id)
+{
+    if (!bit(RE15_R41C_BIT_KASTEN) || generator()) return;
+    re15_aot_t *a = &g_aot.slots[RE15_R41C_SLOT_2060_KASTEN];
+    if (!a->active) return;
+    sperrtext(RE15_R41C_SLOT_2060_KASTEN, RE15_R41C_MSG_2060_FEHLT);
+    LOG("[ventilkette41] ROOM%04X: Sicherung steckt im Ventilkasten 2010 (Bit 125) -> Generator-Kasten Slot 9 = Text 3 (@0x010A6)\n",
+        (unsigned)room_id);
+}
+
 static void install_2050(uint16_t room_id)
 {
     texte_einsetzen(room_id);
@@ -442,8 +500,11 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
     s_ventil_gewaehlt = -1; s_ventile_geloest = 0; s_falsch_offen = 0; s_plakat_offen = 0; s_plakat_takte = 0;
+    s_standbild_offen = 0; s_standbild_takte = 0;
     for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
+    if (ist(room_id, RE15_R41C_RAUM_2010))            /* Nachbesserung 5: ROOM2010/2011 benutzen Bank 5 nicht (scd_dump_room.py) */
+        re15_game_flag_set(5, RE15_R41C_FLAG_STANDBILD, 0);
     if (ist(room_id, RE15_R41C_RAUM_2030)) {          /* nur der eigene Raum (Nachbesserung 1, M3): anderswo sind
                                                        * (5,0x1D)/(5,0x1E) Original-Bits, z. B. ROOM1171 sub02 @0x013B2
                                                        * `22 05 1e 01` im Init-Takt (Kraehen DIVE-ARM @0x801155e8) */
@@ -452,16 +513,20 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
         for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) re15_game_flag_set(5, (uint8_t)(RE15_R41C_FLAG_DREHUNG0 + i), 0);
         re15_game_flag_set(5, RE15_R41C_FLAG_GEDREHT, 0);  /* Nachbesserung 4: Ventile + Plakat */
         re15_game_flag_set(5, RE15_R41C_FLAG_PLAKAT, 0);
+        re15_game_flag_set(5, RE15_R41C_FLAG_TON, 0);      /* Nachbesserung 5: Ventil-Ton */
     }
     s_v13_vorher = bit(RE15_R41C_BIT_VENTIL13);
     s_dok_vorher = bit(RE15_R41C_BIT_DOKUMENT);
+    s_kasten_vorher = bit(RE15_R41C_BIT_KASTEN);
     s_letzter_raum = room_id;
 
     if (ist(room_id, RE15_R41C_RAUM_2000) || ist(room_id, RE15_R41C_RAUM_20B0)) install_2000(room_id);
     else if (ist(room_id, RE15_R41C_RAUM_2030)) install_2030(room_id, rdt);
     else if (ist(room_id, RE15_R41C_RAUM_2050)) install_2050(room_id);
     else if (ist(room_id, RE15_R41C_RAUM_2070)) install_2070(room_id);
-    else if (ist(room_id, RE15_R41C_RAUM_2010) || ist(room_id, RE15_R41C_RAUM_1260))
+    else if (ist(room_id, RE15_R41C_RAUM_2010)) install_2010(room_id);     /* Nachbesserung 5: + Ventilkasten */
+    else if (ist(room_id, RE15_R41C_RAUM_2060)) install_2060(room_id);     /* Nachbesserung 5: Generator-Kasten */
+    else if (ist(room_id, RE15_R41C_RAUM_1260))
         tueren_umlenken(room_id);
 }
 
@@ -472,6 +537,8 @@ void re15_ventilkette_r41_reset(void)
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
     s_ventil_gewaehlt = -1; s_ventile_geloest = 0; s_falsch_offen = 0; s_plakat_offen = 0; s_plakat_takte = 0;
+    s_standbild_offen = 0; s_standbild_takte = 0; s_kasten_vorher = -1;
+    for (int i = 0; i < 3; i++) s_ton_n[i] = 0;
     for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
 }
 
@@ -487,12 +554,14 @@ const uint8_t *re15_ventilkette_r41_ereignis(uint16_t room_id, uint8_t event_id)
             name = bit(RE15_R41C_BIT_VENTIL13) ? "2030_v13_zustand" : "2030_v13_frage";
         else if (event_id >= RE15_R41C_EV_VENTIL0 && event_id < RE15_R41C_EV_VENTIL0 + RE15_R41C_VENTILE_N &&
                  !bit(RE15_R41C_BIT_FLUT_GELAUFEN)) {
-            /* Nachbesserung 4 (Nachtrag 13): ein Ventil. Nachtraege 9/10: erst mit gesenkter Bruecke (Bit 102) UND
-             * aufgehobener Sicherung ((3,108), Setzer 2030 sub06 @0x01FF2), vorher Satz 49; waehrend des Zaehlers (und
-             * zwischen der richtigen Folge und dem Zaehlerstart) die Warnung erneut. Nach der Flut gibt es die Plaetze nicht. */
+            /* Nachbesserung 4 (Nachtrag 13): ein Ventil. Nachtrag 9: erst mit gesenkter Bruecke (Bit 102); Nachtrag 16
+             * (ersetzt Nachtrag 10): nur solange die Sicherung im Ventil-Sicherungskasten 2010 steckt (Bit 125), sonst
+             * Satz 49 = Original "It's locked."; waehrend des Zaehlers (und zwischen der richtigen Folge und dem
+             * Zaehlerstart) die Warnung erneut. Nach der Flut gibt es die Plaetze nicht. */
             s_ventil_gewaehlt = event_id - RE15_R41C_EV_VENTIL0;
             name = (s_timer || s_ventile_geloest) ? "2030_ventile_laeuft"
-                 : (bit(RE15_R41C_BIT_BRUECKE_UNTEN) && sicherung()) ? k_ventil_prog[s_ventil_gewaehlt] : "2030_ventile_vorher";
+                 : (bit(RE15_R41C_BIT_BRUECKE_UNTEN) && bit(RE15_R41C_BIT_KASTEN)) ? k_ventil_prog[s_ventil_gewaehlt]
+                 : "2030_ventile_vorher";
         }
         else if (event_id == RE15_R41C_EV_FLUT && s_ventile_geloest && !s_timer)
             name = "2030_ventile_flut";                        /* vom C-Takt nach der richtigen Folge */
@@ -500,8 +569,16 @@ const uint8_t *re15_ventilkette_r41_ereignis(uint16_t room_id, uint8_t event_id)
             s_falsch_offen = 0;
             name = "2030_ventile_falsch";                      /* vom C-Takt nach vier Drehungen in falscher Folge */
         }
-        else if (event_id == RE15_R41C_EV_PLAKAT && !s_plakat_offen && !bit(RE15_R41C_BIT_FLUT_GELAUFEN))
-            name = "2030_plakat";
+        else if (event_id == RE15_R41C_EV_PLAKAT && !s_plakat_offen && !bit(RE15_R41C_BIT_FLUT_GELAUFEN) &&
+                 !s_timer && !s_ventile_geloest && !s_flut)
+            name = "2030_plakat";   /* Abnahme 4 Mangel 2: waehrend Zaehler/Flut kein Plakat (deren Pad-Sperre bleibt) */
+    } else if (ist(room_id, RE15_R41C_RAUM_2010)) {
+        /* Nachbesserung 5 (Nachtrag 16): Ventil-Sicherungskasten - Zustaende wie der Original-Kasten 2060 sub00
+         * @0x0109E..@0x010DE: steckt (Bit 125) -> Text + Frage zum Herausnehmen; aufgehoben ((3,108)) und nicht im
+         * Generator ((3,144)) -> Frage zum Einsetzen; sonst nur der Text "One of the fuses is missing...". */
+        if (event_id == RE15_R41C_EV_KASTEN)
+            name = bit(RE15_R41C_BIT_KASTEN) ? "2010_kasten_drin"
+                 : (sicherung() && !generator()) ? "2010_kasten_frage" : "2010_kasten_leer";
     } else if (ist(room_id, RE15_R41C_RAUM_2050)) {
         /* Hebel-Platz Slot 6: Ereignis 4 (sub00 @0x01E28 -> sub04 @0x022E6) UND Ereignis 2 (Kisten im Becken, sub01
          * @0x0201A -> sub02 @0x0220E, Speed -20 For 180 @0x0227C) heben das Wasser -> beide erst nach dem Pult
@@ -683,8 +760,12 @@ static void plakat_tick(void)
     if (s_plakat_takte > 1 && (g_scd_pad_edge & 0xC000u)) {
         s_plakat_offen = 0;
         re15_game_flag_set(5, RE15_R41C_FLAG_PLAKAT, 0);
-        re15_game_flag_set(2, 7, 0);                                     /* Form ROOM1051 sub03 @0x00DD2 */
-        re15_game_flag_set(2, 2, 0);                                     /* Form ROOM11F0 sub17 @0x016EC */
+        /* Abnahme 4 Mangel 2: nur die EIGENE Sperre zuruecknehmen - laeuft die Flut (deren Programm setzt (2,7)/(2,2)
+         * selbst, sub-Form ROOM2030 sub02 @0x01E30), bleibt sie stehen. */
+        if (!s_flut && !re15_game_flag_get(5, RE15_R41C_FLAG_FLUT)) {
+            re15_game_flag_set(2, 7, 0);                                 /* Form ROOM1051 sub03 @0x00DD2 */
+            re15_game_flag_set(2, 2, 0);                                 /* Form ROOM11F0 sub17 @0x016EC */
+        }
         LOG("[ventilkette41] Plakat-Nahaufnahme zu (nach %d Bildern)\n", s_plakat_takte);
     }
 }
@@ -711,6 +792,38 @@ const uint32_t *re15_ventilkette_r41_plakat_rgba(void)
     return NULL;
 #endif
 }
+
+/* ---- 2010 Ventilkasten (Nachbesserung 5): Standbild der Ventile ab dem Marker, zu mit der Bestaetigen-/Abbrechen-Flanke -- */
+static void kasten_tick(void)
+{
+    const int k = bit(RE15_R41C_BIT_KASTEN);
+    if (s_kasten_vorher >= 0 && k != s_kasten_vorher)
+        LOG("[ventilkette41] Ventil-Sicherungskasten 2010: Sicherung %s -> Bit (9,125) = %d\n", k ? "eingesetzt" : "genommen", k);
+    s_kasten_vorher = k;
+    if (!s_standbild_offen) {
+        if (!re15_game_flag_get(5, RE15_R41C_FLAG_STANDBILD)) return;
+        s_standbild_offen = 1; s_standbild_takte = 0;
+        ton(RE15_R41C_TON_AUF);                                          /* RE2 Satz 0x26 im selben Bild (@0x800515f8) */
+        LOG("[ventilkette41] Standbild der Ventile offen (ROOM2030 Cut %d) + Aufschliess-Ton\n", RE15_R41C_STANDBILD_CUT);
+        return;
+    }
+    s_standbild_takte++;
+    if (s_standbild_takte > 1 && (g_scd_pad_edge & 0xC000u)) {        /* wie die Plakat-Nahaufnahme (@0x80028698) */
+        s_standbild_offen = 0;
+        re15_game_flag_set(5, RE15_R41C_FLAG_STANDBILD, 0);             /* das Programm laeuft weiter (While-Ende) */
+        LOG("[ventilkette41] Standbild der Ventile zu (nach %d Bildern)\n", s_standbild_takte);
+    }
+}
+
+int re15_ventilkette_r41_standbild(unsigned *raum, int *cut)
+{
+    if (!s_standbild_offen || !ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2010)) return 0;
+    if (raum) *raum = RE15_R41C_STANDBILD_RAUM;
+    if (cut) *cut = RE15_R41C_STANDBILD_CUT;
+    return 1;
+}
+unsigned re15_ventilkette_r41_ton_zaehler(int t) { return (t >= 1 && t <= 2) ? s_ton_n[t] : 0u; }
+int re15_ventilkette_r41_ventil_rbj(unsigned room_id) { return ist((uint16_t)room_id, RE15_R41C_RAUM_2030); }
 
 int re15_ventilkette_r41_timer_laeuft(void) { return s_timer; }
 int re15_ventilkette_r41_flut_laeuft(void)  { return s_flut; }
@@ -739,6 +852,10 @@ void re15_ventilkette_r41_tick(void)
             wasser_anlegen(1, RE15_R41C_WASSER_PARK_Y, RE15_R41C_WASSER_PARK_Z);
             LOG("[ventilkette41] Zaehler laeuft: 1800 Takte, Ost-Tuer -> 20B0, Wasser geparkt\n");
         }
+        if (re15_game_flag_get(5, RE15_R41C_FLAG_TON)) {   /* Nachbesserung 5: Ventil-Ton (RE2 ROOM1080 se_on(2,5)) */
+            re15_game_flag_set(5, RE15_R41C_FLAG_TON, 0);
+            ton(RE15_R41C_TON_VENTIL);
+        }
         ventile_tick();                                  /* Nachbesserung 4: Drehungen vermerken / pruefen */
         plakat_tick();
         { const int dok = bit(RE15_R41C_BIT_DOKUMENT);  /* Ablage durch den Dokument-Leser (menu_common.c, Bit (9,107)) */
@@ -749,6 +866,8 @@ void re15_ventilkette_r41_tick(void)
         if (g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0) s_timer = 0;
     } else if (ist(room, RE15_R41C_RAUM_2050)) {
         panel_tick();
+    } else if (ist(room, RE15_R41C_RAUM_2010)) {
+        kasten_tick();                                   /* Nachbesserung 5 */
     }
 }
 

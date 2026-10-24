@@ -528,6 +528,7 @@ static const port_bit_t k_port[] = {
     { RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN, "RE15_R41C_BIT_FLUT_GELAUFEN", "Flut in 2030 gelaufen -> 2000 wird 20B0, ventilkette_r41.c install (Runde 41 C)" },
     { RE15_R41C_BANK, RE15_R41C_BIT_PULT2050,      "RE15_R41C_BIT_PULT2050",      "Schaltpult 2050 auf 80 V, ventilkette_r41.c panel_tick (Runde 41 C)" },
     { RE15_R41C_BANK, RE15_R41C_BIT_DOKUMENT,      "RE15_R41C_BIT_DOKUMENT",      "Dokument Technician's Note genommen (Taken-Bit Item 0x4E), ventilkette_r41.c install_2030 (Runde 41 C)" },
+    { RE15_R41C_BANK, RE15_R41C_BIT_KASTEN,        "RE15_R41C_BIT_KASTEN",        "Sicherung im Ventil-Sicherungskasten 2010, gen/ventilkette_r41_programme.inc Set (Runde 41 C, Nachtrag 16)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 

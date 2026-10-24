@@ -37,7 +37,8 @@ gesehen"). C und A beruehren beide 20B0 (A: Effekt EM024; C: Raumwechsel/Weg) �
 ### 1.1 Bank-9-Bits (gespeichert mit g_game.flags)
 Zensus 2026-10-23 (`re15_port/tools/r36_kartenbits/bank9_zensus.py` + Riegel `unit_r36_kartenbits`): im Original UND
 im Port frei sind u.a. 100-103, 106-107, 110-133. Zuteilung: **C = 100, 101, 102, 103, 106, 107** (Leiter frei /
-Ventil 13 / Bruecke unten / Flut gelaufen / 2050-Pult / 2080-Entleerung — im Dossier benennen), **F = 110-113**
+Ventil 13 / Bruecke unten / Flut gelaufen / 2050-Pult / 2080-Entleerung — im Dossier benennen; **+ 125** Sicherung im
+Ventil-Sicherungskasten 2010, nachgetragen von Spur C nach AUFTRAG.md Nachtrag 16 Folge 5 "naechste freie nach Zensus"), **F = 110-113**
 (Szene gesehen 110, Schluessel liegt 111, Schluessel genommen 112), **G = 114-119**, **E = 120** (nur wenn kein
 Original-Flag reicht), **J/K = 121-124** bei Bedarf, 125-133 vergibt der Orchestrator. Jedes neu belegte Bit traegt
 die Spur in `tests/unit/test_r36_kartenbits.c` k_port[] ein (eine Zeile) — 104/105 sind Original!
