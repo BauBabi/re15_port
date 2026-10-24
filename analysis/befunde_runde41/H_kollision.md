@@ -223,6 +223,28 @@ gegen p=4 obj=3 ... dX=1799 dZ=-1781`): die Kerben liegen im Raster 1900/1850, d
 bleiben 100/50 Einheiten Spiel, genau wie im Original (FUN_8002cdf4 ist dieselbe Pruefung). Fenster fuer obj 1:
 z in (-3750, z3 - 1800) (r0[0] @0x00910 sperrt die Kiste bei z < -3750, Zellentest FUN_8003b558).
 
+## Querbezug R39 J: integration_r39_dining1141_kampf (gemessen, angepasst)
+Im gezielten Lauf rot: `NB2 (a): 0 Treffer, waehrend Elza im Griff ist (gr=1); kein Fehlschuss wegen des Opferzustands (0)`.
+Mit der exe OHNE Haken (re15_pc_h41_vorher.exe) gruen (2 Treffer bei gr=1) — Ursache ist also Runde 41: John (0x49,
+Wurzel STAGE1 0x8011dc68, aec4 @0x8011dd28 / b544 @0x8011dd30) wird jetzt von einem Gorilla (Kasten 1600) in die Ecke
+geschoben (vorher (-7535,-21362), nachher (-8143,-21636) ab F3600), die Gorilla-Wege und damit die Griff-Fenster
+verschieben sich. Johns Salven kommen im festen Takt (~371 Bilder: F3446/3821/4192/4563/4934/5305), die Griffe dauern ~120
+Bilder (nachher 3561-3684, 3960-4083, 4337-4449, 4708-4820) — jede Salve liegt ~140 Bilder VOR einem Griff, keine faellt in ein
+Fenster. Kein Schuss ist am Opferzustand gescheitert; (a) ist eine Zufalls-Koinzidenz der Zeitachse. Messreihe (Elzas WARTE vor
+dem letzten GEHE, sonst unveraendert, `scratchpad dining_var`):
+
+| WARTE | vorher (ohne Haken) | nachher |
+|---|---|---|
+| 60 (bisher) | (a) 2 Treffer bei gr=1, gruen | (a) 0, rot |
+| 180 | — | (a) 0, rot |
+| 240 | (a) 3, alles gruen | (a) 3, alles gruen |
+| 300 | (a) 0 + Querungs-Wache rot (Gorilla x -7368, 1427 Bilder) | dasselbe (1416 Bilder) |
+
+Anpassung (Kommentar "Runde 41 Spur H" im Riegel): WARTE 60 -> 240, Kriterien unveraendert; der Riegel unterscheidet weiter
+(eine wiederkehrende Opferzustands-Sperre machte die Schuesse bei gr=1 zu Fehlschuessen). Nebenbefund fuer den Orchestrator
+(nicht Runde 41, mit beiden exe gleich): bei WARTE 300 steht ein Gorilla 1400 Bilder lang bei x -7368 (Wand-Grenze des Riegels
+-7100, Querungs-Wache der Spur E R39).
+
 ## Gemeinsame Dateien (Haken, je "Runde 41 Spur H")
 - `engine/src/enemy_ai_common.c`: 1 Include (hinter re15_npckante_r38.h) + 1 Zeile in re15_npc_ai_tick vor
   `re15_npc_wall_clamp` (`re15_kollision_r41_npc_schwanz(slot)`). ⛔ NICHT in der Haken-Liste der Spur H (VERTRAG §1.3
@@ -234,6 +256,7 @@ z in (-3750, z3 - 1800) (r0[0] @0x00910 sperrt die Kiste bei z < -3750, Zellente
 - `engine/src/aot_common.c`: 1 Include (hinter re15_zellschub_r36.h, nicht neben Spur A's Include) + Objekt-Pass in
   re15_prop_push_tick (3 Zeilen + berichtigter Kopfkommentar).
 - `engine/src/game_step_common.c`: 1 Include + 1 Zeile `re15_kollision_r41_objspiegel()` nach re15_objfall_nach_pass.
+- `tests/integration/test_r39_dining1141_kampf.cmake` (Riegel der Spur J R39): WARTE 60 -> 240 (s. Querbezug oben).
 - Keine Bank-9-Bits, keine Nachrichten-Ids, keine Assets, kein Eingriff in shared_assets/pri/synchro/release.
 - Messhaken (kein Spielverhalten, env): `RE15_KOLLISION_LOG=<datei>` (NPC-SCHUB / OBJEKT-GESPERRT / SETZE),
   `RE15_KOLLISION_SETZE="<obj>:<x>,<y>,<z>,<band>@<bild>"` (Objekt einmal je Raum versetzen = Gegenstueck der
