@@ -827,7 +827,10 @@ eigene Stimmen (2/3) fuer Nicht-Spieler, aber dieselbe Zeile fuer jeden Typ.
 Raumzeile wie der Spieler (eigene Stimmen 2/3). Die leeren Beta-Zeilen sind die unfertige Stelle.
 **Weg (Regel Beta -> Retail):** NPC-Schritt = Original-Index (Boden - 8), WENN das Original dort hoerbar ist (Satz belegt und
 Stimme 0..7, s.o.); SONST die Retail-Zeile a0 + (Boden & 0x7f) (FUN_8005c040 @0x8005c44c/@0x8005c458); ist auch die leer, kein
-Ton (@0x8005c470). Damit bleiben die 93 hoerbaren Original-Faelle byte-gleich, die 421 stummen bekommen den Retail-Ton.
+Ton (@0x8005c470). Damit bleiben die im Original hoerbaren Faelle byte-gleich, die stummen bekommen den Retail-Ton, wo die Raumzeile einen Ton hat (Zahlen nach der Ton-Pruefung: Nachtrag unten).
+Tondaten: keine RE2-Baenke noetig - der Retail-Weg waehlt nur die ZEILE; der Ton kommt aus der snd0-Bank des RE1.5-Raums (dieselbe
+Zeile wie Leons/Elzas Schritt auf diesem Boden). RE2_SOUND_LISTE.md geprueft: die RE2-Schrittklaenge ("All FS** files are footsteps
+in various rooms", PC-Fassung) liegen auf der PSX ebenfalls in den Raum-RDTs (snd0) - fuer RE1.5-Raeume gibt es keine RE2-Entsprechung.
 **Nachtrag zu N2.1 (Ton-Existenz):** "hoerbar" heisst im Original zusaetzlich: der Ton des Satzes hat einen VAG. SsUtKeyOnV
 @0x80059d3c liest `lhu a0,22(v0)` (VagAtr +0x16) @0x80059f2c / `sh a0,21292(at)` @0x80059f34 und keyt nur bei `bne a0,zero`
 @0x80059f8c. Erster Zensus ohne diese Pruefung: 106 Faelle "Retail", deren Zeile keinen VAG hat (meist Stempel-Zeilen 26/27 in Raeumen
