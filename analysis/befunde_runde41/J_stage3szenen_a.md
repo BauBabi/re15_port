@@ -360,6 +360,9 @@ Gezielte Laeufe (keine volle Suite; re15_pc.exe 20:31 = letzter Code-Stand, Test
   -> **`100% tests passed, 0 tests failed out of 9`** (3061 dabei noch mit RE15_FIRE_AOT)
 - `ctest --test-dir re15_port/build -R "^integration_r41_stage3szenen_a_3061$" --timeout 1200` (Ausloesen per Quadrat, §2.11)
   -> **`100% tests passed, 0 tests failed out of 1`**
+- nach der Abbruch-Haertung des Riegelskripts (exe-Kopie wird auch bei Abbruch entfernt):
+  `ctest --test-dir re15_port/build -R "^integration_r41_stage3szenen_a_" -j 2 --timeout 1200` ->
+  **`100% tests passed, 0 tests failed out of 2`** (3061 per Quadrat 61,7 s, 3060 148,0 s)
 
 ## §4 OFFEN (je mit Adresse; keiner betrifft das, was der Nutzer in 3060/3061 sieht)
 1. Super_set-Vaterarten 0x40 (Spieler), 0xc0 (Objekt) und Gegner ausserhalb State 4 (Lieferfall nur ROOM4030/4031 sub07
