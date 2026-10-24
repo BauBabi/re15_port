@@ -10,6 +10,15 @@ Begonnen 2026-10-24 11:55. Pruefer: Abnahme 3 (Opus). Der Bericht wird FORTLAUFE
 `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/C41abn3`).
 
 ## 0. Stand / Protokoll (neueste zuerst)
+* 14:0x FORTSETZUNG 3 (dritte Pruefer-Sitzung nach dem Kontowechsel; die zweite endete ~13:5x am Wochenlimit). HEAD 8d7df414,
+  seit 2fb94b25 nur `analysis/` (AUFTRAG.md +93 = E-E1..3, Nachtrag 11, I-E1/2, **Nachtrag 12 (13:11)**, **Nachtrag 13 (13:19)**;
+  VERTRAG.md 1.2 +"2030 Ids 50-55"; dieser Bericht) -> gepruefter Code-Stand unveraendert, letzter re15_port-Commit 97fb1d18 (11:01),
+  `git status --porcelain` leer. `local_build.sh build` -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)` (`<a3>/build3.txt`),
+  exe 11:03 7803557 B. Die Integrationsgruppe der zweiten Sitzung (`<a3>/ctest_integ2.txt`) wurde mit der Sitzung beendet: 14 von 16
+  Riegeln gruen, `integration_r41_ventilkette_b` gestartet 14:01 und abgebrochen (kein ctest-Prozess mehr, liegengebliebene Kopie
+  `re15_pc_r41cb_4b791565.exe` 14:01 ohne Prozess). Die zwei fehlenden Riegel (`_b`, Hauptriegel) neu gestartet 14:0x
+  (`<a3>/integ3.sh`, Protokoll `<a3>/ctest_integ3.txt`), Ergebnis §3. Nachtraege 12/13 kamen NACH dem Start dieser Abnahme (11:55)
+  und nach dem letzten Code-Commit (11:01); AUFTRAG.md ist massgeblich -> beide als Punkte bewertet (§1 N12/N13, §4, §5).
 * 12:5x FORTSETZUNG (zweite Pruefer-Sitzung, Abnahme 3; die erste endete ~12:23 am Sitzungslimit). HEAD jetzt c8655d74
   (nur `analysis/befunde_runde41/AUFTRAG.md` +27 Zeilen = Nachtrag 11 fuer Spur M, kein Code) -> gepruefter Code-Stand
   unveraendert 2fb94b25. `local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)` (Zeile 180 `_kette uebersprungen:
@@ -429,6 +438,51 @@ Aufbau wie L6, aber ohne 3:144/3:126 (Wegplan F62 `FLAG (3,126) = 0`), Start vor
 * state.txt: `fx=0` in 3937 Zeilen, `fx=1` in 104 Zeilen (der Kanal-Sprung; keine 18 Strahlen-Effekte wie in 2000 vor der Flut,
   dort fx 21..33, L1) -> nach der Flut laeuft an der Leiter kein Wasser mehr herunter.
 
+### N12 — Nachtrag 12 (13:11, NACH dem letzten Code-Commit 11:01): (k) Ruhepegel nach dem Strom, (l) Texte 48/49
+Massstab (AUFTRAG.md, Folgen Orchestrator): (k) "Wasserstand nach dem Strom: unterhalb der Absperrung, sodass es nicht drueber
+'rein' laufen wuerde" -> Pegel so hoch wie moeglich, aber UNTERHALB der Absperrung am inneren Ringrand, kein Wasser auf dem Ring;
+Absperrung aus der Geometrie belegen (SCA + Hintergrund); ist sie ein durchsichtiges Gelaender, gilt die Ringboden-Kante y -5400
+als Grenze und der Pegel liegt knapp darunter; y -3600 bleibt nur, wenn die Geometrie zeigt, dass es keinen hoeheren Pegel
+unterhalb der Absperrung gibt; Bildbeleg vorher/nachher aus den Ring-Kameras. (l) Texte 48/49 vorerst frei, 49 spaeter aendern.
+* Ist (eigene Laeufe L6 `strom`/`strom_elza`, L8 `w3`/`w3_elza`): `ROOM2030: Strom (3,126) -> Wasser auf Relinghoehe y -3600
+  (Schachtoeffnung), Treppe Slot 8 -> Sperrtext 48, Ring frei`, `[prop-render] pi=4 oid=0x04 pos=(0,-3600,0)`; Leon geht auf dem
+  Ring bei `pl pos=(-6605,-5400,-7722)` -> Wasser **1800 unter dem Ringboden**. Quelle: `RE15_R41C_WASSER_Y_RELING (-3600)` "Oberkante
+  der unteren Reling" (include/re15_ventilkette_r41.h Z. 275) = die Lesart der Nachbesserung 3 VOR der Antwort (k).
+* Absperrung am inneren Ringrand: SCA-Wandzellen 19/20/21/22 und 31/32 fl 0x33 (Band 3 = Ringebene, selbst geparst, G1); im Bild
+  (`<a3>/cuts_vorher_nachher.png` Spalte "vor der Flut" Cut 1/7, `C_belege/nb3_pegel_vorher_nachher_sheet.png` Cut 1/2/7/15) ein
+  Stabgelaender mit Handlauf, durch dessen Staebe der untere Bereich (Schilder 04/02 bzw. 09/08/07/06, Tank 13) zu sehen ist =
+  durchsichtiges Gelaender, keine Bruestung. Nach der Regel der Folgen (k) ist damit die Ringboden-Kante y -5400 die Grenze.
+  Spalte "Flut + Strom" desselben Bogens: zwischen der Wasserflaeche (-3600) und dem Ringrand (-5400) steht die Schachtwand mit den
+  Schildern frei -> es gibt hoehere Pegel unterhalb der Absperrung; **-3600 erfuellt (k) nicht**.
+* Nicht umgesetzt: kein Code-Commit nach 11:01, Dossier ohne "Nachtrag 12" (grep 0 Treffer), die Riegel pinnen weiter -3600
+  (`test_r41_ventilkette_b.cmake` Z. 250/251, `test_r41_ventilkette_weg.cmake` Z. 429/431, `test_r41_ventilkette.c` Z. 597/676);
+  kein Geometrie-/Bildbeleg der Absperrung, kein Vorher/Nachher-Bogen eines neuen Pegels.
+* (l): Text 48 gemessen (L6) `[msgtext] room=2030 id=48 "I cannot go down the stairs because of the water."` = die freigegebene
+  Fassung -> erfuellt. Text 49 (L2) unveraendert; die Release-Notes-Zeile "Zu entscheiden" gehoert zur Paketierung und ist durch
+  Nachtrag 13 Folge 1 ueberholt (49 wird ersetzt) -> N13.
+
+### N13 — Nachtrag 13 (13:19, NACH dem Bau): echtes Ventilraetsel 2030 mit Dokument und falschem Plakat ("Jetzt in v0.8.29")
+Massstab: AUFTRAG.md Nachtrag 13, Folgen 1-6 (der Platzhalter des Punkts 3 wird durch das echte Raetsel ersetzt).
+* Folge 1 (Text 49 neutral, kein Wissen, das der Spieler nicht haben kann): Ist (L2 Leon, Elza `room=2031` gleich) `[msgtext]
+  room=2030 id=49 "Numbered valves. If I turn them, this whole level will be flooded.I should look around here first."`; Tabelle
+  `gen/ventilkette_r41_texte.inc` Z. 75/76 unveraendert; gepinnt in `test_r41_ventilkette.c` Z. 323, `test_r41_ventilkette.cmake`
+  Z. 281, `test_r41_ventilkette_weg.cmake` Z. 284 -> **nicht erfuellt**.
+* Folge 2 (Dokument mit dem Nutzer-Text WOERTLICH, Leiche am Sued-Landeplatz oder Anlage, re15_files ab 0x48, Taken-Bit nach
+  RDT-Zensus): `git grep -n -i -E "amateurs|colorblind|valve instructions|mixed up black" -- re15_port` **0 Treffer**; die AOT-Liste
+  von 2030 (`<a3>/mess/kette/wegplan.txt` F65: Slots 0-14 + Kamerazonen 42-63) hat keinen Dokument-/Leichen-Platz; Bit 107 bleibt
+  frei (Unit G `bit(107) == 0`) -> **nicht erfuellt**.
+* Folge 3 (Plakat als Nahaufnahme im unteren Bereich mit der falschen Anleitung, Bild als Port-Asset): keine Nahaufnahme/kein Plakat
+  in den Dateien der Spur (grep `plakat|poster|nahaufnahme|re15_files` in ventilkette_r41.c/.h/gen: nur Bytewerte 0x48), kein
+  Bild-Asset im Diff (`git diff master...HEAD --name-only` ohne analysis/: 0 png/tim/bmp) -> **nicht erfuellt**.
+* Folge 4 (echtes Dreh-Raetsel in richtiger Reihenfolge, falsch -> zurueckgesetzt, Loesung aus Plakat + Dokument + sichtbaren
+  Ventilen eindeutig, richtig -> Warnung -> Flut): Ist = Platzhalter: ein Platz Slot 14 (Band 1, (-900,7900) halb (2500,500)) ->
+  `2030_ventile` -> `id=45 "Numbered valves. They control the flood gates of the treatment pool.Will you turn them?"` -> Ja ->
+  `id=46` -> Zaehler (L3, L3b, L3c, Leon + Elza); keine Einzel-Ventile, keine Reihenfolge, kein Zuruecksetzen; Text 45 traegt im
+  Kopf selbst "PORT-WAHL (Platzhalter des Ventilraetsels ...)" (texte.inc Z. 47) -> **nicht erfuellt**.
+* Folge 5 (Dossier §7: Plakat-Bild, Dokument-Text, Loesung + Ableitung zur Freigabe): Dossier ohne "Nachtrag 13"/"Plakat"/
+  "Dokument" -> **nicht erfuellt**. Folge 6 (Ids 2030 50-55): nicht benutzt (kein Verstoss).
+* Die Warnung/Flut/Flucht/Ertrinken hinter dem Raetsel (Punkt 3, L3/L3b/L3c) bleibt gueltig und ist weiter das, was nach der
+  richtigen Loesung laufen soll.
 ## 3. Tests (gezielt, im Spurbaum; KEINE volle Suite)
 * Unit-Gruppe (erste Sitzung 12:02, Code-Stand seither unveraendert): 166 Tests `100% tests passed, 0 tests failed out of 166`
   (`<a3>/ctest_unit.txt`); `test_r41_ventilkette.exe` direkt `PASS (376 Pruefungen)` (Leon + Elza, J1 `206 Raeume, 16 Funde`, L
