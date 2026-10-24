@@ -55,6 +55,9 @@ int re15_fussanker_r41_kette(const re15_actor_t *e, const re15_emd_skeleton_t *s
                              int kette, int32_t out[3]);                 /* feste Kette E-0-1-(2|5)-(3|6)-(4|7) */
 int re15_fussanker_r41_teil(const re15_actor_t *e, const re15_emd_skeleton_t *sk, const re15_emd_animation_t *an,
                             int part, int32_t out[3]);                    /* Part-Welt ueber die Eltern-Kette */
+/* dasselbe mit Welt-Rotation (Part+64 des Originals: Eltern-Welt x lokal ueber 0x80022da0), fuer Super_set (0x48). */
+int re15_fussanker_r41_teil_matrix(const re15_actor_t *e, const re15_emd_skeleton_t *sk,
+                                   const re15_emd_animation_t *an, int part, int32_t R[9], int32_t t[3]);
 /* Kanal des State-4-Subs (Sub 0 +0x180/+0x184 RBJ, 1 +0x84/+0x16c Loco, 2 +0x170/+0x174 eigene Bank, 3 Victim). */
 int re15_fussanker_r41_kanal(const re15_actor_t *e, const re15_emd_skeleton_t **sk, const re15_emd_animation_t **an);
 /* Testhaken: gemerkten Stand eines Slots setzen/lesen (1 = gueltig). */

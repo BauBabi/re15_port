@@ -730,6 +730,10 @@ static void pc_prop_rot_q12(int16_t rx, int16_t ry, int16_t rz, int32_t m[9])
  * kann gar nicht tiefer als "Eltern schon in derselben Zeichenschleife berechnet". */
 static void pc_prop_world(int slot, int32_t rot_q12[9], int32_t pos[3])
 {
+    /* Runde 41 Spur J: Super_set 0x48 (@0x80040b20) -> Gegner-Teil als Vater (re15_superobj_r41.h) */
+    { extern int re15_superobj_r41_welt(int s, int32_t r[9], int32_t t[3]); int32_t sr[9], st[3];
+      if (re15_superobj_r41_welt(slot, sr, st)) { for (int k = 0; k < 9; k++) rot_q12[k] = sr[k];
+          pos[0] = st[0]; pos[1] = re15_prop_render_y((int)g_scd.props[slot].obj_type, st[1]); pos[2] = st[2]; return; } }
     int32_t r[9], t[3];
     pc_prop_rot_q12(g_scd.props[slot].rot_x, g_scd.props[slot].rot_y,
                     g_scd.props[slot].rot_z, r);

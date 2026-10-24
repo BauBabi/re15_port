@@ -144,8 +144,8 @@ int re15_fussanker_r41_kette(const re15_actor_t *e, const re15_emd_skeleton_t *s
     return 1;
 }
 
-int re15_fussanker_r41_teil(const re15_actor_t *e, const re15_emd_skeleton_t *sk, const re15_emd_animation_t *an,
-                            int part, int32_t out[3])
+int re15_fussanker_r41_teil_matrix(const re15_actor_t *e, const re15_emd_skeleton_t *sk,
+                                   const re15_emd_animation_t *an, int part, int32_t R[9], int32_t t[3])
 {
     static int32_t lokal[RE15_EMD_MAX_BONES][9];
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
@@ -159,7 +159,7 @@ int re15_fussanker_r41_teil(const re15_actor_t *e, const re15_emd_skeleton_t *sk
         if (q < 0 || q >= p) break;                                    /* Wurzel-Regel wie re15_skel_compute_pose */
         p = q;
     }
-    int32_t R[9], t[3], u[3];
+    int32_t u[3];
     entity_matrix(e, R, t);
     for (int i = n - 1; i >= 0; i--) {
         int p = kette[i];
@@ -167,8 +167,14 @@ int re15_fussanker_r41_teil(const re15_actor_t *e, const re15_emd_skeleton_t *sk
         else lokal_t(sk, poses, p, u);
         verketten(R, t, lokal[p], u);
     }
-    memcpy(out, t, sizeof t);
     return 1;
+}
+
+int re15_fussanker_r41_teil(const re15_actor_t *e, const re15_emd_skeleton_t *sk, const re15_emd_animation_t *an,
+                            int part, int32_t out[3])
+{
+    int32_t R[9];
+    return re15_fussanker_r41_teil_matrix(e, sk, an, part, R, out);
 }
 
 void re15_fussanker_r41_merken(void)
