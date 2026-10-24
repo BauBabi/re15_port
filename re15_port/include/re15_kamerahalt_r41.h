@@ -15,8 +15,10 @@
  *   Cut_chg setzt DAT_800b5457 ohne Vergleich (@0x800402f4) -> auch ein Cut_chg auf denselben Cut ist ein Apply-Bild.
  * PORT: der Apply des Ports laeuft am Anfang des FOLGEBILDS (pc_cam_present_apply, re15_cam_present_tick), sobald
  *   angezeigt (work_vars[0x0A]) != angefordert (cam_id) oder cam_change_pending — genau die Bedingung, mit der das
- *   Original am Ende dieses Durchlaufs den Apply-Zweig nimmt. In diesem Bild zeigt der Port darum das vorige Bild noch
- *   einmal (re15_render_pc_standbild_wiederholen). Die Dauer des Standbilds im Original (CD-Ladezeit von FUN_80013c50)
+ *   Original am Ende dieses Durchlaufs den Apply-Zweig nimmt. In diesem Bild praesentiert der Port darum nichts
+ *   (re15_render_pc_bild_halten, platform/pc/src/bildhalt_r41_pc.c): das Fenster zeigt das vorige Bild weiter. Der
+ *   Blenden-Takt FUN_80021880 laeuft dabei weiter (@0x80020f44 vor dem Present @0x80020f4c; Nachbesserung 3, Abnahme 2
+ *   Mangel 4). Die Dauer des Standbilds im Original (CD-Ladezeit von FUN_80013c50)
  *   ist Hardware-Zeit und bleibt weg: der Port haelt genau EIN Spielbild — die Logik eines Durchlaufs.
  * Ausnahmen: erstes Bild eines Raums (Raum gewechselt: kein Bild dieses Raums zum Halten), die ROOM1240-Montage
  *   (RE2-Praesentation des Ports), RE15_FORCE_CUT (Messhaken: setzt jedes Bild pending).

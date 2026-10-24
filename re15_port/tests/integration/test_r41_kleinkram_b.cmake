@@ -23,6 +23,10 @@ cmake_minimum_required(VERSION 3.16)
 #                        nach dem Schliessen der Frage (Auswahl-Message_on kehrt sofort zurueck @0x80040520), Bild gehalten.
 #   TEIL renn            dieselbe Bildfolge im RENNEN (Abnahme 1 R4). Den Renn-STOPP des Originals (0x80032778 @0x800328f8-
 #                        @0x8003295c, Auslauf an der Kurbel) hat der Port nicht - Dossier "Nachbesserung 2" OFFEN.
+# NACHBESSERUNG 3 (Abnahme 2 Mangel 4, Orchestrator-Entscheid E-E3):
+#   TEIL spawn_kante     Raumeintritt ROOM2020 mit der Spielerlage AUF der Kante (9000,-3200): jedes Bild ab F1 ist ein
+#                        Apply-Bild (gehalten), der Blenden-Takt FUN_80021880 laeuft trotzdem (@0x80020f44 vor dem Present
+#                        @0x80020f4c), der Eintritts-Freeze faellt in F6 wie VORHER, der Spieler laeuft (vorher: Softlock).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_WERKZEUG=<test_r41_kleinkram_b_exe> -DWORKDIR=<dir> -DTEIL=<teil>
 #               -P test_r41_kleinkram_b.cmake
 # =============================================================================
@@ -116,6 +120,12 @@ elseif(TEIL STREQUAL "kante")
     set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_PLAYER_POS=9375,-3200,2048,1 RE15_INPUT_SCRIPT=U0.1667
              RE15_INPUT_SCRIPT_START=60 RE15_INPUT_SCRIPT_BASIS=spiel RE15_STATE_LOG=state.txt RE15_FRAMEDUMP=66-90/1:fd_
              "RE15_EXIT_AT=92#2020")
+elseif(TEIL STREQUAL "spawn_kante")
+    # Lauf EN1_spawn_kante der Abnahme 2 (§3.6): Sprung nach 2020 mit der Lage genau auf der Kante, 2 s warten, 1 s
+    # rueckwaerts (UNTEN = +x bei Blick 2048), 1 s warten.
+    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_PLAYER_POS=9000,-3200,2048,1
+             "RE15_INPUT_SCRIPT=W2.0,D1.0,W1.0" RE15_INPUT_SCRIPT_START=10 RE15_INPUT_SCRIPT_BASIS=spiel
+             RE15_STATE_LOG=state.txt RE15_KAMERAHALT_LOG=1 "RE15_EXIT_AT=200#2020")
 elseif(TEIL STREQUAL "geh")
     set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-1500,1024,1
              "RE15_INPUT_SCRIPT=U0.3,UA0.1,U0.1,UA0.1,U0.1,UA0.1,U0.1,UA0.1,U0.1,UA0.1,U1.0" RE15_INPUT_SCRIPT_START=300
@@ -258,6 +268,17 @@ if(TEIL STREQUAL "kante")
         set(_ok TRUE)
     endif()
     pruef_wahr(_ok "Bild steht (Present @0x80021560: kein DrawOTag, kein Pufferwechsel): Abzuege F66..F90 pixelgleich")
+elseif(TEIL STREQUAL "spawn_kante")
+    pruef(_d "loaded room2020.rdt")
+    pruef(_d "EXIT_AT: Bild 200 in Raum 2020")
+    execute_process(COMMAND "${RE15_WERKZEUG}" einblendung "${_lauf}/debug.log" "${_lauf}/state.txt"
+                    RESULT_VARIABLE _rw OUTPUT_VARIABLE _ow ERROR_VARIABLE _ew)
+    message(STATUS "${_ow}${_ew}")
+    set(_ok FALSE)
+    if(_rw EQUAL 0)
+        set(_ok TRUE)
+    endif()
+    pruef_wahr(_ok "Raumeintritt auf der Kante: Einblendung endet trotz gehaltener Bilder (F6), Spieler steuerbar")
 elseif(TEIL STREQUAL "geh" OR TEIL STREQUAL "renn")
     pruef(_d "loaded room2020.rdt")
     pruef(_d "@0x0A62 op=0x2B")

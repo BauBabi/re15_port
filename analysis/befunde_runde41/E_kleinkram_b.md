@@ -608,6 +608,34 @@ Gorilla-Sonde neu eingemessen + Riegel renn auf (3650,-3369), (3) Mangel 3 / E-E
 Integrations-Bedingung (msg/scd/cut/door/szene/karte-Riegel mitgefahren).
 
 ### Status Nachbesserung 3
-- [ ] Mangel 4 / E-E3 Blenden-Takt im gehaltenen Bild
+- [x] Mangel 4 / E-E3 Blenden-Takt im gehaltenen Bild
 - [ ] Mangel 1/2 / E-E2 Renn-Stopp spielweit, Gorilla-Sonde, Riegel renn
 - [ ] Mangel 3 / E-E1 Vertrag + Integrations-Riegel
+
+### Mangel 4 / E-E3 — Blenden-Takt im gehaltenen Bild (Softlock beim Raumeintritt auf der Kante)
+- Ursache: das gehaltene Apply-Bild (main.c Nachbesserung 2) ruft `re15_render_pc_bild_halten()` statt
+  `re15_render_end_frame()`; der Blenden-Takt `re15_fade_tick()` (= FUN_80021880) steckt aber in end_frame
+  (render_pc.c:1290). Jede Rampe verlor je gehaltenem Bild einen Schritt; steht der Spieler beim Raumeintritt auf einer
+  wechselnden RVD-Kante, ist JEDES Bild gehalten, die Tuer-Einblendung (Schritt -6144) endet nie, room_common.c Zustand 5
+  gibt den Eintritts-Freeze nie frei.
+- Messung vorher (Abnahme 2 §3.6, nicht wiederholt; Lauf `<sp>/E41a2/runs/EN1_spawn_kante_{nach,vorher}`): 11b8f867
+  pf=FF000007 F1..F199, Spieler steht, alle Abzuege schwarz; 753652fc (ohne Bildhalt) pf=00000007 ab **F6**, F70 9070 ->
+  F100 11100.
+- Beleg (selbst disassembliert, `re15_disasm.py dis 0x80020f30 10` / `dis 0x80021910 12`): Hauptschleife @0x80020f34
+  `jal 0x80021a0c` (Letterbox), @0x80020f3c `jal 0x80010000`, @0x80020f44 `jal 0x80021880` (Blenden-Takt), @0x80020f4c
+  `jal 0x8002137c` (Present), @0x80020f54 `j 0x80020c10`. FUN_80021880 fuehrt den Pegel: @0x8002191c `lhu v0,0(s0)`,
+  @0x80021920 `lhu v1,-6(s1)`, @0x80021928 `addu v0,v0,v1`, @0x8002192c `sh v0,0(s0)`. Der Takt liegt VOR dem Present,
+  also auch im Apply-Durchlauf (der Apply-Zweig @0x80021558/@0x80021560 ueberspringt nur DrawOTag + Pufferwechsel).
+- Aenderung: platform/pc/src/bildhalt_r41_pc.c `re15_render_pc_bild_halten()` ruft `re15_fade_tick()` (Pegel weiter,
+  Kachel ungezeichnet — wie die OT des Apply-Durchlaufs, die nie gezeichnet wird). Keine neue Konstante, keine gemeinsame
+  Datei. Kommentar include/re15_kamerahalt_r41.h berichtigt (Hinweis H4: "nicht praesentieren" statt "Standbild
+  wiederholen").
+- Messung nachher (`<sp>/E41n3/runs/EN1_spawn_kante_n3a`, exe re15_pc_E41n3a.exe, Eingaben wie Abnahme 2 §3.6):
+  `[kamerahalt]` F0 zeigen, F1..F70 HALTEN (Spieler auf der Kante), danach zeigen; state.txt pf=FF000007 F1..F5,
+  **pf=00000007 ab F6** (= VORHER 753652fc), F70 9070 -> F100 11100 (= VORHER); Abzuege F0..F70 schwarz (gehalten:
+  Helligkeit 5,1), ab F75 der Raum in voller Helligkeit (28,2) — die Einblendung lief unsichtbar in den gehaltenen
+  Bildern, wie im Original (dort ohne DrawOTag).
+- Riegel NEU `integration_r41_kleinkram_b_spawn_kante` (Auswerter `einblendung`): F1..F5 gehalten (Vorbedingung), Lage x
+  9000, Freeze faellt in F6, x(F100) > 9000. NACHHER: `FREI F6 GEHALTEN 70 (F1..F5: 5) X1 9000 X100 11100` BESTANDEN;
+  Gegenprobe VORHER-exe (re15_pc_E41a2.exe = 11b8f867, `<sp>/E41n3/vorher_riegel/spawn_kante.log`): `FREI F-1 GEHALTEN
+  200 ... X100 9000` DURCHGEFALLEN.

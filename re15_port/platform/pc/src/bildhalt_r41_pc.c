@@ -19,12 +19,24 @@
  *   Auftrag (oder mit gesetztem RE15_FRAMEDUMP) jedes gezeigte Bild hier zusaetzlich gemerkt und ein Auftrag fuer ein
  *   gehaltenes Bild mit diesem Bild bedient (Zeile "[framedump] ... (gehalten)"). Ohne Rueckleser: kein Ruecklesen,
  *   keine Kosten.
+ * NACHBESSERUNG 3 (Abnahme 2 Mangel 4, Orchestrator-Entscheid E-E3): der BLENDEN-TAKT laeuft auch im gehaltenen Bild.
+ *   ORIGINAL (selbst disassembliert): Hauptschleife @0x80020f34 `jal 0x80021a0c` (Letterbox), @0x80020f3c `jal
+ *   0x80010000`, @0x80020f44 `jal 0x80021880` (Blenden-Takt), @0x80020f4c `jal 0x8002137c` (Present) — der Takt liegt
+ *   VOR dem Present und damit auch im Apply-Durchlauf; FUN_80021880 fuehrt den Pegel jedes aktiven Kanals weiter
+ *   (@0x8002191c `lhu v0,0(s0)` / @0x80021920 `lhu v1,-6(s1)` / @0x80021928 `addu` / @0x8002192c `sh v0,0(s0)`), die
+ *   Kachel dieses Durchlaufs landet in der OT, die der Apply-Zweig nie zeichnet (@0x80021560).
+ *   PORT: re15_fade_tick() (= FUN_80021880) steckt in re15_render_end_frame(); das gehaltene Bild ruft end_frame nicht
+ *   und liess den Takt aus -> jede Rampe verlor je gehaltenem Bild einen Schritt, beim Raumeintritt auf einer
+ *   wechselnden RVD-Kante endete die Einblendung nie (Freeze pf=FF000007, Softlock; Abnahme 2 §3.6). Jetzt: Takt hier,
+ *   nichts gezeichnet.
  */
 #include <SDL.h>
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "re15_fade.h"   /* re15_fade_tick = FUN_80021880 (Nachbesserung 3) */
 
 extern SDL_Renderer *re15_render_pc_renderer(void);
 extern void re15_render_pc_clear_scene_overlays(void);
@@ -60,6 +72,7 @@ void re15_bildhalt_r41_merken(int auftrag)
 void re15_render_pc_bild_halten(void)
 {
     s_gehalten++;
+    re15_fade_tick();   /* @0x80020f44 vor @0x80020f4c: Pegel += Schritt (@0x8002191c-@0x8002192c), Kachel ungezeichnet */
     re15_render_pc_clear_scene_overlays();   /* Dreiecke, Schatten verwerfen; Masken-Riegel gilt bis begin_frame */
     char pfad[512];
     if (!re15_render_pc_abzug_nehmen(pfad, (int)sizeof pfad)) return;

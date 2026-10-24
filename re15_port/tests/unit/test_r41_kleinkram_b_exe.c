@@ -22,6 +22,13 @@
  *                                       @0x0A5C bis Message_on 1 @0x0A62 ([mot]-Spur), Pos_set @0x0A8C im ersten Bild
  *                                       nach dem Schliessen der Frage und im selben Skript-Takt wie Ifel_ck @0x0A68,
  *                                       dieses Bild gehalten ([kamerahalt] HALTEN), Spieler dort (3650,-3018) mo 200.
+ * Nachbesserung 3 (Abnahme 2 Mangel 4, Orchestrator-Entscheid E-E3):
+ *   einblendung <debug.log> <state.txt> Raumeintritt ROOM2020 mit der Spielerlage AUF der RVD-Kante (9000,-3200): jedes
+ *                                       Bild ab F1 ist ein Apply-Bild (gehalten); der Blenden-Takt FUN_80021880 laeuft
+ *                                       trotzdem (@0x80020f44 vor dem Present @0x80020f4c), die Tuer-Einblendung (Schritt
+ *                                       -6144: 0x7fff -> nach 6 Takten Bit 15) endet, der Eintritts-Freeze (pf FF......)
+ *                                       faellt in F6 wie VORHER (753652fc, ohne Bildhalt) und der Spieler laeuft.
+ *                                       Ausgabe "FREI F<n> GEHALTEN <k> X100 <x>".
  * Rueckgabe 0 = bestanden, 1 = durchgefallen, 2 = Eingabefehler.
  */
 #define _DEFAULT_SOURCE
@@ -317,8 +324,56 @@ static int takt(const char *dlog, const char *state)
     return ok ? 0 : 1;
 }
 
+/* ---- Nachbesserung 3 ------------------------------------------------------------------------------------ */
+static int einblendung(const char *dlog, const char *state)
+{
+    /* [kamerahalt]-Zeilen des Raums 2020 (globaler Bildzaehler): Raum-Bild k = k-te Zeile mit raum=2020. */
+    FILE *f = fopen(dlog, "rb");
+    if (!f) { printf("FEHLER %s\n", dlog); return 2; }
+    char line[4096];
+    int k = 0, gehalten_1_5 = 0, gehalten = 0;
+    while (fgets(line, sizeof line, f)) {
+        if (strncmp(line, "[kamerahalt] F", 14) != 0 || !strstr(line, " raum=2020 ")) continue;
+        const int halt = strstr(line, "HALTEN") != NULL;
+        if (halt) gehalten++;
+        if (halt && k >= 1 && k <= 5) gehalten_1_5++;
+        k++;
+    }
+    fclose(f);
+    /* state.txt: letzter Raum-Abschnitt, pf=<hex> und PL(x,..) je Bild. */
+    static long fr_[MAXF * 4]; static unsigned pf_[MAXF * 4]; static int x_[MAXF * 4];
+    int n = 0;
+    f = fopen(state, "rb");
+    if (!f) { printf("FEHLER %s\n", state); return 2; }
+    while (fgets(line, sizeof line, f) && n < MAXF * 4) {
+        long fr; int x, z; unsigned pf;
+        const char *pl = strstr(line, "PL("), *pp = strstr(line, " pf=");
+        if (line[0] != 'F' || !pl || !pp || sscanf(line + 1, "%ld", &fr) != 1 || sscanf(pl + 3, "%d,%d", &x, &z) != 2 ||
+            sscanf(pp + 4, "%x", &pf) != 1) continue;
+        fr_[n] = fr; pf_[n] = pf; x_[n] = x; n++;
+    }
+    fclose(f);
+    int a = 0;
+    for (int i = 1; i < n; i++) if (fr_[i] < fr_[i - 1]) a = i;
+    long frei = -1; int x100 = -99999, x_start = -99999;
+    for (int i = a; i < n; i++) {
+        if (fr_[i] == 1) x_start = x_[i];
+        if (frei < 0 && fr_[i] >= 1 && (pf_[i] & 0xFF000000u) == 0) frei = fr_[i];
+        if (fr_[i] == 100) x100 = x_[i];
+    }
+    printf("FREI F%ld GEHALTEN %d (F1..F5: %d) X1 %d X100 %d\n", frei, gehalten, gehalten_1_5, x_start, x100);
+    int ok = 1;
+    if (gehalten_1_5 != 5) { printf("FAIL F1..F5 nicht gehalten - der Lauf prueft den Bildhalt nicht\n"); ok = 0; }
+    if (x_start != 9000) { printf("FAIL Eintrittslage x %d statt 9000 (Kante)\n", x_start); ok = 0; }
+    if (frei != 6) { printf("FAIL Eintritts-Freeze faellt in F%ld statt F6 (6 Takte zu -6144, wie VORHER)\n", frei); ok = 0; }
+    if (x100 <= 9000) { printf("FAIL Spieler laeuft nicht (x %d in F100)\n", x100); ok = 0; }
+    printf(ok ? "BESTANDEN\n" : "DURCHGEFALLEN\n");
+    return ok ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
+    if (argc >= 4 && strcmp(argv[1], "einblendung") == 0) return einblendung(argv[2], argv[3]);
     if (argc >= 3 && strcmp(argv[1], "segment") == 0) return segment(argv[2]);
     if (argc >= 3 && strcmp(argv[1], "marker") == 0) return marker(argv[2]);
     if (argc >= 5 && strcmp(argv[1], "kurbel") == 0) return kurbel(argv[2], argv[3], argv[4]);
