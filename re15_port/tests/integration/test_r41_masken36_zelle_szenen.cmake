@@ -5,7 +5,7 @@
 # wieder aufgenommenen Rechtecke ohne verdeckten Figurpunkt; Fenster = Figurkasten 3000 x +-350 (+4), ans Bild geschnitten.
 # An der exe gemessen (Dossier NB1 Mangel 1; RE15_TRILOG, Leon = vorderstes Dreieck, verdeckt = Maske mit Schluessel <= z):
 # 88 DAVOR-Szenen neu uebermalt 0; HINTER sichtbar verdeckt vor -> nach NB1: 3050 C5 2 -> 740, 5100 C7 0 -> 1085,
-# 5020 C7 98 -> 770, 4040 C6 0 -> 124, 30A0 C3 185 -> 336 (Schritt 1); 4040 C9 0 -> 278, 5100 C2 34 -> 756, 4040 C7 8 -> 201
+# 5020 C7 98 -> 770, 30A0 C3 185 -> 336 (Schritt 1); 4040 C6 5 -> 146, 4040 C9 0 -> 278, 5100 C2 34 -> 756, 4040 C7 8 -> 201
 # (Schritt 2, Fehltreffer erben).
 #   name raum cut x z band art x0 y0 x1 y1 [E] [G=...]
 set(R41M_SZENEN
@@ -15,7 +15,8 @@ set(R41M_SZENEN
     "d5100_07 5100 7 -12030 -5200 0 V 37 97 86 240"
     "h5020_07 5020 7 -13533 -14125 0 H 90 56 119 134"
     "d5020_07 5020 7 -10033 -20025 0 V 43 14 129 240"
-    "h4040_06 4040 6 -23600 -422 0 H 138 76 152 109"
+    # 4040 C6: an (-23600,-422) ist Leon zu klein (Lauf 1: S 44 < 50) -> HINTER-Stelle (-15000,-7722) aus Schritt 2
+    "h4040_06 4040 6 -15000 -7722 0 M 171 79 189 127"
     "d30A0_03 30A0 3 -23543 16463 0 V 186 50 263 226"
     "h30A0_03 30A0 3 -19443 14663 0 M 191 35 227 128"
     # Schritt 2 (--erben)

@@ -442,7 +442,7 @@ Neu/geaendert (nur tests/unit/probes/r41_masken36.cmake + eigene Dateien):
 | Test | misst | Ergebnis |
 |---|---|---|
 | `integration_r41_masken36_zelle` (neu) | Mangel 1, echte exe: Objekte mit Zellen-Tiefe - HINTER-Stellen verdeckt (H >= Haelfte bzw. H > 0), DAVOR-Stellen 0 uebermalt; Szenen `test_r41_masken36_zelle_szenen.cmake`, Laeufer = stage2-Skript (SZENEN/PRAEFIX r41m3, Stages aus den Szenen) | s. Lauf unten |
-| `integration_r41_masken36_stage2` (erweitert) | + Mangel 3: v2030_15/v2031_15 Leon/Elza VOR der Reling mit weggestellter Spinne (G=1,...) H == 0, Gegenprobe m2030_15 (Spinne hinter der Reling verdeckt, H > 0); + Mangel 4: m2030_07/m2040_07 Leon HINTER dem Gelaender verdeckt (H > 0) | s. Lauf unten |
+| `integration_r41_masken36_stage2` (erweitert) | + Mangel 3: v2030_15/v2031_15 Leon/Elza VOR der Reling mit weggestellter Spinne (G=1,...) H == 0 (gemessen S 1225 / 1017, H 0 / 0), Gegenprobe m2030_15 (Spinne hinter der Reling verdeckt: S 1762, H 166); + Mangel 4: m2030_07 / m2040_07 Leon HINTER dem Gelaender verdeckt (S 362 / 5398, H 77 / 377) | PASS (Lauf 3) |
 | `unit_r41_masken36_loecher` (Messwert) | Kerben NACHHER 11 494 von 62 432 = 18,4 % (vor NB1 25,1 %), Schranke <= 30 % unveraendert | PASS |
 | `unit_r37_masken36_ausschluss` (unveraendert) | rechnet die Tabelle aus den Dateien nach (== gen/masken36_ausschluss_r37.inc nach Schritt 2), Schranke NB2 M2 0/0 | PASS |
 
