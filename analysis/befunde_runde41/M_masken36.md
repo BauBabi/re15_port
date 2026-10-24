@@ -692,9 +692,12 @@ Neu/geaendert (nur tests/unit/probes/r41_masken36.cmake + eigene Dateien; test_r
 | `unit_r41_masken36_loecher` (Messwert) | Kerben NACHHER 10 178 von 63 546 = 16,0 % (NB1 18,4 %), Schranke <= 30 % unveraendert | PASS |
 Laeufe (Spurbaum, Bau `local_build.sh build` nach der letzten Aenderung; KEINE volle Suite):
 1. `ctest --test-dir re15_port/build -R "unit_r41_masken36|unit_r37_masken36|unit_pri_|unit_r36_pri|unit_r37_pri1100|unit_sld_atlas|unit_r38_itemorte|unit_r39_optik|unit_r34n_e_dokumente|unit_bss|prop_bss|unit_stage6_hintergrund" -j 3 --timeout 1500 --output-on-failure`
-   -> erster Lauf `97% tests passed, 1 tests failed out of 31` (unit_r37_masken36_verdeckung: FREI-Gegenprobe, s. oben, Riegel
-   angepasst), danach **`100% tests passed, 0 tests failed out of 31`**
-Determinismus: zweiter Lauf von `zellen3d_r41.py` (letzter Schritt der Kette) -> 30 MSK und Modell-Tabelle bitgleich.
+   -> erster Lauf (Stand k2) `97% tests passed, 1 tests failed out of 31` (unit_r37_masken36_verdeckung: FREI-Gegenprobe, s. oben,
+   Riegel angepasst), danach `100% tests passed, 0 tests failed out of 31`; **Endstand k3 (Nahfeld-Sperre, nach Neubau):
+   `100% tests passed, 0 tests failed out of 31`** (695 s); nach der Messwert-Zeile in test_r41_masken36.c neu gebaut und
+   `ctest -R "unit_r41_masken36_loecher"` -> `100% tests passed, 0 tests failed out of 1`.
+Determinismus: zweiter Lauf von `zellen3d_r41.py` (letzter Schritt der Kette, Stand k2) -> 30 MSK und Modell-Tabelle bitgleich; Kette k3
+selbst: zweites erzeuge bitgleich zum ersten.
 
 ## OFFEN
 
