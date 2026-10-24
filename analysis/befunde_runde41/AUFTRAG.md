@@ -377,3 +377,23 @@ Folgen (Orchestrator):
   blinkenden Schluessel -> oben in 2080 kommen die Zombies herein (die 8 Zombies der Spur G) -> erneut Kamera auf den Zombie
   mit dem Schluessel -> der Alligator kommt und frisst den Zombie samt Schluessel -> Schrei- und Schuettel-Animation in
   Richtung Leon -> Kampfbeginn mit der Kampfmusik aus Resident Evil 2 (RE2-Alligator-BGM aus ROOM40A0 belegen).
+
+## 2026-10-24 09:22 — Nachtrag 7 (Wortlaut; Antwort auf die Frage "Wie soll 2030 nach der Flut wieder trocken werden?"; Spur C)
+
+Frage des Orchestrators (gekuerzt): 2080 erreicht man nur ueber die 2030-Suedgalerie (Lift B vom Ring; beide Lifte brauchen
+den Generator 2060) oder aus 2090; wegen der Leiter-Sperre kommen 2050/2020/2060 und damit der Strom erst nach der Flut.
+Angeboten: "Pumpe in 2050" oder "2030 laeuft durch 20B0 leer". Antwort des Nutzers:
+
+> Nach der Aktivierung des Stroms ist 2030 leer gelaufen.
+
+Folgen (Orchestrator, Umsetzung Spur C):
+- Ausloeser der Entleerung = Strom aktiviert (Generator 2060, Original-Ergebnisbit (3,0x7E) aus 2060; Setzer und Leser mit
+  SCD-Offsets belegen). Ist die Flut gelaufen (Bits 103 + 100) und der Strom an, ist 2030 beim naechsten Betreten trocken
+  (Zustand wie bisher nach Bit 107; Bit 107 wird mit dem Strom gesetzt, oder der Zustand haengt direkt an (3,0x7E) — Wahl mit
+  Beleg im Dossier). Kein neuer Text noetig.
+- Der Rechner in 2080 macht nur noch seine ORIGINAL-Aufgabe (Wasser in 2080 senken, Tuer nach 2090 frei, (3,245)); die
+  Port-Erweiterung "2080_rechner_erw" und die Texte 2080 Id 40-41 entfallen (VERTRAG 1.2 entsprechend).
+- Ring-Sperre C-E2 (20B0 Ost-Tuer, 2070 Slots 1/2) gilt nur, solange 2030 geflutet ist (Flut gelaufen UND Strom aus).
+- Weg nach der Flut (zu Fuss messen, Leon UND Elza, Riegel): 20B0 -> Leiter -> 2050 -> (Kisten-Raetsel) -> 2020 -> Kurbel
+  (3,219) -> 2030 Nordgalerie -> 2060 Generator -> Strom -> 2030 trocken -> Lift -> Ring -> Lift B -> Suedgalerie -> 2080
+  -> Rechner -> 2090. Keine zusaetzliche Tuer, keine Original-Sperre umgehen.
