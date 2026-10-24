@@ -831,7 +831,7 @@ Ton (@0x8005c470). Damit bleiben die 93 hoerbaren Original-Faelle byte-gleich, d
 **Nachtrag zu N2.1 (Ton-Existenz):** "hoerbar" heisst im Original zusaetzlich: der Ton des Satzes hat einen VAG. SsUtKeyOnV
 @0x80059d3c liest `lhu a0,22(v0)` (VagAtr +0x16) @0x80059f2c / `sh a0,21292(at)` @0x80059f34 und keyt nur bei `bne a0,zero`
 @0x80059f8c. Erster Zensus ohne diese Pruefung: 106 Faelle "Retail", deren Zeile keinen VAG hat (meist Stempel-Zeilen 26/27 in Raeumen
-ohne Wasser). Zensus 2 (`A_nb2/npc_ton_retail2.py` / `.txt`, mit VH-Pruefung wie re15_footstep_vag): ohne Stempel-Zweig (Gehen auf
+ohne Wasser). Zensus 2 (`A_nb2/npc_ton_retail2.py` / `.txt`, versioniert als `A_belege/nb2/npc_ton_zensus2.py` / `.txt`, mit VH-Pruefung wie re15_footstep_vag): ohne Stempel-Zweig (Gehen auf
 trockenem Boden / Wasserboden 0x80) **Original hoerbar 15 / Retail 257 / stumm 8** (die 8 = ROOM6030/6031 Boden 0x17, Zeilen 15/16
 und 23/24 ohne Ton - dort hat auch der Spieler keinen Ton); mit Stempel-Zweig 20 / 138 / 106 (Stempel nur in WATER-Saetzen).
 Im Original hoerten also 15 von 280 NPC-Schritt-Faellen, im Port jetzt 272 (ROOM10D0 Boden 0x1d ist unerreichbar - FLR-Satz hinter dem Ende x == 0, FUN_800437d4 - und zaehlt mit 4 Retail-Faellen mit; der Riegel unit_r41_wasser20b0_ton zaehlt nur erreichbare Typen: 35 / 387 / 114 mit Stempel-Zweig).
@@ -866,7 +866,7 @@ Im Original hoerten also 15 von 280 NPC-Schritt-Faellen, im Port jetzt 272 (ROOM
   (@0x80055e68-ed8), Prog-Pan (@0x80055edc-f48), **Tasten-Pan** (`lbu v1,21273(v1)` @0x80055f50, `sltiu v0,v1,0x40` @0x80055f58): < 0x40
   -> rechts * Pan / 63 (@0x80055f60-88), sonst links * (0x7f - Pan) / 63 (@0x80055f8c-...); /63 = `lui 0x410` / `ori 0x4105`.
 **Befund am Port (Nebenbefund):** rotor_common.c (re15_rotor_compute_pan, Rotor des Hubschraubers) bildet FUN_80045a64 nach, rechnet den
-Winkel aber mit einer ATAN-Tabelle statt mit dem CORDIC @0x800658fc: Abweichung bis +-7/4096 (`A_nb2/cordic_vgl.py`: ueber 40000
+Winkel aber mit einer ATAN-Tabelle statt mit dem CORDIC @0x800658fc: Abweichung bis +-7/4096 (`A_nb2/cordic_vgl.py` = `A_belege/nb2/cordic_vgl.py`: ueber 40000
 Verhaeltnisse 690 gleich, Rest +-1..7) = bis eine Pan-Stufe (i = rel >> 3). Ausserdem heisst dort "L" = DAT_800b2826 (volr) und
 "R" = DAT_800b2824 (voll). Fuer den Rotor nicht geaendert (fremdes Modul) -> OFFEN N2.7.
 
