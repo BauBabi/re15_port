@@ -22,6 +22,10 @@
  *                                       @0x0A5C bis Message_on 1 @0x0A62 ([mot]-Spur), Pos_set @0x0A8C im ersten Bild
  *                                       nach dem Schliessen der Frage und im selben Skript-Takt wie Ifel_ck @0x0A68,
  *                                       dieses Bild gehalten ([kamerahalt] HALTEN), Spieler dort (3650,-3018) mo 200.
+ * Nachbesserung 3 (Abnahme 2 Maengel 1/2, Orchestrator-Entscheid E-E2):
+ *   renn <debug.log> <state.txt>       Kurbel im RENNEN wie o_renn2: Bildfolge wie takt, erstes Renn-Bild z -3216 (Tempo 198),
+ *                                       vor Pos_set im Renn-Bild 6 eingefroren, ab Pos_set z -3099 -3233 -3327 -3381 -3395
+ *                                       -3369 (Original n94..n99), danach Stand (3650,-3369) bis Plc_motion und weiter.
  * Nachbesserung 3 (Abnahme 2 Mangel 4, Orchestrator-Entscheid E-E3):
  *   einblendung <debug.log> <state.txt> Raumeintritt ROOM2020 mit der Spielerlage AUF der RVD-Kante (9000,-3200): jedes
  *                                       Bild ab F1 ist ein Apply-Bild (gehalten); der Blenden-Takt FUN_80021880 laeuft
@@ -298,13 +302,26 @@ static void mot_lesen(const char *log)
     fclose(f);
 }
 
+static int takt_gemein(const char *dlog, const char *state, long *pos_bild);
 static int takt(const char *dlog, const char *state)
+{
+    long f_pos = -1;
+    int ok = takt_gemein(dlog, state, &f_pos);
+    if (ok < 0) return -ok;
+    if (!s_z[f_pos].gueltig || s_z[f_pos].x != 3650 || s_z[f_pos].z != -3018 || !s_mv[f_pos] || s_mo[f_pos] != 200) {
+        printf("FAIL im Pos_set-Bild nicht (3650,-3018) mo 200: (%d,%d) mo %d\n", s_z[f_pos].x, s_z[f_pos].z, s_mo[f_pos]); ok = 0; }
+    printf(ok ? "BESTANDEN\n" : "DURCHGEFALLEN\n");
+    return ok ? 0 : 1;
+}
+/* Rueckgabe 1 = bestanden, 0 = durchgefallen, -1/-2 = Abbruch (Szene unvollstaendig / Eingabefehler). */
+static int takt_gemein(const char *dlog, const char *state, long *pos_bild)
 {
     long f_m0 = scd_bild_erst(dlog, "@0x0A5C"), f_m1 = scd_bild_erst(dlog, "@0x0A62");
     long f_if = scd_bild(dlog, "@0x0A68"), f_pos = scd_bild(dlog, "@0x0A8C");
     printf("SCD Message_on0 F%ld Message_on1 F%ld Ifel_ck F%ld Pos_set F%ld\n", f_m0, f_m1, f_if, f_pos);
-    if (f_m0 < 0 || f_m1 <= f_m0 || f_pos <= f_m1 || f_pos >= MAXF - 1) { printf("FAIL Szene nicht vollstaendig\n"); return 1; }
-    if (zustand_lesen(state) != 0) { printf("FEHLER %s\n", state); return 2; }
+    if (f_m0 < 0 || f_m1 <= f_m0 || f_pos <= f_m1 || f_pos >= MAXF - 1) { printf("FAIL Szene nicht vollstaendig\n"); return -1; }
+    if (zustand_lesen(state) != 0) { printf("FEHLER %s\n", state); return -2; }
+    *pos_bild = f_pos;
     mot_lesen(dlog);
     int ok = 1, wechsel = 0;
     for (long fr = f_m0 + 1; fr <= f_m1; fr++)
@@ -318,8 +335,41 @@ static int takt(const char *dlog, const char *state)
     if (f_zu < 0 || f_pos != f_zu + 1) { printf("FAIL Pos_set nicht im ersten Bild nach dem Schliessen (Original n94 -> n95)\n"); ok = 0; }
     if (f_if != f_pos) { printf("FAIL Ifel_ck und Pos_set nicht im selben Skript-Takt\n"); ok = 0; }
     if (!s_halt[f_pos]) { printf("FAIL Pos_set-Bild (Cut_chg @0x0A7E) nicht gehalten\n"); ok = 0; }
-    if (!s_z[f_pos].gueltig || s_z[f_pos].x != 3650 || s_z[f_pos].z != -3018 || !s_mv[f_pos] || s_mo[f_pos] != 200) {
-        printf("FAIL im Pos_set-Bild nicht (3650,-3018) mo 200: (%d,%d) mo %d\n", s_z[f_pos].x, s_z[f_pos].z, s_mo[f_pos]); ok = 0; }
+    return ok;
+}
+
+/* Nachbesserung 3 (E-E2): Kurbel im RENNEN wie das Original o_renn2 (Start (2600,-3018) Blick 1024 aus dem Stehclip 2,
+ * 7 Renn-Bilder, Aktion im 7.): Bildfolge wie takt, dazu das Renn-Tempo des ersten Bilds (o_renn2 n1: 198 -> z -3216,
+ * FUN_800369f8 Modus 1), eingefroren im Renn-Bild 6 (o_renn2 `mo=0/7`), und ab Pos_set @0x0A8C der Auslauf
+ * 174 134 94 54 14 -26 = z -3099 -3233 -3327 -3381 -3395 -3369 (o_renn2 n94..n99, 0x80032778 @0x8003293c/@0x8003295c),
+ * danach Stand (3650,-3369) bis Plc_motion @0x0A9C und darueber hinaus. */
+static int renn(const char *dlog, const char *state)
+{
+    long f_pos = -1;
+    int ok = takt_gemein(dlog, state, &f_pos);
+    if (ok < 0) return -ok;
+    const long f_mot = scd_bild(dlog, "@0x0A9C");
+    long f_r = -1;
+    for (long fr = 1; fr < f_pos && fr < MAXF; fr++)
+        if (s_z[fr].gueltig && s_z[fr - 1].gueltig && s_z[fr - 1].x == 2600 && s_z[fr - 1].z == -3018 && s_z[fr].z != -3018) { f_r = fr; break; }
+    printf("erstes Renn-Bild F%ld z %d (Original n1 -3216 = 198)\n", f_r, f_r > 0 ? s_z[f_r].z : 0);
+    if (f_r < 0 || s_z[f_r].x != 2600 || s_z[f_r].z != -3216) { printf("FAIL Renn-Tempo im ersten Bild nicht 198 (FUN_800369f8 Modus 1)\n"); ok = 0; }
+    if (!s_mv[f_pos - 1] || s_mo[f_pos - 1] != 100 || s_af[f_pos - 1] != 6) {
+        printf("FAIL vor Pos_set nicht im Renn-Bild 6 eingefroren (mo %d af %d; Original mo=0/7)\n", s_mo[f_pos - 1], s_af[f_pos - 1]); ok = 0; }
+    static const int soll[6] = { -3099, -3233, -3327, -3381, -3395, -3369 };
+    for (int i = 0; i < 6; i++) {
+        const zustand_t *st = &s_z[f_pos + i];
+        printf("F%ld (%d,%d) Original z %d\n", f_pos + i, st->x, st->z, soll[i]);
+        if (!st->gueltig || st->x != 3650 || st->z != soll[i]) ok = 0;
+    }
+    long letzt = f_pos + 5, f_ende = f_pos + 5;
+    for (long fr = f_pos + 5; fr < MAXF && s_z[fr].gueltig; fr++) f_ende = fr;
+    for (long fr = f_pos + 5; fr <= f_ende; fr++) {
+        if (s_z[fr].x != 3650 || s_z[fr].z != -3369) { ok = 0; printf("FAIL F%ld (%d,%d) nach dem Auslauf\n", fr, s_z[fr].x, s_z[fr].z); break; }
+        letzt = fr;
+    }
+    printf("Stand (3650,-3369) F%ld..F%ld, Plc_motion F%ld\n", f_pos + 5, letzt, f_mot);
+    if (f_mot <= f_pos + 5 || letzt < f_mot) { printf("FAIL Plc_motion nicht im Stand (3650,-3369)\n"); ok = 0; }
     printf(ok ? "BESTANDEN\n" : "DURCHGEFALLEN\n");
     return ok ? 0 : 1;
 }
@@ -380,6 +430,7 @@ int main(int argc, char **argv)
     if (argc >= 5 && strcmp(argv[1], "gleich") == 0) return gleich(argv[2], atol(argv[3]), atol(argv[4]));
     if (argc >= 5 && strcmp(argv[1], "kamwechsel") == 0) return kamwechsel(argv[2], atol(argv[3]), atol(argv[4]));
     if (argc >= 4 && strcmp(argv[1], "takt") == 0) return takt(argv[2], argv[3]);
+    if (argc >= 4 && strcmp(argv[1], "renn") == 0) return renn(argv[2], argv[3]);
     fprintf(stderr, "Aufruf: %s marker <bmp> | kurbel <debug.log> <state.txt> <anim.txt> | segment <state.txt>\n",
             argv[0]);
     return 2;

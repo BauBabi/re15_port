@@ -676,3 +676,31 @@ Keyframes (= Port-Verbund der Handgun-Bank), Kette wie oben, Mischung mit zwei A
 Das erste Bild von o_rennstopp (269) ist ein Messartefakt: der GDB-Treiber hatte die Lage im RAM versetzt, die gespeicherte
 Weltmatrix (Teil+0x40) stammte noch von der alten Lage -> grosser Fussweg. Mit einer Abrundung statt zweien weicht die Rechnung
 in 3 von 7 bzw. 4 von 11 Bildern um 1 ab, mit exaktem isqrt in 1 von 7. Damit ist der Mechanismus belegt.
+
+### Mangel 1/2 / E-E2 — Umsetzung, Messung nachher (Teil 2)
+- NEU engine/src/rennstopp_r41.c + include/re15_rennstopp_r41.h (Ausgang 635be823, erweitert):
+  `re15_rennstopp_r41_lauftempo` = Fall 0/1 des Renn-ANIMATE: erstes Renn-Bild Tempo := Tabelle (@0x80073f24 = 200,
+  Port RUN_SPEED_PER_FRAME), dann Fussweg-Tempo aus der Bank des Renders (re15_player_w_skel/_anim = Verbund PL00-Bindepose +
+  Waffen-Keyframes, Clip 0); Pose der Kette wie FUN_8001f3bc mit zwei Abrundungen, im ersten Renn-Bild aus dem zuletzt
+  gezeichneten Bild (prev_angles/prev_root) gesetzt; Gier des letzten Bilds = aktuelle Gier minus Drehung dieses Takts.
+  `re15_rennstopp_r41_takt/_skript` = Renn-Stopp wie 635be823, beginnt aber mit dem letzten Renn-Tempo (+0x8c bleibt stehen).
+  Konstanten: 40 (@0x8003293c), 7 (@0x800327f4/@0x80032908), 0x200 (@0x80032888/@0x8003292c), 150 (@0x800328ec), Kette
+  0/1/2+3f/3+3f/4+3f (@0x80036a48-@0x80036a9c), Fuss-Bit 0x2000 (@0x800328b4). Ohne gespiegelte Bank: Tabellen-Tempo (wie
+  Figur 0xf im Original, @0x80032894).
+- Haken player_common.c (3 Stellen, "Runde 41 Spur E"): Stopp-Takt hinter `r1_held` (wie 635be823), Renn-Tempo statt
+  `speed = RUN_SPEED_PER_FRAME`, Skript-Zweig (Stopp mit leerem Pad, wie 635be823).
+- Unit-Riegel (`ctest -R "unit_r41_kleinkram_b_takt_(rennstopp|renntempo)"`: 100% tests passed, 0 tests failed out of 2):
+  rennstopp 10/10 (Stopp mit Tabellen-Tempo, Abbruch, Zielen, Skript-Zweig), renntempo 7/7: o_renn2 198 210 171 182 204 211
+  214 = Original, o_rennstopp ab Bild 2 = Original (11/11), derselbe Wert ueber den Spieler-Pfad (lauftempo), Kurbel-Auslauf
+  z -3099 -3233 -3327 -3381 -3395 -3369 = Original n94..n99, Gegenprobe ohne Bank z -3285, Renn-Clip 0 ohne Tween-Bild in
+  42 Waffen-Baenken.
+- Port-Idle in ROOM2020 auf (2600,-3018) Blick 1024 (`<sp>/E41n3/runs/idle2020`): Stehclip 2 (Wiegen) ab F113, F156 = Bild 43.
+- Messung nachher an der exe (re15_pc_E41n3b.exe, Lauf `<sp>/E41n3/runs/renn_o2` = Nachbau o_renn2: Start (2600,-3018) Blick
+  1024, Rennen ab F157 (6 Bilder XU + 1 Bild XU mit Aktion)): Renn-Bilder F157..F163 = Clip 0 Bild 0..6, F157 z -3216
+  (Tempo 198 = Original n1), F158 -3382 (Stegkante, Original n2 -3382), eingefroren in Bild 6 (Original `mo=0/7`); msg 0 F164,
+  msg 1 F202, Frage zu F281, F282 Ifel_ck..Pos_set..Sleep (gehalten) und Stopp-Schritt 1: **F282..F287 (3650,-3099) -3233 -3327
+  -3381 -3395 -3369 = Original n94..n99**, Stand (3650,-3369) bis F420, Plc_motion F302 (= Pos_set + 20).
+- Riegel `integration_r41_kleinkram_b_renn` umgestellt (Mangel 2): Nachbau o_renn2, Auswerter `renn` (Bildfolge wie geh, erstes
+  Renn-Bild z -3216, Bild 6 eingefroren, Auslauf n94..n99, Stand (3650,-3369) bis Plc_motion). NACHHER BESTANDEN; Gegenprobe
+  VORHER-exe (11b8f867, `<sp>/E41n3/vorher_riegel/renn.log`): erstes Bild z -3218 (Tempo 200), Pos_set-Bild (3650,-3018) ohne
+  Auslauf -> DURCHGEFALLEN.

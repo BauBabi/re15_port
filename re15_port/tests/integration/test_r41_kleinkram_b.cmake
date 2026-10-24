@@ -21,8 +21,11 @@ cmake_minimum_required(VERSION 3.16)
 #   TEIL geh             E-N2: Kurbel im GEHEN (Abnahme 1 R2): kein Spieler-Bild zwischen Message_on 0 @0x0A5C und 1
 #                        @0x0A62 (Spiel-Task @0x80020de4 vor Nachrichten-Takt @0x80020f3c), Pos_set @0x0A8C im ersten Bild
 #                        nach dem Schliessen der Frage (Auswahl-Message_on kehrt sofort zurueck @0x80040520), Bild gehalten.
-#   TEIL renn            dieselbe Bildfolge im RENNEN (Abnahme 1 R4). Den Renn-STOPP des Originals (0x80032778 @0x800328f8-
-#                        @0x8003295c, Auslauf an der Kurbel) hat der Port nicht - Dossier "Nachbesserung 2" OFFEN.
+#   TEIL renn            NACHBESSERUNG 3 (E-E2): Kurbel im RENNEN wie das Original o_renn2 (GDB): Start (2600,-3018) Blick
+#                        1024 aus dem Stehclip 2 (zuletzt Bild 43 = o_renn2 `mo=2/44`), 7 Renn-Bilder, Aktion im 7.: erstes
+#                        Renn-Bild Tempo 198 (FUN_800369f8 Modus 1, @0x800328cc-@0x800328f4), Bildfolge wie geh, ab Pos_set
+#                        @0x0A8C der Renn-Stopp (0x80032604 @0x8003272c, 0x80032778 @0x800328f8-@0x8003295c) mit z -3099 -3233
+#                        -3327 -3381 -3395 -3369 (o_renn2 n94..n99), Kurbeln bei (3650,-3369).
 # NACHBESSERUNG 3 (Abnahme 2 Mangel 4, Orchestrator-Entscheid E-E3):
 #   TEIL spawn_kante     Raumeintritt ROOM2020 mit der Spielerlage AUF der Kante (9000,-3200): jedes Bild ab F1 ist ein
 #                        Apply-Bild (gehalten), der Blenden-Takt FUN_80021880 laeuft trotzdem (@0x80020f44 vor dem Present
@@ -132,9 +135,11 @@ elseif(TEIL STREQUAL "geh")
              RE15_INPUT_SCRIPT_BASIS=spiel RE15_PRESS=square@380,square@430,square@470,square@510 RE15_SCD_TRACE=1
              RE15_MOTRACE=1 RE15_STATE_LOG=state.txt RE15_KAMERAHALT_LOG=1 "RE15_EXIT_AT=420#2020")
 elseif(TEIL STREQUAL "renn")
-    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-800,1024,1
-             "RE15_INPUT_SCRIPT=XU0.2,XUA0.1,XU0.1,XUA0.1,XU0.1,XUA0.1,XU0.1,XUA0.1,XU0.1,XUA0.1,XU1.0"
-             RE15_INPUT_SCRIPT_START=300 RE15_INPUT_SCRIPT_BASIS=spiel RE15_PRESS=square@380,square@430,square@470,square@510
+    # Stehclip 2 (Wiegen) beginnt in ROOM2020 bei F113 (Port-Idle-FSM, gemessen <sp>/E41n3/runs/idle2020): F156 = Bild 43 ->
+    # Rennen ab F157 (6 Bilder XU + 1 Bild XU mit Aktion = o_renn2 n0..n6), Fragen per Quadrat.
+    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-3018,1024,1
+             "RE15_INPUT_SCRIPT=XU0.2,XUA0.034,XU1.0" RE15_INPUT_SCRIPT_START=157 RE15_INPUT_SCRIPT_BASIS=spiel
+             RE15_PRESS=square@200,square@240,square@280,square@320
              RE15_SCD_TRACE=1 RE15_MOTRACE=1 RE15_STATE_LOG=state.txt RE15_KAMERAHALT_LOG=1 "RE15_EXIT_AT=420#2020")
 else()
     message(FATAL_ERROR "r41_kleinkram_b: TEIL '${TEIL}' unbekannt")
@@ -284,6 +289,9 @@ elseif(TEIL STREQUAL "geh" OR TEIL STREQUAL "renn")
     pruef(_d "@0x0A62 op=0x2B")
     pruef(_d "@0x0A8C op=0x32")
     set(_modus takt)
+    if(TEIL STREQUAL "renn")
+        set(_modus renn)
+    endif()
     execute_process(COMMAND "${RE15_WERKZEUG}" ${_modus} "${_lauf}/debug.log" "${_lauf}/state.txt"
                     RESULT_VARIABLE _rw OUTPUT_VARIABLE _ow ERROR_VARIABLE _ew)
     message(STATUS "${_ow}${_ew}")
@@ -291,7 +299,7 @@ elseif(TEIL STREQUAL "geh" OR TEIL STREQUAL "renn")
     if(_rw EQUAL 0)
         set(_ok TRUE)
     endif()
-    pruef_wahr(_ok "Kurbel-Anlauf ${TEIL}: Bildfolge wie das Original (Auswerter ${TEIL})")
+    pruef_wahr(_ok "Kurbel-Anlauf ${TEIL}: Bildfolge und Lagen wie das Original (Auswerter ${_modus})")
 endif()
 
 if(_fehler)
