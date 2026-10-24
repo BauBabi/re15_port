@@ -169,6 +169,13 @@ gemessen.) Gegner per GEGNERWEG weg, Start (4900,-7100) Ring Band 3:
 * nachher (Bit 106): Hebel -> Original `id=0 "A lever to fill and drain water. Will you move it?"` -> Ja -> `Cut_chg(4)` -> `Cut_chg(7)` ->
   `FLAG (3,104)` 0 -> 1 (Original sub04, Wasser steigt), Leon und Elza.
 
+### FLR — Punkt 3: Wasser UEBER die Ringebene, Spieler auf dem Ring (Leon `flr`)
+Wie FL, nach der Warnung zu Fuss ueber Treppe und Ring vor die Ost-Tuer (6606,-5400,-1338), Tuer NICHT geoeffnet, Plan
+`<a4>/plaene/flr.txt`: `[scd F3524] Cut_chg(4)` -> `FLUT: Wasser steigt` -> **`SPRITZER: Wasser y -5400 erreicht die Fuesse (Spieler y
+-5400)`** -> **`ERTRUNKEN: Wasser y -6300, Spieler y -5400 -> hp -1, blaue Blende`** (Wasser 900 ueber der Ringebene). Bildbogen
+`<a4>/bilder/flr_ring.png`: F3540 Wasser ueber dem Steg, F3580/F3620 der Ring unter der Flaeche, F3660 blauer Schleier, F3800 "YOU DIED"
+(F3700/F3740 Todes-Kamera der Engine).
+
 ## 2. Gates
 
 ### G1 RE-Gate (eigene Disassembly / eigene Byte-Lesung)
@@ -256,7 +263,7 @@ Ventilraetsel freigegeben ("Freigeben" — Plakat, Loesung 09 -> 07 -> 02 -> 01,
 |---|---|---|
 | 1 Leiter 2000 -> 2050 mit herunterlaufendem Wasserstrom blockiert, "I cannot climb up the ladder because of the water pressure", bis die Flut gelaufen ist | **erfuellt** | P1/P1r Leon + Elza ueber die echte Tuer 2010 -> 2000: Text 40 woertlich (2x), kein Raumwechsel, Bit 100 = 0; Bild Cut 10: Strahl aus dem Gitter neben der Leiter (`p1r_leiter.png`) |
 | 2 2030: Bruecke zunaechst OBEN; Pult links (Kamera 2, Nordwand): zu wenig Druck / Ventil 13 zu -> Ventil 13 -> "Lower the bridge?" -> Bruecke faehrt herunter; nicht die Kurbel | **erfuellt** | K1 Leon + Elza ueber die echte Tuer 2070 -> 2030: Bruecke oben y -5400, Zelle 12 u0 0xff; Pult Text 40; Ventil 13 41/42, Bit 101; Pult 43 -> Ja -> Cut 4, Bruecke -> -1800, Bit 102, 44; Zelle 12 u0 0x00, ueber den Steg (`k1_teil1.png`) |
-| 3 Ventilraetsel -> Warnung (1 min, Raum verlassen) -> 60 s -> Wasser ueber die Ringebene; Ost-Tuer -> 20B0 (Auswasch-Szene); Zeit abgelaufen im Raum: Tod mit Ertrink-Effekt | **erfuellt** (20B0-Szene selbst nach C-E1 mit dem Haken der Spur A, Riegel `_kette` vorhanden und im C-Baum bis zur 20B0-Ankunft gruen) | K2 Leon + Elza: richtige Folge -> 46 woertlich -> Zaehler 1800 -> zu Fuss zur Ost-Tuer -> `loaded room20b0/20b1.rdt`, Bits 103 + 100; FL: im Raum -> Cut 4, Flut, Spritzer, `ERTRUNKEN` + blaue Blende, YOU DIED; FLR (Ring): siehe §1 FLR; KE `_kette` rc=0 |
+| 3 Ventilraetsel -> Warnung (1 min, Raum verlassen) -> 60 s -> Wasser ueber die Ringebene; Ost-Tuer -> 20B0 (Auswasch-Szene); Zeit abgelaufen im Raum: Tod mit Ertrink-Effekt | **erfuellt** (20B0-Szene selbst nach C-E1 mit dem Haken der Spur A, Riegel `_kette` vorhanden und im C-Baum bis zur 20B0-Ankunft gruen) | K2 Leon + Elza: richtige Folge -> 46 woertlich -> Zaehler 1800 -> zu Fuss zur Ost-Tuer -> `loaded room20b0/20b1.rdt`, Bits 103 + 100; FL (Landeplatz) und FLR (Ring): Cut 4, Flut, Spritzer bei den Fuessen, `ERTRUNKEN: Wasser y -6300, Spieler y -5400` (ueber der Ringebene) + blaue Blende, YOU DIED; KE `_kette` rc=0 |
 | 4 Danach 20B0 statt 2000 (spaeter wieder frei ohne Wasser), Leiter frei (kein Wasser laeuft mehr herunter) | **erfuellt** | P4 Leon + Elza: 2010-Tuer -> `ROOM20B0 Cut 10` -> `loaded room20b0/20b1.rdt`, Leiter -> 2050 ohne Sperrtext, 2050-Leiter -> 20B0; Bild Cut 9 ohne Strahl (`p4_20b0.png`) |
 | 5 2050: Wasserlevel (Hebel) erst nach dem Pult-Raetsel (80 V wie 11F0) | **erfuellt** | P5 Leon + Elza: Hebel vorher Text 40, (3,104) bleibt 0; Pult 43/41 -> Cut 15 -> 40/70/80 V -> "Power supply OK." -> Bit 106 (Bild `p5_pult.png`); danach Hebel = Original msg 0 -> Cut 4/7 -> (3,104) = 1 |
 | 6 2080-Rechner entleert danach auch 2030 — ERSETZT durch Nachtraege 7/8/12 (k) (Strom leert 2030 bis knapp unter die Absperrung, Rechner nur Original) | **erfuellt** | P6 Leon + Elza ueber die echte 20B0-Ost-Tuer: `Wasser knapp unter der Absperrung y -5350`, `pos=(0,-5350,0)`, Treppe Text 48, Ring zu Fuss, Lift B (3,220), 2080 Rechner = Original msg 0 -> (3,245) -> 2090; N12 Bildbogen `pegel_sheet.png` |
