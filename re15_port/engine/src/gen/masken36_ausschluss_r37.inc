@@ -4,14 +4,14 @@
  * tests/unit/gen_r41_masken36_zellen.inc). Grundlagen und Messaufbau: Kopf von test_r37_masken36.c,
  * Dossier analysis/befunde_runde37/P_masken36.md. Spalten: Raum der MSK-Datei, Cut, Zahl, Bitfeld je Rechteck. */
 static const re15_masken36_zeile_t re15_masken36_zeilen[] = {
-    { 0x3040,  0,  14, { 0x1B00057Fu, 0x00000010u, 0x00000000u, 0x00000000u } },   /* 14 von 49 Masken, Stehplaetze 2710 */
+    { 0x3040,  0,  11, { 0x0B00057Cu, 0x00000010u, 0x00000000u, 0x00000000u } },   /* 11 von 49 Masken, Stehplaetze 2710 */
     { 0x3040,  1,  19, { 0x0007FFFFu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 19 von 19 Masken, Stehplaetze 4716 */
     { 0x3040,  3,  20, { 0x00302400u, 0x2F800000u, 0x000027FAu, 0x00000000u } },   /* 20 von 105 Masken, Stehplaetze 4451 */
     { 0x3040,  7,   1, { 0x00000000u, 0x00000400u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 3817 */
     { 0x3040,  8,   4, { 0x00000000u, 0x88080000u, 0x00008000u, 0x00000000u } },   /* 4 von 105 Masken, Stehplaetze 2923 */
     { 0x3040,  9,   4, { 0x00800008u, 0x00000000u, 0x00500000u, 0x00000000u } },   /* 4 von 105 Masken, Stehplaetze 4955 */
     { 0x3040, 10,   1, { 0x00000040u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 15 Masken, Stehplaetze 5140 */
-    { 0x3041,  0,  14, { 0x1B00057Fu, 0x00000010u, 0x00000000u, 0x00000000u } },   /* 14 von 49 Masken, Stehplaetze 2710 */
+    { 0x3041,  0,  11, { 0x0B00057Cu, 0x00000010u, 0x00000000u, 0x00000000u } },   /* 11 von 49 Masken, Stehplaetze 2710 */
     { 0x3041,  1,  19, { 0x0007FFFFu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 19 von 19 Masken, Stehplaetze 4716 */
     { 0x3041,  3,  20, { 0x00302400u, 0x2F800000u, 0x000027FAu, 0x00000000u } },   /* 20 von 105 Masken, Stehplaetze 4451 */
     { 0x3041,  7,   1, { 0x00000000u, 0x00000400u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 3817 */
@@ -36,11 +36,11 @@ static const re15_masken36_zeile_t re15_masken36_zeilen[] = {
     { 0x3051,  9,   1, { 0x01000000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 29106 */
     { 0x3051, 13,  11, { 0x00110002u, 0x00000120u, 0x00000BA8u, 0x00000000u } },   /* 11 von 105 Masken, Stehplaetze 11941 */
     { 0x3051, 15,  70, { 0xFFFFFFFFu, 0xFFFFFFFFu, 0x0000003Fu, 0x00000000u } },   /* 70 von 70 Masken, Stehplaetze 0 */
-    { 0x30A0,  0,  33, { 0xFFC00001u, 0x0000003Fu, 0x1B9EC800u, 0x000001E0u } },   /* 33 von 105 Masken, Stehplaetze 4172 */
-    { 0x30A0,  1,  19, { 0xB000000Fu, 0x05104001u, 0x23000A30u, 0x00000000u } },   /* 19 von 105 Masken, Stehplaetze 3742 */
+    { 0x30A0,  0,   7, { 0x80000000u, 0x0000001Du, 0x00000000u, 0x00000060u } },   /* 7 von 105 Masken, Stehplaetze 4172 */
+    { 0x30A0,  1,  13, { 0xB0000000u, 0x05000001u, 0x23000A30u, 0x00000000u } },   /* 13 von 105 Masken, Stehplaetze 3742 */
     { 0x30A0,  3,  27, { 0x00300000u, 0x00003FF0u, 0xFA000000u, 0x000001FFu } },   /* 27 von 105 Masken, Stehplaetze 2014 */
-    { 0x30A1,  0,  33, { 0xFFC00001u, 0x0000003Fu, 0x1B9EC800u, 0x000001E0u } },   /* 33 von 105 Masken, Stehplaetze 4172 */
-    { 0x30A1,  1,  19, { 0xB000000Fu, 0x05104001u, 0x23000A30u, 0x00000000u } },   /* 19 von 105 Masken, Stehplaetze 3742 */
+    { 0x30A1,  0,   7, { 0x80000000u, 0x0000001Du, 0x00000000u, 0x00000060u } },   /* 7 von 105 Masken, Stehplaetze 4172 */
+    { 0x30A1,  1,  13, { 0xB0000000u, 0x05000001u, 0x23000A30u, 0x00000000u } },   /* 13 von 105 Masken, Stehplaetze 3742 */
     { 0x30A1,  3,  27, { 0x00300000u, 0x00003FF0u, 0xFA000000u, 0x000001FFu } },   /* 27 von 105 Masken, Stehplaetze 2014 */
     { 0x30E0,  6,  35, { 0xFFFFFFFFu, 0x00000007u, 0x00000000u, 0x00000000u } },   /* 35 von 35 Masken, Stehplaetze 4290 */
     { 0x30E0,  7,  53, { 0xFFFFFFFFu, 0x001FFFFFu, 0x00000000u, 0x00000000u } },   /* 53 von 53 Masken, Stehplaetze 10657 */
@@ -76,27 +76,25 @@ static const re15_masken36_zeile_t re15_masken36_zeilen[] = {
     { 0x4081,  5,  18, { 0xFF802AF6u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 18 von 32 Masken, Stehplaetze 8768 */
     { 0x4081,  6,  19, { 0xFE400957u, 0x0000000Fu, 0x00000000u, 0x00000000u } },   /* 19 von 36 Masken, Stehplaetze 8768 */
     { 0x4081,  7,   5, { 0x20021280u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 5 von 30 Masken, Stehplaetze 8768 */
-    { 0x5020,  0,  25, { 0xFF00000Bu, 0x02000000u, 0x619F8020u, 0x00000006u } },   /* 25 von 105 Masken, Stehplaetze 6549 */
-    { 0x5020,  6,  38, { 0x00007FBFu, 0x017FD000u, 0x4C285C01u, 0x0000000Eu } },   /* 38 von 105 Masken, Stehplaetze 3804 */
+    { 0x5020,  0,   1, { 0x20000000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 6549 */
+    { 0x5020,  6,  18, { 0x000036ACu, 0x00000000u, 0x40285C00u, 0x0000000Eu } },   /* 18 von 105 Masken, Stehplaetze 3804 */
     { 0x5020,  7,   2, { 0x00000000u, 0x00000020u, 0x00008000u, 0x00000000u } },   /* 2 von 105 Masken, Stehplaetze 6615 */
     { 0x5020, 11,   2, { 0x00000003u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 2 von 105 Masken, Stehplaetze 4089 */
     { 0x5020, 12,   3, { 0x00030001u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 3 von 28 Masken, Stehplaetze 1050 */
-    { 0x5021,  0,  25, { 0xFF00000Bu, 0x02000000u, 0x619F8020u, 0x00000006u } },   /* 25 von 105 Masken, Stehplaetze 6549 */
-    { 0x5021,  6,  38, { 0x00007FBFu, 0x017FD000u, 0x4C285C01u, 0x0000000Eu } },   /* 38 von 105 Masken, Stehplaetze 3804 */
+    { 0x5021,  0,   1, { 0x20000000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 6549 */
+    { 0x5021,  6,  18, { 0x000036ACu, 0x00000000u, 0x40285C00u, 0x0000000Eu } },   /* 18 von 105 Masken, Stehplaetze 3804 */
     { 0x5021,  7,   2, { 0x00000000u, 0x00000020u, 0x00008000u, 0x00000000u } },   /* 2 von 105 Masken, Stehplaetze 6615 */
     { 0x5021, 11,   2, { 0x00000003u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 2 von 105 Masken, Stehplaetze 4089 */
     { 0x5021, 12,   3, { 0x00030001u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 3 von 28 Masken, Stehplaetze 1050 */
     { 0x5050,  0,   5, { 0x00010708u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 5 von 22 Masken, Stehplaetze 5464 */
-    { 0x5050,  1,  17, { 0x00402ECDu, 0x01002800u, 0x84000000u, 0x00000042u } },   /* 17 von 105 Masken, Stehplaetze 5464 */
-    { 0x5050,  2,  86, { 0xFFFFFFFFu, 0xFF8001FFu, 0xFFFF2BFEu, 0x000001FFu } },   /* 86 von 105 Masken, Stehplaetze 5464 */
+    { 0x5050,  1,  15, { 0x004006CDu, 0x01002800u, 0x84000000u, 0x00000042u } },   /* 15 von 105 Masken, Stehplaetze 5464 */
+    { 0x5050,  2,  50, { 0xFC909581u, 0xFE0001FFu, 0x60C62878u, 0x000001FEu } },   /* 50 von 105 Masken, Stehplaetze 5464 */
     { 0x5051,  0,   5, { 0x00010708u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 5 von 22 Masken, Stehplaetze 5464 */
-    { 0x5051,  1,  17, { 0x00402ECDu, 0x01002800u, 0x84000000u, 0x00000042u } },   /* 17 von 105 Masken, Stehplaetze 5464 */
-    { 0x5051,  2,  86, { 0xFFFFFFFFu, 0xFF8001FFu, 0xFFFF2BFEu, 0x000001FFu } },   /* 86 von 105 Masken, Stehplaetze 5464 */
-    { 0x5090, 11,   3, { 0x00000021u, 0x00000000u, 0x02000000u, 0x00000000u } },   /* 3 von 105 Masken, Stehplaetze 7892 */
-    { 0x5090, 13,  11, { 0x00045441u, 0x22001400u, 0x00010000u, 0x00000000u } },   /* 11 von 105 Masken, Stehplaetze 7892 */
+    { 0x5051,  1,  15, { 0x004006CDu, 0x01002800u, 0x84000000u, 0x00000042u } },   /* 15 von 105 Masken, Stehplaetze 5464 */
+    { 0x5051,  2,  50, { 0xFC909581u, 0xFE0001FFu, 0x60C62878u, 0x000001FEu } },   /* 50 von 105 Masken, Stehplaetze 5464 */
+    { 0x5090, 13,   1, { 0x00000000u, 0x00000400u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 7892 */
     { 0x5090, 14,   5, { 0x00000000u, 0x05400000u, 0x80000000u, 0x00000008u } },   /* 5 von 105 Masken, Stehplaetze 2206 */
-    { 0x5091, 11,   3, { 0x00000021u, 0x00000000u, 0x02000000u, 0x00000000u } },   /* 3 von 105 Masken, Stehplaetze 7892 */
-    { 0x5091, 13,  11, { 0x00045441u, 0x22001400u, 0x00010000u, 0x00000000u } },   /* 11 von 105 Masken, Stehplaetze 7892 */
+    { 0x5091, 13,   1, { 0x00000000u, 0x00000400u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 7892 */
     { 0x5091, 14,   5, { 0x00000000u, 0x05400000u, 0x80000000u, 0x00000008u } },   /* 5 von 105 Masken, Stehplaetze 2206 */
     { 0x50B0,  1,   5, { 0x00000000u, 0x00030083u, 0x00000000u, 0x00000000u } },   /* 5 von 60 Masken, Stehplaetze 14960 */
     { 0x50B0,  2,   1, { 0x00000000u, 0x20000000u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 14960 */
