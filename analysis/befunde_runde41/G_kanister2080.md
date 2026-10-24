@@ -173,6 +173,20 @@ Wortlaut: "In 2080, nachdem die Zombies durch die Tuer gebrochen sind, sollen si
   Alligator-Becken 2090); oben ist die Oeffnung zum Treppenabsatz. Die Lage der 8 (Tabelle k_zombies, API
   `re15_k2080_zombie_lage`) ist die "dieselbe Lage" fuer Spur F's Einstellung.
 
+### 1.12 Nachtrag 21 (22:25): Zugang zum Alligator ueber die Leiter - Folgen fuer Spur G
+Wortlaut: "... man kommt ueber die Leiter zum Aligator, nicht ueber das Tor. Das Tor soll verschlossen sein, und dann mit den
+Schluessel den man vom Aligator bekommt geoeffnet werden!" Orchestrator: "Spur G: die Kanister-Szene setzt voraus, dass der
+Spieler ueber die Leiter in 2090 ist (nicht ueber 20A0)."
+- Leiterweg = ROOM2080 main00 Slot 1 @0x0BC2 (Band 8, Rechteck (-9650,-26150)) -> ROOM2090 (-8200,0,-25550), gesperrt bis zum
+  Rechner (sub00 @0x0C50 Aot_reset Slot 1 solange (3,245) = 0; sub02 @0x0CAC gibt ihn frei, Abschnitt 1.1); zurueck ROOM2090
+  Tuer 0 @0x0996 -> 2080 (-9950,-14400,-25700) Cut 4 (gemessen `[aot] DOOR FIRE slot=0 ... target_cut=4 spawn=(-9950,-14400,
+  -25700)`, DOOR16).
+- Spur G braucht dafuer KEINE Aenderung: der Ausloeser (Abschnitt 3.3) verlangt den lebenden, geschwaechten Alligator; solange
+  er lebt, ist das Tor 2090/20A0 verschlossen (Spur F) - in 2090 ist der Spieler dann nur ueber die Leiter. Die Szene sichert
+  die Spielerlage beim Ausloesen und kehrt dorthin zurueck (kein Tor-Bezug). P1 (Knall + Zombies) faellt auf das erste
+  Betreten von 2080 NACH Bit 110 - im Leiterweg also auf den Rueckweg die Leiter hinauf (Riegel `ankunft` laeuft genau diesen
+  Weg 2090 -> 2080 ueber DOOR16) oder auf den Eintritt von 2030.
+
 ## 2. Messung vorher (Stand 2adca3bf, Bau local_build.sh, exe-Kopie re15_pc_g41_mess.exe)
 Lauf vorher1: `RE15_DEBUG_JUMP=2080@250 RE15_SET_FLAG=9:110,3:245 RE15_FORCE_CUT=5 RE15_FRAMEDUMP=20-60/20 RE15_SPAWN_DIAG=1
 RE15_EXIT_AT=60#2080` (Titel-Autostart wie die r41-Riegel).
@@ -289,6 +303,9 @@ Alligatorkampfes (Nachtrag 4: Aufnahme ohne Schnitt, Explosion R1 automatisch) l
   Stimmen. Jetzt: mit RE15_SE_DEBUG=1 schreibt se_play_layers je gespielter Lage `[se] Stimme: se.. layer.. vag.. note.. fine..
   center.. (.. Hz) -> SE-Stimme ..` direkt hinter die Ausloese-Zeile dieses Moduls (gleicher Aufruf, gleicher Strom).
 - Werkzeug `tools/r41_kanister2080/belege_n17_n20.py knall|sca|zlage` (Belege 1.10/1.11, Auswertung state.log).
+- **PSX-Variante des Moduls (build18):** `kanister2080_r41.c` rief `labs` ohne <stdlib.h> (das nur unter RE15_PLATFORM_PC
+  eingebunden ist) -> eigener Betrag; die leere PSX-Form von K_LOG nimmt die Werte jetzt als Argumente (keine unbenutzten
+  Log-Werte); die Messzeile Ebene laeuft nur auf dem PC (Abschnitt 5).
 
 ## 4. Messung nachher (exe-Kopie re15_pc_g41_mess.exe, Bau 2026-10-24)
 Grundumgebung: RE15_NO_INTRO=1 RE15_NOAUDIO=1 Titel-Autostart, RE15_WINDOW_SCALE=1.
@@ -338,9 +355,10 @@ Grundumgebung: RE15_NO_INTRO=1 RE15_NOAUDIO=1 Titel-Autostart, RE15_WINDOW_SCALE
   (Leon oben hinter der Kamera, Treppe leer), Bild 120 Cut 1 (Leon auf der Treppe, ein Zombie oben am Absatz), Bilder 180/390/600
   Cut 0 (Leon unten, Treppe leer).
 
-## 5. Tests (gezielt, keine volle Suite; Bau build16 ueber local_build.sh, ctest mit msys64 zuerst im PATH)
+## 5. Tests (gezielt, keine volle Suite; Bau build18 ueber local_build.sh, ctest mit msys64 zuerst im PATH)
 `ctest --test-dir re15_port/build -R "unit_r41_kanister2080|integration_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_" --timeout 1500 --output-on-failure`
--> **`100% tests passed, 0 tests failed out of 34`** (Total Test time (real) = 288.33 sec; integration_r41_kanister2080 245.78 sec).
+-> **`100% tests passed, 0 tests failed out of 34`** (Total Test time (real) = 232.10 sec; integration_r41_kanister2080 190.77 sec;
+   erster Lauf auf build16 ebenso 34/34, 288.33 sec).
 - Eigene Riegel (tests/unit/probes/r41_kanister2080.cmake): unit_r41_kanister2080_{lage, spawn, szene, start, bahn, texte, ebene}
   und integration_r41_kanister2080 (Laeufe ankunft / ebene / kanister / szene_leon / szene_elza, Kopf des Skripts).
   - `ebene` (neu, Nachtrag 20): `SCA @0x4BC: 140 Zellen, davon 100 auf Band 8; Flaeche ab Zombie 0: 37695 Raster, x -16625..-6725
@@ -353,6 +371,10 @@ Grundumgebung: RE15_NO_INTRO=1 RE15_NOAUDIO=1 Titel-Autostart, RE15_WINDOW_SCALE
 - Gruppen der beruehrten gemeinsamen Dateien: unit_r36_kartenbits (k_port[] Bits 114-116), unit_scd_* (7; Haken in
   scd_room_setup.c / scd_vm.c), unit_r41_re2gator_* (18; Spur-B-API re15_gr2_*, Kanister im Becken).
 - Nicht gelaufen: integration_r41_re2gator (Spur B; dieser Zweig aendert B's Modul nicht, er ruft nur dessen API).
+- PSX-Praeprozessorpfad (ohne RE15_PLATFORM_PC): `gcc -std=gnu11 -fsyntax-only -Wall -Wextra -Wno-comment -I include -I engine/src
+  engine/src/kanister2080_r41.c` -> rc 0, 0 Warnungen (vorher, Stand 5d635136: `error: implicit declaration of function 'labs'`,
+  <stdlib.h> nur unter RE15_PLATFORM_PC, und 5 x -Wunused-variable fuer reine Log-Werte; behoben mit eigenem Betrag und
+  einer PSX-K_LOG-Form, die die Werte benutzt).
 
 ## 6. OFFEN (gemessen bzw. benannt, nicht geraten)
 1. RE2-Ausloeser-Mitglieder +0x1D8/+0x1DA des Tyrant (ROOM7020 sub11 @0x06BE/@0x06C4, Getter @0x800560a4/@0x800560b0): der
@@ -388,6 +410,7 @@ Sprachdateien (vom Nutzer aufzunehmen, die Zeile laeuft bis dahin ohne Stimme):
 - `synchro/STAGE2/room2080/main42.wav` = "Marvin: Hey, Leon, try with this!"
 - `synchro/STAGE2/room2081/main42.wav` = "John: Hey, Elza, try with this!"
 Bedienung / Ablauf im Spiel:
+- Zugang zum Alligator ueber die Leiter (Nachtrag 21, Abschnitt 1.12).
 - Nach der 2090-Szene (Spur F, Bit 110): beim ersten Betreten von 2080/2081 knallt es (wie nach Irons), oben im Hauptbereich
   stehen 8 Zombies. Sie bleiben oben (Laufgang, Rechner, Balkon) - die Treppe zur 2030-Tuer gehen sie nicht hinunter, auch nicht,
   wenn Leon/Elza oben war und wieder hinuntergeht. Der Gaskanister steht von Anfang an am Ende des Balkons (Gas_Can.bmp).

@@ -118,7 +118,9 @@ static uint64_t s_kopf_ab;            /* Aktor-Bits: Kopf-ab gemeldet */
 #define K_LOG(...) do { fprintf(stderr, "[k2080] F%u ", (unsigned)g_engine.frame_count); fprintf(stderr, __VA_ARGS__); \
                         fputc('\n', stderr); } while (0)
 #else
-#define K_LOG(...) do { } while (0)
+/* PSX: keine Ausgabe; die Argumente bleiben "benutzt" (sonst -Wunused-variable fuer reine Log-Werte wie slot/t). */
+static void k_log_leer(const char *f, ...) { (void)f; }
+#define K_LOG(...) k_log_leer(__VA_ARGS__)
 #endif
 
 static int bit(int b)               { return re15_game_flag_get(RE15_K2080_BANK, (uint8_t)b) != 0; }
@@ -443,7 +445,10 @@ static void ziel_waehlen(re15_actor_t *n)
     for (int s = 1; s < RE15_ACTOR_MAX; s++) {
         const re15_actor_t *e = &g_actors[s];
         if (!zombie_lebt(e)) continue;
-        const long d = labs((long)e->x - n->x) + labs((long)e->z - n->z);
+        long dx = (long)e->x - n->x, dz = (long)e->z - n->z;     /* ohne <stdlib.h> (PSX-Bau: nur unter RE15_PLATFORM_PC) */
+        if (dx < 0) dx = -dx;
+        if (dz < 0) dz = -dz;
+        const long d = dx + dz;
         if (d < best) { best = d; s_ziel_slot = s; }   /* naechster zuerst (Gun-FSM-Zielsuche FUN_80037250, Form) */
     }
     K_LOG("Ziel %d: Slot %d", s_ziel_n + 1, s_ziel_slot);
@@ -550,6 +555,7 @@ int re15_k2080_zombies_oben(int *aktiv, int *auf_treppe, int *falsche_hoehe)
 }
 static void messzeile_ebene(void)
 {
+#ifdef RE15_PLATFORM_PC   /* nur Messzeile: auf der PSX ohne Ausgabe (K_LOG leer) */
     if ((g_engine.frame_count % 30u) != 0) return;
     int n = 0, w = 0, h = 0;
     if (re15_k2080_zombies_oben(&n, &w, &h) == 0) return;
@@ -565,6 +571,7 @@ static void messzeile_ebene(void)
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     K_LOG("Ebene: %d Zombies x %d..%d y %d..%d, auf der Treppe (x < %d) %d, nicht auf y %d: %d | Spieler (%d,%d,%d)", n,
           (int)x0, (int)x1, (int)y0, (int)y1, RE15_K2080_ABSATZ_WAND_X, w, RE15_K2080_Y, h, (int)pl->x, (int)pl->y, (int)pl->z);
+#endif
 }
 
 void re15_kanister2080_r41_tick(void)
