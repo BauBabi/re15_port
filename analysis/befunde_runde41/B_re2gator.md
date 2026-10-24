@@ -1923,3 +1923,24 @@ ohne Ende, bis 600 Bilder), buehne (jede laufende Kamera, Raum-Objekte), integra
   F902 (Game-Over-Uebergabe)`. Bilder `B41nb6/E1_nachher_ende.png` (F760-F902) und `E1_nachher_ende_zoom.png` (x3, Aufhellung x2,5):
   F870-F898 Gator aufgerichtet mit Leon (blau) im Maul unter YOU DIED, **F902 ungeblendet: Leon im offenen Maul** - kein Bild mit
   stehendem Opfer. Vorher `B41abn5/E1_ende2.png`.
+
+### 14.2 M2 - Buehne in der laufenden Kamera, Umsetzen sichtbar (behoben)
+- **Ursache (Code, gelesen):** re15_gr2_finisher_buehne (NB5) waehlte unter ALLEN Zonenkameras nach Versatz + 4 x Drehung - auch die
+  Kamera, die im Biss-Bild schon zu sehen war; dann gibt es keinen Schnitt, und P0 setzt Gator und Leon im laufenden Bild um.
+- **Messung vorher** (Abnahme 5, nicht wiederholt): G1F `Buehne ... Gier 1499 -> ... Gier 351 Cut 0`, state.log cam=0 F395-F403, Gator
+  r1499 -> r351 (101 Grad) und Leon (-8024,-23663) -> (-118,-25508) in einem Bild (`B41abn5/G1_gleiche_kamera.png`); G2F cam=6 durchgehend,
+  Leon springt 3500 (`G2_gleiche_kamera.png`); Sonde probe_kamreg: 10090 von 24295 Wasser-Bisslagen.
+- **Beleg:** RE2 P0 setzt um (@0x80101048-4c) und schneidet im selben Takt (@0x80100fec-ff4, Sperre @0x80100fcc-d0); dort ist der Weg
+  klein (Biss nur am Korridorende, Sub 7 @0x801012e0-e4) - Cut 7 ist in ROOM40A0 selbst Zonenkamera (§14.0). Laufende Kamera RE1.5:
+  angezeigt work_vars[0x0A] = DAT_800b0fe4 (@0x80021bfc), angefordert DAT_800afbb5 (@0x80014300).
+- **Aenderung (PORT-WAHL, Form RE2-P0 "Umsetzen nur zusammen mit dem Schnitt"):** gr2_fin_laufend schliesst beide Cuts des Biss-Bildes
+  als Buehnen-Kamera aus (gator_re2_r41.c, Kopf der Suche); der Rueckfall ohne Buehne (re15_gr2_kamera_finisher -> gr2_kam_schnitt)
+  nimmt sie ebenfalls nicht (s_wahl_ohne_laufend). Die Buehnen-Logzeile nennt "laufende Kamera a/b ausgeschlossen".
+- **Messung nachher** (exe, eigene Kopien re15_pc_b41n6_<Lauf>.exe, Ordner `B41nb6/mess/<Lauf>`):
+  - G1F (`RE15_DEBUG_JUMP=2090@250 RE15_GB_TEST=1 RE15_PLAYER_POS=-7950,-25050,2048 RE15_EXIT_AT=430#2090 RE15_FRAMEDUMP=394-430`):
+    `Buehne ... von (-5734,-21085) Gier 1499 -> (-5650,-16000) Gier 2929 Cut 6 ... laufende Kamera 0/0 ausgeschlossen`; state.log cam=0
+    bis F398, Biss F399 (Anforderung cam=6), Maul-Sitz F400 "(Cut 6)"; Bild `B41nb6/G1_nachher.png`: F396-F399 Seitenansicht Cut 0 mit
+    dem Biss, **F400 Schnitt auf Cut 6** - Leon vor dem frontalen Gator, F402-F412 Hochheben, F414 im Maul. Vorher `B41abn5/G1_gleiche_kamera.png`.
+  - G2F (`RE15_PLAYER_POS=-5950,-20550,2048 RE15_EXIT_AT=470#2090`): state.log cam=6 bis F439, Biss F440 -> `... -> (2100,-24500) Gier 1951
+    Cut 1 ... laufende Kamera 6/6 ausgeschlossen`; Bild `B41nb6/G2_nachher.png`: F440 Cut 6, **F441 Schnitt auf Cut 1**.
+  - E1 (Tuerweg): laufend 2/2 -> Cut 6, Schnitt F627 -> F628 (`B41nb6/E1_nachher_schnitt_p1.png`).
