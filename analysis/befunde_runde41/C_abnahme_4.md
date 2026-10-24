@@ -10,9 +10,16 @@ Begonnen 2026-10-24 ~18:4x. Pruefer: Abnahme 4 (Opus). Der Bericht wird FORTLAUF
 `C41abn4/` (unten `<a4>` =
 `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/C41abn4`).
 
-**Ergebnis: (in Arbeit)**
+**Ergebnis (abgeschlossen 2026-10-24 20:3x): NICHT bestanden.** Punkte 1, 2, 3, 4, 5, 6 erfuellt (Leon UND Elza, ueber echte Tueren);
+Nachtrag 12 (k) erfuellt (Pegel y -5350 knapp unter dem Ringboden, Bilder); Abnahme-3-Maengel 1 (`_kette` rc=0) und 2 (Doku) behoben;
+Nachtrag 13 (echtes Ventilraetsel; vom Nutzer mit Nachtrag 15 freigegeben) **teilweise**: Raetsel, Plakat, Texte, Leser und Ableitung
+stimmen, aber das Dokument-Blatt ist in der Welt nicht zu erkennen (15 von 16 Kameras 0 Pixel, Cut 5 39 dunkle Pixel) -> Mangel 1
+(mittel); dazu Mangel 2 (niedrig): Schliessen des Plakats in der Flut hebt deren Pad-Sperre auf (gemessen). Gates: RE-Gate und Vertrag
+halten, Nebenwirkungen bis auf Mangel 2 keine. Tests: Unit 241/241 + PASS (446), Integration 22/22, `_kette` von Hand rc=0.
 
 ## 0. Stand / Protokoll (neueste zuerst)
+* 20:3x ABSCHLUSS: Raum-/Dokument-Gruppe 17/17 gruen (§3); FLR Elza, PK (Plakat bis in die Flut -> Mangel 2) gemessen; Urteile §4,
+  Maengel §5. Kein Code geaendert; nur dieser Bericht committet.
 * 19:3x Messungen K1/K2/D/P/P1/P4/P5/P6/FL/FLR/N12/KE abgeschlossen (Leon + Elza wo verlangt); Integration r41 4/5 gruen, Haupt-Riegel
   und Raum-/Dokument-Gruppe laufen (`<a4>/ctest_integ_r41.txt`, `<a4>/ctest_integ_raum.txt`). Neu im master (nach dem Start dieser
   Abnahme): AUFTRAG.md **Nachtrag 15 (19:01)** = Freigabe des Ventilraetsels durch den Nutzer (§4).
@@ -280,7 +287,19 @@ Stichproben der in Nachbesserung 4 NEU zitierten Stellen (alle selbst gelesen, r
   `Folge 09 07 02 01 -> RICHTIG` -> `DOOR FIRE slot=0 ... target_cut=11` -> `loaded room20b0.rdt` -> `Bits 103 + 100`; w3: `Wasser knapp
   unter der Absperrung y -5350`, `[prop-render] pi=4 oid=0x04 pos=(0,-5350,0)`.
 * `_kette` von Hand (C-E1, im Spurbaum nicht registriert): rc=0 bis zur 20B0-Ankunft (§1 KE).
-* Raum-/Dokument-Gruppe (17 Riegel, Regex `<a4>/regex_integ_raum.txt`, `-j 2`): (laeuft, Protokoll `<a4>/ctest_integ_raum.txt`)
+* Raum-/Dokument-Gruppe (Nachbar-Riegel der beruehrten Module: Raeume 2030/2050/2000/20B0/2070, Kisten, Wasser, Itemband/Lift,
+  Gegnerzahl, Dokument-Leser/re15_files.c, Prop-Lader main.c; 17 Riegel, Regex `<a4>/regex_integ_raum.txt`, `-j 2`, 19:39-20:30, unter
+  Last): `integration_r37_itemband_lift Passed 1500.38 sec`, `integration_r36_dachkiste Passed 1885.20 sec`,
+  `integration_r34n_e_dokumente_bild Passed 174.17 sec`, `integration_r37_kistenregel Passed 395.48 sec`, `integration_r37_itemband Passed
+  1069.86 sec`, `integration_r30_irons_tisch_bild Passed 47.35 sec`, `integration_r38_wasser Passed 172.07 sec`,
+  `integration_r38_spinnen_echtlauf Passed 126.59 sec`, `integration_r38_wasserzombie Passed 167.20 sec`, `integration_r38_tagebuch_lesen
+  Passed 45.94 sec`, `integration_r38_tagebuch_leon Passed 24.41 sec`, `integration_r37_fahrstuhl_n1 Passed 136.01 sec`,
+  `integration_r37_kiste Passed 68.55 sec`, `integration_r30_irons_tisch_laden Passed 52.29 sec`, `integration_r36_gegnerzahl Passed 138.81
+  sec`, `integration_r38_tagebuch_karte Passed 41.29 sec`, `integration_r37_kiste2feld Passed 80.31 sec` -> **`100% tests passed, 0 tests
+  failed out of 17`** (Total Test time (real) = 3081.48 sec; `<a4>/ctest_integ_raum.txt`). Kein roter Riegel -> kein Nachfahren noetig.
+* **Summe: Unit 241/241 (+ `unit_r41_ventilkette` PASS 446), Integration 22/22 (5 r41 + 17 Raum/Dokument), `_kette` von Hand rc=0.** Keine
+  volle Suite (Auftrag). Gruen heisst hier nicht "Mangel 1/2 erfuellt": kein Riegel prueft die Sichtbarkeit des Dokument-Blatts oder die
+  Pad-Sperre nach dem Schliessen des Plakats in der Flut.
 
 
 ## 4. Urteil je Nutzer-Punkt (gegen den Wortlaut, AUFTRAG.md; gebauter Stand exe 16:59 = Code HEAD b08bb0c4)
@@ -316,7 +335,7 @@ Ventilraetsel freigegeben ("Freigeben" — Plakat, Loesung 09 -> 07 -> 02 -> 01,
   Freigabe). Das Plakat dagegen ist im Spielbild deutlich sichtbar (K1 Cut 5). Forderung: das Blatt am freigegebenen Fundort "neben der
   Sicherung" so legen bzw. kenntlich machen, dass es in der Kamera des Landeplatzes (Cut 5; Gegenprobe Cut 6/7) als Blatt erkennbar ist
   (z. B. eine Stelle des Landeplatzes vor dem Gelaender bzw. im freien Bodenbereich von Cut 5, oder an Wand/Gelaender neben der Tuer
-  wie das Plakat, oder die RE2-Blink-Form der Spur D (re15_blink, Feuerloescher 1030) — Form mit Beleg, Begruendung im Dossier);
+  wie das Plakat, oder — nach dem Merge des master — die RE2-Blink-Form der Spur D (re15_blink, Feuerloescher 1030) — Form mit Beleg, Begruendung im Dossier);
   Zone weiter neben der Sicherung erreichbar; Messung wie oben (Pixel-Unterschied mit/ohne Bit 107 in Cut 5 deutlich > 39, Bild 1x/4x),
   Riegel mit Leon UND Elza; Dossier §7 fuer den Nutzer nachziehen.
 
@@ -334,10 +353,12 @@ Ventilraetsel freigegeben ("Freigeben" — Plakat, Loesung 09 -> 07 -> 02 -> 01,
   Beleg, Riegel (Plakat offen bis in die Flut -> nach dem Schliessen player_mode bleibt 2 bis zum Tod).
 
 Hinweise (kein Mangel):
-* (b) Fehlerton 0x0B: Aufruf und Bank-Eintrag (PANEL2130.EDT Satz 0x0B `00 00 83 01`) geprueft, nicht mitgeschnitten (RE15_NOAUDIO).
-* (c) PSX-Ziel ungebaut: Plakat-Nahaufnahme ueber die PC-Vollbild-Ebene, Wassernetze/Blaetter nur unter RE15_PLATFORM_PC (bekannt, H3).
-* (d) Ein Messlauf (sv_6_mit) blieb nach `[flow] EXIT_AT ... -> exit` haengen und endete erst am 200-s-Zeitlimit (allgemeiner
+* (a) Fehlerton 0x0B: Aufruf und Bank-Eintrag (PANEL2130.EDT Satz 0x0B `00 00 83 01`) geprueft, nicht mitgeschnitten (RE15_NOAUDIO).
+* (b) PSX-Ziel ungebaut: Plakat-Nahaufnahme ueber die PC-Vollbild-Ebene, Wassernetze/Blaetter nur unter RE15_PLATFORM_PC (bekannt, H3).
+* (c) Ein Messlauf (sv_6_mit) blieb nach `[flow] EXIT_AT ... -> exit` haengen und endete erst am 200-s-Zeitlimit (allgemeiner
   Beenden-Haenger der exe unter Last, nicht Spur C).
-* (e) Fragen (g)/(h) aus frueheren Abnahmen bleiben offen (keine Maengel der Spur); (m)/(n) mit Nachtrag 15 beantwortet.
-* (f) 20B0-Auswasch-Szene: nach C-E1 nur mit dem Haken der Spur A; im Integrationsbaum wird `_kette` registriert (Merge-Probe §1 KE).
+* (d) Fragen (g)/(h) aus frueheren Abnahmen bleiben offen (keine Maengel der Spur); (m)/(n) mit Nachtrag 15 beantwortet.
+* (e) 20B0-Auswasch-Szene: nach C-E1 nur mit dem Haken der Spur A; im Integrationsbaum wird `_kette` registriert (Merge-Probe §1 KE).
 
+Gates: G1 RE-Gate haelt (7 Stichproben selbst disassembliert/gelesen, alle bestaetigt), G2 Vertrag haelt, G3 Nebenwirkungen: Mangel 2.
+**bestanden = false** (Mangel 1 mittel, Mangel 2 niedrig).
