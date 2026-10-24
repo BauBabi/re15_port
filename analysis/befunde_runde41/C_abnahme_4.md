@@ -123,6 +123,14 @@ Zustand nach der Flut + Strom (Bits 103/100/101/102/106, (3,108), (3,126), (3,14
   (`id=0 "From here maybe I can control the water level.Will you operate the computer?"`, `FLAG (3,245)` 0 -> 1, kein Port-Programm) ->
   `DOOR FIRE slot=1 rect=(-9150,-25650,...)` -> `loaded room2090.rdt`.
 
+### FL — Punkt 3: Zeit abgelaufen und noch im Raum -> Flut -> Tod mit Ertrink-Effekt (Leon `fl`; ausgeloest ueber die richtige Folge)
+Start Sued-Landeplatz (Bits 101/102 + (3,108)), Wegplan `<a4>/plaene/fl.txt`: 09/07/02/01 zu Fuss -> `RICHTIG` -> `id=46` -> `Zaehler
+laeuft: 1800 Takte` (~F1750) -> Spieler bleibt am Nord-Landeplatz (-1320,-1800,-7887) -> `[scd F3524] Cut_chg(4)` -> `FLUT: Wasser steigt`
+-> `SPRITZER: Wasser y -1800 erreicht die Fuesse (Spieler y -1800), Effekt 0x06050D00` -> `[fade-log] config ch=0 abr=2 mask=6 step=0
+bucket=7` + `kick ch=0 value=0x5000` -> **`ERTRUNKEN: Wasser y -2700, Spieler y -1800 -> hp -1, blaue Blende`** -> mo 7 (Sterben).
+Bildbogen `<a4>/bilder/fl_flut.png`: F3530..F3570 Draufsicht Cut 4, das Wasser steigt ueber den Steg, F3590/F3610 blauer Schleier,
+F3700 "YOU DIED" (F3650 ein heller Vollbild-Uebergang der Todeskette).
+
 ## 2. Gates
 
 ### G1 RE-Gate (eigene Disassembly / eigene Byte-Lesung)
