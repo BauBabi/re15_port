@@ -633,3 +633,15 @@ Folgen (Orchestrator, Umsetzung Spur C):
    belegt -> naechste freie nach Zensus, im VERTRAG nachtragen).
 6. Riegel: ohne Kasten-Sicherung kein Ventil; mit ja; nach der Flut Herausnehmen moeglich und Generator 2060 erreichbar
    (ganzer Weg zu Fuss, Leon UND Elza).
+
+## 2026-10-24 19:44 — Nachtrag 17 (Wortlaut; Ton beim Hereinkommen der Zombies in 2080, Spuren G und F)
+
+Bezug (Orchestrator-Meldung): "Metalltuer-Ton und 8 Zombies" (Spur G, 2080).
+
+> Muss natürlich ein knallen sein, als ob die Zombies rein brechen, so wie bei STAGE1 von Elza/Leon am Ende in der Cutscene
+> nach Irons.
+
+Folgen (Orchestrator): Kein Schliess-Ton, sondern der KNALL des Hereinbrechens, wie in der STAGE1-Endszene nach Irons
+(Leon und Elza). Spur G (und Spur F fuer die Einstellung "oben in 2080 kommen die Zombies herein" in der 2090-Szene) belegt
+die genaue Original-Stelle (Raum, SCD-Offset des Ton-Befehls / Szenen-Ereignis, Ton-Id bzw. VAG/VAB-Satz) und verwendet
+denselben Ton (gleiche Datei/Stimme, Ton-Datei des Ports im Dossier fuer den Nutzer nennen). Beide nutzen denselben Ton.
