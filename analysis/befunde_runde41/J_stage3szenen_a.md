@@ -167,7 +167,8 @@ ROOM3020 mit Leon. Der Port vorher kniete an dieser Stelle (PL00 Clip 6, 50 Bild
 
 ### §1.7 Messung Port NACHHER (Lauf m3060_tuer = Weg des Spiels, integration_r41_stage3szenen_a_3060)
 Leon -> ROOM3020, Szene sub02 (RE15_FORCE_EVENT 2 = Ereignis des Aot slot 3 @0x00BE2) -> `[pld] Spielermodell -> PL0D`,
-Tuer -> ROOM30C0; Sprung ROOM3040; **Tuer Slot 0 -> ROOM3060 Ankunft (2063,0,-17192) Cut 4** (@0x0127E, Bit 4:196);
+Tuer -> ROOM30C0; Sprung ROOM3040; **Tuer Slot 0 -> ROOM3060 Ankunft (2063,0,-17192) Cut 4** (ROOM3040 @0x0127E Door_aot_set sce 2, Bit 4:196 —
+im Spiel setzt es ROOM3040 sub02 @0x014EE beim Aufschliessen);
 `[wclip41] ROOM3060 F65 Spieler Plc_motion(2,6) -> W-Bank-Clip 6 (... Waffe 1, 10 Bilder)`; RE15_ANIM_TRACE: Clip 6 /
 10 Bilder, Bilder 0..8 je einmal, **Bild 9 31x gehalten** bis zum Ende (Bild 104); vorher F25 W5 (Drehen), F28 W-Clip 1,
 F44 W-Clip 2 wie das Original (t=5,0 s Sub 6 W-Clip 1). Danach Tuer -> ROOM3020 als PL00 (Leon). Bild:
@@ -329,3 +330,34 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
 | integration_r41_stage3szenen_a_3060 | echte exe: 3020-Szene -> PL0D -> Tuer 3040 -> 3060, W-Clip 6 / 10 Bilder, Bild 9 >= 25x | gruen |
 | integration_r41_stage3szenen_a_3061 | echte exe: Spielstand + CONTINUE ROOM3061 (Elza), Gitter-Lage, Anker-Takte, Sherry-Lagen (Rest (3,10)), Sherry im Schacht (-30700), Elza W-Clip 6 gehalten, Wechsel 30C1/PL0F | gruen |
 | unit_r41_stage3szenen_a_rbj_{mechanik,zensus,kanal} | Binder (§0, Vorgaenger) | gruen |
+
+## §4 OFFEN (je mit Adresse; keiner betrifft das, was der Nutzer in 3060/3061 sieht)
+1. Super_set-Vaterarten 0x40 (Spieler), 0xc0 (Objekt) und Gegner ausserhalb State 4 (Lieferfall nur ROOM4030/4031 sub07
+   `48 00 80 81`, Typ 0x2D Teil 1): der Opcode wird wie vor dieser Spur uebersprungen (Messzeile `[superobj41] ... OFFEN`).
+   Fuer die Gegner-Pose ausserhalb State 4 fehlt dem Port die Kanal-Zuordnung je AI-Zustand (Zeichner main.c).
+2. PSX-Plattform: Zeichner-Haken fuer angehaengte Props (pc_prop_world) und fuer den W-Bank-Clip (dining_r39-Haken) gibt
+   es nur im PC-Zeichner; die Engine-Module (fussanker/superobj/wclip) sind plattformneutral. PSX in dieser Runde nicht gebaut.
+3. Sherrys Lage VOR dem Kriechen: Port (-18857,-26256), Original (-18860,-26266) — Ende des NPC-Gangs (Plc_dest Modus 5/9 in
+   sub02/sub10 @0x013B2.., Sub-VM-WALK); danach traegt der Anker den Rest (3,10) unveraendert weiter. NPC-Gang-Genauigkeit,
+   nicht Teil dieser Punkte.
+4. Spieler-Executor 0x80030660 hat dieselben Anker-Bits (@0x800306cc `andi 0x1` / @0x800306e8 `andi 0x2`); kein ausgelieferter
+   Datensatz setzt sie am Spieler (Zensus) -> nicht verdrahtet.
+5. Vorbild-Stand des Ankers nach dem NPC-Takt: ein spaeteres Objekt-Ausschieben desselben Bildes (FUN_8002bd44 @0x8002be0c)
+   waere nicht enthalten — in ROOM3061 kein Fall (Gitter ohne Box).
+6. Beobachtung ohne Bewertung: Johns Einlauf (sub10) schiebt im Port eine im Ausloese-Rechteck wartende Elza bis x 262; im
+   Original stand die Figur erst nach dem Einlauf dort (o3061_a). NPC-Spieler-Kollision = Spur H.
+
+## §5 Fuer den Nutzer
+- Sehen: **Leon**, STAGE3, Ende von Marvins Abschnitt (ROOM3020-Szene -> als Marvin ueber 30C0 ... 3040 -> Tuer -> ROOM3060):
+  Marvin dreht sich zu den Hunden und hebt das Messer vor die Brust und haelt es (vorher: er kniete sich hin); dann Wechsel
+  zurueck zu Leon in ROOM3020. **Elza**, ROOM3061-Szene: Sherry zieht das Gitter mit beiden Haenden heraus, legt es links ab,
+  geht auf alle Viere und kriecht in die Oeffnung, bis sie verschwunden ist (vorher: sie lag vor der Wand); am Ende dreht
+  sich Elza zum Hund und hebt das Messer (vorher: Knien), John hebt die Pistole; dann ROOM30C1 als Sherry.
+- Keine neuen Assets (shared_assets/RE2 unveraendert), keine Sprachdateien, keine neuen Bits/Nachrichten-Ids.
+- Ueberschneidung Spur K: Sherrys MODELL ab 30C1 (PL0F) und die 3091-Szene gehoeren K; hier nur die Schacht-Bewegung der
+  NPC-Sherry (Typ 0x4B, EM4B aus CDEMD1) in 3061. Der RBJ-Binder (§0, e4a9f39c) wird von K per cherry-pick uebernommen.
+- Gemeinsame Dateien (Haken, je "Runde 41 Spur J"): enemy_ai_common.c (Executor-Bits 2 Zeilen, Vorbild-Stand 1 Zeile),
+  scd_vm.c (register_opcodes 0x48/0x49, 1 Block), platform/pc/main.c (pc_prop_world 4 Zeilen; RBJ-Spieler 1 Zeile §0),
+  dining_r39.c (3 Zeilen wclip), enemy_common.c + platform/psx/src/asset_psx.c (RBJ-Binder §0).
+- Werkzeuge: `re15_port/tools/r41_j/j41_szene.py` (DuckStation-Szene aus einem Savestate: Video und/oder Slot-1-Reihe,
+  settings.ini bytegleich zurueck), `lauf.sh` (Port-Messlauf mit eigener exe-Kopie).
