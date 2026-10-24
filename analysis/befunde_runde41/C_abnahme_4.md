@@ -111,6 +111,18 @@ der Sicherung), Wegplan `<a4>/plaene/k2.txt` (91 Befehle). Leon und Elza Zeile f
   ROOM2000)` -> `loaded room20b0.rdt`. Bild `<a4>/bilder/p4_20b0.png` (Cut 9): Gitterfenster OHNE Strahl, Spieler an der Leiter.
   (Laufende per Zeitlimit, weil mein EXIT_AT auf 2050 zielte und der Plan vorher nach 20B0 zurueckging — kein Spielbefund.)
 
+### P6 — Punkt 6 / Nachtraege 7/8/12 (k): nach der Flut MIT Strom ueber die echte 20B0-Ost-Tuer -> 2030 Ring -> Lift B -> 2080 -> 2090 (Leon `p6`)
+Zustand nach der Flut + Strom (Bits 103/100/101/102/106, (3,108), (3,126), (3,144), Kisten/Kurbel/Tuer-Bits wie die Riegel; 20B0-Szene
+(3,235) gelaufen), Start 20B0 (4950,-6400) vor Tuer Slot 3, Wegplan `<a4>/plaene/p6.txt`:
+* `[aot] DOOR FIRE slot=3 rect=(5950,-6400,hw=500,hh=1500) target_cut=0 spawn=(6550,-5400,-100)` -> `loaded room2030.rdt` ->
+  **`[ventilkette41] ROOM2030: Strom (3,126) -> Wasser knapp unter der Absperrung y -5350 (Schachtoeffnung), Treppe Slot 8 -> Sperrtext 48,
+  Ring frei`**, **`[prop-render] pi=4 oid=0x04 pos=(0,-5350,0)`** (Ringboden y -5400 -> Wasser 50 darunter). AOT-Liste ohne die Slots
+  14-21 (Ventile/Dokument/Plakat unter Wasser), Treppe Slot 8 `typ 5 ev 48 band 3`.
+* Treppe vom Ring: **`id=48 "I cannot go down the stairs because of the water."`**; Ring trocken begehbar (Nord -> Ost -> Sued -> West),
+  Lift B: `FLAG (3,220)` 0 -> 1; Suedgalerie -> `DOOR FIRE slot=1 rect=(-7700,6400,...)` -> `loaded room2080.rdt` -> Rechner = ORIGINAL
+  (`id=0 "From here maybe I can control the water level.Will you operate the computer?"`, `FLAG (3,245)` 0 -> 1, kein Port-Programm) ->
+  `DOOR FIRE slot=1 rect=(-9150,-25650,...)` -> `loaded room2090.rdt`.
+
 ## 2. Gates
 
 ### G1 RE-Gate (eigene Disassembly / eigene Byte-Lesung)
