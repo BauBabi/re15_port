@@ -341,3 +341,46 @@ Framedump-Dateien, die je Raum nummeriert sind — so geschehen in den ersten L�
 - **Einordnung:** ALT, aber sichtbar, gegen den Wortlaut von Punkt 1 ("den Finisher … aus Resident Evil 2": im RE2-Finisher liegt
   Leon im Maul, so wie hier in A2) und seit der Nachbesserung 4 auf dem natürlichen Weg (20A0-Tür → Ostrampe, wo der Spieler steht
   und schießt) erreicht. Nach dem Maßstab der Abnahme 3 (deren M2 war ebenfalls ALT) ist das ein **Mangel dieser Abnahme (M1, §9)**.
+
+## 6. Nebenbefunde (keine Mängel dieser Abnahme, zur Kenntnis)
+- **Türweg 20A0 → 2090 ohne Testhebel (EN):** der Gator bleibt 2400 Bilder untergetaucht am Lauerplatz (−7200,−9200), obwohl Leon
+  per Autopilot über die Rampe bis (−1200,−13200) und zurück läuft — der Auslöser des Kampfes auf diesem Weg ist die Szene der
+  Spur F (Nachtrag 6: "… Macht danach Richtung Leon eine schrei und Schüttel Animation. Danach geht der Kampf los"). Alle
+  Belagerungsläufe dieser Abnahme brauchen deshalb `RE15_GB_TEST=1`.
+- **Spinnen in 2090** ziehen Leon weiter je 20 ab (A2 F57/F175 bei 9327/8928 Abstand zum Gator, BA/BN F382/F515/F873) — Spur F
+  entfernt sie (AUFTRAG).
+- **Vorher-Bau MA2:** die Finisher-Kamera wählt Cut 7 (Kandidatenzeile `kopf_bild=(265,105)`, also im Bild), im Bild ist aber kein
+  Gator zu sehen; die Ursache (Verdeckung/Licht) ist nicht geprüft. Im neuen Bau zeigen die gewählten Schnitte den Gator (E1/RN
+  Cut 2, MN2 Cut 4) — Teil der Forderung von M1 (Kamera zeigt Gator UND Leon).
+- **Prüfer-Sonde `probe_tod`** (Vorgängerin): Leon bleibt nach dem Tod an seiner Statuenlage stehen (der Harness hat keinen
+  Spieler-Schritt) — sie misst nur den Todeszeitpunkt und die Gier, nicht die Finisher-Lage.
+- **Messfalle (für spätere Abnahmen):** `RE15_FRAMEDUMP` nummeriert je Raum; nach dem Game Over startet ROOM1170 neu und
+  überschreibt die 2090-Bilder gleicher Nummer → `RE15_EXIT_AT` vor den Raumwechsel legen (MA/MN → MA2/MN2).
+- **Befreiungs-Schub (PORT-WAHL der Nachbesserung 4):** in keinem exe-Lauf und keiner Sonde aufgetreten (`probe_cross` 32000 Takte,
+  34 CROSS-Starts: 0 Befreiungen), nur im Riegel `sitz (c)` (17 Schub-Bilder) — die vom Bau-Agenten offene Sichtprüfung im Spiel
+  ist damit praktisch nicht erreichbar.
+
+## 7. Behauptungen des Bau-Agenten — Abgleich am gebauten Stand
+| Behauptung | gemessen | Ergebnis |
+|---|---|---|
+| M1: RE2 hängt den Kanister als Kind an die Part-6-Weltmatrix (`addiu a0,s0,1104` @0x801018d0, `sw a0,128(s2)` @0x801018e0, FUN_8002d030 @0x801018f0, Kopf-az +0x22A @0x8010037c-90) | §2 selbst disassembliert; dazu RE2-Hauptschleife: Zeichnen 0x80027160 je Aktor VOR der Objekt-Schleife 0x800363f0 | ✓ |
+| Wand-Klemme am Takt-Ende, `re15_gr2_nachtakt` rechnet die gezeichnete Pose, Anhängen, Weltlage, Effekt-Quellen | Code gelesen (§1, §4.1); echte Zeichner-Messzeile 0 in 270/420/30 Bildern (C3/Z/K) | ✓ |
+| Riegel sitz 0 bei Wende, Biss, Befreiung, Überblendung | `unit_r41_re2gator_sitz` (a)–(d) je 0 | ✓ |
+| Gegenprobe alter Zeitpunkt: Wende 626 | passt zur eigenen Messung der Abnahme 3 (619–637 je Bild) | ✓ (nicht wiederholt) |
+| exe C3: Kanister-Sitz 270 Bilder, max 0 | `Kanister-Sitz F1388: angehaengt 270 Bilder, Abweichung max 0 (F1119)`; Bildbögen der Vorgängerin (Wende/Biss mit Kanister im Maul) | ✓ |
+| Nebenbefund Überblendung 4096/(n+1) + Abbau; Dash-Pose vorher 150 Bilder eingefroren | §2 selbst gelesen; C3 POSE_DUMP: 150 verschiedene Bone-9-Posen F635–F784 (vorher bitgleich) | ✓ |
+| M2: RE2 schreibt die Gier in Sub 1/2 nie | Volldisassembly EM23 (§2): kein Gier-Schreiber in Sub 1/2/T2 | ✓ |
+| PORT-WAHL: Befreiung nur im echten Gefängnis, Schub ohne Drehung | Code + Kennzeichnung; nur im Riegel aufgetreten (§6) | ✓ |
+| Riegel gier E1/C3 je 800 Takte max 64/96, 0 Sprünge; Gegenprobe alter Snap ±1984 | Riegel-Ausgabe; Prüfer-Sonde `probe_kopfwand` alt/neu (E1 15 → 0 Sprünge) | ✓ |
+| exe E1, C3, A2, D2, N, NZ ohne Sprung außer +1024 | gier.py: nur +1024, Intro-/Lauer-/CROSS-Starts (keine CHASE/GUARD-Bilder) | ✓ |
+| Sweep 3342/0 | `gator-sweep: 3342 Paare, 0 nicht konvergiert` | ✓ |
+| K, Intro, Dash/Putz und Elza unverändert | K/D2/NZ wie Abnahme 3 (Schütteln Bild für Bild), A2-Clipfolge 5 Bilder früher (fehlender Snap) | ✓ |
+| Unit 110, Integration 7 bzw. 2 grün | Unit 112/112 (Obermenge), Integration 7/7 (§5) | ✓ |
+| (nicht berichtet) Folgen von M2 im echten Türweg | E1/RN: Tod F627, Finisher ohne Leon im Maul (§3.4); in den eigenen Riegel-Läufen "belagerung" 11:21/11:34 als `… -> Cut 2 F628` protokolliert, nicht geprüft | ✗ |
+
+## 8. Urteile je Nutzer-Punkt
+| Punkt (Wortlaut AUFTRAG.md) | Urteil | Beleg |
+|---|---|---|
+| 1. "den Finisher und fehlende Animationen aus Resident Evil 2 extrahierst" | **teilweise** | RE2-Clips im Spiel (A2 6/3/4/1/5/11, D2 2/3, K 9, E1 10), RE2-FRESSEN + Finisher-Kamera bis Game Over aus einem CHASE-Biss mit Leon im Maul (A2 F398–F659, `beleg_A2_finisher.png`). ABER: nach einem tödlichen GUARD-Hochbiss (Leon oben auf der Rampe = Ankunftsort der 20A0-Tür) liegt Leon nicht im Maul — E1/RN F628–F868 (Cut 2), MN2 F588–F700 (Cut 4), im Vorher-Bau MA2 sogar ohne Gator im Bild; seit der Nachbesserung 4 auf dem Türweg erreicht (§3.4, M1) |
+| 2. Verfolgung wie RE2 (Animation, Schreie, Beschleunigung an gleichen Stellen), Wände wackeln + Putz, Klettern bleibt | **erfüllt** | Gier-Sprünge der Abnahme 3 (M2) weg: gier.py/GIER-WACHE in A2/C3/D2/E1/N/NZ/Z, Riegel gier, Sonden `probe_kopfwand`/`probe_sprung`/`probe_cross` gegen den Vorher-Bau (§3.2); Dash Clip 2/3 mit RE2-Planung, 27 Bank-17-SE, Schütteln Bild für Bild = Tafeln @0x8009db14/@0x8009daf4, Putz 6 × 9 = 54 (D2), Dash jetzt animiert, Klettern C3 `CROSS … frames=240` (§3.3); untergetaucht bis zum Durchbruch (N 201/201 bytegleich mit "ohne Gator", Elza gleich). Hinweis H2 (Belagerungsziel) gehört zur Ursachenkette von M1 |
+| 3. Kanister aufnehmen "GENAUSO wie im original", im Maul beschießbar, Sterbeanimation mit geplatztem Kiefer wie RE2 | **erfüllt** | M1 der Abnahme 3 behoben: Kanister-Sitz 0 in jedem gezeichneten Bild (C3 270, Z 420, K 30 Bilder; Riegel sitz (a)–(d)), Kanister dreht bei Wende/Biss mit dem Kopf zwischen den Kiefern (C3-Bögen); Aufnahme ohne Lenkung in 12 Bildern, Anschwimm-Sperre (Z); Schuss → R1 mit Zeitlupe 38 Bilder/2516 ms, Kiefer-Splitter F71–F80, Leiche mit geplatztem Unterkiefer ab F82 (K); RE2-Kind-Matrix und Bildreihenfolge selbst nachgelesen. Hinweis H1 (Hals-Zielmodus) wie in Abnahme 3 kein Mangel |
