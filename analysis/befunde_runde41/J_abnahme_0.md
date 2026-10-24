@@ -19,7 +19,7 @@ Pruefer: Abnahme 0, 2026-10-24 (abends). Arbeitsordner (Laeufe, Logs, Bilder): S
 - [x] Punkt 2a gemessen (CONTINUE-Weg UND echter Tuerweg 3011 -> 3061 per Quadrat, Framedump, Original selbst gelesen)
 - [x] Punkt 2b gemessen (dto.)
 - [x] RE-Gate (11 Adressbereiche selbst disassembliert, alle stimmen)
-- [x] Vertrag (Mangel V1 formal) / Nebenwirkungen (Mangel M2 ROOM4031, Nebenbefund N1 Hund)
+- [x] Vertrag (Mangel V1 formal) / Nebenwirkungen (keine erreichbare; Mangel M2 = falsche Doku-Aussage zu ROOM4031; Nebenbefund N1 Hund)
 
 ## Gate RE — selbst disassembliert (info/Re1.5/PSX.EXE, `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`)
 Alle zitierten Stellen enthalten das Behauptete (Auszug, Bytes/Instruktionen aus dem eigenen Lauf):
@@ -92,7 +92,8 @@ Riegel `integration_r41_stage3szenen_a_3060` (eigener Lauf): Passed 214,6 s — 
 `J41abn0/p1b_3060_marvin_zoom.png` (Ausschnitt 62,85-112,165, 3-fach): F56-F68 Marvin steht, F70-F74 hebt er den Arm vor die
 Brust, F76-F100 haelt er diese Haltung. Original-Video selbst ausgeschnitten (`J41b/orig/o3060_v4.mp4`, ffmpeg fps=10,
 `J41abn0/o3060v4_marvin_zoom.png`, Ausschnitt 124,170-224,330): o21-o32 steht, o33 Arm vor die Brust, o33-o43 gehalten, o44
-Abblende. **Gleicher Bewegungsablauf, gleiche Endhaltung; kein Knien.**
+Abblende. **Gleicher Bewegungsablauf, gleiche Endhaltung; kein Knien.** Zusammengefasst (obere Zeile Port, untere Original):
+`J41abn0/vergleich_p1_marvin.png`.
 
 **Lauf p1c_3060_waffe3** (gleicher Tuerweg, zusaetzlich `RE15_EQUIP=3` = Handfeuerwaffe, weil der Nutzer nicht zwingend das
 Messer traegt; ROOM3020 sub02 setzt keine Waffe, die W-Bank folgt im Original der ausgeruesteten Waffe @0x80036bc4):
@@ -131,6 +132,7 @@ Bilder (Port, 320x240 Framedump) gegen das selbst ausgeschnittene Original-Video
 - Elzas Ende: `J41abn0/p2a_3061_ende_zoom.png` / `J41abn0/o3061v3_ende_zoom.png` / `J41abn0/vergleich_3061_ende_voll.png`:
   Elza steht (F1396-F1436 / o117-o124), dreht sich (F1440-F1452 / o125-o127), hebt die Arme mit der Waffe nach vorn
   (F1456-F1465 / o128) und haelt (F1468-F1516 / o129-o137); John ebenso. Kein Knien mehr (vorher: J_belege/e3061_vor_ende_elza_kniet.png).
+  Zusammengefasst (oben Port F1436-F1516, unten Original o124-o137): `J41abn0/vergleich_p2b_elza.png`.
 
 **Lauf d3_3011_tuer_szene — der echte Weg durch die Tuer** (statt CONTINUE im Raum): Spielstand Elza in **ROOM3011** vor der Tuer
 Slot 1 (ROOM3011 @0x01FF2, Ziel ROOM3060/3061) bei (-7578,10065) Blick 0, Bits 4:244/3:160; Eingaben ab Spielbild 30
@@ -195,17 +197,20 @@ Bildfolge (Drehen, Arme mit Waffe vor, Halten) = Original-Video; kein Knien mehr
   `[rbj-binder] ROOM4001 Spieler rec2 (alt rec0) Gegner 0:rec1(alt rec1) 1:rec2(alt rec-1)`, `[rbj] room 4001 cinematic overlay:
   14 clips, 329 kf`, `Aktor 1 Typ 0x49 Marker-Slot 1 -> rec1 gebunden`, `Aktor 2 Typ 0x4B Marker-Slot 2 -> rec2 gebunden` — wie die
   eigene Nachrechnung der Schleife (Marker 1/2/3: Spieler = letzter Record mit Bit 0, a3 kumulativ).
-- **Super_set in ROOM4031 (Elza): NICHT wie vorher.** Selbst gemessen, Lauf `J41abn0/laeufe/e4031_super` (Elza ueber PSELECT,
-  RE15_DEBUG_JUMP=4030@250 -> ROOM4031, RE15_FORCE_EVENT=6@600 = sub06 -> sub07 `48 00 80 81` @0x00722):
-  `[superobj41] F621 Super_set Objekt 0 Art 0x80 Teil-Byte 0x81 lokal (0,0,0) Rot (0,0,0) -> angehaengt`. Grund: in ROOM4031 ist
-  Gegner 0 beim ersten Besuch (Bit 3:88 = 0, main00 @0x00552/@0x00556) **John (Typ 0x49)**, der nach seiner Szene sub08 in State 4
-  bleibt (state.txt bis F900: `[1 t=49 st=4 ...]`, sub08 @0x00886 `Member_set 01 = 20000`); der Typ 0x2D ist dann Gegner 1. Das
-  Objekt haengt jetzt an Johns Teil 1 (vorher: Opcode uebersprungen). Dossier §4.1 und der Kopf von `re15_superobj_r41.h` sagen
-  dagegen "einziger Fall ROOM4030/4031 sub07, Typ 0x2D in State 1 -> wie vorher uebersprungen" — fuer 4031 falsch und nicht
-  gemessen. Ob die Konstellation im Spiel erreichbar ist (sub06 nur ueber sub02 = AOT Slot 5, den main00 nur bei Bit 3:87 setzt;
-  3:87 setzt ROOM4040/4041 @0x01020; Weg ohne 4031 ueber 4001 -> 4021 -> STAGE5 -> 4071 -> 4041 existiert als Tuerkette) und was das
-  Original dann zeigt (der Original-Handler @0x80040c18 nimmt ebenfalls Gegner 0, egal welcher Typ), ist offen. -> **Mangel M2**.
-
+- **Super_set in ROOM4031 (Elza): anders als im Dossier behauptet — aber im Spiel nicht erreichbar.** Selbst gemessen, Lauf
+  `J41abn0/laeufe/e4031_super` (Elza ueber PSELECT, RE15_DEBUG_JUMP=4030@250 -> ROOM4031, Kunstgriff RE15_FORCE_EVENT=6@600 =
+  sub06 -> sub07 `48 00 80 81` @0x00722): `[superobj41] F621 Super_set Objekt 0 Art 0x80 Teil-Byte 0x81 lokal (0,0,0) Rot (0,0,0)
+  -> angehaengt`. Grund: beim ersten Besuch (Bit 3:88 = 0, main00 @0x00552/@0x00556) ist Gegner 0 **John (Typ 0x49)** und bleibt
+  nach seiner Szene sub08 in State 4 (state.txt bis F900 `[1 t=49 st=4 ...]`); der Typ 0x2D ist dann Gegner 1. Das Dossier (§4.1,
+  Bau-Bericht "einziger Fall ROOM4030/4031 sub07, Typ 0x2D in State 1: ... wie vor dieser Spur uebersprungen") und der Kopf von
+  `re15_superobj_r41.h` stimmen fuer 4031 also nicht.
+  Erreichbarkeit selbst geprueft (SCD aller 240 RDTs + Tuerkette): sub07 kommt nur aus sub06 (einziger Aufruf `Gosub 18 06`
+  @0x0068E in sub02), sub02 nur ueber den Aufzugs-AOT Slot 5, den main00 nur bei Bit 3:87 = 1 setzt (@0x004FA/@0x00516).
+  3:87 setzt nur ROOM4040/4041 @0x01020; 4040/4041 erreicht man nur ueber 4030/4031 Slot 1 oder ueber 4050/4070, 4070 nur aus
+  4040 oder STAGE5, STAGE5 nur ueber 4020/4021, und deren Tuer in 4000/4001 (Slot 0) ist nur bei Bit 3:78 eine Tuer
+  (@0x01046); 3:78 setzt nur sub06 von 4030/4031 (@0x0068C/@0x006CE) — der Aufzug selbst. Der erste 4031-Besuch (mit John) liegt
+  also immer vor 3:87; jeder spaetere Besuch hat 3:88 = 1 (sub08 @0x0075C) und damit Gegner 0 = Typ 0x2D in State 1 -> wie vorher
+  uebersprungen. **Keine im Spiel erreichbare Nebenwirkung**, aber eine falsche Aussage im Dossier/Kopf -> **Mangel M2 (Doku)**.
 ### Nebenbefund N1 (kein Spur-J-Punkt, nicht von Spur J verursacht): der Hund am Ende der 3061-Szene
 Original (o3061_s2 selbst gelesen, Gegner 2 Typ 0x20): t16 36 s cmd 1 / Sub 12 bei (-13350,-22000); t17 38 s cmd 1 / Sub 2 / Clip 0
 (Gehen) (-12932,-22482) rot 650; t18 40 s (-12578,-23421) rot 830 — er geht langsam nach rechts vorn (zur Kamera), nicht zu Elza
@@ -224,7 +229,16 @@ Logs unter Scratchpad `J41abn0/ctest_*.log`.
    Skript-Riegel von release/ (unit_r35_android_pruefkette, _bash_mutanten, unit_r38_releaseskript_trocken, _ablauf,
    _fehler_bau, _fehler_umfeld): ihre Pruefzeilen standen alle auf ok, der Prozess wurde unter der Parallel-Last nicht fertig;
    release/ ist vom Diff unberuehrt. Einzeln nachgefahren: `unit_r38_releaseskript_trocken` **Passed (788,7 s)**; die uebrigen
-   fuenf laufen einzeln (Ergebnis unten).
+   fuenf laufen einzeln nach (Stand am Ende dieses Berichts).
+3. Integrationsriegel der beruehrten Raeume/Module (NPC-Szenen mit State-4-Executor, RBJ-Raeume inkl. 1041/3091, dining_r39-Haken
+   1141, Tuer-/Raumwechselweg in main.c, STAGE3-Masken, Elza-Ketten), Regex in `J41abn0/integ_regex.txt`:
+   `ctest -R "<regex>" -j 3` -> **52/54 Passed**; rot unter Last: `integration_elza_vollstart` (Zeitschranke 100 s Wanduhr, Szene
+   lief noch: letzte Zeile F737 `[knee] ... cut=6`) und `integration_r35_cut1150` (Zeitablauf 900 s mitten in Lauf C, normal
+   ~550-615 s). Einzeln nachgefahren: `integration_elza_vollstart` **Passed (113,7 s)**; `integration_r35_cut1150` siehe Stand am
+   Ende. Gruen u.a.: r39_dining1141_* (4), r38_dining1141_* (7), r37_elzaems_elza3091/3071, r37_szene11c0, r36_szene1150,
+   r35_cut10f0, r36_szenenleon, r36_story_elza, r36_elza_* (5), r37_roy_* (3), r37_masken36_stage3, r38_elzatoene_* (2),
+   r38/r39_heliport1171_* (5), r38_szenenschutz, r39_elza_karte, r39_johnruf1041_* (8), r39_parkplatz11c0_* (5), door_traversal,
+   door_lock, keydoor.
 
 ## Maengel (nummeriert, nachpruefbar)
 **V1 (Vertrag, formal):** Haken ausserhalb der Zuteilung VERTRAG 1.3: `re15_port/engine/src/scd_vm.c` register_opcodes
@@ -233,16 +247,13 @@ D und F/G). Klein, markiert "Runde 41 Spur J", technisch ohne Alternative (Opcod
 Orchestrator-Entscheid; Konfliktgefahr mit C/F/G in register_opcodes bei der Integration. Abhilfe: Entscheid wie B5/A-E3/E-E1
 (annehmen) oder Haken verlegen. (Der RBJ-Spieler-Haken in main.c ist durch A-E5 gedeckt.)
 
-**M2 (Nebenwirkung ungeprueft, Doku falsch):** Super_set (0x48) wirkt in **ROOM4031 (Elza)** anders als behauptet. Beim ersten
-Besuch (Bit 3:88 = 0) ist Gegner 0 **John (Typ 0x49, Sce_em_set @0x00556)** und bleibt nach sub08 in State 4; sub07 `48 00 80 81`
-(@0x00722) haengt Objekt 0 dann jetzt an Johns Teil 1 — vorher wurde der Opcode uebersprungen. Gemessen: Lauf
-`J41abn0/laeufe/e4031_super` (Elza, RE15_DEBUG_JUMP=4030@250, RE15_FORCE_EVENT=6@600): `[superobj41] F621 Super_set Objekt 0 Art 0x80
-Teil-Byte 0x81 lokal (0,0,0) Rot (0,0,0) -> angehaengt`, state.txt `[1 t=49 st=4 ...]`. Dossier §4.1 / Bau-Bericht ("einziger Fall
-ROOM4030/4031 sub07, Typ 0x2D in State 1: der Opcode wird wie vor dieser Spur uebersprungen") und der Kopf von `re15_superobj_r41.h`
-stimmen fuer 4031 nicht. Abhilfe: Erreichbarkeit im Spiel klaeren (sub06 nur ueber sub02 = AOT Slot 5, nur bei Bit 3:87; 3:87 setzt
-ROOM4040/4041 @0x01020; Tuerkette 4001 -> 4021 -> STAGE5 -> 4071 -> 4041 ohne 4031 existiert) und das Original in genau dieser Lage
-messen (der Handler @0x80040c18 nimmt Gegner 0 ohne Typpruefung — der neue Port-Weg ist also vermutlich byte-true), dann Doku
-berichtigen und einen Riegel fuer 4031 anlegen; sonst (unerreichbar) Beleg + Doku-Korrektur.
+**M2 (Doku, klein):** Die Nebenwirkungs-Aussage zu Super_set in ROOM4031 ist falsch: Dossier §4.1, Bau-Bericht ("einziger Fall
+ROOM4030/4031 sub07, Typ 0x2D in State 1 ... uebersprungen") und Kopf `re15_superobj_r41.h`. In ROOM4031 ist Gegner 0 beim ersten
+Besuch John (Typ 0x49, State 4); per Kunstgriff gemessen haengt der Port Objekt 0 dort jetzt an (Lauf `J41abn0/laeufe/e4031_super`,
+`[superobj41] F621 ... -> angehaengt`). Im Spiel ist diese Lage nach eigener Pruefung nicht erreichbar (Aufzugs-AOT erst mit Bit
+3:87 aus 4040/4041, das erst nach dem ersten 4031-Besuch gesetzt werden kann; Kette s. Gate N) — der Bau-Agent hat 4031 aber
+weder gemessen noch so begruendet. Abhilfe: Dossier §4.1 und Header berichtigen (4031: Gegner 0 = John beim ersten Besuch,
+unerreichbar mit Beleg-Kette; der Original-Handler @0x80040c18 nimmt Gegner 0 ohne Typpruefung).
 
 ## Hinweise (keine Maengel)
 - H1: `integration_r41_stage3szenen_a_3060` nimmt die Tuer ROOM3040 -> ROOM3060 noch per `RE15_FIRE_AOT=0@1200#3040`. Mein Lauf
@@ -255,3 +266,16 @@ berichtigen und einen Riegel fuer 4031 anlegen; sonst (unerreichbar) Beleg + Dok
   Bild gesetzt werden kann" guenstiger (Laufzeitbudget). Kein Verhaltensunterschied.
 - H4: Neue Quellen fussanker/superobj/wclip/rbj_binder kompilieren mit `-Wall -Wextra` ohne eigene Warnung (eigener Probelauf in den
   Scratchpad, einzige Meldung ist die alte `-Wcomment` in re15_emd.h:37).
+
+## Gesamturteil: **NICHT bestanden** — alle drei Nutzer-Punkte erfuellt; offen sind nur zwei kleine Gate-Maengel (V1 formal, M2 Doku)
+| Punkt | Urteil | Kernbeleg |
+|---|---|---|
+| 1 ROOM3060 Marvin | **erfuellt** | echter Tuerweg 3040 -> 3060 per Quadrat; W-Clip 6 (10 Bilder) + 31 x Bild 9 bis zur Tuer, erstes 3020-Bild ohne W-Clip; Original o3060_s2_t03 cmd 4/Sub 2/Phase 2/Clip 6 (+0x168 = PL00W01-Clip-6 Bild 9); Bildfolge = Original-Video; auch mit Pistole |
+| 2a ROOM3061 Sherry kriecht | **erfuellt** | Anker FUN_800369f8 bytegleich zur Original-Reihe o3061_s3; Super_set/Super_reset; Sherry (-18792,-30700) vs (-18795,-30700); Bildfolge = Original-Video; CONTINUE-Weg und echter Tuerweg 3011 -> 3061 identisch; auf master reproduziert (z bleibt -26308) |
+| 2b ROOM3061 Elzas Ende | **erfuellt** | W-Bank PL04W01 Clip 6 + Halten (56 x Bild 9); Original o3061_s2_t17 cmd 4/Sub 2/Phase 2/Clip 6; Lage/Blick (-18510,-26206) 3651 gleich; Bildfolge = Original-Video |
+| 0 A-E5 RBJ-Binder | erfuellt | FUN_8001b3f8 selbst disassembliert, eigener Commit e4a9f39c, Riegel, Laufzeit-Stichprobe ROOM4001, Gegenmessung der Spur K in 3091 |
+
+Gates: RE **haelt** (11 Adressbereiche selbst disassembliert, Original-Daten selbst gelesen, MZD-RAM = PSX.EXE); V **Mangel V1**
+(formal, Orchestrator-Entscheid wie B5 genuegt); N **keine erreichbare Nebenwirkung**, aber **Mangel M2** (falsche Dossier-Aussage
+zu ROOM4031) + Nebenbefund N1 (Hund, nicht Spur J); T: Riegel der Spur 9/9, unit/probe/prop 917/923 (6 release/-Skript-Zeitablaeufe
+unter Last, vom Diff unberuehrt), Integration 52/54 + Nachlaeufe (s. Gate T und Stand unten).
