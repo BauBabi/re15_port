@@ -691,7 +691,9 @@ LAST_EXT), eigenes exe-Praefix je Riegel (`re15_pc_r41m2_*` / `re15_pc_r41m3_*`)
 5. **Uebersichtsbilder pri/STAGE3-6:** 204 von 214 vom Orchestrator ersetzt (master 919cc1ed); die 10 fehlenden liegen jetzt
    unter `M_bilder/uebersicht/` (durchsichtig, NB1 Auflage). Durch NB1 Mangel 1 haben sich die Uebersichtsbilder der Cuts mit
    wieder aufgenommenen Rechtecken geaendert (git diff --stat analysis/befunde_runde41/M_bilder/uebersicht) - pri/ ist fuer die
-   Spur tabu, das Ersetzen bleibt dem Orchestrator.
+   Spur tabu, das Ersetzen bleibt dem Orchestrator. **Nachbesserung 2** hat weitere 14 geaendert (Leon-Ordner; die Elza-Ordner xxx1
+   bekommen dasselbe Bild, MSK bytegleich): STAGE3/3040/00+03, STAGE3/30A0/00+01, STAGE5/5020/00+06 (X-Kiste), STAGE5/5050/01+02,
+   STAGE5/5090/11+13, STAGE6/6000/05+07+08+09 (Lok).
 6. **ROOM5100 C7, Leons Hand am unteren Bildrand** (-12030,-5300): das ALTE Generator-Rechteck 0 (Tiefe 64, x 0..43 y 154..240)
    verdeckt Leon-Dreiecke mit z 4164..4615 (120 Rasterpunkte; Altbestand R37, vor/nach Runde 41 gleich). Ob die Hand dort vor
    oder hinter dem Objekt liegt, ist nicht gemessen (keine Zellen-Tiefe fuer Rechteck 0, es ist nicht ausgeschlossen).
