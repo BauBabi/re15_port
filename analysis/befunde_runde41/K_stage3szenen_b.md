@@ -309,3 +309,11 @@ Raumwechsel, RBJ-/NPC-Szenen):
 * Entscheidungsfragen: (a) Nach der 3091-Szene setzt das Original Elzas Waffe auf das Messer und fuellt die Energie auf
   100 — soll der Port das uebernehmen oder (wie jetzt) Elzas vorherige Waffe und Energie behalten? (b) Elzas Lauf-/
   Gehtempo im Port entspricht Leon (200/75) statt Elzas Original-Werten (210/70) — angleichen?
+
+## Nachbesserung 1 (2026-10-25, nach Abnahme 0 `K_abnahme_0.md`)
+Auftrag: M1 (Spielfigur-Schleife Clip 13 in 3091, blockierend), M2 (FUN_800314b0 ganz: HP := 100, Waffe aus der
+DEBUG.BIN-Tabelle beim Rueckwechsel, keine Wahlfrage), M3 (EDD/EMR bei jedem Neuladen binden statt nach Waffen-Familie;
+Marvin 0x0D). Basis: HEAD cb51ec29 (Stand der Abnahme 0661fc6e + Abnahme-Doku). Messdateien dieser Nachbesserung:
+Scratchpad `K41nb1/` (im Text `K41nb1/...`).
+
+### NB1.M1 Spielfigur-Schleife (Plc_flg 0x04) — in Arbeit
