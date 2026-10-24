@@ -639,3 +639,40 @@ Integrations-Bedingung (msg/scd/cut/door/szene/karte-Riegel mitgefahren).
   9000, Freeze faellt in F6, x(F100) > 9000. NACHHER: `FREI F6 GEHALTEN 70 (F1..F5: 5) X1 9000 X100 11100` BESTANDEN;
   Gegenprobe VORHER-exe (re15_pc_E41a2.exe = 11b8f867, `<sp>/E41n3/vorher_riegel/spawn_kante.log`): `FREI F-1 GEHALTEN
   200 ... X100 9000` DURCHGEFALLEN.
+
+### Mangel 1/2 / E-E2 — Renn-Stopp spielweit: das Renn-TEMPO des Originals (RE-Belege, Teil 1)
+Ausgangslage (Abnahme 2 §3.4, Dossier Nachbesserung 2): mit dem Renn-Stopp aus 635be823 und dem konstanten Port-Tempo 200 endet
+der Auslauf an der Kurbel bei (3650,-3285), das Original bei (3650,-3369), weil sein Stopp mit Tempo 214 beginnt (o_renn2 n93
+-> n94 174 = 214 - 40). Der Riegel auf (3650,-3369) (E-E2) verlangt also das Renn-Tempo des Originals, nicht nur den Stopp.
+Selbst disassembliert (`re15_disasm.py dis 0x80032778 150`, `dis 0x800369f8 120`, `dis 0x80022da0 60`, `dis 0x80020510 70`,
+`dis 0x800664e0 30`):
+- ANIMATE Rennen 0x80032778 (Tabelle @0x80073ff0[2]): Fall 0 @0x800327cc-@0x80032830: Tempo := Tabelle @0x80073f24[Figur*2]
+  (= 200), +6 = 1, +0x8f = 7 @0x800327fc, Clip 0 @0x8003280c, Bild 0 @0x80032814 -> faellt in Fall 1 @0x80032834: Schritt-Ton
+  (Bildwort & 0x4000 @0x80032848), anim_set @0x80032884 (FUN_8001f314 a3 = 0x200), Figur 0xf -> ohne Fussrechnung
+  (@0x80032894/@0x80032898); sonst @0x800328b4 Bildwort & 0x2000 -> a1 = 0 (@0x800328c4), sonst a1 = 1 (@0x800328c8), a0 = 1,
+  @0x800328cc `jal 0x800369f8`, dann @0x800328dc-@0x800328f4 Tempo := ((int16)Tempo >> 2) + 150, @0x8003295c Vorschub.
+- FUN_800369f8(Modus a0, Fuss a1): Kette Entity-Matrix +0x20 (Rotation aus +0x68 @0x80036a34, Translation = Lage +0x34/+0x3c)
+  · Teil 0 (@0x80036a48) · Teil 1 (@0x80036a58) · Teil 2+3f (@0x80036a7c) · Teil 3+3f (@0x80036a8c) · Teil 4+3f (@0x80036a9c),
+  Teile-Stride 0xAC (Fuss-Versatz a1*0x204 @0x80036a60-@0x80036a70); Modus 1 @0x80036af0-@0x80036b44: Tempo +0x8c :=
+  SquareRoot0((s16)(x_neu - Teil[+0x54])^2 + (s16)(z_neu - Teil[+0x5c])^2) — Teil+0x40.. = Weltmatrix des Fussteils aus dem
+  LETZTEN Zeichnen (Weltlage von dort), x/z_neu = dieselbe Kette mit der eben gesetzten Pose. Das Renn-Tempo ist also die
+  Strecke, die der Fuss gegenueber dem letzten Bild zuruecklegt.
+- FUN_80022da0 (Matrix-Verkettung, GTE): Rotation = A·B je Spalte MVMVA sf=1 (IR, lm=0), Translation = A.t + (A·(s16)B.t) >> 12
+  (@0x80022eb0-@0x80022f00).
+- Pose-Aufbau FUN_8001f3bc (RE_15_Quellcode_V2/FUN_8001f3bc.c, Zaehler +0x8f vor dem Abzaehlen): Wurzel = GPF12(kf, 0x1000-w) +
+  GPL12(vorige, w); Winkel FUN_80020510 -> LoadAverageShort12 @0x800664e0: GPF @0x80066508 `cop2 0x198003d` / GPL
+  @0x80066538 `cop2 0x1a8003e` = floor(vorige*w/4096) + floor(kf*(0x1000-w)/4096) — ZWEI Abrundungen (psx-spx: GPF MAC =
+  IR*IR0 SAR 12, GPL MAC = ((MAC SHL 12) + IR*IR0) SAR 12), w = 0x200 * Zaehler. (Der Port-Renderer rundet einmal ab:
+  skeleton_common.c re15_blend_angle12 / Wurzel-Mischung — Abweichung <= 1 je Winkel; fuer das Tempo braucht es die zwei.)
+- SquareRoot0 = BIOS-Tabellen-Naeherung (Memory reai-v2-squareroot0-audit; Port re15_squareroot0, re15_math.c).
+- Gehen 0x80032498 hat dieselbe Fussrechnung (@0x800325c4 `jal 0x800369f8`, @0x800325dc-@0x800325e8 Tempo := (raw >> 1) + 50,
+  Fuss-Zuordnung umgekehrt @0x800325a8-@0x800325c0) — der Port geht konstant 75 (@0x80073ea4). Nicht Teil von E-E2 -> OFFEN.
+Nachgerechnet OHNE Emulator (Sonde `<sp>/E41n3/probe/renntempo_blend.c`, gegen libre15_engine.a: PL00-Bindepose + PL00W03-
+Keyframes (= Port-Verbund der Handgun-Bank), Kette wie oben, Mischung mit zwei Abrundungen, re15_squareroot0):
+| Lauf | Original (GDB, Spalte spd) | Nachrechnung |
+|---|---|---|
+| o_renn2 (Blick 1024, Start Stehclip 2, `mo=2/44` -> zuletzt Bild 43) | 198 210 171 182 204 211 214 | **198 210 171 182 204 211 214** (7/7) |
+| o_rennstopp (Blick 0, `mo=2/40` -> Bild 39) | 269 210 170 182 205 210 214 210 188 159 176 197 | 199 **210 170 182 205 210 214 210 188 159 176 197** (11/11 ab Bild 2) |
+Das erste Bild von o_rennstopp (269) ist ein Messartefakt: der GDB-Treiber hatte die Lage im RAM versetzt, die gespeicherte
+Weltmatrix (Teil+0x40) stammte noch von der alten Lage -> grosser Fussweg. Mit einer Abrundung statt zweien weicht die Rechnung
+in 3 von 7 bzw. 4 von 11 Bildern um 1 ab, mit exaktem isqrt in 1 von 7. Damit ist der Mechanismus belegt.
