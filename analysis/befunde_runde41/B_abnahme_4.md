@@ -238,3 +238,35 @@ Alle Läufe rc = 0 (A2 im ersten Versuch rc = 124, s. Tabelle; wiederholt mit EX
 ### 4.3 Nebenwirkungen
 - Elza (ROOM2091, NZ): identisch mit Leon (§3.3). Echter Türweg 20A0 → 2090 (E1): Gier-Sprünge weg, ABER Belagerung endet jetzt
   mit Tod und leerem Finisher-Maul (§3.4). Granaten-/Wasser-/Zombie-/Türen-Querriegel siehe §5.
+
+---
+
+## Fortsetzung (Prüfer 2, ab 2026-10-24 12:50; die Vorgängerin wurde ~12:23 vom Sitzungslimit beendet)
+
+Gleicher Baum, gleicher Bau (re15_pc.exe 11:40:40; seit b20f1496 nur Doku-Commits 11c7a348 und c36d537c =
+AUFTRAG/VERTRAG vom master mit Nachtrag 6-11, kein Code). Messungen der Vorgängerin werden nicht wiederholt; neue Dateien
+im Prüfer-Scratchpad `.../scratchpad/B41abn4f/` bzw. `B41abn4/mess/RN|RA` (Läufe mit den Skripten der Vorgängerin).
+Nicht ausgewertete Reste der Vorgängerin: Lauf EN (Türweg 20A0 → 2090 OHNE GB_TEST, Autopilot `xz:-1200,-13200;
+xz:6300,-16250`, 2400 Bilder): `Sicht F1 untergetaucht`, danach nur `TICK ph=1` (Lauern) bis zum Ende — ohne Testhebel
+taucht der Gator auf diesem Weg in 2400 Bildern nicht auf (Auslöser des Intros = Spur F, Nachtrag 6). Prüfer-Sonde
+`probe/probe_tod.c` (Leon als Statue, Riegel-Harness): auch der VORHER-Bau tötet Leon an der Rampe (Lage E1 Takt 159
+Gier 703, Lage E1b Takt 136 Gier 159 — E1b bitgleich mit dem neuen Bau), in der Türnische beide Takt 9.
+
+### 3.4 (Fortsetzung) — ist der leere Finisher eine Regression der Nachbesserung 4?
+
+**(a) Treffer ohne Blick ist ALT (gemessen am Vorher-Bau).** `B41abn4f/bisse.py <state.log>` (je HP-Abzug Gator-Gier gegen
+die Peilung Gator → Leon, Konvention wie `relativ.py`):
+- E1alt_lang (Vorher-Bau 47efb932): `F417 hp 100 -> 50 | Gator mo=4 af=18 (5716,-12406) Gier 169 | Leon (6300,-16250)
+  Abstand 3888 Peilung 926 -> daneben +757 (67 Grad)`, `F528 hp 50 -> 0 | Gator mo=4 af=6 (5668,-12827) Gier 2431 | Leon
+  (6732,-16250) Abstand 3584 Peilung 828 -> daneben -1603 (-141 Grad)` — der alte Gator biss Leon also sogar mit dem
+  Rücken zu ihm.
+- E1neu_lang (= E1, bitgleich): F417 wie oben, `F522 hp 50 -> 0 … Gier 13 … daneben +835 (73 Grad)`, `F627 hp 0 -> -50 |
+  Gator mo=4 af=0 (5716,-12762) Gier 115 | Leon (6732,-16250) Abstand 3632 Peilung 839 -> daneben +724 (64 Grad)` → Tod.
+- A2 (Türnische, CHASE-Biss): `F290 hp 60 -> 10 … Gier 1471 … daneben -7 (-1 Grad)`, `F397 hp 10 -> -40 … Gier 2569 …
+  daneben +2 (0 Grad)` → Finisher mit Leon im Maul. (F57/F175 je −20 im Intro bei Abstand 9327/8928 = Spinnen, t=25.)
+- Code: der GUARD-Hochbiss (enemy_ai_boss_gator.c:2234-2251) prüft nur `dist < 4200` (Start) und `dist < 3900` im Fenster
+  Bild 6..34, keine Blickrichtung; `git blame`: 68f37634 (2026-09-10), c9f74499 (2026-09-11), nur die Kanister-Sperre
+  `re15_gr2_biss_erlaubt` ist von Spur B (b5516dda, NB2). FRESSEN P0 = Gator + RotY(Gier) × (10643·s, −915)
+  (Z. 2409-2423): 9b6e0b35 (2026-09-12) / e3fb82bb (2026-09-19), in master unverändert. Das GUARD-Ziel (Z. 2052-2061,
+  `gx = pl->x` geklemmt, `gz = Rampenkante ± GB_GPAT_M`) ist ebenfalls ALT; es liegt in E1 bei (6500,−12600), östlich der
+  Klemmlinie x 5716 — der Gator steuert mit 0x40/Bild auf dieses unerreichbare Ziel (Gier 13…115) statt auf Leon (Peilung ~840).
