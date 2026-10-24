@@ -151,6 +151,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_gegner_r39.h"       /* Runde 39 Spur E: Gorilla-/Affen-Schatten auf +0x1ba (@0x80116f30 / @0x80110c78) */
 #include "re15_inventar_r39.h"  /* Runde 39 Spur C: Spind 1000, Stapeln, Status-Bild, Messschiene RE15_INV_LOG */
 #include "re15_parkplatz_r39.h" /* Runde 39 Spur O: Tuersperre ROOM11C0 (Boot-/CONTINUE-Weg, Messhaken RE15_R39O_*) */
+#include "re15_rbj_binder_r41.h" /* Runde 41 Spur J: Spieler-Record des RBJ-Marker-Binders FUN_8001b3f8 */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -8303,6 +8304,8 @@ re_title:;
                                         pl00_ok ? &pl00_skel : NULL, &skel, &anim,
                                         &elliot_base_skel, elliot_skel_ok, &elliot_skel, &elliot_anim,
                                         &s_cine_scratch_skel, &s_cine_scratch_anim, pc_enemy_load);
+                                if (pl00_ok && re15_rbj_binder_spieler(rbuf, (size_t)rsz) < 0) { skel = pl00_skel; anim = pl00_anim; }   /* Runde 41 Spur J:
+                                 * FUN_8001b3f8 schreibt den Spieler-Kanal nicht (kein Marker-Bit 0, ROOM1040/1041) -> PL00-Basis wie ohne RBJ */
                                 /* Runde 39 Spur P (Nachtrag 17 Punkt 3): wie im Boot-Weg - Elzas Gesten fuer RUF1041 */
                                 { extern unsigned re15_johnruf_r39_gesten_quelle(unsigned); int gs = 0;
                                   uint8_t *gb = re15_johnruf_r39_gesten_quelle(dest_room) ? re15_cut10f0_pc_rbj_leihen(dest_room, &gs) : NULL;

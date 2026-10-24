@@ -19,6 +19,7 @@
 #include "shadow_blob_psx.h"   /* RE1.5 char shadow blob as a 16bpp+STP texture */
 #include "font_atlas_psx.h"    /* RE1.5 subtitle glyph font (TEX.TIM region) + CLUT */
 #include "re15_enemy.h"        /* generic enemy-model registry (Step B PSX loader) */
+#include "re15_rbj_binder_r41.h" /* Runde 41 Spur J: Spieler-Record des Marker-Binders */
 #include <stdio.h>             /* sprintf — CD path building (codebase idiom) */
 #include <string.h>            /* memcpy — copy enemy model out of shared staging */
 
@@ -475,7 +476,8 @@ void re15_load_room_cinematic(unsigned room_id)
         re15_emd_skeleton_t  base     = re15_pl00_skel;   /* clean PL00 bind + hierarchy */
         re15_emd_skeleton_t  rbj_skel = {0};
         re15_emd_animation_t rbj_anim = {0};
-        if (re15_emd_parse_rbj(room_rbj, (size_t)room_rbj_size, &base, &rbj_skel, &rbj_anim) == 0) {
+        int pr = re15_rbj_binder_spieler(room_rbj, (size_t)room_rbj_size);   /* Runde 41 Spur J: FUN_8001b3f8 @0x8001b450 */
+        if (pr >= 0 && re15_emd_parse_rbj_record(room_rbj, (size_t)room_rbj_size, pr, &base, &rbj_skel, &rbj_anim) == 0) {
             re15_test_skel = rbj_skel;   /* Leon's cinematic-gesture overlay (aliases the arena) */
             re15_test_anim = rbj_anim;
         }
