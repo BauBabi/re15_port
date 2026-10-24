@@ -258,8 +258,10 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
 - **Glied-Anker** `engine/src/fussanker_r41.c` + `include/re15_fussanker_r41.h` (Adressen je Zeile): feste Kette
   E-0-1-(2|5)-(3|6)-(4|7) mit den lokalen Matrizen des aktuellen Bildes (Kanal je Sub wie @0x80050d40/e64/f88),
   Vergleich gegen die Part-4/7-Welt-Lage des letzten Spielschritts (Hierarchie wie FUN_8001e8c8), x/z -= Differenz
-  (@0x80036ab4..aec). Haken: `enemy_ai_common.c` re15_npc_executor (alter Zweig Keyframe-Wurzelweg/"deferred" ersetzt,
-  2 Zeilen @0x80050c6c/@0x80050c94), `game_step_common.c` Ende re15_game_step `re15_fussanker_r41_merken()` (1 Zeile).
+  (@0x80036ab4..aec). Haken nur in `enemy_ai_common.c` (NPC-Code, VERTRAG 1.3 J): re15_npc_executor (alter Zweig
+  Keyframe-Wurzelweg/"deferred" ersetzt, 2 Zeilen @0x80050c6c/@0x80050c94) und nach `re15_npc_ai_tick(s)` in
+  re15_enemy_ai_run_all `re15_fussanker_r41_merken_aktor(e)` (1 Zeile: Vorbild-Stand nach Executor + Wandklemme, vor dem
+  SCD-Takt des naechsten Bildes — SCD @0x8001cdec laeuft im Original vor den Entities @0x8001ce04).
   PORT-WAHL: ohne gemerkten Vorbild-Stand keine Verschiebung (Raumwechsel/erstes State-4-Bild; kein Lieferfall).
 - **Super_set/Super_reset** `engine/src/superobj_r41.c` + `include/re15_superobj_r41.h`: Vater-Art 0x80 + Part-Bit
   (Gegner-Teil-Weltmatrix) und 0x00 (Welt); Reset uebernimmt die Welt-Lage, Rot = pc+2/4/6. Haken: `scd_vm.c`
@@ -307,3 +309,23 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
   0-1-2-3-4 / 0-1-5-6-7 von FUN_800369f8 IST die Hierarchie; Teil 14 (Gitter-Hand) haengt an 13-12-0.
 - Im Spiellauf bleibt ein konstanter Rest (3,10) aus Sherrys Lage VOR dem Kriechen (Port (-18857,-26256), Original
   (-18860,-26266), Ende des Plc_dest-Gangs in sub02/sub04 — nicht Teil dieser Punkte, OFFEN notiert).
+
+### §2.10 Messung Port NACHHER — Elzas Ende (Punkt 2b) und John
+- `[wclip41] ROOM3061 F1421 Spieler Plc_motion(2,6) -> W-Bank-Clip 6 (... Waffe 1, 10 Bilder)` (PL04W01, Modell 4 ->
+  Tabelle @0x800741e8 = 97 = PL04Wxx); RE15_ANIM_TRACE: Clip 6 / 10 Bilder, Bild 9 gehalten (Riegel: 56x bis zum Wechsel).
+  Original o3061_s2 t17: Spieler cmd 4 / Sub 2 / Phase 2 / Clip 6.
+- John (Typ 0x49) Plc_motion(2,6) @0x011EA: eigene Bank 1 Clip 6, 10 Bilder, Bild 9 gehalten (60 Zeilen im Trace) —
+  Original t17: Gegner 1 Sub 2 Phase 2 Clip 6. (Port-Weg unveraendert, war schon richtig.)
+- Bild: J_belege/vergleich_3061_elza_ende.png (oben Original-Video 6 Bilder/s, unten Port alle 8 Bilder): Drehen zum Hund,
+  Arme vor (W-Clip 6), Halten — gleich; vorher kniete Elza (J_belege/e3061_vor_ende_elza_kniet.png).
+
+## §3 Tests (registriert NUR in re15_port/tests/unit/probes/r41_stage3szenen_a.cmake, + _rbj.cmake des Binders)
+| Test | misst | Ergebnis |
+|---|---|---|
+| unit_r41_stage3szenen_a_zensus | 206 RDTs mit SCD + 34 Platzhalter: Spieler-Plc_motion(2,c) nur 3060 @0x010BE / 3061 @0x011DE; Plc_flg Bit 1/2 nur 3061 (5 Stellen); Super_set nur 3061 @0x0127E + 4030/4031 | gruen |
+| unit_r41_stage3szenen_a_anker | Anker an Sherrys echter Bank, o3061_s3 t08->t10 und t09->t11: Abweichung **0** | gruen |
+| unit_r41_stage3szenen_a_superobj | Super_set/_reset am echten Bytestrom: Loslass-Lage = Original **(0,0,0)**, Vater ausserhalb State 4 -> uebersprungen | gruen |
+| unit_r41_stage3szenen_a_wclip | (2,6) -> W-Clip 6, Halten Bild 9, Schleife, Ende bei Befehl/Raumwechsel, Sub 0/1 und 1141 unberuehrt | gruen |
+| integration_r41_stage3szenen_a_3060 | echte exe: 3020-Szene -> PL0D -> Tuer 3040 -> 3060, W-Clip 6 / 10 Bilder, Bild 9 >= 25x | gruen |
+| integration_r41_stage3szenen_a_3061 | echte exe: Spielstand + CONTINUE ROOM3061 (Elza), Gitter-Lage, Anker-Takte, Sherry-Lagen (Rest (3,10)), Sherry im Schacht (-30700), Elza W-Clip 6 gehalten, Wechsel 30C1/PL0F | gruen |
+| unit_r41_stage3szenen_a_rbj_{mechanik,zensus,kanal} | Binder (§0, Vorgaenger) | gruen |
