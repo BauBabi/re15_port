@@ -785,6 +785,15 @@ Massstab: `analysis/befunde_runde41/A_abnahme_1.md` (Maengel M1..M5), AUFTRAG Na
 Abnahme werden NICHT wiederholt (Laeufe `A41abn1/mess/<lauf>`), sie sind die "Messung vorher". Scratch dieser Nachbesserung:
 `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/A_nb2/`.
 
+### N2.0 Ueberblick je Mangel (Ursache / Messung vorher / Beleg / Aenderung / Messung nachher)
+| Mangel | Ursache | vorher (Abnahme 1) | Beleg | Aenderung | nachher |
+|---|---|---|---|---|---|
+| M1 Ton stumm | NPC-Zeile Boden - 8 (@0x8004575c) leer/ohne Stimme 0..7/ohne VAG | 61/64, 8/8, 23/23 unterdrueckt | N2.1 (RE1.5 + RE2 FUN_8005c040 @0x8005c458) | Original-Zeile sonst Retail-Zeile (N2.3) | 64/64, 8/8, 23/23 gemischt (N2.4) |
+| M2 Lage (A-E4) | re15_audio_footstep ohne Lage | mono | N2.2 (FUN_80045a64, CORDIC, SsUtKeyOnV, SpuVmKeyOnNow) | eigene Nachbildung + 4 Zeilen audio_pc.c (N2.3) | Abstand 41 -> 104, 125 -> 56, 95/95 L != R (N2.4) |
+| M3 r35_granate | Riegel fest Slot 20, Alligator seit E2 auf 35 | rot | main.c Rueckwaertssuche ab RE15_ACTOR_MAX-1 | Slot aus re15_actor.h (N2.6) | N2.8 |
+| M4 Riegel | nur Index geprueft, 0x47 / Sub 7/8 ohne Lauf-Pin | gruen trotz Stille | - | unit ton/lage, npc*/npc_subs, integration _npc (N2.5) | N2.8 |
+| M5 Dossier | N1.14 behauptete hoerbare Schritte | widerlegt | Abnahme 1, 4.3 | Richtigstellung in N1.14, neu N2.9 | - |
+
 ### N2.1 M1 — NPC-Schritt-Toene stumm: Ursache, Beleg, Weg
 **Messung vorher (Abnahme 1, 4.3, an der exe 7db5a6b2):** `RE15_FOOT_DEBUG=1` -> `[foot] SE unterdrueckt: type=21 -> vag=-1` /
 `type=18 -> vag=-1`: ROOM2000 61/64 NPC-Schritte stumm, ROOM11C0 8/8, ROOM2001 (Elza, John) 23/23.
@@ -878,6 +887,27 @@ Verhaeltnisse 690 gleich, Rest +-1..7) = bis eine Pan-Stufe (i = rel >> 3). Auss
   `s_active[slot].vol_r_q15 = vol_r` (0 = wie bisher mono).
 - `tests/integration/test_r35_granate.cmake` (M3): Alligator-Platz = RE15_ACTOR_MAX - 1, gelesen aus include/re15_actor.h.
 
+### N2.4 Messung nachher (Stand 7e639adc, `local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`)
+| Mangel | vorher (Abnahme 1) | nachher |
+|---|---|---|
+| M1 Ton 2000 (Leon, Marvin/Ada, bis Bild 2100) | 61/64 `SE unterdrueckt` | 64 Schritte (7 im Kanal), Quelle orig 3 / retail 61 / stumm 0, **64 gemischte Stimmen** (`[foot] NPC-Lage`), 0 `SE unterdrueckt` |
+| M1 Ton 2001 (Elza, John 0x49, Flag 3:65) | 23/23 stumm | 23 Schritte (5 im Kanal), retail 23, **23 gemischt**, 0 unterdrueckt |
+| M1 Ton 11C0 (Leon, Marvin 0x42) | 8/8 stumm | 8 Schritte, retail 8, **8 gemischt**, 0 unterdrueckt |
+| M2 Lage (A-E4) | mono, Ton-Pegel | je Schritt `abstand`/`lage` im npc.log; 2000: naechster Schritt Abstand 41 -> Pegel 104, fernster Abstand 125 -> Pegel 56 (= 0x89 - ATT[Abstand], ATT @0x800747a8); alle 95 gemischten NPC-Schritte L != R |
+| M3 r35_granate | rot (Slot 20) | s. N2.8 |
+| M4 Riegel | Index-Pruefung | N2.5 |
+
+Beispiel (Beleg `A_belege/nb2/npc2000_npc.log` / `npc2000_foot.txt`, Lauf integration_r41_wasser20b0_npc `lauf_227c451b_npc2000`):
+`F886 slot=1 typ=0x42 clip=5 bild=8 fuss=7 boden=0x1d ... ton=29 ... ton_orig=21 quelle=retail cut=15 abstand=51 lage=86/99` ->
+`[foot] SE foot=7 type=29 vag=1` / `[foot] NPC-Lage voll=86 volr=99 -> Pegel 99 Pan 72 -> L=3072 R=3519 (Q15, Ton 4515)`
+(nachgerechnet: Pan = 127 - (86 << 6)/99 = 72; 4515 * 99 / 127 = 3519 rechts; 3519 * (127 - 72) / 63 = 3072 links).
+Pegel je Abstand (max(voll, volr) = (0x89 - ATT[Abstand]) & 0x7f, ATT-Bytes PSX.EXE @0x800747a8):
+| Abstand (/250) | 10 | 20 | 30 | 41 | 50 | 60 | 80 | 100 | 125 | 127 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ATT | 10 | 20 | 28 | 33 | 38 | 43 | 53 | 63 | 81 | 83 |
+| Pegel | 127 | 117 | 109 | 104 | 99 | 94 | 84 | 74 | 56 | 54 |
+Landungen (Punkt 2a, unveraendert): landung_leon / landung_elza je 1 Landung, 104 fx-Zeilen id=6 sub=3.
+
 ### N2.5 M4 — Riegel (messen jetzt das Abspielen)
 - `unit_r41_wasser20b0_ton` (neu): alle 52 NPC-Raeume (Liste = Zensus der Abnahme), je erreichbarer FLR-Bodentyp eine Stelle dieses
   Typs, Zweig ohne/mit Stempel, a0 0/1, Fuss 7/4 -> `re15_wassersprung_r41_npc_schritt` (536 Faelle). Erwartung je Fall UNABHAENGIG aus
@@ -909,27 +939,6 @@ und setzt Slot = RE15_ACTOR_MAX - 1 (Kopf des Riegels ergaenzt). Weitere feste "
 **An den Orchestrator (Spuren B/F/G, kein SendMessage aus der Spur):** der Alligator liegt seit Runde 41 Spur A auf Slot 35
 (RE15_ACTOR_MAX 36). Riegel/Haken, die den Alligator-Platz fest annehmen (z.B. RE15_FORCE_EXPLOSION=..:20, `[20 t=23`), muessen an
 RE15_ACTOR_MAX-1 gekoppelt werden; Aktor-Masken mit 32 Bit (1u << slot) reichen fuer Slot 35 nicht (s. N1.10c, Hundemaske M7).
-
-### N2.4 Messung nachher (Stand 7e639adc, `local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`)
-| Mangel | vorher (Abnahme 1) | nachher |
-|---|---|---|
-| M1 Ton 2000 (Leon, Marvin/Ada, bis Bild 2100) | 61/64 `SE unterdrueckt` | 64 Schritte (7 im Kanal), Quelle orig 3 / retail 61 / stumm 0, **64 gemischte Stimmen** (`[foot] NPC-Lage`), 0 `SE unterdrueckt` |
-| M1 Ton 2001 (Elza, John 0x49, Flag 3:65) | 23/23 stumm | 23 Schritte (5 im Kanal), retail 23, **23 gemischt**, 0 unterdrueckt |
-| M1 Ton 11C0 (Leon, Marvin 0x42) | 8/8 stumm | 8 Schritte, retail 8, **8 gemischt**, 0 unterdrueckt |
-| M2 Lage (A-E4) | mono, Ton-Pegel | je Schritt `abstand`/`lage` im npc.log; 2000: naechster Schritt Abstand 41 -> Pegel 104, fernster Abstand 125 -> Pegel 56 (= 0x89 - ATT[Abstand], ATT @0x800747a8); alle 95 gemischten NPC-Schritte L != R |
-| M3 r35_granate | rot (Slot 20) | s. N2.8 |
-| M4 Riegel | Index-Pruefung | N2.5 |
-
-Beispiel (Beleg `A_belege/nb2/npc2000_npc.log` / `npc2000_foot.txt`, Lauf integration_r41_wasser20b0_npc `lauf_227c451b_npc2000`):
-`F886 slot=1 typ=0x42 clip=5 bild=8 fuss=7 boden=0x1d ... ton=29 ... ton_orig=21 quelle=retail cut=15 abstand=51 lage=86/99` ->
-`[foot] SE foot=7 type=29 vag=1` / `[foot] NPC-Lage voll=86 volr=99 -> Pegel 99 Pan 72 -> L=3072 R=3519 (Q15, Ton 4515)`
-(nachgerechnet: Pan = 127 - (86 << 6)/99 = 72; 4515 * 99 / 127 = 3519 rechts; 3519 * (127 - 72) / 63 = 3072 links).
-Pegel je Abstand (max(voll, volr) = (0x89 - ATT[Abstand]) & 0x7f, ATT-Bytes PSX.EXE @0x800747a8):
-| Abstand (/250) | 10 | 20 | 30 | 41 | 50 | 60 | 80 | 100 | 125 | 127 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| ATT | 10 | 20 | 28 | 33 | 38 | 43 | 53 | 63 | 81 | 83 |
-| Pegel | 127 | 117 | 109 | 104 | 99 | 94 | 84 | 74 | 56 | 54 |
-Landungen (Punkt 2a, unveraendert): landung_leon / landung_elza je 1 Landung, 104 fx-Zeilen id=6 sub=3.
 
 ### N2.7 OFFEN (Stand Nachbesserung 2; N1.13 gilt weiter, Punkt 8 ist fuer die NPCs erledigt)
 1. **Lage der SPIELER-Schritte:** FUN_80045630 ruft FUN_80045a64 fuer JEDE Entity (`jal 0x80045a64` @0x80045830, kein Typ-Gate davor),
