@@ -127,8 +127,13 @@ Zeilen `id=6 sub=3` ab F192 bei w(6363,-640,-14032), `-> sx=96 sy=148 S=8` (im B
 @0x8003873c, y `lw a0,-13684(a0)` @0x80038744, `slt v1,v1,a0` @0x8003874c, `beq v1,zero,0x800387d4` @0x80038758, `ori s1,zero,0x4`
 @0x8003875c, `lui a0,0x603`/`ori a0,a0,0x3000` @0x8003876c-70 und @0x8003879c-a0, `addiu s0,s0,-2`/`sll s0,s0,8` @0x80038788/90,
 `jal 0x80019700` @0x80038794 und @0x800387bc mit `addiu a1,a1,2048` @0x800387c0, Schleife `bne` @0x800387cc/`addiu s1,s1,-1`. NPC-Gegenstueck: die NPC-Kante 0x80052508.. und der Schub 0x80052864.. rufen KEIN
-`jal 0x80019700` (eigener Scan), also auch im Original keine NPC-Landungsspritzer. **2a: erfuellt** (ohne Original-Bild der Landung;
-Mechanismus belegt).
+`jal 0x80019700` (eigener Scan), also auch im Original keine NPC-Landungsspritzer.
+Zweiter STAGE2-Ort (eigener Lauf kante2000t): ROOM2000-Gehweg -> Wasserkanal, `RE15_DEBUG_JUMP=2000@240
+RE15_PLAYER_POS=-4321,-21100,1024,1 RE15_PRESS=square@60` (Kante, an der auch Marvin/Ada absteigen: `[npckante] ... Sonde 2 bei
+(-4321,-1800,-20813) Band 1 -> Sub 0x12`): climb.log `T301 ... sub=9 kind=0x02`, `T319 ... pos=(-4321,-640,-22068) band=0 sub=10
+kind=0x02 ph=4`; fx.log 104 Zeilen `id=6 sub=3` F79..F91 (`-> sx=191 sy=168`); Bogen `A41abn1/kante2000_bogen.png`: deutlicher
+gruen-weisser Spritzerkranz um Leon F82-F88 (Stempel -900 des WATER-Satzes < y 0).
+**2a: erfuellt** (ohne Original-Bild der Landung; Mechanismus belegt).
 ### 4.2 Punkt 2b NPC-Wasser-EFFEKTE an der exe
 - Lauf npc2000_lang (Leon, `RE15_SET_FLAG=4:244 RE15_DEBUG_JUMP=2000@240 RE15_PLAYER_POS=4350,-20500,0,1 RE15_NPCSCHRITT_LOG=npc.log
   RE15_FOOT_DEBUG=1 RE15_FX_LOG=fx.log RE15_AUDIO_CAP_SYNC=cap.raw RE15_FRAMEDUMP=0-3600/20:f RE15_EXIT_AT=3600#2000`, Audio AN):
@@ -233,6 +238,7 @@ Mechanismus belegt).
 - Kette 3 (exakte Namen der Sammel-Riegel, `-j 1`): `-R "^integration_(r39_stimmen_1050|r39_stimmen_1150|r39_stimmen_11b0|
   r39_stimmen_1171|r39_johnruf1041_tuer_t1041|..._t1041o|..._t1051|..._t1051o|..._t11b1|..._t11b1d|r38_affen3_tor)$"` ->
   `100% tests passed, 0 tests failed out of 11`.
+- Kette 4 (lange Riegel mit 4-Werte-RE15_PLAYER_POS, `-j 2`): r37_itemband Passed 830.19 s; r36_dachkiste s.u.
 
 ## 8. Urteile je Nutzer-Punkt (gegen den Wortlaut)
 ### Punkt 1 — "Runde 41 startet mit dem Wasserschwall in 20B0 im Original ... in unserem Port noch kaputt" -> ERFUELLT
@@ -243,11 +249,22 @@ laeuft durch (Cut 7/15/6, Spieler frei F242), Leon und Elza. Der Abnahme-0-Mange
 per Orchestrator-Entscheid (04:01) in die naechste Runde verschoben.
 ### Punkt 2 — "Wassereffekt vom rein springen von der Kante in das Wasser. Auch die NPCs teilen die gleichen Effekte ..."
 ### (+ Nachtrag 3 "Effekte wenn sie sich im Wasser bewegen, fussschritt sounds wenn sie laufen ... auch fuer die NPCs") -> TEILWEISE
-- 2a Landung: erfuellt (4.1; Leon 2090 + Elza 2091 ueber den Tuerweg, 8 x 0x06033000, im Bild).
+- 2a Landung: erfuellt (4.1; Leon 2090 + Elza 2091 ueber den Tuerweg, Leon 2000 Gehweg -> Kanal, 8 x 0x06033000, im Bild).
 - 2b NPC-Wasser-Effekte: erfuellt (4.2; Ada/Marvin im 2000-Kanal waehrend der Szene, John 2001 im Elza-Szenario, Unit je Typ).
 - 2b NPC-Schritt-Toene: NICHT erfuellt (4.3; an der exe 61/64 in 2000, 8/8 in 11C0, 23/23 in 2001 stumm - leere EDT-Eintraege
   Boden-8; das Dossier behauptet das Gegenteil).
 - A-E4 Lautstaerke/Richtung nach FUN_80045a64: NICHT erfuellt (4.4; nicht gebaut, kein Haken in audio_pc.c).
+
+## 8a. Stand der Abnahme-0-Maengel
+| Abnahme 0 | Stand (selbst geprueft) |
+|---|---|
+| M1 Wolkendichte im Video | widerlegt: Original-FB 21 vs Original-Video 220 gruenliche Pixel am selben Takt; Port-FB = Original-FB (3.4) |
+| M2 NPC-Schritte nicht gebaut | Schritte gebaut (OWN-Bank-Marken, alle NPC-Subs): Effekte ja (4.2); Toene an der exe stumm (4.3) -> neuer M1 |
+| M3 Szenensperre WATER | behoben: Stempel -900 fuer Ada/Marvin/John waehrend der Szene an der exe (4.2) |
+| M4 Letterbox | widerlegt: 24 px Original-Primitive @0x80072ecc, Video = Overscan, Port-Balken = ROOM1240 Set(1,0x1b,1) (3.4) |
+| M5 Riegel | gebaut (unit npc/npc_wasser/stempel/npc_subs, integration _npc); Ton-Pruefung misst nur den Index -> M4 |
+| M6 main.c | per Entscheid A-E3 angenommen |
+| M7 Hundemaske | behoben (uint64_t), dazu RBJ `mslot < 32`. Uebriger Querschnitt von RE15_ACTOR_MAX 36 (E2): Gator-Platz 20 -> 35, r35_granate rot -> M3 |
 
 ## 9. Gates
 - RE-Gate: HAELT (2.; alle Stichproben enthalten das Behauptete; PORT-WAHL gekennzeichnet; keine Guess-Tells).
