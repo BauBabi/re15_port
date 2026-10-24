@@ -2782,7 +2782,10 @@
      "massstab": 1,
      "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2064 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Band 4 (y -7200): Blickziel (11754,-8335,-20268) liegt am Austritt der Leiter-Tuer 20A0->20A0 (16500,-7200,-20000); Zelle Band 4 traegt 12_01 (IoU 0,81).",
      "ebene": -7200
-    },
+    }
+
+   ],
+   "_r41_nicht_gebaut": [
     {
      "name": "ROOM20A0 Cut 12 Objekt 12_02",
      "png": "pri/STAGE2/20A0/12_02.png",
@@ -2790,7 +2793,8 @@
      "y": 126,
      "massstab": 1,
      "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 237 gleich gute Lage(n), 3572 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Band 4 (y -7200): Blickziel (11754,-8335,-20268) liegt am Austritt der Leiter-Tuer 20A0->20A0 (16500,-7200,-20000); Zelle Band 4 traegt 12_01 (IoU 0,81).",
-     "ebene": -7200
+     "ebene": -7200,
+     "r41": "Runde 41 Spur M (analysis/befunde_runde41/M_masken36.md 2.3): NICHT GEBAUT. 12_02 ist ein Streifen BODEN vor dem Fuss der Ziegelwand (Lage fein gemessen (94,126) Fehler 1,65; Oberkante = Vorderkante der Zelle x 8000..14700 z -21000..-20500 Band 4 auf y -7200). Eine Maske auf der Bodenebene kann nichts richtig verdecken (Regel ROOM10E0 C7, Nutzer-Marke F1585): ihre Profil-Tiefe (119..151) liegt rund 1400 vor der Wand, jede Figur, die AUF dem Streifen steht, verliert die Fuesse (Bau R40: HINTER-Rest (4,13600,-19700) 0,92 ... (4,14000,-19100) 0,75; exe: Leon (14000,-18900) VOR der Wand 30 Beinpunkte uebermalt). 12_01 (Mauerecke, Tiefe aus der Zelle x14700..15800) bleibt."
     }
    ]
   }

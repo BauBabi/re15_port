@@ -1742,7 +1742,8 @@ int main(int argc, char **argv)
         snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, re15_pri_masken_raum(r));
         msk = slurp(p, &mn);
         if (!msk || !(off = re15_pri_msk_section_offset(msk, mn, c)) || re15_pri_parse_section(msk, mn, off, &pri) <= 0
-            || !atlas_generator(r, c, &bss) || !raum_laden(&R, r) || re15_camera_build_view(&R.rdt.cuts[c], &v) != 0) {
+            || !(atlas_generator(r, c, &bss) || atlas_eigen(re15_pri_masken_raum(r), c, &bss))   /* R41: auch Freistellungen */
+            || !raum_laden(&R, r) || re15_camera_build_view(&R.rdt.cuts[c], &v) != 0) {
             printf("FEHLER\n"); return 1;
         }
         idx = (const uint8_t *) bss.tim.pixels;

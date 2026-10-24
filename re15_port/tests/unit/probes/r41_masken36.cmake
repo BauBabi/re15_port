@@ -25,3 +25,17 @@ set_tests_properties(unit_r41_masken36_loecher PROPERTIES TIMEOUT 600)
 #                             Leon kreuzt die solide Zelle der Suedreling (Leon steht HINTER ihr), das Original hat in Cut 3
 #                             keine Masken (NULL-Sektion), die Reling-Maske verdeckt die Beine nach dem Original-Urteil.
 add_test(NAME unit_r41_masken36_kurbel COMMAND test_r41_masken36 kurbel WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+#   integration_r41_masken36_stage2  echte exe (Leon und Elza): ROOM2020 Cut 3 an der Kurbel - die Reling-Maske verdeckt die
+#                             Beine (Leon steht HINTER der Reling); an der strengsten VOR-Stelle 0 Figurpunkte uebermalt,
+#                             an der HINTER-Stelle >= Haelfte verdeckt (11A0, 2030, 2040, 2050, 2080); C = probe_bg_dump.
+if(TARGET re15_pc)
+    add_test(NAME integration_r41_masken36_stage2
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r37_masken36_ppm>
+                     -DRE15_BG_TOOL=$<TARGET_FILE:probe_bg_dump>
+                     -DCD_ROOT=${CMAKE_SOURCE_DIR}/shared_assets/PSX
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_masken36_s2_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
+    set_tests_properties(integration_r41_masken36_stage2 PROPERTIES TIMEOUT 900)
+endif()
