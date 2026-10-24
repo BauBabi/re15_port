@@ -136,3 +136,33 @@ Bild `zoom_p1a_3070_f1350.png` (F1350, in BEIDEN Laeufen Kamera 1, gleicher Auss
 Marvin und Leon zu sehen — Ada steckt in Marvin (state.txt `Ada(-9464,-12287) Marvin(-9464,-12288)`, d = 1); **nach** stehen Ada,
 Marvin und Leon als drei getrennte Figuren (d = 900). Dazu `zoom_p1a_3070_f2550.png` (vor: eine Mischfigur Marvin/Ada, d = 6) und
 Bogen `bild_p1a_3070_vor_nach.png`. => Nutzer-Befund am echten Tuerweg mit meinem Laufweg reproduziert (vor) und behoben (nach).
+
+### 4.2 Punkt 2, LEON, ROOM2050, EIGENE Kistenpaarung obj 1 gegen obj 2 auf der Z-Achse (`laeufe/ka_2050_{vor,nach}`)
+Diese Paarung (obj 1 <-> obj 2) hat weder die Spur (obj 2 -> obj 3, Raetsel) noch Abnahme 0 (obj 3 -> obj 2, obj 3 -> obj 1)
+gefahren. Befehl: `lauf.sh ka_2050 <vor|nach> 400 RE15_DEBUG_JUMP=2050@250 RE15_PLAYER_POS=-2700,-64,0,0
+RE15_WEGPLAN=plaene/ka_2050.txt RE15_PUSH_LOG=push.txt RE15_OBJFALL_LOG=objfall.txt RE15_KOLLISION_LOG=kollision.txt
+RE15_EXIT_AT=2400#2050 RE15_FRAMEDUMP=300-2400/50:f`. Wegplan: `GEGNERWEG` (die zwei Spinnen 0x25), obj 2 (-1256,0,-64) nach
+OSTEN bis x >= 600 (dann |dX| zu obj 1 = 1420 <= 1800, zu obj 3 = 3616 > 1800), um die Kisten herum nach (2052,-6952) noerdlich
+von obj 1, obj 1 (2052,0,-5552) nach SUEDEN (`SCHIEB 3072 Z >= 1000`, zweimal). Auswerter `kistenpaare.py` (eigener: alle Paare
+der Band-0-Kisten je Lagezeile von RE15_OBJFALL_LOG, Ueberlappung = |dX| <= 1800 UND |dZ| <= 1800 wie FUN_8002cdf4).
+
+| exe | Lagezeilen mit Kisten-Ueberlappung | tiefste Eindringung | SCHUB-OK / SCHUB-GESPERRT obj 1 | OBJEKT-GESPERRT | Endlage obj 1 / obj 2 |
+|---|---|---|---|---|---|
+| vor | **115 / 160** (ab F690) | **380** (= ganze X-Ueberdeckung; obj 1 laeuft von z -1368 durch obj 2 (z -64) bis **z 1043**) | 322 / 0 | — | **(2052,0,1043) / (632,0,-64)**: \|dX\| 1420, \|dZ\| 1107 = ineinander |
+| nach | **0 / 160** | — | 203 / 2 | **2**: `F676 room=2050 OBJEKT-GESPERRT p=2 obj=1 ziel=(2052,-1862) gegen p=3 obj=2 lage=(632,0,-64) dX=1420 dZ=-1798 sumX=1800 sumZ=1800` (dazu F773 dZ=-1789) | **(2052,0,-1873) / (632,0,-64)**: \|dZ\| 1809 > 1800 |
+
+Push-Log nach woertlich: `F676 room=2050 p=2 obj=1 SCHUB-GESPERRT spieler=(2047,-3212) rot=3072 lage=(2052,-1882) ziel=(2052,-1862)
+band=0`. Beide Laeufe `[pl] Spieler-Familie PL00`, `[room] PC loaded room2050.rdt`, `[flow] EXIT_AT: Bild 2400 in Raum 2050
+erreicht -> exit`. => vorher ist die Kiste ganz durch die andere hindurchgeschoben worden (Nutzer-Befund), nachher sperrt der
+Objekt-Pass beim ersten Ziel mit \|dZ\| <= 1800 (1798, inklusive Grenze) und die Kiste bleibt 9 Einheiten vor der Beruehrung.
+
+### 4.3 Punkt 2, ELZA, ROOM2051, dieselbe eigene Paarung (`laeufe/kb_2051_{vor,nach}`)
+Befehl wie 4.2 mit `RE15_PSELECT_AUTO_SWITCH=1 RE15_DEBUG_JUMP=2051@250` (Plan `plaene/ka_2051.txt`, RAUM 2051); debug.log beider
+Laeufe `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`, `[room] PC loaded room2051.rdt`.
+
+| exe | Lagezeilen mit Ueberlappung | tiefste Eindringung | SCHUB-OK / SCHUB-GESPERRT obj 1 | OBJEKT-GESPERRT | Endlage obj 1 / obj 2 |
+|---|---|---|---|---|---|
+| vor | **116 / 160** (ab F675) | **374** (obj 1 bis **z 1013** durch obj 2) | 325 / 0 | — | (2052,0,1013) / (626,0,-64) = ineinander |
+| nach | **0 / 160** | — | 205 / 2 | **2** (gegen obj 2) | (2052,0,-1880) / (626,0,-64): \|dZ\| 1816 > 1800 |
+
+=> Elza-Szenario wie Leon: vorher ineinander, nachher gesperrt.
