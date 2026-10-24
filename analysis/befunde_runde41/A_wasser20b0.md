@@ -774,3 +774,40 @@ prueft NPC-Schritte oder hat mehr als 31 Aktoren.
   enemy_common.c traegt seit dieser Nachbesserung einen 1-Zeilen-Haken der Spur A (RBJ-Marker, N1.10c). Die RBJ-Bindung der 12
   Raeume aus OFFEN 9 den Szenen-Spuren zuweisen. Querbezug Spur C (dort gemessen): deren 2030->20B0-Kette haengt ohne den
   AUTO-AOT-Haken dieser Spur in aot_common.c - der Haken bleibt noetig.
+
+## Nachbesserung 2 (nach Abnahme 1, 2026-10-24 ab ~06:00)
+
+Massstab: `analysis/befunde_runde41/A_abnahme_1.md` (Maengel M1..M5), AUFTRAG Nachtrag 3 und Entscheid A-E4. Messungen der
+Abnahme werden NICHT wiederholt (Laeufe `A41abn1/mess/<lauf>`), sie sind die "Messung vorher". Scratch dieser Nachbesserung:
+`C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/A_nb2/`.
+
+### N2.1 M1 — NPC-Schritt-Toene stumm: Ursache, Beleg, Weg
+**Messung vorher (Abnahme 1, 4.3, an der exe 7db5a6b2):** `RE15_FOOT_DEBUG=1` -> `[foot] SE unterdrueckt: type=21 -> vag=-1` /
+`type=18 -> vag=-1`: ROOM2000 61/64 NPC-Schritte stumm, ROOM11C0 8/8, ROOM2001 (Elza, John) 23/23.
+**Ursache (RE1.5, PSX.EXE, selbst disassembliert):** FUN_80045630 bildet den Index `a0 + (Boden & 0x7f)` (`andi v0,s0,0x7f` /
+`addu a0,s3,v0` @0x80045718-24) und zieht fuer Typ >= 0x40 acht ab (`lbu v0,8(v1)` @0x80045728, `sltiu v0,v0,0x40` @0x80045730,
+`bne v0,zero,0x80045760` @0x80045734, `j 0x80045794` / `addiu s3,a0,-8` @0x80045758-5c). Die Stimme ist
+`(e[3] & 0x1f) - 16 + (fuss != 4)` (`lbu v0,3(a2)` @0x800457a0, `andi s1,v0,0x1f` @0x800457a8, `addiu s1,s1,-16` @0x800457ac,
+`xori v0,v0,0x4` @0x800457b4); FUN_800458d4 pumpt nur die 8 Saetze @0x800b2420 (Stimme 0..7). Ein leerer EDT-Satz (00000000)
+gibt Stimme -16/-15 = kein Ton. Die Beta-Raeume fuellen die NPC-Zeilen (Boden - 8) fast nie: Zensus der 52 NPC-Raeume
+(`A_nb2/npc_ton_retail.py` / `.txt`, je Raum alle FLR-Bodentypen x Stempel-Zweig (Boden - 3, @0x800456ec) x a0 0/1 x Fuss 7/4 =
+544 Faelle): im Original hoerbar (Satz belegt UND Stimme 0..7) nur **93**; 421 Faelle stumm, obwohl die Spielerzeile
+(Boden + a0) desselben Raums belegt ist; 30 Faelle in beiden Zeilen leer. Alle 52 EDTs haben 32 Saetze (RDT +0x08 bis +0x0C).
+Sonderfall ROOM6020/6021: NPC-Zeile 21 = `86001f0e` (Stimme 0x0e-16 = -2/-1) -> im Original stumm, Zeile 22 = `86002f0f`
+nur fuer Fuss 7 hoerbar (Stimme 0).
+**Beta -> Retail (RE2 Leon, ghidra_re2_Leon.txt, selbst gelesen):** das RE2-Gegenstueck von FUN_80045630 ist **FUN_8005c040**
+(a0, Fuss, Entity): Boden aus FUN_800528e8(x +0x38, z +0x40) @0x8005c0b8-c4, EDT = DAT_800dbb80 (= RDT +0x08, gesetzt in
+FUN_8005a338 @0x8005a37c-8c) @0x8005c0d0, Wasser (Entity +0x10c != 0) -> Boden 0x1a @0x8005c11c-30 (= RE1.5 0x1d - 3),
+Index **`andi v1,t0,0x7f` @0x8005c44c / `addu s5,s5,v1` @0x8005c458 = a0 + (Boden & 0x7f) - OHNE Typ-Versatz**; leerer Satz
+(-1) -> kein Ton (`lw v0,0(s4)` / `li v1,-1` / `beq v0,v1` @0x8005c468-70). Der Typ waehlt nur die STIMME: `lbu v0,8(s3)` /
+`sltiu v0,v0,0x10` @0x8005c0e0-ec -> Typ < 0x10 Stimme `fuss != 4` (@0x8005c110-18), sonst Stimme 3 bzw. 2 fuer Fuss 4
+(`li s6,0x3` @0x8005c104, `li s6,0x2` @0x8005c10c). Die Lage geht mit (+0x38/+0x3c/+0x40 in den Stimmsatz, Abstand/Seite in
+FUN_8005c970 = /0xfa wie RE1.5 FUN_80045a64). Aufrufer im Scripted-Walk wie RE1.5-Sub 4: LAB_80061bbc (Tabelle @0x800a86b0)
+liest das Anim-Paar +0x180/+0x184 (`lw a1,0x180(s0)` / `lw a2,0x184(s0)` @0x80061c48-4c), das Bildwort `lw v0,0x178(s0)` /
+`andi v0,v1,0x4000` @0x80061c6c-7c, Fuss `andi 0x2000` / `srl 0xd` / *3 + 4 @0x80061c88-98, a0 = 0 (`clear a0` @0x80061c84),
+`jal 0x8005c040` @0x80061c9c; ebenso FUN_80066afc (Plc_dest-Walker, Ziel +0x1c4/+0x1c6, `jal 0x8005c040`).
+=> In der Retail-Fassung gibt es die NPC-Zeilen (Boden - 8) nicht mehr: jeder Nicht-Spieler schreitet mit derselben
+Raumzeile wie der Spieler (eigene Stimmen 2/3). Die leeren Beta-Zeilen sind die unfertige Stelle.
+**Weg (Regel Beta -> Retail):** NPC-Schritt = Original-Index (Boden - 8), WENN das Original dort hoerbar ist (Satz belegt und
+Stimme 0..7, s.o.); SONST die Retail-Zeile a0 + (Boden & 0x7f) (FUN_8005c040 @0x8005c44c/@0x8005c458); ist auch die leer, kein
+Ton (@0x8005c470). Damit bleiben die 93 hoerbaren Original-Faelle byte-gleich, die 421 stummen bekommen den Retail-Ton.
