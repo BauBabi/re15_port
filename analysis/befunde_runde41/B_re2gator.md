@@ -10,6 +10,10 @@ Zeiten aus `date`. Jeder Schritt wird hier VOR dem Bau notiert.
 
 ## 0. Protokoll (neueste Eintraege oben)
 
+* 2026-10-24 05:23-07:2x (NACHBESSERUNG 2, Abnahme 1 M1-M4, Entscheide B6-B8): M4 Belegpflege; M3 Kanister-Aufnahme
+  wie RE2 (Sub 2 -> 1, Hysterese-Ruhe, kein Biss in Stufe 1..6); M1 b Finisher-Schnitt bis Game Over (RE1.5-Todesbild
+  im Boss-Takt zurueckgenommen), M1 a mit RVD-Beleg widerlegt; M2 RE2-Wende im Becken (Intro-Startlage Pos_set-Zwilling,
+  Dash-Vordrehung, Probe probe_wende.c). Riegel aufnahme NEU, wand/kamera/integration neu gefasst. §10.
 * 2026-10-24 02:51-04:xx (FORTSETZUNG 3 nach Sitzungslimit ~01:00, neuer Agent): Baum sauber, HEAD a6653809 (Kamera-
   Programme, UNGEPRUEFT) -> gebaut (keine neue Warnung) + gezielt getestet; Schnittfolge am ECHTEN Ablauf gemessen (§9.4).
   Drei Befunde aus der Messung behoben: Kamera-Wahl mit RE2-Massstab-Grenze (74f247c1, §9.5), R1-Zeitlupe VSync 4
@@ -510,7 +514,8 @@ Nachtrag 4 / Nachbesserung 1 (Fortsetzung 3) - was der Nutzer jetzt sieht:
 - Die Kiefer-Explosion laeuft wie in RE2 in halber Bildrate (Zeitlupe, ~2,5 s).
 - Der Putz faellt jetzt sichtbar um Leon (vorher entstand er unsichtbar am Raumursprung).
 - Keine neuen Assets und keine Sprachdateien in dieser Fortsetzung.
-Entscheidungsfragen (gemessen, nicht geaendert):
+Entscheidungsfragen (gemessen, nicht geaendert) - ENTSCHIEDEN durch den Orchestrator (AUFTRAG.md 03:58, B6 = Frage 4,
+B7 = Frage 5, B8 = Frage 6) und umgesetzt in Nachbesserung 2 (§10.3/§10.4):
 4. Finisher: RE2 bleibt bis zum Game Over auf dem Finisher-Schnitt; der Port zeigt ihn ~80 Bilder und blendet dann in die
    byte-true RE1.5-Todeskamera (Weissblende + Orbit, YOU DIED) - so lassen oder die RE1.5-Todeskamera im Gator-Finisher
    unterdruecken (RE2-Verhalten)?
@@ -875,3 +880,161 @@ Messungen nachher -> Abschluss-Commit.
   B41abn1/statelog.py: Leon-HP F57 100->80, F175 ->60, F387 ->40, F499 ->20 (Spinnen-Gift), F656 20 -> -30 = BISS,
   FRESSEN ab F657).
 
+### 10.2 M3 (Punkt 3, Kanister-Aufnahme GENAU wie RE2) — behoben
+- **Ursache:** gr2_kan_takt setzte beim Fenstertreffer nur die Stufe; re15_gr2_chase_clip kannte den Kanister nicht, der
+  Nutzer-Design-Biss fragte die Stufe nicht ab.
+- **Messung vorher** (Abnahme 1, Lauf C3, state.log selbst ausgewertet): Stufe 1/2 vor `[walk] F660`, Stufen 2..7 waehrend
+  des Schnapps Clip 4 F660-F702 - der Gator beisst beim Aufnehmen.
+- **RE-Beleg** (EM23_OVL_0000.BIN, Sub-1/2-Pre @0x80100964 selbst gelesen, `B41abn1/em23_full.dis` Z. 603-777):
+  - Kanister-Block nur in Zone 1: `lbu v1,538 / addiu v0,zero,1 / bne v1,v0,0x80100b20` @0x801009c8-d0.
+  - Liegt im Wasser (Raumflag Bank 5 Bit 0): `jal 0x80077360 / addu a1,zero,zero / beq v0,zero,0x80100b20` @0x80100ab8-c8;
+    Fenster `addiu v0,v0,-8601 / sltiu v0,v0,0x18f / beq v0,zero,0x80100c08` @0x80100ae4-ec (verfehlt -> Ende OHNE
+    Hysterese), Stufe != 0 -> `bne v0,zero,0x80100c08` @0x80100afc (Ende), Stufe 0 -> `sb v0(1),550(s0)` @0x80100b08 und
+    bei Sub 2 `addiu v0,zero,257 / j 0x80100c04` @0x80100b14-18 -> `sw v0,4(s0)` @0x80100c04 = Sub 1 (Schwimmen). Der
+    Dispatcher liest +5 nach dem Pre neu (`lbu v0,5(a0)` @0x801007b8) und ruft im selben Tick Sub-1-Main @0x80100c20 =
+    `FUN_8001a330(em, 0, 32, 0)` @0x80100c34-40. Das Bit setzt ROOM40A0 sub10 einmal (`Set 22 05 00 01` @SCD 0x0712),
+    ein `Set 22 05 00 00` gibt es im Raumskript nicht (re2_scd_walk.py) - die Ruhe gilt in Zone 1 also auch beim Tragen.
+  - Hysterese-Sperre bei Stufe != 0/7: `lbu a0,550 / beq a0,zero,0x80100b38 / addiu v0,zero,7 / bne a0,v0,0x80100c08`
+    @0x80100b20-30.
+  - Kein Biss in Stufe 1..6: FUN_801012fc macht die Biss-Maschine T1 nur bei Stufe 0/7 scharf: `lbu v1,550(a0) / beq
+    v1,zero,0x80101378 / addiu v0,zero,7 / bne v1,v0,0x80101380` @0x80101360-70 vor `sb v0(1),548(a0)` @0x8010137c.
+- **Aenderung** (gator_re2_r41.c, Haken enemy_ai_boss_gator.c):
+  - Fenstertreffer: Paddeln -> Schwimmen (`letzter_clip` 1 -> 0; der Clipwechsel Bild 0 / Blend 32 passiert im naechsten
+    re15_gr2_chase_clip desselben Takts), Logzeile `KANISTER Stufe 1 ... sub 2 -> 1 F<n>`.
+  - re15_gr2_hysterese_ruht: Stufe 1..6 (@0x80100b20-30) oder Gator in der Zone der Liegestelle, solange der Kanister im
+    Raum ist (@0x80100ab8-c8/aec/afc). PORT-WAHL der Zone wie beim Dash: RE2-Zone 1 = das Korridorbein des Kanisters ->
+    die Beckenzone (gb_zone) seiner Liegestelle (re15_gr2_zonen_quelle(gb_zone) beim Boss-INIT).
+  - re15_gr2_biss_erlaubt vor allen vier Biss-Starts des Boss-Moduls (Not-Schnapp, Biss-Commit, GUARD-Hochbiss,
+    CROSS-Biss).
+- **Messung nachher:** Lauf C3 (eigene exe-Kopie, Rezept der Abnahme, `B41nb2/mess/C3`): `KANISTER Stufe 1 laengs=5868
+  quer=1593 sub 2 -> 1 F1098`; state.log Clip 0 F1096-F1162 (Stufen 1..6 liegen darin, kein Clip 4), erster Biss erst
+  F1163 bei Stufe 7 (RE2 erlaubt ihn dort), danach in der Kanister-Zone weiter Schwimmen (Clip 0 F1206-F1289). Bildbogen
+  `bilder_r41b/nb2_m3_aufnahme_schwimmen_C3_x2.png` (2x aufgehellt): F1090 Kanister liegt, F1098-F1112 Aufnahme, F1155/
+  F1199 Kanister im Maul. Lauf K (Kanister-Tod, Rezept Dossier §7) unveraendert: Stufe 1 F6, R1 F70 (Cut 1), Leiche,
+  VSync 2 F108.
+- **Riegel:** NEU unit_r41_re2gator_aufnahme: `Paddeln 12/12 -> Stufe 1 Clip 0 Blend 32, Stufe 1..6 39/39 Clip 0, Biss 0,
+  Stufe 7 Zone 0 30/30 Clip 0, Zone 2 Paddeln 12/12, Biss Stufe 7 nach 0 Takten`.
+
+### 10.3 M1 (Nachtrag 4, Finisher-Kamera) — (b) behoben, (a) mit Beleg widerlegt
+- **Messung vorher** (Abnahme 1 Lauf A, gator_boss.log Z. 82-90 selbst gelesen): FINISHER waehlte den aktiven Cut 0
+  (frontal -605); alle anderen Zonenkameras zeigten den Gator von HINTEN (Cut 3 -3932 mit Kopf am Bildrand x 316, Cut 6
+  -4050) oder lagen ausserhalb/zu nah (Cut 1/2/4/5/7). F735-F745 Weissblende, ab F750 RE1.5-Todeskamera.
+- **RE-Beleg:** FRESSEN P0 (Sub 4 Main @0x80100f58, selbst gelesen): `lui a0,0x800d / addiu a0,a0,-1064 / lw v0,0(a0) /
+  ori v0,v0,0x100 / sw v0,0(a0)` @0x80100fbc-d0 (Sperre), Cut 14 nur bei `0x800cfbd8 & 0x40000000` und Flag Bit 16
+  (@0x80100fd4-ec), sonst `addiu a0,zero,7` @0x80100ff0, `jal 0x8002c7ac` @0x80100ff4. Sub 4 (@0x80100f58-0x801011fc)
+  gibt Bit 0x100 nie frei - die vier `addiu v1,zero,-257` des Overlays stehen in Intro P2 @0x80100910, R1 P3 @0x80102688,
+  R2 @0x801028ac, R3 @0x80102b1c. FRESSEN wird nur aus Sub 7 erreicht (`addiu v0,zero,1025 / sw v0,4(s0)` @0x801012e0-e4,
+  Zone 2 = Korridorende) und stellt Leon auf (Gator-x + 10643, -915) @0x8010106c-84.
+- **(a) Widerlegung "Wahl darf den aktiven Cut nicht als Schnitt zaehlen":** RE2 schneidet beim Finisher auf die Kamera
+  der INSZENIERTEN Lage, nicht zwingend auf eine andere: Leons Finisher-Lage (-12435,-915) liegt in ROOM40A0 in der RVD-
+  Zone "von Cut 6 nach Cut 7" (Satz @RDT 0x3EC) und in keinem Wechselsatz "von Cut 7" (nur im Such-Anker @0x400) - Cut 7
+  IST dort Leons Zonenkamera (gemessen mit `re15_port/tools/r41_re2gator/rvd_40a0.py info/re2leon/PL0/RDT/ROOM40A0.RDT`,
+  RVD = Offset-Tabelle [8] @RDT 0x25C, 36 Saetze, Punkttest wie re15_aot_point_in_quad). FUN_8002c7ac(7)
+  aendert das Bild also nur, wenn Leon aus dem Bereich von Cut 6 kam. Die Port-Form (beste Zonenkamera mit Kopf + Kiefer
+  unter der RE2-Massstabsgrenze, frontal am naechsten, Entscheid B8 "seitliche Sicht bleibt") nimmt den aktiven Cut nur,
+  wenn er der beste ist; im Lauf der Abnahme waere jede andere Kamera eine Rueckansicht gewesen (s.o.). Mit der Intro-Lage
+  aus M2 faellt der Biss jetzt frueher und anders: Lauf A (Nachbesserung 2) F403 FINISHER Cut 0 -> **Cut 6** (frontal
+  +1666 = +0,41, Kopf (222,106) im Bild) - ein sichtbarer Schnitt.
+- **(b) Ursache + Aenderung** (Entscheid B6): die RE1.5-Todes-Praesentation (game_step_common.c re15_gameover_fsm_tick =
+  FUN_8001500c) startet ab dem Fress-Latch und setzt Weissblende (sub0/1, FUN_800217b0/80021880), Schwarzgrund
+  (FUN_80021634(2,0)) und die kreisende Kamera (FUN_80015850, main.c g_death_cam). gr2_kam_finisher_halten (im Boss-Takt,
+  der in re15_game_step NACH der FSM laeuft: FSM @game_step_common.c:1137-1138, Entity-Schleife am Ende) nimmt diese drei
+  Werte (+ g_death_glow) zurueck, solange die FRESSEN-Sperre steht, und haelt cut_auto_enabled = 0. Keine neue Zeile in
+  einer gemeinsamen Datei. YOU-DIED-Buchstaben, Schluss-Abblende und Titel = Game-Over-Folge des Ports bleiben.
+- **Messung nachher** (Lauf A, `B41nb2/mess/A`, EXIT_AT 672 vor dem Game Over ~F677): state.log cam= F403..F672 = 6 ohne
+  Wechsel; 13 Zeilen `RE2 KAMERA FINISHER Halt Cut 6 F404 .. F664` (je 20 Bilder, B6-Messung);
+  `KAMERA FINISHER haelt Cut 6: RE1.5-Todesbild unterdrueckt (cam=0 weiss=1 schwarz=0) ab F467` (die Weissblende waere ab
+  F467 angelaufen, Schwarzgrund/Orbit wurden ab F494/F495 gesetzt und sofort zurueckgenommen). Bildbogen
+  `bilder_r41b/nb2_m1_finisher_halt_cut6_je20.png` (F400 Cut 0, F404-F672 Cut 6 je 20 Bilder): Gator mit Leon im Maul,
+  YOU DIED ab ~F520 ueber dem Finisher-Bild, Abblende F660-F672, keine Weissblende, kein Orbit. Elza (ROOM2091, Lauf EZ)
+  identisch (Cut 6 ab F403, 13 Halt-Zeilen).
+- **Riegel:** unit_r41_re2gator_kamera (c) `FINISHER-Halt: 400/400 Takte Cut 0 gesperrt, RE1.5-Todesbild (Orbit/Weiss/
+  Schwarz) aus`; integration_r41_re2gator Lauf nische `Finisher Cut 6 ab F403 gehalten 248 Bilder / 13 Halt-Zeilen`.
+
+### 10.4 M2 (Punkt 2, RE2-Wende in die Westwand) — behoben (Entscheid B7)
+- **Ursache:** Clip 3 dreht rechts um 90 Grad (Root-ry 438 -> 1023, danach `yaw += 1024` Intro @0x80100938-48, Dash
+  @0x80100eb0-c0) - in ROOM40A0 die Kurve in das naechste Korridorbein. Vom Lauerplatz (-7200,-9200) mit Gier 1089 (Sued)
+  und am Suedausgang des Westkanals (Gier ~1024) zeigt dieselbe Rechtswende im Becken in die Westwand.
+- **Messung vorher** (Probe `re15_port/tools/r41_re2gator/probe_wende.c` gegen libre15_engine.a, rechnet die Bahn wie
+  gr2_wurzel_schritt/gr2_clip_tick; gegen Abnahme 1 Lauf A geeicht: Kopf am Clip-6-Ende -10022 bei ungeklemmter Wurzel
+  -7882 = mit der Klemme -7434 genau die gemessenen -9574): Intro vom Lauerplatz Kopf 4988 ausserhalb (Wand x -8900, Kopf
+  x -13888 am Clip-3-Ende); Dash an den Startlagen der Abnahme (A (-7300,-18109) 1024 / C2 (-6767,-18110) 695 / N
+  (-7247,-18259) 1059) Kopf 4340 / 1048 / 4504 ausserhalb. Bild vorher `bilder_r41b/nb2_m2_vorher_abnahme1_A_intro.png`
+  (Abnahme 1).
+- **RE-Form, die bleibt:** Clip 6 -> Clip 3 bzw. Clip 2 -> Clip 3 und `yaw += 1024` unveraendert. RE2 stellt den Gator VOR
+  dem Intro auf eine feste Lage: ROOM40A0 sub11 `Pos_set 32 00 cd 11 f8 f8 c3 b8` @SCD 0x0736 = (4557,-1800,-18237), Gier
+  0x400 aus Sce_em_set @RDT 0x25A0 - eine Lage, auf der die Rechtswende in den Korridor passt.
+- **PORT-WAHL (Rechnung):**
+  - INTRO (gr2_intro_lage, Pos_set-Zwilling, vom Boss-Modul beim Aggro VOR re15_gr2_intro_start gerufen): gesucht wird
+    Startlage + Gier (Raster Gier 32, Ende-Abstand zu Leon 250 in [1000,24000]) mit (1) Rumpf 0/1, Hals 5, Kopf 6, Kiefer 7
+    in jedem 3. und im letzten der 275 Bilder im Wasser (Beckengeometrie des Boss-Moduls gb_becken_draussen = ROOM2090-SCA
+    [0]-[5]: Becken x[-8900,7200] z[-27000,-5400], Plattform x[-1700,1850] z[-20000,-12450], Rampe x[1850,7200]
+    z[-18100,-14500]), Wurzel ausserhalb der Klemmzone 1466 (damit gilt die Bahn exakt), (2) End-Gier = Peilung vom echten
+    Bahnende zu Leon (Toleranz 128, dann 256/512), (3) kein Rumpf-/Kopf-Bone naeher als 1350 an Leon (SEG[0].r 900 + 0x1c2)
+    und Leon in keinem Bild in einem Koerperlaengen-Push-Kreis (k_gb_seg) - sonst setzt der Push g->maul_kontakt und der
+    Nutzer-Design-Biss faellt im ersten CHASE-Takt (gemessen unit intro); RE2 liest die Intro-Sperre +0x238 = 110 nur in der
+    Hysterese (@0x80100b5c, @0x80100bf4, @0x80100cb4), nicht in T1, (4) kleinste Kosten Startabstand + 4 x Gier-Drehung +
+    16 x Toleranz. Der Schwanz (Bones 11-15) darf wie in der ganzen Nutzer-Design-Verfolgung an die Wand reichen (12,2-m-Tier
+    im 7,2-m-Kanal). Die Bahn laeuft Bild fuer Bild wie gr2_wurzel_schritt (eine einmal gedrehte Summe wich ~180 ab). Der
+    Sprung auf die Lage faellt in den DURCHBRUCH-Schnitt und den Posenwechsel Clip 6 Bild 0 mit Blend 0 (@0x801008ac-b8).
+    Ergebnis-Speicher (32 Eintraege) fuer gleiche Eingaben (Sweep-Riegel: 3342 Paare, sonst 49-184 s statt 27 s).
+    Rechnung der Regel (probe_wende.c Modi `kreis`/`regel`, `B41nb2/wende_intro_regel_final.txt`; die Probe dreht die
+    Wurzelsumme einmal, das Spiel Bild fuer Bild - daher Abweichungen um ein Rasterfeld): Leon in der Tuernische
+    -> Start (-7237,-13449) Gier 608 (Abstand 4249; im Spiel (-7345,-13277) Gier 576); Leon an der Osttuer (6300,-16250) -> Start 1170 vom Lauerplatz; Leon im
+    Suedbecken Ost (2500,-25000) -> 566 vom Lauerplatz; Leon am Suedende des Westkanals (-8440,-18171) -> Start (5222,-19590)
+    im Suedbecken Ost: die Rechtswende passt dort nur von Osten kommend (vom Lauerplatz aus endet jede freie Bahn ohne
+    Beruehrung mindestens 45 Grad neben Leon, Modus `nah`).
+  - DASH (gr2_dash_planen + Vordrehung): der Dash beginnt, wo der Zonenwechsel passiert (RE2 an der Zonenlinie
+    @0x80100990-a8 / @0x801009d8-fc); gewaehlt wird die Start-Gier (Raster 16, hoechstens 0x400 neben der aktuellen) mit
+    (1) und kleinster Drehung, die Ausrichtung auf Leon entscheidet nur bei gleicher Drehung (RE2: die Wende folgt dem
+    Korridor, Abnahme 1 M2 "Dash-Yaw so, dass die RE2-Wende vom Rand weg zeigt"). Gedreht wird VOR Clip 2 mit 0x60/Bild (die
+    "zackige Wende" der Nutzer-Design-Verfolgung, re15_enemy_steer_point(...,0x60)), dann SE 4 + Clip 2 wie RE2. Ohne
+    zulaessige Gier kein Dash an diesem Zonenwechsel (Logzeile `DASH entfaellt`). Die Laengs-Probe gb_seg_frei ist durch
+    diese bone-genaue Bahn ersetzt.
+- **Messung nachher** (exe, eigene Kopien, Messzeilen `INTRO/DASH ende ... wand_draussen_max= kopf_x_min=` aus
+  gr2_wand_messen = gezeichnete Bones mit Skala 2731):
+  - Lauf A (Tuernische, GB_TEST=1): `INTRO Lage ... -> (-7345,-13277) yaw 576, End-Gier 1600, Peilung zu Leon Abw. |95|`,
+    `INTRO ende pos=(-4506,-21480) yaw=1600 wand_draussen_max=0 kopf_x_min=-6889`; Kamera DURCHBRUCH Cut 0 (frontal 4101) ->
+    SEITE Cut 1 -> ANGRIFF Cut 7 (frontal 3577, soll 3386; vorher 1397) -> frei F280. Bildbogen
+    `bilder_r41b/nb2_m2_intro_nische_kopf_im_becken_x16.png` (1,6x aufgehellt): Gator taucht F40 frontal auf, F131-F279
+    (Cut 7) Kopf und Leib im Becken, F300 Gator vor Leon.
+  - Lauf N (natuerlicher Aggro F201, ohne GB_TEST): Start (5085,-19880) Gier 1536 -> End-Gier 2560 (Abw. 1), wand 0, Kopf x
+    min -4965; DURCHBRUCH Cut 1: der Gator bricht hinter Leon im Suedbecken auf (`nb2_m2_intro_natuerlich_N_x16.png`).
+  - Lauf D2 (Leon (-4000,-24000), Messhaken HP 100): Intro endet im Nordbecken (wand 0), Dash am Suedausgang
+    `DASH Planung: an (-6052,-18113) yaw 1139 -> Start-Gier 624 (Drehung 515), End-Gier 1648, Abw. zu Leon 5`, Vordrehung 6
+    Bilder, `DASH ende ... wand_draussen_max=0 kopf_x_min=-8642`, Putz 54 um Leon, 27..98 Quads/Bild gezeichnet
+    (`nb2_m2_dash_vordrehung_D2_x16.png`: F487-F495 Vordrehung, F521-F601 Dash auf Leon mit Putzwolke).
+  - Lauf D (Leon (2500,-25000)): Klettern ueber die Rampe (`CROSS start=(4450,-11900) ende=(4578,-20700)`) bleibt, Dash
+    danach mit Drehung 5. Lauf EZ (Elza, ROOM2091): wie A.
+- **Riegel:** unit_r41_re2gator_wand NEU gefasst: `intro Start (-7345,-13277) yaw 576 Clip6 125 Clip3 150 -> yaw 1600
+  (Peilung Leon 1505, Abw 95), draussen 0, Kopf x min -6889 | dash Vordrehung 6 Bilder 1024 -> 512, ab f40 Clip2 150 Clip3
+  150, Bahn (797,-5119), draussen 0, Kopf x min -8701, yaw 1536` (Bone-Lage mit Zeichen-Skala, re15_gr2_bone_welt_pub);
+  integration_r41_re2gator: Lauf nische `Intro ... wand 0`, Lauf dash `DASH 1/1 wand 0`. Mit Beleg angepasst:
+  probe_gator_fress (stellt den Gator nach dem Intro mit Blick auf Leon hin, weil der Intro jetzt mit Leon-Gier endet;
+  Sitz dRef (-2,-1,-1)), unit_r41_re2gator_aufnahme (Biss-Pruefung ohne Zonenwechsel in Leons Zone).
+
+### 10.5 Tests (gebauter Stand, keine volle Suite)
+- `ctest -R "^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|sca_wall_hit|re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_.*|re2_hit_repeat_crow_spider|re2_crow_.*|crow_ai|crow_fixes|crow_death_corpse|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|r35_fenster_kraehe|r37_re2zombie_.*|r34_re2fx.*|montage_fx|r35_cut1150_montage.*|r38_montage.*|r38_wasser.*|r38_wasserzombie|r39_heliport1171_kraehen|r30_granate|r35_granate|r36_granate|r36_kartenbits)$|^probe_(re2z_stomp|crow_kill)$" --timeout 600 -j 6`
+  -> **100% tests passed, 0 tests failed out of 91** (114.62 s; unit_gator_sweep 114,53 s unter Last, einzeln 26,8 s).
+- `ctest -R "^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate)$" --timeout 900 -j 4`
+  -> **100% tests passed, 0 tests failed out of 4** (190.83 s; r41_re2gator 85,96 s, r36_schuss 154,44 s, r35_granate
+  177,28 s, r38_wasser 190,74 s).
+
+### 10.6 OFFEN (gemessen, benannt)
+- Intro-Lage fuer Leon am Suedende des Westkanals (natuerliches Annaehern aus der Tuernische) liegt im Suedbecken Ost
+  (~16 000 vom Lauerplatz): der Gator bricht hinter Leon auf. Vom Lauerplatz aus gibt es fuer diese Leon-Lagen keine
+  Rechtswende, die frei bleibt und auf Leon endet (probe_wende.c `nah`); die Regel stellt die Ausrichtung (B7) vor die Naehe.
+- Dash: die Rechtswende endet bei Zonenwechseln, deren Korridor-Gegenstueck nach links zeigt, nicht auf Leon (Lauf D:
+  Abw. 2039); RE2-Form, die Ausrichtung ist dort nur Gleichstands-Regel.
+- Wie §9.8/§6: Raum-Effekt 0x26 fehlt, Frame-Wort-Latenz 1 Bild, Waffenschaden ueber die RE1.5-Zeile, Kanister im dunklen
+  Becken kaum sichtbar, GUARD/CROSS spielen Clip 0.
+
+### 10.7 Fuer den Nutzer (Nachbesserung 2)
+- Keine neuen Assets, keine Sprachdateien. Gemeinsame Dateien: keine neue Zeile (M1 b laeuft ueber den Boss-Takt).
+- Was sich im Spiel aendert: (1) der Alligator nimmt den Kanister schwimmend auf (kein Schnappen dabei) und schwimmt mit dem
+  Kanister in der Zone, in der er lag, langsam weiter - Zeit fuer den Schuss; (2) der Durchbruch beginnt dort, wo die
+  RE2-Wende ins Becken passt und auf Leon zeigt - der Kopf ragt nicht mehr in die Wand; (3) vor einem Dash dreht der Gator
+  kurz (6 Bilder), damit die RE2-Wende vom Rand weg zeigt; (4) beim toedlichen Biss bleibt die Finisher-Kamera bis zum Game
+  Over stehen, keine Weissblende und keine kreisende Todeskamera mehr, YOU DIED erscheint ueber dem Fress-Bild.
+- gator_boss.log: neue Zeilen `RE2 INTRO Lage ...`, `RE2 DASH Planung/Vordrehung/entfaellt ...`, `... wand_draussen_max=`,
+  `RE2 KAMERA FINISHER Halt Cut n Fm`, `KANISTER Stufe 1 ... sub a -> 1`.

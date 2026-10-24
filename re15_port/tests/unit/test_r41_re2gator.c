@@ -928,7 +928,7 @@ static int teil_kamera(void)
         wahl_pruefen("FINISHER (FRESSEN P0)", RE15_GR2_BLICK_FINISHER, cut[fin], pl);
         CHECK(re15_gr2_kamera_gesperrt() && g_scd.cut_auto_enabled == 0, "FINISHER: keine Sperre (@0x80100fcc)");
         /* Nachbesserung 2 (Abnahme 1, M1 b) + Entscheid B6: der Finisher-Schnitt steht bis zum Game Over (RE2 Sub 4 hat
-         * keinen Freigabe-Pfad, `and ...,-257` nur @0x80100904-918 / @0x80102688-94). Die RE1.5-Todes-Praesentation
+         * keinen Freigabe-Pfad; `addiu v1,zero,-257` nur @0x80100910 / @0x80102688 / @0x801028ac / @0x80102b1c). Die RE1.5-Todes-Praesentation
          * (game_step_common.c FSM, laeuft im Spiel VOR dem Boss-Takt) setzt Weissblende / Schwarzgrund / Orbit - hier
          * je Takt so gesetzt, wie die FSM es taete; der Boss-Takt muss sie zuruecknehmen und die Sperre halten. */
         int cam_fin = cut[fin] >= 0 ? cut[fin] : (int)g_scd.cam_id, halt = 0, pl_hp = pl->hp;
