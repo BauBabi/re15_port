@@ -14,12 +14,12 @@ Pruefer: Abnahme 0, 2026-10-24 (abends). Arbeitsordner (Laeufe, Logs, Bilder): S
 - [x] Diff gelesen (git diff master...HEAD, 45 Dateien; Code-Diff vollstaendig gelesen, s. Gate V)
 - [x] Bau (local_build.sh configure + build: LOCAL-BUILD-OK, "ninja: no work to do" = exe 20:31 entspricht HEAD ed8b1457;
       Baum sauber, `git status` leer)
-- [ ] Riegel der Spur + Nachbargruppen
-- [ ] Punkt 1 gemessen
-- [ ] Punkt 2a gemessen
-- [ ] Punkt 2b gemessen
-- [ ] RE-Gate (3 Adressen selbst disassembliert)
-- [ ] Vertrag
+- [x] Riegel der Spur (9/9) + alle unit_/probe_/prop_ + 54 Integrationsriegel der beruehrten Raeume/Module (Gate T)
+- [x] Punkt 1 gemessen (echter Tuerweg 3040 -> 3060, Framedump, Original-Video + Savestates selbst gelesen)
+- [x] Punkt 2a gemessen (CONTINUE-Weg UND echter Tuerweg 3011 -> 3061 per Quadrat, Framedump, Original selbst gelesen)
+- [x] Punkt 2b gemessen (dto.)
+- [x] RE-Gate (11 Adressbereiche selbst disassembliert, alle stimmen)
+- [x] Vertrag (Mangel V1 formal) / Nebenwirkungen (Mangel M2 ROOM4031, Nebenbefund N1 Hund)
 
 
 ## Gate RE — selbst disassembliert (info/Re1.5/PSX.EXE, `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`)
@@ -176,3 +176,60 @@ Bildfolge (Drehen, Arme mit Waffe vor, Halten) = Original-Video; kein Knien mehr
   `m` auf Nicht-WIN32, `cmake_minimum_required` im -P-Skript, keine .exe-/Backslash-Pfade. **ok**
   Kleinigkeit: der Kopf von `probes/r41_stage3szenen_a.cmake` nennt fuer `_anker` noch "Abweichung <= 40" und fuer `_superobj`
   "~ Original", die Riegel pruefen inzwischen strenger auf 0 (Kommentar veraltet, kein Mangel).
+
+## Gate N — Nebenwirkungen (beide Szenarien, Nachbarraeume)
+- **Vorher-Stand selbst nachgemessen** (master-exe des Hauptbaums 19:03 = master ohne Spur J, als Kopie im Baum gestartet, Lauf
+  `J41abn0/laeufe/m3061_master`, gleicher Weg wie p2a): Sherry kommt nie tiefer als z -26308 (bleibt vor der Wand), Elza ab F1460
+  Motion 6 (PLD-Clip 6 = Knien) — die Nutzer-Befunde sind auf master reproduziert, mit Spur J behoben.
+- Spieler-Plc_motion(2,c) gibt es nur in 3060/3061 (Zensus-Riegel), Plc_flg-Bit 1/2 nur in 3061 sub04, Port-Code setzt +0x1c4 nie mit
+  Bit 1/2 (eigene Suche `anim_flags |=/=` im engine/: nur 0x10/0x80/0x1000/Member-16-Pfade) -> Executor-Wechsel und W-Bank-Regel
+  wirken ausserhalb 3060/3061 nicht. ROOM1141 (Runde 39) bleibt auf seiner eigenen Regel (Riegel `_wclip`).
+- RBJ-Binder (A-E5): 12 Raeume aendern die Bindung byte-true (Zensus-Riegel gegen eigene Nachrechnung der Schleife @0x8001b3f8).
+- **Super_set in ROOM4031 (Elza): NICHT wie vorher.** Selbst gemessen, Lauf `J41abn0/laeufe/e4031_super` (Elza ueber PSELECT,
+  RE15_DEBUG_JUMP=4030@250 -> ROOM4031, RE15_FORCE_EVENT=6@600 = sub06 -> sub07 `48 00 80 81` @0x00722):
+  `[superobj41] F621 Super_set Objekt 0 Art 0x80 Teil-Byte 0x81 lokal (0,0,0) Rot (0,0,0) -> angehaengt`. Grund: in ROOM4031 ist
+  Gegner 0 beim ersten Besuch (Bit 3:88 = 0, main00 @0x00552/@0x00556) **John (Typ 0x49)**, der nach seiner Szene sub08 in State 4
+  bleibt (state.txt bis F900: `[1 t=49 st=4 ...]`, sub08 @0x00886 `Member_set 01 = 20000`); der Typ 0x2D ist dann Gegner 1. Das
+  Objekt haengt jetzt an Johns Teil 1 (vorher: Opcode uebersprungen). Dossier §4.1 und der Kopf von `re15_superobj_r41.h` sagen
+  dagegen "einziger Fall ROOM4030/4031 sub07, Typ 0x2D in State 1 -> wie vorher uebersprungen" — fuer 4031 falsch und nicht
+  gemessen. Ob die Konstellation im Spiel erreichbar ist (sub06 nur ueber sub02 = AOT Slot 5, den main00 nur bei Bit 3:87 setzt;
+  3:87 setzt ROOM4040/4041 @0x01020; Weg ohne 4031 ueber 4001 -> 4021 -> STAGE5 -> 4071 -> 4041 existiert als Tuerkette) und was das
+  Original dann zeigt (der Original-Handler @0x80040c18 nimmt ebenfalls Gegner 0, egal welcher Typ), ist offen. -> **Mangel M2**.
+
+### Nebenbefund N1 (kein Spur-J-Punkt, nicht von Spur J verursacht): der Hund am Ende der 3061-Szene
+Original (o3061_s2 selbst gelesen, Gegner 2 Typ 0x20): t16 36 s cmd 1 / Sub 12 bei (-13350,-22000); t17 38 s cmd 1 / Sub 2 / Clip 0
+(Gehen) (-12932,-22482) rot 650; t18 40 s (-12578,-23421) rot 830 — er geht langsam nach rechts vorn (zur Kamera), nicht zu Elza
+(Video o125-o137). Port (p2a und gleich auf der master-exe m3061_master): F1430 Sub 12, ab F1460 rot 1747, Motion 2, ~200
+Einheiten/Bild direkt zu Elza, ab F1490 an ihren Fuessen (Abstand 949) — sichtbar anders als das Original, noch vor der Abblende.
+Hund-KI (Typ 0x20) ist von Spur J unberuehrt (master-exe zeigt dasselbe). Empfehlung: eigener Auftrag (Hund-KI Sub 2 nach dem
+Aufstehen, Ziel/Tempo gegen o3061_s2 t17/t18).
+
+## Gate T — gezielte Tests (eigene Laeufe, keine volle Suite)
+Logs unter Scratchpad `J41abn0/ctest_*.log`.
+1. Riegel der Spur: `ctest -R "^unit_r41_stage3szenen_a" -V` -> **7/7 Passed** (zensus, anker (0,0)/(0,0), superobj (0,0,0),
+   wclip, rbj_mechanik, rbj_zensus, rbj_kanal); `ctest -R "^integration_r41_stage3szenen_a_"` -> **2/2 Passed** (3060 214,6 s,
+   3061 93,9 s).
+2. Alle unit_/probe_/prop_ (Diff beruehrt NPC-Executor, RBJ-Bindung, SCD-Opcodes, Zeichner, Raumwechsel — breit genug, um die
+   ganze Unit-Ebene zu fahren): `ctest -R "^(unit|probe|prop)_" -j 4` -> **917/923 Passed**, 6 x Timeout, alle sechs sind
+   Skript-Riegel von release/ (unit_r35_android_pruefkette, _bash_mutanten, unit_r38_releaseskript_trocken, _ablauf,
+   _fehler_bau, _fehler_umfeld): ihre Pruefzeilen standen alle auf ok, der Prozess wurde unter der Parallel-Last nicht fertig;
+   release/ ist vom Diff unberuehrt. Einzeln nachgefahren: `unit_r38_releaseskript_trocken` **Passed (788,7 s)**; die uebrigen
+   fuenf laufen einzeln (Ergebnis unten).
+
+## Maengel (nummeriert, nachpruefbar)
+**V1 (Vertrag, formal):** Haken ausserhalb der Zuteilung VERTRAG 1.3: `re15_port/engine/src/scd_vm.c` register_opcodes
+(`s_op_table[0x48]/[0x49]`, 3 Zeilen, laut 1.3 nur C/F/G) und `re15_port/platform/pc/main.c` pc_prop_world (4 Zeilen, laut 1.3 nur
+D und F/G). Klein, markiert "Runde 41 Spur J", technisch ohne Alternative (Opcode-Tabelle und PC-Zeichner liegen nur dort), aber ohne
+Orchestrator-Entscheid; Konfliktgefahr mit C/F/G in register_opcodes bei der Integration. Abhilfe: Entscheid wie B5/A-E3/E-E1
+(annehmen) oder Haken verlegen. (Der RBJ-Spieler-Haken in main.c ist durch A-E5 gedeckt.)
+
+**M2 (Nebenwirkung ungeprueft, Doku falsch):** Super_set (0x48) wirkt in **ROOM4031 (Elza)** anders als behauptet. Beim ersten
+Besuch (Bit 3:88 = 0) ist Gegner 0 **John (Typ 0x49, Sce_em_set @0x00556)** und bleibt nach sub08 in State 4; sub07 `48 00 80 81`
+(@0x00722) haengt Objekt 0 dann jetzt an Johns Teil 1 — vorher wurde der Opcode uebersprungen. Gemessen: Lauf
+`J41abn0/laeufe/e4031_super` (Elza, RE15_DEBUG_JUMP=4030@250, RE15_FORCE_EVENT=6@600): `[superobj41] F621 Super_set Objekt 0 Art 0x80
+Teil-Byte 0x81 lokal (0,0,0) Rot (0,0,0) -> angehaengt`, state.txt `[1 t=49 st=4 ...]`. Dossier §4.1 / Bau-Bericht ("einziger Fall
+ROOM4030/4031 sub07, Typ 0x2D in State 1: der Opcode wird wie vor dieser Spur uebersprungen") und der Kopf von `re15_superobj_r41.h`
+stimmen fuer 4031 nicht. Abhilfe: Erreichbarkeit im Spiel klaeren (sub06 nur ueber sub02 = AOT Slot 5, nur bei Bit 3:87; 3:87 setzt
+ROOM4040/4041 @0x01020; Tuerkette 4001 -> 4021 -> STAGE5 -> 4071 -> 4041 ohne 4031 existiert) und das Original in genau dieser Lage
+messen (der Handler @0x80040c18 nimmt Gegner 0 ohne Typpruefung — der neue Port-Weg ist also vermutlich byte-true), dann Doku
+berichtigen und einen Riegel fuer 4031 anlegen; sonst (unerreichbar) Beleg + Doku-Korrektur.
