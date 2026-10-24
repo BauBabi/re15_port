@@ -964,6 +964,10 @@ RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72
   | TD ganzer Stopp | F68..F73 170 130 90 50 10 -30, ab F74 Stehen, erster Leerlauf-Wechsel mo 210 F169 (= F74 + 95) | Stopp gleich, Leerlauf-FSM ab F68, mo 210 F189 | Stehen-ANIMATE Fall 0 im Bild nach dem Stopp-Ende (@0x80032958 -> @0x80032074), Zeitgeber rng & 0x1f + 90 (@0x800320a8-@0x800320bc) |
   Der Zeitgeberwert selbst kommt im Port aus re15_idle_rand (Bildzaehler-Hash, vorbestehend) — belegt ist hier nur der Einstieg
   (Bild nach dem Stopp-Ende), nicht der Wert.
+  Vorzeichen: das virtuelle Pad-Wort 0x800ac768 entsteht ueber die Tabelle @0x80073dbc (`read 0x80073dbc 16 --w 2`: [0] 0x1000 =
+  OBEN, [1] 0x2000 = RECHTS, [2] 0x4000 = UNTEN, [3] 0x8000 = LINKS, [7] 0x80 = QUADRAT, [8] 0x8 = R1, [9] 0x40 = KREUZ) — LINKS ist
+  also held & 0x8 = der Abzug-Zweig (@0x80032660-@0x800326a0), RENNEN 0x200 = KREUZ, Zielen 0x100 = R1, Aktion 0x80 = QUADRAT;
+  der Port dreht LINKS ebenfalls negativ.
 
 ### Fortsetzung — Tests (gezielt, keine volle Suite)
 - Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)` (Endstand; keine neue .c-Datei seit dem letzten
