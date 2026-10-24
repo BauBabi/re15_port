@@ -926,3 +926,17 @@ Pegel je Abstand (max(voll, volr) = (0x89 - ATT[Abstand]) & 0x7f, ATT-Bytes PSX.
 | ATT | 10 | 20 | 28 | 33 | 38 | 43 | 53 | 63 | 81 | 83 |
 | Pegel | 127 | 117 | 109 | 104 | 99 | 94 | 84 | 74 | 56 | 54 |
 Landungen (Punkt 2a, unveraendert): landung_leon / landung_elza je 1 Landung, 104 fx-Zeilen id=6 sub=3.
+
+### N2.7 OFFEN (Stand Nachbesserung 2; N1.13 gilt weiter, Punkt 8 ist fuer die NPCs erledigt)
+1. **Lage der SPIELER-Schritte:** FUN_80045630 ruft FUN_80045a64 fuer JEDE Entity (`jal 0x80045a64` @0x80045830, kein Typ-Gate davor),
+   also auch fuer Leon/Elza. Der Port spielt die Spieler-Schritte (wasser_r38.c -> re15_audio_footstep, game_step_common.c,
+   affen_11c0.c, enemy_ai_common.c Koerperfall) weiter mittig mit dem Ton-Pegel. Die Anbindung waere ein Aufruf
+   re15_wassersprung_r41_lage(...) vor dem jeweiligen re15_audio_footstep; sie aendert die Schritt-Lautstaerke in JEDEM Raum und
+   betrifft die 23 Mitschnitt-Riegel -> Entscheid des Orchestrators + volle Suite (Entscheid A-E4 nennt nur die NPC-Schritte).
+2. **Rotor (rotor_common.c, nicht Spur A):** Winkel ueber eine ATAN-Tabelle statt CORDIC @0x800658fc (Abweichung bis +-7/4096 = bis
+   eine Pan-Stufe, `A_nb2/cordic_vgl.py`), und "L" = DAT_800b2826 (volr) / "R" = DAT_800b2824 (voll) im Vergleich zum Verbraucher
+   SsUtKeyOnV (voll = +0x0e = DAT_800b2824, @0x8004598c-9c). Ob der Rotor-Verbraucher die Seiten so erwartet, ist nicht geprueft.
+3. **SPU-Quadrat:** SpuVmKeyOnNow schreibt (v * v) / 0x3fff in die SPU-Lautstaerke; der Port-Mischer ist fuer alle SE-Pfade linear
+   (se_play_layers, Schritte). Die Schritt-Lage folgt dieser Port-Einheit; eine Umstellung waere engine-weit.
+4. Stempel-Zeilen ohne Ton (106 Faelle, Raeume ohne WATER-Satz - dort gibt es keinen Stempel) und ROOM6030/6031 Boden 0x17 (keine
+   Zeile mit Ton fuer NPC und Spieler): Daten des Originals, unveraendert stumm.
