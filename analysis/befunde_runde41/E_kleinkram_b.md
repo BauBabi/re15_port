@@ -839,3 +839,23 @@ work to do", `LOCAL-BUILD-OK (build)` (exe md5 9de3bd488e72334278224893f65b136d 
   (72 statt 48, dann Gehen 75), C Stopp -> OBEN+RENNEN (ein Geh-Bild, dann Rennen 200), D ganzer Stopp (160 120 80 40 0 40, mo 200,
   Folgebild Mischung 7), E Zielen mit Waffe 3 + LINKS (72 und Stopp); Gegenprobe mit re15_rennstopp_r41_pruef_aus(1) muss in
   allen fuenf durchfallen. rennstopp-Teil erweitert (Rueckgabe 2, OBEN+RENNEN im Stopp, unterzustand2, Stehen-Fall 0).
+
+### Fortsetzung — gebaut, Riegel rennpfad gemessen
+- `local_build.sh build` -> `LOCAL-BUILD-OK (build)` (keine neue .c-Datei, kein configure). Erster Lauf rennpfad: die Wege nach
+  einer Drehung waren 159 statt 160 bzw. 74 statt 75 — der Vorschub rundet je Achse ab (player_common.c `x += cos*v/4096`, Blick
+  -72 -> cos 4071 / sin -451: dx 159, dz 17, Betrag 159,9); Riegel vergleicht nach einer Drehung auf +-1 (rp_weg_um).
+- `ctest -R "unit_r41_kleinkram_b_takt_"` (-V): msgtakt 11/11, kamerahalt 6/6, frage 5/5, rennstopp 17/17, renntempo 7/7,
+  **rennpfad 6/6**:
+  | Fall | Modul (NACHHER) | Stand 4190e6b0 (VORHER) | ohne Modul (vor NB3) |
+  |---|---|---|---|
+  | A Rennen -> LINKS | S1 dreh -72 mo 200 weg 159, S2 -72 mo 105 weg 0, S3 -96 | S1 -96 mo 105 weg 159, S2 -96, S3 -96 | S1 -96 mo 105 weg 0 |
+  | B Rennen -> OBEN+LINKS | S1 -72 mo 200 weg 159, S2 -72 mo 105 weg 74, S3 -48 | S1 -48 mo 105 weg 159, S2 -48 | S1 -48 mo 105 weg 74 |
+  | C Stopp -> OBEN+RENNEN | S1 mo 200 160, S2 mo 105 75, S3 mo 100 200 | S2 mo 100 200 | S1 mo 200 weg 0, S2 mo 100 |
+  | D ganzer Stopp | 160 120 80 40 0 40, Folgebild Mischung 7, danach 6 | Folgebild Mischung 1 | kein Weg, Mischung 1 |
+  | E Zielen+LINKS (Waffe 3) | S1 -72 mo 200 weg 159 | S1 dreh 0 mo 105 weg 160 | S1 -24 mo 215 (Zielen) weg 0 |
+  VORHER = derselbe neue Test gegen die Engine von 4190e6b0 (Baum `git archive 4190e6b0 re15_port` ohne shared_assets + Junction,
+  Linker-Stub fuer unterzustand2, nur Ziel test_r41_kleinkram_b_takt gebaut; `<sp>/E41n3b/vorher_rennpfad.log`): **A-E 5/5
+  DURCHGEFALLEN** (1/6 bestanden = nur die Gegenprobe-Zeile). Nebenbefund VORHER: im Stopp-Einstieg mit LINKS/RECHTS ueberschrieb
+  der Dreh-Zweig die Steh-Bewegung (mo 105), der Stopp brach im Folgebild als "Fremdeingriff" ab.
+- unit_r36_zombieki_affen_block mit dem verfeinerten Stopp (`<sp>/E41n3b/ctest_affen.log`): **rot** — FERN 4852 > 24533/6 und
+  schlechtester Seed 0x9b5bf362 +3521 (Schranke 1039). Neu-Messung `rennvergleich 0 143 6000` laeuft (`<sp>/E41n3b/affen/`).

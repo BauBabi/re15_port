@@ -481,6 +481,8 @@ static int rp_weg(rp_t a, rp_t b)
     long w = 0; while ((w + 1) * (w + 1) <= dx * dx + dz * dz) w++;
     return (int)w;
 }
+/* Weg nach einer Drehung: der Vorschub rundet je Achse ab (player_common.c x += cos*v/4096), der Betrag weicht um <= 1 ab. */
+static int rp_weg_um(rp_t a, rp_t b, int soll) { const int w = rp_weg(a, b); return w >= soll - 1 && w <= soll + 1; }
 /* ROOM2020 Tunnel (z -3150, wie der Weg des Nutzers 11350 -> West), Blick 0 (+x), 8 Bilder Rennen. */
 static rp_t rp_start(int waffe)
 {
@@ -510,14 +512,14 @@ static void teil_rennpfad(void)
         rp_t r0 = rp_start(0), a1 = rp_bild(L), a2 = rp_bild(L), a3 = rp_bild(L);
         printf("  [%s] A Rennen->LINKS: Renn-Bild x %d mo %d | S1 dreh %d mo %d weg %d | S2 dreh %d mo %d weg %d | S3 dreh %d\n", w,
                (int)r0.x, r0.mo, rp_drehung(r0, a1), a1.mo, rp_weg(r0, a1), rp_drehung(a1, a2), a2.mo, rp_weg(a1, a2), rp_drehung(a2, a3));
-        const int okA = r0.mo == 100 && rp_drehung(r0, a1) == -72 && a1.mo == 200 && a1.aktiv && rp_weg(r0, a1) == 160 &&
+        const int okA = r0.mo == 100 && rp_drehung(r0, a1) == -72 && a1.mo == 200 && a1.aktiv && rp_weg_um(r0, a1, 160) &&
                         rp_drehung(a1, a2) == -72 && a2.mo == 105 && !a2.aktiv && rp_weg(a1, a2) == 0 && rp_drehung(a2, a3) == -96;
         /* B: RENNEN los, OBEN+LINKS gehalten */
         rp_t s0 = rp_start(0), b1 = rp_bild(U | L), b2 = rp_bild(U | L), b3 = rp_bild(U | L);
         printf("  [%s] B Rennen->OBEN+LINKS: S1 dreh %d mo %d weg %d | S2 dreh %d mo %d weg %d | S3 dreh %d mo %d\n", w,
                rp_drehung(s0, b1), b1.mo, rp_weg(s0, b1), rp_drehung(b1, b2), b2.mo, rp_weg(b1, b2), rp_drehung(b2, b3), b3.mo);
-        const int okB = rp_drehung(s0, b1) == -72 && b1.mo == 200 && rp_weg(s0, b1) == 160 &&
-                        rp_drehung(b1, b2) == -72 && b2.mo == 105 && rp_weg(b1, b2) == 75 && rp_drehung(b2, b3) == -48;
+        const int okB = rp_drehung(s0, b1) == -72 && b1.mo == 200 && rp_weg_um(s0, b1, 160) &&
+                        rp_drehung(b1, b2) == -72 && b2.mo == 105 && rp_weg_um(b1, b2, 75) && rp_drehung(b2, b3) == -48;
         /* C: Stopp, dann OBEN+RENNEN */
         rp_t c0 = rp_start(0), c1 = rp_bild(0), c2 = rp_bild(U | X), c3 = rp_bild(U | X);
         printf("  [%s] C Stopp->OBEN+RENNEN: S1 mo %d weg %d | S2 mo %d weg %d | S3 mo %d weg %d\n", w,
@@ -537,7 +539,7 @@ static void teil_rennpfad(void)
         /* E: Zielen mit Waffe aus dem Rennen, LINKS gehalten */
         rp_t e0 = rp_start(3), e1 = rp_bild(U | X | M | L);
         printf("  [%s] E Rennen->Zielen+LINKS (Waffe 3): S1 dreh %d mo %d weg %d\n", w, rp_drehung(e0, e1), e1.mo, rp_weg(e0, e1));
-        const int okE = rp_drehung(e0, e1) == -72 && e1.mo == 200 && rp_weg(e0, e1) == 160;
+        const int okE = rp_drehung(e0, e1) == -72 && e1.mo == 200 && rp_weg_um(e0, e1, 160);
         re15_player_set_equipped_weapon(0);
         if (!gegen) {
             PRUEF(okA, "A: aus dem Rennen LINKS: Stopp-Bild dreht 72 (@0x80073f25, @0x80032660-@0x800326a0), 160 Vorschub; "
