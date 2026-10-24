@@ -92,6 +92,29 @@ Fress-Schleifen 0x27/0x28 (69/82 Bilder, -680..-1197 = kniend); 0x29 Aufstehen a
 **Im Original liegt ein 0x84-Zombie also flach am Boden (Pose 0x0c), frisst NICHT, und steht auf, sobald
 Leon naeher als 4000 kommt (nach 0..15 Takten): Aufsteh-Clip 0x12 (98 Bilder), danach Angriff.**
 
+### 2.1b ORIGINAL dynamisch (DuckStation, MZD-Disc = Auslieferungs-EXE, kein PATCHED-Save)
+Ruhezustand `stage_saves/mzd_demo/mzd_stage2_room.sav` (ROOM2000, Leon (4350,-1800,-20500)), Entity-Array
+@0x800acc2c Stride 0x1f4, Slots 2/3 (Typ 0x16): `+0x4..7 = 1/0/0/0`, `+0x9 = 0x84`, **`+0x94 = 0x12`**,
+`+0x95 = 0`, `+0x8f = 0`, **`+0x93 = 0x01`** (Phase-0-Riegel = unschiessbar), `+0x1b8 = 0x01`, d = 30168/28816
+(Port am Sprungpunkt: dieselben d-Werte). Also Liege-Phasenmaschine P0, NICHT Fress-Schleife.
+
+Filmstreifen (Werkzeug `tools/r41_zombiefresser/orig_weck_film.py`: RAM-Patch Slot 3 nach (1350,-20500) =
+d 3000 < 4000, DuckStation `-statefile`, je Lauf EINE Probe ueber SaveStateOnExit nach `--lead` s, Ende nur
+per eigener PID). Belege `scratchpad/I41/orig2/resume_lead*.sav`:
+
+| lead | Slot 3 (`+0x4/5/6/7`, grid, Clip, Bild, +0x8f, +0x93, +0x9c, d) | Slot 2 (fern) |
+|---|---|---|
+| 1.0 s | 1/0/**2**/0 g=84 Clip **0x12** f7 8f=8 93=01 9c=**-1** d=3197 | 1/0/0/0 g=84 0x12 f0 93=01 |
+| 2.0 s | 1/0/2/0 g=84 Clip 0x12 f32 93=01 | unveraendert |
+| 3.0 s | 1/0/2/0 g=84 Clip 0x12 f65 93=01 | unveraendert |
+| 4.5 s | **1/2/1/0 g=00** Clip 0x02 f9 **93=00** | unveraendert |
+| 6.0 s | 1/2/1/0 g=00 Clip 0x02 d=3974 | unveraendert |
+| 9.0 s | 1/2/1/0 g=00 d=6036 (Leon auf Ebene -1800, Zombie y=0 — Weg fuehrt weg) | unveraendert |
+
+=> Original: liegt (P0, unschiessbar) -> d < 4000 -> Wartezeit (+0x9c laeuft auf -1, Post-Dekrement
+@0x80103974) -> P2 Aufstehen Clip 0x12 (1 Bild/Takt, 98 Bilder, Riegel bleibt) -> P3 grid 0 + 0x201 +
+Riegel frei -> Kampf-Gang (Bank0 Clip 2). Der ferne Zombie (d 30168) bleibt die ganze Zeit liegen.
+
 ### 2.2 Der Port-Defekt
 - RE2-KI (Default): `re2z_init` (enemy_ai_re2_zombie.c, Zweig `sel == 6 || sel == 4 || sel == 5`) schickt
   0x84/0x85 in EXEC[8] FRESSEN (RE2-Fress-Clips 18/19/20) — begruendet mit "[5]/[6] = Fresser". Das Etikett
