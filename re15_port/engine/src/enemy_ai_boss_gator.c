@@ -224,6 +224,10 @@ typedef struct {
     int32_t  frei_lx, frei_lz;     /* Position im Vortick (Totalstand-Nachweis) */
     int8_t   befrei_schub;         /* Runde 41 Spur B NB4 (M2): Befreiung laeuft (Schub aus dem Slab, Gier bleibt) */
     int32_t  befrei_x, befrei_z;   /*   ... Ziel = Slab-Rand + 120 (wie bisher bx/bz) */
+    /* NB4 (M2) Messzeile GIER-WACHE: Gier/Phase des Vorbilds und Statistik der Verfolgungs-/Belagerungsbilder */
+    int16_t  gw_yaw;               /* Gier am Ende des Vortakts */
+    int8_t   gw_verf;              /* Vortakt endete in CHASE/GUARD */
+    int32_t  gw_n, gw_max, gw_spr; /* Bildpaare CHASE/GUARD -> CHASE/GUARD, groesstes |Gier-Delta| ohne +1024, Spruenge > 0x60 */
     /* v0.7.65: Steuer-Zustaende AUS den file-statics hierher - die lebten
      * ueber Neuspawns/Raum-Re-Entries (und Sweep-Testpaare) hinweg weiter
      * und verschleppten Pendel-/Waechterziele (Sweep-Beleg: Einzelfall
@@ -1146,6 +1150,10 @@ int re15_gator_boss_untergetaucht(const re15_actor_t *e)
  * im Takt) ---------------------------------------------------------------------------------------------------------------- */
 static int s_gb_befreiungen;                /* Messhaken: Befreiungen seit Programmstart */
 int re15_gator_boss_befreiungen(void) { return s_gb_befreiungen; }
+int re15_gator_boss_phase(const re15_actor_t *e)
+{
+    return re15_gator_boss_active(e) ? (int)s_gb[(int)(e - g_actors)].phase : -1;
+}
 int re15_gator_boss_verfolgt(const re15_actor_t *e)
 {
     if (!re15_gator_boss_active(e)) return 0;
@@ -1227,6 +1235,38 @@ void re15_gator_boss_tick(int slot)
         e->x = nx; e->z = nz;
     }
     re15_gr2_nachtakt(slot, e);                               /* (3) */
+    {   /* NB4 (Abnahme 3, M2) - MESSZEILE GIER-WACHE (gator_boss.log): je Bildpaar, dessen beide Takte in CHASE/GUARD enden, das
+         * Gier-Delta. Erlaubt: Port-Wenderate 0x60/Bild (re15_enemy_steer_point(.., 0x60) "zackige Wende") und der RE2-Knick
+         * +1024 am Clip-3-Ende (@0x80100938-48 / @0x80100eb0-c0, Lunge-Ende ebenso). "GIER-SPRUNG" je Verstoss, "GIER-WACHE"
+         * alle 300 Paare. RE2: kein Gier-Schreiber in Sub 1/2 (@0x80100964 / @0x80100c20 / @0x80100cdc). */
+        gb_state_t *g = &s_gb[slot];
+        int verf = (g->phase == GBP_CHASE || g->phase == GBP_GUARD);
+        unsigned f = (unsigned)g_engine.frame_count;
+        if (verf && g->gw_verf) {   /* gw_verf gilt nur fuer den unmittelbar vorigen Takt (wird je Takt neu gesetzt) */
+            int d = (((int)e->rot_y - (int)g->gw_yaw + 0x800) & 0xfff) - 0x800;
+            int ad = d < 0 ? -d : d;
+            g->gw_n++;
+            if (d != 1024 && ad > g->gw_max) g->gw_max = ad;
+            if (d != 1024 && ad > 0x60) {
+                g->gw_spr++;
+                if (!s_gb_stumm) { FILE *fl = fopen("gator_boss.log", "a");
+                    if (fl) { fprintf(fl, "GIER-SPRUNG F%u d=%d phase=%d pos=(%d,%d) mo=%d af=%d\n", f, d, (int)g->phase, e->x, e->z,
+                                      (int)e->motion, (int)e->anim_frame); fclose(fl); } }
+            }
+            if ((g->gw_n % 300) == 0 && !s_gb_stumm) { FILE *fl = fopen("gator_boss.log", "a");
+                if (fl) { fprintf(fl, "GIER-WACHE bis F%u: %d Bildpaare CHASE/GUARD, max |Gier-Delta| %d (ohne +1024), Spruenge > 0x60: %d, "
+                                  "Befreiungen %d\n", f, (int)g->gw_n, (int)g->gw_max, (int)g->gw_spr, s_gb_befreiungen); fclose(fl); } }
+        }
+        g->gw_verf = (int8_t)verf; g->gw_yaw = e->rot_y;
+    }
+}
+int re15_gator_boss_gier_wache(int slot, int *paare, int *max_delta, int *spruenge)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
+    if (paare) *paare = s_gb[slot].gw_n;
+    if (max_delta) *max_delta = s_gb[slot].gw_max;
+    if (spruenge) *spruenge = s_gb[slot].gw_spr;
+    return 1;
 }
 
 static void gb_takt(int slot)

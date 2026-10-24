@@ -66,7 +66,14 @@ endif()
 #                                @0x801019c4-0x80101b8c, z per Quer-Ausgleich (PORT-WAHL, Schritte wie x)
 #   unit_r41_re2gator_anschwimmen Nachbesserung 3 (M3): Zielmodus +0x1C0 & 4 (@0x80100a34-b4) sperrt den Biss (T1 @0x8010134c-58),
 #                                solange der Kanister >= 8880 x Skala voraus in der Zone des Gators liegt
-foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera aufnahme lauer schleppen anschwimmen)
+#   unit_r41_re2gator_sitz       Nachbesserung 4 (Abnahme 3 M1): der getragene Kanister sitzt in JEDEM gezeichneten Bild an
+#                                Part6(Bild) x Lokallage (RE2: Kind der Part-6-Weltmatrix @0x801018d0-e0, Kopf-az +0x22A
+#                                @0x8010037c-90) - gemessen gegen einen Nachbau des NPC-Zeichners nach jedem Takt bei Aufnahme,
+#                                Wende, Biss und Befreiung (Schub ohne Drehung); Effekt-Quelle Part 6 = dieselbe Matrix
+#   unit_r41_re2gator_gier       Nachbesserung 4 (Abnahme 3 M2): in CHASE/GUARD kein Gier-Delta > 0x60 je Bild ausser dem RE2-Knick
+#                                +1024 (@0x80100938-48 / @0x80100eb0-c0), je >= 300 Bildpaare in den Lagen E1 (Plattform-Belagerung,
+#                                Leon oben auf der Rampe) und C3 (Westwand vor der Tuernische); Wand-Druck = keine Befreiung
+foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera aufnahme lauer schleppen anschwimmen sitz gier)
     add_test(NAME unit_r41_re2gator_${_teil} COMMAND test_r41_re2gator ${_teil})
     set_tests_properties(unit_r41_re2gator_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()

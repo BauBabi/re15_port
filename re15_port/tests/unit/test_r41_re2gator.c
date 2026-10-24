@@ -1231,7 +1231,11 @@ static int teil_schleppen(void)
             if (re15_gr2_kanister_stufe() == 7) nach7++;
         }
         int ok = re15_gr2_kanister_lokal(l);
-        CHECK(anh && (l_anh[2] > 1000 || l_anh[2] < -1000), "Fall 3: beim Anhaengen keine Querlage (lokal z %d)", l_anh[2]);
+        /* Nachbesserung 4 (M1): die Lokallage beim Anhaengen bezieht sich auf die GEZEICHNETE Part-6-Matrix (FUN_8002d030
+         * @0x801018f0 gegen die Part-6-Weltmatrix @0x801018d0, samt Kopf-az +0x22A @0x8010037c-90 = nach Stufe 2 ~+204): die
+         * Querlage ist darin kleiner als in der Keyframe-Matrix ohne +0x22A (vorher > 1000), aber nicht 0 - der Quer-Ausgleich
+         * hat weiter etwas zu tun. */
+        CHECK(anh && l_anh[2] != 0, "Fall 3: beim Anhaengen keine Querlage (lokal z %d)", l_anh[2]);
         CHECK(ok && l[0] == RE15_GR2_KAN_LOKAL_X && l[1] == RE15_GR2_KAN_LOKAL_Y && l[2] == 0,
               "Fall 3: Lokallage nach Stufe 7 + 40 Takte (%d,%d,%d) statt (1750,-210,0) - x/y @0x801019c4-0x80101b8c, z Quer-Ausgleich",
               l[0], l[1], l[2]);
@@ -1289,6 +1293,187 @@ static int teil_anschwimmen(void)
     return fails ? 1 : 0;
 }
 
+/* ===== Nachbesserung 4 (Abnahme 3) =============================================================================================
+ * Zeichner-Nachbau wie der NPC-Pass in main.c (nach dem Takt): clip_override = (anim_flags & 4) ? motion : -1
+ * (anim_select_common.c, Gegner-Zweig), re15_compute_actor_kf(.., anim_frame), re15_skel_compute_pose mit g_anim_pose_actor =
+ * Aktor (Ueberblendung + Kopf/Kiefer-az +0x22A/+0x228 ueber re15_gator_spine_arc_vz; schreibt den Ueberblend-Schnappschuss wie
+ * der echte Zeichner). Part-6-Weltmatrix: Rotation = Yaw x Part (ohne Skala), Lage = Wurzel + Yaw x Skala x Part (main.c nyaw x
+ * render_scale_q12). */
+static int zeichnen_nachbau(int32_t r6[9], int32_t p6[3])
+{
+    re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+    if (!bk) return 0;
+    int ov = (e->anim_flags & 0x04u) ? (int)e->motion : -1;
+    int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, e, ov, (uint32_t)e->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor; g_anim_pose_actor = e;
+    int rv = re15_skel_compute_pose(&bk->skel, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return 0;
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    int32_t tr[3] = { (int32_t)(((int64_t)poses[6].trans[0] * s) >> 12), (int32_t)(((int64_t)poses[6].trans[1] * s) >> 12),
+                      (int32_t)(((int64_t)poses[6].trans[2] * s) >> 12) };
+    re15_skel_bone_to_world(tr, e->rot_y, e->x, e->y, e->z, p6);
+    int32_t ry[9]; re15_skel_euler_matrix(0, (int)e->rot_y, 0, ry);
+    for (int r = 0; r < 3; r++)
+        for (int c = 0; c < 3; c++)
+            r6[r*3 + c] = (int32_t)(((int64_t)ry[r*3+0] * poses[6].rot[0*3+c] + (int64_t)ry[r*3+1] * poses[6].rot[1*3+c]
+                                    + (int64_t)ry[r*3+2] * poses[6].rot[2*3+c]) >> 12);
+    return 1;
+}
+/* |gezeichnete Kanister-Lage - Part6(Bild) x Skala x Lokallage| (groesste Komponente); *fx_ok = Effekt-Quelle Part 6 = dieselbe
+ * Matrix (32-Byte-Abbild: 9 x s16 Rotation, 3 x s32 Lage ab Byte 20). -1 = nicht angehaengt. */
+static int32_t sitz_fehler(const int32_t r6[9], const int32_t p6[3], int *fx_ok)
+{
+    int32_t kw[3], kr[9], l[3];
+    if (!re15_gr2_kanister_welt(kw, kr) || !re15_gr2_kanister_lokal(l)) return -1;
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    int32_t ls[3] = { (int32_t)(((int64_t)l[0] * s) >> 12), (int32_t)(((int64_t)l[1] * s) >> 12), (int32_t)(((int64_t)l[2] * s) >> 12) };
+    int32_t m = 0;
+    for (int r = 0; r < 3; r++) {
+        int32_t soll = p6[r] + (int32_t)(((int64_t)r6[r*3] * ls[0] + (int64_t)r6[r*3+1] * ls[1] + (int64_t)r6[r*3+2] * ls[2]) >> 12);
+        int32_t d = soll - kw[r]; if (d < 0) d = -d; if (d > m) m = d;
+    }
+    if (fx_ok) {
+        uint8_t q[32], soll[32]; memset(soll, 0, sizeof soll);
+        for (int i = 0; i < 9; i++) { int16_t v = (int16_t)r6[i]; soll[i*2] = (uint8_t)v; soll[i*2+1] = (uint8_t)(v >> 8); }
+        for (int i = 0; i < 3; i++) { uint32_t v = (uint32_t)p6[i];
+            soll[20+i*4] = (uint8_t)v; soll[21+i*4] = (uint8_t)(v >> 8); soll[22+i*4] = (uint8_t)(v >> 16); soll[23+i*4] = (uint8_t)(v >> 24); }
+        *fx_ok = re15_gr2_fx_quelle(0, q) && memcmp(q, soll, 32) == 0;
+    }
+    return m;
+}
+/* sitz - Abnahme 3 M1: der getragene Kanister sitzt in JEDEM gezeichneten Bild an Part 6 x Lokallage. RE2 haengt ihn als Kind an
+ * die Part-6-Weltmatrix (`addiu a0,s0,1104` @0x801018d0, `sw a0,128(s2)` @0x801018e0; Kopf-az +0x22A in die lokale Part-6-Matrix
+ * @0x8010037c-90), der Port rechnete die Lage am Takt-Anfang aus der Pose des Vorbilds (Pruefer-Sonde 'nachlauf', gleiche Lage:
+ * Wende 619-637 je Bild, Biss bis 409, > 300 in 51 von 240 Bildern). Gemessen wird nach jedem Takt gegen den Zeichner-Nachbau,
+ * (a) Aufnahme bis Stufe 7 + 40, (b) 240 Takte Wende (Leon seitlich) / Biss (Leon vor der Schnauze) / Wende zurueck wie die
+ * Sonde, (c) Befreiung aus einem Gefaengnis im Plattform-Slab (Schub, Gier fest) mit dem Kanister im Maul. */
+static int teil_sitz(void)
+{
+    if (!setup(1)) return 1;
+    leon_statue(-3000, -19000); tick(); intro_abwarten();
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    e->x = -3000; e->z = -24000; e->y = -1200; e->rot_y = 0;
+    re15_gr2_kanister_setzen(-3000 + (int32_t)(((int64_t)8800 * s) >> 12), -1200, -24000);
+    int32_t r6[9], p6[3]; int fx_ok = 0, fx_falsch = 0;
+    int f7 = 0, n_auf = 0; int32_t m_auf = 0;
+    for (int f = 0; f < 200 && f7 < 40; f++) {
+        leon_statue(-3000, -19000); tick();
+        if (!zeichnen_nachbau(r6, p6)) { CHECK(0, "Zeichner-Nachbau ohne Pose"); return 1; }
+        int32_t d = sitz_fehler(r6, p6, &fx_ok);
+        if (d >= 0) { n_auf++; if (d > m_auf) m_auf = d; if (!fx_ok) fx_falsch++; }
+        if (re15_gr2_kanister_stufe() == 7) f7++;
+    }
+    CHECK(f7 >= 40, "Stufe 7 nicht erreicht (%d Takte)", f7);
+    CHECK(m_auf == 0, "Aufnahme: Kanister %d neben Part6(Bild) x lokal (%d angehaengte Bilder)", m_auf, n_auf);
+    printf("sitz: (a) Aufnahme Stufe 3..7 + 40: %d angehaengte Bilder, groesster Abstand zu Part6(Bild) x lokal %d\n", n_auf, m_auf);
+    int n_wende = 0, n_biss = 0, n_blend = 0, n = 0; int32_t m_wende = 0, m_biss = 0, m = 0;
+    for (int f = 0; f < 240; f++) {
+        if (f < 80)       leon_statue(e->x - 6000, e->z + 6000);
+        else if (f < 160) leon_statue(e->x + (int32_t)(((int64_t)re15_cos_q12((int)e->rot_y) * 2600) >> 12),
+                                      e->z - (int32_t)(((int64_t)re15_sin_q12((int)e->rot_y) * 2600) >> 12));
+        else              leon_statue(e->x + 6000, e->z + 6000);
+        pl->hp = 100;                           /* kein Fress-Finisher: Wende und Biss messen (wie die Sonde) */
+        int16_t y0 = e->rot_y;
+        tick();
+        if (!zeichnen_nachbau(r6, p6)) { CHECK(0, "Zeichner-Nachbau ohne Pose (Takt %d)", f); return 1; }
+        int32_t d = sitz_fehler(r6, p6, &fx_ok);
+        if (d < 0) { CHECK(0, "Kanister nicht mehr angehaengt (Takt %d, Stufe %d)", f, re15_gr2_kanister_stufe()); return 1; }
+        n++; if (d > m) m = d; if (!fx_ok) fx_falsch++;
+        if (e->motion == 0 && e->rot_y != y0) { n_wende++; if (d > m_wende) m_wende = d; }
+        if (e->motion == 4) { n_biss++; if (d > m_biss) m_biss = d; }
+        if (e->anim_frac > 0) n_blend++;
+    }
+    CHECK(n_wende >= 20 && n_biss >= 20, "Faelle nicht abgedeckt: Wende %d / Biss %d Bilder (je >= 20)", n_wende, n_biss);
+    CHECK(m == 0, "Wende/Biss: Kanister %d neben Part6(Bild) x lokal (Wende max %d, Biss max %d)", m, m_wende, m_biss);
+    printf("sitz: (b) %d Bilder, Wende %d (max %d), Biss %d (max %d), mit Ueberblendung %d, groesster Abstand %d\n",
+           n, n_wende, m_wende, n_biss, m_biss, n_blend, m);
+    /* (c) Gefaengnis: Zentrum 600 innerhalb der um den Koerperradius aufgeblasenen Plattform-Westkante (x -1700 - 1466), Leon im
+     *     Westen - die Verfolgung will hinaus, push_rect Fall 0 verwirft den Schritt (re15_collision.c) -> Befreiung (Schub). */
+    int b0 = re15_gator_boss_befreiungen(), n_schub = 0, gestartet = 0; int32_t m_schub = 0; int gier_fest = 1;
+    const int32_t ausgang = -1700 - ((int32_t)e->hit_radius_min + 60) - 120;   /* Slab-Ausgang bx (enemy_ai_boss_gator.c) */
+    e->x = -1700 - (int32_t)e->hit_radius_min + 600; e->z = -16000; e->rot_y = 0x800;
+    for (int f = 0; f < 80; f++) {
+        leon_statue(-7000, -16000); pl->hp = 100;
+        int16_t y0 = e->rot_y; int32_t x0 = e->x;
+        tick();
+        if (!zeichnen_nachbau(r6, p6)) { CHECK(0, "Zeichner-Nachbau ohne Pose (Befreiung %d)", f); return 1; }
+        int32_t d = sitz_fehler(r6, p6, &fx_ok);
+        if (d < 0) { CHECK(0, "Kanister bei der Befreiung nicht angehaengt"); return 1; }
+        if (!fx_ok) fx_falsch++;
+        if (!gestartet && re15_gator_boss_befreiungen() > b0) gestartet = 1;
+        if (gestartet && x0 > ausgang) {        /* Schub-Bild: Start bis zum Erreichen des Ausgangs */
+            n_schub++;
+            if (e->rot_y != y0) gier_fest = 0;
+            if (d > m_schub) m_schub = d;
+        }
+        if (gestartet && e->x <= ausgang) break;
+    }
+    CHECK(re15_gator_boss_befreiungen() == b0 + 1, "Gefaengnis: %d Befreiungen statt 1", re15_gator_boss_befreiungen() - b0);
+    CHECK(n_schub >= 1 && gier_fest, "Befreiung: %d Schub-Bilder, Gier fest %d (NB4 M2: Schub ohne Drehung)", n_schub, gier_fest);
+    CHECK(m_schub == 0, "Befreiung: Kanister %d neben Part6(Bild) x lokal", m_schub);
+    CHECK(fx_falsch == 0, "Effekt-Quelle Part 6 in %d Bildern nicht die gezeichnete Part-6-Matrix", fx_falsch);
+    printf("sitz: (c) Befreiung %d Schub-Bilder, Gier fest %d, groesster Abstand %d; Effekt-Quelle Part 6 falsch in %d Bildern\n",
+           n_schub, gier_fest, m_schub, fx_falsch);
+    return fails ? 1 : 0;
+}
+
+/* gier - Abnahme 3 M2: in Verfolgung (CHASE) und Belagerung (GUARD) dreht der Gator hoechstens mit der Port-Wenderate 0x60 je
+ * Bild (re15_enemy_steer_point(.., 0x60), "zackige Wende"); einzige Ausnahme der RE2-Knick +1024 am Clip-3-Ende (@0x80100938-48 /
+ * @0x80100eb0-c0). RE2 dreht den Koerper in Sub 1/2 nie (Gier-Schreiber nur @0x80100280/2a0/948/ec0/2404/2440/27c8/2a34). Lagen
+ * der Abnahme 3 (je >= 300 Bildpaare mit beiden Takten in CHASE/GUARD):
+ *   E1  Plattform-Belagerung: Leon OBEN auf der Rampe (6732,-16250, y -1800), GUARD-Ziel (6500,-12600) vor der Ostwand - vorher
+ *       Befreiungs-Snap +-1944..1984 alle 32 Bilder an der Ostwand (x 5716 > 7200 - 1526).
+ *   C3  Westwand vor der Tuernische: Leon in der Nische (-8200,-25550) - vorher 1300..1650 (C3 F1097/1207/1327, A2 F379, D2 F1075).
+ * Beide sind Wand-DRUCK (der Schritt hinaus ist frei) -> keine Befreiung mehr. Messwerte: Paare, groesstes |Delta|, Spruenge. */
+static int lauf_gier(int32_t lx, int32_t lz, int32_t ly, int takte, int *paare, int *maxd, int *spr, int *bef, int *guard, int *wand)
+{
+    if (!setup(1)) return 0;
+    leon_statue(lx, lz); tick(); intro_abwarten();
+    int b0 = re15_gator_boss_befreiungen();
+    int v_alt = re15_gator_boss_verfolgt(e); int16_t y_alt = e->rot_y;
+    *paare = 0; *maxd = 0; *spr = 0; *guard = 0; *wand = 0;
+    for (int f = 0; f < takte; f++) {
+        leon_statue(lx, lz); pl->y = ly; pl->hp = 100;   /* Leon haelt die Lage (ohne Fress-Finisher) */
+        tick();
+        int v = re15_gator_boss_verfolgt(e);
+        if (v && v_alt) {
+            int d = (((int)e->rot_y - (int)y_alt + 0x800) & 0xfff) - 0x800, ad = d < 0 ? -d : d;
+            (*paare)++;
+            if (d != 1024 && ad > *maxd) *maxd = ad;
+            if (d != 1024 && ad > 0x60) { (*spr)++; if (*spr <= 5) printf("  Sprung Takt %d: %d (Phase %d, (%d,%d))\n", f, d,
+                                                                       re15_gator_boss_phase(e), e->x, e->z); }
+        }
+        if (re15_gator_boss_phase(e) == 5) (*guard)++;
+        if (e->x > 7200 - 1466 - 100 || e->x < -8900 + 1466 + 100) (*wand)++;   /* an der Ost-/Westwand-Klemmlinie */
+        v_alt = v; y_alt = e->rot_y;
+    }
+    *bef = re15_gator_boss_befreiungen() - b0;
+    int gp = 0, gm = 0, gs = 0; re15_gator_boss_gier_wache(slot, &gp, &gm, &gs);
+    CHECK(gp >= *paare && gs == *spr, "Messzeile GIER-WACHE (%d Paare, %d Spruenge) weicht vom Riegel ab (%d / %d)", gp, gs, *paare, *spr);
+    return 1;
+}
+static int teil_gier(void)
+{
+    struct { const char *was; int32_t x, z, y; } k[2] = {
+        { "E1 Plattform-Belagerung (Leon oben auf der Rampe)", 6732, -16250, -1800 },
+        { "C3 Westwand vor der Tuernische (Leon in der Nische)", -8200, -25550, 0 },
+    };
+    for (int i = 0; i < 2; i++) {
+        int pa = 0, md = 0, sp = 0, bf = 0, gu = 0, wa = 0;
+        if (!lauf_gier(k[i].x, k[i].z, k[i].y, 400, &pa, &md, &sp, &bf, &gu, &wa)) return 1;
+        printf("gier: %-52s %d Bildpaare CHASE/GUARD (GUARD %d, an der Wand %d), max |Gier-Delta| %d (ohne +1024), Spruenge > 0x60 %d, "
+               "Befreiungen %d\n", k[i].was, pa, gu, wa, md, sp, bf);
+        CHECK(pa >= 300, "%s: nur %d Bildpaare CHASE/GUARD (>= 300 verlangt)", k[i].was, pa);
+        CHECK(sp == 0 && md <= 0x60, "%s: %d Gier-Spruenge, max |Delta| %d > 0x60 (RE2 ohne Gier-Schreiber in Sub 1/2)", k[i].was, sp, md);
+        CHECK(bf == 0, "%s: %d Befreiungen an einer Wand (Wand-Druck ist kein Gefaengnis)", k[i].was, bf);
+        if (i == 0) CHECK(gu >= 300, "%s: nur %d GUARD-Bilder (Belagerung nicht erreicht)", k[i].was, gu);
+        CHECK(wa >= 100, "%s: nur %d Bilder an der Wand-Klemmlinie (Lage nicht erreicht)", k[i].was, wa);
+    }
+    return fails ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "clips";
@@ -1307,6 +1492,8 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "lauer")) rc = teil_lauer();
     else if (!strcmp(t, "schleppen")) rc = teil_schleppen();
     else if (!strcmp(t, "anschwimmen")) rc = teil_anschwimmen();
+    else if (!strcmp(t, "sitz")) rc = teil_sitz();
+    else if (!strcmp(t, "gier")) rc = teil_gier();
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);
     return rc;
