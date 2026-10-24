@@ -26,6 +26,12 @@ static const unsigned char re15_r41c_org_2050_slot8[20] = {
 };
 #define RE15_R41C_ORG_2050_SLOT8_OFF 0x01D38u
 
+/* STAGE2/ROOM2050.RDT @0x0201A 10 B md5 cf3686e3ee4deeca2d64bc0f16a50891: ROOM2050 sub01 @0x0201A Aot_reset Slot 6 sce 3 sat 0x31 -> Ereignis 2 (Kisten im Becken; Nachbesserung 1, M1) - 10 B */
+static const unsigned char re15_r41c_org_2050_kisten[10] = {
+    0x46,0x06,0x03,0x31,0xff,0x00,0x18,0x02,0x00,0x00,
+};
+#define RE15_R41C_ORG_2050_KISTEN_OFF 0x0201Au
+
 /* STAGE2/ROOM2050.RDT @0x01D4C 34 B md5 3ed4af9dc0b558fba61a381b33abd06c: ROOM2050 main00 @0x01D4C Obj_model_set obj 8 Typ 4 (-19554,0,22684) = Cursor - 34 B */
 static const unsigned char re15_r41c_org_2050_obj8[34] = {
     0x2d,0x08,0x04,0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x9e,0xb3,0x00,0x00,0x9c,0x58,0x00,0x00,0x00,0x00,

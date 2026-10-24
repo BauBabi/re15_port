@@ -334,8 +334,12 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
-    re15_game_flag_set(5, RE15_R41C_FLAG_TIMER, 0);   /* Raum-Scratch, wie das Raumladen (FUN_8003ecec @0x8003ed74) */
-    re15_game_flag_set(5, RE15_R41C_FLAG_FLUT, 0);
+    if (ist(room_id, RE15_R41C_RAUM_2030)) {          /* nur der eigene Raum (Nachbesserung 1, M3): anderswo sind
+                                                       * (5,0x1D)/(5,0x1E) Original-Bits, z. B. ROOM1171 sub02 @0x013B2
+                                                       * `22 05 1e 01` im Init-Takt (Kraehen DIVE-ARM @0x801155e8) */
+        re15_game_flag_set(5, RE15_R41C_FLAG_TIMER, 0);   /* Raum-Scratch, wie das Raumladen (FUN_8003ecec @0x8003ed74) */
+        re15_game_flag_set(5, RE15_R41C_FLAG_FLUT, 0);
+    }
     s_v13_vorher = bit(RE15_R41C_BIT_VENTIL13);
     s_letzter_raum = room_id;
 
@@ -366,9 +370,14 @@ const uint8_t *re15_ventilkette_r41_ereignis(uint16_t room_id, uint8_t event_id)
         else if (event_id == RE15_R41C_EV_VENTIL13)
             name = bit(RE15_R41C_BIT_VENTIL13) ? "2030_v13_zustand" : "2030_v13_frage";
         else if (event_id == RE15_R41C_EV_VENTILE)
-            name = (bit(RE15_R41C_BIT_FLUT_GELAUFEN) || s_timer) ? "2030_ventile_zustand" : "2030_ventile";
+            name = bit(RE15_R41C_BIT_2030_LEER) ? "2030_ventile_leer"      /* Nachbesserung 1 (M8): nach dem Rechner */
+                 : (bit(RE15_R41C_BIT_FLUT_GELAUFEN) || s_timer) ? "2030_ventile_zustand" : "2030_ventile";
     } else if (ist(room_id, RE15_R41C_RAUM_2050)) {
-        if (event_id == RE15_R41C_EV_2050_HEBEL && !bit(RE15_R41C_BIT_PULT2050)) name = "2050_hebel_sperre";
+        /* Hebel-Platz Slot 6: Ereignis 4 (sub00 @0x01E28 -> sub04 @0x022E6) UND Ereignis 2 (Kisten im Becken, sub01
+         * @0x0201A -> sub02 @0x0220E, Speed -20 For 180 @0x0227C) heben das Wasser -> beide erst nach dem Pult
+         * (Nachbesserung 1, M1). */
+        if ((event_id == RE15_R41C_EV_2050_HEBEL || event_id == RE15_R41C_EV_2050_KISTEN) && !bit(RE15_R41C_BIT_PULT2050))
+            name = "2050_hebel_sperre";
         else if (event_id == RE15_R41C_EV_2050_PULT)
             name = bit(RE15_R41C_BIT_PULT2050) ? "2050_pult_zustand" : "2050_pult_ein";
     } else if (ist(room_id, RE15_R41C_RAUM_2080)) {

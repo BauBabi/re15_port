@@ -116,6 +116,8 @@ def bauen(cd):
     P.append(("re15_r41c_prg_2030_ventile", ventile))
     P.append(("re15_r41c_prg_2030_ventile_zustand",
               [msg_on(48, "The valves are open. The pool has been flooded."), EVT_NEXT, ENDE]))
+    P.append(("re15_r41c_prg_2030_ventile_leer",
+              [msg_on(49, "The valves are open. The pool has been drained. (Nachbesserung 1, M8: nach Bit 107)"), EVT_NEXT, ENDE]))
     # ---- 2050 ------------------------------------------------------------------------------------------------
     P.append(("re15_r41c_prg_2050_hebel_sperre",
               [msg_on(40, "The pump has no power. The switchboard must be set first. (Form ROOM2060 sub12 @0x015D0)"),

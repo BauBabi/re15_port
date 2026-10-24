@@ -107,6 +107,13 @@ static const unsigned char re15_r41c_prg_2030_ventile_zustand[8] = {
     /* +006 */ 0x01,0x00, /* Evt_end */
 };
 
+/* re15_r41c_prg_2030_ventile_leer (8 B) */
+static const unsigned char re15_r41c_prg_2030_ventile_leer[8] = {
+    /* +000 */ 0x2b,0x31,0xff,0xff, /* Message_on 49, Maske ffff - The valves are open. The pool has been drained. (Nachbesserung 1, M8: nach Bit 107) */
+    /* +004 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +006 */ 0x01,0x00, /* Evt_end */
+};
+
 /* re15_r41c_prg_2050_hebel_sperre (8 B) */
 static const unsigned char re15_r41c_prg_2050_hebel_sperre[8] = {
     /* +000 */ 0x2b,0x28,0xff,0xff, /* Message_on 40, Maske ffff - The pump has no power. The switchboard must be set first. (Form ROOM2060 sub12 @0x015D0) */
@@ -172,6 +179,7 @@ static const re15_r41c_programm_t re15_r41c_programme[] = {
     { "2030_v13_zustand", re15_r41c_prg_2030_v13_zustand, 8 },
     { "2030_ventile", re15_r41c_prg_2030_ventile, 112 },
     { "2030_ventile_zustand", re15_r41c_prg_2030_ventile_zustand, 8 },
+    { "2030_ventile_leer", re15_r41c_prg_2030_ventile_leer, 8 },
     { "2050_hebel_sperre", re15_r41c_prg_2050_hebel_sperre, 8 },
     { "2050_pult_ein", re15_r41c_prg_2050_pult_ein, 44 },
     { "2050_pult_zustand", re15_r41c_prg_2050_pult_zustand, 8 },

@@ -147,6 +147,7 @@
 #define RE15_R41C_MSG_WARNUNG         46
 #define RE15_R41C_MSG_V13_ZUSTAND     47
 #define RE15_R41C_MSG_VENTILE_ZUSTAND 48
+#define RE15_R41C_MSG_VENTILE_LEER    49   /* Nachbesserung 1 (M8): Zustandssatz nach dem Entleeren (Bit 107) */
 #define RE15_R41C_MSG_HEBEL_OHNE      40   /* 2050 */
 #define RE15_R41C_MSG_PULT_FRAGE      41   /* = ROOM11F0 msg 1 "Will you push them? " @0x18D8 */
 #define RE15_R41C_MSG_PULT_OK         42   /* = ROOM11F0 msg 2 "Power supply OK." @0x18F1     */
@@ -160,6 +161,14 @@
 #define RE15_R41C_EV_VENTIL13  25
 #define RE15_R41C_EV_VENTILE   26
 #define RE15_R41C_EV_2050_HEBEL 4   /* Original-Ereignis des Hebels (sub00 @0x01E28)  */
+/* Nachbesserung 1 (Abnahme 0, M1): DERSELBE Hebel-Platz Slot 6 fuehrt Ereignis 2, sobald die drei Kisten im Becken
+ * liegen: ROOM2050/2051 sub01 @0x02006 `06 00 1c 00` Ifel_ck, @0x0200A `21 03 6d 00` Ck(3,109)=0, @0x0200E/@0x02012/
+ * @0x02016 `21 05 00 01`/`21 05 01 01`/`21 05 02 01` Ck(5,0..2)=1 (gesetzt @0x0203C ff. bei Member_cmp 0x0F == 3/4/5),
+ * @0x0201A `46 06 03 31 ff 00 18 02 00 00` Aot_reset Slot 6 sce 3 sat 0x31 -> Ereignis 2 = sub02 @0x0220E: Frage msg 0
+ * `2b 00 ff ff`, Ja `21 0c 1f 00` @0x02218, Set(3,109) `22 03 6d 01` @0x0221C, Wasser obj 0 y 0 `34 01 00 00` @0x02268,
+ * Cut 4 `29 04` @0x02270, Speed_set(1,-20) `2f 01 ec ff` @0x0227C + For 180 `0d 00 06 00 b4 00` @0x02280 = das Wasser
+ * STEIGT. Einzige Ereignis-2-Stelle in 2050/2051 (scd_dump_room.py: Aot_set/Aot_reset mit `18 02` nur @0x0201A). */
+#define RE15_R41C_EV_2050_KISTEN 2  /* sub01 @0x0201A -> sub02 @0x0220E (Hebel mit den Kisten im Becken) */
 #define RE15_R41C_EV_2050_PULT  9   /* Original-Ereignis des Pults (main00 @0x01D38)  */
 #define RE15_R41C_EV_2050_AUS  10   /* Original sub10 = Ausstieg aus dem Pult          */
 #define RE15_R41C_EV_2080_RECHNER 2 /* Original-Ereignis des Rechners (sub00 @0x00C1A) */
@@ -207,15 +216,20 @@
 #define RE15_R41C_WASSER_TYP       3         /* @0x00C2E pc[2]                                   */
 #define RE15_R41C_WASSER_FLAGS     0x000Bu   /* @0x00C2E pc[6..7] 0x000a | 1 (op_obj_model_set)  */
 #define RE15_R41C_WASSER_ATTR      0x001Au   /* @0x00C2E pc[8..9]                                */
-#define RE15_R41C_ERTRINK_TIEFE    900       /* Wasser 900 ueber den Fuessen = halbe Koerperhoehe (Typ-4-Anhebung
-                                              * -900 @0x8002c24c als Mass einer Koerperhaelfte)   */
+#define RE15_R41C_ERTRINK_TIEFE    900       /* PORT-WAHL (Ertrinken gibt es im Original nicht): Wasser 900 ueber
+                                              * den Fuessen. ENTLIEHENES Mass, KEINE Koerperhoehe: @0x8002c24c
+                                              * `addiu v0,v0,-900` hebt in der Objekt-Schleife (Schritt 148
+                                              * `addiu s6,s6,148` @0x8002c1f8) die y-Lage (+0x60) von Typ-4-Objekten
+                                              * an (`lbu v1,8(s1)` / `ori v0,zero,0x4` / `bne` @0x8002c234-3c). */
 /* Spritzer: KEINE Rate — ein Ereignis, wenn die Flaeche die Fuesse erreicht (ventilkette_r41.c flut_tick; Original
  * nur je Fuss-Aufsetzer @0x8003253c -> FUN_80045630 @0x800456b8). Die fruehere Rate "alle 6 Takte" war ohne Beleg. */
 #define RE15_R41C_ZAEHLER_BILDER   1800      /* 60 s bei 30 SCD-Takten (Sleep `09 0a 08 07`)     */
 /* Marker des Programms fuer den C-Takt: Bank 5 WORT 0 (Raum-Scratch, beim Raumladen gewischt FUN_8003ecec
  * @0x8003ed74; Wort 1 taugt NICHT — es ist der Ein-Bild-Handshake, den FUN_8003ebf4 @0x8003ec1c am Ende JEDES
  * VM-Laufs loescht). 2030 benutzt Bank 5 nicht (0 Treffer `21 05`/`22 05` in ROOM2030.RDT); der Installer loescht
- * beide Bits bei jedem Raumstart zusaetzlich. */
+ * beide Bits NUR in 2030/2031 (Nachbesserung 1, M3: in fremden Raeumen sind es Original-Bits, z. B. ROOM1171 sub02
+ * @0x013B2 `22 05 1e 01` im Init-Takt = Kraehen-Flag DIVE-ARM @0x801155e8; das Raumladen wischt Wort 0 ohnehin,
+ * scd_room_setup.c @0x8003ed74). */
 #define RE15_R41C_FLAG_TIMER       0x1D
 #define RE15_R41C_FLAG_FLUT        0x1E
 /* Blaue Blende: Kanal 0, ABR 2 (B-F subtraktiv wie @0x174a), Maske Rot+Gruen (Config-Bits 2+1: Blau bleibt stehen),

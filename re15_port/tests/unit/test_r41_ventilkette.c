@@ -9,15 +9,23 @@
  *   B  2000/2001: Leiter Slot 4 = Sperrtext 40 (Aktion zeigt ihn), mit Bit 100 = Tuer
  *   C  2030/2031: Bruecke oben + Zelle 12 zu; Pult "kein Druck"; Ventil 13 (Frage, Ja, Bit 101, Klick-Zustand);
  *      Pult "Lower the bridge?" -> Fahrt 30 x 120 unter Cut 4 -> y -1800, Bit 102, Zelle 12 offen; mit 102 unten
- *   D  Ventile: Frage, Warnung, Zaehler (5,0x3D) -> Ost-Tuer -> 20B0, Wasser geparkt; 1800 Takte -> Flut (5,0x3E),
+ *   D  Ventile: Frage, Warnung, Zaehler (5,0x1D) -> Ost-Tuer -> 20B0, Wasser geparkt; 1800 Takte -> Flut (5,0x1E),
  *      Wasser steigt 50/Takt, Spieler ertrinkt (hp -1, Blende), Zeit abgelaufen = tot
  *   E  Verlassen waehrend des Zaehlers -> Bits 103 + 100; 20B0: Leiter = Tuer, Strahlen unterdrueckt (0 statt 3);
- *      Tueren nach 2000 -> 20B0 mit Cut-Zuordnung; 2030 nach der Flut unter Wasser, Lift-Rufzone = msg 1; mit 107 leer
+ *      Tueren nach 2000 -> 20B0 mit Cut-Zuordnung; 2030 nach der Flut unter Wasser, Lift-Rufzone = msg 1; mit 107 leer,
+ *      Ventile danach = Zustandssatz 49 (Nachbesserung 1, M8)
  *   F  2050/2051: Hebel ohne Strom = msg 40, (3,104) bleibt; Pult: Slot 8 + Cursor, Frage, Cut 15, Cursor faehrt
  *      (Original sub07), SQUARE kippt Hebel (Zonen), 30+40+10 = 80 -> 30 Ruhebilder -> Bit 106, "Power supply OK.",
- *      Ausstieg sub10; danach Hebel = Original sub04 ((3,104)=1); alle 16 Masken: nur 0xD = 80
+ *      Ausstieg sub10; danach Hebel = Original sub04 ((3,104)=1); alle 16 Masken: nur 0xD = 80;
+ *      Kisten im Becken (sub01 @0x0201A -> Ereignis 2 = sub02 @0x0220E): ohne Bit 106 Sperrsatz 40, Wasser bleibt;
+ *      mit Bit 106 Original sub02 (Wasser steigt) (Nachbesserung 1, M1)
  *   G  2080/2081: ohne Flut Original; mit Flut: sub02 + Set(9,107) + msg 40, Wasser obj 0 -> -3420; war der Rechner
  *      schon gelaufen: Slot 4 erneut, nur Frage + Bit 107
+ *   H  fremde Raeume: der Installer laesst (5,0x1D)/(5,0x1E) stehen (ROOM1171 sub02 @0x013B2 `22 05 1e 01` im
+ *      Init-Takt bleibt 1), nur 2030/2031 loescht er (Nachbesserung 1, M3)
+ *
+ * Werkzeug (Riegel integration_r41_ventilkette C, Nachbesserung 1 M4): `test_r41_ventilkette ppm <datei.ppm> x0 y0 x1 y1`
+ * gibt "MITTEL r g b" der Flaeche (P6-Framedump, x1/y1 ausschliesslich) aus.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -222,6 +230,7 @@ static void fall_a(void)
         { 0x2050, RE15_R41C_ORG_2050_SUB09_OFF, re15_r41c_org_2050_sub09, (int)sizeof re15_r41c_org_2050_sub09, "2050 sub09" },
         { 0x2050, RE15_R41C_ORG_2050_SLOT8_OFF, re15_r41c_org_2050_slot8, (int)sizeof re15_r41c_org_2050_slot8, "2050 Slot 8" },
         { 0x2050, RE15_R41C_ORG_2050_OBJ8_OFF,  re15_r41c_org_2050_obj8,  (int)sizeof re15_r41c_org_2050_obj8,  "2050 obj 8" },
+        { 0x2050, RE15_R41C_ORG_2050_KISTEN_OFF, re15_r41c_org_2050_kisten, (int)sizeof re15_r41c_org_2050_kisten, "2050 sub01 Kisten -> Ereignis 2" },
         { 0x2000, RE15_R41C_ORG_2000_SLOT4_OFF, re15_r41c_org_2000_slot4, (int)sizeof re15_r41c_org_2000_slot4, "2000 Slot 4" },
         { 0x2030, RE15_R41C_ORG_2030_OBJ0_OFF,  re15_r41c_org_2030_obj0,  (int)sizeof re15_r41c_org_2030_obj0,  "2030 obj 0" },
         { 0x2080, RE15_R41C_ORG_2080_SLOT4_OFF, re15_r41c_org_2080_slot4, (int)sizeof re15_r41c_org_2080_slot4, "2080 Slot 4" },
@@ -252,6 +261,7 @@ static void fall_a(void)
     PRUEFE(text_ist(0x2050, 42, "Power supply OK."), "Text 2050/42 = 11F0 msg 2");
     PRUEFE(text_ist(0x2050, 41, "Will you push them?"), "Text 2050/41 = 11F0 msg 1");
     PRUEFE(text_ist(0x2080, 40, "The treatment pool is being drained as well."), "Text 2080/40");
+    PRUEFE(text_ist(0x2031, 49, "The valves are open. The pool has been drained."), "Text 2031/49 (Nachbesserung 1, M8)");
     /* Gewichte: genau eine der 16 Masken ergibt 80 */
     int treffer = 0, welche = -1;
     for (unsigned m = 0; m < 16; m++)
@@ -505,6 +515,11 @@ static void fall_e(uint16_t r2030, uint16_t r20b0, uint16_t r2000, uint16_t r201
     PRUEFE(prop_von_obj(RE15_R41C_WASSER_OBJ_A) < 0 && prop_von_obj(RE15_R41C_WASSER_OBJ_B) < 0, "ROOM%04X mit Bit 107: kein Wasser", r2030);
     PRUEFE(g_aot.slots[4].type != RE15_AOT_TYPE_MESSAGE, "ROOM%04X mit Bit 107: Lift-Rufzone wieder Original", r2030);
     PRUEFE(g_aot.door_params[0].dest_room == 0x0B, "ROOM%04X mit Bit 107: Ost-Tuer bleibt -> 20B0 (Bit 103)", r2030);
+    /* Nachbesserung 1 (M8): nach dem Entleeren sagen die Ventile nicht mehr "flooded", sondern Zustandssatz 49 */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].y = -5400;
+    L = druecken(6500, -200, 2048, 0, 300);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_LEER, "ROOM%04X mit Bit 107: Ventile = Zustandssatz 49 (msgs %d, erste %d)",
+           r2030, L.n_msgs, L.n_msgs ? L.msgs[0] : -1);
 }
 
 /* ---- F: 2050 Hebel + Pult ----------------------------------------------------------------------------------- */
@@ -520,6 +535,46 @@ static void square(void)
     takt();
     g_scd_pad_edge = 0; g_scd_pad_held = 0;
     for (int i = 0; i < 3; i++) takt();
+}
+
+/* Nachbesserung 1 (M1): die drei Kisten liegen im Becken = die Bits, die sub01 beim Einschieben setzt ((5,0) @0x0203C/
+ * @0x0205A/@0x02078 nach Member_cmp(0x0F == 3/4/5) fuer obj 1, (5,1) @0x02096.. obj 2, (5,2) @0x020F0.. obj 3; Messmittel
+ * wie RE15_SET_FLAG_AT=5:0,5:1,5:2 der Abnahme). Danach legt sub01 @0x0201A `46 06 03 31 ff 00 18 02` den Hebel-Platz
+ * Slot 6 auf Ereignis 2 (sub01 laeuft je Bild, scd_vm_tick FUN_8003f038 @0x8003f064-84). */
+static void kisten_ins_becken(void)
+{
+    re15_game_flag_set(5, 0, 1); re15_game_flag_set(5, 1, 1); re15_game_flag_set(5, 2, 1);
+    for (int i = 0; i < 4; i++) takt();
+}
+
+static void fall_f_kisten(uint16_t r)
+{
+    /* ohne Bit 106: Ereignis 2 = Sperrsatz 40; (3,109) bleibt 0; Wasser obj 0 bleibt "ausser Sicht" y -16200 (@0x01D92) */
+    bits_leeren();
+    if (raum_hoch(r, 5100, -5400, -10500) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+    const int w = prop_von_obj(0);
+    const int32_t wy0 = (w >= 0) ? g_scd.props[w].y : 0;
+    PRUEFE(g_aot.slots[6].type == RE15_AOT_TYPE_GENERIC && g_aot.slots[6].event_id == RE15_R41C_EV_2050_HEBEL,
+           "ROOM%04X: ohne Kisten Slot 6 = Ereignis 4 (ist %d)", r, g_aot.slots[6].event_id);
+    kisten_ins_becken();
+    PRUEFE(g_aot.slots[6].active && g_aot.slots[6].type == RE15_AOT_TYPE_GENERIC && g_aot.slots[6].event_id == RE15_R41C_EV_2050_KISTEN,
+           "ROOM%04X Kisten im Becken: Slot 6 = Ereignis 2 (sub01 @0x0201A; Typ %d ev %d)", r, g_aot.slots[6].type, g_aot.slots[6].event_id);
+    lauf_t L = druecken(5100, -10500, 1024, 0, 600); zeige("kisten ohne", r, &L);
+    int cut4 = 0; for (int i = 0; i < L.n_cuts; i++) if (L.cuts[i] == 4) cut4 = 1;
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_HEBEL_OHNE && re15_game_flag_get(3, 109) == 0 && !cut4 &&
+           w >= 0 && wy0 == -16200 && g_scd.props[w].y == wy0,
+           "ROOM%04X Kisten ohne Strom: Sperrsatz 40, (3,109)=%d, kein Cut 4 (%d), Wasser y %d -> %d (erwartet -16200)",
+           r, re15_game_flag_get(3, 109), cut4, (int)wy0, w >= 0 ? (int)g_scd.props[w].y : 0);
+    /* Gegenprobe mit Bit 106: Original sub02 @0x0220E -> Frage msg 0 -> Ja -> Set(3,109) @0x0221C, Wasser y 0 @0x02268,
+     * Speed -20 For 180 @0x0227C/@0x02280 -> y -3600 */
+    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_PULT2050);
+    if (raum_hoch(r, 5100, -5400, -10500) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+    kisten_ins_becken();
+    L = druecken(5100, -10500, 1024, 0, 900); zeige("kisten 106", r, &L);
+    const int w2 = prop_von_obj(0);
+    PRUEFE(L.n_msgs >= 1 && L.msgs[0] == 0 && re15_game_flag_get(3, 109) == 1 && w2 >= 0 && g_scd.props[w2].y == -3600,
+           "ROOM%04X Kisten mit Strom: Original sub02 (msg %d, (3,109)=%d, Wasser y %d, erwartet -3600)",
+           r, L.n_msgs ? L.msgs[0] : -1, re15_game_flag_get(3, 109), w2 >= 0 ? (int)g_scd.props[w2].y : 0);
 }
 
 static void fall_f(uint16_t r)
@@ -597,6 +652,7 @@ static void fall_f(uint16_t r)
     g_scd_pad_edge = 0x8000; takt(); g_scd_pad_edge = 0;
     for (int i = 0; i < 40; i++) takt();
     PRUEFE(re15_game_flag_get(5, 4) == 0 && g_scd.cam_id != 15 && bit(RE15_R41C_BIT_PULT2050) == 0, "ROOM%04X: CROSS = Abbruch (sub10), Bit 106 bleibt 0", r);
+    fall_f_kisten(r);
 }
 
 /* ---- G: 2080 Rechner ---------------------------------------------------------------------------------------- */
@@ -634,8 +690,55 @@ static void fall_g(uint16_t r)
            g_aot.slots[4].type, g_aot.slots[4].event_id, re15_game_flag_get(3, 245), bit(RE15_R41C_BIT_FLUT_GELAUFEN), bit(RE15_R41C_BIT_2030_LEER));
 }
 
-int main(void)
+/* ---- H: Bank-5-Marker nur in 2030 loeschen (Nachbesserung 1, M3) ------------------------------------------------ */
+static void fall_h(void)
 {
+    /* Direkt am Installer: fremder Raum laesst beide Bits stehen, 2030 loescht sie. */
+    bits_leeren();
+    re15_game_flag_set(5, RE15_R41C_FLAG_TIMER, 1); re15_game_flag_set(5, RE15_R41C_FLAG_FLUT, 1);
+    re15_ventilkette_r41_install(0x1171, NULL);
+    PRUEFE(re15_game_flag_get(5, RE15_R41C_FLAG_TIMER) == 1 && re15_game_flag_get(5, RE15_R41C_FLAG_FLUT) == 1,
+           "ROOM1171: Installer laesst (5,0x1D)/(5,0x1E) stehen");
+    re15_ventilkette_r41_install(0x2031, NULL);
+    PRUEFE(re15_game_flag_get(5, RE15_R41C_FLAG_TIMER) == 0 && re15_game_flag_get(5, RE15_R41C_FLAG_FLUT) == 0,
+           "ROOM2031: Installer loescht die Marker");
+    /* Echter Raumstart ROOM1171 mit (3,194) (Kraehenszene): sub00 Switch -> Gosub sub07 -> Evt_exec sub02, das im
+     * Init-Takt @0x013B2 `22 05 1e 01` setzt (erst @0x014A4 `22 05 1e 00` loescht es wieder, nach dem Warten auf
+     * (5,28) @0x013F4). Vor der Nachbesserung loeschte der Installer es direkt danach. */
+    bits_leeren(); vorflag(3, 194);
+    if (raum_hoch(0x1171, -1500, 0, -8000) != 0) { PRUEFE(0, "ROOM1171 Parse"); return; }
+    PRUEFE(re15_game_flag_get(3, 194) == 0 && re15_game_flag_get(5, 0x1E) == 1,
+           "ROOM1171 (3,194): sub02 lief ((3,194)=%d) und (5,0x1E) = %d nach dem Installer (erwartet 1, @0x013B2)",
+           re15_game_flag_get(3, 194), re15_game_flag_get(5, 0x1E));
+}
+
+/* Werkzeug fuer den exe-Riegel C (M4): Mittel einer Flaeche eines P6-Framedumps. */
+static int ppm_mittel(const char *pfad, int x0, int y0, int x1, int y1)
+{
+    long sz = 0;
+    uint8_t *d = slurp(pfad, &sz);
+    if (!d) { printf("FEHLER: %s nicht lesbar\n", pfad); return 2; }
+    int w = 0, h = 0, mx = 0, n = 0;
+    if (sscanf((const char *)d, "P6 %d %d %d%n", &w, &h, &mx, &n) != 3 || w <= 0 || h <= 0 || mx != 255) {
+        printf("FEHLER: kein P6/255: %s\n", pfad); free(d); return 2; }
+    const long kopf = n + 1;   /* genau ein Trennzeichen nach maxval */
+    if (x0 < 0 || y0 < 0 || x1 > w || y1 > h || x0 >= x1 || y0 >= y1 || kopf + (long)w * h * 3 > sz) {
+        printf("FEHLER: Flaeche/Groesse (%dx%d, %ld B)\n", w, h, sz); free(d); return 2; }
+    long s[3] = { 0, 0, 0 }, cnt = 0;
+    for (int y = y0; y < y1; y++)
+        for (int x = x0; x < x1; x++) {
+            const uint8_t *px = d + kopf + ((long)y * w + x) * 3;
+            s[0] += px[0]; s[1] += px[1]; s[2] += px[2]; cnt++;
+        }
+    printf("MITTEL %ld %ld %ld (%dx%d, Flaeche %d,%d..%d,%d)\n", s[0] / cnt, s[1] / cnt, s[2] / cnt, w, h, x0, y0, x1, y1);
+    free(d);
+    return 0;
+}
+
+int main(int argc, char **argv)
+{
+    if (argc == 7 && strcmp(argv[1], "ppm") == 0)
+        return ppm_mittel(argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
     fall_a();
     for (int v = 0; v < 2; v++) {
         printf("== %s\n", v ? "Elza" : "Leon");
@@ -657,6 +760,7 @@ int main(void)
                 (g_aot.slots[s].event_id == RE15_R41C_EV_PULT || g_aot.slots[s].event_id == RE15_R41C_EV_VENTIL13 || g_aot.slots[s].event_id == RE15_R41C_EV_VENTILE)) n++;
         PRUEFE(n == 0 && re15_ventilkette_r41_wasser_prop(0) < 0, "ROOM2060: %d fremde Plaetze (obj 4 ist dort das Sicherungs-Panel)", n);
     }
+    fall_h();
     printf("%s (%d Pruefungen)\n", s_fail ? "FAIL" : "PASS", s_pruef);
     free(s_daten);
     return s_fail;
