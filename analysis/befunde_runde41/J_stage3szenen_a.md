@@ -278,8 +278,10 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
 - **Super_set/Super_reset** `engine/src/superobj_r41.c` + `include/re15_superobj_r41.h`: Vater-Art 0x80 + Part-Bit
   (Gegner-Teil-Weltmatrix) und 0x00 (Welt); Reset uebernimmt die Welt-Lage, Rot = pc+2/4/6. Haken: `scd_vm.c`
   register_opcodes (0x48/0x49, 1 Block), `platform/pc/main.c` pc_prop_world (4 Zeilen: angehaengtes Prop = Vater x lokal).
-  OFFEN (kein Lieferfall): Vater 0x40/0xc0, Gegner ausserhalb State 4 (ROOM4030/4031 sub07 `48 00 80 81`, Typ 0x2D:
-  dort wird der Opcode wie bisher uebersprungen, Messzeile `[superobj41] ... OFFEN`).
+  Weitere Lieferfaelle (berichtigt in Nachbesserung 1, Mangel M2): Vater 0x40/0xc0 haben keinen; die Aufzugsfahrt sub07
+  `48 00 80 81` (ROOM4030 immer, ROOM4031 ab dem zweiten Besuch) haengt an Gegner 0 = Typ 0x2D in State 1: der Opcode wird
+  wie bisher uebersprungen (`[superobj41] ... OFFEN`); ROOM4031 beim ersten Besuch: Gegner 0 = John (Typ 0x49, State 4) ->
+  angehaengt wie im Original (Handler ohne Typpruefung), im Spiel unerreichbar (§4.1).
 - PSX-Plattform: kein Zeichner-Haken fuer angehaengte Props (asset/render_psx nicht gebaut) — OFFEN fuer die Paritaet.
 
 ### §2.7 Messung Port NACHHER (Laeufe e3061_nach1 = Anker, e3061_nach2 = Anker + Super_set; Elza, RE15_FUSSANKER_LOG)
@@ -345,11 +347,11 @@ bei (-3165,-25115) statt (-3500,-25500): Johns Einlauf (sub10) schiebt sie F131.
 ## §3 Tests (registriert NUR in re15_port/tests/unit/probes/r41_stage3szenen_a.cmake, + _rbj.cmake des Binders)
 | Test | misst | Ergebnis |
 |---|---|---|
-| unit_r41_stage3szenen_a_zensus | 206 RDTs mit SCD + 34 Platzhalter: Spieler-Plc_motion(2,c) nur 3060 @0x010BE / 3061 @0x011DE; Plc_flg Bit 1/2 nur 3061 (5 Stellen); Super_set nur 3061 @0x0127E + 4030/4031; andere Schreiber von +0x1c4 Bit 1/2: Member_set 0, Plc_motion pc[3] 0, Member_set2 86 alle bit-erhaltend | gruen |
+| unit_r41_stage3szenen_a_zensus | 206 RDTs mit SCD + 34 Platzhalter: Spieler-Plc_motion(2,c) nur 3060 @0x010BE / 3061 @0x011DE; Plc_flg Bit 1/2 nur 3061 (5 Stellen); Super_set nur 3061 @0x0127E + 4030/4031; andere Schreiber von +0x1c4 Bit 1/2: Member_set 0, Plc_motion pc[3] 0, Member_set2 86 alle bit-erhaltend; **Nachbesserung 1 (M2):** Sce_em_set Gegner 0 in 4030/4031 = 4030 @0x0052C Typ 0x2D, 4031 @0x00556 John 0x49 / @0x00586 Typ 0x2D; Set 3:87 = 1 nur 4040/4041 @0x01020; Set 3:78 = 1 nur 4030 @0x0068C / 4031 @0x006CE; 9 Glieder der Aufzugs-Kette in ROOM4031 bytegleich | gruen |
 | unit_r41_stage3szenen_a_anker | Anker an Sherrys echter Bank, o3061_s3 t08->t10 und t09->t11: Abweichung **0** | gruen |
 | unit_r41_stage3szenen_a_superobj | Super_set/_reset am echten Bytestrom: Loslass-Lage = Original **(0,0,0)**, Vater ausserhalb State 4 -> uebersprungen | gruen |
 | unit_r41_stage3szenen_a_wclip | (2,6) -> W-Clip 6, Halten Bild 9, Schleife, Ende bei Befehl/Raumwechsel, Sub 0/1 und 1141 unberuehrt | gruen |
-| integration_r41_stage3szenen_a_3060 | echte exe: 3020-Szene -> PL0D -> Tuer 3040 -> 3060, W-Clip 6 / 10 Bilder, Bild 9 >= 25x | gruen |
+| integration_r41_stage3szenen_a_3060 | echte exe: 3020-Szene -> PL0D -> Sprung 3040 an die Gegentuer (-8900,-26300) Blick 1024 + **QUADRAT** an der Tuer Slot 0 (Nachbesserung 1, H1; kein RE15_FIRE_AOT, `[fire-aot]` verboten) -> 3060, W-Clip 6 / 10 Bilder, Bild 9 >= 25x | gruen |
 | integration_r41_stage3szenen_a_3061 | echte exe: Spielstand Elza (-3500,-25500) + CONTINUE ROOM3061, vor an die Wand + QUADRAT am Slot-1-AOT -> sub02 (Cut_chg 6 @0x01062, §2.11), Gitter-Lage, Anker-Takte, Sherry-Lagen (Rest (3,10)), Sherry im Schacht (-30700), Elza W-Clip 6 gehalten, Wechsel 30C1/PL0F | gruen |
 | unit_r41_stage3szenen_a_rbj_{mechanik,zensus,kanal} | Binder (§0, Vorgaenger) | gruen |
 
@@ -365,12 +367,23 @@ Gezielte Laeufe (keine volle Suite; re15_pc.exe 20:31 = letzter Code-Stand, Test
   **`100% tests passed, 0 tests failed out of 2`** (3061 per Quadrat 61,7 s, 3060 148,0 s)
 
 ## §4 OFFEN (je mit Adresse; keiner betrifft das, was der Nutzer in 3060/3061 sieht)
-1. Super_set-Vaterarten 0x40 (Spieler), 0xc0 (Objekt) und Gegner ausserhalb State 4 (Lieferfall nur ROOM4030/4031 sub07
-   `48 00 80 81`, Typ 0x2D Teil 1): der Opcode wird wie vor dieser Spur uebersprungen (Messzeile `[superobj41] ... OFFEN`).
-   GEMESSEN Lauf r4030_super (Sprung 4030, RE15_FORCE_EVENT 6 -> sub07): `[superobj41] F171 Super_set Objekt 0 Art 0x80
-   Teil-Byte 0x81 lokal (0,0,0) Rot (0,0,0) -> OFFEN (Vater nicht berechenbar, uebersprungen)`, Gegner 0 Typ 0x2D in State 1
-   — ROOM4030 verhaelt sich wie vor dieser Spur. Fuer die Gegner-Pose ausserhalb State 4 fehlt dem Port die
-   Kanal-Zuordnung je AI-Zustand (Zeichner main.c).
+1. Super_set (**berichtigt in Nachbesserung 1**, Mangel M2 der Abnahme J 0). Der Original-Handler @0x80040b20 liest weder
+   Typ noch Zustand des Gegners (Art 0x80 + Teil-Bit @0x80040bdc..c30: Zeiger aus 0x8009d3b4 + pc[2]*500, + Teil*172 + 64).
+   Vater-Art 0x40 (Spieler) / 0xc0 (Objekt): kein Lieferfall (Zensus: genau 3 Super_set, alle Art 0x80 + Teil-Bit).
+   Ausser 3061 sind die Lieferfaelle die Aufzugsfahrt-Subs sub07 (`48 00 80 81` = Objekt 0 an Gegner 0 Teil 1):
+   - ROOM4030 sub07 @0x006E0: Gegner 0 = Typ 0x2D (main00 @0x0052C, ohne Bedingung), State 1. GEMESSEN Lauf r4030_super
+     (Sprung 4030, RE15_FORCE_EVENT 6 -> sub07): `[superobj41] F171 Super_set Objekt 0 Art 0x80 Teil-Byte 0x81 lokal
+     (0,0,0) Rot (0,0,0) -> OFFEN (Vater nicht berechenbar, uebersprungen)` — wie vor dieser Spur. Im Spiel erreichbar
+     (Aufzug, sobald 3:87 gesetzt ist).
+   - ROOM4031 sub07 @0x00722: Gegner 0 haengt an Bit 3:88 (main00 @0x00552 `21 03 58 00`). Ab dem zweiten Besuch (3:88 = 1,
+     sub08 @0x0075C `22 03 58 01`) Typ 0x2D (@0x00586), State 1 -> wie ROOM4030 uebersprungen. Beim ersten Besuch (3:88 = 0)
+     ist Gegner 0 **John** (Typ 0x49, @0x00556), nach sub08 in State 4: dort **haengt der Port Objekt 0 an** (gemessen von der
+     Abnahme J 0 per Kunstgriff, Lauf e4031_super: `[superobj41] F621 Super_set Objekt 0 Art 0x80 Teil-Byte 0x81 lokal (0,0,0)
+     Rot (0,0,0) -> angehaengt`) — dasselbe taete der Original-Handler ohne Typpruefung. Im Spiel nicht erreichbar (Kette
+     mit Bytes: "Nachbesserung 1", NB1.M2).
+   OFFEN bleibt die Gegner-Pose ausserhalb State 4 (dem Port fehlt die Kanal-Zuordnung je AI-Zustand, Zeichner main.c):
+   in der Aufzugsfahrt 4030/4031 wird Super_set wie auf master uebersprungen; was Objekt 0 dort im Bild ausmacht, ist nicht
+   gemessen (nicht Teil der Punkte dieser Spur).
 2. PSX-Plattform: Zeichner-Haken fuer angehaengte Props (pc_prop_world) und fuer den W-Bank-Clip (dining_r39-Haken) gibt
    es nur im PC-Zeichner; die Engine-Module (fussanker/superobj/wclip) sind plattformneutral. PSX in dieser Runde nicht gebaut.
 3. Sherrys Lage VOR dem Kriechen: Port (-18857,-26256), Original (-18860,-26266) — Ende des NPC-Gangs (Plc_dest Modus 5/9 in
@@ -384,6 +397,10 @@ Gezielte Laeufe (keine volle Suite; re15_pc.exe 20:31 = letzter Code-Stand, Test
    Original stand die Figur erst nach dem Einlauf dort (o3061_a). NPC-Spieler-Kollision = Spur H. Der Riegel 3061 wartet
    deshalb ausserhalb des Rechtecks ((-3500,-25500), dort F131..F136 nur auf (-3165,-25115) geschoben) und geht erst nach
    dem Einlauf selbst an die Wand (§2.11) — kein Abkuerzungs-Schalter mehr.
+7. Nebenbefund N1 der Abnahme J 0 (nicht Spur J, auf master gleich): der Hund (Gegner 2, Typ 0x20) am Ende der 3061-Szene
+   laeuft im Port ab F1460 direkt zu Elza (rot 1747, ~200 Einheiten/Bild, ab F1490 an ihren Fuessen); im Original geht er
+   langsam nach rechts vorn (o3061_s2 t17 cmd 1 / Sub 2 / Clip 0 (-12932,-22482) rot 650 -> t18 (-12578,-23421) rot 830).
+   Messung der Abnahme, hier nicht wiederholt. Empfehlung der Abnahme: eigener Auftrag (Hund-KI Sub 2 nach dem Aufstehen).
 
 ## §5 Fuer den Nutzer
 - Sehen: **Leon**, STAGE3, Ende von Marvins Abschnitt (ROOM3020-Szene -> als Marvin ueber 30C0 ... 3040 -> Tuer -> ROOM3060):
@@ -397,7 +414,9 @@ Gezielte Laeufe (keine volle Suite; re15_pc.exe 20:31 = letzter Code-Stand, Test
   NPC-Sherry (Typ 0x4B, EM4B aus CDEMD1) in 3061. Der RBJ-Binder (§0, e4a9f39c) wird von K per cherry-pick uebernommen.
 - Gemeinsame Dateien (Haken, je "Runde 41 Spur J"): enemy_ai_common.c (Executor-Bits 2 Zeilen, Vorbild-Stand 1 Zeile),
   scd_vm.c (register_opcodes 0x48/0x49, 1 Block), platform/pc/main.c (pc_prop_world 4 Zeilen; RBJ-Spieler 1 Zeile §0),
-  dining_r39.c (3 Zeilen wclip), enemy_common.c + platform/psx/src/asset_psx.c (RBJ-Binder §0).
+  dining_r39.c (3 Zeilen wclip), enemy_common.c + platform/psx/src/asset_psx.c (RBJ-Binder §0). Die Haken in scd_vm.c und
+  main.c (pc_prop_world) sind durch den Orchestrator-Entscheid **J-E1** (2026-10-24 23:10) angenommen, der RBJ-Spieler-Haken
+  durch A-E5 (Integrations-Hinweis: "Nachbesserung 1", NB1.V1).
 - Werkzeuge: `re15_port/tools/r41_j/j41_szene.py` (DuckStation-Szene aus einem Savestate: Video und/oder Slot-1-Reihe,
   settings.ini bytegleich zurueck), `lauf.sh` (Port-Messlauf mit eigener exe-Kopie).
 
@@ -410,3 +429,57 @@ nur zitiert (Laeufe im Scratchpad `J41abn0/`).
 Plan: V1 = Entscheid J-E1 dokumentieren (Haken bleiben unveraendert); M2 = Kopf `re15_superobj_r41.h` + §2.6/§4.1 mit der
 Beleg-Kette (SCD-Bytes je Glied) berichtigen; H1 = Riegel 3060 nimmt die Tuer per Quadrat; H2 = Kopf der probes-Datei;
 Bau + gezielte Riegel.
+
+### NB1.V1 — Haken in scd_vm.c / platform/pc/main.c ausserhalb der Zuteilung VERTRAG 1.3
+- Ursache: VERTRAG 1.3 teilt scd_vm.c nur C/F/G und platform/pc/main.c nur D und F/G zu; Spur J brauchte die
+  Opcode-Tabelle (0x48/0x49 liegen nur in register_opcodes) und den PC-Zeichner (Prop-Weltmatrix nur in pc_prop_world).
+- Messung vorher (`git diff master...HEAD`): scd_vm.c @445 +3 Zeilen (`s_op_table[0x48]/[0x49]`), main.c @729 +4 Zeilen
+  (pc_prop_world: `re15_superobj_r41_welt`), dazu main.c @151 include + @8303 RBJ-Spieler (A-E5, nicht Teil von V1).
+- Beleg: Orchestrator-Entscheid **J-E1** (master dba6ff8e, AUFTRAG.md "2026-10-24 23:10", Wortlaut): "V1 angenommen (wie
+  B5/I-E1/H-E1): Haken der Spur J in scd_vm.c (register_opcodes, s_op_table[0x48]/[0x49], 3 Zeilen) und platform/pc/main.c
+  (pc_prop_world, 4 Zeilen), markiert "Runde 41 Spur J". Bei der Integration in register_opcodes mit C/E (op_message_on)
+  und den uebrigen Haken beidseitig mergen."
+- Aenderung: keine am Code — die Haken bleiben genau so, wie J-E1 sie angenommen hat (kein Verlegen). §5 nennt J-E1.
+- Integrations-Hinweis (gelesen 2026-10-24, `git diff master...r41/<zweig> -- <datei>`, Hunk-Anfaenge): scd_vm.c — C
+  (ventilkette) @48/@680/@4560, E (kleinkram_b, op_message_on) @32/@1820, F (gatorszene) @78/@680/@760/@3865, G
+  (kanister2080) @759, Integrationszweig @32/@1820; **kein anderer Zweig aendert register_opcodes** (Spur J @445 nach dem
+  0x45-Block) -> dort kein Textkonflikt zu erwarten. main.c — kein anderer Zweig nahe pc_prop_world (@729); K
+  (stage3szenen_b) traegt @151/@8303 dieselben Zeilen (cherry-pick des rbj-binder-Commits), C hat einen Hunk @8293.
+- Messung nachher: Diff der beiden Dateien unveraendert (3 + 4 Zeilen, markiert "Runde 41 Spur J").
+
+### NB1.M2 — falsche Nebenwirkungs-Aussage zu Super_set in ROOM4031
+- Ursache: Die Aussage "Lieferfall nur ROOM4030/4031 sub07, Typ 0x2D in State 1 -> uebersprungen" (§2.6, §4.1, Kopf
+  re15_superobj_r41.h, Bau-Bericht) stammte allein aus dem Lauf r4030_super (Leon). In ROOM4030 ist Gegner 0 immer Typ 0x2D;
+  ROOM4031 verzweigt in main00 auf Bit 3:88 — das war nicht gelesen.
+- Messung vorher (Abnahme J 0, nicht wiederholt): Lauf e4031_super (Elza, RE15_DEBUG_JUMP=4030@250 -> ROOM4031,
+  RE15_FORCE_EVENT=6@600 = sub06 -> sub07): `[superobj41] F621 Super_set Objekt 0 Art 0x80 Teil-Byte 0x81 lokal (0,0,0)
+  Rot (0,0,0) -> angehaengt`; Gegner 0 = John in State 4 (state.txt bis F900 `[1 t=49 st=4 ...]`).
+- Beleg (SCD-Bytes, `re15_port/tools/scd_dump_room.py` auf shared_assets/PSX/STAGE4, Datei-Offsets):
+  - ROOM4031 main00: @0x0054E `06 00 34 00` Ifel / @0x00552 `21 03 58 00` Ck 3:88 = 0 -> @0x00556
+    `44 00 49 40 00 00 00 ff 2d a1 00 00 dc ae 00 00 d3 03 00 00` Sce_em_set Gegner 0 = **Typ 0x49 (John)**, @0x0056A
+    `44 01 2d ...` Gegner 1 = Typ 0x2D, @0x0057E `04 ff 18 08` Evt_exec sub08; Else @0x00586
+    `44 00 2d 00 00 00 00 ff 00 a6 3e fe 00 a6 00 00 00 02 00 00` Gegner 0 = Typ 0x2D. sub08 beginnt @0x0075C
+    `22 03 58 01` (3:88 = 1).
+  - ROOM4030 main00 @0x0052C `44 00 2d 00 ...` Gegner 0 = Typ 0x2D hinter dem If/Else @0x004F6..0x0052A, ohne Bedingung.
+  - sub07: ROOM4031 @0x0071E `2e 03 00` Work_set Objekt 0, @0x00722 `48 00 80 81 00 00 00 00 00 00 00 00 00 00 00 00`;
+    ROOM4030 @0x006DC/@0x006E0 dieselben Bytes.
+  - Original-Handler (PSX.EXE, `re15_disasm.py dis 0x80040b20 92`, selbst gelesen): `80040b38 andi v1,a1,0xc0`; Art 0x80 ->
+    `80040bdc andi v0,a0,0x80` (Teil-Bit) -> `80040be4..bf4` v1 = pc[2]*500, `80040c18 addiu at,at,-11340` (0x8009d3b4)
+    + v1, `80040c20 lw v1,0(at)`, + Teil*172 (`80040bfc..c24`) + 64 (`80040c30`), `80040c74 sw v0,116(a2)`. Kein Lesen von
+    Typ oder Zustand des Gegners -> das Original haengt an jeden Gegner 0, auch an John.
+  - Erreichbarkeit des John-Falls (Glieder mit Bytes; die Tuerkette zu 4040/4041 ist die der Abnahme J 0, Gate N):
+    sub07 nur aus sub06 (@0x006DA `04 ff 18 07`); sub06 nur aus sub02 (@0x0068E `18 06`); sub02 nur aus sub01 Case 5
+    (@0x00620 `14 00 0a 00 05 00` -> @0x0062A `04 ff 18 02`) = Aufzugs-AOT Slot 5, den main00 nur bei 3:87 = 1 setzt
+    (@0x004F6 Ifel `06 00 1c 00` / @0x004FA `21 03 57 00`: bei 3:87 = 0 nur Slot 6 sce 1 @0x004FE, sonst @0x00516
+    `2c 05 05 31 ...` Slot 5). 3:87 = 1 setzt nur ROOM4040/4041 @0x01020 `22 03 57 01` (Set-Zensus aller 240 RDTs);
+    4040/4041 erreicht man nur ueber 4030/4031 (Slot 1) oder 4050/4070 <- STAGE5 <- 4020/4021, deren Tuer in 4000/4001
+    Slot 0 erst bei 3:78 = 1 eine Tuer ist (ROOM4001 @0x01046 / ROOM4000 @0x0105E `21 03 4e 00`); 3:78 = 1 setzt nur
+    sub06 der Aufzugsfahrt (ROOM4030 @0x0068C / ROOM4031 @0x006CE `22 03 4e 01`). Also liegt der erste 4031-Besuch (John)
+    immer vor 3:87 = 1, und jeder spaetere Besuch hat 3:88 = 1 -> Gegner 0 = Typ 0x2D -> uebersprungen wie in ROOM4030.
+- Aenderung: Kopf `re15_port/include/re15_superobj_r41.h` (Lieferfaelle je Raum mit Offsets/Bytes, John-Fall, Kette;
+  OFFEN nur noch Vater 0x40/0xc0 ohne Lieferfall und Gegner ausserhalb State 4 in der Aufzugsfahrt), Dossier §2.6, §3,
+  §4.1. Riegel: `unit_r41_stage3szenen_a_zensus` pinnt die Praemissen (Gegner 0 in 4030/4031, Set 3:87 = 1 nur 4040/4041,
+  Set 3:78 = 1 nur sub06 4030/4031, 9 Glieder in ROOM4031 bytegleich). Kein Verhalten geaendert.
+- Messung nachher (ctest -V, Zensus): `Sce_em_set Gegner 0 ROOM4030 @0x0052C Typ 0x2D`, `ROOM4031 @0x00556 Typ 0x49`,
+  `ROOM4031 @0x00586 Typ 0x2D`; `Set 3:87 = 1 ROOM4040 @0x01020` / `ROOM4041 @0x01020`; `Set 3:78 = 1 ROOM4030 @0x0068C`
+  / `ROOM4031 @0x006CE`; `ROOM4031 Glieder der Aufzugs-Kette: 9/9 Byte-Folgen wie belegt` — alle ok.
