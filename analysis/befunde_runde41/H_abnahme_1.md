@@ -253,3 +253,21 @@ RE15_DEBUG_JUMP=30E0@250`, Quadrat je Sekunde (Szenentexte), `RE15_EXIT_AT=2500`
 `kollision.txt` nach: 296 `NPC-SCHUB`. Bild `bild_s30e0_vor_nach.png` (F500-F2500, Kamera 1 in beiden Laeufen): **vor** ab F900 nur
 noch Marvin und Leon zu sehen — Ada steckt in Marvin; **nach** drei getrennte Figuren (Marvin, Ada, Leon). => Ein zweiter echter
 Befund-Ort fuer "Ada und Marvin laufen ineinander", vorher reproduziert, nachher behoben; Szenenablauf (Ende F654) unveraendert.
+
+### 4.8 Punkt 1, ELZA, weitere Eskorten-Raeume 3011/3021 (Zensus) und ROOM3011 auf dem echten Weg (`laeufe/p1e_3011_*`, `laeufe/p1d_*`)
+Eigener Zensus aller 240 RDTs (`npc_zensus.txt`: jedes Sce_em_set mit Typ 0x40..0x4d und Verhaltensbyte): Eskorten-PAARE
+(Verhaltensbyte 0x00) stehen in ROOM3070 (Ada/Marvin), ROOM3001, **ROOM3011** (sub00 @0x02212/@0x02226) und **ROOM3021** (sub00
+@0x00BB8/@0x00BCC) — John/Sherry folgen Elza nach (4,199)=1 also auch durch 3011 und 3021; Spur und Abnahme 0 haben 3011/3021 nicht
+gemessen. Geskriptete Paare (0x40) u.a. in 11B0, 11B1, 1260, 2000, 2001, 3080, 3081, 30E0, 4000, 4001, 6030.
+- **Echter Weg** (`p1e_3011`): wie 4.5 bis nach der 3001-Szene, dann durch die Ost-Tuer nach ROOM3011 (`DOOR FIRE slot=1 ...
+  spawn=(-23168,0,11769)` -> `loaded room3011.rdt`, sub00 (4,199)=1 -> Eskorte), Elza geht (-16000,8000), (-22000,9000),
+  (-12000,5000), (-18000,9500) mit Pausen, `EXIT_AT: Bild 2600 in Raum 3011`:
+  vor **min 3** (F1615), **2382 / 2600** Bilder < 700, Ende 191 — nach **min 749** (F1021), **0** Bilder < 700, 78 < 750, Ende 753;
+  1234 `NPC-SCHUB`. => auch in 3011 vorher ineinander, nachher getrennt.
+- **Sprung-Aufbau** (`p1d_3011`, `RE15_SET_FLAG=4:198,4:199 RE15_DEBUG_JUMP=3011@250`, Elza an der WEST-Tuer): der Sprung liefert
+  Cut 0, sub00 waehlt `Case 0` @0x0223E und setzt die Eskorten an die OST-Seite ((-7350,11850)/(-8400,12300), @0x02248-0x02260),
+  15 000 Einheiten von Elza. John bleibt F37-F167 an einer Wand bei (-7238,9268) haengen, Sherry laeuft je Bild ~200 auf ihn zu,
+  b544 schiebt sie heraus (`F42 ... NPC-SCHUB slot=2 typ=4b von=1 typ=49 vor=(-7761,8967) nach=(-7891,8892)`), die Wandklemme
+  danach (b0a4 @0x8011c974 hinter b544, RE-Gate 1) setzt sie auf z 9118 zurueck -> stehender Kreislauf mit **d = 664..670 (Summe 750)
+  ueber 128 Bilder** (vor: d = 212, spaeter 4). Danach (Elza geht los) min 751. Bild `zoom_p1d_3011_f110.png`. Auf dem echten Weg
+  tritt der Aufbau nicht auf (s. oben); Bewertung in Hinweis H2.
