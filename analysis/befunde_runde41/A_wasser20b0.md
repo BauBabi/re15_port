@@ -905,3 +905,24 @@ und setzt Slot = RE15_ACTOR_MAX - 1 (Kopf des Riegels ergaenzt). Weitere feste "
 **An den Orchestrator (Spuren B/F/G, kein SendMessage aus der Spur):** der Alligator liegt seit Runde 41 Spur A auf Slot 35
 (RE15_ACTOR_MAX 36). Riegel/Haken, die den Alligator-Platz fest annehmen (z.B. RE15_FORCE_EXPLOSION=..:20, `[20 t=23`), muessen an
 RE15_ACTOR_MAX-1 gekoppelt werden; Aktor-Masken mit 32 Bit (1u << slot) reichen fuer Slot 35 nicht (s. N1.10c, Hundemaske M7).
+
+### N2.4 Messung nachher (Stand 7e639adc, `local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`)
+| Mangel | vorher (Abnahme 1) | nachher |
+|---|---|---|
+| M1 Ton 2000 (Leon, Marvin/Ada, bis Bild 2100) | 61/64 `SE unterdrueckt` | 64 Schritte (7 im Kanal), Quelle orig 3 / retail 61 / stumm 0, **64 gemischte Stimmen** (`[foot] NPC-Lage`), 0 `SE unterdrueckt` |
+| M1 Ton 2001 (Elza, John 0x49, Flag 3:65) | 23/23 stumm | 23 Schritte (5 im Kanal), retail 23, **23 gemischt**, 0 unterdrueckt |
+| M1 Ton 11C0 (Leon, Marvin 0x42) | 8/8 stumm | 8 Schritte, retail 8, **8 gemischt**, 0 unterdrueckt |
+| M2 Lage (A-E4) | mono, Ton-Pegel | je Schritt `abstand`/`lage` im npc.log; 2000: naechster Schritt Abstand 41 -> Pegel 104, fernster Abstand 125 -> Pegel 56 (= 0x89 - ATT[Abstand], ATT @0x800747a8); alle 95 gemischten NPC-Schritte L != R |
+| M3 r35_granate | rot (Slot 20) | s. N2.8 |
+| M4 Riegel | Index-Pruefung | N2.5 |
+
+Beispiel (Beleg `A_belege/nb2/npc2000_npc.log` / `npc2000_foot.txt`, Lauf integration_r41_wasser20b0_npc `lauf_227c451b_npc2000`):
+`F886 slot=1 typ=0x42 clip=5 bild=8 fuss=7 boden=0x1d ... ton=29 ... ton_orig=21 quelle=retail cut=15 abstand=51 lage=86/99` ->
+`[foot] SE foot=7 type=29 vag=1` / `[foot] NPC-Lage voll=86 volr=99 -> Pegel 99 Pan 72 -> L=3072 R=3519 (Q15, Ton 4515)`
+(nachgerechnet: Pan = 127 - (86 << 6)/99 = 72; 4515 * 99 / 127 = 3519 rechts; 3519 * (127 - 72) / 63 = 3072 links).
+Pegel je Abstand (max(voll, volr) = (0x89 - ATT[Abstand]) & 0x7f, ATT-Bytes PSX.EXE @0x800747a8):
+| Abstand (/250) | 10 | 20 | 30 | 41 | 50 | 60 | 80 | 100 | 125 | 127 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ATT | 10 | 20 | 28 | 33 | 38 | 43 | 53 | 63 | 81 | 83 |
+| Pegel | 127 | 117 | 109 | 104 | 99 | 94 | 84 | 74 | 56 | 54 |
+Landungen (Punkt 2a, unveraendert): landung_leon / landung_elza je 1 Landung, 104 fx-Zeilen id=6 sub=3.

@@ -1,0 +1,38 @@
+[foot] Bank snd0 geladen: 9 VAGs, vh=3104B vb=29584B edt=128B
+[foot] Bank snd0 geladen: 3 VAGs, vh=3104B vb=6448B edt=128B
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=4 type=29 vag=1
+[foot] SE foot=7 type=29 vag=1
+[foot] SE foot=7 type=29 vag=1
+[foot] NPC-Lage voll=93 volr=105 -> Pegel 105 Pan 71 -> L=2843 R=3199 (Q15, Ton 3870)
+[foot] SE foot=7 type=29 vag=1
+[foot] SE foot=7 type=29 vag=1
+[foot] NPC-Lage voll=88 volr=98 -> Pegel 98 Pan 70 -> L=2701 R=2986 (Q15, Ton 3870)
+[foot] SE foot=7 type=29 vag=1
+[foot] NPC-Lage voll=88 volr=98 -> Pegel 98 Pan 70 -> L=2701 R=2986 (Q15, Ton 3870)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=83 volr=95 -> Pegel 95 Pan 72 -> L=2526 R=2894 (Q15, Ton 3870)
+[foot] SE foot=7 type=29 vag=1
+[foot] NPC-Lage voll=78 volr=91 -> Pegel 91 Pan 73 -> L=2376 R=2772 (Q15, Ton 3870)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=72 volr=88 -> Pegel 88 Pan 75 -> L=2212 R=2681 (Q15, Ton 3870)
+[foot] SE foot=7 type=29 vag=1
+[foot] NPC-Lage voll=66 volr=84 -> Pegel 84 Pan 77 -> L=2030 R=2559 (Q15, Ton 3870)
+[foot] SE foot=4 type=29 vag=1
+[foot] NPC-Lage voll=61 volr=81 -> Pegel 81 Pan 79 -> L=1880 R=2468 (Q15, Ton 3870)
