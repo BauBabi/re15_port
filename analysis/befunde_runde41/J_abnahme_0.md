@@ -21,7 +21,6 @@ Pruefer: Abnahme 0, 2026-10-24 (abends). Arbeitsordner (Laeufe, Logs, Bilder): S
 - [x] RE-Gate (11 Adressbereiche selbst disassembliert, alle stimmen)
 - [x] Vertrag (Mangel V1 formal) / Nebenwirkungen (Mangel M2 ROOM4031, Nebenbefund N1 Hund)
 
-
 ## Gate RE — selbst disassembliert (info/Re1.5/PSX.EXE, `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`)
 Alle zitierten Stellen enthalten das Behauptete (Auszug, Bytes/Instruktionen aus dem eigenen Lauf):
 | Stelle | eigene Disasm | Behauptung im Code/Dossier |
@@ -36,7 +35,6 @@ Alle zitierten Stellen enthalten das Behauptete (Auszug, Bytes/Instruktionen aus
 | Super_set 0x80040b20 / Super_reset 0x80040cd0 | Art `andi v1,a1,0xc0`; 0x80 + Part-Bit: `80040c18 addiu at,at,-11340` (0x8009d3b4) + pc[2]*500 (= Gegner+0x188 fuer pc[2]-0x80), Part*172 + 64; `80040c74 sw v0,116(a2)`; `80040c78..cbc` lokal pc+4/6/8, Rot pc+10/12/14; Reset `80040cd8..ce0` +0x5c/60/64 -> `80040cf0..cf8` +0x34/38/3c, `80040cec` Vater 0x80072d4c | stimmt |
 | RBJ-Binder 0x8001b3f8 | `8001b404 lw a2,92(v0)`, `8001b410 addu a3,zero,zero` (einmal), `8001b440 andi 0x1` -> `8001b450/460` Spieler-Kanal (jeder Bit-0-Record, letzter gewinnt), `8001b4a0/4bc` Gegner-Kanal 0x800acdac/b0 + (a3&0xff)*500, **`8001b4c4 addiu a3,a3,1` im Delay-Slot je Bitposition**; Aufrufer `80039a08 jal 0x8001b3f8` | stimmt; 3060-Rechnung Marker 1/2/4 -> Gegner {0:1, 2:2} nachgerechnet |
 | Bild-Zaehler 0x8001f314/0x8001f3bc | `8001f36c sw a2,360(t0)` (+0x168 = Eintrag Bild +0x95), `8001f5f0 jal 0x80068098` (lokale Part-Matrizen), **`8001f618 addiu v0,v0,1` / `8001f61c sb v0,149(v1)`**, `8001f63c sb zero` + Rueckgabe 1 | "+0x95 = gezeichnetes Bild + 1" — stimmt |
-
 | Plc_flg 0x80041fb8 | `80041fc8 beq a1(pc[1]),1 -> 80042008 sh a2,452(v0)` (SET), pc[1] = 0 -> `80041ffc or`, 2 -> `8004201c xor` | stimmt |
 
 Ergebnis: alle 11 geprueften Adressbereiche stimmen (richtige Datei PSX.EXE, Sprungziele/Tabellen nachgeschlagen).
@@ -95,6 +93,11 @@ Riegel `integration_r41_stage3szenen_a_3060` (eigener Lauf): Passed 214,6 s — 
 Brust, F76-F100 haelt er diese Haltung. Original-Video selbst ausgeschnitten (`J41b/orig/o3060_v4.mp4`, ffmpeg fps=10,
 `J41abn0/o3060v4_marvin_zoom.png`, Ausschnitt 124,170-224,330): o21-o32 steht, o33 Arm vor die Brust, o33-o43 gehalten, o44
 Abblende. **Gleicher Bewegungsablauf, gleiche Endhaltung; kein Knien.**
+
+**Lauf p1c_3060_waffe3** (gleicher Tuerweg, zusaetzlich `RE15_EQUIP=3` = Handfeuerwaffe, weil der Nutzer nicht zwingend das
+Messer traegt; ROOM3020 sub02 setzt keine Waffe, die W-Bank folgt im Original der ausgeruesteten Waffe @0x80036bc4):
+`[equip] W-bank -> W03`, `[wclip41] ROOM3060 F65 ... Waffe 3, 10 Bilder`, ANIM_TRACE `6 6 10` Slot 0..8 je 1x, Slot 9 27x bis F100;
+Bild `J41abn0/p1c_3060_waffe3_zoom.png`: Marvin hebt die Pistole vor die Brust und haelt — auch mit anderer Waffe kein Knien.
 
 ### Urteil Punkt 1: **erfuellt**
 Beleg: Ursache (Spieler-Plc_motion(2,6) lief auf der PLD-Grundbank statt +0x170/+0x174) und Mechanismus (Sub 2 0x80050f00,
@@ -185,6 +188,13 @@ Bildfolge (Drehen, Arme mit Waffe vor, Halten) = Original-Video; kein Knien mehr
   Bit 1/2 (eigene Suche `anim_flags |=/=` im engine/: nur 0x10/0x80/0x1000/Member-16-Pfade) -> Executor-Wechsel und W-Bank-Regel
   wirken ausserhalb 3060/3061 nicht. ROOM1141 (Runde 39) bleibt auf seiner eigenen Regel (Riegel `_wclip`).
 - RBJ-Binder (A-E5): 12 Raeume aendern die Bindung byte-true (Zensus-Riegel gegen eigene Nachrechnung der Schleife @0x8001b3f8).
+  Commit e4a9f39c (erste Zeile mit `rbj-binder`) ist in sich geschlossen und seitdem unveraendert (`git diff e4a9f39c HEAD` auf
+  seinen Dateien leer); Spur K hat ihn als 299b6deb uebernommen und dort 3091 im Original per GDB gegengemessen ("Spieler+Elza-NPC
+  rec2, John rec1 ... = Port nach rbj-binder", K-Commit b7764be3 — Messung der Spur K, hier nur gelesen).
+  Eigene Stichprobe zur Laufzeit (Lauf `J41abn0/laeufe/rbj_4001`, Elza ueber PSELECT, RE15_DEBUG_JUMP=4000@250 -> ROOM4001):
+  `[rbj-binder] ROOM4001 Spieler rec2 (alt rec0) Gegner 0:rec1(alt rec1) 1:rec2(alt rec-1)`, `[rbj] room 4001 cinematic overlay:
+  14 clips, 329 kf`, `Aktor 1 Typ 0x49 Marker-Slot 1 -> rec1 gebunden`, `Aktor 2 Typ 0x4B Marker-Slot 2 -> rec2 gebunden` — wie die
+  eigene Nachrechnung der Schleife (Marker 1/2/3: Spieler = letzter Record mit Bit 0, a3 kumulativ).
 - **Super_set in ROOM4031 (Elza): NICHT wie vorher.** Selbst gemessen, Lauf `J41abn0/laeufe/e4031_super` (Elza ueber PSELECT,
   RE15_DEBUG_JUMP=4030@250 -> ROOM4031, RE15_FORCE_EVENT=6@600 = sub06 -> sub07 `48 00 80 81` @0x00722):
   `[superobj41] F621 Super_set Objekt 0 Art 0x80 Teil-Byte 0x81 lokal (0,0,0) Rot (0,0,0) -> angehaengt`. Grund: in ROOM4031 ist
@@ -233,3 +243,15 @@ stimmen fuer 4031 nicht. Abhilfe: Erreichbarkeit im Spiel klaeren (sub06 nur ueb
 ROOM4040/4041 @0x01020; Tuerkette 4001 -> 4021 -> STAGE5 -> 4071 -> 4041 ohne 4031 existiert) und das Original in genau dieser Lage
 messen (der Handler @0x80040c18 nimmt Gegner 0 ohne Typpruefung — der neue Port-Weg ist also vermutlich byte-true), dann Doku
 berichtigen und einen Riegel fuer 4031 anlegen; sonst (unerreichbar) Beleg + Doku-Korrektur.
+
+## Hinweise (keine Maengel)
+- H1: `integration_r41_stage3szenen_a_3060` nimmt die Tuer ROOM3040 -> ROOM3060 noch per `RE15_FIRE_AOT=0@1200#3040`. Mein Lauf
+  p1a/p1b zeigt, dass der echte Weg genauso geht (RE15_PLAYER_POS=-8900,-26300,1024,0 = Ankunftspunkt der Gegentuer @0x00ED6,
+  Quadrat -> `[aot] DOOR FIRE slot=0 rect=(-8800,-26950,...)`). Empfehlung: Riegel wie 3061 auf Quadrat umstellen.
+- H2: Kopfkommentar `tests/unit/probes/r41_stage3szenen_a.cmake` ("Abweichung <= 40", "~ Original") ist veraltet; die Riegel pruefen
+  auf 0.
+- H3: Fuer jeden NPC in State 4 rechnet `re15_fussanker_r41_merken_aktor` je Bild zwei Posen (Part 4/7), auch ohne Anker-Bit.
+  Auf dem PC ohne Belang; fuer das (derzeit nicht baubare) PSX-Ziel waere "nur merken, wenn Bit 1/2 gesetzt ist oder im naechsten
+  Bild gesetzt werden kann" guenstiger (Laufzeitbudget). Kein Verhaltensunterschied.
+- H4: Neue Quellen fussanker/superobj/wclip/rbj_binder kompilieren mit `-Wall -Wextra` ohne eigene Warnung (eigener Probelauf in den
+  Scratchpad, einzige Meldung ist die alte `-Wcomment` in re15_emd.h:37).
