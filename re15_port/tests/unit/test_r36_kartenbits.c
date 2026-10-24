@@ -70,6 +70,7 @@
 #include "re15_funk10f1_r39.h" /* Runde 39 Spur I: Bank-9-Bit 70 (VERTRAG Runde 39 1.1) */
 #include "re15_elzazombies_r39.h" /* Runde 39 Spur Q: Bank-9-Bits 95 + 96 (VERTRAG Runde 39 1.1; 96 Nachbesserung 3) */
 #include "re15_johnruf_r39.h"  /* Runde 39 Spur P: Bank-9-Bit 97 (VERTRAG Runde 39 1.1) */
+#include "re15_gatorszene_r41.h" /* Runde 41 Spur F: Bank-9-Bits 110-113 (VERTRAG Runde 41 1.1) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -521,6 +522,10 @@ static const port_bit_t k_port[] = {
     { RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE, "RE15_R39Q_BIT_MONTAGE", "Elza-Montage gelaufen (Kopien), elzazombies_r39.c umzug_vorbereiten (Runde 39 Q)" },
     { RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060, "RE15_R39Q_BIT_LEON_1060", "Leon: Umzug 10E0 -> 1060 gelaufen, elzazombies_r39.c re15_r39q_leon_umzug (Runde 39 Q, NB3)" },
     { RE15_R39P_BIT_BANK, RE15_R39P_BIT_PANIK, "RE15_R39P_BIT_PANIK", "Elzas Panikphase (1041-Ruf bis Johns Rettung), gen/johnruf_r39_programme.inc Set @+0048 (Runde 39 P)" },
+    { RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN, "RE15_GSZ_BIT_GESEHEN", "2090-Ankunftsszene gesehen, gatorszene_r41.c Programm 3 (Runde 41 F)" },
+    { RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT, "RE15_GSZ_BIT_LIEGT", "Water Key liegt beim toten Alligator, gatorszene_r41.c (Runde 41 F)" },
+    { RE15_GSZ_BANK, RE15_GSZ_BIT_GENOMMEN, "RE15_GSZ_BIT_GENOMMEN", "Water Key genommen (Item-Zone Taken-Bit), gatorszene_r41.c (Runde 41 F)" },
+    { RE15_GSZ_BANK, RE15_GSZ_BIT_TOR, "RE15_GSZ_BIT_TOR", "Tor 2090<->20A0 aufgeschlossen, gatorszene_r41.c (Runde 41 F)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 

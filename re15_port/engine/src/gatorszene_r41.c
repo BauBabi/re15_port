@@ -53,6 +53,16 @@ int re15_gatorszene_r41_spawn_weg(uint16_t room_id, uint8_t type, int16_t x, int
 #ifdef RE15_PLATFORM_PC
 #include <stdlib.h>
 #endif
+#include "re15_audio.h"   /* re15_audio_start_room_bgm (Musik-Weiche), re15_audio_re2_tuer_laden/_se (Knall), _door_se (Tor) */
+#include "re15_msg.h"
+#include "re15_inventory.h"
+#include "re15_lock_se.h"
+#include "re15_item_discard.h"
+#include "gen/knall_bank.inc"      /* k_knall_bank: Satz 0 Tuerknall (RE2 ROOM1060 Se_on 0x0a), Satz 1 Knall ROOM1030 */
+#include "gen/re2_door_bank.inc"   /* RE2_DOOR_SE_AUF_KEY (TUERSE.VBS Satz 4 = RE2 ROOM1140 Satz 0x25)                 */
+extern void re15_scd_show_message(uint8_t index, uint32_t pause_mask);   /* scd_vm.c (sce-1-Weg), wie schluessel_r36.c */
+static void musik_takt(void);
+static void musik_takt_vor(void) { musik_takt(); }
 
 /* ---- Opcode-Formen (Satzbreiten = s_opcode_sizes, scd_vm.c). Vorbild je Form:
  *   Set            `22 bb ii vv`                         ROOM1150 sub08 @0x01110
@@ -91,17 +101,35 @@ int re15_gatorszene_r41_spawn_weg(uint16_t room_id, uint8_t type, int16_t x, int
 
 /* ---- PORT-WAHL der Inszenierung (Nachtrag 6 "Betreff Aligator darfst du alles machen was du willst. Du darfst auch die
  * Startposition des Aligators und die Position der schwimmenden Zombie Leiche ... aendern"), gemessen am Bild (Dossier §1): */
-#define GSZ_CUT_LEICHE        0      /* ROOM2090 Cut 0 (RID @0x060): zeigt die Leiche obj 2 von Osten; Eintritts-Cut von 2080
-                                      * (ROOM2080 main00 @0x00BC2 Nutzlast-Cut 0) - "sieht die Zombie Leiche" */
+/* Leiche obj 2 + Szenenkamera: tools/r41_gatorszene/leiche_lage.py. Der Schluessel ist ein flaches RE2-Bodenmodell (180 x 180,
+ * ROOM7040.RDT MD1 @0x354C), und alle Zonenkameras von ROOM2090 stehen flach ueber dem Wasser (y -3132): an der ersten
+ * Szenen-Lage (-5300,-21000) zeigte Cut 0 ihn als Strich (5,6 x 0,6 Bildpunkte, Messlauf lc_*), in Cut 7 lag er im
+ * Umgebungslicht (Lichtwert 78; Bildwerte 33..47, Messlauf k7b). Gewaehlt je Zonenkamera die Lage, in der die GANZE Leiche
+ * (MD1 @0x2054) mit Rand im Bild liegt und die Gator-Buehne (Kopf im Koppelbild 13 auf der Rumpfmitte, Start S aus dem Norden)
+ * ganz in den sce-8-Wasserzonen (main00 @0x009D6/@0x009EA/@0x009FE) verlaeuft, mit dem groessten Wert Bildgroesse^2 x Licht
+ * des Schluessels (Lichtsatz des Cuts, RDT @0x468 + 40 * Cut). Ergebnis: Cut 1 (RID @0x080; Lichtsatz @0x490, Licht 0 bei
+ * (-4790,-4000,-24387) Reichweite 20000) - Wert 23412 gegen Cut 7 7209 / Cut 0 5026; Leiche (-5500,-1740,-23700) Gier 384,
+ * Bildkasten (26,137)-(218,203), Rumpfmitte (-4594,-24306), Start S (-4623,-13591) im Nordbecken. */
+#define GSZ_CUT_LEICHE        1
+#define GSZ_LEICHE_X          (-5500)
+#define GSZ_LEICHE_Z          (-23700)
+#define GSZ_LEICHE_ROT_Y      384
+/* Rumpfmitte (Mundpunkt) im Objektraum der Leiche: Leichen-Modell MD1 @0x2054 x -444..2626 (Kopf .. Beine), Rumpf oben
+ * (y <= -100) bei x -100..1400 -> Mitte 1090 (leiche_lage.py MITTE_X). */
+#define GSZ_LEICHE_MITTE_X    1090
 #define GSZ_LEICHE_BILDER     90     /* Halt auf der Leiche (1,5 Blinkperioden 0x3c, re15_blink_r41.h) */
 #define GSZ_LEICHE2_BILDER    45     /* "erneut Kamera auf Zombie mit Schluessel" vor dem Gator-Signal */
-#define GSZ_MONTAGE_BILDER    150    /* Zombies kommen die Treppe herauf (2080 Cut 0) */
-/* 2080-Montage: Kamera Cut 0 (RID ROOM2080 @0x060 pos (-18060,-16688,-17526) -> (-21498,-7096,-16344)) = von oben die Treppe
- * zur 2030-Tuer; Spieler geparkt HINTER der Kamera (Lauf p2080b: (-16182,-14400,-17000) in Cut 0 unsichtbar). */
-#define GSZ_2080_CUT          0
-#define GSZ_2080_PARK_X       (-16182)
-#define GSZ_2080_PARK_Y       (-14400)  /* Band 8 = -8 * 0x708 (ROOM2090 Tuer 0 Nutzlast-y C7C0) */
-#define GSZ_2080_PARK_Z       (-17000)
+#define GSZ_KNALL_BILDER      45     /* Knall -> Schnitt: irons_tod_1150.c k_p_szene `OP_KNALL(..), OP_SLEEP(45)` */
+#define GSZ_MONTAGE_BILDER    150    /* Halt auf den Zombies: Irons-Montage 1130-Schritt "15 + 10 + 150" (irons_tod_1150.c) */
+/* 2080-Einstellung (Nachtrag 20): Kamera Cut 2 (RID ROOM2080 @0x0A0 pos (-4832,-19777,-18507) -> (-14827,-14428,-16815)) =
+ * Treppenabsatz + oberer Laufgang von Osten (Spur G RE15_K2080_CUT_SCHUSS). Spieler geparkt an SEINER Ankunftslage ueber die
+ * Leiter = Nutzlast von ROOM2090 Tuer 0 @0x00996 `22 d9 c0 c7 9c 9b 00 08` (-9950,-14400,-25700) Gier 2048: in BLK-Zone 0
+ * von ROOM2080 (@0x0B6C x -14500..-8984, z -27100..-6500), damit der Navigator der Zombies ihn als Ziel nimmt (re15_montage_r38.h
+ * Baustein 2, FUN_80039e7c gleiche Zone); in Cut 2 nicht im Bild (65 Grad neben der Blickachse, halber Bildwinkel 37,6). */
+#define GSZ_2080_CUT          2
+#define GSZ_2080_PARK_X       (-9950)
+#define GSZ_2080_PARK_Y       (-14400)  /* Band 8 = -8 * 0x708 */
+#define GSZ_2080_PARK_Z       (-25700)
 #define GSZ_2080_PARK_YAW     2048
 
 /* ---- Zustand ---------------------------------------------------------------------------------------------------- */
@@ -131,35 +159,37 @@ const re15_gsz_folge_t *re15_gatorszene_r41_folge(int i) { return (i >= 0 && i <
 int re15_gatorszene_r41_zustand(void) { return s_zustand; }
 
 /* ---- Programme --------------------------------------------------------------------------------------------------- */
-/* PROGRAMM 1 - ROOM2090/2091 Ankunft: Riegel, Cut 0 auf die Leiche mit dem blinkenden Schluessel, dann Montage nach 2080. */
+/* PROGRAMM 1 - ROOM2090/2091 Ankunft: Riegel, Cut 1 auf die Leiche mit dem blinkenden Schluessel, Knall von oben (Nachtrag 17,
+ * "erst Knall, dann die Zombies, dann der Schnitt" wie die Irons-Montage), dann Montage nach 2080. */
 static const uint8_t k_p1[] = {
     GSZ_ABSCHNITT_ENDE, GSZ_RIEGEL,
     GSZ_CUT(GSZ_CUT_LEICHE),
     GSZ_SLEEP(GSZ_LEICHE_BILDER),
+    GSZ_SET(5, RE15_GSZ_SIG_KNALL, 1),                   /* Port-Takt: Knall-Bank Satz 0 (irons_tod_1150.c (5,28)-Form) */
+    GSZ_SLEEP(GSZ_KNALL_BILDER),
     GSZ_DOOR, GSZ_AOT_ON,
     GSZ_END,
 };
-/* PROGRAMM 2 - ROOM2080/2081 Montage: acht Zombies kommen durch die 2030-Tuer (Treppenfuss) und gehen die Treppe herauf.
- * Satzform der Zombies, die durch eine geoeffnete Tuer/ein Tor kommen: grid 0x0d = ENGAGE ab INIT (STAGE1.BIN `ori v0,zero,
- * 0x201` / `sw v0,4(v1)` @0x80100f40-44; Raum-Records ROOM1040 main00 @0x011FC, ROOM1030 main00 @0x01DE6; Port-Vorbild
- * irons_tod_1150.c EM_1130_DURCH), Kill-Flag 0xff = kein Tor (@0x80042128) - Szenenfiguren nur fuer diese Einstellung.
- * Typen 0x16/0x10/0x11/0x12 = Zombie-Typen der STAGE2-Wurzel 0x801002b8 (Rosterscan wasserzombie_r38.c), 0x16 = der
- * STAGE2-Raum-Zombie (ROOM2000/2020). Lage = Treppenfuss vor der 2030-Tuer (Tuer-Rechteck 2080 Slot 0 @0x00BA2
- * x -24900..-23900, z -18700..-16700; Ankunft aus 2030 (-23200,-9000,-16700) Gier 0, ROOM2030 main00 @0x01AEA), Band 5. */
+/* PROGRAMM 2 - ROOM2080/2081 Montage: die acht Zombies sind durch die Tuer gebrochen und laufen OBEN (Nachtrag 20).
+ * Lagen/Typ/Band/Byte 6 = Spur G (re15_kanister2080_r41.h k_zombies, Typ 0x16, Band 8, y -14400 = -8 * 1800, `.. 08 00 01 ..`
+ * Stand f78be367; Satzform ROOM2020 sub00 @0x008F6); Gier = Blick auf den Treppenabsatz wie dort. Abweichend: grid 0x0d =
+ * ENGAGE ab INIT (STAGE1.BIN `ori v0,zero,0x201` / `sw v0,4(v1)` @0x80100f40-44; Raum-Records ROOM1040 main00 @0x011FC;
+ * Port-Vorbild irons_tod_1150.c EM_1130_DURCH) - sie LAUFEN ("oberhalb von der Treppe laufen"), Ziel = der geparkte Spieler an
+ * der Leiter; Kill-Flag 0xff = kein Tor (@0x80042128) - Szenenfiguren nur fuer diese Einstellung. Die Treppe betreten sie nicht
+ * (Band-Vergleich FUN_8003b0a4 @0x8003b228-3c, Band 8 gegen die Treppen-Baender). */
 #define GSZ_2080_ZOMBIES \
-    GSZ_EM(0, 0x16, 0x0d, 0x00, -23200,  -9000, -16700, 5, 0), \
-    GSZ_EM(1, 0x10, 0x0d, 0x01, -23700,  -9000, -17400, 5, 0), \
-    GSZ_EM(2, 0x11, 0x0d, 0x01, -23700,  -9000, -16000, 5, 0), \
-    GSZ_EM(3, 0x16, 0x0d, 0x01, -24300,  -9000, -16700, 5, 0), \
-    GSZ_EM(4, 0x12, 0x0d, 0x00, -24300,  -9000, -17700, 5, 0), \
-    GSZ_EM(5, 0x10, 0x0d, 0x00, -24900,  -9000, -16200, 5, 0), \
-    GSZ_EM(6, 0x11, 0x0d, 0x00, -24900,  -9000, -17300, 5, 0), \
-    GSZ_EM(7, 0x16, 0x0d, 0x01, -25400,  -9000, -16700, 5, 0)
+    GSZ_EM(0, 0x16, 0x0d, 0x01, -12800, -14400, -19600, 8, 2698), \
+    GSZ_EM(1, 0x16, 0x0d, 0x01, -11400, -14400, -20000, 8, 2569), \
+    GSZ_EM(2, 0x16, 0x0d, 0x01, -10000, -14400, -19300, 8, 2392), \
+    GSZ_EM(3, 0x16, 0x0d, 0x01, -12300, -14400, -18300, 8, 2455), \
+    GSZ_EM(4, 0x16, 0x0d, 0x01, -10700, -14400, -17500, 8, 2204), \
+    GSZ_EM(5, 0x16, 0x0d, 0x01, -12700, -14400, -15800, 8, 1838), \
+    GSZ_EM(6, 0x16, 0x0d, 0x01, -11300, -14400, -15300, 8, 1833), \
+    GSZ_EM(7, 0x16, 0x0d, 0x01,  -9900, -14400, -14700, 8, 1819)
 static const uint8_t k_p2[] = {
     GSZ_2080_ZOMBIES,                                    /* Raumaufbau: vor dem ersten Bild (Form EM_1130_DURCH) */
     GSZ_ABSCHNITT_ENDE, GSZ_RIEGEL,
     GSZ_CUT(GSZ_2080_CUT),
-    GSZ_SET(5, RE15_GSZ_SIG_TUER, 1),                    /* Metalltuer faellt hinter ihnen zu (Port-Takt, Door_exit DOOR06) */
     GSZ_SLEEP(GSZ_MONTAGE_BILDER),
     GSZ_DOOR, GSZ_AOT_ON,
     GSZ_END,
@@ -213,8 +243,10 @@ static int programm_bauen(int nr)
         tuer_setzen(door_off, s_leon_x, s_leon_y, s_leon_z, s_leon_yaw, 0x09, GSZ_CUT_LEICHE);
     return 1;
 }
+static const uint8_t *tor_druck(uint16_t room_id);   /* Abschnitt 5 */
 const uint8_t *re15_gatorszene_r41_ereignis(uint16_t room_id, uint8_t event_id)
 {
+    if (event_id == RE15_GSZ_TOR_EREIGNIS || event_id == RE15_GSZ_TOR20A0_EREIGNIS) return tor_druck(room_id);
     if (event_id != RE15_GSZ_EREIGNIS) return NULL;
     const uint16_t basis = (uint16_t)(room_id & 0xFFFEu);
     int nr = 0;
@@ -240,19 +272,27 @@ static int prop_slot(uint8_t obj_id)
  * attr 0 = NCCT-beleuchtet (FUN_8002c18c @0x8002c2ec-f8): Voraussetzung des Helligkeitspulses (re15_blink_r41.h). */
 #define GSZ_KEY_FLAGS     0x000B    /* ROOM2090 obj 2 @0x00A6C pc[6..7] `0a 00` | 1 */
 #define GSZ_KEY_BAND      0
-/* Lage auf dem Ruecken der Leiche, Objektraum von obj 2 (Elternobjekt, Anhaenge-Form 0xC0|n @0x80040a84-9c): Leichen-Modell
- * ROOM2090 Prop 2 MD1 @0x2054 x -444..2626, y -341..966 -> Rumpfmitte x 1090, Oberseite y -341. PORT-WAHL am Bild. */
+/* Lage auf dem Ruecken der Leiche, Objektraum von obj 2 (Elternobjekt, Anhaenge-Form 0xC0|n @0x80040a84-9c): hoechste Stelle
+ * des Rueckens im Leichen-Modell MD1 @0x2054 (y -341 bei x 800..1100, z -100); die Mitte 420 darueber, weil das gekippte
+ * Quadrat (180) in y bis +-73 reicht. Kippung zur Kamera von Cut 1, hoechstens 60 Grad (leiche_lage.py: lokal rx 608 / rz -160
+ * in der Drehfolge von main.c pc_prop_rot_q12, 54,7 Grad): Bildflaeche cos 0,270 (flach) -> 0,925 bei Licht 216 -> 210,
+ * ~10,4 x 9,6 Bildpunkte. PORT-WAHL. */
 #define GSZ_KEY_AUF_X     1090
-#define GSZ_KEY_AUF_Y     (-360)
-#define GSZ_KEY_AUF_Z     0
+#define GSZ_KEY_AUF_Y     (-420)
+#define GSZ_KEY_AUF_Z     (-100)
+#define GSZ_KEY_AUF_RX    608
+#define GSZ_KEY_AUF_RZ    (-160)
 /* Item-Zone nach dem Tod (re15_aot_set_item_tk_prop = Item_aot_set @0x80040644-Form), Rechteck 1000 x 1000 wie ROOM2090 main00
  * @0x00A12 (`e8 03 e8 03`), AOT-Platz 15: frei in 2090 (main00 0..5, Kamerazonen 48..63). */
 #define GSZ_KEY_AOT       15
 #define GSZ_KEY_RECHTECK  1000
 #define GSZ_WASSER_Y      (-1620)   /* Wasseroberflaeche: sce-8-Zone p0 ROOM2090 main00 @0x009D6 pc[14..15] `ac f9` */
-/* Ersatzlage nach dem Laden eines Spielstands (die Todeslage lebt nur im RAM): die Liegestelle der Leiche (GSZ_LEICHE_X/Z). */
-#define GSZ_KEY_ERSATZ_X  (-5300)
-#define GSZ_KEY_ERSATZ_Z  (-21000)
+/* Ersatzlage nach dem Laden eines Spielstands (die Todeslage lebt nur im RAM): die Rumpfmitte der gefressenen Leiche. */
+static void leiche_mitte_konst(int32_t *x, int32_t *z)
+{
+    *x = GSZ_LEICHE_X + (int32_t)(((int64_t)re15_cos_q12(GSZ_LEICHE_ROT_Y) * GSZ_LEICHE_MITTE_X) >> 12);
+    *z = GSZ_LEICHE_Z - (int32_t)(((int64_t)re15_sin_q12(GSZ_LEICHE_ROT_Y) * GSZ_LEICHE_MITTE_X) >> 12);
+}
 
 static int32_t s_key_x = 0, s_key_z = 0;
 static int     s_key_lage_ok = 0;
@@ -310,7 +350,7 @@ static void key_auf_leiche(uint16_t room_id)
     g_scd.props[k].active = 1;
     g_scd.props[k].parent_obj = RE15_GSZ_LEICHE_OBJ;
     g_scd.props[k].x = GSZ_KEY_AUF_X; g_scd.props[k].y = GSZ_KEY_AUF_Y; g_scd.props[k].z = GSZ_KEY_AUF_Z;
-    g_scd.props[k].rot_x = 0; g_scd.props[k].rot_y = 0; g_scd.props[k].rot_z = 0;
+    g_scd.props[k].rot_x = GSZ_KEY_AUF_RX; g_scd.props[k].rot_y = 0; g_scd.props[k].rot_z = GSZ_KEY_AUF_RZ;
     re15_blink_r41_setzen(room_id, RE15_GSZ_KEY_OBJ, 1);
 }
 /* Nach dem Tod: Schluessel liegt bei der Leiche (Weltraum), Item-Zone mit Taken-Bit 112 und Prop-Verstecken. */
@@ -319,7 +359,7 @@ static void key_bei_leiche(uint16_t room_id)
     if (re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GENOMMEN)) return;
     int k = key_prop();
     if (k < 0) return;
-    if (!s_key_lage_ok) { s_key_x = GSZ_KEY_ERSATZ_X; s_key_z = GSZ_KEY_ERSATZ_Z; }
+    if (!s_key_lage_ok) leiche_mitte_konst(&s_key_x, &s_key_z);
     g_scd.props[k].active = 1;
     g_scd.props[k].parent_obj = -1;
     g_scd.props[k].x = s_key_x; g_scd.props[k].y = GSZ_WASSER_Y; g_scd.props[k].z = s_key_z;
@@ -350,10 +390,7 @@ static void erster_abschnitt_sofort(int slot)
 }
 
 
-/* Leiche obj 2: Lage der Szene (PORT-WAHL nach Nachtrag 6, Dossier §1.3) - nur waehrend die Szene noch aussteht. */
-#define GSZ_LEICHE_X      (-5300)   /* Mitte des Westkanals x -8900..-1700 (Wasserzonen ROOM2090 main00 @0x009D6/@0x009FE) */
-#define GSZ_LEICHE_Z      (-21000)  /* Suedbecken z -27000..-18100 (@0x009D6), im Bild von Cut 0 (Eintritts-Cut aus 2080) */
-#define GSZ_LEICHE_ROT_Y  1024      /* quer zur Anschwimmrichtung des Gators (Gier 1024 = -z, Konvention cut10f0.h) */
+/* Leiche obj 2: Lage der Szene (GSZ_LEICHE_*, leiche_lage.py) - nur waehrend die Szene noch aussteht. */
 static void leiche_lage(void)
 {
     int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
@@ -370,9 +407,11 @@ static void leiche_weg(void)
     if (k >= 0) g_scd.props[k].active = 0;
 }
 
+static void tor_sperren(uint16_t room_id);   /* Abschnitt 5 */
 void re15_gatorszene_r41_install(uint16_t room_id)
 {
     const uint16_t basis = (uint16_t)(room_id & 0xFFFEu);
+    tor_sperren(room_id);
     if (basis == RE15_GSZ_RAUM) {
         if (s_zustand == RE15_GSZ_MONTAGE) {                /* zurueck aus 2080: Programm 3 */
             s_zustand = RE15_GSZ_RUECKKEHR;
@@ -514,9 +553,6 @@ static int ga_kopf_probe(const re15_actor_t *e, int clip, int frame, int32_t x, 
 
 /* Szenen-Gier: der Gator kommt aus dem Norden durch den Westkanal (Gier 1024 = -z) auf die Leiche zu. */
 #define GSZ_GATOR_GIER        1024
-/* Mundpunkt der Leiche (Leichen-Modell ROOM2090 Prop 2 MD1 @0x2054: x -444..2626, y -341..966, z -1049..822 -> Mitte
- * des Rumpfs) - im Objektraum der Leiche, gedreht mit ihrer Gier. */
-#define GSZ_LEICHE_MITTE_X    1090
 /* Biss: Kopf (Part 6) im Koppelbild 13 von Clip 4 (RE2 FRESSEN P1 @0x80101104-34) auf dem Rumpf der Leiche. */
 #define GSZ_KOPPEL_BILD       13
 #define GSZ_WENDE_RATE        75     /* RE2 R1 Ziel-Gier 75/Bild (FUN_8001569c @0x801025f8-608) */
@@ -528,7 +564,7 @@ static int ga_kopf_probe(const re15_actor_t *e, int clip, int frame, int32_t x, 
 static void leiche_punkt(int32_t p[3])
 {
     int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
-    if (k < 0) { p[0] = GSZ_LEICHE_X; p[1] = -1740; p[2] = GSZ_LEICHE_Z; return; }
+    if (k < 0) { leiche_mitte_konst(&p[0], &p[2]); p[1] = -1740; return; }
     int ry = g_scd.props[k].rot_y;
     p[0] = g_scd.props[k].x + q12m(re15_cos_q12(ry), GSZ_LEICHE_MITTE_X);
     p[1] = g_scd.props[k].y;
@@ -588,7 +624,9 @@ static void ga_start(int slot, re15_actor_t *e, const re15_enemy_bank_t *bk)
     ga_clip(e, 6, 0, 0);                                      /* Clip 6 (0) @0x801008ac-b8 */
     s_ga.phase = GP_DURCHBRUCH;
     re15_gr2_kamera_auto(0);                                  /* die Szene haelt die Kamera selbst (Nachtrag 4 API) */
-    int cut = re15_gr2_kamera_schnitt(RE15_GR2_BLICK_DURCHBRUCH, e, leiche_als_opfer(), "gatorszene Durchbruch");
+    /* Ohne Opfer-Bedingung: der Anlauf FRONTAL (RE2 Cut 10, soll +4092) - mit der Leiche als Opfer blieb nur der Seitenblick
+     * Cut 0 (frontal 3250; Cut 7 frontal 3894 "-Opfer", Lauf s3 gator_boss.log). Die Leiche zeigt der FINISHER-Schnitt. */
+    int cut = re15_gr2_kamera_schnitt(RE15_GR2_BLICK_DURCHBRUCH, e, NULL, "gatorszene Durchbruch");
     folge('G', GP_DURCHBRUCH, cut);
     (void)slot;
 }
@@ -666,7 +704,12 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
             ga_se(GSZ_SCHREI_SE);                             /* R4: SE 0 @0x80102c0c-10 */
             re15_gr2_frame_wort(slot, 0x28000000u);           /* Stoss-Ereignis 1 -> Ruetteln + Schuetteln (@0x801003f0-40c) */
             s_ga.phase = GP_SCHREI; s_ga.t = 0;
-            int cut = re15_gr2_kamera_schnitt(RE15_GR2_BLICK_ANGRIFF, e, NULL, "gatorszene Schrei");   /* Gesicht frontal, ohne Leon-Bedingung */
+            /* Kamera: die laufende (FINISHER-Schnitt), solange sie den Kopf zeigt - die Wahl ANGRIFF nahm in Lauf s3 Cut 3, in dem
+             * der Kopf (Bild (266,106)) hinter dem Vordergrund des Kessels liegt (PRI-Masken pruefen die Wahl nicht). */
+            int32_t kopf[3];
+            int cut = (int)g_scd.cam_id;
+            if (!re15_gr2_bone_welt_pub(e, 6, kopf) || !re15_gr2_im_bild_cut(cut, kopf, NULL, NULL))
+                cut = re15_gr2_kamera_schnitt(RE15_GR2_BLICK_ANGRIFF, e, NULL, "gatorszene Schrei");
             folge('G', GP_SCHREI, cut);
         }
         break;
@@ -751,8 +794,6 @@ void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor)
 }
 
 /* ---- Takt (scd_vm_tick, Gameplay-Lauf) --------------------------------------------------------------------------- */
-static void (*s_tuerton_fn)(void) = NULL;   /* PC: Door_exit-Satz (se 1) des RE2-Archivs DOOR06 = Tuer 2080 Slot 0 */
-void re15_gatorszene_r41_tuer_hook(void (*fn)(void)) { s_tuerton_fn = fn; }
 static re15_actor_t *gator_aktor(void)
 {
     for (int i = 1; i < RE15_ACTOR_MAX; i++)
@@ -764,7 +805,7 @@ static re15_actor_t *gator_aktor(void)
 static void key_lage_bei_tod(void)
 {
     re15_actor_t *g = gator_aktor();
-    s_key_x = GSZ_KEY_ERSATZ_X; s_key_z = GSZ_KEY_ERSATZ_Z;
+    leiche_mitte_konst(&s_key_x, &s_key_z);
     if (g) {
         int32_t kopf[3] = { g->x, g->y, g->z };
         if (!re15_gr2_bone_welt_pub(g, 6, kopf)) { kopf[0] = g->x; kopf[2] = g->z; }
@@ -786,11 +827,15 @@ void re15_gatorszene_r41_tick(void)
         key_bei_leiche((uint16_t)g_current_room_id);
         folge('L', (int)s_key_x, (int)s_key_z);
     }
-    if (basis == 0x2080u && s_zustand == RE15_GSZ_MONTAGE && re15_game_flag_get(5, RE15_GSZ_SIG_TUER)) {
-        re15_game_flag_set(5, RE15_GSZ_SIG_TUER, 0);
-        if (s_tuerton_fn) s_tuerton_fn();
-        folge('T', 1, 0);
+    if (basis == RE15_GSZ_RAUM && s_zustand == RE15_GSZ_ANKUNFT && re15_game_flag_get(5, RE15_GSZ_SIG_KNALL)) {
+        re15_game_flag_set(5, RE15_GSZ_SIG_KNALL, 0);
+        /* Knall-Bank in den Tuerbank-Platz (wie irons_tod_1150.c knallbank_laden; die Tuersequenz nach 2080 ersetzt sie), dann
+         * Satz 0 = der Tuerknall der Irons-Montage ((5,28) -> re15_audio_re2_tuer_se(KNALL_SE_TUER), irons_tod_1150.c). */
+        int ok = re15_audio_re2_tuer_laden(k_knall_bank, (int)KNALL_BANK_SIZE);
+        if (ok) re15_audio_re2_tuer_se(KNALL_SE_TUER);
+        folge('T', KNALL_SE_TUER, ok);
     }
+    musik_takt_vor();
     if (basis == RE15_GSZ_RAUM && s_zustand == RE15_GSZ_RUECKKEHR && re15_game_flag_get(5, RE15_GSZ_SIG_GATOR)) {
         re15_game_flag_set(5, RE15_GSZ_SIG_GATOR, 0);
         memset(&s_ga, 0, sizeof s_ga);
@@ -798,4 +843,140 @@ void re15_gatorszene_r41_tick(void)
         s_zustand = RE15_GSZ_GATOR;
         folge('S', 0, 0);
     }
+}
+
+/* ==== 5. Tor 2090 <-> 20A0 (Nachtrag 21; Form + Belege re15_gatorszene_r41.h) ======================================= */
+/* Texte = ROOM20A0.RDT Nachrichtenblock @0x2008: msg 1 @0x203C "It's locked." und msg 2 @0x204C "You've opened the lock.",
+ * bytegleich (Satzkopf `04 02`, Ende `01 00`; der Riegel vergleicht mit der ausgelieferten RDT). */
+static const uint8_t k_tor_msg_zu[16] = {
+    0x04,0x02,0x25,0x50,0x3a,0x4f,0x00,0x48,0x4b,0x3f,0x47,0x41,0x40,0x57,0x01,0x00,
+};
+static const uint8_t k_tor_msg_auf[27] = {
+    0x04,0x02,0x35,0x4b,0x51,0x3a,0x52,0x41,0x00,0x4b,0x4c,0x41,0x4a,0x41,0x40,0x00,0x50,0x44,0x41,0x00,0x48,0x4b,0x3f,
+    0x47,0x57,0x01,0x00,
+};
+/* Leeres Ereignis-Programm (Evt_end `01 00`): der Druck erledigt alles in C wie RE2s Tuer-Handler LAB_80051514 (schluessel_r36.c). */
+static const uint8_t k_tor_evt_end[2] = { 0x01, 0x00 };
+#define GSZ_TOR_SAT        0x31     /* sat der Tuer-Saetze selbst: ROOM2090 @0x009B9 / ROOM20A0 @0x01749 `31` */
+#define GSZ_TOR_MASKE      0xffffu  /* Pausemaske jeder RE1.5-Raummeldung am Platz (re15_schluessel_r36.h RE15_R36Q_MASKE) */
+static uint8_t s_tor_slot = 0;      /* 1 + gesperrter Slot, 0 = nichts gesperrt */
+static int16_t s_tor_next[3];       /* Door_aot_set-Nutzlast +0/+2/+4 fuers Zurueckwidmen (Aot_reset @0x80040788-a8) */
+int re15_gatorszene_r41_tor_gesperrt(void) { return s_tor_slot != 0; }
+
+static void tor_meldung(int id, const uint8_t *b, size_t n)
+{
+    re15_msg_install_text((unsigned char)id, b, n);
+    int d = re15_msg_compute_duration(b, n, 0);
+    if (d > 0 && d < 65535) re15_msg_install_durations((unsigned char)id, d);
+}
+
+static void tor_sperren(uint16_t room_id)
+{
+    const uint16_t basis = (uint16_t)(room_id & 0xFFFEu);
+    s_tor_slot = 0;
+    if (re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_TOR)) return;              /* schon aufgeschlossen */
+    int slot, ereignis;
+    if (basis == RE15_GSZ_RAUM)  { slot = RE15_GSZ_TOR_SLOT;     ereignis = RE15_GSZ_TOR_EREIGNIS; }
+    else if (basis == 0x20A0u)   { slot = RE15_GSZ_TOR20A0_SLOT; ereignis = RE15_GSZ_TOR20A0_EREIGNIS; }
+    else return;
+    const re15_aot_t *a = &g_aot.slots[slot];
+    if (!a->active || a->type != RE15_AOT_TYPE_DOOR) return;
+    const re15_aot_door_params_t *dp = &g_aot.door_params[slot];
+    if (dp->dest_room != (basis == RE15_GSZ_RAUM ? 0x0Au : 0x09u)) return;        /* nur der echte Tor-Satz */
+    if (basis == RE15_GSZ_RAUM) {
+        tor_meldung(RE15_GSZ_MSG_ZU, k_tor_msg_zu, sizeof k_tor_msg_zu);
+        tor_meldung(RE15_GSZ_MSG_AUF, k_tor_msg_auf, sizeof k_tor_msg_auf);
+    }
+    s_tor_next[0] = (int16_t)dp->spawn_x; s_tor_next[1] = (int16_t)dp->spawn_y; s_tor_next[2] = (int16_t)dp->spawn_z;
+    g_aot.slots[slot].band = dp->band;      /* der Ereignis-Platz liest a->band (schluessel_r36.c, gleiche Begruendung) */
+    re15_aot_retype(slot, 3, GSZ_TOR_SAT, 0, (uint16_t)(ereignis << 8), 0);       /* sce 3, Nutzlast +3 = Sub (@0x80043100) */
+    s_tor_slot = (uint8_t)(slot + 1);
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[gatorszene] ROOM%04X Slot %d (Tor) gesperrt: Ereignis %d, Bit (9,%d) = 0\n",
+            (unsigned)room_id, slot, ereignis, RE15_GSZ_BIT_TOR);
+#endif
+}
+
+unsigned g_re15_gsz_tor_zu = 0, g_re15_gsz_tor_auf = 0;   /* Pruefzaehler (Riegel) */
+static const uint8_t *tor_druck(uint16_t room_id)
+{
+    const uint16_t basis = (uint16_t)(room_id & 0xFFFEu);
+    if (!s_tor_slot || (basis != RE15_GSZ_RAUM && basis != 0x20A0u)) return NULL;
+    const int slot = s_tor_slot - 1;
+    if (basis == RE15_GSZ_RAUM && re15_inv_find_item(RE15_GSZ_KEY_ITEM) >= 0) {
+        /* RE2 LAB_80051514 Treffer-Zweig: Besitz VOR dem Oeffnen (@0x80051628/34), Text (@0x8005164c), Aufschliess-Ton
+         * (@0x80051654/58), Wegwerf-Fortsetzung (@0x80051670), Schlossbit (@0x80051690); kein Durchgang bei diesem Druck. */
+        (void)re15_discard_besitz_vor_nachricht(room_id, RE15_GSZ_MSG_AUF);
+        re15_scd_show_message(RE15_GSZ_MSG_AUF, GSZ_TOR_MASKE << 16);
+        re15_audio_re2_door_se(RE2_DOOR_SE_AUF_KEY);
+        re15_discard_notice_message(room_id, RE15_GSZ_MSG_AUF);
+        re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_TOR, 1);
+        g_aot.slots[slot].band = g_aot.door_params[slot].band;
+        re15_aot_retype(slot, 2, GSZ_TOR_SAT, (uint16_t)s_tor_next[0], (uint16_t)s_tor_next[1], (uint16_t)s_tor_next[2]);
+        g_aot.slots[slot].was_inside = 1;
+        s_tor_slot = 0;
+        g_re15_gsz_tor_auf++;
+        folge('U', slot, 1);
+    } else {
+        /* Nicht-Treffer-Zweig: Verschlossen-Ton (@0x800516a0/a4, Art M der Mini-Bank TUERSE.VBS) + Text (@0x800516b8). */
+        re15_audio_re2_door_se(re15_lock_se_satz_fuer_art(RE15_LOCK_SE_ART_M));
+        re15_scd_show_message(basis == RE15_GSZ_RAUM ? RE15_GSZ_MSG_ZU : RE15_GSZ_MSG20A0_ZU, GSZ_TOR_MASKE << 16);
+        g_re15_gsz_tor_zu++;
+        folge('Z', slot, 0);
+    }
+    return k_tor_evt_end;
+}
+
+int re15_gatorszene_r41_discard_stelle(unsigned room_id, uint8_t msg_id, uint8_t *out_item)
+{
+    if (((uint16_t)room_id & 0xFFFEu) != RE15_GSZ_RAUM || msg_id != RE15_GSZ_MSG_AUF) return 0;
+    if (out_item) *out_item = RE15_GSZ_KEY_ITEM;
+    return 1;
+}
+
+/* ==== 4. RE2-Kampfmusik ============================================================================================ */
+/* RE2 ROOM40A0: Raumtabellen-Eintrag `5a ff` (INIT_TBL.DAT Szenarioblock Tabelle @0x22C, Stage-Versatz @0x800a80b0 = 0x4d,
+ * Eintrag 0x4d + 0x0A @0x2DA; beide Bloecke @0x2DA / @0x19A2 gleich) = MAIN 0x1A mit Manuell-Start-Bit 0x40 (FUN_8005a444
+ * laedt, spielt nicht), gespielt von sub11 `51 00 01 00 78 40` @SCD 0x071F (Handler @0x80057e20: a0 = pc1<<28|pc2<<24|..,
+ * FUN_8005b6f0 Fall 1 = SsSeqPlay) beim Intro, ausgeblendet von `51 00 05 00 00 00` @0x0762/@0x078A (Fall 5 FUN_8007a120)
+ * nach dem Tod. Datei = COMMON/SOUND/MAIN1A.BGM (Index 0x1A der MAIN-Dateitabelle @0x800a8168), Container wie RE1.5
+ * (Anhang u32 @size-4 SEQ 0, @size-8 VH 0x64, @size-12 VB 0xE88; FUN_8005a97c) -> shared_assets/RE2/SOUND/MAIN1A.BGM bytegleich.
+ * PORT-Weiche: Tabellen-Eintrag 0xFF3C (Muster cut_10f0.c 0xFF01) - MAIN-Platz 0x3C ist im RE1.5-Raumtabellen-Zensus
+ * (SS_BGMTBL UNK_80074828) unbenutzt und SOUND/MAIN3C.BGM ein 4-Byte-Platzhalter; der Lader liest ihn aus RE2/SOUND/MAIN1A.BGM.
+ * Wann (NUTZER-VORGABE Nachtrag 6 "Danach geht der Kampf los, mit der Kampfmusik"): ab dem Kampfbeginn der Szene bzw. ab dem
+ * Auftauchen beim spaeteren Betreten (RE2: Musik mit dem Intro), bis der Alligator tot ist (RE2: Ausblenden nach dem Tod). */
+#define GSZ_BGM_EINTRAG   0xFF3C
+#define GSZ_BGM_PLATZ     0x3C
+static int s_bgm_stand = 0;                 /* letzte Auskunft an die Audio-Schicht: 1 = 0xFF3C */
+static int musik_soll(void)
+{
+    if ((g_current_room_id & 0xFFFEu) != RE15_GSZ_RAUM) return 0;
+    if (!re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN)) return 0;
+    if (re15_gr2_tot()) return 0;
+    re15_actor_t *g = gator_aktor();
+    if (!g) return 0;
+    if (re15_gator_boss_untergetaucht(g)) return 0;
+    return 1;
+}
+int re15_gatorszene_r41_bgm_eintrag(int stage, int room)
+{
+    (void)stage; (void)room;
+    int e = musik_soll() ? GSZ_BGM_EINTRAG : -1;
+    s_bgm_stand = (e >= 0);
+    return e;
+}
+const char *re15_gatorszene_r41_bgm_re2(const char *name, int slot)
+{
+    if (name && name[0] == 'M' && slot == GSZ_BGM_PLATZ && s_bgm_stand) return "SOUND/MAIN1A.BGM";
+    return NULL;
+}
+static void musik_takt(void)
+{
+    const int soll = musik_soll();
+    if (soll == s_bgm_stand) return;
+    const int stage = (int)((g_current_room_id >> 12) & 0xf) - 1;
+    const int room  = (int)((g_current_room_id >> 4) & 0xff);
+    folge('B', soll, 0);
+    re15_audio_start_room_bgm(stage, room);  /* Weiche wie cut_10f0.c bgm_fenster_tick: MAIN wechselt -> Ausblendung + Load */
+    s_bgm_stand = soll;
 }

@@ -61,10 +61,11 @@ int  re15_gatorszene_r41_spinnen_verworfen(void);
 #define RE15_GSZ_BIT_GESEHEN     110   /* Szene gesehen (gesetzt mit dem Kampfbeginn; Spur G liest es)                     */
 #define RE15_GSZ_BIT_LIEGT       111   /* Schluessel liegt bei der Leiche (Alligator tot)                                 */
 #define RE15_GSZ_BIT_GENOMMEN    112   /* Schluessel genommen (Item-Zone Taken-Bit)                                       */
+#define RE15_GSZ_BIT_TOR         113   /* Tor 2090 <-> 20A0 mit dem Schluessel aufgeschlossen (Nachtrag 21)                */
 /* Signal-Bits Bank 5 Wort 0 (Raum-Scratch, geloescht beim Raum-Init FUN_8003ecec @0x8003ed74; ROOM2090/2080-Skripte nutzen
  * Bank 5 nicht - Zensus der Disassemblierung): Programm setzt per Set, der Port-Takt reagiert (Form irons_tod (5,12)/(5,28)). */
 #define RE15_GSZ_SIG_GATOR       28    /* 2090: Gator-Ablauf starten                                     */
-#define RE15_GSZ_SIG_TUER        29    /* 2080: Metalltuer zu (Door_exit-Satz der Tuer 2080 Slot 0)       */
+#define RE15_GSZ_SIG_KNALL       29    /* 2090: Knall des Hereinbrechens oben in 2080 (Nachtrag 17)       */
 #define RE15_GSZ_SIG_FERTIG      30    /* 2090: Port -> Programm: Gator-Ablauf fertig (Ankunfts-Poll)      */
 #define RE15_GSZ_LEICHE_OBJ      2     /* ROOM2090 main00 @0x00A6C Obj_model_set obj 2 = treibende Zombie-Leiche (Bild Cut 0) */
 #define RE15_GSZ_KEY_OBJ         4     /* Port-Prop (nOmodel = 4, RDT-Kopf Byte 2), Muster dining_r38 obj 6                */
@@ -88,11 +89,46 @@ void re15_gatorszene_r41_tick(void);
 int  re15_gatorszene_r41_boss(int slot, void *gator_actor);
 /* HAKEN enemy_ai_boss_gator.c re15_gator_boss_tick nach re15_gr2_nachtakt: Leiche + Schluessel an die Part-6-Matrix. */
 void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor);
-/* PC-Anbindung (platform/pc/src/gatorszene_r41_pc.c, einmal beim Start): ENEMSE-SE des Gators (Bank 17) und der Door_exit-
- * Satz der 2080-Tuer fuer die Montage. Ohne Anbindung (Riegel) bleibt die Szene stumm. */
+/* PC-Anbindung (platform/pc/src/gatorszene_r41_pc.c, einmal beim Start): ENEMSE-SE des Gators (Bank 17). Ohne Anbindung
+ * (Riegel) bleibt der Schrei stumm. */
 void re15_gatorszene_r41_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int));
-void re15_gatorszene_r41_tuer_hook(void (*fn)(void));
 void re15_pc_gatorszene_r41_init(void);
+
+/* ---- KNALL (Nachtrag 17, Wortlaut im Dossier): "Muss natuerlich ein knallen sein, als ob die Zombies rein brechen, so wie bei
+ * STAGE1 von Elza/Leon am Ende in der Cutscene nach Irons." = der Tuerknall der Irons-Montage: irons_tod_1150.c k_p_szene
+ * `OP_KNALL(RE15_IT_SIG_KNALL_TUER), OP_SLEEP(45)` vor dem Schnitt, Takt -> re15_audio_re2_tuer_se(KNALL_SE_TUER) auf der
+ * Knall-Bank gen/knall_bank.inc Satz 0 = RE2 ROOM1060 sub05 Se_on 0x0a @0x00F48 (EDT 0x0a `00 00 85 20` -> VAG 5 @Datei
+ * 0x066B8, 8768 B, sha1 192e09df...) - derselbe Satz wie Spur G (kanister2080, Nachtrag 17). Form "erst Knall, dann die
+ * Zombies, dann der Schnitt" = Runde 36 Spur K (K3) der Irons-Montage. */
+
+/* ---- 2080-EINSTELLUNG (Nachtrag 20, Wortlaut im Dossier): "In 2080, nachdem die Zombies durch die Tuer gebrochen sind, sollen
+ * sie oberhalb von der Treppe laufen, nicht unten." - dieselbe Lage wie Spur G: Band 8 (oberer Laufgang; Treppe = Aot_set
+ * Slot 2 sce 12 @0x0BE2 Band 5 -> 8), die acht Lagen von re15_kanister2080_r41.h k_zombies (Stand Spur G f78be367: "alle mit
+ * Fuss UND Kopf im Bild von Cut 2"), Kamera 2080 Cut 2 (RID @0x0A0). */
+
+/* ---- TOR 2090 <-> 20A0 (Nachtrag 21, Wortlaut im Dossier): "man kommt ueber die Leiter zum Aligator, nicht ueber das Tor. Das
+ * Tor soll verschlossen sein, und dann mit den Schluessel den man vom Aligator bekommt geoeffnet werden!"
+ * FORM = RE2-Tuer-Handler LAB_80051514 wie Runde 36 Spur Q / Runde 38 Spur F (schluessel_r36.c, dining_r38.c): der Tuer-Satz
+ * wird zum sce-3-Ereignis umgewidmet (re15_aot_retype = Aot_reset @0x80040760-a8), der Druck prueft den Besitz im Inventar
+ * (`jal FUN_800696cc` @0x80051628, `bltz` @0x80051634): mit Schluessel Text (@0x8005164c), Aufschliess-Ton (Se_on(2,0x25)
+ * @0x80051654/58 = RE2_DOOR_SE_AUF_KEY), Wegwerf-Fortsetzung (@0x80051670), Schlossbit (@0x80051690) und der Satz wird
+ * wieder die Original-Tuer (kein Durchgang bei diesem Druck, @0x80051698); ohne Schluessel Verschlossen-Ton (@0x800516a0/a4,
+ * Art M der Mini-Bank) und Text (@0x800516b8).
+ *   2090/2091 Slot 1 @0x009B6 (-> 20A0 (4950,-3600,4100) Cut 13): Ereignis RE15_GSZ_TOR_EREIGNIS, Texte 42/43 (VERTRAG
+ *     2090/2091 42-46; ROOM2090 hat keinen Nachrichtenblock, RDT +0x3C = 0) = die Original-Saetze von ROOM20A0 msg 1
+ *     @0x203C "It's locked." und msg 2 @0x204C "You've opened the lock." (bytegleich, dieselbe Tor-Gegend).
+ *   20A0/20A1 Slot 0 @0x01746 (-> 2090 (6300,-1800,-16250) Cut 2): gesperrt, bis Bit 113 steht; der Druck zeigt die
+ *     Original-Meldung msg 1 "It's locked." von 20A0 (aufgeschlossen wird an der 2090-Seite, wo man den Schluessel bekommt). */
+#define RE15_GSZ_TOR_SLOT        1     /* ROOM2090/2091 main00 Door_aot_set @0x009B6 `3b 01 02 31 01 ..`                   */
+#define RE15_GSZ_TOR_EREIGNIS    19    /* frei: ROOM2090 Sub-Tabelle @0x0ADC = 4 Subs; 18 = die Szene                      */
+#define RE15_GSZ_TOR20A0_SLOT    0     /* ROOM20A0/20A1 main00 Door_aot_set @0x01746 `3b 00 02 31 02 ..`                   */
+#define RE15_GSZ_TOR20A0_EREIGNIS 20   /* frei: ROOM20A0 Sub-Tabelle @0x1A24 `16 00` = 11 Subs; kein Port-Ereignis in 20A0  */
+#define RE15_GSZ_MSG_ZU          42    /* 2090/2091: "It's locked."            (= ROOM20A0 msg 1 @0x203C)              */
+#define RE15_GSZ_MSG_AUF         43    /* 2090/2091: "You've opened the lock." (= ROOM20A0 msg 2 @0x204C)              */
+#define RE15_GSZ_MSG20A0_ZU      1     /* 20A0/20A1: Original msg 1 "It's locked." (@0x203C)                           */
+int  re15_gatorszene_r41_tor_gesperrt(void);                              /* Pruefhaken: 1 = Tor-Satz umgewidmet     */
+/* Wegwerf-Kette (item_discard_common.c, RE2 @0x80051670): (2090/2091, msg 43) -> Water Key. */
+int  re15_gatorszene_r41_discard_stelle(unsigned room_id, uint8_t msg_id, uint8_t *out_item);
 
 /* ---- 3. SCHLUESSEL (Dossier §3): der nie platzierte RE1.5-"Water Key" (Namenstabelle DEBUG.BIN @0x800c495c Eintrag 0x45,
  * CHECK 'The label says: "Sewer Mainteinance Room."' @0x800c50de Eintrag 0x45, Icon ITEMALL.PIX Tile 0x45, Bild ITPS.ITP Block
