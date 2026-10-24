@@ -1092,3 +1092,30 @@ E-E4 Gorilla-Sonde misst den Haenger (benannte Ausnahmen, Ursache in zombieki_r3
   VOR der Stopp-Entscheidung (Treppe: Handler-Rueckgabe 1 @0x800435c8 -> kein Stopp-Schritt im Aktionsbild); der Port prueft
   Aktions-AOTs/Treppe/Klettern hinter dem Spieler-Takt (game_step_common.c `re15_stair_try_start` nach `re15_player_tick`). An der
   gemessenen Treppe ohne Wirkung (Kollision haelt Leon an der Kante); Umbau = aot_common.c/game_step_common.c (Katalog #14/#15).
+
+### Punkt 1 / Nachtrag 14 — Standbild nach Cut_chg (der "halb fliegende" Sprung an die Kurbel): Original gemessen
+Nutzer-Antwort (Nachtrag 14): "direkt am Anfang springt Leon so komisch zu der Kurbel. So halb fliegend." Orchestrator: der
+Sprung (Cut_chg 3 @0x0A7E, Pos_set @0x0A8C) ist Original, dort aber hinter einem Standbild, bis der Hintergrund von CD geladen
+ist; der Port haelt 1 Bild. Ziel: Standbild-Dauer an genau dieser Stelle messen, Abhaengigkeit vom Hintergrund-Laden pruefen.
+- RE (selbst disassembliert): Apply FUN_80021bbc (Present @0x80021558): @0x80021c80 `sb 2,0x800be571`, @0x80021cb8 `sw
+  0x800be574` = Bytes des Cut-Hintergrunds aus der Raumtabelle (s1 = *0x800b52c8 + Raum*0x20 + Cut*2, @0x80021c40-@0x80021cac),
+  @0x80021d28 `sw 0x800be57c` = LBA = Datei-LBA (@0x8006f440/@0x8006f442 je Datei*8, Datei aus PTR_DAT_8007438c[Stufe][Raum]-1)
+  + Cut*0x20 (@0x80021cd8 `sll a3,a3,5`), @0x80021d2c `jal 0x80013c50` mit a1 = 0 (@0x80021d30) = BLOCKIERENDES Lesen
+  (FUN_80013c50: param_2 == 0 -> FUN_80013df0(1)), danach @0x80021e34 `jal 0x80053a8c` (MDEC-Dekodierung) und StoreImage. Der
+  ganze Durchlauf steht, bis Lesen + Dekodieren fertig sind; ausgenommen nur das erste Apply nach dem Raumladen (FUN_8001d600
+  laedt den Hintergrund vor und setzt 0x800aca38 |= 0x20000000, FUN_80021bbc @0x80021c48 ueberspringt das Lesen dann einmal).
+- Messung Original (DuckStation-GDB, neuer Treiber `<sp>/E41n4/gdb_cut.py`: Haltepunkte 0x80031c44 je Durchlauf, 0x80021d2c
+  vor dem Lesen (Bytes/LBA), 0x80021d34 nach dem Lesen, 0x80021e3c nach der Dekodierung; VSync-Zaehler 0x800787dc;
+  settings.ini binaer bytegleich zurueck, md5 b3e22060...; [CDROM] ReadSpeedup = 1, SeekSpeedup = 1):
+  | Lauf (Start) | Apply | Bytes / LBA | Lesen | Dekodieren | Durchlauf |
+  |---|---|---|---|---|---|
+  | `o_kurbel_cut3.txt` (p_x9000_slot1.sav = Weg des Nutzers: Cut 0 -> 2 -> 3 gelaufen; links drehen, gehen, Quadrat, Ja) | Cut_chg 3 nach dem Ja (Pos_set) n104 | 31964 / 39845 | vs10460 -> 10468 = 8 | -> 10472 = 4 | n104 -> n105 **14 VSyncs** (sonst 2) |
+  | `o_weg_rvd.txt` (hg_east9000.sav, nach Westen gehen) | RVD Cut 0 / Cut 2 / Cut 3 | 23244/39749, 20708/39813, 31964/39845 | 8 / 7 / 9 | 3 / 3 / 4 | 13 / 12 / 15 VSyncs |
+  | o_renn2 / o_geh1 / o_renn_losl (hg_ready.sav, Dossier NB2 / Abnahme 3) | Cut_chg 3 nach dem Ja | — | — | — | je **34 VSyncs** |
+  Die LBA = 39749 + Cut*0x20 bestaetigt die Rechnung (@0x80021cd8). Die Dauer haengt am Laden: Lesen (Groesse des Cut-Bilds,
+  Suchweg des Kopfs) + MDEC. Nach einem weit entfernten Lesen (hg_ready.sav wurde nach einem Waffenwechsel im Statusschirm
+  gesichert = PLW-Laden FUN_80036b68) dauert dasselbe Apply 34 VSyncs; auf dem Weg des Nutzers 14. Das Original-Video desselben
+  Wegs (`<sp>/E41n1/orig/o_hg_cut3.mp4`, v420..v436 17 unbewegte Bilder) passt dazu: Bild des Durchlaufs n103 steht 2 + 14 =
+  16 VSyncs (+1 Abtastung).
+- Gilt fuer JEDEN Kamerawechsel mit Hintergrund (Cut_chg auch auf denselben Cut, RVD-Zonen): Apply = dieselbe Funktion
+  FUN_80021bbc; gemessen 12-15 VSyncs auf dem natuerlichen Weg durch 2020.
