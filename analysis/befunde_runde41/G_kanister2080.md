@@ -428,3 +428,44 @@ Entscheidungsfragen:
    statt wie jetzt beim naechsten Annaehern?
 3. In der Szene (Punkt 3 "erneut die Geraeusche einer schliessenden Tuer") kommt Marvin/John herein: dort spielt der
    Schliess-Ton der Stahltuer (DOOR06). Soll dort stattdessen ebenfalls der Knall kommen?
+
+## 8. Nachbesserung 1 (Abnahme 0 `G_abnahme_0.md`, 2026-10-25)
+Baum wie oben, Start auf 1608232e (Abnahme-Commit; Code-Stand = 489c0756). Mängel M1-M5 der Abnahme; Nachträge 22-24b
+(AUFTRAG.md) massgeblich, FG-E2 ist widerrufen (keine Änderung in Spur B's Modulen gator_re2_r41.c / enemy_ai_boss_gator.c).
+
+### 8.0 Plan / Stand
+- [x] M1 RE: welcher Clip lief, was er ist, welcher Original-Clip "hinknien + aufnehmen + aufstehen" ist (8.1)
+- [ ] M1 Umsetzung + Bildbogen vorher/nachher Leon + Elza + Riegel
+- [ ] M2 Messung vorher (Gator-Bahn nach der Rückkehr), RE2-Form der Liegestelle, Umsetzung, echter Ablauf Leon + Elza, Riegel
+- [ ] M3 Entscheidungsvorlage (Kameras vermessen), kein "fertig" ohne Entscheid
+- [ ] M4 Doku (6.3, k_port[] Bit 114, main.c-Kommentar)
+- [ ] M5 Dauern belegen oder PORT-WAHL (OP_SLEEP 10/30/30, Adas Wurf-Clip)
+
+### 8.1 M1 - Kletter-Animation vor dem Aufnehmen (Nachtrag 24b)
+**Ursache.** `baue_szene` spielte `Plc_motion(1, 2)` = Loco-Bank (Sub 1, dir[1]/dir[2]) Clip 2. Der Clip-Zensus 1.8 las ihn aus
+vier Stichbildern (f0/f16/f33/f49) als "Bücken + Aufheben". Jedes Bild (Werkzeug `tools/r41_kanister2080/probe_npc_clip_bilder.c`,
+Ausgabe `G_belege/nb1_clipbilder_40_49.txt`, Marvin 0x40 und John 0x49, Pose = re15_skel_compute_pose wie der NPC-Zeichner):
+- **Loco c2 (50 B.) = KLETTERN (Aufstieg).** Bild 15-28: der rechte Fuss steigt von y -162 auf -1958 (Stufe ~1800 hoch), die
+  Wurzel von -1813 auf -2614, der Kopf auf -2990; Bild 29 springt die Wurzel auf (-684,-846) = die zweite Hälfte kniet OBEN auf
+  der Stufe (die Kletter-FSM hebt dabei die Spielerhöhe an). Das ist genau der PL00-Clip 2 des Spielers: `KLETTERN aus der
+  PL00-Bank ... 231 Aufstieg = clip 2 @0x80038134 (50 Frames)` (`ori v0,zero,0x2` @0x80038134, include/re15_climb.h
+  RE15_PLAYER_MOTION_CLIMB_UP, anim_select_common.c), und die NPC-Loco-Bank hat dieselbe Belegung (Bildzahlen c2 50 / c3 26 /
+  c4 20 / c5 20 / c6 50 = PL00 Aufstieg / Absprung-Vorbereitung / Fall / Landung 5 / Landung 6; enemy_ai_common.c
+  re15_actor_uses_loco_bank "Kletter-/Sprung-Clips 2..5 = +0x84/+0x16c", Runde 38 Spur M). Darum stieg Marvin/John in den
+  Bildern 532-544 über die Reling-Höhe (Abnahme 3.9).
+- **Eigen c0 (22 B.) = LAUFZYKLUS, nicht "Tragen".** Der Zensus 1.8 nannte ihn "Tragen vor der Brust"; jedes Bild zeigt die Füsse
+  im Wechselschritt (FussL -1126 -> -275, FussR -183 -> -1123 = Laufschritte) und die Arme pumpend. Beleg: Sub 5 (Plc_dest
+  RUN) setzt beim Ausrichten `+0x94 = 0` = RUN-GAIT CLIP 0 der Bank 1 (`sb zero,148` @0x8005157c, enemy_ai_common.c
+  re15_npc_sub_walk). Der alte Ablauf spielte ihn mit `Plc_motion(2, 0)` an der Reling als "Tragen" - ebenfalls falsch.
+- **Loco c11 (25 B.) = HINKNIEN (Stand -> Knie)**, rückwärts gespielt = AUFSTEHEN. Wurzel -1810 -> -761, rechter Fuss bleibt am
+  Boden (-155), das linke Knie geht hinab (-157 -> -402), beide Hände gehen nach vorn unten: Bild 24 HR (249,-668,-509) /
+  HL (593,-312,318) (John: (243,-642,-549) / (600,-270,334), dieselben Schlüsselbilder kf 236-260). Original-Verwendung
+  (Plc_motion-Zensus über alle RE1.5-RDTs, `G_belege/nb1_plc_motion_zensus.txt`): **Marvin (0x40) ROOM11B0 sub06
+  @0x01650 `3f 01 0b 00`** (Plc_motion(1,11), hinknien am Gully: "There's a manhole here..."), **Sleep 60 `09 0a 3c 00`
+  @0x01654**, **@0x01658 `3f 01 0b 00` + @0x0165C `43 00 80 00`** (derselbe Clip mit Plc_flg 0x80 = rückwärts = aufstehen),
+  **Sleep 30 `09 0a 1e 00` @0x01660**; John (0x49) ROOM1021 sub02 @0x02102 `3f 01 0b 00` (kniet bei Roy), ROOM5011 sub02/sub04
+  (5x, bei Sherry); 0x42 ROOM4010/50B0/1090 (6x); der Spieler 54x (PL00 c11, ROOM1150 "stand->kneel fold", scd_vm.c).
+  Einen eigenen "Aufheben"-Clip haben Marvin/John nicht: der Zensus zeigt für NPCs nur Plc_motion(1,7/11/22/23) und (2,6/7),
+  und RE2 hat für das Aufnehmen eines Gegenstands keinen Clip (Ada hält den Raketenwerfer schon, Super_set @0x072C).
+  -> Das Original-Hinknien/Aufstehen von Marvin ist die Form für "nimmt ihn auf in beide Hände": im Bild 24 liegen beide
+  Hände seitlich am Kanister (z -509 / +318 um die Kanisterachse, Radius 267) in Höhe 312..668 über dem Boden.
