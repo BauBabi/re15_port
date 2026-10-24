@@ -87,69 +87,77 @@ Nachbau (Scratchpad `m41/py/b2_grown.py`, `b3_tiefe.py`; im Repo `re15_port/tool
   verifizierte Region ist sicher richtig platziert (Saum-Abweichung zum Hintergrund: Median 14, 90 % <= 33, gegen
   gedeckte Punkte Median 11, 90 % <= 24; `a8_abweichung.py`).
 
-**(b) Tiefe aus der Erreichbarkeit statt Ausschluss.** Der Ausschluss (R37 masken36_r37.c) nimmt ein Rechteck GANZ weg,
-sobald es an einem erreichbaren Stehplatz einen Figurpunkt ohne solide Zelle davor verdeckt. Gemessen (`b6_teilobjekte.py`):
-398 Objekte (>= 64 px), 247 ganz gezeichnet, 57 ganz aus, **94 teilweise ausgeschlossen (358 358 px) = loechrige Objekte**.
-Original-Urteil (R37 §3.3): verdeckt gdw. `depth < (1023*vz)>>16` (Figur-OT otz>>4 @0x8002565c, ZSF3 = 341 @0x80066c70,
-Masken-OT = depth @0x80039650..60). Je Rechteck m ueber ALLE seine deckenden Punkte und alle erreichbaren Figurpunkte
-darunter: falsch = keine Zelle davor (darf nicht verdecken -> depth >= bucket), echt = Zelle davor (soll verdecken ->
-depth < bucket). Neue Tiefe = max bucket(falsch), wenn groesser als die Generator-Tiefe: verdeckt keinen falsch-Punkt und
-jeden Punkt mit groesserem Bucket - also nie weniger als der Ausschluss (der verdeckt gar nichts). Wo das Figurraster
-nicht pixelgenau ist (Kasten breiter als das Bild, Spalte halb hinter der Kamera) dieselbe Schranke wie R37 NB2 M2 als
-Untergrenze. Werkzeug `test_r37_masken36 erzeuge_tiefe`, Laufzeit-Tabelle `engine/src/gen/masken36_tiefe_r41.inc`.
+**(b) Ausschluss der Spur P (R37) gilt weiter - auch fuer die Saum-Rechtecke.** Ein Saum-Rechteck, das an einem
+erreichbaren Stehplatz einen Figurpunkt ohne solide Zelle davor verdecken wuerde, faellt ganz weg (masken36_r37.c,
+Tabelle neu erzeugt mit `test_r37_masken36 erzeuge`). Die Schranke fuer nicht pixelgenaue Figurraster (R37 NB2 M2: Kasten
+breiter als das Bild / Spalte halb hinter der Kamera) ist beim Iterieren jetzt AUCH Ausschluss-Grund (vorher nur Pruefung -
+die neuen Saum-Rechtecke liegen teils dicht vor der Kamera: in Runde 0 7544 / 7958 Faelle "Maske koennte verdecken"), und
+der Riegel zaehlt sie am Endzustand mit Tabelle: 0 / 0. Ergebnis: in allen 216 Sektionen sind die ALTEN Rechtecke genau so
+ausgeschlossen wie in der R37-Tabelle (bitgleich verglichen), von den 8600 Saum-Rechtecken (Leon + Elza) bleiben 1662 aus.
+Das Schliessen ist damit rein additiv: nichts, was vorher gezeichnet wurde, aendert Lage, Tiefe oder Sichtbarkeit.
+Ein zweiter Weg (Tiefe aus der Erreichbarkeit statt Ausschluss) wurde gebaut, gemessen und VERWORFEN, s. 1.5.
 
 ### 1.3 Umsetzung
 
 | Datei | Inhalt |
 |---|---|
-| `re15_port/tools/maske/schliessen_r41.py` (neu) | baut je Raumpaar xxx0/xxx1 MSK + 216 `_PRIcc.TIM`. Probe 1: Rechteck in der Region; Probe 2: Deckung == alte Rechtecke + Region bitgenau; Probe 3: alter Teil jeder Sektion bytegleich (Gruppen + Rechtecke, nur Kopfzahlen und Anhang neu). Saum-Rechtecke: Grundstuecke = 8-zusammenhaengende Saumpunkte gleicher Spaltentiefe, gierig zusammengelegt (gleiche Verschiebung, Tiefenspanne <= Stufe, kleinster Flaechenzuwachs) bis 105 Rechtecke je Cut (RE15_PRI_MAX_MASKS_PER_CUT, re15_pri.h) erreicht sind; feinste Stufe aus (0, 1, 2, 3, 4, 6, 8, 12, 16) wie bau_p2.bau_cut. Ergebnis: 87 von 108 Sektionen Stufe 0 (jede Spaltentiefe genau), groesste Abweichung 12 Buckets (1 Sektion). Atlas: alte Rechtecke an ihrer BSS-Stelle (Texel = Hintergrund an der Zielstelle), Saum-Rechtecke an der ersten freien Stelle, je eine Gruppe (Anker = Ziel - Quelle), deckend nur an ihren Saumpunkten; 255 Farben Median-Schnitt, CLUT wie atlas.tim_aus (0,480, STP fuer Schwarz). |
-| `re15_port/shared_assets/PSX/MASKS/ROOM3040..ROOM6031.MSK` + `ROOMxxxx_PRIcc.TIM` | 30 MSK (bytegleiche Paare Leon/Elza wie bisher), 216 TIM neu. 4300 Saum-Rechtecke (15 078 Rechtecke gesamt). |
-| `re15_port/engine/src/masken36_r41.c`, `include/re15_masken36_r41.h` (neu) | Tiefen-Tabelle anwenden (Index vor dem Ausschluss) |
-| `re15_port/engine/src/gen/masken36_tiefe_r41.inc` (neu, erzeugt) | 2966 Zeilen |
-| `re15_port/engine/src/masken36_r37.c` | Haken (1 Zeile + include) am Anfang von re15_masken36_filter: Tiefe vor Ausschluss |
-| `re15_port/engine/src/gen/masken36_ausschluss_r37.inc` (neu erzeugt) | nur noch ROOM3050/3051 Cut 15 (kein Stehplatz = Original-NULL-Sektion, R37 NB2 M1) |
-| `re15_port/tests/unit/test_r37_masken36.c` | Generator-Sektion = Stage 3..6 (`generator_sektion`/`atlas_generator`, vorher "ohne eigenen Atlas"); Tiefen-Tabelle in der Nachrechnung wie der Lader; Gegenprobe "ohne Ausschluss" jetzt auch ohne Tiefen-Tabelle; Zensus: Stages 3..6 eigener Atlas (vorher BSS), Trennschaerfe-Gegenprobe nur fuer Freistellungen (der alte Teil der Generator-Sektionen passt durch beide Atlanten, Probe 3); Werkzeug `erzeuge_tiefe`, Riegel `tiefe` |
-| `re15_port/tests/unit/probes/r41_masken36.cmake` (neu) | `unit_r41_masken36_tiefe` |
+| `re15_port/tools/maske/schliessen_r41.py` (neu) | baut je Raumpaar xxx0/xxx1 MSK + 216 `_PRIcc.TIM`. Probe 1: Rechteck in der Region; Probe 2: Deckung == alte Rechtecke + Region bitgenau; Probe 3: alter Teil jeder Sektion bytegleich (Gruppen + Rechtecke, nur Kopfzahlen und Anhang neu). Saum-Rechtecke: Grundstuecke = 8-zusammenhaengende Saumpunkte gleicher Spaltentiefe, gierig zusammengelegt (gleiche Verschiebung, Tiefenspanne <= Stufe, kleinster Flaechenzuwachs) bis 105 Rechtecke je Cut (RE15_PRI_MAX_MASKS_PER_CUT, re15_pri.h) erreicht sind; feinste Stufe aus (0, 1, 2, 3, 4, 6, 8, 12, 16) wie bau_p2.bau_cut. Ergebnis: 87 von 108 Sektionen Stufe 0 (jede Spaltentiefe genau), groesste Abweichung 12 Buckets (1 Sektion). Atlas: alte Rechtecke an ihrer BSS-Stelle (Texel = Hintergrund an der Zielstelle), Saum-Rechtecke an der ersten freien Stelle, je eine Gruppe (Anker = Ziel - Quelle), deckend nur an ihren Saumpunkten; 255 Farben Median-Schnitt, CLUT wie atlas.tim_aus (0,480, STP fuer Schwarz). Deterministisch (zweiter Lauf bitgleich). |
+| `re15_port/shared_assets/PSX/MASKS/ROOM3040..ROOM6031.MSK` + `ROOMxxxx_PRIcc.TIM` | 30 MSK (bytegleiche Paare Leon/Elza wie bisher), 216 TIM neu. 4300 Saum-Rechtecke je Variante (15 078 Rechtecke Leon + Elza). |
+| `re15_port/engine/src/gen/masken36_ausschluss_r37.inc` (neu erzeugt) | 148 Zeilen (R37: 126); alte Rechtecke bitgleich ausgeschlossen, dazu 1662 Saum-Rechtecke |
+| `re15_port/tests/unit/test_r37_masken36.c` | Generator-Sektion = Stage 3..6 (`generator_sektion`/`atlas_generator`, vorher "ohne eigenen Atlas"); Schranke NB2 M2 als Ausschluss-Grund beim Iterieren, Riegel-Zaehlung am Endzustand; Zensus: Stages 3..6 eigener Atlas (vorher BSS), Trennschaerfe-Gegenprobe nur fuer Freistellungen (der alte Teil der Generator-Sektionen passt durch beide Atlanten, Probe 3); Werkzeug `fehl` auch fuer Freistellungen (Punkt 2) |
+| `re15_port/tests/integration/test_r37_masken36_verdeckung.cmake` | die Zeile "Port-Masken ohne eigenen Atlas -> BSS-Atlas" darf nicht mehr kommen (vorher Pflicht) |
+| `re15_port/tests/unit/test_r41_masken36.c`, `probes/r41_masken36.cmake` (neu) | Riegel `unit_r41_masken36_loecher` (1.4), `_kurbel` (2.1), `integration_r41_masken36_stage2` (2.2) |
 | `re15_port/tools/maske/original.py` | Entpacker-Fix (1.1) |
+| `re15_port/tools/maske/bilder_r41.py` (neu) | Vorher/Nachher-Bilder je Cut + berichtigte Uebersichtsbilder |
 
-Der Lader braucht keine Aenderung: R15M MIT eigenem Atlas -> eigener Atlas (re15_pri_atlas_quelle, bg_pc.c), die Zeile
-"Port-Masken ohne eigenen Atlas -> BSS-Atlas des Cuts (Runde 37 Spur P)" erscheint fuer die Stages 3..6 nicht mehr.
+Kein Engine-/Laufzeit-Code geaendert: der Lader nimmt fuer R15M-Sektionen MIT eigenem Atlas den eigenen (re15_pri_atlas_quelle,
+bg_pc.c); die Zeile "Port-Masken ohne eigenen Atlas -> BSS-Atlas des Cuts (Runde 37 Spur P)" erscheint fuer die Stages
+3..6 nicht mehr.
 
-### 1.4 Messung nachher (2026-10-24, Bau 2cfb1158 + Riegel ded95f4b)
+### 1.4 Messung nachher (Endstand 6871f2a5)
 
 **Statisch, alle 108 Sektionen (Elza bytegleich), `re15_port/tools/maske/bilder_r41.py` -> `M_bilder/ROOMxxx0_Ccc.png`
 (je Cut: Hintergrund | VORHER | NACHHER; magenta = schon vorher, gruen = neu geschlossen, rot = weg, cyan = eingeschlossene
-Luecke, die offen bleibt) und `M_bilder/zahlen.txt`:** gezeichnet vorher 727 561 Bildpunkte -> nachher 1 199 780
-(+472 219 = Saum + vorher ausgeschlossene Rechtecke mit Tiefe aus der Erreichbarkeit), weg 0. Die cyan-Flaechen sind echte
-Zwischenraeume (Beispiel ROOM6010 C12: der Raum unter der Treppe zwischen Pfeiler, Wange und Bodenleiste; ROOM5020 C6:
-Luecken zwischen den Kistenfuessen). Beispiele: ROOM3050 C1 (Konsole links: Treppenkante -> glatte Kante), ROOM6010 C12
-(Treppe: Kanten zu, Wange oben links dazu), ROOM5020 C6 (die beiden Kisten waren GANZ ausgeschlossen, jetzt gezeichnet).
+Luecke, die offen bleibt) und `M_bilder/zahlen.txt`:** gezeichnet vorher 727 561 Bildpunkte -> nachher 780 626 (+53 065
+Saumpunkte), weg 0. Beispiel ROOM3050 C1: die Treppenkante der Konsole ist zu (+837). Die cyan-Flaechen sind echte
+Zwischenraeume oder Stuecke ausgeschlossener Rechtecke (z.B. ROOM6010 C12: der Raum unter der Treppe).
 Berichtigte Uebersicht im Format von `pri/STAGE3-6/<raum>/<cc>_port.png`: `M_bilder/uebersicht/STAGEn/<raum>/<cc>_port.png`
-(107 Bilder; pri/ ist laut VERTRAG §1.3 tabu - Ersetzen der alten, mit dem kaputten Entpacker gebauten Bilder ist eine
-Orchestrator-/Nutzer-Entscheidung, s. "Fuer den Nutzer").
+(107 Bilder, Leon-Ordner; die Elza-Ordner xxx1 sind bytegleich). pri/ ist laut VERTRAG §1.3 tabu - die alten Bilder dort
+sind mit dem kaputten Entpacker gebaut (1.1) und sollten ersetzt werden (Orchestrator/Nutzer, s. "Fuer den Nutzer").
 
-**Offene Kerben (Riegel `unit_r41_masken36_loecher`, ueber die Engine-Leser):** Kuenstler-Atlas deckend + farbgleich
-direkt an der Kante eines alten Rechtecks, nicht gezeichnet: VORHER 67 242 (alte Rechtecke, BSS-Atlas, ohne Ausschluss -
-das Beste, was bis Runde 40 je gezeichnet wurde) -> NACHHER 3 946 (5,9 %), Leon- und Elza-Dateien. Blit nachher: 2 399 560
-Punkte, max. Mittel je Sektion 10,66 / 765 (eigener Atlas = Hintergrund an der Zielstelle).
-
-**Tiefe aus der Erreichbarkeit:** 2966 Tabellenzeilen (Leon + Elza); davon 1372 alte Rechtecke, die ALLE vorher
-ausgeschlossen waren (von 1444; die uebrigen 72 = ROOM3050/3051 Cut 15 bleiben ganz aus), 1594 Saum-Rechtecke; KEIN
-vorher gezeichnetes Rechteck hat eine neue Tiefe (gegen die alte Tabelle geprueft). 768 Zeilen verdecken weiter Figuren
-hinter Zellen, 2184 Rechtecke haben keinen erreichbaren Figurpunkt hinter einer Zelle (zeichnen, verdecken aber nichts
-Erreichbares). Ausschluss-Tabelle jetzt nur noch ROOM3050/3051 Cut 15.
+**Offene Kerben (Riegel `unit_r41_masken36_loecher`, ueber die Engine-Leser, Leon + Elza):** Kuenstler-Atlas deckend +
+farbgleich direkt an der Kante eines alten Rechtecks, nicht gezeichnet: VORHER 61 672 (alte Rechtecke, BSS-Atlas, gleicher
+Ausschluss) -> NACHHER 15 498 (25,1 %). Der Rest sind Saum-Rechtecke, die der Ausschluss nimmt. Blit nachher: max. Mittel
+je Sektion 10,66 / 765 (eigener Atlas = Hintergrund an der Zielstelle).
 
 **An der exe (Framedump Bild 120, RE15_WINDOW_SCALE=1, Leon per RE15_DEBUG_JUMP + RE15_PLAYER_POS, RE15_FORCE_CUT):**
-* R37-Szenen (Riegel integration_r37_masken36_stage3..6, nb2, alle gruen): HINTER 3050 C2 1203/1234 Figurpunkte verdeckt
-  (R37: 1123/1234), 5020 C9 224/322 (199), 6010 C12 844/1440 (820), 4080 C5 880/883 (879); Elza 1228/1274, 240/316,
-  656/1109, 633/636; DAVOR 0 in allen vier Stages (Leon und Elza), FREI 3050 C5 0, WEG M1 30A0/30A1 0.
-* Sweep ueber ALLE 108 Leon-Cuts (Scratchpad `m41/py/d1_sweep.py`, Stellen aus `test_r37_masken36 suche 60`, A = mit
-  Masken, B = RE15_NO_PRI; Figurpunkte = |B - Hintergrund| > 24 im Figurfenster - der figurlose Spielrahmen ist bitgleich
-  zum probe_bg_dump-Bild, gemessen 0 Abweichung): **DAVOR 53 Szenen, 49 mit 0 uebermalten Punkten**; 4 mit wenigen
-  Punkten, die NICHT Leon sind: v4040_11 (7 von 5915) und v4080_07 (34 von 5977) = Kanten des 3D-Tuermodells im Tuerrahmen
-  (der Rahmen deckte die Tuer-Oberkante schon VOR Runde 41: 448 Punkte aus alten, gezeichneten Rechtecken), v5050_03
-  (4 von 3316, Rand eines runden 3D-Objekts), v5100_07 (27 von 1890: Leons Hand am unteren Bildrand unter einem ALTEN,
-  schon vorher gezeichneten Rechteck - kein Runde-41-Effekt). HINTER 44 Szenen: 19 385 von 28 457 Figurpunkten verdeckt.
+* R37-Szenen (Riegel integration_r37_masken36_stage3..6, nb2): s. Tests.
+* Sweep ueber ALLE 108 Leon-Cuts (Scratchpad `m41/py/d1_sweep.py`, `d2_vorher.py`, `d3_final.py`; Stellen aus
+  `test_r37_masken36 suche 60`; A = mit Masken, B = RE15_NO_PRI; Figurpunkte = |B - Hintergrund| > 24 im Figurfenster -
+  der figurlose Spielrahmen ist bitgleich zum probe_bg_dump-Bild, gemessen 0 Abweichung). VORHER = eigene exe des
+  Basisstands b28c7236 (git archive, Scratchpad `m41/vorher`, gleiche Szenen):
+
+  | | Szenen | VORHER | NACHHER |
+  |---|---|---|---|
+  | DAVOR, Punkte uebermalt | 53 | 2 Szenen: v4080_07 9, v5100_07 25 | 3 Szenen: v4040_11 1, v4080_07 11, v5100_07 27 |
+  | HINTER, verdeckte Figurpunkte | 44 | 11 782 von 28 457 | 12 664 von 28 457 (+882) |
+
+  Die DAVOR-Punkte sind keine Figur-Fehler von Runde 41: v4080_07/v4040_11 = Kanten des 3D-Tuermodells im Tuerrahmen (der
+  Rahmen deckte die Tuer-Oberkante schon vorher), v5100_07 = Leons Hand am unteren Bildrand unter einem ALTEN Rechteck
+  (vorher 25). HINTER: kein Szenenwert sinkt (h6000_04 128 -> 127 = Rauschen), groesste Gewinne h6000_07 626 -> 838,
+  h3050_02 1116 -> 1237, h3040_02 1057 -> 1169, h3040_13 613 -> 687.
+
+### 1.5 Verworfen: Tiefe aus der Erreichbarkeit statt Ausschluss (gebaut 2cfb1158, gemessen, zurueckgenommen 6871f2a5)
+
+Idee: ein Rechteck mit Figurpunkten ohne Zelle davor nicht wegnehmen, sondern ihm depth = max bucket dieser Punkte geben
+(verdeckt keinen von ihnen; Urteil depth < (1023*vz)>>16, @0x8002565c / @0x80066c70 / @0x80039650). 2966 Tabellenzeilen;
+statisch +472 219 Bildpunkte, an der exe HINTER 11 782 -> 19 385. Aber das Zelle-davor-Urteil ist ein GRUNDRISS-Urteil: in
+ROOM4080 Cut 2 (10475,-13710) blieb von Leon nur der Oberkoerper (Beine und Huefte mit der Wand uebermalt,
+`M_bilder/P1_exe_h4080_02.png`), in ROOM4040 Cut 5 (-16400,-7622) nur die rechte Haelfte (`P1_exe_h4040_05.png`) - beides
+mit "Zelle davor" im Grundriss (die Kameras von 4040 C5 / 4080 C2 / 30A0 C0 stehen IN grossen schraegen Zellen der Gaenge).
+Der Ausschluss nimmt solche Rechtecke (Hintergrund in der Generator-Region, R37 §3.2) ganz weg und bleibt damit die sichere
+Regel; der Nutzer hat diese Fehlerart schon einmal gemeldet ("Leon verschwindet fast vollstaendig", 6c29d834). Die
+P1_exe_*.png zeigen diesen verworfenen Zwischenstand (Spalte NACHHER), nicht den Endstand.
 
 ## Punkt 2 — die 53 Nutzer-Masken 11A0 + STAGE2 (Sichtpruefung im Spiel)
 
