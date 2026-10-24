@@ -119,3 +119,52 @@ zwischen 850 und 900 sind die Wandklemme nach dem Schub (Reihenfolge b544 @0x801
 Spieler/Ada min 675 (F1755) nach: Ada steht zwischen Leon und Marvin — `kollision.txt` F1755 `von=SPIELER vor=(-10204,-17278)
 nach=(-10128,-17078)` und danach `von=2 typ=40 ... nach=(-10224,-17285)`: der spaetere b544-Schub (Marvin) gewinnt gegen den
 aec4-Schub (Spieler), genau die Original-Reihenfolge @0x8011cc3c -> @0x8011cc44; kein Befund.
+
+### 4.2 Punkt 1, Leon, STAGE2 ROOM2000 (Ada + Marvin gehen dieselbe Strecke), ECHTER Tuerweg (`laeufe/p1_2000_{vor,nach}`)
+Warum dieser Raum: der Nutzer spielt gerade STAGE2; im Zensus der Spur stehen Ada + Marvin in 2000 gemeinsam, gemessen hat
+die Spur dort nicht. ROOM2000 sub00 @0x01798 Ck(4,244)=1 -> sub02: Ada (slot 0) und Marvin (slot 1) laufen per Plc_dest
+nacheinander dieselbe Strecke (-8350,-26100) -> (-26100,-26100) -> (-26100,-11550) (sub03 @0x01A80-0x01AC4 fuer Ada,
+sub02 @0x01A3A-0x01A60 fuer Marvin nach `Sleep 120` @0x01A36). (4,244) setzt ROOM11B0 sub06 @0x01480.
+Befehl `skripte/p1_2000.sh <vor|nach>`: `RE15_SET_FLAG=4:244`, `RE15_DEBUG_JUMP=1260@250`, `RE15_PLAYER_POS=-8750,-6500,1024,1`,
+Wegplan `plaene/p1_2000.txt` (GEHE vor Tuer 1260 slot 1 rect (-9700,-9350,1900,1900) @0x0114A, Aktionstaste ->
+`[room] PC loaded room2000.rdt`, dann 45x Aktionstaste fuer die Szenentexte), `RE15_EXIT_AT=4200#2000`.
+Ergebnis (vor = nach, bitgleich in allen Abstandswerten): Ada/Marvin **min 1572** (F931), 0 Bilder < 900; Szenenende identisch
+(beide auf den Parkplatz Pos_set (6900,3400)/(2400,3400) ab **F1926**, Spieler steuerbar `pm=0` ab **F2010**, vor und nach);
+`kollision.txt` nach: **0** `NPC-SCHUB`-Zeilen. => In 2000 kommen sich die beiden nicht nahe; der Schub aendert die STAGE2-
+Szene nicht (kein Haenger an den gemeinsamen Wegpunkten). Kein Befund-Ort, aber Nebenwirkungs-Pruefung bestanden.
+
+### 4.3 Punkt 2, Leon, ROOM2050, EIGENES Szenario (andere Kiste, andere Richtung als der Riegel) (`laeufe/k1_{vor,nach}`)
+Befehl `skripte/k.sh k1 <vor|nach>`: `RE15_DEBUG_JUMP=2050@250`, `RE15_PLAYER_POS=4248,2850,1024,0` (Becken, Band 0, suedlich
+von obj 3), Wegplan `plaene/k1.txt` (echte Pad-Bits ueber den Wegplan-Treiber): `GEGNERWEG` (die zwei Spinnen 0x25 weg),
+obj 3 (4248,0,1400) nach Norden bis z <= 0, dann um die Kiste herum und obj 3 nach WESTEN gegen obj 2 (-1256,0,-64)
+(`SCHIEB 2048 X <= -3000`), `RE15_PUSH_LOG`/`RE15_OBJFALL_LOG`/`RE15_KOLLISION_LOG`, Auswerter `kisten.py`.
+(Erster Versuch `laeufe/k1a_zelle_*` direkt nach Westen bei z 1400: in BEIDEN exe von der Zelle `r0[9]: x -350..2100 z
+2250..4250` bei x 3030 gesperrt — `TREFFER-ZELLE`, keine Kistenberuehrung; deshalb erst nach Norden.)
+
+| exe | Zeilen mit Kisten-Ueberlappung | tiefste Eindringung | SCHUB-GESPERRT / OBJEKT-GESPERRT | Endlage obj 3 / obj 2 |
+|---|---|---|---|---|
+| vor | **142** | **1751** (F570: obj 3 (-1321,0,-15) IN obj 2 (-1321,0,-64), \|dX\| 0, \|dZ\| 49) | 0 / — | **(-3030,0,-15) / (-3030,0,-64)** (beide zusammen weitergeschoben) |
+| nach | **0** | — | **1 / 1**: `F480 OBJEKT-GESPERRT p=4 obj=3 ziel=(536,-15) gegen p=3 obj=2 lage=(-1256,0,-64) dX=1792 dZ=49 sumX=1800` | **(557,0,-15) / (-1256,0,-64)**, \|dX\| 1813 > 1800 |
+
+=> Nutzer-Befund im eigenen Szenario vorher reproduziert (Kiste ganz IN der anderen und beide zusammen weiter), nachher
+sperrt der Objekt-Pass an der Grenze |dX| <= 1800 (FUN_8002cdf4 @0x8002ce80-8c, inklusive) und die Kiste bleibt 13 Einheiten
+vor der Beruehrung stehen.
+
+### 4.4 Punkt 1, ELZA, ROOM3001 Eskorte John + Sherry, ECHTER Tuerweg (`laeufe/p1_3001_{vor,nach}`)
+Befehl `skripte/p1_3001.sh <vor|nach>`: `RE15_PSELECT_AUTO_SWITCH=1` (debug.log `[pl] Spieler-Familie PL04 (character=4,
+Elza-Bit=1)`), `RE15_SET_FLAG=4:198,4:199` ((4,199) setzt ROOM3000/3001 @0x01672/@0x016AA), `RE15_DEBUG_JUMP=3011@250`,
+`RE15_PLAYER_POS=-23168,11769,2048` (Ankunftsstelle der 3001-Tuer in 3011), Wegplan `plaene/p1_3001.txt`: Aktionstaste an Tuer
+3011 slot 0 (rect (-25000,10620,1600,1820) @0x01FD2) -> `[room] PC loaded room3001.rdt` -> sub00 @0x015A2/@0x015B6 John (0x49) +
+Sherry (0x4b) als Eskorte; Elza steht 450, geht in den Gang (-11250,-13378), nach Westen (-18000,-13378), zurueck, steht;
+`RE15_EXIT_AT=4000#3001`.
+
+| exe | Paar John/Sherry (Summe 750): min | Bilder < 700 | Bilder < 750 | Ende F4000 | Spieler/Sherry min |
+|---|---|---|---|---|---|
+| vor | **0** (F1023) | **3917 / 4000** | 3917 | **196** | 59 |
+| nach | **737** (F1405) | **0** | 369 | 751 | 629 |
+
+`kollision.txt` nach: 4180 `NPC-SCHUB`-Zeilen. Rest bis zur Summe (min 737 = 13 unter 750) = Wandklemme nach dem Schub; den
+Hautabstand 18 der Klemme selbst nachgelesen: `8003bce0 addiu t1,v0,18` / `8003bce8 addiu a0,a0,-18`. => Nutzer-Befund fuer
+Elza am echten Weg reproduziert (vor: beide stehen ineinander) und behoben (nach: getrennt).
+Nebenbeobachtung (vorbestehend, kein Punkt der Spur): Spieler/John direkt nach dem Eintritt F55-110 53 Bilder < 850 in BEIDEN exe
+(John an der Ostwand x -6140 geklemmt) — gleiche Zahl vor/nach, nicht NPC-gegen-NPC.
