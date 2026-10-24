@@ -3,13 +3,14 @@
 Pruefer: Abnahme-Agent 4, 2026-10-24 (Beginn 20:34 laut `date`). Baum `.claude/worktrees/r41_kleinkram_b`, Zweig
 `r41/kleinkram_b`, HEAD d2d4e794 (merge-base master 116e8b0f). `<sp>` = Scratchpad
 `C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad`;
-eigene Laeufe unter `<sp>/E41a4/` (Helfer `<sp>/E41a4/run.sh`: exe-Kopie, eigener Laufordner, geerbte RE15_* geloescht).
+eigene Laeufe unter `<sp>/E41a4/` (Helfer `<sp>/E41a4/run.sh` / `run2.sh` / `batch.sh` / `grab.sh`: exe-Kopie, eigener Laufordner, geerbte
+RE15_* geloescht; Werkzeuge `<sp>/E41a4/tools/`).
 
 Status dieses Berichts: IN ARBEIT (fortlaufend gespeichert).
 
 ## 0. Gelesen / Bau
 - AUFTRAG.md (Wortlaut; fuer Spur E: Hinweise 03:21, E-N1/E-N2 04:52, E-E1..E-E3 10:50, **E-E4 17:32**, **Nachtrag 14 17:36**;
-  master-Stand 3da82407 hat danach nur Eintraege fuer C/F/G/H), VERTRAG.md, Dossier E_kleinkram_b.md (ganz, Schwerpunkt
+  master 6fc20609: danach Eintraege fuer C/F/G/H und **Orchestrator-Entscheid E-E5 (20:34, Spur E)**), VERTRAG.md, Dossier E_kleinkram_b.md (ganz, Schwerpunkt
   "Nachbesserung 4"), E_abnahme_3.md (Maengel 1-2, H1-H6).
 - `git log --oneline master..HEAD`: NB4 = 5057b8d6 .. d2d4e794 (11 Commits) auf 6e2c62b1/3c02068f (AUFTRAG vom Orchestrator).
   `git diff master...HEAD --stat` 36 Dateien; NB4-Teil `git diff 877541e2 HEAD -- re15_port` (861 Zeilen, `<sp>/E41a4/nb4.diff`)
@@ -19,7 +20,6 @@ Status dieses Berichts: IN ARBEIT (fortlaufend gespeichert).
   (= behaupteter Endstand) -> Messkopie `re15_pc_E41a4.exe`. VORHER-exe = `re15_pc_E41a3.exe` (c3ba4317 = Stand Abnahme 3, md5
   1f38e02535c6259e6f99619bba2917ab), BASIS = `<sp>/abn0_base/.../re15_pc_E41a1_basis.exe` (116e8b0f, md5 2310696431b26d115bc00f3796663c01).
 
-(weitere Abschnitte folgen)
 
 ## 1. Tests der Spur (gezielt, im Spurbaum, kein test/all)
 - `ctest --test-dir re15_port/build -R "r41_kleinkram_b|^unit_r36_zombieki_" -j 2 --timeout 1200 --output-on-failure` (20:37-20:41,
@@ -67,7 +67,7 @@ VORHER (c3ba4317): dieselben HALTEN-Zeilen, kein `[standbild]`.
 
 | Fenster-Aufnahme | Frage zu (Textfeld 1411 px) | naechste Aenderung = Leon an der Kurbel (8799 px, ganzes Bild) | Bild ohne Frage steht | Kurbel-Clip beginnt (Leon-Bereich) |
 |---|---|---|---|---|
-| NACHHER g1525 -> g1539 | t=26,043 s | t=26,293 s | **250 ms** (14 Aufnahmebilder ohne Aenderung) | g1578 t=26,944 = **651 ms** nach dem Sprung |
+| NACHHER g1525 -> g1539 | t=26,043 s | t=26,293 s | **250 ms** (13 Aufnahmebilder ohne Aenderung) | g1578 t=26,944 = **651 ms** nach dem Sprung |
 | VORHER g1427 -> g1432 | t=25,525 s | t=25,600 s | **75 ms** | — |
 | Original o_hg_cut3 v420 -> v437 | v420 | v437 | **284 ms** (17 VSync-Bilder) | v475 = **635 ms** (38 VSyncs) nach dem Sprung |
 
@@ -196,3 +196,45 @@ ihn nicht). **Urteil Punkt 2: erfuellt.**
   Szene "Leon: H-hey!"), kein `[wk11b1-r41]`.
 - Grenze wie Abnahme 3: der Abschnitt 2001 -> 1261 ist nicht gefahren (Flags gesetzt); 1261 -> 11B1 ist die echte Tuer. Code von Punkt 3 seit Abnahme 1
   unveraendert. **Urteil Punkt 3: erfuellt.**
+
+## 8. Gates / Vertrag / Tests
+### 8.1 Tests (gezielt, keine volle Suite im Spurbaum)
+- Spur + Gorilla: 29/29 (§1).
+- Alle unit_/prop_/probe_ ausser Release-/Android-Skripten: `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -E "releaseskript|android|
+  r35_android|release_" -j 3 --timeout 900 --output-on-failure` (21:04-21:12, 449 s unter Fremdlast) -> **100% tests passed, 0 tests failed out of 914**,
+  CTEST_EXIT=0 (`<sp>/E41a4/ctest_unit.log`) — darin alle Spieler-, Renn-, Szenen-, Nachrichten-, Karten-, Tuer-Sonden.
+- Gegenproben der Riegel-Auswerter auf meinen eigenen Laeufen (`test_r41_kleinkram_b_exe`): `treppe` M_N2 BESTANDEN / V_N2 (c3ba4317) DURCHGEFALLEN
+  ("Rest-Stopp nach der Treppe: 8 Lageaenderungen in 8 Bildern"); `losl` M_P1_losl BESTANDEN / V_P1_losl DURCHGEFALLEN nur an der neuen Standbild-
+  Pruefung ("Standbild F282: 0 Bilder 0 ms"; die Auslauf-Lagen -3056..-3180 sind in beiden Staenden gleich — der Bau-Agent fuehrt losl-VORHER als
+  BESTANDEN, das war vor dem Einbau der Standbild-Pruefung in `takt_gemein`).
+- Integration (echte exe), eigene Auswahl nach Beruehrung durch NB4 — Uebernahme-Zweige des Spieler-Dispatchers (Griff, Biss, Spinne, Hund, Gorilla,
+  Gift, Treppe, Kisten/Schieben, Szenen mit Plc_dest/Plc_ret), Standbild bei Kamerawechseln, Elza/11B1-Nachbarschaft, Raumwechsel (Liste
+  `<sp>/E41a4/integ_list.txt`): `ctest --test-dir re15_port/build -R "$(cat <sp>/E41a4/integ_regex.txt)" -j 2 --timeout 1800 --output-on-failure`
+  (21:11-21:36, 1459 s, CPU 90-100 % durch fremde Laeufe) -> **100% tests passed, 0 tests failed out of 30**, CTEST_EXIT=0 (`<sp>/E41a4/ctest_integ.log`):
+  r37_elzaems_elza1181griff, r37_bissarm_echtlauf, r37_re2zombie, r38_spinnen_echtlauf, r38_wasserzombie, r39_gegner_hunde1190, r38_affen3,
+  r39_zustand_gift, r39_elzazombies_treppe, r37_kiste, r37_kiste2feld, r36_szenenleon, r37_szene11c0, r37_roy_szene1011, r37_roy_szene1021,
+  r38_szenenschutz, r39_toene_szene, r39_toene_szene_elza, r38_werkstatt11b0, r39_johnruf1041_tuer_t11b1, r39_johnruf1041_tuer_t11b1d,
+  r37_elzaems_elza11b1, room_transition, cross_stage, rvd_coverage, r39_elzazombies_kette, r38_elzaintro_schwarz, r35_inventar1050,
+  r39_funk10f1_echt, r37_zombieaktiv. Kein Fenster-Haken rot, keine Nachlaeufe noetig.
+- Klettern/Treppe/Kisten/Tueren (Uebernahme-Zweige Klettern + Treppe des Dispatchers, Riegel mit Renn-Eingaben): `ctest -R "^(integration_r36_klettern|
+  integration_r36_dachkiste|integration_r37_kistenregel|integration_r36_tueren)$" -j 2 --timeout 1800` (`<sp>/E41a4/ctest_integ2.log`):
+  ERGEBNIS_ZWEITE_GRUPPE
+
+### 8.2 RE-Gate
+| Pruefung | Urteil | Beleg |
+|---|---|---|
+| Adressen der NB4-Konstanten/Mechanik stimmen | haelt | §2: FUN_80021bbc (@0x80021cd8/@0x80021d28/@0x80021d2c+@0x80021d30/@0x80021e34, Vorladen @0x80021c30-@0x80021c60), FUN_80013c50/FUN_80013df0 (blockierend), Renn-ANIMATE Fall 2 @0x800328f8/@0x800328fc, Treppen-Abschluss @0x80038ea8/@0x80038eb0, Plc_ret @0x80041f90-9c, Plc_motion @0x80041bb0/@0x80041bb4/@0x80041bc4, sce 12/13 @0x80043540/44, @0x8004360c/10, Rueckgabe @0x800435c8, STAGE1 @0x80102640 / @0x8011c38c, Dispatcher @0x80031c54/@0x80031c78 — alle selbst disassembliert, alle wie zitiert |
+| Jede neue Konstante belegt | haelt | `KH_STANDBILDER 6` = gemessene 14 VSyncs (o_kurbel_cut3 n104 -> n105, Log selbst gelesen) - 1 gehaltenes Bild, Kommentar mit @0x80021d2c/@0x80021e34; `RS_FALL3 3` @0x800328f8/@0x800328fc; `R41_WARTE_MAX 354` = R36_NAH_START (zombieki_r36.c:202-213, vorab gemessen); benannte Stellen mit Messwerten (E-E5) |
+| Mechanismus am Original gemessen | haelt | Dauer: GDB o_kurbel_cut3 (14) / o_weg_rvd (13/12/15) / o_kurbel_cut3_renn (15) des Bau-Agenten, Video o_hg_cut3 und o_w03_stand selbst ausgewertet (17 bzw. 36 Bilder); Renn-Stopp: o_renn2 / o_rennstopp / o_renn_losl (Abnahme 3) = Port je Bild (§4) |
+| Kein Raten | haelt | `+`-Zeilen des Gesamt-Diffs (3738) auf deferred/tunable/interim/for now/faithful/plausib/TODO/FIXME/hack/vermutlich/ungefaehr/approx/geschaetzt/Platzhalter/"sieht .. aus": **0 Treffer**; neue getenv nur RE15_FORCE_CUT (Ausnahme), RE15_KAMERAHALT_LOG (Log), RE15_FRAMEDUMP (Abzug) — kein Env-Schalter als Abschluss |
+| Fix erklaert den Befund | haelt | Punkt 1: Standbild VORHER 75 ms -> NACHHER 250-267 ms ≈ Original 284 ms am echten Fenster (§3); Mangel 1: Modulzustand ueberlebte die Uebernahme -> Marke +6/Dispatcher (§4, VORHER-Gegenprobe rot); Punkt 2/3 wie Abnahme 3 (BASIS reproduziert, NACHHER weg) |
+| Riegel nicht gruen gemacht | haelt (E-E5) | Gorilla-Sonde misst den Haenger je Seed, Schranke vorab begruendet, Gegenprobe Original-Regel 76 Seeds; dritte Ausnahme WESTBLOCK per E-E5 bestaetigt (§5) |
+
+### 8.3 Vertrag
+| Pruefung | Urteil | Beleg |
+|---|---|---|
+| Pfade | haelt | `git diff master...HEAD --name-only` (36): analysis/befunde_runde41 (AUFTRAG/VERTRAG vom master, Abnahmen, Dossier), engine/src (6 neue *_r41.c; Haken game_step_common, msg_common, player_common, re15_inv_screen, scd_room_setup, scd_vm), include (6 neue Header), platform/pc (bildhalt_r41_pc.c neu; Haken main.c, render_pc.c), tests (eigene Quellen, probes/r41_kleinkram_b.cmake, integration/test_r41_kleinkram_b.cmake, test_r36_zombieki_affen_block.c per E-E2/E-E4). Grep auf release/, platform/android/, shared_assets/PSX/, pri/, synchro/, CMakeLists.txt: **0 Treffer** |
+| Ressourcen | haelt | kein Bank-9-Bit (test_r36_kartenbits.c unberuehrt, Bit 120 frei), keine neue Nachricht (msg 12 = Original 11B1), kein Asset |
+| Gemeinsame Dateien | haelt | alle Haken je 1-5 Zeilen, markiert "Runde 41 Spur E" (Diff gelesen); NB4 neu: game_step_common.c 2 Zeilen (**angenommen per E-E5**), player_common.c +1, main.c +1/+2 (E-E1) |
+| Riegel je Punkt / messend | haelt | Punkt 1: unit kurbel_*, takt_* (7), integration kurbel/geh/renn/losl/kante/spawn_kante (geh/renn/losl pruefen die Standbild-Dauer); Punkt 2: unit karte_pin + integration karte; Punkt 3: unit 11b1_* + integration werkstatt_{szene,tuer}; Mangel 1: unit takt_uebernahme + integration treppe/losl — Gegenproben rot (§8.1) |
+| Nebenwirkungen beide Szenarien | haelt | Leon/Elza in Punkt 1-3 und im Renn-Stopp gemessen (§3-§7); NACHHER = VORHER zeilengleich in N1/N3/P1_frei/TA/TC/Elza/losl/renn_a2; Leon 11B0 = BASIS |
