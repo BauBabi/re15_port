@@ -1178,6 +1178,10 @@ static void fall_m(uint16_t r)
     int pp = prop_von_obj(RE15_R41C_PLAKAT_OBJ);
     PRUEFE(pp >= 0 && g_scd.props[pp].x == RE15_R41C_PLAKAT_X && g_scd.props[pp].y == RE15_R41C_PLAKAT_Y && g_scd.props[pp].z == RE15_R41C_PLAKAT_Z,
            "ROOM%04X: Aushang obj 7 an der Suedwand (-3650,-3900,7880)", r);
+    /* Kletter-Sonde (@0x8002d370 Objekt-Band == Spielerband) und Standtest (@0x80031cfc Band + 1 == Spielerband) duerfen die
+     * Blaetter am Landeplatz (Spielerband 1) nicht greifen: Band 2 (gemessen: mit Band 1 stieg Leon auf das Plakat). */
+    PRUEFE(pp >= 0 && g_scd.props[pp].band == RE15_R41C_BLATT_BAND && RE15_R41C_BLATT_BAND != 1 && RE15_R41C_BLATT_BAND + 1 != 1,
+           "ROOM%04X: Aushang Band %d (nicht kletterbar vom Landeplatz)", r, pp >= 0 ? (int)g_scd.props[pp].band : -1);
     L = druecken(-3650, 7280, 3072, 0, 20);
     PRUEFE(re15_ventilkette_r41_plakat_offen() == 1 && re15_game_flag_get(2, 7) == 1 && re15_game_flag_get(2, 2) == 1,
            "ROOM%04X: Plakat-Nahaufnahme offen, Pad-Sperre (2,7) + KI (2,2)", r);

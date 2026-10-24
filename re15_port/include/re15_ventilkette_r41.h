@@ -317,6 +317,10 @@
 #define RE15_R41C_PLAKAT_Y        (-3900)  /* Mitte 2100 ueber dem Landeplatz, ueber dem Handlauf der unteren Reling */
 #define RE15_R41C_PLAKAT_Z        7880     /* 20 vor der Wandflaeche z 7900                                       */
 #define RE15_R41C_PLAKAT_RECT     -4100, 7380, 900, 1000   /* Wand +- 500, buendig zwischen Dokument und Ventil 09 */
+/* Objekt-Band der zwei Blaetter (Obj_model_set pc[4] -> pool+0x82): 2 = weder das Spielerband am Landeplatz (1; Kletter-
+ * Sonde FUN_8002d2c0 @0x8002d370 obj[0x82] == Spielerband) noch eines darunter (0; Standtest @0x80031cfc obj[0x82] + 1 ==
+ * Spielerband). PORT-WAHL nach Messung (Lauf v2_leon F1858: mit Band 1 kletterte Leon auf das Plakat, ventilkette_r41.c). */
+#define RE15_R41C_BLATT_BAND      2
 
 /* ---- Bruecke (obj 0 @0x01B6C) ------------------------------------------------------------------------------- */
 #define RE15_R41C_BRUECKE_OBJ      0

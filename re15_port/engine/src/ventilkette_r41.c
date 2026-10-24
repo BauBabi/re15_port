@@ -68,6 +68,7 @@ static int      s_ventile_geloest = 0;          /* richtige Folge -> Ereignis 26
 static int      s_falsch_offen = 0;             /* falsche Folge -> Ereignis 27 freigegeben                   */
 static int      s_plakat_offen = 0;
 static int      s_plakat_takte = 0;
+static int      s_dok_vorher = -1;              /* Flanke von Bit 107 (Protokoll der Ablage)                    */
 
 static const int     k_ventil_nr[RE15_R41C_VENTILE_N]     = RE15_R41C_VENTIL_NUMMERN;
 static const int32_t k_ventil_x[RE15_R41C_VENTILE_N]      = RE15_R41C_VENTIL_X;
@@ -236,7 +237,11 @@ static int wasser_anlegen_bei(int k, int32_t x, int32_t y, int32_t z)
 int re15_ventilkette_r41_wasser_prop(int k) { return (k == 0 || k == 1) ? s_wasser_prop[k] : -1; }
 
 /* Dokument-Blatt (obj 6) / Plakat-Aushang (obj 7) als Prop - Felder wie ein Obj_model_set (LAB_80040914), Werte wie die
- * Dokumente der Runde 34 (re15_dokumente.h: Typ 0, Band 1, Flags 0x000A | 1 @0x80040998, Welt, Box 0). */
+ * Dokumente der Runde 34 (re15_dokumente.h: Typ 0, Flags 0x000A | 1 @0x80040998, Welt, Box 0) bis auf das BAND: der Spieler
+ * steht am Landeplatz in Band 1, und die Kletter-Sonde FUN_8002d2c0 nimmt jedes aktive Objekt mit Objekt-Band == Spieler-
+ * Band (@0x8002d370) - gemessen 2026-10-24 15:3x (Lauf v2_leon, F1858): mit Band 1 stieg Leon an der Suedwand auf das
+ * Plakat (mo 230/231, y -1800 -> -3600 -> -5400 auf den Ring). Band 2 liegt weder im Spielerband (Sonde) noch darunter
+ * (Standtest obj[0x82] + 1 == Spielerband @0x80031cfc) -> RE15_R41C_BLATT_BAND (PORT-WAHL, Kopf). */
 static int blatt_prop(int obj, int32_t x, int32_t y, int32_t z)
 {
     int p = prop_von_obj(obj);
@@ -247,7 +252,7 @@ static int blatt_prop(int obj, int32_t x, int32_t y, int32_t z)
         g_scd.props[p].active     = 1;
         g_scd.props[p].obj_id     = (uint8_t)obj;
         g_scd.props[p].obj_type   = 0;
-        g_scd.props[p].band       = 1;
+        g_scd.props[p].band       = RE15_R41C_BLATT_BAND;
         g_scd.props[p].parent_obj = -1;
         g_scd.props[p].flags      = 0x000Bu;
     }
@@ -449,6 +454,7 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
         re15_game_flag_set(5, RE15_R41C_FLAG_PLAKAT, 0);
     }
     s_v13_vorher = bit(RE15_R41C_BIT_VENTIL13);
+    s_dok_vorher = bit(RE15_R41C_BIT_DOKUMENT);
     s_letzter_raum = room_id;
 
     if (ist(room_id, RE15_R41C_RAUM_2000) || ist(room_id, RE15_R41C_RAUM_20B0)) install_2000(room_id);
@@ -735,6 +741,9 @@ void re15_ventilkette_r41_tick(void)
         }
         ventile_tick();                                  /* Nachbesserung 4: Drehungen vermerken / pruefen */
         plakat_tick();
+        { const int dok = bit(RE15_R41C_BIT_DOKUMENT);  /* Ablage durch den Dokument-Leser (menu_common.c, Bit (9,107)) */
+          if (s_dok_vorher == 0 && dok) LOG("[ventilkette41] Dokument 6 \"Technician's Note\" abgelegt: Bit (9,107) = 1\n");
+          s_dok_vorher = dok; }
         if (!s_flut && re15_game_flag_get(5, RE15_R41C_FLAG_FLUT)) { s_flut = 1; LOG("[ventilkette41] FLUT: Wasser steigt\n"); }
         if (s_flut) flut_tick();
         if (g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0) s_timer = 0;
