@@ -154,11 +154,13 @@ Idee: ein Rechteck mit Figurpunkten ohne Zelle davor nicht wegnehmen, sondern ih
 (verdeckt keinen von ihnen; Urteil depth < (1023*vz)>>16, @0x8002565c / @0x80066c70 / @0x80039650). 2966 Tabellenzeilen;
 statisch +472 219 Bildpunkte, an der exe HINTER 11 782 -> 19 385. Aber das Zelle-davor-Urteil ist ein GRUNDRISS-Urteil: in
 ROOM4080 Cut 2 (10475,-13710) blieb von Leon nur der Oberkoerper (Beine und Huefte mit der Wand uebermalt,
-`M_bilder/P1_exe_h4080_02.png`), in ROOM4040 Cut 5 (-16400,-7622) nur die rechte Haelfte (`P1_exe_h4040_05.png`) - beides
+`M_bilder/P1_verworfen_erreichbarkeit_h4080_02.png`), in ROOM4040 Cut 5 (-16400,-7622) nur die rechte Haelfte
+(`P1_verworfen_erreichbarkeit_h4040_05.png`) - beides
 mit "Zelle davor" im Grundriss (die Kameras von 4040 C5 / 4080 C2 / 30A0 C0 stehen IN grossen schraegen Zellen der Gaenge).
 Der Ausschluss nimmt solche Rechtecke (Hintergrund in der Generator-Region, R37 §3.2) ganz weg und bleibt damit die sichere
 Regel; der Nutzer hat diese Fehlerart schon einmal gemeldet ("Leon verschwindet fast vollstaendig", 6c29d834). Die
-P1_exe_*.png zeigen diesen verworfenen Zwischenstand (Spalte NACHHER), nicht den Endstand.
+Bilder `M_bilder/P1_verworfen_erreichbarkeit_*.png` (Nachbesserung 1: umbenannt, vorher P1_exe_*.png) zeigen diesen
+verworfenen Zwischenstand (Spalte NACHHER), nicht den Endstand.
 
 ## Punkt 2 — die 53 Nutzer-Masken 11A0 + STAGE2 (Sichtpruefung im Spiel)
 
@@ -227,20 +229,29 @@ aus 5924939d) in den Scratchpad gebaut: MSK/TIM/PBM/STAND bitgleich zu MASKS - d
 AUF dem Streifen (14000,-7200,-19300): 50 von 678 (Bein und Schatten weg) - exe des Basisstands b28c7236,
 `M_bilder/P2_ROOM20A0_C12_bodenstreifen.png` (VORHER | NACHHER | ohne Masken | rot). Der R40-Bau meldete denselben Ort als
 "HINTER-Rest" (4,14000,-19300) 0,53 / (4,13600,-19700) 0,92 - als Figur HINTER der Kante, obwohl dort Boden ist.
-**Beleg:** 12_02 = Streifen BODEN vor dem Fuss der Ziegelwand: Lage fein gemessen (94,126) Fehler 1,65 (zweitbeste 2,24 - die
-grobe R40-Messung hatte "237 gleich gute Lagen"); die Projektion der Vorderkante der Zelle x 8000..14700 z -21000..-20500
-(Band 4) auf y -7200 verlaeuft genau an der OBERKANTE des Streifens (Bild `M_bilder/P2_ROOM20A0_C12_wandkante.png`, kontrastverstaerkt
-`M_bilder/P2_ROOM20A0_C12_streifen_kontrast.png`: Bodenfliesen unter dem Streifen). Die Profil-Tiefe des Baus (119..151) setzt den Bodenkontakt an
-die UNTERKANTE des Streifens, ~1400 vor der Wand (Bildpunkt (110,148) -> Boden (13814,-19080)). Eine Maske auf der
-Bodenebene verdeckt nichts richtig - wer auf ihr steht, verliert die Fuesse (Regel ROOM10E0 C7, Nutzer-Marke F1585, Memory
-reai-v2-flache-maske-verdeckt-nichts).
+**Beleg (Nachbesserung 1 berichtigt, Abnahme 0 Mangel 2):** 12_02 ist der Streifen BODEN vor der Schwelle unter dem
+ROLLADEN - nicht vor einer "Ziegelwand" (so stand es hier bis Nachbesserung 1; falsch). Lage fein gemessen (94,126) Fehler 1,65
+(zweitbeste 2,24 - die grobe R40-Messung hatte "237 gleich gute Lagen"); die Projektion der Vorderkante der Zelle 32
+x 8000..14700 z -21000..-20500 (Band 4) auf y -7200 verlaeuft an der OBERKANTE des Streifens (Bild
+`M_bilder/P2_ROOM20A0_C12_wandkante.png`, kontrastverstaerkt `M_bilder/P2_ROOM20A0_C12_streifen_kontrast.png`: Bodenfliesen
+unter dem Streifen). Was hinter der Kante liegt, steht in Runde 38 (`analysis/befunde_runde38/W_rolltor20a0.md` §3/§6, dort
+gemessen, hier nicht wiederholt): Zelle 32 ist "die Wand unter dem Rolladen"; der Rolladen ist das 3D-Objekt **obj 1**
+(Obj_model_set @0x01932, Typ 0, Lage (7942,-7200,-20510), in der Welt x 7942..14422 z -20510..-20420) und faehrt per Schalter
+auf y -10800 hoch; dann setzt Sca_id_set @0x01E5E-6E Zelle 32 auf u0 = 0, und hinter der Schwelle liegt ein SCHACHT (die
+Kiste faellt dort auf Band 2, y -3600, und weiter auf Band 1, y -1800). Das Hintergrundbild zeigt ueber dem Streifen die
+gruen gekachelte Oeffnung, die der Rolladen (3D-Modell) verdeckt. Die Profil-Tiefe des Baus (119..151) setzte den
+Bodenkontakt an die UNTERKANTE des Streifens, ~1400 vor der Schwelle (Bildpunkt (110,148) -> Boden (13814,-19080)): wer auf
+dem Streifen stand, verlor die Fuesse. Die Abnahme rechnete nach, dass 12_02 mit der Tiefe der Schwellen-Zelle 32 baubar
+waere, ohne eine Figur auf dem Streifen zu uebermalen (Leon auf dem Streifen vz 9198..9895, Schwelle vz 9633..11527), und dann
+Inhalte des Schachts hinter der Kante verdecken wuerde. **Nutzer-Entscheid (AUFTRAG.md Nachtrag 11, 2026-10-24 11:4x):
+"Weglassen ist ok"** - 12_02 bleibt aus dem Bau, keine weitere Aenderung.
 **Umsetzung:** `analysis/esp_masken_2026-09-03/auswahl.json` ROOM20A0 Cut 12: 12_02 unter `"_r41_nicht_gebaut"` (mit
 Begruendung; die PNG unter pri/ bleibt unveraendert), 12_01 (Mauerecke, Tiefe aus der Zelle x14700..15800 z-21000..-20000)
 bleibt; `raum.py ROOM20A0 12 --p2 --stufe 16 --statistik max` -> MASKS/ROOM20A0.MSK + _PRI12.TIM/.PBM/.STAND (88 statt 101
 Rechtecke; Bau-Schiene VOR 354 verdeckt 0, teil 0). ROOM20A1 nutzt die Masken von 20A0 (Zwilling).
 **Messung nachher:** (14000,-18900) 0 von 698, (14000,-19300) 0 von 678; Riegel integration_r41_masken36_stage2 mit Leon
 und Elza (20A1) 0.
-**Frage an den Nutzer:** was sollte 12_02 verdecken? Als Bodenstreifen kann es keine Figur richtig verdecken.
+~~Frage an den Nutzer: was sollte 12_02 verdecken?~~ - beantwortet (Nachtrag 11): "Weglassen ist ok".
 
 ## Nachbesserung 1 (2026-10-24, nach Abnahme 0 = analysis/befunde_runde41/M_abnahme_0.md)
 
@@ -321,9 +332,10 @@ exe-Kopie je Lauf (`re15_pc_r41m2_<id>`).
   bisher weg - sonst verschwindet Leon wieder, wie in Ihrer Meldung vom 2026-09-03). Wo Ihnen dort eine Verdeckung fehlt,
   ist eine Freistellung wie in STAGE1/2 der sichere Weg (F9-Marke oder PNG unter pri/).
 - **Ihre 53 STAGE2-Masken** sind an der exe geprueft (je Kamerawinkel eine Stelle VOR und HINTER der Freistellung, Leon und
-  Elza-Stichproben, Bilder `M_bilder/P2_*.png`). Ein Fehler: **ROOM20A0 Kamera 12, Freistellung 12_02** ist ein Streifen
-  BODEN vor der Ziegelwand - wer darauf stand, verlor die Fuesse. 12_02 wird nicht mehr gebaut (Ihre PNG bleibt liegen),
-  12_01 (Mauerecke) bleibt. **Frage:** was sollte 12_02 verdecken?
+  Elza-Stichproben, Bilder `M_bilder/P2_*.png`). Ein Fehler: **ROOM20A0 Kamera 12, Freistellung 12_02** ist der Streifen
+  BODEN vor der Schwelle unter dem Rolladen (dahinter der Schacht, in den die Kiste faellt) - wer darauf stand, verlor die
+  Fuesse. 12_02 wird nicht gebaut (Ihre PNG bleibt liegen), 12_01 (Mauerecke) bleibt - Ihr Entscheid "Weglassen ist ok"
+  (Nachtrag 11).
 - **ROOM2020 Kamera 3 an der Kurbel:** dass die Reling ueber Leons Beinen liegt, ist richtig - die Kamera haengt ueber dem
   Becken, Leon steht an der Kurbel HINTER der Reling (Kollisionszelle der Reling liegt auf der Sichtlinie). Das Original
   hat fuer diesen Winkel gar keine Masken und zeichnet ihn deshalb obenauf. Keine Aenderung.

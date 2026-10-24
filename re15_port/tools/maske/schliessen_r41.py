@@ -28,9 +28,11 @@ SCHLIESSEN = die verifizierte Region des Generators VOLLSTAENDIG zeichnen:
   5. Echte Zwischenraeume bleiben offen: ein Punkt, der nicht zur verifizierten Region gehoert (Kuenstler-Atlas
      Index 0 = Gelaender-/Gitterluecke, oder Farbe passt nicht zur Verschiebung), wird nie gedeckt.
 Die vorhandenen Rechtecke behalten Stelle, Gruppe und Bytes (Probe 3: alter Teil der Sektion bytegleich); ihre Texel
-liegen im eigenen Atlas an derselben Stelle wie im BSS-Atlas (Inhalt = Hintergrund an der Zielstelle). Tiefe aus der
-Erreichbarkeit fuer Rechtecke, die eine Figur VOR dem Objekt verdecken wuerden: Laufzeit-Tabelle (engine/src/
-masken36_r41.c), erzeugt von test_r37_masken36 "erzeuge_tiefe" - nicht in dieser Datei.
+liegen im eigenen Atlas an derselben Stelle wie im BSS-Atlas (Inhalt = Hintergrund an der Zielstelle).
+Danach (nicht in dieser Datei): der Ausschluss der Spur P (R37) gilt fuer alte UND Saum-Rechtecke - Tabelle
+engine/src/gen/masken36_ausschluss_r37.inc, erzeugt von "test_r37_masken36 erzeuge", gelesen von engine/src/masken36_r37.c.
+Ausgeschlossene Rechtecke mit einer Kollisionszelle bekommen deren Tiefe: tiefe_zelle_r41.py (Nachbesserung 1, Mangel 1).
+(Ein Zwischenstand "Tiefe aus der Erreichbarkeit" wurde gebaut, gemessen und verworfen - Dossier 1.5.)
 
 Aufruf:
   python re15_port/tools/maske/schliessen_r41.py --ppm <probe_bg_dump-Ordner> --out <Ordner> [--cache <Ordner>]

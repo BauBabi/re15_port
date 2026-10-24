@@ -42,7 +42,10 @@ def sld_decompress(src, sp, size):
                 # engine/src/sld_common.c re15_sld_decode. Vorher wurde der schon negative Python-Wert
                 # NOCHMAL um 0x10000 verschoben (bit 15 einer negativen Zahl ist gesetzt): jeder lange
                 # Rueckverweis las 65536 Byte zu weit vorn (negativer Index = Pufferende = Nullen) -
-                # 116 von 116 Stage-3..6-Atlanten falsch, Palettenindex 0 als "Loch" in pri/STAGE3-6/*_port.png.
+                # Palettenindex 0 als "Loch" in pri/STAGE3-6/*_port.png. Gemessen gegen den Engine-Entpacker
+                # (Dossier analysis/befunde_runde41/M_masken36.md 1.1 und Nachbesserung 1): vorher 0 von 359
+                # Vordergrund-Atlanten aller Stages gleich (Stage 3..6: 0 von 222, davon die 15 Raeume mit
+                # Generator-Masken: 0 von 116), nachher 359 von 359 bytegleich.
                 off = ((s << 2) | (b3 >> 6)) & 0xFFFF
                 off = off - 0x10000 if off & 0x8000 else off
             fm >>= 1
