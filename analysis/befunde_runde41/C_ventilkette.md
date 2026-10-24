@@ -107,6 +107,10 @@ Lauf mit dem Haken der Spur A (M2, _kette), Blendenfarbe (M4, integration C), Ba
 Ring-Zugaenge des gefluteten 2030 gesperrt (M5 / C-E2, unit I, _b L/L2/M/M2). **Nachbesserung 2 (§0c):** Punkt 6 nach
 der Flut — Tuergraph + Weg zu Fuss: kein Weg zum Rechner (ORIGINAL-Sperre ROOM11A0 Slot 4, (3,206)); OFFEN, Frage §7 (j);
 Riegel unit J, integration_r41_ventilkette_weg.
+**Nachbesserung 3 (§0d, Nachtraege 6-10):** Punkt 6 durch Nachtrag 7 ersetzt — 2030 laeuft mit dem Strom (3,126) aus dem
+Generator 2060 bis auf Relinghoehe (y -3600, nur Schachtoeffnung) leer, Ring-Tueren dann offen, Treppe hinab gesperrt (Text 48),
+Rechner 2080 nur Original; Ventilraetsel am Sued-Landeplatz erst mit Bruecke (Bit 102) und Sicherung (3,108), sonst Text 49;
+der ganze Weg nach der Flut zu Fuss mit Leon und Elza. Riegel unit K/L (+E/G/I neu), integration _weg/_weg_elza/_sperre.
 
 ## 0b. Nachbesserung 1 (Abnahme 0 vom 2026-10-24, `C_abnahme_0.md` §4) — je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher
 
