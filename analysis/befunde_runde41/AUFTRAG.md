@@ -715,3 +715,20 @@ Folgen (Orchestrator):
   110-113). Damit ist die offene Frage "welche Tuer oeffnet der 2090-Schluessel" beantwortet. Weg danach: 2090 -> Tor -> 20A0
   -> (Original sub10 (3,206)) -> 11A0 -> STAGE3.
 - Spur G: die Kanister-Szene setzt voraus, dass der Spieler ueber die Leiter in 2090 ist (nicht ueber 20A0).
+
+## 2026-10-24 23:10 — Orchestrator-Entscheid J-E1 (Abnahme J 0: alle Nutzer-Punkte erfuellt, nur Vertrag V1 + Doku M2)
+
+- **V1 angenommen** (wie B5/I-E1/H-E1): Haken der Spur J in scd_vm.c (register_opcodes, s_op_table[0x48]/[0x49], 3 Zeilen)
+  und platform/pc/main.c (pc_prop_world, 4 Zeilen), markiert "Runde 41 Spur J". Bei der Integration in register_opcodes mit
+  C/E (op_message_on) und den uebrigen Haken beidseitig mergen.
+- M2 (Dossier/Kopf von re15_superobj_r41.h zu ROOM4031: Gegner 0 beim ersten Besuch ist John, Typ 0x49) berichtigt die
+  Nachbesserung J 1; sonst ist nichts zu tun.
+
+## 2026-10-25 00:01 — Nachtrag 22 (Nutzer-Entscheide per Auswahl zu den Fragen der Spur G)
+
+1. "Wann ist der Alligator 'oft genug angeschossen'?" — **"RE2-Schwelle (300 Schaden)"** (wie gebaut: RE2-Schwaeche
+   @0x80101ebc-dc; Pistole 43 / Schrotflinte 11 / Magnum 7 / Granatwerfer 5 Treffer).
+2. "Soll der Alligator nach der Kanister-Szene sofort wieder auftauchen?" — **"Erst beim Annaehern"** (wie gebaut).
+3. "Soll beim Hereinkommen von Marvin/John ebenfalls der Knall kommen?" — **"Stahltuer-Ton lassen"** (DOOR06 wie gebaut).
+Damit sind alle Entscheidungsfragen der Spur G beantwortet. Sprachaufnahmen fuer den Nutzer: synchro/STAGE2/room2080/main42.wav
+("Hey, Leon, try with this!", Marvin) und synchro/STAGE2/room2081/main42.wav ("Hey, Elza, try with this!", John).
