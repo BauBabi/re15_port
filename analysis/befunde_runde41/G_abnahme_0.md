@@ -7,12 +7,12 @@ Pruefer: Abnahme-Agent (glaubt nichts Ungemessenes). Bericht wird FORTLAUFEND ge
 - [x] Lektuere AUFTRAG/VERTRAG/Dossier/Diff (G-Diff gegen die Basis 9f10bdb0: 32 Dateien, +3054/-1)
 - [x] Bau (local_build.sh configure + build: LOCAL-BUILD-OK, ninja 'no work to do'; exe 23:17:18 juenger als jede Quelle, Baum sauber = HEAD 489c0756)
 - [x] gezielte Tests 34/34 (Regex des Bau-Agenten) + integration_r41_re2gator 1/1 (272 s) - alle gruen
-- [ ] P1 gemessen
-- [ ] P2 gemessen
-- [ ] P3 gemessen
-- [ ] RE-Gate (3 Adressen selbst disassembliert)
-- [ ] Vertrag
-- [ ] Urteil
+- [x] P1 gemessen (Leon + Elza, echter Leiterweg 2090 -> 2080/2091 -> 2081, Ton im Mitschnitt, Nachtrag 20 mit 66 s unten)
+- [x] P2 gemessen (Cut 5 gegen Gas_Can.bmp)
+- [x] P3 gemessen (Leon + Elza; Aufnahme/Explosion an G's Landepunkt; natuerlicher Ablauf ohne GB_TEST)
+- [x] RE-Gate (22 Stellen selbst gelesen/disassembliert)
+- [x] Vertrag
+- [x] Urteil: NICHT BESTANDEN (P3 teilweise)
 
 
 Bildbelege und Laufordner liegen NICHT im Baum (Auftrag: nur diese Datei committen), sondern unter
@@ -39,6 +39,8 @@ Bildbelege und Laufordner liegen NICHT im Baum (Auftrag: nur diese Datei committ
 | RE2 ROOM1060 Knall @0x0F48, EDT @0x3F80, VAG 5 @0x066B8 | `36 02 0a 01 00 00 dc 88 f8 f8 3d 05`; `00 00 85 20`; sha1 192e09df824ba47854001928662ec82e9fd33522; Kopf +8/+C/+10 = 0x3F58/0x4018/0x4C38 | stimmt; gen/knall_bank.inc ist dieselbe Datei wie irons_tod_1150.c:1357 / elzazombies_r39.c:1123 (Satz 0 = KNALL_SE_TUER) |
 | RE2 ROOM7020 sub12/sub13/sub18 (re2_scd_walk.py, SCD-main-relativ) | 0726 `2907`, 0750 `3f0a1240`, 0754 Sleep 1, 0758 Plc_dest `40001400..`, 0764 Message_on 5, 076A Sleep 30, 0782 Plc_motion, 0786 Sleep 20, 078E Super_reset, 079C-07A4 Do/Ck(5,0e), 07A8 Sleep 15, 07D4 `290b`, 0812 Plc_dest; sub13 088E-08A2 Speed_set (2,10)(1,20)(0,25)(8,0)(7,20)(6,5), 08B0 Member_cmp `3e000c03e0fc` (y < -800), 08BA Se_on 0x0e; sub18 0A2C-0A38 | stimmt (Wurf-Clip: RE2 Ada `3f 0a 12 40` = Clip 0x12 ihrer Bank; Port nimmt Marvins Eigen c6 - PORT-WAHL aus dem Clip-Zensus 1.8, als solche nicht im Header benannt, s. Maengel) |
 | ROOM2080 Treppe @0x0BE2, Absatzwand SCA @0x05C4, Tueren @0x0BA2/@0x0BC2, Wasser @0x0C2E/@0x0C5E | `2c 02 0c 31 80 00 54 a7 46 ba 9c 18 fc 08 00 00 03 00` (x -22700..-16400, side 0, Sprung 3); Zelle x -17650..-16650 typ 1 floor 0x88; Tuer 2030 Band 5, Tuer 2090 Band 8; y -10800 / -3420 | stimmt |
+| RE2 ROOM40A0 Kanister-Modell @0x0452, Aufschlag @0x0686 (SCD-main) | `2d 01 .. b8ac f8f8 ccdb` + Drehung 0 (Modell 1 stehend); `36 02 0b 01 04 01 ..` | stimmt; `kanister2080_se_cut.py` (ohne --install) erzeugt KANISTER2080.VBS md5 848c40f6c077d937fb025df9ae1bc62b und r41_kanister2080_bank.inc bytegleich zum Commit (Ausgabe danach geloescht) |
+| ROOM2030 Tuer @0x1AEA (+22/+23), ROOM2090 Tuer @0x0996 | `.. 01 08 ..` -> STAGE2/2080; 2090 Slot 0 -> 2080 Cut 4 Etage 8 | stimmt |
 | ROOM1021 sub02 @0x020C2-F2, ROOM2020 @0x008F6/@0x0090A, ROOM2000 @0x017B4, ROOM2001 @0x0179E | Bytes wie zitiert (`3f 02 06 00`, `09 0a 6e 00`, `3f 02 07 00`, `09 0a 1e 00`, `43 00 80 00`, `09 0a 14 00`; `44 01 16 02 01 00 01 bd`; `44 01 40 40 ..`; `44 00 49 40 ..`) | stimmt |
 - Zusatz (der Bau-Agent hat ihn NICHT gefahren, G greift aber per Haken in ROOM2090 ein): `ctest -R "^integration_r41_re2gator$"
   --timeout 900` -> `1/1 Test #1155: integration_r41_re2gator ... Passed 272.22 sec`.
@@ -143,3 +145,98 @@ RE15_EXIT_AT=1500#2090` (kein GB_TEST: der Gator taucht wie im Spiel per Naehe a
   Bild <SP>/belege/n3_rueckkehr_bogen.png (2090 nach der Szene: Kanister im Wasser, kein Alligator, 50 s).
 - Der Messlauf des Bau-Agenten (p3h) lief mit RE15_GB_TEST=5 - dieser Testhaken laesst den Gator aufgetaucht starten und VERDECKT genau
   dieses Verhalten.
+
+## 4. Gates
+
+### 4.1 RE-Gate
+- Stichproben (Abschnitt 2): 9 RE1.5-EXE-Adressen, 2 RE2-EXE/EM23-Adressen, 4 RE2-RDT-Stellen, 7 RE1.5-RDT-Stellen selbst gelesen -
+  alle zitierten Stellen enthalten das Behauptete (richtige Binaerdatei: @0x800141f0 ist RE2-Code, in RE1.5 steht dort anderes).
+- Suche im Code-Diff (9f10bdb0..HEAD -- re15_port) nach deferred/tunable/interim/for now/faithful/plausib/TODO/FIXME/geschaetzt: 0 Treffer.
+  7 x PORT-WAHL/NUTZER-VORGABE gekennzeichnet.
+- Luecken (klein, s. Maengel M4): Dauern ohne eigenen Beleg und ohne PORT-WAHL-Kennzeichnung: `OP_SLEEP(10)` zwischen zwei Zielen
+  (Kommentar zitiert nur die Drehrate 0xC8/Bild @0x80033f90, nicht die 10), `OP_SLEEP(30)` nach dem Tuer-Ton (Kommentar "RE2 ROOM7020
+  sub12 Sleep 30 @0x076A (Form)" = Wert aus anderem Zusammenhang: dort nach Message_on), `OP_SLEEP(30)` im Rueckkehr-Programm (Kommentar
+  "Wsleep @0x081A" - RE2 wartet dort per Wsleep, keine 30 Bilder). Der RE2-Wurf-Clip (Ada `3f 0a 12 40` = Clip 0x12 ihrer Bank @0x0750)
+  ist durch Marvins Eigen c6 ersetzt; im Header steht "Plc_motion @0x0750" ohne PORT-WAHL-Vermerk (der Clip-Zensus 1.8 begruendet c6).
+- Erklaert der Fix den Befund? P1/N17: der gemischte Ton enthaelt den RE2-ROOM1060-Knall im ersten 2080-Bild (r 0,891), vorher
+  (Dossier 2.1) DOOR06 - ja. N20: Band-8-Huelle + Gegner-Bandvergleich @0x8003b228-3c erklaeren, warum kein Zombie auf die Treppe kommt;
+  gemessen 66 s - ja.
+- PSX-Pfad: `gcc -std=gnu11 -fsyntax-only -Wall -Wextra -Wno-comment -I include -I engine/src engine/src/kanister2080_r41.c` rc 0 ohne
+  Warnung, mit -DRE15_PLATFORM_PC ebenso.
+
+### 4.2 Vertrag
+- Bank-9-Bits 114/115/116 (Zuteilung G 114-119), je eine k_port[]-Zeile in test_r36_kartenbits.c, unit_r36_kartenbits gruen.
+- Zone-7-Tot-Bits 236..243 (Bank re15_em_status_zone, nicht Teil der VERTRAG-Zuteilung): eigener Zensus (Sce_em_set pc[7] + Ck/Set
+  Bank 7 in allen RDTs STAGE1-3, scd_walk_lib): 236..245 nirgends belegt, 230-235/246-252 belegt -> frei. Port: kein anderes Modul nutzt sie.
+- Nachrichten-Id 42 in 2080/2081 (Zuteilung 42-47).
+- Pfade (git diff 9f10bdb0 --name-only): keine release/, platform/android/, shared_assets/PSX/, pri/, synchro/, keine Test-CMakeLists;
+  neues RE2-Asset shared_assets/RE2/KANISTER2080.VBS (erlaubt, reproduzierbar). Gemeinsame Dateien: scd_room_setup.c 1 Zeile, scd_vm.c
+  1 Zeile, platform/pc/main.c 2 Zeilen, je "Runde 41 Spur G".
+  (Die Zeilen synchro/STAGE2/room2030/main46.wav in `git diff master --stat` kommen von master nach dem Abzweig, nicht von G.)
+- Tests je Punkt: unit lage (P2), spawn/ebene (P1/N20), szene/start/bahn/texte (P3), integration ankunft/ebene/kanister/szene_leon/szene_elza;
+  parallel-fest (eigener Laufordner + exe-Kopie re15_pc_r41g_<id>), Linux-fest (m gelinkt, cmake_minimum_required, keine .exe auf Linux).
+  LUECKE: kein Riegel prueft nach der echten Szene Aufnahme + Explosion, und alle Szenen-Laeufe fahren mit RE15_GB_TEST=5 (s. M1/M3).
+- Nebenwirkungen: integration_r41_re2gator auf diesem Zweig gruen; Elza-Varianten (2081/2091, John) gemessen; 2080 ohne Bit 110:
+  keine Zombies, Kanister steht (Riegel kanister); nach Bit 115 keine Zombies/kein Kanister (Code).
+
+## 5. Urteile (gegen den Wortlaut, AUFTRAG.md; Aufteilung FG-E1)
+
+| Punkt | Urteil | Beleg |
+|---|---|---|
+| P1 Knall (N17), dann 8 Zombies oben im Hauptbereich | **erfuellt** | 3.1/3.2: echter Leiterweg, `Knall: Knall-Bank ... Satz 0` vor 8 x Sce_em_set y -14400, Mitschnitt RE2_1060 r 0,891 im ersten 2080/2081-Bild, Bild Cut 4 |
+| N20 Zombies oberhalb der Treppe | **erfuellt** | 3.3: 66 s Leon unten, 0 von 16760 Zombie-Saetzen westlich x -16650, 70/70 Ebene-Zeilen; Mechanismus @0x8003b228-3c / SCA @0x05C4 / Treppe @0x0BE2 selbst gelesen |
+| P2 Gaskanister an der Reling (Gas_Can.bmp) | **erfuellt** | 3.4: Cut 5 = Gas_Can.bmp, Kanister (RE2 ROOM40A0 Modell 1, @0x0452 stehend) steht an der Marke |
+| P3 Ausloeser, Tuer-Ton, Marvin/John, 8 Kopfschuesse, Kanister in beide Haende, Zeile, Wurf, liegt im Wasser | erfuellt (Teilschritte) | 3.5/3.6: Leon + Elza, Logs + Bildboegen |
+| P3 "Wenn der Aligator dran vorbei kommt, soll er ihn aufnehmen ... Sterbe-Animation" | **teilweise** | 3.7: Mechanik (Spur B) greift an G's Landepunkt (Aufnahme F1104, R1-Tod); 3.8: im natuerlichen Ablauf ist der Alligator nach der Szene ein frischer, untergetauchter Aktor am Lauerplatz (1500 Bilder `ph=1`), der Kampf beginnt mit erneutem Intro von vorn (M1); kein Riegel fuer Aufnahme/Tod nach der echten Szene (M3) |
+| N5 Kamera des Wurfs "GENAUSO" wie Adas Raketenwerfer-Wurf | **teilweise** | Struktur RE2 (Cut 7 Werfer + Zeile, Sleep 30/20, Loslassen, Aufschlag, Sleep 15, Schnitt auf den Fangenden) ja; Blick von unten/nah (RE2 Cut 7: 43,6 Grad, 8908) nein - 2080 Cut 7 Totale (6,4 Grad ueber, 17168). Eigene Projektion: keine 2080/2090-Kamera zeigt den Werfer von unten (2090 Cut 12: Balkonende 19-24 px ueber dem Bildrand) - offene Entscheidung (M2) |
+| N21 Zugang ueber die Leiter | **erfuellt** (keine Aenderung noetig) | Leiterweg 2090 Slot 0 @0x0996 -> 2080 Cut 4 in 3.1 gefahren; die Szene merkt sich Lage/Cut beim Ausloesen |
+| RE-Gate | haelt (mit kleinen Luecken M4) | Abschnitt 2 / 4.1 |
+| Vertrag | haelt | Abschnitt 4.2 |
+| Tests (34/34 + integration_r41_re2gator) | gruen, aber Luecke M3 | Abschnitt 1 |
+
+**bestanden = false** (P3 und N5 nur teilweise).
+
+## 6. Maengel (nummeriert, nachpruefbar)
+
+**M1 (P3, schwer) - Nach der Szene beginnt der Alligator-Kampf von vorn.** Die Szene wechselt 2090 -> 2080 -> 2090; beim Rueckweg wird
+ROOM2090 neu aufgebaut und der Alligator neu gesetzt: HP 25300, untergetaucht am Lauerplatz (-7200,-9200) (B9), Auftauchen erst bei
+Abstand < 9000 / Treffer, dann spielt der Intro-Durchbruch ERNEUT (enemy_ai_boss_gator.c GBP_LURK -> re15_gr2_intro_start; kein Merkbit
+in gator_re2_r41.c / enemy_ai_boss_gator.c). Gemessen Lauf n3_natur (ohne RE15_GB_TEST): nach `F671 ROOM2090 RUECKKEHR` 1500 Bilder nur
+`TICK ph=1 pos=(-7200,-9200)`; Bild <SP>/belege/n3_rueckkehr_bogen.png (Becken leer bis auf den Kanister). RE2 (das Vorbild ROOM7020)
+setzt den Boss im selben Raum neu (Pos_set @0x07C4) und laesst ihn weiterkaempfen. Der Messlauf des Bau-Agenten (p3h) und alle
+Szenen-Laeufe des Riegels fahren mit RE15_GB_TEST=5, der genau dieses Verhalten verdeckt (Gator startet aufgetaucht); die Dossier-Aussage
+"Gemessen (Lauf p3h mit RE15_GB_TEST=5): Gator wieder aufgetaucht ..., verfolgt Leon" ist damit kein Beleg fuer das Spiel.
+Forderung: Kampfzustand ueber die Szene erhalten (kein erneutes Untertauchen/Intro, Gator nach der Rueckkehr in der Verfolgung, wie RE2)
+oder Orchestrator-/Nutzer-Entscheid (Dossier-Frage 2); Riegel OHNE RE15_GB_TEST.
+
+**M2 (N5) - Wurf-Kamera nicht "GENAUSO".** RE2 ROOM7020 Cut 7 zeigt Ada von unten (43,6 Grad unter dem Kopf, Abstand 8908); der Port
+zeigt Marvin/John in 2080 Cut 7 als kleine Figur in der Totale (6,4 Grad ueber dem Kopf, 17168; Bild <SP>/belege/p3a_bogen4.png). Eine
+Kamera von unten mit dem Werfer im Bild gibt es nicht (selbst projiziert: 2090 Cut 12 sieht die Wand unter dem Balkon, Balkonende
+(122.8,-24.3) knapp ueber dem Bild; die Fallbahn erreicht 2090-Kameras erst ab Bild 30 von 36). Der Bau-Agent hat das benannt (OFFEN 2),
+aber ohne Entscheid "fertig" gemeldet. Forderung: Orchestrator-/Nutzer-Entscheid (analog B8) - bis dahin teilweise.
+
+**M3 (P3, Riegel-Luecke) - Aufnahme und Kiefer-Tod nach der ECHTEN Szene sind nicht gesichert.** integration_r41_kanister2080 endet mit
+`Kanister im Becken`; Aufnahme/Explosion werden nur von Spur B's Riegel mit dessen Testhaken RE15_GATOR_KANISTER an einer anderen Stelle
+(-1500,-23400) geprueft. An G's Landepunkt nimmt der Gator den Kanister nur, wenn er gerade darauf zu schwimmt (Laeufe auf_A/auf_B je 1500
+Bilder ohne Aufnahme, auf_C mit Aufnahme F1104). Forderung: ein Riegel Szene -> Kanister im Becken -> Aufnahme (`KANISTER angehaengt`)
+-> Schuss -> `R1 start`/`R1 ende`, im natuerlichen Ablauf (nach M1).
+
+**M4 (RE-Gate, klein) - Dauern ohne eigenen Beleg und ohne PORT-WAHL-Vermerk** in kanister2080_r41.c: `OP_SLEEP(10)` zwischen zwei Zielen
+(baue_szene; zitiert nur 0xC8/Bild @0x80033f90), `OP_SLEEP(30)` nach dem Tuer-Ton (Wert von RE2 @0x076A, dort nach Message_on), `OP_SLEEP(30)`
+in baue_rueck (RE2 hat dort Wsleep @0x081A, keine 30). Ausserdem ist Adas Wurf-Clip (`3f 0a 12 40` @0x0750) durch Marvins Eigen c6
+ersetzt, ohne PORT-WAHL-Vermerk im Header. Forderung: herleiten oder als PORT-WAHL mit Begruendung kennzeichnen.
+
+**M5 (Doku, klein)** - test_r36_kartenbits.c k_port[] Bit 114: "2080: Tuer-Ton beim ersten Betreten nach Bit 110" (ist seit Nachtrag 17
+der Knall); main.c-Haken "Tuer-Ton DOOR06, Aufschlag, NPC-Schuss" ohne den Knall (vom Bau-Agenten selbst benannt).
+
+## 7. Hinweise (kein Mangel dieser Spur)
+- H1 Integration mit F: der Knall faellt in F's 2090-Einstellung UND beim ersten Betreten von 2080 (FG-E1). Ob zweimal gewollt ist, bei der
+  Integration im Spiel pruefen.
+- H2 Zone-7-Tot-Bits 236..243 stehen nicht im VERTRAG (der teilt nur Bank 9 zu); F darf sie fuer seine 2080-Szenenfiguren nicht verwenden.
+- H3 In diesem Zweig sind die Spinnen (Typ 0x25) noch in 2090 (F entfernt sie): in den natuerlichen Laeufen n1/n2 traf die Zielhilfe die
+  Spinnen statt des Alligators.
+- H4 Schwelle 300 Schaden = 43 Pistolentreffer (Dossier-Frage 1) - durch "oft genug" gedeckt, Nutzer fragen.
+- H5 Der Kanister ist RE2-gross (2784): an der Reling ragt er weit ueber das Gelaender, in den Haenden 1392 zu jeder Seite (kein Massstab
+  erfunden, Dossier OFFEN 5). Im 2090-Becken zeichnet Spur B ihn sehr dunkel.
+- H6 Die Messkopien re15_pc_g41abn*.exe wurden nach der Abnahme geloescht; ein Lauf des Kanister-Schnittwerkzeugs (ohne --install) legte
+  build/r41_kanister2080/ im Baum an - bytegleich geprueft und wieder entfernt.
