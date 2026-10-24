@@ -369,7 +369,7 @@ die Standlinien-"VOR"-Stellen sind HINTER-Stellen.
 **Nebenbefund dabei (Punkt 2, behoben):** an diesen HINTER-Stellen verdeckte der Handlauf Leon NICHT (exe, Leon-Dreiecke):
 2040 C7 (-17500,-5600): 355 Leon-Punkte unter der Maskenflaeche, 146 verdeckt (Pfosten, Tiefe 43), **209 nicht** (Handlauf
 Tiefe 391/392, Leon z 2713..3169 = Bucket 42..49); 2030 C7 (4500,9150): 297 unter der Maske, 28 verdeckt, **269 nicht** (Tiefe
-186..256 an der Ecke, Leon Bucket 179..193). Ursache: Profil-Tiefe (geometrie.tiefe_profil) - der Handlauf hat im Bild keinen
+186..256 an der Ecke, Leon Bucket 179..193; sichtbares Mass - Leon vorderstes Dreieck - 20 von 297). Ursache: Profil-Tiefe (geometrie.tiefe_profil) - der Handlauf hat im Bild keinen
 Bodenkontakt, seine Spalten erbten den Bodenpunkt weit hinten (2040 C7 "Profil-Tiefe 43..631"; 2030 C7 07_01 "83..202" fuer
 Nord- UND Ostgelaender zusammen). **Aenderung** (auswahl.json, `"r41"`-Vermerk; Nutzer-PNG unveraendert): 2040 C7 `"zelle"`
 [-18250,-6500,22400,450]; 2030 C7 07_01 an der Ecke (Bildspalte 173..186, Projektion der Zellenecke) bei Spalte 179 in zwei
@@ -377,6 +377,12 @@ Objekte geteilt (`"minus"`), Nordgelaender `"zelle"` [-6350,8150,12250,500], Ost
 --p2 --stufe 16 --statistik max --dump build/p2/dump_klemmpfad_r40.txt` -> 2040 C7 33 Rechtecke Tiefe 35..50 (2898 von 2981
 Punkten direkt getroffen), 2030 C7 105 Rechtecke Tiefe 78..258 (Nord 130..183, Ost 77..181, 07_02 unveraendert 246..258);
 Bau-Schiene VOR verdeckt 0 / teil 0. Bilder vorher `M_bilder/NB1_M4_ROOM2030_C07_hinter.png`, `NB1_M4_ROOM2040_C07_hinter.png`.
+**Messung nachher** (exe, dieselben Stellen, Leon = vorderstes Dreieck, RE15_TRILOG): 2040 C7 (-17500,-5600) **355 von 355**
+Leon-Punkten unter der Maske verdeckt (vorher 146), Elza (2041) 188 von 188; 2030 C7 (4500,9150) 83 von 297 (vorher 20) - die
+214 offenen liegen alle unter 07_02 (Pult an der Nordwand, Zelle x 5400..7750 z 12800..13300, Tiefe 246..256, HINTER Leon) = richtig,
+d.h. alle Gelaenderpunkte vor Leon verdeckt; Elza (2031) 57 von 200 (Rest ebenso unter 07_02). Bilder
+`M_bilder/NB1_M4_ROOM2040_C07_nachher.png`, `NB1_M4_ROOM2041_C07_nachher.png`, `NB1_M4_ROOM2030_C07_nachher.png`.
+Riegel-Szenen `m2030_07` / `m2040_07` (test_r41_masken36_szenen.cmake, Art M: H > 0).
 
 ### NB1 Mangel 2 - ROOM20A0 C12, 12_02 (erledigt durch Nutzer-Entscheid)
 
