@@ -424,6 +424,16 @@ unit_r39_optik_* 5, integration_r39_optik_* 2, unit_r34n_e_dokumente, integratio
 Linux: neue Tests ohne .exe-/Backslash-Pfade, `m` gelinkt, cmake_minimum_required in jedem -P-Skript, eigene Laufordner und
 exe-Kopie je Lauf (`re15_pc_r41m2_<id>`).
 
+### Tests Nachbesserung 1 (gezielt, KEINE volle Suite)
+
+Neu/geaendert (nur tests/unit/probes/r41_masken36.cmake + eigene Dateien):
+| Test | misst | Ergebnis |
+|---|---|---|
+| `integration_r41_masken36_zelle` (neu) | Mangel 1, echte exe: Objekte mit Zellen-Tiefe - HINTER-Stellen verdeckt (H >= Haelfte bzw. H > 0), DAVOR-Stellen 0 uebermalt; Szenen `test_r41_masken36_zelle_szenen.cmake`, Laeufer = stage2-Skript (SZENEN/PRAEFIX r41m3, Stages aus den Szenen) | s. Lauf unten |
+| `integration_r41_masken36_stage2` (erweitert) | + Mangel 3: v2030_15/v2031_15 Leon/Elza VOR der Reling mit weggestellter Spinne (G=1,...) H == 0, Gegenprobe m2030_15 (Spinne hinter der Reling verdeckt, H > 0); + Mangel 4: m2030_07/m2040_07 Leon HINTER dem Gelaender verdeckt (H > 0) | s. Lauf unten |
+| `unit_r41_masken36_loecher` (Messwert) | Kerben NACHHER 11 494 von 62 432 = 18,4 % (vor NB1 25,1 %), Schranke <= 30 % unveraendert | PASS |
+| `unit_r37_masken36_ausschluss` (unveraendert) | rechnet die Tabelle aus den Dateien nach (== gen/masken36_ausschluss_r37.inc nach Schritt 2), Schranke NB2 M2 0/0 | PASS |
+
 ## OFFEN
 
 1. **Teilweise ausgeschlossene Objekte (Punkt 1):** der Ausschluss der Spur P (R37) nimmt weiter ganze Rechtecke weg, die an
