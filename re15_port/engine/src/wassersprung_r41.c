@@ -19,6 +19,8 @@
 #include "re15_esp.h"            /* re15_esp_fx_spawn_rows = FUN_80019700                                   */
 #include "re15_rdt.h"            /* re15_rdt_floor_sound = FUN_800437d4                                     */
 #include "re15_skeleton.h"       /* re15_skel_compute_pose (PORT-WAHL-Ableitung)                            */
+#include "re15_scd.h"            /* g_scd.work_vars[0x0A] = DAT_800b0fe4 (gezeigter Cut, Nachbesserung 2)        */
+#include "re15_math.h"           /* re15_squareroot0 = SquareRoot0 (Abstand der Messzeile, Nachbesserung 2)      */
 
 static re15_wassersprung_r41_mess_t s_mess;
 
@@ -67,6 +69,7 @@ void re15_wassersprung_r41_reset(void)
     memset(s_gez, 0, sizeof s_gez);
     s_gen = 0;
     s_mess.letzter_ton = -1;
+    s_mess.letzter_ton_orig = -1; s_mess.letzte_lage[0] = s_mess.letzte_lage[1] = -1; s_mess.letzter_abstand = -1;
     for (int i = 0; i < FOLGE_MAX; i++) { s_folge[i].platz = -1; s_folge[i].aktor = -1; s_folge[i].part = -1; }
     s_init = 1;
 }
@@ -324,6 +327,149 @@ static int npc_anker(const re15_actor_t *e, int part, int32_t out[3])
     return -1;
 }
 
+/* ===================== Nachbesserung 2: Schritt-Ton der NPCs (M1) und seine Lage (M2), Kopf (f) im Header ===================== */
+
+/* EDT-Satz idx der Raumbank snd0 (RDT +0x08; FUN_80045630 `lw a2,8(v0)` @0x80045754 / `lw a2,8(v1)` @0x80045784). */
+static const uint8_t *edt_satz(const re15_rdt_t *rdt, int idx)
+{
+    if (!rdt || !rdt->snd_edt[0] || idx < 0 || (idx + 1) * 4 > rdt->snd_edt_size[0]) return NULL;
+    return rdt->snd_edt[0] + (size_t)idx * 4;
+}
+
+/* Im ORIGINAL hoerbar: Stimme (e[3] & 0x1f) - 16 + (fuss != 4) liegt in den 8 gepumpten Saetzen (@0x800457a0-b4, FUN_800458d4
+ * `ori s4,zero,0x8` @0x800458dc). Ein leerer Satz (00000000) gibt Stimme -16/-15. */
+static int ton_orig_hoerbar(const re15_rdt_t *rdt, int idx, int fuss)
+{
+    const uint8_t *e = edt_satz(rdt, idx);
+    if (!e) return 0;
+    const int stimme = (e[3] & 0x1f) - RE15_WASSERSPRUNG_R41_STIMME_BASIS + (fuss != 4 ? 1 : 0);
+    return stimme >= 0 && stimme < RE15_WASSERSPRUNG_R41_STIMMEN;
+}
+
+/* RE2-Retail FUN_8005c040: leerer Satz -> kein Ton (`lw v0,0(s4)` / `beq v0,v1` @0x8005c468-70; RE1.5-Daten: leer = Ton 0 und
+ * Kopf 0, dieselbe Pruefung wie re15_footstep_vag in vab_common.c). */
+static int satz_belegt(const re15_rdt_t *rdt, int idx)
+{
+    const uint8_t *e = edt_satz(rdt, idx);
+    return e && !(e[2] == 0 && e[3] == 0);
+}
+
+/* FUN_80045a64 byte-genau (Kopf (f)). Die Tabellen PAN @0x80074728 (128 B) und ATT @0x800747a8 (128 B) liegen im Original
+ * hintereinander; der Pan-Index 0x89 - i (bis 137) liest ueber PAN hinaus in ATT (`lui at,0x8007` / `addiu at,at,18216` /
+ * `lbu s1,0(at)` @0x80045c88-94) - deshalb EIN Feld. Bytes = PSX.EXE (re15_disasm.py read 0x80074728 256 --w 1; Riegel
+ * unit_r41_wasser20b0_lage vergleicht sie mit der Datei). */
+static const uint8_t k_pan_att[256] = {
+    127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,127, 126,126,126,126,125,125,125,125,124,124,124,124,123,123,122,122,
+    121,121,120,120,119,119,118,118,117,117,116,116,116,116,115,115, 114,114,113,113,112,112,111,111,110,110,109,109,108,108,107,107,
+    106,106,105,105,104,104,103,103,102,102,101,101,100,100, 99, 99,  98, 98, 97, 97, 96, 96, 95, 95, 94, 94, 93, 93, 92, 92, 91, 91,
+     90, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76,  75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60,
+      0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 26, 27, 27, 28, 28,
+     29, 29, 30, 30, 31, 31, 32, 32, 33, 33, 34, 34, 35, 35, 36, 36,  37, 37, 38, 38, 39, 39, 40, 40, 41, 41, 42, 42, 43, 43, 44, 44,
+     45, 45, 46, 46, 47, 47, 48, 48, 49, 49, 50, 50, 51, 51, 52, 52,  53, 53, 54, 54, 55, 55, 56, 56, 57, 57, 58, 58, 59, 59, 60, 60,
+     61, 61, 62, 62, 63, 63, 64, 64, 65, 65, 66, 66, 67, 67, 68, 68,  69, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83,
+};
+#define K_ATT 0x80   /* ATT @0x800747a8 = PAN @0x80074728 + 0x80 (`addiu at,at,18344` @0x80045cf4) */
+
+const uint8_t *re15_wassersprung_r41_lage_tabelle(void) { return k_pan_att; }
+
+/* catan @0x800658fc: CORDIC, x = 0x1000 / y = a / z = 0, 12 Stufen (`slti v0,a2,12` @0x800659b4), Schiebung `srav` je Stufe,
+ * y >= 0 (`bgez a0` @0x80065930): x += y>>i, y -= x>>i, z += W[i]; sonst umgekehrt; Rueckgabe z nach 12 Stufen (`lw v0,160(sp)`
+ * @0x800659c0). W = Tabelle @0x80078c90 (re15_disasm.py read 0x80078c90 12 --w 4). */
+static int32_t catan_cordic(int32_t a)
+{
+    static const int32_t W[12] = { 511, 302, 159, 81, 41, 20, 10, 5, 3, 1, 0, 0 };
+    int32_t x = 0x1000, y = a, z = 0;                                   /* `ori v0,zero,0x1000` @0x80065918 */
+    for (int i = 0; i < 12; i++) {
+        const int32_t xs = x >> i, ys = y >> i;
+        if (y >= 0) { x += ys; y -= xs; z += W[i]; }                    /* @0x8006596c-9c */
+        else        { x -= ys; y += xs; z -= W[i]; }                    /* @0x80065938-68 */
+    }
+    return z;
+}
+
+/* FUN_80045d6c(x1, z1, x2, z2): Richtung in 4096-teln. dx == 0 -> dz > 0 ? 0xc00 : 0x400 (`blez a0` @0x80045dd8, @0x80045ddc/e0);
+ * sonst ((dx >= 0 ? 0x1000 : 0x800) - catan((dz << 12) / dx)) & 0xfff (`sll a0,a0,12` / `div` @0x80045d84-88, @0x80045dc0-d4). */
+static int32_t azimut(int32_t x1, int32_t z1, int32_t x2, int32_t z2)
+{
+    const int32_t dx = x2 - x1, dz = z2 - z1;
+    if (dx == 0) return (dz > 0) ? 0xc00 : 0x400;
+    const int32_t c = catan_cordic((int32_t)((uint32_t)dz << 12) / dx);
+    return ((dx >= 0 ? 0x1000 : 0x800) - c) & 0xfff;
+}
+
+int re15_wassersprung_r41_lage(const void *rdt_v, const int32_t pos[3], int lage[2], int *abstand)
+{
+    const re15_rdt_t *rdt = (const re15_rdt_t *)rdt_v;
+    const int cut = (int)g_scd.work_vars[0x0A];          /* DAT_800b0fe4 `lh v0,4068(v0)` @0x80045a70; Satz = *(RDT+0x24) + Cut*0x20 */
+    if (!rdt || !rdt->cuts || cut < 0 || cut >= rdt->cut_count || !pos) return 0;
+    const re15_camera_cut_t *c = &rdt->cuts[cut];       /* +4/+8/+0xc Auge, +0x10/+0x18 Ziel */
+    /* Abstand @0x80045aa0-5c: |dx|^2 + |dz|^2 (32 Bit, mflo), zweimal SquareRoot0, Y-Term Kamera.y - |Kamera.y - y| */
+    int32_t dx = c->pos_x - pos[0]; if (dx < 0) dx = -dx;                               /* @0x80045aac-b8 */
+    int32_t dz = c->pos_z - pos[2]; if (dz < 0) dz = -dz;                               /* @0x80045acc-d8 */
+    const uint32_t sxz = (uint32_t)dx * (uint32_t)dx + (uint32_t)dz * (uint32_t)dz;     /* @0x80045abc-e8 */
+    int32_t dy = c->pos_y - pos[1]; if (dy < 0) dy = -dy;                               /* @0x80045af4-b00 */
+    const uint32_t r1 = re15_squareroot0(sxz), r2 = re15_squareroot0(sxz);              /* @0x80045b04 / @0x80045b10 */
+    const int32_t dyt = c->pos_y - dy;                                                  /* `subu v1,v1,s0` @0x80045b20 */
+    const uint32_t r = re15_squareroot0((uint32_t)dyt * (uint32_t)dyt + r1 * r2);      /* @0x80045b24-38 */
+    uint32_t di = r / 250u;                                                             /* `0x10624dd3`, `srl 4` @0x80045b3c-4c */
+    if (di > 0x7fu) di = 0x7fu;                                                         /* `slti v0,s4,128` @0x80045b50-5c */
+    /* Seite @0x80045b70-c88 */
+    const int32_t ah = azimut(c->pos_x, c->pos_z, pos[0], pos[2]);                      /* @0x80045b70 */
+    const int32_t at = azimut(c->pos_x, c->pos_z, c->target_x, c->target_z);            /* @0x80045b88 */
+    const int32_t h = ah - azimut(0, 0, c->pos_x, c->pos_z);                            /* @0x80045ba0 / `subu s0,s0,v0` @0x80045bbc */
+    const int32_t t = at - azimut(0, 0, c->pos_x, c->pos_z);                            /* @0x80045bb8 / `subu a0,s1,v0` @0x80045bc0 */
+    const uint32_t rel = ((int16_t)h < (int16_t)t) ? (uint32_t)(h + 0x1000 - t) : (uint32_t)(h - t);   /* @0x80045bd4-e8 */
+    int voll, volr;
+    const int16_t rs = (int16_t)rel;
+    if (rs == 0 || rs == 0x1000 || rs == 0x800) {                                      /* @0x80045bf4-c04 */
+        voll = volr = 0x89;                                                             /* @0x80045c0c-1c */
+    } else {
+        const int bit = (rel & 0x800u) != 0;                                            /* `andi v0,a1,0x800` @0x80045c08 */
+        int spiegel = bit;                                                              /* a0 = bit, v1 = !bit @0x80045c28-3c */
+        if (((rel - 0x401u) & 0xffffu) < 0x7ffu) spiegel = !bit;                        /* @0x80045c40-60 */
+        int i = (int)((rel & 0x3ffu) >> 3);                                             /* @0x80045c50-54 */
+        if (spiegel) i = 0x89 - i;                                                      /* @0x80045c70-7c */
+        const int pan = k_pan_att[(int16_t)i];                                          /* @0x80045c80-94 */
+        voll = bit ? 0x89 : pan;                                                        /* DAT_800b2824 `sh a0` @0x80045ce4 */
+        volr = bit ? pan : 0x89;                                                        /* DAT_800b2826 `sh a1` @0x80045cd4 */
+    }
+    lage[0] = (voll - k_pan_att[K_ATT + di]) & 0x7f;                                    /* @0x80045cf0-d2c */
+    lage[1] = (volr - k_pan_att[K_ATT + di]) & 0x7f;                                    /* @0x80045d30-44 */
+    if (abstand) *abstand = (int)di;
+    return 1;
+}
+
+/* Lage des GERADE gespielten NPC-Schritts (gesetzt nur um den re15_audio_footstep-Aufruf herum, s. npc_schritt). */
+static int s_lage_haengt = 0;
+static int s_lage[2] = { 0, 0 };
+
+int re15_wassersprung_r41_lage_nehmen(int lage[2])
+{
+    if (!s_lage_haengt) return 0;
+    lage[0] = s_lage[0]; lage[1] = s_lage[1];
+    s_lage_haengt = 0;
+    return 1;
+}
+
+int re15_wassersprung_r41_lage_pegel(int *vol, const int lage[2], int diag)
+{
+    const int voll = lage[0], volr = lage[1];
+    int pegel, pan;                                         /* SsUtKeyOnV @0x80059d3c: DAT_800b5318 / DAT_800b5319 */
+    if (voll == volr)     { pegel = voll; pan = RE15_WASSERSPRUNG_R41_LAGE_MITTE; }   /* @0x80059e08-20            */
+    else if (volr < voll) { pegel = voll; pan = (volr << 6) / voll; }                 /* @0x80059e2c-6c            */
+    else                  { pegel = volr; pan = 0x7f - (voll << 6) / volr; }          /* @0x80059e78-bc            */
+    const int v = *vol * pegel / 0x7f;                      /* SpuVmKeyOnNow: Tastenpegel * Master * Prog * Ton @0x80055d24-80;
+                                                             * *vol ist der Port-Pegel des Tons bei Tastenpegel 0x7f */
+    int l = v, r = v;
+    if (pan < RE15_WASSERSPRUNG_R41_LAGE_MITTE) r = v * pan / RE15_WASSERSPRUNG_R41_PAN_TEILER;          /* @0x80055f58-88 */
+    else                                        l = v * (0x7f - pan) / RE15_WASSERSPRUNG_R41_PAN_TEILER; /* @0x80055f8c-... */
+    if (diag) fprintf(stderr, "[foot] NPC-Lage voll=%d volr=%d -> Pegel %d Pan %d -> L=%d R=%d (Q15, Ton %d)\n",
+                      voll, volr, pegel, pan, l, r, *vol);
+    s_mess.letzter_pegel[0] = l; s_mess.letzter_pegel[1] = r;
+    *vol = l;
+    return r > 0 ? r : 1;                                   /* 0 hiesse im Mischer "Mono" (audio_pc.c vol_r_q15) */
+}
+
 int re15_wassersprung_r41_npc_schritt(re15_actor_t *e, int a0, int fuss, const void *rdt_v)
 {
     init();
@@ -351,19 +497,41 @@ int re15_wassersprung_r41_npc_schritt(re15_actor_t *e, int a0, int fuss, const v
         if (n > 0 && platz >= 0 && code == RE15_WASSER_R38_CODE_STEMPEL)
             folge_merken(platz, (int)(e - g_actors), part);
     }
-    /* Tonindex: a0 + (Boden & 0x7f) @0x80045718-24, NPC-Zweig -8 @0x8004575c (kein Objekt-Override) */
-    int idx = a0 + (s0 & 0x7f) - RE15_WASSERSPRUNG_R41_NPC_TON;
-    if (idx >= 0) re15_audio_footstep(fuss, idx);
+    /* Tonindex: a0 + (Boden & 0x7f) @0x80045718-24, NPC-Zweig -8 @0x8004575c (kein Objekt-Override). Nachbesserung 2 (M1,
+     * Kopf (f)): im Original nur hoerbar mit Stimme 0..7; sonst (Beta-Luecke) die RE2-Retail-Zeile a0 + (Boden & 0x7f) von
+     * FUN_8005c040 (@0x8005c44c / @0x8005c458), leer -> kein Ton (@0x8005c470). Ohne EDT (kein Raum) bleibt die Original-Zeile. */
+    const int ton_orig = a0 + (s0 & 0x7f) - RE15_WASSERSPRUNG_R41_NPC_TON;
+    int idx = ton_orig, quelle = 0;
+    if (rdt && rdt->snd_edt[0] && !ton_orig_hoerbar(rdt, ton_orig, fuss)) {
+        idx = a0 + (s0 & 0x7f);
+        quelle = satz_belegt(rdt, idx) ? 1 : 2;
+    }
+    if (quelle == 2 || idx < 0) idx = -1;
+    /* M2 (Entscheid A-E4): Lage fuer den Ton = FUN_80045a64(Entity+0x34) @0x80045830-34 */
+    const int32_t lpos[3] = { e->x, e->y, e->z };
+    int lage[2] = { -1, -1 }, abstand = -1;
+    const int mit_lage = re15_wassersprung_r41_lage(rdt, lpos, lage, &abstand);
+    if (idx >= 0) {
+        s_lage[0] = lage[0]; s_lage[1] = lage[1]; s_lage_haengt = mit_lage;
+        re15_audio_footstep(fuss, idx);
+        s_lage_haengt = 0;                                   /* nie an einen fremden (Spieler-)Schritt weitergeben */
+    }
     s_mess.npc_schritte++;
     s_mess.letzter_ton = idx;
+    s_mess.letzter_ton_orig = ton_orig; s_mess.letzte_quelle = (uint8_t)quelle;
+    if (quelle == 0) s_mess.npc_ton_orig++; else if (quelle == 1) s_mess.npc_ton_retail++; else s_mess.npc_ton_stumm++;
+    s_mess.letzte_lage[0] = lage[0]; s_mess.letzte_lage[1] = lage[1]; s_mess.letzter_abstand = abstand;
     s_mess.letzter_typ = e->type; s_mess.letzter_fuss = (uint8_t)fuss;
     {
         FILE *lf = npc_log();
         if (lf) {
-            fprintf(lf, "F%u slot=%d typ=0x%02x clip=%d bild=%u fuss=%d boden=0x%02x stempel=%d zweig=%s ton=%d plaetze=%d portwahl=%u pos=(%d,%d,%d)\n",
+            static const char *const qn[3] = { "orig", "retail", "stumm" };
+            fprintf(lf, "F%u slot=%d typ=0x%02x clip=%d bild=%u fuss=%d boden=0x%02x stempel=%d zweig=%s ton=%d plaetze=%d portwahl=%u pos=(%d,%d,%d)"
+                        " ton_orig=%d quelle=%s cut=%d abstand=%d lage=%d/%d\n",
                     (unsigned)g_engine.frame_count, (int)(e - g_actors), (unsigned)e->type, (int)e->motion,
                     (unsigned)e->anim_frame, fuss, (unsigned)boden, (int)e->water_y, zweig, idx, n,
-                    (unsigned)s_mess.letzter_portwahl, e->x, e->y, e->z);
+                    (unsigned)s_mess.letzter_portwahl, e->x, e->y, e->z,
+                    ton_orig, qn[quelle], (int)g_scd.work_vars[0x0A], abstand, lage[0], lage[1]);
             fflush(lf);
         }
     }

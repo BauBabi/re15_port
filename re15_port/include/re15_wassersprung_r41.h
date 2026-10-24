@@ -72,6 +72,30 @@
  *        Aktor am Bildanfang (wassersprung_r41.c s_gez). Die STAGE-Overlays rufen FUN_80045630 nur aus Typ-Handlern
  *        (STAGE1 @0x80111da4/@0x8011c4f0, STAGE3 @0x80110884/@0x80116180, STAGE4 @0x80111820/@0x801162dc/@0x801166b4,
  *        STAGE5 @0x801119a0/@0x8011645c/@0x80116834; STAGE2 keinen) - nicht Teil der NPC-Geh-Subs.
+ *
+ *  (f) NACHBESSERUNG 2 (2026-10-24), M1 - SCHRITT-TON DER NPCs: FUN_80045630 bildet a0 + (Boden & 0x7f) (`andi v0,s0,0x7f` /
+ *        `addu a0,s3,v0` @0x80045718-24) und zieht fuer Typ >= 0x40 acht ab (`sltiu v0,v0,0x40` @0x80045730, `addiu s3,a0,-8`
+ *        @0x8004575c). Hoerbar ist ein Satz nur mit Stimme (e[3] & 0x1f) - 16 + (fuss != 4) in 0..7 (`lbu v0,3(a2)` @0x800457a0,
+ *        `andi s1,v0,0x1f` @0x800457a8, `addiu s1,s1,-16` @0x800457ac, `xori v0,v0,0x4` @0x800457b4; FUN_800458d4 pumpt 8 Saetze
+ *        @0x800b2420: `ori s4,zero,0x8` @0x800458dc, `addiu s1,s1,-18` @0x8004590c, `bne s4,zero` @0x800459e4). Die Beta-Raeume
+ *        fuellen die NPC-Zeilen fast nie (52 NPC-Raeume: 93 von 544 Faellen hoerbar, Dossier N2.1). BETA -> RETAIL: das
+ *        RE2-Gegenstueck FUN_8005c040 (RE2 Leon) indiziert JEDEN Typ mit a0 + (Boden & 0x7f) - ohne Typ-Versatz (`andi v1,t0,0x7f`
+ *        @0x8005c44c, `addu s5,s5,v1` @0x8005c458; der Typ waehlt nur die Stimme, `sltiu v0,v0,0x10` @0x8005c0ec) - und spielt
+ *        einen leeren Satz nicht (`beq v0,v1` @0x8005c470). Port: Original-Zeile, wenn sie im Original hoerbar ist, sonst die
+ *        Retail-Zeile; ist auch die leer, kein Ton.
+ *     M2 - LAGE (Entscheid A-E4): FUN_80045630 ruft FUN_80045a64(Entity+0x34) (`jal 0x80045a64` / `addiu a0,a0,52`
+ *        @0x80045830-34): Kamera = *(RDT+0x24) + DAT_800b0fe4*0x20 (gezeigter Cut), Abstand /250 (`0x10624dd3` @0x80045b3c-4c,
+ *        Deckel 0x7f @0x80045b50-5c), Seite ueber FUN_80045d6c; DAT_800b2824 = (Bit 0x800 ? 0x89 : PAN) (`sh a0` @0x80045ce4),
+ *        DAT_800b2826 = (Bit 0x800 ? PAN : 0x89) (`sh a1` @0x80045cd4), beide minus ATT[Abstand], `& 0x7f`. FUN_800458d4 reicht
+ *        sie als voll (sp+24, +0x0e @0x8004598c-9c) / volr (sp+28, +0x10 @0x800459a0-b8) an SsUtKeyOnV @0x80059d3c: gleich ->
+ *        Pan 0x40 (@0x80059e10), volr < voll -> Pan (volr<<6)/voll (@0x80059e30-6c), sonst 0x7f - (voll<<6)/volr
+ *        (@0x80059e78-bc); Tastenpegel = der groessere (@0x80059e20 / @0x80059e64 / @0x80059eb0). SpuVmKeyOnNow @0x80055d10:
+ *        Pegel * Master * Prog * Ton (@0x80055d24-80), Tasten-Pan < 0x40 -> rechts * Pan / 63 (@0x80055f58-88), sonst links *
+ *        (0x7f - Pan) / 63 (@0x80055f8c-...). Port: eigene byte-genaue Nachbildung von FUN_80045a64 in wassersprung_r41.c
+ *        mit dem Winkel des Originals: FUN_80045d6c ruft catan @0x800658fc = CORDIC (12 Stufen, Winkel @0x80078c90 =
+ *        511,302,159,81,41,20,10,5,3,1,0,0). rotor_common.c (Rotor) rechnet den Winkel mit einer ATAN-Tabelle (Abweichung bis
+ *        +-7/4096 = eine Pan-Stufe, gemessen A_nb2/cordic_vgl.py) - dort nicht geaendert (OFFEN, Dossier N2.2). Pegel im
+ *        linearen Mischer-Modell des Ports (wie se_play_layers, ohne SPU-Quadrat).
  */
 #ifndef RE15_WASSERSPRUNG_R41_H
 #define RE15_WASSERSPRUNG_R41_H
@@ -82,6 +106,10 @@
 #define RE15_WASSERSPRUNG_R41_CODE      0x06033000u   /* `lui a0,0x603` / `ori a0,a0,0x3000` @0x8003876c-70 */
 #define RE15_WASSERSPRUNG_R41_PLAETZE   8             /* s1 = 4..1 x 2 Spawns @0x8003875c / @0x800387c4-d0   */
 #define RE15_WASSERSPRUNG_R41_NPC_TON   8             /* `addiu s3,a0,-8` @0x8004575c                          */
+#define RE15_WASSERSPRUNG_R41_STIMME_BASIS 16         /* `addiu s1,s1,-16` @0x800457ac (Stimme = (e[3]&0x1f)-16+(fuss!=4)) */
+#define RE15_WASSERSPRUNG_R41_STIMMEN   8             /* 8 Saetze @0x800b2420: `ori s4,zero,0x8` @0x800458dc        */
+#define RE15_WASSERSPRUNG_R41_LAGE_MITTE 0x40         /* Pan bei voll == volr `ori v0,zero,0x40` @0x80059e10         */
+#define RE15_WASSERSPRUNG_R41_PAN_TEILER 0x3f         /* /63: `lui 0x410` / `ori 0x4105` @0x80055f68-6c             */
 
 /* (a) Landung: Spieler p auf Bodenhoehe (p->y = +0x1ba), stempel = Spieler+0x88 des Vorbild-Scans, t_y = y der
  * Entity-Matrix +0x20 (zuletzt gezeichnete Lage, vor dem Bodenschreiben @0x8003872c). Spawnt die 8 Plaetze bei
@@ -126,8 +154,28 @@ typedef struct {
     unsigned portwahl_schritte;  /* Schritte aus der PORT-WAHL-Regel (Clips ohne Marke, Typ 0x4b) */
     unsigned letzter_portwahl;   /* 1 = der letzte Schritt kam aus der Regel                    */
     uint8_t  letzter_typ, letzter_clip, letztes_bild, letzter_fuss;
+    /* Nachbesserung 2 (M1/M2): letzter_ton = GESPIELTE Zeile (-1 = kein Ton), letzter_ton_orig = Zeile des Originals (-8)  */
+    int      letzter_ton_orig;
+    uint8_t  letzte_quelle;      /* 0 = Original hoerbar, 1 = RE2-Retail-Zeile (FUN_8005c040), 2 = stumm (beide leer)     */
+    unsigned npc_ton_orig, npc_ton_retail, npc_ton_stumm;
+    int      letzte_lage[2];     /* DAT_800b2824 / DAT_800b2826 (FUN_80045a64), -1 ohne Kamera                         */
+    int      letzter_abstand;    /* Abstand/250 (0..127)                                                             */
+    int      letzter_pegel[2];   /* Port-Pegel L/R (Q15) des zuletzt GESPIELTEN NPC-Schritts (re15_wassersprung_r41_lage_pegel) */
 } re15_wassersprung_r41_mess_t;
 const re15_wassersprung_r41_mess_t *re15_wassersprung_r41_mess(void);
+
+/* Nachbesserung 2, M2 (Kopf (f)): FUN_80045a64 fuer die Lage pos (Entity+0x34) mit dem gezeigten Cut g_scd.work_vars[0x0A]
+ * (= DAT_800b0fe4) des Raums rdt. lage[0] = DAT_800b2824 (voll), lage[1] = DAT_800b2826 (volr), *abstand = Abstand/250 (0..127).
+ * Liefert 0 ohne Kamera (kein RDT / Cut ausserhalb). */
+int re15_wassersprung_r41_lage(const void *rdt, const int32_t pos[3], int lage[2], int *abstand);
+/* Nur fuer Riegel: die PAN/ATT-Bytes (256, @0x80074728..0x800747a8+0x80), mit denen re15_wassersprung_r41_lage rechnet. */
+const uint8_t *re15_wassersprung_r41_lage_tabelle(void);
+/* Fuer den Schritt-Ton (audio_pc.c re15_audio_footstep, Haken Runde 41 Spur A): die Lage des GERADE gespielten NPC-Schritts
+ * abholen (1 = vorhanden; danach geloescht). Spieler-Schritte haben keine (OFFEN, Dossier N2.2). */
+int re15_wassersprung_r41_lage_nehmen(int lage[2]);
+/* Pegel nach SsUtKeyOnV/SpuVmKeyOnNow (Kopf (f)): *vol = Ton-Pegel des Ports bei Tastenpegel 0x7f (Q15) -> links; Rueckgabe
+ * rechts (>= 1, 0 hiesse im Mischer "Mono"). diag != 0: Messzeile "[foot] NPC-Lage ..." auf stderr. */
+int re15_wassersprung_r41_lage_pegel(int *vol, const int lage[2], int diag);
 void re15_wassersprung_r41_reset(void);
 
 #endif /* RE15_WASSERSPRUNG_R41_H */
