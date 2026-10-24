@@ -39,6 +39,19 @@ extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
                                     const int *decoded_len, int satz);
 
+/* MESSZEILE (kein Verhalten): welche SE-Stimmen (SPU 16..23) nach dem Anstoss klingen - mit RE15_AUDIO_CAP_SYNC (Mischkette ohne
+ * Geraet) der Beleg, dass der Ton wirklich gemischt wird (Messhaken re15_audio_se_stimme_aktiv, Riegel r31_tueren). */
+static const char *s_pruef_was;     /* zwei Bilder nach dem Anstoss pruefen (die Stimmen-Pumpe keyt im naechsten Audio-Takt) */
+static int          s_pruef_n;      /* gezeichnete Bilder seit dem Anstoss (der Bildzaehler springt beim Raumaufbau) */
+static void stimmen_log(const char *was)
+{
+    char b[64]; int n = 0, k = 0;
+    for (int v = 0; v < 8 && k < (int)sizeof b - 4; v++)
+        if (re15_audio_se_stimme_aktiv(v)) { k += snprintf(b + k, sizeof b - (size_t)k, " %d", v); n++; }
+    b[k] = 0;
+    fprintf(stderr, "[k2080] F%u %s: %d SE-Stimmen aktiv%s\n", (unsigned)g_engine.frame_count, was, n, n ? b : "");
+}
+
 /* ---- (1) Modell ------------------------------------------------------------------------------------------------------- */
 static int        s_modell;       /* 0 ungeprueft, 1 geladen, -1 fehlt */
 static uint8_t   *s_md1_raw;
@@ -70,6 +83,7 @@ static int modell_laden(void)
 
 void re15_k2080_pc_zeichnen(const void *cam_view_v, int cx, int cy)
 {
+    if (s_pruef_was && ++s_pruef_n >= 2) { stimmen_log(s_pruef_was); s_pruef_was = NULL; }
     int32_t pos[3], rot[9];
     if (!re15_k2080_kanister_lage(pos, rot)) return;
     if (!modell_laden()) return;
@@ -171,6 +185,7 @@ static void tuerton(void)
     fprintf(stderr, "[k2080] F%u Tuer-Ton: DOOR06-Tonteil %d B %s, Satz %d (Door_exit @0x800141f0)\n", (unsigned)g_engine.frame_count,
             s_tuer_ton, ok ? "in der Tuerbank" : "nicht geladen (kein Audiogeraet)", K2080_TUER_SATZ);
     if (ok) re15_audio_re2_tuer_se(K2080_TUER_SATZ);
+    s_pruef_was = "Tuer-Ton"; s_pruef_n = 0;
 }
 
 /* ---- (3) Aufschlag: Mini-Bank KANISTER2080.VBS ------------------------------------------------------------------------ */
@@ -214,6 +229,7 @@ static void platsch(void)
     fprintf(stderr, "[k2080] F%u Aufschlag-Ton KANISTER2080.VBS Satz %d%s\n", (unsigned)g_engine.frame_count,
             R41_K2080_SE_PLATSCH, ok ? "" : " (Bank fehlt, stumm)");
     if (ok) re15_audio_se_play_bank(s_edt, &s_vab, s_dec, s_dec_len, R41_K2080_SE_PLATSCH);
+    s_pruef_was = "Aufschlag"; s_pruef_n = 0;
 }
 
 /* ---- (4) NPC-Schuss ------------------------------------------------------------------------------------------------- */

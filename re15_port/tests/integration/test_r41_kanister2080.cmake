@@ -44,29 +44,37 @@ set(_basisenv RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=alwa
 set(_leon RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2)
 set(_elza RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1)
 
-# ---------------------------------------------------------------- ankunft
+# ---------------------------------------------------------------- ankunft (echter Tuerweg 2090 -> 2080, Ton gemischt)
 set(WORKDIR "${_basis}/ankunft")
 file(MAKE_DIRECTORY "${WORKDIR}")
-re15_start_spiel(_rv 300 ${_basisenv} ${_leon}
-    RE15_DEBUG_JUMP=2080@250 "RE15_SET_FLAG=9:110,3:245" "RE15_PLAYER_POS=-15000,-16500,0,8"
-    RE15_SPAWN_DIAG=1 "RE15_EXIT_AT=60#2080" "${_exe_kopie}")
+re15_start_spiel(_rv 300 RE15_NO_INTRO=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore ${_leon}
+    RE15_DEBUG_JUMP=2090@250 "RE15_SET_FLAG=9:110,3:245" RE15_KEIN_GATOR=1 "RE15_PLAYER_POS=-8900,-25244,2048"
+    RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=W1.0,A0.2,W6.0"
+    RE15_SPAWN_DIAG=1 "RE15_EXIT_AT=90#2080" "${_exe_kopie}")
+file(REMOVE "${WORKDIR}/cap.raw")
 if(NOT _rv EQUAL 0)
     r41g_fehler("Lauf ankunft exe exit=${_rv}")
+endif()
+file(STRINGS "${WORKDIR}/debug.log" _td REGEX "\\[tuer\\] Sequenz Archiv [0-9]+ DOOR16 ")
+if(NOT _td)
+    r41g_fehler("Lauf ankunft: kein Tuerweg 2090 -> 2080 (Leiter DOOR16, Tuer Slot 0 @ROOM2090 0x0996)")
 endif()
 file(STRINGS "${WORKDIR}/debug.log" _sp REGEX "\\[k2080\\] F[0-9]+ ROOM2080 nach Bit 110: 8 lebende Zombies \\(Tot-Bits 236\\.\\.243\\)")
 if(NOT _sp)
     r41g_fehler("Lauf ankunft: keine Zeile 'ROOM2080 nach Bit 110: 8 lebende Zombies'")
 endif()
 file(STRINGS "${WORKDIR}/debug.log" _tt REGEX "\\[k2080\\] F[0-9]+ Tuer-Ton DOOR06 Satz 1 .*erstes Betreten nach Bit 110, Bit 114 = 1")
-if(NOT _tt)
-    r41g_fehler("Lauf ankunft: kein Tuer-Ton beim ersten Betreten")
+file(STRINGS "${WORKDIR}/debug.log" _tb REGEX "\\[k2080\\] F[0-9]+ Tuer-Ton: DOOR06-Tonteil 19608 B in der Tuerbank, Satz 1")
+file(STRINGS "${WORKDIR}/debug.log" _ts REGEX "\\[k2080\\] F[0-9]+ Tuer-Ton: [1-8] SE-Stimmen aktiv")
+if(NOT _tt OR NOT _tb OR NOT _ts)
+    r41g_fehler("Lauf ankunft: Tuer-Ton nicht gespielt (Anstoss ${_tt} / Tuerbank ${_tb} / Stimmen ${_ts})")
 endif()
 file(STRINGS "${WORKDIR}/debug.log" _em REGEX "\\[spawn-diag\\] Sce_em_set type=0x16 behavior=0x02 slot=[0-7] pos=\\(-?[0-9]+,-14400,-?[0-9]+\\)")
 list(LENGTH _em _n_em)
 if(NOT _n_em EQUAL 8)
     r41g_fehler("Lauf ankunft: ${_n_em} Zombie-Spawns auf Band 8 statt 8")
 endif()
-message(STATUS "r41_kanister2080 ankunft: 8 Zombies Typ 0x16 auf y -14400, Tuer-Ton beim ersten Betreten")
+message(STATUS "r41_kanister2080 ankunft: Tuerweg 2090 -> 2080, Tuer-Ton gemischt (${_ts}), 8 Zombies Typ 0x16 auf y -14400")
 
 # ---------------------------------------------------------------- kanister
 set(WORKDIR "${_basis}/kanister")
@@ -114,13 +122,26 @@ foreach(_wer leon elza)
         set(_r90 2091)
         set(_npc "John 0x49")
     endif()
-    re15_start_spiel(_rv 600 ${_basisenv} ${_wahl}
+    if(_wer STREQUAL "leon")
+        set(_tonenv RE15_NO_INTRO=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore)
+    else()
+        set(_tonenv ${_basisenv})
+    endif()
+    re15_start_spiel(_rv 600 ${_tonenv} ${_wahl}
         RE15_DEBUG_JUMP=2090@250 "RE15_SET_FLAG=9:110,3:245" RE15_GB_TEST=5 "RE15_PLAYER_POS=6500,-25000,3072"
         "RE15_GIVE=3:15" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=W2.0,M0.3,MA0.1,M0.3,MA0.1,W1.0"
         RE15_STATE_LOG=state.log "RE15_EXIT_AT=120#${_r90}" "${_exe_kopie}")
+    file(REMOVE "${WORKDIR}/cap.raw")
     if(NOT _rv EQUAL 0)
         r41g_fehler("Lauf szene_${_wer} exe exit=${_rv}")
+    endif()
+    if(_wer STREQUAL "leon")
+        file(STRINGS "${WORKDIR}/debug.log" _as REGEX "\\[k2080\\] F[0-9]+ Aufschlag: [1-8] SE-Stimmen aktiv")
+        file(STRINGS "${WORKDIR}/debug.log" _ts REGEX "\\[k2080\\] F[0-9]+ Tuer-Ton: [1-8] SE-Stimmen aktiv")
+        if(NOT _as OR NOT _ts)
+            r41g_fehler("Lauf szene_leon: Aufschlag-/Tuer-Ton nicht gemischt (${_as} / ${_ts})")
+        endif()
     endif()
     foreach(_muster
             "AUSLOESER geschwaecht .*-> ROOM${_r80}"
