@@ -455,7 +455,10 @@ Slot 1: F1 WECKT, F2 P2-SAAT, F3 erstes P2-Bild `kf=400 af=0 frac=15`, die 4 fer
    DECISION[2] Block A @0x8010205C-94 / EXEC[14] @0x80104D74 = RE2-Retail-Verhalten.
 2. ~~LADE-Weg 2000/2001~~ -> behoben (8.2/8.4, I-E2). Wirkung auch auf die anderen Raeume mit main00-Evt_exec beim Laden
    (1021, 1031, 4010, 4031, 5011 — Zensus 8.2): dort startet sub00 jetzt ebenfalls wie im Original (FUN_8003ef6c); 1170
-   behaelt die Erzaehler-Halte (Port-Vorspann). Gegenproben: Integrationsgruppe 8.8.
+   behaelt die Erzaehler-Halte (Port-Vorspann). Gegenproben: 8.8 (Lade-Tests 1021/1031/1170/1171 gruen, Messlaeufe
+   4010/4031/5011: sub00 startet sofort, keine Rueckfall-Neubetretung).
+   platform/psx/main.c hat dieselbe Erkennung nur im Boot des Demo-Raums ROOM1170 (kein LADE-Weg/CONTINUE) — unberuehrt,
+   dort ist die Erzaehler-Halte richtig.
 3. ~~RE1.5-KI Pose vor dem Wecken~~ -> behoben (M1).
 4. (unveraendert) RE2-KI: Aufstehen RE2-Clip 8/9 (80 Bilder) statt RE1.5-Clip 0x12 (98) — RE2-Praesentation der RE2-KI.
 5. (Abnahme H3, nicht Teil dieser Nachbesserung, nicht selbst disassembliert) nach dem Loesen aus dem RE2-Griff fallen
@@ -514,6 +517,16 @@ mit diesen Deskriptoren (Zensus `fresser_zensus.py`): 1020/1021, 1070/1071, 10E0
    Einzeln: r35_entladen_d 93.2 s, _e 39.2 s, _f 61.5 s, _h 23.7 s, r37_elzaems_elza1101 18.8 s, _elza1141 11.3 s,
    _leon1100 19.4 s, room_probe_sweep 0.16 s (laedt die Raeume, Ausgabe gelesen), r37_beretta 164.8 s.
 
+4. **Nebenwirkung des LADE-Weg-Fixes ohne vorhandenen Test** (eigene Messlaeufe, `I_belege/nb1_laden_nebenwirkung.txt`):
+   die Raeume mit BEDINGTEM main00-Evt_exec aus dem Zensus 8.2, deren Bedingung mit Standard-Bits greift — 4010
+   (`If Ck(3,0x48,0)` @0x0065c .. `Evt_exec(0x18,3)` @0x006a0), 4031 (`If Ck(3,0x58,0)` @0x0054e .. @0x0057e sub08), 5011
+   (`If Ck(3,0x3a,1)` @0x004d8 .. @0x0051c, Karte mit Bit 3:0x3a). Spielstand am Tuer-Zielpunkt (ROOM4000 @0x00044 -> 4010
+   (-21044,0,-24000); ROOM4000 @0x0008c -> 4030/4031 (-23066,0,-19748); ROOM5000 @0x00050 -> 5010/5011 (-23636,0,-18240)) +
+   CONTINUE, 300 Bilder: jeweils `thread start slot=0` (main00) -> `CONTINUE: resumed` -> `thread start slot=10` (das
+   main00-Ereignis) -> `thread start slot=1` (sub00, wie FUN_8003ef6c Slot 1 @0x8003efd4-d8) -> `EXIT_AT: Bild 300`; KEINE
+   `door-3 self-reentry FALLBACK`-Zeile (die alte Halte-Logik haette sub00 bis zum Ende des Ereignisses zurueckgehalten
+   und dann main00+sub00 ueber `scd_room_reenter` noch einmal laufen lassen, main.c Pre-Intro-Handoff).
+
 ### 8.9 Fuer den Nutzer (Nachbesserung 1)
 
 - Spielstand IN ROOM2000 (Leon) bzw. ROOM2001 (Elza) laden: die beiden Kanal-Zombies sind jetzt da, liegen flach und stehen
@@ -521,4 +534,7 @@ mit diesen Deskriptoren (Zensus `fresser_zensus.py`): 1020/1021, 1070/1071, 10E0
 - Mit RE1.5-KI (Optionsmenue) liegen die Zombies in 2000/2001/3000/3010 (und die Liegenden in STAGE1, z.B. 1070/1140) vor
   dem Aufstehen in der Original-Liegepose (flach, Arme abgespreizt) und gehen fliessend in das Aufstehen ueber; mit der
   Standard-KI (RE2) aendert sich nichts.
+- Dieselbe Lade-Korrektur gilt fuer alle Raeume, deren Raumskript beim Betreten sofort eine Szene startet (z.B. 1021, 1031,
+  4010, 4031, 5011): beim Laden laeuft der Raum jetzt wie beim Betreten durch die Tuer an (wie im Original); nur der
+  Hubschrauber-Vorspann in ROOM1170 haelt den Raumablauf weiter bis zum Ende der Erzaehlung zurueck.
 - Keine neuen Assets, keine Sprachdateien, keine Entscheidungsfragen.

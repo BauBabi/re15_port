@@ -1,0 +1,26 @@
+# Runde 41 Spur I NB1 - Nebenwirkung des LADE-Weg-Fixes (main.c, I-E2) in Raeumen mit BEDINGTEM main00-Evt_exec
+# exe 13:30:09 (Codestand 3083b2da), Messkopie re15_pc_r41nb1c_<lauf>.exe, Karte probe_r41_zombiefresser_karte, Env:
+# RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1 RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0 RE15_EXIT_AT=300#<raum>
+# 4010 main00 @0x0065c If Ck(3,0x48,0) .. @0x006a0 Evt_exec(0x18,3); 4031 @0x0054e If Ck(3,0x58,0) .. @0x0057e Evt_exec(0x18,8); 5011 @0x004d8 If Ck(3,0x3a,1) .. @0x0051c Evt_exec(0x18,3)
+
+== laden4010: Karte Karte re15_card.mcr: Raum 0x4010, Spieler (-21044,0,-24000) Band 0 Blick 2048 Figur 0, 0 Bits gesetzt, 0 nach dem Ruecklesen, Kamera 0 
+[scd] thread start slot=0 first_op=0x3B
+[save] CONTINUE: resumed in room 4010 (hp=100)
+[scd] thread start slot=10 first_op=0x2E
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x22
+[flow] EXIT_AT: Bild 300 in Raum 4010 erreicht -> exit
+
+== laden4031: Karte Karte re15_card.mcr: Raum 0x4031, Spieler (-23066,0,-19748) Band 0 Blick 1104 Figur 4, 0 Bits gesetzt, 0 nach dem Ruecklesen, Kamera 0 
+[scd] thread start slot=0 first_op=0x3B
+[save] CONTINUE: resumed in room 4031 (hp=100)
+[scd] thread start slot=10 first_op=0x22
+[scd] thread start slot=1 first_op=0x22
+[flow] EXIT_AT: Bild 300 in Raum 4031 erreicht -> exit
+
+== laden5011: Karte Karte re15_card.mcr: Raum 0x5011, Spieler (-23636,0,-18240) Band 0 Blick 456 Figur 4, 1 Bits gesetzt, 1 nach dem Ruecklesen, Kamera 0 
+[scd] thread start slot=0 first_op=0x3B
+[save] CONTINUE: resumed in room 5011 (hp=100)
+[scd] thread start slot=10 first_op=0x2E
+[scd] thread start slot=1 first_op=0x06
+[flow] EXIT_AT: Bild 300 in Raum 5011 erreicht -> exit
