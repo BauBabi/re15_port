@@ -21,6 +21,10 @@
  * GEMESSEN am Original (DuckStation, MZD-Disc, Savestate-Reihe o3060_s2, Dossier §1): 6,5 s nach dem Sprung
  *   cmd 4 / Sub 2 / Phase 2 / Clip 6, +0x170 = 0x801d7b64, +0x174 = 0x801d7708 (PLW-Puffer @0x801d7700), Marvin steht
  *   mit erhobenem Arm; der Port spielte PL00-Clip 6 (50 Bilder) = Marvin KNIET (Lauf m3060_vor).
+ * Ende der Phase: anderer Plc-Befehl (Kommandowort/Clip ersetzt) oder Raumwechsel (Original o3060_s2_t04 in ROOM3020:
+ *   cmd 0 / Sub 0 — der Executor 0x80030660 laeuft nicht mehr; gemessen ohne Pruefung: 1 Bild Leon mit W-Clip 6).
+ * Bild-Zaehler: FUN_8001f3bc zaehlt +0x95 NACH dem Setzen der Pose hoch (@0x8001f618/@0x8001f61c, Ende -> 0 @0x8001f63c),
+ *   +0x168 zeigt auf das gezeichnete Bild (@0x8001f36c) — Phase 2 mit +0x95 = 0 zeigt also Bild 9 = das letzte.
  * Bis Runde 41 galt die W-Bank-Regel nur in ROOM1141 (Runde 39 Spur J, dining_r39.c, dort mit Port-Wahl Messer-DRAW);
  * dieses Modul ist die allgemeine Regel fuer alle uebrigen Raeume (ohne Messer-Ersatz: das Original spielt Clip 6 der
  * W-Bank, gleich welche Waffe). Eingehaengt ueber die vorhandenen dining_r39-Haken (Beginn, Zeichner, Halten).

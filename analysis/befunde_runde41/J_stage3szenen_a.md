@@ -150,6 +150,30 @@ Bildern = PL00.EDD Clip 6 (Knien)** — scd_vm.c `anim_use_pl00 = (entity != 0)`
 statt +0x170/+0x174. Bild: Marvin kniet ab F75 (J_belege/vergleich_3060_marvin.png, Spalte "Port vorher F90").
 **Ursache Punkt 1 = Plc_motion(2,6) auf dem Spieler spielt die falsche Bank.**
 
+### §1.5 Messung Original nachgezogen (Video, J41b/orig/o3060_v4.mp4 ab Savestate o3060_s2_t00)
+Cut 3 bei 10 Bildern/s (J_belege/o3060_ende_marvin_10fps.png): Marvin steht nach dem Drehen (W-Clip 1 -> 2), hebt in
+3 Bildern den Arm vor die Brust (W-Clip 6, 10 Bilder) und haelt die Haltung bis zur Abblende; danach Schwarz (Tuer) und
+ROOM3020 mit Leon. Der Port vorher kniete an dieser Stelle (PL00 Clip 6, 50 Bilder).
+
+### §1.6 Umsetzung Punkt 1 (und 2b)
+`engine/src/wclip_r41.c` + `include/re15_wclip_r41.h` (Vorgaenger-Stand 541881b5, hier geprueft und ergaenzt):
+- Spieler-Plc_motion(2,c) ausserhalb ROOM1141 (dort bleibt Runde 39 dining_r39.c) = W-Bank-Clip c; Zeichner ueber den
+  vorhandenen Haken `re15_dining_r39_w_clip` (main.c W-Bank-Composite wie Zielen/Ereignis-Griff), Halten im Spielschritt
+  `w_halten` -> `re15_wclip_r41_halten`: Phase 2 = letztes Bild (@0x80050fec), Schleife nur mit +0x1c4 & 4.
+- NEU in dieser Fortsetzung: Ende beim Raumwechsel (gemessen Lauf m3060_tuer: das erste ROOM3020-Bild zeigte Leon noch mit
+  W-Clip 6; Original o3060_s2_t04 dort cmd 0 / Sub 0).
+- Keine Konstante ohne Beleg: Sub 2 @0x80041bc4/0x80073e30[2], Kanal @0x80050f88/90, W-Bank @0x80036be4/@0x80036c04 +
+  Tabelle @0x800741e8, Halten @0x80050fec, Bildzaehler @0x8001f618.
+
+### §1.7 Messung Port NACHHER (Lauf m3060_tuer = Weg des Spiels, integration_r41_stage3szenen_a_3060)
+Leon -> ROOM3020, Szene sub02 (RE15_FORCE_EVENT 2 = Ereignis des Aot slot 3 @0x00BE2) -> `[pld] Spielermodell -> PL0D`,
+Tuer -> ROOM30C0; Sprung ROOM3040; **Tuer Slot 0 -> ROOM3060 Ankunft (2063,0,-17192) Cut 4** (@0x0127E, Bit 4:196);
+`[wclip41] ROOM3060 F65 Spieler Plc_motion(2,6) -> W-Bank-Clip 6 (... Waffe 1, 10 Bilder)`; RE15_ANIM_TRACE: Clip 6 /
+10 Bilder, Bilder 0..8 je einmal, **Bild 9 31x gehalten** bis zum Ende (Bild 104); vorher F25 W5 (Drehen), F28 W-Clip 1,
+F44 W-Clip 2 wie das Original (t=5,0 s Sub 6 W-Clip 1). Danach Tuer -> ROOM3020 als PL00 (Leon). Bild:
+J_belege/vergleich_3060_marvin_reihe.png (oben Original-Video 10 Bilder/s, unten Port-Framedump Lauf m3060_tuer3 alle
+5 Bilder: Stehen, Arm vor die Brust, Halten — gleich) und J_belege/vergleich_3060_marvin.png.
+
 ## §2 ROOM3061 — Sherry kriecht in den Schacht, Elzas Ende (Punkt 2)
 
 ### §2.1 Original-Skript (ROOM3061.RDT, scd_dump_room.py; Nachrichten rdt_msgdump.py)
@@ -254,13 +278,12 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
 - Bild: Sherry zieht das Gitter mit beiden Haenden heraus, legt es links flach ab, kriecht hinein, bis nur die Beine
   herausschauen, dann ist sie weg (J_belege/e3061_nach_gitter_kriechen.png, Seite an Seite mit dem Original:
   J_belege/vergleich_3061_gitter_kriechen.png).
-- Rest-Abweichung (im Bild ohne Wirkung, Sherry steckt dann im Gebaeude): Original-Endlage (-18795,-30700) ab t14,
-  Port (-18792,-29716) am Ende der 2. Clip-2-Runde (For-Zaehler 2 @0x01308 `0d 00 22 00 02 00`, For/Next @0x8003f540/
-  @0x8003f674 selbst gelesen: genau 2 Runden). Bis Runde 2 Bild 22 decken sich Port und Original (s.o.). URSACHE NOCH
-  NICHT BELEGT. Gepruefte Spur: nach der Schleife schaltet sub04 @0x01330..0x0133C die SCA-Eintraege Region 2/0 (#9) und
-  3/1 (#17) wieder ein (Rechteck x -31340..12792, z -30382..-26744); Herausschieben auf die Kante minus Radius ergaebe
-  -30382 - 300 = -30682 (Radius = +0x78-Box +6 = 300, im RAM gelesen) — nicht -30700, also so nicht bestaetigt. Port:
-  `re15_npc_wall_clamp` (NPC-Wurzel @0x8011cc64 `jal 0x8003b0a4`). Dichte Original-Reihe o3061_s3 folgt (§2.8).
+- Endlage: nach der Schleife (For-Zaehler 2 @0x01308 `0d 00 22 00 02 00`, For/Next @0x8003f540/@0x8003f674 selbst
+  gelesen: genau 2 Runden) schaltet sub04 @0x01330..0x0133C die SCA-Eintraege Region 2/0 (#9) und 3/1 (#17) wieder ein
+  (Rechteck x -31340..12792, z -30382..-26744); Sherry steht darin und wird von der NPC-Wandklemme (Wurzel @0x8011cc64
+  `jal 0x8003b0a4`, Port `re15_npc_wall_clamp`) herausgeschoben. GEMESSEN Port (integration_r41_stage3szenen_a_3061,
+  state.txt): **F1310 Sprung (-18792,-29716) -> (-18792,-30700)**; Original o3061_s2/s3 ab t14 bzw. t12 **(-18795,-30700)**.
+  Gleiche Endlage — keine Rest-Abweichung (die frueheren Laeufe e3061_nach1/2 lasen nur die letzte Anker-Zeile).
 
 ### §2.8 Dichte Original-Reihe o3061_s3 (Slot-1 alle 0,4 s, `J_belege/o3061_s3_dicht.txt`)
 - t03 Clip 0 Bild 52: Gitter lokal **(252,192,-153) Rot (0,1024,3072)** = Super_set-Werte (angehaengt); t04 Bild 79:
@@ -269,7 +292,7 @@ Gitter-Loslass-Lage = Endlage - 640 (Speed_set-Summe) = (-18756,-266,-26788).
 - Clip 2: t08 Bild 19 +0x1c4 0x26 (SET 6), t09 Bild 44 0x05, t10 Bild 12 0x06, t11 Bild 39 0x25 (SET 5), **t13 Bild 29
   0x24 = nur SET 4** -> die Schleife ist nach 2 Runden zu Ende (For-Zaehler 2 bestaetigt).
 - Lagen: t11 Runde 2 Bild 39 **(-18810,-29279)** — Port F1244 (-18807,-29269); t12 Bild 5 nach Schleifenende
-  **(-18795,-30700)**. Der Sprung von ~-974 zwischen Runde-2-Ende und t12 ist der Rest aus §2.7 (OFFEN, im Bild ohne Wirkung).
+  **(-18795,-30700)** = Herausschieben nach dem SCA-Wiedereinschalten (§2.7, im Port ebenso gemessen).
 
 ### §2.9 Bild-Zaehler des Originals und bytegleicher Riegel
 - FUN_8001f314 setzt +0x168 = Eintrag des Bildes +0x95 (@0x8001f36c) und ruft FUN_8001f3bc; dort wird NACH dem Setzen der

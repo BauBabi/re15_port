@@ -9,8 +9,12 @@
 #         Tuer -> ROOM30C0; Sprung ROOM3040, dort die TUER Slot 0 (@0x0127E, 4:196 gesetzt) -> ROOM3060 = der Weg des
 #         Spiels. Erwartet: Marvin-Modell PL0D, Tuer-Ankunft (2063,-17192), sub03 Plc_motion(2,6) @0x010BE spielt
 #         W-Bank-Clip 6 (PL00W01, 10 Bilder) und haelt Bild 9 (@0x80050fec) — nie PL00-Clip 6 (50 Bilder = Knien).
-#   3061  Punkt 2 (Elza): Spielstand ROOM3061 (Elza (-3500,-26276) Blick 0, Bits 4:244 + 3:160) + CONTINUE, QUADRAT
-#         am Aktions-AOT Slot 1 (sub00 @0x00F3A -> sub02). Erwartet: Gitter an Sherrys Teil 14 (Super_set @0x0127E),
+#   3061  Punkt 2 (Elza): Spielstand ROOM3061 (Elza (-3500,-26276) Blick 0, Bits 4:244 + 3:160) + CONTINUE; das
+#         Ereignis des Aktions-AOT Slot 1 (sub00 @0x00F3A -> sub02) feuert RE15_FIRE_AOT bei Bild 450, Quadrat schaltet
+#         die Nachrichten weiter. (Gemessen: Johns Einlauf sub10 Plc_dest @0x013B2/@0x013BC laeuft bei z -26306 durch das
+#         Ausloese-Rechteck und schiebt eine dort wartende Elza bis x 262 — im Original stand die Figur erst NACH dem
+#         Einlauf im Rechteck, Savestate o3061_a; Elzas Lage spielt fuer die Szene keine Rolle, sub02 @0x01052 Pos_set.)
+#         Erwartet: Gitter an Sherrys Teil 14 (Super_set @0x0127E),
 #         Loslass-Lage (Super_reset @0x0129E) ~ Original (-18756,-266,-26788); Anker-Takte 22/22/11 (Clip 1) und 2 x 26/24
 #         (Clip 2) = Plc_flg-Folge von sub04; Sherry-Lagen gegen die Original-Reihe (o3061_s2/s3); Sherry am Ende im
 #         Schacht; Elza Plc_motion(2,6) @0x011DE = W-Bank-Clip 6 (10 Bilder) gehalten; Wechsel nach ROOM30C1 als PL0F.
@@ -155,7 +159,8 @@ elseif(TEIL STREQUAL "3061")
     re15_start_spiel(_rv 900
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
         RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
-        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=420 "RE15_INPUT_SCRIPT=${_druck}"
+        "RE15_FIRE_AOT=1@450#3061"
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=460 "RE15_INPUT_SCRIPT=${_druck}"
         RE15_FUSSANKER_LOG=1 "RE15_STATE_LOG=state.txt" "RE15_ANIM_TRACE=anim.txt" "RE15_EXIT_AT=1#30C1"
         "${_exe}")
     if(NOT EXISTS "${WORKDIR}/debug.log")
