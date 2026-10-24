@@ -37,6 +37,7 @@
 #include "re15_ziel1190.h"   /* Runde 36 Spur H: Scheiben-Text-Plaetze haengen an ihrer Scheibe */
 #include "re15_climb.h"      /* Runde 36 Spur R: re15_climb_standing_probe = DAT_800ac788 @0x8002bef0 */
 #include "re15_zellschub_r36.h" /* Runde 36 Spur R: Ruhe-Zweig LAB_8002c0b8 (FUN_8003b558 + FUN_8003da78), zellschub_r36.c */
+#include "re15_kollision_r41.h"  /* Runde 41 Spur H: Objekt-gegen-Objekt-Pass @0x8002c03c-c0a8 */
 #include "re15_fahrstuhl_r37.h" /* Runde 37 Spur C: Tuersequenz beim Aussteigen aus den Fahrstuhlkabinen */
 #include "re15_lastenaufzug_r37.h" /* Runde 37 Spur C N1: Ausstieg Lastenaufzug ROOM3080 -> ROOM4000 */
 
@@ -1688,10 +1689,10 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
  *   @0x8002bfd4  DAT_800aca3c |= 0x2000       Kontaktbit fuer den Spieler-FSM
  *   @0x8002bfe0/e4 DAT_800aca59 (Spieler +0x05) != 8 -> Ruecksetzung
  *   @0x8002c0b8-d4 Ruecksetzung: obj[+0x34]/[+0x3C] = gesichert
- * Nicht portiert (kein Port-Gegenstueck / dokumentiert): der zweite Entity-Durchlauf
- * @0x8002bfec-c034 und der Objekt-gegen-Objekt-Pass FUN_8002cdf4 @0x8002c03c-a8 — ROOM1090
- * hat genau zwei Typ-4-Kisten in VERSCHIEDENEN Baendern (1 und 5), sie koennen einander nie
- * treffen, und der Port fuehrt keine Gegner-Boxen im Objekt-Pool.
+ * Nicht portiert (dokumentiert): der zweite Entity-Durchlauf @0x8002bfec-c034 (FUN_8002cabc(entity,obj,1)).
+ * Der Objekt-gegen-Objekt-Pass FUN_8002cdf4 @0x8002c03c-a8 ist seit Runde 41 Spur H portiert
+ * (kollision_r41.c): ROOM2050 hat drei Typ-4-Kisten in Band 0 (obj 1/2/3, sub00 @0x01DB4/@0x01DD6/@0x01DF8),
+ * die sich ohne ihn ineinander schieben liessen (Nutzer-Befund Runde 41).
  */
 static uint8_t s_prop_push_count[16];      /* obj[+0x8C] je Objekt */
 static uint8_t s_prop_push_contact;        /* DAT_800aca3c & 0x2000 */
@@ -1783,8 +1784,11 @@ void re15_prop_push_tick(const re15_rdt_t *rdt, uint16_t pad_held)
          * Ruecksetzung @0x8002c0bc-d4 verworfen; die Rueckgabe (irgendeine Zelle getroffen) ist davon unabhaengig. */
         int32_t tx = nx, tz = nz;
         const int gesperrt = re15_zellschub_8003b558(rdt, p, &tx, &tz, 2u);
+        /* Runde 41 Spur H: Objekt-gegen-Objekt-Pass @0x8002c03c-c0a8 (FUN_8002cdf4 @0x8002c078, Treffer -> @0x8002c0b0),
+         * nur nach angenommenem Zellentest (@0x8002bfb8) und im Schub-Substate (@0x8002bfe4) — kollision_r41.c. */
+        const int objgesperrt = (!gesperrt && in_sub8) ? re15_kollision_r41_kisten_pass(rdt, p, nx, nz) : 0;
         { extern void re15_dachkiste_schub_log(int, int32_t, int32_t, int);   /* Runde 36 Spur R: RE15_PUSH_LOG */
-          re15_dachkiste_schub_log(p, nx, nz, gesperrt); }
+          re15_dachkiste_schub_log(p, nx, nz, gesperrt || objgesperrt); }
         if (gesperrt) {
             s_prop_push_count[p] = 10;                        /* @0x8002c0b0 (s7 = 10) */
             ruhe = 1;                                         /* Ruecksetzung @0x8002c0bc-d4 = nichts schreiben, dann FUN_8003b558 @0x8002c0d0 */
@@ -1792,6 +1796,7 @@ void re15_prop_push_tick(const re15_rdt_t *rdt, uint16_t pad_held)
         s_prop_push_count[p] = 8;                             /* @0x8002bfc0 */
         s_prop_push_contact  = 1;                             /* @0x8002bfd4 |= 0x2000 */
         if (!in_sub8) ruhe = 1;                               /* @0x8002bfe4 -> Ruecksetzung + FUN_8003b558 @0x8002c0d0 */
+        else if (objgesperrt) { s_prop_push_count[p] = 10; ruhe = 1; }   /* Runde 41 Spur H: `bne v0,zero,0x8002c0b0` @0x8002c080 */
         else {
         g_scd.props[p].x = nx;                                /* Schub bleibt (kein Restore, @0x8002c0a8 -> @0x8002c0d8) */
         g_scd.props[p].z = nz;

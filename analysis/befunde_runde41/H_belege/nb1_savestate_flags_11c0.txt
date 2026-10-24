@@ -1,0 +1,5 @@
+@0x80026e4c = 03e00008 (Auslieferung: 03e00008 = jr ra)
+Stage/Raum 0x800b0fe0/fe2 = 0/28, g_active_count 0x800aca4e = 3
+E0 typ=0x42 Wort0=40000001 Gate-Bits=keine Zustand=4/6 +0x9=40 Lage=(-8965,0,-14347) Kasten r=450
+E1 typ=0x27 Wort0=60000801 Gate-Bits=keine Zustand=1/6 +0x9=10 Lage=(-4080,0,-12407) Kasten r=1600
+E2 typ=0x27 Wort0=60000811 Gate-Bits=keine Zustand=1/6 +0x9=10 Lage=(-338,-2500,-12153) Kasten r=1600

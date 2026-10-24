@@ -1,0 +1,4 @@
+F5 room=2050 SETZE p=2 obj=1 lage=(-1600,-5400,-6948) band=3
+F113 room=2050 OBJEKT-GESPERRT p=0 obj=6 ziel=(-1600,-8735) gegen p=2 obj=1 lage=(-1600,-5400,-6948) dX=0 dZ=-1787 sumX=1800 sumZ=1800
+F199 room=2050 OBJEKT-GESPERRT p=0 obj=6 ziel=(-1600,-8739) gegen p=2 obj=1 lage=(-1600,-5400,-6948) dX=0 dZ=-1791 sumX=1800 sumZ=1800
+F286 room=2050 OBJEKT-GESPERRT p=0 obj=6 ziel=(-1600,-8730) gegen p=2 obj=1 lage=(-1600,-5400,-6948) dX=0 dZ=-1782 sumX=1800 sumZ=1800

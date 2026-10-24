@@ -1,0 +1,1 @@
+F262 room=2050 OBJEKT-GESPERRT p=3 obj=2 ziel=(2462,-64) gegen p=4 obj=3 lage=(4248,0,1400) dX=-1786 dZ=-1464 sumX=1800 sumZ=1800

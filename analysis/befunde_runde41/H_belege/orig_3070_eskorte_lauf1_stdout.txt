@@ -1,0 +1,22 @@
+DuckStation gestartet {'7192'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+vor dem Sprung Flag (4,215): @800b1030 00000000 -> 00000100
+vor dem Sprung Flag (4,236): @800b1034 00000000 -> 00080000
+vor dem Sprung Flag (3,180): @800b100c 00000000 -> 00000800
+in der Menue-Zeile Flag (4,215): @800b1030 00000100 -> 00000100
+in der Menue-Zeile Flag (4,236): @800b1034 00080000 -> 00080000
+in der Menue-Zeile Flag (3,180): @800b100c 00000800 -> 00000800
+Square -> Laden, warte 20 s
+nach dem Laden: Spieler (-24000, -21764, 0) g_active_count 3
+  Entity 0 aktiv=1 +4=4 +5=1 typ=0x20 lage=(-14000,-24000) +9=0x41
+  Entity 1 aktiv=1 +4=4 +5=1 typ=0x20 lage=(-8039,-22041) +9=0x41
+  Entity 2 aktiv=1 +4=4 +5=1 typ=0x20 lage=(-1313,-19980) +9=0x41
+  Entity 3 aktiv=0 +4=0 +5=0 typ=0x00 lage=(0,0) +9=0x00
+  Entity 4 aktiv=0 +4=0 +5=0 typ=0x00 lage=(0,0) +9=0x00
+  Entity 5 aktiv=0 +4=0 +5=0 typ=0x00 lage=(0,0) +9=0x00
+  Entity 6 aktiv=0 +4=0 +5=0 typ=0x00 lage=(0,0) +9=0x00
+  Entity 7 aktiv=0 +4=0 +5=0 typ=0x00 lage=(0,0) +9=0x00
+KEINE zwei NPC 0x40/0x42 aktiv - Flags im Ladeweg nicht wirksam? Abbruch der Messung
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)

@@ -58,6 +58,12 @@ macro(pruef_wahr _bed _text)
 endmacro()
 
 # Wegplan = integration_r39_dining1141_d bis zum Kampf, dann neben John (Lage L3 der Abnahme 1) und stehen bleiben.
+# Runde 41 Spur H: Elza wartet vor dem letzten GEHE 240 statt 60 Bilder. (a) braucht eine Salve Johns (Takt ~371 Bilder)
+# IN einem Griff-Fenster (~120 Bilder) — ein Zufall der Zeitachse. Seit dem NPC-Wurzel-Schwanz (aec4/b544 @0x8011dd28/
+# @0x8011dd30 fuer 0x49, kollision_r41.c) schiebt ein Gorilla John in die Ecke, die Gorilla-Wege verschieben sich, und mit
+# WARTE 60 lagen alle Salven ~140 Bilder VOR den Griffen (0 Treffer bei gr=1, kein Fehlschuss wegen des Opferzustands).
+# Gemessen (analysis/befunde_runde41/H_kollision.md, Querbezug R39 J): WARTE 60 vorher 2 / nachher 0, 180 nachher 0,
+# 240 vorher 3 / nachher 3, 300 vorher 0 / nachher 0 (dort auch ohne Runde 41 rot: Querungs-Wache). Kriterien unveraendert.
 set(_plan "RAUM 1131
 AKTION
 WARTE 60
@@ -93,7 +99,7 @@ WARTE 40
 AKTION
 WARTE 40
 AKTION
-WARTE 60
+WARTE 240
 GEHE -5800 -20500 150
 WARTE 2400
 ENDE
