@@ -320,3 +320,44 @@ Stand beim Speichern: LAEUFT (gestartet 18:27, 4/81 bisher gruen) — Ergebnis w
   parallel-fest und Linux-fest (Abschnitt 2). **haelt.**
 - **Nebenwirkungen beide Szenarien / Nachbarraeume:** Leon und Elza fuer beide Punkte gemessen (4.1-4.9); Nachbarszenen 3080/3081
   und Folgeraeume 4000/4001 unveraendert bzw. ohne Kontakt (4.6); 30E0 (4.7) und 3011 (4.8) als weitere Eskorten-Orte. **haelt.**
+
+## 7. Urteile je Nutzer-Punkt (gegen den Wortlaut)
+| Punkt (Wortlaut) | Urteil | Beleg |
+|---|---|---|
+| 1 "Die NPCs z.B. Ada und Marvin koennen ineinander rein laufen, das ist falsch, die sind beide fest." | **erfuellt** | Eigene Laeufe, je vor/nach: **3070 Leon** (echte Tuer 30E0 -> 3070, eigener Laufweg) Ada/Marvin min **1 -> 899**, Bilder < 850 **4539 -> 0** (4.1, `zoom_p1a_3070_f1350.png`: vor nur zwei Figuren, nach drei); **30E0 Leon** (nach der Ada/Marvin-Szene, von niemandem vorher gemessen) min **12 -> 884**, < 850 **1881 -> 0** (4.7, `bild_s30e0_vor_nach.png`); **3001 Elza** auf dem echten Story-Weg ohne Flag-Vorgabe (Szene setzt (4,198)/(4,199) selbst, zwei Tuerdurchgaenge) 1. Besuch **8 -> 749**, 2. Besuch **13 -> 722**, < 700 **343/3917 -> 0/0** (4.5, `zoom_p1c_3001_f2000.png`); **3011 Elza** echter Weg **3 -> 749**, < 700 **2382 -> 0** (4.8). Mechanik selbst disassembliert: aec4 + b544 vor b0a4 in **28/28** NPC-Wurzeln (eigener Scanner), b544 ohne Typfilter (RE-Gate 1-3). Nachbarszenen 3080/3081 unveraendert (4.6). Riegel gruen (2). |
+| 2 "In ROOM 2050 lassen sich die Kisten in einander schieben, das ist falsch" | **erfuellt** | Eigene Paarung obj 1 -> obj 2 (Z-Achse, von niemandem vorher gefahren), je vor/nach: **Leon 2050** Ueberlappungszeilen **115 -> 0**, `OBJEKT-GESPERRT ... dZ=-1798` (4.2, `bild_ka_cut12.png`: vor schiebt sich die Kiste in die andere, nach Kante an Kante); **Elza 2051** **116 -> 0** (4.3); **Leon ECHTER WEG** (Leiter 2000 -> Tuer -> drei Absprunge 3->2->1->0 ins Becken) **109 -> 0** (4.4; Abnahme 0 H4 damit geschlossen); **Elza ECHTER WEG** 2001 -> 2051 **109 -> 0** (4.9). Mechanik: Durchlauf @0x8002c03c-c0a8 und FUN_8002cdf4 Zeile fuer Zeile (RE-Gate 4/5). Raetsel bleibt loesbar (Riegel raetsel_leon/raetsel_elza gruen, (5,0..2) = 1). |
+
+## 8. Gates
+- **RE-Gate: haelt.** Jede neue verhaltensrelevante Zahl hat ihre Adresse; selbst disassembliert: 28 Registrierungen + 28 Wurzel-
+  Schwaenze (eigener Scanner), FUN_8002b544, FUN_8002aec4 (Gates, Radien, SquareRoot0, Y-Band, Schubformel), der Objekt-Pass in
+  FUN_8002bd44 (inkl. s7 = 10, fp = Pool, Ruecksetzung, Spiegel), FUN_8002cdf4 vollstaendig, Pool-Indizierung @0x8004093c-58 und
+  die neuen V2-Belege der Nachbesserung 1 (@0x8011ddbc-c8, @0x80042284-b0, @0x8011beac, @0x801213c8[7], @0x8011ac34, @0x8011ad8c) —
+  alle stimmen mit dem Zitierten ueberein. Rate-Woerter im Code-Diff: 0. Der Fix erklaert beide gemessenen Befunde (RE-Gate 8).
+- **Tests: halten** — Spur 10/10 (346 s), unit_/prop_/probe_ 922/922 (ohne 10 Bash-Riegel ohne Diff-Bezug), Integrationsgruppe
+  s. 5.2.
+- **Vertrag: haelt** (Abschnitt 6; V1/V2 per H-E1 angenommen, hier nicht mehr bewertet).
+
+## 9. Maengel (nummeriert)
+Keine.
+
+## 10. Hinweise (kein Mangel; fuer Orchestrator / Integration / spaetere Nutzer-Rueckfragen)
+- **H1 (Dossier OFFEN 4, gemessen):** Die Yield-Zweige von `re15_npc_ai_tick` (SCD-besessener Slot ausserhalb Pose/Executor)
+  kehren vor dem Schwanz zurueck. Gesehen in ROOM4001 (Elza, nach der 3081-Szene): das Skript setzt John UND Sherry per `Pos_set 32 00
+  d5 fb 00 00 41 ab` (@0x01B2A / @0x01C44) auf denselben Parkpunkt (-1067,-21695) — Abstand 0 in beiden exe, 0 `NPC-SCHUB`. Bei
+  dX = dZ = 0 schiebt auch die Original-Formel nicht (dX*pen/(dist+1) = 0), und der Punkt liegt ausserhalb des Bildes (Framedump
+  F1300/F2000 zeigt nur Elza, `bild_s3081_4001.png`). Kein sichtbarer Befund.
+- **H2 (Wandklemme nach dem Schub, gemessen):** Ist eine Figur an einer Wand gefangen und laeuft die andere jedes Bild auf sie zu, stellt
+  sich ein Kreislauf b544-Schub -> Wandklemme ein, der unter der Radien-Summe bleibt: 3011-Sprung-Aufbau (4.8) d = 664..670 bei Summe
+  750 ueber 128 Bilder (vorher 212/4). Die Reihenfolge Schub vor Klemme ist Original (b544 @0x8011c954 vor b0a4 @0x8011c974, STAGE3
+  0x4b), die Klemme selbst ist vorbestehender Port-Code (`re15_npc_wall_clamp`, nicht Teil des Diffs). Auf dem echten Weg nach 3011
+  tritt der Aufbau nicht auf (min 749). Der Riegel-Massstab der Spur ("kein Bild < Summe-50") wuerde diesen Aufbau rot melden —
+  falls der Nutzer "an der Wand stehen sie noch leicht ineinander" meldet, ist das die Stelle (Original-Messung an einer Wand fehlt).
+- **H3 (Spieler wird von einer folgenden NPC geschoben):** 3001 2. Besuch: Sherry will an Elza vorbei zu ihrem Folgepunkt; nach schiebt
+  sie Elza ueber ~100 Bilder 570 Einheiten (vorher lief sie durch Elza und stiess sie in 12 Bildern 530 weg). Mechanik = Spieler-Tick
+  b544 @0x80031cbc (vorbestehend) + NPC-Tick aec4 @0x8011cc3c (neu); gegen das Original nicht gemessen.
+- **H4 (Integration, wie Abnahme 0 H5):** Der Schub wirkt in jedem NPC-Tick, auch in Szenen. Nach dem Merge die NPC-Szenen der Spuren
+  G (2080 Marvin/John + 8 Zombies) und J/K (3060/3061/30C1/3091) nachfahren. Ein Plc_dest-Ziel naeher als die Radien-Summe an einer
+  anderen Figur wird nie erreicht — die hier gefahrenen Szenen (3080, 3081, 30E0, 3001) enden alle im selben Bild wie vorher.
+- **H5:** Im Baum liegen fremde exe-Kopien `build/platform/pc/re15_pc_r35e_haken_bce82682.exe` (10:14) und
+  `re15_pc_r37d_lift_7c28d838.exe` (17:11) aus Laeufen anderer Riegel (nicht von Spur H, nicht versioniert); harmlos.
+- **H6:** Die 10 Bash-Riegel (release/, Android) sind nicht gefahren (kein Diff-Bezug) — im Release-Container mitlaufen lassen.
