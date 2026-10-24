@@ -426,3 +426,18 @@ Folgen (Orchestrator, Umsetzung Spur C):
   sperrt Bit 102 das Ventilraetsel (Aktionstaste vorher: vorhandene/Port-Nachricht aus den Ids 2030 40-49, Wortlaut als
   Vorschlag fuer den Nutzer). Riegel: Ventilraetsel vor Bit 102 nicht ausloesbar, danach ja; Weg zu Fuss (Leon UND Elza).
 - Nach der Flut liegen die Ventile ggf. im gefluteten unteren Bereich (Nachtrag 8) — das ist gewollt.
+
+## 2026-10-24 09:55 — Nachtrag 10 (Nutzer-Entscheid per Auswahl; Sicherung vor der Flut, Spur C)
+
+Frage des Orchestrators (Hinweis H-a der Abnahme C 2): Der Generator 2060 braucht die Sicherung ((3,144), 2060 sub19
+@0x0169E; ohne sie msg 3 "One of the fuses is missing..."); die Sicherung liegt in 2030 im UNTEREN Bereich (Slot 9 @0x01BAA,
+Steg-Suedlandeplatz, Band 1), der nach der Flut geflutet bleibt -> wer sie vor der Flut nicht aufhebt, bekommt nie Strom.
+Angeboten: "Flut erst mit Sicherung" / "Sicherung wird nach 20B0 gespuelt" / "Sicherung woanders hinlegen".
+**Gewaehlt vom Nutzer: "Flut erst mit Sicherung (Empfohlen)"** — Beschreibung der Option: "Die Ventile lassen sich erst
+drehen, wenn die Sicherung aufgehoben ist (vorher ein kurzer Text am Ventil). Die Sicherung bleibt am Original-Platz; man
+kommt nach Nachtrag 9 ohnehin ueber die Bruecke an ihr vorbei. Kein Softlock moeglich."
+
+Folgen (Umsetzung Spur C): Bedingung des Ventilraetsels = Bruecke unten (Bit 102, Nachtrag 9) UND Sicherung aufgehoben
+(Item-Taken-Bit der Sicherung aus dem RDT-Zensus belegen — nicht "im Inventar", denn sie kann schon in 2060 eingesetzt
+sein). Vorher an den Ventilen ein kurzer Port-Text (Id aus 2030 40-49, Wortlaut als Vorschlag). Riegel: ohne Sicherung kein
+Ventilraetsel, mit Sicherung ja; ganzer Ablauf zu Fuss (Leon UND Elza).
