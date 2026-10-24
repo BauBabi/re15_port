@@ -9,6 +9,11 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-25 01:5x **Nachbesserung 5 abgeschlossen** (§0f): Mangel 1 = Dokument als Zettel an der Suedwand (Cut 5: 243 statt 39
+  Pixel); Mangel 2 = Plakat waehrend Zaehler/Flut gesperrt, Flut-Sperre bleibt (Riegel E); Mangel 3 = Nachtraege 16 (Ventil-
+  Sicherungskasten 2010, "It's locked.", Herausnehmen nach der Flut, Generator 2060), 18 (Plakat-Stil, Hebel 2050, RE2-Dreh-
+  Animation, Countdown, Stimme main46) und 19 (Text 46 woertlich). OFFEN: der Alarm (RE2 SUB_25 belegt, Abspielweg in audio_pc.c =
+  Spur D) -> Frage (o). Tests: Unit 238/238 + PASS (517), r41-Riegel 5/5 gruen, `_kette` von Hand rc=0.
 * 2026-10-24 ab 21:0x **Nachbesserung 5** (Abnahme 4 `C_abnahme_4.md`, Maengel 1-3; Nachtraege 16/18/19 des Nutzers, AUFTRAG.md
   19:31-19:55). Baum sauber (`status --porcelain` leer, HEAD 9bc62279 = Abnahme 4 vollstaendig). Der FORTSETZUNGS-Block des Auftrags
   ("Abnahme-3-Fortsetzung ... Kein Code aendern") gehoert zur Abnahme 3 und ist seit 320b57d8/a4f68cff erledigt -> nicht wiederholt;
@@ -1010,7 +1015,208 @@ Die Messungen der Abnahme 4 (`C41abn4/`) gelten als "vorher" und werden NICHT wi
 9. Tests: Unit + Integrationsriegel (Leon UND Elza) nachziehen, gezielte Laeufe, Dossier, Commit.
 
 ### Protokoll der Nachbesserung 5 (neueste zuerst)
+* 2026-10-25 00:4x-01:56 Riegel nachgezogen und gezielt gefahren (unten "Tests der Nachbesserung 5"): Unit-Gruppe, Haupt-Riegel
+  A-E (neu E = Mangel 2), `_weg`/`_weg_elza` (v2a neu, v2c neu, k1/k2/k3 neu, v2b/v2d angepasst), `_b`, `_sperre`, `_kette` von
+  Hand. Messlaeufe dafuer (scratchpad `nb5/mess/`): v2an (v2a neu, Leon), v2c (Plakat-Folge, Leon), k2m (nach der Flut zu Fuss
+  20B0 -> 2010 -> ... -> 2060, Leon), k3m (2060 mit Bit 125), dreh3e (Dreh-Animation Elza, Bildbogen).
+* 2026-10-24 21:0x-23:2x Code und Messlaeufe in fuenf Zwischenstaenden (55540fde Code; 39a6d734 Kasten-Platz + Unit; a0f21d3e
+  Countdown; 9e5664bd Hebel; 6a480b9e Plakat-Stil + Dokument-Zettel), je Commit-Nachricht mit den Adressen.
 * 21:0x Start, Pflichtlektuere (AUFTRAG.md Nachtraege 15-19, VERTRAG.md, Abnahme 4, Dossier §0e/§6/§7), Arbeitsplan.
+
+### RE-Belege der Nachbesserung 5 (selbst aus den Bytes/Bildern gelesen, VOR dem Code)
+
+**B5-1 Ventil-Sicherungskasten ROOM2010/2011 (Nachtrag 16 Folgen 1-5).**
+* Lage: im Hintergrund ROOM2010 Cut 3 (`BSS/ROOM2010/BG03.BSS`) haengt an der Ostwand ein Schaltschrank mit einem kleinen
+  Anzeigefeld (3 x 3 Tasten), Bild x 229..252 y 66..86 (scratchpad `nb5/bg2010_c3_mark.png`, `bg2010_c3c4_x2.png`).
+  Rueckprojektion (tools/maske/geom.py `cut_view`, Kamera Cut 3 aus der RID) auf die Ostwand x 5400 = Innenkante der SCA-Zelle 3
+  (5400,-9550,2000,16650) -> Mitte z -2770, y -2650..-2970. Der Platz hat die Groesse des Original-Kastens ROOM2060 Slot 9
+  (Aot_set @0x010A6, 1400 x 1000, die lange Seite an der Wand) und die Form "Wandflaeche +- 500" der Pult-/Ventil-Plaetze dieses
+  Moduls (x 4900..5900, z -3470..-2070; gemessen: mit x 4400..5400 lag der Vorwaertspunkt 620 eines Spielers an der Wand
+  ausserhalb -> keine Aktion). Band 0: alle Plaetze von 2010 tragen Band 0 (main00 @0x00746..@0x007D0, `floor=0`). Slot 8 =
+  erster freier (0-7 belegt: Tuer 0 @0x00746, Items 1-3, Aot 4 @0x00880, 5-7). Erreichbar vor UND nach der Flut: ROOM2000/2001
+  und ROOM20B0/20B1 Tuer slot 2 (`3b 02 02 31 01 00 30 94 be f1 e8 03 d0 07 08 ee 00 00 aa ec 00 00 01 01 00 00`, @0x0165E bzw.
+  @0x019A2) -> ROOM2010 (-4600,0,-4950); zurueck ROOM2010 slot 0 @0x00746 (`... ae 98 f8 f8 74 f5 00 00 01 00 0e 01`) ->
+  ROOM2000 (-26450,-1800,-2700) Cut 14, nach der Flut von `tueren_umlenken` auf 20B0 Cut 10 gelegt (wie jede 2000-Tuer).
+* Form der Zustaende = der Original-Kasten 2060 sub00 @0x0109E..@0x010DE: (3,144) gesetzt -> Text 6 (@0x010DE "The fuse is in
+  place."), Sicherung aufgehoben -> Ereignis 18 (@0x010C6, sub18: msg 3 + Frage msg 4 "Will you use the Fuse?" -> sub19
+  Set(3,144) @0x0169E + msg 5 "You've used the Fuse."), sonst Text 3 (@0x010A6 "One of the fuses is missing..."). Der Port-Kasten
+  2010: steckt (Bit 125) -> Text 43 (Seite 1 = 2060 msg 6 @0x1892, Seite 2 = 2030 msg 2 @0x208B "Will you take the Fuse?") -> Ja
+  -> Set(9,125)=0 + Text 44 (= 2030 msg 3 @0x20AC "You've taken the Fuse."); aufgehoben und nicht im Generator -> Text 40 (Seite 1
+  PORT-WAHL "A fuse box for the valve controls." = Kasten benennen ohne erfundenes Wissen, Seite 2 = 2060 msg 3 @0x1833) + Frage 41
+  (= 2060 msg 4 @0x1855) -> Ja -> Set(9,125)=1 `22 09 7d 01`, Standbild, Text 42 (= 2060 msg 5 @0x1875); sonst nur Text 40. Alle
+  Zeilen <= 286 px (Vorschub DEBUG.BIN @0x4416, `gen_r41_ventilkette.py zeilenbreiten`).
+* Bit: 107 ist mit dem Dokument belegt -> Zensus `bank9_zensus.py` (original: "FREI im Original ... 110..133", port: kein Zugriff auf
+  125; 110-124 sind F/G/E/J/K zugeteilt) -> **(9,125)**, VERTRAG §1.1 nachgetragen, k_port[] in test_r36_kartenbits.c.
+* "Kamera auf die Ventile" (Folge 2): die Ventil-Kamera der Suedwand ROOM2030 **Cut 7** (Raeder 09/08/07 + Plakat, §0e B4-2) als
+  Standbild = `BSS/ROOM2030/BG07.BSS` (bytegleich ROOM2031/BG07.BSS), dekodiert mit derselben Kette wie jeder Raumhintergrund
+  (bss_common.c/bss_vlc.c/bss_mdec.c), ueber die Vollbild-Ebene wie die Plakat-Nahaufnahme (Form der Nahaufnahmen der Runde 40:
+  Pad-Sperre (2,7), Bestaetigen/Abbrechen schliesst, @0x80028698-Form). Das Programm wartet mit `While Ck(5,0x1F)=1 {Evt_next}`
+  (Form ROOM2000 @0x01AD4) auf das Schliessen.
+* Unlock-Ton: RE2 "You unlocked it." **Satz 0x26** (EXE @0x800515f8, die Aufschliess-Stelle der RE2-Tueren; im Port die Bank
+  KARTSE `AUF_HIER`, Runde 36 `gen_r36_aufschliessen.py`), im selben Bild wie das Standbild.
+
+**B5-2 2050-Hebel gehen runter (Nachtrag 18 Punkt 2).** Form der Original-Hebel ROOM11F0 sub06 @0x01322..: `2f 05 40 00`
+Speed_set(5,+0x40) @0x01332, For 16 `0d 00 04 00 10 00` @0x01336, Add_speed + Evt_next = **16 Bilder je Umlegen, 64 je Bild =
+1024 = 90 Grad** aus der Grundstellung rot_z 512 (Obj_model_set @0x00E76). Die 2050-Hebel sind gemalt (kein Modell): aus
+`BSS/ROOM2050/BG15.BSS` gemessen (tools/r41_ventilkette/hebel2050.py): je Hebel Griff-Rechteck, Klingenspalten (Helligkeit < 16)
+und Drehpunkt = Gehaeuse-Unterkante (HEBEL-Tabelle im Werkzeug, Bild `C_belege/nb5_hebel2050.png`), Grund unter dem Hebel per
+cv2.inpaint; gezeichnet wird der Bildteil senkrecht skaliert um den Drehpunkt mit cos(45 + 90 t/16 Grad)/cos(45 Grad), t = 0..16
+(`gen/ventilkette_r41_hebel.inc`). Die Lampen bleiben (Nutzer).
+
+**B5-3 Ventil-Dreh-Animation aus RE2 (Nachtrag 18 Punkt 3).** RE2 ROOM1080 (Hubschrauber-Landeplatz, msg 0 @0x267A "A water
+pressure valve") **sub08 @0x0210A..@0x0221E** (selbst gelistet, `tools/r34n_c/re2_scd_dump.py ROOM1080`): work_set @0x0210A
+`2e 01 00`, pos_set @0x02116 `32 00 30 b2 00 00 fe ac` (z -21250; Else-Zweig @0x02122), member_set @0x0212C `34 0f 00 08`, Sleep 20,
+plc_motion 0x0F @0x0213C (Hand zum Rad), Sleep 30, plc_motion 0x10 @0x02156 (fassen), Sleep 28, se_on @0x02168, Sleep 22, For 2
+@0x02178 {plc_motion 0x11 @0x02186, Sleep 18, se_on @0x02198, Sleep 12}, set(5,2,1) @0x021AA, For 2 @0x021AE {plc_motion 0x11
+@0x021B4, Sleep 18, se_on @0x021BC, Sleep 12}, plc_motion 0x11 @0x021CE, Sleep 18, se_on @0x021D6, Sleep 15 + 12, plc_cnt 0x32 +
+plc_motion 0x10 0xC0 @0x021EC (loslassen rueckwaerts), Sleep 50, plc_cnt 0x1E + plc_motion 0x0F 0xC0 @0x021F6, Sleep 30, ...,
+plc_ret @0x0221E. Also 5 x Drehtakt (Clip 0x11), 6 x Ton (`36 02 05 01 01 00 70 17 38 ff 00 00`), Summe der Sleeps bis @0x021FA
+= **345** Takte (Unit D: Flut-Fenster +345). Uebernommen: diese Folge (Port-Programme `2030_ventil_*`, tools/r41_ventilkette/
+programme.py, je Zeile mit der RE2-Adresse); nicht uebernommen: RE2s plc_cnt (RE1.5 kennt den Opcode nicht; die Werte 0x32/0x1E
+sind genau die Clip-Laengen 50/30, der Clip laeuft ohnehin ganz), der Blick plc_neck @0x021FE/@0x0220C (Sleep 180/60) und
+cut_be_set @0x0221A - die Reaktion der RE2-Szene am Landeplatz, nicht das Drehen. Clips aus dem **RBJ derselben RDT @0x39AC**
+(13128 B, 1 Record, EMR 15 Knochen x 80 B, EDD 19 Clips: 15 = 30, 16 = 50, 17 = 40 Bilder) = neues Asset
+`shared_assets/RE2/VENTIL1080.RBJ`; Ton = ROOM1080 snd0 Satz 5 (EDT-Eintrag `00 00 54 16`) = `VENTIL1080.EDT/.VH/.VB`
+(`tools/r41_ventilkette/re2_ventil_export.py --pruefen`: bytegleich mit der RDT). Abstand Spieler - Wandflaeche **816** = RE2
+Pos_set z -21250 bis zur SCA-Flaeche in Blickrichtung (Element 12, z -22066). Gebunden ueber den RBJ-Ueberlagerungsweg der
+Engine (re15_apply_room_cinematic; `re15_ventilkette_r41_pc_rbj` in den zwei Raumlade-Wegen von main.c: 2030/2031 ->
+VENTIL1080.RBJ).
+
+**B5-4 Countdown, Alarm, Sprachausgabe (Nachtrag 18 Punkt 4).**
+* Ein eigenes Countdown-Bild (Uhr-/Ziffern-Grafik) wurde weder in RE1.5 (Raumtexte aller Stages, Port-Quellen, Analyse-
+  Notizen) noch in RE2 (Overlay-/EXE-Dekompilate der Stages 6/7; die Selbstzerstoerung ROOM6040 meldet nur msg 1 @0x4FD8 "The
+  auto destruct system is active") gefunden. Belegt ist die **Schrift** (Nachrichtenschrift TEX.TIM, Glyphen 0x0C..0x15 = 0..9, 0x16 = ':',
+  Vorschub DEBUG.BIN @0x4416: Ziffer 8 px, '1' 7, ':' 4) und die **Farbe 2**, mit der das Original eine ablaufende Frist
+  hervorhebt: ROOM2040 msg 4 @0x19A6 "Bomb activated, I have `05 02`10 seconds`05 00` before it detonates!" (die Zeitbombe).
+  Anzeige MM:SS:HH = Restbilder (1800 - Takte seit dem Zaehlerstart, 30 Takte je Sekunde), **Format und Lage PORT-WAHL**: oben
+  rechts, rechter Rand wie der linke Rand der Nachrichtenbox (x 34) -> x 230, y 20.
+* Alarm "wie am Spielende": RE2s Selbstzerstoerungs-Alarm ist die SUB-Spur **SUB_25** (RE2 ROOM6040 main sub04 @0x022E8
+  `57 00 04 06 11 25 00 80` Sce_bgmtbl_set, ebenso @0x022F0 fuer Raum 05; `info/re2leon/COMMON/SOUND/SUB_25.BGM` 100688 B).
+  RE1.5 hat keine Alarm-Spur (SOUND/SUB_25.BGM ist ein 4-Byte-Stummel, belegte SUB-Spuren nur 0x00..0x1A + 0x3F). Abspielen
+  ginge nur ueber den BGM-Lader in `platform/pc/src/audio_pc.c` (SUB-Container mit SEQ + VAB, `re15_bgm_load_sub`) - dort
+  duerfen in Runde 41 nur Haken der Spur D stehen (VERTRAG §1.3) -> **OFFEN, Frage** (§6/§7).
+* Sprachausgabe: datengetrieben ueber den Nachrichten-Weg; Messlauf `nb5/mess/v2b` (mit Ton): `[voice] clip loaded: main46.wav
+  (32000 Hz x1 -> 226817 @44100 Hz)` beim Text 46 im neuen Wortlaut (synchro/STAGE2/room2030/main46.wav, Elza room2031).
+
+**B5-5 Plakat im Stil des Spiels (Nachtrag 18 Punkt 1).** Vorbild = die vorgerenderten Nahaufnahmen von RE1.5 (ROOM11D0 Cut 12
+Zwinger-Pult: verwitterte blaugraue Stahlplatte, Schildchen in Schreibmaschinenschrift, Warnstreifen; ROOM11F0 Cut 12 Notstrom-
+Pult) und das RE2-Dokumentpapier (FILE17 title_paper: gelbliches, fleckiges Papier, Licht von oben); Schrift = RE2-
+Dokumentschrift. Umsetzung `tools/r41_ventilkette/plakat.py nahaufnahme_spielstil` (Herleitung im Werkzeugkopf): Stahlwand mit
+Schlieren/Plattenfugen/Vignette, Papier mit Faserrauschen, Flecken, Knick, Klebeband, Schlagschatten, Schrift und Ziffern
+weich gedruckt, Nummern auf schwarzen Feldern wie die Wandschilder; doppelt gerechnet, auf 320 x 240 verkleinert, 256 Farben
+(8 bpp). Inhalt unveraendert (Nachtrag 15). Vergleichsbogen `C_belege/nb5_plakat_vergleich.png` (vorher / nachher / ROOM11D0
+Cut 12 / ROOM11F0 Cut 12), im Spiel `C_belege/nb5_plakat_im_spiel.png`.
+
+**B5-6 Dokument-Zettel (Abnahme 4 Mangel 1).** Das RE2-Blatt mesh01 lag flach am Boden (gemessen Abnahme 4: 15 von 16 Kameras
+0 Pixel, Cut 5 39 Pixel). Neu: ein Zettel 500 x 700 AUFRECHT an der Suedwand (Wandflaeche z 7900 = Innenkante SCA Zelle 7
+@0x008EC) zwischen dem Schrank mit der Sicherung (x <= -5600; Sicherung Slot 9 @0x01BAA x -5900..-5100) und dem Warnpfosten
+(x ~-4400), Mitte (-4850,-3950,7880) = ueber dem Handlauf der unteren Reling wie der Aushang (Mitte y -3900); Form des Aushangs
+(ein Viereck, Normale (0,0,-4096) zur Kamera), Bild = Papier und Schrift der Nahaufnahme mit den ersten Zeilen des Nutzertexts
+auf 64 x 64 (`C_belege/nb5_dokument_zettel_tex.png`; als beschriebener Zettel erkennbar, gelesen wird im Leser). Projektion in
+Cut 5 (Kamera des Sued-Landeplatzes) Bild x 105..118 y 73..93 ueber dem Handlauf. Platz = Wandflaeche +- 500, x -5100..-4600
+(grenzt an die Sicherung, laesst den Plakat-Platz x >= -4100 frei). PORT-WAHL der Lage mit dieser Begruendung.
+
+**B5-7 Texte 46 und 49.** Id 46 = Nachtrag 19 woertlich in 3 Zeilen (Form ROOM10D0 msg 17 @0x21BD, dreizeilige Nachricht; Zeilen
+<= 286 px). Id 49 = Original **"It's locked."** (ROOM20A0 msg 1 @0x203C, Scheibe) statt "I should look around here first."
+(Nachtrag 16 Folge 4: neutral, ohne "look around").
+
+### Umsetzung der Nachbesserung 5 (Dateien)
+* `include/re15_ventilkette_r41.h`: Bit 125, Kasten-Platz/Slot/Ereignis/Texte 40-44, 2060-Slot 9/Text 3, Standbild Raum/Cut,
+  Toene, RBJ-Raum/Abstand/Clip/Satz, Countdown x/y/Farbe, Hebel-Takte/Schritt/Grund, Dokument-Lage — je mit Beleg (B5-x).
+* `engine/src/ventilkette_r41.c`: install_2010 (Texte, Kasten-Platz, Tueren), install_2060 (Sperrtext 3 bei Bit 125), Ventile
+  nur mit Bit 102 UND Bit 125, Kasten-Programme, kasten_tick (Standbild + Ton), Ventil-Ton je Marker (5,0x1A), Countdown-
+  Zaehler, Hebel 1 Schritt je Bild, Plakat waehrend Zaehler/Flut gesperrt (+ Protokollzeile "Plakat gesperrt"), plakat_tick
+  hebt (2,7)/(2,2) nur ohne Flut auf, 8-bpp-Plakat.
+* `platform/pc/src/ventilkette_r41_pc.c` (neu): Bildhaken je Spielbild (Hebel, Pult-Zeiger, Vollbild Plakat/Standbild,
+  Countdown-Text), Tonhaken (KARTSE Satz 3 = RE2 0x26; VENTIL1080 Satz 5), RBJ-Haken fuer 2030/2031.
+* `platform/pc/main.c` (gemeinsam, "Runde 41 Spur C"): die zwei frueheren C-Bloecke nach dem Hintergrund durch EINEN Aufruf
+  `re15_ventilkette_r41_pc_bild()` ersetzt; je eine Zeile `re15_ventilkette_r41_pc_rbj(...)` im Boot- und Tuer-Ladeweg.
+  `engine/src/scd_vm.c`: nur Kommentar (Ereignisliste).
+* Daten: `gen/ventilkette_r41_{texte,original,programme,plakat,hebel}.inc` aus `tools/r41_ventilkette/{gen_r41_ventilkette,
+  programme,plakat,hebel2050}.py`; neue Assets `shared_assets/RE2/VENTIL1080.{RBJ,EDT,VH,VB}` (`re2_ventil_export.py`).
+* Riegel: `tests/unit/test_r41_ventilkette.c` (Faelle K/N/O/P/Q neu, A/D/E/F/M angepasst; Werkzeug "bss"),
+  `tests/integration/test_r41_ventilkette{,_weg,_kette}.cmake`, `tests/unit/probes/r41_ventilkette.cmake`,
+  `tests/unit/test_r36_kartenbits.c` (k_port Bit 125).
+
+### Nachbesserung 5 je Mangel (Ursache / Messung vorher / Beleg / Aenderung / Messung nachher)
+
+**Mangel 1 (mittel) - Dokument-Blatt in der Welt nicht zu erkennen.**
+* Ursache: Weltmodell = RE2-Blatt mesh01 flach auf dem Boden des Landeplatzes, aus der Kamera Cut 5 fast in Blickrichtung.
+* Messung vorher: Abnahme 4 (`C41abn4`, sicht_c5_dok): Cut 5 **39 Pixel** (x 102..113 y 143..149), 15 andere Cuts 0.
+* Beleg: B5-6 (Wandflaeche SCA Zelle 7 @0x008EC, Aushang-Form, Projektion Cut 5).
+* Aenderung: Zettel aufrecht an der Suedwand neben dem Schrank mit der Sicherung, Platz x -5100..-4600 z 7400..8400.
+* Messung nachher (exe 23:01, `nb5/sicht.sh`, je Cut ein Lauf mit und einer ohne Bit 107, RE15_FORCE_CUT nur zur Bildwahl):
+  **Cut 5: 243 Pixel** (x 104..116 y 72..91; `C_belege/nb5_dokument_cut5_mit_ohne.png`), Cut 3/6/7: 0 (der Zettel liegt dort
+  ausserhalb des Bildes). Riegel: Unit M (Platz/Modell, Leon + Elza), `_weg` v2d (Leser von (-4850,7280) Blick +z, Bit 107,
+  Leon + Elza).
+
+**Mangel 2 (niedrig) - Schliessen der Plakat-Nahaufnahme hob die Pad-Sperre der Flut auf.**
+* Ursache: `plakat_tick` setzte beim Schliessen (2,7)/(2,2) unbedingt auf 0; das Plakat liess sich waehrend Zaehler/Flut oeffnen.
+* Messung vorher: Abnahme 4 Lauf pk: `Plakat-Nahaufnahme zu (nach 1421 Bildern)` F3540 -> `letterbox closed -> gameplay
+  (player_mode=0)` F3555 mitten in der Flut.
+* Beleg: Pad-Sperre der Flut = Form ROOM2030 sub02 @0x01E30 (Set(2,7)/(2,2) im Flut-Programm); die Nahaufnahme nimmt nur IHRE
+  Sperre zurueck.
+* Aenderung: Plakat nur ohne Zaehler/Flut (`!s_timer && !s_ventile_geloest && !s_flut`, sonst Protokollzeile "Plakat gesperrt");
+  beim Schliessen (2,7)/(2,2) nur, wenn keine Flut laeuft (`!s_flut && !Ck(5,FLUT)`).
+* Messung nachher: Unit P (Leon + Elza): Plakat offen + Flut -> nach dem Schliessen (2,7)=(2,2)=1; waehrend des Zaehlers kein
+  Plakat. Integration E (Haupt-Riegel): richtige Folge -> Warnung -> zurueck zum Plakat, Aktion -> "Plakat gesperrt", kein
+  `2030_plakat`, (5,0x1C) = 0 -> Flut -> zwischen "FLUT" und "ERTRUNKEN" kein "letterbox closed -> gameplay".
+
+**Mangel 3 (hoch) - Nachtraege 16, 18, 19 nicht umgesetzt.** Je Punkt:
+* **N19 (Text 46):** vorher "WARNING: The water will rise in one minute. Leave the room!"; nachher woertlich der Nachtrag (B5-7),
+  gemessen v2b/v2bc und Riegel A/v2b: `[msgtext] room=2030 id=46 "WARNING: The water will rise in one minute. Please leave the room
+  immediately!"`, Stimme main46.wav (B5-4).
+* **N16 (Ventil-Sicherungskasten):** vorher Text 49 "I should look around here first.", Bedingung "Sicherung aufgehoben"
+  (Abnahme 4 K1). Nachher (B5-1): ohne Kasten-Sicherung Ventile = "It's locked." auch mit der Sicherung in der Hand (Unit K, `_weg`
+  v2a: `id=49 "It's locked."` -> Sicherung -> wieder 49, Bit 125 "0;0"); Kasten 2010 einsetzen (`_weg` k1 / Messlauf bx2: 40 ->
+  41 -> Ja -> `Set zone=9 idx=125 op=1` -> Standbild ROOM2030 Cut 7 (Framedump F640 Pixel fuer Pixel gleich
+  BG07.BSS: Werkzeug bssdiff GLEICH 100 %, der Raum davor F560 13 %) + Aufschliess-Ton `[se] ... KARTSE Satz 3 (RE2 Satz 0x26 ...)` -> Bestaetigen -> 42); mit Bit 125
+  Ventile frei (v2b/v2c); nach der Flut zu Fuss 20B0 -> slot 2 -> 2010 -> 43 -> Ja -> `Set zone=9 idx=125 op=0` -> 44 -> 20B0 ->
+  Leiter -> 2050 -> 2020 -> 2030 -> 2060 -> Original-Frage "Will you use the Fuse?" (`_weg` k2, Messlauf k2m); solange die Sicherung
+  im Ventilkasten steckt, zeigt der Generator-Kasten 2060 Text 3 statt der Frage (`_weg` k3, Unit O). Leon UND Elza.
+* **N18-1 (Plakat):** vorher Flaechenfarben/Blockziffern (4 bpp, 16 Farben, `nb4_plakat.png`); nachher B5-5 (Bilder dort);
+  Riegel v2p: Bildmitte des offenen Plakats hell (Mittel 168/160/142 im erzeugten Bild), nach dem Schliessen der Raum.
+* **N18-2 (Hebel 2050):** vorher 0 Pixel Unterschied am Hebelkoerper beim Umlegen (Abnahme 4); nachher B5-2, Messlauf p5h
+  (Leon): Hebel 3/1/4 laufen in 16 Bildern nach unten (`C_belege/nb5_hebel2050_spiel_sheet.png`); Unit F (Takte 0..16, Hebel
+  zurueck nach oben beim Ausschalten).
+* **N18-3 (Dreh-Animation):** vorher mo=200 (keine Animation, Abnahme 4); nachher B5-3: je Drehung Plc_motion 15/16/17 x 5/16r/
+  15r, 6 Ventil-Toene (v2b mit Ton: 24 x `Ventil-Ton VENTIL1080 Satz 5` fuer vier Drehungen), Lage vor dem Rad (Unit Q);
+  Bilder Leon `C_belege/nb5_ventil_animation_09.png`, Elza `C_belege/nb5_ventil_animation_09_elza.png` (Messlauf dreh3e, die Haende
+  am roten Rad); Riegel `_weg` v2b: RBJ gebunden + 20 x Clip 17 (Leon + Elza).
+* **N18-4 (Timer/Alarm/Stimme):** vorher kein Timer (Abnahme 4); nachher Countdown MM:SS:HH (B5-4), gemessen v2bc 00:59:43 ..
+  (`C_belege/nb5_countdown_sheet.png`) und Riegel A (Software-Renderer): Ausschnitt x 230..286 y 20..36 Rot F4440 15 (Warnung
+  noch offen) -> F4560 66 / F4680 67. Stimme main46.wav spielt (B5-4). **Alarm OFFEN** (B5-4: RE2 SUB_25 belegt, Abspielweg
+  liegt in audio_pc.c = Spur D).
+
+### Tests der Nachbesserung 5 (gezielt, im Spurbaum; KEINE volle Suite)
+* Bau: `bash re15_port/tools/local_build.sh configure` + `build` -> `=== LOCAL-BUILD-OK (build)` (zuletzt 2026-10-25 nach dem
+  Werkzeug "bssdiff"; exe 00:40 = Stand mit der Protokollzeile "Plakat gesperrt").
+* `unit_r41_ventilkette` direkt: **`PASS (517 Pruefungen)`** (Leon + Elza; Faelle K/N/O/P/Q neu, A/D/E/F/M angepasst).
+* Unit-Gruppe: `ctest --test-dir re15_port/build -R "<scratchpad nb5/regex_unit.txt>" --timeout 600 --output-on-failure -j 2`
+  (Regex der Nachbesserung 4 + `unit_anim_.*|unit_plc_.*|unit_audio_.*|unit_se_.*` fuer RBJ-Ueberlagerung und Toene) ->
+  **`100% tests passed, 0 tests failed out of 238`** (`Total Test time (real) =  52.07 sec`, scratchpad `nb5/ctest_unit3.txt`).
+* Integration (je `ctest --test-dir re15_port/build -R "<regex>" --timeout 3600 --output-on-failure`, zwei Stroeme parallel):
+  - `-R "^integration_r41_ventilkette(_weg_elza)?$"` (00:56): `1/2 Test #1126: integration_r41_ventilkette ............   Passed
+    720.92 sec` (A-E); `_weg_elza` scheiterte dort an der Gegenprobe des ersten k1-Entwurfs (Flaechenmittel F560 25/25/20 gegen
+    das Standbild 19/20/16 = 6 - zu schwach, nicht das Spiel) -> Werkzeug "bssdiff" (Pixelvergleich), Lauf wiederholt.
+  - `-R "^integration_r41_ventilkette(_weg|_b|_sperre)$"` (00:56): `1/3 Test #1127: integration_r41_ventilkette_b ........   Passed
+    535.31 sec`, `3/3 Test #1130: integration_r41_ventilkette_sperre ...   Passed  300.64 sec` (`_weg` wie oben an k1).
+  - Wiederholung mit "bssdiff" (01:26): `-R "^integration_r41_ventilkette_weg$"` -> `1/1 Test #1128:
+    integration_r41_ventilkette_weg ...   Passed  1460.63 sec`, **`100% tests passed, 0 tests failed out of 1`**;
+    `-R "^integration_r41_ventilkette_weg_elza$"` -> `1/1 Test #1129: integration_r41_ventilkette_weg_elza ...   Passed  1768.83
+    sec`, **`100% tests passed, 0 tests failed out of 1`**.
+  - Zusammen: alle fuenf registrierten r41-Riegel gruen (Haupt, `_b`, `_weg`, `_weg_elza`, `_sperre`).
+* `_kette` von Hand (nicht registriert ohne Spur A, C-E1): `cmake -DRE15_PC_EXE=... -DRE15_SRC=re15_port -DWORKDIR=<nb5/kette>
+  -P re15_port/tests/integration/test_r41_ventilkette_kette.cmake` -> rc=0, "2030 richtige Folge 09/07/02/01 zu Fuss -> Warnung
+  -> Ost-Tuer zu Fuss -> ROOM20B0, Bits 103 + 100; Teil ab der Szene uebersprungen: Haken der Spur A fehlt" (01:02-01:05).
+* Gemessene Werte der Riegel-Laeufe: A Countdown-Ausschnitt Rot F4440 15 / F4560 66 / F4680 67; C Warnung zu F4482, Flut F6283
+  (+1801), Tod F6408 (+125); E "Plakat gesperrt" -> `FLUT: Wasser steigt (Countdown-Takte 1801 von 1800)` -> `SPRITZER: Wasser
+  y -1800` -> `ERTRUNKEN: Wasser y -2700, Spieler y -1800`, dazwischen kein `letterbox closed`; k1 (Leon und Elza) F640 bssdiff
+  `ABWEICHUNG 0 GLEICH 100`, F560 `ABWEICHUNG 26 GLEICH 13`; k2 Elza Bit 125 `1;0;0;0`, `room=2011 id=43` / `id=44`; v2b Elza
+  20 x Clip 17, `ROOM2031 bindet das RBJ von RE2 ROOM1080`.
+
+### OFFEN (Nachbesserung 5)
+Siehe §6 "Nachbesserung 5" (Alarm = Frage (o); Countdown-Form = Frage (p)).
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
@@ -1579,6 +1785,17 @@ shared_assets/PSX, pri/, synchro/, release/.
   - `integration_r41_ventilkette_kette` weiter nur mit Spur A registriert (Configure: "uebersprungen: Spur A fehlt", C-E1).
 
 ## 6. OFFEN
+* **Nachbesserung 5 (2026-10-25, Abnahme 4 Maengel 1-3, Nachtraege 16/18/19):**
+  - **Alarm (Nachtrag 18 Punkt 4) nicht umgesetzt:** belegt ist RE2s Selbstzerstoerungs-Alarm SUB_25 (ROOM6040 sub04 @0x022E8
+    `57 00 04 06 11 25 00 80`, `info/re2leon/COMMON/SOUND/SUB_25.BGM`); RE1.5 hat keine Alarm-Spur (SUB_25.BGM 4 Byte). Abspielen
+    braucht einen Haken im BGM-Lader von `platform/pc/src/audio_pc.c` (SUB-Container aus `shared_assets/RE2/` waehrend des
+    Zaehlers in 2030/2031) - die Datei gehoert in Runde 41 der Spur D (VERTRAG §1.3) -> Frage an Orchestrator/Nutzer (§7).
+  - Countdown: Format MM:SS:HH und Lage oben rechts sind PORT-WAHL (ein Original-Countdown-Bild gibt es in RE1.5/RE2 nicht,
+    §0f B5-4); belegt sind Schrift und Farbe 2.
+  - Standbild, Plakat, Hebel, Countdown laufen ueber die PC-Bildebenen (ventilkette_r41_pc.c); PSX-Ziel ungebaut (wie H3).
+  - Die 20B0-Szene (Ost-Tuer) braucht weiter den AUTO-Haken der Spur A (C-E1); `_kette` (Wartezeiten 450 nach jedem Ja, (9,125))
+    von Hand im Spurbaum bis zur 20B0-Ankunft geprueft.
+  - Die Texte des Kastens 2010 (Ids 40-44) haben keine Aufnahmen (Zeilen bleiben stumm, `[voice] ... keine Aufnahme`).
 * **Nachbesserung 4 (2026-10-24, Abnahme 3 Maengel 1-4, Nachtraege 12/13):**
   - Loesung, Plakat-Inhalt, Dokument-Titel, Rad-Zuordnung und die Texte 45/49/50-55 sind Vorschlaege zur Freigabe (§7 (m)/(n)).
   - Die Plakat-Nahaufnahme ist ein Port-Bild ueber die Vollbild-Ebene des PC-Renderers (main.c); waehrend sie offen ist,
@@ -1672,6 +1889,44 @@ shared_assets/PSX, pri/, synchro/, release/.
   RE2-Panel-Klick 0x0A wie lift2030_r37/hebetisch.
 
 ## 7. Fuer den Nutzer
+* **Stand Nachbesserung 5 (Nachtraege 16/18/19, Abnahme 4) — was sich geaendert hat:**
+  - **Ventil-Sicherungskasten in 2010 (Nachtrag 16).** Die Sicherung vom Sued-Landeplatz in 2030 kommt zuerst in einen
+    Sicherungskasten in ROOM2010: an der Ostwand der Schaltschrank mit dem kleinen Tastenfeld (Kamera 3; 2010 erreicht man vor
+    der Flut ueber 2000 und nach der Flut ueber 20B0, jeweils die Tuer im Westgang). Aktionstaste: "A fuse box for the valve
+    controls." / "One of the fuses is missing..." -> "Will you use the Fuse?" -> Ja -> Einstellung auf die Ventile (das
+    Hintergrundbild der Ventil-Kamera von 2030: Raeder 09/08/07 + Plakat) mit dem Aufschliess-Ton aus RE2 -> Aktionstaste ->
+    "You've used the Fuse." Ohne die Sicherung im Kasten sagen die Ventile **"It's locked."** (ein Satz aus dem Spiel, ROOM20A0)
+    - auch wenn man die Sicherung bei sich traegt. Herausnehmen geht jederzeit, auch nach der Flut: "The fuse is in place." /
+    "Will you take the Fuse?" -> Ja -> "You've taken the Fuse." -> die Ventile sind wieder gesperrt, und die Sicherung geht wie
+    im Original in den Generator-Kasten 2060. Solange sie im Ventilkasten steckt, sagt der Generator-Kasten 2060 "One of the
+    fuses is missing...". Bis auf "A fuse box for the valve controls." sind alle Saetze Original-Saetze (2060/2030/20A0).
+    Bildbogen: C_belege/nb5_ventilkasten_2010_sheet.png.
+  - **Plakat (Nachtrag 18 Punkt 1):** im Stil der vorgerenderten Nahaufnahmen des Spiels (Stahlwand, vergilbtes Papier,
+    Schreibmaschinenschrift, Flecken, Klebeband), Inhalt unveraendert: C_belege/nb5_plakat.png; Vergleich mit zwei echten
+    Nahaufnahmen (11D0/11F0) C_belege/nb5_plakat_vergleich.png; im Spiel C_belege/nb5_plakat_im_spiel.png.
+  - **Hebel 2050 (Nachtrag 18 Punkt 2):** der umgelegte Hebel kippt in 16 Bildern nach unten (Takt der Original-Hebel in 11F0),
+    beim Zuruecklegen wieder hoch; die Lampen bleiben. C_belege/nb5_hebel2050_spiel_sheet.png.
+  - **Ventil-Dreh-Animation (Nachtrag 18 Punkt 3):** die Animation aus RE2 (Wasserdruck-Ventil am Hubschrauber-Landeplatz,
+    RE2 ROOM1080) mit dem RE2-Drehgeraeusch, je Drehung ~11,5 s wie in RE2: Leon C_belege/nb5_ventil_animation_09.png, Elza
+    C_belege/nb5_ventil_animation_09_elza.png.
+  - **Countdown (Nachtrag 18 Punkt 4):** waehrend der 60 s laeuft oben rechts die Restzeit MM:SS:HH in der Schrift der
+    Nachrichten und in der Farbe, mit der das Spiel Fristen hervorhebt (Zeitbombe in 2040): C_belege/nb5_countdown_sheet.png.
+    Ein eigenes Countdown-Bild hat weder RE1.5 noch RE2 - Format und Lage sind eine Wahl (Frage (p)). Der **Alarm** fehlt noch
+    (Frage (o)).
+  - **Warntext (Nachtrag 19):** "WARNING: The water will rise in one minute. / Please leave the room immediately!" (3 Zeilen);
+    Ihre Aufnahme main46.wav spielt dazu.
+  - **Dokument (Abnahme 4 Mangel 1):** jetzt ein beschriebener Zettel an der Wand neben dem Schrank mit der Sicherung, in der
+    Kamera des Landeplatzes zu sehen: C_belege/nb5_dokument_cut5_mit_ohne.png (links mit, rechts ohne Zettel).
+  - **Neue Assets (Paket-Gate):** `re15_port/shared_assets/RE2/VENTIL1080.RBJ` (13128 B, Animation), `VENTIL1080.EDT`/`.VH`/
+    `.VB` (Drehgeraeusch) - bytegleich aus RE2 ROOM1080 (tools/r41_ventilkette/re2_ventil_export.py). Plakat, Zettel und Hebel
+    sind eingebacken (gen/*.inc), keine Datei im Paket.
+  - **Sprachdateien:** synchro/STAGE2/room2030/main46.wav und room2031/main46.wav (Ihre Aufnahme, vorhanden). Fuer die neuen
+    Kasten-Texte in 2010 waeren die Plaetze synchro/STAGE2/room2010/main40.wav .. main44.wav (Elza: room2011/) - ohne Datei
+    bleibt die Zeile stumm.
+  - **Fragen:** (o) Alarm wie am Spielende: RE2s Selbstzerstoerungs-Alarm (SUB_25) waehrend der 60 s spielen - dafuer braucht der
+    Musik-Lader (audio_pc.c, in dieser Runde bei Spur D) einen Haken. Soll Spur D ihn setzen, oder darf Spur C dort eine Zeile
+    setzen? (p) Countdown so lassen (MM:SS:HH oben rechts, Farbe der Fristen) oder anders (z. B. nur Sekunden, andere Stelle)?
+    (q) Der einzige neue Satz "A fuse box for the valve controls." - so lassen?
 * **Stand Nachbesserung 4 (Nachtraege 12/13) — zur Freigabe:**
   - **Das Ventilraetsel (Vorschlag, Nachtrag 13).** Im unteren Bereich von 2030 gibt es sechs drehbare Ventile, je ein Rad
     unter einem Nummernschild (aus den Hintergruenden, C_belege/nb4_ventile_raeder_sheet.png): Nordwand **03 rot, 02 gruen,

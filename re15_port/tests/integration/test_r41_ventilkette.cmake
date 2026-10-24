@@ -8,11 +8,17 @@
 # mit dem Setzen der Bits 103 + 100; dazu die Leiter in 2000 als Sperrtext (kein Raumwechsel nach 2050).
 #
 #   A  ROOM2030 per Debug-Sprung, RE15_PLAYER_POS (-2650,7280) Blick +z Band 1 = am Sued-Landeplatz vor Ventil 09, mit
-#      gesenkter Bruecke + aufgehobener Sicherung (Bits 101/102, (3,108) = Bedingung der Nachtraege 9/10). Nachbesserung 4
+#      gesenkter Bruecke + Sicherung im Ventilkasten 2010 (Bits 101/102 + (9,125) = Bedingung der Nachtraege 9/16; (3,108)
+#      dazu, weil die Sicherung vorher aufgehoben wurde). Nachbesserung 5: nach jedem Ja die RE2-Dreh-Animation (RE2 ROOM1080
+#      sub08, 345 Takte) -> Wartezeit 450 statt 90; Zaehlerstart ~F4500, Ost-Tuer F4700. Nachbesserung 4
 #      (Nachtrag 13): die richtige Folge 09/07/02/01 zu Fuss (RE15_WEGPLAN, Plan _ventile unten: Sued, Sued, Steg, Nord, Nord),
-#      nach der vierten Drehung "RICHTIG" -> Ereignis 26 -> Warnung 46 -> Marker -> Zaehler. F2300 RE15_FIRE_AOT=0 (die
+#      nach der vierten Drehung "RICHTIG" -> Ereignis 26 -> Warnung 46 -> Marker -> Zaehler. F4700 RE15_FIRE_AOT=0 (die
 #      umgelenkte Ost-Tuer feuert ueber den echten Tuerpfad) -> ROOM20B0 geladen, "Zaehler lief beim Verlassen" (Bits 103 +
-#      100), Framedump F2370 (20B0 Eintrittsszene), Ende F2440. Gemessen 2026-10-24 (Lauf v2b_leon): Zaehler ab ~F1760.
+#      100), Ende 60 Bilder nach der Ankunft in 20B0 (der Bildzaehler g_engine.frame_count beginnt je Raum neu - Wegplan-Log
+#      und RE15_EXIT_AT "#raum" zaehlen je Raum; die Framedumps F4440/F4560/F4680 liegen darum in 2030 und werden in 20B0
+#      nicht ueberschrieben). Gemessen 2026-10-24 (Messlauf nb5 v2bc, Plan wie _ventile):
+#      die Wegplan-WARTE ruht waehrend der Animation (player_mode 2: je Ja 795 statt 450 Bilder), Warnung zu F4483, Countdown
+#      sichtbar ab F4500 (Bildausschnitt x 230..286 y 20..36 Mittel Rot 68 statt 15 davor).
 #   B  ROOM2000 per Debug-Sprung + RE15_PLAYER_POS vor die Leiter (-26000,10300, Blick -x; Vorwaertspunkt 620 -> x -26620
 #      liegt im Leiter-Rechteck x -27600..-26600 @0x0169E, bei -25900 nicht - gemessen 22:12): F330 Aktion ->
 #      Sperrtext 40, KEIN Raumwechsel nach ROOM2050 bis zum Ende (F520).
@@ -26,14 +32,21 @@
 #      Schliessen, Tod 125 +- 2 Bilder nach dem Flutbeginn, Blende, Wasser -6300 / Spieler -5400.
 #      Nachbesserung 1 (Abnahme 0, M4): C laeuft im BESCHLEUNIGTEN Renderer (direct3d/opengl, wie beim Nutzer), weil SDLs
 #      Software-Renderer die subtraktive Blende ABR 2 nicht kann. Die Farbe der Bildmitte wird an Framedumps je 6 Bilder im
-#      Fenster F3500..F3840 gemessen (das Todesbild haengt vom Weg ab, gemessen F3650): der letzte Dump <= Tod - 4 und der erste >= Tod + 5
+#      Fenster F6300..F6594 gemessen (das Todesbild haengt vom Weg ab; Nachbesserung 4 F3650, Nachbesserung 5 F6408): der letzte Dump <= Tod - 4 und der erste >= Tod + 5
 #      (Werkzeug test_r41_ventilkette ppm): vorher Rot und Gruen >= 15 (unverschleiert), nachher Rot und Gruen <= 4 und
 #      Blau >= 20 (Rot+Gruen abgezogen, Blau bleibt).
 #
-#   D  Nachtraege 9/10/13: Ventil 09 (Slot 19, Ereignis 22) ohne die Sicherung ((3,108) = 0; Bits 101/102 gesetzt)
-#      -> Port-Programm 2030_ventile_vorher, Text 49 "I should look around here first.", KEIN Zaehler, KEINE Flut.
+#   D  Nachtraege 9/16: Ventil 09 (Slot 19, Ereignis 22) ohne die Sicherung im Ventilkasten 2010 ((9,125) = 0; Bits 101/102
+#      gesetzt) -> Port-Programm 2030_ventile_vorher, Text 49 = Original "It's locked." (ROOM20A0 msg 1 @0x203C), KEIN
+#      Zaehler, KEINE Flut.
 #
-# Die Spinnen (main00 Switch auf den Eintritts-Cut, Case 0 @0x01C12) stehen am Ring; A, C und D laufen ohne sie (Kill-Bits).
+#   E  Abnahme 4 Mangel 2 (Nachbesserung 5): Start wie A, Plan _ventile, nach dem Schliessen der Warnung zurueck ueber den
+#      Steg an das Plakat (Sued-Landeplatz, Slot 21, Ereignis 23) und Aktion -> waehrend des Zaehlers oeffnet das Plakat
+#      NICHT ("Plakat gesperrt"); stehen bleiben -> Flut -> die Pad-Sperre der Flut (ROOM2030 sub02 @0x01E30 Form) bleibt bis
+#      zum Ertrinken: zwischen "FLUT: Wasser steigt" und "ERTRUNKEN" kein "letterbox closed -> gameplay" (der Fehlerfall der
+#      Abnahme 4, Lauf pk: F3555 mitten in der Flut).
+#
+# Die Spinnen (main00 Switch auf den Eintritts-Cut, Case 0 @0x01C12) stehen am Ring; A, C, D und E laufen ohne sie (Kill-Bits).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_R41C_WERKZEUG=<test_r41_ventilkette> -DWORKDIR=<dir> -P test_r41_ventilkette.cmake
 # =============================================================================
@@ -91,14 +104,14 @@ WARTE 10
 AKTION
 WARTE 150
 AKTION
-WARTE 90
+WARTE 450
 GEHE 2600 7280 100
 BLICK 3072
 WARTE 10
 AKTION
 WARTE 150
 AKTION
-WARTE 90
+WARTE 450
 GEHE -1050 6900 100
 GEHE -1050 6000
 GEHE -1050 -6400
@@ -109,14 +122,14 @@ WARTE 10
 AKTION
 WARTE 150
 AKTION
-WARTE 90
+WARTE 450
 GEHE -1350 -7880 100
 BLICK 1024
 WARTE 10
 AKTION
 WARTE 150
 AKTION
-WARTE 150
+WARTE 450
 AKTION
 WARTE 30
 ")
@@ -125,17 +138,17 @@ WARTE 30
 set(WORKDIR "${_basis}_a")
 file(MAKE_DIRECTORY "${WORKDIR}")
 file(WRITE "${WORKDIR}/plan.txt" "${_ventile}ENDE\n")
-re15_start_spiel(_rva 420
+re15_start_spiel(_rva 600
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
     RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_DEBUG_JUMP=2030@250
     "RE15_PLAYER_POS=-2650,7280,3072,1"
-    "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108"
+    "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125"
     "RE15_WEGPLAN=${WORKDIR}/plan.txt" RE15_WEGPLAN_LOG=wegplan.txt
     RE15_MSG_LOG=1
-    "RE15_FIRE_AOT=0@2300#2030"
-    "RE15_FRAMEDUMP=2370:${WORKDIR}/f20b0_2370.ppm"
-    "RE15_EXIT_AT=2440#20B0"
+    "RE15_FIRE_AOT=0@4700#2030"
+    "RE15_FRAMEDUMP=4440-4680/120:${WORKDIR}/f_"
+    "RE15_EXIT_AT=60#20B0"
     "${RE15_PC_EXE}")
 if(NOT EXISTS "${WORKDIR}/debug.log")
     message(FATAL_ERROR "r41_ventilkette[a]: kein debug.log (exit=${_rva}, ${WORKDIR})")
@@ -148,6 +161,8 @@ _muss("${_dbg}" "[msg] room=2030 id=55" a "Frage 55 (Ventil 09)")
 _muss("${_dbg}" "[ventilkette41] Folge 09 07 02 01 -> RICHTIG: Warnung, Zaehler, Flut" a "richtige Folge nach der vierten Drehung")
 _muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile_flut" a "Ereignis 26 vom C-Takt")
 _muss("${_dbg}" "[msg] room=2030 id=46" a "Warnung 46")
+_muss("${_dbg}" "[msgtext] room=2030 id=46 \"WARNING: The water will rise in one minute. Please leave the room immediately!\"" a "Warnung 46 im Wortlaut des Nachtrags 19")
+_muss("${_dbg}" "Plc_motion(entity=0, motion=17, flags=0x00)" a "RE2-Dreh-Animation (Clip 17, RE2 ROOM1080 sub08) beim Drehen")
 _muss("${_dbg}" "[ventilkette41] Zaehler laeuft: 1800 Takte, Ost-Tuer -> 20B0, Wasser geparkt" a "Zaehler im Spiel-Takt")
 _muss("${_dbg}" "[ventilkette41] ROOM2030: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)" a "Ost-Tuer umgelenkt")
 _muss("${_dbg}" "[fire-aot] slot=0" a "Ost-Tuer gefeuert (echter Tuerpfad)")
@@ -155,8 +170,32 @@ _muss("${_dbg}" "[esp] room 20B0:" a "ROOM20B0 geladen (Umlenkung wirksam)")
 _muss("${_dbg}" "[ventilkette41] Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100" a "Flut gelaufen + Leiter frei")
 _darf_nicht("${_dbg}" "[esp] room 2070:" a "ohne Umlenkung waere die Ost-Tuer nach ROOM2070 gegangen")
 _muss("${_dbg}" "EXIT_AT: Bild" a "Endbild in ROOM20B0 erreicht")
-if(NOT EXISTS "${WORKDIR}/f20b0_2370.ppm")
-    message(FATAL_ERROR "r41_ventilkette[a]: Framedump F2370 fehlt")
+# Countdown der 60 s (Nachtrag 18 Punkt 4; MM:SS:HH in der Nachrichtenschrift, Farbe 2 wie die Frist der Zeitbombe ROOM2040
+# msg 4 @0x19A6, Lage oben rechts x 230 y 20 = PORT-WAHL, include/re15_ventilkette_r41.h RE15_R41C_COUNTDOWN_*): Mittel des
+# Ausschnitts x 230..286 y 20..36 vor dem Schliessen der Warnung (F4440: kein Zaehler) und waehrend des Zaehlers (F4560,
+# F4680). Gemessen 2026-10-24 (Messlauf nb5 v2bc, beschleunigt): F4440 Rot 15, F4500/F4680 Rot 68/67; 2026-10-25 00:24
+# (Riegel-Lauf lauf_da6c18d5_a, Software-Renderer): F4440 15, F4560 66, F4680 67.
+function(_ausschnitt _bild _out)
+    set(_ppm "${WORKDIR}/f_00${_bild}.ppm")
+    if(NOT EXISTS "${_ppm}")
+        message(FATAL_ERROR "r41_ventilkette[a]: Framedump F${_bild} fehlt (${_ppm})")
+    endif()
+    execute_process(COMMAND "${RE15_R41C_WERKZEUG}" ppm "${_ppm}" 230 20 286 36 OUTPUT_VARIABLE _o RESULT_VARIABLE _r)
+    string(REGEX MATCH "MITTEL ([0-9]+) ([0-9]+) ([0-9]+)" _m "${_o}")
+    if(NOT _m)
+        message(FATAL_ERROR "r41_ventilkette[a]: ppm-Werkzeug F${_bild}: ${_o}")
+    endif()
+    set(${_out} "${CMAKE_MATCH_1}" PARENT_SCOPE)
+endfunction()
+_ausschnitt(4440 _cd_vor)
+_ausschnitt(4560 _cd_1)
+_ausschnitt(4680 _cd_2)
+message(STATUS "r41_ventilkette[a]: Countdown-Ausschnitt Rot F4440 ${_cd_vor}, F4560 ${_cd_1}, F4680 ${_cd_2}")
+if(NOT _cd_vor LESS 30)
+    message(FATAL_ERROR "r41_ventilkette[a]: vor dem Zaehler (F4440) ist der Countdown-Ausschnitt schon rot (${_cd_vor}) - Gegenprobe ungueltig")
+endif()
+if(_cd_1 LESS 40 OR _cd_2 LESS 40)
+    message(FATAL_ERROR "r41_ventilkette[a]: kein Countdown oben rechts waehrend des Zaehlers (Rot F4560 ${_cd_1}, F4680 ${_cd_2}; erwartet >= 40)")
 endif()
 
 # ---- B: 2000 Leiter = Sperrtext, kein Raumwechsel ------------------------------------------------------------
@@ -197,16 +236,16 @@ GEHE 6550 -200
 BLICK 3072
 ENDE
 ")
-re15_start_spiel(_rvc 480
+re15_start_spiel(_rvc 720
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
     RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_DEBUG_JUMP=2030@250
     "RE15_PLAYER_POS=-2650,7280,3072,1"
-    "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108"
+    "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125"
     "RE15_WEGPLAN=${WORKDIR}/plan.txt" RE15_WEGPLAN_LOG=wegplan.txt
     RE15_MSG_LOG=1 RE15_FADE_LOG=1 RE15_STATE_LOG=state.txt
-    "RE15_FRAMEDUMP=3500-3840/6:${WORKDIR}/f_"
-    "RE15_EXIT_AT=3850#2030"
+    "RE15_FRAMEDUMP=6300-6594/6:${WORKDIR}/f_"
+    "RE15_EXIT_AT=6600#2030"
     "${RE15_PC_EXE}")
 if(NOT EXISTS "${WORKDIR}/debug.log")
     message(FATAL_ERROR "r41_ventilkette[c]: kein debug.log (exit=${_rvc}, ${WORKDIR})")
@@ -284,14 +323,15 @@ function(_mittel _bild _out)
     endif()
     set(${_out} "${CMAKE_MATCH_1};${CMAKE_MATCH_2};${CMAKE_MATCH_3}" PARENT_SCOPE)
 endfunction()
-# Dumps je 6 Bilder ab F3500: der letzte <= Tod - 4 und der erste >= Tod + 5. Gemessen (Lauf lauf_a8685a18_c, exe 15:4x):
-# Warnung zu ~F1760, Flut F3524, Tod F3650, Todesschirm (pst 7) F3762, Titel/Neustart nach F3911 -> das Ende F3850 muss
-# zwischen Tod und Titel liegen (Tod + 200; frueher F2960 = Tod F2746 + 214).
-if(_f_tot LESS 3590 OR _f_tot GREATER 3830)
-    message(FATAL_ERROR "r41_ventilkette[c]: Todesbild F${_f_tot} ausserhalb F3590..F3830 (Dump-Fenster F3500..F3840, Ende F3850 vor dem Titel; Weg oder Zaehler veraendert?)")
+# Dumps je 6 Bilder ab F6300: der letzte <= Tod - 4 und der erste >= Tod + 5. Nachbesserung 5: vier Drehungen mit der RE2-
+# Animation (je 345 Takte) verschieben alles um ~2760 Bilder. Gemessen 2026-10-25 00:24 (Riegel-Lauf lauf_da6c18d5_c):
+# Warnung zu F4482, Flut F6283 (+1801), Tod F6408 (+125); vorher (Nachbesserung 4, lauf_a8685a18_c) Tod F3650, Titel nach
+# F3911 (Tod + 261) -> Schranken wie damals Tod - 60 .. Tod + 180, Ende F6600 = obere Schranke + 12 (vor dem Titel).
+if(_f_tot LESS 6348 OR _f_tot GREATER 6588)
+    message(FATAL_ERROR "r41_ventilkette[c]: Todesbild F${_f_tot} ausserhalb F6348..F6588 (Dump-Fenster F6300..F6594, Ende F6600 vor dem Titel; Weg oder Zaehler veraendert?)")
 endif()
-math(EXPR _bild_vor "((${_f_tot} - 4 - 3500) / 6) * 6 + 3500")
-math(EXPR _bild_nach "((${_f_tot} + 5 - 3500 + 5) / 6) * 6 + 3500")
+math(EXPR _bild_vor "((${_f_tot} - 4 - 6300) / 6) * 6 + 6300")
+math(EXPR _bild_nach "((${_f_tot} + 5 - 6300 + 5) / 6) * 6 + 6300")
 _mittel(${_bild_vor} _rgb_vor)
 _mittel(${_bild_nach} _rgb_nach)
 list(GET _rgb_vor 0 _vr)
@@ -328,11 +368,68 @@ endif()
 file(READ "${WORKDIR}/debug.log" _dbgd)
 _muss("${_dbgd}" "[fire-aot] slot=19" d "Ventil 09 (Slot 19, Ereignis 22) gefeuert")
 _muss("${_dbgd}" "[ventilkette41] ROOM2030 Ereignis 22 -> Port-Programm 2030_ventile_vorher" d "ohne Sicherung kein Ventilraetsel")
-_muss("${_dbgd}" "[msgtext] room=2030 id=49 \"I should look around here first.\"" d "Text 49 neutral (Nachtrag 13 Folge 1)")
+_muss("${_dbgd}" "[msgtext] room=2030 id=49 \"It's locked.\"" d "Text 49 = Original ROOM20A0 msg 1 @0x203C (Nachtrag 16 Folge 4)")
 _darf_nicht("${_dbgd}" "Port-Programm 2030_ventil_09" d "nicht die Ventil-Frage")
 _darf_nicht("${_dbgd}" "Zaehler laeuft" d "kein Zaehler ohne Sicherung")
 _darf_nicht("${_dbgd}" "[msg] room=2030 id=46" d "keine Warnung ohne Sicherung")
 _muss("${_dbgd}" "EXIT_AT: Bild" d "Endbild erreicht")
 
+# ---- E: Plakat waehrend des Zaehlers gesperrt, die Flut-Sperre bleibt bis zum Tod (Abnahme 4 Mangel 2) -------------
+# Ende F6450: Warnung zu ~F4482 und Flut ~F6283 wie C (gleicher Plan bis zur Warnung), Tod auf dem Landeplatz (y -1800) ~61
+# Bilder nach dem Flutbeginn (Abnahme 4 Lauf pk: Flut F3524 -> ERTRUNKEN F3585), Titel erst ~260 Bilder nach dem Tod.
+set(WORKDIR "${_basis}_e")
+file(MAKE_DIRECTORY "${WORKDIR}")
+file(WRITE "${WORKDIR}/plan.txt" "${_ventile}FLAG 5 29
+GEHE -1050 -7400 100
+GEHE -1050 -6400
+GEHE -1050 6000
+GEHE -1050 6900 100
+GEHE -3650 7280 100
+BLICK 3072
+WARTE 10
+AKTION
+WARTE 60
+FLAG 5 28
+ENDE
+")
+re15_start_spiel(_rve 720
+    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+    RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+    RE15_DEBUG_JUMP=2030@250
+    "RE15_PLAYER_POS=-2650,7280,3072,1"
+    "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125"
+    "RE15_WEGPLAN=${WORKDIR}/plan.txt" RE15_WEGPLAN_LOG=wegplan.txt
+    RE15_MSG_LOG=1
+    "RE15_EXIT_AT=6450#2030"
+    "${RE15_PC_EXE}")
+if(NOT EXISTS "${WORKDIR}/debug.log")
+    message(FATAL_ERROR "r41_ventilkette[e]: kein debug.log (exit=${_rve}, ${WORKDIR})")
+endif()
+file(READ "${WORKDIR}/debug.log" _dbge)
+set(_wpe "")
+if(EXISTS "${WORKDIR}/wegplan.txt")
+    file(READ "${WORKDIR}/wegplan.txt" _wpe)
+endif()
+_muss("${_dbge}" "[ventilkette41] Zaehler laeuft: 1800 Takte" e "Zaehler gestartet")
+_muss("${_dbge}" "Plakat gesperrt (Zaehler/Flut laufen, ihre Pad-Sperre bleibt)" e "Aktion am Plakat waehrend des Zaehlers")
+_darf_nicht("${_dbge}" "Port-Programm 2030_plakat" e "waehrend des Zaehlers oeffnet das Plakat nicht")
+_muss("${_wpe}" "FLAG (5,28) = 0" e "Plakat-Marker (5,0x1C) bleibt 0")
+string(FIND "${_dbge}" "[ventilkette41] FLUT: Wasser steigt" _p_flut_e)
+if(_p_flut_e LESS 0)
+    message(FATAL_ERROR "r41_ventilkette[e]: keine Flut")
+endif()
+string(SUBSTRING "${_dbge}" ${_p_flut_e} -1 _nach_flut_e)
+string(FIND "${_nach_flut_e}" "[ventilkette41] ERTRUNKEN:" _p_tot_e)
+if(_p_tot_e LESS 0)
+    message(FATAL_ERROR "r41_ventilkette[e]: nach der Flut nicht ertrunken")
+endif()
+string(SUBSTRING "${_nach_flut_e}" 0 ${_p_tot_e} _flut_bis_tot_e)
+string(FIND "${_flut_bis_tot_e}" "letterbox closed -> gameplay" _p_frei_e)
+if(NOT _p_frei_e LESS 0)
+    message(FATAL_ERROR "r41_ventilkette[e]: zwischen Flutbeginn und Tod gibt das Spiel den Spieler frei (Pad-Sperre der Flut aufgehoben, Abnahme 4 Mangel 2)")
+endif()
+_muss("${_dbge}" "EXIT_AT: Bild" e "Endbild erreicht")
+
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_ventilkette: A (2030 richtige Folge 09/07/02/01 zu Fuss -> Zaehler -> Ost-Tuer -> 20B0, Bits 103+100), B (Leiter 2000 = Text 40), C (Zaehler ${_d_zaehler} -> Flut -> tot nach ${_d_tod}, Blende ${_rgb_vor} -> ${_rgb_nach}) und D (ohne Sicherung Text 49, kein Zaehler) bestanden")
+message(STATUS "r41_ventilkette: E (Plakat waehrend des Zaehlers gesperrt, Flut-Sperre bis zum Tod) bestanden")
+message(STATUS "r41_ventilkette: A (2030 richtige Folge 09/07/02/01 zu Fuss mit RE2-Dreh-Animation -> Warnung 46 (Nachtrag 19) -> Zaehler -> Ost-Tuer -> 20B0, Bits 103+100), B (Leiter 2000 = Text 40), C (Zaehler ${_d_zaehler} -> Flut -> tot nach ${_d_tod}, Blende ${_rgb_vor} -> ${_rgb_nach}) und D (ohne Kasten-Sicherung Text 49 \"It's locked.\", kein Zaehler) bestanden")

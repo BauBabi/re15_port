@@ -576,6 +576,9 @@ const uint8_t *re15_ventilkette_r41_ereignis(uint16_t room_id, uint8_t event_id)
         else if (event_id == RE15_R41C_EV_PLAKAT && !s_plakat_offen && !bit(RE15_R41C_BIT_FLUT_GELAUFEN) &&
                  !s_timer && !s_ventile_geloest && !s_flut)
             name = "2030_plakat";   /* Abnahme 4 Mangel 2: waehrend Zaehler/Flut kein Plakat (deren Pad-Sperre bleibt) */
+        else if (event_id == RE15_R41C_EV_PLAKAT && (s_timer || s_ventile_geloest || s_flut))
+            LOG("[ventilkette41] ROOM%04X Ereignis %u: Plakat gesperrt (Zaehler/Flut laufen, ihre Pad-Sperre bleibt)\n",
+                (unsigned)room_id, (unsigned)event_id);   /* nur Protokoll (Riegel E), kein Programm */
     } else if (ist(room_id, RE15_R41C_RAUM_2010)) {
         /* Nachbesserung 5 (Nachtrag 16): Ventil-Sicherungskasten - Zustaende wie der Original-Kasten 2060 sub00
          * @0x0109E..@0x010DE: steckt (Bit 125) -> Text + Frage zum Herausnehmen; aufgehoben ((3,108)) und nicht im

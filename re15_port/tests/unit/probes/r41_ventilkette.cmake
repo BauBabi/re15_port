@@ -16,7 +16,9 @@ set_tests_properties(unit_r41_ventilkette PROPERTIES TIMEOUT 300)
 # Echter Weg mit der exe (nur PC-Ziel): A Sprung nach 2030 (Sued-Landeplatz), die richtige Ventil-Folge zu Fuss -> Warnung,
 # Zaehler, Tuer Slot 0 feuert -> ROOM20B0 geladen (Umlenkung), Bits 103 + 100; B 2000 mit Leiter-Text; C Zaehler abgelaufen
 # -> Flut -> tot (Nachbesserung 1, M4: beschleunigter Renderer, Farbe der Ertrink-Blende ueber das ppm-Werkzeug von
-# test_r41_ventilkette); D Ventil ohne Sicherung = Text 49.
+# test_r41_ventilkette); D Ventil ohne Kasten-Sicherung = Text 49 "It's locked.". Nachbesserung 5: mit der RE2-Dreh-Animation
+# laeuft A in 2030 bis F4700 (Countdown-Ausschnitt F4440/F4560/F4680) + 60 Bilder in 20B0, C bis F6600; neu E (Abnahme 4
+# Mangel 2: Plakat waehrend des Zaehlers gesperrt, Flut-Sperre bis zum Tod) bis F6450.
 if(RE15_BUILD_PC AND TARGET re15_pc)
     add_test(NAME integration_r41_ventilkette
              COMMAND ${CMAKE_COMMAND}
@@ -24,7 +26,7 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
                      -DRE15_R41C_WERKZEUG=$<TARGET_FILE:test_r41_ventilkette>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette.cmake)
-    set_tests_properties(integration_r41_ventilkette PROPERTIES TIMEOUT 900 RUN_SERIAL TRUE)
+    set_tests_properties(integration_r41_ventilkette PROPERTIES TIMEOUT 1500 RUN_SERIAL TRUE)
 endif()
 
 # Teil B (dritte Fortsetzung 2026-10-24): die Glieder, die Teil A nicht faehrt — Pult 2050 -> 80 V -> Hebel = Original
@@ -58,9 +60,11 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
     endif()
 endif()
 
-# Nachbesserung 3/4 (Abnahme 2 N1/N2/N4, Abnahme 3 Maengel 3/4; Nachtraege 7/9/10/12/13): die Kette in 2030 und der Weg nach
-# der Flut zu Fuss, je Figur - v1 Bruecke, v2a Ventil ohne Sicherung = 49 + Sicherung + Plakat-Folge = falsch -> zurueck,
-# v2b richtige Folge -> Warnung -> Flucht in 60 s -> 20B0, v2d Dokument -> Leser -> Bit 107, v2p Plakat-Nahaufnahme,
+# Nachbesserung 3/4/5 (Abnahme 2 N1/N2/N4, Abnahme 3 Maengel 3/4, Abnahme 4; Nachtraege 7/9/12/13/16/18/19): die Kette in 2030
+# und der Weg nach der Flut zu Fuss, je Figur - v1 Bruecke, v2a Ventil ohne Kasten-Sicherung = 49 "It's locked." (auch mit der
+# Sicherung in der Hand), v2b richtige Folge mit RE2-Dreh-Animation -> Warnung -> Flucht in 60 s -> 20B0, v2c Plakat-Folge =
+# falsch -> zurueck, v2d Dokument -> Leser -> Bit 107, v2p Plakat-Nahaufnahme, k1 Ventilkasten 2010 (Standbild + Ton),
+# k2 nach der Flut Sicherung aus dem Kasten -> zu Fuss bis 2060, k3 Generator-Kasten 2060 mit Bit 125 = Text 3,
 # g1/g2 Sicherung + Generator 2060 (Original-Raetsel, (3,126)), w1 20B0 -> 2050 -> 2020 -> 2030 Nordgalerie (geflutet) -> 2060,
 # w3 2060 -> 2030 (Pegel -5350) -> 2020 -> 2050 -> 20B0, w4 20B0 -> Ost-Tuer -> 2030 Ring -> Lift B -> 2080 -> Rechner
 # (Original) -> 2090. Eigene exe-Praefixe re15_pc_r41cw<figur>_.
@@ -74,10 +78,11 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
                  COMMAND ${CMAKE_COMMAND}
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                          -DRE15_R41C_WERKZEUG=$<TARGET_FILE:test_r41_ventilkette>
+                         -DRE15_R41C_PSX=${RE15_ASSETS_PATH}
                          -DFIGUR=${_r41c_fig}
                          -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_weg_${_r41c_fig}
                          -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_weg.cmake)
-        set_tests_properties(${_r41c_name} PROPERTIES TIMEOUT 2400 RUN_SERIAL TRUE)
+        set_tests_properties(${_r41c_name} PROPERTIES TIMEOUT 3600 RUN_SERIAL TRUE)
     endforeach()
 endif()
 

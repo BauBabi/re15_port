@@ -1,6 +1,8 @@
 # =============================================================================
 # VENTILKETTE IN EINEM EXE-LAUF (Runde 41 Spur C, Nachbesserung 1 — Abnahme 0, Mangel M2; Nachbesserung 4 — Abnahme 3,
-# Mangel 1: auf die Kette der Nachbesserungen 3/4 umgestellt): 2030 Sued-Landeplatz (Bruecke unten, Sicherung genommen =
+# Mangel 1: auf die Kette der Nachbesserungen 3/4 umgestellt; Nachbesserung 5 - Abnahme 4 Mangel 3: Bedingung der Ventile ist
+# seit Nachtrag 16 die Sicherung im Ventilkasten 2010 (9,125), nach jedem Ja laeuft die RE2-Dreh-Animation (345 Takte, der
+# Wegplan ruht waehrend player_mode 2) -> WARTE 450): 2030 Sued-Landeplatz (Bruecke unten, Sicherung genommen =
 # Bedingung der Nachtraege 9/10) -> die richtige Ventil-Folge 09/07/02/01 ZU FUSS (Nachtrag 13) -> Warnung -> ZU FUSS ueber
 # Steg, Treppe und Ring durch die Ost-Tuer -> ROOM20B0 -> Auswasch-Szene des Originals bis zur Freigabe ((3,235)=1, Balken
 # weg) -> zu Fuss durch den Kanal an die Leiter -> ROOM2050. Dossier analysis/befunde_runde41/C_ventilkette.md §0b M2, §0e.
@@ -114,14 +116,14 @@ WARTE 10
 AKTION
 WARTE 150
 AKTION
-WARTE 90
+WARTE 450
 GEHE 2600 7280 100
 BLICK 3072
 WARTE 10
 AKTION
 WARTE 150
 AKTION
-WARTE 90
+WARTE 450
 GEHE -1050 6900 100
 GEHE -1050 6000
 GEHE -1050 -6400
@@ -132,14 +134,14 @@ WARTE 10
 AKTION
 WARTE 150
 AKTION
-WARTE 90
+WARTE 450
 GEHE -1350 -7880 100
 BLICK 1024
 WARTE 10
 AKTION
 WARTE 150
 AKTION
-WARTE 150
+WARTE 450
 AKTION
 WARTE 30
 GEHE -1900 -7700 80
@@ -181,7 +183,7 @@ ENDE
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
         RE15_MSG_LOG=1 RE15_FLAG_CENSUS=1
         RE15_DEBUG_JUMP=2030@250
-        "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108"
+        "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125"
         "RE15_PLAYER_POS=-2650,7280,3072,1"
         "RE15_WEGPLAN=${WORKDIR}/kette.txt" RE15_WEGPLAN_LOG=wegplan.txt
         "RE15_EXIT_AT=${_exit}"
@@ -205,9 +207,9 @@ endmacro()
 
 # Ohne den Haken der Spur A haengt die Szene (Spieler nie frei) -> dann nur bis zur 20B0-Ankunft (200 Bilder in 20B0).
 if(_haken)
-    _kette_lauf(voll "60#2050" 480)
+    _kette_lauf(voll "60#2050" 720)
 else()
-    _kette_lauf(bis20b0 "200#20B0" 420)
+    _kette_lauf(bis20b0 "200#20B0" 600)
 endif()
 
 # ---- 2030: richtige Folge zu Fuss -> Warnung -> Flucht zu Fuss -> Ost-Tuer -> 20B0 (ohne RE15_FIRE_AOT) ----------------

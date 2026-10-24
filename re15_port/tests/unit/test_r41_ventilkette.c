@@ -76,6 +76,7 @@
 #include "re15_md1.h"
 #include "re15_files.h"      /* Nachbesserung 4: Dokument 6 */
 #include "re15_menu.h"       /* re15_menu_doc_active */
+#include "re15_bss.h"        /* Nachbesserung 5: Werkzeug "bss" (Standbild 2030 Cut 7 im Riegel k1) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -1555,10 +1556,89 @@ static int ppm_mittel(const char *pfad, int x0, int y0, int x1, int y1)
     return 0;
 }
 
+/* Werkzeug "bss"/"bssdiff" (Nachbesserung 5, Riegel integration_r41_ventilkette_weg k1): die erste Kamera-Scheibe (0x10000 B)
+ * einer BSS-Datei, dekodiert mit derselben Kette wie das Standbild der Ventile (ventilkette_r41_pc.c standbild_laden:
+ * re15_bss_parse_chunk -> re15_bss_vlc_decode -> re15_bss_mdec_decode, 320 x 240 RGB). "bss" gibt das Flaechenmittel im
+ * Format von "ppm" aus; "bssdiff" vergleicht einen Framedump Pixel fuer Pixel mit dem Bild: ABWEICHUNG = mittlere
+ * Abweichung je Pixel ((|dr| + |dg| + |db|) / 3), GLEICH = Anteil der Pixel mit Abweichung <= 4 in Prozent. */
+static uint8_t *bss_rgb(const char *pfad)
+{
+    long sz = 0;
+    uint8_t *d = slurp(pfad, &sz);
+    if (!d || sz < 0x10000) { free(d); return NULL; }
+    re15_bss_chunk_t ch;
+    uint8_t *aus = NULL;
+    if (re15_bss_parse_chunk(d, 0x10000, &ch) && re15_bss_chunk_has_video(&ch)) {
+        size_t cap = ((size_t)ch.run_length_words + 2) * 8 + 4096;
+        int16_t *co = (int16_t *)malloc(cap * sizeof(int16_t));
+        uint8_t *rgb = (uint8_t *)malloc((size_t)RE15_BSS_FRAME_WIDTH * RE15_BSS_FRAME_HEIGHT * 3);
+        if (co && rgb) {
+            int k = re15_bss_vlc_decode(ch.vlc_payload, ch.vlc_payload_size, ch.run_length_words, ch.quant, ch.version, co, cap);
+            if (k >= 0 && re15_bss_mdec_decode(co, (size_t)k, RE15_BSS_FRAME_WIDTH, RE15_BSS_FRAME_HEIGHT, rgb) == 0) {
+                aus = rgb; rgb = NULL;
+            }
+        }
+        free(co); free(rgb);
+    }
+    free(d);
+    return aus;
+}
+
+static int flaeche_ok(int x0, int y0, int x1, int y1)
+{
+    return !(x0 < 0 || y0 < 0 || x1 > RE15_BSS_FRAME_WIDTH || y1 > RE15_BSS_FRAME_HEIGHT || x0 >= x1 || y0 >= y1);
+}
+
+static int bss_mittel(const char *pfad, int x0, int y0, int x1, int y1)
+{
+    if (!flaeche_ok(x0, y0, x1, y1)) { printf("FEHLER: Flaeche\n"); return 2; }
+    uint8_t *rgb = bss_rgb(pfad);
+    if (!rgb) { printf("FEHLER: %s nicht lesbar/dekodierbar\n", pfad); return 2; }
+    long su[3] = { 0, 0, 0 }, cnt = 0;
+    for (int y = y0; y < y1; y++)
+        for (int x = x0; x < x1; x++) {
+            const uint8_t *px = rgb + ((long)y * RE15_BSS_FRAME_WIDTH + x) * 3;
+            su[0] += px[0]; su[1] += px[1]; su[2] += px[2]; cnt++;
+        }
+    printf("MITTEL %ld %ld %ld (BSS %dx%d, Flaeche %d,%d..%d,%d)\n", su[0] / cnt, su[1] / cnt, su[2] / cnt,
+           RE15_BSS_FRAME_WIDTH, RE15_BSS_FRAME_HEIGHT, x0, y0, x1, y1);
+    free(rgb);
+    return 0;
+}
+
+static int bss_diff(const char *bss, const char *ppm, int x0, int y0, int x1, int y1)
+{
+    if (!flaeche_ok(x0, y0, x1, y1)) { printf("FEHLER: Flaeche\n"); return 2; }
+    uint8_t *rgb = bss_rgb(bss);
+    if (!rgb) { printf("FEHLER: %s nicht lesbar/dekodierbar\n", bss); return 2; }
+    long sz = 0;
+    uint8_t *d = slurp(ppm, &sz);
+    int w = 0, h = 0, mx = 0, n = 0;
+    if (!d || sscanf((const char *)d, "P6 %d %d %d%n", &w, &h, &mx, &n) != 3 || w != RE15_BSS_FRAME_WIDTH ||
+        h != RE15_BSS_FRAME_HEIGHT || mx != 255 || (long)n + 1 + (long)w * h * 3 > sz) {
+        printf("FEHLER: %s kein P6 320x240/255\n", ppm); free(d); free(rgb); return 2; }
+    const uint8_t *bild = d + n + 1;
+    long summe = 0, gleich = 0, cnt = 0;
+    for (int y = y0; y < y1; y++)
+        for (int x = x0; x < x1; x++) {
+            const uint8_t *a = rgb + ((long)y * w + x) * 3, *b = bild + ((long)y * w + x) * 3;
+            const int dd = (abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])) / 3;
+            summe += dd; if (dd <= 4) gleich++; cnt++;
+        }
+    printf("ABWEICHUNG %ld GLEICH %ld (Pixel %ld, Flaeche %d,%d..%d,%d)\n", summe / cnt, (gleich * 100) / cnt, cnt,
+           x0, y0, x1, y1);
+    free(d); free(rgb);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     if (argc == 7 && strcmp(argv[1], "ppm") == 0)
         return ppm_mittel(argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
+    if (argc == 7 && strcmp(argv[1], "bss") == 0)
+        return bss_mittel(argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
+    if (argc == 8 && strcmp(argv[1], "bssdiff") == 0)
+        return bss_diff(argv[2], argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]));
     fall_a();
     for (int v = 0; v < 2; v++) {
         printf("== %s\n", v ? "Elza" : "Leon");
