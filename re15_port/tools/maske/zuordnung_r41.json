@@ -1,0 +1,22 @@
+{
+  "_kopf": [
+    "Runde 41 Spur M, Nachbesserung 2 (Abnahme 1, Mangel 1): Kollisionszelle je Generator-Objekt VON HAND, wo die automatische",
+    "Zuordnung (geometrie.zelle_zuordnen: Mehrheit der Bodenkontakte) scheitert, obwohl der Gegenstand eine eigene Sperrzelle hat",
+    "(Kiste auf Kufen: die Unterkante zwischen den Kufen schaut auf den Boden HINTER der Kiste).",
+    "Je Eintrag: verschiebung + punkt = das Objekt (8-Komponente der Generator-Region dieser Verschiebung, die den Bildpunkt",
+    "x,y enthaelt; schliessen_r41.region_im_bild), zelle = RDT-Offset des SCA-Eintrags (12 Bytes, solide), beleg = Messung.",
+    "Hoehe und Tiefe rechnet tiefe_zelle_r41.koerper_geometrie wie fuer jedes Objekt; ob ein Rechteck gezeichnet wird, entscheidet",
+    "der Ausschluss (test_r37_masken36, 3D-Urteil: jeder verdeckte Figurpunkt hinter dem Koerper). Benutzt von zellen3d_r41.py.",
+    "Bilder: analysis/befunde_runde41/M_bilder/NB2/NB2_zuordnung_*.png; Dossier M_masken36.md 'Nachbesserung 2'."
+  ],
+  "ROOM5020": {
+    "6": [
+      {"objekt": "rechte X-Kiste (Kiste)", "verschiebung": [29, 45], "punkt": [227, 98], "zelle": "0x00870",
+       "beleg": "SCA-Zelle 12 x -4875..-2275 z -15425..-12825 Typ 1 Band 0, Bytes @RDT+0x00870 = 28 0a 28 0a f5 ec bf c3 01 ff 00 03; Koerper-Silhouette bei gemessener Hoehe 3225 deckt 93 % des Objekts, Vorderkante am Boden = Unterkante der Kufen; automatisch: Anteil 0,19 (Unterkante zwischen den Kufen). Zelle 10 (IoU 0,63, Saeule) liegt HINTER der Kiste (Unterkante hoeher im Bild)."},
+      {"objekt": "rechte X-Kiste, linke Kufe", "verschiebung": [27, 42], "punkt": [206, 151], "zelle": "0x00870",
+       "beleg": "Kufe steht im Grundriss derselben Zelle 12; automatisch Anteil 0,43"},
+      {"objekt": "rechte X-Kiste, rechte Kufe", "verschiebung": [248, 20], "punkt": [259, 156], "zelle": "0x00870",
+       "beleg": "Kufe steht im Grundriss derselben Zelle 12; automatisch Anteil 0,19"}
+    ]
+  }
+}

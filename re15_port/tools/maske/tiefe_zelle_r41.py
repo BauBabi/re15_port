@@ -62,6 +62,7 @@ import original                  # noqa: E402
 import schliessen_r41 as SR      # noqa: E402
 
 ERBEN = False                    # --erben (Nachbesserung 1, Schritt 2), s. Kopf Regel 4b
+ZUORDNUNG = {}                   # Nachbesserung 2 (zellen3d_r41.py --zuordnung): (raum, cut) -> Eintraege von Hand
 NAEHER = False                   # Nachbesserung 2 (zellen3d_r41.py): Zellen-Tiefe auch dann, wenn sie NAEHER als die alte
                                  # liegt - die 3D-Regel des Ausschlusses (test_r37_masken36.c) urteilt dann je Figurpunkt
 
@@ -118,6 +119,26 @@ def zelle_geometrie(rdt, R, t, H, o, y0, band, hull):
     z, anteil = G.zelle_zuordnen(o, eigene, R, t, H, y0, zellen, hull)
     if z is None:
         return {"grund": "keine Zelle traegt die Mehrheit der Bodenkontakte (%.2f)" % anteil}
+    return koerper_geometrie(R, t, H, o, y0, band, z, anteil)
+
+
+def zelle_von_hand(rdt, e):
+    """Nachbesserung 2: Zelle einer Zuordnung von Hand (zuordnung_r41.json, Feld "zelle" = RDT-Offset des SCA-Eintrags) ->
+    ((x, z, breite, tiefe, typ), band). Der Offset muss ein Eintrag der SCA-Tabelle (RDT +0x20) und solide sein."""
+    s = struct.unpack_from("<I", rdt, 0x20)[0]
+    n = sum(struct.unpack_from("<5I", rdt, s + 4))
+    off = int(e["zelle"], 16)
+    if not (s + 24 <= off < s + 24 + 12 * n) or (off - s - 24) % 12:
+        raise SystemExit("Zuordnung %s: 0x%X ist kein SCA-Eintrag" % (e.get("objekt"), off))
+    w, d, x, z = struct.unpack_from("<HHhh", rdt, off)
+    t_, u0, _u1, f = rdt[off + 8:off + 12]
+    if not (u0 & 1):
+        raise SystemExit("Zuordnung %s: Zelle 0x%X nicht solide" % (e.get("objekt"), off))
+    return (x, z, w, d, t_ & 15), f >> 4
+
+
+def koerper_geometrie(R, t, H, o, y0, band, z, anteil):
+    """Koerper einer zugeordneten Zelle: Hoehe gemessen, Sehstrahl je Punkt (Rest von zelle_geometrie)."""
     hm = G.hoehe_messen(o, R, t, H, z, y0)
     if hm is None:
         return {"grund": "Zelle trifft das Objekt bei keiner Hoehe"}
@@ -148,7 +169,8 @@ def zelle_geometrie(rdt, R, t, H, o, y0, band, hull):
     if not hit.any():
         return {"grund": "kein Punkt direkt getroffen"}
     return {"vz": np.where(hit, vz, 0.0), "hit": hit, "zelle": [int(v) for v in z[:4]], "typ": typ,
-            "hoehe": int(hoehe), "iou": round(float(iou), 3), "saeule": bool(saeule), "anteil": round(float(anteil), 3),
+            "hoehe": int(hoehe), "iou": round(float(iou), 3), "saeule": bool(saeule),
+            "anteil": round(float(anteil), 3) if anteil is not None else None,
             "band": int(band), "treffer": int(hit.sum()), "px": int(o.sum())}
 
 
@@ -171,6 +193,14 @@ def kandidaten(room, cut, blob, sek, aus, rdt, cam, cache):
     def objekt(sh, j):
         if (sh, j) not in geo:
             o = labs[sh] == j
+            for e in ZUORDNUNG.get((room, cut), []):      # Nachbesserung 2: Zelle von Hand (Beleg im Eintrag)
+                if tuple(e["verschiebung"]) == tuple(sh) and labs[sh][e["punkt"][1], e["punkt"][0]] == j:
+                    z, b = zelle_von_hand(rdt, e)
+                    g = koerper_geometrie(R, t, H, o, -b * geom.BAND_HOEHE, b, z, None)
+                    if "grund" not in g:
+                        g["von_hand"] = e["zelle"]
+                    geo[(sh, j)] = g
+                    return g
             treffer, gruende = [], []
             for b in baender:
                 g = zelle_geometrie(rdt, R, t, H, o, -b * geom.BAND_HOEHE, b, hull)
@@ -219,7 +249,8 @@ def kandidaten(room, cut, blob, sek, aus, rdt, cam, cache):
             o = labs[sh] == c
             vz[o] = g["vz"][o]
             hit[o] = g["hit"][o]
-            info.append({k: g[k] for k in ("zelle", "typ", "hoehe", "iou", "saeule", "anteil", "band", "treffer", "px")})
+            info.append(dict({k: g[k] for k in ("zelle", "typ", "hoehe", "iou", "saeule", "anteil", "band", "treffer", "px")},
+                             von_hand=g.get("von_hand")))
         else:
             if not hit[d].all():
                 if not ERBEN:

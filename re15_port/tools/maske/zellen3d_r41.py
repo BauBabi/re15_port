@@ -65,9 +65,16 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--tabelle", required=True, help="Ziel: tests/unit/gen_r41_masken36_zellen.inc")
     ap.add_argument("--zurueck", default=None, help="Tabelle nach erzeuge: dort weiter ausgeschlossene -> alte Tiefe")
+    ap.add_argument("--zuordnung", default=os.path.join(HIER, "zuordnung_r41.json"),
+                    help="Zellen von Hand je Objekt (Beleg je Eintrag), s. Kopf von zuordnung_r41.json")
     a = ap.parse_args()
     TZ.ERBEN = True
     TZ.NAEHER = True
+    if a.zuordnung and os.path.exists(a.zuordnung):
+        for room, cuts in json.load(open(a.zuordnung, encoding="utf-8")).items():
+            if room.startswith("ROOM"):
+                for cut, liste in cuts.items():
+                    TZ.ZUORDNUNG[(room, int(cut))] = liste
     os.makedirs(a.out, exist_ok=True)
     vor = TZ.ausschluss(a.vor)
     zur = TZ.ausschluss(a.zurueck) if a.zurueck else None
