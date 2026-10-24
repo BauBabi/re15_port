@@ -22,7 +22,8 @@ elzazombies_r39.c, test_r36_kartenbits.c k_port[] (nur falls Bit 120 belegt).
 - [x] Nachbesserung 2 (Abnahme 1): E-N1 Apply-Bild steht (kamerahalt_r41.c/bildhalt_r41_pc.c), E-N2 Nachrichten-Takt hinter dem
   Spiel-Takt + Auswahl ohne Parken (msgtakt_r41.c); alle Anlauf-Varianten am Original (GDB) gemessen; Renn-Stopp OFFEN
 - [x] Nachbesserung 3 (Abnahme 2): Blenden-Takt im gehaltenen Bild (E-E3), Renn-Tempo + Renn-Stopp + DECIDE 0x80032604
-  vollstaendig spielweit (E-E2, rennstopp_r41.c), Riegel renn auf o_renn2, Gorilla-Sonde neu eingemessen, Vertrag E-E1
+  vollstaendig spielweit (E-E2, rennstopp_r41.c), Riegel renn auf o_renn2, Gorilla-Sonde neu eingemessen, Vertrag E-E1;
+  gezielt 266/266 + 376/376 + 10/10 + 101/101 gruen (Abschnitt "Fortsetzung — Tests")
 
 ## Protokoll
 - (Start) Baum sauber auf 116e8b0f, Dossier angelegt.
@@ -991,3 +992,22 @@ RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72
 - Nachtrag Tests, die `motion = 100` (Rennen) direkt setzen (grep in tests/unit):
   `ctest -R "^(unit_ai_flavor_mixed|unit_r35_raeume_trage.*|unit_r16_liegende.*|unit_plc_back.*|unit_re2_dog.*)$" -j 2`
   -> **100% tests passed, 0 tests failed out of 10**.
+- Gezielter Lauf 3 (15:14-16:16), Bedingung E-E1 "alle Nachrichten-/Szenen-/Tuer-Riegel": die uebrigen 101 Integrations-Riegel
+  der Nachbesserung-2-Auswahl (Skript enthaelt RE15_FRAMEDUMP / RE15_PRESS / RE15_MSG_LOG / msgtext / XU / CROSS / RE15_CAM_TRACE;
+  `<sp>/E41n2/integ_auswahl.txt` ohne die 50 aus Lauf 1 -> `<sp>/E41n3b/rest_auswahl.txt`):
+  `ctest --test-dir re15_port/build -R "$(cat <sp>/E41n3b/rest_regex.txt)" -j 4 --timeout 1800 --output-on-failure`
+  -> **100% tests passed, 0 tests failed out of 101** (3727 s, CTEST_EXIT=0, `<sp>/E41n3b/ctest_rest.log`). Kein Fenster-Haken
+  rot, keine Nachlaeufe.
+- Zusammen: 151 Integrations-Riegel mit der echten exe (alle 151 Nachrichten-/Szenen-/Tuer-/Karten-/Renn-Riegel der Auswahl)
+  und 602 Unit-/Prop-Tests (alle, die den Spieler treiben, plus die Namensgruppen) gruen auf dem Endstand; keine volle Suite.
+
+### Nachbesserung 3 — Abschluss
+- Mangel 1 (Renn-Anlauf): behoben — Renn-Tempo, Renn-Stopp und der ganze Renn-DECIDE 0x80032604 wie im Original; Kurbel im
+  Rennen bis (3650,-3369) = o_renn2 n94..n99 (Riegel renn, exe-Lauf P1_renn mit dem Anlauf der Abnahme). Gehen und Stand
+  unveraendert original-gleich (Riegel geh/kurbel, P1_stand). Alle Anlauf-Varianten sind damit original-gleich; das
+  "Herumfliegen" ist in keinem Lauf zu finden -> Rueckfrage an den Nutzer (Abschnitt "Fuer den Nutzer (Stand NB3)").
+- Mangel 2 (Riegel renn): behoben — Auswerter `renn` misst die Original-Folge; VORHER-exe rot.
+- Mangel 3 (Vertrag): Entscheid E-E1 liegt vor; Bedingung (alle Nachrichten-/Szenen-/Tuer-Riegel) mit Lauf 1-3 erfuellt; neu in
+  NB3 nur player_common.c (E-E2), markiert "Runde 41 Spur E".
+- Mangel 4 (Softlock): behoben (E-E3), Riegel spawn_kante.
+- unit_r36_zombieki_affen_block: zweimal neu eingemessen (Teil 3 und Fortsetzung), Begruendung und Messung im Test-Kommentar.
