@@ -137,9 +137,12 @@ def zelle_von_hand(rdt, e):
     return (x, z, w, d, t_ & 15), f >> 4
 
 
-def koerper_geometrie(R, t, H, o, y0, band, z, anteil):
-    """Koerper einer zugeordneten Zelle: Hoehe gemessen, Sehstrahl je Punkt (Rest von zelle_geometrie)."""
-    hm = G.hoehe_messen(o, R, t, H, z, y0)
+def koerper_geometrie(R, t, H, o, y0, band, z, anteil, mess=None):
+    """Koerper einer zugeordneten Zelle: Hoehe gemessen, Sehstrahl je Punkt (Rest von zelle_geometrie).
+    mess: Region, an der die Hoehe gemessen wird (Vorgabe o). Nachbesserung 2: bei Zuordnungen von Hand die Vereinigung ALLER
+    Objekte derselben Zelle im Cut - ein Gegenstand, den die Generator-Region in mehrere Komponenten teilt (Trennwand 30A0 C0:
+    unterer Teil zweier Felder), hat EINE Hoehe."""
+    hm = G.hoehe_messen(o if mess is None else mess, R, t, H, z, y0)
     if hm is None:
         return {"grund": "Zelle trifft das Objekt bei keiner Hoehe"}
     hoehe, iou, kante, saeule = hm
@@ -196,7 +199,12 @@ def kandidaten(room, cut, blob, sek, aus, rdt, cam, cache):
             for e in ZUORDNUNG.get((room, cut), []):      # Nachbesserung 2: Zelle von Hand (Beleg im Eintrag)
                 if tuple(e["verschiebung"]) == tuple(sh) and labs[sh][e["punkt"][1], e["punkt"][0]] == j:
                     z, b = zelle_von_hand(rdt, e)
-                    g = koerper_geometrie(R, t, H, o, -b * geom.BAND_HOEHE, b, z, None)
+                    mess = np.zeros((240, 320), bool)        # Hoehe an allen Objekten derselben Zelle in diesem Cut
+                    for e2 in ZUORDNUNG.get((room, cut), []):
+                        sh2 = tuple(e2["verschiebung"])
+                        if e2["zelle"] == e["zelle"] and sh2 in labs:
+                            mess |= labs[sh2] == labs[sh2][e2["punkt"][1], e2["punkt"][0]]
+                    g = koerper_geometrie(R, t, H, o, -b * geom.BAND_HOEHE, b, z, None, mess)
                     if "grund" not in g:
                         g["von_hand"] = e["zelle"]
                     geo[(sh, j)] = g

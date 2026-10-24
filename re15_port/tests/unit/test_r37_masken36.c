@@ -673,7 +673,8 @@ static int zelle_dazwischen(zellen_t *Z, int band, double ax, double az, double 
  * Nutzer-Freistellungen; Tabelle gen_r41_masken36_zellen.inc, geschrieben von tools/maske/zellen3d_r41.py, je Zeile die 12
  * SCA-Bytes mit RDT-Offset), ist die richtige Frage die 3D-Frage: schneidet die Strecke Kamera -> Figurpunkt den KOERPER des
  * eigenen Objekts (Zellform x [Bandboden + Hoehe, Bandboden]) vor dem Figurpunkt? Dann zeigt der Hintergrund dort das Objekt
- * VOR der Figur - die Verdeckung ist richtig. Weder Kamera noch Figurpunkt duerfen im Koerper liegen (sonst kein Urteil).
+ * VOR der Figur - die Verdeckung ist richtig. Steht die Kamera im Koerper, gibt es kein Urteil.
+ * Liegt der Figurpunkt selbst im Koerper (Kamera draussen), schneidet die Strecke den Koerper vor ihm - verdeckt.
  * Die Form fragt wie oben der Kollisions-Resolver des Ports (form_drin, Radius 0), mit den Original-Bytes der Zelle.
  * Das Urteil kommt ZUSAETZLICH zum Grundriss-Netz: ein Punkt ohne Zelle davor im Grundriss UND ohne Koerper davor bleibt
  * eine Fehlverdeckung. */
@@ -733,7 +734,8 @@ static int r41_form(int i, const r41_zellen_modell_t *k, double x, double z)
 }
 
 /* Koerper der Modellzelle von Rechteck `rect` vor dem Figurpunkt F (Welt)? A = Kameraort.
- * -> 1 ja; 0 kein Modell; -1 Kamera im Koerper; -2 Figurpunkt im Koerper; -3 Strecke verfehlt den Koerper. */
+ * -> 1 ja; 0 kein Modell; -1 Kamera im Koerper; -3 Strecke verfehlt den Koerper. Liegt F IM Koerper (Kamera draussen), tritt
+ * die Strecke vor F in den Koerper ein - F ist von dessen Oberflaeche verdeckt (1), wie jeder Punkt hinter ihm. */
 static int r41_koerper_davor(unsigned raum, int cut, int rect, const double A[3], double fx, double fy, double fz)
 {
     int i = -1, n, kk; const r41_zellen_modell_t *k = r41_modell(raum, cut, rect, &i);
@@ -743,7 +745,6 @@ static int r41_koerper_davor(unsigned raum, int cut, int rect, const double A[3]
     B[0] = fx; B[1] = fy; B[2] = fz;
     D[0] = B[0] - A[0]; D[1] = B[1] - A[1]; D[2] = B[2] - A[2];
     if (A[1] >= ylo && A[1] <= yhi && r41_form(i, k, A[0], A[2])) return -1;    /* Kamera im Koerper: kein Urteil */
-    if (B[1] >= ylo && B[1] <= yhi && r41_form(i, k, B[0], B[2])) return -2;    /* Figurpunkt im Koerper: kein Urteil */
     {   /* Strecke gegen die drei Achsen-Schichten des Huellkoerpers */
         const double lo[3] = { (double) k->x, ylo, (double) k->z }, hi[3] = { (double) k->x + k->w, yhi, (double) k->z + k->d };
         int ax;
