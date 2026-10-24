@@ -1871,3 +1871,36 @@ Summenzeile am Game-Over-Uebergabebild. (3) M2: Buehnen-Suche schliesst die ange
 Raum-Objekte (Obj_model_set, MD1-Huelle unter der Objekt-Drehung) in jedem Bild der Bahn; Messzeile "Opfer frei". (5) Riegel maul (P3
 ohne Ende, bis 600 Bilder), buehne (jede laufende Kamera, Raum-Objekte), integration belagerung bis zum Raumwechsel (gr=1 je Bild).
 (6) exe E1/G1/G2/MN/A2/BL/Elza nachher, Bildbelege. (7) gezielte Tests, Abschluss.
+
+### 14.0 RE-Belege (selbst gelesen: `re2_disasm.py --bin EM23_OVL_0000.BIN`, `re15_disasm.py` auf info/Re1.5/PSX.EXE)
+- **RE2 FRESSEN P3 endet nie (M1):** Dispatch Sub 4 `lbu v1,6(s0)` @0x80100f74, `addiu v0,zero,3 / beq v1,v0,0x801011c4` @0x80100fa8-ac;
+  P3 @0x801011c4-e4 = `addu a1,s1,zero / addu a2,s2,zero / jal 0x80015cb8 / addu a3,zero,zero` + `addu a0,s0,zero / addiu a1,zero,11 /
+  addu a2,zero,zero / jal 0x8001a240 / addu a3,zero,zero`, danach `lw ra,28(sp)` @0x801011e8 ... `jr ra` @0x801011fc - kein `sb ..,6(s0)`.
+- **RE2 Leon-Handler @0x80102d44, Phase 3 = Opfer geparkt und gehalten (M1):** `lbu v1,6(s0)` @0x80102d60; `addiu v0,zero,3 / beq v1,v0,
+  0x80102f24 / addiu v0,zero,128` @0x80102d94-9c; Phase 3 @0x80102f24-28 = `lui at,0x800d / sb v0,-565(at)` -> 0x800cfdcb = 0x80 und
+  Ruecksprung. Spielerbasis 0x800cfbf8 (Leon-x `sw v0,-976(at)` = 0x800cfc30 = +0x38, §13.0) -> **Spieler +0x1D3 = 0x80 je Bild** (= das
+  "gehalten"-Bit, Port re15_player_is_grabbed "PL+0x1D3&0x80"). Animation (`jal 0x8002959c`) nur in Phase 1 @0x80102e9c und Phase 2
+  @0x80102f08, Platzierung (`jal 0x80015cb8`) nur in Phase 2 @0x80102ed4: in Phase 3 bleibt Leon im letzten Bild von Opfer-Clip 1 an der
+  letzten Lage. Phase 2 -> 3 bei Clip-Ende (`addu v1,v1,v0 / sb v1,6(s0)` @0x80102f18-20, v0 = Rueckgabe von 0x8002959c).
+- **RE2 P0 schneidet im Takt des Umsetzens (M2):** Sperre `ori v0,v0,0x100 / sw v0,0(a0)` @0x80100fcc-d0 (a0 = 0x800cfbd8), Cut 14 nur bei
+  `and v0,v0,v1 / beq v0,zero,0x80100ff0` (v1 = 0x40000000 @0x80100f94) + `jal 0x80077360` (a0 = 0x800d4e54, a1 = 16) @0x80100fd4-e8,
+  sonst `addiu a0,zero,7` @0x80100ff0, `jal 0x8002c7ac` @0x80100ff4; Umsetzen `addiu v0,zero,-23078 / sw v0,56(s0)` @0x80101048-4c im
+  selben P0-Takt. Cut 7 ist in ROOM40A0 selbst eine Zonenkamera (RVD-Saetze @RDT 0x3EC "6 -> 7" und 0x450 "8 -> 7", `rvd_40a0.py`, §10.3):
+  RE2 kann also ohne sichtbaren Schnitt umsetzen - dort ist der Weg klein (FRESSEN nur aus Sub 7 am Korridorende `addiu v0,zero,1025 /
+  sw v0,4(s0)` @0x801012e0-e4, Gator schon nahe x -23078, Leon vor dem Maul). Die Port-Buehne versetzt bis zur Becken-Diagonale (Abnahme 5
+  G1: Gier 101 Grad, Leon 8100) - darum PORT-WAHL "nie die laufende Kamera" (Form RE2-P0: Umsetzen nur zusammen mit dem Schnitt).
+- **RE1.5 laufende Kamera:** angezeigter Cut = work_vars[0x0A] = DAT_800b0fe4, geschrieben im Apply-Kopf FUN_80021bbc `sh v1,DAT_800b0fe4`
+  @0x80021bfc; angeforderter Cut = DAT_800afbb5 (RVD-Scan FUN_800142f4 `sb a0,-0x44b(at)` @0x80014300), Vergleich je Bild @0x800214f4-514
+  (Abnahme 5 §2 nachgeprueft). Der Port fuehrt beide als g_scd.work_vars[0x0A] / g_scd.cam_id (room_common.c re15_cam_present_tick).
+- **RE2 P0 nimmt Raum-Objekte aus dem Finisher-Bild (Form M3):** `lui at,0x800d / sw zero,1308(at)` @0x80101008-0c = obj[1] Wort 0 = Kanister
+  aus - das einzige Objekt, das in RE2 neben dem Gator im Wasser liegen kann; der Finisher zeigt nur Gator und Opfer.
+- **RE1.5 Objekt-Zeichner FUN_8002c18c (wer kann verdecken):** Pool 0x800b3f98, Schritt 148 (`addiu v0,v0,16280` / `addiu s6,s6,148`
+  @0x8002c1f0-f8), aktiv `andi v0,v0,0x1` @0x8002c204, Drehmatrix `jal 0x80068098` @0x8002c218 + Kette `jal 0x80022da0` @0x8002c22c, Typ 4
+  -900 @0x8002c234-50; **Typ 3** `ori v0,zero,0x3 / bne v1,v0` @0x8002c2bc-c0 -> `jal 0x8003e64c` @0x8002c2c8 (Raster-Sprite, eigene
+  Zellen-Verdeckung, danach naechstes Objekt); sonst Regions-Cull `lw a1,0(s5)` (s5 = 0x800aca38 - 680 = 0x800ac790) / `jal 0x80014368`
+  @0x8002c2d8-dc / `beq v0,zero,0x8002c3bc` @0x8002c2e4: ein Mesh-Objekt wird nur gezeichnet, wenn seine Welt-Lage (pool+92) im
+  Regions-Viereck des aktiven Cuts liegt.
+- **ROOM2090-Objekte** (debug.log `[scd] Obj_model_set`, MD1-Huellen Sonde `B41nb6/probe/probe_aabb.c` aus der RDT-Modelltabelle):
+  obj 0 Typ 0 (5750,-1800,-16300) Huelle 143 x 18 x 144 (Kleinteil auf der Rampe); obj 1 **Typ 3** (-9000,-1620,-5400) Huelle 21600 x 0 x
+  16200 = **Wasseroberflaeche**; obj 2 Typ 0 (-1725,-1740,-21723) Gier 685 und obj 3 Typ 0 (-25,-1740,-7423) Gier 1656 = die zwei
+  treibenden Leichen (Huelle ~3070 x 1300 x 1900). Der Verdecker der Abnahme 5 (E1 P1) ist obj 3.
