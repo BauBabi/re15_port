@@ -297,7 +297,7 @@ _darf_nicht("${_dbg}" "ERTRUNKEN" v2 "nicht ertrunken")
 message(STATUS "r41_ventilkette_weg[${FIGUR}] v2: Ventile 49 ohne Sicherung -> Sicherung (3,108) -> 45/46 -> Zaehler -> zu Fuss zur Ost-Tuer -> 20B0 (103+100)")
 
 # ---- g1/g2: 2060 Sicherung + Generator (Original-Raetsel) ---------------------------------------------------------------
-_lauf(g1 150 "" RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2060@250 RE15_SET_FLAG=3:108,7:122,7:123 "RE15_PLAYER_POS=-4000,3800,3072,0"
+_lauf(g1 240 "" RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2060@250 RE15_SET_FLAG=3:108,7:122,7:123 "RE15_PLAYER_POS=-4000,3800,3072,0"
       RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330
       "RE15_INPUT_SCRIPT=A0.1,W3,A0.1,W3,A0.1,W3,A0.1,W3,R0.2,W0.5,A0.1,W3,A0.1,W3"
       "RE15_EXIT_AT=1100#206${S}")
@@ -305,7 +305,7 @@ _muss("${_dbg}" "[msgtext] room=206${S} id=4 \"Will you use the Fuse?\"" g1 "Fra
 _danach("${_dbg}" "Will you use the Fuse?" "Cut_chg(8)" g1 "Einsetz-Ansicht Cut 8")
 _danach("${_dbg}" "Cut_chg(8)" "WRITE Set  zone=3 idx=144 op=1" g1 "Sicherung eingesetzt: sub19 Set(3,144) @0x0169E")
 _muss("${_dbg}" "[msgtext] room=206${S} id=5 \"You've used the Fuse.\"" g1 "Text 5")
-_lauf(g2 150 "" RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2060@250 RE15_SET_FLAG=3:108,3:144,7:122,7:123 "RE15_PLAYER_POS=-3200,3400,0,0"
+_lauf(g2 240 "" RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2060@250 RE15_SET_FLAG=3:108,3:144,7:122,7:123 "RE15_PLAYER_POS=-3200,3400,0,0"
       RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330
       "RE15_INPUT_SCRIPT=A0.1,W3,A0.1,W3,A0.1,W3,A0.1,W3,A0.1,W3,L0.77,W0.5,D0.57,W0.5,A0.1,W1.5,R1.0,W0.5,A0.1,W5"
       "RE15_EXIT_AT=1300#206${S}")
