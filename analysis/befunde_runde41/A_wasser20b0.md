@@ -329,12 +329,12 @@ dem Savestate gegen Port-PPM), sonde_npc_own.c (OWN-Bank-Dump), edit_tests.py.
 | Mangel | Ergebnis |
 |---|---|
 | M1 Wolkendichte 5-30x | WIDERLEGT durch Messung am exakten Framebuffer: der Port zeichnet dieselben opaken CLUT-Texel wie das Original (Histogramm je CLUT-Index +-10 %); die Abnahme mass die Tiefpass-Glaettung der Videokette. Restabweichungen der Szene gemessen und als OFFEN benannt (1 Bild EM024-INIT, 1 Bild Sprites beim Kamerawechsel, RVD 12->13 2-3 Bilder). |
-| M2 NPC-Schritte | BEHOBEN: der Bau-Stand las die falsche Bank. Die OWN-Bank (+0x170/+0x174), die die Geh-Subs spielen, TRAEGT Aufsetzer (Clip 5 Bilder 7/22 bzw. 8/22) -> byte-true fuer 0x40/0x42/0x45/0x49/0x4d; PORT-WAHL-Regel nur fuer 0x4b (keine Marke in keiner Bank). Beide Archive. |
+| M2 NPC-Schritte | BEHOBEN: der Bau-Stand las die falsche Bank. Die OWN-Bank (+0x170/+0x174), die die Geh-Subs spielen, TRAEGT Aufsetzer (Clip 5 Bilder 7/22 bzw. 8/22) -> byte-true fuer 0x40/0x42/0x45/0x49/0x4d; PORT-WAHL-Regel nur fuer 0x4b (keine Marke in keiner Bank). Beide Archive. Dritte Fortsetzung (N1.10d): PORT-WAHL nur fuer Fortbewegungs-Clips ohne Marke (0x4b und 0x47 CDEMD1 = Roy, OWN c5), Ableitung ohne Anim-Spur. |
 | M3 Szenen-Sperre WATER | BEHOBEN: ENV-Stempel (sce 7/8) ohne in_cinematic-Gate (aot_common.c), Riegel `stempel`. |
 | M4 Letterbox | WIDERLEGT: 24 px sind byte-true (POLY_F4 @0x80072ecc/@0x80072efc, ts_12-Framebuffer 24 schwarze Zeilen); das Video ist der Overscan-Ausschnitt (224 Zeilen auf 240 gestreckt) -> 16/17 px; die Balken F5-F14 des Ports sind die FUN_80021a0c-Rampe des Vor-Sprung-Zustands (ROOM1240 Set(1,27)). |
 | M5 Riegel | GEBAUT: `unit_r41_wasser20b0_npc` (Zensus beider Archive + Regelpruefung), `_npc_wasser` (echter Geh-Sub je Typ durch den Wasserfleck), `_stempel`; `integration_r41_wasser20b0_npc` (2000-Szene Marvin/Ada an der exe; Landung ueber die Tuer 20A0->2090 Leon und 20A1->2091 Elza). |
 | M6 main.c | BLEIBT (begruendet, N1.6): Schatten-Bedingung ist noetig; der 4. Wert von RE15_PLAYER_POS traegt den Tuer-Landungsriegel (Band 2 in 20A0). |
-| M7 Hundemaske | BEHOBEN: uint64_t. PSX-BSS weiter OFFEN. |
+| M7 Hundemaske | BEHOBEN: uint64_t; zweite Stelle derselben Fehlerklasse im RBJ-Marker-Binder (`1u << mslot`, Slots 32..35) gefunden und behoben (N1.10c). PSX-BSS weiter OFFEN. |
 
 ### N1.1 M1 — Wolkendichte: Ursache Videokette, nicht Zeichner
 **Korrektur des Werkzeugs.** Der ESP-Platz ist 0x84 Byte gross (FUN_80053240: `pbVar3 = pbVar3 + -0x84`, Schleife von 0x800aa538
@@ -471,7 +471,7 @@ der 4. Wert von RE15_PLAYER_POS (Band) traegt den Tuer-Landungsriegel (Spawn in 
 Laeufe B/D/E2. Konfliktrisiko mit Spur D gering (andere Stellen); zur Integration gemeldet.
 
 ### N1.7 M7
-`s_dog_noclamp_mask` ist uint64_t (`(uint64_t)1u << slot`, enemy_ai_common.c). PSX-BSS (+28 KB) weiter OFFEN.
+`s_dog_noclamp_mask` ist uint64_t (`(uint64_t)1u << slot`, enemy_ai_common.c). PSX-BSS (+28 KB) weiter OFFEN. Zweite Stelle derselben Fehlerklasse (RBJ-Marker-Binder, `1u << mslot`): N1.10c.
 
 ### N1.8 Weitere Belege (Disasm, am 2026-10-24 mit re15_disasm.py nachgeprueft, PSX.EXE)
 - Sub 4 Phase 1 Fusstest @0x80051278-ac: `lw v0,360(v0)` (+0x168) / `lw v1,0(v0)` / `andi v0,v1,0x4000` @0x80051288 / `beq`
@@ -601,8 +601,13 @@ Laeufe B/D/E2. Konfliktrisiko mit Spur D gering (andere Stellen); zur Integratio
 - **Nebenbefund (nicht geaendert, Hinweis an den Orchestrator).** a3 (Gegner-Index) wird in FUN_8001b3f8 nur EINMAL auf 0 gesetzt
   (`addu a3,zero,zero` @0x8001b410, Verzoegerungsplatz von `beq` @0x8001b40c) und in der Record-Schleife (@0x8001b42c ..
   `bne` @0x8001b4d4) nicht zurueckgesetzt: im Original zaehlt der Gegner-Index von Record r+1 hinter den geschobenen Bits von
-  Record r weiter; der Port wertet jeden Record ab Bit 1 aus. Ob ein ausgeliefertes RBJ davon betroffen ist (mehrere Records mit
-  Gegner-Bits), ist NICHT gemessen -> OFFEN 9.
+  Record r weiter; der Port wertet jeden Record ab Bit 1 aus (und bindet dem Spieler immer Record 0, das Original den LETZTEN
+  Record mit Bit 0 - `sw v0,0(t3)` @0x8001b450 je Treffer). Statische Auswertung der RDT-Daten (`A_belege/nb1d/rbj_a3_zensus.py`
+  / `.txt`): in 12 von 47 Raeumen mit RBJ weicht die Original-Bindung vom Port-Modell ab; zur Laufzeit NICHT gemessen -> OFFEN 9.
+- **Messung nachher (Stand 7db5a6b2, gebaut).** `unit_r39_heliport1171_binder` gruen, woertlich: `ok: John nach 34 abgefragten
+  Slots ohne Record: RBJ rec1 (3 Clips)`, `ok: Skelett-Kanal +0x180 (EMR rec1) ebenfalls gebunden`, `ok: ROOM10D0: Marvin (Aktor 1)
+  nach den Zombies an rec1 gebunden (10 Clips, Marker 0x2)`; die 383 Nicht-Integrations-Tests mit RE15_ACTOR_MAX `100% tests
+  passed, 0 tests failed out of 383` (N1.12).
 
 ### N1.10d Dritte Fortsetzung 2026-10-24: PORT-WAHL nur fuer Fortbewegungs-Clips, Ableitung ohne Anim-Spur (eigener Befund)
 - **Messung vorher (Stand d77bf72a).** Integrationskette (N1.12) `94% tests passed, 1 tests failed out of 17`: rot nur
@@ -641,3 +646,131 @@ Laeufe B/D/E2. Konfliktrisiko mit Spur D gering (andere Stellen); zur Integratio
   Fuss 7/4, CDEMD1 Clip 5 PORT-WAHL 19/50 Fuss 7/4, Clip 0 Marken 0/12, LOCO-Clip 2 0/0. **Gegenprobe** (alter Schritt-Code d1809dbf,
   neuer Riegel; `A_belege/nb1d/gegenprobe_portwahl.txt`): `npc: 90 Pruefungen, 27 Fehler` (Container-Clip 5 und INIT-Pose je 2..4
   erfundene Aufsetzer bei jedem Typ, Roy 19/45 Fuss 7/7); neuer Code `npc: 90 Pruefungen, 0 Fehler`.
+
+### N1.11 Messung nachher je Mangel
+Bau-Staende: **d77bf72a** (Code = f5cb9e0f; `local_build.sh build` -> `ninja: no work to do.`, re15_pc.exe 00:55:59 juenger als
+jede Quelle des Diffs) und der **Endstand 7db5a6b2** (RBJ-Haken N1.10c + PORT-WAHL N1.10d, `=== LOCAL-BUILD-OK (build)`). Je Zeile
+steht, an welchem Stand gemessen wurde.
+
+| Mangel | Messung nachher |
+|---|---|
+| M1 Wolkendichte | Kein Zeichner-Mangel (N1.1: exakter Framebuffer tf_7 gegen Port F52, CLUT-Histogramm +-10 %). Die Nachbesserung aendert den Zeichner nicht. Dass die M3-Aufhebung die 20B0-Szene nicht veraendert, zeigt Lauf A_nb1c/w20b0 (Stand e6e6869b; die spaeteren Commits aendern nur NPC-Schritte (Typ >= 0x40), den Stempel der Nicht-Spieler-Slots und die RBJ-Bindung der Slots >= 32 - nicht den Spielerweg; `A_belege/nb1c/w20b0_spielerstempel.txt`): 14 Spielerschritte F17..F154 (Szene bis F242), alle `stempel=0` (der Szenenweg kreuzt die WATER-Saetze 5/6 nicht), Boden 0x97 bei F17/F51/F61 -> Zweig boden 0x06050D00 = derselbe Code wie der Original-Platz 24 in tf_7 (`esp 24 fl=03 id=06 sub=05 scale=0d00 ... wpos=(-3621,-2875,-6163)`, `nb1/esp_pool_tf_7.txt`; Port F51 Anker (-3617,-2875,-6160)); in 20B0 laeuft kein NPC. integration_r41_wasser20b0 (Leon 20B0 + Elza 20B1) gruen an d77bf72a und am Endstand (N1.12). Restabweichungen = OFFEN 1-3. |
+| M2 NPC-Schritte | Abnahme Lauf F vorher: 0 NPC-Schritte. d77bf72a (integration_r41_wasser20b0_npc Teil npc2000, Marvin 0x42 Slot 1 / Ada 0x40 Slot 2 per Plc_dest, `npc.log` des Laufs `lauf_06f38624_npc2000`): je Slot **8** Schritte, alle Clip 5 der OWN-Bank, Slot 1 Bilder 8/22 (Fuss 7/4), Slot 2 Bilder 7/22, Ton 21 = (0x1d & 0x7f) - 8, Zweig trocken, `stempel=0`; davon je 7 im Geh-Sub 4 (F842..F932 bzw. F851..F941) und je **1 im Dreh-Sub 9** (F942 Slot 1 Bild 8, F951 Slot 2 Bild 7, Lage = Ankunftspunkt): nach `Plc_dest(slot=1/2 mode=0x09)` -> state4/sub9 spielt der Dreh-Sub Clip 5 ab Bild 0 (`+0x94=5` @0x80051d3c, `+0x95=0` @0x80051d4c) und testet das Bildwort (Schritt @0x80051e88, N1.10) - das Original schreitet beim Drehen auf der Stelle ebenso, kein Doppelschritt. Endstand: Endstand 7db5a6b2 (Lauf `lauf_d40ae8c2_npc2000`): zeilengleich - 16 Schritte, je Slot 8, dieselben Bilder, Toene und Lagen (die Einschraenkung der PORT-WAHL, N1.10d, beruehrt markierte Clips nicht); Landung Leon 2090 und Elza 2091 je 104 fx-Zeilen `id=6 sub=3`. Unit npc_wasser: 6 Typen beider Archive durch den Wasserfleck (je 6 Schritte, 0x4b 9 nach PORT-WAHL), Ton 15, Plaetze 0x06050D00; npc_subs (N1.10): Sub 9 / Kante / Schub / Laufbeginn / Fleckrand; npc (N1.10d): PORT-WAHL nur Fortbewegungs-Clips, Roy 19/50. |
+| M3 Szenen-Sperre | Unit stempel: NPC und Spieler unter player_mode 2 gestempelt (+0x88 = p0); dazu der Pro-Bild-Wert (N1.10b, Takt A/B). In den gemessenen exe-Szenen kreuzt der Weg keinen WATER-Satz (20B0 Spieler: `stempel=0` in allen 14 Schritten; 2000 Marvin/Ada: alle 16 `npc.log`-Zeilen `stempel=0`) - die Aufhebung aendert dort kein Bild. |
+| M4 Letterbox | Kein Mangel (N1.2: 24 px byte-true, Video = Overscan-Ausschnitt; Balken F5-F14 = Rampe des Vor-Sprung-Zustands). Unveraendert. |
+| M5 Riegel | integration_r41_wasser20b0_npc (npc2000 + landung_leon + landung_elza) gruen an d77bf72a und am Endstand (nach dem Riegel-Defekt N1.9); unit npc / npc_wasser / stempel / npc_subs gruen. |
+| M6 main.c | Unveraendert zwei markierte Haken (Schatten-Bedingung Typ 0x24, 4. Wert RE15_PLAYER_POS fuer den Tuer-Landungsriegel); zur Integration gemeldet - Bitte an den Orchestrator: wie Entscheid B5 annehmen. |
+| M7 Hundemaske | uint64_t; Hunde-Riegel der Unit-Gruppe gruen (dog_*, re2_dog_*, r39_hund1121_*, r27_hund_*, r30_hund_*). Zweite Stelle derselben Fehlerklasse gefunden und behoben: RBJ-Marker-Binder (N1.10c, `1u << mslot` fuer Slots 32..35). Abgleich: grep auf Verschiebungen um Slot-/Index-Variablen in engine/src und platform/pc (uebrige Treffer: Hilfsmasken mit Index < 16, main.c mit `ai < 32` geschuetzt) und alle 383 Nicht-Integrations-Tests, deren Quelle RE15_ACTOR_MAX nennt, gruen (N1.12). PSX-BSS OFFEN 6. |
+
+### N1.12 Tests (gezielte Laeufe, KEINE volle Suite)
+Ausfuehrung mit dem PATH aus local_build.sh (msys64 zuerst), `ctest --test-dir re15_port/build ...`; -R-Ausdruecke woertlich.
+
+**Unit, Endstand 7db5a6b2** (nach dem letzten Bau):
+
+(a) Gruppe der Vorgaengerin (eigene Teile, NPC/Marvin/Ada/AOT/Kante/Schub/Szene 11C0/Werkstatt-Schub, Hunde wegen M7, Wasser,
+Klettern, Gegnerzahl/Schatten), `--timeout 600 -j 4`:
+```
+-R "^(unit|probe|prop)_(r41_wasser20b0|r36_gegnerzahl|r38_wasser|r38_wasserzombie|r34_wasser|re2_spider_water|r38_npckante|npc_|marvin_|aot_|scd_aot|rvd_scan|1090_climb|1090_npc|r36_klettern|r39_elza_klettern|room1140_spawn|spawn_entered|1030_spawncap|re2z_spawn|r34n_d_adaruf|r27_ada|ada_eintritt|r35_affen_npcband|r35_affen_sprung|r39_hund1121|dog_|re2_dog|fx_emitter_ai|r39_gegner|r36_pri_schatten|r35_raeume_hundeschatten|r36_szenenleon|r37_szene11c0|r38_szenenschutz|r38_rolltor20a0|r34_plattform|r27_hund|r30_hund)"
+100% tests passed, 0 tests failed out of 128
+```
+(b) alle Nicht-Integrations-Eintraege, deren Quelle RE15_ACTOR_MAX nennt (Abbildung Quelle -> ctest ueber `ctest --show-only=json-v1`,
+383 Namen, `--tests-from-file <liste> --timeout 600 -j 4`; Liste im Scratch `A_nb1d/actormax_unit.txt`):
+```
+100% tests passed, 0 tests failed out of 383
+(Stand d77bf72a: 99% tests passed, 1 tests failed out of 383 - rot unit_r39_heliport1171_binder, N1.10c)
+```
+(c) weitere Tests der beruehrten Module (`git grep` szenenleon / npckante / climb_common in re15_port/tests), `--timeout 600 -j 4`:
+```
+-R "^(unit|probe|prop)_(r39_heliport1171|r36_kartenbits|r38_werkstatt11b0|r39_stimmen|r20_birkin_push)"
+100% tests passed, 0 tests failed out of 21
+(Stand d77bf72a: 95% tests passed, 1 tests failed out of 21 - derselbe binder)
+```
+**Integration, Stand d77bf72a** - die 17er-Kette der Vorgaengerin, vollstaendig, `--timeout 1800 -j 2`, 2283 s:
+```
+-R "^integration_(r41_wasser20b0|r41_wasser20b0_npc|r36_gegnerzahl|r36_klettern|r38_wasser|r38_wasserzombie|r39_gegner_schatten|r36_pri_schatten|r37_szene11c0|r36_szenenleon|r38_werkstatt11b0|r38_rolltor20a0|r38_rolltor20a0_abe|r34_plattform_esp_eintritt|r37_itemband|r36_dachkiste|r37_roy_leon1170)$"
+94% tests passed, 1 tests failed out of 17
+```
+Rot nur integration_r37_roy_leon1170 (Ursache N1.10d: die Anim-Spur selbst traegt die Fremdzeilen - kein Fenster-Flattern).
+Einzeln Passed: r38_wasserzombie 122.31 s, r41_wasser20b0_npc 122.43 s, r38_wasser 180.96 s, r39_gegner_schatten 61.37 s,
+r36_klettern 519.30 s, r36_pri_schatten 27.76 s, r36_gegnerzahl 87.94 s, r34_plattform_esp_eintritt 9.18 s, r41_wasser20b0 98.28 s,
+r36_szenenleon 162.53 s, r37_itemband 838.69 s, r37_szene11c0 120.45 s, r36_dachkiste 1422.58 s, r38_rolltor20a0 273.46 s,
+r38_rolltor20a0_abe 195.24 s, r38_werkstatt11b0 151.40 s.
+
+**Integration, Endstand 7db5a6b2** - neu gefahren: die Ketten-Tests mit NPC-Szene oder Slots >= 32 (r41_wasser20b0, _npc,
+r36_gegnerzahl, r37_szene11c0, r36_szenenleon, r38_werkstatt11b0, r37_roy_leon1170), alle Anim-Spur-Riegel mit NPCs (r37_roy,
+r39_heliport1171, r39_funk10f1, r39_elza) und die Ton-Riegel der NPC-Szenen (r38_elzatoene_szene1021, r39_toene_szene(_elza),
+r39_stimmen_11b0); `--timeout 1800 -j 2`:
+```
+-R "^integration_(r37_roy_szene1011|r37_roy_szene1021|r37_roy_leon1170|r39_heliport1171_weg|r39_heliport1171_laden|r39_funk10f1_echt|r39_funk10f1_zweit|r39_funk10f1_leon|r38_werkstatt11b0|r39_elza_hand|r39_elza_karte|r39_elza_loescher|r41_wasser20b0|r41_wasser20b0_npc|r36_gegnerzahl|r38_elzatoene_szene1021|r39_toene_szene|r39_toene_szene_elza|r39_stimmen_11b0|r37_szene11c0|r36_szenenleon)$"
+100% tests passed, 0 tests failed out of 21
+```
+Einzeln Passed: r38_werkstatt11b0 169.79 s, r36_szenenleon 179.06 s, r37_szene11c0 120.45 s, r41_wasser20b0_npc 120.75 s,
+r36_gegnerzahl 87.91 s, r41_wasser20b0 96.40 s, r37_roy_szene1021 56.40 s, r37_roy_szene1011 96.56 s, **r37_roy_leon1170 63.35 s
+(an d77bf72a rot)**, r38_elzatoene_szene1021 65.33 s, r39_elza_karte 47.16 s, r39_elza_hand 84.34 s, r39_elza_loescher 38.74 s,
+r39_funk10f1_zweit 17.66 s, r39_funk10f1_leon 8.24 s, r39_funk10f1_echt 65.52 s, r39_heliport1171_laden 45.49 s,
+r39_heliport1171_weg 60.01 s, r39_toene_szene 45.68 s, r39_toene_szene_elza 45.87 s, r39_stimmen_11b0 102.42 s; gesamt 814 s.
+Nicht neu gefahren (gruen an d77bf72a): r36_klettern, r38_wasser, r38_wasserzombie, r39_gegner_schatten, r36_pri_schatten,
+r34_plattform_esp_eintritt, r37_itemband, r36_dachkiste, r38_rolltor20a0(_abe) - die Aenderungen danach wirken nur auf die
+RBJ-Bindung der Slots >= 32 und auf NPC-Schritte in Clips ohne Marke (es entfallen erfundene Schritte); keiner dieser Riegel
+prueft NPC-Schritte oder hat mehr als 31 Aktoren.
+
+
+### N1.13 OFFEN (Stand Nachbesserung 1)
+1. **Sprites im ersten Bild nach einem Kamerawechsel (Schnittbild).** Mechanismus GEFUNDEN (PSX.EXE, re15_disasm.py, am
+   2026-10-24 nachgeprueft): der Bildtausch FUN_8002137c (`jal 0x8002137c` @0x80020f4c) setzt bei DAT_800b0fe4 != DAT_800afbb5
+   (`lh v1,4068(v1)` @0x800214f8 / `lbu v0,-1099(v0)` @0x80021500 / `beq v1,v0` @0x80021508) das Schnitt-Flag DAT_800b5457
+   (`sb v0,21591(at)` @0x80021514) und ruft dann FUN_80021bbc (Schnitt anwenden, `jal 0x80021bbc` @0x80021558) mit
+   `j 0x800215fc` @0x80021560 - KEIN DrawOTag und KEIN Puffertausch (`xori v0,v0,0x1` / `sb v0,0(s0)` @0x800215f4-f8
+   uebersprungen). Der naechste Takt laeuft mit demselben Pufferindex DAT_800aca34; FUN_80010000 (`jal 0x80010000` @0x80020f3c)
+   hat die Marke DAT_800a73a4 im Vortakt auf diesen Index gesetzt (`sb v0,0(a0)` @0x80010040), also ueberspringt FUN_80052fd0
+   (`jal 0x80052fd0` @0x8001d1d0) ESP-Takt UND -Zeichnen FUN_80053240 (`beq v1,v0` @0x80052ff4, Marke == Index); FUN_80010000
+   ueberspringt ebenso seinen Aufbau (`beq v1,v0` @0x80010028 vor `jal 0x800280b4` @0x80010044). Folge im Original: das Bild des
+   Anforderungstakts wird nicht gezeichnet, das erste Bild der neuen Kamera traegt keine ESP-Sprites, der Partikel-Pool steht
+   einen Takt. Port-Umsetzung OFFEN: engine-weit (Kamera-Schnitt + ESP-Takt aller Raeume, alle FX-Zaehlriegel) - an den
+   Orchestrator, nicht in dieser Spur-Nachbesserung.
+2. **RVD 12 -> 13 in 20B0:** Port schaltet an der Zonengrenze (x -4220/-4420, F49/F50), das Original zeigt Cut 12 noch bei
+   x -4866 (tf_7 oben) und Cut 13 bei x -5020 (unten). Der Schnitt-Takt aus 1 (Anwendung im Bildtausch, gezeigt im Folgetakt)
+   gilt auch hier; der Anforderungszeitpunkt des Originals ist nicht gemessen (Kamerazonen-Mechanik, nicht Spur A).
+3. **EM024-INIT einen Takt spaeter als im Original** (das Original taktet frisch gespawnte Entities noch im Ladebild nach dem
+   Skript, Entity-Takt @0x8001ce04): Reihenfolge Skript -> Entity-Takt im Ladebild gilt fuer alle Gegner, nicht Spur A.
+4. Allgemeine Aufhebung der Port-Sperre in_cinematic fuer AUTO/FLAG_CHG-Saetze ausserhalb 20B0/20B1 (FUN_800436a8 @0x8001ce1c
+   ohne Gate; volle Suite noetig). Die ENV-Stempel (WATER/RAMP, sce 7/8: 36 Saetze in 18 Raeumen) sind seit Nachbesserung 1 frei.
+5. EM024 grid 2..4 (0x8010f910 / 0x8010fe24 / 0x80110338) ungebaut (kein ausgeliefertes RDT spawnt sie); DAT_800acc0c := 1
+   @0x8010ef34 (Konsument FUN_80024c30) OFFEN.
+6. PSX: RE15_ACTOR_MAX 36 = +28 KB BSS (PSX-Laufzeitbudget pruefen, wenn der PSX-Bau wieder gebaut wird).
+7. **PORT-WAHL (keine Original-Marke, NUTZER-VORGABE "alle NPCs"):** Typ 0x4b (Kind) OWN Clip 5 Bilder 5/19, Clip 0 Bilder 0/10,
+   Container Clip 1 (Rueckwaerts) nach derselben Regel; Typ 0x47 aus CDEMD1 (Roy) OWN Clip 5 Bilder 19/50 (N1.10d). Alle anderen
+   Schritte kommen aus den Original-Marken.
+8. **Lautstaerke/Richtung der Schritt-Toene:** FUN_80045630 ruft FUN_80045a64(Entity+0x34) (`jal 0x80045a64` @0x80045830):
+   Abstand zur Kamera (dist/250, Deckel 0x7f) und Seite -> DAT_800b2824/26 (L/R). Der Port spielt re15_audio_footstep ohne Lage
+   mit der Ton-Lautstaerke (audio_pc.c, Spur-D-Datei; gilt fuer Spieler UND NPC). Ein byte-genaues FUN_80045a64 liegt bereits in
+   engine/src/rotor_common.c (re15_rotor_compute_pan); die Anbindung an den Schritt-Ton braucht eine Lage-Variante in
+   audio_pc.c -> an den Orchestrator (Spur D / Integration).
+9. **RBJ-Marker-Binder FUN_8001b3f8: Gegner-Index kumulativ, Spieler = letzter Record mit Bit 0** (Nebenbefund N1.10c, NICHT
+   Spur A, nicht geaendert): statische Auswertung aller 240 RDTs (`A_belege/nb1d/rbj_a3_zensus.py` / `.txt`): 47 Raeume mit RBJ,
+   in **12** weicht die Original-Bindung vom Port-Modell ab - ROOM2000, 3091, 30E0, 4000, 4001, 4010, 5011, 6030, 6031 (Marker
+   0x1/0x2/0x3: Original Spieler = rec2 und Gegner 1 = rec2; Port Spieler = rec0, Gegner 1 ohne Record), ROOM3060 (Marker
+   0x1/0x2/0x4: Original Gegner 2 = rec2; Port Gegner 1 = rec2), ROOM1040/1041 (Marker 0x7e: Original bindet dem Spieler keinen
+   Record; Port Spieler = rec0). Zur Laufzeit NICHT gemessen (kein Savestate dieser Raeume im Baum) -> an den Orchestrator;
+   betrifft die Szenen-Spuren (u.a. J: 3060, K: 3091).
+10. **Anim-Spur bei NPC-Wasserschritten:** der Part-Anker eines Wasser-/Stempel-Schritts (npc_anker -> re15_wasser_r38_anker ->
+   re15_compute_actor_kf an einer Aktor-Kopie) schreibt bei gesetztem RE15_ANIM_TRACE je Schritt eine Zeile mit Kopie-Index - wie
+   der Spieler-Anker seit Runde 38. Kein Anim-Spur-Riegel laeuft in einem Wasserraum (grep RE15_ANIM_TRACE in tests: 10xx/11xx/
+   12xx/3071/3091/50xx); fuer saubere Spuren braeuchte re15_wasser_r38_anker eine Keyframe-Variante (Mess-Artefakt, kein Verhalten).
+
+### N1.14 Fuer den Nutzer (Stand Nachbesserung 1)
+- Keine neuen Assets, keine Sprachdateien, kein Patch an shared_assets/PSX (Effekte 0x0f/6 aus den Raum-ESP-Banken der
+  Original-RDTs, Toene aus den Raum-Baenken).
+- Hoer-/sichtbar: alle NPCs (Ada 0x40, Marvin 0x42, Irons 0x45, Elliot/Roy 0x47, John 0x49, 0x4d) machen beim Gehen, Laufen,
+  Rueckwaertsgehen und Drehen auf der Stelle (der Dreh-Sub spielt den Geh-Clip) Schrittgeraeusche (Ton des Bodens, NPC-Zweig -8)
+  und spritzen im Wasser wie der Spieler - in Szenen und im freien Lauf. Das Kind 0x4b und Roys Gehen ebenso (Port-Regel, OFFEN 7).
+  Am Laufbeginn kein Doppelschritt mehr; beim Stehen, Gestikulieren oder in der Startpose kein Schritt (wie im Original). Beim
+  Sprung von der Kante ins Becken (2090/2091) 8 Spritzer an der Landestelle; die 20B0/20B1-Flut wie im Original.
+- Hinweis zum Vergleich: die Wolke in 20B0 ist am exakten Framebuffer die des Originals; ein DuckStation-Video glaettet sie
+  (Skalierung BilinearSmooth + yuv420p/VP9) zu einer helleren, dichteren Flaeche - Vergleiche bitte am Savestate-Framebuffer.
+- Bedienhinweise (Messung): RE15_NPCSCHRITT_LOG=<datei> (je NPC-Schritt eine Zeile: Bild, Slot, Typ, Clip, Bild, Fuss, Boden,
+  Stempel, Zweig, Ton, Plaetze, PORT-WAHL, Lage); RE15_PLAYER_POS nimmt als 4. Wert das Band.
+- An den Orchestrator: main.c-Haken (M6) wie B5 annehmen? NPC-Schritt-Lautstaerke nach Abstand (OFFEN 8) mit Spur D klaeren.
+  enemy_common.c traegt seit dieser Nachbesserung einen 1-Zeilen-Haken der Spur A (RBJ-Marker, N1.10c). Die RBJ-Bindung der 12
+  Raeume aus OFFEN 9 den Szenen-Spuren zuweisen. Querbezug Spur C (dort gemessen): deren 2030->20B0-Kette haengt ohne den
+  AUTO-AOT-Haken dieser Spur in aot_common.c - der Haken bleibt noetig.

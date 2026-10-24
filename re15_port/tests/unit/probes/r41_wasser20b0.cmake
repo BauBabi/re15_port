@@ -9,7 +9,8 @@
 #   unit_r41_wasser20b0_raum       ROOM20B0/20B1 am VM: 35 EM024 unsichtbar, Drift byte-gleich zu ts_10/Umbruch/ts_14,
 #                                  Partikel 0x0f im Pool, Spawn-Zaehlung je grid
 #   unit_r41_wasser20b0_landung    Punkt 2a: Landungs-Spritzer @0x80038730-d0 (8 x 0x06033000, Gier-Faecher, Gate Stempel < y)
-#   unit_r41_wasser20b0_npc        Punkt 2b: NPC-Schritt FUN_80045630 Typ >= 0x40 (Boden-/Stempel-Zweig, Ton -8, Bildwort-Takt)
+#   unit_r41_wasser20b0_npc        Punkt 2b: NPC-Schritt FUN_80045630 Typ >= 0x40 (Boden-/Stempel-Zweig, Ton -8, Bildwort-Takt);
+#                                  Marken je Typ/Archiv, PORT-WAHL nur fuer Fortbewegungs-Clips ohne Marke (0x4b, 0x47 CDEMD1 c5)
 #   unit_r41_wasser20b0_npc_wasser Nachbesserung 1: der echte Geh-Sub (state 4 / sub 4) fuehrt jeden NPC-Typ (beide Archive)
 #                                  durch den Wasserfleck ROOM2000 -> Spritzer 0x06050D00 + Ton (OWN-Bank-Marken, 0x4b PORT-WAHL)
 #   unit_r41_wasser20b0_stempel    Nachbesserung 1 (M3): WATER-Stempel +0x88 fuer NPC und Spieler auch unter player_mode 2
