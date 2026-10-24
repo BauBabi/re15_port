@@ -66,7 +66,14 @@ nur in 0x49d0..0x529b = Bloecke 3/4 des Verzeichnisses @0x59a0, nicht in den Ani
 | t18 40 s | dto. | dto. | dto. | (-12578,-23421) ry 830 |
 | t19 42 s | Modell 0x0f (Sherry), Waffe 0, cmd 0 (-19100,-1350) = ROOM30C1 | | | |
 
-Diese Werte stimmen mit Dossier §1.3/§2.5 und der Abnahme J 0 ueberein (hier unabhaengig nachgelesen).
+- `J41b/orig/o3061_s3` (dichte Reihe, 0,4 s; Code = PSX.EXE): t03 Sherry Clip 0 +0x95 52, Gitter lokal (252,192,-153) Rot
+  (0,1024,3072) Vater 0x8014046c (= angehaengt, die Super_set-Werte); t04 Gitter (-18276,-266,-26788) Rot (72,3072,0) Vater
+  0x80072d4c (rutscht); t05 Gitter (-18116,-266,-26788), Sherry Clip 1 +0x95 17 (-18980,-26266); **t08 Clip 2 +0x95 19 +0x1c4 0x26
+  (-18780,-28017); t09 +0x95 44 0x05 (-18791,-28390); t10 +0x95 12 0x06 (-18783,-28806); t11 +0x95 39 0x25 (-18810,-29279)**; t12/t13
+  (-18795,-30700). Die Soll-Werte des Riegels `unit_r41_stage3szenen_a_anker` (t08 -> t10, t09 -> t11) sind genau diese
+  Original-Werte — der Riegel ist nicht selbstbestaetigend.
+
+Diese Werte stimmen mit Dossier §1.3/§2.5/§2.8 und der Abnahme J 0 ueberein (hier unabhaengig nachgelesen).
 
 ## Gate M2 — Bytes selbst gelesen (shared_assets/PSX/STAGE4 = info/Re1.5/PSX/STAGE4, md5 gleich)
 ROOM4031 @0x004F6 `06 00 1c 00`, @0x004FA `21 03 57 00`, @0x00516 `2c 05 05 31`, @0x0054E `06 00 34 00`, @0x00552 `21 03 58 00`,
