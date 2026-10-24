@@ -562,6 +562,7 @@ int re15_render_pc_standbild_wiederholen(void)
     if (!s_sb_gueltig) return 0;
     memcpy(s_framebuffer, s_sb_fb, sizeof s_sb_fb);
     if (s_sb_text_used) { memcpy(s_text_overlay, s_sb_text, sizeof s_sb_text); s_text_overlay_used = s_sb_text_used; }
+    else s_text_overlay_used = 0;   /* Runde 41 Spur E: auch die Text-Ebene des stehenden Bildes (kein DrawOTag @0x80021560) */
     s_shadow_quad_count = s_sb_shadow_n;
     if (s_sb_shadow_n > 0) {
         memcpy(s_shadow_quads, s_sb_shadow, (size_t)s_sb_shadow_n * sizeof s_shadow_quads[0]);

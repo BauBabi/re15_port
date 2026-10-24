@@ -32,6 +32,7 @@
 #include "re15_esp.h"        /* Phase ESP-C: op-0x3a effect particle spawn */
 #include "re15_damage.h"     /* re15_enemy_apply_hitbox — wire the spawned enemy's +0x78 hitbox */
 #include "re15_msg.h"        /* re15_msg_is_choice — YES/NO vs plain Message_on gating */
+#include "re15_msgtakt_r41.h" /* Runde 41 Spur E: Auswahl-Message_on ohne Parken */
 #include "re15_savepoint.h"  /* FE-4: phone save-point registry + pending signal */
 #include "re15_itembox.h"    /* ITEM BOX: safe-room box-AOT registry + pending signal
                               * (save-phone precedent, shots/itembox_spec.md §6) */
@@ -1820,6 +1821,7 @@ static int op_message_on(scd_thread_t *t)
             re15_dialog_open_mask((int)t->pc[1], 1, pause_mask);   /* blocking: query=1, fsm_active=1 */
             g_scd.message_arg2 = t->pc[2];
             g_scd.message_arg3 = t->pc[3];
+            if (re15_msgtakt_r41_frage_durchlaufen(pause_mask)) { t->pc += 4; return 1; }   /* Runde 41 Spur E: wie @0x80040520 (re15_msgtakt_r41.h) */
             return 2;                              /* park (PC not advanced) */
         }
         if (g_scd.message_active)                  /* FSM still running (driven by re15_msg_tick) */
