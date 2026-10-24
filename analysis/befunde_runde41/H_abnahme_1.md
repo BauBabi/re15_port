@@ -237,7 +237,11 @@ die NPCs der beiden Punkte (3080 sub00 @0x007AC/@0x007C0 Ada 0x42 + Marvin 0x40 
   Szenenende beide NPC per `Pos_set 32 00 d5 fb 00 00 41 ab` (@0x01B2A, wieder @0x01C44) auf DENSELBEN Parkpunkt (-1067,-21695)
   ausserhalb des Bildes (Framedump F1300/F2000: nur Elza im Aufzug) — Abstand 0 in BEIDEN exe. Das ist kein Befund der Spur: bei dX =
   dZ = 0 liefert auch die Original-Formel `dX*pen/(dist+1)` (@0x8002b22c-238) 0, die beiden bleiben auch im Original deckungsgleich;
-  zu sehen ist es nicht (Hinweis H4).
+  zu sehen ist es nicht (Hinweis H1).
+- STAGE2 ROOM2000 (der Nutzer spielt gerade STAGE2; Ada + Marvin gehen per Plc_dest dieselbe Strecke, sub02/sub03):
+  `lauf.sh s2000 <vor|nach> 400 RE15_SET_FLAG=4:244 RE15_DEBUG_JUMP=2000@250` + Quadrat je Sekunde, `RE15_EXIT_AT=2500`: in BEIDEN
+  exe Szenenende `pm=2 -> pm=1` bei F2007, `pm=0` ab F2021, Ada/Marvin min 1572 (F942), **alle 2500 Bilder bitgleich** (0 abweichende
+  Aktorlagen), 0 `NPC-SCHUB` — die beiden kommen sich dort nicht nahe, der Schub aendert die Szene nicht (wie Abnahme 0 4.2).
 
 ### 4.7 Punkt 1, LEON, ROOM30E0 Ada + Marvin nach ihrer Szene (zweiter Befund-Ort, von Spur und Abnahme 0 nicht gemessen) (`laeufe/s30e0_*`)
 ROOM30E0 sub11 (`Ck (3,75)=1` @0x01088) setzt Ada (0x42) + Marvin (0x40) mit Verhaltensbyte 0x40 @0x0108C/@0x010A0 und startet die Szene
