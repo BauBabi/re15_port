@@ -117,11 +117,11 @@ static int setup(int gb_test)
 {
 #ifdef _WIN32
     _putenv(gb_test ? "RE15_GB_TEST=1" : "RE15_GB_TEST=");
-    _putenv("RE15_GB_STUMM=1");
+    if (!getenv("R41B_LOG")) _putenv("RE15_GB_STUMM=1");   /* R41B_LOG=1: gator_boss.log schreiben (Diagnose) */
     _putenv("RE15_GATOR_KANISTER=");
 #else
     if (gb_test) setenv("RE15_GB_TEST", "1", 1); else unsetenv("RE15_GB_TEST");
-    setenv("RE15_GB_STUMM", "1", 1);
+    if (!getenv("R41B_LOG")) setenv("RE15_GB_STUMM", "1", 1);
     unsetenv("RE15_GATOR_KANISTER");
 #endif
     size_t n = 0;
@@ -583,54 +583,91 @@ static int teil_modell(void)
 
 /* ================================================================================================ */
 /* Nachbesserung 1 (Abnahme 0, M1): Dash und Intro muessen im NATUERLICHEN Ablauf zuenden.
- * (a) Intro vom Lauerplatz (-7200,-9200), Blick zur Leiter (INIT-Yaw ~1087), Leon in der Tuernische
- *     (-8200,-25550): RE2 Sub 0 ohne Bahn-Gate - Clip 6 (125) -> Clip 3 (150) -> yaw += 1024 (@0x80100938-48),
- *     Biss-Sperre 110 (@0x8010091c-20); der Durchbruch (Clip 6 netto 6281 laengs) kommt nach Sueden voran, die
- *     Dispatcher-Klemme (tick()) haelt ihn an der Westwand (x >= -8900 + 1466).
- * (b) Dash im Westkanal nach SUEDEN auf der Klemmlinie x = -7434 (Abnahme-Lauf A: Route bei x -7289..-7300),
- *     Leon Zone 0: Zonenwechsel 2 -> 0 bei z = -18100 -> SE 4 + Clip 2/3 je 150 (@0x80100dac-e28); die Klemme
- *     nimmt den RE2-Korridor-Seitversatz von Clip 3 (-2775 quer = West), laengs ~4188 (2307 + 1881) voran, am
- *     Ende yaw += 1024 (@0x80100eb0-c0). Vorher (gb_bahn_frei, Ende-x -7309 < -7300) zuendete hier nichts. */
+ * Nachbesserung 2 (Abnahme 1, M2 + Orchestrator-Entscheid B7): die RE2-Wende (Clip 3 Root-ry 438 -> 1023, danach
+ * `yaw += 1024` @0x80100938-48 / @0x80100eb0-c0) darf Kopf und Rumpf NICHT in die Beckenwand drehen.
+ * (a) Intro, Leon in der Tuernische (-8200,-25550): gr2_intro_lage waehlt Startlage/-gier (Pos_set-Zwilling, RE2 sub11
+ *     @SCD 0x0736) - in JEDEM der 275 Intro-Bilder liegen Rumpf (Bones 0/1), Hals 5, Kopf 6 und Kiefer 7 im Wasser des
+ *     Beckens (Raumgeometrie ROOM2090-SCA [0]-[5]: Becken x[-8900,7200] z[-27000,-5400], Plattform x[-1700,1850]
+ *     z[-20000,-12450], Rampe x[1850,7200] z[-18100,-14500]); Clip 6 (125) -> Clip 3 (150) -> yaw += 1024; die End-Gier
+ *     zeigt auf Leon (Peilung, Toleranz 128); Biss-Sperre 110 (@0x8010091c-20). Vorher (Lauerplatz, Gier 1089): Kopf am
+ *     Clip-3-Ende 4988 in der Westwand (probe_wende.c, = Abnahme-1-Lauf A).
+ * (b) Dash am Suedausgang des Westkanals, Gator auf der Klemmlinie (-7434,-17900) Blick Sued, Leon Zone 0: Zonenwechsel
+ *     2 -> 0 -> gr2_dash_planen dreht VOR Clip 2 auf die kleinste Gier mit freier Wende (vorher Kopf 4474 in der
+ *     Westwand), dann SE 4 + Clip 2/3 je 150 (@0x80100dac-e28) entlang der authored Deltas (x UND z, um die Gier gedreht),
+ *     am Ende yaw += 1024 (@0x80100eb0-c0); Rumpf/Hals/Kopf/Kiefer in jedem Bild im Wasser. */
+static int32_t wand_draussen(int32_t x, int32_t z)
+{
+    int32_t d = 0;
+    if (x < -8900) d = -8900 - x;
+    if (x > 7200 && x - 7200 > d) d = x - 7200;
+    if (z < -27000 && -27000 - z > d) d = -27000 - z;
+    if (z > -5400 && z + 5400 > d) d = z + 5400;
+    static const int32_t blk[2][4] = { { -1700, 1850, -20000, -12450 }, { 1850, 7200, -18100, -14500 } };
+    for (int k = 0; k < 2; k++)
+        if (x > blk[k][0] && x < blk[k][1] && z > blk[k][2] && z < blk[k][3]) {
+            int32_t t = x - blk[k][0];
+            if (blk[k][1] - x < t) t = blk[k][1] - x;
+            if (z - blk[k][2] < t) t = z - blk[k][2];
+            if (blk[k][3] - z < t) t = blk[k][3] - z;
+            if (t > d) d = t;
+        }
+    return d;
+}
+/* groesster Aussenabstand der Rumpf-/Kopf-Bones dieses Bildes; *kopf_x = Kopf (Bone 6) x */
+static int32_t wand_bild(int32_t *kopf_x)
+{
+    static const int bones[5] = { 0, 1, 5, 6, 7 };
+    int32_t m = 0;
+    for (int i = 0; i < 5; i++) {
+        int32_t p[3] = { e->x, e->y, e->z }; re15_gr2_bone_welt_pub(e, bones[i], p);   /* gezeichnete Lage (Skala 2731) */
+        int32_t d = wand_draussen(p[0], p[2]);
+        if (d > m) m = d;
+        if (bones[i] == 6 && kopf_x) *kopf_x = p[0];
+    }
+    return m;
+}
 static int teil_wand(void)
 {
     if (!setup(1)) return 1;
     leon_statue(-8200, -25550);
-    tick();                                   /* INIT: Lauerplatz, Blick zur Leiter, aggro (GB_TEST=1) -> der
-                                               * INIT-Tick laeuft schon in LURK -> Intro-Start (Clip 6, Bild 0) */
-    CHECK(e->x == -7200 && e->z == -9200, "INIT-Lage (%d,%d) statt Lauerplatz (-7200,-9200)", e->x, e->z);
+    tick();                                   /* INIT: Lauerplatz -> aggro (GB_TEST=1) -> Intro-Lage + Intro-Start */
     int yaw0 = (int)e->rot_y & 0xfff;
+    int32_t sx = e->x, sz = e->z;
+    int32_t kx = 0, raus_intro = wand_bild(&kx), kx_min = kx;
     int n6 = (e->motion == 6) ? 1 : 0, n3 = 0, f;
-    int32_t x_min = e->x, z_min = e->z;
     for (f = 0; f < 400; f++) {
         leon_statue(-8200, -25550); tick();
         if (!re15_gr2_im_intro(slot) && f > 2) break;
         if (e->motion == 6) n6++; else if (e->motion == 3) n3++;
-        if (e->x < x_min) x_min = e->x;
-        if (e->z < z_min) z_min = e->z;
+        int32_t d = wand_bild(&kx);
+        if (d > raus_intro) raus_intro = d;
+        if (kx < kx_min) kx_min = kx;
     }
     int yaw1 = (int)e->rot_y & 0xfff;
+    int peil = ((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff;
+    int abw = ((yaw1 - peil + 0x800) & 0xfff) - 0x800; if (abw < 0) abw = -abw;
+    CHECK(sx != -7200 || sz != -9200, "Intro: keine Startlage gewaehlt (Lauerplatz (-7200,-9200) mit Gier 1089 dreht in die Westwand)");
     CHECK(n6 == 125 && n3 == 150, "Intro Clip 6 %d / Clip 3 %d Bilder (RE2: 125/150, EDD)", n6, n3);
-    CHECK(x_min >= -8900 + 1400, "Intro: Gator in der Westwand (x_min %d, Klemmlinie -7434)", x_min);
-    CHECK(z_min <= -9200 - 5000, "Intro: Durchbruch kam nicht voran (z_min %d; Clip 6 netto 6281 laengs)", z_min);
+    CHECK(raus_intro == 0, "Intro: Rumpf/Kopf %d ausserhalb des Wassers (Kopf x min %d, Westwand -8900)", raus_intro, kx_min);
     CHECK(((yaw1 - yaw0) & 0xfff) == 1024, "Intro-Ende: yaw %d -> %d, erwartet +1024 (@0x80100938-48)", yaw0, yaw1);
+    CHECK(abw <= 128, "Intro-Ende zeigt nicht auf Leon: Gier %d, Peilung %d (Abw. %d > 128)", yaw1, peil, abw);
     CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO - 1,
-          "Biss-Sperre im ersten CHASE-Tick %d != 109 (110 im Ende-Tick @0x8010091c-20, ein Takt abgezogen)", re15_gr2_biss_cd_rest(slot));
+          "Biss-Sperre im ersten CHASE-Takt %d != 109 (110 im Ende-Takt @0x8010091c-20, ein Takt abgezogen)", re15_gr2_biss_cd_rest(slot));
     /* (b) Dash: Klemmlinie im Westkanal, Blick Sued, Leon Zone 0 */
+    pl->hp = 100;
     e->x = -7434; e->z = -17900; e->y = -1200; e->rot_y = 1024;
-    int f_start = -1, n2 = 0, yaw_d = 0; n3 = 0;
-    int32_t z_start = 0, x_dmin = e->x, x_dmax = e->x;
-    int32_t dz_soll_sum = 0, dz_ist_sum = 0; int abw_n = 0;
+    int f_start = -1, n2 = 0, yaw_d = 0, vor = 0; n3 = 0;
+    int32_t raus_dash = 0, kx_dmin = 0x7fffffff;
+    int32_t dx_soll_sum = 0, dz_soll_sum = 0, dx_ist_sum = 0, dz_ist_sum = 0; int abw_n = 0;
     int se_vor = s_se_n;
     for (f = 0; f < 600; f++) {
-        /* Soll-Schritt dieses Bildes (FUN_80015e7c-Delta, um den Yaw gedreht wie gr2_rig_welt), nur z */
         int clip_b = (int)e->motion, f_b = (int)e->anim_frame, yaw_b = (int)e->rot_y & 0xfff;
-        int32_t z_b = e->z;
+        int32_t x_b = e->x, z_b = e->z;
         int im_dash_b = re15_gr2_im_dash(slot);
         leon_statue(-8200, -25550); tick();
         if (im_dash_b && (clip_b == 2 || clip_b == 3)) {
             /* Soll = Schritt des NEUEN Bildes f_b+1 (FUN_8001a330: Vorschub, dann e7c+152c8); das letzte Bild
-             * (f = n-1) wird ohne Schritt gezeigt (`bne v0,zero,0x8001a3cc` @0x8001a3b0), der Umschalt-Tick
-             * (Bild 0 des Folgeclips / Clip 0) ebenfalls ohne Schritt. */
+             * (f = n-1) wird ohne Schritt gezeigt (`bne v0,zero,0x8001a3cc` @0x8001a3b0). */
             re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
             int16_t a[3] = {0,0,0}, b[3] = {0,0,0};
             const re15_emd_clip_t *c = &bk->anim.clips[clip_b];
@@ -641,34 +678,39 @@ static int teil_wand(void)
                 re15_emd_get_keyframe_speed(&bk->skel, (int)(bk->anim.frames[c->first_frame + f_n - 1] & 0xfffu), &a[0], &a[1], &a[2]);
             }
             int32_t vx = (int32_t)(((int64_t)(b[0] - a[0]) * s) >> 12), vz = (int32_t)(((int64_t)(b[2] - a[2]) * s) >> 12);
+            int32_t dx_soll = (int32_t)(((int64_t)re15_cos_q12(yaw_b) * vx + (int64_t)re15_sin_q12(yaw_b) * vz) >> 12);
             int32_t dz_soll = (int32_t)((-(int64_t)re15_sin_q12(yaw_b) * vx + (int64_t)re15_cos_q12(yaw_b) * vz) >> 12);
-            int32_t dz_ist = e->z - z_b;
-            dz_soll_sum += dz_soll; dz_ist_sum += dz_ist;
-            if (dz_ist != dz_soll && abw_n++ < 6)
-                printf("  wand: Bild %d clip %d f %d yaw %d dz ist %d soll %d\n", f, clip_b, f_b, yaw_b, dz_ist, dz_soll);
+            dx_soll_sum += dx_soll; dz_soll_sum += dz_soll;
+            dx_ist_sum += e->x - x_b; dz_ist_sum += e->z - z_b;
+            if ((e->x - x_b != dx_soll || e->z - z_b != dz_soll) && abw_n++ < 6)
+                printf("  wand: Bild %d clip %d f %d yaw %d d ist (%d,%d) soll (%d,%d)\n", f, clip_b, f_b, yaw_b,
+                       e->x - x_b, e->z - z_b, dx_soll, dz_soll);
+        }
+        if (re15_gr2_dash_vordrehung(slot)) vor++;                 /* Vordrehung auf die Plan-Gier (vor Clip 2) */
+        if (re15_gr2_im_dash(slot) || re15_gr2_dash_vordrehung(slot)) {
+            int32_t d = wand_bild(&kx);
+            if (d > raus_dash) raus_dash = d;
+            if (kx < kx_dmin) kx_dmin = kx;
         }
         if (re15_gr2_im_dash(slot)) {
-            if (f_start < 0) { f_start = f; z_start = e->z; yaw_d = (int)e->rot_y & 0xfff; }
+            if (f_start < 0) { f_start = f; yaw_d = (int)e->rot_y & 0xfff; }
             if (e->motion == 2) n2++; else if (e->motion == 3) n3++;
-            if (e->x < x_dmin) x_dmin = e->x;
-            if (e->x > x_dmax) x_dmax = e->x;
         } else if (f_start >= 0) break;
     }
     int yaw2 = (int)e->rot_y & 0xfff;
-    int32_t weg = z_start - e->z;
-    CHECK(dz_ist_sum == dz_soll_sum, "Dash z-Summe ist %d != soll %d (authored Delta um den Yaw gedreht; %d Bilder weichen ab)",
-          dz_ist_sum, dz_soll_sum, abw_n);
     CHECK(f_start >= 0 && f_start < 60, "kein Dash beim Zonenwechsel 2 -> 0 in Leons Zone (f_start %d)", f_start);
+    CHECK(vor > 0 && yaw_d != 1024, "keine Vordrehung vor dem Dash (Start-Gier %d, %d Drehbilder) - Gier 1024 dreht in die Westwand", yaw_d, vor);
     CHECK(se_count_since(4, se_vor) >= 1, "kein SE 4 am Dash-Start (@0x80100d64/84)");
     CHECK(n2 == 150 && n3 == 150, "Dash Clip 2 %d / Clip 3 %d Bilder (150/150)", n2, n3);
-    CHECK(x_dmin >= -8900 + 1400, "Dash: Gator in der Westwand (x_min %d, Klemmlinie -7434)", x_dmin);
-    /* laengs: roh 3535 + 2884 = 6419 x 2731/4096 = 4279, je Bild dreimal floor (Skalierung x/z, Rotation) ->
-     * gemessen 4389 bei Yaw 1007; exakt = -dz_soll_sum (dieselbe Integer-Arithmetik wie gr2_rig_welt) */
-    CHECK(weg == -dz_soll_sum && weg >= 4000 && weg <= 4500,
-          "Dash laengs %d (soll %d aus den authored Deltas; Klemme nur quer)", weg, -dz_soll_sum);
+    CHECK(dx_ist_sum == dx_soll_sum && dz_ist_sum == dz_soll_sum,
+          "Dash-Bahn ist (%d,%d) != soll (%d,%d) aus den authored Deltas (%d Bilder weichen ab)", dx_ist_sum, dz_ist_sum,
+          dx_soll_sum, dz_soll_sum, abw_n);
+    CHECK(raus_dash == 0, "Dash: Rumpf/Kopf %d ausserhalb des Wassers (Kopf x min %d)", raus_dash, kx_dmin);
     CHECK(((yaw2 - yaw_d) & 0xfff) == 1024, "Dash-Ende: yaw %d -> %d, erwartet +1024 (@0x80100eb0-c0)", yaw_d, yaw2);
-    printf("wand: intro Clip6 %d Clip3 %d x_min %d z_min %d yaw %d->%d | dash ab f%d yaw %d Clip2 %d Clip3 %d x[%d..%d] laengs %d yaw %d\n",
-           n6, n3, x_min, z_min, yaw0, yaw1, f_start, yaw_d, n2, n3, x_dmin, x_dmax, weg, yaw2);
+    printf("wand: intro Start (%d,%d) yaw %d Clip6 %d Clip3 %d -> yaw %d (Peilung Leon %d, Abw %d), draussen %d, Kopf x min %d | "
+           "dash Vordrehung %d Bilder 1024 -> %d, ab f%d Clip2 %d Clip3 %d, Bahn (%d,%d), draussen %d, Kopf x min %d, yaw %d\n",
+           sx, sz, yaw0, n6, n3, yaw1, peil, abw, raus_intro, kx_min, vor, yaw_d, f_start, n2, n3, dx_ist_sum, dz_ist_sum,
+           raus_dash, kx_dmin, yaw2);
     return fails ? 1 : 0;
 }
 
@@ -975,7 +1017,9 @@ static int teil_aufnahme(void)
     }
     CHECK(pad2 >= 10, "ausserhalb der Kanister-Zone kein Paddeln bei Stufe 7 (%d/12) - Hysterese @0x80100b20", pad2);
     CHECK(re15_gr2_biss_erlaubt(slot), "Biss bei Stufe 7 nicht erlaubt (FUN_801012fc laesst 7 durch @0x8010136c-70)");
-    /* Stufe 7 + Leon vor der Schnauze: der Biss startet wieder (RE2 T1 bei Stufe 7 scharf) */
+    /* Stufe 7 + Leon vor der Schnauze: der Biss startet wieder (RE2 T1 bei Stufe 7 scharf). Erst zurueck in Zone 0 mit
+     * Leon noch im Nordbecken (Zonenwechsel 2 -> 0 nicht in Leons Zone = kein Dash), dann Leon vor die Schnauze. */
+    leon_statue(-6000, -8000); e->x = -6000; e->z = -25000; e->rot_y = 0xC00; tick();
     int biss7 = -1;
     for (int f = 0; f < 10 && biss7 < 0; f++) {
         leon_statue(-6000, -21600); e->x = -6000; e->z = -25000; e->rot_y = 0xC00;

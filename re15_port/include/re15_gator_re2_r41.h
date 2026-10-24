@@ -80,14 +80,28 @@ int  re15_gr2_biss_erlaubt(int slot);
  * Nachbesserung 1 (Abnahme 0, M1): die Bahn laeuft bildweise (FUN_80015e7c/152c8-Delta) statt absolut. */
 int  re15_gr2_dash_zonenwechsel(int slot, const re15_actor_t *e, int zone, int zone_leon, int32_t ziel_vor[2]);
 /* SE 4 @0x80100d64/84, Clip 2 (16); `pl` = Leon (Putz-Lage, PORT-WAHL "um Leon"). */
-void re15_gr2_dash_start(int slot, re15_actor_t *e, const re15_actor_t *pl);
+/* Nachbesserung 2 (Abnahme 1 M2, Entscheid B7): Start-Gier mit freier RE2-Wende (Kopf/Rumpf im Wasser, Wurzel
+ * ausserhalb der Klemmzone, Bahn nicht durch Leon; Drehung <= 0x400, kleinste Drehung vor Ausrichtung auf Leon) -
+ * 0 = kein Dash an diesem Zonenwechsel. */
+int  re15_gr2_dash_planen(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t ziel_vor[2]);
+void re15_gr2_dash_start(int slot, re15_actor_t *e, const re15_actor_t *pl);   /* dreht erst auf die Plan-Gier */
 int  re15_gr2_dash_tick(int slot, re15_actor_t *e);       /* 1 = laeuft, 0 = fertig (0x101, yaw += 1024 @0x80100eb0-c0) */
 int  re15_gr2_im_dash(int slot);                          /* +0x225 */
+int  re15_gr2_bone_welt_pub(const re15_actor_t *e, int bone, int32_t pos[3]);   /* Messhaken: Bone-Welt mit Zeichen-Skala */
+int  re15_gr2_dash_vordrehung(int slot);                  /* Nachbesserung 2: Drehung auf die Plan-Gier vor Clip 2 laeuft */
 
 /* RE2-INTRO (Sub 0 P1/P2 @0x8010086c-948): Clip 6 (Durchbruch) -> Clip 3 (Schnapper), danach
  * +0x238 = 110 und yaw += 1024 (@0x80100938-48). Bahn-Ende (Wurzel) in ziel[] nur fuer die Telemetrie. */
 void re15_gr2_intro_bahn(const re15_actor_t *e, int32_t ziel[2]);
 void re15_gr2_intro_start(int slot, re15_actor_t *e);
+/* Nachbesserung 2 (Abnahme 1 M2, Entscheid B7): Intro-Startlage/-gier (Pos_set-Zwilling, RE2 sub11 @SCD 0x0736), so
+ * dass die ganze RE2-Bahn (Clip 6 -> 3 -> yaw += 1024) Kopf/Rumpf im Wasser haelt und der Knick auf Leon zeigt;
+ * vom Boss-Modul VOR re15_gr2_intro_start beim Aggro gerufen (Szenen von Spur F/G rufen nur intro_start). */
+void re15_gr2_intro_lage(int slot, re15_actor_t *e, const re15_actor_t *pl);
+/* Beckengeometrie des Boss-Moduls: Aussenabstand eines Punkts zum Wasser (0 = drin), m = Rand nach innen. */
+void re15_gr2_becken_quelle(int32_t (*draussen)(int32_t x, int32_t z, int32_t m));
+/* Koerperlaengen-Push-Kreise des Boss-Moduls: 1 = Punkt (px,pz) liegt in einem Kreis des Gators bei (x,z,yaw). */
+void re15_gr2_koerper_quelle(int (*kontakt)(int32_t x, int32_t z, int yaw, int32_t px, int32_t pz));
 int  re15_gr2_intro_tick(int slot, re15_actor_t *e);      /* 1 = laeuft, 0 = fertig */
 int  re15_gr2_im_intro(int slot);                         /* Messhaken: Intro laeuft (Clip 6/3) */
 

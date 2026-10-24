@@ -63,6 +63,8 @@ typedef struct {
     uint8_t  im_dash;         /* +0x225 */
     uint8_t  dash_phase;      /* 0 aus, 1 Clip 2, 2 Clip 3 */
     uint8_t  dash_endbild;    /* voriger Tick zeigte das letzte Clip-Bild (FUN_8001a330 lieferte 1) */
+    uint8_t  dash_vor;        /* Nachbesserung 2 (M2): Vordrehung auf dash_gier laeuft (PORT-WAHL, s. Dash-Planung) */
+    int16_t  dash_gier;       /* geplante Start-Gier des Dashes (-1 = keine) */
     uint8_t  intro_endbild;   /* dito fuer den Intro */
     int8_t   zone_alt;        /* zuletzt gesehene Beckenzone (PORT) */
     uint8_t  intro_phase;     /* 0 aus, 1 Clip 6, 2 Clip 3 */
@@ -292,6 +294,7 @@ void re15_gr2_reset(int slot, re15_gr2_se_fn se)
     memset(&s_g[slot], 0, sizeof s_g[slot]);
     s_g[slot].se = se;
     s_g[slot].zone_alt = -1;
+    s_g[slot].dash_gier = -1;
     s_g[slot].letzter_clip = 0;
     s_cfbd8 = 0;                                            /* Raumstart: keine Schuettel-Bits */
     s_vsync = 2;                                            /* Raumstart: Spieltakt VSync(2) @0x8003b9a8-b0 */
@@ -950,6 +953,224 @@ int re15_gr2_biss_erlaubt(int slot)
 void re15_gr2_biss_cd(int slot, int n) { if (slot >= 0 && slot < RE15_ACTOR_MAX) s_g[slot].biss_cd = (int16_t)n; }
 int  re15_gr2_biss_cd_rest(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].biss_cd : 0; }
 
+/* ==== Nachbesserung 2 (Abnahme 1, M2) + Orchestrator-Entscheid B7: die RE2-Wende im BECKEN ====================
+ * MESSUNG (Abnahme 1 Lauf A/N, selbst nachgerechnet mit tools/r41_re2gator/probe_wende.c gegen libre15_engine.a): Clip 3
+ * dreht die Pose per Root-ry 438 -> 1023 und schiebt die Wurzel quer (Netto laengs 8135 / quer -2828 fuer Clip 6 + 3,
+ * 4191 / -2861 fuer Clip 2 + 3, skaliert 2731), danach `yaw += 1024` (Intro @0x80100938-48, Dash @0x80100eb0-c0) - eine
+ * RECHTS-Wende um 90 Grad. Vom Lauerplatz (-7200,-9200) mit Gier 1089 (Sued) zeigt sie im Westkanal in die Westwand:
+ * Probe = Lauf A Bild fuer Bild (Kopf Bone 6 am Clip-6-Ende -10022 bei Wurzel -7882 ungeklemmt; mit der Klemme
+ * -7434 also -9574 = gemessen), am Clip-3-Ende 4988 ausserhalb. Der Dash am Suedausgang des Kanals (Lauf A (-7300,
+ * -18109) Gier 1024, C2 (-6767,-18110) 695, N (-7247,-18259) 1059) dreht ebenso in die Westwand: Kopf 4340 / 1048 /
+ * 4504 draussen. Das Becken ist der RE2-Korridor gespiegelt: RE2 legt die Zonenlinien VOR Rechtskurven des Korridors
+ * (Bein 1 entlang -X auf z -21212 @0x801008d0-d4, Bein 2 entlang +Z auf x -23078 @0x80101048), im Becken oeffnet sich der
+ * Suedausgang nach OSTEN.
+ * RE2-FORM bleibt (B7): Clip 6 -> Clip 3 bzw. Clip 2 -> Clip 3 und `yaw += 1024` unveraendert. PORT-WAHL ist nur die
+ * START-LAGE/-GIER:
+ *  - INTRO: RE2 stellt den Gator vor dem Intro per Pos_set (ROOM40A0 sub11 @SCD 0x0736: (4557,-1800,-18237)) + Gier
+ *    0x400 (Sce_em_set @0x25A0) auf eine feste Lage, die zum Korridor passt. Port: gr2_intro_lage waehlt eine Lage +
+ *    Gier, bei der (1) Rumpf (Bones 0/1), Hals 5, Kopf 6 und Kiefer 7 in JEDEM Bild der 275 Intro-Bilder im Wasser
+ *    bleiben und die Wurzel ausserhalb der Klemmzone (hit_radius 1466) - damit gilt die gerechnete Bahn exakt,
+ *    (2) der Knick auf Leons Angriffslinie endet: End-Gier = Peilung vom Bahnende zu Leon (Toleranz 128, dann 256/512),
+ *    (3) kein Bahnpunkt durch Leon laeuft (Rumpf/Kopf-Bones >= 1350 = SEG[0].r 900 + Spielerradius 0x1c2 450 des
+ *    Boss-Moduls) und Leon in KEINEM Bild in einem Koerperlaengen-Push-Kreis liegt (gb_koerper_kontakt), (4) unter allen solchen Lagen die mit den kleinsten Kosten
+ *    Startabstand + 4 x Gier-Drehung + 16 x Toleranz - also so nah wie moeglich am Lauerplatz. Der Schwanz (Bones 11-15)
+ *    darf wie in der ganzen Nutzer-Design-Verfolgung an die Wand reichen (12,2 m Tier im 7,2 m Kanal). Der Sprung auf die
+ *    Lage faellt in den DURCHBRUCH-Schnitt (wie RE2 Pos_set + Cut 10) und in den Posenwechsel Clip 6 Bild 0 mit Blend 0
+ *    (`FUN_8001a330(em,6,0,0)` @0x801008ac-b8). Findet sich keine Lage: Start am Ort (alter Ablauf) + Logzeile.
+ *  - DASH: der Dash beginnt, wo der Zonenwechsel passiert (RE2: an der Zonenlinie, @0x80100990-a8 / @0x801009d8-fc);
+ *    gr2_dash_planen waehlt die Start-Gier (Raster 16, hoechstens 0x400 neben der aktuellen) mit denselben Bedingungen
+ *    (1)/(3); Kosten 4 x Drehung + Abweichung der End-Gier von der Peilung zu Leon (RE2: die Wende folgt dem naechsten
+ *    Korridorbein, nicht Leon - die Ausrichtung entscheidet nur zwischen gleich kleinen Drehungen; Abnahme 1 M2:
+ *    "Dash-Yaw so, dass die RE2-Wende vom Rand weg zeigt"). Die Drehung dorthin laeuft VOR Clip 2 mit 0x60
+ *    je Bild (die "zackige Wende" der Nutzer-Design-Verfolgung, enemy_ai_boss_gator.c re15_enemy_steer_point(...,0x60)),
+ *    dann SE 4 + Clip 2 wie RE2. Keine zulaessige Gier = kein Dash an diesem Zonenwechsel (Logzeile). */
+static int32_t (*s_becken_fn)(int32_t x, int32_t z, int32_t m);
+void re15_gr2_becken_quelle(int32_t (*draussen)(int32_t x, int32_t z, int32_t m)) { s_becken_fn = draussen; }
+static int (*s_kontakt_fn)(int32_t x, int32_t z, int yaw, int32_t px, int32_t pz);
+void re15_gr2_koerper_quelle(int (*kontakt)(int32_t x, int32_t z, int yaw, int32_t px, int32_t pz)) { s_kontakt_fn = kontakt; }
+#define GR2_BAHN_MAX   300
+#define GR2_BAHN_BONES 5
+#define GR2_LEON_MIN   1350          /* SEG[0].r 900 + Spielerradius 0x1c2 (450) - Boss-Modul Koerperlaengen-Push */
+#define GR2_KLEMM_R    1466          /* hit_radius_min des 0x23 im Boss (2200 x 2731/4096, Boss-INIT) */
+static const int k_bahn_bone[GR2_BAHN_BONES] = { 0, 1, 5, 6, 7 };   /* Rumpf 0/1, Hals 5, Kopf 6, Kiefer 7 */
+typedef struct {
+    int     n;
+    int32_t skala;
+    int32_t w[GR2_BAHN_MAX][2];                       /* Wurzelschritt DIESES Bildes im Rig (x laengs, z quer), skaliert
+                                                       * wie gr2_wurzel_schritt (q12mul je Komponente), 0 ohne Schritt */
+    int32_t b[GR2_BAHN_MAX][GR2_BAHN_BONES][2];       /* Bone-Lage im Rig (x, z), skaliert */
+    uint8_t knick[GR2_BAHN_MAX];                      /* Bild mit yaw += 1024 */
+} gr2_bahn_t;
+static gr2_bahn_t s_bahn[2];                          /* 0 = Intro (Clip 6 -> 3), 1 = Dash (Clip 2 -> 3) */
+/* Bahn wie gr2_clip_tick: Bild 0 Neu-Anker, Schritt off[f]-off[f-1] fuer f = 1..n-2, Bild n-1 ohne Schritt (FUN_8001a330
+ * `bne v0,zero,0x8001a3cc` @0x8001a3b0), Knick im letzten Bild der zweiten Clip. */
+static const gr2_bahn_t *gr2_bahn(const re15_actor_t *e, int art)
+{
+    gr2_bahn_t *b = &s_bahn[art];
+    int32_t s = gr2_scale(e);
+    if (b->n > 0 && b->skala == s) return b;
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    if (!bk) return NULL;
+    int clips[2] = { art ? 2 : 6, 3 };
+    b->n = 0; b->skala = s;
+    void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    for (int k = 0; k < 2; k++) {
+        int c = clips[k], n = bk->anim.clips[c].frame_count;
+        for (int f = 0; f < n && b->n < GR2_BAHN_MAX; f++) {
+            int32_t w[2] = { 0, 0 };
+            if (f >= 1 && f <= n - 2) {
+                int16_t o1[3], o0[3];
+                gr2_off(bk, c, f, o1); gr2_off(bk, c, f - 1, o0);
+                w[0] = q12mul(o1[0] - o0[0], s); w[1] = q12mul(o1[2] - o0[2], s);
+            }
+            re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+            int kf = gr2_kf(&bk->anim, c, f);
+            if (kf < 0 || re15_skel_compute_pose(&bk->skel, kf, poses) != 0) { g_anim_pose_actor = save; b->n = 0; return NULL; }
+            b->w[b->n][0] = w[0]; b->w[b->n][1] = w[1];
+            for (int i = 0; i < GR2_BAHN_BONES; i++) {
+                int bo = k_bahn_bone[i] < bk->skel.bone_count ? k_bahn_bone[i] : 0;
+                b->b[b->n][i][0] = q12mul(poses[bo].trans[0], s);
+                b->b[b->n][i][1] = q12mul(poses[bo].trans[2], s);
+            }
+            b->knick[b->n] = (uint8_t)(k == 1 && f == n - 1);
+            b->n++;
+        }
+    }
+    g_anim_pose_actor = save;
+    return b;
+}
+static void gr2_dreh(int yaw, int32_t lx, int32_t lz, int32_t *wx, int32_t *wz)   /* wie gr2_rig_welt, ohne Skala */
+{
+    int32_t c = re15_cos_q12(yaw), sn = re15_sin_q12(yaw);
+    *wx = (int32_t)(((int64_t)c * lx + (int64_t)sn * lz) >> 12);
+    *wz = (int32_t)((-(int64_t)sn * lx + (int64_t)c * lz) >> 12);
+}
+static int32_t gr2_abstand(int32_t ax, int32_t az, int32_t bx, int32_t bz)
+{
+    int64_t dx = ax - bx, dz = az - bz;
+    return (int32_t)re15_squareroot0((uint32_t)((dx * dx + dz * dz) > 0xffffffffLL ? 0xffffffffLL : (dx * dx + dz * dz)));
+}
+/* 1 = Bahn ab (sx,sz) mit Start-Gier y0 frei (Bedingungen (1)/(3) oben); *kopf_ende = Kopf-Leon im letzten Bild,
+ * ende[] = Wurzel im letzten Bild. Die Wurzel laeuft Bild fuer Bild GENAU wie gr2_wurzel_schritt (Schritt um die Gier
+ * gedreht, `>> 12` je Schritt) - die Planung trifft so dieselbe Lage wie das Spiel (eine einmal gedrehte Summe wich
+ * gemessen um ~180 ab, unit wand). Geprueft wird jedes 3. Bild und das letzte. */
+static int gr2_bahn_frei(const gr2_bahn_t *b, int32_t sx, int32_t sz, int y0, const re15_actor_t *pl, int32_t *kopf_ende,
+                         int32_t ende[2])
+{
+    if (!s_becken_fn) return 0;
+    int32_t c = re15_cos_q12(y0), sn = re15_sin_q12(y0);
+    int32_t rx = sx, rz = sz;
+    for (int t = 0; t < b->n; t++) {
+        rx += (int32_t)(((int64_t)c * b->w[t][0] + (int64_t)sn * b->w[t][1]) >> 12);
+        rz += (int32_t)((-(int64_t)sn * b->w[t][0] + (int64_t)c * b->w[t][1]) >> 12);
+        if (t % 3 != 0 && t != b->n - 1) continue;
+        int yaw = b->knick[t] ? ((y0 + 1024) & 0xfff) : y0;
+        if (s_becken_fn(rx, rz, GR2_KLEMM_R)) return 0;
+        /* (3b) keine Beruehrung durch die Push-Kreise des Boss-Moduls (laengs der Entity-Gier): sonst setzt der Push
+         * g->maul_kontakt und der Nutzer-Design-Biss faellt sofort nach der Wende (gemessen unit intro: Biss im
+         * ersten CHASE-Takt). RE2 liest +0x238 = 110 nach dem Intro nur in der Hysterese (@0x80100b5c/bf4/cb4). */
+        if (pl && s_kontakt_fn && s_kontakt_fn(rx, rz, yaw, pl->x, pl->z)) return 0;
+        for (int i = 0; i < GR2_BAHN_BONES; i++) {
+            int32_t bx, bz; gr2_dreh(yaw, b->b[t][i][0], b->b[t][i][1], &bx, &bz);
+            bx += rx; bz += rz;
+            if (s_becken_fn(bx, bz, 0)) return 0;
+            if (pl && gr2_abstand(bx, bz, pl->x, pl->z) < GR2_LEON_MIN) return 0;
+            if (t == b->n - 1 && i == 3 && kopf_ende) *kopf_ende = pl ? gr2_abstand(bx, bz, pl->x, pl->z) : 0;
+        }
+    }
+    if (ende) { ende[0] = rx; ende[1] = rz; }
+    return 1;
+}
+/* Bahnende (Wurzel im letzten Bild) ab (sx,sz) mit Gier y0, Schritt fuer Schritt wie gr2_bahn_frei. */
+static void gr2_bahn_ende(const gr2_bahn_t *b, int32_t sx, int32_t sz, int y0, int32_t ende[2])
+{
+    int32_t c = re15_cos_q12(y0), sn = re15_sin_q12(y0);
+    int32_t rx = sx, rz = sz;
+    for (int t = 0; t < b->n; t++) {
+        rx += (int32_t)(((int64_t)c * b->w[t][0] + (int64_t)sn * b->w[t][1]) >> 12);
+        rz += (int32_t)((-(int64_t)sn * b->w[t][0] + (int64_t)c * b->w[t][1]) >> 12);
+    }
+    ende[0] = rx; ende[1] = rz;
+}
+static int gr2_peilung(int32_t fx, int32_t fz, int32_t tx, int32_t tz)
+{
+    return ((int)re15_atan2_q12(tz - fz, tx - fx) - 0x400) & 0xfff;    /* Boss-Konvention: Ost 0, Sued 1024 */
+}
+static int gr2_wdiff(int a, int b) { int d = ((a - b + 0x800) & 0xfff) - 0x800; return d < 0 ? -d : d; }
+
+void re15_gr2_intro_lage(int slot, re15_actor_t *e, const re15_actor_t *pl)
+{
+    (void)slot;
+    const gr2_bahn_t *b = gr2_bahn(e, 0);
+    if (!b || !pl || !s_becken_fn) { re15_gr2_log("INTRO Lage: keine Bahn/Becken - Start am Ort"); return; }
+    static const int k_tol[3] = { 128, 256, 512 };
+    int yaw_jetzt = (int)e->rot_y & 0xfff;
+    for (int st = 0; st < 3; st++) {
+        int64_t best = -1; int32_t bx = 0, bz = 0, bk = 0; int by = 0, bdl = 0;
+        for (int y0 = 0; y0 < 4096; y0 += 32) {
+            int ye = (y0 + 1024) & 0xfff;
+            int32_t e0[2]; gr2_bahn_ende(b, 0, 0, y0, e0);
+            int32_t ex = e0[0], ez = e0[1];
+            for (int dl = -k_tol[st]; dl <= k_tol[st]; dl += 32) {
+                int32_t ux, uz; gr2_dreh((ye + dl) & 0xfff, 4096, 0, &ux, &uz);   /* Richtung Ende -> Leon, Q12 */
+                for (int32_t d = 1000; d <= 24000; d += 250) {
+                    int32_t sx = pl->x - (int32_t)(((int64_t)ux * d) >> 12) - ex;
+                    int32_t sz = pl->z - (int32_t)(((int64_t)uz * d) >> 12) - ez;
+                    if (s_becken_fn(sx, sz, GR2_KLEMM_R)) continue;
+                    int64_t k = (int64_t)gr2_abstand(sx, sz, e->x, e->z) + 4 * gr2_wdiff(y0, yaw_jetzt) + 16 * (dl < 0 ? -dl : dl);
+                    if (best >= 0 && k >= best) continue;
+                    int32_t kopf = 0, ende[2];
+                    if (!gr2_bahn_frei(b, sx, sz, y0, pl, &kopf, ende)) continue;
+                    int abw = gr2_wdiff(ye, gr2_peilung(ende[0], ende[1], pl->x, pl->z));
+                    if (abw > k_tol[st]) continue;                 /* am echten Bahnende nachgeprueft */
+                    best = k; bx = sx; bz = sz; by = y0; bk = kopf; bdl = abw;
+                }
+            }
+        }
+        if (best >= 0) {
+            re15_gr2_log("INTRO Lage (Pos_set-Zwilling, Nachbesserung 2): von (%d,%d) yaw %d -> (%d,%d) yaw %d, End-Gier %d, "
+                         "Peilung zu Leon (%d,%d) Abw. |%d| (Toleranz %d), Kopf-Leon am Ende %d",
+                         e->x, e->z, yaw_jetzt, bx, bz, by, (by + 1024) & 0xfff, pl->x, pl->z, bdl, k_tol[st], bk);
+            e->x = bx; e->z = bz; e->rot_y = (int16_t)by;
+            return;
+        }
+    }
+    re15_gr2_log("INTRO Lage: keine freie Bahn zu Leon (%d,%d) - Start am Ort (%d,%d) yaw %d", pl->x, pl->z, e->x, e->z, yaw_jetzt);
+}
+int re15_gr2_dash_planen(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t ziel_vor[2])
+{
+    gr2_t *g = &s_g[slot];
+    g->dash_gier = -1;
+    const gr2_bahn_t *b = gr2_bahn(e, 1);
+    if (!b || !pl || !s_becken_fn) return 0;
+    int yaw_jetzt = (int)e->rot_y & 0xfff, best_y = -1, best_a = 0, best_k = 0;
+    int64_t best = -1;
+    for (int y0 = 0; y0 < 4096; y0 += 16) {
+        int dreh = gr2_wdiff(y0, yaw_jetzt);
+        if (dreh > 0x400) continue;                         /* hoechstens eine Vierteldrehung vor dem Dash */
+        int32_t en[2]; gr2_bahn_ende(b, e->x, e->z, y0, en);
+        int a = gr2_wdiff((y0 + 1024) & 0xfff, gr2_peilung(en[0], en[1], pl->x, pl->z));
+        int64_t k = 4 * (int64_t)dreh + (int64_t)a;         /* kleinste Drehung, dann Ausrichtung auf Leon */
+        if (best >= 0 && k >= best) continue;
+        int32_t kopf = 0;
+        /* ohne Leon-Bedingungen: der Dash IST der Angriff (RE2 oeffnet das Maul in Clip 3 ab Bild 114 in Zone 2,
+         * `+0x218 |= 0x10` @0x80100e64-a4) - geprueft werden nur Wasser und Klemmzone */
+        if (!gr2_bahn_frei(b, e->x, e->z, y0, NULL, &kopf, NULL)) continue;
+        best = k; best_y = y0; best_a = a; best_k = kopf;
+    }
+    if (best_y < 0) {
+        re15_gr2_log("DASH entfaellt (Nachbesserung 2): keine Start-Gier (+-0x400) mit freier Wende an (%d,%d) yaw %d, Leon (%d,%d)",
+                     e->x, e->z, yaw_jetzt, pl->x, pl->z);
+        return 0;
+    }
+    g->dash_gier = (int16_t)best_y;
+    if (ziel_vor) gr2_bahn_ende(b, e->x, e->z, best_y, ziel_vor);
+    re15_gr2_log("DASH Planung: an (%d,%d) yaw %d -> Start-Gier %d (Drehung %d), End-Gier %d, Abw. zu Leon %d",
+                 e->x, e->z, yaw_jetzt, best_y, gr2_wdiff(best_y, yaw_jetzt), (best_y + 1024) & 0xfff, best_a);
+    (void)best_k;
+    return 1;
+}
+
 /* ---- Dash ---------------------------------------------------------------------------------- */
 int re15_gr2_dash_zonenwechsel(int slot, const re15_actor_t *e, int zone, int zone_leon, int32_t ziel_vor[2])
 {
@@ -968,19 +1189,31 @@ int re15_gr2_dash_zonenwechsel(int slot, const re15_actor_t *e, int zone, int zo
     gr2_rig_welt(e, v, ziel_vor);
     return 1;
 }
-void re15_gr2_dash_start(int slot, re15_actor_t *e, const re15_actor_t *pl)
+static void gr2_dash_los(gr2_t *g, re15_actor_t *e)
 {
-    gr2_t *g = &s_g[slot];
     gr2_se(g, 4);                                           /* P0: `addiu a0,zero,4` @0x80100d64, jal @0x80100d84 */
     e->motion = 2; e->anim_frame = 0; e->anim_frac = 16;    /* Clip 2 Blend 16 @0x80100dac-b4 */
     g->im_dash = 1; g->dash_phase = 1;                      /* +0x225 = 1 @0x80100e04-0c */
+    g->dash_vor = 0;
+    g->putz_t = 1;
+    re15_gr2_log("DASH start pos=(%d,%d) yaw=%d putz_um=(%d,%d,%d)", e->x, e->z, (int)e->rot_y,
+                 g->putz_x, g->putz_y, g->putz_z);
+}
+void re15_gr2_dash_start(int slot, re15_actor_t *e, const re15_actor_t *pl)
+{
+    gr2_t *g = &s_g[slot];
+    g->dash_vor = 0;                                        /* kein Rest einer abgebrochenen Vordrehung (R4/Treffer) */
     /* PORT-WAHL: Putz-Sequenz um Leon (s. k_putz) - Lage = Leons Stand beim Dash-Start (RE2: Kamera 9 am
      * Korridorende, dort laeuft Leon, sub13 @0x0778/0x0786). Nachbesserung 1 (M2): vorher blieb putz_x/y/z
      * ungesetzt (0,0,0) = noerdlich ausserhalb des Beckens (z > -5400). */
-    g->putz_t = 1;
     g->putz_x = pl ? pl->x : e->x; g->putz_y = pl ? pl->y : 0; g->putz_z = pl ? pl->z : e->z;
-    re15_gr2_log("DASH start pos=(%d,%d) yaw=%d putz_um=(%d,%d,%d)", e->x, e->z, (int)e->rot_y,
-                 g->putz_x, g->putz_y, g->putz_z);
+    /* Nachbesserung 2 (M2): erst auf die geplante Start-Gier drehen (gr2_dash_planen), dann SE 4 + Clip 2 */
+    if (g->dash_gier >= 0 && gr2_wdiff(g->dash_gier, (int)e->rot_y & 0xfff) != 0) {
+        g->dash_vor = 1; g->dash_phase = 0;
+        re15_gr2_log("DASH Vordrehung yaw %d -> %d F%u", (int)e->rot_y & 0xfff, (int)g->dash_gier, (unsigned)g_engine.frame_count);
+        return;
+    }
+    gr2_dash_los(g, e);
 }
 /* Ein Tick FUN_8001a330(em, clip, blend, 0) im Port-Modell (Bild = e->anim_frame NACH dem Tick):
  *   FUN_8002959c/80029614 rechnet die Pose fuer +0x14D, erhoeht dann +0x14D (`lbu v0,333 / addiu v0,v0,1 /
@@ -1002,6 +1235,15 @@ int re15_gr2_dash_tick(int slot, re15_actor_t *e)
 {
     gr2_t *g = &s_g[slot];
     re15_enemy_bank_t *bk = gr2_bank(e);
+    if (g->dash_vor && bk) {                                /* Nachbesserung 2 (M2): Vordrehung 0x60/Bild (PORT-WAHL) */
+        int d = (((int)g->dash_gier - (int)e->rot_y + 0x800) & 0xfff) - 0x800;
+        if (d > 0x60) d = 0x60; else if (d < -0x60) d = -0x60;
+        e->rot_y = (int16_t)((e->rot_y + d) & 0xfff);
+        int n = bk->anim.clips[e->motion < bk->anim.clip_count ? e->motion : 0].frame_count;
+        if (++e->anim_frame >= n) e->anim_frame = 0;        /* laufender Verfolgungs-Clip weiter, ohne Vortrieb */
+        if (((int)e->rot_y & 0xfff) == (int)g->dash_gier) { g->dash_vor = 0; gr2_dash_los(g, e); }
+        return 1;
+    }
     if (!g->dash_phase || !bk) { g->im_dash = 0; g->dash_phase = 0; return 0; }
     if (g->dash_endbild) {                                  /* voriger Tick: FUN_8001a330 == 1 */
         g->dash_endbild = 0;
@@ -1028,6 +1270,10 @@ int re15_gr2_dash_tick(int slot, re15_actor_t *e)
     return 1;
 }
 int re15_gr2_im_dash(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].im_dash : 0; }
+/* Messhaken (Nachbesserung 2): Bone-Weltlage MIT der Zeichen-Skala +0x166 (ScaleMatrix um den Ursprung @0x8001e904-40) -
+ * re15_enemy_bone_world_pos (re15_damage.c) rechnet in voller Groesse, der Boss wird mit 2731/4096 gezeichnet. */
+int re15_gr2_bone_welt_pub(const re15_actor_t *e, int bone, int32_t pos[3]) { int32_t r[9]; return gr2_bone_welt(e, bone, r, pos); }
+int re15_gr2_dash_vordrehung(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].dash_vor : 0; }
 
 /* ---- Intro --------------------------------------------------------------------------------- */
 void re15_gr2_intro_bahn(const re15_actor_t *e, int32_t ziel[2])

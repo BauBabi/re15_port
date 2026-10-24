@@ -606,6 +606,7 @@ static int gb_seg_frei(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t m
 }
 
 static int     gb_zone(int32_t z);       /* fwd (definiert unten) */
+static int32_t gb_becken_draussen(int32_t x, int32_t z, int32_t m);   /* fwd (Nachbesserung 2, M2) */
 static int32_t gb_iabs(int32_t v);       /* fwd */
 
 /* Zentraler Kanten-Umweg als FUNKTION (v0.7.64): schert die Luftlinie zum
@@ -893,6 +894,56 @@ static int gb_zone(int32_t z)
 
 static int32_t gb_iabs(int32_t v) { return v < 0 ? -v : v; }
 
+/* KOERPERLAENGEN-PUSH-Kreise (Nutzer 2026-09-10/11, s. Push-Block unten): Versatz laengs der Blickachse + Radius.
+ * Runde 41 Spur B, Nachbesserung 2: auf Dateiebene, damit gb_koerper_kontakt dieselben Kreise benutzt. */
+typedef struct { int32_t ofs, r; } gb_seg_t;
+static const gb_seg_t k_gb_seg[5] = {
+    { 2600, 900 }, { 4600, 700 }, { -2600, 900 }, { -4800, 750 },
+    {    0, 1050 }   /* Koerpermitte (Biss-Sweep 2026-09-11: zwischen
+                      * den +-2600er-Segmenten stand Leon im Loch) */
+};
+/* Nachbesserung 2 (Abnahme 1 M2): 1 = der Punkt (px,pz) laege in einem Push-Kreis (Radius + Spielerradius 0x1c2 = 450)
+ * eines Gators bei (x,z) mit Gier yaw - der Push setzte dann g->maul_kontakt (ofs > 0) und oeffnete den Biss-Commit.
+ * gator_re2_r41.c prueft damit die RE2-Intro-/Dash-Bahn gegen Leon (keine Beruehrung = kein Sofortbiss). */
+static int gb_koerper_kontakt(int32_t x, int32_t z, int yaw, int32_t px, int32_t pz)
+{
+    int32_t fc = re15_cos_q12(yaw), fs = re15_sin_q12(yaw);
+    for (int si = 0; si < 5; si++) {
+        int32_t cx = x + (int32_t)(((int64_t)fc * k_gb_seg[si].ofs) >> 12);
+        int32_t cz = z - (int32_t)(((int64_t)fs * k_gb_seg[si].ofs) >> 12);
+        int64_t dx = px - cx, dz = pz - cz, R = k_gb_seg[si].r + 450;
+        if (dx * dx + dz * dz < R * R) return 1;
+    }
+    return 0;
+}
+
+/* Runde 41 Spur B, Nachbesserung 2 (Abnahme 1 M2): Aussenabstand eines Punkts zum WASSER des Beckens (0 = im
+ * Wasser), m = Rand nach innen - fuer die bone-genauen RE2-Wende-Bahnen in gator_re2_r41.c. Geometrie wie oben im
+ * Dateikopf (ROOM2090.RDT selbst geparst): SCA-Aussenwaende x[-8900..7200] z[-27000..-5400], Plattform-Block
+ * GB_PLAT_* (SCA [4]/[7]), Rampe GB_RAMP_* (SCA [5]); in einem Block = Tiefe bis zum naechsten Blockrand. */
+static int32_t gb_becken_draussen(int32_t x, int32_t z, int32_t m)
+{
+    int32_t d = 0;
+    if (x < -8900 + m) d = (-8900 + m) - x;
+    if (x > 7200 - m && x - (7200 - m) > d) d = x - (7200 - m);
+    if (z < -27000 + m && (-27000 + m) - z > d) d = (-27000 + m) - z;
+    if (z > -5400 - m && z - (-5400 - m) > d) d = z - (-5400 - m);
+    {   const int32_t blk[2][4] = { { GB_PLAT_X0, GB_PLAT_X1, GB_PLAT_Z0, GB_PLAT_Z1 },
+                                    { GB_RAMP_X0, GB_RAMP_X1, GB_RAMP_Z0, GB_RAMP_Z1 } };
+        for (int k = 0; k < 2; k++) {
+            int32_t x0 = blk[k][0] - m, x1 = blk[k][1] + m, z0 = blk[k][2] - m, z1 = blk[k][3] + m;
+            if (x > x0 && x < x1 && z > z0 && z < z1) {
+                int32_t t = x - x0;
+                if (x1 - x < t) t = x1 - x;
+                if (z - z0 < t) t = z - z0;
+                if (z1 - z < t) t = z1 - z;
+                if (t > d) d = t;
+            }
+        }
+    }
+    return d;
+}
+
 /* Belagerungsseite mit BEHARRLICHKEIT (Nutzer 2026-09-11: "Gehe ich vor
  * kommt er an, gehe ich dann zurueck, geht er weg" - Leon konnte das
  * Kantenziel per Taenzeln um die Flaechen-Mitte im Sekundentakt flippen,
@@ -1079,6 +1130,8 @@ void re15_gator_boss_tick(int slot)
         g->prev_hp = e->hp;
         re15_gr2_reset(slot, gb_se);          /* Runde 41 Spur B: RE2-Bausteine je Aktor-Leben */
         re15_gr2_zonen_quelle(gb_zone);       /* Nachbesserung 2 (M3): RE2-Zone 1 des Kanisters = Beckenzone */
+        re15_gr2_becken_quelle(gb_becken_draussen);   /* Nachbesserung 2 (M2): Wasser fuer die RE2-Wende-Bahnen */
+        re15_gr2_koerper_quelle(gb_koerper_kontakt);  /* Nachbesserung 2 (M2): Push-Kreise gegen Leon */
         g->next_flinch_hp = (int16_t)(e->hp - GB_FLINCH_STEP);
         e->x = GB_START_X; e->z = GB_START_Z; e->y = GB_WATER_Y;
         /* Blick zur Leiter ueber die ENGINE-Peilung (steer mit Voll-Slew 0x800 =
@@ -1284,6 +1337,7 @@ void re15_gator_boss_tick(int slot)
              * @0x801008e4-f0, danach +0x238 = 110 @0x8010091c-20 und yaw += 1024 @0x80100938-48). RE2 spielt
              * ihn IMMER (P0 wartet nur auf +0x1D4 @0x80100854-68 = Member_set2 des Raumskripts; hier: Aggro).
              * Nachbesserung 1 (M1): kein Bahn-Gate mehr, s. gb_seg_frei-Kommentar oben. */
+            re15_gr2_intro_lage(slot, e, pl);    /* Nachbesserung 2 (M2, B7): Startlage so, dass der Knick auf Leon zeigt */
             re15_gr2_intro_start(slot, e); g->phase = GBP_RE2_INTRO; g->timer = 0; break;
         }
         e->motion = 0;                        /* still liegen, Blick zur Leiter */
@@ -1326,8 +1380,10 @@ void re15_gator_boss_tick(int slot)
              * Nachbesserung 1 (M1): statt der ganzen Bahn gegen Insel + Aussenwaende nur noch die Laengs-
              * Bahn gegen Insel/Rampe; Quer-Komponente und Aussenwaende nimmt die Dispatcher-Klemme. */
             int32_t zv[2];
+            /* Nachbesserung 2 (Abnahme 1 M2): statt der Laengs-Probe gb_seg_frei die bone-genaue Bahn der RE2-Wende
+             * (gator_re2_r41.c gr2_dash_planen: Kopf/Rumpf im Wasser, Wurzel ausserhalb der Klemmzone, Ende auf Leon) */
             if (re15_gr2_dash_zonenwechsel(slot, e, gb_zone(e->z), gb_zone(pl->z), zv)
-                && gb_seg_frei(e->x, e->z, zv[0], zv[1], GB_KOERPER_M)) {
+                && re15_gr2_dash_planen(slot, e, pl, zv)) {
                 re15_gr2_dash_start(slot, e, pl);
                 g->phase = GBP_RE2_DASH; g->timer = 0;
                 break;
@@ -2351,11 +2407,7 @@ void re15_gator_boss_tick(int slot)
      * s. hit_offset_y im INIT): Leon OBEN auf dem Steg wird nicht geschoben. */
     if (g->phase != GBP_DIE && g->phase != GBP_DEAD
         && pl->hp >= 0 && !re15_player_is_grabbed()) {
-        static const struct { int32_t ofs, r; } SEG[5] = {
-            { 2600, 900 }, { 4600, 700 }, { -2600, 900 }, { -4800, 750 },
-            {    0, 1050 }   /* Koerpermitte (Biss-Sweep 2026-09-11: zwischen
-                              * den +-2600er-Segmenten stand Leon im Loch) */
-        };
+        const gb_seg_t *SEG = k_gb_seg;   /* Runde 41 Spur B NB2: Tabelle auf Dateiebene (gb_koerper_kontakt) */
         int32_t fc = re15_cos_q12((int)e->rot_y);
         int32_t fs = re15_sin_q12((int)e->rot_y);
         int32_t dy = pl->y - (e->y - GB_WATER_Y);  /* Push-Zentrum = e->y + 1200 */
