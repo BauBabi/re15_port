@@ -81,7 +81,9 @@ endforeach()
 if(TARGET re15_pc)
     # echte exe, ROOM2090 per Sprung, RE15_GB_TEST=1 (Kampf sofort). Nachbesserung 2: zwei Laeufe - "nische" (Intro mit
     # gewaehlter Startlage ohne Wanddurchdringung, Kamera-Programm, Finisher-Schnitt haelt bis zum Raumende = Entscheid B6)
-    # und "dash" (Leon im Suedbecken Ost: Zonen-Dash mit Putz 6 x 9, Kopf/Rumpf im Wasser).
+    # und "dash" (Leon im Suedbecken Ost: Zonen-Dash mit Putz 6 x 9, Kopf/Rumpf im Wasser). Nachbesserung 3: "natuerlich" (B9).
+    # Nachbesserung 4: "kanister" (Kanister-Sitz = Part6(gezeichnet) x Lokallage in jedem Bild) und "belagerung" (Tuerweg
+    # 20A0 -> 2090, GUARD an der Ostwand); in allen Laeufen keine Zeile GIER-SPRUNG (Abnahme 3 M2).
     add_test(NAME integration_r41_re2gator
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

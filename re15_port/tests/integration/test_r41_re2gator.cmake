@@ -29,6 +29,16 @@
 #   F1-F200, Auftauchen F201 auf (5085,-19880) Clip 6 Bild 0, groesster Schritt 338 (Clip 6 Bild 28); Bilder F1-F201
 #   pixelgleich mit einem Lauf ohne Gator (RE15_KEIN_GATOR=1).
 #
+# Nachbesserung 4 (Abnahme 3 M1/M2): VIERTER Lauf "kanister" (Abnahme-Rezept C3: Leon per Autopilot im Suedbecken, Kanister
+#   (-1500,-23400), bis F1400) - der Gator nimmt den Kanister auf und traegt ihn; Messzeile des PC-Zeichners
+#   "[gator-re2] Kanister-Sitz ..." (Part6(gezeichnetes Bild) x Lokallage gegen die gezeichnete Kanister-Lage, RE2: Kind der
+#   Part-6-Weltmatrix @0x801018d0-e0) muss in JEDEM angehaengten Bild 0 sein. FUENFTER Lauf "belagerung" (Abnahme-Lauf E1: echter
+#   Tuerweg 20A0 -> 2090, Leon oben auf der Rampe, GUARD an der Ostwand). In ALLEN Laeufen: keine Zeile "GIER-SPRUNG" in
+#   gator_boss.log (Gier-Delta > 0x60 zwischen zwei CHASE/GUARD-Bildern ausser dem RE2-Knick +1024 @0x80100938-48 /
+#   @0x80100eb0-c0; RE2 hat in Sub 1/2 keinen Gier-Schreiber). Gemessen 2026-10-24 (B41nb4/mess/C3n, E1n): Kanister angehaengt
+#   F1119, "Kanister-Sitz F1388: angehaengt 270 Bilder, Abweichung max 0"; "GIER-WACHE bis F581: 300 Bildpaare CHASE/GUARD, max
+#   |Gier-Delta| 64 (ohne +1024), Spruenge > 0x60: 0, Befreiungen 0" (vorher E1 F426/458/490/522/546 +-1944..1984).
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_re2gator.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -42,7 +52,27 @@ include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
 
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_basis "${WORKDIR}/lauf_${_lauf_id}")
-file(MAKE_DIRECTORY "${_basis}/nische" "${_basis}/dash" "${_basis}/natuerlich")
+file(MAKE_DIRECTORY "${_basis}/nische" "${_basis}/dash" "${_basis}/natuerlich" "${_basis}/kanister" "${_basis}/belagerung")
+# Nachbesserung 4 (M2): keine "GIER-SPRUNG"-Zeile in gator_boss.log; liefert die letzte "GIER-WACHE"-Zeile (oder "keine").
+function(r41b_gier_wache _dir _lauf _out)
+    if(NOT EXISTS "${_dir}/gator_boss.log")
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r41_re2gator: Lauf ${_lauf} ohne gator_boss.log")
+    endif()
+    file(STRINGS "${_dir}/gator_boss.log" _spr REGEX "^GIER-SPRUNG ")
+    if(_spr)
+        file(REMOVE "${_exe_kopie}")
+        list(GET _spr 0 _s0)
+        message(FATAL_ERROR "r41_re2gator: Lauf ${_lauf} - Gier-Sprung in Verfolgung/Belagerung (Abnahme 3 M2): ${_s0}")
+    endif()
+    file(STRINGS "${_dir}/gator_boss.log" _gw REGEX "^GIER-WACHE ")
+    if(_gw)
+        list(GET _gw -1 _g)
+        set(${_out} "${_g}" PARENT_SCOPE)
+    else()
+        set(${_out} "keine" PARENT_SCOPE)
+    endif()
+endfunction()
 # EIGENER EXE-NAME (Muster test_r34n_b_cursor.cmake): parallele Bauten beenden re15_pc.exe per Namen.
 # Nachbesserung 1 (Abnahme 0, M5): KEIN file(GLOB)+REMOVE fremder re15_pc_r41b_*.exe mehr - nur die eigene Kopie.
 get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
@@ -218,7 +248,8 @@ if(_hp_min LESS 25000)
     file(REMOVE "${_exe_kopie}")
     message(FATAL_ERROR "r41_re2gator: HP unter dem RE2-Sockel (${_hp_min} < 25000) ohne Beschuss")
 endif()
-set(_status1 "nische: RE2-Zeilen ${_re2}, Intro Lage/Start/Ende ${_intro_lage}/${_intro}/${_intro_ende} wand ${_intro_wand}, Clip 6/3 ${_mo6}/${_mo3}, Kamera ${_kam_folge}, Finisher Cut ${_fin_cut} ab F${_fin_bild} gehalten ${_fin_cam_bilder} Bilder / ${_fin_halt} Halt-Zeilen, HP min ${_hp_min}")
+r41b_gier_wache("${_basis}/nische" "nische" _gw1)
+set(_status1 "nische: RE2-Zeilen ${_re2}, Intro Lage/Start/Ende ${_intro_lage}/${_intro}/${_intro_ende} wand ${_intro_wand}, Clip 6/3 ${_mo6}/${_mo3}, Kamera ${_kam_folge}, Finisher Cut ${_fin_cut} ab F${_fin_bild} gehalten ${_fin_cam_bilder} Bilder / ${_fin_halt} Halt-Zeilen, HP min ${_hp_min}, kein Gier-Sprung")
 
 # ---------------------------------------------------------------- Lauf 3: natuerlicher Zugang (B9: untergetaucht)
 set(_dir "${_basis}/natuerlich")
@@ -293,7 +324,72 @@ if(_s_sprung LESS 1 OR _s_sprung GREATER 340)
     message(FATAL_ERROR "r41_re2gator: Lauf natuerlich - sichtbarer Lagesprung ${_s_sprung} > 340 (groesster authored Wurzelschritt "
                         "Clip 6/3/0/1 x 2731/4096, unit_r41_re2gator_lauer)")
 endif()
-set(_status3 "natuerlich: untergetaucht bis F${_s_auf} (Lauerplatz ${_g_lage}), Auftauchen Clip/Bild ${_s_auf_clip}, erstes Bild F${_s_gez} Clip ${_s_gez_clip}, groesster Bildschritt ${_s_sprung}")
+r41b_gier_wache("${_dir}" "natuerlich" _gw3)
+set(_status3 "natuerlich: untergetaucht bis F${_s_auf} (Lauerplatz ${_g_lage}), Auftauchen Clip/Bild ${_s_auf_clip}, erstes Bild F${_s_gez} Clip ${_s_gez_clip}, groesster Bildschritt ${_s_sprung}, kein Gier-Sprung")
+
+# ---------------------------------------------------------------- Lauf 4: Kanister getragen (Nachbesserung 4, M1 + M2)
+set(_dir "${_basis}/kanister")
+set(WORKDIR "${_dir}")
+re15_start_spiel(_rv 300
+    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
+    SDL_ASSERT=always_ignore
+    RE15_DEBUG_JUMP=2090@250 RE15_GB_TEST=1
+    "RE15_PLAYER_POS=2500,-25000,2048" RE15_R39_MESS_SPIELER_HP=100
+    "RE15_GATOR_KANISTER=-1500,-23400"
+    "RE15_AUTOPILOT=xz:5500,-25500\;xz:5500,-20500\;xz:-1000,-21000\;xz:-1000,-25500\;xz:5500,-25500\;xz:5500,-20500\;xz:-1000,-21000\;noact"
+    RE15_AUTOPILOT_ROOM=2090
+    "RE15_EXIT_AT=1400#2090"
+    "${_exe_kopie}")
+if(NOT _rv EQUAL 0)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf kanister exe exit=${_rv} (erwartet 0 bis RE15_EXIT_AT), ${_dir}")
+endif()
+file(STRINGS "${_dir}/gator_boss.log" _anh REGEX "^RE2 KANISTER angehaengt ")
+file(STRINGS "${_dir}/debug.log" _sitz REGEX "\\[gator-re2\\] Kanister-Sitz F[0-9]+: angehaengt ")
+if(NOT _anh OR NOT _sitz)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf kanister - Kanister nicht aufgenommen/angehaengt (angehaengt '${_anh}', Sitz-Zeilen '${_sitz}')")
+endif()
+list(GET _sitz -1 _sitz_l)
+if(NOT _sitz_l MATCHES "angehaengt ([0-9]+) Bilder, Abweichung max ([0-9]+) ")
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf kanister - Kanister-Sitz-Zeile unlesbar: ${_sitz_l}")
+endif()
+set(_sitz_n "${CMAKE_MATCH_1}")
+set(_sitz_max "${CMAKE_MATCH_2}")
+if(_sitz_n LESS 200 OR NOT _sitz_max EQUAL 0)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf kanister - Kanister ${_sitz_max} neben Part6(gezeichnet) x Lokallage bzw. nur ${_sitz_n} angehaengte "
+                        "Bilder (Abnahme 3 M1: Kind der Part-6-Weltmatrix @0x801018d0-e0, >= 200 Bilder verlangt)")
+endif()
+r41b_gier_wache("${_dir}" "kanister" _gw4)
+set(_status4 "kanister: ${_sitz_n} angehaengte Bilder, Abweichung max ${_sitz_max}, ${_gw4}")
+
+# ---------------------------------------------------------------- Lauf 5: Plattform-Belagerung ueber den echten Tuerweg (E1)
+set(_dir "${_basis}/belagerung")
+set(WORKDIR "${_dir}")
+re15_start_spiel(_rv 300
+    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
+    SDL_ASSERT=always_ignore
+    RE15_DEBUG_JUMP=20A0@250 "RE15_FIRE_AOT=0@40#20A0" RE15_GB_TEST=1
+    "RE15_EXIT_AT=700#2090"
+    "${_exe_kopie}")
+if(NOT _rv EQUAL 0)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf belagerung exe exit=${_rv} (erwartet 0 bis RE15_EXIT_AT), ${_dir}")
+endif()
+r41b_gier_wache("${_dir}" "belagerung" _gw5)
+if(NOT _gw5 MATCHES "^GIER-WACHE bis F[0-9]+: ([0-9]+) Bildpaare CHASE/GUARD, max \\|Gier-Delta\\| ([0-9]+) \\(ohne \\+1024\\), Spruenge > 0x60: 0, Befreiungen 0")
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf belagerung - keine 300 Bildpaare CHASE/GUARD ohne Sprung/Befreiung: '${_gw5}'")
+endif()
+file(STRINGS "${_dir}/gator_boss.log" _guard REGEX "^GUARD dist=")
+list(LENGTH _guard _guard_n)
+if(_guard_n LESS 5)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf belagerung - Belagerung (GUARD) nicht erreicht (${_guard_n} GUARD-Zeilen)")
+endif()
+set(_status5 "belagerung: ${_gw5}, GUARD-Zeilen ${_guard_n}")
 
 # ---------------------------------------------------------------- Lauf 2: Leon im Suedbecken (Dash, Putz)
 set(_dir "${_basis}/dash")
@@ -391,4 +487,5 @@ endforeach()
 if(_mo2 LESS 145 OR _mo3 LESS 290)
     message(FATAL_ERROR "r41_re2gator: Lauf dash Clip-Bilder Clip 2 ${_mo2} / Clip 3 ${_mo3} (erwartet 150 / 300)")
 endif()
-message(STATUS "r41_re2gator: ok — ${_status1} | ${_status3} | dash: DASH ${_dash}/${_dash_ende} wand ${_dash_wand}, Putz ${_putz_runden} x 9 = ${_putz_gesamt}, gezeichnet bis ${_ps_gez} Quads/Bild in ${_ps_n} Messbildern, Clip 2/3 ${_mo2}/${_mo3}")
+r41b_gier_wache("${_basis}/dash" "dash" _gw2)
+message(STATUS "r41_re2gator: ok — ${_status1} | ${_status3} | ${_status4} | ${_status5} | dash: DASH ${_dash}/${_dash_ende} wand ${_dash_wand}, Putz ${_putz_runden} x 9 = ${_putz_gesamt}, gezeichnet bis ${_ps_gez} Quads/Bild in ${_ps_n} Messbildern, Clip 2/3 ${_mo2}/${_mo3}, ${_gw2}")
