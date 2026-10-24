@@ -1011,3 +1011,22 @@ RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72
   NB3 nur player_common.c (E-E2), markiert "Runde 41 Spur E".
 - Mangel 4 (Softlock): behoben (E-E3), Riegel spawn_kante.
 - unit_r36_zombieki_affen_block: zweimal neu eingemessen (Teil 3 und Fortsetzung), Begruendung und Messung im Test-Kommentar.
+
+## Nachbesserung 4 (nach Abnahme 3, 2026-10-24 ab 17:41)
+Grundlage: `E_abnahme_3.md` §8 Maengel 1-2 (+ Hinweise H1-H6), Orchestrator-Entscheid E-E4 (AUFTRAG.md 2026-10-24 17:32) und
+Nachtrag 14 (Nutzer-Antwort 17:36: "herumfliegend" = "direkt am Anfang springt Leon so komisch zu der Kurbel. So halb
+fliegend." -> der Sprung an die Kurbel; Ziel Bild fuer Bild wie das Original-Video vom "Yes" bis Plc_motion, Standbild-Dauer
+des Originals an dieser Stelle MESSEN). Stand bei Beginn: HEAD 6e2c62b1 (Code = c3ba4317, exe md5 1f38e025...; die zwei
+AUFTRAG-Commits 3c02068f/6e2c62b1 hat der Orchestrator in den Zweig gelegt). Laeufe unter `<sp>/E41n4/` (`<sp>` = Scratchpad
+dieser Sitzung, dieselbe wie bei den Vorgaengern). Vorliegende Messungen (Abnahme 3, Dossier NB1-NB3) werden zitiert, nicht
+wiederholt.
+
+Reihenfolge: (1) Mangel 1 Renn-Stopp endet bei einer Uebernahme (Treppe, Griff, Plc_ret ...), (2) Punkt 1 / Nachtrag 14
+Standbild-Dauer nach Cut_chg (Original messen, Abhaengigkeit vom Hintergrund-Laden, Umsetzung, Bildvergleich), (3) Mangel 2 /
+E-E4 Gorilla-Sonde misst den Haenger (benannte Ausnahmen, Ursache in zombieki_r36.c pruefen).
+
+### Status Nachbesserung 4
+- [ ] Mangel 1 Renn-Stopp nach Uebernahme (Treppe/Griff/Plc_ret)
+- [ ] Punkt 1 / Nachtrag 14 Standbild nach Cut_chg (Sprung an die Kurbel)
+- [ ] Mangel 2 / E-E4 Gorilla-Sonde
+- [ ] Bau, gezielte Tests, Abschluss
