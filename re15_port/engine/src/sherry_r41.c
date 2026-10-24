@@ -9,6 +9,9 @@
 #include "re15_engine.h"
 #include "re15_room.h"
 
+extern int  re15_player_equipped_weapon(void);   /* re15_damage.c (DAT_800aca5d) */
+extern void re15_player_waffe_roh(int id);       /* re15_damage.c, Runde 41 Spur K: aca5d ohne Ausruest-Platz */
+
 void re15_sherry_r41_messhaken(void)
 {
     static int s_init = 0, s_done = 0;
@@ -49,4 +52,48 @@ void re15_sherry_r41_messhaken(void)
         }
         while (*p == ',' || *p == ' ') p++;
     }
+}
+
+static int s_modell = -1;
+static int s_waffe_gemerkt = -1;
+
+int  re15_sherry_r41_modell(void) { return s_modell; }
+
+void re15_sherry_r41_modell_init(int modell)
+{
+    s_modell = modell & 0x0F;
+    s_waffe_gemerkt = -1;
+}
+
+void re15_sherry_r41_modell_setzen(int modell)
+{
+    int alt = s_modell;
+    s_modell = modell & 0x0F;
+    if (s_modell == RE15_SHERRY_R41_MODELL && alt != RE15_SHERRY_R41_MODELL) {
+        /* @0x800316b8 `bne v1,v0(=0xf)` / @0x800316c4 `sb zero,DAT_800aca5d`: Modell 0x0F -> Waffe 0 */
+        s_waffe_gemerkt = re15_player_equipped_weapon();
+        re15_player_waffe_roh(0);
+    } else if (s_modell != RE15_SHERRY_R41_MODELL && alt == RE15_SHERRY_R41_MODELL && s_waffe_gemerkt >= 0) {
+        re15_player_waffe_roh(s_waffe_gemerkt);   /* PORT-WAHL (Header): vorherige Waffe zurueck */
+        s_waffe_gemerkt = -1;
+    }
+    fprintf(stderr, "[sherry-r41] Spielermodell %d -> %d, Waffe (aca5d) %d\n", alt, s_modell,
+            re15_player_equipped_weapon());
+}
+
+int re15_sherry_r41_waffe_gesperrt(void) { return s_modell == RE15_SHERRY_R41_MODELL; }
+
+/* Zeile 15 der vier Tabellen [Tempo, Drehung], Byte-Index 15*2 = +30 (aus info/Re1.5/PSX.EXE gelesen):
+ *   GEHEN  @0x80073ec2 = 32 30 -> [50,48]   Leser Tempo @0x800324d4, Drehung (+1) @0x800323a0
+ *   RUECK  @0x80073ee2 = 23 30 -> [35,48]   Leser Tempo @0x80032d5c, Drehung (+1) @0x80032c4c
+ *   DREHEN @0x80073f02 = 00 50 -> [0,80]    Leser Drehung (+1) @0x80032a08
+ *   RENNEN @0x80073f42 = 78 40 -> [120,64]  Leser Tempo @0x800327e8, Drehung (+1) @0x80032688
+ * (Zum Vergleich Zeile 0 Leon: [75,48] [70,48] [0,96] [200,72]; Zeile 4 Elza: [70,48] [65,48] [0,96] [210,72].) */
+static const uint8_t s_zeile15[4][2] = { { 50, 48 }, { 35, 48 }, { 0, 80 }, { 120, 64 } };
+
+int re15_sherry_r41_tabelle(int tab, int feld, int standard)
+{
+    if (s_modell != RE15_SHERRY_R41_MODELL) return standard;
+    if (tab < 0 || tab > 3 || feld < 0 || feld > 1) return standard;
+    return (int)s_zeile15[tab][feld];
 }

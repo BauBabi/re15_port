@@ -94,6 +94,7 @@ static inline int RNDI(float f) {
 #include "re15_item_use.h"    /* heal classifier gate + applier table (wave 3: prompt-less direct heal) */
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
 #include "asset_root_pc.h"    /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ, 2026-08-24) */
+#include "sherry_pc_r41.h"    /* Runde 41 Spur K: Spielfigur Sherry (Skelett/Animation/Waffen-Bank) */
 #include "asset_selftest_pc.h" /* RE15_ASSET_SELFTEST=1 — Paket-Gate, reine Diagnose */
 #include "fx_plattform_pc.h"  /* Runde 34 Spur C: ESP-Takt, Ton-Weiche, Licht-Latch, TEX.TIM-Seiten */
 #include "re2_fx.h"           /* Runde 34 V3: RE2-FX-Maschine (Registrierung, Aufschlag-Harness) */
@@ -1434,6 +1435,8 @@ static int pc_sync_player_model(re15_md1_t *pl_md1)
     *pl_md1            = nm;
     s_player_model_idx = want;
     re15_render_pc_upload_tim_slot(&nt, 0);       /* Slot 0 = Spielerhaut */
+    { extern int re15_sherry_pc_r41_koerper(int, const uint8_t *, int);   /* Runde 41 Spur K: EDD/EMR/W-Bank wie */
+      re15_sherry_pc_r41_koerper(want, buf, sz); }                         /* FUN_800314b0 @0x8003154c-@0x800316f0 */
     fprintf(stderr, "[pld] Spielermodell -> %s (Mesh %d Teile, Textur %dx%d)%s\n",
             path, nm.mesh_count, nt.width, nt.height,
             want == 1 ? "  [R.P.D.-Ruestung an]" : "");
@@ -4390,6 +4393,9 @@ re_title:;
     re15_emd_skeleton_t  pl00_skel = {0};
     int pl00_ok = 0;
     if (skel_ok) { pl00_anim = anim; pl00_skel = skel; pl00_ok = 1; }
+    { re15_sherry_pc_r41_baenke_t kb = { &skel, &pl00_skel, &w01_skel, &anim, &pl00_anim, &w01_anim, wpn_anim, wpn_skel,
+                                         wpn_bank_ok, wpn_md1_ok, RE15_WPN_MDL_MAX };   /* Runde 41 Spur K (sherry_pc_r41.c) */
+      re15_sherry_pc_r41_anmelden(&kb, (int)(g_gameflow.character & 0x0F)); }
 
     /* Save the BASE (pre-overlay) Elliot skeleton so a cross-room reload re-overlays from
      * base instead of stacking overlays (parity with the pl00_skel base saved above). */
@@ -9475,7 +9481,8 @@ re_title:;
                         int sxp = 256 + (p & 3) * 32;
                         int syp = (lv * 128 + 128 + ((p >= 4) ? 0x40 : 0)) - 256;
                         int dxp = 0, dyp = 0;   /* Zeile = aca5c (`lbu` @0x80037c8c, `sll 4` @0x80037c94) */
-                        if (!re15_kleidung_panel_ziel((int)g_gameflow.character, p, &dxp, &dyp)) continue;
+                        { extern int re15_sherry_r41_modell(void); int mz = re15_sherry_r41_modell();   /* Runde 41 Spur K: Zeile = Modell aca5c */
+                          if (!re15_kleidung_panel_ziel(mz >= 0 ? mz : (int)g_gameflow.character, p, &dxp, &dyp)) continue; }
                         ok &= re15_render_pc_wound_blit(sxp, syp, dxp, dyp, 32, 64);
                     }
                     if (any)
@@ -9552,7 +9559,7 @@ re_title:;
                 {   extern int re15_werfer_bank_id(int id);   /* Runde 35 Spur B: 16/17 -> Mesh dir[2] der W0F */
                     eq = re15_werfer_bank_id(eq); }
                 int wi = (eq >= 0 && eq < RE15_WPN_MDL_MAX) ? eq : 0;
-                int vis = wpn_md1_ok[wi];                    /* show whatever weapon is equipped */
+                int vis = (eq != 0) && wpn_md1_ok[wi];       /* show whatever weapon is equipped; Runde 41 Spur K: Waffe 0 -> kein Anhang (`beq v1,zero` @0x80036c08) */
                 if (vis && wpn_bone_valid && player_visible &&
                     !(g_actors[RE15_ACTOR_SLOT_PLAYER].fress_skip_mask & 0x0800) &&
                     re15_player_victim_state() == 0) {

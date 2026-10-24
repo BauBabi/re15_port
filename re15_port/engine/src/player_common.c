@@ -975,6 +975,8 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * The old model used walk/run (CROSS) here — that was wrong and made in-place pivots half-speed. */
         int turn_rate = !moving ? TURN_RATE_IN_PLACE_PER_FRAME
                                 : (run ? TURN_RATE_RUN_PER_FRAME : TURN_RATE_WALK_PER_FRAME);
+        { extern int re15_sherry_r41_tabelle(int, int, int);   /* Runde 41 Spur K: Drehbyte Zeile 15 (@0x80073f03/@0x80073f43/@0x80073ec3) */
+          turn_rate = re15_sherry_r41_tabelle(!moving ? 2 : (run ? 3 : 0), 1, turn_rate); }
         if (pad_bits & RE15_PAD_BIT_LEFT)  yaw_delta -= turn_rate;
         if (pad_bits & RE15_PAD_BIT_RIGHT) yaw_delta += turn_rate;
         if (pad_bits & RE15_PAD_BIT_UP)    move_dir  += 1;
@@ -985,6 +987,8 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * die Lauf-Drehung darf dann nicht zusaetzlich wirken. Vorher liefen beide: -96 (Stehen,
          * Rate @0x80073ee4) + 24 (Rueckstoss, falsches Vorzeichen) = -72 je Bild statt -24. */
         int zielt_schon = ((pad_bits & RE15_PAD_BIT_R1) != 0) || (s_player_aim_phase != RE15_AIM_NONE);
+        { extern int re15_player_equipped_weapon(void);   /* Runde 41 Spur K: R1 nur mit Waffe != 0 (@0x80032014/@0x80032430/@0x80032720/@0x80032a80/@0x80032cb4) */
+          if (s_player_aim_phase == RE15_AIM_NONE && re15_player_equipped_weapon() == 0) zielt_schon = 0; }
         if (yaw_delta != 0 && !zielt_schon) {
             p->rot_y = (int16_t)((int)p->rot_y + yaw_delta);
         }
@@ -1049,6 +1053,8 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         /* Aim stays ACTIVE past the R1 release until the machine exits through LOWER (both
          * machines): a raise/slash/recoil plays out, then HOLD sees !R1 -> LOWER -> exit. */
         int aiming = r1_held || (s_player_aim_phase != RE15_AIM_NONE);
+        { extern int re15_player_equipped_weapon(void);   /* Runde 41 Spur K: kein Zielen mit Waffe 0 (beq/bne zero vor `ori v0,zero,0x701`) */
+          if (s_player_aim_phase == RE15_AIM_NONE && re15_player_equipped_weapon() == 0) aiming = 0; }
         if (aiming) move_dir = 0;   /* rooted: no translation while aiming */
         if (aiming) {
             /* Manual aim turn (table @0x80074090 = [24,48,...], 5-BYTE records per weapon): byte0=24
@@ -1263,11 +1269,14 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         } else if (move_dir > 0) {
             if (run) { want_motion = RE15_MOTION_RUN;  speed = RUN_SPEED_PER_FRAME;  }
             else     { want_motion = RE15_MOTION_WALK; speed = WALK_SPEED_PER_FRAME; }
+            { extern int re15_sherry_r41_tabelle(int, int, int);   /* Runde 41 Spur K: Zeile 15 @0x80073f42 / @0x80073ec2 */
+              speed = re15_sherry_r41_tabelle(run ? 3 : 0, 0, speed); }
             s_idle_phase = -1;
         } else if (move_dir < 0) {
             /* BACK: distinct base-track back-walk clip (PL00.edd clip 1), moved in
              * reverse (move_dir = -1 negates the step, = FSM mode 8). */
             want_motion = RE15_MOTION_BACK; speed = BACK_SPEED_PER_FRAME;
+            { extern int re15_sherry_r41_tabelle(int, int, int); speed = re15_sherry_r41_tabelle(1, 0, speed); }   /* Runde 41 Spur K: @0x80073ee2 */
             s_idle_phase = -1;
         } else if (yaw_delta != 0) {
             /* TURN (FSM mode 9, motion 0x60): the original plays the walk-step clip

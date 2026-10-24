@@ -428,7 +428,8 @@ static void climb_sub9(const re15_rdt_t *rdt, re15_actor_t *p,
     case 3: {                                   /* @0x80038154 */
         if (s_frame == 0x11) p->hit_react |= 1;                  /* @0x80038164-80 */
         /* Ausloese-Frame: Spielertyp (+0x08) == 0xf -> 0x63, sonst 0x1d (@0x80038184-ac) */
-        const int trg = ((int)p->type == 0x0f) ? 0x63 : 0x1d;
+        extern int re15_sherry_r41_modell(void);   /* Runde 41 Spur K: +0x08 des Spielers = DAT_800aca5c = Modell (Port: type bleibt 0) */
+        const int trg = (re15_sherry_r41_modell() == 0x0f) ? 0x63 : 0x1d;
         if (s_frame == trg) {
             s_speed = 0x47c;                                     /* @0x800381b0-b8 */
             pos_advance(p);                                      /* @0x800381bc */

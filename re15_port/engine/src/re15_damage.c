@@ -1062,8 +1062,10 @@ static int s_player_weapon = 1;   /* RE-CORRECTED twice: aca5d = the inventory I
                                    * [3]=5, reach [3]=1000). My interim default 3 was a start-state
                                    * divergence (parity oracle: the original spawns with the knife). */
 int  re15_player_equipped_weapon(void) { return s_player_weapon; }
+void re15_player_waffe_roh(int id) { if (id >= 0 && id < 22) s_player_weapon = id; }   /* Runde 41 Spur K: nur aca5d, wie @0x800316c4 */
 void re15_player_set_equipped_weapon(int weapon_id)
 {
+    { extern int re15_sherry_r41_waffe_gesperrt(void); if (re15_sherry_r41_waffe_gesperrt()) return; }   /* Runde 41 Spur K: Sherry (0x0F) ohne Waffe */
     if (weapon_id >= 0 && weapon_id < 22) {
         s_player_weapon = weapon_id;
         /* keep the equipped SLOT (DAT_800b25c8) in sync — the byte-true menu commit stores the
