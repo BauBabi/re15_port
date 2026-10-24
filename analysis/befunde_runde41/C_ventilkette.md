@@ -9,6 +9,10 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-24 ab 21:0x **Nachbesserung 5** (Abnahme 4 `C_abnahme_4.md`, Maengel 1-3; Nachtraege 16/18/19 des Nutzers, AUFTRAG.md
+  19:31-19:55). Baum sauber (`status --porcelain` leer, HEAD 9bc62279 = Abnahme 4 vollstaendig). Der FORTSETZUNGS-Block des Auftrags
+  ("Abnahme-3-Fortsetzung ... Kein Code aendern") gehoert zur Abnahme 3 und ist seit 320b57d8/a4f68cff erledigt -> nicht wiederholt;
+  diese Sitzung ist die Nachbesserung 5. Arbeitsplan und Ergebnis in §0f. Messordner scratchpad `nb5/`.
 * 2026-10-24 18:2x **Nachbesserung 4 abgeschlossen** (§0e): Mangel 3 = das echte Ventilraetsel (sechs Ventile 01/02/03 +
   07/08/09 an den Raedern der Hintergruende, Folge 09/07/02/01 erst nach der vierten Drehung geprueft, falsch -> zurueck +
   Text 45; Dokument "Technician's Note" mit dem Nutzertext woertlich, Bit (9,107); Plakat-Nahaufnahme mit der falschen
@@ -977,6 +981,36 @@ Nachtraege 7/8/12/13 gebracht.
   **`100% tests passed, 0 tests failed out of 17`** (Total Test time (real) = 5019.29 sec; laengste: r37_itemband_lift
   1391.40 s, r36_dachkiste 1378.61 s, r37_itemband 795.90 s).
 * Keine volle Suite (Auftrag).
+
+## 0f. Nachbesserung 5 (Abnahme 4 `C_abnahme_4.md` Maengel 1-3; Nachtraege 16, 18, 19, AUFTRAG.md 2026-10-24 19:31-19:55)
+
+Massstab: die Forderungen der Abnahme 4 §5 und der Wortlaut der Nachtraege 16/18/19 (AUFTRAG.md, massgeblich). Punkte, die die
+Abnahme als erfuellt bewertet hat (1-6, Nachtrag 12 (k), Nachtraege 6/9), bleiben erhalten; ihre Riegel bleiben gruen.
+Messordner scratchpad `nb5/` (`C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/nb5`).
+Die Messungen der Abnahme 4 (`C41abn4/`) gelten als "vorher" und werden NICHT wiederholt.
+
+### Arbeitsplan
+1. Nachtrag 19 (Mangel 3): Text 2030/2031 Id 46 = "WARNING: The water will rise in one minute. Please leave the room immediately!"
+   (Wortlaut exakt, nur Umbruch); Programm-Kommentare; Riegel-Pins auf den alten Wortlaut nachziehen.
+2. Mangel 2 (niedrig): Plakat-Nahaufnahme hebt die Flut-Sperre nicht mehr auf (Plakat waehrend Zaehler/Flut gesperrt, beim
+   Schliessen nur die eigene Sperre zuruecknehmen); Riegel.
+3. Nachtrag 16 (Mangel 3): Ventil-Sicherungskasten in ROOM2010/2011 (Lage aus den 2010-Hintergruenden, Form des Original-Kastens
+   2060 sub19 @0x0169E), Einsetzen -> Einstellung auf die Ventile + Unlock-Ton (RE2/RE1.5-Beleg), Herausnehmen -> Ventile wieder
+   gesperrt, Sicherung danach in 2060 nutzbar; Ventile ohne Kasten-Sicherung neutraler Text ohne "look around"; Bit nach Zensus
+   (VERTRAG nachtragen), Texte 2010 Ids 40-44; Riegel zu Fuss (Leon + Elza).
+4. Nachtrag 18 Punkt 4 (Mangel 3): Countdown-Anzeige der 60 s (Original-Timer-UI belegen), Alarm wie am Spielende (Ton belegen),
+   Sprachausgabe main46.wav beim Warntext (laeuft bereits datengetrieben, mit dem neuen Wortlaut nachmessen).
+5. Nachtrag 18 Punkt 3 (Mangel 3): Ventil-Dreh-Animation aus RE2 (RE2 ROOM1080 sub08 @0x0210A: Plc_motion 0x0F/0x10/0x11 + se 05;
+   Clips aus dem RBJ von RE2 ROOM1080, Offsets belegen) beim Drehen der Ventile.
+6. Nachtrag 18 Punkt 2 (Mangel 3): 2050-Pult - der umgelegte Hebel geht sichtbar nach unten (Form 11F0/2060, Grafik aus dem
+   Hintergrund abgeleitet); Lampen bleiben.
+7. Nachtrag 18 Punkt 1 (Mangel 3): Plakat im Stil der Spiel-Dokumente (Papier, Schrift, Farben), Inhalt wie freigegeben; Vorher/
+   Nachher + Vergleich mit zwei echten Spiel-Nahaufnahmen.
+8. Mangel 1 (mittel): Dokument-Blatt am Fundort neben der Sicherung in Cut 5 erkennbar (Messung mit/ohne Bit 107 deutlich > 39 px).
+9. Tests: Unit + Integrationsriegel (Leon UND Elza) nachziehen, gezielte Laeufe, Dossier, Commit.
+
+### Protokoll der Nachbesserung 5 (neueste zuerst)
+* 21:0x Start, Pflichtlektuere (AUFTRAG.md Nachtraege 15-19, VERTRAG.md, Abnahme 4, Dossier §0e/§6/§7), Arbeitsplan.
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
