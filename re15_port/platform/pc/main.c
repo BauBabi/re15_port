@@ -7786,7 +7786,7 @@ re_title:;
                     }
                 }
                 re15_pc_fx_takt();
-                re15_msgtakt_r41_nach_spieltakt();   /* Runde 41 Spur E: Restore wie @0x80010044 hinter @0x8001ce2c, vor dem Modal (re15_msgtakt_r41.h) */
+                re15_msgtakt_r41_nach_spieltakt();   /* Runde 41 Spur E: Restore hinter dem Spiel-Takt wie @0x80010044 (Original: auch hinter dem Modal @0x8001ce34; ohne Wirkung, das Port-Modal liest g_pauseflags nicht - re15_msgtakt_r41.h) */
                 /* ITEM-GET-MODAL-FSM — NACH dem Spieler-Step, byte-true zur Frame-Ordnung des
                  * Originals (Hauptloop FUN_8001c6e8: Dispatcher @0x8001ce0c `jal 0x80031c44` ->
                  * ... -> Modal-FSM @0x8001ce34 `jal 0x8001db28`; selbst nachdisassembliert
