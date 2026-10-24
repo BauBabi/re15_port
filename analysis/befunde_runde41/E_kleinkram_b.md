@@ -21,6 +21,8 @@ elzazombies_r39.c, test_r36_kartenbits.c k_port[] (nur falls Bit 120 belegt).
 - [x] Punkt 3 Werkstatt-Tuer 11B1 (Elza) — Ereignis 24, unit_r41_kleinkram_b_11b1 3/3
 - [x] Nachbesserung 2 (Abnahme 1): E-N1 Apply-Bild steht (kamerahalt_r41.c/bildhalt_r41_pc.c), E-N2 Nachrichten-Takt hinter dem
   Spiel-Takt + Auswahl ohne Parken (msgtakt_r41.c); alle Anlauf-Varianten am Original (GDB) gemessen; Renn-Stopp OFFEN
+- [x] Nachbesserung 3 (Abnahme 2): Blenden-Takt im gehaltenen Bild (E-E3), Renn-Tempo + Renn-Stopp + DECIDE 0x80032604
+  vollstaendig spielweit (E-E2, rennstopp_r41.c), Riegel renn auf o_renn2, Gorilla-Sonde neu eingemessen, Vertrag E-E1
 
 ## Protokoll
 - (Start) Baum sauber auf 116e8b0f, Dossier angelegt.
@@ -609,8 +611,9 @@ Integrations-Bedingung (msg/scd/cut/door/szene/karte-Riegel mitgefahren).
 
 ### Status Nachbesserung 3
 - [x] Mangel 4 / E-E3 Blenden-Takt im gehaltenen Bild
-- [ ] Mangel 1/2 / E-E2 Renn-Stopp spielweit, Gorilla-Sonde, Riegel renn
-- [ ] Mangel 3 / E-E1 Vertrag + Integrations-Riegel
+- [x] Mangel 1/2 / E-E2 Renn-Stopp spielweit, Gorilla-Sonde, Riegel renn (Fortsetzung: DECIDE 0x80032604 vollstaendig,
+      Riegel rennpfad, Gorilla-Sonde zweite Messung ueber die Population)
+- [x] Mangel 3 / E-E1 Vertrag + Integrations-Riegel (gezielter Lauf, Abschnitt "Fortsetzung — Tests")
 
 ### Mangel 4 / E-E3 — Blenden-Takt im gehaltenen Bild (Softlock beim Raumeintritt auf der Kante)
 - Ursache: das gehaltene Apply-Bild (main.c Nachbesserung 2) ruft `re15_render_pc_bild_halten()` statt
