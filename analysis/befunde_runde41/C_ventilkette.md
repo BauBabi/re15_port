@@ -58,6 +58,20 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 * 17:12 Baum sauber (status leer, HEAD 116e8b0f). AUFTRAG/VERTRAG/UEBERGABE gelesen. SCD-Dumps aller Kettenraeume
   (tools/scd_dump_room.py) + Texttabellen (tools/rdt_msgdump.py) gezogen, Belege unten in §1.
 
+## 0a. Wegweiser je Nutzer-Punkt (Messung vorher / Beleg / Umsetzung / Messung nachher / Riegel)
+
+| Punkt (AUFTRAG.md) | vorher | Beleg | Umsetzung | nachher (exe) | Riegel |
+|---|---|---|---|---|---|
+| 1 Leiter 2000 gesperrt + Text, bis die Flut lief | §2 (Slot 4 = Tuer nach 2050) | §1.1 @0x0169E, Strahlen @0x0174C.., Form @0x01B12 | §3.1 | §4 "Leiter" (C_belege/leiter2_vergleich.png) | unit B; integration_r41_ventilkette Lauf b; _b Lauf K (Elza 2001) |
+| 2 Bruecke oben, Pult -> Ventil 13 -> "Lower the bridge?" -> Fahrt | §2 (Planke y -1800) | §1.3 obj 0 @0x01B6C, Lift-Fahrt @0x01ED2.., Pult/Tank-Lage | §3.2 | §4 "Bruecke", "Punkt 2 am Spiel", "P2 Pult ohne Ventil 13" | unit C; _b Lauf F |
+| 3 Ventile -> Warnung -> 60 s -> Flut ueber den Ring -> Tod mit Ertrinken; Ost-Tuer -> 20B0 | §2 (keine Stelle, Cut 14/15 nie) | §1.2 @0x019C2/sub02/sub05, §1.5 Rate @0x00CC8, Blende @0x174a, Spritzer @0x800456b8 | §3.3 | §4 "Flut am Spiel", "Spritzer nachgemessen", "Blende"; Szene 20B0 §6 Querbezug A | unit D/D2; integration_r41_ventilkette Laeufe a/c |
+| 4 danach 20B0 statt 2000, Leiter frei (kein Wasser) | §2 (20B0 nur per Sprung) | §1.1/§1.2 (kein Tuersatz -> 20B0, Kamera-Zwillinge, Strahlen @0x01E96..) | §3.4 | §4 "Leiter", "P4 Leiter 20B0 -> 2050", "P4 2050-Leiter -> 20B0" | unit E; _b Laeufe G/H |
+| 5 2050: Hebel erst nach dem Pult-Raetsel (80 V) | §2 (Hebel immer bedienbar) | §1.4 sub04 @0x022E6, Slot 8 @0x01D38, Cursor @0x01D4C, 2060/11F0/RE2 ROOM2130 | §3.5 | §4 "Pult 2050", "P5 Pult -> Hebel", "P5 Hebel vorher" | unit F; _b Laeufe D/E/J (Elza 2051) |
+| 6 2080-Rechner leert auch 2030 | §2 ((3,245) Raum-Merkflag) | §1.5 sub02 @0x00C86..@0x00CF1 | §3.6 | §4 "Punkt 6 am Spiel", "P6 2030 nach dem Rechner" | unit G; _b Lauf I |
+
+unit = unit_r41_ventilkette (Abschnitte A-G, D2), _b = integration_r41_ventilkette_b. Offen nach Messung: §6
+(Querbezug A; Ring-Eintritt in das geflutete 2030 = Frage §7 f).
+
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
 Alle Datei-Offsets beziehen sich auf `re15_port/shared_assets/PSX/STAGE2/ROOMxxxx.RDT` (Leon); die Elza-Varianten
@@ -582,6 +596,9 @@ shared_assets/PSX, pri/, synchro/, release/.
   re15_aot_door_params_t hat kein Schloss-Feld, die Port-Sperren (tuersperre_r39.c, sperre1050_r37.c) nutzen je Raum
   eine Port-Id; (3) Ertrinken auch nach der Flut — ein Sofort-Tod hinter einer Tuer ohne Warnung. Keins davon ist
   belegt oder vertraglich gedeckt -> nicht gebaut, Entscheidungsfrage §7 (f) mit Vorschlag.
+* PSX-Ziel: die Wasserflaechen-Daten (gen/ventilkette_r41_wasser.inc = ROOM2080 MD1 @0x000D98 4572 B + TIM @0x026408
+  16928 B) sind nur unter RE15_PLATFORM_PC eingebunden (ventilkette_r41.c, PSX-Laufzeitbudget); Bits, Zaehler, Flut-Takt
+  und Tod sind plattformneutral. Der PSX-Bau ist in diesem Baum weder gebaut noch gemessen (keine PSn00bSDK-Kette).
 * (erledigt 22:00) Die Flut als exe-Messung: gemessen mit den Spinnen-Kill-Bits als Spielzustand (§4 "Flut am Spiel",
   Riegel integration C). Offen bleibt nur die ORIGINAL-Seite: RE1.5/RE2 kennen kein Ertrinken, Form = PORT-WAHL.
 * Der Level 0x5000 (Helligkeit 160) der Ertrink-Blende ist PORT-WAHL: die ausgelieferten Skripte nutzen die Blende nur
