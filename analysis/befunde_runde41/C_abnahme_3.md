@@ -2,7 +2,7 @@
 
 Baum `.claude/worktrees/r41_ventilkette`, Zweig `r41/ventilkette`, gepruefter Stand HEAD 2fb94b25 (Basis master 116e8b0f;
 master selbst steht inzwischen auf 7b59e297 mit Spur A — die Integration ist nicht Gegenstand dieser Abnahme).
-Massstab: die sechs Punkte des Auftragstexts und AUFTRAG.md (massgeblich) mit den Nachtraegen 6-10 und den Entscheiden
+Massstab: die sechs Punkte des Auftragstexts und AUFTRAG.md (massgeblich) mit den Nachtraegen 6-13 (12 und 13 kamen 13:11/13:19, nach dem Bau) und den Entscheiden
 C-a..e, C-E1..C-E3, C-E2b (C-E2c widerrufen durch Nachtrag 6). Vorlage: Abnahme 2 (`C_abnahme_2.md`, Maengel N1-N4 + H-a),
 Nachbesserung 3 (Dossier §0d).
 Begonnen 2026-10-24 11:55. Pruefer: Abnahme 3 (Opus). Der Bericht wird FORTLAUFEND geschrieben. Messordner scratchpad
@@ -508,12 +508,15 @@ Massstab: AUFTRAG.md Nachtrag 13, Folgen 1-6 (der Platzhalter des Punkts 3 wird 
 |---|---|---|
 | 1 Leiter 2000 -> 2050 mit herunterlaufendem Wasserstrom blockiert, "I cannot climb up the ladder because of the water pressure", bis die Flut gelaufen ist | **erfuellt** | L1 Leon + Elza zu Fuss: Aktion -> Text 40 woertlich (2x), kein Raumwechsel, Strahlen `fx=21/23`; L1b Bild: Strahl aus dem Gitterfenster neben der Leiter; nach der Flut (L4, L7, L1b) Leiter = Tuer -> 2050, `fx=0`, kein Strahl |
 | 2 2030: Bruecke zunaechst OBEN; Pult links (Kamera 2, Nordwand): zu wenig Druck / Ventil 13 zu -> Ventil 13 -> "Lower the bridge?" -> Bruecke faehrt herunter; nicht die Kurbel | **erfuellt** | L2 Leon + Elza (Sprung) und L2b Leon + Elza (echte Tuer 2070 -> Ring): Bruecke oben y -5400, Zelle 12 `u0 0xff`, Steg nicht begehbar; Pult Text 40 (cam 1/2, Schaltschrank = Nutzerbild); Ventil 13 Text 41/42 + Bit 101; Pult Text 43 "... Lower the bridge?" -> Cut 4, `prop[0] ... val=-1800`, Bit 102, Text 44, Zelle 12 `u0 0x00`, ueber den Steg |
-| 3 Ventilraetsel-Platzhalter -> Warnung (1 min, Raum verlassen) -> 60 s -> Wasser ueber die Ringebene; Ost-Tuer -> 20B0 (Auswasch-Szene); Zeit abgelaufen im Raum: Tod mit Ertrink-Effekt | **erfuellt** (20B0-Szene nach C-E1 mit dem Haken der Spur A; deren Ketten-Riegel ist kaputt -> Mangel 1) | L3 Leon unten: Warnung woertlich, 1800 Bilder, Flut, ein Spritzer, Tod + blaue Blende, YOU DIED; L3c Leon + Elza auf dem Ring: Wasser bis -6300 (ueber die Ringebene), Spritzer bei -5400, Tod; L3b Leon + Elza: zu Fuss zur Ost-Tuer in 1069 Bildern -> `loaded room20b0/20b1.rdt`, Bits 103 + 100, keine Flut; L2: Nachtraege 9/10 (Text 49 vor Bruecke/Sicherung, 45 danach) |
+| 3 Ventilraetsel-Platzhalter -> Warnung (1 min, Raum verlassen) -> 60 s -> Wasser ueber die Ringebene; Ost-Tuer -> 20B0 (Auswasch-Szene); Zeit abgelaufen im Raum: Tod mit Ertrink-Effekt | **teilweise** — gegen den Wortlaut des Punkts erfuellt; AUFTRAG.md Nachtrag 13 (13:19, massgeblich) ersetzt den Platzhalter durch das echte Raetsel mit Dokument und Plakat -> nicht gebaut (N13, Mangel 3); 20B0-Szene nach C-E1 mit dem Haken der Spur A, deren Ketten-Riegel faellt (Mangel 1) | L3 Leon unten: Warnung woertlich, 1800 Bilder, Flut, ein Spritzer, Tod + blaue Blende, YOU DIED; L3c Leon + Elza auf dem Ring: Wasser bis -6300 (ueber die Ringebene), Spritzer bei -5400, Tod; L3b Leon + Elza: zu Fuss zur Ost-Tuer in 1069 Bildern -> `loaded room20b0/20b1.rdt`, Bits 103 + 100, keine Flut; L2: Nachtraege 9/10 (Text 49 vor Bruecke/Sicherung, 45 danach); das Raetsel selbst = Ja/Nein-Frage 45 (Platzhalter, N13) |
 | 4 Danach 20B0 statt 2000 (spaeter wieder frei ohne Wasser), Leiter frei (kein Wasser laeuft mehr herunter) | **erfuellt** | L4 Leon + Elza zu Fuss: 2010-Tuer -> 20B0/20B1 Cut 10 (nicht 2000), Leiter -> 2050 ohne Sperrtext, 2050-Leiter -> 20B0/20B1 Cut 9, `fx=0` in allen Bildern; L1b Bild ohne Strahl; L7 (Kanal -> Leiter -> 2050 -> 20B0); "spaeter wieder frei" = 2030 mit dem Strom (Punkt 6/Nachtraege 7/8) |
 | 5 2050: Wasserlevel (Hebel) erst nach dem Pult-Raetsel (80 V wie 11F0) | **erfuellt** | L5 Hebel vorher: Ereignis 4 -> `2050_hebel_sperre`, Text 40, `(3,104) = 0`; L5b Leon + Elza: Pult 43/41 -> Cut 15 -> 40/70/80 V -> "Power supply OK." -> Bit 106 (Bild: Zeiger im roten Feld, gruene Marken); L5c Leon + Elza: mit Bit 106 Original sub04 -> `Set zone=3 idx=104`, Cut 4/7, `(3,104) = 1` |
-| 6 2080-Rechner entleert danach auch 2030 — ERSETZT durch Nachtrag 7/8 ("Nach der Aktivierung des Stroms ist 2030 leer gelaufen", Pegel auf Relinghoehe, nur unterer Bereich geflutet; Rechner nur Original) | **erfuellt** | L6 Leon + Elza: mit (3,126) `Wasser auf Relinghoehe y -3600`, Ring-Tuer 20B0 offen, Treppe -> Text 48, Lift B (3,220), 2080 Rechner = Original msg 0 -> (3,245) -> Cut 7/3 -> 2090, kein Port-Programm, kein Bit 107; L6b Bilder (Ring trocken, nur Schacht geflutet); L7/L9 ohne Strom Sperrtexte 41/40; L8 Weg nach der Flut zu Fuss (w1, Sicherung, Generator, w3) Leon + Elza |
+| 6 2080-Rechner entleert danach auch 2030 — ERSETZT durch Nachtrag 7/8 ("Nach der Aktivierung des Stroms ist 2030 leer gelaufen", Pegel auf Relinghoehe, nur unterer Bereich geflutet; Rechner nur Original) und Nachtrag 12 (k) (Pegel "unterhalb der Absperrung") | **teilweise** — Strom leert 2030, Ring frei, Rechner Original: erfuellt; der Ruhepegel -3600 liegt 1800 unter der Ringboden-Kante und widerspricht Nachtrag 12 (k) (13:11, nach dem Bau) -> N12, Mangel 4 | L6 Leon + Elza: mit (3,126) `Wasser auf Relinghoehe y -3600`, Ring-Tuer 20B0 offen, Treppe -> Text 48, Lift B (3,220), 2080 Rechner = Original msg 0 -> (3,245) -> Cut 7/3 -> 2090, kein Port-Programm, kein Bit 107; L6b Bilder (Ring trocken, nur Schacht geflutet, Schachtwand zwischen Wasser und Ringrand frei); L7/L9 ohne Strom Sperrtexte 41/40; L8 Weg nach der Flut zu Fuss (w1, Sicherung, Generator, w3) Leon + Elza |
 | Nachtrag 6: keine zusaetzliche Tuer (C-E2c widerrufen) | **erfuellt** | kein Code setzt (3,206) (Diff-Suche); `_sperre` (Integrationsgruppe) |
 | Nachtraege 9/10: Ventilraetsel erst mit gesenkter Bruecke UND aufgehobener Sicherung, vorher kurzer Text | **erfuellt** | L2 Leon + Elza: Platz nur ueber den Steg erreichbar; vor der Sicherung `id=49`, nach `id=2/3` (Set(3,108) @0x01FF2) `id=45` |
+| Nachtrag 12 (k) (13:11): Ruhepegel nach dem Strom "unterhalb der Absperrung, sodass es nicht drueber 'rein' laufen wuerde" (Folgen: so hoch wie moeglich unter der Absperrung am inneren Ringrand; durchsichtiges Gelaender -> knapp unter der Ringboden-Kante y -5400; Geometrie- und Bildbeleg) | **nicht erfuellt** | N12: Ist `Wasser auf Relinghoehe y -3600` / `pos=(0,-3600,0)` (L6, w3, Leon + Elza), Ring y -5400; Absperrung = Stabgelaender (SCA fl 0x33, Bild Cut 1/2/7/15 durchsichtig) -> Grenze -5400, 1800 Luecke; kein Code nach 11:01, Riegel pinnen -3600 |
+| Nachtrag 12 (l): Texte 48/49 vorerst freigegeben (49 spaeter aendern) | **erfuellt** (Freigabe; 49 durch Nachtrag 13 Folge 1 ueberholt -> Mangel 3) | Text 48 woertlich gemessen (L6), Text 49 (L2) = die vorgelegte Fassung |
+| Nachtrag 13 (13:19, "Jetzt in v0.8.29"): echtes Ventilraetsel — (1) Text 49 neutral, (2) Dokument mit dem Nutzer-Text woertlich (Leiche Sued-Landeplatz / Anlage), (3) Plakat als Nahaufnahme mit der falschen Anleitung, (4) Dreh-Raetsel mit Reihenfolge und Zuruecksetzen, Loesung -> Warnung -> Flut, (5) Dossier §7 zur Freigabe | **nicht erfuellt** | N13: Text 49 alt (L2, Riegel pinnen ihn); Nutzer-Text 0 Treffer in re15_port; kein Dokument-/Plakat-Platz in der AOT-Liste 2030; kein Bild-Asset; Ventile = ein Platz mit Ja/Nein-Frage 45 (L3/L3b/L3c); Dossier ohne Nachtrag 13 |
 
 ## 5. Maengel (nummeriert, nachpruefbar)
 * **Mangel 1 (mittel, Riegel / Entscheid C-E1, Punkt 3) — `integration_r41_ventilkette_kette` passt nicht mehr zur Kette und
@@ -532,8 +535,36 @@ Massstab: AUFTRAG.md Nachtrag 13, Folgen 1-6 (der Platzhalter des Punkts 3 wird 
   tests/unit/probes/r41_ventilkette.cmake Z. 2 "Rechner 2080 entleert 2030" und Z. 30 "2030 mit Bit 107 ohne Wasser" (Kommentare;
   die Riegel selbst pruefen den neuen Stand). Forderung: Saetze auf den Stand Nachbesserung 3 bringen.
 
+* **Mangel 3 (hoch, Nutzer-Punkt Nachtrag 13 / Punkt 3) — das echte Ventilraetsel fehlt (Nachtrag 13, 13:19, nach dem Bau).**
+  Ist (N13): Text 2030/49 traegt weiter das Wissen "If I turn them, this whole level will be flooded." (L2, gen/ventilkette_r41_texte.inc
+  Z. 75/76); kein Dokument (Nutzer-Text 0 Treffer in re15_port, kein Dokument-/Leichen-Platz in der AOT-Liste 2030), kein Plakat
+  (keine Nahaufnahme, kein Bild-Asset), die Ventile sind ein Platz Slot 14 mit der Ja/Nein-Frage 45 (Platzhalter, L3/L3b/L3c), das
+  Dossier enthaelt keinen Vorschlag zur Freigabe. Forderung (AUFTRAG.md Nachtrag 13 Folgen 1-6): (1) Id 49 neutral ersetzen (z. B. nur
+  "I should look around here first."), Gate der Nachtraege 9/10 bleibt; (2) Dokument mit dem Nutzer-Text WOERTLICH (nur Umbruch/Seiten),
+  Fundort mit Begruendung (bevorzugt Leiche am Sued-Landeplatz neben der Sicherung), Dokument-System re15_files (Ids ab 0x48),
+  Taken-Bit nach RDT-Zensus (Bit 107 frei, gehoert C); (3) Plakat als Nahaufnahme (System der Runde 40) im unteren Bereich bei den
+  Ventilen, Anleitung genau so falsch wie das Dokument sie beschreibt (schwarz/gruen/rot vertauscht, Nummern der schwarzen Ventile
+  getauscht), Bild als Port-Asset im Dossier und fuer das Paket-Gate genannt; (4) echte Ventile (Nummern/Farben aus den 2030-
+  Hintergruenden belegt) in der richtigen Reihenfolge drehen, falsche Reihenfolge -> zurueckgesetzt (Form eines Original-Raetsels
+  2060/11F0 mit @-Beleg), Loesung aus Plakat + Dokument + sichtbaren Ventilen eindeutig, richtig -> Warnung 46 -> Flut wie bisher;
+  (5) Dossier §7: Plakat-Bild, Dokument-Text, Loesung und Ableitung zur Freigabe; (6) weitere Texte nur 2030 Ids 50-55. Riegel: falsche
+  Reihenfolge setzt zurueck (kein Zaehler), richtige -> 46 -> Zaehler, Dokument aufnehmen/lesen, Plakat-Nahaufnahme, zu Fuss mit Leon
+  UND Elza; die Pins auf den alten Satz 49 (Unit Z. 323, `test_r41_ventilkette.cmake` Z. 281, `_weg` Z. 284) und auf die Ja/Nein-
+  Frage nachziehen; Mangel 1 (`_kette`) gleich mit auf das neue Raetsel stellen.
+* **Mangel 4 (hoch, Nutzer-Punkt Nachtrag 12 (k) / Punkt 6) — Ruhepegel nach dem Strom y -3600 statt knapp unter der Absperrung.**
+  Ist (N12): `Wasser auf Relinghoehe y -3600`, `pos=(0,-3600,0)` (L6/w3, Leon + Elza), 1800 unter dem Ringboden y -5400; die Absperrung
+  am inneren Ringrand ist ein durchsichtiges Stabgelaender (SCA-Zellen 19/20/21/22/31/32 fl 0x33 Band 3; Bild Cut 1/2/7/15) -> nach
+  den Folgen (k) ist die Ringboden-Kante y -5400 die Grenze, ein hoeherer Pegel unterhalb der Absperrung existiert (Schachtwand mit
+  den Schildern zwischen -3600 und -5400 frei). Forderung: die Absperrung aus der Geometrie belegen und ins Dossier schreiben (SCA-
+  Zellen mit Offsets + Hintergrundbild, Art und Hoehe); den Pegel knapp unter die Ringboden-Kante legen — Grenze mit @-Beleg, der
+  Abstand "knapp" als PORT-WAHL mit Begruendung; Flaeche/Netz fuer den neuen Pegel neu ableiten (die Treppe Slot 8 westlich x -4200
+  liegt dann bis auf die oberste Stufe UNTER dem Pegel, Kopf Z. 88/89 "dort keine Flaeche" gilt nicht mehr; Treppe/Sperrtext 48 und die
+  Erreichbarkeit pruefen); Bildbogen vorher/nachher aus den Ring-Kameras (Cut 1/2/7/15); Riegel (`_b` Z. 250/251, `_weg` Z. 429/431,
+  Unit Z. 597/676) auf den neuen Pegel, Leon UND Elza.
 Hinweise (kein Mangel): (a) die Flutflaechen liegen ueber dem tiefenlosen BSS — im ersten Flutbild ist das Becken im Bild schon
 zugedeckt (L3c, unveraendert seit Abnahme 2, Platzhalter ohne Formvorgabe); (b) nach der Flut ist der 2070-Mittelgang nicht mehr
-betretbar (beide Zugaenge 2000 Slot 3 / 2030 Slot 0 fuehren nach 20B0) — Teil der offenen Frage (g), bekannt seit M7; (c) offene
-Nutzerfragen (k) Relinghoehe -3600 vs -5400, (l) Texte 48/49, (g), (h) sind keine Maengel der Spur; (d) PSX-Ziel ungebaut, Wasser-
-netze nur unter RE15_PLATFORM_PC (bekannt, H3).
+betretbar (beide Zugaenge 2000 Slot 3 / 2030 Slot 0 fuehren nach 20B0) — Teil der offenen Frage (g), bekannt seit M7; (c) die Fragen
+(k)/(l) sind mit Nachtrag 12 beantwortet ((k) -> Mangel 4, (l) freigegeben); (g), (h) bleiben offen und sind keine Maengel der Spur;
+(d) PSX-Ziel ungebaut, Wassernetze nur unter RE15_PLATFORM_PC (bekannt, H3); (e) Nachtrag 12 (l) verlangt fuer Text 49 einen Eintrag
+"Zu entscheiden" in den Release Notes — mit Nachtrag 13 Folge 1 (49 neutral) ueberholt; bleibt 49 stehen, gehoert der Eintrag zum
+Paket-Gate.
