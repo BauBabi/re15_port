@@ -198,3 +198,116 @@ mit der entsprechenden Blickbeziehung: Gator frontal / seitlich / Nahaufnahme; Z
 PORT-WAHL der Zuordnung, Form = RE2). Pins: Schnittfolge + Bildnummern im Log je Phase. Spur G nutzt dieselben Programme
 fuer die Kanister-Szene (Wurf aus 2080 -> Landung 2090 -> Aufnahme -> Explosion). Faellt die laufende Abnahme B ohne
 diesen Punkt "bestanden" aus, folgt eine gesonderte Nachbesserung B mit diesem Mangel.
+
+## 2026-10-23 23:06 — Orchestrator-Entscheid B5 (Abnahme B 0, Mangel M3) + Hinweis fuer Abnahme B 1
+
+- B5 Gemeinsame Dateien: die kleinen, markierten Haken der Spur B in platform/pc/main.c (3), enemy_ai_re2_zombie.c (4
+  Zeilen re15_re2z_gore_active fuer Typ 0x23) und re2_fx.c (+40 Zeilen Op 11/73) sind ANGENOMMEN (Vertrag §1.3 um B
+  erweitert); Konflikte mit D/I/G loest die Integration. Kein Mangel mehr fuer Abnahme 1.
+- Abnahme B 1 prueft zusaetzlich Nachtrag 4 (RE2-artige Kameraschnitte fuer Durchbruch/R1/Finisher/Kanister/Explosion,
+  Zuordnung ROOM40A0-Schnitte -> 2090-Kameras mit Belegen). Fehlt das, ist die Spur NICHT bestanden.
+
+## 2026-10-23 23:27 — Nachtrag 5 (Wortlaut; betrifft Spur G, Welle 2)
+
+> Auch beim runterschmeißen des Gaskanisters - es gibt eine Szene in Resident Evil 2, wo Ada den Raketenwerfer runter
+> wirft. GENAUSO würde ich das auch haben wollen von der Kamera.
+
+Orchestrator: NUTZER-VORGABE fuer die Kanister-Szene der Spur G. Vorbild = die RE2-Szene, in der Ada den Raketenwerfer
+von oben zu Leon hinunterwirft (Endkampf gegen den Tyrant; RE2-Raum per Zensus ermitteln: Item_aot_set des
+Raketenwerfers / Ada-NPC + Wurf-Clip im SCD der Leon-Disc info/re2leon/PL0/RDT, Offsets belegen). Kameraschnitte,
+Zeitpunkte, NPC-Clips (Werfen) und Flugbahn des Objekts dieser Szene auf 2080 (Marvin/John an der Reling) -> 2090
+(Landung im Wasser) abbilden; Zuordnung der RE2-Schnitte auf 2080/2090-Kameras im Dossier mit Bildbelegen.
+
+## 2026-10-24 03:21 — Orchestrator-Hinweise nach Abnahme E 0 (kein Nutzer-Wortlaut; betrifft Spur E und Spur M)
+
+**Spur E, Punkt "Kurbel 2020" (Nachbesserung):** Abnahme 0 (`E_abnahme_0.md`) fand das "Herumfliegen" weder im Port
+(vorher/nachher, vier Waffen) noch im Original-Video — ALLE Laeufe starteten aber im STAND bei (2600,-2800) und drueckten
+die Aktionstaste aus dem Stillstand. Ungeprueft sind die Wege, auf denen ein Spieler normalerweise an die Kurbel kommt.
+Vor jeder Rueckfrage an den Nutzer systematisch messen (Port; bei einem Befund das Original mit demselben Weg):
+(a) Aktionstaste waehrend des GEHENS und des RENNENS in die Zone Slot 3 (`Aot_set` @0x009AE, rect (2200,-4150,800,800))
+    hinein — was macht der Lauf-/Geh-Zustand waehrend `Message_on` @0x0A5C/@0x0A62 und in `Sleep 20` @0x0A98 zwischen
+    `Pos_set` @0x0A8C (3650,-1800,-2925) / Gier `34 04 00 04` @0x0A94 und `Plc_motion` @0x0A9C?
+(b) Zugang von allen vier Seiten der Zone und mit verschiedener Gier;
+(c) mit gezogener Waffe (Zielhaltung) und direkt nach einem Schuss;
+(d) `Work_set kind=1 idx=0` @0x0A88, danach `Work_set kind=3 idx=1` @0x0AA8 + `Speed_set 2f 01 33 00` @0x0AAC und die
+    `For 6 { Add_speed }`-Schleifen @0x0AB0-0x0ACC: trifft Add_speed im Port wirklich Objekt 1 und nie den Spieler?
+Jede Variante mit RE15_FRAMEDUMP (RE15_WINDOW_SCALE=1) + Bildbogen; ein gefundenes Fliegen am Original nachmessen
+(DuckStation-Treiber `abn0_orig_kurbel.py` mit Anlauf statt Stand). Erst wenn alle Varianten original-gleich sind, bleibt
+die Rueckfrage an den Nutzer (Weg/Bild).
+
+**Spur M, Masken STAGE2 (Sichtpruefung):** Abnahme E Hinweis H2 (Bilder scratchpad `E41a0/zoom_legs.png` und
+`E41a0/zoom_legs_nopri.png`): ROOM2020 Cut 3 — `MASKS/ROOM2020.MSK` (aus 5924939d) zeichnet die Reling ueber Leons Beine
+an der Kurbel (Spielerlage nach `Pos_set` @0x0A8C = (3650,-1800,-2925)), obwohl Leon dort VOR der Reling steht; das
+Original hat in Cut 3 keine PRI (RDT @0x3FC = ff ff ff ff). Tiefe/Ebene dieser Freistellung belegen und korrigieren
+(Nutzer-Dateien unter pri/ nicht aendern — nur Zuordnung/Tiefe im Maskenbau), Vorher/Nachher-Bild genau an dieser Stelle,
+und dieselbe Pruefung (Spielfigur an begehbaren Stellen VOR der Freistellung) fuer alle 53 neuen Masken.
+
+## 2026-10-24 03:58 — Orchestrator-Entscheide B6-B8 (Fragen aus Nachbesserung B 1, c59802b5; der Nutzer kann widersprechen)
+
+Massstab: Nutzer-Auftrag "RE2-Alligator-Finisher" + Nachtrag 4 "RE2-artige Kameraschnitte"; Regel Beta -> Retail (wo RE1.5
+nichts vorgibt, gilt RE2).
+- **B6 Finisher-Kamera = RE2.** Im Alligator-Finisher bleibt der Finisher-Schnitt (FRESSEN P0, Sperre + Cut @0x80100fbc-ff4,
+  kein Ende) bis zum Game Over stehen; die RE1.5-Todeskamera (FUN_80015850: Weissblende, kreisende Kamera) wird fuer diesen
+  Tod NICHT gezeigt. Die Game-Over-Folge danach bleibt die des Ports. Messung: Finisher-Lauf bis Game Over, Cut und Bild je 20
+  Bilder, kein Kamerawechsel nach F658.
+- **B7 Intro ohne Wanddurchdringung.** Der Kopf darf im Westkanal nicht ueber die Wand ragen (gemessen F160-F279 Cut 7,
+  Kopf x -9574 / Wand x -8900). Form = RE2 (Clip 6 -> Clip 3, Knick yaw += 1024 @0x80100938-48 unveraendert); die
+  Startlage/-gier des Intros in ROOM2090 wird so gewaehlt, dass der Knick auf Leons Angriffslinie endet (PORT-WAHL, im Dossier
+  mit Rechnung). Messung: Kopf-x je Bild F160-F279 innerhalb der Wand, Bildbogen.
+- **B8 Seitliche Sicht bleibt.** ROOM2090 hat keine frontale Zonenkamera in Explosions-/Finisher-Lage; neue Hintergruende
+  werden nicht erfunden. Die Massstabsgrenze (groesster RE2-Schnitt) bleibt.
+Umsetzung B6/B7 in der naechsten Nachbesserung der Spur B (oder, falls B vorher besteht, als eigener Auftrag vor Spur F).
+
+## 2026-10-24 04:01 — Orchestrator-Entscheide nach Nachbesserung A 1 (7db5a6b2 / 0636c300; der Nutzer kann widersprechen)
+
+- **A-E3 main.c-Haken der Spur A angenommen** (wie B5): Schatten-Bedingung Typ 0x24 und 4. Wert von RE15_PLAYER_POS = Band
+  (Tuer-Landungsriegel). Kein Mangel.
+- **A-E4 NPC-Schrittgeraeusche mit Lautstaerke und Richtung (Nachtrag 3 "Fussschritt-Sounds ... auch fuer die NPCs"):** die
+  Abstands-/Seiten-Regel des Originals (FUN_80045a64, Aufruf @0x80045830) wird an re15_audio_footstep angebunden (Spur A;
+  1-5-Zeilen-Haken in audio_pc.c, die Spur D ist integriert -> Konflikt bei der Integration aufloesen). Abnahmepunkt der
+  Spur A: ein NPC-Schritt in 2000 ist leiser/seitlich je nach Abstand und Lage zur Kamera wie im Original (Werte je Abstand
+  aus FUN_80045a64 mit Adressen, Messzeile je Schritt).
+- **A-E5 RBJ-Binder (A OFFEN 9, Beleg A_belege/nb1d/rbj_a3_zensus.txt) gehoert Spur J.** Statisch bindet das Original
+  (FUN_8001b3f8: a3 kumulativ ueber die Records, spaetere Records ueberschreiben, Spieler = letzter Record mit Bit 0) in 12
+  Raeumen anders als der Port (rbj_resolve_slot / re15_emd_parse_rbj): 2000, 3091, 30E0, 4000, 4001, 4010, 5011, 6030,
+  6031 (Spieler orig rec2, Port rec0; Gegner-Slot 1 orig rec2, Port ungebunden), 3060 (Gegner orig {0:1, 2:2}, Port
+  {0:1, 1:2}), 1040/1041 (Spieler orig rec-1). Das ist sehr wahrscheinlich die Ursache der Nutzer-Punkte "3060 Marvins
+  Animation" (Spur J) und "3091-Szene mit staendig falschen Animationen" (Spur K).
+  * **Spur J** baut den Binder byte-true als ERSTEN Schritt (Disasm FUN_8001b3f8 selbst lesen, Adressen im Kopf), misst ihn
+    zur Laufzeit in allen 12 Raeumen (welcher Record spielt je Slot, vorher/nachher) und committet ihn SOFORT als eigenen
+    Commit mit `rbj-binder` in der ersten Zeile der Nachricht. Danach die eigenen Punkte (3060/3061).
+  * **Spur K** aendert den Binder NICHT selbst. Sie beginnt mit den Punkten, die ihn nicht brauchen (30C1 Sherry Modell +
+    Waffe, Analyse der 3091-Szene); sobald J den Commit hat (`git -C <ROOT>/.claude/worktrees/r41_stage3szenen_a log --oneline
+    --grep rbj-binder`), uebernimmt K ihn UNVERAENDERT per `git cherry-pick <hash>` (bei der Integration loest git den
+    gleichen Patch konfliktfrei) und misst 3091 darauf. Abweichungen am Binder meldet K im Dossier an J (nicht selbst aendern).
+- Engine-weite Restpunkte der Spur A (OFFEN 1 ESP-Sprites im ersten Bild nach dem Kamerawechsel, OFFEN 2 RVD-Schaltzeitpunkt,
+  OFFEN 3 Gegner-INIT-Takt, OFFEN 4 allgemeine Szenensperre AUTO/FLAG_CHG) bleiben fuer die naechste Runde (UEBERGABE).
+
+## 2026-10-24 04:52 — Orchestrator-Auftraege nach Nachbesserung E 1 (kein Nutzer-Wortlaut; Spur E)
+
+- **E-N1 Kamera-Flackern ROOM2020 (Nebenbefund der Nachbesserung E 1, Lauf g2):** steht der Spieler bei (9000,-3200), wechselt
+  der Port JEDES Bild zwischen Cut 0 und Cut 2 (F1..F299); im Original-Video steht dieselbe Lage ruhig auf Cut 0. Das ist ein
+  sichtbarer Port-Fehler in einem Raum der Spur E und wird von Spur E behoben: Mechanismus der Zonen-Umschaltung im Original
+  belegen (RVD-Pruefung, Reihenfolge/Hysterese, Adressen), Ursache im Port finden, beheben, vorher/nachher an genau dieser
+  Lage messen (Cut je Bild), dazu ein Riegel. Abnahmepunkt der Spur E.
+- **E-N2 Geh-Stopp waehrend der Frage (Punkt Kurbel):** "Mechanismus nicht gefunden = NICHT fertig". Der Port wechselt beim
+  Anlauf im Gehen zwischen Message_on 0 und 1 ein Bild lang auf Stehen 200, das Original-RAM zeigt waehrend der Frage noch
+  Gehen. Den Geh-Stopp (Kommando 1, 0x80031de8) disassemblieren, das Original nach dem Ja im Geh-Fall messen (DuckStation,
+  Ja-Eingabe zuverlaessig machen) und den Port angleichen oder mit Messung + Adresse als gleich belegen.
+
+## 2026-10-24 05:25 — Orchestrator-Entscheide C-E1..C-E3 (Abnahme C 0; der Nutzer kann widersprechen)
+
+- **C-E1 (Mangel M2, Abhaengigkeit von Spur A):** Der AUTO-AOT-Haken bleibt Code der Spur A (aot_common.c +
+  re15_wasser20b0_r41_auto_aot); Spur C uebernimmt ihn NICHT (auch nicht per cherry-pick — er haengt an A's Modul). Spur C
+  baut stattdessen den Ketten-Riegel `integration_r41_ventilkette_kette` (Ventile -> Ost-Tuer zu Fuss -> 20B0-Szene bis
+  Szenen-Ende/letterbox zu und (3,235)=1 -> Leiter -> 2050) und registriert ihn in probes/r41_ventilkette.cmake NUR, wenn
+  A's Modul im Baum liegt (`if(EXISTS ${...}/engine/src/wasser20b0_r41.c)`), sonst mit einer Statuszeile "uebersprungen: Spur A
+  fehlt". Der Orchestrator misst die ganze Kette im Integrationsbaum A+C; M2 gilt fuer die Abnahme der Spur C als erfuellt,
+  wenn der Riegel existiert, im C-Baum sauber uebersprungen wird und sein Ablauf im Dossier beschrieben ist.
+- **C-E2 (Mangel M5, geflutetes 2030):** Bis der Rechner 2080 entleert hat (Bit 107), sind die Zugaenge ins geflutete 2030
+  (20B0 Ost-Tuer, 2070 Slots 1/2, jede weitere Tuer in den Ring) gesperrt: Aktionstaste -> Port-Text, kein Raumwechsel.
+  Id-Zuteilung (VERTRAG 1.2 ergaenzt): 20B0/20B1 Id 41, 2070/2071 Id 40 (Wortlaut englisch wie das Spiel, Vorschlag bis zur
+  Freigabe durch den Nutzer). Nach Bit 107 wieder offen. Riegel: Sperre vor 107, offen nach 107, je Zugang.
+- **C-E3 (Mangel M6, Vertrag):** Die Haken in platform/pc/main.c (4 Stellen) und game_step_common.c (1 Zeile) sowie die
+  Querbezugs-Flags in test_r36_dachkiste.cmake / test_r37_itemband.cmake sind angenommen (wie B5), weil sie klein,
+  markiert und durch die neue Sperre noetig sind. Kein Mangel mehr.
