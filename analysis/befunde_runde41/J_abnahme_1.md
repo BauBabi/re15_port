@@ -45,8 +45,9 @@ Code-Gleichheit RAM = PSX.EXE (Auslieferungsstand) in jedem gelesenen Stand: Stu
 0x80050f00, 0x800369f8, 0x80040b20, 0x80036b68, 0x80050be8, Tabelle 0x800741e8 — alle gleich.
 PLW-Dateien selbst geparst: PL00W01.PLW Verzeichnis @0x59a0, EDD @+0x8, 14 Clips, **Clip 6 = 10 Bilder, Eintraege
 EDD+0x2e4..0x30c, letztes Bild EDD+0x308**; PL04W01.PLW EDD @+0x8, 14 Clips, **Clip 6 = 10 Bilder, EDD+0x3c0..0x3e8, letztes
-Bild EDD+0x3e4**. (PL00W00/W01/W02 und PL04W00/W01/W02 sind byte-gleiche Dateien; der PLW-Puffer 0x801d7700 im RAM gleicht
-ihnen bis auf 89 Bytes relokierte Zeiger.)
+Bild EDD+0x3e4**. (PL00W00/W01/W02 und PL04W00/W01/W02 sind byte-gleiche Dateien. Der PLW-Puffer 0x801d7700 im RAM von
+o3060_s2_t03 ist in EDD (Datei 0x8..0x464) und EMR (0x464..0x49cc) byte-gleich mit PL00W01.PLW; die 89 abweichenden Bytes liegen
+nur in 0x49d0..0x529b = Bloecke 3/4 des Verzeichnisses @0x59a0, nicht in den Animationsdaten.)
 - `J41/orig/o3060_s2_t03_6.5s.sav` (ROOM3060): Spieler **Modell 0x0d (Marvin), Waffe 1, cmd 4 / Sub 2 / Phase 2 / Clip 6, +0x95 0,
   +0x168 = +0x174 + 0x308 = PL00W01-Clip-6 Bild 9 (letztes)**, +0x170 801d7b64 / +0x174 801d7708, (2063,-17192) ry 1601.
   t02 (5,0 s): cmd 4 / Sub 6 / Clip 1 (+0x168 = EDD+0xc8). t04 (8,0 s): **Modell 0x00 (Leon), cmd 0 / Sub 0 / Phase 0** bei
