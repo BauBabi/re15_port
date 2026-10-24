@@ -600,3 +600,118 @@ gegenseitig ueberschreiben:
   API (re15_gr2_kanister_setzen) -> Aufnahme/Explosion/Kiefer-Tod (Spur B, fertig).
 - Gemeinsame Beruehrungspunkte nur ueber Bits/APIs (F: Bits 110-113, Text-Ids 2090/2091 42-46; G: Bits 114-119, Ids 2080/2081
   42-47), keine Aenderung im Modul der anderen Spur; Treffer-Zaehler fuer G's Ausloeser liest G aus B's API.
+
+## 2026-10-24 19:31 — Nachtrag 16 (Wortlaut + Auswahl-Antwort; Ventil-Sicherungskasten in ROOM2010, Spur C — ersetzt Nachtrag 10)
+
+> Das einzige was ich noch reichlich schlecht finde ist das der Charakter so etwas sagen muss wie - "Ich muss mich vorher
+> noch umschauen" bis er die SIcherung genommen hat. So etwas gibt es im ganzen Spiel nicht und ist komisch.... Kannst du
+> evtl. noch einen zweiten Sicherungskasten irgendwo einbauen - außerhalb des Raumes, wo man die Sicherung zuerst einsetzen
+> muss. Macht man das geht die Kamera auf die Ventile und man hört ein unlock geräusch, das man sie dann drehen kann. Und
+> dann kann man die Sicherung aus dem Kasten wieder raus nehmen und in den 2. Sicherungskasten packen? Irgendwie sowas? Das
+> mach insgesamt viel mehr sinn....
+
+Frage des Orchestrators: Wo soll der Kasten hin (angeboten: 2070 vor der Ring-Tuer / 2030 am Ring)? Antwort:
+
+> Nein, weder 2070 noch 2030, denn man muss ja, nachdem man das Rätsel gelöst hat, und der Raum geflutet wurde die
+> Sicherung heraus nehmen können, um danach damit zum anderen Generator zu gehen. Ist sie raus, sollen die valves wieder
+> blockiert werden. Nein, ich glaube im ROOM 2010 wäre das vielleicht am günstigsten?
+
+Folgen (Orchestrator, Umsetzung Spur C):
+1. Neuer Ventil-Sicherungskasten in ROOM2010/2011 (Lage an einer passenden Wand aus den 2010-Hintergruenden belegen;
+   Kasten-Modell/Bild wie der Original-Kasten in 2060, falls vorhanden — Beleg). 2010 ist vor UND nach der Flut ueber
+   2000/20B0 Slot 2 erreichbar -> kein Softlock.
+2. Sicherung einsetzen (Frage im Original-Stil, Sicherung verlaesst das Inventar) -> "Kamera auf die Ventile" + Unlock-
+   Geraeusch (RE2/RE1.5-Ton mit Beleg): als kurze Einstellung der 2030-Ventil-Kamera (z. B. Hintergrund der Ventil-Kamera als
+   Standbild wie die Nahaufnahmen der Runde 40, oder kurzer Raumwechsel hin und zurueck — Form mit Beleg/Begruendung im
+   Dossier) -> Ventile in 2030 sind frei, solange die Sicherung im Kasten steckt.
+3. Sicherung herausnehmen (jederzeit, auch nach der Flut) -> zurueck ins Inventar, Ventile wieder blockiert. Danach geht
+   sie wie im Original in den Generator-Kasten 2060 ((3,144) sub19 @0x0169E).
+4. Die Ventile ohne Sicherung im 2010-Kasten: neutraler Text OHNE erfundenes Wissen und OHNE "look around" (z. B. "The
+   valve won't turn." / "It's locked." — Vorschlag). Der Gate-Text Id 49 und die Bedingung "Sicherung aufgehoben" aus
+   Nachtrag 10 entfallen; Nachtrag 9 (Bruecke vorher unten) bleibt (die Ventile liegen im unteren Bereich).
+5. Nachrichten-Ids: 2010/2011 Ids 40-44 fuer C (VERTRAG 1.2). Bits: aus C's Zuteilung (z. B. 107 ist mit dem Dokument
+   belegt -> naechste freie nach Zensus, im VERTRAG nachtragen).
+6. Riegel: ohne Kasten-Sicherung kein Ventil; mit ja; nach der Flut Herausnehmen moeglich und Generator 2060 erreichbar
+   (ganzer Weg zu Fuss, Leon UND Elza).
+
+## 2026-10-24 19:44 — Nachtrag 17 (Wortlaut; Ton beim Hereinkommen der Zombies in 2080, Spuren G und F)
+
+Bezug (Orchestrator-Meldung): "Metalltuer-Ton und 8 Zombies" (Spur G, 2080).
+
+> Muss natürlich ein knallen sein, als ob die Zombies rein brechen, so wie bei STAGE1 von Elza/Leon am Ende in der Cutscene
+> nach Irons.
+
+Folgen (Orchestrator): Kein Schliess-Ton, sondern der KNALL des Hereinbrechens, wie in der STAGE1-Endszene nach Irons
+(Leon und Elza). Spur G (und Spur F fuer die Einstellung "oben in 2080 kommen die Zombies herein" in der 2090-Szene) belegt
+die genaue Original-Stelle (Raum, SCD-Offset des Ton-Befehls / Szenen-Ereignis, Ton-Id bzw. VAG/VAB-Satz) und verwendet
+denselben Ton (gleiche Datei/Stimme, Ton-Datei des Ports im Dossier fuer den Nutzer nennen). Beide nutzen denselben Ton.
+
+## 2026-10-24 19:53 — Nachtrag 18 (Wortlaut; vier Punkte zur Ventilkette, Spur C)
+
+> 4 Dinge:
+>
+> - Das Poster mit der Anleitung der Valves die gedreht werden müssen entspricht nicht dem Stil des restlichen Spieles wie
+>   die Dinge dort aussehen. Das sieht er aus wie aus Monkey Island..... Wenn schon muss du den Stil des Rest des Spieles
+>   damit treffen
+> - in ROOM 2050 bei den neuen Rätsel mit den hebeln finde ich das mit den Lampen unten gut. ABER, bei den ausgewählten
+>   hebel, muss dann auch der Heben runter gehen wenn er ausgewählt wurde.
+> - Wenn an den valves gedreht wird in ROOM 2030, dann muss auch die valve dreh animation kommen. Die kannst du aus Resident
+>   Evil 2 übernehmen.
+> - Bei der Minute in ROOM 2030 bis der Raum flutet, muss es einen typischen Timer geben wie aus den Rest des Spiels, der dann
+>   abläuft. Außerdem brauche ich den Text noch mal, damit ich den voiceover dafür aufnehmen kann. Also - Alarm, so wie am
+>   Spiel Ende immer und dann das Voiceover beim Text.
+
+Folgen (Orchestrator, Umsetzung Spur C in der naechsten Nachbesserung):
+1. Plakat im Stil des Spiels: Vorbild sind die echten Nahaufnahmen/Dokumente des Spiels (RE1.5-Nahaufnahmen der Runde 40,
+   RE2-Aushaenge/Dokumente aus info/re2leon bzw. extracted_re2_dokumente) — Papier/Textur, Schrift (Schreibmaschine/Druck wie
+   die Spiel-Dokumente), Farben, Abnutzung; keine Comic-/Zeichentrick-Optik. Vorher/Nachher-Bild + Vergleich mit 2 echten
+   Spiel-Nahaufnahmen im Dossier. Inhalt (Reihenfolge/Farben/Nummern) bleibt wie freigegeben (Nachtrag 15).
+2. ROOM2050 Schaltpult: die Lampen bleiben; der ausgewaehlte/umgelegte Hebel muss sichtbar nach unten gehen (Hebel-Stellung
+   je Zustand, Form wie die Original-Hebel 11F0/2060 mit Beleg; Grafik aus dem Hintergrund/den Original-Modellen ableiten).
+3. ROOM2030 Ventile: beim Drehen spielt die Ventil-Dreh-Animation aus Resident Evil 2 (RE2-Spieler-Clip des Ventilrads,
+   Raum/RBJ/EDD mit Offsets belegen, wie Spur B die RE2-Clips uebernommen hat; ggf. das Rad selbst mitdrehen).
+4. ROOM2030 Countdown: die 60 s laufen als typischer Spiel-Timer ab (Anzeige wie der Countdown am Spielende — Original-
+   Timer-UI belegen), dazu der Alarm wie am Spielende (Original-Ton belegen), und beim Warntext die Sprachausgabe des Nutzers.
+   Datei-Platz fuer die Aufnahme des Nutzers: synchro/STAGE2/room2030/main46.wav (Elza: room2031/main46.wav; fehlt die Datei,
+   kein Ton — der Port darf sie nicht erzeugen). Wortlaut des Textes Id 46 wird dem Nutzer genannt.
+
+## 2026-10-24 19:55 — Nachtrag 19 (Wortlaut; Warntext 2030 Id 46, Spur C)
+
+> Ändere den Text zu: WARNING: The water will rise in one minute. Please leave the room immediately!
+
+Folgen (Orchestrator): Text 2030/2031 Id 46 = "WARNING: The water will rise in one minute. Please leave the room
+immediately!" (Wortlaut exakt; nur der Zeilenumbruch nach der Breite des Nachrichtenfensters). Die Sprachaufnahme des Nutzers
+kommt nach synchro/STAGE2/room2030/main46.wav bzw. room2031/main46.wav (Nachtrag 18 Punkt 4).
+
+## 2026-10-24 20:34 — Orchestrator-Entscheid E-E5 (Fragen der Nachbesserung E 4; der Nutzer kann widersprechen)
+
+- Der 2-Zeilen-Haken der Spur E in engine/src/game_step_common.c (vor der Zweig-Kette des Spieler-Dispatchers; Renn-Stopp
+  endet, wenn ein Durchlauf keinen Kommando-1-Schritt macht — Original +5/+6 @0x8003272c/@0x800328fc, Ueberschreiber
+  @0x80043544/@0x80043610/@0x80038ea8/@0x80041f90/@0x80041bb0/@0x80102640/@0x8011c38c) ist angenommen (Erweiterung von E-E1/E-E2).
+- Die dritte benannte Ausnahme der Gorilla-Sonde (WESTBLOCK x 3800..6200 / z 9900..12500) ist bestaetigt, weil dort auch die
+  Original-Regel haengt (AUS 5880 in 15 Seeds) — kein Rueckschritt der Spur E. Die drei Gorilla-Haenger (TASCHE, SUB7,
+  WESTBLOCK; zombieki_r36.c, Runde-36-PORT-WAHL) sind Folgeauftrag (UEBERGABE §3b).
+
+## 2026-10-24 21:41 — Nachtrag 20 (Wortlaut; Lage der Zombies in 2080, Spuren G und F)
+
+> In 2080, nachdem die Zombies durch die Tür gebrochen sind, sollen sie oberhalb von der Treppe laufen, nicht unten.
+
+Folgen (Orchestrator): Die 8 Zombies (Spur G, ROOM2080/2081) brechen durch die Tuer herein und laufen auf der OBEREN Ebene
+(oberhalb der Treppe), nicht unten. Ebene/Band und Tuer aus der Geometrie belegen (SCA-Zellen/Baender, Tuer-Satz), Wege der
+Zombies auf der oberen Ebene halten (kein Abstieg ueber die Treppe), Bildbeleg aus den 2080-Kameras. Spur F zeigt in der
+2090-Einstellung "oben in 2080 kommen die Zombies herein" dieselbe Lage.
+
+## 2026-10-24 22:25 — Nachtrag 21 (Wortlaut; Zugang zum Alligator und Zweck des Schluessels, Spuren F und G)
+
+> Nur für den fall das du es falsch hast - man kommt über die Leiter zum Aligator, nicht über das Tor. Das Tor soll
+> verschlossen sein, und dann mit den Schlüssel den man vom Aligator bekommt geöffnet werden!
+
+Folgen (Orchestrator):
+- Zugang zu ROOM2090/2091 im Spielablauf: ueber die LEITER aus 2080 (ROOM2080 Slot 1 @0x00BC2 -> 2090 (-8200,0,-25550), frei
+  nach dem Original-Rechner (3,245)); die 2090-Ankunftsszene (Spur F) beginnt bei dieser Ankunft.
+- Das TOR zwischen 2090 und 20A0 (2090 Slot 1 @0x009B6 <-> 20A0 Slot 0 @0x01746, Rolltor-Bereich 20A0) ist VERSCHLOSSEN
+  und oeffnet sich erst mit dem Schluessel, den man vom Alligator bekommt (Spur F: Schluessel nach dem Tod blinkend bei der
+  Leiche; Tuer-Sperre/Schluessel-Item in Original-Form mit Beleg, Item-/Taken-Bit nach Zensus, Bits aus F's Zuteilung
+  110-113). Damit ist die offene Frage "welche Tuer oeffnet der 2090-Schluessel" beantwortet. Weg danach: 2090 -> Tor -> 20A0
+  -> (Original sub10 (3,206)) -> 11A0 -> STAGE3.
+- Spur G: die Kanister-Szene setzt voraus, dass der Spieler ueber die Leiter in 2090 ist (nicht ueber 20A0).
