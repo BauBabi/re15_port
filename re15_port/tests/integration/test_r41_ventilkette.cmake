@@ -7,9 +7,10 @@
 # die umgelenkte Ost-Tuer (echter Tuer-Feuerpfad re15_aot_fire_slot -> Raumlader) und den Raumwechsel nach ROOM20B0
 # mit dem Setzen der Bits 103 + 100; dazu die Leiter in 2000 als Sperrtext (kein Raumwechsel nach 2050).
 #
-#   A  ROOM2030 per Debug-Sprung, RE15_PLAYER_POS (6550,-100) Blick -x (2048) = auf die Ventile 04/05/06 (der
-#      Debug-Sprung selbst stellt den Spieler mit Blick +x = auf die Ost-Tuer; gemessen 2026-10-23 21:52: Aktion bei
-#      F330 feuerte die Tuer Slot 0 nach 2070). Gemessen 21:56 (RE15_STATE_LOG): F330 Aktion -> Frage 45 oeffnet F331
+#   A  ROOM2030 per Debug-Sprung, RE15_PLAYER_POS (-1000,7300) Blick +z (3072) Band 1 = am Sued-Landeplatz vor den
+#      Ventilen 09/08 (Nachbesserung 3, Nachtrag 9: die nummerierten Ventile liegen im unteren Bereich, Dossier §0d B3),
+#      mit gesenkter Bruecke + aufgehobener Sicherung (Bits 101/102, (3,108) = Bedingung der Nachtraege 9/10).
+#      Taktung wie zuvor gemessen (21:56, RE15_STATE_LOG, damals am Ring-Platz): F330 Aktion -> Frage 45 oeffnet F331
 #      (zwei Seiten + Ja/Nein); F453 + F531 spulen/blaettern, F654 = Ja -> 45 zu F655, Warnung 46 oeffnet F657;
 #      F777 schliesst die Warnung (im Flut-Lauf: Druck 120 Bilder nach dem Oeffnen schliesst) -> Marker -> Zaehler.
 #      F900 RE15_FIRE_AOT=0 (die umgelenkte Ost-Tuer feuert ueber den echten Tuerpfad) -> ROOM20B0 geladen,
@@ -18,7 +19,8 @@
 #      liegt im Leiter-Rechteck x -27600..-26600 @0x0169E, bei -25900 nicht - gemessen 22:12): F330 Aktion ->
 #      Sperrtext 40, KEIN Raumwechsel nach ROOM2050 bis zum Ende (F520).
 #   C  Die Flut am Spiel (gemessen 2026-10-23 22:00, Dossier §4 "Flut am Spiel", C_belege/flut_echt_sheet.png):
-#      Spieler (6550,-100) Blick +z (3072; Vorwaertspunkt trifft keinen Platz), die drei Spinnen als Spielzustand
+#      Spieler (6550,-100) am Ring Blick +z (3072; Vorwaertspunkt trifft keinen Platz), Bits 101/102 + (3,108) (seit
+#      Nachbesserung 3 Bedingung des Ventilraetsels), die drei Spinnen als Spielzustand
 #      "schon getoetet" ueber ihre Kill-Bits (Sce_em_set pc[7] = 0x9b/0x9c/0x9d @0x01C18/@0x01C2C/@0x01C40, EM-Status-
 #      Gate FUN_800420a0 @0x80042120-38, Zone 7 = STAGE2) - kein Haken, kein Spielverhalten. F330 RE15_FIRE_AOT=14
 #      (der Ventil-Platz, Ereignis 26) -> Frage 45; Druecke alle 4 s ab F450: F696 Ja (46 oeffnet F699), F819 zu
@@ -34,8 +36,11 @@
 #      misst die Farbe 4 Bilder vor und 4 Bilder nach dem Todesbild (Werkzeug test_r41_ventilkette ppm): vorher Rot und
 #      Gruen >= 15 (unverschleiert), nachher Rot und Gruen <= 4 und Blau >= 20 (Rot+Gruen abgezogen, Blau bleibt).
 #
-# Die Spinnen (main00 Switch auf den Eintritts-Cut, Case 0 @0x01C12) greifen in A nach wenigen Sekunden an; A bleibt
-# deshalb unter 35 s im Raum (Zaehler-Start reicht); C laeuft ohne sie (Kill-Bits, s. o.).
+#   D  Nachtraege 9/10 (Nachbesserung 3): derselbe Ventil-Platz ohne die Sicherung ((3,108) = 0; Bits 101/102 gesetzt)
+#      -> Port-Programm 2030_ventile_vorher, Text 49, KEIN Zaehler, KEINE Flut.
+#
+# Die Spinnen (main00 Switch auf den Eintritts-Cut, Case 0 @0x01C12) stehen am Ring; A bleibt unter 35 s im Raum
+# (Zaehler-Start reicht); C und D laufen ohne sie (Kill-Bits, s. o.).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_R41C_WERKZEUG=<test_r41_ventilkette> -DWORKDIR=<dir> -P test_r41_ventilkette.cmake
 # =============================================================================
@@ -90,7 +95,8 @@ re15_start_spiel(_rva 300
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
     RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_DEBUG_JUMP=2030@240
-    "RE15_PLAYER_POS=6550,-100,2048"
+    "RE15_PLAYER_POS=-1000,7300,3072,1"
+    "RE15_SET_FLAG=9:101,9:102,3:108"
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330
     "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W2.5,A0.1,W4,A0.1,W4,A0.1,W4"
     RE15_MSG_LOG=1
@@ -103,7 +109,7 @@ if(NOT EXISTS "${WORKDIR}/debug.log")
 endif()
 file(READ "${WORKDIR}/debug.log" _dbg)
 _muss("${_dbg}" "JUMP -> 203 TREATMENT POOL (ROOM2030)" a "Sprung nach 2030")
-_muss("${_dbg}" "[ventilkette41] ROOM2030: Bruecke obj 0 oben y -5400" a "Bruecke oben beim Raumstart")
+_darf_nicht("${_dbg}" "[ventilkette41] ROOM2030: Bruecke obj 0 oben" a "mit Bit 102 steht die Bruecke unten")
 _muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile" a "Aktion an den Ventilen startet das Programm")
 _muss("${_dbg}" "[msg] room=2030 id=45" a "Frage 45")
 _muss("${_dbg}" "[msg] room=2030 id=46" a "Warnung 46 (Ja gewaehlt)")
@@ -150,7 +156,7 @@ re15_start_spiel(_rvc 420
     RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_DEBUG_JUMP=2030@240
     "RE15_PLAYER_POS=6550,-100,3072"
-    "RE15_SET_FLAG=7:155,7:156,7:157"
+    "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108"
     "RE15_FIRE_AOT=14@330#2030"
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=450
     "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W4,A0.1,W4,A0.1,W4,A0.1,W4,A0.1,W4,A0.1,W4,A0.1,W4"
@@ -251,5 +257,32 @@ if(_nr GREATER 4 OR _ng GREATER 4 OR _nb LESS 20)
     message(FATAL_ERROR "r41_ventilkette[c]: Ertrink-Blende F${_bild_nach} nicht blau (${_rgb_nach}; erwartet Rot/Gruen <= 4, Blau >= 20 - ABR 2 Maske Rot+Gruen @0x174a)")
 endif()
 
+# ---- D: Ventile ohne Sicherung (Nachtraege 9/10) ---------------------------------------------------------------------
+set(WORKDIR "${_basis}_d")
+file(MAKE_DIRECTORY "${WORKDIR}")
+re15_start_spiel(_rvd 240
+    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+    RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+    RE15_DEBUG_JUMP=2030@240
+    "RE15_PLAYER_POS=-1000,7300,3072,1"
+    "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102"
+    "RE15_FIRE_AOT=14@330#2030"
+    RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=450
+    "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W4,A0.1,W4"
+    RE15_MSG_LOG=1
+    "RE15_EXIT_AT=900#2030"
+    "${RE15_PC_EXE}")
+if(NOT EXISTS "${WORKDIR}/debug.log")
+    message(FATAL_ERROR "r41_ventilkette[d]: kein debug.log (exit=${_rvd}, ${WORKDIR})")
+endif()
+file(READ "${WORKDIR}/debug.log" _dbgd)
+_muss("${_dbgd}" "[fire-aot] slot=14" d "Ventil-Platz (Ereignis 26) gefeuert")
+_muss("${_dbgd}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile_vorher" d "ohne Sicherung kein Ventilraetsel")
+_muss("${_dbgd}" "[msgtext] room=2030 id=49 \"Numbered valves. If I turn them, this whole level will be flooded.I should look around here first.\"" d "Text 49")
+_darf_nicht("${_dbgd}" "Port-Programm 2030_ventile\n" d "nicht das Ventilraetsel")
+_darf_nicht("${_dbgd}" "Zaehler laeuft" d "kein Zaehler ohne Sicherung")
+_darf_nicht("${_dbgd}" "[msg] room=2030 id=46" d "keine Warnung ohne Sicherung")
+_muss("${_dbgd}" "EXIT_AT: Bild" d "Endbild erreicht")
+
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_ventilkette: A (2030 -> Ost-Tuer -> 20B0, Bits 103+100), B (Leiter 2000 = Text 40) und C (Zaehler ${_d_zaehler} -> Flut -> tot nach ${_d_tod}, Blende ${_rgb_vor} -> ${_rgb_nach}) bestanden")
+message(STATUS "r41_ventilkette: A (2030 Sued-Landeplatz -> Ventile -> Ost-Tuer -> 20B0, Bits 103+100), B (Leiter 2000 = Text 40), C (Zaehler ${_d_zaehler} -> Flut -> tot nach ${_d_tod}, Blende ${_rgb_vor} -> ${_rgb_nach}) und D (ohne Sicherung Text 49, kein Zaehler) bestanden")

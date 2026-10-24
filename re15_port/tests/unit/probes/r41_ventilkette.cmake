@@ -54,15 +54,33 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
     endif()
 endif()
 
-# Nachbesserung 2 (Abnahme 1 Mangel N1, Orchestrator-Entscheid C-E2b): der Weg zum Rechner 2080 nach der Flut zu Fuss -
-# 2050 -> 2020, 2030 Nordgalerie -> 2060, 2040 Halle -> Galerie -> 2070 Nordgang -> 11A0 bis zur ORIGINAL-Sperre slot 4
-# ((3,206), @0x00FEA/@0x00FEE; Leon + Elza), Gegenprobe (3,206)=1 -> 20A0, 2080 ab der 2090-Tuer -> Rechner -> Bit 107.
-# Eigener exe-Kopie-Praefix re15_pc_r41cw_.
+# Nachbesserung 3 (Abnahme 2 N1/N2/N4; Nachtraege 7/9/10): die Kette in 2030 und der Weg nach der Flut zu Fuss, je Figur -
+# v1 Bruecke, v2 Ventile erst mit Sicherung + Flucht in 60 s, g1/g2 Sicherung + Generator 2060 (Original-Raetsel, (3,126)),
+# w1 20B0 -> 2050 -> 2020 -> 2030 Nordgalerie (geflutet) -> 2060, w3 2060 -> 2030 (Relinghoehe) -> 2020 -> 2050 -> 20B0,
+# w4 20B0 -> Ost-Tuer -> 2030 Ring -> Lift B -> 2080 -> Rechner (Original) -> 2090. Eigene exe-Praefixe re15_pc_r41cw<figur>_.
 if(RE15_BUILD_PC AND TARGET re15_pc)
-    add_test(NAME integration_r41_ventilkette_weg
+    foreach(_r41c_fig leon elza)
+        set(_r41c_name integration_r41_ventilkette_weg)
+        if(_r41c_fig STREQUAL "elza")
+            set(_r41c_name integration_r41_ventilkette_weg_elza)
+        endif()
+        add_test(NAME ${_r41c_name}
+                 COMMAND ${CMAKE_COMMAND}
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DFIGUR=${_r41c_fig}
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_weg_${_r41c_fig}
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_weg.cmake)
+        set_tests_properties(${_r41c_name} PROPERTIES TIMEOUT 2400 RUN_SERIAL TRUE)
+    endforeach()
+endif()
+
+# Nachtrag 6 (C-E2c widerrufen): die ORIGINAL-Sperre ROOM11A0/11A1 slot 4 ((3,206), @0x00FEA/@0x00FEE) bleibt — 2040 Halle ->
+# 2070 Nordgang -> 11A0 bis zur Sperre (Leon + Elza), Gegenprobe (3,206)=1 -> 20A0 (vormals Laeufe a/b/c von _weg).
+if(RE15_BUILD_PC AND TARGET re15_pc)
+    add_test(NAME integration_r41_ventilkette_sperre
              COMMAND ${CMAKE_COMMAND}
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
-                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_weg
-                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_weg.cmake)
-    set_tests_properties(integration_r41_ventilkette_weg PROPERTIES TIMEOUT 1800 RUN_SERIAL TRUE)
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_sperre
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_sperre.cmake)
+    set_tests_properties(integration_r41_ventilkette_sperre PROPERTIES TIMEOUT 1500 RUN_SERIAL TRUE)
 endif()
