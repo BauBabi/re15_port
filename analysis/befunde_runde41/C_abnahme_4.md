@@ -122,6 +122,10 @@ Zustand nach der Flut + Strom (Bits 103/100/101/102/106, (3,108), (3,126), (3,14
   Lift B: `FLAG (3,220)` 0 -> 1; Suedgalerie -> `DOOR FIRE slot=1 rect=(-7700,6400,...)` -> `loaded room2080.rdt` -> Rechner = ORIGINAL
   (`id=0 "From here maybe I can control the water level.Will you operate the computer?"`, `FLAG (3,245)` 0 -> 1, kein Port-Programm) ->
   `DOOR FIRE slot=1 rect=(-9150,-25650,...)` -> `loaded room2090.rdt`.
+* Elza `p6_elza` Zeile fuer Zeile gleich: `loaded room20b1.rdt` -> Tuer Slot 3 -> `loaded room2031.rdt` -> `ROOM2031: Strom (3,126) ->
+  Wasser knapp unter der Absperrung y -5350 ...`, `[prop-render] pi=4 oid=0x04 pos=(0,-5350,0)` -> `room=2031 id=48` -> `FLAG (3,220)`
+  0 -> 1 -> `loaded room2081.rdt` -> `room=2081 id=0 "From here maybe I can control the water level..."` -> `FLAG (3,245)` 0 -> 1 ->
+  `loaded room2091.rdt`.
 
 ### FL — Punkt 3: Zeit abgelaufen und noch im Raum -> Flut -> Tod mit Ertrink-Effekt (Leon `fl`; ausgeloest ueber die richtige Folge)
 Start Sued-Landeplatz (Bits 101/102 + (3,108)), Wegplan `<a4>/plaene/fl.txt`: 09/07/02/01 zu Fuss -> `RICHTIG` -> `id=46` -> `Zaehler
