@@ -1841,3 +1841,33 @@ Kopf-Massstab (712 gegen 691) - der RE2-Finisher-Schnitt Cut 7 ist frontal (+1,0
   CHASE mit Band 1) und in den exe-Laeufen E1 (Tuerweg 20A0 -> 2090), MN3, BL3, A2 und EZ3 (Elza) liegt das Opfer in allen 254
   Finisher-Bildern wie authored am gezeichneten Kiefer (Kiefer-Abstand <= 3), im Wasser und im Bild; Bildbelege E1 vorher/nachher.
   Riegel: unit_r41_re2gator_maul (GUARD-Lagen, gezeichneter Kiefer mit Haken), integration "belagerung" prueft nach dem Tod.
+
+## 14. Nachbesserung 6 (Abnahme 5, B_abnahme_5.md; Beginn 2026-10-24 16:3x, HEAD 9de8e9f4)
+
+Neuer Agent (Nachbesserung 6). Baum sauber (`status --porcelain` leer), HEAD 9de8e9f4 (= Code-Stand 73979140 der Nachbesserung 5 +
+Abnahmebericht 5). Der Hinweis "FORTSETZUNG Nachbesserung 5" im Auftrag ist ueberholt: NB5 ist mit 73979140 abgeschlossen und von
+Abnahme 5 gemessen. Der gebaute Stand (re15_pc.exe 15:11, Abnahme 5 §1) ist der Code-Stand 73979140 - seither kein Code-Commit.
+Die Laeufe der Abnahme 5 (Pruefer-Scratchpad `B41abn5/mess/<Lauf>/`, Bilder `B41abn5/*.png`) gelten als "Messung vorher" und werden
+nicht wiederholt. Eigene Laeufe/Sonden unter `.../scratchpad/B41nb6/`.
+Pflichtlektuere: B_abnahme_5.md (vollstaendig, M1-M3 + H1-H4), AUFTRAG.md (Wortlaut, B1-B9, Nachtrag 6), VERTRAG.md, Dossier §13,
+Memory reai-v2-gator-bosskampf.md.
+
+Maengel (Abnahme 5 §9):
+- **M1** nach dem P3-Ende steht das Opfer bis zum Game Over aufrecht neben dem Gator (E1 F882-F902, A2 F652-F670, MN ab F842, BL ab
+  F782, Elza F882-F902); Ursache FRESSEN-Ende nach 120 P3-Bildern (enemy_ai_boss_gator.c `g->timer <= 340` + `victim_force_end`).
+  RE2-P3 @0x801011c4-e4 schreibt keine Phase. Verlangt: Opfer bis zum Raumwechsel im Maul, Riegel bis zum letzten 2090-Bild,
+  Bildbeleg F878-F902 vorher/nachher.
+- **M2** die Buehne nimmt oft die laufende Kamera (G1: Cut 0 durchgehend, Gator dreht 101 Grad, Leon springt 8100; G2 Cut 6, Leon
+  3500; Sonde 10090/24295 Wasser-Bisslagen). RE2 schneidet in P0 (@0x80100fec-ff4). Verlangt: Umsetzen nie in der laufenden
+  Kamera, Riegel Buehnen-Kamera != laufende Kamera fuer alle Bisslagen, G1 vorher/nachher.
+- **M3** in P1 der Cut-4-Buehne verdeckt die Raum-Leiche Obj_model_set[3] (-25,-1740,-7423) das Opfer (E1 F628-F641, MN F588-F600,
+  Elza F628-F640). Verlangt: Opfer in P1 sichtbar (Buehne beruecksichtigt Raum-Objekte ODER belegte Entfernung durch Spur F), Dossier
+  §13.7 richtigstellen (Verdecker = Raum-Leiche, nicht Spinne).
+
+Plan: (1) RE: RE2-P3 + Leon-Handler Phase 3 (Opfer geparkt?) selbst lesen; RE2-P0-Schnitt (Cut 7/14, RVD ROOM40A0: ist Cut 7 eine
+Zonenkamera?). (2) M1: P3 ohne Ende (Takt-Zaehler im Clip-11-Kreis), Opfer bleibt im Opfer-Modus bis zum Raumwechsel; Messzeile
+Summenzeile am Game-Over-Uebergabebild. (3) M2: Buehnen-Suche schliesst die angezeigte und die angeforderte Kamera des Biss-Bildes aus
+(PORT-WAHL, Form RE2: P0 = Sperre + Schnitt). (4) M3: Buehnen-Suche prueft die Sichtlinien Kamera -> Opfer-Knochen/Kopf gegen die
+Raum-Objekte (Obj_model_set, MD1-Huelle unter der Objekt-Drehung) in jedem Bild der Bahn; Messzeile "Opfer frei". (5) Riegel maul (P3
+ohne Ende, bis 600 Bilder), buehne (jede laufende Kamera, Raum-Objekte), integration belagerung bis zum Raumwechsel (gr=1 je Bild).
+(6) exe E1/G1/G2/MN/A2/BL/Elza nachher, Bildbelege. (7) gezielte Tests, Abschluss.
