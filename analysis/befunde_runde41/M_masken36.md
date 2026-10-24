@@ -16,7 +16,7 @@ Baum: .claude/worktrees/r41_masken36 (Zweig r41/masken36, Basis b28c7236 = maste
 - [x] Punkt 2: Sichtpruefung 53 Masken (2.2), ROOM2020 Cut 3 = richtig (2.1), Fehler ROOM20A0 Cut 12 behoben (2.3)
 - [x] Tests (probes/r41_masken36.cmake), gezielte Laeufe 41/41
 - [x] Nachbesserung 1 (Abnahme 0) und Nachbesserung 2 (Abnahme 1): Abschnitte unten; NB2 = 3D-Urteil fuer Rechtecke mit
-      Zellen-Modell + Zuordnung von Hand (210 Rechtecke wieder drin, 962 144 Punkte), Restliste fuer den Nutzer
+      Zellen-Modell + Nahfeld-Sperre + Zuordnung von Hand (164 Rechtecke wieder drin, 956 982 Punkte), Restliste fuer den Nutzer
 
 ## Punkt 1 — STAGE3-6-Masken "ueberall Loecher"
 
@@ -429,7 +429,8 @@ Keine Messung der Abnahme wird wiederholt; ihre Zahlen werden zitiert. Punkt 2 (
       ferner"-Modelle - 80 Rechtecke (Leon) wieder drin, u.a. die Lok 6000 C5/C7/C8/C9
 - [x] Mangel 1: die vier Cuts ohne Maske = Boden/Wand-Regionen (gemessen, richtig ohne Maske); 3050 C6 "Treppengelaender" = Boden vor
       dem Gelaender; X-Kiste 5020 C6 per Zuordnung von Hand geschlossen; 6000 C5 Lok + Gittertraeger oben geschlossen
-- [x] Zuordnung von Hand fuer 16 Objekte (zuordnung_r41.json) -> zusammen 210 Rechtecke wieder drin, 962 144 statt 889 591 Punkte
+- [x] Zuordnung von Hand fuer 12 Objekte (zuordnung_r41.json; Nahfeld-Sperre nach der Gegenprobe 5050 C2) -> zusammen 164 Rechtecke
+      wieder drin, 956 982 statt 889 591 Punkte (Kette k3)
 - [x] Mangel 1 (b): Restliste fuer den Nutzer `M_bilder/NB2_rest/` + Liste echter Gegenstaende ("Fuer den Nutzer")
 - [x] exe-Messung nachher (DAVOR 0 neu sichtbar uebermalt; Randpunkte hinter dem Koerper nachgerechnet), gezielte Tests, Abschluss-Commit
 
@@ -440,6 +441,8 @@ Keine Messung der Abnahme wird wiederholt; ihre Zahlen werden zitiert. Punkt 2 (
   6000 C5). (2) Die automatische Zuordnung (Mehrheit der Bodenkontakte in einer Sperrzelle) scheitert an Gegenstaenden auf Kufen,
   mit angeschnittener Unterkante, am Bildrand oder knapp unter der Mehrheit (X-Kiste 5020 C6 0,19; Trennwand 30A0 C0/C1 0,49/0,46).
   (3) Die vier Cuts ohne Maske zeigen in der Generator-Region nur Boden/Rueckwand (gemessen, Bild NB2_vier_cuts_region.png).
+  (4) Gefunden in NB2 selbst: steht die Kamera UEBER dem Grundriss einer Modellzelle, traegt weder das 3D-Urteil noch das
+  Grundriss-Netz die nahe Tiefe (5050 C2: 381 Gitterpunkte ohne Koerper davor) -> Nahfeld-Sperre.
 * **Messung vorher (Abnahme 1, eigene Zaehler bitgleich nachgerechnet):** 1186 Rechtecke (Leon) aus, 889 591 Punkte gezeichnet,
   341 352 nur in ausgeschlossenen Rechtecken, Kerben 11 494 von 62 432 (18,4 %); X-Kiste 5020 C6 ganz aus (fehlte im Uebersichtsbild),
   Lok 6000 C5 groesstenteils aus.
@@ -451,11 +454,13 @@ Keine Messung der Abnahme wird wiederholt; ihre Zahlen werden zitiert. Punkt 2 (
   Messung (IoU-Maximum der Koerper-Silhouette gegen den Gegenstand, wie raum.py "zelle" fuer die Nutzer-Freistellungen) - keine
   Spielkonstante. Original: die Stages 3..6 haben fuer diese Cuts KEINE Masken (NULL-Sektion, @0x80039324/@0x80039338) - die
   Generator-Masken sind eine Port-Ergaenzung (PORT-WAHL seit R37); Ziel ist "keine Figur VOR dem Gegenstand uebermalen".
-* **Aenderung:** 3D-Urteil im Ausschluss-Generator (`r41_koerper_davor`, nur zusaetzlich zum Grundriss-Netz), Zellen-Tiefe auch
-  naeher als die alte (`tiefe_zelle_r41.NAEHER`), Zuordnung von Hand fuer 16 Gegenstaende (`zuordnung_r41.json`), Kette k2 mit
-  `--zurueck` (stabil). Nur Tiefenfelder von 210 Rechtecken in 10 MSK-Paaren + Ausschluss-Tabelle + Modell-Tabelle (Test-Daten).
-* **Messung nachher:** 976 aus, **962 144 gezeichnet (+72 553)**, 268 799 nur ausgeschlossen, Kerben **10 612 von 64 654 (16,4 %)**;
-  0 Rechtecke neu ausgeschlossen; unabhaengige 3D-Gegenprobe 0 Verdeckungen ohne Koerper davor; exe DAVOR 0 neu sichtbar uebermalt
+* **Aenderung:** 3D-Urteil im Ausschluss-Generator (`r41_koerper_davor`, nur zusaetzlich zum Grundriss-Netz; kein Urteil bei
+  Kamera ueber dem Grundriss der Zelle), Zellen-Tiefe auch naeher als die alte (`tiefe_zelle_r41.NAEHER`), Zuordnung von Hand fuer 12
+  Gegenstaende (`zuordnung_r41.json`), Kette k3 mit `--zurueck` (stabil). Nur Tiefenfelder von 164 Rechtecken in 5 MSK-Paaren +
+  Ausschluss-Tabelle + Modell-Tabelle (Test-Daten).
+* **Messung nachher (Kette k3):** 1022 aus, **956 982 gezeichnet (+67 391)**, 273 961 nur ausgeschlossen, Kerben **10 178 von 63 546
+  (16,0 %)**; 0 Rechtecke neu ausgeschlossen; unabhaengige 3D-Gegenprobe in den geaenderten Cuts 0 Verdeckungen ohne Koerper davor;
+  exe DAVOR 0 neu sichtbar uebermalt
   (Randpunkte in 30A0 C0/5020 C0 nachgerechnet hinter dem Koerper), HINTER verdeckt; FREI-Stellen der R37 (30A0/30A1 C0, "Haar"):
   exe 0 Leon-Punkte uebermalt. X-Kiste 5020 C6 und Lok 6000 C5 gezeichnet (Uebersichtsbilder neu). Rest: Restliste fuer den Nutzer.
 
@@ -559,9 +564,9 @@ Generator nie gefunden; sie brauchen eine Freistellung (Restliste fuer den Nutze
 Bodenkontakte (unterste Regionszeile je Spalte, auf den Boden zurueckprojiziert) in EINER Sperrzelle liegt. Das scheitert an echten
 Gegenstaenden, deren Unterkante nicht der Boden ist: die X-Kiste 5020 C6 steht auf zwei Kufen (Anteil 0,19 - die Spalten zwischen
 den Kufen schauen auf den Boden HINTER der Kiste), die Buero-Trennwand 30A0 C0/C1 (0,49 / 0,46 - knapp unter der Mehrheit), Kisten
-mit angeschnittener Unterkante (5090 C13 0,41), Objekte am unteren Bildrand (5050 C1/C2, 30A0 C0: 0,00) und Teile ueber einem
-Hohlraum (5020 C0 Treppenwange, 3040 C0 Schaltkasten auf der Kiste: "kein Bodenkontakt").
-**Weg:** je solcher Gegenstand die Zelle VON HAND (`re15_port/tools/maske/zuordnung_r41.json`, 16 Eintraege; Werkzeug
+mit angeschnittener Unterkante (5090 C13 0,41) und Teile ueber einem Hohlraum (5020 C0 Treppenwange, 3040 C0 Schaltkasten auf der
+Kiste: "kein Bodenkontakt").
+**Weg:** je solcher Gegenstand die Zelle VON HAND (`re15_port/tools/maske/zuordnung_r41.json`, **12 Eintraege**; Werkzeug
 `zellen3d_r41.py --zuordnung`, `tiefe_zelle_r41.zelle_von_hand`/`koerper_geometrie`). Ausgewaehlt wurde je Objekt die Sperrzelle eines
 begehbaren Bands, deren Koerper-Silhouette (gemessene Hoehe, IoU-Maximum wie raum.py "zelle") den Gegenstand SELBST zeigt -
 Grundriss unter dem Fuss des Gegenstands, Vorderkante = Unterkante im Bild (Bild je Eintrag `M_bilder/NB2/NB2_zuordnung_*.png`:
@@ -570,50 +575,61 @@ links Objekt gelb/rot, Mitte Kandidat 1, rechts Kandidat 2). Die Hoehe wird an A
 knapp vor Zelle 12 (0,61) - Zelle 10 steht aber HINTER der Kiste (Unterkante im Bild hoeher), die Kufen stehen in Zelle 12
 (Grundriss x -4875..-2275 z -15425..-12825, Bytes @RDT+0x00870 `28 0a 28 0a f5 ec bf c3 01 ff 00 03`). Nicht von Hand zugeordnet
 (kein passender Koerper, IoU <= 0,23 oder Hoehe 25 = Bodenplatte): 6000 C7/C8/C9 (Lok-Unterteil/Treppe), 5100 C7, 5050 C1 Schreibtisch
-links, 30A0 C3 Schraenke (Zelle 6/7 zeigen nicht den Schrank), 30A0 C1 Gegenstand am Boden. Ob ein Rechteck gezeichnet wird,
-entscheidet weiter der Ausschluss mit dem 3D-Urteil - die Zuordnung liefert nur Koerper und Tiefe.
-**3D-Urteil, Feinschliff:** ein Figurpunkt IM Koerper (Kamera draussen) zaehlt jetzt als verdeckt - die Strecke Kamera -> Punkt tritt
-vor ihm in den Koerper ein (vorher "kein Urteil"; betraf 5090 C11 R0/R5/R89, je 1..3 Punkte an der Dreieckszelle).
+links, 30A0 C3 Schraenke (Zelle 6/7 zeigen nicht den Schrank), 30A0 C1 Gegenstand am Boden.
+**Nahfeld-Sperre (gemessen, Kette k2 -> k3):** in der ersten Kette (k2) standen 16 Zuordnungen; die unabhaengige 3D-Gegenprobe
+(`statisch.py`) fand in **5050 C2** (Pult vorn, Zelle x -27872..-24102 z -25960..-20835, Hoehe 3475) **381 verdeckte Gitterpunkte ohne
+jeden Koerper davor** (z.B. Rechteck 55, Tiefe 6, an (-21600,-18350): der Strahl verlaesst den Grundriss oberhalb des Deckels). Ursache:
+die Kamera (-24301,-3719,-23493) steht UEBER dem Grundriss der Zelle - der Koerper liegt im Nahfeld, die Rechteck-Tiefe faellt gegen 0,
+das 3D-Urteil haengt allein an der gemessenen Hoehe, und das Grundriss-Netz laesst Zellen mit der Kamera darin aus (sein Urteil
+kommt dann von fremden Zellen ohne Hoehe). **Regel jetzt:** steht die Kamera ueber dem Grundriss der Modellzelle, gibt das 3D-Urteil
+kein Urteil (`r41_koerper_davor` -1) und eine Zuordnung von Hand ist dort unzulaessig (`tiefe_zelle_r41`, Kopf von zuordnung_r41.json).
+Raus deshalb: 5050 C1 Pult rechts, 5050 C2 Pult vorn, 30A0 C0 Moebel vorn, 5090 C11 Kiste vorn links (alle mit Kamera ueber der Zelle),
+und aus NB2 (a) 3040 C3 R9 sowie 5050 C1 R1/R4/R47 (automatische Modelle mit Kamera ueber der Zelle; das Grundriss-Netz allein nimmt sie).
+**3D-Urteil, Feinschliff:** ein Figurpunkt IM Koerper (Kamera draussen) zaehlt als verdeckt - die Strecke Kamera -> Punkt tritt vor
+ihm in den Koerper ein (vorher "kein Urteil"; damit 5090 C11 R0/R5/R89 ueber ihr automatisches Dreiecksmodell, Kamera nicht darueber).
 
-### NB2 Mangel 1 - Ergebnis nach Kette k2 (3D-Urteil + Zuordnung von Hand), Messung nachher
-**Kette k2** (`m41nb2/kette2.sh`: zellen3d mit Zuordnung -> MASKS -> Neubau -> erzeuge -> --zurueck -> MASKS -> Neubau -> erzeuge):
-Modell-Tabelle 771 -> 576 Zeilen, **zweites erzeuge bitgleich zum ersten (stabil)**, Tabelle eingebaut, exe neu gebaut.
+### NB2 Mangel 1 - Ergebnis nach Kette k3 (3D-Urteil + Nahfeld-Sperre + 12 Zuordnungen von Hand), Messung nachher
+**Kette k3** (`m41nb2/kette2.sh k3`: zellen3d mit Zuordnung -> MASKS -> Neubau -> erzeuge -> --zurueck -> MASKS -> Neubau -> erzeuge):
+Modell-Tabelle 705 -> **530 Zeilen**, **zweites erzeuge bitgleich zum ersten (stabil)**, Tabelle eingebaut, exe neu gebaut. Ein dritter
+Lauf des letzten Werkzeugschritts (Determinismus, am Stand k2 gemessen) lieferte MSK und Modell-Tabelle bitgleich.
 **Statisch (Leon Stage 3..6; Elza bytegleich; Zaehler wie stat_nb1 der Abnahme, Ausgangszahlen bitgleich nachgerechnet):**
-| | vor NB2 (= nach NB1) | nach NB2 (a), nur Automatik | nach NB2 (k2, mit Zuordnung von Hand) |
+| | vor NB2 (= nach NB1) | nach NB2 (a), nur Automatik | nach NB2 (k3, endgueltig) |
 |---|---|---|---|
-| ausgeschlossene Rechtecke | 1186 | 1106 | **976** (0 neu ausgeschlossen) |
-| gezeichnete Generator-Punkte | 889 591 | 920 514 | **962 144** (+72 553, +8,2 %) |
-| Punkte nur in ausgeschlossenen Rechtecken | 341 352 | 310 429 | **268 799** (-21,3 %) |
-Geaendert sind nur die Tiefenfelder (+4 im Satz) der 210 wieder aufgenommenen Rechtecke (103 naeher, 107 ferner; 0 Bytes
-ausserhalb, `m41nb2/msk_diff.py`), Atlas/Lage/Gruppen unveraendert. Wieder drin (Leon; Elza gleich): 3040 C0 3 (Schaltkasten),
-3040 C3 1, 30A0 C0 26 (Trennwand + Moebel vorn), 30A0 C1 6 (Trennwand), 5020 C0 24 (Treppenraum), 5020 C6 20 (X-Kiste + Kufen),
-5050 C1 5, 5050 C2 36 (Pult vorn), 5090 C11 3 (Kiste vorn links), 5090 C13 10 (Kistenstapel), 6000 C5 26 / C7 12 / C8 24 / C9 14 (Lok,
+| ausgeschlossene Rechtecke | 1186 | 1106 | **1022** (0 neu ausgeschlossen) |
+| gezeichnete Generator-Punkte | 889 591 | 920 514 | **956 982** (+67 391, +7,6 %) |
+| Punkte nur in ausgeschlossenen Rechtecken | 341 352 | 310 429 | **273 961** (-19,7 %) |
+Geaendert sind nur die Tiefenfelder (+4 im Satz) der 164 wieder aufgenommenen Rechtecke (57 naeher, 107 ferner; 0 Bytes ausserhalb,
+`m41nb2/msk_diff.py`) in 5 MSK-Paaren (ROOM3040/3041, 30A0/30A1, 5020/5021, 5090/5091, 6000/6001); Atlas/Lage/Gruppen unveraendert.
+Wieder drin (Leon; Elza gleich): 3040 C0 3 (Schaltkasten), 30A0 C0 22 / C1 6 (Trennwand), 5020 C0 24 (Treppenraum), 5020 C6 20 (X-Kiste
++ Kufen), 5090 C11 3 (Kiste vorn links, automatisches Modell), 5090 C13 10 (Kistenstapel), 6000 C5 26 / C7 12 / C8 24 / C9 14 (Lok,
 Gittertraeger oben). Das Uebersichtsbild `M_bilder/uebersicht/STAGE5/5020/06_port.png` zeigt die X-Kiste jetzt (Abnahme 1: fehlte).
-**Warum der Rest aus bleibt (976 Rechtecke, Leon):** 616 kein Modell - keine Sperrzelle mit der Mehrheit der Bodenkontakte (ueberwiegend
-Waende, Boeden, Decken: 4040/4080 Gangwaende, 5020 C11 Boden, 30E0 Bodenstreifen, 3040 C1 Rueckwand, 5100 Decke); 125 mit Modell,
-aber ein verdeckter Figurpunkt liegt nicht hinter dem Koerper (Modell erklaert nicht jeden Punkt des Rechtecks - z.B. 6000 C5 unterer
-Gittertraeger: IoU 0,86, die Rechtecke reichen ueber die Zelle hinaus); 70 Sektion ohne Stehplatz (3050 C15, Original-NULL);
-66 Zelle trifft bei keiner Hoehe; 62 kein Bodenkontakt; 37 Saeule mit schraeger Zelle.
-**Unabhaengige 3D-Gegenprobe** (`m41nb2/py/statisch.py`, alle Stehplaetze, alle Zellkoerper): fuer jeden Cut mit neuen Rechtecken
-**0 verdeckte Figurpunkte ohne Koerper davor** (3040 C0/C3, 30A0 C0/C1, 5020 C0/C6, 5050 C1/C2, 5090 C11/C13, 6000 C5/C8/C9; 6000 C7
-2 Punkte des groben Gitters am Bildrand, s. oben).
-**exe (Kette k2; Szenen `m41nb2/szenen_k2.json` je Modellzelle, Leon = vorderstes Dreieck, RE15_TRILOG):**
+**Warum der Rest aus bleibt (1022 Rechtecke, Leon):** 682 kein Modell - keine Sperrzelle mit der Mehrheit der Bodenkontakte (ueberwiegend
+Waende, Boeden, Decken: 4040/4080 Gangwaende, 5020 C11 Boden, 30E0 Bodenstreifen, 3040 C1 Rueckwand, 5100 Decke; dazu die echten
+Gegenstaende der Restliste); 105 mit Modell, aber ein verdeckter Figurpunkt liegt nicht hinter dem Koerper oder die Kamera steht ueber
+der Zelle (z.B. 6000 C5 unterer Gittertraeger: IoU 0,86, die Rechtecke reichen ueber die Zelle hinaus); 70 Sektion ohne Stehplatz
+(3050 C15, Original-NULL); 66 Zelle trifft bei keiner Hoehe; 62 kein Bodenkontakt; 37 Saeule mit schraeger Zelle.
+**Unabhaengige 3D-Gegenprobe ueber ALLE Modell-Cuts** (`m41nb2/py/statisch.py`, Stand k3): verdeckte Figurpunkte ohne jeden Koerper davor
+nur noch im Altbestand NB1 (4040 C6 5 094 / C7 5 608: Kopf ueber der gemessenen Blockhoehe, OFFEN 11; 3040 C9 3) und 6000 C7 2 Punkte
+des groben Gitters am Bildrand; **0 in jedem durch NB2 geaenderten Cut** (3040 C0, 30A0 C0/C1, 5020 C0/C6, 5090 C11/C13, 6000 C5/C8/C9).
+**exe (Szenen je Modellzelle, Leon = vorderstes Dreieck, RE15_TRILOG; vorher = Tabelle vor NB2):**
 | Szene | Platz (Band 0) | Leon vorne | sichtbar uebermalt/verdeckt vorher -> nachher | Befund |
 |---|---|---|---|---|
 | d3040_00 DAVOR (Schaltkasten) | (-22600,-2000) | 1911 | 0 -> 0 | frei |
 | d5020_06 DAVOR (X-Kiste) | (-1733,-14625) | 1894 | 0 -> 0 | frei |
 | d5090_13 DAVOR (Kistenstapel) x 2 | (20717,-21365) / (20717,-26065) | 1195 / 1700 | 0 -> 0 / 55 -> 55 (Altbestand) | frei |
+| d5090_11 DAVOR (Kiste vorn links) | (3117,-25565) | 2909 | 7 -> 7 (Altbestand) | frei |
 | d30A0_01 DAVOR (Trennwand) | (-21243,13663) | 4035 | 0 -> 0 | frei |
-| d30A0_00 (Trennwand) | (-21143,15863) | 2407 | 14 -> 39 | die 25 neuen Punkte liegen HINTER dem Koerper (Leon z 7112..7220 > Eintritt 5077..5191, Zelle 6) = Rueckseite/Rand von Leon hinter der Trennwand |
+| d30A0_00 (Trennwand) | (-21143,15863) | 2407 | 14 -> 39 | die 25 neuen Punkte liegen HINTER dem Koerper (Leon z 7112..7220 > Eintritt 5077..5191, Zelle 6) = Rand von Leon hinter der Trennwand |
 | d5020_00 (Treppenraum) | (-12033,-18725) | 3139 | 160 -> 295 | 128 der 135 neuen Punkte HINTER dem Koerper (Leon z 8374..8719 > Eintritt 6976..7303), 6 in der Saeule darueber; sichtbar: 0 Punkte geaendert (Bild `NB2_k2_d5020_00_g0_0.png`, magenta = Leons Rueckseite neben dem Treppenraum) |
+| f30A0_00k / f30A1_00 (R37-FREI-Stellen, "Haar") | (-25400,13550) / (-24284,13657) | 1102 / 1361 | 0 -> 0 / 0 -> 0 | frei |
 | h5020_06 HINTER (X-Kiste) | (-4333,-15925) | 1626 | 25 -> 170 | verdeckt |
 | h30A0_00 / h30A0_01 HINTER (Trennwand) | (-21843,15863) / (-19443,15363) | 2010 / 1983 | 42 -> 757 / 85 -> 935 | verdeckt |
 | h5020_00 HINTER (Treppenraum) | (-13633,-21625) | 1121 | 0 -> 944 | verdeckt |
 | h5090_13 HINTER x 2 | (24417,-20365) / (24417,-26365) | 652 / 906 | 0 -> 129 / 0 -> 906 | verdeckt |
-| h5050_01 / h5050_02 HINTER | (-16600,-20950) / (-22100,-20150) | 5894 / 6986 | 132 -> 772 / 0 -> 810 | verdeckt |
-(h5090_11: Leon 0 neu; die Kiste vorn links verdeckt dort Teile eines anderen Akteurs (Slot 50) dahinter.) Bilder
-`M_bilder/NB2/NB2_k2_*.png`. Die Python-Szenenwahl "DAVOR" nimmt den Figurkasten +-350; Leons echte Silhouette ist breiter (OFFEN 7)
-- deshalb zeigen d30A0_00/d5020_00 Randpunkte, und jeder davon liegt nachgerechnet hinter dem Koerper.
+(Die Lok-Szenen 6000 stehen im Abschnitt (a). h5090_11: Leon dort 0 neu - die Kiste vorn links verdeckt Teile eines anderen Akteurs
+(Slot 50) dahinter.) Bilder `M_bilder/NB2/NB2_k2_*.png` (Stand k2; die gezeigten Objekte sind in k3 unveraendert). Die Python-Szenenwahl
+"DAVOR" nimmt den Figurkasten +-350; Leons echte Silhouette ist breiter (OFFEN 7) - deshalb zeigen d30A0_00/d5020_00 Randpunkte, und
+jeder davon liegt nachgerechnet hinter dem Koerper.
 
 ## Tests (gezielt, KEINE volle Suite)
 
@@ -669,11 +685,11 @@ LAST_EXT), eigenes exe-Praefix je Riegel (`re15_pc_r41m2_*` / `re15_pc_r41m3_*`)
 Neu/geaendert (nur tests/unit/probes/r41_masken36.cmake + eigene Dateien; test_r37_masken36.c angepasst mit Beleg):
 | Test | misst | Ergebnis |
 |---|---|---|
-| `unit_r41_masken36_zellen3d` (neu, Modus `zellen3d` von test_r37_masken36) | Mangel 1 Mechanik: 576 Modell-Zeilen byte-genau im RDT (12 SCA-Bytes am Offset, solide), MSK-Tiefe (Leon+Elza) == Zellen-Tiefe der Zeile, Engine zeichnet jedes Modell-Rechteck; Ausschluss MIT 3D-Urteil == Engine-Tabelle in 48 Cuts; Gegenprobe OHNE 3D-Urteil: 125 Rechtecke fielen weg, alle mit Modell-Zeile | PASS (124 s) |
-| `integration_r41_masken36_zellen3d` (neu) | Mangel 1 an der exe: 16 Szenen (Lok 6000 C5/C7/C8/C9, 5050 C1, 3040 C0/C3, X-Kiste 5020 C6, Treppenraum 5020 C0, Trennwand 30A0 C1, Kistenstapel 5090 C13, Elza 6001 C5): DAVOR H == 0, HINTER H >= Haelfte bzw. H > 0 | s. Lauf unten |
+| `unit_r41_masken36_zellen3d` (neu, Modus `zellen3d` von test_r37_masken36) | Mangel 1 Mechanik: 530 Modell-Zeilen byte-genau im RDT (12 SCA-Bytes am Offset, solide), MSK-Tiefe (Leon+Elza) == Zellen-Tiefe der Zeile, Engine zeichnet jedes Modell-Rechteck; Ausschluss MIT 3D-Urteil == Engine-Tabelle in 46 Cuts; Gegenprobe OHNE 3D-Urteil: 79 Rechtecke fielen weg (Lok 6000 76, 5090 C11 3), alle mit Modell-Zeile | PASS |
+| `integration_r41_masken36_zellen3d` (neu) | Mangel 1 an der exe: 14 Szenen (Lok 6000 C5/C7/C8/C9, 3040 C0, X-Kiste 5020 C6, Treppenraum 5020 C0, Trennwand 30A0 C1, Kistenstapel 5090 C13, Elza 6001 C5): DAVOR H == 0, HINTER H >= Haelfte bzw. H > 0 | s. Lauf unten |
 | `unit_r37_masken36_ausschluss` (Regel erweitert) | rechnet die Tabelle MIT 3D-Urteil aus den Dateien nach (== gen/masken36_ausschluss_r37.inc), keine Fehlverdeckung ohne Zelle/Koerper davor, Raumpaare gleich, Schranke 0 | PASS (561 s) |
 | `unit_r37_masken36_verdeckung` (FREI angepasst) | FREI-Szenen 30A0/30A1 C0: die Figur steht auf der gezeichneten Modell-Maske (1221 / 590 Punkte) und ist nicht verdeckt - die Zellen-Tiefe schuetzt sie (vorher: der Ausschluss; ungefiltert verdeckt jetzt 0, weil die Trennwand die Tiefe ihrer Zelle traegt) | PASS |
-| `unit_r41_masken36_loecher` (Messwert) | Kerben NACHHER 10 612 von 64 654 = 16,4 % (NB1 18,4 %), Schranke <= 30 % unveraendert | PASS |
+| `unit_r41_masken36_loecher` (Messwert) | Kerben NACHHER 10 178 von 63 546 = 16,0 % (NB1 18,4 %), Schranke <= 30 % unveraendert | PASS |
 Laeufe (Spurbaum, Bau `local_build.sh build` nach der letzten Aenderung; KEINE volle Suite):
 1. `ctest --test-dir re15_port/build -R "unit_r41_masken36|unit_r37_masken36|unit_pri_|unit_r36_pri|unit_r37_pri1100|unit_sld_atlas|unit_r38_itemorte|unit_r39_optik|unit_r34n_e_dokumente|unit_bss|prop_bss|unit_stage6_hintergrund" -j 3 --timeout 1500 --output-on-failure`
    -> erster Lauf `97% tests passed, 1 tests failed out of 31` (unit_r37_masken36_verdeckung: FREI-Gegenprobe, s. oben, Riegel
@@ -682,12 +698,13 @@ Determinismus: zweiter Lauf von `zellen3d_r41.py` (letzter Schritt der Kette) ->
 
 ## OFFEN
 
-0. **Stand Nachbesserung 2 (ersetzt die Zahlen von 1):** 976 Rechtecke (Leon, Elza gleich) bleiben aus, 268 799 Punkte liegen nur in
-   ausgeschlossenen Rechtecken (NB1: 341 352). Gruende: 616 kein Modell (keine Sperrzelle mit der Mehrheit der Bodenkontakte -
-   ueberwiegend Waende/Boeden/Decken), 125 Modell aber ein verdeckter Figurpunkt nicht hinter dem Koerper, 70 Sektion ohne Stehplatz
-   (3050 C15), 66 Zelle trifft bei keiner Hoehe, 62 kein Bodenkontakt, 37 Saeule mit schraeger Zelle. Restliste mit Bildern:
-   `M_bilder/NB2_rest/NB2_rest_ROOMxxxx.png` (gruen gezeichnet, blau durch NB2, rot weiter aus, Nummern = Objekte) und
-   `NB2_rest_liste.txt` (Cuts >= 300 rote Punkte, 267 134 Punkte). Die echten Gegenstaende darunter stehen unter "Fuer den Nutzer".
+0. **Stand Nachbesserung 2 (ersetzt die Zahlen von 1):** 1022 Rechtecke (Leon, Elza gleich) bleiben aus, 273 961 Punkte liegen nur
+   in ausgeschlossenen Rechtecken (NB1: 341 352). Gruende: 682 kein Modell (keine Sperrzelle mit der Mehrheit der Bodenkontakte -
+   ueberwiegend Waende/Boeden/Decken), 105 Modell aber ein verdeckter Figurpunkt nicht hinter dem Koerper bzw. Kamera ueber der Zelle,
+   70 Sektion ohne Stehplatz (3050 C15), 66 Zelle trifft bei keiner Hoehe, 62 kein Bodenkontakt, 37 Saeule mit schraeger Zelle.
+   Restliste mit Bildern: `M_bilder/NB2_rest/NB2_rest_ROOMxxxx.png` (gruen gezeichnet, blau durch NB2, rot weiter aus, Nummern =
+   Objekte) und `NB2_rest_liste.txt` (Cuts >= 300 rote Punkte, 272 296 Punkte). Die echten Gegenstaende darunter stehen unter
+   "Fuer den Nutzer".
 1. **Weiter ausgeschlossene Objektteile (Punkt 1, Stand Nachbesserung 1):** nach der Zellen-Tiefe (Schritt 1 + 2) bleiben
    530 von 3239 alten und 656 von 4300 Saum-Rechtecken (Leon; mit Elza 1 312 von 8 600 Saum) aus, 341 352 Bildpunkte liegen nur in
    ausgeschlossenen Rechtecken (vor NB1 450 317), 99 Objekte teilweise und 47 gar nicht gezeichnet (vor NB1 147 / 55).
@@ -709,9 +726,9 @@ Determinismus: zweiter Lauf von `zellen3d_r41.py` (letzter Schritt der Kette) ->
 5. **Uebersichtsbilder pri/STAGE3-6:** 204 von 214 vom Orchestrator ersetzt (master 919cc1ed); die 10 fehlenden liegen jetzt
    unter `M_bilder/uebersicht/` (durchsichtig, NB1 Auflage). Durch NB1 Mangel 1 haben sich die Uebersichtsbilder der Cuts mit
    wieder aufgenommenen Rechtecken geaendert (git diff --stat analysis/befunde_runde41/M_bilder/uebersicht) - pri/ ist fuer die
-   Spur tabu, das Ersetzen bleibt dem Orchestrator. **Nachbesserung 2** hat weitere 14 geaendert (Leon-Ordner; die Elza-Ordner xxx1
-   bekommen dasselbe Bild, MSK bytegleich): STAGE3/3040/00+03, STAGE3/30A0/00+01, STAGE5/5020/00+06 (X-Kiste), STAGE5/5050/01+02,
-   STAGE5/5090/11+13, STAGE6/6000/05+07+08+09 (Lok).
+   Spur tabu, das Ersetzen bleibt dem Orchestrator. **Nachbesserung 2** hat weitere 11 geaendert (Leon-Ordner; die Elza-Ordner xxx1
+   bekommen dasselbe Bild, MSK bytegleich): STAGE3/3040/00, STAGE3/30A0/00+01, STAGE5/5020/00+06 (X-Kiste), STAGE5/5090/11+13,
+   STAGE6/6000/05+07+08+09 (Lok).
 6. **ROOM5100 C7, Leons Hand am unteren Bildrand** (-12030,-5300): das ALTE Generator-Rechteck 0 (Tiefe 64, x 0..43 y 154..240)
    verdeckt Leon-Dreiecke mit z 4164..4615 (120 Rasterpunkte; Altbestand R37, vor/nach Runde 41 gleich). Ob die Hand dort vor
    oder hinter dem Objekt liegt, ist nicht gemessen (keine Zellen-Tiefe fuer Rechteck 0, es ist nicht ausgeschlossen).
@@ -758,21 +775,22 @@ Determinismus: zweiter Lauf von `zellen3d_r41.py` (letzter Schritt der Kette) ->
   Gegenstand ragt ueber seine Zelle hinaus) - hier braeuchte es Ihre Freistellung wie in STAGE1/2 (PNG unter pri/STAGEn/<raum>/):
   * ROOM30A0 Kamera 3: die hohen grauen Spinde rechts (groesster Rest, ~10 000 Punkte)
   * ROOM6000 Kamera 5: unterer Teil des Gittertraegers vorn links; Kamera 7: unterer Teil der Lok links
-  * ROOM5050 Kamera 1: Schreibtisch mit Monitor und Stuhl links; Kamera 2: Pult vorn unten (Rest)
+  * ROOM5050 Kamera 1: Schreibtisch mit Monitor und Stuhl links, Pult vorn rechts; Kamera 2: Pult vorn unten
   * ROOM5090 Kamera 13: oberer Teil des Kistenstapels in der Mitte
   * ROOM3040 Kamera 0: Schaltkasten oben / Kiste unten (Reste); Kamera 9: Kiste vorn
-  * ROOM30A0 Kamera 0: Lampe/Stuhl vorn links am Bildrand
+  * ROOM30A0 Kamera 0: Lampe/Stuhl/Moebel vorn links am Bildrand
   * ROOM50B0 Kamera 1/3: der Roboterarm oben
   * ROOM5020 Kamera 7: Kiste rechts oben; Kamera 12: Unterseite der Kiste
   * Gelaender, die der Generator nie erfasst hat: ROOM3050 Kamera 6, ROOM30E0 Kamera 6/7/8/9, ROOM3040 Kamera 3 (Stueck)
 - **Masken STAGE3-6, Nachbesserung 2:** weitere Gegenstaende sind jetzt geschlossen - die Lok in ROOM6000 (Kameras 5, 7, 8, 9) samt
   oberem Gittertraeger, die rechte X-Kiste mit Kufen in ROOM5020 Kamera 6 (fehlte im Uebersichtsbild), der Treppenraum in ROOM5020
-  Kamera 0, die Buero-Trennwand in ROOM30A0 Kamera 0/1, Kisten in ROOM5090 Kamera 11/13, der Schaltkasten in ROOM3040 Kamera 0, die
-  Pulte vorn in ROOM5050 Kamera 1/2. Regel: eine Maske wird gezeichnet, wenn jeder Figurpunkt, den sie verdeckt, vom Kamerablick aus
-  HINTER dem Koerper ihres Gegenstands liegt (Kollisionszelle des Raums, Hoehe am Bild gemessen); fuer 16 Gegenstaende, deren Zelle
-  die Automatik nicht fand, habe ich die Zelle von Hand zugeordnet (mit Bild und Zellbytes: `re15_port/tools/maske/zuordnung_r41.json`).
-  Im Spiel geprueft: VOR diesen Gegenstaenden wird Leon nirgends sichtbar uebermalt, dahinter ist er verdeckt. Zusammen zeichnet das
-  Spiel jetzt 962 144 Maskenpunkte der Generator-Masken (Nachbesserung 1: 889 591, Runde 40: 727 561).
+  Kamera 0, die Buero-Trennwand in ROOM30A0 Kamera 0/1, Kisten in ROOM5090 Kamera 11/13, der Schaltkasten in ROOM3040 Kamera 0.
+  Regel: eine Maske wird gezeichnet, wenn jeder Figurpunkt, den sie verdeckt, vom Kamerablick aus HINTER dem Koerper ihres
+  Gegenstands liegt (Kollisionszelle des Raums, Hoehe am Bild gemessen); fuer 12 Gegenstaende, deren Zelle die Automatik nicht fand,
+  habe ich die Zelle von Hand zugeordnet (mit Bild und Zellbytes: `re15_port/tools/maske/zuordnung_r41.json`). Wo die Kamera direkt
+  UEBER dem Gegenstand haengt (Pulte vorn in ROOM5050), traegt das nicht - die bleiben ohne Maske. Im Spiel geprueft: VOR diesen
+  Gegenstaenden wird Leon nirgends sichtbar uebermalt, dahinter ist er verdeckt. Zusammen zeichnet das Spiel jetzt 956 982
+  Maskenpunkte der Generator-Masken (Nachbesserung 1: 889 591, Runde 40: 727 561).
 - **Kameras ohne Maske (3040 C1, 3050 C6, 30E0 C6, 30E0 C7):** dort hatte der Generator nur Boden bzw. die Rueckwand gefunden - als
   Maske nutzlos, deshalb zu Recht nichts. Die GELAENDER dort (3050 C6, 30E0 C6/C7/C8/C9) hat der Generator nie erfasst.
 - **Ihre 53 STAGE2-Masken:** an der exe geprueft. Zwei Fehler gefunden und behoben: in **ROOM2040 Kamera 7** und **ROOM2030
