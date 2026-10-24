@@ -802,5 +802,7 @@ Determinismus: zweiter Lauf von `zellen3d_r41.py` (letzter Schritt der Kette) ->
   12_02 bleibt weg (Ihr Entscheid "Weglassen ist ok"). ROOM2020 Kamera 3 an der Kurbel: Reling ueber Leons Beinen ist richtig.
 - Assets fuer das Paket: `re15_port/shared_assets/PSX/MASKS/` - die 30 ROOM3040..6031.MSK (nur Tiefenwerte geaendert, NB1),
   216 ROOMxxxx_PRIcc.TIM (Runde 41), ROOM2030.MSK + ROOM2030_PRI07.TIM/.STAND, ROOM2040.MSK + ROOM2040_PRI07.TIM/.STAND (NB1),
-  ROOM20A0.MSK + ROOM20A0_PRI12.TIM/.PBM/.STAND (Runde 41). Keine neuen Quelldateien in der Engine (Android: kein neuer
-  GLOB-Eintrag), keine Sprachdateien, keine neuen Schalter.
+  ROOM20A0.MSK + ROOM20A0_PRI12.TIM/.PBM/.STAND (Runde 41); Nachbesserung 2: ROOM3040/3041, 30A0/30A1, 5020/5021, 5090/5091,
+  6000/6001.MSK (nur Tiefenfelder) und `re15_port/engine/src/gen/masken36_ausschluss_r37.inc`. Neu (nur Werkzeug/Test):
+  `re15_port/tools/maske/zellen3d_r41.py`, `re15_port/tools/maske/zuordnung_r41.json`, `re15_port/tests/unit/gen_r41_masken36_zellen.inc`.
+  Keine neuen Quelldateien in der Engine (Android: kein neuer GLOB-Eintrag), keine Sprachdateien, keine neuen Schalter.
