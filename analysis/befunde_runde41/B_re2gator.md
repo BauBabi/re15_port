@@ -1749,7 +1749,7 @@ die Kosten unter 9000 bleiben):
 | A2 | Tuernische `DEBUG_JUMP=2090@250 GB_TEST=1` | F397 LUNGE | 749/458 -> Cut 6 | F652: 254, Abw. 0, Kiefer 2, Kopf/Leon 254/254, Wasser 254/254 |
 | BL2 (Bau 14:31, OHNE Band-Haken) | `PLAYER_POS=0,-13200,2048,1 GB_TEST=1` | F526 LUNGE | 4222/850 -> Cut 2 | F781: **Kiefer 949 (F528), Wasser 241/254** - Leon (Band 1) von der Wandklemme aus SCA [8] in die Rampe geschoben |
 | BL3 (Endstand) | wie BL2 | F526 LUNGE | 4222/850 -> Cut 2 | F781: 254, Abw. 0, **Kiefer 2**, Kopf/Leon 254/254, **Wasser 254/254** |
-| BL1 | `PLAYER_POS=0,-16250,2048,1 GB_TEST=1`, 1500 Bilder | - | - | kein Tod: eine Raum-Spinne warf Leon ~F300 nieder, die Band-1-Klemme schob ihn aus der Plattformzelle [7] nach (-2168,-16250), der Gator blieb in CHASE (Altbestand, Spinnen = Spur F); der GUARD-Tod auf dem Plattformblock ist im Riegel `maul` (Lage D) gemessen |
+| BL1 | `PLAYER_POS=0,-16250,2048,1 GB_TEST=1`, 1500 Bilder | - | - | kein Tod, Lage ungueltig: die Spieler-Klemme schob Leon gleich nach dem Spawn (F3-F40, hp 100) aus der Band-1-Zelle [7] nach (-2168,-16250) - mit Band 1 ist der Plattformblock im Port kein Standort (Testhebel-Lage, Altbestand); danach Spinnen-Niederschlag F240 und der Gator blieb in CHASE. Der GUARD-Tod mit Leon oben auf dem Block ist im Riegel `maul` (Lage D) gemessen |
 
 Bildbelege (Framedump, RE15_WINDOW_SCALE=1, Ausschnitte 2x, Aufhellung nur zur Sichtung): **E1 vorher** = Abnahme 4
 `B41abn4/beleg_E1_finisher.png`, `E1_fress_zoom2.png`, `E1_fress_p3_zoom.png` (Maul leer, Leon hinter der Ostwand); **E1 nachher**
@@ -1760,3 +1760,84 @@ neben/ueber dem Kopf), `BL3_nachher_kopf.png`, `EZ3_nachher_kopf.png` (Elza rot 
 Gator; bei E1/MN3/EZ3 verdeckt eine Raum-Spinne im Vordergrund Teile von ihm (Spinnen entfernt Spur F).
 A2 zeigt seit der Buehne die Frontalansicht (Cut 6, frontal 4118) statt der Schraegsicht (vorher Cut 6, frontal 2541) bei aehnlichem
 Kopf-Massstab (712 gegen 691) - der RE2-Finisher-Schnitt Cut 7 ist frontal (+1,00, §9.2).
+
+### 13.6 Tests (gebauter Stand, keine volle Suite)
+- NEU (tests/unit/test_r41_re2gator.c, registriert in tests/unit/probes/r41_re2gator.cmake):
+  - `unit_r41_re2gator_maul` - die von der Abnahme verlangte GUARD-Erweiterung der Maulraum-Messung von unit_gator_fress (dieselbe
+    Groesse: Leons PL00-Koerper mit Opfer-Keyframes und Fress-Massstab im AABB von Mesh 6+7), hier mit dem GEZEICHNETEN Kiefer (Pose
+    mit pitch/arc/jaw/+0x22A-Haken) in JEDEM P0-P3-Bild, sechs Lagen (Tabelle §13.5), dazu Abstand Leon <-> gezeichneter Kiefer gegen
+    die authored Bahn, Wasser, Bild der Finisher-Kamera, Spieler-Wandklemme und Band. Schranken: Kopf-lokal <= 32 Modelleinheiten
+    (Q12-Rundung der anderen Buehnen-Gier, gemessen bis 14; Defekt vorher bis 5649), Maulraum <= 20 Promille (gemessen bis 13),
+    Kiefer-Abstand <= 8 (gemessen bis 3).
+  - `unit_r41_re2gator_buehne` - Buehne fuer jede Gator-Lage (Raster 1000 x 8 Gier, Wasser + Plattform/Rampe), unabhaengig
+    nachgeprueft (Wurzel im Wasser ausserhalb der Klemmzone, Zonenkamera, Versatz <= Becken-Diagonale).
+- integration_r41_re2gator (tests/integration/test_r41_re2gator.cmake): Lauf "belagerung" jetzt bis F890 (Tod F627 aus dem GUARD-
+  Hochbiss, P3-Ende F881) mit Pruefung der Summenzeile `Maul-Sitz Ende` (r41b_maul_sitz: 254 Bilder 14/120/120, Kopf <= 4 neben der
+  Anker-Lage, Kiefer-Abstand <= 8, Kopf und Leon (oder oben hinaus) in jedem Bild im Bild, alles im Wasser); Lauf "nische" (CHASE-Tod)
+  prueft dieselbe Messzeile bis EXIT_AT 650 (P3 noch nicht zu Ende).
+- Mit Beleg angepasst: `unit_gator_fress` (probe_gator_fress.c pin_leon_im_maul) Schranke 5 -> 16: der Gator steht im Finisher jetzt
+  frontal zu Cut 0 (Gier 289) statt auf Gier 0, dort runden die drei Q12-Drehungen (je bis |v|/4096 + 1 = 3,6 bei |v| <= 10643) im
+  lokalen Rahmen (x 4096/2731) bis 16; gemessen dRef (-8,-1,-2), Koerper 776/776 im Maulraum (vorher bei Gier 0 (-2,-1,-1)).
+- Gegenproben: §13.1 (Sonde probe_maul am Stand 7831a6d5: Kopf-lokal bis 5649, Maul 0/0/0) und §13.5 (Riegel maul am Stand ohne
+  Band-Haken: 10 Fehler).
+- Laeufe:
+  - `ctest --test-dir re15_port/build -R "^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|
+    sca_wall_hit|re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_.*|
+    re2_hit_repeat_crow_spider|re2_crow_.*|crow_ai|crow_fixes|crow_death_corpse|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|
+    r35_fenster_kraehe|r37_re2zombie_.*|r34_re2fx.*|montage_fx|r35_cut1150_montage.*|r38_montage.*|r38_wasser.*|r38_wasserzombie|
+    r39_heliport1171_kraehen|r30_granate|r35_granate|r36_granate|r36_kartenbits|text_freeze|r34_reaktion|r34_schaden|g5_boss|
+    load_after_death|r35_affen_finisher|r36_tueren_.*|r37_itemband|r36_kartenitems|irons_mittelmodell|r36_story_sweep)$|
+    ^probe_(re2z_stomp|crow_kill)$|^r31_trefferboxen.*$" --timeout 600 -j 6` -> **100% tests passed, 0 tests failed out of 114**
+    (14:52:40-14:53:36, Stand f605f433; der Lauf davor 14:50 hatte unit_gator_fress rot, s. oben).
+  - `ctest --test-dir re15_port/build -R "^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate|r37_itemband|r36_tueren|
+    r37_re2zombie)$" --timeout 1800 -j 3 --output-on-failure` -> **100% tests passed, 0 tests failed out of 7** (14:53:51-15:07:36,
+    Stand f605f433; r41_re2gator 215,34 s, r37_itemband 824,06 s, r35_granate 163,89 s, r38_wasser 165,75 s, r36_schuss 164,14 s,
+    r36_tueren 61,42 s, r37_re2zombie 53,09 s). Lauf `r41_re2gator_wd/lauf_4a59388b`: belagerung `Maul-Sitz Ende F882: Bilder 254
+    (P1 14 P2 120 P3 120), Abweichung max 0 (F628), Kiefer-Abstand max 2 (F763), Kopf im Bild 254/254, Leon im Bild 244/254 + oben
+    hinaus 10 (Cut 4), im Wasser 254/254` (= E1 §13.5), nische `Maul-Sitz F637: Bilder 240 (P1 14 P2 120 P3 106), Abweichung max 0,
+    Kiefer-Abstand max 2, Kopf im Bild 240/240, Leon im Bild 240/240 (Cut 6), im Wasser 240/240`.
+
+### 13.7 OFFEN (gemessen, benannt)
+- **Hals-Zielmodus / RE2-Halsfuehrung** (FUN_80017d98 / FUN_800177c0, Root @0x80100330-74): unveraendert OFFEN (Abnahme 4 H1,
+  Entscheid des Orchestrators zum Part-5-Gier-Kanal steht aus).
+- **GUARD-Hochbiss ohne Blick auf Leon** (Nutzer-Design v0.7.42, enemy_ai_boss_gator.c GUARD, nur Abstand): unveraendert. Der Finisher
+  haengt nicht mehr davon ab (die Buehne stellt die RE2-Relation her); im Biss-Bild selbst zeigt die alte Kamera den Biss weiter
+  33-141 Grad neben Leon (Abnahme 4 §3.4 a). Eine Aenderung haette die Belagerung (Punkt 2, erfuellt) beruehrt - nicht gemacht.
+  Ebenso H2 (GUARD-Ziel hinter der Klemmlinie): unveraendert.
+- **Kamera-Abstand:** die Buehnen-Kameras zeigen den Kopf kleiner als RE2 Cut 7 (Massstab 573-865 gegen 1354; die Suche verlangt nur
+  <= RE2-Grenze 1892 und waehlt nach Versatz + Drehung). A2 vorher 691 (Schraegsicht), jetzt 712 (frontal).
+- **Spinnen** stehen im Finisher-Bild teils vor Leon (E1/MN3/EZ3 P1) - Spur F entfernt sie; die Buehne beachtet keine anderen Aktoren.
+- **Band nach Niederschlag/Spawn** (Altbestand, nicht Spur B): Leon behaelt Band 1, wenn er von Rampe/Plattform ins Wasser gestossen wird
+  (BL2: Biss bei (6732,-11982) mit Band 1), und der Plattformblock (0,-16250) ist mit Band 1 kein Standort (BL1: Klemme schiebt nach
+  (-2168,-16250)). Im Finisher setzt P0 das Band jetzt selbst.
+- Unveraendert aus §12.4: Befreiungs-Schub nur im Riegel, Effekt-Quellmatrizen (von Abnahme 4 §3.1 beantwortet: dieses Bild),
+  RE15_FPS != 30, Altbestand-Liste.
+
+### 13.8 Fuer den Nutzer (Nachbesserung 5)
+- Keine neuen Assets, keine Sprachdateien, keine neuen Umgebungsschalter. Geaendert nur Spur-B-Dateien (enemy_ai_boss_gator.c,
+  gator_re2_r41.c, platform/pc/src/gator_re2_pc.c, re15_gator_re2_r41.h, re15_boss_gator.h) und Riegel (test_r41_re2gator.c,
+  probes/r41_re2gator.cmake, integration/test_r41_re2gator.cmake, probe_gator_fress.c mit Beleg).
+- Was sich im Spiel aendert:
+  1. Stirbt Leon (oder Elza) durch den Alligator - auch durch den Hochbiss, waehrend er oben auf der Rampe oder dem Plattformblock
+     steht -, schneidet das Bild wie in RE2 auf eine Kamera, die den Alligator von vorn zeigt; der Alligator steht dafuer im Wasser
+     (wie RE2 ihn im Finisher umsetzt), packt Leon, schuettelt ihn, wirft ihn hoch und behaelt ihn im Maul bis zum YOU DIED.
+     Vorher war das Maul nach einem Belagerungs-Tod leer und Leon schwebte neben dem Kopf oder hinter der Wand.
+  2. Die Kamera dieses Schnitts kann eine andere sein als vorher (frontal statt seitlich, z. B. Tuernische Cut 6 von vorn).
+- Messzeilen: debug.log `[gator-re2] Maul-Sitz F<n>: ...` je Finisher-Bild (bei Auffaelligkeit/alle 30 Bilder) und `[gator-re2]
+  Maul-Sitz Ende F<n>: Bilder 254 (P1 14 P2 120 P3 120), Abweichung max 0, Kiefer-Abstand max 2, Kopf im Bild 254/254, Leon im Bild
+  244/254 + oben hinaus 10, im Wasser 254/254`; gator_boss.log `RE2 FINISHER Buehne ... -> (x,z) Gier g Cut c, Versatz v Drehung d`.
+- Entscheidungsfrage: Soll der Finisher-Schnitt naeher heran (RE2 Cut 7 zeigt den Kopf 1,6- bis 2,4-mal so gross wie die
+  jetzt gewaehlten Raumkameras: Massstab 1354 gegen 573-865), auch wenn der Alligator dafuer weiter umgesetzt werden muss?
+
+### 13.9 Abschluss Nachbesserung 5 (je Mangel)
+- **M1 behoben.** Ursachen (gemessen, §13.1/§13.5): (1) Port-Neigung pitch -350 des GUARD-Aufrichtens blieb durch P0-P3 stehen,
+  (2) die Wand-Klemme der Takt-Huelle hielt den Gator, Leon folgte dem ungeklemmten Anker, (3) die authored RE2-Konfiguration lag an
+  der Belagerungs-Wand hinter der Ostwand, (4) - erst in dieser Fortsetzung im Spiel gefunden - Leon behielt nach P0 sein Band 1 und
+  die Spieler-Wandklemme schob ihn in P1 aus der Band-1-Zelle SCA [8]. Belege: RE2 FRESSEN P0 @0x80100fbc-0x801010e4 (Umsetzen
+  @0x80101048-4c, Zusatzwinkel 0 @0x80101050-54, Kanister aus @0x80101008-0c, Schnitt @0x80100fec-ff4), FUN_80015cb8 ohne Wand
+  (@0x80015d68/@0x80015d90), FUN_8001a330(em,4,0,0) @0x801010ec-f4, Spieler-Wandklemme FUN_80031c44 @0x80031d70, Band -(y/1800)
+  @0x80038460-bc. Aenderung: Zusatzwinkel 0 und keine Klemme in FRESSEN, Finisher-Buehne (PORT-WAHL, Form RE2-P0) mit Pruefung jedes
+  Bildes, Band-Haken in P0. Messung nachher: in allen sechs Riegel-Lagen (CHASE, GUARD Rampe Ost x2, Rampenmitte, Plattformblock,
+  CHASE mit Band 1) und in den exe-Laeufen E1 (Tuerweg 20A0 -> 2090), MN3, BL3, A2 und EZ3 (Elza) liegt das Opfer in allen 254
+  Finisher-Bildern wie authored am gezeichneten Kiefer (Kiefer-Abstand <= 3), im Wasser und im Bild; Bildbelege E1 vorher/nachher.
+  Riegel: unit_r41_re2gator_maul (GUARD-Lagen, gezeichneter Kiefer mit Haken), integration "belagerung" prueft nach dem Tod.
