@@ -51,3 +51,26 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
     set_tests_properties(integration_r41_masken36_zelle PROPERTIES TIMEOUT 1500)
 endif()
+
+# Nachbesserung 2 (Abnahme 1, Mangel 1, Weg (a)): Generator-Rechtecke mit Zellen-Modell (tests/unit/gen_r41_masken36_zellen.inc,
+# tools/maske/zellen3d_r41.py) - der Ausschluss urteilt fuer sie in 3D (Koerper der Modellzelle vor dem Figurpunkt).
+#   unit_r41_masken36_zellen3d  jede Modell-Zeile byte-genau im RDT, MSK-Tiefe == Zeile, Engine zeichnet sie; Ausschluss MIT 3D-Urteil
+#                             == Engine-Tabelle in jedem Modell-Cut, Gegenprobe OHNE 3D-Urteil: >= 80 Rechtecke fielen weg, alle mit Modell.
+add_test(NAME unit_r41_masken36_zellen3d COMMAND test_r37_masken36 zellen3d WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r41_masken36_zellen3d PROPERTIES TIMEOUT 1500)
+#   integration_r41_masken36_zellen3d  echte exe: die durch das 3D-Urteil gezeichneten Objekte (ROOM6000 Lok/Traeger, 5050 C1, 3040 C3)
+#                             verdecken Leon HINTER ihnen (H >= Haelfte bzw. H > 0) und uebermalen ihn DAVOR nicht (H == 0);
+#                             Szenen test_r41_masken36_zellen3d_szenen.cmake, Laeufer wie integration_r41_masken36_stage2.
+if(TARGET re15_pc)
+    add_test(NAME integration_r41_masken36_zellen3d
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r37_masken36_ppm>
+                     -DRE15_BG_TOOL=$<TARGET_FILE:probe_bg_dump>
+                     -DCD_ROOT=${CMAKE_SOURCE_DIR}/shared_assets/PSX
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_masken36_zellen3d_wd
+                     -DSZENEN=${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_zellen3d_szenen.cmake
+                     -DPRAEFIX=r41m4
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
+    set_tests_properties(integration_r41_masken36_zellen3d PROPERTIES TIMEOUT 1500)
+endif()

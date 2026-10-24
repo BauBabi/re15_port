@@ -773,6 +773,7 @@ static int r41_koerper_davor(unsigned raum, int cut, int rect, const double A[3]
  * "Kasten breiter als das Bild", [5] Schranke "Spalte halb hinter der Kamera". */
 static int g_r41_diag;
 static long g_r41_grund[RE15_PRI_MAX_MASKS_PER_CUT][6];
+static int g_r41_aus;                /* Riegel zellen3d: 1 = 3D-Urteil abgeschaltet (Gegenprobe) */
 
 typedef struct {
     re15_rdt_t rdt; uint8_t *roh; size_t n;
@@ -1012,7 +1013,7 @@ static void sektion_pruefen(raum_t *R, int cut, const re15_pri_cut_t *pri, const
                                 dv = zelle_dazwischen(&R->zel, b, cam[0], cam[2], wx + o * lx, wz + o * lz) ? 1 : 2;
                                 if (d) *d = dv;
                             }
-                            int k3 = dv == 1 ? 0 : r41_koerper_davor(R->raum, cut, mi, cam, wx + o * lx,
+                            int k3 = (dv == 1 || g_r41_aus) ? 0 : r41_koerper_davor(R->raum, cut, mi, cam, wx + o * lx,
                                                                       -(double) b * BAND_Y - pt[i].h, wz + o * lz);
                             if (dv == 1) E->echt++;
                             else if (k3 > 0) { E->echt++; E->echt3d++; }   /* R41 NB2: Koerper des Zellen-Modells davor */
@@ -1073,6 +1074,84 @@ static void alle_sektionen(int iterieren, int mit_tabelle, sektion_fn fn, void *
                 free(R.roh); R.roh = NULL;
                 free(msk);
             }
+}
+
+/* ---- zellen3d (Runde 41 Spur M, Nachbesserung 2; Riegel unit_r41_masken36_zellen3d) ------------------------------- *
+ * Beleg: jede Zeile der Modell-Tabelle steht byte-genau im RDT (12 SCA-Bytes am genannten Offset, Werte = Zeile), das MSK-Tiefenfeld
+ * des Rechtecks (Leon und Elza) ist die Zellen-Tiefe der Zeile, und die Engine-Tabelle zeichnet das Rechteck.
+ * Mechanik: fuer jeden Cut mit Modell-Zeilen rechnet sektion_pruefen den Ausschluss MIT dem 3D-Urteil (== Engine-Tabelle) und
+ * OHNE (Gegenprobe): Rechtecke, die nur das 3D-Urteil zeichnet, gibt es, und jedes davon hat eine Modell-Zeile. */
+static void teil_zellen3d(void)
+{
+    static raum_t R;
+    int i, j, n = R41_MODELLE, beleg_ok = 0, msk_ok = 0, tab_ok = 0, cuts = 0, gleich = 0, nur3d = 0, nur3d_modell = 0;
+    long echt3d = 0;
+    printf("== r41_masken36 zellen3d: Modell-Tabelle (%d Zeilen) belegt, 3D-Urteil traegt den Ausschluss ==\n", n);
+    for (i = 0; i < n; i++) {
+        const r41_zellen_modell_t *k = &r41_masken36_zellen[i];
+        char p[700]; uint8_t *roh, *msk; size_t rn = 0, mn = 0; int v, ok = 0;
+        snprintf(p, sizeof p, "%s/STAGE%u/ROOM%04X.RDT", PSX, (unsigned) k->raum >> 12, (unsigned) k->raum);
+        roh = slurp(p, &rn);
+        if (roh && k->rdt_off + 12 <= rn && !memcmp(roh + k->rdt_off, k->sca, 12)) {
+            re15_sca_entry_t e; r41_eintrag(k, &e);
+            ok = e.x == k->x && e.z == k->z && e.width == k->w && e.density == k->d && (e.type & 15) == k->typ
+                 && (e.floor >> 4) == k->band && (e.u0 & 1);
+        }
+        beleg_ok += ok;
+        if (!ok) printf("  BELEG FEHLT: ROOM%04X C%d R%d +0x%X\n", k->raum, k->cut, k->rect, (unsigned) k->rdt_off);
+        free(roh);
+        for (v = 0; v < 2; v++) {
+            re15_pri_cut_t pri; uint32_t off; int tief_ok = 0;
+            snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, (unsigned) k->raum | (unsigned) v);
+            msk = slurp(p, &mn);
+            if (msk && (off = re15_pri_msk_section_offset(msk, mn, k->cut)) && re15_pri_parse_section(msk, mn, off, &pri) > 0
+                && k->rect < pri.draw_count)
+                tief_ok = pri.masks[k->rect].depth == k->tiefe;
+            msk_ok += tief_ok;
+            if (!tief_ok) printf("  TIEFE ABWEICHEND: ROOM%04X C%d R%d\n", (unsigned) k->raum | (unsigned) v, k->cut, k->rect);
+            tab_ok += !re15_masken36_ausgeschlossen(re15_pri_masken_raum((unsigned) k->raum | (unsigned) v), k->cut, k->rect);
+            free(msk);
+        }
+    }
+    printf("  Beleg im RDT %d/%d | MSK-Tiefe == Zeile (Leon+Elza) %d/%d | Engine-Tabelle zeichnet %d/%d\n", beleg_ok, n,
+           msk_ok, 2 * n, tab_ok, 2 * n);
+    saaten_sammeln();
+    for (i = 0; i < n; i++) {
+        const r41_zellen_modell_t *k = &r41_masken36_zellen[i];
+        re15_pri_cut_t pri; atlas_t a; ergebnis_t E1, E0; char p[700]; uint8_t *msk; size_t mn = 0; uint32_t off; int m, vorgabe[RE15_PRI_MAX_MASKS_PER_CUT] = {0};
+        for (j = 0; j < i; j++) if (r41_masken36_zellen[j].raum == k->raum && r41_masken36_zellen[j].cut == k->cut) break;
+        if (j < i) continue;                                   /* je Cut einmal */
+        snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, (unsigned) k->raum);
+        msk = slurp(p, &mn);
+        if (!msk || !(off = re15_pri_msk_section_offset(msk, mn, k->cut)) || re15_pri_parse_section(msk, mn, off, &pri) <= 0
+            || !atlas_generator(k->raum, k->cut, &a)) { free(msk); continue; }
+        if (!raum_laden(&R, k->raum) || k->cut >= R.rdt.cut_count) { free(a.roh); free(msk); continue; }
+        cuts++;
+        g_r41_aus = 0; sektion_pruefen(&R, k->cut, &pri, &a, 1, vorgabe, &E1);
+        g_r41_aus = 1; sektion_pruefen(&R, k->cut, &pri, &a, 1, vorgabe, &E0);
+        g_r41_aus = 0;
+        {
+            int diff = 0, hier = 0;
+            for (m = 0; m < pri.draw_count; m++) {
+                int idx;
+                if (E1.aus[m] != re15_masken36_ausgeschlossen(re15_pri_masken_raum(k->raum), k->cut, m)) diff++;
+                if (!E1.aus[m] && E0.aus[m]) { nur3d++; hier++; nur3d_modell += r41_modell(k->raum, k->cut, m, &idx) != NULL; }
+            }
+            gleich += diff == 0;
+            echt3d += E1.echt3d;
+            printf("  ROOM%04X C%-2d: Ausschluss mit 3D-Urteil %s Tabelle, %d Rechtecke nur durch das 3D-Urteil gezeichnet, "
+                   "Punkte nur per Koerper belegt %ld\n", (unsigned) k->raum, k->cut, diff ? "!=" : "==", hier, E1.echt3d);
+        }
+        free(a.roh); free(msk); free(R.roh); R.roh = NULL;
+    }
+    printf("  Cuts %d, davon Ausschluss == Tabelle %d | nur durch das 3D-Urteil gezeichnet %d (mit Modell-Zeile %d) | Punkte per Koerper %ld\n",
+           cuts, gleich, nur3d, nur3d_modell, echt3d);
+    CHECK("jede Modell-Zeile steht byte-genau im RDT (12 SCA-Bytes am Offset, solide, Werte = Zeile)", n > 0 && beleg_ok == n);
+    CHECK("MSK-Tiefenfeld (Leon und Elza) == Zellen-Tiefe der Zeile", msk_ok == 2 * n);
+    CHECK("die Engine-Tabelle zeichnet jedes Modell-Rechteck (Leon und Elza)", tab_ok == 2 * n);
+    CHECK("Ausschluss MIT 3D-Urteil == Engine-Tabelle in jedem Cut mit Modell", cuts > 0 && gleich == cuts);
+    CHECK("Gegenprobe: ohne 3D-Urteil fielen Rechtecke weg (NB2: 80 je Variante), jedes davon mit Modell-Zeile",
+          nur3d >= 80 && nur3d_modell == nur3d && echt3d > 0);
 }
 
 /* ---- warum (Werkzeug R41 NB2) ----------------------------------------------------------------------------------- */
@@ -1895,6 +1974,7 @@ int main(int argc, char **argv)
     }
     if (!strcmp(teil, "zensus")) teil_zensus();
     else if (!strcmp(teil, "ausschluss")) teil_ausschluss();
+    else if (!strcmp(teil, "zellen3d")) teil_zellen3d();          /* Runde 41 Spur M NB2: Riegel unit_r41_masken36_zellen3d */
     else if (!strcmp(teil, "verdeckung")) teil_verdeckung();
     else if (!strcmp(teil, "erzeuge") && argc > 2) teil_erzeuge(argv[2]);
     else { teil_zensus(); teil_ausschluss(); teil_verdeckung(); }
