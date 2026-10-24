@@ -1237,6 +1237,19 @@ Anschwimm-Sperre +0x1C0 & 4, Hals-Zielmodus OFFEN mit Beleg) -> Bau -> gezielte 
   load_after_death|r35_affen_finisher|r36_tueren_.*|r37_itemband|r36_kartenitems)$|^probe_(re2z_stomp|crow_kill)$|
   ^r31_trefferboxen.*$" --timeout 600 -j 6` -> **100% tests passed, 0 tests failed out of 108** (Endstand, 211 s; mit dem
   ersten Stand 1 Fehler unit_r34_reaktion Zensus `Gator-Boss ?? ?? ?? ??` -> behoben, s. §11.1).
+- `ctest --test-dir re15_port/build -R "^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate|r37_itemband|r36_tueren)$"
+  --timeout 1200 -j 3` -> **100% tests passed, 0 tests failed out of 6** (Endstand, 829.68 s: r41_re2gator 112,8 s,
+  r36_schuss 146,9 s, r35_granate 168,0 s, r38_wasser 166,8 s, r36_tueren 37,3 s, r37_itemband 829,6 s unter Last; derselbe
+  Satz vor dem Quer-Ausgleich ebenfalls 6/6, 893 s). integration_r41_re2gator -V (Stand a1fefc53): `nische: RE2-Zeilen 57, Intro
+  Lage/Start/Ende 1/1/1 wand 0, Clip 6/3 125/150, Kamera DURCHBRUCH:6/0;SEITE:6/70;ANGRIFF:6/124;FREI:3/149;FINISHER:4/0,
+  Finisher Cut 6 ab F403 gehalten 248 Bilder / 13 Halt-Zeilen, HP min 25300 | natuerlich: untergetaucht bis F201 (Lauerplatz
+  -7200,-9200), Auftauchen Clip/Bild 6/0, erstes Bild F201 Clip 6, groesster Bildschritt 338 | dash: DASH 1/1 wand 0, Putz 6 x 9
+  = 54, gezeichnet bis 98 Quads/Bild in 20 Messbildern, Clip 2/3 150/300`.
+- Nach dem letzten Kommentar-Commit neu gebaut (nur gator_re2_r41.c uebersetzt, keine Warnung) und `ctest -R "^unit_r41_re2gator_"`
+  -> **100% tests passed, 0 tests failed out of 14**.
+- exe-Laeufe (eigene Kopien re15_pc_b41n3_*.exe, `B41nb3/mess/`): N (natuerlich, Leon), N0 (dasselbe ohne Gator, Pixelvergleich),
+  NZ (Elza ROOM2091, natuerlich: identisch, Auftauchen F201, Schritt 338), C3 / C3b (Kanister-Aufnahme ohne/mit Quer-Ausgleich),
+  K (Kanister-Tod, GB_TEST=5).
 
 ### 11.5 OFFEN (gemessen, benannt)
 - **Hals-Zielmodus** (RE2 FUN_800177c0 bei +0x1C0 & 4) und die normale RE2-Halsfuehrung FUN_80017d98: nicht gebaut, Beleg und
@@ -1281,3 +1294,17 @@ Anschwimm-Sperre +0x1C0 & 4, Hals-Zielmodus OFFEN mit Beleg) -> Bau -> gezielte 
 - **M2** behoben: Gier fest vom Fenster bis zum Anhaengen (C3 F1097-F1110 r4095), Kanister unbewegt bis zum Anhaengen, Anhaengen
   12 Takte nach dem Fenster wie RE2, Quer-Ausgleich -> Kanister zwischen den Kiefern. Riegel schleppen (3 Faelle).
 - **M3** Biss-Sperre umgesetzt (Riegel anschwimmen, 6 Faelle), Hals-Zielmodus OFFEN mit Beleg (§11.3).
+
+### 11.8 Paralleler Schreiber im Zweig + Nachtrag 6 (nur vermerkt)
+- Waehrend dieser Nachbesserung landete der Orchestrator-Commit 2fa4c43c (09:17, `doc(r41): AUFTRAG - Nachtrag 6 ...`, nur
+  AUFTRAG.md) zwischen 8fd08bdc und 1d3f0776 in r41/re2gator. Keine Code-Datei betroffen, kein Konflikt.
+- Nachtrag 6 (Wortlaut des Nutzers) gibt fuer den Alligator freie Hand bei Startlage und Leichenlage und legt die
+  Ankunftsszene fest (Spur F mit G): Leiche mit Schluessel -> Zombies oben in 2080 -> Leiche -> Alligator frisst sie samt
+  Schluessel -> Schrei/Schuetteln zu Leon -> Kampf mit RE2-Kampfmusik. Diese Nachbesserung setzt davon nichts um (nicht
+  zugeteilt). Vertraeglich mit §11.1: bis zum Szenen-Auftritt bleibt der Gator untergetaucht; die Szene taucht ihn mit
+  `re15_gr2_intro_start` (oder einer eigenen Lage + Clip) auf - `re15_gator_boss_untergetaucht` meldet dann 0 (im_intro), der
+  Boss-Takt stellt die Trefferbox im selben Takt wieder her (gb_auftauchen). Bausteine fuer "Schrei und Schuetteln": SE 4
+  (ENEMSE Bank 17, @0x80100d64/84) und die Ereignis-Maschine (Stroke-Ereignis 1 -> Rumble + Schuetteln @0x80101d44, Tafeln
+  @0x8009db14/@0x8009daf4). Fuer die RE2-Kampfmusik (Spur F): ROOM40A0 sub11 startet die Musik mit dem Intro -
+  `Sce_bgm_control 51 00 01 00 78 40` @SCD-main 0x071F (vor `Member_set2` @0x0730), weitere Aufrufe `51 00 05 00 00 00`
+  @0x0762 / @0x078A (Walker re2_scd_walk.py; Bedeutung der Bytes nicht in dieser Spur belegt).
