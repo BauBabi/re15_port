@@ -268,3 +268,14 @@ Erster Lauf der Integrationsgruppe (vor dem Nachziehen von r38 Teil e): `99% tes
 - Mit RE2-KI schnappt ein Kanal-Zombie, der direkt unter dem Spieler steht, nach oben (RE2-Verhalten, §6.1);
   einen Schritt vom Kanalrand weg laeuft er zur Kante und klettert hoch.
 - Keine Entscheidungsfragen.
+
+## 8. Nachbesserung 1 (nach Abnahme 0, Start 2026-10-24 ~12:50)
+
+Grundlage: `analysis/befunde_runde41/I_abnahme_0.md` (M1, V1, H2) + AUFTRAG.md 12:43 (I-E1: V1 erledigt, Haken angenommen;
+I-E2: Laden IN 2000/2001 ohne Zombies -> Spur I). Vorliegende Messungen/Belege der Abnahme werden NICHT wiederholt.
+
+| Mangel | Status |
+|---|---|
+| M1 RE1.5-KI: Liegepose vor dem Wecken Clip 0x12 f0 statt INIT-Pose 0x0c/0x0e f0 (auch 0x87/0x88) | in Arbeit |
+| V1 Vertrag | erledigt durch Orchestrator-Entscheid I-E1 |
+| I-E2 Laden in 2000/2001 -> keine Zombies | in Arbeit |
