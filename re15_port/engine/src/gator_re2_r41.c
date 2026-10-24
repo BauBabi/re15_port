@@ -2283,6 +2283,57 @@ static int gr2_fin_unverdeckt(const gr2_fin_t *t, int c, int32_t gx, int32_t gy,
     }
     return 1;
 }
+/* Nachbesserung 6: eine Buehnen-Suche (Kontext) und ein Raster-Fenster davon. */
+typedef struct {
+    const gr2_fin_t *t;
+    const re15_actor_t *e;
+    int32_t grenze, m_soll;
+    int yaw0;
+    re15_camera_view_t kv[RE15_GR2_KAM_MAX];
+    int kok[RE15_GR2_KAM_MAX];
+    int64_t best1, best2;
+    int32_t bx, bz, bm, bm13;
+    int by, bc, bkb[2], blb[2];
+    int n_geprueft, n_verdeckt, k_verdeckt;
+} gr2_fin_suche_t;
+static void gr2_fin_fenster(gr2_fin_suche_t *S, int32_t x0, int32_t x1, int32_t z0, int32_t z1, int32_t schritt)
+{
+    const gr2_fin_t *t = S->t;
+    const re15_actor_t *e = S->e;
+    const int32_t *kopf13 = t->b[GR2_FIN_P2 - 1][2];      /* Kopf (Bone 6) im Koppelbild, Rig relativ zur P0-Lage */
+    if (x0 < GR2_BECKEN_X0) x0 = GR2_BECKEN_X0;
+    if (x1 > GR2_BECKEN_X1) x1 = GR2_BECKEN_X1;
+    if (z0 < GR2_BECKEN_Z0) z0 = GR2_BECKEN_Z0;
+    if (z1 > GR2_BECKEN_Z1) z1 = GR2_BECKEN_Z1;
+    for (int32_t px = x0; px <= x1; px += schritt)
+        for (int32_t pz = z0; pz <= z1; pz += schritt) {
+            if (s_becken_fn(px, pz, GR2_KLEMM_R)) continue;
+            int32_t versatz = gr2_abstand(px, pz, e->x, e->z);
+            if (versatz > GR2_FIN_WEIT) continue;
+            for (int c = 0; c < g_room_rdt.cut_count && c < RE15_GR2_KAM_MAX; c++) {
+                if (!S->kok[c]) continue;                       /* NB6 (M2): nie die laufende Kamera (gr2_fin_laufend) */
+                int y2 = gr2_peilung(px, pz, g_room_rdt.cuts[c].pos_x, g_room_rdt.cuts[c].pos_z);
+                int32_t wx, wz, kp[3], vz = 0; int sx, sy;
+                gr2_dreh(y2, kopf13[0], kopf13[2], &wx, &wz);
+                kp[0] = px + wx; kp[1] = e->y + kopf13[1]; kp[2] = pz + wz;
+                if (!gr2_fin_proj(&S->kv[c], kp, &sx, &sy, &vz)) continue;
+                int32_t m13 = (int32_t)(((int64_t)S->kv[c].fov_screen_dist * t->skala * 16) / vz);   /* = gr2_massstab */
+                int64_t k1 = m13 > S->m_soll ? m13 - S->m_soll : S->m_soll - m13;
+                int64_t k2 = versatz + 4 * (int64_t)gr2_wdiff(y2, S->yaw0);
+                if (S->best1 >= 0 && (k1 > S->best1 || (k1 == S->best1 && k2 >= S->best2))) continue;
+                S->n_geprueft++;
+                /* erst Stichproben (jedes 8. Bild + letztes), dann jedes Bild - gleiche Bedingungen, nur schneller verworfen */
+                if (!gr2_fin_frei(t, px, pz, y2, 8)) continue;
+                int kb[2] = {0, 0}, lb[2] = {0, 0}; int32_t mm = 0;
+                if (!gr2_fin_sicht(t, c, px, e->y, pz, y2, S->grenze, kb, lb, &mm, 8)) continue;
+                if (!gr2_fin_unverdeckt(t, c, px, e->y, pz, y2, 8, &S->k_verdeckt)) { S->n_verdeckt++; continue; }   /* NB6 (M3) */
+                if (!gr2_fin_frei(t, px, pz, y2, 1) || !gr2_fin_sicht(t, c, px, e->y, pz, y2, S->grenze, kb, lb, &mm, 1)) continue;
+                if (!gr2_fin_unverdeckt(t, c, px, e->y, pz, y2, 1, &S->k_verdeckt)) { S->n_verdeckt++; continue; }
+                S->best1 = k1; S->best2 = k2; S->bx = px; S->bz = pz; S->by = y2; S->bc = c; S->bm = mm; S->bm13 = m13;
+                S->bkb[0] = kb[0]; S->bkb[1] = kb[1]; S->blb[0] = lb[0]; S->blb[1] = lb[1];
+            }
+        }
+}
 int re15_gr2_finisher_buehne(int slot, re15_actor_t *e)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return 0;
@@ -2300,41 +2351,24 @@ int re15_gr2_finisher_buehne(int slot, re15_actor_t *e)
          * H3: 573-1318). Suche: Raster GR2_FIN_RING ueber das ganze Becken (Aussenwaende = Becken-Diagonale GR2_FIN_WEIT) x alle Zonen-
          * kameras ausser der laufenden; der Massstab des Koppelbilds ist billig (eine Projektion) und begrenzt die teuren Pruefungen
          * (Wasser/Bild/Verdeckung je Bild), die nur fuer Lagen laufen, die die bisher beste schlagen. */
-        int32_t m_soll = gr2_massstab_soll(RE15_GR2_BLICK_FINISHER);
-        re15_camera_view_t kv[RE15_GR2_KAM_MAX];
-        int kok[RE15_GR2_KAM_MAX];
+        /* Grob -> fein (Laufzeit im Biss-Bild): erst Raster 4 x GR2_FIN_RING ueber das ganze Becken, dann GR2_FIN_RING im Fenster +-4 x
+         * GR2_FIN_RING um die beste grobe Lage (alle Kameras, die grobe Lage bleibt Schranke); ohne grobe Lage das volle feine Raster.
+         * Gemessen (unit_r41_re2gator_buehne, 2240 Suchen): volles feines Raster 129 s = 58 ms je Suche. */
+        static gr2_fin_suche_t S;
+        memset(&S, 0, sizeof S);
+        S.t = t; S.e = e; S.grenze = grenze; S.yaw0 = yaw0; S.m_soll = gr2_massstab_soll(RE15_GR2_BLICK_FINISHER);
+        S.best1 = -1; S.bc = -1; S.k_verdeckt = -1;
         for (int c = 0; c < g_room_rdt.cut_count && c < RE15_GR2_KAM_MAX; c++)
-            kok[c] = gr2_zonenkamera(c) && !gr2_fin_laufend(c) && re15_camera_build_view(&g_room_rdt.cuts[c], &kv[c]) == 0;
-        const int32_t *kopf13 = t->b[GR2_FIN_P2 - 1][2];      /* Kopf (Bone 6) im Koppelbild, Rig relativ zur P0-Lage */
-        int64_t best1 = -1, best2 = 0; int32_t bx = 0, bz = 0, bm = 0, bm13 = 0; int by = 0, bc = -1, bkb[2] = {0, 0}, blb[2] = {0, 0};
-        int n_geprueft = 0;
-        for (int32_t px = GR2_BECKEN_X0; px <= GR2_BECKEN_X1; px += GR2_FIN_RING)
-            for (int32_t pz = GR2_BECKEN_Z0; pz <= GR2_BECKEN_Z1; pz += GR2_FIN_RING) {
-                if (s_becken_fn(px, pz, GR2_KLEMM_R)) continue;
-                int32_t versatz = gr2_abstand(px, pz, e->x, e->z);
-                if (versatz > GR2_FIN_WEIT) continue;
-                for (int c = 0; c < g_room_rdt.cut_count && c < RE15_GR2_KAM_MAX; c++) {
-                    if (!kok[c]) continue;                          /* NB6 (M2): nie die laufende Kamera (gr2_fin_laufend) */
-                    int y2 = gr2_peilung(px, pz, g_room_rdt.cuts[c].pos_x, g_room_rdt.cuts[c].pos_z);
-                    int32_t wx, wz, kp[3], vz = 0; int sx, sy;
-                    gr2_dreh(y2, kopf13[0], kopf13[2], &wx, &wz);
-                    kp[0] = px + wx; kp[1] = e->y + kopf13[1]; kp[2] = pz + wz;
-                    if (!gr2_fin_proj(&kv[c], kp, &sx, &sy, &vz)) continue;
-                    int32_t m13 = (int32_t)(((int64_t)kv[c].fov_screen_dist * t->skala * 16) / vz);   /* = gr2_massstab */
-                    int64_t k1 = m13 > m_soll ? m13 - m_soll : m_soll - m13;
-                    int64_t k2 = versatz + 4 * (int64_t)gr2_wdiff(y2, yaw0);
-                    if (best1 >= 0 && (k1 > best1 || (k1 == best1 && k2 >= best2))) continue;
-                    n_geprueft++;
-                    /* erst Stichproben (jedes 8. Bild + letztes), dann jedes Bild - gleiche Bedingungen, nur schneller verworfen */
-                    if (!gr2_fin_frei(t, px, pz, y2, 8)) continue;
-                    int kb[2] = {0, 0}, lb[2] = {0, 0}; int32_t mm = 0;
-                    if (!gr2_fin_sicht(t, c, px, e->y, pz, y2, grenze, kb, lb, &mm, 8)) continue;
-                    if (!gr2_fin_frei(t, px, pz, y2, 1) || !gr2_fin_sicht(t, c, px, e->y, pz, y2, grenze, kb, lb, &mm, 1)) continue;
-                    if (!gr2_fin_unverdeckt(t, c, px, e->y, pz, y2, 1, &k_verdeckt)) { n_verdeckt++; continue; }   /* NB6 (M3) */
-                    best1 = k1; best2 = k2; bx = px; bz = pz; by = y2; bc = c; bm = mm; bm13 = m13;
-                    bkb[0] = kb[0]; bkb[1] = kb[1]; blb[0] = lb[0]; blb[1] = lb[1];
-                }
-            }
+            S.kok[c] = gr2_zonenkamera(c) && !gr2_fin_laufend(c) && re15_camera_build_view(&g_room_rdt.cuts[c], &S.kv[c]) == 0;
+        gr2_fin_fenster(&S, GR2_BECKEN_X0, GR2_BECKEN_X1, GR2_BECKEN_Z0, GR2_BECKEN_Z1, 4 * GR2_FIN_RING);
+        if (S.best1 >= 0)
+            gr2_fin_fenster(&S, S.bx - 4 * GR2_FIN_RING, S.bx + 4 * GR2_FIN_RING, S.bz - 4 * GR2_FIN_RING, S.bz + 4 * GR2_FIN_RING, GR2_FIN_RING);
+        else
+            gr2_fin_fenster(&S, GR2_BECKEN_X0, GR2_BECKEN_X1, GR2_BECKEN_Z0, GR2_BECKEN_Z1, GR2_FIN_RING);
+        int64_t best1 = S.best1; int32_t bx = S.bx, bz = S.bz, bm = S.bm, bm13 = S.bm13; int by = S.by, bc = S.bc;
+        int bkb[2] = { S.bkb[0], S.bkb[1] }, blb[2] = { S.blb[0], S.blb[1] }, n_geprueft = S.n_geprueft;
+        int32_t m_soll = S.m_soll;
+        n_verdeckt = S.n_verdeckt; k_verdeckt = S.k_verdeckt;
         if (best1 >= 0) {
             re15_gr2_log("FINISHER Buehne (Nachbesserung 5, RE2-P0 @0x80101048-4c): von (%d,%d) Gier %d -> (%d,%d) Gier %d Cut %d, "
                          "Versatz %d Drehung %d | Koppelbild Kopf (%d,%d) Leon (%d,%d) Massstab max %d (Grenze %d) F%u | NB6: laufende "
