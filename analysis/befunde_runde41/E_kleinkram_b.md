@@ -371,3 +371,18 @@ nach Osten). Original-Video `o_hg_ost.mp4`: dieselbe Lage steht ~100 Videobilder
   ist behoben (er kurbelt jetzt durchgehend wie im Original). Dass Leon beim "Yes" an die Kurbel SPRINGT, macht das
   Original genauso (im Original friert das Bild vorher ~1/4 s ein). Frage: Meinst du mit "herumfliegend" den Sprung, das
   Standbild, oder etwas anderes? Ein Bild (F9) oder die Stelle (welche Waffe, gerannt oder gegangen) wuerde es klaeren.
+
+## Nachbesserung 2 (nach Abnahme 1, 2026-10-24)
+Grundlage: `E_abnahme_1.md` §7 Maengel 1-3 und master-AUFTRAG 2026-10-24 04:52 (E-N1 Kamera-Flackern ROOM2020, E-N2
+Geh-Stopp waehrend der Kurbel-Frage). Stand bei Beginn: HEAD 29b7a8a7 (Code = 753652fc). Laeufe unter `<sp>/E41n2/`
+(`<sp>` = Scratchpad dieser Sitzung, derselbe Ordner wie E41n1/E41a1). Vorliegende Messungen werden NICHT wiederholt,
+sondern zitiert (Abnahme 1 §3.4 R2/R4, §6.1 EN1_kamera_{nach,basis}).
+
+Reihenfolge: (1) E-N1 Kamera (konkreter Port-Fehler), (2) E-N2 Geh-Stopp (Disasm Kommando 1 + Original nach dem Ja im
+Geh-Fall), (3) Mangel 1 Urteil "herumfliegend" nach (1)+(2).
+
+### Mangel 3 / E-N1 — Kamera-Flackern ROOM2020 bei (9000,-3200)
+Messung vorher (Abnahme 1 §6.1, nicht wiederholt): `cam=` wechselt F1..F300 299-mal (2,0,2,0,...), VORHER = NACHHER.
+RVD ROOM2020 (RDT-Header +0x28 = 0x158, selbst gedumpt `<sp>/E41n2/rvd.py`): z1 @0x016C `01 ff 00 02` Cut 0 -> 2,
+Viereck (8000,-4500)(8000,-2000)(9000,-2000)(9000,-4500); z5 @0x01BC `01 ff 02 00` Cut 2 -> 0, Viereck
+(9000,-4500)(9000,-2000)(10000,-2000)(10000,-4500). Beide teilen die Kante x = 9000 — der Messpunkt liegt GENAU darauf.
