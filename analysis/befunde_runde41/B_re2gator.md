@@ -10,9 +10,10 @@ Zeiten aus `date`. Jeder Schritt wird hier VOR dem Bau notiert.
 
 ## 0. Protokoll (neueste Eintraege oben)
 
-* 2026-10-24 (FORTSETZUNG 3 nach Sitzungslimit ~01:00, neuer Agent): Baum sauber, HEAD a6653809 (Kamera-Programme
-  Nachtrag 4, UNGEPRUEFT). Plan: configure + build -> gezielte Tests (Regex §8.7 + unit_r41_re2gator_kamera +
-  integration_r41_re2gator) -> Schnittfolge im echten Ablauf an der exe messen (§9.4) -> Dossier §9.3ff + §8 abschliessen.
+* 2026-10-24 02:51-04:xx (FORTSETZUNG 3 nach Sitzungslimit ~01:00, neuer Agent): Baum sauber, HEAD a6653809 (Kamera-
+  Programme, UNGEPRUEFT) -> gebaut (keine neue Warnung) + gezielt getestet; Schnittfolge am ECHTEN Ablauf gemessen (§9.4).
+  Drei Befunde aus der Messung behoben: Kamera-Wahl mit RE2-Massstab-Grenze (74f247c1, §9.5), R1-Zeitlupe VSync 4
+  (6592c742, §9.7), Putz am Ursprung statt um Leon / nie gezeichnet (fb8ed4da, KORREKTUR in §8 M2). §8.8 + §9.3-9.8 neu.
 * 2026-10-23 22:0x-22:2x: Kiefer-Umbau gebaut (22:04, 783 Schritte, keine neue Warnung), Unit-Riegel 45/45 inkl.
   unit_r41_re2gator_kiefer, Integration r41_re2gator + r36_schuss 2/2 am neuen Stand. exe-Messungen (§4.3): Lauf A2
   (Verfolgung + RE2-Finisher, Clip-Folge 0/1/4/0/1/4/5/11 bitgleich in zwei Laeufen) und Laeufe B2/B3 (Kanister-
@@ -423,6 +424,17 @@ Fortsetzung 2026-10-23 21:4x-22:2x (gebauter Stand, keine volle Suite):
 - Stand 25a3fc77: `ctest -R "^integration_(r41_re2gator|r36_schuss)$"`: 100% tests passed, 0 tests failed out of 2
   (integration_r36_schuss 161.53 sec, integration_r41_re2gator 27.58 sec)
 
+Fortsetzung 3 2026-10-24 (Endstand fb8ed4da, Bau 03:5x, keine volle Suite):
+- `ctest -R "^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|sca_wall_hit|re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_.*|re2_hit_repeat_crow_spider|re2_crow_.*|crow_ai|crow_fixes|crow_death_corpse|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|r35_fenster_kraehe|r37_re2zombie_.*|r34_re2fx.*|montage_fx|r35_cut1150_montage.*|r38_montage.*|r38_wasser.*|r38_wasserzombie|r39_heliport1171_kraehen|r30_granate|r35_granate|r36_granate)$|^probe_(re2z_stomp|crow_kill)$"`
+  (Regex der Abnahme 0 inkl. unit_r41_re2gator_wand/_kamera): **100% tests passed, 0 tests failed out of 89** (26,05 s).
+- `ctest -R "^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate)$"`: **100% tests passed, 0 tests failed out of 4**
+  (r35_granate 193,89 s, r36_schuss 151,68 s, r38_wasser 193,60 s, r41_re2gator 32,58 s); Statuszeile r41_re2gator:
+  `ok - ... RE2-Zeilen 49 (INTRO 1/1, DASH 1/1, Putz 6 x 9 = 54), Clip 6/2/3 Bilder 125/150/300, HP min 25300, Kamera
+  DURCHBRUCH:6/0;SEITE:6/70;ANGRIFF:6/124;FREI:3/149;FINISHER:4/0, Putz gezeichnet bis 98 Quads/Bild in 20 Messbildern`.
+- Riegel-Ausgaben: unit_r41_re2gator_kamera "R1-Fall 2: Winkelwahl ohne Grenze Cut 2 (massstab 0.0470, Grenze 0.0289),
+  gewaehlt Cut 1"; unit_r41_re2gator_kanister "Zeitlupe VSync 4 ueber 38 Takte (R1 P0 .. vor P3)"; unit_r41_re2gator_putz
+  "lebende Teilchen max 11/Bild, groesster xz-Abstand zu Leon 1560".
+
 ## 6. OFFEN (benannt, nicht geraten)
 
 - (ERLEDIGT 21:5x) Part-7-Felder nach FUN_80104318: RE'd als Part-Record des Modellblocks (§2.6) und ueber
@@ -434,8 +446,9 @@ Fortsetzung 2026-10-23 21:4x-22:2x (gebauter Stand, keine volle Suite):
   schneidet ihn aus ROOM40A0.RDT (ESPid-Liste @0x59CC, EFF @0x65E4, TIM @0x221FC) nach shared_assets/RE2
   und registriert ihn ueber re2fx_register_raum.
 - Frame-Wort-Latenz 1 Bild (§3.3) — Port-Struktur seit Runde 8, nicht in dieser Spur geaendert.
-- RE2 schneidet im Intro/R1 die Kamera um (Cut 0/1, 5, 6/13) und friert den Spieler (0x800cfbd8 |= 0x110):
-  Pool-Kampf ohne Kameraskript, Leon behaelt die Kontrolle (PORT-WAHL).
+- (ERLEDIGT Nachtrag 4, §9) RE2-Kameraschnitte Intro/R1/Finisher auf die 2090-Zonenkameras; die Spieler-Sperre
+  (Bit 0x10 Kino-Balken) bleibt PORT-WAHL: Leon behaelt die Kontrolle.
+- Intro-Knick zur Westwand (Kopf ueber der Wand in Cut 7) und Finisher -> RE1.5-Todeskamera: §9.8, Fragen §7.
 - Schaden je Waffe: der Port rechnet die RE1.5-Zeile je Typ (exe: Pistole 7 = s_wpn_dmg_gator[3],
   re15_damage.c:429; der Riegel sockel nutzt attack_type 0 = 30) — RE2 (0x800A4A28: 17) braeuchte eine
   RE1.5->RE2-Waffenzuordnung (nicht vorhanden). Folge: "geschwaecht" (< 25000) erst nach 43 Pistolentreffern.
@@ -487,6 +500,24 @@ widersprechen — der Code folgt diesen Entscheiden, nichts davon ist ein Schalt
    Tragen -> R1 (Explosion, Clip 9, geplatzter Kiefer §2.6, Leiche).
 3. B3 Putz nur an den RE2-Stellen = beim Dash-Start (ROOM40A0 sub13/sub14, 6 x 9 Partikel), nicht bei jedem
    starken Schuetteln.
+
+Nachtrag 4 / Nachbesserung 1 (Fortsetzung 3) - was der Nutzer jetzt sieht:
+- RE2-artige Kameraschnitte (§9): beim Durchbruch Cut 7 (Gator taucht auf und kommt frontal auf die Kamera zu), bei
+  Clip-6-Bild 70 Cut 0 (seitlich), am Clip-6-Ende Cut 7, nach dem Schnapper zurueck auf Leons Kamera; bei der Kanister-
+  Explosion ein Schnitt auf eine Totale, wenn Leons Kamera den Kopf nicht zeigt (zurueck nach Clip 9); beim toedlichen Biss
+  ein Schnitt (Sperre bis Game Over). Jeder Schnitt steht mit Bildnummer und allen Kandidaten in gator_boss.log ("RE2 KAMERA").
+- Die Kiefer-Explosion laeuft wie in RE2 in halber Bildrate (Zeitlupe, ~2,5 s).
+- Der Putz faellt jetzt sichtbar um Leon (vorher entstand er unsichtbar am Raumursprung).
+- Keine neuen Assets und keine Sprachdateien in dieser Fortsetzung.
+Entscheidungsfragen (gemessen, nicht geaendert):
+4. Finisher: RE2 bleibt bis zum Game Over auf dem Finisher-Schnitt; der Port zeigt ihn ~80 Bilder und blendet dann in die
+   byte-true RE1.5-Todeskamera (Weissblende + Orbit, YOU DIED) - so lassen oder die RE1.5-Todeskamera im Gator-Finisher
+   unterdruecken (RE2-Verhalten)?
+5. Intro: der RE2-Knick (Clip 3 + yaw += 1024) dreht den Gator im Westkanal zur Westwand, der Kopf ragt in Cut 7 ueber die Wand
+   (§9.8). So lassen (RE2-Animation unveraendert) oder den Intro-Start so drehen, dass der Knick zu Leon zeigt (neue PORT-WAHL)?
+6. Explosion und Finisher sehen im Becken seitlich statt frontal aus: ROOM2090 hat keine Kamera vor dem Kopf in diesen Lagen
+   (die einzige frontale fuer die Explosion laege 2,5-fach naeher als jeder RE2-Schnitt). Neue Kameras wuerden neue
+   Hintergruende brauchen - nicht im Umfang.
 
 ## 8. Nachbesserung 1 (Abnahme 0, B_abnahme_0.md; Beginn 2026-10-23 23:1x, HEAD 18c0894b)
 
@@ -547,6 +578,24 @@ ANGENOMMEN (M3 kein Mangel mehr); Abnahme B 1 prueft zusaetzlich Nachtrag 4 (RE2
   "RE2 PUTZ runde r/6 spawns=n gesamt=m um=(x,y,z) letzter=(x,y,z)" + Haken re15_gr2_putz_letzte(); der Riegel
   pinnt den letzten Spawn jeder Runde auf Leon + (-622, -2400, -50) (k_putz[8] @0x0900).
 - Messung nachher: s. §8.7.
+- KORREKTUR (Fortsetzung 3, 2026-10-24): die Messzeile und der Riegel pinnten nur die ANGEFORDERTE Lage (`s_putz_letzt`),
+  nicht die wirksame. Gemessen mit der neuen Zeile `[gator-re2] Putz-Sicht` (gator_re2_pc.c, Stand 6592c742, Leon in der
+  Tuernische): die Teilchen lagen bei `welt=(67,-2000,2)` .. `(-634,-4000,-722)` = am URSPRUNG, Bildlage x 394..560
+  (ausserhalb), `quads=85 gezeichnet_vorbild=0` - der Putz war im Spiel nie zu sehen (Framedump F340-F372 ohne Staub).
+  Ursache: gr2_fx uebergab eine STACK-Matrix (lokales m[32]); FUN_8001bf10 merkt sich den Zeiger (`sw a2,108(t0)` @0x8001cd6c,
+  re2_fx.c mtx_src), FUN_8001d894 kopiert ihn bei Status-Bit 0x800 je Bild nach +0x4C (@0x8001d8ac-fc) -> haengender Zeiger;
+  ausserdem stand die Lage in der Translation statt im Versatz. RE2 (selbst disassembliert): Sce_espr_on @0x800565a4 ruft
+  FUN_8001bf10(a0, Richtung `lh a1,14(s1)` @0x80056610, a2 = FUN_80056a38(Byte 4 = 0), a3 = &{x,y,z} `addiu a3,sp,16`
+  @0x80056618 aus den SCD-Bytes 8..13 @0x800565ec-0c); FUN_80056a38(0) -> Tafel @0x80011470[0] = 0x80056a78 `lui v0,0x800a /
+  addiu v0,v0,-9404` = Einheitsmatrix 0x8009db44 (Bytes `00 10 00 00 .. 00 10`, Translation 0). Die Fontaene uebergibt die
+  Part-Matrix des Modellblocks (`addiu a2,s2,1104` @0x80103f58), der Spritzring die Kanister-Matrix.
+  Aenderung (fb8ed4da): Putz = `re2fx_einheitsmatrix` + Versatz (Lage um Leon); Fontaene/Spritzring = statische Quell-Matrizen
+  (Part 6/7, Kanister in seiner AKTUELLEN Weltlage - vorher die alte freie Lage), je Takt nachgefuehrt wie der RE2-Modellblock.
+  Messung nachher (Lauf putz3, gleicher Aufbau): `welt=(-8260,-3500,-25588)` .. `(-9434,-4000,-25937)`, Bildlage x 36..83 /
+  y 25..59 (ueber Leons Kopf), `gezeichnet_vorbild` 27..98 Quads/Bild; Staubwolken ueber Leon in Cut 0 F350-F372
+  (bilder_r41b/putz_m2_vorher_nachher_cut0.png, Ausschnitt x2 / x2,5 aufgehellt nur zur Sichtung). Riegel:
+  unit_r41_re2gator_putz pinnt die wirksame Pool-Lage (Bank 4, +0x34/+0x38; groesster xz-Abstand zu Leon 1560, Soll <= 3000),
+  integration_r41_re2gator die gezeichneten Quads ("Putz gezeichnet bis 98 Quads/Bild in 20 Messbildern") und die Lage um Leon.
 
 ### M3 (Vertrag §1.3): Haken in nicht zugeteilten Dateien
 - Orchestrator-Entscheid B5: angenommen, Vertrag um B erweitert; Konflikte loest die Integration. master (bb08d04f)
@@ -554,6 +603,7 @@ ANGENOMMEN (M3 kein Mangel mehr); Abnahme B 1 prueft zusaetzlich Nachtrag 4 (RE2
   Haken: main.c @122 (include), @4008 (re15_pc_gator_re2_init), @5598-5599 (Schuettel-Versatz), @11094
   (re15_gr2_pc_zeichnen); enemy_ai_re2_zombie.c @4634-4637 (Typ 0x23 in re15_re2z_gore_active); re2_fx.c @880,
   @901-902 (Dispatch) + Block "RUNDE 41 SPUR B" ab @1560 (op_11/op_73).
+  Fortsetzung 3: +1 Haken in main.c am Bild-Deckel (`budget = re15_gr2_pc_bildbudget(frame_budget_ms)`, R1-Zeitlupe §9.7).
 
 ### M4 (Dossier §4.3): falsche Erklaerung
 - §4.3 Lauf A2 korrigiert: der Gator durchlief die Zonen 1 -> 2 -> 0 (Zonenlinie z = -18100 bei (-7289,-18278)
@@ -587,6 +637,30 @@ Gezielte Tests am Stand 591041e9 (Bau 00:08):
   -> M1: Intro (Clip 6 -> 3) und Dash (Clip 2 -> 3, auf der Westwand-Klemmlinie nach Sueden) zuenden im normalen
   Ablauf; M2: 54 Putz-Spawns um Leons Stand (-8438,0,-25538), letzter Spawn = Leon + (-622,-2400,-50) (k_putz[8]).
 
+**Fortsetzung 3 2026-10-24 02:5x-04:xx (neuer Agent nach dem Sitzungslimit ~01:00):** Baum sauber, HEAD a6653809 (UNGEPRUEFT).
+`local_build.sh configure` + `build`: "no work to do" (exe 00:46:52 = Stand a6653809); die Spur-B-Quellen per touch neu
+uebersetzt: 779 Schritte, keine neue Warnung -> a6653809 kompiliert; unit-Regex (89) und integration_r41_re2gator gruen.
+Danach am ECHTEN Ablauf gemessen (§9.4) und drei Befunde behoben: (1) Kamera-Wahl ohne Massstab-Grenze -> EXPLOSION mit
+dem Kopf 3201 vor der Linse (74f247c1, §9.5); (2) R1-Zeitlupe VSync 4 (vormals OFFEN, 6592c742, §9.7); (3) Putz am
+Ursprung statt um Leon und nie gezeichnet (fb8ed4da, KORREKTUR unter M2). Endstand-Messungen:
+- Lauf KA (GB_TEST=1, Tuernische): Kamera-Folge DURCHBRUCH F6 Cut 7 / SEITE F76 Cut 0 / ANGRIFF F130 Cut 7 / zurueck + frei F280
+  / FINISHER F657 Cut 0 (§9.4); INTRO/DASH/Putz wie oben (`RE2 DASH start pos=(-7300,-18109) yaw=1024 putz_um=(-8438,0,-25538)`).
+- Lauf putz3 (dto.): Putz-Teilchen um Leon, 27..98 Quads/Bild gezeichnet (M2).
+- Lauf KK (GB_TEST=5): R1 F70 -> Cut 1 (EXPLOSION), zurueck F106, frei F108; VSync 4 F70..F108 = 66,6 ms/Bild; debug.log
+  `[gator-re2] Raum-SE 15 -> GATOR40A0.VBS Satz 1` (M6).
+- Lauf KF: FINISHER-Schnitt bis ~F738, dann RE1.5-Todeskamera.
+
+### 8.8 Abschluss Nachbesserung 1 (je Mangel)
+| Mangel | Ursache | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|
+| M1 Dash/Intro zuenden nicht | absolute Bahn + Bahn-Probe gb_bahn_frei auf der Klemmlinie | Clip-Geometrie §8 M1, Zonenlinie `slti v0,v0,-17877` @0x80100990-98 / `-7322` @0x801009d8-e0, `yaw += 1024` @0x80100eb0-c0 / @0x80100938-48 | bildweise Wurzelbahn durch die Dispatcher-Klemme, Bahn-Probe weg, yaw += 1024 | INTRO 1/1, DASH 1/1 im exe-Riegel; Clip 6/2/3 = 125/150/300 Bilder |
+| M2 Putz nicht belegt | haengt an M1; Lage nie gesetzt; Stack-Matrix + Lage in der Translation (Teilchen am Ursprung) | ROOM40A0 sub13/sub14 §2.4, Sce_espr_on @0x800565a4-0x80056618, Einheitsmatrix 0x8009db44 | Lage um Leon; Einheitsmatrix + Versatz wie RE2; dauerhafte Quell-Matrizen | 54 Spawns; Teilchen um Leon (<= 1560 xz); 27..98 Quads/Bild gezeichnet; Bild putz_m2_vorher_nachher_cut0.png |
+| M3 gemeinsame Dateien | - | Entscheid B5 | angenommen; Fortsetzung 3: +1 Haken main.c Bild-Deckel (Zeitlupe) | - |
+| M4 falsche Erklaerung | - | state.log Lauf A | §4.3 korrigiert | - |
+| M5 GLOB+REMOVE | - | - | nur die eigene exe-Kopie | - |
+| M6 Raum-SE 15 | kein Logpfad | Se_on 0x020f0001 @0x8010237c-88 | debug.log-Zeile in gator_re2_pc.c | `[gator-re2] Raum-SE 15 -> GATOR40A0.VBS Satz 1` (Lauf KK) |
+| Nachtrag 4 Kameraschnitte | - | §9.1/§9.2 | Programme INTRO/R1/FINISHER, Wahl mit Massstab-Grenze | §9.4: Folge + Bildnummern im exe-Riegel gepinnt |
+
 ## 9. Nachtrag 4 — RE2-Kameraschnitte des Alligator-Kampfes (ROOM40A0) auf ROOM2090/2091
 
 NUTZER-VORGABE (AUFTRAG.md 22:37, "Ja, ich moechte RE2-artige Kameraschnitte"): die Schnittfolge des RE2-Kampfes
@@ -618,7 +692,7 @@ Blickbeziehung waehlen. Form = RE2 (Ausloeser, Bild, Dauer, Sperre), Zuordnung =
   | @0x80102a7c / @0x80102aec | R3 | 7/14, dann 8 | dito |
   KEIN Schnitt in: T2 Kanister-Aufnahme (0x801017c4-0x80101d40), Sub-1-Pre mit Kanister-Fenster (0x80100964-0x80100c1c),
   Sub 3 Dash (0x80100d30-0x80100f34), R4 Grossreaktion (@0x80102bd0), R0. Sperre-Ende: Intro P2 `and v0,v0,-17 / and
-  v0,v0,-257` @0x801008fc-918 (Bits 0x10/0x100 frei am Clip-3-Ende), R1 P3 `addiu v1,zero,-257 / and v0,v0,v1 / sw v0,0x800cfbd8` @0x80102688-94 (NUR Bit 0x100 frei; §2.5 nannte "&= ~0x101" - korrigiert). Zusatzbefund R1: `addiu v0,zero,4 / sb v0,0x800dfc1a` @0x8010235c-64 = VSync(4) statt 2 (FUN_8002b968 `VSync(DAT_800dfc1a)`) = halbe Bildrate (Zeitlupe) von P0 bis P3, P3 setzt 2 zurueck @0x80102668/7c (§9.7 OFFEN).
+  v0,v0,-257` @0x801008fc-918 (Bits 0x10/0x100 frei am Clip-3-Ende), R1 P3 `addiu v1,zero,-257 / and v0,v0,v1 / sw v0,0x800cfbd8` @0x80102688-94 (NUR Bit 0x100 frei; §2.5 nannte "&= ~0x101" - korrigiert). Zusatzbefund R1: `addiu v0,zero,4 / sb v0,0x800dfc1a` @0x8010235c-64 = VSync(4) statt 2 (FUN_8002b968 `VSync(DAT_800dfc1a)`) = halbe Bildrate (Zeitlupe) von P0 bis P3, P3 setzt 2 zurueck @0x80102668/7c (§9.7, in Fortsetzung 3 umgesetzt).
 - SCD ROOM40A0 (Walker re15_port/tools/r41_re2gator/re2_scd_walk.py, Laengen information73.txt): Cut_chg NUR in sub02 = Durchbruch-Szene
   (Ausloeser AOT 5 `Aot_set_4p 67 05 05 41 ... ff 00 18 02` @SCD-main 0x04CA, sat 0x41 Betreten, einmalig ueber
   Flag 4/0x33 @0x00AE): `29 0a` @0x00CC (Cut 10) -> warten auf 5/0x0b (Leons Satz: sub03 Message_on 7 + Xa_on 0x20
@@ -653,3 +727,125 @@ Bone 6, Blickachse = Bone 1 -> Bone 6 (xz) der EM23-Pose (Scale 1). "frontal" = 
 Belegbilder der RE2-Hintergruende: info/re2leon/COMMON/BSS/ROOM40A/ROOM40A{10,11,00,01,05,06,07,13,14}.bmp
 (Bildbogen bilder_r41b/re2_40a0_cuts_10_11_00_01_05.png und re2_40a0_cuts_06_07_08_13_14.png, halbe Groesse, Reihenfolge wie im Dateinamen: Cut 10 Durchbruchstelle mit Muellhaufen, Cut 11 Leiter/Gelaender,
 Cut 0/1 Korridor Bein 1, Cut 5 Bein 2 nach Sueden, Cut 6/7 Bein 3, Cut 13/14 = 6/7 mit Schutt).
+
+### 9.3 Umsetzung (a6653809 Kamera-Programme, 74f247c1 Massstab-Grenze, Fortsetzung 3)
+Dateien: `engine/src/gator_re2_r41.c` (Kamera-Programme, Wahl, Messzeilen), `include/re15_gator_re2_r41.h` (API),
+`engine/src/enemy_ai_boss_gator.c` (1 Haken in FRESSEN P0 -> `re15_gr2_kamera_finisher`, nach der Opfer-Platzierung),
+Riegel `unit_r41_re2gator_kamera` + Kamera-Pins in `integration_r41_re2gator`.
+- Sperre der Zonenkamera = `g_scd.cut_auto_enabled = 0` (RE2 `0x800cfbd8 |= 0x100`, Hauptschleife `andi v0,v0,0x100 / bne`
+  @0x8002639c-a0; RE1.5 DAT_800aca3c Bit 0x100). Schnitt = RE1.5-Cut_chg-Zwilling (scd_vm.c op_cut_chg: cam_id_prev,
+  cam_id, cam_change_pending, work_vars 0x0A/0x0C @0x800402c0-fc). Rueckkehr = Cut_old-Zwilling (FUN_8004032c) auf den
+  Zonen-Cut VOR dem Programm, frei = `cut_auto_enabled = 1`.
+- INTRO: DURCHBRUCH beim Intro-Start (Clip 6 Bild 0 = RE2 Cut 10, SCD sub02 `29 0a` @0x00E0), SEITE bei Clip-6-Bild 70
+  (`addiu v0,zero,70 / bne v1,v0` @0x80100894-98), ANGRIFF am Clip-6-Ende (@0x801008bc-c8), zurueck + frei am Clip-3-Ende
+  (`and v0,v0,-17 / and v0,v0,-257` @0x801008f8-918).
+- R1: Sperre (`ori v0,v0,0x100` @0x8010220c); Schnitt EXPLOSION nur, wenn der aktuelle Cut den Kopf NICHT zeigt (RE2:
+  aktueller Cut 6/13 @0x80102218-24 und z < -13300 @0x8010222c-34 = der Fall "Kopf ausserhalb", Probe: Bild-x -2 in
+  Cut 6), dann +0x218 |= 0x40 (@0x80102240-4c); zurueck am Clip-9-Ende (@0x801024a4-ec); frei in P3 (@0x80102688-94).
+- FINISHER: Sperre + Schnitt bei FRESSEN P0 (@0x80100fbc-ff4), kein Ende (RE2: Game Over).
+- Kein Schnitt in Dash, R4, R0 und Kanister-Aufnahme (T2 0x801017c4-0x80101d40) - Zensus der 9 Rufe (§9.1).
+- Messzeilen (gator_boss.log): `RE2 KAMERA <Programm> <Blick> RE2-Cut c -> Cut k F<n> clip= bild= frontal= soll= massstab=
+  re2_m= grenze=`, `RE2 KAMERA <Programm> zurueck/frei ...`, je Schnitt alle Zonenkameras als `RE2 KAMERA-KANDIDAT ...`
+  (Kopf-Bildlage, Massstab, frontal, Abstand zum Soll). Messhaken `re15_gr2_kamera_folge` (Riegel).
+- Fortsetzung 3 (Mangel aus der exe-Messung §9.4 am Stand a6653809): Massstab-Grenze in der Wahl (§9.5).
+
+### 9.4 Messung nachher (exe, eigene Kopien re15_pc_r41b_kam_*.exe, Basis-Umgebung wie §4.3 / Abnahme 0)
+**Lauf KA** (`RE15_GB_TEST=1`, Leon in der Tuernische (-8200,-25550), `RE15_EXIT_AT=700#2090`, `RE15_FRAMEDUMP=0-700/1`),
+gator_boss.log (gleich in 3 Laeufen und im Riegel integration_r41_re2gator):
+```
+RE2 KAMERA INTRO DURCHBRUCH RE2-Cut 10 -> Cut 7 F6 clip=6 bild=0 frontal=4098 soll=4092 massstab=661 re2_m=1161 grenze=1892
+RE2 KAMERA INTRO SEITE RE2-Cut 0 -> Cut 0 F76 clip=6 bild=70 frontal=1876 soll=1445 massstab=679 re2_m=1892 grenze=1892
+RE2 KAMERA INTRO ANGRIFF RE2-Cut 1 -> Cut 7 F130 clip=6 bild=124 frontal=1397 soll=3386 massstab=1150 re2_m=927 grenze=1892
+RE2 KAMERA INTRO zurueck -> Cut 0 F280 clip=3 bild=149
+RE2 KAMERA INTRO frei (Zonenkamera an) Cut 0 F280 clip=3 bild=149
+RE2 KAMERA FINISHER FINISHER RE2-Cut 7 -> Cut 0 F657 clip=4 bild=0 frontal=-605 soll=4094 massstab=952 re2_m=1354 grenze=1892
+```
+state.log `cam=`: F1 0, F6 7, F76 0, F130 7, F280 0 (angeforderter Cut im selben Bild). Im Bild erscheint jeder Schnitt im
+FOLGEbild (Framedump F6 noch Cut 0, F7 Cut 7; ebenso F76/F77, F130/F131, F280/F281). Das ist die RE2-Ordnung: FUN_8002b968
+wendet den Cut erst am Bildende NACH dem VSync an (`jal VSync` @0x8002b998, `andi v0,v0,0x80` @0x8002b9e0, `lh v1,DAT_800d4820`
+@0x8002b9f0 gegen `lbu v0,DAT_800cfbf2` @0x8002b9f8, `sb v0,DAT_800dfc1b` @0x8002ba0c, `jal FUN_8002bdf4` @0x8002ba50); das
+Bild, in dessen Tick FUN_8002c7ac gerufen wurde, ist noch mit der alten Kamera gebaut.
+Bildfolge (bilder_r41b/kamera_n4_re2_vs_port_je_schnitt.png): Cut 7 F7-F75 der Gator taucht links auf und kommt frontal auf die
+Kamera zu (F20-F60); Cut 0 F77-F130 Gator seitlich im Hintergrund vor dem Gittertor; Cut 7 F131-F280 Clip 3; danach Leons
+Zonenkamera Cut 0; der Dash F341-F640 laeuft ohne Schnitt (wie RE2).
+
+**Lauf KK** (Kanister-Tod, Rezept §7: `RE15_GB_TEST=5`, Leon (6500,-25000), Kanister (4430,-26160), Pistole,
+`RE15_EXIT_AT=260#2090`, OHNE `RE15_FORCE_CUT`): Leons Zonenkamera Cut 0 zeigt den Kopf nicht -> Schnitt (RE2-Fall Cut 6/13):
+```
+RE2 R1 VSync 4 (Zeitlupe) F70
+RE2 R1 start pos=(4997,-20318) hp=25293
+RE2 KAMERA R1 EXPLOSION RE2-Cut 5 -> Cut 1 F70 clip=9 bild=0 frontal=1247 soll=4046 massstab=715 re2_m=1154 grenze=1892
+RE2 KAMERA R1 zurueck -> Cut 0 F106 clip=9 bild=36
+RE2 R1 ende (Leiche) pos=(3413,-25001)
+RE2 R1 VSync 2 F108
+RE2 KAMERA R1 frei (Zonenkamera an) Cut 0 F108 clip=9 bild=36
+```
+Bild F71-F106 (Cut 1, Totale aus der SW-Ecke): Blitz am Kopf (F71), weisse Fontaenen + rote Kiefer-Scherben (F73-F90), Leiche
+mit offenem Maul (F100); F107 zurueck auf Cut 0. VOR der Grenze (Stand a6653809) schnitt die Wahl auf Cut 2: Kandidat
+`Cut 2 kopf_bild=(273,178) massstab=2839` = Kopf 3201 vor der Linse, 2,5-facher RE2-Cut-5-Massstab; der Leib fuellte F71-F106
+als Pixelblock (Lauf kam_k, gesichtet) -> §9.5. Kandidaten Lauf KK (Stufe 2 = Grenze aktiv):
+
+| Cut | Kopf im Bild | Massstab (x 2^-16) | frontal | Abstand zum Soll |
+|---|---|---|---|---|
+| 0 | draussen | - | +3611 | - |
+| 1 | (180,98) | 715 | +1247 | 2799 (gewaehlt) |
+| 2 | (273,178) | 2839 > 1892 | +3395 | 651 (die Winkelwahl vor Fortsetzung 3) |
+| 3 / 4 / 6 | (167,104) / (277,93) / (56,102) | 534 / 500 / 484 | -4007 / -3056 / -3056 | 8053 / 7102 / 7102 |
+| 5 / 7 | draussen | - | - | - |
+
+**Lauf KF** (wie KA, `RE15_EXIT_AT=925#2090`, Framedump 650-925/5; bilder_r41b/kamera_n4_finisher_dann_todeskamera.png):
+FINISHER-Schnitt Cut 0 F658 bis ~F738 (Clip 4/5, Leon im Maul), F740 Weissblende, ab ~F745 die byte-true RE1.5-Todeskamera
+(Orbit FUN_80015850, Memory reai-v2-death-camera) mit YOU DIED; Raumende F931 (Game Over). RE2 bleibt bis zum Game Over auf
+Cut 7 - Entscheidungsfrage §7.
+
+### 9.5 PORT-WAHL der Zuordnung (Form = RE2, Zuordnung = PORT-WAHL)
+- Kandidaten: die ZONENKAMERAS von ROOM2090 (Cuts 0..7 = RVD-Gruppen mit Wechselsatz und Masken; 8..12 sind Sonderkameras
+  ohne Zone/Masken). Bedingung: Kopf (Bone 6) im Bild (Projektion wie der Zeichner, re15_camera_build_view) UND Bildmassstab
+  m = H x Skala / Kopf-Tiefe nicht groesser als der groesste RE2-Schnittmassstab; FINISHER zusaetzlich Kiefer (Part 7) im Bild
+  (Opfer im Maul ab P1 @0x80101110-34). Wahl: kleinster Abstand |frontal - soll| (frontal = cos(Blickachse Bone 1 -> 6,
+  Kopf -> Kamera), Q12). Stufen, falls leer: ohne Grenze, dann ohne Kiefer.
+- Grenze = RE2-Messwert: m(RE2) = H / Kopf-Tiefe im Schnittbild (RE2 zeichnet EM23 1x), probe_kamera_re2.c (gcc -std=c11
+  -DRE15_PLATFORM_PC=1 gegen libre15_engine.a + libre15_test_support.a; OHNE -DRE15_PLATFORM_PC=1 ist die Bank-Struktur
+  verschoben und die Probe liefert falsche Clip-Laengen 45/26/165): Cut 10 208/11734 = 1161, Cut 0 257/8898 = 1892,
+  Cut 1 231/16318 = 927, Cut 5 231/13113 = 1154, Cut 7 231/11175 = 1354 (x 2^-16; H = RID fov >> 7 = 26684/32946/29623 >> 7).
+  RE2 schneidet an keiner Stelle naeher heran als Cut 0 (1892); die Grenze ist dieser Messwert.
+- Ergebnis im Spiel (Laeufe KA/KK):
+
+| RE2-Schnitt | RE2 frontal / m | Port-Cut | Port frontal / m | Lesart |
+|---|---|---|---|---|
+| Cut 10 DURCHBRUCH (Clip 6 f0) | +1.00 / 1161 | 7 | +1.00 / 661 | frontal, der Gator taucht auf und kommt auf die Kamera zu |
+| Cut 0 SEITE (f70) | +0.35 / 1892 | 0 | +0.46 / 679 | seitlich (63 statt 69 Grad), Totale |
+| Cut 1 ANGRIFF (f124) | +0.83 / 927 | 7 | +0.34 / 1150 | schraeg; RE2 dreht in Clip 3 auf die Kamera, im Becken dreht Clip 3 nach Westen (§9.8) |
+| Cut 5 EXPLOSION (R1) | +0.99 / 1154 | 1 | +0.30 / 715 | seitliche Totale; die einzige frontale Kamera (Cut 2) laege 2,5-fach naeher |
+| Cut 7 FINISHER | +1.00 / 1354 | 0 | -0.15 / 952 | seitlich; in der Tuernische steht keine Kamera vor dem Kopf (Cuts 1/7 bei x -7740 liegen 243/275 vom Kopf = im Leib) |
+
+  Belegbild bilder_r41b/kamera_n4_re2_vs_port_je_schnitt.png: je Zeile der RE2-Hintergrund ROOM40A{10,00,01,05,07}.bmp mit
+  dem RE2-Kopf (Probe) neben dem Port-Bild F+1 (Kreuz = Kopf beim Schnitt; x2,5 aufgehellt nur zur Sichtung) und einem
+  spaeteren Bild desselben Schnitts.
+
+### 9.6 Fuer Spur G (Nachtrag 5, Kanister-Wurf wie Adas Raketenwerfer-Wurf)
+Die Wurf-Kamera ist Spur G. Sie nutzt dieselben Bausteine: `re15_gr2_kamera_schnitt(blick, gator, opfer, "Name")` (Sperre +
+Cut_chg-Zwilling, liefert den Cut oder -1), `re15_gr2_kamera_frei("Name")` (zurueck + Zonenkamera an), `re15_gr2_kamera_wahl`
+(nur waehlen), `re15_gr2_kamera_gesperrt()`, `re15_gr2_kamera_auto(0)` (die automatischen Programme INTRO/R1/FINISHER aus,
+solange eine Szene selbst schneidet). Die Kanister-AUFNAHME hat in RE2 keinen Schnitt (T2 0x801017c4-0x80101d40); die
+Explosion (R1) schneidet automatisch nach §9.3, wenn Leons Kamera den Kopf nicht zeigt.
+
+### 9.7 R1-Zeitlupe (vormals OFFEN, jetzt umgesetzt)
+RE2 (selbst disassembliert): die Hauptschleife wartet `VSync(DAT_800dfc1a)` (FUN_8002b968 `lui a0,0x800e / lbu a0,-0x3e6(a0) /
+jal VSync` @0x8002b990-98); im Spiel 2 (`li v0,0x2 / sb v0,0x800dfc1a` @0x8003b9a8-b0, ebenso @0x80068e6c-74); R1 P0
+`addiu v0,zero,4 / lui at,0x800e / sb v0,-998(at)` @0x8010235c-64, R1 P3 `addiu v0,zero,2` @0x80102668 + `sb v0,-998(at)`
+@0x8010267c - die Explosion laeuft mit halber Bildrate. Port: `s_vsync` 2/4/2 an denselben Stellen (gator_re2_r41.c,
+`re15_gr2_vsync()`), PC-Bildbudget `re15_gr2_pc_bildbudget` = Grundbudget x VSync / 2 (gator_re2_pc.c; 1 Haken am Bild-Deckel
+in platform/pc/main.c, "Runde 41 Spur B"). Gemessen (Lauf KK): `[gator-re2] VSync 4 (Bildbudget 66 ms) ab F70 t=11117 ms` und
+`VSync 2 (Bildbudget 33 ms) ab F108 t=13649 ms` = 38 Bilder in 2532 ms = 66,6 ms/Bild (sonst 33). Riegel
+unit_r41_re2gator_kanister: "Zeitlupe VSync 4 ueber 38 Takte (R1 P0 .. vor P3)".
+
+### 9.8 Beobachtungen / OFFEN (gemessen, nicht geaendert)
+- Intro im Westkanal: der RE2-Korridor-Knick (Clip 3 Root-ry 438 -> 1023, danach `yaw += 1024` @0x80100938-48) dreht den Gator
+  vom Lauerplatz (Yaw 1089, Sued) nach WESTEN (2113) - im Becken zur Westwand. Kopf (Bone 6) am Clip-6-Ende bei x = -9574
+  (unit_r41_re2gator_kamera, ANGRIFF), Wandflaeche x = -8900; die Dispatcher-Klemme haelt nur die Wurzel. In Cut 7 ragt der
+  Kopf (Bilder F160-F279) links ueber die Wand. Das 12,2-m-Modell (Bindpose 18313 x 2/3) im Kanal tut das bei jeder Wende; eine andere
+  Startrichtung waere eine neue PORT-WAHL am abgenommenen M1-Ablauf -> Entscheidungsfrage §7.
+- Finisher -> RE1.5-Todeskamera (Lauf KF): s. §9.4, Entscheidungsfrage §7.
+- Der Port zeichnet den Gator 2/3 gross (Nutzer-Design v0.7.36, +0x166 = 2731): alle Port-Massstaebe liegen unter den RE2-Werten
+  (0,36..1,24-fach); die Grenze verwirft nur zu NAHE Kameras.

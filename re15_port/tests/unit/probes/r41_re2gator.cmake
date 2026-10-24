@@ -16,8 +16,11 @@
 #                                nach den Ease-Formeln 0x80101bac/0x80101c74, Anhaengen an Part 6, Lokallage -> (1750,-210));
 #                                Treffer beim Tragen -> R1: SE 4 + Raum-Satz 15 + Rumble (8,3)/(50,255->0) + Clip 9 (37) +
 #                                Kanister 9 Bilder spaeter weg + Leiche (Endpose), weitere Treffer wirkungslos
+#                                Fortsetzung 3: RE2-Zeitlupe VSync 4 von R1 P0 (@0x8010235c-64) bis P3 (@0x80102668/7c)
 #   unit_r41_re2gator_putz       Dash-Start -> 6 x 9 Putz-Partikel (RE2 CORE00.ESP id 4, Typen 0x10/0x08/0x00) ueber
 #                                re2fx ohne unbekannte Ops
+#                                Fortsetzung 3: WIRKSAME Pool-Lage der lebenden Teilchen um Leon (Einheitsmatrix 0x8009db44 +
+#                                Versatz wie Sce_espr_on @0x800565a4-0x80056618; vorher am Ursprung)
 add_executable(test_r41_re2gator ${CMAKE_CURRENT_SOURCE_DIR}/test_r41_re2gator.c)
 target_link_libraries(test_r41_re2gator PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_re2gator PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -43,6 +46,8 @@ endif()
 #                                nur Sperre, ohne = EXPLOSION-Schnitt, zurueck bei Clip-9-Bild 36 (@0x801024a4-ec), frei in
 #                                P3 (@0x80102688-94); FINISHER bei FRESSEN P0 (@0x80100fbc-ff4) mit Kopf + Kiefer im Bild;
 #                                jede Wahl unabhaengig nachgerechnet (Projektion, frontal = cos Blickachse/Kamera)
+#                                Fortsetzung 3: Wahl nur unter der RE2-Massstab-Grenze (H*Skala/Tiefe <= RE2 Cut 0 257/8898);
+#                                R1-Fall 2 (Lage des exe-Laufs kam_k) pinnt, dass die Grenze die zu nahe Cut-2-Wahl verwirft
 foreach(_teil modell clips dash intro sockel kanister kiefer putz wand kamera)
     add_test(NAME unit_r41_re2gator_${_teil} COMMAND test_r41_re2gator ${_teil})
     set_tests_properties(unit_r41_re2gator_${_teil} PROPERTIES TIMEOUT 240)
