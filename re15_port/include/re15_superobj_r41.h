@@ -24,9 +24,22 @@
  *   vorher lokal = Welt (-19095,-495,-27045) Rot (0,3072,0), Vater 0x80072d4c; t10 (Sherry Clip 0 Bild 78) lokal
  *   (-18356,-266,-26788) Rot (72,3072,0); ab t11 Endlage (-18116,-266,-26788) Rot (72,3072,0) = Loslass-Lage + 640 x.
  * Port: Vater-Art 0x80 mit Part-Bit (Gegner-Teil) und 0x00 (Welt). Die Gegner-Pose kommt aus dem Kanal des State-4-Subs
- * (re15_fussanker_r41_kanal / _teil_matrix, gleiche Rechnung wie das Zusammensetzen). OFFEN (kein Lieferfall): Vater-Art
- * 0x40 (Spieler), 0xc0 (Objekt) und Gegner ausserhalb State 4 (ROOM4030/4031 sub07 `48 00 80 81` = Typ 0x2D Part 1) —
- * dort bleibt das alte Verhalten (Opcode wird uebersprungen, Messzeile [superobj41] ... OFFEN).
+ * (re15_fussanker_r41_kanal / _teil_matrix, gleiche Rechnung wie das Zusammensetzen). Der Original-Handler liest weder Typ
+ * noch Zustand des Gegners (@0x80040bdc..c30: Zeiger aus 0x8009d3b4 + pc[2]*500, + Teil*172 + 64).
+ * Lieferfaelle (SCD-Zensus unit_r41_stage3szenen_a_zensus: genau 3 Super_set, alle Art 0x80 + Teil-Bit, Datei-Offsets):
+ *   ROOM3061 sub04 @0x0127E `48 00 80 8e`: Gegner 0 = Sherry (Typ 0x4B) in State 4 -> angehaengt (Punkt 2).
+ *   ROOM4030 sub07 @0x006E0 `48 00 80 81` (Aufzugsfahrt): Gegner 0 = Typ 0x2D (main00 @0x0052C, ohne Bedingung), State 1
+ *     -> OFFEN: der Opcode wird wie vor dieser Spur uebersprungen (Messzeile [superobj41] ... OFFEN, Lauf r4030_super).
+ *   ROOM4031 sub07 @0x00722 `48 00 80 81`: Gegner 0 haengt an Bit 3:88 (main00 @0x00552 `21 03 58 00`):
+ *     3:88 = 1 (jeder Besuch nach dem ersten, sub08 @0x0075C `22 03 58 01`): Gegner 0 = Typ 0x2D (@0x00586), State 1
+ *       -> OFFEN wie ROOM4030 (uebersprungen).
+ *     3:88 = 0 (erster Besuch): Gegner 0 = John (Typ 0x49, @0x00556), nach sub08 in State 4 -> angehaengt, wie es der
+ *       Original-Handler ohne Typpruefung auch tut (Abnahme J 0, Kunstgriff RE15_FORCE_EVENT=6: "F621 Super_set Objekt 0
+ *       Art 0x80 Teil-Byte 0x81 ... -> angehaengt"). Im Spiel unerreichbar: sub07 nur aus sub06 (@0x006DA) <- sub02
+ *       (@0x0068E Gosub 6) <- sub01 Case 5 <- Aufzugs-AOT Slot 5, den main00 nur bei 3:87 = 1 setzt (@0x004FA `21 03 57 00`,
+ *       Else @0x00516); 3:87 = 1 setzt nur ROOM4040/4041 @0x01020 `22 03 57 01`, und 4040/4041 liegen hinter dem ersten
+ *       4031-Besuch (Tuerkette: Dossier J_stage3szenen_a.md "Nachbesserung 1").
+ * OFFEN (kein Lieferfall): Vater-Art 0x40 (Spieler) und 0xc0 (Objekt).
  */
 #ifndef RE15_SUPEROBJ_R41_H
 #define RE15_SUPEROBJ_R41_H
