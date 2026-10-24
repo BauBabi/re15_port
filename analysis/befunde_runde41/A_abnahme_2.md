@@ -132,3 +132,43 @@ Auszuege: `A41abn2/dis_45700.txt`, `dis_45a64.txt`, `dis_59d3c.txt`, `dis_55d10.
   ... sub=10 kind=0x02 ph=4`, 104 Zeilen `id=6 sub=3` ab F79 (`-> sx=191 sy=168`); Bild `A41abn2/kante2000_bogen.png`: deutlicher
   gruen-weisser Spritzerkranz F81-F89. Mechanik @0x80038724-d0 hat Abnahme 1 selbst disassembliert (unveraendert).
 - **2a: erfuellt.**
+### 4.2 Punkt 2b NPC-Wasser-EFFEKTE (eigener Lauf `npc2000`)
+- `RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_FOOT_DEBUG=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+  RE15_SET_FLAG=4:244 RE15_DEBUG_JUMP=2000@240 RE15_PLAYER_POS=4350,-20500,0,1 RE15_NPCSCHRITT_LOG=npc.log RE15_SPAWN_DIAG=1
+  RE15_FX_LOG=fx.log RE15_FRAMEDUMP=1500-2100/20 RE15_EXIT_AT=2100#2000`, rc 0: `Sce_em_set type=0x42 ... slot=0 pos=(550,-1800,-20800)`,
+  `type=0x40 ... slot=1 pos=(2450,-1800,-20400)`; npc.log 64 Schritte (typ 0x42: 31, 0x40: 33; Clip 5: 34, Clip 0: 30), davon 7
+  `zweig=stempel` im Kanal (F1637/1651/1667 Slot 1, F1762/1777/1792/1809 Slot 2, `stempel=-900 ... plaetze=1`); fx.log zeichnet je
+  Schritt den Platz `id=6 sub=3` 13 Bilder lang (F1637-1649, F1651-1663, F1667-1679, F1762-...).
+- Bild `A41abn2/npc2000_wasser_bogen.png` / Zoom `npc2000_zoom.png`: F1640/F1660 die Frau im weissen Mantel (Slot 1, Typ 0x42) im
+  Kanal, F1780/F1800 der Polizist (Slot 2, Typ 0x40) im Kanal - beide mit gruenen Spritzern an den Fuessen.
+- Unit `npc_wasser` (selbst gefahren): alle Typen beider Archive (0x40/0x42/0x45/0x47 CDEMD0+CDEMD1/0x49/0x4b/0x4d) durch den Fleck FLR
+  0x97 -> `Wasser-Spritzer 0x06050D00 gespawnt`, Schritt-Ton gespielt (`Retail 23 (VAG 7)`); `npc_subs`: Sub 7/8 rueckwaerts
+  `Schritt @0x80051a0c / @0x80051c04 NACH dem Vorschub ... Zweig boden 6, Ton 23 gespielt`.
+- **NPC-Wasser-Effekte: erfuellt** (beide NPCs im Bild, beide Szenarien ueber John 2001 in 4.3, alle Typen im Riegel).
+### 4.3 Punkt 2b NPC-SCHRITT-TOENE (Abnahme-1-Mangel M1) - jetzt HOERBAR, im Mitschnitt nachgewiesen
+- npc2000 (Leon): debug.log `[foot] NPC-Lage voll=.. volr=.. -> Pegel .. Pan .. -> L=.. R=..` **64** Zeilen = 64 NPC-Schritte, **0**
+  `[foot] SE unterdrueckt` (Abnahme 1: 61 von 64 unterdrueckt); Quelle `orig` 3 (Zeile 22, a0 = 1 auf Boden 0x1d), `retail` 61 (Zeile 29
+  trocken 54, Zeile 26 Stempel 7). Code-Weg nach der Zeile: `mixer_alloc_free_slot()` liefert immer einen Platz, danach `volume_q15 = L`,
+  `vol_r_q15 = R`, `active = 1` (audio_pc.c re15_audio_footstep) - die Messzeile steht also nur fuer gemischte Schritte.
+- elza2001 (`RE15_TITLE_SHOT_CHAR=1 RE15_SET_FLAG=3:65 RE15_DEBUG_JUMP=2001@240 RE15_EXIT_AT=700#2001`): `Spieler-Familie PL04 ...
+  Elza-Bit=1`, `Sce_em_set type=0x49 ... (-26003,-1800,-26062)`; 23 Schritte (John), 23 NPC-Lage, 0 unterdrueckt, `retail` 23, 5 im Kanal.
+- npc11c0 (`RE15_DEBUG_JUMP=11c0@240 RE15_EXIT_AT=1200#11c0`): `Sce_em_set type=0x42 ... (-8965,0,-14347)`; 8 Schritte, 8 NPC-Lage,
+  0 unterdrueckt, `retail` 8 (Boden 0x1d: Zeile 21 leer -> Spielerzeile 29).
+- **Im Ton-Mitschnitt selbst (nicht nur im Log)** - `A41abn2/py/schritt_im_mitschnitt.py`: Referenz = VAG des gespielten EDT-Satzes
+  (eigene ADPCM-Dekodierung, Kopie von knall_zensus.adpcm/vab), auf 44,1 kHz gebracht; Lage des Schritts im cap.raw = Takt (F + 244) *
+  1470, Feinlage +-1 Takt per normierter Korrelation; Pegel L/R = Kleinste-Quadrate-Amplitude der Referenz im linken/rechten Kanal.
+  Ergebnis (Versatz F + 244 gefunden, Nachbarversatz -1/+1 ohne Korrelation): ROOM2001 `23` Schritte, Feinlage +2..+6 Abtastwerte,
+  Schaetzung L/R innerhalb 15 % des Log-Pegels **23/23**, Korrelation Schaetzung~Log L 0.989 / R 0.987, Seitenrichtung 23/23 (z.B. F506
+  Log 1584/2772 -> Mitschnitt 1555/2656); ROOM2000 64 Schritte, 53/64 innerhalb 15 % (Rest von Musik/ueberlappenden Schritten gestoert),
+  Korrelation 0.890 / 0.908, Seitenrichtung 62/64 (z.B. F1999 Log 2346/1861 -> 2324/1858); ROOM11C0 8 Schritte, 5/8 innerhalb 15 %,
+  Seitenrichtung 7/8. Die NPC-Schritte liegen also mit dem geloggten Links/Rechts-Pegel im ausgegebenen Ton.
+- Zensus (eigenes Skript `A41abn2/py/zensus_abn2.py`, 52 NPC-Raeume aus dem Abnahme-1-Zensus, FLR +0x34 / EDT +0x08 / VH +0x0C, je
+  Bodentyp x a0 0/1 x Fuss 7/4 ohne Stempel): `orig 15, retail 257, stumm 8` = 280, stumm nur ROOM6030/6031 Boden 0x17 (auch die
+  Spielerzeilen 15/16 und 23/24 ohne Ton) - deckt sich mit der Behauptung des Bau-Agenten.
+- **NPC-Schritt-Toene: erfuellt** (Original-Zeile, wo das Original klingt; sonst Retail-Zeile nach RE2 FUN_8005c040, Abschnitt 2).
+### 4.4 Entscheid A-E4 (NPC-Schritt leiser/seitlich nach Abstand und Lage zur Kamera wie FUN_80045a64)
+- Messzeile je Schritt: npc.log `cut= abstand= lage=voll/volr` + debug.log `-> Pegel Pan -> L= R=`. Unabhaengig nachgerechnet (2.):
+  64/64, 23/23, 8/8 gleich (Zeile, Quelle, Lage, Abstand, Pegel).
+- Leiser mit dem Abstand: ROOM2000 Abstand 41 -> Pegel 104, Abstand 125 -> Pegel 56 (= (0x89 - ATT[Abstand]) & 0x7f, ATT @0x800747a8);
+  seitlich: alle 64/23/8 Schritte L != R, Seite wechselt mit der Lage (z.B. ROOM2000 F886 86/99 -> L 3072 / R 3519, F1999 L 2346 / R 1861).
+- **A-E4: erfuellt.** Die Spieler-Schritte bleiben mittig (Dossier N2.7 Punkt 1; A-E4 nennt nur NPC-Schritte) -> Hinweis H1.
