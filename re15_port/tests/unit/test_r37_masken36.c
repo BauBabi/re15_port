@@ -1713,6 +1713,22 @@ int main(int argc, char **argv)
         }
         printf("OK\n"); return 0;
     }
+    if (!strcmp(teil, "plaetze") && argc > 3) {         /* Werkzeug (Runde 41 Spur M, Nachbesserung 1): die erreichbaren Stehplaetze
+                                                          * eines Cuts im Regionsviereck (Akteur-Cull) - Zeilen "P x z band" */
+        static raum_t R; unsigned r = (unsigned) strtoul(argv[2], NULL, 16); int c = atoi(argv[3]), b, gx, gz, hq, n = 0;
+        int16_t qx[4], qz[4];
+        saaten_sammeln();
+        if (!raum_laden(&R, r) || c >= R.rdt.cut_count) { printf("FEHLER\n"); return 1; }
+        hq = re15_rdt_get_region_quad(&R.rdt, c, qx, qz);
+        for (b = 0; b < 16; b++)
+            for (gx = 0; gx < R.nx; gx++)
+                for (gz = 0; gz < R.nz; gz++) {
+                    int wx = R.x0 + gx * SCHRITT, wz = R.z0 + gz * SCHRITT;
+                    if (!R.err[b][gx][gz] || (hq && !re15_aot_point_in_quad(wx, wz, qx, qz))) continue;
+                    printf("P %d %d %d\n", wx, wz, b); n++;
+                }
+        printf("PLAETZE %d\nOK\n", n); free(R.roh); return 0;
+    }
     if (!strcmp(teil, "suche")) {
         if (argc > 2) g_such_prozent = atoi(argv[2]);
         if (argc > 3) g_such_stage = atoi(argv[3]);
