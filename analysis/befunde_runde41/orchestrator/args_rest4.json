@@ -1,0 +1,407 @@
+{
+ "welle": [
+  "B",
+  "C",
+  "E",
+  "I",
+  "M",
+  "H",
+  "J",
+  "K",
+  "L"
+ ],
+ "slots": 5,
+ "basis": "116e8b0f (Welle-1-Baeume) bzw. master 4c667c97 (H I J K L M)",
+ "max_nach": 2,
+ "modus": {
+  "B": "abnahme",
+  "C": "abnahme",
+  "H": "abnahme",
+  "I": "nachbesserung",
+  "M": "nachbesserung",
+  "E": "nachbesserung"
+ },
+ "runde0": {
+  "B": 4,
+  "C": 3,
+  "H": 0,
+  "I": 0,
+  "M": 0,
+  "E": 2
+ },
+ "bau": {
+  "B": {
+   "status": "fertig",
+   "zusammenfassung": "Nachbesserung 4 behebt beide Mängel der Abnahme 3. Code-Stand b20f1496, Dossier §12.\nM1 (Kanister im Maul): RE2 hängt den Kanister als Kind an die Part-6-Weltmatrix (addiu a0,s0,1104 @0x801018d0, sw a0,128(s2) @0x801018e0, FUN_8002d030 @0x801018f0, Kopf-az +0x22A @0x8010037c-90). Der Port rechnete die Lage am Takt-Anfang, aus der Keyframe-Pose ohne +0x22A.\nJetzt läuft die Wand-Klemme bitgleich am Ende des Boss-Takts. re15_gr2_nachtakt rechnet danach die Pose, die der Zeichner zeichnet, und daraus Anhängen, Weltlage und die Effekt-Quellen.\nGemessen: Riegel sitz 0 bei Wende, Biss, Befreiung und Überblendung (Gegenprobe alter Zeitpunkt: Wende 626). exe C3 mit bitgleichem Ablauf: Kanister-Sitz 270 Bilder, max 0. Bild C3 F1276-1284 vorher/nachher.\nNebenbefund mit behoben: die RE2-Überblendung (Rate 4096/(n+1) @0x8001a37c-ac, Abbau @0x800299c0-cc). Vorher war die Dash-Pose 150 Bilder eingefroren.\nM2 (Gier-Sprünge): RE2 schreibt die Gier in Sub 1/2 nie. PORT-WAHL: eine Befreiung gibt es nur noch im echten Gefängnis (die Klemme verwirft den Schritt hinaus), als Schub ohne Drehung.\nGemessen: Riegel gier für E1 und C3, je 800 Takte, max 64/96, 0 Sprünge (Gegenprobe alter Snap: ±1984 alle 32 Takte). exe E1, C3, A2, D2, N und NZ ohne Sprung außer +1024. Sweep 3342/0. Bilder A2 F377-381 und E1. K, Intro, Dash/Putz und Elza bleiben unverändert.",
+   "commits": [
+    "5f10b1a5 wip: Dossier §12 angelegt",
+    "d3a66ae8 wip: §12.0 RE-Belege",
+    "642ad014 wip: M1 Kanister/Effekt-Quellen aus gezeichneter Pose + RE2-Ueberblendung",
+    "2e524c97 wip: M2 Befreiung ohne Gier-Snap, Messzeile Kanister-Sitz",
+    "45a78d40 wip: Riegel sitz + gier, GIER-WACHE, schleppen Fall 3 mit Beleg",
+    "89c1a114 wip: Riegel sitz a-d + gier E1/C3, Gegenproben",
+    "5e02e2e5 wip: Dossier §12.1 M1 + Bildbeleg C3",
+    "9fd7d545 wip: integration Laeufe kanister + belagerung, Bildbelege M2",
+    "e9043678 wip: Dossier §12.2 M2",
+    "7831a6d5 wip: Befreiungs-Schub nur in LURK/CHASE/GUARD",
+    "b20f1496 fix(r41-re2gator): Nachbesserung 4 - Kanister im Maul aus der gezeichneten Pose, keine Gier-Spruenge in Verfolgung/Belagerung"
+   ],
+   "suite": "-R \"^unit_(r41_re2gator_.*|alligator_ai|gator_sweep|gator_fress|re2_spider_water_2090|sca_wall_hit|re2_gore|re2_gore_render|re2_gore_fly|re2_gore_decoder|re15_re2z_import|re15_re2z_gore_se|re2z_.*|re2_hit_repeat_crow_spider|re2_crow_.*|crow_ai|crow_fixes|crow_death_corpse|r36_schuss|r36_schuss_kraehe|r36_kleidung_kraehe|r35_fenster_kraehe|r37_re2zombie_.*|r34_re2fx.*|montage_fx|r35_cut1150_montage.*|r38_montage.*|r38_wasser.*|r38_wasserzombie|r39_heliport1171_kraehen|r30_granate|r35_granate|r36_granate|r36_kartenbits|text_freeze|r34_reaktion|r34_schaden|g5_boss|load_after_death|r35_affen_finisher|r36_tueren_.*|r37_itemband|r36_kartenitems)$|^probe_(re2z_stomp|crow_kill)$|^r31_trefferboxen.*$\" -> 100% tests passed, 0 tests failed out of 110 (Stand 7831a6d5); -R \"^integration_(r41_re2gator|r36_schuss|r38_wasser|r35_granate|r37_itemband|r36_tueren|r37_re2zombie)$\" -> 100% tests passed, 0 tests failed out of 7 (Stand 9fd7d545); nach Neubau 7831a6d5: -R \"^integration_(r41_re2gator|r35_granate)$\" -> 100% tests passed, 0 tests failed out of 2",
+   "offene_punkte": [
+    "Hals-Zielmodus / RE2-Halsfuehrung (FUN_80017d98 / FUN_800177c0, Root @0x80100330-74) weiter OFFEN, Entscheid des Orchestrators zum Part-5-Gier-Kanal steht aus",
+    "Befreiungs-Schub (echtes Gefaengnis nach CROSS-Landung) nur im Riegel gemessen (17 Bilder), in keinem exe-Lauf aufgetreten - Sichtpruefung im Spiel offen",
+    "Effekt-Quellmatrizen: ob RE2s Pumpe @0x80026980 die Part-Weltmatrix dieses oder des vorigen Bildes kopiert, ist nicht belegt (Port folgt der Abnahme-Forderung: gezeichnetes Bild)",
+    "RE15_FPS != 30 (Entwickler-Schalter): Zeichner posiert anim_frame>>1, Nachtakt anim_frame - dort wuerde der Kanister abweichen; im Spiel nicht erreichbar",
+    "Altbestand unveraendert: Granate weckt untergetauchten Gator, Intro-Startlage beim Westkanal-Zugang, Zielmodus-0-Messzeile fehlt beim Loeschen, Kanister in Stufe 3-6 vor der Schnauze (C3 F1136 hinter Suedwand), E1-Wurzelsprung nach R4, GUARD-Ziel GPAT (6500,-12600) hinter der Ostwand-Klemmlinie"
+   ],
+   "fragen_an_nutzer": [
+    "Steht Leon fuer den Alligator unerreichbar hinter einer Wand (Tuernische, oben auf der Rampe), bleibt der Alligator jetzt an der Wand und schaut zu Leon, ohne ruckartiges Umdrehen. Soll das so bleiben, oder soll er sich - weich, ohne Sprung - immer wieder abwenden und neu anschwimmen?"
+   ],
+   "gemeinsame_dateien": [],
+   "neue_assets": [],
+   "sprachdateien": []
+  },
+  "C": {
+   "status": "fertig",
+   "zusammenfassung": "Was gemessen wurde: Die Messungen der Abnahme 2 habe ich nicht wiederholt. Neu sind Bildmessungen (BSS-Hintergruende mit projizierten SCA-Zellen), ein Bildbogen vorher/nachher (Cut 0/1/2/4/7/15 in den Zustaenden trocken, geflutet, mit Strom) und exe-Laeufe zu Fuss mit Leon und Elza (v1, v2, g1, g2, w1, w3, w4).\nN2: Der Zustand von 2030 nach der Flut haengt jetzt direkt an (3,126). Setzer ist nur ROOM2060/2061 sub01 @0x012AE `22 03 7e 01`; es gibt keinen Loescher. Leser ist 2030 sub01 @0x01E14. Ohne Strom bleibt die Ring-Sperre (C-E2), mit Strom sind die Ring-Tueren offen. Der Rechner 2080 ist nur noch Original (sub02 @0x00C86, (3,245) @0x00C94). 2080_rechner_erw, _nur2030 und Text 2080/40 sind entfernt, Bit 107 ist frei.\nN3: Der Ruhepegel steht auf y -3600. Belege: Oberkante der unteren Reling (Zellen 5/10/11 @0x008D4/@0x00910/@0x0091C, im Bild +1800 ueber dem Landeplatz), Band 2 der Ring-Bodenzellen (fl 0x23 @0x00A48..@0x00A84) und der ROOM2050-Pegel -3600 @0x01F88. Die Flaeche obj 4 deckt nur die Schachtoeffnung; das Netz hat die MD1-Form von ROOM2080 Prop 0 @0x000D98. Die Treppe Slot 8 @0x01B8E zeigt Text 48. Bild: C_belege/nb3_pegel_vorher_nachher_sheet.png.\nN4: Alle Ventile 01-09 und 13 liegen im unteren Bereich (C_belege/nb3_ventile_lage_sheet.png). Der Platz liegt deshalb an der Suedwand vor 09/08 und verlangt Bit 102 UND (3,108); Setzer der Sicherung ist 2030 sub06 @0x01FF2. Ohne beides kommt Text 49. Zu Fuss gemessen: Warnung zu bis Ost-Tuer 1077 Bilder (36 s) gehend (C_belege/nb3_ventile_zu_fuss_leon_sheet.png).\nN1: Der Weg nach der Flut ist zu Fuss mit Leon und Elza gemessen: 20B0 -> Leiter -> 2050 -> 2020 -> 2030 Nordgalerie (geflutet) -> 2060 mit Sicherung (3,144) @0x0169E und Generator (3,126) ueber die Original-Raetsel -> Nordgalerie (Relinghoehe) -> 2020 -> 2050 -> 20B0 -> Ost-Tuer (offen) -> Ring -> Lift B (3,220) -> Suedgalerie -> 2080 -> Rechner (Original) -> 2090.\nRiegel: unit_r41_ventilkette mit 376 Pruefungen (K und L neu, E, G und I neu gefasst). Die Integrationsriegel _weg und _weg_elza sind neu, _sperre haelt die 11A0-Sperre (Nachtrag 6), der Hauptriegel und _b sind angepasst. Alles gruen.",
+   "commits": [
+    "251a5b09 wip(r41-ventilkette): Nachbesserung 3 - Dossier-Abschnitt 0d angelegt",
+    "344d32f7 wip(r41-ventilkette): Nachbesserung 3 - RE-Belege vor dem Code",
+    "c9153844 wip(r41-ventilkette): Nachbesserung 3 - Code N2/N3/N4 + Unit-Riegel K/L (UNGEBAUT)",
+    "7610a08e wip(r41-ventilkette): Nachbesserung 3 - Bau OK, unit_r41_ventilkette PASS (376 Pruefungen)",
+    "6a51727b wip(r41-ventilkette): Nachbesserung 3 - Netz der Relinghoehe auf ein gemeinsames Gitter, Bildbogen vorher/nachher",
+    "07be0846 wip(r41-ventilkette): Nachbesserung 3 - Riegel neu gefasst (_weg/_weg_elza/_sperre, _b, Hauptriegel)",
+    "f4e7c71e wip(r41-ventilkette): Nachbesserung 3 - Dossier §7, Tuer-Zielpunkte enger",
+    "fd89ad43 wip(r41-ventilkette): Nachbesserung 3 - Dossier je Mangel N1-N4",
+    "ff689c89 wip(r41-ventilkette): Nachbesserung 3 - Riegel _weg: 2080/2090/2060-Zielpunkte nach Messung",
+    "2b54aebc wip(r41-ventilkette): Nachbesserung 3 - Dossier §6 OFFEN und §7 Fragen (k)/(l)",
+    "97fb1d18 wip(r41-ventilkette): Nachbesserung 3 - Riegel _weg g1/g2 Zeitlimit 240 s",
+    "32c75111 wip(r41-ventilkette): Nachbesserung 3 - Bau OK, Unit-Gruppe 164/164",
+    "348290bd wip(r41-ventilkette): Nachbesserung 3 - Dossier N1 komplett (Leon + Elza)",
+    "a1afbd88 wip(r41-ventilkette): Nachbesserung 3 - Dossier §0a Wegweiser",
+    "91a067a2 wip(r41-ventilkette): Nachbesserung 3 - Bildbogen Ventile zu Fuss",
+    "5f5a7108 wip(r41-ventilkette): Nachbesserung 3 - Integrationsriegel 1-3/5 gruen",
+    "2fb94b25 fix(r41-ventilkette): Nachbesserung 3 - 2030 laeuft mit dem Strom bis Relinghoehe leer, Ventilraetsel erst mit Bruecke und Sicherung, Weg nach der Flut zu Fuss (Leon + Elza)"
+   ],
+   "suite": "Integration: ctest --test-dir re15_port/build -R \"^integration_r41_ventilkette(_b|_weg|_weg_elza|_sperre)?$\" --timeout 2700 --output-on-failure -> \"100% tests passed, 0 tests failed out of 5\" (Total Test time (real) = 2913.54 sec; #1126 257.45 s, #1127 _b 505.60 s, #1128 _weg 897.27 s, #1129 _weg_elza 908.15 s, #1130 _sperre 344.98 s). Unit: ctest -R \"^(unit_r41_ventilkette|unit_r36_kartenbits|unit_scd_.*|unit_aot_.*|unit_r40_.*|unit_r37_kistenregel_.*|unit_r36_dachkiste_.*|unit_r37_kiste.*|unit_r37_itemband|unit_r37_fahrstuhl_.*|unit_r36_gegnerzahl_.*|unit_r38_npckante_.*|unit_r34n_.*|unit_r36_kartenitems|unit_r38_wasser_.*|unit_r38_wasserzombie|unit_r38_spinnen|unit_r3[89]_heliport1171_.*|unit_r33_tueren_.*|unit_r36_tueren_.*|unit_r30_tuer_.*|unit_door_.*|unit_msg_dialog|unit_action_msg_gate|unit_fade_.*|unit_flag_gate|unit_espr_.*|unit_r38_rolltor20a0.*|prop_door_roundtrip|prop_zone_dispatch|unit_r26_panel_11f0|unit_r27_panel_schalterwerte|unit_r37_codepanel_.*|unit_r39_karten_tueren|unit_map_tuerachse|unit_r31_.*|unit_re2_spider_water_2090|unit_r34_wasser|unit_crow_.*|unit_re2_crow_.*|probe_crow_kill|unit_r35_fenster_kraehe|unit_r36_kleidung_kraehe|unit_r36_schuss_kraehe|unit_r30_tuer|unit_map_zone_bits|unit_fx_emitter_ai|unit_r38_tagebuch.*|unit_room1050_sicherung|unit_npc_back_walk)$\" -> \"100% tests passed, 0 tests failed out of 164\" (34.55 sec); test_r41_ventilkette.exe: PASS (376 Pruefungen)",
+   "offene_punkte": [
+    "Lesart 'Relinghoehe': umgesetzt ist y -3600 (Oberkante der unteren Reling, dreifach belegt). Die andere Lesart 'Wasser bis an die Ring-Reling' waere y -5400 (Band der Ring-Reling-Zellen fl 0x33) und braucht nur die Konstante RE15_R41C_WASSER_Y_RELING plus den Riegel. Frage (k) an den Nutzer.",
+    "2060: Die zwei Original-Raetsel (Sicherung, Generator) laufen in den Riegeln g1/g2 ueber RE15_INPUT_SCRIPT ab der Stelle, weil der Wegplan-Treiber kein Steuerkreuz fuer den Cursor kennt. Der Gang Tuer <-> Generator ist zu Fuss gemessen (w3).",
+    "Die 20B0-Auswasch-Szene beim Eintritt ueber die Ost-Tuer braucht weiter den AUTO-Haken der Spur A (C-E1). w1 startet am Szenenende mit (3,235)=1; integration_r41_ventilkette_kette ist nur mit Spur A registriert.",
+    "Die Fragen (g) (2030-Ost-Tuer nach der Flut dauerhaft nach 20B0) und (h) (Spritzer ausserhalb von Cut 4) bleiben ohne Entscheid.",
+    "Das PSX-Ziel ist nicht gebaut; das Netz der Relinghoehe ist wie die Flutflaeche nur unter RE15_PLATFORM_PC eingebunden.",
+    "Die Port-Texte (neu 2030 Id 48/49) sind Vorschlag bis zur Freigabe durch den Nutzer."
+   ],
+   "fragen_an_nutzer": [
+    "(k) Nach dem Strom steht das Wasser in 2030 auf y -3600 = Oberkante der unteren Reling (Ring trocken, Steg und Landeplaetze 1800 unter Wasser; Bild C_belege/nb3_pegel_vorher_nachher_sheet.png). Ist das gemeint, oder soll es bis direkt an die Ring-Reling stehen (y -5400, buendig mit dem Ring)?",
+    "(l) Neue Texte freigeben oder aendern: 2030 Id 48 'I cannot go down the stairs / because of the water.' (Treppe nach dem Strom) und Id 49 'Numbered valves. If I turn them, / this whole level will be flooded. | I should look around here first.' (Ventile ohne Bruecke/Sicherung).",
+    "(g) Die 2030-Ost-Tuer fuehrt nach der Flut dauerhaft nach 20B0 (statt 2070). So lassen?",
+    "(h) Steht Leon waehrend der Flut an den Ventilen, liegt sein Spritzer ausserhalb der Flut-Kamera Cut 4. So lassen?"
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/scd_vm.c (Nachbesserung 3: nur der Kommentar am eigenen Ereignis-Haken, '2050/2+4+9; 2080 seit Nachtrag 7 Original')",
+    "re15_port/engine/src/scd_room_setup.c (Nachbesserung 3: nur der Kommentar an der eigenen Installer-Zeile)",
+    "re15_port/tests/unit/test_r36_kartenbits.c (Nachbesserung 3: k_port[]-Zeile fuer Bit 107 entfernt, Bit frei; Include-Kommentar angepasst)",
+    "unveraendert aus frueheren Runden (C-E3 angenommen): re15_port/platform/pc/main.c, re15_port/engine/src/game_step_common.c, re15_port/tests/integration/test_r36_dachkiste.cmake, re15_port/tests/integration/test_r37_itemband.cmake"
+   ],
+   "neue_assets": [
+    "Keine neuen Dateien unter shared_assets/RE2 und kein Asset-Patch. Neu sind eingebackene Daten in re15_port/engine/src/gen/ventilkette_r41_wasser.inc: re15_r41c_wasser_reling_md1 (4052 B), abgeleitet aus ROOM2080.RDT Prop 0 MD1 @0x000D98 (UV-Satz, Normale und Format Byte fuer Byte; Generator re15_port/tools/r41_ventilkette/gen_r41_ventilkette.py reling_netz())."
+   ],
+   "sprachdateien": [
+    "keine"
+   ]
+  },
+  "H": {
+   "status": "fertig",
+   "zusammenfassung": "Spur H ist fertig: Beide Nutzer-Befunde sind im Port reproduziert, im Original gemessen, behoben und mit Riegeln gesichert.\n(1) NPCs: Ada/Marvin (Eskorte, ROOM3070) liefen ineinander, min. Abstand 14 bzw. 3. Elzas John/Sherry (ROOM3001) kamen auf 4 bzw. 16. Im Original sind die NPCs fest: alle 28 NPC-Wurzeln in STAGE1..6 rufen nach dem Zustands-jalr FUN_8002aec4(&Spieler, NPC) @0x8011cc3c und FUN_8002b544 @0x8011cc44 auf, vor der Wandklemme @0x8011cc64. DuckStation-GDB in ROOM3070: min. 901 ueber 187 Proben.\nPort: neue Datei kollision_r41.c, 1-Zeilen-Haken in re15_npc_ai_tick. Danach Ada/Marvin min. 884 bzw. 897, John/Sherry 740 (Radien-Summe 900/750; der Rest bis zur Summe kommt aus der Wandklemme, Hautabstand 18 @0x8003bce0).\n(2) Kisten 2050: obj 2 liess sich bis x 4506 in obj 3 schieben. Im Original sperrt der Objekt-gegen-Objekt-Pass @0x8002c03c-c0a8 (FUN_8002cdf4) den Schub. Gemessen am Original: 3 von 3 Schueben gesperrt (Haltepunkt @0x8002cfb8 -> @0x8002c0b0). Port und Original enden beide bei 1802..1820 Abstand.\nDas Kisten-Raetsel (5,0..2) ist mit Leon (2050) und Elza (2051) geloest. Die Kerben lassen nur 100/50 Einheiten Spiel, wie im Original.\nGezielte Tests sind gruen. integration_r39_dining1141_kampf (Riegel der Spur J aus Runde 39) habe ich angepasst: WARTE 60 -> 240. Gemessen: mit WARTE 60 vorher 2 / nachher 0 Treffer im Griff, mit 240 vorher 3 / nachher 3.\nmaster (Spur A + D) ist in den Zweig gemergt und nachgemessen.",
+   "commits": [
+    "f58dcf91 wip(r41-kollision): Dossier angelegt",
+    "c62f5a54 wip(r41-kollision): Punkt 2 Messung vorher + RE FUN_8002bd44/FUN_8002cdf4",
+    "acde21c3 wip(r41-kollision): NPC-Wurzel-Schwanz aec4/b544 + Objekt-gegen-Objekt-Pass",
+    "0aa888f3 wip(r41-kollision): Messung vorher/nachher beider Punkte",
+    "4edbd776 wip(r41-kollision): Original-Messung Kiste gegen Kiste (DuckStation-GDB) + Port-Gegenstueck",
+    "9d6876bf wip(r41-kollision): Original-Messung Eskorte ROOM3070 (min 901) + Port-Spiegel",
+    "d3428d74 wip(r41-kollision): Riegel probes/r41_kollision.cmake",
+    "30c5a00f wip(r41-kollision): Unit-Riegel gruen",
+    "95cfcfa9 wip(r41-kollision): Dossier Original-Messungen",
+    "9c6be7e4 wip(r41-kollision): integration kiste prueft die LAGE",
+    "fcc0448b wip(r41-kollision): npc3001 mit Elza oestlich der Eskorten",
+    "7596740a wip(r41-kollision): Dossier 3001-Riegel-Lauf",
+    "7cd8a4d7 wip(r41-kollision): Dossier Gemeinsame Dateien/Tests/OFFEN/Nutzer",
+    "0ffa4bee wip(r41-kollision): Zahl der NPC-Wurzeln berichtigt (28)",
+    "5f7dca2e wip(r41-kollision): Querbezug R39 J dining1141_kampf WARTE 60 -> 240",
+    "370d8c31 merge(r41-kollision): master (Spur A + D) in r41/kollision",
+    "32955efe wip(r41-kollision): Dossier Ergebnisse der gezielten Laeufe",
+    "103563cc feat(r41-kollision): NPCs fest (Wurzel-Schwanz aec4/b544) + Kisten sperren sich (FUN_8002cdf4)"
+   ],
+   "suite": "-R \"^(unit_|prop_|probe_)\" -> \"100% tests passed, 0 tests failed out of 920\" (vor dem master-Merge); -R \"^integration_(r35_cut10f0|r35_cut1150|r36_szene1150|r36_szenenleon|r37_szene11c0|r37_sperre1050|r39_parkplatz11c0_[kwnei]|r37_roy_szene1011|r37_roy_szene1021|r37_roy_leon1170|r38_dining1141_[wzdlsra]|r39_dining1141_.*|r38_heliport1171_.*|r39_heliport1171_.*|r39_johnruf1041_.*|r39_funk10f1_.*|r38_werkstatt11b0|r39_stimmen_.*|r38_elzatoene_szene1021|r39_toene_szene.*|r36_elza_irons|r38_kleinkram_irons|r38_szenenschutz|r30_irons_tisch_.*|r30_cut_blitz|r34n_g_schrift1150|r35_inventar1050|r39_elzazombies_oben|r36_dachkiste|r36_klettern|r37_kiste|r37_kiste2feld|r37_kistenregel)$\" -> \"98% tests passed, 1 tests failed out of 64\" (dining1141_kampf, danach angepasst: -R \"^integration_r39_dining1141_kampf$\" -> \"100% tests passed, 0 tests failed out of 1\"); nach dem master-Merge: -R \"^unit_r41_\" -> \"100% tests passed, 0 tests failed out of 16\"; -R \"^integration_r41_\" -> \"100% tests passed, 0 tests failed out of 10\"; -R \"^integration_(r36_szenenleon|r35_cut10f0|r39_parkplatz11c0_k|r39_dining1141_kampf|r37_szene11c0|r36_dachkiste)$\" -> \"100% tests passed, 0 tests failed out of 6\"",
+   "offene_punkte": [
+    "Nicht portiert, weil nicht Teil des Befunds: der Entity-Durchlauf der Schubkette @0x8002bfec-c038 (FUN_8002cabc(Entitaet,obj,1), Kiste gegen Gegner/NPC, Zaehler 10 @0x8002c030).",
+    "Vorbestehende Abweichung: Der Schubzaehler obj+0x8C ist im Original ein Byte und laeuft nach 255 auf 0 ueber (@0x8002bf60-70); der Port bleibt bei 255 stehen.",
+    "Spiegel +0x42 als Schnappschuss je Bild: Abweichung nur, wenn eine Nachbarkiste im selben Pass faellt. In ausgelieferten Raeumen kommt das nicht vor.",
+    "Die Yield-Zweige von re15_npc_ai_tick (Elliot walk_active, SCD-besetzter Slot) ueberspringen den Schwanz, wie bisher schon die Wandklemme.",
+    "Abweichung vom Auftragstext und von VERTRAG 1.3: der NPC-Haken sitzt in enemy_ai_common.c statt in game_step_common.c. Grund: die Original-Reihenfolge Schub -> Wandklemme @0x8011cc64 liegt im NPC-Tick. Bei der Integration beachten.",
+    "Querbezug fuer die Integration: Der Schub wirkt jetzt in jeder NPC-Szene. Spur G (2080: Marvin/John, Zombies, Kanister) und J/K (STAGE3-Szenen) nach dem Merge nachfahren.",
+    "Riegel einer anderen Spur geaendert: test_r39_dining1141_kampf.cmake (Spur J, Runde 39), WARTE 60 -> 240, gemessen und begruendet.",
+    "Nebenbefund ohne Bezug zu Runde 41: Bei WARTE 300 steht ein Gorilla in 1141 rund 1400 Bilder lang bei x -7368 (Querungs-Wache der Spur E aus Runde 39). Tritt mit und ohne Haken gleich auf."
+   ],
+   "fragen_an_nutzer": [],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/enemy_ai_common.c (1 Include + 1 Haken in re15_npc_ai_tick, Runde 41 Spur H)",
+    "re15_port/engine/src/aot_common.c (1 Include + Objekt-Pass in re15_prop_push_tick + berichtigter Kopfkommentar)",
+    "re15_port/engine/src/game_step_common.c (1 Include + 1 Zeile re15_kollision_r41_objspiegel)",
+    "re15_port/tests/integration/test_r39_dining1141_kampf.cmake (WARTE 60 -> 240, Querbezug R39 J)"
+   ],
+   "neue_assets": [],
+   "sprachdateien": []
+  },
+  "I": {
+   "status": "fertig",
+   "zusammenfassung": "Measured: in the port (RE2 AI, the default) the 0x84 zombies in 2000/3000 ran EXEC[8] FRESSEN (RE2 feeding clips 18/19/20). Census: 0x84 x28 and 0x85 x2, only in 2000/2001, 3000/3001 and 3010/3011. The real eaters (sel 6) exist only in STAGE1 (1140, 10E0).\nRE1.5 evidence (STAGE2, STAGE1/3 the same code shifted): bit 0x80 gate @0x80100b44, lying pose 0x0c @0x80100b74 + f314 @0x80100c34, FINAL +0x94=0x12 @0x80100c7c. The eater sel 6 sets grid=0 @0x80100d44, so it never reaches the grid dispatcher.\nGrid [4]/[5] dispatcher: waker 0x80103814 (dist<0xfa0 @0x8010382c, +0x9c=rand&0xf @0x80103858-60). Phase machine 0x801038ec: P0 +0x93|=1, P2 f314 @0x801039a8 plays clip 0x12 (98 frames, getting up from lying), P3 grid 0 + 0x201.\nDuckStation (mzd_stage2_room.sav, plus a RAM patch): at rest +0x94=0x12, +0x6=0, +0x93=1. After d<4000: P2 clip 0x12 f7/f32/f65, then 0x201, grid 0, +0x93=0.\nRE2 (EMZ0) has no proximity waker of its own (latch clear only @0x80104F0C). So the timing comes from RE1.5 and the executor from RE2: EXEC[7] lying, get-up clip 8/9 @0x80103838-80.\nBuilt: zombiefresser_r41.c / re15_zombiefresser_r41.h, with hooks in enemy_ai_re2_zombie.c, enemy_ai_common.c and player_common.c. Old feeder-label premise (Phase 3 2026-09-19) disproved; 4 tests updated.\nAfter: every 0x84/0x85 lies, wakes at d<4000, stands up after at most 16 frames and attacks. In the channel rooms it climbs the edge first. 3000 RE2: grab at F76. Real door path 2070->2000 as Leon and 2071->2001 as Elza: grab at F371.",
+   "commits": [
+    "27485acf wip(r41-zombiefresser): Dossier angelegt",
+    "ca504c8f wip(r41-zombiefresser): Zensus + RE1.5-Beleg 0x84/0x85 = Liegender mit Naehe-Wecker",
+    "ce70b0f2 wip(r41-zombiefresser): Original-Filmstreifen des Naehe-Weckers (DuckStation)",
+    "93f9e3fe wip(r41-zombiefresser): 0x84/0x85 liegen und stehen per Naehe-Wecker auf (UNGEPRUEFT)",
+    "88ad6615 wip(r41-zombiefresser): Messung nachher 2000/3000 + Belege (Bilder, Logs, Original-Saves)",
+    "9765772c wip(r41-zombiefresser): Riegel unit_r41_zombiefresser + 5 echte-exe-Teile; drei alte Pins nachgezogen",
+    "ce430484 merge(r41-zombiefresser): master (Spur A + D integriert) in den Spurzweig",
+    "814586f0 wip(r41-zombiefresser): Elza-Teil ueber den echten Tuerweg 2071 -> 2001, Endbilder je Teil",
+    "1ad22881 wip(r41-zombiefresser): integration_r38_wasserzombie Teil e - Endbild 406 -> 560",
+    "864088ca wip(r41-zombiefresser): Dossier Tests / OFFEN / Fuer den Nutzer",
+    "773ffdb8 fix(r41-zombiefresser): 0x84/0x85-Zombies liegen und stehen auf, wenn man naeher kommt"
+   ],
+   "suite": "ctest --test-dir re15_port/build -R \"^(unit_|prop_|probe_|r[23][0-9]b?_)\" -j 6 --timeout 600 -> \"100% tests passed, 0 tests failed out of 937\" | ctest --test-dir re15_port/build -R \"^integration_(r41_zombiefresser|r38_wasserzombie|r37_zombieaktiv|r39_elzazombies|r36_gegnerzahl|r36_schuss|r37_re2zombie|r36_zombieki|r39_gegner|r37_beretta|r34_granaten)\" -j 4 --timeout 600 -> \"100% tests passed, 0 tests failed out of 23\" | after the last edit to the own test: ctest --test-dir re15_port/build -R \"^unit_(r41_zombiefresser|anim_rate|room1140_combat|p3_restposten_pin|r38_wasserzombie|re2_lyer_1140|r16_liegende_unschiessbar|re2z_spawn_seed)$\" -j 4 --timeout 600 -> \"100% tests passed, 0 tests failed out of 8\"",
+   "offene_punkte": [
+    "RE2 AI, channel rooms 2000/2001: a risen zombie directly below the player (east walkway, distance < 2000) snaps upward instead of walking to the edge. This is RE2 Retail behaviour, not a leftover of the fix: DECISION[2] Block A, sltiu 0x7d0 @0x80102064, floor compare +0x106 @0x80102070-7c, 0x0E01 -> EXEC[14] @0x80102090-94 / @0x80104D74. From further away it climbs the edge and grabs (F306).",
+    "Side finding, not part of this assignment: when a save made in ROOM2000/2001 is loaded (CONTINUE), sub00 does not run, so the zombies (and the 2000 scene) are missing. Cause: the pre-intro detection in the boot path platform/pc/main.c holds sub00 back as soon as main00 starts an event thread (2000/2001 main00 Evt_exec @0x0177c). The original always starts sub00 (FUN_8003ef6c @0x8003efd8). The door path and the debug jump are not affected (measured).",
+    "RE1.5 AI only, cosmetic: before waking the lying pose is clip 0x12 frame 0 (height -457) instead of the original INIT pose clip 0x0c frame 0 (height -234; f314 @0x80100c34 runs before FINAL @0x80100c7c), because the port does not separate the pose from +0x94. This already applied to 0x87/0x88 before.",
+    "Integration: this branch already contains master ce430484 (Spurs A and D). Old tests whose premise was disproved and which were updated: probe_p3_restposten.c [D], test_anim_rate.c PIN 4, test_room1140_combat.c (13b), test_r38_wasserzombie.cmake part e (end frame 406->560). Keep these versions when merging."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/enemy_ai_re2_zombie.c (Include; re2z_init feeder/lying branch; re2z_exec_lying waker hook; hit filter passive_lyer) — all marked 'Runde 41 Spur I'",
+    "re15_port/engine/src/enemy_ai_common.c (Include; grid case 5/6 -> re15_r41_liegewecker_re15_decide + re15_enemy_ai_lying_phase)",
+    "re15_port/engine/src/player_common.c (pin release for the lying phase machine nib >= 7 -> nib >= 4)",
+    "re15_port/tests/unit/probe_p3_restposten.c",
+    "re15_port/tests/unit/test_anim_rate.c",
+    "re15_port/tests/unit/test_room1140_combat.c",
+    "re15_port/tests/integration/test_r38_wasserzombie.cmake"
+   ],
+   "neue_assets": [],
+   "sprachdateien": [],
+   "fragen_an_nutzer": []
+  },
+  "M": {
+   "status": "fertig",
+   "zusammenfassung": "P1 Messung: Die Löcher in pri/STAGE3-6/*_port.png kamen aus einem Fehler im Python-SLD-Entpacker tools/maske/original.py. Der lange Rückverweis wurde nicht auf 16 Bit gekürzt (Original FUN_800c47e8, DEBUG.BIN +0x4898 sll v0,v0,16 und +0x48A0 sra t2,v0,16). Vorher stimmten 0 von 359 Atlanten mit dem Engine-Entpacker überein, nachher 359 von 359. Im Spiel hatten die Rechtecke 0,00 % Index-0-Texel.\nP1 Echte Löcher im Spiel: Treppenkanten. Der Generator (gen_masken b8db7b2b) zeichnete seine verifizierte Region nur mit vollen Rechtecken. schliessen_r41.py baut Region und Tiefenregel exakt nach (3239/3239 Rechtecke in der Region, 3239/3239 Tiefen bitgleich).\nP1 Bau: Der Saum kommt in neue Rechtecke (höchstens 105 je Cut = RE15_PRI_MAX_MASKS_PER_CUT), jeder Cut hat einen eigenen Atlas (216 _PRIcc.TIM). Die alten Rechtecke sind bytegleich. Der Ausschluss aus R37 gilt auch für die Saum-Rechtecke; 1662 von 8600 bleiben aus. Die alten Ausschlüsse sind bitgleich, die Schranke NB2 M2 steht am Endzustand bei 0/0.\nP1 Ergebnis: Offene Kerben 61672 -> 15498. An der exe (97 gleiche Szenen, Vorher-exe aus b28c7236) stieg HINTER von 11782 auf 12664 von 28457. DAVOR keine neue Übermalung von Figuren; nur Kanten der 3D-Türmodelle +1/+2 Punkte (Tür-Oberkante schon vorher).\nP1 Verworfen: 'Tiefe aus der Erreichbarkeit' habe ich gebaut, gemessen und zurückgenommen. In 4080 C2 blieb von Leon nur der Oberkörper.\nP2: Alle 53 Masken an der exe geprüft (VOR/HINTER je Cut, Leon allein über C = Akteur-Cull, Stichproben mit Elza). Kurbel 2020 C3: Die Sichtlinie kreuzt die solide Zelle der Südreling (SCA 11), Leon steht also HINTER ihr. Das Original hat für Cut 3 eine NULL-Sektion (+0x3FC FF FF FF FF). Die Maske ist richtig, keine Änderung.\nP2 Fehler: ROOM20A0 C12, Freistellung 12_02 ist ein Bodenstreifen vor der Wand. Leon verlor dort die Füße (30/698 bzw. 50/678). 12_02 steht jetzt nicht mehr im Bau (auswahl.json), Cut 12 ist mit raum.py --p2 neu gebaut. Nachher 0/0.",
+   "commits": [
+    "6962dd32 wip(r41-masken36): Dossier angelegt",
+    "18ba3e33 wip(r41-masken36): Dossier 1.1 - Loecher der Uebersichtsbilder = Fehler im Python-SLD-Entpacker",
+    "6acdabcd wip(r41-masken36): Werkzeug schliessen_r41.py - verifizierte Generator-Region ganz zeichnen",
+    "2cfb1158 wip(r41-masken36): STAGE3-6-Masken geschlossen (Saum-Rechtecke, eigener Atlas, Tiefe aus der Erreichbarkeit)",
+    "cea61393 wip(r41-masken36): Dossier 1.2/1.3 - Ansatz, Belege, Umsetzung",
+    "6f343b1d wip(r41-masken36): Vorher/Nachher-Bilder je Cut (M_bilder), Uebersicht neu, R37-Integration auf eigenen Atlas",
+    "ded95f4b wip(r41-masken36): Riegel unit_r41_masken36_loecher + _kurbel",
+    "c8944586 wip(r41-masken36): Dossier 1.4 Messung nachher (statisch, Riegel, exe-Sweep)",
+    "bc29bf74 wip(r41-masken36): Dossier 2.1 Kurbel 2020 C3 (Leon steht HINTER der Reling), Integrationsgeruest Punkt 2",
+    "6255abd6 fix(r41-masken36): ROOM20A0 Cut 12 - Bodenstreifen 12_02 nicht mehr als Maske (Leon verlor die Fuesse)",
+    "6871f2a5 wip(r41-masken36): Tiefe aus der Erreichbarkeit zurueckgenommen - Saum-Rechtecke unter dem Ausschluss der Spur P",
+    "bfdce5e0 wip(r41-masken36): Dossier 1.2-1.5 Endstand (Saum + Ausschluss), M_bilder neu, exe-Sweep vorher/nachher",
+    "d20eb0b2 wip(r41-masken36): Riegel integration_r41_masken36_stage2 um ROOM20A0 Cut 12 (Leon/Elza vor der Wand, 0 uebermalt)",
+    "ecd00566 wip(r41-masken36): Dossier 2.2/2.3 Sichtpruefung 53 Masken, Fehler 20A0 C12",
+    "734e0aa1 wip(r41-masken36): Belegbilder 20A0 C12 (Wandkante, Streifen) in M_bilder",
+    "95b9f38d feat(r41-masken36): STAGE3-6-Masken geschlossen, 53 STAGE2-Masken an der exe geprueft (20A0 C12 behoben)"
+   ],
+   "suite": "100% tests passed, 0 tests failed out of 41 -- ctest --test-dir re15_port/build -R \"masken36|_pri|pri_|sld_atlas|itemorte|optik|dokumente\" -j 4 --timeout 900 --output-on-failure (Endstand, Baum r41_masken36; keine volle Suite)",
+   "offene_punkte": [
+    "P1: Wo der R37-Ausschluss ganze Rechtecke nimmt, bleiben Objekte teilweise offen (vor Runde 41: 94 Objekte mit 358358 px). Dazu bleiben 1662 von 8600 Saum-Rechtecken aus (Kerben 25,1 % von vorher). Sicherer Weg dorthin sind Freistellungen wie in STAGE1/2. 'Tiefe aus der Erreichbarkeit' ist gemessen und verworfen (Dossier 1.5).",
+    "Masken wirken auch auf 3D-Objekte und Effekte, die Erreichbarkeits- und Standplatz-Schienen prüfen aber nur Figuren. Betroffen: Kanten der Türmodelle 4040 C11 / 4080 C7 (Türrahmen) und in ROOM2020 C3 die rechte Reling über dem 3D-Objekt obj 1 in der Beckenmitte; vor oder hinter der Reling ist nicht gemessen.",
+    "ROOM2030 C15 (4400,3850) Band 3: bis zu 8 Punkte Handlauf an Leons Schulterkante, wenn er 1 Bucket vor der Reling steht (Bucket-Rundung der Freistellungstiefe).",
+    "PSX: pri_psx.c kennt keinen eigenen Atlas. Die alten Rechtecke liegen an ihrer BSS-Stelle und funktionieren dort, die Saum-Rechtecke nicht. Das PSX-Ziel ist ohnehin ungebaut.",
+    "pri/STAGE3-6/<raum>/<cc>_port.png (a8be31a7) stammen aus dem kaputten Entpacker und zeigen falsche Löcher. Berichtigte Bilder liegen in analysis/befunde_runde41/M_bilder/uebersicht/ (Leon-Ordner, Elza-Ordner bytegleich). pri/ ist für die Spur tabu, das Ersetzen übernimmt Orchestrator oder Nutzer.",
+    "Die M_bilder/P1_exe_*.png zeigen den verworfenen Zwischenstand mit Tiefen-Reparatur (Spalte NACHHER), nicht den Endstand; Vermerk steht in Dossier 1.5."
+   ],
+   "fragen_an_nutzer": [
+    "ROOM20A0 Kamera 12: Ihre Freistellung 12_02 ist ein Streifen Boden vor der Ziegelwand. Wer darauf stand, verlor im Spiel die Füße, deshalb wird 12_02 nicht mehr gebaut (PNG unverändert, 12_01 bleibt). Was sollte 12_02 verdecken?",
+    "Sollen die Übersichtsbilder pri/STAGE3-6/*/*_port.png durch die berichtigten aus analysis/befunde_runde41/M_bilder/uebersicht/ ersetzt werden? Die alten zeigen Löcher, die es im Spiel nie gab."
+   ],
+   "neue_assets": [
+    "re15_port/shared_assets/PSX/MASKS/ROOM3040..ROOM6031.MSK (30 Dateien geändert: alte Sektionsteile bytegleich + Saum-Rechtecke)",
+    "re15_port/shared_assets/PSX/MASKS/ROOM{3040,3041,3050,3051,30A0,30A1,30E0,30E1,4040,4041,4080,4081,40A0,40A1,5020,5021,5050,5051,5090,5091,50B0,50B1,5100,5101,6000,6001,6010,6011,6030,6031}_PRIcc.TIM (216 neue Atlanten)",
+    "re15_port/shared_assets/PSX/MASKS/ROOM20A0.MSK + ROOM20A0_PRI12.TIM/.PBM/.STAND (Cut 12 ohne Bodenstreifen 12_02)",
+    "Keine neuen Dateien unter shared_assets/RE2; keine neuen Engine-Quelldateien (Android: kein neuer GLOB-Eintrag)"
+   ],
+   "sprachdateien": [],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/gen/masken36_ausschluss_r37.inc (neu erzeugt mit test_r37_masken36 erzeuge, 148 Zeilen; alte Ausschlüsse bitgleich)",
+    "re15_port/tests/unit/test_r37_masken36.c (Generator-Sektion = Stage 3..6 mit eigenem Atlas, Schranke NB2 M2 als Ausschlussgrund, Zensus angepasst, Werkzeug fehl auch für Freistellungen)",
+    "re15_port/tests/integration/test_r37_masken36_verdeckung.cmake (die Spur-P-Logzeile zum BSS-Atlas darf nicht mehr kommen)",
+    "analysis/esp_masken_2026-09-03/auswahl.json (ROOM20A0 Cut 12: 12_02 unter _r41_nicht_gebaut)",
+    "re15_port/tools/maske/original.py (Entpacker-Fix)"
+   ]
+  },
+  "E": {
+   "status": "teilweise",
+   "zusammenfassung": "Gemessen am Original mit dem DuckStation-GDB (Savestate hg_ready, Haltepunkte im Spiel-Task, Pad-Eingabe direkt in die virtuellen Worte bei @0x80030638), Ergebnisse in E41n2/o_*.txt:\nE-N1: Auf der RVD-Kante x 9000 (z1 @0x016C, z5 @0x01BC) wechselt auch das Original den angeforderten Cut in jedem Durchlauf (FUN_800142f4 aus @0x800142b4). Es zeigt das Bild aber nicht: 39 von 40 Durchläufen gehen über den Apply-Zweig @0x80021558 und springen mit @0x80021560 `j 0x800215fc` an DrawOTag (@0x800215bc/d0/e4) und am Pufferwechsel (@0x800215f4/f8) vorbei. Das Bild steht also still.\nE-N2: Beim Anlauf im Gehen gibt es zwischen Message_on @0x0A5C und @0x0A62 kein Lückenbild (n9..n94 Clip 5 Bild 9). Pos_set @0x0A8C kommt im ersten Bild nach dem Schließen der Frage (n94 -> n95). Den Geh-Stopp (0x800322e8 @0x80032328/@0x80032480, Stehen 0x80032038) hatte der Port schon richtig.\nUrsache im Port: Er hatte die Reihenfolge Skript -> Nachrichten -> Spiel, das Original Spiel-Task @0x80020de4 vor Nachrichten-Takt @0x80020f3c/@0x80010044. Außerdem parkte der Port Auswahl-Nachrichten am Opcode, das Original kehrt zurück (@0x80040520) und hält über den Skript-Freeze (@0x8003f040). Alle 102 Auswahl-Message_on tragen das Skript-Bit.\nGebaut: kamerahalt_r41.c + bildhalt_r41_pc.c (das Apply-Bild wird nicht präsentiert) und msgtakt_r41.c (Restore erst hinter dem Spiel-Takt, Auswahl ohne Parken). Dazu kleine Haken in main.c, msg_common.c, scd_vm.c und render_pc.c.\nNachher: Gang auf die Kante -> 40/40 Bilder pixelgleich. Gehen, Rennen, Stehen und der Weg ab 2050 jetzt ohne Lückenbild, Pos_set = Schließen + 1, Apply-Bild gehalten.\nRenn-Stopp gebaut und gemessen, dann wieder entfernt: Er bricht unit_r36_zombieki_affen_block. Bleibt OFFEN.",
+   "commits": [
+    "d7c57d7d wip: Dossier-Abschnitt, RVD ROOM2020 z1/z5",
+    "2ed74e99 wip: Original gemessen (GDB) Kante 9000 + Geh-Anlauf, Frame-Ordnung",
+    "facdf2ca wip: Apply-Bild/Nachrichten-Restore/Auswahl ohne Parken (ungebaut)",
+    "9195208b wip: Apply-Bild ohne Present (bildhalt_r41_pc.c), E-N1 gemessen",
+    "635be823 wip: Renn-Stopp (spaeter entfernt)",
+    "098ff9ab wip: Dossier Renn-Stopp/Umsetzung/Messung",
+    "607d2a66 wip: Riegel unit_r41_kleinkram_b_takt_*",
+    "7ece47fb wip: Integrations-Riegel kante/geh/renn (VORHER-exe rot)",
+    "d4fa9074 wip: Renn-Stopp wieder heraus (Querbezug unit_r36_zombieki_affen_block)",
+    "aeead96b wip: Dossier Umsetzung/Messung nachher",
+    "df18b896 wip: Dossier Status, Rennen nachgemessen",
+    "91afb6df wip: Dossier DuckStation bytegleich zurueck",
+    "11b8f867 wip: gehaltenes Bild bedient jeden Ruecklese-Auftrag (dining1141_s)",
+    "40d01dac wip: Dossier je Mangel/Tests/OFFEN/Nutzer",
+    "82cd04ec fix(r41-kleinkram_b): Nachbesserung 2 - Apply-Bild steht (E-N1), Nachrichten-Takt hinter dem Spiel-Takt + Auswahl ohne Parken (E-N2), alle Kurbel-Anlaeufe am Original gemessen"
+   ],
+   "suite": "-R \"^(unit_|prop_|probe_)\" -j 2: \"100% tests passed, 0 tests failed out of 925\" | Integrations-Auswahl -R \"$(cat integ_regex2.txt)\" (127 Riegel mit FRAMEDUMP/PRESS/MSG_LOG/msgtext/XU/CROSS/CAM_TRACE) -j 4: \"99% tests passed, 1 tests failed out of 127\" (integration_r38_dining1141_s, behoben in 11b8f867) + integration_r36_szenenleon Passed | -R \"^(integration_r38_dining1141_s|integration_r35_entladen|unit_r41_kleinkram_b_.*|integration_r41_kleinkram_b_.*)$\" -j 3: \"100% tests passed, 0 tests failed out of 17\" | restliche Integration -R \"$(cat integ_rest_regex.txt)\" -j 4: \"100% tests passed, 0 tests failed out of 95\"",
+   "offene_punkte": [
+    "Renn-Stopp fehlt dem Port allgemein. Original gemessen (frei 157,117,77,37,-3; an der Kurbel 174..-26 bis (3650,-3369)), Mechanismus disassembliert (0x80032604 @0x8003272c/@0x80032730-@0x80032760, 0x80032778 @0x800328f8-@0x8003295c), Umsetzung 635be823 gebaut und gemessen. Wieder entfernt in d4fa9074, weil unit_r36_zombieki_affen_block (Runde 36 Spur F) fuer Seed 0x67be2dfd ueber die Schranke 600 faellt (+841). Ohne Stopp ist der Test gruen. Entscheid des Orchestrators: Renn-Stopp spielweit einbauen und die Gorilla-Sonde neu einmessen.",
+    "Das Renn-Tempo des Ports ist konstant 200 (@0x80073f24), im Original haengt es am Clip (159..269). Die Auslauflaenge waere darum auch mit Renn-Stopp nur im Mechanismus gleich.",
+    "Das Apply-Standbild dauert im Port 1 Spielbild. Im Original haelt es, solange der Hintergrund von CD laedt (FUN_80013c50, ca. 8 Bilder). Das ist Hardware-Zeit, keine Konstante.",
+    "PSX-Plattform: platform/psx/main.c ruft msgtakt und kamerahalt nicht auf (PSn00bSDK fehlt hier zum Bauen).",
+    "Gemeinsame Dateien ohne Vertragszuteilung fuer Spur E (main.c, msg_common.c, scd_vm.c, render_pc.c), je 1-9 Zeilen mit Kommentar 'Runde 41 Spur E'. Bei der Integration beachten.",
+    "Die GDB-Treiber nach dem Muster gdb_affen.py schreiben settings.ini im Textmodus zurueck (CRLF statt LF). Hier per Byte-Kopie aus E41n2/ds_backup korrigiert.",
+    "Der FORTSETZUNG-Block im Auftrag (Abnahme-0-Rest) war veraltet: Abnahme 0 und Abnahme 1 sind abgeschlossen (b5ae3037, 29b7a8a7). Nicht bearbeitet."
+   ],
+   "fragen_an_nutzer": [
+    "Kurbel ROOM2020: Was genau war das 'Herumfliegen'? (a) Der Sprung an die Kurbel nach dem 'Yes'? Den macht das Original genauso, dort steht davor nur ca. 1/4 s ein Standbild, waehrend die CD laedt; der Port haelt jetzt 1 Bild. (b) Das Einfrieren nach einer Kurbel-Umdrehung? Das ist seit Nachbesserung 1 behoben. (c) Etwas anderes? Dann bitte die Stelle (gerannt, gegangen oder gestanden, welche Waffe) oder ein Bild (F9).",
+    "Rennen: Im Original rutscht Leon nach dem Rennen aus (Renn-Stopp); an der Kurbel kurbelt er dadurch etwa 35 cm neben der Kurbel. Der Port hat das noch nicht, weil der Einbau einen Gorilla-Test der Runde 36 aendert. Die Entscheidung liegt beim Orchestrator."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/platform/pc/main.c (+7/-1: msgtakt um re15_msg_tick, Restore nach re15_pc_fx_takt und vor dem Bildende, Apply-Bild statt re15_render_end_frame)",
+    "re15_port/engine/src/msg_common.c (+4/-1: vor_oeffnen, Schliessen aufschieben)",
+    "re15_port/engine/src/scd_vm.c (+2: Auswahl-Message_on ohne Parken)",
+    "re15_port/platform/pc/src/render_pc.c (+9: re15_render_pc_abzug_nehmen + 1 Haken vor dem Ruecklesen)",
+    "aus frueheren Staenden unveraendert: engine/src/player_common.c (+2 plcloop), engine/src/re15_inv_screen.c, engine/src/scd_room_setup.c"
+   ],
+   "neue_assets": [],
+   "sprachdateien": []
+  }
+ },
+ "abn": {
+  "I": {
+   "bestanden": false,
+   "urteile": [
+    {
+     "punkt": "ROOM2000 (Leon), Standard-KI RE2",
+     "urteil": "erfuellt",
+     "beleg": "S1 echter Tuerweg 2070 -> 2000 (I_abnahme_0.md 3.1)"
+    },
+    {
+     "punkt": "ROOM2001 (Elza), Standard-KI",
+     "urteil": "erfuellt",
+     "beleg": "S2 echter Tuerweg 2071 -> 2001"
+    },
+    {
+     "punkt": "STAGE3 ROOM3000/3010 (+3001/3011), Standard-KI",
+     "urteil": "erfuellt",
+     "beleg": "S3a/S3b/S7 echte Tuerwege"
+    },
+    {
+     "punkt": "Dieselben Zombies mit RE1.5-KI (Optionsmenue)",
+     "urteil": "teilweise",
+     "beleg": "S5: Liegepose vor dem Wecken Clip 0x12 Bild 0 statt Original Clip 0x0c Bild 0 (M1)"
+    }
+   ],
+   "maengel": [
+    "M1 (RE1.5-KI, Pose vor dem Wecken): mit RE15_AI_FLAVOR=re15 zeigen alle 0x84/0x85-Zombies bis zum Wecken Clip 0x12 Bild 0, das Original die INIT-Pose Clip 0x0c Bild 0 (0x85: Clip 0x0e). INIT setzt +0x94 = 0x0c @0x80100b74, +0x95 = 0 @0x80100c0c, +0x8f = 0 @0x80100c1c, jal 0x8001f314 @0x80100c34 (FUN_8001f3bc setzt den Keyframe direkt), danach +0x94 = 0x12 @0x80100c7c OHNE f314, P0 @0x80103940-60 ohne f314 -> Pose bleibt 0x0c Bild 0 bis P2 (@0x801039a8, +0x8f = 0xf @0x80103998). Abhilfe: angezeigte Pose von +0x94 trennen; gilt auch fuer 0x87/0x88. Riegel: RE1.5-Lauf 2000/3000, Pose-Keyframe vor dem Wecken == 0x12d (0x84) bzw. 0x149 (0x85).",
+    "V1 (Vertrag): durch Orchestrator-Entscheid I-E1 ERLEDIGT (Haken angenommen).",
+    "I-E2 (Orchestrator-Auftrag, AUFTRAG.md): Laden eines Spielstands IN 2000/2001 zeigt keine Zombies — Ursache im Boot-/Lade-Pfad belegen und beheben, Riegel Laden in 2000 und 2001."
+   ],
+   "bericht": "analysis/befunde_runde41/I_abnahme_0.md (vom Orchestrator gesichert, Agent vom Sitzungslimit ~12:23 beendet)"
+  },
+  "M": {
+   "bestanden": false,
+   "urteile": [
+    {
+     "punkt": "1 \"Masken STAGE3-6 ... ueberall Loecher\" -> \"Masken schliessen\"",
+     "urteil": "teilweise",
+     "beleg": "Werkzeugfehler als Ursache der Bild-Loecher belegt und behoben (17,26 % -> 0,00 %), im Spiel Kerben 61672 -> 15498; 25,1 % der Kerben, 1662/8600 Saum-Rechtecke und die R37-ausgeschlossenen Objektteile bleiben offen (M_abnahme_0.md)."
+    },
+    {
+     "punkt": "2 \"neue PRIs fuer STAGE2 ... alle sauber eingebaut\" (Sichtpruefung)",
+     "urteil": "teilweise",
+     "beleg": "Kurbel 2020 C3 richtig (Leon/Elza hinter der Reling); 20A0 C12: 12_02 ausgenommen (Nutzer: \"Weglassen ist ok\", Nachtrag 11); 2030/2031 C15 uebermalt Leon (12) und Elza (24) vor der Reling."
+    }
+   ],
+   "maengel": [
+    "Mangel 1 (P1 nicht vollstaendig geschlossen): NACHHER 15 498 offene Kerben (25,1 % von 61 672); 1 662 der 8 600 Saum-Rechtecke ausgeschlossen; Objekte mit R37-Ausschluss bleiben ganz/teilweise ohne Maske (94 Objekte / 358 358 px, z.B. ROOM3050 C05/C07). Weg laut Abnahme: Tiefe je Objekt aus der Kollisionszelle/Geometrie (wie raum.py \"zelle\"), nicht aus der Erreichbarkeit; Restliste mit Bildern dem Nutzer vorlegen, falls Freistellungen gebraucht werden. Commit-Titel \"geschlossen\" ueberzeichnet.",
+    "Mangel 2 (12_02) ist durch den Nutzer-Entscheid \"Weglassen ist ok\" (AUFTRAG Nachtrag 11) ERLEDIGT — nur die Begruendung im Dossier richtigstellen (Rolladen obj 1 / Schacht hinter der Schwelle Zelle 32, nicht \"Ziegelwand\").",
+    "Mangel 3 (ROOM2030/2031 Cut 15 (4400,3850) Band 3): die Nutzer-Maske uebermalt die Spielfigur VOR der Reling (Leon 12, Elza 24 Punkte). Tiefe des Handlaufs in C15 korrigieren, Stelle (Leon + Elza) als VOR-Szene mit H == 0 in test_r41_masken36_szenen.cmake.",
+    "Mangel 4 (Sichtpruefung teils ohne Spielfigur): VOR-Stellen 2030 C7 (0,-1950) und 2040 C7 (-17300,-8800) zeigen Leon gar nicht; Stelle mit Spielfigur im Bild waehlen oder \"keine begehbare VOR-Stelle mit Figur im Bild\" belegen.",
+    "Mangel 5 (Doku/Nebenbefunde): original.py-Kommentar \"116 von 116\" vs Dossier \"0 von 359\"; Kopf von schliessen_r41.py beschreibt den verworfenen Weg; M_bilder/P1_exe_*.png = verworfener Zwischenstand (entfernen/umbenennen); Dossier 1.4 \"DAVOR keine neue Uebermalung\": ROOM5100 C7 Leons Hand +2 Punkte, 4040 C11 +1.",
+    "Auflage (Nachtrag 11): die 10 Uebersichtsbilder ohne berichtigtes Gegenstueck nachliefern (pri/STAGE3/3040+3041/01, 3050+3051/06+15, 30E0+30E1/06+07) unter analysis/befunde_runde41/M_bilder/uebersicht/ (pri/ selbst bleibt fuer die Spur tabu)."
+   ],
+   "bericht": "analysis/befunde_runde41/M_abnahme_0.md (vom Orchestrator gesichert, Agent vom Sitzungslimit ~12:23 beendet)"
+  },
+  "E": {
+   "bestanden": false,
+   "suite": "Gezielt im Spurbaum, ohne volle Suite: ctest -R \"r41_kleinkram_b\" -j 2: 16 von 16 bestanden. Unit/Prop/Probe der berührten Module (Regex <sp>/E41a2/unit_regex.txt): 135 von 135. Integrations-Auswahl (Auswahl-Nachrichten, Item-Aufnahme, Kartenabzug, 11B0/11B1, Szenen mit Nachricht und Kamerawechsel, Leon und Elza; <sp>/E41a2/integ_liste.txt) -j 3: 35 von 35, darunter integration_r38_dining1141_s, das beim Bau-Agenten rot war. Gegenprobe der neuen Riegel kante/geh/renn mit der VORHER-exe 753652fc: alle 3 rot, und zwar aus dem Mechanismus. Die Logs des Bau-Agenten (925, 127 mit 1 rot, 17, 95) habe ich gelesen, die Zahlen stimmen.",
+   "urteile": [
+    {
+     "punkt": "1 Kurbel ROOM2020: 'komische herumfliegende Animation am Anfang, wenn er die Kurbel nutzt'",
+     "urteil": "teilweise",
+     "beleg": "Selbst gemessen mit re15_pc_E41a2.exe (md5 486f77a7…) gegen VORHER 753652fc. Gehen (P1_geh): Bild 9 bleibt durch beide Nachrichten stehen, Frage zu F381, Ifel_ck..Pos_set..Sleep in einem Takt F382, Bild gehalten, Plc_motion F402. Das ist Bild für Bild dieselbe Folge wie das Original-RAM o_geh1 (n9..n94 mo=5/9, n95 Pos_set, n115 Plc_motion). Stand (P1_stand), Weg des Nutzers 2050->2020 in Cut 3 (P1_weg2050) und die Antwort 'No' (P1_nein) verhalten sich ebenfalls wie das Original. Rennen (P1_renn_nach): F382 Pos_set und im selben Bild Stehen bei (3650,-3018), mo 200. Das Original (o_renn2 n93-n99) läuft dagegen 6 Bilder aus, bis (3650,-3369). Den Renn-Stopp habe ich selbst disassembliert (0x80032604 @0x8003272c, 0x80032778 @0x8003293c/@0x8003295c), er fehlt dem Port. Das Symptom 'herumfliegend' tritt in keinem Lauf auf."
+    },
+    {
+     "punkt": "E-N1 Kamera-Flackern ROOM2020 bei x 9000 (Orchestrator-Auftrag)",
+     "urteil": "teilweise",
+     "beleg": "Lauf EN1_kante: Der Spieler steht ab F64 auf der Kante. cam= wechselt weiter 2/0 wie im Original (o_cam9000_draw2: 39x RELOAD ohne DrawOTag). NACHHER sind die Bilder F64..F200 pixelgleich (137 gehaltene Bilder, md5 a44654161d), VORHER unterscheiden sich aufeinanderfolgende Bilder um je ~68 000 px. Das Flackern ist also weg. Die Umsetzung erzeugt aber einen Softlock: Wird der Raum mit der Spielerlage auf der Kante betreten (EN1_spawn_kante_nach), bleibt der Freeze pf=FF000007 von F1 bis F199 stehen, der Spieler reagiert nicht und das Bild bleibt schwarz. VORHER ist die Einblendung bei F10 fertig. Mehr dazu in Mangel 4."
+    },
+    {
+     "punkt": "E-N2 Geh-Stopp während der Frage (Orchestrator-Auftrag)",
+     "urteil": "erfuellt",
+     "beleg": "Selbst disassembliert: Message_on @0x800404f4 gibt bei @0x80040520 eine 1 zurück, der Skript-Freeze sitzt bei @0x8003f040-@0x8003f04c. Die Bildreihenfolge @0x80020de4 / @0x80020f3c / @0x80010044 stimmt. Geh-Stopp: @0x80032328 -> @0x80032334 -> @0x80032480, Stehen-Fall 0 @0x80032088/@0x8003209c. Die Zählung von 102 Auswahl-Message_on (Masken 69x 0xffff0000 und 33x 0xff800000, Folge-Opcode 102x 0x02) habe ich nachgefahren. Die Port-Messung stimmt mit o_geh1 überein: kein Lückenbild, Pos_set eins nach dem Schließen, Plc_motion +20. Der 'No'-Zweig ist intakt (F472 Evt_end, Spieler läuft danach)."
+    },
+    {
+     "punkt": "2 Karte B1: Sprung zum hinteren Teil vor der vorderen Tür der Waffen Armory 1090/1190",
+     "urteil": "erfuellt",
+     "beleg": "P2-Läufe: BASIS 116e8b0f zeigt MARKER 137 109 bzw. 130 112, also wandert der Marker zur Hallen-Marke (127,115). NACHHER bleibt er bei 145 106 / 145 107 (Ostkammer-Marke 146,109), für Leon und für Elza (ROOM1231). Durch die echte Tür nach 1190 steht er bei 145 108. Bild: <sp>/E41a2/P2_karte_vor_nach.png"
+    },
+    {
+     "punkt": "3 Werkstatt-Tür ROOM11B1 bleibt bei Elza dauerhaft zu",
+     "urteil": "erfuellt",
+     "beleg": "P3a, echter Türweg 1261->11B1 mit der Szene: '[wk11b1-r41] … Ereignis 24', msg 10/11. Kameras 2,3,4,5,6, am Ende Cut 2; BASIS endet auf Cut 8. Bild <sp>/E41a2/P3a_tuer_zoom.png: BASIS mit offenem Türblatt, NACHHER geschlossen. P3b: Von der Garagenseite wird Elza bei x -20942 gestoppt, es kommt msg 12 'The door is locked.', kein Raumwechsel. P3c: Von der Werkstattseite wird sie bei x -22618 gestoppt; BASIS läuft dort durch."
+    },
+    {
+     "punkt": "Gate Bau / RE-Belege / kein Raten",
+     "urteil": "teilweise",
+     "beleg": "local_build.sh configure und build laufen OK ('ninja: no work to do'). 6 Stichproben habe ich selbst disassembliert: Present @0x80021558/@0x80021560, Message_on, Bildreihenfolge, Renn-Stopp, Blenden-Takt @0x80020f44, Geh-Stopp. Die Wortsuche nach Rate-Begriffen im Diff ergibt 0 Treffer. Der Mechanismus ist aber unvollständig: Der Blenden-Takt läuft im gehaltenen Bild nicht (Mangel 4). Nicht modelliert sind außerdem das Tor @0x80010028 (der Nachrichten-Takt fällt im Bild nach einem Apply aus, H1) und zwei Present-Tore @0x8002151c/@0x80021544 (H2)."
+    },
+    {
+     "punkt": "Gate Vertrag: gemeinsame Dateien",
+     "urteil": "nicht_erfuellt",
+     "beleg": "Die Haken in scd_vm.c (zugeteilt C/F/G), platform/pc/main.c (D/F/G), render_pc.c (D) und msg_common.c (nicht zugeteilt) wirken im ganzen Spiel. Für Spur E fehlt dafür ein Orchestrator-Entscheid, wie es ihn für B5, C-E3 und A-E3 gab. Pfade, Bits und Nachrichten-IDs sind in Ordnung."
+    },
+    {
+     "punkt": "Gate Riegel / Nebenwirkungen",
+     "urteil": "nicht_erfuellt",
+     "beleg": "Für jeden Punkt gibt es einen Riegel, und alle neuen Riegel sind mit der VORHER-exe rot. Aber der Riegel 'renn' (test_r41_kleinkram_b_exe.c:314) verlangt die bekannte Nicht-Original-Lage (3650,-3018) mo 200 und meldet das als 'wie das Original'. Dazu kommt als Nebenwirkung der Softlock beim Raumeintritt auf der Kante. Inventar auf der Kante und Tür-Einblendungen 2050->2020 und 1230->1190 sind ohne Befund."
+    }
+   ],
+   "maengel": [
+    "1 (Punkt 1): Der Renn-Anlauf an die Kurbel ist weiterhin nicht wie im Original. Im Port steht Leon in F382 sofort bei (3650,-3018) mo 200 (P1_renn_nach). Im Original läuft er 6 Bilder aus und kurbelt bei (3650,-3369) (o_renn2 n93-n99; Mechanismus 0x80032604 @0x8003272c, 0x80032778 @0x800328f8-@0x8003295c). Nach dem Orchestrator-Hinweis von 03:21 ist die Rückfrage an den Nutzer erst zulässig, wenn alle Anlauf-Varianten original-gleich sind. Den 'Entscheid des Orchestrators' zum Renn-Stopp gibt es in AUFTRAG.md nicht (master af7e0e8a); das ist ein Vorschlag des Bau-Agenten. Das Symptom 'herumfliegend' ist weiter nicht reproduziert.",
+    "2 (Riegel): integration_r41_kleinkram_b_renn nutzt seit d4fa9074 den Auswerter 'takt' (test_r41_kleinkram_b.cmake:261/265, test_r41_kleinkram_b_exe.c:314). Dieser verlangt im Pos_set-Bild (3650,-3018) mo 200 und meldet ':273 Bildfolge wie das Original'. Das Original hat dort den Renn-Stopp (n94 (3650,-3099), cmd 1/2/3/0). Mit dem gemessenen Renn-Stopp aus 635be823 (F382 z -3085) würde der Riegel rot. Er schützt also die Abweichung und blockiert den Fix von Mangel 1.",
+    "3 (Vertrag §1.3): Nachbesserung 2 ändert spielweit wirksam fremde gemeinsame Dateien: scd_vm.c +2 (zugeteilt C/F/G), platform/pc/main.c +9/-1 (D/F/G), render_pc.c +9 (D), msg_common.c +4/-1 (nicht zugeteilt), dazu player_common.c und re15_inv_screen.c. Damit wird jedes Apply-Bild gehalten, jede Nachricht gibt den Spieler ein Bild später frei, und 102 Auswahl-Nachrichten laufen ohne Parken. Ein Orchestrator-Entscheid wie B5/C-E3/A-E3 fehlt. Bei der Integration sind die Konflikte mit D/F/G (main.c), C/F/G (op_message_on) und D (render_pc.c) zu lösen.",
+    "4 (Nebenwirkung, Softlock): Im gehaltenen Bild ruft main.c:11427-11429 re15_render_pc_bild_halten() statt re15_render_end_frame() auf. re15_fade_tick() (FUN_80021880) steckt aber in re15_render_end_frame() (render_pc.c:1290) und läuft dann nicht. Im Original läuft der Blenden-Takt in jedem Durchlauf vor dem Present (@0x80020f44 vor @0x80020f4c). Messung EN1_spawn_kante_nach (Raumeintritt ROOM2020 mit Lage (9000,-3200)): pf=FF000007 bleibt von F1 bis F199 stehen, der Spieler reagiert nicht auf pad 0040, alle Abzüge sind schwarz. VORHER ist die Einblendung bei F10 fertig. Keine der 653 Tür-Ankünfte und keines der 101 Debug-Sprungziele liegt auf einer wechselnden Kante (Zählung mit <sp>/E41a2/tools/rvd_kante_zensus.py). Trotzdem verliert jede Blenden-Rampe pro gehaltenem Bild einen Schritt. Fix: den Blenden-Takt auch im gehaltenen Bild ausführen und dafür einen Riegel anlegen."
+   ],
+   "bericht": "Abnahme 2 für Spur E (kleinkram_b): NICHT bestanden.\n\nDen Bericht habe ich als C:/workspace/git/reAi_v2/.claude/worktrees/r41_kleinkram_b/analysis/befunde_runde41/E_abnahme_2.md geschrieben und im Zweig r41/kleinkram_b committet, nur diese Datei. Commit 5c27360b mit der Nachricht 'doc(r41-kleinkram_b): Abnahme 2'; davor gab es zwei Zwischenstände (23603fc5, 7d63ff2a). Den Code habe ich nicht verändert, der Baum ist sauber.\n\nGemessen habe ich mit der Kopie re15_pc_E41a2.exe (HEAD 82cd04ec, Code-Stand 11b8f867). Verglichen wurde mit re15_pc_E41a1.exe (VORHER, 753652fc) und der Basis-exe 116e8b0f. Alle Läufe liegen unter C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/E41a2/runs/.\n\nUrteile:\n- **Punkt 2 (Karte B1):** erfüllt. Den Sprung in der Basis habe ich reproduziert (Marker 130/137 px), NACHHER bleibt der Marker bei 145, für Leon, Elza und den Weg durch die echte Tür.\n- **Punkt 3 (11B1, Elza):** erfüllt. Auf dem echten Türweg mit der Szene ist die Tür zu, sie sperrt von beiden Seiten und zeigt 'The door is locked.'.\n- **E-N2 (Geh-Stopp, Orchestrator):** erfüllt. Gehen, Stehen und die Antwort 'No' laufen Bild für Bild wie das Original-RAM.\n- **Punkt 1 (Kurbel):** teilweise.\n  - Gehen, Stehen und der Weg von 2050 her sind jetzt original-gleich.\n  - Im Rennen fehlt der Auslauf (Renn-Stopp) des Originals; Leon kurbelt 351 Einheiten neben der Original-Stelle.\n  - Das 'Herumfliegen' habe ich nicht gefunden.\n- **E-N1 (Kamera-Flackern):** teilweise. Das Flackern ist weg.\n\nNeuer Befund dieser Abnahme: Der Bildhalt überspringt re15_fade_tick(). Betritt Leon einen Raum mit der Lage auf einer wechselnden Kamerakante, wird die Einblendung nie fertig, das Spiel bleibt eingefroren und das Bild schwarz. Das ist ein Softlock; VORHER und im Original gibt es ihn nicht. Bei normalen Tür-Ankünften und Debug-Sprungzielen tritt der Fall nicht auf, das habe ich gezählt.\n\nWas zum Bestehen noch fehlt:\n1. Ein Orchestrator-Entscheid zum Renn-Stopp. Er bricht sonst unit_r36_zombieki_affen_block; danach den Renn-Stopp einbauen.\n2. Den Riegel 'renn' so umbauen, dass er die bekannte Abweichung nicht mehr festschreibt.\n3. Ein Vertragsentscheid für die Haken in den gemeinsamen Dateien main.c, render_pc.c, scd_vm.c und msg_common.c.\n4. Den Blenden-Takt auch im gehaltenen Bild laufen lassen, mit einem Riegel dazu.\n\nErst danach ist die Rückfrage an den Nutzer zum 'Herumfliegen' zulässig. Die Hinweise H1 bis H7 im Bericht (§8) sind keine Mängel."
+  }
+ },
+ "stand": {
+  "B": "Abnahme-Fortsetzung: deine Vorgaengerin (Abnahme 4) wurde vom Sitzungslimit 2026-10-24 ~12:23 beendet. Ihr Teilbericht ist committet: analysis/befunde_runde41/B_abnahme_4.md (11c7a348, 240 Zeilen: 1 Lektuere + Bau, 2 RE-Stichproben, 3 exe-Laeufe mit 3.1 Kanister im Maul = behoben/gemessen, 3.2 keine Gier-Spruenge = behoben/gemessen, 3.3 Regression gegen Abnahme 3, 3.4 Nebenwirkung der M2-Aenderung im echten Tuerweg E1: \"Belagerung endet mit Leons Tod, Finisher mit leerem Maul\", 4 Gates bis 4.3). Es FEHLEN die Urteile je Punkt und die Maengel-Liste. Lies den Bericht ZUERST, wiederhole keine Messung, pruefe 3.4 zu Ende (ist das eine Regression der Nachbesserung 4?), ergaenze Urteile + Maengel in DERSELBEN Datei und committe. Kein Code aendern. Neu seit dem Bau: Nutzer-Nachtrag 6 (AUFTRAG.md 09:17): \"Betreff Aligator darfst du alles machen was du willst\" (freie Hand bei Startlage/Inszenierung); die 2090-Szenenfolge selbst ist Spur F.",
+  "C": "Abnahme-Fortsetzung: deine Vorgaengerin (Abnahme 3) wurde vom Sitzungslimit 2026-10-24 ~12:23 beendet. Ihr Teilbericht ist committet: analysis/befunde_runde41/C_abnahme_3.md (a307443f, 170 Zeilen: Stand/Protokoll, Gates G1 RE-Gate, Messungen L2 (Punkt 2 + Nachtraege 9/10 zu Fuss, Leon + Elza), L3 (Zaehler/Flut/Tod), L6 (Nachtraege 7/8: Strom -> Relinghoehe, Ring offen, Rechner Original, Leon + Elza), L7 (nach der Flut ohne Strom)). Es FEHLEN weitere Messungen (Weg nach der Flut bis 2080/2090 falls nicht in L6, Punkte 1/4/5, Nebenwirkungen) sowie Urteile und Maengel. Lies den Bericht ZUERST, wiederhole keine Messung, ergaenze in DERSELBEN Datei und committe. Kein Code aendern. Offene Nutzerfragen der Spur ((k) Relinghoehe y -3600 vs -5400, (l) Texte 2030 Id 48/49, (g), (h)) sind KEINE Maengel der Spur.",
+  "H": "Abnahme-Fortsetzung: dein Vorgaenger (Abnahme 0) wurde vom Sitzungslimit 2026-10-24 ~12:23 kurz nach dem Start beendet; sein Anfang ist committet: analysis/befunde_runde41/H_abnahme_0.md (7552fee6, 24 Zeilen: 0 Bau, 1 Diff gelesen). Setze in DERSELBEN Datei fort (Tests, Messungen je Punkt am echten Weg, RE-Gate, Vertrag, Urteile, Maengel), committe. Kein Code aendern.",
+  "I": "Nachbesserung nach Abnahme 0: der Pruefer schrieb seinen Bericht vollstaendig (analysis/befunde_runde41/I_abnahme_0.md, vom Orchestrator gesichert aff3c34b), konnte das Ergebnis aber wegen des Sitzungslimits nicht zurueckmelden — Maengel unten aus dem Bericht uebernommen. V1 ist durch den Orchestrator-Entscheid I-E1 erledigt; NEU ist I-E2 (Laden in 2000/2001 ohne Zombies), AUFTRAG.md 12:43.",
+  "M": "Nachbesserung nach Abnahme 0: der Pruefer schrieb seinen Bericht vollstaendig (analysis/befunde_runde41/M_abnahme_0.md, vom Orchestrator gesichert ee7149ed), konnte das Ergebnis aber wegen des Sitzungslimits nicht zurueckmelden — Maengel unten aus dem Bericht uebernommen. Nutzer-Nachtrag 11 (AUFTRAG.md): 12_02 bleibt weg (\"Weglassen ist ok\"); die pri-Uebersichtsbilder hat der Orchestrator auf master ersetzt (919cc1ed, 204/214), die fehlenden 10 lieferst du unter M_bilder/uebersicht/ nach.",
+  "J": "Baum r41_stage3szenen_a: dein Vorgaenger (Bau) wurde vom Sitzungslimit 2026-10-24 ~12:23 beendet. Commits: 918cbac8 (Dossier angelegt), 8f1b224c (Dossier S0: RBJ-Binder FUN_8001b3f8 Disasm + Zensus-Werkzeug), e4a9f39c (feat: rbj-binder byte-true FUN_8001b3f8, Entscheid A-E5 — Spur K cherry-pickt diesen Commit, NICHT mehr umschreiben, Aenderungen daran nur als eigener Folge-Commit mit Beleg), db792a9c (Dossier S0.3/S0.4: Laufzeitmessung 12 Raeume vorher/nachher + Messwerkzeuge), 541881b5 (vom Orchestrator gesichert, UNGEPRUEFT: wclip_r41.c/.h \"Spieler-Plc_motion(2,c) = W-Bank-Clip c\", Haken dining_r39.c, Werkzeuge tools/r41_j/*). Lies ZUERST das Dossier J_stage3szenen_a.md und den Diff gegen master; bauen (configure, neue .c), die Arbeit an 3060 (Marvin) / 3061 (Sherry Schacht + Elza) fortsetzen. Wiederhole KEINE vorliegende Messung.",
+  "E": "Neue Runde nach Abnahme E 2 (E_abnahme_2.md) und den Orchestrator-Entscheiden E-E1..E-E3 (AUFTRAG.md 10:50): E-E1 = deine spielweiten Haken sind angenommen (Bedingung: Integration mit allen Nachrichten-/Szenen-/Tuer-Riegeln); E-E2 = Renn-Stopp des Originals SPIELWEIT einbauen (Ausgang 635be823, entfernt in d4fa9074), unit_r36_zombieki_affen_block mit Beleg neu einmessen (erst klaeren, was die Sonde misst), Riegel integration_r41_kleinkram_b_renn auf die Original-Lage nach dem Auslaufen (3650,-3369) umstellen; E-E3 = Blenden-Takt (re15_fade_tick, Original @0x80020f44 vor @0x80020f4c) auch im gehaltenen Apply-Bild, Riegel Raumeintritt 2020 auf der Kante (9000,-3200). Danach Punkt 1 (Kurbel) mit allen Anlauf-Varianten original-gleich -> erst dann bleibt die Rueckfrage an den Nutzer (Weg/Bild) als einziger offener Rest."
+ }
+}
