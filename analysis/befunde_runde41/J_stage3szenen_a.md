@@ -92,3 +92,60 @@ Gezielte Riegel vorher/nachher: `ctest -R "<Gruppen der RBJ-/Raum-Module>"` 164/
 **Folgerung fuer Punkt 1 (A-E5-Hypothese geprueft):** in ROOM3060 aendert der Binder nur Gegner 1/2 (Hunde; kein Hund
 spielt Sub 0). Marvin ist dort entweder Gegner 0 (Folge-NPC, `Ck(4,0xC7)` sub00 @0x00F54, rec1 vorher wie nachher) oder
 der SPIELER (s. §1). Der Binder ist also NICHT die Ursache von Punkt 1; Ursache siehe §1.
+
+## Fortsetzung 2026-10-24 (Abend; Vorgaenger am Sitzungslimit ~12:23 beendet, Stand 541881b5 UNGEPRUEFT)
+Vorliegend und NICHT wiederholt: Original-Savestate-Reihe `o3060_s2_*` (DuckStation, MZD-Disc = identische PSX.EXE),
+`o3061_a_*` (nur Raumeintritt 3061, Szene sub02 nicht erreicht), Port-Laeufe `re15_port/build/r41j_laeufe/{m3060_vor,
+m3060_nach,e3061_vor,cut3060}` (debug.log, anim.txt = RE15_ANIM_TRACE, Framedumps). Ablage der Original-Staende:
+Scratchpad `J41/orig/` (Sitzung c41eae99), Bilder/Auszuege fuer die Abnahme unter `analysis/befunde_runde41/J_belege/`.
+Die Behauptungen im Kopf von `re15_wclip_r41.h` sind unten SELBST nachdisassembliert (nicht uebernommen).
+
+## §1 ROOM3060 — Marvins Ende des Abschnitts (Punkt 1)
+
+### §1.1 Original-Skript (ROOM3060.RDT sub03, scd_dump_room.py, Datei-Offsets)
+| Offset | Bytes | Bedeutung |
+|---|---|---|
+| 0x0105E | `29 04` | Cut_chg 4 |
+| 0x01060 / 0x01064 / 0x0106C | `2e 01 00` / `32 00 0f 08 00 00 d8 bc` / `33 00 00 00 28 05 00 00` | Work_set Spieler; Pos_set (2063,0,-17192); Dir_set 1320 |
+| 0x01084 / 0x0108E | `41 01 df fa 00 00 f4 b1 64 64` / `40 00 09 00 df fa f4 b1` | Plc_neck + Plc_dest Modus 9 (Drehen) auf Hund 2 (-1313,-19980) |
+| 0x0109A..0x010B6 | `34 0c 42 00` x3, Sleep 5/5/30 | die drei Hunde (Work_set 2,0..2) losschicken |
+| 0x010BA / **0x010BE** / 0x010C2 | `2e 01 00` / **`3f 02 06 00`** / `09 0a 28 00` | Work_set Spieler; **Plc_motion(2,6)**; Sleep 40 |
+| 0x010D2 / 0x010DE / 0x010E4 | `24 10 00 00` / `24 10 01 00` / `47 03` | Spielermodell zurueck auf Leon (0/1 je Bit 3:117); Aot_on 3 = Tuer -> ROOM3020 |
+Zensus aller 240 RDTs (eigenes Skript, Work_set-Verfolgung je Sub): Plc_motion mit pc[1] = 2 auf dem SPIELER (Work_set 1,0)
+gibt es NUR in ROOM3060 sub03 @0x010BE und ROOM3061 sub02 @0x011DE; die uebrigen 15 (1021, 10D0, 1141, 1171, 3061
+@0x011EA, 3091) stehen auf Work_set 2,n (NPC).
+
+### §1.2 RE-Beleg (selbst disassembliert, `re15_disasm.py` auf info/Re1.5/PSX.EXE)
+- Plc_motion-Handler @0x80041b90: `lbu a2,1(v0)` (pc[1]), `lhu a1,2(v0)`, `lw v0,340(a0)` (Work-Entity),
+  @0x80041ba8 `sb a1,148(v0)` +0x94 = Clip, @0x80041bb0 `sb v1,4(v0)` +0x4 = 4, @0x80041bb4 `sb zero,6(v0)`,
+  @0x80041bc4 `sb a2,5(v0)` **+0x5 = pc[1]**, @0x80041bc8 `sh a1,452(v0)` +0x1c4 = pc[3]. Kein Spieler-Sonderweg.
+- Spieler-Kommandotabelle @0x80073f90 [4] = 0x80030660 (Plc-Executor). 0x80030660: @0x8003068c `lbu v0,-13735(v0)`
+  (= 0x800aca59 = Spieler+0x5), @0x8003069c Tabelle **0x80073e30**: [0] 0x80050cb8, [1] 0x80050ddc, **[2] 0x80050f00**.
+- Kanal je Sub (jeweils `lw a0`/`lw a1` direkt vor `jal 0x8001f314` anim_set):
+  Sub 0 @0x80050d40/48 = +0x180/+0x184 (Raum-RBJ), Sub 1 @0x80050e64/6c = +0x84/+0x16c (PLD-Grundbank),
+  **Sub 2 @0x80050f88/90 = +0x170/+0x174**.
+- Sub 2 (0x80050f00): Phase 0 -> @0x80050f34 +0x6 = 1, @0x80050f44 +0x8f = 7, @0x80050f54 +0x95 = 0 (+0x1c4 & 0x40 ->
+  +0x8f = 0); Phase 1 anim_set; Rueckgabe != 0 (Clip-Ende) -> @0x80050fec **+0x6 = 2 = HALTEN** (kein anim_set mehr);
+  nur mit +0x1c4 & 4 zurueck auf Phase 1 (@0x80051004/@0x80051010).
+- Was +0x170/+0x174 beim Spieler ist: Waffen-Lader FUN_80036b68: Datei = u16-Tabelle @0x800741e8[Modell 0x800aca5c]
+  + Waffe 0x800aca5d (@0x80036b84..bc4), Puffer 0x801d7700; @0x80036be4 `sw v0,-13368(at)` = 0x800acbc8 (+0x174, EDD),
+  @0x80036c04 `sw v0,-13372(at)` = 0x800acbc4 (+0x170, EMR). Tabelle gelesen: `[76,76,76,76,97,97,97,97,76,76,76,76,76,
+  76,76,118]` -> Modell 0x0D (Marvin) = 76 = **PL00Wxx**, Modell 4 (Elza) = 97 = **PL04Wxx**, Modell 15 = 118 = PL0FW00.
+- PL00W01.PLW (EDD @+8): Clip 6 = **10 Bilder** (EDD+0x2e4..0x30c); PL04W01.PLW Clip 6 = 10 Bilder (EDD+0x3c0..0x3e8).
+
+### §1.3 Messung Original (vorliegende Reihe o3060_s2, Marvin Modell 0x0D, Waffe 1; Werte aus RAM gelesen)
+| t | Raum | cmd/sub/Phase | Clip/Bild | +0x168 (Bildzeiger) | Deutung |
+|---|---|---|---|---|---|
+| 2,0 s | 3060 | 1/0/1 | 3/0 | 0x801d78a8 = W-EDD+0x1a0 | W-Clip 3 (Stand) |
+| 3,5 s | 3060 cut 4 | 1/0/0 | 1/1 | 0x801d7798 = W-EDD+0x90 | Pos_set (2063,-17192), Dir 1320 |
+| 5,0 s | 3060 cut 3 | 4/**6**/1 | 1/15 | 0x801d77d0 = W-EDD+0xc8 = W-Clip 1 Bild 14 | nach dem Drehen (rot 1601): Sub 6 W-Clip 1 |
+| **6,5 s** | 3060 cut 3 | **4/2/2** | **6**/0 | **0x801d7a10 = W-EDD+0x308 = W-Clip 6 Bild 9 (letztes)** | Plc_motion(2,6) gehalten |
+| 8,0 s | **3020** cut 6 | 0/0/0 | - | - | Modell 0 (Leon) bei (-11250,-13250) |
++0x170 = 0x801d7b64 / +0x174 = 0x801d7708 in allen Staenden (= PLW-Puffer 0x801d7700 + dir); +0x1c4 = 0x20 bei 6,5 s
+ist das Bild-Paritaetsbit (@0x800306c4 `xori v0,v0,0x20` je Executor-Bild). Bild: J_belege/o3060_65s_marvin.png.
+
+### §1.4 Messung Port VORHER (Lauf m3060_vor, Stand master + rbj-binder, RE15_ANIM_TRACE)
+Spieler (Marvin, PL0D) ab Sub-03-Start: F25 Clip 105 (W5), F28 W-Clip 1 (16), F44 W-Clip 2 (52), **F65 Clip 6 mit 50
+Bildern = PL00.EDD Clip 6 (Knien)** — scd_vm.c `anim_use_pl00 = (entity != 0)` waehlt fuer pc[1] = 2 die PLD-Grundbank
+statt +0x170/+0x174. Bild: Marvin kniet ab F75 (J_belege/vergleich_3060_marvin.png, Spalte "Port vorher F90").
+**Ursache Punkt 1 = Plc_motion(2,6) auf dem Spieler spielt die falsche Bank.**
