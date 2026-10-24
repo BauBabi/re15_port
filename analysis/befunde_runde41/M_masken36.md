@@ -662,6 +662,22 @@ Spurbaum, KEINE volle Suite; alle Laeufe auf demselben Endstand der Assets):
 Linux/parallel: neue Szenen nur ueber das bestehende -P-Skript (cmake_minimum_required, keine .exe-/Backslash-Pfade,
 LAST_EXT), eigenes exe-Praefix je Riegel (`re15_pc_r41m2_*` / `re15_pc_r41m3_*`), eigene Laufordner.
 
+### Tests Nachbesserung 2 (gezielt, KEINE volle Suite)
+
+Neu/geaendert (nur tests/unit/probes/r41_masken36.cmake + eigene Dateien; test_r37_masken36.c angepasst mit Beleg):
+| Test | misst | Ergebnis |
+|---|---|---|
+| `unit_r41_masken36_zellen3d` (neu, Modus `zellen3d` von test_r37_masken36) | Mangel 1 Mechanik: 576 Modell-Zeilen byte-genau im RDT (12 SCA-Bytes am Offset, solide), MSK-Tiefe (Leon+Elza) == Zellen-Tiefe der Zeile, Engine zeichnet jedes Modell-Rechteck; Ausschluss MIT 3D-Urteil == Engine-Tabelle in 48 Cuts; Gegenprobe OHNE 3D-Urteil: 125 Rechtecke fielen weg, alle mit Modell-Zeile | PASS (124 s) |
+| `integration_r41_masken36_zellen3d` (neu) | Mangel 1 an der exe: 16 Szenen (Lok 6000 C5/C7/C8/C9, 5050 C1, 3040 C0/C3, X-Kiste 5020 C6, Treppenraum 5020 C0, Trennwand 30A0 C1, Kistenstapel 5090 C13, Elza 6001 C5): DAVOR H == 0, HINTER H >= Haelfte bzw. H > 0 | s. Lauf unten |
+| `unit_r37_masken36_ausschluss` (Regel erweitert) | rechnet die Tabelle MIT 3D-Urteil aus den Dateien nach (== gen/masken36_ausschluss_r37.inc), keine Fehlverdeckung ohne Zelle/Koerper davor, Raumpaare gleich, Schranke 0 | PASS (561 s) |
+| `unit_r37_masken36_verdeckung` (FREI angepasst) | FREI-Szenen 30A0/30A1 C0: die Figur steht auf der gezeichneten Modell-Maske (1221 / 590 Punkte) und ist nicht verdeckt - die Zellen-Tiefe schuetzt sie (vorher: der Ausschluss; ungefiltert verdeckt jetzt 0, weil die Trennwand die Tiefe ihrer Zelle traegt) | PASS |
+| `unit_r41_masken36_loecher` (Messwert) | Kerben NACHHER 10 612 von 64 654 = 16,4 % (NB1 18,4 %), Schranke <= 30 % unveraendert | PASS |
+Laeufe (Spurbaum, Bau `local_build.sh build` nach der letzten Aenderung; KEINE volle Suite):
+1. `ctest --test-dir re15_port/build -R "unit_r41_masken36|unit_r37_masken36|unit_pri_|unit_r36_pri|unit_r37_pri1100|unit_sld_atlas|unit_r38_itemorte|unit_r39_optik|unit_r34n_e_dokumente|unit_bss|prop_bss|unit_stage6_hintergrund" -j 3 --timeout 1500 --output-on-failure`
+   -> erster Lauf `97% tests passed, 1 tests failed out of 31` (unit_r37_masken36_verdeckung: FREI-Gegenprobe, s. oben, Riegel
+   angepasst), danach **`100% tests passed, 0 tests failed out of 31`**
+Determinismus: zweiter Lauf von `zellen3d_r41.py` (letzter Schritt der Kette) -> 30 MSK und Modell-Tabelle bitgleich.
+
 ## OFFEN
 
 0. **Stand Nachbesserung 2 (ersetzt die Zahlen von 1):** 976 Rechtecke (Leon, Elza gleich) bleiben aus, 268 799 Punkte liegen nur in
