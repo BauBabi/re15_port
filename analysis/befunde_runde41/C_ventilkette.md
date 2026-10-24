@@ -1219,15 +1219,31 @@ shared_assets/PSX, pri/, synchro/, release/.
   RE2-Panel-Klick 0x0A wie lift2030_r37/hebetisch.
 
 ## 7. Fuer den Nutzer
-* Keine neuen Assets im Paket-Gate (alles eingebacken in gen/*.inc aus den vorhandenen RDTs); keine Sprachdateien.
-* Nach der Flut sind die Tueren aus 20B0 (Ost) und 2070 in den Ring von 2030 zu ("I cannot open the door because of the
-  water pressure."), bis der Rechner 2080 das Becken geleert hat. **⛔ BERICHTIGT (Nachbesserung 2):** den frueher
+* **Stand Nachbesserung 3 (Nachtraege 7-10):** So laeuft die Kette jetzt: 2030 Pult (zu wenig Druck) -> Treppe hinab ->
+  Ventil 13 am Tank -> Pult "Lower the bridge?" -> Bruecke unten -> ueber den Steg zum Sued-Landeplatz -> dort liegt die
+  Sicherung (aufheben!) -> die nummerierten Ventile 09/08 an der Suedwand (ohne Sicherung: "Numbered valves. If I turn
+  them, this whole level will be flooded. I should look around here first.") -> Ventile drehen -> Warnung -> 60 s ->
+  ueber Steg/Treppe/Ring zur Ost-Tuer -> 20B0 (Auswasch-Szene mit Spur A) -> Kanal -> Leiter -> 2050 (Pult 80 V, Kisten)
+  -> 2020 (Kurbel) -> 2030 Nordgalerie (noch geflutet) -> 2060: Sicherung einsetzen + Generator (Schalter 1 und 3) ->
+  zurueck: 2030 Nordgalerie (jetzt nur noch der untere Bereich unter Wasser) -> 2020 -> 2050 -> Leiter -> 20B0 -> Kanal ->
+  Ost-Tuer (jetzt offen) -> 2030 Ring (trocken) -> Lift B -> Suedgalerie -> 2080 -> Treppe -> Rechner (Original) -> 2090.
+  Zu Fuss gemessen mit Leon und Elza (§0d, Riegel integration_r41_ventilkette_weg / _weg_elza).
+* Nach dem Strom bleibt der untere Bereich geflutet (Pegel y -3600 = Oberkante der unteren Reling, Bildbogen
+  C_belege/nb3_pegel_vorher_nachher_sheet.png) und ist gesperrt: die Treppe sagt "I cannot go down the stairs because of
+  the water." **Dort liegen und sind danach verloren:** die Sicherung (2030 Slot 9 @0x01BAA — wird vor der Flut
+  zwingend aufgehoben, weil die Ventile erst danach gehen) und **Shotgun Shells x14** (2030 Slot 10 @0x01BC0, Item 0x16,
+  Sued-Landeplatz Ostende), dazu Ventil 13 und die Bruecke. Wer die Patronen will, nimmt sie vor dem Ventilraetsel mit.
+* Keine neuen Assets im Paket-Gate (alles eingebacken in gen/*.inc aus den vorhandenen RDTs; das Netz der Relinghoehe ist
+  aus ROOM2080 Prop 0 abgeleitet); keine Sprachdateien.
+* (Historie) Nach der Flut sind die Tueren aus 20B0 (Ost) und 2070 in den Ring von 2030 zu ("I cannot open the door
+  because of the water pressure.") — seit Nachtrag 7 nur noch, bis der Strom an ist. **⛔ BERICHTIGT (Nachbesserung 2):** den frueher
   hier genannten Weg "2050 -> 2020 -> 2030 oben -> 2080" gibt es nicht (die Tuerebene von 2030 hat zwei getrennte
   Galerien), und auch der Umweg 2050 -> 2040 -> 2070 -> 11A0 -> 20A0 -> 2090 -> 2080 endet an der Original-Tuer in
   11A0: "It's locked from the other side." (§0c, Bilder C_belege/nb2_11a0_sperre_leon_sheet.png /
   nb2_11a1_sperre_elza_sheet.png). Nach der Flut ist der Rechner 2080 derzeit NICHT erreichbar -> Frage (j).
-* Bedienung: 2030 Ring-Nordwand (Cut 1/2) = Pult; Treppe hinab, am Tank rechts (Zelle 2) = Ventil 13; Ring Ost-Streifen
-  an der Tuer (Schilder 04/05/06) = die Ventile (Platzhalter des spaeteren Raetsels). 2050: Pult an der Saeule
+* Bedienung: 2030 Ring-Nordwand (Cut 1/2) = Pult; Treppe hinab, am Tank rechts (Zelle 2) = Ventil 13; ueber den Steg
+  zum Sued-Landeplatz: Westende = Sicherung, Suedwand vor 09/08 = die Ventile (Platzhalter des spaeteren Raetsels;
+  Nachbesserung 3, vorher am Ring-Ost-Streifen ueber den Schildern 04/05/06). 2050: Pult an der Saeule
   (Slot 8), Cursor mit dem Steuerkreuz, SQUARE kippt einen Hebel, CROSS verlaesst das Pult; Loesung 30 + 40 + 10 V.
 * Port-Texte zur Freigabe (englisch wie das Spiel; NUTZER-VORGABE = Wortlaut aus dem Auftrag):
   2000/20B0 40 "I cannot climb up the ladder / because of the water pressure." (VORGABE)
@@ -1236,12 +1252,14 @@ shared_assets/PSX, pri/, synchro/, release/.
   2030 43 "The pressure gauge reads 80. / Lower the bridge?" (VORGABE "Lower the bridge?") · 44 "The bridge is down."
   2030 45 "Numbered valves. They control the / flood gates of the treatment pool. | Will you turn them?"
   2030 46 "WARNING: The water will rise / in one minute. Leave the room!" (VORGABE sinngemaess)
-  2030 47 "Intake valve 13 is open." · 48 "The valves are open. / The pool has been flooded."
-  2030 49 "The valves are open. / The pool has been drained." (NEU, Nachbesserung 1 M8: nach dem Rechner 2080)
+  2030 47 "Intake valve 13 is open." · 48 "I cannot go down the stairs / because of the water." (NEU, Nachbesserung 3:
+  Treppe nach dem Strom) · 49 "Numbered valves. If I turn them, / this whole level will be flooded. | I should look
+  around here first." (NEU, Nachbesserung 3: Ventile vor Bruecke/Sicherung); waehrend des Zaehlers zeigen die Ventile die
+  Warnung 46 erneut (die frueheren Saetze 48 "... flooded" / 49 "... drained" entfallen)
   2050 40 "The pump has no power. / The switchboard must be set first." · 41 = 11F0 "Will you push them? " ·
   42 = 11F0 "Power supply OK." · 43 "A high voltage switchboard. / The pump needs 80 volts." ·
   44 "The switchboard is set to 80 volts. / The pump is powered."
-  2080 40 "The treatment pool is / being drained as well."
+  (2080 40 entfaellt mit Nachtrag 7 — der Rechner ist wieder reines Original.)
   20B0 41 = 2070 40 "I cannot open the door / because of the water pressure." (NEU, Entscheid C-E2: Ring-Tueren in das
   geflutete 2030 bis zum Entleeren gesperrt)
 * Entscheidungsfragen: (a) Hebelgewichte 30/20/40/10 (Loesung Hebel 1 + 3 + klein) — anderes Muster gewuenscht?
