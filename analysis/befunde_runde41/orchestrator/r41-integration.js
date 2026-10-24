@@ -18,9 +18,8 @@ const LABEL = CFG.label || SPUREN.map(s => s.id).join('')
 const BEREITS = CFG.bereits || []      // schon gemergt, Tests/Gegenpruefung stehen noch aus: [{id, thema, merge}]
 const liste = SPUREN.map(s => `- Spur ${s.id} "${s.thema}": Zweig r41/${s.thema}, Dossier analysis/befunde_runde41/${s.id}_${s.thema}.md, letzte Abnahme analysis/befunde_runde41/${s.id}_abnahme_*.md (hoechste Nummer)`).join('\n')
 
-const bereitsText = BEREITS.length ? '
-' + BEREITS.map(b => `- BEREITS GEMERGT (Merge ${b.merge}), Tests und Gegenpruefung stehen noch aus: Spur ${b.id} "${b.thema}": Zweig r41/${b.thema}, Dossier analysis/befunde_runde41/${b.id}_${b.thema}.md, letzte Abnahme ${b.id}_abnahme_*.md (hoechste Nummer)`).join('
-') : ''
+const NL = String.fromCharCode(10)
+const bereitsText = BEREITS.length ? NL + BEREITS.map(b => `- BEREITS GEMERGT (Merge ${b.merge}), Tests und Gegenpruefung stehen noch aus: Spur ${b.id} "${b.thema}": Zweig r41/${b.thema}, Dossier analysis/befunde_runde41/${b.id}_${b.thema}.md, letzte Abnahme ${b.id}_abnahme_*.md (hoechste Nummer)`).join(NL) : ''
 const GEMEINSAM = `
 ## Rahmen (bindend)
 - Integrationsbaum ${BAUM} (Zweig r41/integration). ALLE Aenderungen nur dort; Spurbaeume und Hauptbaum ${ROOT} nur lesen. Kein push, kein master-Merge (macht der Orchestrator).
@@ -65,8 +64,7 @@ const PRUEF_SCHEMA = {
 
 phase('Merge+Bau')
 const merge = await agent(`Du bist der INTEGRATOR der Runde 41 im Projekt reAi_v2 (RE1.5-PSX -> PC-Port). Fuehre diese bestandenen Spuren in den Integrationsbaum zusammen:
-${liste}${bereitsText ? '
-(Bereits gemergt, NICHT erneut mergen:' + bereitsText + ')' : ''}
+${liste}${bereitsText ? NL + '(Bereits gemergt, NICHT erneut mergen:' + bereitsText + ')' : ''}
 ${GEMEINSAM}
 ## Vorgehen
 1. git -C "${BAUM}" status (muss sauber sein), git -C "${BAUM}" log --oneline -3. Vorher master in r41/integration mergen (git -C "${BAUM}" merge --no-edit master), Konflikte in AUFTRAG.md/VERTRAG.md/UEBERGABE.md immer mit der master-Fassung loesen (git checkout --theirs), dann pruefen, dass keine Zeile der vorigen Fassung fehlt.
