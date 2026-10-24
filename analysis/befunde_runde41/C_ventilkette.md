@@ -643,7 +643,10 @@ Messungen an der exe 10:27 bzw. 10:31 (Quellstand = Commit 6a51727b ff.), Laeufe
   `Zaehler laeuft: 1800 Takte` -> zu Fuss zurueck (Steg, Treppe mo 221, Ring) -> `[aot] DOOR FIRE slot=0 rect=(7350,-200,
   hw=500,hh=1750) target_cut=11` -> `loaded room20b0.rdt` -> `Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100`;
   keine Flut, kein Ertrinken. Zeit: Warnung zu F1702 -> Tuer-Aktion F2776 = **1074 Bilder (36 s) GEHEND**, also
-  726 Bilder Reserve auf die 60 s (Wegplan geht nur; laufen ist schneller). Ohne Bruecke ist der Platz nicht erreichbar
+  726 Bilder Reserve auf die 60 s (Wegplan geht nur; laufen ist schneller). Wiederholung ab der Ost-Tuer (Lauf v2b, die Kamera
+  schaltet dann wie im Spiel: Cut 5 vor 09, Cut 4 Steg, Cut 2 Treppe, Cut 0 Ost-Tuer): Warnung zu F2491 -> Tuer F3568 =
+  1077 Bilder; Bildbogen **C_belege/nb3_ventile_zu_fuss_leon_sheet.png** (Text 49 vor dem Schild 09, Sicherung am
+  Westende mit Ja/Nein, "You've taken the Fuse.", Frage 45, Warnung 46, zurueck ueber Steg, Treppe, Ring, Ost-Tuer). Ohne Bruecke ist der Platz nicht erreichbar
   (Steg-Zelle 12 u0 0xff; exe v1 `ZELLE r0[12] ... u0 0xff`), mit Bit 102 ohne Sicherung Text 49 (unit K, exe D).
 
 **N1 (hoch, Nachtrag 7) — der Weg nach der Flut zu Fuss**
