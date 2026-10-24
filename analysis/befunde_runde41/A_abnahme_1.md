@@ -78,12 +78,16 @@ Spur) erreichbar; der Tuerweg 2030 -> 20B0 entsteht erst in Spur C. Der Debug-Sp
 RE15_FX_LOG=fx.log RE15_ENEMY_DBG=1 RE15_SPAWN_DIAG=1 RE15_FRAMEDUMP=0-330/1:f RE15_EXIT_AT=340#20b0` -> rc 0; debug.log
 `Cut_chg(11)` ... `[scd F105] Cut_chg(7)`, `[scd F146] Cut_chg(15)`, `[scd F228] Cut_chg(6)`, `[scd F242] letterbox closed ->
 gameplay (player_mode=0)`; fx.log 3548 Zeilen. Die Szene laeuft durch, der Spieler wird frei (vorher Port: haengt, keine Partikel).
-Elza 20B1: integration_r41_wasser20b0 (1.) gleich.
+Elza 20B1: integration_r41_wasser20b0 (1.) gleich; eigener Lauf p20b1_elza (RE15_TITLE_SHOT_CHAR=1, `[pl] Spieler-Familie PL04
+(character=4, Elza-Bit=1)`, `PC loaded room20b1.rdt`, 35 x `Sce_em_set type=0x24`, Cut 7 F105 / 15 F146 / 6 F228, frei F242,
+fx.log 1387 Zeilen id=15 bis F262); Bogen `A41abn1/elza20b1_bogen.png` (F14 Wolke an der Osttuer, F36/F52 Lauf, F100 Nahaufnahme,
+F130 Westtuer mit Tuerblatt, F250 frei).
 ### 3.3 Partikel-Pool Original gegen Port (eigene Lesung, `A41abn1/pool_vgl.py`, Platz-Stride 0x84 ab 0x800a73b8, Felder +0x6c/
 +0x70/+0x71/+0x72/+0x6e/+0x40 - dieselben Offsets wie re15_esp.c)
 - tf_8.sav (Takt 1): 8 aktive 0x0f-Plaetze = 2 x sub 0 Skala 0x2000 a1 -200 Versatz (200,1800,0) + 6 x sub 7 (0x4000 x5, 0x3000 x1)
   mit den Versaetzen (-1000,2700,-1200) (-2000,2700,1200) (-1000,2700,0) (-2000,1300,-1200) (-1000,1300,1200) (-2000,1300,0), Anim 4.
-  Port F7: 8 Plaetze, 2 x sub 0 bei z -7350/-5550 (= Saetze 0x08/0x1A), 6 x sub 7, frame=4. GLEICH.
+  Port F7: 8 Plaetze, 2 x sub 0 bei z -7350/-5550 (= Saetze 0x08/0x1A), 6 x sub 7, frame=4. GLEICH. Der zweite sub-0-Platz
+  kommt vom grid-1-Emitter in Satz 0x1A (Slot 26) - mit dem alten RE15_ACTOR_MAX 21 fehlte er; Beleg fuer Entscheid E2.
 - tf_7.sav (Takt 48): 22 Plaetze, (sub,anim) = (0,5)x4 (0,8)x6 (0,11)x4 (0,14)x2 (7,7)x6. Port F54: exakt dieselbe Verteilung
   (22 Plaetze). GLEICH (Versatz F = Takt + 6, wie im Dossier).
 ### 3.4 Wolke am exakten Framebuffer (Abnahme-0-Mangel M1 nachgeprueft)
@@ -154,7 +158,8 @@ Mechanismus belegt).
   22..31 belegt; ROOM11C0: nur 0,1,2,5,6,26..31 belegt. Original-RAM tf_7.sav (ROOM20B0): DAT_800ac778 = 0x80119330,
   *(+8) = 0x8011e33c, 128 B dort == Datei-EDT (RDT +0x08 = 0x500c), Eintraege 15..21 = 00000000, 22 = 0000b111 - der NPC-Zweig
   liest im Original genau diese Tabelle. Zensus aller 206 RDTs mit snd0-EDT: Index 21 (= NPC auf Boden 0x1d) in nur
-  26 Raeumen belegt, Index 29 (Spieler) in 206. Im Original ist ein leerer Eintrag ebenfalls stumm (FUN_80045630: Stimme =
+  26 Raeumen belegt, Index 29 (Spieler) in 206. Im Original ist ein leerer Eintrag ebenfalls stumm (statisch belegt, nicht am
+  Emulator gemessen; FUN_80045630: Stimme =
   (e[3]&0x1f)-16+(fuss!=4) = -16/-15, Satz bei 0x800b2420+Stimme*18 = ausserhalb der 8 Saetze, die FUN_800458d4 abarbeitet - `addiu
   s1,s1,9392`/`addiu s1,s1,-18`/`bne s4,zero` @0x800458f0..0x800459e4). Der Port ist an dieser Stelle also original-gleich STUMM -
   der Nutzer-Wortlaut verlangt aber hoerbare NPC-Schritte (Beta-Luecke: nach der Projektregel Beta -> Retail RE2 pruefen bzw. eine
@@ -263,7 +268,9 @@ M1 (Punkt 2b, NUTZER-VORGABE Nachtrag 3 "fussschritt sounds wenn sie laufen ... 
    Abbildung, z.B. Rueckfall auf den Spieler-Eintrag Boden+a0 bei leerem NPC-Eintrag) und ein Riegel, der das ABSPIELEN misst
    (VAG >= 0 / Mischer-Stimme je NPC-Schritt, je Typ, beide Szenarien), nicht nur den Index.
 M2 (Entscheid A-E4, Abnahmepunkt der Spur A): Lautstaerke/Richtung der (NPC-)Schritte nach FUN_80045a64 (`jal 0x80045a64` @0x80045830;
-   Abstand Kamera->Entity+0x34 /250 @0x80045b3c-4c, Deckel 0x7f @0x80045b50-5c, Seite FUN_80045d6c, Stimmsatz +14/+16 @0x80045888-a4)
+   Abstand Kamera->Entity+0x34 /250 @0x80045b3c-4c, Deckel 0x7f @0x80045b50-5c, Seite: Winkel FUN_80045d6c Kamera->Entity minus
+   Blickrichtung (Kamera->Ziel +0x10/+0x18) @0x80045b70-bc, vorn/hinten beide 0x89 @0x80045c0c-1c, sonst Tabelle @0x80074728
+   @0x80045c88-94, Ablage DAT_800b2824/26 -> Stimmsatz +14/+16 @0x80045888-a4)
    nicht gebaut: re15_audio_footstep(foot, type) ohne Lage, `vol_r_q15 = 0` (mono), kein Haken in audio_pc.c, keine Messzeile je Schritt,
    kein Pin in 2000. (Haengt an M1: in 2000 spielt fast kein NPC-Schritt.)
 M3 (Regression dieser Spur): integration_r35_granate rot - `r35_granate [gator]: Boss-Slot 20 fehlt im Zustandslog (Bild 59/60)`;
@@ -274,7 +281,8 @@ M3 (Regression dieser Spur): integration_r35_granate rot - `r35_granate [gator]:
    pruefen; Spuren B/F/G auf den neuen Alligator-Platz hinweisen.
 M4 (Riegel): Typ 0x47 (Elliot CDEMD0 / Roy CDEMD1) ohne Wasser-Lauf-Pin (unit npc_wasser: 6 Typen); die Ton-Pruefungen in unit npc /
    npc_wasser / npc_subs ("Schritt-Ton 0x17-8 = 15") und integration npc2000 (`ton >= 0`) pruefen nur den Index - sie bleiben gruen,
-   obwohl der Ton unterdrueckt wird (Index 15 und 21 sind in ROOM2000 leer).
+   obwohl der Ton unterdrueckt wird (Index 15 und 21 sind in ROOM2000 leer). Die Rueckwaerts-Subs 7/8 (Haken NACH dem Vorschub,
+   @0x800519c8 -> @0x800519dc) haben nur den Marken-Zensus (Container-Clip 1), keinen Lauf-Pin wie Sub 9/Kante/Schub in npc_subs.
 M5 (Dossier): N1.14 "alle NPCs ... machen beim Gehen, Laufen, Rueckwaertsgehen und Drehen ... Schrittgeraeusche" ist an der exe
    widerlegt (M1) - richtigstellen.
 
