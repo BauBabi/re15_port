@@ -9737,6 +9737,7 @@ re_title:;
                  * keinen sichtbaren Part). Das generische no_draw darunter laesst den
                  * Schatten stehen (Feuer-Emitter 0x26), deshalb der eigene Ausstieg HIER. */
                 if (npc->type == 0x1Au && npc->no_draw && re15_re2arm_owns(npc)) continue;
+                if (re15_gr2_pc_untergetaucht(npc, npc_region_culled)) continue;   /* Runde 41 Spur B (Entscheid B9): Boss-Alligator vor dem Durchbruch untergetaucht wie RE2 (Sce_em_set y=+3000 @RDT 0x25A0) - Mesh UND Schatten aus */
 
                 /* RE1.5 character shadow for this NPC — FUN_8001b064 is called
                  * PER-ENTITY (corners from param_1+0xc/+0xe), so each on-stage

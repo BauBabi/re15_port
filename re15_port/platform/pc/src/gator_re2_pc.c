@@ -29,6 +29,9 @@
 #include <SDL_timer.h>   /* SDL_GetTicks (Messzeile der Zeitlupe) */
 #include "re2_fx.h"       /* re2fx_quads (Messzeile Putz-Sicht) */
 #include "re2fx_pc.h"     /* re2fx_pc_letzte_quads */
+#include "re15_boss_gator.h"  /* Nachbesserung 3: re15_gator_boss_untergetaucht */
+#include "re15_room.h"        /* Nachbesserung 3: g_current_room_id (Messzeilen je Raumeintritt) */
+#include "re15_math.h"        /* Nachbesserung 3: re15_squareroot0 (Messzeile Lagesprung) */
 
 #define R41_KANISTER_TIM_SLOT 53
 
@@ -263,6 +266,50 @@ void re15_pc_gator_re2_init(void)
 /* (3) RE2-Zeitlupe der Kiefer-Explosion: die RE2-Hauptschleife wartet VSync(DAT_800dfc1a) (FUN_8002b968
  * @0x8002b990-98); R1 setzt 4 statt 2 (@0x8010235c-64 / zurueck @0x80102668/7c) = doppelte Bilddauer. Der Port-
  * Deckel (main.c, 1000/RE15_FPS ms je Bild = VSync(2)) wird im selben Verhaeltnis gestreckt. */
+/* (5) Nachbesserung 3 (Abnahme 2 M1, Orchestrator-Entscheid B9): der Boss-Alligator ist bis zum Durchbruch UNTERGETAUCHT
+ * wie RE2 (ROOM40A0 Sce_em_set y = +3000 @RDT 0x25A0, erst der Pos_set @SCD 0x0736 hebt ihn im Intro) - der NPC-Zeichner
+ * (main.c, vor Schatten und Mesh) laesst den Aktor aus, solange re15_gator_boss_untergetaucht gilt. Messzeilen (debug.log):
+ *   "[gator-re2] Sicht F<n> untergetaucht|aufgetaucht pos=(x,y,z) clip=<c> bild=<b>"        je Wechsel,
+ *   "[gator-re2] Sicht erstes Bild F<n> gezeichnet pos=... clip=<c> bild=<b> (untergetaucht vorher <k> Bilder)",
+ *   "[gator-re2] Sicht Lagesprung max <d> F<n> (x0,z0)->(x1,z1) clip=<c> bild=<b>"            groesster Wurzelschritt
+ *   zwischen zwei aufeinanderfolgenden aufgetauchten Bildern (gezeichnet oder vom Regions-Cull verworfen); der Sprung
+ *   vom Versteck auf die Intro-Startlage zaehlt nicht (er faellt in ein untergetauchtes Bild). */
+int re15_gr2_pc_untergetaucht(const re15_actor_t *npc, int gecullt)
+{
+    static int s_war = -1, s_erst = 0, s_unter_n = 0;
+    static unsigned s_lf = 0, s_raum = 0xffffffffu;
+    static int32_t s_lx = 0, s_lz = 0, s_max = 0;
+    if (!npc || npc->type != 0x23u) return 0;
+    unsigned f = (unsigned)g_engine.frame_count;
+    int u = re15_gator_boss_untergetaucht(npc);
+    if (s_raum != (unsigned)g_current_room_id || (u && npc->state == 0 && s_war == 0)) {
+        s_raum = (unsigned)g_current_room_id;              /* Raumeintritt / Neuspawn: Messung neu */
+        s_war = -1; s_erst = 0; s_unter_n = 0; s_max = 0; s_lf = 0;
+    }
+    if (u != s_war) {
+        fprintf(stderr, "[gator-re2] Sicht F%u %s pos=(%d,%d,%d) clip=%d bild=%d\n", f, u ? "untergetaucht" : "aufgetaucht",
+                npc->x, npc->y, npc->z, (int)npc->motion, (int)npc->anim_frame);
+        s_war = u;
+    }
+    if (u) { s_unter_n++; s_lf = 0; return 1; }
+    if (!gecullt && !s_erst) {
+        s_erst = 1;
+        fprintf(stderr, "[gator-re2] Sicht erstes Bild F%u gezeichnet pos=(%d,%d,%d) clip=%d bild=%d (untergetaucht vorher %d Bilder)\n",
+                f, npc->x, npc->y, npc->z, (int)npc->motion, (int)npc->anim_frame, s_unter_n);
+    }
+    if (s_lf != 0 && f == s_lf + 1u) {
+        int64_t dx = (int64_t)npc->x - s_lx, dz = (int64_t)npc->z - s_lz, d2 = dx * dx + dz * dz;
+        int32_t d = (int32_t)re15_squareroot0((uint32_t)(d2 > 0xffffffffLL ? 0xffffffffLL : d2));
+        if (d > s_max) {
+            s_max = d;
+            fprintf(stderr, "[gator-re2] Sicht Lagesprung max %d F%u (%d,%d)->(%d,%d) clip=%d bild=%d\n", (int)d, f,
+                    (int)s_lx, (int)s_lz, npc->x, npc->z, (int)npc->motion, (int)npc->anim_frame);
+        }
+    }
+    s_lf = f; s_lx = npc->x; s_lz = npc->z;
+    return 0;
+}
+
 unsigned re15_gr2_pc_bildbudget(unsigned grund_ms)
 {
     static int s_alt = 2;

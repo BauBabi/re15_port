@@ -59,6 +59,7 @@
 #include "re15_math.h"       /* re15_squareroot0 - Fress-Ausrichtung (Maulachsen-Elevation) */
 #include "re15_enemy_ai.h"   /* victim_force + Clip-Anker-Exporte (Fress-Finisher R6) */
 #include "re15_audio.h"     /* re15_audio_core_se - Leons Schrei im Fress-Finisher (@0x80102EF4) */
+#include "re15_engine.h"    /* Runde 41 Spur B NB3: g_engine.frame_count (Messzeile AUFTAUCHEN) */
 #include "re15_gator_re2_r41.h" /* Runde 41 Spur B: RE2-Bausteine (Hysterese, Zonen-Dash, Intro, HURT-Selektor,
                                  * Kanister T2/R1, Schuetteln) - gator_re2_r41.c */
 
@@ -240,6 +241,10 @@ typedef struct {
                                     * maul~3150 blieb ewig ueber dem 2400er-Gate) */
     int8_t   dbg_zweig;            /* Telemetrie: aktiver CHASE-Zweig */
     int32_t  dbg_tx, dbg_tz;       /* Telemetrie: aktuelles Steuer-Ziel */
+    /* Runde 41 Spur B, Nachbesserung 3 (Abnahme 2 M1, Entscheid B9): vor dem Durchbruch UNTERGETAUCHT wie RE2
+     * (s. gb_untertauchen); ut_* = die skalierte Trefferbox, solange sie auf 0 steht. */
+    int8_t   untergetaucht;
+    uint16_t ut_r_min, ut_r_max;
 } gb_state_t;
 
 /* RE15_GB_STUMM=1: gesamte gator_boss.log-Telemetrie aus (Sweep-Test). */
@@ -1084,6 +1089,47 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued,
     }
 }
 
+/* Runde 41 Spur B, Nachbesserung 3 (Abnahme 2 M1, Orchestrator-Entscheid B9 "vor dem Intro kein sichtbarer Gator"):
+ * UNTERGETAUCHT wie RE2. RE2 setzt den Gator per Sce_em_set 3000 UNTER den Boden (ROOM40A0 SCD-init @RDT 0x25A0
+ * `44 00 00 23 00 00 01 16 00 00 4a 16 b8 0b 3c eb 00 04 ...` = Pos (5706, +3000, -5316); Leons Ebene und das
+ * Wassergitter Modell 0 liegen bei y = 0) und hebt ihn erst im Intro an: sub11 `Member_set2 35 17 10` @SCD 0x0730
+ * (+0x1D4 -> Sub 0 P1), im Bild danach `Pos_set 32 00 cd 11 f8 f8 c3 b8` @SCD 0x0736 = (4557,-1800,-18237). Bis dahin
+ * laeuft nur Sub 0 P0 (@0x80100854-68: `lh v0,468(s0) / beq v0,zero,0x80100950` - kein FUN_8001a330, also keine
+ * Animation, keine Bildwort-SE/-Strokes) mit leerem Pre (Tafel @0x8010463c[0] = 0x801007fc `jr ra`: kein Kanister-
+ * Fenster, kein T1-Schaerfen FUN_801012fc). Port (B9 "Lage frei"): der Lauerplatz bleibt der Aggro-Bezug (Nutzer-Design
+ * GB_AGGRO 9000); untergetaucht heisst
+ *   - nicht gezeichnet, Mesh UND Schatten (PC: re15_gr2_pc_untergetaucht im NPC-Zeichner von main.c),
+ *   - keine Trefferbox (hit_radius 0 wie beim verborgenen RE2-Zellenarm, enemy_ai_common.c "Koerper-Push ueber
+ *     hit_radius (0 solange verborgen)"): kein Ziel der Zielhilfe (re15_player_aim_target `hit_radius_min <= 0`), kein
+ *     Schuss-Kandidat (Resolver re15_damage.c), kein Spieler-Push (re15_body_push_player `hit_radius_min == 0`) - RE2
+ *     erreicht dasselbe ueber die Lage 3000 unter dem Boden (Y-Band des Pushs @0x8002b1f0),
+ *   - keine Animation, kein Kanister-Vorpass, keine Selbst-Befreiung, kein Sieger-Abzug, kein Koerperlaengen-Push.
+ * Aufgetaucht wird mit dem Intro-Start (re15_gr2_intro_lage = Pos_set-Zwilling, dann Clip 6 Bild 0 @0x801008ac-b8)
+ * bzw. mit jedem anderen Verlassen des Lauerns; RE15_GB_TEST=5 (Nutzer-Marker-Repro: wartet MITTEN im Kampf an der
+ * Marker-Lage) taucht nie unter. */
+static void gb_untertauchen(re15_actor_t *e, gb_state_t *g)
+{
+    g->untergetaucht = 1;
+    g->ut_r_min = e->hit_radius_min; g->ut_r_max = e->hit_radius_max;
+    e->hit_radius_min = 0; e->hit_radius_max = 0;
+}
+static void gb_auftauchen(re15_actor_t *e, gb_state_t *g)
+{
+    g->untergetaucht = 0;
+    e->hit_radius_min = g->ut_r_min; e->hit_radius_max = g->ut_r_max;
+    re15_gr2_log("AUFTAUCHEN F%u pos=(%d,%d) yaw=%d phase=%d clip=%d bild=%d r=%d", (unsigned)g_engine.frame_count,
+                 e->x, e->z, (int)e->rot_y & 0xfff, (int)g->phase, (int)e->motion, (int)e->anim_frame,
+                 (int)e->hit_radius_min);
+}
+int re15_gator_boss_untergetaucht(const re15_actor_t *e)
+{
+    if (!re15_gator_boss_active(e)) return 0;
+    if (e->state == 0) return 1;              /* Spawn-Bild vor dem Boss-INIT (main.c setzt state 0, der INIT 1) */
+    int slot = (int)(e - g_actors);
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
+    return s_gb[slot].untergetaucht && !re15_gr2_im_intro(slot);
+}
+
 void re15_gator_boss_tick(int slot)
 {
     if (s_gb_stumm < 0) s_gb_stumm = (getenv("RE15_GB_STUMM") != NULL);
@@ -1179,6 +1225,11 @@ void re15_gator_boss_tick(int slot)
                           g->aggro = 0;
                       } }
         }
+        {   /* Runde 41 Spur B, Nachbesserung 3 (Entscheid B9): bis zum Durchbruch untergetaucht wie RE2 (Sce_em_set
+             * y = +3000 @RDT 0x25A0, Sub 0 P0 @0x80100854-68). GB_TEST=5 = Marker-Repro MITTEN im Kampf: aufgetaucht. */
+            const char *tv9 = getenv("RE15_GB_TEST");
+            if (!(tv9 && *tv9 == '5')) gb_untertauchen(e, g);
+        }
     }
 
     {   /* GB_TEST=3: Kill nach ~10 s Raumzeit (Todes-Pfad-Probe ohne Waffe).
@@ -1197,7 +1248,9 @@ void re15_gator_boss_tick(int slot)
         g->prev_hp = e->hp;
     }
     /* Runde 41 Spur B: Ereignis-Maschine, Schuetteln, Rumble, Putz, Zaehler, Kanister-Vorpass */
-    re15_gr2_takt(slot, e, pl, g->phase == GBP_CHASE || g->phase == GBP_LURK);
+    /* Nachbesserung 3 (M1, B9): untergetaucht kein Kanister-Fenster - RE2 Sub-0-Pre = `jr ra` (Tafel @0x8010463c[0] =
+     * 0x801007fc), das Fenster liegt nur im Sub-1/2-Pre @0x80100ab8-b18. */
+    re15_gr2_takt(slot, e, pl, g->phase == GBP_CHASE || (g->phase == GBP_LURK && !g->untergetaucht));
 
     /* SELBST-BEFREIUNG (Sweep-Klasse "end==start", probe_gator_sweep
      * 2026-09-11): steckt das ZENTRUM im Klemm-Slab (Blockkante +
@@ -1206,7 +1259,8 @@ void re15_gator_boss_tick(int slot)
      * CROSS-Landungen (Klemme ausgesetzt). Raus zum naechsten Slab-Rand,
      * Klemme fuer das Fenster ausgesetzt (skip_clamp liest g->befrei). */
     if (g->befrei > 0) g->befrei--;
-    if (g->phase == GBP_LURK || g->phase == GBP_CHASE || g->phase == GBP_GUARD) {
+    if (!g->untergetaucht                     /* Nachbesserung 3 (B9): RE2 Sub 0 P0 bewegt nichts */
+        && (g->phase == GBP_LURK || g->phase == GBP_CHASE || g->phase == GBP_GUARD)) {
         /* Gefangen = im Slab (Kante+radius+60) UND Totalstand (<8 Bewegung
          * seit dem Vortick): echte Gefangene bewegen sich EXAKT null (die
          * Box-Klemme verwirft von innen alles), legitime Kanten-Staende
@@ -1286,7 +1340,8 @@ void re15_gator_boss_tick(int slot)
     }
     if (pl->hp < 0 && g->phase != GBP_DIE && g->phase != GBP_DEAD
         && g->phase != GBP_OFF && g->phase != GBP_FRESSEN
-        && g->phase != GBP_RE2_TOD && g->phase != GBP_RE2_DASH && g->phase != GBP_RE2_INTRO) {
+        && g->phase != GBP_RE2_TOD && g->phase != GBP_RE2_DASH && g->phase != GBP_RE2_INTRO
+        && !g->untergetaucht) {               /* Nachbesserung 3 (B9): untergetaucht bleibt er liegen (Sub 0 P0) */
         int64_t rdx = (int64_t)GB_START_X - e->x, rdz = (int64_t)GB_START_Z - e->z;
         re15_enemy_steer_point(e, GB_START_X, GB_START_Z, 0x20);
         if (rdx * rdx + rdz * rdz > (int64_t)1500 * 1500)
@@ -1341,7 +1396,9 @@ void re15_gator_boss_tick(int slot)
             re15_gr2_intro_start(slot, e); g->phase = GBP_RE2_INTRO; g->timer = 0; break;
         }
         e->motion = 0;                        /* still liegen, Blick zur Leiter */
-        e->anim_frame++;
+        if (!g->untergetaucht) e->anim_frame++;   /* Nachbesserung 3 (B9): untergetaucht kein FUN_8001a330 (Sub 0 P0
+                                                   * @0x80100854-68) - keine Bildwort-SE (Clip 0 f76/f162) und keine
+                                                   * 0x28-Strokes (Schuetteln) aus dem Versteck */
         break;
 
     case GBP_CHASE: {                         /* Punkt 6: Verfolgung im Wasser */
@@ -2379,6 +2436,10 @@ void re15_gator_boss_tick(int slot)
         g->phase = GBP_LURK;
         break;
     }
+    /* Nachbesserung 3 (B9): Auftauchen mit dem Intro-Start (Pos_set-Zwilling + Clip 6 Bild 0, RE2 sub11 @SCD 0x0730/0x0736 ->
+     * Sub 0 P1 @0x8010086c-b8) oder jedem anderen Verlassen des Lauerns (Szene von Spur F/G ruft re15_gr2_intro_start). */
+    if (g->untergetaucht && (g->phase != GBP_LURK || re15_gr2_im_intro(slot)))
+        gb_auftauchen(e, g);
 
     {   /* VOLLPHASEN-TELEMETRIE (Nutzer "bleibt immer noch haengen"): alle 30 F
          * Phase+Position in gator_boss.log - der Stillstands-Detektor findet
@@ -2406,7 +2467,8 @@ void re15_gator_boss_tick(int slot)
      * GANZEN Laenge ab. Y-Fenster wie der Body-Push (Zentrum auf Bodenniveau,
      * s. hit_offset_y im INIT): Leon OBEN auf dem Steg wird nicht geschoben. */
     if (g->phase != GBP_DIE && g->phase != GBP_DEAD
-        && pl->hp >= 0 && !re15_player_is_grabbed()) {
+        && pl->hp >= 0 && !re15_player_is_grabbed()
+        && !g->untergetaucht) {               /* Nachbesserung 3 (B9): 3000 unter dem Boden beruehrt er niemanden */
         const gb_seg_t *SEG = k_gb_seg;   /* Runde 41 Spur B NB2: Tabelle auf Dateiebene (gb_koerper_kontakt) */
         int32_t fc = re15_cos_q12((int)e->rot_y);
         int32_t fs = re15_sin_q12((int)e->rot_y);

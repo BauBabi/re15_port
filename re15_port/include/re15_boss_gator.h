@@ -34,6 +34,11 @@ int  re15_gator_fress_todeslatch(void);
 /* ENEMSE-Anbindung (Bank 17, Dossier gator-biss-sound.md) - PC registriert beim
  * 0x23-Laden; se_fn(id, flag2000), bank_fn(bank). */
 void re15_gator_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int));
+/* Runde 41 Spur B, Nachbesserung 3 (Abnahme 2 M1, Orchestrator-Entscheid B9): 1 = der Boss ist vor seinem Durchbruch
+ * UNTERGETAUCHT wie RE2 (Sce_em_set y = +3000 @RDT 0x25A0 ROOM40A0, Pos_set erst im Intro @SCD 0x0736): nicht zeichnen
+ * (Mesh und Schatten), keine Trefferbox. Auch 1 im Spawn-Bild vor dem Boss-INIT (state 0). Fuer Spur F/G: die Szene
+ * "Alligator springt aus dem Wasser" taucht ihn mit re15_gr2_intro_start auf. */
+int  re15_gator_boss_untergetaucht(const re15_actor_t *e);
 
 
 

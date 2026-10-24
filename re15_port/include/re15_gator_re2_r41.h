@@ -195,6 +195,12 @@ extern void (*re15_gr2_raum_se_hook)(int satz);   /* ROOM40A0-Raumbank: 15 = Exp
 /* platform/pc/src/gator_re2_pc.c: Kanister-Prop zeichnen (Aufruf aus dem Prop-Pass von main.c). */
 struct re15_camera_view_s;
 void re15_gr2_pc_zeichnen(const void *cam_view, int cx, int cy);
+/* Nachbesserung 3 (Abnahme 2 M1, Entscheid B9): NPC-Zeichner-Haken (main.c, vor Schatten + Mesh). 1 = diesen Aktor
+ * nicht zeichnen, weil der Boss-Alligator untergetaucht ist (re15_gator_boss_untergetaucht: RE2 Sce_em_set y = +3000
+ * @RDT 0x25A0 bis zum Pos_set im Intro @SCD 0x0736). `gecullt` = Regions-Cull des Zeichners (nur fuer die Messzeilen).
+ * Messzeilen debug.log "[gator-re2] Sicht ...": Wechsel untergetaucht/aufgetaucht mit Bild, Lage, Clip/Bild; erstes
+ * gezeichnetes Bild; groesster Lagesprung zwischen zwei aufgetauchten Bildern. */
+int  re15_gr2_pc_untergetaucht(const re15_actor_t *npc, int gecullt);
 /* Messhaken: Zahl der gespawnten Putz-Partikel (re2fx) seit Start + Welt-Lage des letzten Spawns
  * (Nachbesserung 1, M2: die exe-Zeile "RE2 PUTZ runde ..." in gator_boss.log traegt beides). */
 int  re15_gr2_putz_spawns(void);
