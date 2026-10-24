@@ -234,8 +234,24 @@ Stichproben der in Nachbesserung 4 NEU zitierten Stellen (alle selbst gelesen, r
 * (folgt: Haupt, `_b`, Raum-/Dokument-Gruppe, `_kette` von Hand)
 
 
-## 4. Urteil je Nutzer-Punkt
-(folgt)
+## 4. Urteil je Nutzer-Punkt (gegen den Wortlaut, AUFTRAG.md; gebauter Stand exe 16:59 = Code HEAD b08bb0c4)
+AUFTRAG.md ist massgeblich; im master steht inzwischen **Nachtrag 15 (19:01, nach dem Start dieser Abnahme)**: der Nutzer hat das
+Ventilraetsel freigegeben ("Freigeben" — Plakat, Loesung 09 -> 07 -> 02 -> 01, Titel, Texte, Dokument "neben der Sicherung"; Fragen
+(m)/(n) beantwortet). Keine neue Forderung; die Freigabe setzt die vorgelegte Beschreibung voraus ("Dokument ... neben der Sicherung").
+
+| Punkt | Urteil | Beleg (eigene Messung) |
+|---|---|---|
+| 1 Leiter 2000 -> 2050 mit herunterlaufendem Wasserstrom blockiert, "I cannot climb up the ladder because of the water pressure", bis die Flut gelaufen ist | **erfuellt** | P1/P1r Leon + Elza ueber die echte Tuer 2010 -> 2000: Text 40 woertlich (2x), kein Raumwechsel, Bit 100 = 0; Bild Cut 10: Strahl aus dem Gitter neben der Leiter (`p1r_leiter.png`) |
+| 2 2030: Bruecke zunaechst OBEN; Pult links (Kamera 2, Nordwand): zu wenig Druck / Ventil 13 zu -> Ventil 13 -> "Lower the bridge?" -> Bruecke faehrt herunter; nicht die Kurbel | **erfuellt** | K1 Leon + Elza ueber die echte Tuer 2070 -> 2030: Bruecke oben y -5400, Zelle 12 u0 0xff; Pult Text 40; Ventil 13 41/42, Bit 101; Pult 43 -> Ja -> Cut 4, Bruecke -> -1800, Bit 102, 44; Zelle 12 u0 0x00, ueber den Steg (`k1_teil1.png`) |
+| 3 Ventilraetsel -> Warnung (1 min, Raum verlassen) -> 60 s -> Wasser ueber die Ringebene; Ost-Tuer -> 20B0 (Auswasch-Szene); Zeit abgelaufen im Raum: Tod mit Ertrink-Effekt | **erfuellt** (20B0-Szene selbst nach C-E1 mit dem Haken der Spur A, Riegel `_kette` vorhanden und im C-Baum bis zur 20B0-Ankunft gruen) | K2 Leon + Elza: richtige Folge -> 46 woertlich -> Zaehler 1800 -> zu Fuss zur Ost-Tuer -> `loaded room20b0/20b1.rdt`, Bits 103 + 100; FL: im Raum -> Cut 4, Flut, Spritzer, `ERTRUNKEN` + blaue Blende, YOU DIED; FLR (Ring): siehe §1 FLR; KE `_kette` rc=0 |
+| 4 Danach 20B0 statt 2000 (spaeter wieder frei ohne Wasser), Leiter frei (kein Wasser laeuft mehr herunter) | **erfuellt** | P4 Leon + Elza: 2010-Tuer -> `ROOM20B0 Cut 10` -> `loaded room20b0/20b1.rdt`, Leiter -> 2050 ohne Sperrtext, 2050-Leiter -> 20B0; Bild Cut 9 ohne Strahl (`p4_20b0.png`) |
+| 5 2050: Wasserlevel (Hebel) erst nach dem Pult-Raetsel (80 V wie 11F0) | (folgt) | P5 |
+| 6 2080-Rechner entleert danach auch 2030 — ERSETZT durch Nachtraege 7/8/12 (k) (Strom leert 2030 bis knapp unter die Absperrung, Rechner nur Original) | **erfuellt** | P6 Leon + Elza ueber die echte 20B0-Ost-Tuer: `Wasser knapp unter der Absperrung y -5350`, `pos=(0,-5350,0)`, Treppe Text 48, Ring zu Fuss, Lift B (3,220), 2080 Rechner = Original msg 0 -> (3,245) -> 2090; N12 Bildbogen `pegel_sheet.png` |
+| Nachtrag 12 (k): Pegel nach dem Strom "unterhalb der Absperrung, sodass es nicht drueber 'rein' laufen wuerde" | **erfuellt** | y -5350 = Ringboden -5400 + 50 (G1 Nr. 5 SCA-Belege, PORT-WAHL mit Mass @0x00CC8), Bilder Cut 1/2/7/15/4 (Ring trocken, Gelaender ueber dem Wasser) |
+| Nachtrag 13 (+ Freigabe Nachtrag 15): echtes Ventilraetsel — (1) Text 49 neutral, (2) Dokument mit dem Nutzer-Text woertlich, (3) Plakat als Nahaufnahme mit der falschen Anleitung, (4) Dreh-Raetsel mit Reihenfolge und Zuruecksetzen, Loesung -> Warnung -> Flut, (5) Dossier §7 zur Freigabe | **teilweise** | (1) K1 `id=49 "I should look around here first."`; (2) Leser Leon + Elza: Text woertlich (nur U+2014 -> '-'), Bit 107 — ABER das Blatt ist in der Welt nicht zu sehen (15 von 16 Cuts 0 Pixel, Cut 5 39 dunkle Pixel; Mangel 1); (3) Plakat-Nahaufnahme Leon + Elza, Aushang an der Suedwand sichtbar; (4) K2 Leon + Elza falsch -> 45 + zurueck, richtig -> 46; Ableitung eindeutig (§1 D/P); (5) Dossier §7 + Freigabe Nachtrag 15 |
+| Nachtraege 6, 9/10 | **erfuellt** | keine zusaetzliche Tuer (Diff; `_sperre` gruen); Ventile vor Bruecke (K1 Nordventil 01: 49) und vor Sicherung (K1 Ventil 09: 49), danach Fragen 50-55 (K2) |
+| Abnahme 3 Mangel 1 (`_kette`) / Mangel 2 (Doku) | **behoben** | KE rc=0 auf der heutigen Kette; Dossier §7/§0b/probes-Kopf berichtigt (gelesen) |
+
 
 ## 5. Maengel
 (folgt)
