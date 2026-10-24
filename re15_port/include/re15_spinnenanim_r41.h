@@ -62,6 +62,10 @@ void re15_spinnenanim_r41_zeichnen_ende(const re15_actor_t *ec);
  * und Massstab). Schreibt nur fuer Typ 0x25 und nur mit gesetzter Umgebungsvariable. */
 void re15_spinnenanim_r41_log_matrix(const re15_actor_t *e, const int32_t m[9]);
 
+/* Pose des letzten Zeichnens (Clip, Bild) fuer Weltanker wie *(+0x188)+0x40 (Teil-0-Weltmatrix des vorigen Takts,
+ * FUN_8001e9ec @0x8001ea24). 1 = Merker aus dem vorigen Takt vorhanden. */
+int re15_spinnenanim_r41_letzte_pose(const re15_actor_t *e, int *clip, int *bild);
+
 /* Test/Messschiene: alle Merker loeschen (Raumwechsel/Testanfang). */
 void re15_spinnenanim_r41_reset(void);
 

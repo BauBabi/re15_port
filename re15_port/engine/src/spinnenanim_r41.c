@@ -154,3 +154,19 @@ void re15_spinnenanim_r41_log_matrix(const re15_actor_t *e, const int32_t m[9])
             (int)m[0], (int)m[1], (int)m[2], (int)m[3], (int)m[4], (int)m[5], (int)m[6], (int)m[7], (int)m[8]);
     fflush(s_fp);
 }
+
+/* Pose des letzten Zeichnens fuer Weltanker (Gift-Anker spinnen_r38.c): das Original liest *(+0x188)+0x40 = die
+ * Teil-0-WELTmatrix, die NUR der Zeichner schreibt (FUN_8001e9ec -> FUN_80022da0 @0x8001ea24) — also die Pose des
+ * VORIGEN Takts. Der Merker eines anim_set-Zwillings aus dem vorigen Takt ist genau diese Pose (Clip, Bild vor dem
+ * Vorschub). Rueckgabe 0 = kein Merker aus dem vorigen Takt (z.B. RE2-Gehirn nach der Landung) -> Aufrufer nimmt
+ * seinen bisherigen Weg. Die Ueberblendung (+0x8f) des gezeichneten Bilds rechnet der Anker nicht nach. */
+int re15_spinnenanim_r41_letzte_pose(const re15_actor_t *e, int *clip, int *bild)
+{
+    int s = platz_von(e);
+    if (s < 0 || e->type != SPINNE_TYP) return 0;
+    const merker_t *m = &s_merker[s];
+    if (!m->gueltig || m->takt + 1u != g_engine.frame_count) return 0;
+    if (clip) *clip = m->clip;
+    if (bild) *bild = m->bild;
+    return 1;
+}

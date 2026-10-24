@@ -330,7 +330,9 @@ static void gift_anker(const re15_actor_t *e, const int32_t ofs[3], int32_t out[
     int32_t v[3] = { ofs[0], ofs[1], ofs[2] };
     re15_enemy_bank_t *b = re15_enemy_find(e->type);
     if (b && b->ok && b->skel.bone_count > 0) {
-        int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
+        int a_clip = -1, a_bild = e->anim_frame;
+        (void)re15_spinnenanim_r41_letzte_pose(e, &a_clip, &a_bild);   /* Runde 41 Spur L: Pose des vorigen Zeichnens */
+        int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, a_clip, (uint32_t)a_bild);
         re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
         void *save = g_anim_pose_actor;
         g_anim_pose_actor = NULL;                       /* Abfrage: Ueberblendung nicht anfassen */
