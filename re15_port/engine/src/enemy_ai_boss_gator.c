@@ -251,6 +251,9 @@ typedef struct {
      * (s. gb_untertauchen); ut_* = die skalierte Trefferbox, solange sie auf 0 steht. */
     int8_t   untergetaucht;
     uint16_t ut_r_min, ut_r_max;
+    /* Runde 41 Spur B, Nachbesserung 6 (Abnahme 5 M1): vollendete Kau-Kreise der endlosen P3-Schleife (Clip 11, 59 Bilder) -
+     * nur Messhaken/Log, kein Verhalten. */
+    uint8_t  p3_kreise;
 } gb_state_t;
 
 /* RE15_GB_STUMM=1: gesamte gator_boss.log-Telemetrie aus (Sweep-Test). */
@@ -2566,7 +2569,21 @@ static void gb_takt(int slot)
                     fflush(s_ff);
                 }
             }
-        } else if (g->timer <= 340) {                  /* ---- P3: Clip 11 Kau-Loop ---- */
+        } else {                                       /* ---- P3: Clip 11 Kau-Loop OHNE ENDE ---- */
+            /* Runde 41 Spur B, Nachbesserung 6 (Abnahme 5 M1): P3 endet nicht. RE2 P3 @0x801011c4-e4 (selbst gelesen,
+             * re2_disasm.py --bin EM23_OVL_0000.BIN): `jal 0x80015cb8` @0x801011cc + `addiu a1,zero,11 / jal 0x8001a240`
+             * @0x801011d8-e0, danach `lw ra,28(sp)` @0x801011e8 - KEIN Schreiber auf das Phasenbyte +6 (Dispatch `lbu v1,6(s0)`
+             * @0x80100f74, P3 = `beq v1,v0(3),0x801011c4` @0x80100fac): die Kauschleife laeuft, bis das Game Over den Raum
+             * verlaesst. Leons RE2-Handler @0x80102d44 tut in seiner Phase 3 nur noch `sb v0,-565(at)` mit v0 = 128 (Delay-Slot
+             * `addiu v0,zero,128` @0x80102d9c, Ziel @0x80102f24-28) = Spieler +0x1D3 (0x800cfdcb - Spielerbasis 0x800cfbf8)
+             * |= 0x80 "gehalten" je Bild, ohne Animation und ohne Platzierung - das Opfer bleibt geparkt im Maul. Hier stand ein
+             * Ende nach 120 P3-Takten (`g->timer <= 340`, dann re15_player_victim_force_end + render_scale 0 + CHASE): der Port
+             * wechselt den Raum erst rund 20 Bilder spaeter (Abnahme 5: E1 P3-Ende F881, Raumwechsel nach F902) - so lange stand
+             * Leon aufrecht neben dem Gator. Der Opfer-Modus 4 (= +0x1D3 & 0x80, re15_player_is_grabbed) und der Maul-Massstab
+             * bleiben jetzt bis zum Raumwechsel; den raeumt der Raumlader (re15_enemy_reset -> re15_player_victim_reset,
+             * re15_actor_init setzt render_scale_q12 = 0). Takt-Zaehler im Clip-11-Kreis: 59 Bilder (EDD1-Clip-Tabelle EM23.EMD
+             * @0x38 = 59/0x1180, s. u.), haelt den int16-Zaehler vom Ueberlauf fern; Bildfolge 0..58 wie bisher. */
+            if (g->timer >= 221 + 59) { g->timer -= 59; if (g->p3_kreise < 255) g->p3_kreise++; }
             e->motion = 11;
             /* ⛔ HIER STAND `% 30`. Clip 11 hat 59 Bilder (EDD1-Clip-Tabelle EM23.EMD
              * @0x38 = 59/0x1180); 30 ist die Laenge von Clip 10. FUN_8001A240
@@ -2589,19 +2606,13 @@ static void gb_takt(int slot)
                 re15_clip_root_motion_abs_y3_pub(pl, &gb23->skel_victim,
                                                  &gb23->anim_victim, 1, 119);
                 gb_opfer_skalieren(e, pl, gb23, 1, 119);   /* Phase 2, s. P2 */
-                if (!s_gb_stumm && g->timer == 221) {
+                if (!s_gb_stumm && g->timer == 221 && g->p3_kreise == 0) {
                     FILE *fl = fopen("gator_boss.log", "a");
                     if (fl) { fprintf(fl, "FSYNC3 P3 pl=(%d,%d,%d) y_vor=%d\n",
                                       (int)pl->x, (int)pl->y, (int)pl->z, (int)pl_y_vor);
                               fclose(fl); }
                 }
             }
-        } else {
-            re15_player_victim_force_end();
-            pl->render_scale_q12 = 0;                  /* Maul-Massstab wieder ab (s. P0) */
-            g->pitch_vz = 0; g->jaw_vz = 0;
-            g->phase = GBP_CHASE;                      /* der pl->hp<0-Abzug uebernimmt */
-            e->motion = 0; e->anim_frame = 0;
         }
         break;
     }

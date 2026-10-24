@@ -226,6 +226,16 @@ int  re15_gr2_fress_sitz(re15_actor_t *e, const re15_actor_t *pl, int32_t *abw, 
                          int32_t *kiefer_abw, int *phase);
 int32_t re15_gr2_becken_draussen(int32_t x, int32_t z, int32_t m);
 int  re15_gr2_im_bild_cut(int c, const int32_t p[3], int *sx, int *sy);
+/* Nachbesserung 6 (Abnahme 5 M2/M3): die Buehne nimmt nie die laufende Kamera des Biss-Bildes (angezeigt g_scd.work_vars[0x0A] =
+ * DAT_800b0fe4 @0x80021bfc, angefordert g_scd.cam_id = DAT_800afbb5 @0x80014300) und nur Lagen, in denen in JEDEM Bild der Bahn kein
+ * in der Buehnen-Kamera gezeichnetes Raum-Objekt (Obj_model_set, MD1-Huelle unter der Objekt-Drehung, Regions-Cull FUN_80014368) den
+ * Strahl Kamera -> Leons Knochen / Kopf / Kiefer schneidet (gator_re2_r41.c, Kopf von re15_gr2_finisher_buehne).
+ *  - raum_verdeckt: Zahl der Punkte p[0..n-1], die im Bild von Cut c liegen und von einem dort gezeichneten Raum-Objekt verdeckt
+ *    sind (*im_bild = Punkte im Bild) - Messzeile Maul-Sitz.
+ *  - leon_knochen: Leons gezeichnete Knochen-Urspruenge im Opfer-Modus (PL00 + Posen der Opfer-Bank des Gators, Gier, Zeichen-
+ *    Skala) -> out[0..], Rueckgabe Anzahl (0 = kein Skelett). */
+int  re15_gr2_raum_verdeckt(int c, const int32_t p[][3], int n, int *im_bild);
+int  re15_gr2_leon_knochen(const re15_actor_t *gator, const re15_actor_t *pl, int32_t out[][3], int max);
 /* Messhaken: Schnittfolge seit dem Boss-INIT (cut[i] = gewaehlter Cut, -1 = Sperre ohne Schnitt, -2 = frei;
  * blick[i] = RE15_GR2_BLICK_*, 0 = frei/zurueck; clip/bild = Gator-Clip und -Bild beim Ereignis). */
 int  re15_gr2_kamera_folge(int max, int *cut, int *blick, int *clip, int *bild);

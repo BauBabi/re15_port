@@ -51,6 +51,8 @@
 #include "re15_camera.h"       /* Nachtrag 4: re15_camera_build_view (FUN_80053ca4-Zwilling) */
 #include "re15_math.h"         /* Nachtrag 4: re15_squareroot0 */
 #include "re15_engine.h"       /* Nachtrag 4: g_engine.frame_count (Bildnummer im Log) */
+#include "re15_md1.h"          /* Nachbesserung 6 (M3): Huelle der Raum-Objekte (Obj_model_set-MD1 aus dem RDT) */
+#include "re15_aot.h"          /* Nachbesserung 6 (M3): re15_prop_culled / re15_prop_render_y (Objekt-Zeichner FUN_8002c18c) */
 
 /* ------------------------------------------------------------------------------------------ */
 typedef struct {
@@ -751,6 +753,7 @@ static int32_t gr2_massstab_grenze(void)
     return g;
 }
 static uint8_t s_kam_log;        /* gr2_kam_schnitt: Kandidatenzeilen in gator_boss.log (Messzeilen, Dossier §9.4) */
+static uint8_t s_wahl_ohne_laufend;   /* Nachbesserung 6 (M2): Rueckfall-Wahl des Finishers ohne Buehne nimmt die laufende Kamera nicht */
 
 int re15_gr2_kamera_wahl(int blick, const re15_actor_t *gator, const re15_actor_t *opfer, int *frontal)
 {
@@ -769,6 +772,7 @@ int re15_gr2_kamera_wahl(int blick, const re15_actor_t *gator, const re15_actor_
         int best = -1, best_d = 0x7fffffff, best_f = 0;
         for (int k = 0; k < g_room_rdt.cut_count; k++) {
             if (!gr2_zonenkamera(k)) continue;
+            if (s_wahl_ohne_laufend && (k == (int)g_scd.work_vars[0x0A] || k == (int)g_scd.cam_id)) continue;   /* NB6 (M2) */
             const re15_camera_cut_t *c = &g_room_rdt.cuts[k];
             int sx = -9999, sy = -9999, im = gr2_im_bild(c, kopf, &sx, &sy);
             int kim = (mit_o && mit_opfer) ? gr2_im_bild(c, kiefer, NULL, NULL) : 1;
@@ -946,7 +950,10 @@ void re15_gr2_kamera_finisher(int slot, const re15_actor_t *gator, const re15_ac
                      (int)gr2_massstab_grenze());
         return;
     }
+    /* ohne Buehne bleibt der Gator am Ort, Leon kommt trotzdem vor ihn (P0 @0x8010106c-84): auch dann nie die laufende Kamera (NB6 M2) */
+    s_wahl_ohne_laufend = 1;
     gr2_kam_schnitt(GR2_KAM_FRESSEN, RE15_GR2_BLICK_FINISHER, gator, NULL);   /* @0x80100fbc-ff4, kein Ende */
+    s_wahl_ohne_laufend = 0;
 }
 int re15_gr2_vsync(void) { return s_vsync; }
 
@@ -1920,12 +1927,18 @@ int re15_gr2_kanister_sitz(re15_actor_t *e, int32_t *abw)
                                * z[-27000..-5400] = 21600 -> 26940, aufs Raster 250 aufgerundet): die Suche bricht ab, sobald
                                * r >= beste Kosten, eine weitere Grenze waere nur ein Rueckfall-Risiko (Fortsetzung NB5: mit 9000
                                * brauchte die Rampenmitte bis 8997, Sonde B41nb5c/probe_bsweep) */
+#define GR2_FIN_LK    15      /* Nachbesserung 6 (M3): Leons Stichpunkte je Bild = Ursprung der PL00-Knochen 0..14 - an diesen Knochen
+                               * zeichnet der Spieler-Zeichner die Meshes 0..14 (main.c Spieler-Zweig; derselbe Koerper wie die
+                               * Maulraum-Messung von unit_gator_fress / unit_r41_re2gator_maul) */
 typedef struct {
     int     n;
     int32_t skala;
+    const void *pl00;               /* Nachbesserung 6: Leons Skelett (re15_player_pl00_skel), mit dem lk[] gebaut ist (Cache-Schluessel) */
+    int     nlk;                    /* Leon-Stichpunkte je Bild (0 = kein PL00-Skelett geladen: nur die Wurzel l[]) */
     int32_t w[GR2_FIN_N][2];        /* Gator-Wurzel relativ zur P0-Lage (Rig: x laengs, z quer) */
     int32_t b[GR2_FIN_N][4][3];     /* Bones 1/5/6/7 relativ zur P0-Lage (Rig x, y, Rig z), Zeichen-Skala */
     int32_t l[GR2_FIN_N][3];        /* Leons gezeichnete Wurzel relativ zur P0-Lage (Rig x, POS-y x Skala, Rig z) */
+    int32_t lk[GR2_FIN_N][GR2_FIN_LK][3];   /* Nachbesserung 6 (M3): Leons gezeichnete Knochen-Urspruenge, Bezug wie l[] */
 } gr2_fin_t;
 static gr2_fin_t s_fin;
 static const int k_fin_bone[4] = { 1, 5, 6, 7 };
@@ -1948,12 +1961,24 @@ static int gr2_voff(const re15_enemy_bank_t *bk, int clip, int frame, int16_t o[
 static const gr2_fin_t *gr2_fin_tabelle(const re15_actor_t *e)
 {
     int32_t s = gr2_scale(e);
-    if (s_fin.n > 0 && s_fin.skala == s) return &s_fin;
+    extern const re15_emd_skeleton_t *re15_player_pl00_skel(void);   /* player_common.c (Leons Skelett, game_step setzt es) */
+    const re15_emd_skeleton_t *pl00 = re15_player_pl00_skel();
+    if (s_fin.n > 0 && s_fin.skala == s && s_fin.pl00 == (const void *)pl00) return &s_fin;
     re15_enemy_bank_t *bk = gr2_bank(e);
     if (!bk || !bk->victim_ok || bk->skel.bone_count <= 7 || bk->anim.clip_count <= 11 || bk->anim_victim.clip_count <= 1) return NULL;
     int16_t g4[3]; gr2_off(bk, 4, 13, g4);
     int32_t vx = q12mul(10643, s);
-    s_fin.n = 0; s_fin.skala = s;
+    s_fin.n = 0; s_fin.skala = s; s_fin.pl00 = (const void *)pl00; s_fin.nlk = 0;
+    /* Nachbesserung 6 (M3): Leons Koerper wie der Spieler-Zeichner im Opfer-Modus - LEONS Knochen (PL00) mit den Posen der Opfer-Bank
+     * des Greifers (dieselbe Komposition wie re15_player_victim_bone_pos, enemy_ai_common.c: Original ankert am Spieler-Part-Pool
+     * @0x80111dd4-e0), Gier = Gator-Gier (P0 @0x80101154-5c), Massstab = Zeichen-Skala des Gators (P0, render_scale_q12) */
+    re15_emd_skeleton_t vs;
+    if (pl00 && pl00->bone_count > 0) {
+        vs = *pl00;
+        vs.keyframe_data = bk->skel_victim.keyframe_data;       vs.keyframe_data_size  = bk->skel_victim.keyframe_data_size;
+        vs.keyframe_count = bk->skel_victim.keyframe_count;     vs.keyframe_size_bytes = bk->skel_victim.keyframe_size_bytes;
+        s_fin.nlk = pl00->bone_count < GR2_FIN_LK ? pl00->bone_count : GR2_FIN_LK;
+    }
     void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
     for (int k = 0; k < GR2_FIN_N; k++) {
         int gc, gf, vc, vf; int32_t wx = 0, wz = 0, lx, lz; int16_t go[3] = {0,0,0}, vo[3], vp[3];
@@ -1981,6 +2006,16 @@ static const gr2_fin_t *gr2_fin_tabelle(const re15_actor_t *e)
         }
         s_fin.w[k][0] = wx; s_fin.w[k][1] = wz;
         s_fin.l[k][0] = lx + q12mul(vp[0], s); s_fin.l[k][1] = q12mul(vp[1], s); s_fin.l[k][2] = lz + q12mul(vp[2], s);
+        if (s_fin.nlk > 0) {                                     /* Nachbesserung 6 (M3): Leons Knochen dieses Bildes (Lage + s x trans) */
+            re15_skel_pose_t vpo[RE15_EMD_MAX_BONES];
+            int vkf = gr2_kf(&bk->anim_victim, vc, vf);
+            if (vkf < 0 || re15_skel_compute_pose(&vs, vkf, vpo) != 0) s_fin.nlk = 0;
+            for (int j = 0; j < s_fin.nlk; j++) {
+                s_fin.lk[k][j][0] = lx + q12mul(vpo[j].trans[0], s);
+                s_fin.lk[k][j][1] = q12mul(vpo[j].trans[1], s);
+                s_fin.lk[k][j][2] = lz + q12mul(vpo[j].trans[2], s);
+            }
+        }
         re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
         int kf = gr2_kf(&bk->anim, gc, gf);
         if (kf < 0 || re15_skel_compute_pose(&bk->skel, kf, poses) != 0) { g_anim_pose_actor = save; s_fin.n = 0; return NULL; }
@@ -2058,13 +2093,194 @@ static int gr2_fin_sicht(const gr2_fin_t *t, int c, int32_t gx, int32_t gy, int3
     }
     return 1;
 }
+/* ==== Nachbesserung 6 (Abnahme 5 M2/M3) ========================================================================================
+ * M2 - LAUFENDE KAMERA: im Biss-Bild zeigt der Zeichner den Cut, den der Kamera-Apply am Bildanfang uebernommen hat (work_vars[0x0A]
+ * = DAT_800b0fe4, Apply-Kopf FUN_80021bbc `sh v1,DAT_800b0fe4` @0x80021bfc), angefordert ist cam_id (= DAT_800afbb5, RVD-Scan
+ * FUN_800142f4 `sb a0,-0x44b(at)` @0x80014300 / Cut_chg @0x800402fc). Nimmt die Buehne einen dieser Cuts, gibt es keinen Schnitt,
+ * und das Umsetzen von Gator und Opfer ist im Bild zu sehen (Abnahme 5 G1: Cut 0 durchgehend, Gator dreht 101 Grad, Leon springt
+ * 8100). RE2 setzt in P0 um (`sw v0,56(s0)` @0x80101048-4c) und schneidet im SELBEN Takt (`jal 0x8002c7ac` @0x80100ff4, Sperre
+ * @0x80100fcc-d0); dort ist das Umsetzen klein (Biss nur am Korridorende, Sub 7 @0x801012e0-e4), die Port-Buehne versetzt bis zur
+ * Becken-Diagonale. PORT-WAHL (Form RE2-P0 "Umsetzen nur mit Schnitt"): beide Cuts sind als Buehnen-Kamera ausgeschlossen. */
+static int gr2_fin_laufend(int c) { return c == (int)g_scd.work_vars[0x0A] || c == (int)g_scd.cam_id; }
+/* M3 - RAUM-OBJEKTE IM SICHTSTRAHL: Obj_model_set-Objekte als gedrehte Huellquader (MD1-Huelle aller Meshes im Objektrahmen; Welt =
+ * Drehmatrix x v + Lage wie der Objekt-Zeichner FUN_8002c18c: Matrix pool+0x20 = RotMatrix(rot) in der Port-Konvention des PC-
+ * Zeichners (main.c pc_prop_rot_q12, Ry*Rx*Rz), Lage x / Zeichen-y re15_prop_render_y (Typ 4 -900 @0x8002c23c-50) / z). Gezeichnet
+ * wird ein Objekt in Cut c nur, wenn seine Lage im Regions-Viereck von c liegt (re15_prop_culled = FUN_80014368 ueber DAT_800ac790;
+ * Typ 3 ohne Ganzobjekt-Cull) - nur diese Objekte koennen das Opfer in c verdecken. Abnahme 5 E1: Obj_model_set[3] (-25,-1740,-7423)
+ * lag in P1 der Cut-4-Buehne zwischen Kamera und Leon (Bild (98,116) gegen Leons Wurzel (138,128)). RE2-Vorbild: P0 nimmt das einzige
+ * Objekt, das neben dem Gator im Wasser liegen kann, aus dem Bild (Kanister obj[1] `sw zero,1308(at)` @0x80101008-0c) - der Finisher
+ * zeigt nur Gator und Opfer. PORT-WAHL (Raum-Objekte bleiben stehen, die Buehne weicht aus): eine Buehne gilt nur, wenn in JEDEM Bild
+ * der Bahn kein gezeichnetes Raum-Objekt den Strahl Kamera -> Leons Knochen (im Bild) bzw. -> Kopf/Kiefer (Bones 6/7) schneidet. */
+typedef struct { int32_t lo[3], hi[3], r[9], t[3]; int typ; } gr2_obj_t;
+static gr2_obj_t s_obj[RE15_SCD_MAX_PROPS];
+static int       s_obj_n;
+static re15_md1_t s_obj_md1;
+/* Drehmatrix Ry*Rx*Rz (Q12) = main.c pc_prop_rot_q12 (dieselbe Formel, Objekt-Zeichner des Ports). */
+static void gr2_obj_rot(int16_t rx, int16_t ry, int16_t rz, int32_t m[9])
+{
+    int32_t sx = re15_sin_q12((int)rx), cx = re15_cos_q12((int)rx);
+    int32_t sy = re15_sin_q12((int)ry), cy = re15_cos_q12((int)ry);
+    int32_t sz = re15_sin_q12((int)rz), cz = re15_cos_q12((int)rz);
+    m[0] = q12mul(cz, cy);
+    m[1] = -q12mul(sz, cy);
+    m[2] = sy;
+    m[3] = (int32_t)(((((int64_t)sz * cx) << 12) + (int64_t)cz * sy * sx) >> 24);
+    m[4] = (int32_t)(((((int64_t)cz * cx) << 12) - (int64_t)sz * sy * sx) >> 24);
+    m[5] = -q12mul(cy, sx);
+    m[6] = (int32_t)(((((int64_t)sz * sx) << 12) - (int64_t)cz * sy * cx) >> 24);
+    m[7] = (int32_t)(((((int64_t)cz * sx) << 12) + (int64_t)sz * sy * cx) >> 24);
+    m[8] = q12mul(cy, cx);
+}
+/* Huellquader der aktiven Raum-Objekte neu aufbauen (Lage/Drehung koennen Skripte aendern; einmal je Buehnen-Suche/Messbild). Objekte
+ * mit Elternteil (Obj_model_set pc[5] != 0, im Bestand nur ROOM1150/1151) haben keinen Weltrahmen ohne die Kette - nicht erfasst. */
+static int gr2_raum_objekte(void)
+{
+    s_obj_n = 0;
+    if (!g_room_rdt_ok) return 0;
+    for (int pi = 0; pi < (int)g_scd.prop_count && pi < RE15_SCD_MAX_PROPS; pi++) {
+        if (!g_scd.props[pi].active || g_scd.props[pi].parent_obj >= 0) continue;
+        int oid = (int)g_scd.props[pi].obj_id;
+        if (oid >= RE15_RDT_MAX_PROPS || !g_room_rdt.prop_md1[oid]) continue;
+        if (re15_md1_parse(g_room_rdt.prop_md1[oid], g_room_rdt.prop_md1_size[oid], &s_obj_md1) != 0) continue;
+        gr2_obj_t *o = &s_obj[s_obj_n];
+        int nv = 0;
+        for (int i = 0; i < 3; i++) { o->lo[i] = 0x7fffffff; o->hi[i] = -0x7fffffff; }
+        for (int m = 0; m < s_obj_md1.mesh_count; m++)
+            for (int pass = 0; pass < 2; pass++) {
+                const re15_md1_vertex_t *V = pass ? s_obj_md1.meshes[m].quad_vertices : s_obj_md1.meshes[m].tri_vertices;
+                int N = pass ? s_obj_md1.meshes[m].quad_vertex_count : s_obj_md1.meshes[m].tri_vertex_count;
+                for (int v = 0; V && v < N; v++) {
+                    int32_t q[3] = { V[v].x, V[v].y, V[v].z };
+                    for (int i = 0; i < 3; i++) { if (q[i] < o->lo[i]) o->lo[i] = q[i]; if (q[i] > o->hi[i]) o->hi[i] = q[i]; }
+                    nv++;
+                }
+            }
+        if (nv == 0) continue;
+        gr2_obj_rot(g_scd.props[pi].rot_x, g_scd.props[pi].rot_y, g_scd.props[pi].rot_z, o->r);
+        o->t[0] = g_scd.props[pi].x;
+        o->t[1] = re15_prop_render_y((int)g_scd.props[pi].obj_type, g_scd.props[pi].y);
+        o->t[2] = g_scd.props[pi].z;
+        o->typ = (int)g_scd.props[pi].obj_type;
+        s_obj_n++;
+    }
+    return s_obj_n;
+}
+/* Schneidet die Strecke a -> p den Huellquader von o? (beide Punkte in den Objektrahmen: R^T x (w - t); Strecken-Parameter in Q16) */
+static int gr2_obj_im_strahl(const gr2_obj_t *o, const int32_t a[3], const int32_t p[3])
+{
+    int64_t al[3], pl[3];
+    for (int i = 0; i < 3; i++) {
+        int64_t sa = 0, sp = 0;
+        for (int k = 0; k < 3; k++) {
+            sa += (int64_t)o->r[k * 3 + i] * (int64_t)(a[k] - o->t[k]);
+            sp += (int64_t)o->r[k * 3 + i] * (int64_t)(p[k] - o->t[k]);
+        }
+        al[i] = sa >> 12; pl[i] = sp >> 12;
+    }
+    int64_t t0 = 0, t1 = 65536;
+    for (int i = 0; i < 3; i++) {
+        int64_t d = pl[i] - al[i];
+        if (d == 0) { if (al[i] < o->lo[i] || al[i] > o->hi[i]) return 0; continue; }
+        int64_t ta = (((int64_t)o->lo[i] - al[i]) * 65536) / d, tb = (((int64_t)o->hi[i] - al[i]) * 65536) / d;
+        if (ta > tb) { int64_t x = ta; ta = tb; tb = x; }
+        if (ta > t0) t0 = ta;
+        if (tb < t1) t1 = tb;
+        if (t0 > t1) return 0;
+    }
+    return 1;
+}
+/* Objekte, die in Cut c gezeichnet werden (Regions-Cull wie der Objekt-Zeichner) -> Liste; Rueckgabe Anzahl. */
+static int gr2_obj_in_cut(int c, const gr2_obj_t *liste[RE15_SCD_MAX_PROPS])
+{
+    int16_t xs[4], zs[4];
+    int reg = re15_rdt_get_region_quad(&g_room_rdt, c, xs, zs), n = 0;
+    for (int i = 0; i < s_obj_n; i++)
+        if (!re15_prop_culled(s_obj[i].typ, s_obj[i].t[0], s_obj[i].t[2], reg, xs, zs)) liste[n++] = &s_obj[i];
+    return n;
+}
+/* Wie viele der Weltpunkte p[0..n-1] liegen im Bild von Cut c und sind von einem dort gezeichneten Raum-Objekt verdeckt (Strahl vom
+ * Kamera-Ort)? *im_bild = Zahl der Punkte im Bild. Messzeile Maul-Sitz (gator_re2_pc.c). */
+int re15_gr2_raum_verdeckt(int c, const int32_t p[][3], int n, int *im_bild)
+{
+    if (im_bild) *im_bild = 0;
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || c < 0 || c >= g_room_rdt.cut_count) return 0;
+    gr2_raum_objekte();
+    const gr2_obj_t *ob[RE15_SCD_MAX_PROPS];
+    int nob = gr2_obj_in_cut(c, ob), verdeckt = 0;
+    re15_camera_view_t v;
+    if (re15_camera_build_view(&g_room_rdt.cuts[c], &v) != 0) return 0;
+    const re15_camera_cut_t *cc = &g_room_rdt.cuts[c];
+    int32_t a[3] = { cc->pos_x, cc->pos_y, cc->pos_z };
+    for (int j = 0; j < n; j++) {
+        int sx, sy; int32_t vz = 0;
+        if (!gr2_fin_proj(&v, p[j], &sx, &sy, &vz)) continue;
+        if (im_bild) (*im_bild)++;
+        for (int i = 0; i < nob; i++) if (gr2_obj_im_strahl(ob[i], a, p[j])) { verdeckt++; break; }
+    }
+    return verdeckt;
+}
+/* Leons gezeichnete Knochen-Ursprunge im Opfer-Modus (PL00 + Posen der Opfer-Bank, Gier, Zeichen-Skala; wie gr2_fin_tabelle) -
+ * Messzeile Maul-Sitz. Rueckgabe Anzahl (0 = kein Skelett / keine Opfer-Bank). */
+int re15_gr2_leon_knochen(const re15_actor_t *gator, const re15_actor_t *pl, int32_t out[][3], int max)
+{
+    extern const re15_emd_skeleton_t *re15_player_pl00_skel(void);
+    const re15_emd_skeleton_t *pl00 = re15_player_pl00_skel();
+    re15_enemy_bank_t *bk = gator ? gr2_bank(gator) : NULL;
+    if (!pl || !pl00 || pl00->bone_count <= 0 || !bk || !bk->victim_ok) return 0;
+    re15_emd_skeleton_t vs = *pl00;
+    vs.keyframe_data = bk->skel_victim.keyframe_data;       vs.keyframe_data_size  = bk->skel_victim.keyframe_data_size;
+    vs.keyframe_count = bk->skel_victim.keyframe_count;     vs.keyframe_size_bytes = bk->skel_victim.keyframe_size_bytes;
+    int vkf = gr2_kf(&bk->anim_victim, (int)pl->motion, (int)pl->anim_frame);
+    re15_skel_pose_t vpo[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    int rv = (vkf < 0) ? -1 : re15_skel_compute_pose(&vs, vkf, vpo);
+    g_anim_pose_actor = save;
+    if (rv != 0) return 0;
+    int n = pl00->bone_count < max ? pl00->bone_count : max;
+    if (n > GR2_FIN_LK) n = GR2_FIN_LK;
+    int32_t sp = pl->render_scale_q12 ? pl->render_scale_q12 : 4096;
+    for (int j = 0; j < n; j++) {
+        int32_t P[3] = { q12mul(vpo[j].trans[0], sp), q12mul(vpo[j].trans[1], sp), q12mul(vpo[j].trans[2], sp) };
+        re15_skel_bone_to_world(P, (int16_t)pl->rot_y, pl->x, pl->y, pl->z, out[j]);
+    }
+    return n;
+}
+/* (M3) Bahn in Kamera c frei von Raum-Objekten: je Bild Leons Knochen (ohne Skelett: die Wurzel) und Kopf/Kiefer (Bones 6/7) - nur
+ * Punkte im Bild zaehlen (Leon "oben hinaus" beim Wurf ist nicht zu verdecken). *k_aus = erstes verdecktes Bild. */
+static int gr2_fin_unverdeckt(const gr2_fin_t *t, int c, int32_t gx, int32_t gy, int32_t gz, int yaw, int schritt, int *k_aus)
+{
+    const gr2_obj_t *ob[RE15_SCD_MAX_PROPS];
+    int nob = gr2_obj_in_cut(c, ob);
+    if (nob == 0) return 1;
+    re15_camera_view_t v;
+    if (re15_camera_build_view(&g_room_rdt.cuts[c], &v) != 0) return 1;
+    const re15_camera_cut_t *cc = &g_room_rdt.cuts[c];
+    int32_t a[3] = { cc->pos_x, cc->pos_y, cc->pos_z };
+    for (int k = 0; k < t->n; k = (k + schritt < t->n || k == t->n - 1) ? k + schritt : t->n - 1) {
+        int32_t basis = k < GR2_FIN_P2 ? 0 : gy;
+        int np = (t->nlk > 0 ? t->nlk : 1) + 2;
+        for (int j = 0; j < np; j++) {
+            const int32_t *q; int32_t y0;
+            if (j < np - 2) { q = t->nlk > 0 ? t->lk[k][j] : t->l[k]; y0 = basis; }
+            else            { q = t->b[k][2 + (j - (np - 2))]; y0 = gy; }   /* Kopf (Bone 6) / Kiefer (Bone 7) */
+            int32_t wx, wz, p[3], vz = 0; int sx, sy;
+            gr2_dreh(yaw, q[0], q[2], &wx, &wz);
+            p[0] = gx + wx; p[1] = y0 + q[1]; p[2] = gz + wz;
+            if (!gr2_fin_proj(&v, p, &sx, &sy, &vz)) continue;       /* nicht im Bild = nicht zu verdecken */
+            for (int i = 0; i < nob; i++)
+                if (gr2_obj_im_strahl(ob[i], a, p)) { if (k_aus) *k_aus = k; return 0; }
+        }
+        if (k == t->n - 1) break;
+    }
+    return 1;
+}
 int re15_gr2_finisher_buehne(int slot, re15_actor_t *e)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return 0;
     gr2_t *g = &s_g[slot];
     g->fin_cut = -1;
     const gr2_fin_t *t = gr2_fin_tabelle(e);
-    int yaw0 = (int)e->rot_y & 0xfff, gefunden = 0;
+    int yaw0 = (int)e->rot_y & 0xfff, gefunden = 0, n_verdeckt = 0, k_verdeckt = -1, n_obj = gr2_raum_objekte();
     if (t && s_becken_fn && g_room_rdt_ok && g_room_rdt.cuts && g_room_rdt.cut_count > 0) {
         int32_t grenze = gr2_massstab_grenze();
         int64_t best = -1; int32_t bx = 0, bz = 0, bm = 0; int by = 0, bc = -1, bkb[2] = {0, 0}, blb[2] = {0, 0};
@@ -2077,7 +2293,7 @@ int re15_gr2_finisher_buehne(int slot, re15_actor_t *e)
                 int32_t px = e->x + q12mul(re15_cos_q12(a), r), pz = e->z + q12mul(re15_sin_q12(a), r);
                 if (s_becken_fn(px, pz, GR2_KLEMM_R)) continue;
                 for (int c = 0; c < g_room_rdt.cut_count; c++) {
-                    if (!gr2_zonenkamera(c)) continue;
+                    if (!gr2_zonenkamera(c) || gr2_fin_laufend(c)) continue;   /* Nachbesserung 6 (M2): nie die laufende Kamera */
                     int y2 = gr2_peilung(px, pz, g_room_rdt.cuts[c].pos_x, g_room_rdt.cuts[c].pos_z);
                     int64_t k = r + 4 * (int64_t)gr2_wdiff(y2, yaw0);
                     if (best >= 0 && k >= best) continue;
@@ -2086,6 +2302,7 @@ int re15_gr2_finisher_buehne(int slot, re15_actor_t *e)
                     int kb[2] = {0, 0}, lb[2] = {0, 0}; int32_t mm = 0;
                     if (!gr2_fin_sicht(t, c, px, e->y, pz, y2, grenze, kb, lb, &mm, 8)) continue;
                     if (!gr2_fin_frei(t, px, pz, y2, 1) || !gr2_fin_sicht(t, c, px, e->y, pz, y2, grenze, kb, lb, &mm, 1)) continue;
+                    if (!gr2_fin_unverdeckt(t, c, px, e->y, pz, y2, 1, &k_verdeckt)) { n_verdeckt++; continue; }   /* NB6 (M3) */
                     best = k; bx = px; bz = pz; by = y2; bc = c; bm = mm;
                     bkb[0] = kb[0]; bkb[1] = kb[1]; blb[0] = lb[0]; blb[1] = lb[1];
                 }
@@ -2093,17 +2310,20 @@ int re15_gr2_finisher_buehne(int slot, re15_actor_t *e)
         }
         if (best >= 0) {
             re15_gr2_log("FINISHER Buehne (Nachbesserung 5, RE2-P0 @0x80101048-4c): von (%d,%d) Gier %d -> (%d,%d) Gier %d Cut %d, "
-                         "Versatz %d Drehung %d | Koppelbild Kopf (%d,%d) Leon (%d,%d) Massstab max %d (Grenze %d) F%u",
+                         "Versatz %d Drehung %d | Koppelbild Kopf (%d,%d) Leon (%d,%d) Massstab max %d (Grenze %d) F%u | NB6: laufende "
+                         "Kamera %d/%d ausgeschlossen, Raum-Objekte %d, Leon-Stichpunkte %d, wegen Verdeckung verworfen %d (zuletzt Bild %d)",
                          e->x, e->z, yaw0, bx, bz, by, bc, gr2_abstand(bx, bz, e->x, e->z), gr2_wdiff(by, yaw0),
-                         bkb[0], bkb[1], blb[0], blb[1], (int)bm, (int)grenze, (unsigned)g_engine.frame_count);
+                         bkb[0], bkb[1], blb[0], blb[1], (int)bm, (int)grenze, (unsigned)g_engine.frame_count,
+                         (int)g_scd.work_vars[0x0A], (int)g_scd.cam_id, n_obj, t->nlk, n_verdeckt, k_verdeckt);
             g->fin_x = bx; g->fin_z = bz; g->fin_gier = (int16_t)by;
             g->fin_cut = (int8_t)bc;
             gefunden = 1;
         }
     }
     if (!gefunden) {
-        re15_gr2_log("FINISHER Buehne: keine Lage im Wasser mit frontaler Zonenkamera bis %d - am Ort (%d,%d) Gier %d F%u",
-                     GR2_FIN_WEIT, e->x, e->z, yaw0, (unsigned)g_engine.frame_count);
+        re15_gr2_log("FINISHER Buehne: keine Lage im Wasser mit frontaler Zonenkamera bis %d - am Ort (%d,%d) Gier %d F%u (laufende "
+                     "Kamera %d/%d, wegen Verdeckung verworfen %d)", GR2_FIN_WEIT, e->x, e->z, yaw0, (unsigned)g_engine.frame_count,
+                     (int)g_scd.work_vars[0x0A], (int)g_scd.cam_id, n_verdeckt);
         g->fin_x = e->x; g->fin_z = e->z; g->fin_gier = e->rot_y;
     }
     g->fin_geplant = 1; g->fin_aktiv = 0;

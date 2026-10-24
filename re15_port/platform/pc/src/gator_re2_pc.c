@@ -136,7 +136,12 @@ static void kanister_sitz(void)
  * debug.log "[gator-re2] Maul-Sitz F<n>: Bilder <k> (P1 a P2 b P3 c), Abweichung max <m> (F..), Kiefer-Abstand max <j> (F..),
  * Kopf im Bild <h>/<k>, Leon im Bild <l>/<k> + oben hinaus <o> (Cut <c>), im Wasser <w>/<k> | jetzt ..." beim ersten Bild, bei
  * jedem neuen Hoechstwert, bei jedem Bild ausserhalb Bild/Wasser und alle 30 Bilder; im ersten Bild nach dem Finisher die
- * Summenzeile "[gator-re2] Maul-Sitz Ende F<n>: ..." (integration_r41_re2gator Lauf belagerung). Reine Messung. */
+ * Summenzeile "[gator-re2] Maul-Sitz Ende F<n>: ..." (integration_r41_re2gator Lauf belagerung). Reine Messung.
+ * Nachbesserung 6 (Abnahme 5): P3 endet nicht mehr (RE2 @0x801011c4-e4) - die Summenzeile steht jetzt im Bild der Game-Over-
+ * Uebergabe (g_gameover_active: letztes Bild des Raums, danach Titel) bzw. im ersten Bild eines anderen Raums, und traegt dazu
+ * "Opfer gehalten" (Bilder mit Opfer-Modus = re15_player_is_grabbed, RE2 Spieler +0x1D3 |= 0x80 @0x80102f24-28) und "Opfer frei"
+ * (M1/M3: Bilder, in denen kein Knochen-Ursprung Leons (re15_gr2_leon_knochen) im Bild von einem gezeichneten Raum-Objekt verdeckt
+ * ist, re15_gr2_raum_verdeckt) - "Leon im Bild" prueft nur die Projektion der Wurzel. */
 static int fress_proj(const re15_camera_view_t *cam, int cx, int cy, const int32_t p[3], int *ox, int *oy)
 {
     if (ox) *ox = -1;
@@ -154,11 +159,22 @@ static int fress_proj(const re15_camera_view_t *cam, int cx, int cy, const int32
 }
 static void fress_sitz(const re15_camera_view_t *cam, int cx, int cy)
 {
-    static int s_n, s_pn[4], s_kopf_bild, s_leon_bild, s_leon_oben, s_wasser, s_ende; static int32_t s_max = -1, s_kmax = -1;
-    static unsigned s_fmax = 0, s_fkmax = 0, s_raum = 0xffffffffu;
+    static int s_n, s_pn[4], s_kopf_bild, s_leon_bild, s_leon_oben, s_wasser, s_ende, s_gehalten, s_frei, s_vpkt_max, s_cut = -1;
+    static int32_t s_max = -1, s_kmax = -1;
+    static unsigned s_fmax = 0, s_fkmax = 0, s_fvpkt = 0, s_raum = 0xffffffffu, s_fletzt = 0;
+    extern int re15_player_is_grabbed(void);   /* enemy_ai_common.c: Opfer-Modus 4 = Spieler +0x1D3 & 0x80 */
+#define R41_MAUL_ENDE(grund) \
+    do { s_ende = 1; \
+         fprintf(stderr, "[gator-re2] Maul-Sitz Ende F%u: Bilder %d (P1 %d P2 %d P3 %d), Abweichung max %d (F%u), Kiefer-Abstand max %d (F%u), " \
+                 "Kopf im Bild %d/%d, Leon im Bild %d/%d + oben hinaus %d (Cut %d), im Wasser %d/%d, Opfer gehalten %d/%d, Opfer frei %d/%d " \
+                 "(Punkte verdeckt max %d F%u), letztes Finisher-Bild F%u (%s)\n", \
+                 (unsigned)g_engine.frame_count, s_n, s_pn[1], s_pn[2], s_pn[3], (int)s_max, s_fmax, (int)s_kmax, s_fkmax, \
+                 s_kopf_bild, s_n, s_leon_bild, s_n, s_leon_oben, s_cut, s_wasser, s_n, s_gehalten, s_n, s_frei, s_n, \
+                 s_vpkt_max, s_fvpkt, s_fletzt, (grund)); } while (0)
     if (s_raum != (unsigned)g_current_room_id) {
+        if (s_n > 0 && !s_ende) R41_MAUL_ENDE("Raumwechsel");   /* NB6: Finisher bis zum letzten Bild des Raums */
         s_raum = (unsigned)g_current_room_id; s_n = 0; s_kopf_bild = 0; s_leon_bild = 0; s_leon_oben = 0; s_wasser = 0; s_ende = 0;
-        s_max = -1; s_kmax = -1; s_fmax = 0; s_fkmax = 0;
+        s_max = -1; s_kmax = -1; s_fmax = 0; s_fkmax = 0; s_gehalten = 0; s_frei = 0; s_vpkt_max = 0; s_fvpkt = 0; s_cut = -1;
         memset(s_pn, 0, sizeof s_pn);
     }
     int im_fressen = 0;
@@ -166,43 +182,53 @@ static void fress_sitz(const re15_camera_view_t *cam, int cx, int cy)
         re15_actor_t *a = &g_actors[i];
         if (a->active && a->type == 0x23u && re15_gator_boss_im_fressen(a)) { im_fressen = 1; break; }
     }
-    if (!im_fressen && s_n > 0 && !s_ende) {             /* Summenzeile am Ende des Finishers (P3 vorbei) */
-        s_ende = 1;
-        fprintf(stderr, "[gator-re2] Maul-Sitz Ende F%u: Bilder %d (P1 %d P2 %d P3 %d), Abweichung max %d (F%u), Kiefer-Abstand max %d (F%u), "
-                "Kopf im Bild %d/%d, Leon im Bild %d/%d + oben hinaus %d (Cut %d), im Wasser %d/%d\n",
-                (unsigned)g_engine.frame_count, s_n, s_pn[1], s_pn[2], s_pn[3], (int)s_max, s_fmax, (int)s_kmax, s_fkmax,
-                s_kopf_bild, s_n, s_leon_bild, s_n, s_leon_oben, (int)g_re15_active_cut, s_wasser, s_n);
+    if (!im_fressen && s_n > 0 && !s_ende) {             /* Summenzeile, falls der Finisher im Raum endet (seit NB6 nicht vorgesehen) */
+        R41_MAUL_ENDE("Finisher-Ende");
         return;
     }
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *a = &g_actors[i];
         if (!a->active || a->type != 0x23u || !re15_gator_boss_im_fressen(a)) continue;
         int32_t abw = 0, kab = -1, kopf[3], leon[3]; int ph = 0;
-        if (!re15_gr2_fress_sitz(a, &g_actors[RE15_ACTOR_SLOT_PLAYER], &abw, kopf, leon, &kab, &ph)) return;
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        if (!re15_gr2_fress_sitz(a, pl, &abw, kopf, leon, &kab, &ph)) return;
         unsigned f = (unsigned)g_engine.frame_count;
         int lx = -1, ly = -1;
         int kb = fress_proj(cam, cx, cy, kopf, NULL, NULL);
         int lb = fress_proj(cam, cx, cy, leon, &lx, &ly);
         int lo = !lb && lx >= 0 && lx < 320 && ly < 0;
         int wasser = re15_gr2_becken_draussen(kopf[0], kopf[2], 0) == 0 && re15_gr2_becken_draussen(leon[0], leon[2], 0) == 0;
-        s_n++; s_pn[ph & 3]++;
+        int gehalten = re15_player_is_grabbed();
+        /* NB6 (M3): Leons Knochen + Kopf gegen die in diesem Cut gezeichneten Raum-Objekte (Strahl vom Kamera-Ort) */
+        int32_t pk[20][3]; int np = re15_gr2_leon_knochen(a, pl, pk, 18), nim = 0;
+        if (np <= 0) { memcpy(pk[0], leon, sizeof leon); np = 1; }
+        memcpy(pk[np], kopf, sizeof kopf); np++;
+        int nverd = re15_gr2_raum_verdeckt((int)g_re15_active_cut, (const int32_t (*)[3])pk, np, &nim);
+        s_n++; s_pn[ph & 3]++; s_cut = (int)g_re15_active_cut; s_fletzt = f;
         if (kb) s_kopf_bild++;
         if (lb) s_leon_bild++;
         if (lo) s_leon_oben++;
         if (wasser) s_wasser++;
+        if (gehalten) s_gehalten++;
+        if (nverd == 0) s_frei++;
         int neu = abw > s_max;
         if (neu) { s_max = abw; s_fmax = f; }
+        if (nverd > s_vpkt_max) { s_vpkt_max = nverd; s_fvpkt = f; neu = 1; }
         int32_t kw = kab < 0 ? 0x7fffffff : kab;          /* nicht bestimmbar = Hoechstwert (faellt im Riegel auf) */
         if (kw > s_kmax) { s_kmax = kw; s_fkmax = f; neu = 1; }
-        if (neu || s_n == 1 || (s_n % 30) == 0 || !kb || !(lb || lo) || !wasser)
+        if (neu || s_n == 1 || (s_n % 30) == 0 || !kb || !(lb || lo) || !wasser || !gehalten || nverd > 0)
             fprintf(stderr, "[gator-re2] Maul-Sitz F%u: Bilder %d (P1 %d P2 %d P3 %d), Abweichung max %d (F%u), Kiefer-Abstand max %d (F%u), "
-                    "Kopf im Bild %d/%d, Leon im Bild %d/%d + oben hinaus %d (Cut %d), im Wasser %d/%d | jetzt P%d %d %d "
-                    "kopf=(%d,%d,%d) leon=(%d,%d,%d) leon_bild=(%d,%d)\n",
+                    "Kopf im Bild %d/%d, Leon im Bild %d/%d + oben hinaus %d (Cut %d), im Wasser %d/%d, Opfer gehalten %d/%d, Opfer frei "
+                    "%d/%d | jetzt P%d %d %d kopf=(%d,%d,%d) leon=(%d,%d,%d) leon_bild=(%d,%d) verdeckt %d/%d\n",
                     f, s_n, s_pn[1], s_pn[2], s_pn[3], (int)s_max, s_fmax, (int)s_kmax, s_fkmax, s_kopf_bild, s_n, s_leon_bild, s_n,
-                    s_leon_oben, (int)g_re15_active_cut, s_wasser, s_n, ph, (int)abw, (int)kab,
-                    kopf[0], kopf[1], kopf[2], leon[0], leon[1], leon[2], lx, ly);
+                    s_leon_oben, (int)g_re15_active_cut, s_wasser, s_n, s_gehalten, s_n, s_frei, s_n, ph, (int)abw, (int)kab,
+                    kopf[0], kopf[1], kopf[2], leon[0], leon[1], leon[2], lx, ly, nverd, nim);
+        /* NB6 (M1): das Bild der Game-Over-Uebergabe (game_step_common.c sub 6 ctr 0x6d -> g_gameover_active, main.c verlaesst danach
+         * die Spielschleife zum Titel) ist das letzte Bild dieses Raums - hier die Summenzeile. */
+        if (g_gameover_active && !s_ende) R41_MAUL_ENDE("Game-Over-Uebergabe");
         return;
     }
+#undef R41_MAUL_ENDE
 }
 
 void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
