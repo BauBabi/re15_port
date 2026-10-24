@@ -89,38 +89,58 @@ def bauen(cd):
                msg_on(42, "You've opened valve 13. The pressure is rising. (Form ROOM2030 sub06 @0x02000 msg 3 nach dem Set)"),
                EVT_NEXT, ("ENDIF", ""), ENDE]))
     P.append(("re15_r41c_prg_2030_v13_zustand", [msg_on(47, "Intake valve 13 is open."), EVT_NEXT, ENDE]))
-    # ---- 2030 Ventile (Platzhalter) + Zaehler + Flut im selben Faden -------------------------------------------
-    ventile = [msg_on(45, "Numbered valves... Will you turn them?"), EVT_NEXT,
-               ("IF", "Ja-Zweig"), JA,
-               msg_on(46, "WARNING: The water will rise in one minute. Leave the room!"), EVT_NEXT,
-               ("22 05 1d 01", "Set(5,0x1D)=1 Zaehler laeuft (Bank 5 Wort 0 = Raum-Scratch, Raumladen wischt @0x8003ed74; C-Takt liest)"),
-               ("09 0a " + le16(1800), "Sleep 1800 = 60 s bei 30 Takten (Hintergrundfaden wie ROOM2000 sub07 @0x01B36)"),
-               SPERRE_AN, ("22 02 02 01", "Set(2,2)=1 KI steht (ROOM2050 sub02 @0x0223C)"), CUT_AUTO_0,
-               ("29 04", "Cut_chg 4 Draufsicht"),
-               ("2e 03 04 00", "Work_set(3,4) Wasser A + Nop"),
-               ("32 00 " + le16(-10800) + " " + le16(0) + " " + le16(-12400),
-                "Pos_set (-10800,0,-12400) Beckengrund (Form ROOM2000 sub02 @0x0180C)"),
-               ("2f 01 " + le16(-50), "Speed_set(1,-50) aufwaerts (Rate ROOM2080 sub02 @0x00CC8 `2f 01 32 00`)"),
-               ("2e 03 05 00", "Work_set(3,5) Wasser B + Nop"),
-               ("32 00 " + le16(-10800) + " " + le16(0) + " " + le16(3800), "Pos_set (-10800,0,3800)"),
-               ("2f 01 " + le16(-50), "Speed_set(1,-50)"),
-               ("22 05 1e 01", "Set(5,0x1E)=1 Flut laeuft (Bank 5 Wort 0; C-Takt: Ertrinken)"),
-               ("0d 00 16 00 " + le16(324), "For 324, Block 0x16 = Koerper 20 + Next 2 (324 x 50 = 16200 bis zur Tuerebene; Form ROOM2080 @0x00CCC)"),
-               ("2e 03 04 00", "Work_set(3,4) + Nop"), ("2f 01 " + le16(-50), "Speed_set(1,-50) (Form: Speed_set direkt vor Add_speed, sub03 @0x01ED6)"),
-               ("30", "Add_speed A"),
-               ("2e 03 05 00", "Work_set(3,5) + Nop"), ("2f 01 " + le16(-50), "Speed_set(1,-50)"),
-               ("30", "Add_speed B"),
-               EVT_NEXT, ("0e 00", "Next"),
-               ("09 0a 3c 00", "Sleep 60 (Form ROOM20B0 sub05 @0x01FB2)"),
-               ("ENDIF", ""), ENDE]
-    P.append(("re15_r41c_prg_2030_ventile", ventile))
-    # Nachbesserung 3: waehrend des Zaehlers zeigen die Ventile die Warnung 46 erneut (Zustand = die Warnung selbst);
-    # vor der Bruecke (Bit 102) bzw. ohne die Sicherung ((3,108), Setzer 2030 sub06 @0x01FF2) Satz 49 (Nachtraege 9/10).
+    # ---- 2030 Ventilraetsel (Nachbesserung 4, Nachtrag 13): sechs Ventile (Raeder 01/02/03 Nordwand, 07/08/09 Suedwand) -------
+    # Jede Drehung: Frage -> Ja -> Marker (5,0x1B); der C-Takt vermerkt sie in (5,0x10..0x13) (Raum-Scratch wie die Schalter-
+    # bits ROOM11F0 (5,13..22) / ROOM2060 (5,6..9)) und prueft nach der VIERTEN (RE2 ROOM2130 sub04: Ergebnis erst am Ende,
+    # @0x01752): richtig -> Ereignis 26 "2030_ventile_flut", falsch -> Ereignis 27 "2030_ventile_falsch".
+    for k, nr in enumerate(("01", "02", "03", "07", "08", "09")):
+        P.append(("re15_r41c_prg_2030_ventil_%s" % nr,
+                  [msg_on(50 + k, "Valve %s ... Will you turn it? (Frage, Ja/Nein)" % nr), EVT_NEXT,
+                   ("IF", "Ja-Zweig"), JA,
+                   ("22 05 1b 01", "Set(5,0x1B)=1 Ventil gedreht (Marker fuer den C-Takt; Bank 5 Wort 0 = Raum-Scratch, "
+                                   "Raumladen wischt @0x8003ed74; Form der Schalter ROOM2060 sub06 @0x014D8 `22 05 06 01`)"),
+                   ("ENDIF", ""), ENDE]))
+    # richtige Folge: Warnung -> Zaehler -> Flut im selben Faden (Form wie bisher; vom C-Takt als Ereignis 26 gefeuert)
+    flut = [msg_on(46, "WARNING: The water will rise in one minute. Leave the room!"), EVT_NEXT,
+            ("22 05 1d 01", "Set(5,0x1D)=1 Zaehler laeuft (Bank 5 Wort 0 = Raum-Scratch, Raumladen wischt @0x8003ed74; C-Takt liest)"),
+            ("09 0a " + le16(1800), "Sleep 1800 = 60 s bei 30 Takten (Hintergrundfaden wie ROOM2000 sub07 @0x01B36)"),
+            SPERRE_AN, ("22 02 02 01", "Set(2,2)=1 KI steht (ROOM2050 sub02 @0x0223C)"), CUT_AUTO_0,
+            ("29 04", "Cut_chg 4 Draufsicht"),
+            ("2e 03 04 00", "Work_set(3,4) Wasser A + Nop"),
+            ("32 00 " + le16(-10800) + " " + le16(0) + " " + le16(-12400),
+             "Pos_set (-10800,0,-12400) Beckengrund (Form ROOM2000 sub02 @0x0180C)"),
+            ("2f 01 " + le16(-50), "Speed_set(1,-50) aufwaerts (Rate ROOM2080 sub02 @0x00CC8 `2f 01 32 00`)"),
+            ("2e 03 05 00", "Work_set(3,5) Wasser B + Nop"),
+            ("32 00 " + le16(-10800) + " " + le16(0) + " " + le16(3800), "Pos_set (-10800,0,3800)"),
+            ("2f 01 " + le16(-50), "Speed_set(1,-50)"),
+            ("22 05 1e 01", "Set(5,0x1E)=1 Flut laeuft (Bank 5 Wort 0; C-Takt: Ertrinken)"),
+            ("0d 00 16 00 " + le16(324), "For 324, Block 0x16 = Koerper 20 + Next 2 (324 x 50 = 16200 bis zur Tuerebene; Form ROOM2080 @0x00CCC)"),
+            ("2e 03 04 00", "Work_set(3,4) + Nop"), ("2f 01 " + le16(-50), "Speed_set(1,-50) (Form: Speed_set direkt vor Add_speed, sub03 @0x01ED6)"),
+            ("30", "Add_speed A"),
+            ("2e 03 05 00", "Work_set(3,5) + Nop"), ("2f 01 " + le16(-50), "Speed_set(1,-50)"),
+            ("30", "Add_speed B"),
+            EVT_NEXT, ("0e 00", "Next"),
+            ("09 0a 3c 00", "Sleep 60 (Form ROOM20B0 sub05 @0x01FB2)"),
+            ENDE]
+    P.append(("re15_r41c_prg_2030_ventile_flut", flut))
+    # falsche Folge: zuruecksetzen (Form ROOM11F0 sub17 @0x016C0..@0x016E4 `22 05 nn 00`), Text 45 (Fehlerton 0x0B spielt der
+    # C-Takt, RE2 ROOM2130 sub04 @0x01800 `36 02 0b 01`).
+    P.append(("re15_r41c_prg_2030_ventile_falsch",
+              [("22 05 10 00", "Set(5,0x10)=0 Drehung 1 zurueck (Form ROOM11F0 sub17 @0x016C0 `22 05 0d 00`)"),
+               ("22 05 11 00", "Set(5,0x11)=0"), ("22 05 12 00", "Set(5,0x12)=0"), ("22 05 13 00", "Set(5,0x13)=0"),
+               msg_on(45, "The valves turned back to their original position."), EVT_NEXT, ENDE]))
+    # waehrend des Zaehlers zeigen die Ventile die Warnung 46 erneut (Zustand = die Warnung selbst); vor der Bruecke
+    # (Bit 102) bzw. ohne die Sicherung ((3,108), Setzer 2030 sub06 @0x01FF2) Satz 49 (Nachtraege 9/10, Nachtrag 13 Folge 1).
     P.append(("re15_r41c_prg_2030_ventile_laeuft",
               [msg_on(46, "WARNING: The water will rise in one minute. Leave the room! (Zustand waehrend des Zaehlers)"), EVT_NEXT, ENDE]))
     P.append(("re15_r41c_prg_2030_ventile_vorher",
-              [msg_on(49, "Numbered valves. If I turn them, this whole level will be flooded. I should look around here first."),
-               EVT_NEXT, ENDE]))
+              [msg_on(49, "I should look around here first."), EVT_NEXT, ENDE]))
+    # Plakat-Nahaufnahme (Nachtrag 13 Folge 3; Form der Nahaufnahmen Runde 40: Pad-Sperre ROOM1051 sub03 @0x00DA4, KI steht
+    # ROOM2050 sub02 @0x0223C). Bild, Warten auf die Taste und Freigabe (2,7)/(2,2) := 0 (Form ROOM11F0 sub17 @0x016E8/
+    # @0x016EC, ROOM1051 sub03 @0x00DD2) macht der C-Takt.
+    P.append(("re15_r41c_prg_2030_plakat",
+              [SPERRE_AN, ("22 02 02 01", "Set(2,2)=1 KI steht (ROOM2050 sub02 @0x0223C)"),
+               ("22 05 1c 01", "Set(5,0x1C)=1 Plakat-Nahaufnahme (Marker fuer den C-Takt, Bank 5 Wort 0)"), ENDE]))
     # ---- 2050 ------------------------------------------------------------------------------------------------
     P.append(("re15_r41c_prg_2050_hebel_sperre",
               [msg_on(40, "The pump has no power. The switchboard must be set first. (Form ROOM2060 sub12 @0x015D0)"),

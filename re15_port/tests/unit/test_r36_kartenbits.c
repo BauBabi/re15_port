@@ -70,7 +70,7 @@
 #include "re15_funk10f1_r39.h" /* Runde 39 Spur I: Bank-9-Bit 70 (VERTRAG Runde 39 1.1) */
 #include "re15_elzazombies_r39.h" /* Runde 39 Spur Q: Bank-9-Bits 95 + 96 (VERTRAG Runde 39 1.1; 96 Nachbesserung 3) */
 #include "re15_johnruf_r39.h"  /* Runde 39 Spur P: Bank-9-Bit 97 (VERTRAG Runde 39 1.1) */
-#include "re15_ventilkette_r41.h" /* Runde 41 Spur C: Bank-9-Bits 100-103, 106 (VERTRAG Runde 41 1.1; 107 seit Nachtrag 7 frei) */
+#include "re15_ventilkette_r41.h" /* Runde 41 Spur C: Bank-9-Bits 100-103, 106, 107 (VERTRAG Runde 41 1.1; 107 = Dokument, Nachbesserung 4) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -527,6 +527,7 @@ static const port_bit_t k_port[] = {
     { RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN, "RE15_R41C_BIT_BRUECKE_UNTEN", "Bruecke 2030 gesenkt, gen/ventilkette_r41_programme.inc Set (Runde 41 C)" },
     { RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN, "RE15_R41C_BIT_FLUT_GELAUFEN", "Flut in 2030 gelaufen -> 2000 wird 20B0, ventilkette_r41.c install (Runde 41 C)" },
     { RE15_R41C_BANK, RE15_R41C_BIT_PULT2050,      "RE15_R41C_BIT_PULT2050",      "Schaltpult 2050 auf 80 V, ventilkette_r41.c panel_tick (Runde 41 C)" },
+    { RE15_R41C_BANK, RE15_R41C_BIT_DOKUMENT,      "RE15_R41C_BIT_DOKUMENT",      "Dokument Technician's Note genommen (Taken-Bit Item 0x4E), ventilkette_r41.c install_2030 (Runde 41 C)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 

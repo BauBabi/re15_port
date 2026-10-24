@@ -2,6 +2,8 @@
  * RE1.5 Rebuilt — Runde 41 Spur C "ventilkette": Leiter 2000 / Bruecke + Ventile 2030 / Flut -> 20B0 /
  * Schaltpult 2050 / Strom 2060 -> 2030 auf Relinghoehe (Nachbesserung 3).
  *
+ * Nachbesserung 4 (Nachtraege 12/13): Pegel mit Strom knapp unter der Absperrung (y -5350), das echte Ventilraetsel
+ * (sechs Ventile, Reihenfolge, falsch -> zurueck), Dokument "Technician's Note" und Plakat mit der falschen Anleitung.
  * Herleitung, Belege und alle Konstanten: include/re15_ventilkette_r41.h; Dossier
  * analysis/befunde_runde41/C_ventilkette.md. Kein Asset-Patch: die RDTs bleiben byte-true. Die Port-Programme
  * (SCD-Bytecode, jede Zeile mit Vorbild) liegen in gen/ventilkette_r41_programme.inc, die Texte in
@@ -30,6 +32,7 @@
 #include "gen/ventilkette_r41_programme.inc"
 #ifdef RE15_PLATFORM_PC
 #include "gen/ventilkette_r41_wasser.inc"
+#include "gen/ventilkette_r41_plakat.inc"   /* Nachbesserung 4: Plakat (Nahaufnahme + Aushang) und Dokument-Blatt */
 #endif
 
 extern uint16_t g_scd_pad_edge;    /* virtuelle Flanke (SQUARE = 0x40, CROSS = 0x8000; pad_common.c vtbl) */
@@ -58,6 +61,20 @@ static unsigned s_schalter = 0;
 static int      s_ruhe = 0;
 static int      s_panel_phase = 0;  /* 0 frei, 1 geloest: Satz laeuft, 2 Ausstieg angefordert */
 static int      s_cursor_vorher = -1;
+/* 2030 Ventilraetsel + Plakat (Nachbesserung 4) */
+static int      s_folge[RE15_R41C_DREHUNGEN];   /* Ventil-Index je vermerkter Drehung                          */
+static int      s_ventil_gewaehlt = -1;         /* Ventil des zuletzt gefeuerten Platzes (Ereignis 17..22)    */
+static int      s_ventile_geloest = 0;          /* richtige Folge -> Ereignis 26 freigegeben                  */
+static int      s_falsch_offen = 0;             /* falsche Folge -> Ereignis 27 freigegeben                   */
+static int      s_plakat_offen = 0;
+static int      s_plakat_takte = 0;
+
+static const int     k_ventil_nr[RE15_R41C_VENTILE_N]     = RE15_R41C_VENTIL_NUMMERN;
+static const int32_t k_ventil_x[RE15_R41C_VENTILE_N]      = RE15_R41C_VENTIL_X;
+static const int32_t k_ventil_wand_z[RE15_R41C_VENTILE_N] = RE15_R41C_VENTIL_WAND_Z;
+static const int     k_loesung[RE15_R41C_DREHUNGEN]       = RE15_R41C_LOESUNG;
+static const char   *const k_ventil_prog[RE15_R41C_VENTILE_N] = {
+    "2030_ventil_01", "2030_ventil_02", "2030_ventil_03", "2030_ventil_07", "2030_ventil_08", "2030_ventil_09" };
 
 static const int k_gewichte[RE15_R41C_PANEL_N] = RE15_R41C_PANEL_GEWICHTE;
 static const int32_t k_zone_x0[RE15_R41C_PANEL_N] = RE15_R41C_PANEL_X0;
@@ -218,6 +235,27 @@ static int wasser_anlegen_bei(int k, int32_t x, int32_t y, int32_t z)
 
 int re15_ventilkette_r41_wasser_prop(int k) { return (k == 0 || k == 1) ? s_wasser_prop[k] : -1; }
 
+/* Dokument-Blatt (obj 6) / Plakat-Aushang (obj 7) als Prop - Felder wie ein Obj_model_set (LAB_80040914), Werte wie die
+ * Dokumente der Runde 34 (re15_dokumente.h: Typ 0, Band 1, Flags 0x000A | 1 @0x80040998, Welt, Box 0). */
+static int blatt_prop(int obj, int32_t x, int32_t y, int32_t z)
+{
+    int p = prop_von_obj(obj);
+    if (p < 0) {
+        if (g_scd.prop_count >= RE15_SCD_MAX_PROPS) return -1;
+        p = (int)g_scd.prop_count++;
+        memset(&g_scd.props[p], 0, sizeof g_scd.props[p]);
+        g_scd.props[p].active     = 1;
+        g_scd.props[p].obj_id     = (uint8_t)obj;
+        g_scd.props[p].obj_type   = 0;
+        g_scd.props[p].band       = 1;
+        g_scd.props[p].parent_obj = -1;
+        g_scd.props[p].flags      = 0x000Bu;
+    }
+    g_scd.props[p].x = x; g_scd.props[p].y = y; g_scd.props[p].z = z;
+    g_scd.props[p].rot_x = g_scd.props[p].rot_y = g_scd.props[p].rot_z = 0;
+    return p;
+}
+
 /* ---- SCA: Steg-Zelle 12 sperren/oeffnen (Form Sca_id_set `37 0r 0c ff`, alle 5 Regionen wie 2050 @0x02346) --- */
 static void steg_zelle(const re15_rdt_t *rdt, uint8_t u0)
 {
@@ -324,8 +362,29 @@ static void install_2030(uint16_t room_id, const re15_rdt_t *rdt)
     const int zustand = re15_ventilkette_r41_zustand_2030();
     ereignis_platz(RE15_R41C_SLOT_PULT,     RE15_R41C_PULT_RECT,     RE15_R41C_PULT_BAND,     RE15_R41C_EV_PULT);
     ereignis_platz(RE15_R41C_SLOT_VENTIL13, RE15_R41C_VENTIL13_RECT, RE15_R41C_VENTIL13_BAND, RE15_R41C_EV_VENTIL13);
-    if (zustand == RE15_R41C_2030_TROCKEN)
-        ereignis_platz(RE15_R41C_SLOT_VENTILE, RE15_R41C_VENTILE_RECT, RE15_R41C_VENTILE_BAND, RE15_R41C_EV_VENTILE);
+    if (zustand == RE15_R41C_2030_TROCKEN) {
+        /* Nachbesserung 4 (Nachtrag 13): sechs Ventil-Plaetze an den Raedern (Kopf "Ventil-RAEDER"), das Plakat an der
+         * Suedwand und - solange nicht genommen - das Dokument neben der Sicherung. */
+        for (int k = 0; k < RE15_R41C_VENTILE_N; k++)
+            ereignis_platz(RE15_R41C_SLOT_VENTIL0 + k, k_ventil_x[k] - 500, k_ventil_wand_z[k] - 500, 1000, 1000,
+                           RE15_R41C_VENTILE_BAND, (uint8_t)(RE15_R41C_EV_VENTIL0 + k));
+        ereignis_platz(RE15_R41C_SLOT_PLAKAT, RE15_R41C_PLAKAT_RECT, RE15_R41C_VENTILE_BAND, RE15_R41C_EV_PLAKAT);
+        blatt_prop(RE15_R41C_PLAKAT_OBJ, RE15_R41C_PLAKAT_X, RE15_R41C_PLAKAT_Y, RE15_R41C_PLAKAT_Z);
+        if (!bit(RE15_R41C_BIT_DOKUMENT)) {
+            const int32_t dr[4] = { RE15_R41C_DOK_RECT };
+            if (!g_aot.slots[RE15_R41C_SLOT_DOKUMENT].active) {
+                /* Item-Zone wie op_item_aot_set / dokumente_r34.c anlegen(): Item 0x4E -> Leser (aot_common.c
+                 * aot_item_dokument, Id >= 0x48), Taken-Bit (9,107), Weltmodell obj 6 wird beim Ablegen ausgeblendet. */
+                re15_aot_set_item_tk_prop(RE15_R41C_SLOT_DOKUMENT, dr[0] + dr[2] / 2, dr[1] + dr[3] / 2, dr[2] / 2, dr[3] / 2,
+                                          RE15_R41C_DOK_ITEM, 1, RE15_R41C_BIT_DOKUMENT, RE15_R41C_DOK_OBJ);
+                g_aot.slots[RE15_R41C_SLOT_DOKUMENT].sce_flags = RE15_R41C_SAT;
+                g_aot.slots[RE15_R41C_SLOT_DOKUMENT].band      = RE15_R41C_VENTILE_BAND;
+            }
+            blatt_prop(RE15_R41C_DOK_OBJ, RE15_R41C_DOK_X, RE15_R41C_DOK_Y, RE15_R41C_DOK_Z);
+        }
+        LOG("[ventilkette41] ROOM%04X: Ventile 01/02/03/07/08/09 (Slots 14-19), Plakat Slot 21, Dokument %s\n",
+            (unsigned)room_id, bit(RE15_R41C_BIT_DOKUMENT) ? "genommen" : "Slot 20 (Item 0x4E)");
+    }
     if (zustand == RE15_R41C_2030_GEFLUTET) {
         /* Nach der Flut ohne Strom: Wasser 1800 ueber dem Ring, Lift-Rufzonen oben = Original-Satz 1. */
         wasser_anlegen(0, RE15_R41C_WASSER_Y_RUHE, RE15_R41C_WASSER_ZA);
@@ -336,8 +395,8 @@ static void install_2030(uint16_t room_id, const re15_rdt_t *rdt)
                 sperrtext(k_ruf[i], RE15_R41C_MSG_LIFT_ORIGINAL);
         LOG("[ventilkette41] ROOM%04X: unter Wasser (y %d), Lift-Rufzonen 4/6 -> msg 1\n", (unsigned)room_id, RE15_R41C_WASSER_Y_RUHE);
     } else if (zustand == RE15_R41C_2030_RELING) {
-        /* Nach der Flut mit Strom (Nachtraege 7/8): EINE Flaeche ueber der Schachtoeffnung auf der Oberkante der unteren
-         * Reling (y -3600, Kopf), Ring trocken (Tueren/Lifte = Original), der einzige Weg hinab = Treppe Slot 8
+        /* Nach der Flut mit Strom (Nachtraege 7/8/12): EINE Flaeche ueber der Schachtoeffnung knapp unter der Absperrung
+         * (y -5350, Kopf), Ring trocken (Tueren/Lifte = Original), der einzige Weg hinab = Treppe Slot 8
          * (@0x01B8E sce 12) wird Sperrtext 48 im Band 3 (Form der Leiter 2000; Band wie install_2000 auf den Platz). */
         wasser_anlegen_bei(0, 0, RE15_R41C_WASSER_Y_RELING, 0);
         re15_aot_t *t = &g_aot.slots[RE15_R41C_SLOT_2030_TREPPE];
@@ -345,7 +404,7 @@ static void install_2030(uint16_t room_id, const re15_rdt_t *rdt)
             t->band = RE15_R41C_TREPPE_BAND;
             sperrtext(RE15_R41C_SLOT_2030_TREPPE, RE15_R41C_MSG_TREPPE_FLUT);
         }
-        LOG("[ventilkette41] ROOM%04X: Strom (3,126) -> Wasser auf Relinghoehe y %d (Schachtoeffnung), Treppe Slot 8 -> Sperrtext %d, Ring frei\n",
+        LOG("[ventilkette41] ROOM%04X: Strom (3,126) -> Wasser knapp unter der Absperrung y %d (Schachtoeffnung), Treppe Slot 8 -> Sperrtext %d, Ring frei\n",
             (unsigned)room_id, RE15_R41C_WASSER_Y_RELING, RE15_R41C_MSG_TREPPE_FLUT);
     }
     tueren_umlenken(room_id);
@@ -377,12 +436,17 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
     s_timer = 0; s_timer_gesehen = 0; s_flut = 0; s_ertrunken = 0; s_fuesse_nass = 0; s_spritzer_n = 0;
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
+    s_ventil_gewaehlt = -1; s_ventile_geloest = 0; s_falsch_offen = 0; s_plakat_offen = 0; s_plakat_takte = 0;
+    for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
     if (ist(room_id, RE15_R41C_RAUM_2030)) {          /* nur der eigene Raum (Nachbesserung 1, M3): anderswo sind
                                                        * (5,0x1D)/(5,0x1E) Original-Bits, z. B. ROOM1171 sub02 @0x013B2
                                                        * `22 05 1e 01` im Init-Takt (Kraehen DIVE-ARM @0x801155e8) */
         re15_game_flag_set(5, RE15_R41C_FLAG_TIMER, 0);   /* Raum-Scratch, wie das Raumladen (FUN_8003ecec @0x8003ed74) */
         re15_game_flag_set(5, RE15_R41C_FLAG_FLUT, 0);
+        for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) re15_game_flag_set(5, (uint8_t)(RE15_R41C_FLAG_DREHUNG0 + i), 0);
+        re15_game_flag_set(5, RE15_R41C_FLAG_GEDREHT, 0);  /* Nachbesserung 4: Ventile + Plakat */
+        re15_game_flag_set(5, RE15_R41C_FLAG_PLAKAT, 0);
     }
     s_v13_vorher = bit(RE15_R41C_BIT_VENTIL13);
     s_letzter_raum = room_id;
@@ -401,6 +465,8 @@ void re15_ventilkette_r41_reset(void)
     s_timer = 0; s_timer_gesehen = 0; s_flut = 0; s_ertrunken = 0; s_fuesse_nass = 0; s_spritzer_n = 0; s_v13_vorher = -1; s_letzter_raum = 0xFFFFu;
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
+    s_ventil_gewaehlt = -1; s_ventile_geloest = 0; s_falsch_offen = 0; s_plakat_offen = 0; s_plakat_takte = 0;
+    for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
 }
 
 /* ---- Ereignisse (scd_event_fire-Kette) --------------------------------------------------------------------- */
@@ -413,11 +479,23 @@ const uint8_t *re15_ventilkette_r41_ereignis(uint16_t room_id, uint8_t event_id)
                  : bit(RE15_R41C_BIT_VENTIL13)      ? "2030_pult_senken" : "2030_pult_ohne";
         else if (event_id == RE15_R41C_EV_VENTIL13)
             name = bit(RE15_R41C_BIT_VENTIL13) ? "2030_v13_zustand" : "2030_v13_frage";
-        else if (event_id == RE15_R41C_EV_VENTILE && !bit(RE15_R41C_BIT_FLUT_GELAUFEN))
-            /* Nachtraege 9/10: erst mit gesenkter Bruecke (Bit 102) UND aufgehobener Sicherung ((3,108), Setzer 2030
-             * sub06 @0x01FF2); waehrend des Zaehlers die Warnung erneut. Nach der Flut gibt es den Platz nicht mehr. */
-            name = s_timer ? "2030_ventile_laeuft"
-                 : (bit(RE15_R41C_BIT_BRUECKE_UNTEN) && sicherung()) ? "2030_ventile" : "2030_ventile_vorher";
+        else if (event_id >= RE15_R41C_EV_VENTIL0 && event_id < RE15_R41C_EV_VENTIL0 + RE15_R41C_VENTILE_N &&
+                 !bit(RE15_R41C_BIT_FLUT_GELAUFEN)) {
+            /* Nachbesserung 4 (Nachtrag 13): ein Ventil. Nachtraege 9/10: erst mit gesenkter Bruecke (Bit 102) UND
+             * aufgehobener Sicherung ((3,108), Setzer 2030 sub06 @0x01FF2), vorher Satz 49; waehrend des Zaehlers (und
+             * zwischen der richtigen Folge und dem Zaehlerstart) die Warnung erneut. Nach der Flut gibt es die Plaetze nicht. */
+            s_ventil_gewaehlt = event_id - RE15_R41C_EV_VENTIL0;
+            name = (s_timer || s_ventile_geloest) ? "2030_ventile_laeuft"
+                 : (bit(RE15_R41C_BIT_BRUECKE_UNTEN) && sicherung()) ? k_ventil_prog[s_ventil_gewaehlt] : "2030_ventile_vorher";
+        }
+        else if (event_id == RE15_R41C_EV_FLUT && s_ventile_geloest && !s_timer)
+            name = "2030_ventile_flut";                        /* vom C-Takt nach der richtigen Folge */
+        else if (event_id == RE15_R41C_EV_FALSCH && s_falsch_offen) {
+            s_falsch_offen = 0;
+            name = "2030_ventile_falsch";                      /* vom C-Takt nach vier Drehungen in falscher Folge */
+        }
+        else if (event_id == RE15_R41C_EV_PLAKAT && !s_plakat_offen && !bit(RE15_R41C_BIT_FLUT_GELAUFEN))
+            name = "2030_plakat";
     } else if (ist(room_id, RE15_R41C_RAUM_2050)) {
         /* Hebel-Platz Slot 6: Ereignis 4 (sub00 @0x01E28 -> sub04 @0x022E6) UND Ereignis 2 (Kisten im Becken, sub01
          * @0x0201A -> sub02 @0x0220E, Speed -20 For 180 @0x0227C) heben das Wasser -> beide erst nach dem Pult
@@ -546,6 +624,88 @@ static void flut_tick(void)
     }
 }
 
+/* ---- 2030 Ventilraetsel (Nachbesserung 4): Drehung vermerken, nach der vierten pruefen -------------------------------- */
+int re15_ventilkette_r41_drehungen(void)
+{
+    int n = 0;
+    while (n < RE15_R41C_DREHUNGEN && re15_game_flag_get(5, (uint8_t)(RE15_R41C_FLAG_DREHUNG0 + n))) n++;
+    return n;
+}
+int re15_ventilkette_r41_folge(int i) { return (i >= 0 && i < RE15_R41C_DREHUNGEN) ? s_folge[i] : -1; }
+int re15_ventilkette_r41_ventil_nummer(int i) { return (i >= 0 && i < RE15_R41C_VENTILE_N) ? k_ventil_nr[i] : -1; }
+int re15_ventilkette_r41_plakat_offen(void) { return s_plakat_offen; }
+
+static void ventile_tick(void)
+{
+    if (!re15_game_flag_get(5, RE15_R41C_FLAG_GEDREHT)) return;
+    re15_game_flag_set(5, RE15_R41C_FLAG_GEDREHT, 0);           /* Handshake verbraucht */
+    const int n = re15_ventilkette_r41_drehungen();
+    if (n >= RE15_R41C_DREHUNGEN || s_ventil_gewaehlt < 0) return;
+    s_folge[n] = s_ventil_gewaehlt;
+    re15_game_flag_set(5, (uint8_t)(RE15_R41C_FLAG_DREHUNG0 + n), 1);   /* Form der Schalterbits ROOM11F0 (5,13..22) */
+    re15_audio_re2_panel_se(RE15_PANEL_SE_KLICK);                         /* RE2 ROOM2130 sub04 @0x01192 */
+    LOG("[ventilkette41] Ventil %02d gedreht (Drehung %d/%d)\n", k_ventil_nr[s_ventil_gewaehlt], n + 1, RE15_R41C_DREHUNGEN);
+    if (n + 1 < RE15_R41C_DREHUNGEN) return;
+    /* Pruefung erst nach der letzten Drehung (RE2 ROOM2130 sub04 @0x01752): keine Rueckmeldung je Schritt. */
+    int richtig = 1;
+    for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) if (s_folge[i] != k_loesung[i]) richtig = 0;
+    LOG("[ventilkette41] Folge %02d %02d %02d %02d -> %s\n", k_ventil_nr[s_folge[0]], k_ventil_nr[s_folge[1]],
+        k_ventil_nr[s_folge[2]], k_ventil_nr[s_folge[3]], richtig ? "RICHTIG: Warnung, Zaehler, Flut" : "FALSCH: zurueckgesetzt");
+    if (richtig) {
+        s_ventile_geloest = 1;
+        (void)scd_event_fire(RE15_R41C_EV_FLUT);
+    } else {
+        for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
+        re15_audio_re2_panel_se(RE15_R41C_SE_FEHLER);                    /* RE2 ROOM2130 sub04 @0x01800 */
+        s_falsch_offen = 1;
+        (void)scd_event_fire(RE15_R41C_EV_FALSCH);                       /* (5,0x10..0x13) := 0 + Text 45 */
+    }
+}
+
+/* ---- 2030 Plakat-Nahaufnahme (Nachbesserung 4): offen ab dem Marker, zu mit der Bestaetigen-/Abbrechen-Flanke -------- */
+static void plakat_tick(void)
+{
+    if (!s_plakat_offen) {
+        if (!re15_game_flag_get(5, RE15_R41C_FLAG_PLAKAT)) return;
+        s_plakat_offen = 1; s_plakat_takte = 0;
+        LOG("[ventilkette41] Plakat-Nahaufnahme offen\n");
+        return;
+    }
+    s_plakat_takte++;
+    /* Erst ab dem Folgebild (die oeffnende Flanke ist verbraucht); virtuell 0x4000/0x8000 = die Tasten, mit denen das
+     * Original eine Nachricht wegdrueckt (andi 0xc000 @0x80028698, msg_common.c dismiss_edge). */
+    if (s_plakat_takte > 1 && (g_scd_pad_edge & 0xC000u)) {
+        s_plakat_offen = 0;
+        re15_game_flag_set(5, RE15_R41C_FLAG_PLAKAT, 0);
+        re15_game_flag_set(2, 7, 0);                                     /* Form ROOM1051 sub03 @0x00DD2 */
+        re15_game_flag_set(2, 2, 0);                                     /* Form ROOM11F0 sub17 @0x016EC */
+        LOG("[ventilkette41] Plakat-Nahaufnahme zu (nach %d Bildern)\n", s_plakat_takte);
+    }
+}
+
+#ifdef RE15_PLATFORM_PC
+static uint32_t s_plakat_rgba[RE15_R41C_PLAKAT_W * RE15_R41C_PLAKAT_H];
+static int      s_plakat_dekodiert = 0;
+#endif
+const uint32_t *re15_ventilkette_r41_plakat_rgba(void)
+{
+#ifdef RE15_PLATFORM_PC
+    if (!s_plakat_offen) return NULL;
+    if (!s_plakat_dekodiert) {
+        for (int i = 0; i < RE15_R41C_PLAKAT_W * RE15_R41C_PLAKAT_H; i++) {
+            const uint8_t b = re15_r41c_plakat_4bpp[i >> 1];
+            const int v = (i & 1) ? (b >> 4) : (b & 15);
+            const uint8_t *c = &re15_r41c_plakat_pal[v * 3];
+            s_plakat_rgba[i] = ((uint32_t)c[0] << 24) | ((uint32_t)c[1] << 16) | ((uint32_t)c[2] << 8) | 0xFFu;
+        }
+        s_plakat_dekodiert = 1;
+    }
+    return s_plakat_rgba;
+#else
+    return NULL;
+#endif
+}
+
 int re15_ventilkette_r41_timer_laeuft(void) { return s_timer; }
 int re15_ventilkette_r41_flut_laeuft(void)  { return s_flut; }
 int re15_ventilkette_r41_ertrunken(void)    { return s_ertrunken; }
@@ -573,6 +733,8 @@ void re15_ventilkette_r41_tick(void)
             wasser_anlegen(1, RE15_R41C_WASSER_PARK_Y, RE15_R41C_WASSER_PARK_Z);
             LOG("[ventilkette41] Zaehler laeuft: 1800 Takte, Ost-Tuer -> 20B0, Wasser geparkt\n");
         }
+        ventile_tick();                                  /* Nachbesserung 4: Drehungen vermerken / pruefen */
+        plakat_tick();
         if (!s_flut && re15_game_flag_get(5, RE15_R41C_FLAG_FLUT)) { s_flut = 1; LOG("[ventilkette41] FLUT: Wasser steigt\n"); }
         if (s_flut) flut_tick();
         if (g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0) s_timer = 0;
@@ -592,7 +754,31 @@ int re15_ventilkette_r41_obj_id(uint16_t room_id, int k)
 {
     if (!ist(room_id, RE15_R41C_RAUM_2030)) return -1;
     if (k == 1 && reling_jetzt()) return -1;
+    if (k == 2) return RE15_R41C_DOK_OBJ;        /* Nachbesserung 4: Dokument-Blatt */
+    if (k == 3) return RE15_R41C_PLAKAT_OBJ;     /* Nachbesserung 4: Plakat-Aushang */
     return k == 0 ? RE15_R41C_WASSER_OBJ_A : (k == 1 ? RE15_R41C_WASSER_OBJ_B : -1);
+}
+
+const uint8_t *re15_ventilkette_r41_md1_bytes_k(int k, int *out_size)
+{
+#ifdef RE15_PLATFORM_PC
+    if (k == 2) { if (out_size) *out_size = (int)sizeof re15_r41c_blatt_md1;   return re15_r41c_blatt_md1; }
+    if (k == 3) { if (out_size) *out_size = (int)sizeof re15_r41c_aushang_md1; return re15_r41c_aushang_md1; }
+#endif
+    if (k == 0 || k == 1) return re15_ventilkette_r41_md1_bytes(out_size);
+    if (out_size) *out_size = 0;
+    return NULL;
+}
+
+const uint8_t *re15_ventilkette_r41_tim_bytes_k(int k, int *out_size)
+{
+#ifdef RE15_PLATFORM_PC
+    if (k == 2) { if (out_size) *out_size = (int)sizeof re15_r41c_blatt_tim;   return re15_r41c_blatt_tim; }
+    if (k == 3) { if (out_size) *out_size = (int)sizeof re15_r41c_aushang_tim; return re15_r41c_aushang_tim; }
+#endif
+    if (k == 0 || k == 1) return re15_ventilkette_r41_tim_bytes(out_size);
+    if (out_size) *out_size = 0;
+    return NULL;
 }
 
 const uint8_t *re15_ventilkette_r41_md1_bytes_fuer(int reling, int *out_size)

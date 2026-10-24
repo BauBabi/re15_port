@@ -87,9 +87,10 @@ def wasser():
 
 
 # Schachtoeffnung ROOM2030 (x0, x1, z0, z1) = include/re15_ventilkette_r41.h RE15_R41C_RELING_RECHTECKE (Belege dort und
-# im Dossier §0d B2: Innenkanten der Ring-Reling-Zellen 19/20/21/22/31/32, Aussenwand 26/27, Treppe Slot 8 ausgespart).
-RELING_RECHTECKE = [(-4200, 5400, -8500, -6400), (-5400, -4200, -6900, -6400),
-                    (-7700, 5400, -6400, 2450), (-5850, 5400, 2450, 8150)]
+# im Dossier §0e B4-1: Innenkanten der Absperrung = Ring-Reling-Zellen 19/20/21/22/31/32 fl 0x33, Aussenwand 26/27).
+# Nachbesserung 4 (Nachtrag 12 (k)): der Pegel steht knapp unter dem Ringboden (y -5350), der Treppenschacht
+# x -5400..-4200 z -8500..-6900 liegt damit unter Wasser (frueher bei -3600 ausgespart).
+RELING_RECHTECKE = [(-5400, 5400, -8500, -6400), (-7700, 5400, -6400, 2450), (-5850, 5400, 2450, 8150)]
 ZELLE = 1800   # Gitterschritt des Originals (ROOM2080 MD1: x 0..21600, z 0..16200 in 1800er Schritten)
 
 
@@ -240,17 +241,24 @@ TEXTE = [
      "NUTZER-VORGABE \"Lower the bridge?\" (AUFTRAG.md)"),
     ("2030", 44, "bruecke_unten", [["The bridge is down."]], False, None,
      "PORT-WAHL, Zustandssatz wie ROOM2060 msg 6 @0x1892 \"The fuse is in place.\""),
-    ("2030", 45, "ventile_frage", [["Numbered valves. They control the", "flood gates of the treatment pool."],
-                                    ["Will you turn them"]], True, None,
-     "PORT-WAHL (Platzhalter des Ventilraetsels, Nutzer: \"Ventilraetsel: einverstanden\")"),
+    ("2030", 45, "ventile_zurueck", [["The valves turned back", "to their original position."]], False, None,
+     "PORT-WAHL (Nachbesserung 4, Nachtrag 13 Folge 4: falsche Reihenfolge -> zurueckgesetzt; Form ROOM11F0 sub17 "
+     "@0x016C0..@0x016E4 Schalterbits := 0, RE2 ROOM2130 sub04 @0x017D6/@0x01800 Meldung + Fehlerton)"),
     ("2030", 46, "warnung", [["WARNING: The water will rise", "in one minute. Leave the room!"]], False, None,
      "NUTZER-VORGABE (sinngemaess: \"Warnung, dass das Wasser in einer Minute steigt und man den Raum verlassen soll\")"),
     ("2030", 47, "ventil13_zustand", [["Intake valve 13 is open."]], False, None, "PORT-WAHL, Zustandssatz"),
     ("2030", 48, "treppe_flut", [["I cannot go down the stairs", "because of the water."]], False, None,
      "PORT-WAHL (Nachbesserung 3, Nachtrag 8: unterer Bereich nach dem Strom geflutet und gesperrt), Form der Leiter-Vorgabe Id 40"),
-    ("2030", 49, "ventile_vorher", [["Numbered valves. If I turn them,", "this whole level will be flooded."],
-                                     ["I should look around here first."]], False, None,
-     "PORT-WAHL (Nachbesserung 3, Nachtraege 9/10: Ventilraetsel erst mit gesenkter Bruecke und aufgehobener Sicherung)"),
+    ("2030", 49, "ventile_vorher", [["I should look around here first."]], False, None,
+     "Nachtrag 13 Folge 1 (Vorschlag des Orchestrators woertlich: kein Wissen, das der Spieler nicht haben kann; Gate der "
+     "Nachtraege 9/10 bleibt: Bruecke unten UND Sicherung aufgehoben)"),
+    ("2030", 50, "ventil_01", [["Valve 01, black wheel.", "Will you turn it"]], True, None,
+     "PORT-WAHL (Nachtrag 13 Folge 4; Nummer + Farbe aus dem Hintergrund, Dossier §0e B4-2), Frageform ROOM2050 msg 0 @0x2446"),
+    ("2030", 51, "ventil_02", [["Valve 02, green wheel.", "Will you turn it"]], True, None, "PORT-WAHL wie Id 50"),
+    ("2030", 52, "ventil_03", [["Valve 03, red wheel.", "Will you turn it"]], True, None, "PORT-WAHL wie Id 50"),
+    ("2030", 53, "ventil_07", [["Valve 07, black wheel.", "Will you turn it"]], True, None, "PORT-WAHL wie Id 50"),
+    ("2030", 54, "ventil_08", [["Valve 08, green wheel.", "Will you turn it"]], True, None, "PORT-WAHL wie Id 50"),
+    ("2030", 55, "ventil_09", [["Valve 09, red wheel.", "Will you turn it"]], True, None, "PORT-WAHL wie Id 50"),
     ("2050", 40, "hebel_ohne_strom", [["The pump has no power.", "The switchboard must be set first."]], False, None,
      "PORT-WAHL (Nutzer: Wasserlevel erst nach dem Pult-Raetsel), Form ROOM2060 msg 1 @0x15D0 Sperrsatz"),
     ("2050", 43, "pult_beschreibung", [["A high voltage switchboard.", "The pump needs 80 volts."]], False, None,

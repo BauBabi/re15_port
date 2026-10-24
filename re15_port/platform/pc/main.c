@@ -1599,9 +1599,9 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         const uint8_t *tb = re15_dining_r38_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
         if (f_oid >= 0 && nprops <= f_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[f_oid]) == 0) ok[f_oid] = 1;
         if (f_oid >= 0 && nprops <= f_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(f_oid)); }
-    for (int vk = 0; vk < 2; vk++) {   /* Runde 41 Spur C: zwei Wasserflaechen ROOM2030/2031 (ROOM2080 Prop 0, gen/ventilkette_r41_wasser.inc), Muster oben. */
+    for (int vk = 0; vk < RE15_R41C_PROPS_N; vk++) {   /* Runde 41 Spur C: Wasserflaechen + (Nachbesserung 4) Dokument-Blatt/Plakat ROOM2030/2031 (gen/ventilkette_r41_*.inc), Muster oben. */
         const int v_oid = re15_ventilkette_r41_obj_id((uint16_t)g_current_room_id, vk);
-        int msz = 0, tsz = 0; const uint8_t *mb = re15_ventilkette_r41_md1_bytes(&msz); const uint8_t *tb = re15_ventilkette_r41_tim_bytes(&tsz); re15_tim_t tt;
+        int msz = 0, tsz = 0; const uint8_t *mb = re15_ventilkette_r41_md1_bytes_k(vk, &msz); const uint8_t *tb = re15_ventilkette_r41_tim_bytes_k(vk, &tsz); re15_tim_t tt;
         if (v_oid >= 0 && nprops <= v_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[v_oid]) == 0) ok[v_oid] = 1;
         if (v_oid >= 0 && nprops <= v_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(v_oid)); }
 }
@@ -5606,6 +5606,11 @@ re_title:;
               if (re15_ventilkette_r41_sicht(0, &vx0, &vy0, &vw, &vh)) re15_render_tile(vx0, vy0, vw, vh, 0, 208, 24, 40);
               for (int vn = 1; vn <= 4; vn++)
                   if (re15_ventilkette_r41_sicht(vn, &vx0, &vy0, &vw, &vh)) re15_render_tile(vx0, vy0, vw, vh, 0, 40, 200, 60); }
+            { extern void re15_render_pc_show_fmv(const uint32_t *rgba, int w, int h); extern void re15_render_pc_hide_fmv(void);
+              static int s_r41c_plakat = 0;   /* Runde 41 Spur C (Nachbesserung 4): Plakat-Nahaufnahme 2030 ueber die Vollbild-Ebene */
+              const uint32_t *r41c_pr = re15_ventilkette_r41_plakat_rgba();
+              if (r41c_pr) { re15_render_pc_show_fmv(r41c_pr, 320, 240); s_r41c_plakat = 1; }
+              else if (s_r41c_plakat) { re15_render_pc_hide_fmv(); s_r41c_plakat = 0; } }
             /* DER ROTE LEISTUNGS-ZEIGER des Boiler-Room-Bedienfelds (ROOM11F0, Cut 10).
              * Direkt nach dem Hintergrund und vor dem 3D-Pass, weil er zur ANZEIGE des
              * Bedienfelds gehoert (die Skala selbst steckt im BSS). Er liegt bei x 282,
