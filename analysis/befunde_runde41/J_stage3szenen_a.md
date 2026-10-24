@@ -53,3 +53,42 @@ Inhalt (rbj_zensus.py json, Clip-Hashes): 2000/30E0/4000 rec0 == rec2 (25/25 Cli
 4001/4010/5011 rec2 = rec0 + Zusatzclips (11->14, 25->27, 20->21); **3091/6030/6031 rec0 = 1 Clip mit 2 Bildern
 (Platzhalter), rec2 = die echten 14/22/20 Clips** -> Spieler bekommt dort erstmals die Szenen-Gesten (Spur K 3091).
 1040/1041: kein Plc_motion im ganzen SCD (scd_dump_room.py) -> Spieler-Kanal ungenutzt.
+
+### §0.3 Umsetzung (Commit e4a9f39c `feat(r41-stage3szenen_a): rbj-binder ...`, fuer Spur K per cherry-pick)
+- `re15_port/engine/src/rbj_binder_r41.c` + `include/re15_rbj_binder_r41.h`: `re15_rbj_binder()` = die Schleife von
+  FUN_8001b3f8 (Adressen je Zeile im Code), `re15_rbj_binder_spieler/_gegner`, alte Regel `re15_rbj_binder_alt_gegner`
+  nur fuer Messzeile/Riegel. PORT-WAHL Schutzgrenzen: <= 8 Records, Gegner-Index < 32 (Original prueft nichts).
+- Haken `enemy_common.c`: `rbj_resolve_slot` -> `re15_rbj_binder_gegner(mslot-1)` (Alias Runde 35 L bleibt);
+  `re15_apply_room_cinematic` (1) Spieler = `re15_rbj_binder_spieler` statt Record 0; `re15_rbj_bind_room` schreibt die
+  Messzeile `[rbj-binder] ROOMxxxx Spieler recN (alt rec0) Gegner i:recN(alt recM)`; je aufgeloestem Aktor
+  `[rbj-binder] ROOMxxxx Aktor s Typ 0xTT Marker-Slot m -> recN gebunden`.
+- Haken `platform/pc/main.c` (Raumwechsel, 1 Zeile + include): kein Spieler-Record (1040/1041) -> Leon/Elza auf die
+  PL00/PL04-Basis wie in einem Raum ohne RBJ (sonst blieb die Bank des Vorraums; Original: Kanal nicht geschrieben,
+  1040/1041 haben kein Plc_motion).
+- Haken `platform/psx/src/asset_psx.c`: dieselbe Spieler-Regel (Paritaet der Inline-Kopie; PSX hier nicht gebaut).
+
+### §0.4 Laufzeitmessung 12 Raeume (vorher = Hauptbaum-exe 09:57 = master vor dieser Spur, nachher = Baum-exe)
+Werkzeuge `re15_port/tools/r41_j/lauf.sh` (eigene exe-Kopie + Laufordner), `rbj_12raeume.sh` (Leon: TITLE_SHOT +
+DEBUG_JUMP <raum>@5; Elza: TITLE_CONFIRM_MS 1500 + PSELECT_AUTO(_SWITCH) + DEBUG_JUMP <leonraum>@250), `rbj_vergleich.sh`.
+Laeufe `re15_port/build/r41j_laeufe/{vor,nach}_<raum>/debug.log`. Ergebnis (Spieler-Overlay = `[rbj] room .. cinematic
+overlay`, Gegner = Messzeile):
+| Raum | Spieler vorher | Spieler nachher | Gegner nachher (alt) | zur Laufzeit aufgeloest |
+|---|---|---|---|---|
+| 1040 | rec0 = 5 Clips/100 kf (Rolltor-Zombie-Record!) | PL00-Basis 24 Clips/712 kf | 0..5: rec0 (rec0) | - |
+| 1041 | rec0 = 5 Clips/100 kf | PL04-Basis 24 Clips/705 kf | 0..5: rec0 (rec0) | - |
+| 2000 | rec0 25/284 | rec2 25/284 (inhaltsgleich) | 0:rec1 (rec1), 1:rec2 (-1) | - |
+| 3060 | rec0 2/50 | rec0 2/50 | 0:rec1 (rec1), 1:-1 (rec2), 2:rec2 (-1) | - |
+| 3091 | rec0 **1 Clip/2 kf** | rec2 **14 Clips/329 kf** | 0:rec1 (rec1), 1:rec2 (-1) | - |
+| 30E0 | rec0 25/284 | rec2 25/284 | 0:rec1, 1:rec2 (-1) | - |
+| 4000 | rec0 25/284 | rec2 25/284 | 0:rec1, 1:rec2 (-1) | - |
+| 4001 | rec0 11/264 | rec2 14/329 | 0:rec1, 1:rec2 (-1) | Aktor 1 Typ 0x49 -> rec1, **Aktor 2 Typ 0x4B (Sherry) -> rec2** (vorher ungebunden) |
+| 4010 | rec0 25/284 | rec2 27/355 | 0:rec1, 1:rec2 (-1) | Aktor 1 Typ 0x42 -> rec1, **Aktor 2 Typ 0x40 (Marvin) -> rec2** (vorher ungebunden) |
+| 5011 | rec0 20/524 | rec2 21/564 | 0:rec1, 1:rec2 (-1) | - |
+| 6030 | rec0 **1/2** | rec2 **22/762** | 0:rec1, 1:rec2 (-1) | Aktor 1 Typ 0x4D -> rec1 |
+| 6031 | rec0 **1/2** | rec2 **20/536** | 0:rec1, 1:rec2 (-1) | Aktor 1 Typ 0x4B -> rec1 |
+"-" = in den 200/450 Bildern nach dem Sprung hat kein Aktor den Sub-0-Kanal angefordert (keine Szene gelaufen).
+Gezielte Riegel vorher/nachher: `ctest -R "<Gruppen der RBJ-/Raum-Module>"` 164/164 gruen (Regex im §Tests).
+
+**Folgerung fuer Punkt 1 (A-E5-Hypothese geprueft):** in ROOM3060 aendert der Binder nur Gegner 1/2 (Hunde; kein Hund
+spielt Sub 0). Marvin ist dort entweder Gegner 0 (Folge-NPC, `Ck(4,0xC7)` sub00 @0x00F54, rec1 vorher wie nachher) oder
+der SPIELER (s. §1). Der Binder ist also NICHT die Ursache von Punkt 1; Ursache siehe §1.
