@@ -229,11 +229,23 @@ Neue Riegel (registriert nur in `re15_port/tests/unit/probes/r41_spinnenanim.cma
   Toleranz = eine Winkeleinheit aus gpf12/gpl12 @0x800664e0, Herleitung im Testkopf), A4 Gegenprobe alter Zeichenweg verfehlt
   das Original (Wand-Matrix 40/40 falsch, Takt 93 Bild falsch, Ueberblendung in 21 Takten falsch), A5 Schatten 1300 x 1400 auf
   +0x1ba (73/73, an der Wand 40/40 auf dem Boden; vorher 40/40 in der Luft), B Gift-Anker == Original (Abweichung 0 <= 2).
+  C ROOM20A0 (zweite Schachtspinne, floor 3, Gier -1024; RE1.5- und RE2-KI) gegen die Runde-38-Messung
+  `analysis/befunde_runde38/R_belege/orig_20a0_schacht.txt` (Tabelle test_r41_spinnenanim_20a0.inc, erzeugt von
+  `L_belege/orig_tabelle_20a0.py`): Logik 90/90, gezeichnetes Bild 90/90, Figur-Matrix = RotMatrix(rot Original) x 0xccc
+  90/90 (Wand 57/57), Schatten-Hoehe 90/90.
   Ergebnis: OK (0 FAIL).
 - `integration_r41_spinnenanim` (tests/integration/test_r41_spinnenanim.cmake): echte exe, echter Weg durch die Tuer (4.2),
   Laeufe L2/L15/E2, Auswerter `test_r41_spinnenanim pruef_log`: je 72/72 Takte == Original. Passed (120 s).
 
-Gezielte Laeufe: siehe 5.1 (Summenzeile woertlich).
+### 5.1 Gezielte Laeufe (keine volle Suite)
+Testgruppen der beruehrten Module: Spinnen (0x25/0x26/RE2-Spinne/Babys/Spiderman-Griffe/Trefferkaesten/Gift/Zustand),
+RotMatrix-Zwilling, Gegner-Schatten (main.c-Schattenblock), Kopflauf (scd_room_setup), Runde-38-Spinnen-Echtlauf, die eigenen.
+Erster Lauf (Stand bed1d57c, vor Teil C):
+`ctest --test-dir re15_port/build -R "unit_damage|unit_spider_ai|unit_adult_spider_ai|unit_rotmatrix|unit_re2_spider_ai|unit_re2_spider_water_2090|unit_re2_hit_repeat_crow_spider|unit_re2_baby_spider_dmg|probe_spinne_elevation|r31_trefferboxen|unit_r38_spiderman|unit_r38_griff_spiderman|unit_r38_spinnen|integration_r38_spinnen_echtlauf|r39_gegner_schatten|r39_zustand|r41_spinnenanim|integration_headless_run" --timeout 600 -j 4`
+-> `100% tests passed, 0 tests failed out of 24`
+Endlauf: siehe Abschluss (Abschnitt 8).
+Nebenbefund aus dem Runde-38-Echtlauf (ROOM2030/2031, RE2-KI, 9225 Figur-Bilder je Lauf): keine Spinne hat dort rot_x/rot_z != 0
+-> die volle Figur-Matrix aendert ausserhalb des Schacht-Ablaufs nichts an der Lage der Figuren.
 
 
 ## 6. OFFEN
@@ -262,7 +274,7 @@ Gezielte Laeufe: siehe 5.1 (Summenzeile woertlich).
 
 * **Neue Assets / Sprachdateien:** keine (nichts unter shared_assets/, kein gen/*.inc). Paket-Gate unberuehrt.
 * **Was sich im Spiel aendert (STAGE2, Leon und Elza, beide KI-Einstellungen):**
-  * Die Schachtspinne in ROOM2060/2061 (und 20A0/20A1) kippt am Ende des Herauskriechens kopfueber ueber die Gitterkante und
+  * Die Schachtspinne in ROOM2060/2061 (gemessen) und ROOM20A0/20A1 (gleicher Ablauf, Riegel C gegen die Runde-38-Messung) kippt am Ende des Herauskriechens kopfueber ueber die Gitterkante und
     klettert KOPFUEBER, mit dem Bauch an der Wand, an der Wand hinunter — vorher lag sie dabei waagrecht in der Luft und
     "schwebte" vor der Wand herunter. Unten dreht sie sich wieder auf den Boden.
   * Kein kurzes Zurueckspringen in die Ausgangspose mehr beim Uebergang vom Herauskriechen auf die Wand und beim Absprung von der
