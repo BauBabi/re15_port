@@ -746,3 +746,18 @@ seinem weiteren Rundlauf auf (Aufnahme-Mechanik der Spur B, RE2-Form) -> Schuss 
 Tod mit geplatztem Kiefer. Abnahmepunkt der Spur G: diese ganze Folge im ECHTEN Ablauf an der exe (Leon UND Elza), ohne
 Testhaken fuer den Kanister — insbesondere: der Kanister liegt nach dem Wurf erreichbar auf dem Rundweg des Alligators
 und wird im normalen Kampf tatsaechlich aufgenommen (Messung: Bild der Aufnahme, Zeit seit dem Wurf).
+
+## 2026-10-25 00:23 — Nachtrag 24 (Wortlaut; Animation vor der Kanister-Aufnahme, Spur G) + Orchestrator-Entscheid FG-E2
+
+> Ich sah die Animation vor dem aufnehmen des Kanisters ist noch falsch. Da hat er mal wieder eine dämliche Kletter
+> Animation
+
+Folgen (Orchestrator):
+- Vor der Kanister-Aufnahme darf der Alligator KEINE Kletter-Animation (CROSS/GUARD-Kletterclip des Nutzer-Designs) zeigen.
+  Form = RE2: er schwimmt zum Kanister (Sub 1 Schwimmen, Clip 0, Blend 32 @0x80100b04-18 / @0x80100c04, Stufen der
+  T2-Aufnahme @0x801017c4-0x80101d40) und nimmt ihn auf. Ursache im Ablauf finden (liegt der geworfene Kanister so, dass der
+  Weg ueber die Plattform/Rampe fuehrt? greift CROSS waehrend des Aufnahme-Fensters?) und belegt beheben; Bildbogen der
+  Aufnahme vorher/nachher im echten Ablauf (Nachtrag 23), Leon UND Elza.
+- **FG-E2:** Spur G darf dafuer gezielt in Spur B's Modulen (gator_re2_r41.c, enemy_ai_boss_gator.c) aendern — nur die
+  Aufnahme-/Anschwimm-Logik, markiert "Runde 41 Spur G (Nachtrag 24)"; Spur F aendert dort nur die Szene/den Auftritt.
+  Bei der Integration beidseitig mergen; die B-Riegel (unit_r41_re2gator_*, integration_r41_re2gator) bleiben gruen.
