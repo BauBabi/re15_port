@@ -231,7 +231,8 @@ Logs unter Scratchpad `J41abn0/ctest_*.log`.
    Skript-Riegel von release/ (unit_r35_android_pruefkette, _bash_mutanten, unit_r38_releaseskript_trocken, _ablauf,
    _fehler_bau, _fehler_umfeld): ihre Pruefzeilen standen alle auf ok, der Prozess wurde unter der Parallel-Last nicht fertig;
    release/ ist vom Diff unberuehrt. Einzeln nachgefahren: `unit_r38_releaseskript_trocken` **Passed (788,7 s)**; die uebrigen
-   fuenf laufen einzeln nach (Stand am Ende dieses Berichts).
+   fuenf laufen einzeln nach (Stand am Ende dieses Berichts). Zur Last: waehrend der Laeufe liefen auf der Maschine auch fremde
+   Sitzungen (u.a. 125 bash.exe, davon 9 aus diesem Baum; fremde re15_pc-Kopien re15_pc_nb5c_*, re15_pc_r41m2_*, re15_pc_r41m3_*).
 3. Integrationsriegel der beruehrten Raeume/Module (NPC-Szenen mit State-4-Executor, RBJ-Raeume inkl. 1041/3091, dining_r39-Haken
    1141, Tuer-/Raumwechselweg in main.c, STAGE3-Masken, Elza-Ketten), Regex in `J41abn0/integ_regex.txt`:
    `ctest -R "<regex>" -j 3` -> **52/54 Passed**; rot unter Last: `integration_elza_vollstart` (Zeitschranke 100 s Wanduhr, Szene
