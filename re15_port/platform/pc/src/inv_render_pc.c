@@ -54,6 +54,7 @@ extern void re15_pc_put_pixel(int x, int y, uint32_t rgba);
 #include "re15_sicherung.h" /* Item-Bild + Icon der Sicherung im geladenen Puffer (Runde 30) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Icon + Bild der zwei Schluessel (0x42/0x45) */
 #include "re15_dining_r38.h"     /* Runde 38 Spur F: Icon + Bild des Dining Room Key (0x43) */
+#include "re15_gatorszene_r41.h" /* Runde 41 Spur F: Icon + Bild des Water Key (0x34) */
 #include "re15_kiste2feld_r37.h" /* Runde 37 Spur R: 2-Feld-Symbol (Kiste) + Haelften je Zelle (Gitter) */
 #include "re15_inventar_r39.h"   /* Runde 39 Spur C: Status-Bild je Figur (STPIC_<k>.TIM) */
 
@@ -327,6 +328,7 @@ static int inv_assets_init(void)
     re15_sicherung_icon_einsetzen(s_itemall, s_itemall_size);
     re15_schluessel_r36_icon_einsetzen(s_itemall, s_itemall_size);   /* Runde 36 Spur Q */
     re15_dining_r38_icon_einsetzen(s_itemall, s_itemall_size);       /* Runde 38 Spur F */
+    re15_gatorszene_r41_icon_einsetzen(s_itemall, s_itemall_size);   /* Runde 41 Spur F */
 
     /* DATA/MIXITEM.PIX (wave 5): headerless 14 x 1200B (40x30 8bpp) combine-result
      * tiles, pic ids 1-14 (see the s_mixitem note above). */
@@ -346,6 +348,7 @@ static int inv_assets_init(void)
     if (s_itps) re15_sicherung_bild_einsetzen(s_itps, s_itps_size);
     if (s_itps) re15_schluessel_r36_bild_einsetzen(s_itps, s_itps_size);   /* Runde 36 Spur Q */
     if (s_itps) re15_dining_r38_bild_einsetzen(s_itps, s_itps_size);       /* Runde 38 Spur F */
+    if (s_itps) re15_gatorszene_r41_bild_einsetzen(s_itps, s_itps_size);   /* Runde 41 Spur F */
     /* PRUEFZEILE der beiden Ladestellen dieses Schirms (Runde 30, Nachbesserung): 0 = das
      * Rohr ist in DEN Puffern, aus denen Raster (inv_compose_cells) und CHECK-Foto
      * (photo_upload_check) lesen. Ohne Einsetzen stuende hier der ausgelieferte Stand

@@ -226,6 +226,115 @@ const uint8_t *re15_gatorszene_r41_ereignis(uint16_t room_id, uint8_t event_id)
     return s_prog;
 }
 
+static int prop_slot(uint8_t obj_id)
+{
+    for (int k = 0; k < (int)g_scd.prop_count; k++)
+        if (g_scd.props[k].obj_id == obj_id) return k;
+    return -1;
+}
+
+/* ==== 3. Schluessel ================================================================================================ */
+#include "gen/gatorszene_r41_schluessel.inc"   /* tools/r41_gatorszene/schluessel_export.py */
+
+/* Prop-Felder wie Obj_model_set (LAB_80040914): flags pc[6..7] | 1 (@0x80040990-a4), Band pc[4] -> pool+0x82 (@0x8004096c-74).
+ * attr 0 = NCCT-beleuchtet (FUN_8002c18c @0x8002c2ec-f8): Voraussetzung des Helligkeitspulses (re15_blink_r41.h). */
+#define GSZ_KEY_FLAGS     0x000B    /* ROOM2090 obj 2 @0x00A6C pc[6..7] `0a 00` | 1 */
+#define GSZ_KEY_BAND      0
+/* Lage auf dem Ruecken der Leiche, Objektraum von obj 2 (Elternobjekt, Anhaenge-Form 0xC0|n @0x80040a84-9c): Leichen-Modell
+ * ROOM2090 Prop 2 MD1 @0x2054 x -444..2626, y -341..966 -> Rumpfmitte x 1090, Oberseite y -341. PORT-WAHL am Bild. */
+#define GSZ_KEY_AUF_X     1090
+#define GSZ_KEY_AUF_Y     (-360)
+#define GSZ_KEY_AUF_Z     0
+/* Item-Zone nach dem Tod (re15_aot_set_item_tk_prop = Item_aot_set @0x80040644-Form), Rechteck 1000 x 1000 wie ROOM2090 main00
+ * @0x00A12 (`e8 03 e8 03`), AOT-Platz 15: frei in 2090 (main00 0..5, Kamerazonen 48..63). */
+#define GSZ_KEY_AOT       15
+#define GSZ_KEY_RECHTECK  1000
+#define GSZ_WASSER_Y      (-1620)   /* Wasseroberflaeche: sce-8-Zone p0 ROOM2090 main00 @0x009D6 pc[14..15] `ac f9` */
+/* Ersatzlage nach dem Laden eines Spielstands (die Todeslage lebt nur im RAM): die Liegestelle der Leiche (GSZ_LEICHE_X/Z). */
+#define GSZ_KEY_ERSATZ_X  (-5300)
+#define GSZ_KEY_ERSATZ_Z  (-21000)
+
+static int32_t s_key_x = 0, s_key_z = 0;
+static int     s_key_lage_ok = 0;
+
+int re15_gatorszene_r41_obj_id(uint16_t room_id)
+{
+    return ((room_id & 0xFFFEu) == RE15_GSZ_RAUM) ? RE15_GSZ_KEY_OBJ : -1;
+}
+const uint8_t *re15_gatorszene_r41_md1_bytes(uint16_t room_id, int *n)
+{
+    if (re15_gatorszene_r41_obj_id(room_id) < 0) { if (n) *n = 0; return NULL; }
+    if (n) *n = (int)sizeof re15_gsz_key_md1;
+    return re15_gsz_key_md1;
+}
+const uint8_t *re15_gatorszene_r41_tim_bytes(uint16_t room_id, int *n)
+{
+    if (re15_gatorszene_r41_obj_id(room_id) < 0) { if (n) *n = 0; return NULL; }
+    if (n) *n = (int)sizeof re15_gsz_key_tim;
+    return re15_gsz_key_tim;
+}
+const uint8_t *re15_gatorszene_r41_name(uint8_t item_id) { return item_id == RE15_GSZ_KEY_ITEM ? re15_gsz_key_name : NULL; }
+const uint8_t *re15_gatorszene_r41_desc(uint8_t item_id) { return item_id == RE15_GSZ_KEY_ITEM ? re15_gsz_key_desc : NULL; }
+int re15_gatorszene_r41_ist_schluessel(uint8_t item_id) { return item_id == RE15_GSZ_KEY_ITEM; }
+void re15_gatorszene_r41_icon_einsetzen(uint8_t *itemall, int size)
+{
+    if (itemall && (RE15_GSZ_KEY_ITEM + 1) * 1200 <= size)
+        memcpy(itemall + RE15_GSZ_KEY_ITEM * 1200, re15_gsz_key_icon, 1200);
+}
+void re15_gatorszene_r41_bild_einsetzen(uint8_t *itps, int size)
+{
+    if (itps && (RE15_GSZ_KEY_ITEM + 1) * 0x3000 <= size)
+        memcpy(itps + RE15_GSZ_KEY_ITEM * 0x3000, re15_gsz_key_itps, 0x3000);
+}
+
+/* Prop obj 4 anlegen (falls noch nicht da) - Felder wie dining_r38.c schluessel_1011. */
+static int key_prop(void)
+{
+    int k = prop_slot(RE15_GSZ_KEY_OBJ);
+    if (k < 0 && g_scd.prop_count < RE15_SCD_MAX_PROPS) {
+        k = (int)g_scd.prop_count++;
+        memset(&g_scd.props[k], 0, sizeof g_scd.props[k]);
+        g_scd.props[k].obj_id   = RE15_GSZ_KEY_OBJ;
+        g_scd.props[k].obj_type = 0;
+        g_scd.props[k].flags    = GSZ_KEY_FLAGS;
+        g_scd.props[k].band     = GSZ_KEY_BAND;
+        g_scd.props[k].attr     = 0;
+    }
+    return k;
+}
+/* Waehrend die Szene aussteht: Schluessel auf dem Ruecken der Leiche, Kind von obj 2 (wippt mit ihr, sub02 @0x00AF0). */
+static void key_auf_leiche(uint16_t room_id)
+{
+    int k = key_prop();
+    if (k < 0) return;
+    g_scd.props[k].active = 1;
+    g_scd.props[k].parent_obj = RE15_GSZ_LEICHE_OBJ;
+    g_scd.props[k].x = GSZ_KEY_AUF_X; g_scd.props[k].y = GSZ_KEY_AUF_Y; g_scd.props[k].z = GSZ_KEY_AUF_Z;
+    g_scd.props[k].rot_x = 0; g_scd.props[k].rot_y = 0; g_scd.props[k].rot_z = 0;
+    re15_blink_r41_setzen(room_id, RE15_GSZ_KEY_OBJ, 1);
+}
+/* Nach dem Tod: Schluessel liegt bei der Leiche (Weltraum), Item-Zone mit Taken-Bit 112 und Prop-Verstecken. */
+static void key_bei_leiche(uint16_t room_id)
+{
+    if (re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GENOMMEN)) return;
+    int k = key_prop();
+    if (k < 0) return;
+    if (!s_key_lage_ok) { s_key_x = GSZ_KEY_ERSATZ_X; s_key_z = GSZ_KEY_ERSATZ_Z; }
+    g_scd.props[k].active = 1;
+    g_scd.props[k].parent_obj = -1;
+    g_scd.props[k].x = s_key_x; g_scd.props[k].y = GSZ_WASSER_Y; g_scd.props[k].z = s_key_z;
+    g_scd.props[k].rot_x = 0; g_scd.props[k].rot_y = 0; g_scd.props[k].rot_z = 0;
+    re15_blink_r41_setzen(room_id, RE15_GSZ_KEY_OBJ, 1);
+    re15_aot_set_item_tk_prop(GSZ_KEY_AOT, s_key_x, s_key_z, GSZ_KEY_RECHTECK / 2, GSZ_KEY_RECHTECK / 2,
+                              RE15_GSZ_KEY_ITEM, 1, RE15_GSZ_BIT_GENOMMEN, RE15_GSZ_KEY_OBJ);
+    g_aot.slots[GSZ_KEY_AOT].band = 0;
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[gatorszene] ROOM%04X: Water Key (Item 0x%02X, Bits (9,%d)/(9,%d)) bei der Leiche (%d,%d,%d), Zone Slot %d\n",
+            (unsigned)room_id, RE15_GSZ_KEY_ITEM, RE15_GSZ_BIT_LIEGT, RE15_GSZ_BIT_GENOMMEN, s_key_x, GSZ_WASSER_Y, s_key_z,
+            GSZ_KEY_AOT);
+#endif
+}
+
 /* ---- Raumaufbau -------------------------------------------------------------------------------------------------- */
 /* Erster Abschnitt eines eben gestarteten Fadens SOFORT (Raumaufbau): Form elzazombies_r39.c / irons_tod_1150.c
  * erster_abschnitt_sofort = Init-Lauf FUN_8003ef6c -> FUN_8003f0a0 @0x8003f018 vor der Einblendung @0x8001cbb8..@0x8001cc28. */
@@ -240,12 +349,6 @@ static void erster_abschnitt_sofort(int slot)
     for (int s = 0; s < SCD_THREAD_COUNT; s++) if (s != slot) g_scd.threads[s].active = aktiv[s];
 }
 
-static int prop_slot(uint8_t obj_id)
-{
-    for (int k = 0; k < (int)g_scd.prop_count; k++)
-        if (g_scd.props[k].obj_id == obj_id) return k;
-    return -1;
-}
 
 /* Leiche obj 2: Lage der Szene (PORT-WAHL nach Nachtrag 6, Dossier §1.3) - nur waehrend die Szene noch aussteht. */
 #define GSZ_LEICHE_X      (-5300)   /* Mitte des Westkanals x -8900..-1700 (Wasserzonen ROOM2090 main00 @0x009D6/@0x009FE) */
@@ -274,15 +377,21 @@ void re15_gatorszene_r41_install(uint16_t room_id)
         if (s_zustand == RE15_GSZ_MONTAGE) {                /* zurueck aus 2080: Programm 3 */
             s_zustand = RE15_GSZ_RUECKKEHR;
             leiche_lage();
+            key_auf_leiche(room_id);
             if (scd_event_fire(RE15_GSZ_EREIGNIS) < 0) { s_zustand = RE15_GSZ_AUS; folge('X', 3, 0); return; }
             return;
         }
         if (s_zustand != RE15_GSZ_AUS) { folge('X', s_zustand, 1); s_zustand = RE15_GSZ_AUS; }
-        if (re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN)) { leiche_weg(); return; }
+        if (re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN)) {
+            leiche_weg();                                   /* gefressen */
+            if (re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT)) key_bei_leiche(room_id);
+            return;
+        }
         const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         s_leon_x = pl->x; s_leon_y = pl->y; s_leon_z = pl->z; s_leon_yaw = pl->rot_y;
         s_folge_n = 0;
         leiche_lage();
+        key_auf_leiche(room_id);
         s_zustand = RE15_GSZ_ANKUNFT;
         folge('A', (int)s_leon_x, (int)s_leon_z);
         if (scd_event_fire(RE15_GSZ_EREIGNIS) < 0) { s_zustand = RE15_GSZ_AUS; folge('X', 1, 0); }
@@ -557,7 +666,7 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
             ga_se(GSZ_SCHREI_SE);                             /* R4: SE 0 @0x80102c0c-10 */
             re15_gr2_frame_wort(slot, 0x28000000u);           /* Stoss-Ereignis 1 -> Ruetteln + Schuetteln (@0x801003f0-40c) */
             s_ga.phase = GP_SCHREI; s_ga.t = 0;
-            int cut = re15_gr2_kamera_schnitt(RE15_GR2_BLICK_ANGRIFF, e, pl, "gatorszene Schrei");
+            int cut = re15_gr2_kamera_schnitt(RE15_GR2_BLICK_ANGRIFF, e, NULL, "gatorszene Schrei");   /* Gesicht frontal, ohne Leon-Bedingung */
             folge('G', GP_SCHREI, cut);
         }
         break;
@@ -580,15 +689,32 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
 }
 
 /* ---- Leiche im Maul: Kind der Part-6-Weltmatrix wie der RE2-Kanister (@0x801018d0-e0) ---------------------------- */
-/* Lokallage im Maul = Kanister-Ziellage (1750,-210) im 1x-Rig (@0x801019c4 / @0x80101a4c), skaliert wie der Kanister
- * (gator_re2_r41.c re15_gr2_kanister_sitz: l = lokal * s). Leiche quer im Maul (Modell-x = Kopf-z): PORT-WAHL am Bild. */
-#define GSZ_MAUL_X        1750
-#define GSZ_MAUL_Y        (-210)
+/* Anhaengen im Koppelbild = FUN_8002d030(Part-6-Matrix, Objekt-Matrix) @0x801018f0: rel = R6^T * Ro, lokal = R6^T * (o - p6)
+ * (Lokallage `sw v0,56(s2)` / `sw v1,60(s2)` / `sw a3,64(s2)` @0x80101910-18); danach je Bild Ro = R6 * rel, o = p6 + R6 * lokal
+ * (Form gator_re2_r41.c re15_gr2_nachtakt / gr2_kan_folgen). Die Leiche haengt also so im Maul, wie sie im Koppelbild lag. */
+static int32_t s_rel[9], s_lokal[3];
+static int     s_rel_ok = 0;
+/* Prop-Drehmatrix wie main.c pc_prop_rot_q12 (RotMatrix-Konvention des Prop-Zeichners). */
+static void prop_matrix(int16_t rx, int16_t ry, int16_t rz, int32_t m[9])
+{
+    int32_t sx = re15_sin_q12(rx), cx = re15_cos_q12(rx);
+    int32_t sy = re15_sin_q12(ry), cy = re15_cos_q12(ry);
+    int32_t sz = re15_sin_q12(rz), cz = re15_cos_q12(rz);
+    m[0] = q12m(cz, cy);
+    m[1] = -q12m(sz, cy);
+    m[2] = sy;
+    m[3] = (int32_t)(((((int64_t)sz * cx) << 12) + (int64_t)cz * sy * sx) >> 24);
+    m[4] = (int32_t)(((((int64_t)cz * cx) << 12) - (int64_t)sz * sy * sx) >> 24);
+    m[5] = -q12m(cy, sx);
+    m[6] = (int32_t)(((((int64_t)sz * sx) << 12) - (int64_t)cz * sy * cx) >> 24);
+    m[7] = (int32_t)(((((int64_t)cz * sx) << 12) + (int64_t)sz * sy * cx) >> 24);
+    m[8] = q12m(cy, cx);
+}
 static void euler_aus_matrix(const int32_t m[9], int16_t *rx, int16_t *ry, int16_t *rz)
 {
-    /* Umkehrung von pc_prop_rot_q12 (main.c): m[2] = sin(ry), m[0] = cz*cy, m[1] = -sz*cy, m[5] = -cy*sx, m[8] = cy*cx. */
+    /* Umkehrung von prop_matrix: m[2] = sin(ry), m[0] = cz*cy, m[1] = -sz*cy, m[5] = -cy*sx, m[8] = cy*cx.
+     * math-atan2(Y, X) = re15_atan2_q12(-Y, X) - 1024 (re15_actor.h: Gier 0 = +X, Vorwaerts (cos,-sin)). */
     int32_t cy = (int32_t)re15_squareroot0((uint32_t)((int64_t)m[0] * m[0] + (int64_t)m[1] * m[1]));
-    /* math-atan2(Y, X) = re15_atan2_q12(-Y, X) - 1024 (re15_actor.h: Gier 0 = +X, Vorwaerts (cos,-sin)) */
     *ry = (int16_t)(((int)re15_atan2_q12(-m[2], cy) - 1024) & 0xfff);
     *rx = (int16_t)(((int)re15_atan2_q12(m[5], m[8]) - 1024) & 0xfff);
     *rz = (int16_t)(((int)re15_atan2_q12(m[1], m[0]) - 1024) & 0xfff);
@@ -601,30 +727,65 @@ void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor)
     int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
     int32_t r6[9], p6[3];
     if (k < 0 || !re15_gr2_part6_gezeichnet(r6, p6)) return;
-    int32_t s = ga_scale(e);
-    int32_t l[3] = { q12m(GSZ_MAUL_X, s), q12m(GSZ_MAUL_Y, s), 0 };
-    int32_t mund[3];
-    for (int r = 0; r < 3; r++)
-        mund[r] = p6[r] + (int32_t)(((int64_t)r6[r*3] * l[0] + (int64_t)r6[r*3+1] * l[1] + (int64_t)r6[r*3+2] * l[2]) >> 12);
-    /* Leiche quer: Modell-x -> Kopf-z (RotY 90 Grad im Kopfraum): R_l = R6 * Ry(1024) */
-    int32_t ry[9]; re15_skel_euler_matrix(0, 1024, 0, ry);
-    int32_t rl[9];
+    if (!s_rel_ok) {                                         /* Koppelbild: Relation einfrieren (FUN_8002d030 @0x801018f0) */
+        int32_t ro[9];
+        prop_matrix(g_scd.props[k].rot_x, g_scd.props[k].rot_y, g_scd.props[k].rot_z, ro);
+        int32_t d[3] = { g_scd.props[k].x - p6[0], g_scd.props[k].y - p6[1], g_scd.props[k].z - p6[2] };
+        for (int r = 0; r < 3; r++) {
+            s_lokal[r] = (int32_t)(((int64_t)r6[0*3+r] * d[0] + (int64_t)r6[1*3+r] * d[1] + (int64_t)r6[2*3+r] * d[2]) >> 12);
+            for (int c = 0; c < 3; c++)
+                s_rel[r*3+c] = (int32_t)(((int64_t)r6[0*3+r] * ro[0*3+c] + (int64_t)r6[1*3+r] * ro[1*3+c]
+                                        + (int64_t)r6[2*3+r] * ro[2*3+c]) >> 12);
+        }
+        s_rel_ok = 1;
+        folge('H', s_lokal[0], s_lokal[2]);
+    }
+    int32_t rw[9];
     for (int r = 0; r < 3; r++)
         for (int c = 0; c < 3; c++)
-            rl[r*3+c] = (int32_t)(((int64_t)r6[r*3] * ry[c] + (int64_t)r6[r*3+1] * ry[3+c] + (int64_t)r6[r*3+2] * ry[6+c]) >> 12);
-    /* Ursprung = Mund - R_l * Rumpfmitte (GSZ_LEICHE_MITTE_X, 0, 0) */
-    g_scd.props[k].x = mund[0] - q12m(rl[0], GSZ_LEICHE_MITTE_X);
-    g_scd.props[k].y = mund[1] - q12m(rl[3], GSZ_LEICHE_MITTE_X);
-    g_scd.props[k].z = mund[2] - q12m(rl[6], GSZ_LEICHE_MITTE_X);
-    euler_aus_matrix(rl, &g_scd.props[k].rot_x, &g_scd.props[k].rot_y, &g_scd.props[k].rot_z);
+            rw[r*3+c] = (int32_t)(((int64_t)r6[r*3] * s_rel[c] + (int64_t)r6[r*3+1] * s_rel[3+c] + (int64_t)r6[r*3+2] * s_rel[6+c]) >> 12);
+    g_scd.props[k].x = p6[0] + (int32_t)(((int64_t)r6[0] * s_lokal[0] + (int64_t)r6[1] * s_lokal[1] + (int64_t)r6[2] * s_lokal[2]) >> 12);
+    g_scd.props[k].y = p6[1] + (int32_t)(((int64_t)r6[3] * s_lokal[0] + (int64_t)r6[4] * s_lokal[1] + (int64_t)r6[5] * s_lokal[2]) >> 12);
+    g_scd.props[k].z = p6[2] + (int32_t)(((int64_t)r6[6] * s_lokal[0] + (int64_t)r6[7] * s_lokal[1] + (int64_t)r6[8] * s_lokal[2]) >> 12);
+    euler_aus_matrix(rw, &g_scd.props[k].rot_x, &g_scd.props[k].rot_y, &g_scd.props[k].rot_z);
 }
 
 /* ---- Takt (scd_vm_tick, Gameplay-Lauf) --------------------------------------------------------------------------- */
 static void (*s_tuerton_fn)(void) = NULL;   /* PC: Door_exit-Satz (se 1) des RE2-Archivs DOOR06 = Tuer 2080 Slot 0 */
 void re15_gatorszene_r41_tuer_hook(void (*fn)(void)) { s_tuerton_fn = fn; }
+static re15_actor_t *gator_aktor(void)
+{
+    for (int i = 1; i < RE15_ACTOR_MAX; i++)
+        if (g_actors[i].active && g_actors[i].type == 0x23u) return &g_actors[i];
+    return NULL;
+}
+/* Schluessel-Lage nach dem Tod: Kopf (Part 6) der Leiche (dort platzte der Kiefer, R1 @0x80102354-58), in eine Wasserzone
+ * (re15_aot_water_at = FUN_800527B4-Zwilling) gezogen - sonst Richtung Wurzel, sonst die Ersatzlage. */
+static void key_lage_bei_tod(void)
+{
+    re15_actor_t *g = gator_aktor();
+    s_key_x = GSZ_KEY_ERSATZ_X; s_key_z = GSZ_KEY_ERSATZ_Z;
+    if (g) {
+        int32_t kopf[3] = { g->x, g->y, g->z };
+        if (!re15_gr2_bone_welt_pub(g, 6, kopf)) { kopf[0] = g->x; kopf[2] = g->z; }
+        for (int i = 0; i <= 8; i++) {
+            int32_t x = kopf[0] + (int32_t)(((int64_t)(g->x - kopf[0]) * i) / 8);
+            int32_t z = kopf[2] + (int32_t)(((int64_t)(g->z - kopf[2]) * i) / 8);
+            if (re15_aot_water_at(x, z) != 0) { s_key_x = x; s_key_z = z; break; }
+        }
+    }
+    s_key_lage_ok = 1;
+}
 void re15_gatorszene_r41_tick(void)
 {
     const uint16_t basis = (uint16_t)(g_current_room_id & 0xFFFEu);
+    if (basis == RE15_GSZ_RAUM && re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN)
+        && !re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT) && re15_gr2_tot()) {
+        key_lage_bei_tod();                                  /* Alligator tot (R1-Endzustand +0x10E |= 0x4000 @0x80102654-64) */
+        re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT, 1);
+        key_bei_leiche((uint16_t)g_current_room_id);
+        folge('L', (int)s_key_x, (int)s_key_z);
+    }
     if (basis == 0x2080u && s_zustand == RE15_GSZ_MONTAGE && re15_game_flag_get(5, RE15_GSZ_SIG_TUER)) {
         re15_game_flag_set(5, RE15_GSZ_SIG_TUER, 0);
         if (s_tuerton_fn) s_tuerton_fn();
@@ -633,6 +794,7 @@ void re15_gatorszene_r41_tick(void)
     if (basis == RE15_GSZ_RAUM && s_zustand == RE15_GSZ_RUECKKEHR && re15_game_flag_get(5, RE15_GSZ_SIG_GATOR)) {
         re15_game_flag_set(5, RE15_GSZ_SIG_GATOR, 0);
         memset(&s_ga, 0, sizeof s_ga);
+        s_rel_ok = 0;
         s_zustand = RE15_GSZ_GATOR;
         folge('S', 0, 0);
     }

@@ -94,6 +94,20 @@ void re15_gatorszene_r41_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int
 void re15_gatorszene_r41_tuer_hook(void (*fn)(void));
 void re15_pc_gatorszene_r41_init(void);
 
+/* ---- 3. SCHLUESSEL (Dossier §3): der nie platzierte RE1.5-"Water Key" (Namenstabelle DEBUG.BIN @0x800c495c Eintrag 0x45,
+ * CHECK 'The label says: "Sewer Mainteinance Room."' @0x800c50de Eintrag 0x45, Icon ITEMALL.PIX Tile 0x45, Bild ITPS.ITP Block
+ * 0x45) unter der nie platzierten Id 0x34 (0x45 = Parking Lot Key seit Runde 36 Spur Q); Weltmodell RE2 Item 0x63 Platform Key
+ * (ROOM7040.RDT MD1 @0x00354C). Bits: 111 = liegt bei der Leiche, 112 = genommen. */
+#define RE15_GSZ_KEY_ITEM        0x34
+int  re15_gatorszene_r41_obj_id(uint16_t room_id);                       /* main.c Prop-Lader: 4 in 2090/2091, sonst -1 */
+const uint8_t *re15_gatorszene_r41_md1_bytes(uint16_t room_id, int *n);
+const uint8_t *re15_gatorszene_r41_tim_bytes(uint16_t room_id, int *n);
+const uint8_t *re15_gatorszene_r41_name(uint8_t item_id);                 /* 0x07-terminiert (Namensblob-Form)          */
+const uint8_t *re15_gatorszene_r41_desc(uint8_t item_id);                 /* CHECK-Text, 01 00-terminiert               */
+int  re15_gatorszene_r41_ist_schluessel(uint8_t item_id);                 /* Wegwerf-Text "key" (item_prompt_common.c)  */
+void re15_gatorszene_r41_icon_einsetzen(uint8_t *itemall, int size);      /* Tile 0x34 <- Original-Tile 0x45            */
+void re15_gatorszene_r41_bild_einsetzen(uint8_t *itps, int size);         /* Block 0x34 <- Original-Block 0x45          */
+
 /* Pruefhaken (kein Spielverhalten). Szenenfolge: je Ereignis (Art, Raum, Bild, Wert). */
 typedef struct { char art; uint16_t raum; unsigned bild; int wert; int wert2; } re15_gsz_folge_t;
 int  re15_gatorszene_r41_zustand(void);
