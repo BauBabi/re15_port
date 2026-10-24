@@ -314,11 +314,13 @@ _danach("${_dbg}" "Ventil 01 gedreht (Drehung 2/4)" "[msgtext] room=203${S} id=5
 _danach("${_dbg}" "Ventil 02 gedreht (Drehung 3/4)" "[msgtext] room=203${S} id=53 \"Valve 07, black wheel. Will you turn it?\"" v2a "Ventil 07: Frage 53")
 _danach("${_dbg}" "Ventil 07 gedreht (Drehung 4/4)" "[ventilkette41] Folge 09 01 02 07 -> FALSCH: zurueckgesetzt" v2a "Pruefung erst nach der vierten Drehung")
 _danach("${_dbg}" "FALSCH: zurueckgesetzt" "[msgtext] room=203${S} id=45 \"The valves turned back to their original position.\"" v2a "Text 45")
-_flagfolge("${_wp}" v2a 5 19 "1")
+# (5,0x13) und (5,0x10): das Programm 2030_ventile_falsch setzt die Drehungen sofort zurueck (vor dem Text 45), die
+# vierte Drehung selbst belegt die Zeile "Ventil 07 gedreht (Drehung 4/4)".
+_flagfolge("${_wp}" v2a 5 19 "0")
 _flagfolge("${_wp}" v2a 5 16 "0")
 _flagfolge("${_wp}" v2a 5 29 "0")
 _darf_nicht("${_dbg}" "Zaehler laeuft" v2a "falsche Folge: kein Zaehler")
-_darf_nicht("${_dbg}" "id=46" v2a "falsche Folge: keine Warnung")
+_darf_nicht("${_dbg}" "room=203${S} id=46" v2a "falsche Folge: keine Warnung")
 message(STATUS "r41_ventilkette_weg[${FIGUR}] v2a: Ventil 09 ohne Sicherung = 49 -> Sicherung -> Plakat-Folge 09/01/02/07 zu Fuss -> FALSCH, Text 45, zurueck")
 
 # ---- v2b: richtige Folge 09/07/02/01 zu Fuss -> Warnung -> Zaehler -> Flucht zur Ost-Tuer -> 20B0 -------------------------
@@ -388,7 +390,7 @@ _muss("${_dbg}" "loaded room${_k20b0}.rdt" v2b "20B0 geladen")
 _muss("${_dbg}" "[ventilkette41] Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100" v2b "Flut gelaufen + Leiter frei")
 _darf_nicht("${_dbg}" "FLUT: Wasser steigt" v2b "der Weg zur Tuer passt in die 60 s")
 _darf_nicht("${_dbg}" "ERTRUNKEN" v2b "nicht ertrunken")
-_darf_nicht("${_dbg}" "FALSCH" v2b "keine falsche Folge")
+_darf_nicht("${_dbg}" "-> FALSCH: zurueckgesetzt" v2b "keine falsche Folge")
 message(STATUS "r41_ventilkette_weg[${FIGUR}] v2b: 09/07/02/01 zu Fuss -> RICHTIG -> 46 -> Zaehler -> zu Fuss zur Ost-Tuer -> 20B0 (103+100)")
 
 # ---- v2d: Dokument "Technician's Note" (Slot 20, Item 0x4E) -> Leser -> abgelegt, Bit (9,107) ----------------------------

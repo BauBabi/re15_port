@@ -26,7 +26,7 @@
 #      Schliessen, Tod 125 +- 2 Bilder nach dem Flutbeginn, Blende, Wasser -6300 / Spieler -5400.
 #      Nachbesserung 1 (Abnahme 0, M4): C laeuft im BESCHLEUNIGTEN Renderer (direct3d/opengl, wie beim Nutzer), weil SDLs
 #      Software-Renderer die subtraktive Blende ABR 2 nicht kann. Die Farbe der Bildmitte wird an Framedumps je 6 Bilder im
-#      Fenster F3400..F3900 gemessen (das Todesbild haengt vom Weg ab): der letzte Dump <= Tod - 4 und der erste >= Tod + 5
+#      Fenster F3500..F3840 gemessen (das Todesbild haengt vom Weg ab, gemessen F3650): der letzte Dump <= Tod - 4 und der erste >= Tod + 5
 #      (Werkzeug test_r41_ventilkette ppm): vorher Rot und Gruen >= 15 (unverschleiert), nachher Rot und Gruen <= 4 und
 #      Blau >= 20 (Rot+Gruen abgezogen, Blau bleibt).
 #
@@ -205,8 +205,8 @@ re15_start_spiel(_rvc 480
     "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108"
     "RE15_WEGPLAN=${WORKDIR}/plan.txt" RE15_WEGPLAN_LOG=wegplan.txt
     RE15_MSG_LOG=1 RE15_FADE_LOG=1 RE15_STATE_LOG=state.txt
-    "RE15_FRAMEDUMP=3400-3900/6:${WORKDIR}/f_"
-    "RE15_EXIT_AT=3960#2030"
+    "RE15_FRAMEDUMP=3500-3840/6:${WORKDIR}/f_"
+    "RE15_EXIT_AT=3850#2030"
     "${RE15_PC_EXE}")
 if(NOT EXISTS "${WORKDIR}/debug.log")
     message(FATAL_ERROR "r41_ventilkette[c]: kein debug.log (exit=${_rvc}, ${WORKDIR})")
@@ -284,12 +284,14 @@ function(_mittel _bild _out)
     endif()
     set(${_out} "${CMAKE_MATCH_1};${CMAKE_MATCH_2};${CMAKE_MATCH_3}" PARENT_SCOPE)
 endfunction()
-# Dumps je 6 Bilder ab F3400: der letzte <= Tod - 4 und der erste >= Tod + 5 (Fenster am Lauf v2b_leon ausgerichtet).
-if(_f_tot LESS 3410 OR _f_tot GREATER 3890)
-    message(FATAL_ERROR "r41_ventilkette[c]: Todesbild F${_f_tot} ausserhalb des Dump-Fensters F3400..F3900 (Weg oder Zaehler veraendert?)")
+# Dumps je 6 Bilder ab F3500: der letzte <= Tod - 4 und der erste >= Tod + 5. Gemessen (Lauf lauf_a8685a18_c, exe 15:4x):
+# Warnung zu ~F1760, Flut F3524, Tod F3650, Todesschirm (pst 7) F3762, Titel/Neustart nach F3911 -> das Ende F3850 muss
+# zwischen Tod und Titel liegen (Tod + 200; frueher F2960 = Tod F2746 + 214).
+if(_f_tot LESS 3590 OR _f_tot GREATER 3830)
+    message(FATAL_ERROR "r41_ventilkette[c]: Todesbild F${_f_tot} ausserhalb F3590..F3830 (Dump-Fenster F3500..F3840, Ende F3850 vor dem Titel; Weg oder Zaehler veraendert?)")
 endif()
-math(EXPR _bild_vor "((${_f_tot} - 4 - 3400) / 6) * 6 + 3400")
-math(EXPR _bild_nach "((${_f_tot} + 5 - 3400 + 5) / 6) * 6 + 3400")
+math(EXPR _bild_vor "((${_f_tot} - 4 - 3500) / 6) * 6 + 3500")
+math(EXPR _bild_nach "((${_f_tot} + 5 - 3500 + 5) / 6) * 6 + 3500")
 _mittel(${_bild_vor} _rgb_vor)
 _mittel(${_bild_nach} _rgb_nach)
 list(GET _rgb_vor 0 _vr)
