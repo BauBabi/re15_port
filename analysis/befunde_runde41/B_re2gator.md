@@ -1636,3 +1636,37 @@ Leon steht 7096 vor der Wurzel (Hochheben, Opfer-Clip 0) bis zum Anker bei Bild 
 - **Ursache 3 (Ort):** auch ohne 1 und 2 liegt die authored Konfiguration in E1 HINTER der Ostwand (Leon P1 bei (12620,-14370),
   P2 x 8800-11000, Wand x 7200; Offline-Suche `B41nb5/probe/probe_buehne.c` aus dem Bezugspfad A: "am Ort mit eigener Gier
   passt=0") - die Kamera (E1: Cut 2, Rueckansicht frontal -1147) sieht Gator und Leon von hinten bzw. durch die Wand.
+
+### 13.2 Fortsetzung (neuer Agent ab 2026-10-24 14:0x, Kontowechsel; HEAD a06c52e0)
+Der Vorgaenger wurde vom Wochenlimit ~13:5x beendet; sein Code-Stand ist 0c101dd8 + a06c52e0 (vom Orchestrator gesichert). Bau-
+stand geprueft: re15_pc.exe 13:56:59 und libre15_engine.a 13:56:57 sind juenger als jede Quelle (letzte Aenderung
+enemy_ai_boss_gator.c 13:56:53) und der Baum ist sauber -> der gebaute Stand IST a06c52e0 (build5.log `LOCAL-BUILD-OK (build)`).
+Damit gelten diese Messungen des Vorgaengers fuer den Endstand (nicht wiederholt):
+- Sonde `B41nb5/probe/probe_maul.c` gegen die Bibliothek 13:56:57 (Ordner `n2_A..n2_E`, 13:59): ab P0 in ALLEN fuenf Lagen
+  Kopf-lokal-Abweichung 0 und Klemm-Versatz 0, Bilder mit >= 50 % von Leons Koerper im Maulraum P2 106/120, P3 120/120 - bitgleich
+  mit dem CHASE-Bezug A (vorher B/E/C/D: 0/0/0, 0/0/0, 0/17/82, 0/0/0, Tabelle §13.1). Die einzige Abweichung (B 1180, C 1113,
+  D 1364, E 1515) steht im Biss-Bild selbst (Phase schon FRESSEN, Timer 0, GUARD-Pose pitch -350, P0 noch nicht gelaufen) - das
+  Bild zeigt noch die alte Kamera mit dem Biss (s. u.), es ist kein P1-P3-Bild.
+- exe `B41nb5/mess/E1b` (13:57, Endstand, Tuerweg 20A0 -> 2090, Framedump F622-F640): `RE2 FINISHER Buehne (Nachbesserung 5,
+  RE2-P0 @0x80101048-4c): von (5763,-12762) Gier 115 -> (5638,-12546) Gier 2323 Cut 4, Versatz 249 Drehung 1888` und
+  `KAMERA FINISHER ... -> Cut 4 F627 ... (Buehne)` im Biss-Bild; Bildbogen `B41nb5/E1_schnitt2.png`: F627 zeigt den Biss noch in
+  Cut 2 (Leon oben auf der Rampe), F628 den umgesetzten Gator in Cut 4 - kein Lagesprung in der alten Kamera.
+- exe `B41nb5/mess/E1` (13:52, Vorstand mit Schnitt in P0, sonst gleich) F600-F880: Messzeile `Maul-Sitz F867: Bilder 240 (P1 14
+  P2 120 P3 106), Abweichung max 0, Kopf+Leon im Bild 230/240 (Cut 4), im Wasser 240/240`; Bilder `B41nb5/E1_nachher_zoom.png`:
+  F650-F690 Leon (blau) im Maul, F700-F720 Wurf nach oben (RE2-P2-Bild 60-75), F740 wieder im Maul, ab ~F760 YOU DIED.
+  Die 10 Bilder "nicht im Bild" sind der Wurf (Leon oben aus dem Bild; in RE2 Cut 7 ebenso, Dossier §13.0 / gr2_fin_sicht).
+  Nebenbeobachtung: in P1 (F628-F640) verdeckt eine der beiden Raum-Spinnen (braun, liegt im Vordergrund) Leons Oberkoerper; die
+  Spinnen entfernt Spur F (AUFTRAG), die Buehnen-Wahl beruecksichtigt keine anderen Aktoren.
+
+Neu gemessen (dieser Agent): Buehnen-Garantie, Sonde `B41nb5c/probe_bsweep.c` (echte re15_gr2_finisher_buehne gegen die
+Bibliothek 13:56:57, Gator-Wurzel im Raster, 8 Gierwinkel je Lage):
+- Wasser (Wurzel ausserhalb der Klemmzone 1466), Raster 250: **21320 Lagen, 0 ohne Buehne**, Versatz max 7250, Drehung max 1991,
+  1,31 ms je Suche (Raster 1000: 1480/0, 1,18 ms).
+- zusaetzlich alle Lagen IN Plattform/Rampe/Wandsaum (CROSS-Biss), Raster 250: **24256 Lagen, 0 ohne Buehne**, Versatz max 8997
+  (unter der Suchgrenze GR2_FIN_WEIT 9000; die weitesten Faelle sind Wurzeln mitten auf der Rampe x 2100-4600, Buehne im Westkanal
+  x ~-4200), 1,44 ms je Suche.
+- Folge: der Rueckfall "keine Buehne - am Ort" tritt fuer keine erreichbare Gator-Lage auf.
+
+Offen fuer diesen Agenten: Riegel `maul` (Maulraum mit gezeichnetem Kiefer, GUARD-Lagen gegen den CHASE-Bezug je Bild) und
+`buehne` (Garantie), Messzeile um den Abstand Leon <-> gezeichneter Kiefer erweitern, integration "belagerung" bis nach dem Tod
+pruefen, exe-Laeufe E1/MN2/Plattformblock/Elza/A2 am Endstand, Abschluss.
