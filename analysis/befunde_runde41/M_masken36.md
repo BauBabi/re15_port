@@ -114,3 +114,39 @@ Untergrenze. Werkzeug `test_r37_masken36 erzeuge_tiefe`, Laufzeit-Tabelle `engin
 
 Der Lader braucht keine Aenderung: R15M MIT eigenem Atlas -> eigener Atlas (re15_pri_atlas_quelle, bg_pc.c), die Zeile
 "Port-Masken ohne eigenen Atlas -> BSS-Atlas des Cuts (Runde 37 Spur P)" erscheint fuer die Stages 3..6 nicht mehr.
+
+### 1.4 Messung nachher (2026-10-24, Bau 2cfb1158 + Riegel ded95f4b)
+
+**Statisch, alle 108 Sektionen (Elza bytegleich), `re15_port/tools/maske/bilder_r41.py` -> `M_bilder/ROOMxxx0_Ccc.png`
+(je Cut: Hintergrund | VORHER | NACHHER; magenta = schon vorher, gruen = neu geschlossen, rot = weg, cyan = eingeschlossene
+Luecke, die offen bleibt) und `M_bilder/zahlen.txt`:** gezeichnet vorher 727 561 Bildpunkte -> nachher 1 199 780
+(+472 219 = Saum + vorher ausgeschlossene Rechtecke mit Tiefe aus der Erreichbarkeit), weg 0. Die cyan-Flaechen sind echte
+Zwischenraeume (Beispiel ROOM6010 C12: der Raum unter der Treppe zwischen Pfeiler, Wange und Bodenleiste; ROOM5020 C6:
+Luecken zwischen den Kistenfuessen). Beispiele: ROOM3050 C1 (Konsole links: Treppenkante -> glatte Kante), ROOM6010 C12
+(Treppe: Kanten zu, Wange oben links dazu), ROOM5020 C6 (die beiden Kisten waren GANZ ausgeschlossen, jetzt gezeichnet).
+Berichtigte Uebersicht im Format von `pri/STAGE3-6/<raum>/<cc>_port.png`: `M_bilder/uebersicht/STAGEn/<raum>/<cc>_port.png`
+(107 Bilder; pri/ ist laut VERTRAG §1.3 tabu - Ersetzen der alten, mit dem kaputten Entpacker gebauten Bilder ist eine
+Orchestrator-/Nutzer-Entscheidung, s. "Fuer den Nutzer").
+
+**Offene Kerben (Riegel `unit_r41_masken36_loecher`, ueber die Engine-Leser):** Kuenstler-Atlas deckend + farbgleich
+direkt an der Kante eines alten Rechtecks, nicht gezeichnet: VORHER 67 242 (alte Rechtecke, BSS-Atlas, ohne Ausschluss -
+das Beste, was bis Runde 40 je gezeichnet wurde) -> NACHHER 3 946 (5,9 %), Leon- und Elza-Dateien. Blit nachher: 2 399 560
+Punkte, max. Mittel je Sektion 10,66 / 765 (eigener Atlas = Hintergrund an der Zielstelle).
+
+**Tiefe aus der Erreichbarkeit:** 2966 Tabellenzeilen (Leon + Elza); davon 1372 alte Rechtecke, die ALLE vorher
+ausgeschlossen waren (von 1444; die uebrigen 72 = ROOM3050/3051 Cut 15 bleiben ganz aus), 1594 Saum-Rechtecke; KEIN
+vorher gezeichnetes Rechteck hat eine neue Tiefe (gegen die alte Tabelle geprueft). 768 Zeilen verdecken weiter Figuren
+hinter Zellen, 2184 Rechtecke haben keinen erreichbaren Figurpunkt hinter einer Zelle (zeichnen, verdecken aber nichts
+Erreichbares). Ausschluss-Tabelle jetzt nur noch ROOM3050/3051 Cut 15.
+
+**An der exe (Framedump Bild 120, RE15_WINDOW_SCALE=1, Leon per RE15_DEBUG_JUMP + RE15_PLAYER_POS, RE15_FORCE_CUT):**
+* R37-Szenen (Riegel integration_r37_masken36_stage3..6, nb2, alle gruen): HINTER 3050 C2 1203/1234 Figurpunkte verdeckt
+  (R37: 1123/1234), 5020 C9 224/322 (199), 6010 C12 844/1440 (820), 4080 C5 880/883 (879); Elza 1228/1274, 240/316,
+  656/1109, 633/636; DAVOR 0 in allen vier Stages (Leon und Elza), FREI 3050 C5 0, WEG M1 30A0/30A1 0.
+* Sweep ueber ALLE 108 Leon-Cuts (Scratchpad `m41/py/d1_sweep.py`, Stellen aus `test_r37_masken36 suche 60`, A = mit
+  Masken, B = RE15_NO_PRI; Figurpunkte = |B - Hintergrund| > 24 im Figurfenster - der figurlose Spielrahmen ist bitgleich
+  zum probe_bg_dump-Bild, gemessen 0 Abweichung): **DAVOR 53 Szenen, 49 mit 0 uebermalten Punkten**; 4 mit wenigen
+  Punkten, die NICHT Leon sind: v4040_11 (7 von 5915) und v4080_07 (34 von 5977) = Kanten des 3D-Tuermodells im Tuerrahmen
+  (der Rahmen deckte die Tuer-Oberkante schon VOR Runde 41: 448 Punkte aus alten, gezeichneten Rechtecken), v5050_03
+  (4 von 3316, Rand eines runden 3D-Objekts), v5100_07 (27 von 1890: Leons Hand am unteren Bildrand unter einem ALTEN,
+  schon vorher gezeichneten Rechteck - kein Runde-41-Effekt). HINTER 44 Szenen: 19 385 von 28 457 Figurpunkten verdeckt.
