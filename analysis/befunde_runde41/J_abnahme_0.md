@@ -58,6 +58,8 @@ Keyframe-Wurzelweg der eigenen Bank aus (No-op), Bit 2 war "deferred", Super_set
 - o3061_s3: t08 Clip 2 +0x95 19 (-18780,-28017), t09 +0x95 44 (-18791,-28390), t10 +0x95 12 (-18783,-28806), t11 +0x95 39
   (-18810,-29279), t12 (-18795,-30700); Gitter t03 lokal (252,192,-153) Rot (0,1024,3072) Vater 0x8014046c, t04 lokal (-18276,..)
   Rot (72,3072,0) Vater 0x80072d4c, ab t05 (-18116,-266,-26788). = die Sollwerte in den Riegeln (keine erfundenen Zahlen).
+- o3061_s2 (Sollwerte des Integrationsriegels): t09 Clip 0 +0x95 20 (-18860,-26266); t11 Clip 1 +0x95 47 (-19054,-27044); t12 Clip 2
+  +0x95 30 (-18792,-28234); t13 +0x95 22 (-18799,-29042); t14 (-18795,-30700) — stimmen mit den Zahlen im Riegel ueberein.
 
 ## Punkt 1 — ROOM3060, Marvins Animation am Ende seines Abschnitts (Leon-Szenario)
 
@@ -234,8 +236,10 @@ Logs unter Scratchpad `J41abn0/ctest_*.log`.
    1141, Tuer-/Raumwechselweg in main.c, STAGE3-Masken, Elza-Ketten), Regex in `J41abn0/integ_regex.txt`:
    `ctest -R "<regex>" -j 3` -> **52/54 Passed**; rot unter Last: `integration_elza_vollstart` (Zeitschranke 100 s Wanduhr, Szene
    lief noch: letzte Zeile F737 `[knee] ... cut=6`) und `integration_r35_cut1150` (Zeitablauf 900 s mitten in Lauf C, normal
-   ~550-615 s). Einzeln nachgefahren: `integration_elza_vollstart` **Passed (113,7 s)**; `integration_r35_cut1150` siehe Stand am
-   Ende. Gruen u.a.: r39_dining1141_* (4), r38_dining1141_* (7), r37_elzaems_elza3091/3071, r37_szene11c0, r36_szene1150,
+   ~550-615 s). Einzeln nachgefahren: `integration_elza_vollstart` **Passed (113,7 s)**; `integration_r35_cut1150` **Passed
+   (635,3 s)**, darin die Montage durch ROOM1040 mit der neuen Bindung `[rbj-binder] ROOM1040 Spieler rec-1 (alt rec0) ...`,
+   `[rbj] room 1040 cinematic overlay: 24 clips, 712 kf` und `[irons-tod] ROOM1150 ... Rueckkehr beendet, Steuerung frei`.
+   **Damit 54/54.** Gruen u.a.: r39_dining1141_* (4), r38_dining1141_* (7), r37_elzaems_elza3091/3071, r37_szene11c0, r36_szene1150,
    r35_cut10f0, r36_szenenleon, r36_story_elza, r36_elza_* (5), r37_roy_* (3), r37_masken36_stage3, r38_elzatoene_* (2),
    r38/r39_heliport1171_* (5), r38_szenenschutz, r39_elza_karte, r39_johnruf1041_* (8), r39_parkplatz11c0_* (5), door_traversal,
    door_lock, keydoor.
@@ -278,4 +282,4 @@ unerreichbar mit Beleg-Kette; der Original-Handler @0x80040c18 nimmt Gegner 0 oh
 Gates: RE **haelt** (11 Adressbereiche selbst disassembliert, Original-Daten selbst gelesen, MZD-RAM = PSX.EXE); V **Mangel V1**
 (formal, Orchestrator-Entscheid wie B5 genuegt); N **keine erreichbare Nebenwirkung**, aber **Mangel M2** (falsche Dossier-Aussage
 zu ROOM4031) + Nebenbefund N1 (Hund, nicht Spur J); T: Riegel der Spur 9/9, unit/probe/prop 917/923 (6 release/-Skript-Zeitablaeufe
-unter Last, vom Diff unberuehrt), Integration 52/54 + Nachlaeufe (s. Gate T und Stand unten).
+unter Last, vom Diff unberuehrt; trocken einzeln gruen), Integration 54/54 (2 davon einzeln nachgefahren).
