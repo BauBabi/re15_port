@@ -240,6 +240,27 @@ W00 + Waffe 0). K2 zum groessten Teil (Binder + Koerper), die Clip-13-Schleife n
   (libm, cmake_minimum_required, keine .exe-Pfade). Schwaeche: der 3091-Riegel verdichtet je Aktor auf Clip-Wechsel
   und sieht die Wiedergabe im Clip nicht (M1).
 
+## 8. Tests der Abnahme (gezielt; keine volle Suite)
+* Spur-Riegel + J-Binder: `ctest -R "r41_stage3szenen" -j 4 --timeout 2400` -> **8/8 gruen** (s. 3.).
+* Alle Einheiten-Gruppen (beruehrte Module player_common/re15_damage/climb_common/enemy_common/main.c-Haken sind ueber
+  viele Gruppen verteilt, daher ALLE): `ctest -R "^(unit|probe|prop)_|^(re15_tests|r28_messer_dauerschlag|
+  r29_1d3_doppelabzug|r31_trefferboxen|r31_trefferboxen_versteckt|m93r_nachladen|eintritt_pose_einmal)$" -j 6
+  --timeout 600` -> **923/929 gruen**; die 6 roten sind ausschliesslich Release-/Android-Skripttests mit Zeitablauf unter
+  Last (unit_r35_android_pruefkette, unit_r35_android_bash_mutanten, unit_r38_releaseskript_{trocken,ablauf,fehler_bau,
+  fehler_umfeld}; der Trockenlauf meldet alle Pruefungen "ok" und haengt erst am Ende) — Spur K beruehrt weder release/
+  noch platform/android/; dieselben Tests sind laut Orchestrator (0bcfa157) und anderen Abnahmen unter Last ausgenommen.
+* Integrationsgruppen der beruehrten Module/Raeume (Zielen/Schuss/Kleidung/Wunden/Weste/Klettern/Raumwechsel/Inventar,
+  RBJ-/NPC-Szenen 1041/1141/1150/1171/10F0/11C0, Elza-EMS 3071/3091):
+  `ctest -R "^integration_(r37_elzaems_elza3091|r37_elzaems_elza3071|weste_load_pin|r36_kleidung_bild|
+  r36_kleidung_spielweg|r39_zustand_kleidung|r39_dining1141_zielen|r36_klettern|room_transition|r36_elza_schuss|
+  r36_schuss|r36_ziel1190_scheiben|r39_inventar_status|r37_szene11c0|r36_szene1150|r39_elza_klettern.*|r36_zielen.*|
+  weste.*|r35_cut1150.*|r38_heliport1171.*|r39_heliport1171.*|r38_dining1141.*|r39_dining1141.*|r39_johnruf1041.*|
+  r35_cut10f0.*)$" -j 3 --timeout 2400` -> **`100% tests passed, 0 tests failed out of 40`** (1957 s)
+* Eigene Messlaeufe (exe-Kopien `re15_pc_k0abn{A,B,C,D,E}.exe`, danach geloescht; kein taskkill): Lauf A (echter Weg 3061 ->
+  30C1), Lauf B (Bewegung/R1 in 30C1), Lauf C (echter Weg 30C1 -> Tuer -> 3091 -> zu Fuss zur Riegeltuer -> Szene ->
+  30C1), Lauf D (= C, Bildabzuege an den 7 Original-Takten), Lauf E (Status-Bildschirm als Sherry). Alle exit=0, keine
+  Fehlerzeilen im debug.log.
+
 ## 9. Maengel (nummeriert, nachpruefbar)
 **M1 (K2, blockierend) — Spielfigur-Schleife fehlt: Sherry erstarrt in der 3091-Szene.**
 Original: Sub-0-Handler FUN_80050cb8 (Spieler @0x80073e30[0], NPC @0x80076ca0[0]) setzt am Clip-Ende +0x06 = 2
@@ -286,3 +307,27 @@ Bytegleichheit). Original bindet EDD/EMR bei JEDEM Neuladen (@0x8003154c/@0x8003
   laeuft sub02 im K-Baum durch und nimmt die Schacht-Tuer (Lauf A).
 * H4 Bekannt/offen laut Dossier und nicht K: Renn-Stopp (Spur E, E-E2), Elzas Tempo-Zeile 4 (70/65/210) gegen Port
   75/70/200, Wund-Reset beim Westen-Wechsel, PSX-Ziel ohne Koerper-Tausch.
+* H5 Anzeige: Der Status-Bildschirm zeigt als Sherry "SHERRY BIRKIN / STUDENT" (STPIC_0F, richtig) und im Feld
+  "Equip Arms" das MESSER (Lauf E, Bild `scratchpad/k0/k0_k1_status_sherry.png`; Port 25c8 = 0x80 -> Messer). Im Spiel
+  hat sie keine Waffe (aca5d 0, kein Zielen). Das Original zeigt hier dasselbe: Original-RAM 30C1 Inventar
+  `(1,0)(3,15)(21,50)`, 25c8 = 0 = Platz 0 = Messer (Id 1), aca5d = 0. Ob "sollte keine Waffe haben" auch die Anzeige
+  meint (RE2-Retail: Sherry ohne Waffen), entscheidet der Orchestrator/Nutzer; am Wortlaut-Kontext (Modell) gemessen
+  ist K1 erfuellt.
+
+## 11. Gesamturteil
+| Punkt / Gate | Urteil | Kern-Beleg |
+|---|---|---|
+| K1 Sherry ab 30C1: Modell falsch/kaputt, keine Waffe | **erfuellt** | Lauf A (echter Weg) + B: PL0F-Koerper/W00, Bild = Original-Puffer, Tempo 50/120/80/35 = Zeile 15, aca5d 0, kein Zielen |
+| K2 3091 "staendig falsche Animationen" | **teilweise** | Clipfolgen/Laengen/Gesten aller drei Figuren = Original (Lauf C/D), ABER Sherrys Schleifen-Clip 13 eingefroren (M1) |
+| RE-Gate (Adressen, Stichproben, Suchworte) | teilweise | 12 Pruefzeilen mit ueber 25 Adressen selbst disassembliert/gelesen: alle zitierten Adressen stimmen, keine Rate-Worte; aber die Kopf-Behauptung "gleiche Familie = bytegleich" ist fuer PL03/PL08-PL0E falsch (M3) |
+| Regel "Original oder nicht" (keine Wahlfragen) | teilweise | M2 (HP := 100 / Rueckwechsel-Waffe als Nutzerfrage statt Original) |
+| Vertrag (Pfade, Bits, Ids, Haken) | erfuellt | nur erlaubte Pfade, kleine kommentierte Haken; Konflikt nur J/A in enemy_common.c (H1) |
+| Riegel je Punkt, messend | teilweise | vorhanden und gruen, aber 3091-Riegel blind fuer M1 |
+| Tests | erfuellt | 8/8 Spur, 923/929 Einheiten (6 Release-/Android-Skript-Zeitablaeufe ohne Bezug), 40/40 Integration der beruehrten Module |
+
+**bestanden = false** — K2 ist nur teilweise erfuellt (M1), dazu M2 (Regel) und M3 (unbelegte Code-Behauptung).
+Nachbesserung (Vorschlag, nachpruefbar): (1) Spieler-Sub-0-Schleife wie FUN_80050cb8 @0x80050dbc-c8 (anim_flags & 0x04
+-> Bild nach fc-1 wieder 0) im Spieler-Posen-/Vorschubpfad; Riegel: im 3091-Lauf muss der Spieler-Slot innerhalb jedes
+Clip-13-Abschnitts nach 39 wieder auf 0 springen (Original lauf2: 19,5 Umlaeufe in B1-779), plus Bildvergleich
+Sherry-Ausschnitt F2063 != F3663. (2) M2 nach dem Original entscheiden (oder RE2-belegt), nicht als Frage. (3) M3: EDD/EMR bei abweichenden PLD-Teilen
+binden (Original @0x8003154c/@0x80031578 bindet immer) statt nach Waffen-Familie; mit Spur J (Marvin 0x0D) abstimmen.
