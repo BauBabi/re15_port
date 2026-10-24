@@ -958,8 +958,8 @@ RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72
 - **Tunnel ROOM2020 (4000,-3150) Blick 0, 8 Renn-Bilder F60..F67** (Tempo 210 213 214 210), dann:
   | Lauf | Endstand n3c | VORHER n3 (4190e6b0) | Original (Disasm) |
   |---|---|---|---|
-  | TA LINKS | F68 dreh -72 mo 200 Weg 169, F69 -72 mo 105 Weg 0, F70 -96 | F68 -96 mo 105 Weg 170, F69 -96, F70 -96 | 72 (@0x80032660-@0x800326a0) + Stopp, 72 + Drehen 0x0301, dann 96 (@0x80032a00) |
-  | TB OBEN+LINKS | F68 -72 mo 200 Weg 169, F69 -72 mo 105 Weg 75, F70 -48 | F68 -48 mo 105 Weg 169, F69 -48, F70 -48 | 72 + Stopp, 72 + Gehen 0x0101 (@0x80032738), dann 48 (@0x8003235c) |
+  | TA LINKS | F68 dreh -72 mo 200 Weg 169, F69 -72 mo 105 Weg 0, F70 -96 | F68 -96 mo 105 Weg 170, F69 -96, F70 -96 | 72 (@0x80032660-@0x800326a0) + Stopp, 72 + Drehen 0x0301, dann 96 (Drehen-DECIDE @0x800329e0-@0x80032a20) |
+  | TB OBEN+LINKS | F68 -72 mo 200 Weg 169, F69 -72 mo 105 Weg 75, F70 -48 | F68 -48 mo 105 Weg 169, F69 -48, F70 -48 | 72 + Stopp, 72 + Gehen 0x0101 (@0x80032738), dann 48 (Gehen-DECIDE @0x80032378-@0x800323b8) |
   | TC Stopp, dann OBEN+RENNEN | F68/F69 Stopp 170/130, F70 mo 105 Weg 75, F71 mo 100 Weg 208, F72 231; loslassen F73 191 | F70 sofort mo 100 Weg 208 | Gehen 0x0101 (@0x80032738), Rennen erst @0x80032444 |
   | TD ganzer Stopp | F68..F73 170 130 90 50 10 -30, ab F74 Stehen, erster Leerlauf-Wechsel mo 210 F169 (= F74 + 95) | Stopp gleich, Leerlauf-FSM ab F68, mo 210 F189 | Stehen-ANIMATE Fall 0 im Bild nach dem Stopp-Ende (@0x80032958 -> @0x80032074), Zeitgeber rng & 0x1f + 90 (@0x800320a8-@0x800320bc) |
   Der Zeitgeberwert selbst kommt im Port aus re15_idle_rand (Bildzaehler-Hash, vorbestehend) — belegt ist hier nur der Einstieg
