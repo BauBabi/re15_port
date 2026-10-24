@@ -22,9 +22,6 @@
  *                                       @0x0A5C bis Message_on 1 @0x0A62 ([mot]-Spur), Pos_set @0x0A8C im ersten Bild
  *                                       nach dem Schliessen der Frage und im selben Skript-Takt wie Ifel_ck @0x0A68,
  *                                       dieses Bild gehalten ([kamerahalt] HALTEN), Spieler dort (3650,-3018) mo 200.
- *   renn <debug.log> <state.txt>       Kurbel im RENNEN: ab Pos_set (3650,-2925) Renn-Stopp mit dem Port-Tempo 200,
- *                                       Schritte 160,120,80,40,0,-40 (0x80032778 @0x8003293c/@0x8003295c), danach
- *                                       Stand bis Plc_motion @0x0A9C.
  * Rueckgabe 0 = bestanden, 1 = durchgefallen, 2 = Eingabefehler.
  */
 #define _DEFAULT_SOURCE
@@ -320,25 +317,6 @@ static int takt(const char *dlog, const char *state)
     return ok ? 0 : 1;
 }
 
-static int renn(const char *dlog, const char *state)
-{
-    long f_pos = scd_bild(dlog, "@0x0A8C"), f_mot = scd_bild(dlog, "@0x0A9C");
-    printf("SCD Pos_set F%ld Plc_motion F%ld\n", f_pos, f_mot);
-    if (f_pos < 0 || f_mot <= f_pos + 6 || f_mot >= MAXF) { printf("FAIL Szene nicht vollstaendig\n"); return 1; }
-    if (zustand_lesen(state) != 0) { printf("FEHLER %s\n", state); return 2; }
-    int ok = 1, z = -2925, tempo = 200;            /* Pos_set @0x0A8C z -2925; Port-Renntempo (Tabelle @0x80073f24) */
-    for (int i = 0; i < 6; i++) {
-        tempo -= 40; z -= tempo;                     /* @0x8003293c, Vorschub @0x8003295c in Blickrichtung 1024 = -z */
-        const zustand_t *st = &s_z[f_pos + i];
-        printf("F%ld (%d,%d) Soll z %d\n", f_pos + i, st->x, st->z, z);
-        if (!st->gueltig || st->x != 3650 || st->z != z) ok = 0;
-    }
-    for (long fr = f_pos + 6; fr <= f_mot; fr++)
-        if (!s_z[fr].gueltig || s_z[fr].x != 3650 || s_z[fr].z != z) { ok = 0; printf("FAIL F%ld (%d,%d) nach dem Stopp\n", fr, s_z[fr].x, s_z[fr].z); break; }
-    printf(ok ? "BESTANDEN\n" : "DURCHGEFALLEN (Renn-Stopp fehlt oder weicht ab)\n");
-    return ok ? 0 : 1;
-}
-
 int main(int argc, char **argv)
 {
     if (argc >= 3 && strcmp(argv[1], "segment") == 0) return segment(argv[2]);
@@ -347,7 +325,6 @@ int main(int argc, char **argv)
     if (argc >= 5 && strcmp(argv[1], "gleich") == 0) return gleich(argv[2], atol(argv[3]), atol(argv[4]));
     if (argc >= 5 && strcmp(argv[1], "kamwechsel") == 0) return kamwechsel(argv[2], atol(argv[3]), atol(argv[4]));
     if (argc >= 4 && strcmp(argv[1], "takt") == 0) return takt(argv[2], argv[3]);
-    if (argc >= 4 && strcmp(argv[1], "renn") == 0) return renn(argv[2], argv[3]);
     fprintf(stderr, "Aufruf: %s marker <bmp> | kurbel <debug.log> <state.txt> <anim.txt> | segment <state.txt>\n",
             argv[0]);
     return 2;

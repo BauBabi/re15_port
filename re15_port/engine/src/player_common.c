@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include "re15_player.h"
 #include "re15_plcloop_r41.h"   /* Runde 41 Spur E: Spieler-Clip-Ende im Kommandowort 4 (plcloop_r41.c) */
-#include "re15_rennstopp_r41.h"  /* Runde 41 Spur E: Renn-Stopp (rennstopp_r41.c) */
 #include "re15_elza_r39.h"   /* Runde 39 Spur H: Eintritts-Latch vs. Kommandowort 4 (@0x80041bb0) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"   /* WELLE B: RE2-Flavor-Gates im Anim-Advancer (Clip-Pin-Konflikte) */
@@ -1008,9 +1007,6 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * RELOAD->READY->next-tick-LOWER is the same observable order). Raise/slash/reload
          * themselves never test R1 and play out first. */
         int r1_held = (pad_bits & RE15_PAD_BIT_R1) != 0;
-        { extern int re15_player_equipped_weapon(void);   /* Runde 41 Spur E: Renn-Stopp 0x80032604/0x80032778 (re15_rennstopp_r41.h) */
-          if (re15_rennstopp_r41_takt(p, pad_bits, RE15_MOTION_RUN, RE15_MOTION_IDLE, RUN_SPEED_PER_FRAME,
-                                      re15_player_equipped_weapon() != 0)) { r1_held = 0; move_dir = 0; } }
         if (!r1_held && s_player_aim_phase != RE15_AIM_NONE &&
             s_player_aim_phase != RE15_AIM_LOWER) {
             int enter_lower = 0;
@@ -1384,9 +1380,7 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * (other clip ids), in-progress Plc_dest walks, and the byte-true post-walk hold are
          * all left untouched. */
         extern int re15_r39k_reach_wartet(void);   /* Runde 39 Spur K NB1: im Ankunftsbild steht die Gang-Pose (f314 @0x80030c78) */
-        if (!p->walk_active && !p->anim_freeze && !re15_r39k_reach_wartet() &&   /* Runde 41 Spur E: Renn-Stopp mit leerem Pad */
-            re15_rennstopp_r41_skript(p, RE15_MOTION_RUN, RE15_MOTION_IDLE, RUN_SPEED_PER_FRAME)) {
-        } else if ((p->motion == 105 || p->motion == 100) && !p->walk_active && !p->anim_freeze && !re15_r39k_reach_wartet()) {
+        if ((p->motion == 105 || p->motion == 100) && !p->walk_active && !p->anim_freeze && !re15_r39k_reach_wartet()) {
             p->motion = RE15_MOTION_IDLE;
             p->anim_frame = 0;
             p->motion_init_delay = 0;

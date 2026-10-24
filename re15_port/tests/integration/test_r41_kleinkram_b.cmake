@@ -21,7 +21,8 @@ cmake_minimum_required(VERSION 3.16)
 #   TEIL geh             E-N2: Kurbel im GEHEN (Abnahme 1 R2): kein Spieler-Bild zwischen Message_on 0 @0x0A5C und 1
 #                        @0x0A62 (Spiel-Task @0x80020de4 vor Nachrichten-Takt @0x80020f3c), Pos_set @0x0A8C im ersten Bild
 #                        nach dem Schliessen der Frage (Auswahl-Message_on kehrt sofort zurueck @0x80040520), Bild gehalten.
-#   TEIL renn            Kurbel im RENNEN (Abnahme 1 R4): Renn-Stopp an der Kurbel (0x80032778 @0x8003293c/@0x8003295c).
+#   TEIL renn            dieselbe Bildfolge im RENNEN (Abnahme 1 R4). Den Renn-STOPP des Originals (0x80032778 @0x800328f8-
+#                        @0x8003295c, Auslauf an der Kurbel) hat der Port nicht - Dossier "Nachbesserung 2" OFFEN.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_WERKZEUG=<test_r41_kleinkram_b_exe> -DWORKDIR=<dir> -DTEIL=<teil>
 #               -P test_r41_kleinkram_b.cmake
 # =============================================================================
@@ -124,7 +125,7 @@ elseif(TEIL STREQUAL "renn")
     set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-800,1024,1
              "RE15_INPUT_SCRIPT=XU0.2,XUA0.1,XU0.1,XUA0.1,XU0.1,XUA0.1,XU0.1,XUA0.1,XU0.1,XUA0.1,XU1.0"
              RE15_INPUT_SCRIPT_START=300 RE15_INPUT_SCRIPT_BASIS=spiel RE15_PRESS=square@380,square@430,square@470,square@510
-             RE15_SCD_TRACE=1 RE15_STATE_LOG=state.txt "RE15_EXIT_AT=430#2020")
+             RE15_SCD_TRACE=1 RE15_MOTRACE=1 RE15_STATE_LOG=state.txt RE15_KAMERAHALT_LOG=1 "RE15_EXIT_AT=420#2020")
 else()
     message(FATAL_ERROR "r41_kleinkram_b: TEIL '${TEIL}' unbekannt")
 endif()
@@ -261,10 +262,7 @@ elseif(TEIL STREQUAL "geh" OR TEIL STREQUAL "renn")
     pruef(_d "loaded room2020.rdt")
     pruef(_d "@0x0A62 op=0x2B")
     pruef(_d "@0x0A8C op=0x32")
-    set(_modus renn)
-    if(TEIL STREQUAL "geh")
-        set(_modus takt)
-    endif()
+    set(_modus takt)
     execute_process(COMMAND "${RE15_WERKZEUG}" ${_modus} "${_lauf}/debug.log" "${_lauf}/state.txt"
                     RESULT_VARIABLE _rw OUTPUT_VARIABLE _ow ERROR_VARIABLE _ew)
     message(STATUS "${_ow}${_ew}")

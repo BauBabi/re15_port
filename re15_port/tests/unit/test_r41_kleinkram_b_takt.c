@@ -1,6 +1,6 @@
 /*
  * Runde 41 Spur E "kleinkram_b", Nachbesserung 2 (Abnahme 1 Maengel 1-3, master-AUFTRAG E-N1/E-N2). Module
- * engine/src/msgtakt_r41.c, kamerahalt_r41.c, rennstopp_r41.c; Dossier E_kleinkram_b.md "Nachbesserung 2".
+ * engine/src/msgtakt_r41.c, kamerahalt_r41.c; Dossier E_kleinkram_b.md "Nachbesserung 2".
  *
  *   msgtakt     Restore beim Schliessen IM Nachrichten-Takt wirkt erst hinter dem Spiel-Takt (Hauptschleife
  *               @0x80020de4 Spiel-Task < @0x80020f3c/@0x80010044 Nachrichten-Takt); ein Oeffnen im selben Bild holt
@@ -8,9 +8,6 @@
  *               Auswahl-Message_on laeuft durch nur mit Skript-Bit 0x02000000 (@0x8003f040-@0x8003f04c).
  *   kamerahalt  Apply-Bild = pending ODER work_vars[0x0A] != cam_id (Present @0x800214f4-@0x80021538 ->
  *               @0x80021558/@0x80021560); erstes Bild eines Raums und ROOM1240-Montage nicht.
- *   rennstopp   Renn-Stopp 0x80032604 @0x8003272c / 0x80032778 @0x800328f8-@0x8003295c: Port-Tempo 200 ->
- *               Schritte 160,120,80,40,0,-40, Clip 3 + Mischung 7, Abbruch OBEN/UNTEN/LINKS/RECHTS, kein Einstieg
- *               bei OBEN+RENNEN, Einstieg bei Zielen mit Waffe, Skript-Zweig mit leerem Pad.
  *   frage       ROOM2020 ohne Fenster, Leon GEHT in die Kurbel-Zone (Slot 3 @0x009AE), Aktion, beide Fragen per
  *               Quadrat: mit der Original-Reihenfolge kein Luecken-Bild zwischen Message_on 0 @0x0A5C und 1 @0x0A62
  *               (Geh-Bild bleibt, Original n9..n94 Clip 5 Bild 9) und Pos_set @0x0A8C im ERSTEN Bild nach dem
@@ -36,7 +33,6 @@
 #include "re15_montage_fx.h"
 #include "re15_msgtakt_r41.h"
 #include "re15_kamerahalt_r41.h"
-#include "re15_rennstopp_r41.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -120,54 +116,6 @@ static void teil_kamerahalt(void)
     PRUEF(re15_kamerahalt_r41_haelt(0x2021) == 0, "ROOM1240-Montage aktiv: zeigen");
     re15_montage_fx_set_active(0);
     g_scd.cam_change_pending = 0;
-}
-
-/* ============================================================================================ rennstopp */
-static void teil_rennstopp(void)
-{
-    printf("== rennstopp ==\n");
-    re15_actor_t a; memset(&a, 0, sizeof a);
-    const int RUN = 100, IDLE = 200;
-    re15_rennstopp_r41_zuruecksetzen();
-    a.state = 1; a.motion = RUN; a.x = 0; a.z = 0; a.rot_y = 0;
-    PRUEF(re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP | RE15_PAD_BIT_CROSS, RUN, IDLE, 200, 0) == 0 && a.x == 0,
-          "OBEN+RENNEN gehalten (& 0x201 == 0x201 @0x800326fc): kein Stopp");
-    static const int soll[6] = { 160, 280, 360, 400, 400, 360 };
-    int ok = 1, r = 0;
-    for (int i = 0; i < 6; i++) {
-        r = re15_rennstopp_r41_takt(&a, 0, RUN, IDLE, 200, 0);
-        if (r != 1 || a.x != soll[i]) ok = 0;
-        if (i == 0 && (a.motion != IDLE || a.anim_frac != 7 || a.anim_frame != 0)) ok = 0;
-    }
-    PRUEF(ok, "Loslassen: Clip 3 + Mischung 7 (@0x80032904/@0x80032910), x 160,280,360,400,400,360 (Tempo -40 @0x8003293c, letzter Schritt -40 @0x8003295c): x=%d", a.x);
-    r = re15_rennstopp_r41_takt(&a, 0, RUN, IDLE, 200, 0);
-    PRUEF(r == 0 && !re15_rennstopp_r41_aktiv() && a.x == 360, "Tempo < 0 -> Stehen (@0x80032958), danach kein Schritt");
-    a.motion = RUN; a.x = 0;
-    re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP, RUN, IDLE, 200, 0);          /* RENNEN losgelassen, OBEN gehalten */
-    PRUEF(re15_rennstopp_r41_aktiv() && a.x == 160, "nur RENNEN losgelassen: Stopp-Bild (+6 = 2 im Rennen-DECIDE)");
-    r = re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP, RUN, IDLE, 200, 0);
-    PRUEF(r == 0 && !re15_rennstopp_r41_aktiv() && a.x == 160, "OBEN im Stopp -> Gehen (0x0101 @0x80032738), kein Stopp-Schritt");
-    a.motion = RUN; a.x = 0;
-    re15_rennstopp_r41_takt(&a, 0, RUN, IDLE, 200, 0);
-    r = re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_LEFT, RUN, IDLE, 200, 0);
-    PRUEF(r == 0 && !re15_rennstopp_r41_aktiv(), "LINKS im Stopp -> Drehen (0x0301 @0x80032750)");
-    a.motion = RUN; a.x = 0;
-    r = re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP | RE15_PAD_BIT_CROSS | RE15_PAD_BIT_R1, RUN, IDLE, 200, 1);
-    PRUEF(r == 1 && a.x == 160, "Zielen mit Waffe aus dem Rennen (@0x80032708-@0x80032720): erst der Stopp");
-    re15_rennstopp_r41_zuruecksetzen();
-    a.motion = RUN; a.x = 0;
-    r = re15_rennstopp_r41_takt(&a, RE15_PAD_BIT_UP | RE15_PAD_BIT_CROSS | RE15_PAD_BIT_R1, RUN, IDLE, 200, 0);
-    PRUEF(r == 0, "R1 ohne Waffe: weiter rennen");
-    a.motion = RUN; a.x = 0; a.state = 1;
-    int n = 0;
-    while (re15_rennstopp_r41_skript(&a, RUN, IDLE, 200)) n++;
-    PRUEF(n == 6 && a.x == 360 && a.motion == IDLE, "Skript-Zweig (Pad gesperrt, Set(2,7)): derselbe Stopp, %d Schritte, x=%d", n, a.x);
-    a.motion = RUN; a.x = 0;
-    re15_rennstopp_r41_skript(&a, RUN, IDLE, 200);
-    a.state = 4;                                                               /* Plc_motion uebernimmt */
-    r = re15_rennstopp_r41_skript(&a, RUN, IDLE, 200);
-    PRUEF(r == 0 && !re15_rennstopp_r41_aktiv() && a.x == 160, "Kommandowort 4 (Plc_motion) beendet den Stopp");
-    re15_rennstopp_r41_zuruecksetzen();
 }
 
 /* ============================================================================================ frage */
@@ -256,7 +204,7 @@ static frage_t frage_lauf(int r41)
     s_r41 = r41;
     {   static int s_gemerkt = 0; static re15_game_state_t s_ausgang;   /* jeder Lauf vom selben Spielstand */
         if (!s_gemerkt) { s_ausgang = g_game; s_gemerkt = 1; } else g_game = s_ausgang; }
-    re15_msgtakt_r41_zuruecksetzen(); re15_rennstopp_r41_zuruecksetzen();
+    re15_msgtakt_r41_zuruecksetzen();
     re15_game_flag_set(3, 0x72, 1);                     /* Kurbel aufgenommen (ROOM2010 sub02 @0x008CA) */
     if (room_boot(0x2020, 2600, -1500, 1024, 1) != 0) return r;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -312,7 +260,6 @@ int main(int argc, char **argv)
     const char *teil = argc > 1 ? argv[1] : "alle";
     if (!strcmp(teil, "msgtakt")    || !strcmp(teil, "alle")) teil_msgtakt();
     if (!strcmp(teil, "kamerahalt") || !strcmp(teil, "alle")) teil_kamerahalt();
-    if (!strcmp(teil, "rennstopp")  || !strcmp(teil, "alle")) teil_rennstopp();
     if (!strcmp(teil, "frage")      || !strcmp(teil, "alle")) teil_frage();
     printf("%s: %d/%d bestanden\n", g_fail ? "FAIL" : "OK", g_n - g_fail, g_n);
     return g_fail ? 1 : 0;
