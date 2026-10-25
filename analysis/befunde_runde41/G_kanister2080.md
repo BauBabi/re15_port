@@ -1067,3 +1067,85 @@ Laufordner/Bilder: `<SP>/g3` (scratchpad der Sitzung, nicht im Baum); Bildbelege
 - [ ] M2 RE (Ada-Blick Cut 7) / Umsetzung G-E2 / Messung Nord- und Suedwurf Leon + Elza / Riegel Blickwert
 - [ ] Tests gezielt, Dossier 10.x (OFFEN, Fuer den Nutzer), Abschluss-Commit
 
+
+### 10.1 M3 - Explosionseffekt des Gaskanisters (Nachtrag 28): RE2-Beleg (selbst disassembliert/gelesen)
+Werkzeuge: `.claude/skills/re15-psx-disasm/scripts/re2_disasm.py` (info/re2leon/PSX.EXE, `--bin EM23_OVL_0000.BIN`), eigene
+ESP-Zerleger (Spawn-Rechnung wie re2_fx.c spawn_kern = FUN_8001cbe8/FUN_8001bf10, Registrierung FUN_8001bca0), RDT-Bytes
+info/re2leon/PL0/RDT/ROOM40A0.RDT. Ergebnis: Die Explosion des Kanisters ist KEIN einzelner Sprite, sondern die R1-Folge aus
+fuenf Effekt-Quellen; vier davon brauchen die RAUM-ESP von ROOM40A0, die der Port in 2090/2091 nie registriert hat.
+
+**R1 P0 @0x801021ec-0x80102398 (EM23, `+6 == 0`):** `jal 0x8005bd6c` (SE 4) @0x801021ec, `jal 0x80018fb0` @0x801021f4
+(FUN_8007730c = Bit setzen in 0x800d489c/0x800d487c, kein Effekt), Sperre/Cut 5 @0x8010220c-6c, Schuetteln `ori v0,v0,0x4`
+@0x801022b0, Kanister-Weltlage aus der Matrix @0x80102300-24 (+0x80 = Einheitsmatrix 0x8009db44), `jal 0x8007746c` @0x80102320
+(Matrix -> Winkel, RE2_Quellcode_V2/FUN_8007746c.c), Rumble @0x8010232c/@0x80102340, **`jal 0x80036eb4` a0 = 0x800d051c
+(Kanister-Objekt) @0x80102348**, Kiefer FUN_80104318 @0x80102354, VSync 4 @0x8010235c-64, **Fontaene FUN_80103eb4 @0x80102368**,
+**Spritzring FUN_8010338c @0x80102374**, Raum-SE Se_on(0x020f0001) @0x8010237c-84, +0x16B = 9 @0x80102390-94.
+- **FUN_80036eb4 (der Kanister fliegt abgedunkelt weg):** `ori v0,zero,0x8000 / sh v0,492(a0)` (+0x1EC), `addiu v0,zero,-10 /
+  sh v0,486(a0)` (+0x1E6 = -10), `lui v1,0x40 / ori v1,v1,0x4040 / sw v1,444(a0)` (+0x1BC Farbe 0x404040), `sh zero,488/490/496(a0)`,
+  `lw v0,332 / ori v0,v0,0x4a / sw v0,332(a0)` (+0x14C |= 0x4A = Flug wie der Kiefer-Part), `lhu v1,118 / addiu v1,v1,2048 /
+  sh v1,484(a0)` (+0x1E4 = Gier + 0x800) @0x80036eb4-ef4: dieselben Felder wie FUN_80104318 fuer Part 7, im Objekt ab +0x14C.
+- **Spritzring FUN_8010338c:** 6 x `jal 0x8001bf10` a0 = 0x030f2000/0x030f3000/0x030f3000/0x030f2000/0x030f2000/0x030f3000,
+  a1 = 0, a2 = 0x800d051c + 84 (Kanister-Matrix) @0x8010344c-d0, Versaetze = SVECTOR-Tafel @0x801000a8 `[0,-2800,0] [300,-2100,0]
+  [0,-700,0] [0,0,300] [0,-1400,-200] [-500,-400,200]` (laengs des Kanisters, Laenge 2784). Kern-Bank 3 (CORE00.ESP Id 03 @0x8,
+  Kopf CLUT 0x7811 = Zeile 480 x 272, TPage 0x1E), Sub 0x0f = Skript 7 mit Palette +1 = CLUT-Zeile 481; Schritt 0 Op 1 (Status
+  0xB003, Anim 11, TPage |= 0x20 = Mischmodus 1 B+F), Schritt 1 Op 0, Beschl. (0,-18,0) = steigt; Anim 11..22 = Wolke aus 3x3 bis
+  4x4 Zellen (Zellen 0x16..0xa5, je 1 Bild).
+- **Fontaene FUN_80103eb4** (Callback +0x234, Zaehler +0x231, 64 Ticks): Tick 0 = Einhaengen `sw v1,564(s1)` @0x80103f0c-1c.
+  Tick 1 (`beq v1,v0,0x80103f20` @0x80103ed8): `jal 0x8001bf10` a0 = **0x26032000** (Raumbank 0x26, Sub 3, Skala 0x2000), a1 = 0,
+  a2 = s2 + 1104 (Part-6-Weltmatrix), Versatz (rnd*2+300, rnd*2, rnd*4+200) @0x80103f20-6c - danach OHNE Sprung weiter in den Block
+  der Ticks 2..8 @0x80103f74 (Tick 1 spawnt also alle fuenf). Ticks 1..8 (`slti v0,v1,9` @0x80103ef8): a0 = **0x00064000** (Kern-
+  Bank 0 Sub 6) an s2 + 1276 (**Part 7**), Versatz (rnd*4+300, rnd*2, rnd*2+200), a1 = rnd*16 @0x80103f74-cc; a0 = **0x00034000**
+  (Kern-Bank 0 Sub 3) ebenfalls an s2 + 1276 (**Part 7**: s0 wird erst im Verzoegerungsplatz @0x80104030 auf +1104 gesetzt),
+  Versatz (rnd*4+300, rnd*2, rnd*2+200) @0x80103fd0-0x80104028; 2 x a0 = **0x08024000** (Raumbank 0x08, Sub 2) an s2 + 1104
+  (Part 6), Versatz (rnd*2+300, rnd*2, rnd*4+200) (`sra v0,v0,22` @0x8010405c), a1 je rnd*16 @0x8010402c-0x801040a8. Tick 64:
+  Callback aus `sw zero,564(s1)` @0x801040bc. (rnd = `jal 0x80015fe8` mit `sll 24 / sra 23|22|20` = int8 * 2|4|16.)
+
+**Banken und Skripte (Datei-Offsets, ESP-Zerleger):**
+| Quelle | Bank / Sub | Datei | Kopf CLUT / TPage | Skript | Bild |
+|---|---|---|---|---|---|
+| Spritzring | Kern 0x03 / 0x0f | CORE00.ESP @0x8 (Tafel @0x41C, Skript @0x5B4) | 0x7811 (Zeile 480) / 0x1E | Op 1 -> Anim 11, Op 0 | Wolke Zeile 481, additiv |
+| Fontaene Tick 1 | Raum 0x26 / 3 | ROOM40A0-ESP @0x5A8 (Skript @0x808) | 0x7840 / 0 (Lader legt um) | **Op 69** = Sprueher | unsichtbarer Sender, 90 Bilder |
+| Op-69-Kinder | Raum 0x26 / 0..2 | @0x760 / @0x798 / @0x7D0 | wie oben | Op 11 (Op 1 + Skala/3000), Op 0; v (50/110/80, -130/-90/-100, 0), a (0,10,0) | Blutspritzer esp26 Palette 0 ("CHI") |
+| Fontaene Ticks 1-8 | Kern 0x00 / 6 | CORE00.ESP @0x88C (Skript @0x110C, 3 Teile) | 0x7A11 (Zeile 488) / 0x1F | Op 1 -> Anim 5; v (50,-90/-70,0/+-14), a (0,10,0) | Blut Zeile 488 |
+| Fontaene Ticks 1-8 | Kern 0x00 / 3 | @0xDEC (9 Teile) | wie oben | Op 1, **Op 4** (Warten +3), **Op 6** (Lebensdauer +2) | Blutstropfen |
+| Fontaene Ticks 1-8 | Raum 0x08 / 2 | ROOM40A0-ESP @0x2F0 (Skript @0x434) | 0x7840 / 0 | Op 1 -> Anim 0..7 (2x2 Zellen 24 px), **Op 41** | gluehende Brocken esp08 |
+| Op-41/42-Kinder | Raum 0x09 / 8..12 | @0x470 (Skripte 0..4, Palette +1) | 0x7840 / 0 | Op 0 + Op 16 (Boden) -> Op 5 (Wasser: Spritzer 0x1A01) bzw. **Op 37/38** | Fleischbrocken esp09 Palette 1 |
+| Op-5-Spritzer | Raum 0x1A / 1 | @0x82C | 0x7840 / 0 | **Op 78** (Op 2 + Skala/3000) | Wasserspritzer esp1A Palette 0 |
+
+Neue Ops (RE2-Tafel 0x8009D868, selbst disassembliert):
+- **Op 4** = 0x8001df50: `lbu v0,3 / beq / addiu v0,v0,-1 / sb v0,3`, sonst `jal 0x8001dc30` (= Op 1).
+- **Op 6** = 0x8001e11c: `lbu v0,2 / beq / addiu v0,v0,-1 / sb v0,2`, sonst `sb zero,1 / sb zero,0 / sh zero,24` (Platz frei).
+- **Op 37** = 0x80020660: `sw zero,0` (Op A/B/[2]/[3] := 0), `sb zero,9 / sb zero,8`, Anim := 6 (`addiu v0,zero,6 / sb v0,33`),
+  `sh zero,14 / sh zero,12` (vy, vx), Countdown := Anim[6].Dauer (`lbu v0,2(v1) / sb v0,32`), Status &= 0xA001 (`andi v0,v0,0xa001`).
+- **Op 38** = 0x800206e0: `sb zero,8 / sh zero,12 / sb zero,3`.
+- **Op 41** = 0x800207e4: 3 x `jal 0x8001cbe8` a0 = 0x09<<24 | (step[2]+0|1|2)<<16 | 0x0800|0x1000|0x0c00, a1 = rnd << 4
+  (`sll v0,v0,20 / sra a1,v0,16`), a2 = *(Platz+0x6C), a3 = Platz + 0x2C; danach Op A := 42 (`addiu v0,zero,42 / sb v0,0`).
+- **Op 42** = 0x800208b8: 2 x Spawn Sub step[2]+3 / +4 mit Skala 0x0c00 / 0x0a00, danach Op A := 0.
+- **Op 69** = 0x80022ebc: Phase +2 == 0 -> Status 0x8002, +2 := 1, +3 := 90 (`addiu v0,zero,90 / sb v0,3` @0x80022f08-24) und
+  weiter; Phase 1 -> +3 == 0: Platz frei (@0x800231d4-dc); sonst 3 x `jal 0x8001cbe8` a0 = 0x26<<24 | ((rnd % 3) + (Sub & 0xf8))<<16
+  | Skala(+0x3A) (`lui s3,0x5555 / ori 0x5556` = /3, `andi s2,v0,0xf8`), a1 = +0x22 + 400 * (rnd % 30) (`lui s4,0x8888 / ori 0x8889`
+  = /30, x25 x16), a2 = *(Platz+0x6C), a3 = Platz + 0x2C @0x80022f44-0x80023158; ab +3 < 65 (`sltiu v0,v0,0x41` @0x80023170)
+  Skala := Skala * 955 / 1000 (Magic 0x10624dd3 >> 38) @0x8002317c-b0; +3 -= 1 @0x800231c8.
+- **Op 78** = 0x800241c8: `jal 0x8001dd2c` (= Op 2), dann +8/+9/+10 und +0xC/+0xE/+0x10 := Feld * Skala / 3000 wie Op 11
+  (Magic 0x057619f1 @0x800241f8-0x80024340).
+
+**Lader der Raum-ESP-Texturen = FUN_8001bd38** (RE2_Quellcode_V2/FUN_8001bd38.c, gerufen von FUN_8001bba4 mit RDT[21]/RDT[20]):
+je registrierter Raumbank k (Registry 0x800eae50) die TIM k (Offset-Tafel rueckwaerts vor RDT[21] = 0x2fcfc, Basis RDT[20] =
+0x221fc); Bild an x = Spalte * 64 (Spalte ab 15, `iVar10 = 0xf`), y = laufende Hoehe; passt die TIM nicht mehr (`0x100 < y + h`),
+Spalte - 1 und y = 0; CLUT an (0x120, Zeile) ab Zeile 480 (`y = 0x1e0`), je TIM um ihre CLUT-Hoehe weiter; Bankkopf +4 :=
+GetClut(0x120, Zeile), +6 (Byte) := GetTPage(0, 0, x, y), jedes Zell-v (+n1*8+9, je 4 Byte, n2 Zellen) += y. Fuer ROOM40A0
+(Registry 16 19 08 09 26 1A 18 = RDT @0x59CC = effect.esp, 3100 B = RDT[0x59CC:0x65E8], sha1 bcce378c; TIMs RDT @0x221FC +
+Offsets 0/0x10A0/0x38E0/0x5D20/0x6D80/0x9A20/0xC2A0 = esp16/19/08/09/26/1A/18.tim bytegleich): Spalte 15 (TPage 0x0F): 0x16 y 0-31,
+0x19 y 32-111, 0x08 y 112-183, 0x09 y 184-215; Spalte 14 (TPage 0x0E): 0x26 y 0-87, 0x1A y 88-167, 0x18 y 168-215; CLUT-Zeilen
+(x 288) 0x16 480-483, 0x19 484, 0x08 485, 0x09 486-487, 0x26 488-491, 0x1A 492-494, 0x18 495.
+Kern-Banken (CORE00.ESP, ohne Umlegen): 0x03/0x04 Zeile 480, 0x05 484, **0x00 488**, 0x01 492, 0x02 494, 0x06 497, 0x07 498 (x 272).
+
+**Port-Abweichungen der R1-Folge (Code-Lesung vor der Messung):**
+1. Raum-ESP von ROOM40A0 nicht registriert (nur GLAS1090.ESP aus room1090) -> Spawns der Banken 0x26/0x08 (und ihrer Kinder 0x09/0x1A)
+   laufen in `spawn_kern` gegen `s_bank_off[bank] < 0` -> -1.
+2. Ops 4/6/37/38/41/42/69/78 fehlen in `op_rufen` (default: `s_op_unbekannt++`).
+3. Zeichner re2fx_pc.c laedt nur die CLUT-Zeilen 480..484 von RE2 TEX.TIM und laesst jede andere Zeile aus (Kommentar N5) -> Kern-Bank 0
+   (Zeile 488, Blut) wird nie gezeichnet.
+4. gr2_fontaene_takt: Tick 1 nur 0x26032000 (`else if`, RE2 faellt durch); 0x00034000 an Part 6 mit Versatz (rnd*2+300, rnd*2,
+   rnd*4+200) statt Part 7 mit (rnd*4+300, rnd*2, rnd*2+200); 0x08024000 Versatz z rnd*2+200 statt rnd*4+200.
+5. FUN_80036eb4 (Kanister fliegt, Farbe 0x404040) fehlt: der Kanister steht 9 Bilder still und verschwindet.
