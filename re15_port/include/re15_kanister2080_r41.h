@@ -26,8 +26,9 @@
  * FORMEN (Belege im Dossier §1):
  *   - Raumwechsel in der Szene = Door_aot_set (0x3B) + Aot_on (0x47) "fire now" (Port-Montage irons_tod_1150.c /
  *     elzazombies_r39.c; Vorbilder ROOM1240 sub02/sub03, ROOM1080 sub07..10). 2080 und 2090 teilen x/z (RVD-Vierecke
- *     ROOM2080 @0x188 Cut 5/6/8 = ROOM2090 @0x220; Tuer 2080 Slot 1 @0x0BC2 (-9650,-26150) -> 2090 (-8200,0,-25550)), der
- *     Kanister landet in 2090 dort, wo seine Bahn in 2080 endet.
+ *     ROOM2080 @0x188 Cut 5/6/8 = ROOM2090 @0x220; Tuer 2080 Slot 1 @0x0BC2 (-9650,-26150) -> 2090 (-8200,0,-25550)); die
+ *     Bahn endet sichtbar im 2080-Bild, in 2090 liegt der Kanister an seiner Spielstelle (RE2 ROOM7020 sub13 Pos_set nach dem
+ *     Aufschlag @0x08CA, RE15_K2080_LIEGE_X/Z, Nachbesserung 1).
  *   - Zombies = Sce_em_set-Saetze (Form ROOM2020 sub00 @0x008F6 `44 00 16 02 01 00 00 bc ..`: Typ 0x16 "Steher" grid 0x02),
  *     Etage 8 (y = -8*1800, @0x800421d4), Tot-Bits Zone 7 (Gate @0x80042128-38).
  *   - KNALL (P1, Nachtrag 17) = derselbe Tuerknall wie nach Irons (irons_tod_1150.c:1357 / elzazombies_r39.c:1123):

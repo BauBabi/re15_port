@@ -622,3 +622,44 @@ Leon/Elza schiessen alle ~4 s):
   - integration_r41_kanister2080_kampf (NEU, 248 s): Leon + Elza ohne RE15_GB_TEST/RE15_GATOR_KANISTER: Auslöser -> Szene
     (Hinknien) -> Rückkehr -> Kanister an der Spielstelle -> GATOR VERSCHWUNDEN -> AUFTAUCHEN -> KANISTER Stufe 1 -> angehängt ->
     R1 start -> R1 ende (Leiche), in dieser Reihenfolge.
+
+### 8.7 OFFEN (gemessen bzw. benannt, nicht geraten)
+1. **M3 Wurf-Kamera** - Entscheid von Orchestrator/Nutzer nötig (8.4): keine 2080/2090-Kamera zeigt den Werfer frontal von unten
+   wie RE2 Cut 7; gebaut bleibt Cut 7 (frontal von der Grubenseite).
+2. **Aufnahme in JEDEM Kampfverlauf**: an der Spielstelle Nordbecken in 9 von 10 gemessenen Verläufen (7/7 Erkundung, 2 von 3
+   ganzen Folgen); fn_leon/fn_elza (Leon vom ersten Kampf nach Osten geschoben) ohne Aufnahme in 2700 Bildern. Ursache: der
+   Alligator lenkt den Körper nicht zum Kanister (RE2 lenkt nur den Hals, Hals-Zielmodus FUN_800177c0 bei +0x1C0 & 4 = Spur B
+   OFFEN §11.3; RE2 erzwingt die Aufnahme über die Korridor-Geometrie von ROOM40A0). Nach dem Widerruf von FG-E2 ändert G Spur B's
+   Module nicht - Frage 8.8.
+3. Unverändert aus Abschnitt 6: RE2-Auslöser-Mitglieder +0x1D8/+0x1DA (Tyrant-Overlay fehlt), Adas Abgang/Mode 0x14 nicht
+   übernommen, Kanister in RE2-Grösse, Ton nur über die Mischkette belegt (kein Audiogerät).
+4. Griff-Bild: der Kanister wechselt beim Greifen in einem Bild von stehend auf quer (8.1).
+
+**Hinweise an den Orchestrator (andere Spuren, nicht in G geändert):**
+- Spur B: der R1-Tod schiebt die Leiche in mehreren Läufen AUS dem Becken: `R1 ende (Leiche) pos=(-12384,-8319)` (x_nord_L1 /
+  x_nord_E1), `(-4105,-1916)` (x_nord_L2), `(-10006,-1916)` (x_nord_L5), `(-10221,-1916)` (x_nordrand_L2), `(-10602,-30484)`
+  (fc1b_leon) - Aussenwände x -8900..7200, z -27000..-5400; state.log fc1b: F3180 (-7416,-25516) -> F3183 (-7416,-30484) -> F3207
+  (-10602,-30484) im Clip 9 (mo9). Die R1-Wurzelbahn läuft offenbar ohne Wand-Klemme.
+- Spur F: in diesem Zweig sind die Spinnen (0x25) noch in 2090 (H4 der Abnahme); die Zielhilfe trifft teils sie statt des Alligators
+  - die gemessenen R1-Zeiten (568..3171 Bilder nach der Rückkehr) hängen davon ab.
+
+### 8.8 Für den Nutzer (Stand Nachbesserung 1)
+Neue Assets: keine (weiter `re15_port/shared_assets/RE2/KANISTER2080.VBS`, md5 848c40f6c077d937fb025df9ae1bc62b).
+Sprachdateien (vom Nutzer aufzunehmen, unverändert): `synchro/STAGE2/room2080/main42.wav` ("Marvin: Hey, Leon, try with this!"),
+`synchro/STAGE2/room2081/main42.wav` ("John: Hey, Elza, try with this!").
+Was sich im Spiel ändert:
+- Marvin (Leon) / John (Elza) rennt zum Kanister, **kniet sich hin, nimmt ihn mit beiden Händen und steht damit auf** (Marvins
+  Hinknien/Aufstehen aus ROOM11B0, wo er sich zum Gully kniet) - kein Hochklettern mehr. Danach stemmt er ihn über die Reling.
+- Nach dem Tür-Ton legt er sofort an (vorher 1 s Pause); zwischen zwei Zielen dreht er nur so lange nach, wie er braucht.
+- Zurück in 2090 hat man sofort wieder die Kontrolle (vorher 1 s Sperre).
+- **Der Kanister liegt nach dem Wurf im Nordbecken vor der Ecke, in der der Alligator lauert** (wie RE2 den Raketenwerfer nach dem
+  Wurf an seine Spielstelle legt), nicht dort, wo er aufschlägt. Kommt man der Ecke nahe, taucht der Alligator wieder auf, schwimmt
+  auf einen zu und schnappt sich dabei den Kanister (gemessen 11-29 s); ein Treffer dann -> Explosion, Kiefer, Tod.
+Entscheidungsfragen:
+1. **Wurf-Kamera (M3):** A) wie gebaut 2080 Cut 7 (von der Grubenseite, frontal auf Marvin/John, leicht von oben, weit), B) 2080
+   Cut 1 (von unten wie RE2, aber von hinten), C) anders - welche?
+2. **Liegestelle des Kanisters:** A) wie gebaut im Nordbecken (sichere Aufnahme, 7560 von der sichtbaren Aufschlagstelle), B) an der
+   Aufschlagstelle/im Kanal (näher am Bild aus 2080, der Alligator nimmt ihn dort aber selten auf)?
+3. **Aufnahme in jedem Kampf:** soll Spur B dem Alligator die RE2-Hals-/Anschwimm-Lenkung zum Kanister geben (RE2 FUN_800177c0,
+   B OFFEN §11.3), damit er ihn auch dann holt, wenn Leon weit weg kämpft? (Änderung in Spur B's Modul.)
+4. Soll der Kanister beim Greifen sichtbar kippen (RE2-Kippen aus ROOM40A0 sub10) statt in einem Bild quer zu liegen?
