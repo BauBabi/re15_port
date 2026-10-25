@@ -44,6 +44,10 @@
 #include "re15_gator_re2_r41.h"
 #include "re2_ems.h"
 #include "re15_gatorszene_r41.h"
+#include "re15_light.h"
+#include "re15_lock_se.h"
+#include "re15_math.h"
+#include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,6 +63,8 @@
 void re15_actor_step_all_walkers(void);
 extern unsigned g_re15_gsz_tor_zu, g_re15_gsz_tor_auf;
 int re15_gatorszene_r41_bgm_eintrag(int stage, int room);
+extern int g_test_door_se_count;   /* tests/test_support.c: Spion re15_audio_re2_door_se (Tuer-/Schloss-Ton) */
+extern int g_test_door_se_last;
 
 static int g_fail = 0;
 #define PRUEF(c, ...) do { if (!(c)) { printf("  FEHLER: "); printf(__VA_ARGS__); printf("\n"); g_fail++; } \
@@ -94,6 +100,8 @@ static int rdt_laden(uint16_t room)
     if (!s_raw || s_rawsz < 0x100) return -1;
     if (re15_rdt_parse(s_raw, s_rawsz, &s_rdt) < 0) return -1;
     g_room_rdt = s_rdt;
+    /* Lichtsatz des Raums wie room_common.c Schritt 10 (Nachbesserung 1: Puls-Kappung M5 / Schluessel-Neigung M2) */
+    g_re15_room_lights_ok = (s_rdt.lights && re15_light_parse(s_rdt.lights, (size_t)s_rdt.lights_size, &g_re15_room_lights) == 0);
     return 0;
 }
 
@@ -327,6 +335,22 @@ static void teil_leiche(void)
               g_scd.props[ks].rot_x == 544 && g_scd.props[ks].rot_z == -464,
               "Schluessel obj 4 = Kind der Leiche, lokal (1090,-420,-100), Neigung rx 544 rz -464 (leiche_lage.py, Puls-Grenze)");
         PRUEF(re15_blink_r41_aktiv(raeume[r], RE15_GSZ_KEY_OBJ), "Schluessel blinkt (re15_blink_r41)");
+        /* Nachbesserung 1 (M5): der Puls laeuft nicht in die Kappung des PC-Zeichners (Primitivfarbe 0x80 = Texel x 1,0,
+         * render_pc.c psx_prim_to_sdl_vert). Gemessen mit dem Zeichner-Licht (Lichtsatz Cut 1 @0x490, Elternkette obj 2). */
+        int ruhe = -1, spitze = -1;
+        const int ok = re15_gatorszene_r41_key_prim_jetzt(1, &ruhe, &spitze);
+        PRUEF(ok && spitze <= 0x80 && ruhe > 0 && spitze * 128 >= ruhe * 0xBE - 128,
+              "Cut 1: Primitivfarbe Ruhe %d -> Blink-Spitze %d (<= 0x80, Verhaeltnis %d/%d ~ 0xBE/0x80 = voller Dreieckpuls)",
+              ruhe, spitze, spitze, ruhe);
+        if (r == 0 && ks >= 0) {                     /* Gegenprobe: die alte Neigung rx 608 / rz -160 laeuft in die Kappung */
+            const int16_t ax = g_scd.props[ks].rot_x, az = g_scd.props[ks].rot_z;
+            g_scd.props[ks].rot_x = 608; g_scd.props[ks].rot_z = -160;
+            int r2 = -1, s2 = -1;
+            re15_gatorszene_r41_key_prim_jetzt(1, &r2, &s2);
+            g_scd.props[ks].rot_x = ax; g_scd.props[ks].rot_z = az;
+            PRUEF(s2 > 0x80, "Gegenprobe erste Fassung (rx 608 / rz -160): Ruhe %d -> Spitze %d > 0x80 (gekappt = Plateau, Abnahme 0 M5)",
+                  r2, s2);
+        }
     }
 }
 
@@ -358,9 +382,15 @@ static void teil_tor(void)
     for (int f = 0; f < 20; f++) frame(0, 0);
     PRUEF(re15_gatorszene_r41_tor_gesperrt(), "2090 Slot 1 (Tor -> 20A0) gesperrt (Ereignis %d)", RE15_GSZ_TOR_EREIGNIS);
     unsigned zu0 = g_re15_gsz_tor_zu;
+    int se0 = g_test_door_se_count;
     druck_t r = druecke(6630, -16350, 0, 200);
     PRUEF(r.msg_id == RE15_GSZ_MSG_ZU && !r.raumwechsel && g_re15_gsz_tor_zu == zu0 + 1,
           "ohne Schluessel: msg %d (soll 42 \"It's locked.\"), kein Raumwechsel", r.msg_id);
+    /* Nachbesserung 1 (M3): RE2 LAB_80051514 spielt im Nicht-Treffer-Zweig GENAU EINEN Ton (@0x800516a0 lui a0,0x216 /
+     * @0x800516a4 jal 0x8005ba28), Satz der Art M (re15_lock_se_satz_fuer_art). msg 42 ist Port-Text (keine Tabellen-Stelle). */
+    PRUEF(g_test_door_se_count - se0 == 1 && g_test_door_se_last == re15_lock_se_satz_fuer_art(RE15_LOCK_SE_ART_M),
+          "2090 ohne Schluessel: %d Verschlossen-Ton(e), Satz %d (soll 1 x %d)", g_test_door_se_count - se0, g_test_door_se_last,
+          re15_lock_se_satz_fuer_art(RE15_LOCK_SE_ART_M));
     nachricht_weg(120);
     inv_geben(RE15_GSZ_KEY_ITEM);
     r = druecke(6630, -16350, 0, 300);
@@ -386,9 +416,15 @@ static void teil_tor(void)
     for (int f = 0; f < 20; f++) frame(0, 0);
     PRUEF(re15_gatorszene_r41_tor_gesperrt(), "20A0 Slot 0 (Tor -> 2090) gesperrt, solange (9,113) = 0");
     zu0 = g_re15_gsz_tor_zu;
+    se0 = g_test_door_se_count;
     r = druecke(4950, 4100, 3072, 200);
     PRUEF(r.msg_id == RE15_GSZ_MSG20A0_ZU && !r.raumwechsel && g_re15_gsz_tor_zu == zu0 + 1,
           "20A0: msg %d (soll Original-msg 1 \"It's locked.\"), kein Raumwechsel", r.msg_id);
+    /* M3: msg 1 steht als Text-Platz-Stelle in gen/lock_se_sites.inc (Zeile 49) - re15_lock_se_notice spielt den Ton, der
+     * Tor-Handler nicht noch einmal (Abnahme 0: 2 Aufrufe). */
+    PRUEF(g_test_door_se_count - se0 == 1 && g_test_door_se_last == re15_lock_se_satz_fuer_art(RE15_LOCK_SE_ART_M),
+          "20A0 ohne (9,113): %d Verschlossen-Ton(e), Satz %d (soll 1 x %d)", g_test_door_se_count - se0, g_test_door_se_last,
+          re15_lock_se_satz_fuer_art(RE15_LOCK_SE_ART_M));
     re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_TOR, 1);
     if (room_boot(0x20A0, 4950, -3600, 4100, 3072, 13) != 0) return;
     for (int f = 0; f < 20; f++) frame(0, 0);
@@ -412,8 +448,10 @@ static void teil_schluessel(void)
     const re15_aot_t *a = &g_aot.slots[15];
     const int ks = prop_von(RE15_GSZ_KEY_OBJ);
     PRUEF(re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT) == 1, "Leiche (Zustand 7) -> (9,%d) = 1", RE15_GSZ_BIT_LIEGT);
-    PRUEF(ks >= 0 && g_scd.props[ks].active && g_scd.props[ks].parent_obj == -1 && g_scd.props[ks].y == -1620 &&
-          re15_aot_water_at(g_scd.props[ks].x, g_scd.props[ks].z) != 0,
+    /* Nachbesserung 1 (M2): die Mitte liegt ueber der Wasseroberflaeche (-1620 = ROOM2090 @0x009D6 p0), die tiefste Ecke des
+     * zur Kamera gekippten Quadrats darauf. */
+    PRUEF(ks >= 0 && g_scd.props[ks].active && g_scd.props[ks].parent_obj == -1 && g_scd.props[ks].y <= -1620 &&
+          g_scd.props[ks].y > -1620 - 90 && re15_aot_water_at(g_scd.props[ks].x, g_scd.props[ks].z) != 0,
           "Schluessel liegt im Wasser bei der Leiche (%d,%d,%d)", ks >= 0 ? g_scd.props[ks].x : 0, ks >= 0 ? g_scd.props[ks].y : 0,
           ks >= 0 ? g_scd.props[ks].z : 0);
     PRUEF(a->active && a->type == RE15_AOT_TYPE_ITEM, "Zone Slot 15 = Item");
@@ -442,6 +480,125 @@ static void teil_schluessel(void)
     g_game = gs;
     const int k2 = prop_von(RE15_GSZ_KEY_OBJ);
     PRUEF(k2 < 0 || !g_scd.props[k2].active, "Wiederbetreten nach der Aufnahme: kein Schluessel mehr");
+}
+
+/* ---- Teil: tod (Nachbesserung 1, M2) ---------------------------------------------------------------------------------
+ * Die zwei Todeslagen der Abnahme 0 mit der RE2-EM23-Bank (alle Knochen der Leichen-Pose), je laufender Kamera:
+ *   todesrolle   Leiche (-5416,-22578) (GB_TEST=3, Abnahme 0 Lauf T), Clip 7 letztes Bild, laufende Kamera Cut 0
+ *                (state.log Abnahme 0 F470-F519 cam=0);
+ *   r1           Leiche (3413,-25001) (gator_boss.log "R1 ende (Leiche) pos=(3413,-25001)"), Clip 9 letztes Bild, laufende
+ *                Kamera Cut 1 (RVD 1 -> 0 erst bei x -1500..-500: die Zonenkamera des Suedostbeckens);
+ *   r1_sprung    dieselbe Leiche mit Cut 0 (Messrezept K der Abnahme: Sprung-Cut 0 + Teleport nach Osten - die Leiche liegt
+ *                hinter der Kamera Cut 0 (2754,-3132,-26190)) -> Ersatz: Zonenkamera mit dem groessten Schluessel-Bild.
+ * Verlangt: Schluessel im Bild der gewaehlten Kamera (Bildrand 24..296 / 40..205), vor JEDEM Leichen-Knochen (Tiefe - 800 =
+ * Alligator-Kasten z @0x80118b98), Mitte und vier Ecken im Wasser, Kippung <= 60 Grad zur Kamera hin, Blink-Spitze <= 0x80
+ * (render_pc.c psx_prim_to_sdl_vert, kein Plateau), Zone Slot 15 am Schluessel. Gegenprobe der ersten Fassung: flach (rx 0 /
+ * rz 0) am Kopf -> kein Bildpunkt hoeher als 1 (Bildhoehe 180 x sin(Blickhoehe) * H / Tiefe). */
+static int kam_tiefe(int cut, const int32_t p[3], int *sx, int *sy, int32_t *vz)
+{
+    re15_camera_view_t v;
+    if (cut < 0 || cut >= g_room_rdt.cut_count || re15_camera_build_view(&g_room_rdt.cuts[cut], &v) != 0) return 0;
+    const int64_t px = p[0], py = p[1], pz = p[2];
+    const int32_t vx = (int32_t)(((int64_t)v.rot[0]*px + (int64_t)v.rot[1]*py + (int64_t)v.rot[2]*pz) >> 12) + v.trans[0];
+    const int32_t vy = (int32_t)(((int64_t)v.rot[3]*px + (int64_t)v.rot[4]*py + (int64_t)v.rot[5]*pz) >> 12) + v.trans[1];
+    *vz = (int32_t)(((int64_t)v.rot[6]*px + (int64_t)v.rot[7]*py + (int64_t)v.rot[8]*pz) >> 12) + v.trans[2];
+    if (*vz <= 0) return 0;
+    *sx = 160 + (int)(((int64_t)vx * v.fov_screen_dist) / *vz);
+    *sy = 120 + (int)(((int64_t)vy * v.fov_screen_dist) / *vz);
+    return (int)v.fov_screen_dist;
+}
+static void tod_fall(const char *name, uint16_t raum, int32_t gx, int32_t gz, int16_t gier, int clip, int cam, int cam_soll)
+{
+    printf("  -- %s (ROOM%04X, Leiche (%d,%d) Clip %d, laufende Kamera Cut %d)\n", name, raum, gx, gz, clip, cam);
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN, 1);
+    if (room_boot(raum, -8200, 0, -25550, 0, (uint8_t)cam) != 0) return;
+    if (!gator_bank()) { printf("  FEHLER: RE2-EM23-Bank nicht ladbar (CDEMD0.EMS)\n"); g_fail++; return; }
+    re15_enemy_ai_set_paused(1);                              /* nur der Szenen-Takt: die Leiche liegt (Zustand 7) */
+    re15_actor_t *g = gator_setzen();
+    re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+    if (!g || !bk || !bk->ok || clip >= bk->anim.clip_count) { printf("  FEHLER: Alligator/Bank fehlt\n"); g_fail++; return; }
+    g->x = gx; g->z = gz; g->y = -1200; g->rot_y = gier; g->state = 7;
+    g->render_scale_q12 = 2731;                               /* GB_SCALE_Q12 = 2/3 (enemy_ai_boss_gator.c INIT) */
+    /* Pose: Clip 0 Bild 0 (Schwimmen) - die Wurzelbahn der Todes-Clips 7/9 ist im Spiel ueber die Lage aufgeloest (Anker), hier
+     * zaehlt nur die Lage der Knochen um die gemessene Leichen-Lage; die echten Todes-Posen misst der exe-Lauf. */
+    (void)clip;
+    g->motion = 0; g->anim_frame = 0; g->anim_frac = 0; g->anim_prev_valid = 0;
+    {   /* gezeichneten Wurzelknochen auf die gemessene Leichen-Lage legen (Wurzelversatz des Bildes ausgleichen) */
+        int32_t p0[3];
+        if (re15_gr2_bone_welt_pub(g, 0, p0)) { g->x += gx - p0[0]; g->z += gz - p0[2]; }
+    }
+    g_scd.cam_id = (uint8_t)cam; g_scd.work_vars[0x0A] = (int16_t)cam; s_shown = cam;
+    /* Knochen der Leiche VOR dem Bild: der Schluessel wird im SCD-Takt dieses Bildes gelegt (vor dem Boss-Takt, der den
+     * Harness-Alligator ohne Boss-Phase GBP_DEAD weiterbewegen wuerde; im Spiel steht die Leiche in GBP_DEAD still). */
+    static int32_t kn[64][3]; int nb = 0;
+    for (int b = 0; b < bk->skel.bone_count && nb < 64; b++) if (re15_gr2_bone_welt_pub(g, b, kn[nb])) nb++;
+    int32_t kopf[3] = { g->x, -1620, g->z };
+    re15_gr2_bone_welt_pub(g, 6, kopf);
+    frame(0, 0);
+    const int kc = re15_gatorszene_r41_key_kamera(), ks = prop_von(RE15_GSZ_KEY_OBJ);
+    PRUEF(re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT) == 1 && ks >= 0 && g_scd.props[ks].active,
+          "Leiche -> (9,111) = 1, Schluessel obj 4 aktiv");
+    if (ks < 0) return;
+    PRUEF(cam_soll < 0 ? (kc >= 0 && kc != cam) : kc == cam_soll, "Kamera der Lage: Cut %d (soll %s %d)", kc,
+          cam_soll < 0 ? "Ersatz statt" : "", cam_soll < 0 ? cam : cam_soll);
+    const int32_t kp[3] = { g_scd.props[ks].x, g_scd.props[ks].y, g_scd.props[ks].z };
+    int sx = -1, sy = -1; int32_t vz = 0;
+    const int fd = kam_tiefe(kc, kp, &sx, &sy, &vz);
+    PRUEF(fd > 0 && sx >= 24 && sx <= 296 && sy >= 40 && sy <= 205,
+          "Schluessel (%d,%d,%d) im Bild von Cut %d bei (%d,%d), Tiefe %d = %d.%d Bildpunkte breit", kp[0], kp[1], kp[2], kc, sx, sy,
+          (int)vz, fd > 0 && vz > 0 ? (int)(180 * fd / vz) : 0, fd > 0 && vz > 0 ? (int)((1800 * fd / vz) % 10) : 0);
+    int32_t vz_min = 0x7fffffff, d_min = 0x7fffffff;
+    for (int b = 0; b < nb; b++) {
+        const int32_t *p = kn[b]; int bx, by; int32_t bz;
+        kam_tiefe(kc, p, &bx, &by, &bz);
+        if (bz < vz_min) vz_min = bz;
+        const int32_t d = (int32_t)re15_squareroot0((uint32_t)((int64_t)(p[0]-kp[0])*(p[0]-kp[0]) + (int64_t)(p[2]-kp[2])*(p[2]-kp[2])));
+        if (d < d_min) d_min = d;
+    }
+    PRUEF(nb >= 10 && vz < vz_min - 800 && d_min < 3055, "vor der ganzen Leiche: Tiefe %d < kleinste Knochen-Tiefe %d - 800 (%d Knochen), "
+          "naechster Knochen %d entfernt (< 3055 = Kopf-Wurzel-Abstand, Buehnen-Messzeile Kopf13-Versatz)", (int)vz, (int)vz_min, nb,
+          (int)d_min);
+    int wasser = re15_aot_water_at(kp[0], kp[2]) != 0;
+    for (int e = 0; e < 4; e++) wasser &= re15_aot_water_at(kp[0] + ((e & 1) ? 90 : -90), kp[2] + ((e & 2) ? 90 : -90)) != 0;
+    PRUEF(wasser, "Mitte und vier Ecken (+-90) im Wasser");
+    /* Kippung: Weltnormale der MD1-Normalen (0,-4096,0) unter pc_prop_rot_q12(rx, 0, rz): n = (sin rz, -cos rz cos rx, -cos rz sin rx) */
+    const int32_t sxr = re15_sin_q12(g_scd.props[ks].rot_x), cxr = re15_cos_q12(g_scd.props[ks].rot_x);
+    const int32_t szr = re15_sin_q12(g_scd.props[ks].rot_z), czr = re15_cos_q12(g_scd.props[ks].rot_z);
+    const int32_t n[3] = { szr, -(int32_t)(((int64_t)czr * cxr) >> 12), -(int32_t)(((int64_t)czr * sxr) >> 12) };
+    const re15_camera_cut_t *c = &g_room_rdt.cuts[kc];
+    const int64_t cv = (int64_t)n[0] * (c->pos_x - kp[0]) + (int64_t)n[1] * (c->pos_y - kp[1]) + (int64_t)n[2] * (c->pos_z - kp[2]);
+    PRUEF(-n[1] >= 2048 && cv > 0, "Neigung rx %d rz %d: Kippung <= 60 Grad (n_y %d), zur Kamera hin", (int)g_scd.props[ks].rot_x,
+          (int)g_scd.props[ks].rot_z, (int)n[1]);
+    int ruhe = -1, spitze = -1;
+    re15_gatorszene_r41_key_prim_jetzt(kc, &ruhe, &spitze);
+    PRUEF(ruhe > 0 && spitze <= 0x80 && spitze * 128 >= ruhe * 0xBE - 256,
+          "Primitivfarbe Ruhe %d -> Blink-Spitze %d (<= 0x80: voller Dreieckpuls; NCCT-Rundung <= 2)", ruhe, spitze);
+    const re15_aot_t *a = &g_aot.slots[15];
+    PRUEF(a->active && a->type == RE15_AOT_TYPE_ITEM && a->x == kp[0] && a->z == kp[2], "Zone Slot 15 = Item am Schluessel");
+    /* Gegenprobe erste Fassung: flach am Kopf -> Bildhoehe unter 1 Bildpunkt */
+    {
+        kopf[1] = -1620;
+        int hx, hy; int32_t hz;
+        const int hf = kam_tiefe(kc, kopf, &hx, &hy, &hz);
+        int64_t hh = 0;
+        if (hf > 0 && hz > 0) {
+            const int64_t ddx = c->pos_x - kopf[0], ddy = c->pos_y - kopf[1], ddz = c->pos_z - kopf[2];
+            const uint32_t dl = re15_squareroot0((uint32_t)(ddx * ddx + ddy * ddy + ddz * ddz));
+            hh = dl ? (int64_t)180 * (-ddy) * hf * 10 / ((int64_t)dl * hz) : 0;   /* 180 x sin(Blickhoehe) x H / Tiefe, x10 */
+        }
+        printf("    Gegenprobe flach am Kopf (%d,%d): %s, Bildhoehe %d.%d Bildpunkte\n", kopf[0], kopf[2],
+               hf > 0 ? "vor der Kamera" : "hinter der Kamera", (int)(hh / 10), (int)(hh % 10 < 0 ? -(hh % 10) : hh % 10));
+    }
+}
+static void teil_tod(void)
+{
+    printf("== tod ==\n");
+    tod_fall("todesrolle", 0x2090, -5416, -22578, 1024, 7, 0, 0);
+    tod_fall("r1", 0x2090, 3413, -25001, 2048, 9, 1, 1);
+    tod_fall("r1_sprung", 0x2090, 3413, -25001, 2048, 9, 0, -1);
+    tod_fall("todesrolle_elza", 0x2091, -5416, -22578, 1024, 7, 0, 0);
 }
 
 /* ---- Teil: szene ------------------------------------------------------------------------------------------ */
@@ -531,6 +688,16 @@ static void teil_szene(int elza)
     PRUEF(prop_von(RE15_GSZ_LEICHE_OBJ) < 0 || !g_scd.props[prop_von(RE15_GSZ_LEICHE_OBJ)].active, "Leiche verschlungen (obj 2 aus)");
     PRUEF(prop_von(RE15_GSZ_KEY_OBJ) < 0 || !g_scd.props[prop_von(RE15_GSZ_KEY_OBJ)].active, "Schluessel mitgefressen (obj 4 aus)");
     PRUEF(re15_gatorszene_r41_bgm_eintrag(1, 9) == 0xFF3C, "Musik-Eintrag 0xFF3C (RE2 MAIN1A) im Kampf");
+    /* Nachbesserung 1 (M1): Szenenende = Cut_chg auf den Eintritts-Cut (Leiter ROOM2080 Slot 1 @0x00BC2 -> Cut 0, Form ROOM1150
+     * sub08 `29 05` @0x012C4 vor Plc_ret @0x012E0), im selben Bild wie die Freigabe der Spur-B-Sperre; die Spielfigur im Bild. */
+    {
+        const int ic = folge_hat('C', 0);
+        const re15_gsz_folge_t *q = ic >= 0 ? re15_gatorszene_r41_folge(ic) : NULL;
+        PRUEF(q && q->wert2 == 1, "Folge C: Kamera-Uebergabe auf Cut 0, Spielfigur im Bild (wert2 %d)", q ? q->wert2 : -1);
+        PRUEF(g_scd.cam_id == 0 && g_scd.work_vars[0x0A] == 0 && re15_gatorszene_r41_spieler_im_bild(0) && !re15_gr2_kamera_gesperrt(),
+              "120 Bilder nach dem Kampfbeginn: Cut %d (soll 0), Spielfigur im Bild, Spur-B-Sperre frei", (int)g_scd.cam_id);
+        PRUEF(g_scd.cut_auto_enabled == 1, "Zonenkamera an (Cut_auto 1 aus Programm 3, ROOM1150 sub08 @0x012E2)");
+    }
 }
 
 int main(int argc, char **argv)
@@ -544,6 +711,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "texte"))      teil_texte();
     if (alle || !strcmp(teil, "tor"))        teil_tor();
     if (alle || !strcmp(teil, "schluessel")) teil_schluessel();
+    if (alle || !strcmp(teil, "tod"))        teil_tod();
     if (alle || !strcmp(teil, "szene"))      teil_szene(0);
     if (alle || !strcmp(teil, "szene_elza")) teil_szene(1);
     re15_door_seq_setze_laeufer(NULL);

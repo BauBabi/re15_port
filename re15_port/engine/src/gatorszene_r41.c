@@ -49,6 +49,8 @@ int re15_gatorszene_r41_spawn_weg(uint16_t room_id, uint8_t type, int16_t x, int
 #include "re15_boss_gator.h"
 #include "re15_blink_r41.h"
 #include "re15_math.h"
+#include "re15_camera.h"   /* Nachbesserung 1 (M2): re15_camera_build_view (Schluessel-Lage im Bild der Kamera) */
+#include "re15_light.h"    /* Nachbesserung 1 (M2/M5): NCCT wie der Prop-Zeichner (Neigung unter der Puls-Kappung) */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdlib.h>
@@ -276,10 +278,11 @@ static int prop_slot(uint8_t obj_id)
 /* Lage auf dem Ruecken der Leiche, Objektraum von obj 2 (Elternobjekt, Anhaenge-Form 0xC0|n @0x80040a84-9c): hoechste Stelle
  * des Rueckens im Leichen-Modell MD1 @0x2054 (y -341 bei x 800..1100, z -100); die Mitte 420 darueber, weil das gekippte
  * Quadrat (180) in y bis +-73 reicht. Kippung zur Kamera von Cut 1, hoechstens 60 Grad, mit dem hoechsten Wert cos(Blick) x Licht
- * UNTER der Puls-Grenze Licht x 0xBE / 0x80 <= 255 (Nachbesserung 1, M5; leiche_lage.py: Blink-Spitze 0xBE @0x8010290c-Folge,
- * NCCT-Klemme 255 re15_light.h): lokal rx 544 / rz -464 in der Drehfolge von main.c pc_prop_rot_q12, 59,4 Grad -> Bildflaeche
- * cos 0,270 (flach) -> 0,917, Licht 169,8 (Spitze 252 statt geklemmt 255), ~10,4 x 9,5 Bildpunkte. Die erste Fassung (rx 608 /
- * rz -160, Licht 211,5) lief in die 255-Grenze: Puls 92 -> 112 mit Plateau (Abnahme 0, M5). PORT-WAHL. */
+ * UNTER der Puls-Grenze Licht x 0xBE / 0x80 <= 255 (Nachbesserung 1, M5; leiche_lage.py: Blink-Spitze 0xBE der Folge
+ * @0x801028fc/@0x8010290c; NCCT-Ausgabe = Licht / 2, light_common.c `IR_c >> 5`; der PC-Zeichner kappt die Primitivfarbe bei
+ * 0x80 = Texel x 1,0, render_pc.c psx_prim_to_sdl_vert): lokal rx 544 / rz -464 in der Drehfolge von main.c pc_prop_rot_q12,
+ * 59,4 Grad -> Bildflaeche cos 0,270 (flach) -> 0,917, Licht 169,8 (Spitze 252 < 256), ~10,4 x 9,5 Bildpunkte. Die erste
+ * Fassung (rx 608 / rz -160, Licht 211,5) lief in die Kappung: Puls 92 -> 112 mit Plateau (Abnahme 0, M5). PORT-WAHL. */
 #define GSZ_KEY_AUF_X     1090
 #define GSZ_KEY_AUF_Y     (-420)
 #define GSZ_KEY_AUF_Z     (-100)
@@ -297,8 +300,11 @@ static void leiche_mitte_konst(int32_t *x, int32_t *z)
     *z = GSZ_LEICHE_Z - (int32_t)(((int64_t)re15_sin_q12(GSZ_LEICHE_ROT_Y) * GSZ_LEICHE_MITTE_X) >> 12);
 }
 
-static int32_t s_key_x = 0, s_key_z = 0;
-static int     s_key_lage_ok = 0;
+static int32_t s_key_x = 0, s_key_y = GSZ_WASSER_Y, s_key_z = 0;
+static int16_t s_key_rx = 0, s_key_rz = 0;      /* Neigung zur Kamera (Nachbesserung 1, M2), Welt (parent -1) */
+static int     s_key_lage_ok = 0;               /* Lage + Neigung aus dem Tod (nur RAM) */
+static int     s_key_neigung_offen = 0;         /* Ersatzlage nach dem Laden: Neigung im ersten Takt (s. key_bei_leiche) */
+static int     s_key_cut = -1;                  /* Kamera, fuer die Lage/Neigung gewaehlt wurde (Messzeile/Riegel) */
 
 int re15_gatorszene_r41_obj_id(uint16_t room_id)
 {
@@ -362,19 +368,27 @@ static void key_bei_leiche(uint16_t room_id)
     if (re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GENOMMEN)) return;
     int k = key_prop();
     if (k < 0) return;
-    if (!s_key_lage_ok) leiche_mitte_konst(&s_key_x, &s_key_z);
+    if (!s_key_lage_ok) {
+        /* Nach dem Laden eines Spielstands (die Todeslage lebt nur im RAM): Ersatzlage = Rumpfmitte der gefressenen Leiche;
+         * die Neigung zur Kamera rechnet der erste Takt (re15_gatorszene_r41_tick) - beim Raumaufbau steht noch der Lichtsatz
+         * des VORIGEN Raums (room_common.c Schritt 10 parst ihn erst nach scd_room_reenter). */
+        leiche_mitte_konst(&s_key_x, &s_key_z);
+        s_key_y = GSZ_WASSER_Y; s_key_rx = 0; s_key_rz = 0;
+        s_key_neigung_offen = 1;
+    }
     g_scd.props[k].active = 1;
     g_scd.props[k].parent_obj = -1;
-    g_scd.props[k].x = s_key_x; g_scd.props[k].y = GSZ_WASSER_Y; g_scd.props[k].z = s_key_z;
-    g_scd.props[k].rot_x = 0; g_scd.props[k].rot_y = 0; g_scd.props[k].rot_z = 0;
+    g_scd.props[k].x = s_key_x; g_scd.props[k].y = s_key_y; g_scd.props[k].z = s_key_z;
+    g_scd.props[k].rot_x = s_key_rx; g_scd.props[k].rot_y = 0; g_scd.props[k].rot_z = s_key_rz;
     re15_blink_r41_setzen(room_id, RE15_GSZ_KEY_OBJ, 1);
     re15_aot_set_item_tk_prop(GSZ_KEY_AOT, s_key_x, s_key_z, GSZ_KEY_RECHTECK / 2, GSZ_KEY_RECHTECK / 2,
                               RE15_GSZ_KEY_ITEM, 1, RE15_GSZ_BIT_GENOMMEN, RE15_GSZ_KEY_OBJ);
     g_aot.slots[GSZ_KEY_AOT].band = 0;
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[gatorszene] ROOM%04X: Water Key (Item 0x%02X, Bits (9,%d)/(9,%d)) bei der Leiche (%d,%d,%d), Zone Slot %d\n",
-            (unsigned)room_id, RE15_GSZ_KEY_ITEM, RE15_GSZ_BIT_LIEGT, RE15_GSZ_BIT_GENOMMEN, s_key_x, GSZ_WASSER_Y, s_key_z,
-            GSZ_KEY_AOT);
+    fprintf(stderr, "[gatorszene] ROOM%04X: Water Key (Item 0x%02X, Bits (9,%d)/(9,%d)) bei der Leiche (%d,%d,%d) Neigung rx %d rz %d"
+                    " (Kamera %d%s), Zone Slot %d\n",
+            (unsigned)room_id, RE15_GSZ_KEY_ITEM, RE15_GSZ_BIT_LIEGT, RE15_GSZ_BIT_GENOMMEN, s_key_x, s_key_y, s_key_z,
+            (int)s_key_rx, (int)s_key_rz, s_key_cut, s_key_neigung_offen ? ", Neigung folgt im ersten Takt" : "", GSZ_KEY_AOT);
 #endif
 }
 
@@ -881,22 +895,311 @@ static int gator_tot(void)
     const re15_actor_t *g = gator_aktor();
     return g && g->state == 7;
 }
-/* Schluessel-Lage nach dem Tod: Kopf (Part 6) der Leiche (dort platzte der Kiefer, R1 @0x80102354-58), in eine Wasserzone
- * (re15_aot_water_at = FUN_800527B4-Zwilling) gezogen - sonst Richtung Wurzel, sonst die Ersatzlage. */
+/* ---- Schluessel-Lage nach dem Tod (Nachbesserung 1, M2) ---------------------------------------------------------------
+ * Abnahme 0: an beiden gemessenen Todesstellen (R1 (2795,-1620,-26820), Todesrolle (-7277,-1620,-25029)) lag der FLACHE
+ * Schluessel unter bzw. hinter den Zonenkameras (Cut 0 steht bei (2754,-3132,-26190), Cut 1 bei (-7740,-3132,-25956); RID
+ * @0x060) - in allen 13 Kameras bitgleich zum Lauf ohne Schluessel. Die erste Fassung nahm den Kopf des Alligators ohne Blick
+ * auf eine Kamera und legte das Quadrat flach (Bildhoehe 180 x sin(Blickhoehe ~10 Grad) < 1 Bildpunkt). PORT-WAHL der Lage
+ * (Nutzer: "Wenn der Aligator danach tot ist, soll der Schluessel in der Naehe seine Leiche sein und blinken"), FORM wie der
+ * Schluessel der Ankunft (tools/r41_gatorszene/leiche_lage.py):
+ *  - Kamera: die laufende (g_scd.cam_id; R1 gibt seine Szenen-Kamera frei, bevor das Tot-Flag steht, P3 @0x80102688-94); hat
+ *    sie keine Lage, die Zonenkamera (RVD-Gruppe mit Wechselsatz: ROOM2090 Cut 0..7, wie gator_re2_r41.c gr2_zonenkamera)
+ *    mit dem groessten Schluessel-Bild;
+ *  - Lage: Rasterpunkt (100) im Wasser (re15_aot_water_at fuer Mitte und alle vier Ecken des Quadrats +-90 = MD1 @0x354C
+ *    Ecken -90/90) im Bild der Kamera (Mitte x 24..296, y 40..205 wie leiche_lage.py), VOR der ganzen Leiche (Tiefe kleiner
+ *    als die jedes Leichen-Knochens minus 800 = halbe Breite des RE1.5-Alligator-Kastens {1000,-720,0,2200,720,800}
+ *    @0x80118b98, re15_damage.c - die Leiche verdeckt ihn nicht) und darunter der Leiche am naechsten (kleinster xz-Abstand
+ *    zu einem Knochen; gleich nah: groesseres Bild);
+ *  - Neigung: zur Kamera, hoechstens 60 Grad (wie die Ankunft), groesster Wert cos(Blick) x Helligkeit, deren Blink-Spitze
+ *    (Takt 0x1f = Wert 0xBE, re15_blink_r41_wert) die Primitivfarbe 0x80 nicht ueberschreitet (M5: render_pc.c
+ *    psx_prim_to_sdl_vert kappt darueber) - Licht genau wie der Zeichner (main.c Prop-Pfad: Lichtsatz des Cuts,
+ *    re15_light_setup_actor an der Lage, re15_light_ctx_rotate_for_bone, re15_light_shade_vertex der MD1-Normalen
+ *    (0,-4096,0) @0x354C+0x60 = 00 00 00 f0);
+ *  - Hoehe: die tiefste Ecke des gekippten Quadrats auf der Wasseroberflaeche (p0 der Wasserzone, ROOM2090 @0x009D6 ac f9). */
+#define GSZ_RASTER          100
+#define GSZ_KEY_HALB        90      /* Quadrat-Halbseite: re15_gsz_key_md1 Ecken (-90/90) = ROOM7040 MD1 @0x354C+0x38 */
+#define GSZ_BILD_X0         24      /* Bildrand wie leiche_lage.py (x 24..296, y 40..205) */
+#define GSZ_BILD_X1         296
+#define GSZ_BILD_Y0         40
+#define GSZ_BILD_Y1         205
+#define GSZ_GATOR_HALBBREITE 800    /* RE1.5-Alligator-Kasten @0x80118b98 = {1000,-720,0,2200,720,800}, z 800 (re15_damage.c) */
+#define GSZ_KIPP_MIN_Q12    2048    /* cos 60 Grad = 0,5 (Kippung hoechstens 60 Grad, wie leiche_lage.py) */
+#define GSZ_PRIM_KAPPE      0x80    /* render_pc.c psx_prim_to_sdl_vert: Primitivfarbe 0x80 -> SDL 0xFF = Texel x 1,0 (Kappung) */
+#define GSZ_LEICHE_PUNKTE   40
+
+static int kam_sicht(int cut, re15_camera_view_t *v)
+{
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || cut < 0 || cut >= g_room_rdt.cut_count) return 0;
+    return re15_camera_build_view(&g_room_rdt.cuts[cut], v) == 0;
+}
+/* Projektion wie der Zeichner (gator_re2_r41.c gr2_im_bild): 1 = vor der Kamera; Bildpunkt + Tiefe vz. */
+static int kam_proj(const re15_camera_view_t *v, const int32_t p[3], int *sx, int *sy, int32_t *vz_out)
+{
+    const int64_t px = p[0], py = p[1], pz = p[2];
+    const int32_t vx = (int32_t)(((int64_t)v->rot[0]*px + (int64_t)v->rot[1]*py + (int64_t)v->rot[2]*pz) >> 12) + v->trans[0];
+    const int32_t vy = (int32_t)(((int64_t)v->rot[3]*px + (int64_t)v->rot[4]*py + (int64_t)v->rot[5]*pz) >> 12) + v->trans[1];
+    const int32_t vz = (int32_t)(((int64_t)v->rot[6]*px + (int64_t)v->rot[7]*py + (int64_t)v->rot[8]*pz) >> 12) + v->trans[2];
+    if (vz_out) *vz_out = vz;
+    if (vz <= 0) return 0;
+    if (sx) *sx = 160 + (int)(((int64_t)vx * v->fov_screen_dist) / vz);
+    if (sy) *sy = 120 + (int)(((int64_t)vy * v->fov_screen_dist) / vz);
+    return 1;
+}
+/* Zonenkamera = Cut mit mindestens einem Wechselsatz ausser dem Such-Anker (rdt_common.c), wie gr2_zonenkamera. */
+static int zonenkamera(int cut)
+{
+    int n = 0;
+    for (int i = 0; i < g_room_rdt.zone_count; i++) if ((int)g_room_rdt.zones[i].cam_from == cut) n++;
+    return n >= 2;
+}
+/* Leichen-Punkte: alle Knochen der GEZEICHNETEN Pose (re15_gr2_bone_welt_pub, mit Zeichen-Skala und Wurzelversatz des
+ * Bildes); die Aktorlage selbst nur, wenn keine Bank da ist (sie liegt bei einem Wurzelversatz nicht auf dem Koerper). */
+static int leichen_punkte(const re15_actor_t *g, int32_t pk[GSZ_LEICHE_PUNKTE][3], int32_t kopf[3])
+{
+    int n = 0;
+    kopf[0] = g->x; kopf[1] = g->y; kopf[2] = g->z;
+    re15_enemy_bank_t *bk = re15_enemy_find(g->type);
+    const int nb = (bk && bk->ok) ? bk->skel.bone_count : 0;
+    for (int b = 0; b < nb && n < GSZ_LEICHE_PUNKTE; b++)
+        if (re15_gr2_bone_welt_pub(g, b, pk[n])) {
+            if (b == 6) { kopf[0] = pk[n][0]; kopf[1] = pk[n][1]; kopf[2] = pk[n][2]; }
+            n++;
+        }
+    if (n == 0) { pk[0][0] = g->x; pk[0][1] = g->y; pk[0][2] = g->z; n = 1; }
+    return n;
+}
+static int wasser_quadrat(int32_t x, int32_t z, int32_t *wy)
+{
+    const int32_t y = re15_aot_water_at(x, z);
+    if (!y) return 0;
+    for (int e = 0; e < 4; e++)
+        if (!re15_aot_water_at(x + ((e & 1) ? GSZ_KEY_HALB : -GSZ_KEY_HALB), z + ((e & 2) ? GSZ_KEY_HALB : -GSZ_KEY_HALB)))
+            return 0;
+    *wy = y;
+    return 1;
+}
+typedef struct { int32_t x, y, z, vz; int64_t d2; } gsz_lage_t;
+/* Beste Lage fuer Kamera cut (s. Kopf); 0 = keine. */
+static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, gsz_lage_t *out)
+{
+    re15_camera_view_t v;
+    if (!kam_sicht(cut, &v)) return 0;
+    int32_t vz_min = 0x7fffffff;
+    for (int i = 0; i < npk; i++) { int32_t vz; kam_proj(&v, pk[i], NULL, NULL, &vz); if (vz < vz_min) vz_min = vz; }
+    int32_t x0 = 0x7fffffff, x1 = -0x7fffffff, z0 = 0x7fffffff, z1 = -0x7fffffff;
+    for (int i = 0; i < RE15_AOT_MAX; i++) {                  /* Rasterbereich = Huelle der Wasserzonen */
+        const re15_aot_t *a = &g_aot.slots[i];
+        if (!a->active || a->type != RE15_AOT_TYPE_WATER) continue;
+        if (a->has_quad) {
+            for (int k = 0; k < 4; k++) {
+                if (a->xs[k] < x0) x0 = a->xs[k];
+                if (a->xs[k] > x1) x1 = a->xs[k];
+                if (a->zs[k] < z0) z0 = a->zs[k];
+                if (a->zs[k] > z1) z1 = a->zs[k];
+            }
+        } else {
+            if (a->x - a->half_w < x0) x0 = a->x - a->half_w;
+            if (a->x + a->half_w > x1) x1 = a->x + a->half_w;
+            if (a->z - a->half_h < z0) z0 = a->z - a->half_h;
+            if (a->z + a->half_h > z1) z1 = a->z + a->half_h;
+        }
+    }
+    if (x0 > x1 || z0 > z1) return 0;
+    x0 = (x0 / GSZ_RASTER) * GSZ_RASTER; z0 = (z0 / GSZ_RASTER) * GSZ_RASTER;
+    int gefunden = 0;
+    for (int32_t z = z0; z <= z1; z += GSZ_RASTER)
+        for (int32_t x = x0; x <= x1; x += GSZ_RASTER) {
+            int32_t wy;
+            if (!wasser_quadrat(x, z, &wy)) continue;
+            const int32_t p[3] = { x, wy, z };
+            int sx = 0, sy = 0; int32_t vz;
+            if (!kam_proj(&v, p, &sx, &sy, &vz)) continue;
+            if (sx < GSZ_BILD_X0 || sx > GSZ_BILD_X1 || sy < GSZ_BILD_Y0 || sy > GSZ_BILD_Y1) continue;
+            if (vz >= vz_min - GSZ_GATOR_HALBBREITE) continue;          /* vor der ganzen Leiche */
+            int64_t d2 = INT64_MAX;
+            for (int i = 0; i < npk; i++) {
+                const int64_t dx = (int64_t)x - pk[i][0], dz = (int64_t)z - pk[i][2];
+                if (dx * dx + dz * dz < d2) d2 = dx * dx + dz * dz;
+            }
+            if (!gefunden || d2 < out->d2 || (d2 == out->d2 && vz < out->vz)) {
+                out->x = x; out->y = wy; out->z = z; out->vz = vz; out->d2 = d2; gefunden = 1;
+            }
+        }
+    return gefunden;
+}
+/* Neigung zur Kamera cut an der Lage p (s. Kopf). Rueckgabe 1 + rx/rz, Mittelpunkt-y (tiefste Ecke auf p[1]) und die
+ * Primitivfarben (Ruhe, Spitze) des hellsten Kanals; ohne Lichtsatz (Riegel ohne Raum-Licht) nur cos(Blick). */
+static int key_neigung(int cut, const int32_t p_wasser[3], int16_t *rx_out, int16_t *rz_out, int32_t *y_out,
+                       int *prim_ruhe, int *prim_spitze)
+{
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || cut < 0 || cut >= g_room_rdt.cut_count) return 0;
+    const re15_camera_cut_t *c = &g_room_rdt.cuts[cut];
+    int32_t p[3] = { p_wasser[0], p_wasser[1], p_wasser[2] };
+    int brx = 0, brz = 0, bruhe = 0, bspitze = 0;
+    for (int pass = 0; pass < 2; pass++) {                   /* 2. Durchgang: Licht an der gehobenen Mitte */
+        const int64_t dx = (int64_t)c->pos_x - p[0], dy = (int64_t)c->pos_y - p[1], dz = (int64_t)c->pos_z - p[2];
+        const uint32_t len = re15_squareroot0((uint32_t)(dx * dx + dy * dy + dz * dz));
+        if (!len) return 0;
+        const int32_t dv[3] = { (int32_t)(dx * 4096 / len), (int32_t)(dy * 4096 / len), (int32_t)(dz * 4096 / len) };
+        re15_actor_lightctx_t welt;
+        const int licht = g_re15_room_lights_ok && cut < g_re15_room_lights.cut_count;
+        if (licht) re15_light_setup_actor(&g_re15_room_lights.cuts[cut], p, NULL, &welt);
+        int64_t best = -1;
+        for (int rx = -1024; rx <= 1024; rx += 32)
+            for (int rz = -1024; rz <= 1024; rz += 32) {
+                int32_t m[9];
+                prop_matrix((int16_t)rx, 0, (int16_t)rz, m);
+                const int32_t n[3] = { -m[1], -m[4], -m[7] };   /* Welt-Normale der MD1-Normalen (0,-4096,0) */
+                if (-n[1] < GSZ_KIPP_MIN_Q12) continue;
+                const int32_t cv = (int32_t)(((int64_t)n[0] * dv[0] + (int64_t)n[1] * dv[1] + (int64_t)n[2] * dv[2]) >> 12);
+                if (cv <= 0) continue;
+                int ruhe = GSZ_PRIM_KAPPE, spitze = 0;
+                if (licht) {
+                    re15_actor_lightctx_t ctx, sp;
+                    uint8_t r, g, b;
+                    re15_light_ctx_rotate_for_bone(&welt, m, &ctx);
+                    re15_light_shade_vertex(&ctx, 0, -4096, 0, &r, &g, &b);
+                    ruhe = r > g ? (r > b ? r : b) : (g > b ? g : b);
+                    sp = ctx;
+                    re15_blink_r41_lichtctx((uint16_t)g_current_room_id, RE15_GSZ_KEY_OBJ, RE15_BLINK_R41_UP_BELOW, &sp);
+                    re15_light_shade_vertex(&sp, 0, -4096, 0, &r, &g, &b);
+                    spitze = r > g ? (r > b ? r : b) : (g > b ? g : b);
+                    if (spitze > GSZ_PRIM_KAPPE) continue;      /* Puls liefe in die Kappung (M5) */
+                }
+                const int64_t w = (int64_t)cv * ruhe;
+                if (w > best) { best = w; brx = rx; brz = rz; bruhe = ruhe; bspitze = spitze; }
+            }
+        if (best < 0) return 0;
+        int32_t m[9], ext = 0;
+        prop_matrix((int16_t)brx, 0, (int16_t)brz, m);
+        for (int e = 0; e < 4; e++) {                            /* tiefste Ecke (y waechst nach unten) */
+            const int32_t ex = (e & 1) ? GSZ_KEY_HALB : -GSZ_KEY_HALB, ez = (e & 2) ? GSZ_KEY_HALB : -GSZ_KEY_HALB;
+            const int32_t ey = (int32_t)(((int64_t)m[3] * ex + (int64_t)m[5] * ez) >> 12);
+            if (ey > ext) ext = ey;
+        }
+        p[1] = p_wasser[1] - ext;
+    }
+    *rx_out = (int16_t)brx; *rz_out = (int16_t)brz; *y_out = p[1];
+    if (prim_ruhe) *prim_ruhe = bruhe;
+    if (prim_spitze) *prim_spitze = bspitze;
+    return 1;
+}
+static int s_key_prim_ruhe = -1, s_key_prim_spitze = -1;
+/* Lage + Kamera + Neigung beim Tod (Kopf oben). */
 static void key_lage_bei_tod(void)
 {
     re15_actor_t *g = gator_aktor();
     leiche_mitte_konst(&s_key_x, &s_key_z);
-    if (g) {
-        int32_t kopf[3] = { g->x, g->y, g->z };
-        if (!re15_gr2_bone_welt_pub(g, 6, kopf)) { kopf[0] = g->x; kopf[2] = g->z; }
+    s_key_y = GSZ_WASSER_Y; s_key_rx = 0; s_key_rz = 0; s_key_cut = -1;
+    s_key_lage_ok = 1; s_key_neigung_offen = 0;
+    re15_blink_r41_setzen((uint16_t)g_current_room_id, RE15_GSZ_KEY_OBJ, 1);   /* fuer die Spitzen-Rechnung (re15_blink_r41_lichtctx) */
+    if (!g) return;
+    static int32_t pk[GSZ_LEICHE_PUNKTE][3];
+    int32_t kopf[3];
+    const int npk = leichen_punkte(g, pk, kopf);
+    gsz_lage_t l, b;
+    memset(&l, 0, sizeof l);
+    int cut = -1;
+    const int lauf = (int)g_scd.cam_id;
+    if (key_suche(lauf, pk, npk, &l)) cut = lauf;
+    else
+        for (int c = 0; c < g_room_rdt.cut_count; c++) {
+            if (!zonenkamera(c) || !key_suche(c, pk, npk, &b)) continue;
+            if (cut < 0 || b.vz < l.vz) { l = b; cut = c; }
+        }
+    if (cut < 0) {                                          /* keine Kamera: Kopf in eine Wasserzone gezogen (erste Fassung) */
         for (int i = 0; i <= 8; i++) {
-            int32_t x = kopf[0] + (int32_t)(((int64_t)(g->x - kopf[0]) * i) / 8);
-            int32_t z = kopf[2] + (int32_t)(((int64_t)(g->z - kopf[2]) * i) / 8);
+            const int32_t x = kopf[0] + (int32_t)(((int64_t)(g->x - kopf[0]) * i) / 8);
+            const int32_t z = kopf[2] + (int32_t)(((int64_t)(g->z - kopf[2]) * i) / 8);
             if (re15_aot_water_at(x, z) != 0) { s_key_x = x; s_key_z = z; break; }
         }
+        return;
     }
-    s_key_lage_ok = 1;
+    s_key_x = l.x; s_key_z = l.z; s_key_y = l.y; s_key_cut = cut;
+    const int32_t p[3] = { l.x, l.y, l.z };
+    int16_t rx = 0, rz = 0; int32_t y = l.y;
+    if (key_neigung(cut, p, &rx, &rz, &y, &s_key_prim_ruhe, &s_key_prim_spitze)) { s_key_rx = rx; s_key_rz = rz; s_key_y = y; }
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[gatorszene] Schluessel-Lage: Kamera %d (%s), Lage (%d,%d,%d) Tiefe %d, %u von der Leiche (%d Punkte), "
+                    "Neigung rx %d rz %d, Primitivfarbe Ruhe %d / Blink-Spitze %d (Kappe 0x80)\n",
+            cut, cut == lauf ? "laufende" : "Zonenkamera mit dem groessten Bild", s_key_x, s_key_y, s_key_z, (int)l.vz,
+            (unsigned)re15_squareroot0((uint32_t)(l.d2 > 0xffffffffLL ? 0xffffffffLL : l.d2)), npk,
+            (int)s_key_rx, (int)s_key_rz, s_key_prim_ruhe, s_key_prim_spitze);
+#endif
+}
+/* Ersatzlage nach dem Laden: Neigung zur laufenden Kamera (oder zur Zonenkamera, in deren Bild sie liegt), im ersten Takt. */
+static void key_neigung_nachholen(void)
+{
+    s_key_neigung_offen = 0;
+    const int k = prop_slot(RE15_GSZ_KEY_OBJ);
+    if (k < 0 || !g_scd.props[k].active) return;
+    const int32_t wy = re15_aot_water_at(s_key_x, s_key_z);
+    const int32_t p[3] = { s_key_x, wy ? wy : GSZ_WASSER_Y, s_key_z };
+    int cut = -1;
+    const int lauf = (int)g_scd.cam_id;
+    re15_camera_view_t v; int sx = 0, sy = 0; int32_t vz;
+    if (kam_sicht(lauf, &v) && kam_proj(&v, p, &sx, &sy, &vz) && sx >= GSZ_BILD_X0 && sx <= GSZ_BILD_X1 &&
+        sy >= GSZ_BILD_Y0 && sy <= GSZ_BILD_Y1) cut = lauf;
+    else {
+        int32_t best = 0x7fffffff;
+        for (int c = 0; c < g_room_rdt.cut_count; c++)
+            if (zonenkamera(c) && kam_sicht(c, &v) && kam_proj(&v, p, &sx, &sy, &vz) && sx >= GSZ_BILD_X0 &&
+                sx <= GSZ_BILD_X1 && sy >= GSZ_BILD_Y0 && sy <= GSZ_BILD_Y1 && vz < best) { best = vz; cut = c; }
+    }
+    if (cut < 0) return;
+    int16_t rx, rz; int32_t y;
+    if (!key_neigung(cut, p, &rx, &rz, &y, &s_key_prim_ruhe, &s_key_prim_spitze)) return;
+    s_key_rx = rx; s_key_rz = rz; s_key_y = y; s_key_cut = cut;
+    g_scd.props[k].y = y; g_scd.props[k].rot_x = rx; g_scd.props[k].rot_z = rz;
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[gatorszene] Schluessel-Ersatzlage (%d,%d,%d): Neigung rx %d rz %d zur Kamera %d\n", s_key_x, y, s_key_z,
+            (int)rx, (int)rz, cut);
+#endif
+}
+int re15_gatorszene_r41_key_kamera(void) { return s_key_cut; }
+/* Pruefhaken (M5/M2): Primitivfarbe (hellster Kanal) des Schluessels JETZT, wie der Prop-Zeichner sie rechnet: Weltmatrix
+ * und -lage ueber die Elternkette wie main.c pc_prop_world (Typ-4-Absenkung re15_prop_render_y), Lichtsatz des Cuts an der
+ * Weltlage, Drehung, MD1-Normale (0,-4096,0); Ruhe = ohne Puls, Spitze = Blink-Takt 0x1f (Wert 0xBE). 0 = kein Schluessel. */
+int re15_gatorszene_r41_key_prim_jetzt(int cut, int *ruhe, int *spitze)
+{
+    int k = prop_slot(RE15_GSZ_KEY_OBJ);
+    if (k < 0 || !g_scd.props[k].active || !g_re15_room_lights_ok || cut < 0 || cut >= g_re15_room_lights.cut_count) return 0;
+    int32_t r[9], t[3];
+    prop_matrix(g_scd.props[k].rot_x, g_scd.props[k].rot_y, g_scd.props[k].rot_z, r);
+    t[0] = g_scd.props[k].x; t[1] = g_scd.props[k].y; t[2] = g_scd.props[k].z;
+    for (int cur = k, tiefe = 0; tiefe < 4 && g_scd.props[cur].parent_obj >= 0; tiefe++) {
+        const int ps = prop_slot((uint8_t)g_scd.props[cur].parent_obj);
+        if (ps < 0 || ps == cur) break;
+        int32_t pr[9], nr[9], nt[3];
+        prop_matrix(g_scd.props[ps].rot_x, g_scd.props[ps].rot_y, g_scd.props[ps].rot_z, pr);
+        const int32_t pt[3] = { g_scd.props[ps].x, re15_prop_render_y((int)g_scd.props[ps].obj_type, g_scd.props[ps].y),
+                                g_scd.props[ps].z };
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++)
+                nr[row*3+col] = (int32_t)(((int64_t)pr[row*3] * r[col] + (int64_t)pr[row*3+1] * r[3+col] + (int64_t)pr[row*3+2] * r[6+col]) >> 12);
+            nt[row] = (int32_t)(((int64_t)pr[row*3] * t[0] + (int64_t)pr[row*3+1] * t[1] + (int64_t)pr[row*3+2] * t[2]) >> 12) + pt[row];
+        }
+        memcpy(r, nr, sizeof r); memcpy(t, nt, sizeof t);
+        cur = ps;
+    }
+    t[1] = re15_prop_render_y((int)g_scd.props[k].obj_type, t[1]);
+    re15_actor_lightctx_t welt, ctx, sp;
+    uint8_t cr, cg, cb;
+    re15_light_setup_actor(&g_re15_room_lights.cuts[cut], t, NULL, &welt);
+    re15_light_ctx_rotate_for_bone(&welt, r, &ctx);
+    re15_light_shade_vertex(&ctx, 0, -4096, 0, &cr, &cg, &cb);
+    if (ruhe) *ruhe = cr > cg ? (cr > cb ? cr : cb) : (cg > cb ? cg : cb);
+    sp = ctx;
+    re15_blink_r41_lichtctx((uint16_t)g_current_room_id, RE15_GSZ_KEY_OBJ, RE15_BLINK_R41_UP_BELOW, &sp);
+    re15_light_shade_vertex(&sp, 0, -4096, 0, &cr, &cg, &cb);
+    if (spitze) *spitze = cr > cg ? (cr > cb ? cr : cb) : (cg > cb ? cg : cb);
+    return 1;
+}
+int re15_gatorszene_r41_key_prim(int *ruhe, int *spitze)
+{
+    if (ruhe) *ruhe = s_key_prim_ruhe;
+    if (spitze) *spitze = s_key_prim_spitze;
+    return s_key_cut;
 }
 void re15_gatorszene_r41_tick(void)
 {
@@ -908,6 +1211,7 @@ void re15_gatorszene_r41_tick(void)
         key_bei_leiche((uint16_t)g_current_room_id);
         folge('L', (int)s_key_x, (int)s_key_z);
     }
+    if (basis == RE15_GSZ_RAUM && s_key_neigung_offen) key_neigung_nachholen();   /* Ersatzlage nach dem Laden (M2) */
     if (basis == RE15_GSZ_RAUM && s_zustand == RE15_GSZ_ANKUNFT && re15_game_flag_get(5, RE15_GSZ_SIG_KNALL)) {
         re15_game_flag_set(5, RE15_GSZ_SIG_KNALL, 0);
         /* Knall-Bank in den Tuerbank-Platz (wie irons_tod_1150.c knallbank_laden; die Tuersequenz nach 2080 ersetzt sie), dann

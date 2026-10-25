@@ -10,6 +10,9 @@
 #   unit_r41_gatorszene_texte       Tor-Texte = ROOM20A0 msg 1/2 bytegleich; Name "Water Key"
 #   unit_r41_gatorszene_tor         Nachtrag 21: Tor 2090/20A0 zu bis (9,113), Aufschliessen mit dem Water Key, Wegwerf-Abfrage
 #   unit_r41_gatorszene_schluessel  Alligator tot -> Schluessel im Wasser bei der Leiche, Aufnahme -> 0x34 + (9,112)
+#   unit_r41_gatorszene_tod         Nachbesserung 1 (M2): die zwei Todeslagen der Abnahme 0 (Todesrolle Cut 0, R1 Cut 1, R1 mit
+#                                   Sprung-Cut 0 -> Ersatz-Zonenkamera, Elza): Schluessel im Bild, vor der Leiche, im Wasser,
+#                                   zur Kamera gekippt, Blink-Spitze unter der Kappung 0x80
 #   unit_r41_gatorszene_szene       die ganze Szene (Leon) mit dem echten Boss-Takt und der RE2-EM23-Bank
 #   unit_r41_gatorszene_szene_elza  dieselbe mit Elza (2091/2081)
 #   integration_r41_gatorszene      echte exe (test_r41_gatorszene.cmake): Leiter 2080 -> 2090, Szene, Folge-Zeilen (Leon + Elza)
@@ -22,7 +25,7 @@ target_compile_definitions(test_r41_gatorszene PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_gatorszene PRIVATE m)
 endif()
-foreach(_teil spinnen programme leiche texte tor schluessel szene szene_elza)
+foreach(_teil spinnen programme leiche texte tor schluessel tod szene szene_elza)
     add_test(NAME unit_r41_gatorszene_${_teil} COMMAND test_r41_gatorszene ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorszene_${_teil} PROPERTIES TIMEOUT 600)

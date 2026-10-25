@@ -154,5 +154,11 @@ const uint8_t *re15_gatorszene_r41_programm(int nr, int *out_len);
 int  re15_gatorszene_r41_gator_phase(void);
 /* Pruefhaken (Nachbesserung 1, M1): 1 = Fuss UND Kopf der Spielfigur liegen im Bild von Cut cut (Projektion des Zeichners). */
 int  re15_gatorszene_r41_spieler_im_bild(int cut);
+/* Pruefhaken (Nachbesserung 1, M2/M5): Kamera, fuer die der Schluessel nach dem Tod gelegt wurde (-1 = keine); Primitivfarben
+ * (hellster Kanal) Ruhe/Blink-Spitze dieser Wahl; und die Primitivfarben des Schluessels JETZT im Lichtsatz von Cut cut (wie
+ * der Prop-Zeichner; 0 = kein Schluessel/kein Lichtsatz). Kappung des PC-Zeichners: 0x80 (render_pc.c psx_prim_to_sdl_vert). */
+int  re15_gatorszene_r41_key_kamera(void);
+int  re15_gatorszene_r41_key_prim(int *ruhe, int *spitze);
+int  re15_gatorszene_r41_key_prim_jetzt(int cut, int *ruhe, int *spitze);
 
 #endif /* RE15_GATORSZENE_R41_H */

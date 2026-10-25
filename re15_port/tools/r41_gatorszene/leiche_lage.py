@@ -150,12 +150,14 @@ def main():
     dv = norm([cam[i] - kw[i] for i in range(3)])
     flach_cos = sum(-Rp[3 * i + 1] * dv[i] for i in range(3))
     flach_l = licht(lichter[cut], kw, [-Rp[1], -Rp[4], -Rp[7]])
-    # Nachbesserung 1 (Abnahme F 0, M5): der Puls darf nicht in die 255-Grenze laufen. Der Blink-Puls (re15_blink_r41.h, Form
+    # Nachbesserung 1 (Abnahme F 0, M5): der Puls darf nicht in die Kappung laufen. Der Blink-Puls (re15_blink_r41.h, Form
     # TITLE.BIN FUN_801028ec) skaliert Umgebung und Lichtfarben bis 0xBE / 0x80 (0x80 + 31 x 2: `sltiu v0,v1,0x1f` @0x801028fc,
-    # `addiu a0,a0,2` @0x8010290c), der NCCT-Wert klemmt je Kanal bei 255 (re15_light.h `out_c = clamp(lit_c >> 4, 0, 255)` =
-    # GTE-Farbsaettigung). Die erste Fassung waehlte die hellste Neigung (Licht 211,5 -> Spitze 255 statt 314: Puls 92 -> 112
-    # mit Plateau, gemessen Abnahme 0). Jetzt: hoechster Wert cos(Blick) x Licht UNTER der Grenze Licht * 0xBE / 0x80 <= 255
-    # in jedem Kanal, Raster 16 statt 32 (die Grenze schneidet das alte Optimum).
+    # `addiu a0,a0,2` @0x8010290c). Die NCCT-Ausgabe ist Licht / 2 (CODE 0x80 der Flaechenfarbe 0x808080, light_common.c Stufe
+    # 3+4 `byte_out = sat_u8(IR_c >> 5)`), und der PC-Zeichner bildet diese Primitivfarbe mit x 0xFF / 0x80 auf die SDL-Farbe ab
+    # und kappt bei 0xFF (render_pc.c psx_prim_to_sdl_vert: ueber 0x80 bleibt Texel x 1,0). Ab Licht 256 ist der Schluessel also
+    # voll hell. Die erste Fassung waehlte die hellste Neigung (Licht 211,5 -> Spitze 314 gekappt auf 256 = x 1,21: Puls
+    # 92 -> 112 mit Plateau, gemessen Abnahme 0). Jetzt: hoechster Wert cos(Blick) x Licht UNTER der Grenze
+    # Licht * 0xBE / 0x80 <= 255 (Primitivfarbe <= 0x7F) in jedem Kanal, Raster 16 statt 32 (die Grenze schneidet das alte Optimum).
     grenze = 255 * 0x80 / 0xBE
     beste = None
     for rx in range(-1024, 1025, 16):
