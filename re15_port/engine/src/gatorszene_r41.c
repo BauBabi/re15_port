@@ -111,16 +111,18 @@ static void musik_takt_vor(void) { musik_takt(); }
  * man am Start des Kampfes eine Chance hat"; Sollwert = RE2-Intro-Ende ROOM40A0, tools/r41_gatorszene/probe_re2_intro_ende.c:
  * Wurzel (503,-24100) nach Pos_set @SCD 0x0736 + Clip 6/3 @0x801008ac-948, Leon (-10800,-25800) nach Plc_dest @SCD 0x0286 ->
  * Abstand 11430, vorderster Knochen auf Leons x nach 121 Bildern): Wahl tools/r41_gatorszene/leiche_lage_n4.py - Kette im Wasser
- * des Beckens (gb_becken_draussen), Abstand Kau-Lage <-> Leiter-Ankunft - 700 >= 11430, Leiche ganz im Bild. Gewaehlt ist die
- * zweite treibende Leiche obj 3 an ihrer ORIGINAL-Lage (Obj_model_set @0x00A8E `2d 03 00 00 02 00 0a 00 00 00 e7 ff 34 f9 01 e3
- * 00 00 78 06` = (-25,-1740,-7423) Gier 1656; Nutzer: "Es schwimmt bereits ein Zombie im Wasser, nimm vielleicht diesen"); der
- * beste Wert der freien Suche (obj 2 bei (700,-8200)) laege 1063 neben ihr. Szenenkamera Cut 5 (RID @0x060 + 5 * 32: (2754,-3132,
- * -6408) -> (-7992,-18,-10782)), die Kamera, in der das Original obj 3 zeigt: ganze Leiche im Bild (114,120)-(203,189), Rumpfmitte
- * (-924,-8040), Kau-Lage (-2576,-10344) = 16213 von der Leiter-Ankunft. obj 2 bleibt an seiner Original-Lage (Cut 0). */
+ * des Beckens (gb_becken_draussen), Abstand Kau-Lage <-> Leiter-Ankunft - 700 >= 11430, Leiche ganz im Bild, groesster Wert
+ * Bildgroesse^2 x Licht des Schluessels (die Regel von Fassung 1). Die beste Lage liegt in Cut 5 bei (700,-8200) Gier 2432 - 1063
+ * neben der zweiten treibenden Leiche obj 3 (Obj_model_set @0x00A8E `2d 03 00 00 02 00 0a 00 00 00 e7 ff 34 f9 01 e3 00 00 78 06`
+ * = (-25,-1740,-7423) Gier 1656). Darum ist die Szenen-Leiche obj 3 selbst, an diese Lage gesetzt (Nutzer: "Es schwimmt bereits
+ * ein Zombie im Wasser, nimm vielleicht diesen"; Nachtrag 6: ihre Lage darf sich aendern); obj 2 bleibt an seiner Original-Lage
+ * (-1725,-21723) @0x00A6C (Cut 0), 13739 entfernt. Szenenkamera Cut 5 (RID @0x060 + 5 * 32: (2754,-3132,-6408) ->
+ * (-7992,-18,-10782)), die Kamera, in der auch das Original obj 3 zeigt: ganze Leiche im Bild (62,132)-(261,205), Rumpfmitte
+ * (-206,-7594), Kau-Lage (-2077,-9725) = 16968 von der Leiter-Ankunft (Fassung 1: rund 3800). */
 #define GSZ_CUT_LEICHE        5
-#define GSZ_LEICHE_X          (-25)     /* obj 3 @0x00A8E pc[10..11] `e7 ff` */
-#define GSZ_LEICHE_Z          (-7423)   /* obj 3 @0x00A8E pc[14..15] `01 e3` */
-#define GSZ_LEICHE_ROT_Y      1656      /* obj 3 @0x00A8E pc[18..19] `78 06` */
+#define GSZ_LEICHE_X          700       /* leiche_lage_n4.py (obj 3 Original @0x00A8E pc[10..11] `e7 ff` = -25) */
+#define GSZ_LEICHE_Z          (-8200)   /* leiche_lage_n4.py (obj 3 Original pc[14..15] `01 e3` = -7423) */
+#define GSZ_LEICHE_ROT_Y      2432      /* leiche_lage_n4.py (obj 3 Original pc[18..19] `78 06` = 1656) */
 /* Rumpfmitte (Mundpunkt) im Objektraum der Leiche: Leichen-Modell MD1 @0x2054 x -444..2626 (Kopf .. Beine), Rumpf oben
  * (y <= -100) bei x -100..1400 -> Mitte 1090 (leiche_lage.py MITTE_X). */
 #define GSZ_LEICHE_MITTE_X    1090
@@ -305,13 +307,14 @@ static int prop_slot(uint8_t obj_id)
  * UNTER der Puls-Grenze Licht x 0xBE / 0x80 <= 255 (Nachbesserung 1, M5; Blink-Spitze 0xBE der Folge @0x801028fc/@0x8010290c;
  * NCCT-Ausgabe = Licht / 2, light_common.c `IR_c >> 5`; der PC-Zeichner kappt die Primitivfarbe bei 0x80 = Texel x 1,0,
  * render_pc.c psx_prim_to_sdl_vert), Drehfolge main.c pc_prop_rot_q12. Nachbesserung 4: Kamera Cut 5, Lichtsatz RDT @0x468 +
- * 40 * 5 -> lokal rx 144 / rz -672 (59,9 Grad), Bildflaeche cos 0,911, Licht 108,6 (Spitze 161 < 172), ~9,0 x 8,2 Bildpunkte
- * (leiche_lage_n4.py; Fassung 1 Cut 1: rx 544 / rz -464, Licht 169,8, ~10,4 x 9,5). PORT-WAHL. */
+ * 40 * 5 (Umgebung 63/73/63, die drei Lichter bei x -29490/-24699/2000 reichen kaum ins Nordbecken) -> lokal rx 672 / rz -144
+ * (59,9 Grad), Bildflaeche cos 0,922, Licht 103,8 (Spitze 154 < 172), ~11,5 x 10,6 Bildpunkte (leiche_lage_n4.py; Fassung 1 Cut 1:
+ * rx 544 / rz -464, Licht 169,8, ~10,4 x 9,5). PORT-WAHL. */
 #define GSZ_KEY_AUF_X     1090
 #define GSZ_KEY_AUF_Y     (-420)
 #define GSZ_KEY_AUF_Z     (-100)
-#define GSZ_KEY_AUF_RX    144
-#define GSZ_KEY_AUF_RZ    (-672)
+#define GSZ_KEY_AUF_RX    672
+#define GSZ_KEY_AUF_RZ    (-144)
 /* Item-Zone nach dem Tod (re15_aot_set_item_tk_prop = Item_aot_set @0x80040644-Form), Rechteck 1000 x 1000 wie ROOM2090 main00
  * @0x00A12 (`e8 03 e8 03`), AOT-Platz 15: frei in 2090 (main00 0..5, Kamerazonen 48..63). */
 #define GSZ_KEY_AOT       15
@@ -431,7 +434,7 @@ static void erster_abschnitt_sofort(int slot)
 }
 
 
-/* Leiche obj 3: Lage der Szene (GSZ_LEICHE_* = Original-Lage @0x00A8E, leiche_lage_n4.py) - nur waehrend die Szene noch aussteht. */
+/* Leiche obj 3: Lage der Szene (GSZ_LEICHE_*, leiche_lage_n4.py) - nur waehrend die Szene noch aussteht. */
 static void leiche_lage(void)
 {
     int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
@@ -613,11 +616,11 @@ static int ga_kopf_probe(const re15_actor_t *e, int clip, int frame, int32_t x, 
     return re15_gr2_bone_welt_pub(&b, 6, kopf);
 }
 
-/* Szenen-Gier (PORT-WAHL der Inszenierung, Nachbesserung 4): der Gator kommt aus dem Westkanal nach Nordosten (Gier 3488,
- * Vorwaerts (cos, -sin) = (0,63, 0,78)) ins Nordbecken auf obj 3 zu; Start S (-7283,-16663). leiche_lage_n4.py: unter den Gieren
- * (Raster 16), deren Kette mit dem RE2-Abstand im Wasser liegt (3328..3584), die mit dem groessten kleinsten Rand (Wurzelweg 1408,
- * Kopfweg 1443; Fassung 1: Gier 1024 aus dem Norden, Leiche im Suedbecken). */
-#define GSZ_GATOR_GIER        3488
+/* Szenen-Gier (PORT-WAHL der Inszenierung, Nachbesserung 4): der Gator kommt aus dem Westkanal nach Nordosten (Gier 3552,
+ * Vorwaerts (cos, -sin) = (0,67, 0,74)) ins Nordbecken auf obj 3 zu; Start S (-7381,-15553). leiche_lage_n4.py: unter den Gieren
+ * (Raster 16), deren Kette mit dem RE2-Abstand im Wasser liegt (3440..3600), die mit dem groessten kleinsten Rand (Wurzelweg 1496,
+ * Kopfweg 1534; Fassung 1: Gier 1024 aus dem Norden, Leiche im Suedbecken). */
+#define GSZ_GATOR_GIER        3552
 /* Biss: Kopf (Part 6) im Koppelbild 13 von Clip 4 (RE2 FRESSEN P1 @0x80101104-34) auf dem Rumpf der Leiche. */
 #define GSZ_KOPPEL_BILD       13
 #define GSZ_WENDE_RATE        75     /* RE2 R1 Ziel-Gier 75/Bild (FUN_8001569c @0x801025f8-608, `addiu a2,zero,75` @0x80102608) */

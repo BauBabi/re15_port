@@ -349,20 +349,21 @@ static void teil_leiche(void)
         if (room_boot(raeume[r], -8200, 0, -25550, 0, 0) != 0) return;
         const int kl = prop_von(RE15_GSZ_LEICHE_OBJ), ks = prop_von(RE15_GSZ_KEY_OBJ);
         PRUEF(re15_gatorszene_r41_zustand() == RE15_GSZ_ANKUNFT, "ROOM%04X: Szene startet (Zustand ANKUNFT)", raeume[r]);
-        /* Nachbesserung 4 (Nachtrag 29, Querbezug): die Szenen-Leiche ist obj 3 an ihrer Original-Lage (Obj_model_set @0x00A8E
-         * (-25,-1740,-7423) Gier 1656, leiche_lage_n4.py); Fassung 1 verlangte obj 2 bei (-5500,-23700) Gier 384. */
-        PRUEF(kl >= 0 && g_scd.props[kl].x == -25 && g_scd.props[kl].z == -7423 && g_scd.props[kl].rot_y == 1656,
-              "Leiche obj %d an der Szenen-Lage (-25,-7423) Gier 1656 (obj 3 @0x00A8E, leiche_lage_n4.py)", RE15_GSZ_LEICHE_OBJ);
+        /* Nachbesserung 4 (Nachtrag 29, Querbezug): die Szenen-Leiche ist obj 3 (Obj_model_set @0x00A8E, Original (-25,-7423) Gier
+         * 1656) an der Lage mit dem besten Schluessel-Wert unter dem RE2-Abstand (leiche_lage_n4.py); Fassung 1 verlangte obj 2 bei
+         * (-5500,-23700) Gier 384. */
+        PRUEF(kl >= 0 && g_scd.props[kl].x == 700 && g_scd.props[kl].z == -8200 && g_scd.props[kl].rot_y == 2432,
+              "Leiche obj %d an der Szenen-Lage (700,-8200) Gier 2432 (leiche_lage_n4.py)", RE15_GSZ_LEICHE_OBJ);
         PRUEF(ks >= 0 && g_scd.props[ks].active && g_scd.props[ks].parent_obj == RE15_GSZ_LEICHE_OBJ &&
               g_scd.props[ks].x == 1090 && g_scd.props[ks].y == -420 && g_scd.props[ks].z == -100 &&
-              g_scd.props[ks].rot_x == 144 && g_scd.props[ks].rot_z == -672,
-              "Schluessel obj 4 = Kind der Leiche, lokal (1090,-420,-100), Neigung rx 144 rz -672 (leiche_lage_n4.py, Cut 5)");
+              g_scd.props[ks].rot_x == 672 && g_scd.props[ks].rot_z == -144,
+              "Schluessel obj 4 = Kind der Leiche, lokal (1090,-420,-100), Neigung rx 672 rz -144 (leiche_lage_n4.py, Cut 5)");
         PRUEF(re15_blink_r41_aktiv(raeume[r], RE15_GSZ_KEY_OBJ), "Schluessel blinkt (re15_blink_r41)");
         /* Nachbesserung 1 (M5): der Puls laeuft nicht in die Kappung des PC-Zeichners (Primitivfarbe 0x80 = Texel x 1,0,
          * render_pc.c psx_prim_to_sdl_vert). Nachbesserung 4: gemessen mit dem Zeichner-Licht der Szenenkamera Cut 5 (Lichtsatz
          * RDT @0x468 + 40 * 5, Elternkette obj 3). In Cut 5 erreicht keine Neigung <= 60 Grad die Kappung (leiche_lage_n4.py:
-         * groesstes Licht 113 < 255 * 0x80 / 0xBE = 171,8); die Gegenprobe prueft deshalb die Wahl selbst: flach (rx 0 / rz 0)
-         * ist der Schluessel dunkler als mit der gewaehlten Neigung (Licht 76,8 gegen 108,6). */
+         * groesstes Licht < 255 * 0x80 / 0xBE = 171,8); die Gegenprobe prueft deshalb die Wahl selbst: flach (rx 0 / rz 0) ist
+         * der Schluessel dunkler als mit der gewaehlten Neigung (Licht 103,8 geneigt). */
         int ruhe = -1, spitze = -1;
         const int ok = re15_gatorszene_r41_key_prim_jetzt(5, &ruhe, &spitze);
         PRUEF(ok && spitze <= 0x80 && ruhe > 0 && spitze * 128 >= ruhe * 0xBE - 128,

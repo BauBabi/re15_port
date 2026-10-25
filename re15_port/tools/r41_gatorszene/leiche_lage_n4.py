@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 """Runde 41 Spur F "gatorszene", Nachbesserung 4 (Nachtrag 29): Lage der Leiche samt Kette WEITER WEG von der Leiter.
 
-  python re15_port/tools/r41_gatorszene/leiche_lage_n4.py            (Wahl: obj 3 an der Original-Lage, s. unten)
+  python re15_port/tools/r41_gatorszene/leiche_lage_n4.py            (Wahl: obj 3 an der Lage mit dem besten Wert, s. unten)
   python re15_port/tools/r41_gatorszene/leiche_lage_n4.py --suche [--liste N]   (freie Lagesuche ueber alle Lagen/Cuts)
+  python re15_port/tools/r41_gatorszene/leiche_lage_n4.py --original              (Vergleich: obj 3 an der Original-Lage)
 
 NUTZER-VORGABE (AUFTRAG.md Nachtrag 29, 2026-10-25 12:08): "Die Zombie Leiche inklusive der Kette - Schluessel - Aligator Fressen
 etc. muss weiter weg sein, damit man am Start des Kampfes eine Chance hat." Orchestrator: Abstand Gator <-> Spieler am Kampfbeginn
@@ -31,11 +32,13 @@ Pruefungen je Lage:
   - Abstand: Kau-Lage <-> Leiter-Ankunft (-8200,-25550) (ROOM2080 Slot 1 @0x00BC2) minus 700 (Wende Clip 0 <= 28 Bilder + Schrei
     Clip 10 Wurzel 0 -> -1025 x 2/3; Abnahme 3 gemessen Kau-Lage -> Kampfbeginn (295,487)) >= 11430;
   - Wert = Bildgroesse^2 x Licht des Schluessels (wie Fassung 1); Neigung wie Fassung 1 (<= 60 Grad, Puls unter der Kappung).
-Wahl (PORT-WAHL, Dossier N4.M1): die freie Suche findet den besten Wert mit obj 2 bei (700,-8200) in Cut 5 - 1063 neben der
-zweiten treibenden Leiche obj 3 (Obj_model_set @0x00A8E (-25,-1740,-7423) Gier 1656), also zwei Leichen nebeneinander. obj 3 an
-ihrer Original-Lage erfuellt alle Bedingungen ohne Verschieben (Nutzer: "Es schwimmt bereits ein Zombie im Wasser, nimm vielleicht
-diesen"): Anlauf-Gier = groesster kleinster Wasserrand von Wurzel- und Kopfweg (Raster 16), Kamera = groesster Wert unter den
-Cuts, die die ganze Leiche zeigen, Neigung wie Fassung 1.
+Wahl (PORT-WAHL, Dossier N4.M1): die Lage mit dem besten Wert (Fassung-1-Regel + Abstand) liegt in Cut 5 bei (700,-8200) Gier
+2432 - 1063 neben der zweiten treibenden Leiche obj 3 (Obj_model_set @0x00A8E (-25,-1740,-7423) Gier 1656). Darum ist die
+Szenen-Leiche obj 3 selbst (die treibende Leiche des Nordbeckens; Nutzer: "Es schwimmt bereits ein Zombie im Wasser, nimm
+vielleicht diesen", Nachtrag 6: Lage darf sich aendern), an diese Lage verschoben; obj 2 bleibt an seiner Original-Lage
+(-1725,-21723) @0x00A6C, 13739 entfernt (> Leichenlaenge 3070, MD1 x -444..2626). Anlauf-Gier = groesster kleinster Wasserrand
+von Wurzel- und Kopfweg (Raster 16), Neigung wie Fassung 1. Ohne --suche rechnet das Werkzeug nur diese Lage (Vergleich: obj 3
+an der Original-Lage, Cut 5: 9,0 x 8,2 Bildpunkte).
 """
 import math, os, sys
 import numpy as np
@@ -193,8 +196,8 @@ def rand_max(X, Z):
     return lo
 
 
-def obj3_wahl(cams, lichter, V):
-    x, z, ry = -25, -7423, 1656                    # Obj_model_set obj 3 @0x00A8E pc[10..11]/pc[14..15]/pc[18..19]
+def obj3_wahl(cams, lichter, V, x=700, z=-8200, ry=2432):
+    # Lage mit dem besten Wert der freien Suche (--suche: Cut 5 (700,-8200) Gier 2432), dorthin obj 3 (@0x00A8E (-25,-7423) 1656)
     mx = x + L.MITTE_X * L.C(ry); mz = z - L.MITTE_X * L.S(ry)
     beste = None
     for th in range(0, 4096, 16):
@@ -223,8 +226,9 @@ def obj3_wahl(cams, lichter, V):
         if ganz and (wahl is None or wert > wahl[0]):
             wahl = (wert, cut, box, gr)
     wert, cut, box, gr = wahl
-    print("GEWAEHLT obj 3 (%d,%d,%d) Gier %d, Anlauf-Gier %d (Rand Wurzel %.0f / Kopf %.0f), Cut %d, Bildkasten (%.0f,%.0f)-(%.0f,%.0f)" %
-          (x, L.LEICHE_Y, z, ry, th, rw, rk, cut, *box))
+    print("GEWAEHLT obj 3 (%d,%d,%d) Gier %d (%.0f von der Original-Lage @0x00A8E, %.0f von obj 2 @0x00A6C), Anlauf-Gier %d (Rand "
+          "Wurzel %.0f / Kopf %.0f), Cut %d, Bildkasten (%.0f,%.0f)-(%.0f,%.0f)" %
+          (x, L.LEICHE_Y, z, ry, math.dist((x, z), (-25, -7423)), math.dist((x, z), (-1725, -21723)), th, rw, rk, cut, *box))
     print("  Rumpfmitte (%.0f,%.0f), Start S (%.0f,%.0f), Kau-Lage (%.0f,%.0f), Abstand Kau-Lage <-> Leiter-Ankunft %.0f "
           "(- %d = %.0f >= %d)" % (mx, mz, s[0], s[1], kau[0], kau[1], ab + WENDE_SCHREI, WENDE_SCHREI, ab, SOLL_RE2))
     return cut, ry, kw, gr
@@ -271,6 +275,8 @@ def main():
               "Anlauf-Gier %d (groesster Abstand), Abstand - %d = %.0f" % (k[1], WENDE_SCHREI, k[0])))
     if "--suche" in sys.argv:
         cut, ry, kw, gr = suche_alle(cams, lichter, V, H, liste)
+    elif "--original" in sys.argv:
+        cut, ry, kw, gr = obj3_wahl(cams, lichter, V, -25, -7423, 1656)
     else:
         cut, ry, kw, gr = obj3_wahl(cams, lichter, V)
     bn, grenze = neigung(cams, lichter, cut, ry, kw)
