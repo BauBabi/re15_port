@@ -817,3 +817,95 @@ faehrt sie gruen — kein Lockern ohne Grund:
   beheben -> genau 1 Ton.
 - integration_r41_re2gator (Spur B, "RE2-Intro ..."): die 2090-Ankunftsszene ersetzt das RE2-Intro (Nachtrag 6) -> der Riegel
   prueft den Auftritt ueber F's Szene (Clip-Folge/Schnitte), B's uebrige Pruefungen bleiben unveraendert gruen.
+
+## 2026-10-25 08:16 — Nachtrag 26 (Nutzer-Antworten per Auswahl zu den Fragen der Nachbesserung G 1) + Entscheide FG-E5, C-E5
+
+1. "Soll der Alligator die RE2-Hals-/Anschwimm-Lenkung zum Kanister bekommen (RE2 FUN_800177c0, Zielmodus)?" —
+   **"Ja, RE2-Lenkung (Empfohlen)"**: im Kanister-Bereich lenkt er Hals und Schwimmweg zum Kanister und nimmt ihn
+   verlaesslich auf (RE2 Zielmodus +0x1C0&4, FUN_800177c0 Part 5, Ziel (x, y-800, obj[1].z) @0x80100a4c-70, Grenzen
+   560/312 @0x801005a0-c4; sonst FUN_80017d98 @0x80100344-74).
+2. "Wurf-Kamera: 2090 Kamera 12 (von unten) oder 2080 Kamera 7 (frontal)?" — **"2090 Kamera 12 (von unten)"** (wie gebaut).
+3. "Soll der Kanister beim Greifen sichtbar kippen (RE2-Kippen aus ROOM40A0)?" — **"Ja, RE2-Kippen (Empfohlen)"**.
+
+**FG-E5:** Spur G setzt 1. und 3. um; dafuer darf G (wie FG-E3) kleine markierte Haken/Funktionen in Spur B's Modulen setzen
+(Part-5-Gier-Kanal fuer den Hals, Kippen beim Anhaengen). B's Riegel bleiben gruen.
+**C-E5:** Der Alarm-Schalter re15_audio_r41_alarm (~20 Zeilen am Ende von audio_pc.c + 4 markierte Einzeiler) ist angenommen
+(braucht die statischen BGM-Zustaende der Datei). Die zwei RBJ-Haken der Spur C in main.c (V1 der Abnahme C 5) sind angenommen;
+Bit (9,125) (Ventil-Sicherungskasten) ist in VERTRAG 1.1 fuer C eingetragen.
+
+## 2026-10-25 11:10 — Nachtrag 27 (Nutzer-Antwort zur Masken-Frage der Spur M, Abnahme M 3 Mangel 2) + Orchestrator-Entscheid M-E1
+
+Frage: "Masken STAGE3–6 (Spur M): Die meisten Löcher sind geschlossen, aber einige Gegenstände haben automatisch keine
+verlässliche Tiefe und bleiben ohne Maske: Geländer 3050 Kamera 6, 30E0 Kamera 6–9, 3040 Kamera 3; Pulte 5050 Kamera 1/2;
+Möbel 30A0 Kamera 0; Lok-Unterteil 6000 Kamera 7; Roboterarm 50B0 Kamera 1/3; Wandecke 6000 Kamera 5. Der sichere Weg wären
+Freistellungen von dir wie bei STAGE1/2 (die berichtigten Übersichtsbilder liegen in pri/STAGE3-6). Wie möchtest du vorgehen?"
+Antwort des Nutzers (Wortlaut): **"Ich kümmere mich selbst drum."**
+
+**M-E1:** Die Restliste (Mangel 2 der Abnahme M 3: Gelaender 3050 C6, 30E0 C6..C9, 3040 C3, Pulte 5050 C1/C2, Moebel 30A0 C0,
+Lok-Unterteil 6000 C7, Roboterarm 50B0 C1/C3, Wandecke 6000 C5) ist KEIN Mangel der Spur M mehr. Die Freistellungen zeichnet
+der Nutzer selbst (pri/STAGE3-6); eingebaut werden sie, sobald sie vorliegen (naechste Version). Spur M baut fuer diese
+Gegenstaende KEINE weiteren automatischen Masken; der Stand der Nachbesserung 3 bleibt (kein Rueckschritt). Die Liste kommt je
+Raum/Kamera/Gegenstand mit Beleg ins Dossier ("Fuer den Nutzer: Freistellungen") und in die Release Notes v0.8.29.
+Offen fuer Spur M bleiben nur Mangel 1 (Ost-Stirn der Buero-Trennwand 30A0/30A1 C0: Zelle 6 @RDT+0x0045C, neuer Befund auf dem
+natuerlichen Weg, Tiefe aus der Zelle belegt) und Mangel 3 (Laufpruefung im gemeinsamen Laeufer). Abnahme M 4 urteilt Punkt 1
+an Mangel 1 und daran, dass keine Stelle der Restliste schlechter wurde; die Restliste selbst ist kein Mangel.
+
+## 2026-10-25 11:58 — Nachtrag 28 (Wortlaut; Explosionseffekt des Gaskanisters, Spur G)
+
+> Beim Ausschnitt gerade eben fehlte noch der Explosionseffekt vom Gaskanister vom Original.
+
+Gesehen hat der Nutzer die Kampflaeufe der Abnahme G 2 (re15_pc_g41abn2c/d auf seinem Bildschirm). Orchestrator-Messung am
+selben Stand (Baum r41_kanister2080, Lauf scratchpad/g2abn/runs/r1_v1_leon, Bildstreifen scratchpad/g2abn/
+r1_v1_leon_f1548-1588_hell2.png): R1-Start F1549 ("RE2 R1 start pos=(-7391,-25446)"), danach nur ein kleiner weiss-blauer
+Schimmer am Kopf (F1550-F1560) und die Kiefer-Brocken; KEIN Feuerball/Explosionsbild.
+Port-Stand (gator_re2_r41.c, re15_gr2_r1_start): Spritzring @0x80102374 -> 0x8010338c = 6 x re2fx Bank 3 Sub 0x0f
+(0x030f2000/0x030f3000, Versaetze @0x801000a8) an der Kanister-Matrix; Fontaenen FUN_80103eb4 = Bank 0x26 Sub 3, Bank 0 Sub 6/3,
+Bank 8 Sub 2 (spawn_kern: Bank = a0>>24, Sub = (a0>>16)&0xff @0x8001cbec-f8). Registriert waren im Lauf nur CORE00.ESP (Kern)
+und GLAS1090.ESP als Raum-ESP (Registry 8..15); die RE2-Raum-ESP des Alligatorraums ROOM40A0 ist NICHT registriert.
+
+**Auftrag an Spur G** (RE-Gate; FG-E3/FG-E5 gelten: kleine markierte Haken in B's Modulen und in re2_fx.c erlaubt):
+1. In RE2 belegen, woraus der Explosionseffekt des Gaskanisters besteht: welche Effekte/Banken/Subs (R1 @0x80102158, Spritzring
+   0x8010338c, Kanister T2 @0x801017c4, ggf. weitere Spawns/Sprites/Lichtblitz/Rauch), aus welcher Datei (CORE00.ESP, ESP-Abschnitt
+   von ROOM40A0.RDT, EM23-Daten) mit welcher TIM/CLUT/TPage, Zeitpunkt, Lage, Dauer, Reihenfolge.
+2. Messen, warum der Port ihn nicht zeigt (Bank registriert? Raum-ESP von 40A0 in 2090/2091 geladen? Textur/CLUT im VRAM?
+   Zeichenpass, Cull, Blend?) - Zahlen pro Bild (gespawnte/gezeichnete Quads in F1549ff).
+3. 1:1 nachbauen (jede Konstante mit @0x/Datei-Offset), beide Szenarien (2090/2091), ohne die bestehenden B-/G-Riegel zu brechen.
+4. Nachweis am Spiel: Bildstreifen der Explosion gegen ein RE2-Referenzbild desselben Effekts (aus den RE2-Daten gerendert oder
+   aufgenommen), Riegel: Effekt-Bank in 2090 registriert + gezeichnete Explosions-Quads > 0 in den R1-Bildern.
+
+## 2026-10-25 12:08 — Nachtrag 29 (Wortlaut; Lage der Zombie-Leiche mit dem Schluessel in 2090, Spur F)
+
+> Und eine weitere Auffälligkeit: Die Zombie Leiche mit dem Schlüssel ist zu nah an der Leiter. Das Krokodil frisst ihn,
+> und ist damit direkt beim Start des Kampfes quasi unmittelbar an der Leiter. Man hat keine Chance direkt am Anfang vom
+> Kampf den Aligator auszuweichen. Die Zombie Leiche inklusive der Kette - Schlüssel - Aligator Fressen etc. muss weiter
+> weg sein, damit man am Start des Kampfes eine Chance hat.
+
+Orchestrator-Messung (Baum r41_gatorszene da156ce6): Leon kommt ueber die Leiter bei (-8200, 0, -25550) Gier 0 in 2090 an
+(ROOM2080 Leiter-Tuer Slot 1 @0x0BC2: `3b 01 02 31 08 00 4e da da 99 e8 03 e8 03 f8 df 00 00 32 9c 00 00 01 09`). Leiche
+(-5500,-1740,-23700) Gier 384, Fressstelle = Rumpfmitte (-4594,-24306) - rund 3800 Einheiten von der Ankunft (gatorszene_r41.c
+GSZ_LEICHE_*; gewaehlt nach der Sichtbarkeit des Schluessels in Cut 1).
+
+**Auftrag an Spur F:** Leiche samt der ganzen Kette (Einstellung Leiche mit Schluessel, Zombies oben in 2080, erneut Leiche,
+Fressen, Schrei/Schuetteln Richtung Leon, Kampfbeginn mit RE2-Musik) so weit von der Leiter weg, dass man am Kampfbeginn
+ausweichen kann. Mass belegen statt schaetzen: Abstand Alligator <-> Leon und Bilder bis zum ersten Angriff (Biss-/Dash-Kontakt)
+am Kampfbeginn mindestens wie in RE2 am Ende des Alligator-Intros in ROOM40A0 (Intro-Startlage = Pos_set-Zwilling der Spur B,
+Dash-/Biss-Schwellen des RE2-Moduls mit @0x); reicht die Beckengeometrie von 2090 dafuer nicht, so weit wie die Wasserzonen
+erlauben, mit Zahlen im Dossier. Messen an der exe mit Leon UND Elza, einmal stehend, einmal sofort weglaufend (Ausweichen
+gelingt). Die Schluessel-Sichtbarkeit (Nachtrag 6: "sieht die Zombie Leiche mit dem Schluessel") an der neuen Lage neu waehlen
+und messen; die Szenenfolge bleibt sonst gleich. Riegel: Abstand und Bilder bis zum ersten Angriff >= Sollwert, bestehende
+F-Riegel mit Beleg (Nachtrag 29) nachziehen. Querbezug B/G: nur die Startlage des Kampfes aendert sich.
+
+## 2026-10-25 12:08 — Orchestrator-Entscheide G-E1/G-E2 (Abnahme G 2, Maengel M1/M2; der Nutzer kann widersprechen)
+
+**G-E1 (M1, Tod nicht im Bild):** Spur G behebt die Kamerawahl fuer den R1-Explosionstod in Spur B's Modul (gator_re2_r41.c,
+gr2_kam_r1_start / re15_gr2_kamera_wahl) mit markiertem Haken ("Runde 41 Spur G, G-E1"; FG-E3/FG-E5 gelten). Mass = RE2:
+R1 zeigt den Kopf in RE2-Cut 5 nahe der Bildmitte (Bild (170,111), Tabelle der Spur B "EXPLOSION"). Gewaehlt wird die
+2090/2091-Zonenkamera, in der Kopf und Kiefer mit Rand im Bild liegen und von keiner Maske verdeckt sind, am naechsten an der
+RE2-Lage; Messung in allen Verlaeufen (Riegel-Startlage (-6000,-17500), d15, v1, west, Plattform; Leon und Elza), Bildbogen,
+Riegel prueft den sichtbaren Kopf statt nur "R1 ende (Leiche)". Fs Schluessel-Einstellung nach dem Tod (F Nachbesserung 2)
+folgt danach; der Querbezug wird bei der Integration F+G gemessen.
+**G-E2 (M2, Werfer mit dem Ruecken zur Kamera):** Nachtrag 5 verlangt die RE2-Form ("GENAU wie die RE2-Szene, in der Ada den
+Raketenwerfer ... hinunterwirft"). Marvin/John stehen beim Satz 42 und beim Wurf in 2080 Cut 7 der Kamera zugewandt wie Ada
+(RE2 ROOM7020 Dir_set 0x0e74 @0x0748, Blick 0,99), die Kanister-Bahn laeuft in Weltrichtung zur Landestelle, unabhaengig von der
+Gier des Werfers (Add_speed @0x80055abc-e0). Messen fuer Nord- und Suedwurf, Leon und Elza, Bildbogen Cut 7 F530-F630, Riegel
+(Blickwert je Wurfrichtung).
