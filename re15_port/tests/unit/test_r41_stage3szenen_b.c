@@ -34,6 +34,7 @@
 #include "re15_rdt.h"
 #include "re15_enemy.h"            /* re15_rbj_bind_room */
 #include "re15_actor.h"
+#include "re15_scd.h"              /* g_scd, Weste (re15_vest_*), re15_game_flag_set */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -201,6 +202,16 @@ static void t_waffe(void)
     re15_sherry_r41_modell_setzen(13);
     CHECK(re15_player_equipped_weapon() == 1 && pl->hp == 100 && !re15_sherry_r41_waffe_gesperrt(),
           "Leon -> Marvin 0x0D (ROOM3020 @0x00D7A): Waffe 1 (@0x800c00d4[13]), HP 100, Ausruesten frei");
+    /* Weste (Port-Nachruestung +5, Flag (3,0x75)) und Figurwechsel: der Raumlader ruft danach re15_vest_hp_on_model_reload */
+    re15_game_flag_set(3, 0x75, 1);
+    g_scd.work_vars[0x10] = 1; re15_vest_model_mark(1);
+    re15_sherry_r41_modell_init(1); pl->hp = 105;
+    g_scd.work_vars[0x10] = 13; re15_sherry_r41_modell_setzen(13); re15_vest_hp_on_model_reload();
+    CHECK(pl->hp == 100, "Leon mit Weste (1) -> Marvin: HP %d (Soll 100 = @0x80031718; der Westen-Abzug -5 greift nicht)", pl->hp);
+    pl->hp = 40;
+    g_scd.work_vars[0x10] = 1; re15_sherry_r41_modell_setzen(1); re15_vest_hp_on_model_reload();
+    CHECK(pl->hp == 105, "Marvin -> Leon mit Weste (ROOM3060 @0x010DE): HP %d (Soll 100 + Westen-Bonus 5 = voll wie item_use_common.c)", pl->hp);
+    re15_game_flag_set(3, 0x75, 0);
 }
 
 /* ---------- koerper ---------- */

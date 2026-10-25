@@ -98,7 +98,12 @@ void re15_sherry_r41_modell_setzen(int modell)
          * CORE-/ARMS-Bank (@0x800316e8 / @0x80031708) und Koerper (@0x8003154c/@0x80031578) laedt das PC-Modul. */
         re15_player_waffe_roh((int)k_debug_waffe[s_modell]);
         re15_wound_reset();
-        g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 100;
+        /* HP := 100 ist im Original die Vollheilung. Die Port-Weste (Nutzer-Auftrag 2026-08-29: Modell 1 = +5 Hoechst-
+         * energie, scd_room_setup.c re15_vest_hp_bonus; "voll" = 100 + Bonus wie item_use_common.c/zustand_r39.c) gilt
+         * auch hier: Wechsel IN Modell 1 -> 105. Der Westen-Spiegel wird nachgezogen, damit re15_vest_hp_on_model_reload
+         * (laeuft danach, @0x80039760-Stelle) den Figurwechsel nicht als An-/Ablegen liest (sonst Leon(1) -> Marvin 95). */
+        g_actors[RE15_ACTOR_SLOT_PLAYER].hp = (int16_t)(100 + ((s_modell == 1) ? re15_vest_hp_bonus() : 0));
+        re15_vest_model_mark((int16_t)s_modell);
         g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags = 0;
     }
     fprintf(stderr, "[sherry-r41] Spielermodell %d -> %d, Waffe (aca5d) %d, HP %d, Status %04x (vorher Waffe %d, HP %d, "
