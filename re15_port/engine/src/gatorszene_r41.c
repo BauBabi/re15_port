@@ -104,19 +104,23 @@ static void musik_takt_vor(void) { musik_takt(); }
 
 /* ---- PORT-WAHL der Inszenierung (Nachtrag 6 "Betreff Aligator darfst du alles machen was du willst. Du darfst auch die
  * Startposition des Aligators und die Position der schwimmenden Zombie Leiche ... aendern"), gemessen am Bild (Dossier §1): */
-/* Leiche obj 2 + Szenenkamera: tools/r41_gatorszene/leiche_lage.py. Der Schluessel ist ein flaches RE2-Bodenmodell (180 x 180,
- * ROOM7040.RDT MD1 @0x354C), und alle Zonenkameras von ROOM2090 stehen flach ueber dem Wasser (y -3132): an der ersten
- * Szenen-Lage (-5300,-21000) zeigte Cut 0 ihn als Strich (5,6 x 0,6 Bildpunkte, Messlauf lc_*), in Cut 7 lag er im
- * Umgebungslicht (Lichtwert 78; Bildwerte 33..47, Messlauf k7b). Gewaehlt je Zonenkamera die Lage, in der die GANZE Leiche
- * (MD1 @0x2054) mit Rand im Bild liegt und die Gator-Buehne (Kopf im Koppelbild 13 auf der Rumpfmitte, Start S aus dem Norden)
- * ganz in den sce-8-Wasserzonen (main00 @0x009D6/@0x009EA/@0x009FE) verlaeuft, mit dem groessten Wert Bildgroesse^2 x Licht
- * des Schluessels (Lichtsatz des Cuts, RDT @0x468 + 40 * Cut). Ergebnis: Cut 1 (RID @0x080; Lichtsatz @0x490, Licht 0 bei
- * (-4790,-4000,-24387) Reichweite 20000) - Wert 23412 gegen Cut 7 7209 / Cut 0 5026; Leiche (-5500,-1740,-23700) Gier 384,
- * Bildkasten (26,137)-(218,203), Rumpfmitte (-4594,-24306), Start S (-4623,-13591) im Nordbecken. */
-#define GSZ_CUT_LEICHE        1
-#define GSZ_LEICHE_X          (-5500)
-#define GSZ_LEICHE_Z          (-23700)
-#define GSZ_LEICHE_ROT_Y      384
+/* Leiche + Szenenkamera. Fassung 1 (leiche_lage.py): obj 2 nach (-5500,-1740,-23700) Gier 384, Cut 1, Anlauf aus dem Norden
+ * (Gier 1024) - Rumpfmitte (-4594,-24306), rund 3800 von der Leiter-Ankunft; der Kampf begann mit der Gator-Wurzel 6162 vor
+ * Leon, erster Treffer nach 61 (stehend) bzw. 33 Bildern (weglaufend) - Abnahme 3 M1. Nachbesserung 4 (NUTZER-VORGABE Nachtrag
+ * 29, 2026-10-25 12:08: "Die Zombie Leiche inklusive der Kette - Schluessel - Aligator Fressen etc. muss weiter weg sein, damit
+ * man am Start des Kampfes eine Chance hat"; Sollwert = RE2-Intro-Ende ROOM40A0, tools/r41_gatorszene/probe_re2_intro_ende.c:
+ * Wurzel (503,-24100) nach Pos_set @SCD 0x0736 + Clip 6/3 @0x801008ac-948, Leon (-10800,-25800) nach Plc_dest @SCD 0x0286 ->
+ * Abstand 11430, vorderster Knochen auf Leons x nach 121 Bildern): Wahl tools/r41_gatorszene/leiche_lage_n4.py - Kette im Wasser
+ * des Beckens (gb_becken_draussen), Abstand Kau-Lage <-> Leiter-Ankunft - 700 >= 11430, Leiche ganz im Bild. Gewaehlt ist die
+ * zweite treibende Leiche obj 3 an ihrer ORIGINAL-Lage (Obj_model_set @0x00A8E `2d 03 00 00 02 00 0a 00 00 00 e7 ff 34 f9 01 e3
+ * 00 00 78 06` = (-25,-1740,-7423) Gier 1656; Nutzer: "Es schwimmt bereits ein Zombie im Wasser, nimm vielleicht diesen"); der
+ * beste Wert der freien Suche (obj 2 bei (700,-8200)) laege 1063 neben ihr. Szenenkamera Cut 5 (RID @0x060 + 5 * 32: (2754,-3132,
+ * -6408) -> (-7992,-18,-10782)), die Kamera, in der das Original obj 3 zeigt: ganze Leiche im Bild (114,120)-(203,189), Rumpfmitte
+ * (-924,-8040), Kau-Lage (-2576,-10344) = 16213 von der Leiter-Ankunft. obj 2 bleibt an seiner Original-Lage (Cut 0). */
+#define GSZ_CUT_LEICHE        5
+#define GSZ_LEICHE_X          (-25)     /* obj 3 @0x00A8E pc[10..11] `e7 ff` */
+#define GSZ_LEICHE_Z          (-7423)   /* obj 3 @0x00A8E pc[14..15] `01 e3` */
+#define GSZ_LEICHE_ROT_Y      1656      /* obj 3 @0x00A8E pc[18..19] `78 06` */
 /* Rumpfmitte (Mundpunkt) im Objektraum der Leiche: Leichen-Modell MD1 @0x2054 x -444..2626 (Kopf .. Beine), Rumpf oben
  * (y <= -100) bei x -100..1400 -> Mitte 1090 (leiche_lage.py MITTE_X). */
 #define GSZ_LEICHE_MITTE_X    1090
@@ -163,7 +167,7 @@ const re15_gsz_folge_t *re15_gatorszene_r41_folge(int i) { return (i >= 0 && i <
 int re15_gatorszene_r41_zustand(void) { return s_zustand; }
 
 /* ---- Programme --------------------------------------------------------------------------------------------------- */
-/* PROGRAMM 1 - ROOM2090/2091 Ankunft: Riegel, Cut 1 auf die Leiche mit dem blinkenden Schluessel, Knall von oben (Nachtrag 17,
+/* PROGRAMM 1 - ROOM2090/2091 Ankunft: Riegel, Schnitt auf die Leiche (GSZ_CUT_LEICHE) mit dem blinkenden Schluessel, Knall von oben (Nachtrag 17,
  * "erst Knall, dann die Zombies, dann der Schnitt" wie die Irons-Montage), dann Montage nach 2080. */
 static const uint8_t k_p1[] = {
     GSZ_ABSCHNITT_ENDE, GSZ_RIEGEL,
@@ -293,21 +297,21 @@ static int prop_slot(uint8_t obj_id)
 
 /* Prop-Felder wie Obj_model_set (LAB_80040914): flags pc[6..7] | 1 (@0x80040990-a4), Band pc[4] -> pool+0x82 (@0x8004096c-74).
  * attr 0 = NCCT-beleuchtet (FUN_8002c18c @0x8002c2ec-f8): Voraussetzung des Helligkeitspulses (re15_blink_r41.h). */
-#define GSZ_KEY_FLAGS     0x000B    /* ROOM2090 obj 2 @0x00A6C pc[6..7] `0a 00` | 1 */
+#define GSZ_KEY_FLAGS     0x000B    /* ROOM2090 obj 2 @0x00A6C / obj 3 @0x00A8E pc[6..7] `0a 00` | 1 */
 #define GSZ_KEY_BAND      0
-/* Lage auf dem Ruecken der Leiche, Objektraum von obj 2 (Elternobjekt, Anhaenge-Form 0xC0|n @0x80040a84-9c): hoechste Stelle
+/* Lage auf dem Ruecken der Leiche, Objektraum der Leiche (Elternobjekt, Anhaenge-Form 0xC0|n @0x80040a84-9c): hoechste Stelle
  * des Rueckens im Leichen-Modell MD1 @0x2054 (y -341 bei x 800..1100, z -100); die Mitte 420 darueber, weil das gekippte
- * Quadrat (180) in y bis +-73 reicht. Kippung zur Kamera von Cut 1, hoechstens 60 Grad, mit dem hoechsten Wert cos(Blick) x Licht
- * UNTER der Puls-Grenze Licht x 0xBE / 0x80 <= 255 (Nachbesserung 1, M5; leiche_lage.py: Blink-Spitze 0xBE der Folge
- * @0x801028fc/@0x8010290c; NCCT-Ausgabe = Licht / 2, light_common.c `IR_c >> 5`; der PC-Zeichner kappt die Primitivfarbe bei
- * 0x80 = Texel x 1,0, render_pc.c psx_prim_to_sdl_vert): lokal rx 544 / rz -464 in der Drehfolge von main.c pc_prop_rot_q12,
- * 59,4 Grad -> Bildflaeche cos 0,270 (flach) -> 0,917, Licht 169,8 (Spitze 252 < 256), ~10,4 x 9,5 Bildpunkte. Die erste
- * Fassung (rx 608 / rz -160, Licht 211,5) lief in die Kappung: Puls 92 -> 112 mit Plateau (Abnahme 0, M5). PORT-WAHL. */
+ * Quadrat (180) in y bis +-73 reicht. Kippung zur Szenenkamera, hoechstens 60 Grad, mit dem hoechsten Wert cos(Blick) x Licht
+ * UNTER der Puls-Grenze Licht x 0xBE / 0x80 <= 255 (Nachbesserung 1, M5; Blink-Spitze 0xBE der Folge @0x801028fc/@0x8010290c;
+ * NCCT-Ausgabe = Licht / 2, light_common.c `IR_c >> 5`; der PC-Zeichner kappt die Primitivfarbe bei 0x80 = Texel x 1,0,
+ * render_pc.c psx_prim_to_sdl_vert), Drehfolge main.c pc_prop_rot_q12. Nachbesserung 4: Kamera Cut 5, Lichtsatz RDT @0x468 +
+ * 40 * 5 -> lokal rx 144 / rz -672 (59,9 Grad), Bildflaeche cos 0,911, Licht 108,6 (Spitze 161 < 172), ~9,0 x 8,2 Bildpunkte
+ * (leiche_lage_n4.py; Fassung 1 Cut 1: rx 544 / rz -464, Licht 169,8, ~10,4 x 9,5). PORT-WAHL. */
 #define GSZ_KEY_AUF_X     1090
 #define GSZ_KEY_AUF_Y     (-420)
 #define GSZ_KEY_AUF_Z     (-100)
-#define GSZ_KEY_AUF_RX    544
-#define GSZ_KEY_AUF_RZ    (-464)
+#define GSZ_KEY_AUF_RX    144
+#define GSZ_KEY_AUF_RZ    (-672)
 /* Item-Zone nach dem Tod (re15_aot_set_item_tk_prop = Item_aot_set @0x80040644-Form), Rechteck 1000 x 1000 wie ROOM2090 main00
  * @0x00A12 (`e8 03 e8 03`), AOT-Platz 15: frei in 2090 (main00 0..5, Kamerazonen 48..63). */
 #define GSZ_KEY_AOT       15
@@ -371,7 +375,7 @@ static int key_prop(void)
     }
     return k;
 }
-/* Waehrend die Szene aussteht: Schluessel auf dem Ruecken der Leiche, Kind von obj 2 (wippt mit ihr, sub02 @0x00AF0). */
+/* Waehrend die Szene aussteht: Schluessel auf dem Ruecken der Leiche, Kind von obj 3 (wippt mit ihr, sub03 @0x00B5E). */
 static void key_auf_leiche(uint16_t room_id)
 {
     int k = key_prop();
@@ -427,7 +431,7 @@ static void erster_abschnitt_sofort(int slot)
 }
 
 
-/* Leiche obj 2: Lage der Szene (GSZ_LEICHE_*, leiche_lage.py) - nur waehrend die Szene noch aussteht. */
+/* Leiche obj 3: Lage der Szene (GSZ_LEICHE_* = Original-Lage @0x00A8E, leiche_lage_n4.py) - nur waehrend die Szene noch aussteht. */
 static void leiche_lage(void)
 {
     int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
@@ -609,8 +613,11 @@ static int ga_kopf_probe(const re15_actor_t *e, int clip, int frame, int32_t x, 
     return re15_gr2_bone_welt_pub(&b, 6, kopf);
 }
 
-/* Szenen-Gier: der Gator kommt aus dem Norden durch den Westkanal (Gier 1024 = -z) auf die Leiche zu. */
-#define GSZ_GATOR_GIER        1024
+/* Szenen-Gier (PORT-WAHL der Inszenierung, Nachbesserung 4): der Gator kommt aus dem Westkanal nach Nordosten (Gier 3488,
+ * Vorwaerts (cos, -sin) = (0,63, 0,78)) ins Nordbecken auf obj 3 zu; Start S (-7283,-16663). leiche_lage_n4.py: unter den Gieren
+ * (Raster 16), deren Kette mit dem RE2-Abstand im Wasser liegt (3328..3584), die mit dem groessten kleinsten Rand (Wurzelweg 1408,
+ * Kopfweg 1443; Fassung 1: Gier 1024 aus dem Norden, Leiche im Suedbecken). */
+#define GSZ_GATOR_GIER        3488
 /* Biss: Kopf (Part 6) im Koppelbild 13 von Clip 4 (RE2 FRESSEN P1 @0x80101104-34) auf dem Rumpf der Leiche. */
 #define GSZ_KOPPEL_BILD       13
 #define GSZ_WENDE_RATE        75     /* RE2 R1 Ziel-Gier 75/Bild (FUN_8001569c @0x801025f8-608, `addiu a2,zero,75` @0x80102608) */
@@ -699,9 +706,9 @@ int re15_gatorszene_r41_spieler_im_bild(int cut) { int sx, sy; return spieler_im
  * Cut_chg auf den Cut des Spielers `29 05` @0x012C4 vor Plc_ret `42` @0x012E0 und Cut_auto `3c 01` @0x012E2 (die beiden
  * letzten macht Programm 3 im naechsten Bild). Ziel = der Eintritts-Cut (s_leon_cut; Leiter ROOM2080 Slot 1 @0x00BC2 Ziel-Cut
  * 0); der Spieler steht an seiner Eintrittslage (Montage-Tuer von Programm 2). Ohne den Schnitt blieb die Zonen-Zustands-
- * maschine auf P3s Leichen-Cut 1 (eine Zone feuert nur mit cam_from = angezeigter Cut, `lbu v1,22(a0)` @0x80014254), in
+ * maschine auf P3s Leichen-Cut (Fassung 1: Cut 1; eine Zone feuert nur mit cam_from = angezeigter Cut, `lbu v1,22(a0)` @0x80014254), in
  * dem keine Zone die Spielerlage traegt - gemessen Abnahme 0 Lauf L1: F405-F699 cam=1, Leon hinter der Kamera. Im SELBEN
- * Bild wie re15_gr2_kamera_frei (dessen Rueckschnitt auf Cut 1 sonst ein Bild lang zu sehen waere: SCD-Takt vor dem
+ * Bild wie re15_gr2_kamera_frei (dessen Rueckschnitt auf den Leichen-Cut sonst ein Bild lang zu sehen waere: SCD-Takt vor dem
  * Spielschritt, main.c). Cut_chg-Zwilling = LAB_800402a0 wie scd_vm.c op_cut_chg: alter Cut @0x800402c0/@0x800402e4,
  * work_vars[0x0C] @0x800402ec, work_vars[0x0A] @0x800402fc, Bit 0x100 (Zonenkamera aus) @0x800402d4. */
 static void cut_chg_zwilling(int cut)
@@ -831,7 +838,7 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
         if (ga_schritt(e, bk) == 2) {
             ga_clip(e, 0, 0, GSZ_SCHWIMM_BLEND);
             re15_gr2_biss_cd(slot, GSZ_BISS_CD);
-            re15_gr2_kamera_frei("gatorszene");               /* Spur-B-Sperre auf (Cut_old-Zwilling auf Cut 1 = P3s Leichen-Cut) */
+            re15_gr2_kamera_frei("gatorszene");               /* Spur-B-Sperre auf (Cut_old-Zwilling auf P3s Leichen-Cut) */
             re15_gr2_kamera_auto(1);                          /* Nachbesserung 1 (N1): B's Programme R1/Finisher/Intro wieder an */
             kam_uebergabe();                                  /* Nachbesserung 1 (M1): im SELBEN Bild auf den Cut des Spielers */
             s_ga.phase = GP_ENDE; s_ga.t = 0;

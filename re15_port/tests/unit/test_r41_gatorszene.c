@@ -32,6 +32,10 @@
  *               OBEN, Band 8, nie westlich der Absatzwand) -> zurueck -> Gator-Ablauf G1..G7 -> Kampf, (9,110) = 1, Riegel auf,
  *               Musik-Eintrag 0xFF3C
  *   szene_elza  dasselbe mit Elza (2091 / 2081)
+ *   abstand     Nachbesserung 4 (Abnahme 3 M1, Nachtrag 29): Szene ueber die Leiter bis zum Kampfbeginn; Abstand Gator-Wurzel <->
+ *               Spielfigur >= RE2-Intro-Ende ROOM40A0 und erster Biss/Treffer (Leon steht) nicht vor den RE2-Bildern - beide
+ *               Sollwerte im Riegel aus den RE2-Daten gerechnet (probe_re2_intro_ende.c); Gegenprobe Fassung-1-Lage
+ *   abstand_elza  dasselbe mit Elza (2091 / 2081)
  */
 #if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
 #define _DEFAULT_SOURCE 1   /* setenv/unsetenv (Teil tod_explosion), VERTRAG 2 */
@@ -344,28 +348,32 @@ static void teil_leiche(void)
         if (room_boot(raeume[r], -8200, 0, -25550, 0, 0) != 0) return;
         const int kl = prop_von(RE15_GSZ_LEICHE_OBJ), ks = prop_von(RE15_GSZ_KEY_OBJ);
         PRUEF(re15_gatorszene_r41_zustand() == RE15_GSZ_ANKUNFT, "ROOM%04X: Szene startet (Zustand ANKUNFT)", raeume[r]);
-        PRUEF(kl >= 0 && g_scd.props[kl].x == -5500 && g_scd.props[kl].z == -23700 && g_scd.props[kl].rot_y == 384,
-              "Leiche obj 2 an der Szenen-Lage (-5500,-23700) Gier 384 (leiche_lage.py)");
+        /* Nachbesserung 4 (Nachtrag 29, Querbezug): die Szenen-Leiche ist obj 3 an ihrer Original-Lage (Obj_model_set @0x00A8E
+         * (-25,-1740,-7423) Gier 1656, leiche_lage_n4.py); Fassung 1 verlangte obj 2 bei (-5500,-23700) Gier 384. */
+        PRUEF(kl >= 0 && g_scd.props[kl].x == -25 && g_scd.props[kl].z == -7423 && g_scd.props[kl].rot_y == 1656,
+              "Leiche obj %d an der Szenen-Lage (-25,-7423) Gier 1656 (obj 3 @0x00A8E, leiche_lage_n4.py)", RE15_GSZ_LEICHE_OBJ);
         PRUEF(ks >= 0 && g_scd.props[ks].active && g_scd.props[ks].parent_obj == RE15_GSZ_LEICHE_OBJ &&
               g_scd.props[ks].x == 1090 && g_scd.props[ks].y == -420 && g_scd.props[ks].z == -100 &&
-              g_scd.props[ks].rot_x == 544 && g_scd.props[ks].rot_z == -464,
-              "Schluessel obj 4 = Kind der Leiche, lokal (1090,-420,-100), Neigung rx 544 rz -464 (leiche_lage.py, Puls-Grenze)");
+              g_scd.props[ks].rot_x == 144 && g_scd.props[ks].rot_z == -672,
+              "Schluessel obj 4 = Kind der Leiche, lokal (1090,-420,-100), Neigung rx 144 rz -672 (leiche_lage_n4.py, Cut 5)");
         PRUEF(re15_blink_r41_aktiv(raeume[r], RE15_GSZ_KEY_OBJ), "Schluessel blinkt (re15_blink_r41)");
         /* Nachbesserung 1 (M5): der Puls laeuft nicht in die Kappung des PC-Zeichners (Primitivfarbe 0x80 = Texel x 1,0,
-         * render_pc.c psx_prim_to_sdl_vert). Gemessen mit dem Zeichner-Licht (Lichtsatz Cut 1 @0x490, Elternkette obj 2). */
+         * render_pc.c psx_prim_to_sdl_vert). Nachbesserung 4: gemessen mit dem Zeichner-Licht der Szenenkamera Cut 5 (Lichtsatz
+         * RDT @0x468 + 40 * 5, Elternkette obj 3). In Cut 5 erreicht keine Neigung <= 60 Grad die Kappung (leiche_lage_n4.py:
+         * groesstes Licht 113 < 255 * 0x80 / 0xBE = 171,8); die Gegenprobe prueft deshalb die Wahl selbst: flach (rx 0 / rz 0)
+         * ist der Schluessel dunkler als mit der gewaehlten Neigung (Licht 76,8 gegen 108,6). */
         int ruhe = -1, spitze = -1;
-        const int ok = re15_gatorszene_r41_key_prim_jetzt(1, &ruhe, &spitze);
+        const int ok = re15_gatorszene_r41_key_prim_jetzt(5, &ruhe, &spitze);
         PRUEF(ok && spitze <= 0x80 && ruhe > 0 && spitze * 128 >= ruhe * 0xBE - 128,
-              "Cut 1: Primitivfarbe Ruhe %d -> Blink-Spitze %d (<= 0x80, Verhaeltnis %d/%d ~ 0xBE/0x80 = voller Dreieckpuls)",
+              "Cut 5: Primitivfarbe Ruhe %d -> Blink-Spitze %d (<= 0x80, Verhaeltnis %d/%d ~ 0xBE/0x80 = voller Dreieckpuls)",
               ruhe, spitze, spitze, ruhe);
-        if (r == 0 && ks >= 0) {                     /* Gegenprobe: die alte Neigung rx 608 / rz -160 laeuft in die Kappung */
+        if (r == 0 && ks >= 0) {                     /* Gegenprobe: flacher Schluessel ist dunkler */
             const int16_t ax = g_scd.props[ks].rot_x, az = g_scd.props[ks].rot_z;
-            g_scd.props[ks].rot_x = 608; g_scd.props[ks].rot_z = -160;
+            g_scd.props[ks].rot_x = 0; g_scd.props[ks].rot_z = 0;
             int r2 = -1, s2 = -1;
-            re15_gatorszene_r41_key_prim_jetzt(1, &r2, &s2);
+            re15_gatorszene_r41_key_prim_jetzt(5, &r2, &s2);
             g_scd.props[ks].rot_x = ax; g_scd.props[ks].rot_z = az;
-            PRUEF(s2 > 0x80, "Gegenprobe erste Fassung (rx 608 / rz -160): Ruhe %d -> Spitze %d > 0x80 (gekappt = Plateau, Abnahme 0 M5)",
-                  r2, s2);
+            PRUEF(r2 >= 0 && r2 < ruhe, "Gegenprobe flach (rx 0 / rz 0): Ruhe %d < %d mit der gewaehlten Neigung", r2, ruhe);
         }
     }
 }
@@ -839,9 +847,10 @@ static void teil_szene(int elza)
     /* Gehen braucht die Zombie-Bank (Clips + Wurzelbahn), die nur der Lader der Plattform haengt - das Laufen misst
      * integration_r41_gatorszene_* am state.log der exe (Lauf lad4: 8 von 8 bewegt, z.B. (-9900,-14700) -> (-10732,-18661)). */
     printf("    (ohne Zombie-Bank im Harness: %d von 8 bewegt - Laufen misst der exe-Riegel)\n", bewegt);
+    /* Nachbesserung 4 (Nachtrag 29, Querbezug): Rueckkehr-Cut = Leichen-Cut 5 (obj 3, leiche_lage_n4.py; Fassung 1: Cut 1) */
     PRUEF(g_room_change.pending && (g_room_change.room_id & 0xFFFEu) == 0x2090 && g_room_change.x == -8200 &&
-          g_room_change.z == -25550 && g_room_change.target_cut == 1,
-          "nach %d Bildern: zurueck nach ROOM%04X (%d,%d) Cut %d (soll Eintrittslage (-8200,-25550), Cut 1)", f,
+          g_room_change.z == -25550 && g_room_change.target_cut == 5,
+          "nach %d Bildern: zurueck nach ROOM%04X (%d,%d) Cut %d (soll Eintrittslage (-8200,-25550), Leichen-Cut 5)", f,
           g_room_change.room_id, g_room_change.x, g_room_change.z, g_room_change.target_cut);
 
     if (room_boot(r2090, -8200, 0, -25550, 0, 1) != 0) return;
@@ -872,7 +881,7 @@ static void teil_szene(int elza)
     for (int k = 0; k < 120; k++) frame(0, 0);
     PRUEF(re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN) == 1, "(9,110) = 1 (Szene gesehen)");
     PRUEF(re15_game_flag_get(2, 7) == 0 && re15_game_flag_get(1, 27) == 0, "Riegel auf: (2,7) = 0, (1,27) = 0");
-    PRUEF(prop_von(RE15_GSZ_LEICHE_OBJ) < 0 || !g_scd.props[prop_von(RE15_GSZ_LEICHE_OBJ)].active, "Leiche verschlungen (obj 2 aus)");
+    PRUEF(prop_von(RE15_GSZ_LEICHE_OBJ) < 0 || !g_scd.props[prop_von(RE15_GSZ_LEICHE_OBJ)].active, "Leiche verschlungen (obj %d aus)", RE15_GSZ_LEICHE_OBJ);
     PRUEF(prop_von(RE15_GSZ_KEY_OBJ) < 0 || !g_scd.props[prop_von(RE15_GSZ_KEY_OBJ)].active, "Schluessel mitgefressen (obj 4 aus)");
     PRUEF(re15_gatorszene_r41_bgm_eintrag(1, 9) == 0xFF3C, "Musik-Eintrag 0xFF3C (RE2 MAIN1A) im Kampf");
     /* Nachbesserung 1 (M1): Szenenende = Cut_chg auf den Eintritts-Cut (Leiter ROOM2080 Slot 1 @0x00BC2 -> Cut 0, Form ROOM1150
@@ -885,6 +894,144 @@ static void teil_szene(int elza)
               "120 Bilder nach dem Kampfbeginn: Cut %d (soll 0), Spielfigur im Bild, Spur-B-Sperre frei", (int)g_scd.cam_id);
         PRUEF(g_scd.cut_auto_enabled == 1, "Zonenkamera an (Cut_auto 1 aus Programm 3, ROOM1150 sub08 @0x012E2)");
     }
+}
+
+/* ---- Teil: abstand / abstand_elza (Nachbesserung 4, Abnahme 3 M1 = Nachtrag 29) -----------------------------------------
+ * Nutzer (Nachtrag 29, 2026-10-25 12:08): "Die Zombie Leiche inklusive der Kette - Schluessel - Aligator Fressen etc. muss weiter
+ * weg sein, damit man am Start des Kampfes eine Chance hat." Sollwert = Ende des RE2-Alligator-Intros in ROOM40A0, hier aus den
+ * RE2-Daten SELBST gerechnet (dieselbe Rechnung wie tools/r41_gatorszene/probe_re2_intro_ende.c, Adressen dort und im Dossier):
+ *   Gator: sub11 `Pos_set 32 00 cd 11 f8 f8 c3 b8` @SCD 0x0736 (4557,-18237), Gier 0x400 (Sce_em_set @RDT 0x25A0); Clip 6 bis
+ *          zum Ende (@0x801008ac-b8), z = -21212 (@0x801008d0-d4), Clip 3 bis zum Ende (@0x801008e4-f0), Gier += 1024
+ *          (@0x80100938-48); Wurzelschritt wie FUN_8001a330 (erstes Bild off[0] @0x8001a374 / FUN_80015e7c, am Clip-Ende kein
+ *          Schritt @0x8001a3b0, Drehung FUN_800152c8 @0x8001a3c0).
+ *   Leon:  sub03 `Plc_dest 40 00 08 0a d0 d5 38 9b` @SCD 0x0286 = (-10800,-25800).
+ *   Danach Leon stehend: 110 Bilder Sub 1 Clip 0 (+0x238 = 110 @0x8010091c-20, Hysterese @0x80100b5c-64, Abzaehlen
+ *          @0x801004a8-b8), dann Sub 2 Clip 1 (+0x1F0 >= 0x65 @0x80100b88), geradeaus mit Gier 2048 (keine Koerperlenkung
+ *          @0x8010036c-74), bis der vorderste Knochen Leons x erreicht.
+ * Verlangt im Port (echte Szene ueber die Leiter, echter Boss-Takt, RE2-EM23-Bank): am Kampfbeginn (Zustand KAMPF = Folge C)
+ * Abstand Gator-Wurzel <-> Spielfigur >= RE2-Abstand; Leon steht: der erste Angriff (Clip 4 = Biss des Boss-Moduls) bzw. der erste
+ * Treffer kommt nicht vor RE2-Bildern. Gegenprobe: dieselbe Szene, am Kampfbeginn der Gator an die gemessene Kampfbeginn-Lage der
+ * Fassung 1 (Abnahme 3 / Lauf V_L: (-4254,-20984) Gier 1505) - dort kommt der Angriff vor den RE2-Bildern (exe: nach 54). */
+static int re2_kf(const re15_enemy_bank_t *bk, int clip, int frame)
+{
+    const re15_emd_animation_t *an = &bk->anim;
+    const re15_emd_clip_t *c = &an->clips[clip];
+    int fi = c->first_frame + frame, fend = c->first_frame + c->frame_count;
+    while ((an->frames[fi] & 0x8000u) && fi + 1 < fend) fi++;
+    return (int)(an->frames[fi] & 0xfffu);
+}
+static void re2_off(const re15_enemy_bank_t *bk, int clip, int f, int32_t o[3])
+{
+    int16_t a[3]; re15_emd_get_keyframe_speed(&bk->skel, re2_kf(bk, clip, f), &a[0], &a[1], &a[2]);
+    o[0] = a[0]; o[1] = a[1]; o[2] = a[2];
+}
+static void re2_clip_bild(const re15_enemy_bank_t *bk, int clip, int f, int32_t *x, int32_t *z, int yaw)
+{
+    if (f >= bk->anim.clips[clip].frame_count - 1) return;               /* Clip-Ende: kein Schritt (@0x8001a3b0) */
+    int32_t a[3] = { 0, 0, 0 }, b[3];
+    re2_off(bk, clip, f, b);
+    if (f > 0) re2_off(bk, clip, f - 1, a);
+    const int32_t dx = b[0] - a[0], dz = b[2] - a[2], c = re15_cos_q12(yaw), s = re15_sin_q12(yaw);
+    *x += (int32_t)(((int64_t)c * dx + (int64_t)s * dz) >> 12);
+    *z += (int32_t)((-(int64_t)s * dx + (int64_t)c * dz) >> 12);
+}
+static int32_t re2_vorn_x(const re15_enemy_bank_t *bk, int clip, int f, int32_t x, int32_t z, int yaw)
+{
+    re15_skel_pose_t p[RE15_EMD_MAX_BONES];
+    re15_skel_compute_pose(&bk->skel, re2_kf(bk, clip, f), p);
+    int32_t vorn = x;
+    for (int b = 0; b < bk->skel.bone_count; b++) {
+        int32_t w[3]; re15_skel_bone_to_world(p[b].trans, (int16_t)yaw, x, -1800, z, w);
+        if (w[0] < vorn) vorn = w[0];
+    }
+    return vorn;
+}
+static int re2_soll(int32_t *abstand, int *bilder)
+{
+    const re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+    if (!bk || !bk->ok || bk->anim.clip_count < 7) return 0;
+    int32_t x = 4557, z = -18237; int yaw = 0x400;
+    for (int f = 0; f < bk->anim.clips[6].frame_count; f++) re2_clip_bild(bk, 6, f, &x, &z, yaw);
+    z = -21212;
+    for (int f = 0; f < bk->anim.clips[3].frame_count; f++) re2_clip_bild(bk, 3, f, &x, &z, yaw);
+    yaw = (yaw + 1024) & 0xfff;
+    const int32_t lx = -10800, lz = -25800;
+    *abstand = (int32_t)re15_squareroot0((uint32_t)((int64_t)(x - lx) * (x - lx) + (int64_t)(z - lz) * (z - lz)));
+    int sperre = 110, sub = 1, f0 = 0, f1 = 0;
+    for (int t = 1; t <= 600; t++) {
+        int clip, fr;
+        if (sub == 1) { clip = 0; fr = f0; re2_clip_bild(bk, 0, f0, &x, &z, yaw); f0 = (f0 + 1) % bk->anim.clips[0].frame_count; }
+        else          { clip = 1; fr = f1; re2_clip_bild(bk, 1, f1, &x, &z, yaw); f1 = (f1 + 1) % bk->anim.clips[1].frame_count; }
+        if (sperre > 0) sperre--;
+        const uint32_t d = re15_squareroot0((uint32_t)((int64_t)(x - lx) * (x - lx) + (int64_t)(z - lz) * (z - lz)));
+        if (sub == 1 && sperre == 0 && d >= 0x65) sub = 2;
+        if (re2_vorn_x(bk, clip, fr, x, z, yaw) <= lx) { *bilder = t; return 1; }
+    }
+    return 0;
+}
+
+/* Die ganze Szene (wie teil_szene, ohne deren Pruefungen) bis zum Kampfbeginn; Rueckgabe der Alligator. */
+static re15_actor_t *szene_bis_kampf(int elza)
+{
+    const uint16_t r2090 = (uint16_t)(0x2090 + elza), r2080 = (uint16_t)(0x2080 + elza);
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    if (room_boot(r2090, -8200, 0, -25550, 0, 0) != 0) return NULL;
+    for (int f = 0; f < 600 && !g_room_change.pending; f++) frame(0, 0);
+    if (!g_room_change.pending) return NULL;
+    if (room_boot(r2080, -9950, -14400, -25700, 2048, 2) != 0) return NULL;
+    for (int f = 0; f < 600 && !g_room_change.pending; f++) frame(0, 0);
+    if (!g_room_change.pending) return NULL;
+    const uint8_t cut = g_room_change.target_cut;
+    if (room_boot(r2090, g_room_change.x, g_room_change.y, g_room_change.z, g_room_change.yaw_4096, cut) != 0) return NULL;
+    if (!gator_bank()) return NULL;
+    re15_actor_t *g = gator_setzen();
+    if (!g) return NULL;
+    for (int f = 0; f < 2000 && re15_gatorszene_r41_zustand() != RE15_GSZ_KAMPF; f++) frame(0, 0);
+    return re15_gatorszene_r41_zustand() == RE15_GSZ_KAMPF ? g : NULL;
+}
+/* Leon steht (keine Taste): Bilder ab Kampfbeginn bis zum ersten Biss (Clip 4 des Boss-Moduls) und bis zum ersten Treffer. */
+static int s_verfolgt_ab;   /* erstes Bild ab Kampfbeginn mit dem Boss in der Verfolgung (re15_gator_boss_verfolgt) */
+static void erster_angriff(re15_actor_t *g, int max_bilder, int *angriff, int *treffer)
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int hp0 = pl->hp;
+    *angriff = -1; *treffer = -1; s_verfolgt_ab = -1;
+    for (int f = 1; f <= max_bilder && (*angriff < 0 || *treffer < 0); f++) {
+        frame(0, 0);
+        if (s_verfolgt_ab < 0 && re15_gator_boss_verfolgt(g)) s_verfolgt_ab = f;
+        if (*angriff < 0 && g->motion == 4) *angriff = f;
+        if (*treffer < 0 && pl->hp < hp0) *treffer = f;
+    }
+}
+static void teil_abstand(int elza)
+{
+    printf("== abstand%s ==\n", elza ? "_elza" : "");
+    re15_actor_t *g = szene_bis_kampf(elza);
+    PRUEF(g != NULL, "Szene ueber die Leiter bis zum Kampfbeginn (ROOM%04X)", 0x2090 + elza);
+    if (!g) return;
+    int32_t soll_ab = 0; int soll_bi = 0;
+    PRUEF(re2_soll(&soll_ab, &soll_bi), "RE2-Sollwert gerechnet (ROOM40A0-Intro-Ende): Abstand %d, vorderster Knochen auf Leons x nach %d Bildern",
+          (int)soll_ab, soll_bi);
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int32_t ab = (int32_t)re15_squareroot0((uint32_t)((int64_t)(g->x - pl->x) * (g->x - pl->x) +
+                                                            (int64_t)(g->z - pl->z) * (g->z - pl->z)));
+    printf("    Kampfbeginn: Spieler (%d,%d), Gator-Wurzel (%d,%d) Gier %d\n", pl->x, pl->z, g->x, g->z, (int)g->rot_y);
+    PRUEF(soll_ab > 0 && ab >= soll_ab, "Abstand Gator-Wurzel <-> Spielfigur am Kampfbeginn %d >= RE2 %d", (int)ab, (int)soll_ab);
+    int an = -1, tr = -1;
+    erster_angriff(g, 900, &an, &tr);
+    PRUEF(s_verfolgt_ab >= 1 && s_verfolgt_ab <= 2, "Boss in der Verfolgung ab Bild %d nach dem Kampfbeginn (Rueckgabe 3 des Szenen-"
+          "Hakens im naechsten Boss-Takt)", s_verfolgt_ab);
+    PRUEF(soll_bi > 0 && (an < 0 || an >= soll_bi) && (tr < 0 || tr >= soll_bi),
+          "Leon steht: erster Biss nach %d, erster Treffer nach %d Bildern (-1 = keiner in 900) - nicht vor RE2 %d", an, tr, soll_bi);
+    /* Gegenprobe: Fassung-1-Lage am Kampfbeginn */
+    g = szene_bis_kampf(elza);
+    PRUEF(g != NULL, "Gegenprobe: Szene erneut bis zum Kampfbeginn");
+    if (!g) return;
+    g->x = -4254; g->z = -20984; g->rot_y = 1505;
+    erster_angriff(g, 900, &an, &tr);
+    PRUEF(an >= 0 && an < soll_bi, "Gegenprobe Fassung 1 (Gator (-4254,-20984) Gier 1505): erster Biss nach %d Bildern < RE2 %d "
+          "(der Riegel faengt den Befund der Abnahme 3)", an, soll_bi);
 }
 
 /* ---- Auswerter fuer den exe-Riegel (integration_r41_gatorszene_tod*, Nachbesserung 1 M2) -------------------------------
@@ -1019,6 +1166,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "tod_explosion")) teil_tod_explosion();
     if (alle || !strcmp(teil, "szene"))      teil_szene(0);
     if (alle || !strcmp(teil, "szene_elza")) teil_szene(1);
+    if (alle || !strcmp(teil, "abstand"))    teil_abstand(0);
+    if (alle || !strcmp(teil, "abstand_elza")) teil_abstand(1);
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

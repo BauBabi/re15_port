@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """Runde 41 Spur F "gatorszene", Nachbesserung 4 (Nachtrag 29): Lage der Leiche samt Kette WEITER WEG von der Leiter.
 
-  python re15_port/tools/r41_gatorszene/leiche_lage_n4.py [--liste N]
+  python re15_port/tools/r41_gatorszene/leiche_lage_n4.py            (Wahl: obj 3 an der Original-Lage, s. unten)
+  python re15_port/tools/r41_gatorszene/leiche_lage_n4.py --suche [--liste N]   (freie Lagesuche ueber alle Lagen/Cuts)
 
 NUTZER-VORGABE (AUFTRAG.md Nachtrag 29, 2026-10-25 12:08): "Die Zombie Leiche inklusive der Kette - Schluessel - Aligator Fressen
 etc. muss weiter weg sein, damit man am Start des Kampfes eine Chance hat." Orchestrator: Abstand Gator <-> Spieler am Kampfbeginn
@@ -30,6 +31,11 @@ Pruefungen je Lage:
   - Abstand: Kau-Lage <-> Leiter-Ankunft (-8200,-25550) (ROOM2080 Slot 1 @0x00BC2) minus 700 (Wende Clip 0 <= 28 Bilder + Schrei
     Clip 10 Wurzel 0 -> -1025 x 2/3; Abnahme 3 gemessen Kau-Lage -> Kampfbeginn (295,487)) >= 11430;
   - Wert = Bildgroesse^2 x Licht des Schluessels (wie Fassung 1); Neigung wie Fassung 1 (<= 60 Grad, Puls unter der Kappung).
+Wahl (PORT-WAHL, Dossier N4.M1): die freie Suche findet den besten Wert mit obj 2 bei (700,-8200) in Cut 5 - 1063 neben der
+zweiten treibenden Leiche obj 3 (Obj_model_set @0x00A8E (-25,-1740,-7423) Gier 1656), also zwei Leichen nebeneinander. obj 3 an
+ihrer Original-Lage erfuellt alle Bedingungen ohne Verschieben (Nutzer: "Es schwimmt bereits ein Zombie im Wasser, nimm vielleicht
+diesen"): Anlauf-Gier = groesster kleinster Wasserrand von Wurzel- und Kopfweg (Raster 16), Kamera = groesster Wert unter den
+Cuts, die die ganze Leiche zeigen, Neigung wie Fassung 1.
 """
 import math, os, sys
 import numpy as np
@@ -175,18 +181,56 @@ def neigung(cams, lichter, cut, ry, kw):
     return bn, grenze
 
 
-def main():
-    liste = int(sys.argv[sys.argv.index("--liste") + 1]) if "--liste" in sys.argv else 1
-    cams, lichter, zonen, vs = L.lade()
-    V = np.array(vs, float)
-    H = huelle(V)
-    print("Huelle: %d von %d Modellpunkten" % (len(H), len(V)))
-    # Vergleich: die Original-Lagen der beiden treibenden Leichen (Obj_model_set obj 2 @0x00A6C, obj 3 @0x00A8E)
-    for name, x, z, ry in (("obj 2 @0x00A6C", -1725, -21723, 685), ("obj 3 @0x00A8E", -25, -7423, 1656),
-                           ("Fassung 1", -5500, -23700, 384)):
-        k = ketten_pruefen(x, z, ry)
-        print("%-16s (%d,%d) Gier %d: %s" % (name, x, z, ry, "keine Kette mit Abstand >= %d im Wasser" % SOLL_RE2 if k is None else
-              "Anlauf-Gier %d, Abstand - %d = %.0f" % (k[1], WENDE_SCHREI, k[0])))
+def rand_max(X, Z):
+    """groesster Rand m (Bisektion), mit dem alle Punkte im Wasser liegen."""
+    lo, hi = 0.0, 4000.0
+    for _ in range(30):
+        m = (lo + hi) / 2
+        if (draussen(X, Z, m) > 0).any():
+            hi = m
+        else:
+            lo = m
+    return lo
+
+
+def obj3_wahl(cams, lichter, V):
+    x, z, ry = -25, -7423, 1656                    # Obj_model_set obj 3 @0x00A8E pc[10..11]/pc[14..15]/pc[18..19]
+    mx = x + L.MITTE_X * L.C(ry); mz = z - L.MITTE_X * L.S(ry)
+    beste = None
+    for th in range(0, 4096, 16):
+        s, r13, kau, k13 = kette(th, mx, mz)
+        ab = math.dist(kau, LEITER) - WENDE_SCHREI
+        if ab < SOLL_RE2 or not weg_ok(s, kau, k13):
+            continue
+        t = np.linspace(0.0, 1.0, 200)
+        X = s[0] + (kau[0] - s[0]) * t; Z = s[1] + (kau[1] - s[1]) * t
+        rw = rand_max(X, Z); rk = rand_max(X + k13[0], Z + k13[1])
+        print("  Anlauf-Gier %4d: S (%.0f,%.0f) Kau-Lage (%.0f,%.0f) Rand Wurzel %.0f Kopf %.0f, Abstand - %d = %.0f" %
+              (th, s[0], s[1], kau[0], kau[1], rw, rk, WENDE_SCHREI, ab))
+        if beste is None or min(rw, rk) > beste[0]:
+            beste = (min(rw, rk), th, s, kau, ab, rw, rk)
+    _, th, s, kau, ab, rw, rk = beste
+    kl = L.mv(L.M(0, ry, 0), L.KEY_LOKAL)
+    kw = [x + kl[0], L.LEICHE_Y + kl[1], z + kl[2]]
+    wahl = None
+    for cut in range(8):
+        box = bildkasten(V, x, z, ry, cams[cut])
+        gr = 180 * cams[cut][2] / math.dist(kw, cams[cut][0])
+        wert = gr * gr * L.licht(lichter[cut], kw, (0, -1, 0))
+        ganz = box is not None and box[0] >= 24 and box[2] <= 296 and box[1] >= 40 and box[3] <= 205
+        print("  Cut %d: Bildkasten %s%s, Schluessel %.1f Bildpunkte, Wert %.0f" %
+              (cut, "-" if box is None else "(%.0f,%.0f)-(%.0f,%.0f)" % box, "" if ganz else " (nicht ganz im Bild)", gr, wert))
+        if ganz and (wahl is None or wert > wahl[0]):
+            wahl = (wert, cut, box, gr)
+    wert, cut, box, gr = wahl
+    print("GEWAEHLT obj 3 (%d,%d,%d) Gier %d, Anlauf-Gier %d (Rand Wurzel %.0f / Kopf %.0f), Cut %d, Bildkasten (%.0f,%.0f)-(%.0f,%.0f)" %
+          (x, L.LEICHE_Y, z, ry, th, rw, rk, cut, *box))
+    print("  Rumpfmitte (%.0f,%.0f), Start S (%.0f,%.0f), Kau-Lage (%.0f,%.0f), Abstand Kau-Lage <-> Leiter-Ankunft %.0f "
+          "(- %d = %.0f >= %d)" % (mx, mz, s[0], s[1], kau[0], kau[1], ab + WENDE_SCHREI, WENDE_SCHREI, ab, SOLL_RE2))
+    return cut, ry, kw, gr
+
+
+def suche_alle(cams, lichter, V, H, liste):
     beste = []
     for cut in range(8):
         n = 0
@@ -198,8 +242,9 @@ def main():
             if n == 0:
                 beste.append((wert, cut, x, z, ry, th, mitte, s, kau, ab, gr, kw))
             print("Cut %d: Wert %6.0f Leiche (%d,%d) Gier %4d, Anlauf-Gier %4d, Mitte (%.0f,%.0f), S (%.0f,%.0f), Kau-Lage "
-                  "(%.0f,%.0f), Abstand - %d = %.0f, Schluessel %.1f Bildpunkte" %
-                  (cut, wert, x, z, ry, th, mitte[0], mitte[1], s[0], s[1], kau[0], kau[1], WENDE_SCHREI, ab, gr))
+                  "(%.0f,%.0f), Abstand - %d = %.0f, Schluessel %.1f Bildpunkte, %.0f von obj 3" %
+                  (cut, wert, x, z, ry, th, mitte[0], mitte[1], s[0], s[1], kau[0], kau[1], WENDE_SCHREI, ab, gr,
+                   math.dist((x, z), (-25, -7423))))
             n += 1
             if n >= liste:
                 break
@@ -207,10 +252,27 @@ def main():
             print("Cut %d: keine Lage" % cut)
     wert, cut, x, z, ry, th, mitte, s, kau, ab, gr, kw = max(beste)
     box = bildkasten(V, x, z, ry, cams[cut])
-    print("GEWAEHLT Cut %d: Leiche (%d,%d,%d) Gier %d, Anlauf-Gier %d; Bildkasten (alle %d Punkte) (%.0f,%.0f)-(%.0f,%.0f)" %
-          (cut, x, L.LEICHE_Y, z, ry, th, len(V), *box))
-    print("  Rumpfmitte (%.0f,%.0f), Start S (%.0f,%.0f), Kau-Lage (%.0f,%.0f), Abstand Kau-Lage <-> Leiter-Ankunft %.0f "
-          "(- %d = %.0f >= %d)" % (mitte[0], mitte[1], s[0], s[1], kau[0], kau[1], ab + WENDE_SCHREI, WENDE_SCHREI, ab, SOLL_RE2))
+    print("BESTER WERT Cut %d: Leiche (%d,%d,%d) Gier %d, Anlauf-Gier %d; Bildkasten (alle %d Punkte) (%.0f,%.0f)-(%.0f,%.0f), "
+          "%.0f von obj 3" % (cut, x, L.LEICHE_Y, z, ry, th, len(V), *box, math.dist((x, z), (-25, -7423))))
+    return cut, ry, kw, gr
+
+
+def main():
+    liste = int(sys.argv[sys.argv.index("--liste") + 1]) if "--liste" in sys.argv else 1
+    cams, lichter, zonen, vs = L.lade()
+    V = np.array(vs, float)
+    H = huelle(V)
+    print("Huelle: %d von %d Modellpunkten" % (len(H), len(V)))
+    # Vergleich: die Original-Lagen der beiden treibenden Leichen (Obj_model_set obj 2 @0x00A6C, obj 3 @0x00A8E) + Fassung 1
+    for name, x, z, ry in (("obj 2 @0x00A6C", -1725, -21723, 685), ("obj 3 @0x00A8E", -25, -7423, 1656),
+                           ("Fassung 1", -5500, -23700, 384)):
+        k = ketten_pruefen(x, z, ry)
+        print("%-16s (%d,%d) Gier %d: %s" % (name, x, z, ry, "keine Kette mit Abstand >= %d im Wasser" % SOLL_RE2 if k is None else
+              "Anlauf-Gier %d (groesster Abstand), Abstand - %d = %.0f" % (k[1], WENDE_SCHREI, k[0])))
+    if "--suche" in sys.argv:
+        cut, ry, kw, gr = suche_alle(cams, lichter, V, H, liste)
+    else:
+        cut, ry, kw, gr = obj3_wahl(cams, lichter, V)
     bn, grenze = neigung(cams, lichter, cut, ry, kw)
     _, rx, rz, kipp, cv, l = bn
     print("  Puls-Grenze Licht <= %.2f: gewaehlt Licht %.1f -> Spitze %.1f; Schluessel Welt (%.0f,%.0f,%.0f)" %

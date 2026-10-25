@@ -67,7 +67,8 @@ int  re15_gatorszene_r41_spinnen_verworfen(void);
 #define RE15_GSZ_SIG_GATOR       28    /* 2090: Gator-Ablauf starten                                     */
 #define RE15_GSZ_SIG_KNALL       29    /* 2090: Knall des Hereinbrechens oben in 2080 (Nachtrag 17)       */
 #define RE15_GSZ_SIG_FERTIG      30    /* 2090: Port -> Programm: Gator-Ablauf fertig (Ankunfts-Poll)      */
-#define RE15_GSZ_LEICHE_OBJ      2     /* ROOM2090 main00 @0x00A6C Obj_model_set obj 2 = treibende Zombie-Leiche (Bild Cut 0) */
+#define RE15_GSZ_LEICHE_OBJ      3     /* ROOM2090 main00 @0x00A8E Obj_model_set obj 3 = treibende Zombie-Leiche im Nordbecken
+                                        * (Bild Cut 5); Nachbesserung 4 (Nachtrag 29), vorher obj 2 @0x00A6C (Bild Cut 0) */
 #define RE15_GSZ_KEY_OBJ         4     /* Port-Prop (nOmodel = 4, RDT-Kopf Byte 2), Muster dining_r38 obj 6                */
 
 /* Zustaende der Szene (nur RAM; waehrend der Szene kann weder gespeichert noch gekaempft werden). */
