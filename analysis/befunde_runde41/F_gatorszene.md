@@ -39,6 +39,8 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
       Abnahme 1 behoben und gemessen (Abschnitt "Nachbesserung 2")
 - [x] Nachbesserung 3: M1 der Abnahme 2 (Zwischenbild der Zonenkamera zwischen Explosionsschnitt und Schluessel-Einstellung)
       behoben und gemessen, Nebenbefund (R1-Tod aus frueherem Raumbesuch) behoben (Abschnitt "Nachbesserung 3")
+- [ ] Nachbesserung 4: M1 der Abnahme 3 (Nachtrag 29: Leiche samt Kette weiter weg von der Leiter, Ausweichen am Kampfbeginn)
+      (Abschnitt "Nachbesserung 4")
 
 ## 0. Protokoll
 
@@ -764,3 +766,25 @@ integration_r41_re2gator) laufen ohne (9,110) bzw. ohne R1 und sind damit von ke
   wie bisher auf die Raumkamera zurueck. Ohne Explosionsschnitt und bei Elza gleich.
 - Frage (aus Nachbesserung 2, weiter offen): Ist der Water Key in dieser Einstellung nach dem Tod fuer dich gut zu erkennen, und passt die
   Form "Kamera springt nach dem Tod kurz auf den Schluessel"?
+
+## Nachbesserung 4 (nach Abnahme 3, F_abnahme_3.md: M1 = Nachtrag 29)
+
+Start 2026-10-25, HEAD cc4a4646 (Code-Stand da156ce6 + Doku 0a1625af/cc4a4646), Baum sauber. Messordner (scratchpad, nicht im
+Repo): `F41n4/` (`runs/<lauf>/...`, eigene exe-Kopie je Lauf `re15_pc_f41n4_<lauf>.exe`, timeout, danach geloescht). Alle Laeufe
+RE15_WINDOW_SCALE=1, Bilder nur per RE15_FRAMEDUMP.
+
+Nutzer-Wortlaut (Nachtrag 29, 2026-10-25 12:08): "Die Zombie Leiche mit dem Schluessel ist zu nah an der Leiter. Das Krokodil frisst
+ihn, und ist damit direkt beim Start des Kampfes quasi unmittelbar an der Leiter. Man hat keine Chance direkt am Anfang vom Kampf den
+Aligator auszuweichen. Die Zombie Leiche inklusive der Kette - Schluessel - Aligator Fressen etc. muss weiter weg sein, damit man am
+Start des Kampfes eine Chance hat."
+
+Plan:
+- N4.M1 (1) Messung vorher an der exe (Leiterweg, Leon + Elza, stehend und sofort weglaufend): Abstand Gator <-> Spielfigur beim
+  Kampfbeginn, Bild des ersten Angriffs (Clip 4 Bild 0) und des ersten Treffers. (2) RE2-Sollwert: Ende des Alligator-Intros in
+  ROOM40A0 (Pos_set @SCD 0x0736, Intro-Clips 6 -> 3, Gier-Knick @0x80100938-48, Biss-Sperre +0x238 = 110 @0x8010091c-20) gegen
+  Leons Lage am Intro-Ende (SCD-Ausloeser/Pos_set), Abstand und Bilder bis zum ersten Angriff aus den Dash-/Biss-Schwellen des
+  RE2-Moduls (selbst disassembliert). (3) Geometrie 2090: Wasserzonen (sce 8 @0x009D6/@0x009EA/@0x009FE), Becken/Plattform,
+  groesster erreichbarer Abstand; neue Lage der Leiche + Buehne + Szenenkamera + Schluessel-Neigung (leiche_lage.py erweitert um
+  den Abstand zur Leiter-Ankunft). (4) Umsetzung, (5) Messung nachher (Leon + Elza, stehend/weglaufend, Ausweichen gelingt),
+  (6) Riegel fuer Abstand und Bilder bis zum ersten Angriff; bestehende F-Riegel mit Beleg (Nachtrag 29) nachziehen.
+
