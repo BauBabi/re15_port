@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-25 16:39: Release-Notes-Entwurf A-L fertig und unabhaengig geprueft (wf_c85f5501-af8, in Ordnung; Korrekturen u. a. Nachtrag 4 ergaenzt, 12_02-Aussage gestrichen, Herkunft "Lower the bridge?" ungeklaert -> §3b). Paket-Gate fuer neue RE2-Dateien -> §4.
+
 * 2026-10-25 16:28: M Abnahme 4 NICHT bestanden (M1 = M-E2 nicht umgesetzt, kam nach NB4; M2 roter Ordner 30A0/30A1 C0 ohne Maske, steht in Zelle 6 VOR der Figur) -> **M Nachbesserung 5 = wf_919ed783-7b2** (args orchestrator/args_m_nb5.json). G Nachbesserung 3 fertig (Kanister-Explosion aus fuenf RE2-Quellen nachgebaut, Raum-ESP GATOR40A0, Todeskamera G-E1, Werfer G-E2) -> G Abnahme 3 laeuft (wf_2bd33954-f59). F Nachbesserung 5 laeuft (wf_f2e30b5e-2c4). Release-Notes-Entwurf A-L: Pruefung laeuft (wf_c85f5501-af8).
 
 * 2026-10-25 15:09: **Integration C+K fertig** (wf_9e0c61da-a3f): Merge C 2d20306d, K 4b313429, Fix 45cc6246 (E x K), Riegel-Fix d1edabbc, Tests gruen, Kette A+C in Ordnung, Gegenpruefung ohne Befund (C 48 Hunks, K 46 Hunks, keiner verloren). master-Doku in r41/integration (91ae1a79), **master ff 91ae1a79 = A B C D E H I J K L integriert**. Hauptbaum-exe neu gebaut 15:08:36 (configure + build, LOCAL-BUILD-OK). Offen: F (NB5 wf_f2e30b5e-2c4), G (NB3 wf_2bd33954-f59), M (Abnahme 4 wf_6d1c4408-277, danach M-E2).
@@ -93,6 +95,7 @@ siehe VERTRAG.md §0; Status je Spur wird hier nachgetragen (Bau / Abnahme N / b
 - SpuVmKeyOnNow quadriert die Lautstaerke (v*v/0x3fff), der Port-Mischer ist linear — engine-weit (spaetere Runde).
 - Spur A OFFEN 1-4 (ESP-Sprites im ersten Bild nach dem Kamerawechsel, RVD-Schaltzeitpunkt, Gegner-INIT-Takt, allgemeine
   Szenensperre AUTO/FLAG_CHG) — spaetere Runde.
+- Spur C Herkunft: 'Lower the bridge?' (2030 Port-Text) ist in Dossier C und tools/gen_r41_ventilkette.py als 'NUTZER-VORGABE (AUFTRAG.md)' ausgewiesen, steht aber nie in AUFTRAG.md (Pruefer Release Notes, git log -S). Zuschreibung im Code-Kommentar/Dossier berichtigen; der Satz ist ein Port-Text zur Freigabe durch den Nutzer.
 - ⛔ VOR DEM RELEASE: integration_r41_ventilkette_kette (Kette A+C, nur Leon) endete im Integrationsbaum viermal STILL bei ~220 s (20B0 F750, debug.log bytegleich mit gruenen Laeufen, kein WER-Eintrag, kein Ressourcen-Wachstum) und einmal mit der SDL-Assertion WIN_AddDisplay, danach viermal gruen (Ketten-Agent der Integration C+K, INT_belege/riegel_kette_laeufe.txt). Ursache offen (Verdacht: Fremdlast / ein fremdes Beenden der exe). In der vollen Suite auf ruhiger Maschine pruefen; Elza-Kette (2031 -> 20B1 -> 2051) hat keinen registrierten Riegel (nur eigener Lauf gruen).
 Integrationsbaum `.claude/worktrees/r41_integration` von master; je bestandene Spur `git merge --no-ff r41/<x>`; Konflikte
 mit `analysis/befunde_runde36/orchestrator/konflikt_beide.py <dateien>` (beide Seiten); dann `bash re15_port/tools/local_build.sh
@@ -101,5 +104,7 @@ reai-v2-gezielte-integration-querbezug); ⛔ neue gemeinsame Regeln können ALTE
 Riegel greppen, die dieselben Bits/Räume setzen. master ff, Hauptbaum-exe neu bauen (Nutzer testet dort).
 
 ## 4. Release v0.8.29
+- Release-Notes-Entwurf A-L (geprueft, in Ordnung): scratchpad/r41_release/entwurf_v0829.md (583 Zeilen) - F/G/M-Platzhalter nach deren Integration fuellen, Einleitung/Testzahlen nach der vollen Suite, dann oben in release/RELEASE_NOTES.md.
+- ⛔ Paket-Gate: release/make_package.sh check_tree um ALLE neuen RE2-Dateien der Runde 41 ergaenzen (git diff --name-only --diff-filter=A f632a17b HEAD -- re15_port/shared_assets/RE2/, nach F/G/M; je Datei [[ -s ]] + cmp wie TORSE.VBS).
 Release Notes oben in release/RELEASE_NOTES.md, `bash release/release_alles.sh --version v0.8.29 --tag --linux-jobs 6`
 (volle Suite im Linux-Container ist das Gate), Bäume entfernen, Memory, Abschlussmeldung.
