@@ -303,6 +303,14 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
         # ausgeschlossenen Rechtecken (OFFEN 9: Modell da, aber nicht jeder Punkt hinter dem Koerper -> Teile nur aus Koerperpunkten)
         grp = {key: rl for key, rl in grp.items()
                if key[0] == "hand" or any(r["i"] in auswahl for r in rl) or any(r["i"] in aus_set for r in rl)}
+    # Rechtecke, fuer die der Koerper NEU ist (vorher ausgeschlossen, ohne Modell-Zeile oder mit einer anderen Zelle): nur fuer sie
+    # werden die Punkte ausserhalb des Koerpers abgetrennt (zl) - bei gleichem Modell hat der Ausschluss das Rechteck schon so genommen
+    for r in recs:
+        mz = modelle.get((rid, cut, r["i"]))
+        kp_ = koerper.get(r["k"]) if r["k"] is not None else None
+        r["neuer_koerper"] = bool(kp_ is not None and (r["i"] in aus_set or mz is None or
+                                  (mz["x"], mz["z"], mz["w"], mz["d"], mz["typ"], mz["band"]) !=
+                                  (kp_["x"], kp_["z"], kp_["w"], kp_["d"], kp_["typ"], kp_["band"])))
     bericht = {"koerper": {}, "n_vorher": n}
     if not grp:
         return None, [], bericht, None
@@ -376,6 +384,7 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
         idx_neu = idx.copy()
         idx_neu[~belegt] = 0                          # Flaechen entfernter Saum-Rechtecke freigeben
         neu = []
+        klar = {}                                     # Atlas-Texel -> Teile, die ihn durchsichtig haben wollen (OFFEN 9)
         for r in recs:
             key = r["k"]
             if r["i"] in tot_i and wahl.get("__tote__", True):
@@ -401,39 +410,30 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
                 y0, y1 = max(0, r["Y"] + dy), min(240, r["Y"] + dy + hh)
                 if x1 > x0 and y1 > y0:
                     teil[y0:y1, x0:x1] = r["d"][y0:y1, x0:x1]
-                stuecke = [(dx, dy, ww, hh)]
-                if zl and r["i"] in aus_set:
-                    # quer zur Streifenrichtung: Laeufe nur mit Koerperpunkten / mit Punkten ausserhalb des Koerpers
-                    quer = hh if ri == "x" else ww
-                    rein = []
-                    for q in range(quer):
-                        if ri == "x":
-                            Yy = r["Y"] + dy + q
-                            zr = teil[Yy, :] if 0 <= Yy < 240 else np.zeros(320, bool)
-                            zo = L["ok"][Yy, :] if 0 <= Yy < 240 else np.zeros(320, bool)
-                        else:
-                            Xx = r["X"] + dx + q
-                            zr = teil[:, Xx] if 0 <= Xx < 320 else np.zeros(240, bool)
-                            zo = L["ok"][:, Xx] if 0 <= Xx < 320 else np.zeros(240, bool)
-                        rein.append(bool(zr.any()) and int((zr & zo).sum()) == int(zr.sum()))
-                    stuecke, q0 = [], 0
-                    for q in range(1, quer + 1):
-                        if q == quer or rein[q] != rein[q0]:
-                            if ri == "x":
-                                stuecke.append((dx, dy + q0, ww, q - q0))
-                            else:
-                                stuecke.append((dx + q0, dy, q - q0, hh))
-                            q0 = q
-                for (ex, ey, ew, eh) in stuecke:
-                    tz = np.zeros((240, 320), bool)
-                    x0, x1 = max(0, r["X"] + ex), min(320, r["X"] + ex + ew)
-                    y0, y1 = max(0, r["Y"] + ey), min(240, r["Y"] + ey + eh)
-                    if x1 > x0 and y1 > y0:
-                        tz[y0:y1, x0:x1] = r["d"][y0:y1, x0:x1]
-                    th = tz & L["ok"]
-                    D = int(L["be"][th].max()) if th.any() else int(r["dep"])
-                    neu.append((r["sx"] + ex, r["sy"] + ey, r["X"] + ex, r["Y"] + ey, ew, eh, D, r["gi"], [r["i"]],
-                                key if th.any() else None))
+                th = teil & L["ok"]
+                D = int(L["be"][th].max()) if th.any() else int(r["dep"])
+                j = len(neu)
+                neu.append((r["sx"] + dx, r["sy"] + dy, r["X"] + dx, r["Y"] + dy, ww, hh, D, r["gi"], [r["i"]], key if th.any() else None))
+                if zl and th.any() and r["neuer_koerper"]:
+                    # OFFEN 9: Punkte des Teils AUSSERHALB des Koerpers (Sehstrahl verfehlt ihn) - ihr Texel wird im eigenen Atlas
+                    # durchsichtig, die Punkte kommen in ein Rest-Stueck mit der alten Tiefe; das Teil selbst zeigt nur Koerperpunkte
+                    ys_, xs_ = np.nonzero(teil & ~L["ok"])
+                    for y_, x_ in zip(ys_, xs_):
+                        klar.setdefault((int(r["sy"] + (y_ - r["Y"])), int(r["sx"] + (x_ - r["X"]))), []).append(
+                            (j, int(y_), int(x_), key, r["i"], bool(r["i"] in aus_set)))
+        # durchsichtig machen, wo kein anderes Teil den Texel deckend braucht (gleiche Abbildung = gleicher Zielpunkt)
+        rest = {}
+        for (ay_, ax_), anf in klar.items():
+            nutzer = [jj for jj, e in enumerate(neu) if e[1] <= ay_ < e[1] + e[5] and e[0] <= ax_ < e[0] + e[4]]
+            frag = set(q[0] for q in anf)
+            if any(jj not in frag for jj in nutzer):
+                continue                              # ein anderes Teil zeigt diesen Texel - bleibt deckend
+            wert = int(idx_neu[ay_, ax_])
+            if not wert:
+                continue
+            idx_neu[ay_, ax_] = 0
+            for (jj, y_, x_, key_, i_, war_aus) in anf:
+                rest.setdefault((key_, war_aus), {})[(y_, x_)] = (wert, i_)
         if wahl.get("__tote__", True):
             for o, l in sorted(tote.items(), key=lambda kv: str(kv[0])):
                 m = np.zeros((240, 320), bool)
@@ -493,6 +493,31 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
                     herk = sorted(set(r["i"] for r in L["rl"] if r["saum"] and (r["d"] & tm).any()))
                     D = int(L["be"][th].max()) if th.any() else max(recs[i]["dep"] for i in herk)
                     neu.append((ax, ay, X0, Y0, w, h, D, None, herk, key if th.any() else None))
+        for (key_, war_aus), pix in sorted(rest.items(), key=lambda kv: (str(kv[0][0]), kv[0][1])):
+            m = np.zeros((240, 320), bool)
+            for (y_, x_) in pix:
+                m[y_, x_] = True
+            lab, nl = ndimage.label(m, structure=np.ones((3, 3)))
+            ys, xs = np.nonzero(m)
+            teile = [m] if SR.frei_platz(belegt, int(xs.max() - xs.min() + 1), int(ys.max() - ys.min() + 1)) is not None \
+                else [lab == q for q in range(1, nl + 1)]
+            for tm in teile:
+                ys, xs = np.nonzero(tm)
+                X0, Y0 = int(xs.min()), int(ys.min())
+                w, h = int(xs.max() - X0 + 1), int(ys.max() - Y0 + 1)
+                pl = SR.frei_platz(belegt, w, h)
+                if pl is None:
+                    return None, None
+                ax, ay = pl
+                belegt[ay:ay + h, ax:ax + w] = True
+                idx_neu[ay:ay + h, ax:ax + w] = 0
+                herk = set()
+                for y_, x_ in zip(ys, xs):
+                    wert, i_ = pix[(int(y_), int(x_))]
+                    idx_neu[ay + (y_ - Y0), ax + (x_ - X0)] = wert
+                    herk.add(i_)
+                D = max(recs[i_]["dep"] for i_ in herk)  # alte Tiefe (die fernste der Herkunfts-Rechtecke: deckt hoechstens so viel)
+                neu.append((ax, ay, X0, Y0, w, h, D, None, sorted(herk), ("rest", war_aus)))
         return neu, idx_neu
 
     def verletzt(key, w):
@@ -559,6 +584,8 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
     for j, e in enumerate(alle):
         if e[9] is None:
             continue
+        if e[9][0] == "rest":                         # Rest-Stueck (Punkte ausserhalb des Koerpers): kein Modell
+            continue
         if e[9][0] == "zeile":                        # mitgewanderte Zeile eines unveraenderten Rechtecks
             mz = modelle[(rid, cut, e[9][1])]
             o, b_ = Z3.sca_beleg(rdt, (mz["x"], mz["z"], mz["w"], mz["d"]), mz["typ"], mz["band"])
@@ -581,6 +608,7 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
                                                   figurdaten=bool(hinter and (rid, cut, kp["off"], kp["hoehe"], ri) in hinter))
     bericht["n_nachher"] = len(alle)
     bericht["herkunft"] = [e[8] for e in alle]
+    bericht["rest"] = [j for j, e in enumerate(alle) if e[9] is not None and e[9][0] == "rest"]
     return sec, zeilen, bericht, idx_neu
 
 

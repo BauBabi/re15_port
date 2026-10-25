@@ -134,6 +134,34 @@
     "zelle": "0x00864",
     "beleg": "SCA-Zelle 11 @RDT+0x00864 = 28 0a 28 0a cd e2 51 b4 01 ff 00 03 (x -7475..-4875 z -19375..-16775 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): rechter Container; Hoehe an allen vier Container-Objekten gemessen: 3500, IoU 0.872, 97 % im Koerper; Kamera C7 (-8517,-2427,-22045) nicht ueber der Zelle; vorher gezeichnet, Generator-Tiefe; Bild M_bilder/NB3/NB3_zuordnung_5020_07.png"
    }
+  ],
+  "12": [
+   {
+    "objekt": "X-Kiste, unterer Teil der Vorderseite",
+    "verschiebung": [
+     -75,
+     124
+    ],
+    "punkt": [
+     102,
+     141
+    ],
+    "zelle": "0x00870",
+    "beleg": "SCA-Zelle 12 @RDT+0x00870 = 28 0a 28 0a f5 ec bf c3 01 ff 00 03 (x -4875..-2275 z -15425..-12825 Typ 1 Band 0); Nachbesserung 3: dieselbe X-Kiste wie ROOM5020 Kamera 6 (NB2), aus Kamera 12 nur der untere Teil in der Generator-Region (Restliste NB2 'Unterseite der Kiste'); Hoehe an beiden Objekten gemessen: 1425, IoU 0.306 (der Koerper zeigt die ganze Kiste, die Region nur ihren unteren Teil), 95 % im Koerper; Kamera C12 (583,-527,-18146) nicht ueber der Zelle; vorher ausgeschlossen (R0/R16/R17, kein Bodenkontakt); Bild M_bilder/NB3/NB3_zuordnung_5020_12.png"
+   },
+   {
+    "objekt": "X-Kiste, Kufe",
+    "verschiebung": [
+     -147,
+     164
+    ],
+    "punkt": [
+     68,
+     185
+    ],
+    "zelle": "0x00870",
+    "beleg": "SCA-Zelle 12 @RDT+0x00870 = 28 0a 28 0a f5 ec bf c3 01 ff 00 03 (x -4875..-2275 z -15425..-12825 Typ 1 Band 0); Nachbesserung 3: dieselbe X-Kiste wie ROOM5020 Kamera 6 (NB2), aus Kamera 12 nur der untere Teil in der Generator-Region (Restliste NB2 'Unterseite der Kiste'); Hoehe an beiden Objekten gemessen: 1425, IoU 0.306 (der Koerper zeigt die ganze Kiste, die Region nur ihren unteren Teil), 95 % im Koerper; Kamera C12 (583,-527,-18146) nicht ueber der Zelle; vorher gezeichnet, Generator-Tiefe; Bild M_bilder/NB3/NB3_zuordnung_5020_12.png"
+   }
   ]
  },
  "ROOM5090": {
