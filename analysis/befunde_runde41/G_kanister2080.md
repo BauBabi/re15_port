@@ -840,4 +840,48 @@ Werfer (Work_set(2, NPC) steht seit dem Anlegen); der Takt dreht ihn nicht mehr.
 (Hinknien/Aufstehen mit Blick auf den Kanister).
 
 ### 9.3 N3 - Aufnahme im weiteren Kampf (Frage 8.8.1)
-(wird fortgeschrieben)
+**Messung vorher** (Abnahme 1 §3.4, Laeufe `<SP>/g1/runs/*`, eigene Auswertung mit `gator_bahn.py` ueber state.log, Kanister
+(-7515,-12304)): v1 natuerlich (37 Treffer, Ausloeser F7375, Alligator SO-Ecke (5782,-26532)) - in 9000 Bildern nie naeher als
+13098 (F5371 (-6513,-25364)), der Kampf bleibt im Sued-/Ostteil (F600 (5251,-24990), F3600 (2700,-23300), F7200 (5419,-25532));
+v5/v3 Start West (Ausloeser bei Leon (-8432,-10447), Alligator (-4940,-9716)) - naechstens 1853 bei F47 (der Kanister landet
+erst F43, der Alligator steht schon daneben), danach Nordost (F1800 (4105,-10063), F3000 (5681,-6939)); v2/v4 Start (0,-7000)
+(Alligator (5716,-7090)) - Aufnahme erst F3835. Gemeinsame Ursache: die Landestelle ist fest (Gier 3072), und der Alligator
+verfolgt nur den Spieler; liegt der Kanister nicht zufaellig auf seinem Weg, kommt er nicht vorbei.
+
+**RE-Belege (selbst gelesen, `re2_disasm.py --bin EM23_OVL_0000.BIN`, `re2_scd_walk.py` ROOM40A0.RDT SCD-main @RDT 0x25C0):**
+- RE2s Gator lenkt den Koerper NIE (Spur B §2.2): er schwimmt seine Korridorbahn, z. B. `addiu v0,zero,-23078` / `sw v0,56(s0)`
+  @0x80101048-4c (x der Bahn), Richtungswechsel nur nach der Zonen-Lunge `yaw += 1024` @0x80100eb0-c0.
+- Der Kanister landet AUF dieser Bahn: ROOM40A0 sub10 @0x0656 Fall `2f 00 d8 ff` (v_x -40) @0x0672 + For 23 @0x0676,
+  Aufschlag-Se_on @0x0686, Treiben `2f 00 dc ff` (v_x -36) @0x06A2 + For 12 @0x06AA + For 4 @0x06BC (16 x 36 = 576 zur Bahn hin),
+  Liegestelle sub05 Pos_set `32 00 e0 a6 40 f8 e4 da` = (-22816,-1984,-9500) @0x0484 = 262 neben x -23078.
+- Zielmodus +0x1C0 & 4 (Sub-1/2-Pre, Spur B §11.0): an bei Bank 5 Bit 1 und Stufe < 2 (@0x80100a34-5c), Ziel (x, y - 800,
+  obj[1].z) @0x80100a4c-70; aus, wenn obj[1].z - z < 9000 - 120 (`addiu v0,v0,-9000` / `slti v0,v0,-120` @0x80100a88-8c) und
+  Stufe 0; solange er an ist, schaerft FUN_801012fc den Biss nicht (`lbu v0,448(a0)` / `andi v0,v0,0x4` / `bne` @0x8010134c-58).
+- Fenster der Aufnahme nur laengs der Bahn: `lw v1,64(s0)` / `subu` / `addiu v0,v0,-8601` / `sltiu v0,v0,0x18f` @0x80100ad8-e8,
+  Stufe 1 `sb v0,550(s0)` @0x80100b08.
+-> In RE2 holt der Alligator den gefallenen Kanister IMMER beim naechsten Anschwimmen, und vorher beisst er nicht: der Kanister
+  liegt auf der Bahn, die er ohnehin schwimmt.
+
+**Entscheid zu Frage 8.8.1 (Regel "Original oder nicht", Memory reai-v2-original-oder-nicht - keine Wahlfrage an den Nutzer,
+wo das Original die Antwort gibt):** Im offenen 2090-Becken hat der Port-Gator keine feste Bahn - seine Verfolgung ist das
+Nutzer-Design der Spur B (enemy_ai_boss_gator.c "VERFOLG Ring um die Plattform"). Die RE2-Eigenschaft "der Kanister liegt auf der
+Bahn, er wird beim naechsten Anschwimmen genommen, vorher kein Biss" laesst sich hier nur halten, wenn die Bahn ueber den Kanister
+fuehrt: solange der geworfene Kanister frei liegt (Stufe 0) und mindestens 8880 x Zeichen-Skala entfernt ist (Ende des
+Zielmodus @0x80100a88-8c), ist er das Steuerziel der Verfolgung (Kanten-Umweg, Klemmflaeche, Wende und Vortrieb wie die
+Verfolgung, kein Biss). Unter 8880 uebernimmt die normale Verfolgung; das Fenster (Spur B) nimmt ihn dann aus dem Anlauf.
+Die Alternative "Landestelle nach der Kampflage allein" reicht nicht: alle Wuerfe von der Reling landen auf einem Kreis von
+~5330 um den Werfer (Westteil des Beckens); v1 (Kampf in der SO-Ecke) erreicht kein Landepunkt. Die Alternative "bleibt wie
+in RE2 dabei, dass man ihn vorbeilocken muss" ist nicht RE2: dort lockt niemand, die Bahn fuehrt ihn hin.
+Zusaetzlich (FG-E3 "der Kanister landet so, dass der Alligator ihn ... aufnimmt"): die Wurfrichtung wird beim Bau der Szene aus
+den zwei gemessenen Wuerfen (Tabelle 8.9: Nord 3072 -> (-7515,-12304), Sued 1024 -> (-6821,-22914)) so gewaehlt, dass der
+Landepunkt WEITER vom Alligator beim Ausloesen liegt - er braucht den Anlauf (>= 8880 voraus). Bit 117 merkt die Wahl fuer den
+Raumaufbau ohne Laufzeit-Bahn.
+Dies ist ein Entscheid der Spur G nach RE2 (Orchestrator/Nutzer koennen widersprechen); FG-E3 erlaubt kleine, markierte Haken in
+Spur B's Modulen fuer "Landepunkt/Fenster", VERTRAG 1.3 G-Haken in enemy_ai_boss_gator.c.
+
+**Umsetzung:** kanister2080_r41.c `re15_k2080_r41_anschwimmen` / `_aktiv`, `re15_k2080_wurf_gier_wahl`, `nenn_landung`, Header
+RE15_K2080_ANSCHWIMM_AB (9000 - 120), RE15_K2080_WURF_GIER_NORD/_SUED, RE15_K2080_BIT_SUEDWURF 117; Haken enemy_ai_boss_gator.c:
+Include (1 Zeile), Export `re15_gator_boss_steuerziel` (gb_kanten_umweg + Klemmflaeche der CHASE-Phase, 4 Zeilen), CHASE nach
+der Aufnahme-Lenksperre `if (re15_k2080_r41_anschwimmen(slot, e, dist)) break;`, GUARD `oben = 0` waehrend des Anschwimmens.
+Nur fuer den Kanister DIESER Szene (Bit 116, im Raum gelegt) - Spur B's eigene Riegel (RE15_GATOR_KANISTER-Weg) sehen den Haken
+nicht (Gegenprobe im Riegel anschwimmen).
