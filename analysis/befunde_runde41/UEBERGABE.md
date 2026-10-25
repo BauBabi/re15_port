@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-25 14:50: Integration C+K: Tests GRUEN (unit/prop/probe 963/963 am Endstand 7cf41fc9, C 290/290 + 3/3 + 4/4, K-Spur 17/17, C-Raum 17/17, K-Integrationsgruppe 77/77, Querbezuege 40/40); Fixes d1edabbc (R36-Riegel 2050 obj 8 mit Bit 106, Beleg ROOM2050.RDT @0x01D30 / PSX.EXE @0x8003ed74) und 45cc6246 (E x K Sherry-Renntempo); Kette A+C in Ordnung (Leon und Elza bis 2050/2051), Riegel _kette flakig -> §3b. Gegenpruefung laeuft.
+
 * 2026-10-25 14:30: M Nachbesserung 4 fertig (Mangel 1 an der exe widerlegt + Riegel _stirn, Mangel 3 Laufpruefung, Restliste nach M-E1 auf NB3 zurueck); Befund: Gelaender/Pfosten/Saeulen/Lampen STAGE3-6 liegen im Original-Vordergrundatlas (platzieren_r41.py, 437 Teile in 74 Sektionen) -> Entscheid M-E2 (a90bce6f): Original-Teile einsetzen, Tuer-Band-Fix @0x80042cac mitnehmen, teilen_r41.py nicht. M Abnahme 4 laeuft (wf_6d1c4408-277, letzte des Laufs) -> danach M-Lauf fuer M-E2. Integration nur mit bestandenem Stand.
 
 * 2026-10-25 14:23: F Abnahme 3 nicht bestanden (M1 = Nachtrag 29), F Nachbesserung 4 fertig (877919e2: Leiche obj 3 im Nordbecken (700,-8200), Kampfbeginn-Abstand 17539, erster Biss nach 470 Bildern; RE2-Soll aus ROOM40A0 = 11430 / 121 Bilder) -> Entscheid F-E2 (7245d4bb): Sollwert RE2 mit oberer und unterer Grenze, Schluessel nicht dunkler als die abgenommene Ankunftseinstellung, Fressen nicht von hinten. F Abnahme 4 laeuft (wf_6b800ae2-ba9, letzte des Laufs) -> danach F-Lauf mit F-E2, falls nicht erfuellt. Waechter setzt jetzt an der zuletzt gemeldeten Journalzeile fort (.waechter_n). Integration C+K: K-Spieltestblock 22/77 gruen (14:03).
@@ -84,6 +86,7 @@ siehe VERTRAG.md §0; Status je Spur wird hier nachgetragen (Bau / Abnahme N / b
 - SpuVmKeyOnNow quadriert die Lautstaerke (v*v/0x3fff), der Port-Mischer ist linear — engine-weit (spaetere Runde).
 - Spur A OFFEN 1-4 (ESP-Sprites im ersten Bild nach dem Kamerawechsel, RVD-Schaltzeitpunkt, Gegner-INIT-Takt, allgemeine
   Szenensperre AUTO/FLAG_CHG) — spaetere Runde.
+- ⛔ VOR DEM RELEASE: integration_r41_ventilkette_kette (Kette A+C, nur Leon) endete im Integrationsbaum viermal STILL bei ~220 s (20B0 F750, debug.log bytegleich mit gruenen Laeufen, kein WER-Eintrag, kein Ressourcen-Wachstum) und einmal mit der SDL-Assertion WIN_AddDisplay, danach viermal gruen (Ketten-Agent der Integration C+K, INT_belege/riegel_kette_laeufe.txt). Ursache offen (Verdacht: Fremdlast / ein fremdes Beenden der exe). In der vollen Suite auf ruhiger Maschine pruefen; Elza-Kette (2031 -> 20B1 -> 2051) hat keinen registrierten Riegel (nur eigener Lauf gruen).
 Integrationsbaum `.claude/worktrees/r41_integration` von master; je bestandene Spur `git merge --no-ff r41/<x>`; Konflikte
 mit `analysis/befunde_runde36/orchestrator/konflikt_beide.py <dateien>` (beide Seiten); dann `bash re15_port/tools/local_build.sh
 configure && ... build`; gezielte Tests je Spur + `ctest -j 6 -R '^(unit_|prop_|probe_)'` (Querbezüge, Memory
