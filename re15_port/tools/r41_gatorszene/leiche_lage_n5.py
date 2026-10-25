@@ -15,7 +15,17 @@ gb_becken_draussen, Wurzel Rand 900, Kopf Rand 500):
   (3) Fressen von vorn: eine Zonenkamera (Cut 0..7) mit Kopf (= Rumpfmitte im Koppelbild) im Bild, Tiefe >= 4804 (Massstab-Grenze
       1892: 208 * 2731 * 16 / Tiefe, gator_re2_r41.c gr2_massstab), Frontalwert cos(Anlauf, Kopf -> Kamera) > 0.
 Ausgabe: Zahl der Lagen je Kombination der erfuellten Punkte, die besten Lagen fuer (1)+(2), (1)+(3), (2)+(3) - zeigt, ob alle drei
-mit der GERADEN Kette (Durchbruch Clip 6 ganz, Fressen am Ende der Kette) zugleich gehen.
+mit der GERADEN Kette (Durchbruch Clip 6 ganz, Fressen am Ende der Kette) zugleich gehen (Ergebnis: (1)+(2) KEINE Lage).
+
+  python leiche_lage_n5.py --m2 [--raster N]
+      Punkt (2) allein ueber ALLE Lagen und alle 13 Kameras mit der vollen Pruefung (ganze Leiche im Bild, groesstes cos(Blick) bei
+      Licht in [168, Puls-Grenze] ueber alle Normalen <= 60 Grad, Schluessel >= 10,4 x 9,5): Ergebnis nur Cut 1 bei x -5500..-5200 /
+      z -24700..-23700 Gier 384 = die Fassung-1-Stelle (2700..3300 von der Leiter).
+  python leiche_lage_n5.py --kandidaten <clip6.txt> > kand.txt
+      Vorauswahl fuer `test_r41_gatorszene lagesuche kand.txt` (der ECHTE Ablauf entscheidet): Leiche ganz im Bild der Ankunftskamera
+      Cut 0, Licht >= 168 moeglich, Kette Durchbruch (Clip 6 Bild 1..k, k <= 40, Weg aus probe_clip6_n5.c) + Biss im Wasser mit
+      Wurzel-Rand 1500 (ueber der Klemme hit_radius_min 1466 des Boss-Takts) und Kopf-Rand 500; Raster 200, Leichen-Gier 128,
+      Anlauf-Gier 1408..2304 (32), je Lage/Gier das groesste k. Zeilen "x z gier_leiche anlauf_gier k".
 """
 import math, os, sys
 import numpy as np
@@ -39,8 +49,126 @@ def cam_basis(cam):
     return np.array(p, float), f, r, u, sd
 
 
+def m2_voll(raster):
+    """Punkt (2) allein: alle Lagen, alle Kameras, volle Pruefung (Normalen-Raster 2 x 4 Grad)."""
+    cams, lichter, zonen, vs = L.lade()
+    V = np.array(vs, float); H = N4.huelle(V)
+    grenze = 255 * 0x80 / 0xBE
+    ns = []
+    for a in range(0, 61, 2):
+        for b in range(0, 360, 4):
+            t = math.radians(a); p = math.radians(b)
+            ns.append((math.sin(t) * math.cos(p), -math.cos(t), math.sin(t) * math.sin(p)))
+    NN = np.array(ns)
+
+    def licht_vec(ls, P, k):
+        gs, typ, farbe, umg, lage, hell = ls
+        w = np.full(len(NN), float(umg[k]))
+        for i in range(3):
+            d = np.array([(P[j] - lage[i][j]) / 16 for j in range(3)])
+            dist = math.hypot(d[0], d[2]); rw = hell[i] / 16
+            ab = max(0.0, (rw - dist) / rw)
+            if ab <= 0:
+                continue
+            n = d / np.linalg.norm(d)
+            w += farbe[i][k] * ab * np.maximum(0.0, NN @ (-gs * n))
+        return w
+    B = [cam_basis(c) for c in cams]
+    ok = []
+    for ry in range(0, 4096, 64):
+        R = np.array(L.M(0, ry, 0)).reshape(3, 3); Hw = H @ R.T
+        kl = L.mv(L.M(0, ry, 0), L.KEY_LOKAL)
+        for x in range(-8000, 6401, raster):
+            for z in range(-26400, -5800, raster):
+                if any(N4.draussen(x + (R @ np.array(e, float))[0], z + (R @ np.array(e, float))[2], 250) > 0
+                       for e in ((-444, 0, 0), (2626, 0, 0), (1090, 0, -1049), (1090, 0, 822))):
+                    continue
+                kw = [x + kl[0], L.LEICHE_Y + kl[1], z + kl[2]]
+                for cut, (p, f, r, u, sd) in enumerate(B):
+                    gr = 180 * sd / math.dist(kw, p)
+                    if gr < KEY_MIN[0]:
+                        continue
+                    Q = Hw + np.array([x, L.LEICHE_Y, z]) - p
+                    Zc = Q @ f
+                    if Zc.min() <= 300:
+                        continue
+                    bx = 160 + sd * (Q @ r) / Zc; by = 120 + sd * (Q @ u) / Zc
+                    if bx.min() < 24 or bx.max() > 296 or by.min() < 40 or by.max() > 205:
+                        continue
+                    l = np.max([licht_vec(lichter[cut], kw, k) for k in range(3)], axis=0)
+                    dv = np.array(L.norm([p[i] - kw[i] for i in range(3)]))
+                    cv = NN @ dv
+                    m = (l >= LICHT_MIN) & (l <= grenze) & (cv > 0)
+                    if m.any() and gr * cv[m].max() >= KEY_MIN[1]:
+                        ok.append((cut, x, z, ry, gr, cv[m].max()))
+    print("Punkt (2) wie abgenommen moeglich: %d Lagen" % len(ok))
+    for o in sorted(ok, key=lambda o: -o[4] * o[5])[:20]:
+        print("  Cut %d Leiche (%d,%d) Gier %d: %.1f x %.1f Bildpunkte" % (o[0], o[1], o[2], o[3], o[4], o[4] * o[5]))
+    return 0
+
+
+def kandidaten(clip6):
+    """Vorauswahl fuer test_r41_gatorszene lagesuche (s. Kopf)."""
+    import re
+    rest = {}
+    for line in open(clip6):
+        m = re.match(r"f\s+(\d+) .*Rest ab f \(2/3\) \(\s*(-?\d+),\s*(-?\d+)\)", line)
+        if m:
+            rest[int(m.group(1))] = (float(m.group(2)), float(m.group(3)))
+    tot = rest[0]
+    cams, lichter, zonen, vs = L.lade()
+    V = np.array(vs, float); H = N4.huelle(V)
+    p, f, r, u, sd = cam_basis(cams[0])
+    best = {}
+    for ry in range(0, 4096, 128):
+        R = np.array(L.M(0, ry, 0)).reshape(3, 3); Hw = H @ R.T
+        kl = L.mv(L.M(0, ry, 0), L.KEY_LOKAL)
+        for x in range(-1400, 2001, 200):
+            for z in range(-26400, -22599, 200):
+                if any(N4.draussen(x + (R @ np.array(e, float))[0], z + (R @ np.array(e, float))[2], 250) > 0
+                       for e in ((-444, 0, 0), (2626, 0, 0), (1090, 0, -1049), (1090, 0, 822))):
+                    continue
+                kw = [x + kl[0], L.LEICHE_Y + kl[1], z + kl[2]]
+                if 180 * sd / math.dist(kw, p) < 9.5:
+                    continue
+                ls = lichter[0]
+                lmax = ls[3][1] + sum(ls[2][i][1] * max(0.0, 1 - math.hypot((kw[0] - ls[4][i][0]) / 16, (kw[2] - ls[4][i][2]) / 16)
+                                                           / (ls[5][i] / 16)) for i in range(3))
+                if lmax < LICHT_MIN:
+                    continue
+                Q = Hw + np.array([x, L.LEICHE_Y, z]) - p
+                Zc = Q @ f
+                if Zc.min() <= 300:
+                    continue
+                bx = 160 + sd * (Q @ r) / Zc; by = 120 + sd * (Q @ u) / Zc
+                if bx.min() < 24 or bx.max() > 296 or by.min() < 40 or by.max() > 205:
+                    continue
+                mx = x + L.MITTE_X * L.C(ry); mz = z - L.MITTE_X * L.S(ry)
+                for th in range(1408, 2305, 32):
+                    h = (L.C(th), -L.S(th))
+                    for k in range(40, 15, -1):
+                        w6 = (tot[0] - rest[k][0], tot[1] - rest[k][1])
+                        k13 = N4.welt(th, N4.KOPF13_R); w4 = N4.welt(th, N4.WEG4_R); w6w = N4.welt(th, w6)
+                        r13 = (mx - k13[0], mz - k13[1]); a = (r13[0] - w4[0], r13[1] - w4[1]); s0 = (a[0] - w6w[0], a[1] - w6w[1])
+                        kau = (r13[0] + 220 * h[0], r13[1] + 220 * h[1])
+                        t = np.linspace(0.0, 1.0, 60)
+                        X = s0[0] + (kau[0] - s0[0]) * t; Z = s0[1] + (kau[1] - s0[1]) * t
+                        if (N4.draussen(X, Z, 1500) > 0).any() or (N4.draussen(X + k13[0], Z + k13[1], 500) > 0).any():
+                            continue
+                        best[(x, z, ry, th)] = k
+                        break
+    for (x, z, ry, th), k in sorted(best.items()):
+        print("%d %d %d %d %d" % (x, z, ry, th, k))
+    print("Kandidaten: %d" % len(best), file=sys.stderr)
+    return 0
+
+
 def main():
     global RY, TH
+    if "--m2" in sys.argv:
+        return m2_voll(int(sys.argv[sys.argv.index("--raster") + 1]) if "--raster" in sys.argv else 100)
+    if "--kandidaten" in sys.argv:
+        return kandidaten(sys.argv[sys.argv.index("--kandidaten") + 1])
     raster = int(sys.argv[sys.argv.index("--raster") + 1]) if "--raster" in sys.argv else 200
     if "--grob" in sys.argv:
         RY, TH = 512, 128
