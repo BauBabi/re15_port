@@ -682,3 +682,124 @@ Folgen (Orchestrator, Umsetzung Spur C in der naechsten Nachbesserung):
 Folgen (Orchestrator): Text 2030/2031 Id 46 = "WARNING: The water will rise in one minute. Please leave the room
 immediately!" (Wortlaut exakt; nur der Zeilenumbruch nach der Breite des Nachrichtenfensters). Die Sprachaufnahme des Nutzers
 kommt nach synchro/STAGE2/room2030/main46.wav bzw. room2031/main46.wav (Nachtrag 18 Punkt 4).
+
+## 2026-10-24 20:34 — Orchestrator-Entscheid E-E5 (Fragen der Nachbesserung E 4; der Nutzer kann widersprechen)
+
+- Der 2-Zeilen-Haken der Spur E in engine/src/game_step_common.c (vor der Zweig-Kette des Spieler-Dispatchers; Renn-Stopp
+  endet, wenn ein Durchlauf keinen Kommando-1-Schritt macht — Original +5/+6 @0x8003272c/@0x800328fc, Ueberschreiber
+  @0x80043544/@0x80043610/@0x80038ea8/@0x80041f90/@0x80041bb0/@0x80102640/@0x8011c38c) ist angenommen (Erweiterung von E-E1/E-E2).
+- Die dritte benannte Ausnahme der Gorilla-Sonde (WESTBLOCK x 3800..6200 / z 9900..12500) ist bestaetigt, weil dort auch die
+  Original-Regel haengt (AUS 5880 in 15 Seeds) — kein Rueckschritt der Spur E. Die drei Gorilla-Haenger (TASCHE, SUB7,
+  WESTBLOCK; zombieki_r36.c, Runde-36-PORT-WAHL) sind Folgeauftrag (UEBERGABE §3b).
+
+## 2026-10-24 21:41 — Nachtrag 20 (Wortlaut; Lage der Zombies in 2080, Spuren G und F)
+
+> In 2080, nachdem die Zombies durch die Tür gebrochen sind, sollen sie oberhalb von der Treppe laufen, nicht unten.
+
+Folgen (Orchestrator): Die 8 Zombies (Spur G, ROOM2080/2081) brechen durch die Tuer herein und laufen auf der OBEREN Ebene
+(oberhalb der Treppe), nicht unten. Ebene/Band und Tuer aus der Geometrie belegen (SCA-Zellen/Baender, Tuer-Satz), Wege der
+Zombies auf der oberen Ebene halten (kein Abstieg ueber die Treppe), Bildbeleg aus den 2080-Kameras. Spur F zeigt in der
+2090-Einstellung "oben in 2080 kommen die Zombies herein" dieselbe Lage.
+
+## 2026-10-24 22:25 — Nachtrag 21 (Wortlaut; Zugang zum Alligator und Zweck des Schluessels, Spuren F und G)
+
+> Nur für den fall das du es falsch hast - man kommt über die Leiter zum Aligator, nicht über das Tor. Das Tor soll
+> verschlossen sein, und dann mit den Schlüssel den man vom Aligator bekommt geöffnet werden!
+
+Folgen (Orchestrator):
+- Zugang zu ROOM2090/2091 im Spielablauf: ueber die LEITER aus 2080 (ROOM2080 Slot 1 @0x00BC2 -> 2090 (-8200,0,-25550), frei
+  nach dem Original-Rechner (3,245)); die 2090-Ankunftsszene (Spur F) beginnt bei dieser Ankunft.
+- Das TOR zwischen 2090 und 20A0 (2090 Slot 1 @0x009B6 <-> 20A0 Slot 0 @0x01746, Rolltor-Bereich 20A0) ist VERSCHLOSSEN
+  und oeffnet sich erst mit dem Schluessel, den man vom Alligator bekommt (Spur F: Schluessel nach dem Tod blinkend bei der
+  Leiche; Tuer-Sperre/Schluessel-Item in Original-Form mit Beleg, Item-/Taken-Bit nach Zensus, Bits aus F's Zuteilung
+  110-113). Damit ist die offene Frage "welche Tuer oeffnet der 2090-Schluessel" beantwortet. Weg danach: 2090 -> Tor -> 20A0
+  -> (Original sub10 (3,206)) -> 11A0 -> STAGE3.
+- Spur G: die Kanister-Szene setzt voraus, dass der Spieler ueber die Leiter in 2090 ist (nicht ueber 20A0).
+
+## 2026-10-24 23:10 — Orchestrator-Entscheid J-E1 (Abnahme J 0: alle Nutzer-Punkte erfuellt, nur Vertrag V1 + Doku M2)
+
+- **V1 angenommen** (wie B5/I-E1/H-E1): Haken der Spur J in scd_vm.c (register_opcodes, s_op_table[0x48]/[0x49], 3 Zeilen)
+  und platform/pc/main.c (pc_prop_world, 4 Zeilen), markiert "Runde 41 Spur J". Bei der Integration in register_opcodes mit
+  C/E (op_message_on) und den uebrigen Haken beidseitig mergen.
+- M2 (Dossier/Kopf von re15_superobj_r41.h zu ROOM4031: Gegner 0 beim ersten Besuch ist John, Typ 0x49) berichtigt die
+  Nachbesserung J 1; sonst ist nichts zu tun.
+
+## 2026-10-25 00:01 — Nachtrag 22 (Nutzer-Entscheide per Auswahl zu den Fragen der Spur G)
+
+1. "Wann ist der Alligator 'oft genug angeschossen'?" — **"RE2-Schwelle (300 Schaden)"** (wie gebaut: RE2-Schwaeche
+   @0x80101ebc-dc; Pistole 43 / Schrotflinte 11 / Magnum 7 / Granatwerfer 5 Treffer).
+2. "Soll der Alligator nach der Kanister-Szene sofort wieder auftauchen?" — **"Erst beim Annaehern"** (wie gebaut).
+3. "Soll beim Hereinkommen von Marvin/John ebenfalls der Knall kommen?" — **"Stahltuer-Ton lassen"** (DOOR06 wie gebaut).
+Damit sind alle Entscheidungsfragen der Spur G beantwortet. Sprachaufnahmen fuer den Nutzer: synchro/STAGE2/room2080/main42.wav
+("Hey, Leon, try with this!", Marvin) und synchro/STAGE2/room2081/main42.wav ("Hey, Elza, try with this!", John).
+
+## 2026-10-25 00:22 — Nachtrag 23 (Wortlaut; Ablauf des Alligator-Kampfes mit der Kanister-Szene, Spuren G/F/B)
+
+> Aber die Kanister Szene kommt erst nachdem der Aligator genug getroffen wurde. Aligator Kampf -> Mehrere Treffer ->
+> Kanister Szene -> Kampf geht weiter, Aligator nimmt irgendwann in dem weiteren Rundlauf den Kanister auf -> Schuss -> Ende
+> Kiefer kaputt.
+
+Folgen (Orchestrator): Massgeblicher Ablauf (ergaenzt Nachtrag 22 Punkt 2 "Erst beim Annaehern" = der Alligator setzt nach
+der Szene seinen normalen RE2-Ablauf fort, nicht sofort angreifend): Kampf -> Treffer bis zur RE2-Schwelle (300 Schaden) ->
+Kanister-Szene (Marvin/John, Wurf ins 2090-Becken) -> Kampf geht weiter -> der Alligator nimmt den Kanister IRGENDWANN in
+seinem weiteren Rundlauf auf (Aufnahme-Mechanik der Spur B, RE2-Form) -> Schuss auf den Kanister im Maul -> Explosion ->
+Tod mit geplatztem Kiefer. Abnahmepunkt der Spur G: diese ganze Folge im ECHTEN Ablauf an der exe (Leon UND Elza), ohne
+Testhaken fuer den Kanister — insbesondere: der Kanister liegt nach dem Wurf erreichbar auf dem Rundweg des Alligators
+und wird im normalen Kampf tatsaechlich aufgenommen (Messung: Bild der Aufnahme, Zeit seit dem Wurf).
+
+## 2026-10-25 00:23 — Nachtrag 24 (Wortlaut; Animation vor der Kanister-Aufnahme, Spur G) + Orchestrator-Entscheid FG-E2
+
+> Ich sah die Animation vor dem aufnehmen des Kanisters ist noch falsch. Da hat er mal wieder eine dämliche Kletter
+> Animation
+
+Folgen (Orchestrator):
+- Vor der Kanister-Aufnahme darf der Alligator KEINE Kletter-Animation (CROSS/GUARD-Kletterclip des Nutzer-Designs) zeigen.
+  Form = RE2: er schwimmt zum Kanister (Sub 1 Schwimmen, Clip 0, Blend 32 @0x80100b04-18 / @0x80100c04, Stufen der
+  T2-Aufnahme @0x801017c4-0x80101d40) und nimmt ihn auf. Ursache im Ablauf finden (liegt der geworfene Kanister so, dass der
+  Weg ueber die Plattform/Rampe fuehrt? greift CROSS waehrend des Aufnahme-Fensters?) und belegt beheben; Bildbogen der
+  Aufnahme vorher/nachher im echten Ablauf (Nachtrag 23), Leon UND Elza.
+- **FG-E2:** Spur G darf dafuer gezielt in Spur B's Modulen (gator_re2_r41.c, enemy_ai_boss_gator.c) aendern — nur die
+  Aufnahme-/Anschwimm-Logik, markiert "Runde 41 Spur G (Nachtrag 24)"; Spur F aendert dort nur die Szene/den Auftritt.
+  Bei der Integration beidseitig mergen; die B-Riegel (unit_r41_re2gator_*, integration_r41_re2gator) bleiben gruen.
+
+## 2026-10-25 00:24 — Nachtrag 24b (Wortlaut; BERICHTIGT Nachtrag 24 — es geht um Marvin/John, nicht um den Alligator)
+
+> nein, nicht der aligator
+
+Folgen (Orchestrator, ersetzt die Folgen von Nachtrag 24; FG-E2 ist WIDERRUFEN, keine Aenderung in Spur B's Modulen):
+- Die "daemliche Kletter-Animation" vor dem Aufnehmen des Kanisters spielt **Marvin (Leon) bzw. John (Elza) in ROOM2080/2081**
+  in der Kanister-Szene der Spur G (Punkt 3: "Rennt zu dem Gas Kanister, nimmt ihn auf in beide Haende"). Spur G belegt, welcher
+  Clip dort laeuft (Bank/EDD/RBJ, Clip-Nummer, Ursache: z. B. falscher Clip-Index, Kanten-/Kletter-Sub des NPC-Gangs an der
+  Reling, Stufe), und ersetzt ihn durch passende Animationen: Hinlaufen (Lauf-Clip des NPC) und Aufnehmen mit beiden Haenden
+  (Original-/RE2-Clip mit Beleg — z. B. eine Aufheb-/Trage-Animation aus RE1.5-NPC- oder RE2-Banken; Herkunft im Dossier).
+  Bildbogen der Szene vorher/nachher, Leon UND Elza.
+
+Nachsatz des Nutzers zu 24b (Wortlaut): "marvin" — gesehen bei Marvin (Leons Szenario); John (Elza) gleich pruefen.
+
+## 2026-10-25 00:56 — Orchestrator-Entscheide FG-E3/FG-E4 (Abnahme G 0, Maengel M2/M3; der Nutzer kann widersprechen)
+
+- **FG-E3 (M2, Nachtrag 23):** Nach der Kanister-Szene setzt der Kampf mit DEMSELBEN Alligator fort (HP, Intro gesehen,
+  Lage/Zustand bleiben; kein erneuter Durchbruch), und der Kanister landet so, dass der Alligator ihn im normalen Rundlauf
+  aufnimmt (B's Aufnahme-Fenster). Spur G darf dafuer kleine, markierte Haken ("Runde 41 Spur G, FG-E3") in Spur B's Modulen
+  setzen (gator_re2_r41.c / enemy_ai_boss_gator.c: Zustand ueber die Szene erhalten, Landepunkt/Fenster), Merkbits aus G's
+  Zuteilung 114-119. B's Riegel bleiben gruen. Beleg im echten Ablauf ohne Testhaken (Leon UND Elza): Wurf -> Kampf -> Aufnahme
+  -> Schuss -> Kiefer.
+- **FG-E4 (M3, Nachtrag 5):** Eine Kamera "genau wie Adas Raketenwerfer-Wurf" (Werferin von unten, ~44 Grad) gibt es in
+  ROOM2080/2090 nicht — der Port hat nur die vorgerenderten Hintergruende der Original-Kameras, eine neue Blickrichtung
+  braeuchte einen neuen Hintergrund. Gewaehlt wird die naechstliegende vorhandene Kamera (laut Abnahme 2090 Cut 12, knapp
+  daneben) mit der RE2-Schnittfolge des Wurfs (ROOM7020 sub12/13: Bild, Dauer, Schnitte belegen); PORT-WAHL im Dossier mit
+  Bildvergleich RE2 <-> Port. Der Nutzer wird darauf hingewiesen.
+
+## 2026-10-25 02:47 — Nachtrag 25 (Nutzer-Antworten per Auswahl zu den Fragen (o)/(p)/(q) der Spur C) + Orchestrator-Entscheid C-E4
+
+(o) "Soll waehrend der 60 Sekunden RE2s Selbstzerstoerungs-Alarm (SUB_25, RE2 ROOM6040) laufen?" — **"Ja, RE2-Alarm SUB_25"**.
+(p) "Countdown-Anzeige: gebaut MM:SS:HH oben rechts ... Passt das?" — **Antwort des Nutzers (Wortlaut): "Auch da gibt es
+    mindestens ein Alarm in Resident Evil 2."** -> RE2 HAT eine Countdown-Anzeige (Selbstzerstoerungs-Zeit am Spielende):
+    Spur C findet sie in RE2 (ghidra_re2_Leon.txt / RE2_Quellcode_V2: Zeit-Anzeige, Ziffern-Textur, Lage, Format, Ausloeser,
+    z. B. die Laborsequenz um ROOM6040 / den Zug) und baut den 2030-Countdown in GENAU dieser Form nach (Form/Lage/Ziffern/
+    Farbe mit Beleg), statt der Port-Wahl MM:SS:HH.
+(q) "A fuse box for the valve controls." — **"Freigeben"**.
+
+**C-E4:** Fuer den Alarm darf Spur C einen kleinen, markierten Haken im Musik-/BGM-Lader platform/pc/src/audio_pc.c setzen
+("Runde 41 Spur C, C-E4"; Spur D ist integriert, beidseitig mergen). SUB_25 aus info/re2leon/COMMON/SOUND/SUB_25.BGM bytegleich
+nach shared_assets/RE2/SOUND/ (Paket-Gate nennen). Alarm vom Warntext bis zur Flut bzw. bis zum Verlassen des Raums.
