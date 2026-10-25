@@ -1043,3 +1043,14 @@ Bezug: Bilder F_belege/n5_gator_szene.png, n5_kampfbeginn.png, n5_ankunft_cut0.p
    ~150 Bilder (Riegel), Bildbogen Leon + Elza.
 3. "Schluessel etwas kleiner (7x9 statt 8x10), gut zu erkennen?" — **"Ja, gut genug"**: die Groesse aus Nachbesserung 5 ist
    angenommen; F-E2 Punkt 2 gilt fuer die Groesse damit als erfuellt (Helligkeit bleibt Pflicht).
+
+## 2026-10-25 17:57 — Nachtrag 32 (Wortlaut) + Orchestrator-Entscheid FG-E6 (Abschluss Alligator, Spuren F und G)
+
+> Wir müssen beim Aligator auch so langsam erst einmal zu einen Ende kommen, bis nächsten Samstag.... gut ist erst einmal gut genug
+
+**FG-E6:** Ziel: v0.8.29 bis Samstag 2026-10-31. Fuer F und G gibt es nach den LAUFENDEN Laeufen keine weiteren Laeufe (F: hoechstens
+die automatisch folgende Nachbesserung 6 des laufenden Laufs, darin Nachtrag 31 Punkt 2; G: Abnahme 4 ist die letzte). Abnahmen von
+F und G urteilen ab jetzt nach "gut genug": NICHT BESTANDEN nur bei blockierenden Fehlern - Absturz, Haenger/Softlock, Regression
+ausserhalb 2080/2090, ein Nutzer-Punkt fehlt ganz oder ist im Spiel kaputt. Feinheiten (Kamera-/Lagefeinheiten, Bildanteile,
+Toleranzen, Messluecken) kommen als "offen" in den Bericht und in die Release Notes und blockieren nicht. Danach integriert der
+Orchestrator F und G mit dieser Liste.
