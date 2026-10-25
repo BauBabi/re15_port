@@ -873,54 +873,109 @@ static void gr2_kam_reset(void)
     s_kam.vorher = -1;
 }
 /* ==== Runde 41 Spur G, G-E1 (Nachbesserung 3, Abnahme G 2 M1 "der R1-Tod ist in der Riegel-Startlage nicht im Bild") ==========
- * Orchestrator-Entscheid G-E1: fuer den R1-Explosionstod die 2090/2091-Zonenkamera, in der Kopf und Kiefer im Bild liegen und von
- * keiner Maske verdeckt sind, am naechsten an der RE2-Lage (RE2-Cut 5: Kopf bei Bild (170,111), k_blick EXPLOSION, gemessen mit
- * tools/r41_re2gator/probe_kamera_re2.c der Spur B). PRUEFPUNKTE = Kopf (Bone 6), Kiefer (Bone 7) und die sechs Punkte, an denen
- * RE2 die Explosion zeichnet: Spritzring FUN_8010338c = Kanister-Matrix x SVECTOR-Tafel @0x801000a8 (`jal 0x8001bf10` @0x8010344c-d0,
- * k_ring unten). VERDECKT = ein Masken-Rechteck des Cuts ueber dem Bildpunkt mit re15_pri_mask_occludes(depth, vz) (STRIKT depth <
- * Bucket(vz) @0x8001ce54; Plattform-Haken re15_gr2_maske_hook, dieselbe Masken-Kette wie der Zeichner; Rechteck statt Texel =
- * strenger als das Bild). RE2-FORM bleibt: kein Schnitt, solange der laufende Cut die Bedingung erfuellt (R1 P0 schneidet nur, wenn
- * der Kopf im laufenden Cut nicht zu sehen ist, @0x80102218-34); sonst auf die Wahl (Stufe 0 mit Spur B's Massstab-Grenze, Stufe 1
- * ohne), Rueckfall die alte Wahl. Messzeilen "KAMERA R1 G-E1 ..." in gator_boss.log. */
+ * Orchestrator-Entscheid G-E1: fuer den R1-Explosionstod die 2090/2091-Zonenkamera, in der Kopf und Kiefer mit Rand im Bild liegen
+ * und von keiner Maske verdeckt sind, am naechsten an der RE2-Lage (RE2-Cut 5: Kopf bei Bild (170,111) im ersten Bild von Clip 9,
+ * k_blick EXPLOSION, gemessen mit tools/r41_re2gator/probe_kamera_re2.c der Spur B).
+ * START (Bild R1 P0): Kopf (Bone 6), Kiefer (Bone 7) und die sechs Punkte, an denen RE2 die Explosion zeichnet (Spritzring
+ * FUN_8010338c = Kanister-Matrix x SVECTOR-Tafel @0x801000a8, `jal 0x8001bf10` @0x8010344c-d0, k_ring) muessen im Bild liegen, die
+ * Spritzring-Punkte samt dem groessten Bild ihres Sprites ("mit Rand", GR2_R1_RAND_*), keiner von einer Maske verdeckt (Masken-
+ * Rechteck des Cuts mit re15_pri_mask_occludes(depth, vz), STRIKT depth < Bucket(vz) @0x8001ce54, Plattform-Haken
+ * re15_gr2_maske_hook = dieselbe Masken-Kette wie der Zeichner; Rechteck statt Texel = strenger als das Bild), und alle im
+ * Regions-Viereck des Cuts: der Zeichner verwirft Effekt-Plaetze (re2fx_quads `jal 0x8002c820` @0x80077a30) und den Gegner (NPC-
+ * Pass npc_region_culled, Ursprung = Wurzel) ausserhalb des Vierecks.
+ * TODES-CLIP: der Kopf wandert im Clip 9 weit (R1 P1: Rueckstoss +0x144 = -500, Schritt 40 je Bild - 2 @0x8010246c-a0, Ziel-Gier
+ * +160 mit 75/Bild @0x8010239c-a4/@0x801025f8-608, Clip 9 absolut vom Anker; gemessen bis 6100 Einheiten). Je zweites Clip-Bild wird
+ * mit derselben Rechnung wie re15_gr2_r1_tick auf einer Kopie des Aktors vorausgerechnet (ohne die Wandklemme des Dispatchers) und
+ * gezaehlt, in wie vielen Proben Kopf und Kiefer im Bild und unverdeckt sind und Kopf und Wurzel im Viereck liegen.
+ * WAHL (PORT-WAHL der Abbildung, Mass = G-E1): unter den Zonenkameras mit gueltigem START (der laufende Cut eingeschlossen) die mit
+ * den meisten sichtbaren Proben, bei Gleichstand die mit der Kopf-Bildlage naechst (170,111); Stufe 0 mit Spur B's Massstab-Grenze,
+ * Stufe 1 ohne. Ist das der laufende Cut, bleibt er (RE2 R1 P0 schneidet nur, wenn der laufende Cut den Kopf nicht zeigt,
+ * @0x80102218-34), sonst Schnitt (+0x218 |= 0x40 @0x80102248, zurueck am Clip-Ende @0x801024a4-ec); ohne gueltigen START die alte
+ * Wahl. Messzeilen "KAMERA R1 G-E1 ..." in gator_boss.log. */
 int (*re15_gr2_maske_hook)(int cut, int sx, int sy, int32_t vz) = NULL;
 #define GR2_R1_SOLL_X  170   /* RE2-Cut-5-Bildlage des Kopfes (k_blick EXPLOSION, probe_kamera_re2.c) */
 #define GR2_R1_SOLL_Y  111
-#define GR2_R1_PUNKTE  8     /* Kopf, Kiefer, 6 Spritzring-Punkte */
-static int gr2_r1_punkte(const re15_actor_t *e, int32_t p[GR2_R1_PUNKTE][3]);   /* nach k_ring definiert */
+#define GR2_R1_START   8     /* Kopf, Kiefer, 6 Spritzring-Punkte */
+#define GR2_R1_PROBEN  24    /* Vorausschau: je zweites Bild von Clip 9 */
+/* "MIT RAND": um jeden Spritzring-Punkt muss das groesste Bild seines Sprites ins Bild passen. CORE00.ESP Bank 3 (Kopf @0x8) Sub
+ * 0x0f, Anim 11..22 (Eintraege @0x68..@0xC0, Zelltafel @0x190): groesstes Bild A17 @0x98 / A18 @0xA0 = Zellen x -36..36, y -32..36
+ * Texel (dx/dy + Groesse 16); Bildschirm-Versatz je Texel = Skala * camf * Aspekt / (SZ * 16 * 65536) (FUN_80077ed0: step = Groesse
+ * * Skala * camf / (SZ << 4), Breite = step * Aspekt, Texelschritt = Breite / Groesse; re2fx_quads), Aspekt 0x1000 (Schritt 0 +4/+6
+ * `00 10 00 10` @0x5BC), Skala = a0 & 0xffff des Rings (0x2000/0x3000, k_ring_a0). */
+#define GR2_R1_RAND_X0 (-36)
+#define GR2_R1_RAND_X1 36
+#define GR2_R1_RAND_Y0 (-32)
+#define GR2_R1_RAND_Y1 36
+#define GR2_R1_ASPEKT  0x1000
+typedef struct {
+    int32_t start[GR2_R1_START][3];
+    int32_t wurzel0[3];
+    int     n;                                   /* Proben des Todes-Clips */
+    int32_t kopf[GR2_R1_PROBEN][3], kiefer[GR2_R1_PROBEN][3], wurzel[GR2_R1_PROBEN][3];
+} gr2_r1_pfad_t;
+typedef struct { int start_ok, im, vd, aus, kx, ky, bilder; int32_t m; } gr2_r1_urteil_t;
+static int gr2_r1_pfad(const re15_actor_t *e, gr2_r1_pfad_t *P);                 /* nach k_ring definiert */
+static uint16_t gr2_r1_skala(int ring);                                          /* ebenso */
 static int gr2_fin_proj(const re15_camera_view_t *v, const int32_t p[3], int *sx, int *sy, int32_t *vz_aus);
-/* 1 = alle n Pruefpunkte im Bild von Cut c und keiner verdeckt; *im/*vd = Zahl im Bild/verdeckt, (*kx,*ky) = Bildlage des Kopfes. */
-static int gr2_r1_sicht(int c, const int32_t p[][3], int n, int *im, int *vd, int *kx, int *ky)
+/* Ein Punkt in Cut c: 1 = im Bild (+ Rand bei ring >= 0), im Viereck, unverdeckt; *sx/*sy Bildlage; *aus/*vd Gruende. */
+static int gr2_r1_punkt(int c, const re15_camera_view_t *v, int region, const int16_t rx[4], const int16_t rz[4], const int32_t p[3],
+                        int ring, int *sx, int *sy, int *aus, int *vd)
 {
-    re15_camera_view_t v;
-    *im = 0; *vd = 0; *kx = *ky = -9999;
-    if (re15_camera_build_view(&g_room_rdt.cuts[c], &v) != 0) return 0;
-    for (int j = 0; j < n; j++) {
-        int sx = -9999, sy = -9999; int32_t vz = 0;
-        const int drin = gr2_fin_proj(&v, p[j], &sx, &sy, &vz);
-        if (j == 0) { *kx = sx; *ky = sy; }
-        if (!drin) continue;
-        (*im)++;
-        if (re15_gr2_maske_hook && re15_gr2_maske_hook(c, sx, sy, vz)) (*vd)++;
+    int32_t vz = 0;
+    *sx = *sy = -9999;
+    int drin = gr2_fin_proj(v, p, sx, sy, &vz);
+    if (drin && ring >= 0) {                                    /* Sprite-Rand (s.o.), 16.16 */
+        const int64_t f = ((int64_t)gr2_r1_skala(ring) * v->fov_screen_dist * GR2_R1_ASPEKT) / ((int64_t)vz * 16);
+        const int x0 = *sx + (int)((GR2_R1_RAND_X0 * f) >> 16), x1 = *sx + (int)((GR2_R1_RAND_X1 * f) >> 16);
+        const int y0 = *sy + (int)((GR2_R1_RAND_Y0 * f) >> 16), y1 = *sy + (int)((GR2_R1_RAND_Y1 * f) >> 16);
+        drin = x0 >= 0 && x1 < 320 && y0 >= 0 && y1 < 240;
     }
-    return *im == n && *vd == 0;
+    if (drin && region && !re15_aot_point_in_quad(p[0], p[2], rx, rz)) { if (aus) (*aus)++; return 0; }   /* FUN_8002c820 */
+    if (!drin) return 0;
+    if (re15_gr2_maske_hook && re15_gr2_maske_hook(c, *sx, *sy, vz)) { if (vd) (*vd)++; return 0; }
+    return 1;
 }
-static int gr2_r1_wahl(const re15_actor_t *e, const int32_t p[][3], int n)
+static void gr2_r1_beurteilen(int c, const re15_actor_t *e, const gr2_r1_pfad_t *P, gr2_r1_urteil_t *u)
 {
-    const int32_t skala = gr2_scale(e), grenze = gr2_massstab_grenze();
+    memset(u, 0, sizeof *u); u->kx = u->ky = -9999;
+    re15_camera_view_t v;
+    if (re15_camera_build_view(&g_room_rdt.cuts[c], &v) != 0) return;
+    int16_t rx[4], rz[4];
+    const int region = re15_rdt_get_region_quad(&g_room_rdt, c, rx, rz);
+    for (int j = 0; j < GR2_R1_START; j++) {
+        int sx, sy;
+        if (gr2_r1_punkt(c, &v, region, rx, rz, P->start[j], j >= 2 ? j - 2 : -1, &sx, &sy, &u->aus, &u->vd)) u->im++;
+        if (j == 0) { u->kx = sx; u->ky = sy; }
+    }
+    const int wurzel_ok = !region || re15_aot_point_in_quad(P->wurzel0[0], P->wurzel0[2], rx, rz);
+    if (!wurzel_ok) u->aus++;
+    u->start_ok = (u->im == GR2_R1_START) && wurzel_ok;
+    for (int s = 0; s < P->n; s++) {
+        int sx, sy;
+        if (!gr2_r1_punkt(c, &v, region, rx, rz, P->kopf[s], -1, &sx, &sy, NULL, NULL)) continue;
+        if (!gr2_r1_punkt(c, &v, region, rx, rz, P->kiefer[s], -1, &sx, &sy, NULL, NULL)) continue;
+        if (region && !re15_aot_point_in_quad(P->wurzel[s][0], P->wurzel[s][2], rx, rz)) continue;
+        u->bilder++;
+    }
+    u->m = gr2_massstab(&g_room_rdt.cuts[c], P->start[0], gr2_scale(e));
+}
+static int gr2_r1_wahl(const re15_actor_t *e, const gr2_r1_pfad_t *P)
+{
+    const int32_t grenze = gr2_massstab_grenze();
     for (int stufe = 0; stufe < 2; stufe++) {
-        int best = -1; int64_t best_d = 0;
+        int best = -1, best_b = -1; int64_t best_d = 0;
         for (int k = 0; k < g_room_rdt.cut_count; k++) {
             if (!gr2_zonenkamera(k)) continue;
-            int im, vd, kx, ky;
-            const int ok = gr2_r1_sicht(k, p, n, &im, &vd, &kx, &ky);
-            const int32_t m = gr2_massstab(&g_room_rdt.cuts[k], p[0], skala);
-            const int gok = stufe == 1 || m <= grenze;
-            const int64_t d = (int64_t)(kx - GR2_R1_SOLL_X) * (kx - GR2_R1_SOLL_X) + (int64_t)(ky - GR2_R1_SOLL_Y) * (ky - GR2_R1_SOLL_Y);
-            re15_gr2_log("KAMERA R1 G-E1 Kandidat stufe=%d Cut %d kopf_bild=(%d,%d) Punkte %d/%d im Bild, %d verdeckt, massstab=%d%s, "
-                         "Abstand zu RE2 (%d,%d) %d", stufe, k, kx, ky, im, n, vd, (int)m, gok ? "" : " >grenze",
+            gr2_r1_urteil_t u;
+            gr2_r1_beurteilen(k, e, P, &u);
+            const int gok = stufe == 1 || u.m <= grenze;
+            const int64_t d = (int64_t)(u.kx - GR2_R1_SOLL_X) * (u.kx - GR2_R1_SOLL_X) + (int64_t)(u.ky - GR2_R1_SOLL_Y) * (u.ky - GR2_R1_SOLL_Y);
+            re15_gr2_log("KAMERA R1 G-E1 Kandidat stufe=%d Cut %d kopf_bild=(%d,%d) Start %d/%d (%d verdeckt, %d ausserhalb)%s, "
+                         "Todes-Clip %d/%d Proben, massstab=%d%s, Abstand zu RE2 (%d,%d) %d", stufe, k, u.kx, u.ky, u.im, GR2_R1_START,
+                         u.vd, u.aus, u.start_ok ? "" : " ungueltig", u.bilder, P->n, (int)u.m, gok ? "" : " >grenze",
                          GR2_R1_SOLL_X, GR2_R1_SOLL_Y, (int)(d > 0x7fffffff ? 0x7fffffff : d));
-            if (!ok || !gok) continue;
-            if (best < 0 || d < best_d) { best = k; best_d = d; }   /* Gleichstand: kleinerer Cut */
+            if (!u.start_ok || !gok) continue;
+            if (best < 0 || u.bilder > best_b || (u.bilder == best_b && d < best_d)) { best = k; best_b = u.bilder; best_d = d; }
         }
         if (best >= 0) return best;
     }
@@ -936,38 +991,38 @@ static void gr2_kam_r1_start(const re15_actor_t *e)
     int cur = (int)g_scd.cam_id, sx = -1, sy = -1, sichtbar = 0;
     if (g_room_rdt_ok && g_room_rdt.cuts && cur < g_room_rdt.cut_count && gr2_kopf_achse(e, kopf, achse))
         sichtbar = gr2_im_bild(&g_room_rdt.cuts[cur], kopf, &sx, &sy);
-    {   /* Runde 41 Spur G, G-E1: "sichtbar" = Kopf, Kiefer und Explosionspunkte im Bild und unverdeckt (s.o.) */
-        int32_t p[GR2_R1_PUNKTE][3];
-        const int n = gr2_r1_punkte(e, p);
-        if (n == GR2_R1_PUNKTE && g_room_rdt_ok && g_room_rdt.cuts && cur >= 0 && cur < g_room_rdt.cut_count) {
-            int im, vd, kx, ky;
-            const int ok = gr2_r1_sicht(cur, p, n, &im, &vd, &kx, &ky);
-            re15_gr2_log("KAMERA R1 G-E1 laufender Cut %d: kopf_bild=(%d,%d) Punkte %d/%d im Bild, %d verdeckt -> %s F%u", cur, kx, ky,
-                         im, n, vd, ok ? "kein Schnitt" : "Wahl", (unsigned)g_engine.frame_count);
-            if (ok) {
+    {   /* Runde 41 Spur G, G-E1 (s.o.) */
+        static gr2_r1_pfad_t P;
+        if (gr2_r1_pfad(e, &P) && g_room_rdt_ok && g_room_rdt.cuts && cur >= 0 && cur < g_room_rdt.cut_count) {
+            gr2_r1_urteil_t u;
+            gr2_r1_beurteilen(cur, e, &P, &u);
+            re15_gr2_log("KAMERA R1 G-E1 laufender Cut %d: kopf_bild=(%d,%d) Start %d/%d (%d verdeckt, %d ausserhalb)%s, Todes-Clip %d/%d "
+                         "Proben F%u", cur, u.kx, u.ky, u.im, GR2_R1_START, u.vd, u.aus, u.start_ok ? "" : " ungueltig", u.bilder, P.n,
+                         (unsigned)g_engine.frame_count);
+            const int c = gr2_r1_wahl(e, &P);
+            if (c >= 0 && c == cur) {
                 gr2_kam_sperre(GR2_KAM_R1);
                 gr2_kam_merken(-1, RE15_GR2_BLICK_EXPLOSION, e);
-                re15_gr2_log("KAMERA R1 Sperre ohne Schnitt: Kopf im Bild von Cut %d bei (%d,%d) F%u", cur, kx, ky,
-                             (unsigned)g_engine.frame_count);
+                re15_gr2_log("KAMERA R1 Sperre ohne Schnitt: Kopf im Bild von Cut %d bei (%d,%d) F%u (G-E1: laufender Cut ist die Wahl, "
+                             "Todes-Clip %d/%d Proben)", cur, u.kx, u.ky, (unsigned)g_engine.frame_count, u.bilder, P.n);
                 return;
             }
-            const int c = gr2_r1_wahl(e, p, n);
             if (c >= 0) {
                 gr2_kam_sperre(GR2_KAM_R1);
                 gr2_kam_cut_chg(c);
                 gr2_kam_merken(c, RE15_GR2_BLICK_EXPLOSION, e);
                 s_kam.r1_geschnitten = 1;                           /* RE2 +0x218 |= 0x40 @0x80102248 */
-                gr2_r1_sicht(c, p, n, &im, &vd, &kx, &ky);
+                gr2_r1_beurteilen(c, e, &P, &u);
                 const int f = gr2_kopf_achse(e, kopf, achse) ? gr2_frontal(kopf, achse, &g_room_rdt.cuts[c]) : 0;
                 re15_gr2_log("KAMERA R1 EXPLOSION RE2-Cut %d -> Cut %d F%u clip=%d bild=%d frontal=%d soll=%d massstab=%d re2_m=%d grenze=%d "
-                             "(G-E1: kopf_bild=(%d,%d), Punkte %d/%d im Bild, %d verdeckt)",
+                             "(G-E1: kopf_bild=(%d,%d), Start %d/%d, Todes-Clip %d/%d Proben)",
                              (int)k_blick[RE15_GR2_BLICK_EXPLOSION].re2_cut, c, (unsigned)g_engine.frame_count, (int)e->motion,
-                             (int)e->anim_frame, f, (int)k_blick[RE15_GR2_BLICK_EXPLOSION].soll,
-                             (int)gr2_massstab(&g_room_rdt.cuts[c], p[0], gr2_scale(e)),
-                             (int)gr2_massstab_soll(RE15_GR2_BLICK_EXPLOSION), (int)gr2_massstab_grenze(), kx, ky, im, n, vd);
+                             (int)e->anim_frame, f, (int)k_blick[RE15_GR2_BLICK_EXPLOSION].soll, (int)u.m,
+                             (int)gr2_massstab_soll(RE15_GR2_BLICK_EXPLOSION), (int)gr2_massstab_grenze(), u.kx, u.ky, u.im, GR2_R1_START,
+                             u.bilder, P.n);
                 return;
             }
-            re15_gr2_log("KAMERA R1 G-E1: keine Zonenkamera zeigt alle Punkte unverdeckt -> alte Wahl F%u", (unsigned)g_engine.frame_count);
+            re15_gr2_log("KAMERA R1 G-E1: keine Zonenkamera mit gueltigem Start -> alte Wahl F%u", (unsigned)g_engine.frame_count);
         }
     }
     if (!sichtbar) {
@@ -1705,16 +1760,48 @@ static const int16_t k_ring[6][4] = {   /* SVECTOR-Tabelle @0x801000a8 */
 static const uint32_t k_ring_a0[6] = { 0x030f2000u, 0x030f3000u, 0x030f3000u, 0x030f2000u, 0x030f2000u, 0x030f3000u };
 /* Runde 41 Spur G, G-E1: die Pruefpunkte der R1-Kamerawahl - Kopf (Bone 6), Kiefer (Bone 7) und die sechs Spritzring-Punkte
  * (Kanister-Weltlage x k_ring, wie FUN_8001d894 sie fuer die Spritzring-Plaetze rechnet: t + R * ofs). 0 = keine Pose/kein Kanister. */
-static int gr2_r1_punkte(const re15_actor_t *e, int32_t p[GR2_R1_PUNKTE][3])
+static uint16_t gr2_r1_skala(int ring) { return (uint16_t)(k_ring_a0[ring] & 0xffffu); }
+/* Runde 41 Spur G, G-E1: Pruefpunkte der R1-Kamerawahl (Herleitung am Kopf von gr2_r1_beurteilen). 0 = keine Pose / kein Kanister. */
+static int gr2_r1_pfad(const re15_actor_t *e, gr2_r1_pfad_t *P)
 {
     int32_t r[9], kp[3], kr[9];
-    if (!gr2_bone_welt(e, 6, r, p[0]) || !gr2_bone_welt(e, 7, r, p[1])) return 0;
-    if (!re15_gr2_kanister_welt(kp, kr)) return 2;
-    for (int k = 0; k < 6; k++)
+    memset(P, 0, sizeof *P);
+    if (!gr2_bone_welt(e, 6, r, P->start[0]) || !gr2_bone_welt(e, 7, r, P->start[1])) return 0;
+    if (!re15_gr2_kanister_welt(kp, kr)) return 0;
+    for (int k = 0; k < 6; k++)                                 /* Spritzring: t + R * ofs wie FUN_8001d894 im Spawnbild */
         for (int i = 0; i < 3; i++)
-            p[2 + k][i] = kp[i] + (int32_t)(((int64_t)kr[i * 3 + 0] * k_ring[k][0] + (int64_t)kr[i * 3 + 1] * k_ring[k][1] +
-                                             (int64_t)kr[i * 3 + 2] * k_ring[k][2]) >> 12);
-    return GR2_R1_PUNKTE;
+            P->start[2 + k][i] = kp[i] + (int32_t)(((int64_t)kr[i * 3 + 0] * k_ring[k][0] + (int64_t)kr[i * 3 + 1] * k_ring[k][1] +
+                                                    (int64_t)kr[i * 3 + 2] * k_ring[k][2]) >> 12);
+    P->wurzel0[0] = e->x; P->wurzel0[1] = e->y; P->wurzel0[2] = e->z;
+    /* Vorausschau des Todes-Clips: P1 von re15_gr2_r1_tick auf einer Kopie (Rueckstoss, Ziel-Gier, Clip 9 absolut vom Anker). */
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    const int slot = (int)(e - g_actors);
+    if (!bk || slot <= 0 || slot >= RE15_ACTOR_MAX || bk->anim.clip_count <= 9) return 1;
+    const gr2_t *g = &s_g[slot];
+    re15_actor_t t = *e;
+    int16_t speed = g->r1_speed, schritt = g->r1_schritt;
+    const int n = bk->anim.clips[9].frame_count;
+    for (int k = 0; k < n; k++) {
+        if (schritt > 0) { speed = (int16_t)(speed + schritt); schritt = (int16_t)(schritt - 2); }   /* @0x8010257c-a0 */
+        {
+            int32_t v = q12mul(-(int32_t)speed, gr2_scale(&t));
+            int32_t c = re15_cos_q12((int)t.rot_y), sn = re15_sin_q12((int)t.rot_y);
+            t.anchor_x += q12mul(c, v); t.anchor_z -= q12mul(sn, v);
+        }
+        {
+            int d = (((int)g->r1_zielyaw - (int)t.rot_y + 0x800) & 0xfff) - 0x800;   /* FUN_8001569c @0x801025f8-608 */
+            if (d > 75) d = 75; else if (d < -75) d = -75;
+            t.rot_y = (int16_t)((t.rot_y + d) & 0xfff);
+        }
+        t.motion = 9; t.anim_frame = (uint32_t)k;
+        re15_clip_root_motion_abs_pub(&t, &bk->skel, &bk->anim, 9, k);
+        if ((k & 1) == 0 && P->n < GR2_R1_PROBEN) {
+            if (!gr2_bone_welt(&t, 6, r, P->kopf[P->n]) || !gr2_bone_welt(&t, 7, r, P->kiefer[P->n])) break;
+            P->wurzel[P->n][0] = t.x; P->wurzel[P->n][1] = t.y; P->wurzel[P->n][2] = t.z;
+            P->n++;
+        }
+    }
+    return 1;
 }
 
 static inline int16_t rnd8(void) { return (int16_t)(int8_t)(re15_re2_rand() & 0xffu); }
