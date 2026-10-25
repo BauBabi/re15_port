@@ -729,19 +729,19 @@ void re15_kanister2080_r41_install(uint16_t room_id)
                   RE15_K2080_N_ZOMBIES);
         }
         if (bit(RE15_K2080_BIT_KANISTER)) {
-            if (!s_lande_ok) {                           /* Spielstand geladen: dieselbe Bahn aus der Nennlage (Dossier 3.4) */
-                int32_t start[3]; int nb = 0;
-                start[0] = RE15_K2080_NPC_WURF_X + RE15_K2080_HAND_VOR; start[1] = RE15_K2080_Y + RE15_K2080_HAND_HOCH;
-                start[2] = RE15_K2080_NPC_STAND_Z;   /* Mitte = Haende (Gier 0: Haende auf der Koerperachse) */
-                int32_t ende[3];
-                re15_k2080_bahn_rechnen(start, 0, RE15_K2080_WASSER_TIEF, ende, &nb);
-                s_lande[0] = ende[0]; s_lande[1] = ende[2]; s_lande_ok = 1;
-            }
-            re15_gr2_kanister_setzen(s_lande[0], RE15_K2080_GATOR_WASSER_Y, s_lande[1]);
+            /* Nachbesserung 1 (M2): Spielstelle statt Bahnende - RE2 ROOM7020 sub13 Pos_set @0x08CA nach dem Aufschlag (Header
+             * RE15_K2080_LIEGE_X/Z). Gilt auch fuer einen geladenen Spielstand (Bit 116 ohne Laufzeit-Bahn). */
+            re15_gr2_kanister_setzen(RE15_K2080_LIEGE_X, RE15_K2080_GATOR_WASSER_Y, RE15_K2080_LIEGE_Z);
             s_set_2090 = 1;
             s_zaehler[4]++;
-            K_LOG("ROOM%04X Kanister im Becken (%d,%d,%d) (Bit %d)", raum, (int)s_lande[0], RE15_K2080_GATOR_WASSER_Y,
-                  (int)s_lande[1], RE15_K2080_BIT_KANISTER);
+            if (s_lande_ok)
+                K_LOG("ROOM%04X Kanister im Becken (%d,%d,%d) = Spielstelle Westkanal (Aot_set Slot 4 @0x009FE, RE2 Pos_set @0x08CA), "
+                      "Aufschlag war bei (%d,%d) (Bit %d)", raum, RE15_K2080_LIEGE_X, RE15_K2080_GATOR_WASSER_Y, RE15_K2080_LIEGE_Z,
+                      (int)s_lande[0], (int)s_lande[1], RE15_K2080_BIT_KANISTER);
+            else
+                K_LOG("ROOM%04X Kanister im Becken (%d,%d,%d) = Spielstelle Westkanal (Aot_set Slot 4 @0x009FE, RE2 Pos_set @0x08CA), "
+                      "Spielstand (Bit %d)", raum, RE15_K2080_LIEGE_X, RE15_K2080_GATOR_WASSER_Y, RE15_K2080_LIEGE_Z,
+                      RE15_K2080_BIT_KANISTER);
         }
         return;
     }

@@ -127,7 +127,7 @@
 #define RE15_K2080_NPC_STAND_Z     (-17625)
 #define RE15_K2080_LAUF_UEBER      250       /* RUN-Ankunft bei d < 300 (`slti 300` @0x80051764): Ziel 250 hinter dem Stand */
 /* Wurf an der Reling: die Reling-Zelle @0x5A0 beginnt bei x -6700; Koerperradius 400 (+0x78-Satz +6) -> Mitte -7100 = Nennlage des
- * Werfers fuer die Rechnung ohne Laufzeit-Landepunkt (Spielstand). Seit Nachbesserung 1 wirft er dort, wo er den Kanister
+ * Werfers fuer die Bahn-Nachrechnung (Riegel unit_r41_kanister2080_bahn). Seit Nachbesserung 1 wirft er dort, wo er den Kanister
  * aufgehoben hat (Ankunft RUN d < 300 @0x80051764 vor STAND_X + LAUF_UEBER, der Kanister steht schon an der Reling): die Haende
  * (Eigen c6 Ende +840 vorn) liegen dann 1450 ueber der Relingstange (Bodenlinie x -6350 aus Cut 5, Pfosten (139,151)/(200,151)
  * Rueckprojektion, Oberkante ~ -15443), die RE2-Bahn faellt frei darueber (Dossier 3.4/8.1). */
@@ -161,6 +161,16 @@
 #define RE15_K2080_WASSER_HOCH     (-10800)  /* ROOM2080 sub00 @0x0C2E Obj_model_set y, solange (3,245) = 0 */
 #define RE15_K2080_WASSER_TIEF     (-3420)   /* ROOM2080 sub00 @0x0C5E Obj_model_set y nach dem Rechner (3,245) = 1 */
 #define RE15_K2080_GATOR_WASSER_Y  (-1200)   /* B: Kanister-Hoehe im Becken = GB_WATER_Y (0x23-KI @0x8010c65c) */
+/* Liegestelle im 2090-Becken (Nachbesserung 1, M2 / Nachtrag 23 "Aligator nimmt irgendwann in dem weiteren Rundlauf den Kanister
+ * auf"). FORM RE2: nach dem Aufschlag (Se_on 0x0e @0x08BA) legt ROOM7020 sub13 den Raketenwerfer per Pos_set an seine SPIELSTELLE
+ * `32 00 b6 9f 00 00 10 aa` @0x08CA = (-24650,0,-21998) im Item-AOT 5 (@0x00DA: x -26200..-22800, z -23200..-20700), nicht ans
+ * Bahnende: die Bahn bewegt z nur um v_z 10/Bild (Speed_set(2,10) @0x088E, Add_speed reine Weltaddition @0x80055abc-e0), Ada steht
+ * bei z -17900 (Pos_set @0x0740) -> >= 2000 Versatz in z. PORT-WAHL der Spielstelle: der einzige Wasserweg zwischen Sued- und
+ * Nordbecken, die Mitte der Westkanal-Wasserzone ROOM2090 main00 Aot_set Slot 4 sce 8 @0x009FE `2c 04 08 47 00 00 3c dd 4c b9 20
+ * 1c 10 0e ..` (x -8900 + 7200/2, z -18100 + 3600/2) - hier schwimmt der Alligator durch, wenn er Leon von einem Becken ins andere
+ * folgt (Aufnahme-Fenster der Spur B laengs 8601..9000 x Skala, quer Koerperradius + 267, gator_re2_r41.c Stufe 0). */
+#define RE15_K2080_LIEGE_X         (-5300)
+#define RE15_K2080_LIEGE_Z         (-16300)
 /* Haende am Ende von Eigen c6 (Mitte der Bones 11/14, Zensus Dossier 1.8): Fallback, wenn die NPC-Bank nicht geladen ist. */
 #define RE15_K2080_HAND_VOR        840
 #define RE15_K2080_HAND_HOCH       (-2496)
