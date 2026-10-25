@@ -171,9 +171,14 @@
 #define RE15_K2080_CUT_FALL        12
 #define RE15_K2080_WASSER_2090     (-1620)
 /* Wurfrichtung (Gier des Werfers beim Anheben; die RE2-Bahn v (25,20,10) a (5,20,0) @0x088E-08A2 wird um sie gedreht, wie
- * seit Abnahme 0 - RE2 wirft in Weltachsen nach +x, die Reling-Richtung des Ports ist frei). PORT-WAHL, GEMESSEN Dossier 8.9:
- * Sichtbarkeit des Falls in 2090 Cut 12 und Aufnahme durch denselben Alligator im weiteren Kampf. */
-#define RE15_K2080_WURF_GIER       1024
+ * seit Abnahme 0 - RE2 wirft in Weltachsen nach +x (Add_speed Weltaddition @0x80055abc-e0), die Reling-Richtung des Ports ist
+ * frei). PORT-WAHL, GEMESSEN Dossier 8.9 (exe-Laeufe der ganzen Folge ohne Testhaken, Messhaken RE15_K2080_WURF_GIER):
+ *   3072 (Blick +z, Nordbecken): Aufschlag (-7515,-12304) nach 38 Bildern, 14 von 39 Fall-Bildern in 2090 Cut 12 (24..37);
+ *        derselbe Alligator nimmt ihn in 5 von 6 Verlaeufen auf (Aufnahme/R1 nach der Rueckkehr F104/F570, F619/F833,
+ *        F3675/F3882, F3130/F3454, Elza F619/F833; ein Verlauf ohne Aufnahme in 4200 Bildern, Kampf in der SW-Ecke).
+ *   1024 (Blick -z, Suedbecken, Stand vor FG-E3): 0 von 2 Aufnahmen; 0 (+x): 0 von 1; 640: 0 von 1; 3200: 3 von 4;
+ *   3328: 1 von 1; 2816: Aufschlag x -9586 ausserhalb des Beckens (x > -8900). */
+#define RE15_K2080_WURF_GIER       3072
 /* Haende am Ende von Eigen c6 (Mitte der Bones 11/14, Zensus Dossier 1.8): Fallback, wenn die NPC-Bank nicht geladen ist. */
 #define RE15_K2080_HAND_VOR        840
 #define RE15_K2080_HAND_HOCH       (-2496)

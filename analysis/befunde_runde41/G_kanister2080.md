@@ -20,6 +20,8 @@ Punkte (Wortlaut AUFTRAG.md):
 - 2026-10-24 23:xx: P1 (Knall nach Nachtrag 17, dann 8 Zombies oben nach Nachtrag 20), P2 (Kanister an der Reling) und P3
   (Szene Marvin/John, Kopfschuesse, RE2-Wurf, Kanister im Becken) gebaut und an der exe gemessen (Abschnitte 4/4.1); Riegel
   gezielt 34/34 gruen (Abschnitt 5). Offen: Abschnitt 6, Fragen: Abschnitt 7.
+- 2026-10-25: Nachbesserung 1 (Abnahme 0, Maengel M1-M5; Orchestrator-Entscheide FG-E3/FG-E4 waehrend der Arbeit) -
+  Abschnitt 8 (je Mangel Ursache, Messung vorher, Beleg, Aenderung, Messung nachher; Tests 8.6, OFFEN 8.7, Nutzer 8.8).
 
 ## 1. RE-Belege (selbst gelesen)
 
@@ -443,8 +445,10 @@ Baum wie oben, Start auf 1608232e (Abnahme-Commit; Code-Stand = 489c0756). Mäng
 ### 8.0 Plan / Stand
 - [x] M1 RE: welcher Clip lief, was er ist, welcher Original-Clip "hinknien + aufnehmen + aufstehen" ist (8.1)
 - [x] M1 Umsetzung + Bildbogen vorher/nachher Leon + Elza + Riegel (8.1, unit szene, integration szene/kampf)
-- [x] M2 Messung vorher, RE2-Form der Liegestelle, gemessene Wahl der Spielstelle, ganze Folge Leon + Elza, Riegel kampf (8.2)
-- [x] M3 Entscheidungsvorlage (alle neun 2080-Kameras vermessen, 8.4) - Entscheid steht aus (8.8 Frage 1)
+- [x] M2 Messung vorher (8.2); nach FG-E3 umgebaut: derselbe Alligator kämpft weiter, der Kanister liegt an der
+  Aufschlagstelle, Wurf-Richtung gemessen gewählt, ganze Folge Leon + Elza im echten Ablauf, Riegel kampf (8.9)
+- [x] M3 Kameravorlage (8.4); nach FG-E4 umgebaut: Fall in 2090/2091 Cut 12 mit der RE2-Schnittfolge, Bildvergleich
+  RE2 <-> Port und Bildbogen des Falls (8.9)
 - [x] M4 Doku (6.3, k_port[] Bit 114, Haken-Kommentare, überholte Stellen markiert, 8.5)
 - [x] M5 Dauern belegt bzw. entfernt, Adas Wurf-Clip als PORT-WAHL (8.3)
 
@@ -522,7 +526,7 @@ neben dem Plattformblock (x -1700), der Gator klemmt mit Radius 1466 bei x <= -3
   @0x00DA: x -26200..-22800, z -23200..-20700), der nach dem Wurf mit `Aot_reset 5` @0x0822 frei wird - RE2 legt den Gegenstand
   also an die Stelle, an der er im Spiel gebraucht wird.
 
-**Port (PORT-WAHL der Stelle, Form RE2 @0x08CA):** der Kanister liegt in 2090 an seiner Spielstelle = Mitte der Westkanal-
+**[ÜBERHOLT durch FG-E3, 8.9]** **Port (PORT-WAHL der Stelle, Form RE2 @0x08CA):** der Kanister liegt in 2090 an seiner Spielstelle = Mitte der Westkanal-
 Wasserzone ROOM2090 main00 **Aot_set Slot 4 sce 8 @0x009FE `2c 04 08 47 00 00 3c dd 4c b9 20 1c 10 0e ..`** (x -8900..-1700,
 z -18100..-14500) = **(-5300,-16300)**. Begründung aus dem Raum: die drei sce-8-Wasserzonen @0x09D6/@0x09EA/@0x09FE sind Süd-,
 Nordbecken und dieser Kanal; Süd <-> Nord geht im Wasser nur durch den Kanal (Plattform x -1700..1850 z -20000..-12450 und Rampe
@@ -537,7 +541,7 @@ schwimmt er hier geradeaus durch. Der Bahnendpunkt (Aufschlag im 2080-Bild, Ton)
 | `OP_SLEEP(30)` in der Rückkehr | RE2 wartet dort mit Wsleep/Wsleeping @0x081A/@0x081B | Wsleeping @0x80053ac0: gibt ab (Rückgabe 2 @0x80053b18), solange `0x800cfbd8 & 0x20` (@0x80053acc) oder `0x800e873c & 0x80` (@0x80053adc-e4); 0x800e873c = 0x80 setzt der Nachrichten-Start FUN_8002fe38 (`addiu t2,zero,128` / `sb t2,-30916(at)` @0x8002fe80/88), hier für Leons Zeile Message_on @0x07E6/@0x07F4 | entfernt: der Port hat diese Zeile nicht -> 0 Bilder; Riegel start prüft die Form ohne Sleep |
 | Adas Wurf-Clip `3f 0a 12 40` @0x0750 durch Eigen c6 ersetzt, ohne Vermerk | - | Marvin/John haben keinen Wurf-Clip (Zensus 8.1: NPC-Plc_motion nur (1,7/11/22/23), (2,6/7)) | PORT-WAHL im Header (Formen) und am Opcode benannt: Eigen c6 hebt beide Hände von der Hüfte nach vorn oben = Hochstemmen über die Reling |
 
-### 8.4 M3 - Wurf-Kamera "GENAUSO" (Nachtrag 5): Entscheidungsvorlage, KEIN "fertig"
+### 8.4 M3 - Wurf-Kamera "GENAUSO" (Nachtrag 5): Entscheidungsvorlage (entschieden durch FG-E4, Umsetzung 8.9)
 Vorbild RE2 ROOM7020 Cut 7 (RID @RDT+0x24): pos (-22158,-3852,-15174) -> (-28368,-7434,-18234), Ada bei (-28000,-7500,-17900)
 mit Blick 0x0e74 (@0x0740/@0x0748): Kamera **43,6 Grad unter** Adas Kopf, Abstand 8908, frontal 0,99 (Dossier 3.4). Alle neun
 2080-Kameras gegen den Werfer an der Reling (Kopf (-7168,-16900,-17642), Blick +x = über die Reling; RID @0x60, eigene Rechnung
@@ -558,7 +562,11 @@ frontal von unten**: von unten sieht ihn nur Cut 1 - von hinten (17,9 Grad, 1717
 und Cut 7 (Totale, 6,4 Grad über dem Kopf). Neue Hintergründe werden nicht erfunden (Entscheid B8). Unverändert gebaut: Cut 7 (die
 RE2-Schnittfolge Cut_chg 7 @0x0726 -> Wurf -> Aufschlag -> Sleep 15 @0x07A8 -> Schnitt auf den Fangenden wie @0x07D4 bleibt).
 **Entscheidungsfrage an Orchestrator/Nutzer (Abschnitt 8.8, Frage 1):** A) Cut 7 frontal von der Grubenseite (gebaut), B) Cut 1
-von unten, aber von hinten, C) ein anderer Wunsch. Bis zum Entscheid bleibt M3 offen.
+von unten, aber von hinten, C) ein anderer Wunsch. Bis zum Entscheid bleibt M3 offen. **[Entschieden: FG-E4 -> 2090 Cut 12 mit der RE2-Schnittfolge;
+Umsetzung und Messung 8.9.]**
+
+**[Die folgenden zwei Absätze gehören zu 8.2 (M2) und sind durch FG-E3 ÜBERHOLT: der Kanister liegt jetzt an der
+Aufschlagstelle, derselbe Alligator kämpft weiter (8.9). Stehen gelassen als Herleitung der Becken-Rangfolge.]**
 
 **Wahl der Spielstelle - gemessen (die Kanalmitte oben war die erste Annahme, die Messung hat sie verworfen):**
 - Sonde `tools/r41_kanister2080/probe_liegestelle.c` (echter Boss-Tick wie `test_r41_re2gator.c setup(0)`, Zustand nach der
@@ -609,39 +617,60 @@ Leon/Elza schiessen alle ~4 s):
   (gen/knall_bank.inc Satz 0), Tür-Ton DOOR06, Aufschlag, NPC-Schuss" (je nur der Kommentar der vorhandenen Zeile).
 - Überholte Aussagen im Dossier markiert: 1.8 (c2/c0 falsch gedeutet), 3.2 (Wurf-Stand), 3.3 (Ablauf-Tabelle), 7 (Stand).
 
-### 8.6 Tests (gezielt, keine volle Suite; Bau 2026-10-25 local_build.sh build, ctest mit msys64 zuerst im PATH)
+### 8.6 Tests (gezielt, keine volle Suite; Bau 2026-10-25 04:07 local_build.sh build, ctest mit msys64 zuerst im PATH)
 - `ctest --test-dir re15_port/build -R "unit_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_" --timeout 600
-  --output-on-failure` -> **`100% tests passed, 0 tests failed out of 34`** (Total Test time (real) = 26.41 sec); darin NEU
-  unit_r41_kanister2080_liege (Spielstelle im Wasser, < 9000 vom Lauerplatz, Installer legt den Kanister in 2090 UND 2091 dort
-  hin), geändert unit_r41_kanister2080_szene (Aufnehmen Byte für Byte gegen ROOM11B0 sub06 @0x01650..0x01663, kein (1,2)/(2,0),
-  Ausricht-Polls statt Sleep 10, nach dem Tür-Ton direkt Work_set) und _start (Rückkehr ohne Sleep 30).
+  --output-on-failure` -> **`100% tests passed, 0 tests failed out of 34`** (Total Test time (real) = 29.23 sec). Darin
+  geändert: unit_r41_kanister2080_szene (Aufnehmen Byte für Byte gegen ROOM11B0 sub06 @0x01650..0x01663, kein (1,2)/(2,0),
+  Ausricht-Polls statt Sleep 10, nach dem Tür-Ton direkt Work_set; der Wurfteil endet mit Signal WURF, Sleep 1 und der Tür
+  nach 2090 Cut 12), _start (Rückweg: Riegel, Poll auf den Aufschlag wie @0x079C-07A4, Sleep 15 @0x07A8, Schnitt auf Leons
+  Cut wie @0x07D4, kein Sleep 30), NEU _landung (Nennbahn Gier 3072 endet im 2090-Wasser: `Aufschlag (-7480,-2076,-12320)
+  nach 38 Bilder`, `ROOM2090 Cut 12: 14 von 39 Fall-Bildern im Bild`; der Installer legt den Kanister bei Bit 116 an die
+  Aufschlagstelle, 2090 und 2091). Der Riegel _liege (Spielstelle Nordbecken) ist mit FG-E3 entfallen.
 - `ctest --test-dir re15_port/build -R "^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_re2gator$"
-  --timeout 1800 --output-on-failure` -> siehe unten (Summenzeile).
-  - integration_r41_kanister2080 (175 s): szene_leon/elza zusätzlich "Kanister aufgehoben (Loco c11 Bild 24 ...)", Plc_motion(1,11)
-    zweimal, kein Kletter-/Lauf-Clip, "Kanister im Becken (-6500,-1200,-11000) = Spielstelle Nordbecken".
-  - integration_r41_kanister2080_kampf (NEU, 248 s): Leon + Elza ohne RE15_GB_TEST/RE15_GATOR_KANISTER: Auslöser -> Szene
-    (Hinknien) -> Rückkehr -> Kanister an der Spielstelle -> GATOR VERSCHWUNDEN -> AUFTAUCHEN -> KANISTER Stufe 1 -> angehängt ->
-    R1 start -> R1 ende (Leiche), in dieser Reihenfolge.
+  --timeout 1800 --output-on-failure` -> **`100% tests passed, 0 tests failed out of 3`** (Total Test time (real) = 263.15 sec):
+  - integration_r41_kanister2080 (171 s): szene_leon/elza mit "Kanister aufgehoben (Loco c11 Bild 24 ...)", Plc_motion(1,11)
+    zweimal, kein Kletter-/Lauf-Clip, Cut 12 in 2090/2091 nach dem Wurf (state.log), "Kanister im Becken (x,-1200,z) =
+    Aufschlagstelle".
+  - integration_r41_kanister2080_kampf (263 s): Leon + Elza OHNE RE15_GB_TEST/RE15_GATOR_KANISTER/RE15_KEIN_GATOR/
+    RE15_K2080_WURF_GIER (ausdrücklich gelöscht): "FG-E3: Alligator gesichert" -> Auslöser -> Szene (Hinknien, Plc_motion(1,11)
+    zweimal) -> Wurf "(Wasser 2090 y -1620)" -> "FG-E3: derselbe Alligator in Slot" -> Rückkehr -> state.log cam=12 ->
+    Aufschlag -> "Kanister im Becken ... = Aufschlagstelle" -> gator_boss.log KANISTER gesetzt -> KANISTER Stufe 1 ->
+    angehängt -> R1 start -> R1 ende (Leiche), und nach der Szene KEIN "GATOR VERSCHWUNDEN"/"RE2 AUFTAUCHEN"/"INTRO ende".
+    In diesem Lauf: Leon Aufnahme F104, R1 F570, Rückschnitt F606; Elza Aufnahme F103, R1 F888, Rückschnitt F924.
+  - integration_r41_re2gator (243 s, Spur B's Riegel): grün.
 
 ### 8.7 OFFEN (gemessen bzw. benannt, nicht geraten)
-1. **M3 Wurf-Kamera** - Entscheid von Orchestrator/Nutzer nötig (8.4): keine 2080/2090-Kamera zeigt den Werfer frontal von unten
-   wie RE2 Cut 7; gebaut bleibt Cut 7 (frontal von der Grubenseite).
-2. **Aufnahme in JEDEM Kampfverlauf**: an der Spielstelle Nordbecken in 9 von 10 gemessenen Verläufen (7/7 Erkundung, 2 von 3
-   ganzen Folgen); fn_leon/fn_elza (Leon vom ersten Kampf nach Osten geschoben) ohne Aufnahme in 2700 Bildern. Ursache: der
-   Alligator lenkt den Körper nicht zum Kanister (RE2 lenkt nur den Hals, Hals-Zielmodus FUN_800177c0 bei +0x1C0 & 4 = Spur B
-   OFFEN §11.3; RE2 erzwingt die Aufnahme über die Korridor-Geometrie von ROOM40A0). Nach dem Widerruf von FG-E2 ändert G Spur B's
-   Module nicht - Frage 8.8.
-3. Unverändert aus Abschnitt 6: RE2-Auslöser-Mitglieder +0x1D8/+0x1DA (Tyrant-Overlay fehlt), Adas Abgang/Mode 0x14 nicht
+1. **Aufnahme in JEDEM Kampfverlauf:** mit der Wurf-Gier 3072 nimmt derselbe Alligator den Kanister in 5 von 6 gemessenen
+   Verläufen auf (8.9). Der sechste (Start (-8000,-7000), Auslöser bei (-8432,-13539); der Alligator liegt beim Auslösen schon
+   AUF der späteren Aufschlagstelle, (-7311,-12620)): der stehende, nur schiessende Test-Spieler wird vom Alligator-Körper an der
+   West- und Südwand entlang bis an die Rampe geschoben (state.log F600 (-8438,-16066) -> F1500 (-8439,-26498) -> F3300
+   (3964,-26405) -> ab F6600 (7668,-15549)), der Alligator folgt ihm im Süd- und Ostteil und kommt in **12000 Bildern (400 s)**
+   nicht ins Nordbecken zurück (Kanister bei z -12304) - keine Aufnahme (Lauf `lang_L3`). Ursache wie 8.2: B's Aufnahme ist die
+   RE2-Form (Fenster am Maul nur in der Verfolgung, Anschwimm-Sperre nur in der Zone des Kanisters, gator_re2_r41.c
+   gr2_zielmodus_takt @0x801009c8-0x80100ab4); der Körper lenkt nicht zum Kanister, RE2 erzwingt die Aufnahme über den Korridor
+   von ROOM40A0, das 2090-Becken hat keinen. Der RE2-Hals-Zielmodus (Root @0x80100344-60 -> FUN_800177c0) ist bei Spur B OFFEN
+   (§11.3). FG-E3 erlaubt markierte Haken in B's Modulen für "Landepunkt/Fenster"; eine Lenkung des Körpers zum Kanister wäre
+   neues Verhalten ohne RE2-Beleg und ist darum NICHT gebaut (Frage 8.8.1).
+2. **Kamera (M3) per FG-E4 entschieden** (Hinweis an den Nutzer 8.8): 2090 Cut 12 liegt 59,6 Grad unter dem Werfer (RE2 Cut 7
+   43,6 Grad), der Werfer selbst ist in Cut 12 nicht im Bild; die Zeile 42 bleibt in 2080 Cut 7 (Text-Id-Zuteilung).
+3. Während des Falls in Cut 12 (F1-F57 nach der Rückkehr, Spieler gehalten pm=2) kämpft der Alligator weiter (FG-E3) und schiebt
+   den gehaltenen Spieler mit dem Körper (bild_elza: (-5790,-6245) -> F34 (-4479,-5852) -> F58 (-5157,-5868)); kein Biss (gr=0).
+   Das Original friert Gegner in Szenen nicht ein (Set(2,7)/(1,27) liest kein Gegner-Code: B_szenenschutz.md 2.1, RE1.5
+   @0x800304f4-500 / @0x8001cd0c-20, RE2 @0x800391f8-21c); RE2 versetzt nach dem Wurf aber Leon und den Tyrant (Pos_set
+   @0x07B0 / @0x07C4) - der Port lässt die Lagen (FG-E3 "Lage/Zustand bleiben"). Benannt, nicht geändert.
+4. Unverändert aus Abschnitt 6: RE2-Auslöser-Mitglieder +0x1D8/+0x1DA (Tyrant-Overlay fehlt), Adas Abgang/Mode 0x14 nicht
    übernommen, Kanister in RE2-Grösse, Ton nur über die Mischkette belegt (kein Audiogerät).
-4. Griff-Bild: der Kanister wechselt beim Greifen in einem Bild von stehend auf quer (8.1).
+5. Griff-Bild: der Kanister wechselt beim Greifen in einem Bild von stehend auf quer (8.1).
 
 **Hinweise an den Orchestrator (andere Spuren, nicht in G geändert):**
-- Spur B: der R1-Tod schiebt die Leiche in mehreren Läufen AUS dem Becken: `R1 ende (Leiche) pos=(-12384,-8319)` (x_nord_L1 /
-  x_nord_E1), `(-4105,-1916)` (x_nord_L2), `(-10006,-1916)` (x_nord_L5), `(-10221,-1916)` (x_nordrand_L2), `(-10602,-30484)`
-  (fc1b_leon) - Aussenwände x -8900..7200, z -27000..-5400; state.log fc1b: F3180 (-7416,-25516) -> F3183 (-7416,-30484) -> F3207
-  (-10602,-30484) im Clip 9 (mo9). Die R1-Wurzelbahn läuft offenbar ohne Wand-Klemme.
-- Spur F: in diesem Zweig sind die Spinnen (0x25) noch in 2090 (H4 der Abnahme); die Zielhilfe trifft teils sie statt des Alligators
-  - die gemessenen R1-Zeiten (568..3171 Bilder nach der Rückkehr) hängen davon ab.
+- Spur B: der R1-Tod schiebt die Leiche in mehreren Läufen AUS dem Becken (Aussenwände x -8900..7200, z -27000..-5400): neu
+  `R1 ende (Leiche) pos=(10684,-8412)` (Elza, integration_r41_kanister2080_kampf und bild_elza), `(-3482,-1916)` (k1_leon_gm768);
+  früher `(-12384,-8319)` (x_nord_L1/E1), `(-4105,-1916)` (x_nord_L2), `(-10006,-1916)` (x_nord_L5), `(-10221,-1916)`
+  (x_nordrand_L2), `(-10602,-30484)` (fc1b_leon; state.log F3180 (-7416,-25516) -> F3183 (-7416,-30484) -> F3207
+  (-10602,-30484) im Clip 9). Die R1-Wurzelbahn läuft offenbar ohne Wand-Klemme.
+- Spur F: in diesem Zweig sind die Spinnen (0x25) noch in 2090 (H4 der Abnahme): Giftkugel-Treffer auf Leon/Elza im ersten Kampf
+  (bild_elza debug.log `[giftkugel] F228 ... F900`), eine Spinne steht in Cut 0 neben dem Spieler (Bilder nb1_fg3_*); die
+  Zielhilfe trifft teils sie statt des Alligators - die gemessenen R1-Zeiten hängen davon ab.
 
 ### 8.8 Für den Nutzer (Stand Nachbesserung 1)
 Neue Assets: keine (weiter `re15_port/shared_assets/RE2/KANISTER2080.VBS`, md5 848c40f6c077d937fb025df9ae1bc62b).
@@ -651,18 +680,23 @@ Was sich im Spiel ändert:
 - Marvin (Leon) / John (Elza) rennt zum Kanister, **kniet sich hin, nimmt ihn mit beiden Händen und steht damit auf** (Marvins
   Hinknien/Aufstehen aus ROOM11B0, wo er sich zum Gully kniet) - kein Hochklettern mehr. Danach stemmt er ihn über die Reling.
 - Nach dem Tür-Ton legt er sofort an (vorher 1 s Pause); zwischen zwei Zielen dreht er nur so lange nach, wie er braucht.
-- Zurück in 2090 hat man sofort wieder die Kontrolle (vorher 1 s Sperre).
-- **Der Kanister liegt nach dem Wurf im Nordbecken vor der Ecke, in der der Alligator lauert** (wie RE2 den Raketenwerfer nach dem
-  Wurf an seine Spielstelle legt), nicht dort, wo er aufschlägt. Kommt man der Ecke nahe, taucht der Alligator wieder auf, schwimmt
-  auf einen zu und schnappt sich dabei den Kanister (gemessen 11-29 s); ein Treffer dann -> Explosion, Kiefer, Tod.
+- **Nach dem Loslassen schneidet das Bild nach 2090 in Kamera 12** (Blick von unten an der Wand unter dem Balkon): dort fällt der
+  Kanister ins Becken (Aufschlag-Ton), eine halbe Sekunde danach zurück auf Leon/Elza, dann hat man sofort wieder die Kontrolle.
+  **Hinweis (Orchestrator-Entscheid FG-E4):** eine Kamera "genau wie Adas Raketenwerfer-Wurf" (die Werferin von unten) gibt es
+  in 2080/2090 nicht - der Port hat nur die vorgerenderten Hintergründe der Original-Kameras; Kamera 12 ist die nächstliegende,
+  Marvin/John selbst sieht man darin nicht. Die Zeile "Hey, Leon, try with this!" kommt noch in 2080. Bilder:
+  `G_belege/nb1_fg4_re2c7_2090c12_2080c7.png` (RE2 <-> Port), `G_belege/nb1_fg4_fall_cut12_leon_f10-58.png` (der Fall).
+- **Der Kampf geht mit DEMSELBEN Alligator weiter** (Lebenspunkte, Lage, kein neues Auftauchen/Intro). Der Kanister liegt dort,
+  wo er aufschlägt (Nordbecken); der Alligator schnappt ihn im weiteren Kampf, wenn er dort vorbeischwimmt (gemessen 3,5 s bis
+  2 min nach dem Wurf in 5 von 6 Verläufen), ein Treffer dann -> Explosion, Kiefer, Tod.
 Entscheidungsfragen:
-1. **Wurf-Kamera (M3):** A) wie gebaut 2080 Cut 7 (von der Grubenseite, frontal auf Marvin/John, leicht von oben, weit), B) 2080
-   Cut 1 (von unten wie RE2, aber von hinten), C) anders - welche?
-2. **Liegestelle des Kanisters:** A) wie gebaut im Nordbecken (sichere Aufnahme, 7560 von der sichtbaren Aufschlagstelle), B) an der
-   Aufschlagstelle/im Kanal (näher am Bild aus 2080, der Alligator nimmt ihn dort aber selten auf)?
-3. **Aufnahme in jedem Kampf:** soll Spur B dem Alligator die RE2-Hals-/Anschwimm-Lenkung zum Kanister geben (RE2 FUN_800177c0,
-   B OFFEN §11.3), damit er ihn auch dann holt, wenn Leon weit weg kämpft? (Änderung in Spur B's Modul.)
-4. Soll der Kanister beim Greifen sichtbar kippen (RE2-Kippen aus ROOM40A0 sub10) statt in einem Bild quer zu liegen?
+1. **Aufnahme in jedem Kampf:** in einem von sechs Verläufen schwamm der Alligator nicht mehr ins Nordbecken (er folgte dem
+   Spieler in die Südost-Ecke; 400 s ohne Aufnahme). Soll Spur B dem Alligator die RE2-Hals-/Anschwimm-Lenkung zum Kanister
+   geben (RE2 FUN_800177c0, B OFFEN §11.3), damit er ihn auch holt, wenn man weit weg kämpft - oder bleibt es wie in RE2 dabei,
+   dass man ihn am Kanister vorbeilocken muss?
+2. **Kamera 12 (FG-E4):** passt der Blick von unten auf den fallenden Kanister, oder lieber den ganzen Wurf in 2080 Cut 7
+   (frontal auf Marvin/John, wie vor FG-E4)?
+3. Soll der Kanister beim Greifen sichtbar kippen (RE2-Kippen aus ROOM40A0 sub10) statt in einem Bild quer zu liegen?
 
 ### 8.9 Orchestrator-Entscheide FG-E3 / FG-E4 (AUFTRAG.md 2026-10-25 00:56, während dieser Nachbesserung in den Baum gelegt)
 Wortlaut-Kern: **FG-E3 (M2)** "Nach der Kanister-Szene setzt der Kampf mit DEMSELBEN Alligator fort (HP, Intro gesehen, Lage/Zustand
@@ -690,3 +724,48 @@ bisherige 2080 Cut 7); dort fällt der Kanister zu Ende (RE2 sub13-Bahn, Landefl
 p1 `ac f9`, Stopp 800 darüber @0x08B0), Aufschlag-Ton, dann wie RE2 Warten auf den Aufschlag @0x079C-07A4, Sleep 15 @0x07A8,
 Schnitt auf den Fangenden @0x07D4 (= Leons Cut beim Auslösen), Plc_ret/Riegel los/Cut_auto (sub18 @0x0A2C-0A38). Der Werfer ist in
 Cut 12 nicht im Bild (Balkonende y -14..-36 über dem Bildrand, eigene Projektion `g_nb1/src/projpt.c`).
+
+**Wurf-Richtung (PORT-WAHL, gemessen; Header RE15_K2080_WURF_GIER = 3072).** RE2 wirft in Weltachsen nach +x (Add_speed =
+Weltaddition @0x80055abc-e0); die Richtung über die 2080-Reling ist im Port frei, die RE2-Bahn v (25,20,10) a (5,20,0)
+@0x088E-08A2 wird um die Gier des Werfers gedreht. Gemessen an der GANZEN Folge im echten Ablauf (kein RE15_GB_TEST, kein
+RE15_GATOR_KANISTER; der Messhaken RE15_K2080_WURF_GIER nur zur Wahl; Auslöser-Messhaken RE15_K2080_GATOR_HP=24990 wie im
+Riegel; Leon/Elza schiessen alle ~4 s; 4200 Bilder nach der Rückkehr; scratchpad `g_nb1/runs/k1_*`, `k3_*`, `g1024_*`,
+`g896_*`, `lang_L3`). Start -> Auslöser-Lage: k1 (-6000,-17500) -> (-5790,-6245); k3 (-3500,-12000) -> (-8432,-5868);
+L1 (-6000,-9000) -> (-1989,-6363); L2 (-2500,-11000) -> (-990,-11602); L3 (-8000,-7000) -> (-8432,-13539).
+
+| Gier | Aufschlag | Aufnahme / R1 (Bilder nach der Rückkehr) |
+|---|---|---|
+| 1024 (Blick -z, Südbecken, Stand vor FG-E3) | (-6821,-22914) | k1 Leon: keine; k1 Elza: keine |
+| 640 | (-4488,-22449) | k1: keine |
+| 0 (+x wie RE2) | (-1863,-17262) | k1: keine |
+| 3328 | (-6114,-13047) | k1: F336 / F581 |
+| 3200 | (-7162,-12992) | k1: F105 / F245; L1: F1324 / - ; L2: keine; L3: F261 / F832 |
+| **3072 (Blick +z, Nordbecken) = gewählt** | **(-7515,-12304)** | **k1: F104 / F570; k3: F619 / F833; L1: F3675 / F3882; L2: F3130 / F3454; L3: keine (auch in 12000 Bildern nicht, 8.7.1); Elza (k3-Start): F619 / F833** |
+| 2816 | (-9586,-13287) | verworfen: ausserhalb des Beckens (x < -8900) |
+
+Sichtbarkeit in 2090 Cut 12 (eigene Projektion wie der Zeichner, `g_nb1/src/proj12b.c`, Riegel unit landung): Gier 3072 zeigt
+14 von 39 Fall-Bildern (Bild 24..37), der Aufschlag selbst liegt knapp unter dem Bildrand (y 247); die Südwürfe (Gier 768..1280)
+zeigen 17-19 Bilder samt Aufschlag, werden aber im weiteren Kampf nicht aufgenommen. Gewählt nach dem Abnahmepunkt (Aufnahme im
+echten Ablauf); die Sichtbarkeit (>= 10 Bilder) hält der Riegel unit_r41_kanister2080_landung.
+
+**Messung nachher FG-E3/FG-E4** (Bau 2026-10-25 04:07, exe-Kopien re15_pc_g41nb1*.exe, Gier 3072 aus dem Header, Rezept des
+Riegels kampf mit Bildern 2..640/2):
+- Leon (Lauf `bild_leon`): `F902 FG-E3: Alligator gesichert Slot 35 (-4889,-1200,-7442) Gier 2365 hp 24980 Phase 2` ->
+  Auslöser -> 2080 `F465 Kanister aufgehoben (Loco c11 Bild 24 ...)` -> `F581 Wurf: Start (-7135,-16896,-16769)
+  v=(-10,20,25) a=(0,20,5) -> Landung (-7515,-2076,-12304) nach 38 Bildern (Wasser 2090 y -1620)` -> `F581 FG-E3: ROOM2090
+  derselbe Alligator in Slot 35 (-4889,-1200,-7442) Gier 2365 hp 24980 Phase 2` -> 2090 state.log cam=12 F1..F57 -> `F43
+  Aufschlag im Wasser bei (-7515,-2076,-12304) Bild 38` -> `F43 ROOM2090 Kanister im Becken (-7515,-1200,-12304) =
+  Aufschlagstelle (Bit 116)` -> cam=0 ab F58 -> gator_boss.log `KANISTER gesetzt`, `Zielmodus 1 (Anschwimm-Sperre) ... F102`,
+  **`KANISTER Stufe 1 laengs=5782 quer=428 sub 2 -> 1 F104`**, `angehaengt ... F116`, **`R1 VSync 4 (Zeitlupe) F570`**,
+  `R1 start pos=(-7294,-6995) hp=24973`, `KAMERA R1 zurueck -> Cut 0 F606`, `R1 ende (Leiche)`. Nach der Szene KEIN
+  `GATOR VERSCHWUNDEN`/`AUFTAUCHEN`/`INTRO ende` (diese Zeilen stehen nur im ersten Besuch vor dem Auslöser). Zeit vom
+  Loslassen bis zur Aufnahme: 1 + 104 = **105 Bilder = 3,5 s**.
+- Elza (Lauf `bild_elza`, ROOM2091/2081, John): dieselbe Folge, Wurf-Start (-7126,-16865,-16741) -> Aufschlag
+  (-7506,-2045,-12276), Aufnahme F103, angehängt F115, R1 F888, Rückschnitt F924.
+- Bilder: der Fall in Cut 12 `G_belege/nb1_fg4_fall_cut12_leon_f10-58.png` / `G_belege/nb1_fg4_fall_cut12_elza_f10-58.png`
+  (F24/F28 schwimmt derselbe Alligator dicht an der Kamera vorbei, F32..F42 fällt der Kanister von oben rechts zur Wasserlinie,
+  bis F58 Cut 12, der gezeichnete Rückschnitt folgt F59/F60); die Aufnahme
+  `G_belege/nb1_fg3_aufnahme_leon_f100-134_cut0_zoom5_hell6.png` / `G_belege/nb1_fg3_aufnahme_elza_f100-134_cut0_zoom5_hell6.png`
+  (Cut 0, Ausschnitt x 236..320 y 56..106 = die Ecke des Nordbeckens, 5x, Helligkeit x6 nur zur Lesbarkeit: F100..F118 schwimmt
+  der Kopf heran, F120..F126 hebt er den Kanister (grau, gelbe Enden) aus dem Wasser); der Tod
+  `G_belege/nb1_fg3_r1_leon_f566-630.png` (B's R1-Schnitt Cut 5 ab F570, Explosion F574/F578, zurück Cut 0 F606).

@@ -1,15 +1,15 @@
 # =============================================================================
-# Runde 41 Spur G "kanister2080", Nachbesserung 1 (Abnahme 0, M2 / Nachtrag 23) - die GANZE Folge im ECHTEN Ablauf an der exe:
+# Runde 41 Spur G "kanister2080", Nachbesserung 1 (Abnahme 0 M2 / Nachtrag 23, Orchestrator-Entscheide FG-E3/FG-E4) - die GANZE
+# Folge im ECHTEN Ablauf an der exe:
 #   Kampf in ROOM2090/2091 -> Treffer bis zur RE2-Schwelle (Messhaken RE15_K2080_GATOR_HP=24990: EIN echter Pistolentreffer statt
 #   43, die Schwelle HP < 25000 @0x80101ebc-dc bleibt) -> Kanister-Szene in 2080/2081 (Marvin/John: Hinknien Loco c11 statt
-#   Klettern, Wurf) -> Rueckkehr -> Kanister an seiner Spielstelle im Nordbecken (RE2-Form Pos_set ROOM7020 sub13 @0x08CA) ->
-#   der Alligator taucht bei Annaeherung wieder auf (Spur B B9 / Nutzer-Entscheid N22.2) -> Kampf geht weiter -> er nimmt den
-#   Kanister auf (Spur B: Fenster gator_re2_r41.c Stufe 0, "KANISTER Stufe 1" / "angehaengt") -> Schuss -> R1-Tod ("R1 ende
-#   (Leiche)").
+#   Klettern, Zeile 42, Loslassen) -> Fall in 2090/2091 Cut 12 (FG-E4) -> Kanister liegt an der Aufschlagstelle -> DERSELBE
+#   Alligator kaempft weiter (FG-E3: Aktor zurueck in seinen Slot, kein Untertauchen/Auftauchen/Intro) -> er nimmt den Kanister
+#   auf (Spur B: Fenster gator_re2_r41.c Stufe 0, "KANISTER Stufe 1" / "angehaengt") -> Schuss -> R1-Tod ("R1 ende (Leiche)").
 # OHNE RE15_GB_TEST und OHNE RE15_GATOR_KANISTER (beide ausdruecklich geloescht), Leon UND Elza. Leon beginnt im Westkanal bei
-# (-6000,-17500) und schiesst (Zielen/Feuern alle ~4 s), wie ein Spieler, der den Kampf fortsetzt; der erste Kampf schiebt ihn ans
-# Nordende (gemessen: Ausloeser F902 bei (-5790,-6245)), nach der Rueckkehr nimmt der Alligator den Kanister im Nordbecken auf
-# (gemessen F355 nach der Rueckkehr) und stirbt am Schuss (R1 F815). EXIT_AT 1500 Bilder nach der Rueckkehr.
+# (-6000,-17500) und schiesst (Zielen/Feuern alle ~4 s), wie ein Spieler, der den Kampf fortsetzt. Gemessen (Wurf-Gier 3072,
+# Dossier 8.9): Ausloeser F902 bei (-5790,-6245), Aufschlag (-7515,-12304); nach der Rueckkehr Aufnahme F104, R1 F570, Leiche
+# F606. EXIT_AT 1500 Bilder nach der Rueckkehr.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_kanister2080_kampf.cmake
 # =============================================================================
@@ -41,6 +41,7 @@ endfunction()
 unset(ENV{RE15_GB_TEST})
 unset(ENV{RE15_GATOR_KANISTER})
 unset(ENV{RE15_KEIN_GATOR})
+unset(ENV{RE15_K2080_WURF_GIER})
 
 set(_basisenv RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore)
 set(_leon RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2)
@@ -68,19 +69,21 @@ foreach(_wer leon elza)
     re15_start_spiel(_rv 900 ${_basisenv} ${_wahl}
         RE15_DEBUG_JUMP=2090@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:60" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100
         RE15_K2080_GATOR_HP=24990 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schiess}"
-        "RE15_PLAYER_POS=-6000,-17500,3072" "RE15_EXIT_AT=1500#${_r90}" "${_exe_kopie}")
+        RE15_STATE_LOG=state.log "RE15_PLAYER_POS=-6000,-17500,3072" "RE15_EXIT_AT=1500#${_r90}" "${_exe_kopie}")
     if(NOT _rv EQUAL 0)
         r41gk_fehler("Lauf kampf_${_wer} exe exit=${_rv}")
     endif()
-    # ---- Szene (Ablauf in 2080/2081) ----
+    # ---- Szene (2080/2081) und Rueckweg ----
     foreach(_muster
+            "FG-E3: Alligator gesichert Slot [0-9]+ "
             "AUSLOESER geschwaecht .*-> ROOM${_r80}"
             "ROOM${_r80} SZENE \\(${_npc}, 8 lebende Zombies"
             "Kanister aufgehoben \\(Loco c11 Bild 24, Hinknien ROOM11B0 sub06 @0x01650\\)"
-            "Wurf: Start .* -> Landung \\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\) nach [0-9]+ Bildern"
-            "Aufschlag im Wasser"
+            "Wurf: Start .* -> Landung \\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\) nach [0-9]+ Bildern \\(Wasser 2090 y -1620\\)"
+            "FG-E3: ROOM${_r90} derselbe Alligator in Slot [0-9]+ "
             "ROOM${_r90} RUECKKEHR: .*Zone-7-Tot-Bits 236\\.\\.243 gesetzt: 8 von 8"
-            "ROOM${_r90} Kanister im Becken \\(-6500,-1200,-11000\\) = Spielstelle Nordbecken")
+            "Aufschlag im Wasser bei "
+            "ROOM${_r90} Kanister im Becken \\(-?[0-9]+,-1200,-?[0-9]+\\) = Aufschlagstelle")
         file(STRINGS "${WORKDIR}/debug.log" _z REGEX "\\[k2080\\] F[0-9]+ ${_muster}")
         if(NOT _z)
             r41gk_fehler("Lauf kampf_${_wer}: keine Zeile '${_muster}'")
@@ -93,31 +96,39 @@ foreach(_wer leon elza)
     if(NOT _n_kn EQUAL 2 OR _kl)
         r41gk_fehler("Lauf kampf_${_wer}: ${_n_kn} x Plc_motion(1,11) statt 2 bzw. Kletter-/Lauf-Clip im Szenen-Programm (${_kl})")
     endif()
-    # ---- weiterer Kampf in 2090/2091 nach der Rueckkehr (gator_boss.log, Reihenfolge) ----
-    file(STRINGS "${WORKDIR}/gator_boss.log" _gb REGEX "GATOR VERSCHWUNDEN|RE2 AUFTAUCHEN|KANISTER Stufe 1 |KANISTER angehaengt|R1 start|R1 ende \\(Leiche\\)")
+    # FG-E4: der Fall laeuft in Cut 12
+    file(STRINGS "${WORKDIR}/state.log" _c12 REGEX " cam=12 ")
+    if(NOT _c12)
+        r41gk_fehler("Lauf kampf_${_wer}: Cut 12 nie im Bild (FG-E4)")
+    endif()
+    # ---- weiterer Kampf nach der Rueckkehr (gator_boss.log, Reihenfolge ab "KANISTER gesetzt") ----
+    file(STRINGS "${WORKDIR}/gator_boss.log" _gb REGEX
+         "GATOR VERSCHWUNDEN|RE2 AUFTAUCHEN|INTRO ende|KANISTER gesetzt|KANISTER Stufe 1 |KANISTER angehaengt|R1 start|R1 ende \\(Leiche\\)")
     set(_stand 0)
+    set(_aufnahme "")
     foreach(_l IN LISTS _gb)
-        if(_stand EQUAL 0 AND _l MATCHES "GATOR VERSCHWUNDEN")
+        if(_stand GREATER 0 AND _l MATCHES "GATOR VERSCHWUNDEN|RE2 AUFTAUCHEN|INTRO ende")
+            r41gk_fehler("Lauf kampf_${_wer}: nach der Szene ein neuer Alligator/Intro ('${_l}') - FG-E3 verlangt denselben")
+        endif()
+        if(_stand EQUAL 0 AND _l MATCHES "KANISTER gesetzt")
             set(_stand 1)
-        elseif(_stand EQUAL 1 AND _l MATCHES "RE2 AUFTAUCHEN")
+        elseif(_stand EQUAL 1 AND _l MATCHES "KANISTER Stufe 1 ")
             set(_stand 2)
-        elseif(_stand EQUAL 2 AND _l MATCHES "KANISTER Stufe 1 ")
-            set(_stand 3)
             set(_aufnahme "${_l}")
-        elseif(_stand EQUAL 3 AND _l MATCHES "KANISTER angehaengt")
+        elseif(_stand EQUAL 2 AND _l MATCHES "KANISTER angehaengt")
+            set(_stand 3)
+        elseif(_stand EQUAL 3 AND _l MATCHES "R1 start")
             set(_stand 4)
-        elseif(_stand EQUAL 4 AND _l MATCHES "R1 start")
+        elseif(_stand EQUAL 4 AND _l MATCHES "R1 ende \\(Leiche\\)")
             set(_stand 5)
-        elseif(_stand EQUAL 5 AND _l MATCHES "R1 ende \\(Leiche\\)")
-            set(_stand 6)
         endif()
     endforeach()
-    set(_schritte "Rueckkehr (GATOR VERSCHWUNDEN)" "Auftauchen" "Aufnahme (KANISTER Stufe 1)" "angehaengt" "R1 start" "R1 ende (Leiche)")
-    if(NOT _stand EQUAL 6)
+    set(_schritte "Kanister im Becken (KANISTER gesetzt)" "Aufnahme (KANISTER Stufe 1)" "angehaengt" "R1 start" "R1 ende (Leiche)")
+    if(NOT _stand EQUAL 5)
         list(GET _schritte ${_stand} _fehlt)
-        r41gk_fehler("Lauf kampf_${_wer}: Folge nach der Rueckkehr bricht ab vor '${_fehlt}' (Stand ${_stand} von 6)")
+        r41gk_fehler("Lauf kampf_${_wer}: Folge nach der Szene bricht ab vor '${_fehlt}' (Stand ${_stand} von 5)")
     endif()
-    message(STATUS "r41_kanister2080_kampf ${_wer}: Szene (${_npc}, Hinknien) -> Rueckkehr -> Auftauchen -> ${_aufnahme} -> R1-Tod")
+    message(STATUS "r41_kanister2080_kampf ${_wer}: Szene (${_npc}, Hinknien) -> Fall Cut 12 -> derselbe Alligator -> ${_aufnahme} -> R1-Tod")
 endforeach()
 
 file(REMOVE "${_exe_kopie}")

@@ -20,8 +20,9 @@
 #                 2 -> 5 -> 7 (state.log cam=), Nachricht 42 im Bild (state.log msg id=42), keiner der Zombies auf der Treppe.
 # Lauf "elza"     dasselbe mit Elza (Spielerwahl RE15_PSELECT_AUTO_SWITCH): ROOM2091 -> ROOM2081, John 0x49.
 # Nachbesserung 1: Aufheben = Hinknien Loco c11 (ROOM11B0 sub06 @0x01650, Plc_motion(1,11) zweimal, kein Loco c2 = Klettern, kein
-#                 Eigen c0 = RUN-Gait), Kanister an der Spielstelle Nordbecken (RE2 Pos_set @0x08CA). RE15_GB_TEST=5 dient hier nur
-#                 als schneller Ausloeser der Szene; den weiteren Kampf OHNE Testhaken misst integration_r41_kanister2080_kampf.
+#                 Eigen c0 = RUN-Gait); Orchestrator-Entscheide FG-E3/FG-E4: der Fall laeuft in ROOM2090/2091 Cut 12 (state.log
+#                 cam=12 nach dem Wurf), der Kanister liegt an der Aufschlagstelle. RE15_GB_TEST=5 dient hier nur als schneller
+#                 Ausloeser der Szene; den weiteren Kampf OHNE Testhaken misst integration_r41_kanister2080_kampf.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_kanister2080.cmake
 # =============================================================================

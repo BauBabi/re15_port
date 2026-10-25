@@ -19,7 +19,8 @@
 #                                 (Absatzwand @0x05C4 x -16650), Treppenfuss Band 5 unerreichbar
 #   integration_r41_kanister2080  echte exe (Laeufe ankunft / kanister / szene / elza), s. Kopf des Skripts
 #   integration_r41_kanister2080_kampf  Nachbesserung 1 (M2): die ganze Folge im echten Ablauf OHNE RE15_GB_TEST/RE15_GATOR_KANISTER,
-#                                 Leon + Elza: Ausloeser -> Szene (Hinknien) -> Rueckkehr -> Auftauchen -> Aufnahme -> R1-Tod
+#                                 Leon + Elza: Ausloeser -> Szene (Hinknien) -> Fall in Cut 12 (FG-E4) -> derselbe Alligator
+#                                 (FG-E3, kein neues Auftauchen/Intro) -> Aufnahme an der Aufschlagstelle -> R1-Tod
 add_executable(test_r41_kanister2080 ${CMAKE_CURRENT_SOURCE_DIR}/test_r41_kanister2080.c)
 target_link_libraries(test_r41_kanister2080 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_kanister2080 PRIVATE ${CMAKE_SOURCE_DIR}/include)
