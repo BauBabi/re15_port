@@ -9,6 +9,12 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-25 06:3x **Nachbesserung 6 abgeschlossen** (§0g): Mangel 1 = RE2-Alarm SUB_25 (ROOM6040 @0x022E8 Sub-Byte 0xA5,
+  @0x038BA Programm 0 = 99) vom Warntext 46 bis Flut/Tod/Raumwechsel, gemessen mit RE15_AUDIO_CAP_SYNC (Zwilling bitgleich bis zum
+  Alarm, RMS 692 waehrend, 0 danach; Elza 0,548/0,571); Mangel 2 = Countdown in der Form der RE2-Anzeige (Hauptschleife @0x8002608c,
+  FUN_8002fa28(104, 32, ...), "%2d^%d%d=%d%d" @0x800109a4, 14x14-Schrift FUN_800318a4 aus RE2 TEX.TIM), Pixel fuer Pixel gegen das
+  echte RE2 (DuckStation) und im Riegel A; Mangel 3 = Kopf re15_ventilkette_r41.h. Neues Asset shared_assets/RE2/SOUND/SUB_25.BGM.
+  Tests: unit_r41_ventilkette PASS (557), Unit-Gruppe 281/281, r41-Riegel 6/6 (neu _alarm), cut10f0 1/1, `_kette` von Hand rc=0.
 * 2026-10-25 ab 04:0x **Nachbesserung 6** (Abnahme 5 `C_abnahme_5.md`, Maengel 1-3; Nachtrag 25 + C-E4). Arbeitsplan, RE-Belege
   (RE2-Countdown B6-1, RE2-Alarm SUB_25 B6-2) und Ergebnis in §0g. Messordner scratchpad `nb6/`.
 * 2026-10-25 01:5x **Nachbesserung 5 abgeschlossen** (§0f): Mangel 1 = Dokument als Zettel an der Suedwand (Cut 5: 243 statt 39
@@ -144,6 +150,12 @@ Pruefung nach der vierten Drehung, falsch -> zurueck + Text 45; Dokument "Techni
 Anleitung; Text 49 neutral); Punkt 6 / Nachtrag 12 (k): Pegel mit Strom y -5350 knapp unter der Absperrung; Ketten-Riegel
 auf der heutigen Kette (Mangel 1). Riegel unit M (+A/C/D/E/K/L angepasst), integration Haupt A/C/D, _weg/_weg_elza
 v2a/v2b/v2d/v2p, _b i2/l2, _kette.
+**Nachbesserung 5 (§0f, Nachtraege 16/18/19):** Ventil-Sicherungskasten 2010, Plakat-Stil, 2050-Hebel, RE2-Dreh-Animation, Text 46,
+Dokument-Zettel; Riegel unit K/N/O/P/Q, integration Haupt E, _weg v2a/v2c/k1/k2/k3.
+**Nachbesserung 6 (§0g, Nachtrag 25 + C-E4):** Punkt 3 / Nachtrag 18 Punkt 4 = RE2-Alarm SUB_25 vom Warntext 46 bis Flut/Tod/
+Raumwechsel (Haken audio_pc.c "Runde 41 Spur C, C-E4") und der Countdown in der Form der RE2-Anzeige (x 104 y 32, 14x14-Schrift
+aus RE2 TEX.TIM, ` 0'59"98` .. ` 0'00"00`, Rot unter 60 s; gegen das echte RE2 in DuckStation verglichen). Riegel unit R1-R3,
+integration Haupt A (Bildvergleich), integration_r41_ventilkette_alarm (neu, RE15_AUDIO_CAP_SYNC, Leon + Zwilling + Elza).
 
 ## 0b. Nachbesserung 1 (Abnahme 0 vom 2026-10-24, `C_abnahme_0.md` §4) — je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher
 
@@ -1347,8 +1359,10 @@ nachher/vorher), `C_belege/nb6_countdown_ausschnitt.png` (6x).
 * Neues Asset `re15_port/shared_assets/RE2/SOUND/SUB_25.BGM` (100688 B, md5 ef66256d0e847e428b11caedd5c655da) = bytegleich
   `info/re2leon/COMMON/SOUND/SUB_25.BGM` (cmp, `git show :pfad | md5sum` gleich). Git behandelt es ueber die NUL-Bytes ab Byte 4
   ("pQES" 00 00 00 01) als binaer; .gitattributes (gemeinsam) nicht angefasst.
-* Riegel: `tests/unit/test_r41_ventilkette.c` (Faelle R1/R2/R3, Werkzeug "re2cd"), `tests/integration/test_r41_ventilkette.cmake`
-  (Teil A: Bildvergleich statt Rot-Mittel), `tests/unit/probes/r41_ventilkette.cmake` (-DRE15_R41C_RE2TEX).
+* Riegel: `tests/unit/test_r41_ventilkette.c` (Faelle R1/R2/R3, Werkzeuge "re2cd", "capdiff", "capkorr"),
+  `tests/integration/test_r41_ventilkette.cmake` (Teil A: Bildvergleich statt Rot-Mittel), NEU
+  `tests/integration/test_r41_ventilkette_alarm.cmake` (Leon mit Alarm / Zwilling ohne SUB_25 / Elza, RE15_AUDIO_CAP_SYNC),
+  `tests/unit/probes/r41_ventilkette.cmake` (-DRE15_R41C_RE2TEX, Registrierung integration_r41_ventilkette_alarm, `m` ausser WIN32).
 
 ### Messung nachher (exe 2026-10-25 04:4x, beschleunigter Renderer, RE15_WINDOW_SCALE=1, RE15_AUDIO_CAP_SYNC; scratchpad `nb6/mess/*`)
 Laeufe (Plan = Riegel A/v2b: die richtige Folge 09/07/02/01 zu Fuss am Sued-/Nord-Landeplatz, danach Treppe -> Ring): `al_flucht_leon`
@@ -1382,7 +1396,8 @@ Laeufe (Plan = Riegel A/v2b: die richtige Folge 09/07/02/01 zu Fuss am Sued-/Nor
 * Aenderung: SUB_25 bytegleich nach shared_assets/RE2/SOUND/; Haken "Runde 41 Spur C, C-E4" in audio_pc.c; Schalter in
   ventilkette_r41_pc.c nach re15_ventilkette_r41_alarm (Warntext 46 bis Flut/Tod/Raumwechsel).
 * Messung nachher: oben "Alarm" (Leon und Elza, Flut und Flucht); Riegel Unit R3 (Alarm erst nach der vierten Drehung mit dem
-  Warntext, aus mit dem Flut-Beginn, aus nach dem Raumwechsel; Leon + Elza).
+  Warntext, aus mit dem Flut-Beginn, aus nach dem Raumwechsel; Leon + Elza) und integration_r41_ventilkette_alarm (die Aufnahme
+  selbst: Zwilling bitgleich vor dem Alarm, RMS(A-B) 692 waehrend, bitgleich ab Ende + 120 Takte; Elza 0,548, Gegenprobe 0,035).
 
 **Mangel 2 (mittel) - der Countdown hatte nicht die Form der RE2-Anzeige.**
 * Ursache: die RE2-Anzeige war nicht gefunden (Hauptschleife @0x80025794 im Ghidra-Dump nur Rohbytes); Port-Wahl MM:SS:HH oben rechts.
@@ -1396,10 +1411,47 @@ Laeufe (Plan = Riegel A/v2b: die richtige Folge 09/07/02/01 zu Fuss am Sued-/Nor
 Original "It's locked."", Z. 162 "Fundort neben der Sicherung" (der Absatz beschreibt danach den Zettel an der Wand).
 
 ### Protokoll der Nachbesserung 6 (Fortsetzung, neueste zuerst)
+* 06:3x **Nachbesserung 6 abgeschlossen:** neuer Riegel integration_r41_ventilkette_alarm (Leon mit Alarm / Zwilling ohne SUB_25 /
+  Elza) gruen, die fuenf bisherigen r41-Riegel gruen (Teil A mit dem Bildvergleich RE2 <-> Port), integration_r35_cut10f0 (BGM-Lader)
+  gruen, `_kette` von Hand rc=0; kleine Doku-Nachlaeufe (veraltete Kommentare Nachtraege 9/10, Blatt am Boden). Tests unten.
 * 05:0x-05:3x Messlaeufe (oben), RE2-Gegenprobe B6-3, Bildbogen; Unit-Gruppe (Regex `nb6/regex_unit6.txt` = Abnahme-5-Regex +
   `unit_rotor_bgm_pin|unit_r35_cut10f0_.*|unit_r39_johnruf1041_.*`): **`100% tests passed, 0 tests failed out of 281`**
   (`Total Test time (real) =  63.04 sec`); `unit_r41_ventilkette` **`PASS (557 Pruefungen)`**. Integrationsriegel laufen (unten).
 * 04:3x Code + Bau (`LOCAL-BUILD-OK`), Commits 81dadaab (Code) / ffcd86d5 (Riegel).
+
+### Tests der Nachbesserung 6 (gezielt, im Spurbaum; KEINE volle Suite)
+* Bau: `bash re15_port/tools/local_build.sh configure` + `build` -> `=== LOCAL-BUILD-OK (configure)` / `=== LOCAL-BUILD-OK (build)`
+  (Configure-Zeile `integration_r41_ventilkette_kette uebersprungen: Spur A fehlt` wie bisher; neu registriert
+  `integration_r41_ventilkette_alarm`).
+* `unit_r41_ventilkette` direkt: **`PASS (557 Pruefungen)`** (vorher 517; neu R1/R2/R3 fuer Leon + Elza, Werkzeuge re2cd/capdiff/
+  capkorr); `ctest -R "^unit_r41_ventilkette$"` -> **`100% tests passed, 0 tests failed out of 1`**.
+* Unit-Gruppe: `ctest --test-dir re15_port/build -R "<scratchpad nb6/regex_unit6.txt>" --timeout 600 --output-on-failure -j 2`
+  (Regex der Abnahme 5 + `unit_rotor_bgm_pin|unit_r35_cut10f0_.*|unit_r39_johnruf1041_.*` fuer den BGM-Lader) ->
+  **`100% tests passed, 0 tests failed out of 281`** (`Total Test time (real) =  63.04 sec`).
+* Integration (drei Stroeme parallel, je `ctest --test-dir re15_port/build -R "<regex>" --timeout 3600 --output-on-failure`):
+  - `-R "^integration_r41_ventilkette(_b|_sperre)?$"` -> `1/3 Test #1126: integration_r41_ventilkette ..........   Passed
+    726.65 sec`, `2/3 Test #1127: integration_r41_ventilkette_b ........   Passed  523.41 sec`, `3/3 Test #1130:
+    integration_r41_ventilkette_sperre ...   Passed  302.65 sec` -> **`100% tests passed, 0 tests failed out of 3`**. Teil A mit dem
+    neuen Bildvergleich (Software-Renderer): F4440 `RE2CD KEIN TREFFER`, F4560 `RE2CD TREFFER " 0^57=45" FARBE 2 PIXEL 546`, F4680
+    `RE2CD TREFFER " 0^53=45" FARBE 2 PIXEL 565`, erstes Countdown-Bild F4484.
+  - `-R "^integration_r41_ventilkette_weg$"` -> `1/1 Test #1128: integration_r41_ventilkette_weg ...   Passed  1466.00 sec`,
+    **`100% tests passed, 0 tests failed out of 1`**.
+  - `-R "^integration_r41_ventilkette_weg_elza$"` -> `1/1 Test #1129: integration_r41_ventilkette_weg_elza ...   Passed  1692.20
+    sec`, **`100% tests passed, 0 tests failed out of 1`**.
+  - BGM-Lader (audio_pc.c beruehrt): `-R "^integration_r35_cut10f0$"` -> `1/1 Test #489: integration_r35_cut10f0 ..........   Passed
+    256.04 sec`, **`100% tests passed, 0 tests failed out of 1`**.
+  - neuer Alarm-Riegel: `-R "^integration_r41_ventilkette_alarm$"` -> `1/1 Test #1128: integration_r41_ventilkette_alarm ...   Passed  704.93 sec`, **`100% tests passed, 0 tests failed out of 1`**;
+    Statuszeilen `r41_ventilkette_alarm[ab]: Alarm an 4285 aus 6537: CAPDIFF VOR 0 WAEHREND 692.2 NACH 0 TAKTE 6704/6704`,
+    `r41_ventilkette_alarm[c]: Elza Alarm an 5380 aus 7632: CAPKORR 0.548 KONTROLLE 0.035` (A = Leon mit Alarm, B = Zwilling ohne
+    SUB_25, C = Elza; Software-Renderer, RE15_AUDIO_CAP_SYNC).
+  (Testnummern vor dem zweiten Configure; danach hat der neue Riegel #1128, die folgenden ruecken um eins.)
+* `_kette` von Hand (nicht registriert ohne Spur A, C-E1): `cmake -DRE15_PC_EXE=... -DRE15_SRC=re15_port -DWORKDIR=<nb6/kette>
+  -P re15_port/tests/integration/test_r41_ventilkette_kette.cmake` -> rc=0, "2030 richtige Folge 09/07/02/01 zu Fuss -> Warnung ->
+  Ost-Tuer zu Fuss -> ROOM20B0, Bits 103 + 100; Teil ab der Szene uebersprungen: Haken der Spur A fehlt".
+
+### OFFEN (Nachbesserung 6)
+Siehe §6 "Nachbesserung 6" (Kamera-Staffel der Alarm-Lautstaerke nicht uebertragen, PSX-Ziel, formale Bestaetigung des
+audio_pc.c-Schalters).
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
