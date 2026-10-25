@@ -1546,3 +1546,37 @@ dieselbe Verfolgung); die Logs sind verschieden (2090/2091, Werfer Marvin/John).
   Elza bei (-3315,-6197) an der Nordwand, der Alligator beisst mit Maul 864 vor ihr, `hr=1` (Elza in Trefferreaktion durch die Spinne), sie
   schiesst auf Spinne 2 bei 1514); mit EXIT_AT 9000 R1 nach F592..F3040. Riegel: EXIT_AT 5000 statt 3000 (kein Spielverhalten).
 
+### 11.7 OFFEN (gemessen bzw. benannt, nicht geraten)
+1. **Querbezug Spur F (Nachtrag 29, Startlage des Kampfes / Leiche weiter weg von der Leiter - der Nutzer-Wortlaut, der diese Runde
+   ausgeloest hat):** G aendert die Startlage nicht. Die R1-Lagen und damit Kamerawahl, Kopf-Klemme und Explosion haengen vom Kampfverlauf
+   ab - nach der Integration F+G die zehn Verlaeufe aus 11.5 neu messen (Werkzeug `<SP>/g4/r1sum.py` bzw. die Pruefungen des Riegels
+   kampf). Haken im selben Modul: enemy_ai_boss_gator.c re15_gator_boss_tick (G-E1-Anker 3 Zeilen + (2b) Kopf-Klemme 6 Zeilen) - beidseitig mergen.
+2. **Spinnen 0x25/0x26** stehen in diesem Zweig noch in 2090/2091 (Spur F entfernt sie): der passive Testschuetze zielt dann laenger auf
+   die Spinnen; Riegel kampf deshalb EXIT_AT 5000 (11.6).
+3. **Kopf-Klemme nur mit Kanister im Maul und im R1-Tod** (Gegenstand von M3). In den uebrigen Phasen (Verfolgung ohne Kanister, Biss,
+   GUARD) haelt die Wand-Klemme der Spur B weiter nur die Wurzel; der Kopf des RE2-grossen Modells kann dort ueber eine Aussenwand ragen
+   (Spur B hat das fuer Intro/Dash/Finisher ueber die Bahn-Pruefung gr2_bahn_frei geloest, B7). Nicht geaendert - Thema der Spur B.
+4. Unveraendert aus 10.6/9.6/8.7: RE2-Ausloeser-Mitglieder +0x1D8/+0x1DA (Tyrant-Overlay fehlt), Kanister in RE2-Groesse, Ton nur ueber die
+   Mischkette belegt; Werfer in 2090 Cut 12 nicht im Bild (FG-E4); Apply-Bild F530 bei der Integration mit Spur E (kamerahalt_r41.c) pruefen.
+5. **Erledigt aus 10.6:** 10.6.1 (Regions-Test des Kanister-Objekts, FUN_800363f0 @0x80036534) -> 11.3 Aenderung 2; 10.6.2 ("Start a/8 < 8
+   ... wie im Original verworfen") ist WIDERLEGT - Ursache war der Kanister ausserhalb des Raums (11.3); im Endstand in keinem Verlauf ein
+   Start-Punkt ausserhalb des Regions-Vierecks (11.5).
+6. Merge-Querbezug (alle Haken markiert "Runde 41 Spur G"): `engine/src/re2_fx.c` (Ops-Block + re2fx_platz_quelle), `include/re2_fx.h`,
+   `engine/src/gator_re2_r41.c` + `include/re15_gator_re2_r41.h` (G-E1-Wahl/Rangfolge, Kopf-Klemme, Fontaene, Scherben, Herkunft R1),
+   `engine/src/enemy_ai_boss_gator.c` (s.o.), `platform/pc/src/gator_re2_pc.c` (Scherben, Regions-Test), `platform/pc/main.c` (1 Aufruf),
+   `tests/unit/test_r41_re2gator.c` (Teile kamera/scherben/kopfklemme). `platform/pc/src/render_pc.c` ist wieder unveraendert (V1).
+
+### 11.8 Fuer den Nutzer (Stand Nachbesserung 4)
+Neue Assets: keine (die Explosions-Dateien `re15_port/shared_assets/RE2/GATOR40A0.ESP` und `GATOR40A0_08/09/16/18/19/1A/26.TIM` aus
+Nachbesserung 3 bleiben fuer das Paket-Gate). Sprachdateien unveraendert (vom Nutzer aufzunehmen): `synchro/STAGE2/room2080/main42.wav`
+("Marvin: Hey, Leon, try with this!"), `synchro/STAGE2/room2081/main42.wav` ("John: Hey, Elza, try with this!").
+Was sich im Spiel aendert:
+- Hat der Alligator den Kanister im Maul, steckt er Kopf und Kanister nicht mehr durch die Beckenwand. Dadurch ist die Explosion mit der
+  grau-weissen Wolke jetzt in jedem Verlauf zu sehen - vorher fehlte die Wolke ganz, wenn er an der Wand erschossen wurde.
+- Die Kamera beim Tod zeigt Kopf und geplatzten Kiefer waehrend der ganzen Todesanimation (vorher verschwand der Kopf im Plattform-Fall
+  hinter dem Maschinenblock).
+- Der Granatwerfer sieht nach einem Besuch im Alligator-Becken wieder ueberall gleich aus (vorher zusaetzliche Muendungsblitze/Glut).
+- Mit dem Kanister im Maul kommt der Alligator an Leon/Elza an einer Wand etwas weniger weit heran (der Kopf bleibt vor der Wand); beissen
+  kann er weiterhin.
+Entscheidungsfragen: keine (V1 ist ohne Aenderung an render_pc.c geloest).
+
