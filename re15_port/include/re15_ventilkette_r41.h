@@ -33,6 +33,9 @@
  *   Nachtrag 18: Plakat im Stil des Spiels; 2050-Hebel gehen beim Umlegen runter; Ventil-Dreh-Animation aus RE2;
  *                Timer der 60 s + Alarm + Sprachausgabe beim Warntext.
  *   Nachtrag 19: Text 46 = "WARNING: The water will rise in one minute. Please leave the room immediately!"
+ *   Nachtrag 30/30b/30d (Runde 41 Spur N, Dossier N_nachtrag30.md): Notiz "nur gruen und rot verwechselt ... ausserdem die
+ *                Nummern verwechselt von "Schwarz" und "Gruen""; Plakat NEU "1. GREEN 01 - 2. RED 02 - 3. BLACK 09 - 4. RED 08",
+ *                Loesung 09 -> 02 -> 01 -> 08 (Nutzer-Wahl 30d).
  *
  * Dossier: analysis/befunde_runde41/C_ventilkette.md (RE-Belege §1, Umsetzung §3). Kein Asset-Patch: die RDTs
  * bleiben byte-true; alles hier wird nach dem Init-Lauf des Raums angelegt (scd_room_setup.c / main.c Boot-Weg).
@@ -147,8 +150,8 @@
  *   Bit 102 (Bruecke unten, Nachtrag 9) UND Bit (9,125) (Sicherung im Ventil-Sicherungskasten 2010, Nachtrag 16 - ersetzt
  *   die Bedingung (3,108) aus Nachtrag 10); sonst Satz 49 = Original "It's locked." (ROOM20A0 msg 1 @0x203C, Nachtrag 16
  *   Folge 4; der fruehere Satz "I should look around here first." ist entfallen); je Platz Frage 50..55
- *   (Nummer + Farbe) -> Ja -> Drehung in (5,0x10..0x13) + Klick 0x0A; nach der VIERTEN: richtige Folge 09, 07, 02, 01
- *   (PORT-WAHL, Ableitung im Dossier §7) -> Ereignis 26 = Warnung -> Sleep 1800 (= 60 s bei 30 Takten) im selben Faden (Form ROOM2000 sub07 @0x01B36: For/Evt_next-Schleife eines
+ *   (Nummer + Farbe) -> Ja -> Drehung in (5,0x10..0x13) + Klick 0x0A; nach der VIERTEN: richtige Folge 09, 02, 01, 08
+ *   (NUTZER-VORGABE Nachtrag 30d, Ableitung Dossier N_nachtrag30.md §3; bis Spur N 09, 07, 02, 01) -> Ereignis 26 = Warnung -> Sleep 1800 (= 60 s bei 30 Takten) im selben Faden (Form ROOM2000 sub07 @0x01B36: For/Evt_next-Schleife eines
  *   Hintergrundfadens) -> Pad-Sperre, Cut 4, Wasser steigt 324 x 50 (Rate des Rechners @0x00CC8) vom Beckengrund
  *   y 0 bis zur Tuerebene y -16200; der C-Takt ertraenkt den Spieler, sobald die Flaeche 900 ueber seinen Fuessen
  *   steht (hp := -1 wie RE15_KILL_AT, main.c; blaue Blende Kanal 0 in der Form ROOM11F0 @0x174a `56 00 02 07 00 00`
@@ -331,10 +334,15 @@
 #define RE15_R41C_VENTIL_WAND_Z   { -8500, -8500, -8500, 7900, 7900, 7900 }
 #define RE15_R41C_VENTIL_FARBE    { 2, 1, 0, 2, 1, 0 }
 #define RE15_R41C_VENTILE_BAND    1                          /* Nord-Landeplatz Zelle 13 / Sued-Landeplatz Zelle 16 */
-/* Richtige Folge (PORT-WAHL, Vorschlag zur Freigabe; Plakat druckt sie falsch, Dossier §7): 09 rot, 07 schwarz, 02 gruen,
- * 01 schwarz = Indizes in RE15_R41C_VENTIL_NUMMERN. */
+/* Richtige Folge = NUTZER-VORGABE AUFTRAG.md Nachtrag 30d (2026-10-25 17:23, Auswahl des Nutzers; ersetzt Nachtrag 15 "09, 07,
+ * 02, 01" und Nachtrag 30c "02, 01, 09, 07"): 09 rot, 02 gruen, 01 schwarz, 08 gruen = Indizes in RE15_R41C_VENTIL_NUMMERN
+ * {1,2,3,7,8,9} -> {5, 1, 0, 4}. Ableitung aus Plakat + Notiz (Spur N, Dossier N_nachtrag30.md §3): Plakat "1. GREEN 01 -
+ * 2. RED 02 - 3. BLACK 09 - 4. RED 08" (gen/ventilkette_r41_plakat.inc, tools/r41_ventilkette/plakat.py), Notiz "They mixed up
+ * green and red, and on top of that they swapped the numbers of "black" and "green"!" (Nachtrag 30b) -> Gruen/Rot tauschen,
+ * Nummern der Zeilen GREEN/BLACK tauschen -> 09 rot / 02 gruen / 01 schwarz / 08 gruen = die echten Raeder (Kopf
+ * "Ventil-RAEDER": 09 rot, 02 gruen, 01 schwarz, 08 gruen). */
 #define RE15_R41C_DREHUNGEN       4
-#define RE15_R41C_LOESUNG         { 5, 3, 1, 0 }
+#define RE15_R41C_LOESUNG         { 5, 1, 0, 4 }
 /* Bank 5 (Raum-Scratch) der Ventile/des Plakats (2030 benutzt Bank 5 sonst nicht; 0x1D/0x1E s. u.). */
 #define RE15_R41C_FLAG_DREHUNG0   0x10   /* 0x10..0x13 = Drehung 1..4 (Form ROOM11F0 Schalterbits (5,13..22)) */
 #define RE15_R41C_FLAG_GEDREHT    0x1B   /* Handshake Programm -> C-Takt (Ja auf die Ventil-Frage)              */
