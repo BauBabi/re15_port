@@ -1154,6 +1154,32 @@ Ausdruck (alle Masken-/PRI-Riegel der Spur und die Nachbar-Riegel, die dieselben
 3. Lauf 3 (derselbe Ausdruck): **`100% tests passed, 0 tests failed out of 1`** (507 s; 15 Szenen, d6000_05a 0 von 2648).
    Die uebrigen 26 Riegel aus Lauf 1 lesen dieselbe exe (md5 597ba53a), dieselben MSK/TIM und unveraenderte Szenendateien.
 
+### Tests Nachbesserung 4 (gezielt, KEINE volle Suite)
+Neu/geaendert (nur tests/unit/probes/r41_masken36.cmake + eigene Dateien):
+| Test | misst | Ergebnis |
+|---|---|---|
+| `unit_r41_masken36_stirn` (neu, Mangel 1) | Zelle 6 @RDT+0x0045C byte-genau; 0 offene Kerben im Fenster x 282..319 y 80..215 (Kuenstler-Ausschnitt der Stirnplatte gezeichnet); Kante der Zeichnung in den Zeilen 118..194 bei z 14834..14904 <= 14950 (Zelle bis 15375); 0 gezeichnete Punkte mit Sehstrahl durch die Zellenflaeche jenseits z 14950 (von 2877 Punkten der Flaeche im Fenster); Leon/Elza-Datei gleich | PASS |
+| `integration_r41_masken36_fern` (+6 Szenen, Mangel 1) | z30A0_o3 / _o4 / _a0 (Figur hinter der Stirnplatte): Figurpunkte 267 / 641 / 378, sichtbar **0**; v30A0_o2 / _a0, v30A1_o5 Elza (rechts der Kante, Boden dahinter): Figurpunkte 236 / 264 / 224, uebermalt **0**; die 9 NB3-Szenen unveraendert (s/u/t/h30A0_00, e30A1_00, h30A0_01 sichtbar 0; d30A0_00/01, f30A1_00 uebermalt 0) | PASS (15 Szenen) |
+| `integration_r41_masken36_laufpruefung` (neu, Mangel 3) | Laeufer mit -DGEGENPROBE=1: Lauf mit RE15_EXIT_AT=60 im Zielraum abgelehnt ("kein '[flow] EXIT_AT: Bild 120 in Raum 30a0' nach dem Laden des Zielraums"), voller Lauf angenommen ("Gegenprobe OK") | PASS |
+| Laeufer `test_r41_masken36_stage2.cmake` (Mangel 3) | jeder Lauf von _stage2/_zelle/_zellen3d/_fern nur mit EXIT_AT-Zeile + Framedump im Zielraum, bis zu 3 Versuche; Feld W=<gier> | im Lauf unten keine Wiederholung noetig |
+| `unit_r41_masken36_fern`, `_zellen3d`, `_loecher`, `unit_r37_masken36_*` | unveraendert auf den NB3-Werten (MASKS/Tabellen = Stand NB3); test_r37_masken36 rechnet ohne `--saat-tuer` wie NB3 | PASS |
+Laeufe (Endstand, `local_build.sh configure` + `build`, Spurbaum; KEINE volle Suite):
+1. `ctest --test-dir re15_port/build -R "unit_r41_masken36|unit_r37_masken36" -j 3 --timeout 2400 --output-on-failure`
+   -> **`100% tests passed, 0 tests failed out of 8`** (unit_r37_masken36_ausschluss 322 s, unit_r41_masken36_fern 175 s, zellen3d 77 s).
+2. `ctest --test-dir re15_port/build -R "integration_r41_masken36|integration_r37_masken36" -j 3 --timeout 2400 --output-on-failure`
+   -> **`100% tests passed, 0 tests failed out of 10`** (integration_r41_masken36_stage2 473 s = Punkt 2, _fern 508 s, _zelle 414 s,
+   _zellen3d 389 s, _laufpruefung 25 s, integration_r37_masken36_stage3..6 + nb2).
+3. Einzeln -V nachgefahren fuer die Werte oben: `ctest ... -R "integration_r41_masken36_laufpruefung" -V` -> `100% tests passed, 0 tests failed
+   out of 1`; `ctest ... -R "integration_r41_masken36_fern$" -V` -> `100% tests passed, 0 tests failed out of 1` ("15 Szenen OK").
+Diese 18 Riegel sind alle, die die geaenderten Dateien benutzen (test_r37_masken36.c, test_r41_masken36.c, der Laeufer, die Szenendateien;
+`ctest -N | grep masken36`). Engine, Plattform, include und shared_assets sind bytegleich zu 1ad2c96e (Stand NB3) - keine weiteren Gruppen
+betroffen. Linux: neue Teile nur stdio/stdlib/string/math (m gelinkt), -P-Skript mit cmake_minimum_required, keine .exe-/Backslash-Pfade,
+eigenes exe-Praefix r41m6 fuer den neuen Riegel, eigener Laufordner.
+Am Vorschlagsstand (vor der Ruecknahme nach M-E1, Commits 27e6594b..33e758ae) liefen zusaetzlich 41 Unit-Riegel der PRI-/Masken-Gruppen
+(unit_pri_*, unit_r36_pri_*, unit_r37_pri1100_*, unit_sld_atlas, unit_r38_itemorte_*, unit_r39_optik_*, unit_r34n_e_dokumente, unit_bss,
+prop_bss, unit_stage6_hintergrund, unit_r19_*, unit_r22_10f0_figur, unit_r30_irons_tisch*, unit_1210_gitterhaende) - 40/41 gruen, rot nur
+zellen3d (Gegenprobe 3 statt >= 127, mit der Saaten-Korrektur erwartet) - fuer den ausgelieferten Stand ohne Bedeutung.
+
 ## OFFEN
 
 0. **Stand Nachbesserung 2 (ersetzt die Zahlen von 1):** 1022 Rechtecke (Leon, Elza gleich) bleiben aus, 273 961 Punkte liegen nur
