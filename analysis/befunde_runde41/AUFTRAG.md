@@ -803,3 +803,17 @@ Nachsatz des Nutzers zu 24b (Wortlaut): "marvin" — gesehen bei Marvin (Leons S
 **C-E4:** Fuer den Alarm darf Spur C einen kleinen, markierten Haken im Musik-/BGM-Lader platform/pc/src/audio_pc.c setzen
 ("Runde 41 Spur C, C-E4"; Spur D ist integriert, beidseitig mergen). SUB_25 aus info/re2leon/COMMON/SOUND/SUB_25.BGM bytegleich
 nach shared_assets/RE2/SOUND/ (Paket-Gate nennen). Alarm vom Warntext bis zur Flut bzw. bis zum Verlassen des Raums.
+
+## 2026-10-25 02:51 — Orchestrator-Entscheid F-E1 (Abnahme F 0, Mangel M4: alte Riegel durch Nutzer-Vorgaben widerlegt)
+
+Die von Spur F rot gemachten Riegel pruefen Zustaende, die der Nutzer ausdruecklich geaendert hat ("neue Regel widerlegt alten
+Riegel", Memory reai-v2-gezielte-integration-querbezug). Spur F zieht sie mit Beleg nach (Kommentar mit Nachtrag/Wortlaut) und
+faehrt sie gruen — kein Lockern ohne Grund:
+- unit_r36_tueren_schott ("ROOM2090: keine begehbare Tuer nach ROOM20A0"): Tor 2090<->20A0 verschlossen bis zum Alligator-
+  Schluessel (Nachtrag 21) -> Erwartung: verschlossen vor (9,113), begehbar danach.
+- unit_r38_spinnen ("ROOM2090 Cut 0: 0 Spinnen"): Spinnen in 2090/2091 entfernt (Nutzer-Auftrag) -> 2090/2091 aus der
+  Spinnen-Erwartung, uebrige Raeume unveraendert.
+- unit_r30_tuer_verschlossen (Tabellenzahl 54 statt 52): Tabelle um die zwei neuen Tor-Saetze ergaenzen UND M3 (doppelter Ton)
+  beheben -> genau 1 Ton.
+- integration_r41_re2gator (Spur B, "RE2-Intro ..."): die 2090-Ankunftsszene ersetzt das RE2-Intro (Nachtrag 6) -> der Riegel
+  prueft den Auftritt ueber F's Szene (Clip-Folge/Schnitte), B's uebrige Pruefungen bleiben unveraendert gruen.
