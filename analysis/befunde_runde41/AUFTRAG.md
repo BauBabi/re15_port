@@ -468,3 +468,384 @@ Ventilraetsel, mit Sicherung ja; ganzer Ablauf zu Fuss (Leon UND Elza).
    Erledigt vom Orchestrator auf master 919cc1ed: 204 von 214 pri/STAGE3-6/*_port.png aus M_bilder/uebersicht/ ersetzt.
    Ohne berichtigtes Gegenstueck (Spur M liefert sie nach, Ersatz bei der Integration): pri/STAGE3/3040+3041/01,
    3050+3051/06+15, 30E0+30E1/06+07.
+
+## 2026-10-24 12:43 — Orchestrator-Entscheide I-E1/I-E2 (Abnahme I 0; der Nutzer kann widersprechen)
+
+- **I-E1 (V1, Vertrag):** Die Haken der Spur I in enemy_ai_common.c (Include + 2 Zeilen, RE1.5-Grid-Dispatcher
+  0x80117910[4..6]) und player_common.c (1 Zeile, Pin-Freigabe der geteilten Phasenmaschine) sind angenommen (wie B5);
+  bei der Integration mit A (enemy_ai_common.c) gegenlesen.
+- **I-E2 (Hinweis H2 der Abnahme I 0):** Laden eines Spielstands IN ROOM2000/2001 (CONTINUE) zeigt keine Zombies (300 Bilder
+  ohne Zombie-Aktor) — vorbestehend, aber genau die Raeume des Nutzer-Punkts der Spur I. Spur I behebt es (Ursache im
+  Boot-/Lade-Pfad belegen, Riegel: Laden in 2000 und 2001 -> Zombies liegen wie beim Tuerweg).
+
+## 2026-10-24 13:11 — Nachtrag 12 (Wortlaut; Antworten auf die Fragen (k) und (l) der Spur C)
+
+Fragen (gekuerzt): (k) "Umgesetzt ist die Unterkante: Wasser bis zur Oberkante der unteren Reling (y -3600). Der Ring ist
+trocken, Steg und Landeplaetze stehen 1800 unter Wasser. Oder meintest du direkt buendig an die Ring-Reling (y -5400)?"
+(l) Zwei neue Texte zur Freigabe: "I cannot go down the stairs / because of the water." und "Numbered valves. If I turn
+them, / this whole level will be flooded. | I should look around here first."
+
+> (k) Wasserstand nach dem Strom:: unterhalb der Absperrung, sodass es nicht drüber "rein" laufen würde.
+> zu (l) Zwei neue Texte zur Freigabe: Für den Moment ok, aber „Numbered valves. If I turn them, / this whole level will be
+> flooded. | I should look around here first." würde ich später noch ändern wollen.
+
+Folgen (Orchestrator, Spur C):
+- (k) Der Ruhepegel nach dem Strom steht so hoch wie moeglich, aber UNTERHALB der Absperrung am inneren Ringrand, so dass
+  kein Wasser auf den Ring laeuft (nicht buendig mit dem Ring). Die Absperrung (Bruestung/Gelaender am Ringrand, Hoehe und
+  Art) aus der Geometrie belegen (SCA-Zellen mit Offsets + Hintergrundbild); ist sie ein durchsichtiges Gelaender, gilt die
+  Ringboden-Kante (y -5400) als Grenze und der Pegel liegt knapp darunter. y -3600 bleibt nur, wenn die Geometrie zeigt, dass
+  es keinen hoeheren Pegel unterhalb der Absperrung gibt. Bildbeleg vorher/nachher aus den Ring-Kameras.
+- (l) Beide Texte sind vorerst freigegeben (2030 Id 48 Treppe, Id 49 Ventile). Den Ventil-Text (Id 49) will der Nutzer
+  spaeter aendern — in den Release Notes unter "Zu entscheiden" fuehren.
+
+## 2026-10-24 13:19 — Nachtrag 13 (Wortlaut; das echte Ventilraetsel in 2030, Spur C — Nutzer-Entscheid "Jetzt in v0.8.29")
+
+> Der Text: „Numbered valves. If I turn them, / this whole level will be flooded. | I should look around here first." ist
+> deshalb dämlich, weil sich die Frage stellt - woher weiß den der Spieler das, das dann alles flutet?
+>
+> Wenn denn würde ich beim Anklicken der Anlage oder bei einer Leiche oder so ein Dokument machen, wo so etwas drin steht wie:
+>
+> These amateurs—not only did they completely mess up the water ventilation, so that the water level not only rises up to
+> the railing but also goes beyond it until it has completely drained out—but they also made a complete mess of the valve
+> instructions.... They mixed up black, green, and red, and swapped the numbers for black! What are they? Colorblind? How
+> is anyone supposed to work with something like this....
+>
+> und dann würde ich ein Plakat machen mit der Anleitung in welcher Reihenfolge mit welchen Zahlen man die valves drehen muss,
+> nur eben genau falsch entsprechend dem Dokument.
+
+Frage des Orchestrators: "Soll Spur C das jetzt noch fuer v0.8.29 bauen, oder kommt es in die naechste Runde?" —
+**Antwort: "Jetzt in v0.8.29 (Empfohlen)"** (Option: Dokument mit dem Nutzer-Text bei einer Leiche am Steg-Suedlandeplatz,
+wo die Sicherung liegt, oder beim Untersuchen der Anlage; Plakat als Nahaufnahme mit der falschen Reihenfolge; echtes
+Dreh-Raetsel statt Platzhalter; Plakat-Inhalt und Loesung dem Nutzer zur Freigabe vorlegen).
+
+Folgen (Orchestrator, Umsetzung Spur C):
+1. Text 2030 Id 49 ersetzen: kein Wissen, das der Spieler nicht haben kann — neutral, z. B. nur "I should look around
+   here first." (Gate Nachtrag 9/10 bleibt: Bruecke unten UND Sicherung aufgehoben).
+2. Dokument: Inhalt = der Nutzer-Text oben WOERTLICH (nur Umbruch/Seiten fuer den Leser; Titel als Vorschlag). Fundort:
+   Leiche am Steg-Suedlandeplatz neben der Sicherung (bevorzugt, weil der Spieler dort ohnehin vorbeikommt) oder beim
+   Untersuchen der Ventil-Anlage — Wahl mit Begruendung. Dokument-System des Ports (re15_files, Ids ab 0x48), Item-/Taken-Bit
+   nach RDT-Zensus (Memory reai-v2-bank9-taken-bits; Bit 107 ist seit Nachtrag 7 frei und gehoert C).
+3. Plakat: Nahaufnahme (System der Runde 40 "nahaufnahmen") an einer Wand im unteren Bereich bei den Ventilen, mit der
+   Anleitung (Reihenfolge Farbe + Nummer) — genau so falsch, wie das Dokument es beschreibt: Farben schwarz/gruen/rot
+   vertauscht, die Nummern der schwarzen Ventile getauscht. Bild als Port-Asset (im Dossier und fuer das Paket-Gate nennen).
+4. Raetsel: die echten Ventile (Nummern/Farben aus den 2030-Hintergruenden belegen, C_belege/nb3_ventile_lage_sheet.png)
+   in der richtigen Reihenfolge drehen; falsche Reihenfolge -> zurueckgesetzt (Form wie die Original-Raetsel 2060/11F0 mit
+   Beleg); die Loesung muss aus Plakat + Dokument + den sichtbaren Ventilen eindeutig ableitbar sein. Richtige Loesung ->
+   Warnung -> Flut wie bisher.
+5. Fuer den Nutzer (Dossier §7): Plakat-Bild, Dokument-Text, Loesung und Ableitung als Vorschlag zur Freigabe.
+6. Nachrichten-Ids: 2030 Ids 40-49 sind C's; werden mehr gebraucht, 2030 Ids 50-55 (VERTRAG 1.2 ergaenzt).
+
+## 2026-10-24 17:32 — Orchestrator-Entscheid E-E4 (Abnahme E 3, Mangel 2; der Nutzer kann widersprechen)
+
+unit_r36_zombieki_affen_block darf nicht durch eine nachtraeglich gewaehlte Schranke gruen werden. Die Sonde misst den
+Haenger (blockierte Gorilla-Bilder an einer Klemme je Seed) wieder wirksam; die zwei bekannten Haenger-Stellen (u. a. Klemme
+(11129,9982), Seed 0x9b5bf362: 4405/6000 Bilder) werden als BENANNTE Ausnahmen mit Beleg gefuehrt. Ist die Ursache im
+Port-Code (zombieki_r36.c, Runde-36-PORT-WAHL) belegbar und klein zu beheben, behebt Spur E sie in dieser Nachbesserung
+(mit Riegel); sonst Folgeauftrag in UEBERGABE §3b. Mangel 1 (Renn-Stopp nach Treppe, Griff-Freigabe, Plc_ret: Original
+loescht +5/+6 @0x80038ea8/@0x80038eb0 bzw. @0x80041f90-9c) behebt Spur E wie gefordert.
+
+## 2026-10-24 17:36 — Nachtrag 14 (Nutzer-Antwort per Auswahl; Kurbel ROOM2020, Spur E)
+
+Frage (gekuerzt): "Was meintest du mit 'herumfliegend'?" — Optionen: das Einfrieren (behoben) / den Sprung an die Kurbel
+(Original macht ihn genauso, davor friert das Bild ~1/4 s ein) / etwas anderes. **Antwort des Nutzers:**
+
+> Ja, direkt am Anfang springt Leon so komisch zu der Kurbel. So halb fliegend.
+
+Folgen (Orchestrator, Umsetzung Spur E):
+- Gemeint ist der Sprung an die Kurbel (Cut_chg 3 @0x0A7E, Pos_set @0x0A8C, Gier @0x0A94, Sleep 20, Plc_motion @0x0A9C).
+  Im Original ist er nicht als "Fliegen" zu sehen, weil das Bild nach Cut_chg stehen bleibt, bis der Hintergrund von CD
+  geladen ist (Apply-Zweig @0x80021558/@0x80021560, Lader FUN_80013c50; im Original-Video ~8 Bilder). Im Port dauert dieses
+  Standbild 1 Bild -> der Uebergang (alte Lage/Pose -> Kurbel) wird sichtbar.
+- Ziel: Port Bild fuer Bild wie das Original-Video vom "Yes" bis Plc_motion (Leon erscheint erst an der Kurbel, kein
+  sichtbares Hinueberfliegen, keine sichtbare Ueberblendung von der alten Pose). Die Standbild-Dauer des Originals an
+  genau dieser Stelle aus dem Original-Video bzw. DuckStation-RAM MESSEN (nicht schaetzen) und als gemessenen Wert mit
+  Quelle (Video/Savestate, Bildnummern) einsetzen; pruefen, ob die Laenge vom Hintergrund-Laden abhaengt und ob sie fuer
+  alle Cut_chg mit Hintergrundwechsel gilt (dann spielweit, mit den Riegeln der Spur E-E1). Riegel + Bildvergleich
+  Port/Original (Gehen, Rennen, Stehen).
+
+## 2026-10-24 17:38 — Orchestrator-Entscheid H-E1 (Abnahme H 0: beide Nutzer-Punkte erfuellt, nur Vertrag V1/V2)
+
+- **V1 angenommen** (wie B5/I-E1): Include + Aufruf `re15_kollision_r41_npc_schwanz(slot)` in enemy_ai_common.c
+  (re15_npc_ai_tick vor re15_npc_wall_clamp; Original-Reihenfolge aec4/b544 vor der Wandklemme @0x8011cc64).
+- **V2 angenommen** als belegter Querbezug ("neue Regel widerlegt alten Riegel"): test_r39_dining1141_kampf.cmake
+  `WARTE 60` -> `WARTE 240` ist durch die festen NPCs noetig (alt: vor-exe gruen / nach-exe rot nur ueber die Zufallsdeckung
+  Salve/Griff; neu: nach-exe gruen) — Messung steht in H_abnahme_0.md. Die Nachbesserung H 1 dokumentiert beides im Dossier;
+  sonst ist nichts zu tun. Die naechste Abnahme der Spur H bewertet V1/V2 nicht mehr als Mangel.
+
+## 2026-10-24 19:01 — Nachtrag 15 (Nutzer-Entscheid per Auswahl: Ventilraetsel freigegeben, Spur C)
+
+Vorgelegt (Nachbesserung C 4): echte Ventile Nordwand 03 rot / 02 gruen / 01 schwarz, Suedwand 09 rot / 08 gruen / 07
+schwarz; Plakat (absichtlich falsch) "1. GREEN 09 - 2. RED 01 - 3. BLACK 02 - 4. RED 07"; Dokument "Technician's Note"
+(Nutzer-Text woertlich) neben der Sicherung; Loesung 09 -> 07 -> 02 -> 01; falsche Folge -> "The valves turned back to
+their original position."; Frage am Rad "Valve 09, red wheel. Will you turn it?". **Antwort: "Freigeben"** — Plakat,
+Loesung, Titel und Texte bleiben so (Fragen (m) und (n) der Spur C damit beantwortet).
+
+## 2026-10-24 19:03 — Orchestrator-Entscheid FG-E1 (Aufteilung der Spuren F und G nach Nachtrag 6; der Nutzer kann widersprechen)
+
+F und G starten parallel auf dem integrierten Stand mit Spur B (r41/integration nach dem Merge von B). Damit sie sich nicht
+gegenseitig ueberschreiben:
+- **Spur F (gatorszene) besitzt die ganze 2090-Ankunftsszene** nach Nachtrag 6: Ankunft -> Kamera auf die Zombie-Leiche mit
+  dem blinkenden Schluessel (Blinken wie der Feuerloescher, Spur D re15_blink) -> Einstellung "oben in 2080 kommen die Zombies
+  herein" -> erneut die Leiche -> der Alligator kommt (aus dem Wasser, B9: vorher unsichtbar) und frisst den Zombie samt
+  Schluessel -> Schrei- und Schuettel-Animation zu Leon (RE2-Clips aus Spur B) -> Kampfbeginn mit der RE2-Kampfmusik (aus
+  ROOM40A0 belegen, Ton nach shared_assets/RE2/). Dazu: Spinnen aus 2090 entfernen; nach dem Tod liegt der blinkende
+  Schluessel bei der Leiche. Die Zombies der 2080-Einstellung baut F als SZENEN-Figuren (nur fuer diese Einstellung); ist
+  der obere 2080-Bereich aus 2090 nicht sichtbar, ist die Einstellung ein kurzer Schnitt mit eigener Kamera — Form und
+  Belege im Dossier. F setzt Bit 110 (Szene gesehen) wie im VERTRAG.
+- **Spur G (kanister2080) besitzt ROOM2080/2081**: nach Bit 110 beim Betreten Metalltuer-Ton + 8 Zombies im oberen
+  Hauptbereich (dieselbe Zahl/Modelle wie F's Einstellung), Gaskanister an der Reling (Gas_Can.bmp, Modell aus Spur B
+  shared_assets/RE2/KANISTER40A0.*), die Marvin/John-Szene nach genug Treffern auf den Alligator (Kopfschuss je Zombie, Kanister
+  aufnehmen, "Hey, Leon/Elza, try with this!" — Stimmen synchro/STAGE2/room2080/main42.wav bzw. room2081/main42.wav, Wurf
+  ueber die Reling mit Kamera wie Adas Raketenwerfer-Wurf in RE2, Nachtrag 5), dann Kanister im 2090-Wasser ueber Spur B's
+  API (re15_gr2_kanister_setzen) -> Aufnahme/Explosion/Kiefer-Tod (Spur B, fertig).
+- Gemeinsame Beruehrungspunkte nur ueber Bits/APIs (F: Bits 110-113, Text-Ids 2090/2091 42-46; G: Bits 114-119, Ids 2080/2081
+  42-47), keine Aenderung im Modul der anderen Spur; Treffer-Zaehler fuer G's Ausloeser liest G aus B's API.
+
+## 2026-10-24 19:31 — Nachtrag 16 (Wortlaut + Auswahl-Antwort; Ventil-Sicherungskasten in ROOM2010, Spur C — ersetzt Nachtrag 10)
+
+> Das einzige was ich noch reichlich schlecht finde ist das der Charakter so etwas sagen muss wie - "Ich muss mich vorher
+> noch umschauen" bis er die SIcherung genommen hat. So etwas gibt es im ganzen Spiel nicht und ist komisch.... Kannst du
+> evtl. noch einen zweiten Sicherungskasten irgendwo einbauen - außerhalb des Raumes, wo man die Sicherung zuerst einsetzen
+> muss. Macht man das geht die Kamera auf die Ventile und man hört ein unlock geräusch, das man sie dann drehen kann. Und
+> dann kann man die Sicherung aus dem Kasten wieder raus nehmen und in den 2. Sicherungskasten packen? Irgendwie sowas? Das
+> mach insgesamt viel mehr sinn....
+
+Frage des Orchestrators: Wo soll der Kasten hin (angeboten: 2070 vor der Ring-Tuer / 2030 am Ring)? Antwort:
+
+> Nein, weder 2070 noch 2030, denn man muss ja, nachdem man das Rätsel gelöst hat, und der Raum geflutet wurde die
+> Sicherung heraus nehmen können, um danach damit zum anderen Generator zu gehen. Ist sie raus, sollen die valves wieder
+> blockiert werden. Nein, ich glaube im ROOM 2010 wäre das vielleicht am günstigsten?
+
+Folgen (Orchestrator, Umsetzung Spur C):
+1. Neuer Ventil-Sicherungskasten in ROOM2010/2011 (Lage an einer passenden Wand aus den 2010-Hintergruenden belegen;
+   Kasten-Modell/Bild wie der Original-Kasten in 2060, falls vorhanden — Beleg). 2010 ist vor UND nach der Flut ueber
+   2000/20B0 Slot 2 erreichbar -> kein Softlock.
+2. Sicherung einsetzen (Frage im Original-Stil, Sicherung verlaesst das Inventar) -> "Kamera auf die Ventile" + Unlock-
+   Geraeusch (RE2/RE1.5-Ton mit Beleg): als kurze Einstellung der 2030-Ventil-Kamera (z. B. Hintergrund der Ventil-Kamera als
+   Standbild wie die Nahaufnahmen der Runde 40, oder kurzer Raumwechsel hin und zurueck — Form mit Beleg/Begruendung im
+   Dossier) -> Ventile in 2030 sind frei, solange die Sicherung im Kasten steckt.
+3. Sicherung herausnehmen (jederzeit, auch nach der Flut) -> zurueck ins Inventar, Ventile wieder blockiert. Danach geht
+   sie wie im Original in den Generator-Kasten 2060 ((3,144) sub19 @0x0169E).
+4. Die Ventile ohne Sicherung im 2010-Kasten: neutraler Text OHNE erfundenes Wissen und OHNE "look around" (z. B. "The
+   valve won't turn." / "It's locked." — Vorschlag). Der Gate-Text Id 49 und die Bedingung "Sicherung aufgehoben" aus
+   Nachtrag 10 entfallen; Nachtrag 9 (Bruecke vorher unten) bleibt (die Ventile liegen im unteren Bereich).
+5. Nachrichten-Ids: 2010/2011 Ids 40-44 fuer C (VERTRAG 1.2). Bits: aus C's Zuteilung (z. B. 107 ist mit dem Dokument
+   belegt -> naechste freie nach Zensus, im VERTRAG nachtragen).
+6. Riegel: ohne Kasten-Sicherung kein Ventil; mit ja; nach der Flut Herausnehmen moeglich und Generator 2060 erreichbar
+   (ganzer Weg zu Fuss, Leon UND Elza).
+
+## 2026-10-24 19:44 — Nachtrag 17 (Wortlaut; Ton beim Hereinkommen der Zombies in 2080, Spuren G und F)
+
+Bezug (Orchestrator-Meldung): "Metalltuer-Ton und 8 Zombies" (Spur G, 2080).
+
+> Muss natürlich ein knallen sein, als ob die Zombies rein brechen, so wie bei STAGE1 von Elza/Leon am Ende in der Cutscene
+> nach Irons.
+
+Folgen (Orchestrator): Kein Schliess-Ton, sondern der KNALL des Hereinbrechens, wie in der STAGE1-Endszene nach Irons
+(Leon und Elza). Spur G (und Spur F fuer die Einstellung "oben in 2080 kommen die Zombies herein" in der 2090-Szene) belegt
+die genaue Original-Stelle (Raum, SCD-Offset des Ton-Befehls / Szenen-Ereignis, Ton-Id bzw. VAG/VAB-Satz) und verwendet
+denselben Ton (gleiche Datei/Stimme, Ton-Datei des Ports im Dossier fuer den Nutzer nennen). Beide nutzen denselben Ton.
+
+## 2026-10-24 19:53 — Nachtrag 18 (Wortlaut; vier Punkte zur Ventilkette, Spur C)
+
+> 4 Dinge:
+>
+> - Das Poster mit der Anleitung der Valves die gedreht werden müssen entspricht nicht dem Stil des restlichen Spieles wie
+>   die Dinge dort aussehen. Das sieht er aus wie aus Monkey Island..... Wenn schon muss du den Stil des Rest des Spieles
+>   damit treffen
+> - in ROOM 2050 bei den neuen Rätsel mit den hebeln finde ich das mit den Lampen unten gut. ABER, bei den ausgewählten
+>   hebel, muss dann auch der Heben runter gehen wenn er ausgewählt wurde.
+> - Wenn an den valves gedreht wird in ROOM 2030, dann muss auch die valve dreh animation kommen. Die kannst du aus Resident
+>   Evil 2 übernehmen.
+> - Bei der Minute in ROOM 2030 bis der Raum flutet, muss es einen typischen Timer geben wie aus den Rest des Spiels, der dann
+>   abläuft. Außerdem brauche ich den Text noch mal, damit ich den voiceover dafür aufnehmen kann. Also - Alarm, so wie am
+>   Spiel Ende immer und dann das Voiceover beim Text.
+
+Folgen (Orchestrator, Umsetzung Spur C in der naechsten Nachbesserung):
+1. Plakat im Stil des Spiels: Vorbild sind die echten Nahaufnahmen/Dokumente des Spiels (RE1.5-Nahaufnahmen der Runde 40,
+   RE2-Aushaenge/Dokumente aus info/re2leon bzw. extracted_re2_dokumente) — Papier/Textur, Schrift (Schreibmaschine/Druck wie
+   die Spiel-Dokumente), Farben, Abnutzung; keine Comic-/Zeichentrick-Optik. Vorher/Nachher-Bild + Vergleich mit 2 echten
+   Spiel-Nahaufnahmen im Dossier. Inhalt (Reihenfolge/Farben/Nummern) bleibt wie freigegeben (Nachtrag 15).
+2. ROOM2050 Schaltpult: die Lampen bleiben; der ausgewaehlte/umgelegte Hebel muss sichtbar nach unten gehen (Hebel-Stellung
+   je Zustand, Form wie die Original-Hebel 11F0/2060 mit Beleg; Grafik aus dem Hintergrund/den Original-Modellen ableiten).
+3. ROOM2030 Ventile: beim Drehen spielt die Ventil-Dreh-Animation aus Resident Evil 2 (RE2-Spieler-Clip des Ventilrads,
+   Raum/RBJ/EDD mit Offsets belegen, wie Spur B die RE2-Clips uebernommen hat; ggf. das Rad selbst mitdrehen).
+4. ROOM2030 Countdown: die 60 s laufen als typischer Spiel-Timer ab (Anzeige wie der Countdown am Spielende — Original-
+   Timer-UI belegen), dazu der Alarm wie am Spielende (Original-Ton belegen), und beim Warntext die Sprachausgabe des Nutzers.
+   Datei-Platz fuer die Aufnahme des Nutzers: synchro/STAGE2/room2030/main46.wav (Elza: room2031/main46.wav; fehlt die Datei,
+   kein Ton — der Port darf sie nicht erzeugen). Wortlaut des Textes Id 46 wird dem Nutzer genannt.
+
+## 2026-10-24 19:55 — Nachtrag 19 (Wortlaut; Warntext 2030 Id 46, Spur C)
+
+> Ändere den Text zu: WARNING: The water will rise in one minute. Please leave the room immediately!
+
+Folgen (Orchestrator): Text 2030/2031 Id 46 = "WARNING: The water will rise in one minute. Please leave the room
+immediately!" (Wortlaut exakt; nur der Zeilenumbruch nach der Breite des Nachrichtenfensters). Die Sprachaufnahme des Nutzers
+kommt nach synchro/STAGE2/room2030/main46.wav bzw. room2031/main46.wav (Nachtrag 18 Punkt 4).
+
+## 2026-10-24 20:34 — Orchestrator-Entscheid E-E5 (Fragen der Nachbesserung E 4; der Nutzer kann widersprechen)
+
+- Der 2-Zeilen-Haken der Spur E in engine/src/game_step_common.c (vor der Zweig-Kette des Spieler-Dispatchers; Renn-Stopp
+  endet, wenn ein Durchlauf keinen Kommando-1-Schritt macht — Original +5/+6 @0x8003272c/@0x800328fc, Ueberschreiber
+  @0x80043544/@0x80043610/@0x80038ea8/@0x80041f90/@0x80041bb0/@0x80102640/@0x8011c38c) ist angenommen (Erweiterung von E-E1/E-E2).
+- Die dritte benannte Ausnahme der Gorilla-Sonde (WESTBLOCK x 3800..6200 / z 9900..12500) ist bestaetigt, weil dort auch die
+  Original-Regel haengt (AUS 5880 in 15 Seeds) — kein Rueckschritt der Spur E. Die drei Gorilla-Haenger (TASCHE, SUB7,
+  WESTBLOCK; zombieki_r36.c, Runde-36-PORT-WAHL) sind Folgeauftrag (UEBERGABE §3b).
+
+## 2026-10-24 21:41 — Nachtrag 20 (Wortlaut; Lage der Zombies in 2080, Spuren G und F)
+
+> In 2080, nachdem die Zombies durch die Tür gebrochen sind, sollen sie oberhalb von der Treppe laufen, nicht unten.
+
+Folgen (Orchestrator): Die 8 Zombies (Spur G, ROOM2080/2081) brechen durch die Tuer herein und laufen auf der OBEREN Ebene
+(oberhalb der Treppe), nicht unten. Ebene/Band und Tuer aus der Geometrie belegen (SCA-Zellen/Baender, Tuer-Satz), Wege der
+Zombies auf der oberen Ebene halten (kein Abstieg ueber die Treppe), Bildbeleg aus den 2080-Kameras. Spur F zeigt in der
+2090-Einstellung "oben in 2080 kommen die Zombies herein" dieselbe Lage.
+
+## 2026-10-24 22:25 — Nachtrag 21 (Wortlaut; Zugang zum Alligator und Zweck des Schluessels, Spuren F und G)
+
+> Nur für den fall das du es falsch hast - man kommt über die Leiter zum Aligator, nicht über das Tor. Das Tor soll
+> verschlossen sein, und dann mit den Schlüssel den man vom Aligator bekommt geöffnet werden!
+
+Folgen (Orchestrator):
+- Zugang zu ROOM2090/2091 im Spielablauf: ueber die LEITER aus 2080 (ROOM2080 Slot 1 @0x00BC2 -> 2090 (-8200,0,-25550), frei
+  nach dem Original-Rechner (3,245)); die 2090-Ankunftsszene (Spur F) beginnt bei dieser Ankunft.
+- Das TOR zwischen 2090 und 20A0 (2090 Slot 1 @0x009B6 <-> 20A0 Slot 0 @0x01746, Rolltor-Bereich 20A0) ist VERSCHLOSSEN
+  und oeffnet sich erst mit dem Schluessel, den man vom Alligator bekommt (Spur F: Schluessel nach dem Tod blinkend bei der
+  Leiche; Tuer-Sperre/Schluessel-Item in Original-Form mit Beleg, Item-/Taken-Bit nach Zensus, Bits aus F's Zuteilung
+  110-113). Damit ist die offene Frage "welche Tuer oeffnet der 2090-Schluessel" beantwortet. Weg danach: 2090 -> Tor -> 20A0
+  -> (Original sub10 (3,206)) -> 11A0 -> STAGE3.
+- Spur G: die Kanister-Szene setzt voraus, dass der Spieler ueber die Leiter in 2090 ist (nicht ueber 20A0).
+
+## 2026-10-24 23:10 — Orchestrator-Entscheid J-E1 (Abnahme J 0: alle Nutzer-Punkte erfuellt, nur Vertrag V1 + Doku M2)
+
+- **V1 angenommen** (wie B5/I-E1/H-E1): Haken der Spur J in scd_vm.c (register_opcodes, s_op_table[0x48]/[0x49], 3 Zeilen)
+  und platform/pc/main.c (pc_prop_world, 4 Zeilen), markiert "Runde 41 Spur J". Bei der Integration in register_opcodes mit
+  C/E (op_message_on) und den uebrigen Haken beidseitig mergen.
+- M2 (Dossier/Kopf von re15_superobj_r41.h zu ROOM4031: Gegner 0 beim ersten Besuch ist John, Typ 0x49) berichtigt die
+  Nachbesserung J 1; sonst ist nichts zu tun.
+
+## 2026-10-25 00:01 — Nachtrag 22 (Nutzer-Entscheide per Auswahl zu den Fragen der Spur G)
+
+1. "Wann ist der Alligator 'oft genug angeschossen'?" — **"RE2-Schwelle (300 Schaden)"** (wie gebaut: RE2-Schwaeche
+   @0x80101ebc-dc; Pistole 43 / Schrotflinte 11 / Magnum 7 / Granatwerfer 5 Treffer).
+2. "Soll der Alligator nach der Kanister-Szene sofort wieder auftauchen?" — **"Erst beim Annaehern"** (wie gebaut).
+3. "Soll beim Hereinkommen von Marvin/John ebenfalls der Knall kommen?" — **"Stahltuer-Ton lassen"** (DOOR06 wie gebaut).
+Damit sind alle Entscheidungsfragen der Spur G beantwortet. Sprachaufnahmen fuer den Nutzer: synchro/STAGE2/room2080/main42.wav
+("Hey, Leon, try with this!", Marvin) und synchro/STAGE2/room2081/main42.wav ("Hey, Elza, try with this!", John).
+
+## 2026-10-25 00:22 — Nachtrag 23 (Wortlaut; Ablauf des Alligator-Kampfes mit der Kanister-Szene, Spuren G/F/B)
+
+> Aber die Kanister Szene kommt erst nachdem der Aligator genug getroffen wurde. Aligator Kampf -> Mehrere Treffer ->
+> Kanister Szene -> Kampf geht weiter, Aligator nimmt irgendwann in dem weiteren Rundlauf den Kanister auf -> Schuss -> Ende
+> Kiefer kaputt.
+
+Folgen (Orchestrator): Massgeblicher Ablauf (ergaenzt Nachtrag 22 Punkt 2 "Erst beim Annaehern" = der Alligator setzt nach
+der Szene seinen normalen RE2-Ablauf fort, nicht sofort angreifend): Kampf -> Treffer bis zur RE2-Schwelle (300 Schaden) ->
+Kanister-Szene (Marvin/John, Wurf ins 2090-Becken) -> Kampf geht weiter -> der Alligator nimmt den Kanister IRGENDWANN in
+seinem weiteren Rundlauf auf (Aufnahme-Mechanik der Spur B, RE2-Form) -> Schuss auf den Kanister im Maul -> Explosion ->
+Tod mit geplatztem Kiefer. Abnahmepunkt der Spur G: diese ganze Folge im ECHTEN Ablauf an der exe (Leon UND Elza), ohne
+Testhaken fuer den Kanister — insbesondere: der Kanister liegt nach dem Wurf erreichbar auf dem Rundweg des Alligators
+und wird im normalen Kampf tatsaechlich aufgenommen (Messung: Bild der Aufnahme, Zeit seit dem Wurf).
+
+## 2026-10-25 00:23 — Nachtrag 24 (Wortlaut; Animation vor der Kanister-Aufnahme, Spur G) + Orchestrator-Entscheid FG-E2
+
+> Ich sah die Animation vor dem aufnehmen des Kanisters ist noch falsch. Da hat er mal wieder eine dämliche Kletter
+> Animation
+
+Folgen (Orchestrator):
+- Vor der Kanister-Aufnahme darf der Alligator KEINE Kletter-Animation (CROSS/GUARD-Kletterclip des Nutzer-Designs) zeigen.
+  Form = RE2: er schwimmt zum Kanister (Sub 1 Schwimmen, Clip 0, Blend 32 @0x80100b04-18 / @0x80100c04, Stufen der
+  T2-Aufnahme @0x801017c4-0x80101d40) und nimmt ihn auf. Ursache im Ablauf finden (liegt der geworfene Kanister so, dass der
+  Weg ueber die Plattform/Rampe fuehrt? greift CROSS waehrend des Aufnahme-Fensters?) und belegt beheben; Bildbogen der
+  Aufnahme vorher/nachher im echten Ablauf (Nachtrag 23), Leon UND Elza.
+- **FG-E2:** Spur G darf dafuer gezielt in Spur B's Modulen (gator_re2_r41.c, enemy_ai_boss_gator.c) aendern — nur die
+  Aufnahme-/Anschwimm-Logik, markiert "Runde 41 Spur G (Nachtrag 24)"; Spur F aendert dort nur die Szene/den Auftritt.
+  Bei der Integration beidseitig mergen; die B-Riegel (unit_r41_re2gator_*, integration_r41_re2gator) bleiben gruen.
+
+## 2026-10-25 00:24 — Nachtrag 24b (Wortlaut; BERICHTIGT Nachtrag 24 — es geht um Marvin/John, nicht um den Alligator)
+
+> nein, nicht der aligator
+
+Folgen (Orchestrator, ersetzt die Folgen von Nachtrag 24; FG-E2 ist WIDERRUFEN, keine Aenderung in Spur B's Modulen):
+- Die "daemliche Kletter-Animation" vor dem Aufnehmen des Kanisters spielt **Marvin (Leon) bzw. John (Elza) in ROOM2080/2081**
+  in der Kanister-Szene der Spur G (Punkt 3: "Rennt zu dem Gas Kanister, nimmt ihn auf in beide Haende"). Spur G belegt, welcher
+  Clip dort laeuft (Bank/EDD/RBJ, Clip-Nummer, Ursache: z. B. falscher Clip-Index, Kanten-/Kletter-Sub des NPC-Gangs an der
+  Reling, Stufe), und ersetzt ihn durch passende Animationen: Hinlaufen (Lauf-Clip des NPC) und Aufnehmen mit beiden Haenden
+  (Original-/RE2-Clip mit Beleg — z. B. eine Aufheb-/Trage-Animation aus RE1.5-NPC- oder RE2-Banken; Herkunft im Dossier).
+  Bildbogen der Szene vorher/nachher, Leon UND Elza.
+
+Nachsatz des Nutzers zu 24b (Wortlaut): "marvin" — gesehen bei Marvin (Leons Szenario); John (Elza) gleich pruefen.
+
+## 2026-10-25 00:56 — Orchestrator-Entscheide FG-E3/FG-E4 (Abnahme G 0, Maengel M2/M3; der Nutzer kann widersprechen)
+
+- **FG-E3 (M2, Nachtrag 23):** Nach der Kanister-Szene setzt der Kampf mit DEMSELBEN Alligator fort (HP, Intro gesehen,
+  Lage/Zustand bleiben; kein erneuter Durchbruch), und der Kanister landet so, dass der Alligator ihn im normalen Rundlauf
+  aufnimmt (B's Aufnahme-Fenster). Spur G darf dafuer kleine, markierte Haken ("Runde 41 Spur G, FG-E3") in Spur B's Modulen
+  setzen (gator_re2_r41.c / enemy_ai_boss_gator.c: Zustand ueber die Szene erhalten, Landepunkt/Fenster), Merkbits aus G's
+  Zuteilung 114-119. B's Riegel bleiben gruen. Beleg im echten Ablauf ohne Testhaken (Leon UND Elza): Wurf -> Kampf -> Aufnahme
+  -> Schuss -> Kiefer.
+- **FG-E4 (M3, Nachtrag 5):** Eine Kamera "genau wie Adas Raketenwerfer-Wurf" (Werferin von unten, ~44 Grad) gibt es in
+  ROOM2080/2090 nicht — der Port hat nur die vorgerenderten Hintergruende der Original-Kameras, eine neue Blickrichtung
+  braeuchte einen neuen Hintergrund. Gewaehlt wird die naechstliegende vorhandene Kamera (laut Abnahme 2090 Cut 12, knapp
+  daneben) mit der RE2-Schnittfolge des Wurfs (ROOM7020 sub12/13: Bild, Dauer, Schnitte belegen); PORT-WAHL im Dossier mit
+  Bildvergleich RE2 <-> Port. Der Nutzer wird darauf hingewiesen.
+
+## 2026-10-25 02:47 — Nachtrag 25 (Nutzer-Antworten per Auswahl zu den Fragen (o)/(p)/(q) der Spur C) + Orchestrator-Entscheid C-E4
+
+(o) "Soll waehrend der 60 Sekunden RE2s Selbstzerstoerungs-Alarm (SUB_25, RE2 ROOM6040) laufen?" — **"Ja, RE2-Alarm SUB_25"**.
+(p) "Countdown-Anzeige: gebaut MM:SS:HH oben rechts ... Passt das?" — **Antwort des Nutzers (Wortlaut): "Auch da gibt es
+    mindestens ein Alarm in Resident Evil 2."** -> RE2 HAT eine Countdown-Anzeige (Selbstzerstoerungs-Zeit am Spielende):
+    Spur C findet sie in RE2 (ghidra_re2_Leon.txt / RE2_Quellcode_V2: Zeit-Anzeige, Ziffern-Textur, Lage, Format, Ausloeser,
+    z. B. die Laborsequenz um ROOM6040 / den Zug) und baut den 2030-Countdown in GENAU dieser Form nach (Form/Lage/Ziffern/
+    Farbe mit Beleg), statt der Port-Wahl MM:SS:HH.
+(q) "A fuse box for the valve controls." — **"Freigeben"**.
+
+**C-E4:** Fuer den Alarm darf Spur C einen kleinen, markierten Haken im Musik-/BGM-Lader platform/pc/src/audio_pc.c setzen
+("Runde 41 Spur C, C-E4"; Spur D ist integriert, beidseitig mergen). SUB_25 aus info/re2leon/COMMON/SOUND/SUB_25.BGM bytegleich
+nach shared_assets/RE2/SOUND/ (Paket-Gate nennen). Alarm vom Warntext bis zur Flut bzw. bis zum Verlassen des Raums.
+
+## 2026-10-25 02:51 — Orchestrator-Entscheid F-E1 (Abnahme F 0, Mangel M4: alte Riegel durch Nutzer-Vorgaben widerlegt)
+
+Die von Spur F rot gemachten Riegel pruefen Zustaende, die der Nutzer ausdruecklich geaendert hat ("neue Regel widerlegt alten
+Riegel", Memory reai-v2-gezielte-integration-querbezug). Spur F zieht sie mit Beleg nach (Kommentar mit Nachtrag/Wortlaut) und
+faehrt sie gruen — kein Lockern ohne Grund:
+- unit_r36_tueren_schott ("ROOM2090: keine begehbare Tuer nach ROOM20A0"): Tor 2090<->20A0 verschlossen bis zum Alligator-
+  Schluessel (Nachtrag 21) -> Erwartung: verschlossen vor (9,113), begehbar danach.
+- unit_r38_spinnen ("ROOM2090 Cut 0: 0 Spinnen"): Spinnen in 2090/2091 entfernt (Nutzer-Auftrag) -> 2090/2091 aus der
+  Spinnen-Erwartung, uebrige Raeume unveraendert.
+- unit_r30_tuer_verschlossen (Tabellenzahl 54 statt 52): Tabelle um die zwei neuen Tor-Saetze ergaenzen UND M3 (doppelter Ton)
+  beheben -> genau 1 Ton.
+- integration_r41_re2gator (Spur B, "RE2-Intro ..."): die 2090-Ankunftsszene ersetzt das RE2-Intro (Nachtrag 6) -> der Riegel
+  prueft den Auftritt ueber F's Szene (Clip-Folge/Schnitte), B's uebrige Pruefungen bleiben unveraendert gruen.
+
+## 2026-10-25 08:16 — Nachtrag 26 (Nutzer-Antworten per Auswahl zu den Fragen der Nachbesserung G 1) + Entscheide FG-E5, C-E5
+
+1. "Soll der Alligator die RE2-Hals-/Anschwimm-Lenkung zum Kanister bekommen (RE2 FUN_800177c0, Zielmodus)?" —
+   **"Ja, RE2-Lenkung (Empfohlen)"**: im Kanister-Bereich lenkt er Hals und Schwimmweg zum Kanister und nimmt ihn
+   verlaesslich auf (RE2 Zielmodus +0x1C0&4, FUN_800177c0 Part 5, Ziel (x, y-800, obj[1].z) @0x80100a4c-70, Grenzen
+   560/312 @0x801005a0-c4; sonst FUN_80017d98 @0x80100344-74).
+2. "Wurf-Kamera: 2090 Kamera 12 (von unten) oder 2080 Kamera 7 (frontal)?" — **"2090 Kamera 12 (von unten)"** (wie gebaut).
+3. "Soll der Kanister beim Greifen sichtbar kippen (RE2-Kippen aus ROOM40A0)?" — **"Ja, RE2-Kippen (Empfohlen)"**.
+
+**FG-E5:** Spur G setzt 1. und 3. um; dafuer darf G (wie FG-E3) kleine markierte Haken/Funktionen in Spur B's Modulen setzen
+(Part-5-Gier-Kanal fuer den Hals, Kippen beim Anhaengen). B's Riegel bleiben gruen.
+**C-E5:** Der Alarm-Schalter re15_audio_r41_alarm (~20 Zeilen am Ende von audio_pc.c + 4 markierte Einzeiler) ist angenommen
+(braucht die statischen BGM-Zustaende der Datei). Die zwei RBJ-Haken der Spur C in main.c (V1 der Abnahme C 5) sind angenommen;
+Bit (9,125) (Ventil-Sicherungskasten) ist in VERTRAG 1.1 fuer C eingetragen.
+
+## 2026-10-25 11:10 — Nachtrag 27 (Nutzer-Antwort zur Masken-Frage der Spur M, Abnahme M 3 Mangel 2) + Orchestrator-Entscheid M-E1
+
+Frage: "Masken STAGE3–6 (Spur M): Die meisten Löcher sind geschlossen, aber einige Gegenstände haben automatisch keine
+verlässliche Tiefe und bleiben ohne Maske: Geländer 3050 Kamera 6, 30E0 Kamera 6–9, 3040 Kamera 3; Pulte 5050 Kamera 1/2;
+Möbel 30A0 Kamera 0; Lok-Unterteil 6000 Kamera 7; Roboterarm 50B0 Kamera 1/3; Wandecke 6000 Kamera 5. Der sichere Weg wären
+Freistellungen von dir wie bei STAGE1/2 (die berichtigten Übersichtsbilder liegen in pri/STAGE3-6). Wie möchtest du vorgehen?"
+Antwort des Nutzers (Wortlaut): **"Ich kümmere mich selbst drum."**
+
+**M-E1:** Die Restliste (Mangel 2 der Abnahme M 3: Gelaender 3050 C6, 30E0 C6..C9, 3040 C3, Pulte 5050 C1/C2, Moebel 30A0 C0,
+Lok-Unterteil 6000 C7, Roboterarm 50B0 C1/C3, Wandecke 6000 C5) ist KEIN Mangel der Spur M mehr. Die Freistellungen zeichnet
+der Nutzer selbst (pri/STAGE3-6); eingebaut werden sie, sobald sie vorliegen (naechste Version). Spur M baut fuer diese
+Gegenstaende KEINE weiteren automatischen Masken; der Stand der Nachbesserung 3 bleibt (kein Rueckschritt). Die Liste kommt je
+Raum/Kamera/Gegenstand mit Beleg ins Dossier ("Fuer den Nutzer: Freistellungen") und in die Release Notes v0.8.29.
+Offen fuer Spur M bleiben nur Mangel 1 (Ost-Stirn der Buero-Trennwand 30A0/30A1 C0: Zelle 6 @RDT+0x0045C, neuer Befund auf dem
+natuerlichen Weg, Tiefe aus der Zelle belegt) und Mangel 3 (Laufpruefung im gemeinsamen Laeufer). Abnahme M 4 urteilt Punkt 1
+an Mangel 1 und daran, dass keine Stelle der Restliste schlechter wurde; die Restliste selbst ist kein Mangel.
