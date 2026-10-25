@@ -1258,7 +1258,7 @@ angefasst; seine Riegel bleiben gruen.
   | 6010 | 12 | 24/0 | 2642/0 |  |
   | 6010 | 13 | 211/162 | 2661/0 |  |
   | 6030 | 10 | - | 1750/0 | L 1287/0 |
-* 108 Szenen in 4 Gruppen (`integration_r41_masken36_teile_a..d`): HINTER in jeder Kamera mit Stelle verdeckt (H > 0, z.B. Leon hinter dem Steg-Gelaender
+* 108 Szenen (9 Gruppen a1..d2 zu hoechstens 13) (`integration_r41_masken36_teile_a1..d2`): HINTER in jeder Kamera mit Stelle verdeckt (H > 0, z.B. Leon hinter dem Steg-Gelaender
   ROOM30E0 C8 94 von 225, Bild `M_bilder/NB5/NB5_exe_t30E0_08.png`; hinter dem Laufsteg-Gelaender ROOM3040 C3 91 von 309, `NB5_exe_t3040_03.png`),
   DAVOR in jeder Kamera 0 Punkte der Spielfigur uebermalt. Drei Szenen genommen bzw. geaendert (Messung bleibt hier): t3050_06 (S 26 im Fenster
   am oberen Bildrand, H 18: verdeckt - M bekommt SMIN=0, weil H > 0 die Figur im Fenster voraussetzt); t6010_12 (H 0 von 24: Randfall, das

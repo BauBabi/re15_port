@@ -159,13 +159,13 @@ set_tests_properties(unit_r41_masken36_platziert PROPERTIES TIMEOUT 900)
 #                             @0x8002565c / ZSF3 341 @0x80066c70 / Masken-OT @0x80039650) - keine Figur VOR dem Gegenstand wird verdeckt.
 add_test(NAME unit_r41_masken36_teile COMMAND test_r37_masken36 teile WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r41_masken36_teile PROPERTIES TIMEOUT 900)
-#   integration_r41_masken36_teile_a..d  echte exe: je Kamera mit eingesetzten Original-Atlas-Teilen eine HINTER-Stelle (Art M: die neuen
-#                             Rechtecke verdecken die Figur, H > 0) und eine DAVOR-Stelle (Art V: Figur ueberlappt die neuen Teile davor,
-#                             0 Punkte uebermalt), Leon; Elza je Raum die staerkste HINTER-/DAVOR-Stelle. Stellen = test_r37_masken36 neustellen
+#   integration_r41_masken36_teile_a1..d2  echte exe: je Kamera mit eingesetzten Original-Atlas-Teilen eine HINTER-Stelle (Art M: die neuen
+#                             Rechtecke verdecken die Figur, H > 0) und eine DAVOR-Stelle (Art L: nur die Spielfigur, Lauf D ohne Masken mit der
+#                             Figur ausserhalb des Regionsvierecks; 0 Punkte uebermalt), Leon; Elza je Raum die staerkste HINTER-/DAVOR-Stelle. Stellen = test_r37_masken36 neustellen
 #                             (dieselben Stehplaetze/Figur/Tabelle wie der Ausschluss). Gruppen: a = ROOM3040, b = 3050 + 4040, c = 30A0/30E0/
-#                             Stage 5, d = Stage 6; Szenen test_r41_masken36_teile_szenen_<g>.cmake, Laeufer wie integration_r41_masken36_stage2.
+#                             Stage 5, d = Stage 6, je hoechstens 13 Szenen (TIMEOUT 2400 s; L-Szenen brauchen 3 Laeufe); Szenen test_r41_masken36_teile_szenen_<g>.cmake, Laeufer wie integration_r41_masken36_stage2.
 if(TARGET re15_pc)
-    foreach(_g a b c d)
+    foreach(_g a1 a2 b1 b2 c1 c2 c3 d1 d2)
         add_test(NAME integration_r41_masken36_teile_${_g}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
