@@ -1407,3 +1407,90 @@ genau 4096). Raum-Quads mit v > 216 werden gezaehlt ("aus_fenster"), nicht gezei
 re15_pc_g41nb4a.exe gegen die Bilder der Abnahme 3 (`<SP>/g3abn/runs/k_leon_r1`, alter Stand mit zwei Plaetzen): `Bilder 31, davon verschieden 0`
 (`<SP>/g4/ppmdiff.py`, Pixel fuer Pixel, F2280..F2340 = Schnitt, Explosion, Fontaene, Scherben).
 
+### 11.3 M3 - Kanister/Kopf ausserhalb des Raums (Spritzring-Wolke verworfen) und Regions-Test des Kanister-Zeichners
+**Messung vorher** (Abnahme-3-Lauf `<SP>/g3abn/runs/v1_leon`, kein Testhaken; gleicher Code-Stand): nach der Rueckkehr steht Leon bei
+(5782,0,-26532), 468 vor der Suedwand. Der Alligator traegt den Kanister (angehaengt F155, Stufe 7) und schwimmt auf Leon zu; das
+Steuerziel endet auf der Klemmlinie z -25400 (re15_gator_boss_steuerziel: Kante -27000 + 1600), die Wand-Klemme der Takt-Huelle
+(re15_gator_boss_tick (2), re15_collision_constrain_enemy mit hit_radius_min) haelt nur die WURZEL. state.log F444: Alligator
+(4324,-25408) Gier 743 (Sued-Suedost) -> beim R1 `Kanister Stufe 13 pos=(5996,-2041,-29290)` = 2290 jenseits der Suedwand und 290 jenseits
+des Regions-Vierecks (alle 13 Cuts von ROOM2090 haben den Anker x -11000..9500, z -29000..-3500). Ebenso in den anderen Abnahme-Laeufen
+(Tabelle 2.7 der Abnahme): k_elza (-9986,-4622), plat_elza (-10422,-4136), west_leon (-10831,-27801), v1_elza (8714,-26043) - jedes Mal
+ausserhalb der Aussenwaende x[-8900..7200] z[-27000..-5400] (SCA-Aussenwaende ROOM2090.RDT, enemy_ai_boss_gator.c Kopf). Folge:
+Start 2/8 (6 ausserhalb) bzw. 3/8, 5/8, re2fx_pc 0 bzw. 16/48 - die Ring-Sprites (Kanister-Matrix x Tafel @0x801000a8) fielen durch den
+Regions-Test von FUN_80077924 (`jal 0x8002c820` @0x80077a30).
+**RE2 (selbst gelesen):**
+- Der RE2-Alligator hat keine Wandklemme (Dossier B 13.0: Root @0x80100190-3a4 und Hauptschleife 0x800267c0-930 ohne Wand-Aufruf,
+  FUN_80015cb8 setzt die Lage absolut ohne Wandkollision). Kopf und Kanister bleiben im Raum, weil er auf den Korridor-Beinen schwimmt
+  (Bein 2 x -23078: `addiu v0,zero,-23078 / sw v0,56(s0)` @0x80101048-4c) und der Kanister auf diesem Bein liegt (ROOM40A0 sub05
+  `Pos_set (-22816,-1984,-9500)` @SCD 0x0484). Die Regions-Vierecke der R1-Schnitte umfassen das Bein mit Rand (ROOM40A0.RDT RVD,
+  Werkzeug B `tools/r41_re2gator/rvd_40a0.py`-Zerlegung: Cut 5 Anker @0x00388 (-28300,-28201) (-28899,4105) (-20878,2616) (-18491,-27607)
+  -> bei z -10000 x -28638..-19883; Cut 6 Anker @0x003C4 x -29405..-10899 z -16001..5606) - in RE2 liegen Kanister und Spritzring beim R1
+  immer im Viereck.
+- Objekt-Zeichner FUN_800363f0 (info/re2leon/PSX.EXE, selbst disassembliert): je Objekt (Basis 0x800d0324, Schritt 504) Matrix
+  zusammensetzen (`jal 0x8002ce94` @0x80036484 -> Weltmatrix +84, Lage +104), dann `lw a1,-8172(s4)` (Viereck des aktiven Cuts 0x800ce014)
+  / `jal 0x8002c820` mit a0 = s3 = obj+104 @0x80036530-34; `bne v0,zero,0x80036558` (im Viereck -> zeichnen), sonst `lw v0,0(s1) /
+  andi v0,v0,0x10 / beq v0,zero,0x800366a4` @0x80036544-50 = ohne Flag 0x10 weiter zum naechsten Objekt: KEIN Mesh, KEINE Scherben
+  (@0x80036558-b4) und KEIN Scherben-Zaehler (+0x1EC += 1 erst @0x800365bc-c8). FUN_8002c820 = Punkt-im-Viereck (RE2_Quellcode_V2/
+  FUN_8002c820.c), wie re15_aot_point_in_quad.
+- Flagwort des Kanisters obj[1]: Obj_model_set-Handler 0x80055260 (Op-Tafel 0x800a74c8[0x2D]): `lhu v0,10(s2) / ori v0,v0,0x1 /
+  sll v0,v0,16 / sra v0,v0,16 / sw v0,0(s1)` @0x800552d0-e4. ROOM40A0.RDT @0x2A12 `2d 01 00 00 00 00 00 00 00 00 0a 00 00 00 b8 ac ...`
+  -> word0 = 0x000A | 1 = 0x000B: KEINE Ausnahme 0x10 - der Regions-Test gilt fuer den Kanister.
+**Aenderung:**
+1. KOPF-KLEMME (PORT-WAHL; Form = der Bahn-Massstab der Spur B gr2_bahn_frei "Hals/Kopf/Kiefer Bones 5/6/7 im Wasser", Werkzeug = die
+   Wand-Klemme, die nur die Lage verschiebt): solange der Kanister im Maul haengt (Stufe 3..7 nach dem Anhaengen) und im R1-Tod liegen
+   Hals, Kopf, Kiefer (Bones 5/6/7 der gezeichneten Pose, gr2_pose_gezeichnet) und der Kanister (Part 6 x Lokallage) innerhalb der
+   Aussenwaende x[-8900..7200] z[-27000..-5400]; ragt ein Punkt hinaus, wird der ganze Alligator (Lage + Anker) um den Ueberstand nach
+   innen geschoben. Ohne die Bloecke Plattform/Rampe (GUARD-Hochbiss und CROSS-Klettern bleiben unberuehrt), nicht im FRESSEN (eigene
+   Buehne der Spur B) und nicht bei abgeschalteter Klemme (gb_klemme_aus: CROSS/Befreiung). Dateien: `engine/src/gator_re2_r41.c`
+   re15_gr2_kopf_klemme / gr2_kk_rechnen / gr2_kk_takt (dieselbe Klemme in der R1-Vorausschau gr2_r1_pfad), Haken (2b) in
+   `engine/src/enemy_ai_boss_gator.c` re15_gator_boss_tick nach der Wurzel-Klemme, vor re15_gr2_nachtakt (6 Zeilen, markiert);
+   Messzeilen `KOPF-KLEMME an/aus` in gator_boss.log.
+2. REGIONS-TEST des Kanister-Zeichners (`platform/pc/src/gator_re2_pc.c` re15_gr2_pc_zeichnen): ausserhalb des Vierecks des aktiven
+   Cuts (re15_rdt_get_region_quad + re15_aot_point_in_quad = FUN_8002c820) weder Mesh noch Scherben noch Scherben-Zaehler; Messzeile
+   `[gator-re2] Kanister F<n> im/AUSSERHALB des Regions-Viereck(s) von Cut <c>` bei jedem Wechsel.
+**Messung nachher** (Messkopie re15_pc_g41nb4b.exe = Code dieses Abschnitts, Rezepte der Abnahme 3 unveraendert (`<SP>/g4/nach.sh` liest
+deren env.txt); die vier Elza-Laeufe mit Haken HP erreichten den R1 nicht mehr in EXIT_AT 3000 (11.5) und wurden mit 250 Schussbloecken
+und EXIT_AT 9000 nachgefahren (`<SP>/g4/runs/c_*`); Auswertung `<SP>/g4/r1sum.py`):
+
+| Lauf | R1 (Bild nach der Rueckkehr) | Kanister beim R1 vorher (Abnahme 3) | Kanister beim R1 nachher | Start nachher | Spritzring re2fx_pc max vorher -> nachher | Kopf-Klemme-Episoden |
+|---|---|---|---|---|---|---|
+| k_leon | F814 | (1874,-20754) | (-1075,-6208) innen | 8/8 | 96 -> 96 | 10 |
+| k_elza | F3766 | (-9986,-4622) AUSSEN | (-7172,-11242) innen | 8/8 | 64 -> 176 | 137 |
+| d15_leon | F987 | (-7394,-11396) | (6466,-6345) innen | 8/8 | 96 -> 96 | 17 |
+| d15_elza | F4651 | (-7374,-11400) | (-6097,-22283) innen | 8/8 | 96 -> 96 | 147 |
+| west_leon | F322 | (-10831,-27801) AUSSEN | (-6615,-9182) innen | 8/8 | 16 -> 96 | 6 |
+| west_elza | F3274 | (-3482,-10330) | (5304,-23991) innen | 8/8 | 96 -> 96 | 81 |
+| plat_leon | F1204 | (5402,-11294) | (7200,-6844) innen | 8/8 | 96 -> 96 | 2 |
+| plat_elza | F3397 | (-10422,-4136) AUSSEN | (7200,-9856) innen | 8/8 | 48 -> 96 | 116 |
+| **v1_leon (kein Haken)** | F1215 | **(5996,-29290) AUSSEN** | (5940,-19569) innen | **8/8** | **0 -> 96** (12 Bilder) | 31 |
+| v1_elza (kein Haken) | F2167 | (8714,-26043) AUSSEN | (7200,-22497) innen | 8/8 | 48 -> 96 | 81 |
+
+In allen zehn Verlaeufen: Raum-ESP ROOM40A0 registriert, op_unbekannt 0, zehn Scherben-Bilder 180..1530, Regions-Test des Kanisters
+"im Regions-Viereck" (kein AUSSERHALB in den R1-Bildern). Die R1-Lagen haben sich verschoben, weil der Alligator mit dem Kanister nicht
+mehr mit dem Kopf durch die Wand schwimmt (k_leon R1 jetzt F814 im Nordbecken statt F2290 im Suedbecken).
+Riegel: `unit_r41_kanister2080_kopfklemme` (Teil "kopfklemme" im Testprogramm der Spur B, echter Boss-Takt): vor dem Takt meldet die
+Klemme fuer Wurzel (2000,-25400) Gier 0x400 mit Kanister den Ueberstand (0,3260) = Kopf/Kanister 3260 jenseits der Suedwand; nach jedem
+der 30 Takte Kanister z >= -27000 (min -27000); R1-Start Kanister (2077,-1937,-26418) mit 6/6 Spritzring-Punkten im Regions-Viereck;
+Todes-Clip 38 Bilder Bones 5/6/7 innerhalb; Gegenprobe ohne Kanister: keine Klemme. `integration_r41_kanister2080_kampf` prueft in allen
+fuenf Laeufen Kanister beim R1 innerhalb der Aussenwaende und Spritzring-Quads > 0 (11.5).
+
+### 11.4 M1 - Plattform-Verlauf: Todes-Clip nur 6/19 im Bild
+**Ursache (Code + Abnahme-Lauf plat_leon F1278, gator_boss.log):** gr2_r1_wahl bewertete (1) gueltigen Start VOR (2) sichtbaren Proben, und
+Stufe 0 schloss jeden Schnitt ueber Spur B's Massstab-Grenze aus. Kandidaten: laufender Cut 4 Start 8/8, Todes-Clip 6/19 (ab F1290 Kopf
+hinter dem Maschinenblock); Cut 3 Start 8/8, 19/19, Massstab 2158 > Grenze 1892; Cut 2 Start 2/8, 16/19 -> Wahl Cut 4.
+**Beleg / Mass:** G-E1 (AUFTRAG 12:08): "die Zonenkamera, in der Kopf und Kiefer mit Rand im Bild liegen und von keiner Maske verdeckt
+sind, am naechsten an der RE2-Lage" - keine Massstab-Grenze; Entscheid B8 ("die Massstabsgrenze (groesster RE2-Schnitt) bleibt") gilt
+fuer die Kamera-Programme der Spur B und bleibt hier Vorrang-Regel, nicht Sperre. RE2-Form: R1 P0 schneidet nur, wenn der laufende Cut
+den Kopf nicht zeigt (`addiu v0,zero,6 / beq` ... `slti v0,v0,-13300` @0x80102218-34, +0x218 |= 0x40 @0x80102240-4c) - der Port
+bleibt bei der Wahl = laufender Cut ohne Schnitt (unveraendert).
+**Aenderung** (`engine/src/gator_re2_r41.c`, markiert "Nachbesserung 4 (M1)"): Rangfolge als reine Funktion re15_gr2_r1_rang (Header
+re15_gator_re2_r41.h, Typ re15_gr2_r1_kand_t): VOLL = Kopf und Kiefer im Start und in allen Proben des Todes-Clips. Stufe 0: volle Cuts
+unter der Grenze (oder der laufende); Stufe 1: volle Cuts ohne Grenze; Stufe 2 (kein voller Cut): die meisten Proben zuerst. Innerhalb:
+gueltiger Start, meiste Start-Punkte, Kopf naechst (170,111). gr2_r1_wahl beurteilt jede Zonenkamera einmal (vorher je Stufe erneut) und
+schreibt "Kandidat ... voll" und "Wahl Stufe s: Cut c" in gator_boss.log.
+**Messung nachher:** Riegel `unit_r41_kanister2080_r1wahl` mit der Kandidatentabelle des Abnahme-Laufs plat_leon F1278 (Zahlen aus dessen
+gator_boss.log): `r1wahl A (plat_leon F1278, laufender Cut 4 mit 6/19): Wahl Cut 3 Stufe 1` (vorher Cut 4); dazu drei Grenzfaelle (naeher
+an RE2, Grenze bevorzugt, kein voller Cut -> meiste Proben). Im Spiel (Tabelle 11.3, alle zehn Verlaeufe): Kopf ok, Kiefer ok, Todes-Clip
+19/19 Proben, gewaehlt in Stufe 0; plat_leon jetzt R1 F1204 bei (3541,-8901): laufender Cut 4 mit 8/8 und 19/19 -> ohne Schnitt; plat_elza
+F3397: Schnitt Cut 4 8/8 19/19. Riegel `integration_r41_kanister2080_kampf` um den Lauf plattform_leon (Leon auf (0,-16000)) ergaenzt (11.5).
+

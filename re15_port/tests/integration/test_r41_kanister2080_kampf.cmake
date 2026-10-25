@@ -31,6 +31,18 @@
 #   F826/F899/F826/F814); dazwischen zielt die automatische Wahl auf die Spinnen (0x25) in 2090. Daher 60 Schussbloecke (statt 18,
 #   die nach gut 2400 Bildern endeten) und EXIT_AT 3000 Bilder nach der Rueckkehr (statt 1500).
 #
+# Nachbesserung 4 (Abnahme G 3, Maengel M1/M3):
+#   M1 Plattform: FUENFTER Lauf "plattform_leon" (Leon auf der Plattform (0,-16000), Lage des Abnahme-Laufs plat_leon) - dort waehlte
+#      die R1-Kamera den laufenden Cut 4 mit nur 6/19 sichtbaren Proben des Todes-Clips; die Rangfolge (gator_re2_r41.c
+#      re15_gr2_r1_rang) nimmt jetzt den vollen Todes-Clip vor dem gueltigen Start und vor der Massstab-Grenze.
+#   M3 Kopf-Klemme: in jedem Lauf liegt der Kanister beim R1 (debug.log "Kanister Stufe 13 pos=") innerhalb der Aussenwaende
+#      x[-8900..7200] z[-27000..-5400] und der Spritzring (Kern-Bank 3, re2fx_pc) wird in den R1-Bildern gezeichnet (vorher im
+#      natuerlichen Leon-Verlauf 0 Quads: Kanister bei z -29290 jenseits der Suedwand, FUN_8002c820 @0x80077a30 verwarf alle sechs).
+#   Laufdauer: mit der Kopf-Klemme kommt der Alligator an Leon/Elza an der Wand nicht mehr mit dem Kopf durch die Wand heran; der
+#   passive Schuetze zielt dann laenger auf die Spinnen (0x25, in diesem Zweig noch in 2090 - Spur F entfernt sie) - gemessen R1
+#   nach der Rueckkehr: kampf_elza F3766, west_elza F3274 (EXIT_AT 3000 reichte nicht mehr), kampf_leon F814, nordost_leon F1383
+#   (vorher), plattform_leon F1204. Daher EXIT_AT 5000 Bilder nach der Rueckkehr.
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_kanister2080_kampf.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -72,7 +84,8 @@ foreach(_i RANGE 1 60)
     string(APPEND _schiess ",M0.6,MA0.1,M0.3,MA0.1,W3.0")
 endforeach()
 
-foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leon|0,-7000,2048|nordost" "elza|-8000,-16000,1024|west")
+foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leon|0,-7000,2048|nordost" "elza|-8000,-16000,1024|west"
+              "leon|0,-16000,3072|plattform")
     string(REPLACE "|" ";" _lt "${_lauf}")
     list(GET _lt 0 _wer)
     list(GET _lt 1 _start)
@@ -93,7 +106,7 @@ foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leo
     re15_start_spiel(_rv 900 ${_basisenv} ${_wahl}
         RE15_DEBUG_JUMP=2090@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:60" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100
         RE15_K2080_GATOR_HP=24990 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schiess}"
-        RE15_STATE_LOG=state.log "RE15_PLAYER_POS=${_start}" "RE15_EXIT_AT=3000#${_r90}" RE15_GATOR_FX_LOG=1 "${_exe_kopie}")
+        RE15_STATE_LOG=state.log "RE15_PLAYER_POS=${_start}" "RE15_EXIT_AT=5000#${_r90}" RE15_GATOR_FX_LOG=1 "${_exe_kopie}")
     if(NOT _rv EQUAL 0)
         r41gk_fehler("Lauf ${_lname}_${_wer} exe exit=${_rv}")
     endif()
@@ -226,8 +239,29 @@ foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leo
     if(NOT "${_sch_ist}" STREQUAL "180;354;522;684;840;990;1134;1272;1404;1530")
         r41gk_fehler("Lauf ${_lname}_${_wer}: Kanister-Scherben '${_sch_ist}' statt zehn Bilder 180..1530 (Tafel @0x8009DC64, M3)")
     endif()
-    message(STATUS "r41_kanister2080_kampf ${_lname}_${_wer} (Start ${_start}): Szene (${_npc}, Hinknien) -> Fall Cut 12 -> derselbe Alligator -> ${_aufnahme} -> R1-Tod; R1-Kamera '${_r1l}'; Werfer Versatz ${_vers} frontal ${_fr}; Explosion bis ${_fx_raum} Raum- + ${_fx_kern} Kern-Quads in ${_n_fx} R1-Bildern; Kanister-Scherben ${_sch_ist}")
+    # ---- Nachbesserung 4, M3: Kanister beim R1 innerhalb der Aussenwaende (Kopf-Klemme), Spritzring gezeichnet ----
+    file(STRINGS "${WORKDIR}/debug.log" _k13 REGEX "\\[gator-re2\\] Kanister Stufe 13 pos=\\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\)")
+    if(NOT _k13)
+        r41gk_fehler("Lauf ${_lname}_${_wer}: keine Zeile 'Kanister Stufe 13 pos=' (M3)")
+    endif()
+    list(GET _k13 -1 _k13l)
+    string(REGEX MATCH "pos=\\((-?[0-9]+),(-?[0-9]+),(-?[0-9]+)\\)" _m "${_k13l}")
+    set(_kx ${CMAKE_MATCH_1})
+    set(_kz ${CMAKE_MATCH_3})
+    if(_kx LESS -8900 OR _kx GREATER 7200 OR _kz LESS -27000 OR _kz GREATER -5400)
+        r41gk_fehler("Lauf ${_lname}_${_wer}: Kanister beim R1 (${_kx},${_kz}) ausserhalb der Aussenwaende x[-8900..7200] z[-27000..-5400] (M3)")
+    endif()
+    set(_ring 0)
+    foreach(_l IN LISTS _fx)
+        if(_l MATCHES "re2fx_pc ([0-9]+) \\| op_unbekannt" AND CMAKE_MATCH_1 GREATER _ring)
+            set(_ring ${CMAKE_MATCH_1})
+        endif()
+    endforeach()
+    if(_ring EQUAL 0)
+        r41gk_fehler("Lauf ${_lname}_${_wer}: Spritzring (re2fx_pc) in keinem R1-Bild gezeichnet (M3)")
+    endif()
+    message(STATUS "r41_kanister2080_kampf ${_lname}_${_wer} (Start ${_start}): Szene (${_npc}, Hinknien) -> Fall Cut 12 -> derselbe Alligator -> ${_aufnahme} -> R1-Tod; R1-Kamera '${_r1l}'; Werfer Versatz ${_vers} frontal ${_fr}; Explosion bis ${_fx_raum} Raum- + ${_fx_kern} Kern- + ${_ring} Spritzring-Quads in ${_n_fx} R1-Bildern; Kanister beim R1 (${_kx},${_kz}); Kanister-Scherben ${_sch_ist}")
 endforeach()
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_kanister2080_kampf: Leon und Elza, drei Startlagen gruen")
+message(STATUS "r41_kanister2080_kampf: Leon und Elza, vier Startlagen (mit Plattform) gruen")
