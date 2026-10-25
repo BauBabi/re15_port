@@ -987,3 +987,15 @@ am Ende von audio_callback nach SE/Stimmen/XA/FMV/BGM/Ambience - Rueckfrage, wel
 3. Lautstaerke — Antwort (Wortlaut): **"Die Türsequenzen und Sounds der Reinsprung SOunds ins wasser etc, scheint davon nicht
    betroffen."** -> je Tonart bei volume=100 und 50 messen (Mitschnitt), Ursache belegen, beheben: ALLE Toene folgen der Einstellung.
 4. Neue Spur **N** (nachtrag30, Baum r41_nachtrag30 von master) fuer alle Punkte von Nachtrag 30/30b; C und D sind integriert.
+
+## 2026-10-25 17:09 — Nachtrag 30c (Wortlaut; BERICHTIGT N-E1: Loesung des Ventilraetsels)
+
+> Aber ich raffe es immer noch nicht... wie kommst du auf 9, 2, 1, 8? Wir haben 6 valves: 1 - schwarz, 2 - grün. 3 - rot, 7
+> schwarz, 8 grün, 9 rot und dann das Plakat. Ich wollte sagen das es laut Plakat "Grün" und "Schwarz" vertauscht hat, also 9
+> und 2. Wie kommst du auf die Lösung?
+
+**N-E1 ist widerrufen** (der Orchestrator hatte "Nummern von black und green" als Tausch der Nummern der ECHTEN schwarzen und
+gruenen Ventile gelesen). Gemeint ist: auf dem Plakat sind die Nummern der Zeilen "GREEN" (09) und "BLACK" (02) vertauscht.
+Plakat (bleibt UNVERAENDERT): 1. GREEN 09 - 2. RED 01 - 3. BLACK 02 - 4. RED 07 -> richtig: 1. 02 - 2. 01 - 3. 09 - 4. 07.
+**Loesung = 02 -> 01 -> 09 -> 07** (es zaehlen die Nummern; die Plakatfarben sind die Ironie, "green and red mixed up").
+Code: RE15_R41C_LOESUNG = Indizes in RE15_R41C_VENTIL_NUMMERN {1,2,3,7,8,9} -> {1, 0, 5, 3}. Notiztext wie Nachtrag 30b.
