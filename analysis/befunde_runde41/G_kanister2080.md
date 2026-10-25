@@ -490,3 +490,34 @@ Ausgabe `G_belege/nb1_clipbilder_40_49.txt`, Marvin 0x40 und John 0x49, Pose = r
   Kanister quer vor der Hüfte auf - kein Knieheben, kein Aufstieg, keine Hocke. Hinweis: im Griff-Bild 467 wechselt der Kanister
   von stehend auf quer in einem Bild (wie schon im alten Stand beim Greifen); eine Kipp-Bewegung hätte als RE2-Form das Kippen
   aus ROOM40A0 sub10 (`2f 0b fc ff` @0x066E, 23 Bilder @0x0676, `34 10 00 fc` @0x0682) - nicht gebaut (Frage 8.8).
+
+### 8.2 M2 - Aufnahme im echten Ablauf (Nachtrag 23)
+**Messung vorher** (Abnahme 0 §3.8/§3.10, Läufe n3_natur, n23_kanal, n23_kanal_ohne_ap auf 489c0756, ohne RE15_GB_TEST und ohne
+RE15_GATOR_KANISTER): nach der Rückkehr ist der Alligator ein neuer Aktor (B9: untergetaucht am Lauerplatz (-7200,-9200),
+Auftauchen bei Annäherung < 9000 = Nutzer-Entscheid N22.2 "Erst beim Annähern"); in n23_kanal 2700 Bilder Kampf ohne Aufnahme,
+in n23_kanal_ohne_ap / n3_natur bleibt er unten (Leon > 9000 vom Lauerplatz). Eigene Nachrechnung (scratchpad
+`g_nb1/fenster_replay.py` = B's Fenster aus gator_re2_r41.c gr2_kan_takt Stufe 0 / gr2_kan_vor, über die Gator-Lagen von
+n23_kanal state.log): am alten Liegeplatz (-2278,-17267) **0 Bilder** im Fenster. Ursache: das Fenster ist ein schmaler Streifen
+8601..9000 x Skala 2731/4096 = **5734..6000 vor der Wurzel** (= am Maul), quer < 1466 + 267; das Maul überstreicht den Kanister
+nur, wenn der Gator in der Verfolgung GERADE auf ihn zuschwimmt und dabei weiter als 6000 Anlauf hat. Der Bahnendpunkt liegt 578
+neben dem Plattformblock (x -1700), der Gator klemmt mit Radius 1466 bei x <= -3166 und schwimmt im Kanal bei x -7386..-3183
+(n23_kanal) - quer >= 900, und er kommt dort nie von weit her gerade an.
+
+**RE2-Form der Liegestelle.** In ROOM7020 liegt der geworfene Raketenwerfer NICHT am Bahnende:
+- sub13 (selbst gelesen, re2_scd_walk.py): Speed_set 2/1/0 = 10/20/25 @0x088E-0896, 8/7/6 = 0/20/5 @0x089A-08A2, Do {Evt_next,
+  Add_speed, Add_aspeed} while Member_cmp(y < -800) @0x08A6-08B0, Set(5,0x0e) @0x08B6, Se_on 0x0e @0x08BA, **dann Pos_set
+  `32 00 b6 9f 00 00 10 aa` @0x08CA = (-24650,0,-21998)** + Dir_set `33 00 00 fc 00 00 00 04` @0x08D2 (liegt).
+- Add_speed @0x80055ab0 ist reine Weltaddition (`lw v0,56(a1)` / `addu` / `sw v0,56(a1)` @0x80055abc-c8, +0x3C/+0x40
+  @0x80055acc-e0, selbst disassembliert) -> z ändert sich im Flug um v_z 10/Bild (bis y -800 höchstens ~30 Bilder, ~300).
+  Ada steht bei z -17900 (`32 00 a0 92 b4 e2 14 ba` @0x0740), die Spielstelle bei z -21998 = 4098 daneben: den Rest legt der
+  Pos_set zurück.
+- Die Spielstelle liegt im Item-AOT 5 des Raketenwerfers (`4e 05 02 31 00 00 a8 99 60 a5 48 0d c4 09 11 00 ..` SCD-main
+  @0x00DA: x -26200..-22800, z -23200..-20700), der nach dem Wurf mit `Aot_reset 5` @0x0822 frei wird - RE2 legt den Gegenstand
+  also an die Stelle, an der er im Spiel gebraucht wird.
+
+**Port (PORT-WAHL der Stelle, Form RE2 @0x08CA):** der Kanister liegt in 2090 an seiner Spielstelle = Mitte der Westkanal-
+Wasserzone ROOM2090 main00 **Aot_set Slot 4 sce 8 @0x009FE `2c 04 08 47 00 00 3c dd 4c b9 20 1c 10 0e ..`** (x -8900..-1700,
+z -18100..-14500) = **(-5300,-16300)**. Begründung aus dem Raum: die drei sce-8-Wasserzonen @0x09D6/@0x09EA/@0x09FE sind Süd-,
+Nordbecken und dieser Kanal; Süd <-> Nord geht im Wasser nur durch den Kanal (Plattform x -1700..1850 z -20000..-12450 und Rampe
+dazwischen sind SCA-Blöcke, Spur B gb_zone/Westumlauf-Ecken x -4300) - folgt der Alligator Leon von einem Becken ins andere,
+schwimmt er hier geradeaus durch. Der Bahnendpunkt (Aufschlag im 2080-Bild, Ton) bleibt die RE2-Bahn.
