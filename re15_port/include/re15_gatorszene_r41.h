@@ -118,7 +118,9 @@ void re15_pc_gatorszene_r41_init(void);
  *     2090/2091 42-46; ROOM2090 hat keinen Nachrichtenblock, RDT +0x3C = 0) = die Original-Saetze von ROOM20A0 msg 1
  *     @0x203C "It's locked." und msg 2 @0x204C "You've opened the lock." (bytegleich, dieselbe Tor-Gegend).
  *   20A0/20A1 Slot 0 @0x01746 (-> 2090 (6300,-1800,-16250) Cut 2): gesperrt, bis Bit 113 steht; der Druck zeigt die
- *     Original-Meldung msg 1 "It's locked." von 20A0 (aufgeschlossen wird an der 2090-Seite, wo man den Schluessel bekommt). */
+ *     Original-Meldung msg 1 "It's locked." von 20A0 (aufgeschlossen wird an der 2090-Seite, wo man den Schluessel bekommt).
+ *   Nachbesserung 1 (M3): GENAU EIN Verschlossen-Ton (RE2 @0x800516a0/a4) - 20A0 msg 1 ist eine Text-Platz-Stelle der
+ *     Schloss-Ton-Tabelle (gen/lock_se_sites.inc), dort spielt ihn re15_lock_se_notice; der Tor-Handler nur bei msg 42. */
 #define RE15_GSZ_TOR_SLOT        1     /* ROOM2090/2091 main00 Door_aot_set @0x009B6 `3b 01 02 31 01 ..`                   */
 #define RE15_GSZ_TOR_EREIGNIS    19    /* frei: ROOM2090 Sub-Tabelle @0x0ADC = 4 Subs; 18 = die Szene                      */
 #define RE15_GSZ_TOR20A0_SLOT    0     /* ROOM20A0/20A1 main00 Door_aot_set @0x01746 `3b 00 02 31 02 ..`                   */
@@ -134,7 +136,9 @@ int  re15_gatorszene_r41_discard_stelle(unsigned room_id, uint8_t msg_id, uint8_
 /* ---- 3. SCHLUESSEL (Dossier §3): der nie platzierte RE1.5-"Water Key" (Namenstabelle DEBUG.BIN @0x800c495c Eintrag 0x45,
  * CHECK 'The label says: "Sewer Mainteinance Room."' @0x800c50de Eintrag 0x45, Icon ITEMALL.PIX Tile 0x45, Bild ITPS.ITP Block
  * 0x45) unter der nie platzierten Id 0x34 (0x45 = Parking Lot Key seit Runde 36 Spur Q); Weltmodell RE2 Item 0x63 Platform Key
- * (ROOM7040.RDT MD1 @0x00354C). Bits: 111 = liegt bei der Leiche, 112 = genommen. */
+ * (ROOM7040.RDT MD1 @0x00354C). Bits: 111 = liegt bei der Leiche, 112 = genommen.
+ * Nachbesserung 1: Lage nach dem Tod im Bild der laufenden Kamera, vor der Leiche, zur Kamera gekippt, Puls unter der Kappung
+ * (M2, gatorszene_r41.c key_lage_bei_tod); Ankunfts-Neigung unter der Puls-Kappung (M5, leiche_lage.py). */
 #define RE15_GSZ_KEY_ITEM        0x34
 int  re15_gatorszene_r41_obj_id(uint16_t room_id);                       /* main.c Prop-Lader: 4 in 2090/2091, sonst -1 */
 const uint8_t *re15_gatorszene_r41_md1_bytes(uint16_t room_id, int *n);

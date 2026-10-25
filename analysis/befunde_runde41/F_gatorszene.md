@@ -33,7 +33,8 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
 - [x] Punkt 2 Spinnen: Messung vorher / Beleg / Umsetzung / Messung nachher
 - [x] Punkt 1 Szene + Schluessel + Musik + Knall + 2080 oben + Tor: Messung vorher / Beleg / Umsetzung / Messung nachher
 - [x] Riegel: 8 Unit-Teile + 2 exe-Laeufe (Leon, Elza), gezielte Gruppen gruen (§T)
-- [ ] OFFEN (§O): Spur-B-Riegel integration_r41_re2gator braucht die Bits 110/113 + neue Bildfenster (Nutzer-Aenderungen)
+- [x] Spur-B-Riegel integration_r41_re2gator mit belegtem Querbezug gruen (Nachbesserung 1, M4)
+- [x] Nachbesserung 1: M1-M6 der Abnahme 0 behoben und gemessen (Abschnitt unten), Zusatzbefund N1 (B-Kamera-Programme)
 
 ## 0. Protokoll
 
@@ -261,13 +262,154 @@ Gesondert (Spur B, NICHT gruen, s. §O): `ctest ... -R "^integration_r41_re2gato
 
 ## Nachbesserung 1 (nach Abnahme 0, F_abnahme_0.md: M1-M6)
 
-Start 2026-10-25, HEAD 76ad856d, Baum sauber. Messordner (scratchpad, nicht im Repo): `F41n1/` (exe-Kopien
-`re15_pc_f41n1_<lauf>.exe`, RE15_WINDOW_SCALE=1, Bilder nur per RE15_FRAMEDUMP).
+Start 2026-10-25, HEAD 76ad856d, Baum sauber. Messordner (scratchpad, nicht im Repo): `F41n1/` (`runs/<lauf>/debug.log|state.log|
+gator_boss.log|fd_*.ppm`, Helfer `tools/lauf.sh` = eigene exe-Kopie `re15_pc_f41n1_<lauf>.exe`, timeout, danach geloescht;
+`tools/puls_diff.py` = Bildvergleich mit/ohne Schluessel). Alle Laeufe RE15_WINDOW_SCALE=1, Bilder nur per RE15_FRAMEDUMP.
+Belegbilder: `F_belege/n1_*.png`.
 
-Plan (je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher):
-- M1 Kampfbeginn ohne Spielfigur im Bild (Kamera bleibt nach der Szene auf P3s Leichen-Cut 1).
-- M2 Water Key nach dem Tod unsichtbar (beide Todeswege).
-- M3 doppelter Verschlossen-Ton am Tor 20A0/20A1.
-- M4 rote Fremd-Riegel (unit_r36_tueren_schott, unit_r38_spinnen, unit_r30_tuer_verschlossen, integration_r41_re2gator).
-- M5 Schluessel-Puls in der Ankunftseinstellung gesaettigt.
-- M6 RE-Gate: `s_ga.t > 60` ohne Beleg; Clip-11-Zitat (RE2 @0x801011e0 `jal 0x8001a240`).
+### N1.M1 Kampfbeginn ohne Spielfigur im Bild (Leon und Elza)
+
+- **Ursache.** Am Szenenende ruft der Gator-Ablauf `re15_gr2_kamera_frei` (Spur B). Dessen Cut_old-Zwilling kehrt auf den Cut
+  VOR dem Kamera-Programm zurueck = P3s Leichen-Cut 1 (gator_boss.log "zurueck -> Cut 1 F405"). Die Zonen-Zustandsmaschine
+  FUN_80014230 prueft nur Zonen mit cam_from = angezeigter Cut (`lbu v1,22(a0)` @0x80014254, Memory reai-v2-camera-zone-
+  statemachine). Die Gruppe von Cut 1 (RVD ROOM2090 @0x0025C Anker, @0x00270 1->0 bei x -1500..-500, @0x00284 1->2) enthaelt
+  Leons Lage (-8392,-25550) nicht. Die Kamera blieb deshalb bis zum Ende auf Cut 1, Leon hinter der Kamera.
+- **Messung vorher** (Abnahme-Lauf L1, state.log 5. Raum selbst ausgewertet): F370-F404 cam=0 (Schrei im Finisher-Cut 0), ab F405
+  cam=1 bis F699, Leon (-8392,-25550), F466 erster Treffer.
+- **Beleg (Original-Form des Szenenendes).** ROOM1150 sub08 (eigener SCD-Dump): `29 05` Cut_chg(5) @0x012C4 auf den Cut der
+  Spielerlage, `42` Plc_ret @0x012E0, `3c 01` Cut_auto @0x012E2. Zensus aller 240 RDTs: vor 115 von 201 Cut_auto(1) steht als
+  letzter Kamera-Befehl ein Cut_chg, vor 56 ein Cut_old. Cut_chg = LAB_800402a0 (alter Cut `lbu a1` @0x800402c0 / `sb` @0x800402e4,
+  work_vars[0x0C] @0x800402ec, work_vars[0x0A] @0x800402fc, Bit 0x100 @0x800402d4). Ziel = Eintritts-Cut, den der Raumlader aus
+  der Tuer-Nutzlast setzt (@0x8001d940; Leiter ROOM2080 Slot 1 @0x00BC2 -> Cut 0).
+- **Aenderung** (gatorszene_r41.c): `s_leon_cut` = g_scd.cam_id beim Ankunfts-Installer (scd_room_setup.c setzt ihn vor den
+  Installern). `kam_uebergabe()` = Cut_chg-Zwilling auf diesen Cut, im SELBEN Bild wie `re15_gr2_kamera_frei` (der SCD-Takt
+  laeuft vor dem Spielschritt, main.c; im naechsten Bild waere Cut 1 ein Bild lang sichtbar). Programm 3 macht danach wie
+  ROOM1150 Plc_ret + Cut_auto 1. Folge-Zeile 'C' (Cut, Spielfigur im Bild), Messzeile
+  `[gatorszene] Kamera-Uebergabe: ...`, Pruefhaken `re15_gatorszene_r41_spieler_im_bild` (Fuss und Kopf = eine Bandhoehe 0x708
+  hoeher im Bild, Projektion wie der Zeichner).
+- **Zusatzbefund N1 (vom Bau-Agenten verursacht, von der Abnahme nicht gemeldet):** `ga_start` schaltete mit
+  `re15_gr2_kamera_auto(0)` Spur B's Kamera-Programme ab und niemand schaltete sie wieder an. Nach der Ankunftsszene liefen deshalb
+  fuer den Rest der Sitzung weder der R1-Explosionsschnitt (gr2_kam_r1_start, RE2 @0x801021ec-6c) noch der Finisher-Schnitt
+  (re15_gr2_kamera_finisher, RE2 @0x80100fec-ff4) noch der Intro-Schnitt. Jetzt am Szenenende `re15_gr2_kamera_auto(1)`.
+- **Messung nachher.** L1 (Leon) und E1 (Elza, `Spieler-Familie PL04`), Leiterweg wie Abnahme L1: debug.log `Folge C ROOM2090|2091
+  F405 wert=0/1`, `Kamera-Uebergabe: Cut 0 (Eintritts-Cut), Spielfigur im Bild (Fuss-Bildpunkt 88,126)`; state.log 5. Raum
+  F400-F499 in jedem Bild `cam=0` (F405 kein Cut-1-Bild; F406 pm=1, F420 pm=0). Bildboegen `F_belege/n1_m1_kampfstart_leon.png`
+  (F400-F470) und `n1_m1_kampfstart_elza.png` (F404-F470): Spielfigur links an der Leiter, der Alligator davor, Angriff F470.
+
+### N1.M2 Water Key nach dem Tod unsichtbar
+
+- **Ursache.** Die erste Fassung legte das FLACHE Quadrat (MD1-Normale (0,-4096,0) @0x354C+0x60) an den Kopf des Alligators.
+  Alle Zonenkameras von 2090 stehen auf y -3132, also 1512 ueber dem Wasser, an den Beckenenden (RID @0x060). Von dort ist ein
+  flacher Schluessel 180 x sin(Blickhoehe) x H / Tiefe hoch: Gegenprobe im Riegel unit_r41_gatorszene_tod 0,8-0,9 Bildpunkte
+  (Todesrolle) bzw. 1,2 (R1). Die zwei Kopf-Lagen der Abnahme lagen zudem unter bzw. hinter Cut 0/1.
+- **Messung vorher:** Abnahme 0 §3.3 (R1 in allen 13 Kameras bitgleich, Todesrolle Cut 0/1 bitgleich).
+- **Beleg/Form.** PORT-WAHL der Lage (Nutzer: "soll der Schluessel in der Naehe seine Leiche sein und blinken"), dieselbe Form wie
+  der Schluessel der Ankunft (leiche_lage.py). Alle Groessen kommen aus den Daten: Kamera-RID @0x060 (re15_camera_build_view
+  wie der Zeichner), Wasserzonen sce 8 (re15_aot_water_at, ROOM2090 @0x009D6/@0x009EA/@0x009FE, p0 = Wasserhoehe -1620),
+  Quadrat +-90 (MD1 @0x354C), Alligator-Kasten {1000,-720,0,2200,720,800} @0x80118b98 (halbe Breite 800), Knochen der
+  gezeichneten Leichen-Pose (re15_gr2_bone_welt_pub), Blink-Spitze 0xBE und Kappung 0x80 (s. M5).
+- **Aenderung** (gatorszene_r41.c `key_lage_bei_tod`, `key_suche`, `key_neigung`):
+  1. Kamera = die laufende (R1 P3 setzt das Tot-Flag @0x80102654-64 und gibt die Szenen-Kamera im selben Schritt frei
+     @0x80102688-94). Hat sie keine Lage, gilt die Zonenkamera (RVD-Gruppe mit Wechselsatz, Cut 0..7) mit dem groessten Bild.
+  2. Lage = Rasterpunkt (100) im Wasser (Mitte und vier Ecken) im Bild der Kamera (x 24..296, y 40..205 wie leiche_lage.py), vor
+     JEDEM Knochen der Leiche um 800, hoechstens so weit vom naechsten Knochen wie der Kopf der Leiche von ihrer Wurzel (Knochen 6
+     zu 0). Darunter wird die Lage mit dem groessten Bild gewaehlt. Die Zwischenfassung "der Leiche am naechsten" (Lauf T1n:
+     Tiefe 6948) zeigte nur 4 Pixel von 43 bis 78 und wurde deshalb verworfen.
+  3. Neigung zur Kamera hoechstens 60 Grad mit dem groessten cos(Blick) x Helligkeit, deren Blink-Spitze die Primitivfarbe 0x80
+     nicht ueberschreitet. Das Licht wird wie im Zeichner gerechnet (re15_light_setup_actor / _ctx_rotate_for_bone /
+     _shade_vertex, Lichtsatz des Cuts).
+  4. Hoehe: die tiefste Ecke liegt auf der Wasseroberflaeche.
+  5. Nach dem Laden eines Spielstands (Ersatzlage = Rumpfmitte der Leiche) folgt die Neigung im ersten Takt, weil
+     room_common.c Schritt 10 den Lichtsatz erst nach den Installern parst.
+- **Messung nachher** (Differenzbild = derselbe Lauf mit (9,112) vorab, Bild fuer Bild, `tools/puls_diff.py`):
+  | Lauf | Kamera | Lage (Messzeile) | Bilder mit Unterschied | Kasten | hellster Pixel | Bilder am Max |
+  |---|---|---|---|---|---|---|
+  | T2n/T2x Leon Todesrolle (GB_TEST=3) | Cut 0 laufend | (-1300,-1729,-24000), Tiefe 4835, 3061 von der Leiche, rx -416 rz 576, Prim 86 -> 128 | 64 / 64 (F472-F598) | (175,124)-(178,129), 4 px | 75 -> 111 (x1,48) | 4 |
+  | K1n/K1x Leon R1-Kanistertod (Rezept K, RE15_FORCE_CUT=1 wie Abnahme B 0) | Cut 1 laufend | (-1600,-1717,-26900), Tiefe 5766, 2985 von der Leiche, rx -608 rz -320, Prim 86 -> 128 | 66 / 66 (F200-F330) | (257,124)-(262,127), 6 px | 75 -> 110 (x1,467) | 5 |
+  | integration_r41_gatorszene_tod (Leon) | Cut 0 | wie T2n | 60 / 60 (F480-F598) | 4 px | 75 -> 111 (x1,48) | 4 |
+  | integration_r41_gatorszene_tod_elza (Elza 2091) | Cut 0 | wie T2n | 60 / 60 | 4 px | 75 -> 111 (x1,48) | 4 |
+  Der Puls ist ein Dreieck mit der Periode 60 (Spitzen F508-514 / F568-574). Riegel unit_r41_gatorszene_tod: Todesrolle Cut 0
+  9,7 Bildpunkte breit, R1 Cut 1 7,5, R1 mit Sprung-Cut 0 -> Ersatz Cut 1, Elza wie Leon. Bilder:
+  `F_belege/n1_m2_todesrolle_cut0.png`, `n1_m2_todesrolle_zoom.png`, `n1_m2_r1_cut1.png`.
+- **Grenze (ehrlich):** Der Schluessel ist das flache RE2-Bodenmodell Platform Key (duenner Ring mit Bart auf 180 x 180,
+  sonst transparent), und die Zonenkameras stehen an den Beckenenden. In der Naehe der Leiche bleiben 4-6 sichtbare Pixel, die
+  im Dreieck pulsieren. Ein groesserer oder massiverer Schluessel braeuchte ein anderes Modell -> Frage an den Nutzer (unten).
+
+### N1.M3 Doppelter Verschlossen-Ton am Tor 20A0/20A1
+
+- **Ursache.** `tor_druck` spielte Art M selbst. Die Original-msg 1 von 20A0 steht als Text-Platz-Stelle in
+  gen/lock_se_sites.inc (Zeile 49/50), deshalb spielte `re15_scd_show_message` -> `re15_lock_se_notice` den Ton ein zweites Mal.
+- **Beleg (selbst disassembliert, re2_disasm.py PSX.EXE):** RE2 LAB_80051514 Nicht-Treffer-Zweig: `lui a0,0x216` @0x800516a0,
+  `jal 0x8005ba28` @0x800516a4, `addu a1,zero,zero` @0x800516a8, danach Text `jal 0x8002fe38` @0x800516b8. Das ist GENAU EIN
+  Se_on (Treffer-Zweig: Besitz `jal 0x800696cc` @0x80051628 / `bltz` @0x80051634, Text @0x8005164c, `lui a0,0x225` @0x80051654).
+- **Aenderung:** Der Tor-Handler spielt den Ton nur, wenn (Raum, Nachricht) keine Text-Platz-Stelle der Tabelle ist
+  (`lock_stelle`, re15_lock_se_site). In 2090/2091 (Port-msg 42) spielt ihn also der Handler, in 20A0/20A1 (msg 1) die Tabelle.
+- **Messung nachher:** unit_r41_gatorszene_tor `2090 ohne Schluessel: 1 Verschlossen-Ton(e), Satz 0 (soll 1 x 0)` und
+  `20A0 ohne (9,113): 1 Verschlossen-Ton(e), Satz 0`; unit_r30_tuer_verschlossen: ROOM20A0/20A1 Platz 0 msg 1 Art M `1 x 0`.
+
+### N1.M4 Rote Fremd-Riegel (belegte Querbezuege, je gezielt gefahren)
+
+| Riegel | Ursache | Querbezug / Aenderung | Ergebnis |
+|---|---|---|---|
+| unit_r36_tueren_schott | Nachtrag 21: 2090 Slot 1 @0x009B6 bis Bit 113 sce-3-Ereignis | Durchgang 2090 -> 20A0 (DOOR26 V0) mit (9,110)+(9,113) im Zustand NACH dem Aufschliessen; das Gesperrt-Sein misst unit_r41_gatorszene_tor | gruen |
+| unit_r38_spinnen (Teil D) | Nutzer-Punkt 2: Saetze @0x00AB0/@0x00AC4 verworfen | Zeile ROOM2090 misst die Spinnen-Mechanik an den Original-Saetzen, Verwerfen nur fuer diese Zeile aus (Muster probe_sca_wall_hit C2) | gruen |
+| unit_r30_tuer_verschlossen | 20A0/20A1 Slot 0 @0x01746 zeigt jetzt msg 1 (Stelle von Platz 8) + M3 | 54 Plaetze (K 16 / M 38 / S 0), weiterhin 47 Stellen; je Platz 1 Ton | gruen |
+| integration_r41_re2gator (Spur B) | (a) ohne Bit 110 startet die Ankunftsszene, Tor 20A0 -> 2090 bis Bit 113 zu; (b) ohne Spinnen trafen Leon in "nische" zwei Spinnen-Treffer weniger (Abnahme B 6 Lauf A2: 100 -> 80 F57 -> 60 F175, Gator 10 F290 -> -40 F397); (c) "kanister": Aufnahme F1227 statt F1119 | alle Laeufe RE15_SET_FLAG=9:110,9:113; nische RE15_R41_HP_AT=175:60 (Messhaken Spur D) = dieselbe HP wie mit den Spinnen; kanister RE15_EXIT_AT 1400 -> 1500 (Schranke >= 200 Bilder bleibt). Querbezug im Kopf der Datei | gruen: nische hp 100 -> 60 F175 -> 10 F290 -> -40 F397, FINISHER Cut 6 ab F398; kanister angehaengt F1227, 270 Bilder, Abweichung 0 |
+
+### N1.M5 Blinken in der Ankunftseinstellung gesaettigt
+
+- **Ursache (gemessen am Code, nicht vermutet).** Die NCCT-Ausgabe ist Licht/2 (CODE 0x80 der Flaechenfarbe, light_common.c
+  Stufe 3+4 `byte_out = sat_u8(IR_c >> 5)`). Der PC-Zeichner bildet die Primitivfarbe mit x0xFF/0x80 auf SDL ab und kappt bei
+  0xFF (render_pc.c `psx_prim_to_sdl_vert`: ueber 0x80 bleibt Texel x 1,0). Ab Licht 256 wird der Schluessel also nicht mehr
+  heller. Die erste Neigung (rx 608 / rz -160) hatte Licht 211,5. Die Blink-Spitze 211,5 x 0xBE/0x80 = 314 wurde auf 256 gekappt
+  (x1,21). Das ergab den gemessenen Puls 92 -> 112 mit einem Plateau ueber 34 von 60 Bildern.
+- **Beleg:** Blink-Folge TITLE.BIN FUN_801028ec (`sltiu v0,v1,0x1f` @0x801028fc, `addiu a0,a0,2` @0x8010290c, `-2` @0x80102910,
+  Reset `0x3c` @0x80102918-28; re15_blink_r41.h), Kappung render_pc.c psx_prim_to_sdl_vert.
+- **Aenderung:** leiche_lage.py waehlt die Neigung jetzt unter der Grenze Licht x 0xBE / 0x80 <= 255 in jedem Kanal (Raster 16):
+  rx 544 / rz -464 (59,4 Grad), cos 0,917 (Bildgroesse wie vorher, ~10,4 x 9,5), Licht 169,8 -> Spitze 252.
+  GSZ_KEY_AUF_RX/RZ in gatorszene_r41.c.
+- **Messung nachher:** unit_r41_gatorszene_leiche `Cut 1: Primitivfarbe Ruhe 84 -> Blink-Spitze 125 (<= 0x80)`; Gegenprobe
+  erste Neigung `Ruhe 104 -> Spitze 154 > 0x80`. exe L5 (Leon) und E5 (Elza), Ankunft Cut 1, hellster Pixel im Schluessel-
+  Ausschnitt (112..146 x 112..146): F60 72, F66 79, F72 87, F78 94, F84 101, F90 108, F96 103, F102 95, F108 88, F114 81, F120 72.
+  Das sind min 72, max 108 (x1,50), 3 von 61 Bildern am Hoechstwert, ein Dreieck ohne Plateau (vorher 92 -> 112, x1,22,
+  Plateau 34/60). Folge: In Ruhe ist der Schluessel etwas dunkler (72 statt 92), weil die Kappung oben Platz fuer den vollen Puls
+  verlangt. Bild `F_belege/n1_m5_puls_ankunft_zoom.png`.
+
+### N1.M6 RE-Gate
+
+- `s_ga.t > 60` ersetzt durch `GSZ_WENDE_MAX = ceil(0x800 / 75) = 28` (PORT-WAHL der Notbremse, aus den Konstanten hergeleitet):
+  Rate 75 `addiu a2,zero,75` @0x80102608, groesste Wende 0x800 (Halbkreis-Weiche `< 0x801` in FUN_8001569c). Die Wende ist jetzt
+  FUN_8001569c exakt (`ga_drehen`, RE2_Quellcode_V2/FUN_8001569c.c: Einrasten bei `(rate + ziel - gier) & 0xfff < 2*rate`,
+  Richtung bei `< 0x801`). Die Szene nennt sie als Nutzer-Inszenierung; RE2 R4 @0x80102bd0 selbst dreht nicht.
+- Clip-11-Zitat berichtigt (Code und Dossier §1.2): `addiu a1,zero,11` @0x801011d8, `jal 0x8001a240` @0x801011e0. FUN_8001a240
+  setzt Clip und Blend (@0x8001a258-60) und schaltet das Bild (FUN_8002959c @0x8001a28c). Den Wurzelschritt von FUN_8001a330
+  (FUN_80015e7c @0x8001a374, FUN_800152c8 @0x8001a3c0) hat es nicht. Die Lage setzt vorher FUN_80015cb8 @0x801011cc = ga_anker_lage.
+
+### N1 Tests
+
+Neu/erweitert: unit_r41_gatorszene_tod (neu, M2), _leiche (M5), _tor (M3), _szene/_szene_elza (M1);
+integration_r41_gatorszene_tod / _tod_elza (neu, M2: zwei exe-Laeufe mit/ohne Schluessel + Auswerter `test_r41_gatorszene
+bilddiff`), _leon / _elza (M1: Folge C 0, Kamera-Uebergabe-Zeile, state.log F405-F479 cam=0).
+Gezielt (keine volle Suite), Regex wie Abnahme 0 plus `integration_r41_re2gator$` (scratchpad `F41n1/final_regex.txt`):
+SUMMENZEILE_FOLGT
+
+### N1 OFFEN
+
+1. Sichtbarkeit nach dem Tod: 4-6 pulsierende Pixel (Modell und Kameraabstand, s. M2). Ein anderes Bodenmodell waere eine
+   Nutzer-Entscheidung.
+2. Abgleich mit Spur G (unveraendert aus §O 2): 2080-Lagen gleich halten. Neu: Spur B's Kamera-Programme laufen nach der Szene
+   wieder (N1). Bei der Integration mit G die Kanister-/Explosionsschnitte nach der Ankunftsszene messen.
+3. Unveraendert aus §O: Musik nach dem Tod (MAIN2E statt RE2-Ausblenden), Nachrichten-Ids 44-46 frei, PSX-Bau ungeprueft,
+   Schachtspinnen 20A0.
+4. §O 1 (Spur-B-Riegel) und §O 3 (flacher Schluessel) sind mit dieser Nachbesserung erledigt (M4, M2).
+
+### N1 Fuer den Nutzer
+
+- Keine neuen Assets und keine Sprachdateien in dieser Nachbesserung.
+- Ablauf: Nach dem Schrei des Alligators zeigt die Kamera wieder den Leiter-Eingang mit Leon bzw. Elza (Cut 0). Der Kampf
+  beginnt im Bild.
+- Nach dem Tod des Alligators liegt der Water Key im Wasser vor der Leiche, im Bild der Kamera, in der man gerade steht, und
+  zur Kamera gekippt. Er pulsiert alle 2 s. Er ist klein: das RE2-Bodenmodell "Platform Key" ist ein duenner Ring, aus den
+  Beckenkameras sind das 4-6 Pixel.
+- **Frage:** Soll der Schluessel nach dem Tod groesser bzw. als massiveres Modell erscheinen (z. B. ein anderes RE2-Schluessel-
+  modell oder ein vergroessertes Modell)? Oder soll die Kamera nach dem Tod kurz auf den Schluessel schneiden?

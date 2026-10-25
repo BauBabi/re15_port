@@ -15,6 +15,11 @@
  *               Durchgang nach 20A0; 20A0 Slot 0 zu (Original-msg 1) bis (9,113), danach Durchgang nach 2090
  *   schluessel  Alligator tot -> (9,111) + Schluessel bei der Leiche (Zone Slot 15); Aufnahme -> Item 0x34 + (9,112); danach
  *               kein Schluessel mehr
+ *   tod         Nachbesserung 1 (M2): Todeslagen der Abnahme 0 (Todesrolle Cut 0, R1 Cut 1, R1 mit Sprung-Cut 0, Elza) -
+ *               Schluessel im Bild der Kamera, vor der Leiche, im Wasser, zur Kamera gekippt, Blink-Spitze <= 0x80
+ *   bilddiff    Auswerter des exe-Riegels integration_r41_gatorszene_tod*: Bilder mit/ohne Schluessel (s. bilddiff())
+ * Nachbesserung 1 in bestehenden Teilen: leiche (M5 Puls-Kappung + Gegenprobe der ersten Neigung), tor (M3 genau ein
+ * Verschlossen-Ton in 2090 und 20A0), szene/szene_elza (M1 Kamera-Uebergabe auf Cut 0, Spielfigur im Bild, Sperre frei).
  *   szene       die ganze Szene mit dem echten Boss-Takt (RE2-EM23-Bank): Ankunft ueber die Leiter -> Knall -> 2080 (8 Zombies
  *               OBEN, Band 8, nie westlich der Absatzwand) -> zurueck -> Gator-Ablauf G1..G7 -> Kampf, (9,110) = 1, Riegel auf,
  *               Musik-Eintrag 0xFF3C
