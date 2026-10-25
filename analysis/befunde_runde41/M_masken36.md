@@ -22,6 +22,10 @@ Baum: .claude/worktrees/r41_masken36 (Zweig r41/masken36, Basis b28c7236 = maste
 - [x] Nachbesserung 4 (Abnahme 3): Ost-Stirn 30A0 mit Messung widerlegt (Kuenstler-Ausschnitt ganz gezeichnet, Riegel), Laeufer mit
       Laufpruefung; Restliste nach Entscheid M-E1 beim Nutzer (Freistellungen) - Masken = Stand NB3; gemessene Vorschlaege (Tuer-Band der
       Saaten, nie platzierte Kuenstler-Komponenten, Teilung 6000 C5) als Werkzeuge im Repo, nicht angewandt
+- [x] Nachbesserung 5 (Abnahme 4, Entscheid M-E2): 267 Teile des Original-Vordergrundatlas mit Zellen-Tiefe (RDT-Offset je Teil) in 61 Kameras
+      eingesetzt (+101 280 Punkte), Tuer-Band der Saaten als Vorgabe (Lok 6000), Kapazitaet 128 (Byte-Zahl @0x8003928c), an der exe 108 Szenen
+      (HINTER verdeckt, DAVOR 0 Punkte der Spielfigur uebermalt), Rueckschritt-Suche (neu frei 0), roter Ordner 30A0 C0 = kein Original-Teil ->
+      Freistellungs-Liste NB5 (277 Teile ohne belegbare Tiefe + Ordner)
 
 ## Punkt 1 — STAGE3-6-Masken "ueberall Loecher"
 
@@ -1138,7 +1142,7 @@ angefasst; seine Riegel bleiben gruen.
      danach `test_r37_masken36 erzeuge` mit dem 3D-Urteil (r41_koerper_davor) und den Tuer-Band-Saaten.
 * **Tuer-Band der Saaten** als Vorgabe (`g_saat_tuer = 1`, `--saat-alt` = NB3).
 * **teilen_r41.py NICHT angewandt** (M-E2): ROOM6000 C5 Rechteck 37 (Traeger-Mitte) Tiefe 176 wie NB3, alter Teil der Sektion bytegleich.
-* Dateien: `re15_port/shared_assets/PSX/MASKS/` (61 Sektionen in 15 Raumpaaren, MSK + _PRIcc.TIM Leon/Elza bytegleich),
+* Dateien: `re15_port/shared_assets/PSX/MASKS/` (61 Sektionen in 14 Raumpaaren, MSK + _PRIcc.TIM Leon/Elza bytegleich),
   `re15_port/engine/src/gen/masken36_ausschluss_r37.inc`, `re15_port/include/re15_pri.h` (128), `tests/unit/gen_r41_masken36_zellen.inc`
   (1025 -> 2820 Zeilen), `tests/unit/gen_r41_masken36_platziert.inc`, `tests/unit/test_r37_masken36.c` (Saaten-Vorgabe, neustellen, teile,
   binaere Modellsuche), `tests/unit/test_r41_masken36.c` (platziert, ordner), Szenen `tests/integration/test_r41_masken36_teile_szenen_{a,b,c,d}.cmake`,
@@ -1197,7 +1201,7 @@ angefasst; seine Riegel bleiben gruen.
   exe-Kopie je Gruppe, Framedump Bild 120, RE15_WINDOW_SCALE=1, RE15_FORCE_CUT. HINTER = Art M (H > 0), DAVOR = **Art L (neu)**: nur die
   Spielfigur zaehlt (Lauf D ohne Masken mit der Figur an A0 = `test_r37_masken36 aussen`, erreichbarer Platz ausserhalb des Regionsvierecks;
   S = |B - D| > 24), H == 0. Grund fuer Art L (gemessen, erster Durchgang mit Art V): w3040_03 zaehlte einen Gegner HINTER dem neuen Gelaender
-  als "uebermalt" (Bild `M_bilder/NB5/` nicht noetig - die Maske verdeckt ihn richtig), w5090_11 37 und die 6000-Szenen 1..59 Punkte ebenso
+  als "uebermalt" - die neue Maske verdeckt ihn richtig (Bild `M_bilder/NB5/NB5_exe_w3040_03_gegner.png`: Hintergrund | ohne Masken | mit Masken), w5090_11 37 und die 6000-Szenen 1..59 Punkte ebenso
   andere Figuren/3D-Objekte (Annette-Szene in 6000). 50B0 C2/C3 haben keinen Platz ausserhalb des Vierecks -> Art V (alle Figuren), dort 0.
 * Ergebnis (Figur / verdeckt bzw. uebermalt; Elza = Raumvariante xxx1, je Raum die staerkste Stelle):
   | Raum | Kamera | HINTER (M: Figur/verdeckt) | DAVOR (L/V: Figur/uebermalt) | Elza |
@@ -1397,6 +1401,29 @@ Am Vorschlagsstand (vor der Ruecknahme nach M-E1, Commits 27e6594b..33e758ae) li
 prop_bss, unit_stage6_hintergrund, unit_r19_*, unit_r22_10f0_figur, unit_r30_irons_tisch*, unit_1210_gitterhaende) - 40/41 gruen, rot nur
 zellen3d (Gegenprobe 3 statt >= 127, mit der Saaten-Korrektur erwartet) - fuer den ausgelieferten Stand ohne Bedeutung.
 
+### Tests Nachbesserung 5 (gezielt, KEINE volle Suite)
+Neu/geaendert (nur tests/unit/probes/r41_masken36.cmake + eigene Dateien):
+| Test | misst | Ergebnis |
+|---|---|---|
+| `unit_r41_masken36_teile` (neu, M-E2 Mechanik) | jedes gezeichnete neue Rechteck (1 795) hat seine Modell-Zeile (Zelle + 12 SCA-Bytes am RDT-Offset), Tiefe == Zeile; an 0 von 97 032 getroffenen deckenden Punkten liegt der Eintritt in den Koerper hinter der Rechteck-Tiefe (in C unabhaengig gerechnet: Kamera des Spiels, Halbebenen der Resolver-Form); Treffer >= 97 032 | PASS |
+| `unit_r41_masken36_platziert` (aus deffda66 wiederhergestellt, Tabelle NB5) | 61 Sektionen = erstes + n, Leon/Elza bytegleich; 267 Teile mit dem Spiel-Entpacker an ihrer Lage bestaetigt; Blit Mittel 5,88 (max je Sektion 9,23); 101 280 neue gezeichnete Punkte (R41_PLATZ_MIN); Gelaender 30E0 C6..C9, 3050 C6, 3040 C3 gezeichnet | PASS |
+| `unit_r41_masken36_ordner` (neu, Mangel 2) | Original 30A0/30A1 ohne Masken (pri_offset 0x3C0 -> ff ff ff ff, Kopfbyte 7 = 0); Kuenstler-Ausschnitt: gruener Ordner 91 / roter 0 von 40; kein eingesetztes Teil dort; gezeichnet 0 | PASS |
+| `unit_r41_masken36_zellen3d` (Messwert) | 2 820 Modell-Zeilen byte-genau, MSK-Tiefe == Zeile, Engine zeichnet jede, Ausschluss mit 3D == Tabelle in 85 Cuts, Gegenprobe 12 (3 + 9 neue Teile 3050 C12) | PASS |
+| `unit_r41_masken36_fern` (Schranken aus der Messung) | `fern 3360 2 72 270 3016` (vorher 40 276; Gleisbett weg durch das Tuer-Band, Restloecher an neuen Teilen 3040 C4 / 6010 C5, OFFEN 18) | PASS |
+| `unit_r41_masken36_loecher` (Messwert) | Kerben 8 428 von 64 424 = 13,1 % (NB3 14,3 %) | PASS |
+| `unit_r37_masken36_ausschluss` (unveraendert) | rechnet die Tabelle aus den Dateien nach (jetzt mit Tuer-Band-Saaten) == gen/masken36_ausschluss_r37.inc | PASS |
+| `integration_r41_masken36_teile_a1..d2` (neu, 9 Gruppen) | an der exe je Kamera HINTER (Art M, H > 0) und DAVOR (Art L, 0 Punkte der Spielfigur uebermalt), Elza je Raum; Abschnitt "NB5 an der exe" | s. Lauf 2 |
+| Laeufer `test_r41_masken36_stage2.cmake` | Art L (Lauf D ohne Masken, Figur an A0 ausserhalb des Regionsvierecks), Feld SMIN; bestehende Arten unveraendert | im Lauf 2 |
+Laeufe (Spurbaum, `local_build.sh build` nach der letzten Aenderung):
+1. `ctest --test-dir re15_port/build -R "^(unit_r41_masken36|unit_r37_masken36|unit_pri_|unit_r36_pri|unit_r37_pri1100|unit_sld_atlas|unit_bss_room_source|prop_bss_chunk|unit_r38_itemorte|unit_r39_optik|unit_r39_titelversion_maske|unit_r34n_e_dokumente|unit_stage6_hintergrund|unit_r19_|unit_r19b_|r19_marke1_10d0_c1|unit_r22_10f0_figur|unit_r30_irons_tisch|unit_1210_gitterhaende|unit_1050)" -j 2 --timeout 2400 --output-on-failure`
+   -> **`100% tests passed, 0 tests failed out of 45`** (alle Unit-Riegel der Spur + die PRI-/Atlas-Riegel, die `RE15_PRI_MAX_MASKS_PER_CUT` / den
+   Sektionsleser benutzen: test_pri_*, test_r36_pri, test_r37_pri1100, test_r38_itemorte, test_r39_optik, test_r34n_e_dokumente, r19_*, r22, r30, 1210, 1050).
+2. `ctest --test-dir re15_port/build -R "^(integration_r41_masken36|integration_r37_masken36|integration_pri_masken|integration_r36_pri|integration_r37_pri1100|integration_r38_itemorte|integration_r39_optik|integration_r34n_e_dokumente|integration_r35_zgirl_5090|integration_r38_affen3|integration_r35_granate|integration_r37_elzaems_elza5091|integration_r36_dachkiste|integration_r37_beretta|integration_r37_itemband)" -j 3 --timeout 2700 --output-on-failure`
+   (die Masken-/PRI-Riegel aller Stages inkl. Punkt 2 = integration_r41_masken36_stage2, die Verhaltens-Riegel der Raeume mit geaenderten MSK wie
+   Abnahme 4) -> **`100% tests passed, 0 tests failed out of 37`** (4 086 s; integration_r41_masken36_stage2 = Punkt 2 518 s gruen, die 9 Gruppen teile_a1..d2 je 389..465 s mit "Szenen OK", _zelle/_zellen3d/_fern/_laufpruefung, integration_r37_masken36_stage3..6/nb2, r37_itemband(_lift), r36_dachkiste, r38_affen3, r35_granate, r35_zgirl_5090, r37_elzaems_elza5091, r38_itemorte, r39_optik_*, r37_pri1100_*, r36_pri_schatten, pri_masken).
+Linux/parallel: neue Teile nur stdio/stdlib/string/math (m gelinkt), -P-Skripte mit cmake_minimum_required, keine .exe-/Backslash-Pfade, eigenes
+exe-Praefix je Gruppe (r41m8a1..r41m8d2), eigene Laufordner.
+
 ## OFFEN
 
 0. **Stand Nachbesserung 2 (ersetzt die Zahlen von 1):** 1022 Rechtecke (Leon, Elza gleich) bleiben aus, 273 961 Punkte liegen nur
@@ -1592,6 +1619,11 @@ zellen3d (Gegenprobe 3 statt >= 127, mit der Saaten-Korrektur erwartet) - fuer d
   Stirnplatte ist so weit gezeichnet, wie sie im Bild reicht (Bild `analysis/befunde_runde41/M_bilder/NB4/NB4_M1_30A0_ost_stirn.png`); rechts
   davon zeigt das Bild den Boden und die Schraenke HINTER Leon - dort ist er zu Recht zu sehen. Der Testlaeufer der Masken-Riegel prueft
   jetzt, ob jeder Spiellauf wirklich im Zielraum zu Ende kam (vorher konnte ein abgebrochener Lauf das Bild des Startraums vergleichen).
+- **Assets fuer das Paket (Nachbesserung 5):** `re15_port/shared_assets/PSX/MASKS/` - 61 Kameras in 14 Raumpaaren neu (ROOM3040/3041, 3050/3051,
+  30A0/30A1, 30E0/30E1, 4040/4041, 40A0/40A1, 5020/5021, 5050/5051, 5090/5091, 50B0/50B1, 5100/5101, 6000/6001, 6010/6011, 6030/6031: MSK +
+  _PRIcc.TIM, Leon/Elza bytegleich); `re15_port/engine/src/gen/masken36_ausschluss_r37.inc`; `re15_port/include/re15_pri.h` (Platz 128 je Kamera).
+  Keine neuen Dateien unter shared_assets/RE2, keine Sprachdateien, keine neuen Schalter. Die Uebersichtsbilder der 61 Kameras
+  (`analysis/befunde_runde41/M_bilder/uebersicht/STAGEn/<raum>/<cc>_port.png`) koennen pri/STAGE3-6 ersetzen (pri/ ist fuer die Spur tabu).
 - **[Beantwortet: Entscheid M-E2, umgesetzt in Nachbesserung 5] Entscheidungsfrage (Orchestrator/Nutzer):** Fuer die Gelaender usw. gibt es einen gemessenen automatischen Weg: die Teile liegen im
   Vordergrundatlas des Spiels selbst (vom Kuenstler ausgeschnitten), der Masken-Generator vom 2026-09-03 hatte sie nur nie gefunden. Das
   Werkzeug `re15_port/tools/maske/platzieren_r41.py` legt sie an ihre Stelle (437 Teile in 74 Kameras, +160 539 Maskenpunkte, im Spiel an 16
