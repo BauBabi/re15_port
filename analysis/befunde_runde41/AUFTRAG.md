@@ -1067,3 +1067,11 @@ sondern der Zeitpunkt neuer Tokens fuer Nachbesserungen. Abschlussplan (ersetzt 
 - N (Nachtrag 30-30e): ANGEHALTEN 18:0x, Stand gesichert (r41/nachtrag30 bb7a0df6, Plakat 30d erzeugt, ungeprueft) -> Samstag.
 - Danach: Integration F/G/M ("gut genug": nur blockierende Fehler halten auf), volle Suite, Release v0.8.29; offene Punkte in die
   Release Notes ("Ab Samstag").
+
+## 2026-10-25 19:34 — Nachtrag 33 (Nutzer-Entscheid per Auswahl; Spur M / Orchestrator)
+
+Frage: "M hat fuer die 61 geaenderten Kamerabilder neue Uebersichtsbilder mit dem jetzigen Maskenstand erzeugt
+(analysis/befunde_runde41/M_bilder/uebersicht/STAGEn/<raum>/<cc>_port.png). Sollen sie die alten unter pri/STAGE3-6 ersetzen,
+damit du am Samstag nach dem aktuellen Stand zeichnest?" — **"Ja, ersetzen (Empfohlen)"**: nur die *_port.png-Uebersichtsbilder
+dieser Kameras; Freistellungen und alles andere in pri/ bleiben unberuehrt. Ausfuehrung durch den Orchestrator NACH der
+Integration von M (endgueltiger Maskenstand), wie 919cc1ed.
