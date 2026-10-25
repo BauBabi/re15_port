@@ -1553,7 +1553,11 @@ dieselbe Verfolgung); die Logs sind verschieden (2090/2091, Werfer Marvin/John).
   Riegel kampf (Lauf lauf_86a48c13, `<SP>/g4/r1sum.py`): kampf_leon R1 F1429 Cut 6, kampf_elza F2536 Cut 6, nordost_leon F1409 Cut 7,
   west_elza F3040 Cut 1, plattform_leon F2659 Cut 1 - jeweils Kanister innerhalb der Aussenwaende, Start 8/8 (0 verdeckt, 0 ausserhalb),
   Kopf ok, Kiefer ok, Todes-Clip 19/19, Spritzring-Quads 96..170, zehn Scherben-Bilder; dieselben Zahlen wie die Endmessung 11.5.
-- Messkopien re15_pc_g41nb4a..d.exe geloescht; Laeufe/Bilder im scratchpad `<SP>/g4`, im Baum nur `G_belege/nb4_*`.
+- **Integration (Endstand 4c72aaba, G-E3/G-E4/G-E6; danach nur Doku und Referenz-Werkzeug):** derselbe Ausdruck (21 Tests) ->
+  **`100% tests passed, 0 tests failed out of 21`** (Total Test time (real) = 1311.42 sec; kampf 1311,35 s mit denselben fuenf R1-Lagen
+  wie oben, raumfremd 55,99 s mit den G-E4-Erwartungen, r35_werfer/_elza/_ton/_form, r36_granate, r35_granate, r34_granaten gruen
+  mit den jetzt gezeichneten Kern-Zeilen).
+- Messkopien re15_pc_g41nb4a..e.exe geloescht; Laeufe/Bilder im scratchpad `<SP>/g4`, im Baum nur `G_belege/nb4_*`.
 - Laufdauer des Riegels kampf: mit der Kopf-Klemme erreicht der Alligator Leon/Elza an der Wand nicht mehr mit dem Kopf durch die Wand;
   der passive Schuetze (Zielhilfe FUN_8003703c = naechster Gegner) zielt dann laenger auf die Spinnen (0x25/0x26, in diesem Zweig noch in
   2090; Hinweis B4 / Spur F entfernt sie). Gemessen mit dem Abnahme-Rezept (EXIT_AT 3000): die vier Elza-Laeufe mit Haken HP ohne R1 (k_elza:
