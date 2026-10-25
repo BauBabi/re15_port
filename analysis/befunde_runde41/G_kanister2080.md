@@ -1371,6 +1371,8 @@ gleicher Code-Stand); Bildbelege im Baum unter `G_belege/nb4_*`.
       Fuer den Nutzer (11.8)
 
 ### 11.1 M2 - Kern-Zeilen 485..498 nach dem ersten 2090-Besuch in jedem Raum
+**UEBERHOLT durch den Orchestrator-Entscheid G-E4 (11.9):** die hier beschriebene Beschraenkung auf die R1-Folge ist entfernt; die
+Kern-Zeilen werden jetzt wie in RE2 ab dem Start in jedem Raum gezeichnet. Ursache und Messung vorher gelten weiter.
 **Ursache (Code):** `re15_pc_gator_fx_draw` (gator_fx_r41_pc.c) lief in jedem Raum; der Zweig "kern485" pruefte weder Raum noch Herkunft,
 nur `s_kern_tex_ok`, das `laden()` beim ersten Betreten von 2090/2091 setzte und nie zuruecknahm. re2fx_pc.c laesst diese Zeilen in
 allen Raeumen bewusst aus (Kommentar N5, Runde 34 Spur D).
@@ -1395,6 +1397,8 @@ direkt `F200 ROOM2080 ... kern485 6 ... | gezeichnet G 0 (kern485 0 raum 0) | ke
 a_k_leon_r1): in allen 38 R1-Bildern `kern485 fremd 0`, die R1-Messzeilen sind Zahl fuer Zahl gleich denen der Abnahme 3 (diff leer).
 
 ### 11.2 V1 - render_pc.c (RE15_TIM_SLOT_MAX 56 -> 57) ohne Freigabe
+**UEBERHOLT durch G-E6 (11.9):** die Zeile ist angenommen; mit G-E4 liegen die Kern-Zeilen 485..498 wieder in Platz 56
+(RE15_TIM_SLOT_MAX 57), Platz 54 haelt nur noch den Raum-Atlas. Der Bildvergleich unten bleibt gueltig (gleiche Texel).
 **Ursache:** Nachbesserung 3 legte die Raum-Texturen (Platz 54) und die Kern-Zeilen (Platz 56) in zwei Textur-Plaetze und erhoehte dafuer
 RE15_TIM_SLOT_MAX in render_pc.c (VERTRAG 1.3: nur Spur D).
 **Aenderung:** render_pc.c ist wieder bytegleich mit der Basis 9f10bdb0 (`git checkout 9f10bdb0 -- re15_port/platform/pc/src/render_pc.c`,
@@ -1485,7 +1489,7 @@ sind, am naechsten an der RE2-Lage" - keine Massstab-Grenze; Entscheid B8 ("die 
 fuer die Kamera-Programme der Spur B und bleibt hier Vorrang-Regel, nicht Sperre. RE2-Form: R1 P0 schneidet nur, wenn der laufende Cut
 den Kopf nicht zeigt (`addiu v0,zero,6 / beq` ... `slti v0,v0,-13300` @0x80102218-34, +0x218 |= 0x40 @0x80102240-4c) - der Port
 bleibt bei der Wahl = laufender Cut ohne Schnitt (unveraendert).
-**Aenderung** (`engine/src/gator_re2_r41.c`, markiert "Nachbesserung 4 (M1)"): Rangfolge als reine Funktion re15_gr2_r1_rang (Header
+**Aenderung** (`engine/src/gator_re2_r41.c`, markiert "Nachbesserung 4 (M1)"; Reihenfolge nach G-E3 berichtigt, 11.9): Rangfolge als reine Funktion re15_gr2_r1_rang (Header
 re15_gator_re2_r41.h, Typ re15_gr2_r1_kand_t): VOLL = Kopf und Kiefer im Start und in allen Proben des Todes-Clips. Stufe 0: volle Cuts
 unter der Grenze (oder der laufende); Stufe 1: volle Cuts ohne Grenze; Stufe 2 (kein voller Cut): die meisten Proben zuerst. Innerhalb:
 gueltiger Start, meiste Start-Punkte, Kopf naechst (170,111). gr2_r1_wahl beurteilt jede Zonenkamera einmal (vorher je Stufe erneut) und
@@ -1535,13 +1539,15 @@ dieselbe Verfolgung); die Logs sind verschieden (2090/2091, Werfer Marvin/John).
 
 ### 11.6 Tests (gezielt, keine volle Suite; local_build.sh, ctest mit msys64 zuerst im PATH)
 - Bau: `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`, `... build` -> `=== LOCAL-BUILD-OK (build)` (Stand 63e50c22).
-- Unit (Endstand): `ctest --test-dir re15_port/build -R "unit_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_|unit_msg_|unit_action_msg_gate|unit_alligator_ai|unit_gator_|unit_g5_boss|unit_r35_granate|unit_r34_reaktion|unit_re2_spider_water_2090|unit_r34_re2fx|unit_r34_plattform|unit_r34_wasser|unit_r34_wurf|unit_r35_fenster|unit_r35_werfer|unit_r36_granate|unit_r36_schuss|unit_r39_hund1121|unit_re2_gore_render|unit_marvin_render_pose" --timeout 600 -j4`
+- Unit (Stand 63e50c22, vor G-E3/G-E4): `ctest --test-dir re15_port/build -R "unit_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_|unit_msg_|unit_action_msg_gate|unit_alligator_ai|unit_gator_|unit_g5_boss|unit_r35_granate|unit_r34_reaktion|unit_re2_spider_water_2090|unit_r34_re2fx|unit_r34_plattform|unit_r34_wasser|unit_r34_wurf|unit_r35_fenster|unit_r35_werfer|unit_r36_granate|unit_r36_schuss|unit_r39_hund1121|unit_re2_gore_render|unit_marvin_render_pose" --timeout 600 -j4`
   -> **`100% tests passed, 0 tests failed out of 82`** (Total Test time (real) = 166.29 sec) - der Ausdruck der Abnahme 3 (80) plus die
   neuen unit_r41_kanister2080_kopfklemme und unit_r41_kanister2080_r1wahl.
 - Integration (Zwischenstand vor dem zweiten Kanister-Ende): `-R "^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_kanister2080_raumfremd$|^integration_r41_re2gator$" -j4`
   -> `100% tests passed, 0 tests failed out of 4` (1448,40 s; kampf mit fuenf Laeufen: kampf_leon R1 (-4621,-8441), kampf_elza (-5153,-14712),
   nordost_leon (2321,-9486), west_elza (2971,-20467), plattform_leon).
-- Integration (Endstand 63e50c22, gleiche Binaerdatei wie a863e029 - danach nur Kommentare): `ctest --test-dir re15_port/build -R "^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_kanister2080_raumfremd$|^integration_r41_re2gator$|^integration_r35_fenster$|^integration_r35_werfer$|^integration_r35_werfer_ton$|^integration_r35_werfer_elza$|^integration_r35_werfer_form$|^integration_r34_plattform_takt$|^integration_r34_plattform_esp_eintritt$|^integration_r36_schuss$|^integration_r39_hund1121$|^integration_r35_granate$|^integration_r36_granate$|^integration_r34_granaten$|^integration_r38_wasser$|^integration_r41_wasser20b0_npc$|^integration_r37_itemband$|^integration_r36_tueren$|^integration_r36_kartenitems_bild$" --timeout 3000 --output-on-failure -j4`
+- Unit (Endstand 4c72aaba, G-E3/G-E4/G-E6): derselbe Ausdruck -> **`100% tests passed, 0 tests failed out of 82`** (Total Test time
+  (real) = 47.79 sec).
+- Integration (Stand 63e50c22, vor G-E3/G-E4): `ctest --test-dir re15_port/build -R "^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_kanister2080_raumfremd$|^integration_r41_re2gator$|^integration_r35_fenster$|^integration_r35_werfer$|^integration_r35_werfer_ton$|^integration_r35_werfer_elza$|^integration_r35_werfer_form$|^integration_r34_plattform_takt$|^integration_r34_plattform_esp_eintritt$|^integration_r36_schuss$|^integration_r39_hund1121$|^integration_r35_granate$|^integration_r36_granate$|^integration_r34_granaten$|^integration_r38_wasser$|^integration_r41_wasser20b0_npc$|^integration_r37_itemband$|^integration_r36_tueren$|^integration_r36_kartenitems_bild$" --timeout 3000 --output-on-failure -j4`
   -> **`100% tests passed, 0 tests failed out of 21`** (Total Test time (real) = 1811.39 sec; kampf 1811,23 s, r37_itemband 868,33 s,
   re2gator 344,48 s, kanister2080 214,73 s, raumfremd 68,88 s) - der Ausdruck der Abnahme 3 (20) plus integration_r41_kanister2080_raumfremd.
   Riegel kampf (Lauf lauf_86a48c13, `<SP>/g4/r1sum.py`): kampf_leon R1 F1429 Cut 6, kampf_elza F2536 Cut 6, nordost_leon F1409 Cut 7,
@@ -1572,7 +1578,9 @@ dieselbe Verfolgung); die Logs sind verschieden (2090/2091, Werfer Marvin/John).
 6. Merge-Querbezug (alle Haken markiert "Runde 41 Spur G"): `engine/src/re2_fx.c` (Ops-Block + re2fx_platz_quelle), `include/re2_fx.h`,
    `engine/src/gator_re2_r41.c` + `include/re15_gator_re2_r41.h` (G-E1-Wahl/Rangfolge, Kopf-Klemme, Fontaene, Scherben, Herkunft R1),
    `engine/src/enemy_ai_boss_gator.c` (s.o.), `platform/pc/src/gator_re2_pc.c` (Scherben, Regions-Test), `platform/pc/main.c` (1 Aufruf),
-   `tests/unit/test_r41_re2gator.c` (Teile kamera/scherben/kopfklemme). `platform/pc/src/render_pc.c` ist wieder unveraendert (V1).
+   `tests/unit/test_r41_re2gator.c` (Teile kamera/scherben/kopfklemme), `platform/pc/src/render_pc.c` (RE15_TIM_SLOT_MAX 57, G-E6).
+   re2_fx.c/re2_fx.h sind gegenueber Nachbesserung 3 unveraendert (der zwischenzeitliche Haken re2fx_platz_quelle ist mit G-E4 wieder
+   entfernt).
 
 ### 11.8 Fuer den Nutzer (Stand Nachbesserung 4)
 Neue Assets: keine (die Explosions-Dateien `re15_port/shared_assets/RE2/GATOR40A0.ESP` und `GATOR40A0_08/09/16/18/19/1A/26.TIM` aus
@@ -1583,7 +1591,49 @@ Was sich im Spiel aendert:
   grau-weissen Wolke jetzt in jedem Verlauf zu sehen - vorher fehlte die Wolke ganz, wenn er an der Wand erschossen wurde.
 - Die Kamera beim Tod zeigt Kopf und geplatzten Kiefer waehrend der ganzen Todesanimation (vorher verschwand der Kopf im Plattform-Fall
   hinter dem Maschinenblock).
-- Der Granatwerfer sieht nach einem Besuch im Alligator-Becken wieder ueberall gleich aus (vorher zusaetzliche Muendungsblitze/Glut).
+- Der Granatwerfer zeigt jetzt in jedem Raum den RE2-Muendungsblitz und die rot gluehenden Granatkoerner (wie RE2, das diese
+  Effekt-Farben ab dem Start geladen haelt); vorher erschienen sie erst nach einem Besuch im Alligator-Becken.
 - Mit dem Kanister im Maul kommt der Alligator an Leon/Elza an einer Wand etwas weniger weit heran (der Kopf bleibt vor der Wand); beissen
   kann er weiterhin.
-Entscheidungsfragen: keine (V1 ist ohne Aenderung an render_pc.c geloest).
+Entscheidungsfragen: keine (G-E3..G-E6 umgesetzt).
+
+### 11.9 Orchestrator-Entscheide G-E3..G-E6 (AUFTRAG 17:24, waehrend dieser Nachbesserung in den Baum gelegt, 29790441)
+Erst beim Abschluss gesehen (der Commit liegt zwischen der Basis cc089cde und meinem ersten Commit 88e225c1); danach umgesetzt (4c72aaba):
+- **G-E3 (M1):** "Rangfolge der Wahl: 1. Todes-Clip in allen Proben sichtbar, 2. Massstabsgrenze, 3. Naehe zur RE2-Lage (170,111)".
+  re15_gr2_r1_rang ist jetzt genau so lexikografisch (voll, Zahl der Proben, Grenze oder laufender Cut, Abstand zu (170,111)); gueltiger
+  Start und Start-Punkte entscheiden nur noch einen Gleichstand. Nachgerechnet (`<SP>/g4/ge3_replay.py` auf den Kandidatentabellen der
+  zehn Endmessungs-Laeufe 11.5 und der fuenf Riegel-Laeufe): in allen 15 R1-Lagen dieselbe Wahl wie die Rangfolge aus 11.4; der Riegel
+  unit_r41_kanister2080_r1wahl (plat_leon F1278 -> Cut 3, Stufe 1) gilt unveraendert.
+- **G-E4 (M2):** "RE2 haelt den Kern (CORE00.ESP + Kern-Textur) ab dem Start resident - belegen ... und die Zeilen spielweit beim Start
+  laden". Beleg (selbst disassembliert, info/re2leon/PSX.EXE):
+  * Der Start-Code uebergibt 0x8002b6d4 an 0x80031f6c (`lui a1,0x8003 / addiu a1,a1,-18732 / jal 0x80031f6c / addu a0,zero,zero`
+    @0x8002b65c-68; ebenso a0 = 1/2 mit 0x8002b6ac @0x8002b66c-88). 0x8002b6d4 ruft 0x800769c4 mit dem ganzen VRAM-Rechteck
+    (0,0,1024,512) @0x8002b70c-1c, laedt dann "TEX TIM" (Name @0x80010a08,
+    `addiu a0,zero,225 / lui a1,0x8011 / ori a1,a1,0xa000 / ... / jal 0x80012fb8` @0x8002b8ac-c4) und legt es mit dem Lader FUN_80076a40
+    (`addiu v0,zero,28 / sh v0,-1040(at)` = 0x800CFBF0 @0x8002b8cc-d4, `jal 0x80076a40` a0 = 0x8011a000 @0x8002b8d8-dc) nach VRAM
+    (768,256) mit der CLUT (256,480) 32 x 19 = alle Kern-Zeilen 480..498 (re2fx_pc.c Kopf).
+  * CORE00.ESP (Name @0x800108cc, Datei 144): FUN_8001babc leert Pool/Registry/Tafeln (@0x8001bac4-b34), laedt die Datei in den festen
+    Puffer 0x801fc400 (`addiu a0,zero,144 / lui a1,0x801f / ori a1,a1,0xc400 / ... / jal 0x80012fb8` @0x8001bb38-4c) und registriert
+    sie (`jal 0x8001bca0` @0x8001bb8c); gerufen aus TITLE.BIN @0x801062dc (einziger Aufruf; EXE ohne jal/j/Zeiger darauf). Der Raumlader
+    FUN_8001bba4 (einziger Aufruf @0x8004a2ec) traegt nur die Raumbanken (Registry-Basis 8) ein.
+  Umsetzung: `platform/pc/src/gator_fx_r41_pc.c` kern_laden() beim ersten Bild (jeder Raum) - RE2 TEX.TIM Seiten 0x1E/0x1F mit den
+  Zeilen 485..498 in Platz 56 (`[gator-fx] F0 Kern-Zeilen 485..498 (RE2 TEX.TIM) Slot 56 ok - spielweit ab dem Start (G-E4)`); der
+  Zeichner nimmt die Kern-Zeilen fuer JEDEN Platz in jedem Raum; Platz 54 = Raum-Atlas (16 x 216 = 3456 Zeilen) erst beim ersten
+  2090/2091-Besuch. Entfernt: die R1-Beschraenkung (re2fx_platz_quelle in re2_fx.c/.h und re15_gr2_fx_quelle_r1 - beide Dateien wieder
+  ohne diese Haken) und der Fruehausstieg 63e50c22.
+  Messung (Messkopie re15_pc_g41nb4e.exe, Umgebungen der Abnahme-3-Laeufe gl_2080_direkt / gl_2080_nach2090, `<SP>/g4/runs/g_gl_2080_*`):
+  ohne 2090-Besuch `F200 ROOM2080 ... kern485 6 ... | gezeichnet G 6 (kern485 6 raum 0)` ... F209 `G 2`, F210 `G 0`; nach dem 2090-Besuch
+  F236..F246 Zahl fuer Zahl dieselbe Folge (vorher G 0 gegen G 6). Bild `G_belege/nb4_ge4_werfer_2080_direkt_oben_nach2090_unten.png`:
+  oben ohne, unten nach dem 2090-Besuch - in beiden der gelb-orange Muendungsblitz (F200/F236) und die rot gluehenden Granatkoerner
+  (F202-F206/F238-F242); die uebrigen Pixel-Unterschiede (~11000 je Bild, auch ohne Effekt) sind die acht Zombies in anderer Pose.
+  Gegen RE2: `G_belege/nb4_ge4_werfer_re2_referenz_aus_re2_daten.png` (`tools/r41_kanister2080/re2_explosion_referenz.py <out> werfer`,
+  unabhaengig vom Port aus CORE00.ESP + TEX.TIM gerendert): Muendungsblitz Kern 1/0 = CLUT-Zeile 492, TPage 0x1F, 3 Bilder hell gelb-
+  weiss -> rot -> dunkelrot; Granatkoerner Kern 2/0x0c = Zeile 495, 8 Bilder orange-rote Staebchen in vier Drehlagen - dieselben Formen
+  und Farben wie im Port. R1-Bilder unveraendert: plat_leon F2652..F2700 mit nb4e gegen nb4d (Kern-Zeile 488 im Atlas) `Bilder 25,
+  davon verschieden 0`. Riegel integration_r41_kanister2080_raumfremd geaendert: in beiden Laeufen Kern-Zeilen ab dem Start geladen,
+  jedes Kern-485-Quad gezeichnet, dieselbe Folge (Quads/kern480/kern485/gezeichnet) mit und ohne 2090-Besuch.
+- **G-E5 (M3):** wie umgesetzt (11.3/11.5): Kopf (Part 6/7, dazu Hals 5) und Kanister innerhalb der Wand waehrend R1 - die Klemme wirkt
+  schon ab dem Anhaengen, damit der Kanister beim R1-Start (R1 P0 loest ihn an seiner Lage) innen liegt; der Original-Regionstest
+  @0x80077a30 bleibt; Regionstest der Scherben @0x80036534 nachgezogen; natuerliche Verlaeufe v1/west/k/plat Leon + Elza gemessen.
+- **G-E6 (V1):** render_pc.c RE15_TIM_SLOT_MAX 57 angenommen - wieder eingesetzt (eine Zeile + Kommentar, markiert), noetig fuer G-E4.
+

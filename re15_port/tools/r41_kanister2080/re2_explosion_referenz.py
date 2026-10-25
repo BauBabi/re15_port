@@ -9,7 +9,7 @@ halbtransparent, TPage | step[0x14] Bits 5-6 = ABR; 0 = 0,5B + 0,5F, 1 = B + F).
 0x1E/0x1F, CLUT-Zeile aus dem Bankkopf), Raum-Banken aus der Raum-ESP von ROOM40A0 (effect.esp = RDT 0x59CC) mit IHRER TIM aus dem
 RDT (espXX.tim, Palette = Sub >> 3) - ohne die VRAM-Umlage des Ports (gator_fx_r41_pc.c), damit die Gegenprobe unabhaengig ist.
 
-Aufruf: python re15_port/tools/r41_kanister2080/re2_explosion_referenz.py <out.png>
+Aufruf: python re15_port/tools/r41_kanister2080/re2_explosion_referenz.py <out.png> [werfer]
 """
 import os, struct, sys
 from PIL import Image, ImageDraw
@@ -102,6 +102,36 @@ def bild(raw, off, e, quelle, zeile_clut, cx_off, abr, halb, groesse=96):
     return im
 
 
+def werfer(out):
+    """Nachbesserung 4 (Orchestrator-Entscheid G-E4): die Kern-Effekte des Runde-35-Granatwerfers aus den RE2-Dateien - Muendungsblitz
+    0x01002000 (Kern-Bank 1, Sub 0) und Granatkoerner 0x020c0a00 (Kern-Bank 2, Sub 0x0c -> Palette + (0x0c >> 3) = 1) - als Referenz
+    fuer die Port-Bilder, seit die Kern-Zeilen 485..498 in jedem Raum gezeichnet werden."""
+    core = open(CORE, 'rb').read()
+    tcl, tiw, tih, tpix = tim_lesen(open(TEX, 'rb').read())
+    reihen = []
+    for (bank, sub, name) in [(1, 0, 'Muendungsblitz Kern 1/0 (0x01002000)'), (2, 0x0c, 'Granatkoerner Kern 2/0x0c (0x020c0a00)')]:
+        off, st = skript(core, bank, sub)
+        clut = rd16(core, off + 4); tpage = rd16(core, off + 6)
+        zeile = (clut >> 6) - 480 + (sub >> 3)
+        a_start, status, tp_or = sichtbarer_schritt(st)
+        abr = ((tpage | tp_or) >> 5) & 3
+        halb = (status & 0x1000) != 0
+        u_basis = ((tpage & 0x1f) - 0x1c) * 256
+        quelle = (tcl, tiw, tih, tpix, u_basis)
+        bilder = [bild(core, off, e, quelle, zeile, (clut & 0x3f) * 16 - 256, abr, halb) for (a, e) in anims_ab(core, off, a_start)]
+        reihen.append(('%s: CLUT-Zeile %d, TPage 0x%02X, ABR %d%s, Anim ab %d' % (name, 480 + zeile, tpage & 0x1f, abr, ' halbtransp.' if halb else '', a_start), bilder))
+    W = 96 * 2 + 2; spalten = max(1, max(len(b) for _, b in reihen))
+    sheet = Image.new('RGB', (spalten * W, len(reihen) * (W + 14)), (0, 0, 0))
+    dr = ImageDraw.Draw(sheet)
+    for r, (titel, bilder) in enumerate(reihen):
+        y = r * (W + 14)
+        dr.text((2, y), titel, fill=(255, 255, 0))
+        for c, im in enumerate(bilder):
+            sheet.paste(im.resize((96 * 2, 96 * 2), Image.NEAREST), (c * W, y + 14))
+    sheet.save(out)
+    print(out, sheet.size, ['%s: %d Bilder' % (t, len(b)) for t, b in reihen])
+
+
 def main(out):
     core = open(CORE, 'rb').read(); raum = open(os.path.join(RAUM, 'effect.esp'), 'rb').read()
     tcl, tiw, tih, tpix = tim_lesen(open(TEX, 'rb').read())
@@ -143,4 +173,5 @@ def main(out):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1] if len(sys.argv) > 1 else 're2_explosion_referenz.png')
+    if len(sys.argv) > 2 and sys.argv[2] == 'werfer': werfer(sys.argv[1])
+    else: main(sys.argv[1] if len(sys.argv) > 1 else 're2_explosion_referenz.png')
