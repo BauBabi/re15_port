@@ -1052,3 +1052,63 @@ Plan:
   hit_radius_min 1466 nach JEDEM bewegten Takt, auch in der Szene) schiebt den Gator, wenn die Wurzel naeher als ~1466 an eine
   SCA-Wand/-Insel kommt (erste Engine-Messung: Start S (6243,-19354) 1254 neben der Rampe -> Kampfbeginn im Nordbecken). Die
   Lagewahl verlangt deshalb Wurzel-Rand 1500 (nicht 900 wie leiche_lage_n4.py).
+
+### N5 Messung vorher (Abnahme 4, Laeufe F41a4/runs L1/E1/LW/EW/L1a/E1a, Stand fb64e68c; selbst nachgerechnet mit kampf_a4.py/keypix.py)
+
+| Mangel | gemessen vorher | Soll (F-E2) |
+|---|---|---|
+| M1 Kampfbeginn | F422, Gator (-2178,-9077) Zone 1 (Nordbecken), Leon (-8200,-25550) Zone 0, Abstand 17539; Dash Clip 2 F591 -> Clip 3 F741 -> Clip 0 F891 (300 Bilder); erster Biss +470 / Treffer +477 (stehend), +525 / +532 (Osten rennend) | 11430 / 121 so nah wie moeglich, nicht darunter; RE2-Zonenbeziehung |
+| M2 Schluessel Ankunft | Cut 5 (Nordbecken, nur Umgebungslicht): Primitivfarbe 51 -> 76, hellster Pixel 47 -> 70, Ring 2..16 Pixel, Kasten <= 9 x 12 | wie Fassung 1: 72 -> 108, 10 x 9 |
+| M3 Fressen | FINISHER Cut 4 frontal -1625 (von hinten), Leiche im Maul nur in einzelnen Bildern | frontal > 0, Leiche sichtbar, B8 bleibt |
+| M4 Riegel | nur Untergrenzen (`ab >= soll`, Biss/Treffer `LESS_EQUAL _b_ende`); 17539/470 gruen | obere UND untere Grenze aus RE2, gleiches Mass |
+
+Ursachen (gemessen + gelesen): M1 = Gator am Kampfbeginn in einer anderen Beckenzone als Leon -> Spur B's Zonen-Dash beim Wechsel in
+Leons Zone (300 Bilder); M2 = Nordbecken nur im Umgebungslicht 63..73 (Lichtsatz RDT @0x468 + 40 * 5); M3 = Anlauf nach Nordosten,
+die einzige Kamera vor dem Kopf (Cut 5, frontal 3933) liegt ueber der Massstab-Grenze 1892 (Massstab 1944, B8); M4 = Riegel-Code.
+
+### N5 Umsetzung (nur engine/src/gatorszene_r41.c + include/re15_gatorszene_r41.h; keine gemeinsame Datei, Spur B's Modul unberuehrt)
+
+- **Lage (PORT-WAHL der Inszenierung nach Nachtrag 6/29 und F-E2, Kommentar im Code mit allen Belegen):** Szenen-Leiche wieder **obj 2**
+  (Obj_model_set @0x00A6C, Original (-1725,-1740,-21723) Gier 685, Bild Cut 0) bei **(0,-1740,-26000) Gier 2944**, Ankunfts-/Rueckkehr-
+  Kamera **Cut 0** (RID @0x060: (2754,-3132,-26190) -> (-7992,-18,-21564), Lichtsatz @0x468 mit dem Licht (2510,-4000,-24087)),
+  Anlauf-Gier **1952** (von Osten nach Westen), **Durchbruch bis Clip-6-Bild 22** (neu: `GSZ_DURCHBRUCH_BIS_STD`, `ga_durchbruch_bis`;
+  Buehne Weg6 = off6[22] - off6[0]), Schluessel lokal (1090,-420,-100) wie bisher, Neigung **rx -48 / rz -608**. obj 3 bleibt an seiner
+  Original-Lage (-25,-7423) im Nordbecken.
+- **Wahl** mit dem ECHTEN Ablauf: neues Werkzeug `test_r41_gatorszene lagesuche <datei>` (Szene ueber die Leiter, Boss-Takt mit Klemme,
+  Spur-B-Kamerawahl, Messhaken unten) ueber 2873 Kandidaten aus der Vorauswahl (Leiche ganz im Bild von Cut 0, Licht >= 168 moeglich,
+  Kette mit Wurzel-Rand 1500; scratchpad F41n5/kand3_*.txt, Ergebnisse F41n5/ls*/out.txt). Alle drei Punkte erfuellen 34 Leichen-Lagen
+  (je mit mehreren Anlauf-Gieren); gewaehlt die mit dem groessten Schluessel (Quad-Kasten 11,7 x 12,0 = 0,87 x Fassung 1) und dem
+  Abstand knapp ueber dem RE2-Wert (Anlauf 1920 gaebe genau 11402 = die Untergrenze, 1952 laesst 46 Rand).
+- **Laufzeit-Lage** `re15_gsz_lage_t` + `re15_gatorszene_r41_lage_setzen/_lage` (nur Sonden/Riegel, kein Spielweg, kein Env-Schalter).
+- **Messhaken** (Logzeilen + Pruefhaken): `[gatorszene] Fress-Einstellung: Cut c frontal f` (Frontalwert wie gator_re2_r41.c
+  gr2_frontal), `[gatorszene] Kampfbeginn F..: Gator (..) Zone z, Spielfigur (..) Zone z, Abstand a` (SquareRoot0 wie RE2 +0x1F0),
+  `[gatorszene] Kontakt F..: +n Bilder` (Kontakt-Mass max_b <P_b - L, h> >= 0 je Bild nach dem Kampfbeginn, Knochen ueber
+  re15_gr2_bone_welt_pub); `re15_gatorszene_r41_kampfbeginn/_kontakt/_fress_kamera`.
+
+### N5 Messung nachher (exe 1b13a8be ff., eigene Kopien `re15_pc_f41n5_<lauf>.exe`, RE15_WINDOW_SCALE=1; scratchpad F41n5/runs)
+
+M1 (kampf_a4.py der Abnahme 4, unveraendert):
+
+| Lauf | Figur | Eingabe | Kampfbeginn | Gator (Zone) | Leon (Zone) | Abstand | erster Biss | erster Treffer | Kontakt-Mass |
+|---|---|---|---|---|---|---|---|---|---|
+| N_L1 | PL00 | steht | F297 | (3197,-24407) Zone 0 | (-8200,-25550) Zone 0 | **11454** (SquareRoot0 11448) | F428 (**+131**) | F435 (+138) | +210 (nach dem Biss, Leon zurueckgestossen) |
+| N_E1 | PL04 | steht | F297 | (3197,-24407) Zone 0 | (-8200,-25550) Zone 0 | 11454 | F428 (+131) | F435 (+138) | +210 |
+| N_LW_test | PL00 | `W10,L0.6,UX5` (nach Norden) | F297 | Zone 0 | Zone 0 | 11454 | F487 (+190) | F494 (+197) | - |
+| N_EW | PL04 | dto. | F297 | Zone 0 | Zone 0 | 11454 | F487 (+190) | F494 (+197) | +268 |
+
+RE2-Band 11430..13924 (SquareRoot0 11402..13890) / 121..158 Bilder: Abstand +24 ueber 11430, erster Angriff +10 ueber 121 (das Port-
+Tier ist 2/3 so gross, GB_SCALE_Q12 2731; dieselbe RE2-Bahn mit 2/3: 146). Kein Dash vor dem Biss (Clip-Folge N_L1: 0 F298, 1 F407,
+4 F428). Weglaufen gelingt: Leon rennt durch den Westkanal 9400 nach Norden, erster Angriff +190. Folge wie bisher (A, P1, T, P2+M 8/2,
+P3, S F53, G1 F53, G2 F74, K13 F87, G3 F88, G4 F208, V F267, G5 F267, G6 F268, C F297, G7, B1 F299 -> MAIN3C = RE2 MAIN1A), Szene 125
+Bilder kuerzer (Durchbruch 22 statt 124 Bilder); Kamera-Uebergabe Cut 0, Spielfigur im Bild.
+
+M2 (keypix.py der Abnahme 4, Ausschnitt ueber dem Ruecken (150..180 x 108..134) bzw. Fassung 1 (115..140 x 118..140), je Bild mit
+ganzem Ring): **neu hellster Pixel 86 .. 110, Ring 6 x 8 .. 7 x 9** (Leon N_L1a4 = Elza N_E1a); abgenommene Fassung 1 (F41a3/runs/L1a,
+selbes Werkzeug) 72 .. 108, Ring 8 x 10. Primitivfarbe Ruhe 85 -> Spitze 126 (Riegel; Fassung 1 84 -> 125). Der Ring wippt mit der
+Leiche (sub03 @0x00B5E) und liegt in einem Teil der Bilder vor dem Ruecken. Bild `F_belege/n5_ankunft_cut0.png` (Cut 0 F60 und
+Zoom N5 F10/F82/F94 gegen Fassung 1 F40/F88).
+
+M3: FINISHER **Cut 1 frontal 4116** (gator_boss.log `RE2 KAMERA SZENE FINISHER RE2-Cut 7 -> Cut 1`; Soll 4094), Leiche im Maul in
+allen Bildern des Fressens zu sehen (`F_belege/n5_gator_szene.png`: F75/F81/F87 Biss, F99/F151/F201/F251 Schuetteln und Kauen von
+vorn, F265-F285 Schrei), Durchbruch F59-F71 in Cut 1 (Kopf steigt aus dem Wasser). Kampfbeginn F297 Cut 0 (`F_belege/
+n5_kampfbeginn.png`): der Gator schwimmt von der Kamera (Suedostecke) auf Leon an der Leiter zu.
