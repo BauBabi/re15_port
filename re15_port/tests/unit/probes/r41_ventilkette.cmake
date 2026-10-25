@@ -10,6 +10,9 @@ target_link_libraries(test_r41_ventilkette PRIVATE re15_engine re15_test_support
 target_include_directories(test_r41_ventilkette PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/engine/src)
 target_compile_definitions(test_r41_ventilkette PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r41_ventilkette PRIVATE m)   # Nachbesserung 6: sqrt in capdiff/capkorr (Linux-fest, VERTRAG §2)
+endif()
 add_test(NAME unit_r41_ventilkette COMMAND test_r41_ventilkette)
 set_tests_properties(unit_r41_ventilkette PROPERTIES TIMEOUT 300)
 
@@ -42,6 +45,20 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_b
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_b.cmake)
     set_tests_properties(integration_r41_ventilkette_b PROPERTIES TIMEOUT 1200 RUN_SERIAL TRUE)
+endif()
+
+# Nachbesserung 6 (Abnahme 5 Mangel 1; Nachtrag 18 Punkt 4 / 25 (o), C-E4): der RE2-Alarm SUB_25 in der Aufnahme
+# (RE15_AUDIO_CAP_SYNC) - Leon mit Alarm, Zwilling ohne SUB_25 (RE15_RE2_ASSET_ROOT mit dem 4-Byte-Stummel der RE1.5-CD), Elza; A-B
+# vor dem Alarm bitgleich, waehrend RMS >= 300, danach bitgleich; Elza korreliert mit A-B. Eigener exe-Praefix re15_pc_r41calarm_.
+if(RE15_BUILD_PC AND TARGET re15_pc)
+    add_test(NAME integration_r41_ventilkette_alarm
+             COMMAND ${CMAKE_COMMAND}
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_R41C_WERKZEUG=$<TARGET_FILE:test_r41_ventilkette>
+                     -DRE15_SRC=${CMAKE_SOURCE_DIR}
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette_alarm
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette_alarm.cmake)
+    set_tests_properties(integration_r41_ventilkette_alarm PROPERTIES TIMEOUT 2700 RUN_SERIAL TRUE)
 endif()
 
 # Nachbesserung 1 (Abnahme 0, M2; Orchestrator-Entscheid C-E1 2026-10-24), seit Nachbesserung 4 auf der heutigen Kette: die

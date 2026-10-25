@@ -72,7 +72,13 @@
  * aus Seite 0 der RE2-TEX.TIM, x 104 + 14 i, y 32, CLUT (256, 480 + 2 * Farbe), CLUT-Wert 0x0000 = durchsichtig; Treffer =
  * JEDES deckende Texel gleich (RGB555 -> 8 bit wie der PC-Renderer). Ausgabe "RE2CD TREFFER <text> FARBE f PIXEL n" bzw.
  * "RE2CD KEIN TREFFER (bester <text> f: <gleich>/<n>)".
+ * Werkzeuge "capdiff"/"capkorr" (Nachbesserung 6, Riegel integration_r41_ventilkette_alarm; Abnahme 5 Mangel 1): Aufnahmen von
+ * RE15_AUDIO_CAP_SYNC (s16 Stereo, 1470 Stereo-Bilder je Spieltakt = 44100 / 30, audio_pc.c). `capdiff <a.raw> <b.raw> <an> <aus>`
+ * vergleicht einen Lauf mit dem Alarm (a) und seinen Zwilling ohne SUB_25 (b): "CAPDIFF VOR <max|a-b| vor Takt an> WAEHREND
+ * <RMS(a-b) an..aus> NACH <max|a-b| ab aus + 90>"; `capkorr <c.raw> <a.raw> <b.raw> <takt_c> <takt_a> <takte>` korreliert einen
+ * dritten Lauf (c, z. B. Elza) ab seinem Alarm-Takt mit dem Alarm allein (a - b): "CAPKORR <k> KONTROLLE <k 300 Takte frueher>".
  */
+#include <math.h>           /* Nachbesserung 6: sqrt (capdiff/capkorr) */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -1814,6 +1820,58 @@ static int re2cd(const char *ppm, const char *tex)
     return 0;
 }
 
+/* Werkzeuge "capdiff"/"capkorr" (Kopf). */
+#define R41C_CAP_BILDER 1470   /* Stereo-Bilder je Spieltakt im Modus RE15_AUDIO_CAP_SYNC (44100 / 30, audio_pc.c) */
+static int16_t *cap_lesen(const char *pfad, long *n_bilder)
+{
+    long sz = 0;
+    uint8_t *d = slurp(pfad, &sz);
+    if (!d || sz < 4) { free(d); *n_bilder = 0; return NULL; }
+    *n_bilder = sz / 4;
+    return (int16_t *)(void *)d;   /* little-endian s16 L/R (x86/ARM des Testlaufs) */
+}
+static double cap_mono(const int16_t *a, long i) { return ((double)a[2 * i] + (double)a[2 * i + 1]) * 0.5; }
+static int capdiff(const char *pa, const char *pb, long an, long aus)
+{
+    long na = 0, nb = 0;
+    int16_t *a = cap_lesen(pa, &na), *b = cap_lesen(pb, &nb);
+    if (!a || !b) { printf("FEHLER: Aufnahme fehlt (%s / %s)\n", pa, pb); free(a); free(b); return 2; }
+    const long n = na < nb ? na : nb, t_an = an * R41C_CAP_BILDER, t_aus = aus * R41C_CAP_BILDER, t_nach = (aus + 90) * R41C_CAP_BILDER;
+    long vor = 0, nach = 0; double q = 0.0; long qn = 0;
+    for (long i = 0; i < n; i++) {
+        const long d0 = labs((long)a[2 * i] - (long)b[2 * i]), d1 = labs((long)a[2 * i + 1] - (long)b[2 * i + 1]);
+        const long dm = d0 > d1 ? d0 : d1;
+        if (i < t_an) { if (dm > vor) vor = dm; }
+        else if (i < t_aus) { const double d = cap_mono(a, i) - cap_mono(b, i); q += d * d; qn++; }
+        else if (i >= t_nach) { if (dm > nach) nach = dm; }
+    }
+    printf("CAPDIFF VOR %ld WAEHREND %.1f NACH %ld TAKTE %ld/%ld\n", vor, qn ? sqrt(q / (double)qn) : 0.0, nach,
+           na / R41C_CAP_BILDER, nb / R41C_CAP_BILDER);
+    free(a); free(b);
+    return 0;
+}
+static double cap_korr_ab(const int16_t *c, long c0, const int16_t *a, const int16_t *b, long a0, long len)
+{
+    double sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0;
+    for (long i = 0; i < len; i++) {
+        const double x = cap_mono(c, c0 + i), y = cap_mono(a, a0 + i) - cap_mono(b, a0 + i);
+        sx += x; sy += y; sxx += x * x; syy += y * y; sxy += x * y;
+    }
+    const double n = (double)len, vx = sxx - sx * sx / n, vy = syy - sy * sy / n;
+    return (vx > 0 && vy > 0) ? (sxy - sx * sy / n) / sqrt(vx * vy) : 0.0;
+}
+static int capkorr(const char *pc, const char *pa, const char *pb, long tc, long ta, long takte)
+{
+    long nc = 0, na = 0, nb = 0;
+    int16_t *c = cap_lesen(pc, &nc), *a = cap_lesen(pa, &na), *b = cap_lesen(pb, &nb);
+    const long len = takte * R41C_CAP_BILDER, c0 = tc * R41C_CAP_BILDER, a0 = ta * R41C_CAP_BILDER, k0 = (tc - 300) * R41C_CAP_BILDER;
+    if (!a || !b || !c || c0 + len > nc || a0 + len > na || a0 + len > nb || k0 < 0) {
+        printf("FEHLER: Aufnahmen zu kurz/fehlen\n"); free(a); free(b); free(c); return 2; }
+    printf("CAPKORR %.3f KONTROLLE %.3f\n", cap_korr_ab(c, c0, a, b, a0, len), cap_korr_ab(c, k0, a, b, a0, len));
+    free(a); free(b); free(c);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     if (argc == 7 && strcmp(argv[1], "ppm") == 0)
@@ -1824,6 +1882,10 @@ int main(int argc, char **argv)
         return bss_diff(argv[2], argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]));
     if (argc == 4 && strcmp(argv[1], "re2cd") == 0)
         return re2cd(argv[2], argv[3]);
+    if (argc == 6 && strcmp(argv[1], "capdiff") == 0)
+        return capdiff(argv[2], argv[3], atol(argv[4]), atol(argv[5]));
+    if (argc == 8 && strcmp(argv[1], "capkorr") == 0)
+        return capkorr(argv[2], argv[3], argv[4], atol(argv[5]), atol(argv[6]), atol(argv[7]));
     fall_a();
     fall_r_text();   /* Nachbesserung 6 */
     for (int v = 0; v < 2; v++) {
