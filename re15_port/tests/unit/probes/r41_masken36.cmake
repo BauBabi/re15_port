@@ -116,6 +116,32 @@ endif()
 add_test(NAME unit_r41_masken36_stirn COMMAND test_r41_masken36 stirn WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r41_masken36_stirn PROPERTIES TIMEOUT 600)
 
+# Nachbesserung 4 (Abnahme 3, Mangel 2 "Restliste: Gelaender ohne Maske ..."): der Generator saete nur aus vollen 16x16-Bloecken; duenne
+# Kuenstler-Komponenten (Gelaender, Rohre, Lampen) wurden nie platziert. tools/maske/platzieren_r41.py platziert sie (Tabelle
+# tests/unit/gen_r41_masken36_platziert.inc).
+#   unit_r41_masken36_platziert  je Sektion: Rechteckzahl erstes + n, Leon/Elza bytegleich; neue Rechtecke = Hintergrund an der Zielstelle
+#                             (Blit); jede Komponente liegt dort, wo der Original-Atlas (Spiel-Entpacker re15_sld_*) sie hat (>= 95 % der
+#                             Texel farbgleich); gezeichnet (nach dem Ausschluss R37) mindestens der gemessene Endstand; die Gelaender
+#                             30E0 C6..C9, 3050 C6, 3040 C3 sind dabei.
+add_test(NAME unit_r41_masken36_platziert COMMAND test_r41_masken36 platziert WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r41_masken36_platziert PROPERTIES TIMEOUT 900)
+#   integration_r41_masken36_platziert  echte exe: an den neu platzierten Komponenten (Gelaender 3040 C3/C7, 30E0 C6/C8/C9, Kisten/Saeulen 3040 C9,
+#                             3050 C11, 5090 C12, 6000 C2, 50B0 C3, 6010 C2) VOR dem Gegenstand 0 Figurpunkte uebermalt (Art V), HINTER ihm
+#                             verdeckt (Art M); Szenen test_r41_masken36_platziert_szenen.cmake, Laeufer wie integration_r41_masken36_stage2.
+if(TARGET re15_pc)
+    add_test(NAME integration_r41_masken36_platziert
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r37_masken36_ppm>
+                     -DRE15_BG_TOOL=$<TARGET_FILE:probe_bg_dump>
+                     -DCD_ROOT=${CMAKE_SOURCE_DIR}/shared_assets/PSX
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_masken36_platziert_wd
+                     -DSZENEN=${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_platziert_szenen.cmake
+                     -DPRAEFIX=r41m7
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
+    set_tests_properties(integration_r41_masken36_platziert PROPERTIES TIMEOUT 2400)
+endif()
+
 # Nachbesserung 4 (Abnahme 3, Mangel 3): der gemeinsame Laeufer test_r41_masken36_stage2.cmake (stage2/_zelle/_zellen3d/_fern) wertet
 # nur noch Laeufe aus, deren debug.log nach dem letzten Laden des Zielraums den Framedump und "[flow] EXIT_AT: Bild 120 in Raum <zr>"
 # zeigt (RE15_FRAMEDUMP=120 schreibt sonst schon im Boot-Raum; gemessen Abnahme 3: d4040_09 verglich das Boot-Bild), sonst bis zu

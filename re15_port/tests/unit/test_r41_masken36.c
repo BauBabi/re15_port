@@ -471,12 +471,118 @@ static void teil_stirn(void)
     free(roh); free(msk); free(msk1); free(eig.roh); free(bss.roh);
 }
 
+/* ---- Nachbesserung 4 (Abnahme 3, Mangel 2): unplatzierte Kuenstler-Komponenten (tools/maske/platzieren_r41.py) -------
+ * Der Generator saete nur aus vollstaendig deckenden 16x16-Bloecken (gen_region.find_blocks); duenne Teile (Gelaender, Rohre,
+ * Lampen) als eigene Atlas-Komponente wurden nie platziert. platzieren_r41.py sucht ihre Lage (maskierte SSD ueber alle
+ * Verschiebungen, Schwellen an den Generator-Lagen kalibriert) und haengt Rechtecke an die Sektion an (alter Teil bytegleich).
+ *   test_r41_masken36 platziert   je Sektion der Tabelle gen_r41_masken36_platziert.inc:
+ *     (a) die Sektion hat genau erstes + n Rechtecke, Leon- und Elza-Datei bytegleich;
+ *     (b) Blit der neuen Rechtecke: Texel des eigenen Atlas = Hintergrund an der Zielstelle (Mittel <= 12, Anteil > 48 <= 5 %);
+ *     (c) je Komponente: im ORIGINAL-Atlas (BSS-SLD, Engine-Entpacker) liegen an der Verschiebung mindestens 95 % der verifizierten
+ *         Texel farbgleich (<= 48) auf dem Hintergrund - die Lage ist mit dem Entpacker des Spiels nachgeprueft;
+ *     (d) gezeichnet (wie der Lader, Ausschluss R37) werden die neuen Rechtecke zusammen mindestens R41_PLATZ_MIN Punkte, die vorher
+ *         keine Maske hatten; die Gelaender der Abnahme-Restliste (30E0 C6..C9, 3050 C6, 3040 C3) sind dabei. */
+typedef struct { int raum, cut, erstes, n, punkte; } r41_platz_sek_t;
+typedef struct { int raum, cut, komp, x0, y0, x1, y1, dx, dy, texel; } r41_platz_komp_t;
+#include "gen_r41_masken36_platziert.inc"
+#ifndef R41_PLATZ_MIN
+#define R41_PLATZ_MIN 160539               /* gemessener Endstand NB4 (Dossier NB4: 998 854 -> 1 159 393 gezeichnete Generator-Punkte) */
+#endif
+
+static void teil_platziert(void)
+{
+    static uint8_t rgb[320 * 240 * 3];
+    static uint8_t deck[240][320], deck_alt[240][320];
+    int s, k, sekt = 0, sekt_ok = 0, elza_ok = 0, komp_n = 0, komp_ok = 0, gel_n = 0;
+    long neu_gez = 0, neu_aus = 0, blit_n = 0, blit_gross = 0; double blit_sum = 0, blit_max = 0;
+    static const struct { int raum, cut; } gel[] = { { 0x30E0, 6 }, { 0x30E0, 7 }, { 0x30E0, 8 }, { 0x30E0, 9 }, { 0x3050, 6 },
+                                                    { 0x3040, 3 } };
+    long gel_px[6] = { 0, 0, 0, 0, 0, 0 };
+    printf("== r41_masken36 platziert: unplatzierte Kuenstler-Komponenten der Stages 3..6 (platzieren_r41.py) ==\n");
+    for (s = 0; r41_platz_sek[s].raum; s++) {
+        const r41_platz_sek_t *S = &r41_platz_sek[s];
+        char p[700]; uint8_t *msk, *msk1; size_t mn = 0, mn1 = 0; re15_pri_cut_t pri, lader, vor; atlas_t eig; uint32_t off;
+        int m, x, y; long sd = 0, sn = 0, gross = 0, gez = 0, aus = 0;
+        sekt++;
+        snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, (unsigned) S->raum); msk = slurp(p, &mn);
+        snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, (unsigned) (S->raum | 1)); msk1 = slurp(p, &mn1);
+        off = msk ? re15_pri_msk_section_offset(msk, mn, S->cut) : 0;
+        if (!off || re15_pri_parse_section(msk, mn, off, &pri) <= 0 || !atlas_eigen((unsigned) S->raum, S->cut, &eig)
+            || !bg_rgb((unsigned) S->raum, S->cut, rgb)) {
+            printf("  FAIL: ROOM%04X C%d nicht lesbar\n", (unsigned) S->raum, S->cut); g_fail = 1; free(msk); free(msk1); continue;
+        }
+        if (pri.mask_count == S->erstes + S->n) sekt_ok++;
+        else printf("  ROOM%04X C%d: %d Rechtecke statt %d + %d\n", (unsigned) S->raum, S->cut, pri.mask_count, S->erstes, S->n);
+        if (msk1 && mn1 == mn && !memcmp(msk, msk1, mn)) elza_ok++;
+        for (m = S->erstes; m < pri.mask_count; m++) {          /* (b) Blit der neuen Rechtecke */
+            const re15_pri_mask_t *q = &pri.masks[m];
+            int dx = (int16_t) q->dstX, dy = (int16_t) q->dstY, xx, yy, r, g, b, d;
+            for (yy = 0; yy < q->height; yy++)
+                for (xx = 0; xx < q->width; xx++) {
+                    int tx = dx + xx, ty = dy + yy;
+                    if (tx < 0 || ty < 0 || tx >= 320 || ty >= 240) continue;
+                    if (!farbe(&eig, q->srcX + xx, q->srcY + yy, &r, &g, &b)) continue;
+                    d = abs(r - rgb[(ty * 320 + tx) * 3]) + abs(g - rgb[(ty * 320 + tx) * 3 + 1]) + abs(b - rgb[(ty * 320 + tx) * 3 + 2]);
+                    sd += d; sn++; if (d > FARBE_MAX) gross++;
+                }
+        }
+        blit_sum += sd; blit_n += sn; blit_gross += gross;
+        if (sn && (double) sd / sn > blit_max) blit_max = (double) sd / sn;
+        /* (d) gezeichnet wie der Lader; "vor" = dieselbe Sektion ohne die neuen Rechtecke */
+        lader = pri; re15_masken36_filter(re15_pri_masken_raum((unsigned) S->raum), S->cut, &lader);
+        zeichnen(&lader, lader.draw_count, NULL, &eig, deck);
+        vor = pri; vor.mask_count = S->erstes; if (vor.draw_count > S->erstes) vor.draw_count = S->erstes;
+        re15_masken36_filter(re15_pri_masken_raum((unsigned) S->raum), S->cut, &vor);
+        zeichnen(&vor, vor.draw_count, NULL, &eig, deck_alt);
+        for (y = 0; y < 240; y++)
+            for (x = 0; x < 320; x++) gez += deck[y][x] && !deck_alt[y][x];
+        for (m = S->erstes; m < pri.mask_count; m++)
+            if (re15_masken36_ausgeschlossen(re15_pri_masken_raum((unsigned) S->raum), S->cut, m))
+                aus += (long) pri.masks[m].width * pri.masks[m].height;
+        neu_gez += gez; neu_aus += aus;
+        for (k = 0; k < 6; k++) if (gel[k].raum == S->raum && gel[k].cut == S->cut) gel_px[k] = gez;
+        free(msk); free(msk1); free(eig.roh);
+    }
+    for (k = 0; r41_platz_komp[k].raum; k++) {              /* (c) Lage mit dem Entpacker des Spiels nachpruefen */
+        const r41_platz_komp_t *K = &r41_platz_komp[k];
+        atlas_t bss; int x, y, treffer = 0, r, g, b;
+        komp_n++;
+        if (!atlas_bss((unsigned) K->raum, K->cut, &bss) || !bg_rgb((unsigned) K->raum, K->cut, rgb)) { free(bss.roh); continue; }
+        for (y = K->y0; y < K->y1; y++)
+            for (x = K->x0; x < K->x1; x++) {
+                int tx = x + K->dx, ty = y + K->dy, d;
+                if (tx < 0 || ty < 0 || tx >= 320 || ty >= 240 || !farbe(&bss, x, y, &r, &g, &b)) continue;
+                d = abs(r - rgb[(ty * 320 + tx) * 3]) + abs(g - rgb[(ty * 320 + tx) * 3 + 1]) + abs(b - rgb[(ty * 320 + tx) * 3 + 2]);
+                treffer += d <= FARBE_MAX;
+            }
+        if (treffer * 100 >= K->texel * 95) komp_ok++;
+        else printf("  ROOM%04X C%d Komponente %d: nur %d von %d Texeln an (%d,%d)\n", (unsigned) K->raum, K->cut, K->komp, treffer,
+                    K->texel, K->dx, K->dy);
+        free(bss.roh);
+    }
+    for (k = 0; k < 6; k++) gel_n += gel_px[k] > 0;
+    printf("  Sektionen %d (Rechteckzahl stimmt %d, Elza bytegleich %d), Komponenten %d (Lage mit dem Spiel-Entpacker bestaetigt %d)\n",
+           sekt, sekt_ok, elza_ok, komp_n, komp_ok);
+    printf("  Blit neue Rechtecke: %ld Texel, Mittel %.2f, je Sektion max %.2f, Anteil > 48 %.2f %%\n", blit_n,
+           blit_n ? blit_sum / blit_n : 0.0, blit_max, blit_n ? 100.0 * blit_gross / blit_n : 0.0);
+    printf("  neu gezeichnete Punkte (wie der Lader, vorher ohne Maske): %ld | Flaeche ausgeschlossener neuer Rechtecke %ld\n", neu_gez, neu_aus);
+    printf("  Gelaender der Restliste: 30E0 C6 %ld, C7 %ld, C8 %ld, C9 %ld, 3050 C6 %ld, 3040 C3 %ld\n", gel_px[0], gel_px[1], gel_px[2],
+           gel_px[3], gel_px[4], gel_px[5]);
+    CHECK("jede Sektion der Tabelle hat genau erstes + n Rechtecke, Leon- und Elza-Datei bytegleich", sekt > 0 && sekt_ok == sekt && elza_ok == sekt);
+    CHECK("neue Rechtecke: Texel = Hintergrund an der Zielstelle (Mittel je Sektion <= 12, Anteil > 48 <= 5 %)",
+          blit_n > 0 && blit_max <= 12.0 && blit_gross * 20 <= blit_n);
+    CHECK("jede Komponente liegt dort, wo der Original-Atlas (Spiel-Entpacker) sie hat: >= 95 % der Texel farbgleich", komp_n > 0 && komp_ok == komp_n);
+    CHECK("die neuen Rechtecke zeichnen (nach dem Ausschluss R37) mindestens den gemessenen Endstand an Punkten ohne Maske", neu_gez >= R41_PLATZ_MIN);
+    CHECK("die Gelaender der Abnahme-Restliste (30E0 C6..C9, 3050 C6, 3040 C3) sind gezeichnet", gel_n == 6);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "loecher";
     if (!strcmp(teil, "loecher")) teil_loecher();
     else if (!strcmp(teil, "kurbel")) teil_kurbel();
     else if (!strcmp(teil, "stirn")) teil_stirn();
+    else if (!strcmp(teil, "platziert")) teil_platziert();
     else { printf("unbekannter Teil %s\n", teil); return 2; }
     return g_fail;
 }
