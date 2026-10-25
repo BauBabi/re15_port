@@ -998,6 +998,17 @@ posiert: Spur B's gezeichnete Pose, der NPC-Zeichner). PORT-WAHL der Abbildung: 
 die Hochachse (Gier des Werfers x Bruch) und die Querachse (1024 x Bruch) und fuehrt die Mitte von der stehenden Lage an der Marke
 (Fuss y -14400 + halbe Laenge) in die Haende; ab Bild 24 wie bisher quer in den Haenden. PORT-WAHL der Achsen/Mitte (RE2 kippt den
 Kanister von der Wand ins Wasser, nicht in Haende).
+**Messung (Bau 2026-10-25 09:15, exe-Kopie re15_pc_g41nb2b.exe, Rezept kampf, Laeufe `<SP>/g2/runs/{s4,k2}_{leon,elza}`):**
+- Kippen, Leon und Elza: debug.log `F465 Kippen Bild 1: Bruch 0/4096` -> `F470 Bild 6: 240` -> `F476 Bild 12: 1056` -> `F482 Bild 18:
+  2448` -> `F488 Bild 24: 4096` (= RE2-Winkel 0/60/264/612/1024). Bild `G_belege/nb2_n26_kippen_marvin_f462-492_cut5_x2.png` /
+  `..._john_...` (Cut 5, 2x): F462-F470 steht der Kanister hochkant vor dem knienden Werfer, F472-F484 kippt er beschleunigt zur
+  Seite (oben zuerst langsam, dann schnell), ab F486 liegt er quer in den Haenden - kein Sprung mehr in einem Bild.
+- Hals, Leon und Elza: `F43 HALS zum Kanister: Part 5 Akku Gier 20 Neigung 14, Akku-Ziel (482,14)` (Alligator dreht sich gerade
+  zum Kanister), `F60 Akku Gier 309 Neigung -19`, `F75 9/40`, `F90 -35/48`, `F105 -23/66`, `F114 HALS zurueck (Akku -> 0)` im Bild
+  nach der Aufnahme (Stufe 1 F113). Aufnahme F113, angehaengt F125, R1 F826 wie ohne Hals (der Hals bewegt nur die Pose, nicht die
+  Wurzel). Vergleich `G_belege/nb2_n26_hals_vorher_nachher_leon_f48-78_x3_hell25.png` (oben k_leon ohne Hals, unten k2_leon mit
+  Hals, dieselben Bilder und Wurzellagen): F54 (Cut 12) und F66-F78 (Cut 0) zeigen den Kopf anders gedreht/geneigt.
+- Spur B's Riegel sehen den Haken nicht: er wird erst in `hals_takt` eingehaengt, und der laeuft nur mit Bit 116 in 2090/2091.
 
 ### 9.6 OFFEN (gemessen bzw. benannt, nicht geraten)
 1. **Apply-Bild F530** (N2): dieser Zweig (Basis 9f10bdb0) zeigt im Bild des Schnitts auf Cut 7 noch den alten Hintergrund mit dem
@@ -1024,8 +1035,7 @@ Was sich im Spiel aendert:
 - Beim Aufheben dreht sich Marvin/John nicht mehr ruckartig zur Seite; die Wurfrichtung nimmt er erst mit dem Schnitt auf die
   Totale ein.
 - Der Kanister fliegt in das Becken, das weiter vom Alligator entfernt ist (Nord oder Sued). Der Alligator schwimmt danach sofort zu
-  ihm, beisst Leon/Elza bis dahin nicht (wie in RE2: dort liegt der Kanister auf seinem Weg, und solange er ihn anvisiert, beisst er
-  nicht) und schnappt ihn etwa 3 bis 5 Sekunden nach dem Wurf; dann ein Treffer -> Explosion, Kiefer, Tod.
-Entscheidungsfragen: keine offenen. Hinweis zum Entscheid 9.3 (Anschwimmen statt "vorbeilocken"): falls der Alligator den Kanister
-lieber nur zufaellig beim Vorbeischwimmen nehmen soll, kann das mit einem Wort zurueckgestellt werden - dann kann es im Kampf
-Minuten dauern (Abnahme 1: bis zu 5 min ohne Aufnahme).
+  ihm und richtet dabei Hals und Kopf auf ihn (RE2-Lenkung, deine Auswahl in Nachtrag 26), beisst Leon/Elza bis dahin nicht und
+  schnappt ihn etwa 3 bis 5 Sekunden nach dem Wurf; dann ein Treffer -> Explosion, Kiefer, Tod.
+- Beim Aufheben kippt der stehende Kanister sichtbar in die Haende von Marvin/John (RE2-Kippen, deine Auswahl in Nachtrag 26).
+Entscheidungsfragen: keine offenen (Nachtrag 26 hat 8.8 beantwortet; Kamera 12 bleibt).
