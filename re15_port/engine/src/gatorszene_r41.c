@@ -933,14 +933,14 @@ static int gator_tot(void)
  * auf eine Kamera und legte das Quadrat flach (Bildhoehe 180 x sin(Blickhoehe ~10 Grad) < 1 Bildpunkt). PORT-WAHL der Lage
  * (Nutzer: "Wenn der Aligator danach tot ist, soll der Schluessel in der Naehe seine Leiche sein und blinken"), FORM wie der
  * Schluessel der Ankunft (tools/r41_gatorszene/leiche_lage.py):
- *  - Kamera: die laufende (g_scd.cam_id; R1 P3 setzt das Tot-Flag +0x10E |= 0x4000 @0x80102654-64 und gibt im selben Schritt
- *    die Szenen-Kamera frei @0x80102688-94 (gator_re2_r41.c re15_gr2_r1_tick) - der SCD-Takt des naechsten Bildes sieht beides); hat
- *    sie keine Lage, die Zonenkamera (RVD-Gruppe mit Wechselsatz: ROOM2090 Cut 0..7, wie gator_re2_r41.c gr2_zonenkamera)
- *    mit dem groessten Schluessel-Bild;
+ *  - Kamera (Nachbesserung 2): die Zonenkamera (RVD-Gruppe mit Wechselsatz: ROOM2090 Cut 0..7, wie gator_re2_r41.c
+ *    gr2_zonenkamera) mit dem GROESSTEN Schluessel-Bild; die Einstellung nach dem Tod schneidet auf sie (key_einstellung). Bis
+ *    Nachbesserung 1 die laufende Kamera (R1 P3 setzt das Tot-Flag +0x10E |= 0x4000 @0x80102654-64 und gibt im selben Schritt
+ *    die Szenen-Kamera frei @0x80102688-94) - darin nur 4-6 Bildpunkte (Abnahme 1, M2);
  *  - Lage: Rasterpunkt (100) im Wasser (re15_aot_water_at fuer Mitte und alle vier Ecken des Quadrats +-90 = MD1 @0x354C
- *    Ecken -90/90) im Bild der Kamera (Mitte x 24..296, y 40..205 wie leiche_lage.py), VOR der ganzen Leiche (Tiefe kleiner
- *    als die jedes Leichen-Knochens minus 800 = halbe Breite des RE1.5-Alligator-Kastens {1000,-720,0,2200,720,800}
- *    @0x80118b98, re15_damage.c - die Leiche verdeckt ihn nicht), hoechstens so weit vom naechsten Knochen wie der Kopf der
+ *    Ecken -90/90) im Bild der Kamera (Mitte x 24..296, y 40..205 wie leiche_lage.py), von der Leiche NICHT verdeckt (je Knochen
+ *    eine Kugel mit der halben Breite 800 des RE1.5-Alligator-Kastens {1000,-720,0,2200,720,800} @0x80118b98, re15_damage.c;
+ *    leiche_verdeckt - bis Nachbesserung 1 "vor JEDEM Knochen - 800"), hoechstens so weit vom naechsten Knochen wie der Kopf der
  *    Leiche von ihrer Wurzel (Knochen 6 zu Knochen 0 der Leichen-Pose; ohne Bank 3055 = Kopf-Versatz der Buehnen-Messzeile)
  *    und darunter mit dem GROESSTEN Bild (kleinste Tiefe; gleich gross: naeher an der Leiche). Erste Messung dieser Fassung
  *    mit "der Leiche am naechsten" (Lauf T1n, Todesrolle Cut 0): Tiefe 6948, nur 4 Bildpunkte - darum das groesste Bild
@@ -1014,13 +1014,33 @@ static int wasser_quadrat(int32_t x, int32_t z, int32_t *wy)
     return 1;
 }
 typedef struct { int32_t x, y, z, vz; int64_t d2; } gsz_lage_t;
+/* Nachbesserung 2 (M2): verdeckt die Leiche den Schluessel im Bild? Je Knochen eine Kugel mit der halben Breite des
+ * Alligator-Kastens (800, {1000,-720,0,2200,720,800} @0x80118b98): verdeckt, wenn die Kugel nicht ganz hinter dem Schluessel
+ * liegt (Tiefe - 800 < Schluessel-Tiefe) und ihr Bildkreis (800 x H / Tiefe) den Schluessel (Mitte + halbe Quadrat-Bildgroesse)
+ * trifft; eine Kugel, die die Bildebene schneidet (0 < Tiefe <= 800), verdeckt immer, Knochen hinter der Kamera nie. Die erste
+ * Fassung verlangte "vor JEDEM Knochen - 800" - das schloss jede Kamera aus, hinter der ein Teil der Leiche liegt oder vor der die
+ * Leiche naeher als ihr Bildrand liegt (gemessen Lauf T1m dieser Nachbesserung: von acht Zonenkameras blieben Cut 0/3/6, der
+ * groesste Schluessel 7 Bildpunkte). */
+static int leiche_verdeckt(const re15_camera_view_t *v, int32_t pk[][3], int npk, int sx, int sy, int32_t vz_key)
+{
+    const int64_t h = v->fov_screen_dist;
+    const int64_t halb = vz_key > 0 ? (GSZ_KEY_HALB * h) / vz_key : 0;
+    for (int i = 0; i < npk; i++) {
+        int bx = 0, by = 0; int32_t bz = 0;
+        if (!kam_proj(v, pk[i], &bx, &by, &bz)) continue;               /* Knochen hinter der Kamera */
+        if (bz - GSZ_GATOR_HALBBREITE >= vz_key) continue;              /* Kugel ganz hinter dem Schluessel */
+        if (bz <= GSZ_GATOR_HALBBREITE) return 1;                       /* Kugel schneidet die Bildebene */
+        const int64_t r = (GSZ_GATOR_HALBBREITE * h) / bz + halb;
+        const int64_t dx = sx - bx, dy = sy - by;
+        if (dx * dx + dy * dy <= r * r) return 1;
+    }
+    return 0;
+}
 /* Beste Lage fuer Kamera cut (s. Kopf); r_nah = hoechster Abstand zum naechsten Knochen; 0 = keine. */
 static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t r_nah, gsz_lage_t *out)
 {
     re15_camera_view_t v;
     if (!kam_sicht(cut, &v)) return 0;
-    int32_t vz_min = 0x7fffffff;
-    for (int i = 0; i < npk; i++) { int32_t vz; kam_proj(&v, pk[i], NULL, NULL, &vz); if (vz < vz_min) vz_min = vz; }
     int32_t x0 = 0x7fffffff, x1 = -0x7fffffff, z0 = 0x7fffffff, z1 = -0x7fffffff;
     for (int i = 0; i < RE15_AOT_MAX; i++) {                  /* Rasterbereich = Huelle der Wasserzonen */
         const re15_aot_t *a = &g_aot.slots[i];
@@ -1058,7 +1078,7 @@ static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t
             int sx = 0, sy = 0; int32_t vz;
             if (!kam_proj(&v, p, &sx, &sy, &vz)) continue;
             if (sx < GSZ_BILD_X0 || sx > GSZ_BILD_X1 || sy < GSZ_BILD_Y0 || sy > GSZ_BILD_Y1) continue;
-            if (vz >= vz_min - GSZ_GATOR_HALBBREITE) continue;          /* vor der ganzen Leiche */
+            if (leiche_verdeckt(&v, pk, npk, sx, sy, vz)) continue;    /* nicht von der Leiche verdeckt (Nachbesserung 2) */
             int32_t wy;
             if (!wasser_quadrat(x, z, &wy)) continue;
             if (!gefunden || vz < out->vz || (vz == out->vz && d2 < out->d2)) {
