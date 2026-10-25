@@ -8,11 +8,11 @@ Laufordner/Bilder (nicht im Baum): `<SP>` = `C:/Users/MJOEDI~1/AppData/Local/Tem
 - [x] Lektuere AUFTRAG (inkl. Nachtraege 5/17/20-26, FG-E1..FG-E5), VERTRAG, Dossier §9, Abnahme 1, Code-Diff 9f10bdb0..HEAD
 - [x] Bau (local_build.sh configure + build: `ninja: no work to do`, exe 09:15:21 = Stand e4121848, keine Quelle neuer)
 - [x] gezielte Unit-Tests (46/46)
-- [ ] gezielte Integrations-Tests (laufen)
+- [x] gezielte Integrations-Tests (9/9)
 - [x] RE-Gate Stichproben (Abschnitt 4)
-- [x] Messungen P1 / P2 / P3 (Leon + Elza; 24 exe-Laeufe)
+- [x] Messungen P1 / P2 / P3 (Leon + Elza; 27 exe-Laeufe)
 - [x] Vertrag
-- [x] Urteil: NICHT BESTANDEN (M1: R1-Tod in der Standard-Startlage nicht im Bild); N1/N2/N3 der Abnahme 1 und Nachtrag 26 erfuellt
+- [x] Urteil: NICHT BESTANDEN (M1: R1-Tod in der Standard-Startlage nicht im Bild; M2: Werfer in Cut 7 beim Suedwurf von hinten); N1/N2/N3 der Abnahme 1 und Nachtrag 26 (Hals, Kippen) erfuellt
 
 ## 1. Diff, Bau
 - Massgeblich ist `git diff 9f10bdb0..HEAD` (merge-base; `git diff master` enthaelt master-Stand nach dem Abzweig). Seit Abnahme 1
@@ -25,6 +25,22 @@ Laufordner/Bilder (nicht im Baum): `<SP>` = `C:/Users/MJOEDI~1/AppData/Local/Tem
   `=== LOCAL-BUILD-OK (build)`. Kontrolle: `find re15_port/{engine,include,platform,tests} -newer re15_pc.exe -name '*.c|*.h|*.inc|*.cmake'`
   leer, `git status` sauber; exe 2026-10-25 09:15:21 (+0100), letzter Code-Commit e4121848 09:14:19 -> die exe ist der Stand HEAD.
   Messkopien re15_pc_g41abn2{,b,c,d}.exe (md5 629cb2a2... = re15_pc.exe).
+
+### 1a Gezielte Unit-Tests (Log <SP>/ctest_unit.log)
+`ctest --test-dir re15_port/build -R "unit_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_|unit_msg_|unit_action_msg_gate|unit_alligator_ai|
+unit_gator_|unit_g5_boss|unit_r35_granate|unit_r34_reaktion|unit_re2_spider_water_2090" --timeout 600 --output-on-failure -j3` (Regex des Bau-Agenten
++ unit_g5_boss als zweiter Nutzer von g_anim_bone_angle_hook) -> **`100% tests passed, 0 tests failed out of 46`** (61,62 s). Einzeln ausgegeben:
+anschwimmen 5 Lagen Aufnahme Bild 131/419/407/424/319, `Biss davor nein`, Gegenprobe ohne Szene `KEINE Aufnahme` (Haken nur fuer die Szene);
+hals `Slew 20/Bild bis (560,-312), zurueck auf 0`; kippen `Bild 1 0, Bild 12 1056, Bild 23 4048, Bild 24 4096`; landung Nord/Sued je Lage, Bit 117
+in 2090/2091.
+
+### 1b Gezielte Integrations-Tests (Log <SP>/ctest_integ.log; allein gefahren, keine parallelen Messlaeufe)
+`ctest --test-dir re15_port/build -R "^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_re2gator$|
+^integration_r35_granate$|^integration_r38_wasser$|^integration_r41_wasser20b0_npc$|^integration_r37_itemband$|^integration_r36_tueren$|
+^integration_r36_kartenitems_bild$" --timeout 3000 --output-on-failure -j3` (G + B's Riegel + alle Riegel, die durch ROOM2080/2081/2090/2091
+laufen, `grep -l "2080\|2081\|2090\|2091" tests/integration/*.cmake`) -> **`100% tests passed, 0 tests failed out of 9`** (1456,97 s;
+kanister2080 219,76 s, kanister2080_kampf 749,24 s, re2gator 345,70 s, r37_itemband 874,00 s, r36_kartenitems_bild 523,52 s). Der kampf-Lauf
+(build/tests/integration/r41_kanister2080_kampf_wd/lauf_0717c302) hat dieselben Zeilen wie k_leon (3.3), inkl. `R1 EXPLOSION ... -> Cut 2 F826`.
 
 ## 2. Messungen P1 / P2 (Laufordner <SP>/runs/<lauf>; Helfer <SP>/lauf.sh, <SP>/kampf.sh)
 Gemeinsam: RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore; Leon RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2, Elza
@@ -89,29 +105,6 @@ Bit 110 per RE15_SET_FLAG (Spur F fehlt in diesem Zweig). Zeit "nach dem Loslass
   (Mitschnitt-Bild 1686..1835 = 5,0 s = volle Laenge der Datei), der Raumwechsel nach 2090 folgt danach. Damit wartet der Wurf wirklich auf
   das Ende von Zeile UND Stimme (Wsleeping-Form @0x80053ac0: 0x800cfbd8 & 0x20 / 0x800e873c & 0x80); ohne Datei 99 Bilder (3.1).
 
-## 4. RE-Gate (Stichproben selbst disassembliert/gelesen; Werkzeuge .claude/skills/re15-psx-disasm/scripts/re2_disasm.py / re15_disasm.py
-aus dem Hauptbaum, nur lesend; RDT-Bytes per Python aus info/re2leon/PL0/RDT)
-| Zitat im Diff | selbst gelesen | Ergebnis |
-|---|---|---|
-| RE2 Wsleep/Wsleeping, Tafel @0x800a74c8 [11]/[12] | `table 0x800a74c8`: [11] -> 0x80053a8c, [12] -> 0x80053ac0. Wsleep: `lb v1,2(a0)` / `lbu v0,8(v1)` / `addiu v0,v0,1` / `sb v0,8(v1)` @0x80053a8c-a4, pc+1, `jr ra / addiu v0,zero,1` @0x80053ab8/bc. Wsleeping: `lw v0,-1064(v0)` (0x800cfbd8) `andi v0,v0,0x20` `bne .. 0x80053b14` @0x80053ac4-d0; `lbu v0,-30916(v0)` (0x800e873c) `andi v0,v0,0x80` `bne .. 0x80053b14` @0x80053adc-e8; Ende `jr ra / addiu v0,zero,2` @0x80053b14/18 | stimmt |
-| Xa_on setzt 0x800cfbd8 \| 0x20 @0x80058060; FUN_8002fe38 setzt 0x800e873c = 0x80 @0x8002fe80/88 | Tafel [0x59] @0x800a762c -> 0x80058028; `jal 0x800129b4` @0x80058048, `lw v0,0(v1)` (0x800cfbd8) / `ori v0,v0,0x20` / `sw v0,0(v1)` @0x80058058-64. FUN_8002fe38: `addiu t2,zero,128` @0x8002fe80, `sb t2,-30916(at)` (0x800e873c) @0x8002fe88 | stimmt |
-| RE2 ROOM7020 sub12 @0x0726/0x0748/0x079A/0x079B (SCD-main @RDT 0x1128) | 0x0726 `29 07`, 0x073C `2e 02 00`, 0x0740 `32 00 a0 92 b4 e2 14 ba`, 0x0748 `33 00 00 00 74 0e 00 00`, 0x0750 `3f 0a 12 40`, 0x0760 `59 00 00 00`, 0x0764 `2b 00 05 00 00 00`, 0x076A `09 0a 1e 00`, 0x0782 `3f 0a 12 40`, 0x0786 `09 0a 14 00`, 0x078E `49 00 40 fb 40 02 00 04`, 0x0796 `04 ff 18 0d`, **0x079A `0b`, 0x079B `0c`**, 0x079C `11 00 08 00 02 00 12 04 21 05 0e 00`, 0x07A8 `09 0a 0f 00`, 0x07D4 `29 0b` | stimmt (Dir_set direkt nach dem Schnitt; Wsleep/Wsleeping nach dem Loslassen - der Port zieht es vor das Loslassen, Begruendung Raumwechsel, s. 4a) |
-| RE1.5 Dir_set @0x80041080 (Tafel @0x800744a8[0x33]) | `table`: [0x33] @0x80074574 -> 0x80041080; `lw a1,340(a0)` @0x80041084, `lhu v0,2(v1)`/`sh v0,104(a1)`, `lhu v0,4(v1)`/`sh v0,106(a1)`, `lhu v0,6(v1)`/`sh v0,108(a1)` @0x80041088-a8, `addiu v1,v1,8` / `sw v1,28(a0)` | stimmt |
-| EM23 Zielmodus @0x80100a34-5c, Ziel @0x80100a4c-70, Ende 9000-120 @0x80100a88-8c (EM23_OVL_0000.BIN) | `lbu v0,550(s0)` / `sltiu v0,v0,0x2` @0x80100a34-3c; `lbu v0,448(s0)` / `ori v0,v0,0x4` / `sb v0,448(s0)` @0x80100a48-5c; `lw a0,56(s0)` (eigene x) / `lw v1,60(s0)` / `addiu v1,v1,-800` / `sh a0,368` / `sh v1,370` / `lw v0,64(s1)` / `sh v0,372(s0)` @0x80100a4c-70 (s1 = 0x800d051c @0x80100980-84); `lw v0,1372(0x800d0000)` (= 0x800d055c = s1+0x40) / `lw v1,64(s0)` / `subu` / `addiu v0,v0,-9000` / `slti v0,v0,-120` @0x80100a78-8c; `andi v0,v0,0xfb` @0x80100ab0 | stimmt (RE2: Ziel x = EIGENE x, Ende laengs z; Port: Ziel x = Kanister-x und euklidischer Abstand - als PORT-WAHL der Abbildung benannt) |
-| Biss-Sperre @0x8010134c-58 | `lbu v0,448(a0)` / `andi v0,v0,0x4` / `bne v0,zero,0x80101380` | stimmt |
-| Hals: Part 5 @0x801001c4-cc, Schritt 20 / Klemmen 560/312 @0x801005a0-c4 | `addiu v0,zero,5` @0x801001c4, `sb v0,449(s0)` @0x801001cc; `addiu v0,zero,20` @0x801005a0, `sh v0,1016(v1)` / `sh v0,1018(v1)` @0x801005a8/ac, `addiu v0,zero,560` / `sh v0,1020(v1)` @0x801005b0/b4, `addiu v0,zero,312` @0x801005b8, `sh v0,1022(v1)` @0x801005c4 | stimmt |
-| Kippen ROOM40A0 sub10 (SCD-main @RDT 0x25C0) @0x066E/0x0676/0x0682 | 0x0656 `2e 04 01`, 0x0659 `22 05 01 01`, 0x0666 `34 10 00 00`, 0x066E `2f 0b fc ff` (-4), 0x0672 `2f 00 d8 ff`, 0x0676 `0d 00 06 00 17 00` (For 23), 0x067C `30`, 0x067D `31`, 0x067E `02`, 0x0682 `34 10 00 fc` (-1024), 0x0686 `36 02 0b 01 04 01 ..`, 0x06A2 `2f 00 dc ff`, 0x0484 `32 00 e0 a6 40 f8 e4 da` | stimmt (Winkel(k) = -2k(k-1), Bild 23 -1012, dann -1024 = Port-Logzeilen 0/240/1056/2448/4096) |
-| Steuerziel-Klemme -8900+1600 .. 7200-1600 / -27000+1600 .. -5400-1600, Wende 0x300 / Slew 0x60 / 0x30 | enemy_ai_boss_gator.c CHASE Z.1777-1780 (Klemme), Z.1813-1814 (`dlt > 0x300` -> `steer_point(.., 0x60)`), Z.1847 (`0x30`), als "DESIGN" (Nutzer 2026-09-11) der Spur B | stimmt (Uebernahme mit Verweis, keine eigene Zahl) |
-| Notbremse 300 Bilder | scd_vm.c Z.1868 `enum { RE15_VOICE_NOTBREMSE = 300 }`, msg_common.c Z.432 `#define RE15_UNTERTITEL_NACHHALL_DECKEL 300` | stimmt (Port-Schranke mit Verweis) |
-- Suche im Code-Diff 9f10bdb0..HEAD -- re15_port nach deferred/tunable/interim/for now/faithful/plausib/TODO/FIXME/geschaetzt/ungefaehr/
-  placeholder/platzhalter/approx/vorlaeufig: **0 Treffer**. 17 x PORT-WAHL/NUTZER-VORGABE/MESSHAKEN/DESIGN. Neue getenv nur die Messhaken
-  RE15_K2080_WURF_GIER / RE15_K2080_GATOR_HP (env-gegatet, nur PC, kein Spielverhalten).
-- 4a Erklaert der Fix den Befund? N1: ja - die Zeile endete vorher, weil der Raumwechsel 1 Bild nach dem Loslassen kam; jetzt pollt das
-  Programm vor dem Loslassen (gemessen 99 Bilder ohne, 151 Bilder mit 5-s-Stimme, 3.1/3.2). Die Verlegung des Wartens VOR das Loslassen
-  ist begruendet (Raumwechsel beendet Zeile/Stimme; RE1.5 reloziert den Nachrichtenblock @0x800397fc-834 - Zitat nicht selbst nachgelesen)
-  und deckt sich mit dem Wortlaut ("sagt ... Dann schmeisst er"). N2: ja - der Takt dreht nicht mehr, Dir_set kommt mit dem Schnitt
-  (gemessen r93 bis F529, F530 r1024). N3: ja - das Anschwimmen fuehrt den Alligator unabhaengig von der Kampflage zum Kanister (3.3).
-
 ### 3.3 Wurf, Fall, Aufnahme, R1 - alle Verlaeufe (debug.log [k2080], gator_boss.log, state.log; Auswertung <SP>/runs/*)
 | Lauf | Start / Schiess-Beginn | Ausloeser | Wurf -> Aufschlag | Zeile 42 | ANSCHWIMMEN an | Aufnahme (Stufe 1) / angehaengt | Biss davor | R1 / Kamera |
 |---|---|---|---|---|---|---|---|---|
@@ -133,7 +126,8 @@ aus dem Hauptbaum, nur lesend; RDT-Bytes per Python aus info/re2leon/PL0/RDT)
   (Akku -> 0)` (k_leon), Bildvergleich des Bau-Agenten G_belege/nb2_n26_hals_vorher_nachher_leon_f48-78_x3_hell25.png zeigt den anders
   gerichteten Kopf.
 - Fall (k_leon, `RE15_FRAMEDUMP=0-1000/2`): state.log Rueckkehr F1 cam=12 (pm 0), F7 pm 2 (gehalten), F58 cam=0; Bilder
-  <SP>/k_leon_fall_cut12_f2-58.png: F30-F42 faellt der Kanister von oben rechts zur Wasserlinie (Suedwurf), F43 `Aufschlag im Wasser bei
+  <SP>/k_leon_fall_cut12_f2-58.png / <SP>/k_leon_fall_f28-44_x2.png: F28-F40 faellt der Kanister von oben links (unter der Reling) an der
+  Leiter entlang zur Wasserlinie (Suedwurf), F28 schwimmt der Alligator dicht an der Kamera vorbei, F43 `Aufschlag im Wasser bei
   (-6821,-2076,-22914)` + `Aufschlag-Ton KANISTER2080.VBS Satz 0` + `Kanister im Becken (-6821,-1200,-22914) = Aufschlagstelle (Bit 116)`.
 - Aufnahme (k_leon) <SP>/k_leon_aufnahme_f60-130.png: Cut 0, der Alligator schwimmt hinten heran, F130 Kanister (gelb) im Maul; im Vordergrund
   greift eine Spinne (0x25) Leon an (Spinnen sind in diesem Zweig noch in 2090, Spur F).
@@ -144,6 +138,46 @@ aus dem Hauptbaum, nur lesend; RDT-Bytes per Python aus info/re2leon/PL0/RDT)
   oben rechts, F826 Blitz am rechten Rand, F828-F860 Cut 2: nur Maschine/Rohre, kein Alligator, keine Explosion, kein Kiefer (der Kopf
   liegt bei x 8 unter der Maschine = Vordergrund-Freistellung), F862 zurueck auf Cut 0 mit der Leiche. Ebenso d15_leon: Kopf am rechten
   Bildrand (296,81), vom Tod ist praktisch nichts zu sehen (<SP>/r1_d15_leon_f726-766_hell2.png).
+
+### 3.4 Nachpruefungen (Laeufe k_leon_nopri, kopf_leon, nord_cut7_leon; Rezept 3)
+- **R1-Schnitt ohne Freistellungen** (k_leon mit Messhaken `RE15_NO_PRI=1`, `RE15_FRAMEDUMP=820-862/2`; gleiche Zeile `R1 EXPLOSION RE2-Cut 5 -> Cut 2
+  F826`): <SP>/k_leon_nopri_r1_f826-860_hell3.png - erst ohne PRI erscheinen in Cut 2 F828-F842 kleine Explosions-/Gore-Teile am LINKEN
+  BILDRAND (x 0..30, y 90..110) ueber der Maschine; mit Freistellung (k_leon) ist davon nichts zu sehen. Der Kopf liegt also am Bildrand hinter
+  der Maschinen-Freistellung (M1).
+- **Kopfschuesse** (kopf_leon, `RE15_FRAMEDUMP=110-200/2 RE15_EXIT_AT=200#2080`): <SP>/kopf_leon_f112-160.png - Cut 2, F118/F152 Schuss,
+  F120-F124 / F154-F160 platzt der Kopf (Blutwolke), der Zombie faellt; `Schuss 1: Treffer Slot 6 ... hp=-1 state=3 zeile=5`, `F119 Kopf ab:
+  Slot 6 (Part 8 Flagwort 0x4B ...)`.
+- **Blickbeziehung Werfer <-> 2080 Cut 7** (Formeln wie tools/r41_kanister2080/blick_wurf.py, eigenes Skript <SP>/blick_gier.py, Werfer
+  (-7168,-17609) laut state.log): RE2 ROOM7020 Cut 7 Ada (Dir_set 0x0e74 @0x0748) **frontal 0,99**; Port Nordwurf Gier 3072 frontal 0,45 (63 Grad);
+  **Port Suedwurf Gier 1024 frontal -0,45 (117 Grad = von hinten)**; keine 2080-Kamera zeigt Gier 1024 von vorn (alle < 0,5). Bilder
+  <SP>/m2_cut7_sued_vs_nord_x6.png (oben s_leon Suedwurf F532-F600: Ruecken, Kanister auf der abgewandten Seite; unten nord_cut7_leon Nordwurf:
+  schraeg von vorn, Kanister vor ihm). Der Suedwurf ist in 6 von 8 Verlaeufen dieser Abnahme gewaehlt (Alligator beim Ausloesen im Norden:
+  kampf, d15, d30, d45, ne, west) - der Riegel-Standardfall spricht die Zeile 42 also mit dem Ruecken zur Kamera (M2).
+
+## 4. RE-Gate (Stichproben selbst disassembliert/gelesen; Werkzeuge .claude/skills/re15-psx-disasm/scripts/re2_disasm.py / re15_disasm.py
+aus dem Hauptbaum, nur lesend; RDT-Bytes per Python aus info/re2leon/PL0/RDT)
+| Zitat im Diff | selbst gelesen | Ergebnis |
+|---|---|---|
+| RE2 Wsleep/Wsleeping, Tafel @0x800a74c8 [11]/[12] | `table 0x800a74c8`: [11] -> 0x80053a8c, [12] -> 0x80053ac0. Wsleep: `lb v1,2(a0)` / `lbu v0,8(v1)` / `addiu v0,v0,1` / `sb v0,8(v1)` @0x80053a8c-a4, pc+1, `jr ra / addiu v0,zero,1` @0x80053ab8/bc. Wsleeping: `lw v0,-1064(v0)` (0x800cfbd8) `andi v0,v0,0x20` `bne .. 0x80053b14` @0x80053ac4-d0; `lbu v0,-30916(v0)` (0x800e873c) `andi v0,v0,0x80` `bne .. 0x80053b14` @0x80053adc-e8; Ende `jr ra / addiu v0,zero,2` @0x80053b14/18 | stimmt |
+| Xa_on setzt 0x800cfbd8 \| 0x20 @0x80058060; FUN_8002fe38 setzt 0x800e873c = 0x80 @0x8002fe80/88 | Tafel [0x59] @0x800a762c -> 0x80058028; `jal 0x800129b4` @0x80058048, `lw v0,0(v1)` (0x800cfbd8) / `ori v0,v0,0x20` / `sw v0,0(v1)` @0x80058058-64. FUN_8002fe38: `addiu t2,zero,128` @0x8002fe80, `sb t2,-30916(at)` (0x800e873c) @0x8002fe88 | stimmt |
+| RE2 ROOM7020 sub12 @0x0726/0x0748/0x079A/0x079B (SCD-main @RDT 0x1128) | 0x0726 `29 07`, 0x073C `2e 02 00`, 0x0740 `32 00 a0 92 b4 e2 14 ba`, 0x0748 `33 00 00 00 74 0e 00 00`, 0x0750 `3f 0a 12 40`, 0x0760 `59 00 00 00`, 0x0764 `2b 00 05 00 00 00`, 0x076A `09 0a 1e 00`, 0x0782 `3f 0a 12 40`, 0x0786 `09 0a 14 00`, 0x078E `49 00 40 fb 40 02 00 04`, 0x0796 `04 ff 18 0d`, **0x079A `0b`, 0x079B `0c`**, 0x079C `11 00 08 00 02 00 12 04 21 05 0e 00`, 0x07A8 `09 0a 0f 00`, 0x07D4 `29 0b` | stimmt (Dir_set direkt nach dem Schnitt; Wsleep/Wsleeping nach dem Loslassen - der Port zieht es vor das Loslassen, Begruendung Raumwechsel, s. 4a) |
+| RE1.5 Dir_set @0x80041080 (Tafel @0x800744a8[0x33]) | `table`: [0x33] @0x80074574 -> 0x80041080; `lw a1,340(a0)` @0x80041084, `lhu v0,2(v1)`/`sh v0,104(a1)`, `lhu v0,4(v1)`/`sh v0,106(a1)`, `lhu v0,6(v1)`/`sh v0,108(a1)` @0x80041088-a8, `addiu v1,v1,8` / `sw v1,28(a0)` | stimmt |
+| EM23 Zielmodus @0x80100a34-5c, Ziel @0x80100a4c-70, Ende 9000-120 @0x80100a88-8c (EM23_OVL_0000.BIN) | `lbu v0,550(s0)` / `sltiu v0,v0,0x2` @0x80100a34-3c; `lbu v0,448(s0)` / `ori v0,v0,0x4` / `sb v0,448(s0)` @0x80100a48-5c; `lw a0,56(s0)` (eigene x) / `lw v1,60(s0)` / `addiu v1,v1,-800` / `sh a0,368` / `sh v1,370` / `lw v0,64(s1)` / `sh v0,372(s0)` @0x80100a4c-70 (s1 = 0x800d051c @0x80100980-84); `lw v0,1372(0x800d0000)` (= 0x800d055c = s1+0x40) / `lw v1,64(s0)` / `subu` / `addiu v0,v0,-9000` / `slti v0,v0,-120` @0x80100a78-8c; `andi v0,v0,0xfb` @0x80100ab0 | stimmt (RE2: Ziel x = EIGENE x, Ende laengs z; Port: Ziel x = Kanister-x und euklidischer Abstand - als PORT-WAHL der Abbildung benannt) |
+| Biss-Sperre @0x8010134c-58 | `lbu v0,448(a0)` / `andi v0,v0,0x4` / `bne v0,zero,0x80101380` | stimmt |
+| Hals: Part 5 @0x801001c4-cc, Schritt 20 / Klemmen 560/312 @0x801005a0-c4 | `addiu v0,zero,5` @0x801001c4, `sb v0,449(s0)` @0x801001cc; `addiu v0,zero,20` @0x801005a0, `sh v0,1016(v1)` / `sh v0,1018(v1)` @0x801005a8/ac, `addiu v0,zero,560` / `sh v0,1020(v1)` @0x801005b0/b4, `addiu v0,zero,312` @0x801005b8, `sh v0,1022(v1)` @0x801005c4 | stimmt |
+| Kippen ROOM40A0 sub10 (SCD-main @RDT 0x25C0) @0x066E/0x0676/0x0682 | 0x0656 `2e 04 01`, 0x0659 `22 05 01 01`, 0x0666 `34 10 00 00`, 0x066E `2f 0b fc ff` (-4), 0x0672 `2f 00 d8 ff`, 0x0676 `0d 00 06 00 17 00` (For 23), 0x067C `30`, 0x067D `31`, 0x067E `02`, 0x0682 `34 10 00 fc` (-1024), 0x0686 `36 02 0b 01 04 01 ..`, 0x06A2 `2f 00 dc ff`, 0x0484 `32 00 e0 a6 40 f8 e4 da` | stimmt (Winkel(k) = -2k(k-1), Bild 23 -1012, dann -1024 = Port-Logzeilen 0/240/1056/2448/4096) |
+| Steuerziel-Klemme -8900+1600 .. 7200-1600 / -27000+1600 .. -5400-1600, Wende 0x300 / Slew 0x60 / 0x30 | enemy_ai_boss_gator.c CHASE Z.1777-1780 (Klemme), Z.1813-1814 (`dlt > 0x300` -> `steer_point(.., 0x60)`), Z.1847 (`0x30`), als "DESIGN" (Nutzer 2026-09-11) der Spur B | stimmt (Uebernahme mit Verweis, keine eigene Zahl) |
+| RE2 Add_speed = Weltaddition @0x80055abc-e0 (Grundlage M2) | `lh v1,344(a0)` / `lw a1,340(a0)` / `lh a2,346(a0)` @0x80055ab0-b8, `lw v0,56(a1)` / `addu v0,v0,v1` / `sw v0,56(a1)` @0x80055abc-c8, ebenso +60/+64 mit +346/+348 @0x80055acc-e0 - keine Drehung um die Gier des Objekts | stimmt (RE2 wirft in Weltachsen; Adas Blick @0x0748 ist davon unabhaengig) |
+| Notbremse 300 Bilder | scd_vm.c Z.1868 `enum { RE15_VOICE_NOTBREMSE = 300 }`, msg_common.c Z.432 `#define RE15_UNTERTITEL_NACHHALL_DECKEL 300` | stimmt (Port-Schranke mit Verweis) |
+- Suche im Code-Diff 9f10bdb0..HEAD -- re15_port nach deferred/tunable/interim/for now/faithful/plausib/TODO/FIXME/geschaetzt/ungefaehr/
+  placeholder/platzhalter/approx/vorlaeufig: **0 Treffer**. 17 x PORT-WAHL/NUTZER-VORGABE/MESSHAKEN/DESIGN. Neue getenv nur die Messhaken
+  RE15_K2080_WURF_GIER / RE15_K2080_GATOR_HP (env-gegatet, nur PC, kein Spielverhalten).
+- 4a Erklaert der Fix den Befund? N1: ja - die Zeile endete vorher, weil der Raumwechsel 1 Bild nach dem Loslassen kam; jetzt pollt das
+  Programm vor dem Loslassen (gemessen 99 Bilder ohne, 151 Bilder mit 5-s-Stimme, 3.1/3.2). Die Verlegung des Wartens VOR das Loslassen
+  ist begruendet (Raumwechsel beendet Zeile/Stimme; RE1.5 reloziert den RDT-Kopf samt Nachrichtenblock @0x800397fc-834, RE2 CdlSetmode 0xa0
+  @0x800130f0 - beides selbst nachgelesen, H6)
+  und deckt sich mit dem Wortlaut ("sagt ... Dann schmeisst er"). N2: ja - der Takt dreht nicht mehr, Dir_set kommt mit dem Schnitt
+  (gemessen r93 bis F529, F530 r1024); der WERT des Dir_set (Wurf-Gier statt Kamera-zugewandter Gier wie RE2 0x0e74) fuehrt aber zu M2. N3: ja - das Anschwimmen fuehrt den Alligator unabhaengig von der Kampflage zum Kanister (3.3).
 
 ## 5. Vertrag
 - Bank-9-Bits 114/115/116/117 (Zuteilung G 114-119); Bit 117 neu (Suedwurf), je eine k_port[]-Zeile in test_r36_kartenbits.c (+ include),
@@ -174,12 +208,13 @@ aus dem Hauptbaum, nur lesend; RDT-Bytes per Python aus info/re2leon/PL0/RDT)
 | P3 / N24b "rennt hin, nimmt ihn auf in beide Haende" (Abnahme 1 N2: Gier-Sprung) + N26 "RE2-Kippen" | **erfuellt** | 3.1: Lauf (Sub 5) -> Hinknien Loco c11 -> Kanister kippt in 23 Bildern (Bruch 0/240/1056/2448/4096 = RE2 ROOM40A0 sub10) in beide Haende -> Aufstehen; Gier r93 in Cut 5 unveraendert, kein Profil, Leon + Elza (s_leon_griff_*, s_elza_griff_*). Apply-Bild F530 = Zweig-Eigenschaft ohne Spur E (H1), Kanister im Aufstehen in der Huefte (H2) |
 | P3 sagt "Hey, Leon/Elza, try with this!" (Abnahme 1 N1) | **erfuellt** | 3.1/3.2: Zeile 99 Bilder (volle Dauer), mit 5-s-Stimme 151 Bilder und Stimme ungekuerzt (150 Bilder im Mitschnitt), Wurf erst danach |
 | P3 Wurf die Reling runter, liegt in 2090 an der Stelle im Wasser (FG-E3/FG-E4, N26: Kamera 12) | **erfuellt** | 3.3: RE2-sub13-Bahn, Fall in 2090 Cut 12 (k_leon_fall_cut12_f2-58.png), Aufschlag + Ton, `Kanister im Becken ... = Aufschlagstelle`; Nord-/Suedwurf nach der Lage des Alligators |
-| P3 / N23 / N26 "wenn der Aligator dran vorbei kommt, ... aufnehmen, GENAUSO wie RE2" (Abnahme 1 N3), RE2-Lenkung von Hals und Schwimmweg | **erfuellt** | 3.3: Aufnahme 2,8-5,2 s nach dem Loslassen in JEDEM Verlauf mit Szene (10 Laeufe, 6 Startlagen/Verlaeufe, davon 4 neue; v1 Leon + Elza ohne jeden Testhaken), kein Biss davor, derselbe Alligator (FG-E3), Hals-Akku zum Kanister und zurueck |
+| N5 / FG-E4 "GENAUSO ... von der Kamera" wie Adas Wurf (RE2-Schnittfolge: Cut 7 mit dem Werfer frontal, dann der Fall in 2090 Cut 12) | **teilweise** | Schnittfolge und Cut 12 wie entschieden (N26); aber beim Suedwurf (6 von 8 Verlaeufen, auch Riegel-Standard) steht der Werfer in Cut 7 mit dem Ruecken zur Kamera (frontal -0,45; RE2 0,99, Nordwurf 0,45) - Mangel M2 (3.4) |
+| P3 / N23 / N26 "wenn der Aligator dran vorbei kommt, ... aufnehmen, GENAUSO wie RE2" (Abnahme 1 N3), RE2-Lenkung von Hals und Schwimmweg | **erfuellt** | 3.3: Aufnahme 2,8-5,2 s nach dem Loslassen in JEDEM Verlauf mit Szene (10 Laeufe in 8 Verlaeufen, davon 4 neue: d15/d30/d45/Plattform; v1 Leon + Elza ohne jeden Testhaken), kein Biss davor, derselbe Alligator (FG-E3), Hals-Akku zum Kanister und zurueck |
 | P3 "Sobald er den Kanister im Maul hat, soll man auf ihn schiessen koennen" | **erfuellt** | R1 nach einem Treffer in 9 von 10 Laeufen; d30_elza ohne R1 in 2500 Bildern (stehender Test-Spieler unter Biss/Spinnen, H3) |
 | P3 "die Sterbe Animation mit geplatzten Kiefer etc. ... genauso wie im Original" | **teilweise** | R1-Clip 9 + Leiche laufen ab (Spur B), im Bild bei v1, west, ne (klein), Plattform, d45; **in der Riegel-Startlage (Leon + Elza) zeigt der R1-Schnitt Cut 2 keinen Alligator** (Kopf (8,106) unter der Maschine), bei d15 liegt der Kopf am Bildrand (296,81) - Mangel M1 |
-| RE-Gate | **haelt** | 4: 9 Zitatgruppen selbst disassembliert/gelesen, alle stimmen; 0 Rate-Woerter; Abweichungen von RE2 (Warten vor dem Loslassen, Ziel-x, euklidische Grenze, Kipp-Achsen, Anschwimm-Lenkung) benannt und begruendet |
+| RE-Gate | **haelt** | 4: 11 Zitatgruppen selbst disassembliert/gelesen, alle stimmen; 0 Rate-Woerter; Abweichungen von RE2 (Warten vor dem Loslassen, Ziel-x, euklidische Grenze, Kipp-Achsen, Anschwimm-Lenkung) benannt und begruendet |
 | Vertrag | **haelt** | 5 |
-| Tests | s. 1a/1b | LUECKE: kein Riegel fuer "Tod im Bild" (M1) |
+| Tests | gruen: 46/46 Unit, 9/9 Integration (1a/1b) | LUECKE: kein Riegel fuer "Tod im Bild" (M1) und fuer die Blickbeziehung in Cut 7 (M2) |
 
 ## 7. Maengel (nummeriert, nachpruefbar)
 
@@ -193,11 +228,23 @@ kein Kiefer (der Kopf liegt bei x 8 unter der Maschine = Vordergrund-Freistellun
 (`Sperre ohne Schnitt: Kopf im Bild von Cut 0 bei (296,81)`): Kopf am rechten Bildrand, vom Tod ist praktisch nichts zu sehen
 (<SP>/r1_d15_leon_f726-766_hell2.png). Vorher (Nachbesserung 1, Abnahme 1 g1/k_leon_r1.png) zeigte dieselbe Startlage den Tod in Cut 5; erst
 der Suedwurf der Nachbesserung 2 verlegt den R1 dieser Startlage in die verdeckte Lage, und kein Bild der Nachbesserung 2 zeigt den R1 (nur
-nb1_fg3_r1_leon_f566-630.png aus dem alten Ablauf). Ursache: die R1-Kamerawahl der Spur B (gator_re2_r41.c, KAMERA-KANDIDAT nach Frontal-Winkel
-und Massstab) prueft weder Bildrand noch Vordergrund-Freistellung; der Riegel kampf prueft nur Logzeilen (`R1 ende (Leiche)`). Forderung: der
+nb1_fg3_r1_leon_f566-630.png aus dem alten Ablauf). Ursache: die R1-Kamerawahl der Spur B (gator_re2_r41.c gr2_kam_r1_start Z.877-891 / re15_gr2_kamera_wahl Z.759-797: geschnitten wird nur,
+wenn der Kopf ausserhalb des laufenden Cuts liegt - Cut 0 `kopf_bild=(335,86) draussen`; gewaehlt wird dann der Kandidat mit dem besten
+Frontal-Winkel, dessen Kopfpunkt `gr2_im_bild` ist - Cut 2 |f-soll| 34) prueft weder Randabstand noch Vordergrund-Freistellung; der Riegel kampf prueft nur Logzeilen (`R1 ende (Leiche)`). Forderung: der
 R1-Tod ist im G-Ablauf in allen gemessenen Verlaeufen sichtbar (Kopf/Explosion im Bild, nicht unter einer Freistellung, nicht am Rand) -
 Ort der Behebung per Orchestrator (Querbezug Spur B: Kamerawahl; oder Spur G), Messung Leon + Elza mindestens Riegel-Startlage, d15, v1 mit
 Bildbogen der R1-Phase, Riegel "Tod im Bild" (z. B. projizierter Kopf mit Randabstand und ohne PRI-Deckung im R1-Schnitt).
+
+**M2 (Nachtrag 5 / FG-E4 "Kamera wie Adas Wurf"; Nebenwirkung der Nachbesserung 2) - beim Suedwurf spricht der Werfer die Zeile 42 mit dem
+Ruecken zur Kamera.** state.log s_leon/s_elza: F530 cam=7 Slot 9 r1024 bis F630; Blickbeziehung (3.4) 2080 Cut 7 frontal -0,45 (117 Grad) statt RE2
+ROOM7020 Cut 7 frontal 0,99 (Ada, Dir_set `33 00 00 00 74 0e 00 00` @0x0748) bzw. 0,45 beim Nordwurf; Bild <SP>/m2_cut7_sued_vs_nord_x6.png. Ursache:
+das Dir_set der Nachbesserung 2 schreibt die WURF-Gier (1024/3072, re15_k2080_wurf_gier_wahl) - RE2 setzt mit Dir_set @0x0748 dagegen die Gier,
+mit der Ada der Kamera zugewandt ist, und wirft in Weltachsen (Add_speed = Weltaddition @0x80055abc-e0), unabhaengig von ihrer Blickrichtung.
+Die Kopplung "Blick = Wurfrichtung" ist PORT-WAHL; mit dem neuen Suedwurf kehrt sie in der Mehrzahl der Kaempfe den Werfer von der Kamera ab.
+Im Dossier (9.2/9.3/9.7) nicht benannt; der Nutzer hat in Nachtrag 26 Frage 2 zwischen "2090 Kamera 12" und "2080 Kamera 7 (frontal)" gewaehlt -
+Kamera 7 ist beim Suedwurf nicht mehr frontal. Forderung: Entscheid Orchestrator/Nutzer; RE2-Form waere: Gier des Werfers in Cut 7 der Kamera
+zugewandt (wie Ada @0x0748), Wurfbahn in Weltrichtung Nord/Sued (der Wurf selbst faellt ohnehin erst in 2090 Cut 12, FG-E4); Messung Leon + Elza,
+Nord- und Suedwurf, Bildbogen Cut 7 F530-F630, Riegel auf die Blickbeziehung.
 
 ## 8. Hinweise (kein Mangel dieser Spur bzw. klein)
 - H1 Apply-Bild F530 (3.1): ein Bild Cut-5-Hintergrund mit gedrehtem Werfer, Kanister in alter Lage und Zeile 42 - bei JEDEM Cut_chg dieses Zweigs
