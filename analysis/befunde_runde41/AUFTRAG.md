@@ -941,3 +941,32 @@ Original-Teil. Pruefumfang: jede der 74 Kameras mit mindestens einer HINTER- und
 wo erreichbar), Rueckschritt-Suche wie in Nachbesserung 3, Riegel. Den belegten Generator-Fix "Tuer-Band der Saaten"
 (AOT-Scan pruefen pc[4] @0x80042cac..0x80042ccc) mitnehmen; teilen_r41.py fuer 6000 C5 NICHT (verdeckt 192 Gang-Plaetze falsch).
 Was danach noch fehlt, steht neu im Dossier ("Fuer den Nutzer: Freistellungen") - nur das zeichnet der Nutzer.
+
+## 2026-10-25 16:51 — Nachtrag 30 (Wortlaut; Ventilkette 2010/2030, Technikernotiz, RE2-Toene, Lautstaerke; Spuren C und D)
+
+> Ok, Also:
+>
+> In ROOM 2010, beim Anklicken des Schranks, mache das er aufklappt und dann so aussieht wie in 2060 der Fuse Kasten - siehe
+> fuse_box.bmp. Ab da soll auch der Mechanismus gleich - das Einsetzen der Sicherung etc. Dann - in ROOM 2030 am Kasten, damit
+> die Platform runter fährt, erstelle ein Rätsel, das so aussieht wie das Panel in Nahansicht, anstatt das komische - dreh an
+> Valve 13.
+>
+> Dann - beim Text soll nur drin stehen das grün und rot verwechselt wurde, nicht black, das soll raus. Bei der verwechselten
+> Nummer soll drin stehen das sie außerdem die Nummern verwechselt haben von "Schwarz" und "Grün". Hier dienen die
+> Anführungszeichen als Ironie für die falschen Farben auf den Poster.
+>
+> Natürlich auf englisch.
+>
+> Und wenn die Plattform runter fährt, fehlt mir noch der Original Sound von Resident Evil 2.
+>
+> Und während des Alerts und der Alert message fehlt mir noch zusätzlich durchweg der Alert sound aus Resident Evil 2.
+
+> Und bei der reduzierten Volume sollen  ALLE Volumes reduziert werden, nicht nur ein paar.
+
+Bilder des Nutzers: fuse_box.bmp (Repo-Wurzel, 320x240, 25.10. 16:41: der offene Sicherungsschrank aus ROOM2060, rot
+umrandet), schaltschrank.png (Repo-Wurzel, 23.10.: links das Panel in 2030 mit roter Marke = "der Kasten", rechts der Tank 13).
+Orchestrator-Rechnung zum Notiztext: "nur Gruen und Rot vertauscht" + "Nummern von black und green vertauscht" (01<->02,
+07<->08) machen aus dem unveraenderten Plakat 1. GREEN 09 - 2. RED 01 - 3. BLACK 02 - 4. RED 07 die Folge 09 rot, 02 gruen,
+01 schwarz, 08 gruen (jede Zeile passt zu einem echten Ventil) - NICHT mehr 09-07-02-01. Rueckfrage an den Nutzer laeuft.
+Orchestrator-Befund zur Lautstaerke: es gibt EIN Audiogeraet (audio_pc.c SDL_OpenAudioDevice); die Endstufe der Spur D sitzt
+am Ende von audio_callback nach SE/Stimmen/XA/FMV/BGM/Ambience - Rueckfrage, welche Toene laut bleiben, laeuft.
