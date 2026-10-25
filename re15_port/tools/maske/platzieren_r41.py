@@ -1,16 +1,22 @@
-"""Runde 41 Spur M, Nachbesserung 4 (Abnahme 3, Mangel 2): UNPLATZIERTE Kuenstler-Komponenten der Stages 3..6 platzieren.
+"""Runde 41 Spur M: UNPLATZIERTE Teile des ORIGINAL-Vordergrundatlas der Stages 3..6 an ihre Stelle setzen.
+Nachbesserung 4 (Abnahme 3, Mangel 2): Befund + Vorschlag; Nachbesserung 5 (Abnahme 4, Mangel 1 = Entscheid M-E2): eingebaut, die
+Tiefe je Teil aus seiner KOLLISIONSZELLE (nicht mehr die Generator-Regel "Bodenkontakt auf y = 0, x 0,90" des NB4-Vorschlags).
 
-Dossier: analysis/befunde_runde41/M_masken36.md, Abschnitt "Nachbesserung 4".
+Dossier: analysis/befunde_runde41/M_masken36.md, Abschnitte "Nachbesserung 4" und "Nachbesserung 5".
 
-BEFUND: Der Generator (analysis/esp_masken_2026-09-03/gen_masken.py build_cut) saet nur aus VOLLSTAENDIG deckenden 16x16-Bloecken
+BEFUND (NB4): Der Generator (analysis/esp_masken_2026-09-03/gen_masken.py build_cut) saet nur aus VOLLSTAENDIG deckenden 16x16-Bloecken
 des Kuenstler-Atlas (gen_region.find_blocks: `if cnt != n: continue`, NCC >= 0.97) und waechst von dort (region_grow) nur innerhalb
 schon belegter Verschiebungen. Duenne Teile - Gelaender, Rohre, Kabel, Lampen - haben nie einen solchen Block; liegen sie im
 Atlas als EIGENE Komponente (8-zusammenhaengend, Index != 0), wurden sie nie platziert und fehlen im Spiel ganz. Gemessen an den 216
 Generator-Sektionen: 800 unplatzierte Komponenten (>= 16 Texel, 410 127 Texel), z.B. ROOM30E0 Cut 7: das Gelaender des Stegs (alle
-Pfosten und der Handlauf) - die Restliste der Abnahme ("Gelaender nicht in der Generator-Region").
+Pfosten und der Handlauf).
+
+ENTSCHEID M-E2 (AUFTRAG.md 2026-10-25 14:29): "Spur M setzt die Teile des Original-Atlas ein, in ALLEN Kameras (auch auf der Restliste
+von Nachtrag 27), sofern je Teil Lage (Bildvergleich gegen den Hintergrund) und Tiefe (Zelle mit RDT-Offset) belegt sind. M-E1 gilt
+weiter fuer AUTOMATISCHE Masken ohne Original-Teil."
 
 REGEL (je Cut, je unplatzierter Komponente K des Original-Atlas = SLD des BSS-Chunks, Entpacker wie FUN_800c47e8 / original.atlas):
-  1. Lage = Verschiebung s mit der kleinsten mittleren quadratischen Farbabweichung (maskierte SSD ueber ALLE ganzzahligen s per
+  1. LAGE = Verschiebung s mit der kleinsten mittleren quadratischen Farbabweichung (maskierte SSD ueber ALLE ganzzahligen s per
      FFT, nur Texel von K, nur Texel im Bild; mindestens 90 % von K im Bild). Grund: der Atlasinhalt ist der Hintergrund an der
      Zielstelle (gen_region Kopf, Q1) - an der richtigen Lage bleibt nur die Paletten-Rundung.
   2. Annahme nur, wenn (a) RMS <= RMS_MAX und (b) die beste NICHT benachbarte Lage (|ds| > 2) mindestens EINDEUTIG-mal schlechter ist.
@@ -18,23 +24,46 @@ REGEL (je Cut, je unplatzierter Komponente K des Original-Atlas = SLD des BSS-Ch
      findet 410 an der Generator-Lage; RMS dort Median 9,66, 99 % 18,91, Maximum 20,24 -> RMS_MAX = 18,91 (99 %-Punkt); Verhaeltnis
      zweitbeste/beste bei den 12 abweichenden Faellen hoechstens 1,47 -> EINDEUTIG = 1,5 (darueber lag keiner).
   3. Texel von K, deren Farbe an der Lage um mehr als 48 abweicht (|dR|+|dG|+|dB|, Grenze der R37-Blit-Pruefung), bleiben weg
-     (wie das Wachstum des Generators je Texel prueft).
+     (wie das Wachstum des Generators je Texel prueft). Das Teil = die uebrigen Texel an ihrer Bildstelle.
   4. Bildpunkte, die schon ein vorhandenes Rechteck des Cuts deckend zeichnet (gezeichnet ODER ausgeschlossen), bleiben weg -
      die neuen Rechtecke kommen nur dazu (alter Teil jeder Sektion bytegleich, Probe unten).
-  5. Tiefe = Regel des Generators je Bildspalte (gen_masken.depth_map_for_cut = schliessen_r41.tiefenkarte: Bodenkontakt der
-     Komponente in dieser Spalte auf y = 0, DEPTH_SAFETY 0,90), aber JE KOMPONENTE (eigene Bildpunkte), damit sich zwei Gegenstaende
-     in einer Spalte nicht einen Kontakt teilen. Punkte ohne Bodenkontakt (Strahl ueber dem Horizont) bekommen keine Tiefe und bleiben
-     weg. Rechtecke wie schliessen_r41 (Grundstuecke gleicher Spaltentiefe, gierig zusammengelegt, Tiefe = Median), Platz hoechstens
-     105 Rechtecke je Cut (re15_pri.h RE15_PRI_MAX_MASKS_PER_CUT); reicht er nicht, kommen die groessten Komponenten zuerst.
-  6. Atlas: das eigene Blatt des Cuts (_PRIcc.TIM) behaelt alle vorhandenen Fenster; neue Texel kommen an die erste freie Stelle,
-     Farbe = Hintergrund an der Zielstelle, Index = naechste Farbe der VORHANDENEN Palette (CLUT bleibt bytegleich -> vorhandene Texel
-     unveraendert). Index 0 = durchsichtig (Gelaender-Luecken bleiben offen).
-  7. Danach rechnet test_r37_masken36 "erzeuge" den Ausschluss der Spur P (R37) neu: ein neues Rechteck, das an einem erreichbaren
-     Stehplatz einen Figurpunkt ohne Gegenstand davor verdecken wuerde, faellt weg.
+  5. KOERPER je Teil (M-E2): (a) Zuordnung von Hand (zuordnung_teile_r41.json: Raum, Cut, Bildpunkt im Teil, RDT-Offset der Zelle,
+     Beleg), sonst (b) automatisch wie fuer die Generator-Objekte (NB1/NB2 tiefe_zelle_r41.zelle_geometrie, Regel der
+     Nutzer-Freistellungen raum.py "zelle"): je begehbarem Band (geom.begehbare_baender) die solide Sperrzelle mit der Mehrheit der
+     Bodenkontakte des Teils (geometrie.standpunkte + zelle_zuordnen) - gilt nur, wenn GENAU EIN Band eine Zelle liefert.
+     Koerper = Zellform des Kollisions-Resolvers (koerper_r41: Typ 1 Kasten, 2 Raute push_diag2, 3 Kreis, 4..7 Schraegen) x
+     [Bandboden + Hoehe, Bandboden]; HOEHE = Oberkante des Teils auf der Eintrittsflaeche (oberkante(): je Bildpunkt des Teils die Hoehe,
+     in der sein Sehstrahl in das Prisma ueber dem Grundriss eintritt, davon das Maximum). Nicht das IoU-Maximum der Generator-Objekte
+     (koerper_r41.hoehe_messen): fuer duenne Teile auf breiten Zellen faellt es auf den Rand des Messbereichs (gemessen NB5: 88 von 266
+     Teilen bei -25, z.B. das Steg-Gelaender ROOM30E0 C9 auf Zelle 0x00600, 2000 breit); wo es traegt, stimmen beide ueberein (ROOM30E0 C7
+     Gelaender auf Zelle 0x005E8: IoU 1450..1525, Oberkante 1494..1596; ROOM3050 C6: 925/650/2025 gegen 910/714/2075).
+     KEIN Koerper -> das Teil bleibt weg (Grund im Bericht, Liste "Fuer den Nutzer: Freistellungen"): Zelltyp 8/9 (Kapsel, Form
+     nicht modelliert), Kamera ueber dem Grundriss der Zelle (Nahfeld, kein 3D-Urteil: r41_koerper_davor -1), Saeule mit
+     nicht-rechteckiger Zelle, kein Punkt des Teils getroffen. Beleg je Teil: RDT-Offset + 12 Bytes des SCA-Eintrags
+     (zellen3d_r41.sca_beleg) in der Modell-Tabelle.
+  6. TIEFE je Bildpunkt = bucket(Eintritt des Sehstrahls in den Koerper) (koerper_r41.ein_aus; bucket(vz) = (1023*vz)>>16: Figur-OT
+     @0x8002565c sra v1,v1,4 mit ZSF3 = 341 @0x80066c70; Masken-OT = depth @0x80039650; re15_pri_mask_occludes: verdeckt gdw.
+     depth < bucket(vz_Figur)). Punkte des Teils, die der Strahl nicht trifft (ueber der gemessenen Hoehe, neben dem Grundriss),
+     erben den naechsten getroffenen Punkt DESSELBEN Teils (geometrie._erben - die Regel der Nutzer-Freistellungen raum.py "zelle"
+     und der NB1-Stufe 2). Je Bildspalte des Teils die groesste Tiefe; Rechtecke = Grundstuecke gleicher Spaltentiefe, gierig
+     zusammengelegt (schliessen_r41.stuecke_bilden/zusammenlegen); RECHTECK-TIEFE = MAXIMUM ueber seine Punkte -> eine Figur VOR dem
+     Koerper wird nie verdeckt (vz_Figur < Eintritt: bucket(vz_Figur) <= bucket(Eintritt) <= Tiefe).
+  7. PLATZ: hoechstens MAX_MASKEN = 128 Rechtecke je Cut (re15_pri.h RE15_PRI_MAX_MASKS_PER_CUT, NB5). Das Original legt die Zahl als
+     BYTE an (FUN_80039270 @0x8003928c lbu v0,7(a0) = RDT-Kopfbyte 7; @0x80039294 sll 2 / @0x800392ac sll 5 / @0x800392c4 sll 5 = 4 +
+     32 + 32 Bytes Arena je Maske) - dort ist 255 die Grenze; 128 = Breite der Port-Tabelle des Ausschlusses (masken36_r37.c bits[4]).
+     Reicht der Platz nicht, kommen die groessten Teile zuerst.
+  8. ATLAS: das eigene Blatt des Cuts (_PRIcc.TIM) behaelt alle vorhandenen Fenster; neue Texel kommen an die erste freie Stelle,
+     Farbe = Hintergrund an der Zielstelle; Palette des Blatts neu (255 Farben Median-Schnitt, Index 0 = durchsichtig - Gelaender-
+     Luecken bleiben offen).
+  9. MODELL-TABELLE (tests/unit/gen_r41_masken36_zellen.inc, --tabelle/--tabelle-aus): je neuem Rechteck eine Zeile (Zelle, Typ, Band,
+     Hoehe, Saeule, Tiefe, RDT-Offset + 12 Bytes). Danach rechnet test_r37_masken36 "erzeuge" den Ausschluss der Spur P (R37) neu -
+     mit dem 3D-Urteil (r41_koerper_davor) fuer die neuen Rechtecke wie fuer die Generator-Rechtecke mit Modell: ein Rechteck, das an
+     einem erreichbaren Stehplatz einen Figurpunkt ohne Zelle davor UND ohne seinen Koerper davor verdecken wuerde, faellt weg.
 Leon- und Elza-Datei bleiben bytegleich.
 
 Aufruf:
-  python re15_port/tools/maske/platzieren_r41.py --ppm <probe_bg_dump-Ordner> --cache <Regionen-Cache> --out <Ordner> [ROOMxxxx ...]
+  python re15_port/tools/maske/platzieren_r41.py --ppm <probe_bg_dump-Ordner> --cache <Regionen-Cache> --out <Ordner>
+         --tabelle <Modell-Tabelle vorher> --tabelle-aus <Modell-Tabelle nachher> [--inc <Riegel-Tabelle>] [ROOMxxxx ...]
 """
 import argparse
 import json
@@ -50,15 +79,18 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HIER)
 
 import geom                      # noqa: E402
+import geometrie as G            # noqa: E402
+import koerper_r41 as K          # noqa: E402
 import maskenbild                # noqa: E402
 import original                  # noqa: E402
 import schliessen_r41 as SR      # noqa: E402
+import tiefe_zelle_r41 as TZ     # noqa: E402
+import zellen3d_r41 as Z3        # noqa: E402
 
 PSX = SR.PSX
 MASKS = SR.MASKS
-MAX_MASKEN = 105                 # re15_pri.h RE15_PRI_MAX_MASKS_PER_CUT. Fuer die 37 vollen Cuts braeuchte es 128: das Original hat KEINE
-                                 # feste Grenze (FUN_80039270 @0x8003928c lbu v0,7(a0): Zahl = RDT-Kopfbyte 7, u8), die Port-Tabelle des
-                                 # Ausschlusses (masken36_r37.c bits[4]) traegt 128 - Vorschlag, nicht eingebaut (Entscheid M-E1, Dossier NB4)
+MAX_MASKEN = 128                 # re15_pri.h RE15_PRI_MAX_MASKS_PER_CUT (NB5): Original = Byte-Zahl (FUN_80039270 @0x8003928c lbu v0,7(a0),
+                                 # Grenze 255); 128 = Breite der Port-Tabelle des Ausschlusses (masken36_r37.c bits[4]) - Kopf Regel 7
 MIN_TEXEL = 16                   # kleinste Komponente (wie die Kalibrierung; kleiner ist die Lage nicht belegbar)
 RMS_MAX = 18.91                  # 99 %-Punkt der RMS an der Generator-Lage (Kalibrierung, Kopf)
 EINDEUTIG = 1.5                  # zweitbeste/beste > 1,47 (groesster Wert der abweichenden Kalibrierfaelle)
@@ -137,9 +169,100 @@ def platzieren(idx, clut, bild, grown):
     return erg
 
 
-def tiefe_je_komponente(rdt, cut, schirm):
-    """Generator-Regel (schliessen_r41.tiefenkarte) fuer EINE Komponente: je Bildspalte Bodenkontakt auf y = 0, x 0,90."""
-    return SR.tiefenkarte(rdt, cut, schirm)
+HAND = {}                        # (raum, cut) -> Eintraege aus zuordnung_teile_r41.json (Kopf Regel 5a)
+
+
+def koerper_aus_zelle(rdt, R, t, H, teil, z, band, anteil, quelle, off=None):
+    """Koerper (Kopf Regel 5) einer Zelle z = (x, z, breite, tiefe, typ) auf `band` fuer das Teil (bool 240x320).
+    -> dict mit zelle/typ/band/hoehe/iou/saeule/off/bytes/ve/hit oder {"grund": ...}."""
+    x, zz, w, d, typ = (int(v) for v in z)
+    if typ not in (1, 2, 3, 4, 5, 6, 7):
+        return {"grund": "Zelltyp %d (Kapsel, Form nicht modelliert)" % typ}
+    if K.kamera_im_grundriss(R, t, typ, x, zz, w, d):
+        return {"grund": "Kamera ueber dem Grundriss der Zelle (%d,%d %dx%d): kein 3D-Urteil" % (x, zz, w, d)}
+    hoehe = oberkante(R, t, H, typ, x, zz, w, d, band, teil)
+    if hoehe is None:
+        return {"grund": "kein Sehstrahl des Teils tritt in den Grundriss der Zelle (%d,%d %dx%d)" % (x, zz, w, d)}
+    saeule = False
+    ve, va, hit = K.ein_aus(R, t, H, typ, x, zz, w, d, band, hoehe, saeule)
+    if not (hit & teil).any():
+        return {"grund": "kein Punkt des Teils getroffen"}
+    u = float((hit | teil).sum())
+    iou = float((hit & teil).sum()) / u if u else 0.0       # nur Bericht/Kommentar der Modell-Zeile (Silhouette des Koerpers gegen das Teil)
+    if off is None:
+        off, by = Z3.sca_beleg(rdt, (x, zz, w, d), typ, band)
+    else:
+        by = bytes(rdt[off:off + 12])
+    return dict(zelle=(x, zz, w, d), typ=typ, band=int(band), hoehe=int(hoehe), iou=round(float(iou), 3), saeule=bool(saeule),
+                anteil=round(float(anteil), 3) if anteil is not None else None, quelle=quelle, off=int(off), bytes=by, ve=ve, hit=hit)
+
+
+def oberkante(R, t, H, typ, x, zz, w, d, band, teil):
+    """Kopf Regel 5: HOEHE des Koerpers = Oberkante des Teils auf der Eintrittsflaeche - je Bildpunkt des Teils die Hoehe ueber dem
+    Bandboden, in der sein Sehstrahl in das (nach oben offene) Prisma ueber dem Grundriss der Zelle eintritt (koerper_r41.ein_aus mit
+    Saeule), davon das Maximum. Damit tritt JEDER Strahl des Teils, der den Grundriss kreuzt, durch eine Seitenflaeche (bzw. am hoechsten
+    Punkt durch den Deckel) in den Koerper ein - so hoch reicht der Gegenstand im Bild. -> negative Hoehe (PSX-Y nach unten) oder None."""
+    ve, _va, hit = K.ein_aus(R, t, H, typ, x, zz, w, d, band, -1.0, True)
+    m = hit & teil
+    if not m.any():
+        return None
+    c, dd = K.ansicht(R, t, H)
+    r = np.array(R[6:9], float) / 4096.0
+    den = (dd * r).sum(-1)
+    s = (ve - t[2] - c.dot(r)) / np.where(np.abs(den) > 1e-12, den, 1e-12)
+    y_ein = c[1] + s * dd[..., 1]
+    ueber = (-K.BAND_HOEHE * band) - y_ein[m]           # Hoehe ueber dem Bandboden (positiv nach oben)
+    return -max(1, int(np.ceil(float(ueber.max()))))
+
+
+def koerper_teil(rdt, room, cut, R, t, H, teil, baender, hull):
+    """Kopf Regel 5: Koerper des Teils - Zuordnung von Hand, sonst die Sperrzelle mit der Mehrheit der Bodenkontakte (genau ein Band)."""
+    for e in HAND.get((room, cut), []):
+        px, py = e["punkt"]
+        if 0 <= py < 240 and 0 <= px < 320 and teil[py, px]:
+            z, b = TZ.zelle_von_hand(rdt, e)
+            g = koerper_aus_zelle(rdt, R, t, H, teil, z, b, None, "Hand " + e["zelle"], off=int(e["zelle"], 16))
+            if "grund" in g:
+                g["grund"] = "Zuordnung von Hand %s: %s" % (e["zelle"], g["grund"])
+            return g
+    treffer, gruende = [], []
+    for b in baender:
+        y0 = -b * geom.BAND_HOEHE
+        zellen = geom.sca_sperrzellen(rdt, b) or []
+        if not zellen:
+            gruende.append("Band %d: keine Sperrzelle" % b)
+            continue
+        stand, eigene, _ohne = G.standpunkte(teil, R, t, H, y0, hull)
+        if not stand:
+            gruende.append("Band %d: kein Bodenkontakt" % b)
+            continue
+        z, anteil = G.zelle_zuordnen(teil, eigene, R, t, H, y0, zellen, hull)
+        if z is None:
+            gruende.append("Band %d: keine Zelle traegt die Mehrheit der Bodenkontakte (%.2f)" % (b, anteil))
+            continue
+        treffer.append((z, b, anteil))
+    if not treffer:
+        return {"grund": "; ".join(gruende) or "kein begehbares Band"}
+    if len(treffer) > 1:
+        return {"grund": "Zelle auf mehreren Baendern %s" % [tr[1] for tr in treffer]}
+    z, b, anteil = treffer[0]
+    return koerper_aus_zelle(rdt, R, t, H, teil, z, b, anteil, "automatisch")
+
+
+def tiefe_teil(k, teil):
+    """Kopf Regel 6: Tiefe je Bildpunkt des Teils = bucket(Eintritt), Fehltreffer erben den naechsten Treffer desselben Teils.
+    -> (dep int 240x320, 0 ausserhalb des Teils; Zahl der geerbten Punkte)."""
+    vz = np.where(k["hit"] & teil, k["ve"], 0.0)
+    geerbt = int((teil & ~(k["hit"] & teil)).sum())
+    vz = G._erben(vz, teil)
+    dep = np.where(teil, K.bucket(vz), 0).astype(np.int32)     # ein_aus liefert nur vz > 64 -> bucket >= 1
+    return dep, geerbt
+
+
+def spaltentiefe(dep, teil):
+    """Je Bildspalte des Teils die groesste Tiefe (Kopf Regel 6)."""
+    sp = np.where(teil, dep, 0).max(0)
+    return np.where(teil, sp[None, :], 0).astype(np.int32)
 
 
 def naechster_index(rgb, pal):
@@ -149,7 +272,9 @@ def naechster_index(rgb, pal):
     return (np.argmin(d, 1) + 1).astype(np.uint8)
 
 
-def cut_bearbeiten(rdt, cut, sek, idx_eigen, clut_eigen, idx_orig, clut_orig, bild, grown, reserve=0):
+def cut_bearbeiten(rdt, room, cut, sek, idx_eigen, clut_eigen, idx_orig, clut_orig, bild, grown, reserve=0):
+    """-> (Sektion, (Index, Palette), Bericht, Modell-Zeilen) bzw. (None, None, Bericht, [])."""
+    rid = int(room[4:], 16)
     bericht = {"cut": cut}
     alt = []
     deck_alt = np.zeros((240, 320), bool)
@@ -171,34 +296,52 @@ def cut_bearbeiten(rdt, cut, sek, idx_eigen, clut_eigen, idx_orig, clut_orig, bi
     bericht["budget"] = budget
     if budget <= 0 or not ang:
         bericht["neu"] = 0
-        return None, None, bericht
+        return None, None, bericht, []
+    v = geom.cut_view(rdt, struct.unpack_from("<I", rdt, 0x24)[0], cut)
+    if not v or v[2] <= 0:
+        bericht["neu"] = 0
+        bericht["grund"] = "keine Kamera"
+        return None, None, bericht, []
+    R, t, H = v
+    hull = G.huelle(rdt)
+    baender = sorted(b for b in geom.begehbare_baender(rid) if 0 <= b < 16)
     stuecke_alle = []
-    dep_cut = np.zeros((240, 320), np.int32)              # Tiefe je Bildpunkt aus der Regel SEINER Komponente
+    dep_cut = np.zeros((240, 320), np.int32)              # Spaltentiefe je Bildpunkt (Kopf Regel 6) aus dem Koerper SEINES Teils
+    komp_cut = np.zeros((240, 320), np.int32)             # Komponente je Bildpunkt
+    koerper_von = {}                                      # Komponente -> Koerper (Modell-Zeilen)
     for e in ang:
         dx, dy = e["shift"]
         ys, xs = np.nonzero(e["maske"])
         X, Y = xs + dx, ys + dy
         ok = (X >= 0) & (X < 320) & (Y >= 0) & (Y < 240)
-        schirm = np.zeros((240, 320), bool)
-        schirm[Y[ok], X[ok]] = True
-        schirm &= ~deck_alt
+        teil = np.zeros((240, 320), bool)
+        teil[Y[ok], X[ok]] = True
+        schirm = teil & ~deck_alt & (dep_cut == 0)        # Regel 4; je Punkt eine Komponente
         if not schirm.any():
             e["neu_px"] = 0
             continue
-        dep = tiefe_je_komponente(rdt, cut, schirm)
-        if dep is None:
+        k = koerper_teil(rdt, room, cut, R, t, H, teil, baender, hull)
+        if "grund" in k:
+            e["neu_px"] = 0
+            e["ohne_koerper"] = k["grund"]
+            e["ohne_koerper_px"] = int(schirm.sum())
             continue
-        schirm &= (dep > 0) & (dep_cut == 0)            # ohne Bodenkontakt keine Tiefe -> nicht zeichnen; je Punkt eine Komponente
+        dep, _geerbt = tiefe_teil(k, teil)
+        dsp = spaltentiefe(dep, schirm)
         e["neu_px"] = int(schirm.sum())
-        if not schirm.any():
-            continue
-        dep_cut[schirm] = dep[schirm]
-        for s in SR.stuecke_bilden({(dx, dy): schirm}, dep):
-            s["komp"] = e["komp"]
+        e["koerper"] = {kk: (list(vv) if isinstance(vv, tuple) else vv) for kk, vv in k.items() if kk not in ("ve", "hit", "bytes")}
+        e["koerper"]["sca"] = k["bytes"].hex(" ")
+        e["geerbt"] = int((schirm & ~k["hit"]).sum())
+        e["tiefe"] = [int(dep[schirm].min()), int(dep[schirm].max())]
+        dep_cut[schirm] = dsp[schirm]
+        komp_cut[schirm] = e["komp"]
+        koerper_von[e["komp"]] = k
+        for s in SR.stuecke_bilden({(dx, dy): schirm}, dsp):
+            s["sh"] = (dx, dy, e["komp"])                 # zusammenlegen vereint nur Stuecke DESSELBEN Teils (ein Koerper je Rechteck)
             stuecke_alle.append(s)
     if not stuecke_alle:
         bericht["neu"] = 0
-        return None, None, bericht
+        return None, None, bericht, []
     wahl = None
     for stufe in SR.STUFEN + (24, 32, 48, 64, 1024):
         neu = SR.zusammenlegen(stuecke_alle, stufe, budget)
@@ -206,11 +349,11 @@ def cut_bearbeiten(rdt, cut, sek, idx_eigen, clut_eigen, idx_orig, clut_orig, bi
             wahl = (stufe, neu)
             break
     if wahl is None:
+        # Platz reicht nicht: die groessten Stuecke zuerst (Kopf Regel 7)
         stufe, neu = 1024, sorted(SR.zusammenlegen(stuecke_alle, 1024, budget), key=lambda s: -len(s["ys"]))[:budget]
     else:
         stufe, neu = wahl
     pal = SR.clut_rgb(clut_eigen).astype(np.int32)
-    idx_neu = idx_eigen.copy()
     rgb_at = pal[idx_eigen].astype(np.uint8)          # alte Texel: ihre bisherige Farbe
     op_at = idx_eigen != 0
     plaetze, verloren = [], 0
@@ -230,7 +373,7 @@ def cut_bearbeiten(rdt, cut, sek, idx_eigen, clut_eigen, idx_orig, clut_orig, bi
     if not plaetze:
         bericht["neu"] = 0
         bericht["atlas_verloren"] = verloren
-        return None, None, bericht
+        return None, None, bericht, []
     # Palette fuer das ganze Blatt neu (255 Farben Median-Schnitt, Index 0 = durchsichtig; schliessen_r41.palette_und_index):
     # die vorhandene Palette kennt die Farben der neuen Teile nicht (gemessen ROOM30E0 C9: naechste Farbe im Mittel 51,6 daneben).
     idx_neu, pal_neu = SR.palette_und_index(rgb_at, op_at)
@@ -239,11 +382,15 @@ def cut_bearbeiten(rdt, cut, sek, idx_eigen, clut_eigen, idx_orig, clut_orig, bi
     alt_abw = np.abs(pal_neu_full[idx_neu[idx_eigen != 0]] - pal[idx_eigen[idx_eigen != 0]]).sum(1)
     groups = [(g[0], g[2], g[3]) for g in sek["groups"]]
     masks = list(alt)
-    neue = []
-    for (s, ax, ay) in sorted(plaetze, key=lambda t: (t[0]["box"][1], t[0]["box"][0])):
+    neue, modell = [], []
+    for j, (s, ax, ay) in enumerate(sorted(plaetze, key=lambda q: (q[0]["box"][1], q[0]["box"][0]))):
         x0, y0, x1, y1 = s["box"]
-        d = int(np.median(dep_cut[s["ys"], s["xs"]]))        # wie schliessen_r41: Median der Spaltentiefen des Stuecks
+        d = int(dep_cut[s["ys"], s["xs"]].max())            # Kopf Regel 6: Rechteck-Tiefe = Maximum ueber seine Punkte
         neue.append((ax, ay, x0, y0, x1 - x0, y1 - y0, d))
+        komp = int(s["sh"][2])
+        k = koerper_von[komp]
+        modell.append((rid, cut, len(masks) + j, k["zelle"], k["typ"], k["band"], k["hoehe"], k["saeule"], d, k["off"], k["bytes"],
+                       k["iou"], komp))
     for m in neue:
         groups.append((1, m[2] - m[0], m[3] - m[1]))
     sec = geom.pack_section(groups, masks + neue)
@@ -260,7 +407,7 @@ def cut_bearbeiten(rdt, cut, sek, idx_eigen, clut_eigen, idx_orig, clut_orig, bi
                    neue_rechtecke=[list(m) for m in neue], erstes_neues=len(masks),
                    alte_texel_abw_mittel=round(float(alt_abw.mean()), 2) if len(alt_abw) else 0.0,
                    alte_texel_abw_max=int(alt_abw.max()) if len(alt_abw) else 0)
-    return sec, (idx_neu, pal_neu), bericht
+    return sec, (idx_neu, pal_neu), bericht, modell
 
 
 def main():
@@ -273,7 +420,17 @@ def main():
     ap.add_argument("--inc", default=None, help="C-Tabelle fuer den Riegel (tests/unit/gen_r41_masken36_platziert.inc)")
     ap.add_argument("--reserve", action="append", default=[], help="RAUM:CUT:N - N Plaetze des Cuts frei lassen (z.B. fuer teilen_r41.py)")
     ap.add_argument("--bericht-dazu", default=None, help="platzieren_r41.json eines frueheren Laufs: Raeume, die hier nicht laufen, von dort")
+    ap.add_argument("--tabelle", default=None, help="Modell-Tabelle VORHER (tests/unit/gen_r41_masken36_zellen.inc), Zeilen bleiben")
+    ap.add_argument("--tabelle-aus", default=None, help="Modell-Tabelle NACHHER: vorhandene Zeilen + je neuem Rechteck eine Zeile (Kopf Regel 9)")
+    ap.add_argument("--zuordnung", default=os.path.join(HIER, "zuordnung_teile_r41.json"),
+                    help="Zellen von Hand je Teil (Kopf Regel 5a): {Raum: {Cut: [{teil, punkt, zelle, beleg}]}}")
     a = ap.parse_args()
+    if a.zuordnung and os.path.exists(a.zuordnung):
+        for room, cuts in json.load(open(a.zuordnung, encoding="utf-8")).items():
+            if room.startswith("ROOM"):
+                for cut, liste in cuts.items():
+                    HAND[(room, int(cut))] = liste
+    zeilen_neu = []
     reserve = {}
     for r in a.reserve:
         rr, cc, nn = r.split(":")
@@ -312,7 +469,8 @@ def main():
             z = np.load(gp)
             grown = {(int(k.split("_")[0]), int(k.split("_")[1])): z[k] for k in z.files}
             idx_o, clut_o = at[cut]
-            sec, idx_neu, b = cut_bearbeiten(rdt, cut, sek, idx_e, clut_e, idx_o, clut_o, bild, grown, reserve.get((rid, cut), 0))
+            sec, idx_neu, b, modell = cut_bearbeiten(rdt, room, cut, sek, idx_e, clut_e, idx_o, clut_o, bild, grown,
+                                                     reserve.get((rid, cut), 0))
             b["komponenten"] = [{k: v for k, v in e.items() if k != "maske"} for e in b.get("komponenten", [])]
             b_raum[cut] = b
             if sec is None:
@@ -327,6 +485,7 @@ def main():
                 raise SystemExit("%s Cut %d: alte Rechtecke nicht bytegleich" % (room, cut))
             alle[cut] = sec
             tims[cut] = SR.atlasmod.tim_aus(idx_neu[0], idx_neu[1])
+            zeilen_neu += modell
             print("%s C%-2d +%3d Rechtecke (%3d -> %3d, Stufe %d), %5d neue Punkte, Farbe Mittel %.1f, alte Texel %.2f (max %d), "
                   "Atlas verloren %d" % (room, cut, b["neu"], nm, b["rechtecke"], b["stufe"], b["neu_px"], b["farbe_mittel"],
                                          b["alte_texel_abw_mittel"], b["alte_texel_abw_max"], b["atlas_verloren"]), flush=True)
@@ -343,6 +502,48 @@ def main():
     json.dump(bericht, open(os.path.join(a.out, "platzieren_r41.json"), "w"), indent=1, default=str)
     if a.inc:
         inc_schreiben(a.inc, bericht)
+    if a.tabelle_aus:
+        tabelle_schreiben(a.tabelle, a.tabelle_aus, zeilen_neu)
+
+
+def tabelle_schreiben(vorher, nachher, zeilen_neu):
+    """Kopf Regel 9: Modell-Tabelle = vorhandene Zeilen (unveraendert, Text wie gelesen) + je neuem Rechteck eine Zeile im Format von
+    kacheln_r41.tabelle_schreiben / zellen3d_r41 (Raum, Cut, Rechteck, Zelle x z breite tiefe, Typ, Band, Hoehe, Saeule, Tiefe,
+    RDT-Offset, 12 SCA-Bytes; Kommentar IoU + Herkunft)."""
+    import re
+    alt_zeilen, kopf = [], []
+    if vorher:
+        for z in open(vorher, encoding="utf-8").read().splitlines():
+            if re.match(r"\s*\{ 0x([0-9A-F]{4}),", z) and not z.strip().startswith("{ 0x0000, 0xFF"):
+                alt_zeilen.append(z)
+            elif not alt_zeilen and not z.startswith("static const") and not z.strip().startswith("{ 0x0000"):
+                kopf.append(z)
+    neu_txt = []
+    for (rid, cut, i, zl, typ, band, hoehe, saeule, tiefe, o, b, iou, komp) in zeilen_neu:
+        neu_txt.append("    { 0x%04X, %2d, %3d, %6d, %6d, %5d, %5d, %d, %2d, %5d, %d, %3d, 0x%05X, { %s } },   /* IoU %.2f - Original-Atlas-Teil %d, platzieren_r41.py (NB5, M-E2) */"
+                       % (rid, cut, i, zl[0], zl[1], zl[2], zl[3], typ, band, hoehe, 1 if saeule else 0, tiefe, o,
+                          ", ".join("0x%02x" % c for c in b), iou, komp))
+    rx = re.compile(r"\s*\{ 0x([0-9A-F]{4}),\s*(\d+),\s*(\d+),")
+
+    def schluessel(z):
+        m = rx.match(z)
+        return (int(m.group(1), 16), int(m.group(2)), int(m.group(3)))
+    alle = sorted(alt_zeilen + neu_txt, key=schluessel)
+    if len(set(schluessel(z) for z in alle)) != len(alle):
+        raise SystemExit("Modell-Tabelle: doppelte Zeile (Raum, Cut, Rechteck)")
+    with open(nachher, "w", newline="\n") as f:
+        f.write("/* Erzeugt von re15_port/tools/maske/kacheln_r41.py (Nachbesserung 3) auf zellen3d_r41.py (Nachbesserung 2) und\n"
+                " * platzieren_r41.py (Nachbesserung 5, Entscheid M-E2: Teile des Original-Vordergrundatlas mit der Tiefe ihrer Zelle) -\n"
+                " * NICHT von Hand aendern. Runde 41 Spur M: Rechtecke der Stages 3..6 mit Zellen-Modell (Koerper).\n"
+                " * Je Zeile: Raum (Leon-Datei; Elza xxx1 ist bytegleich), Cut, Rechteck, SCA-Zelle x z breite tiefe, Typ, Band,\n"
+                " * gemessene Hoehe (IoU-Maximum, negativ = nach oben), Saeule, Tiefe im MSK; Beleg: RDT-Offset und die\n"
+                " * 12 Bytes des SCA-Eintrags dort (u16 breite, u16 tiefe, s16 x, s16 z, typ, u0, u1, floor); Kommentar: IoU.\n"
+                " * Benutzt von tests/unit/test_r37_masken36.c (r41_koerper_davor) und tests/unit/test_r41_masken36.c (zellen3d). */\n"
+                "static const r41_zellen_modell_t r41_masken36_zellen[] = {\n")
+        for z in alle:
+            f.write(z + "\n")
+        f.write("    { 0x0000, 0xFF, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 } }   /* Ende */\n};\n")
+    print("Modell-Tabelle: %d vorhandene + %d neue Zeilen -> %s" % (len(alt_zeilen), len(neu_txt), nachher), flush=True)
 
 
 def inc_schreiben(pfad, bericht):

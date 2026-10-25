@@ -383,9 +383,10 @@ static int figur_raster(const re15_camera_view_t *v, double wx, double wz, int b
 typedef struct { unsigned raum; int x, z, band; char art; unsigned von; uint32_t off; } saat_t;   /* art: A = AOT, T = Tuer (VM), S = Tuer (Satz statisch) */
 static saat_t g_saat[SAAT_MAX];
 static int g_saat_n;
-static int g_saat_tuer;      /* R41 NB4: 1 = Tuer-AOTs mit ihrem Band pc[4] (door_params) = gemessene Korrektur (--saat-tuer); Vorgabe 0 =
-                              * Stand NB3, auf dem die Tabellen der Spur stehen (Entscheid M-E1: keine weiteren automatischen Masken fuer die
-                              * Restliste - die Korrektur zeichnet 6000 C5/C7/C8 37 Rechtecke mehr, Dossier NB4 Mangel 2 (a)) */
+static int g_saat_tuer = 1;  /* R41 NB4 gemessen, NB5 eingebaut (Entscheid M-E2 "den belegten Generator-Fix 'Tuer-Band der Saaten' mitnehmen"):
+                              * Tuer-AOTs saeen mit ihrem Band pc[4] (door_params) - AOT-Scan @0x80042cac lbu v0,2(s0) / @0x80042cb4 andi 0x80 /
+                              * @0x80042cc0 lbu v1,130(s1) / @0x80042ccc bne v1,v0 (Dossier NB4 Mangel 2 (a), NB5). --saat-alt = Stand NB3
+                              * (Tuer-Saaten auf Band 0) nur fuer Vergleiche. */
 
 static void saat_dazu(unsigned raum, int x, int z, int band, char art, unsigned von, uint32_t off)
 {
@@ -537,12 +538,12 @@ static void saaten_sammeln(void)
                      * Tuer saete deshalb auf Band 0 (gemessen ROOM6000: Tueren @RDT+0x00D58/0x00D78/0x00DDA mit pc[4] = 2 ergaben die
                      * Band-0-Saaten (2800,2750), (-4900,-8350), (1763,-10677) und damit das Netz im Gleisbett). Traege Tuersaetze
                      * (sce 0, Typ NONE) tragen ihr Band ebenso in door_params (floor = pc[3] != 0 nur nach einem Tuersatz). Die Korrektur
-                     * gilt nur mit --saat-tuer (g_saat_tuer, Entscheid M-E1); ohne sie rechnet das Werkzeug wie NB3. */
+                     * ist seit NB5 die Vorgabe (g_saat_tuer, Entscheid M-E2); --saat-alt rechnet wie NB3. */
                     {
                         int tuer = q->type == RE15_AOT_TYPE_DOOR
                                    || (q->type == RE15_AOT_TYPE_NONE && g_aot.door_params[i].floor != 0);
                         int band = tuer ? (int) g_aot.door_params[i].band : (int) q->band;
-                        if (!g_saat_tuer) band = q->band;               /* Vorgabe: Stand NB3 (s. g_saat_tuer) */
+                        if (!g_saat_tuer) band = q->band;               /* nur --saat-alt: Stand NB3 (s. g_saat_tuer) */
                         if (band & 0x80) continue;
                         /* Zonen ohne Stehplatz-Beleg: GENERIC (Ereignisflaeche), CAM_SWITCH, AUTO_EVENT */
                         if (q->type == RE15_AOT_TYPE_GENERIC || q->type == RE15_AOT_TYPE_CAM_SWITCH
@@ -2141,7 +2142,8 @@ int main(int argc, char **argv)
         int i, j = 1;
         for (i = 1; i < argc; i++) {
             if (!strcmp(argv[i], "--alt")) g_fz_alt = 1;
-            else if (!strcmp(argv[i], "--saat-tuer")) g_saat_tuer = 1;    /* R41 NB4: Tuer-Saaten mit ihrem Band pc[4] (Korrektur) */
+            else if (!strcmp(argv[i], "--saat-tuer")) g_saat_tuer = 1;    /* R41 NB4: Tuer-Saaten mit ihrem Band pc[4] (seit NB5 Vorgabe) */
+            else if (!strcmp(argv[i], "--saat-alt")) g_saat_tuer = 0;     /* R41 NB5: Vergleich mit dem Stand NB3 (Tuer-Saaten auf Band 0) */
             else if (!strncmp(argv[i], "--zeilen=", 9) && atoi(argv[i] + 9) >= 2) g_fz = atoi(argv[i] + 9);
             else if (!strncmp(argv[i], "--spalten=", 10) && atoi(argv[i] + 10) >= 3) {
                 g_fs = atoi(argv[i] + 10) | 1;
@@ -2195,7 +2197,7 @@ int main(int argc, char **argv)
                         if (n[0][b] != n[1][b])
                             printf("  ROOM%04X Band %d: Stehplaetze alt %ld -> neu %ld\n", raum, b, n[1][b], n[0][b]);
                 }
-        g_saat_tuer = 0;
+        g_saat_tuer = 1;
         printf("OK\n");
         return 0;
     }
@@ -2219,7 +2221,7 @@ int main(int argc, char **argv)
                        neu_b < 0 ? " (entfaellt: Band & 0x80 = jedes Band)" : "");
             }
         }
-        g_saat_tuer = 0;
+        g_saat_tuer = 1;
         printf("  AOT-Saaten alt %d, mit geaendertem Band %d\nOK\n", na, geaendert);
         return 0;
     }
