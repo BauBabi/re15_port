@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-25 18:03: **ABSCHLUSSPLAN (Nachtrag 32b)**: jetzt abschliessen und v0.8.29 bauen, neue Tokens ab Samstag 31.10. fuer Nachbesserungen. F nur Abnahme 5 (bei Start von NB6 den Lauf wphjy3205 stoppen), G NB4 + Abnahme 4 (letzte), M NB5 + Abnahme 5 (bei Start von NB6 den Lauf wbqdkh8lq stoppen). **N ANGEHALTEN** (Task we66egvi6 gestoppt, Stand r41/nachtrag30 bb7a0df6 ungeprueft: Plakat 30d erzeugt; Dossier N_nachtrag30.md; Messung: Endstufe skaliert alle Quellen) -> Samstag. Danach Integration F/G/M ("gut genug"), volle Suite, Release.
+
 * 2026-10-25 17:58: Nachtrag 31 (F: Durchbruch bleibt, Kampfbeginn nicht vor der Kamera, Schluesselgroesse angenommen) und Nachtrag 32 + FG-E6: **Alligator "gut genug", Ziel v0.8.29 bis Samstag 2026-10-31**; F/G nur noch die laufenden Laeufe, Abnahmen nur bei blockierenden Fehlern rot. Laufend: F Abnahme 5, G NB4, M NB5, N Bau.
 
 * 2026-10-25 17:24: Nachtrag 30d (Plakat NEU 1. GREEN 01 - 2. RED 02 - 3. BLACK 09 - 4. RED 08, Loesung 09-02-01-08; ersetzt 30c) und 30e (2010: Wasser die Leiter herunter und ueber den Weg zum Becken, bis zur Flut in 2030) an Spur N (Baum 4bd6c7e2). G Abnahme 3 NICHT bestanden (M1 Todeskamera Plattform, M2 Kern-CLUT erst nach 2090-Besuch, M3 Kopf in der Suedwand, V1 render_pc.c) -> Entscheide G-E3..G-E6 (5d6b6d8e, im G-Baum 29790441); G Nachbesserung 4 laeuft (wf_2bd33954-f59, letzte des Laufs).
