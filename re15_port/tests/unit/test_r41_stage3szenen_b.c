@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #ifndef RE15_ASSET_PSX_DIR
 #error RE15_ASSET_PSX_DIR fehlt
@@ -481,14 +482,39 @@ static void t_marvinlauf(const char *dlog)
     z = strstr(d, "[sherry-r41] Koerper -> Familie 76 (PL00): ");
     int n2 = z ? sscanf(z, "[sherry-r41] Koerper -> Familie 76 (PL00): %d Knochen, %d Clips, W00 %d Clips, Wurzel-Bind y %d (Modell 13)",
                         &nk, &nc, &nw, &y) : 0;
-    CHECK(n2 == 4 && nk == 15, "Raumlader bindet Marvins Koerper (EDD/EMR @0x8003154c/@0x80031578, PL0D) - %d Felder", n2);
-    /* letzter [bone]-Block (Bild 60 in ROOM30C0): Knochen 10 Bindelage (PL0D 485, Leon PL00 422) */
-    int rel10 = 99999;
+    /* Wurzel-Bindelage aus den Dateien selbst (kein Zahlenpin): PL0D gegen PL00 */
+    re15_emd_skeleton_t sk_d, sk_l; memset(&sk_d, 0, sizeof sk_d); memset(&sk_l, 0, sizeof sk_l);
+    long nd = 0, nl0 = 0; uint8_t *fd = psx("PLD/PL0D.PLD", &nd), *fl = psx("PLD/PL00.PLD", &nl0);
+    const uint8_t *pp; size_t ll;
+    int sk_ok = fd && fl && teil(fd, nd, RE15_PLD_EMR, &pp, &ll) && re15_emd_parse_skeleton(pp, ll, &sk_d) == 0 &&
+                teil(fl, nl0, RE15_PLD_EMR, &pp, &ll) && re15_emd_parse_skeleton(pp, ll, &sk_l) == 0;
+    CHECK(n2 == 4 && nk == 15 && sk_ok && y == sk_d.bone_relative_pos[0][1] && y != sk_l.bone_relative_pos[0][1],
+          "Raumlader bindet Marvins Koerper (EDD/EMR @0x8003154c/@0x80031578): Wurzel-Bind y %d = PL0D %d (Leon PL00 %d)",
+          n2 == 4 ? y : 0, sk_ok ? sk_d.bone_relative_pos[0][1] : 0, sk_ok ? sk_l.bone_relative_pos[0][1] : 0);
+    /* letzter [bone]-Block (Bild 60 in ROOM30C0): Laenge Oberarm (9 -> 10) und Unterarm (10 -> 11) im Modellraum =
+     * Betrag der Bindelage des Kind-Knochens (drehungsfrei) - PL0D statt PL00 */
+    int bx[15], by[15], bz[15], hat[15] = { 0 };
     for (char *p = strstr(d, "[bone] "); p; p = strstr(p + 1, "[bone] ")) {
         int bi, rx, ry, rz;
-        if (sscanf(p, "[bone] %d: rel=(%d,%d,%d)", &bi, &rx, &ry, &rz) == 4 && bi == 10) rel10 = ry;
+        if (sscanf(p, "[bone] %d: rel=(%d,%d,%d)", &bi, &rx, &ry, &rz) == 4 && bi >= 0 && bi < 15) {
+            bx[bi] = rx; by[bi] = ry; bz[bi] = rz; hat[bi] = 1;
+        }
     }
-    CHECK(rel10 == 485, "Knochen 10 in 30C0: rel y %d (Marvin PL0D 485, Leons Skelett 422)", rel10);
+    int arm_ok = sk_ok && hat[9] && hat[10] && hat[11];
+    for (int k = 10; k <= 11 && arm_ok; k++) {
+        double dx = bx[k] - bx[k - 1], dy = by[k] - by[k - 1], dz = bz[k] - bz[k - 1];
+        double lp = sqrt(dx * dx + dy * dy + dz * dz);
+        double ld = sqrt((double)sk_d.bone_relative_pos[k][0] * sk_d.bone_relative_pos[k][0] +
+                         (double)sk_d.bone_relative_pos[k][1] * sk_d.bone_relative_pos[k][1] +
+                         (double)sk_d.bone_relative_pos[k][2] * sk_d.bone_relative_pos[k][2]);
+        double ll2 = sqrt((double)sk_l.bone_relative_pos[k][0] * sk_l.bone_relative_pos[k][0] +
+                          (double)sk_l.bone_relative_pos[k][1] * sk_l.bone_relative_pos[k][1] +
+                          (double)sk_l.bone_relative_pos[k][2] * sk_l.bone_relative_pos[k][2]);
+        printf("    Knochen %d: Laenge im Bild %.1f, PL0D %.1f, PL00 %.1f\n", k, lp, ld, ll2);
+        if (fabs(lp - ld) > 3.0 || fabs(lp - ll2) < 10.0) arm_ok = 0;
+    }
+    CHECK(arm_ok, "Bild 60 in 30C0: Ober-/Unterarm-Laenge = PL0D-Bindelage (Marvin), nicht PL00 (Leon)");
+    free(fd); free(fl);
     free(d);
 }
 
