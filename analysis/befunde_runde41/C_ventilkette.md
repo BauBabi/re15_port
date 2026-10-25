@@ -9,6 +9,8 @@ Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser}.inc` aus
 
 ## 0. Stand / Protokoll (neueste zuerst)
 
+* 2026-10-25 ab 04:0x **Nachbesserung 6** (Abnahme 5 `C_abnahme_5.md`, Maengel 1-3; Nachtrag 25 + C-E4). Arbeitsplan, RE-Belege
+  (RE2-Countdown B6-1, RE2-Alarm SUB_25 B6-2) und Ergebnis in §0g. Messordner scratchpad `nb6/`.
 * 2026-10-25 01:5x **Nachbesserung 5 abgeschlossen** (§0f): Mangel 1 = Dokument als Zettel an der Suedwand (Cut 5: 243 statt 39
   Pixel); Mangel 2 = Plakat waehrend Zaehler/Flut gesperrt, Flut-Sperre bleibt (Riegel E); Mangel 3 = Nachtraege 16 (Ventil-
   Sicherungskasten 2010, "It's locked.", Herausnehmen nach der Flut, Generator 2060), 18 (Plakat-Stil, Hebel 2050, RE2-Dreh-
@@ -1217,6 +1219,99 @@ Cut 5 (Kamera des Sued-Landeplatzes) Bild x 105..118 y 73..93 ueber dem Handlauf
 
 ### OFFEN (Nachbesserung 5)
 Siehe §6 "Nachbesserung 5" (Alarm = Frage (o); Countdown-Form = Frage (p)).
+
+## 0g. Nachbesserung 6 (Abnahme 5 `C_abnahme_5.md` Maengel 1-3; Nachtrag 25 (o)/(p) + C-E4, AUFTRAG.md 2026-10-25 02:47)
+
+Massstab: die drei Maengel der Abnahme 5 §5 und der Wortlaut von Nachtrag 18 Punkt 4 ("Alarm, so wie am Spiel Ende immer") mit
+Nachtrag 25 (o) "Ja, RE2-Alarm SUB_25", (p) "Auch da gibt es mindestens ein Alarm in Resident Evil 2." (= Countdown in der Form
+der RE2-Anzeige) und C-E4 (kleiner markierter Haken im BGM-Lader audio_pc.c erlaubt, SUB_25 bytegleich nach shared_assets/RE2/SOUND/,
+Alarm vom Warntext bis zur Flut bzw. bis zum Verlassen des Raums). Alles, was die Abnahme 5 als erfuellt bewertet hat, bleibt; die
+Riegel bleiben gruen. Messordner scratchpad `nb6/` (`C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/nb6`).
+Die Messungen der Abnahme 5 (`C41abn5/`, KB/KB_ELZA/KF) gelten als "vorher" (nur Raummusik, Countdown MM:SS:HH oben rechts) und
+werden nicht wiederholt.
+
+### Arbeitsplan
+1. RE (vor jedem Code): die RE2-Countdown-Anzeige finden (Ausloeser, Zaehler, Format, Lage, Schrift, Farbe) und den Abspielweg des
+   RE2-Alarms SUB_25 (Tabelleneintrag, Flags, Programm-Lautstaerke) - je mit Adresse. Ergebnis unten B6-1 / B6-2.
+2. Mangel 2: Countdown genau in dieser Form (Port-Modul + PC-Bildebene), Riegel A nachziehen, Bildvergleich RE2 <-> Port.
+3. Mangel 1: SUB_25 bytegleich nach shared_assets/RE2/SOUND/, Haken in audio_pc.c ("Runde 41 Spur C, C-E4"), Alarm vom Text 46 bis
+   Flut/Tod/Raumwechsel; Messung RE15_AUDIO_CAP_SYNC (Leon + Elza), Riegel.
+4. Mangel 3: Kopf von include/re15_ventilkette_r41.h (Z. 147/160) an den Code anpassen.
+5. Bau, gezielte Tests, Dossier, Commit.
+
+### RE-Belege der Nachbesserung 6 (selbst disassembliert, VOR dem Code)
+Werkzeug `.claude/skills/re15-psx-disasm/scripts/re2_disasm.py` auf `info/re2leon/PSX.EXE` (= SLUS_007.48, gleiche Bytes), Ghidra-Dump
+`ghidra_re2_Leon.txt`, `RE2_Quellcode_V2/`, RDT-Dumps `re15_port/tools/r34n_c/re2_scd_dump.py`; Rechnungen scratchpad `nb6/`.
+
+**B6-1 Die RE2-Countdown-Anzeige (Mangel 2).** Die Vorgaenger-Suche fand sie nicht, weil die Hauptschleife @0x80025794..@0x80026b24
+im Ghidra-Dump nur als Rohbytes steht (Z. 106243 ff.) und kein Zeit-Konstanten-Muster traegt; gefunden ueber den Zaehler selbst.
+* Ausloeser im Skript: Set(1,4)=1 und Save(0x23, Sekunden) direkt hintereinander - ROOM6170 @0x038C6 `22 01 04 01` + @0x038CA
+  `24 23 2c 01` (300 s), ROOM7010 @0x02376 `22 01 04 01` + @0x0237A `24 23 2c 01` (300 s), ROOM7030 @0x022AC `22 01 04 01` + @0x022B0
+  `24 23 78 00` (120 s) = das Labor-/Zug-Ende mit der Selbstzerstoerung; aus z. B. ROOM7000 @0x0191C `22 01 04 00`.
+  Bank 1 = Status_flg @0x800cfbd8 (Bank-Tabelle @0x800a78c8: [0] 0x800cfb74, [1] 0x800cfbd8, [2] 0x800cfbdc), Bit 4 = Maske
+  0x80000000 >> 4 = 0x08000000 (Set-Handler @0x800543b4: Wort = Basis + (Bit>>5)*4 @0x800543d8..@0x800543f0, `srlv` @0x8005444c).
+  Save-Handler @0x8005451c: Variable idx -> 0x800d47ec + 2*idx (`sh a1,0x47ec(at)` @0x80054540) -> idx 0x23 = 0x800d4832 = Restsekunden.
+* Zaehlen + Anzeige in der Hauptschleife (Prolog @0x80025794 `addiu sp,sp,-80`; s3 = 0x800cc1e8 @0x800257cc/@0x800257d0,
+  0x800d4832 = s3 + 0x10000 - 0x79b6):
+  - @0x80025de4..@0x80025e00: nur wenn Status_flg & 0x08000000 (`lui a0,0x800` @0x80025df8, `and` @0x80025dfc, `beq` @0x80025e00).
+  - @0x80025e08..@0x80025e1c: System_flg (0x800cfb74) & 8 -> Aufwaerts-Zweig (Stoppuhr), sonst Abwaerts-Zweig @0x8002608c;
+    Farbe a2 = 1 (Verzoegerungsplatz @0x80025e1c `addiu a2,zero,1`).
+  - @0x8002608c..@0x800260d8: Bildzaehler s6 < 30 (`slti v0,v0,30` @0x80026094) und Timer-Bit schon im Vorbild (0x800c3a8c & 0x08000000;
+    0x800c3a8c = Status_flg des Vorbilds, geschrieben @0x80026364..@0x80026378) -> weiter; sonst s6 = 0, s7 = 8 (@0x800260c8),
+    Sekunde - 1 (@0x800260c4 `lhu` / @0x800260cc `addiu -1` / @0x800260d8 `sh`). Folge: schon das erste Bild nach Set(1,4) zeigt N-1.
+  - @0x800260e4..@0x800260f8: Restsekunden < 60 (`slti v0,v1,60` @0x800260ec) -> Farbe 2 (`addiu a2,zero,2` @0x800260f8).
+  - @0x800260fc `bltz` -> abgelaufen @0x80026284..@0x800262a0: Text " 0^00=00" (@0x800109b4) in Farbe 2 (`addiu a2,zero,2` @0x80026298),
+    Platz 0 (@0x800262a0); danach @0x800262bc..@0x80026328 Status_flg &= ~0x08000000 (Anzeige aus, `0xf7ffffff` @0x800262f0/f4) und
+    System_flg |= 4 (@0x80026314/@0x80026320), s6 = s7 = 0.
+  - sonst @0x80026104..@0x80026274 FUN_8002fa28(x 104 @0x800261e8, y 32 @0x80026140, Farbe a2, Platz 2 @0x80026144,
+    "%2d^%d%d=%d%d" @0x800109a4 (Ghidra `s_%2d^%d%d=%d%d_800109a4`), Minuten = Sek/60 (`0x88888889` @0x80026100/@0x80026110, `sra 5`
+    @0x800261f0), Zehner/Einer der Sekunden ((Sek%60)/10 ueber `0x66666667` @0x80026138/@0x8002613c, Rest @0x80026268),
+    9 - s6/3 (`0x55555556` @0x80026120/@0x80026124, `addiu v0,zero,9` @0x80026188, `subu` @0x800261b4), s7 (@0x8002617c..@0x80026184)).
+  - je Bild (nicht pausiert, FUN_8002c350(0)) @0x8002632c..@0x80026360: s7 -= 3 (@0x8002634c), s6 += 1 (@0x8002635c im
+    Verzoegerungsplatz), s7 <= 0 -> 8 (@0x80026360). Die letzten zwei Stellen laufen also 98 95 92 88 85 82 ... 08 05 02: ein
+    Bildzaehler (30 Bilder je Sekunde), keine echten Hundertstel.
+* Druck: FUN_8002fa28 @0x8002fa28: attr = Farbe<<4 | Platz | 0x200 (`sll a2,a2,4` @0x8002fa30, `ori a3,a3,0x200` @0x8002fa34);
+  FUN_8002fa54 = printf in die Druckwarteschlange (x, y, attr, Zeichen; "%2d" = zweistellig mit fuehrendem Leerzeichen).
+  Die Warteschlange zeichnet FUN_800316a8 (aus FUN_8003022c @0x80030258, gerufen aus main @0x8002b440): attr & 0x200
+  (`andi v0,v0,0x200` @0x800316e8) -> FUN_800318a4 = 14x14-Schrift: SPRT `0x64808080` (@0x800318fc/@0x80031900; Farbe 128 = Textur
+  unveraendert, Bit 8 von attr = 0 -> nicht halbtransparent), w = h = 14 (`0x000e000e` @0x800319d8..@0x800319e0),
+  uv = ((c % 18) * 14, (c / 18) * 14) aus dem Zeichenbyte selbst (`0x38e38e39` @0x800319b0..@0x80031a24), Vorschub 14 (@0x80031978;
+  Leerzeichen 0x20 = nur Vorschub @0x80031970/@0x80031974), CLUT x 256 / y 480 + 2*Farbe (`srl v0,v0,3` @0x80031920, `addiu v1,a1,480`
+  @0x80031924, `ori v0,v0,0x10` @0x80031930), tpage des Platzes = (768,256) 4 bpp (FUN_80031af4 `GetTPage(0,0,0x300,0x100)`).
+  In der Schrift liegt auf '^' (0x5e, uv 56,70) das Minutenzeichen ' und auf '=' (0x3d, uv 98,42) das Sekundenzeichen " - die Anzeige
+  liest sich ` 4'59"98`.
+* Textur: TEX.TIM (Datei 0xe1 "TEX TIM" @0x8002b8ac..@0x8002b8c0) auf Seite 0x1c (`li v0,0x1c` @0x8002b8cc) = VRAM (768,256), CLUT-Zeile
+  480 (FUN_80076a40: x = Seite*64-1024, y = 256, CLUT y = 0x1e0 + Versatz 0). `info/re2leon/COMMON/DATA/TEX.TIM` ==
+  `re15_port/shared_assets/RE2/TEX.TIM` (cmp gleich, liegt seit Runde 34 im Paket). CLUT-Zeile 482 (Farbe 1) = Gruen (0,184,40) ...,
+  Zeile 484 (Farbe 2) = Rot (152,0,72) ... mit dunklem Rand (Index 8 = 0x0002). RE1.5s eigene TEX.TIM hat dort andere Zeichen
+  (1884 von 2352 Texeln der 12 Zeichen verschieden) -> die RE2-Datei ist die Quelle.
+* Lage: x 104..215, y 32..45 = waagerecht mittig oben (320 breit; Schirm-Koordinaten wie die Nachrichtenbox x 34 / y 185 derselben
+  Schrift-Maschine, FUN_8002fe38).
+* Fuer 2030 (60 s): Save 60 -> erstes Bild " 0'59"98", durchgehend Farbe 2 (Rot, weil < 60), letztes " 0'00"02", abgelaufen " 0'00"00".
+
+**B6-2 Der RE2-Alarm SUB_25 (Mangel 1).**
+* Tabelleneintrag: ROOM6040 sub04 @0x022E8 `57 00 04 06 11 25 00 80` (Sce_bgmtbl_set, Handler @0x80057e98: a0 = u16@2<<16 | u16@4 | u16@6
+  = 0x0604_2511 | 0x8000) -> FUN_8005b9f4 schreibt 0xA511 in die BGM-Tabelle (Stage 6 Raum 4; ebenso @0x022F0 Raum 5): MAIN 0x11 +
+  SUB-Byte 0xA5 = SUB 0x25 mit Bit 7. Raum-BGM-Lader RE2 FUN_8005a444: SEQ0-Flag = (sub>>6)&1 (DAT_800d75c9), SEQ#2-Flag = sub>>7
+  (DAT_800d75d1) -> SEQ0 laeuft, SEQ#2 bleibt stumm (wie RE1.5 FUN_80044774 = audio_pc.c re15_bgm_load_sub).
+* Datei: `info/re2leon/COMMON/SOUND/SUB_25.BGM` 100688 B, Trailer wie RE1.5 (u32@size-8 = SEQ#2 244, @size-12 = VH 824, @size-16 = VB 7516;
+  "pQES" @0/@244, "pBAV" @824). SEQ0 = 2 Kanaele (Programm 0/1), Schleife `b0 63 14`..`b0 63 1e` = 30820 Ticks (ppqn 480, 500000 us)
+  = 32,1 s Sirenen-Wechselton (Noten 46/20 <-> 58/32); SEQ#2 = 6 Kanaele Musik (Tempo 833333). VAB: Programme 0/1 mvol 0 in der Datei
+  (stumm, bis das Skript sie aufdreht).
+* Lautstaerke: ROOM6040 sub23 @0x038BA `51 01 00 01 64 40` (Sce_bgm_control, Handler @0x80057e20 packt pc[1..5] -> FUN_8005b6f0: Teil 1
+  -> ProgAtr[0].mvol = 0x64-1 = 99, Pan 0x40-1) = der Alarm beim Betreten von 6040; sub25 @0x038CE..@0x039B8 setzt Programm 0 je Kamera
+  (0x3c..0x7f) - an RE2s Kameras gebunden, fuer 2030 nicht uebertragbar; Programm 1 bleibt in 6040 stumm (nur 6050 sub17 @0x01F06 dreht
+  es je Kamera auf).
+* RE1.5 hat keine Alarm-Spur (SOUND/SUB_25.BGM = 4 Byte `00 00 00 00`).
+* Form im Port: beim Warntext 46 wird der SUB-Platz von 2030 wie ein Tabellenwechsel mit Sub-Byte 0xA5 neu geladen (RE1.5/RE2-Weg "nur der
+  SUB wechselt": SsSeqStop beider SUB-Sequenzen @0x8004432C/@0x80044354 + FUN_80044774), Quelle shared_assets/RE2/SOUND/SUB_25.BGM, danach
+  dieselbe Lautstaerke-Anweisung `51 01 00 01 64 40` (ss_seq_ctl_ex(1,0,1,0x64,0x40) = Port-Gegenstueck von FUN_8005b6f0). MAIN08 von 2030
+  laeuft weiter (wie MAIN 0x11 im RE2-Eintrag). Ende: Flut-Beginn oder Tod (SUB-Platz freigeben = SsSeqStop) bzw. Raumwechsel (der
+  Raum-BGM-Lader laedt den SUB des Zielraums; der Alarm gilt dort als gewechselter SUB).
+
+### Protokoll der Nachbesserung 6 (neueste zuerst)
+* 2026-10-25 ~04:0x Start: Baum sauber (`status --porcelain` nur `?? build/`), HEAD b8d56709 (Abnahme 5). Pflichtlektuere (AUFTRAG.md
+  Nachtrag 25 + C-E4, VERTRAG.md, C_abnahme_5.md, Dossier §0f). RE B6-1/B6-2 (oben). Als Naechstes Code.
 
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
