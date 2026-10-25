@@ -849,3 +849,26 @@ Raum/Kamera/Gegenstand mit Beleg ins Dossier ("Fuer den Nutzer: Freistellungen")
 Offen fuer Spur M bleiben nur Mangel 1 (Ost-Stirn der Buero-Trennwand 30A0/30A1 C0: Zelle 6 @RDT+0x0045C, neuer Befund auf dem
 natuerlichen Weg, Tiefe aus der Zelle belegt) und Mangel 3 (Laufpruefung im gemeinsamen Laeufer). Abnahme M 4 urteilt Punkt 1
 an Mangel 1 und daran, dass keine Stelle der Restliste schlechter wurde; die Restliste selbst ist kein Mangel.
+
+## 2026-10-25 11:58 — Nachtrag 28 (Wortlaut; Explosionseffekt des Gaskanisters, Spur G)
+
+> Beim Ausschnitt gerade eben fehlte noch der Explosionseffekt vom Gaskanister vom Original.
+
+Gesehen hat der Nutzer die Kampflaeufe der Abnahme G 2 (re15_pc_g41abn2c/d auf seinem Bildschirm). Orchestrator-Messung am
+selben Stand (Baum r41_kanister2080, Lauf scratchpad/g2abn/runs/r1_v1_leon, Bildstreifen scratchpad/g2abn/
+r1_v1_leon_f1548-1588_hell2.png): R1-Start F1549 ("RE2 R1 start pos=(-7391,-25446)"), danach nur ein kleiner weiss-blauer
+Schimmer am Kopf (F1550-F1560) und die Kiefer-Brocken; KEIN Feuerball/Explosionsbild.
+Port-Stand (gator_re2_r41.c, re15_gr2_r1_start): Spritzring @0x80102374 -> 0x8010338c = 6 x re2fx Bank 3 Sub 0x0f
+(0x030f2000/0x030f3000, Versaetze @0x801000a8) an der Kanister-Matrix; Fontaenen FUN_80103eb4 = Bank 0x26 Sub 3, Bank 0 Sub 6/3,
+Bank 8 Sub 2 (spawn_kern: Bank = a0>>24, Sub = (a0>>16)&0xff @0x8001cbec-f8). Registriert waren im Lauf nur CORE00.ESP (Kern)
+und GLAS1090.ESP als Raum-ESP (Registry 8..15); die RE2-Raum-ESP des Alligatorraums ROOM40A0 ist NICHT registriert.
+
+**Auftrag an Spur G** (RE-Gate; FG-E3/FG-E5 gelten: kleine markierte Haken in B's Modulen und in re2_fx.c erlaubt):
+1. In RE2 belegen, woraus der Explosionseffekt des Gaskanisters besteht: welche Effekte/Banken/Subs (R1 @0x80102158, Spritzring
+   0x8010338c, Kanister T2 @0x801017c4, ggf. weitere Spawns/Sprites/Lichtblitz/Rauch), aus welcher Datei (CORE00.ESP, ESP-Abschnitt
+   von ROOM40A0.RDT, EM23-Daten) mit welcher TIM/CLUT/TPage, Zeitpunkt, Lage, Dauer, Reihenfolge.
+2. Messen, warum der Port ihn nicht zeigt (Bank registriert? Raum-ESP von 40A0 in 2090/2091 geladen? Textur/CLUT im VRAM?
+   Zeichenpass, Cull, Blend?) - Zahlen pro Bild (gespawnte/gezeichnete Quads in F1549ff).
+3. 1:1 nachbauen (jede Konstante mit @0x/Datei-Offset), beide Szenarien (2090/2091), ohne die bestehenden B-/G-Riegel zu brechen.
+4. Nachweis am Spiel: Bildstreifen der Explosion gegen ein RE2-Referenzbild desselben Effekts (aus den RE2-Daten gerendert oder
+   aufgenommen), Riegel: Effekt-Bank in 2090 registriert + gezeichnete Explosions-Quads > 0 in den R1-Bildern.
