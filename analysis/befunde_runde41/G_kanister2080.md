@@ -469,3 +469,24 @@ Ausgabe `G_belege/nb1_clipbilder_40_49.txt`, Marvin 0x40 und John 0x49, Pose = r
   und RE2 hat für das Aufnehmen eines Gegenstands keinen Clip (Ada hält den Raketenwerfer schon, Super_set @0x072C).
   -> Das Original-Hinknien/Aufstehen von Marvin ist die Form für "nimmt ihn auf in beide Hände": im Bild 24 liegen beide
   Hände seitlich am Kanister (z -509 / +318 um die Kanisterachse, Radius 267) in Höhe 312..668 über dem Boden.
+- **Messung vorher** (Abnahme 0 §3.9, Läufe n24b_leon / n24b_elza auf 489c0756, Bilder übernommen):
+  `G_belege/nb1_m1_vorher_marvin_f514-562_abnahme0.png`, `G_belege/nb1_m1_vorher_john_f526-562_abnahme0.png` - Bild 532-544
+  Knie hoch und Aufstieg über die Reling-Höhe (= Loco c2 Bild 15-28, Fuss auf -1958), Bild 547 Hocke (Bild 29 ff.).
+- **Änderung** (kanister2080_r41.c `baue_szene`, Header RE15_K2080_CLIP_KNIEN / KNIEN_BILDER / KNIEN_HALT / AUFSTEHEN_HALT /
+  KNIEN_GRIFF): nach dem Lauf (Plc_dest RUN, Sub 5, Laufzyklus Eigen c0 @0x8005157c = das "Hinlaufen" des Originals)
+  `3f 01 0b 00` (Hinknien, @0x01650) · Sleep 24 · Signal AUFHEBEN (Griff im Bild 24 = letztes Bild, beide Hände seitlich am
+  Kanister) · Sleep 36 (zusammen Sleep 60 @0x01654) · `3f 01 0b 00` + `43 00 80 00` (Aufstehen rückwärts, @0x01658/@0x0165C) ·
+  Sleep 30 (@0x01660); danach direkt der RE2-Wurfteil (der Kanister steht schon an der Reling, kein Gang mehr; der WALK an die
+  Reling und `Plc_motion(2,0)` = RUN-Gait als "Tragen" sind entfernt). Die Hände-Lage für den Kanister liest jetzt den
+  GEZEICHNETEN Slot (rückwärts fc-1-f, re15_actor_playback_slot @0x8001f34c-54), sonst hätte der Kanister beim Aufstehen die
+  Vorwärts-Bilder gesehen.
+- **Messung nachher** (Bau 2026-10-25 01:55, exe-Kopien re15_pc_g41nb1*.exe, Rezept wie Abnahme 3.5/3.9 mit RE15_GB_TEST=5 nur als
+  Auslöser der Szene, Bilder 380..640/3, EXIT_AT 150#2090/2091): Läufe m1_leon / m1_elza:
+  `F435 NPC Lauf Sub 5 Phase 2 (-8083,-17471)` -> `F465 Kanister aufgehoben (Loco c11 Bild 24, Hinknien ROOM11B0 sub06 @0x01650)`
+  -> Aufstehen F501-F525 -> `F531` Cut 7 -> `F581 Wurf: Start (-6328,-16896,-17642)` -> `F617 Aufschlag` -> `F632 RUECKKEHR`
+  (Elza: John 0x49, dieselben Bilder, Wurf-Start (-6300,-16865,-17651)). Bildbögen `G_belege/nb1_m1_nachher_marvin_f437-530.png`
+  und `G_belege/nb1_m1_nachher_john_f437-530.png` (Cut 5, Ausschnitt 2x): 437 steht an der Reling, 446-464 kniet er sich hin
+  (der stehende Kanister wird über ihm sichtbar), 467 hält er ihn quer mit beiden Händen vor den Knien, 506-530 steht er mit dem
+  Kanister quer vor der Hüfte auf - kein Knieheben, kein Aufstieg, keine Hocke. Hinweis: im Griff-Bild 467 wechselt der Kanister
+  von stehend auf quer in einem Bild (wie schon im alten Stand beim Greifen); eine Kipp-Bewegung hätte als RE2-Form das Kippen
+  aus ROOM40A0 sub10 (`2f 0b fc ff` @0x066E, 23 Bilder @0x0676, `34 10 00 fc` @0x0682) - nicht gebaut (Frage 8.8).

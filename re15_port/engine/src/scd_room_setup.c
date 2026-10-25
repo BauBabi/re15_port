@@ -515,7 +515,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     re15_johnruf_r39_install((uint16_t)g_current_room_id);    /* Runde 39 Spur P: 1041 Johns Ruf + Satz + Karte, 1131 lauterer Ruf (re15_johnruf_r39.h) */
     re15_untersuchen_r40_install((uint16_t)g_current_room_id); /* Runde 40: ROOM1120/1121 Bild/Fenster/Akten -> Plaetze 5..7 (re15_untersuchen_r40.h) */
     re15_nahaufnahmen_r40_install((uint16_t)g_current_room_id); /* Runde 40: Text-Plaetze 11D0/1110/1100 -> Ereignis 31 (re15_nahaufnahmen_r40.h) */
-    { extern void re15_kanister2080_r41_install(uint16_t); re15_kanister2080_r41_install((uint16_t)g_current_room_id); }   /* Runde 41 Spur G: 2080 Zombies/Tuer-Ton/Kanister-Szene, 2090 Kanister im Becken (re15_kanister2080_r41.h) */
+    { extern void re15_kanister2080_r41_install(uint16_t); re15_kanister2080_r41_install((uint16_t)g_current_room_id); }   /* Runde 41 Spur G: 2080 Knall (Knall-Bank Satz 0) + Zombies / Kanister-Szene, 2090 Kanister im Becken (re15_kanister2080_r41.h) */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und

@@ -11,8 +11,12 @@
  *              (Plc_motion(2,6) + Sleep 110), je lebendem Zombie Plc_motion(2,7) + Signal + Sleep 30, Senken (2,6)+Plc_flg 0x80
  *              + Sleep 20, Schnitte 2 -> 5 -> 7 in dieser Reihenfolge, RE2-Wurf ROOM7020 sub12 (Cut 7, Plc_motion, Message_on
  *              42, Sleep 30, Plc_motion, Sleep 20, Signal WURF, Poll GELANDET, Sleep 15), Rueckkehr-Tuer Raum-Byte 0x09 + Aot_on.
- *              Mit 3 schon toten Zombies (Zone-7-Bits gesetzt) nur 5 Schuss-Bloecke.
- *   start      Programm 2 (Riegel + Tuer -> 0x08 Cut 2 Etage 5 Parkplatz) und 3 (RE2 sub18-Form: Plc_ret, Riegel los, Cut_auto).
+ *              Mit 3 schon toten Zombies (Zone-7-Bits gesetzt) nur 5 Schuss-Bloecke. Nachbesserung 1: zwischen zwei Zielen
+ *              Poll auf AUSGERICHTET (kein Sleep 10), kein Sleep nach dem Tuer-Ton; Aufnehmen = Marvins Hinknien/Aufstehen
+ *              ROOM11B0 sub06 @0x01650..0x01663 Byte fuer Byte (Plc_motion(1,11), Sleep 60 geteilt am Griff-Bild 24,
+ *              Plc_motion(1,11)+Plc_flg 0x80, Sleep 30); kein Loco c2 (PL00-Klettern) und kein Eigen c0 (RUN-Gait) im Programm.
+ *   start      Programm 2 (Riegel + Tuer -> 0x08 Cut 2 Etage 5 Parkplatz) und 3 (RE2 sub18-Form: Plc_ret, Riegel los, Cut_auto;
+ *              Nachbesserung 1 ohne Sleep 30 - RE2 Wsleeping @0x80053ac0 wartet dort nur auf Leons Zeile).
  *   bahn       RE2 sub13: unabhaengig nachgerechnete Bahn (Lage += v, v += a; Stop y >= Wasser - 800) == Modul; Landepunkt aus
  *              der Nennlage im 2090-Becken (Aussenwaende x[-8900..7200] z[-27000..-5400], ausserhalb Plattform-/Rampenblock).
  *   texte      2080/2081 Id 42 in der Form ROOM2000 msg 1 @0x1BFD / ROOM2001 msg 0 @0x1E0A (Kopf 04 00 05 07 + Sprecher +
@@ -199,6 +203,29 @@ static int szene_pruefen(int elza, int tote)
                              0x09, 0x0a, 20, 0x00, 0x22, 0x05, RE15_K2080_SIG_WURF, 0x01,
                              0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_K2080_SIG_GELANDET, 0x00,
                              0x09, 0x0a, 15, 0x00, 0x3b, RE15_K2080_TUER_SLOT };
+    /* Nachbesserung 1 (M1): Aufnehmen = ROOM11B0 sub06 @0x01650..0x01663 (Marvin kniet am Gully und steht auf) - dieselben
+     * Opcodes, das Sleep 60 @0x01654 am Griff-Bild 24 (letztes Bild von Loco c11, 25 Bilder) in 24 + Signal + 36 geteilt. */
+    {
+        long n11 = 0; uint8_t *r11b0 = slurp("STAGE1/ROOM11B0.RDT", &n11);
+        const uint8_t form[] = { 0x3f, 0x01, 0x0b, 0x00, 0x09, 0x0a, 0x3c, 0x00, 0x3f, 0x01, 0x0b, 0x00, 0x43, 0x00, 0x80, 0x00,
+                                 0x09, 0x0a, 0x1e, 0x00 };
+        PRUEFE(r11b0 && n11 > 0x01664 && !memcmp(r11b0 + 0x01650, form, sizeof form), "ROOM11B0 sub06 @0x01650..0x01663 != Vorbild");
+        free(r11b0);
+        const uint8_t knien[] = { 0x3f, 0x01, 0x0b, 0x00, 0x09, 0x0a, 24, 0x00, 0x22, 0x05, RE15_K2080_SIG_AUFHEBEN, 0x01,
+                                  0x09, 0x0a, 36, 0x00, 0x3f, 0x01, 0x0b, 0x00, 0x43, 0x00, 0x80, 0x00, 0x09, 0x0a, 0x1e, 0x00 };
+        const uint8_t *pk = suche(p, n, 0, knien, sizeof knien);
+        PRUEFE(pk != NULL, "Aufnehmen nicht in der Form ROOM11B0 sub06 (Hinknien, Griff Bild 24, Aufstehen rueckwaerts, Sleep 30)");
+        PRUEFE(pk && p5 && p7 && pk > p5 && pk < p7, "Aufnehmen nicht zwischen Lauf (Cut 5) und Wurf (Cut 7)");
+        const uint8_t klettern[] = { 0x3f, 0x01, 0x02, 0x00 }, laufgait[] = { 0x3f, 0x02, 0x00, 0x00 };
+        PRUEFE(zaehle(p, n, klettern, 4) == 0, "Plc_motion(1,2) = Loco c2 = PL00-Klettern (@0x80038134) im Programm");
+        PRUEFE(zaehle(p, n, laufgait, 4) == 0, "Plc_motion(2,0) = Eigen c0 = RUN-Gait (@0x8005157c) im Programm");
+        /* M5: zwischen zwei Zielen Poll auf AUSGERICHTET statt Sleep 10; kein Sleep direkt nach dem Tuer-Ton-Signal */
+        const uint8_t naechst[] = { 0x22, 0x05, RE15_K2080_SIG_AUSGERICHTET, 0x00, 0x22, 0x05, RE15_K2080_SIG_ZIEL, 0x01,
+                                    0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_K2080_SIG_AUSGERICHTET, 0x00 };
+        PRUEFE(zaehle(p, n, naechst, sizeof naechst) == (soll > 0 ? soll - 1 : 0), "%d Ausricht-Polls statt %d",
+               zaehle(p, n, naechst, sizeof naechst), soll > 0 ? soll - 1 : 0);
+        PRUEFE(p2 && p2[6] == 0x2e, "nach dem Tuer-Ton-Signal folgt nicht direkt Work_set (Anlegen ROOM1021 @0x020C2)");
+    }
     const uint8_t *pw = suche(p, n, 0, wurf, sizeof wurf);
     PRUEFE(pw != NULL, "RE2-Wurfform ROOM7020 sub12 (Cut 7, Plc_motion, Message_on 42, Sleep 30/20, Loslassen, Poll, Sleep 15, Tuer)");
     if (pw) {
@@ -230,7 +257,7 @@ static int teil_start(void)
         PRUEFE(p[40] == 0x47 && p[41] == RE15_K2080_TUER_SLOT, "Aot_on");
     }
     p = re15_k2080_programm(3, &n);
-    const uint8_t rueck[] = { 0x09, 0x0a, 0x01, 0x00, 0x22, 0x02, 0x07, 0x01, 0x22, 0x01, 0x1b, 0x01, 0x09, 0x0a, 30, 0x00,
+    const uint8_t rueck[] = { 0x09, 0x0a, 0x01, 0x00, 0x22, 0x02, 0x07, 0x01, 0x22, 0x01, 0x1b, 0x01,
                               0x2e, 0x01, 0x00, 0x00, 0x42, 0x00, 0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1b, 0x00, 0x3c, 0x01, 0x01, 0x00 };
     PRUEFE(p && n == (int)sizeof rueck && !memcmp(p, rueck, sizeof rueck), "Programm 3 = RE2 sub18-Form (@0x0A2C-0A38)");
     return fails != 0;

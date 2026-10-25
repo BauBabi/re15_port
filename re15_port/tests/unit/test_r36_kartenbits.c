@@ -522,7 +522,7 @@ static const port_bit_t k_port[] = {
     { RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE, "RE15_R39Q_BIT_MONTAGE", "Elza-Montage gelaufen (Kopien), elzazombies_r39.c umzug_vorbereiten (Runde 39 Q)" },
     { RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060, "RE15_R39Q_BIT_LEON_1060", "Leon: Umzug 10E0 -> 1060 gelaufen, elzazombies_r39.c re15_r39q_leon_umzug (Runde 39 Q, NB3)" },
     { RE15_R39P_BIT_BANK, RE15_R39P_BIT_PANIK, "RE15_R39P_BIT_PANIK", "Elzas Panikphase (1041-Ruf bis Johns Rettung), gen/johnruf_r39_programme.inc Set @+0048 (Runde 39 P)" },
-    { RE15_K2080_BANK, RE15_K2080_BIT_ANKUNFT, "RE15_K2080_BIT_ANKUNFT", "2080: Tuer-Ton beim ersten Betreten nach Bit 110, kanister2080_r41.c (Runde 41 G)" },
+    { RE15_K2080_BANK, RE15_K2080_BIT_ANKUNFT, "RE15_K2080_BIT_ANKUNFT", "2080: Knall (Knall-Bank Satz 0) beim ersten Betreten nach Bit 110, kanister2080_r41.c (Runde 41 G)" },
     { RE15_K2080_BANK, RE15_K2080_BIT_SZENE, "RE15_K2080_BIT_SZENE", "Marvin/John-Kanister-Szene gelaufen, kanister2080_r41.c (Runde 41 G)" },
     { RE15_K2080_BANK, RE15_K2080_BIT_KANISTER, "RE15_K2080_BIT_KANISTER", "Kanister liegt im 2090-Becken, kanister2080_r41.c (Runde 41 G)" },
 };
