@@ -1362,12 +1362,12 @@ Startlage nicht. Laufordner/Bilder: `<SP>/g4` (scratchpad, nicht im Baum); `<SP>
 gleicher Code-Stand); Bildbelege im Baum unter `G_belege/nb4_*`.
 
 ### 11.0 Plan / Stand
-- [ ] M2: Kern-Zeilen 485..498 nur fuer die Plaetze der R1-Folge (Messung vorher = Abnahme 3 Abschnitt 5, Beleg, Aenderung, nachher,
-      Riegel "anderer Raum mit/ohne 2090-Besuch gleich")
-- [ ] V1: render_pc.c unveraendert lassen (beide Texturen in Platz 54), Bildvergleich vorher/nachher
-- [ ] M3: Ursache "Kopf/Kanister in der Wand" belegen und beheben; Scherben mit dem Regions-Test @0x80036534; v1 Leon/Elza + west_leon
-- [ ] M1: R1-Kamerawahl so, dass der Todes-Clip im Bild bleibt; Plattform Leon/Elza + alle Pflicht-Verlaeufe; Riegel um Plattform-Lauf
-- [ ] Tests gezielt, OFFEN, Fuer den Nutzer
+- [x] M2: Kern-Zeilen 485..498 nur fuer die Plaetze der R1-Folge (11.1, Riegel integration_r41_kanister2080_raumfremd)
+- [x] V1: render_pc.c unveraendert (beide Texturen als Atlas in Platz 54), Bildvergleich vorher/nachher 31/31 pixelgleich (11.2)
+- [x] M3: Ursache belegt (Kopf/Kanister durch die Aussenwand), Kopf-Klemme + Regions-Test des Kanister-Zeichners (11.3, Riegel
+      unit_r41_kanister2080_kopfklemme, kampf); Nachtrag waehrend der Messung: auch das andere Kanister-Ende (9009a99a), Endmessung 11.5
+- [x] M1: Rangfolge voller Todes-Clip zuerst (11.4, Riegel unit_r41_kanister2080_r1wahl, kampf + Plattform-Lauf)
+- [ ] Endmessung aller zehn Verlaeufe mit dem Endstand, Bildboegen, Tests gezielt, OFFEN, Fuer den Nutzer (11.5-11.8)
 
 ### 11.1 M2 - Kern-Zeilen 485..498 nach dem ersten 2090-Besuch in jedem Raum
 **Ursache (Code):** `re15_pc_gator_fx_draw` (gator_fx_r41_pc.c) lief in jedem Raum; der Zweig "kern485" pruefte weder Raum noch Herkunft,
