@@ -165,12 +165,18 @@ typedef struct { const char *stage; unsigned rid; int obj_id; flag_t fl[2]; } cu
  * Spielflags: Cursor, die sub00 nur im Else-Zweig installiert — ROOM1100 sub00 @0x00AC8 Ck(3,103)==0 -> Else
  * @0x00AFE; ROOM11E0 sub00 @0x01798 Ck(3,127)==0 -> Else @0x017C4; ROOM2040 sub00 @0x0141A Ck(3,146)==0 -> Else
  * @0x0144A; ROOM3050 main00 @0x01F90 Ck(3,178)==0 -> Else @0x01FA8. ROOM2050 obj 8 haengt an Ck(5,7)==1
- * @0x01D34 (Bank 5 = raumlokal, FUN_8003ecec `sw zero,0x800b1028` @0x8003ed74) -> beim Raumaufbau nie da. */
+ * @0x01D34 (Bank 5 = raumlokal, FUN_8003ecec `sw zero,0x800b1028` @0x8003ed74) -> beim Raumaufbau nie da.
+ * Runde 41 Integration (Spur C, Nutzer-Punkt 5, AUFTRAG.md 2026-10-23 16:3x: "2050: Wasserlevel (Hebel) erst nach
+ * dem Pult-Raetsel (80 V wie 11F0)"): ventilkette_r41.c install_2050 legt Slot 8 (@0x01D38 `2c 08 03 31`) und
+ * Cursor obj 8 (@0x01D4C `2d 08 04 00`) aus diesem If-Block (@0x01D30 `06 00 3c 00`, @0x01D34 `21 05 07 01`) als
+ * PORT-ZUSATZ an, solange Bank 9 Bit 106 (Pult 2050 geloest, VERTRAG 1.1) = 0; gepinnt in unit_r41_ventilkette
+ * Fall F. Mit Bit 106 = 1 legt der Port keinen Cursor an (nur Slot 8 als Port-Text) = Cursor-Lage des Originals
+ * -> diesen Zustand prueft die Zeile ROOM2050 {9, 106, 1}. */
 static const cursor_t CURSOR[] = {
     { "STAGE1", 0x1080, 0, {{0}} }, { "STAGE1", 0x10D0, 1, {{0}} }, { "STAGE1", 0x10D1, 1, {{0}} },
     { "STAGE1", 0x1100, 0, {{3, 103, 1}} }, { "STAGE1", 0x11E0, 1, {{3, 127, 1}} }, { "STAGE1", 0x11E0, 2, {{0}} },
     { "STAGE1", 0x11F0, 0, {{0}} }, { "STAGE1", 0x1230, 0, {{0}} }, { "STAGE2", 0x2040, 0, {{3, 146, 1}} },
-    { "STAGE2", 0x2050, 8, {{0}} }, { "STAGE2", 0x2060, 3, {{0}} }, { "STAGE2", 0x2060, 4, {{0}} },
+    { "STAGE2", 0x2050, 8, {{9, 106, 1}} }, { "STAGE2", 0x2060, 3, {{0}} }, { "STAGE2", 0x2060, 4, {{0}} },
     { "STAGE3", 0x3050, 3, {{3, 178, 1}} }, { "STAGE3", 0x30E0, 0, {{0}} }, { "STAGE4", 0x4020, 0, {{0}} },
     { "STAGE5", 0x5050, 0, {{0}} },
 };
@@ -196,7 +202,7 @@ static const int32_t RDZ[4] = { 200, -200, 0, 0 };
  *   D  ROOM2060 obj 4, Rahmen x 7500..31450 z -31050..-14050, Start (19571,-22542) (Z.48)
  * ROOM2050 obj 8 fehlt: main00 @0x01D30-34 installiert ihn nur bei Ck(5,7)==1, Bank 5 ist beim Raumaufbau leer
  * (FUN_8003ecec `sw zero,0x800b1028` @0x8003ed74) — im Original nach dem JUMP gemessen leer (log Z.178: Pool 8
- * `+0=0000`), im Port ebenso. */
+ * `+0=0000`), im Port ebenso, sobald Bank 9 Bit 106 gesetzt ist (Runde 41 Spur C, siehe CURSOR[]). */
 typedef struct { int bewegt; int32_t ex, ez, vx, vz, nx, nz; } soll_t;
 static const soll_t SOLL_A[4] = {
     {  33, -19554,  29232, -19554,  29284, -19554,  29232 },
