@@ -599,3 +599,16 @@ Gezielt (keine volle Suite):
   Ring mit Bart, danach geht die Kamera zurueck. Aufheben an der gezeigten Stelle (Aktionstaste).
 - Am Tor bleibt alles wie in Nachbesserung 1.
 - Frage (Beobachtung): Ist der Water Key in dieser Einstellung nach dem Tod fuer dich gut zu erkennen?
+
+## Nachbesserung 3 (nach Abnahme 2, F_abnahme_2.md: M1)
+
+Start 2026-10-25, HEAD d5321663, Baum sauber. Messordner (scratchpad, nicht im Repo): `F41n3/` (`runs/<lauf>/...`, eigene
+exe-Kopie je Lauf `re15_pc_f41n3_<lauf>.exe`, timeout, danach geloescht). Alle Laeufe RE15_WINDOW_SCALE=1, Bilder nur per
+RE15_FRAMEDUMP.
+
+Plan:
+- N3.M1 Zwischenbild der Zonenkamera zwischen Explosionsschnitt (Spur B, R1 P0) und Schluessel-Einstellung: Messung vorher
+  (Rezept KW/KWE der Abnahme: Leiter-Spawn, natuerliche Cut 0, RE15_GB_TEST=5, Kanister (4430,-26160), Schuesse ab F151),
+  RE2-R1 P1-Ende/P2/P3 selbst disassemblieren (EM23_OVL_0000.BIN @0x80102488-0x801026a0), Schnitt auf den Schluessel dort,
+  wo B auf die Zonenkamera zurueckschneiden wuerde, Messung nachher Bild fuer Bild (Leon + Elza), Riegel fuer den Fall mit
+  Explosionsschnitt (state.log + Bildklassen je Bild).
