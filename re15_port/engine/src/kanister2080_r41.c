@@ -744,10 +744,13 @@ void re15_kanister2080_r41_tick(void)
             K_LOG("Zeile 42 stand F%d..F%d (%d Bilder), Stimme %s", s_z42_an, s_z42_aus - 1, s_z42_aus - s_z42_an,
                   stimme ? "laeuft noch" : "aus");
         }
-        if (!zeile && !stimme && !sig(RE15_K2080_SIG_WSLEEP)) {
+        /* Notbremse fuer einen haengenden Sprachkanal wie die Port-Stimmenschranke (scd_vm.c RE15_VOICE_NOTBREMSE = 300 Bilder,
+         * msg_common.c RE15_UNTERTITEL_NACHHALL_DECKEL = 300 > laengste Aufnahme 242,5 Bilder); RE2 kennt keinen Deckel. */
+        const int notbremse = stimme && s_z42_aus >= 0 && (int)g_engine.frame_count - s_z42_aus >= 300;
+        if (!zeile && (!stimme || notbremse) && !sig(RE15_K2080_SIG_WSLEEP)) {
             sig_setzen(RE15_K2080_SIG_WSLEEP, 1);
             if (s_z42_aus >= 0)
-                K_LOG("Wsleeping frei (RE2 @0x079B: Zeile 42 und Stimme zu Ende) - Loslassen folgt");
+                K_LOG("Wsleeping frei (RE2 @0x079B: Zeile 42 und Stimme zu Ende%s) - Loslassen folgt", notbremse ? ", NOTBREMSE" : "");
         }
     }
     /* KEIN Halt der Zombies (entity+0x9 |= 0x20): gemessen (Lauf p3f) spielte der angehaltene RE2-Steher seinen Clip 1 bis zum
@@ -852,9 +855,13 @@ int re15_k2080_r41_anschwimmen(int slot, re15_actor_t *e, int32_t dist)
     const int an = lage && d2 >= ab2;
     if (an != s_anschw) {
         s_anschw = an;
-        K_LOG("ANSCHWIMMEN %s: Gator Slot %d (%d,%d) Gier %d, Kanister (%d,%d) Abstand %d, Grenze %d (RE2-Zielmodus 8880 @0x80100a88-8c)",
-              an ? "an" : "aus", slot, (int)e->x, (int)e->z, (int)e->rot_y & 0xfff, (int)c[0], (int)c[1], (int)isqrt64(d2),
-              (int)isqrt64(ab2));
+        if (lage)
+            K_LOG("ANSCHWIMMEN %s: Gator Slot %d (%d,%d) Gier %d, Kanister (%d,%d) Abstand %d, Grenze %d (RE2-Zielmodus 8880 @0x80100a88-8c)",
+                  an ? "an" : "aus", slot, (int)e->x, (int)e->z, (int)e->rot_y & 0xfff, (int)c[0], (int)c[1], (int)isqrt64(d2),
+                  (int)isqrt64(ab2));
+        else
+            K_LOG("ANSCHWIMMEN aus: Gator Slot %d (%d,%d) Gier %d, Kanister nicht mehr frei (Spur-B-Stufe %d)", slot, (int)e->x,
+                  (int)e->z, (int)e->rot_y & 0xfff, re15_gr2_kanister_stufe());
     }
     if (!an) return 0;
     int32_t tx = c[0], tz = c[1];

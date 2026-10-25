@@ -825,6 +825,12 @@ keine Nachricht mehr steht (`g_scd.message_active` = 0, entspricht 0x800e873c & 
 laengeren Sprachaufnahme ein) und keine Sprachaufnahme mehr laeuft (`g_re15_voice_laeuft`/`g_re15_voice_restbilder`,
 entspricht 0x800cfbd8 & 0x20); das Programm pollt es (Do/Evt_next/Edwhile wie @0x079C-07A4, mindestens ein Bild wie Wsleeping,
 das immer mit 2 zurueckkehrt).
+**Aenderung:** kanister2080_r41.c `baue_szene`: nach `09 0a 14 00` (Sleep 20 @0x0786) `22 05 1f 00` (Signal WSLEEP loeschen) und
+`11 00 08 00 02 00 12 04 21 05 1f 00` (Do/Evt_next/Edwhile Ck(5,0x1F)), dann erst `22 05 1b 01` (WURF = Super_reset @0x078E). Takt
+(Raum 2080/2081, Szene laeuft): Bit 0x1F = 1, sobald `g_scd.message_active` = 0 und keine Sprachaufnahme laeuft; Messzeilen
+"Zeile 42 stand Fa..Fb (n Bilder)" und "Wsleeping frei (RE2 @0x079B ...)". Notbremse fuer einen haengenden Sprachkanal 300 Bilder
+nach dem Zeilenende = derselbe Deckel wie die Port-Stimmenschranke (scd_vm.c RE15_VOICE_NOTBREMSE, msg_common.c
+RE15_UNTERTITEL_NACHHALL_DECKEL; RE2 hat keinen). Header RE15_K2080_SIG_WSLEEP.
 
 ### 9.2 N2 - Gier-Sprung um 98 Grad im Griffbild
 **Messung vorher** (Abnahme 1 §3.1, Laeufe s_leon / s_elza, Bau ebe8445f): Slot 9 F464 `mo=11 af=24 r=93`, F465 `r=3072`, mitten
@@ -835,9 +841,10 @@ in Cut 5 (Bild `<SP>/g1/n2_griffbild_gier_sprung_x3.png`). Ursache: `re15_kanist
 RE1.5-Dir_set (Tafel @0x800744a8[0x33] = 0x80041080): `lw a1,340(a0)` (Arbeitsobjekt) @0x80041084, `lhu v0,2(v1)` / `sh v0,104(a1)`,
 `lhu v0,4(v1)` / `sh v0,106(a1)`, `lhu v0,6(v1)` / `sh v0,108(a1)` @0x80041088-a8, pc + 8 @0x800410a4/b4 (Port scd_vm.c op_dir_set:
 rot_x/rot_y/rot_z des Work_set-Aktors).
-**Aenderung (geplant):** das Programm schreibt nach `29 07` (Cut_chg 7) ein Dir_set `33 00 00 00 <Wurf-Gier> 00 00` auf den
-Werfer (Work_set(2, NPC) steht seit dem Anlegen); der Takt dreht ihn nicht mehr. Bis zum Schnitt behaelt er die Gier des Laufs
-(Hinknien/Aufstehen mit Blick auf den Kanister).
+**Aenderung:** das Programm schreibt nach `29 07` (Cut_chg 7) `33 00 00 00 <Wurf-Gier LE16> 00 00` (Dir_set auf den Werfer; Work_set(2,
+NPC) = Aktor 9 steht seit dem Anlegen, scd_vm.c scd_work_bind kind 2 -> idx + 1); der Takt (`re15_kanister2080_r41_tick`) setzt
+die Gier nicht mehr, er haengt nur noch den Kanister an die Haende. Bis zum Schnitt behaelt der Werfer die Gier des Laufs
+(Hinknien/Aufstehen mit Blick auf den Kanister), die Wurfbahn rechnet beim Loslassen mit der Gier aus dem Dir_set.
 
 ### 9.3 N3 - Aufnahme im weiteren Kampf (Frage 8.8.1)
 **Messung vorher** (Abnahme 1 §3.4, Laeufe `<SP>/g1/runs/*`, eigene Auswertung mit `gator_bahn.py` ueber state.log, Kanister
