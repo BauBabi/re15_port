@@ -806,4 +806,38 @@ Plan:
   (GSZ_LEICHE_*, Fassung 1 von leiche_lage.py: Anlauf fest Gier 1024 aus dem Norden durch den Westkanal, Wert nur Bildgroesse^2 x
   Licht des Schluessels in Cut 1 - der Abstand zur Leiter war kein Kriterium). Der einzige freie Weg von der Leiter ist Osten, also
   am Maul vorbei.
+- **RE2-Sollwert (selbst gelesen und gerechnet).** Probe `re15_port/tools/r41_gatorszene/probe_re2_intro_ende.c` (gegen
+  libre15_engine.a, RE2-EM23-Bank aus shared_assets/RE2/CDEMD0.EMS, Massstab 1 wie RE2), Ausgabe `F41n4/probe_re2_intro_ende.txt`.
+  Belege (SCD-Walker `tools/r41_re2gator/re2_scd_walk.py` auf info/re2leon/PL0/RDT/ROOM40A0.RDT, `re2_disasm.py --bin
+  EM23_OVL_0000.BIN` bzw. info/re2leon/PSX.EXE):
+  - Ausloeser sub02 (Durchbruch-Szene) `Evt_exec 04 ff 18 0b` @SCD-main 0x00EE startet sub11; sub11 `Member_set2 35 17 10` @0x0730
+    (+0x1D4 -> Intro P1), `Evt_next` @0x0734, `Pos_set 32 00 cd 11 f8 f8 c3 b8` @0x0736 = Gator (4557,-1800,-18237), Gier 0x400 aus
+    Sce_em_set `44 00 00 23 ...` @RDT 0x25A0 (SCD-init sub00 @0x00A0).
+  - Intro Sub 0 (EM23 @0x80100804): P0 `lh v0,468(s0)` / `beq` @0x80100854-5c; P1 `ori v0,v0,0x110` @0x8010087c, Clip 6
+    `addiu a1,zero,6` / `jal 0x8001a330` @0x801008ac-b4, Ende -> Cut 1 `jal 0x8002c7ac` / `addiu a0,zero,1` @0x801008c4-c8, z = -21212
+    `addiu v1,zero,-21212` / `sw v1,64(s0)` @0x801008d0-d4; P2 Clip 3 `addiu a1,zero,3` / `jal 0x8001a330` @0x801008e4-ec, Ende:
+    0x800cfbd8 &= ~0x10 & ~0x100 @0x801008f8-918, `addiu v0,zero,110` / `sb v0,568(s0)` @0x8010091c-20 (+0x238 = 110),
+    `addiu v1,zero,257` / `sw v1,4(s0)` @0x80100928-2c (Sub 1), `addiu v0,v0,1024` / `sh v0,118(s0)` @0x80100940-48 (Gier += 1024).
+  - Wurzelschritt FUN_8001a330 (RE2 PSX.EXE): Clip-Wechsel setzt Bild 0 (`sb zero,333(s0)` @0x8001a360), Geschwindigkeit
+    `jal 0x80015e7c` @0x8001a374 (RE2_Quellcode_V2/FUN_80015e7c.c: bei Bild 0 Vorgaenger-Versatz +0x20C/+0x210 = 0 -> erster Schritt
+    = off[0]), Bildschritt `jal 0x8002959c` @0x8001a3a8, am Clip-Ende kein Schritt (`bne v0,zero,0x8001a3cc` @0x8001a3b0), sonst
+    `jal 0x800152c8` @0x8001a3c0 (FUN_800152c8: RotMatrix Y = Gier, x += c*vx + s*vz, z += -s*vx + c*vz). Versaetze = EMR-
+    Keyframe-Bytes 6..11 (Clip 6 off -7040 -> 2458, Clip 3 (0,0,3) -> (2884,0,-4042), Clip 0 106 .. 6096 mit Rueckgleiten in den
+    Bildern 6..22 und 82..99, Clip 1 311 -> 6109 in 26 Bildern).
+  - Nach dem Intro: Sub 1 Main `FUN_8001a330(em,0,32,0)` @0x80100c34-40; Sub 1 -> Sub 2 nur bei +0x238 == 0 (`lbu v0,568(s0)` /
+    `bne` @0x80100b5c-64) und +0x1F0 >= 0x65 (`sltiu v0,v0,0x65` @0x80100b88/@0x80100ba4; +0x1F0 = SquareRoot0(dx*dx + dz*dz)
+    `jal 0x8008d2f4` / `sw v0,496(s0)` @0x800265a4-e0, Welteinheiten); +0x238 zaehlt am Ende des Root-Takts ab (`lbu v0,568(s0)` /
+    `addiu v0,v0,-1` / `sb v0,568(s0)` @0x801004a8-b8); Sub 2 = Clip 1 (@0x80100cf8-d04). Der Koerper wird nie gelenkt (Root nur
+    Hals FUN_80017d98 @0x8010036c-74) -> geradeaus mit Gier 2048 (Westen).
+  - Leon: sub03 `Pos_set 32 00 80 da f8 f8 38 9b` @0x0250 = (-9600,-1800,-25800), Warten auf Cut 1 `While ... Cmp 23 00 1a 05 01 00`
+    @0x025E-6A, `Sleep 0x3c` @0x0276, `Sleep 0x32` @0x027E, `Plc_dest 40 00 08 0a d0 d5 38 9b` @0x0286 -> (-10800,-25800),
+    `Plc_dest 40 00 15 0a 00 08 80 00` @0x029E (Drehung), `Plc_ret` @0x02B6, `Set 22 02 07 00` @0x02B7 (Riegel auf). Leon bekommt
+    die Steuerung also >= 110 Bilder + Gehweg nach Cut 1, der Gator braucht nach Cut 1 noch Clip 3 = 150 Bilder: beide Enden
+    liegen im selben Fenster (Leons Gehzeit fuer 1200 Einheiten ist hier nicht gemessen - Bezug ist das Intro-Ende des Gators).
+  - **Ergebnis RE2:** Intro-Ende Wurzel (503,-24100) Gier 2048; Leon (-10800,-25800): **Abstand Wurzel <-> Leon 11430** (laengs
+    11303, quer 1700), Kopf (Bone 6) <-> Leon im ersten Bild danach 6871. Leon steht: 110 Bilder Schwimmen (Clip 0, Wurzel 503 ->
+    -2557), dann Paddeln (Clip 1); der vorderste Knochen erreicht Leons x **nach 121 Bildern** (Kopf dabei 1647 seitlich), die
+    Wurzel nach 143. Sollwerte fuer den Port: Abstand Wurzel <-> Spielfigur am Kampfbeginn >= 11430, erster Angriff (Leon steht)
+    >= 121 Bilder nach dem Kampfbeginn. Gleiche Einheiten (Leon ist in beiden Spielen gleich gross); der Port-Gator ist 2/3 so gross
+    (GB_SCALE_Q12 2731) und entsprechend langsamer - ein gleicher Wurzelabstand ist im Port also eher grosszuegiger.
 
