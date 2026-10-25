@@ -1015,3 +1015,19 @@ Leiter runter kommen und über den Weg bis zum Wasser Pool in der Mitte laufen."
 2030 (Empfohlen)"** = wie der Wasserstrom an der Leiter in 2000: er endet, sobald das Ventilraetsel geloest und 2030 geflutet
 ist (dieselbe Bedingung wie dort; im Dossier mit Bit/Flag belegen). Effekt-Form wie der 2000-Leiterstrom bzw. Spur A (Wasser
 EM024 / Spritzer), Weg von der Leiter ueber den Gang bis zum Becken in der Mitte von ROOM2010/2011 aus Kollision/Kameras belegen.
+
+## 2026-10-25 17:24 — Orchestrator-Entscheide G-E3..G-E6 (Abnahme G 3, Maengel M1-M3 + V1; der Nutzer kann widersprechen)
+
+**G-E3 (M1, Tod hinter dem Maschinenblock in der Plattform-Lage):** Fuer die R1-Todeskamera geht G-E1 (Kopf, Kiefer und
+Todes-Clip ueber ALLE Proben im Bild, keine Maske davor) VOR Spur B's Massstabsgrenze (B8). Rangfolge der Wahl: 1. Todes-Clip
+in allen Proben sichtbar, 2. Massstabsgrenze, 3. Naehe zur RE2-Lage (170,111). Pflicht-Verlaeufe inkl. Plattform (Leon + Elza),
+Riegel um einen Plattform-Lauf ergaenzen.
+**G-E4 (M2, Kern-CLUT-Zeilen 485..498 erst nach dem 2090-Besuch):** RE2 haelt den Kern (CORE00.ESP + Kern-Textur) ab dem Start
+resident - belegen (Ladeweg FUN_8001bd38 / Boot) und die Zeilen spielweit beim Start laden, nicht erst in 2090. Dann sehen die
+RE2-Effekte in allen Raeumen gleich aus, mit und ohne 2090-Besuch; die Runde-35-Werfer-Effekte (Muendungsblitz 0x01002000,
+Granatkoerner 0x020c0a00) gegen RE2 messen. Riegel "anderer Raum mit/ohne 2090-Besuch gleich".
+**G-E5 (M3, Kopf in der Suedwand -> Spritzring ausserhalb des Regions-Vierecks):** Spur G behebt die Ursache (markierter Haken in
+B's Modul, FG-E3/FG-E5): waehrend R1 bleibt der Kopf (Part 6/7 + Kanister) innerhalb der Wand - Wandklemme nicht nur fuer die
+Wurzel (Port-Wahl, Form im Dossier belegen); der Original-Regionstest @0x80077a30 bleibt. Zusaetzlich den vorgeschalteten
+Regionstest der Scherben (FUN_800363f0 @0x80036534) nachziehen. Natuerlicher Verlauf v1/west/k/plat (Leon + Elza) messen.
+**G-E6 (V1, render_pc.c RE15_TIM_SLOT_MAX 56 -> 57):** angenommen (eine markierte Zeile, Spur D ist integriert; wie B5/J-E1).
