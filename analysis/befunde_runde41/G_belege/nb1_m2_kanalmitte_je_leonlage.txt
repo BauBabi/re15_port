@@ -1,0 +1,51 @@
+Leon ( -8300,-18000): Auftauchen F0, keine Aufnahme
+Leon ( -6800,-18000): Auftauchen F0, Aufnahme F831 (831 Bilder nach dem Auftauchen)
+Leon ( -8300,-16500): Auftauchen F0, keine Aufnahme
+Leon ( -6800,-16500): Auftauchen F0, Aufnahme F334 (334 Bilder nach dem Auftauchen)
+Leon ( -5300,-16500): Auftauchen F0, Aufnahme F277 (277 Bilder nach dem Auftauchen)
+Leon ( -3800,-16500): Auftauchen F0, Aufnahme F278 (278 Bilder nach dem Auftauchen)
+Leon ( -2300,-16500): Auftauchen F0, keine Aufnahme
+Leon ( -8300,-15000): Auftauchen F0, Aufnahme F334 (334 Bilder nach dem Auftauchen)
+Leon ( -6800,-15000): Auftauchen F0, Aufnahme F276 (276 Bilder nach dem Auftauchen)
+Leon ( -5300,-15000): Auftauchen F0, keine Aufnahme
+Leon ( -3800,-15000): Auftauchen F0, keine Aufnahme
+Leon ( -2300,-15000): Auftauchen F0, Aufnahme F489 (489 Bilder nach dem Auftauchen)
+Leon ( -8300,-13500): Auftauchen F0, keine Aufnahme
+Leon ( -6800,-13500): Auftauchen F0, keine Aufnahme
+Leon ( -5300,-13500): Auftauchen F0, Aufnahme F934 (934 Bilder nach dem Auftauchen)
+Leon ( -3800,-13500): Auftauchen F0, keine Aufnahme
+Leon ( -2300,-13500): Auftauchen F0, keine Aufnahme
+Leon ( -8300,-12000): Auftauchen F0, Aufnahme F1147 (1147 Bilder nach dem Auftauchen)
+Leon ( -6800,-12000): Auftauchen F0, Aufnahme F952 (952 Bilder nach dem Auftauchen)
+Leon ( -5300,-12000): Auftauchen F0, keine Aufnahme
+Leon ( -3800,-12000): Auftauchen F0, keine Aufnahme
+Leon ( -2300,-12000): Auftauchen F0, Aufnahme F703 (703 Bilder nach dem Auftauchen)
+Leon ( -8300,-10500): Auftauchen F0, Aufnahme F626 (626 Bilder nach dem Auftauchen)
+Leon ( -6800,-10500): Auftauchen F0, Aufnahme F892 (892 Bilder nach dem Auftauchen)
+Leon ( -5300,-10500): Auftauchen F0, Aufnahme F828 (828 Bilder nach dem Auftauchen)
+Leon ( -3800,-10500): Auftauchen F0, Aufnahme F804 (804 Bilder nach dem Auftauchen)
+Leon ( -2300,-10500): Auftauchen F0, keine Aufnahme
+Leon (  -800,-10500): Auftauchen F0, keine Aufnahme
+Leon (   700,-10500): Auftauchen F0, keine Aufnahme
+Leon ( -8300, -9000): Auftauchen F0, keine Aufnahme
+Leon ( -6800, -9000): Auftauchen F0, keine Aufnahme
+Leon ( -5300, -9000): Auftauchen F0, keine Aufnahme
+Leon ( -3800, -9000): Auftauchen F0, keine Aufnahme
+Leon ( -2300, -9000): Auftauchen F0, keine Aufnahme
+Leon (  -800, -9000): Auftauchen F0, keine Aufnahme
+Leon (   700, -9000): Auftauchen F0, keine Aufnahme
+Leon ( -8300, -7500): Auftauchen F0, keine Aufnahme
+Leon ( -6800, -7500): Auftauchen F0, keine Aufnahme
+Leon ( -5300, -7500): Auftauchen F0, keine Aufnahme
+Leon ( -3800, -7500): Auftauchen F0, keine Aufnahme
+Leon ( -2300, -7500): Auftauchen F0, keine Aufnahme
+Leon (  -800, -7500): Auftauchen F0, keine Aufnahme
+Leon (   700, -7500): Auftauchen F0, keine Aufnahme
+Leon ( -8300, -6000): Auftauchen F0, keine Aufnahme
+Leon ( -6800, -6000): Auftauchen F0, keine Aufnahme
+Leon ( -5300, -6000): Auftauchen F0, keine Aufnahme
+Leon ( -3800, -6000): Auftauchen F0, keine Aufnahme
+Leon ( -2300, -6000): Auftauchen F0, keine Aufnahme
+Leon (  -800, -6000): Auftauchen F0, keine Aufnahme
+Leon (   700, -6000): Auftauchen F0, keine Aufnahme
+Stelle (-5300,-16300): 15 von 50 Leon-Lagen mit Aufnahme in 1500 Bildern

@@ -222,7 +222,9 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
 
 /* TIM slot pool — allows multiple characters/props to have their own
  * textures. Slot 0 = player default (Leon); other slots for NPCs/props. */
-#define RE15_TIM_SLOT_MAX 56   /* 50/51 = Runde 34 C2: die zwei GLOBAL-Effektseiten aus DATA/TEX.TIM
+#define RE15_TIM_SLOT_MAX 57   /* 56 = Runde 41 Spur G (Nachtrag 28, Orchestrator-Entscheid G-E6): RE2 TEX.TIM mit den Kern-
+                                *      CLUT-Zeilen 485..498 (gator_fx_r41_pc.c; 54 = Raum-ESP ROOM40A0 ebenda)
+                                * 50/51 = Runde 34 C2: die zwei GLOBAL-Effektseiten aus DATA/TEX.TIM
                                 *      (tpage 0x1e / 0x1f, je 16 Paletten 480..495 -> 256x4096;
                                 *      main.c RE15_TIM_SLOT_FX_SEITE_1E/_1F)
                                 * 52 = RE2-FX-Seiten 0x1E/0x1F aus RE2 TEX.TIM (Runde 34 Spur D,

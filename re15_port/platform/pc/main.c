@@ -4043,6 +4043,7 @@ re_title:;
     { extern void re15_pc_toene_r39_init(void); re15_pc_toene_r39_init(); }   /* Runde 39 Spur B: TOENE39.VBS-Haken (Schublade 11F0, Gitter/Schrank 1190) */
     { extern void re15_pc_gator_re2_init(void); re15_pc_gator_re2_init(); }   /* Runde 41 Spur B: GATOR40A0.VBS-Haken + Kanister-Modell */
     { extern void re15_pc_gatorszene_r41_init(void); re15_pc_gatorszene_r41_init(); }   /* Runde 41 Spur F: Gator-SE + Metalltuer der 2090-Ankunftsszene (gatorszene_r41_pc.c) */
+    { extern void re15_pc_kanister2080_init(void); re15_pc_kanister2080_init(); }   /* Runde 41 Spur G: Knall (gen/knall_bank.inc Satz 0), Tuer-Ton DOOR06, Aufschlag, NPC-Schuss */
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -11168,6 +11169,7 @@ re_title:;
             }
 
             re15_gr2_pc_zeichnen(&cam_view, cx, cy);   /* Runde 41 Spur B: Kanister-Prop (ROOM40A0 Modell 1) */
+            { extern void re15_k2080_pc_zeichnen(const void *, int, int); re15_k2080_pc_zeichnen(&cam_view, cx, cy); }   /* Runde 41 Spur G: Kanister in 2080 */
 
             /* Cut/player HUD + projection marker silenced. */
             (void)active_cut_count;
@@ -11195,6 +11197,8 @@ re_title:;
             re2fx_pc_draw();
             re15_pc_glas1120_draw(&cam_view, cx, cy, pc_fx_camf(),           /* Runde 35 Spur M */
                                   cam_has_region, cam_region_xs, cam_region_zs);
+            { extern void re15_pc_gator_fx_draw(const re15_camera_view_t *, int, int, int, int, const int16_t *, const int16_t *);
+              re15_pc_gator_fx_draw(&cam_view, cx, cy, pc_fx_camf(), cam_has_region, cam_region_xs, cam_region_zs); }   /* Runde 41 Spur G (Nachtrag 28): Raum-ESP ROOM40A0 + Kern-Zeilen 485..498 */
             re2fx_pc_set_ansicht(NULL, 0, 0, 0, 0, NULL, NULL);
             /* Runde 34 Nacht B: der Hebetisch-Cursor ueber dem Cut-4-Bild (eigene Abbildung ueber
              * Cut 10 von ROOM11F0, platform/pc/src/hebetisch_cursor_pc.c). */
