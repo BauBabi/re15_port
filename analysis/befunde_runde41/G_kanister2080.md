@@ -27,6 +27,8 @@ Punkte (Wortlaut AUFTRAG.md):
   Messung 9.4, Tests 9.5, OFFEN 9.6, Nutzer 9.7). Massgeblich fuer den Stand ist Abschnitt 9, dann 8.
 - 2026-10-25 (ab 12:3x): Nachbesserung 3 (Abnahme 2 `G_abnahme_2.md`, Maengel M1-M3; Orchestrator-Entscheide G-E1/G-E2,
   Nachtrag 28) - Abschnitt 10. Massgeblich fuer den Stand ist Abschnitt 10, dann 9, dann 8.
+- 2026-10-25 (ab 17:3x): Nachbesserung 4 (Abnahme 3 `G_abnahme_3.md`, Maengel M1-M3 + V1) - Abschnitt 11. Massgeblich fuer
+  den Stand ist Abschnitt 11, dann 10, 9, 8.
 
 ## 1. RE-Belege (selbst gelesen)
 
@@ -1348,3 +1350,22 @@ Was sich im Spiel aendert:
 - Marvin/John stehen beim Wurf mit dem Gesicht zur Kamera (wie Ada in RE2); der Kanister landet dadurch etwas anders (Suedbecken
   (-6096,-21600) statt (-6821,-22914), Nordbecken (-6856,-12670)).
 Entscheidungsfragen: keine.
+
+## 11. Nachbesserung 4 (Abnahme 3 `G_abnahme_3.md`, 2026-10-25)
+Baum wie oben, Start auf cc089cde (Code-Stand = 8d7e738a/4c622ad4, exe 15:38 = Stand der Abnahme 3). Maengel der Abnahme 3:
+M1 (G-E1 Plattform-Verlauf: Todes-Clip 6/19), M2 (Kern-Zeilen 485..498 nach dem ersten 2090-Besuch in jedem Raum), M3 (natuerlicher
+Leon-Verlauf: Kanister/Kopf ausserhalb des Raums -> Spritzring-Wolke verworfen; Scherben ohne den Regions-Test @0x80036534),
+V1 (render_pc.c RE15_TIM_SLOT_MAX 56 -> 57 ohne Freigabe). Die erfuellten Punkte (P1, P2, Ausloeser, Szene, Kopfschuesse, Griff,
+Zeile 42, Wurf/Blick G-E2, Fall, Aufnahme, R1) bleiben, ihre Riegel bleiben gruen. Nachtrag 29 (Leiche/Kette weiter weg von der
+Leiter = Startlage des Kampfes) ist Spur F; der Nutzer-Wortlaut, der diesen Lauf ausgeloest hat, ist Nachtrag 29 - G aendert die
+Startlage nicht. Laufordner/Bilder: `<SP>/g4` (scratchpad, nicht im Baum); `<SP>/g3abn/runs` = Laeufe der Abnahme 3 (Messung vorher,
+gleicher Code-Stand); Bildbelege im Baum unter `G_belege/nb4_*`.
+
+### 11.0 Plan / Stand
+- [ ] M2: Kern-Zeilen 485..498 nur fuer die Plaetze der R1-Folge (Messung vorher = Abnahme 3 Abschnitt 5, Beleg, Aenderung, nachher,
+      Riegel "anderer Raum mit/ohne 2090-Besuch gleich")
+- [ ] V1: render_pc.c unveraendert lassen (beide Texturen in Platz 54), Bildvergleich vorher/nachher
+- [ ] M3: Ursache "Kopf/Kanister in der Wand" belegen und beheben; Scherben mit dem Regions-Test @0x80036534; v1 Leon/Elza + west_leon
+- [ ] M1: R1-Kamerawahl so, dass der Todes-Clip im Bild bleibt; Plattform Leon/Elza + alle Pflicht-Verlaeufe; Riegel um Plattform-Lauf
+- [ ] Tests gezielt, OFFEN, Fuer den Nutzer
+
