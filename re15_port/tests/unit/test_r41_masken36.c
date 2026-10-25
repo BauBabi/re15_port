@@ -487,7 +487,8 @@ typedef struct { int raum, cut, erstes, n, punkte; } r41_platz_sek_t;
 typedef struct { int raum, cut, komp, x0, y0, x1, y1, dx, dy, texel; } r41_platz_komp_t;
 #include "gen_r41_masken36_platziert.inc"
 #ifndef R41_PLATZ_MIN
-#define R41_PLATZ_MIN 160539               /* gemessener Endstand NB4 (Dossier NB4: 998 854 -> 1 159 393 gezeichnete Generator-Punkte) */
+#define R41_PLATZ_MIN 101280               /* gemessener Endstand NB5 (Teile mit Zellen-Tiefe, Entscheid M-E2; Dossier NB5) - NB4-Vorschlag mit der
+                                            * Generator-Regel waren es 160 539 (437 Teile, ohne Zellbeleg) */
 #endif
 
 static void teil_platziert(void)

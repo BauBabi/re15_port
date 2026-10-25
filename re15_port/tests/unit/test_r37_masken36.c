@@ -826,7 +826,7 @@ typedef struct { int raum, cut, erstes, n, punkte; } r41_platz_sek_t;
 typedef struct { int raum, cut, komp, x0, y0, x1, y1, dx, dy, texel; } r41_platz_komp_t;
 #include "gen_r41_masken36_platziert.inc"
 #ifndef R41_TEILE_TREFFER_MIN
-#define R41_TEILE_TREFFER_MIN 1L           /* gemessen NB5, s. Dossier (Riegel unit_r41_masken36_teile) */
+#define R41_TEILE_TREFFER_MIN 97032L       /* gemessen NB5: 97 032 von 101 280 deckenden Punkten der gezeichneten neuen Rechtecke (Dossier NB5) */
 #endif
 
 static int r41_halbebenen(const r41_zellen_modell_t *k, double hs[6][3])
