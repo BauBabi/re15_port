@@ -2144,6 +2144,9 @@ static void gr2_part_welt(const re15_actor_t *e, const re15_skel_pose_t *p, int3
  * Bloecke Plattform/Rampe: GUARD-Hochbiss und CROSS-Klettern bleiben unberuehrt); ragt ein Punkt hinaus, verschiebt die Klemme den
  * ganzen Alligator um den Ueberstand nach innen. Gerechnet auf der GEZEICHNETEN Pose (gr2_pose_gezeichnet), Aufruf am Takt-Ende
  * nach der Wurzel-Klemme (enemy_ai_boss_gator.c (2b)), vor re15_gr2_nachtakt. */
+/* Innenflaechen der vier Aussenwand-Bloecke von ROOM2090.RDT (SCA @RDT+0x6DC, 12-Byte-Eintraege ab +0x6F4, selbst gelesen): [0] @0x6F4
+ * x -10900 + Breite 2000 = West -8900, [1] @0x700 z -29000 + Tiefe 2000 = Sued -27000, [2] @0x70C z -5400 = Nord, [3] @0x718 x 7200 = Ost;
+ * ROOM2091.RDT an denselben Offsets bytegleich. */
 #define GR2_KK_X0 (-8900)
 #define GR2_KK_X1 7200
 #define GR2_KK_Z0 (-27000)
