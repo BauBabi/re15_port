@@ -902,14 +902,18 @@ static int gator_tot(void)
  * auf eine Kamera und legte das Quadrat flach (Bildhoehe 180 x sin(Blickhoehe ~10 Grad) < 1 Bildpunkt). PORT-WAHL der Lage
  * (Nutzer: "Wenn der Aligator danach tot ist, soll der Schluessel in der Naehe seine Leiche sein und blinken"), FORM wie der
  * Schluessel der Ankunft (tools/r41_gatorszene/leiche_lage.py):
- *  - Kamera: die laufende (g_scd.cam_id; R1 gibt seine Szenen-Kamera frei, bevor das Tot-Flag steht, P3 @0x80102688-94); hat
+ *  - Kamera: die laufende (g_scd.cam_id; R1 P3 setzt das Tot-Flag +0x10E |= 0x4000 @0x80102654-64 und gibt im selben Schritt
+ *    die Szenen-Kamera frei @0x80102688-94 (gator_re2_r41.c re15_gr2_r1_tick) - der SCD-Takt des naechsten Bildes sieht beides); hat
  *    sie keine Lage, die Zonenkamera (RVD-Gruppe mit Wechselsatz: ROOM2090 Cut 0..7, wie gator_re2_r41.c gr2_zonenkamera)
  *    mit dem groessten Schluessel-Bild;
  *  - Lage: Rasterpunkt (100) im Wasser (re15_aot_water_at fuer Mitte und alle vier Ecken des Quadrats +-90 = MD1 @0x354C
  *    Ecken -90/90) im Bild der Kamera (Mitte x 24..296, y 40..205 wie leiche_lage.py), VOR der ganzen Leiche (Tiefe kleiner
  *    als die jedes Leichen-Knochens minus 800 = halbe Breite des RE1.5-Alligator-Kastens {1000,-720,0,2200,720,800}
- *    @0x80118b98, re15_damage.c - die Leiche verdeckt ihn nicht) und darunter der Leiche am naechsten (kleinster xz-Abstand
- *    zu einem Knochen; gleich nah: groesseres Bild);
+ *    @0x80118b98, re15_damage.c - die Leiche verdeckt ihn nicht), hoechstens so weit vom naechsten Knochen wie der Kopf der
+ *    Leiche von ihrer Wurzel (Knochen 6 zu Knochen 0 der Leichen-Pose; ohne Bank 3055 = Kopf-Versatz der Buehnen-Messzeile)
+ *    und darunter mit dem GROESSTEN Bild (kleinste Tiefe; gleich gross: naeher an der Leiche). Erste Messung dieser Fassung
+ *    mit "der Leiche am naechsten" (Lauf T1n, Todesrolle Cut 0): Tiefe 6948, nur 4 Bildpunkte - darum das groesste Bild
+ *    innerhalb des Kopf-Wurzel-Abstands;
  *  - Neigung: zur Kamera, hoechstens 60 Grad (wie die Ankunft), groesster Wert cos(Blick) x Helligkeit, deren Blink-Spitze
  *    (Takt 0x1f = Wert 0xBE, re15_blink_r41_wert) die Primitivfarbe 0x80 nicht ueberschreitet (M5: render_pc.c
  *    psx_prim_to_sdl_vert kappt darueber) - Licht genau wie der Zeichner (main.c Prop-Pfad: Lichtsatz des Cuts,
@@ -979,8 +983,8 @@ static int wasser_quadrat(int32_t x, int32_t z, int32_t *wy)
     return 1;
 }
 typedef struct { int32_t x, y, z, vz; int64_t d2; } gsz_lage_t;
-/* Beste Lage fuer Kamera cut (s. Kopf); 0 = keine. */
-static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, gsz_lage_t *out)
+/* Beste Lage fuer Kamera cut (s. Kopf); r_nah = hoechster Abstand zum naechsten Knochen; 0 = keine. */
+static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t r_nah, gsz_lage_t *out)
 {
     re15_camera_view_t v;
     if (!kam_sicht(cut, &v)) return 0;
@@ -1021,7 +1025,8 @@ static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, gsz_lag
                 const int64_t dx = (int64_t)x - pk[i][0], dz = (int64_t)z - pk[i][2];
                 if (dx * dx + dz * dz < d2) d2 = dx * dx + dz * dz;
             }
-            if (!gefunden || d2 < out->d2 || (d2 == out->d2 && vz < out->vz)) {
+            if (d2 > (int64_t)r_nah * r_nah) continue;                     /* nicht mehr "in der Naehe seiner Leiche" */
+            if (!gefunden || vz < out->vz || (vz == out->vz && d2 < out->d2)) {
                 out->x = x; out->y = wy; out->z = z; out->vz = vz; out->d2 = d2; gefunden = 1;
             }
         }
@@ -1097,14 +1102,20 @@ static void key_lage_bei_tod(void)
     static int32_t pk[GSZ_LEICHE_PUNKTE][3];
     int32_t kopf[3];
     const int npk = leichen_punkte(g, pk, kopf);
+    /* Naehe = Kopf-Wurzel-Abstand der Leiche (Knochen 6 zu Knochen 0, xz); ohne Bank der Kopf-Versatz 3055 der Buehne */
+    int32_t r_nah = 3055;
+    if (npk > 6) {
+        const int64_t dx = (int64_t)pk[6][0] - pk[0][0], dz = (int64_t)pk[6][2] - pk[0][2];
+        r_nah = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+    }
     gsz_lage_t l, b;
     memset(&l, 0, sizeof l);
     int cut = -1;
     const int lauf = (int)g_scd.cam_id;
-    if (key_suche(lauf, pk, npk, &l)) cut = lauf;
+    if (key_suche(lauf, pk, npk, r_nah, &l)) cut = lauf;
     else
         for (int c = 0; c < g_room_rdt.cut_count; c++) {
-            if (!zonenkamera(c) || !key_suche(c, pk, npk, &b)) continue;
+            if (!zonenkamera(c) || !key_suche(c, pk, npk, r_nah, &b)) continue;
             if (cut < 0 || b.vz < l.vz) { l = b; cut = c; }
         }
     if (cut < 0) {                                          /* keine Kamera: Kopf in eine Wasserzone gezogen (erste Fassung) */
@@ -1120,10 +1131,10 @@ static void key_lage_bei_tod(void)
     int16_t rx = 0, rz = 0; int32_t y = l.y;
     if (key_neigung(cut, p, &rx, &rz, &y, &s_key_prim_ruhe, &s_key_prim_spitze)) { s_key_rx = rx; s_key_rz = rz; s_key_y = y; }
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[gatorszene] Schluessel-Lage: Kamera %d (%s), Lage (%d,%d,%d) Tiefe %d, %u von der Leiche (%d Punkte), "
+    fprintf(stderr, "[gatorszene] Schluessel-Lage: Kamera %d (%s), Lage (%d,%d,%d) Tiefe %d, %u von der Leiche (%d Punkte, Naehe <= %d), "
                     "Neigung rx %d rz %d, Primitivfarbe Ruhe %d / Blink-Spitze %d (Kappe 0x80)\n",
             cut, cut == lauf ? "laufende" : "Zonenkamera mit dem groessten Bild", s_key_x, s_key_y, s_key_z, (int)l.vz,
-            (unsigned)re15_squareroot0((uint32_t)(l.d2 > 0xffffffffLL ? 0xffffffffLL : l.d2)), npk,
+            (unsigned)re15_squareroot0((uint32_t)(l.d2 > 0xffffffffLL ? 0xffffffffLL : l.d2)), npk, (int)r_nah,
             (int)s_key_rx, (int)s_key_rz, s_key_prim_ruhe, s_key_prim_spitze);
 #endif
 }

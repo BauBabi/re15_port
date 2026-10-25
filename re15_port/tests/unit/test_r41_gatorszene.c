@@ -557,9 +557,10 @@ static void tod_fall(const char *name, uint16_t raum, int32_t gx, int32_t gz, in
         const int32_t d = (int32_t)re15_squareroot0((uint32_t)((int64_t)(p[0]-kp[0])*(p[0]-kp[0]) + (int64_t)(p[2]-kp[2])*(p[2]-kp[2])));
         if (d < d_min) d_min = d;
     }
-    PRUEF(nb >= 10 && vz < vz_min - 800 && d_min < 3055, "vor der ganzen Leiche: Tiefe %d < kleinste Knochen-Tiefe %d - 800 (%d Knochen), "
-          "naechster Knochen %d entfernt (< 3055 = Kopf-Wurzel-Abstand, Buehnen-Messzeile Kopf13-Versatz)", (int)vz, (int)vz_min, nb,
-          (int)d_min);
+    const int32_t r_nah = nb > 6 ? (int32_t)re15_squareroot0((uint32_t)((int64_t)(kn[6][0]-kn[0][0])*(kn[6][0]-kn[0][0]) +
+                                                                    (int64_t)(kn[6][2]-kn[0][2])*(kn[6][2]-kn[0][2]))) : 3055;
+    PRUEF(nb >= 10 && vz < vz_min - 800 && d_min <= r_nah, "vor der ganzen Leiche: Tiefe %d < kleinste Knochen-Tiefe %d - 800 (%d Knochen), "
+          "naechster Knochen %d entfernt (<= Kopf-Wurzel-Abstand der Leiche %d)", (int)vz, (int)vz_min, nb, (int)d_min, (int)r_nah);
     int wasser = re15_aot_water_at(kp[0], kp[2]) != 0;
     for (int e = 0; e < 4; e++) wasser &= re15_aot_water_at(kp[0] + ((e & 1) ? 90 : -90), kp[2] + ((e & 2) ? 90 : -90)) != 0;
     PRUEF(wasser, "Mitte und vier Ecken (+-90) im Wasser");
