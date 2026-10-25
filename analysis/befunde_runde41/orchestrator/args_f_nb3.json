@@ -1,0 +1,97 @@
+{
+ "welle": [
+  "F"
+ ],
+ "slots": 1,
+ "basis": "r41/integration 9f10bdb0 (Baum r41_gatorszene)",
+ "max_nach": 2,
+ "modus": {
+  "F": "nachbesserung"
+ },
+ "runde0": {
+  "F": 2
+ },
+ "bau": {
+  "F": {
+   "status": "fertig",
+   "zusammenfassung": "Ich habe beide Mängel aus Abnahme 1 behoben und an der exe vorher und nachher gemessen, jeweils mit Leon und Elza.\nM1: Die drei Fremd-Riegel waren nachweislich rot. leon2090: Leon steht, obwohl die Taste gedrückt ist, weil die Ankunftsszene ihn festhält (Riegel ROOM1150 sub08 @0x01114/@0x01118). weg2090 und landung_leon/elza: Das Tor 20A0 slot 0 @0x01746 bleibt bis Bit 113 zu. Neu sind belegte Querbezüge (Nachtrag 21 und Nutzer-Punkt 'neue Cutscene'): RE15_SET_FLAG=9:110 bzw. 9:110,9:113. Damit gibt es wieder Watschritte, DOOR FIRE, Item FREI und 104 Spritzer; alle drei Riegel sind grün.\nM2: Es lag kein Entscheid von Orchestrator oder Nutzer vor. Gebaut habe ich deshalb als PORT-WAHL den Kameraschnitt nach dem Tod. Die Form stammt aus RE1.5 'Kamera auf einen Gegenstand': ROOM2010 sub03 @0x008EE-0x008F8 sowie ROOM1180 sub02 @0x00B3C, dazu Cut_old FUN_8004032c @0x8004033c/@0x80040364/@0x80040374-84.\nDer Schlüssel liegt jetzt in der Zonenkamera mit dem größten Bild statt in der laufenden. Verdeckung wird je Knochen-Kugel mit Radius 800 geprüft (Alligator-Kasten @0x80118b98).\nDer Schnitt kommt im selben Bild wie der R1-Rückschnitt der Spur B: Nachtakt-Haken, Cut_chg-Zwilling @0x800402c0-fc. Danach folgt Programm 4: Riegel, Halt 90 Bilder (= GSZ_LEICHE_BILDER, 0x3c @0x80102918), Cut_old, Plc_ret, Cut_auto.\nMessung mit Zwilling ohne Schlüssel: Todesrolle Cut 1 mit 37 Pixeln, Kasten 17 x 12, Puls 72 -> 106. R1 mit natürlicher Kamera Cut 2 mit 29 Pixeln, Kasten 13 x 15, Puls 70 -> 102. Vorher waren es 4 bzw. 6 Pixel. Bei 6-facher Vergrößerung ist ein Ring mit Bart zu sehen. Elza ist bitgleich zu Leon.\nRiegel: unit_r41_gatorszene_tod und _schluessel sowie integration_r41_gatorszene_tod und _tod_elza sind angepasst, _tod_r1 und _tod_r1_elza sind neu. Der Kasten muss mindestens 10 x 9 groß sein, das entspricht dem abgenommenen Schlüssel der Ankunftsszene. Belegbilder liegen unter F_belege/n2_m2_*.png, alles steht im Dossier unter 'Nachbesserung 2'.",
+   "commits": [
+    "58d88629 wip(r41-gatorszene): Nachbesserung 2 - Dossier-Abschnitt angelegt (Plan M1/M2)",
+    "709c0ceb wip(r41-gatorszene): Nachbesserung 2 M1 - drei Fremd-Riegel mit belegtem Querbezug (Bits 110/113)",
+    "4d013992 wip(r41-gatorszene): Nachbesserung 2 M1 - Dossier (vorher/nachher, Riegel gruen 3/3)",
+    "a6e29e7d wip(r41-gatorszene): Nachbesserung 2 M2 - Einstellung auf den Schluessel nach dem Tod (UNGEBAUT)",
+    "f38cbc4d wip(r41-gatorszene): Nachbesserung 2 M2 - Verdeckung je Knochen-Kugel statt \"vor jedem Knochen\" (UNGEPRUEFT)",
+    "1023f54e wip(r41-gatorszene): Nachbesserung 2 M2 - Riegel fuer die Schluessel-Einstellung (UNGEBAUT)",
+    "be1977be wip(r41-gatorszene): Nachbesserung 2 M2 - Riegel gruen (F 15/15 + tod 4/4), Belegbilder",
+    "0c73197e wip(r41-gatorszene): Nachbesserung 2 M2 - Dossier (Entscheid, Belege, Messung)",
+    "5c99bba8 fix(r41-gatorszene): Nachbesserung 2 - Fremd-Riegel mit Querbezug, Einstellung auf den Water Key nach dem Tod"
+   ],
+   "suite": "100% tests passed, 0 tests failed out of 213 (Total Test time (real) = 958.10 sec) — ctest --test-dir \"<baum>/re15_port/build\" -j4 --timeout 1200 --output-on-failure -R \"^(unit_r41_gatorszene_|integration_r41_gatorszene_|unit_r41_re2gator_|integration_r41_re2gator$|unit_r36_kartenbits$|unit_r26_inventar$|unit_r21_discard_wegwerfen$|unit_r39_inventar_|integration_r39_inventar_discard$|unit_item_|unit_inv_|unit_sca_wall_hit$|unit_re2_spider_|unit_spider_ai$|unit_adult_spider_ai$|unit_r38_spinnen$|integration_r38_spinnen_echtlauf$|unit_writher_ai$|unit_enemy_shootable$|unit_collision_layers$|unit_alligator_ai$|unit_gator_sweep$|unit_gator_fress$|unit_r36_schluessel_|integration_r36_schluessel|unit_r38_dining1141_(schluessel1011|tuer1131)$|unit_r38_rolltor20a0|integration_r38_rolltor20a0|unit_r37_feuerloescher_|integration_r37_feuerloescher$|unit_r39_optik_schluessel$|unit_r39_schluessel2_|unit_aot_sce_census$|unit_aot_edge$|unit_scd_|unit_door_seq$|unit_r38_wasser_|integration_r38_wasser$|unit_r41_kleinkram_a$|integration_r41_kleinkram_a_blink$|r31_trefferboxen|unit_rotor_bgm_pin$|unit_r35_cut10f0_bgm$|unit_r39_johnruf1041_musik$|unit_r35_cut1150_knallbank$|unit_r36_szene1150_knall_re2$|integration_r39_elzazombies_knall$|unit_r36_inventar$|unit_r36_kartenitems$|unit_r37_itemband$|integration_r37_itemband$|unit_r36_tueren_|unit_r33_tueren_|unit_r30_tuer|unit_r31_tuer_ton$|unit_r35_cut10f0_tuerton$|unit_r39_karten_tueren$|integration_r36_tueren$|unit_camera_view$|unit_cut_old_displayed$|unit_r34n_b_cut_old$|prop_zone_dispatch$|prop_scd_pc_advance$|unit_r38_montage_kameras$|integration_(cross_stage|room_probe_sweep|rvd_coverage|door_traversal|door_lock|item_name_census|keydoor)$|prop_door_roundtrip$|prop_spawn_entered$|integration_r35_granate$|integration_r41_wasser20b0_npc$|integration_r38_wasserzombie$|unit_r35_granate$|unit_irons_mittelmodell$|unit_r34_reaktion$|unit_1210_arme$|unit_r30_irons_tisch_licht$|unit_r35_affen_|unit_r36_szenenleon_|unit_r36_ziel1190$|unit_r37_pri1100_|unit_r38_npckante_|unit_r38_wasserzombie$|unit_r41_wasser20b0_)\". Vorab einzeln: -R \"^(integration_r38_wasser|integration_r37_itemband|integration_r41_wasser20b0_npc)$\" -> 100% tests passed, 0 tests failed out of 3 (858.32 sec); -R \"^integration_r41_gatorszene_tod\" -> 100% tests passed, 0 tests failed out of 4 (118.61 sec).",
+   "offene_punkte": [
+    "Die Form 'Kameraschnitt nach dem Tod' ist eine PORT-WAHL ohne Entscheid von Orchestrator oder Nutzer, gewählt aus den drei Wegen der offenen Frage (Modell bleibt RE2-bytegleich, Form RE1.5 ROOM2010 sub03 / ROOM1180 sub02). Bestätigung steht aus.",
+    "Todesrolle: Nach der Einstellung ist der Schlüssel in der laufenden Cut 0 nicht zu sehen (0 Pixel F564-F660). Er ist zur Einstellungs-Kamera Cut 1 gekippt, Cut 0 sieht die Rückseite, und die verwirft das Original per NCLIP (FUN_800254a0 @0x800255a8). Beim R1-Tod bleibt er in Cut 1 sichtbar, aber nur 3 x 2 Pixel. Die Aufnahme-Zone liegt an der gezeigten Stelle.",
+    "Stirbt der Alligator mitten im Becken (z. B. im Westkanal), bleibt auch die beste Zonenkamera bei etwa 6 Bildpunkten. Das ist gerechnet (kam2090.py), aber nicht gemessen, weil alle bekannten R1-Enden an den Beckenenden liegen.",
+    "Integration mit Spur G: Nach dem R1-Tod folgt jetzt die Einstellung (90 Bilder mit Riegel). G-Prüfungen, die nach dem Tod Kamera oder Steuerung abfragen (integration_r41_kanister2080_kampf*), müssen im Integrationsbaum neu gemessen werden. Die 2080-Lagen weiter gleich halten.",
+    "Aus Nachbesserung 1 unverändert offen: Nach dem Tod spielt MAIN2E statt der RE2-Ausblendung, Nachrichten-Ids 44-46 sind frei, die Schachtspinnen in 20A0 bleiben, nach dem Laden eines Spielstands gibt es keine Einstellung (Ersatzlage). Der PSX-Bau ist ungeprüft; key_suche läuft beim Tod jetzt für alle acht Zonenkameras."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/tests/integration/test_r38_wasser.cmake (Runde 38 N, Teil leon2090: RE15_SET_FLAG=9:110, Querbezug-Kommentar)",
+    "re15_port/tests/integration/test_r37_itemband.cmake (Runde 37 D, Teil weg2090: RE15_SET_FLAG=9:110,9:113, Querbezug-Kommentar)",
+    "re15_port/tests/integration/test_r41_wasser20b0_npc.cmake (Spur A, landung_leon/_elza: RE15_SET_FLAG=9:110,9:113, Querbezug-Kommentar)"
+   ],
+   "neue_assets": [],
+   "sprachdateien": [],
+   "fragen_an_nutzer": [
+    "Beobachtung: Nach dem Tod des Alligators schneidet das Bild 1,5 s auf die Kamera, in der der Water Key neben der Leiche am größten liegt; er blinkt dort als Ring mit Bart. Ist er so für dich gut zu erkennen?"
+   ]
+  }
+ },
+ "abn": {
+  "F": {
+   "bestanden": false,
+   "suite": "Gezielt: ctest -R \"<Regex des Bau-Agenten, 213 Tests, F41a2/regex.txt>\" -j4 --timeout 1200 --output-on-failure -> 100% tests passed, 0 tests failed out of 213 (Total Test time (real) = 1131.01 sec); darin integration_r37_itemband 943.82 s, integration_r38_wasser 223.77 s, integration_r41_wasser20b0_npc 255.05 s, integration_r41_re2gator 312.90 s, integration_r41_gatorszene_leon/_elza/_tod/_tod_elza/_tod_r1/_tod_r1_elza alle Passed. Bau: local_build.sh configure/build OK (ninja: no work to do, Arbeitsbaum sauber = HEAD 5c99bba8).",
+   "urteile": [
+    {
+     "punkt": "1a Ankunftsszene 2090 (Leiche mit blinkendem Schluessel, Knall, 2080-Zombies oben, erneut Leiche, Alligator frisst Leiche samt Schluessel, Schrei/Schuetteln, RE2-Kampfmusik; Leon + Elza)",
+     "urteil": "erfuellt",
+     "beleg": "L1/E1 (Leiter ROOM2080 Slot 1 -> 2090/2091): Folge A F40, P1, T F98 (Knall Takt 573 18920), P2+M 8/2 (2080), P3, S, G1-G7, V F369, C F405 + Kamera-Uebergabe Cut 0 Spielfigur im Bild, B 1 F407 + MAIN1A; state.log F405-F479 75/75 cam=0; Bildnummern identisch zu Abnahme 1; Bogen F41a2/L1_kampfstart.png, E1_kampfstart.png"
+    },
+    {
+     "punkt": "1b Nach dem Tod liegt der Schluessel in der Naehe der Leiche und blinkt",
+     "urteil": "teilweise",
+     "beleg": "Einstellung nach dem Tod: R1 Leon/Elza (KLm/KEm vs. Zwilling 9:112) Cut 2 F85-F175, 29 px, Kasten 13x15, Puls 70->103, Ring mit Bart (KL_key_zoom.png), Lage 1001 von der Leiche; Todesrolle Leon/Elza Cut 1 F470-F560, 37 px, 17x12, 72->108; andere Todeslage KQ Cut 3 12x14, 47->68; Aufnahme PKL2/PKE: itemband FREI F461, inv 34:1 F554 (Leon+Elza). ABER: mit Explosionsschnitt der Spur B (KW Leon/KWE Elza, natuerliche Leiter-Kamera) state.log cam 1 F160-F195 -> cam 0 F196-F197 -> cam 2 ab F198, Bilder F197/F198 zeigen Cut 0 mit der Spielfigur zwischen Explosion und Schluessel (KW_wechsel.png) = Zwischenbild (M1)"
+    },
+    {
+     "punkt": "Nachtrag 21 (Leiter statt Tor, Tor mit dem Schluessel)",
+     "urteil": "erfuellt",
+     "beleg": "G1b: msgtext id=42 \"It's locked.\", Folge Z; G2b (GIVE 0x34): id=43 \"You've opened the lock.\", 34:0 F141, DOOR FIRE slot=1 -> DOOR26 V0 -> EXIT in 20a0; G3b: 20A0 id=1 \"It's locked.\", tuerse.log genau 1 Zeile"
+    },
+    {
+     "punkt": "2 Spinnen aus ROOM2090 entfernen",
+     "urteil": "erfuellt",
+     "beleg": "state.log ' t=25 ' in allen 2090/2091-Abschnitten 0 (L1, E1, KLm, KEm, TLm, TEm, PKL2, PKE, KW, KWE, KQm, G1b), je Besuch 2 Zeilen 'Spinne 0x25 ... verworfen'; Riegel unit_r41_gatorszene_spinnen/unit_r38_spinnen/integration_r38_spinnen_echtlauf gruen"
+    },
+    {
+     "punkt": "M1 der Abnahme 1 (drei Fremd-Riegel)",
+     "urteil": "erfuellt",
+     "beleg": "Diff gelesen: RE15_SET_FLAG=9:110 bzw. 9:110,9:113 mit Querbezug-Kommentar (Nachtrag 21 / neue Cutscene); integration_r37_itemband 943.82 s, integration_r38_wasser 223.77 s, integration_r41_wasser20b0_npc 255.05 s Passed"
+    },
+    {
+     "punkt": "RE-Gate",
+     "urteil": "erfuellt",
+     "beleg": "Selbst disassembliert: Cut_old FUN_8004032c @0x8004033c-0x80040390, Cut_chg LAB_800402a0 @0x800402c0-0x80040300, NCLIP FUN_800254a0 bgez @0x800255a8 / @0x800257c0, STAGE2 @0x80118b98 = [1000,-720,0,2200,720,800], TITLE.BIN @0x80102918 ori 0x3c, RE2 EM23 @0x80102654-64/@0x80102684-94; xxd ROOM2010 @0x8EE und ROOM1180 @0xB3C, ROOM1150 sub08 per scd_dump_room.py; 0 Rate-Woerter, kein getenv; Halt 90 und Kamerawahl als PORT-WAHL gekennzeichnet"
+    },
+    {
+     "punkt": "Vertrag/Riegel",
+     "urteil": "erfuellt",
+     "beleg": "Nur Bits 110-113, Ids 42/43, Ereignis 18; keine verbotenen Pfade (git diff master...HEAD --name-only); 213/213 gezielt gruen; neue Riegel _tod_r1/_tod_r1_elza messend; Luecke: kein Riegel fuer den Explosionsschnitt-Fall (M1)"
+    }
+   ],
+   "maengel": [
+    "M1 Zwischenbild der Zonenkamera zwischen Explosionsschnitt und Schluessel-Einstellung (Punkt 1b, Leon und Elza): Hat Spur B's R1-Programm auf eine Explosions-Kamera geschnitten, kehrt B am Ende von P1 auf die Zonenkamera zurueck (gator_re2_r41.c:1726, RE2 @0x801024a4-ec), zwei Takte vor dem Tot-Flag in P3 (gator_re2_r41.c:1734-1738, RE2 @0x80102654-64), auf das F erst schneidet (key_tod_pruefen -> gator_tot). Gemessen ohne Teleport (KW Leon / KWE Elza an der Leiter, RE15_GB_TEST=5 RE15_GATOR_KANISTER=4430,-26160, Schuesse ab F151): gator_boss.log 'KAMERA R1 EXPLOSION ... -> Cut 1 F160', 'KAMERA R1 zurueck -> Cut 0 F196', 'R1 frei ... F198'; debug.log 'Schluessel-Einstellung: Cut 2 (vorher Cut 0) F198'; state.log cam 1 F160-F195 -> cam 0 F196-F197 -> cam 2 ab F198; Bilder F197/F198 zeigen Cut 0 mit der Spielfigur zwischen Explosion (F195/F196) und Schluessel (F199/F200), scratchpad F41a2/KW_wechsel.png; ebenso KN und KQ (Cut 3 -> 0 -> 3). Widerspricht der Behauptung 'Schnitt im selben Bild wie der R1-Rueckschnitt der Spur B (kein Zwischenbild)' - die gilt nur ohne Explosionsschnitt (Riegel _tod_r1 / Lauf K4m). Soll: Explosions-Kamera -> Schluessel-Kamera ohne Bild der Zonenkamera dazwischen, Bild fuer Bild gemessen (Leon + Elza), plus Riegel fuer den Fall mit Explosionsschnitt."
+   ],
+   "bericht": "Track F does not pass Abnahme 2: one new defect (M1) was found in the cut to the Water Key after the gator dies.\n\nWhat holds:\n- Test suite: I reran the builder's regex myself and got 213 of 213 green (`ctest -j4`, 1131 s), matching his claim.\n- Abnahme 1 M1 is fixed. The three foreign test scripts (`integration_r37_itemband`, `integration_r38_wasser`, `integration_r41_wasser20b0_npc`) now set `RE15_SET_FLAG=9:110` or `9:110,9:113`. Each change carries a comment quoting the user's wording, and all three pass.\n- Arrival scene (point 1a), Leon and Elza: unchanged from Abnahme 1, frame for frame. Same sequence of steps, camera on Cut 0 in 75 of 75 frames after the scene, the bang at the same audio frame, MAIN1A music.\n- Spiders (point 2): zero spiders in every 2090/2091 run.\n- Gate (Nachtrag 21): \"It's locked.\" without the key; with the key \"You've opened the lock.\" and the door leads to 20A0; in 20A0 \"It's locked.\" plays exactly one sound.\n- RE gate: I disassembled eight cited addresses myself and all match (list in section 7 of the report). No guess words and no env switches in the diff. The 90-frame hold and the camera choice are marked as PORT-WAHL.\n- Contract: only bits 110-113, message IDs 42/43 and event 18 are used, and no forbidden paths are touched.\n\nPoint 1b is rated \"teilweise\":\n- What works: the key cut shows a ring with a bart. R1 (Leon/Elza): Cut 2, 29 px, box 13x15, blinking 70->103. Death roll: Cut 1, 37 px, box 17x12. Another death spot: Cut 3, box 12x14. The key lies 1001-2346 units from the corpse, and picking it up works for both characters (Water Key in inventory at F554).\n- M1: when Spur B's R1 sequence has cut to an explosion camera, B switches back to the player's camera two frames before the death flag that F waits for. Measured without teleport, Leon (KW) and Elza (KWE) at the ladder:\n  - `state.log`: camera 1 F160-F195 -> camera 0 F196-F197 -> camera 2 from F198.\n  - Frames F197/F198 show Leon at the ladder between the explosion shot and the key shot.\n  - The builder's claim \"same frame as B's camera return, no in-between frame\" therefore only holds when B did not cut. That is the only case he measured and the only case the new test `_tod_r1` covers.\n\nHints, not defects:\n- The R1 recipe `(M0.3,MA0.1)x12` fires one shot, not twelve, because the input parser has no repeat syntax. The death still happens, so the measurement is valid; only the description is wrong.\n- After the cut the key is tiny in the camera you play in: 2 px in Cut 1, and 0 px after the death roll (that path is only reachable through a test hook).\n- The original's camera-on-item form shows a text message; the port holds 90 frames without text.\n- One code comment cites `@0x8004032c` (function start) for \"zone camera on\"; the actual instruction is at `@0x80040374-84`.\n\nThe report is `C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorszene/analysis/befunde_runde41/F_abnahme_2.md`, committed as `d5321663` (only that file). Measurement runs, logs and images are in `C:\\Users\\MJOEDI~1\\AppData\\Local\\Temp\\claude\\c--workspace-git-reAi-v2\\c41eae99-e724-4cb3-afb9-119709f20a9d\\scratchpad\\F41a2`."
+  }
+ },
+ "stand": {}
+}
