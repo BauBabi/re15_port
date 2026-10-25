@@ -441,3 +441,35 @@ Plan:
   Aenderung, gezielt gruen.
 - N2.M2 Water Key nach dem Tod nur 4-6 Pixel: Form im Original/RE2 suchen (wie zeigen die Spiele einen Gegenstand, der erst
   nach einem Kampf aufnehmbar wird), umsetzen, neu messen (Differenzbild, Kasten, Puls, R1 mit natuerlicher Kamera, Leon + Elza).
+
+### N2.M1 Drei Fremd-Riegel durch F rot (Muster F-E1)
+
+- **Ursache.** Alle drei Laeufe stellen einen Zustand VOR den Nutzer-Vorgaben der Runde 41 nach: (1) `integration_r38_wasser`
+  Teil leon2090 springt ohne Bit 110 nach 2090 -> das erste Betreten startet die Ankunftsszene (Nutzer-Punkt "neue Cutscene"),
+  Programm 1 setzt den Riegel Set(2,7,1)/Set(1,27,1) (ROOM1150 sub08 @0x01114/@0x01118) und haelt Leon; (2)
+  `integration_r37_itemband` Teil weg2090 und (3) `integration_r41_wasser20b0_npc` Teile landung_leon/landung_elza gehen durch
+  das Tor 20A0/20A1 slot 0 @0x01746 nach 2090/2091, das seit Nachtrag 21 bis Bit (9,113) verschlossen ist (sce-3-Ereignis 20,
+  "It's locked.").
+- **Messung vorher** (exe am Stand a9472f02, eigene Kopien, scratchpad `F41n2/runs`):
+  | Lauf | Umgebung wie der Riegel | Ergebnis |
+  |---|---|---|
+  | W0 | leon2090 (RE15_DEBUG_JUMP=2090@250, Lage (-8438,-25550), "U1.6,W1" ab Bild 30, EXIT_AT 80) | `Folge A ROOM2090 F250`, `Folge P ROOM2090 F250 wert=1/0`; state.log F30.. `pad=0010 PL(-8438,-25550) ... pm=2` (Leon steht trotz Taste), kein wasser.log |
+  | I0 | weg2090 (Wegplan des Riegels, RE15_DEBUG_JUMP=20A0@250, Lage (4950,4100) Blick 3072) | `ROOM20A0 Slot 0 (Tor) gesperrt: Ereignis 20, Bit (9,113) = 0`, `Folge Z ROOM20A0 F84`, kein DOOR FIRE, Zeitgrenze |
+  | L0 | landung_leon (Eingabeskript des Riegels, RE15_DEBUG_JUMP=20a0@240) | `ROOM20A0 Slot 0 (Tor) gesperrt`, `Folge Z ROOM20A0 F27/F215/F245`, 0 Landungen, 0 Zeilen id=6 sub=3 |
+- **Beleg / Querbezug** ("neue Regel widerlegt alten Riegel", Entscheid F-E1, Memory reai-v2-gezielte-integration-querbezug): Die
+  Laeufe messen Wasser-Schritte, die Item-Band-Regel und die Landung, nicht die Szene/das Tor. Der Zustand, in dem ihr Weg im
+  Spiel besteht, ist "Szene gesehen" (Bit 110) bzw. "Szene gesehen + Tor aufgeschlossen" (Bits 110 + 113, VERTRAG 1.1) - das
+  Tor oeffnet erst mit dem Schluessel nach dem Tod des Alligators, die Szene laeuft nur beim ersten Betreten.
+- **Aenderung** (nur Messhaken RE15_SET_FLAG, Kommentar mit Nutzer-Wortlaut im Riegel):
+  `tests/integration/test_r38_wasser.cmake` (r38n_exe nimmt weitere Umgebung, leon2090 `RE15_SET_FLAG=9:110`),
+  `tests/integration/test_r37_itemband.cmake` (weg2090 `RE15_SET_FLAG=9:110,9:113`),
+  `tests/integration/test_r41_wasser20b0_npc.cmake` (landung_leon/landung_elza `RE15_SET_FLAG=9:110,9:113`).
+- **Messung nachher** (dieselben Laeufe mit den Bits): W1 `[setflag] flag(9,110/0x6e) = 1`, wasser.log F38/F53/F68
+  `room=2090 ... stempel=-1620 ... zweig=stempel code=0x06032000 part=6 ... edt=0x1a`, debug.log `[foot] SE foot=7 type=26 vag=3`;
+  I1 `[aot] DOOR FIRE slot=0 rect=(4950,5000,hw=1500,hh=500) target_cut=2 spawn=(6300,-1800,-16250)`, `PC loaded room2090.rdt`,
+  itemband.txt `F87 room=2090 ITEM slot 5 floor 1 item 0x3F tk 90 spieler-band 1 ... -> FREI`, wegplan.txt FLAG (9,90) 0 -> 1;
+  L1 (Leon) / E1 (Elza, `Spieler-Familie PL04`) je DOOR FIRE slot=0, `PC loaded room2090.rdt` bzw. `room2091.rdt`, 1 Landung,
+  104 Zeilen id=6 sub=3 (wie Abnahme A 2).
+- **Riegel gezielt:** `ctest --test-dir "<baum>/re15_port/build" -R "^(integration_r38_wasser|integration_r37_itemband|integration_r41_wasser20b0_npc)$" -j3 --timeout 1200 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 3` (Total Test time (real) = 858.32 sec; r38_wasser 188.84 s, r41_wasser20b0_npc
+  227.65 s, r37_itemband 858.25 s).
