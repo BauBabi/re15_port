@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-25 21:43: M Abnahme 5 nicht bestanden, aber alle 3 Maengel NICHT blockierend (Restloch 6010/6011 C5 Teil 8, veralteter Teile-Bericht teile_nb5.txt, HINTER-Beleg 4040 C12 mass das Tor) -> M NB6 sofort gestoppt (Task wbqdkh8lq), M wird mit dem NB5-Stand 284b0202 integriert ("gut genug", Liste fuer Samstag). **Integration F+G+M = wf_c43ce68b-6d7** (Task wksxxf9b4, args spuren F/G/M, kette_ac false, label FGM). Danach: pri-Uebersichtsbilder ersetzen (Nachtrag 33), Paket-Gate, volle Suite, Release-Notes, Release.
+
 * 2026-10-25 21:23: **G BESTANDEN** (Abnahme 4, wf_2bd33954-f59): alle Nutzer-Punkte erfuellt, Unit 105/105, Integration 26/26, G-E3..G-E6 umgesetzt (Todes-Clip 19/19, RE2-Kern ab Start, Kopf-Klemme, render_pc.c 57). Stimmen fuer den Nutzer: synchro/STAGE2/room2080/main42.wav (Marvin "Hey, Leon, try with this!") und room2081/main42.wav (John "Hey, Elza, try with this!"). Warten auf M Abnahme 5, dann Integration F+G+M in EINEM Lauf (Querbezuege §3a F x G).
 
 * 2026-10-25 18:46: **F BESTANDEN** (Abnahme 5, wf_f2e30b5e-2c4, "gut genug" nach FG-E6): Folge vollstaendig, Kampfbeginn im RE2-Band (11454 / +131), Fressen frontal Cut 1, Schluessel hell (Groesse 7x9 vom Nutzer angenommen), Spinnen weg, Tor nur mit Schluessel; 221/221 gezielte Tests. OFFEN fuer Samstag: Nachtrag 31 Punkt 2 (Gator startet vor der Linse von Cut 0). Integration: EIN Lauf fuer F + G + M, sobald G (Abnahme 4) und M (Abnahme 5) fertig sind (Tokens sparen).
