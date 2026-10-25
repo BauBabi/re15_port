@@ -300,6 +300,10 @@ void re15_pc_gator_fx_draw(const re15_camera_view_t *cam, int cx, int cy, int ca
     raum_takt();
     if (s_log < 0) { const char *e = getenv("RE15_GATOR_FX_LOG"); s_log = (e && *e && *e != '0') ? 1 : 0; }
     if (!cam) return;
+    /* Nachbesserung 4 (Abnahme G 3, M2 + Hinweis H5): ausserhalb von 2090/2091 (Raum-ESP ROOM40A0 nicht registriert) zeichnet dieser
+     * Zeichner nichts - Raum-Quads brauchen s_reg, Kern-485-Quads einen Platz der R1-Folge, und den Pool leert re2fx_reset bei jedem
+     * Raumwechsel. Ohne Messzeile also kein dritter re2fx_quads-Lauf je Bild in den uebrigen Raeumen. */
+    if (!s_reg && s_log != 1) return;
     const int n = re2fx_quads(cam, cx, cy, camf, has_region, rxs, rzs, q, (int)(sizeof q / sizeof q[0]));
     int k480 = 0, k485 = 0, rr = 0, gl = 0, rest = 0, aus_fenster = 0, gebunden = 0;
     for (int i = n - 1; i >= 0; i--) {                              /* rueckwaerts wie re2fx_pc_draw (OT vorn) */
