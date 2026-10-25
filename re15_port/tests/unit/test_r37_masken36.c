@@ -383,7 +383,9 @@ static int figur_raster(const re15_camera_view_t *v, double wx, double wz, int b
 typedef struct { unsigned raum; int x, z, band; char art; unsigned von; uint32_t off; } saat_t;   /* art: A = AOT, T = Tuer (VM), S = Tuer (Satz statisch) */
 static saat_t g_saat[SAAT_MAX];
 static int g_saat_n;
-static int g_saat_alt;       /* R41 NB4: 1 = Tuer-AOTs mit slots[].band (Stand vor NB4, Gegenprobe/Werkzeug) */
+static int g_saat_tuer;      /* R41 NB4: 1 = Tuer-AOTs mit ihrem Band pc[4] (door_params) = gemessene Korrektur (--saat-tuer); Vorgabe 0 =
+                              * Stand NB3, auf dem die Tabellen der Spur stehen (Entscheid M-E1: keine weiteren automatischen Masken fuer die
+                              * Restliste - die Korrektur zeichnet 6000 C5/C7/C8 37 Rechtecke mehr, Dossier NB4 Mangel 2 (a)) */
 
 static void saat_dazu(unsigned raum, int x, int z, int band, char art, unsigned von, uint32_t off)
 {
@@ -534,12 +536,13 @@ static void saaten_sammeln(void)
                      * pc[4] fuer Door_aot_set in door_params[].band ab (scd_vm.c op_door_aot_set), slots[].band bleibt dort 0 - jede
                      * Tuer saete deshalb auf Band 0 (gemessen ROOM6000: Tueren @RDT+0x00D58/0x00D78/0x00DDA mit pc[4] = 2 ergaben die
                      * Band-0-Saaten (2800,2750), (-4900,-8350), (1763,-10677) und damit das Netz im Gleisbett). Traege Tuersaetze
-                     * (sce 0, Typ NONE) tragen ihr Band ebenso in door_params (floor = pc[3] != 0 nur nach einem Tuersatz). */
+                     * (sce 0, Typ NONE) tragen ihr Band ebenso in door_params (floor = pc[3] != 0 nur nach einem Tuersatz). Die Korrektur
+                     * gilt nur mit --saat-tuer (g_saat_tuer, Entscheid M-E1); ohne sie rechnet das Werkzeug wie NB3. */
                     {
                         int tuer = q->type == RE15_AOT_TYPE_DOOR
                                    || (q->type == RE15_AOT_TYPE_NONE && g_aot.door_params[i].floor != 0);
                         int band = tuer ? (int) g_aot.door_params[i].band : (int) q->band;
-                        if (g_saat_alt) band = q->band;                 /* Werkzeug: Stand vor NB4 (Gegenprobe) */
+                        if (!g_saat_tuer) band = q->band;               /* Vorgabe: Stand NB3 (s. g_saat_tuer) */
                         if (band & 0x80) continue;
                         /* Zonen ohne Stehplatz-Beleg: GENERIC (Ereignisflaeche), CAM_SWITCH, AUTO_EVENT */
                         if (q->type == RE15_AOT_TYPE_GENERIC || q->type == RE15_AOT_TYPE_CAM_SWITCH
@@ -1172,12 +1175,10 @@ static void teil_zellen3d(void)
     CHECK("MSK-Tiefenfeld (Leon und Elza) == Zellen-Tiefe der Zeile", msk_ok == 2 * n);
     CHECK("die Engine-Tabelle zeichnet jedes Modell-Rechteck (Leon und Elza)", tab_ok == 2 * n);
     CHECK("Ausschluss MIT 3D-Urteil == Engine-Tabelle in jedem Cut mit Modell", cuts > 0 && gleich == cuts);
-    /* Nachbesserung 4: mit der Tuer-Band-Regel der Saaten (saaten_sammeln, AOT-Scan @0x80042cac..0x80042ccc) gibt es im Gleisbett ROOM6000
-     * keine Band-0-Stehplaetze mehr; die 124 Lok-/Traeger-Rechtecke 6000 brauchten das 3D-Urteil nur gegen diese falschen Figurpunkte.
-     * Gemessen nach NB4: 3 Rechtecke (5090 C11) nur durch das 3D-Urteil gezeichnet, 6 Punkte per Koerper belegt. */
+    /* NB4: mit der Tuer-Band-Korrektur der Saaten (--saat-tuer) bleiben nur 3 (5090 C11) - die 124 Lok-/Traeger-Rechtecke 6000 brauchen das
+     * 3D-Urteil nur gegen die falschen Band-0-Figurpunkte im Gleisbett (Dossier NB4 Mangel 2 (a)); Vorgabe = Stand NB3. */
     CHECK("Gegenprobe: ohne 3D-Urteil fielen Rechtecke weg (NB2 gemessen: 79 der Leon-Dateien; Nachbesserung 3 mit den Teilrechtecken "
-          "von kacheln_r41.py: 127; Nachbesserung 4 ohne die falschen Band-0-Saaten: 3; Elza bytegleich), jedes davon mit Modell-Zeile",
-          nur3d >= 3 && nur3d_modell == nur3d && echt3d > 0);
+          "von kacheln_r41.py: 127; Elza bytegleich), jedes davon mit Modell-Zeile", nur3d >= (g_saat_tuer ? 3 : 127) && nur3d_modell == nur3d && echt3d > 0);
 }
 
 /* ---- fern (Runde 41 Spur M, Nachbesserung 3; Riegel unit_r41_masken36_fern) ---------------------------------------- *
@@ -2140,7 +2141,7 @@ int main(int argc, char **argv)
         int i, j = 1;
         for (i = 1; i < argc; i++) {
             if (!strcmp(argv[i], "--alt")) g_fz_alt = 1;
-            else if (!strcmp(argv[i], "--saat-alt")) g_saat_alt = 1;      /* R41 NB4: Tuer-Saaten wie vor NB4 (Gegenprobe) */
+            else if (!strcmp(argv[i], "--saat-tuer")) g_saat_tuer = 1;    /* R41 NB4: Tuer-Saaten mit ihrem Band pc[4] (Korrektur) */
             else if (!strncmp(argv[i], "--zeilen=", 9) && atoi(argv[i] + 9) >= 2) g_fz = atoi(argv[i] + 9);
             else if (!strncmp(argv[i], "--spalten=", 10) && atoi(argv[i] + 10) >= 3) {
                 g_fs = atoi(argv[i] + 10) | 1;
@@ -2170,8 +2171,8 @@ int main(int argc, char **argv)
         static raum_t R; int stage, rr, var, b, gx, gz, alt_v;
         static long n[2][16];
         static saat_t s_neu[SAAT_MAX], s_alt[SAAT_MAX]; int n_neu, n_alt;
-        g_saat_alt = 0; saaten_sammeln(); memcpy(s_neu, g_saat, sizeof g_saat); n_neu = g_saat_n;
-        g_saat_alt = 1; saaten_sammeln(); memcpy(s_alt, g_saat, sizeof g_saat); n_alt = g_saat_n;
+        g_saat_tuer = 1; saaten_sammeln(); memcpy(s_neu, g_saat, sizeof g_saat); n_neu = g_saat_n;
+        g_saat_tuer = 0; saaten_sammeln(); memcpy(s_alt, g_saat, sizeof g_saat); n_alt = g_saat_n;
         for (stage = 3; stage <= 6; stage++)
             for (rr = 0; rr < 0x40; rr++)
                 for (var = 0; var < 2; var++) {
@@ -2194,18 +2195,18 @@ int main(int argc, char **argv)
                         if (n[0][b] != n[1][b])
                             printf("  ROOM%04X Band %d: Stehplaetze alt %ld -> neu %ld\n", raum, b, n[1][b], n[0][b]);
                 }
-        g_saat_alt = 0;
+        g_saat_tuer = 0;
         printf("OK\n");
         return 0;
     }
     if (!strcmp(teil, "saatband")) {                    /* Werkzeug R41 NB4: AOT-Saaten, deren Band die Tuer-Regel aendert */
         static struct { unsigned raum; int x, z, band; } alt_s[SAAT_MAX];
         int i, j, na = 0, geaendert = 0;
-        g_saat_alt = 1; saaten_sammeln();
+        g_saat_tuer = 0; saaten_sammeln();
         for (i = 0; i < g_saat_n; i++) if (g_saat[i].art == 'A') {
             alt_s[na].raum = g_saat[i].raum; alt_s[na].x = g_saat[i].x; alt_s[na].z = g_saat[i].z; alt_s[na].band = g_saat[i].band; na++;
         }
-        g_saat_alt = 0; saaten_sammeln();
+        g_saat_tuer = 1; saaten_sammeln();
         for (j = 0; j < na; j++) {
             int gleich = 0, neu_b = -1;
             for (i = 0; i < g_saat_n; i++)
@@ -2218,6 +2219,7 @@ int main(int argc, char **argv)
                        neu_b < 0 ? " (entfaellt: Band & 0x80 = jedes Band)" : "");
             }
         }
+        g_saat_tuer = 0;
         printf("  AOT-Saaten alt %d, mit geaendertem Band %d\nOK\n", na, geaendert);
         return 0;
     }

@@ -56,9 +56,9 @@ import schliessen_r41 as SR      # noqa: E402
 
 PSX = SR.PSX
 MASKS = SR.MASKS
-MAX_MASKEN = 128                 # re15_pri.h RE15_PRI_MAX_MASKS_PER_CUT (NB4: 105 -> 128; das Original hat KEINE feste Grenze -
-                                 # FUN_80039270 @0x8003928c lbu v0,7(a0): Zahl = RDT-Kopfbyte 7 (u8), Puffer daraus; die Port-
-                                 # Tabelle des Ausschlusses masken36_r37.c traegt 4 x u32 = 128 Bits je Sektion)
+MAX_MASKEN = 105                 # re15_pri.h RE15_PRI_MAX_MASKS_PER_CUT. Fuer die 37 vollen Cuts braeuchte es 128: das Original hat KEINE
+                                 # feste Grenze (FUN_80039270 @0x8003928c lbu v0,7(a0): Zahl = RDT-Kopfbyte 7, u8), die Port-Tabelle des
+                                 # Ausschlusses (masken36_r37.c bits[4]) traegt 128 - Vorschlag, nicht eingebaut (Entscheid M-E1, Dossier NB4)
 MIN_TEXEL = 16                   # kleinste Komponente (wie die Kalibrierung; kleiner ist die Lage nicht belegbar)
 RMS_MAX = 18.91                  # 99 %-Punkt der RMS an der Generator-Lage (Kalibrierung, Kopf)
 EINDEUTIG = 1.5                  # zweitbeste/beste > 1,47 (groesster Wert der abweichenden Kalibrierfaelle)

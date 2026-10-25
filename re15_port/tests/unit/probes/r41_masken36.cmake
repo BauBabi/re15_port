@@ -4,7 +4,7 @@
 # aufweisen." -> "danach kannst du deine Masken schliessen in der naechsten Version."
 #   unit_r41_masken36_loecher  Mechanik des Schliessens an allen 216 Generator-Sektionen (test_r41_masken36.c): eigener Atlas,
 #                             den der Lader nimmt; offene Kerben (Kuenstler-Atlas deckend + farbgleich direkt an der Kante
-#                             eines alten Rechtecks, nicht gezeichnet) NACHHER <= 30 % von VORHER (gemessen nach NB4 13,1 %, NB3 14,3 %, NB2 16,0 %, NB1 18,4 %, vor NB1 25,1 %), Gegenprobe VORHER > 10000; Blit.
+#                             eines alten Rechtecks, nicht gezeichnet) NACHHER <= 30 % von VORHER (gemessen nach NB3 14,3 %, NB2 16,0 %, NB1 18,4 %, vor NB1 25,1 %), Gegenprobe VORHER > 10000; Blit.
 add_executable(test_r41_masken36 ${CMAKE_CURRENT_LIST_DIR}/../test_r41_masken36.c)
 target_link_libraries(test_r41_masken36 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_masken36 PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -55,8 +55,7 @@ endif()
 # Nachbesserung 2 (Abnahme 1, Mangel 1, Weg (a)): Generator-Rechtecke mit Zellen-Modell (tests/unit/gen_r41_masken36_zellen.inc,
 # tools/maske/zellen3d_r41.py) - der Ausschluss urteilt fuer sie in 3D (Koerper der Modellzelle vor dem Figurpunkt).
 #   unit_r41_masken36_zellen3d  jede Modell-Zeile byte-genau im RDT, MSK-Tiefe == Zeile, Engine zeichnet sie; Ausschluss MIT 3D-Urteil
-#                             == Engine-Tabelle in jedem Modell-Cut, Gegenprobe OHNE 3D-Urteil: >= 3 Rechtecke fielen weg (gemessen NB4 3 - ohne die falschen
-#                             Band-0-Saaten im Gleisbett 6000 brauchen die Lok-/Traeger-Rechtecke das 3D-Urteil nicht mehr; NB3 127, NB2 79),
+#                             == Engine-Tabelle in jedem Modell-Cut, Gegenprobe OHNE 3D-Urteil: >= 127 Rechtecke fielen weg (gemessen NB3 127, NB2 79),
 #                             alle mit Modell-Zeile. Modelle auch aus der Zuordnung von Hand (tools/maske/zuordnung_r41.json, 12 Objekte).
 add_test(NAME unit_r41_masken36_zellen3d COMMAND test_r37_masken36 zellen3d WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r41_masken36_zellen3d PROPERTIES TIMEOUT 1500)
@@ -88,9 +87,10 @@ endif()
 #                             Stage 3 == 0 (vorher 56 346, darunter die Trennwand 30A0), Stage 4 <= 72 (4080 C7, zwei Plaetze an der
 #                             Zellkante), Stage 5 <= 270 (5090 C11, Randfall an der Dreieckszelle), Stage 6 <= 39 934 (alles ROOM6000 Band 0
 #                             = Gleisbett unter dem Bahnsteig, OFFEN 10).
-# NB4: Stage 6 39 934 -> 0 - alle diese Punkte lagen auf Band 0 im Gleisbett ROOM6000 und kamen aus den Tuer-Saaten mit falschem Band
-# (Saaten-Regel NB4: Tuer-Band = pc[4], AOT-Scan @0x80042cac..0x80042ccc); gemessen nach NB4 342 (Stage 3: 0, 4: 72, 5: 270, 6: 0).
-add_test(NAME unit_r41_masken36_fern COMMAND test_r37_masken36 fern 342 0 72 270 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+# NB4: die 39 934 Punkte der Stage 6 liegen auf Band 0 im Gleisbett ROOM6000 - Saaten aus Tueren mit falsch gelesenem Band (AOT-Scan
+# @0x80042cac..0x80042ccc gated auf pc[4]); mit der Korrektur (test_r37_masken36 --saat-tuer) waeren es 0. Vorgabe bleibt Stand NB3
+# (Entscheid M-E1, Dossier NB4 Mangel 2 (a)).
+add_test(NAME unit_r41_masken36_fern COMMAND test_r37_masken36 fern 40276 0 72 270 39934 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r41_masken36_fern PROPERTIES TIMEOUT 1500)
 #   integration_r41_masken36_fern  echte exe (Leon und Elza): hinter der Buero-Trennwand ROOM30A0 Cut 0/1 an den Spielstellen der Abnahme 2
 #                             im Fenster der Trennwand KEIN Figurpunkt im Endbild sichtbar (Art Z, V == 0, probe_r41_masken36_sicht mit
@@ -118,32 +118,6 @@ endif()
 #                             Figur; Szenen z30A0_*/v30A0_*/v30A1_* im Riegel integration_r41_masken36_fern.
 add_test(NAME unit_r41_masken36_stirn COMMAND test_r41_masken36 stirn WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r41_masken36_stirn PROPERTIES TIMEOUT 600)
-
-# Nachbesserung 4 (Abnahme 3, Mangel 2 "Restliste: Gelaender ohne Maske ..."): der Generator saete nur aus vollen 16x16-Bloecken; duenne
-# Kuenstler-Komponenten (Gelaender, Rohre, Lampen) wurden nie platziert. tools/maske/platzieren_r41.py platziert sie (Tabelle
-# tests/unit/gen_r41_masken36_platziert.inc).
-#   unit_r41_masken36_platziert  je Sektion: Rechteckzahl erstes + n, Leon/Elza bytegleich; neue Rechtecke = Hintergrund an der Zielstelle
-#                             (Blit); jede Komponente liegt dort, wo der Original-Atlas (Spiel-Entpacker re15_sld_*) sie hat (>= 95 % der
-#                             Texel farbgleich); gezeichnet (nach dem Ausschluss R37) mindestens der gemessene Endstand; die Gelaender
-#                             30E0 C6..C9, 3050 C6, 3040 C3 sind dabei.
-add_test(NAME unit_r41_masken36_platziert COMMAND test_r41_masken36 platziert WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(unit_r41_masken36_platziert PROPERTIES TIMEOUT 900)
-#   integration_r41_masken36_platziert  echte exe: an den neu platzierten Komponenten (Gelaender 3040 C3/C7, 30E0 C6/C8/C9, Kisten/Saeulen 3040 C9,
-#                             3050 C11, 5090 C12, 6000 C2, 50B0 C3, 6010 C2) VOR dem Gegenstand 0 Figurpunkte uebermalt (Art V), HINTER ihm
-#                             verdeckt (Art M); Szenen test_r41_masken36_platziert_szenen.cmake, Laeufer wie integration_r41_masken36_stage2.
-if(TARGET re15_pc)
-    add_test(NAME integration_r41_masken36_platziert
-             COMMAND "${CMAKE_COMMAND}"
-                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
-                     -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r37_masken36_ppm>
-                     -DRE15_BG_TOOL=$<TARGET_FILE:probe_bg_dump>
-                     -DCD_ROOT=${CMAKE_SOURCE_DIR}/shared_assets/PSX
-                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_masken36_platziert_wd
-                     -DSZENEN=${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_platziert_szenen.cmake
-                     -DPRAEFIX=r41m7
-                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
-    set_tests_properties(integration_r41_masken36_platziert PROPERTIES TIMEOUT 2400)
-endif()
 
 # Nachbesserung 4 (Abnahme 3, Mangel 3): der gemeinsame Laeufer test_r41_masken36_stage2.cmake (stage2/_zelle/_zellen3d/_fern) wertet
 # nur noch Laeufe aus, deren debug.log nach dem letzten Laden des Zielraums den Framedump und "[flow] EXIT_AT: Bild 120 in Raum <zr>"
