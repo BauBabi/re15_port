@@ -16,11 +16,11 @@ Querbezug (Abschnitt 9).
 - [x] Code-Diff gelesen (9f10bdb0..HEAD; Schwerpunkt cc089cde..HEAD = Nachbesserung 4)
 - [x] Bau (local_build.sh configure + build)
 - [x] gezielte Unit-Tests (105/105)
-- [ ] gezielte Integrations-Tests
+- [x] gezielte Integrations-Tests (26/26)
 - [x] RE-Gate Stichproben (8 Zitatgruppen)
-- [ ] Messungen P1/P2/P3 + M1/M2/M3 an der exe (Leon + Elza)
-- [ ] Vertrag
-- [ ] Urteil
+- [x] Messungen P1/P2/P3 + M1/M2/M3 an der exe (Leon + Elza; 24 exe-Laeufe, alle rc=0)
+- [x] Vertrag
+- [x] Urteil: BESTANDEN nach FG-E6 ("gut genug"); offen O1-O6 (O1 neu: Lagespruenge durch die Kopf-Klemme)
 
 ## 1. Diff, Bau
 - Nachbesserung 4 (`git diff cc089cde..HEAD --stat -- re15_port`, 12 Dateien +625/-78): gator_re2_r41.c (+182: re15_gr2_r1_rang
@@ -53,6 +53,15 @@ unit_r38_kleinkram_flammenwerfer|unit_r39_dining1141_fenster|unit_r41_wasser20b0
   ausserhalb (Toleranz 300) 0`.
 - scherben `10 Bilder Skala 180..1530 Farbe 0x404040, weg ab Bild 10`; re2gator_kamera `R1-Fall 0 (aus Cut 7): G-E1 zeigt Cut 6 (Schnitt),
   Kopf (161,112)`, `R1-Fall 2: G-E1 Cut 3, Kopf (168,105)`.
+
+### 1b Gezielte Integrations-Tests (Log `<SP>/ctest_integ.log`; -j3 neben fremden Laeufen anderer Agenten)
+Ausdruck des Bau-Agenten (21) + integration_r30_granate_laden, integration_r36_elza_fenster, integration_fx_region_cull,
+integration_r41_wasser20b0, integration_r41_kleinkram_a_blink (alle Nutzer von re2_fx/Glas/Werfer/Granate bzw. Riegel, die durch Raeume mit
+den jetzt spielweit gezeichneten Kern-Zeilen laufen; `<SP>/integ_regex.txt`):
+`ctest --test-dir re15_port/build -R "<regex>" --timeout 3000 --output-on-failure -j3` -> **`100% tests passed, 0 tests failed out of 26`**
+(1570,32 s; kanister2080_kampf 1239,63 s, r37_itemband 797,59 s, r36_kartenitems_bild 443,84 s, re2gator 214,01 s, kanister2080 155,33 s,
+raumfremd 48,82 s). Kein Fenster-Haken rot, kein Nachfahren noetig. Riegel-Lauf kampf (`build/tests/integration/r41_kanister2080_kampf_wd/
+lauf_3d5e5348`, mit `<SP>/auswertung.py` nachgelesen): Zahlen siehe 4.2.
 
 ## 2. RE-Gate (Stichproben der Nachbesserung 4 selbst disassembliert/gelesen; `.claude/skills/re15-psx-disasm/scripts/re2_disasm.py` aus dem
 Hauptbaum, nur lesend, EXE = info/re2leon/PSX.EXE, Overlays info/re2leon/COMMON/BIN; Datei-Bytes per Python)
@@ -202,14 +211,14 @@ Alligator am rechten Rand, kaum zu sehen). Bewertung nach FG-E6: Feinheit (in de
 der Kampf endet in allen Verlaeufen mit dem R1), aber eine neue, messbare Unstetigkeit, die die Nachbesserung einfuehrt und die das Dossier
 nicht nennt ("kommt ... etwas weniger weit heran" beschreibt sie nicht) -> offen O1 (Abschnitt 8).
 
-### 1b Gezielte Integrations-Tests (Log `<SP>/ctest_integ.log`; -j3 neben fremden Laeufen anderer Agenten)
-Ausdruck des Bau-Agenten (21) + integration_r30_granate_laden, integration_r36_elza_fenster, integration_fx_region_cull,
-integration_r41_wasser20b0, integration_r41_kleinkram_a_blink (alle Nutzer von re2_fx/Glas/Werfer/Granate bzw. Riegel, die durch Raeume mit
-den jetzt spielweit gezeichneten Kern-Zeilen laufen; `<SP>/integ_regex.txt`):
-`ctest --test-dir re15_port/build -R "<regex>" --timeout 3000 --output-on-failure -j3` -> **`100% tests passed, 0 tests failed out of 26`**
-(1570,32 s; kanister2080_kampf 1239,63 s, r37_itemband 797,59 s, r36_kartenitems_bild 443,84 s, re2gator 214,01 s, kanister2080 155,33 s,
-raumfremd 48,82 s). Kein Fenster-Haken rot, kein Nachfahren noetig. Riegel-Lauf kampf (`build/tests/integration/r41_kanister2080_kampf_wd/
-lauf_3d5e5348`, mit `<SP>/auswertung.py` nachgelesen): Zahlen siehe 4.2.
+### 4.5 P3 Tuer-Ton der Szene im Ton-Mitschnitt (Regression, Code unveraendert)
+s_leon_ton (wie s_leon, aber MIT Audiogeraet: `RE15_AUDIO_CAP_SYNC=cap.raw RE15_SE_DEBUG=1`, kein RE15_NOAUDIO, `RE15_EXIT_AT=120#2080`):
+debug.log `[k2080] F8 Tuer-Ton: DOOR06-Tonteil 19608 B in der Tuerbank, Satz 1` -> `[se] Stimme: se=1 layer=0 vag=2 note=61 fine=57
+center=79 vol=127 pitch=0x5f3 (16397 Hz) -> SE-Stimme 7 (SPU 23)` (erste SE der Szene; darunter laeuft BGM MAIN2E). Mitschnitt (Pegel je
+Bild, `<SP>/runs/s_leon_ton/cap.raw`, erstes 2080-Bild = Index 1155): 2080-F0..F7 RMS 1130..1470 (BGM), ab F8 Anstieg auf 1776/1836/2311/
+2654/2959 (F12), bis F22 ueber 1700. VAG 2 von DOOR06.DO2 selbst dekodiert (VAB @0x10, VB @0xC38, Groessen 48/8880/7552 = 19608 B
+Tonteil): normierte Kreuzkorrelation gegen den BGM-Teppich nur r <= 0,13 (`<SP>/tools_k/tuer06_im_mitschnitt.py`) - der Ton ist ueber die
+SE-Zeile und den Pegelanstieg belegt, nicht ueber die Wellenform (wie 10.6 "Ton nur ueber die Mischkette").
 
 ## 5. Vertrag
 - Pfade (`git diff 9f10bdb0..HEAD --name-only`): keine release/, platform/android/, shared_assets/PSX/, pri/, synchro/, keine CMakeLists
@@ -241,3 +250,57 @@ lauf_3d5e5348`, mit `<SP>/auswertung.py` nachgelesen): Zahlen siehe 4.2.
   im selben Bereich, beide Haken additiv zu behalten (Reihenfolge: (2) Wurzel-Klemme, (2b) Kopf-Klemme G, (3) nachtakt B, F-nachtakt).
 - Nach der Integration F+G aendern sich Kampfbeginn und -verlauf (Fs neue Startlage, keine Spinnen) - R1-Lagen, Kamerawahl, Kopf-Klemme
   und die Lagespruenge (4.4) neu messen (Riegel kampf mit seinen fuenf Laeufen; Spinnen-bedingte EXIT_AT 5000 dann pruefen).
+
+## 7. Urteile (gegen den Wortlaut, AUFTRAG.md inkl. Nachtraege 5/17/20-29/32/32b und Entscheide FG-E1..FG-E6, G-E1..G-E6)
+| Punkt | Urteil | Beleg |
+|---|---|---|
+| P1 erst Metalltuer-Sound (N17: Knall wie nach Irons), dann 8 gespawnte Zombies oben im Hauptbereich (N20) | **erfuellt** | 3: echter Leiterweg DOOR16, Leon + Elza: Knall (RE2_1060 r 0,891) im ersten 2080/2081-Bild, dann 8 x Sce_em_set 0x16 y -14400, keiner auf der Treppe; Bild p1_leon_elza_2080_zombies_x2.png. Ausloeser "nach dem Start der Fress-Szene" = Bit 110 der Spur F (hier per RE15_SET_FLAG, Spur F fehlt im Zweig) |
+| P2 Gaskanister am Rand der Reling (Gas_Can.bmp) | **erfuellt** | 3: Cut 5 Kasten (159..177,75..158) auf der Marke x 159..175 y 149..163, Leon + Elza pixelgleich mit Abnahme 3; in der Szene (4.3) steht er dort, bis Marvin/John ihn aufheben |
+| P3 "oft genug angeschossen" -> Cutscene (N22: RE2-Schwelle 300) | **erfuellt** | v1 Leon + Elza ohne jeden G-Haken: `F7375 AUSLOESER ... Treffer 37` |
+| P3 erneut Geraeusch einer schliessenden Tuer (N22: Stahltuer-Ton lassen) | **erfuellt** | `F8 Tuer-Ton DOOR06 Satz 1` in allen Szenen-Laeufen; mit Audiogeraet SE-Stimme vag 2 gestartet, Pegelanstieg ab F8 (4.5) |
+| P3 Marvin (Leon) / John (Elza) im ROOM 2080 | **erfuellt** | `ROOM2080 SZENE (Marvin 0x40 ...)` / `ROOM2081 SZENE (John 0x49 ...)`, Bilder s_leon_* / s_elza_john_szene_x2.png |
+| P3 toetet alle 8 Zombies mit Kopfschuss - ein Schuss - Kopf platzt - tot | **erfuellt** | je Zombie genau ein `Schuss n: Treffer ... hp=-1 state=3` und im Folgebild `Kopf ab ... (Part 8 Flagwort 0x4B)`, `8 von 8` F352; Bild s_leon_kopfschuesse_cut2_x2.png (rote Kopfwolken, Zombies fallen) |
+| P3 rennt zum Kanister, nimmt ihn in beide Haende (N24b/N26) | **erfuellt** | `NPC Lauf Sub 5` F405-F435, `Kanister aufgehoben (Loco c11 Bild 24)` F465; Bilder Cut 5 F426-F528 (laeuft hin, kniet, hebt und kippt, haelt ihn quer mit beiden Haenden) - Leon und Elza |
+| P3 sagt "Hey, Leon, try with this!" (Elza: "Hey, Elza, ...") | **erfuellt** | `Zeile 42 stand F531..F629 (99 Bilder)`, Untertitel im Bild (Cut 7); Stimme = Nutzer-Aufnahme synchro/STAGE2/room2080(1)/main42.wav (N22, noch aufzunehmen) |
+| P3 wirft den Kanister die Reling runter (Kamera N5/FG-E4/N26/G-E2) | **erfuellt** | `Werfer Cut 7: ... Versatz -113, frontal 4035/4096` (RE2 Ada -111/4034), Wurf F631, Fall in 2090 Cut 12 (fall_leon_cut12_aufnahme_x2.png) |
+| P3 liegt dann in 2090 an der Stelle im Wasser | **erfuellt** | `F43 Aufschlag im Wasser`, `Kanister im Becken ... = Aufschlagstelle (Bit 116)` in allen Laeufen |
+| P3 Alligator nimmt ihn beim Vorbeikommen auf, GENAUSO wie RE2 | **erfuellt** | `ANSCHWIMMEN an` (RE2-Zielmodus), `KANISTER Stufe 1` / `angehaengt` in allen 11 Kampf-Laeufen, auch v1 ohne Haken (F143/F155); derselbe Alligator (FG-E3) |
+| P3 Schuss auf den Kanister im Maul -> Sterbeanimation mit geplatztem Kiefer wie RE2 (+N28 Explosion, G-E1/G-E3 Tod im Bild, G-E5 Kopf im Raum) | **erfuellt** (Feinheiten offen, Abschnitt 8) | 4.2: R1 in allen Laeufen; Kanister beim R1 in allen innerhalb der Aussenwaende, kein Regions-Verwurf; Spritzring-Wolke gezeichnet (v1_leon 0 -> 96); Todes-Clip 19/19 "voll" in jeder gewaehlten Kamera, Plattform-Lage Leon/Elza mit Schnitt auf Cut 1/4; Bilder v1/k/plat |
+| M1 / G-E3 (Rangfolge) | behoben | Code = Wortlaut G-E3; unit r1wahl (Tabelle plat_leon F1278 -> Cut 3 Stufe 1); im Spiel alle gewaehlten Cuts 19/19 |
+| M2 / G-E4 (Kern-Zeilen ab dem Start) | behoben | 4.1: F0-Ladezeile im Startraum, 2080 mit/ohne 2090-Besuch Zahl fuer Zahl gleich, 1140 gezeichnet, Formen/Farben = RE2-Referenz; RE2-Ladeweg selbst disassembliert (2) |
+| M3 / G-E5 (Kopf/Kanister im Raum, Regionstest Scherben) | behoben, mit Nebenwirkung O1 | 4.2/4.4 |
+| V1 / G-E6 | erledigt (angenommen) | 5 |
+| RE-Gate | **haelt** | 2: 8 Zitatgruppen selbst gelesen, 0 Rate-Woerter, PORT-WAHL benannt |
+| Vertrag | **haelt** | 5 |
+| Nebenwirkungen | **ok** (keine Regression ausserhalb 2080/2090) | 26/26 Integration inkl. aller re2_fx-/Werfer-/Granaten-/Fenster-/Hund-Riegel, 105/105 Unit; G-E4 aendert gewollt die RE2-Kern-Effekte in allen Raeumen (gemessen = RE2-Referenz); O1 liegt in 2090 |
+
+## 8. Ergebnis
+Nach der Urteilsregel FG-E6 / Nachtrag 32b ("gut genug": nicht bestanden nur bei Absturz, Haenger/Softlock, Regression ausserhalb 2080/
+2090, Nutzer-Punkt fehlt ganz oder ist im Spiel kaputt): **BESTANDEN**. Alle Nutzer-Punkte sind an der exe im echten Ablauf erfuellt (Leon
+und Elza, natuerlicher Verlauf ohne G-Haken eingeschlossen), alle Gates halten, keine blockierenden Fehler. Kein Absturz/Haenger in 24
+exe-Laeufen (alle rc=0, Ende ueber EXIT_AT) und in den 26 Integrations-Riegeln.
+
+### OFFEN (nicht blockierend, fuer die Release Notes / "Ab Samstag")
+- **O1 (neu, Nachbesserung 4):** Die Kopf-Klemme verschiebt den ganzen Alligator um den Ueberstand in EINEM Bild - beim Tragen bis 1517
+  (v1_leon F156) bzw. 1489 (v1_elza) Einheiten je Bild, 37 Bildpaare > 400 im natuerlichen Lauf (vorher max 258); an der Westwand neben dem
+  Plattform-Block arbeiten Kopf-Klemme und Wand-/Slab-Klemme gegeneinander (Hin- und Rueckspruenge 1517/660/524 ... -1317/-791), an der
+  Suedwand im Treffer-Clip +457/+582/+379. Spur Bs eigener Massstab fuer sichtbare Lagespruenge im natuerlichen Lauf ist 340
+  (integration_r41_re2gator). In den aufgenommenen Bildern (4.4) kein kaputtes Bild (Alligator meist am Bildrand bzw. als schnelles Schlagen
+  lesbar), im Dossier nicht benannt. Vorschlag fuer Samstag: Ueberstand ueber mehrere Bilder abbauen bzw. die Kopf-Klemme mit der Plattform-
+  Klemme abstimmen; Riegel "Sicht Lagesprung mit Kanister <= Massstab".
+- O2 Querbezug Spur F / Nachtrag 29 (Abschnitt 6): nach der Integration F+G R1-Lagen, Kamerawahl, Kopf-Klemme und O1 neu messen; Haken
+  (2b) und Fs nachtakt-Haken in enemy_ai_boss_gator.c beidseitig mergen; Spinnen-bedingte EXIT_AT 5000 im Riegel kampf dann pruefen.
+- O3 R1-Kamera: in Cut 6/7 liegt der Alligator klein im Bild (Massstab 587/674 gegen RE2 1154, k_leon/k_elza); d15_leon Start 5/8 (3
+  Sprite-Raender am Bildrand) - G-E1/G-E3 verlangen keinen Massstab.
+- O4 Kopf-Klemme nur mit Kanister/R1; in den uebrigen Phasen kann der Kopf weiter ueber eine Aussenwand ragen (Thema Spur B, Dossier 11.7.3).
+- O5 unveraendert aus 10.6: RE2-Ausloeser-Mitglieder +0x1D8/+0x1DA, Kanister in RE2-Groesse, Tuer-/Aufschlag-Ton nur ueber Mischkette/SE-
+  Zeile belegt (4.5), Werfer in 2090 Cut 12 nicht im Bild (FG-E4), Apply-Bild F530 bei der Integration mit Spur E pruefen.
+- O6 PSX-Bau hier nicht pruefbar (kein PSn00bSDK).
+
+## 9. Hinweise
+- H1 Erzwungener Cut 5 (Rezept p2_cut5) zeigt ein grosses dunkles Viereck ueber Laufsteg/Reling - nicht vom Kanister (Gegenprobe Bit 115),
+  schon in Abnahme 2/3 so; in der echten Szene (Cut 5, 4.3) liegen nur die bekannten dunklen Felder links/rechts.
+- H2 re15_pc_gator_fx_draw ruft re2fx_quads() jetzt in jedem Raum je Bild (der Fruehausstieg 63e50c22 ist mit G-E4 entfernt) - Rechenzeit,
+  kein Fehler; Kommentar-Rest an `kern_laden();` (zweiter Kommentar gehoert zur Zeile davor).
+- H3 Aufraeumen: Messkopien re15_pc_g41abn4{,b..f}.exe nach der Abnahme geloescht; Laufordner/Bilder nur im scratchpad `<SP>`; im Baum
+  nur dieser Bericht.
