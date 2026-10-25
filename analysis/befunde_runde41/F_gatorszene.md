@@ -637,6 +637,7 @@ Plan:
     Einstellung bei bis zu 5420 (Effekte), beim Schnitt E -> X bei 2682 - eine Schwelle auf Wechsel-Pixel trennt Schnitte also nicht;
     darum klassifiziert der Riegel je Bild ueber Referenzbilder (keine Schwelle).
 - **RE-Belege (selbst disassembliert, `re2_disasm.py --bin EM23_OVL_0000.BIN`, RE2 PSX.EXE):**
+  - P0 (zum Vergleich, B's Zitat nachgelesen): `8010220c ori v0,v0,0x100` / `80102214 sw v0,-1064(at)` (0x800cfbd8 Sperre), `80102218-24` laufender Cut (0x800d4820) 6 oder 13, `80102234 slti v0,v0,-13300` (z), `80102248 ori v0,v0,0x40` / `8010224c sh v0,536(s1)` (+0x218 |= 0x40 = "geschnitten"), `80102268 jal 0x8002c7ac` mit `8010226c addiu a0,zero,5` (Cut 5).
   - P1 Clip-9-Ende: `80102488 addu a0,s1,zero / 8010248c addiu a1,zero,9 / 80102494 jal 0x8001a330`, `8010249c beq v0,zero,0x8010252c`
     (nicht am Ende -> weiter mit Clip 9).
   - Rueckschnitt am Ende: `801024a4 lhu v1,536(s1)` (+0x218), `801024ac andi v0,v1,0x40`, `801024b0 beq v0,zero,0x8010251c` (ohne
