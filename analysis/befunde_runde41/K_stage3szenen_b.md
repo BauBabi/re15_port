@@ -1,0 +1,504 @@
+# Runde 41 — Spur K "stage3szenen_b" (Dossier, fortlaufend)
+
+Baum `.claude/worktrees/r41_stage3szenen_b`, Zweig `r41/stage3szenen_b`, Basis 700483de (master 4c667c97 + AUFTRAG/VERTRAG
+Stand Nachtrag 11). Wortlaut des Nutzers (AUFTRAG.md, 2026-10-23 16:3x):
+
+> K1: "Ab 30C1 wird es richtig wild... Sherrys Charakter Modell ist völlig falsch und kaputt. Außerdem sollte sie keine
+>     Waffe haben."
+> K2: "Die Cutscene im ROOM 3091 hat STÄNDIG falsche Animationen...."
+
+Orchestrator A-E5: RBJ-Binder (FUN_8001b3f8) gehoert Spur J; K uebernimmt J's Commit `rbj-binder` UNVERAENDERT per
+cherry-pick und misst 3091 darauf. Bits: J/K = 121-124 bei Bedarf. Nachrichten: nur vorhandene.
+
+## Plan
+1. K1 Messung vorher: welcher Typ/welches Modell/welche Bank fuer Sherry in 30C1..3091 (Port), Framedump.
+2. K1 Original: Sce_em_set-Zensus, EMD/CDEMD1-TOC, Textur/CLUT, Waffen-Mesh-Frage; Savestate/Video.
+3. K1 Umsetzung + Riegel (Modell-Hash/Mesh-Zahl, kein Waffen-Mesh).
+4. K2 Messung vorher (RE15_ANIM_TRACE je Akteur je Zeile), Original-SCD-Subs, Clip-Folge je Akteur.
+5. K2 cherry-pick rbj-binder (J), Messung darauf; Ursachen belegen, beheben, Riegel.
+6. Gezielte Tests, Abschluss.
+
+## Protokoll (neueste unten)
+- 2026-10-24 20:03: Dossier angelegt.
+- 2026-10-24: rbj-binder der Spur J (e4a9f39c) UNVERAENDERT per cherry-pick uebernommen (hier 299b6deb, A-E5).
+- 2026-10-24: K1 (Spielfigur Sherry) gebaut, gemessen, Riegel; K2 (3091) am Original per GDB gemessen, Port gleich.
+- 2026-10-25: Abnahme 0 (K_abnahme_0.md): K1 erfuellt, K2 teilweise (M1 Clip-13-Schleife), M2 (Wahlfrage statt Original),
+  M3 (Familienregel). Nachbesserung 1: M1 ueber Spur-E-Modul plcloop_r41 + Binder-Record, M2 Original-Schwanz von
+  FUN_800314b0 je Figurwechsel (am Original per GDB gemessen), M3 Koerper je Neuladen (Marvin). Abschnitt "Nachbesserung 1".
+
+## Kurzfassung
+* K1 "Ab 30C1 ... Sherrys Charakter Modell ist voellig falsch und kaputt ... keine Waffe": ab der Schacht-Tuer 3061 -> 30C1
+  spielt man SHERRY (ROOM3061 @0x011F6 `24 10 0f 00`). Der Port tauschte nur Mesh+Textur auf Elzas Skelett/Animation/
+  Waffe. Jetzt wie FUN_800314b0 (@0x8003154c EDD, @0x80031578 EMR) + FUN_80036b68 (@0x800741e8[15] = PL0FW00, Waffe 0
+  @0x800316c4, kein Hand-Mesh @0x80036c08), kein Zielen ohne Waffe (@0x80032014 ff.), Tempo Zeile 15 (@0x80073ec2/
+  @0x80073f42), Kletter-Ausloesebild 0x63 (@0x8003818c). Original-Bild + Original-Tempo gemessen, Port gleich.
+* K2 "3091 STAENDIG falsche Animationen": Spieler spielte den rec0-Platzhalter (2 Bilder), Elza-NPC war ungebunden
+  (Bank-0-Clips). Mit J's Binder + K1 sind die Clipfolgen aller drei Figuren = Original (GDB-Mitschrift 2953 Bilder)
+  und 7 Original-Szenenbilder = Port-Bilder.
+* Nachbesserung 1: Sherrys Schleifen-Clip 13 laeuft wie im Original im Kreis (19/12/5/3/10/4 Umlaeufe, Bild = i % 40,
+  @0x80050dbc-c8); Figurwechsel setzen Waffe/HP/Status wie FUN_800314b0 (@0x800c00d4, @0x80031718, @0x80031720 -
+  Elza bekommt nach 3091 das Messer und HP 100, am Original gemessen); Koerper bei jedem Neuladen (Marvin PL0D).
+
+
+## K1 — Sherry ab 30C1 (Modell falsch/kaputt, Waffe)
+
+### K1.1 Wer ist "Sherry" in Elzas STAGE3 (statischer Zensus, eigene Dumps)
+Quelle: `re15_port/tools/scd_dump_room.py` je Raum (Dumps `K_belege/k2_scd3091.txt`), Typ-Zensus Runde 37
+(`analysis/befunde_runde37/N_belege/n1_typzensus.txt`), Texte `analysis/story_leon_elza/zensus.md` (rdt_msgdump):
+* Sherry ist im RE1.5-Material **Typ 0x4B** ("Girl": ROOM11B1 msg 3 "Girl: ...Sherry.", ROOM2001 msg 8 "Sherry: ...").
+  Elzas Weg 3061 -> (Tuer main00 @0x00EF8 Slot 3 -> ROOM30C Cut 10) -> 30C1 -> 3071 -> 3081 -> 3091 -> 30C1 (Marvin).
+  Sherry als 0x4B: 3061 @0x00F44, 3071 @0x034C2, 3081 @0x007A0, 30E1 @0x00EC0, 4001, 5011, 5021, 5031, 6021, 6031 ...
+* **ROOM3091 (Elza) ist die Ausnahme:** sub00 @0x014F4 `44 01 42 40 00 00 00 ff 35 a0 00 00 cf 0f 00 00 70 f4 00 00`
+  = Sce_em_set Gegner 1 **Typ 0x42** (John = Gegner 0 @0x014E0 Typ 0x49). Die Szene sub07 fuehrt Gegner 1 durch alle
+  Sherry-Zeilen (msg 15 "Sherry: It's Sherry...", 20, 22, 24, 28, 29; Work_set 2,1 @0x0171A/@0x01752/@0x01808/...).
+* In 30C1 selbst steht KEINE Sherry (einziges Sce_em_set sub00 @0x00BEE `44 00 40 40 ..` = Marvin 0x40, nur bei
+  Ck(3,57)==1, gesetzt in 3091 sub07 @0x016D4). "Ab 30C1" = der Abschnitt nach 3061: 30C1 -> 3071 -> 3081 -> 3091.
+* Klaerung der Einstiegs-Widersprueche: Kommentar enemy_ai_common.c:9640 "0x45 Sherry" ist FALSCH (0x45 = Irons:
+  ROOM1150/1151 msg 2 "Irons: ..."; B_figuren.md 1.3); test_r37_elzaems "elza3091 Typ 0x42 CDEMD1 Sektor 1505" ist
+  richtig, aber dieser Typ ist im Original NICHT das Sherry-Modell (K1.2).
+
+### K1.2 Was das Original fuer 0x42 im Elza-Archiv laedt (EXE-TOC, eigener Leser)
+Lader FUN_80022300 (Runde 37 N §1.1, Elza-Bit bltz @0x80022334 -> Datei 0x27 @0x800223ac, TOC Sektor @0x800223e0,
+Laenge @0x800223c4). TOC-Bytes selbst aus info/Re1.5/PSX.EXE gelesen (`K_belege/k1_baenke.py` -> `k1_baenke.txt`):
+
+| Typ / Archiv | TOC-Adresse | Bytes | Sektor / Laenge |
+|---|---|---|---|
+| 0x42 CDEMD0 (Ada) | 0x800730c8 | `dd 05 00 00 dc 7a 02 00` | 1501 / 162524 |
+| **0x42 CDEMD1** | **0x80073308** | **`e1 05 00 00 a0 32 02 00`** | **1505 / 144032** |
+| 0x4B CDEMD0 | 0x80073110 | `ee 06 00 00 08 1f 02 00` | 1774 / 139016 |
+| 0x4B CDEMD1 | 0x80073350 | `f0 06 00 00 08 1f 02 00` | 1776 / 139016 (Inhalt bytegleich, n1_zensus) |
+
+Ansichtsblaetter (Port-Leser `re15_port/tools/emd_ansichtsblatt.py`, nur EMS_PFAD umgestellt: `K_belege/k1_ansicht.py`):
+* `K_belege/k1_cdemd1_typ0x42.png` (Kopfzeile des Werkzeugs sagt faelschlich "CDEMD0", gelesen ist CDEMD1 Sektor 1505,
+  Blobgroesse 144032 = TOC): **eine erwachsene Frau im rot-weissen RACCOON-Rennanzug mit blondem Pferdeschwanz = Elzas
+  Kleidung — mit einer PISTOLE in der rechten Hand** (VORNE/RECHTS). Textur: Anzug mit "RACCOON"-Schriftzug, Elzas
+  Gesicht. Modellhoehe 2782 (Pose Clip 0). Das ist ein **Elza-Doppel (NPC-Format) als Platzhalter** — nicht Sherry.
+* `K_belege/k1_cdemd0_typ0x4B.png`: **Sherry** = Maedchen, weisse Matrosenbluse mit blauem Kragen, dunkler Rock,
+  Anhaenger/Taschenuhr ("My, that's a nice pocket watch!" ROOM2001), **keine Waffe**; Hoehe 2094.
+* Bank-Vergleich (`k1_baenke.txt`): alle drei Skelette 15 Knochen mit DERSELBEN Hierarchie
+  `[-1,0,1,2,3,1,5,6,0,0,9,10,0,12,13]`; Bind-Lagen 0x42-CDEMD1 erwachsen (Wurzel y -1709, Oberschenkel 609),
+  0x4B Kind (Wurzel y -1268, Oberschenkel 427). Bank 0 (dir1): 0x42 beide Archive 24 Clips {34,32,50,20,...};
+  0x4B 24 Clips {28,28,133,30,20,38,...}. Eigene Bank (dir3): 0x42-CDEMD1 14 Clips {22,16,52,1,105,30,10,16,1,17,1,17,1,32}
+  (Layout wie John 0x49 {22,16,52,1,50,30,10,16,...}), 0x4B 9 Clips {20,30,60,1,30,28,15,1,8}.
+* Runde 37 N §5 hatte genau dieses Modell als "blonde Figur in Rot/Weiss wie das Original" in den Port geholt
+  (`N_belege/n5_sherry3091_original_vorher_nachher.png`: auch im ORIGINAL steht in 3091 ein zweites Elza-Bild neben Elza).
+
+=> **UEBERHOLT durch K1.3** (erste Lesart, hier stehen gelassen): das 0x42-Modell ist nicht "Sherry-Platzhalter", sondern ELZA als NPC — in 3091 ist Sherry die SPIELFIGUR (Modell 0x0F). Massgeblich sind K1.3 ff.
+
+### K1.3 KORREKTUR (2026-10-24 ~21:00): in 3091 ist SHERRY DER SPIELER, das 0x42-Modell ist ELZA als NPC
+K1.1/K1.2 oben haben die Rollen verwechselt. Belege (eigene Dumps, Datei-Offsets):
+* ROOM3061 sub02 (Kriech-Szene) endet mit `2e 01 00` Work_set Spieler, **`24 10 0f 00` @0x011F6 = Save
+  work_vars[0x10] = 0x0F**, `47 03` @0x011FA = Aot_on 3 = Door_aot_set Slot 3 @0x00EF8 (Rechteck 0, Ziel Raum 0x0C
+  = 30C, Cut 10, Lage (-19100,-,-1350)). Raumlader FUN_800396fc @0x80039760-8c (Kommentar platform/pc/main.c "SPIELER-
+  MODELL-WECHSEL", Runde 2026-08-26): Modell-Nibble von DAT_800aca5c != work_vars[0x10] (0x800b0ff0) -> neues Modell
+  -> FUN_800314b0 laedt PL0<n>.PLD (Datei-Id-Tabelle @0x80073f70). **Modell 0x0F = PL0F.PLD = Sherry als SPIELFIGUR**
+  (PLD/PL0F.PLD 126892 B, Waffen-Datei PL0FW00.PLW 14696 B; Waffen-Tabelle @0x800741e8[15] = 118 = PL0FW00, Spur J
+  §1.2). => **"Ab 30C1" = ab der Ankunft in 30C1 Cut 10 spielt man SHERRY.**
+* ROOM3091 sub07 endet mit `24 10 04 00` @0x01D9C bzw. `24 10 05 00` @0x01DA8 (je Ck(3,117)) = Spielermodell zurueck
+  auf Elza (4/5), dann `47 00` Aot_on 0 -> 30C1 Cut 1 (Marvin-Szene "Elza: Who are you?").
+* In der 3091-Szene spricht der SPIELER die Sherry-Zeilen (msg 15 "Sherry: It's Sherry..." nach Work_set 1,0
+  @0x018EA, Plc_motion(0,12) @0x018EE) und Gegner 1 (Typ 0x42) die Elza-Zeilen (msg 11 "Elza: Yes, somehow!" nach
+  Work_set 2,1 @0x01808, Plc_motion(0,4) @0x0181A). Das CDEMD1-0x42-Modell (Elza-Anzug, Pistole) ist also ELZA als
+  NPC — richtig so, Elza traegt ihre Pistole.
+* Wurzelhoehen der Raum-Animation 3091 (`K_belege/k1_rbj_clips.py 3 3091 2`): rec2 (Marker 0x3 = Spieler + Gegner 1,
+  FUN_8001b3f8) Clips 0..10 Wurzel-y -1678..-1723 (Erwachsene: Elza), **Clips 11..13 Wurzel-y -1257..-1261 (Kind:
+  Sherry; 0x4B-Eigenbank Median -1255, Bind -1268)**. Das Skript spielt 11/12/13 auf dem SPIELER (Work_set 1,0:
+  @0x0170E (0,13), @0x018EE (0,12), @0x01A1E (0,11) ...) und 0..9 auf Gegner 1 (Elza-NPC). Gegenprobe ROOM4001
+  (Elza ist dort Spielerin, Sherry 0x4B Gegner 1): dort spielt Gegner 1 die Kind-Clips 11..13 und der Spieler 0..9.
+  => Die Clips sind fuer genau diese Rollen gebaut: Spieler = Sherry-Skelett, Gegner 1 = Elza-Skelett.
+* K1 ist damit: **die SPIELFIGUR Sherry (Modell 0x0F) ist im Port falsch/kaputt und traegt eine Waffe.** Port-Stand:
+  `pc_sync_player_model` (platform/pc/main.c ~Z.1394) tauscht beim Modellwechsel NUR MD1 + TIM aus PL<n>.PLD und
+  behaelt Skelett (EMR) und Animation (EDD) der bisherigen Figur sowie deren Waffe — fuer die Weste (PL00<->PL01: EDD
+  und EMR bytegleich) richtig, fuer Sherry (Kind-Skelett, eigene Clips, eigene Waffendatei) falsch. Messung folgt.
+
+### K1.4 Messung vorher (Port, Bau 750bfe36 = Basis + rbj-binder J + Messhaken)
+Lauf `re15_port/tools/r41_k/lauf.sh v30c1s` (Elza-Neuspiel RE15_PSELECT_AUTO(_SWITCH), RE15_SET_FLAG=4:244,
+RE15_DEBUG_JUMP=3060@250 -> ROOM3061, **RE15_WORKVAR_AT=0x10:15@30#3061** = was ROOM3061 @0x011F6 schreibt,
+**RE15_FIRE_AOT=3@60#3061** = die Schacht-Tuer @0x00EF8, also der Tuerweg der Szene -> ROOM30C1 Cut 10,
+RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1). debug.log: `[workvar-at] Bild 30 Raum 3061: work_vars[0x10] = 15`,
+`[fire-aot] slot=3 at F60`, `[room] PC loaded room30c1.rdt`, **`[pld] Spielermodell -> PLD/PL0F.PLD (Mesh 15 Teile,
+Textur 256x256)`** — nur Mesh+Textur getauscht.
+Bilder: `K_belege/k1_vorher_30c1_bogen.png`, Zoom `k1_vorher_30c1_zoom.png`, Vergleich
+**`K_belege/k1_original_vs_port_vorher_30c1.png`**:
+* ORIGINAL (Nutzer-/Spur-J-Stand HASH-957757946319438E_1.sav, sauber: Stub 08 00 e0 03; RAM DAT_800aca5c = **0x0F**,
+  DAT_800aca5d = **0x00**, work_vars[0x10] = 0x000F, Lage (-19100,-1350) = Cut 10 der Schacht-Tuer; Framebuffer aus dem
+  VRAM, `K_belege/k1_original_30c1_sherry_fb.png`): Sherry steht als Kind mit geschlossenen Gliedern, Schuhe im
+  Schatten, KEINE Waffe.
+* PORT vorher: Sherrys Teile haengen am ERWACHSENEN Elza-Skelett (PL04-Bindelagen/-Animation): Beine auseinander-
+  gerissen, Fuesse schweben, Schuhe liegen getrennt im Schatten; in der rechten Hand ein grauer Stab = Elzas Messer-Hand
+  (wpn_md1[0] = PL04W00 dir[2], gezeichnet weil main.c ~Z.9555 `vis = wpn_md1_ok[wi]` auch fuer Waffe 0 zeichnet).
+  => Nutzer-Befund "voellig falsch und kaputt" + "Waffe" am Port reproduziert.
+
+### K1.5 RE-Beleg Original: Modellwechsel FUN_800314b0 + Waffenlader FUN_80036b68 (selbst disassembliert)
+Aufruf: Raumlader FUN_800396fc @0x80039788 `jal 0x800314b0` (wenn Nibble != work_vars[0x10], s. K1.3).
+FUN_800314b0 (ghidra1_V2.txt Z.~126300, RE_15_Quellcode_V2/FUN_800314b0.c, re15_disasm.py):
+* @0x800314d4 `lbu v0,DAT_800aca5c`, @0x80031500 Tabelle **@0x80073f70** (u16 je Modell: `3c 00 3d 00 ... 4b 00`) ->
+  @0x8003151c `jal 0x80013b60` laedt die PLD nach 0x801bd814. Modell 15 -> Datei 0x4B = PL0F.PLD (CD-Dateitabelle
+  @0x8006f440, Eintrag 74: Groesse 126892 = PLD/PL0F.PLD; Eintrag 59 = 189108 = PL00.PLD).
+* ALLE VIER Teile werden gebunden: @0x8003154c `sw v0,DAT_800acbc0` = dir[0] **EDD** (Spieler +0x16c), @0x80031578
+  `sw v0,DAT_800acad8` = dir[1] **EMR** (+0x84), @0x800315a0 `sw v0,DAT_800aca64` = dir[2] **MD1**
+  (@0x800315c8 `jal 0x80022150`), @0x800315b0 `jal 0x8004ee78` = dir[3] **TIM**; @0x80031614 `jal 0x8001e56c` +
+  @0x80031624 `jal 0x8001e5b0` = Skelett-Aufbau aus dem neuen EMR. => Skelett + Animation + Mesh + Textur der Figur.
+* Waffe: @0x8003167c `lbu v1,DAT_800aca5c`, @0x80031680 `jal 0x800c00a8` (DEBUG.BIN, resident @0x800c0000: Datei-
+  Offset 0xa8; liest Byte-Tabelle @0x800c00d4[Modell] = `01 x15, 00` -> 1 fuer Modell 0..14, 0 fuer 15),
+  @0x80031690 `sb v0,DAT_800aca5d`; @0x80031694 `ori v0,zero,0xf` / @0x800316b8 `bne v1,v0` / **@0x800316c4
+  `sb zero,DAT_800aca5d` = Modell 0x0F -> Waffe 0** (Bytes `03 00 62 14` / `5d ca 20 a0`).
+* Danach @0x800316e8 `jal 0x800440c4(Modell)` (CORE-Klangbank je Modell, Tabelle @0x80073a88/@0x80073ab0),
+  @0x800316f0 `jal 0x80036b68` (Waffe), @0x80031708 `jal 0x80043d8c(Waffe)` (ARMS-Klangbank), @0x80031718
+  `sh 100,DAT_800acaee` (HP = 100).
+FUN_80036b68 (Waffenlader): @0x80036b84/@0x80036b8c Modell/Waffe, Tabelle **@0x800741e8** (u16 je Modell:
+`4c x4, 61 x4, 4c x7, 76 00`) -> Datei Basis + Waffe; Modell 15 -> 118 = PL0FW00.PLW (Eintrag 117: 14696 B).
+@0x80036be4 `sw ..,DAT_800acbc8` = dir[0] W-EDD (+0x174), @0x80036c04 `sw ..,DAT_800acbc4` = dir[1] W-EMR (+0x170);
+**@0x80036bf8 `lbu v1,DAT_800aca5d` / @0x80036c08 `beq v1,zero,0x80036da0` (Bytes `65 00 60 10`): Waffe 0 ->
+KEIN Hand-/Waffen-Mesh, keine Waffen-TIM** (der ganze Anhang @0x80036c10..@0x80036d9c entfaellt).
+PLD-Inhalt (`K_belege`, eigener Schnitt ueber die Verzeichnistabelle): PL0F.PLD EDD 24 Clips
+{28,28,133,30,20,38,1x11,45,31,1x5}, EMR 15 Knochen Hierarchie wie PL04, Bind Wurzel (0,-1268,0) (Kind; PL04 -1709),
+MD1 15 Meshes, TIM 256x256 8bpp. PL0FW00.PLW: EDD 9 Clips {20,1,40,1,1,28,15,1,8}, EMR 15 Knochen 115 Keyframes,
+MD1 1 Mesh, dir[3] 2336 B.
+
+### K1.6 Weitere Modell-0x0F-Stellen im Original (alle 33 Leser von DAT_800aca5c, ghidra1_V2.txt, + Overlays)
+* Bewegung je Modell [Tempo, Drehung], Index Modell*2 (Zeile 15 = Sherry, Bytes aus PSX.EXE):
+  GEHEN @0x80073ea4 (Leser Tempo @0x800324d4, Drehung @0x800323a0) Zeile 15 @0x80073ec2 = `32 30` = [50,48];
+  RUECK @0x80073ec4 (@0x80032d5c / @0x80032c4c) Zeile 15 `23 30` = [35,48]; DREHEN @0x80073ee4 (@0x80032a08) Zeile 15
+  `00 50` = [0,80]; RENNEN @0x80073f24 (@0x800327e8 / @0x80032688) Zeile 15 @0x80073f42 = `78 40` = [120,64].
+  (Leon Zeile 0: [75,48] [70,48] [0,96] [200,72]; Elza Zeile 4: [70,48] [65,48] [0,96] [210,72].)
+* Gehen @0x8003258c / Rennen @0x80032898: `ori v0,zero,0xf` + `beq` -> Modell 0x0F ueberspringt den Fussanker
+  FUN_800369f8 und die Tempo-Mischung (Port fuehrt diese Mischung fuer niemanden -> nichts zu tun).
+* Hochklettern @0x8003818c-a8: Ausloesebild 0x63 statt 0x1d fuer Modell 0x0F (Sherrys Clip 2 hat 133 Bilder).
+  Port: climb_common.c verglich `p->type == 0x0f` — der Spieler-Typ ist im Port aber immer 0 (actor_common.c:38),
+  der Zweig war tot -> jetzt `re15_sherry_r41_modell()`.
+* Zielen nur mit Waffe != 0 (`lbu DAT_800aca5d` + beq/bne zero vor `ori v0,zero,0x701`): Stehen @0x80032014, Gehen
+  @0x80032430, Rennen @0x80032720, Drehen @0x80032a80, Rueckwaerts @0x80032cb4. Port zielte mit R1 immer.
+* Wund-Zeile = Modell (FUN_80037c1c @0x80037c8c `lbu DAT_800aca5c`, 8 Zeilen @0x80074208-87); Zeile 15 liegt hinter
+  der Tabelle (Original liest @0x800742f8 Fremddaten) -> Port: keine Zeile (re15_kleidung_panel_ziel liefert 0).
+* Overlays STAGE1-5 je 1 Leser (Griff-Zweig Leon/Elza ueber Bit 2) — nicht Sherry-spezifisch.
+
+### K1.7 Umsetzung (Commit cdb12ea8, Messung nachher K1.8)
+| Datei | Inhalt |
+|---|---|
+| NEU engine/src/sherry_r41.c, include/re15_sherry_r41.h | Modell-Spiegel (`re15_sherry_r41_modell`), Waffe beim Wechsel (0x0F -> 0 @0x800316c4; zurueck -> vorherige Waffe = PORT-WAHL wie Westen-Weg, Original: DEBUG.BIN-Tabelle @0x800c00d4 = 1 Messer), Ausruesten gesperrt solange 0x0F, Bewegungs-Zeile 15, Messhaken RE15_WORKVAR_AT |
+| NEU platform/pc/src/sherry_pc_r41.c/.h | Koerper-Tausch: bei neuer Waffen-Familie (@0x800741e8[Modell]: 76/97/118) EDD+EMR der PLD binden (@0x8003154c/@0x80031578), W00-Bank der Familie (PL0FW00.PLW, @0x80036be4/@0x80036c04, Verbund Bindelage+Keyframes wie main.c [wpn-bank]), alle Hand-Meshes aus (@0x80036c08), Wunden loeschen (FUN_80037c1c @0x800316c8), CORE-Bank des Modells (FUN_800440c4 @0x800316e8 -> CORE0F.VB 41200 B); Boot-Familie gesichert + beim Zurueckkehren wiederhergestellt; gleiche Familie (Weste PL00/01, Elza PL04-07: EDD/EMR md5-gleich) -> unveraendert |
+| platform/pc/main.c (Haken) | include; Anmeldung nach pl00_*; Aufruf in pc_sync_player_model nach MD1/TIM; Hand-Mesh nur bei Waffe != 0 (@0x80036c08); Wund-Zeile = Modell (@0x80037c8c) |
+| engine/src/re15_damage.c (2 Zeilen) | `re15_player_waffe_roh` (nur aca5d, kein Ausruest-Platz); Ausruesten gesperrt solange Sherry |
+| engine/src/player_common.c (4 Haken) | Tempo/Drehung Zeile 15 fuer Modell 0x0F; kein Zielen mit Waffe 0 (5 Original-Stellen oben) |
+| engine/src/climb_common.c (1 Zeile) | Ausloesebild 0x63 fuer Modell 0x0F (@0x8003818c) ueber den Modell-Spiegel |
+
+### K1.8 Messung nachher (gleicher Lauf, Bau cdb12ea8: `re15_port/build/r41k_laeufe/n30c1s`)
+debug.log: `[sherry-r41] Spielermodell 4 -> 15, Waffe (aca5d) 0`, `[sherry-r41] Koerper -> Familie 118 (PL0F): 15 Knochen,
+24 Clips, W00 9 Clips, Wurzel-Bind y -1268`, `[pld] Spielermodell -> PLD/PL0F.PLD`. Bild
+**`K_belege/k1_original_vs_port_nachher_30c1.png`** (Original-Puffer | Port vorher F200 | Port nachher F20 | F200):
+nachher steht Sherry wie im Original als Kind mit geschlossenen Gliedern, Schuhe im Schatten, keine Waffe.
+
+## K2 — ROOM3091-Szene "staendig falsche Animationen"
+
+### K2.1 Skript (ROOM3091 sub07 @0x016CA..@0x01DB0, `K_belege/k2_scd3091.txt`) und Rollen
+Spieler = SHERRY (Modell 0x0F, K1.3), Gegner 0 = John (0x49, Sce_em_set @0x014E0), Gegner 1 = Elza als NPC (0x42 aus
+CDEMD1 Sektor 1505, @0x014F4). Plc_motion(0,n) = Kanal-Sub 0 = Raum-RBJ (+0x180/+0x184, Handler @0x80041b90:
++0x94 = pc[2] @0x80041ba8, +0x5 = pc[1] @0x80041bc4, +0x1c4 = pc[3] @0x80041bc8), Plc_motion(2,6) = Sub 2 = eigene
+Bank (+0x170/+0x174), Plc_dest Modus 5/9 = Geh-/Dreh-Sub (eigene Bank). Raum-RBJ 3091: rec0 Marker 0x1 (1 Clip,
+2 Keyframes = Platzhalter), rec1 Marker 0x2 (10 Clips, John), rec2 Marker 0x3 (14 Clips; 0..10 Erwachsenenhoehe =
+Elza, 11..13 Kindhoehe = Sherry, K1.3). Binder FUN_8001b3f8 (Spur J, @0x8001b410/@0x8001b450/@0x8001b4c4):
+Spieler = letzter Record mit Bit 0 = rec2, Gegner 0 = rec1, Gegner 1 = rec2.
+
+### K2.2 Messung vorher (Port, Basis 700483de ohne Binder; Laeufe `re15_port/build/r41k_laeufe/v3091a|b`)
+Elza-Neuspiel, RE15_DEBUG_JUMP=3090@250, RE15_SUBSTART=7@40#3091, Kreuz alle 30 Bilder (RE15_PAD_AT), RE15_ANIM_TRACE,
+RE15_FRAMEDUMP. Clip-Folge `K_belege/k2_port_vorher_3091_clipfolge.txt`, Bilder `k2_vorher_bogen1.png`,
+`k2_vorher_zoom1.png`. debug.log `[rbj] room 3091 cinematic overlay: 1 clips, 2 kf`:
+* Spieler: in ALLEN Spielerzeilen Clip 0 mit 2 Bildern (rec0-Platzhalter) — die Figur steht starr, keine Geste.
+* Gegner 1 (Elza-NPC): UNGEBUNDEN -> Plc_motion(0,n) spielt Bank 0 des NPC-Blobs (dir1: Clips {34,32,50,20,20,20,
+  50,1,...}): u.a. Clip 9 = 1 Bild, hunderte Bilder lang gehalten (F520-661, F762-1142, ...), Clip 3/4 mit
+  Wurzelversatz -> Bilder zeigen verrenkte/kniende Posen.
+* Gegner 0 (John): rec1 (richtig gebunden).
+=> Nutzer-Befund reproduziert. Ursache: Binder (A-E5, Spur J) — Spieler rec0 statt rec2, Gegner 1 ohne Record.
+
+### K2.3 ORIGINAL gemessen (DuckStation-GDB, `re15_port/tools/r41_k/k2_orig_3091.py`)
+Ausgang: Spielstand HASH-957757946319438E_1.sav (sauber, Modell 0x0F in 30C1, Kopie scratchpad K41/orig). Bild 20:
+Flags (4,8)=1 + (9,21)=1 (Bank-Tabelle @0x80074664), Tuerwechsel wie FUN_800430bc mit der Nutzlast der 30C1-Tuer
+Slot 0 (@0x00B5A, Ziel 3091), Spieler vor die Riegeltuer (Slot 1), Viereck (= raw 0x80, AOT-Pruefung) -> sub02 ->
+sub07: "SZENE (4,16)=1 bei Bild 175". Danach je Bild (Haltepunkt 0x8001ce04) Spieler + Gegner 0/1: Sub, Phase, Clip,
+Bild, +0x1c4, +0x180/+0x184, Lage; Kreuz alle 40 Bilder. 2953 Szenenbilder bis zum Raumwechsel nach 30C1.
+settings.ini und resume.sav danach bytegleich zurueck (Protokoll-Kopf `K_belege/k2_orig_3091_gdb_lauf2_kopf.txt`,
+volles Protokoll `k2_orig_3091_gdb_lauf2.log.gz`).
+* RBJ-Kanaele im RAM: Spieler (Typ 0x0f) und Gegner 1 (0x42) w180/w184 = 0x8012737c/0x8012da54 = rec2, Gegner 0
+  (0x49) 0x80121de4/0x80126edc = rec1 (Basis RBJ+0x1440; Record-Offsets aus dem RDT-Trailer) -> Binder-Ergebnis
+  der Spur J am Original bestaetigt.
+* Sub-0-Clipfolgen (Original):
+  Spieler: 13(Schleife), 12, 12r, 13, 11, 11r, 13, 11, 11r, 13, 12, 12r, 13, 12, 12r, 11, 11r, 13
+  Gegner 0: 3, 3r, 2, 0, 0r, 8, 0, 0r, 8, 1, 1r, 8, 4, 4r, 3, 3r, 8, 1, 1r, 0, 0r, 8, 4, 4r, 0, 0r, 8, 3, 3r, 0, 0r, 8
+  Gegner 1: 4, 4r, 3, 3r, 9, 1, 1r, 0, 0r, 9, 4, 4r, 9, 1, 1r, 0, 0r, 9, 4, 4r, 9, 5, 5r, 2, 9, 6, 6r, 9
+  (r = Plc_flg 0x80 rueckwaerts). Dazwischen die Geh-/Dreh-Subs 5/6/9 (eigene Bank Clip 0/1/2/5) und Sub 2 Clip 6.
+
+### K2.4 Umsetzung
+Keine eigene Aenderung am Binder (A-E5): J's Commit e4a9f39c `rbj-binder` UNVERAENDERT per cherry-pick (hier
+299b6deb). Dazu K1 (Sherry-Koerper), damit rec2-Clips 11..13 auf dem Kind-Skelett laufen, fuer das sie gebaut sind.
+
+### K2.5 Messung nachher (Bau cdb12ea8, Lauf `re15_port/build/r41k_laeufe/n3091s`)
+Sherry als Spielfigur (RE15_WORKVAR_AT=0x10:15@200 vor dem Sprung -> Raumlader tauscht den Koerper), sonst wie K2.2.
+debug.log: `[rbj-binder] ROOM3091 Spieler rec2 (alt rec0) Gegner 0:rec1(alt rec1) 1:rec2(alt rec-1)`,
+`Aktor 1 Typ 0x49 Marker-Slot 1 -> rec1`, `Aktor 2 Typ 0x42 Marker-Slot 2 -> rec2`.
+Vergleich `K_belege/k2_vergleich_orig_port_nachher.txt` (`re15_port/tools/r41_k/k2_vergleich.py`): die Sub-0-
+Clipfolgen von Spieler, John und Elza-NPC sind im Port nachher IDENTISCH mit dem Original (gleiche Clips, gleiche
+Reihenfolge, gleiche Vor-/Rueckwaerts-Paare, gleiche Schleife Clip 13); Bildzahlen je Clip gleich (rec2: 13=40,
+12=30, 11=15; Elza 4=30, 3=20, 9=24, 1=30, 0=20, 5=25, 2=30, 6=30; John rec1). Absolute Bildnummern weichen nur
+durch den Tastentakt der Nachrichten ab (Port 30, Original 40 Bilder). Bilder `K_belege/k2_nachher_zoom1.png`.
+
+### K2.6 Bild fuer Bild: Original-Spielstaende gegen Port (gleicher Szenenzustand)
+Zweiter Original-Lauf (`k2_orig_3091.py --lb 300,700,...,2700`, Protokoll-Kopf `K_belege/k2_orig_3091_gdb_lauf5_kopf.txt`):
+derselbe Ablauf (wieder 2953 Szenenbilder), dazu je ein Slot-1-Spielstand (LB = SaveSelectedSaveState) bei Szenenbild
+300/700/1100/1500/1900/2300/2700 (gespeichert ~6 Bilder spaeter); Slot-1-.sav/.bak und resume.sav danach bytegleich
+zurueck (md5). Aus jedem Stand der angezeigte VRAM-Puffer (y 240..479; Puffer 1 enthielt den halb gezeichneten
+naechsten Rahmen). Port-Gegenstueck = erstes Framedump-Bild (alle 20 Bilder, Lauf `r41k_laeufe/n3091t` ueber die
+echte Riegeltuer) mit DERSELBEN Clip-Kombination je Aktor (Spieler/John/Elza inkl. Rueckwaerts-Bit) in Reihenfolge.
+**`K_belege/k2_original_vs_port_3091.png`**: alle 7 Paare zeigen dieselbe Textzeile ("Yes, somehow!...", "What's your
+name, kid?", "You seem to have taken a liking to her.", "Your... dad...?", "I dunno. Sounds like somebody's in there."
+mit Elzas Pistolen-Pose = eigene Bank Clip 6, "Will do!", "Sherry: Good luck!"), dieselbe Aufstellung (Elza links,
+John Mitte, Sherry als Kind rechts) und dieselben Posen.
+
+### K1.9 Gehen/Rennen der Spielfigur Sherry - Original gegen Port (je Bild)
+* ORIGINAL (`re15_port/tools/r41_k/k1_orig_tempo.py`, Spielstand 30C1, Steuerkreuz hoch bzw. hoch+Kreuz per vgamepad,
+  Lage 0x800aca88/0x800aca90 + Tempo DAT_800acae0 je Bild): Gehen **50 je Bild**, DAT_800acae0 = 50, W-Clip 5;
+  Rennen **120 je Bild**, DAT_800acae0 = 120, W-Clip 0 (20 Bilder); Wand bei z -3632 (`K_belege/k1_orig_tempo_30c1.txt`,
+  `k1_orig_rennen_30c1.txt`).
+* PORT nachher (gleicher Ort, RE15_PAD_AT, RE15_STATE_LOG): Gehen 50 je Bild, Rennen 18 x 120 + 2 bis z -3632 - dieselbe
+  Folge wie das Original (-1350 -> -3630 -> -3632). R1 gehalten: kein Zielen (mo bleibt Ruhe-Sentinel).
+* Nebenbefund (nicht Spur K): nach dem Loslassen bremst das Original ab (DAT_800acae0 80/40/0/-40, Schritt zurueck,
+  B52-B55) = Renn-Stopp @0x80032918-4c, spielweit Spur E (Entscheid E-E2); der Port haelt hier sofort.
+
+## Tests (gezielt, keine volle Suite)
+Neue Riegel (`re15_port/tests/unit/probes/r41_stage3szenen_b.cmake`, Quelle `tests/unit/test_r41_stage3szenen_b.c`,
+`tests/integration/test_r41_stage3szenen_b_{sherry,3091}.cmake`; eigene exe-Kopien re15_pc_r41ks_/r41kz_ + Laufordner,
+RE15_*-Umgebung des Aufrufers geloescht, `cmake_minimum_required` in jedem -P-Skript, libm unter Linux):
+| Riegel | misst | Punkt |
+|---|---|---|
+| unit_r41_stage3szenen_b_pins | Original-Bytes PSX.EXE (@0x80073f70[15], @0x800741e8[15], CD-Eintraege 74/117 = Dateigroessen, @0x80031694/b8/c4, @0x80036bf8/c08, Zeile 15 der vier Tabellen, 5 Ziel-Sperren), ROOM3061 @0x011F6, ROOM3091 @0x01D9C/@0x01DA8, RBJ rec2 Kind-/Erwachsenenhoehe | K1, K2 |
+| unit_r41_stage3szenen_b_waffe | Modellwechsel -> Waffe 0, Ausruesten gesperrt, Tabelle Zeile 15, zurueck -> Waffe wieder da, Elza 4->5 unveraendert | K1 |
+| unit_r41_stage3szenen_b_koerper | PC-Modul an echten Dateien: PL0F-Koerper (15 Knochen, Bind -1268, 24 Clips), W00 (9 Clips, 115 Keyframes), keine Hand-Meshes, Wunden 0, CORE 0x0F; zurueck auf PL04 (alle 42 Banken/Meshes); Weste/Elza-Varianten aendern nichts | K1 |
+| integration_r41_stage3szenen_b_sherry | echte exe, Schacht-Tuer 3061 -> 30C1: Raumlader-Zeilen, Knochenlage Bild 60 (Huefte -1261, Brust -1726, Knoechel -71), Gehen 8/8 x 50, Rennen 10/10 x 120, R1 40/40 ohne Zielen | K1 |
+| integration_r41_stage3szenen_b_3091 | echte exe, Viereck an der Riegeltuer (sce-5-Scan) -> sub07: Binder-Zeilen + Sub-0-Clipfolge Spieler/John/Elza = Original | K2 |
+
+Gezielte Laeufe (Bau 2ac553ef + Dossier; Regex = eigene Riegel + Gruppen der beruehrten Module player_common/re15_damage/
+climb_common/enemy_common+rbj_binder (J)/main.c-Haken: Zielen, Waffen, Inventar, Weste, Kleidung/Wunden, Klettern,
+Raumwechsel, RBJ-/NPC-Szenen):
+* `ctest --test-dir re15_port/build -R "^(unit|probe|prop)_(r41_stage3szenen_b|r41_stage3szenen_a_rbj|damage|weapon_select|inv_fsm|aim_|savedata|weste_effekt|re2_room1190_ab|wound_accumulator|room_transition_cmd|anim_|re2_weapon_rows|1090_climb_pin|rvd_scan_ungated_by_climb|1190_|autofire_pin|r17_waffen_loop_pin|r26_inventar|r30_android_n3_plc_aim|r30_granate|r35_granate|r35_inventar1050|r35_werfer|r36_elza_schuss|r36_granate|r36_inventar|r36_karte_r1190|r36_kleidung|r36_klettern|r36_schuss|r36_ziel1190|r37_beretta|r37_elzaems|r38_kleinkram|r39_elza_klettern|r39_inventar|r39_treffer|r39_zustand|tank_controls|npc|marvin|room1040|lane_b1|r35_cut1150|r35_cut10f0|r35_entladen|r36_szene|r37_roy|r37_szene11c0|r38_dining1141|r38_heliport1171|r38_npckante|r38_szenenschutz|r39_dining1141|r39_heliport1171|r39_johnruf1041|room1140|r36_zombieki_szenen|r38_elzatoene|r33_tuer1120|r34n_d_adaruf|r35_affen|r36_elza|r36_szenenleon|r36_gegnerzahl|r36_schluessel|r39_elzazombies|r39_funk10f1|r16_tuer1040)|^(r28_messer_dauerschlag|r29_1d3_doppelabzug|r31_trefferboxen)$" -j 6 --timeout 600 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 275`**
+* `ctest --test-dir re15_port/build -R "^integration_(r41_stage3szenen_b_sherry|r41_stage3szenen_b_3091|r37_elzaems_elza3091|r37_elzaems_elza3071|weste_load_pin|r36_kleidung_bild|r36_kleidung_spielweg|r39_zustand_kleidung|r39_dining1141_zielen|r36_klettern|room_transition|r36_elza_schuss|r36_schuss|r36_ziel1190_scheiben|r39_inventar_status|r37_szene11c0|r36_szene1150)$" -j 3 --timeout 2400 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 17`** (Total Test time (real) = 918.56 sec)
+
+## OFFEN (mit Adresse, nicht erfunden) — Stand Nachbesserung 1
+1. ~~Rueckwechsel auf Elza~~ ERLEDIGT (NB1.M2): wie das Original - Waffe := @0x800c00d4[4] = 1 (Messer), HP := 100,
+   Status := 0, am Original per GDB gemessen. Keine Nutzerfrage mehr.
+2. Elzas Bewegungswerte: Tabellen-Zeile 4 ist [70,48]/[65,48]/[0,96]/[210,72] (Gehen/Rueck/Drehen/Rennen, @0x80073eac/
+   @0x80073ecc/@0x80073eec/@0x80073f2c), der Port faehrt fuer Leon UND Elza 75/70/96/200 (player_common.c). Spielweit fuer
+   Elza, nicht Spur K -> Orchestrator (keine Nutzerfrage: das Original ist eindeutig).
+3. Renn-Stopp (Abbremsen 80/40/0/-40 @0x80032918-4c) - Spur E (E-E2), in r41/integration als rennstopp_r41.c.
+4. RUESTUNGS-Wechsel (Weste ROOM1190/1191 sub15, U.S.S.-Ruestung ROOM40A0/40A1 sub06): das Original fuehrt auch dort den
+   ganzen Schwanz von FUN_800314b0 aus - Waffe := 1 (@0x80031680-90), Wunden := 0 (@0x800316c8), HP := 100
+   (@0x80031710/18), Status := 0 (@0x80031720). Der Port behaelt dort Waffe, Wunden, Status und HP; nur die HP sind durch
+   den Nutzer-Entscheid 2026-08-30 ("Weste soll nicht heilen") gedeckt. Vorbestehend, nicht Spur K -> Orchestrator.
+   Wund-Zeile 15 (Sherry) liegt im Original hinter der 8-Zeilen-Tabelle (@0x800742f8, Fremddaten) -> Port: keine
+   Wund-Stempel fuer Sherry (Beta -> Retail).
+5. Ausruesten waehrend Sherry ist gesperrt (PORT-WAHL, Form = RE2-Retail: Sherry fuehrt keine Waffe). Das Original
+   wuerde Datei 118 + Waffe laden (FUN_80036b68 @0x80036bb4-c4) = keine PLW (Beta-Luecke).
+6. PSX-Ziel: Koerper-Tausch und Figurwechsel-Schwanz (CORE/ARMS) stecken im PC-Modul (platform/pc/src/sherry_pc_r41.c);
+   platform/psx tauscht weiter nur MD1/TIM (PSX hier nicht gebaut). Waffe/HP/Status/Wunden sind Engine (sherry_r41.c).
+7. Die Kriech-Szene ROOM3061 sub02 ist Spur J; ueber den echten AOT laeuft sie im K-Baum durch (Abnahme 0, H3).
+8. Port-Spielstand im Sherry-Abschnitt: re15_savedata.c rekonstruiert work_vars[0x10] beim Laden aus der Figur (Elza -> 4,
+   re15_savedata.c ~Z.279-292), das Original speichert 0x800b0ff0 mit (Save-Record-memcpy @0x800261c4-d8, laut Kommentar
+   dort). Ein Port-Stand aus 30C1/3071/3081/3091 laedt daher als Elza. Vorbestehend (der Auslieferungsstand kann nicht
+   speichern), nicht Spur K -> Orchestrator.
+9. Integration (NB1): `engine/src/plcloop_r41.c` ist add/add gegen r41/integration (Spur E) - die K-Fassung ist E's
+   Fassung + Binder-Record (@0x8001b450) und zu nehmen; der player_common.c-Haken ist wortgleich. Mit diesem Stand laufen
+   lassen: E's `unit/integration_r41_kleinkram_b_kurbel*` (ROOM2020, ein Record -> unveraendert) und J's
+   `integration_r41_stage3szenen_a_3060/3061` (Marvin mit eigenem Koerper/Messer/HP 100; Elza-Schleife Clip 10 in 3061
+   @0x010F8/@0x01126 jetzt wie 0x80050cb8).
+
+## Fuer den Nutzer
+* Keine neuen Assets (kein shared_assets/RE2), keine Sprachdateien; synchro/ und pri/ unveraendert.
+* Was sich aendert: Nach der Kriech-Szene in 3061 spielt man in Elzas Szenario Sherry (wie im Original). Sherry ist das
+  echte Kind-Modell mit eigenem Skelett und eigenen Bewegungen (PL0F.PLD + PL0FW00.PLW), traegt KEINE Waffe, kann nicht
+  zielen und laeuft so schnell wie im Original (Gehen 50, Rennen 120 je Bild). In der 3091-Szene ist Sherry die
+  Spielfigur, Elza steht als NPC mit ihrer Pistole daneben; alle drei Figuren spielen dieselben Gesten in derselben
+  Reihenfolge wie das Original, und Sherrys Haltung zwischen den Gesten bewegt sich jetzt durchgehend (ihr Wiederhol-Clip
+  laeuft im Kreis wie im Original, statt nach 40 Bildern einzufrieren).
+* Wie im Original (Nachbesserung 1): Beim Figurwechsel bekommt die neue Figur volle Energie (100) und ist entgiftet;
+  Sherry hat keine Waffe, nach der 3091-Szene hat Elza das Messer in der Hand (die Pistole bleibt im Inventar und laesst
+  sich wieder ausruesten). Dasselbe beim Wechsel Leon -> Marvin (ROOM3020) und zurueck (ROOM3060). Marvin hat als
+  Spielfigur jetzt seinen eigenen Koerper (laengere Arme, PL0D) statt Leons Skelett. Das Anlegen/Ablegen der Weste und
+  der U.S.S.-Ruestung bleibt wie bisher (heilt nicht - dein Entscheid vom 2026-08-30).
+* Keine Entscheidungsfragen.
+
+## Nachbesserung 1 (2026-10-25, nach Abnahme 0 `K_abnahme_0.md`)
+Auftrag: M1 (Spielfigur-Schleife Clip 13 in 3091, blockierend), M2 (FUN_800314b0 ganz: HP := 100, Waffe aus der
+DEBUG.BIN-Tabelle beim Rueckwechsel, keine Wahlfrage), M3 (EDD/EMR bei jedem Neuladen binden statt nach Waffen-Familie;
+Marvin 0x0D). Basis: HEAD cb51ec29 (Stand der Abnahme 0661fc6e + Abnahme-Doku). Messdateien dieser Nachbesserung:
+Scratchpad `K41nb1/` (im Text `K41nb1/...`).
+
+### NB1.M1 Spielfigur-Schleife Clip 13 (Plc_flg 0x04) — behoben
+**Ursache.** Der Spieler-Vorschub (player_common.c `p->anim_frame++`) kannte das Clip-Ende nicht, der Zeichner hielt bei
+`cur >= fc` das letzte Bild (anim_select_common.c HOLD-LAST). Plc_flg 0x04 wurde fuer den Spieler nie ausgewertet.
+
+**Messung vorher** (selbst, Bau = Abnahme-Stand, Weg des Riegels `integration_r41_stage3szenen_b_3091`, Lauf
+`build/tests/integration/r41_stage3szenen_b_3091_wd/lauf_7d91e6dc`, Auswerter `K_belege/nb1_m1_clip13.py`): 6 Clip-13-
+Abschnitte F363-1141 (779), F1242-1745 (504), F1846-2078 (233), F2179-2338 (160), F2439-2854 (416), F3076-3239 (164) =
+2256 Bilder, **0 Spruenge 39 -> 0, 2016 Bilder auf Slot 39 gehalten** (739/464/193/120/376/124). = Abnahme-Befund.
+
+**Original** (selbst: `re15_disasm.py dis 0x80050cb8 80`, `dis 0x8001f600 20`, `read 0x80073e30 8`, `dis 0x8001b3f8 40`):
+* Spieler-Sub-Tabelle @0x80073e30[0] = 0x80050cb8 (= NPC-Tabelle @0x80076ca0[0]). Phase 1 ruft f314 mit dem KANAL
+  +0x180/+0x184: `lw a0,384(v0)` @0x80050d40, `lw a1,388(v0)` @0x80050d48, `jal 0x8001f314` @0x80050d4c.
+* f314 posiert und schiebt danach vor: `lbu v0,149(v1)` @0x8001f610, `addiu v0,v0,1` @0x8001f618, `sltu v0,v0,s4`
+  @0x8001f624, am Clip-Ende `sb zero,149(v1)` @0x8001f63c + Rueckgabe 1.
+* Clip-Ende in 0x80050cb8: `ori v0,zero,0x2` / `sb v0,6(v1)` @0x80050da4 (Phase 2 = Halten), dann `lhu v0,452(v1)`
+  @0x80050db4, **`andi v0,v0,0x4` @0x80050dbc, `beq v0,zero,0x80050dcc` @0x80050dc0, `sb v0(=1),6(v1)` @0x80050dc8**
+  (Bytes ab 0x80050dbc: `04 00 42 30 02 00 40 10 01 00 02 34 06 00 62 a0`) = mit +0x1c4 & 4 bleibt Phase 1, der naechste
+  Takt posiert Bild 0.
+* Binder FUN_8001b3f8: `andi v0,a0,0x1` @0x8001b440, `beq` @0x8001b444, `sw v0,0(t3)` @0x8001b450, `sw v0,4(t3)`
+  @0x8001b460 (t3 = 0x800acbd4 = Spieler +0x180): JEDER Record mit Marker-Bit 0 schreibt den Kanal, der LETZTE gewinnt.
+* Original-GDB-Protokoll (`K_belege/k2_orig_3091_gdb_lauf2.log.gz`, eigener Zerleger): die 6 Clip-13-Abschnitte B1-779,
+  B880-1383, B1484-1716, B1817-1976, B2077-2492, B2714-2877 laufen Bild = i % 40 (0 Abweichungen), **19/12/5/3/10/4
+  Spruenge 39 -> 0**, fl 0x04/0x24 (0x20 = Halbtakt-Kippbit).
+* Zensus aller RDTs (`K_belege/nb1_m1_zensus_plcflg04.txt`, `nb1_m1_zensus_spieler_schleife.txt`, Skripte daneben):
+  Spieler-Plc_flg 0x04 in ROOM1011 @0x00D9E, ROOM1031 @0x029A8/@0x02A10, ROOM2020/2021 @0x00AA0 (Kurbel, Spur E), ROOM3061
+  @0x010F8/@0x01126 (Spur J), ROOM3091 @0x01712/@0x01906/@0x01A36/@0x01B0E/@0x01B7A/@0x01CA0, ROOM6031 @0x0104E - jedes Mal
+  im selben Takt direkt nach Plc_motion(0,n) und nie vor dem naechsten Spieler-Plc_motion/Plc_dest/Plc_ret geloescht
+  (ROOM11B0 sub04 setzt 0x04 nach Plc_dest = Geh-Sub, nicht Sub 0).
+
+**Befund am Port-Bestand.** Spur E hat denselben Mechanismus fuer die Kurbel ROOM2020 gebaut (`engine/src/plcloop_r41.c`,
+abgenommen, in `r41/integration`, NICHT im master). Dessen Clip-Laenge nimmt den ERSTEN Record mit Marker-Bit 0. In
+ROOM3091 ist das rec0 (Marker 1, 1 Clip, Platzhalter) -> Clip 13 ausser Bereich -> Rueckfall PL00-Bank = fuer Sherry
+PL0F-EDD Clip 13 = 1 Bild -> Wrap in JEDEM Takt (Slot 0 eingefroren). Ohne Korrektur haette die Integration E+J+K den
+Fehler nur verschoben; eine zweite, eigene Schleife der Spur K haette doppelt gewrappt.
+
+**Aenderung** (2 Commits):
+1. dbea1cd2 - Spur-E-Modul UNVERAENDERT uebernommen (Blobs `plcloop_r41.c` c5a86597, `re15_plcloop_r41.h` 8c6a15f2 =
+   Stand r41/kleinkram_b f63b4fb2 = r41/integration; Haken player_common.c 2 Zeilen wortgleich zu 871826e7).
+2. 576e6ac7 - `rbj_spieler_clip_len`: Record = `re15_rbj_binder_spieler` (Spur J, @0x8001b450), +9 Zeilen mit Kommentar
+   "Runde 41 Spur K (Nachbesserung 1, M1)". ROOM2020 (ein Record) unveraendert.
+
+**Integrationshinweis.** `plcloop_r41.c` meldet git beim Zusammenfuehren mit r41/integration als add/add; die K-Fassung
+ist E's Fassung + Binder-Record (Obermenge) -> K-Fassung nehmen. Der player_common.c-Haken ist wortgleich (kein
+Konflikt). Querbezug: dieselbe Schleife greift jetzt auch fuer Elza in ROOM3061 sub02 (@0x010F8/@0x01126, Spur J) und in
+ROOM1011/1031/6031 (byte-true, derselbe Handler 0x80050cb8).
+
+**Messung nachher** (Bau 576e6ac7, gleicher Weg, Lauf `lauf_627ebc8b`): 6 Abschnitte 779/504/233/160/416/164, **Spruenge
+19/12/5/3/10/4, 0 Abweichungen von Bild = i % 40, kein gehaltenes Bild**; letzte Bilder je Abschnitt = Original
+(16,17,18 / 21,22,23 / 30,31,32 / 37,38,39 / 13,14,15 / 1,2,3). Clipfolgen aller drei Figuren unveraendert = Original.
+Bildlauf (`K41nb1/lauf_bild3091.sh`, RE15_FRAMEDUMP an den Original-Takten, Port-Bild = 362 + B): Slots an B306/B1106/
+B1506/B1906/B2306 = 25/26/22/9/29 = Original f25/f26/f22/f9/f29. Sherry-Ausschnitt 52x100 @ (180,80), Schwelle 24, gegen
+das jeweils erste Bild: **Port nachher 32/11/95/49 Pixel** (vorher laut Abnahme 0/0/0), Original 28/22/123/51. Bilder
+`K_belege/nb1_m1_sherry_clip13_orig_vs_port.png` (Zoom) und `K_belege/nb1_m1_3091_orig_vs_port_voll.png` (gleiche
+Textzeilen, gleiche Gesten; der Lichtton ist H2 der Abnahme, nicht Teil von K2).
+
+**Riegel.** `unit_r41_stage3szenen_b_schleife` (echte RBJ ROOM3091: Binder rec2, Clip 13 = 40, 779 Takte -> Bild = i % 40,
+19 Umlaeufe; ohne 0x04 Halten auf 39; ROOM2020 = 40) und `integration_r41_stage3szenen_b_3091` mit erweiterter Auswertung
+`szene` (6 Abschnitte, Laengen = Original, Bild = i % 40, Spruenge = (Laenge-1)/40). Gegenprobe am Vorher-Lauf
+lauf_7d91e6dc: `FAIL` (0 Spruenge, 721/453/189/117/367/121 Abweichungen).
+
+
+### NB1.M2 FUN_800314b0 ganz (Waffe, HP, Status beim Figurwechsel) — behoben, keine Wahlfrage mehr
+**Ursache.** `re15_sherry_r41_modell_setzen` setzte nur fuer 0x0F die Waffe (0) und gab beim Verlassen die vorige Waffe
+zurueck (PORT-WAHL); HP und Status blieben stehen (Sherry erbte Elzas Energie). Das Dossier legte das dem Nutzer als
+Entscheidungsfrage vor - die Regel "Original oder nicht" verbietet das.
+
+**Messung vorher** (Port, Bau a6fe8166-Stand des Moduls, Lauf `K41nb1/marvin_vorher`, gleicher Figurwechsel-Pfad wie
+3061/3091): `[sherry-r41] Spielermodell 0 -> 13, Waffe (aca5d) 3` - Waffe bleibt, HP/Status unberuehrt.
+
+**Original statisch** (selbst: `re15_disasm.py dis 0x80031660 50`, DEBUG.BIN mit `k0/disraw.py`):
+* `jal 0x800c00a8` @0x80031680 (Bytes `2a 00 03 0c`), `sb v0,-13731(at)` = aca5d @0x80031690 (`5d ca 22 a0`).
+  DEBUG.BIN @0x800c00a8: `lui t1,0x800b` / `lbu t1,-13732(t1)` (aca5c) / `lui t0,0x800c` / `addiu t0,t0,212` /
+  `addu t0,t0,t1` / `lbu v0,0(t0)` / `jr ra`; Tabelle @0x800c00d4 = `01` x15, `00`. Im Original-RAM (lauf2_30c1.sav,
+  sauberer Stub `0800e003`) stehen ab 0x800c00a8 dieselben 64 Bytes wie in DEBUG.BIN (`K_belege/nb1_m2_ss_status.py`)
+  -> resident.
+* `ori v0,zero,0xf` @0x80031694, `bne v1,v0,0x800316c8` @0x800316b8, `sb zero,-13731(at)` @0x800316c4 (0x0F -> Waffe 0).
+* `jal 0x80037c1c` @0x800316c8 (Wunden), `jal 0x800440c4(aca5c)` @0x800316e8 (CORE), `jal 0x80036b68` @0x800316f0
+  (Waffen-Bank), `jal 0x80043d8c(aca5d)` @0x80031708 (ARMS), **`ori v0,zero,0x64` @0x80031710 / `sh v0,-13586(at)`
+  @0x80031718 (HP +0x9a := 100)**, **`sh zero,-13588(at)` @0x80031720 (+0x98 := 0, Bit 0x2 = Gift)**.
+* Einziger Aufrufer: Raumlader FUN_800396fc `jal 0x800314b0` @0x80039788 hinter dem Nibble-Vergleich @0x80039770 - also
+  bei JEDEM Modell-Neuladen.
+* Zensus aller Modellwechsel (`K_belege/nb1_m2_zensus_modell.txt`, Save work_vars[0x10], opcode-exakt): Weste ROOM1190/
+  1191 sub15 (0<->1, 4<->5), U.S.S.-Ruestung ROOM40A0/40A1 sub06 (2 bzw. 6; msg 12 "There is one U.S.S. armor ... Will you
+  equip it?"), Marvin ROOM3020 sub02 @0x00D7A (13) / zurueck ROOM3060 sub03 @0x010D2/@0x010DE (0/1), Sherry ROOM3061 sub02
+  @0x011F6 (15) / zurueck ROOM3091 sub07 @0x01D9C/@0x01DA8 (4/5).
+* Figuren im Original: Waffen-Basis @0x800741e8 = 76 x4 (0..3), 97 x4 (4..7), 76 x7 (8..14), 118 (15); Figuren-Bit 2 der
+  Modell-Nibble `lbu v1,-13732(v1)` @0x8001207c / `andi v1,v1,0x4` @0x80012088.
+
+**Original dynamisch** (DuckStation-GDB, neues Werkzeug `re15_port/tools/r41_k/k2_orig_rueckwechsel.py`, sauberer Stand
+lauf2_30c1.sav, ganze 3091-Szene; Protokoll `K_belege/nb1_m2_orig_rueckwechsel_gdb.log`): bei Szenenbild 2800 Sherrys
+HP := 37 und Gift (Status 0000 -> 0002) gesetzt; bis Szenenbild 2952 bleibt `aca5d 0 HP 37 Status 0002 25c8 0`. Nach dem
+Rueckwechsel (Raum 30C, Cut 1, 11 Bilder lang gleich): **`aca5c 4 aca5d 1 HP 100 Status 0000 25c8 0`**, Inventar
+`(1,0)(3,15)(21,50)` unveraendert. settings.ini / resume.sav / Slot-1-Staende danach bytegleich zurueck.
+
+**Entscheid (Regel "Original oder nicht"):** FIGUREN-Wechsel (Leon<->Marvin, Elza<->Sherry) bekommen den
+Original-Schwanz: Waffe := @0x800c00d4[Modell] (Sherry 0, sonst 1 = Messer), Wunden := 0, HP := 100, Status := 0, CORE-
+und ARMS-Bank des neuen Modells. Der Ausruest-Platz 0x800b25c8 bleibt wie im Original unberuehrt. RUESTUNGS-Wechsel
+derselben Figur (Weste, U.S.S.-Ruestung; Modelle 0..3 bzw. 4..7) bleiben beim Port-Weg: dort gilt der Nutzer-Entscheid
+2026-08-30 "die Weste soll nicht heilen" (scd_room_setup.c `re15_vest_hp_on_model_reload`), siehe OFFEN 4.
+
+**Aenderung** (ac5ad9c4, 39f96d51): `engine/src/sherry_r41.c` - `re15_sherry_r41_modell_setzen` mit Tabelle
+`k_debug_waffe[16]` (@0x800c00d4), HP/Status/Wunden (@0x80031710/18/20, @0x800316c8), Log mit Vorher-Werten; neue
+`re15_sherry_r41_ruestungswechsel` (Gruppen 0..3 / 4..7, @0x800741e8, @0x80012088). `platform/pc/src/sherry_pc_r41.c` -
+CORE (`re15_audio_prime_core`, @0x800316e8) und ARMS (`re15_audio_prime_weapon`, @0x80031708) je Figurwechsel; der Wund-
+Reset wanderte ins Engine-Modul. PORT-WAHL "vorige Waffe zurueck" und `s_waffe_gemerkt` entfernt.
+
+**Messung nachher** (Bau df63abea):
+* Marvin-Lauf `K41nb1/marvin_nachher` (Leon mit Pistole + Gift): `Spielermodell 0 -> 13, Waffe (aca5d) 1, HP 100, Status
+  0000 (vorher Waffe 3, HP 94, Status 0002)` = Original-Schwanz.
+* 3091-Riegel (Elza mit Pistole + Gift in jedem Raum bei Bild 100): Hin `4 -> 15`: Waffe 0, HP 100, Status 0; Rueck
+  `15 -> 4`: Waffe 1 (Messer), HP 100, Status 0 - Werte s. Tests unten.
+
+### NB1.M3 Koerper bei jedem Neuladen (Marvin 0x0D) — behoben
+**Ursache.** `sherry_pc_r41.c` band EDD/EMR nur bei neuer Waffen-Familie und begruendete das mit "gleiche Familie =
+bytegleich". Eigener md5-Vergleich aller PLD-Teile (`K_belege/nb1_m3_pld_teile.txt`): bytegleich sind nur PL00/01/02
+(EDD 3160 038c9653, EMR 57136 b467407e) und PL04/05/06/07 (EDD 3156 de98dbdd, EMR 56576 145d7964); PL03 (EMR), PL08..PL0E
+und PL0F weichen ab. Im Spiel betroffen: Marvin 0x0D (Familie 76 wie Leon, PL0D EDD 3152 / EMR 56976).
+
+**Original:** FUN_800314b0 bindet EDD und EMR bei JEDEM Aufruf ohne Familienabfrage - `sw v0,-13376(at)` (0x800acbc0,
++0x16c) @0x8003154c, `sw v0,-13608(at)` (0x800acad8, +0x84) @0x80031578 - und baut das Skelett neu (`jal 0x8001e56c`
+@0x80031614, `jal 0x8001e5b0` @0x80031624).
+
+**Messung vorher** (Lauf `K41nb1/marvin_vorher`, `K_belege/nb1_m3_marvin_vorher_log.txt`): keine Koerper-Zeile, Bild 60 in
+30C0: Oberarm (Knochen 9 -> 10) im Bild 426.0 = PL00-Bindelage 426.1 -> Marvin auf Leons Skelett.
+
+**Aenderung** (ac5ad9c4): bei jedem Modellwechsel Bytevergleich EDD/EMR der neuen PLD gegen die PLD des gebundenen Modells;
+verschieden -> Koerper aus der neuen PLD binden (eigene Kopie); die W-Verbunde (main.c [wpn-bank]: Bindelage des Koerpers +
+Keyframes der PLW) bekommen die neue Bindelage, Keyframes und Banken der Familie bleiben. Familienwechsel (Sherry) wie
+bisher, beim Zurueckkehren nach dem Wiederherstellen erneut verglichen. Kopf von sherry_pc_r41.c berichtigt.
+
+**Messung nachher** (`K41nb1/marvin_nachher`, `K_belege/nb1_m3_marvin_nachher_log.txt`): `Koerper -> Familie 76 (PL00):
+15 Knochen, 24 Clips, W00 14 Clips, Wurzel-Bind y -1810 (Modell 13)` (PL0D -1810, Leon -1804); Bild 60: Oberarm 488.0 /
+Unterarm 454.5 = PL0D 488.8 / 455.4 (PL00 426.1 / 409.7). Bild `K_belege/nb1_m3_marvin_30c0_vorher_nachher.png`: vorher
+kurze Arme (Haende an der Huefte, Pistole), nachher Marvins Proportionen (Haende tiefer, Messer = Waffe 1).
+Kein Original-Spielstand mit Marvin als Spielfigur vorhanden (alle sauberen Staende in stage_saves/ und DuckStation-
+savestates/ durchsucht: Modell nur 0/1/4/5/15); der Beleg ist der Code (@0x8003154c/@0x80031578 ohne Bedingung).
+**Querbezug Spur J (3060 Marvin):** Marvins Abschnitt laeuft jetzt auf seinem eigenen Koerper mit Messer und HP 100 (wie
+das Original). J's Riegel `integration_r41_stage3szenen_a_3060` muss bei der Integration mit diesem Stand laufen.
+
+
+### NB1 Tests (gezielt, keine volle Suite; Bau 896e3014)
+Neue/erweiterte Riegel (alle in `re15_port/tests/unit/probes/r41_stage3szenen_b.cmake`):
+| Riegel | misst | Mangel |
+|---|---|---|
+| unit_r41_stage3szenen_b_schleife | echte RBJ ROOM3091: Binder rec2 (@0x8001b450), Clip 13 = 40; 779 Takte Vorschub -> Bild = i % 40, 19 Umlaeufe; ohne 0x04 Halten 39 (@0x80050da4); ROOM2020 (Spur E) = 40 | M1 |
+| integration_r41_stage3szenen_b_3091 (erweitert) | 6 Clip-13-Abschnitte 779/504/233/160/416/164, Bild = i % 40, Spruenge (L-1)/40 (= Original-GDB); beide Figurwechsel mit Pistole + Gift vorher: Hin Waffe 0/HP 100/Status 0, Rueck Waffe 1 (Messer)/HP 100/Status 0 | M1, M2 |
+| unit_r41_stage3szenen_b_waffe (umgebaut) | Original-Bytes DEBUG.BIN @0x800c00a8/@0x800c00d4 und FUN_800314b0 @0x80031680/90/@0x800316c8/@0x80031710/18/20; Figurwechsel 4<->15, 0->13 (Waffe/HP/Status), Ruestung 4->5 und 0->2 unveraendert, Weste: Leon(1)->Marvin 100, Marvin->Leon(1) 105 | M2 |
+| unit_r41_stage3szenen_b_koerper (angepasst) | zurueck auf Elza: Waffe 1 (statt "vorige Waffe"), CORE04 | M2 |
+| unit_r41_stage3szenen_b_marvin (neu) | PC-Modul am echten PL00/PL0D: Koerper PL0D (Knochen 10 = 485, Clip 1 = 32), W-Verbunde mit Marvins Bindelage, zurueck auf PL01 = Leon, Weste ab = nichts | M3 |
+| integration_r41_stage3szenen_b_marvin (neu) | echte exe ROOM3020 -> 30C0: Waffe 1/HP 100/Status 0 (vorher 3/94/2), Koerper-Zeile (Wurzel = PL0D aus der Datei), Ober-/Unterarm-Laenge im Bild = PL0D-Bindelage (drehungsfrei) | M2, M3 |
+Gegenproben: 3091-Auswertung am Vorher-Lauf lauf_7d91e6dc FAIL (0 Spruenge); marvinlauf am Vorher-Lauf marvin_vorher
+3 FAIL (Waffe 3 bleibt, keine Koerper-Zeile, Oberarm 426 = PL00).
+
+* `ctest --test-dir re15_port/build -R "r41_stage3szenen" -j 3 --timeout 2400 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 11`** (Total Test time (real) = 142.57 sec; Bau df63abea, die Weste-Korrektur
+  896e3014 aendert nur sherry_r41.c + Riegel waffe, danach unit-Teile einzeln gruen)
+* Bau 896e3014: `ctest --test-dir re15_port/build -R "^(unit|probe|prop)_" -j 5 --timeout 900` (alle Einheiten-Gruppen, weil der
+  player_common.c-Haken jeden Spieler-Plc_motion trifft) -> **`99% tests passed, 7 tests failed out of 924`**; die 7 roten
+  sind ausschliesslich Zeitablaeufe der Release-/Android-Skripttests (unit_r35_android_pruefkette,
+  unit_r35_android_bash_mutanten, unit_r38_releaseskript_{trocken,ablauf,fehler_bau,fehler_umfeld,cmd}; 1200-1500 s,
+  Last durch parallele Spuren) - dieselbe Gruppe wie in Abnahme 0 (dort 6), Spur K beruehrt weder release/ noch
+  platform/android/.
+* Integration der beruehrten Module/Raeume (Szenen mit Spieler-Plc_motion, Weste/Kleidung/Zielen/Klettern/Raumwechsel,
+  Elza-EMS 3071/3091, Roy 1011/1021/1170, John 1041, Dining 1141, Heliport 1171, 11B0/11C0/10F0/1150):
+  `ctest --test-dir re15_port/build -R "^integration_(r37_elzaems_elza3091|r37_elzaems_elza3071|weste_load_pin|r36_kleidung_bild|r36_kleidung_spielweg|r39_zustand_kleidung|r39_dining1141_zielen|r36_klettern|room_transition|r36_elza_schuss|r36_schuss|r36_ziel1190_scheiben|r39_inventar_status|r37_szene11c0|r36_szene1150|r30_cut_blitz|r34n_g_schrift1150|r35_cut10f0|r35_cut1150|r36_szenenleon|r37_elzaems_elza1141|r37_roy_szene1011|r37_roy_szene1021|r37_roy_leon1170|r38_dining1141_.*|r38_elzatoene_.*|r38_heliport1171_.*|r38_szenenschutz|r38_werkstatt11b0|r39_dining1141_.*|r39_gegner_1141|r39_heliport1171_.*|r39_johnruf1041_.*|r39_parkplatz11c0_.*|r39_stimmen_.*|r39_toene_szene.*)$" -j 2 --timeout 2400 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 63`** (Total Test time (real) = 3951.97 sec)
+* Nach der Westen-Korrektur (896e3014) die eigenen Riegel erneut: `ctest --test-dir re15_port/build -R "r41_stage3szenen"
+  -j 3 --timeout 2400 --output-on-failure` -> **`100% tests passed, 0 tests failed out of 11`** (Total Test time (real) =
+  146.59 sec).

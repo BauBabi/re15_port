@@ -1,0 +1,4 @@
+[sherry-r41] Spielermodell 0 -> 13, Waffe (aca5d) 1, HP 100, Status 0000 (vorher Waffe 3, HP 94, Status 0002)
+[sherry-r41] Koerper -> Familie 76 (PL00): 15 Knochen, 24 Clips, W00 14 Clips, Wurzel-Bind y -1810 (Modell 13)
+[bone] 10: rel=(-154,-2046,-412) world=(-10838,-2046,-11054)
+[bone] 11: rel=(-31,-1610,-449) world=(-10801,-1610,-10931)

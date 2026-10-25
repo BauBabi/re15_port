@@ -1,0 +1,10 @@
+ROOM3091 RBJ @0x2510 total 50028 nrec 3
+RBJ rec0 Marker 0x1 Clips 1  Knochen 15 ksize  80 kf    2  Wurzel-y min  -1810 med  -1810 max  -1810 | x med     0
+RBJ rec1 Marker 0x2 Clips 10 Knochen 15 ksize  80 kf  259  Wurzel-y min  -1810 med  -1762 max  -1753 | x med    23
+RBJ rec2 Marker 0x3 Clips 14 Knochen 15 ksize  80 kf  329  Wurzel-y min  -1723 med  -1678 max  -1256 | x med     0
+CDEMD1 0x42 dir2 (Bank0)     Knochen 15 ksize  80 kf  358  Wurzel-y min  -2614 med  -1678 max    -86 | x med     0
+CDEMD1 0x42 dir4 (eigene)    Knochen 15 ksize  80 kf  219  Wurzel-y min  -1758 med  -1684 max  -1554 | x med     0
+CDEMD0 0x4B dir2 (Bank0)     Knochen 15 ksize  80 kf  384  Wurzel-y min  -2040 med  -1249 max   -258 | x med     0
+CDEMD0 0x4B dir4 (eigene)    Knochen 15 ksize  80 kf  123  Wurzel-y min  -1294 med  -1255 max   -538 | x med     0
+CDEMD1 0x49 dir2 (Bank0)     Knochen 15 ksize  80 kf  364  Wurzel-y min  -2614 med  -1759 max    221 | x med     0
+CDEMD1 0x49 dir4 (eigene)    Knochen 15 ksize  80 kf  193  Wurzel-y min  -1839 med  -1784 max  -1695 | x med     0

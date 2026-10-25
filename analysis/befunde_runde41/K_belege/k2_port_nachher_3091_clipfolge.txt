@@ -1,0 +1,131 @@
+Abschnitte: 2 (Bilder je Abschnitt: [('0', '249'), ('0', '3062')])
+Aktor 0 Typ 0x00: 28 Abschnitte
+   F    0-    5 clip  1 fc   1 slot   0..  0
+   F    6-  122 clip  3 fc   1 slot   0..  0
+   F  123-  901 clip 13 fc  40 slot   0.. 39
+   F  902-  951 clip 12 fc  30 slot   0.. 29
+   F  952- 1001 clip 12 fc  30 slot  29..  0 rev
+   F 1002- 1505 clip 13 fc  40 slot   0.. 39
+   F 1506- 1555 clip 11 fc  15 slot   0.. 14
+   F 1556- 1605 clip 11 fc  15 slot  14..  0 rev
+   F 1606- 1838 clip 13 fc  40 slot   0.. 39
+   F 1839- 1888 clip 11 fc  15 slot   0.. 14
+   F 1889- 1938 clip 11 fc  15 slot  14..  0 rev
+   F 1939- 2098 clip 13 fc  40 slot   0.. 39
+   F 2099- 2148 clip 12 fc  30 slot   0.. 29
+   F 2149- 2198 clip 12 fc  30 slot  29..  0 rev
+   F 2199- 2614 clip 13 fc  40 slot   0.. 39
+   F 2615- 2664 clip 12 fc  30 slot   0.. 29
+   F 2665- 2735 clip 12 fc  30 slot  29..  0 rev
+   F 2736- 2785 clip 11 fc  15 slot   0.. 14
+   F 2786- 2835 clip 11 fc  15 slot  14..  0 rev
+   F 2836- 2999 clip 13 fc  40 slot   0.. 39
+   F 3000- 3005 clip  5 fc  28 slot   0..  5
+   F 3006- 3014 clip  0 fc  20 slot   0..  8
+   F 3015- 3016 clip  5 fc  28 slot   0..  1
+   F 3017- 3026 clip  0 fc  20 slot   0..  9
+   F 3027- 3031 clip  5 fc  28 slot   0..  4
+   F 3032- 3060 clip  0 fc  20 slot   0..  8
+   F 3061- 3061 clip  1 fc   1 slot   0..  0
+   F 3062- 3062 clip  2 fc  40 slot   0..  0
+Aktor 1 Typ 0x49: 53 Abschnitte
+   F    0-    6 clip  2 fc  50 slot   0..  0
+   F    7-   22 clip  1 fc  16 slot   0.. 15
+   F   23-  165 clip  2 fc  52 slot   0.. 10
+   F  166-  187 clip  0 fc  22 slot   0.. 21
+   F  188-  196 clip  1 fc  16 slot   0..  8
+   F  197-  226 clip  3 fc  20 slot   0.. 19
+   F  227-  246 clip  3 fc  20 slot  19..  0 rev
+   F  247-  298 clip  2 fc  30 slot   0.. 29
+   F  299-  348 clip  0 fc  20 slot   0.. 19
+   F  349-  398 clip  0 fc  20 slot  19..  0 rev
+   F  399-  540 clip  8 fc  24 slot   0.. 23
+   F  541-  590 clip  0 fc  20 slot   0.. 19
+   F  591-  640 clip  0 fc  20 slot  19..  0 rev
+   F  641-  781 clip  8 fc  24 slot   0.. 23
+   F  782-  831 clip  1 fc  30 slot   0.. 29
+   F  832-  881 clip  1 fc  30 slot  29..  0 rev
+   F  882- 1021 clip  8 fc  24 slot   0.. 23
+   F 1022- 1046 clip  4 fc  30 slot   0.. 24
+   F 1047- 1071 clip  4 fc  30 slot  29..  5 rev
+   F 1072- 1096 clip  3 fc  20 slot   0.. 19
+   F 1097- 1121 clip  3 fc  20 slot  19..  0 rev
+   F 1122- 1263 clip  8 fc  24 slot   0.. 23
+   F 1264- 1288 clip  1 fc  30 slot   0.. 24
+   F 1289- 1313 clip  1 fc  30 slot  29..  5 rev
+   F 1314- 1338 clip  0 fc  20 slot   0.. 19
+   F 1339- 1363 clip  0 fc  20 slot  19..  0 rev
+   F 1364- 1798 clip  8 fc  24 slot   0.. 23
+   F 1799- 1807 clip  5 fc  30 slot   0..  8
+   F 1808- 1823 clip  1 fc  16 slot   0.. 15
+   F 1824- 1833 clip  2 fc  52 slot   0..  9
+   F 1834- 1958 clip  6 fc  10 slot   0..  9
+   F 1959- 1978 clip  6 fc  10 slot   9..  0 rev
+   F 1979- 2003 clip  4 fc  30 slot   0.. 24
+   F 2004- 2028 clip  4 fc  30 slot  29..  5 rev
+   F 2029- 2053 clip  0 fc  20 slot   0.. 19
+   F 2054- 2078 clip  0 fc  20 slot  19..  0 rev
+   F 2079- 2243 clip  8 fc  24 slot   0.. 23
+   F 2244- 2252 clip  5 fc  30 slot   0..  8
+   F 2253- 2268 clip  1 fc  16 slot   0.. 15
+   F 2269- 2393 clip  2 fc  52 slot   0.. 20
+   F 2394- 2443 clip  3 fc  20 slot   0.. 19
+   F 2444- 2494 clip  3 fc  20 slot  19..  0 rev
+   F 2495- 2544 clip  0 fc  20 slot   0.. 19
+   F 2545- 2594 clip  0 fc  20 slot  19..  0 rev
+   F 2595- 2976 clip  8 fc  24 slot   0.. 23
+   F 2977- 2977 clip  5 fc  30 slot   0..  0
+   F 2978- 2989 clip  0 fc  22 slot   0.. 11
+   F 2990- 2994 clip  5 fc  30 slot   0..  4
+   F 2995- 3004 clip  0 fc  22 slot   0..  9
+   F 3005- 3009 clip  5 fc  30 slot   0..  4
+   F 3010- 3045 clip  0 fc  22 slot   0.. 13
+   F 3046- 3061 clip  1 fc  16 slot   0.. 15
+   F 3062- 3062 clip  2 fc  52 slot   0..  0
+Aktor 2 Typ 0x42: 46 Abschnitte
+   F    0-    6 clip  2 fc  50 slot   0..  0
+   F    7-   22 clip  1 fc  16 slot   0.. 15
+   F   23-  148 clip  2 fc  52 slot   0.. 45
+   F  149-  165 clip  0 fc  22 slot   0.. 16
+   F  166-  170 clip  5 fc  30 slot   0..  4
+   F  171-  179 clip  0 fc  22 slot   0..  8
+   F  180-  194 clip  5 fc  30 slot   0.. 14
+   F  195-  210 clip  1 fc  16 slot   0.. 15
+   F  211-  419 clip  2 fc  52 slot   0..  0
+   F  420-  444 clip  4 fc  30 slot   0.. 24
+   F  445-  469 clip  4 fc  30 slot  29..  5 rev
+   F  470-  494 clip  3 fc  20 slot   0.. 19
+   F  495-  519 clip  3 fc  20 slot  19..  0 rev
+   F  520-  661 clip  9 fc  24 slot   0.. 23
+   F  662-  686 clip  1 fc  30 slot   0.. 24
+   F  687-  711 clip  1 fc  30 slot  29..  5 rev
+   F  712-  736 clip  0 fc  20 slot   0.. 19
+   F  737-  761 clip  0 fc  20 slot  19..  0 rev
+   F  762- 1142 clip  9 fc  24 slot   0.. 23
+   F 1143- 1192 clip  4 fc  30 slot   0.. 29
+   F 1193- 1242 clip  4 fc  30 slot  29..  0 rev
+   F 1243- 1383 clip  9 fc  24 slot   0.. 23
+   F 1384- 1408 clip  1 fc  30 slot   0.. 24
+   F 1409- 1434 clip  1 fc  30 slot  29..  4 rev
+   F 1435- 1459 clip  0 fc  20 slot   0.. 19
+   F 1460- 1484 clip  0 fc  20 slot  19..  0 rev
+   F 1485- 1625 clip  9 fc  24 slot   0.. 23
+   F 1626- 1675 clip  4 fc  30 slot   0.. 29
+   F 1676- 1725 clip  4 fc  30 slot  29..  0 rev
+   F 1726- 1793 clip  9 fc  24 slot   0.. 23
+   F 1794- 1816 clip  5 fc  30 slot   0.. 22
+   F 1817- 1828 clip  1 fc  16 slot   0.. 11
+   F 1829- 2218 clip  6 fc  10 slot   0..  9
+   F 2219- 2238 clip  6 fc  10 slot   9..  0 rev
+   F 2239- 2259 clip  5 fc  30 slot   0.. 20
+   F 2260- 2273 clip  1 fc  16 slot   0.. 13
+   F 2274- 2298 clip  5 fc  25 slot   0.. 24
+   F 2299- 2323 clip  5 fc  25 slot  24..  0 rev
+   F 2324- 2373 clip  2 fc  30 slot   0.. 29
+   F 2374- 2855 clip  9 fc  24 slot   0.. 23
+   F 2856- 2905 clip  6 fc  30 slot   0.. 29
+   F 2906- 2955 clip  6 fc  30 slot  29..  0 rev
+   F 2956- 2996 clip  9 fc  24 slot   0.. 23
+   F 2997- 3007 clip  5 fc  30 slot   0.. 10
+   F 3008- 3023 clip  1 fc  16 slot   0.. 15
+   F 3024- 3062 clip  2 fc  52 slot   0.. 38

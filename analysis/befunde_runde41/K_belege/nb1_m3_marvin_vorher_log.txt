@@ -1,0 +1,3 @@
+[sherry-r41] Spielermodell 0 -> 13, Waffe (aca5d) 3
+[bone] 10: rel=(-122,-2083,-413) world=(-10837,-2083,-11022)
+[bone] 11: rel=(-12,-1692,-452) world=(-10798,-1692,-10912)

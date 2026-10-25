@@ -1,0 +1,679 @@
+/*
+ * Runde 41 Spur K "stage3szenen_b": Riegel fuer die Spielfigur SHERRY (Modell 0x0F) und die ROOM3091-Szene.
+ * Dossier analysis/befunde_runde41/K_stage3szenen_b.md, Code engine/src/sherry_r41.c, platform/pc/src/sherry_pc_r41.c,
+ * include/re15_sherry_r41.h.
+ *
+ *   pins     Original-Bytes: PSX.EXE (Datei-Tabellen @0x80073f70/@0x800741e8, Waffe 0 @0x800316b8-c4, kein Hand-Mesh
+ *            @0x80036c08, Bewegungs-Zeile 15 @0x80073ec2/@0x80073ee2/@0x80073f02/@0x80073f42, Ziel-Sperren
+ *            @0x80032014/@0x80032430/@0x80032720/@0x80032a80/@0x80032cb4), ROOM3061 @0x011F6 Save 0x10=0x0F,
+ *            ROOM3091 @0x01D9C/@0x01DA8 zurueck auf Elza, RBJ 3091 rec2 Clips 11..13 Kindhoehe / 0..10 Erwachsen.
+ *   waffe    Engine: Figurwechsel 4 -> 0x0F setzt Waffe 0 (@0x800316c4), HP 100 (@0x80031718), Status 0 (@0x80031720),
+ *            Ausruesten gesperrt, Tabelle Zeile 15; zurueck -> Waffe 1 = DEBUG.BIN @0x800c00d4 (Nachbesserung 1, M2);
+ *            Leon/Elza-Tabellenwerte unveraendert; Ruestungswechsel (Weste, U.S.S.) = Port-Weg (Nutzer-Entscheid 2026-08-30).
+ *   marvin   Nachbesserung 1 (M3): Koerper bei JEDEM Neuladen (@0x8003154c/@0x80031578) - Leon -> Marvin 0x0D (PL0D,
+ *            gleiche W-Familie 76) bindet EDD/EMR + W-Verbund-Bindelagen, zurueck auf Leon wieder PL00; Weste bleibt Port-Weg.
+ *   koerper  PC-Modul am echten PL04/PL0F: Koerper (EDD/EMR) + W00-Bank + Hand-Meshes aus, Wunden geloescht, CORE 0x0F;
+ *            zurueck auf Elza stellt alles wieder her; gleiche Familie (Elza 4->5, Leon 0->1 Weste) aendert nichts.
+ *   sherry <debug.log> <state.txt>   Auswertung integration_r41_stage3szenen_b_sherry (echte exe, Schacht-Tuer 3061 -> 30C1):
+ *            Koerper-/Waffen-Zeilen, Knochenlage (Kind), Gehen 50 / Rennen 120 je Bild (= Original-Messung
+ *            K_belege/k1_orig_tempo_30c1.txt / k1_orig_rennen_30c1.txt), kein Zielen mit R1.
+ *   szene <anim.txt> <debug.log>     Auswertung integration_r41_stage3szenen_b_3091 (echte exe, Szene ueber die Riegeltuer):
+ *            Sub-0-Clipfolge je Aktor = ORIGINAL (DuckStation-GDB, K_belege/k2_orig_3091_gdb_lauf2.log.gz); Nachbesserung 1
+ *            (M1): Sherrys Schleifen-Clip 13 (Plc_flg 0x04) Bild fuer Bild = Original (6 Abschnitte 779/504/233/160/416/164,
+ *            Bild = i % 40, 19/12/5/3/10/4 Umlaeufe; FUN_80050cb8 @0x80050dbc-c8).
+ *   schleife Nachbesserung 1 (M1): Spieler-Clip-Ende im Kommandowort 4 (plcloop_r41.c, Spur E) mit der Clip-Laenge des
+ *            BINDER-Records (FUN_8001b3f8 @0x8001b450: letzter Record mit Marker-Bit 0) an der echten ROOM3091/ROOM2020-RBJ.
+ */
+#include "re15_sherry_r41.h"
+#include "sherry_pc_r41.h"
+#include "re15_emd.h"
+#include "re15_md1.h"
+#include "re15_damage.h"
+#include "re15_plcloop_r41.h"      /* Nachbesserung 1 (M1): Spur-E-Modul, Record = Binder */
+#include "re15_rbj_binder_r41.h"
+#include "re15_rdt.h"
+#include "re15_enemy.h"            /* re15_rbj_bind_room */
+#include "re15_actor.h"
+#include "re15_scd.h"              /* g_scd, Weste (re15_vest_*), re15_game_flag_set */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+#ifndef RE15_ASSET_PSX_DIR
+#error RE15_ASSET_PSX_DIR fehlt
+#endif
+#ifndef RE15_PSX_EXE
+#error RE15_PSX_EXE fehlt
+#endif
+
+static int g_fail = 0;
+#define CHECK(cond, ...) do { if (!(cond)) { g_fail++; printf("  FAIL: " __VA_ARGS__); printf("\n"); } \
+                              else { printf("  ok:   " __VA_ARGS__); printf("\n"); } } while (0)
+
+static uint8_t *datei(const char *pfad, long *n)
+{
+    FILE *f = fopen(pfad, "rb"); if (!f) return NULL;
+    fseek(f, 0, SEEK_END); *n = ftell(f); fseek(f, 0, SEEK_SET);
+    uint8_t *b = (uint8_t *)malloc((size_t)*n + 1);
+    if (b && fread(b, 1, (size_t)*n, f) != (size_t)*n) { free(b); b = NULL; }
+    fclose(f); return b;
+}
+static uint8_t *psx(const char *rel, long *n)
+{
+    char p[512]; snprintf(p, sizeof p, "%s/%s", RE15_ASSET_PSX_DIR, rel); return datei(p, n);
+}
+static uint32_t le32(const uint8_t *p) { return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24); }
+static uint16_t le16(const uint8_t *p) { return (uint16_t)(p[0] | (p[1] << 8)); }
+static int16_t  ls16(const uint8_t *p) { return (int16_t)le16(p); }
+
+/* ---- Stubs der Plattform (sherry_pc_r41.c ruft sie) ---- */
+static int g_core_idx = -1;
+void re15_audio_prime_core(int idx) { g_core_idx = idx; }
+uint8_t *re15_pc_read_any(const char *rel, int *size)
+{
+    long n = 0; uint8_t *b = psx(rel, &n);
+    if (size) *size = (int)n;
+    return b;
+}
+
+/* ---------- pins ---------- */
+static const uint8_t *exe_at(const uint8_t *exe, long n, uint32_t addr)
+{
+    uint32_t t = le32(exe + 0x18);
+    long o = 0x800 + (long)(addr - t);
+    return (o >= 0 && o < n) ? exe + o : NULL;
+}
+static int bytes_gleich(const uint8_t *exe, long n, uint32_t addr, const char *hex)
+{
+    const uint8_t *p = exe_at(exe, n, addr);
+    if (!p) return 0;
+    for (size_t i = 0; hex[i * 3] && hex[i * 3 + 1]; i++) {
+        unsigned v; if (sscanf(hex + i * 3, "%2x", &v) != 1) return 0;
+        if (p[i] != (uint8_t)v) return 0;
+        if (!hex[i * 3 + 2]) break;
+    }
+    return 1;
+}
+static void t_pins(void)
+{
+    long n = 0; uint8_t *exe = datei(RE15_PSX_EXE, &n);
+    CHECK(exe != NULL, "PSX.EXE lesbar (%s)", RE15_PSX_EXE);
+    if (!exe) return;
+    /* Datei-Tabellen + CD-Dateitabelle @0x8006f440 (Eintrag id-1: u32 Groesse @+4) gegen die PLD-/PLW-Dateien */
+    const uint8_t *pld = exe_at(exe, n, 0x80073f70 + 15 * 2), *plw = exe_at(exe, n, 0x800741e8 + 15 * 2);
+    CHECK(pld && le16(pld) == 0x004B, "@0x80073f70[15] = 0x%04x (Soll 0x004B = Datei 75)", pld ? le16(pld) : 0);
+    CHECK(plw && le16(plw) == 118, "@0x800741e8[15] = %u (Soll 118 = PL0FW00)", plw ? le16(plw) : 0);
+    long s0 = 0, s1 = 0; uint8_t *a = psx("PLD/PL0F.PLD", &s0), *b = psx("PLD/PL0FW00.PLW", &s1);
+    const uint8_t *e74 = exe_at(exe, n, 0x8006f440 + 74 * 8), *e117 = exe_at(exe, n, 0x8006f440 + 117 * 8);
+    CHECK(a && e74 && (long)le32(e74 + 4) == s0, "CD-Eintrag 74 Groesse %u == PLD/PL0F.PLD %ld B", e74 ? le32(e74 + 4) : 0, s0);
+    CHECK(b && e117 && (long)le32(e117 + 4) == s1, "CD-Eintrag 117 Groesse %u == PLD/PL0FW00.PLW %ld B", e117 ? le32(e117 + 4) : 0, s1);
+    free(a); free(b);
+    CHECK(bytes_gleich(exe, n, 0x80031694, "0f 00 02 34") && bytes_gleich(exe, n, 0x800316b8, "03 00 62 14") &&
+          bytes_gleich(exe, n, 0x800316c4, "5d ca 20 a0"),
+          "FUN_800314b0: ori v0,0xf @0x80031694 / bne v1,v0 @0x800316b8 / sb zero,DAT_800aca5d @0x800316c4 (Modell 0x0F -> Waffe 0)");
+    CHECK(bytes_gleich(exe, n, 0x80036bf8, "5d ca 63 90") && bytes_gleich(exe, n, 0x80036c08, "65 00 60 10"),
+          "FUN_80036b68: lbu v1,DAT_800aca5d @0x80036bf8 / beq v1,zero,0x80036da0 @0x80036c08 (Waffe 0 -> kein Hand-Mesh)");
+    CHECK(bytes_gleich(exe, n, 0x80073ec2, "32 30") && bytes_gleich(exe, n, 0x80073ee2, "23 30") &&
+          bytes_gleich(exe, n, 0x80073f02, "00 50") && bytes_gleich(exe, n, 0x80073f42, "78 40"),
+          "Zeile 15: GEHEN [50,48] @0x80073ec2, RUECK [35,48] @0x80073ee2, DREHEN [0,80] @0x80073f02, RENNEN [120,64] @0x80073f42");
+    { static const uint32_t ad[5] = { 0x80032014, 0x80032430, 0x80032720, 0x80032a80, 0x80032cb4 };
+      int ok = 1;
+      for (int i = 0; i < 5; i++) {
+          const uint8_t *p = exe_at(exe, n, ad[i]);
+          const uint8_t *l = exe_at(exe, n, ad[i] - 8);
+          uint32_t w = p ? le32(p) : 0;
+          if (!p || !l || !(l[0] == 0x5d && l[1] == 0xca && l[2] == 0x42 && l[3] == 0x90)) ok = 0;   /* lbu v0,DAT_800aca5d */
+          if (((w >> 26) != 4 && (w >> 26) != 5) || ((w >> 21) & 31) != 2 || ((w >> 16) & 31) != 0) ok = 0; /* beq/bne v0,zero */
+      }
+      CHECK(ok, "Ziel nur mit Waffe != 0: lbu v0,DAT_800aca5d + beq/bne v0,zero an @0x80032014/30/720/a80/cb4"); }
+    free(exe);
+    /* Raumskripte */
+    long r1 = 0, r2 = 0;
+    uint8_t *d3061 = psx("STAGE3/ROOM3061.RDT", &r1), *d3091 = psx("STAGE3/ROOM3091.RDT", &r2);
+    CHECK(d3061 && r1 > 0x11FC && memcmp(d3061 + 0x011F6, "\x24\x10\x0f\x00\x47\x03", 6) == 0,
+          "ROOM3061 @0x011F6 `24 10 0f 00` (work_vars[0x10]=0x0F) + @0x011FA `47 03` (Aot_on Schacht-Tuer)");
+    CHECK(d3091 && r2 > 0x1DAC && memcmp(d3091 + 0x01D9C, "\x24\x10\x04\x00", 4) == 0 &&
+          memcmp(d3091 + 0x01DA8, "\x24\x10\x05\x00", 4) == 0, "ROOM3091 @0x01D9C/@0x01DA8 `24 10 04/05 00` = zurueck auf Elza");
+    if (d3091) {   /* RBJ rec2: Clip 11..13 Wurzel-y ~ -1257..-1261 (Kind), 0..10 ~ -1678..-1723 (Erwachsen) */
+        uint32_t s = le32(d3091 + 0x5C), total = le32(d3091 + s);
+        uint32_t pre = le32(d3091 + s + total + 2 * 8), edd = le32(d3091 + s + total + 2 * 8 + 4);
+        const uint8_t *emr = d3091 + s + pre + 4, *e = d3091 + s + edd;
+        uint16_t o_frm = le16(emr + 2), ksz = le16(emr + 6);
+        int kind = 1, erw = 1;
+        for (int c = 0; c < 14; c++) {
+            uint16_t off = le16(e + c * 4 + 2);
+            int kf = (int)(le32(e + off) & 0xFFF);
+            int y = ls16(emr + o_frm + kf * ksz + 2);
+            if (c >= 11 && (y < -1300 || y > -1200)) kind = 0;
+            if (c <= 10 && (y > -1600)) erw = 0;
+        }
+        CHECK(kind && erw, "ROOM3091 RBJ rec2: Clips 11..13 Kindhoehe (Sherry = Spieler), 0..10 Erwachsenenhoehe (Elza = Gegner 1)");
+    }
+    free(d3061); free(d3091);
+}
+
+/* ---------- waffe ---------- */
+static void t_waffe(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    /* Original-Bytes: DEBUG.BIN (resident ab 0x800c0000) Funktion @0x800c00a8 + Tabelle @0x800c00d4, FUN_800314b0-Schwanz */
+    { long n = 0; uint8_t *d = psx("BIN/DEBUG.BIN", &n);
+      static const uint8_t code[12] = { 0x0b,0x80,0x09,0x3c, 0x5c,0xca,0x29,0x91, 0x0c,0x80,0x08,0x3c };   /* lui t1 / lbu t1,aca5c / lui t0 */
+      static const uint8_t tab[16]  = { 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1, 0 };
+      CHECK(d && n > 0xe4 && memcmp(d + 0xa8, code, 12) == 0 && d[0xb4] == 0xd4 && memcmp(d + 0xd4, tab, 16) == 0,
+            "DEBUG.BIN @0x800c00a8 lbu aca5c / addiu 0x800c00d4, Tabelle @0x800c00d4 = 01 x15, 00 (Waffe je Modell)");
+      free(d);
+      long xn = 0; uint8_t *x = datei(RE15_PSX_EXE, &xn);
+      CHECK(x && bytes_gleich(x, xn, 0x80031680, "2a 00 03 0c") && bytes_gleich(x, xn, 0x80031690, "5d ca 22 a0") &&
+            bytes_gleich(x, xn, 0x80031710, "64 00 02 34") && bytes_gleich(x, xn, 0x80031718, "ee ca 22 a4") &&
+            bytes_gleich(x, xn, 0x80031720, "ec ca 20 a4") && bytes_gleich(x, xn, 0x800316c8, "07 df 00 0c"),
+            "FUN_800314b0: jal 0x800c00a8 @0x80031680, sb aca5d @0x80031690, jal 0x80037c1c @0x800316c8, "
+            "ori v0,0x64 @0x80031710, sh HP @0x80031718, sh zero +0x98 @0x80031720");
+      free(x); }
+    re15_sherry_r41_modell_init(4);
+    re15_player_set_equipped_weapon(3);
+    pl->hp = 61; pl->status_flags = 0x2;
+    CHECK(re15_player_equipped_weapon() == 3, "Elza traegt Waffe 3, HP 61, Gift (Vorbedingung)");
+    CHECK(re15_sherry_r41_tabelle(3, 0, 200) == 200 && re15_sherry_r41_tabelle(2, 1, 96) == 96,
+          "Elza: Port-Werte unveraendert (Rennen 200, Drehen 96)");
+    re15_sherry_r41_modell_setzen(15);
+    CHECK(re15_sherry_r41_modell() == 15, "Modell 0x0F gebunden");
+    CHECK(re15_player_equipped_weapon() == 0 && pl->hp == 100 && pl->status_flags == 0,
+          "Figurwechsel 4 -> 0x0F: Waffe 0 (@0x800316c4), HP 100 (@0x80031710/18), Status 0 (@0x80031720) - HP %d", pl->hp);
+    re15_player_set_equipped_weapon(3);
+    CHECK(re15_player_equipped_weapon() == 0 && re15_sherry_r41_waffe_gesperrt(), "Ausruesten gesperrt solange Sherry");
+    CHECK(re15_sherry_r41_tabelle(0, 0, 75) == 50 && re15_sherry_r41_tabelle(1, 0, 70) == 35 &&
+          re15_sherry_r41_tabelle(2, 1, 96) == 80 && re15_sherry_r41_tabelle(3, 0, 200) == 120 &&
+          re15_sherry_r41_tabelle(3, 1, 72) == 64 && re15_sherry_r41_tabelle(0, 1, 48) == 48,
+          "Zeile 15: Gehen 50, Rueck 35, Drehen 80, Rennen 120/64, Geh-Drehung 48");
+    pl->hp = 40; pl->status_flags = 0x2;
+    re15_sherry_r41_modell_setzen(4);   /* ROOM3091 @0x01D9C */
+    CHECK(re15_player_equipped_weapon() == 1 && pl->hp == 100 && pl->status_flags == 0 && !re15_sherry_r41_waffe_gesperrt(),
+          "zurueck auf Elza: Waffe 1 = Messer (DEBUG.BIN @0x800c00d4[4]), HP 100, Status 0 (wie Original, keine Port-Wahl mehr)");
+    re15_player_set_equipped_weapon(3); pl->hp = 55; pl->status_flags = 0x2;
+    re15_sherry_r41_modell_setzen(5);
+    CHECK(re15_player_equipped_weapon() == 3 && pl->hp == 55 && pl->status_flags == 0x2,
+          "Elza 4 -> 5 (Weste, Nutzer-Entscheid 2026-08-30): Waffe/HP/Status bleiben (Port-Weg)");
+    re15_sherry_r41_modell_init(0); re15_player_set_equipped_weapon(3); pl->hp = 66;
+    re15_sherry_r41_modell_setzen(2);
+    CHECK(re15_player_equipped_weapon() == 3 && pl->hp == 66, "Leon 0 -> 2 (U.S.S.-Ruestung ROOM40A0 sub06): Port-Weg unveraendert");
+    re15_sherry_r41_modell_setzen(13);
+    CHECK(re15_player_equipped_weapon() == 1 && pl->hp == 100 && !re15_sherry_r41_waffe_gesperrt(),
+          "Leon -> Marvin 0x0D (ROOM3020 @0x00D7A): Waffe 1 (@0x800c00d4[13]), HP 100, Ausruesten frei");
+    /* Weste (Port-Nachruestung +5, Flag (3,0x75)) und Figurwechsel: der Raumlader ruft danach re15_vest_hp_on_model_reload */
+    re15_game_flag_set(3, 0x75, 1);
+    g_scd.work_vars[0x10] = 1; re15_vest_model_mark(1);
+    re15_sherry_r41_modell_init(1); pl->hp = 105;
+    g_scd.work_vars[0x10] = 13; re15_sherry_r41_modell_setzen(13); re15_vest_hp_on_model_reload();
+    CHECK(pl->hp == 100, "Leon mit Weste (1) -> Marvin: HP %d (Soll 100 = @0x80031718; der Westen-Abzug -5 greift nicht)", pl->hp);
+    pl->hp = 40;
+    g_scd.work_vars[0x10] = 1; re15_sherry_r41_modell_setzen(1); re15_vest_hp_on_model_reload();
+    CHECK(pl->hp == 105, "Marvin -> Leon mit Weste (ROOM3060 @0x010DE): HP %d (Soll 100 + Westen-Bonus 5 = voll wie item_use_common.c)", pl->hp);
+    re15_game_flag_set(3, 0x75, 0);
+}
+
+/* ---------- koerper ---------- */
+#define WMAX 21
+static re15_emd_skeleton_t  g_skel, g_pl00_skel, g_w01_skel, g_wpn_skel[WMAX];
+static re15_emd_animation_t g_anim, g_pl00_anim, g_w01_anim, g_wpn_anim[WMAX];
+static int g_bank_ok[WMAX], g_md1_ok[WMAX];
+
+static int teil(const uint8_t *b, long n, int idx, const uint8_t **p, size_t *len)
+{
+    unsigned long o = 0, l = 0;
+    if (!re15_pld_part(b, n, idx, &o, &l)) return 0;
+    *p = b + o; *len = (size_t)l; return 1;
+}
+/* Boot wie main.c: Koerper aus PL<fam>.PLD, W-Banken PL<fam>Wxx (Verbund Bindelage + W-Keyframes). */
+static int boot(const char *fam)
+{
+    char nm[64]; long n = 0;
+    snprintf(nm, sizeof nm, "PLD/%s.PLD", fam);
+    uint8_t *b = psx(nm, &n); if (!b) return 0;
+    const uint8_t *p; size_t l;
+    if (!teil(b, n, RE15_PLD_EDD, &p, &l) || re15_emd_parse_animation(p, l, &g_anim) != 0) return 0;
+    if (!teil(b, n, RE15_PLD_EMR, &p, &l) || re15_emd_parse_skeleton(p, l, &g_skel) != 0) return 0;
+    g_pl00_skel = g_skel; g_pl00_anim = g_anim;
+    for (int w = 0; w < WMAX; w++) {
+        g_bank_ok[w] = 0; g_md1_ok[w] = 0;
+        snprintf(nm, sizeof nm, "PLD/%sW%02X.PLW", fam, w);
+        long wn = 0; uint8_t *wb = psx(nm, &wn); if (!wb) continue;
+        re15_emd_skeleton_t raw;
+        if (teil(wb, wn, RE15_PLD_EDD, &p, &l) && re15_emd_parse_animation(p, l, &g_wpn_anim[w]) == 0 &&
+            teil(wb, wn, RE15_PLD_EMR, &p, &l) && re15_emd_parse_skeleton(p, l, &raw) == 0) {
+            g_wpn_skel[w] = g_skel;
+            g_wpn_skel[w].keyframe_data = raw.keyframe_data; g_wpn_skel[w].keyframe_data_size = raw.keyframe_data_size;
+            g_wpn_skel[w].keyframe_count = raw.keyframe_count; g_wpn_skel[w].keyframe_size_bytes = raw.keyframe_size_bytes;
+            g_bank_ok[w] = 1; g_md1_ok[w] = 1;
+        }
+    }
+    g_w01_anim = g_wpn_anim[1]; g_w01_skel = g_wpn_skel[1];
+    return 1;
+}
+static void anmelden(int modell)
+{
+    re15_sherry_pc_r41_baenke_t kb = { &g_skel, &g_pl00_skel, &g_w01_skel, &g_anim, &g_pl00_anim, &g_w01_anim,
+                                       g_wpn_anim, g_wpn_skel, g_bank_ok, g_md1_ok, WMAX };
+    re15_sherry_pc_r41_anmelden(&kb, modell);
+}
+static int clips_sind(const re15_emd_animation_t *a, const int *soll, int n)
+{
+    if (a->clip_count < n) return 0;
+    for (int i = 0; i < n; i++) if (a->clips[i].frame_count != soll[i]) return 0;
+    return 1;
+}
+static void t_koerper(void)
+{
+    CHECK(boot("PL04"), "Elza-Boot aus PL04.PLD + PL04W00..14.PLW");
+    anmelden(4);
+    re15_player_set_equipped_weapon(3);
+    re15_wound_add(2, 5);
+    int vor_ok = 0; for (int w = 0; w < WMAX; w++) vor_ok += g_bank_ok[w] + g_md1_ok[w];
+    long n = 0; uint8_t *f = psx("PLD/PL0F.PLD", &n);
+    g_core_idx = -1;
+    int r = re15_sherry_pc_r41_koerper(15, f, (int)n);
+    CHECK(r == 1, "Wechsel 4 -> 0x0F bindet neu (Rueckgabe %d)", r);
+    CHECK(g_pl00_skel.bone_count == 15 && g_pl00_skel.bone_relative_pos[0][1] == -1268,
+          "Koerper-EMR = PL0F: %d Knochen, Wurzel-Bind y %d (Soll 15 / -1268; Elza -1709)",
+          g_pl00_skel.bone_count, g_pl00_skel.bone_relative_pos[0][1]);
+    { static const int soll[6] = { 28, 28, 133, 30, 20, 38 };
+      CHECK(g_pl00_anim.clip_count == 24 && clips_sind(&g_pl00_anim, soll, 6), "Koerper-EDD = PL0F: 24 Clips {28,28,133,30,20,38,...}"); }
+    CHECK(g_skel.bone_relative_pos[0][1] == -1268 && g_anim.clip_count == 24, "def-Bank = neue Basis (RBJ legt sich danach darueber)");
+    { static const int soll[9] = { 20, 1, 40, 1, 1, 28, 15, 1, 8 };
+      int nur0 = g_bank_ok[0] == 1, kein_mesh = 1;
+      for (int w = 1; w < WMAX; w++) if (g_bank_ok[w]) nur0 = 0;
+      for (int w = 0; w < WMAX; w++) if (g_md1_ok[w]) kein_mesh = 0;
+      CHECK(nur0 && clips_sind(&g_wpn_anim[0], soll, 9) && g_wpn_anim[0].clip_count == 9,
+            "W-Bank 0 = PL0FW00 (9 Clips {20,1,40,1,1,28,15,1,8}), keine andere Bank (@0x800741e8[15] = 118)");
+      CHECK(g_wpn_skel[0].bone_relative_pos[0][1] == -1268 && g_wpn_skel[0].keyframe_count == 115,
+            "W-Verbund: Bindelage PL0F + 115 Keyframes der PL0FW00");
+      CHECK(kein_mesh, "kein Hand-/Waffen-Mesh (Waffe 0, @0x80036c08)");
+      CHECK(clips_sind(&g_w01_anim, soll, 9), "Geh-Quelle (w01) = W00 der Familie"); }
+    CHECK(re15_player_equipped_weapon() == 0, "Waffe 0 (@0x800316c4)");
+    CHECK(re15_wound_level(2) == 0, "Wunden geloescht (FUN_80037c1c @0x800316c8)");
+    CHECK(g_core_idx == 15, "CORE-Bank des Modells 0x0F (FUN_800440c4 @0x800316e8 -> CORE0F)");
+    free(f);
+    /* zurueck auf Elza (ROOM3091 @0x01D9C) */
+    f = psx("PLD/PL04.PLD", &n);
+    r = re15_sherry_pc_r41_koerper(4, f, (int)n);
+    int nach_ok = 0; for (int w = 0; w < WMAX; w++) nach_ok += g_bank_ok[w] + g_md1_ok[w];
+    { static const int soll[3] = { 34, 34, 50 };
+      CHECK(r == 1 && g_pl00_skel.bone_relative_pos[0][1] == -1709 && clips_sind(&g_pl00_anim, soll, 3) &&
+            g_skel.bone_relative_pos[0][1] == -1709 && nach_ok == vor_ok,
+            "zurueck auf Elza: Bind -1709, Clips {34,34,50,...}, alle %d W-Banken/Meshes wieder da", vor_ok); }
+    CHECK(re15_player_equipped_weapon() == 1 && g_core_idx == 4,
+          "zurueck: Waffe 1 = Messer (DEBUG.BIN @0x800c00d4[4], Nachbesserung 1 M2), CORE04 (@0x800316e8)");
+    free(f);
+    /* gleiche Familie: Elza 4 -> 5 (EDD/EMR md5-gleich) */
+    f = psx("PLD/PL05.PLD", &n);
+    g_core_idx = -1;
+    r = re15_sherry_pc_r41_koerper(5, f, (int)n);
+    CHECK(r == 0 && g_pl00_skel.bone_relative_pos[0][1] == -1709 && g_core_idx == -1, "Elza 4 -> 5: nichts neu gebunden");
+    free(f);
+    /* Leon + Weste (Raumlader-Weg ROOM1190) */
+    CHECK(boot("PL00"), "Leon-Boot");
+    anmelden(0);
+    f = psx("PLD/PL01.PLD", &n);
+    int16_t y0 = g_pl00_skel.bone_relative_pos[0][1];
+    r = re15_sherry_pc_r41_koerper(1, f, (int)n);
+    CHECK(r == 0 && g_pl00_skel.bone_relative_pos[0][1] == y0 && g_bank_ok[3] == 1,
+          "Leon 0 -> 1 (Weste): Koerper/W-Banken unveraendert (Bind y %d)", y0);
+    free(f);
+}
+
+/* ---------- marvin (Nachbesserung 1, M3): Koerper bei JEDEM Neuladen (@0x8003154c/@0x80031578) ---------- */
+static void t_marvin(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    CHECK(boot("PL00"), "Leon-Boot aus PL00.PLD + PL00W00..14.PLW");
+    anmelden(0);
+    re15_player_set_equipped_weapon(3);
+    pl->hp = 70;
+    int16_t leon_y10 = g_pl00_skel.bone_relative_pos[10][1];
+    int leon_c1 = g_pl00_anim.clips[1].frame_count;
+    long n = 0; uint8_t *f = psx("PLD/PL0D.PLD", &n);
+    unsigned long eo = 0, el = 0, mo = 0, ml = 0;
+    CHECK(f && re15_pld_part(f, n, RE15_PLD_EDD, &eo, &el) && re15_pld_part(f, n, RE15_PLD_EMR, &mo, &ml) &&
+          el == 3152 && ml == 56976, "PL0D.PLD: EDD %lu B / EMR %lu B (Soll 3152 / 56976; PL00 3160 / 57136)", el, ml);
+    g_core_idx = -1;
+    int r = re15_sherry_pc_r41_koerper(13, f, (int)n);   /* ROOM3020 @0x00D7A `24 10 0d 00` */
+    CHECK(r == 1, "Leon -> Marvin 0x0D (gleiche W-Familie 76) bindet den Koerper neu (Rueckgabe %d)", r);
+    CHECK(leon_y10 == 422 && g_pl00_skel.bone_relative_pos[10][1] == 485 && g_skel.bone_relative_pos[10][1] == 485,
+          "Koerper-EMR = PL0D: Knochen 10 y %d (Leon %d, Soll 485 / 422)", g_pl00_skel.bone_relative_pos[10][1], leon_y10);
+    CHECK(leon_c1 == 34 && g_pl00_anim.clips[1].frame_count == 32,
+          "Koerper-EDD = PL0D: Clip 1 %d Bilder (Leon %d, Soll 32 / 34)", g_pl00_anim.clips[1].frame_count, leon_c1);
+    { int ok = 1;
+      for (int w = 0; w < WMAX; w++)
+          if (g_bank_ok[w] && g_wpn_skel[w].bone_relative_pos[10][1] != 485) ok = 0;
+      CHECK(ok && g_w01_skel.bone_relative_pos[10][1] == 485 && g_bank_ok[1] && g_wpn_skel[1].keyframe_count == g_w01_skel.keyframe_count,
+            "W-Verbunde (PL00W**) mit Marvins Bindelage, Keyframes der PLW bleiben; alle Banken der Familie 76 bleiben"); }
+    CHECK(re15_player_equipped_weapon() == 1 && pl->hp == 100 && g_core_idx == 13,
+          "Figurwechsel: Waffe 1 (@0x800c00d4[13]), HP 100 (@0x80031718), CORE0D (@0x800316e8)");
+    free(f);
+    /* zurueck auf Leon mit Weste (ROOM3060 @0x010DE `24 10 01 00`) */
+    f = psx("PLD/PL01.PLD", &n);
+    pl->hp = 30;
+    r = re15_sherry_pc_r41_koerper(1, f, (int)n);
+    CHECK(r == 1 && g_pl00_skel.bone_relative_pos[10][1] == 422 && g_pl00_anim.clips[1].frame_count == 34 &&
+          g_wpn_skel[3].bone_relative_pos[10][1] == 422 && pl->hp == 100,
+          "Marvin -> Leon (PL01): Koerper wieder Leons (Knochen 10 y %d, Clip 1 %d), W-Verbunde zurueck, HP 100",
+          g_pl00_skel.bone_relative_pos[10][1], g_pl00_anim.clips[1].frame_count);
+    free(f);
+    /* Ruestung bleibt Port-Weg: Leon 1 -> 0 (Weste ab) */
+    f = psx("PLD/PL00.PLD", &n);
+    re15_player_set_equipped_weapon(3); pl->hp = 44; g_core_idx = -1;
+    r = re15_sherry_pc_r41_koerper(0, f, (int)n);
+    CHECK(r == 0 && re15_player_equipped_weapon() == 3 && pl->hp == 44 && g_core_idx == -1,
+          "Leon 1 -> 0 (Weste ab, Nutzer-Entscheid 2026-08-30): nichts neu, Waffe/HP bleiben");
+    free(f);
+}
+
+/* ---------- schleife (Nachbesserung 1, M1) ---------- */
+/* Raum-RBJ binden wie der Raumlader (RDT +0x5C, re15_rbj_bind_room); liefert den RDT-Puffer (freigeben). */
+static uint8_t *rbj_binden(const char *rel, re15_rdt_t *rdt)
+{
+    long n = 0; uint8_t *b = psx(rel, &n);
+    if (!b || re15_rdt_parse(b, (size_t)n, rdt) != 0 || !rdt->animation || rdt->animation_size <= 0) { free(b); return NULL; }
+    re15_rbj_bind_room(rdt->animation, (size_t)rdt->animation_size);
+    return b;
+}
+static void t_schleife(void)
+{
+    re15_rdt_t rdt; memset(&rdt, 0, sizeof rdt);
+    uint8_t *b = rbj_binden("STAGE3/ROOM3091.RDT", &rdt);
+    CHECK(b != NULL, "ROOM3091.RDT + RBJ (+0x5C) gebunden");
+    if (!b) return;
+    const uint8_t *rbj = rdt.animation; size_t rs = (size_t)rdt.animation_size;
+    /* Marker der Records (Trailer @u32[0] + 8*r -> EMR-Praefix): rec0 = 1, rec1 = 2, rec2 = 3 */
+    uint32_t tot = le32(rbj); int nrec = rbj[4];
+    uint32_t m0 = le32(rbj + le32(rbj + tot)), m2 = nrec > 2 ? le32(rbj + le32(rbj + tot + 16)) : 0;
+    uint32_t e0 = le32(rbj + tot + 4);
+    CHECK(nrec == 3 && (m0 & 1) && (m2 & 1) && le16(rbj + e0 + 2) / 4 == 1,
+          "ROOM3091-RBJ: %d Records, rec0 Marker %u (1 Clip), rec2 Marker %u - beide mit Bit 0", nrec, m0, m2);
+    CHECK(re15_rbj_binder_spieler(rbj, rs) == 2, "Binder FUN_8001b3f8: Spieler-Kanal = rec2 (letzter Record mit Bit 0, @0x8001b450)");
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    memset(pl, 0, sizeof *pl);
+    pl->active = 1; pl->motion = 13; pl->anim_use_pl00 = 0;
+    CHECK(re15_plcloop_r41_clip_len(pl) == 40, "Clip 13 im Kommandowort 4: %d Bilder (Soll 40 = rec2; erster Record rec0 haette 1 Clip)",
+          re15_plcloop_r41_clip_len(pl));
+    /* Vorschub wie player_common.c (anim_frame++, dann Takt): Plc_motion(0,13) + Plc_flg 43 00 04 00 (@0x0170E/@0x01712) */
+    pl->state = 4; pl->sub_state_1 = 0; pl->walk_active = 0; pl->anim_flags = 0x04; pl->anim_frame = 0;
+    unsigned u0 = re15_plcloop_r41_umlaeufe();
+    int abw = 0;
+    for (int i = 1; i < 779; i++) {                       /* Original-Abschnitt B1-779 */
+        pl->anim_frame++;
+        re15_plcloop_r41_takt(pl);
+        if ((int)pl->anim_frame != i % 40) abw++;
+    }
+    CHECK(abw == 0 && re15_plcloop_r41_umlaeufe() - u0 == 19,
+          "Schleife 779 Bilder: Bild = i %% 40 (%d Abweichungen), %u Umlaeufe (Original B1-779: 19, @0x80050dbc-c8 / @0x8001f63c)",
+          abw, re15_plcloop_r41_umlaeufe() - u0);
+    pl->anim_flags = 0; pl->anim_frame = 39;
+    for (int i = 0; i < 5; i++) { pl->anim_frame++; re15_plcloop_r41_takt(pl); }
+    CHECK(pl->anim_frame == 39, "ohne Plc_flg 0x04: Halten auf Bild 39 (Phase 2 @0x80050da4), anim_frame %d", (int)pl->anim_frame);
+    free(b);
+    /* Spur E (ROOM2020, ein Record): unveraendert 40 */
+    memset(&rdt, 0, sizeof rdt);
+    b = rbj_binden("STAGE2/ROOM2020.RDT", &rdt);
+    if (b) {
+        pl->motion = 0; pl->anim_use_pl00 = 0;
+        CHECK(re15_rbj_binder_spieler(rdt.animation, (size_t)rdt.animation_size) == 0 && re15_plcloop_r41_clip_len(pl) == 40,
+              "ROOM2020 (Kurbel, Spur E): Spieler-Record rec0, Clip 0 = %d Bilder (Soll 40)", re15_plcloop_r41_clip_len(pl));
+        free(b);
+    } else CHECK(0, "ROOM2020.RDT lesbar");
+    re15_rbj_bind_room(NULL, 0);
+}
+
+/* ---------- Auswertungen der Integrationslaeufe ---------- */
+static char *text(const char *pfad) { long n = 0; uint8_t *b = datei(pfad, &n); if (b) b[n] = 0; return (char *)b; }
+
+static void t_sherry(const char *dlog, const char *slog)
+{
+    char *d = text(dlog), *st = text(slog);
+    CHECK(d != NULL && st != NULL, "debug.log / state.txt lesbar");
+    if (!d || !st) { free(d); free(st); return; }
+    CHECK(strstr(d, "[sherry-r41] Spielermodell 4 -> 15, Waffe (aca5d) 0") != NULL,
+          "Raumlader: Modell 4 -> 0x0F, Waffe 0 (@0x800316c4)");
+    CHECK(strstr(d, "[sherry-r41] Koerper -> Familie 118 (PL0F): 15 Knochen, 24 Clips, W00 9 Clips, Wurzel-Bind y -1268") != NULL,
+          "Koerper PL0F (EDD/EMR @0x8003154c/@0x80031578) + W00 (@0x800741e8[15] = 118)");
+    /* letzter [bone]-Block (Bild 60 in ROOM30C1) */
+    int y[15]; for (int i = 0; i < 15; i++) y[i] = 99999;
+    for (char *p = strstr(d, "[bone] "); p; p = strstr(p + 1, "[bone] ")) {
+        int bi, rx, ry, rz, wx, wy, wz;
+        if (sscanf(p, "[bone] %d: rel=(%d,%d,%d) world=(%d,%d,%d)", &bi, &rx, &ry, &rz, &wx, &wy, &wz) == 7 && bi >= 0 && bi < 15)
+            y[bi] = wy;
+    }
+    CHECK(y[0] >= -1300 && y[0] <= -1200 && y[8] > -2000 && y[4] > -150 && y[7] > -150 && y[4] < 0,
+          "Knochen in 30C1: Huefte y %d (Kind ~-1261, Elza-Skelett -1723), Brust y %d (> -2000; Elza -2346), Knoechel %d/%d am Boden",
+          y[0], y[8], y[4], y[7]);
+    /* Schritte je Bild im letzten Raumabschnitt (30C1) */
+    char *abschnitt = st, *zeile = st; long last = -1;
+    for (char *q = st; q && *q; ) {
+        long f = strtol(q + 1, NULL, 10);
+        if (f < last - 5) abschnitt = q;
+        last = f;
+        char *nl = strchr(q, '\n'); q = nl ? nl + 1 : NULL;
+    }
+    int lauf_n = 0, lauf_ok = 0, geh_n = 0, geh_ok = 0, ziel_n = 0, ziel_ok = 0;
+    long lx = 0, lz = 0; int hat = 0;
+    for (zeile = abschnitt; zeile && *zeile; ) {
+        unsigned f, pad; long x, z; int mo = -1, pst = -1;
+        if (sscanf(zeile, "F%u pad=%x PL(%ld,%ld,", &f, &pad, &x, &z) == 4) {
+            char *m = strstr(zeile, " mo="); if (m) mo = atoi(m + 4);
+            char *ps = strstr(zeile, " pst="); if (ps) pst = atoi(ps + 5);
+            long dx = x - lx, dz = z - lz; long d2 = dx * dx + dz * dz;
+            if (hat && f >= 302 && f <= 309 && pad == 0x0010) { geh_n++; if (d2 == 50L * 50L) geh_ok++; }
+            if (hat && f >= 332 && f <= 341 && pad == 0x4010) { lauf_n++; if (d2 == 120L * 120L) lauf_ok++; }
+            if (f >= 400 && f <= 439 && pad == 0x0800) { ziel_n++; if (mo >= 200 && mo <= 214 && pst == 1) ziel_ok++; }
+            lx = x; lz = z; hat = 1;
+        }
+        char *nl = strchr(zeile, '\n'); zeile = nl ? nl + 1 : NULL;
+    }
+    CHECK(geh_n >= 6 && geh_ok == geh_n, "Gehen: %d/%d Bilder je 50 (Zeile 15 @0x80073ec2; Original k1_orig_tempo_30c1: 50)", geh_ok, geh_n);
+    CHECK(lauf_n >= 8 && lauf_ok == lauf_n, "Rennen: %d/%d Bilder je 120 (@0x80073f42; Original k1_orig_rennen_30c1: 120)", lauf_ok, lauf_n);
+    CHECK(ziel_n >= 30 && ziel_ok == ziel_n, "R1 gehalten: %d/%d Bilder ohne Zielen (Waffe 0, @0x80032014 ff.)", ziel_ok, ziel_n);
+    free(d); free(st);
+}
+
+/* Nachbesserung 1 (M2/M3): Leon -> Marvin 0x0D ueber den Raumlader (ROOM3020 @0x00D7A + Tuer Slot 2 @0x00B6E -> 30C0). */
+static void t_marvinlauf(const char *dlog)
+{
+    char *d = text(dlog);
+    CHECK(d != NULL, "debug.log lesbar");
+    if (!d) return;
+    int w, hp, w0, hp0, nk, nc, nw, y; unsigned st, st0;
+    const char *z = strstr(d, "[sherry-r41] Spielermodell 0 -> 13, ");
+    int n1 = z ? sscanf(z, "[sherry-r41] Spielermodell 0 -> 13, Waffe (aca5d) %d, HP %d, Status %x (vorher Waffe %d, HP %d, Status %x)",
+                        &w, &hp, &st, &w0, &hp0, &st0) : 0;
+    CHECK(n1 == 6 && w == 1 && hp == 100 && st == 0 && w0 == 3 && hp0 < 100 && (st0 & 2),
+          "Leon -> Marvin: Waffe %d (vorher %d; @0x800c00d4[13] = 1), HP %d (vorher %d; @0x80031718), Status %x (vorher %x; @0x80031720)",
+          n1 == 6 ? w : -1, n1 == 6 ? w0 : -1, n1 == 6 ? hp : -1, n1 == 6 ? hp0 : -1, n1 == 6 ? st : 0xffffu, n1 == 6 ? st0 : 0xffffu);
+    z = strstr(d, "[sherry-r41] Koerper -> Familie 76 (PL00): ");
+    int n2 = z ? sscanf(z, "[sherry-r41] Koerper -> Familie 76 (PL00): %d Knochen, %d Clips, W00 %d Clips, Wurzel-Bind y %d (Modell 13)",
+                        &nk, &nc, &nw, &y) : 0;
+    /* Wurzel-Bindelage aus den Dateien selbst (kein Zahlenpin): PL0D gegen PL00 */
+    re15_emd_skeleton_t sk_d, sk_l; memset(&sk_d, 0, sizeof sk_d); memset(&sk_l, 0, sizeof sk_l);
+    long nd = 0, nl0 = 0; uint8_t *fd = psx("PLD/PL0D.PLD", &nd), *fl = psx("PLD/PL00.PLD", &nl0);
+    const uint8_t *pp; size_t ll;
+    int sk_ok = fd && fl && teil(fd, nd, RE15_PLD_EMR, &pp, &ll) && re15_emd_parse_skeleton(pp, ll, &sk_d) == 0 &&
+                teil(fl, nl0, RE15_PLD_EMR, &pp, &ll) && re15_emd_parse_skeleton(pp, ll, &sk_l) == 0;
+    CHECK(n2 == 4 && nk == 15 && sk_ok && y == sk_d.bone_relative_pos[0][1] && y != sk_l.bone_relative_pos[0][1],
+          "Raumlader bindet Marvins Koerper (EDD/EMR @0x8003154c/@0x80031578): Wurzel-Bind y %d = PL0D %d (Leon PL00 %d)",
+          n2 == 4 ? y : 0, sk_ok ? sk_d.bone_relative_pos[0][1] : 0, sk_ok ? sk_l.bone_relative_pos[0][1] : 0);
+    /* letzter [bone]-Block (Bild 60 in ROOM30C0): Laenge Oberarm (9 -> 10) und Unterarm (10 -> 11) im Modellraum =
+     * Betrag der Bindelage des Kind-Knochens (drehungsfrei) - PL0D statt PL00 */
+    int bx[15], by[15], bz[15], hat[15] = { 0 };
+    for (char *p = strstr(d, "[bone] "); p; p = strstr(p + 1, "[bone] ")) {
+        int bi, rx, ry, rz;
+        if (sscanf(p, "[bone] %d: rel=(%d,%d,%d)", &bi, &rx, &ry, &rz) == 4 && bi >= 0 && bi < 15) {
+            bx[bi] = rx; by[bi] = ry; bz[bi] = rz; hat[bi] = 1;
+        }
+    }
+    int arm_ok = sk_ok && hat[9] && hat[10] && hat[11];
+    for (int k = 10; k <= 11 && arm_ok; k++) {
+        double dx = bx[k] - bx[k - 1], dy = by[k] - by[k - 1], dz = bz[k] - bz[k - 1];
+        double lp = sqrt(dx * dx + dy * dy + dz * dz);
+        double ld = sqrt((double)sk_d.bone_relative_pos[k][0] * sk_d.bone_relative_pos[k][0] +
+                         (double)sk_d.bone_relative_pos[k][1] * sk_d.bone_relative_pos[k][1] +
+                         (double)sk_d.bone_relative_pos[k][2] * sk_d.bone_relative_pos[k][2]);
+        double ll2 = sqrt((double)sk_l.bone_relative_pos[k][0] * sk_l.bone_relative_pos[k][0] +
+                          (double)sk_l.bone_relative_pos[k][1] * sk_l.bone_relative_pos[k][1] +
+                          (double)sk_l.bone_relative_pos[k][2] * sk_l.bone_relative_pos[k][2]);
+        printf("    Knochen %d: Laenge im Bild %.1f, PL0D %.1f, PL00 %.1f\n", k, lp, ld, ll2);
+        if (fabs(lp - ld) > 3.0 || fabs(lp - ll2) < 10.0) arm_ok = 0;
+    }
+    CHECK(arm_ok, "Bild 60 in 30C0: Ober-/Unterarm-Laenge = PL0D-Bindelage (Marvin), nicht PL00 (Leon)");
+    free(fd); free(fl);
+    free(d);
+}
+
+/* Sub-0-Clipfolgen des ORIGINALS (k2_orig_3091.py, Lauf 2, 2953 Szenenbilder): Clip*2 (+1 = rueckwaerts, Plc_flg 0x80) */
+#define R(c) ((c) * 2 + 1)
+static const int k_soll_spieler[] = { 26, 24, R(12), 26, 22, R(11), 26, 22, R(11), 26, 24, R(12), 26, 24, R(12), 22, R(11), 26 };
+static const int k_soll_john[]    = { 6, R(3), 4, 0, R(0), 16, 0, R(0), 16, 2, R(1), 16, 8, R(4), 6, R(3), 16, 2, R(1), 0, R(0), 16,
+                                      8, R(4), 0, R(0), 16, 6, R(3), 0, R(0), 16 };
+static const int k_soll_elza[]    = { 8, R(4), 6, R(3), 18, 2, R(1), 0, R(0), 18, 8, R(4), 18, 2, R(1), 0, R(0), 18, 8, R(4), 18,
+                                      10, R(5), 4, 18, 12, R(6), 18 };
+/* Bildzahlen der Raum-RBJ-Clips (ROOM3091 rec1/rec2, EDD) - trennen Kanal 0 von der eigenen Bank */
+static const int k_fc_rec1[10] = { 20, 30, 30, 20, 30, 25, 35, 50, 24, 20 };
+static const int k_fc_rec2[14] = { 20, 30, 30, 20, 30, 25, 30, 50, 18, 24, 20, 15, 30, 40 };
+
+static int folge(const char *anim, int wer, int *out, int cap)
+{
+    /* Abschnitt mit Typ 0x42 auf Aktor 2 = ROOM3091 */
+    const char *beg = NULL, *q = anim; long last = -1; const char *abschnitt = anim; int hat42 = 0;
+    for (; q && *q; ) {
+        long f = strtol(q, NULL, 10);
+        if (f < last - 5) { if (hat42) { beg = abschnitt; break; } abschnitt = q; }
+        last = f;
+        long fr, ak, ty; if (sscanf(q, "%ld %ld %ld", &fr, &ak, &ty) == 3 && ak == 2 && ty == 0x42) hat42 = 1;
+        const char *nl = strchr(q, '\n'); q = nl ? nl + 1 : NULL;
+    }
+    if (!beg) beg = hat42 ? abschnitt : NULL;
+    if (!beg) return 0;
+    int n = 0, last_key = -1, last_fc = -1;
+    last = -1;
+    for (q = beg; q && *q; ) {
+        long fr, ak, ty, mo, clip, fc, cur, slot, cl, lo, rev;
+        if (sscanf(q, "%ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld", &fr, &ak, &ty, &mo, &clip, &fc, &cur, &slot, &cl, &lo, &rev) == 11) {
+            if (fr < last - 5) break;
+            last = fr;
+            int ist = (wer == 0) ? (ty == 0 && ak != 1 && ak != 2) : (ak == wer);
+            if (ist) {
+                int key = (int)clip * 2 + (rev ? 1 : 0);
+                if (key != last_key || fc != last_fc) {
+                    last_key = key; last_fc = (int)fc;
+                    int rbj = 0;
+                    if (wer == 1) rbj = clip >= 0 && clip < 10 && fc == k_fc_rec1[clip];
+                    else rbj = clip >= 0 && clip < 14 && fc == k_fc_rec2[clip] && (wer == 0 ? clip >= 11 : clip <= 10);
+                    if (rbj && n < cap) out[n++] = key;
+                }
+            }
+        }
+        const char *nl = strchr(q, '\n'); q = nl ? nl + 1 : NULL;
+    }
+    return n;
+}
+/* Nachbesserung 1 (M1): Spieler-Abschnitte Clip 13 / 40 Bilder im 3091-Block - Laenge, Abweichungen von Bild = i % 40,
+ * Spruenge 39 -> 0. Soll = Original-GDB-Protokoll (k2_orig_3091_gdb_lauf2): B1-779, B880-1383, B1484-1716, B1817-1976,
+ * B2077-2492, B2714-2877 mit 19/12/5/3/10/4 Spruengen und 0 Abweichungen. */
+static const int k_soll_c13_len[6] = { 779, 504, 233, 160, 416, 164 };
+static int schleife13(const char *anim, int *len, int *abw, int *spr, int cap)
+{
+    const char *beg = NULL, *q = anim; long last = -1; const char *abschnitt = anim; int hat42 = 0;
+    for (; q && *q; ) {
+        long f = strtol(q, NULL, 10);
+        if (f < last - 5) { if (hat42) { beg = abschnitt; break; } abschnitt = q; }
+        last = f;
+        long fr, ak, ty; if (sscanf(q, "%ld %ld %ld", &fr, &ak, &ty) == 3 && ak == 2 && ty == 0x42) hat42 = 1;
+        const char *nl = strchr(q, '\n'); q = nl ? nl + 1 : NULL;
+    }
+    if (!beg) beg = hat42 ? abschnitt : NULL;
+    if (!beg) return 0;
+    int n = -1; long lfr = -10, lsl = -1; last = -1;
+    for (q = beg; q && *q; ) {
+        long fr, ak, ty, mo, clip, fc, cur, slot;
+        if (sscanf(q, "%ld %ld %ld %ld %ld %ld %ld %ld", &fr, &ak, &ty, &mo, &clip, &fc, &cur, &slot) == 8) {
+            if (fr < last - 5) break;
+            last = fr;
+            if (ak == 0 && ty == 0 && clip == 13 && fc == 40) {
+                if (fr != lfr + 1) { if (n + 1 >= cap) break; n++; len[n] = 0; abw[n] = 0; spr[n] = 0; lsl = -1; }
+                if (slot != len[n] % 40) abw[n]++;
+                if (lsl >= 0 && slot < lsl) spr[n]++;
+                len[n]++; lsl = slot; lfr = fr;
+            }
+        }
+        const char *nl = strchr(q, '\n'); q = nl ? nl + 1 : NULL;
+    }
+    return n + 1;
+}
+static int gleich(const int *a, int na, const int *b, int nb) { if (na != nb) return 0; for (int i = 0; i < na; i++) if (a[i] != b[i]) return 0; return 1; }
+static void drucke(const char *t, const int *a, int n)
+{
+    printf("    %s:", t); for (int i = 0; i < n; i++) printf(" %d%s", a[i] / 2, (a[i] & 1) ? "r" : ""); printf("\n");
+}
+static void t_szene(const char *anim_p, const char *dlog)
+{
+    char *anim = text(anim_p), *d = text(dlog);
+    CHECK(anim != NULL && d != NULL, "anim.txt / debug.log lesbar");
+    if (!anim || !d) { free(anim); free(d); return; }
+    CHECK(strstr(d, "[rbj-binder] ROOM3091 Spieler rec2") != NULL && strstr(d, "Typ 0x42 Marker-Slot 2 -> rec2") != NULL &&
+          strstr(d, "Typ 0x49 Marker-Slot 1 -> rec1") != NULL,
+          "Binder (Spur J, FUN_8001b3f8): Spieler rec2, John rec1, Elza-NPC rec2 (= Original-RAM w180/w184)");
+    CHECK(strstr(d, "[sherry-r41] Koerper -> Familie 118 (PL0F)") != NULL, "Spielfigur Sherry gebunden");
+    /* Nachbesserung 1 (M2): FUN_800314b0-Schwanz bei beiden Figurwechseln (Riegel: Pistole + Gift vorher) */
+    { int w, hp, w0, hp0; unsigned st, st0;
+      const char *z = strstr(d, "[sherry-r41] Spielermodell 4 -> 15, ");
+      int n1 = z ? sscanf(z, "[sherry-r41] Spielermodell 4 -> 15, Waffe (aca5d) %d, HP %d, Status %x (vorher Waffe %d, HP %d, Status %x)",
+                          &w, &hp, &st, &w0, &hp0, &st0) : 0;
+      CHECK(n1 == 6 && w == 0 && hp == 100 && st == 0 && w0 == 3 && hp0 < 100 && (st0 & 2),
+            "Elza -> Sherry: Waffe %d (vorher %d), HP %d (vorher %d), Status %x (vorher %x) - Soll 0 / 100 / 0 (@0x800316c4, "
+            "@0x80031718, @0x80031720)", n1 == 6 ? w : -1, n1 == 6 ? w0 : -1, n1 == 6 ? hp : -1, n1 == 6 ? hp0 : -1,
+            n1 == 6 ? st : 0xffffu, n1 == 6 ? st0 : 0xffffu);
+      z = strstr(d, "[sherry-r41] Spielermodell 15 -> 4, ");
+      int n2 = z ? sscanf(z, "[sherry-r41] Spielermodell 15 -> 4, Waffe (aca5d) %d, HP %d, Status %x (vorher Waffe %d, HP %d, Status %x)",
+                          &w, &hp, &st, &w0, &hp0, &st0) : 0;
+      CHECK(n2 == 6 && w == 1 && hp == 100 && st == 0 && w0 == 0 && hp0 < 100 && (st0 & 2),
+            "Sherry -> Elza (ROOM3091 @0x01D9C): Waffe %d = Messer (DEBUG.BIN @0x800c00d4[4]; vorher %d), HP %d (vorher %d), "
+            "Status %x (vorher %x)", n2 == 6 ? w : -1, n2 == 6 ? w0 : -1, n2 == 6 ? hp : -1, n2 == 6 ? hp0 : -1,
+            n2 == 6 ? st : 0xffffu, n2 == 6 ? st0 : 0xffffu); }
+    int a[64], na;
+    na = folge(anim, 0, a, 64); drucke("Spieler PORT", a, na);
+    CHECK(gleich(a, na, k_soll_spieler, (int)(sizeof k_soll_spieler / sizeof k_soll_spieler[0])),
+          "Spieler (Sherry): Sub-0-Clipfolge = Original (%d Abschnitte)", na);
+    na = folge(anim, 1, a, 64); drucke("John PORT", a, na);
+    CHECK(gleich(a, na, k_soll_john, (int)(sizeof k_soll_john / sizeof k_soll_john[0])),
+          "Gegner 0 (John): Sub-0-Clipfolge = Original (%d Abschnitte)", na);
+    na = folge(anim, 2, a, 64); drucke("Elza PORT", a, na);
+    CHECK(gleich(a, na, k_soll_elza, (int)(sizeof k_soll_elza / sizeof k_soll_elza[0])),
+          "Gegner 1 (Elza-NPC): Sub-0-Clipfolge = Original (%d Abschnitte)", na);
+    /* Nachbesserung 1 (M1): Schleifen-Clip 13 Bild fuer Bild (FUN_80050cb8 @0x80050dbc-c8, Plc_flg 43 00 04 00 @0x01712 ff.) */
+    int ln[8], ab[8], sp[8];
+    int ns = schleife13(anim, ln, ab, sp, 8);
+    int ok = (ns == 6);
+    for (int i = 0; i < ns && i < 6; i++) {
+        printf("    Clip 13 Abschnitt %d: %d Bilder (Original %d), %d Spruenge 39->0, %d Abweichungen von i%%40\n",
+               i + 1, ln[i], k_soll_c13_len[i], sp[i], ab[i]);
+        if (ln[i] != k_soll_c13_len[i] || ab[i] != 0 || sp[i] != (k_soll_c13_len[i] - 1) / 40) ok = 0;
+    }
+    CHECK(ok, "Spieler (Sherry) Clip 13: %d Abschnitte, Bild = i %% 40 und Laengen = Original (19/12/5/3/10/4 Umlaeufe)", ns);
+    free(anim); free(d);
+}
+
+int main(int argc, char **argv)
+{
+    const char *teil_ = argc > 1 ? argv[1] : "alle";
+    printf("test_r41_stage3szenen_b %s\n", teil_);
+    if (!strcmp(teil_, "pins")    || !strcmp(teil_, "alle")) t_pins();
+    if (!strcmp(teil_, "waffe")   || !strcmp(teil_, "alle")) t_waffe();
+    if (!strcmp(teil_, "koerper") || !strcmp(teil_, "alle")) t_koerper();
+    if (!strcmp(teil_, "schleife") || !strcmp(teil_, "alle")) t_schleife();
+    if (!strcmp(teil_, "marvin")   || !strcmp(teil_, "alle")) t_marvin();
+    if (!strcmp(teil_, "marvinlauf") && argc > 2) t_marvinlauf(argv[2]);
+    if (!strcmp(teil_, "sherry") && argc > 3) t_sherry(argv[2], argv[3]);
+    if (!strcmp(teil_, "szene")  && argc > 3) t_szene(argv[2], argv[3]);
+    printf("%s (%d Fehler)\n", g_fail ? "FEHLGESCHLAGEN" : "BESTANDEN", g_fail);
+    return g_fail ? 1 : 0;
+}
