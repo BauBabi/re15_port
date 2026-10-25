@@ -383,9 +383,11 @@ Grundumgebung: RE15_NO_INTRO=1 RE15_NOAUDIO=1 Titel-Autostart, RE15_WINDOW_SCALE
 2. Wurf-Kamera von unten wie RE2 Cut 7 (43,6 Grad unter dem Werfer) gibt es in ROOM2080/2090 nicht (Abschnitt 3.4); Cut 7 von
    der Grubenseite ist die naechste vorhandene (frontal 0,89). Neue Hintergruende werden nicht erfunden (Entscheid B8).
 3. Alligator nach der Rueckkehr: der Raum 2090 wird neu aufgebaut, Spur B's Boss startet wieder untergetaucht (B9) und taucht beim
-   naechsten Annaehern auf (Intro). Gemessen (Lauf p3h mit RE15_GB_TEST=5): Gator wieder aufgetaucht an der Marker-Lage, verfolgt
-   Leon. Die Aufnahme des Kanisters geschieht, wenn er an ihm vorbeischwimmt (Spur B's Fenster); im Riegel
-   integration_r41_kanister2080 nicht erzwungen (Spur B's Riegel decken Aufnahme/R1 ab).
+   naechsten Annaehern auf (Intro). ~~Gemessen (Lauf p3h mit RE15_GB_TEST=5): Gator wieder aufgetaucht an der Marker-Lage, verfolgt
+   Leon.~~ **Berichtigt (Nachbesserung 1, M4):** p3h ist dafuer KEIN Beleg - RE15_GB_TEST=5 laesst den Boss aufgetaucht an der
+   Marker-Lage (4997,-20318) warten und schaltet das Untertauchen ab (enemy_ai_boss_gator.c gb_untertauchen, B9). Im echten Ablauf
+   (ohne Testhaken, Abnahme 0 n3_natur/n23_kanal) bleibt er bis zur Annaeherung untergetaucht und nahm den Kanister am alten
+   Liegeplatz nicht auf. Ablauf, Liegestelle und Messung im echten Ablauf: Abschnitt 8.2.
 4. RE2-Form "Werfer laeuft danach weg" (Adas Plc_dest @0x0812) und RE2 sub12 `Sleep 1` + `Plc_dest 40 00 14 ..` (@0x0754/0x0758,
    Mode 0x14) nicht uebernommen: Marvin/John bleibt in 2080, der Schnitt geht nach 2090 (Abschnitt 3.3).
 5. Der Kanister ist RE2-gross (MD1 2784 lang, r 267, ROOM40A0 Modell 1 unveraendert) - in Marvins/Johns Haenden quer vor der
@@ -521,3 +523,11 @@ z -18100..-14500) = **(-5300,-16300)**. Begründung aus dem Raum: die drei sce-8
 Nordbecken und dieser Kanal; Süd <-> Nord geht im Wasser nur durch den Kanal (Plattform x -1700..1850 z -20000..-12450 und Rampe
 dazwischen sind SCA-Blöcke, Spur B gb_zone/Westumlauf-Ecken x -4300) - folgt der Alligator Leon von einem Becken ins andere,
 schwimmt er hier geradeaus durch. Der Bahnendpunkt (Aufschlag im 2080-Bild, Ton) bleibt die RE2-Bahn.
+
+### 8.3 M5 - Dauern ohne Beleg (selbst gelesen, alles RE2 info/re2leon/PSX.EXE bzw. RE1.5-RDTs)
+| Stelle (alt) | Ursache | Beleg | jetzt |
+|---|---|---|---|
+| `OP_SLEEP(10)` zwischen zwei Zielen | 10 = geschätzte Drehzeit, zitiert war nur die Rate | Nachdrehen 0xC8/Bild `ori a1,zero,0xc8` @0x80033f90 (Gun-FSM Sub 5) | Poll auf Signal AUSGERICHTET (Bank 5 Bit 0x1E): der Takt setzt es im Bild, in dem der letzte Schritt (|Rest| <= 0xC8) das Ziel erreicht; kein Ziel mehr -> sofort. Gemessen m1_leon: 1-4 Bilder je Ziel (`Ziel Slot 4 ausgerichtet` F151 nach `Ziel 2` F148) |
+| `OP_SLEEP(30)` nach dem Tür-Ton | RE2-Wert @0x076A aus anderem Zusammenhang (dort nach Message_on) | ROOM1021 sub02: Work_set @0x020C2 -> Plc_motion(2,6) @0x020C6 -> Sleep 110 @0x020CA, kein Warten davor | entfernt: Signal Tür-Ton, dann direkt Work_set + Anlegen; der Ton läuft in den 110 Bildern (Riegel szene: nach dem Signal folgt `2e`) |
+| `OP_SLEEP(30)` in der Rückkehr | RE2 wartet dort mit Wsleep/Wsleeping @0x081A/@0x081B | Wsleeping @0x80053ac0: gibt ab (Rückgabe 2 @0x80053b18), solange `0x800cfbd8 & 0x20` (@0x80053acc) oder `0x800e873c & 0x80` (@0x80053adc-e4); 0x800e873c = 0x80 setzt der Nachrichten-Start FUN_8002fe38 (`addiu t2,zero,128` / `sb t2,-30916(at)` @0x8002fe80/88), hier für Leons Zeile Message_on @0x07E6/@0x07F4 | entfernt: der Port hat diese Zeile nicht -> 0 Bilder; Riegel start prüft die Form ohne Sleep |
+| Adas Wurf-Clip `3f 0a 12 40` @0x0750 durch Eigen c6 ersetzt, ohne Vermerk | - | Marvin/John haben keinen Wurf-Clip (Zensus 8.1: NPC-Plc_motion nur (1,7/11/22/23), (2,6/7)) | PORT-WAHL im Header (Formen) und am Opcode benannt: Eigen c6 hebt beide Hände von der Hüfte nach vorn oben = Hochstemmen über die Reling |
