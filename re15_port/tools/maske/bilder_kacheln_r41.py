@@ -94,7 +94,7 @@ def main():
             n = tint(d_neu & d_alt, (1, 0.1, 0.9), b)
             n = tint(zu, (0.1, 1, 0.2), n)
             n = tint(weg, (1, 0.2, 0.1), n)
-            sheet = Image.new("RGB", (320 * 3 + 16, 2 * 240 + 30), (20, 20, 20))
+            sheet = Image.new("RGB", (320 * 3 + 16, 240 + 16), (20, 20, 20))
             for k, im in enumerate((b, v, n)):
                 sheet.paste(Image.fromarray((im * 255).astype(np.uint8)), (k * 328, 14))
             # Teilrechtecke: Umriss, Farbe nach Tiefe (blau nah .. rot fern)
