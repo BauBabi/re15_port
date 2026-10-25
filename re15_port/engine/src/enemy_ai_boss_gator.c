@@ -1255,6 +1255,10 @@ void re15_gator_boss_tick(int slot)
     if (g_room_rdt_ok && (e->x != ox || e->z != oz) && !gb_klemme_aus(&s_gb[slot])) {   /* (2) */
         int32_t nx = e->x, nz = e->z;
         re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
+        /* Runde 41 Spur G, G-E1 (Abnahme G 2 M1): im R1-Todesclip setzt der Port die Lage absolut vom Anker; RE2 integriert die Lage
+         * selbst (FUN_800152c8 @0x801025a4-ac auf +0x38/+0x40), eine Wandkorrektur gilt dort fuer alle folgenden Bilder. Ohne das
+         * lief der Anker weiter und die Leiche sprang durch die Beckenwand (gemessen kg_elza: z -6884 -> -1916 in einem Bild). */
+        if (s_gb[slot].phase == GBP_RE2_TOD) { e->anchor_x += nx - e->x; e->anchor_z += nz - e->z; }
         e->x = nx; e->z = nz;
     }
     re15_gr2_nachtakt(slot, e);                               /* (3) */

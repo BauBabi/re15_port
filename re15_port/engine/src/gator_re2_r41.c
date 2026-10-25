@@ -53,6 +53,7 @@
 #include "re15_engine.h"       /* Nachtrag 4: g_engine.frame_count (Bildnummer im Log) */
 #include "re15_md1.h"          /* Nachbesserung 6 (M3): Huelle der Raum-Objekte (Obj_model_set-MD1 aus dem RDT) */
 #include "re15_aot.h"          /* Nachbesserung 6 (M3): re15_prop_culled / re15_prop_render_y (Objekt-Zeichner FUN_8002c18c) */
+#include "re15_collision.h"    /* Runde 41 Spur G, G-E1: Wandklemme in der Vorausschau des Todes-Clips (wie re15_gator_boss_tick) */
 
 /* ------------------------------------------------------------------------------------------ */
 typedef struct {
@@ -885,13 +886,15 @@ static void gr2_kam_reset(void)
  * Pass npc_region_culled, Ursprung = Wurzel) ausserhalb des Vierecks.
  * TODES-CLIP: der Kopf wandert im Clip 9 weit (R1 P1: Rueckstoss +0x144 = -500, Schritt 40 je Bild - 2 @0x8010246c-a0, Ziel-Gier
  * +160 mit 75/Bild @0x8010239c-a4/@0x801025f8-608, Clip 9 absolut vom Anker; gemessen bis 6100 Einheiten). Je zweites Clip-Bild wird
- * mit derselben Rechnung wie re15_gr2_r1_tick auf einer Kopie des Aktors vorausgerechnet (ohne die Wandklemme des Dispatchers) und
+ * mit derselben Rechnung wie re15_gr2_r1_tick auf einer Kopie des Aktors vorausgerechnet (samt Wandklemme und Anker-Nachfuehrung
+ * wie re15_gator_boss_tick) und
  * gezaehlt, in wie vielen Proben Kopf und Kiefer im Bild und unverdeckt sind und Kopf und Wurzel im Viereck liegen.
- * WAHL (PORT-WAHL der Abbildung, Mass = G-E1): unter den Zonenkameras mit gueltigem START (der laufende Cut eingeschlossen) die mit
- * den meisten sichtbaren Proben, bei Gleichstand die mit der Kopf-Bildlage naechst (170,111); Stufe 0 mit Spur B's Massstab-Grenze,
- * Stufe 1 ohne. Ist das der laufende Cut, bleibt er (RE2 R1 P0 schneidet nur, wenn der laufende Cut den Kopf nicht zeigt,
- * @0x80102218-34), sonst Schnitt (+0x218 |= 0x40 @0x80102248, zurueck am Clip-Ende @0x801024a4-ec); ohne gueltigen START die alte
- * Wahl. Messzeilen "KAMERA R1 G-E1 ..." in gator_boss.log. */
+ * WAHL (PORT-WAHL der Abbildung, Mass = G-E1), Rangfolge ohne Gewichte: (1) gueltiger START, (2) die meisten sichtbaren Proben des
+ * Todes-Clips, (3) die meisten sichtbaren START-Punkte, (4) Kopf-Bildlage naechst (170,111); Stufe 0 mit Spur B's Massstab-Grenze
+ * fuer jeden Schnitt (der laufende Cut ist kein Schnitt und faellt nicht darunter), Stufe 1 ohne. Ist die Wahl der laufende Cut,
+ * bleibt er (RE2 R1 P0 schneidet nur, wenn der laufende Cut den Kopf nicht zeigt, @0x80102218-34), sonst Schnitt (+0x218 |= 0x40
+ * @0x80102248, zurueck am Clip-Ende @0x801024a4-ec); zeigt keine Zonenkamera einen Punkt, die alte Wahl.
+ * Messzeilen "KAMERA R1 G-E1 ..." in gator_boss.log. */
 int (*re15_gr2_maske_hook)(int cut, int sx, int sy, int32_t vz) = NULL;
 #define GR2_R1_SOLL_X  170   /* RE2-Cut-5-Bildlage des Kopfes (k_blick EXPLOSION, probe_kamera_re2.c) */
 #define GR2_R1_SOLL_Y  111
@@ -959,23 +962,29 @@ static void gr2_r1_beurteilen(int c, const re15_actor_t *e, const gr2_r1_pfad_t 
     }
     u->m = gr2_massstab(&g_room_rdt.cuts[c], P->start[0], gr2_scale(e));
 }
-static int gr2_r1_wahl(const re15_actor_t *e, const gr2_r1_pfad_t *P)
+static int gr2_r1_wahl(const re15_actor_t *e, const gr2_r1_pfad_t *P, int cur)
 {
     const int32_t grenze = gr2_massstab_grenze();
     for (int stufe = 0; stufe < 2; stufe++) {
-        int best = -1, best_b = -1; int64_t best_d = 0;
+        int best = -1; gr2_r1_urteil_t bu; int64_t best_d = 0;
+        memset(&bu, 0, sizeof bu);
         for (int k = 0; k < g_room_rdt.cut_count; k++) {
             if (!gr2_zonenkamera(k)) continue;
             gr2_r1_urteil_t u;
             gr2_r1_beurteilen(k, e, P, &u);
-            const int gok = stufe == 1 || u.m <= grenze;
+            const int gok = stufe == 1 || k == cur || u.m <= grenze;
             const int64_t d = (int64_t)(u.kx - GR2_R1_SOLL_X) * (u.kx - GR2_R1_SOLL_X) + (int64_t)(u.ky - GR2_R1_SOLL_Y) * (u.ky - GR2_R1_SOLL_Y);
             re15_gr2_log("KAMERA R1 G-E1 Kandidat stufe=%d Cut %d kopf_bild=(%d,%d) Start %d/%d (%d verdeckt, %d ausserhalb)%s, "
                          "Todes-Clip %d/%d Proben, massstab=%d%s, Abstand zu RE2 (%d,%d) %d", stufe, k, u.kx, u.ky, u.im, GR2_R1_START,
                          u.vd, u.aus, u.start_ok ? "" : " ungueltig", u.bilder, P->n, (int)u.m, gok ? "" : " >grenze",
                          GR2_R1_SOLL_X, GR2_R1_SOLL_Y, (int)(d > 0x7fffffff ? 0x7fffffff : d));
-            if (!u.start_ok || !gok) continue;
-            if (best < 0 || u.bilder > best_b || (u.bilder == best_b && d < best_d)) { best = k; best_b = u.bilder; best_d = d; }
+            if (!gok || (u.im == 0 && u.bilder == 0)) continue;
+            int besser = best < 0;
+            if (!besser && u.start_ok != bu.start_ok) besser = u.start_ok > bu.start_ok;               /* (1) */
+            else if (!besser && u.bilder != bu.bilder) besser = u.bilder > bu.bilder;                 /* (2) */
+            else if (!besser && u.im != bu.im) besser = u.im > bu.im;                                 /* (3) */
+            else if (!besser) besser = d < best_d;                                                    /* (4), Gleichstand: kleinerer Cut */
+            if (besser) { best = k; bu = u; best_d = d; }
         }
         if (best >= 0) return best;
     }
@@ -999,7 +1008,7 @@ static void gr2_kam_r1_start(const re15_actor_t *e)
             re15_gr2_log("KAMERA R1 G-E1 laufender Cut %d: kopf_bild=(%d,%d) Start %d/%d (%d verdeckt, %d ausserhalb)%s, Todes-Clip %d/%d "
                          "Proben F%u", cur, u.kx, u.ky, u.im, GR2_R1_START, u.vd, u.aus, u.start_ok ? "" : " ungueltig", u.bilder, P.n,
                          (unsigned)g_engine.frame_count);
-            const int c = gr2_r1_wahl(e, &P);
+            const int c = gr2_r1_wahl(e, &P, cur);
             if (c >= 0 && c == cur) {
                 gr2_kam_sperre(GR2_KAM_R1);
                 gr2_kam_merken(-1, RE15_GR2_BLICK_EXPLOSION, e);
@@ -1022,7 +1031,7 @@ static void gr2_kam_r1_start(const re15_actor_t *e)
                              u.bilder, P.n);
                 return;
             }
-            re15_gr2_log("KAMERA R1 G-E1: keine Zonenkamera mit gueltigem Start -> alte Wahl F%u", (unsigned)g_engine.frame_count);
+            re15_gr2_log("KAMERA R1 G-E1: keine Zonenkamera zeigt einen Punkt -> alte Wahl F%u", (unsigned)g_engine.frame_count);
         }
     }
     if (!sichtbar) {
@@ -1794,7 +1803,13 @@ static int gr2_r1_pfad(const re15_actor_t *e, gr2_r1_pfad_t *P)
             t.rot_y = (int16_t)((t.rot_y + d) & 0xfff);
         }
         t.motion = 9; t.anim_frame = (uint32_t)k;
-        re15_clip_root_motion_abs_pub(&t, &bk->skel, &bk->anim, 9, k);
+        {   const int32_t ox = t.x, oz = t.z;
+            re15_clip_root_motion_abs_pub(&t, &bk->skel, &bk->anim, 9, k);
+            if (g_room_rdt_ok && (t.x != ox || t.z != oz)) {      /* Wandklemme + Anker wie re15_gator_boss_tick (2) */
+                int32_t nx = t.x, nz = t.z;
+                re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz, t.hit_radius_min, t.y, 4u);
+                t.anchor_x += nx - t.x; t.anchor_z += nz - t.z; t.x = nx; t.z = nz;
+            } }
         if ((k & 1) == 0 && P->n < GR2_R1_PROBEN) {
             if (!gr2_bone_welt(&t, 6, r, P->kopf[P->n]) || !gr2_bone_welt(&t, 7, r, P->kiefer[P->n])) break;
             P->wurzel[P->n][0] = t.x; P->wurzel[P->n][1] = t.y; P->wurzel[P->n][2] = t.z;
