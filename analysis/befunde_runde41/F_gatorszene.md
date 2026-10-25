@@ -428,3 +428,16 @@ integration_r41_re2gator)$" -j3 --timeout 1000 -V` -> `100% tests passed, 0 test
   Beckenkameras sind das 4-6 Pixel.
 - **Frage:** Soll der Schluessel nach dem Tod groesser bzw. als massiveres Modell erscheinen (z. B. ein anderes RE2-Schluessel-
   modell oder ein vergroessertes Modell)? Oder soll die Kamera nach dem Tod kurz auf den Schluessel schneiden?
+
+## Nachbesserung 2 (nach Abnahme 1, F_abnahme_1.md: M1, M2)
+
+Start 2026-10-25, HEAD a9472f02, Baum sauber. Messordner (scratchpad, nicht im Repo): `F41n2/` (`runs/<lauf>/...`, eigene
+exe-Kopie je Lauf `re15_pc_f41n2_<lauf>.exe`, timeout, danach geloescht). Alle Laeufe RE15_WINDOW_SCALE=1, Bilder nur per
+RE15_FRAMEDUMP.
+
+Plan:
+- N2.M1 Drei Fremd-Riegel mit belegtem Querbezug nachziehen (Muster F-E1): integration_r38_wasser (leon2090),
+  integration_r37_itemband (weg2090), integration_r41_wasser20b0_npc (landung_leon/landung_elza); je Ursache, Messung vorher,
+  Aenderung, gezielt gruen.
+- N2.M2 Water Key nach dem Tod nur 4-6 Pixel: Form im Original/RE2 suchen (wie zeigen die Spiele einen Gegenstand, der erst
+  nach einem Kampf aufnehmbar wird), umsetzen, neu messen (Differenzbild, Kasten, Puls, R1 mit natuerlicher Kamera, Leon + Elza).
