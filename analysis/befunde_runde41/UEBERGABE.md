@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-25 17:10: Nutzer-Nachtrag 30/30b/30c (Schrank 2010 klappt auf -> Sicherungskasten wie 2060 nach fuse_box.bmp; Panel-Raetsel 2030 mit Druck 80 statt Ventil 13 - erst Entwuerfe, Bau nach Freigabe; Notiztext "green and red" + Nummern "black"/"green" -> Loesung 02-01-09-07 (Plakat-Zeilen GREEN 09 / BLACK 02 vertauscht; N-E1 09-02-01-08 war falsch und ist widerrufen); RE2-Ton der Plattformfahrt; RE2-Alarmton durchgehend; Lautstaerke fuer ALLE Toene, Tuersequenzen und Wassersprung folgen ihr nicht). **Neue Spur N** (nachtrag30, Baum r41_nachtrag30, Kopf cd48e3c7) = wf_bb3cf906-c56 (args orchestrator/args_n.json). Nutzer-Bilder bytegleich in N_belege/nutzer/.
+
 * 2026-10-25 16:39: Release-Notes-Entwurf A-L fertig und unabhaengig geprueft (wf_c85f5501-af8, in Ordnung; Korrekturen u. a. Nachtrag 4 ergaenzt, 12_02-Aussage gestrichen, Herkunft "Lower the bridge?" ungeklaert -> §3b). Paket-Gate fuer neue RE2-Dateien -> §4.
 
 * 2026-10-25 16:28: M Abnahme 4 NICHT bestanden (M1 = M-E2 nicht umgesetzt, kam nach NB4; M2 roter Ordner 30A0/30A1 C0 ohne Maske, steht in Zelle 6 VOR der Figur) -> **M Nachbesserung 5 = wf_919ed783-7b2** (args orchestrator/args_m_nb5.json). G Nachbesserung 3 fertig (Kanister-Explosion aus fuenf RE2-Quellen nachgebaut, Raum-ESP GATOR40A0, Todeskamera G-E1, Werfer G-E2) -> G Abnahme 3 laeuft (wf_2bd33954-f59). F Nachbesserung 5 laeuft (wf_f2e30b5e-2c4). Release-Notes-Entwurf A-L: Pruefung laeuft (wf_c85f5501-af8).
