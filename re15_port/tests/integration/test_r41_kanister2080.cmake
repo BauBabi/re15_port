@@ -19,6 +19,9 @@
 #                 8193 Hz) -> Rueckkehr ROOM2090 (Tot-Bits 8 von 8) -> Kanister im Becken; Schnitte in 2080 in der Folge
 #                 2 -> 5 -> 7 (state.log cam=), Nachricht 42 im Bild (state.log msg id=42), keiner der Zombies auf der Treppe.
 # Lauf "elza"     dasselbe mit Elza (Spielerwahl RE15_PSELECT_AUTO_SWITCH): ROOM2091 -> ROOM2081, John 0x49.
+# Nachbesserung 1: Aufheben = Hinknien Loco c11 (ROOM11B0 sub06 @0x01650, Plc_motion(1,11) zweimal, kein Loco c2 = Klettern, kein
+#                 Eigen c0 = RUN-Gait), Kanister an der Spielstelle Nordbecken (RE2 Pos_set @0x08CA). RE15_GB_TEST=5 dient hier nur
+#                 als schneller Ausloeser der Szene; den weiteren Kampf OHNE Testhaken misst integration_r41_kanister2080_kampf.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_kanister2080.cmake
 # =============================================================================
@@ -224,16 +227,24 @@ foreach(_wer leon elza)
             "AUSLOESER geschwaecht .*-> ROOM${_r80}"
             "ROOM${_r80} SZENE \\(${_npc}, 8 lebende Zombies"
             "Tuer-Ton DOOR06 Satz 1 \\(Door_exit @0x800141f0\\) - Szene"
-            "Kanister aufgehoben"
+            "Kanister aufgehoben \\(Loco c11 Bild 24, Hinknien ROOM11B0 sub06 @0x01650\\)"
             "Wurf: Start .* -> Landung \\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\) nach [0-9]+ Bildern"
             "Aufschlag im Wasser"
             "ROOM${_r90} RUECKKEHR: .*Zone-7-Tot-Bits 236\\.\\.243 gesetzt: 8 von 8"
-            "ROOM${_r90} Kanister im Becken")
+            "ROOM${_r90} Kanister im Becken \\(-6500,-1200,-11000\\) = Spielstelle Nordbecken")
         file(STRINGS "${WORKDIR}/debug.log" _z REGEX "\\[k2080\\] F[0-9]+ ${_muster}")
         if(NOT _z)
             r41g_fehler("Lauf szene_${_wer}: keine Zeile '${_muster}'")
         endif()
     endforeach()
+    # Nachbesserung 1 (M1, Nachtrag 24b): Hinknien + Aufstehen = Plc_motion(1,11) zweimal, kein Loco c2 (Klettern) und kein
+    # Eigen c0 (RUN-Gait) im Szenen-Programm
+    file(STRINGS "${WORKDIR}/debug.log" _kn REGEX "\\[scd\\] Plc_motion\\(entity=1, motion=11, ")
+    list(LENGTH _kn _n_kn)
+    file(STRINGS "${WORKDIR}/debug.log" _kl REGEX "\\[scd\\] Plc_motion\\(entity=1, motion=2, |\\[scd\\] Plc_motion\\(entity=2, motion=0, ")
+    if(NOT _n_kn EQUAL 2 OR _kl)
+        r41g_fehler("Lauf szene_${_wer}: ${_n_kn} x Plc_motion(1,11) statt 2 bzw. Kletter-/Lauf-Clip im Programm (${_kl})")
+    endif()
     file(STRINGS "${WORKDIR}/debug.log" _ka REGEX "\\[k2080\\] F[0-9]+ Kopf ab: Slot [0-9]+ \\(Part 8 Flagwort 0x4[A-F]")
     list(LENGTH _ka _n_ka)
     file(STRINGS "${WORKDIR}/debug.log" _sch REGEX "\\[k2080\\] F[0-9]+ Schuss [0-9]+: Treffer Slot [0-9]+ .*hp=-1 state=3 zeile=5")

@@ -19,6 +19,10 @@
  *              Nachbesserung 1 ohne Sleep 30 - RE2 Wsleeping @0x80053ac0 wartet dort nur auf Leons Zeile).
  *   bahn       RE2 sub13: unabhaengig nachgerechnete Bahn (Lage += v, v += a; Stop y >= Wasser - 800) == Modul; Landepunkt aus
  *              der Nennlage im 2090-Becken (Aussenwaende x[-8900..7200] z[-27000..-5400], ausserhalb Plattform-/Rampenblock).
+ *   liege      Nachbesserung 1 (M2): Spielstelle des Kanisters (RE2-Form Pos_set ROOM7020 sub13 @0x08CA) im Wasser von ROOM2090
+ *              (Aussenwaende x[-8900..7200] z[-27000..-5400], ausserhalb Plattform-/Rampenblock) und naeher als 9000 am Lauerplatz
+ *              (-7200,-9200) = dort, wo der Alligator nach der Szene auftaucht (Spur B GB_START/GB_AGGRO); der Installer legt den
+ *              Kanister bei Bit 116 genau dort hin (Spur-B-API re15_gr2_kanister_welt, Stufe 0) - in 2090 UND 2091.
  *   texte      2080/2081 Id 42 in der Form ROOM2000 msg 1 @0x1BFD / ROOM2001 msg 0 @0x1E0A (Kopf 04 00 05 07 + Sprecher +
  *              05 00, Ende 04 01 01 63), Wortlaut dekodiert.
  *   ebene      Nachtrag 20: Treppen-Aot @0x0BE2 (sce 12, Band 0x80, x -22700..-16400, side 0, Bandsprung 3) und Absatzwand
@@ -29,6 +33,7 @@
 #include "re15_camera.h"
 #include "re15_scd.h"
 #include "re15_gameflow.h"
+#include "re15_gator_re2_r41.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -291,6 +296,39 @@ static int teil_bahn(void)
     return fails != 0;
 }
 
+/* ---- liege (Nachbesserung 1, M2) ------------------------------------------------------------------------------------- */
+static int teil_liege(void)
+{
+    const int32_t x = RE15_K2080_LIEGE_X, z = RE15_K2080_LIEGE_Z;
+    const int innen = x > -8900 && x < 7200 && z > -27000 && z < -5400;
+    const int plat = x > -1700 && x < 1850 && z > -20000 && z < -12450;
+    const int ramp = x > 1850 && x < 7200 && z > -18100 && z < -14500;
+    PRUEFE(innen && !plat && !ramp, "Spielstelle (%d,%d) nicht im Wasser des Beckens", (int)x, (int)z);
+    const int64_t dx = (int64_t)x + 7200, dz = (int64_t)z + 9200;   /* Lauerplatz GB_START (enemy_ai_boss_gator.c) */
+    PRUEFE(dx * dx + dz * dz < (int64_t)9000 * 9000, "Spielstelle %lld vom Lauerplatz (soll < 9000 = GB_AGGRO)",
+           (long long)(dx * dx + dz * dz));
+    for (int r = 0; r < 2; r++) {
+        g_gameflow.character = r ? 4 : 0;
+        re15_k2080_reset();
+        re15_gr2_kanister_entfernen();
+        re15_game_flag_set(9, RE15_K2080_BIT_F_SZENE, 1);
+        re15_game_flag_set(9, RE15_K2080_BIT_SZENE, 1);
+        re15_game_flag_set(9, RE15_K2080_BIT_KANISTER, 1);
+        g_current_room_id = r ? RE15_K2080_RAUM_2091 : RE15_K2080_RAUM_2090;
+        re15_kanister2080_r41_install((uint16_t)g_current_room_id);
+        int32_t pos[3] = { 0, 0, 0 }, rot[9];
+        const int da = re15_gr2_kanister_welt(pos, rot);
+        printf("  ROOM%04X: Kanister %s bei (%d,%d,%d), Stufe %d\n", (unsigned)g_current_room_id, da ? "liegt" : "FEHLT",
+               (int)pos[0], (int)pos[1], (int)pos[2], re15_gr2_kanister_stufe());
+        PRUEFE(da && pos[0] == x && pos[1] == RE15_K2080_GATOR_WASSER_Y && pos[2] == z && re15_gr2_kanister_stufe() == 0,
+               "ROOM%04X: Kanister nicht an der Spielstelle", (unsigned)g_current_room_id);
+    }
+    re15_gr2_kanister_entfernen();
+    for (int b = 110; b <= 116; b++) re15_game_flag_set(9, (uint8_t)b, 0);
+    g_gameflow.character = 0;
+    return fails != 0;
+}
+
 /* ---- texte --------------------------------------------------------------------------------------------------------- */
 static void dekodiere(const uint8_t *b, int n, char *out, int cap)
 {
@@ -434,6 +472,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "start")) rc = teil_start();
     else if (!strcmp(t, "bahn")) rc = teil_bahn();
     else if (!strcmp(t, "texte")) rc = teil_texte();
+    else if (!strcmp(t, "liege")) rc = teil_liege();
     else if (!strcmp(t, "ebene")) rc = teil_ebene();
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);
