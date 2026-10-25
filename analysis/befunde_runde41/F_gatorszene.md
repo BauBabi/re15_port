@@ -694,3 +694,19 @@ Plan:
     `Explosions-Cut 3 -> Ausgangs-Cut 0 F1036`, Einstellung `Cut 3 (vorher Cut 0) F1036` bis `Ende: Cut 0 F1128`; state.log cam=3
     durchgehend F1000-F1126, cam=0 ab F1127 (vorher Abnahme 2: Cut 3 -> Cut 0 F1036/F1037 -> Cut 3); Bilder fd 1005-1046: kein Bild der
     Referenz X (Cut 0, Abweichung 12,2-12,7 gegen 0,5-6,0 zu den beiden Cut-3-Referenzen).
+- **Nebenbefund (beim Bau des Unit-Riegels gemessen, gleiche Funktion):** Im zweiten Fall desselben Prozesses (ROOM2091 nach dem
+  2090-Fall) lief die Einstellung schon im ersten Bild ("Einstellung Cut 2 ab Bild 0"), ohne Rueckschnitt-Ersatz, danach stand Cut 0
+  13 Bilder lang. Ursache: `re15_gr2_tot()` fragt ALLE Slots ab (gator_re2_r41.c `for (...) if (s_g[i].tot) return 1`), `s_g` eines
+  Slots loescht erst der Boss-INIT des neuen Aktors (`re15_gr2_reset`, enemy_ai_boss_gator.c INIT), und der SCD-Takt-Rueckfall
+  `key_tod_pruefen` (re15_gatorszene_r41_tick) laeuft im ersten Bild VOR dem ersten Boss-Takt -> der R1-Tod eines frueheren Alligators
+  derselben Sitzung legte den Schluessel sofort. Im Spiel moeglich, wenn in einer Sitzung nach dem Tod ein Zustand davor betreten wird
+  (Spielstand geladen / Continue mit (9,110) und ohne (9,111)) - an der exe nicht nachgestellt (RE15_SET_FLAG(_AT) kann (9,111) nicht
+  loeschen). Aenderung: der R1-Endzustand zaehlt in `key_tod_pruefen` nur, wenn R1 in DIESEM Raumbesuch lief (`s_r1_lief`, gesetzt in
+  key_rueckschnitt_pruefen bei `re15_gr2_r1_laeuft`, geloescht im Installer); die Todesrolle (Zustand 7 des aktuellen Aktors) und
+  `musik_soll` bleiben unveraendert. Nachher: der Fall ROOM2091 im selben Prozess verhaelt sich wie der erste (s. Tests).
+- **Unit-Riegel nachher** (`test_r41_gatorszene tod_explosion`, Harness mit echtem Spielschritt, Lage KW = test_r41_re2gator Fall (b2)):
+  ROOM2090 und ROOM2091 je `angezeigter Cut je Bild ab dem Treffer: 1 x 36, 2 x 90, 0 x 2` - "Folge R 1/0", "Einstellung Cut 2 ab
+  Bild 35, Tot-Flag Bild 37", "kein angezeigtes Bild mit Cut 0 vor dem Tot-Flag (0)", "nach dem Tot-Flag haelt die Einstellung
+  (Zonenkamera gesperrt 1, B's Programm frei 1)", "nach dem Halt: Cut_old auf Cut 0, Zonenkamera an, (9,111) = 1"; Gegenprobe
+  (9,111) vorab: `1 x 36, 0 x 23` - "B schneidet zwei Bilder vor dem Tot-Flag (Bild 37) auf Cut 0 zurueck (2 Bilder Cut 0)", keine
+  Folge-Zeile R -> `tod_explosion: 0 Fehler`.
