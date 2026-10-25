@@ -789,3 +789,17 @@ Nachsatz des Nutzers zu 24b (Wortlaut): "marvin" — gesehen bei Marvin (Leons S
   braeuchte einen neuen Hintergrund. Gewaehlt wird die naechstliegende vorhandene Kamera (laut Abnahme 2090 Cut 12, knapp
   daneben) mit der RE2-Schnittfolge des Wurfs (ROOM7020 sub12/13: Bild, Dauer, Schnitte belegen); PORT-WAHL im Dossier mit
   Bildvergleich RE2 <-> Port. Der Nutzer wird darauf hingewiesen.
+
+## 2026-10-25 02:47 — Nachtrag 25 (Nutzer-Antworten per Auswahl zu den Fragen (o)/(p)/(q) der Spur C) + Orchestrator-Entscheid C-E4
+
+(o) "Soll waehrend der 60 Sekunden RE2s Selbstzerstoerungs-Alarm (SUB_25, RE2 ROOM6040) laufen?" — **"Ja, RE2-Alarm SUB_25"**.
+(p) "Countdown-Anzeige: gebaut MM:SS:HH oben rechts ... Passt das?" — **Antwort des Nutzers (Wortlaut): "Auch da gibt es
+    mindestens ein Alarm in Resident Evil 2."** -> RE2 HAT eine Countdown-Anzeige (Selbstzerstoerungs-Zeit am Spielende):
+    Spur C findet sie in RE2 (ghidra_re2_Leon.txt / RE2_Quellcode_V2: Zeit-Anzeige, Ziffern-Textur, Lage, Format, Ausloeser,
+    z. B. die Laborsequenz um ROOM6040 / den Zug) und baut den 2030-Countdown in GENAU dieser Form nach (Form/Lage/Ziffern/
+    Farbe mit Beleg), statt der Port-Wahl MM:SS:HH.
+(q) "A fuse box for the valve controls." — **"Freigeben"**.
+
+**C-E4:** Fuer den Alarm darf Spur C einen kleinen, markierten Haken im Musik-/BGM-Lader platform/pc/src/audio_pc.c setzen
+("Runde 41 Spur C, C-E4"; Spur D ist integriert, beidseitig mergen). SUB_25 aus info/re2leon/COMMON/SOUND/SUB_25.BGM bytegleich
+nach shared_assets/RE2/SOUND/ (Paket-Gate nennen). Alarm vom Warntext bis zur Flut bzw. bis zum Verlassen des Raums.
