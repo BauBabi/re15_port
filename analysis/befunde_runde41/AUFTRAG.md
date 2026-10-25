@@ -817,3 +817,18 @@ faehrt sie gruen — kein Lockern ohne Grund:
   beheben -> genau 1 Ton.
 - integration_r41_re2gator (Spur B, "RE2-Intro ..."): die 2090-Ankunftsszene ersetzt das RE2-Intro (Nachtrag 6) -> der Riegel
   prueft den Auftritt ueber F's Szene (Clip-Folge/Schnitte), B's uebrige Pruefungen bleiben unveraendert gruen.
+
+## 2026-10-25 08:16 — Nachtrag 26 (Nutzer-Antworten per Auswahl zu den Fragen der Nachbesserung G 1) + Entscheide FG-E5, C-E5
+
+1. "Soll der Alligator die RE2-Hals-/Anschwimm-Lenkung zum Kanister bekommen (RE2 FUN_800177c0, Zielmodus)?" —
+   **"Ja, RE2-Lenkung (Empfohlen)"**: im Kanister-Bereich lenkt er Hals und Schwimmweg zum Kanister und nimmt ihn
+   verlaesslich auf (RE2 Zielmodus +0x1C0&4, FUN_800177c0 Part 5, Ziel (x, y-800, obj[1].z) @0x80100a4c-70, Grenzen
+   560/312 @0x801005a0-c4; sonst FUN_80017d98 @0x80100344-74).
+2. "Wurf-Kamera: 2090 Kamera 12 (von unten) oder 2080 Kamera 7 (frontal)?" — **"2090 Kamera 12 (von unten)"** (wie gebaut).
+3. "Soll der Kanister beim Greifen sichtbar kippen (RE2-Kippen aus ROOM40A0)?" — **"Ja, RE2-Kippen (Empfohlen)"**.
+
+**FG-E5:** Spur G setzt 1. und 3. um; dafuer darf G (wie FG-E3) kleine markierte Haken/Funktionen in Spur B's Modulen setzen
+(Part-5-Gier-Kanal fuer den Hals, Kippen beim Anhaengen). B's Riegel bleiben gruen.
+**C-E5:** Der Alarm-Schalter re15_audio_r41_alarm (~20 Zeilen am Ende von audio_pc.c + 4 markierte Einzeiler) ist angenommen
+(braucht die statischen BGM-Zustaende der Datei). Die zwei RBJ-Haken der Spur C in main.c (V1 der Abnahme C 5) sind angenommen;
+Bit (9,125) (Ventil-Sicherungskasten) ist in VERTRAG 1.1 fuer C eingetragen.
