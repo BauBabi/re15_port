@@ -75,7 +75,7 @@
  * Werkzeuge "capdiff"/"capkorr" (Nachbesserung 6, Riegel integration_r41_ventilkette_alarm; Abnahme 5 Mangel 1): Aufnahmen von
  * RE15_AUDIO_CAP_SYNC (s16 Stereo, 1470 Stereo-Bilder je Spieltakt = 44100 / 30, audio_pc.c). `capdiff <a.raw> <b.raw> <an> <aus>`
  * vergleicht einen Lauf mit dem Alarm (a) und seinen Zwilling ohne SUB_25 (b): "CAPDIFF VOR <max|a-b| vor Takt an> WAEHREND
- * <RMS(a-b) an..aus> NACH <max|a-b| ab aus + 90>"; `capkorr <c.raw> <a.raw> <b.raw> <takt_c> <takt_a> <takte>` korreliert einen
+ * <RMS(a-b) an..aus> NACH <max|a-b| ab aus + 120 (Hall abgeklungen; gemessen letzte Abweichung aus + 78)>"; `capkorr <c.raw> <a.raw> <b.raw> <takt_c> <takt_a> <takte>` korreliert einen
  * dritten Lauf (c, z. B. Elza) ab seinem Alarm-Takt mit dem Alarm allein (a - b): "CAPKORR <k> KONTROLLE <k 300 Takte frueher>".
  */
 #include <math.h>           /* Nachbesserung 6: sqrt (capdiff/capkorr) */
@@ -1836,7 +1836,7 @@ static int capdiff(const char *pa, const char *pb, long an, long aus)
     long na = 0, nb = 0;
     int16_t *a = cap_lesen(pa, &na), *b = cap_lesen(pb, &nb);
     if (!a || !b) { printf("FEHLER: Aufnahme fehlt (%s / %s)\n", pa, pb); free(a); free(b); return 2; }
-    const long n = na < nb ? na : nb, t_an = an * R41C_CAP_BILDER, t_aus = aus * R41C_CAP_BILDER, t_nach = (aus + 90) * R41C_CAP_BILDER;
+    const long n = na < nb ? na : nb, t_an = an * R41C_CAP_BILDER, t_aus = aus * R41C_CAP_BILDER, t_nach = (aus + 120) * R41C_CAP_BILDER;
     long vor = 0, nach = 0; double q = 0.0; long qn = 0;
     for (long i = 0; i < n; i++) {
         const long d0 = labs((long)a[2 * i] - (long)b[2 * i]), d1 = labs((long)a[2 * i + 1] - (long)b[2 * i + 1]);

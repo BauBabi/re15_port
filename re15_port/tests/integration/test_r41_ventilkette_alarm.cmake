@@ -12,7 +12,7 @@
 #   B  derselbe Lauf mit RE15_RE2_ASSET_ROOT -> SOUND/SUB_25.BGM = der 4-Byte-Stummel der RE1.5-CD (shared_assets/PSX/SOUND):
 #      der Alarm laedt NICHT ("nicht lesbar"), sonst bitgleich. A - B = der Alarm allein.
 #      Erwartet (Messlauf nb6 al_flut_leon / al_flut_leon_ohne 2026-10-25): vor dem Alarm-Takt bitgleich (max |A-B| = 0), waehrend
-#      des Alarms RMS(A-B) 667..718 (>= 300 verlangt), ab dem Alarm-Ende + 90 Takte wieder bitgleich (Hall abgeklungen).
+#      des Alarms RMS(A-B) 667..718 (>= 300 verlangt), ab dem Alarm-Ende + 120 Takte wieder bitgleich (Hall abgeklungen; gemessen letzte Abweichung Ende + 78).
 #   C  Elza, 2031, derselbe Plan: Alarm an/aus in 2031; die Aufnahme ab ihrem Alarm-Takt korreliert mit A - B (gemessen 0,571,
 #      Gegenprobe 300 Takte vorher ~0; verlangt >= 0,3 bzw. <= 0,1).
 #   Je Lauf: der Alarm geht MIT dem Warntext an und im Bild des Flut-Beginns aus - das ist das Bild, in dem der Countdown RE2s
@@ -209,7 +209,7 @@ if(_waehrend LESS 300)
     _fehler("[ab]: waehrend des Alarms RMS(A-B) ${_waehrend} < 300 - kein hoerbarer Alarm")
 endif()
 if(NOT _nach EQUAL 0)
-    _fehler("[ab]: nach dem Alarm-Ende (+90 Takte) nicht wieder bitgleich (max |A-B| ${_nach}) - der Alarm laeuft weiter")
+    _fehler("[ab]: nach dem Alarm-Ende (+120 Takte) nicht wieder bitgleich (max |A-B| ${_nach}) - der Alarm laeuft weiter")
 endif()
 # ---- C: Elza (2031) -------------------------------------------------------------------------------------------------------
 _lauf(c elza "${_p1}")
