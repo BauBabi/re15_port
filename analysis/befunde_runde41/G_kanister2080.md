@@ -1439,7 +1439,8 @@ Regions-Test von FUN_80077924 (`jal 0x8002c820` @0x80077a30).
 1. KOPF-KLEMME (PORT-WAHL; Form = der Bahn-Massstab der Spur B gr2_bahn_frei "Hals/Kopf/Kiefer Bones 5/6/7 im Wasser", Werkzeug = die
    Wand-Klemme, die nur die Lage verschiebt): solange der Kanister im Maul haengt (Stufe 3..7 nach dem Anhaengen) und im R1-Tod liegen
    Hals, Kopf, Kiefer (Bones 5/6/7 der gezeichneten Pose, gr2_pose_gezeichnet) und der Kanister (Part 6 x Lokallage) innerhalb der
-   Aussenwaende x[-8900..7200] z[-27000..-5400]; ragt ein Punkt hinaus, wird der ganze Alligator (Lage + Anker) um den Ueberstand nach
+   Aussenwaende x[-8900..7200] z[-27000..-5400] (Innenflaechen der SCA-Bloecke ROOM2090.RDT @0x6F4 West, @0x700 Sued, @0x70C Nord,
+   @0x718 Ost; SCA-Kopf @0x6DC; ROOM2091 bytegleich); ragt ein Punkt hinaus, wird der ganze Alligator (Lage + Anker) um den Ueberstand nach
    innen geschoben. Ohne die Bloecke Plattform/Rampe (GUARD-Hochbiss und CROSS-Klettern bleiben unberuehrt), nicht im FRESSEN (eigene
    Buehne der Spur B) und nicht bei abgeschalteter Klemme (gb_klemme_aus: CROSS/Befreiung). Dateien: `engine/src/gator_re2_r41.c`
    re15_gr2_kopf_klemme / gr2_kk_rechnen / gr2_kk_takt (dieselbe Klemme in der R1-Vorausschau gr2_r1_pfad), Haken (2b) in
