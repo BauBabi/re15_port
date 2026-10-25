@@ -1081,7 +1081,7 @@ angefasst; seine Riegel bleiben gruen.
 * Messung nachher: 267 Teile in 61 Kameras eingesetzt (+101 280 Punkte, Gelaender der Restliste dabei), Lok 6000 C5/C7/C8 +37 Rechtecke je Variante,
   0 Punkte weg; 0 Punkte mit Eintritt hinter der Tiefe (C-Gegenrechnung); "zu fern" 3 360; Rueckschritt-Suche: neu frei 0, neu verdeckt ohne
   Zelle davor nur an Treppe 6010 C5 (mit Quadern bis 7000: 0) und 7 Rand-Punkten 6000 C5 (alte Lok-Rechtecke); an der exe HINTER/DAVOR je
-  Kamera (Abschnitt "NB5 an der exe"); 277 Teile ohne Koerper -> Liste "Fuer den Nutzer".
+  Kamera: 108 Szenen, HINTER verdeckt, DAVOR 0 Punkte der Spielfigur uebermalt (Abschnitt "NB5 an der exe"); 277 Teile ohne Koerper -> Liste "Fuer den Nutzer".
 **Mangel 2 - roter Ordner 30A0/30A1 C0 ohne Maske: kein Teil des Original-Atlas -> Freistellung des Nutzers.**
 * Ursache: der Kuenstler-Ausschnitt (SLD Cut 0) enthaelt den gruenen Ordner, den roten nicht; das Original hat in 30A0/30A1 keine Masken.
 * Messung vorher: 0 von 40 roten Bildpunkten gezeichnet; Beleg: Atlas an (232,-24) 0 von 40 / gruen 91 von 120, pri_offset 0x3C0 -> ff ff ff ff.
@@ -1189,6 +1189,85 @@ angefasst; seine Riegel bleiben gruen.
 * **Riegel** `unit_r41_masken36_ordner` (pri_offset/Kopfbyte beider Varianten, Ausschnitt gruen >= 91 / rot 0, kein eingesetztes Teil auf
   dem Fenster, gezeichnet 0 in Leon- und Elza-Datei) - PASS. Wenn die Freistellung des Nutzers kommt, wird (d) dort auf "gezeichnet"
   umgestellt (Lage/Tiefe dann aus seiner PNG + Zelle 6 @RDT+0x0045C, wie die STAGE1/2-Freistellungen).
+
+### NB5 an der exe (Entscheid M-E2 "jede Kamera mit einer HINTER- und einer DAVOR-Stelle, Leon, Elza wo erreichbar")
+* Stellen: `test_r37_masken36 neustellen <raum> <cut> <erstes>` (neu, dieselben erreichbaren Stehplaetze, dasselbe Figurraster und dieselbe
+  Engine-Tabelle wie der Ausschluss; HINTER = meiste Figurpunkte, die NUR neue Rechtecke verdecken; DAVOR = meiste Figurpunkte auf neuen
+  Rechtecken, keiner verdeckt, im Kasten keiner von irgendeiner Maske verdeckt). Laeufer `test_r41_masken36_stage2.cmake` (Laufpruefung NB4),
+  exe-Kopie je Gruppe, Framedump Bild 120, RE15_WINDOW_SCALE=1, RE15_FORCE_CUT. HINTER = Art M (H > 0), DAVOR = **Art L (neu)**: nur die
+  Spielfigur zaehlt (Lauf D ohne Masken mit der Figur an A0 = `test_r37_masken36 aussen`, erreichbarer Platz ausserhalb des Regionsvierecks;
+  S = |B - D| > 24), H == 0. Grund fuer Art L (gemessen, erster Durchgang mit Art V): w3040_03 zaehlte einen Gegner HINTER dem neuen Gelaender
+  als "uebermalt" (Bild `M_bilder/NB5/` nicht noetig - die Maske verdeckt ihn richtig), w5090_11 37 und die 6000-Szenen 1..59 Punkte ebenso
+  andere Figuren/3D-Objekte (Annette-Szene in 6000). 50B0 C2/C3 haben keinen Platz ausserhalb des Vierecks -> Art V (alle Figuren), dort 0.
+* Ergebnis (Figur / verdeckt bzw. uebermalt; Elza = Raumvariante xxx1, je Raum die staerkste Stelle):
+  | Raum | Kamera | HINTER (M: Figur/verdeckt) | DAVOR (L/V: Figur/uebermalt) | Elza |
+  |---|---|---|---|---|
+  | 3040 | 1 | - | 447/0 |  |
+  | 3040 | 2 | 647/560 | 1511/0 | M 582/475 |
+  | 3040 | 3 | 309/91 | 1116/0 | L 1015/0 |
+  | 3040 | 4 | 163/63 | 6434/0 |  |
+  | 3040 | 5 | 393/128 | 2007/0 |  |
+  | 3040 | 6 | 80/40 | 4979/0 |  |
+  | 3040 | 7 | 296/72 | 2661/0 |  |
+  | 3040 | 9 | - | 2384/0 |  |
+  | 3040 | 11 | 26/1 | 1184/0 |  |
+  | 3040 | 12 | 27/4 | 626/0 |  |
+  | 3040 | 13 | 395/104 | 1082/0 |  |
+  | 3050 | 0 | 68/7 | 1059/0 |  |
+  | 3050 | 1 | 245/125 | 1740/0 |  |
+  | 3050 | 4 | 505/439 | 2527/0 | M 365/290, L 1336/0 |
+  | 3050 | 5 | 174/130 | 3515/0 |  |
+  | 3050 | 6 | 26/18 | 421/0 |  |
+  | 3050 | 7 | 175/28 | 1610/0 |  |
+  | 3050 | 8 | 103/52 | 2279/0 |  |
+  | 3050 | 9 | 341/130 | 1490/0 |  |
+  | 3050 | 12 | 344/335 | 24/0 |  |
+  | 3050 | 13 | 381/125 | 1019/0 |  |
+  | 30A0 | 1 | - | 1269/0 |  |
+  | 30A0 | 2 | - | 276/0 |  |
+  | 30A0 | 3 | 271/125 | - |  |
+  | 30A0 | 4 | 346/157 | 2952/0 | L 4291/0, M 473/234 |
+  | 30A0 | 5 | - | 202/0 |  |
+  | 30E0 | 6 | - | 535/0 |  |
+  | 30E0 | 7 | 90/41 | 2449/0 |  |
+  | 30E0 | 8 | 225/94 | 1613/0 | M 168/64, L 1496/0 |
+  | 30E0 | 9 | - | 1643/0 |  |
+  | 4040 | 12 | 361/9 | 814/0 | M 361/9, L 825/0 |
+  | 40A0 | 7 | - | 1410/0 | L 1383/0 |
+  | 5020 | 2 | - | 651/0 |  |
+  | 5020 | 7 | - | 996/0 | L 1081/0 |
+  | 5020 | 9 | - | 3495/0 |  |
+  | 5050 | 3 | - | 644/0 | L 174/0 |
+  | 5090 | 11 | 831/448 | 2605/0 | M 732/413 |
+  | 5090 | 12 | - | 5633/0 | L 4242/0 |
+  | 5090 | 13 | - | 2582/0 |  |
+  | 5090 | 14 | - | 208/0 |  |
+  | 50B0 | 2 | - | 1146/0 | V 935/0 |
+  | 50B0 | 3 | - | 137/0 |  |
+  | 5100 | 5 | - | 298/0 | L 298/0 |
+  | 6000 | 4 | - | 635/0 |  |
+  | 6000 | 5 | 100/55 | 505/10 | M 92/58, L 671/0 |
+  | 6000 | 7 | - | 1415/0 |  |
+  | 6000 | 8 | - | 372/0 |  |
+  | 6000 | 9 | - | 129/0 |  |
+  | 6010 | 2 | 642/473 | 2695/0 | M 463/395 |
+  | 6010 | 3 | 81/27 | - |  |
+  | 6010 | 5 | 132/40 | - |  |
+  | 6010 | 6 | 128/67 | 5096/0 | L 4516/0 |
+  | 6010 | 7 | 116/55 | - |  |
+  | 6010 | 12 | 24/0 | 2642/0 |  |
+  | 6010 | 13 | 211/162 | 2661/0 |  |
+  | 6030 | 10 | - | 1750/0 | L 1287/0 |
+* 108 Szenen in 4 Gruppen (`integration_r41_masken36_teile_a..d`): HINTER in jeder Kamera mit Stelle verdeckt (H > 0, z.B. Leon hinter dem Steg-Gelaender
+  ROOM30E0 C8 94 von 225, Bild `M_bilder/NB5/NB5_exe_t30E0_08.png`; hinter dem Laufsteg-Gelaender ROOM3040 C3 91 von 309, `NB5_exe_t3040_03.png`),
+  DAVOR in jeder Kamera 0 Punkte der Spielfigur uebermalt. Drei Szenen genommen bzw. geaendert (Messung bleibt hier): t3050_06 (S 26 im Fenster
+  am oberen Bildrand, H 18: verdeckt - M bekommt SMIN=0, weil H > 0 die Figur im Fenster voraussetzt); t6010_12 (H 0 von 24: Randfall, das
+  Kasten-Modell sagt 31 Punkte knapp hinter dem Koerper voraus, die Engine sortiert die Figur je Polygon (OTZ-Mittel @0x8002565c) und zeichnet
+  die Fuesse davor - genommen); r6000_05 (Pruefstelle der Rueckschritt-Suche, Band 2 im Gang an der Wandecke: alle 17 uebermalten Punkte der
+  Spielfigur liegen unter dem ALTEN Rechteck 22 (Tiefe 63, seit R37 gezeichnet), Leon steht dort hinter dem Wandblock (Abnahme 3); die vom
+  Tuer-Band wieder gezeichneten Rechtecke 26/97/100 uebermalen 0 Punkte - genommen).
+* Ohne HINTER- bzw. DAVOR-Stelle (es gibt keinen erreichbaren Platz, an dem ein neues Teil die Figur verdeckt bzw. sie ueberlappt; H = HINTER,
+  D = DAVOR): 3040 C10 H+D, 3040 C1/C9 H, 30A0 C1/C2/C5 H, 30A0 C3 D, 30E0 C6/C9 H, 40A0 C7 H, 5020 C2/C7/C9 H, 5020 C5 H+D, 5050 C2 H+D, 5050 C3 H, 5090 C12/C13/C14 H, 50B0 C2/C3 H, 5100 C5 H, 6000 C4/C7/C8/C9 H, 6010 C5 D, 6010 C3/C7 D, 6030 C7/C9 H+D, 6030 C10 H.
 
 ## Tests (gezielt, KEINE volle Suite)
 
