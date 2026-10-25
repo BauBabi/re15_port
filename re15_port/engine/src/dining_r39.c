@@ -24,6 +24,7 @@
 #include "re15_elza_r36.h"         /* re15_elza_se_hook / RE15_ELZA_TON_SCHUSS (Johns Schuss-Ton, Runde 36 L / 38 H) */
 #include "re15_emd.h"              /* re15_emd_parse_rbj_record (Heranwinken-Leihe ROOM1171) */
 #include "re15_enemy.h"            /* re15_enemy_find (Johns Skelett als Basis-Hierarchie) */
+#include "re15_wclip_r41.h"         /* Runde 41 Spur J: Spieler-Plc_motion(2,c) = W-Bank in jedem Raum */
 
 #include "gen/dining_r39_programme.inc"
 
@@ -94,6 +95,7 @@ static int s_w_ton = 0;   /* Messer-Zieh-Ton dieser Hebung schon gespielt */
 
 void re15_dining_r39_w_beginn(int entity, int clip)
 {
+    re15_wclip_r41_beginn((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141 ? entity : -1, clip);   /* Runde 41 Spur J: (2,c) = W-Bank-Clip in jedem Raum */
     if ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141 || entity != RE15_R39J_W_SUB || clip < 0) { s_w_clip = -1; return; }
     s_w_clip = clip;
     s_w_ton = 0;
@@ -360,7 +362,7 @@ int re15_dining_r39_affe_jagt_john(int slot)
  * (Bild n1_hand.png, Lauf n1 F1756). Senken ist fuer beide Clip 6 rueckwaerts (LOWER @0x80033c74 / @0x80035424). */
 int re15_dining_r39_w_clip(void)
 {
-    if (s_w_clip < 0) return -1;
+    if (s_w_clip < 0) return re15_wclip_r41_clip();   /* Runde 41 Spur J: ausserhalb ROOM1141 die allgemeine Regel */
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     if (s_w_clip == RE15_R39J_W_CLIP_HEBEN && re15_player_equipped_weapon() < 3 && !(pl->anim_flags & 0x80))
         return RE15_R39J_W_CLIP_MESSER;
@@ -369,6 +371,7 @@ int re15_dining_r39_w_clip(void)
 
 static void w_halten(void)
 {
+    re15_wclip_r41_halten();   /* Runde 41 Spur J: Phase 2 der allgemeinen W-Bank-Regel (@0x80050fec) */
     if (s_w_clip < 0) return;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     /* Ein anderer Plc-Befehl hat Kommandowort oder Clip ersetzt (Plc_motion @0x80041ba8/@0x80041bb0, Plc_dest @0x80041c14):

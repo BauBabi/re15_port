@@ -18,6 +18,7 @@
  * (no tick side effects → no 1170 risk; same stance as re15_damage.c).
  */
 #include "re15_enemy_ai.h"
+#include "re15_fussanker_r41.h"   /* Runde 41 Spur J: Glied-Anker FUN_800369f8 */
 #include "re15_ai_flavor.h"
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm (Typ 0x2D) fuer die 0x1A-Gitterhaende */
 #include "re15_enemy.h"    /* re15_enemy_find — the loaded model bank (death-clip framecount) */
@@ -10094,26 +10095,10 @@ static void re15_npc_executor(re15_actor_t *e)
         re15_npc_sub_dispatch(e);
     }
     e->anim_flags ^= 0x20;                                        /* @0x80050c50 */
-    /* root-motion channel 0 (@0x80050c6c-78): `if (anim_flags & 1) FUN_800369f8(0,0)` mode 0 =
-     * re15_clip_root_motion_delta — the current clip's per-frame keyframe root translation, rotated by
-     * rot_y, into +0x34/+0x3c. Byte-true GATE (disasm-verified). Two things must be present for the NPC
-     * to actually displace, and BOTH are deferred (documented in re15_npc_sub_walk):
-     *   (1) anim_flags&1 armed — set by the un-RE'd anim/clip-set path, NOT any executor sub;
-     *   (2) the NPC's EM bank loaded — re15_enemy_find(type) is NULL in the loadable rooms (the NPC
-     *       renders via def_skel there), so there is no skeleton to read the keyframe from.
-     * The gate + wiring are kept byte-true; the delta form self-skips on a non-advancing/ wrapped frame.
-     * Channel 1 (@0x80050c94: `if (anim_flags & 2) FUN_800369f8(0,1)`) is a second segment — deferred. */
-    if (e->anim_flags & 1) {
-        /* Byte-true executor gate (@0x80050c6c): apply channel-0 clip root-motion. NOTE the NPC's own
-         * clips are IN-PLACE — EM040 clip 5 carries a CONSTANT sx=383 across all 20 frames (verified by
-         * dumping bank->anim/anim_loco keyframe speeds), so the frame-to-frame delta is 0 and this is a
-         * no-op for the NPC walk. The NPC forward translation therefore comes from a DIFFERENT mechanism
-         * (a fixed-speed step, not clip root-motion) that is not yet RE'd — see re15_npc_sub_walk. The
-         * gate is kept byte-true for actors whose clips DO carry per-frame root translation. */
-        re15_enemy_bank_t *bank = re15_enemy_find(e->type);
-        if (bank) re15_clip_root_motion_delta(e, &bank->skel, &bank->anim,
-                                              (int)e->motion, (int)e->anim_frame, fr_prev, 1);
-    }
+    /* Runde 41 Spur J: Glied-Anker FUN_800369f8 (re15_fussanker_r41.h) statt Keyframe-Wurzelweg / "deferred". */
+    if (e->anim_flags & 1) re15_fussanker_r41_anwenden(e, 0);   /* @0x80050c6c `andi 0x1` -> @0x80050c78 jal 0x800369f8(0,0) */
+    if (e->anim_flags & 2) re15_fussanker_r41_anwenden(e, 1);   /* @0x80050c94 `andi 0x2` -> @0x80050ca0 jal 0x800369f8(0,1) */
+    (void)fr_prev;
 }
 
 /* ============================ NPC-ESKORTE (State 1, 0x8011ce54) ============================== *
@@ -14816,6 +14801,7 @@ void re15_enemy_ai_run_all(int combat_active)
              * motion 0 (a T-pose, never invulnerable) — confirmed in ROOM11B0 (0x42/0x4b st=0 mo=0 vs
              * 0x40 st=4 mo=2) and ROOM6000 (0x4d st=0). The walk/look/dialogue VM stays Wave-2 deferred. */
             re15_npc_ai_tick(s);
+            re15_fussanker_r41_merken_aktor(e);   /* Runde 41 Spur J: Part+84/+92 des naechsten FUN_800369f8 (re15_fussanker_r41.h) */
         }
         else if (t == 0x13) {   /* ZOMBIE GIRL (type 0x13) — the standard-zombie phase FSM on her own
                                  * root FUN_8010a8c8 (audit wf_827f186d zombie-girl #1). Her root TAIL

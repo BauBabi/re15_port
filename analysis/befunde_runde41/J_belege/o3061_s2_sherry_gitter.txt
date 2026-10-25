@@ -1,0 +1,8 @@
+t07_18.0s.sav Sherry c2 f6 1c4=00 pos(-18860,0,-26266) | Gitter lokal(-19095,-495,-27045) rot(0,3072,0) vater 80072d4c welt(-19095,-495,-27045)
+t08_20.0s.sav Sherry c2 f2 1c4=00 pos(-18860,0,-26266) | Gitter lokal(-19095,-495,-27045) rot(0,3072,0) vater 80072d4c welt(-19095,-495,-27045)
+t09_22.0s.sav Sherry c0 f20 1c4=00 pos(-18860,0,-26266) | Gitter lokal(-19095,-495,-27045) rot(0,3072,0) vater 80072d4c welt(-19095,-495,-27045)
+t10_24.0s.sav Sherry c0 f78 1c4=00 pos(-18860,0,-26266) | Gitter lokal(-18356,-266,-26788) rot(72,3072,0) vater 80072d4c welt(-18356,-266,-26788)
+t11_26.0s.sav Sherry c1 f47 1c4=22 pos(-19054,0,-27044) | Gitter lokal(-18116,-266,-26788) rot(72,3072,0) vater 80072d4c welt(-18116,-266,-26788)
+t12_28.0s.sav Sherry c2 f30 1c4=06 pos(-18792,0,-28234) | Gitter lokal(-18116,-266,-26788) rot(72,3072,0) vater 80072d4c welt(-18116,-266,-26788)
+t13_30.0s.sav Sherry c2 f22 1c4=06 pos(-18799,0,-29042) | Gitter lokal(-18116,-266,-26788) rot(72,3072,0) vater 80072d4c welt(-18116,-266,-26788)
+t14_32.0s.sav Sherry c2 f18 1c4=04 pos(-18795,0,-30700) | Gitter lokal(-18116,-266,-26788) rot(72,3072,0) vater 80072d4c welt(-18116,-266,-26788)

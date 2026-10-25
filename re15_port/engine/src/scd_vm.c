@@ -446,6 +446,9 @@ static void register_opcodes(void)
         extern int op_col_chg_set(scd_thread_t *t);
         s_op_table[0x45]              = op_col_chg_set;
     }
+    { extern int re15_superobj_r41_op_set(scd_thread_t *t); extern int re15_superobj_r41_op_reset(scd_thread_t *t);
+      s_op_table[0x48] = re15_superobj_r41_op_set; s_op_table[0x49] = re15_superobj_r41_op_reset; }   /* Runde 41 Spur J:
+                                        * Super_set @0x80040b20 / Super_reset @0x80040cd0 (re15_superobj_r41.h) */
 }
 
 /* Internal: enqueue an audio event. Drops if full (ring buffer overflow). */
