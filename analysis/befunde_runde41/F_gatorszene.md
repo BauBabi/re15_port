@@ -39,8 +39,8 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
       Abnahme 1 behoben und gemessen (Abschnitt "Nachbesserung 2")
 - [x] Nachbesserung 3: M1 der Abnahme 2 (Zwischenbild der Zonenkamera zwischen Explosionsschnitt und Schluessel-Einstellung)
       behoben und gemessen, Nebenbefund (R1-Tod aus frueherem Raumbesuch) behoben (Abschnitt "Nachbesserung 3")
-- [ ] Nachbesserung 4: M1 der Abnahme 3 (Nachtrag 29: Leiche samt Kette weiter weg von der Leiter, Ausweichen am Kampfbeginn)
-      (Abschnitt "Nachbesserung 4")
+- [x] Nachbesserung 4: M1 der Abnahme 3 (Nachtrag 29: Leiche samt Kette weiter weg von der Leiter, Ausweichen am Kampfbeginn)
+      behoben und gemessen (Abschnitt "Nachbesserung 4")
 
 ## 0. Protokoll
 
@@ -55,6 +55,9 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
 * Nachbesserung 3 (2026-10-25): 6c8956ec (Plan), 71641acd (Code M1), f7090113 (Dossier vorher/RE, exe-Riegel), f314cb63
   (Unit-Riegel), 4b22cd32 (Messung nachher + Bilder), 9e0347c8 (Nebenbefund), a7e00b75 (KN/KQ), b0192d5b (Spielfigur im
   Riegel), 298d2c5d (P0-Beleg), 36539858 (Unit gruen), Schluss-Commit fix(r41-gatorszene): Nachbesserung 3.
+* Nachbesserung 4 (2026-10-25): aa7b3e8a (Plan), 0f990c9f (Messung vorher), f5be4f3d (RE2-Sollwert + Probe), 2b8f3739
+  (Lagesuche), 5702190a (Code obj 3 + Unit-Riegel), ec012418 (exe-Riegel + Querbezuege), fb64e68c (beste Lage), 23cad995
+  (Dossier Wahl), d9357d86 (Messung nachher + Bilder), Schluss-Commit fix(r41-gatorszene): Nachbesserung 4.
 
 ## Punkt 2 — Spinnen aus ROOM2090 entfernen
 
@@ -905,3 +908,73 @@ Plan:
   48 -> 70 bei 2-9 Pixeln, Fassung 1 (Cut 1, Suedbecken) 72 -> 108 - der Schluessel ist jetzt etwa so gross wie in Fassung 1,
   aber dunkler (Nordbecken nur im Umgebungslicht, s. oben).
 
+### N4 Tests
+
+Neu (nur F-eigene Riegel, registriert in tests/unit/probes/r41_gatorszene.cmake):
+- `unit_r41_gatorszene_abstand` / `_abstand_elza` (test_r41_gatorszene.c Teil abstand): die ganze Szene ueber die Leiter mit dem
+  echten Boss-Takt bis zum Kampfbeginn; RE2-Sollwert IM Riegel aus den RE2-Daten gerechnet (Probe-Rechnung: Abstand 11402 mit
+  SquareRoot0 wie RE2 +0x1F0 `jal 0x8008d2f4` @0x800265d4, exakt 11430; 121 Bilder); verlangt Abstand Gator-Wurzel <-> Spielfigur
+  >= RE2 (gemessen 17496), Boss ab Bild 1 in der Verfolgung, erster Biss/Treffer (Leon steht) nicht vor 121 Bildern (gemessen
+  470/477); Gegenprobe: dieselbe Szene, Gator am Kampfbeginn an die Fassung-1-Lage (-4254,-20984) Gier 1505 -> erster Biss nach 48
+  Bildern < 121 (der Riegel faengt den Befund der Abnahme 3; exe vorher: 54).
+- `integration_r41_gatorszene_flucht` / `_flucht_elza` (test_r41_gatorszene.cmake): Leiterweg, Spielfigur rennt ab dem Kampfbeginn
+  nach Osten (`RE15_INPUT_SCRIPT=W13.5,UX4.6`, gehalten ab F406, die Szene haelt die Figur bis zum Kampfbeginn; Lauf N_LW2 = N_LW
+  mit W14.1 Bild fuer Bild gleich); verlangt Abstandsquadrat am Kampfbeginn (Folge C) >= RE2 (Auswerter `test_r41_gatorszene
+  re2soll`: `abstand=11402 abstand2=130647809 bilder=121`), kein Biss/Treffer bis F<c>+121, Spielfigur >= 5000 nach Osten
+  (gemessen 14932, x -8200 -> 6732).
+- Auswerter `test_r41_gatorszene re2soll` (Werkzeug-Modus fuer die exe-Riegel).
+
+Nachgezogen mit Beleg (Querbezug Nachtrag 29):
+- `integration_r41_gatorszene_leon` / `_elza`: Kampfbeginn = Folge C statt fest F405 (cam=0 in F<c>..F<c+74>, jetzt F422-F496),
+  dazu Abstand + kein Biss/Treffer in den RE2-Bildern (Funktion r41f_kampf; Gegenprobe des Auswerters an den Logs der Laeufe V_L /
+  V_LW vor der Aenderung: FEHLER "Abstandsquadrat ... < RE2", an N_L / N_LW: OK).
+- `unit_r41_gatorszene_leiche` (obj 3 bei (700,-8200) Gier 2432, Neigung 672/-144, Cut 5: Primitivfarbe Ruhe 51 -> Spitze 76 <= 0x80;
+  Gegenprobe jetzt "flach dunkler" (38 < 51), weil in Cut 5 keine Neigung die Kappung erreicht), `_programme` (P1 Cut 5),
+  `_szene` (Rueckkehr-Cut 5).
+- Spur-B-Riegel `integration_r41_re2gator` Lauf szene (Datei der Spur B, Querbezug (e) im Kopf): RE15_EXIT_AT 420 -> 440, weil das
+  Szenenende ("KAMERA SZENE ... Ende") jetzt in F422 liegt (Wende 24 statt 7 Bilder); Pruefungen unveraendert.
+
+Gezielt (keine volle Suite), Regex = die der Abnahme 3 (`F41a3/regex2.txt` = `F41n4/regex.txt`), sie schliesst die neuen Riegel
+ueber `unit_r41_gatorszene_` / `integration_r41_gatorszene_` ein (`ctest -N`: `Total Tests: 221` = 217 + 4):
+`ctest --test-dir "<baum>/re15_port/build" -R "^(unit_r41_gatorszene_|integration_r41_gatorszene_|unit_r41_re2gator_|integration_r41_re2gator$|unit_r36_kartenbits$|unit_r26_inventar$|unit_r21_discard_wegwerfen$|unit_r39_inventar_|integration_r39_inventar_discard$|unit_item_|unit_inv_|unit_sca_wall_hit$|unit_re2_spider_|unit_spider_ai$|unit_adult_spider_ai$|unit_r38_spinnen$|integration_r38_spinnen_echtlauf$|unit_writher_ai$|unit_enemy_shootable$|unit_collision_layers$|unit_alligator_ai$|unit_gator_sweep$|unit_gator_fress$|unit_r36_schluessel_|integration_r36_schluessel|unit_r38_dining1141_(schluessel1011|tuer1131)$|unit_r38_rolltor20a0|integration_r38_rolltor20a0|unit_r37_feuerloescher_|integration_r37_feuerloescher$|unit_r39_optik_schluessel$|unit_r39_schluessel2_|unit_aot_sce_census$|unit_aot_edge$|unit_scd_|unit_door_seq$|unit_r38_wasser_|integration_r38_wasser$|unit_r41_kleinkram_a$|integration_r41_kleinkram_a_blink$|r31_trefferboxen|unit_rotor_bgm_pin$|unit_r35_cut10f0_bgm$|unit_r39_johnruf1041_musik$|unit_r35_cut1150_knallbank$|unit_r36_szene1150_knall_re2$|integration_r39_elzazombies_knall$|unit_r36_inventar$|unit_r36_kartenitems$|unit_r37_itemband$|integration_r37_itemband$|unit_r36_tueren_|unit_r33_tueren_|unit_r30_tuer|unit_r31_tuer_ton$|unit_r35_cut10f0_tuerton$|unit_r39_karten_tueren$|integration_r36_tueren$|unit_camera_view$|unit_cut_old_displayed$|unit_r34n_b_cut_old$|prop_zone_dispatch$|prop_scd_pc_advance$|unit_r38_montage_kameras$|integration_(cross_stage|room_probe_sweep|rvd_coverage|door_traversal|door_lock|item_name_census|keydoor)$|prop_door_roundtrip$|prop_spawn_entered$|integration_r35_granate$|integration_r41_wasser20b0_npc$|integration_r38_wasserzombie$|unit_r35_granate$|unit_irons_mittelmodell$|unit_r34_reaktion$|unit_1210_arme$|unit_r30_irons_tisch_licht$|unit_r35_affen_|unit_r36_szenenleon_|unit_r36_ziel1190$|unit_r37_pri1100_|unit_r38_npckante_|unit_r38_wasserzombie$|unit_r41_wasser20b0_|integration_r36_kartenitems_bild$)" -j4 --timeout 1200 --output-on-failure`
+-> **`100% tests passed, 0 tests failed out of 221`** (`Total Test time (real) = 1101.44 sec`; darin integration_r37_itemband 830.27 s,
+integration_r36_kartenitems_bild 465.79 s, integration_r38_rolltor20a0 282.65 s, integration_r41_re2gator 269.20 s,
+integration_r41_wasser20b0_npc 219.66 s, integration_r38_wasser 185.88 s, integration_r41_gatorszene_leon/_elza 54.21/74.70 s,
+_flucht/_flucht_elza 53.98/74.43 s, _tod/_tod_elza 64.11/104.40 s, _tod_r1/_tod_r1_elza 42.27/82.47 s, _tod_explosion/_elza
+27.80/47.88 s, unit_r41_gatorszene_abstand/_elza 0.11/0.11 s).
+
+### N4 OFFEN
+
+1. **Schluessel im Nordbecken dunkler:** Ankunftseinstellung Cut 5 hellster Pixel 47 -> 66 (Fassung 1 im Suedbecken unter Cut 1:
+   72 -> 108), Kasten 9 x 12. Ursache sind die Lichtsaetze des Original-RDT (@0x468 + 40 * Cut): kein Licht reicht ins Nordbecken,
+   dort gilt nur das Umgebungslicht 63..73; der Wert Bildgroesse^2 x Licht ist dort bestmoeglich gewaehlt. Ein helleres Licht waere
+   erfunden - nicht gebaut.
+2. **Fressen von hinten:** die Kamerawahl FINISHER der Spur B nimmt Cut 4 (frontal -1625), weil Cut 5 (frontal 3933) ueber der
+   Massstab-Grenze 1892 liegt (Entscheid B8, Modul der Spur B). Biss, Schuetteln und Kauen sind in Cut 4 zu sehen
+   (n4_gator_szene.png F185-F400), die Leiche im Maul nur teilweise.
+3. **Anlauf lang:** Leon steht -> erster Biss nach 470 Bildern (15,7 s), RE2-Soll 121. Davon 300 Bilder RE2-Dash (Clip 2 + 3) beim
+   Wechsel in Leons Zone (Spur B, Zonen-Dash @0x801009a8/@0x801009ec) - "mindestens wie RE2" ist erfuellt, der Nutzer kann das
+   Tempo im Spiel beurteilen.
+4. RE2-Sollwert: Leons Plc_ret liegt im Fenster des Clip-3-Endes (>= 110 Bilder Sleep + Gehweg 1200 nach Cut 1, Clip 3 = 150 Bilder);
+   Leons Gehzeit in RE2 ist nicht gemessen - Bezug ist das Intro-Ende des Gators (@0x801008f4-948).
+5. **Integration mit Spur G:** der Kampf beginnt jetzt in F422 (statt F405) mit dem Gator im Nordbecken (-2178,-9077) statt bei
+   (-4254,-20984); die Kampf-/Kanister-Riegel der Spur G (nur im G-Baum) im Integrationsbaum neu messen ("Querbezug B/G: nur die
+   Startlage des Kampfes aendert sich", Nachtrag 29).
+6. Unveraendert aus N3: Nebenbefund R1-Tod aus frueherem Raumbesuch nur im Unit-Riegel; musik_soll ueber re15_gr2_tot(); Form
+   "Kameraschnitt nach dem Tod" ohne Bestaetigung; MAIN2E nach dem Tod; Nachrichten-Ids 44-46 frei; Schachtspinnen 20A0; nach dem Laden
+   keine Einstellung (Ersatzlage jetzt die Rumpfmitte von obj 3 (-206,-7594)); PSX-Bau ungeprueft.
+
+### N4 Fuer den Nutzer
+
+- Keine neuen Assets, keine Sprachdateien.
+- Die Leiche mit dem blinkenden Schluessel ist jetzt die treibende Zombie-Leiche im hinteren (noerdlichen) Becken - die zweite, die
+  schon im Original dort schwimmt (Kamera vom Nordost-Ende). Leon kommt wie bisher ueber die Leiter an: Leiche mit Schluessel ->
+  Knall -> 2080 oben -> erneut die Leiche -> der Alligator taucht im Westkanal auf, schwimmt durchs hintere Becken zur Leiche und
+  frisst sie samt Schluessel -> dreht sich zu Leon und schreit -> die Kamera geht an die Leiter, der Kampf beginnt mit der RE2-Musik.
+  Beim Kampfbeginn ist der Alligator jetzt rund 17500 Einheiten entfernt (vorher 6200); steht man still, beisst er nach etwa 15 s
+  (vorher 2 s), rennt man sofort nach Osten, nach etwa 17 s (vorher 1 s). Die erste Leiche (vorne, vom Eingang aus sichtbar) treibt
+  wieder an ihrer Original-Stelle und hat keinen Schluessel.
+- Hinweis: Im hinteren Becken ist es dunkler (das Original beleuchtet es kaum), der Schluessel ist dort etwa so gross wie vorher,
+  aber dunkler.
+- Frage (Beobachtung): Passt dir die Entfernung beim Kampfbeginn so, oder ist der Anlauf des Alligators jetzt zu lang? Ist der
+  blinkende Schluessel im hinteren Becken fuer dich gut zu erkennen?
