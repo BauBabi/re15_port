@@ -769,3 +769,75 @@ Riegels kampf mit Bildern 2..640/2):
   (Cut 0, Ausschnitt x 236..320 y 56..106 = die Ecke des Nordbeckens, 5x, Helligkeit x6 nur zur Lesbarkeit: F100..F118 schwimmt
   der Kopf heran, F120..F126 hebt er den Kanister (grau, gelbe Enden) aus dem Wasser); der Tod
   `G_belege/nb1_fg3_r1_leon_f566-630.png` (B's R1-Schnitt Cut 5 ab F570, Explosion F574/F578, zurück Cut 0 F606).
+
+## 9. Nachbesserung 2 (Abnahme 1 `G_abnahme_1.md`, 2026-10-25)
+Baum wie oben, Start auf 194bab1e (Abnahme-1-Commit; Code-Stand = ebe8445f). Maengel N1-N3 der Abnahme 1; die erfuellten Punkte
+(P1, P2, Ausloeser, Kopfschuesse, Wurf/Aufschlag, FG-E3, FG-E4-Kamera, R1) bleiben, ihre Riegel bleiben gruen.
+Laufordner/Bilder dieser Nachbesserung: `<SP>/g2` (scratchpad der Sitzung, nicht im Baum); Bildbelege im Baum unter `G_belege/nb2_*`.
+
+### 9.0 Plan / Stand
+- [ ] N1 RE (RE2 Wsleep/Wsleeping, Raumwechsel beendet Zeile/Stimme), Umsetzung, Messung Leon + Elza, Riegel Standzeit
+- [ ] N2 RE (RE2 Dir_set nach Cut_chg 7), Umsetzung, Bildbogen F437-F530 des End-Baus Leon + Elza, Riegel Gier im Griffbild
+- [ ] N3 Entscheid zu Frage 8.8.1 (nach RE2), Umsetzung, Messung v1 / v3+v5 / v2+v4 / kampf (Leon + Elza) mit Bild der Aufnahme
+      und Zeit seit dem Wurf, Riegel mit zweiter Startlage
+- [ ] Tests gezielt, Dossier 9.4-9.6, Abschluss-Commit
+
+### 9.1 N1 - Zeile 42 wird vom Raumwechsel abgeschnitten
+**Messung vorher** (Abnahme 1 §3.1/§3.3, Laeufe s_leon / k_leon / ctest lauf_0d602269, Bau ebe8445f): state.log
+`msg(a=1 fsm=1 id=42` in 52 Bildern F530..F581, in 2090 ab F1 `a=0` (Leon und Elza). Die volle Standzeit der Zeile ist 99 Bilder
+(Abnahme 0, Lauf p3r_leon F569..F667: die Zeile endete dort von selbst). Ursache: `baue_szene` schreibt nach Signal WURF nur
+`Sleep 1` und die Tuer nach 2090 Cut 12.
+
+**RE-Belege (selbst disassembliert, `re2_disasm.py` auf info/re2leon/PSX.EXE; SCD mit `re2_scd_walk.py` auf ROOM7020.RDT):**
+- RE2 ROOM7020 sub12 (SCD-main @RDT 0x1128): `29 07` Cut_chg 7 @0x0726 · `2e 02 00` Work_set(2,0) @0x073C · `32 00 a0 92 b4 e2 14 ba`
+  Pos_set @0x0740 · `33 00 00 00 74 0e 00 00` Dir_set @0x0748 · `3f 0a 12 40` Plc_motion @0x0750 · `59 00 00 00` Xa_on 0 @0x0760 ·
+  `2b 00 05 00 00 00` Message_on 5 @0x0764 · `09 0a 1e 00` Sleep 30 @0x076A · Pos_set/Dir_set erneut @0x0772/@0x077A · Plc_motion
+  @0x0782 · `09 0a 14 00` Sleep 20 @0x0786 · `49 00 40 fb 40 02 00 04` Super_reset @0x078E · `04 ff 18 0d` Evt_exec sub13 @0x0796 ·
+  **`0b` Wsleep @0x079A · `0c` Wsleeping @0x079B** · `11 00 08 00` / `02` / `12 04` / `21 05 0e 00` Do/Evt_next/Edwhile Ck(5,0x0e)
+  @0x079C-07A4 · `09 0a 0f 00` Sleep 15 @0x07A8 · Leon Work_set(1,0) + Pos_set + Dir_set @0x07AC-07B8 · Tyrant Pos_set/Dir_set
+  @0x07C0-07CC · `29 0b` Cut_chg 11 @0x07D4.
+- Wsleep (Tafel @0x800a74c8 [11] = 0x80053a8c): `lb v1,2(a0)` / `lbu v0,8(v1)` / `addiu v0,v0,1` / `sb v0,8(v1)` @0x80053a8c-a4
+  (Zaehler +1), pc + 1 @0x80053aa8-b4, `jr ra` / `addiu v0,zero,1` @0x80053ab8/bc.
+- Wsleeping ([12] = 0x80053ac0): `lw v0,-1064(v0)` = 0x800cfbd8 @0x80053ac4, `andi v0,v0,0x20` @0x80053acc, `bne ... 0x80053b14`
+  @0x80053ad0; `lbu v0,-30916(v0)` = 0x800e873c @0x80053adc, `andi v0,v0,0x80` @0x80053ae4, `bne ... 0x80053b14` @0x80053ae8;
+  sonst pc + 1 / Zaehler - 1 @0x80053af0-b10; beide Wege `jr ra` / `addiu v0,zero,2` @0x80053b14/18 (Bild abgeben).
+  - **0x800cfbd8 & 0x20 = die Sprachspur (XA) laeuft:** gesetzt NUR vom Xa_on-Handler ([0x59] = 0x80058028: `jal 0x800129b4`
+    @0x80058048, `ori v0,v0,0x20` / `sw v0,0(v1)` @0x80058060/64), geloescht von den XA-Stopp-Wegen (`li a1,-0x21` / `and` /
+    `sw` @0x80012914-20, @0x80012cc8-d4, @0x80012f90-9c; Ghidra-Dump-Suche ueber alle Schreiber von DAT_800cfbd8 mit Maske 0x20).
+  - **0x800e873c & 0x80 = eine Nachricht steht:** einziger Setzer FUN_8002fe38 (`li t2,0x80` / `sb t2,-30916(at)` @0x8002fe80/88),
+    geloescht @0x8002c68c (FUN_8002c610) und @0x80025890.
+  -> RE2 wartet an dieser Stelle, bis Adas Stimme UND Adas Zeile zu Ende sind, erst dann der Aufschlag-Poll und der Schnitt.
+- **Ein Raumwechsel beendet Zeile und Stimme** (deshalb kann die Zeile nicht ueber den Wechsel nach 2090 stehen bleiben):
+  RE2-Raumlader FUN_80049e48 liest die neue RDT `jal 0x80012fb8` @0x8004a1c4 -> CdlPause (`addiu a0,zero,9` @0x800130d4 vor
+  `jal 0x8008a380`), CdlSetmode mit dem Modusbyte @0x8009a429 = `a0` (`addiu a0,zero,14` @0x800130f0; Bit 0x40 XA-ADPCM aus),
+  CdlReadN (`addiu a0,zero,6` @0x80013140) - danach erreicht keine XA-Stimme mehr die SPU. RE1.5-Raumlader reloziert die
+  Zeiger des RDT-Kopfs (auch den Nachrichtenblock) auf die NEUE RDT (`addiu v1,v0,8` / `lw a0,0(v1)` / `addu v0,a0,v0` /
+  `sw v0,0(v1)` Schleife bis +96 @0x800397fc-834); im Port entsprechend `re15_msg_clear_room_block` und
+  `re15_audio_stimmen_entladen` beim Entladen (entladen_pc.c Schritte 5 und 9). Text-Id 42 gehoert in 2090 der Spur F (VERTRAG 1.2).
+
+**Wahl (mit Beleg):** RE2 laesst los, startet den Fall und wartet DANN auf das Zeilenende. Im Port ist das Loslassen an den
+Raumwechsel gebunden (FG-E4: der Fall laeuft in 2090 Cut 12), und der Raumwechsel beendet Zeile und Stimme (oben). Die RE2-Regel
+"erst weiter, wenn Stimme und Zeile zu Ende sind" laesst sich deshalb nur VOR dem Raumwechsel halten: Wsleep/Wsleeping steht im
+Port zwischen Sleep 20 (@0x0786) und dem Loslassen (Super_reset @0x078E). Die Reihenfolge "Zeile zu Ende, dann der Wurf" ist
+zugleich die des Nutzer-Wortlauts ("sagt so etwas wie - 'Hey, Leon, try with this!' Dann schmeisst er den Gaskanister die Reling
+runter"). Port-Form: neues Signal WSLEEP (Bank 5 Bit 0x1F, Raum-Scratch wie die anderen Signale) - der Bildtakt setzt es, sobald
+keine Nachricht mehr steht (`g_scd.message_active` = 0, entspricht 0x800e873c & 0x80; schliesst den Nutzer-Nachhall einer
+laengeren Sprachaufnahme ein) und keine Sprachaufnahme mehr laeuft (`g_re15_voice_laeuft`/`g_re15_voice_restbilder`,
+entspricht 0x800cfbd8 & 0x20); das Programm pollt es (Do/Evt_next/Edwhile wie @0x079C-07A4, mindestens ein Bild wie Wsleeping,
+das immer mit 2 zurueckkehrt).
+
+### 9.2 N2 - Gier-Sprung um 98 Grad im Griffbild
+**Messung vorher** (Abnahme 1 §3.1, Laeufe s_leon / s_elza, Bau ebe8445f): Slot 9 F464 `mo=11 af=24 r=93`, F465 `r=3072`, mitten
+in Cut 5 (Bild `<SP>/g1/n2_griffbild_gier_sprung_x3.png`). Ursache: `re15_kanister2080_r41_tick` setzt ab dem Greifen jedes Bild
+`n->rot_y = wurf_gier()` (seit d0c4f479).
+**RE-Beleg:** RE2 dreht Ada erst NACH dem Schnitt: Cut_chg 7 @0x0726, dann Work_set(2,0) @0x073C, Pos_set @0x0740 und Dir_set
+`33 00 00 00 74 0e 00 00` @0x0748 (und noch einmal @0x077A), alles im ersten Bild von Cut 7 (dazwischen kein Sleep/Evt_next).
+RE1.5-Dir_set (Tafel @0x800744a8[0x33] = 0x80041080): `lw a1,340(a0)` (Arbeitsobjekt) @0x80041084, `lhu v0,2(v1)` / `sh v0,104(a1)`,
+`lhu v0,4(v1)` / `sh v0,106(a1)`, `lhu v0,6(v1)` / `sh v0,108(a1)` @0x80041088-a8, pc + 8 @0x800410a4/b4 (Port scd_vm.c op_dir_set:
+rot_x/rot_y/rot_z des Work_set-Aktors).
+**Aenderung (geplant):** das Programm schreibt nach `29 07` (Cut_chg 7) ein Dir_set `33 00 00 00 <Wurf-Gier> 00 00` auf den
+Werfer (Work_set(2, NPC) steht seit dem Anlegen); der Takt dreht ihn nicht mehr. Bis zum Schnitt behaelt er die Gier des Laufs
+(Hinknien/Aufstehen mit Blick auf den Kanister).
+
+### 9.3 N3 - Aufnahme im weiteren Kampf (Frage 8.8.1)
+(wird fortgeschrieben)
