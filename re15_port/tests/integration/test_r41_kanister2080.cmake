@@ -27,6 +27,10 @@
 #                 Loslassen kommt erst danach (RE2 Wsleep/Wsleeping @0x079A/@0x079B: "Wsleeping frei" vor "Wurf: Start"); N2 die
 #                 Gier des Werfers bleibt in Cut 5 vom Hinknien bis zum Schnitt gleich, im ersten Bild von Cut 7 steht die
 #                 Wurf-Gier (RE2 Dir_set @0x0748 nach Cut_chg 7 @0x0726); N3 Zeile "Wurfrichtung" mit der Wahl des Landepunkts.
+# Nachbesserung 3: G-E2 im ersten Bild von Cut 7 steht die der Kamera zugewandte Gier (Zeile "Werfer Cut 7", Versatz wie Ada
+#                 -111 +- 12, frontal >= 4023/4096), die Wurfrichtung bleibt die Wahl des Landepunkts; Nachtrag 28 die Raum-ESP
+#                 ROOM40A0 wird in 2090/2091 umgelegt wie FUN_8001bd38 (7 Zeilen "Raumbank") und registriert, beim Wechsel nach
+#                 2080/2081 wieder ausgetragen (GLAS1090.ESP).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_kanister2080.cmake
 # =============================================================================
@@ -217,7 +221,7 @@ foreach(_wer leon elza)
         RE15_DEBUG_JUMP=2090@250 "RE15_SET_FLAG=9:110,3:245" RE15_GB_TEST=5 "RE15_PLAYER_POS=6500,-25000,3072"
         "RE15_GIVE=3:15" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=W2.0,M0.3,MA0.1,M0.3,MA0.1,W1.0"
-        RE15_STATE_LOG=state.log "RE15_EXIT_AT=120#${_r90}" "${_exe_kopie}")
+        RE15_STATE_LOG=state.log "RE15_EXIT_AT=120#${_r90}" RE15_GATOR_FX_LOG=1 "${_exe_kopie}")
     file(REMOVE "${WORKDIR}/cap.raw")
     if(NOT _rv EQUAL 0)
         r41g_fehler("Lauf szene_${_wer} exe exit=${_rv}")
@@ -354,8 +358,36 @@ foreach(_wer leon elza)
     if(_knien EQUAL -1 OR NOT _sprung STREQUAL "")
         r41g_fehler("Lauf szene_${_wer}: Gier in Cut 5 ab dem Hinknien ${_knien}, abweichend:${_sprung} (N2: kein Drehen im Griffbild)")
     endif()
-    if(NOT _cut7 EQUAL _wgier)
-        r41g_fehler("Lauf szene_${_wer}: erstes Bild Cut 7 Gier ${_cut7} statt der Wurf-Gier ${_wgier} (N2, Dir_set @0x0748)")
+    # Nachbesserung 3 (G-E2): im ersten Bild von Cut 7 die der Kamera zugewandte Gier (Zeile "Werfer Cut 7"), nicht die Wurfrichtung
+    file(STRINGS "${WORKDIR}/debug.log" _bl REGEX "\\[k2080\\] F[0-9]+ Werfer Cut 7: Gier [0-9]+, Gier zur Kamera [0-9]+, Versatz -?[0-9]+, frontal [0-9]+/4096")
+    if(NOT _bl)
+        r41g_fehler("Lauf szene_${_wer}: keine Zeile 'Werfer Cut 7' (G-E2)")
+    endif()
+    list(GET _bl 0 _bll)
+    string(REGEX MATCH "Werfer Cut 7: Gier ([0-9]+), Gier zur Kamera [0-9]+, Versatz (-?[0-9]+), frontal ([0-9]+)/4096" _m "${_bll}")
+    set(_wg ${CMAKE_MATCH_1})
+    set(_vers ${CMAKE_MATCH_2})
+    set(_fr ${CMAKE_MATCH_3})
+    math(EXPR _vabw "${_vers} + 111")
+    if(NOT _cut7 EQUAL _wg OR _vabw LESS -12 OR _vabw GREATER 12 OR _fr LESS 4023)
+        r41g_fehler("Lauf szene_${_wer}: erstes Bild Cut 7 Gier ${_cut7}, Werfer ${_wg}, Versatz ${_vers}, frontal ${_fr} (G-E2: wie Ada -111 / 4034)")
+    endif()
+    # Nachtrag 28: Raum-ESP ROOM40A0 umgelegt (FUN_8001bd38), in ${_r90} registriert, beim Wechsel nach ${_r80} ausgetragen
+    set(_umlage "0x16: TIM 32 Zeilen -> TPage 0x0F y 0, CLUT-Zeilen 480\\.\\.483" "0x19: TIM 80 Zeilen -> TPage 0x0F y 32, CLUT-Zeilen 484\\.\\.484"
+                "0x08: TIM 72 Zeilen -> TPage 0x0F y 112, CLUT-Zeilen 485\\.\\.485" "0x09: TIM 32 Zeilen -> TPage 0x0F y 184, CLUT-Zeilen 486\\.\\.487"
+                "0x26: TIM 88 Zeilen -> TPage 0x0E y 0, CLUT-Zeilen 488\\.\\.491" "0x1A: TIM 80 Zeilen -> TPage 0x0E y 88, CLUT-Zeilen 492\\.\\.494"
+                "0x18: TIM 48 Zeilen -> TPage 0x0E y 168, CLUT-Zeilen 495\\.\\.495")
+    foreach(_u IN LISTS _umlage)
+        file(STRINGS "${WORKDIR}/debug.log" _z REGEX "\\[gator-fx\\] Raumbank ${_u} \\(FUN_8001bd38\\)")
+        if(NOT _z)
+            r41g_fehler("Lauf szene_${_wer}: Umlage der Raumbank '${_u}' fehlt (FUN_8001bd38)")
+        endif()
+    endforeach()
+    file(STRINGS "${WORKDIR}/debug.log" _rg REGEX "\\[gator-fx\\] F[0-9]+ ROOM${_r90}: Raum-ESP ROOM40A0 -> re2fx_register_raum rc=0 ")
+    file(STRINGS "${WORKDIR}/debug.log" _ag REGEX "\\[gator-fx\\] F[0-9]+ ROOM${_r80}: Raum-ESP ROOM40A0 ausgetragen, GLAS1090\\.ESP wieder registriert")
+    list(LENGTH _rg _n_rg)
+    if(_n_rg LESS 2 OR NOT _ag)
+        r41g_fehler("Lauf szene_${_wer}: Raum-ESP ${_n_rg}x in ${_r90} registriert (2 Besuche erwartet), Austragen in ${_r80}: '${_ag}'")
     endif()
     # FG-E4: der Fall laeuft in ${_r90} Cut 12; nach dem Aufschlag + Sleep 15 der Schnitt zurueck (Spieler wieder auf seiner Lage
     # beim Ausloesen 6500,-25000)

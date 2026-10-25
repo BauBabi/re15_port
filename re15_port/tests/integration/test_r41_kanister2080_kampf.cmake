@@ -15,6 +15,14 @@
 # Wurfrichtung ("Wurfrichtung" = der weitere Landepunkt vom Alligator), "ANSCHWIMMEN an" (RE2-Zielmodus, Header
 # RE15_K2080_ANSCHWIMM_AB) und die ganze Folge bis zum R1-Tod in 1500 Bildern nach der Rueckkehr.
 #
+# Nachbesserung 3 (Abnahme 2 M1-M3, Orchestrator-Entscheide G-E1/G-E2, Nachtrag 28) in denselben vier Laeufen:
+#   M1 "Tod im Bild": die R1-Kamerazeile (gator_boss.log, G-E1 gator_re2_r41.c gr2_r1_wahl) meldet Kopf und Kiefer im Bild,
+#      im Regions-Viereck und unverdeckt und alle Proben des Todes-Clips sichtbar (statt nur "R1 ende (Leiche)").
+#   M2 Blick: "Werfer Cut 7" - der Werfer steht der Kamera zugewandt wie Ada (Versatz -111 +- 12 = RUN-Ankunft d < 300
+#      `slti 300` @0x80051764 auf 17061 Kamera-Abstand, frontal >= 4023/4096); die Bahn laeuft in der Wurfrichtung (v_z-Vorzeichen).
+#   M3 Explosion: RE15_GATOR_FX_LOG - Raum-ESP ROOM40A0 in 2090/2091 registriert (Banken 0x26/0x08/0x09/0x1A), in den R1-Bildern
+#      gezeichnete Quads der Raumbanken UND der Kern-Zeilen 485..498 (> 0), keine unbekannten Ops.
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_kanister2080_kampf.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -77,7 +85,7 @@ foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leo
     re15_start_spiel(_rv 900 ${_basisenv} ${_wahl}
         RE15_DEBUG_JUMP=2090@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:60" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100
         RE15_K2080_GATOR_HP=24990 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schiess}"
-        RE15_STATE_LOG=state.log "RE15_PLAYER_POS=${_start}" "RE15_EXIT_AT=1500#${_r90}" "${_exe_kopie}")
+        RE15_STATE_LOG=state.log "RE15_PLAYER_POS=${_start}" "RE15_EXIT_AT=1500#${_r90}" RE15_GATOR_FX_LOG=1 "${_exe_kopie}")
     if(NOT _rv EQUAL 0)
         r41gk_fehler("Lauf ${_lname}_${_wer} exe exit=${_rv}")
     endif()
@@ -140,7 +148,67 @@ foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leo
         list(GET _schritte ${_stand} _fehlt)
         r41gk_fehler("Lauf ${_lname}_${_wer}: Folge nach der Szene bricht ab vor '${_fehlt}' (Stand ${_stand} von 5)")
     endif()
-    message(STATUS "r41_kanister2080_kampf ${_lname}_${_wer} (Start ${_start}): Szene (${_npc}, Hinknien) -> Fall Cut 12 -> derselbe Alligator -> ${_aufnahme} -> R1-Tod")
+    # ---- Nachbesserung 3, M1 (G-E1): der R1-Tod im Bild ----
+    file(STRINGS "${WORKDIR}/gator_boss.log" _r1k REGEX "KAMERA R1 (EXPLOSION RE2-Cut 5 -> Cut [0-9]+|Sperre ohne Schnitt).*G-E1")
+    if(NOT _r1k)
+        r41gk_fehler("Lauf ${_lname}_${_wer}: keine R1-Kamerazeile mit G-E1 (gator_boss.log)")
+    endif()
+    list(GET _r1k -1 _r1l)
+    if(NOT _r1l MATCHES "Kopf ok, Kiefer ok, Todes-Clip ([0-9]+)/([0-9]+) Proben")
+        r41gk_fehler("Lauf ${_lname}_${_wer}: Kopf/Kiefer im R1-Schnitt nicht sichtbar: '${_r1l}'")
+    endif()
+    if(NOT CMAKE_MATCH_1 EQUAL CMAKE_MATCH_2 OR CMAKE_MATCH_2 LESS 10)
+        r41gk_fehler("Lauf ${_lname}_${_wer}: Todes-Clip nur ${CMAKE_MATCH_1} von ${CMAKE_MATCH_2} Proben im Bild: '${_r1l}'")
+    endif()
+    # ---- Nachbesserung 3, M2 (G-E2): Werfer der Kamera zugewandt, Bahn in der Wurfrichtung ----
+    file(STRINGS "${WORKDIR}/debug.log" _bl REGEX "\\[k2080\\] F[0-9]+ Werfer Cut 7: Gier [0-9]+, Gier zur Kamera [0-9]+, Versatz -?[0-9]+, frontal [0-9]+/4096")
+    if(NOT _bl)
+        r41gk_fehler("Lauf ${_lname}_${_wer}: keine Zeile 'Werfer Cut 7' (M2)")
+    endif()
+    list(GET _bl 0 _bll)
+    string(REGEX MATCH "Versatz (-?[0-9]+), frontal ([0-9]+)/4096" _m "${_bll}")
+    set(_vers ${CMAKE_MATCH_1})
+    set(_fr ${CMAKE_MATCH_2})
+    math(EXPR _vabw "${_vers} + 111")
+    if(_vabw LESS -12 OR _vabw GREATER 12 OR _fr LESS 4023)
+        r41gk_fehler("Lauf ${_lname}_${_wer}: Werfer nicht wie Ada der Kamera zugewandt (Versatz ${_vers}, frontal ${_fr}; RE2 -111 / 4034)")
+    endif()
+    file(STRINGS "${WORKDIR}/debug.log" _wb REGEX "\\[k2080\\] F[0-9]+ Wurf: Start .* v=\\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\) .* Wurfrichtung (1024|3072)")
+    if(NOT _wb)
+        r41gk_fehler("Lauf ${_lname}_${_wer}: keine Wurf-Zeile mit Wurfrichtung (M2)")
+    endif()
+    list(GET _wb 0 _wbl)
+    string(REGEX MATCH "v=\\(-?[0-9]+,-?[0-9]+,(-?[0-9]+)\\) .* Wurfrichtung ([0-9]+)" _m "${_wbl}")
+    if((CMAKE_MATCH_2 EQUAL 1024 AND NOT CMAKE_MATCH_1 LESS 0) OR (CMAKE_MATCH_2 EQUAL 3072 AND NOT CMAKE_MATCH_1 GREATER 0))
+        r41gk_fehler("Lauf ${_lname}_${_wer}: Bahn nicht in der Wurfrichtung (v_z ${CMAKE_MATCH_1}, Wurfrichtung ${CMAKE_MATCH_2}): '${_wbl}'")
+    endif()
+    # ---- Nachbesserung 3, M3 (Nachtrag 28): Raum-ESP ROOM40A0 registriert, Explosions-Quads gezeichnet ----
+    file(STRINGS "${WORKDIR}/debug.log" _rg REGEX "\\[gator-fx\\] F[0-9]+ ROOM${_r90}: Raum-ESP ROOM40A0 -> re2fx_register_raum rc=0 \\(Banken 0x26 1, 0x08 1, 0x09 1, 0x1A 1\\)")
+    if(NOT _rg)
+        r41gk_fehler("Lauf ${_lname}_${_wer}: Raum-ESP ROOM40A0 in ${_r90} nicht registriert (M3)")
+    endif()
+    file(STRINGS "${WORKDIR}/debug.log" _fx REGEX "\\[gator-fx\\] F[0-9]+ ROOM${_r90} R1 1 reg40A0 1 ")
+    set(_fx_raum 0)
+    set(_fx_kern 0)
+    set(_fx_unb 0)
+    foreach(_l IN LISTS _fx)
+        if(_l MATCHES "gezeichnet G [0-9]+ \\(kern485 ([0-9]+) raum ([0-9]+)\\) re2fx_pc [0-9]+ \\| op_unbekannt ([0-9]+)")
+            if(CMAKE_MATCH_1 GREATER _fx_kern)
+                set(_fx_kern ${CMAKE_MATCH_1})
+            endif()
+            if(CMAKE_MATCH_2 GREATER _fx_raum)
+                set(_fx_raum ${CMAKE_MATCH_2})
+            endif()
+            if(CMAKE_MATCH_3 GREATER _fx_unb)
+                set(_fx_unb ${CMAKE_MATCH_3})
+            endif()
+        endif()
+    endforeach()
+    list(LENGTH _fx _n_fx)
+    if(_n_fx EQUAL 0 OR _fx_raum EQUAL 0 OR _fx_kern EQUAL 0 OR NOT _fx_unb EQUAL 0)
+        r41gk_fehler("Lauf ${_lname}_${_wer}: Explosion in ${_n_fx} R1-Bildern: hoechstens ${_fx_raum} Raum-Quads, ${_fx_kern} Kern-485-Quads, ${_fx_unb} unbekannte Ops (M3)")
+    endif()
+    message(STATUS "r41_kanister2080_kampf ${_lname}_${_wer} (Start ${_start}): Szene (${_npc}, Hinknien) -> Fall Cut 12 -> derselbe Alligator -> ${_aufnahme} -> R1-Tod; R1-Kamera '${_r1l}'; Werfer Versatz ${_vers} frontal ${_fr}; Explosion bis ${_fx_raum} Raum- + ${_fx_kern} Kern-Quads in ${_n_fx} R1-Bildern")
 endforeach()
 
 file(REMOVE "${_exe_kopie}")
