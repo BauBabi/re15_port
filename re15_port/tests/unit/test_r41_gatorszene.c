@@ -20,6 +20,9 @@
  *               Nachbesserung 2 (Abnahme 1, M2): Kamera = Zonenkamera mit dem GROESSTEN Bild (Quadrat >= Wert der Nachbesserung 1
  *               in der laufenden Kamera), Einstellung auf den Schluessel: Schnitt im Bild des Todes, Riegel, nach dem Halt
  *               Cut_old auf den Cut davor + Zonenkamera an + Riegel auf (Folge E / O)
+ *   tod_explosion  Nachbesserung 3 (Abnahme 2, M1): R1 MIT Explosionsschnitt der Spur B (Lage des exe-Laufs KW) - angezeigter Cut
+ *               je Bild: Explosions-Cut, dann sofort der Schluessel-Cut, kein Bild des Zonen-Cuts 0 bis zum Ende der Einstellung;
+ *               Gegenprobe mit (9,111) vorab: B's Rueckschnitt auf Cut 0 unberuehrt
  *   bilddiff    Auswerter des exe-Riegels integration_r41_gatorszene_tod*: Bilder mit/ohne Schluessel (s. bilddiff())
  *   kamfolge    Auswerter des exe-Riegels integration_r41_gatorszene_tod_explosion*: Kamera je Bild ueber drei Referenzbilder
  *               (Explosions-, Schluessel-, Zonen-Cut), verlangt die Folge E+K+ ohne ein Bild des Zonen-Cuts (s. kamfolge())
@@ -30,6 +33,9 @@
  *               Musik-Eintrag 0xFF3C
  *   szene_elza  dasselbe mit Elza (2091 / 2081)
  */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#define _DEFAULT_SOURCE 1   /* setenv/unsetenv (Teil tod_explosion), VERTRAG 2 */
+#endif
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -662,6 +668,120 @@ static void teil_tod(void)
     tod_fall("todesrolle_elza", 0x2091, -5416, -22578, 1024, 7, 0, 97);
 }
 
+/* ---- Teil: tod_explosion (Nachbesserung 3, Abnahme 2 M1) -----------------------------------------------------------------
+ * R1 MIT Explosionsschnitt der Spur B in der Lage des exe-Laufs KW (= test_r41_re2gator Fall (b2), GB_TEST=5): Gator (4997,-20318)
+ * Gier 1024 traegt den Kanister, Leon an der Leiter (-8200,-25550), Zonen-Cut 0 zeigt den Kopf nicht -> P0 schneidet auf die
+ * Explosions-Kamera E (RE2 +0x218 |= 0x40 @0x80102248). Am Clip-9-Ende schnitte B auf Cut 0 zurueck (RE2 `jal 0x8002c7ac`
+ * @0x801024ec), das Tot-Flag kaeme zwei Takte spaeter (P2 @0x80102638-50, P3 @0x8010265c-64, Sperre frei @0x80102688-94).
+ * Verlangt Bild fuer Bild (angezeigter Cut = re15_cam_present_tick am Bildanfang, wie der Zeichner): erst E, dann der Schluessel-
+ * Cut K, KEIN Bild mit Cut 0 bis zum Ende der Einstellung; Folge R E/0 und E K; Einstellung im Takt des Rueckschnitts (vorher Cut 0,
+ * Clip 9 letztes Bild); nach dem Tot-Flag haelt die Einstellung K mit gesperrter Zonenkamera (B's P3 gibt nichts frei); nach dem
+ * Halt Cut_old auf Cut 0 und Zonenkamera an. Gegenprobe mit (9,111) vorab (Schluessel liegt schon): B's Ablauf unberuehrt - zwei
+ * Bilder Cut 0 vor dem Tot-Flag wie RE2, keine Einstellung. */
+static void gb_test_env(int an)
+{
+#ifdef _WIN32
+    _putenv(an ? "RE15_GB_TEST=5" : "RE15_GB_TEST=");
+    _putenv("RE15_GB_STUMM=1");
+    _putenv("RE15_GATOR_KANISTER=");
+#else
+    if (an) setenv("RE15_GB_TEST", "5", 1); else unsetenv("RE15_GB_TEST");
+    setenv("RE15_GB_STUMM", "1", 1);
+    unsetenv("RE15_GATOR_KANISTER");
+#endif
+}
+static void tod_explosion_fall(uint16_t raum, int gegenprobe)
+{
+    printf("  -- ROOM%04X R1 mit Explosionsschnitt%s\n", raum, gegenprobe ? " - Gegenprobe (9,111) vorab" : "");
+    gb_test_env(1);
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN, 1);
+    if (gegenprobe) re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT, 1);
+    if (room_boot(raum, -8200, 0, -25550, 0, 0) != 0) { gb_test_env(0); return; }
+    if (!gator_bank()) { printf("  FEHLER: RE2-EM23-Bank nicht ladbar (CDEMD0.EMS)\n"); g_fail++; gb_test_env(0); return; }
+    re15_actor_t *g = gator_setzen();
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!g) { printf("  FEHLER: Alligator nicht gesetzt\n"); g_fail++; gb_test_env(0); return; }
+    const int gslot = (int)(g - g_actors);
+    frame(0, 0);                                              /* INIT (GB_TEST=5: aufgetaucht wartend) */
+    const int32_t sk = g->render_scale_q12 ? g->render_scale_q12 : 4096;
+    re15_gr2_kanister_setzen(4997, -1200, -20318 - (int32_t)(((int64_t)8800 * sk) >> 12));
+    for (int f = 0; f < 160 && !re15_gr2_traegt(); f++) {
+        g->x = 4997; g->z = -20318; g->rot_y = 1024;
+        pl->x = -8200; pl->z = -25550; pl->rot_y = 0;
+        frame(0, 0);
+    }
+    PRUEF(re15_gr2_traegt(), "Alligator traegt den Kanister (Stufe 7)");
+    if (!re15_gr2_traegt()) { gb_test_env(0); return; }
+    g_scd.cam_id = 0; g_scd.work_vars[0x0A] = 0; g_scd.cut_auto_enabled = 1; s_shown = 0;
+    const int n_folge0 = re15_gatorszene_r41_folge_n();
+    (void)re15_enemy_take_damage(g, 0);                       /* Treffer beim Tragen -> R1 (@0x80101ef4-fc) */
+    const int ecut = (int)g_scd.cam_id;
+    PRUEF(re15_gr2_r1_laeuft(gslot) && re15_gr2_kamera_gesperrt() && ecut != 0,
+          "R1 mit Explosionsschnitt: Cut 0 -> Cut %d, Sperre (RE2 +0x218 |= 0x40 @0x80102248)", ecut);
+    if (!re15_gr2_r1_laeuft(gslot) || ecut == 0) { gb_test_env(0); return; }
+    char folge[400]; int nf = 0, tot_bild = -1, einst_bild = -1, null_bilder = 0, k_cut = -1;
+    int einst_nach_tot = 0, gesperrt_nach_tot = 0;
+    for (int f = 0; f < 300 && nf < (int)sizeof folge - 1; f++) {
+        frame(0, 0);
+        const int angezeigt = s_shown;
+        folge[nf++] = (char)(angezeigt < 10 ? '0' + angezeigt : 'a' + angezeigt - 10);
+        if (angezeigt == 0 && (einst_bild < 0 || re15_gatorszene_r41_key_einstellung(NULL, NULL, NULL))) null_bilder++;
+        if (einst_bild < 0 && re15_gatorszene_r41_key_einstellung(&k_cut, NULL, NULL)) einst_bild = f;
+        if (tot_bild < 0 && re15_gr2_tot()) {
+            tot_bild = f;
+            einst_nach_tot = re15_gatorszene_r41_key_einstellung(NULL, NULL, NULL);
+            gesperrt_nach_tot = (g_scd.cut_auto_enabled == 0);
+        }
+        if (tot_bild >= 0 && (gegenprobe ? f > tot_bild + 20 : !re15_gatorszene_r41_key_einstellung(NULL, NULL, NULL))) break;
+    }
+    folge[nf] = 0;
+    printf("    angezeigter Cut je Bild ab dem Treffer: %s\n", folge);
+    if (gegenprobe) {
+        PRUEF(einst_bild < 0 && null_bilder >= 2 && tot_bild >= 0,
+              "Gegenprobe: keine Einstellung, B schneidet vor dem Tot-Flag (Bild %d) auf Cut 0 zurueck (%d Bilder Cut 0) - RE2-Form",
+              tot_bild, null_bilder);
+        PRUEF(folge_hat('R', -1) < 0, "Gegenprobe: keine Folge-Zeile R");
+        gb_test_env(0);
+        return;
+    }
+    int r_i = -1;
+    for (int i = n_folge0; i < re15_gatorszene_r41_folge_n(); i++) {
+        const re15_gsz_folge_t *fz = re15_gatorszene_r41_folge(i);
+        if (fz && fz->art == 'R') { r_i = i; break; }
+    }
+    const re15_gsz_folge_t *fr = r_i >= 0 ? re15_gatorszene_r41_folge(r_i) : NULL;
+    PRUEF(fr && fr->wert == ecut && fr->wert2 == 0, "Folge R %d/%d: Schluessel-Schnitt statt B's Rueckschnitt (Explosions-Cut %d, "
+          "Ausgangs-Cut 0)", fr ? fr->wert : -1, fr ? fr->wert2 : -1, ecut);
+    PRUEF(einst_bild >= 0 && tot_bild >= 0 && tot_bild - einst_bild == 2 && k_cut >= 0 && k_cut != ecut && k_cut != 0,
+          "Einstellung Cut %d ab Bild %d, Tot-Flag Bild %d (P1-Ende -> P2 -> P3 = zwei Takte, @0x80102638-50 / @0x8010265c-64)", k_cut,
+          einst_bild, tot_bild);
+    PRUEF(null_bilder == 0, "kein angezeigtes Bild mit Cut 0 bis zum Ende der Einstellung (%d; vorher zwei, Abnahme 2 M1)", null_bilder);
+    {   /* Folge E..E K..K 0 (Cut_old): genau ein Wechsel E -> K, danach erst nach der Einstellung Cut 0 */
+        int ok = nf > 2 && folge[0] == (char)('0' + ecut), w = 0;
+        for (int i = 1; i < nf; i++) if (folge[i] != folge[i - 1]) w++;
+        ok = ok && w <= 2 && strchr(folge, (char)('0' + k_cut)) != NULL;
+        const char *k0 = strchr(folge, (char)('0' + k_cut));
+        ok = ok && k0 && (k0 == folge || k0[-1] == (char)('0' + ecut));
+        PRUEF(ok, "Bildfolge Explosion %d -> Schluessel %d direkt (%d Wechsel, letzter = Cut_old auf 0)", ecut, k_cut, w);
+    }
+    PRUEF(einst_nach_tot && gesperrt_nach_tot && !re15_gr2_kamera_gesperrt(),
+          "nach dem Tot-Flag haelt die Einstellung (Zonenkamera gesperrt %d, B's Programm frei %d)", gesperrt_nach_tot,
+          !re15_gr2_kamera_gesperrt());
+    PRUEF(!re15_gatorszene_r41_key_einstellung(NULL, NULL, NULL) && (int)g_scd.cam_id == 0 && g_scd.cut_auto_enabled == 1 &&
+          re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT) == 1,
+          "nach dem Halt: Cut_old auf Cut 0 (FUN_8004032c @0x8004033c/@0x80040364), Zonenkamera an (@0x80040374-84), (9,111) = 1");
+    gb_test_env(0);
+}
+static void teil_tod_explosion(void)
+{
+    printf("== tod_explosion ==\n");
+    tod_explosion_fall(0x2090, 0);
+    tod_explosion_fall(0x2091, 0);
+    tod_explosion_fall(0x2090, 1);
+}
+
 /* ---- Teil: szene ------------------------------------------------------------------------------------------ */
 static int folge_hat(char art, int wert)
 {
@@ -890,6 +1010,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "tor"))        teil_tor();
     if (alle || !strcmp(teil, "schluessel")) teil_schluessel();
     if (alle || !strcmp(teil, "tod"))        teil_tod();
+    if (alle || !strcmp(teil, "tod_explosion")) teil_tod_explosion();
     if (alle || !strcmp(teil, "szene"))      teil_szene(0);
     if (alle || !strcmp(teil, "szene_elza")) teil_szene(1);
     re15_door_seq_setze_laeufer(NULL);
