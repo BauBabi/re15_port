@@ -966,14 +966,45 @@ Aufnahme, R1-Tod; gemessen Aufnahme F113/F113/F154/F90, Leiche (-5502,-11705)/(-
   -> `=== LOCAL-BUILD-OK (build)`, derselbe Unit-Lauf -> **`100% tests passed, 0 tests failed out of 43`** (Total Test time (real)
   = 57.27 sec). Messkopie re15_pc_g41nb2a.exe geloescht; Laeufe/Bilder nur im scratchpad `<SP>/g2`, im Baum nur G_belege/nb2_*.
 
+### 9.5a Nachtrag 26 (2026-10-25 08:16, waehrend dieser Nachbesserung in den Baum gelegt) - Nutzer-Antworten auf 8.8 + FG-E5
+Wortlaut-Kern (AUFTRAG.md): 1. "Soll der Alligator die RE2-Hals-/Anschwimm-Lenkung zum Kanister bekommen?" - **"Ja, RE2-Lenkung
+(Empfohlen)": im Kanister-Bereich lenkt er Hals und Schwimmweg zum Kanister und nimmt ihn verlaesslich auf**; 2. Wurf-Kamera -
+**"2090 Kamera 12 (von unten)"** (wie gebaut, unveraendert); 3. "Soll der Kanister beim Greifen sichtbar kippen?" - **"Ja,
+RE2-Kippen (Empfohlen)"**. FG-E5: G setzt 1. und 3. um, kleine markierte Haken in Spur B's Modulen erlaubt, B's Riegel gruen.
+Damit ist der Entscheid 9.3 (Schwimmweg zum Kanister) vom Nutzer bestaetigt; neu dazu kommen Hals und Kippen.
+
+**Hals - RE-Belege (selbst gelesen):** RE2_Quellcode_V2/FUN_800177c0.c (Zweig `(*(byte*)(p+0x1c0) & 4) != 0`): Ziel = (+0x170,
++0x172, +0x174); FUN_8001820c (RE2_Quellcode_V2/FUN_8001820c.c) rechnet Welt-Gier/-Neigung vom Part (+0x5c..) zum Ziel (dy =
+Part.y - Ziel.y); das Gier-Residual zum Koerper (Ziel - Gier - Part-0-Keyframe) wird auf +-(+0xA0) begrenzt, der Akku +0x98
+laeuft mit +-(+0x9C) auf (Ziel - Part-Keyframe +0x6A) und wird fuer RotMatrix auf den Part-Winkel addiert, danach wieder
+abgezogen; Neigung ebenso mit +0x9A/+0x9E/+0xA2 auf +0x6C. EM23_OVL_0000.BIN: Ziel `lw a0,56(s0)` / `lw v1,60(s0)` / `addiu
+v1,v1,-800` / `sh a0,368(s0)` / `sh v1,370(s0)` / `lw v0,64(s1)` / `sh v0,372(s0)` @0x80100a4c-70 = (eigene x, y - 800,
+Kanister z); Hals-Part `addiu v0,zero,5` / `sb v0,449(s0)` @0x801001c4-cc; Schritt 20 `addiu v0,zero,20` / `sh v0,1016(v1)` /
+`sh v0,1018(v1)` @0x801005a0-ac, Klemmen `addiu v0,zero,560` / `sh v0,1020(v1)` @0x801005b0-b4, `addiu v0,zero,312` / `sh
+v0,1022(v1)` @0x801005b8/c4 (Part 5 = Datensatz 5 x 0xAC = 0x35C, +0x9C = 1016).
+**Hals - Umsetzung:** kanister2080_r41.c `hals_takt` (einmal je Bild im 2090-Takt, nur mit Bit 116): im Zielmodus (= das
+Anschwimmen 9.3) Abfrage-Pose des Alligators (Keyframe-Winkel Part 0/5 ueber eine Erfassungs-Funktion, Hals-Weltlage aus Part 5
+x Zeichen-Skala), Akku-Ziel mit `re15_k2080_hals_ziel` (Konvention der Kopf-Fuehrung des Ports, skeleton_common.c FUN_8003790c),
+Slew `re15_k2080_hals_schritt`; ausserhalb Akku -> 0 (SELBST-Zweig von FUN_800177c0: Ziel = Keyframe; der normale RE2-Halsmodus
+FUN_80017d98 auf Leon bleibt wie bei Spur B OFFEN, B §11.3). Auf die Pose kommt der Akku ueber den verketteten
+`g_anim_bone_angle_hook` (der Haken der Spur G5 wird vorher aufgerufen, dann +Akku auf Part 5 NUR dieses Alligators) - pro Bild
+absolut wie die Part-Zusaetze der Spur B; der Akku selbst wird nur im Takt gerechnet (der Alligator wird je Bild mehrfach
+posiert: Spur B's gezeichnete Pose, der NPC-Zeichner). PORT-WAHL der Abbildung: im RE2-Korridor ist "eigene x" = x des Kanisters
+(262 daneben, 9.3); im offenen Becken steht dort der Kanister selbst.
+**Kippen - RE-Beleg:** ROOM40A0 sub10 (re2_scd_walk.py): `2e 04 01` Work_set(4,1) @0x0656, `34 10 00 00` Member_set rz = 0 @0x0666,
+`2f 0b fc ff` a[5] = -4 @0x066E, `0d 00 06 00 17 00` For 23 @0x0676 { `30` Add_speed (Winkel += v) @0x067C, `31` Add_aspeed (v += a)
+@0x067D, `02` Evt_next }, `34 10 00 fc` Member_set rz = -1024 @0x0682 -> Winkel(k) = -2 k (k - 1), Bild 23 -1012, dann -1024.
+**Kippen - Umsetzung:** `re15_k2080_kipp_bruch(k)` = Winkel(k)/1024 in Q12; `kanister_in_haenden` dreht ab dem Griff je Bild um
+die Hochachse (Gier des Werfers x Bruch) und die Querachse (1024 x Bruch) und fuehrt die Mitte von der stehenden Lage an der Marke
+(Fuss y -14400 + halbe Laenge) in die Haende; ab Bild 24 wie bisher quer in den Haenden. PORT-WAHL der Achsen/Mitte (RE2 kippt den
+Kanister von der Wand ins Wasser, nicht in Haende).
+
 ### 9.6 OFFEN (gemessen bzw. benannt, nicht geraten)
 1. **Apply-Bild F530** (N2): dieser Zweig (Basis 9f10bdb0) zeigt im Bild des Schnitts auf Cut 7 noch den alten Hintergrund mit dem
    schon gedrehten Werfer und der Zeile (`G_belege/nb2_n2_schnitt_applybild_leon_f526-534.png`). Das Original praesentiert dieses
    Bild nicht (@0x80021558/@0x80021560, Spur E E-N1); auf master liegt das als kamerahalt_r41.c / bildhalt_r41_pc.c. Bei der
    Integration pruefen: im Lauf s3_leon-Rezept bleibt F529 stehen, bis Cut 7 da ist (Messschiene RE15_KAMERAHALT_LOG).
-2. Griff-Bild: der Kanister wechselt beim Greifen (F462 -> F466) in einem Bild von stehend auf quer (wie 8.7.5). RE2 hat fuer das
-   Aufnehmen eines Gegenstands durch einen NPC keinen Clip (8.1); das Kippen aus ROOM40A0 sub10 @0x066E-0682 ist ein Fall ins
-   Wasser, kein Griff - nicht gebaut.
+2. (erledigt mit Nachtrag 26, 9.5a) Griff-Bild: der Kanister kippt jetzt in 23 Bildern nach ROOM40A0 sub10 in die Haende.
 3. Anschwimmen: die Wende auf der Stelle (Fehlwinkel > 0x300, Slew 0x60) und der Slew 0x30 sind die DESIGN-Werte der Verfolgung
    der Spur B (enemy_ai_boss_gator.c "WENDE STATT BOGEN"), in kanister2080_r41.c mit Verweis uebernommen; der Kanten-Umweg und die
    Klemmflaeche kommen ueber den Export re15_gator_boss_steuerziel unveraendert aus Spur B. Steht Leon auf der Plattform, verlaesst
