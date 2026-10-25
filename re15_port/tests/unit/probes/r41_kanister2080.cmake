@@ -23,6 +23,10 @@
 #   unit_r41_kanister2080_texte   Id 42 "Marvin: Hey, Leon, try with this!" / "John: Hey, Elza, try with this!" in Vorbildform
 #   unit_r41_kanister2080_ebene   Nachtrag 20: Band-8-Freiflaeche ab den Zombies geschlossen, nichts auf der Treppe @0x0BE2
 #                                 (Absatzwand @0x05C4 x -16650), Treppenfuss Band 5 unerreichbar
+#   unit_r41_kanister2080_blick   Nachbesserung 3 (M2, G-E2): Adas Versatz aus RE2 ROOM7020 (@0x0740/@0x0748, RID @0x144) nachgerechnet,
+#                                 Werfer in 2080/2081 Cut 7 der Kamera zugewandt (frontal wie Ada 0,985), Nord/Sued gleicher Dir_set
+#   unit_r41_kanister2080_fx_*    Nachbesserung 3 (M3, Nachtrag 28): Raum-ESP ROOM40A0 + Ops 4/6/37/38/41/42/69/78 der RE2-Kanister-
+#                                 Explosion gegen die selbst gelesene Disassembly (test_r41_kanister2080_fx.c)
 #   integration_r41_kanister2080  echte exe (Laeufe ankunft / kanister / szene / elza), s. Kopf des Skripts
 #   integration_r41_kanister2080_kampf  Nachbesserung 1 (M2): die ganze Folge im echten Ablauf OHNE RE15_GB_TEST/RE15_GATOR_KANISTER,
 #                                 Leon + Elza: Ausloeser -> Szene (Hinknien) -> Fall in Cut 12 (FG-E4) -> derselbe Alligator
@@ -34,7 +38,7 @@ target_compile_definitions(test_r41_kanister2080 PRIVATE RE15_ASSET_PSX_DIR="${C
 if(NOT WIN32)
     target_link_libraries(test_r41_kanister2080 PRIVATE m)
 endif()
-foreach(_teil lage spawn szene start bahn texte ebene landung kippen hals)
+foreach(_teil lage spawn szene start bahn texte ebene landung kippen hals blick)
     add_test(NAME unit_r41_kanister2080_${_teil} COMMAND test_r41_kanister2080 ${_teil})
     set_tests_properties(unit_r41_kanister2080_${_teil} PROPERTIES TIMEOUT 120)
 endforeach()
@@ -50,6 +54,18 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r41_kanister2080_anschwimmen COMMAND test_r41_kanister2080_anschwimmen)
 set_tests_properties(unit_r41_kanister2080_anschwimmen PROPERTIES TIMEOUT 300)
+
+# Nachbesserung 3 (M3, Nachtrag 28): Ops der RE2-Kanister-Explosion (Raum-ESP ROOM40A0 = shared_assets/RE2/GATOR40A0.ESP)
+add_executable(test_r41_kanister2080_fx ${CMAKE_CURRENT_SOURCE_DIR}/test_r41_kanister2080_fx.c)
+target_link_libraries(test_r41_kanister2080_fx PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r41_kanister2080_fx PRIVATE ${CMAKE_SOURCE_DIR}/include)
+if(NOT WIN32)
+    target_link_libraries(test_r41_kanister2080_fx PRIVATE m)
+endif()
+foreach(_teil register op69 op41 op4_6 op37_78)
+    add_test(NAME unit_r41_kanister2080_fx_${_teil} COMMAND test_r41_kanister2080_fx ${_teil})
+    set_tests_properties(unit_r41_kanister2080_fx_${_teil} PROPERTIES TIMEOUT 120)
+endforeach()
 
 if(TARGET re15_pc)
     add_test(NAME integration_r41_kanister2080

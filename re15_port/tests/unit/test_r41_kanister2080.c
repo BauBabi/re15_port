@@ -207,16 +207,19 @@ static int szene_pruefen(int elza, int tote)
     const uint8_t *p2 = suche(p, n, 0, c2, sizeof c2), *p5 = suche(p, n, 0, c5, sizeof c5), *p7 = suche(p, n, 0, c7, sizeof c7);
     PRUEFE(p2 && p5 && p7 && p2 < p5 && p5 < p7, "Schnittfolge 2 -> 5 -> 7");
     /* FG-E4: mit dem Loslassen der Raumwechsel nach 2090 Cut 12 (der Rest der RE2-Folge laeuft dort, Programm 3).
-     * Nachbesserung 2: N2 Dir_set mit der Wurf-Gier DIREKT nach Cut_chg 7 (RE2 @0x0726 -> @0x0748, kein Bild dazwischen); N1
-     * Wsleep/Wsleeping (RE2 @0x079A/@0x079B) als Poll auf RE15_K2080_SIG_WSLEEP zwischen Sleep 20 (@0x0786) und dem Loslassen. */
-    const uint8_t wurf[] = { 0x29, 0x07, 0x33, 0x00, 0x00, 0x00, (uint8_t)(RE15_K2080_WURF_GIER_NORD & 0xff),
-                             (uint8_t)(RE15_K2080_WURF_GIER_NORD >> 8), 0x00, 0x00,
+     * Nachbesserung 2: N2 Dir_set DIREKT nach Cut_chg 7 (RE2 @0x0726 -> @0x0748, kein Bild dazwischen); N1 Wsleep/Wsleeping (RE2
+     * @0x079A/@0x079B) als Poll auf RE15_K2080_SIG_WSLEEP zwischen Sleep 20 (@0x0786) und dem Loslassen.
+     * Nachbesserung 3 (Abnahme 2 M2, G-E2): der Dir_set-WERT ist die der Kamera zugewandte Gier wie Adas 0x0e74 (Teil blick),
+     * unabhaengig von der Wurfrichtung (Nord/Sued, Bit 117). */
+    const int wg = re15_k2080_werfer_gier();
+    uint8_t wurf[] = { 0x29, 0x07, 0x33, 0x00, 0x00, 0x00, (uint8_t)(wg & 0xff), (uint8_t)((wg >> 8) & 0xff), 0x00, 0x00,
                              0x3f, 0x02, 0x06, 0x00, 0x2b, 42, 0x00, 0x00, 0x09, 0x0a, 30, 0x00, 0x3f, 0x02, 0x06, 0x00,
                              0x09, 0x0a, 20, 0x00,
                              0x22, 0x05, RE15_K2080_SIG_WSLEEP, 0x00,
                              0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_K2080_SIG_WSLEEP, 0x00,
                              0x22, 0x05, RE15_K2080_SIG_WURF, 0x01, 0x09, 0x0a, 0x01, 0x00,
                              0x3b, RE15_K2080_TUER_SLOT };
+    PRUEFE(wg == RE15_K2080_WERFER_GIER_NENN, "Werfer-Gier %d ohne geladenen Raum statt des Nennwerts %d", wg, RE15_K2080_WERFER_GIER_NENN);
 
     /* Nachbesserung 1 (M1): Aufnehmen = ROOM11B0 sub06 @0x01650..0x01663 (Marvin kniet am Gully und steht auf) - dieselben
      * Opcodes, das Sleep 60 @0x01654 am Griff-Bild 24 (letztes Bild von Loco c11, 25 Bilder) in 24 + Signal + 36 geteilt. */
@@ -253,6 +256,18 @@ static int szene_pruefen(int elza, int tote)
 }
 static int teil_szene(void)
 {
+    /* Nachbesserung 3 (G-E2): Nord- und Suedwurf bauen denselben Dir_set (die Wurfrichtung dreht nur die Bahn) */
+    for (int sued = 0; sued < 2; sued++) {
+        re15_game_flag_set(9, RE15_K2080_BIT_SUEDWURF, sued);
+        re15_k2080_reset();
+        int n = 0; const uint8_t *p = re15_k2080_programm(1, &n);
+        const uint8_t c7[] = { 0x29, 7, 0x33, 0x00 };
+        const uint8_t *q = p ? suche(p, n, 0, c7, sizeof c7) : NULL;
+        PRUEFE(q && rd16(q + 6) == re15_k2080_werfer_gier(), "%swurf: Dir_set %d statt der Werfer-Gier %d", sued ? "Sued" : "Nord",
+               q ? (int)rd16(q + 6) : -1, re15_k2080_werfer_gier());
+    }
+    re15_game_flag_set(9, RE15_K2080_BIT_SUEDWURF, 0);
+    re15_k2080_reset();
     szene_pruefen(0, 0);
     szene_pruefen(1, 0);
     szene_pruefen(0, 3);
@@ -317,8 +332,11 @@ static int teil_bahn(void)
 static int nennbahn(int g, const uint8_t *r90, int32_t ende[3], int *sicht_out, int *nb_out)
 {
     const int32_t c = re15_cos_q12(g), sn = re15_sin_q12(g);
-    const int32_t start[3] = { RE15_K2080_NPC_WURF_X + (int32_t)(((int64_t)RE15_K2080_HAND_VOR * c) >> 12), RE15_K2080_Y + RE15_K2080_HAND_HOCH,
-                               RE15_K2080_NPC_STAND_Z - (int32_t)(((int64_t)RE15_K2080_HAND_VOR * sn) >> 12) };
+    /* Nachbesserung 3 (G-E2): die Haende stehen vor dem der Kamera zugewandten Werfer, die Bahn laeuft in der Wurfrichtung g */
+    const int wg = re15_k2080_werfer_gier();
+    const int32_t cw = re15_cos_q12(wg), sw = re15_sin_q12(wg);
+    const int32_t start[3] = { RE15_K2080_NPC_WURF_X + (int32_t)(((int64_t)RE15_K2080_HAND_VOR * cw) >> 12), RE15_K2080_Y + RE15_K2080_HAND_HOCH,
+                               RE15_K2080_NPC_STAND_Z + (int32_t)((-(int64_t)RE15_K2080_HAND_VOR * sw) >> 12) };   /* RotMatrixY wie vektor_drehen */
     int nb = 0;
     re15_k2080_bahn_rechnen(start, (int16_t)g, RE15_K2080_WASSER_2090, ende, &nb);
     const int32_t x = ende[0], z = ende[2];
@@ -610,6 +628,37 @@ static int teil_ebene(void)
     return fails != 0;
 }
 
+/* ---- blick (Nachbesserung 3, Abnahme 2 M2, Orchestrator-Entscheid G-E2) -------------------------------------------------
+ * RE2 ROOM7020 Cut 7 (info/re2leon/PL0/RDT/ROOM7020.RDT, selbst gelesen): Ada Pos_set `32 00 a0 92 b4 e2 14 ba` @SCD 0x0740 =
+ * (-28000,-7500,-17900), Dir_set `33 00 00 00 74 0e 00 00` @0x0748 = 3700, Kamera Cut 7 RID @RDT 0x144 = (-22158,-3852,-15174).
+ * Unabhaengig nachgerechnet: Gier Ada -> Kamera, Versatz = 3700 - Gier (Mesh-Gier zur Richtung (dx,dz) = atan2(dx,dz) - 1024, 4096
+ * je Umlauf) muss RE15_K2080_ADA_BLICK_VERSATZ ergeben; der Port-Werfer am Wurf-Stand blickt zur RID-Kamera Cut 7 von ROOM2080
+ * und ROOM2081 (aus der Datei) mit demselben Versatz = RE15_K2080_WERFER_GIER_NENN, frontal = cos(Versatz) wie Ada. */
+static double gier_zu(double dx, double dz) { double g = atan2(dx, dz) * 4096.0 / (2.0 * 3.14159265358979) - 1024.0; while (g < 0) g += 4096; return fmod(g, 4096.0); }
+static int teil_blick(void)
+{
+    const double ada = gier_zu(-22158.0 - -28000.0, -15174.0 - -17900.0);
+    double vers = 0x0e74 - ada; while (vers > 2048) vers -= 4096; while (vers < -2048) vers += 4096;
+    printf("  RE2 Ada: Gier zur Kamera %.1f, Dir_set 3700, Versatz %.1f (frontal %.3f)\n", ada, vers, cos(vers * 2 * 3.14159265358979 / 4096));
+    PRUEFE((int)lround(vers) == RE15_K2080_ADA_BLICK_VERSATZ, "Ada-Versatz %.1f statt %d", vers, RE15_K2080_ADA_BLICK_VERSATZ);
+    for (int r = 0; r < 2; r++) {
+        long n = 0; uint8_t *d = slurp(r ? "STAGE2/ROOM2081.RDT" : "STAGE2/ROOM2080.RDT", &n);
+        PRUEFE(d && n > 0x200, "ROOM208%d.RDT fehlt", r);
+        if (!d) continue;
+        const uint8_t *k = d + rd32(d + 8 + 7 * 4) + RE15_K2080_CUT_WURF * 32;
+        const double kx = (double)(int32_t)rd32(k + 4), kz = (double)(int32_t)rd32(k + 12);
+        const double zur = gier_zu(kx - RE15_K2080_NPC_WURF_X, kz - RE15_K2080_NPC_STAND_Z);
+        int soll = (int)lround(zur) + RE15_K2080_ADA_BLICK_VERSATZ; soll &= 0xfff;
+        double fr = cos((RE15_K2080_WERFER_GIER_NENN - zur) * 2 * 3.14159265358979 / 4096);
+        printf("  ROOM208%d Cut %d Kamera (%.0f,%.0f): Gier zur Kamera %.1f -> Werfer %d (Nenn %d), frontal %.3f\n", r,
+               RE15_K2080_CUT_WURF, kx, kz, zur, soll, RE15_K2080_WERFER_GIER_NENN, fr);
+        PRUEFE(abs(soll - RE15_K2080_WERFER_GIER_NENN) <= 1, "ROOM208%d: Werfer-Gier %d statt Nenn %d", r, soll, RE15_K2080_WERFER_GIER_NENN);
+        PRUEFE(fr >= 0.98, "ROOM208%d: frontal %.3f < Ada 0,985", r, fr);
+        free(d);
+    }
+    return fails != 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "lage";
@@ -624,6 +673,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "kippen")) rc = teil_kippen();
     else if (!strcmp(t, "hals")) rc = teil_hals();
     else if (!strcmp(t, "ebene")) rc = teil_ebene();
+    else if (!strcmp(t, "blick")) rc = teil_blick();
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);
     return rc;

@@ -899,23 +899,32 @@ static int teil_kamera(void)
         CHECK(re15_gr2_r1_laeuft(slot) && n == n0 + 1 && blick[n0] == RE15_GR2_BLICK_EXPLOSION,
               "R1-Fall %d: kein EXPLOSION-Eintrag beim R1-Start (n %d -> %d)", fall, n0, n);
         CHECK(re15_gr2_kamera_gesperrt() && g_scd.cut_auto_enabled == 0, "R1-Fall %d: keine Sperre (RE2 `ori 0x100` @0x8010220c)", fall);
-        if (fall == 0) {
-            CHECK(n > n0 && cut[n0] == -1 && g_scd.cam_id == 7, "R1 aus Cut 7 (Kopf im Bild): geschnitten auf %d statt nur Sperre", n > n0 ? cut[n0] : -9);
-        } else if (n > n0) {
-            CHECK(cut[n0] >= 0 && g_scd.cam_id == (uint8_t)cut[n0], "R1 aus Cut 2 (Kopf draussen): kein Schnitt (cut %d)", cut[n0]);
-            wahl_pruefen("EXPLOSION (R1 P0, aus Cut 2)", RE15_GR2_BLICK_EXPLOSION, cut[n0], NULL);
+        /* Runde 41 Spur G, Nachbesserung 3 (Abnahme G 2 M1, Orchestrator-Entscheid G-E1): die R1-Kamera waehlt jetzt G-E1 (Kopf,
+         * Kiefer und Spritzring-Punkte mit Sprite-Rand im Bild, im Regions-Viereck, unverdeckt, meiste sichtbare Proben des
+         * Todes-Clips, Kopf naechst RE2 (170,111); gator_re2_r41.c gr2_r1_wahl) statt "Kopf im laufenden Cut -> nur Sperre, sonst
+         * bester Frontalwinkel". Die alte Erwartung (aus Cut 7 kein Schnitt, aus Cut 2 Winkelwahl) ist durch G-E1 widerlegt;
+         * geprueft wird die G-E1-Eigenschaft: der gezeigte Cut hat den Kopf im Bild, die Folge Sperre [-> Schnitt -> zurueck] -> frei. */
+        if (n > n0) {
+            const int gezeigt = cut[n0] >= 0 ? cut[n0] : start;
+            int32_t kk[3]; kopf_welt(6, kk);
+            int kx = 0, ky = 0; const int im = bild(gezeigt, kk, &kx, &ky);
+            printf("  R1-Fall %d (aus Cut %d): G-E1 zeigt Cut %d%s, Kopf (%d,%d)\n", fall, start, gezeigt, cut[n0] >= 0 ? " (Schnitt)" : "", kx, ky);
+            CHECK(im, "R1-Fall %d: G-E1-Cut %d zeigt den Kopf nicht (%d,%d)", fall, gezeigt, kx, ky);
+            CHECK(cut[n0] < 0 ? g_scd.cam_id == (uint8_t)start : g_scd.cam_id == (uint8_t)cut[n0], "R1-Fall %d: cam_id %d passt nicht zur Wahl",
+                  fall, (int)g_scd.cam_id);
         }
+        const int geschnitten = n > n0 && cut[n0] >= 0;
         for (int f = 0; f < 80 && !re15_gr2_tot(); f++) tick();
         n = re15_gr2_kamera_folge(24, cut, blick, clip, bildn);
         for (int i = n0; i < n; i++) printf("  R1-Fall %d Folge %d: blick %d cut %d clip %d bild %d\n", fall, i, blick[i], cut[i], clip[i], bildn[i]);
         CHECK(re15_gr2_tot() && !re15_gr2_kamera_gesperrt() && g_scd.cut_auto_enabled == 1 && g_scd.cam_id == (uint8_t)start,
               "R1-Fall %d: nach P3 nicht frei/zurueck (tot %d gesperrt %d auto %d cam %d, Start %d)", fall, re15_gr2_tot(),
               re15_gr2_kamera_gesperrt(), (int)g_scd.cut_auto_enabled, (int)g_scd.cam_id, start);
-        if (fall == 1)
+        if (geschnitten)
             CHECK(n == n0 + 3 && cut[n0+1] == start && blick[n0+1] == 0 && clip[n0+1] == 9 && bildn[n0+1] == 36 && cut[n0+2] == -2,
-                  "R1 aus Cut 2: Folge Schnitt -> zurueck (Clip 9 Bild 36, @0x801024a4-ec) -> frei erwartet (n %d)", n - n0);
+                  "R1 aus Cut %d: Folge Schnitt -> zurueck (Clip 9 Bild 36, @0x801024a4-ec) -> frei erwartet (n %d)", start, n - n0);
         else
-            CHECK(n == n0 + 2 && cut[n0+1] == -2, "R1 aus Cut 7: Folge Sperre -> frei erwartet (n %d)", n - n0);
+            CHECK(n == n0 + 2 && cut[n0+1] == -2, "R1 aus Cut %d: Folge Sperre -> frei erwartet (n %d)", start, n - n0);
     }
 
     /* (b2) Fortsetzung 3 - die Lage des exe-Laufs kam_k (GB_TEST=5: Gator parkt bei (4997,-20318) Richtung Sueden,
@@ -938,7 +947,11 @@ static int teil_kamera(void)
         CHECK(n == n0 + 1 && blick[n0] == RE15_GR2_BLICK_EXPLOSION && cut[n0] >= 0,
               "R1-Fall 2: kein EXPLOSION-Schnitt aus Cut 0 (n %d -> %d, cut %d)", n0, n, n > n0 ? cut[n0] : -9);
         if (n > n0 && cut[n0] >= 0) {
-            wahl_pruefen("EXPLOSION (R1 P0, Lage kam_k, aus Cut 0)", RE15_GR2_BLICK_EXPLOSION, cut[n0], NULL);
+            /* Runde 41 Spur G, G-E1 (s.o.): statt der Winkelwahl die G-E1-Eigenschaft - Kopf im gewaehlten Cut im Bild */
+            int32_t kk[3]; kopf_welt(6, kk);
+            int kx = 0, ky = 0;
+            CHECK(bild(cut[n0], kk, &kx, &ky), "R1-Fall 2: G-E1-Cut %d zeigt den Kopf nicht (%d,%d)", cut[n0], kx, ky);
+            printf("  R1-Fall 2: G-E1 Cut %d, Kopf (%d,%d)\n", cut[n0], kx, ky);
             double m_w = 0; int w = winkel_bester(RE15_GR2_BLICK_EXPLOSION, &m_w);
             printf("  R1-Fall 2: Winkelwahl ohne Grenze Cut %d (massstab %.4f, Grenze %.4f), gewaehlt Cut %d\n", w, m_w, k_re2_grenze, cut[n0]);
             CHECK(w >= 0 && w != cut[n0] && m_w > k_re2_grenze,

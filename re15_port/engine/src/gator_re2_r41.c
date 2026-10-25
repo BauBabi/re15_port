@@ -916,7 +916,7 @@ typedef struct {
     int     n;                                   /* Proben des Todes-Clips */
     int32_t kopf[GR2_R1_PROBEN][3], kiefer[GR2_R1_PROBEN][3], wurzel[GR2_R1_PROBEN][3];
 } gr2_r1_pfad_t;
-typedef struct { int start_ok, im, vd, aus, kx, ky, bilder; int32_t m; } gr2_r1_urteil_t;
+typedef struct { int start_ok, im, vd, aus, kx, ky, bilder, kopf_ok, kiefer_ok; int32_t m; } gr2_r1_urteil_t;
 static int gr2_r1_pfad(const re15_actor_t *e, gr2_r1_pfad_t *P);                 /* nach k_ring definiert */
 static uint16_t gr2_r1_skala(int ring);                                          /* ebenso */
 static int gr2_fin_proj(const re15_camera_view_t *v, const int32_t p[3], int *sx, int *sy, int32_t *vz_aus);
@@ -947,8 +947,10 @@ static void gr2_r1_beurteilen(int c, const re15_actor_t *e, const gr2_r1_pfad_t 
     const int region = re15_rdt_get_region_quad(&g_room_rdt, c, rx, rz);
     for (int j = 0; j < GR2_R1_START; j++) {
         int sx, sy;
-        if (gr2_r1_punkt(c, &v, region, rx, rz, P->start[j], j >= 2 ? j - 2 : -1, &sx, &sy, &u->aus, &u->vd)) u->im++;
-        if (j == 0) { u->kx = sx; u->ky = sy; }
+        const int ok = gr2_r1_punkt(c, &v, region, rx, rz, P->start[j], j >= 2 ? j - 2 : -1, &sx, &sy, &u->aus, &u->vd);
+        if (ok) u->im++;
+        if (j == 0) { u->kx = sx; u->ky = sy; u->kopf_ok = ok; }
+        if (j == 1) u->kiefer_ok = ok;
     }
     const int wurzel_ok = !region || re15_aot_point_in_quad(P->wurzel0[0], P->wurzel0[2], rx, rz);
     if (!wurzel_ok) u->aus++;
@@ -1013,7 +1015,8 @@ static void gr2_kam_r1_start(const re15_actor_t *e)
                 gr2_kam_sperre(GR2_KAM_R1);
                 gr2_kam_merken(-1, RE15_GR2_BLICK_EXPLOSION, e);
                 re15_gr2_log("KAMERA R1 Sperre ohne Schnitt: Kopf im Bild von Cut %d bei (%d,%d) F%u (G-E1: laufender Cut ist die Wahl, "
-                             "Todes-Clip %d/%d Proben)", cur, u.kx, u.ky, (unsigned)g_engine.frame_count, u.bilder, P.n);
+                             "Start %d/%d, Kopf %s, Kiefer %s, Todes-Clip %d/%d Proben)", cur, u.kx, u.ky, (unsigned)g_engine.frame_count,
+                             u.im, GR2_R1_START, u.kopf_ok ? "ok" : "NEIN", u.kiefer_ok ? "ok" : "NEIN", u.bilder, P.n);
                 return;
             }
             if (c >= 0) {
@@ -1024,11 +1027,11 @@ static void gr2_kam_r1_start(const re15_actor_t *e)
                 gr2_r1_beurteilen(c, e, &P, &u);
                 const int f = gr2_kopf_achse(e, kopf, achse) ? gr2_frontal(kopf, achse, &g_room_rdt.cuts[c]) : 0;
                 re15_gr2_log("KAMERA R1 EXPLOSION RE2-Cut %d -> Cut %d F%u clip=%d bild=%d frontal=%d soll=%d massstab=%d re2_m=%d grenze=%d "
-                             "(G-E1: kopf_bild=(%d,%d), Start %d/%d, Todes-Clip %d/%d Proben)",
+                             "(G-E1: kopf_bild=(%d,%d), Start %d/%d, Kopf %s, Kiefer %s, Todes-Clip %d/%d Proben)",
                              (int)k_blick[RE15_GR2_BLICK_EXPLOSION].re2_cut, c, (unsigned)g_engine.frame_count, (int)e->motion,
                              (int)e->anim_frame, f, (int)k_blick[RE15_GR2_BLICK_EXPLOSION].soll, (int)u.m,
                              (int)gr2_massstab_soll(RE15_GR2_BLICK_EXPLOSION), (int)gr2_massstab_grenze(), u.kx, u.ky, u.im, GR2_R1_START,
-                             u.bilder, P.n);
+                             u.kopf_ok ? "ok" : "NEIN", u.kiefer_ok ? "ok" : "NEIN", u.bilder, P.n);
                 return;
             }
             re15_gr2_log("KAMERA R1 G-E1: keine Zonenkamera zeigt einen Punkt -> alte Wahl F%u", (unsigned)g_engine.frame_count);
