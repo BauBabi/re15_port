@@ -93,7 +93,9 @@ foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leo
             "Aufschlag im Wasser bei "
             "ROOM${_r90} Kanister im Becken \\(-?[0-9]+,-1200,-?[0-9]+\\) = Aufschlagstelle"
             "Wurfrichtung (3072|1024) \\((Nord|Sued)becken, Alligator beim Ausloesen"
-            "ANSCHWIMMEN an: Gator Slot [0-9]+ ")
+            "ANSCHWIMMEN an: Gator Slot [0-9]+ "
+            "HALS zum Kanister: Part 5 "
+            "HALS zurueck \\(Akku -> 0\\)")
         file(STRINGS "${WORKDIR}/debug.log" _z REGEX "\\[k2080\\] F[0-9]+ ${_muster}")
         if(NOT _z)
             r41gk_fehler("Lauf ${_lname}_${_wer}: keine Zeile '${_muster}'")

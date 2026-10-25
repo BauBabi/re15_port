@@ -30,6 +30,7 @@
 #include "re15_gator_re2_r41.h"
 #include "re15_boss_gator.h"
 #include "re15_anim_select.h"   /* re15_actor_playback_slot (Rueckwaerts-Clip, @0x8001f34c-54) */
+#include "re15_math.h"          /* re15_squareroot0 (Nachtrag 26: Hals-Neigung wie FUN_8001820c / FUN_8003790c) */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -133,6 +134,15 @@ static uint64_t s_kopf_ab;            /* Aktor-Bits: Kopf-ab gemeldet */
 static int      s_wurf_gier = -1;     /* Nachbesserung 2 (N3): gewaehlte Wurfrichtung dieser Szene (-1 = aus Bit 117) */
 static int      s_z42_an = -1, s_z42_aus = -1;   /* Nachbesserung 2 (N1): Messzeile Standzeit der Zeile 42 (Bildnummern) */
 static int      s_anschw;             /* Nachbesserung 2 (N3): Messzeile Anschwimmen (0 aus, 1 an) */
+/* Nachtrag 26: RE2-Halsfuehrung (Part 5 Akku +0x98 Gier / +0x9a Neigung) und Kippen beim Greifen */
+static int16_t  s_hals_y, s_hals_p;
+static int      s_hals_slot = -1;
+static int      s_hals_an = -1;
+static void   (*s_hals_vorher)(const void *, int, int16_t *, int16_t *);
+static int16_t  s_cap_ay0, s_cap_ay5, s_cap_az5;
+static int      s_cap_ok;
+static int      s_kipp_k;             /* Bild des Kippens (0 = aus, 1..23 kippt, > 23 liegt quer in den Haenden) */
+static int32_t  s_kipp_mitte[3];      /* Mitte des stehenden Kanisters beim Griff */
 
 #ifdef RE15_PLATFORM_PC
 #define K_LOG(...) do { fprintf(stderr, "[k2080] F%u ", (unsigned)g_engine.frame_count); fprintf(stderr, __VA_ARGS__); \
@@ -173,6 +183,7 @@ void re15_k2080_reset(void)
 {
     s_phase = RE15_K2080_AUS; s_kan_zustand = 0; s_ziel_slot = -1; s_ziel_n = 0; s_lande_ok = 0; s_set_2090 = 0;
     s_wurf_gier = -1; s_z42_an = s_z42_aus = -1; s_anschw = 0; s_gator_slot = -1;
+    s_hals_y = s_hals_p = 0; s_hals_slot = -1; s_hals_an = -1; s_kipp_k = 0;
     memset(s_zaehler, 0, sizeof s_zaehler);
 }
 
@@ -217,6 +228,7 @@ static int satz_tuer(uint8_t *b, int n, int cap, int32_t x, int32_t y, int32_t z
 }
 
 static int wurf_gier(void);   /* Nachbesserung 2: Wahl/Bit 117/Messhaken, definiert bei der Wurfbahn */
+static void hals_takt(void);  /* Nachtrag 26: RE2-Halsfuehrung, definiert vor dem Installer */
 
 static void baue_spawn(void)
 {
@@ -503,17 +515,32 @@ static int haende_welt(const re15_actor_t *n, int32_t out[3])
 /* Kanister quer vor der Brust: Laengsachse (MD1 y) auf die Querachse des NPC (lokal z) = RotY(gier) * RotX(1024); Mitte der
  * Laenge (y -1392) in die Haende. PORT-WAHL (RE2 haengt den Werfer an Adas Teil, Super_set @0x072C; die Lage im Maul des
  * Alligators ist ebenfalls quer, B §2.5). */
+int re15_k2080_kipp_bruch(int k)
+{
+    if (k <= 0) return 0;
+    if (k > RE15_K2080_KIPP_BILDER) return 4096;                       /* Member_set rz = -1024 @0x0682 */
+    const int w = RE15_K2080_KIPP_BESCHL * (k - 1) * k / 2;            /* Winkel += v, v += a @0x067C/@0x067D, a = 4 @0x066E */
+    return w * 4096 / RE15_K2080_KIPP_ENDE;
+}
 static void kanister_in_haenden(const re15_actor_t *n)
 {
     int32_t h[3];
     haende_welt(n, h);
-    const int32_t c = re15_cos_q12(n->rot_y), s = re15_sin_q12(n->rot_y);
-    /* RotY(g) = [c 0 s; 0 1 0; -s 0 c], RotX(90) = [1 0 0; 0 0 -1; 0 1 0] -> M = RotY*RotX = [c s 0; 0 0 -1; -s c 0] (Q12) */
-    const int32_t m[9] = { c, s, 0,  0, 0, -4096,  -s, c, 0 };
+    /* Nachtrag 26 (RE2-Kippen): im Bild k des Greifens Bruch f = Winkel(k)/1024 nach ROOM40A0 sub10 - Drehung um die Hochachse
+     * (Blick des Werfers) und um die Querachse (hochkant -> quer) je f, Mitte von der stehenden Lage zu den Haenden je f. */
+    const int f = (s_kipp_k > 0) ? re15_k2080_kipp_bruch(s_kipp_k) : 4096;
+    const int gy = (int)(((int32_t)n->rot_y * f) >> 12), gx = (int)((1024 * f) >> 12);
+    const int32_t c = re15_cos_q12(gy), s = re15_sin_q12(gy), cx = re15_cos_q12(gx), sx = re15_sin_q12(gx);
+    /* RotY(g) = [c 0 s; 0 1 0; -s 0 c], RotX(a) = [1 0 0; 0 ca -sa; 0 sa ca] -> M = RotY*RotX = [c s*sa s*ca; 0 ca -sa;
+     * -s c*sa c*ca] (Q12); f = 4096: [c s 0; 0 0 -1; -s c 0] wie vorher (quer vor der Brust) */
+    const int32_t m[9] = { c, (int32_t)(((int64_t)s * sx) >> 12), (int32_t)(((int64_t)s * cx) >> 12),
+                           0, cx, -sx,
+                           -s, (int32_t)(((int64_t)c * sx) >> 12), (int32_t)(((int64_t)c * cx) >> 12) };
     memcpy(s_kan_rot, m, sizeof s_kan_rot);
     /* s_kan_pos = MITTE des Kanisters = Mitte der Haende (die Wurfbahn laeuft auf der Mitte, RE2: Super_reset uebernimmt die
      * Weltlage des angehaengten Objekts @0x800558b8-d8); der MD1-Ursprung (Fuss) folgt in kanister_ursprung. */
-    memcpy(s_kan_pos, h, sizeof s_kan_pos);
+    for (int i = 0; i < 3; i++)
+        s_kan_pos[i] = s_kipp_mitte[i] + (int32_t)(((int64_t)(h[i] - s_kipp_mitte[i]) * f) >> 12);
 }
 /* MD1-Ursprung (Fuss, y 0 des Modells) zur Mitte c: o = c - M * (0, -1392, 0). */
 static void kanister_ursprung(const int32_t c[3], const int32_t rot[9], int32_t o[3])
@@ -728,6 +755,7 @@ void re15_kanister2080_r41_tick(void)
             re15_gr2_geschwaecht() && gator_frei(&gslot))
             ausloesen(gslot);
         if (s_kan_zustand == 2) fall_takt(wasser_2090());   /* FG-E4: der Fall laeuft in 2090 (Cut 12) zu Ende */
+        if (bit(RE15_K2080_BIT_KANISTER) || s_hals_y || s_hals_p) hals_takt();   /* Nachtrag 26: nur mit DIESEM Kanister */
         return;
     }
     if (raum_2080(raum)) messzeile_ebene();
@@ -782,11 +810,22 @@ void re15_kanister2080_r41_tick(void)
     if (n && sig(RE15_K2080_SIG_AUFHEBEN)) {
         sig_setzen(RE15_K2080_SIG_AUFHEBEN, 0);
         s_kan_zustand = 1;
+        /* Nachtrag 26: Kippen ab der stehenden Lage (Mitte = Fuss + halbe Laenge, RE2 ROOM40A0 @0x0452 Drehung (0,0,0)) */
+        s_kipp_k = 0;
+        s_kipp_mitte[0] = RE15_K2080_KAN_X; s_kipp_mitte[1] = RE15_K2080_Y - RE15_K2080_KAN_LAENGE / 2; s_kipp_mitte[2] = RE15_K2080_KAN_Z;
         K_LOG("Kanister aufgehoben (Loco c%d Bild %d, Hinknien ROOM11B0 sub06 @0x01650)", (int)n->motion, (int)n->anim_frame);
     }
     /* Nachbesserung 2 (N2): kein Drehen mehr im Takt - der Werfer behaelt die Gier des Laufs, bis das Programm mit dem Schnitt auf
      * Cut 7 das Dir_set schreibt (RE2 @0x0748); vorher setzte der Takt ab dem Griff jedes Bild die Wurf-Gier (98 Grad Sprung). */
-    if (n && s_kan_zustand == 1) kanister_in_haenden(n);
+    if (n && s_kan_zustand == 1) {
+        if (s_kipp_k <= RE15_K2080_KIPP_BILDER) {
+            s_kipp_k++;
+            if (s_kipp_k == 1 || s_kipp_k == RE15_K2080_KIPP_BILDER + 1 || (s_kipp_k % 6) == 0)
+                K_LOG("Kippen Bild %d: Bruch %d/4096 (RE2 ROOM40A0 sub10: a -4 @0x066E, 23 Bilder @0x0676, -1024 @0x0682)", s_kipp_k,
+                      re15_k2080_kipp_bruch(s_kipp_k));
+        }
+        kanister_in_haenden(n);
+    }
     if (n && sig(RE15_K2080_SIG_WURF)) {
         sig_setzen(RE15_K2080_SIG_WURF, 0);
         kanister_in_haenden(n);                          /* Super_reset @0x800558b8-d8: Weltlage der Haende */
@@ -881,6 +920,104 @@ int re15_k2080_r41_anschwimmen(int slot, re15_actor_t *e, int32_t dist)
     }
     e->y = RE15_K2080_GATOR_WASSER_Y;                      /* GB_WATER_Y @0x8010c65c */
     return 1;
+}
+
+/* ---- Nachtrag 26 (FG-E5): RE2-Halsfuehrung zum Kanister (Herleitung am Header RE15_K2080_HALS_PART) ------------------------ */
+static int hals_wrap(int v) { return ((v + 0x800) & 0xfff) - 0x800; }
+void re15_k2080_hals_lesen(int16_t *gier, int16_t *neigung) { if (gier) *gier = s_hals_y; if (neigung) *neigung = s_hals_p; }
+/* Slew des Akkus um hoechstens den Schritt (+0x9C/+0x9E = 20) auf das Akku-Ziel (FUN_800177c0: `+0x98 += +-uVar2`, im Fenster
+ * genau das Ziel). */
+void re15_k2080_hals_schritt(int zy, int zp)
+{
+    int dy = hals_wrap(zy - (int)s_hals_y), dp = hals_wrap(zp - (int)s_hals_p);
+    if (dy > RE15_K2080_HALS_SCHRITT) dy = RE15_K2080_HALS_SCHRITT;
+    if (dy < -RE15_K2080_HALS_SCHRITT) dy = -RE15_K2080_HALS_SCHRITT;
+    if (dp > RE15_K2080_HALS_SCHRITT) dp = RE15_K2080_HALS_SCHRITT;
+    if (dp < -RE15_K2080_HALS_SCHRITT) dp = -RE15_K2080_HALS_SCHRITT;
+    s_hals_y = (int16_t)hals_wrap((int)s_hals_y + dy);
+    s_hals_p = (int16_t)hals_wrap((int)s_hals_p + dp);
+}
+/* Akku-Ziel aus der Lage des Halses zum Ziel (d = Ziel - Hals in Welt, dy = Hals.y - Ziel.y wie FUN_8001820c `param_1[1] -
+ * param_2[1]`): Welt-Gier/-Neigung wie die Kopf-Fuehrung des Ports (FUN_8003790c, skeleton_common.c), Gier-Residual zum Koerper
+ * (Gier des Aktors + Keyframe-Gier Part 0) und Neigung auf die Klemmen, minus Keyframe-Winkel des Hals-Parts. */
+int re15_k2080_hals_ziel(int32_t dx, int32_t dy, int32_t dz, int rot_y, int kf_ay0, int kf_ay5, int kf_az5, int *zy, int *zp)
+{
+    const uint32_t horiz = re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
+    const int wy = ((int)re15_atan2_q12(dz, dx) - 1024) & 0xfff;
+    const int wp = ((int)re15_atan2_q12(dy, (int32_t)horiz) - 1024) & 0xfff;
+    int ty = hals_wrap(wy - rot_y - kf_ay0), tp = hals_wrap(wp);
+    if (ty > RE15_K2080_HALS_KLEMME_GIER) ty = RE15_K2080_HALS_KLEMME_GIER;
+    if (ty < -RE15_K2080_HALS_KLEMME_GIER) ty = -RE15_K2080_HALS_KLEMME_GIER;
+    if (tp > RE15_K2080_HALS_KLEMME_NEIGUNG) tp = RE15_K2080_HALS_KLEMME_NEIGUNG;
+    if (tp < -RE15_K2080_HALS_KLEMME_NEIGUNG) tp = -RE15_K2080_HALS_KLEMME_NEIGUNG;
+    if (zy) *zy = hals_wrap(ty - kf_ay5);
+    if (zp) *zp = hals_wrap(tp - kf_az5);
+    return 1;
+}
+/* Pose-Haken (g_anim_bone_angle_hook, verkettet): Akku auf den Keyframe des Hals-Parts DIESES Alligators (pro Bild absolut, nie
+ * akkumulierend - wie die Part-Zusaetze der Spur B re15_gator_spine_arc_vz). */
+static void hals_haken(const void *a, int b, int16_t *ay, int16_t *az)
+{
+    if (s_hals_vorher) s_hals_vorher(a, b, ay, az);
+    if (b == RE15_K2080_HALS_PART && s_hals_slot > 0 && s_hals_slot < RE15_ACTOR_MAX && a == (const void *)&g_actors[s_hals_slot]) {
+        *ay = (int16_t)(*ay + s_hals_y);
+        *az = (int16_t)(*az + s_hals_p);
+    }
+}
+/* Erfassung der Keyframe-Winkel (Abfrage-Pose ohne Zusaetze: g_anim_pose_actor = NULL, g_anim_query_actor = Gator). */
+static void hals_erfassen(const void *a, int b, int16_t *ay, int16_t *az)
+{
+    (void)a;
+    if (b == 0) s_cap_ay0 = *ay;
+    if (b == RE15_K2080_HALS_PART) { s_cap_ay5 = *ay; s_cap_az5 = *az; s_cap_ok = 1; }
+}
+/* Ein Bild der Halsfuehrung (Takt, einmal je Bild): im Zielmodus (= Anschwimmen) Ziel = Kanister (x, eigene y - 800, z), sonst
+ * Akku -> 0. */
+static void hals_takt(void)
+{
+    re15_actor_t *e = NULL; int slot = -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type == 0x23 && re15_gator_boss_active(&g_actors[s])) { e = &g_actors[s]; slot = s; break; }
+    if (!e) { s_hals_slot = -1; s_hals_y = s_hals_p = 0; return; }
+    if (slot != s_hals_slot) { s_hals_y = s_hals_p = 0; }
+    s_hals_slot = slot;
+    if (g_anim_bone_angle_hook != hals_haken) { s_hals_vorher = g_anim_bone_angle_hook; g_anim_bone_angle_hook = hals_haken; }
+    const int ziel = re15_k2080_r41_anschwimmen_aktiv(e);
+    int zy = 0, zp = 0;                                    /* SELBST-Zweig: Ziel = Keyframe -> Akku 0 */
+    if (ziel) {
+        re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+        int32_t kp[3], kr[9];
+        if (bk && bk->ok && bk->skel.bone_count > RE15_K2080_HALS_PART && bk->anim.clip_count > 0 && re15_gr2_kanister_welt(kp, kr)) {
+            const int ov = (e->anim_flags & 0x04u) ? (int)e->motion : -1;
+            const int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, e, ov, (uint32_t)e->anim_frame);
+            re15_skel_pose_t p[RE15_EMD_MAX_BONES];
+            void (*hv)(const void *, int, int16_t *, int16_t *) = g_anim_bone_angle_hook;
+            void *pa = g_anim_pose_actor, *qa = g_anim_query_actor;
+            g_anim_bone_angle_hook = hals_erfassen; g_anim_pose_actor = NULL; g_anim_query_actor = e; s_cap_ok = 0;
+            const int rv = (kf >= 0) ? re15_skel_compute_pose(&bk->skel, kf, p) : -1;
+            g_anim_bone_angle_hook = hv; g_anim_pose_actor = pa; g_anim_query_actor = qa;
+            if (rv == 0 && s_cap_ok) {
+                const int32_t sk = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+                const int32_t tr[3] = { (int32_t)(((int64_t)p[RE15_K2080_HALS_PART].trans[0] * sk) >> 12),
+                                        (int32_t)(((int64_t)p[RE15_K2080_HALS_PART].trans[1] * sk) >> 12),
+                                        (int32_t)(((int64_t)p[RE15_K2080_HALS_PART].trans[2] * sk) >> 12) };
+                int32_t hw[3];
+                re15_skel_bone_to_world(tr, e->rot_y, e->x, e->y, e->z, hw);
+                re15_k2080_hals_ziel(kp[0] - hw[0], hw[1] - (e->y + RE15_K2080_HALS_ZIEL_DY), kp[2] - hw[2], (int)e->rot_y & 0xfff,
+                                     s_cap_ay0, s_cap_ay5, s_cap_az5, &zy, &zp);
+            }
+        }
+    }
+    re15_k2080_hals_schritt(zy, zp);
+    if (ziel != s_hals_an || (ziel && (g_engine.frame_count % 15u) == 0)) {
+        if (ziel != s_hals_an || s_hals_an < 0)
+            K_LOG("HALS %s: Part %d Akku Gier %d Neigung %d, Akku-Ziel (%d,%d) (RE2 FUN_800177c0, Schritt %d, Klemmen %d/%d)",
+                  ziel ? "zum Kanister" : "zurueck (Akku -> 0)", RE15_K2080_HALS_PART, (int)s_hals_y, (int)s_hals_p, zy, zp,
+                  RE15_K2080_HALS_SCHRITT, RE15_K2080_HALS_KLEMME_GIER, RE15_K2080_HALS_KLEMME_NEIGUNG);
+        else
+            K_LOG("HALS Akku Gier %d Neigung %d, Akku-Ziel (%d,%d)", (int)s_hals_y, (int)s_hals_p, zy, zp);
+        s_hals_an = ziel;
+    }
 }
 
 /* ---- Installer --------------------------------------------------------------------------------------------------------- */

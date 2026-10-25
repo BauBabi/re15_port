@@ -429,6 +429,71 @@ static void dekodiere(const uint8_t *b, int n, char *out, int cap)
     }
     out[k] = 0;
 }
+/* ---- kippen (Nachtrag 26, RE2-Kippen beim Greifen) ----------------------------------------------------------------- */
+static int teil_kippen(void)
+{
+    /* unabhaengig: RE2 ROOM40A0 sub10 - Work_set loescht v/a (@0x80055904), a[5] = -4 (@0x066E), For 23 { Add_speed (Winkel += v)
+     * @0x067C, Add_aspeed (v += a) @0x067D }, danach Member_set rz = 0xfc00 (@0x0682) */
+    int w = 0, v = 0;
+    int alt = -1;
+    for (int k = 1; k <= 24; k++) {
+        if (k <= 23) { w += v; v += 4; }
+        const int soll = (k <= 23) ? w * 4096 / 1024 : 4096;
+        const int ist = re15_k2080_kipp_bruch(k);
+        PRUEFE(ist == soll, "Kippen Bild %d: Bruch %d statt %d (RE2 Winkel %d)", k, ist, soll, w);
+        PRUEFE(ist >= alt, "Kippen Bild %d: Bruch faellt (%d < %d)", k, ist, alt);
+        alt = ist;
+    }
+    printf("  Kippen: Bild 1 %d, Bild 12 %d, Bild 23 %d (RE2-Winkel 1012/1024), Bild 24 %d (Member_set -1024)\n",
+           re15_k2080_kipp_bruch(1), re15_k2080_kipp_bruch(12), re15_k2080_kipp_bruch(23), re15_k2080_kipp_bruch(24));
+    PRUEFE(re15_k2080_kipp_bruch(0) == 0 && re15_k2080_kipp_bruch(1) == 0, "Kippen beginnt nicht bei 0 (hochkant)");
+    PRUEFE(re15_k2080_kipp_bruch(30) == 4096, "Kippen endet nicht quer");
+    return fails != 0;
+}
+
+/* ---- hals (Nachtrag 26, RE2-Halsfuehrung FUN_800177c0) ---------------------------------------------------------------- */
+static int teil_hals(void)
+{
+    re15_k2080_reset();
+    /* Slew: hoechstens 20 je Bild (+0x9C/+0x9E @0x801005a0-ac), im Fenster genau das Ziel */
+    int16_t y = 0, n = 0;
+    for (int f = 1; f <= 40; f++) {
+        re15_k2080_hals_schritt(560, -312);
+        re15_k2080_hals_lesen(&y, &n);
+        const int sy = f * 20 < 560 ? f * 20 : 560, sn = f * 20 < 312 ? -f * 20 : -312;
+        PRUEFE(y == sy && n == sn, "Bild %d: Akku (%d,%d) statt (%d,%d)", f, (int)y, (int)n, sy, sn);
+    }
+    for (int f = 1; f <= 40; f++) re15_k2080_hals_schritt(0, 0);       /* SELBST-Zweig: Akku -> 0 */
+    re15_k2080_hals_lesen(&y, &n);
+    PRUEFE(y == 0 && n == 0, "Akku nach dem Zielmodus nicht 0 (%d,%d)", (int)y, (int)n);
+    /* Ziel: geradeaus (Welt-Gier = Gier des Aktors) -> Gier-Residual 0; 90 Grad daneben -> Klemme 560; tief unten -> Klemme 312 */
+    int fehler_y = 0, fehler_k = 0;
+    for (int r = 0; r < 4096; r += 512) {
+        /* Richtung, deren Welt-Gier r ist (Gier-Konvention des Ports: (re15_atan2_q12(dz,dx) - 1024) & 0xfff, re15_actor.h:1196;
+         * re15_atan2_q12 = FUN_8001a6d4 + 0x400 = 0x400 - catan(dz/dx) -> Richtung (cos(-r), sin(-r))) */
+        const int32_t dx = (int32_t)((int64_t)re15_cos_q12((-r) & 0xfff) * 6000 >> 12);
+        const int32_t dz = (int32_t)((int64_t)re15_sin_q12((-r) & 0xfff) * 6000 >> 12);
+        {   const int gi = ((int)re15_atan2_q12(dz, dx) - 1024) & 0xfff, d = ((gi - r + 0x800) & 0xfff) - 0x800;
+            PRUEFE(d >= -8 && d <= 8, "Richtungs-Konvention: Gier %d statt %d", gi, r); }
+        int zy = 99, zp = 99;
+        re15_k2080_hals_ziel(dx, 0, dz, r, 0, 0, 0, &zy, &zp);
+        if (zy < -8 || zy > 8) fehler_y++;
+        re15_k2080_hals_ziel(dx, 0, dz, (r + 1024) & 0xfff, 0, 0, 0, &zy, &zp);   /* Ziel 90 Grad zur Seite */
+        if (zy != 560 && zy != -560) fehler_k++;
+    }
+    PRUEFE(fehler_y == 0, "%d von 8 Richtungen: Gier-Residual geradeaus nicht ~0", fehler_y);
+    PRUEFE(fehler_k == 0, "%d von 8 Richtungen: 90 Grad daneben nicht auf die Klemme 560 begrenzt", fehler_k);
+    int zy = 0, zp = 0;
+    re15_k2080_hals_ziel(0, 20000, 100, 0, 0, 0, 0, &zy, &zp);           /* Ziel 20000 unter dem Hals, fast senkrecht */
+    PRUEFE(zp == 312 || zp == -312, "steiles Ziel: Neigung %d nicht auf der Klemme 312", zp);
+    re15_k2080_hals_ziel(0, 0, 6000, 0, 0, 100, -50, &zy, &zp);           /* Keyframe-Winkel werden abgezogen */
+    {   int zy0 = 0, zp0 = 0; re15_k2080_hals_ziel(0, 0, 6000, 0, 0, 0, 0, &zy0, &zp0);
+        PRUEFE(zy == zy0 - 100 && zp == zp0 + 50, "Akku-Ziel zieht die Keyframe-Winkel nicht ab (%d,%d) vs (%d,%d)", zy, zp, zy0, zp0); }
+    printf("  Hals: Slew 20/Bild bis (560,-312), zurueck auf 0; Ziel geradeaus Residual 0, seitlich Klemme 560, steil Klemme 312\n");
+    re15_k2080_reset();
+    return fails != 0;
+}
+
 static int teil_texte(void)
 {
     long n0 = 0, n1 = 0; uint8_t *r2000 = slurp("STAGE2/ROOM2000.RDT", &n0), *r2001 = slurp("STAGE2/ROOM2001.RDT", &n1);
@@ -556,6 +621,8 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "bahn")) rc = teil_bahn();
     else if (!strcmp(t, "texte")) rc = teil_texte();
     else if (!strcmp(t, "landung")) rc = teil_landung();
+    else if (!strcmp(t, "kippen")) rc = teil_kippen();
+    else if (!strcmp(t, "hals")) rc = teil_hals();
     else if (!strcmp(t, "ebene")) rc = teil_ebene();
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);

@@ -16,6 +16,8 @@
 #                                 Installer legt den Kanister bei Bit 116 an die Aufschlagstelle (2090 und 2091)
 #                                 Nachbesserung 2 (N3): Nord- UND Suedwurf, Wahl des weiteren Landepunkts nach der Lage
 #                                 des Alligators, Bit 117
+#   unit_r41_kanister2080_kippen  Nachtrag 26: Kipp-Bruch je Bild = RE2 ROOM40A0 sub10 (a -4 @0x066E, 23 Bilder @0x0676, -1024 @0x0682)
+#   unit_r41_kanister2080_hals    Nachtrag 26: RE2-Halsfuehrung FUN_800177c0 (Schritt 20, Klemmen 560/312, Akku -> 0 danach)
 #   unit_r41_kanister2080_anschwimmen  Nachbesserung 2 (N3): echter Boss-Takt nach der Szene, fuenf Lagen beim Ausloesen
 #                                 (Abnahme-1-Laeufe): Aufnahme in 1500 Bildern, kein Biss davor; Gegenprobe ohne Szene
 #   unit_r41_kanister2080_texte   Id 42 "Marvin: Hey, Leon, try with this!" / "John: Hey, Elza, try with this!" in Vorbildform
@@ -32,7 +34,7 @@ target_compile_definitions(test_r41_kanister2080 PRIVATE RE15_ASSET_PSX_DIR="${C
 if(NOT WIN32)
     target_link_libraries(test_r41_kanister2080 PRIVATE m)
 endif()
-foreach(_teil lage spawn szene start bahn texte ebene landung)
+foreach(_teil lage spawn szene start bahn texte ebene landung kippen hals)
     add_test(NAME unit_r41_kanister2080_${_teil} COMMAND test_r41_kanister2080 ${_teil})
     set_tests_properties(unit_r41_kanister2080_${_teil} PROPERTIES TIMEOUT 120)
 endforeach()

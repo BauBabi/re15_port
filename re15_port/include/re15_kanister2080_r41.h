@@ -210,6 +210,29 @@
  * die ueber den Kanister fuehrt, ist hier das Steuerziel: solange der Kanister liegt (Stufe 0) und >= 8880 x Zeichen-Skala
  * entfernt ist, schwimmt der Alligator ihn an (Kanten-Umweg/Klemme/Wende wie die Verfolgung) und beisst nicht. */
 #define RE15_K2080_ANSCHWIMM_AB    (9000 - 120)
+/* Nachtrag 26 (Nutzer-Auswahl "Ja, RE2-Lenkung": "im Kanister-Bereich lenkt er Hals und Schwimmweg zum Kanister") + FG-E5: die
+ * RE2-HALSFUEHRUNG im Zielmodus = FUN_800177c0 (RE2_Quellcode_V2/FUN_800177c0.c, Zweig +0x1C0 & 4): Ziel (+0x170/+0x172/+0x174),
+ * Gier-Residual zum Koerper auf +-Klemme begrenzt, Akku-Ziel = Ziel - Keyframe-Winkel des Parts, Akku slewt mit festem Schritt
+ * und wird zum Bauen der Part-Matrix auf den Keyframe ADDIERT (danach wieder abgezogen). Werte des Gators (EM23_OVL_0000.BIN,
+ * selbst gelesen): Hals-Part +0x1C1 = 5 (`addiu v0,zero,5` / `sb v0,449(s0)` @0x801001c4-cc, INIT @0x80100590), Schritt
+ * +0x9C/+0x9E = 20 (`addiu v0,zero,20` / `sh v0,1016(v1)` / `sh v0,1018(v1)` @0x801005a0-ac), Klemmen +0xA0 = 560 / +0xA2 = 312
+ * (@0x801005b0-b8, `sh v0,1020(v1)` / `sh v0,1022(v1)` @0x801005b4/@0x801005c4), Ziel y = eigene y - 800 (`addiu v1,v1,-800`
+ * @0x80100a58). Ausserhalb des Zielmodus: Akku -> 0 (FUN_800177c0 SELBST-Zweig: Ziel = Keyframe; der normale RE2-Halsmodus
+ * FUN_80017d98 bleibt wie bei Spur B OFFEN, B §11.3). */
+#define RE15_K2080_HALS_PART       5
+#define RE15_K2080_HALS_SCHRITT    20
+#define RE15_K2080_HALS_KLEMME_GIER    560
+#define RE15_K2080_HALS_KLEMME_NEIGUNG 312
+#define RE15_K2080_HALS_ZIEL_DY    (-800)
+/* Nachtrag 26 (Nutzer-Auswahl "Ja, RE2-Kippen"): der Kanister KIPPT beim Greifen sichtbar in die Haende statt in einem Bild quer
+ * zu liegen. Form = RE2 ROOM40A0 sub10 (der Kanister kippt von der Wand ins Wasser, selbst gelesen re2_scd_walk.py):
+ * Member_set rz = 0 `34 10 00 00` @0x0666, Dreh-Beschleunigung a[5] = -4 `2f 0b fc ff` @0x066E, For 23 { Add_speed, Add_aspeed,
+ * Evt_next } `0d 00 06 00 17 00` @0x0676 (Winkel += v, dann v += a: Winkel(k) = -2 k (k - 1), nach 23 Bildern -1012), dann
+ * Member_set rz = 0xfc00 = -1024 `34 10 00 fc` @0x0682 (genau 90 Grad). PORT-WAHL der Achse: der Bruch Winkel/1024 fuehrt
+ * Drehung (Hochkant -> quer in den Haenden) und Mitte (Marke -> Haende) zugleich. */
+#define RE15_K2080_KIPP_BILDER     23
+#define RE15_K2080_KIPP_BESCHL     4
+#define RE15_K2080_KIPP_ENDE       1024
 /* Haende am Ende von Eigen c6 (Mitte der Bones 11/14, Zensus Dossier 1.8): Fallback, wenn die NPC-Bank nicht geladen ist. */
 #define RE15_K2080_HAND_VOR        840
 #define RE15_K2080_HAND_HOCH       (-2496)
@@ -243,6 +266,13 @@ int  re15_k2080_r41_anschwimmen(int slot, re15_actor_t *e, int32_t dist);
 int  re15_k2080_r41_anschwimmen_aktiv(const re15_actor_t *e);
 /* Pruefhaken (Riegel landung): Wahl der Wurfrichtung fuer einen Alligator bei (gx,gz) (gslot < 0: kein Alligator gesichert). */
 int  re15_k2080_wurf_gier_wahl(int gslot, int32_t gx, int32_t gz);
+/* Nachtrag 26: Hals-Akku (Gier, Neigung) des Alligators (Part 5) und ein Schritt der RE2-Halsfuehrung; Pruefhaken fuer die Riegel.
+ * re15_k2080_hals_schritt: Akku-Ziel (zy, zp) -> Akku slewt um hoechstens RE15_K2080_HALS_SCHRITT (FUN_800177c0). */
+void re15_k2080_hals_lesen(int16_t *gier, int16_t *neigung);
+void re15_k2080_hals_schritt(int zy, int zp);
+int  re15_k2080_hals_ziel(int32_t dx, int32_t dy, int32_t dz, int rot_y, int kf_ay0, int kf_ay5, int kf_az5, int *zy, int *zp);
+/* Nachtrag 26: Kipp-Bruch im Bild k (1..) des Greifens, Q12 (0..4096); RE2 ROOM40A0 sub10 @0x066E/@0x0676/@0x0682. */
+int  re15_k2080_kipp_bruch(int k);
 /* Plattform-Haken (PC: platform/pc/src/kanister2080_pc.c). NULL = stumm. */
 extern void (*re15_k2080_knall_hook)(void);      /* P1: Knall-Bank (gen/knall_bank.inc) in die Tuerbank + Satz 0 */
 extern void (*re15_k2080_tuerton_hook)(void);    /* P3: Tonteil DOOR06 in die Tuerbank + Satz 1 */
