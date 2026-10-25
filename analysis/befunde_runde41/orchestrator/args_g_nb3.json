@@ -1,0 +1,139 @@
+{
+ "welle": [
+  "G"
+ ],
+ "slots": 1,
+ "basis": "r41/integration 9f10bdb0 (Baum r41_kanister2080)",
+ "max_nach": 2,
+ "modus": {
+  "G": "nachbesserung"
+ },
+ "runde0": {
+  "G": 2
+ },
+ "bau": {
+  "G": {
+   "status": "fertig",
+   "zusammenfassung": "N1: RE2 ROOM7020 wartet mit Wsleep/Wsleeping @0x079A/@0x079B (Handler 0x80053ac0), bis die XA-Stimme (0x800cfbd8&0x20, gesetzt von Xa_on @0x80058060) und die Nachricht (0x800e873c&0x80, FUN_8002fe38 @0x8002fe80/88) zu Ende sind. Ein Raumwechsel beendet beides (RE2 @0x8004a1c4: CdlSetmode 0xa0 @0x800130f0; RE1.5 @0x800397fc-834). Deshalb steht der Poll vor dem Loslassen. Gemessen bei Leon und Elza: Zeile 42 steht 99 Bilder F530..F628 (vorher 52), der Wurf folgt F631.\nN2: Dir_set `33 00 00 00 <gier> 00 00` kommt direkt nach Cut_chg 7 (RE2 @0x0726->@0x0748, RE1.5 @0x80041080); der Takt dreht den Werfer nicht mehr. In Cut 5 bleibt die Gier ab dem Hinknien bei 93, F530 bringt die Wurf-Gier (Bildbögen nb2_n2_*). F530 ist das Apply-Bild; dieser Zweig zeigt dort noch den alten Hintergrund (siehe OFFEN).\nN3: RE2 legt den Kanister auf die Bahn des Gators (x -23078 @0x80101048, ROOM40A0 @0x0672/@0x06A2/@0x0484); Zielmodus @0x80100a34-5c / Ende 8880 @0x80100a88-8c, Biss-Sperre @0x8010134c-58. Umgesetzt: Anschwimmen zum Kanister über Haken in enemy_ai_boss_gator.c und Wurf ins vom Gator weitere Becken (3072/1024, Bit 117). Nachtrag 26 hat das bestätigt; dazu kamen der Hals (FUN_800177c0: Part 5, Klemmen 560/312, Schritt 20 @0x801005a0-c4) und das Kippen beim Greifen (ROOM40A0 sub10 @0x066E/@0x0676/@0x0682).\nAufnahme 3,0 bis 5,2 s nach dem Wurf in kampf, v1 (ohne jeden Testhaken), v3/v5, v2/v4 und L3, jeweils Leon und Elza; kein Biss davor, danach der R1-Tod.",
+   "commits": [
+    "2404b3ae wip: Dossier 9.0-9.2 RE N1/N2",
+    "a1e0fea3 wip: N1/N2/N3 umgesetzt",
+    "738b6020 wip: Dossier 9.3 N3 RE + Entscheid",
+    "37d171f5 wip: Notbremse Wsleeping, erste Messung",
+    "db0b7913 wip: Dossier 9.4 Messung nachher",
+    "a8042941 wip: Bildbelege G_belege/nb2_*",
+    "ca02fad7 wip: Dossier 9.5-9.7",
+    "fbea36bc wip: Dossier Tests, Kommentare",
+    "45dd2511 fix: Nachbesserung 2 - N1/N2/N3",
+    "e4121848 wip: Nachtrag 26 Hals + Kippen",
+    "327bacfd wip: Dossier 9.5a Nachtrag 26",
+    "29b8a93a wip: Messung Nachtrag 26, Bilder nb2_n26_*",
+    "b9e97e3f fix: Nachbesserung 2 - Nachtrag 26, Tests gruen"
+   ],
+   "suite": "Unit: ctest --test-dir re15_port/build -R \"unit_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_|unit_msg_|unit_action_msg_gate|unit_alligator_ai|unit_gator_|unit_r35_granate|unit_r34_reaktion|unit_re2_spider_water_2090\" --timeout 600 --output-on-failure -j4 -> \"100% tests passed, 0 tests failed out of 45\" (Total Test time (real) = 54.76 sec). Integration: ctest --test-dir re15_port/build -R \"^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_re2gator$|^integration_r35_granate$|^integration_r38_wasser$|^integration_r41_wasser20b0_npc$|^integration_r37_itemband$|^integration_r36_tueren$\" --timeout 3000 --output-on-failure -j3 -> \"100% tests passed, 0 tests failed out of 8\" (Total Test time (real) = 927.54 sec). Beides auf dem Endbau (local_build.sh build, LOCAL-BUILD-OK).",
+   "offene_punkte": [
+    "Apply-Bild F530: Dieser Zweig (Basis 9f10bdb0, ohne Spur E) zeichnet im Bild des Schnitts auf Cut 7 noch den Cut-5-Hintergrund mit dem schon gedrehten Werfer und der Zeile. Das Original präsentiert dieses Bild nicht (@0x80021558/@0x80021560). Auf master liegt dafür Spur E's kamerahalt_r41.c. Bei der Integration prüfen, dass F529 stehen bleibt.",
+    "Normaler RE2-Halsmodus FUN_80017d98 (Hals auf Leon) bleibt OFFEN wie bei Spur B §11.3; nach dem Zielmodus fährt der Akku über den SELBST-Zweig auf 0.",
+    "Anschwimmen übernimmt die DESIGN-Werte der Spur-B-Verfolgung (Wende ab 0x300 mit Slew 0x60, sonst Slew 0x30), mit Verweis.",
+    "Unverändert aus 8.7: RE2-Auslöser-Mitglieder +0x1D8/+0x1DA (Tyrant-Overlay fehlt), Kanister in RE2-Größe, Ton nur über die Mischkette belegt, Werfer in 2090 Cut 12 nicht im Bild, Alligator schiebt den gehaltenen Spieler während des Falls.",
+    "Hinweis an Spur F: Die Spinnen (0x25) stehen in diesem Zweig noch in 2090; sie sind in allen Aufnahme-Bildern zu sehen.",
+    "Gemeinsame Dateien: enemy_ai_boss_gator.c bekommt 10 markierte Zeilen der Spur G (FG-E3/FG-E5), test_r36_kartenbits.c k_port[] Bit 117; g_anim_bone_angle_hook wird verkettet genutzt (kein Eingriff in skeleton_common.c)."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/enemy_ai_boss_gator.c (Spur B: Include, Export re15_gator_boss_steuerziel, CHASE-Haken re15_k2080_r41_anschwimmen, GUARD-Haken; markiert Runde 41 Spur G)",
+    "re15_port/tests/unit/test_r36_kartenbits.c (k_port[] Bit 117 RE15_K2080_BIT_SUEDWURF)"
+   ],
+   "neue_assets": [],
+   "sprachdateien": [
+    "synchro/STAGE2/room2080/main42.wav (Marvin: Hey, Leon, try with this!) - vom Nutzer aufzunehmen; liegt sie dort, wartet der Wurf bis zum Ende der Aufnahme",
+    "synchro/STAGE2/room2081/main42.wav (John: Hey, Elza, try with this!) - vom Nutzer aufzunehmen"
+   ],
+   "fragen_an_nutzer": []
+  }
+ },
+ "abn": {
+  "G": {
+   "bestanden": false,
+   "suite": "Bau: local_build.sh configure + build -> LOCAL-BUILD-OK, ninja: no work to do (exe 09:15:21 = Code-Stand e4121848/HEAD b9e97e3f). Unit: ctest -R \"unit_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_|unit_msg_|unit_action_msg_gate|unit_alligator_ai|unit_gator_|unit_g5_boss|unit_r35_granate|unit_r34_reaktion|unit_re2_spider_water_2090\" -j3 -> 100% tests passed, 0 failed out of 46 (61,62 s). Integration (allein, -j3): ctest -R \"^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_re2gator$|^integration_r35_granate$|^integration_r38_wasser$|^integration_r41_wasser20b0_npc$|^integration_r37_itemband$|^integration_r36_tueren$|^integration_r36_kartenitems_bild$\" -> 100% tests passed, 0 failed out of 9 (1456,97 s). Dazu 27 eigene exe-Laeufe (Leon + Elza) mit Logs/Bildern im Scratchpad g2abn.",
+   "urteile": [
+    {
+     "punkt": "P1 erst Metalltuer-Sound (N17: Knall wie nach Irons), dann 8 gespawnte Zombies oben im Hauptbereich (N20)",
+     "urteil": "erfuellt",
+     "beleg": "Echter Leiterweg 2090->2080 bzw. 2091->2081 (DOOR16), Leon + Elza: '[k2080] F31 Knall: Knall-Bank ... Satz 0' + 2 SE-Lagen, Mitschnitt RE2_1060 r=0,891 im ersten 2080/2081-Bild, danach 8 x Sce_em_set 0x16 auf y -14400, keiner auf der Treppe; Bild p1_leon_bogen.png"
+    },
+    {
+     "punkt": "P2 Gaskanister am Rand der Reling (Gas_Can.bmp)",
+     "urteil": "erfuellt",
+     "beleg": "Cut 5, Leon + Elza: 'Kanister pos=(-6745,-14400,-17625) Cut 5 Kasten=(159..177,75..158)', steht auf der roten Marke (167,156); p2_gascan_leon_elza_x2.png"
+    },
+    {
+     "punkt": "P3 nach genug Treffern startet die Szene (N22: RE2-Schwelle 300)",
+     "urteil": "erfuellt",
+     "beleg": "v1 Leon und Elza ganz ohne G-Testhaken: Ausloeser F7375 nach 37 echten Treffern"
+    },
+    {
+     "punkt": "P3 erneut schliessende Tuer, Marvin/John im Raum, 8 Kopfschuesse (Kopf platzt, tot)",
+     "urteil": "erfuellt",
+     "beleg": "'Tuer-Ton DOOR06 Satz 1' F8, Marvin 0x40 / John 0x49, 8 x 'Schuss n: Treffer ... hp=-1 state=3 zeile=5' + 'Kopf ab ... 8 von 8' in allen Laeufen; Bild kopf_leon_f112-160.png zeigt die platzenden Koepfe"
+    },
+    {
+     "punkt": "P3 / N24b rennt hin und nimmt ihn mit beiden Haenden auf (Abnahme-1-N2 Gier-Sprung) + N26 RE2-Kippen",
+     "urteil": "erfuellt",
+     "beleg": "state.log Slot 9: Gier r93 in Cut 5 ab dem Hinknien unveraendert, F530 r1024 erst mit dem Schnitt; Kippen F465-F488 Bruch 0/240/1056/2448/4096 (= ROOM40A0 sub10 @0x066E/0x0676/0x0682 selbst gelesen); Bilder s_leon/s_elza_griff_*: kein Klettern, kein Profil. Apply-Bild F530 = Zweig-Eigenschaft ohne Spur E (Hinweis H1)"
+    },
+    {
+     "punkt": "P3 sagt 'Hey, Leon/Elza, try with this!' (Abnahme-1-N1)",
+     "urteil": "erfuellt",
+     "beleg": "Zeile 42 steht 99 Bilder (F531..F629), Wurf F631; mit eigener 5-s-Testaufnahme 151 Bilder, Stimme im Mitschnitt 150 Bilder ungekuerzt, Wurf F683 erst danach (RE2 Wsleeping @0x80053ac0 selbst disassembliert)"
+    },
+    {
+     "punkt": "P3 Wurf die Reling runter, liegt in 2090 an der Stelle im Wasser (FG-E3/FG-E4, N26 Kamera 12)",
+     "urteil": "erfuellt",
+     "beleg": "RE2-sub13-Bahn, Fall in 2090 Cut 12 F28-F40 (k_leon_fall_f28-44_x2.png), 'Aufschlag im Wasser' + Ton, 'Kanister im Becken ... = Aufschlagstelle (Bit 116)'"
+    },
+    {
+     "punkt": "N5 / FG-E4 Kamera wie Adas Raketenwerfer-Wurf (RE2-Schnittfolge, Werfer in Cut 7 frontal)",
+     "urteil": "teilweise",
+     "beleg": "Schnittfolge + Cut 12 wie entschieden; beim Suedwurf (6 von 8 Verlaeufen, auch Riegel-Standardlage) steht der Werfer in 2080 Cut 7 mit dem Ruecken zur Kamera (frontal -0,45 statt RE2 0,99 / Nordwurf 0,45), m2_cut7_sued_vs_nord_x6.png - Mangel M2"
+    },
+    {
+     "punkt": "P3 / N23 / N26 Alligator nimmt den Kanister auf, RE2-Lenkung von Hals und Schwimmweg (Abnahme-1-N3)",
+     "urteil": "erfuellt",
+     "beleg": "Aufnahme 2,8-5,2 s nach dem Loslassen in allen 10 Laeufen mit Szene (8 Verlaeufe, davon 4 neue: d15/d30/d45/Plattform; v1 Leon+Elza ohne Testhaken), keine BISS/LUNGE-Zeile davor, derselbe Alligator (FG-E3), HALS zum Kanister/zurueck; Zitate @0x80100a34-8c, @0x8010134c-58, @0x801001c4-cc, @0x801005a0-c4 selbst disassembliert"
+    },
+    {
+     "punkt": "P3 sobald er den Kanister im Maul hat, kann man auf ihn schiessen",
+     "urteil": "erfuellt",
+     "beleg": "R1 nach einem Treffer in 9 von 10 Laeufen; d30_elza ohne R1 in 2500 Bildern wegen stehendem Test-Spieler unter Biss/Spinnen (Hinweis H3)"
+    },
+    {
+     "punkt": "P3 Sterbeanimation mit geplatztem Kiefer genauso wie im Original",
+     "urteil": "teilweise",
+     "beleg": "R1-Clip/Leiche laufen ab und sind bei v1/west/ne/Plattform/d45 im Bild; in der Riegel-Startlage (Leon+Elza) zeigt der R1-Schnitt Cut 2 keinen Alligator (Kopf (8,106) unter der Maschinen-Freistellung, k_leon_r1_*.png, mit RE15_NO_PRI nur Reste am Rand), d15 Kopf am Bildrand (M1); Explosionseffekt fehlt, nur Schimmer, ROOM40A0-ESP nicht registriert (Nutzer-Nachtrag 28 an diesen Laeufen, M3)"
+    },
+    {
+     "punkt": "RE-Gate",
+     "urteil": "erfuellt",
+     "beleg": "11 Zitatgruppen selbst disassembliert/gelesen (RE2 Wsleep/Wsleeping/Xa_on/FUN_8002fe38, ROOM7020 sub12-Bytes, RE1.5 Dir_set @0x80041080, EM23 Zielmodus/Biss-Sperre/Hals, ROOM40A0 sub10, Add_speed, Raumlader @0x800397fc-834, Port-Schranken 300) - alle stimmen; 0 Rate-Woerter im Diff; nur Messhaken als getenv"
+    },
+    {
+     "punkt": "Vertrag",
+     "urteil": "erfuellt",
+     "beleg": "Bits 114-117 in G-Zuteilung (k_port[] eingetragen), Id 42, Bank-5-Signale 0x17-0x1F ohne Konflikt in 2080/2090, keine verbotenen Pfade, Haken in enemy_ai_boss_gator.c (10 Zeilen) gedeckt durch FG-E3/FG-E5, markiert"
+    },
+    {
+     "punkt": "Tests je Punkt",
+     "urteil": "teilweise",
+     "beleg": "46/46 Unit und 9/9 Integration gruen; kein Riegel prueft, ob der R1-Tod im Bild ist (M1) oder die Blickbeziehung in Cut 7 (M2)"
+    }
+   ],
+   "maengel": [
+    "M1 (P3 Sterbeanimation): In der Riegel-Startlage (-6000,-17500) Leon und Elza ist der R1-Tod nicht im Bild. gator_boss.log (k_leon und Riegel-Lauf lauf_daccaba3/kampf_leon|kampf_elza): 'KAMERA-KANDIDAT EXPLOSION ... Cut 2 kopf_bild=(8,106)' -> 'KAMERA R1 EXPLOSION RE2-Cut 5 -> Cut 2 F826'; F828-F860 zeigt Cut 2 nur Maschine/Rohre (Kopf am linken Rand unter der Freistellung; mit RE15_NO_PRI nur Reste am Rand), F862 schon die Leiche; d15_leon Kopf am rechten Rand (296,81). In NB1 (Abnahme 1 g1/k_leon_r1.png) war der Tod derselben Startlage in Cut 5 sichtbar, erst der Suedwurf der NB2 verlegt ihn. Ursache: Spur-B-Kamerawahl gr2_kam_r1_start / re15_gr2_kamera_wahl (gator_re2_r41.c Z.759-797/877-891) prueft weder Randabstand noch Freistellung; Riegel kampf prueft nur 'R1 ende (Leiche)'. Forderung: Tod in allen Verlaeufen sichtbar (Ort der Behebung per Orchestrator, Querbezug B), Bildbogen der R1-Phase Leon+Elza (Riegel-Startlage, d15, v1), Riegel 'Tod im Bild'.",
+    "M2 (N5/FG-E4 Kamera wie Adas Wurf, Nebenwirkung NB2): Beim Suedwurf (Gier 1024; 6 von 8 Verlaeufen, auch Riegel-Standard) spricht Marvin/John die Zeile 42 in 2080 Cut 7 mit dem Ruecken zur Kamera: Blickbeziehung frontal -0,45 (117 Grad) statt RE2 ROOM7020 Cut 7 0,99 (Ada, Dir_set 0x0e74 @0x0748) bzw. 0,45 beim Nordwurf (blick_gier.py, Bild m2_cut7_sued_vs_nord_x6.png). Ursache: das Dir_set schreibt die Wurf-Gier; RE2 setzt die kamerazugewandte Gier und wirft in Weltachsen (Add_speed @0x80055abc-e0 selbst disassembliert). Im Dossier nicht benannt; die Nutzerwahl in N26 Frage 2 ging von 'Kamera 7 (frontal)' aus. Forderung: Entscheid Orchestrator/Nutzer (RE2-Form: Werfer in Cut 7 der Kamera zugewandt, Bahn in Weltrichtung), Messung Leon+Elza Nord-/Suedwurf, Bildbogen Cut 7 F530-F630, Riegel.",
+    "M3 (P3 Sterbeanimation 'genauso wie im Original' / Nutzer-Nachtrag 28, waehrend dieser Abnahme an genau diesen Laeufen gesehen): Der Explosionseffekt des Gaskanisters fehlt. r1_v1_leon F1548-F1588 (und west/d45/Plattform) zeigen am Kopf nur einen kleinen weiss-blauen Schimmer und Kiefer-Brocken, keinen Feuerball; debug.log Z.24/26: re2fx registriert nur CORE00.ESP und GLAS1090.ESP, nicht die Raum-ESP von RE2 ROOM40A0. Forderung: Auftrag Nachtrag 28 (RE2-Beleg der Effekte, Ursache, 1:1-Nachbau, Bildstreifen gegen RE2-Referenz, Riegel 'Effekt-Bank registriert + Explosions-Quads > 0'), zusammen mit M1 messen."
+   ],
+   "bericht": "Abnahme 2 der Spur G ist NICHT BESTANDEN. Die drei Maengel der Abnahme 1 sind behoben, ebenso der Nachtrag 26 (Hals, Kippen). Es bleiben zwei neue Maengel, M1 und M2, und der Nutzer-Nachtrag 28 als M3.\n\nBericht: C:/workspace/git/reAi_v2/.claude/worktrees/r41_kanister2080/analysis/befunde_runde41/G_abnahme_2.md. Commits auf r41/kanister2080: 4cde135d (Zwischenstand), 2d3d63af und d09d5fff, jeweils \"doc(r41-kanister2080): Abnahme 2\", nur diese Datei. Dazwischen liegt 6712fd1d vom Orchestrator mit Nachtrag 27/28.\n\n**Gemessen, Leon und Elza, 27 exe-Laeufe:**\n- **P1 und P2 unveraendert in Ordnung:** Knall, danach 8 Zombies oben; der Kanister steht auf der Marke.\n- **N1 erfuellt:** Zeile 42 steht 99 Bilder. Mit einer eigenen 5-s-Testaufnahme (im Laufordner, nicht im Baum) steht sie 151 Bilder, die Stimme ist im Mitschnitt ungekuerzt, und der Wurf folgt erst danach.\n- **N2 erfuellt:** In Cut 5 bleibt die Gier r93, die Wurf-Gier kommt mit dem Schnitt. Das Kippen laeuft nach RE2 ab, Klettern und Profil-Sprung sind weg.\n- **N3 erfuellt:** In allen 10 Laeufen mit Szene nimmt der Alligator den Kanister 2,8 bis 5,2 s nach dem Loslassen auf. Das gilt auch fuer v1 ohne Testhaken (37 echte Treffer) und vier neue Kampflagen. Vor der Aufnahme beisst er nicht, und es kaempft derselbe Alligator weiter.\n- **RE-Gate haelt:** 11 Zitatgruppen selbst disassembliert, alle stimmen.\n- **Vertrag haelt.**\n- **Tests:** Unit 46/46, Integration 9/9 gruen.\n\n**Maengel:**\n- **M1:** In der Riegel-Startlage (Leon und Elza) schneidet der R1 auf Cut 2. Dort liegt der Kopf am linken Rand unter der Maschinen-Freistellung, Tod und Kiefer sind nicht zu sehen. Ursache ist die Kamerawahl der Spur B; der Suedwurf der Nachbesserung 2 fuehrt diese Startlage dorthin.\n- **M2:** Beim Suedwurf (6 von 8 Verlaeufen) spricht der Werfer die Zeile 42 in Cut 7 mit dem Ruecken zur Kamera. RE2 zeigt Ada dort frontal (Dir_set 0x0e74 @0x0748). Das muss der Orchestrator bzw. der Nutzer entscheiden.\n- **M3:** Der Explosionseffekt des Kanisters fehlt, nur ein Schimmer ist zu sehen. Die Raum-ESP von ROOM40A0 ist nicht registriert. Das deckt sich mit dem Nutzer-Nachtrag 28 zu genau diesen Laeufen.\n\n**Hinweise:**\n- H1: Das Apply-Bild F530 zeigt in diesem Zweig noch den alten Hintergrund. Auf master haelt Spur E's kamerahalt das Bild; das bei der Integration pruefen.\n- H2: Beim Aufstehen sitzt der Kanister in der Huefte.\n- H3/H4: Spinnen (Spur F) und der Lauerplatz verfaelschen einzelne Testlaeufe.\n\nDie Messkopien der exe sind geloescht. Laeufe und Bilder liegen in C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g2abn."
+  }
+ },
+ "stand": {}
+}

@@ -1,0 +1,96 @@
+{
+ "welle": [
+  "F"
+ ],
+ "slots": 1,
+ "basis": "r41/integration 9f10bdb0 (Baum r41_gatorszene)",
+ "max_nach": 2,
+ "modus": {
+  "F": "nachbesserung"
+ },
+ "runde0": {
+  "F": 4
+ },
+ "bau": {
+  "F": {
+   "status": "fertig",
+   "zusammenfassung": "Gemessen vorher (Leon + Elza, Leiterweg): Kampfbeginn F405, Gator-Wurzel 6162 von der Spielfigur. Erster Treffer nach 61 Bildern im Stehen, nach 33 beim sofortigen Wegrennen nach Osten (gleich Abnahme 3).\nRE2-Sollwert selbst disassembliert, Rechnung in tools/r41_gatorszene/probe_re2_intro_ende.c: ROOM40A0 Pos_set @SCD 0x0736, Intro Clip 6/3 @0x801008ac-948 (z = -21212 @0x801008d0-d4, Gier += 1024 @0x80100938-48). Wurzelschritt FUN_8001a330 @0x8001a374/@0x8001a3b0/@0x8001a3c0, Leon Plc_dest @SCD 0x0286. Ergebnis: Abstand 11430 am Intro-Ende. Mit der Sperre +0x238 = 110 @0x8010091c-20 und der Hysterese @0x80100b5c-64/@0x80100b88 erreicht der vorderste Knochen Leon nach 121 Bildern.\nLagewahl (tools/r41_gatorszene/leiche_lage_n4.py): bester Schluessel-Wert unter dem RE2-Abstand, Kette im Beckenwasser. Erste Wahl war obj 3 an der Original-Lage @0x00A8E. Gemessen war der Schluessel dort zu dunkel (2-9 Pixel), deshalb verworfen. Gewaehlt ist obj 3 bei (700,-8200), Gier 2432, Cut 5, Anlauf-Gier 3552, Neigung 672/-144. Diese Stelle liegt 1063 neben der Original-Lage, obj 2 bleibt an seiner Original-Lage @0x00A6C.\nNachher (Leon = Elza): Kampfbeginn F422, Abstand 17539. Erster Biss/Treffer im Stehen nach 470/477 Bildern, beim Wegrennen nach 525/532 Bildern, waehrend des Rennens kein Treffer.\nSchluessel in der Ankunftseinstellung Cut 5: hellster Pixel 47 -> 66, Kasten 9 x 12. Das Fressen zeigt Spur B's Kamerawahl in Cut 4.\nRiegel: NEU unit_r41_gatorszene_abstand/_abstand_elza, Sollwert im Riegel aus den RE2-Daten. Gegenprobe mit der alten Kampfbeginn-Lage: Biss nach 48 < 121. NEU integration_r41_gatorszene_flucht/_flucht_elza. leon/elza nehmen den Kampfbeginn jetzt aus Folge C und pruefen Abstand und Angriff. Querbezug Nachtrag 29: unit leiche/programme/szene sowie Spur B integration_r41_re2gator Lauf szene, EXIT_AT 420 -> 440.",
+   "commits": [
+    "aa7b3e8a wip(r41-gatorszene): Nachbesserung 4 - Dossier-Abschnitt angelegt (Plan M1 = Nachtrag 29)",
+    "0f990c9f wip(r41-gatorszene): Nachbesserung 4 M1 - Messung vorher (Leon + Elza, stehend/weglaufend: Abstand 6162, erster Treffer +61/+33)",
+    "f5be4f3d wip(r41-gatorszene): Nachbesserung 4 M1 - RE2-Sollwert aus ROOM40A0 (Pos_set @SCD 0x0736, Intro @0x801008ac-948, Plc_dest @0x0286): Abstand 11430, erster Kontakt nach 121 Bildern",
+    "2b8f3739 wip(r41-gatorszene): Nachbesserung 4 M1 - Lagesuche leiche_lage_n4.py: obj 3 an der Original-Lage @0x00A8E, Anlauf-Gier 3488, Cut 5 (Dossier)",
+    "5702190a wip(r41-gatorszene): Nachbesserung 4 M1 - Szenen-Leiche obj 3 an der Original-Lage, Anlauf aus dem Westkanal (UNGEPRUEFT an der exe)",
+    "ec012418 wip(r41-gatorszene): Nachbesserung 4 M1 - Riegel: unit abstand/_elza, exe leon/elza + NEU flucht/_elza (Abstand + Bilder bis zum ersten Angriff), Querbezuege (UNGEBAUT)",
+    "fb64e68c wip(r41-gatorszene): Nachbesserung 4 M1 - obj 3 an die Lage mit dem besten Schluessel-Wert (700,-8200) Gier 2432, Anlauf-Gier 3552, Neigung rx 672 / rz -144",
+    "23cad995 wip(r41-gatorszene): Nachbesserung 4 M1 - Dossier: Wahl berichtigt (Original-Lage obj 3 gemessen zu dunkel, beste Lage (700,-8200))",
+    "d9357d86 wip(r41-gatorszene): Nachbesserung 4 M1 - Messung nachher (Leon + Elza: Abstand 17539, erster Treffer +477 stehend / +532 weglaufend), Belegbilder",
+    "877919e2 fix(r41-gatorszene): Nachbesserung 4 - Leiche samt Kette weit weg von der Leiter (Nachtrag 29), Abstand/Angriff nach RE2-Sollwert"
+   ],
+   "suite": "100% tests passed, 0 tests failed out of 221 (Total Test time (real) = 1101.44 sec) mit -R \"^(unit_r41_gatorszene_|integration_r41_gatorszene_|unit_r41_re2gator_|integration_r41_re2gator$|unit_r36_kartenbits$|unit_r26_inventar$|unit_r21_discard_wegwerfen$|unit_r39_inventar_|integration_r39_inventar_discard$|unit_item_|unit_inv_|unit_sca_wall_hit$|unit_re2_spider_|unit_spider_ai$|unit_adult_spider_ai$|unit_r38_spinnen$|integration_r38_spinnen_echtlauf$|unit_writher_ai$|unit_enemy_shootable$|unit_collision_layers$|unit_alligator_ai$|unit_gator_sweep$|unit_gator_fress$|unit_r36_schluessel_|integration_r36_schluessel|unit_r38_dining1141_(schluessel1011|tuer1131)$|unit_r38_rolltor20a0|integration_r38_rolltor20a0|unit_r37_feuerloescher_|integration_r37_feuerloescher$|unit_r39_optik_schluessel$|unit_r39_schluessel2_|unit_aot_sce_census$|unit_aot_edge$|unit_scd_|unit_door_seq$|unit_r38_wasser_|integration_r38_wasser$|unit_r41_kleinkram_a$|integration_r41_kleinkram_a_blink$|r31_trefferboxen|unit_rotor_bgm_pin$|unit_r35_cut10f0_bgm$|unit_r39_johnruf1041_musik$|unit_r35_cut1150_knallbank$|unit_r36_szene1150_knall_re2$|integration_r39_elzazombies_knall$|unit_r36_inventar$|unit_r36_kartenitems$|unit_r37_itemband$|integration_r37_itemband$|unit_r36_tueren_|unit_r33_tueren_|unit_r30_tuer|unit_r31_tuer_ton$|unit_r35_cut10f0_tuerton$|unit_r39_karten_tueren$|integration_r36_tueren$|unit_camera_view$|unit_cut_old_displayed$|unit_r34n_b_cut_old$|prop_zone_dispatch$|prop_scd_pc_advance$|unit_r38_montage_kameras$|integration_(cross_stage|room_probe_sweep|rvd_coverage|door_traversal|door_lock|item_name_census|keydoor)$|prop_door_roundtrip$|prop_spawn_entered$|integration_r35_granate$|integration_r41_wasser20b0_npc$|integration_r38_wasserzombie$|unit_r35_granate$|unit_irons_mittelmodell$|unit_r34_reaktion$|unit_1210_arme$|unit_r30_irons_tisch_licht$|unit_r35_affen_|unit_r36_szenenleon_|unit_r36_ziel1190$|unit_r37_pri1100_|unit_r38_npckante_|unit_r38_wasserzombie$|unit_r41_wasser20b0_|integration_r36_kartenitems_bild$)\" (Regex der Abnahme 3, -j4 --timeout 1200)",
+   "offene_punkte": [
+    "Schluessel im Nordbecken dunkler: hellster Pixel 47 -> 66 (Fassung 1 im Suedbecken: 72 -> 108), weil die Original-Lichtsaetze (RDT @0x468 + 40*Cut) das Nordbecken nur mit Umgebungslicht 63..73 beleuchten. Die Groesse ist etwa wie vorher (Kasten 9 x 12).",
+    "Fressen von hinten: Spur B's Kamerawahl FINISHER nimmt Cut 4 (frontal -1625), weil Cut 5 (frontal 3933) ueber der Massstab-Grenze 1892 liegt (Entscheid B8, Modul der Spur B). Die Leiche im Maul ist nur teilweise zu sehen.",
+    "Anlauf lang: Leon steht, erster Biss erst nach 470 Bildern (RE2-Soll 121). Davon sind 300 Bilder der RE2-Dash der Spur B beim Wechsel in Leons Zone. Die Nutzer-Bewertung steht aus.",
+    "RE2-Sollwert: Leons Gehzeit bis Plc_ret (@SCD 0x02B6) in RE2 ist nicht gemessen. Bezug ist das Intro-Ende des Gators (@0x801008f4-948), beide Enden liegen im selben 150-Bilder-Fenster nach Cut 1.",
+    "Integration mit Spur G: Kampfbeginn jetzt F422 (statt F405), Gator-Start im Nordbecken bei (-2178,-9077). G's Kampf-/Kanister-Riegel liegen nur im G-Baum und sind im Integrationsbaum neu zu messen.",
+    "Unveraendert offen aus Nachbesserung 3: R1-Tod-Nebenbefund nur im Unit-Riegel gemessen; musik_soll fragt weiter alle Slots ab; die Form 'Kameraschnitt nach dem Tod' ist nicht vom Nutzer bestaetigt; nach dem Tod laeuft MAIN2E; Nachrichten-Ids 44-46 sind frei; die Schachtspinnen in 20A0 bleiben; nach dem Laden eines Spielstands gibt es keine Einstellung (Ersatzlage jetzt die Rumpfmitte von obj 3 bei (-206,-7594)); der PSX-Bau ist ungeprueft."
+   ],
+   "fragen_an_nutzer": [
+    "Der Alligator ist beim Kampfbeginn jetzt rund 17500 Einheiten entfernt: stehend beisst er nach etwa 15 s, beim sofortigen Wegrennen nach etwa 17 s (vorher nach 2 s bzw. 1 s). Passt dir die Entfernung so, oder ist der Anlauf jetzt zu lang?",
+    "Die Leiche mit dem blinkenden Schluessel treibt jetzt im hinteren Nordbecken (Kamera vom Nordost-Ende). Das Original beleuchtet das Nordbecken kaum, deshalb ist der Schluessel dunkler als vorher. Ist er fuer dich gut zu erkennen?"
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/tests/integration/test_r41_re2gator.cmake (Datei der Spur B: Lauf szene RE15_EXIT_AT 420 -> 440, Querbezug (e) Nachtrag 29 im Kopf, Pruefungen unveraendert)"
+   ],
+   "neue_assets": [],
+   "sprachdateien": []
+  }
+ },
+ "abn": {
+  "F": {
+   "bestanden": false,
+   "suite": "ctest -R <Regex der Abnahme 3 = Regex des Bau-Agenten, 221 Tests> -j4 --timeout 1200 im Baum r41_gatorszene (PATH von local_build.sh): 100% tests passed, 0 tests failed out of 221 (Total Test time (real) = 1065.00 sec), Log scratchpad/F41a4/ctest_all.log. Bau: local_build.sh configure/build OK, ninja: no work to do, exe = Code-Stand HEAD (877919e2, letzte Code-Aenderung fb64e68c).",
+   "urteile": [
+    {
+     "punkt": "1a Ankunftsszene 2090 (Leiche mit blinkendem Schluessel, Knall, 2080 oben, erneut Leiche, Alligator aus dem Wasser frisst Leiche samt Schluessel, Schrei/Schuetteln zu Leon, RE2-Kampfmusik; Nachtrag 29 + Orchestrator-Entscheid F-E2)",
+     "urteil": "teilweise",
+     "beleg": "Gemessen L1/E1: Szenenfolge vollstaendig mit denselben Bildnummern fuer Leon und Elza (Folge C F422, Cut 0, MAIN1A). Nachtrag 29 ist behoben: Abstand 17539 statt 6162, erster Biss nach 470 Bildern im Stehen und nach 525 beim Wegrennen (vorher 54 und 26). Nicht umgesetzt ist der massgebliche Entscheid F-E2 (14:21, im Zweig): Erstens ist 17539/470 fast das Vierfache des RE2-Sollwerts 11430/121, 300 Bilder davon sind Zonen-Dash (M1). Zweitens ist der Schluessel in Cut 5 bei 47 -> 70 statt der abgenommenen 72 -> 108, mit 2..16 Pixeln und Kasten <= 9 x 12 (M2). Drittens kommt das Fressen aus Cut 4 mit frontal -1625, die Leiche im Maul ist nur in einzelnen Bildern zu sehen (M3)."
+    },
+    {
+     "punkt": "1b Schluessel nach dem Tod bei der Leiche, blinkend",
+     "urteil": "erfuellt",
+     "beleg": "KW/KWE (Leon/Elza) mit Zwilling 9:112: Folge R F196, Einstellung Cut 2 F196-F287, 91/91 Bilder, je 29 px, Kasten 13 x 15, Puls 70 -> 103 (gleich Abnahme 3); die Riegel _tod/_tod_r1/_tod_explosion (+_elza) sind gruen"
+    },
+    {
+     "punkt": "2 Spinnen aus ROOM 2090 entfernen",
+     "urteil": "erfuellt",
+     "beleg": "In allen 2090/2091-Abschnitten 0 Zeilen t=25 (L1/E1/LW/EW 0/1739, L1a/E1a 0/428, KW* 0/713), je Besuch zwei Zeilen 'Spinne 0x25 ... verworfen', Leon und Elza; unit_r41_gatorszene_spinnen, unit_r38_spinnen und integration_r38_spinnen_echtlauf gruen"
+    },
+    {
+     "punkt": "Nachtrag 21 Leiter statt Tor, Tor mit dem Schluessel (Regression)",
+     "urteil": "erfuellt",
+     "beleg": "Ankunft ueber die Leiter-Tuer ROOM2080 Slot 1 bei spawn=(-8200,0,-25550). G1b: 'It's locked.' (id 42). G2b mit 0x34: 'You've opened the lock.' (id 43), Tuer nach 20A0 (DOOR26). Tor-Riegel gruen"
+    },
+    {
+     "punkt": "RE-Gate",
+     "urteil": "erfuellt",
+     "beleg": "Selbst disassembliert bzw. gelesen, alle stimmen: EM23 @0x801008ac-948 (Clip 6/3, z -21212, +0x238=110, Gier +1024), @0x80100b5c-64/@0x80100b88, @0x801004a8-b8, @0x80100c34-40; RE2 FUN_8001a330 @0x8001a360/374/3b0/3c0; ROOM40A0 SCD Pos_set @0x0736, Plc_dest @0x0286, sub03 @0x0250-0x02B7; ROOM2090 obj 3 @0x00A8E, Cut 5 RID @0x100, Lichtsatz @0x530. Die Konstanten sind als PORT-WAHL gekennzeichnet und hergeleitet, es gibt keine Rate-Woerter und keinen getenv, und der Fix erklaert den Befund von Nachtrag 29"
+    },
+    {
+     "punkt": "Vertrag/Riegel",
+     "urteil": "teilweise",
+     "beleg": "221/221 gruen. Nur erlaubte Pfade und keine neuen Bits, IDs oder Slots; an test_r41_re2gator.cmake (Spur B) nur EXIT_AT 420 -> 440 nach F-E1. Die neuen Riegel messen: die herausgeschnittene r41f_kampf meldet auf den Abnahme-3-Logs FEHLER und auf den neuen OK. Sie haben aber nur Untergrenzen: es fehlt die obere Grenze, die F-E2 verlangt (M4), und eine Untergrenze fuer die Schluessel-Sichtbarkeit (M2)"
+    }
+   ],
+   "maengel": [
+    "M1 (F-E2 Punkt 1, Leon und Elza): Der Kampfbeginn liegt nicht beim RE2-Sollwert. Gemessen in L1/E1/LW/EW: Abstand 17539 (RE2 11430), erster Biss nach 470 Bildern im Stehen (RE2 121) bzw. 525 beim Wegrennen. Davon sind 300 Bilder Zonen-Dash (Clip 2 F591 -> Clip 3 F741 -> Clip 0 F891). Soll: so nah wie moeglich an 11430 / 121, nicht darunter. Liegt es am Dash, ist die Lage mit der RE2-Zonenbeziehung am Intro-Ende zu waehlen, mit Beleg in RE2.",
+    "M2 (F-E2 Punkt 2, Leon und Elza): Der Schluessel in der Ankunftseinstellung (Cut 5, L1a/E1a, keypix.py) ist dunkler und kleiner als abgenommen: hellster Pixel 47 in Ruhe, 70 an der Spitze, 2..16 Pixel je Bild, Kasten je Bild hoechstens 9 x 12. Die abgenommene Einstellung (gleiches Werkzeug auf F41a3/runs/L1a) hatte 72 / 108. Soll: Ruhe >= 72, Spitze >= 108, Kasten >= 10 x 9. Der Riegel unit_r41_gatorszene_leiche prueft nur die Primitivfarbe 51 -> 76 (abgenommen 84 -> 125) und hat keine Untergrenze.",
+    "M3 (F-E2 Punkt 3): Die Fress-Einstellung kommt von hinten. In gator_boss.log steht 'RE2 KAMERA SZENE FINISHER RE2-Cut 7 -> Cut 4 F176 ... frontal=-1625'. Die Leiche im Maul ist nur in einzelnen Bildern zu sehen (fd 256-310), in fd 184-238 gar nicht. Soll: frontal > 0 und Leiche sichtbar; B8 bleibt, Freiheitsgrad ist die Lage der Leiche.",
+    "M4 (F-E2, Riegel): unit_r41_gatorszene_abstand/_elza und r41f_kampf in integration_r41_gatorszene_flucht/_flucht_elza/_leon/_elza pruefen nur Untergrenzen; 17539 / 470 gilt deshalb als gruen. Soll: RE2-Sollwert mit oberer und unterer Grenze aus dem RE2-Beleg und auf beiden Seiten mit demselben Mass. RE2 '121' misst, wann der vorderste Knochen Leons x erreicht, der Port misst Clip 4 bzw. den HP-Abfall."
+   ],
+   "bericht": "Abnahme 4 der Spur F: nicht bestanden. Bericht C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorszene/analysis/befunde_runde41/F_abnahme_4.md, committet als 4b875538 (nur diese Datei). Messordner C:\\Users\\MJOEDI~1\\AppData\\Local\\Temp\\claude\\c--workspace-git-reAi-v2\\c41eae99-e724-4cb3-afb9-119709f20a9d\\scratchpad\\F41a4.\n\nVier Minuten nach dem Abschluss-Commit des Bau-Agenten (877919e2, 14:17) hat der Orchestrator den Entscheid F-E2 (e96d076e/3b2340c7, 14:21) in AUFTRAG.md gelegt. AUFTRAG.md ist massgeblich, also gilt F-E2 fuer diese Abnahme; das UEBERGABE von master (14:23) sieht genau das vor.\n\nBau und Tests: configure/build OK, ninja hatte nichts zu tun, die exe ist der Stand HEAD. Die 221 gezielten Tests sind gruen (1065 s), damit ist die Angabe des Bau-Agenten bestaetigt.\n\nMessungen an der exe (Leiterweg, Leon und Elza mit Bild fuer Bild gleichen Ergebnissen):\n- Szenenfolge: vollstaendig, Kampfbeginn F422 in Cut 0, Kampfmusik MAIN1A.\n- Nachtrag 29 ist behoben. Beim Kampfbeginn ist der Gator 17539 entfernt (vorher 6162).\n  - Im Stehen: erster Biss nach 470 Bildern, erster Treffer nach 477.\n  - Beim Wegrennen nach Osten: erster Biss nach 525 Bildern, erster Treffer nach 532.\n  - Der Riegel-Auswerter meldet auf den alten Logs FEHLER und auf den neuen OK, er unterscheidet also vorher und nachher.\n- Punkt 1b, Schluessel nach dem Tod: unveraendert erfuellt. In 91/91 Bildern sichtbar, 29 px, Kasten 13 x 15, Puls 70 -> 103.\n- Spinnen: in keinem 2090/2091-Abschnitt vorhanden.\n- Tor (Nachtrag 21): ohne Schluessel gesperrt, mit Schluessel offen.\n\nRE-Gate: fuenf Stichproben-Bloecke selbst gelesen (Disassembly in EM23 und RE2 PSX.EXE, SCD von ROOM40A0, Bytes von ROOM2090.RDT), alle stimmen. Die Konstanten sind als PORT-WAHL gekennzeichnet, Rate-Woerter gibt es keine.\n\nOffen sind die vier Maengel aus F-E2:\n- M1: Der Kampfbeginn liegt beim 1,5-fachen Abstand und 3,9-fachen Bildzahl des RE2-Sollwerts 11430 / 121. Den groessten Teil der Bilder macht der Zonen-Dash mit 300 Bildern aus.\n- M2: Der Schluessel der Ankunftseinstellung hat 47 -> 70 statt der abgenommenen 72 -> 108, 2..16 px, Kasten hoechstens 9 x 12.\n- M3: Die Fress-Einstellung ist Cut 4 mit frontal -1625, also von hinten.\n- M4: Die Riegel haben keine obere Grenze.\n\nAls Hinweise ohne Mangel stehen im Bericht:\n- Den RE2-Sollwert habe ich nur bis zu den Adressen und der Rechnung geprueft, die EMR-Versaetze nicht unabhaengig nachgerechnet.\n- Die Ersatzlage nach dem Laden eines Spielstands liegt jetzt bei (-206,-7594) und hat keine Einstellung.\n- Querbezug Spur G: Der Kampf beginnt jetzt in F422 mit dem Gator im Nordbecken; G's Riegel muessen im Integrationsbaum neu gemessen werden."
+  }
+ },
+ "stand": {}
+}
