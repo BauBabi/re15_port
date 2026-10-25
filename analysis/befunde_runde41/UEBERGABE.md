@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-25 21:23: **G BESTANDEN** (Abnahme 4, wf_2bd33954-f59): alle Nutzer-Punkte erfuellt, Unit 105/105, Integration 26/26, G-E3..G-E6 umgesetzt (Todes-Clip 19/19, RE2-Kern ab Start, Kopf-Klemme, render_pc.c 57). Stimmen fuer den Nutzer: synchro/STAGE2/room2080/main42.wav (Marvin "Hey, Leon, try with this!") und room2081/main42.wav (John "Hey, Elza, try with this!"). Warten auf M Abnahme 5, dann Integration F+G+M in EINEM Lauf (Querbezuege §3a F x G).
+
 * 2026-10-25 18:46: **F BESTANDEN** (Abnahme 5, wf_f2e30b5e-2c4, "gut genug" nach FG-E6): Folge vollstaendig, Kampfbeginn im RE2-Band (11454 / +131), Fressen frontal Cut 1, Schluessel hell (Groesse 7x9 vom Nutzer angenommen), Spinnen weg, Tor nur mit Schluessel; 221/221 gezielte Tests. OFFEN fuer Samstag: Nachtrag 31 Punkt 2 (Gator startet vor der Linse von Cut 0). Integration: EIN Lauf fuer F + G + M, sobald G (Abnahme 4) und M (Abnahme 5) fertig sind (Tokens sparen).
 
 * 2026-10-25 18:03: **ABSCHLUSSPLAN (Nachtrag 32b)**: jetzt abschliessen und v0.8.29 bauen, neue Tokens ab Samstag 31.10. fuer Nachbesserungen. F nur Abnahme 5 (bei Start von NB6 den Lauf wphjy3205 stoppen), G NB4 + Abnahme 4 (letzte), M NB5 + Abnahme 5 (bei Start von NB6 den Lauf wbqdkh8lq stoppen). **N ANGEHALTEN** (Task we66egvi6 gestoppt, Stand r41/nachtrag30 bb7a0df6 ungeprueft: Plakat 30d erzeugt; Dossier N_nachtrag30.md; Messung: Endstufe skaliert alle Quellen) -> Samstag. Danach Integration F/G/M ("gut genug"), volle Suite, Release.
