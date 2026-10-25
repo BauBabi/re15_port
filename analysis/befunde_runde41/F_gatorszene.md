@@ -35,6 +35,8 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
 - [x] Riegel: 8 Unit-Teile + 2 exe-Laeufe (Leon, Elza), gezielte Gruppen gruen (§T)
 - [x] Spur-B-Riegel integration_r41_re2gator mit belegtem Querbezug gruen (Nachbesserung 1, M4)
 - [x] Nachbesserung 1: M1-M6 der Abnahme 0 behoben und gemessen (Abschnitt unten), Zusatzbefund N1 (B-Kamera-Programme)
+- [x] Nachbesserung 2: M1 (drei Fremd-Riegel mit Querbezug, gruen) und M2 (Einstellung auf den Schluessel nach dem Tod) der
+      Abnahme 1 behoben und gemessen (Abschnitt "Nachbesserung 2")
 
 ## 0. Protokoll
 
@@ -44,6 +46,8 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
   898ae6a8 (Cut 1/Licht, Knall, 2080 oben, Tor, Musik), ef13fe31 (Riegel), 73bf903f (r26-Riegel), Schluss-Commit.
 * Nachbesserung 1 (2026-10-25): 6e9a7b90 (Plan), f478ece5 (M1/M3/M6/N1), 5b08e96e (M4 + M5), ff5bdf11 (M2 + Riegel),
   e01ea055 (M2 groesstes Bild), d224c392 (exe-Riegel + Bilder), 9d36260c (Dossier), Schluss-Commit fix(r41-gatorszene).
+* Nachbesserung 2 (2026-10-25): 58d88629 (Plan), 709c0ceb + 4d013992 (M1), a6e29e7d + f38cbc4d (M2 Code), 1023f54e + be1977be
+  (M2 Riegel + Bilder), 0c73197e (Dossier M2), Schluss-Commit fix(r41-gatorszene): Nachbesserung 2.
 
 ## Punkt 2 — Spinnen aus ROOM2090 entfernen
 
@@ -540,3 +544,58 @@ Plan:
   Einstellungs-Kamera Cut 1 (Westende) gekippt und zeigt Cut 0 (Ostende) die Rueckseite; Objekt-Flaechen mit NCLIP < 0 verwirft
   das Original (re15_nclip_r38.h: FUN_800254a0 @0x800255a8 `bgez`, FUN_800256b0 @0x800257c0). Die Aufnahme-Zone (1000 x 1000,
   Slot 15) liegt an der gezeigten Stelle.
+
+### N2 Tests
+
+Geaendert/neu (nur F-eigene Riegel + die drei Fremd-Riegel von N2.M1, je mit Querbezug):
+- `unit_r41_gatorszene_tod`: Kamera = Zonenkamera (>= 2 RVD-Saetze), Quadrat >= Wert der Nachbesserung 1 in der laufenden
+  Kamera (Todesrolle 15,4 >= 9,7; R1 7,5 >= 7,5 mit Ersatz-Pose), nicht verdeckt (Knochen-Kugeln 800), Einstellung: im Bild des
+  Todes Cut K + Zonenkamera aus + Riegel (2,7)/(1,27), nach 91 Bildern Cut_old auf den Cut davor, Zonenkamera an, Riegel auf,
+  Folge E/O.
+- `unit_r41_gatorszene_schluessel`: Mitte hoechstens halbe Diagonale (127) ueber dem Wasser; Aufnahme erst nach dem Ende der
+  Einstellung (Pad-Sperre).
+- `integration_r41_gatorszene_tod` / `_tod_elza` (Todesrolle) und NEU `_tod_r1` / `_tod_r1_elza` (R1-Kanistertod, natuerliche
+  Kamera): Lage-Zeile "groesstes Bild", Quadrat >= 10,4 Bildpunkte (Ankunfts-Schluessel), Einstellung in beiden Zwillingen
+  gleich und >= 90 Bilder, state.log cam=K in der Einstellung und danach wieder der Cut davor (nur der letzte Raum-Abschnitt),
+  bilddiff in der Einstellung mit Kasten >= 10 x 9 (Auswerter `test_r41_gatorszene bilddiff ... <min_breite> <min_hoehe>`).
+- Fremd: `integration_r38_wasser` (leon2090 9:110), `integration_r37_itemband` (weg2090 9:110,9:113),
+  `integration_r41_wasser20b0_npc` (landung_leon/_elza 9:110,9:113) - s. N2.M1.
+
+Gezielt (keine volle Suite):
+- F allein: `ctest --test-dir "<baum>/re15_port/build" -R "^integration_r41_gatorszene_tod" -j4 --timeout 900 -V`
+  -> `100% tests passed, 0 tests failed out of 4` (Total Test time (real) = 118.61 sec; tod/tod_elza Quadrat 153/10, Kasten 17 x 12,
+  72 -> 106; tod_r1/tod_r1_elza Quadrat 141/10, Kasten 13 x 15, 70 -> 102).
+- Gesamt-Regex (F + B + alle Riegel der Abnahme 1 (Kamera/Zonen, Wasser, Tueren, 2090/2091-Besucher) + Fremd-Riegel N2.M1,
+  scratchpad `F41n2/final_regex.txt`):
+  `ctest --test-dir "<baum>/re15_port/build" -R "^(unit_r41_gatorszene_|integration_r41_gatorszene_|unit_r41_re2gator_|integration_r41_re2gator$|unit_r36_kartenbits$|unit_r26_inventar$|unit_r21_discard_wegwerfen$|unit_r39_inventar_|integration_r39_inventar_discard$|unit_item_|unit_inv_|unit_sca_wall_hit$|unit_re2_spider_|unit_spider_ai$|unit_adult_spider_ai$|unit_r38_spinnen$|integration_r38_spinnen_echtlauf$|unit_writher_ai$|unit_enemy_shootable$|unit_collision_layers$|unit_alligator_ai$|unit_gator_sweep$|unit_gator_fress$|unit_r36_schluessel_|integration_r36_schluessel|unit_r38_dining1141_(schluessel1011|tuer1131)$|unit_r38_rolltor20a0|integration_r38_rolltor20a0|unit_r37_feuerloescher_|integration_r37_feuerloescher$|unit_r39_optik_schluessel$|unit_r39_schluessel2_|unit_aot_sce_census$|unit_aot_edge$|unit_scd_|unit_door_seq$|unit_r38_wasser_|integration_r38_wasser$|unit_r41_kleinkram_a$|integration_r41_kleinkram_a_blink$|r31_trefferboxen|unit_rotor_bgm_pin$|unit_r35_cut10f0_bgm$|unit_r39_johnruf1041_musik$|unit_r35_cut1150_knallbank$|unit_r36_szene1150_knall_re2$|integration_r39_elzazombies_knall$|unit_r36_inventar$|unit_r36_kartenitems$|unit_r37_itemband$|integration_r37_itemband$|unit_r36_tueren_|unit_r33_tueren_|unit_r30_tuer|unit_r31_tuer_ton$|unit_r35_cut10f0_tuerton$|unit_r39_karten_tueren$|integration_r36_tueren$|unit_camera_view$|unit_cut_old_displayed$|unit_r34n_b_cut_old$|prop_zone_dispatch$|prop_scd_pc_advance$|unit_r38_montage_kameras$|integration_(cross_stage|room_probe_sweep|rvd_coverage|door_traversal|door_lock|item_name_census|keydoor)$|prop_door_roundtrip$|prop_spawn_entered$|integration_r35_granate$|integration_r41_wasser20b0_npc$|integration_r38_wasserzombie$|unit_r35_granate$|unit_irons_mittelmodell$|unit_r34_reaktion$|unit_1210_arme$|unit_r30_irons_tisch_licht$|unit_r35_affen_|unit_r36_szenenleon_|unit_r36_ziel1190$|unit_r37_pri1100_|unit_r38_npckante_|unit_r38_wasserzombie$|unit_r41_wasser20b0_)" -j4 --timeout 1200 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 213` (Total Test time (real) = 958.10 sec; darin integration_r37_itemband 840.53 s,
+  integration_r41_re2gator 301.78 s, integration_r41_wasser20b0_npc 215.33 s, integration_r35_granate 169.30 s,
+  integration_r38_wasser 166.37 s, integration_r38_wasserzombie 142.79 s, integration_r41_gatorszene_leon/elza 49.70/66.76 s,
+  _tod/_tod_elza 65.68/98.52 s, _tod_r1/_tod_r1_elza 44.01/76.30 s).
+
+### N2 OFFEN
+
+1. **Nach der Einstellung (Todesrolle):** in der laufenden Kamera Cut 0 ist der Schluessel nicht zu sehen (0 Pixel F564-F660):
+   er ist zur Einstellungs-Kamera Cut 1 gekippt und zeigt Cut 0 die Rueckseite (NCLIP-Verwurf wie das Original, re15_nclip_r38.h).
+   Beim R1-Tod bleibt er in Cut 1 sichtbar (3 x 2 Bildpunkte). Gezeigt und erkennbar ist er in der Einstellung; die Aufnahme-Zone
+   liegt an der gezeigten Stelle. Ein von beiden Seiten sichtbarer Schluessel braeuchte eine zweite, gespiegelte Flaeche, die das
+   RE2-Modell nicht hat - nicht gebaut.
+2. **Leiche fern von allen Kameras:** stirbt der Alligator mitten im Becken (z. B. Westkanal z -17000), bleibt auch die beste
+   Zonenkamera bei ~6 Bildpunkten (Rechnung kam2090.py: Cut 2 Tiefe 6053). Gemessene R1-Enden liegen an den Beckenenden
+   ((3413,-25001) Spur B/Abnahme, (2619,-8209) und (-2856,-6884) Spur G); die Mitte ist nicht gemessen.
+3. **Integration mit Spur G:** nach dem R1-Tod folgt jetzt die Einstellung (90 Bilder, Riegel). G's Kampf-Riegel
+   (integration_r41_kanister2080_kampf*) pruefen nach dem Tod u. a. "KAMERA R1 zurueck -> Cut 0" und "R1 ende (Leiche)" - beide
+   Zeilen kommen weiter (der Schnitt folgt im selben Bild danach); Pruefungen G's auf cam/Spielersteuerung NACH dem Tod bei der
+   Integration nachmessen. Die 2080-Lagen weiter gleich halten (re15_k2080_zombie_lage).
+4. Unveraendert aus N1: Musik nach dem Tod (MAIN2E statt RE2-Ausblenden), Nachrichten-Ids 44-46 frei, Schachtspinnen 20A0,
+   Ersatzlage nach dem Laden eines Spielstands (keine Einstellung, Neigung im ersten Takt), PSX-Bau ungeprueft (key_suche laeuft
+   beim Tod jetzt fuer alle acht Zonenkameras statt fuer eine - PSX-Laufzeit ungemessen).
+
+### N2 Fuer den Nutzer
+
+- Keine neuen Assets, keine Sprachdateien.
+- Nach dem Tod des Alligators schneidet das Bild fuer 1,5 Sekunden (90 Bilder) auf die Kamera, in der der Water Key neben der
+  Leiche am groessten liegt (Balken oben und unten wie in der Ankunftsszene, Leon/Elza stehen still). Der Schluessel blinkt dort als
+  Ring mit Bart, danach geht die Kamera zurueck. Aufheben an der gezeigten Stelle (Aktionstaste).
+- Am Tor bleibt alles wie in Nachbesserung 1.
+- Frage (Beobachtung): Ist der Water Key in dieser Einstellung nach dem Tod fuer dich gut zu erkennen?
