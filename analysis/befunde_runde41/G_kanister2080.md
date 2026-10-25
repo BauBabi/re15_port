@@ -1059,14 +1059,12 @@ R1 nach einem Treffer) bleiben, ihre Riegel bleiben gruen. Nachtrag 29 (Leiche/K
 Laufordner/Bilder: `<SP>/g3` (scratchpad der Sitzung, nicht im Baum); Bildbelege im Baum unter `G_belege/nb3_*`.
 
 ### 10.0 Plan / Stand
-- [ ] M3 RE: Zusammensetzung der RE2-Kanister-Explosion (R1 P0 @0x801021ec-0x80102374, Fontaene FUN_80103eb4, Spritzring
-      FUN_8010338c; Banken/Subs, Datei, TIM/CLUT/TPage, Zeitpunkt, Lage, Dauer)
-- [ ] M3 Messung vorher (Port, R1-Bilder: gespawnte Plaetze je Bank, gezeichnete Quads, Grund jedes Ausfalls)
-- [ ] M3 Umsetzung (Raum-ESP ROOM40A0 in 2090/2091, Texturen, Zeichner), Messung nachher, Bildstreifen gegen RE2-Referenz, Riegel
-- [ ] M1 Messung vorher / Umsetzung G-E1 / Messung aller Verlaeufe Leon + Elza / Riegel "Tod im Bild"
-- [ ] M2 RE (Ada-Blick Cut 7) / Umsetzung G-E2 / Messung Nord- und Suedwurf Leon + Elza / Riegel Blickwert
-- [ ] Tests gezielt, Dossier 10.x (OFFEN, Fuer den Nutzer), Abschluss-Commit
-
+- [x] M3 RE: Zusammensetzung der RE2-Kanister-Explosion (10.1)
+- [x] M3 Messung vorher, Ursachen, Umsetzung (Raum-ESP ROOM40A0, Ops, Kern-Zeilen 485..498, Fontaene 1:1), Messung nachher,
+      RE2-Referenzbild, Riegel (10.2); der Kanister selbst zerplatzt (FUN_80036eb4, 10.2a)
+- [x] M1 Messung vorher / Umsetzung G-E1 / Messung von sieben Verlaeufen Leon + Elza / Riegel "Tod im Bild" (10.3)
+- [x] M2 RE (Ada-Blick Cut 7) / Umsetzung G-E2 / Messung Nord- und Suedwurf Leon + Elza / Riegel Blickwert (10.4)
+- [x] Riegel kampf an die neue Landestelle angepasst (10.4a), Tests gezielt (10.5), OFFEN (10.6), Fuer den Nutzer (10.7)
 
 ### 10.1 M3 - Explosionseffekt des Gaskanisters (Nachtrag 28): RE2-Beleg (selbst disassembliert/gelesen)
 Werkzeuge: `.claude/skills/re15-psx-disasm/scripts/re2_disasm.py` (info/re2leon/PSX.EXE, `--bin EM23_OVL_0000.BIN`), eigene
@@ -1195,6 +1193,44 @@ additiv, 12 Bilder), Kern 0/6 und 0/3 = dunkelrotes Blut (Zeile 488), Raum 0x26/
 gluehende rot-orange Brocken (8 Bilder), Raum 0x09/8..12 = Fleischbrocken (Palette 1). Genau diese Formen und Farben zeigen die
 Port-Bilder nachher (Schleier, Blut, Glut, Brocken); vorher nur der Schleier.
 
+### 10.2a M3 - der Kanister selbst zerplatzt (FUN_80036eb4): Messung vorher, Beleg, Aenderung, Messung nachher
+**Messung vorher** (Lauf `kk_n1_leon`, Messkopie re15_pc_g41nb3b.exe, Rezept 10.2): `[gator-re2] Kanister Stufe 13 pos=(4666,-1983,
+-24535) ... Dreiecke 28 weg 67 hellster=(111,111,111)` - der Kanister bleibt nach dem Treffer zehn Bilder ein intaktes, beleuchtetes
+Mesh und verschwindet dann (Bild `G_belege/nb3_m3_kanister_scherben_kk_leon_f70-80_x3.png` obere Reihe: dunkle Scheibe mitten in der
+Spritzring-Wolke F72-F78; die dunkelroten Splitter daneben sind der Kiefer, Part 7 mit 0x202038).
+**Beleg (selbst disassembliert, info/re2leon/PSX.EXE):**
+- FUN_80036eb4 (17 Befehle, gerufen aus R1 P0 `jal 0x80036eb4` a0 = 0x800d051c @0x80102348): `lui v1,0x40` / `ori v0,zero,0x8000` /
+  `sh v0,492(a0)` (+0x1EC = 0x8000) / `addiu v0,zero,-10` / `sh v0,486(a0)` / `lw v0,332(a0)` / `ori v1,v1,0x4040` / `sw v1,444(a0)`
+  (+0x1BC = 0x404040) / `lhu v1,118(a0)` / `sh zero,488/490/496(a0)` / `ori v0,v0,0x4a` / `addiu v1,v1,2048` / `sw v0,332(a0)`
+  (+0x14C |= 0x4A) / `jr ra` / `sh v1,484(a0)` @0x80036eb4-ef4.
+- Objekt-Zeichner FUN_800363f0 (gerufen @0x80026964; Objekte ab 0x800d0324, Schritt 0x1F8, obj[1] = 0x800d051c): Regions-Test
+  `jal 0x8002c820` @0x80036534 (Ausnahme Flag 0x10 @0x80036544-50), dann `lw v0,0x14c(s1) / andi v0,v0,0x8 / beq v0,zero` @0x80036558-64
+  = Bit 0x08 -> statt des Meshes `jal 0x8002d3c8` @0x80036588 und `jal 0x8002d718` @0x800365b4 mit a2 = obj + 0x14C, danach
+  `lhu v0,0x1ec(s1) / li v1,0x1e / addiu v0,v0,1 / sh v0,0x1ec(s1) / andi v0,v0,0xffff / bne v0,v1` -> `sw zero,0x0(s1)` @0x800365bc-dc.
+  Der Record +0xA0 (= obj +0x1EC) ist der Bildzaehler der Scherben.
+- FUN_8002d3c8 (Dreiecke) / FUN_8002d718 (Vierecke): `lhu a1,160(a2)` / `andi 0x7fff` / `srl 15` @0x8002d3f8-408 bzw. @0x8002d750-68,
+  Tafel 0x8009dc28 + Index * 2 + Zeile * 60 (@0x8002d7ac-d4), Versatz je Prim = (int16)n0 >> 10 (`sll v0,v0,16 / sra v0,v0,26`) mal
+  Skala @0x8002d7d8-ec, ueber MVMVA R*v + TR = Versatz im Modellraum; Farbe aller Scheitel = Record +0x70 (`lw t0,112(a2)` @0x8002d84c,
+  GT4 `lui v0,0x3c00` @0x8002d858; GT3 | 0x34000000); RTPT @0x8002d5a4 + AVSZ3 @0x8002d5dc bzw. RTPT @0x8002d8ec + RTPS @0x8002d93c +
+  AVSZ4 @0x8002d950 - KEIN NCLIP (0x4b400006) bis `jr ra` @0x8002d710 / @0x8002da78: jedes Prim kommt in die OT, beidseitig.
+- Tafel (re2_disasm.py read 0x8009dc28, 2 x 30 int16): Zeile 1 @0x8009DC64 = 180 354 522 684 840 990 1134 1272 1404 1530 ... 2790.
+- obj[1] verschwindet durch R1 P1 nach neun Bildern (+0x16B = 9 @0x80102390-94, `lb v0,363 / blez -> word0 = 0` @0x8010255c-78, im Port
+  RE15_GR2_KAN_ENTFERN_F der Spur B) -> sichtbar sind Index 0..9; der Vergleich mit 0x1e greift mit Bit 15 nie.
+- +0x1E6 = -10 und +0x1E4 = Gier + 0x800 liest nur die Teile-Physik der Gegner FUN_80028dac (aus FUN_80027434 @0x80027b98); der
+  Objekt-Zeichner ruft sie nicht. **Berichtigung zu 10.1 Abweichung 5:** der Kanister "fliegt" nicht weg, er zerplatzt an seiner Lage.
+**Aenderung** (markiert "Runde 41 Spur G (Nachbesserung 3, M3)"): `engine/src/gator_re2_r41.c` s_kan.scherben/scherben_farbe, Stempel im
+R1 P0 nach dem Loesen, re15_gr2_kanister_scherben (Skala/Farbe/Index) und re15_gr2_kanister_scherben_weiter (+0x1EC += 1, Loeschen bei
+0x1e); `platform/pc/src/gator_re2_pc.c` Scherben statt Mesh (Versatz entlang n0, flache Farbe, ohne NCLIP/OTZ-Untergrenze, nur die
+GPU-Groessenschranke der Hardware) und Messzeile `[gator-re2] Kanister-Scherben F<n>: Bild <i> Skala <s> Farbe 0x404040, <p> Prims
+gezeichnet, <w> weg`; Deklarationen in `include/re15_gator_re2_r41.h`.
+**Messung nachher** (Lauf `kk_sch2_leon`, Messkopie re15_pc_g41nb3l.exe, dasselbe Rezept): `Kanister-Scherben F70: Bild 0 Skala 180
+Farbe 0x404040, 93 Prims gezeichnet, 2 weg` ... `F79: Bild 9 Skala 1530 Farbe 0x404040, 95 Prims gezeichnet, 0 weg`, ab F80 kein
+Kanister. (Erster Bau mit NCLIP: nur 17..38 von 95 Prims - die Rueckseiten fielen weg; nach dem Disassembly-Befund "kein NCLIP"
+berichtigt.) Bild untere Reihe: an der Stelle der Scheibe dunkelgraue Scherben, die sich von F72 bis F78 vom Kanister weg ausbreiten.
+Riegel: `unit_r41_kanister2080_scherben` (Teil "scherben" im Testprogramm der Spur B, echter Boss-Takt): getragen = intaktes Mesh,
+nach dem Treffer zehn Bilder Index 0..9 Skala 180..1530 Farbe 0x404040, ab Bild 10 weg; `integration_r41_kanister2080_kampf` prueft
+in allen vier Laeufen die zehn Skalen.
+
 ### 10.3 M1 - Tod nicht im Bild (G-E1): Ursache, Beleg, Aenderung, Messung
 **Ursache:** (1) wie die Abnahme: gr2_kam_r1_start schnitt nur, wenn der KOPFPUNKT im laufenden Cut nicht im Bild lag, und waehlte dann
 den besten Frontalwinkel - ohne Rand, ohne Masken; (2) neu gemessen: der Kopf wandert im Todes-Clip weit (Clip 9 + Rueckstoss, R1-Ende
@@ -1247,3 +1283,68 @@ Kamera ueber die Reling, Nord- und Suedwurf zeigen dasselbe Bild. Wurf: Sued `St
 Landung (-6096,-2076,-21600)`, Nord `v=(-10,20,25) a=(0,20,5) -> Landung (-6856,-2076,-12670)`; Fall in 2090 Cut 12 (unit landung:
 Nord 13, Sued 18 von 39 Fall-Bildern im Bild, vorher 14/22), Aufschlag + Kanister im Becken, Anschwimmen und Aufnahme wie zuvor
 (Laeufe s_sued_*: `ANSCHWIMMEN an ... Abstand 13931`, `KANISTER Stufe 1 ... F103`).
+
+### 10.4a Riegel kampf: Laufdauer (Batch B, Stand 9167e087)
+**Messung:** `integration_r41_kanister2080_kampf` brach in Batch B ab: `Lauf kampf_leon: Folge nach der Szene bricht ab vor 'R1 start'
+(Stand 3 von 5)` (Lauf lauf_40a5780f/kampf_leon). Ursache gemessen: seit G-E2 stehen die Haende vor dem der Kamera zugewandten Werfer
+(Gier 3678 statt 3072), der Wurf startet bei (-6476,-16896,-17135) statt (-7201,-16896,-18449) und landet bei (-6096,-21600) statt
+(-6821,-22914); Aufnahme unveraendert (Stufe 1 F103). Danach zielte der passive Schuetze (Zielen/Feuern ohne Laufen) auf die Spinnen
+(state.log F1500: Slot 1 hp 1, Slot 2 hp 76; vorher 111/110) und die 18 Schussbloecke endeten etwa 860 Bilder nach der Rueckkehr - kein
+Treffer am Alligator, kein R1. Mit mehr Bloecken gemessen (R1 nach der Rueckkehr): kampf_leon F2290 (kh_leon), nordost_leon F1383
+(no_leon, 60 Bloecke), kampf_elza F568, west_elza F322 - vorher F826/F899/F826/F814.
+**Aenderung** (fc062fbc): 60 Schussbloecke (reichen ueber EXIT_AT hinaus), EXIT_AT 3000 Bilder nach der Rueckkehr (statt 1500). Kein
+Spielverhalten - es ist der Testspieler, der den Alligator spaeter trifft.
+
+### 10.5 Tests (gezielt, keine volle Suite; local_build.sh, ctest mit msys64 zuerst im PATH)
+- Bau Stand 4c622ad4: `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`,
+  `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`.
+- Unit (Stand 4c622ad4): `ctest --test-dir re15_port/build -R "unit_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_|unit_msg_|unit_action_msg_gate|unit_alligator_ai|unit_gator_|unit_g5_boss|unit_r35_granate|unit_r34_reaktion|unit_re2_spider_water_2090|unit_r34_re2fx|unit_r34_plattform|unit_r34_wasser|unit_r34_wurf|unit_r35_fenster|unit_r35_werfer|unit_r36_granate|unit_r36_schuss|unit_r39_hund1121" --timeout 600 -j2`
+  -> **`100% tests passed, 0 tests failed out of 78`** (Total Test time (real) = 55.91 sec); darin neu unit_r41_kanister2080_fx_register /
+  _op69 / _op41 / _op4_6 / _op37_78, _blick, _scherben, geaendert _szene/_landung (G-E2) und unit_r41_re2gator_kamera (R1-Faelle G-E1).
+  Derselbe Ausdruck vor der Scherben-Aenderung (Stand 9167e087): `100% tests passed, 0 tests failed out of 77` (49.28 sec).
+- Integration A (Stand 9167e087): `ctest --test-dir re15_port/build -R "^integration_r41_kanister2080$|^integration_r41_re2gator$|^integration_r35_fenster$|^integration_r35_werfer$|^integration_r35_werfer_ton$|^integration_r35_werfer_elza$|^integration_r35_werfer_form$|^integration_r34_granaten$|^integration_r34_plattform_takt$|^integration_r34_plattform_esp_eintritt$|^integration_r36_schuss$|^integration_r39_hund1121$" --timeout 3000 --output-on-failure -j3`
+  -> **`100% tests passed, 0 tests failed out of 12`** (Total Test time (real) = 413.73 sec).
+- Integration B (Stand 9167e087): `ctest --test-dir re15_port/build -R "^integration_r41_kanister2080_kampf$|^integration_r35_granate$|^integration_r38_wasser$|^integration_r41_wasser20b0_npc$|^integration_r37_itemband$|^integration_r36_tueren$|^integration_r36_kartenitems_bild$" --timeout 3000 --output-on-failure -j3`
+  -> `86% tests passed, 1 tests failed out of 7`: gruen r41_wasser20b0_npc, r36_kartenitems_bild, r38_wasser, r36_tueren, r35_granate,
+  r37_itemband; rot kanister2080_kampf (10.4a). Nach der Riegel-Aenderung: `ctest --test-dir re15_port/build -R "^integration_r41_kanister2080_kampf$" --timeout 3000 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 1`** (Total Test time (real) = 746.65 sec).
+- Integration C (Stand 4c622ad4, nach den Kanister-Scherben): `ctest --test-dir re15_port/build -R "^integration_r41_kanister2080_kampf$|^integration_r41_re2gator$|^integration_r41_kanister2080$" --timeout 3000 --output-on-failure -j3`
+  -> **`100% tests passed, 0 tests failed out of 3`** (Total Test time (real) = 722.22 sec; kanister2080 170,40 s, re2gator 238,25 s,
+  kanister2080_kampf 722,14 s). Im Lauf kampf je Lauf zehn Zeilen "Kanister-Scherben" Skala 180..1530, erstes Bild 95 Prims, 0 weg
+  (kampf_leon F2290, kampf_elza F568, nordost_leon F1383, west_elza F322).
+- Messkopien re15_pc_g41nb3a..l.exe geloescht; Laeufe/Bilder nur im scratchpad `<SP>/g3`, im Baum nur `G_belege/nb3_*`.
+
+### 10.6 OFFEN (gemessen bzw. benannt, nicht geraten)
+1. **Regions-Test des Kanister-Objekts** (Spur B): RE2 zeichnet obj[1] - intakt wie als Scherben - nur, wenn FUN_8002c820 seine Lage im
+   Regions-Viereck des Cuts findet (`jal 0x8002c820` @0x80036534, Ausnahme Flag 0x10 @0x80036544-50), und zaehlt die Scherben nur dann
+   weiter. Der Kanister-Zeichner der Spur B (gator_re2_pc.c) prueft das nicht - in einem Cut, dessen Viereck den Kanister nicht enthaelt,
+   zeigt der Port ihn, RE2 nicht. Die G-E1-Wahl bevorzugt Cuts mit allen Startpunkten im Viereck (Spalte "Start a/8" in 10.3); nicht
+   geaendert, weil es den Prop-Zeichner der Spur B betrifft.
+2. "Start a/8" < 8 in einzelnen Verlaeufen (kampf_elza 6/8, v1 Leon 2/8, v1 Elza 5/8): diese Spritzring-Sprites liegen ausserhalb des
+   Regions-Vierecks und werden wie im Original verworfen (@0x80077a30); keine Zonenkamera hatte dort alle acht.
+3. Apply-Bild F530 (unveraendert aus 9.6.1): bei der Integration mit Spur E (kamerahalt_r41.c) pruefen.
+4. Spinnen (0x25) stehen in diesem Zweig noch in 2090 (9.6.5); der Testspieler des Riegels kampf zielt auf sie (10.4a).
+5. Querbezug fuer den Merge (alle Haken markiert "Runde 41 Spur G"): `engine/src/re2_fx.c` (Ops 4/6/37/38/41/42/69/78),
+   `engine/src/gator_re2_r41.c` + `include/re15_gator_re2_r41.h` (G-E1-Kamerawahl, Fontaene 1:1, Kanister-Scherben),
+   `engine/src/enemy_ai_boss_gator.c` (3 Zeilen: Anker-Nachfuehrung der Wandklemme nur in GBP_RE2_TOD - Spur F arbeitet fuer Nachtrag 29
+   an der Startlage des Kampfes im selben Modul), `platform/pc/main.c` (1 Aufruf), `platform/pc/src/render_pc.c` (RE15_TIM_SLOT_MAX 57),
+   `platform/pc/src/gator_re2_pc.c` (Scherben), `tests/unit/test_r41_re2gator.c` (R1-Faelle G-E1, Teil "scherben").
+6. Unveraendert aus 8.7/9.6: RE2-Ausloeser-Mitglieder +0x1D8/+0x1DA (Tyrant-Overlay fehlt), Kanister in RE2-Groesse, Ton nur ueber
+   die Mischkette belegt; Werfer in 2090 Cut 12 nicht im Bild (FG-E4).
+
+### 10.7 Fuer den Nutzer (Stand Nachbesserung 3)
+Neue Assets: `re15_port/shared_assets/RE2/GATOR40A0.ESP` und `GATOR40A0_08.TIM`, `_09`, `_16`, `_18`, `_19`, `_1A`, `_26.TIM` -
+bytegleiche Kopien der Effekt-Datei und ihrer sieben Texturen aus RE2 ROOM40A0.RDT (dem RE2-Alligatorraum); ohne sie fehlt die
+Explosion. Sprachdateien unveraendert (vom Nutzer aufzunehmen): `synchro/STAGE2/room2080/main42.wav` ("Marvin: Hey, Leon, try with
+this!"), `synchro/STAGE2/room2081/main42.wav` ("John: Hey, Elza, try with this!").
+Was sich im Spiel aendert:
+- Trifft der Schuss den Kanister im Maul, laeuft jetzt die ganze RE2-Explosion: grau-weisse Wolke, dunkelroter Blutausbruch mit
+  gluehenden Brocken und Fleischfetzen, Wasserspritzer, eine Blutfontaene steigt gut zwei Sekunden aus dem Kopf - und der Kanister
+  selbst zerplatzt in dunkle Scherben (vorher nur die Wolke, der Kanister stand kurz still und verschwand).
+- Der Tod des Alligators ist immer im Bild: Kopf und Kiefer bleiben in jeder Phase der Todes-Animation sichtbar und unverdeckt; die
+  Kamera bleibt, wenn der laufende Blick das schon zeigt, sonst schneidet sie auf die Zonenkamera, die den Kopf am naechsten an RE2s
+  Bildausschnitt zeigt, und am Ende zurueck.
+- Der tote Alligator rutscht nicht mehr durch die Beckenwand.
+- Marvin/John stehen beim Wurf mit dem Gesicht zur Kamera (wie Ada in RE2); der Kanister landet dadurch etwas anders (Suedbecken
+  (-6096,-21600) statt (-6821,-22914), Nordbecken (-6856,-12670)).
+Entscheidungsfragen: keine.
