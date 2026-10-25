@@ -852,12 +852,20 @@ Plan:
   - Bester Wert ueber alle Lagen: obj 2 nach (700,-8200) in Cut 5 (Schluessel 11,5 Bildpunkte) - das liegt 1063 neben der zweiten
     treibenden Leiche obj 3 (Obj_model_set `2d 03 00 00 02 00 0a 00 00 00 e7 ff 34 f9 01 e3 00 00 78 06 ...` @0x00A8E =
     (-25,-1740,-7423) Gier 1656), also zwei Leichen nebeneinander - verworfen.
-  - **Gewaehlt: obj 3 an ihrer Original-Lage** (Nutzer-Wortlaut: "Es schwimmt bereits ein Zombie im Wasser, nimm vielleicht
-    diesen"): sie erfuellt alles ohne Verschieben - Kette mit Anlauf-Gier 3488 (Raster 16 mit dem groessten kleinsten Rand: Wurzel
-    1408 / Kopf 1443; Nachbarn 3456: 1272/1308, 3504: 1407/1507), S (-7283,-16663) im Westkanal, der Gator schwimmt nach
-    Nordosten aus dem Kanal ins Nordbecken; Kau-Lage (-2576,-10344), Abstand zur Leiter-Ankunft 16213 (- 700 = 15513 >= 11430).
-    Szenenkamera Cut 5 (RID @0x060 + 5*32: (2754,-3132,-6408) -> (-7992,-18,-10782)) = die Kamera, in der das Original obj 3
-    zeigt; ganze Leiche im Bild (114,120)-(203,189); Schluessel-Neigung lokal rx 144 / rz -672 (59,9 Grad), Licht 108,6 (Spitze
-    161 < 172), ~9,0 x 8,2 Bildpunkte (Fassung 1 in Cut 1: 10,4 x 9,5 bei Licht 170). obj 2 bleibt an seiner Original-Lage
-    (Suedbecken, Bild Cut 0) und ohne Schluessel. ROOM2091.RDT ist bytegleich zu ROOM2090.RDT (cmp) -> Elza gleich.
+  - Erste Wahl (verworfen nach Messung): obj 3 an ihrer Original-Lage (-25,-7423) Gier 1656 - Kette mit Anlauf-Gier 3488 im
+    Wasser, Abstand 16213 - 700, Cut 5, Neigung rx 144 / rz -672, ~9,0 x 8,2 Bildpunkte gerechnet. Gemessen an der exe (Lauf
+    `F41n4/runs/N_L1a`, Ankunftseinstellung Cut 5 F40-F135, Ausschnitt (150..169, 106..121)): nur 2-9 Pixel ueber Helligkeit 25,
+    hellster Pixel 48 -> 70 (x1,46) - der Ring ist kaum zu sehen. Ursache: das Nordbecken liegt in allen Kameras nur im
+    Umgebungslicht (Lichtsaetze RDT @0x468 + 40 * Cut: Cut 3/4 Lichter bei (-11890,-4000,-24387)/(-14200,-4000,-30252), Cut 5/6/7
+    bei x -29490/-24699, Umgebung 63/63/63 bzw. 63/73/63; flaches Licht im Nordbecken 63..81, im Suedbecken unter Cut 1/2 bis 195),
+    also zaehlt die Groesse.
+  - **Gewaehlt: obj 3 an der Lage mit dem besten Wert** = die Fassung-1-Regel unter dem RE2-Abstand, Cut 5 (700,-1740,-8200)
+    Gier 2432; da sie 1063 neben obj 3 liegt, ist die Szenen-Leiche obj 3 selbst (die treibende Leiche des Nordbeckens, Nutzer
+    "nimm vielleicht diesen", Nachtrag 6: Lage darf sich aendern), obj 2 bleibt an seiner Original-Lage @0x00A6C (13739 entfernt,
+    Suedbecken, Bild Cut 0, ohne Schluessel). Anlauf-Gier 3552 (groesster kleinster Rand: Wurzelweg 1496 / Kopfweg 1534; Nachbarn
+    3536: 1422/1460, 3568: 1326/1611), S (-7381,-15553) im Westkanal, der Gator schwimmt nach Nordosten ins Nordbecken; Kau-Lage
+    (-2077,-9725), Abstand zur Leiter-Ankunft 16968 (- 700 = 16268 >= 11430). Ganze Leiche im Bild (62,132)-(261,205);
+    Schluessel-Neigung lokal rx 672 / rz -144 (59,9 Grad), Licht 103,8 (Spitze 154 < 172), ~11,5 x 10,6 Bildpunkte (Fassung 1:
+    10,4 x 9,5 bei Licht 170). `leiche_lage_n4.py` (ohne Schalter) rechnet genau diese Wahl nach, `--suche` die freie Suche,
+    `--original` den Vergleich. ROOM2091.RDT ist bytegleich zu ROOM2090.RDT (cmp) -> Elza gleich.
 
