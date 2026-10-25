@@ -2139,8 +2139,8 @@ static void gr2_part_welt(const re15_actor_t *e, const re15_skel_pose_t *p, int3
  * x -22816 = ROOM40A0 sub05 Pos_set @SCD 0x0484) und die Regions-Vierecke der R1-Schnitte den Korridor mit Rand umfassen (ROOM40A0
  * RVD @0x00388 Cut 5: x -28638..-19883 bei z -10000; @0x003C4 Cut 6: x -29405..-10899).
  * PORT-WAHL (Form = der Bahn-Massstab der Spur B gr2_bahn_frei: Hals/Kopf/Kiefer Bones 5/6/7 im Wasser; Werkzeug = die Wand-Klemme,
- * die nur die Lage verschiebt): solange der Kanister im Maul haengt und im R1-Tod liegen Hals, Kopf, Kiefer und der Kanister innerhalb
- * der Aussenwaende des Beckens x[-8900..7200] z[-27000..-5400] (SCA-Aussenwaende ROOM2090.RDT = gb_becken_draussen ohne die
+ * die nur die Lage verschiebt): solange der Kanister im Maul haengt und im R1-Tod liegen Hals, Kopf, Kiefer und der Kanister (beide
+ * Enden) innerhalb der Aussenwaende des Beckens x[-8900..7200] z[-27000..-5400] (SCA-Aussenwaende ROOM2090.RDT = gb_becken_draussen ohne die
  * Bloecke Plattform/Rampe: GUARD-Hochbiss und CROSS-Klettern bleiben unberuehrt); ragt ein Punkt hinaus, verschiebt die Klemme den
  * ganzen Alligator um den Ueberstand nach innen. Gerechnet auf der GEZEICHNETEN Pose (gr2_pose_gezeichnet), Aufruf am Takt-Ende
  * nach der Wurzel-Klemme (enemy_ai_boss_gator.c (2b)), vor re15_gr2_nachtakt. */
@@ -2164,10 +2164,17 @@ static int gr2_kk_rechnen(const re15_actor_t *e, const re15_skel_pose_t *poses, 
         gr2_part_welt(e, &poses[6], r, p);
         const int32_t s = gr2_scale(e);
         const int32_t l[3] = { q12mul(s_kan.lokal[0], s), q12mul(s_kan.lokal[1], s), q12mul(s_kan.lokal[2], s) };
-        int32_t kp[3];
-        for (int i = 0; i < 3; i++)
+        int32_t kp[3], kf[3];
+        for (int i = 0; i < 3; i++) {
             kp[i] = p[i] + (int32_t)(((int64_t)r[i*3] * l[0] + (int64_t)r[i*3+1] * l[1] + (int64_t)r[i*3+2] * l[2]) >> 12);
+            /* das andere Ende des Kanisters: Weltdrehung R6 x rel (gr2_kan_folgen) mal (0, -2784, 0) = Modellhoehe von
+             * KANISTER40A0.MD1 (ROOM40A0 Modell 1 @RDT 0x4024, Ausdehnung y -2784..0, Dossier 1.5 / B 2.5); in diesem Bereich liegen
+             * auch die Spritzring-Punkte @0x801000a8 (y 0..-2800). Ungeskaliert wie der Kanister-Zeichner. */
+            const int64_t ry = (int64_t)r[i*3] * s_kan.rel[1] + (int64_t)r[i*3+1] * s_kan.rel[4] + (int64_t)r[i*3+2] * s_kan.rel[7];
+            kf[i] = kp[i] + (int32_t)(((ry >> 12) * -2784) >> 12);
+        }
         gr2_kk_punkt(kp, u);
+        gr2_kk_punkt(kf, u);
     }
     *dx = u[0] - u[1]; *dz = u[2] - u[3];
     return *dx != 0 || *dz != 0;

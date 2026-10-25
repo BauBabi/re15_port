@@ -2115,7 +2115,7 @@ static int teil_buehne(void)
  * Spritzring-Sprites verworfen (FUN_8002c820 @0x80077a30). RE2 hat keine Wandklemme fuer den Alligator, Kopf und Kanister bleiben
  * auf den Korridor-Beinen im Raum (Bein 2 x -23078 @0x80101048). Riegel: Kanister im Maul, Leon an der Suedwand (5800,-26500) wie
  * im Abnahme-Lauf, der Alligator mit der Wurzel auf der Steuerziel-Linie z -25400 (Kante -27000 + 1600) Richtung Sueden (Gier
- * 0x400): VOR dem Takt meldet die Klemme den Ueberstand (Kopf/Kanister jenseits der Wand); NACH jedem Takt liegt der Kanister
+ * 0x400): VOR dem Takt meldet die Klemme den Ueberstand (Kopf/Kanister jenseits der Wand); NACH jedem Takt liegen beide Enden des Kanisters
  * (Weltlage der gezeichneten Pose, re15_gr2_kanister_welt) innerhalb x[-8900..7200] z[-27000..-5400]; nach dem Schuss (R1) bleiben
  * Hals/Kopf/Kiefer (Bones 5/6/7) in jedem Bild des Todes-Clips innerhalb (Rohpose ohne Ueberblendung, Toleranz 300 = die
  * Ueberblend-Differenz zur gezeichneten Pose, nach der die Klemme rechnet), und die sechs Spritzring-Punkte (Kanister-Matrix x Tafel
@@ -2149,6 +2149,9 @@ static int teil_kopfklemme(void)
         if (kp[2] < kmin) kmin = kp[2];
         CHECK(kp[0] >= -8900 && kp[0] <= 7200 && kp[2] >= -27000 && kp[2] <= -5400, "Bild %d: Kanister (%d,%d) ausserhalb der Aussenwaende",
               f, kp[0], kp[2]);
+        /* anderes Ende des Kanisters: Weltdrehung x (0,-2784,0) (KANISTER40A0.MD1 y -2784..0) */
+        const int32_t fx = kp[0] + (int32_t)(((int64_t)kr[1] * -2784) >> 12), fz = kp[2] + (int32_t)(((int64_t)kr[7] * -2784) >> 12);
+        CHECK(fx >= -8900 - 2 && fx <= 7200 + 2 && fz >= -27000 - 2 && fz <= -5400 + 2, "Bild %d: Kanister-Ende (%d,%d) ausserhalb", f, fx, fz);
     }
     printf("kopfklemme: 30 Bilder mit Kanister an der Suedwand, Kanister z min %d (Wand -27000)\n", (int)kmin);
     /* Schuss -> R1 (wie teil_scherben): Kanister beim R1-Start + Spritzring im Viereck, Bones 5/6/7 im Todes-Clip */
