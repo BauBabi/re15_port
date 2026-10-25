@@ -22,6 +22,9 @@ cherry-pick und misst 3091 darauf. Bits: J/K = 121-124 bei Bedarf. Nachrichten: 
 - 2026-10-24 20:03: Dossier angelegt.
 - 2026-10-24: rbj-binder der Spur J (e4a9f39c) UNVERAENDERT per cherry-pick uebernommen (hier 299b6deb, A-E5).
 - 2026-10-24: K1 (Spielfigur Sherry) gebaut, gemessen, Riegel; K2 (3091) am Original per GDB gemessen, Port gleich.
+- 2026-10-25: Abnahme 0 (K_abnahme_0.md): K1 erfuellt, K2 teilweise (M1 Clip-13-Schleife), M2 (Wahlfrage statt Original),
+  M3 (Familienregel). Nachbesserung 1: M1 ueber Spur-E-Modul plcloop_r41 + Binder-Record, M2 Original-Schwanz von
+  FUN_800314b0 je Figurwechsel (am Original per GDB gemessen), M3 Koerper je Neuladen (Marvin). Abschnitt "Nachbesserung 1".
 
 ## Kurzfassung
 * K1 "Ab 30C1 ... Sherrys Charakter Modell ist voellig falsch und kaputt ... keine Waffe": ab der Schacht-Tuer 3061 -> 30C1
@@ -32,6 +35,9 @@ cherry-pick und misst 3091 darauf. Bits: J/K = 121-124 bei Bedarf. Nachrichten: 
 * K2 "3091 STAENDIG falsche Animationen": Spieler spielte den rec0-Platzhalter (2 Bilder), Elza-NPC war ungebunden
   (Bank-0-Clips). Mit J's Binder + K1 sind die Clipfolgen aller drei Figuren = Original (GDB-Mitschrift 2953 Bilder)
   und 7 Original-Szenenbilder = Port-Bilder.
+* Nachbesserung 1: Sherrys Schleifen-Clip 13 laeuft wie im Original im Kreis (19/12/5/3/10/4 Umlaeufe, Bild = i % 40,
+  @0x80050dbc-c8); Figurwechsel setzen Waffe/HP/Status wie FUN_800314b0 (@0x800c00d4, @0x80031718, @0x80031720 -
+  Elza bekommt nach 3091 das Messer und HP 100, am Original gemessen); Koerper bei jedem Neuladen (Marvin PL0D).
 
 
 ## K1 — Sherry ab 30C1 (Modell falsch/kaputt, Waffe)
@@ -278,37 +284,48 @@ Raumwechsel, RBJ-/NPC-Szenen):
 * `ctest --test-dir re15_port/build -R "^integration_(r41_stage3szenen_b_sherry|r41_stage3szenen_b_3091|r37_elzaems_elza3091|r37_elzaems_elza3071|weste_load_pin|r36_kleidung_bild|r36_kleidung_spielweg|r39_zustand_kleidung|r39_dining1141_zielen|r36_klettern|room_transition|r36_elza_schuss|r36_schuss|r36_ziel1190_scheiben|r39_inventar_status|r37_szene11c0|r36_szene1150)$" -j 3 --timeout 2400 --output-on-failure`
   -> **`100% tests passed, 0 tests failed out of 17`** (Total Test time (real) = 918.56 sec)
 
-## OFFEN (mit Adresse, nicht erfunden)
-1. Rueckwechsel auf Elza (3091-Ende): das Original setzt bei JEDEM Modell-Neuladen die Waffe auf die DEBUG.BIN-Tabelle
-   @0x800c00d4[Modell] (= 1, Messer; @0x80031680-90) und HP := 100 (@0x80031710/@0x80031718). Der Port gibt die vorher
-   ausgeruestete Waffe zurueck und laesst die HP stehen — wie sein Westen-Weg (Nutzer-Entscheid 2026-08-30 "Weste soll
-   nicht heilen"). Fuer Sherry nicht entschieden -> Frage an den Nutzer (unten).
-2. Elzas Bewegungswerte: Tabellen-Zeile 4 ist [70,48]/[65,48]/[0,96]/[210,72] (Gehen/Rueck/Drehen/Rennen), der Port
-   faehrt fuer Leon UND Elza die Leon-Werte 75/70/96/200 (player_common.c Konstanten). Nicht Spur K (ausserhalb des
-   Auftrags, aendert Elzas Spielgefuehl spielweit) -> Orchestrator.
-3. Renn-Stopp (Abbremsen 80/40/0/-40 @0x80032918-4c, am Original gemessen B52-B55) fehlt im Port fuer alle Figuren —
-   Spur E (E-E2), nicht K.
-4. Wunden beim Westen-Wechsel: FUN_80037c1c (@0x800316c8) loescht im Original bei JEDEM Modell-Neuladen; der Port tut es
-   nur beim Familienwechsel (Sherry hin/zurueck). Wund-Zeile 15 (Sherry) liegt im Original hinter der 8-Zeilen-Tabelle
-   (@0x800742f8, Fremddaten) -> Port: keine Wund-Stempel fuer Sherry (Beta -> Retail).
+## OFFEN (mit Adresse, nicht erfunden) — Stand Nachbesserung 1
+1. ~~Rueckwechsel auf Elza~~ ERLEDIGT (NB1.M2): wie das Original - Waffe := @0x800c00d4[4] = 1 (Messer), HP := 100,
+   Status := 0, am Original per GDB gemessen. Keine Nutzerfrage mehr.
+2. Elzas Bewegungswerte: Tabellen-Zeile 4 ist [70,48]/[65,48]/[0,96]/[210,72] (Gehen/Rueck/Drehen/Rennen, @0x80073eac/
+   @0x80073ecc/@0x80073eec/@0x80073f2c), der Port faehrt fuer Leon UND Elza 75/70/96/200 (player_common.c). Spielweit fuer
+   Elza, nicht Spur K -> Orchestrator (keine Nutzerfrage: das Original ist eindeutig).
+3. Renn-Stopp (Abbremsen 80/40/0/-40 @0x80032918-4c) - Spur E (E-E2), in r41/integration als rennstopp_r41.c.
+4. RUESTUNGS-Wechsel (Weste ROOM1190/1191 sub15, U.S.S.-Ruestung ROOM40A0/40A1 sub06): das Original fuehrt auch dort den
+   ganzen Schwanz von FUN_800314b0 aus - Waffe := 1 (@0x80031680-90), Wunden := 0 (@0x800316c8), HP := 100
+   (@0x80031710/18), Status := 0 (@0x80031720). Der Port behaelt dort Waffe, Wunden, Status und HP; nur die HP sind durch
+   den Nutzer-Entscheid 2026-08-30 ("Weste soll nicht heilen") gedeckt. Vorbestehend, nicht Spur K -> Orchestrator.
+   Wund-Zeile 15 (Sherry) liegt im Original hinter der 8-Zeilen-Tabelle (@0x800742f8, Fremddaten) -> Port: keine
+   Wund-Stempel fuer Sherry (Beta -> Retail).
 5. Ausruesten waehrend Sherry ist gesperrt (PORT-WAHL, Form = RE2-Retail: Sherry fuehrt keine Waffe). Das Original
    wuerde Datei 118 + Waffe laden (FUN_80036b68 @0x80036bb4-c4) = keine PLW (Beta-Luecke).
-6. PSX-Ziel: der Koerper-Tausch steckt im PC-Modul (platform/pc/src/sherry_pc_r41.c); platform/psx tauscht weiter nur
-   MD1/TIM (PSX hier nicht gebaut).
-7. Die Kriech-Szene ROOM3061 sub02 selbst (Sherry kriecht in den Schacht) ist Spur J; per RE15_SUBSTART=2 gestartet blieb
-   sie im Port haengen (Lauf v30c1a, Plc_motion(1,22) + Gosub-Warten) — an J gemeldet (hier nur vermerkt). Meine Riegel
-   nehmen deshalb den Tuerweg der Szene (Save 0x10 = 0x0F + Schacht-Tuer Slot 3) ohne die Szene.
+6. PSX-Ziel: Koerper-Tausch und Figurwechsel-Schwanz (CORE/ARMS) stecken im PC-Modul (platform/pc/src/sherry_pc_r41.c);
+   platform/psx tauscht weiter nur MD1/TIM (PSX hier nicht gebaut). Waffe/HP/Status/Wunden sind Engine (sherry_r41.c).
+7. Die Kriech-Szene ROOM3061 sub02 ist Spur J; ueber den echten AOT laeuft sie im K-Baum durch (Abnahme 0, H3).
+8. Port-Spielstand im Sherry-Abschnitt: re15_savedata.c rekonstruiert work_vars[0x10] beim Laden aus der Figur (Elza -> 4,
+   re15_savedata.c ~Z.279-292), das Original speichert 0x800b0ff0 mit (Save-Record-memcpy @0x800261c4-d8, laut Kommentar
+   dort). Ein Port-Stand aus 30C1/3071/3081/3091 laedt daher als Elza. Vorbestehend (der Auslieferungsstand kann nicht
+   speichern), nicht Spur K -> Orchestrator.
+9. Integration (NB1): `engine/src/plcloop_r41.c` ist add/add gegen r41/integration (Spur E) - die K-Fassung ist E's
+   Fassung + Binder-Record (@0x8001b450) und zu nehmen; der player_common.c-Haken ist wortgleich. Mit diesem Stand laufen
+   lassen: E's `unit/integration_r41_kleinkram_b_kurbel*` (ROOM2020, ein Record -> unveraendert) und J's
+   `integration_r41_stage3szenen_a_3060/3061` (Marvin mit eigenem Koerper/Messer/HP 100; Elza-Schleife Clip 10 in 3061
+   @0x010F8/@0x01126 jetzt wie 0x80050cb8).
 
 ## Fuer den Nutzer
 * Keine neuen Assets (kein shared_assets/RE2), keine Sprachdateien; synchro/ und pri/ unveraendert.
-* Was sich aendert: Nach der Kriech-Szene in 3061 spielt man in Elzas Szenario Sherry (wie im Original). Sherry ist jetzt
-  das echte Kind-Modell mit eigenem Skelett und eigenen Bewegungen (PL0F.PLD + PL0FW00.PLW), traegt KEINE Waffe, kann
-  nicht zielen und laeuft so schnell wie im Original (Gehen 50, Rennen 120 je Bild; Elza 70/210). In der 3091-Szene ist
-  Sherry die Spielfigur, Elza steht als NPC mit ihrer Pistole daneben (so baut es das Original: Gegner 1 = Typ 0x42 aus
-  CDEMD1 = Elza-Modell); alle drei Figuren spielen jetzt dieselben Gesten in derselben Reihenfolge wie das Original.
-* Entscheidungsfragen: (a) Nach der 3091-Szene setzt das Original Elzas Waffe auf das Messer und fuellt die Energie auf
-  100 — soll der Port das uebernehmen oder (wie jetzt) Elzas vorherige Waffe und Energie behalten? (b) Elzas Lauf-/
-  Gehtempo im Port entspricht Leon (200/75) statt Elzas Original-Werten (210/70) — angleichen?
+* Was sich aendert: Nach der Kriech-Szene in 3061 spielt man in Elzas Szenario Sherry (wie im Original). Sherry ist das
+  echte Kind-Modell mit eigenem Skelett und eigenen Bewegungen (PL0F.PLD + PL0FW00.PLW), traegt KEINE Waffe, kann nicht
+  zielen und laeuft so schnell wie im Original (Gehen 50, Rennen 120 je Bild). In der 3091-Szene ist Sherry die
+  Spielfigur, Elza steht als NPC mit ihrer Pistole daneben; alle drei Figuren spielen dieselben Gesten in derselben
+  Reihenfolge wie das Original, und Sherrys Haltung zwischen den Gesten bewegt sich jetzt durchgehend (ihr Wiederhol-Clip
+  laeuft im Kreis wie im Original, statt nach 40 Bildern einzufrieren).
+* Wie im Original (Nachbesserung 1): Beim Figurwechsel bekommt die neue Figur volle Energie (100) und ist entgiftet;
+  Sherry hat keine Waffe, nach der 3091-Szene hat Elza das Messer in der Hand (die Pistole bleibt im Inventar und laesst
+  sich wieder ausruesten). Dasselbe beim Wechsel Leon -> Marvin (ROOM3020) und zurueck (ROOM3060). Marvin hat als
+  Spielfigur jetzt seinen eigenen Koerper (laengere Arme, PL0D) statt Leons Skelett. Das Anlegen/Ablegen der Weste und
+  der U.S.S.-Ruestung bleibt wie bisher (heilt nicht - dein Entscheid vom 2026-08-30).
+* Keine Entscheidungsfragen.
 
 ## Nachbesserung 1 (2026-10-25, nach Abnahme 0 `K_abnahme_0.md`)
 Auftrag: M1 (Spielfigur-Schleife Clip 13 in 3091, blockierend), M2 (FUN_800314b0 ganz: HP := 100, Waffe aus der
