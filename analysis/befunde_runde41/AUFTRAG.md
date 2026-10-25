@@ -909,3 +909,125 @@ Raketenwerfer ... hinunterwirft"). Marvin/John stehen beim Satz 42 und beim Wurf
 (RE2 ROOM7020 Dir_set 0x0e74 @0x0748, Blick 0,99), die Kanister-Bahn laeuft in Weltrichtung zur Landestelle, unabhaengig von der
 Gier des Werfers (Add_speed @0x80055abc-e0). Messen fuer Nord- und Suedwurf, Leon und Elza, Bildbogen Cut 7 F530-F630, Riegel
 (Blickwert je Wurfrichtung).
+
+## 2026-10-25 14:21 — Orchestrator-Entscheid F-E2 (Fragen der Nachbesserung F 4 zu Nachtrag 29; der Nutzer kann widersprechen)
+
+Fragen der Spur F: "Der Alligator ist beim Kampfbeginn jetzt rund 17500 Einheiten entfernt: stehend beisst er nach etwa 15 s,
+beim sofortigen Wegrennen nach etwa 17 s (vorher nach 2 s bzw. 1 s). Passt dir die Entfernung so, oder ist der Anlauf jetzt zu
+lang?" und "Die Leiche mit dem blinkenden Schluessel treibt jetzt im hinteren Nordbecken ... der Schluessel dunkler als vorher.
+Ist er fuer dich gut zu erkennen?" Keine Geschmacksfrage, wo das Original einen Wert hat (Memory reai-v2-original-oder-nicht):
+1. **Kampfbeginn = RE2, nicht "mindestens":** so nah wie moeglich an F's eigenem RE2-Beleg (ROOM40A0 Intro-Ende: Abstand 11430,
+   erster Kontakt nach 121 Bildern bei stehendem Leon; tools/r41_gatorszene/probe_re2_intro_ende.c), nicht darunter. 17539 und
+   470 Bilder sind fast das Vierfache und kein RE2-Kampfbeginn. Liegt der Unterschied an der Zonen-Dash-Sperre (300 Bilder beim
+   Wechsel in Leons Zone), die Lage so waehlen, dass die Zonenbeziehung am Kampfbeginn der von RE2 am Intro-Ende entspricht
+   (in RE2 belegen).
+2. **Schluessel:** mindestens so gut sichtbar wie in der abgenommenen Ankunftseinstellung (hellster Pixel Ruhe >= 72,
+   Blink-Spitze >= 108, Kasten >= 10 x 9), gemessen.
+3. **Fressen:** die Leiche im Maul ist zu sehen (Fress-Einstellung nicht von hinten, Frontalwert > 0); B8 bleibt (keine
+   erfundenen Hintergruende, Massstabsgrenze) - der Freiheitsgrad ist die Lage der Leiche (Nachtrag 6).
+Unter 1-3 die Lage mit dem besten Schluessel-Wert; geht nicht alles zugleich, gilt 1 vor 2 vor 3, Abweichungen mit Zahlen im
+Dossier. Riegel unit_r41_gatorszene_abstand/_flucht: Sollwert RE2 mit oberer UND unterer Grenze aus dem RE2-Beleg.
+
+## 2026-10-25 14:29 — Orchestrator-Entscheid M-E2 (Befund der Nachbesserung M 4; ersetzt M-E1 fuer Original-Teile; der Nutzer kann widersprechen)
+
+Befund der Spur M (Nachbesserung 4): "Die Gelaender, Pfosten, Saeulen und Lampen der Stages 3..6 liegen im Original-
+Vordergrundatlas des Spiels; der Generator hatte sie nur nie gefunden." Werkzeug re15_port/tools/maske/platzieren_r41.py setzt
+437 nie platzierte Kuenstler-Teile in 74 Sektionen an ihre Stelle (+160 539 Punkte, an der exe an 16 Stellen ohne Uebermalung).
+Die Frage an den Nutzer (Nachtrag 27) ging davon aus, dass fuer diese Gegenstaende nur eine Freistellung hilft - das ist widerlegt.
+**M-E2:** Original-Grafik an ihrer Original-Stelle gehoert ins Spiel (Memory reai-v2-original-oder-nicht). Spur M setzt die
+Teile des Original-Atlas ein, in ALLEN Kameras (auch auf der Restliste von Nachtrag 27), sofern je Teil Lage (Bildvergleich
+gegen den Hintergrund) und Tiefe (Zelle mit RDT-Offset) belegt sind. M-E1 gilt weiter fuer AUTOMATISCHE Masken ohne
+Original-Teil. Pruefumfang: jede der 74 Kameras mit mindestens einer HINTER- und einer DAVOR-Stelle an der exe (Leon, Elza
+wo erreichbar), Rueckschritt-Suche wie in Nachbesserung 3, Riegel. Den belegten Generator-Fix "Tuer-Band der Saaten"
+(AOT-Scan pruefen pc[4] @0x80042cac..0x80042ccc) mitnehmen; teilen_r41.py fuer 6000 C5 NICHT (verdeckt 192 Gang-Plaetze falsch).
+Was danach noch fehlt, steht neu im Dossier ("Fuer den Nutzer: Freistellungen") - nur das zeichnet der Nutzer.
+
+## 2026-10-25 16:51 — Nachtrag 30 (Wortlaut; Ventilkette 2010/2030, Technikernotiz, RE2-Toene, Lautstaerke; Spuren C und D)
+
+> Ok, Also:
+>
+> In ROOM 2010, beim Anklicken des Schranks, mache das er aufklappt und dann so aussieht wie in 2060 der Fuse Kasten - siehe
+> fuse_box.bmp. Ab da soll auch der Mechanismus gleich - das Einsetzen der Sicherung etc. Dann - in ROOM 2030 am Kasten, damit
+> die Platform runter fährt, erstelle ein Rätsel, das so aussieht wie das Panel in Nahansicht, anstatt das komische - dreh an
+> Valve 13.
+>
+> Dann - beim Text soll nur drin stehen das grün und rot verwechselt wurde, nicht black, das soll raus. Bei der verwechselten
+> Nummer soll drin stehen das sie außerdem die Nummern verwechselt haben von "Schwarz" und "Grün". Hier dienen die
+> Anführungszeichen als Ironie für die falschen Farben auf den Poster.
+>
+> Natürlich auf englisch.
+>
+> Und wenn die Plattform runter fährt, fehlt mir noch der Original Sound von Resident Evil 2.
+>
+> Und während des Alerts und der Alert message fehlt mir noch zusätzlich durchweg der Alert sound aus Resident Evil 2.
+
+> Und bei der reduzierten Volume sollen  ALLE Volumes reduziert werden, nicht nur ein paar.
+
+Bilder des Nutzers: fuse_box.bmp (Repo-Wurzel, 320x240, 25.10. 16:41: der offene Sicherungsschrank aus ROOM2060, rot
+umrandet), schaltschrank.png (Repo-Wurzel, 23.10.: links das Panel in 2030 mit roter Marke = "der Kasten", rechts der Tank 13).
+Orchestrator-Rechnung zum Notiztext: "nur Gruen und Rot vertauscht" + "Nummern von black und green vertauscht" (01<->02,
+07<->08) machen aus dem unveraenderten Plakat 1. GREEN 09 - 2. RED 01 - 3. BLACK 02 - 4. RED 07 die Folge 09 rot, 02 gruen,
+01 schwarz, 08 gruen (jede Zeile passt zu einem echten Ventil) - NICHT mehr 09-07-02-01. Rueckfrage an den Nutzer laeuft.
+Orchestrator-Befund zur Lautstaerke: es gibt EIN Audiogeraet (audio_pc.c SDL_OpenAudioDevice); die Endstufe der Spur D sitzt
+am Ende von audio_callback nach SE/Stimmen/XA/FMV/BGM/Ambience - Rueckfrage, welche Toene laut bleiben, laeuft.
+
+## 2026-10-25 17:03 — Nachtrag 30b (Nutzer-Antworten per Auswahl zu Nachtrag 30) + Orchestrator-Entscheid N-E1; neue Spur N
+
+1. Loesung des Ventilraetsels nach dem neuen Notiztext (Rechnung des Orchestrators in Nachtrag 30, beide Varianten mit Rechenweg
+   gezeigt) — Antwort des Nutzers (Wortlaut): **"Welche Variante einfacher ist."** -> **N-E1:** die NEUE Loesung
+   **09 rot -> 02 gruen -> 01 schwarz -> 08 gruen**; das Plakat bleibt UNVERAENDERT (1. GREEN 09 - 2. RED 01 - 3. BLACK 02 -
+   4. RED 07). Regeln des neuen Texts: Gruen <-> Rot vertauscht (Schwarz bleibt), Nummern der schwarzen und gruenen Ventile
+   vertauscht (01<->02, 07<->08). Notiztext (Vorschlag; der restliche Nutzer-Wortlaut aus Nachtrag 13 bleibt): der Satz
+   "They mixed up black, green, and red, and swapped the numbers for black!" wird zu **"They mixed up green and red, and on top
+   of that they swapped the numbers of "black" and "green"!"** (Anfuehrungszeichen = Ironie auf die falschen Plakatfarben).
+2. Panel-Raetsel 2030 (statt Ventil 13) — Antwort: **"C entwirft, ich gebe frei (Empfohlen)"** + Wortlaut: **"Zum 2030er
+   Rätsel ist noch wichtig das die Pressure irgendwie 80 betragen muss, wenn du das schon so hin schreibst."** (Bezug: Port-Text
+   2030 Id 43 "The pressure gauge reads 80. / Lower the bridge?"). -> 2-3 Entwuerfe mit Bildern (Nahansicht des Panels links in
+   schaltschrank.png, Stil des Spiels), jedes Ziel = Druck 80; GEBAUT WIRD ERST NACH DER FREIGABE des Nutzers (eigener Nachtrag).
+3. Lautstaerke — Antwort (Wortlaut): **"Die Türsequenzen und Sounds der Reinsprung SOunds ins wasser etc, scheint davon nicht
+   betroffen."** -> je Tonart bei volume=100 und 50 messen (Mitschnitt), Ursache belegen, beheben: ALLE Toene folgen der Einstellung.
+4. Neue Spur **N** (nachtrag30, Baum r41_nachtrag30 von master) fuer alle Punkte von Nachtrag 30/30b; C und D sind integriert.
+
+## 2026-10-25 17:09 — Nachtrag 30c (Wortlaut; BERICHTIGT N-E1: Loesung des Ventilraetsels)
+
+> Aber ich raffe es immer noch nicht... wie kommst du auf 9, 2, 1, 8? Wir haben 6 valves: 1 - schwarz, 2 - grün. 3 - rot, 7
+> schwarz, 8 grün, 9 rot und dann das Plakat. Ich wollte sagen das es laut Plakat "Grün" und "Schwarz" vertauscht hat, also 9
+> und 2. Wie kommst du auf die Lösung?
+
+**N-E1 ist widerrufen** (der Orchestrator hatte "Nummern von black und green" als Tausch der Nummern der ECHTEN schwarzen und
+gruenen Ventile gelesen). Gemeint ist: auf dem Plakat sind die Nummern der Zeilen "GREEN" (09) und "BLACK" (02) vertauscht.
+Plakat (bleibt UNVERAENDERT): 1. GREEN 09 - 2. RED 01 - 3. BLACK 02 - 4. RED 07 -> richtig: 1. 02 - 2. 01 - 3. 09 - 4. 07.
+**Loesung = 02 -> 01 -> 09 -> 07** (es zaehlen die Nummern; die Plakatfarben sind die Ironie, "green and red mixed up").
+Code: RE15_R41C_LOESUNG = Indizes in RE15_R41C_VENTIL_NUMMERN {1,2,3,7,8,9} -> {1, 0, 5, 3}. Notiztext wie Nachtrag 30b.
+
+## 2026-10-25 17:23 — Nachtrag 30d (Plakat NEU, Loesung 09-02-01-08; ersetzt 30c) und 30e (Wasser 2010), Spur N
+
+**30d** Nutzer-Frage (Wortlaut): "Aber wenn ich sage rot und grün sind vertauscht, warum sind dann 1 und 7 rot auf den plakat?"
+und "bzw muss das nicht angepasst werden entsprechend der valves?" -> das Plakat muss zu den zwei Regeln der Notiz passen
+((1) Gruen und Rot vertauscht, Schwarz stimmt; (2) Nummern der Zeilen "GREEN" und "BLACK" vertauscht). Nutzer-Wahl per Auswahl:
+**Plakat NEU: 1. GREEN 01 - 2. RED 02 - 3. BLACK 09 - 4. RED 08 -> Loesung 09 -> 02 -> 01 -> 08** (Rechenweg: 1. GREEN 01 =
+rot, Nummer der BLACK-Zeile 09 -> 09 rot; 2. RED 02 = gruen 02; 3. BLACK 09 = schwarz, Nummer der GREEN-Zeile 01 -> 01 schwarz;
+4. RED 08 = gruen 08). Nachtrag 30c (02-01-09-07, Plakat unveraendert) ist damit ERSETZT. Code: RE15_R41C_LOESUNG = {5, 1, 0, 4};
+Plakat-Bild neu erzeugen (tools/r41_ventilkette/plakat.py, gen/ventilkette_r41_plakat.inc); Notiz-Satz wie Nachtrag 30b.
+
+**30e** Wortlaut: "und eine Sache fehlt mir noch - in room 2010 soll - bis zum ablassen der Wassers, auch ein Wasser Effekt die
+Leiter runter kommen und über den Weg bis zum Wasser Pool in der Mitte laufen." Nutzer-Wahl per Auswahl: **"Bis zur Flut in
+2030 (Empfohlen)"** = wie der Wasserstrom an der Leiter in 2000: er endet, sobald das Ventilraetsel geloest und 2030 geflutet
+ist (dieselbe Bedingung wie dort; im Dossier mit Bit/Flag belegen). Effekt-Form wie der 2000-Leiterstrom bzw. Spur A (Wasser
+EM024 / Spritzer), Weg von der Leiter ueber den Gang bis zum Becken in der Mitte von ROOM2010/2011 aus Kollision/Kameras belegen.
+
+## 2026-10-25 17:24 — Orchestrator-Entscheide G-E3..G-E6 (Abnahme G 3, Maengel M1-M3 + V1; der Nutzer kann widersprechen)
+
+**G-E3 (M1, Tod hinter dem Maschinenblock in der Plattform-Lage):** Fuer die R1-Todeskamera geht G-E1 (Kopf, Kiefer und
+Todes-Clip ueber ALLE Proben im Bild, keine Maske davor) VOR Spur B's Massstabsgrenze (B8). Rangfolge der Wahl: 1. Todes-Clip
+in allen Proben sichtbar, 2. Massstabsgrenze, 3. Naehe zur RE2-Lage (170,111). Pflicht-Verlaeufe inkl. Plattform (Leon + Elza),
+Riegel um einen Plattform-Lauf ergaenzen.
+**G-E4 (M2, Kern-CLUT-Zeilen 485..498 erst nach dem 2090-Besuch):** RE2 haelt den Kern (CORE00.ESP + Kern-Textur) ab dem Start
+resident - belegen (Ladeweg FUN_8001bd38 / Boot) und die Zeilen spielweit beim Start laden, nicht erst in 2090. Dann sehen die
+RE2-Effekte in allen Raeumen gleich aus, mit und ohne 2090-Besuch; die Runde-35-Werfer-Effekte (Muendungsblitz 0x01002000,
+Granatkoerner 0x020c0a00) gegen RE2 messen. Riegel "anderer Raum mit/ohne 2090-Besuch gleich".
+**G-E5 (M3, Kopf in der Suedwand -> Spritzring ausserhalb des Regions-Vierecks):** Spur G behebt die Ursache (markierter Haken in
+B's Modul, FG-E3/FG-E5): waehrend R1 bleibt der Kopf (Part 6/7 + Kanister) innerhalb der Wand - Wandklemme nicht nur fuer die
+Wurzel (Port-Wahl, Form im Dossier belegen); der Original-Regionstest @0x80077a30 bleibt. Zusaetzlich den vorgeschalteten
+Regionstest der Scherben (FUN_800363f0 @0x80036534) nachziehen. Natuerlicher Verlauf v1/west/k/plat (Leon + Elza) messen.
+**G-E6 (V1, render_pc.c RE15_TIM_SLOT_MAX 56 -> 57):** angenommen (eine markierte Zeile, Spur D ist integriert; wie B5/J-E1).
