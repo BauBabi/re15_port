@@ -24,6 +24,10 @@
  *      beiden vorhandenen Zeichner nimmt (Kern-Zeilen 485..498; Raum-TPage 0x0E/0x0F mit CLUT x 288). Mischmodus wie dort.
  *   4. MESSHAKEN RE15_GATOR_FX_LOG=1 (nur Messzeilen in debug.log, kein Spielverhalten): je Bild mit lebenden RE2-FX-Plaetzen
  *      die Zahl der Plaetze je Bank, der Quads je Zeichner-Klasse und der gezeichneten Quads.
+ *   5. Orchestrator-Entscheid G-E1 (Abnahme G 2 M1): Masken-Haken re15_gr2_maske_hook fuer die R1-Kamerawahl (gator_re2_r41.c) -
+ *      dieselbe Masken-Kette wie der Zeichner in main.c (RDT-Sektion des Cuts, sonst R15M-Container MASKS/ROOM%04X.MSK mit
+ *      re15_masken36_filter und re15_optik_r39_kappen, gezeichnet werden draw_count Rechtecke @0x80039358), Urteil je Rechteck
+ *      re15_pri_mask_occludes(depth, vz) (@0x8001ce54).
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -39,6 +43,11 @@
 #include "re15_engine.h"      /* g_engine.frame_count */
 #include "re15_gator_re2_r41.h"   /* re15_gr2_r1_laeuft */
 #include "asset_root_pc.h"    /* re15_pc_read_re2 */
+#include "re15_pri.h"         /* G-E1: Masken-Sektionen, re15_pri_mask_occludes */
+#include "re15_entladen.h"    /* G-E1: re15_entladen_msk (R15M-Container), g_re15_entladen_gen */
+extern unsigned re15_pri_masken_raum(unsigned room_id);
+extern int      re15_masken36_filter(unsigned masken_raum, int cut, re15_pri_cut_t *pri);
+extern int      re15_optik_r39_kappen(unsigned masken_raum, int cut, re15_pri_cut_t *pri);
 
 extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 extern int  re15_render_pc_dbg_slot_loaded(int slot);
@@ -208,6 +217,39 @@ static void raum_takt(void)
     }
 }
 
+/* G-E1: Masken des Cuts `cut` wie main.c (Abschnitt "NACHGEZEICHNETE MASKEN"), zwischengespeichert je (Raum, Cut, Entlade-Stand). */
+static re15_pri_cut_t s_mk;
+static unsigned s_mk_raum = 0xFFFFFFFFu, s_mk_gen = 0xFFFFFFFFu;
+static int      s_mk_cut = -1, s_mk_n;
+static int maske_verdeckt(int cut, int sx, int sy, int32_t vz)
+{
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || cut < 0 || cut >= g_room_rdt.cut_count) return 0;
+    if (g_current_room_id != s_mk_raum || cut != s_mk_cut || g_re15_entladen_gen != s_mk_gen) {
+        s_mk_raum = g_current_room_id; s_mk_cut = cut; s_mk_gen = g_re15_entladen_gen;
+        memset(&s_mk, 0, sizeof s_mk);
+        int n = g_room_rdt.raw ? re15_pri_parse_section(g_room_rdt.raw, (size_t)g_room_rdt.raw_size, g_room_rdt.cuts[cut].pri_offset, &s_mk) : 0;
+        if (n == 0) {
+            int msz = 0;
+            const uint8_t *msk = re15_entladen_msk(g_current_room_id, &msz);
+            if (msk) {
+                const uint32_t mo = re15_pri_msk_section_offset(msk, (size_t)msz, cut);
+                if (mo) n = re15_pri_parse_section(msk, (size_t)msz, mo, &s_mk);
+                if (n > 0) n = re15_masken36_filter(re15_pri_masken_raum(g_current_room_id), cut, &s_mk);
+                if (n > 0) n = re15_optik_r39_kappen(re15_pri_masken_raum(g_current_room_id), cut, &s_mk);
+            }
+        }
+        s_mk_n = (n > 0) ? s_mk.draw_count : 0;
+        if (s_mk_n > RE15_PRI_MAX_MASKS_PER_CUT) s_mk_n = RE15_PRI_MAX_MASKS_PER_CUT;
+    }
+    for (int m = 0; m < s_mk_n; m++) {
+        const re15_pri_mask_t *k = &s_mk.masks[m];
+        const int dx = (int16_t)k->dstX, dy = (int16_t)k->dstY;
+        if (sx < dx || sx >= dx + (int)k->width || sy < dy || sy >= dy + (int)k->height) continue;
+        if (re15_pri_mask_occludes((int)k->depth, (long)vz)) return 1;
+    }
+    return 0;
+}
+
 static int r1_laeuft(void)
 {
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
@@ -220,6 +262,7 @@ void re15_pc_gator_fx_draw(const re15_camera_view_t *cam, int cx, int cy, int ca
 {
     static re2fx_quad_t q[384];                                     /* 0x3C00 B Paketpuffer = 384 POLY_FT4 (re2fx_pc.c) */
     s_letzte_raum = s_letzte_kern = 0;
+    re15_gr2_maske_hook = maske_verdeckt;                           /* G-E1 (gator_re2_r41.c gr2_kam_r1_start) */
     raum_takt();
     if (s_log < 0) { const char *e = getenv("RE15_GATOR_FX_LOG"); s_log = (e && *e && *e != '0') ? 1 : 0; }
     if (!cam) return;

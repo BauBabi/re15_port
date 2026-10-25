@@ -193,6 +193,9 @@ int  re15_gr2_traegt(void);          /* Stufe 7 */
 /* Beste Zonenkamera fuer `blick` (s.o.); `opfer` (oder NULL) muss fuer FINISHER mit im Bild liegen (sonst
  * Rueckfall ohne Opfer). -1 = keine Zonenkamera zeigt den Kopf. *frontal = Ist-Wert (Q12) der Wahl. */
 int  re15_gr2_kamera_wahl(int blick, const re15_actor_t *gator, const re15_actor_t *opfer, int *frontal);
+/* Runde 41 Spur G, G-E1: Plattform-Haken der R1-Kamerawahl - 1 = Bildpunkt (sx,sy) mit Kamera-z vz ist in Cut `cut` von einer
+ * Maske verdeckt (re15_pri_mask_occludes). NULL = keine Masken (Sonden). PC: platform/pc/src/gator_fx_r41_pc.c. */
+extern int (*re15_gr2_maske_hook)(int cut, int sx, int sy, int32_t vz);
 /* Programm-Schnitt fuer Szenen (Spur F/G): Sperre setzen + auf die Wahl schneiden (Cut_chg-Zwilling);
  * liefert den Cut oder -1 (dann nur Sperre). `programm` erscheint in gator_boss.log ("RE2 KAMERA ..."). */
 int  re15_gr2_kamera_schnitt(int blick, const re15_actor_t *gator, const re15_actor_t *opfer, const char *programm);

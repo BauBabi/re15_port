@@ -872,6 +872,61 @@ static void gr2_kam_reset(void)
     memset(&s_kam, 0, sizeof s_kam);
     s_kam.vorher = -1;
 }
+/* ==== Runde 41 Spur G, G-E1 (Nachbesserung 3, Abnahme G 2 M1 "der R1-Tod ist in der Riegel-Startlage nicht im Bild") ==========
+ * Orchestrator-Entscheid G-E1: fuer den R1-Explosionstod die 2090/2091-Zonenkamera, in der Kopf und Kiefer im Bild liegen und von
+ * keiner Maske verdeckt sind, am naechsten an der RE2-Lage (RE2-Cut 5: Kopf bei Bild (170,111), k_blick EXPLOSION, gemessen mit
+ * tools/r41_re2gator/probe_kamera_re2.c der Spur B). PRUEFPUNKTE = Kopf (Bone 6), Kiefer (Bone 7) und die sechs Punkte, an denen
+ * RE2 die Explosion zeichnet: Spritzring FUN_8010338c = Kanister-Matrix x SVECTOR-Tafel @0x801000a8 (`jal 0x8001bf10` @0x8010344c-d0,
+ * k_ring unten). VERDECKT = ein Masken-Rechteck des Cuts ueber dem Bildpunkt mit re15_pri_mask_occludes(depth, vz) (STRIKT depth <
+ * Bucket(vz) @0x8001ce54; Plattform-Haken re15_gr2_maske_hook, dieselbe Masken-Kette wie der Zeichner; Rechteck statt Texel =
+ * strenger als das Bild). RE2-FORM bleibt: kein Schnitt, solange der laufende Cut die Bedingung erfuellt (R1 P0 schneidet nur, wenn
+ * der Kopf im laufenden Cut nicht zu sehen ist, @0x80102218-34); sonst auf die Wahl (Stufe 0 mit Spur B's Massstab-Grenze, Stufe 1
+ * ohne), Rueckfall die alte Wahl. Messzeilen "KAMERA R1 G-E1 ..." in gator_boss.log. */
+int (*re15_gr2_maske_hook)(int cut, int sx, int sy, int32_t vz) = NULL;
+#define GR2_R1_SOLL_X  170   /* RE2-Cut-5-Bildlage des Kopfes (k_blick EXPLOSION, probe_kamera_re2.c) */
+#define GR2_R1_SOLL_Y  111
+#define GR2_R1_PUNKTE  8     /* Kopf, Kiefer, 6 Spritzring-Punkte */
+static int gr2_r1_punkte(const re15_actor_t *e, int32_t p[GR2_R1_PUNKTE][3]);   /* nach k_ring definiert */
+static int gr2_fin_proj(const re15_camera_view_t *v, const int32_t p[3], int *sx, int *sy, int32_t *vz_aus);
+/* 1 = alle n Pruefpunkte im Bild von Cut c und keiner verdeckt; *im/*vd = Zahl im Bild/verdeckt, (*kx,*ky) = Bildlage des Kopfes. */
+static int gr2_r1_sicht(int c, const int32_t p[][3], int n, int *im, int *vd, int *kx, int *ky)
+{
+    re15_camera_view_t v;
+    *im = 0; *vd = 0; *kx = *ky = -9999;
+    if (re15_camera_build_view(&g_room_rdt.cuts[c], &v) != 0) return 0;
+    for (int j = 0; j < n; j++) {
+        int sx = -9999, sy = -9999; int32_t vz = 0;
+        const int drin = gr2_fin_proj(&v, p[j], &sx, &sy, &vz);
+        if (j == 0) { *kx = sx; *ky = sy; }
+        if (!drin) continue;
+        (*im)++;
+        if (re15_gr2_maske_hook && re15_gr2_maske_hook(c, sx, sy, vz)) (*vd)++;
+    }
+    return *im == n && *vd == 0;
+}
+static int gr2_r1_wahl(const re15_actor_t *e, const int32_t p[][3], int n)
+{
+    const int32_t skala = gr2_scale(e), grenze = gr2_massstab_grenze();
+    for (int stufe = 0; stufe < 2; stufe++) {
+        int best = -1; int64_t best_d = 0;
+        for (int k = 0; k < g_room_rdt.cut_count; k++) {
+            if (!gr2_zonenkamera(k)) continue;
+            int im, vd, kx, ky;
+            const int ok = gr2_r1_sicht(k, p, n, &im, &vd, &kx, &ky);
+            const int32_t m = gr2_massstab(&g_room_rdt.cuts[k], p[0], skala);
+            const int gok = stufe == 1 || m <= grenze;
+            const int64_t d = (int64_t)(kx - GR2_R1_SOLL_X) * (kx - GR2_R1_SOLL_X) + (int64_t)(ky - GR2_R1_SOLL_Y) * (ky - GR2_R1_SOLL_Y);
+            re15_gr2_log("KAMERA R1 G-E1 Kandidat stufe=%d Cut %d kopf_bild=(%d,%d) Punkte %d/%d im Bild, %d verdeckt, massstab=%d%s, "
+                         "Abstand zu RE2 (%d,%d) %d", stufe, k, kx, ky, im, n, vd, (int)m, gok ? "" : " >grenze",
+                         GR2_R1_SOLL_X, GR2_R1_SOLL_Y, (int)(d > 0x7fffffff ? 0x7fffffff : d));
+            if (!ok || !gok) continue;
+            if (best < 0 || d < best_d) { best = k; best_d = d; }   /* Gleichstand: kleinerer Cut */
+        }
+        if (best >= 0) return best;
+    }
+    return -1;
+}
+
 /* R1 P0 (@0x801021ec-6c): Sperre immer; Schnitt nur, wenn der aktuelle Cut den Kopf nicht zeigt (RE2: Cut 6/13 und
  * z < -13300 = genau der Fall "Kopf ausserhalb", Probe: Bild-x -2 in Cut 6), dann +0x218 |= 0x40 (@0x80102240-4c). */
 static void gr2_kam_r1_start(const re15_actor_t *e)
@@ -881,6 +936,40 @@ static void gr2_kam_r1_start(const re15_actor_t *e)
     int cur = (int)g_scd.cam_id, sx = -1, sy = -1, sichtbar = 0;
     if (g_room_rdt_ok && g_room_rdt.cuts && cur < g_room_rdt.cut_count && gr2_kopf_achse(e, kopf, achse))
         sichtbar = gr2_im_bild(&g_room_rdt.cuts[cur], kopf, &sx, &sy);
+    {   /* Runde 41 Spur G, G-E1: "sichtbar" = Kopf, Kiefer und Explosionspunkte im Bild und unverdeckt (s.o.) */
+        int32_t p[GR2_R1_PUNKTE][3];
+        const int n = gr2_r1_punkte(e, p);
+        if (n == GR2_R1_PUNKTE && g_room_rdt_ok && g_room_rdt.cuts && cur >= 0 && cur < g_room_rdt.cut_count) {
+            int im, vd, kx, ky;
+            const int ok = gr2_r1_sicht(cur, p, n, &im, &vd, &kx, &ky);
+            re15_gr2_log("KAMERA R1 G-E1 laufender Cut %d: kopf_bild=(%d,%d) Punkte %d/%d im Bild, %d verdeckt -> %s F%u", cur, kx, ky,
+                         im, n, vd, ok ? "kein Schnitt" : "Wahl", (unsigned)g_engine.frame_count);
+            if (ok) {
+                gr2_kam_sperre(GR2_KAM_R1);
+                gr2_kam_merken(-1, RE15_GR2_BLICK_EXPLOSION, e);
+                re15_gr2_log("KAMERA R1 Sperre ohne Schnitt: Kopf im Bild von Cut %d bei (%d,%d) F%u", cur, kx, ky,
+                             (unsigned)g_engine.frame_count);
+                return;
+            }
+            const int c = gr2_r1_wahl(e, p, n);
+            if (c >= 0) {
+                gr2_kam_sperre(GR2_KAM_R1);
+                gr2_kam_cut_chg(c);
+                gr2_kam_merken(c, RE15_GR2_BLICK_EXPLOSION, e);
+                s_kam.r1_geschnitten = 1;                           /* RE2 +0x218 |= 0x40 @0x80102248 */
+                gr2_r1_sicht(c, p, n, &im, &vd, &kx, &ky);
+                const int f = gr2_kopf_achse(e, kopf, achse) ? gr2_frontal(kopf, achse, &g_room_rdt.cuts[c]) : 0;
+                re15_gr2_log("KAMERA R1 EXPLOSION RE2-Cut %d -> Cut %d F%u clip=%d bild=%d frontal=%d soll=%d massstab=%d re2_m=%d grenze=%d "
+                             "(G-E1: kopf_bild=(%d,%d), Punkte %d/%d im Bild, %d verdeckt)",
+                             (int)k_blick[RE15_GR2_BLICK_EXPLOSION].re2_cut, c, (unsigned)g_engine.frame_count, (int)e->motion,
+                             (int)e->anim_frame, f, (int)k_blick[RE15_GR2_BLICK_EXPLOSION].soll,
+                             (int)gr2_massstab(&g_room_rdt.cuts[c], p[0], gr2_scale(e)),
+                             (int)gr2_massstab_soll(RE15_GR2_BLICK_EXPLOSION), (int)gr2_massstab_grenze(), kx, ky, im, n, vd);
+                return;
+            }
+            re15_gr2_log("KAMERA R1 G-E1: keine Zonenkamera zeigt alle Punkte unverdeckt -> alte Wahl F%u", (unsigned)g_engine.frame_count);
+        }
+    }
     if (!sichtbar) {
         s_kam.r1_geschnitten = (uint8_t)(gr2_kam_schnitt(GR2_KAM_R1, RE15_GR2_BLICK_EXPLOSION, e, NULL) >= 0);
         return;
@@ -1614,6 +1703,19 @@ static const int16_t k_ring[6][4] = {   /* SVECTOR-Tabelle @0x801000a8 */
     { 0, -2800, 0, 0 }, { 300, -2100, 0, 0 }, { 0, -700, 0, 0 },
     { 0, 0, 300, 0 }, { 0, -1400, -200, 0 }, { -500, -400, 200, 0 } };
 static const uint32_t k_ring_a0[6] = { 0x030f2000u, 0x030f3000u, 0x030f3000u, 0x030f2000u, 0x030f2000u, 0x030f3000u };
+/* Runde 41 Spur G, G-E1: die Pruefpunkte der R1-Kamerawahl - Kopf (Bone 6), Kiefer (Bone 7) und die sechs Spritzring-Punkte
+ * (Kanister-Weltlage x k_ring, wie FUN_8001d894 sie fuer die Spritzring-Plaetze rechnet: t + R * ofs). 0 = keine Pose/kein Kanister. */
+static int gr2_r1_punkte(const re15_actor_t *e, int32_t p[GR2_R1_PUNKTE][3])
+{
+    int32_t r[9], kp[3], kr[9];
+    if (!gr2_bone_welt(e, 6, r, p[0]) || !gr2_bone_welt(e, 7, r, p[1])) return 0;
+    if (!re15_gr2_kanister_welt(kp, kr)) return 2;
+    for (int k = 0; k < 6; k++)
+        for (int i = 0; i < 3; i++)
+            p[2 + k][i] = kp[i] + (int32_t)(((int64_t)kr[i * 3 + 0] * k_ring[k][0] + (int64_t)kr[i * 3 + 1] * k_ring[k][1] +
+                                             (int64_t)kr[i * 3 + 2] * k_ring[k][2]) >> 12);
+    return GR2_R1_PUNKTE;
+}
 
 static inline int16_t rnd8(void) { return (int16_t)(int8_t)(re15_re2_rand() & 0xffu); }
 
