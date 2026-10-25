@@ -1091,6 +1091,15 @@ angefasst; seine Riegel bleiben gruen.
 * Messung vorher: 0 von 40 roten Bildpunkten gezeichnet; Beleg: Atlas an (232,-24) 0 von 40 / gruen 91 von 120, pri_offset 0x3C0 -> ff ff ff ff.
 * Aenderung: keine Maske (M-E1/M-E2), Eintrag in der Freistellungs-Liste, Riegel unit_r41_masken36_ordner. Messung nachher: wie vorher (gewollt).
 
+### NB5 Paralleler Schreiber
+Waehrend der NB5 kam der Orchestrator-Commit 23570b48 (AUFTRAG.md, Nachtrag 32b, 18:02) in den Spurbaum: "M: laufende Nachbesserung 5 + Abnahme 5
+(keine Nachbesserung 6)"; danach Integration F/G/M, offene Punkte in die Release Notes ("Ab Samstag"). Fuer die Release Notes: OFFEN 17-21 und die
+Freistellungs-Liste NB5.
+
+### NB5 Commits
+c9fca410 (Dossier) .. d789f76e (platzieren Koerper/Tuer-Band/128) .. 2bc49e7d/f9c67580 (Assets, Ausschluss, Modell-Tabelle) .. 13e8b150 (Riegel
+teile/platziert/ordner, Kamera des Spiels) .. 5461e972 (Boegen/Uebersicht/Rest) .. 5d5f3561 (Art L) .. e4eca467/4dce7900 (Szenen) .. Abschluss fix(r41-masken36).
+
 ### NB5 Messung vorher (Stand 2ea86d24 = NB3-Masken)
 * `git diff 1ad2c96e..2ea86d24 -- re15_port/shared_assets re15_port/engine re15_port/include` leer (Abnahme 4): MASKS, Ausschluss-Tabelle,
   Modell-Tabelle (1025 Zeilen) und `RE15_PRI_MAX_MASKS_PER_CUT 105` = Stand NB3; `test_r37_masken36` saete Tueren ohne `--saat-tuer` auf Band 0.
