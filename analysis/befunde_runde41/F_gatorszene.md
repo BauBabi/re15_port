@@ -1041,13 +1041,15 @@ Plan:
   gegen Nachtrag 29 ("Die Zombie Leiche ... muss weiter weg sein") und gegen (1) (Kampfbeginn dort 6162). Rangfolge F-E2: 1 vor 2.
 - **Lichter des Suedbeckens** (RDT @0x468 + 40 * Cut): Cut 0: (2510,-4000,-24087) und (2100,-4000,-30252), Cut 1/2: (-4790,-4000,
   -24387) und (-5600,-4000,-30252), Cut 3..12 nur Lichter ausserhalb des Beckens (x -11890..-29490). Unter (1) (Kampfbeginn im
-  Ostteil des Suedbeckens) erreicht der Schluessel Licht >= 168 nur in Cut 0 (Leiche bei x 0..900, z -23800..-25500), dort aber
-  hoechstens ~10,5 x 6,5 Bildpunkte (Licht von Nordosten, Kamera im Suedosten: beste Neigung cos 0,60..0,62).
+  Ostteil des Suedbeckens) erreicht der Schluessel Licht >= 168 nur in Cut 0 (Leiche bei x -400..900, z -23800..-26000); der
+  projizierte Quad-Kasten erreicht dort hoechstens 11,7 x 12,0 (Fassung 1: 13,3 x 13,8), gemessen Ring 6 x 8 .. 7 x 9 (Messung
+  nachher). Die erste Schaetzung "Bildgroesse x cos(Blick)" (~10,5 x 6,5) unterschaetzte den Kasten des gekippten Quadrats.
 - **Kette**: mit dem ganzen Durchbruch (Clip 6 Bild 1..124 = 6327) ist die Kette 10715 lang; an die Cut-0-Stelle kommt der Gator mit
   dem Gesicht nach Westen (Kampfbeginn oestlich der Leiche, Fress-Kamera Cut 1 von vorn) nur von Osten - die Ostwand (x 7200) laesst
   dafuer hoechstens ~6000..7500. Clip 6 je Bild (Sonde scratchpad F41n5/tools/probe_clip6.c, RE2-EM23-Bank): Bild 0..15 Kopf Rig-y
   +1611 -> -1392 (Aufsteigen aus dem Wasser), Bild 15..31 Wurzel -5880 -> -1627 roh (Vorstoss, Schritte bis 480), ab Bild 37 nur noch
-  Ausgleiten (Bild 37..124: 1597 x 2/3). Mit dem Durchbruch bis Bild ~31 passt die Kette von Osten.
+  Ausgleiten (Bild 37..124: 1597 x 2/3). Mit dem Durchbruch bis Bild 22..32 (je nach Lage, Wurzel-Rand 1500) passt die Kette von
+  Osten; die gewaehlte Lage braucht Bild 22.
 - **Klemme**: die Dispatcher-Klemme des Boss-Takts (enemy_ai_boss_gator.c re15_gator_boss_tick: re15_collision_constrain_enemy mit
   hit_radius_min 1466 nach JEDEM bewegten Takt, auch in der Szene) schiebt den Gator, wenn die Wurzel naeher als ~1466 an eine
   SCA-Wand/-Insel kommt (erste Engine-Messung: Start S (6243,-19354) 1254 neben der Rampe -> Kampfbeginn im Nordbecken). Die
@@ -1112,3 +1114,77 @@ M3: FINISHER **Cut 1 frontal 4116** (gator_boss.log `RE2 KAMERA SZENE FINISHER R
 allen Bildern des Fressens zu sehen (`F_belege/n5_gator_szene.png`: F75/F81/F87 Biss, F99/F151/F201/F251 Schuetteln und Kauen von
 vorn, F265-F285 Schrei), Durchbruch F59-F71 in Cut 1 (Kopf steigt aus dem Wasser). Kampfbeginn F297 Cut 0 (`F_belege/
 n5_kampfbeginn.png`): der Gator schwimmt von der Kamera (Suedostecke) auf Leon an der Leiter zu.
+
+### N5 je Mangel (Ursache, vorher, Beleg, Aenderung, nachher)
+
+- **M1 Kampfbeginn beim RE2-Sollwert.** Ursache: Gator am Kampfbeginn im Nordbecken (Zone 1), Leon in Zone 0 -> Zonen-Dash 300 Bilder.
+  Vorher 17539 / Biss +470 (stehend), +525 (Osten). Beleg: RE2 Zonenlinien nur ueber die Gator-Lage @0x80100990-ec, Intro-Ende Zone 0,
+  Kontakt ohne Zonenwechsel (probe_re2_band_n5.c); Band 11430..13924 / 121..158 (Plc_ret @SCD 0x02B6 fruehestens Cut 1 + 113, Intro-
+  Ende Cut 1 + 150). Aenderung: Lage obj 2 (0,-26000) Gier 2944, Anlauf 1952 von Osten, Durchbruch bis Clip-6-Bild 22 (Kette passt nur
+  so von Osten in das Becken). Nachher (Leon = Elza): F297, Zone 0/0, **11454** (RE2 11430), erster Biss **+131** / Treffer +138 (RE2
+  121; Band 121..158), nach Norden rennend +190 / +197, kein Dash.
+- **M2 Schluessel der Ankunft.** Ursache: Nordbecken nur im Umgebungslicht. Vorher Primitivfarbe 51 -> 76, Pixel 47 -> 70, Kasten
+  <= 9 x 12. Beleg: Lichtsaetze RDT @0x468 + 40 * Cut (Cut 0: Licht (2510,-4000,-24087)); Fassung-1-Werte nur an der Fassung-1-Stelle
+  (leiche_lage_n5.py --m2). Aenderung: Ankunftskamera Cut 0, Neigung rx -48 / rz -608 (groesster Quad-Kasten bei Licht >= 168 unter
+  der Puls-Grenze). Nachher: Primitivfarbe **85 -> 126** (Fassung 1 84 -> 125), hellster Pixel **86 .. 110** (Fassung 1 72 .. 108),
+  Ring **6 x 8 .. 7 x 9** (Fassung 1 mit demselben sauberen Ausschnitt 8 x 10) - Helligkeit erreicht, Groesse ~1 Bildpunkt je Richtung
+  darunter (OFFEN 1).
+- **M3 Fressen von hinten.** Ursache: Anlauf nach Nordosten, Cut 5 ueber der Massstab-Grenze. Vorher Cut 4 frontal -1625. Beleg:
+  gator_re2_r41.c re15_gr2_kamera_wahl (Kopf + Kiefer + Opfer im Bild, Massstab <= 1892, |frontal - 4094| klein), B8 unveraendert.
+  Aenderung: Anlauf nach Westen (Lage). Nachher: FINISHER **Cut 1 frontal 4116**, Leiche im Maul in allen Bildern zu sehen.
+- **M4 Riegel.** Ursache: nur Untergrenzen. Aenderung: unit_r41_gatorszene_abstand/_elza und r41f_kampf (integration leon/elza/flucht/
+  flucht_elza) pruefen das RE2-BAND (Abstand 11402..13890 in SquareRoot0 bzw. Quadrat 130647809..193864141, erster Kontakt/Angriff
+  121..158 - flucht nur die Untergrenze) im GLEICHEN Mass (erster Kontakt-Mass-Treffer, Biss oder Treffer; RE2 ohne Angriff in Sub 1/2:
+  Sub 1 Main @0x80100c34-40, Sub 2 Main @0x80100cf8-d04, FRESSEN nur aus Sub 7 @0x801012e0-e4) und die Beckenzonen (Zeile
+  "Kampfbeginn"); unit_r41_gatorszene_leiche hat die Untergrenze Ruhe 84 / Spitze 125. Gegenproben: unit abstand - Fassung-1-Lage Biss
+  nach 48 < 121 (untere Grenze), Kampfbeginn-Lage der Nachbesserung 4 erster Kontakt/Angriff nach 270 > 158 (obere Grenze); die
+  ausgeschnittenen exe-Funktionen (scratchpad F41n5/tools/gegenprobe_n5.cmake) auf den alten Laeufen: F41a3/runs/L1 FEHLER (37971400 <
+  130647809), F41a4/runs/L1 FEHLER (307624213 > 193864141), auf N_L1/N_E1 OK (131198058, +131).
+
+### N5 Tests
+
+Neu/nachgezogen (nur F-eigene Riegel, registriert in tests/unit/probes/r41_gatorszene.cmake; keine neue Testdatei):
+- `unit_r41_gatorszene_abstand` / `_abstand_elza`: RE2-Band im Riegel aus den RE2-Daten gerechnet (re2_soll wie probe_re2_band_n5.c):
+  Abstand 11448 in 11402..13890 (SquareRoot0), Zone Gator 0 = Spielfigur 0, erster Kontakt/Angriff 131 in 121..158 (Biss 131, Treffer
+  138); Gegenproben Fassung 1 (Biss 48 < 121) und Kampfbeginn-Lage der Nachbesserung 4 (270 > 158).
+- `unit_r41_gatorszene_leiche`: obj 2 bei (0,-26000) Gier 2944, Schluessel lokal (1090,-420,-100) rx -48 rz -608, Cut 0 Primitivfarbe
+  85 -> 126 mit UNTERGRENZE Ruhe >= 84 / Spitze >= 125 (abgenommene Fassung 1) und Kappung <= 0x80, Gegenprobe flach 75 < 85.
+- `unit_r41_gatorszene_programme` / `_szene`: Leichen-Cut 0 (P1 `29 00`, Rueckkehr-Tuer Cut 0).
+- `integration_r41_gatorszene_leon` / `_elza` / `_flucht` / `_flucht_elza` (r41f_re2soll/r41f_kampf): Abstandsquadrat im Band
+  130647809..193864141 (gemessen 131198058), Zone 0/0 (Zeile "Kampfbeginn"), erster Kontakt/Angriff im Band 121..158 (leon/elza: 131)
+  bzw. nicht vor 121 (flucht: 190), flucht rennt nach Norden (Eingabe W10,L0.6,UX5; z -25550 -> -16150 in 121 Bildern).
+- Werkzeug-Modi (keine Riegel): `test_r41_gatorszene lagesuche <datei>`, `re2soll` (jetzt mit Band).
+
+### N5 OFFEN
+
+1. **Schluessel-Groesse (M2, Kasten):** hellster Pixel 86 .. 110 (Soll >= 72 / >= 108 erfuellt), Ring 6 x 8 .. 7 x 9 Bildpunkte; die
+   abgenommene Fassung 1 misst mit demselben sauberen Ausschnitt 8 x 10 (F-E2 nennt "10 x 9" = die gerechneten 10,4 x 9,5). Die Fassung-1-
+   Werte gibt es in ROOM2090 nur an der Fassung-1-Stelle (leiche_lage_n5.py --m2: Cut 1, x -5500..-5200), 2700..3300 von der Leiter -
+   gegen Nachtrag 29 und Punkt 1. Unter Punkt 1 hat die gewaehlte Lage den groessten Schluessel aller Lagen, die auch Punkt 3 erfuellen
+   (Quad-Kasten 0,87 x Fassung 1). Rangfolge F-E2: 1 vor 2.
+2. **Durchbruch gekuerzt:** Clip 6 laeuft bis Bild 22 (Aufsteigen aus dem Wasser + Beginn des Vorstosses), dann der Biss; RE2 spielt
+   Clip 6 im Intro bis zum Ende (@0x801008ac-c8). PORT-WAHL der Inszenierung (Nachtrag 6), noetig, damit die Kette von Osten ins Becken
+   passt (mit dem ganzen Clip 6 = 10715 nicht moeglich). Nutzer-Bewertung offen.
+3. **Bild beim Kampfbeginn:** der Gator beginnt 1837 vor der Kamera Cut 0 (Suedostecke) und schwimmt von dort auf Leon zu - rund 100
+   Bilder lang fuellt sein Ruecken die rechte Bildhaelfte (F_belege/n5_kampfbeginn.png). Nutzer-Bewertung offen.
+4. **Mass "erster Kontakt/Angriff":** der Port beisst aus etwa 3000 Abstand (Biss-Commit des Boss-Moduls, NUTZER-VORGABE Clip-4-
+   Schnapp), RE2 greift in Sub 1/2 nicht an - der RE2-Wert ist der Kontakt (121). Der Port-Wert (+131) ist der Biss; das Kontakt-Mass
+   allein kommt erst nach dem Biss (+210, Leon zurueckgestossen).
+5. **Integration mit Spur G:** Kampfbeginn jetzt F297 (vorher F422) mit dem Gator im Suedbecken (3197,-24407); G's Kampf-/Kanister-
+   Riegel (nur im G-Baum) im Integrationsbaum neu messen. Der Riegel flucht rennt jetzt nach Norden (Westkanal).
+6. Unveraendert aus N3/N4: R1-Tod-Nebenbefund nur im Unit-Riegel; musik_soll fragt alle Slots; Form "Kameraschnitt nach dem Tod" ohne
+   Nutzer-Bestaetigung; MAIN2E nach dem Tod; Nachrichten-Ids 44-46 frei; Schachtspinnen 20A0; nach dem Laden keine Einstellung (Ersatz-
+   lage jetzt die Rumpfmitte von obj 2 bei (-212,-24931)); PSX-Bau ungeprueft.
+
+### N5 Fuer den Nutzer
+
+- Keine neuen Assets, keine Sprachdateien.
+- Die Leiche mit dem blinkenden Schluessel treibt jetzt im vorderen Becken nahe der Suedwand (rund 8000 von der Leiter, Nachtrag 29);
+  die Ankunftskamera ist die Leiter-Kamera, Leon und die Leiche sind zugleich zu sehen. Der Schluessel ist so hell wie in der ersten
+  Fassung, etwas kleiner (Ring ~7 x 9 statt 8 x 10 Bildpunkte).
+- Der Alligator springt am Ostende aus dem Wasser, stoesst auf die Leiche zu und frisst sie samt Schluessel - jetzt von vorn zu sehen
+  (Kamera an der Leiter-Seite), dreht sich zu Leon und schreit. Danach beginnt der Kampf wie in RE2 am Ende des Alligator-Intros: rund
+  11450 Einheiten entfernt (RE2 11430), steht man still, beisst er nach ~4,4 s (RE2: ~4 s bis zum Kontakt); rennt man sofort nach Norden
+  durch den Westkanal, nach ~6,3 s.
+- Fragen: (1) Passt der kurze Durchbruch (Sprung aus dem Wasser + Vorstoss, dann sofort der Biss)? (2) Beim Kampfbeginn kommt der
+  Alligator von der Kamera aus ins Bild (gross im Vordergrund) - so in Ordnung?
