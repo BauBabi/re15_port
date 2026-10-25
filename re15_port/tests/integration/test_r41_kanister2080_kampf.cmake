@@ -10,6 +10,10 @@
 # (-6000,-17500) und schiesst (Zielen/Feuern alle ~4 s), wie ein Spieler, der den Kampf fortsetzt. Gemessen (Wurf-Gier 3072,
 # Dossier 8.9): Ausloeser F902 bei (-5790,-6245), Aufschlag (-7515,-12304); nach der Rueckkehr Aufnahme F104, R1 F570, Leiche
 # F606. EXIT_AT 1500 Bilder nach der Rueckkehr.
+# Nachbesserung 2 (Abnahme 1, N3): VIER Laeufe mit ZWEI weiteren Startlagen - Leon (0,-7000) (Kampf im Nordosten, Abnahme-Lauf
+# v2/v4) und Elza (-8000,-16000) (Start West, Abnahme-Lauf v3/v5: vorher keine Aufnahme in 4000 Bildern). Je Lauf: Wahl der
+# Wurfrichtung ("Wurfrichtung" = der weitere Landepunkt vom Alligator), "ANSCHWIMMEN an" (RE2-Zielmodus, Header
+# RE15_K2080_ANSCHWIMM_AB) und die ganze Folge bis zum R1-Tod in 1500 Bildern nach der Rueckkehr.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_kanister2080_kampf.cmake
 # =============================================================================
@@ -52,8 +56,12 @@ foreach(_i RANGE 1 18)
     string(APPEND _schiess ",M0.6,MA0.1,M0.3,MA0.1,W3.0")
 endforeach()
 
-foreach(_wer leon elza)
-    set(WORKDIR "${_basis}/kampf_${_wer}")
+foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leon|0,-7000,2048|nordost" "elza|-8000,-16000,1024|west")
+    string(REPLACE "|" ";" _lt "${_lauf}")
+    list(GET _lt 0 _wer)
+    list(GET _lt 1 _start)
+    list(GET _lt 2 _lname)
+    set(WORKDIR "${_basis}/${_lname}_${_wer}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     if(_wer STREQUAL "leon")
         set(_wahl ${_leon})
@@ -69,9 +77,9 @@ foreach(_wer leon elza)
     re15_start_spiel(_rv 900 ${_basisenv} ${_wahl}
         RE15_DEBUG_JUMP=2090@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:60" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100
         RE15_K2080_GATOR_HP=24990 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schiess}"
-        RE15_STATE_LOG=state.log "RE15_PLAYER_POS=-6000,-17500,3072" "RE15_EXIT_AT=1500#${_r90}" "${_exe_kopie}")
+        RE15_STATE_LOG=state.log "RE15_PLAYER_POS=${_start}" "RE15_EXIT_AT=1500#${_r90}" "${_exe_kopie}")
     if(NOT _rv EQUAL 0)
-        r41gk_fehler("Lauf kampf_${_wer} exe exit=${_rv}")
+        r41gk_fehler("Lauf ${_lname}_${_wer} exe exit=${_rv}")
     endif()
     # ---- Szene (2080/2081) und Rueckweg ----
     foreach(_muster
@@ -83,10 +91,12 @@ foreach(_wer leon elza)
             "FG-E3: ROOM${_r90} derselbe Alligator in Slot [0-9]+ "
             "ROOM${_r90} RUECKKEHR: .*Zone-7-Tot-Bits 236\\.\\.243 gesetzt: 8 von 8"
             "Aufschlag im Wasser bei "
-            "ROOM${_r90} Kanister im Becken \\(-?[0-9]+,-1200,-?[0-9]+\\) = Aufschlagstelle")
+            "ROOM${_r90} Kanister im Becken \\(-?[0-9]+,-1200,-?[0-9]+\\) = Aufschlagstelle"
+            "Wurfrichtung (3072|1024) \\((Nord|Sued)becken, Alligator beim Ausloesen"
+            "ANSCHWIMMEN an: Gator Slot [0-9]+ ")
         file(STRINGS "${WORKDIR}/debug.log" _z REGEX "\\[k2080\\] F[0-9]+ ${_muster}")
         if(NOT _z)
-            r41gk_fehler("Lauf kampf_${_wer}: keine Zeile '${_muster}'")
+            r41gk_fehler("Lauf ${_lname}_${_wer}: keine Zeile '${_muster}'")
         endif()
     endforeach()
     # Nachtrag 24b: Hinknien/Aufstehen (Plc_motion(1,11) zweimal), kein Klettern (1,2) und kein RUN-Gait als "Tragen" (2,0)
@@ -94,12 +104,12 @@ foreach(_wer leon elza)
     list(LENGTH _kn _n_kn)
     file(STRINGS "${WORKDIR}/debug.log" _kl REGEX "\\[scd\\] Plc_motion\\(entity=1, motion=2, |\\[scd\\] Plc_motion\\(entity=2, motion=0, ")
     if(NOT _n_kn EQUAL 2 OR _kl)
-        r41gk_fehler("Lauf kampf_${_wer}: ${_n_kn} x Plc_motion(1,11) statt 2 bzw. Kletter-/Lauf-Clip im Szenen-Programm (${_kl})")
+        r41gk_fehler("Lauf ${_lname}_${_wer}: ${_n_kn} x Plc_motion(1,11) statt 2 bzw. Kletter-/Lauf-Clip im Szenen-Programm (${_kl})")
     endif()
     # FG-E4: der Fall laeuft in Cut 12
     file(STRINGS "${WORKDIR}/state.log" _c12 REGEX " cam=12 ")
     if(NOT _c12)
-        r41gk_fehler("Lauf kampf_${_wer}: Cut 12 nie im Bild (FG-E4)")
+        r41gk_fehler("Lauf ${_lname}_${_wer}: Cut 12 nie im Bild (FG-E4)")
     endif()
     # ---- weiterer Kampf nach der Rueckkehr (gator_boss.log, Reihenfolge ab "KANISTER gesetzt") ----
     file(STRINGS "${WORKDIR}/gator_boss.log" _gb REGEX
@@ -108,7 +118,7 @@ foreach(_wer leon elza)
     set(_aufnahme "")
     foreach(_l IN LISTS _gb)
         if(_stand GREATER 0 AND _l MATCHES "GATOR VERSCHWUNDEN|RE2 AUFTAUCHEN|INTRO ende")
-            r41gk_fehler("Lauf kampf_${_wer}: nach der Szene ein neuer Alligator/Intro ('${_l}') - FG-E3 verlangt denselben")
+            r41gk_fehler("Lauf ${_lname}_${_wer}: nach der Szene ein neuer Alligator/Intro ('${_l}') - FG-E3 verlangt denselben")
         endif()
         if(_stand EQUAL 0 AND _l MATCHES "KANISTER gesetzt")
             set(_stand 1)
@@ -126,10 +136,10 @@ foreach(_wer leon elza)
     set(_schritte "Kanister im Becken (KANISTER gesetzt)" "Aufnahme (KANISTER Stufe 1)" "angehaengt" "R1 start" "R1 ende (Leiche)")
     if(NOT _stand EQUAL 5)
         list(GET _schritte ${_stand} _fehlt)
-        r41gk_fehler("Lauf kampf_${_wer}: Folge nach der Szene bricht ab vor '${_fehlt}' (Stand ${_stand} von 5)")
+        r41gk_fehler("Lauf ${_lname}_${_wer}: Folge nach der Szene bricht ab vor '${_fehlt}' (Stand ${_stand} von 5)")
     endif()
-    message(STATUS "r41_kanister2080_kampf ${_wer}: Szene (${_npc}, Hinknien) -> Fall Cut 12 -> derselbe Alligator -> ${_aufnahme} -> R1-Tod")
+    message(STATUS "r41_kanister2080_kampf ${_lname}_${_wer} (Start ${_start}): Szene (${_npc}, Hinknien) -> Fall Cut 12 -> derselbe Alligator -> ${_aufnahme} -> R1-Tod")
 endforeach()
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_kanister2080_kampf: Leon und Elza gruen")
+message(STATUS "r41_kanister2080_kampf: Leon und Elza, drei Startlagen gruen")

@@ -23,6 +23,10 @@
 #                 Eigen c0 = RUN-Gait); Orchestrator-Entscheide FG-E3/FG-E4: der Fall laeuft in ROOM2090/2091 Cut 12 (state.log
 #                 cam=12 nach dem Wurf), der Kanister liegt an der Aufschlagstelle. RE15_GB_TEST=5 dient hier nur als schneller
 #                 Ausloeser der Szene; den weiteren Kampf OHNE Testhaken misst integration_r41_kanister2080_kampf.
+# Nachbesserung 2: N1 die Zeile 42 steht ihre VOLLE Zeit (state.log msg a=1 id=42 >= 97 Bilder, Messzeile "Zeile 42 stand"), das
+#                 Loslassen kommt erst danach (RE2 Wsleep/Wsleeping @0x079A/@0x079B: "Wsleeping frei" vor "Wurf: Start"); N2 die
+#                 Gier des Werfers bleibt in Cut 5 vom Hinknien bis zum Schnitt gleich, im ersten Bild von Cut 7 steht die
+#                 Wurf-Gier (RE2 Dir_set @0x0748 nach Cut_chg 7 @0x0726); N3 Zeile "Wurfrichtung" mit der Wahl des Landepunkts.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_kanister2080.cmake
 # =============================================================================
@@ -282,6 +286,63 @@ foreach(_wer leon elza)
     endif()
     if(NOT _msg42)
         r41g_fehler("Lauf szene_${_wer}: Nachricht 42 nie im Bild (state.log msg id=42)")
+    endif()
+    # ---- Nachbesserung 2 (N1): volle Standzeit der Zeile 42, Loslassen erst danach ----
+    file(STRINGS "${WORKDIR}/state.log" _z42 REGEX "PL\\(-23200,-16700,.* msg\\(a=1 fsm=[0-9]+ id=42 ")
+    list(LENGTH _z42 _n_z42)
+    # Volle Standzeit = re15_msg_compute_duration des Textes (Leon/Elza je 99 Bilder, Abnahme 0 p3r_leon F569..F667 und unit texte);
+    # 97 laesst zwei Bilder fuer die Lage des ersten/letzten Bildes im Protokoll. Vorher (Abnahme 1): 52.
+    if(_n_z42 LESS 97)
+        r41g_fehler("Lauf szene_${_wer}: Zeile 42 nur ${_n_z42} Bilder im Bild statt ihrer vollen Zeit (N1)")
+    endif()
+    file(STRINGS "${WORKDIR}/debug.log" _wf REGEX "\\[k2080\\] F[0-9]+ (Zeile 42 stand F[0-9]+\\.\\.F[0-9]+ \\([0-9]+ Bilder\\)|Wsleeping frei|Wurf: Start)")
+    set(_wfolge "")
+    foreach(_l IN LISTS _wf)
+        if(_l MATCHES "Zeile 42 stand")
+            string(APPEND _wfolge "Z")
+        elseif(_l MATCHES "Wsleeping frei")
+            string(APPEND _wfolge "W")
+        elseif(_l MATCHES "Wurf: Start")
+            string(APPEND _wfolge "R")
+        endif()
+    endforeach()
+    if(NOT _wfolge MATCHES "^ZW+R$" AND NOT _wfolge MATCHES "^ZWR")
+        r41g_fehler("Lauf szene_${_wer}: Folge Zeilenende/Wsleeping/Loslassen '${_wfolge}' statt 'ZWR' (N1, RE2 @0x079A/@0x079B)")
+    endif()
+    # ---- Nachbesserung 2 (N2): Gier des Werfers (Slot 9) in Cut 5 vom Hinknien bis zum Schnitt gleich, in Cut 7 die Wurf-Gier ----
+    file(STRINGS "${WORKDIR}/debug.log" _wr REGEX "\\[k2080\\] F[0-9]+ Wurfrichtung [0-9]+ ")
+    if(NOT _wr)
+        r41g_fehler("Lauf szene_${_wer}: keine Zeile 'Wurfrichtung' (N3)")
+    endif()
+    list(GET _wr 0 _wrl)
+    string(REGEX MATCH "Wurfrichtung ([0-9]+) " _m "${_wrl}")
+    set(_wgier ${CMAKE_MATCH_1})
+    set(_knien -1)
+    set(_sprung "")
+    set(_cut7 -1)
+    foreach(_l IN LISTS _st)
+        if(NOT _l MATCHES " cam=([0-9]+) ")
+            continue()
+        endif()
+        set(_c ${CMAKE_MATCH_1})
+        if(NOT _l MATCHES "\\[9 t=(40|49) [^]]* mo=([0-9]+) af=[0-9]+ [^]]*@\\(-?[0-9]+,-?[0-9]+,r([0-9]+)\\)\\]")
+            continue()
+        endif()
+        set(_mo ${CMAKE_MATCH_2})
+        set(_r ${CMAKE_MATCH_3})
+        if(_c EQUAL 5 AND _knien EQUAL -1 AND _mo EQUAL 11)
+            set(_knien ${_r})
+        elseif(_c EQUAL 5 AND NOT _knien EQUAL -1 AND NOT _r EQUAL _knien)
+            set(_sprung "${_sprung} ${_r}")
+        elseif(_c EQUAL 7 AND _cut7 EQUAL -1)
+            set(_cut7 ${_r})
+        endif()
+    endforeach()
+    if(_knien EQUAL -1 OR NOT _sprung STREQUAL "")
+        r41g_fehler("Lauf szene_${_wer}: Gier in Cut 5 ab dem Hinknien ${_knien}, abweichend:${_sprung} (N2: kein Drehen im Griffbild)")
+    endif()
+    if(NOT _cut7 EQUAL _wgier)
+        r41g_fehler("Lauf szene_${_wer}: erstes Bild Cut 7 Gier ${_cut7} statt der Wurf-Gier ${_wgier} (N2, Dir_set @0x0748)")
     endif()
     # FG-E4: der Fall laeuft in ${_r90} Cut 12; nach dem Aufschlag + Sleep 15 der Schnitt zurueck (Spieler wieder auf seiner Lage
     # beim Ausloesen 6500,-25000)

@@ -40,6 +40,12 @@ extern unsigned g_current_room_id;
 extern uint8_t  re15_em_status_zone(void);
 extern int      re15_player_weapon_fire(int weapon_id);
 extern int      re15_player_is_dead(void);
+/* Nachbesserung 2 (N1): Sprachspur des Ports (scd_vm.c, je Bild von der Plattform gestempelt) = RE2 0x800cfbd8 & 0x20 */
+extern int      g_re15_voice_laeuft, g_re15_voice_restbilder;
+/* Nachbesserung 2 (N3): Spur-B-Bausteine der Verfolgung (enemy_ai_boss_gator.c / enemy_ai_common.c) */
+extern void     re15_gator_boss_steuerziel(const re15_actor_t *e, int32_t *tx, int32_t *tz);
+extern void     re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);
+extern void     re15_ai_advance(re15_actor_t *e, int32_t sp);
 
 #include "gen/kanister2080_r41_texte.inc"
 
@@ -86,6 +92,9 @@ static const struct { int16_t x, z, gier; } k_zombies[RE15_K2080_N_ZOMBIES] = {
 #define OP_RIEGEL          OP_SET(2, 7, 1), OP_SET(1, 27, 1)
 #define OP_RIEGEL_LOS      OP_SET(2, 7, 0), OP_SET(1, 27, 0)
 #define OP_AOT_ON          0x47, RE15_K2080_TUER_SLOT
+/* Nachbesserung 2 (N2): Dir_set `33 00 rx ry rz` - RE2 ROOM7020 sub12 @0x0748 `33 00 00 00 74 0e 00 00` nach Cut_chg 7 @0x0726;
+ * RE1.5-Handler @0x80041080 (`lhu/sh` +0x68/+0x6a/+0x6c des Work_set-Objekts @0x80041088-a8, pc + 8), Port scd_vm.c op_dir_set */
+#define OP_DIR(gier)       0x33, 0x00, LE16(0), LE16(gier), LE16(0)
 #define OP_END             0x01, 0x00
 
 /* ---- Zustand -------------------------------------------------------------------------------------------------------- */
@@ -121,6 +130,9 @@ static int      s_set_2090;           /* 1 = Kanister in 2090 gesetzt (beim Verl
 static re15_actor_t s_gator;
 static int      s_gator_slot = -1;
 static uint64_t s_kopf_ab;            /* Aktor-Bits: Kopf-ab gemeldet */
+static int      s_wurf_gier = -1;     /* Nachbesserung 2 (N3): gewaehlte Wurfrichtung dieser Szene (-1 = aus Bit 117) */
+static int      s_z42_an = -1, s_z42_aus = -1;   /* Nachbesserung 2 (N1): Messzeile Standzeit der Zeile 42 (Bildnummern) */
+static int      s_anschw;             /* Nachbesserung 2 (N3): Messzeile Anschwimmen (0 aus, 1 an) */
 
 #ifdef RE15_PLATFORM_PC
 #define K_LOG(...) do { fprintf(stderr, "[k2080] F%u ", (unsigned)g_engine.frame_count); fprintf(stderr, __VA_ARGS__); \
@@ -160,6 +172,7 @@ int re15_k2080_landepunkt(int32_t *x, int32_t *z)
 void re15_k2080_reset(void)
 {
     s_phase = RE15_K2080_AUS; s_kan_zustand = 0; s_ziel_slot = -1; s_ziel_n = 0; s_lande_ok = 0; s_set_2090 = 0;
+    s_wurf_gier = -1; s_z42_an = s_z42_aus = -1; s_anschw = 0; s_gator_slot = -1;
     memset(s_zaehler, 0, sizeof s_zaehler);
 }
 
@@ -202,6 +215,8 @@ static int satz_tuer(uint8_t *b, int n, int cap, int32_t x, int32_t y, int32_t z
                             0, 0, 0, 0, 0, 0 };
     return put(b, n, cap, s, 32);
 }
+
+static int wurf_gier(void);   /* Nachbesserung 2: Wahl/Bit 117/Messhaken, definiert bei der Wurfbahn */
 
 static void baue_spawn(void)
 {
@@ -268,6 +283,11 @@ static void baue_szene(void)
     PUT(s_prog_szene, n, OP_SLEEP(RE15_K2080_AUFSTEHEN_HALT));            /* @0x01660 */
     /* ---- RE2 ROOM7020 sub12 ---- */
     PUT(s_prog_szene, n, OP_CUT(RE15_K2080_CUT_WURF));                   /* Cut_chg 7 @0x0726 */
+    /* Nachbesserung 2 (N2): die Wurfrichtung erst MIT dem Schnitt (RE2: Work_set(2,0) @0x073C, Pos_set @0x0740, Dir_set
+     * `33 00 00 00 74 0e 00 00` @0x0748 im ersten Bild von Cut 7, kein Sleep/Evt_next dazwischen); bis hierher behaelt der Werfer
+     * die Gier des Laufs (Hinknien/Aufstehen mit Blick auf den Kanister). Vorher drehte der Takt ihn schon im Griffbild (Cut 5)
+     * in einem Bild um 98 Grad (Abnahme 1 N2). Work_set(2, NPC) steht seit dem Anlegen (ROOM1021 @0x020C2). */
+    PUT(s_prog_szene, n, OP_DIR(wurf_gier()));
     /* Plc_motion @0x0750: RE2 spielt Adas Wurf-Clip `3f 0a 12 40` (Sub 0x0a, Clip 0x12 IHRER Bank). PORT-WAHL (Nachbesserung 1,
      * M5): Marvin/John haben keinen Wurf-Clip; ihr Eigen c6 hebt beide Haende von der Huefte nach vorn oben ((-31,-1602) ->
      * (764..917,-2534..-2458), Dossier 1.8/8.1) = das Hochstemmen ueber die Reling, dieselbe Bank wie ROOM1021 @0x020C6. */
@@ -276,6 +296,15 @@ static void baue_szene(void)
     PUT(s_prog_szene, n, OP_SLEEP(30));                                  /* @0x076A */
     PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_ZIELEN));          /* @0x0782 (PORT-WAHL Clip wie @0x0750) */
     PUT(s_prog_szene, n, OP_SLEEP(20));                                  /* @0x0786 */
+    /* Nachbesserung 2 (N1): Wsleep `0b` @0x079A + Wsleeping `0c` @0x079B - weiter erst, wenn die Zeile 42 und ihre Stimme zu Ende
+     * sind (Wsleeping @0x80053ac0: 0x800cfbd8 & 0x20 / 0x800e873c & 0x80, s. RE15_K2080_SIG_WSLEEP). RE2 wartet nach dem Loslassen;
+     * im Port ist das Loslassen an den Raumwechsel nach 2090 gebunden (FG-E4), und der Raumwechsel beendet Zeile und Stimme (RE2-
+     * Raumlader @0x8004a1c4 -> CdlSetmode 0xa0 ohne XA @0x800130f0; RE1.5 reloziert den Nachrichtenblock der neuen RDT
+     * @0x800397fc-834). Das Warten steht darum VOR dem Loslassen (Dossier 9.1). Poll-Form wie @0x079C-07A4 (mind. ein Bild wie
+     * Wsleeping, das immer mit 2 zurueckkehrt @0x80053b18). Die Opcodes 0x0b/0x0c selbst bedeuten im RE1.5-Interpreter etwas
+     * anderes (Zaehler-Push @0x8003f490 / Warte-Gate @0x8003f4c4), deshalb das Signal. */
+    PUT(s_prog_szene, n, OP_SET(RE15_K2080_SIG_BANK, RE15_K2080_SIG_WSLEEP, 0));
+    PUT(s_prog_szene, n, OP_POLL(RE15_K2080_SIG_WSLEEP));
     PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_WURF));                   /* Super_reset @0x078E + Evt_exec sub13 @0x0796 */
     PUT(s_prog_szene, n, OP_SLEEP(1));   /* Abschnittsende (irons_tod_1150.c OP_ABSCHNITT_ENDE): der Bildtakt sieht das Loslassen,
                                           * bevor die Tuer feuert (Bank 5 ist Raum-Scratch, der 2090-Aufbau loescht ihn) */
@@ -384,17 +413,49 @@ static int32_t wasser_2080(void)
 }
 /* FG-E4: der Wurf faellt in ROOM2090/2091 zu Ende (Cut 12); Landeflaeche = Wasseroberflaeche des Beckens. */
 static int32_t wasser_2090(void) { return RE15_K2080_WASSER_2090; }
-/* Wurfrichtung (Gier des Werfers beim Anheben, die RE2-Bahn wird um sie gedreht). MESSHAKEN RE15_K2080_WURF_GIER=<n> (nur PC,
- * env-gegatet, KEIN Spielverhalten): eine andere Gier fuer Messlaeufe der Landestelle (Dossier 8.9). */
-static int wurf_gier(void)
+/* MESSHAKEN RE15_K2080_WURF_GIER=<n> (nur PC, env-gegatet, KEIN Spielverhalten): eine feste Gier fuer Messlaeufe der Landestelle
+ * (Dossier 8.9); -1 = keiner. */
+static int wurf_gier_messhaken(void)
 {
 #ifdef RE15_PLATFORM_PC
     static int s_g = -0x7fff;
-    if (s_g == -0x7fff) { const char *e = getenv("RE15_K2080_WURF_GIER"); s_g = (e && *e) ? (atoi(e) & 0xfff) : RE15_K2080_WURF_GIER; }
+    if (s_g == -0x7fff) { const char *e = getenv("RE15_K2080_WURF_GIER"); s_g = (e && *e) ? (atoi(e) & 0xfff) : -1; }
     return s_g;
 #else
-    return RE15_K2080_WURF_GIER;
+    return -1;
 #endif
+}
+/* Wurfrichtung (Gier des Werfers ab dem Schnitt auf Cut 7, die RE2-Bahn wird um sie gedreht). Nachbesserung 2 (N3): gewaehlt
+ * beim Bau des Szenen-Programms (re15_k2080_wurf_gier_wahl), gemerkt in Bit 117 fuer den Raumaufbau ohne Laufzeit-Bahn. */
+static int wurf_gier(void)
+{
+    const int m = wurf_gier_messhaken();
+    if (m >= 0) return m;
+    if (s_wurf_gier >= 0) return s_wurf_gier;
+    return bit(RE15_K2080_BIT_SUEDWURF) ? RE15_K2080_WURF_GIER_SUED : RE15_K2080_WURF_GIER_NORD;
+}
+/* Nennbahn einer Wurfrichtung g (Wurf-Stand RE15_K2080_NPC_WURF_X/STAND_Z + Haende am Ende von Eigen c6, gedreht um g) bis zur
+ * 2090-Landeflaeche (RE2 sub13 @0x088E-08B0) - dieselbe Rechnung wie der Raumaufbau ohne Laufzeit-Bahn. */
+static void nenn_landung(int g, int32_t out[2])
+{
+    int32_t start[3], ende[3], dx = 0, dz = 0; int nb = 0;
+    vektor_drehen((int16_t)g, RE15_K2080_HAND_VOR, 0, &dx, &dz);
+    start[0] = RE15_K2080_NPC_WURF_X + dx; start[1] = RE15_K2080_Y + RE15_K2080_HAND_HOCH; start[2] = RE15_K2080_NPC_STAND_Z + dz;
+    re15_k2080_bahn_rechnen(start, (int16_t)g, wasser_2090(), ende, &nb);
+    out[0] = ende[0]; out[1] = ende[2];
+}
+/* Nachbesserung 2 (N3): von den zwei gemessenen Wurfrichtungen (Header RE15_K2080_WURF_GIER_NORD/_SUED) die, deren Landepunkt
+ * WEITER vom Alligator beim Ausloesen liegt - RE2 nimmt den Kanister nur aus dem Anlauf (Zielmodus ab 8880 voraus @0x80100a88-8c,
+ * Fenster 8601..9000 @0x80100ad8-ec), ein Landepunkt neben dem Gator waere fuer ihn schon "vorbei". Ohne gesicherten Alligator:
+ * Nordbecken (Stand Nachbesserung 1). */
+int re15_k2080_wurf_gier_wahl(int gslot, int32_t gx, int32_t gz)
+{
+    if (gslot <= 0) return RE15_K2080_WURF_GIER_NORD;
+    int32_t ln[2], ls[2];
+    nenn_landung(RE15_K2080_WURF_GIER_NORD, ln);
+    nenn_landung(RE15_K2080_WURF_GIER_SUED, ls);
+    const int64_t nx = (int64_t)ln[0] - gx, nz = (int64_t)ln[1] - gz, sx = (int64_t)ls[0] - gx, sz = (int64_t)ls[1] - gz;
+    return (sx * sx + sz * sz > nx * nx + nz * nz) ? RE15_K2080_WURF_GIER_SUED : RE15_K2080_WURF_GIER_NORD;
 }
 
 /* ---- NPC -------------------------------------------------------------------------------------------------------------- */
@@ -672,6 +733,23 @@ void re15_kanister2080_r41_tick(void)
     if (raum_2080(raum)) messzeile_ebene();
     if (!raum_2080(raum) || s_phase != RE15_K2080_IN_2080) return;
     re15_actor_t *n = npc_aktor();
+    {   /* Nachbesserung 2 (N1): Wsleeping-Bedingung (RE15_K2080_SIG_WSLEEP) je Bild - frei, wenn keine Nachricht mehr steht
+         * (0x800e873c & 0x80, inkl. Nutzer-Nachhall einer laengeren Aufnahme) und keine Sprachaufnahme mehr laeuft
+         * (0x800cfbd8 & 0x20). Das Programm loescht das Bit unmittelbar vor seinem Poll. */
+        const int zeile = g_scd.message_active != 0;
+        const int stimme = g_re15_voice_laeuft && g_re15_voice_restbilder > 0;
+        if (zeile && g_scd.message_id == 42 && s_z42_an < 0) s_z42_an = (int)g_engine.frame_count;
+        if (!zeile && s_z42_an >= 0 && s_z42_aus < 0) {
+            s_z42_aus = (int)g_engine.frame_count;
+            K_LOG("Zeile 42 stand F%d..F%d (%d Bilder), Stimme %s", s_z42_an, s_z42_aus - 1, s_z42_aus - s_z42_an,
+                  stimme ? "laeuft noch" : "aus");
+        }
+        if (!zeile && !stimme && !sig(RE15_K2080_SIG_WSLEEP)) {
+            sig_setzen(RE15_K2080_SIG_WSLEEP, 1);
+            if (s_z42_aus >= 0)
+                K_LOG("Wsleeping frei (RE2 @0x079B: Zeile 42 und Stimme zu Ende) - Loslassen folgt");
+        }
+    }
     /* KEIN Halt der Zombies (entity+0x9 |= 0x20): gemessen (Lauf p3f) spielte der angehaltene RE2-Steher seinen Clip 1 bis zum
      * Ende weiter und lag ab Bild 40 am Boden. Die Steher (grid 0x02) bleiben von selbst stehen, solange der Spieler fern ist:
      * der Parkplatz liegt auf Band 5 >= 10000 entfernt (Form: Montage-Steher irons_tod_1150.c "standen still", re15_montage_r38.h). */
@@ -703,10 +781,9 @@ void re15_kanister2080_r41_tick(void)
         s_kan_zustand = 1;
         K_LOG("Kanister aufgehoben (Loco c%d Bild %d, Hinknien ROOM11B0 sub06 @0x01650)", (int)n->motion, (int)n->anim_frame);
     }
-    if (n && s_kan_zustand == 1) {
-        n->rot_y = (int16_t)wurf_gier();                 /* Blick in die Wurfrichtung (PORT-WAHL, Header RE15_K2080_WURF_GIER) */
-        kanister_in_haenden(n);
-    }
+    /* Nachbesserung 2 (N2): kein Drehen mehr im Takt - der Werfer behaelt die Gier des Laufs, bis das Programm mit dem Schnitt auf
+     * Cut 7 das Dir_set schreibt (RE2 @0x0748); vorher setzte der Takt ab dem Griff jedes Bild die Wurf-Gier (98 Grad Sprung). */
+    if (n && s_kan_zustand == 1) kanister_in_haenden(n);
     if (n && sig(RE15_K2080_SIG_WURF)) {
         sig_setzen(RE15_K2080_SIG_WURF, 0);
         kanister_in_haenden(n);                          /* Super_reset @0x800558b8-d8: Weltlage der Haende */
@@ -740,6 +817,65 @@ static void gator_zuruecklegen(unsigned raum)
     s_gator_slot = -1;
 }
 
+/* ---- Nachbesserung 2 (N3): Anschwimmen (Herleitung am Header RE15_K2080_ANSCHWIMM_AB, Dossier 9.3) --------------------------- */
+static int32_t isqrt64(int64_t q)
+{
+    if (q <= 0) return 0;
+    int64_t r = q < 0x7fffffff ? q : 0x7fffffff, alt;
+    do { alt = r; r = (r + q / r) / 2; } while (r < alt);
+    return (int32_t)alt;
+}
+/* 1 = DIESER Szenen-Kanister liegt in 2090/2091 (Bit 116, im Raum gesetzt) noch frei im Wasser (B-Stufe 0); c = Lage, d2/ab2 =
+ * Abstandsquadrat Wurzel <-> Kanister und RE2-Zielmodus-Grenze 8880 x Zeichen-Skala (wie das Fenster, gator_re2_r41.c gr2_scale). */
+static int anschwimm_lage(const re15_actor_t *e, int32_t c[2], int64_t *d2, int64_t *ab2)
+{
+    if (!e || !raum_2090((unsigned)g_current_room_id & 0xFFFFu) || !s_set_2090 || !bit(RE15_K2080_BIT_KANISTER)) return 0;
+    if (re15_gr2_kanister_stufe() != 0) return 0;
+    int32_t pos[3], rot[9];
+    if (!re15_gr2_kanister_welt(pos, rot)) return 0;
+    c[0] = pos[0]; c[1] = pos[2];
+    const int64_t dx = (int64_t)pos[0] - e->x, dz = (int64_t)pos[2] - e->z;
+    const int32_t sk = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    const int64_t ab = ((int64_t)RE15_K2080_ANSCHWIMM_AB * sk) >> 12;
+    *d2 = dx * dx + dz * dz; *ab2 = ab * ab;
+    return 1;
+}
+int re15_k2080_r41_anschwimmen_aktiv(const re15_actor_t *e)
+{
+    int32_t c[2]; int64_t d2 = 0, ab2 = 0;
+    return anschwimm_lage(e, c, &d2, &ab2) && d2 >= ab2;
+}
+int re15_k2080_r41_anschwimmen(int slot, re15_actor_t *e, int32_t dist)
+{
+    int32_t c[2] = { 0, 0 }; int64_t d2 = 0, ab2 = 0;
+    const int lage = anschwimm_lage(e, c, &d2, &ab2);
+    const int an = lage && d2 >= ab2;
+    if (an != s_anschw) {
+        s_anschw = an;
+        K_LOG("ANSCHWIMMEN %s: Gator Slot %d (%d,%d) Gier %d, Kanister (%d,%d) Abstand %d, Grenze %d (RE2-Zielmodus 8880 @0x80100a88-8c)",
+              an ? "an" : "aus", slot, (int)e->x, (int)e->z, (int)e->rot_y & 0xfff, (int)c[0], (int)c[1], (int)isqrt64(d2),
+              (int)isqrt64(ab2));
+    }
+    if (!an) return 0;
+    int32_t tx = c[0], tz = c[1];
+    re15_gator_boss_steuerziel(e, &tx, &tz);              /* Spur B: Kanten-Umweg um Plattform/Rampe + Klemmflaeche */
+    const int soll = ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 0x400) & 0xfff;   /* Mesh-Gier zum Ziel (re15_actor.h:1196) */
+    const int dlt = ((soll - (int)e->rot_y + 0x800) & 0xfff) - 0x800;
+    if (dlt > 0x300 || dlt < -0x300) {
+        /* Wende auf der Stelle wie die Verfolgung (Spur B, enemy_ai_boss_gator.c "WENDE STATT BOGEN": ab 0x300 Fehlwinkel Slew 0x60,
+         * Clip ohne Vortrieb) - RE2 hat keine Lenkung, sein Gator schwimmt die Bahn, auf der der Kanister liegt */
+        re15_enemy_steer_point(e, tx, tz, 0x60);
+        re15_gr2_chase_clip(slot, e, dist, NULL);
+    } else {
+        int32_t v = 0;
+        re15_enemy_steer_point(e, tx, tz, 0x30);          /* Slew 0x30 wie die Verfolgung */
+        re15_gr2_chase_clip(slot, e, dist, &v);            /* RE2 Sub 1/2: Clip 0/1 nach der Hysterese, Wurzelversatz */
+        re15_ai_advance(e, v);
+    }
+    e->y = RE15_K2080_GATOR_WASSER_Y;                      /* GB_WATER_Y @0x8010c65c */
+    return 1;
+}
+
 /* ---- Installer --------------------------------------------------------------------------------------------------------- */
 void re15_kanister2080_r41_install(uint16_t room_id)
 {
@@ -759,7 +895,14 @@ void re15_kanister2080_r41_install(uint16_t room_id)
         }
         if (s_phase == RE15_K2080_NACH_2080) {
             s_phase = RE15_K2080_IN_2080;
-            s_kan_zustand = 0; s_ziel_slot = -1; s_ziel_n = 0; s_kopf_ab = 0;
+            s_kan_zustand = 0; s_ziel_slot = -1; s_ziel_n = 0; s_kopf_ab = 0; s_z42_an = s_z42_aus = -1;
+            /* Nachbesserung 2 (N3): Wurfrichtung nach der Lage des Alligators beim Ausloesen (Header RE15_K2080_WURF_GIER_NORD/_SUED) */
+            s_wurf_gier = re15_k2080_wurf_gier_wahl(s_gator_slot, s_gator.x, s_gator.z);
+            bit_setzen(RE15_K2080_BIT_SUEDWURF, s_wurf_gier == RE15_K2080_WURF_GIER_SUED);
+            {   int32_t l[2]; nenn_landung(wurf_gier(), l);
+                K_LOG("Wurfrichtung %d (%s, Alligator beim Ausloesen (%d,%d)) -> Nennlandung (%d,%d)%s", wurf_gier(),
+                      wurf_gier() == RE15_K2080_WURF_GIER_SUED ? "Suedbecken" : "Nordbecken", (int)s_gator.x, (int)s_gator.z,
+                      (int)l[0], (int)l[1], wurf_gier_messhaken() >= 0 ? " [MESSHAKEN RE15_K2080_WURF_GIER]" : ""); }
             baue_szene();
             const int slot = starten(s_prog_szene, s_prog_szene_n);
             bit_setzen(RE15_K2080_BIT_ANKUNFT, 1);
@@ -802,12 +945,8 @@ void re15_kanister2080_r41_install(uint16_t room_id)
             /* Kanister liegt schon (der Fall laeuft sonst noch, fall_takt legt ihn an der Aufschlagstelle ab). Spielstand ohne
              * Laufzeit-Bahn: dieselbe Bahn aus der Nennlage (Wurf-Stand + Eigen-c6-Ende, Wurf-Gier, 2090-Wasser). */
             if (!s_lande_ok) {
-                int32_t start[3], ende[3], dx = 0, dz = 0; int nb = 0;
-                vektor_drehen((int16_t)wurf_gier(), RE15_K2080_HAND_VOR, 0, &dx, &dz);
-                start[0] = RE15_K2080_NPC_WURF_X + dx; start[1] = RE15_K2080_Y + RE15_K2080_HAND_HOCH;
-                start[2] = RE15_K2080_NPC_STAND_Z + dz;
-                re15_k2080_bahn_rechnen(start, (int16_t)wurf_gier(), wasser_2090(), ende, &nb);
-                s_lande[0] = ende[0]; s_lande[1] = ende[2]; s_lande_ok = 1;
+                nenn_landung(wurf_gier(), s_lande);       /* Bit 117: Nord- oder Suedwurf (Nachbesserung 2) */
+                s_lande_ok = 1;
             }
             re15_gr2_kanister_setzen(s_lande[0], RE15_K2080_GATOR_WASSER_Y, s_lande[1]);
             s_set_2090 = 1;

@@ -75,7 +75,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "re15_kanister2080_r41.h"   /* Runde 41 Spur G: Bits 114-116 */
+#include "re15_kanister2080_r41.h"   /* Runde 41 Spur G: Bits 114-117 */
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -525,6 +525,7 @@ static const port_bit_t k_port[] = {
     { RE15_K2080_BANK, RE15_K2080_BIT_ANKUNFT, "RE15_K2080_BIT_ANKUNFT", "2080: Knall (Knall-Bank Satz 0) beim ersten Betreten nach Bit 110, kanister2080_r41.c (Runde 41 G)" },
     { RE15_K2080_BANK, RE15_K2080_BIT_SZENE, "RE15_K2080_BIT_SZENE", "Marvin/John-Kanister-Szene gelaufen, kanister2080_r41.c (Runde 41 G)" },
     { RE15_K2080_BANK, RE15_K2080_BIT_KANISTER, "RE15_K2080_BIT_KANISTER", "Kanister liegt im 2090-Becken, kanister2080_r41.c (Runde 41 G)" },
+    { RE15_K2080_BANK, RE15_K2080_BIT_SUEDWURF, "RE15_K2080_BIT_SUEDWURF", "Kanister-Wurf ins Suedbecken (sonst Nord), kanister2080_r41.c (Runde 41 G NB2)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 

@@ -62,6 +62,7 @@
 #include "re15_engine.h"    /* Runde 41 Spur B NB3: g_engine.frame_count (Messzeile AUFTAUCHEN) */
 #include "re15_gator_re2_r41.h" /* Runde 41 Spur B: RE2-Bausteine (Hysterese, Zonen-Dash, Intro, HURT-Selektor,
                                  * Kanister T2/R1, Schuetteln) - gator_re2_r41.c */
+#include "re15_kanister2080_r41.h" /* Runde 41 Spur G (Nachbesserung 2, N3): Anschwimmen des geworfenen Kanisters */
 
 /* Wrapper aus enemy_ai_common.c (dort static — als re15_ai_* exportiert). */
 extern void    re15_ai_advance(re15_actor_t *e, int32_t sp);
@@ -1171,6 +1172,11 @@ int re15_gator_boss_im_fressen(const re15_actor_t *e)   /* Nachbesserung 5: Mess
 {
     return re15_gator_boss_active(e) && s_gb[(int)(e - g_actors)].phase == GBP_FRESSEN;
 }
+/* Runde 41 Spur G (NB2, N3): Steuerziel wie die Verfolgung = Kanten-Umweg + Klemmflaeche des CHASE-Zweigs (kanister2080_r41.c) */
+void re15_gator_boss_steuerziel(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+{   (void)gb_kanten_umweg(e, tx, tz);
+    *tx = (*tx < -8900 + 1600) ? -8900 + 1600 : (*tx > 7200 - 1600) ? 7200 - 1600 : *tx;
+    *tz = (*tz < -27000 + 1600) ? -27000 + 1600 : (*tz > -5400 - 1600) ? -5400 - 1600 : *tz; }
 int re15_gator_boss_verfolgt(const re15_actor_t *e)
 {
     if (!re15_gator_boss_active(e)) return 0;
@@ -1601,6 +1607,9 @@ static void gb_takt(int slot)
             e->y = GB_WATER_Y;
             break;
         }
+        /* Runde 41 Spur G (Nachbesserung 2, N3): liegt der geworfene Kanister >= 8880 voraus, schwimmt er ihn an (RE2-Zielmodus
+         * +0x1C0 & 4 @0x80100a34-5c / Biss-Sperre @0x8010134c-58; Herleitung re15_kanister2080_r41.h RE15_K2080_ANSCHWIMM_AB) */
+        if (re15_k2080_r41_anschwimmen(slot, e, dist)) break;
         if (player_on_platform) {
             /* Nutzer 2026-09-10: solange Leon OBEN steht -> BELAGERN und nach
              * oben schnappen; geklettert wird erst, wenn er heruntergesprungen
@@ -2002,6 +2011,7 @@ static void gb_takt(int slot)
         {   const char *tv6 = getenv("RE15_GB_TEST");
             if (tv6 && *tv6 == '6') oben = 1;   /* Sichtlauf: Belagerung erzwingen */
         }
+        if (re15_k2080_r41_anschwimmen_aktiv(e)) oben = 0;   /* Runde 41 Spur G (NB2, N3): erst der Kanister (Zielmodus) */
         if (!oben) {                          /* heruntergesprungen -> Verfolgung
                                                * (deren blocked-Regel klettert) */
             g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;

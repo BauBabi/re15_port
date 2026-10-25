@@ -61,6 +61,7 @@
 #define RE15_KANISTER2080_R41_H
 
 #include <stdint.h>
+#include "re15_actor.h"   /* re15_actor_t (Nachbesserung 2: Haken im Boss-Takt) */
 
 /* ---- Raeume ---------------------------------------------------------------------------------------------------------- */
 #define RE15_K2080_RAUM_2080       0x2080u
@@ -77,6 +78,8 @@
 #define RE15_K2080_BIT_ANKUNFT     114   /* P1: Knall beim ersten Betreten von 2080/2081 nach Bit 110 gespielt */
 #define RE15_K2080_BIT_SZENE       115   /* P3: Marvin/John-Szene gelaufen (Kanister geworfen, Zombies tot, kein Prop mehr) */
 #define RE15_K2080_BIT_KANISTER    116   /* P3: Kanister liegt im Becken 2090/2091, bis der Alligator an ihm stirbt */
+#define RE15_K2080_BIT_SUEDWURF    117   /* Nachbesserung 2 (N3): der Wurf ging ins Suedbecken (Gier RE15_K2080_WURF_GIER_SUED),
+                                          * sonst ins Nordbecken - fuer den Raumaufbau ohne Laufzeit-Bahn (Spielstand/Continue) */
 
 /* ---- Signale Programm <-> Takt (Bank 5 Wort 0 = Raum-Scratch: beim Raum-Init geloescht, `sw zero` FUN_8003ecec @0x8003ed74,
  * Port scd_room_setup.c; in ROOM2080/2081/2090/2091 ohne Ck/Set Bank 5 und ohne Plc_dest, Zensus scd_dump_room.py) ------ */
@@ -88,6 +91,12 @@
 #define RE15_K2080_SIG_GELANDET    0x1C  /* Takt -> Programm: Aufschlag (ROOM7020 Set(5,0x0e) @0x08B6) */
 #define RE15_K2080_SIG_TUERTON     0x1D  /* Programm -> Takt: Tuer-Ton der Szene (DOOR06 Satz 1, Marvin/John kommt herein) */
 #define RE15_K2080_SIG_AUSGERICHTET 0x1E /* Takt -> Programm: NPC steht auf dem Ziel (Nachdrehen 0xC8/Bild @0x80033f90 fertig) */
+/* Nachbesserung 2 (N1): Takt -> Programm "Wsleeping erfuellt" = keine Nachricht steht mehr und keine Sprachaufnahme laeuft mehr.
+ * RE2 ROOM7020 sub12 Wsleep `0b` @0x079A / Wsleeping `0c` @0x079B; Wsleeping (Tafel @0x800a74c8[12] = 0x80053ac0) gibt ab,
+ * solange 0x800cfbd8 & 0x20 (`andi v0,v0,0x20` @0x80053acc; Bit gesetzt vom Xa_on-Handler `ori v0,v0,0x20` @0x80058060, d.h. die
+ * XA-Stimme laeuft) oder 0x800e873c & 0x80 (`andi v0,v0,0x80` @0x80053ae4; gesetzt vom Nachrichten-Start FUN_8002fe38
+ * @0x8002fe80/88) steht. Port: g_scd.message_active (inkl. Nutzer-Nachhall) / g_re15_voice_laeuft + g_re15_voice_restbilder. */
+#define RE15_K2080_SIG_WSLEEP      0x1F
 #define RE15_K2080_SIG_ANKUNFT     0x17  /* Plc_dest-Ankunftsflag (+0x1c3 @0x80041c24; Form ROOM1170 `00 05 21`) */
 #define RE15_K2080_TUER_SLOT       21    /* AOT-Slot der Raumwechsel (frei in 2080 0..4 und 2090 0..5; Montage nutzt 20) */
 
@@ -179,6 +188,25 @@
  *   1024 (Blick -z, Suedbecken, Stand vor FG-E3): 0 von 2 Aufnahmen; 0 (+x): 0 von 1; 640: 0 von 1; 3200: 3 von 4;
  *   3328: 1 von 1; 2816: Aufschlag x -9586 ausserhalb des Beckens (x > -8900). */
 #define RE15_K2080_WURF_GIER       3072
+/* Nachbesserung 2 (N3, Dossier 9.3): zwei gemessene Wurfrichtungen (Tabelle 8.9), die Wahl faellt beim Bau des Szenen-Programms
+ * nach der Lage des Alligators beim Ausloesen (FG-E3 "der Kanister landet so, dass der Alligator ihn ... aufnimmt"): der
+ * Landepunkt, der WEITER vom Alligator liegt - RE2 braucht den Kanister mindestens 8880 voraus (Zielmodus @0x80100a88-8c) und
+ * holt ihn ueber das Fenster 8601..9000 (@0x80100ad8-ec), also aus dem Anlauf.
+ *   NORD 3072: Aufschlag (-7515,-12304), 14 von 39 Fall-Bildern in 2090 Cut 12;
+ *   SUED 1024: Aufschlag (-6821,-22914), Fall samt Aufschlag in Cut 12 (17-19 Bilder, Dossier 8.9). */
+#define RE15_K2080_WURF_GIER_NORD  RE15_K2080_WURF_GIER
+#define RE15_K2080_WURF_GIER_SUED  1024
+/* Nachbesserung 2 (N3): ANSCHWIMMEN = RE2-Zielmodus +0x1C0 & 4 in der Beckengeometrie des Ports. RE2 (EM23_OVL_0000.BIN,
+ * selbst gelesen): Bank 5 Bit 1 (Kanister liegt) und Stufe < 2 -> Zielmodus an (@0x80100a34-5c), Ziel = der Kanister
+ * (x, y - 800, obj[1].z) @0x80100a4c-70; aus, sobald obj[1].z - z < 9000 - 120 = 8880 (`addiu v0,v0,-9000 / slti v0,v0,-120`
+ * @0x80100a88-8c) und Stufe 0; solange er an ist, schaerft FUN_801012fc den Biss nicht (@0x8010134c-58). RE2s Gator lenkt den
+ * Koerper nie - er schwimmt seine Korridorbahn (x -23078 `addiu v0,zero,-23078 / sw v0,56(s0)` @0x80101048-4c), und der
+ * Kanister liegt AUF dieser Bahn: Fall v_x -40 `2f 00 d8 ff` @0x0672 x 23 Bilder @0x0676, Treiben v_x -36 `2f 00 dc ff`
+ * @0x06A2 x 12 + 4 Bilder @0x06AA/@0x06BC (ROOM40A0 sub10), Liegestelle (-22816,-1984,-9500) sub05 Pos_set @0x0484 = 262 neben
+ * der Bahn. Im offenen 2090-Becken hat der Port-Gator keine feste Bahn (Verfolgung = Nutzer-Design der Spur B); die Bahn,
+ * die ueber den Kanister fuehrt, ist hier das Steuerziel: solange der Kanister liegt (Stufe 0) und >= 8880 x Zeichen-Skala
+ * entfernt ist, schwimmt der Alligator ihn an (Kanten-Umweg/Klemme/Wende wie die Verfolgung) und beisst nicht. */
+#define RE15_K2080_ANSCHWIMM_AB    (9000 - 120)
 /* Haende am Ende von Eigen c6 (Mitte der Bones 11/14, Zensus Dossier 1.8): Fallback, wenn die NPC-Bank nicht geladen ist. */
 #define RE15_K2080_HAND_VOR        840
 #define RE15_K2080_HAND_HOCH       (-2496)
@@ -205,6 +233,13 @@
 void re15_kanister2080_r41_install(uint16_t room_id);
 /* HAKEN scd_vm.c Bildtakt (neben re15_elzazombies_r39_tick): Ausloeser, Signale, Wurfbahn. */
 void re15_kanister2080_r41_tick(void);
+/* HAKEN enemy_ai_boss_gator.c (Nachbesserung 2, N3): GBP_CHASE nach der Aufnahme-Lenksperre - 1 = der Alligator schwimmt in
+ * diesem Bild den geworfenen Kanister an (gesteuert + Vortrieb hier, die Verfolgung entfaellt fuer dieses Bild);
+ * GBP_GUARD - aktiv = zurueck in die Verfolgung. Nur fuer den Kanister DIESER Szene (Bit 116, in 2090/2091 gesetzt). */
+int  re15_k2080_r41_anschwimmen(int slot, re15_actor_t *e, int32_t dist);
+int  re15_k2080_r41_anschwimmen_aktiv(const re15_actor_t *e);
+/* Pruefhaken (Riegel landung): Wahl der Wurfrichtung fuer einen Alligator bei (gx,gz) (gslot < 0: kein Alligator gesichert). */
+int  re15_k2080_wurf_gier_wahl(int gslot, int32_t gx, int32_t gz);
 /* Plattform-Haken (PC: platform/pc/src/kanister2080_pc.c). NULL = stumm. */
 extern void (*re15_k2080_knall_hook)(void);      /* P1: Knall-Bank (gen/knall_bank.inc) in die Tuerbank + Satz 0 */
 extern void (*re15_k2080_tuerton_hook)(void);    /* P3: Tonteil DOOR06 in die Tuerbank + Satz 1 */

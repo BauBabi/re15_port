@@ -14,6 +14,10 @@
 #   unit_r41_kanister2080_bahn    RE2 sub13 Fall (v/a, Stop y >= Wasser - 800) unabhaengig nachgerechnet; Landepunkt im Becken
 #   unit_r41_kanister2080_landung Nachbesserung 1 (FG-E3/FG-E4): Nennbahn endet im 2090-Wasser, >= 10 Fall-Bilder in 2090 Cut 12,
 #                                 Installer legt den Kanister bei Bit 116 an die Aufschlagstelle (2090 und 2091)
+#                                 Nachbesserung 2 (N3): Nord- UND Suedwurf, Wahl des weiteren Landepunkts nach der Lage
+#                                 des Alligators, Bit 117
+#   unit_r41_kanister2080_anschwimmen  Nachbesserung 2 (N3): echter Boss-Takt nach der Szene, fuenf Lagen beim Ausloesen
+#                                 (Abnahme-1-Laeufe): Aufnahme in 1500 Bildern, kein Biss davor; Gegenprobe ohne Szene
 #   unit_r41_kanister2080_texte   Id 42 "Marvin: Hey, Leon, try with this!" / "John: Hey, Elza, try with this!" in Vorbildform
 #   unit_r41_kanister2080_ebene   Nachtrag 20: Band-8-Freiflaeche ab den Zombies geschlossen, nichts auf der Treppe @0x0BE2
 #                                 (Absatzwand @0x05C4 x -16650), Treppenfuss Band 5 unerreichbar
@@ -33,6 +37,18 @@ foreach(_teil lage spawn szene start bahn texte ebene landung)
     set_tests_properties(unit_r41_kanister2080_${_teil} PROPERTIES TIMEOUT 120)
 endforeach()
 
+# Nachbesserung 2 (N3): echter Boss-Takt, Kanister nach der Szene, fuenf Lagen beim Ausloesen (Abnahme-1-Laeufe) + Gegenprobe
+add_executable(test_r41_kanister2080_anschwimmen ${CMAKE_CURRENT_SOURCE_DIR}/test_r41_kanister2080_anschwimmen.c)
+target_link_libraries(test_r41_kanister2080_anschwimmen PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r41_kanister2080_anschwimmen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r41_kanister2080_anschwimmen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX" RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+if(NOT WIN32)
+    target_link_libraries(test_r41_kanister2080_anschwimmen PRIVATE m)
+endif()
+add_test(NAME unit_r41_kanister2080_anschwimmen COMMAND test_r41_kanister2080_anschwimmen)
+set_tests_properties(unit_r41_kanister2080_anschwimmen PROPERTIES TIMEOUT 300)
+
 if(TARGET re15_pc)
     add_test(NAME integration_r41_kanister2080
              COMMAND "${CMAKE_COMMAND}"
@@ -45,5 +61,5 @@ if(TARGET re15_pc)
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_kanister2080_kampf_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_kanister2080_kampf.cmake)
-    set_tests_properties(integration_r41_kanister2080_kampf PROPERTIES TIMEOUT 1800)
+    set_tests_properties(integration_r41_kanister2080_kampf PROPERTIES TIMEOUT 3000)
 endif()
