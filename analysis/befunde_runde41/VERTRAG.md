@@ -28,6 +28,7 @@ volle Suite einmal am Ende im Release-Container, dann Release v0.8.29.
 | 3 | J | stage3szenen_a / r41_stage3szenen_a | 3060 Marvins Animation am Ende seines Abschnitts; 3061 Sherry krabbelt in den Schacht; Elzas Animation am Ende dieser Szene |
 | 3 | K | stage3szenen_b / r41_stage3szenen_b | ab 30C1 Sherrys Modell kaputt + ohne Waffe; 3091-Szene mit staendig falschen Animationen |
 | 3 | L | spinnenanim / r41_spinnenanim | Spinnen: Herausklettern aus dem Gitter + Herunterklettern an der Wand |
+| 4 | N | nachtrag30 / r41_nachtrag30 | Nachtrag 30/30b: Schrank 2010 klappt auf -> Sicherungskasten wie 2060 (fuse_box.bmp, Mechanismus wie 2060); Panel-Raetsel 2030 (Druck 80, Entwuerfe zur Freigabe, statt Ventil 13); Notiztext + Loesung 09-02-01-08 (N-E1); RE2-Ton der Plattformfahrt; RE2-Alarmton durchgehend; Lautstaerke fuer ALLE Toene (Tuersequenzen, Wassersprung) |
 
 Abhaengigkeiten: F und G bauen auf dem integrierten B (RE2-Alligator) und D (Blink-API) auf; G auf F (Bit "Szene
 gesehen"). C und A beruehren beide 20B0 (A: Effekt EM024; C: Raumwechsel/Weg) — verschiedene Stellen.
@@ -49,6 +50,10 @@ gen/ ausschliessen). Zuteilung: **C**: 2000/20B0 (+Elza-Varianten) Id 40 (Leiter
 2080 Ids 40-41 (ENTFALLEN mit Nachtrag 7 2026-10-24 09:22), 20B0/20B1 Id 41 + 2070/2071 Id 40 (Sperre des gefluteten 2030, Entscheid C-E2 2026-10-24 05:25); **F**: 2090/2091 Ids 42-46; **G**: 2080/2081 Ids 42-47 (42 = "Hey, Leon/Elza, try with this!",
 Stimmen `synchro/STAGE2/room2080/main42.wav` und `room2081/main42.wav` — im Dossier fuer den Nutzer nennen);
 **D/E/H/I/J/K/L/M**: nur vorhandene Nachrichten. Nutzer-Dateien unter synchro/ und pri/ werden NIE veraendert.
+
+**N** (Nachtrag 30, 2026-10-25): uebernimmt C's Zuteilung (Bits 100-103/106/107/125; Ids 2000/20B0 40, 2030 40-55,
+2010/2011 40-44, 2050 40-44) und D's Lautstaerke-Modul (lautstaerke_r41.c, Endstufe audio_pc.c); weitere Bits nur 126-133 nach
+Zensus + Eintrag hier; neue RE2-Daten nach shared_assets/RE2/ (Paket-Gate im Dossier nennen).
 
 ### 1.3 Gemeinsame Dateien (nur kleine Haken, 1-5 Zeilen, Kommentar "Runde 41 Spur X")
 scd_room_setup.c (Installer-Zeile am ENDE des Blocks: C, E, F, G, I), scd_vm.c (C, F, G), platform/pc/main.c (D

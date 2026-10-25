@@ -970,3 +970,20 @@ Orchestrator-Rechnung zum Notiztext: "nur Gruen und Rot vertauscht" + "Nummern v
 01 schwarz, 08 gruen (jede Zeile passt zu einem echten Ventil) - NICHT mehr 09-07-02-01. Rueckfrage an den Nutzer laeuft.
 Orchestrator-Befund zur Lautstaerke: es gibt EIN Audiogeraet (audio_pc.c SDL_OpenAudioDevice); die Endstufe der Spur D sitzt
 am Ende von audio_callback nach SE/Stimmen/XA/FMV/BGM/Ambience - Rueckfrage, welche Toene laut bleiben, laeuft.
+
+## 2026-10-25 17:03 — Nachtrag 30b (Nutzer-Antworten per Auswahl zu Nachtrag 30) + Orchestrator-Entscheid N-E1; neue Spur N
+
+1. Loesung des Ventilraetsels nach dem neuen Notiztext (Rechnung des Orchestrators in Nachtrag 30, beide Varianten mit Rechenweg
+   gezeigt) — Antwort des Nutzers (Wortlaut): **"Welche Variante einfacher ist."** -> **N-E1:** die NEUE Loesung
+   **09 rot -> 02 gruen -> 01 schwarz -> 08 gruen**; das Plakat bleibt UNVERAENDERT (1. GREEN 09 - 2. RED 01 - 3. BLACK 02 -
+   4. RED 07). Regeln des neuen Texts: Gruen <-> Rot vertauscht (Schwarz bleibt), Nummern der schwarzen und gruenen Ventile
+   vertauscht (01<->02, 07<->08). Notiztext (Vorschlag; der restliche Nutzer-Wortlaut aus Nachtrag 13 bleibt): der Satz
+   "They mixed up black, green, and red, and swapped the numbers for black!" wird zu **"They mixed up green and red, and on top
+   of that they swapped the numbers of "black" and "green"!"** (Anfuehrungszeichen = Ironie auf die falschen Plakatfarben).
+2. Panel-Raetsel 2030 (statt Ventil 13) — Antwort: **"C entwirft, ich gebe frei (Empfohlen)"** + Wortlaut: **"Zum 2030er
+   Rätsel ist noch wichtig das die Pressure irgendwie 80 betragen muss, wenn du das schon so hin schreibst."** (Bezug: Port-Text
+   2030 Id 43 "The pressure gauge reads 80. / Lower the bridge?"). -> 2-3 Entwuerfe mit Bildern (Nahansicht des Panels links in
+   schaltschrank.png, Stil des Spiels), jedes Ziel = Druck 80; GEBAUT WIRD ERST NACH DER FREIGABE des Nutzers (eigener Nachtrag).
+3. Lautstaerke — Antwort (Wortlaut): **"Die Türsequenzen und Sounds der Reinsprung SOunds ins wasser etc, scheint davon nicht
+   betroffen."** -> je Tonart bei volume=100 und 50 messen (Mitschnitt), Ursache belegen, beheben: ALLE Toene folgen der Einstellung.
+4. Neue Spur **N** (nachtrag30, Baum r41_nachtrag30 von master) fuer alle Punkte von Nachtrag 30/30b; C und D sind integriert.
