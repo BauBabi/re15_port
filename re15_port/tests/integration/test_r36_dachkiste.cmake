@@ -494,6 +494,7 @@ GEGNERWEG
 WARTE 120
 ")
 _lauf(echt2050 500 ${_grund} "RE15_WEGPLAN=${_subE}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt
+      RE15_SET_FLAG=9:100   # Runde 41 Spur C: die Leiter 2000 slot 4 ist bis zur Flut gesperrt (Bit 100 = Leiter frei, re15_ventilkette_r41.h)
       RE15_DEBUG_JUMP=2000@250 "RE15_PLAYER_POS=-26100,8500,3072,1" "RE15_EXIT_AT=5400")
 macro(_echt2050_pruefen _name _raum2)
     _muss("[aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)" _dbg "${_name}: Tuer 2000/2001 slot 4 @0x0169E nicht ausgeloest")
@@ -548,6 +549,7 @@ message(STATUS "r36_dachkiste echt2050: nach dem Fall Tuer slot 0 -> ROOM2000 ->
 
 _echt2050(elza2051 2001 2051)
 _lauf(elza2051 500 ${_grund} RE15_PSELECT_AUTO_SWITCH=1 "RE15_WEGPLAN=${_subE}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt
+      RE15_SET_FLAG=9:100   # Runde 41 Spur C: Leiter 2001 slot 4 bis zur Flut gesperrt (Bit 100)
       RE15_DEBUG_JUMP=2000@250 "RE15_PLAYER_POS=-26100,8500,3072,1" "RE15_EXIT_AT=4200")
 _muss("Spieler-Familie PL04" _dbg "elza2051: Elza nicht gewaehlt (RE15_PSELECT_AUTO_SWITCH)")
 _muss("loaded room2001.rdt" _dbg "elza2051: ROOM2001 nicht geladen")

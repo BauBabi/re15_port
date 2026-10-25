@@ -1,0 +1,140 @@
+# Tuergraph STAGE2 nach der Flut - erzeugt von re15_port/tools/r41_ventilkette/tuergraph_nach_flut.py
+# Quelle: 240 RDT-Dateien unter shared_assets/PSX (Auslieferungsstand), davon 206 Raeume mit Kopf (der Rest sind Platzhalter < 0x60 B).
+# Zeile: Raum Region @Offset slot sce floor Rechteck -> Ziel (Ankunft x,y,z) Cut nfloor | Bedingung | Setzer | Elza
+
+## A  Tueren der STAGE2-Raeume (Leon-Variante; Elza = ROOMxxx1 Byte fuer Byte verglichen) + ROOM11A0
+=== ROOM2000
+  ROOM2000 main00 @0x0161E slot 0 sce 2 floor 1 rect x 3900..4900 z -20200..-19200 -> ROOM1260 (-8750,-1800,-6900) Cut 0 nfloor 1 | unbedingt | Elza gleich
+  ROOM2000 main00 @0x0163E slot 1 sce 2 floor 1 rect x -27600..-26600 z -24700..-23700 -> ROOM1260 (19700,-1800,-5000) Cut 8 nfloor 1 | unbedingt | Elza gleich
+  ROOM2000 main00 @0x0165E slot 2 sce 2 floor 1 rect x -27600..-26600 z -3650..-1650 -> ROOM2010 (-4600,0,-4950) Cut 0 nfloor 0 | unbedingt | Elza gleich
+  ROOM2000 main00 @0x0167E slot 3 sce 2 floor 1 rect x -20300..-19300 z -8200..-4200 -> ROOM2070 (-18650,0,-6450) Cut 3 nfloor 0 | unbedingt | Elza gleich
+  ROOM2000 main00 @0x0169E slot 4 sce 2 floor 1 rect x -27600..-26600 z 9800..10800 -> ROOM2050 (9100,-5400,4100) Cut 0 nfloor 3 | unbedingt | Elza gleich
+=== ROOM2010
+  ROOM2010 main00 @0x00746 slot 0 sce 2 floor 0 rect x -5800..-4800 z -5800..-4050 -> ROOM2000 (-26450,-1800,-2700) Cut 14 nfloor 1 | unbedingt | Elza gleich
+=== ROOM2020
+  ROOM2020 main00 @0x0082A slot 0 sce 2 floor 1 rect x 10400..12400 z -4350..-3350 -> ROOM2050 (-5150,-5400,3450) Cut 5 nfloor 3 | unbedingt | Elza gleich
+  ROOM2020 main00 @0x00866 slot 1 sce 0 floor 1 rect x -15200..-13200 z 2800..3800 -> ROOM2030 (-450,-16200,-9700) Cut 13 nfloor 9 | WENN Ck(3,219)=0 @0x0084E | (3,219)=1 gesetzt in: ROOM2020 sub03 @0x00B26, ROOM2021 sub03 @0x00B26 | Elza gleich
+  ROOM2020 main00 @0x0088A slot 1 sce 2 floor 1 rect x -15200..-13200 z 2800..3800 -> ROOM2030 (-450,-16200,-9700) Cut 13 nfloor 9 | NICHT(Ck(3,219)=0 @0x0084E) | (3,219)=1 gesetzt in: ROOM2020 sub03 @0x00B26, ROOM2021 sub03 @0x00B26 | Elza gleich
+  ROOM2020 sub00 @0x00958 TEXT slot 3 floor 1 rect x 2200..3000 z -4150..-3350 msg 0 | WENN Ck(3,114)=0 @0x00954
+=== ROOM2030
+  ROOM2030 main00 @0x01ACA slot 0 sce 2 floor 3 rect x 6850..7850 z -1950..1550 -> ROOM2070 (4800,0,-6300) Cut 0 nfloor 0 | unbedingt | Elza gleich
+  ROOM2030 main00 @0x01AEA slot 1 sce 2 floor 9 rect x -8200..-7200 z 5500..7300 -> ROOM2080 (-23200,-9000,-16700) Cut 0 nfloor 5 | unbedingt | Elza gleich
+  ROOM2030 main00 @0x01B12 TEXT slot 2 floor 9 rect x -1350..450 z -10900..-9900 msg 0 | WENN Ck(3,219)=0 @0x01B0E
+  ROOM2030 main00 @0x01B2A slot 2 sce 2 floor 9 rect x -1350..450 z -10900..-9900 -> ROOM2020 (-14200,-1800,2450) Cut 5 nfloor 1 | NICHT(Ck(3,219)=0 @0x01B0E) | (3,219)=1 gesetzt in: ROOM2020 sub03 @0x00B26, ROOM2021 sub03 @0x00B26 | Elza gleich
+  ROOM2030 main00 @0x01B4C slot 3 sce 2 floor 9 rect x -8200..-7200 z -8150..-6350 -> ROOM2060 (7600,0,3950) Cut 0 nfloor 0 | unbedingt | Elza gleich
+=== ROOM2040
+  ROOM2040 main00 @0x0129C slot 0 sce 2 floor 4 rect x 23300..24300 z -6050..-5050 -> ROOM2050 (-6800,-5400,-5650) Cut 3 nfloor 3 | unbedingt | Elza gleich
+  ROOM2040 main00 @0x012BC slot 1 sce 2 floor 4 rect x -13300..-12300 z 1800..2800 -> ROOM2060 (450,0,-6150) Cut 3 nfloor 0 | unbedingt | Elza gleich
+  ROOM2040 main00 @0x012DC slot 2 sce 2 floor 5 rect x -2800..-2000 z -20800..-18800 -> ROOM2040 (-3900,-9000,-19850) Cut 11 nfloor 5 | unbedingt | Elza gleich
+  ROOM2040 main00 @0x012FC slot 3 sce 2 floor 5 rect x -3650..-2850 z -20800..-18800 -> ROOM2040 (-1800,-9000,-19850) Cut 10 nfloor 5 | unbedingt | Elza gleich
+  ROOM2040 main00 @0x0131C slot 4 sce 2 floor 5 rect x -20950..-19950 z -20800..-18800 -> ROOM2070 (4650,0,-19200) Cut 9 nfloor 0 | unbedingt | Elza gleich
+  ROOM2040 sub00 @0x0141E TEXT slot 8 floor 3 rect x 4050..6050 z -6600..-5600 msg 0 | WENN Ck(3,146)=0 @0x0141A
+=== ROOM2050
+  ROOM2050 main00 @0x01C4A slot 0 sce 2 floor 3 rect x 8100..10100 z 4700..6700 -> ROOM2000 (-26450,-1800,10250) Cut 10 nfloor 1 | unbedingt | Elza gleich
+  ROOM2050 main00 @0x01C6A slot 1 sce 2 floor 3 rect x -6150..-4150 z 3950..4950 -> ROOM2020 (11350,-1800,-3150) Cut 0 nfloor 1 | unbedingt | Elza gleich
+  ROOM2050 main00 @0x01C8A slot 2 sce 2 floor 4 rect x -8200..-7200 z -6200..-5000 -> ROOM2040 (21700,-5400,-5400) Cut 0 nfloor 3 | unbedingt | Elza gleich
+  ROOM2050 sub00 @0x01EC6 TEXT slot 7 floor 3 rect x 6800..8300 z -12000..-11200 msg 1 | WENN Ck(3,109)=0 @0x01D8E | NICHT(Ck(3,104)=0 @0x01E1E)
+  ROOM2050 sub00 @0x01F60 TEXT slot 6 floor 3 rect x 4700..5500 z -11550..-10750 msg 2 | NICHT(Ck(3,109)=0 @0x01D8E)
+  ROOM2050 sub00 @0x01F74 TEXT slot 7 floor 3 rect x 6800..8300 z -12000..-11200 msg 1 | NICHT(Ck(3,109)=0 @0x01D8E)
+=== ROOM2060
+  ROOM2060 main00 @0x00D9A slot 0 sce 2 floor 0 rect x 7950..8950 z 2950..4950 -> ROOM2030 (-6950,-16200,-7200) Cut 13 nfloor 9 | unbedingt | Elza gleich
+  ROOM2060 main00 @0x00DBA slot 1 sce 2 floor 1 rect x -200..1100 z -8850..-7850 -> ROOM2040 (-12850,-5400,1600) Cut 15 nfloor 3 | unbedingt | Elza gleich
+  ROOM2060 sub00 @0x01082 TEXT slot 8 floor 0 rect x -2900..-1900 z 2900..3900 msg 2 | NICHT(Ck(3,126)=0 @0x01066)
+  ROOM2060 sub00 @0x010A6 TEXT slot 9 floor 0 rect x -4700..-3300 z 3950..4950 msg 3 | WENN Ck(3,108)=0 @0x010A2
+  ROOM2060 sub00 @0x010DE TEXT slot 9 floor 0 rect x -4700..-3300 z 3950..4950 msg 6 | NICHT(Ck(3,108)=0 @0x010A2) | NICHT(Ck(3,144)=0 @0x010C2)
+=== ROOM2070
+  ROOM2070 main00 @0x00A3A slot 0 sce 2 floor 0 rect x -19950..-18950 z -7900..-4900 -> ROOM2000 (-20650,-1800,-6200) Cut 13 nfloor 1 | unbedingt | Elza gleich
+  ROOM2070 main00 @0x00A5A slot 1 sce 2 floor 0 rect x 5000..6000 z -7900..-4900 -> ROOM2030 (6550,-5400,-100) Cut 0 nfloor 3 | unbedingt | Elza gleich
+  ROOM2070 main00 @0x00A7A slot 2 sce 2 floor 0 rect x -19950..-18950 z 4900..7900 -> ROOM2030 (6550,-5400,-100) Cut 0 nfloor 3 | unbedingt | Elza gleich
+  ROOM2070 main00 @0x00A9A slot 3 sce 2 floor 0 rect x 5750..6750 z 4900..7900 -> ROOM2000 (-20650,-1800,-6200) Cut 13 nfloor 1 | unbedingt | Elza gleich
+  ROOM2070 main00 @0x00AD6 slot 4 sce 0 floor 0 rect x -19900..-18900 z -20250..-18250 -> ROOM11A0 (6500,0,-3200) Cut 7 nfloor 0 | WENN Ck(3,151)=0 @0x00ABE | (3,151)=1 gesetzt in: ROOM2070 sub02 @0x00CE4, ROOM2071 sub02 @0x00CE4 | Elza gleich
+  ROOM2070 main00 @0x00AFA slot 4 sce 2 floor 0 rect x -19900..-18900 z -20250..-18250 -> ROOM11A0 (6500,0,-3200) Cut 7 nfloor 0 | NICHT(Ck(3,151)=0 @0x00ABE) | (3,151)=1 gesetzt in: ROOM2070 sub02 @0x00CE4, ROOM2071 sub02 @0x00CE4 | Elza gleich
+  ROOM2070 main00 @0x00B1C slot 5 sce 2 floor 0 rect x 5000..6000 z -20200..-18200 -> ROOM2040 (-19750,-9000,-19850) Cut 12 nfloor 5 | unbedingt | Elza gleich
+=== ROOM2080
+  ROOM2080 main00 @0x00BA2 slot 0 sce 2 floor 5 rect x -24400..-23400 z -17700..-15700 -> ROOM2030 (-6950,-16200,6450) Cut 9 nfloor 9 | unbedingt | Elza gleich
+  ROOM2080 main00 @0x00BC2 slot 1 sce 2 floor 8 rect x -9650..-8650 z -26150..-25150 -> ROOM2090 (-8200,0,-25550) Cut 0 nfloor 0 | unbedingt | Elza gleich
+  ROOM2080 sub00 @0x00C06 TEXT slot 3 floor 8 rect x -9650..-8650 z -26150..-25150 msg 1 | WENN Ck(3,245)=0 @0x00C02
+=== ROOM2090
+  ROOM2090 main00 @0x00996 slot 0 sce 2 floor 0 rect x -9400..-8400 z -26000..-25000 -> ROOM2080 (-9950,-14400,-25700) Cut 4 nfloor 8 | unbedingt | Elza gleich
+  ROOM2090 main00 @0x009B6 slot 1 sce 2 floor 1 rect x 6750..7750 z -18100..-14600 -> ROOM20A0 (4950,-3600,4100) Cut 13 nfloor 2 | unbedingt | Elza gleich
+=== ROOM20A0
+  ROOM20A0 main00 @0x01746 slot 0 sce 2 floor 2 rect x 3450..6450 z 4500..5500 -> ROOM2090 (6300,-1800,-16250) Cut 2 nfloor 1 | unbedingt | Elza gleich
+  ROOM20A0 main00 @0x01766 slot 1 sce 2 floor 2 rect x 16000..17000 z -21550..-20550 -> ROOM20A0 (16500,-7200,-20000) Cut 12 nfloor 4 | unbedingt | Elza gleich
+  ROOM20A0 main00 @0x017A2 slot 2 sce 0 floor 2 rect x 24800..26800 z -450..550 -> ROOM11A0 (28150,-1800,1250) Cut 9 nfloor 1 | WENN Ck(3,206)=0 @0x0178A | (3,206)=1 gesetzt in: ROOM20A0 sub10 @0x01FF0, ROOM20A1 sub10 @0x01FF0 | Elza gleich
+  ROOM20A0 main00 @0x017C6 slot 2 sce 2 floor 2 rect x 24800..26800 z -450..550 -> ROOM11A0 (28150,-1800,1250) Cut 9 nfloor 1 | NICHT(Ck(3,206)=0 @0x0178A) | (3,206)=1 gesetzt in: ROOM20A0 sub10 @0x01FF0, ROOM20A1 sub10 @0x01FF0 | Elza gleich
+=== ROOM20B0
+  ROOM20B0 main00 @0x01962 slot 0 sce 2 floor 1 rect x 3900..4900 z -20200..-19200 -> ROOM1260 (-8750,-1800,-6900) Cut 0 nfloor 1 | unbedingt | Elza gleich
+  ROOM20B0 main00 @0x01982 slot 1 sce 2 floor 1 rect x -27600..-26600 z -24700..-23700 -> ROOM1260 (19700,-1800,-5000) Cut 8 nfloor 1 | unbedingt | Elza gleich
+  ROOM20B0 main00 @0x019A2 slot 2 sce 2 floor 1 rect x -27600..-26600 z -3650..-1650 -> ROOM2010 (-4600,0,-4950) Cut 0 nfloor 0 | unbedingt | Elza gleich
+  ROOM20B0 main00 @0x019C2 slot 3 sce 2 floor 1 rect x 5450..6450 z -7900..-4900 -> ROOM2030 (6550,-5400,-100) Cut 0 nfloor 3 | unbedingt | Elza gleich
+  ROOM20B0 main00 @0x019E2 slot 4 sce 2 floor 1 rect x -27600..-26600 z 9800..10800 -> ROOM2050 (9100,-5400,4100) Cut 0 nfloor 3 | unbedingt | Elza gleich
+=== ROOM11A0
+  ROOM11A0 main00 @0x00F42 TEXT slot 0 floor 0 rect x 5400..7600 z -4300..-3400 msg 2 | WENN Ck(3,151)=0 @0x00F3E
+  ROOM11A0 main00 @0x00F5A slot 0 sce 2 floor 0 rect x 5400..7600 z -4300..-3400 -> ROOM2070 (-18650,0,-19300) Cut 12 nfloor 0 | NICHT(Ck(3,151)=0 @0x00F3E) | (3,151)=1 gesetzt in: ROOM2070 sub02 @0x00CE4, ROOM2071 sub02 @0x00CE4 | Elza gleich
+  ROOM11A0 main00 @0x00F7C slot 1 sce 2 floor 1 rect x -650..650 z 24500..25400 -> ROOM3000 (-23338,0,-14647) Cut 0 nfloor 0 | unbedingt | Elza gleich
+  ROOM11A0 main00 @0x00F9C slot 2 sce 2 floor 1 rect x 14200..16400 z 2300..3200 -> ROOM11A0 (7500,-5400,10650) Cut 10 nfloor 3 | unbedingt | Elza gleich
+  ROOM11A0 main00 @0x00FC6 slot 3 sce 2 floor 3 rect x 6400..8600 z 11050..11950 -> ROOM11A0 (15300,-1800,1850) Cut 8 nfloor 1 | unbedingt | Elza gleich
+  ROOM11A0 main00 @0x00FEE TEXT slot 4 floor 1 rect x 28500..29500 z 200..2400 msg 2 | WENN Ck(3,206)=0 @0x00FEA
+  ROOM11A0 main00 @0x01006 slot 4 sce 2 floor 1 rect x 28500..29500 z 200..2400 -> ROOM20A0 (25800,-3600,-800) Cut 8 nfloor 2 | NICHT(Ck(3,206)=0 @0x00FEA) | (3,206)=1 gesetzt in: ROOM20A0 sub10 @0x01FF0, ROOM20A1 sub10 @0x01FF0 | Elza gleich
+
+## B  Zugangs-Zensus: alle Door_aot_set aller RDTs mit diesen Zielen
+  Ziel ROOM2080: 4 Saetze
+    ROOM2030 main00 @0x01AEA slot 1 sce 2 floor 9 -> (-23200,-9000,-16700) nfloor 5 | unbedingt
+    ROOM2031 main00 @0x01AEA slot 1 sce 2 floor 9 -> (-23200,-9000,-16700) nfloor 5 | unbedingt
+    ROOM2090 main00 @0x00996 slot 0 sce 2 floor 0 -> (-9950,-14400,-25700) nfloor 8 | unbedingt
+    ROOM2091 main00 @0x00996 slot 0 sce 2 floor 0 -> (-9950,-14400,-25700) nfloor 8 | unbedingt
+  Ziel ROOM2090: 4 Saetze
+    ROOM2080 main00 @0x00BC2 slot 1 sce 2 floor 8 -> (-8200,0,-25550) nfloor 0 | unbedingt
+    ROOM2081 main00 @0x00BC2 slot 1 sce 2 floor 8 -> (-8200,0,-25550) nfloor 0 | unbedingt
+    ROOM20A0 main00 @0x01746 slot 0 sce 2 floor 2 -> (6300,-1800,-16250) nfloor 1 | unbedingt
+    ROOM20A1 main00 @0x01746 slot 0 sce 2 floor 2 -> (6300,-1800,-16250) nfloor 1 | unbedingt
+  Ziel ROOM20A0: 6 Saetze
+    ROOM11A0 main00 @0x01006 slot 4 sce 2 floor 1 -> (25800,-3600,-800) nfloor 2 | NICHT(Ck(3,206)=0 @0x00FEA)
+    ROOM11A1 main00 @0x01006 slot 4 sce 2 floor 1 -> (25800,-3600,-800) nfloor 2 | NICHT(Ck(3,206)=0 @0x00FEA)
+    ROOM2090 main00 @0x009B6 slot 1 sce 2 floor 1 -> (4950,-3600,4100) nfloor 2 | unbedingt
+    ROOM2091 main00 @0x009B6 slot 1 sce 2 floor 1 -> (4950,-3600,4100) nfloor 2 | unbedingt
+    ROOM20A0 main00 @0x01766 slot 1 sce 2 floor 2 -> (16500,-7200,-20000) nfloor 4 | unbedingt
+    ROOM20A1 main00 @0x01766 slot 1 sce 2 floor 2 -> (16500,-7200,-20000) nfloor 4 | unbedingt
+  Ziel ROOM2070: 8 Saetze
+    ROOM11A0 main00 @0x00F5A slot 0 sce 2 floor 0 -> (-18650,0,-19300) nfloor 0 | NICHT(Ck(3,151)=0 @0x00F3E)
+    ROOM11A1 main00 @0x00F5A slot 0 sce 2 floor 0 -> (-18650,0,-19300) nfloor 0 | NICHT(Ck(3,151)=0 @0x00F3E)
+    ROOM2000 main00 @0x0167E slot 3 sce 2 floor 1 -> (-18650,0,-6450) nfloor 0 | unbedingt
+    ROOM2001 main00 @0x0167E slot 3 sce 2 floor 1 -> (-18650,0,-6450) nfloor 0 | unbedingt
+    ROOM2030 main00 @0x01ACA slot 0 sce 2 floor 3 -> (4800,0,-6300) nfloor 0 | unbedingt
+    ROOM2031 main00 @0x01ACA slot 0 sce 2 floor 3 -> (4800,0,-6300) nfloor 0 | unbedingt
+    ROOM2040 main00 @0x0131C slot 4 sce 2 floor 5 -> (4650,0,-19200) nfloor 0 | unbedingt
+    ROOM2041 main00 @0x0131C slot 4 sce 2 floor 5 -> (4650,0,-19200) nfloor 0 | unbedingt
+  Ziel ROOM2040: 10 Saetze
+    ROOM2040 main00 @0x012DC slot 2 sce 2 floor 5 -> (-3900,-9000,-19850) nfloor 5 | unbedingt
+    ROOM2040 main00 @0x012FC slot 3 sce 2 floor 5 -> (-1800,-9000,-19850) nfloor 5 | unbedingt
+    ROOM2041 main00 @0x012DC slot 2 sce 2 floor 5 -> (-3900,-9000,-19850) nfloor 5 | unbedingt
+    ROOM2041 main00 @0x012FC slot 3 sce 2 floor 5 -> (-1800,-9000,-19850) nfloor 5 | unbedingt
+    ROOM2050 main00 @0x01C8A slot 2 sce 2 floor 4 -> (21700,-5400,-5400) nfloor 3 | unbedingt
+    ROOM2051 main00 @0x01C8A slot 2 sce 2 floor 4 -> (21700,-5400,-5400) nfloor 3 | unbedingt
+    ROOM2060 main00 @0x00DBA slot 1 sce 2 floor 1 -> (-12850,-5400,1600) nfloor 3 | unbedingt
+    ROOM2061 main00 @0x00DBA slot 1 sce 2 floor 1 -> (-12850,-5400,1600) nfloor 3 | unbedingt
+    ROOM2070 main00 @0x00B1C slot 5 sce 2 floor 0 -> (-19750,-9000,-19850) nfloor 5 | unbedingt
+    ROOM2071 main00 @0x00B1C slot 5 sce 2 floor 0 -> (-19750,-9000,-19850) nfloor 5 | unbedingt
+  Ziel ROOM11A0: 14 Saetze
+    ROOM11A0 main00 @0x00F9C slot 2 sce 2 floor 1 -> (7500,-5400,10650) nfloor 3 | unbedingt
+    ROOM11A0 main00 @0x00FC6 slot 3 sce 2 floor 3 -> (15300,-1800,1850) nfloor 1 | unbedingt
+    ROOM11A1 main00 @0x00F9C slot 2 sce 2 floor 1 -> (7500,-5400,10650) nfloor 3 | unbedingt
+    ROOM11A1 main00 @0x00FC6 slot 3 sce 2 floor 3 -> (15300,-1800,1850) nfloor 1 | unbedingt
+    ROOM2070 main00 @0x00AD6 slot 4 sce 0 floor 0 -> (6500,0,-3200) nfloor 0 | WENN Ck(3,151)=0 @0x00ABE
+    ROOM2070 main00 @0x00AFA slot 4 sce 2 floor 0 -> (6500,0,-3200) nfloor 0 | NICHT(Ck(3,151)=0 @0x00ABE)
+    ROOM2071 main00 @0x00AD6 slot 4 sce 0 floor 0 -> (6500,0,-3200) nfloor 0 | WENN Ck(3,151)=0 @0x00ABE
+    ROOM2071 main00 @0x00AFA slot 4 sce 2 floor 0 -> (6500,0,-3200) nfloor 0 | NICHT(Ck(3,151)=0 @0x00ABE)
+    ROOM20A0 main00 @0x017A2 slot 2 sce 0 floor 2 -> (28150,-1800,1250) nfloor 1 | WENN Ck(3,206)=0 @0x0178A
+    ROOM20A0 main00 @0x017C6 slot 2 sce 2 floor 2 -> (28150,-1800,1250) nfloor 1 | NICHT(Ck(3,206)=0 @0x0178A)
+    ROOM20A1 main00 @0x017A2 slot 2 sce 0 floor 2 -> (28150,-1800,1250) nfloor 1 | WENN Ck(3,206)=0 @0x0178A
+    ROOM20A1 main00 @0x017C6 slot 2 sce 2 floor 2 -> (28150,-1800,1250) nfloor 1 | NICHT(Ck(3,206)=0 @0x0178A)
+    ROOM3000 main00 @0x01462 slot 0 sce 2 floor 0 -> (-50,-1800,24200) nfloor 1 | unbedingt
+    ROOM3001 main00 @0x01462 slot 0 sce 2 floor 0 -> (-50,-1800,24200) nfloor 1 | unbedingt
+
+## C  Port-Eingriffe der Runde 41 (engine/src/ventilkette_r41.c) im Zustand Bits 103+100 ohne 107
+  ROOM2000/20B0 slot 4 (Leiter -> 2050): Sperrtext 40 nur OHNE Bit 100 -> nach der Flut Tuer (install_2000)
+  Tueren mit Ziel ROOM2000 -> ROOM20B0 (Cut-Zuordnung re15_ventilkette_r41_cut_20b0) ab Bit 103 (tueren_umlenken)
+  ROOM2030 slot 0 (Ost-Tuer, Ring) -> ROOM20B0 Cut 11 ab Bit 103, auch mit Bit 107 (tueren_umlenken)
+  ROOM20B0 slot 3 / ROOM2070 slots 1,2 (Ring) -> Sperrtext 41 / 40, Bit 103 ohne 107 (ring_sperren, C-E2)
+  ROOM2030 Lift-Rufzonen oben slot 4 / 6 -> Original-Satz 1, Bit 103 ohne 107 (install_2030)
+  Keine Port-Sperre der Runde 41 an Tueren von ROOM2040/2060/2070-Nordgang/11A0/20A0/2090/2080.

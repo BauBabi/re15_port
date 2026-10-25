@@ -49,6 +49,7 @@
 #include "re15_panel_zeiger.h" /* RE2-ANGLEICHUNG: Abnahme erst bei stehendem Zeiger (op_evt_exec) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
 #include "re15_rolltor.h"   /* Runde 34 Nacht, Spur A: Rolltor ROOM1050/1051 (rolltor_1050.c) */
+#include "re15_ventilkette_r41.h"   /* Runde 41 Spur C: Ereignis-Kette + Strahlen 20B0 (ventilkette_r41.c) */
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Cursor haelt sub04 vor For @0x0FC0 (op_for) */
 #include "re15_nahaufnahmen_r40.h" /* Runde 40: Nahaufnahmen-Programme (nahaufnahmen_r40.c) */
 #include "re15_leiche.h"     /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
@@ -684,6 +685,7 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_hund1121_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur R: 1121/30 Hund */
     if (!pc) pc = re15_elzazombies_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur Q: 1041/1061/1031 Ereignis 30 */
     if (!pc) pc = re15_nahaufnahmen_r40_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 40: 11D0/1110/1100 Ereignis 31, 1110/3, 11F0/16 */
+    if (!pc) pc = re15_ventilkette_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur C: 2030/17-27, 2050/2+4+9, 2010/20 (re15_ventilkette_r41.h; 2080 seit Nachtrag 7 Original) */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -4567,6 +4569,8 @@ int op_add_aspeed(scd_thread_t *t)
  * Anim/draw run from the room bank via re15_esp_fx_tick / the platform draw. */
 int op_sce_espr_on(scd_thread_t *t)
 {
+    /* Runde 41 Spur C: ROOM20B0/20B1 Strahlen @0x01E96/@0x01EA6/@0x01EB6 nach der Flut ueberspringen (re15_ventilkette_r41.h). */
+    if (s_current_rdt && re15_ventilkette_r41_espr_unterdrueckt((uint16_t)g_current_room_id, t->pc, s_current_rdt->raw)) { t->pc += 16; return 1; }
     uint8_t effect_id = t->pc[2];
     uint8_t sub_index = t->pc[3];
     uint8_t owner_cat = t->pc[4];   /* andi a0,a1,0xff @0x80041888 — owner category 0..5 */

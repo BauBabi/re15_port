@@ -82,6 +82,15 @@ static const uint8_t s_name_roys_diary[] = {
     0x2e, 0x4b, 0x55, 0x4f, 0x00, 0x20, 0x45, 0x3d, 0x4e, 0x55, 0x07
 };
 
+/* RUNDE 41 SPUR C (Nachbesserung 4, Nachtrag 13) — Dokument 6 "Technician's Note" (include/re15_ventilkette_r41.h):
+ *   Item-Id 0x4E = 0x48 + 6, Bild-Satz 31 (erster freier hinter FILE30), max_page 2 + H 176 gemessen am Satz
+ *   (tools/r41_ventilkette/dokument_satz.py: FILE31_p02 vorhanden, p03 nicht; Vorlage FILE17 = RE2 @0x800AA144 + 17*4
+ *   {9,176}). Name = Titel-Vorschlag, kodiert wie "Chris' Diary" @0x800c4e04: Code = ASCII - 0x24, Leerzeichen 0x00,
+ *   Apostroph 0x3A, Ende 0x07. */
+static const uint8_t s_name_technician[] = {   /* "Technician's Note" */
+    0x30, 0x41, 0x3f, 0x44, 0x4a, 0x45, 0x3f, 0x45, 0x3d, 0x4a, 0x3a, 0x4f, 0x00, 0x2a, 0x4b, 0x50, 0x41, 0x07
+};
+
 static const re15_file_doc_t s_docs[] = {
     { RE15_FILES_FIRST_ITEM_ID + 0, 25, 15, 144, s_name_irons_diary },
     { RE15_FILES_FIRST_ITEM_ID + 1, 26,  3, 144, s_name_dok1 },   /* Runde 34 Nacht, Spur E */
@@ -89,6 +98,7 @@ static const re15_file_doc_t s_docs[] = {
     { RE15_FILES_FIRST_ITEM_ID + 3, 28,  2, 176, s_name_dok3 },   /* Runde 34 Nacht, Spur E */
     { RE15_FILES_FIRST_ITEM_ID + 4, 29,  2, 176, s_name_dok4 },   /* Runde 34 Nacht, Spur E */
     { RE15_FILES_FIRST_ITEM_ID + 5, 30,  5, 176, s_name_roys_diary },   /* Runde 38 Spur G */
+    { RE15_FILES_FIRST_ITEM_ID + 6, 31,  2, 176, s_name_technician },   /* Runde 41 Spur C (Nachtrag 13) */
 };
 #define DOC_COUNT ((int)(sizeof s_docs / sizeof s_docs[0]))
 
