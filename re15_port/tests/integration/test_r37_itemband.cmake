@@ -19,6 +19,7 @@ cmake_minimum_required(VERSION 3.16)
 #   unten3010   Band 0 unter dem Steg (SHOTGUN SHELLS slot 5 @0x02094 floor 1): GESPERRT, (9,20) = 0.
 #   weg3010     Klettern an r0[4] (Band 0 -> 1) -> FREI auf Band 1 -> (9,20) = 1.
 #   weg2090     Tuer 20A0 slot 0 @0x01746 -> 2090 Plattform Band 1 -> FREI (Pocket Watch slot 5 @0x00A12) -> (9,90) = 1.
+#               Mit Bits (9,110)+(9,113) (Querbezug Runde 41 Spur F, s. Lauf weg2090).
 #   galerie2040 Band 5 an der Head of Akuma (slot 7 @0x01364 floor 3): GESPERRT, (9,91) = 0.
 #   weg2040     Halle Band 3 (Tor-Raetsel (3,146)/(3,53) als geloest gesetzt: sub00 schliesst Zelle 19 sonst per Sca_id_set)
 #               -> Nordgang -> FREI auf Band 3 -> (9,91) = 1.
@@ -193,7 +194,16 @@ message(STATUS "r37_itemband weg3010: Klettern an r0[4] (Band 0 -> 1) -> FREI ->
 set(_wp_weg2090 "OBJ 0" "RAUM 20A0" "GEGNERWEG" "WARTE 30" "BLICK 3072" "WARTE 20" "AKTION" "RAUM 2090" "GEGNERWEG"
     "WARTE 30" "FLAG 9 90" "BLICK 2048" "WARTE 20" "AKTION" "WARTE 60" "AKTION" "WARTE 60" "AKTION" "WARTE 100"
     "FLAG 9 90" "ENDE")
-_lauf(weg2090 500 _wp_weg2090 RE15_DEBUG_JUMP=20A0@250 "RE15_PLAYER_POS=4950,4100,3072,2" "RE15_EXIT_AT=500#2090")
+# Querbezug Runde 41 Spur F (Nachbesserung 2, Muster Orchestrator-Entscheid F-E1 "neue Regel widerlegt alten Riegel"):
+# Nutzer (Nachtrag 21) "man kommt ueber die Leiter zum Aligator, nicht ueber das Tor. Das Tor soll verschlossen sein, und dann
+# mit den Schluessel den man vom Aligator bekommt geoeffnet werden!" - das Tor 20A0 slot 0 @0x01746 ist bis Bit (9,113)
+# "Tor aufgeschlossen" ein sce-3-Ereignis ('It's locked.', kein DOOR FIRE), und das erste Betreten von 2090 startet bis
+# Bit (9,110) "Szene gesehen" die Ankunftsszene (VERTRAG 1.1). Der Weg ueber das Tor besteht also nur im Zustand nach
+# Szene und Schluessel -> RE15_SET_FLAG=9:110,9:113. Gemessen 2026-10-25 (Dossier F_gatorszene.md N2.M1): ohne die Bits
+# 'ROOM20A0 Slot 0 (Tor) gesperrt', 'Folge Z ROOM20A0 F84', kein DOOR FIRE; mit den Bits DOOR FIRE slot=0, 2090 geladen,
+# 'ITEM slot 5 floor 1 item 0x3F tk 90 spieler-band 1 ... -> FREI', FLAG (9,90) 0 -> 1.
+_lauf(weg2090 500 _wp_weg2090 RE15_SET_FLAG=9:110,9:113 RE15_DEBUG_JUMP=20A0@250 "RE15_PLAYER_POS=4950,4100,3072,2"
+      "RE15_EXIT_AT=500#2090")
 _muss("[aot] DOOR FIRE slot=0 rect=(4950,5000,hw=1500,hh=500) target_cut=2 spawn=(6300,-1800,-16250)" _dbg "weg2090: Tuer 20A0 slot 0 @0x01746 nicht ausgeloest")
 _muss("loaded room2090.rdt" _dbg "weg2090: ROOM2090 nicht geladen")
 _frei(weg2090 2090 5 1)
