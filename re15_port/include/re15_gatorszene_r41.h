@@ -152,5 +152,7 @@ int  re15_gatorszene_r41_folge_n(void);
 const re15_gsz_folge_t *re15_gatorszene_r41_folge(int i);
 const uint8_t *re15_gatorszene_r41_programm(int nr, int *out_len);
 int  re15_gatorszene_r41_gator_phase(void);
+/* Pruefhaken (Nachbesserung 1, M1): 1 = Fuss UND Kopf der Spielfigur liegen im Bild von Cut cut (Projektion des Zeichners). */
+int  re15_gatorszene_r41_spieler_im_bild(int cut);
 
 #endif /* RE15_GATORSZENE_R41_H */

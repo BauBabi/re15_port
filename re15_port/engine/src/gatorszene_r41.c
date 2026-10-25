@@ -136,6 +136,7 @@ static void musik_takt_vor(void) { musik_takt(); }
 static int      s_zustand = RE15_GSZ_AUS;
 static int32_t  s_leon_x, s_leon_y, s_leon_z;    /* Eintrittslage in 2090 (Rueckkehr-Tuersatz) */
 static int16_t  s_leon_yaw;
+static uint8_t  s_leon_cut;                      /* Eintritts-Cut (Raumlader @0x8001d940 = Tuer-Nutzlast; Leiter = Cut 0) */
 static uint8_t  s_prog[640];
 static int      s_prog_len = 0;
 
@@ -428,6 +429,7 @@ void re15_gatorszene_r41_install(uint16_t room_id)
         }
         const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         s_leon_x = pl->x; s_leon_y = pl->y; s_leon_z = pl->z; s_leon_yaw = pl->rot_y;
+        s_leon_cut = (uint8_t)g_scd.cam_id;               /* scd_room_setup.c: g_scd.cam_id = Eintritts-Cut vor den Installern */
         s_folge_n = 0;
         leiche_lage();
         key_auf_leiche(room_id);
@@ -542,6 +544,21 @@ static void ga_anker_setzen(re15_actor_t *e, const re15_enemy_bank_t *bk)
     s_ga.anker_x = e->x - w[0]; s_ga.anker_z = e->z - w[1];
 }
 
+/* FUN_8001569c (RE2 PSX.EXE @0x8001569c, Decompilat RE2_Quellcode_V2/FUN_8001569c.c; Port-Zwilling enemy_ai_boss_g5.c
+ * g5_yaw_toward): Gier auf ziel mit fester Schrittweite rate. Negative rate = auf ziel + 0x800. Rueckgabe 1 = eingerastet
+ * (Zweig `(rate + ziel - gier) & 0xfff < 2 * rate`: gier := ziel). Sonst gier -= rate, und bei `(..) & 0xfff < 0x801` += 2*rate. */
+static int ga_drehen(re15_actor_t *e, int32_t ziel, int32_t rate)
+{
+    if ((int16_t)rate < 0) { rate = -(int16_t)rate; ziel = (ziel + 0x800) & 0xfff; }
+    const uint32_t d = (uint32_t)((rate + (ziel - (int32_t)(uint16_t)e->rot_y)) & 0xfff);
+    const int16_t zurueck = (int16_t)(e->rot_y - (int16_t)rate);
+    if ((int32_t)d < rate * 2) { e->rot_y = (int16_t)ziel; return 1; }
+    e->rot_y = zurueck;
+    if (d < 0x801u) e->rot_y = (int16_t)(zurueck + (int16_t)rate * 2);
+    e->rot_y = (int16_t)(e->rot_y & 0xfff);          /* Port: Gier 0..4095 (RE2 laesst das Halbwort ueberlaufen, mod 4096 gleich) */
+    return 0;
+}
+
 /* Weltlage des Kopfes (Part 6) einer Probe-Pose (Clip, Bild) an der Lage (x,z) mit Gier yaw. */
 static int ga_kopf_probe(const re15_actor_t *e, int clip, int frame, int32_t x, int32_t z, int yaw, int32_t kopf[3])
 {
@@ -555,7 +572,14 @@ static int ga_kopf_probe(const re15_actor_t *e, int clip, int frame, int32_t x, 
 #define GSZ_GATOR_GIER        1024
 /* Biss: Kopf (Part 6) im Koppelbild 13 von Clip 4 (RE2 FRESSEN P1 @0x80101104-34) auf dem Rumpf der Leiche. */
 #define GSZ_KOPPEL_BILD       13
-#define GSZ_WENDE_RATE        75     /* RE2 R1 Ziel-Gier 75/Bild (FUN_8001569c @0x801025f8-608) */
+#define GSZ_WENDE_RATE        75     /* RE2 R1 Ziel-Gier 75/Bild (FUN_8001569c @0x801025f8-608, `addiu a2,zero,75` @0x80102608) */
+/* PORT-WAHL (Notbremse der Wende, Nachbesserung 1 M6; die Wende vor dem Schrei ist Nutzer-Inszenierung Nachtrag 6 "Macht danach
+ * Richtung Leon eine schrei und Schuettel Animation", RE2 R4 @0x80102bd0 selbst dreht nicht): FUN_8001569c rastet ein, sobald
+ * der Rest kleiner als ein Schritt ist (`(rate + ziel - gier) & 0xfff < 2 * rate`), und waehlt die Richtung am Halbkreis
+ * (`< 0x801`). Die groesste Wende ist also 0x800, sie braucht hoechstens ceil(0x800 / 75) = 28 Bilder - nach so vielen Bildern
+ * ist das Ziel bei ruhendem Leon (Riegel Set(2,7,1) haelt ihn) immer erreicht. Die Grenze greift nur, wenn sich das Ziel je
+ * Bild weiter dreht als die Wende (Gator kreist dicht um Leon) - dann bricht sie die Wende nach derselben Zahl Bilder ab. */
+#define GSZ_WENDE_MAX         ((0x800 + GSZ_WENDE_RATE - 1) / GSZ_WENDE_RATE)
 #define GSZ_SCHREI_SE         0      /* RE2 R4: `addu a0,zero,zero` @0x80102c0c + `jal 0x8005bd6c` @0x80102c10 (ENEMSE Bank 17) */
 #define GSZ_SCHREI_BLEND      3      /* RE2 R4: Clip 10 mit `addiu a2,zero,3` @0x80102c44 */
 #define GSZ_SCHWIMM_BLEND     32     /* RE2 Sub 1: Clip 0 Blend 32 @0x80100c38 */
@@ -616,6 +640,49 @@ static const re15_actor_t *leiche_als_opfer(void)
     return &s_opfer;
 }
 
+/* Spielfigur im Bild von Cut cut? Fuss (pl->y) UND Kopf (eine Bandhoehe 0x708 hoeher, Baender je -1800: ROOM2090 Tuer 0
+ * @0x00996 Nutzlast-y 0xC7C0 = -14400 = 8 Baender) muessen auf dem Schirm liegen (Projektion wie gator_re2_r41.c gr2_im_bild,
+ * re15_camera_build_view). Rueckgabe 1/0, Bildpunkt des Fusses nach sx/sy. Mess-/Pruefgroesse der Uebergabe (M1). */
+static int spieler_im_bild(int cut, int *sx, int *sy)
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int32_t fuss[3] = { pl->x, pl->y, pl->z }, kopf[3] = { pl->x, pl->y - 0x708, pl->z };
+    int kx = -1, ky = -1;
+    const int a = re15_gr2_im_bild_cut(cut, fuss, sx, sy);
+    const int b = re15_gr2_im_bild_cut(cut, kopf, &kx, &ky);
+    return a && b;
+}
+int re15_gatorszene_r41_spieler_im_bild(int cut) { int sx, sy; return spieler_im_bild(cut, &sx, &sy); }
+
+/* Szenenende (Nachbesserung 1, M1): die Kamera geht an die Spielerlage zurueck. FORM = Original-Szenenende ROOM1150 sub08:
+ * Cut_chg auf den Cut des Spielers `29 05` @0x012C4 vor Plc_ret `42` @0x012E0 und Cut_auto `3c 01` @0x012E2 (die beiden
+ * letzten macht Programm 3 im naechsten Bild). Ziel = der Eintritts-Cut (s_leon_cut; Leiter ROOM2080 Slot 1 @0x00BC2 Ziel-Cut
+ * 0); der Spieler steht an seiner Eintrittslage (Montage-Tuer von Programm 2). Ohne den Schnitt blieb die Zonen-Zustands-
+ * maschine auf P3s Leichen-Cut 1 (eine Zone feuert nur mit cam_from = angezeigter Cut, `lbu v1,22(a0)` @0x80014254), in
+ * dem keine Zone die Spielerlage traegt - gemessen Abnahme 0 Lauf L1: F405-F699 cam=1, Leon hinter der Kamera. Im SELBEN
+ * Bild wie re15_gr2_kamera_frei (dessen Rueckschnitt auf Cut 1 sonst ein Bild lang zu sehen waere: SCD-Takt vor dem
+ * Spielschritt, main.c). Cut_chg-Zwilling = LAB_800402a0 wie scd_vm.c op_cut_chg: alter Cut @0x800402c0/@0x800402e4,
+ * work_vars[0x0C] @0x800402ec, work_vars[0x0A] @0x800402fc, Bit 0x100 (Zonenkamera aus) @0x800402d4. */
+static void kam_uebergabe(void)
+{
+    const int cut = (int)s_leon_cut;
+    g_scd.cam_id_prev        = (uint8_t)g_scd.work_vars[0x0A];
+    g_scd.cam_id             = (uint8_t)cut;
+    g_scd.cam_arg2           = 0;
+    g_scd.cam_arg3           = 0;
+    g_scd.cam_change_pending = 1;
+    g_scd.work_vars[0x0C]    = g_scd.work_vars[0x0A];
+    g_scd.work_vars[0x0A]    = (int16_t)cut;
+    g_scd.cut_auto_enabled   = 0;
+    int sx = -1, sy = -1;
+    const int im = spieler_im_bild(cut, &sx, &sy);
+    folge('C', cut, im);
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[gatorszene] Kamera-Uebergabe: Cut %d (Eintritts-Cut), Spielfigur %s (Fuss-Bildpunkt %d,%d)\n",
+            cut, im ? "im Bild" : "NICHT im Bild", sx, sy);
+#endif
+}
+
 static void ga_start(int slot, re15_actor_t *e, const re15_enemy_bank_t *bk)
 {
     memset(&s_ga, 0, sizeof s_ga);
@@ -672,7 +739,11 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
     case GP_SCHUETTELN: {                                     /* Clip 5, 120 Bilder (das Rumschleudern) */
         int n = bk->anim.clips[5].frame_count;
         if ((int)e->anim_frame + 1 >= n) {
-            ga_clip(e, 11, 0, 0);                             /* P3 Clip 11 @0x801011d8-e0 */
+            /* P3 Clip 11: `addiu a1,zero,11` @0x801011d8 + `jal 0x8001a240` @0x801011e0 - FUN_8001a240 setzt nur Clip/Blend
+             * (+0x14C/+0x14E @0x8001a258-60) und schaltet das Bild (FUN_8002959c @0x8001a28c), OHNE den Wurzelschritt
+             * FUN_80015e7c/FUN_800152c8 von FUN_8001a330 (@0x8001a374/@0x8001a3c0); die Lage setzt davor FUN_80015cb8 vom Anker
+             * (@0x801011cc) = ga_anker_lage (Clip 11 hat eine feste Wurzel 3132, gleiche Lage je Bild). */
+            ga_clip(e, 11, 0, 0);
             ga_anker_lage(e, bk);
             s_ga.phase = GP_KAUEN; s_ga.t = 0;
             folge('G', GP_KAUEN, 0);
@@ -693,13 +764,10 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
     }
     case GP_WENDE: {                                          /* Clip 0 schwimmend, Gier 75/Bild auf Leon */
         const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-        int ziel = ((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 1024) & 0xfff;
-        int d = ((ziel - (int)e->rot_y + 0x800) & 0xfff) - 0x800;
-        int fertig = (d <= GSZ_WENDE_RATE && d >= -GSZ_WENDE_RATE);
-        if (d > GSZ_WENDE_RATE) d = GSZ_WENDE_RATE; else if (d < -GSZ_WENDE_RATE) d = -GSZ_WENDE_RATE;
-        e->rot_y = (int16_t)((e->rot_y + d) & 0xfff);
+        const int ziel = ((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 1024) & 0xfff;
+        const int fertig = ga_drehen(e, ziel, GSZ_WENDE_RATE);   /* FUN_8001569c(em, ziel, 75) @0x801025f8-608 */
         if (ga_schritt(e, bk) == 2) e->anim_frame = 0;
-        if (fertig || s_ga.t > 60) {
+        if (fertig || s_ga.t > GSZ_WENDE_MAX) {
             ga_clip(e, 10, 0, GSZ_SCHREI_BLEND);              /* R4: Clip 10 Blend 3 @0x80102c40-48 */
             ga_se(GSZ_SCHREI_SE);                             /* R4: SE 0 @0x80102c0c-10 */
             re15_gr2_frame_wort(slot, 0x28000000u);           /* Stoss-Ereignis 1 -> Ruetteln + Schuetteln (@0x801003f0-40c) */
@@ -718,7 +786,9 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
         if (ga_schritt(e, bk) == 2) {
             ga_clip(e, 0, 0, GSZ_SCHWIMM_BLEND);
             re15_gr2_biss_cd(slot, GSZ_BISS_CD);
-            re15_gr2_kamera_frei("gatorszene");
+            re15_gr2_kamera_frei("gatorszene");               /* Spur-B-Sperre auf (Cut_old-Zwilling auf Cut 1 = P3s Leichen-Cut) */
+            re15_gr2_kamera_auto(1);                          /* Nachbesserung 1 (N1): B's Programme R1/Finisher/Intro wieder an */
+            kam_uebergabe();                                  /* Nachbesserung 1 (M1): im SELBEN Bild auf den Cut des Spielers */
             s_ga.phase = GP_ENDE; s_ga.t = 0;
             s_zustand = RE15_GSZ_KAMPF;
             re15_game_flag_set(5, RE15_GSZ_SIG_FERTIG, 1);    /* Programm 3 laeuft weiter (Ankunfts-Poll) */
@@ -913,6 +983,16 @@ static void tor_sperren(uint16_t room_id)
 }
 
 unsigned g_re15_gsz_tor_zu = 0, g_re15_gsz_tor_auf = 0;   /* Pruefzaehler (Riegel) */
+/* (Raum, Nachricht) ist eine Text-Platz-Stelle der Schloss-Ton-Tabelle (Weg Bit 0 = re15_scd_show_message)? */
+static int lock_stelle(uint16_t room_id, uint8_t msg)
+{
+    for (int i = 0; i < re15_lock_se_site_count(); i++) {
+        unsigned r = 0; int m = -1, art = 0, wege = 0;
+        if (re15_lock_se_site(i, &r, &m, &art, &wege) == 0 && r == room_id && m == (int)msg && (wege & RE15_LOCK_WEG_AOT))
+            return 1;
+    }
+    return 0;
+}
 static const uint8_t *tor_druck(uint16_t room_id)
 {
     const uint16_t basis = (uint16_t)(room_id & 0xFFFEu);
@@ -933,9 +1013,14 @@ static const uint8_t *tor_druck(uint16_t room_id)
         g_re15_gsz_tor_auf++;
         folge('U', slot, 1);
     } else {
-        /* Nicht-Treffer-Zweig: Verschlossen-Ton (@0x800516a0/a4, Art M der Mini-Bank TUERSE.VBS) + Text (@0x800516b8). */
-        re15_audio_re2_door_se(re15_lock_se_satz_fuer_art(RE15_LOCK_SE_ART_M));
-        re15_scd_show_message(basis == RE15_GSZ_RAUM ? RE15_GSZ_MSG_ZU : RE15_GSZ_MSG20A0_ZU, GSZ_TOR_MASKE << 16);
+        /* Nicht-Treffer-Zweig: GENAU EIN Verschlossen-Ton (RE2 @0x800516a0 `lui a0,0x216` / @0x800516a4 `jal 0x8005ba28`, Art M
+         * der Mini-Bank TUERSE.VBS) + Text (@0x800516b8). Steht die Meldung als Text-Platz-Stelle in gen/lock_se_sites.inc
+         * (20A0/20A1 msg 1 @0x0203C, Zeile 49/50), spielt re15_scd_show_message diesen Ton schon (re15_lock_se_notice, scd_vm.c
+         * RE2-ERGAENZUNG) - dann hier keiner (Nachbesserung 1, M3: vorher zwei Aufrufe). 2090/2091 msg 42 ist Port-Text,
+         * dort spielt ihn dieser Zweig. */
+        const uint8_t msg = basis == RE15_GSZ_RAUM ? RE15_GSZ_MSG_ZU : RE15_GSZ_MSG20A0_ZU;
+        if (!lock_stelle(room_id, msg)) re15_audio_re2_door_se(re15_lock_se_satz_fuer_art(RE15_LOCK_SE_ART_M));
+        re15_scd_show_message(msg, GSZ_TOR_MASKE << 16);
         g_re15_gsz_tor_zu++;
         folge('Z', slot, 0);
     }
