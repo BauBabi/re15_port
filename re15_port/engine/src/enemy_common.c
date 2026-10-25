@@ -115,11 +115,7 @@ static int rbj_resolve_slot(int slot)
     /* Marker-Bit (1 + Enemy-Index); Port-Aktor-Slot = 1 + Enemy-Index -> Bit == slot. */
     int mslot = s_rbj_alias[slot] ? (int)s_rbj_alias[slot] : slot;   /* Runde 35 Spur L: Alias */
     int rec = re15_rbj_binder_gegner(s_room_rbj, s_room_rbj_size, mslot - 1);   /* Runde 41 Spur J: byte-true FUN_8001b3f8
-                               * (a3 kumulativ @0x8001b4c4, spaeterer Record ueberschreibt @0x8001b4a0) statt erstem Bit-Record.
-                               * Integration r41 (J x A): ersetzt den Spur-A-Haken d1809dbf (`mslot < 32 &&` vor `1u << mslot`) -
-                               * kein Schieben um mslot mehr; Gegner-Index >= RE15_RBJ_BINDER_MAX_GEGNER -> -1, also Slots 33..35
-                               * (RE15_ACTOR_MAX 36) ungebunden und kein undefiniertes `1u << 32..35`; Slot 32 = Index 31 nur, wenn
-                               * a3 (@0x8001b410 einmal 0, @0x8001b4c4 je Bitposition) ueber die Records bis 31 laeuft. */
+                               * (a3 kumulativ @0x8001b4c4, spaeterer Record ueberschreibt @0x8001b4a0) statt erstem Bit-Record */
     /* Runde 35 Spur K: geliehener Block (ROOM10F0 <- ROOM11B0) hat nur Marker-Bits 0/1 — der zweite NPC
      * (Aktor 2, Marvin) liest denselben NPC-Record 1 (re15_cut10f0.h). Sonst -1 = unveraendert. */
     if (rec < 0) rec = re15_cut10f0_rbj_record_alias(slot);
