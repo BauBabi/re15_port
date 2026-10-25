@@ -927,3 +927,17 @@ Ist er fuer dich gut zu erkennen?" Keine Geschmacksfrage, wo das Original einen 
    erfundenen Hintergruende, Massstabsgrenze) - der Freiheitsgrad ist die Lage der Leiche (Nachtrag 6).
 Unter 1-3 die Lage mit dem besten Schluessel-Wert; geht nicht alles zugleich, gilt 1 vor 2 vor 3, Abweichungen mit Zahlen im
 Dossier. Riegel unit_r41_gatorszene_abstand/_flucht: Sollwert RE2 mit oberer UND unterer Grenze aus dem RE2-Beleg.
+
+## 2026-10-25 14:29 — Orchestrator-Entscheid M-E2 (Befund der Nachbesserung M 4; ersetzt M-E1 fuer Original-Teile; der Nutzer kann widersprechen)
+
+Befund der Spur M (Nachbesserung 4): "Die Gelaender, Pfosten, Saeulen und Lampen der Stages 3..6 liegen im Original-
+Vordergrundatlas des Spiels; der Generator hatte sie nur nie gefunden." Werkzeug re15_port/tools/maske/platzieren_r41.py setzt
+437 nie platzierte Kuenstler-Teile in 74 Sektionen an ihre Stelle (+160 539 Punkte, an der exe an 16 Stellen ohne Uebermalung).
+Die Frage an den Nutzer (Nachtrag 27) ging davon aus, dass fuer diese Gegenstaende nur eine Freistellung hilft - das ist widerlegt.
+**M-E2:** Original-Grafik an ihrer Original-Stelle gehoert ins Spiel (Memory reai-v2-original-oder-nicht). Spur M setzt die
+Teile des Original-Atlas ein, in ALLEN Kameras (auch auf der Restliste von Nachtrag 27), sofern je Teil Lage (Bildvergleich
+gegen den Hintergrund) und Tiefe (Zelle mit RDT-Offset) belegt sind. M-E1 gilt weiter fuer AUTOMATISCHE Masken ohne
+Original-Teil. Pruefumfang: jede der 74 Kameras mit mindestens einer HINTER- und einer DAVOR-Stelle an der exe (Leon, Elza
+wo erreichbar), Rueckschritt-Suche wie in Nachbesserung 3, Riegel. Den belegten Generator-Fix "Tuer-Band der Saaten"
+(AOT-Scan pruefen pc[4] @0x80042cac..0x80042ccc) mitnehmen; teilen_r41.py fuer 6000 C5 NICHT (verdeckt 192 Gang-Plaetze falsch).
+Was danach noch fehlt, steht neu im Dossier ("Fuer den Nutzer: Freistellungen") - nur das zeichnet der Nutzer.
