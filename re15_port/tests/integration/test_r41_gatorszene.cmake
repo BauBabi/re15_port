@@ -13,6 +13,15 @@
 #     dem ersten und dem letzten Bild der Einstellung; gemessen Lauf lad4: 8 von 8).
 # TEIL=leon | elza (Elza: Spieler-Auswahl Auto + Wechsel, Raeume 2081/2091).
 #
+# Nachbesserung 1 (Abnahme F 0):
+#   M1 leon/elza: Folge-Zeile "C 0" (Kamera-Uebergabe auf den Eintritts-Cut 0 der Leiter, ROOM2080 Slot 1 @0x00BC2; Form ROOM1150
+#      sub08 Cut_chg @0x012C4 vor Plc_ret @0x012E0) mit "Spielfigur im Bild", und state.log: in den Bildern F405-F479 des letzten
+#      2090-Besuchs (nur dieser Besuch erreicht F400) steht JEDES Bild auf cam=0 (vorher F405-F699 cam=1, Leon hinter der Kamera).
+#   M2 tod/tod_elza: Todesrolle (RE15_GB_TEST=3) zweimal - mit Schluessel und mit (9,112) vorab (kein Schluessel) -, Bilder
+#      F480-F598 je 2 (RE15_FRAMEDUMP, WINDOW_SCALE=1); Auswerter `test_r41_gatorszene bilddiff` (RE15_TOOL): Schluessel in JEDEM
+#      Bild sichtbar (Unterschied > 0), Puls max/min >= 1,40 ohne Plateau; debug.log "Schluessel-Lage: Kamera <c> (laufende)"
+#      mit Blink-Spitze <= 0x80.
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=leon|elza -P test_r41_gatorszene.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -35,7 +44,7 @@ set(_exe_kopie "${_exe_dir}/re15_pc_r41f_${_lauf_id}.exe")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 set(WORKDIR "${_dir}")
 
-if(TEIL STREQUAL "elza")
+if(TEIL MATCHES "elza$")
     set(_r2080 2081)
     set(_r2090 2091)
     set(_wahl RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1)
@@ -43,6 +52,65 @@ else()
     set(_r2080 2080)
     set(_r2090 2090)
     set(_wahl RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2)
+endif()
+
+# ---- Nachbesserung 1 (M2): Schluessel nach dem Tod sichtbar und pulsierend (Todesrolle, Leon / Elza) -------------------
+if(TEIL MATCHES "^tod")
+    if(NOT RE15_TOOL OR NOT EXISTS "${RE15_TOOL}")
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - RE15_TOOL (test_r41_gatorszene) fehlt: '${RE15_TOOL}'")
+    endif()
+    # GB_TEST=3: Tod nach 300 Boss-Bildern + Todesrolle Clip 7 (165 Bilder) -> Leiche (Zustand 7) und Schluessel ab ~F470
+    # (gemessen Nachbesserung F 1, Lauf T2n: "Folge L ROOM2090 F470"). Eine Blink-Periode (0x3c = 60 Bilder) ab F480.
+    foreach(_v mit ohne)
+        set(WORKDIR "${_dir}/${_v}")
+        file(MAKE_DIRECTORY "${WORKDIR}")
+        if(_v STREQUAL "ohne")
+            set(_bits "RE15_SET_FLAG=9:110,9:112")
+        else()
+            set(_bits "RE15_SET_FLAG=9:110")
+        endif()
+        re15_start_spiel(_rv 300
+            RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore
+            ${_wahl}
+            ${_bits}
+            RE15_DEBUG_JUMP=${_r2090}@250 RE15_GB_TEST=3 RE15_R39_MESS_SPIELER_HP=100
+            RE15_STATE_LOG=state.log
+            "RE15_EXIT_AT=600#${_r2090}"
+            "RE15_FRAMEDUMP=480-598/2:fd_"
+            "${_exe_kopie}")
+        if(NOT _rv EQUAL 0)
+            file(REMOVE "${_exe_kopie}")
+            message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL}/${_v} exe exit=${_rv} (erwartet 0 bis RE15_EXIT_AT), ${WORKDIR}")
+        endif()
+    endforeach()
+    file(REMOVE "${_exe_kopie}")
+    file(STRINGS "${_dir}/mit/debug.log" _lage REGEX "\\[gatorszene\\] Schluessel-Lage: Kamera [0-9]+ ")
+    if(NOT _lage)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - keine Zeile 'Schluessel-Lage' (Alligator nicht tot?), ${_dir}/mit")
+    endif()
+    list(GET _lage 0 _lage0)
+    if(NOT _lage0 MATCHES "Kamera ([0-9]+) \\(laufende\\).*Blink-Spitze ([0-9]+) ")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Schluessel nicht fuer die laufende Kamera gelegt: ${_lage0}")
+    endif()
+    set(_kam "${CMAKE_MATCH_1}")
+    if(CMAKE_MATCH_2 GREATER 128)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Blink-Spitze ${CMAKE_MATCH_2} > 0x80 (Kappung, Plateau): ${_lage0}")
+    endif()
+    file(STRINGS "${_dir}/mit/state.log" _sl REGEX "^F5[0-9][0-9] ")
+    foreach(_z IN LISTS _sl)
+        if(NOT _z MATCHES " cam=${_kam} ")
+            message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Kamera wechselte nach der Lage (soll cam=${_kam}): ${_z}")
+        endif()
+    endforeach()
+    execute_process(COMMAND "${RE15_TOOL}" bilddiff "${_dir}/mit" "${_dir}/ohne" 480 598 2
+                    RESULT_VARIABLE _br OUTPUT_VARIABLE _bo ERROR_VARIABLE _be)
+    string(REGEX MATCH "bilddiff: [^\n]*" _bz "${_bo}")
+    if(NOT _br EQUAL 0)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Schluessel nicht sichtbar/pulsierend: ${_bz}\n${_bo}")
+    endif()
+    message(STATUS "r41_gatorszene: Lauf ${TEIL} - ${_lage0}; Kamera ${_kam} F500-F599 unveraendert; ${_bz}")
+    return()
 endif()
 
 # Bild 600 im DRITTEN 2090-Besuch: der Bildzaehler beginnt je Raum neu; der erste 2090-Besuch (Programm 1) endet nach ~140
@@ -79,7 +147,7 @@ endif()
 
 # Folge-Zeilen in Reihenfolge
 file(STRINGS "${_dir}/debug.log" _fz REGEX "\\[gatorszene\\] Folge ")
-set(_soll "A;P 1;T;P 2;M 8;P 3;S;G 1;G 2;K 13;G 3;G 4;V;G 5;G 6;G 7;B 1")
+set(_soll "A;P 1;T;P 2;M 8;P 3;S;G 1;G 2;K 13;G 3;G 4;V;G 5;G 6;C 0;G 7;B 1")
 set(_i 0)
 list(LENGTH _fz _n_fz)
 foreach(_s IN LISTS _soll)
@@ -103,6 +171,22 @@ foreach(_s IN LISTS _soll)
     endwhile()
     if(NOT _gefunden)
         message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Folge-Zeile '${_s}' fehlt oder steht nicht in der Reihenfolge (${_dir}/debug.log)")
+    endif()
+endforeach()
+# Nachbesserung 1 (M1): Kamera-Uebergabe am Szenenende auf den Eintritts-Cut 0, Spielfigur im Bild; im ganzen Kampfanfang
+# F405-F479 des letzten 2090-Besuchs (nur er erreicht Bild 400) cam=0 (Abnahme 0: cam=1, Leon hinter der Kamera).
+file(STRINGS "${_dir}/debug.log" _ueb REGEX "\\[gatorszene\\] Kamera-Uebergabe: Cut 0 \\(Eintritts-Cut\\), Spielfigur im Bild")
+if(NOT _ueb)
+    message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - keine Kamera-Uebergabe auf Cut 0 mit Spielfigur im Bild (M1)")
+endif()
+file(STRINGS "${_dir}/state.log" _ks REGEX "^F4(0[5-9]|[1-7][0-9]) ")
+list(LENGTH _ks _n_ks)
+if(_n_ks LESS 70)
+    message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - nur ${_n_ks} state.log-Bilder F405-F479")
+endif()
+foreach(_z IN LISTS _ks)
+    if(NOT _z MATCHES " cam=0 ")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Kampfanfang nicht auf Cut 0 (M1): ${_z}")
     endif()
 endforeach()
 # Nachtrag 20: Zombies Typ 0x16 (state.log " t=16 ") oben und laufend. Die Treffer beginnen OHNE die oeffnende "[" des

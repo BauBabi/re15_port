@@ -119,8 +119,11 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
   `04 02 25 50 3a 4f 00 48 4b 3f 47 41 40 57 01 00` "It's locked.", msg 2 @0x204C "You've opened the lock." (ROOM2090 hat
   keinen Nachrichtenblock: RDT +0x3C = 0 -> Port-Texte 42/43 bytegleich zu diesen Saetzen).
 - **Gator-Clips (RE2 EM23, selbst disassembliert `re2_disasm.py --bin EM23_OVL_0000.BIN`)**: FUN_8001a330-Rufe @0x801010f4
-  (`addiu a1,zero,4` = FRESSEN P1 Clip 4), @0x80101188 (Clip 5 P2), @0x801011d8-e0 (Clip 11 P3), @0x80102c48 (Clip 10,
-  `addiu a2,zero,3` = Blend 3, R4), Intro Clip 6 @0x801008ac-b8, Schwimmen Clip 0 Blend 32 @0x80100c38. Wurzelbahnen (EMR
+  (`addiu a1,zero,4` = FRESSEN P1 Clip 4), @0x80101188 (Clip 5 P2), @0x80102c48 (Clip 10,
+  `addiu a2,zero,3` = Blend 3, R4), Intro Clip 6 @0x801008ac-b8, Schwimmen Clip 0 Blend 32 @0x80100c38. BERICHTIGT
+  (Nachbesserung 1, M6): Clip 11 P3 ist KEIN FUN_8001a330-Ruf - `addiu a1,zero,11` @0x801011d8 + `jal 0x8001a240` @0x801011e0;
+  FUN_8001a240 setzt nur Clip/Blend (@0x8001a258-60) und schaltet das Bild (FUN_8002959c @0x8001a28c), ohne den Wurzelschritt
+  FUN_80015e7c/FUN_800152c8 von FUN_8001a330 (@0x8001a374/@0x8001a3c0); die Lage setzt davor FUN_80015cb8 vom Anker (@0x801011cc). Wurzelbahnen (EMR
   Keyframe-Bytes 6..11, `F41/em23_bahn.py`): Clip 6 125 Bilder off -7040 -> +2458 (Auftauchen Pose-y +1489 -> -1210 in Bild
   0..30), Clip 4 off 810 -> 3301, Clip 5 2803 -> 3834 -> 3132, Clip 11 3132, Clip 10 0 -> -1025.
 - **FRESSEN-Anker** (RE2): Koppelbild 13 @0x80101104-34, Anker FUN_80015b94 (@0x80101110-34), absolute Lage FUN_80015cb8

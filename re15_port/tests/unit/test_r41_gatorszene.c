@@ -701,9 +701,66 @@ static void teil_szene(int elza)
     }
 }
 
+/* ---- Auswerter fuer den exe-Riegel (integration_r41_gatorszene_tod*, Nachbesserung 1 M2) -------------------------------
+ * Aufruf `test_r41_gatorszene bilddiff <ordnerA> <ordnerB> <f0> <f1> <schritt>`: A = Lauf mit Schluessel, B = derselbe Lauf mit
+ * (9,112) vorab (kein Schluessel), je Bild fd_NNNNNN.ppm (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1). Je Bild: Zahl der Pixel mit
+ * Unterschied und der hellste Unterschieds-Pixel in A (max R/G/B). Verlangt: (1) in JEDEM Bild ein Unterschied (Schluessel im
+ * Bild), (2) Puls max/min >= 1,40 (Blink-Folge 0x80..0xBE = x1,484, FUN_801028ec; die gekappte erste Fassung der Ankunft lag
+ * bei 1,22), (3) kein Plateau: hoechstens 4 von 30 Bildern auf dem Hoechstwert (gekappt: 34 von 60 Bildern). */
+static int ppm_lesen(const char *p, int *w, int *h, unsigned char **px)
+{
+    FILE *f = fopen(p, "rb");
+    if (!f) return 0;
+    char m[3] = { 0 }; int mx = 0;
+    if (fscanf(f, "%2s %d %d %d", m, w, h, &mx) != 4 || m[0] != 'P' || m[1] != '6' || *w <= 0 || *h <= 0) { fclose(f); return 0; }
+    fgetc(f);
+    *px = (unsigned char *)malloc((size_t)(*w) * (size_t)(*h) * 3u);
+    const size_t n = *px ? fread(*px, 1, (size_t)(*w) * (size_t)(*h) * 3u, f) : 0;
+    fclose(f);
+    if (n != (size_t)(*w) * (size_t)(*h) * 3u) { free(*px); *px = NULL; return 0; }
+    return 1;
+}
+static int bilddiff(const char *da, const char *db, int f0, int f1, int st)
+{
+    int bilder = 0, mit = 0, hmin = 256, hmax = -1, am_max = 0, werte[512], nw = 0;
+    int kx0 = 9999, ky0 = 9999, kx1 = -1, ky1 = -1;
+    for (int f = f0; f <= f1 && nw < 512; f += (st > 0 ? st : 1)) {
+        char pa[700], pb[700];
+        snprintf(pa, sizeof pa, "%s/fd_%06d.ppm", da, f); snprintf(pb, sizeof pb, "%s/fd_%06d.ppm", db, f);
+        int wa, ha, wb, hb; unsigned char *a = NULL, *b = NULL;
+        if (!ppm_lesen(pa, &wa, &ha, &a) || !ppm_lesen(pb, &wb, &hb, &b) || wa != wb || ha != hb) {
+            printf("  F%d: Bild fehlt (%s / %s)\n", f, pa, pb); free(a); free(b); continue;
+        }
+        bilder++;
+        int n = 0, hell = 0;
+        for (int y = 0; y < ha; y++)
+            for (int x = 0; x < wa; x++) {
+                const unsigned char *qa = a + ((size_t)y * wa + x) * 3, *qb = b + ((size_t)y * wa + x) * 3;
+                if (qa[0] == qb[0] && qa[1] == qb[1] && qa[2] == qb[2]) continue;
+                n++;
+                const int v = qa[0] > qa[1] ? (qa[0] > qa[2] ? qa[0] : qa[2]) : (qa[1] > qa[2] ? qa[1] : qa[2]);
+                if (v > hell) hell = v;
+                if (x < kx0) kx0 = x;
+                if (y < ky0) ky0 = y;
+                if (x > kx1) kx1 = x;
+                if (y > ky1) ky1 = y;
+            }
+        free(a); free(b);
+        if (n > 0) { mit++; werte[nw++] = hell; if (hell < hmin) hmin = hell; if (hell > hmax) hmax = hell; }
+        printf("  F%d: %d Pixel Unterschied, hellster %d\n", f, n, hell);
+    }
+    for (int i = 0; i < nw; i++) if (werte[i] == hmax) am_max++;
+    const int ok = bilder > 0 && mit == bilder && hmin > 0 && hmax * 100 >= hmin * 140 && am_max * 30 <= 4 * nw;
+    printf("bilddiff: %d Bilder, %d mit Schluessel-Unterschied, Kasten (%d,%d)-(%d,%d), hellster min %d max %d (x%d.%02d), "
+           "%d Bilder am Hoechstwert -> %s\n", bilder, mit, kx0, ky0, kx1, ky1, hmin, hmax,
+           hmin > 0 ? hmax / hmin : 0, hmin > 0 ? (hmax * 100 / hmin) % 100 : 0, am_max, ok ? "OK" : "FEHLER");
+    return ok ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
+    if (!strcmp(teil, "bilddiff") && argc >= 7) return bilddiff(argv[2], argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
     const int alle = !strcmp(teil, "alle");
     re15_door_seq_setze_laeufer(fang);
     if (alle || !strcmp(teil, "spinnen"))    teil_spinnen();
