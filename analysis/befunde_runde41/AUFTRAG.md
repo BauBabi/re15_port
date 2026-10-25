@@ -832,3 +832,43 @@ faehrt sie gruen — kein Lockern ohne Grund:
 **C-E5:** Der Alarm-Schalter re15_audio_r41_alarm (~20 Zeilen am Ende von audio_pc.c + 4 markierte Einzeiler) ist angenommen
 (braucht die statischen BGM-Zustaende der Datei). Die zwei RBJ-Haken der Spur C in main.c (V1 der Abnahme C 5) sind angenommen;
 Bit (9,125) (Ventil-Sicherungskasten) ist in VERTRAG 1.1 fuer C eingetragen.
+
+## 2026-10-25 11:10 — Nachtrag 27 (Nutzer-Antwort zur Masken-Frage der Spur M, Abnahme M 3 Mangel 2) + Orchestrator-Entscheid M-E1
+
+Frage: "Masken STAGE3–6 (Spur M): Die meisten Löcher sind geschlossen, aber einige Gegenstände haben automatisch keine
+verlässliche Tiefe und bleiben ohne Maske: Geländer 3050 Kamera 6, 30E0 Kamera 6–9, 3040 Kamera 3; Pulte 5050 Kamera 1/2;
+Möbel 30A0 Kamera 0; Lok-Unterteil 6000 Kamera 7; Roboterarm 50B0 Kamera 1/3; Wandecke 6000 Kamera 5. Der sichere Weg wären
+Freistellungen von dir wie bei STAGE1/2 (die berichtigten Übersichtsbilder liegen in pri/STAGE3-6). Wie möchtest du vorgehen?"
+Antwort des Nutzers (Wortlaut): **"Ich kümmere mich selbst drum."**
+
+**M-E1:** Die Restliste (Mangel 2 der Abnahme M 3: Gelaender 3050 C6, 30E0 C6..C9, 3040 C3, Pulte 5050 C1/C2, Moebel 30A0 C0,
+Lok-Unterteil 6000 C7, Roboterarm 50B0 C1/C3, Wandecke 6000 C5) ist KEIN Mangel der Spur M mehr. Die Freistellungen zeichnet
+der Nutzer selbst (pri/STAGE3-6); eingebaut werden sie, sobald sie vorliegen (naechste Version). Spur M baut fuer diese
+Gegenstaende KEINE weiteren automatischen Masken; der Stand der Nachbesserung 3 bleibt (kein Rueckschritt). Die Liste kommt je
+Raum/Kamera/Gegenstand mit Beleg ins Dossier ("Fuer den Nutzer: Freistellungen") und in die Release Notes v0.8.29.
+Offen fuer Spur M bleiben nur Mangel 1 (Ost-Stirn der Buero-Trennwand 30A0/30A1 C0: Zelle 6 @RDT+0x0045C, neuer Befund auf dem
+natuerlichen Weg, Tiefe aus der Zelle belegt) und Mangel 3 (Laufpruefung im gemeinsamen Laeufer). Abnahme M 4 urteilt Punkt 1
+an Mangel 1 und daran, dass keine Stelle der Restliste schlechter wurde; die Restliste selbst ist kein Mangel.
+
+## 2026-10-25 11:58 — Nachtrag 28 (Wortlaut; Explosionseffekt des Gaskanisters, Spur G)
+
+> Beim Ausschnitt gerade eben fehlte noch der Explosionseffekt vom Gaskanister vom Original.
+
+Gesehen hat der Nutzer die Kampflaeufe der Abnahme G 2 (re15_pc_g41abn2c/d auf seinem Bildschirm). Orchestrator-Messung am
+selben Stand (Baum r41_kanister2080, Lauf scratchpad/g2abn/runs/r1_v1_leon, Bildstreifen scratchpad/g2abn/
+r1_v1_leon_f1548-1588_hell2.png): R1-Start F1549 ("RE2 R1 start pos=(-7391,-25446)"), danach nur ein kleiner weiss-blauer
+Schimmer am Kopf (F1550-F1560) und die Kiefer-Brocken; KEIN Feuerball/Explosionsbild.
+Port-Stand (gator_re2_r41.c, re15_gr2_r1_start): Spritzring @0x80102374 -> 0x8010338c = 6 x re2fx Bank 3 Sub 0x0f
+(0x030f2000/0x030f3000, Versaetze @0x801000a8) an der Kanister-Matrix; Fontaenen FUN_80103eb4 = Bank 0x26 Sub 3, Bank 0 Sub 6/3,
+Bank 8 Sub 2 (spawn_kern: Bank = a0>>24, Sub = (a0>>16)&0xff @0x8001cbec-f8). Registriert waren im Lauf nur CORE00.ESP (Kern)
+und GLAS1090.ESP als Raum-ESP (Registry 8..15); die RE2-Raum-ESP des Alligatorraums ROOM40A0 ist NICHT registriert.
+
+**Auftrag an Spur G** (RE-Gate; FG-E3/FG-E5 gelten: kleine markierte Haken in B's Modulen und in re2_fx.c erlaubt):
+1. In RE2 belegen, woraus der Explosionseffekt des Gaskanisters besteht: welche Effekte/Banken/Subs (R1 @0x80102158, Spritzring
+   0x8010338c, Kanister T2 @0x801017c4, ggf. weitere Spawns/Sprites/Lichtblitz/Rauch), aus welcher Datei (CORE00.ESP, ESP-Abschnitt
+   von ROOM40A0.RDT, EM23-Daten) mit welcher TIM/CLUT/TPage, Zeitpunkt, Lage, Dauer, Reihenfolge.
+2. Messen, warum der Port ihn nicht zeigt (Bank registriert? Raum-ESP von 40A0 in 2090/2091 geladen? Textur/CLUT im VRAM?
+   Zeichenpass, Cull, Blend?) - Zahlen pro Bild (gespawnte/gezeichnete Quads in F1549ff).
+3. 1:1 nachbauen (jede Konstante mit @0x/Datei-Offset), beide Szenarien (2090/2091), ohne die bestehenden B-/G-Riegel zu brechen.
+4. Nachweis am Spiel: Bildstreifen der Explosion gegen ein RE2-Referenzbild desselben Effekts (aus den RE2-Daten gerendert oder
+   aufgenommen), Riegel: Effekt-Bank in 2090 registriert + gezeichnete Explosions-Quads > 0 in den R1-Bildern.
