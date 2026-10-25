@@ -1,0 +1,58 @@
+INT_belege - Kette A+C (Spur A wasser20b0 + Spur C ventilkette) im Integrationsbaum gemessen, 2026-10-25 10:20-12:00
+Entscheid C-E1 (AUFTRAG.md 2026-10-24 05:25): Ventile -> Ost-Tuer zu Fuss -> 20B0-Szene bis Szenen-Ende (letterbox zu,
+(3,235)=1, Spieler frei) -> Leiter -> 2050. Gemessen fuer Leon (2030 -> 20B0 -> 2050) UND Elza (2031 -> 20B1 -> 2051).
+
+Stand: r41/integration Kopf 45cc6246 (Merge C 2d20306d, Merge K 4b313429, Fix E x K 45cc6246); danach nur d1edabbc
+(Test-Quelle probe_r36_g2_cursor_rahmen.c, kein Spielcode). exe re15_port/build/platform/pc/re15_pc.exe 09:29:02,
+sha256 568087e0b53bd7313519d953fb6d75038bf9a2c99d25a928b4e73c9dbc882aa6; alle Quellen der Kopf-Commits (player_common.c
+09:07, rennstopp_r41.c 09:11, Merges 08:29/08:38) aelter als die exe, kein Quelltext neuer als die exe, Baum sauber ->
+die exe IST der Kopfstand (der Test-Integrator hat 10:17 gebaut: "no work to do" fuer re15_pc). Messkopie
+re15_pc_r41int_kette.exe (bytegleich).
+
+Dateien
+ kette_leon_logzeilen.txt / kette_elza_logzeilen.txt
+     Eigener exe-Lauf je Figur (beschleunigter Renderer direct3d11, RE15_WINDOW_SCALE=1, RE15_FRAMEDUMP jedes 3. Bild,
+     RE15_STATE_LOG, RE15_SCD_TRACE, RE15_FLAG_CENSUS, RE15_MSG_LOG, RE15_AUDIO_CAP_SYNC; Wegplan = der des Riegels
+     integration_r41_ventilkette_kette, fuer Elza mit 2031/20B1/2051). Inhalt: Umgebung, die 27 (Elza 28) Pruefungen des
+     Riegels auf den Lauf angewandt (alle erfuellt), Schluesselzeilen des debug.log mit Zeilennummer, SCD-Trace-Offsets der
+     Szene, Wegplan-Zeilen, state.log der 20B-Szene je 15 Bilder.
+ kette_leon_ueberblick.png / kette_elza_ueberblick.png
+     24 Bilder der ganzen Kette: Ventilfragen 09/07/02/01, Warnung 46, Countdown, Ring, Ost-Tuer zu Fuss, 20B0/20B1 Cut 11
+     mit EM024-Flut, sub02 Cut 12/13, sub05 Cut 7/15/6, Spieler frei, Kanal, Westgang, Leiter, ROOM2050/2051.
+ kette_leon_20b0_szene.png / kette_elza_20b1_szene.png
+     Szene F3..F261 jedes 6. Bild (halbe Groesse): Flut aus der Ost-Tuer F9..F105 (Cut 11/12/13), Cut 7 mit fliegendem
+     Westtuer-Blatt F111..F141, Cut 15 F147..F225, Cut 6 ab F231, Letterbox auf, frei ab F255.
+ ventile_leon_forcecut.png / ventile_elza_forcecut.png
+     RE2-Dreh-Animation an den Raedern (mo 15/16/17 laut state.log), Warnung 46, Countdown - mit RE15_FORCE_CUT NUR zur
+     Bildwahl (Cut 7 Suedwand 09/08/07, Cut 3 Nordwand 01/02/03, C-Dossier §1), eigene Laeufe bis 2030 F1700 bzw. F4500.
+ riegel_kette_laeufe.txt
+     Alle Laeufe des registrierten Riegels und der Gegenproben mit Zeiten und Ergebnis (Befund unten).
+
+Ergebnis (beide Figuren gleich, Bild fuer Bild in 20B identisch)
+ * 2030/2031: Fragen 09 (Text 55, F75) / 07 (53, F1153) / 02 (51, F2507) / 01 (50, F3531), je Ja RE2-Drehen mo 15->16->17
+   (345 Takte), "Folge 09 07 02 01 -> RICHTIG" (Leon debug.log:28355), Ereignis 26, Text 46 woertlich (Nachtrag 19),
+   "Zaehler laeuft: 1800 Takte", Flucht zu Fuss, [aot] DOOR FIRE slot=0 rect=(7350,-200,...) target_cut=11, kein
+   "[fire-aot]", kein "FLUT: Wasser steigt".
+ * 20B0/20B1: geladen, "Bits 103 + 100", Ring-Tuer Slot 3 gesperrt (Sperrtext 41), 35 Aktoren Typ 0x24 (EM024) je Bild,
+   ESP-Effekte fx 6..31 je Bild ab F15 (vorher und in allen anderen Raeumen 0) = Flut sichtbar.
+   SCD-Trace (Datei-Offsets, ROOM20B0 = ROOM20B1 in diesen Bytes): sub00 @0x1AA6 op 06, @0x1DF2 op 2C =
+   Aot_set Slot 7 "2c 07 03 41 01 00 08 bc 04 de ca 08 f8 11 ff 00 18 05 00 00" (sce 3, Boden 1, x -17400..-15150,
+   z -8700..-4100, Ereignis 18 05 = sub05); sub02 @0x1EF8 Set(2,7), @0x1EFC Set(1,28), @0x1F00 Cut_chg(11),
+   @0x1F24 Plc_dest Modus 5 (-15920,-6355) F16; Spieler betritt Slot 7 bei F104 (x -15220) -> sub05 @0x1F5C op 46 F105,
+   Cut 7 @0x1F6A F105, Cut 15 @0x1F9C F146, Cut 6 @0x1FB6 F228, Set(3,235)=1 @0x1FBC F228, letterbox closed F242,
+   player_mode 0 ab F255; Wegplan FLAG (3,235)=1, (9,103)=1, (9,100)=1; Kanal, Westgang, Leiter: [aot] DOOR FIRE slot=4
+   rect=(-27100,10300,...) spawn=(9100,-5400,4100) -> room2050.rdt / room2051.rdt -> EXIT_AT Bild 60, exit 0.
+
+Befunde / Hinweise
+ 1. Registrierter Riegel integration_r41_ventilkette_kette: 4 von 8 Laeufen (10:27-11:30) ROT, 1 weiterer mit SDL-Assertion;
+    seit 11:38 4 von 4 GRUEN (auch beim Test-Integrator). Rote Laeufe: Prozess endet still nach 20B0 F750 (~220 s),
+    debug.log bis dahin bytegleich mit gruenen Laeufen, kein WER-Eintrag, kein Speicherwachstum (33 -> 40 MB, Handles
+    296, GDI 15 ueber 232 s), Exit-Code eines roten Laufs nicht gefangen. Details riegel_kette_laeufe.txt.
+ 2. Der Riegel faehrt nur Leon; die Elza-Kette (2031 -> 20B1 -> 2051) prueft kein registrierter Riegel - hier mit dem
+    eigenen Lauf gemessen (alle 28 Pruefungen erfuellt).
+ 3. Kamera beim Messstart: RE15_DEBUG_JUMP 2030 + RE15_PLAYER_POS auf den Sued-Landeplatz laesst Cut 0 (Ost-Tuer) bis
+    2030 F5206 stehen; der Spieler ist bei Ventilen und Warnung nicht im Bild. Die exe der Spur C (Baum r41_ventilkette,
+    04:59) zeigt mit demselben Plan dasselbe -> kein Integrationsfehler, Folge des Teleport-Starts (die RVD-Zonen der
+    Gruppe von Cut 0 decken den unteren Bereich nicht). Spur C hat ihre Ventilbilder ebenfalls mit RE15_FORCE_CUT gemacht.
+ 4. Elza: die Zeile lautet "[ventilkette41] ROOM2031: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)" (Basis-Id im
+    Text), geladen wird richtig room20b1.rdt - nur Logtext.

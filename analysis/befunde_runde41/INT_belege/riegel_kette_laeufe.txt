@@ -1,0 +1,48 @@
+integration_r41_ventilkette_kette im Integrationsbaum (Kopf 45cc6246, exe re15_pc.exe 09:29:02,
+sha256 568087e0b53bd7313519d953fb6d75038bf9a2c99d25a928b4e73c9dbc882aa6; alle Quelltexte aelter als die exe, Baum sauber).
+Registriert in tests/unit/probes/r41_ventilkette.cmake:70 (Spur A im Baum: engine/src/wasser20b0_r41.c), TIMEOUT 900, RUN_SERIAL.
+Der Riegel faehrt nur Leon (2030 -> 20B0 -> 2050), Software-Renderer + RE15_NOAUDIO.
+
+Laeufe des REGISTRIERTEN Riegels (Skript tests/integration/test_r41_ventilkette_kette.cmake unveraendert)
+ Nr  Zeit (exe)            Aufruf                 Ergebnis
+ 1   10:21:43-10:24:12     ctest -R ^...kette$    ROT: SDL2-Assertion "WIN_AddDisplay (SDL_windowsmodes.c:380) 'index == *display_index'"
+                                                  in 2030 F~3990 (4. Ventil, RE2-Dreh-Animation mo=16), debug.log endet mit der Assertion
+ 2   10:27:27-10:31:10     ctest                  ROT: Prozess endet still nach 20B0 F750 ([walk] F750 cut=10 pos=(-26539,-1800,-516)),
+                                                  Riegel: "Leiter feuert ... fehlt" (224,86 s)
+ 3   10:44:21-10:48:07     ctest                  ROT: genau so, letzte Zeile [walk] F750 (227,39 s)
+ 4   11:12:21-11:16:4x     ctest                  ROT: genau so, letzte Zeile [walk] F750 (221,78 s)
+ 5   11:26:19-11:30:01     cmake -P (Kommandozeile aus CTestTestfile, ohne ctest)   ROT: genau so, letzte Zeile [walk] F750
+ 6   11:38:39-11:42:34     cmake -P (wie 5)       GRUEN: "-- r41_ventilkette_kette: ... -> ROOM2050 in einem Lauf (Haken der Spur A: 1)"
+ 7   11:44:16-11:48:14     ctest (wie 1-4)        GRUEN: Passed 236,76 s; Messkopie re15_pc_r41ck_c2c4a31e ExitCode 0 nach 236,4 s
+ 8   11:53:52-11:57:53     ctest (wie 1-4)        GRUEN: Passed 240,49 s; Messkopie re15_pc_r41ck_d07de3ae ExitCode 0 nach 240,2 s
+                                                  (parallel 3 eigene exe-Laeufe mit RE15_FORCE_CUT + Spuren F/G)
+ (Test-Integrator: 11:38:32-11:42:28 ctest, Passed 235,35 s - scratchpad int_test_ck/ctest_kette1.txt)
+
+Gegenproben mit einer Kopie des Skripts (wortgleich + eine DIAG-Zeile NACH dem exe-Lauf: message rv)
+ a   10:56:58-11:00:58  cmake -P, WORKDIR scratchpad, exe-Kopie re15_pc_r41int_kette.exe        GRUEN, DIAG rv=[0]
+ b   11:04:44-11:09:38  ctest (eigenes CTestTestfile, WORKING_DIRECTORY build/tests/unit)        GRUEN, Passed 292,82 s
+ c   11:17:47-11:21:43  cmake -P, WORKDIR build/tests/integration/r41int_kette_diag              GRUEN, DIAG rv=[0]
+ d   11:30:35-11:34:30  cmake -P, RE15_PC_EXE=re15_pc.exe + WORKDIR wie registriert             GRUEN, DIAG rv=[0]
+
+Eigene exe-Laeufe derselben Kette (Wegplan des Riegels, siehe kette_*_logzeilen.txt)
+ leon1 10:39:36-10:43:52 GRUEN (direct3d11, Framedumps)   elza1 10:40:11-10:44:42 GRUEN (direct3d11, Framedumps)
+ rx_exakt 10:49:38-10:54:59 GRUEN (Umgebung des Riegels: RE15_SOFTWARE_RENDER=1 RE15_NOAUDIO=1, aus bash gestartet)
+ rx_ohne_sw 10:49:41-10:55:11 GRUEN (nur RE15_NOAUDIO)    rx_ohne_noaudio 10:49:43-10:53:46 GRUEN (nur RE15_SOFTWARE_RENDER)
+ rx_mem 11:49:14-11:53:10 GRUEN (Umgebung des Riegels, aus bash): Private Bytes 33 MB -> 40 MB ueber 232 s, Handles 295-297,
+        GDI 15, USER 19-20 konstant -> kein Ressourcen-Wachstum bis ~220 s
+
+Befund zu den roten Laeufen 2-5
+ * debug.log der roten Laeufe ist bis zur letzten Zeile BYTEGLEICH mit gruenen Laeufen derselben Umgebung
+   (Lauf 4 gegen c: 5002 Zeilen, diff rc=0; Lauf 3 gegen rx_exakt: nur "[tfade] ... Rest vom Titel: 255" statt 127, eine Wanduhr-Groesse).
+   Das Spiel tut also dasselbe; nur der Prozess endet.
+ * Zwischen 20B0 F751 und F779 laeuft im gruenen Lauf nichts Besonderes: nur der Leerlauf-Thread (SCD slot 1 @0x1EF6 op 0x01 je Bild)
+   und der Gang Richtung Leiter; der Schnitt Cut 10 -> Cut 8 kommt erst bei F783/F784.
+ * Kein Absturz: kein Eintrag "Application Error"/WER fuer re15_* (WER protokolliert auf dieser Maschine: Explorer 0xc0000409 11:13:16,
+   WindowsTerminal 0xc0000005 07:49:32); keine eigene Abschlusszeile im debug.log (EXIT_AT/BOOT_EXIT_AT/CAP_SYNC schreiben eine Zeile,
+   still endet nur SDL_QUIT -> exit(0), render_pc.c:810).
+ * Last waehrend der roten Laeufe: Test-Integrator (unit/prop/probe -j 6 10:18-10:35, Bau 10:47:5x-10:48:13, C-Riegel ab 10:58),
+   Spuren F/G mit 4-6 gleichzeitigen exe-Fenstern (Prozessmitschnitt 11:44: re15_pc_r37d/r37i/r38w/r41b in r41_gatorszene,
+   re15_pc_r41g/r36g in r41_kanister2080), GPU LiveKernelEvent 141/193 um 11:13:19 (waehrend Lauf 4).
+ * Einordnung: dieselbe Klasse wie Memory reai-v2-gui-tests-flattern-bei-parallelen-agenten (Fenster-Riegel enden unter paralleler
+   Last ohne Befund, einzeln gruen; Lauf 1 zeigt sogar die dort genannte SDL-Assertion WIN_AddDisplay). Ungeklaert bleibt, warum die vier
+   stillen Enden alle im selben Spielfenster (20B0 F751-F779, ~220 s nach dem Start) liegen.
