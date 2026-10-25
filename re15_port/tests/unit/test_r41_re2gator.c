@@ -2108,6 +2108,86 @@ static int teil_buehne(void)
     return fails ? 1 : 0;
 }
 
+/* ================================================================================================ */
+/* Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M3): KOPF-KLEMME (gator_re2_r41.c re15_gr2_kopf_klemme, Haken re15_gator_boss_tick
+ * (2b)). Abnahme 3 (v1_leon ohne Testhaken): der Alligator trug den Kanister mit dem Kopf in der Suedwand - die Wand-Klemme haelt nur
+ * die Wurzel (hit_radius_min), Kanister beim R1 (5996,-2041,-29290), Wand z -27000, Regions-Viereck z >= -29000 -> alle sechs
+ * Spritzring-Sprites verworfen (FUN_8002c820 @0x80077a30). RE2 hat keine Wandklemme fuer den Alligator, Kopf und Kanister bleiben
+ * auf den Korridor-Beinen im Raum (Bein 2 x -23078 @0x80101048). Riegel: Kanister im Maul, Leon an der Suedwand (5800,-26500) wie
+ * im Abnahme-Lauf, der Alligator mit der Wurzel auf der Steuerziel-Linie z -25400 (Kante -27000 + 1600) Richtung Sueden (Gier
+ * 0x400): VOR dem Takt meldet die Klemme den Ueberstand (Kopf/Kanister jenseits der Wand); NACH jedem Takt liegt der Kanister
+ * (Weltlage der gezeichneten Pose, re15_gr2_kanister_welt) innerhalb x[-8900..7200] z[-27000..-5400]; nach dem Schuss (R1) bleiben
+ * Hals/Kopf/Kiefer (Bones 5/6/7) in jedem Bild des Todes-Clips innerhalb (Rohpose ohne Ueberblendung, Toleranz 300 = die
+ * Ueberblend-Differenz zur gezeichneten Pose, nach der die Klemme rechnet), und die sechs Spritzring-Punkte (Kanister-Matrix x Tafel
+ * @0x801000a8) liegen im Regions-Viereck des Raums (RVD-Anker, re15_rdt_get_region_quad). Gegenprobe: ohne Kanister greift die
+ * Klemme nicht. */
+static int teil_kopfklemme(void)
+{
+    if (!setup(5)) return 1;
+    leon_statue(-6000, 2000);
+    tick();
+    int32_t dx = 0, dz = 0;
+    e->x = 2000; e->z = -25400; e->y = -1200; e->rot_y = 0x400;
+    CHECK(re15_gr2_kopf_klemme(slot, e, &dx, &dz) == 0, "Gegenprobe: Klemme ohne Kanister aktiv (%d,%d)", (int)dx, (int)dz);
+    /* Aufnahme wie teil_scherben (Wurzel fest, Gier Nord), dann zur Suedwand */
+    e->x = -6000; e->z = -22000; e->rot_y = 0xC00;
+    int32_t sc = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    re15_gr2_kanister_setzen(-6000, -267, -22000 + (int32_t)(((int64_t)8800 * sc) >> 12));
+    for (int f = 0; f < 60 && re15_gr2_kanister_stufe() != 7; f++) {
+        leon_statue(-6000, 2000); e->x = -6000; e->z = -22000; e->rot_y = 0xC00; tick();
+    }
+    CHECK(re15_gr2_kanister_stufe() == 7, "Kanister nicht getragen (Stufe %d)", re15_gr2_kanister_stufe());
+    e->x = 2000; e->z = -25400; e->rot_y = 0x400;
+    const int vorher = re15_gr2_kopf_klemme(slot, e, &dx, &dz);
+    printf("kopfklemme: Wurzel (2000,-25400) Gier 0x400 mit Kanister -> Ueberstand vor dem Takt (%d,%d)\n", (int)dx, (int)dz);
+    CHECK(vorher && dz > 0, "Lage ohne Ueberstand - der Riegel prueft nichts (dz %d)", (int)dz);
+    int32_t kmin = 0x7fffffff, kp[3], kr[9];
+    for (int f = 0; f < 30; f++) {
+        leon_statue(5800, -26500);
+        tick();
+        CHECK(re15_gr2_kanister_welt(kp, kr), "Bild %d: kein Kanister", f);
+        if (kp[2] < kmin) kmin = kp[2];
+        CHECK(kp[0] >= -8900 && kp[0] <= 7200 && kp[2] >= -27000 && kp[2] <= -5400, "Bild %d: Kanister (%d,%d) ausserhalb der Aussenwaende",
+              f, kp[0], kp[2]);
+    }
+    printf("kopfklemme: 30 Bilder mit Kanister an der Suedwand, Kanister z min %d (Wand -27000)\n", (int)kmin);
+    /* Schuss -> R1 (wie teil_scherben): Kanister beim R1-Start + Spritzring im Viereck, Bones 5/6/7 im Todes-Clip */
+    (void)re15_enemy_take_damage(e, 0);
+    tick();
+    CHECK(re15_gr2_kanister_stufe() == 13, "Kanister nach dem Schuss in Stufe %d statt 13", re15_gr2_kanister_stufe());
+    if (re15_gr2_kanister_welt(kp, kr)) {
+        static const int16_t ring[6][3] = { { 0, -2800, 0 }, { 300, -2100, 0 }, { 0, -700, 0 }, { 0, 0, 300 }, { 0, -1400, -200 },
+                                            { -500, -400, 200 } };   /* @0x801000a8 */
+        int16_t rx[4], rz[4];
+        const int reg = re15_rdt_get_region_quad(&g_room_rdt, 0, rx, rz);
+        int drin = 0;
+        for (int k = 0; k < 6; k++) {
+            int32_t q[3];
+            for (int i = 0; i < 3; i++)
+                q[i] = kp[i] + (int32_t)(((int64_t)kr[i*3] * ring[k][0] + (int64_t)kr[i*3+1] * ring[k][1] + (int64_t)kr[i*3+2] * ring[k][2]) >> 12);
+            if (!reg || re15_aot_point_in_quad(q[0], q[2], rx, rz)) drin++;
+        }
+        printf("kopfklemme: R1-Start Kanister (%d,%d,%d), Spritzring-Punkte im Regions-Viereck %d/6\n", kp[0], kp[1], kp[2], drin);
+        CHECK(kp[2] >= -27000 && kp[0] >= -8900 && kp[0] <= 7200, "R1-Start: Kanister (%d,%d) ausserhalb", kp[0], kp[2]);
+        CHECK(reg && drin == 6, "R1-Start: nur %d/6 Spritzring-Punkte im Regions-Viereck", drin);
+    }
+    int bilder = 0, raus = 0; int32_t zmin = 0x7fffffff;
+    for (int f = 0; f < 60 && !re15_gr2_tot(); f++) {
+        leon_statue(5800, -26500);
+        tick();
+        for (int b = 5; b <= 7; b++) {
+            int32_t k[3]; kopf_welt(b, k);
+            if (k[2] < zmin) zmin = k[2];
+            if (k[0] < -8900 - 300 || k[0] > 7200 + 300 || k[2] < -27000 - 300 || k[2] > -5400 + 300) raus++;
+        }
+        bilder++;
+    }
+    printf("kopfklemme: R1-Todes-Clip %d Bilder, Hals/Kopf/Kiefer z min %d, ausserhalb (Toleranz 300) %d\n", bilder, (int)zmin, raus);
+    CHECK(re15_gr2_tot(), "R1 nicht zu Ende");
+    CHECK(raus == 0, "R1: %d Bone-Lagen ausserhalb der Aussenwaende", raus);
+    return fails ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "clips";
@@ -2120,6 +2200,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "kanister")) rc = teil_kanister();
     else if (!strcmp(t, "kiefer")) rc = teil_kiefer();
     else if (!strcmp(t, "scherben")) rc = teil_scherben();    /* Runde 41 Spur G (Nachbesserung 3, M3) */
+    else if (!strcmp(t, "kopfklemme")) rc = teil_kopfklemme();   /* Runde 41 Spur G (Nachbesserung 4, M3) */
     else if (!strcmp(t, "putz")) rc = teil_putz();
     else if (!strcmp(t, "wand")) rc = teil_wand();
     else if (!strcmp(t, "kamera")) rc = teil_kamera();

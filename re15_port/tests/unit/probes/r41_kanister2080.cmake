@@ -25,6 +25,8 @@
 #                                 (Absatzwand @0x05C4 x -16650), Treppenfuss Band 5 unerreichbar
 #   unit_r41_kanister2080_blick   Nachbesserung 3 (M2, G-E2): Adas Versatz aus RE2 ROOM7020 (@0x0740/@0x0748, RID @0x144) nachgerechnet,
 #                                 Werfer in 2080/2081 Cut 7 der Kamera zugewandt (frontal wie Ada 0,985), Nord/Sued gleicher Dir_set
+#   unit_r41_kanister2080_r1wahl  Nachbesserung 4 (Abnahme G 3 M1): Rangfolge der R1-Kamerawahl - Kandidatentabelle plat_leon F1278
+#                                 (voller Todes-Clip vor gueltigem Start und vor der Massstab-Grenze) + drei Grenzfaelle
 #   unit_r41_kanister2080_fx_*    Nachbesserung 3 (M3, Nachtrag 28): Raum-ESP ROOM40A0 + Ops 4/6/37/38/41/42/69/78 der RE2-Kanister-
 #                                 Explosion gegen die selbst gelesene Disassembly (test_r41_kanister2080_fx.c)
 #   integration_r41_kanister2080  echte exe (Laeufe ankunft / kanister / szene / elza), s. Kopf des Skripts
@@ -38,7 +40,7 @@ target_compile_definitions(test_r41_kanister2080 PRIVATE RE15_ASSET_PSX_DIR="${C
 if(NOT WIN32)
     target_link_libraries(test_r41_kanister2080 PRIVATE m)
 endif()
-foreach(_teil lage spawn szene start bahn texte ebene landung kippen hals blick)
+foreach(_teil lage spawn szene start bahn texte ebene landung kippen hals blick r1wahl)
     add_test(NAME unit_r41_kanister2080_${_teil} COMMAND test_r41_kanister2080 ${_teil})
     set_tests_properties(unit_r41_kanister2080_${_teil} PROPERTIES TIMEOUT 120)
 endforeach()
@@ -71,6 +73,11 @@ endforeach()
 # Teil "scherben" (markiert "Runde 41 Spur G").
 add_test(NAME unit_r41_kanister2080_scherben COMMAND test_r41_re2gator scherben)
 set_tests_properties(unit_r41_kanister2080_scherben PROPERTIES TIMEOUT 240)
+# Nachbesserung 4 (Abnahme G 3 M3): KOPF-KLEMME - Kanister im Maul an der Suedwand: Kanister und Hals/Kopf/Kiefer innerhalb der
+# Aussenwaende x[-8900..7200] z[-27000..-5400], R1-Start mit allen sechs Spritzring-Punkten (@0x801000a8) im Regions-Viereck
+# (FUN_8002c820 @0x80077a30), Todes-Clip innerhalb; Gegenprobe ohne Kanister (Teil "kopfklemme" im Testprogramm der Spur B).
+add_test(NAME unit_r41_kanister2080_kopfklemme COMMAND test_r41_re2gator kopfklemme)
+set_tests_properties(unit_r41_kanister2080_kopfklemme PROPERTIES TIMEOUT 240)
 
 if(TARGET re15_pc)
     add_test(NAME integration_r41_kanister2080
@@ -85,4 +92,12 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_kanister2080_kampf_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_kanister2080_kampf.cmake)
     set_tests_properties(integration_r41_kanister2080_kampf PROPERTIES TIMEOUT 3000)
+    # Nachbesserung 4 (Abnahme G 3 M2): Kern-CLUT-Zeilen 485..498 nur fuer die R1-Folge - derselbe Granatwerfer-Schuss in ROOM2080 mit
+    # und ohne vorherigen 2090-Besuch: gleiche Quads, in keinem Bild gezeichnet (s. Kopf des Skripts)
+    add_test(NAME integration_r41_kanister2080_raumfremd
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_kanister2080_raumfremd_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_kanister2080_raumfremd.cmake)
+    set_tests_properties(integration_r41_kanister2080_raumfremd PROPERTIES TIMEOUT 900)
 endif()

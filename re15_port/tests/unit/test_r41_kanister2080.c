@@ -659,6 +659,41 @@ static int teil_blick(void)
     return fails != 0;
 }
 
+/* Nachbesserung 4 (Abnahme G 3 M1): Rangfolge der R1-Kamerawahl (gator_re2_r41.c re15_gr2_r1_rang, Entscheid G-E1 "Kopf und
+ * Kiefer ... im Bild ... unverdeckt ... am naechsten an der RE2-Lage"). Fall A = die Kandidatentabelle des Abnahme-Laufs
+ * plat_leon (gator_boss.log F1278, Leon auf der Plattform): der laufende Cut 4 (Start 8/8, Todes-Clip nur 6/19 - ab F1290 liegt der
+ * Kopf hinter dem Maschinenblock) gegen Cut 3 (8/8, 19/19, Massstab 2158 > Grenze 1892). Vorher waehlte die Rangfolge (gueltiger
+ * Start vor den Proben, Grenze in Stufe 0) den Cut 4; jetzt muss Cut 3 kommen (Stufe 1: voller Todes-Clip vor der Grenze).
+ * Faelle B-D: zwei volle Cuts -> der naeher an RE2 (170,111); voll unter der Grenze vor voll darueber (Entscheid B8);
+ * kein voller Cut -> die meisten Proben. */
+static int teil_r1wahl(void)
+{
+    const int32_t grenze = 1892;                              /* gr2_massstab_grenze() (Messzeile plat_leon "grenze=1892") */
+    /* cut, start_ok, im, bilder, kopf_ok, kiefer_ok, kx, ky, m - Abnahme 3 plat_leon F1278 */
+    const re15_gr2_r1_kand_t a[8] = {
+        { 0, 0, 0,  0, 0, 0,   967,   138, 2218 }, { 1, 0, 0,  0, 0, 0,    27,    92,  523 },
+        { 2, 0, 2, 16, 1, 1,   163,   104,  561 }, { 3, 1, 8, 19, 1, 1,    43,   156, 2158 },
+        { 4, 1, 8,  6, 1, 1,   128,    99,  669 }, { 5, 0, 0,  0, 0, 0, -9999, -9999,    0 },
+        { 6, 0, 0,  0, 0, 0,  -271,   135, 1516 }, { 7, 0, 0,  0, 0, 0,   278,   102,  508 } };
+    int st = -1;
+    int i = re15_gr2_r1_rang(a, 8, 4, grenze, 19, &st);
+    printf("r1wahl A (plat_leon F1278, laufender Cut 4 mit 6/19): Wahl Cut %d Stufe %d\n", i >= 0 ? a[i].cut : -1, st);
+    PRUEFE(i >= 0 && a[i].cut == 3 && st == 1, "Fall A: Cut %d Stufe %d statt Cut 3 Stufe 1 (voller Todes-Clip)", i >= 0 ? a[i].cut : -1, st);
+    /* B: zwei volle Cuts unter der Grenze -> naeher an (170,111) */
+    const re15_gr2_r1_kand_t b[2] = { { 0, 1, 8, 19, 1, 1, 60, 150, 900 }, { 1, 1, 8, 19, 1, 1, 175, 105, 1200 } };
+    i = re15_gr2_r1_rang(b, 2, 0, grenze, 19, &st);
+    PRUEFE(i == 1 && st == 0, "Fall B: Index %d Stufe %d statt 1/0 (naeher an RE2)", i, st);
+    /* C: voll unter der Grenze vor voll darueber, auch wenn dieser naeher an RE2 liegt (B8) */
+    const re15_gr2_r1_kand_t c[2] = { { 0, 1, 8, 19, 1, 1, 60, 150, 900 }, { 1, 1, 8, 19, 1, 1, 170, 111, 2500 } };
+    i = re15_gr2_r1_rang(c, 2, 5, grenze, 19, &st);
+    PRUEFE(i == 0 && st == 0, "Fall C: Index %d Stufe %d statt 0/0 (Grenze bevorzugt)", i, st);
+    /* D: kein voller Cut -> die meisten Proben (vor dem gueltigen Start) */
+    const re15_gr2_r1_kand_t d[2] = { { 0, 1, 8, 10, 1, 1, 170, 111, 900 }, { 1, 0, 3, 17, 1, 1, 60, 150, 900 } };
+    i = re15_gr2_r1_rang(d, 2, 0, grenze, 19, &st);
+    PRUEFE(i == 1 && st == 2, "Fall D: Index %d Stufe %d statt 1/2 (meiste Proben)", i, st);
+    return fails != 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "lage";
@@ -674,6 +709,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "hals")) rc = teil_hals();
     else if (!strcmp(t, "ebene")) rc = teil_ebene();
     else if (!strcmp(t, "blick")) rc = teil_blick();
+    else if (!strcmp(t, "r1wahl")) rc = teil_r1wahl();   /* Nachbesserung 4 (M1) */
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);
     return rc;

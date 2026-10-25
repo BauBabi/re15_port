@@ -1261,6 +1261,12 @@ void re15_gator_boss_tick(int slot)
         if (s_gb[slot].phase == GBP_RE2_TOD) { e->anchor_x += nx - e->x; e->anchor_z += nz - e->z; }
         e->x = nx; e->z = nz;
     }
+    {   /* (2b) Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M3): Kopf-Klemme - Kanister im Maul / R1-Tod: Hals, Kopf, Kiefer und Kanister
+         * innerhalb der Aussenwaende (gator_re2_r41.c re15_gr2_kopf_klemme); nicht im FRESSEN (eigene Buehne) und nicht bei Klemme aus. */
+        int32_t kx, kz;
+        if (g_room_rdt_ok && !gb_klemme_aus(&s_gb[slot]) && s_gb[slot].phase != GBP_FRESSEN && re15_gr2_kopf_klemme(slot, e, &kx, &kz))
+        { e->x += kx; e->z += kz; e->anchor_x += kx; e->anchor_z += kz; }
+    }
     re15_gr2_nachtakt(slot, e);                               /* (3) */
     {   /* NB4 (Abnahme 3, M2) - MESSZEILE GIER-WACHE (gator_boss.log): je Bildpaar, dessen beide Takte in CHASE/GUARD enden, das
          * Gier-Delta. Erlaubt: Port-Wenderate 0x60/Bild (re15_enemy_steer_point(.., 0x60) "zackige Wende") und der RE2-Knick

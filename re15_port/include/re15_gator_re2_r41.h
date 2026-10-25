@@ -164,6 +164,11 @@ int  re15_gr2_fx_quelle_r1(const uint8_t *m);
  * aendern), daraus Kanister-Anhaengen (FUN_8002d030 @0x801018f0 gegen die Part-6-Weltmatrix @0x801018d0-e0), Kanister-Weltlage
  * und die Effekt-Quellmatrizen Part 6 / Part 7 / Kanister (Status-0x800-Kopie FUN_8001d894 @0x8001d8ac-fc). */
 void re15_gr2_nachtakt(int slot, re15_actor_t *e);
+/* Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M3): KOPF-KLEMME - solange der Kanister im Maul haengt und im R1-Tod: 1 = Hals,
+ * Kopf, Kiefer (Bones 5/6/7 der gezeichneten Pose) oder der Kanister liegen ausserhalb der Aussenwaende des Beckens x[-8900..7200]
+ * z[-27000..-5400]; *dx/*dz = Verschiebung des ganzen Alligators nach innen (Aufruf re15_gator_boss_tick nach der Wurzel-Klemme,
+ * vor re15_gr2_nachtakt). Messzeilen "KOPF-KLEMME an/aus" in gator_boss.log. */
+int  re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz);
 /* Messhaken (Riegel unit_r41_re2gator_sitz): Part-6-Weltmatrix der letzten re15_gr2_nachtakt-Pose (Rotation ohne Skala, Lage
  * mit Zeichen-Skala) und die Effekt-Quellpuffer (0 = Part 6, 1 = Part 7, 2 = Kanister; 32-Byte-MATRIX-Abbild). 0 = keine. */
 int  re15_gr2_part6_gezeichnet(int32_t rot[9], int32_t pos[3]);
@@ -204,6 +209,12 @@ int  re15_gr2_kamera_wahl(int blick, const re15_actor_t *gator, const re15_actor
 /* Runde 41 Spur G, G-E1: Plattform-Haken der R1-Kamerawahl - 1 = Bildpunkt (sx,sy) mit Kamera-z vz ist in Cut `cut` von einer
  * Maske verdeckt (re15_pri_mask_occludes). NULL = keine Masken (Sonden). PC: platform/pc/src/gator_fx_r41_pc.c. */
 extern int (*re15_gr2_maske_hook)(int cut, int sx, int sy, int32_t vz);
+/* Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M1): Rangfolge der R1-Kamerawahl als reine Funktion. Kandidat = Urteil einer
+ * Zonenkamera (gr2_r1_beurteilen): start_ok/im = Start-Punkte (Kopf, Kiefer, 6 Spritzring-Punkte), bilder = sichtbare Proben des
+ * Todes-Clips (von `proben`), kx/ky = Kopf-Bildlage, m = Massstab. Stufe 0: volle Kandidaten unter `grenze` (oder cut == cur),
+ * Stufe 1: volle ohne Grenze, Stufe 2: meiste Proben. Rueckgabe = Index in k (-1 = keiner), *stufe = Stufe der Wahl. */
+typedef struct { int cut, start_ok, im, bilder, kopf_ok, kiefer_ok, kx, ky; int32_t m; } re15_gr2_r1_kand_t;
+int  re15_gr2_r1_rang(const re15_gr2_r1_kand_t *k, int n, int cur, int32_t grenze, int proben, int *stufe);
 /* Programm-Schnitt fuer Szenen (Spur F/G): Sperre setzen + auf die Wahl schneiden (Cut_chg-Zwilling);
  * liefert den Cut oder -1 (dann nur Sperre). `programm` erscheint in gator_boss.log ("RE2 KAMERA ..."). */
 int  re15_gr2_kamera_schnitt(int blick, const re15_actor_t *gator, const re15_actor_t *opfer, const char *programm);

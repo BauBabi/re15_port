@@ -34,6 +34,8 @@
 #include "re15_math.h"        /* Nachbesserung 3: re15_squareroot0 (Messzeile Lagesprung) */
 #include "re15_zopf_r38.h"    /* Nachbesserung 6: Elzas Zopf-Glied 0 (Messzeile Maul-Sitz) */
 #include "re15_gameflow.h"    /* Nachbesserung 6: re15_char_variant (Elza) */
+#include "re15_rdt.h"         /* Runde 41 Spur G (NB4, M3): re15_rdt_get_region_quad (Regions-Test des Kanisters) */
+#include "re15_aot.h"         /* Runde 41 Spur G (NB4, M3): re15_aot_point_in_quad = FUN_8002c820 */
 
 #define R41_KANISTER_TIM_SLOT 53
 
@@ -273,6 +275,24 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
     fress_sitz((const re15_camera_view_t *)cam_view_v, cx, cy);   /* Messzeile Nachbesserung 5 (M1) */
     int32_t pos[3], rot[9];
     if (!re15_gr2_kanister_welt(pos, rot)) return;
+    {   /* Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M3): RE2-Objekt-Zeichner FUN_800363f0 - vor Mesh UND Scherben der Regions-Test
+         * der Weltlage (obj+0x68, `addiu s3,s1,104`) gegen das Viereck des aktiven Cuts (`lw a1,-8172(s4)` = 0x800ce014, `jal 0x8002c820`
+         * @0x80036530-34); ausserhalb und ohne Flag 0x10 (@0x80036544-50) weiter zum naechsten Objekt @0x800366a4 - kein Zeichnen und
+         * kein Scherben-Zaehler (+0x1EC += 1 erst @0x800365bc-c8). Der Kanister obj[1] hat word0 = 0x000B: Obj_model_set ROOM40A0.RDT
+         * @0x2A12 `2d 01 00 00 00 00 00 00 00 00 0a 00`, Halbwort @+10 | 1 (`lhu v0,10(s2) / ori v0,v0,0x1 / sw v0,0(s1)` @0x800552d0-e4)
+         * -> keine Ausnahme 0x10. */
+        static int s_drin = -1;
+        int16_t rx[4], rz[4];
+        const int drin = !(g_room_rdt_ok && g_re15_active_cut >= 0 &&
+                           re15_rdt_get_region_quad(&g_room_rdt, g_re15_active_cut, rx, rz)) || re15_aot_point_in_quad(pos[0], pos[2], rx, rz);
+        if (drin != s_drin) {
+            s_drin = drin;
+            fprintf(stderr, "[gator-re2] Kanister F%u %s Regions-Viereck von Cut %d (FUN_8002c820 @0x80036534) pos=(%d,%d,%d)\n",
+                    (unsigned)g_engine.frame_count, drin ? "im" : "AUSSERHALB des -> nicht gezeichnet,", (int)g_re15_active_cut,
+                    pos[0], pos[1], pos[2]);
+        }
+        if (!drin) return;
+    }
     if (!modell_laden()) return;
     const re15_camera_view_t *cam_view = (const re15_camera_view_t *)cam_view_v;
     re15_render_pc_bind_tim_slot(R41_KANISTER_TIM_SLOT);
