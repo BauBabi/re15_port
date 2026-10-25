@@ -18,12 +18,14 @@ set_tests_properties(unit_r41_ventilkette PROPERTIES TIMEOUT 300)
 # -> Flut -> tot (Nachbesserung 1, M4: beschleunigter Renderer, Farbe der Ertrink-Blende ueber das ppm-Werkzeug von
 # test_r41_ventilkette); D Ventil ohne Kasten-Sicherung = Text 49 "It's locked.". Nachbesserung 5: mit der RE2-Dreh-Animation
 # laeuft A in 2030 bis F4700 (Countdown-Ausschnitt F4440/F4560/F4680) + 60 Bilder in 20B0, C bis F6600; neu E (Abnahme 4
-# Mangel 2: Plakat waehrend des Zaehlers gesperrt, Flut-Sperre bis zum Tod) bis F6450.
+# Mangel 2: Plakat waehrend des Zaehlers gesperrt, Flut-Sperre bis zum Tod) bis F6450. Nachbesserung 6 (Abnahme 5 Mangel 2):
+# A vergleicht den Countdown Pixel fuer Pixel mit RE2s Zeichner (Werkzeug re2cd, Schrift shared_assets/RE2/TEX.TIM).
 if(RE15_BUILD_PC AND TARGET re15_pc)
     add_test(NAME integration_r41_ventilkette
              COMMAND ${CMAKE_COMMAND}
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                      -DRE15_R41C_WERKZEUG=$<TARGET_FILE:test_r41_ventilkette>
+                     -DRE15_R41C_RE2TEX=${CMAKE_SOURCE_DIR}/shared_assets/RE2/TEX.TIM
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_ventilkette
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_ventilkette.cmake)
     set_tests_properties(integration_r41_ventilkette PROPERTIES TIMEOUT 1500 RUN_SERIAL TRUE)

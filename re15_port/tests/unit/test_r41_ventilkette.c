@@ -57,8 +57,21 @@
  *      2030/2031 sub06 @0x01FF2; SCA-Belege: Band-1-Reling fl 0x11, Ring-Boden fl 0x23, Absperrung 19-22/31/32 fl 0x33 =
  *      Rand der Schachtoeffnung (Nachbesserung 4: Pegel -5350 = Ringboden -5400 + 50)
  *
+ *   R  Nachbesserung 6 (Abnahme 5 Maengel 1/2, Nachtrag 25 (o)/(p)): R1 Countdown-Text in der RE2-Form (RE2 Hauptschleife
+ *      @0x8002608c..: erstes Bild N-1, je 30 Bilder -1, "%2d^%d%d=%d%d" @0x800109a4, 9 - s6/3, s7 8/5/2, Farbe 2 unter 60 s,
+ *      abgelaufen " 0^00=00" @0x800109b4) fuer N = 60/120/300/700; R2 im Raum: erstes Countdown-Bild nach (5,0x1D) = Bild 0
+ *      " 0^59=98"; R3 echter Ablauf: kein Alarm vor der vierten Drehung, Alarm ab dem Warntext 46, Countdown Bild fuer Bild
+ *      nach der Formel, im Bild des Flut-Beginns " 0^00=00" (Bild 1800) und Alarm aus, ein Bild spaeter kein Countdown;
+ *      Raumwechsel waehrend des Zaehlers beendet Alarm und Countdown
+ *
  * Werkzeug (Riegel integration_r41_ventilkette C, Nachbesserung 1 M4): `test_r41_ventilkette ppm <datei.ppm> x0 y0 x1 y1`
  * gibt "MITTEL r g b" der Flaeche (P6-Framedump, x1/y1 ausschliesslich) aus.
+ * Werkzeug "re2cd" (Nachbesserung 6, Riegel A + Bildvergleich RE2 <-> Port): `test_r41_ventilkette re2cd <datei.ppm> <TEX.TIM>`
+ * sucht den Countdown der RE2-Form im Framedump - EIGENER Nachbau von RE2 FUN_800318a4 (nicht der Port-Code): je Kandidat
+ * " 0^SS=TD" (SS 00..59, T 0..9, D 2/5/8) und " 0^00=00", Farbe 1/2, Zeichen c als 14x14-Feld uv ((c % 18) * 14, (c / 18) * 14)
+ * aus Seite 0 der RE2-TEX.TIM, x 104 + 14 i, y 32, CLUT (256, 480 + 2 * Farbe), CLUT-Wert 0x0000 = durchsichtig; Treffer =
+ * JEDES deckende Texel gleich (RGB555 -> 8 bit wie der PC-Renderer). Ausgabe "RE2CD TREFFER <text> FARBE f PIXEL n" bzw.
+ * "RE2CD KEIN TREFFER (bester <text> f: <gleich>/<n>)".
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -1631,6 +1644,176 @@ static int bss_diff(const char *bss, const char *ppm, int x0, int y0, int x1, in
     return 0;
 }
 
+/* ---- R: Nachbesserung 6 - Countdown in der RE2-Form + RE2-Alarm SUB_25 ---------------------------------------------- */
+/* R1: der Text je Bild (RE2 SLUS_007.48: Hauptschleife @0x8002608c..@0x80026360, Format @0x800109a4 / @0x800109b4). */
+static void fall_r_text(void)
+{
+    static const struct { int bild, n; const char *soll; int farbe; } k[] = {
+        {    0,  60, " 0^59=98", 2 },   /* erstes Bild N-1 (@0x800260b8..@0x800260d8), 9 - 0/3, s7 = 8 (@0x800260c8)   */
+        {    1,  60, " 0^59=95", 2 },   /* s7 - 3 je Bild (@0x8002634c)                                                */
+        {    2,  60, " 0^59=92", 2 },
+        {    3,  60, " 0^59=88", 2 },   /* s7 <= 0 -> 8 (@0x80026360), 9 - 3/3                                         */
+        {   27,  60, " 0^59=08", 2 },
+        {   29,  60, " 0^59=02", 2 },
+        {   30,  60, " 0^58=98", 2 },   /* s6 = 30 -> Sekunde - 1 (`slti v0,v0,30` @0x80026094)                         */
+        { 1799,  60, " 0^00=02", 2 },
+        { 1800,  60, " 0^00=00", 2 },   /* < 0 -> " 0^00=00" Farbe 2 (@0x800260fc, @0x80026298)                          */
+        { 5000,  60, " 0^00=00", 2 },
+        {    0, 300, " 4^59=98", 1 },   /* ROOM6170 @0x038CA / ROOM7010 @0x0237A: 300 s, gruen ab 60 (@0x800260ec)      */
+        { 7170, 300, " 1^00=98", 1 },
+        { 7200, 300, " 0^59=98", 2 },   /* unter 60 s Farbe 2 (@0x800260f8)                                              */
+        {    0, 120, " 1^59=98", 1 },   /* ROOM7030 @0x022B0: 120 s                                                      */
+        {    0, 700, "11^39=98", 1 },   /* "%2d": zweistellige Minuten ohne Leerzeichen                                  */
+    };
+    for (size_t i = 0; i < sizeof k / sizeof k[0]; i++) {
+        char t[RE15_R41C_CD_ZEICHEN + 1];
+        memset(t, 'x', sizeof t);
+        const int f = re15_ventilkette_r41_countdown_re2(k[i].bild, k[i].n, t);
+        PRUEFE(strcmp(t, k[i].soll) == 0 && f == k[i].farbe, "R1 Countdown Bild %d von %d s: \"%s\" Farbe %d (erwartet \"%s\" Farbe %d)",
+               k[i].bild, k[i].n, t, f, k[i].soll, k[i].farbe);
+    }
+    PRUEFE(RE15_R41C_CD_X == 104 && RE15_R41C_CD_Y == 32 && RE15_R41C_CD_SCHRITT == 14 && RE15_R41C_CD_GLYPHE == 14 &&
+           RE15_R41C_CD_SPALTEN == 18 && RE15_R41C_CD_CLUT_Y0 == 480 && RE15_R41C_ZAEHLER_BILDER / RE15_R41C_CD_TAKTE == 60,
+           "R1 Lage/Schrift wie RE2 (x 104 @0x800261e8, y 32 @0x80026140, Vorschub 14 @0x80031978, 18 Spalten @0x800319b0, CLUT 480)");
+}
+
+/* Text des Countdown-Bilds nach R1 (60 s): Sekunde 59 - bild/30, dann 9 - (bild%30)/3 und 8 - 3*(bild%3) - unabhaengig
+ * nachgerechnet; Farbe 2 (unter 60). */
+static int cd_text_ist(int bild, int farbe_soll)
+{
+    char t[RE15_R41C_CD_ZEICHEN + 1], soll[RE15_R41C_CD_ZEICHEN + 1];
+    const int f = re15_ventilkette_r41_countdown_re2(bild, RE15_R41C_ZAEHLER_BILDER / RE15_R41C_CD_TAKTE, t);
+    const int sek = 59 - bild / 30;
+    if (sek < 0) snprintf(soll, sizeof soll, " 0^00=00");
+    else snprintf(soll, sizeof soll, " 0^%02d=%d%d", sek, 9 - (bild % 30) / 3, 8 - 3 * (bild % 3));
+    return f == farbe_soll && strcmp(t, soll) == 0;
+}
+
+/* R2/R3 im Raum (Leon + Elza): Lebenslauf von Countdown und Alarm am Engine-Takt. */
+static void fall_r(uint16_t r)
+{
+    /* R2: das erste Countdown-Bild = Bild 0 (RE2: der Zaehler-Neustart im ersten Bild @0x800260b8) */
+    bits_leeren();
+    if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "ROOM%04X R Parse", r); return; }
+    int bild = -1;
+    PRUEFE(!re15_ventilkette_r41_countdown(&bild) && !re15_ventilkette_r41_alarm(), "ROOM%04X R2: vor dem Zaehler kein Countdown, kein Alarm", r);
+    re15_game_flag_set(5, RE15_R41C_FLAG_TIMER, 1);   /* = Set(5,0x1D) des Programms 2030_ventile_flut */
+    takt();
+    PRUEFE(re15_ventilkette_r41_countdown(&bild) && bild == 0, "ROOM%04X R2: erstes Bild nach (5,0x1D) = Countdown-Bild 0 (ist %d)", r, bild);
+    takt();
+    PRUEFE(re15_ventilkette_r41_countdown(&bild) && bild == 1, "ROOM%04X R2: zweites Bild = Countdown-Bild 1 (ist %d)", r, bild);
+    PRUEFE(!re15_ventilkette_r41_alarm(), "ROOM%04X R2: der Alarm folgt dem Warntext (richtige Folge), nicht dem Merker allein", r);
+
+    /* R3: echter Ablauf - Bruecke unten, Sicherung im Ventilkasten, richtige Folge */
+    bits_leeren();
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);
+    if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "ROOM%04X R Parse", r); return; }
+    lauf_t L;
+    for (int i = 0; i + 1 < RE15_R41C_DREHUNGEN; i++) L = ventil(k_los[i], 0, 300);
+    PRUEFE(!re15_ventilkette_r41_alarm() && !re15_ventilkette_r41_countdown(NULL), "ROOM%04X R3: nach drei Drehungen kein Alarm, kein Countdown", r);
+    L = ventil(k_los[RE15_R41C_DREHUNGEN - 1], 0, 900);
+    int warnung = 0;
+    for (int i = 0; i < L.n_msgs; i++) if (L.msgs[i] == RE15_R41C_MSG_WARNUNG) warnung = 1;
+    PRUEFE(warnung && re15_ventilkette_r41_alarm() && re15_ventilkette_r41_timer_laeuft(),
+           "ROOM%04X R3: richtige Folge -> Warntext 46 -> Alarm an (Zaehler laeuft)", r);
+    int vorher = -1, luecken = 0, falsch = 0, alarm_aus = 0, flut_bild = -1, flut_cd = -1, danach_cd = -1;
+    char flut_txt[RE15_R41C_CD_ZEICHEN + 1] = "";
+    for (int i = 0; i < 2400 && danach_cd < 0; i++) {
+        g_scd_pad_edge = 0; g_scd_pad_held = 0;
+        if (g_scd.message_active && (i & 7) == 7) g_scd_pad_edge = 0x4000;
+        const int flut_vorher = re15_ventilkette_r41_flut_laeuft();
+        takt();
+        g_scd_pad_edge = 0;
+        const int sichtbar = re15_ventilkette_r41_countdown(&bild);
+        if (!flut_vorher && re15_ventilkette_r41_flut_laeuft()) {         /* Bild des Flut-Beginns */
+            flut_cd = sichtbar; flut_bild = bild;
+            if (sichtbar) (void)re15_ventilkette_r41_countdown_re2(bild, RE15_R41C_ZAEHLER_BILDER / RE15_R41C_CD_TAKTE, flut_txt);
+            alarm_aus = !re15_ventilkette_r41_alarm();
+            continue;
+        }
+        if (flut_vorher) { danach_cd = sichtbar; break; }
+        if (sichtbar) {
+            if (vorher >= 0 && bild != vorher + 1) luecken++;
+            if (!cd_text_ist(bild, RE15_R41C_CD_FARBE_ROT)) falsch++;
+            if (!re15_ventilkette_r41_alarm()) falsch++;
+            vorher = bild;
+        }
+    }
+    PRUEFE(luecken == 0 && falsch == 0, "ROOM%04X R3: Countdown Bild fuer Bild ohne Luecke, rot, Alarm an (Luecken %d, Abweichungen %d)", r, luecken, falsch);
+    PRUEFE(flut_cd == 1 && flut_bild == RE15_R41C_ZAEHLER_BILDER && strcmp(flut_txt, " 0^00=00") == 0,
+           "ROOM%04X R3: im Bild des Flut-Beginns Countdown-Bild %d \"%s\" (RE2 abgelaufen @0x80026284)", r, flut_bild, flut_txt);
+    PRUEFE(alarm_aus, "ROOM%04X R3: Alarm aus mit dem Flut-Beginn (C-E4 \"bis zur Flut\")", r);
+    PRUEFE(danach_cd == 0, "ROOM%04X R3: ein Bild nach dem Flut-Beginn kein Countdown (RE2 @0x800262f0..@0x80026320)", r);
+
+    /* Raumwechsel waehrend des Zaehlers: Alarm + Countdown enden (der Raum-BGM-Lader uebernimmt den SUB-Platz) */
+    bits_leeren();
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);
+    if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "ROOM%04X R Parse", r); return; }
+    (void)ventile_richtig(900);
+    PRUEFE(re15_ventilkette_r41_alarm() && re15_ventilkette_r41_countdown(NULL), "ROOM%04X R3: Alarm + Countdown laufen vor dem Raumwechsel", r);
+    if (raum_hoch((uint16_t)(0x20B0 + (r & 1)), 5950, -1800, -6400) != 0) { PRUEFE(0, "ROOM20B%d Parse", r & 1); return; }
+    PRUEFE(!re15_ventilkette_r41_alarm() && !re15_ventilkette_r41_countdown(NULL),
+           "ROOM%04X R3: nach dem Raumwechsel (20B%d) kein Alarm, kein Countdown", r, r & 1);
+}
+
+/* Werkzeug "re2cd" (Kopf): eigener Nachbau von RE2 FUN_800318a4 gegen einen Framedump. */
+static int re2cd(const char *ppm, const char *tex)
+{
+    long tsz = 0, psz = 0;
+    uint8_t *t = slurp(tex, &tsz), *d = slurp(ppm, &psz);
+    int w = 0, h = 0, mx = 0, n = 0;
+    if (!t || tsz < 8 + 12 + 32 * 19 * 2 + 12 + 256 * 256 * 2 || t[0] != 0x10 || t[4] != 8) {
+        printf("FEHLER: %s keine 4-bpp-TIM mit CLUT\n", tex); free(t); free(d); return 2; }
+    if (!d || sscanf((const char *)d, "P6 %d %d %d%n", &w, &h, &mx, &n) != 3 || w != 320 || h != 240 || mx != 255 ||
+        (long)n + 1 + 320L * 240 * 3 > psz) { printf("FEHLER: %s kein P6 320x240/255\n", ppm); free(t); free(d); return 2; }
+    const uint8_t *bild = d + n + 1;
+    const uint8_t *c = t + 8;
+    const long clen = (long)c[0] | ((long)c[1] << 8) | ((long)c[2] << 16) | ((long)c[3] << 24);
+    const int cw = c[8] | (c[9] << 8);
+    const uint8_t *im = c + clen;
+    const int iw = im[8] | (im[9] << 8);
+    static const char *const formen[] = { " 0^00=00" };
+    char kand[RE15_R41C_CD_ZEICHEN + 1];
+    int best = -1, best_n = 0, best_f = 0;
+    char best_t[RE15_R41C_CD_ZEICHEN + 1] = "";
+    for (int f = 1; f <= 2; f++)
+        for (int ss = -1; ss < 60; ss++)
+            for (int td = 0; td < (ss < 0 ? 1 : 30); td++) {
+                if (ss < 0) memcpy(kand, formen[0], sizeof kand);
+                else snprintf(kand, sizeof kand, " 0^%02d=%d%d", ss, td / 3, 8 - 3 * (td % 3));
+                int gleich = 0, deckend = 0;
+                for (int i = 0; i < RE15_R41C_CD_ZEICHEN; i++) {
+                    const int ch = (unsigned char)kand[i];
+                    if (ch == 0x20) continue;
+                    const int u0 = (ch % 18) * 14, v0 = (ch / 18) * 14, x0 = 104 + 14 * i, y0 = 32;
+                    for (int y = 0; y < 14; y++)
+                        for (int x = 0; x < 14; x++) {
+                            const int u = u0 + x, v = v0 + y;
+                            const uint8_t b = im[12 + (long)v * iw * 2 + u / 2];
+                            const int idx = (u & 1) ? (b >> 4) : (b & 15);
+                            const int zeile = 2 * f;
+                            const int col = c[12 + (zeile * cw + idx) * 2] | (c[12 + (zeile * cw + idx) * 2 + 1] << 8);
+                            if (col == 0) continue;   /* PSX: CLUT-Wert 0x0000 = durchsichtig */
+                            deckend++;
+                            const uint8_t *px = bild + ((long)(y0 + y) * 320 + (x0 + x)) * 3;
+                            if (px[0] == ((col & 31) << 3) && px[1] == (((col >> 5) & 31) << 3) && px[2] == (((col >> 10) & 31) << 3))
+                                gleich++;
+                        }
+                }
+                if (gleich > best) { best = gleich; best_n = deckend; best_f = f; memcpy(best_t, kand, sizeof best_t); }
+            }
+    if (best >= 0 && best == best_n && best_n > 0) printf("RE2CD TREFFER \"%s\" FARBE %d PIXEL %d\n", best_t, best_f, best_n);
+    else printf("RE2CD KEIN TREFFER (bester \"%s\" %d: %d/%d)\n", best_t, best_f, best, best_n);
+    free(t); free(d);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     if (argc == 7 && strcmp(argv[1], "ppm") == 0)
@@ -1639,7 +1822,10 @@ int main(int argc, char **argv)
         return bss_mittel(argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
     if (argc == 8 && strcmp(argv[1], "bssdiff") == 0)
         return bss_diff(argv[2], argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]));
+    if (argc == 4 && strcmp(argv[1], "re2cd") == 0)
+        return re2cd(argv[2], argv[3]);
     fall_a();
+    fall_r_text();   /* Nachbesserung 6 */
     for (int v = 0; v < 2; v++) {
         printf("== %s\n", v ? "Elza" : "Leon");
         fall_b((uint16_t)(0x2000 + v), (uint16_t)(0x20B0 + v));
@@ -1658,6 +1844,7 @@ int main(int argc, char **argv)
         fall_o((uint16_t)(0x2060 + v));
         fall_p((uint16_t)(0x2030 + v));
         fall_q((uint16_t)(0x2030 + v));
+        fall_r((uint16_t)(0x2030 + v));   /* Nachbesserung 6 */
     }
     /* fremd: ROOM2060 ohne Plaetze 12..14 / Wasser */
     bits_leeren();
