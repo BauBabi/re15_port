@@ -461,7 +461,8 @@ Keine Messung der Abnahme wird wiederholt; ihre Zahlen werden zitiert. Punkt 2 (
 * **Messung nachher (Kette k3):** 1022 aus, **956 982 gezeichnet (+67 391)**, 273 961 nur ausgeschlossen, Kerben **10 178 von 63 546
   (16,0 %)**; 0 Rechtecke neu ausgeschlossen; unabhaengige 3D-Gegenprobe in den geaenderten Cuts 0 Verdeckungen ohne Koerper davor;
   exe DAVOR 0 neu sichtbar uebermalt
-  (Randpunkte in 30A0 C0/5020 C0 nachgerechnet hinter dem Koerper), HINTER verdeckt; FREI-Stellen der R37 (30A0/30A1 C0, "Haar"):
+  (Randpunkte in 30A0 C0/5020 C0 nachgerechnet hinter dem Koerper), HINTER verdeckt (**berichtigt in NB3: in 30A0 C0/C1 nur unten - die
+  Figur hinter der Trennwand blieb oben sichtbar, Abnahme 2 Mangel 1**); FREI-Stellen der R37 (30A0/30A1 C0, "Haar"):
   exe 0 Leon-Punkte uebermalt. X-Kiste 5020 C6 und Lok 6000 C5 gezeichnet (Uebersichtsbilder neu). Rest: Restliste fuer den Nutzer.
 
 ### NB2 Ausgangslage (Lektuere, keine neue Messung)
@@ -623,7 +624,7 @@ des groben Gitters am Bildrand; **0 in jedem durch NB2 geaenderten Cut** (3040 C
 | d5020_00 (Treppenraum) | (-12033,-18725) | 3139 | 160 -> 295 | 128 der 135 neuen Punkte HINTER dem Koerper (Leon z 8374..8719 > Eintritt 6976..7303), 6 in der Saeule darueber; sichtbar: 0 Punkte geaendert (Bild `NB2_k2_d5020_00_g0_0.png`, magenta = Leons Rueckseite neben dem Treppenraum) |
 | f30A0_00k / f30A1_00 (R37-FREI-Stellen, "Haar") | (-25400,13550) / (-24284,13657) | 1102 / 1361 | 0 -> 0 / 0 -> 0 | frei |
 | h5020_06 HINTER (X-Kiste) | (-4333,-15925) | 1626 | 25 -> 170 | verdeckt |
-| h30A0_00 / h30A0_01 HINTER (Trennwand) | (-21843,15863) / (-19443,15363) | 2010 / 1983 | 42 -> 757 / 85 -> 935 | verdeckt |
+| h30A0_00 / h30A0_01 HINTER (Trennwand) | (-21843,15863) / (-19443,15363) | 2010 / 1983 | 42 -> 757 / 85 -> 935 | **nur unten verdeckt** - berichtigt in Nachbesserung 3 (Abnahme 2 Mangel 1): oberhalb der Mittelleiste blieb die Figur sichtbar (Halbfigur), die oberen Felder trugen die Tiefe der Rueckwand |
 | h5020_00 HINTER (Treppenraum) | (-13633,-21625) | 1121 | 0 -> 944 | verdeckt |
 | h5090_13 HINTER x 2 | (24417,-20365) / (24417,-26365) | 652 / 906 | 0 -> 129 / 0 -> 906 | verdeckt |
 (Die Lok-Szenen 6000 stehen im Abschnitt (a). h5090_11: Leon dort 0 neu - die Kiste vorn links verdeckt Teile eines anderen Akteurs
@@ -890,7 +891,8 @@ selbst: zweites erzeuge bitgleich zum ersten.
   Gegenstands liegt (Kollisionszelle des Raums, Hoehe am Bild gemessen); fuer 12 Gegenstaende, deren Zelle die Automatik nicht fand,
   habe ich die Zelle von Hand zugeordnet (mit Bild und Zellbytes: `re15_port/tools/maske/zuordnung_r41.json`). Wo die Kamera direkt
   UEBER dem Gegenstand haengt (Pulte vorn in ROOM5050), traegt das nicht - die bleiben ohne Maske. Im Spiel geprueft: VOR diesen
-  Gegenstaenden wird Leon nirgends sichtbar uebermalt, dahinter ist er verdeckt. Zusammen zeichnet das Spiel jetzt 956 982
+  Gegenstaenden wird Leon nirgends sichtbar uebermalt, dahinter ist er verdeckt (berichtigt in Nachbesserung 3: an der Buero-Trennwand
+  ROOM30A0 nur unten - oben blieb er sichtbar; behoben, s. unten). Zusammen zeichnet das Spiel jetzt 956 982
   Maskenpunkte der Generator-Masken (Nachbesserung 1: 889 591, Runde 40: 727 561).
 - **Kameras ohne Maske (3040 C1, 3050 C6, 30E0 C6, 30E0 C7):** dort hatte der Generator nur Boden bzw. die Rueckwand gefunden - als
   Maske nutzlos, deshalb zu Recht nichts. Die GELAENDER dort (3050 C6, 30E0 C6/C7/C8/C9) hat der Generator nie erfasst.
