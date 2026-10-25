@@ -473,3 +473,70 @@ Plan:
 - **Riegel gezielt:** `ctest --test-dir "<baum>/re15_port/build" -R "^(integration_r38_wasser|integration_r37_itemband|integration_r41_wasser20b0_npc)$" -j3 --timeout 1200 --output-on-failure`
   -> `100% tests passed, 0 tests failed out of 3` (Total Test time (real) = 858.32 sec; r38_wasser 188.84 s, r41_wasser20b0_npc
   227.65 s, r37_itemband 858.25 s).
+
+### N2.M2 Water Key nach dem Tod nur 4-6 Pixel (Abnahme 1: "als Schluessel nicht erkennbar")
+
+- **Entscheid.** Kein Orchestrator- oder Nutzer-Entscheid lag vor (AUFTRAG.md bis F-E1 02:51, master 645fa45f). Von den drei
+  Wegen der offenen Frage (groesseres Modell / massiveres Modell / Kameraschnitt nach dem Tod) ist der Kameraschnitt gebaut,
+  als PORT-WAHL mit belegter Form: (a) das Modell bleibt das RE2-Bodenmodell bytegleich (ROOM7040 MD1 @0x354C, keine erfundene
+  Groesse), (b) RE1.5 zeigt Gegenstaende genau so: Schnitt auf eine Kamera, Halt, Cut_old + Cut_auto (ROOM2010 sub03 /
+  ROOM1180 sub02, s. Belege), (c) der Nutzer hat dieselbe Inszenierung fuer denselben Schluessel vorgegeben (Nachtrag 6 "sieht
+  die Zombie Leiche mit dem Schluessel in der Cutscene"), (d) RE2-artige Kameraschnitte sind Nutzer-Vorgabe (Nachtrag 4). Ein
+  groesseres Modell braeuchte eine Zahl ohne Beleg; das RE1.5-Item-Bild 0x45 (ITPS.ITP Block 0x45) zeigt einen Schluesselbund
+  in Normalgroesse.
+- **Ursache (gemessen).** Zwei Teile: (1) Die Lage galt der LAUFENDEN Kamera. Alle Zonenkameras von 2090 stehen an den
+  Beckenenden auf y -3132 (RID @0x060); die laufende Kamera sieht die Leiche von fern (Abnahme 1: Tiefe 4835 bzw. 5766 = Quadrat
+  7 bzw. 6 Bildpunkte, sichtbar 4-6). (2) Die Verdeckungs-Regel "vor JEDEM Knochen - 800" schloss jede Kamera aus, hinter der
+  ein Teil der Leiche liegt oder vor der die Leiche naeher als ihr Bildrand liegt. Messzeile "Schluessel-Kandidat" (neu) mit der
+  alten Regel, Lauf T1m (Todesrolle): nur Cut 0 (laufende, Tiefe 4835, 7 Bildpunkte), Cut 3 (8989), Cut 6 (9571).
+- **Geometrie (Rechnung, scratchpad F41n2/py/kam2090.py mit der Projektion von camera_common.c, H = 26684 >> 7 = 208):** das
+  naechste Wasser im Bild liegt je Zonenkamera bei Tiefe 2174-2519 (Quadrat 14,9-17,2 Bildpunkte, am unteren Bildrand); Cut 8-12
+  sind schlechter (9,7 / 7,7 / 6,7 / 13,8 / kein Wasser). Mehr als ~17 Bildpunkte gibt keine Kamera von 2090 her.
+- **RE-Belege (selbst gelesen):**
+  - ROOM2010.RDT @0x008EE `29 05 2b 02 ff ff 02 00 2a 00 3c 01 01 00` = Cut_chg 5, Message_on 2, Evt_next, Nop, Cut_old, Nop,
+    Cut_auto 1, Evt_end; ROOM1180.RDT @0x00B3C `29 09 2b 01 ff ff 02 00 2a 00 3c 01 01 00` dieselbe Form (xxd; shared_assets ==
+    info/Re1.5, cmp). Zensus aller Leon-RDTs (scd_dump_room.py): 16 Stellen Cut_chg -> Message_on -> Evt_next -> Cut_old (10C0
+    sub02, 1150 sub06/07, 1180 sub02/03, 1230 sub22, 2010 sub03, 30A0 sub02, 30B0 sub02, 4010 sub07/08, 4020 sub11, 5010
+    sub02/03, 6020 sub02, 6030 sub04).
+  - Cut_old FUN_8004032c (re15_disasm.py, info/Re1.5/PSX.EXE): `8004033c lbu a0,16251(a0)` (DAT_800b3f7b = der bei Cut_chg
+    gemerkte ANGEZEIGTE Cut), `80040344 lhu v1,4068(v1)` (work_vars[0x0A]), `80040354 sb v0,21591(at)` (= 1), `8004035c sh
+    v1,4072(at)` (work_vars[0x0C]), `80040364 sh a0,4068(at)` (work_vars[0x0A] = gemerkter Cut), `80040368 jal 0x800142f4`,
+    `80040374 lw v0,-13764(v0)` / `80040378 addiu v1,zero,-257` / `8004037c and` / `80040384 sw` (0x800aca3c &= ~0x100 = Zonen-
+    kamera an), `80040390 addiu v1,v1,1` (1 Byte). Port scd_vm.c op_cut_old setzt dasselbe.
+  - Cut_chg-Zwilling LAB_800402a0 (`lbu a1,4068(a1)` @0x800402c0, `sb a1,16251(at)` @0x800402e4, `sh a2,4072(at)` @0x800402ec,
+    `sh a0,4068(at)` @0x800402fc, `ori v0,v0,0x100` @0x800402d4) - wie die Kamera-Uebergabe (Nachbesserung 1, M1).
+  - Riegel Set(2,7,1)/Set(1,27,1) ROOM1150 sub08 @0x01114/@0x01118, Plc_ret @0x012E0, Riegel auf @0x012E4/@0x012E8 (wie P3).
+  - Halt = GSZ_LEICHE_BILDER 90 (1,5 Blinkperioden 0x3c, TITLE.BIN FUN_801028ec `ori v0,zero,0x3c` @0x80102918) = die
+    Leichen-Einstellung der Ankunft.
+  - Verdeckung: Alligator-Kasten {1000,-720,0,2200,720,800} @0x80118b98 (STAGE2.BIN, halbe Breite 800 = Kugelradius je Knochen).
+  - Der Tod kommt im Spielschritt (Spur B R1 P3: Tot-Flag @0x80102654-64, Kamera frei @0x80102688-94); der SCD-Takt laeuft
+    VOR dem Spielschritt (main.c) -> Erkennung im Nachtakt-Haken (enemy_ai_boss_gator.c ruft re15_gatorszene_r41_nachtakt nach
+    re15_gr2_nachtakt), damit der Schnitt im selben Bild wie der Rueckschnitt der Spur B kommt (kein Zwischenbild).
+- **Aenderung** (engine/src/gatorszene_r41.c, include/re15_gatorszene_r41.h; keine gemeinsame Datei):
+  - key_lage_bei_tod: die Zonenkamera (RVD-Gruppe mit Wechselsatz, Cut 0..7) mit der kleinsten Tiefe (groesstes Bild), bei
+    Gleichstand die laufende; Messzeile je Kandidat.
+  - leiche_verdeckt: je Knochen eine Kugel 800; verdeckt, wenn sie nicht ganz hinter dem Schluessel liegt und ihr Bildkreis
+    (800 x H / Tiefe) den Schluessel (+ halbe Quadrat-Bildgroesse) trifft; Kugel durch die Bildebene = verdeckt.
+  - key_tod_pruefen (Nachtakt im Bild des Todes, Rueckfall SCD-Takt) -> Lage, (9,111), Schluessel + Zone Slot 15, dann
+    key_einstellung: Cut_chg-Zwilling auf die Schluessel-Kamera + Programm 4 (`22 02 07 01 22 01 1b 01 09 0a 5a 00 2a 00 2e 01
+    00 00 42 00 3c 01 22 02 07 00 22 01 1b 00 01 00`); key_einstellung_takt meldet das Ende. Zustand RE15_GSZ_SCHLUESSEL nur
+    fuer re15_gatorszene_r41_ereignis. Pruefhaken re15_gatorszene_r41_key_einstellung. Folge-Zeilen E (Schnitt) / O (zurueck).
+  - Die Einstellung kommt auch im Messzwilling mit (9,112) vorab (gleiche Kamera, gleiche Bilder; nur der Schluessel fehlt) -
+    im Spiel gibt es (9,112) vor (9,111) nicht.
+- **Messung nachher** (eigene exe-Kopien, Zwilling mit (9,112) vorab, Bild fuer Bild, `F41n2/tools/puls_diff.py`):
+
+  | Lauf | Weg | Kamera (laufende) | Lage / Tiefe / Abstand | Einstellung | Bilder mit Schluessel | Kasten | hellster Pixel |
+  |---|---|---|---|---|---|---|---|
+  | T2m/T2o Leon | Todesrolle GB_TEST=3, Bit 110 | Cut 1 (0) | (-5200,-1689,-26800), 2441 (Quadrat 15,4), 1698 von der Leiche | F469-F561; state.log cam=1 F469-F559, pm=2 F470-F559, cam=0 ab F560 | 46 / 46 (F470-F560), je 37 Pixel | (286,195)-(302,206) = 17 x 12 | 72 -> 106 (x1,47), 2 Bilder am Max |
+  | TEm/TEo Elza (2091) | dto. | Cut 1 (0) | dto. | F469-F561 | 44 / 44 | (286,195)-(302,206) | 72 -> 106 (x1,47) |
+  | K4m/K4o Leon | R1-Kanistertod, natuerliche Kamera (Rezept K3: (-1000,-25550) Blick Ost, `U1.2,(M0.3,MA0.1)x12`, GB_TEST=5, Kanister (4430,-26160)) | Cut 2 (1) | (1400,-1704,-23300), 2643 (Quadrat 14,1), 1001 | F84-F176 (`R1 frei ... Cut 1 F84` im selben Bild) | 45 / 45 (F86-F174), je 29 Pixel | (32,192)-(44,206) = 13 x 15 | 70 -> 102 (x1,46) |
+  | KEm/KEo Elza (2091) | dto. | Cut 2 (1) | dto. | F84-F176 | 44 / 44 | (32,192)-(44,206) | 70 -> 102 (x1,46) |
+
+  Vorher (Abnahme 1): 4 Pixel (175,124)-(178,129) bzw. 6 Pixel (257,124)-(262,127). Bilder `F_belege/n2_m2_todesrolle_
+  einstellung.png`, `n2_m2_todesrolle_zoom.png` (6-fach: Ring mit Bart in F500/F530/F554, im Zwilling nichts),
+  `n2_m2_r1_einstellung.png`, `n2_m2_r1_zoom.png`, `n2_m2_elza_einstellung.png`, `n2_m2_nach_einstellung.png`.
+- **Nach der Einstellung** (gemessen, `n2_m2_nach_einstellung.png`): R1 - in der laufenden Cut 1 weiter sichtbar, Kasten
+  (164,105)-(166,106), 151 / 151 Bilder, 70 -> 102. Todesrolle - in Cut 0 0 Pixel (F564-F660): der Schluessel ist zur
+  Einstellungs-Kamera Cut 1 (Westende) gekippt und zeigt Cut 0 (Ostende) die Rueckseite; Objekt-Flaechen mit NCLIP < 0 verwirft
+  das Original (re15_nclip_r38.h: FUN_800254a0 @0x800255a8 `bgez`, FUN_800256b0 @0x800257c0). Die Aufnahme-Zone (1000 x 1000,
+  Slot 15) liegt an der gezeigten Stelle.
