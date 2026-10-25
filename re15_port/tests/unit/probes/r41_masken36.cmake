@@ -63,6 +63,8 @@ set_tests_properties(unit_r41_masken36_zellen3d PROPERTIES TIMEOUT 1500)
 #                             Treppenraum 5020 C0, Trennwand 30A0 C1, Kistenstapel 5090 C13)
 #                             verdecken Leon HINTER ihnen (H >= Haelfte bzw. H > 0) und uebermalen ihn DAVOR nicht (H == 0);
 #                             Szenen test_r41_masken36_zellen3d_szenen.cmake, Laeufer wie integration_r41_masken36_stage2.
+#                             NB3: die NB2-"DAVOR"-Plaetze 6000 C5 im Gang hinter der Ecke des Wandblocks Zelle 12 @0x007EC sind
+#                             HINTER-Stellen (Art M, Beleg in der Szenendatei); DAVOR Cut 5 = Abnahme-2-Stelle (12233,-9984) Band 2.
 if(TARGET re15_pc)
     add_test(NAME integration_r41_masken36_zellen3d
              COMMAND "${CMAKE_COMMAND}"

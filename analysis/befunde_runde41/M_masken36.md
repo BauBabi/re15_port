@@ -650,7 +650,8 @@ ihre Zahlen werden zitiert. Punkt 2 (erfuellt) wird nicht angefasst.
 - [x] Mangel 1: Verdachtsliste scan_fern_alle.txt (127 Eintraege, 41 Gruppen) gegen den Endstand gesichtet (Werkzeug verdacht)
 - [x] Mangel 2: OFFEN 9 gegangen (Teilrechtecke, Atlaspunkte ausserhalb des Koerpers durchsichtig + Rest-Stueck), Restliste: 7 weitere
       Gegenstaende von Hand zugeordnet und gezeichnet; was bleibt, hat keine Zelle / die Kamera steht darueber / liegt nicht in der Region
-- [x] Bau, gezielte Tests (unit 32/32, Integration s. Tests NB3), Abschluss-Commit
+- [x] Bau, gezielte Tests (unit 32/32; Integration 27 Riegel: 26 gruen, zellen3d rot an drei NB2-Szenen 6000 C5 -> gemessen HINTER dem
+      Wandblock, Szenen berichtigt, Lauf 2 s. Tests NB3), DAVOR-Stellen der Abnahme 2 an der NB3-exe nachgemessen, Abschluss-Commit
 
 ### NB3 Zusammenfassung je Mangel (Ursache, Messung vorher, Beleg, Aenderung, Messung nachher)
 **Mangel 1 - 30A0/30A1 obere Trennwandfelder, Figur hinter der Trennwand als Halbfigur; Riegel gegen zu ferne Tiefe; Verdachtsliste.**
@@ -670,7 +671,11 @@ ihre Zahlen werden zitiert. Punkt 2 (erfuellt) wird nicht angefasst.
   integration_r41_masken36_fern (Art Z: V == 0), Werkzeug verdacht.
 * Messung nachher: an allen Abnahme-Stellen 0 Leon-/Elza-Punkte hinter der Trennwand sichtbar (Haar ueber der Oberkante ausgenommen), DAVOR
   0 verdeckt; zu fern 40 276 (Stage 3: 0; der Rest zu 99 % ROOM6000 Gleisbett Band 0); Verdachtsliste: 27 von 41 Gruppen ohne Wirkung, ein
-  echter Fehler gefunden und behoben (6000 C5 Traeger), 12 Gruppen OFFEN 13.
+  echter Fehler gefunden und behoben (6000 C5 Traeger), 12 Gruppen OFFEN 13. An den 12 eigenen DAVOR-Stellen der Abnahme 2 nichts
+  verschlechtert (Tabelle "DAVOR-Stellen der Abnahme 2 an der NB3-exe"). Der Riegel integration_r41_masken36_zellen3d meldete drei NB2-Szenen
+  6000 C5 rot - gemessen: sie stehen HINTER der Ecke des Wandblocks Zelle 12 @0x007EC (1574 von 1613 Leon-Punkten hinter dem Prisma), die
+  NB2-Erwartung "DAVOR" kam aus ihrem falschen Traeger-Modell; Szenen auf Art M berichtigt, DAVOR Cut 5 an der Abnahme-Stelle (Abschnitt
+  "Riegel zellen3d").
 **Mangel 2 - Punkt 1 weiter nicht geschlossen (Restliste, OFFEN 9).**
 * Ursache: echte Gegenstaende ohne automatisches Modell (Spinde, Kisten, Traeger, Container); OFFEN 9: Rechtecke mit Modell, deren Punkte
   nicht alle hinter dem Koerper liegen, fielen ganz weg.
@@ -753,7 +758,7 @@ Modell-Zeilen in 4040/4080 haben Tiefe und Hoehe vom Huellrechteck (13 289 x 13 
 `m41nb3/kette3.sh k1`: 2 Runden bis stabil (Rueckholliste 4040 C9 R7, C10 R22..R25), Tabelle 682 -> 663 Zeilen (nur gezeichnete),
 Ausschluss mit gefilterter Tabelle bitgleich. Gezeichnete Punkte der bearbeiteten Cuts 224 716 -> 225 041 (0 verloren).
 **zu fern 1 360 606 -> 353 986** (Stage 3: 56 346 -> **0**, 4: 961 232 -> 72, 5: 914 -> 136, 6: 342 114 -> 353 778). Der Rest in
-ROOM6000 liegt an duennen Koerpern (Zelle @0x00810 Hoehe 25/650, @0x007F8 Hoehe 150 = Bahnsteigkante): der Austritt folgt dort
+ROOM6000 liegt an duennen Koerpern (Zelle @0x00810 Hoehe 25/650, @0x007F8 mit der NB2-IoU-Hoehe 150): der Austritt folgt dort
 direkt auf den Eintritt, das Austritts-Kriterium kann die Spalten nicht unterscheiden - die Figuren dahinter stehen im Gleisbett
 (Band 0, OFFEN 10). Deshalb die Figurpunkt-DP (Kette k2).
 
@@ -783,13 +788,65 @@ Maske ihn verdeckt):**
 | e30A1_00 Elza Cut 0 | (-21743,16263) | 1382 | 1382 | **0** | 704 |
 | h30A0_01 Cut 1 (erzwungen) | (-19143,15863) | 1733 | 1733 | **0** | 988 |
 | d30A0_00 DAVOR | (-21943,13663) | 2155 | **0** | (2 Randpunkte) | 0 |
-| d30A0_01 DAVOR | (-21343,13663) | 2555 | **0** | (1) | 0 |
+| d30A0_01 DAVOR, Cut 1 wie die Abnahme 2 | (-21343,13663) | 4282 | **0** | (43: Leons Arm 20..60 hinter dem Eintritt, im Zellkoerper, OFFEN 12) | 0 |
 | f30A0_00 / f30A1_00 (R37-FREI "Haar") | (-25400,13550) / (-24284,13657) | 503 / 843 | **0 / 0** | 0 | 0 |
 Ueber der Trennwand bleibt nur der Haarschopf sichtbar (s30A0_00 36 Punkte oberhalb der Oberkante, "ausser Kopf"); Bild
 `M_bilder/NB3/NB3_M1_30A0_trennwand.png` (rot verdeckt, blau sichtbar, magenta sichtbar obwohl hinter dem Koerper = 0). "uebermalt" (|A-B| > 24)
 DAVOR 1 / 4 Punkte = dieselben Rasterkanten wie in der Abnahme 2. Eigene Zusatzstelle l30A0_00 (-24843,15863), 488 hinter der Trennwand: 12 von
 1050 Punkten sichtbar, alle in EINER Bildspalte (x 208) mit Leon-z zwischen Eintritt und Austritt des Koerpers - Leons Modell ragt dort in den
 Zellen-Koerper (OFFEN 12).
+
+### NB3 Riegel zellen3d - die 6000-C5-"DAVOR"-Szenen der NB2 stehen HINTER dem Wandblock (Messung, Ursache, Beleg, Aenderung)
+**Messung:** der Integrationslauf (Tests NB3, Lauf 1) meldet `integration_r41_masken36_zellen3d` rot an drei NB2-Szenen: d6000_05 (15433,-4184)
+Band 2 550 von 1561 Figurpunkten uebermalt, d6000_05t (14933,-4484) 477 von 1643, e6001_05 (Elza) 265 von 1241 - die NB2 hatte sie als DAVOR
+(H == 0) gesetzt. Uebermalt wird Leon von den NB3-Teilen des Gittertraegers R22 (Tiefe 63, 348 Punkte) und R27 (Tiefe 55, 202); Leon hat dort
+Bucket 110..124 (`m41nb3/py/ueberm.py`).
+**Ursache:** die Plaetze liegen im Gang HINTER der Ecke des Wandblocks, an dem der Traeger sitzt. Die NB2 hatte sie als DAVOR gewaehlt
+("staerkste Ueberdeckung ohne neu verdeckten Punkt" in IHREM Modell), und ihr Modell des Traegers war falsch: Quelle-R23 Zelle @0x007D4
+(x 19313..22275, IoU 0,08, Tiefe 187 = hinter Leon), R33/R35 Zelle 13 @0x007F8 (NB2-IoU-Hoehe 150, Tiefe 176/173), R13/R14/R19 ausgeschlossen.
+NB3 traegt den Traeger mit Zelle 12 (Zuordnung von Hand) - damit verdeckt er Leon hinter der Ecke, so wie es die Geometrie verlangt.
+**Beleg (Bild `M_bilder/NB3/NB3_6000_05_ecke.png`):**
+* Zelle 12 @RDT+0x007EC = `d8 4f c8 0f 4a e1 d6 e9 01 ff 00 23`: x -7862..12578, z -5674..-1634, Typ 1, Band 2 (Boden y = -2 * 0x708 = -3600).
+* Wandblock bis unter die Decke: in Cut 2 (Kamera (13193,-5104,2221), Blick -z) ist die linke Kante der braunen Wandflaeche die Senkrechte
+  (12578,-5674) vom Boden (230,189) bis zum oberen Bildrand (223,4) = 7000 ueber dem Boden (4..5 Bildpunkte Abstand: die Zelle ist etwas
+  groesser als die Kunst); die Ecke (12578,-1634) laeuft von (252,238) bis (241,11) = 4000.
+* Leon steht im Gang zwischen Zelle 12 und Zelle 13 @RDT+0x007F8 (x 15903..20063 z -5734..4175, der Wandblock jenseits des Gangs). Der
+  Sehstrahl Kamera C5 (8794,-9403,-7278) -> Leons Fusspunkt kreuzt den Grundriss der Zelle 12 bei x 12235..12578 / z -5674..-5514, 2500..3700
+  ueber dem Boden.
+* Leon-Dreiecke der NB3-exe (RE15_TRILOG, `m41nb3/py/blockhinter.py`): **1574 von 1613 Leon-Punkten liegen hinter dem Prisma** der Zelle 12
+  (Saeule); mit endlicher Hoehe 4100: 1487, 3700: 1062, 3000: 345, 2500: 60, 1800: 0.
+* Fuer die Traeger-Masken (gezeichnete Rechtecke mit Zelle 12) gibt es auf Band 2 **keinen** Platz VOR dem Block: 0 von 3302 sichtbaren
+  Band-2-Plaetzen (`test_r37_masken36 plaetze 6000 5`, Figur 3 x 18 Punkte, `m41nb3/py/davor6000.py`), 602 Plaetze mit Figurpunkten dahinter.
+**Aenderung (nur die Szenendatei `tests/integration/test_r41_masken36_zellen3d_szenen.cmake`, Beleg im Kopf der Datei):** d6000_05 /
+d6000_05t / e6001_05 -> m6000_05 / m6000_05t / m6001_05, Art M (Figur HINTER dem Gegenstand, die Maske wirkt: H > 0); neu d6000_05a = DAVOR an
+der eigenen Stelle der Abnahme 2 (12233,-9984) Band 2 (Leon 2500, unter Masken 1547, uebermalt 0); Fenster = Leon-Dreiecke (x 203..262
+y 132..233) + 4, oben ohne Rand - in y 128..131 liegt die Kante von Slot 5 (z 16535; das 3D-Tor Obj_model_set[1] (20916,0,-18540) hat in Cut 5
+vz ~17 100, nach Abnahme 2 hinter der Lokfront), die die Lokmaske dort verdeckt (Lauf 2: mit Rand 3 von 2704 uebermalt, alle drei bei
+(219..220,128..129), Leon selbst 0). Masken und Tabellen unveraendert.
+**Messung nachher:** zellen3d gruen (Tests NB3, Lauf 3: m6000_05 550 von 1561, m6000_05t 477 von 1643, m6001_05 265 von 1241 verdeckt,
+d6000_05a 0 von 2648 uebermalt; die uebrigen 11 Szenen wie Lauf 1). Leon hinter der Ecke ist jetzt teilweise verdeckt (536 der 1574 Punkte hinter dem
+Block; NB2: 0). Offen bleibt der Rumpf unter R37 (Quelle-R33, Tiefe 176, NB2-Zeile Zelle 13): seine Zelle-12-Teile nimmt der Ausschluss wegen
+Band-0-Plaetzen wieder heraus (Rueckholliste, OFFEN 14).
+
+### NB3 DAVOR-Stellen der Abnahme 2 an der NB3-exe (nicht verschlechtert)
+Dieselben Plaetze und Laeufer-Parameter wie `M_abnahme_2.md` 1b (run.sh: RE15_DEBUG_JUMP + RE15_PLAYER_POS + RE15_FORCE_CUT, Bild 120;
+`m41nb3/abn_davor.sh`, Auswertung `m41nb3/py/ana.py`, NB3-exe md5 597ba53a...); die Leon-Zahl ist je Stelle gleich der der Abnahme (fuer Elza nennt die Abnahme nur 0 / 0).
+| Szene | Platz (Band) | Cut | Leon | verdeckt Abnahme 2 -> NB3 | uebermalt Abnahme 2 -> NB3 |
+|---|---|---|---|---|---|
+| d30A0_00 | (-21943,13663) B0 | 0 | 2363 | 0 -> **0** | 1 -> 1 (Rasterkante) |
+| d30A0_01 | (-21343,13663) B0 | 1 | 6521 | 0 -> **0** | 4 -> 4 (Rasterkante) |
+| d5020_00 | (-11933,-18925) B0 | 0 | 1929 | 0 -> **0** | 0 -> 0 |
+| d5020_06 | (-1533,-14525) B0 | 6 | 3153 | 0 -> **0** | 0 -> 0 |
+| d5090_11 | (3617,-25365) B0 | 11 | 5013 | 115 -> **110** | 110 -> 104 (Randfall Dreieckszelle 30 @0x009E0, Hinweis der Abnahme) |
+| d5090_13 | (20817,-25965) B0 | 13 | 1294 | 0 -> **0** | 1 -> 1 |
+| d6000_05 | (12233,-9984) B2 | 5 | 2500 | 0 -> **0** | 0 -> 0 |
+| d6000_07 | (18233,-21184) B2 | 7 | 1900 | 0 -> **0** | 0 -> 0 |
+| d6000_08 | (12833,-18784) B2 | 8 | 1583 | 0 -> **0** | 0 -> 0 |
+| d6000_09 | (8033,-18784) B2 | 9 | 755 | 0 -> **0** | 3 -> 3 |
+| d3040_00 | (-24400,-4800) B0 | 0 | 7088 | 0 -> **0** | 0 -> 0 |
+| e5021_06 (Elza) | (-1533,-14525) B0 | 6 | 1994 | 0 -> **0** | 0 -> 0 |
+An d5090_11 liegen 103 Punkte von Leons Unterschenkeln hinter dem niedrigen Koerper der Zelle 30 (R1, Hoehe 625, Tiefe 69; Leon-z 4029..4178,
+Eintritt 3356..3973) und bleiben sichtbar - das ist der Rest "zu fern" 5090 C11 (Tabelle oben, Randfall der Dreieckszelle).
 
 ### NB3 Mangel 1 - Sichtung der Verdachtsliste der Abnahme 2 (`m41abn2/scan_fern_alle.txt`, 127 Eintraege)
 Die Abnahme hat im GRUNDRISS gesucht (>= 50 % der Sehstrahlen eines Modell-Rechtecks betreten vorher eine andere solide Zelle, Huellquader
@@ -816,8 +873,8 @@ die ein Gegenstand davor verdecken muesste. `verdacht <raum> <cut> <rechteck>` d
 | 5090 C13 | x21642 z-29765 | @0x009D4 | 1 | 19 | 89377 |
 | 5090 C13 | x21642 z-22215 | @0x009C8 | 1 | 3 | 65212 |
 | 6000 C5 | x19313 z-25284 | @0x007F8 | 3 | 3 | 5340 |
-Davon nachgesehen: **6000 C5 (Gittertraeger)** - echter Fehler, die Mitte des Traegers trug die Bahnsteigzelle 13 @0x007F8 (Hoehe 150) statt
-der Traegerzelle 12 @0x007EC; Zuordnung von Hand (Bild `NB3_zuordnung_6000_05.png`), unterer Traeger jetzt gezeichnet (+4 698 Punkte). Die
+Davon nachgesehen: **6000 C5 (Gittertraeger)** - echter Fehler, die Mitte des Traegers trug die Zelle 13 @0x007F8 (Wandblock jenseits des Gangs, NB2-IoU-Hoehe 150)
+statt der Zelle 12 @0x007EC (Wandblock, an dem der Traeger sitzt); Zuordnung von Hand (Bild `NB3_zuordnung_6000_05.png`), unterer Traeger jetzt gezeichnet (+4 698 Punkte). Die
 Teilung der Traeger-MITTE nimmt der Ausschluss wegen Figurpunkten im Gleisbett (Band 0) wieder heraus (Rueckholliste), sie bleibt im
 NB2-Stand - der Rest der 5 340 Punkte. **5090 C13 R12 (Kistenstapel rechts, Zelle 26)** - kein Fehler: die Verdachts-Plaetze liegen bei
 x 20717..21117 z -26365..-24965 direkt VOR dem Stapel (Zelle 26 beginnt bei x 21642); die "Zelle davor" ist die lange niedrige Kistenreihe
@@ -941,6 +998,21 @@ Laeufe (Spurbaum, `local_build.sh build` nach der letzten Aenderung):
    -> **`100% tests passed, 0 tests failed out of 32`** (unit_r37_masken36_ausschluss 490 s, unit_r41_masken36_fern 253 s, zellen3d 122 s).
 2. Integration: s. "Tests NB3 - Integrationslauf" unten.
 
+### Tests NB3 - Integrationslauf
+Ausdruck (alle Masken-/PRI-Riegel der Spur und die Nachbar-Riegel, die dieselben MSK/Hintergruende lesen):
+`ctest --test-dir re15_port/build -R "integration_r41_masken36|integration_r37_masken36|integration_pri_masken|integration_r36_pri|integration_r37_pri1100|integration_r38_itemorte|integration_r39_optik|integration_r34n_e_dokumente|integration_r35_zgirl_5090|integration_r38_affen3|integration_r35_granate|integration_r37_elzaems_elza5091|integration_r36_dachkiste|integration_r37_beretta|integration_r37_itemband" -j 3 --timeout 2400 --output-on-failure`
+1. Lauf 1 (Stand k6): **`96% tests passed, 1 tests failed out of 27`** - rot nur `integration_r41_masken36_zellen3d` (d6000_05 550 von 1561,
+   d6000_05t 477 von 1643, e6001_05 265 von 1241 uebermalt); gruen u.a. integration_r41_masken36_stage2 (Punkt 2, die 53 Nutzer-Masken),
+   _zelle, _fern, integration_r37_masken36_stage3..6 / _nb2, integration_pri_masken, r37_pri1100, r38_affen3, r39_optik, r36_pri_schatten.
+   Ursache und Berichtigung: Abschnitt "NB3 Riegel zellen3d" (die drei Plaetze stehen hinter dem Wandblock; nur die Szenendatei geaendert).
+2. Lauf 2 (Szenen berichtigt; Neubau `local_build.sh build` -> `ninja: no work to do`, `=== LOCAL-BUILD-OK (build)`, exe md5 597ba53a
+   unveraendert): `ctest --test-dir re15_port/build -R "integration_r41_masken36_zellen3d" --timeout 1500 --output-on-failure`
+   -> `0% tests passed, 1 tests failed out of 1` - die drei Art-M-Szenen gruen, rot die neue DAVOR-Szene d6000_05a mit 3 von 2704 Punkten:
+   alle drei bei (219..220,128..129) im +4-Rand ueber Leons Kopf (Leon-Dreiecke ab y 132), Kante von Slot 5 (3D-Tor hinter der Lokfront).
+   Fenster oben ohne Rand (Beleg in der Szenendatei).
+3. Lauf 3 (derselbe Ausdruck): **`100% tests passed, 0 tests failed out of 1`** (507 s; 15 Szenen, d6000_05a 0 von 2648).
+   Die uebrigen 26 Riegel aus Lauf 1 lesen dieselbe exe (md5 597ba53a), dieselben MSK/TIM und unveraenderte Szenendateien.
+
 ## OFFEN
 
 0. **Stand Nachbesserung 2 (ersetzt die Zahlen von 1):** 1022 Rechtecke (Leon, Elza gleich) bleiben aus, 273 961 Punkte liegen nur
@@ -1010,7 +1082,8 @@ Laeufe (Spurbaum, `local_build.sh build` nach der letzten Aenderung):
     exe gemessen. Werkzeug: `test_r37_masken36 verdacht <raum> <cut> <rechteck>` (Stehplaetze), Bilder m41nb3/verdacht.
 14. **NB3 - ROOM6000 Band 0 (vgl. OFFEN 10):** 39 934 der 40 276 "zu fern"-Punkte liegen im Gleisbett unter dem Bahnsteig; die Teilung der
     Traeger-MITTE (6000 C5) nimmt der Ausschluss wegen eben dieser Plaetze wieder heraus. Ob der Spieler dort je steht, ist weiter nicht
-    gemessen; wenn nicht, sind diese Punkte im Spiel ohne Wirkung.
+    gemessen; wenn nicht, sind diese Punkte im Spiel ohne Wirkung. Dieselbe Rueckholung laesst im Gang hinter der Wandecke (Cut 5, m6000_05)
+    Leons Rumpf unter R37 (Tiefe 176) sichtbar: 536 von 1574 Punkten hinter dem Block sind verdeckt.
 15. **NB3 - Mass "zu fern" kennt nur Modell-Koerper:** fuer Rechtecke ohne Modell (Generator-Tiefe) gibt es kein Urteil "zu fern"; die
     Verdachtsliste (Grundriss) deckt diesen Fall nur ohne Hoehe ab.
 
