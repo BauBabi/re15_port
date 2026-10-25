@@ -3,22 +3,35 @@
 Baum `.claude/worktrees/r41_ventilkette`, Zweig `r41/ventilkette`, gepruefter Stand HEAD e1f1b6d6 (Basis = merge-base master
 116e8b0f; master steht inzwischen auf aa05ffd0 und enthaelt fremde Spuren — Gegenstand ist der Spur-Diff `git diff master...HEAD`).
 Massstab: die sechs Punkte des Auftragstexts und AUFTRAG.md (massgeblich) mit den Nachtraegen 6-19 (Spur-C-relevant: 6-10, 12, 13,
-15, 16, 18, 19; die master-Nachtraege 20-24 betreffen F/G/B, gelesen) und den Entscheiden C-a..e, C-E1..C-E3, C-E2b (C-E2c widerrufen).
+15, 16, 18, 19; im master zusaetzlich **Nachtrag 25 + C-E4** (02:47 MESZ, Antworten auf (o)/(p)/(q) der Spur C, mitbewertet);
+Nachtraege 20-24 und F-E1 betreffen F/G/B, gelesen) und den Entscheiden C-a..e, C-E1..C-E3, C-E2b (C-E2c widerrufen).
 Vorlage: Abnahme 4 (`C_abnahme_4.md`, Maengel 1-3), Nachbesserung 5 (Dossier §0f, Commits 4e70c77c..e1f1b6d6).
 Begonnen 2026-10-25 ~02:0x. Pruefer: Abnahme 5 (Opus). Der Bericht wird FORTLAUFEND geschrieben. Messordner scratchpad `C41abn5/`
 (unten `<a5>` = `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/C41abn5`).
 
-**Ergebnis: (laeuft)**
+**Ergebnis (abgeschlossen 2026-10-25 ~03:4x MEZ): NICHT bestanden.** Punkte 1-6 erfuellt (Leon UND Elza, ueber echte Tueren); Nachtrag 16
+(Ventil-Sicherungskasten 2010) erfuellt; Nachtrag 18 Punkte 1-3 (Plakat-Stil, 2050-Hebel, RE2-Dreh-Animation) erfuellt; Nachtrag 19 (Text 46)
+erfuellt; Abnahme-4-Maengel 1 (Dokument-Zettel, 243 statt 39 Pixel) und 2 (Plakat in der Flut) behoben. **Nachtrag 18 Punkt 4 nur teilweise:**
+die Sprachaufnahme spielt (Korrelation 0.903/0.885), aber der **Alarm fehlt** (Mangel 1) und der **Countdown hat nicht die RE2-Form** (Mangel 2) -
+beides seit **Nachtrag 25 + C-E4 (master 02:47 MESZ, waehrend dieser Abnahme)** vom Nutzer entschieden: "Ja, RE2-Alarm SUB_25", Countdown in der
+Form der RE2-Anzeige, Haken in audio_pc.c erlaubt. Mangel 3 (niedrig): Kopfkommentar mit der alten Ventil-Bedingung. Gates: RE-Gate haelt (10
+Stichproben selbst gelesen), Vertrag haelt (formale Hinweise V1 main.c-RBJ-Haken, V2 Bit 125 im master-VERTRAG), keine Nebenwirkungen. Tests:
+Unit 261/261 + PASS (517), Integration r41 5/5, Raumgruppe 17/17, `_kette` von Hand rc=0.
 
 ## 0. Stand / Protokoll (neueste zuerst)
-* 02:1x Bau: `local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)` (Zeile 180 `integration_r41_ventilkette_kette uebersprungen:
+* ~03:4x MEZ ABSCHLUSS (Zeitumstellung in der Nacht: 03:00 MESZ -> 02:00 MEZ; Zeiten ab dort MEZ): Urteile §4, Maengel §5. Beim Abschluss im
+  master gelesen: **Nachtrag 25 + C-E4** (94d525de, 02:47 MESZ) - Antworten des Nutzers auf (o)/(p)/(q); als Massstab mitbewertet (Mangel 1/2).
+  Kein Code geaendert; nur dieser Bericht committet.
+* 02:2x MESZ bis 03:3x MEZ Messlaeufe (§1): P1, N16 (ka/ka2/ka3/kk/ka3_elza), KB/KB_ELZA, KF, KP, KZ/KD, KH, KN/KG, P4/P5/P6, KBR, KE; Integration r41
+  5/5 und Raumgruppe 17/17 gruen (§3).
+* 02:1x MESZ Bau: `local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)` (Zeile 180 `integration_r41_ventilkette_kette uebersprungen:
   Spur A fehlt`), `local_build.sh build` -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)` (`<a5>/configure.txt`, `<a5>/build.txt`);
   exe `re15_pc.exe` 2026-10-25 00:40:35 (7942482 B) = Code HEAD (ventilkette_r41.c 00:38:10 -> .obj 00:40:02; `git diff HEAD` leer).
   Unit-Gruppe (Regex `<a5>/regex_unit.txt` = Abnahme-4-Regex + `unit_anim_.*|unit_plc_.*|unit_audio_.*|unit_se_.*|
   unit_r36_tueren_aufschliessen|unit_bss_room_source|unit_r36_karte.*|unit_fahrstuhl_.*` fuer RBJ-Ueberlagerung, Toene, BSS-Standbild):
   **`100% tests passed, 0 tests failed out of 261`** (`Total Test time (real) =  67.44 sec`, `<a5>/ctest_unit.txt`);
   `unit_r41_ventilkette` direkt: **`PASS (517 Pruefungen)`**. Integration r41 in zwei Stroemen gestartet (`<a5>/integ.sh`).
-* 02:0x Start: `git status` = nur `?? build/`; HEAD e1f1b6d6; Spur-Diff (`git diff master...HEAD --stat`, ohne analysis/) = 42 Pfade
+* 02:0x MESZ Start: `git status` = nur `?? build/`; HEAD e1f1b6d6; Spur-Diff (`git diff master...HEAD --stat`, ohne analysis/) = 42 Pfade
   (+15063/-1); seit dem Code-Stand der Abnahme 4 (b08bb0c4..HEAD): ventilkette_r41.c (+195/-), re15_ventilkette_r41.h (+99/-),
   platform/pc/src/ventilkette_r41_pc.c (neu, 222), main.c (15 +-), scd_vm.c (2 +-), gen/*.inc (hebel neu, plakat/programme/texte/
   original geaendert), neue Assets shared_assets/RE2/VENTIL1080.{RBJ,EDT,VH,VB}, Tests (unit + 3 integration + probes), Werkzeuge
@@ -243,7 +256,7 @@ Wegplan = der Plan des Riegels k2 (`<a5>/plaene/kn.txt`, eigene Laeufe):
 * Doku-Rest (kein RE-Verstoss): der Kopf `include/re15_ventilkette_r41.h:147` beschreibt die Ventil-Bedingung noch als "Bit 102 UND (3,108)
   (Nachtraege 9/10; vorher Satz 49 'I should look around here first.')" - der Code prueft seit Nachbesserung 5 Bit 102 UND Bit 125, Satz 49 ist
   "It's locked." (ventilkette_r41.c re15_ventilkette_r41_ereignis); Z. 160 "Blatt am Boden neben der Sicherung" (seit Nachbesserung 5 ein Zettel an
-  der Wand; im selben Absatz weiter unten richtig) -> Mangel 2 (Doku, niedrig).
+  der Wand; im selben Absatz weiter unten richtig) -> Mangel 3 (Doku, niedrig).
 
 ### G2 Vertrag (VERTRAG.md §1/§2)
 * **Bits:** 100-103/106/107 + **125** (Ventilkasten). 125 nach Nachtrag 16 Folge 5 ("naechste freie nach Zensus, im VERTRAG nachtragen"): Zensus
@@ -285,3 +298,75 @@ Wegplan = der Plan des Riegels k2 (`<a5>/plaene/kn.txt`, eigene Laeufe):
 * `_kette` von Hand rc=0 (KE). Kein roter Test, nichts nachzufahren.
 * Hinweis (Laufzeit): die fuenf r41-Riegel laufen RUN_SERIAL zusammen ~80 min (Zeitgrenzen jetzt 1500/1200/3600/3600/1500 s) - fuer die
   Release-Suite einplanen.
+
+## 4. Urteil je Nutzer-Punkt (gegen den Wortlaut, AUFTRAG.md; gebauter Stand exe 00:40 = Code HEAD e1f1b6d6)
+AUFTRAG.md ist massgeblich. Der Spurbaum reicht bis Nachtrag 19; im master steht seit **02:47 (waehrend dieser Abnahme, nach dem letzten
+Code-Commit 01:57) Nachtrag 25** mit den Nutzer-Antworten auf die Fragen (o)/(p)/(q) der Spur C und dem Orchestrator-Entscheid **C-E4**:
+(o) "Ja, RE2-Alarm SUB_25"; (p) "Auch da gibt es mindestens ein Alarm in Resident Evil 2." -> RE2 HAT eine Countdown-Anzeige, Spur C baut
+den 2030-Countdown in GENAU dieser Form nach (statt der Port-Wahl MM:SS:HH); (q) "Freigeben"; C-E4: Spur C darf fuer den Alarm einen kleinen
+markierten Haken in audio_pc.c setzen, SUB_25 bytegleich nach shared_assets/RE2/SOUND/, Alarm vom Warntext bis zur Flut bzw. bis zum Verlassen.
+Wie in Abnahme 4 (Nachtraege 16/18/19) bewertet diese Abnahme die neuen Nutzer-Antworten als Massstab mit. Die master-Nachtraege 20-24 und
+F-E1 betreffen F/G/B.
+
+| Punkt | Urteil | Beleg (eigene Messung) |
+|---|---|---|
+| 1 Leiter 2000 -> 2050 mit herunterlaufendem Wasserstrom blockiert, "I cannot climb up the ladder because of the water pressure", bis die Flut gelaufen ist | **erfuellt** | P1 Leon + Elza ueber die echte Tuer 2010 -> 2000: Satz 40 woertlich (2x), kein Raumwechsel, Bit 100 = 0; Bild Cut 10 mit Strahl (`p1r.png`/`p1r_elza.png`) |
+| 2 2030: Bruecke zunaechst OBEN; Pult links (Kamera 2, Nordwand): zu wenig Druck / Ventil 13 zu -> Ventil 13 -> "Lower the bridge?" -> Bruecke faehrt herunter; nicht die Kurbel | **erfuellt** | KBR Leon + Elza ueber die echte Tuer 2070 -> 2030: Bruecke oben, Zelle 12 u0 0xff, Pult 40, Ventil 13 41/42 (Bit 101), Pult 43 -> Ja -> Cut 4, Bruecke -> -1800 (Bit 102), 44, Zelle 12 offen, Spieler auf dem Steg (`kbr_bruecke.png`) |
+| 3 Ventilraetsel -> Warnung (1 min, Raum verlassen) -> 60 s -> Wasser ueber die Ringebene; Ost-Tuer -> 20B0 (Auswasch-Szene); Zeit abgelaufen im Raum: Tod mit Ertrink-Effekt | **erfuellt** (20B0-Szene selbst nach C-E1 mit dem Haken der Spur A; `_kette` im C-Baum sauber uebersprungen, von Hand rc=0) | KB/KB_ELZA ueber den echten Weg: richtige Folge -> 46 -> Zaehler -> zu Fuss zur Ost-Tuer -> 20B0/20B1, Bits 103 + 100; KF: Countdown bis 00:00, Flut unter Cut 4, Spritzer, `ERTRUNKEN` + blaue Blende, YOU DIED (`kf_flut.png`); Flut-Programm-Bytes unveraendert gegen Abnahme 4 (Flut ueber den Ring dort gemessen) |
+| 4 Danach 20B0 statt 2000 (spaeter wieder frei ohne Wasser), Leiter frei (kein Wasser laeuft mehr herunter) | **erfuellt** | P4 Leon + Elza: 2010-Tuer -> 20B0/20B1 Cut 10, Leiter -> 2050 ohne Sperrtext, 2050-Leiter -> 20B0; Bild Cut 9 ohne Strahl (`p4_20b0.png`) |
+| 5 2050: Wasserlevel (Hebel) erst nach dem Pult-Raetsel (80 V wie 11F0) | **erfuellt** | P5v Leon + Elza: Hebel vorher Satz 40, (3,104) bleibt 0; KH Leon + Elza: Pult 43/41 -> Cut 15 -> 40/70/80 V -> "Power supply OK." -> Bit 106 |
+| 6 2080-Rechner entleert danach auch 2030 - ersetzt durch Nachtraege 7/8/12 (k) (Strom: 2030 bis knapp unter die Absperrung, Rechner = Original) | **erfuellt** | P6 Leon + Elza ueber die echte 20B0-Ost-Tuer: `Wasser knapp unter der Absperrung y -5350`, `pos=(0,-5350,0)`, Treppe 48, Lift B (3,220), 2080 Rechner = Original msg 0 -> (3,245) -> 2090 |
+| Nachtrag 16 (Ventil-Sicherungskasten 2010: Einsetzen -> Kamera auf die Ventile + Unlock-Ton -> Ventile frei; Herausnehmen -> Ventile wieder gesperrt; Sicherung danach in den 2. Kasten; neutraler Text ohne "look around") | **erfuellt** | N16/KB/KN/KG: echter Weg 2030 -> 2070 -> 2000 -> 2010 (Leon + Elza); ohne Kasten-Sicherung "It's locked." auch mit der Sicherung in der Hand; 40 -> 41 -> Ja -> Bit 125 -> Standbild der Ventilwand (= BG07, 91.4 % pixelgleich mit dem Spielbild) + RE2-Aufschliess-Ton (Log + Transiente) -> 42; mit Bit 125 Ventile frei; 43 -> Ja -> 44 (Bit 125 = 0) vor und nach der Flut; nach der Flut zu Fuss bis 2060 -> "Will you use the Fuse?" (Leon + Elza); mit Bit 125 sagt 2060 Text 3 |
+| Nachtrag 18 Punkt 1 (Plakat im Stil des Spiels) | **erfuellt** (Stilurteil beim Nutzer, Vergleichsbogen liegt vor) | KP Leon + Elza: vergilbtes Papier, Schreibmaschinenschrift, gedaempfte Farben, Klebeband auf Stahlwand, Inhalt unveraendert (`kp_plakat_x3.png`); Comic-Optik weg (`nb5_plakat_vergleich.png`) |
+| Nachtrag 18 Punkt 2 (2050: ausgewaehlter Hebel geht runter, Lampen bleiben) | **erfuellt** | KH Leon + Elza: Griff in ~16 Bildern nach unten (F552..F570, `kh_hebel3_zoom.png`), Hebel 1/3/4 unten, 2 oben, gruene Lampen bleiben |
+| Nachtrag 18 Punkt 3 (Ventil-Dreh-Animation aus RE2 beim Drehen) | **erfuellt** | KB/KB_ELZA: RBJ von RE2 ROOM1080 gebunden, 20 x Clip 17 + 15/16 vor/zurueck = sub08 (G1 Nr. 1), Haende am Rad (`kb_ventil09_zoom.png`, `kb_elza_ventil09_zoom.png`), 24 Drehgeraeusche hoerbar (Transienten 4.9..5.5 x Median) |
+| Nachtrag 18 Punkt 4 (typischer Timer der 60 s + **Alarm wie am Spielende** + Voiceover beim Text) mit Nachtrag 25 (o) Alarm = RE2 SUB_25, (p) Countdown in der RE2-Form | **teilweise** (nur das Voiceover erfuellt) | Voiceover: main46.wav spielt (Korrelation 0.903 Leon / 0.885 Elza). Timer: vorhanden, aber in der PORT-WAHL-Form MM:SS:HH oben rechts in der Nachrichtenschrift, Farbe 2 (`kb_countdown.png`, `kf_flut.png`) - Nachtrag 25 (p) verlangt die Form der RE2-Countdown-Anzeige (nicht gesucht/gebaut) -> Mangel 2. **Alarm: nicht umgesetzt** (waehrend der 60 s nur die Raummusik; seit C-E4 ist der Haken in audio_pc.c erlaubt) -> Mangel 1 |
+| Nachtrag 19 (Text 46 woertlich) | **erfuellt** | KB/KB_ELZA: `id=46 "WARNING: The water will rise in one minute. Please leave the room immediately!"`, drei Zeilen im Bild |
+| Abnahme 4 Mangel 1 (Dokument in der Welt nicht erkennbar) | **behoben** | KZ: Cut 5 243 Pixel (Zettel an der Wand neben dem Sicherungsschrank, `z5_dokument_mit_ohne.png`), Leser vom neuen Platz Leon + Elza (`kd_dokument.png`), Bit 107 |
+| Abnahme 4 Mangel 2 (Plakat hebt die Flut-Sperre auf) | **behoben** | KF: "Plakat gesperrt" waehrend des Zaehlers (2x), Flut -> Tod ohne `letterbox closed` dazwischen; Plakat ausserhalb des Zaehlers normal (KP) |
+| Abnahme 4 Mangel 3 (Nachtraege 16/18/19 nicht umgesetzt) | **behoben bis auf Nachtrag 18 Punkt 4 (Alarm, Countdown-Form)** | siehe die Zeilen Nachtrag 16/18/19 |
+| Nachtrag 25 (q) "A fuse box for the valve controls." | **erfuellt** (vom Nutzer freigegeben) | N16: `id=40 "A fuse box for the valve controls.One of the fuses is missing..."` |
+
+## 5. Maengel (nummeriert, nachpruefbar)
+* **Mangel 1 (mittel, Nutzer-Wortlaut Nachtrag 18 Punkt 4 "Also - Alarm, so wie am Spiel Ende immer") — der Alarm waehrend der 60 s fehlt.**
+  Ist: waehrend des Zaehlers laeuft nur die Raummusik; kein Alarm (Laeufe KB/KB_ELZA mit Ton, `cap.raw`; Code: kein Abspielweg). Die Spur hat
+  die Quelle belegt (RE2 ROOM6040 sub04 @0x022E8 `57 00 04 06 11 25 00 80` -> SUB_25, 100688 B; RE1.5 hat keine Alarm-Spur, SUB_25.BGM 4 B - G1
+  Nr. 3 selbst gelesen) und als Frage (o) gemeldet, weil das Abspielen eines RE2-SUB-Containers einen Haken im BGM-Lader
+  `platform/pc/src/audio_pc.c` braucht (der SUB-Lader `re15_bgm_load_sub` ist `static` und liest nur RE1.5-Spuren; eine oeffentliche API fuer
+  einen fremden SUB-Container gibt es nicht - selbst nachgelesen) und audio_pc.c in Runde 41 nur Spur D gehoert (VERTRAG §1.3). Das war zum Zeitpunkt des
+  letzten Code-Commits blockiert; seit **Nachtrag 25 (o) "Ja, RE2-Alarm SUB_25" + C-E4** (master 02:47) ist der Weg frei. Forderung (C-E4): kleiner
+  markierter Haken "Runde 41 Spur C, C-E4" im BGM-Lader audio_pc.c, SUB_25 bytegleich nach `shared_assets/RE2/SOUND/` (Paket-Gate), mit dem Warntext 46 in 2030/2031
+  starten und mit Flut/Tod/Raumwechsel beenden (C-E4: "vom Warntext bis zur Flut bzw. bis zum Verlassen des Raums"; Form RE2 ROOM6040 sub04), mit
+  RE15_AUDIO_CAP_SYNC messen (Korrelation/Pegel gegen SUB_25, Leon UND Elza), Riegel.
+* **Mangel 2 (mittel, Nachtrag 25 (p) "Auch da gibt es mindestens ein Alarm in Resident Evil 2.") — der Countdown hat nicht die Form der
+  RE2-Countdown-Anzeige.** Ist: Port-Wahl MM:SS:HH (`05 02` + Glyphen 0x0C..0x16) oben rechts x 230 y 20 in der Nachrichtenschrift
+  (re15_ventilkette_r41_countdown_text, RE15_R41C_COUNTDOWN_X/Y; Bilder `kb_countdown.png`, `kf_flut.png`); die Spur hatte kein Original-
+  Countdown-Bild gefunden und gefragt (p). Der Nutzer sagt, RE2 hat eine (Selbstzerstoerungs-Zeit am Spielende). Forderung: die RE2-Anzeige
+  in ghidra_re2_Leon.txt / RE2_Quellcode_V2 / den RE2-Stage-6/7-Overlays finden (Ausloeser, Ziffern-Textur/-Schrift, Lage, Format, Farbe -
+  mit Adressen) und den 2030-Countdown genau so zeichnen; Bildvergleich RE2 <-> Port, Riegel nachziehen (Riegel A prueft heute den
+  Rot-Ausschnitt x 230..286 y 20..36). (Meine Stichprobe nach Zeit-Konstanten in RE2_Quellcode_V2/Overlays 6/7 fand nichts - die Suche muss
+  tiefer, z. B. ueber den Ausloeser der Laborsequenz um ROOM6040 und die Zeichenroutinen.)
+* **Mangel 3 (niedrig, Doku) — Kopf von `include/re15_ventilkette_r41.h` beschreibt die alte Ventil-Bedingung.** Z. 147: "erst mit Bit 102 UND
+  (3,108) (Nachtraege 9/10; vorher Satz 49 'I should look around here first.')" - der Code (ventilkette_r41.c `re15_ventilkette_r41_ereignis`)
+  prueft seit Nachbesserung 5 Bit 102 UND Bit 125, Satz 49 ist "It's locked." (Nachtrag 16 ersetzt Nachtrag 10); Z. 160 "Blatt am Boden neben der
+  Sicherung" (seit Nachbesserung 5 ein aufrechter Zettel an der Wand; der Absatz sagt es weiter unten selbst). Forderung: die zwei Stellen dem
+  Code anpassen.
+
+Hinweise (kein Mangel, an den Orchestrator):
+* (V1, formal) `platform/pc/main.c`: zwei neue kleine Haken der Spur C (RBJ-Leihe `re15_ventilkette_r41_pc_rbj` im Boot- und Tuer-Ladeweg, je
+  2 Zeilen, markiert) ueber die in C-E3 angenommenen "4 Stellen" hinaus; der fruehere Inline-Block ist durch einen Aufruf ersetzt (jetzt 6 Stellen,
+  13 Zeilen). Bitte wie J-E1 annehmen oder ablehnen.
+* (V2, formal) Bank-9-Bit **125** (Ventilkasten) ist im Spur-VERTRAG nachgetragen (Nachtrag 16 Folge 5), im master-VERTRAG steht weiter
+  "125-133 vergibt der Orchestrator" -> beim Merge eintragen; kein anderer r41-Baum belegt es.
+* (a) Frage (q) ist mit Nachtrag 25 beantwortet ("Freigeben"); (o)/(p) siehe Mangel 1/2. Der Spurbaum muss AUFTRAG.md vom master holen
+  (Nachtrag 25 fehlt dort).
+* (b) RE2-Animation: der Else-Zweig `Ck(1,0)` von RE2 ROOM1080 sub08 (andere Lage/Plc_motion-Byte 3 = 1) ist nicht uebernommen; beide Figuren
+  nutzen den ersten Zweig (im Bild passend).
+* (c) PSX-Ziel ungebaut: Standbild, Plakat, Hebel, Countdown nur ueber die PC-Bildebenen (bekannt).
+* (d) Die Kasten-Texte 2010/2011 (Ids 40-44) und die Ventil-Fragen haben keine Sprachaufnahmen (Zeilen stumm, Plaetze im Dossier §7 genannt).
+* (e) Laufzeit: die fuenf r41-Riegel ~80 min RUN_SERIAL.
+* (f) Sprungartefakt Kamera Cut 0 nach RE15_DEBUG_JUMP in 2030 (vorbestehend) - Messungen mit Bild deshalb ueber echte Tueren (KB, KBR, KA3).
+
+Gates: G1 RE-Gate haelt (10 Stichproben selbst gelesen/disassembliert, alle bestaetigt), G2 Vertrag haelt (formale Hinweise V1/V2), G3
+Nebenwirkungen keine. **bestanden = false** (Mangel 1: Alarm fehlt; Mangel 2: Countdown nicht in der RE2-Form - beides Nachtrag 18 Punkt 4 mit Nachtrag 25;
+Mangel 3 Doku).
