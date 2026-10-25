@@ -962,6 +962,9 @@ Aufnahme, R1-Tod; gemessen Aufnahme F113/F113/F154/F90, Leiche (-5502,-11705)/(-
   --output-on-failure` -> **`100% tests passed, 0 tests failed out of 1`** (Total Test time (real) = 63.97 sec).
 - Spur B's Riegel (unit_r41_re2gator_* 18 Teile, integration_r41_re2gator) gruen: der Haken greift nur fuer den Kanister DIESER
   Szene (Bit 116), Spur B's RE15_GATOR_KANISTER-Weg sieht ihn nicht.
+- Endstand (danach nur Kommentare in re15_kanister2080_r41.h / test_r41_kanister2080.c): `bash re15_port/tools/local_build.sh build`
+  -> `=== LOCAL-BUILD-OK (build)`, derselbe Unit-Lauf -> **`100% tests passed, 0 tests failed out of 43`** (Total Test time (real)
+  = 57.27 sec). Messkopie re15_pc_g41nb2a.exe geloescht; Laeufe/Bilder nur im scratchpad `<SP>/g2`, im Baum nur G_belege/nb2_*.
 
 ### 9.6 OFFEN (gemessen bzw. benannt, nicht geraten)
 1. **Apply-Bild F530** (N2): dieser Zweig (Basis 9f10bdb0) zeigt im Bild des Schnitts auf Cut 7 noch den alten Hintergrund mit dem
