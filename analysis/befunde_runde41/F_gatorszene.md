@@ -255,3 +255,16 @@ Gesondert (Spur B, NICHT gruen, s. §O): `ctest ... -R "^integration_r41_re2gato
   Messhilfe ohne Spielweg: RE15_SET_FLAG=3:245 RE15_DEBUG_JUMP=2080@250 RE15_FIRE_AOT=1@40#2080.
 - **Hinweis**: Der Schluessel ist das RE2-Bodenmodell "Platform Key" (Ring mit Schluessel, flach); in der Leichen-Einstellung
   ~10 Bildpunkte gross, leicht zur Kamera gekippt.
+
+## Nachbesserung 1 (nach Abnahme 0, F_abnahme_0.md: M1-M6)
+
+Start 2026-10-25, HEAD 76ad856d, Baum sauber. Messordner (scratchpad, nicht im Repo): `F41n1/` (exe-Kopien
+`re15_pc_f41n1_<lauf>.exe`, RE15_WINDOW_SCALE=1, Bilder nur per RE15_FRAMEDUMP).
+
+Plan (je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher):
+- M1 Kampfbeginn ohne Spielfigur im Bild (Kamera bleibt nach der Szene auf P3s Leichen-Cut 1).
+- M2 Water Key nach dem Tod unsichtbar (beide Todeswege).
+- M3 doppelter Verschlossen-Ton am Tor 20A0/20A1.
+- M4 rote Fremd-Riegel (unit_r36_tueren_schott, unit_r38_spinnen, unit_r30_tuer_verschlossen, integration_r41_re2gator).
+- M5 Schluessel-Puls in der Ankunftseinstellung gesaettigt.
+- M6 RE-Gate: `s_ga.t > 60` ohne Beleg; Clip-11-Zitat (RE2 @0x801011e0 `jal 0x8001a240`).
