@@ -37,6 +37,8 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
 - [x] Nachbesserung 1: M1-M6 der Abnahme 0 behoben und gemessen (Abschnitt unten), Zusatzbefund N1 (B-Kamera-Programme)
 - [x] Nachbesserung 2: M1 (drei Fremd-Riegel mit Querbezug, gruen) und M2 (Einstellung auf den Schluessel nach dem Tod) der
       Abnahme 1 behoben und gemessen (Abschnitt "Nachbesserung 2")
+- [x] Nachbesserung 3: M1 der Abnahme 2 (Zwischenbild der Zonenkamera zwischen Explosionsschnitt und Schluessel-Einstellung)
+      behoben und gemessen, Nebenbefund (R1-Tod aus frueherem Raumbesuch) behoben (Abschnitt "Nachbesserung 3")
 
 ## 0. Protokoll
 
@@ -48,6 +50,9 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
   e01ea055 (M2 groesstes Bild), d224c392 (exe-Riegel + Bilder), 9d36260c (Dossier), Schluss-Commit fix(r41-gatorszene).
 * Nachbesserung 2 (2026-10-25): 58d88629 (Plan), 709c0ceb + 4d013992 (M1), a6e29e7d + f38cbc4d (M2 Code), 1023f54e + be1977be
   (M2 Riegel + Bilder), 0c73197e (Dossier M2), Schluss-Commit fix(r41-gatorszene): Nachbesserung 2.
+* Nachbesserung 3 (2026-10-25): 6c8956ec (Plan), 71641acd (Code M1), f7090113 (Dossier vorher/RE, exe-Riegel), f314cb63
+  (Unit-Riegel), 4b22cd32 (Messung nachher + Bilder), 9e0347c8 (Nebenbefund), a7e00b75 (KN/KQ), b0192d5b (Spielfigur im
+  Riegel), 298d2c5d (P0-Beleg), 36539858 (Unit gruen), Schluss-Commit fix(r41-gatorszene): Nachbesserung 3.
 
 ## Punkt 2 — Spinnen aus ROOM2090 entfernen
 
@@ -710,3 +715,52 @@ Plan:
   (Zonenkamera gesperrt 1, B's Programm frei 1)", "nach dem Halt: Cut_old auf Cut 0, Zonenkamera an, (9,111) = 1"; Gegenprobe
   (9,111) vorab: `1 x 36, 0 x 23` - "B schneidet zwei Bilder vor dem Tot-Flag (Bild 37) auf Cut 0 zurueck (2 Bilder Cut 0)", keine
   Folge-Zeile R -> `tod_explosion: 0 Fehler`.
+
+### N3 Tests
+
+Neu (nur F-eigene Riegel, registriert in tests/unit/probes/r41_gatorszene.cmake; keine Fremd-Riegel geaendert):
+- `unit_r41_gatorszene_tod_explosion` (test_r41_gatorszene.c Teil tod_explosion): R1 MIT Explosionsschnitt der Spur B in der Lage KW
+  (ROOM2090 und ROOM2091 im selben Prozess, dazu Gegenprobe (9,111) vorab) - angezeigter Cut je Bild (re15_cam_present_tick), Folge R,
+  Einstellung zwei Takte vor dem Tot-Flag, kein Cut 0 vor dem Tot-Flag, Laeufe E -> K (>= 90) -> Cut_old, Sperre nach dem Tot-Flag,
+  Cut_old + Zonenkamera an; Gegenprobe: B's Rueckschnitt unberuehrt (zwei Bilder Cut 0 wie RE2). Der zweite Fall misst zugleich den
+  Nebenbefund (frueherer R1-Tod im selben Prozess).
+- `integration_r41_gatorszene_tod_explosion` / `_tod_explosion_elza` (test_r41_gatorszene.cmake Teil tod_explosion*): Rezept KW/KWE der
+  Abnahme an der exe - Explosionsschnitt erreicht, Rueckschnitt-Ersatz-Zeile, Einstellung ab dem Rueckschnitt-Takt mit Rueckkehr auf
+  den Ausgangs-Cut (90..94 Bilder), E/K/X verschieden, keine B-Kamerazeile danach, Spielfigur PL00/PL04, state.log cam=E bis F<r-1>
+  und cam=K ab F<r>, Bilder je Bild ueber den neuen Auswerter `test_r41_gatorszene kamfolge` (Klasse = naechstes Referenzbild, keine
+  Schwelle) mit Folge E+K+. Gegenprobe des Auswerters an den Bildern des alten Stands (Laeufe V_KW/V_KWE): `Folge
+  EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEXXKKKKKKKKKK -> FEHLER`; am neuen Stand (N_KWE) `... X 0, 1 Wechsel ... -> OK`.
+
+Gezielt (keine volle Suite), Regex = die der Abnahme 2 (F + B + Kamera/Zonen + Wasser + Tueren + Inventar + Spinnen + alle Laeufe durch
+2090/2091/20A0 + die drei Fremd-Riegel von N2.M1; scratchpad `F41n3/regex.txt` = `F41a2/regex.txt`), sie schliesst die neuen Riegel ueber
+`unit_r41_gatorszene_` / `integration_r41_gatorszene_` ein (`ctest -N`: `Total Tests: 216` = 213 + 3):
+`ctest --test-dir "<baum>/re15_port/build" -R "^(unit_r41_gatorszene_|integration_r41_gatorszene_|unit_r41_re2gator_|integration_r41_re2gator$|unit_r36_kartenbits$|unit_r26_inventar$|unit_r21_discard_wegwerfen$|unit_r39_inventar_|integration_r39_inventar_discard$|unit_item_|unit_inv_|unit_sca_wall_hit$|unit_re2_spider_|unit_spider_ai$|unit_adult_spider_ai$|unit_r38_spinnen$|integration_r38_spinnen_echtlauf$|unit_writher_ai$|unit_enemy_shootable$|unit_collision_layers$|unit_alligator_ai$|unit_gator_sweep$|unit_gator_fress$|unit_r36_schluessel_|integration_r36_schluessel|unit_r38_dining1141_(schluessel1011|tuer1131)$|unit_r38_rolltor20a0|integration_r38_rolltor20a0|unit_r37_feuerloescher_|integration_r37_feuerloescher$|unit_r39_optik_schluessel$|unit_r39_schluessel2_|unit_aot_sce_census$|unit_aot_edge$|unit_scd_|unit_door_seq$|unit_r38_wasser_|integration_r38_wasser$|unit_r41_kleinkram_a$|integration_r41_kleinkram_a_blink$|r31_trefferboxen|unit_rotor_bgm_pin$|unit_r35_cut10f0_bgm$|unit_r39_johnruf1041_musik$|unit_r35_cut1150_knallbank$|unit_r36_szene1150_knall_re2$|integration_r39_elzazombies_knall$|unit_r36_inventar$|unit_r36_kartenitems$|unit_r37_itemband$|integration_r37_itemband$|unit_r36_tueren_|unit_r33_tueren_|unit_r30_tuer|unit_r31_tuer_ton$|unit_r35_cut10f0_tuerton$|unit_r39_karten_tueren$|integration_r36_tueren$|unit_camera_view$|unit_cut_old_displayed$|unit_r34n_b_cut_old$|prop_zone_dispatch$|prop_scd_pc_advance$|unit_r38_montage_kameras$|integration_(cross_stage|room_probe_sweep|rvd_coverage|door_traversal|door_lock|item_name_census|keydoor)$|prop_door_roundtrip$|prop_spawn_entered$|integration_r35_granate$|integration_r41_wasser20b0_npc$|integration_r38_wasserzombie$|unit_r35_granate$|unit_irons_mittelmodell$|unit_r34_reaktion$|unit_1210_arme$|unit_r30_irons_tisch_licht$|unit_r35_affen_|unit_r36_szenenleon_|unit_r36_ziel1190$|unit_r37_pri1100_|unit_r38_npckante_|unit_r38_wasserzombie$|unit_r41_wasser20b0_)" -j4 --timeout 1200 --output-on-failure`
+-> **`100% tests passed, 0 tests failed out of 216`** (`Total Test time (real) = 1077.76 sec`; darin integration_r37_itemband 837.31 s,
+integration_r41_re2gator 268.77 s, integration_r41_wasser20b0_npc 223.17 s, integration_r38_wasser 183.64 s,
+integration_r41_gatorszene_leon/_elza 61.93/80.08 s, _tod/_tod_elza 75.29/123.83 s, _tod_r1/_tod_r1_elza 43.96/96.08 s,
+_tod_explosion/_tod_explosion_elza 28.66/45.14 s, unit_r41_gatorszene_tod_explosion 0.37 s). Spur B's Riegel (unit_r41_re2gator_*,
+integration_r41_re2gator) laufen ohne (9,110) bzw. ohne R1 und sind damit von key_rueckschnitt_pruefen unberuehrt - gruen.
+
+### N3 OFFEN
+
+1. **Nebenbefund an der exe nicht nachgestellt:** "frueherer R1-Tod in derselben Sitzung, dann Zustand davor betreten" (Spielstand mit
+   (9,110) ohne (9,111) laden oder Continue) - gemessen nur im Unit-Riegel (zweiter Fall im selben Prozess). `musik_soll` nutzt weiter
+   `gator_tot()` (re15_gr2_tot() ueber alle Slots): in diesem Ablauf koennte die Kampfmusik-Weiche im ersten Bild den alten Tod sehen -
+   nicht gemessen, nicht geaendert (sonst aendert sich die Musik beim Wiederbetreten NACH dem Tod).
+2. **Integration mit Spur G:** im Fall mit Explosionsschnitt stehen B's Zeilen jetzt `KAMERA R1 zurueck -> Cut X F<r>` und `KAMERA R1
+   frei ... F<r>` im Rueckschnitt-Takt (vorher frei erst in P3), `R1 ende (Leiche)` unveraendert in P3. G's Kampf-Riegel
+   (test_r41_kanister2080_kampf.cmake, im G-Baum nur gelesen) prueft die Reihenfolge `KANISTER gesetzt -> Stufe 1 -> angehaengt -> R1
+   start -> R1 ende (Leiche)` - davon unberuehrt; im Integrationsbaum neu messen. Die 2080-Lagen weiter gleich halten.
+3. Unveraendert aus N2: Form "Kameraschnitt nach dem Tod" = PORT-WAHL ohne Bestaetigung des Nutzers; Todesrolle nach der Einstellung 0
+   Bildpunkte in Cut 0 (Rueckseite, NCLIP @0x800255a8); Leiche mitten im Becken ~6 Bildpunkte (gerechnet, nicht gemessen); MAIN2E nach dem
+   Tod statt RE2-Ausblenden; Nachrichten-Ids 44-46 frei; Schachtspinnen 20A0; nach dem Laden eines Spielstands keine Einstellung
+   (Ersatzlage); PSX-Bau ungeprueft (key_suche beim Tod fuer acht Zonenkameras).
+
+### N3 Fuer den Nutzer
+
+- Keine neuen Assets, keine Sprachdateien.
+- Stirbt der Alligator am Kanister und hat das Spiel dafuer auf eine Explosions-Kamera geschnitten, folgt jetzt direkt die Einstellung auf
+  den blinkenden Water Key - der kurze Blick (zwei Bilder) auf die normale Raumkamera dazwischen ist weg. Nach 1,5 Sekunden geht die Kamera
+  wie bisher auf die Raumkamera zurueck. Ohne Explosionsschnitt und bei Elza gleich.
+- Frage (aus Nachbesserung 2, weiter offen): Ist der Water Key in dieser Einstellung nach dem Tod fuer dich gut zu erkennen, und passt die
+  Form "Kamera springt nach dem Tod kurz auf den Schluessel"?
