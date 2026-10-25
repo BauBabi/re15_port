@@ -19,7 +19,8 @@
  *       61672 = 25,1 %, Leon + Elza, Dossier 1.4; nach Nachbesserung 1 - Zellen-Tiefe fuer ausgeschlossene Rechtecke,
  *       tools/maske/tiefe_zelle_r41.py - 11494 von 62432 = 18,4 %; Nachbesserung 2, Zellen-Modelle mit 3D-Urteil und Zuordnung von
  *       Hand, tools/maske/zellen3d_r41.py - 10178 von 63546 = 16,0 %; Nachbesserung 3, Teilrechtecke je Koerper, tools/maske/
- *       kacheln_r41.py - 9036 von 63116 = 14,3 %) und VORHER > 10000 (Gegenprobe: das Mass findet die Kerben);
+ *       kacheln_r41.py - 9036 von 63116 = 14,3 %; Nachbesserung 4, platzierte Kuenstler-Komponenten, tools/maske/platzieren_r41.py - 8388
+ *       von 63818 = 13,1 %) und VORHER > 10000 (Gegenprobe: das Mass findet die Kerben);
  *     - Blit: die gezeichneten Punkte NACHHER passen zum Hintergrund (eigener Atlas = Hintergrund an der Zielstelle).
  */
 #include <stdio.h>
@@ -269,7 +270,7 @@ static void teil_loecher(void)
           sekt == 216 && eigen == 216 && quelle_eigen == 216);
     CHECK("die alten Generator-Rechtecke sind erkennbar (Quelle im BSS-Atlas voll deckend + Blit)", alt_n > 6000);
     CHECK("Gegenprobe: VORHER gibt es offene Kerben an den Objektkanten (> 10000)", k_alt > 10000);
-    CHECK("NACHHER hoechstens 30 % der Kerben von VORHER (gemessen nach Nachbesserung 3 9036 von 63116 = 14,3 %, nach NB2 16,0 %, nach NB1 18,4 %, vor NB1 25,1 %; der Rest sind Saum-Rechtecke, die der "
+    CHECK("NACHHER hoechstens 30 % der Kerben von VORHER (gemessen nach Nachbesserung 4 8388 von 63818 = 13,1 %, NB3 14,3 %, NB2 16,0 %, NB1 18,4 %, vor NB1 25,1 %; der Rest sind Saum-Rechtecke, die der "
           "Ausschluss nimmt, weil sie eine Figur VOR dem Objekt verdecken wuerden)", k_neu * 10 <= k_alt * 3);
     CHECK("Blit NACHHER: eigener Atlas = Hintergrund an der Zielstelle (Mittel je Sektion <= 12)", gemalt > 0 && mittel_max <= 12.0);
 }
@@ -511,10 +512,11 @@ static void teil_platziert(void)
             || !bg_rgb((unsigned) S->raum, S->cut, rgb)) {
             printf("  FAIL: ROOM%04X C%d nicht lesbar\n", (unsigned) S->raum, S->cut); g_fail = 1; free(msk); free(msk1); continue;
         }
-        if (pri.mask_count == S->erstes + S->n) sekt_ok++;
+        if (pri.mask_count == S->erstes + S->n
+            || (S->raum == 0x6000 && S->cut == 5 && pri.mask_count == S->erstes + S->n + 1)) sekt_ok++;   /* + Teil aus teilen_r41.py */
         else printf("  ROOM%04X C%d: %d Rechtecke statt %d + %d\n", (unsigned) S->raum, S->cut, pri.mask_count, S->erstes, S->n);
         if (msk1 && mn1 == mn && !memcmp(msk, msk1, mn)) elza_ok++;
-        for (m = S->erstes; m < pri.mask_count; m++) {          /* (b) Blit der neuen Rechtecke */
+        for (m = S->erstes; m < S->erstes + S->n && m < pri.mask_count; m++) {   /* (b) Blit der neuen Rechtecke */
             const re15_pri_mask_t *q = &pri.masks[m];
             int dx = (int16_t) q->dstX, dy = (int16_t) q->dstY, xx, yy, r, g, b, d;
             for (yy = 0; yy < q->height; yy++)
@@ -531,12 +533,17 @@ static void teil_platziert(void)
         /* (d) gezeichnet wie der Lader; "vor" = dieselbe Sektion ohne die neuen Rechtecke */
         lader = pri; re15_masken36_filter(re15_pri_masken_raum((unsigned) S->raum), S->cut, &lader);
         zeichnen(&lader, lader.draw_count, NULL, &eig, deck);
-        vor = pri; vor.mask_count = S->erstes; if (vor.draw_count > S->erstes) vor.draw_count = S->erstes;
-        re15_masken36_filter(re15_pri_masken_raum((unsigned) S->raum), S->cut, &vor);
-        zeichnen(&vor, vor.draw_count, NULL, &eig, deck_alt);
+        {   /* vor = dieselbe Sektion ohne die neuen Rechtecke [erstes, erstes + n), Ausschluss wie der Lader */
+            uint8_t ohne[RE15_PRI_MAX_MASKS_PER_CUT];
+            vor = pri;
+            for (m = 0; m < pri.mask_count; m++)
+                ohne[m] = (uint8_t) ((m >= S->erstes && m < S->erstes + S->n)
+                                     || re15_masken36_ausgeschlossen(re15_pri_masken_raum((unsigned) S->raum), S->cut, m));
+            zeichnen(&vor, vor.draw_count, ohne, &eig, deck_alt);
+        }
         for (y = 0; y < 240; y++)
             for (x = 0; x < 320; x++) gez += deck[y][x] && !deck_alt[y][x];
-        for (m = S->erstes; m < pri.mask_count; m++)
+        for (m = S->erstes; m < S->erstes + S->n && m < pri.mask_count; m++)
             if (re15_masken36_ausgeschlossen(re15_pri_masken_raum((unsigned) S->raum), S->cut, m))
                 aus += (long) pri.masks[m].width * pri.masks[m].height;
         neu_gez += gez; neu_aus += aus;

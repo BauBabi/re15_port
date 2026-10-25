@@ -149,7 +149,7 @@ def naechster_index(rgb, pal):
     return (np.argmin(d, 1) + 1).astype(np.uint8)
 
 
-def cut_bearbeiten(rdt, cut, sek, idx_eigen, clut_eigen, idx_orig, clut_orig, bild, grown):
+def cut_bearbeiten(rdt, cut, sek, idx_eigen, clut_eigen, idx_orig, clut_orig, bild, grown, reserve=0):
     bericht = {"cut": cut}
     alt = []
     deck_alt = np.zeros((240, 320), bool)
@@ -164,7 +164,7 @@ def cut_bearbeiten(rdt, cut, sek, idx_eigen, clut_eigen, idx_orig, clut_orig, bi
         Xs, Ys = xs + X, ys + Y
         ok = (Xs >= 0) & (Xs < 320) & (Ys >= 0) & (Ys < 240)
         deck_alt[Ys[ok], Xs[ok]] = True
-    budget = MAX_MASKEN - len(alt)
+    budget = MAX_MASKEN - len(alt) - reserve
     komps = platzieren(idx_orig, clut_orig, bild, grown)
     bericht["komponenten"] = komps                      # Liste wird am Ende ohne Masken abgelegt (neu_px erst unten bekannt)
     ang = sorted([e for e in komps if e["angenommen"]], key=lambda e: -e["verifiziert"])
@@ -271,7 +271,13 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--quelle", default=MASKS)
     ap.add_argument("--inc", default=None, help="C-Tabelle fuer den Riegel (tests/unit/gen_r41_masken36_platziert.inc)")
+    ap.add_argument("--reserve", action="append", default=[], help="RAUM:CUT:N - N Plaetze des Cuts frei lassen (z.B. fuer teilen_r41.py)")
+    ap.add_argument("--bericht-dazu", default=None, help="platzieren_r41.json eines frueheren Laufs: Raeume, die hier nicht laufen, von dort")
     a = ap.parse_args()
+    reserve = {}
+    for r in a.reserve:
+        rr, cc, nn = r.split(":")
+        reserve[(int(rr, 16), int(cc))] = int(nn)
     os.makedirs(a.out, exist_ok=True)
     bericht = {}
     for f in sorted(os.listdir(a.quelle)):
@@ -306,7 +312,7 @@ def main():
             z = np.load(gp)
             grown = {(int(k.split("_")[0]), int(k.split("_")[1])): z[k] for k in z.files}
             idx_o, clut_o = at[cut]
-            sec, idx_neu, b = cut_bearbeiten(rdt, cut, sek, idx_e, clut_e, idx_o, clut_o, bild, grown)
+            sec, idx_neu, b = cut_bearbeiten(rdt, cut, sek, idx_e, clut_e, idx_o, clut_o, bild, grown, reserve.get((rid, cut), 0))
             b["komponenten"] = [{k: v for k, v in e.items() if k != "maske"} for e in b.get("komponenten", [])]
             b_raum[cut] = b
             if sec is None:
@@ -331,6 +337,9 @@ def main():
                 for cut, tb in tims.items():
                     open(os.path.join(a.out, "ROOM%04X_PRI%02d.TIM" % (r, cut)), "wb").write(tb)
         bericht[room] = b_raum
+    if a.bericht_dazu:
+        for room, cuts in json.load(open(a.bericht_dazu)).items():
+            bericht.setdefault(room, cuts)
     json.dump(bericht, open(os.path.join(a.out, "platzieren_r41.json"), "w"), indent=1, default=str)
     if a.inc:
         inc_schreiben(a.inc, bericht)

@@ -1172,8 +1172,12 @@ static void teil_zellen3d(void)
     CHECK("MSK-Tiefenfeld (Leon und Elza) == Zellen-Tiefe der Zeile", msk_ok == 2 * n);
     CHECK("die Engine-Tabelle zeichnet jedes Modell-Rechteck (Leon und Elza)", tab_ok == 2 * n);
     CHECK("Ausschluss MIT 3D-Urteil == Engine-Tabelle in jedem Cut mit Modell", cuts > 0 && gleich == cuts);
+    /* Nachbesserung 4: mit der Tuer-Band-Regel der Saaten (saaten_sammeln, AOT-Scan @0x80042cac..0x80042ccc) gibt es im Gleisbett ROOM6000
+     * keine Band-0-Stehplaetze mehr; die 124 Lok-/Traeger-Rechtecke 6000 brauchten das 3D-Urteil nur gegen diese falschen Figurpunkte.
+     * Gemessen nach NB4: 3 Rechtecke (5090 C11) nur durch das 3D-Urteil gezeichnet, 6 Punkte per Koerper belegt. */
     CHECK("Gegenprobe: ohne 3D-Urteil fielen Rechtecke weg (NB2 gemessen: 79 der Leon-Dateien; Nachbesserung 3 mit den Teilrechtecken "
-          "von kacheln_r41.py: 127; Elza bytegleich), jedes davon mit Modell-Zeile", nur3d >= 127 && nur3d_modell == nur3d && echt3d > 0);
+          "von kacheln_r41.py: 127; Nachbesserung 4 ohne die falschen Band-0-Saaten: 3; Elza bytegleich), jedes davon mit Modell-Zeile",
+          nur3d >= 3 && nur3d_modell == nur3d && echt3d > 0);
 }
 
 /* ---- fern (Runde 41 Spur M, Nachbesserung 3; Riegel unit_r41_masken36_fern) ---------------------------------------- *
