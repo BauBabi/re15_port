@@ -554,3 +554,43 @@ und Cut 7 (Totale, 6,4 Grad über dem Kopf). Neue Hintergründe werden nicht erf
 RE2-Schnittfolge Cut_chg 7 @0x0726 -> Wurf -> Aufschlag -> Sleep 15 @0x07A8 -> Schnitt auf den Fangenden wie @0x07D4 bleibt).
 **Entscheidungsfrage an Orchestrator/Nutzer (Abschnitt 8.8, Frage 1):** A) Cut 7 frontal von der Grubenseite (gebaut), B) Cut 1
 von unten, aber von hinten, C) ein anderer Wunsch. Bis zum Entscheid bleibt M3 offen.
+
+**Wahl der Spielstelle - gemessen (die Kanalmitte oben war die erste Annahme, die Messung hat sie verworfen):**
+- Sonde `tools/r41_kanister2080/probe_liegestelle.c` (echter Boss-Tick wie `test_r41_re2gator.c setup(0)`, Zustand nach der
+  Szene: untergetaucht am Lauerplatz, Auftauchen < 9000; Leon als Statue an 50 Wasser-Lagen < 9000 vom Lauerplatz; Kanister über
+  `re15_gr2_kanister_setzen`; 1500 Bilder): Rasterkarte `G_belege/nb1_m2_liegestellen_raster.txt` - Nordbecken (z >= -13000)
+  14-25/50 Aufnahmen, Kanal (z -18000..-14000) 4-15/50, Südbecken 0-10/50; feiner `G_belege/nb1_m2_liegestellen_fein.txt`:
+  Plateau 25/50 um (-6500..-5500, -11000..-9500); Kanalmitte (-5300,-16300) 15/50 (`G_belege/nb1_m2_kanalmitte_je_leonlage.txt`).
+  Grund: der Alligator taucht nach der Szene nur auf, wenn Leon < 9000 an den Lauerplatz kommt - der weitere Kampf läuft im
+  Nordbecken, dort schwimmt er Leon geradeaus an.
+- Echte exe (natürlicher Gator, KEIN RE15_GB_TEST, Szene gelaufen = Bits 110/115, Kanister per RE15_GATOR_KANISTER nur zur Wahl
+  der Stelle, Leon/Elza schiessen alle ~4 s, 2400 Bilder; Läufe `x_*` im scratchpad g_nb1):
+  | Stelle | L1 (-6000,-9000) | L2 (-8400,-6500) | L3 (-2500,-11000) | L4 (-4500,-14000) | L5 (-6000,-17500) | L6 (-4000,-7000) | Elza (-6000,-9000) |
+  |---|---|---|---|---|---|---|---|
+  | Kanalmitte (-5300,-16300) | - | - | Aufnahme F2315 | - | (E3) F347, R1 F1143 | | |
+  | **Nordbecken (-6500,-11000)** | F355 / R1 F890 | F395 / R1 F568 | F715 / R1 F1146 | F859 / R1 F2056 | F474 / R1 F1564 | F332 / R1 F814 | F355 / R1 F890 |
+  | Nordrand (-6328,-13600) = per Wurf ohne Versatz erreichbar | - | F325 / R1 F560 | - | - | | | |
+  Leon von Süden auf die Kanalmitte zu (Leon nach RE2 @0x07B0 6057 vor den Kanister gestellt, Läufe `d_kanal_*`): 1/4.
+- **Gewählt: (-6500,-11000)** (Header RE15_K2080_LIEGE_X/Z mit dieser Herleitung). Abstand zum sichtbaren Aufschlag (-2278,-17282)
+  7560 - RE2 versetzt den Raketenwerfer per Pos_set ebenfalls um mehrere tausend (oben); die RE2-Wurfbahn (~4050 Vorlauf bei
+  13300 Fallhöhe) erreicht das Nordbecken von der Reling aus nicht (Kreis ~4066 um die Hände, bester erreichbarer Punkt
+  "Nordrand" 1/4).
+
+**Messung nachher - die GANZE Folge im echten Ablauf** (Bau 2026-10-25 03:0x, exe-Kopien, KEIN RE15_GB_TEST, KEIN
+RE15_GATOR_KANISTER; nur der Auslöser-Messhaken RE15_K2080_GATOR_HP=24990 = ein echter Treffer statt 43; Bits 110 + (3,245);
+Leon/Elza schiessen alle ~4 s):
+- **fk_leon** (Start (-6000,-17500)): `F902 AUSLOESER ... Treffer 1: Spieler (-5790,0,-6245)` -> Szene 2080 (Hinknien, Wurf
+  `F581`, Aufschlag `F617`) -> `F632 RUECKKEHR` -> `ROOM2090 Kanister im Becken (-6500,-1200,-11000) = Spielstelle Nordbecken`
+  -> gator_boss.log `GATOR VERSCHWUNDEN`, `RE2 AUFTAUCHEN F6`, **`RE2 KANISTER Stufe 1 laengs=5985 quer=-440 ... F355`**,
+  `angehaengt ... F367`, **`RE2 R1 VSync 4 (Zeitlupe) F815`**, `R1 ende (Leiche) pos=(2619,-8209)`. Zeit seit dem Wurf bis zur
+  Aufnahme: (632 - 581) + 355 = **406 Bilder = 13,5 s** (2080: Wurf F581, Rückkehr F632; 2090: Aufnahme F355).
+  Bild der Aufnahme `G_belege/nb1_m2_aufnahme_fk_leon_f330-399_hell6.png` (Cut 0, Ausschnitt, Helligkeit x6 nur zur Lesbarkeit -
+  das Becken zeichnet Spur B sehr dunkel): F378 hebt der Alligator den Kopf mit dem Kanister im Maul; R1
+  `G_belege/nb1_m2_r1_fk_leon_f810-870.png` (B's R1-Schnitt Cut 2 ab F816, Blitz, zurück Cut 0 F852).
+- **fk_elza** (dasselbe mit Elza, ROOM2091/2081, John): bitgleich dieselbe Folge (Aufnahme F355, R1 F815).
+- **fk_leon_nw** (Start (-3500,-12000)): Auslöser F1799, Aufnahme F394, R1 F568, Leiche (-2239,-7005).
+- Gegenprobe Kanalmitte (Bau davor, fc1b_leon/fc2_elza): Aufnahme erst F2157, R1 F3171; fc3: keine Aufnahme in 2400 Bildern.
+- Grenze (gemessen, nicht verdeckt): fn_leon/fn_elza (Start (-6000,-9000)): der erste Kampf schiebt Leon nach Osten (Auslöser
+  bei (-1989,-6363)), danach kämpft der Gator mit ihm im Ostteil (x 1449..6732) - in 2700 Bildern keine Aufnahme. Der Alligator
+  lenkt nicht zum Kanister (RE2 lenkt nur den Hals, Hals-Zielmodus FUN_800177c0 ist bei Spur B OFFEN §11.3); eine Liegestelle,
+  die JEDEN Kampfverlauf trifft, gibt es nicht (Frage 8.8).
