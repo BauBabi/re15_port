@@ -911,6 +911,22 @@ nicht einzeln an der exe geprueft (OFFEN 13).
   - der Grossteil der 247 319 Punkte sind Waende, Boeden und Decken (Gruende NB2: keine Zelle mit der Mehrheit der Bodenkontakte) - eine
     Figur steht nie hinter einer Raumwand oder dem eigenen Boden, dort verdeckt eine Maske nie richtig etwas.
 
+## Nachbesserung 4 (2026-10-25, nach Abnahme 3 = analysis/befunde_runde41/M_abnahme_3.md)
+
+Grundlage: Abnahme 3 (Urteil "nicht bestanden": Punkt 1 teilweise, Punkt 2 erfuellt). Mangel 1 = ROOM30A0/30A1 Cut 0: die
+Ost-Stirn der Buero-Trennwand (Zelle 6 @RDT+0x0045C, Flaeche x = -19975, z 14125..15375, Bildspalten 282..325) hat keine Maske -
+Leon/Elza hinter der Trennwand sind durch die Stirn sichtbar (o1..o4 62..416, Elza o5 272, a30A0_00 634 Punkte). Mangel 2 = Punkt 1
+weiter nicht geschlossen (Restliste, 6000 C5 Wandecke OFFEN 14, kein Entscheid). Mangel 3 = der gemeinsame Laeufer
+tests/integration/test_r41_masken36_stage2.cmake prueft je Lauf nur EXISTS f.ppm (Boot-Bild 120 vor dem Sprung). Punkt 2 (erfuellt)
+wird nicht angefasst; seine Riegel bleiben gruen.
+
+### Stand Nachbesserung 4
+- [x] Lektuere (AUFTRAG inkl. Nachtrag 11, VERTRAG, Abnahme 3, Dossier NB3, git log master..HEAD = 1ad2c96e)
+- [ ] Mangel 3: Laufpruefung im Laeufer (EXIT_AT-Zeile des Zielraums, Wiederholung, Gegenprobe abgebrochener Lauf)
+- [ ] Mangel 1: Messung vorher (Ost-Stirn), Beleg (Zelle 6, Kamera C0), Stirn-Rechtecke mit Zellen-Tiefe, Messung nachher, Riegel
+- [ ] Mangel 2: Restliste weiter messen (6000 C5 Band 0 begehbar?, Gelaender im Kuenstler-Atlas?), Rest mit Beleg
+- [ ] Bau, gezielte Tests, Abschluss-Commit
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
