@@ -75,6 +75,42 @@ Start 2010 am Kasten (Bits 101/102, (3,108), (9,125)), MIT Ton (RE15_SE_DEBUG, R
   Nachbesserung (`nb6/re2cap/nutzer_backup`), Zeitstempel unveraendert (juengster 2026-10-18 12:42). (Die Fensterfotos `fenster_*.png` der
   Nachbesserung zeigen nicht RE2, sondern andere Fenster — der Beleg ist allein die VRAM, oben selbst gelesen.)
 
+### KF — Punkt 3 "Zeit abgelaufen und noch im Raum" + Countdown-Ende + Alarm-Ende mit der Flut (Leon `kf`, Zwilling `kf_ohne`)
+Plan/Start = Abnahme 5 `kf` (Sued-Landeplatz, Bits 101/102, (3,108), 125; richtige Folge zu Fuss -> Warnung -> zurueck zum Plakat ->
+2x Aktion -> stehen bleiben), MIT Ton + RE15_AUDIO_CAP_SYNC + RE15_FADE_LOG, Framedump JEDES Bild F6200..F6659:
+* `RE2-Alarm SUB_25 an (ROOM2030, Warntext 46) geladen capTick 4347 F4094` -> `id=46 "WARNING: ..."` -> `Countdown RE2-Form Bild 0 " 0^59=98"
+  ... F4546` -> 2x **`Ereignis 23: Plakat gesperrt (Zaehler/Flut laufen, ihre Pad-Sperre bleibt)`** -> `Bild 1770 " 0^00=98" F6316` -> **`FLUT:
+  Wasser steigt (Countdown-Takte 1801 von 1800)`** -> **`Countdown RE2-Form Bild 1800 " 0^00=00" Farbe 2 (x 104 y 32) F6346`** -> **`RE2-Alarm
+  SUB_25 aus (Flut/Tod) capTick 6599 F6346`** -> `SPRITZER: Wasser y -1800 erreicht die Fuesse` -> `[fade-log] kick ch=0 value=0x5000` ->
+  **`ERTRUNKEN: Wasser y -2700, Spieler y -1800 -> hp -1, blaue Blende`**.
+* Countdown-Ende Bild fuer Bild gegen meinen Nachbau (`cdcheck.py`, Start F4546): F6338 `" 0^00=25"` ... F6343 `" 0^00=08"`, F6344 `" 0^00=05"`,
+  F6345 `" 0^00=02"`, **F6346 `" 0^00=00"` (589/589, das Bild des Flut-Beginns = RE2s abgelaufenes Bild @0x80026284)**, ab **F6347 kein Countdown
+  mehr** (0 rote Pixel im Feld x 104..216 y 32..46 in F6347/F6348/F6360; RE2 schaltet ab @0x800262f0..@0x80026320).
+* Bildbogen **`<a6>/bilder/kf_flut.png`**: F6330 ` 0'00"52`, F6346 Draufsicht Cut 4 mit ` 0'00"00` und dem steigenden Wasser, F6347 ohne Anzeige,
+  F6380 Wasser ueber dem Steg, F6420/F6450 blaue Blende unter Wasser, F6480 Leon sinkt im blauen Licht zusammen (Todesbild), F6659 dunkel.
+* Alarm-Ende gegen den Zwilling `kf_ohne` (gleicher Lauf, `RE15_RE2_ASSET_ROOT=<a6>/re2_ohne_alarm` mit dem 4-Byte-Stummel
+  `shared_assets/PSX/SOUND/SUB_25.BGM` -> `[bgm] SUB_25.BGM nicht lesbar`, `... NICHT geladen capTick 4347 F4094`, Flut und Tod in denselben
+  Takten 6599/F6346): **bitgleich bis Takt 4349**, erste Abweichung **4350,043**, RMS(A-B) **733,7..764,4** je 60 Takte waehrend des Zaehlers,
+  6580..6639 274,4 (Ende im Fenster), **letzte Abweichung Takt 6673** (= Alarm-Ende 6599 + 74 Takte Hall, 6640..6699 nur noch max |d| 2),
+  danach bis Takt 8357 bitgleich.
+
+### P1 — Punkt 1: Leiter 2000 vor der Flut, echte Tuer 2010 -> 2000 (Leon `p1r`, Elza `p1r_elza`; Plaene der Abnahme 5)
+* Leon: `[aot] DOOR FIRE slot=0 rect=(-5300,-4925,hw=500,hh=875) target_cut=14 spawn=(-26450,-1800,-2700)` -> `loaded room2000.rdt` ->
+  `ROOM2000: Leiter Slot 4 (@0x0169E) -> Sperrtext 40` -> **`[msgtext] room=2000 id=40 "I cannot climb up the ladder because of the water
+  pressure."`** (2x), kein `loaded room2050`, Wegplan `FLAG (9,100) = 0` vor (F63) und nach (F611) der Leiter. Bild **`<a6>/bilder/p1r.png`**
+  (F240/F360/F480): Wasserstrahl aus dem Gitterfenster neben der Leiter, Leon an der Leiter, Satz 40 tippt.
+* Elza: `Spieler-Familie PL04` -> `loaded room2011.rdt` -> `room2001.rdt` -> `room=2001 id=40` (2x), Bit 100 = 0 vor/nach, kein Raumwechsel.
+
+### KBR — Punkt 2 auf dem echten Weg 2070 slot 1 -> 2030 Ring (Leon `kbr`; Plan der Abnahme 5)
+* `DOOR FIRE slot=1 rect=(5500,-6400,hw=500,hh=1500) target_cut=0 spawn=(6550,-5400,-100)` -> `loaded room2030.rdt` -> **`ROOM2030: Bruecke obj 0
+  oben y -5400, Zelle 12 gesperrt`** -> `Ereignis 24 -> 2030_pult_ohne` -> **`id=40 "A control panel for the bridge. The pressure gauge reads
+  zero.Intake valve 13 is closed."`** -> Nordventil vor der Bruecke `id=49 "It's locked."` -> `2030_v13_frage` -> **`id=41 "Intake valve 13. Will
+  you open it?"`** -> `id=42 "You've opened valve 13. The pressure is rising."` (`FLAG (9,101) = 1` F1974) -> `2030_pult_senken` -> **`id=43 "The
+  pressure gauge reads 80. Lower the bridge?"`** -> `[prop-member F2773] prop[0] obj=0x00 m=1 -> val=-1800` -> `FLAG (9,102) = 1` (F3047) ->
+  `id=44 "The bridge is down."` -> Spieler auf dem Steg (-1042,-2009) F3853. Bildbogen **`<a6>/bilder/kbr_bruecke.png`**: Pult an der Nordwand
+  (F370), Frage Yes/No (F2650), Cut 4 Bruecke faehrt (F2770), "The bridge is d.." (F3070), Leon auf dem Steg (F3850/F4000). Kurbel nicht beteiligt;
+  kein Countdown in diesem Lauf (richtig: kein Zaehler).
+
 (weitere Laeufe folgen)
 
 ## 2. Gates
@@ -126,8 +162,14 @@ Start 2010 am Kasten (Bits 101/102, (3,108), (9,125)), MIT Ton (RE15_SE_DEBUG, R
   `unit_rotor_bgm_pin|unit_r35_cut10f0_.*|unit_r39_johnruf1041_.*|unit_r34_plattform_ton|unit_r38_werkstatt11b0_ton|unit_r39_stimmen_.*|
   unit_synchro_stimme|unit_voice_ausreden|unit_zombie_se_ab_10d0|unit_r38_elzaintro_stimme`; 290 Tests, -j 2):
   **`100% tests passed, 0 tests failed out of 290`** (`Total Test time (real) =  87.28 sec`, `<a6>/ctest_unit.txt`).
-* Integration: zwei Stroeme (`<a6>/integ.sh`): `^integration_r41_ventilkette(_weg|_alarm)?$` und
-  `^(integration_r41_ventilkette_weg_elza|integration_r41_ventilkette_b|integration_r41_ventilkette_sperre|integration_r35_cut10f0)$` (laufen).
+* Integration (zwei Stroeme parallel, `<a6>/integ.sh`, je `--timeout 3600 --output-on-failure`, `<a6>/ctest_integ1.txt` / `ctest_integ2.txt`):
+  - `^integration_r41_ventilkette(_weg|_alarm)?$`: `integration_r41_ventilkette ... Passed 726.02 sec`, `integration_r41_ventilkette_alarm ...
+    Passed 709.06 sec`, `integration_r41_ventilkette_weg ... Passed 1470.14 sec` -> **`100% tests passed, 0 tests failed out of 3`**.
+  - `^(integration_r41_ventilkette_weg_elza|integration_r41_ventilkette_b|integration_r41_ventilkette_sperre|integration_r35_cut10f0)$`:
+    `integration_r35_cut10f0 ... Passed 270.61 sec` (BGM-Lader, audio_pc.c beruehrt), `integration_r41_ventilkette_b ... Passed 534.57 sec`,
+    `integration_r41_ventilkette_weg_elza ... Passed 1699.12 sec`, `integration_r41_ventilkette_sperre ... Passed 307.59 sec` ->
+    **`100% tests passed, 0 tests failed out of 4`**.
+  - Raumgruppe der Abnahme 5 (`<a6>/regex_integ_raum.txt`, 17 Tests, -j 2) laeuft.
 
 ## 4. Urteil je Nutzer-Punkt
 (folgt)
