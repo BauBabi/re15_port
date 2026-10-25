@@ -18,6 +18,8 @@
 #   integration_r41_gatorszene      echte exe (test_r41_gatorszene.cmake): Leiter 2080 -> 2090, Szene, Folge-Zeilen (Leon + Elza);
 #                                   Nachbesserung 1: Kamera-Uebergabe Cut 0 (M1); _tod/_tod_elza: Todesrolle, Schluessel sichtbar
 #                                   und pulsierend (Bildvergleich mit/ohne Schluessel ueber test_r41_gatorszene bilddiff, M2)
+#                                   Nachbesserung 2 (M2): Einstellung auf den Schluessel nach dem Tod (Kamera mit dem groessten Bild,
+#                                   Cut_old zurueck), Kasten >= 10 x 9; NEU _tod_r1/_tod_r1_elza: RE2-R1-Kanistertod, natuerliche Kamera
 add_executable(test_r41_gatorszene ${CMAKE_CURRENT_LIST_DIR}/../test_r41_gatorszene.c)
 target_link_libraries(test_r41_gatorszene PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_gatorszene PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -34,7 +36,7 @@ foreach(_teil spinnen programme leiche texte tor schluessel tod szene szene_elza
 endforeach()
 
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorszene.cmake)
-    foreach(_teil leon elza tod tod_elza)
+    foreach(_teil leon elza tod tod_elza tod_r1 tod_r1_elza)
         add_test(NAME integration_r41_gatorszene_${_teil}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

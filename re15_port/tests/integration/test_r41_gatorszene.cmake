@@ -18,9 +18,17 @@
 #      sub08 Cut_chg @0x012C4 vor Plc_ret @0x012E0) mit "Spielfigur im Bild", und state.log: in den Bildern F405-F479 des letzten
 #      2090-Besuchs (nur dieser Besuch erreicht F400) steht JEDES Bild auf cam=0 (vorher F405-F699 cam=1, Leon hinter der Kamera).
 #   M2 tod/tod_elza: Todesrolle (RE15_GB_TEST=3) zweimal - mit Schluessel und mit (9,112) vorab (kein Schluessel) -, Bilder
-#      F480-F598 je 2 (RE15_FRAMEDUMP, WINDOW_SCALE=1); Auswerter `test_r41_gatorszene bilddiff` (RE15_TOOL): Schluessel in JEDEM
-#      Bild sichtbar (Unterschied > 0), Puls max/min >= 1,40 ohne Plateau; debug.log "Schluessel-Lage: Kamera <c> (laufende)"
-#      mit Blink-Spitze <= 0x80.
+#      je 2 (RE15_FRAMEDUMP, WINDOW_SCALE=1); Auswerter `test_r41_gatorszene bilddiff` (RE15_TOOL): Schluessel in JEDEM
+#      Bild sichtbar (Unterschied > 0), Puls max/min >= 1,40 ohne Plateau; Blink-Spitze <= 0x80.
+# Nachbesserung 2 (Abnahme F 1, M2 "Water Key nach dem Tod nur 4-6 Pixel, als Schluessel nicht erkennbar"):
+#   tod/tod_elza (Todesrolle) und NEU tod_r1/tod_r1_elza (RE2-R1-Kanistertod mit NATUERLICHER Kamera, Rezept K3 der Abnahme: Start
+#   (-1000,-25550) Blick Ost ueber den RVD-Streifen 0 -> 1 (RVD @0x00234 x -500..500), Kanister-Testhaken der Spur B, 12 Schuesse).
+#   Verlangt: debug.log "Schluessel-Lage: Kamera K (groesstes Bild, laufende L)" mit Quadrat 180 x H / Tiefe >= 10,4 Bildpunkte
+#   (H = 26684 >> 7 = 208, RID @0x060 aller 13 Cuts; 10,4 = Schluessel der Ankunftseinstellung, abgenommen), "Schluessel-
+#   Einstellung: Cut K (vorher Cut L) F<s>" und "... Ende: Cut L F<e>" mit e - s >= 90 (Halt GSZ_LEICHE_BILDER) in BEIDEN Laeufen
+#   gleich; state.log cam=K in F<s+1>..F<e-3> und cam=L in F<e+1>..F<e+20> (Cut_old FUN_8004032c @0x8004033c/@0x80040364);
+#   bilddiff in den Bildern der Einstellung: jedes Bild mit Schluessel, Puls >= 1,40, Kasten mindestens 10 x 9 Bildpunkte (= der
+#   Ankunfts-Schluessel ~10,4 x 9,5, gatorszene_r41.c GSZ_KEY_AUF_*; Abnahme 1 mass 4 x 6 bzw. 6 x 4).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=leon|elza -P test_r41_gatorszene.cmake
 # =============================================================================
@@ -54,14 +62,23 @@ else()
     set(_wahl RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2)
 endif()
 
-# ---- Nachbesserung 1 (M2): Schluessel nach dem Tod sichtbar und pulsierend (Todesrolle, Leon / Elza) -------------------
+# ---- Nachbesserung 1/2 (M2): Schluessel nach dem Tod sichtbar und pulsierend (Todesrolle / R1, Leon / Elza) ----------------
 if(TEIL MATCHES "^tod")
     if(NOT RE15_TOOL OR NOT EXISTS "${RE15_TOOL}")
         file(REMOVE "${_exe_kopie}")
         message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - RE15_TOOL (test_r41_gatorszene) fehlt: '${RE15_TOOL}'")
     endif()
-    # GB_TEST=3: Tod nach 300 Boss-Bildern + Todesrolle Clip 7 (165 Bilder) -> Leiche (Zustand 7) und Schluessel ab ~F470
-    # (gemessen Nachbesserung F 1, Lauf T2n: "Folge L ROOM2090 F470"). Eine Blink-Periode (0x3c = 60 Bilder) ab F480.
+    if(TEIL MATCHES "^tod_r1")
+        # Rezept K3 (Abnahme F 1, natuerliche Kamera): R1 ende F84, Einstellung F84-F176 (gemessen Nachbesserung F 2, Laeufe
+        # K4m/KEm).
+        set(_lauf RE15_GB_TEST=5 "RE15_PLAYER_POS=-1000,-25550,0,0" "RE15_GATOR_KANISTER=4430,-26160" "RE15_GIVE=3:15,21:50"
+                  RE15_EQUIP=3 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=U1.2,(M0.3,MA0.1)x12"
+                  "RE15_EXIT_AT=300#${_r2090}" "RE15_FRAMEDUMP=60-300/2:fd_")
+    else()
+        # GB_TEST=3: Tod nach 300 Boss-Bildern + Todesrolle Clip 7 (165 Bilder) -> Leiche (Zustand 7) und Schluessel F469,
+        # Einstellung F469-F561 (gemessen Nachbesserung F 2, Laeufe T2m/TEm).
+        set(_lauf RE15_GB_TEST=3 RE15_R39_MESS_SPIELER_HP=100 "RE15_EXIT_AT=660#${_r2090}" "RE15_FRAMEDUMP=440-660/2:fd_")
+    endif()
     foreach(_v mit ohne)
         set(WORKDIR "${_dir}/${_v}")
         file(MAKE_DIRECTORY "${WORKDIR}")
@@ -74,10 +91,8 @@ if(TEIL MATCHES "^tod")
             RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore
             ${_wahl}
             ${_bits}
-            RE15_DEBUG_JUMP=${_r2090}@250 RE15_GB_TEST=3 RE15_R39_MESS_SPIELER_HP=100
+            RE15_DEBUG_JUMP=${_r2090}@250 ${_lauf}
             RE15_STATE_LOG=state.log
-            "RE15_EXIT_AT=600#${_r2090}"
-            "RE15_FRAMEDUMP=480-598/2:fd_"
             "${_exe_kopie}")
         if(NOT _rv EQUAL 0)
             file(REMOVE "${_exe_kopie}")
@@ -90,26 +105,96 @@ if(TEIL MATCHES "^tod")
         message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - keine Zeile 'Schluessel-Lage' (Alligator nicht tot?), ${_dir}/mit")
     endif()
     list(GET _lage 0 _lage0)
-    if(NOT _lage0 MATCHES "Kamera ([0-9]+) \\(laufende\\).*Blink-Spitze ([0-9]+) ")
-        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Schluessel nicht fuer die laufende Kamera gelegt: ${_lage0}")
+    if(NOT _lage0 MATCHES "Kamera ([0-9]+) \\(groesstes Bild, laufende ([0-9]+)\\), Lage [(][-0-9,]+[)] Tiefe ([0-9]+),.*Blink-Spitze ([0-9]+) ")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Schluessel nicht fuer die Kamera mit dem groessten Bild gelegt: ${_lage0}")
     endif()
     set(_kam "${CMAKE_MATCH_1}")
-    if(CMAKE_MATCH_2 GREATER 128)
-        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Blink-Spitze ${CMAKE_MATCH_2} > 0x80 (Kappung, Plateau): ${_lage0}")
+    set(_lauf_cut "${CMAKE_MATCH_2}")
+    set(_tiefe "${CMAKE_MATCH_3}")
+    if(CMAKE_MATCH_4 GREATER 128)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Blink-Spitze ${CMAKE_MATCH_4} > 0x80 (Kappung, Plateau): ${_lage0}")
     endif()
-    file(STRINGS "${_dir}/mit/state.log" _sl REGEX "^F5[0-9][0-9] ")
+    math(EXPR _quad10 "1800 * 208 / ${_tiefe}")      # Quadrat 180 x H / Tiefe, x10 (H = fov 26684 >> 7, RID @0x060)
+    if(_quad10 LESS 104)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Schluessel-Quadrat ${_quad10}/10 Bildpunkte < 10,4 (Ankunfts-Schluessel): ${_lage0}")
+    endif()
+    foreach(_v mit ohne)
+        file(STRINGS "${_dir}/${_v}/debug.log" _e REGEX "\\[gatorszene\\] Schluessel-Einstellung: Cut [0-9]+ ")
+        file(STRINGS "${_dir}/${_v}/debug.log" _o REGEX "\\[gatorszene\\] Schluessel-Einstellung Ende: Cut [0-9]+ ")
+        if(NOT _e OR NOT _o)
+            message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL}/${_v} - Einstellung auf den Schluessel fehlt (Beginn '${_e}', Ende '${_o}')")
+        endif()
+        list(GET _e 0 _e0)
+        list(GET _o 0 _o0)
+        if(NOT _e0 MATCHES "Cut ([0-9]+) \\(vorher Cut ([0-9]+)\\) F([0-9]+)")
+            message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL}/${_v} - Einstellungs-Zeile unlesbar: ${_e0}")
+        endif()
+        set(_ek_${_v} "${CMAKE_MATCH_1}")
+        set(_ev_${_v} "${CMAKE_MATCH_2}")
+        set(_es_${_v} "${CMAKE_MATCH_3}")
+        if(NOT _o0 MATCHES "Ende: Cut ([0-9]+) F([0-9]+)")
+            message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL}/${_v} - Ende-Zeile unlesbar: ${_o0}")
+        endif()
+        set(_oc_${_v} "${CMAKE_MATCH_1}")
+        set(_ee_${_v} "${CMAKE_MATCH_2}")
+    endforeach()
+    if(NOT _ek_mit EQUAL _kam OR NOT _ev_mit EQUAL _lauf_cut OR NOT _oc_mit EQUAL _lauf_cut)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Einstellung Cut ${_ek_mit} (soll ${_kam}), vorher ${_ev_mit} / zurueck ${_oc_mit} (soll ${_lauf_cut})")
+    endif()
+    if(NOT _ek_ohne EQUAL _ek_mit OR NOT _es_ohne EQUAL _es_mit OR NOT _ee_ohne EQUAL _ee_mit)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Zwilling ohne Schluessel schneidet anders (Cut ${_ek_ohne} F${_es_ohne}-F${_ee_ohne} gegen Cut ${_ek_mit} F${_es_mit}-F${_ee_mit})")
+    endif()
+    math(EXPR _halt "${_ee_mit} - ${_es_mit}")
+    if(_halt LESS 90 OR _halt GREATER 94)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Einstellung ${_halt} Bilder (soll 90 = GSZ_LEICHE_BILDER + Faden-Ende)")
+    endif()
+    # state.log: Kamera K in der Einstellung, danach wieder L (Cut_old)
+    math(EXPR _k0 "${_es_mit} + 1")
+    math(EXPR _k1 "${_ee_mit} - 3")
+    math(EXPR _z0 "${_ee_mit} + 1")
+    math(EXPR _z1 "${_ee_mit} + 20")
+    file(STRINGS "${_dir}/mit/state.log" _sl REGEX "^F[0-9]+ ")
+    set(_n_k 0)
+    set(_n_z 0)
     foreach(_z IN LISTS _sl)
-        if(NOT _z MATCHES " cam=${_kam} ")
-            message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Kamera wechselte nach der Lage (soll cam=${_kam}): ${_z}")
+        if(NOT _z MATCHES "^F([0-9]+) ")
+            continue()
+        endif()
+        set(_f "${CMAKE_MATCH_1}")
+        if(_f GREATER_EQUAL _k0 AND _f LESS_EQUAL _k1)
+            if(NOT _z MATCHES " cam=${_kam} ")
+                message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - in der Einstellung nicht Cut ${_kam}: ${_z}")
+            endif()
+            math(EXPR _n_k "${_n_k} + 1")
+        elseif(_f GREATER_EQUAL _z0 AND _f LESS_EQUAL _z1)
+            if(NOT _z MATCHES " cam=${_lauf_cut} ")
+                message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - nach der Einstellung nicht zurueck auf Cut ${_lauf_cut}: ${_z}")
+            endif()
+            math(EXPR _n_z "${_n_z} + 1")
         endif()
     endforeach()
-    execute_process(COMMAND "${RE15_TOOL}" bilddiff "${_dir}/mit" "${_dir}/ohne" 480 598 2
+    if(_n_k LESS 80 OR _n_z LESS 15)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - state.log zu kurz (${_n_k} Einstellungs-, ${_n_z} Folgebilder)")
+    endif()
+    # Bilder der Einstellung (gerade Nummern, RE15_FRAMEDUMP je 2): ab s+2, bis e-4
+    math(EXPR _b0 "${_es_mit} + 2")
+    math(EXPR _b0_rest "${_b0} % 2")
+    if(_b0_rest)
+        math(EXPR _b0 "${_b0} + 1")
+    endif()
+    math(EXPR _b1 "${_ee_mit} - 4")
+    math(EXPR _b1_rest "${_b1} % 2")
+    if(_b1_rest)
+        math(EXPR _b1 "${_b1} - 1")
+    endif()
+    execute_process(COMMAND "${RE15_TOOL}" bilddiff "${_dir}/mit" "${_dir}/ohne" ${_b0} ${_b1} 2 10 9
                     RESULT_VARIABLE _br OUTPUT_VARIABLE _bo ERROR_VARIABLE _be)
     string(REGEX MATCH "bilddiff: [^\n]*" _bz "${_bo}")
     if(NOT _br EQUAL 0)
-        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Schluessel nicht sichtbar/pulsierend: ${_bz}\n${_bo}")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Schluessel in der Einstellung nicht sichtbar/pulsierend/zu klein: ${_bz}\n${_bo}")
     endif()
-    message(STATUS "r41_gatorszene: Lauf ${TEIL} - ${_lage0}; Kamera ${_kam} F500-F599 unveraendert; ${_bz}")
+    message(STATUS "r41_gatorszene: Lauf ${TEIL} - ${_lage0}; Einstellung Cut ${_kam} F${_es_mit}-F${_ee_mit} (${_halt} Bilder), "
+                   "danach Cut ${_lauf_cut}; Quadrat ${_quad10}/10 Bildpunkte; ${_bz}")
     return()
 endif()
 

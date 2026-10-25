@@ -16,7 +16,10 @@
  *   schluessel  Alligator tot -> (9,111) + Schluessel bei der Leiche (Zone Slot 15); Aufnahme -> Item 0x34 + (9,112); danach
  *               kein Schluessel mehr
  *   tod         Nachbesserung 1 (M2): Todeslagen der Abnahme 0 (Todesrolle Cut 0, R1 Cut 1, R1 mit Sprung-Cut 0, Elza) -
- *               Schluessel im Bild der Kamera, vor der Leiche, im Wasser, zur Kamera gekippt, Blink-Spitze <= 0x80
+ *               Schluessel im Bild der Kamera, nicht verdeckt, im Wasser, zur Kamera gekippt, Blink-Spitze <= 0x80;
+ *               Nachbesserung 2 (Abnahme 1, M2): Kamera = Zonenkamera mit dem GROESSTEN Bild (Quadrat >= Wert der Nachbesserung 1
+ *               in der laufenden Kamera), Einstellung auf den Schluessel: Schnitt im Bild des Todes, Riegel, nach dem Halt
+ *               Cut_old auf den Cut davor + Zonenkamera an + Riegel auf (Folge E / O)
  *   bilddiff    Auswerter des exe-Riegels integration_r41_gatorszene_tod*: Bilder mit/ohne Schluessel (s. bilddiff())
  * Nachbesserung 1 in bestehenden Teilen: leiche (M5 Puls-Kappung + Gegenprobe der ersten Neigung), tor (M3 genau ein
  * Verschlossen-Ton in 2090 und 20A0), szene/szene_elza (M1 Kamera-Uebergabe auf Cut 0, Spielfigur im Bild, Sperre frei).
@@ -465,6 +468,14 @@ static void teil_schluessel(void)
     /* Aufnahme: Vorwaerts-620-Punkt auf dem Schluessel (Blick -X), Quadrat, Abfrage "ja" (Muster test_r38 schluessel1011) */
     const int32_t kx = g_scd.props[ks].x, kz = g_scd.props[ks].z;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    /* Nachbesserung 2 (M2): erst endet die Einstellung auf den Schluessel (Programm 4, Halt 90 mit Riegel (2,7) = Pad-Sperre),
+     * dann der Letterbox-Abbau (15 Bilder, FUN_80021a0c) - vorher nimmt die Pad-Sperre den Druck nicht an. */
+    {
+        int f = 0;
+        while (f < 200 && re15_gatorszene_r41_key_einstellung(NULL, NULL, NULL)) { frame(0, 0); f++; }
+        PRUEF(f >= 90 && !re15_gatorszene_r41_key_einstellung(NULL, NULL, NULL) && !re15_game_flag_get(2, 7),
+              "Einstellung auf den Schluessel nach %d Bildern zu Ende, Riegel auf", f);
+    }
     for (int f = 0; f < 20; f++) frame(0, 0);
     pl->x = kx + 620; pl->z = kz; pl->rot_y = 2048; pl->y = 0;
     frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
@@ -487,7 +498,13 @@ static void teil_schluessel(void)
     PRUEF(k2 < 0 || !g_scd.props[k2].active, "Wiederbetreten nach der Aufnahme: kein Schluessel mehr");
 }
 
-/* ---- Teil: tod (Nachbesserung 1, M2) ---------------------------------------------------------------------------------
+static int folge_hat(char art, int wert);   /* Teil szene */
+/* ---- Teil: tod (Nachbesserung 1, M2; Nachbesserung 2, M2) -------------------------------------------------------------
+ * Nachbesserung 2: die Kamera der Lage ist die Zonenkamera mit dem GROESSTEN Schluessel-Bild (nicht mehr die laufende), die
+ * Verdeckung je Knochen-Kugel (halbe Kastenbreite 800 @0x80118b98) statt "vor jedem Knochen", und im Bild des Todes beginnt die
+ * Einstellung auf den Schluessel (Programm 4: Riegel, Halt 90, Cut_old auf den Cut davor, Plc_ret, Cut_auto, Riegel auf; Form
+ * ROOM2010 sub03 @0x008EE-0x008F8). alt_px10 = Quadrat-Breite x10 der Nachbesserung 1 in der laufenden Kamera (dieser Riegel,
+ * Stand a9472f02): die neue Lage muss mindestens so gross sein.
  * Die zwei Todeslagen der Abnahme 0 mit der RE2-EM23-Bank (alle Knochen der Leichen-Pose), je laufender Kamera:
  *   todesrolle   Leiche (-5416,-22578) (GB_TEST=3, Abnahme 0 Lauf T), Clip 7 letztes Bild, laufende Kamera Cut 0
  *                (state.log Abnahme 0 F470-F519 cam=0);
@@ -512,7 +529,7 @@ static int kam_tiefe(int cut, const int32_t p[3], int *sx, int *sy, int32_t *vz)
     *sy = 120 + (int)(((int64_t)vy * v.fov_screen_dist) / *vz);
     return (int)v.fov_screen_dist;
 }
-static void tod_fall(const char *name, uint16_t raum, int32_t gx, int32_t gz, int16_t gier, int clip, int cam, int cam_soll)
+static void tod_fall(const char *name, uint16_t raum, int32_t gx, int32_t gz, int16_t gier, int clip, int cam, int alt_px10)
 {
     printf("  -- %s (ROOM%04X, Leiche (%d,%d) Clip %d, laufende Kamera Cut %d)\n", name, raum, gx, gz, clip, cam);
     re15_game_state_init();
@@ -546,26 +563,42 @@ static void tod_fall(const char *name, uint16_t raum, int32_t gx, int32_t gz, in
     PRUEF(re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT) == 1 && ks >= 0 && g_scd.props[ks].active,
           "Leiche -> (9,111) = 1, Schluessel obj 4 aktiv");
     if (ks < 0) return;
-    PRUEF(cam_soll < 0 ? (kc >= 0 && kc != cam) : kc == cam_soll, "Kamera der Lage: Cut %d (soll %s %d)", kc,
-          cam_soll < 0 ? "Ersatz statt" : "", cam_soll < 0 ? cam : cam_soll);
+    {   /* Zonenkamera = Cut mit mindestens einem Wechselsatz ausser dem Such-Anker (RVD ROOM2090 Cut 0..7 je 3 Saetze) */
+        int nz = 0;
+        for (int i = 0; i < g_room_rdt.zone_count; i++) if ((int)g_room_rdt.zones[i].cam_from == kc) nz++;
+        PRUEF(kc >= 0 && nz >= 2, "Kamera der Lage: Zonenkamera Cut %d (%d RVD-Saetze; laufende Cut %d)", kc, nz, cam);
+    }
     const int32_t kp[3] = { g_scd.props[ks].x, g_scd.props[ks].y, g_scd.props[ks].z };
     int sx = -1, sy = -1; int32_t vz = 0;
     const int fd = kam_tiefe(kc, kp, &sx, &sy, &vz);
+    const int px10 = fd > 0 && vz > 0 ? (int)(1800 * fd / vz) : 0;
     PRUEF(fd > 0 && sx >= 24 && sx <= 296 && sy >= 40 && sy <= 205,
           "Schluessel (%d,%d,%d) im Bild von Cut %d bei (%d,%d), Tiefe %d = %d.%d Bildpunkte breit", kp[0], kp[1], kp[2], kc, sx, sy,
-          (int)vz, fd > 0 && vz > 0 ? (int)(180 * fd / vz) : 0, fd > 0 && vz > 0 ? (int)((1800 * fd / vz) % 10) : 0);
-    int32_t vz_min = 0x7fffffff, d_min = 0x7fffffff;
+          (int)vz, px10 / 10, px10 % 10);
+    PRUEF(px10 >= alt_px10, "Quadrat %d.%d Bildpunkte >= Nachbesserung 1 in der laufenden Kamera (%d.%d)", px10 / 10, px10 % 10,
+          alt_px10 / 10, alt_px10 % 10);
+    /* Verdeckung (Nachbesserung 2): je Knochen eine Kugel mit Radius 800 (Alligator-Kasten z @0x80118b98); verdeckt, wenn sie nicht
+     * ganz hinter dem Schluessel liegt und ihr Bildkreis den Schluessel (+ halbe Quadrat-Bildgroesse) trifft. */
+    int verdeckt = 0;
+    int32_t d_min = 0x7fffffff;
     for (int b = 0; b < nb; b++) {
-        const int32_t *p = kn[b]; int bx, by; int32_t bz;
-        kam_tiefe(kc, p, &bx, &by, &bz);
-        if (bz < vz_min) vz_min = bz;
+        const int32_t *p = kn[b]; int bx = 0, by = 0; int32_t bz = 0;
+        const int bf = kam_tiefe(kc, p, &bx, &by, &bz);
+        if (bf > 0 && bz - 800 < vz) {
+            if (bz <= 800) verdeckt = 1;
+            else {
+                const int64_t r = (int64_t)800 * bf / bz + (int64_t)90 * bf / vz;
+                const int64_t ddx = sx - bx, ddy = sy - by;
+                if (ddx * ddx + ddy * ddy <= r * r) verdeckt = 1;
+            }
+        }
         const int32_t d = (int32_t)re15_squareroot0((uint32_t)((int64_t)(p[0]-kp[0])*(p[0]-kp[0]) + (int64_t)(p[2]-kp[2])*(p[2]-kp[2])));
         if (d < d_min) d_min = d;
     }
     const int32_t r_nah = nb > 6 ? (int32_t)re15_squareroot0((uint32_t)((int64_t)(kn[6][0]-kn[0][0])*(kn[6][0]-kn[0][0]) +
                                                                     (int64_t)(kn[6][2]-kn[0][2])*(kn[6][2]-kn[0][2]))) : 3055;
-    PRUEF(nb >= 10 && vz < vz_min - 800 && d_min <= r_nah, "vor der ganzen Leiche: Tiefe %d < kleinste Knochen-Tiefe %d - 800 (%d Knochen), "
-          "naechster Knochen %d entfernt (<= Kopf-Wurzel-Abstand der Leiche %d)", (int)vz, (int)vz_min, nb, (int)d_min, (int)r_nah);
+    PRUEF(nb >= 10 && !verdeckt && d_min <= r_nah, "von der Leiche nicht verdeckt (%d Knochen-Kugeln 800), naechster Knochen %d "
+          "entfernt (<= Kopf-Wurzel-Abstand der Leiche %d)", nb, (int)d_min, (int)r_nah);
     int wasser = re15_aot_water_at(kp[0], kp[2]) != 0;
     for (int e = 0; e < 4; e++) wasser &= re15_aot_water_at(kp[0] + ((e & 1) ? 90 : -90), kp[2] + ((e & 2) ? 90 : -90)) != 0;
     PRUEF(wasser, "Mitte und vier Ecken (+-90) im Wasser");
@@ -583,6 +616,24 @@ static void tod_fall(const char *name, uint16_t raum, int32_t gx, int32_t gz, in
           "Primitivfarbe Ruhe %d -> Blink-Spitze %d (<= 0x80: voller Dreieckpuls; NCCT-Rundung <= 2)", ruhe, spitze);
     const re15_aot_t *a = &g_aot.slots[15];
     PRUEF(a->active && a->type == RE15_AOT_TYPE_ITEM && a->x == kp[0] && a->z == kp[2], "Zone Slot 15 = Item am Schluessel");
+    /* Einstellung auf den Schluessel (Nachbesserung 2): im Bild des Todes Schnitt auf kc, Riegel (2,7)/(1,27), Programm 4 laeuft;
+     * nach dem Halt (90 Bilder = GSZ_LEICHE_BILDER) Cut_old auf den Cut davor (FUN_8004032c @0x8004033c/@0x80040364), Zonenkamera
+     * an (@0x80040374-84), Riegel auf (ROOM1150 sub08 @0x012E4/@0x012E8). */
+    {
+        int ec = -1, ev = -1; unsigned eb = 0;
+        const int laeuft = re15_gatorszene_r41_key_einstellung(&ec, &ev, &eb);
+        PRUEF(laeuft && ec == kc && ev == cam && (int)g_scd.cam_id == kc && !g_scd.cut_auto_enabled &&
+              re15_game_flag_get(2, 7) && re15_game_flag_get(1, 27),
+              "Einstellung: Cut %d (vorher %d), Zonenkamera aus, Riegel (2,7)=%d (1,27)=%d, Programm 4 laeuft (%d)", (int)g_scd.cam_id,
+              ev, re15_game_flag_get(2, 7), re15_game_flag_get(1, 27), laeuft);
+        int f = 0;
+        while (f < 120 && re15_gatorszene_r41_key_einstellung(NULL, NULL, NULL)) { frame(0, 0); f++; }
+        frame(0, 0);
+        PRUEF(f >= 90 && f <= 92 && (int)g_scd.cam_id == cam && g_scd.cut_auto_enabled == 1 && !re15_game_flag_get(2, 7) &&
+              !re15_game_flag_get(1, 27), "nach %d Bildern (Halt 90): Cut %d (soll %d = Cut_old), Zonenkamera an, Riegel auf", f,
+              (int)g_scd.cam_id, cam);
+        PRUEF(folge_hat('E', kc) >= 0 && folge_hat('O', cam) >= 0, "Folge E %d (Schnitt) und O %d (zurueck)", kc, cam);
+    }
     /* Gegenprobe erste Fassung: flach am Kopf -> Bildhoehe unter 1 Bildpunkt */
     {
         kopf[1] = -1620;
@@ -601,10 +652,11 @@ static void tod_fall(const char *name, uint16_t raum, int32_t gx, int32_t gz, in
 static void teil_tod(void)
 {
     printf("== tod ==\n");
-    tod_fall("todesrolle", 0x2090, -5416, -22578, 1024, 7, 0, 0);
-    tod_fall("r1", 0x2090, 3413, -25001, 2048, 9, 1, 1);
-    tod_fall("r1_sprung", 0x2090, 3413, -25001, 2048, 9, 0, -1);
-    tod_fall("todesrolle_elza", 0x2091, -5416, -22578, 1024, 7, 0, 0);
+    /* alt_px10 = Nachbesserung 1 (Dossier N1.M2): Todesrolle Cut 0 9,7 / R1 Cut 1 7,5 / R1 Sprung-Cut 0 -> Ersatz Cut 1 7,5 */
+    tod_fall("todesrolle", 0x2090, -5416, -22578, 1024, 7, 0, 97);
+    tod_fall("r1", 0x2090, 3413, -25001, 2048, 9, 1, 75);
+    tod_fall("r1_sprung", 0x2090, 3413, -25001, 2048, 9, 0, 75);
+    tod_fall("todesrolle_elza", 0x2091, -5416, -22578, 1024, 7, 0, 97);
 }
 
 /* ---- Teil: szene ------------------------------------------------------------------------------------------ */
@@ -711,7 +763,9 @@ static void teil_szene(int elza)
  * (9,112) vorab (kein Schluessel), je Bild fd_NNNNNN.ppm (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1). Je Bild: Zahl der Pixel mit
  * Unterschied und der hellste Unterschieds-Pixel in A (max R/G/B). Verlangt: (1) in JEDEM Bild ein Unterschied (Schluessel im
  * Bild), (2) Puls max/min >= 1,40 (Blink-Folge 0x80..0xBE = x1,484, FUN_801028ec; die gekappte erste Fassung der Ankunft lag
- * bei 1,22), (3) kein Plateau: hoechstens 4 von 30 Bildern auf dem Hoechstwert (gekappt: 34 von 60 Bildern). */
+ * bei 1,22), (3) kein Plateau: hoechstens 4 von 30 Bildern auf dem Hoechstwert (gekappt: 34 von 60 Bildern).
+ * Nachbesserung 2 (M2): optional `<min_breite> <min_hoehe>` - (4) der Kasten aller Unterschiede ist mindestens so gross
+ * (Riegel: 10 x 9 = der Ankunfts-Schluessel ~10,4 x 9,5; Abnahme 1 mass nach dem Tod 4 x 6 bzw. 6 x 4). */
 static int ppm_lesen(const char *p, int *w, int *h, unsigned char **px)
 {
     FILE *f = fopen(p, "rb");
@@ -725,7 +779,7 @@ static int ppm_lesen(const char *p, int *w, int *h, unsigned char **px)
     if (n != (size_t)(*w) * (size_t)(*h) * 3u) { free(*px); *px = NULL; return 0; }
     return 1;
 }
-static int bilddiff(const char *da, const char *db, int f0, int f1, int st)
+static int bilddiff(const char *da, const char *db, int f0, int f1, int st, int min_b, int min_h)
 {
     int bilder = 0, mit = 0, hmin = 256, hmax = -1, am_max = 0, werte[512], nw = 0;
     int kx0 = 9999, ky0 = 9999, kx1 = -1, ky1 = -1;
@@ -755,17 +809,21 @@ static int bilddiff(const char *da, const char *db, int f0, int f1, int st)
         printf("  F%d: %d Pixel Unterschied, hellster %d\n", f, n, hell);
     }
     for (int i = 0; i < nw; i++) if (werte[i] == hmax) am_max++;
-    const int ok = bilder > 0 && mit == bilder && hmin > 0 && hmax * 100 >= hmin * 140 && am_max * 30 <= 4 * nw;
-    printf("bilddiff: %d Bilder, %d mit Schluessel-Unterschied, Kasten (%d,%d)-(%d,%d), hellster min %d max %d (x%d.%02d), "
-           "%d Bilder am Hoechstwert -> %s\n", bilder, mit, kx0, ky0, kx1, ky1, hmin, hmax,
-           hmin > 0 ? hmax / hmin : 0, hmin > 0 ? (hmax * 100 / hmin) % 100 : 0, am_max, ok ? "OK" : "FEHLER");
+    const int kb = kx1 >= kx0 ? kx1 - kx0 + 1 : 0, kh = ky1 >= ky0 ? ky1 - ky0 + 1 : 0;
+    const int ok = bilder > 0 && mit == bilder && hmin > 0 && hmax * 100 >= hmin * 140 && am_max * 30 <= 4 * nw &&
+                   kb >= min_b && kh >= min_h;
+    printf("bilddiff: %d Bilder, %d mit Schluessel-Unterschied, Kasten (%d,%d)-(%d,%d) = %d x %d (mindestens %d x %d), hellster "
+           "min %d max %d (x%d.%02d), %d Bilder am Hoechstwert -> %s\n", bilder, mit, kx0, ky0, kx1, ky1, kb, kh, min_b, min_h,
+           hmin, hmax, hmin > 0 ? hmax / hmin : 0, hmin > 0 ? (hmax * 100 / hmin) % 100 : 0, am_max, ok ? "OK" : "FEHLER");
     return ok ? 0 : 1;
 }
 
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
-    if (!strcmp(teil, "bilddiff") && argc >= 7) return bilddiff(argv[2], argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
+    if (!strcmp(teil, "bilddiff") && argc >= 7)
+        return bilddiff(argv[2], argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), argc >= 9 ? atoi(argv[7]) : 0,
+                        argc >= 9 ? atoi(argv[8]) : 0);
     const int alle = !strcmp(teil, "alle");
     re15_door_seq_setze_laeufer(fang);
     if (alle || !strcmp(teil, "spinnen"))    teil_spinnen();
