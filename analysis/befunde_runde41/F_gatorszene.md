@@ -41,6 +41,8 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
       behoben und gemessen, Nebenbefund (R1-Tod aus frueherem Raumbesuch) behoben (Abschnitt "Nachbesserung 3")
 - [x] Nachbesserung 4: M1 der Abnahme 3 (Nachtrag 29: Leiche samt Kette weiter weg von der Leiter, Ausweichen am Kampfbeginn)
       behoben und gemessen (Abschnitt "Nachbesserung 4")
+- [ ] Nachbesserung 5: M1-M4 der Abnahme 4 (= Entscheid F-E2: Kampfbeginn beim RE2-Sollwert, Schluessel nicht dunkler als
+      abgenommen, Fressen nicht von hinten, Riegel mit oberer und unterer Grenze) (Abschnitt "Nachbesserung 5")
 
 ## 0. Protokoll
 
@@ -58,6 +60,7 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
 * Nachbesserung 4 (2026-10-25): aa7b3e8a (Plan), 0f990c9f (Messung vorher), f5be4f3d (RE2-Sollwert + Probe), 2b8f3739
   (Lagesuche), 5702190a (Code obj 3 + Unit-Riegel), ec012418 (exe-Riegel + Querbezuege), fb64e68c (beste Lage), 23cad995
   (Dossier Wahl), d9357d86 (Messung nachher + Bilder), Schluss-Commit fix(r41-gatorszene): Nachbesserung 4.
+* Nachbesserung 5 (2026-10-25): Commits im Abschnitt "Nachbesserung 5".
 
 ## Punkt 2 — Spinnen aus ROOM2090 entfernen
 
@@ -978,3 +981,28 @@ _flucht/_flucht_elza 53.98/74.43 s, _tod/_tod_elza 64.11/104.40 s, _tod_r1/_tod_
   aber dunkler.
 - Frage (Beobachtung): Passt dir die Entfernung beim Kampfbeginn so, oder ist der Anlauf des Alligators jetzt zu lang? Ist der
   blinkende Schluessel im hinteren Becken fuer dich gut zu erkennen?
+
+## Nachbesserung 5 (nach Abnahme 4, F_abnahme_4.md: M1-M4 = Orchestrator-Entscheid F-E2)
+
+Start 2026-10-25, HEAD 4b875538 (Code-Stand fb64e68c + Doku 877919e2/e96d076e/3b2340c7/4b875538), Baum sauber, exe = Code-Stand
+(re15_pc.exe 13:49 nach gatorszene_r41.c 13:49). Messordner (scratchpad, nicht im Repo): `F41n5/` (`runs/<lauf>/...`, eigene exe-Kopie
+je Lauf `re15_pc_f41n5_<lauf>.exe`, timeout, danach geloescht). Alle Laeufe RE15_WINDOW_SCALE=1, Bilder nur per RE15_FRAMEDUMP.
+
+Massgeblich: Entscheid F-E2 (AUFTRAG.md 2026-10-25 14:21): (1) Kampfbeginn = RE2 (Abstand 11430 / erster Kontakt 121 Bilder), so nah wie
+moeglich, nicht darunter; liegt es am Zonen-Dash, Lage mit der RE2-Zonenbeziehung am Intro-Ende (in RE2 belegt); (2) Schluessel in der
+Ankunftseinstellung mindestens wie abgenommen (hellster Pixel Ruhe >= 72, Spitze >= 108, Kasten >= 10 x 9); (3) Fressen mit Frontalwert
+> 0, Leiche im Maul sichtbar, B8 bleibt, Freiheitsgrad = Lage der Leiche; unter 1-3 der beste Schluessel-Wert, Rangfolge 1 > 2 > 3;
+Riegel mit oberer UND unterer Grenze aus dem RE2-Beleg, auf beiden Seiten dasselbe Mass.
+
+Plan:
+- (a) RE2 belegen: Zonenlinien des Gators (+0x21A, Sub-1-Pre @0x80100964-a08) und Lage Gator/Leon am Intro-Ende -> Zonenbeziehung;
+  Ende der Zwischensequenz fuer Leon (sub03 Plc_ret @SCD 0x02B6 / Set(2,7,0) @0x02B7) gegen das Intro-Ende (Clip-3-Ende) -> Band
+  des RE2-Sollwerts (untere und obere Grenze) im selben Mass wie der Port (Kontakt = vorderster Knochen erreicht Leon laengs der
+  Schwimmrichtung).
+- (b) Lagesuche mit dem ECHTEN Engine-Code (C-Sonde gegen libre15_engine.a: Buehne, Durchbruch, Fressen, Wende, Schrei, Kamerawahl der
+  Spur B, Kampfbeginn, erster Kontakt) statt der Python-Naeherung: Gator am Kampfbeginn in Leons Zone 0 (Suedbecken), Abstand und
+  Kontaktbilder im RE2-Band, FINISHER-Kamera mit frontal > 0 unter der Massstab-Grenze, Leiche und Kiefer im Bild, Schluessel in der
+  Ankunftskamera mit dem besten Wert.
+- (c) Umsetzung (Konstanten in gatorszene_r41.c, Herleitung im Kommentar), (d) Messung an der exe (Leon + Elza, stehend + weglaufend,
+  Ankunftseinstellung keypix wie Abnahme 4, Fress-Einstellung), (e) Riegel mit oberer + unterer Grenze (abstand/_elza, leon/_elza,
+  flucht/_elza) und Untergrenze fuer den Schluessel (leiche), (f) gezielte Tests, Dossier, Abschluss-Commit.
