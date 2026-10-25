@@ -447,11 +447,12 @@ static void leiche_weg(void)
 static void tor_sperren(uint16_t room_id);   /* Abschnitt 5 */
 static int s_einst_slot;   /* Einstellung auf den Schluessel (Abschnitt "Schluessel nach dem Tod") */
 static int s_r1_cut = -1;  /* Nachbesserung 3: Cut im ersten R1-Takt (Abschnitt "Schluessel-Schnitt statt R1-Rueckschnitt") */
+static int s_r1_lief = 0;  /* Nachbesserung 3: R1 lief in DIESEM Raumbesuch (key_tod_pruefen) */
 void re15_gatorszene_r41_install(uint16_t room_id)
 {
     const uint16_t basis = (uint16_t)(room_id & 0xFFFEu);
     s_einst_slot = -1;                                      /* Nachbesserung 2: Raumaufbau setzt die SCD-Faeden neu */
-    s_r1_cut = -1;                                          /* Nachbesserung 3: kein R1 im neuen Raum */
+    s_r1_cut = -1; s_r1_lief = 0;                           /* Nachbesserung 3: kein R1 im neuen Raum */
     tor_sperren(room_id);
     if (basis == RE15_GSZ_RAUM) {
         if (s_zustand == RE15_GSZ_MONTAGE) {                /* zurueck aus 2080: Programm 3 */
@@ -1315,10 +1316,17 @@ static void key_tod_setzen(void)
     folge('L', (int)s_key_x, (int)s_key_z);
     key_einstellung();
 }
-/* Tod erkennen (Nachtakt im Bild des Todes, Rueckfall im SCD-Takt). */
+/* Tod erkennen (Nachtakt im Bild des Todes, Rueckfall im SCD-Takt). Nachbesserung 3 (Nebenbefund): der R1-Endzustand zaehlt nur,
+ * wenn R1 in DIESEM Raumbesuch lief (s_r1_lief, key_rueckschnitt_pruefen) - re15_gr2_tot() fragt ALLE Slots ab (gator_re2_r41.c:
+ * `if (s_g[i].tot) return 1`), s_g eines Slots loescht erst der Boss-INIT des neuen Aktors (re15_gr2_reset, enemy_ai_boss_gator.c
+ * INIT), und dieser Rueckfall laeuft im ersten Bild VOR dem ersten Boss-Takt. Ohne die Bedingung legte ein frueherer R1-Tod derselben
+ * Sitzung den Schluessel beim Betreten sofort (gemessen: Riegel unit_r41_gatorszene_tod_explosion, zweiter Fall im selben Prozess -
+ * Einstellung ab Bild 0, kein Rueckschnitt-Ersatz). Die Todesrolle (Zustand 7 des aktuellen Aktors) ist davon nicht betroffen. */
 static void key_tod_pruefen(void)
 {
-    if (!key_tod_offen() || !gator_tot()) return;
+    if (!key_tod_offen()) return;
+    const re15_actor_t *g = gator_aktor();
+    if (!((s_r1_lief && re15_gr2_tot()) || (g && g->state == 7))) return;
     key_tod_setzen();
 }
 /* ---- Schluessel-Schnitt statt R1-Rueckschnitt (Nachbesserung 3, Abnahme 2 M1) -------------------------------------------
@@ -1345,6 +1353,7 @@ static void key_tod_pruefen(void)
 static void key_rueckschnitt_pruefen(int slot)
 {
     if (!re15_gr2_r1_laeuft(slot)) { s_r1_cut = -1; return; }
+    s_r1_lief = 1;
     const int cut = (int)g_scd.cam_id;
     if (s_r1_cut < 0) { s_r1_cut = cut; return; }           /* erster R1-Takt: Cut nach B's P0 (Explosions-Cut oder Sperre) */
     if (cut == s_r1_cut || !re15_gr2_kamera_gesperrt() || !key_tod_offen()) return;

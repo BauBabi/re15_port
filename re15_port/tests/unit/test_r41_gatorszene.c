@@ -717,6 +717,7 @@ static void tod_explosion_fall(uint16_t raum, int gegenprobe)
     g_scd.cam_id = 0; g_scd.work_vars[0x0A] = 0; g_scd.cut_auto_enabled = 1; s_shown = 0;
     const int n_folge0 = re15_gatorszene_r41_folge_n();
     (void)re15_enemy_take_damage(g, 0);                       /* Treffer beim Tragen -> R1 (@0x80101ef4-fc) */
+    frame(0, 0);                                              /* der Boss-Takt nimmt den Treffer auf (gb_absorb_hit) -> R1 P0 */
     const int ecut = (int)g_scd.cam_id;
     PRUEF(re15_gr2_r1_laeuft(gslot) && re15_gr2_kamera_gesperrt() && ecut != 0,
           "R1 mit Explosionsschnitt: Cut 0 -> Cut %d, Sperre (RE2 +0x218 |= 0x40 @0x80102248)", ecut);
@@ -727,7 +728,7 @@ static void tod_explosion_fall(uint16_t raum, int gegenprobe)
         frame(0, 0);
         const int angezeigt = s_shown;
         folge[nf++] = (char)(angezeigt < 10 ? '0' + angezeigt : 'a' + angezeigt - 10);
-        if (angezeigt == 0 && (einst_bild < 0 || re15_gatorszene_r41_key_einstellung(NULL, NULL, NULL))) null_bilder++;
+        if (angezeigt == 0 && tot_bild < 0) null_bilder++;     /* Cut 0 VOR dem Tot-Flag = B's Rueckschnitt sichtbar */
         if (einst_bild < 0 && re15_gatorszene_r41_key_einstellung(&k_cut, NULL, NULL)) einst_bild = f;
         if (tot_bild < 0 && re15_gr2_tot()) {
             tot_bild = f;
@@ -738,18 +739,18 @@ static void tod_explosion_fall(uint16_t raum, int gegenprobe)
     }
     folge[nf] = 0;
     printf("    angezeigter Cut je Bild ab dem Treffer: %s\n", folge);
-    if (gegenprobe) {
-        PRUEF(einst_bild < 0 && null_bilder >= 2 && tot_bild >= 0,
-              "Gegenprobe: keine Einstellung, B schneidet vor dem Tot-Flag (Bild %d) auf Cut 0 zurueck (%d Bilder Cut 0) - RE2-Form",
-              tot_bild, null_bilder);
-        PRUEF(folge_hat('R', -1) < 0, "Gegenprobe: keine Folge-Zeile R");
-        gb_test_env(0);
-        return;
-    }
     int r_i = -1;
     for (int i = n_folge0; i < re15_gatorszene_r41_folge_n(); i++) {
         const re15_gsz_folge_t *fz = re15_gatorszene_r41_folge(i);
         if (fz && fz->art == 'R') { r_i = i; break; }
+    }
+    if (gegenprobe) {
+        PRUEF(einst_bild < 0 && null_bilder == 2 && tot_bild >= 0,
+              "Gegenprobe: keine Einstellung, B schneidet zwei Bilder vor dem Tot-Flag (Bild %d) auf Cut 0 zurueck (%d Bilder Cut 0, RE2 "
+              "P1-Ende @0x801024ec -> P3 @0x8010265c)", tot_bild, null_bilder);
+        PRUEF(r_i < 0, "Gegenprobe: keine Folge-Zeile R");
+        gb_test_env(0);
+        return;
     }
     const re15_gsz_folge_t *fr = r_i >= 0 ? re15_gatorszene_r41_folge(r_i) : NULL;
     PRUEF(fr && fr->wert == ecut && fr->wert2 == 0, "Folge R %d/%d: Schluessel-Schnitt statt B's Rueckschnitt (Explosions-Cut %d, "
@@ -757,14 +758,19 @@ static void tod_explosion_fall(uint16_t raum, int gegenprobe)
     PRUEF(einst_bild >= 0 && tot_bild >= 0 && tot_bild - einst_bild == 2 && k_cut >= 0 && k_cut != ecut && k_cut != 0,
           "Einstellung Cut %d ab Bild %d, Tot-Flag Bild %d (P1-Ende -> P2 -> P3 = zwei Takte, @0x80102638-50 / @0x8010265c-64)", k_cut,
           einst_bild, tot_bild);
-    PRUEF(null_bilder == 0, "kein angezeigtes Bild mit Cut 0 bis zum Ende der Einstellung (%d; vorher zwei, Abnahme 2 M1)", null_bilder);
-    {   /* Folge E..E K..K 0 (Cut_old): genau ein Wechsel E -> K, danach erst nach der Einstellung Cut 0 */
-        int ok = nf > 2 && folge[0] == (char)('0' + ecut), w = 0;
-        for (int i = 1; i < nf; i++) if (folge[i] != folge[i - 1]) w++;
-        ok = ok && w <= 2 && strchr(folge, (char)('0' + k_cut)) != NULL;
-        const char *k0 = strchr(folge, (char)('0' + k_cut));
-        ok = ok && k0 && (k0 == folge || k0[-1] == (char)('0' + ecut));
-        PRUEF(ok, "Bildfolge Explosion %d -> Schluessel %d direkt (%d Wechsel, letzter = Cut_old auf 0)", ecut, k_cut, w);
+    PRUEF(null_bilder == 0, "kein angezeigtes Bild mit Cut 0 vor dem Tot-Flag (%d; vorher zwei, Abnahme 2 M1)", null_bilder);
+    {   /* Laeufe der Bildfolge: E (Explosion), K (Einstellung, >= 90 Bilder Halt = GSZ_LEICHE_BILDER), danach hoechstens Cut 0
+         * (Cut_old) - kein drittes Bild dazwischen */
+        char lauf_c[8]; int lauf_n[8], nl2 = 0;
+        for (int i = 0; i < nf; i++) {
+            if (nl2 > 0 && lauf_c[nl2 - 1] == folge[i]) { lauf_n[nl2 - 1]++; continue; }
+            if (nl2 == 8) { nl2 = 9; break; }
+            lauf_c[nl2] = folge[i]; lauf_n[nl2] = 1; nl2++;
+        }
+        const char ce = (char)('0' + ecut), ck = (char)('0' + k_cut);
+        const int ok = (nl2 == 2 || nl2 == 3) && lauf_c[0] == ce && lauf_c[1] == ck && lauf_n[1] >= 90 && (nl2 == 2 || lauf_c[2] == '0');
+        PRUEF(ok, "Bildfolge: %d x Explosion Cut %d -> %d x Schluessel Cut %d -> Cut_old (%d Laeufe)", nl2 > 0 ? lauf_n[0] : 0, ecut,
+              nl2 > 1 ? lauf_n[1] : 0, k_cut, nl2);
     }
     PRUEF(einst_nach_tot && gesperrt_nach_tot && !re15_gr2_kamera_gesperrt(),
           "nach dem Tot-Flag haelt die Einstellung (Zonenkamera gesperrt %d, B's Programm frei %d)", gesperrt_nach_tot,
