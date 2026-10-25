@@ -927,6 +927,30 @@ wird nicht angefasst; seine Riegel bleiben gruen.
 - [ ] Mangel 2: Restliste weiter messen (6000 C5 Band 0 begehbar?, Gelaender im Kuenstler-Atlas?), Rest mit Beleg
 - [ ] Bau, gezielte Tests, Abschluss-Commit
 
+### NB4 Zwischenstand (laufend)
+* **Mangel 3:** Laeufer prueft jeden Lauf (debug.log nach dem letzten "loaded room<zr>.rdt": "[framedump] WxH -> f.ppm", danach
+  "[flow] EXIT_AT: Bild 120 in Raum <zr>"; main.c RE15_EXIT_AT wirkt nach re15_render_end_frame), bis zu 3 Versuche; Gegenprobe-Riegel
+  integration_r41_masken36_laufpruefung (RE15_EXIT_AT=60 im Zielraum, f.ppm = Boot-Bild). Pruef-Funktion an echten Logs: gut angenommen,
+  der d4040_09-Abbruch der Abnahme 3 (build/tests/integration/r41_masken36_zelle_wd/lauf_3c0f29fe_d4040_09_a) abgelehnt.
+* **Mangel 1 (Ost-Stirn 30A0 C0) - Messung:** der Kuenstler-Ausschnitt (SLD-Atlas ROOM30A0.BSS Cut 0, Komponenten 11/9/10 an den
+  Verschiebungen (232,-24)/(144,24)/(57,86), Farbabstand Median 10..11) == die gezeichneten Masken in den Spalten >= 282 (3344 = 3344
+  Punkte, 0 Abweichung). Die Kante des Ausschnitts liegt in der Ebene x = -19975 bei z 14802..14867 (Zeilen 118..194) und oben bei
+  y -2335 (Zeile 118): die Stirnseite im Bild ist ~705 tief und ~2335 hoch, Zelle 6 dagegen 1250 tief und (Rahmen) 3025 hoch.
+  Alle Leon-/Elza-Punkte der Abnahme-Szenen o1..o5, a30A0_00 "sichtbar hinter der Ost-Stirn" liegen AUSSERHALB des Ausschnitts
+  (0 von 2003; Abstand zur Kante >= 1 Spalte). Dort zeigt der Hintergrund den Boden HINTER der Zelle (Zeilen 150..196: Strahl kreuzt
+  x = -19975 bei z 14913..15295 in 209..1316 Hoehe und trifft den Boden bei z 15376..18289) bzw. die Rueckwand-Schraenke Zelle 8
+  @RDT+0x00474 (Front z 18225, Strahl bei x ~-22000, Zeilen 88..148). Die "Ost-Stirn" der Abnahme ist die Kollisionszelle, nicht der
+  Gegenstand -> Masken dort wuerden Leon ueber leerem Boden abschneiden. Bilder m41nb4/stirn_zoom.png, stirn_leon.png (Scratchpad).
+* **Mangel 2 - Saaten-Fehler gefunden (OFFEN 10/14):** die Band-0-Stehplaetze im Gleisbett ROOM6000 kamen aus Tuer-AOTs, deren Band
+  das Werkzeug falsch las (slots[].band statt door_params[].band = pc[4]; AOT-Scan @0x80042cac..0x80042ccc). ROOM6000-Tueren @RDT+0x00D58
+  `3b 00 02 31 02 ..`, +0x00D78, +0x00DDA: pc[4] = 2. Mit der Regel: Netz 6000/6001 Band 0 90 437 -> 0; Ausschluss aendert sich nur in
+  6000/6001 C5/C7/C8 (37 Rechtecke je Variante wieder gezeichnet). Naechster Schritt: Kette k6 fuer ROOM6000 mit der Regel neu.
+* **Mangel 2 - unplatzierte Kuenstler-Komponenten:** der Generator saet nur aus vollstaendig deckenden 16x16-Bloecken (gen_region
+  find_blocks); duenne Teile (Gelaender, Rohre) ohne solchen Block wurden NIE platziert. Maskierte SSD je Komponente ueber alle
+  Verschiebungen (m41nb4/py/platz1.py): 800 unplatzierte Komponenten (>= 16 Texel, 410 127 Texel) in den Stage-3..6-Sektionen, 484
+  eindeutig platzierbar (229 714 Texel; RMS 5..14 wie die platzierten, zweitbeste Lage >= 1,5x schlechter), 228 978 neue Bildpunkte in
+  79 Cuts. Beispiel ROOM30E0 C7: das ganze Gelaender des Stegs (m41nb4/platz_ROOM30E0_07.png).
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
