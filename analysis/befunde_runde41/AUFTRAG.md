@@ -999,3 +999,19 @@ gruenen Ventile gelesen). Gemeint ist: auf dem Plakat sind die Nummern der Zeile
 Plakat (bleibt UNVERAENDERT): 1. GREEN 09 - 2. RED 01 - 3. BLACK 02 - 4. RED 07 -> richtig: 1. 02 - 2. 01 - 3. 09 - 4. 07.
 **Loesung = 02 -> 01 -> 09 -> 07** (es zaehlen die Nummern; die Plakatfarben sind die Ironie, "green and red mixed up").
 Code: RE15_R41C_LOESUNG = Indizes in RE15_R41C_VENTIL_NUMMERN {1,2,3,7,8,9} -> {1, 0, 5, 3}. Notiztext wie Nachtrag 30b.
+
+## 2026-10-25 17:23 — Nachtrag 30d (Plakat NEU, Loesung 09-02-01-08; ersetzt 30c) und 30e (Wasser 2010), Spur N
+
+**30d** Nutzer-Frage (Wortlaut): "Aber wenn ich sage rot und grün sind vertauscht, warum sind dann 1 und 7 rot auf den plakat?"
+und "bzw muss das nicht angepasst werden entsprechend der valves?" -> das Plakat muss zu den zwei Regeln der Notiz passen
+((1) Gruen und Rot vertauscht, Schwarz stimmt; (2) Nummern der Zeilen "GREEN" und "BLACK" vertauscht). Nutzer-Wahl per Auswahl:
+**Plakat NEU: 1. GREEN 01 - 2. RED 02 - 3. BLACK 09 - 4. RED 08 -> Loesung 09 -> 02 -> 01 -> 08** (Rechenweg: 1. GREEN 01 =
+rot, Nummer der BLACK-Zeile 09 -> 09 rot; 2. RED 02 = gruen 02; 3. BLACK 09 = schwarz, Nummer der GREEN-Zeile 01 -> 01 schwarz;
+4. RED 08 = gruen 08). Nachtrag 30c (02-01-09-07, Plakat unveraendert) ist damit ERSETZT. Code: RE15_R41C_LOESUNG = {5, 1, 0, 4};
+Plakat-Bild neu erzeugen (tools/r41_ventilkette/plakat.py, gen/ventilkette_r41_plakat.inc); Notiz-Satz wie Nachtrag 30b.
+
+**30e** Wortlaut: "und eine Sache fehlt mir noch - in room 2010 soll - bis zum ablassen der Wassers, auch ein Wasser Effekt die
+Leiter runter kommen und über den Weg bis zum Wasser Pool in der Mitte laufen." Nutzer-Wahl per Auswahl: **"Bis zur Flut in
+2030 (Empfohlen)"** = wie der Wasserstrom an der Leiter in 2000: er endet, sobald das Ventilraetsel geloest und 2030 geflutet
+ist (dieselbe Bedingung wie dort; im Dossier mit Bit/Flag belegen). Effekt-Form wie der 2000-Leiterstrom bzw. Spur A (Wasser
+EM024 / Spritzer), Weg von der Leiter ueber den Gang bis zum Becken in der Mitte von ROOM2010/2011 aus Kollision/Kameras belegen.
