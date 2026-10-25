@@ -124,6 +124,12 @@ static struct {
     int32_t  liege_z;         /* Nachbesserung 2 (M3): z beim Setzen = Lage, an der das Raumflag Bank 5 Bit 0
                                * ("liegt im Wasser", ROOM40A0 sub10 `Set 22 05 00 01` @SCD 0x0712, nie geloescht)
                                * gesetzt wird; ihre Beckenzone ist das Gegenstueck der RE2-Zone 1 (s. chase_clip) */
+    /* Runde 41 Spur G (Nachbesserung 3, M3 / Nachtrag 28): der Kanister ZERPLATZT - FUN_80036eb4 auf obj[1] (`jal 0x80036eb4`,
+     * a0 = 0x800d051c @0x80102348) stempelt den Teile-Record des Objekts (+0x14C): Flagwort |= 0x4A, +0x1EC = 0x8000, +0x1BC =
+     * 0x404040. Der Objekt-Zeichner FUN_800363f0 zeichnet bei Bit 0x08 (`lw v0,0x14c(s1) / andi v0,v0,0x8` @0x80036558-64) statt
+     * des Meshes die Scherben FUN_8002d3c8/FUN_8002d718 und zaehlt danach +0x1EC hoch (@0x800365bc-c8). */
+    uint16_t scherben;        /* +0x1EC (0 = intaktes Mesh) */
+    uint32_t scherben_farbe;  /* +0x1BC = Record +0x70 */
 } s_kan;
 
 static int s_env_geprueft;
@@ -1847,6 +1853,11 @@ void re15_gr2_r1_start(int slot, re15_actor_t *e)
          * laeuft im R1-Start-Bild schon einmal -> +1, damit der Kanister wie in RE2 zehn Bilder
          * (P0 + neun P1-Bilder) sichtbar bleibt und im zehnten P1-Bild verschwindet. */
         s_kan.entfern_ctr = RE15_GR2_KAN_ENTFERN_F + 1;
+        /* Runde 41 Spur G (Nachbesserung 3, M3): FUN_80036eb4 (@0x80102348, selbst disassembliert): `ori v0,zero,0x8000 /
+         * sh v0,492(a0)` @0x80036eb8-bc (+0x1EC), `lui v1,0x40 / ori v1,v1,0x4040 / sw v1,444(a0)` @0x80036eb4/cc/d0 (+0x1BC),
+         * `ori v0,v0,0x4a / sw v0,332(a0)` @0x80036ee4/ec (+0x14C). +0x1E6 = -10 und +0x1E4 = Gier + 0x800 liest nur die
+         * Teile-Physik FUN_80028dac der Gegner (FUN_80027434); der Objekt-Zeichner ruft sie nicht - der Kanister bleibt liegen. */
+        s_kan.scherben = 0x8000u; s_kan.scherben_farbe = 0x00404040u;
     }
     re15_rumble_small(8, 3);                                /* FUN_8003947c(8,3) @0x80102328-30 */
     re15_rumble_ramp(50, 255, 0, 0);                        /* FUN_800395b8(50,255,0,0) @0x80102334-44 */
@@ -1993,6 +2004,35 @@ int  re15_gr2_kanister_welt(int32_t pos[3], int32_t rot[9])
     if (s_kan.angehaengt) { memcpy(pos, s_kan.welt, 12); memcpy(rot, s_kan.welt_rot, 36); }
     else                  { memcpy(pos, s_kan.pos, 12);  memcpy(rot, s_kan.rot, 36); }
     return 1;
+}
+/* Runde 41 Spur G (Nachbesserung 3, M3): Scherben-Zeichnung des Kanisters (s. s_kan.scherben). Skala = Tafel @0x8009DC28
+ * [Wort >> 15][Wort & 0x7fff] (`lhu a1,160(a2) / andi 0x7fff / srl 15` FUN_8002d3c8 @0x8002d3f8-408, FUN_8002d718 @0x8002d750-68;
+ * Tafel selbst gelesen: re2_disasm.py read 0x8009dc28, 2 Zeilen a 30 x int16), Farbe = Record +0x70 (`lw t0,112(a2)` @0x8002d84c).
+ * Der Index bleibt <= 9: R1 P1 nimmt obj[1] nach neun Bildern weg (+0x16B, @0x8010255c-78); die Begrenzung auf 29 schuetzt nur
+ * vor dem Lesen hinter der Tafel. 1 = Scherben statt Mesh. */
+static const int16_t k_scherben_skala[2][30] = {
+    {  30,  59,  87, 114, 140, 165, 189, 212, 234, 255, 275, 294, 312, 329, 345,           /* @0x8009DC28 */
+      360, 374, 387, 399, 410, 420, 429, 437, 444, 450, 455, 459, 462, 464, 465 },
+    { 180, 354, 522, 684, 840, 990,1134,1272,1404,1530,1650,1764,1872,1974,2070,           /* @0x8009DC64 */
+     2160,2244,2322,2394,2460,2520,2574,2622,2664,2700,2730,2754,2772,2784,2790 },
+};
+int re15_gr2_kanister_scherben(int32_t *skala, uint32_t *farbe, int *bild)
+{
+    if (!s_kan.aktiv || !s_kan.scherben) return 0;
+    int i = (int)(s_kan.scherben & 0x7fffu);
+    if (bild) *bild = i;
+    if (i > 29) i = 29;
+    if (skala) *skala = k_scherben_skala[(s_kan.scherben >> 15) & 1u][i];
+    if (farbe) *farbe = s_kan.scherben_farbe;
+    return 1;
+}
+/* Nach dem Zeichnen (PC-Zeichner, je gezeichnetes Bild): `lhu v0,0x1ec(s1) / addiu v0,v0,1 / sh v0,0x1ec(s1)` @0x800365bc-c8;
+ * `andi v0,v0,0xffff / bne v0,v1(0x1e)` -> `sw zero,0x0(s1)` @0x800365cc-dc (mit Bit 15 nie erreicht - R1 P1 loescht). */
+void re15_gr2_kanister_scherben_weiter(void)
+{
+    if (!s_kan.aktiv || !s_kan.scherben) return;
+    s_kan.scherben = (uint16_t)(s_kan.scherben + 1u);
+    if (s_kan.scherben == 0x1eu) s_kan.aktiv = 0;
 }
 void re15_gr2_kanister_env(void)
 {

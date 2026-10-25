@@ -66,6 +66,11 @@ foreach(_teil register op69 op41 op4_6 op37_78)
     add_test(NAME unit_r41_kanister2080_fx_${_teil} COMMAND test_r41_kanister2080_fx ${_teil})
     set_tests_properties(unit_r41_kanister2080_fx_${_teil} PROPERTIES TIMEOUT 120)
 endforeach()
+# Nachbesserung 3 (M3): der Kanister zerplatzt (FUN_80036eb4 @0x80102348 -> Objekt-Zeichner FUN_800363f0 Scherben FUN_8002d3c8/d718):
+# zehn Scherben-Bilder, Skala 180..1530 (@0x8009DC64), Farbe 0x404040 - im Testprogramm der Spur B (echter Boss-Takt mit EM23-Bank),
+# Teil "scherben" (markiert "Runde 41 Spur G").
+add_test(NAME unit_r41_kanister2080_scherben COMMAND test_r41_re2gator scherben)
+set_tests_properties(unit_r41_kanister2080_scherben PROPERTIES TIMEOUT 240)
 
 if(TARGET re15_pc)
     add_test(NAME integration_r41_kanister2080

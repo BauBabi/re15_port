@@ -151,6 +151,11 @@ int  re15_gr2_kanister_lokal(int32_t l[3]);
 /* Lage fuer den Zeichner: 1 = sichtbar; pos = Welt, rot = Q12 3x3 (Welt). Nachbesserung 4 (M1): angehaengt = Part-6-Matrix
  * der GEZEICHNETEN Pose dieses Bildes x Lokallage (re15_gr2_nachtakt), nicht mehr die Pose am Takt-Anfang. */
 int  re15_gr2_kanister_welt(int32_t pos[3], int32_t rot[9]);
+/* Runde 41 Spur G (Nachbesserung 3, M3): der Kanister zerplatzt (FUN_80036eb4 @0x80102348) - 1 = Scherben statt Mesh;
+ * skala = Versatz je Prim entlang n0 (Tafel @0x8009DC28/@0x8009DC64), farbe = flache Scheitelfarbe 0x404040, bild = Zaehler
+ * +0x1EC & 0x7fff. _weiter nach jedem gezeichneten Bild (FUN_800363f0 @0x800365bc-c8). */
+int  re15_gr2_kanister_scherben(int32_t *skala, uint32_t *farbe, int *bild);
+void re15_gr2_kanister_scherben_weiter(void);
 /* Nachbesserung 4 (Abnahme 3, M1): Takt-ENDE des Boss-Takts (re15_gator_boss_tick nach der Wand-Klemme): Pose rechnen wie der
  * NPC-Zeichner sie in diesem Bild zeichnet (Ueberblendung + Kopf/Kiefer-az +0x22A/+0x228, ohne den Ueberblend-Schnappschuss zu
  * aendern), daraus Kanister-Anhaengen (FUN_8002d030 @0x801018f0 gegen die Part-6-Weltmatrix @0x801018d0-e0), Kanister-Weltlage

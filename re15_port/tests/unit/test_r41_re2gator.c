@@ -529,6 +529,54 @@ static int teil_kiefer(void)
 }
 
 /* ================================================================================================ */
+/* Runde 41 Spur G (Nachbesserung 3, M3 / Nachtrag 28): der Kanister ZERPLATZT. R1 P0 ruft FUN_80036eb4 auf obj[1] (`jal 0x80036eb4`
+ * @0x80102348): +0x14C |= 0x4A (`ori v0,v0,0x4a` @0x80036ee4), +0x1EC = 0x8000 (@0x80036eb8-bc), +0x1BC = 0x404040 (@0x80036ecc-d0).
+ * Der Objekt-Zeichner FUN_800363f0 zeichnet dann bei Bit 0x08 (@0x80036558-64) die Scherben (FUN_8002d3c8/FUN_8002d718: Skala =
+ * Tafel[+0x1EC >> 15][+0x1EC & 0x7fff] @0x8009DC28/@0x8009DC64, Farbe flach +0x70) und zaehlt +0x1EC je gezeichnetes Bild
+ * (@0x800365bc-c8); R1 P1 nimmt obj[1] nach neun Bildern weg (+0x16B @0x8010255c-78). Der Riegel ruft Abfrage und Weiterzaehlen
+ * so, wie der PC-Zeichner (gator_re2_pc.c) es je Bild nach dem Takt tut: zehn Scherben-Bilder, Skala 180..1530 (Zeile 1, Index
+ * 0..9), Farbe 0x404040; vor dem Treffer das intakte Mesh. */
+static int teil_scherben(void)
+{
+    if (!setup(5)) return 1;
+    leon_statue(-6000, 2000);
+    tick();
+    e->x = -6000; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    re15_gr2_kanister_setzen(-6000, -267, -22000 + (int32_t)(((int64_t)8800 * s) >> 12));
+    for (int f = 0; f < 60 && re15_gr2_kanister_stufe() != 7; f++) {
+        leon_statue(-6000, 2000); e->x = -6000; e->z = -22000; e->rot_y = 0xC00; tick();
+    }
+    CHECK(re15_gr2_kanister_stufe() == 7, "Kanister nicht getragen (Stufe %d)", re15_gr2_kanister_stufe());
+    int32_t sk = -1; uint32_t fb = 0; int bi = -1;
+    CHECK(re15_gr2_kanister_scherben(&sk, &fb, &bi) == 0, "Scherben schon VOR dem Treffer (getragen = intaktes Mesh)");
+    (void)re15_enemy_take_damage(e, 0);
+    tick();                                                     /* -> R1 P0: FUN_80036eb4 @0x80102348 */
+    CHECK(re15_gr2_kanister_stufe() == 13, "Kanister nach R1 in Stufe %d statt 13", re15_gr2_kanister_stufe());
+    static const int soll[10] = { 180, 354, 522, 684, 840, 990, 1134, 1272, 1404, 1530 };   /* @0x8009DC64 [0..9] */
+    int bilder = 0, folge_ok = 1, farbe_ok = 1, weg_ab = -1;
+    for (int k = 0; k < 14; k++) {
+        sk = -1; fb = 0; bi = -1;
+        if (re15_gr2_kanister_scherben(&sk, &fb, &bi)) {        /* PC-Zeichner: Scherben dieses Bildes */
+            if (bilder < 10 && (sk != soll[bilder] || bi != bilder)) {
+                folge_ok = 0; printf("  Bild %d: Index %d Skala %d (soll %d)\n", bilder, bi, (int)sk, soll[bilder]);
+            }
+            if (fb != 0x00404040u) farbe_ok = 0;
+            bilder++;
+            re15_gr2_kanister_scherben_weiter();               /* +0x1EC += 1 @0x800365bc-c8 */
+        } else if (weg_ab < 0) weg_ab = k;
+        tick();
+    }
+    CHECK(bilder == 10, "Scherben-Bilder %d != 10 (P0 + neun P1-Bilder, +0x16B = 9 @0x80102394, @0x8010255c-78)", bilder);
+    CHECK(folge_ok, "Scherben-Skala nicht 180..1530 in Index 0..9 (Zeile 1 @0x8009DC64, Bit 15 von 0x8000)");
+    CHECK(farbe_ok, "Scherben-Farbe nicht 0x404040 (+0x1BC @0x80036ecc-d0)");
+    CHECK(weg_ab == 10 && re15_gr2_kanister_stufe() == -1, "Kanister weg ab Bild %d (soll 10), Stufe danach %d", weg_ab,
+          re15_gr2_kanister_stufe());
+    printf("scherben: %d Bilder Skala 180..1530 Farbe 0x404040, weg ab Bild %d\n", bilder, weg_ab);
+    return fails ? 1 : 0;
+}
+
+/* ================================================================================================ */
 static int teil_putz(void)
 {
     if (!setup(1)) return 1;
@@ -2071,6 +2119,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "sockel")) rc = teil_sockel();
     else if (!strcmp(t, "kanister")) rc = teil_kanister();
     else if (!strcmp(t, "kiefer")) rc = teil_kiefer();
+    else if (!strcmp(t, "scherben")) rc = teil_scherben();    /* Runde 41 Spur G (Nachbesserung 3, M3) */
     else if (!strcmp(t, "putz")) rc = teil_putz();
     else if (!strcmp(t, "wand")) rc = teil_wand();
     else if (!strcmp(t, "kamera")) rc = teil_kamera();

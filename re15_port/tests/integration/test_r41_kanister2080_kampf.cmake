@@ -22,6 +22,9 @@
 #      `slti 300` @0x80051764 auf 17061 Kamera-Abstand, frontal >= 4023/4096); die Bahn laeuft in der Wurfrichtung (v_z-Vorzeichen).
 #   M3 Explosion: RE15_GATOR_FX_LOG - Raum-ESP ROOM40A0 in 2090/2091 registriert (Banken 0x26/0x08/0x09/0x1A), in den R1-Bildern
 #      gezeichnete Quads der Raumbanken UND der Kern-Zeilen 485..498 (> 0), keine unbekannten Ops.
+#   M3 Kanister: "Kanister-Scherben" (gator_re2_pc.c) - FUN_80036eb4 (@0x80102348) laesst den Kanister zerplatzen: zehn Bilder
+#      (R1 P0 + neun P1-Bilder bis +0x16B = 0 @0x8010255c-78) Scherben mit Skala 180..1530 (Tafel @0x8009DC64 Index 0..9) und der
+#      flachen Farbe 0x404040 (@0x80036ecc-d0) statt des intakten Meshes.
 #   Laufdauer: seit G-E2 stehen die Haende vor dem der Kamera zugewandten Werfer (Gier 3678 statt 3072), der Kanister landet im
 #   Suedbecken bei (-6096,-21600) statt (-6821,-22914). Der passive Schuetze (Zielen/Feuern ohne Laufen) trifft den Alligator dann
 #   spaeter - gemessen R1 nach der Rueckkehr: kampf_leon F2290, nordost_leon F1383, kampf_elza F568, west_elza F322 (vorher
@@ -213,7 +216,17 @@ foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leo
     if(_n_fx EQUAL 0 OR _fx_raum EQUAL 0 OR _fx_kern EQUAL 0 OR NOT _fx_unb EQUAL 0)
         r41gk_fehler("Lauf ${_lname}_${_wer}: Explosion in ${_n_fx} R1-Bildern: hoechstens ${_fx_raum} Raum-Quads, ${_fx_kern} Kern-485-Quads, ${_fx_unb} unbekannte Ops (M3)")
     endif()
-    message(STATUS "r41_kanister2080_kampf ${_lname}_${_wer} (Start ${_start}): Szene (${_npc}, Hinknien) -> Fall Cut 12 -> derselbe Alligator -> ${_aufnahme} -> R1-Tod; R1-Kamera '${_r1l}'; Werfer Versatz ${_vers} frontal ${_fr}; Explosion bis ${_fx_raum} Raum- + ${_fx_kern} Kern-Quads in ${_n_fx} R1-Bildern")
+    # ---- Nachbesserung 3, M3: der Kanister zerplatzt (FUN_80036eb4 -> Objekt-Zeichner FUN_800363f0 -> FUN_8002d3c8/d718) ----
+    file(STRINGS "${WORKDIR}/debug.log" _sch REGEX "\\[gator-re2\\] Kanister-Scherben F[0-9]+: Bild [0-9]+ Skala [0-9]+ Farbe 0x404040, ")
+    set(_sch_ist "")
+    foreach(_l IN LISTS _sch)
+        string(REGEX MATCH "Skala ([0-9]+)" _m "${_l}")
+        list(APPEND _sch_ist ${CMAKE_MATCH_1})
+    endforeach()
+    if(NOT "${_sch_ist}" STREQUAL "180;354;522;684;840;990;1134;1272;1404;1530")
+        r41gk_fehler("Lauf ${_lname}_${_wer}: Kanister-Scherben '${_sch_ist}' statt zehn Bilder 180..1530 (Tafel @0x8009DC64, M3)")
+    endif()
+    message(STATUS "r41_kanister2080_kampf ${_lname}_${_wer} (Start ${_start}): Szene (${_npc}, Hinknien) -> Fall Cut 12 -> derselbe Alligator -> ${_aufnahme} -> R1-Tod; R1-Kamera '${_r1l}'; Werfer Versatz ${_vers} frontal ${_fr}; Explosion bis ${_fx_raum} Raum- + ${_fx_kern} Kern-Quads in ${_n_fx} R1-Bildern; Kanister-Scherben ${_sch_ist}")
 endforeach()
 
 file(REMOVE "${_exe_kopie}")
