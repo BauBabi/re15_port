@@ -1054,3 +1054,16 @@ F und G urteilen ab jetzt nach "gut genug": NICHT BESTANDEN nur bei blockierende
 ausserhalb 2080/2090, ein Nutzer-Punkt fehlt ganz oder ist im Spiel kaputt. Feinheiten (Kamera-/Lagefeinheiten, Bildanteile,
 Toleranzen, Messluecken) kommen als "offen" in den Bericht und in die Release Notes und blockieren nicht. Danach integriert der
 Orchestrator F und G mit dieser Liste.
+
+## 2026-10-25 18:02 — Nachtrag 32b (Wortlaut; BERICHTIGT FG-E6) + Abschlussplan Runde 41
+
+> Nein, Ziel ist langsam mit allen fertig zu werden, den build zu bauen, und mit neuen Tokens am Samstag die Sachen nachträglich
+> zu verbessern....
+
+Nutzer-Wahl per Auswahl: **"Laufende Schritte fertig, N anhalten (Empfohlen)"**. Der "Samstag" ist KEIN Termin fuer v0.8.29,
+sondern der Zeitpunkt neuer Tokens fuer Nachbesserungen. Abschlussplan (ersetzt das Ziel in FG-E6; die Regel "gut genug" bleibt):
+- F: nur noch die laufende Abnahme 5 (keine Nachbesserung 6); Nachtrag 31 Punkt 2 (Kampfbeginn nicht vor der Kamera) -> Samstag.
+- G: laufende Nachbesserung 4 + Abnahme 4 (letzte). M: laufende Nachbesserung 5 + Abnahme 5 (keine Nachbesserung 6).
+- N (Nachtrag 30-30e): ANGEHALTEN 18:0x, Stand gesichert (r41/nachtrag30 bb7a0df6, Plakat 30d erzeugt, ungeprueft) -> Samstag.
+- Danach: Integration F/G/M ("gut genug": nur blockierende Fehler halten auf), volle Suite, Release v0.8.29; offene Punkte in die
+  Release Notes ("Ab Samstag").
