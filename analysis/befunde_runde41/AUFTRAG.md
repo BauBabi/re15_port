@@ -872,3 +872,40 @@ und GLAS1090.ESP als Raum-ESP (Registry 8..15); die RE2-Raum-ESP des Alligatorra
 3. 1:1 nachbauen (jede Konstante mit @0x/Datei-Offset), beide Szenarien (2090/2091), ohne die bestehenden B-/G-Riegel zu brechen.
 4. Nachweis am Spiel: Bildstreifen der Explosion gegen ein RE2-Referenzbild desselben Effekts (aus den RE2-Daten gerendert oder
    aufgenommen), Riegel: Effekt-Bank in 2090 registriert + gezeichnete Explosions-Quads > 0 in den R1-Bildern.
+
+## 2026-10-25 12:08 — Nachtrag 29 (Wortlaut; Lage der Zombie-Leiche mit dem Schluessel in 2090, Spur F)
+
+> Und eine weitere Auffälligkeit: Die Zombie Leiche mit dem Schlüssel ist zu nah an der Leiter. Das Krokodil frisst ihn,
+> und ist damit direkt beim Start des Kampfes quasi unmittelbar an der Leiter. Man hat keine Chance direkt am Anfang vom
+> Kampf den Aligator auszuweichen. Die Zombie Leiche inklusive der Kette - Schlüssel - Aligator Fressen etc. muss weiter
+> weg sein, damit man am Start des Kampfes eine Chance hat.
+
+Orchestrator-Messung (Baum r41_gatorszene da156ce6): Leon kommt ueber die Leiter bei (-8200, 0, -25550) Gier 0 in 2090 an
+(ROOM2080 Leiter-Tuer Slot 1 @0x0BC2: `3b 01 02 31 08 00 4e da da 99 e8 03 e8 03 f8 df 00 00 32 9c 00 00 01 09`). Leiche
+(-5500,-1740,-23700) Gier 384, Fressstelle = Rumpfmitte (-4594,-24306) - rund 3800 Einheiten von der Ankunft (gatorszene_r41.c
+GSZ_LEICHE_*; gewaehlt nach der Sichtbarkeit des Schluessels in Cut 1).
+
+**Auftrag an Spur F:** Leiche samt der ganzen Kette (Einstellung Leiche mit Schluessel, Zombies oben in 2080, erneut Leiche,
+Fressen, Schrei/Schuetteln Richtung Leon, Kampfbeginn mit RE2-Musik) so weit von der Leiter weg, dass man am Kampfbeginn
+ausweichen kann. Mass belegen statt schaetzen: Abstand Alligator <-> Leon und Bilder bis zum ersten Angriff (Biss-/Dash-Kontakt)
+am Kampfbeginn mindestens wie in RE2 am Ende des Alligator-Intros in ROOM40A0 (Intro-Startlage = Pos_set-Zwilling der Spur B,
+Dash-/Biss-Schwellen des RE2-Moduls mit @0x); reicht die Beckengeometrie von 2090 dafuer nicht, so weit wie die Wasserzonen
+erlauben, mit Zahlen im Dossier. Messen an der exe mit Leon UND Elza, einmal stehend, einmal sofort weglaufend (Ausweichen
+gelingt). Die Schluessel-Sichtbarkeit (Nachtrag 6: "sieht die Zombie Leiche mit dem Schluessel") an der neuen Lage neu waehlen
+und messen; die Szenenfolge bleibt sonst gleich. Riegel: Abstand und Bilder bis zum ersten Angriff >= Sollwert, bestehende
+F-Riegel mit Beleg (Nachtrag 29) nachziehen. Querbezug B/G: nur die Startlage des Kampfes aendert sich.
+
+## 2026-10-25 12:08 — Orchestrator-Entscheide G-E1/G-E2 (Abnahme G 2, Maengel M1/M2; der Nutzer kann widersprechen)
+
+**G-E1 (M1, Tod nicht im Bild):** Spur G behebt die Kamerawahl fuer den R1-Explosionstod in Spur B's Modul (gator_re2_r41.c,
+gr2_kam_r1_start / re15_gr2_kamera_wahl) mit markiertem Haken ("Runde 41 Spur G, G-E1"; FG-E3/FG-E5 gelten). Mass = RE2:
+R1 zeigt den Kopf in RE2-Cut 5 nahe der Bildmitte (Bild (170,111), Tabelle der Spur B "EXPLOSION"). Gewaehlt wird die
+2090/2091-Zonenkamera, in der Kopf und Kiefer mit Rand im Bild liegen und von keiner Maske verdeckt sind, am naechsten an der
+RE2-Lage; Messung in allen Verlaeufen (Riegel-Startlage (-6000,-17500), d15, v1, west, Plattform; Leon und Elza), Bildbogen,
+Riegel prueft den sichtbaren Kopf statt nur "R1 ende (Leiche)". Fs Schluessel-Einstellung nach dem Tod (F Nachbesserung 2)
+folgt danach; der Querbezug wird bei der Integration F+G gemessen.
+**G-E2 (M2, Werfer mit dem Ruecken zur Kamera):** Nachtrag 5 verlangt die RE2-Form ("GENAU wie die RE2-Szene, in der Ada den
+Raketenwerfer ... hinunterwirft"). Marvin/John stehen beim Satz 42 und beim Wurf in 2080 Cut 7 der Kamera zugewandt wie Ada
+(RE2 ROOM7020 Dir_set 0x0e74 @0x0748, Blick 0,99), die Kanister-Bahn laeuft in Weltrichtung zur Landestelle, unabhaengig von der
+Gier des Werfers (Add_speed @0x80055abc-e0). Messen fuer Nord- und Suedwurf, Leon und Elza, Bildbogen Cut 7 F530-F630, Riegel
+(Blickwert je Wurfrichtung).
