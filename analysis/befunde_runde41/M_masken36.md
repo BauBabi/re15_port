@@ -1070,6 +1070,36 @@ angefasst; seine Riegel bleiben gruen.
 - [ ] Mangel 2: roter Ordner 30A0/30A1 C0
 - [ ] Freistellungs-Liste neu, Bau, gezielte Tests, Abschluss-Commit
 
+### NB5 Messung vorher (Stand 2ea86d24 = NB3-Masken)
+* `git diff 1ad2c96e..2ea86d24 -- re15_port/shared_assets re15_port/engine re15_port/include` leer (Abnahme 4): MASKS, Ausschluss-Tabelle,
+  Modell-Tabelle (1025 Zeilen) und `RE15_PRI_MAX_MASKS_PER_CUT 105` = Stand NB3; `test_r37_masken36` saete Tueren ohne `--saat-tuer` auf Band 0.
+  Gezeichnete Generator-Punkte Leon Stage 3..6 983 624, "zu fern" 40 276 (Stage 6 39 934 = Gleisbett 6000 Band 0) - Zahlen der NB3/NB4.
+* Mangel 2: ROOM30A0 Cut 0, roter Ordner x 310..317 y 106..111 - 0 von 32 Bildpunkten gezeichnet (Abnahme 4 `mskio`), selbst nachgesehen s. unten.
+
+### NB5 RE-Belege (selbst disassembliert, `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`, info/Re1.5/PSX.EXE)
+* **Kapazitaet je Cut (M-E2 "Kapazitaet je Cut belegt")** - FUN_80039270 (Masken-Arena des Raums):
+  `80039270 lui a1,0x800b` / `80039274 addiu a1,a1,-14468` (a1 = 0x800ac77c, Arena-Kopf) / `80039278 lw v1,0(a1)` / `80039280 lw a0,-14472(a0)`
+  (a0 = *0x800ac778 = RDT-Kopf) / `80039288 sw v1,9604(at)` (0x800b2584) / **`8003928c lbu v0,7(a0)`** (Bytes `07 00 82 90`) / `80039294 sll v0,v0,2` /
+  `80039298 addu v0,v0,v1` / `800392a0 sw v0,-19244(at)` (0x800bb4d4) / `800392a4 lbu v1,7(a0)` / `800392ac sll v1,v1,5` / `800392b8 sw v1,-19240(at)`
+  (0x800bb4d8) / `800392bc lbu v0,7(a0)` / `800392c4 sll v0,v0,5` / `800392cc jr ra` / `800392d0 sw v0,0(a1)`. Die Zahl der Masken ist ein BYTE
+  (RDT-Kopf +7), je Maske 4 + 32 + 32 Bytes Arena; kein Vergleich gegen eine Konstante -> Grenze des Originals 255. Gezeichnet wird die
+  deklarierte Zahl als Byte (`80039358 sb t2,0(a0)`). Port: `RE15_PRI_MAX_MASKS_PER_CUT` 105 (= Daten-Maximum ROOM3000 C3) -> **128** fuer die
+  Port-Masken = Breite der Ausschluss-Tabelle (`masken36_r37.c` `bits[4]`, `idx >= 128` -> nie ausgeschlossen); Original-Sektionen (<= 105)
+  unberuehrt. Der Lader (`pri_common.c:125`), der PC-Zeichner (`render_pc.c` `RE15_PRI_RECTS_MAX`), `main.c:6082` und `optik_r39.c` haengen
+  an der Konstante (Felder wachsen mit, kein weiterer Code).
+* **Tuer-Band der Saaten (M-E2 "mitnehmen")** - AOT-Scan FUN_80042bac: `80042cac lbu v0,2(s0)` (`02 00 02 92`) / `80042cb4 andi v0,v0,0x80`
+  (`80 00 42 30`) / `80042cb8 bne v0,zero,0x80042cd4` (Bit 0x80 = jedes Band) / `80042cc0 lbu v1,130(s1)` (`82 00 23 92`, Band des Spielers +0x82) /
+  `80042cc4 lbu v0,2(s0)` / `80042ccc bne v1,v0,0x8004301c` (`d3 00 62 14`, anderes Band -> Satz uebersprungen). Port: `scd_vm.c:4110`
+  `g_aot.door_params[slot].band = t->pc[4]` (Door_aot_set), `slots[slot].band` bleibt bei Tueren 0 - das Werkzeug las `slots[].band`.
+  Umsetzung: `test_r37_masken36.c` `g_saat_tuer = 1` (Vorgabe), `--saat-alt` = Stand NB3 nur fuer Vergleiche.
+* **Tiefe aus der Zelle** - Figur-OT `8002565c sra v1,v1,4` (`03 19 03 00`, vorher `80025654 sra v0,v1,6` / `80025658 beq` = Nahgrenze),
+  ZSF3 `80066c70 addiu t0,zero,341` + `80066c74 ctc2` (0x48c8e800); Masken-OT `80039650 lh a0,2(s3)` (`02 00 64 86`) / `80039658 sll a0,a0,2` /
+  `8003965c addu a0,a0,s6` = Index depth. -> Maske verdeckt einen Figurpunkt gdw. depth < bucket(vz) = (1023*vz)>>16 (`re15_pri_mask_occludes`).
+  Eine Rechteck-Tiefe D = max bucket(Eintritt in den Koerper) ueber seine Punkte verdeckt keinen Figurpunkt VOR dem Koerper.
+* **ROOM30A0/30A1 hat im Original keine Masken** (Mangel 2): Kamerasaetze RDT+0x60/0x80/0xA0/0xC0, Feld +0x1C = pri_offset 0x3C0/0x3C4/0x3C8/0x3CC,
+  dort je `ff ff ff ff` (NULL-Sektion, FUN_800392d4 @0x80039324/0x8003932c), RDT-Kopfbyte 7 = 0 - beide Varianten. Die Port-Masken des Raums sind
+  die Kuenstler-Ausschnitte des SLD-Atlas im BSS (Entpacker FUN_800c47e8).
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):

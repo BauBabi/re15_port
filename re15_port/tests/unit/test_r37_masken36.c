@@ -2077,6 +2077,91 @@ static void such_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri0, const
     free(bss.roh); free(R2.roh); R2.roh = NULL;
 }
 
+/* ---- neustellen (Runde 41 Spur M, Nachbesserung 5; Werkzeug, kein Riegel): HINTER-/DAVOR-Stelle an den NEUEN Rechtecken --------
+ * Entscheid M-E2 verlangt je Kamera mit eingesetzten Original-Atlas-Teilen (tools/maske/platzieren_r41.py, Rechtecke ab Index `erstes`)
+ * mindestens eine HINTER- und eine DAVOR-Stelle an der exe. Gesucht wird ueber dieselben erreichbaren Stehplaetze, dasselbe
+ * pixelgenaue Figurraster und dieselbe Engine-Tabelle wie der Ausschluss (Figuren-Cull am Regionsviereck FUN_80014368):
+ *   HINTER = Platz mit den meisten Figurpunkten, die eine NEUE gezeichnete Maske verdeckt und keine alte (re15_pri_mask_occludes:
+ *            @0x8002565c otz>>4, ZSF3 341 @0x80066c70, Masken-OT = depth @0x80039650); Fenster = Kasten dieser Punkte;
+ *   DAVOR  = Platz mit den meisten Figurpunkten auf neuen Masken-Punkten, von denen KEINER verdeckt ist, und im Kasten dieser Punkte
+ *            ist kein Figurpunkt von irgendeiner Maske verdeckt (sonst misst die exe eine alte Maske mit).
+ * Ausgabe je Sektion: "NEU ROOMrrrr C<cut> H x z band punkte x0 y0 x1 y1 | V x z band punkte x0 y0 x1 y1" ("-" = keine Stelle). */
+static int teil_neustellen(unsigned r, int c, int erstes)
+{
+    static raum_t R; static uint16_t t_alle[240][320], t_neu[240][320], t_alt[240][320]; static uint8_t d_neu[240][320];
+    static figpt_t pt[FIGPT_MAX];
+    int np, nsp, ges, m, b, gx, gz, k, has_q, bh = 0, bv = 0;
+    int hx = 0, hz = 0, hb = 0, hk[4] = {0, 0, 0, 0}, vx = 0, vz_ = 0, vb = 0, vk[4] = {0, 0, 0, 0};
+    re15_camera_view_t v; double lx, lz, ll; char p[700]; uint8_t *msk; size_t mn = 0; re15_pri_cut_t pri; atlas_t bss;
+    uint32_t off; const uint8_t *idx; int16_t qx[4], qz[4]; unsigned mr = re15_pri_masken_raum(r);
+    saaten_sammeln();
+    snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, mr);
+    msk = slurp(p, &mn);
+    if (!msk || !(off = re15_pri_msk_section_offset(msk, mn, c)) || re15_pri_parse_section(msk, mn, off, &pri) <= 0
+        || !atlas_generator(r, c, &bss) || !raum_laden(&R, r) || re15_camera_build_view(&R.rdt.cuts[c], &v) != 0) {
+        printf("FEHLER ROOM%04X C%d\n", r, c); free(msk); return 1;
+    }
+    idx = (const uint8_t *) bss.tim.pixels;
+    for (k = 0; k < 240 * 320; k++) { (&t_alle[0][0])[k] = 0xFFFF; (&t_neu[0][0])[k] = 0xFFFF; (&t_alt[0][0])[k] = 0xFFFF; (&d_neu[0][0])[k] = 0; }
+    for (m = 0; m < pri.draw_count; m++) {
+        const re15_pri_mask_t *q = &pri.masks[m]; int dx = (int16_t) q->dstX, dy = (int16_t) q->dstY, u, w;
+        if (re15_masken36_ausgeschlossen(mr, c, m)) continue;
+        for (w = 0; w < q->height; w++)
+            for (u = 0; u < q->width; u++) {
+                int ax = q->srcX + u, ay = q->srcY + w, tx = dx + u, ty = dy + w;
+                if (ax >= bss.tim.width || ay >= bss.tim.height || tx < 0 || ty < 0 || tx >= 320 || ty >= 240) continue;
+                if (!idx[ay * bss.tim.width + ax]) continue;
+                if (q->depth < t_alle[ty][tx]) t_alle[ty][tx] = q->depth;
+                if (m >= erstes) { d_neu[ty][tx] = 1; if (q->depth < t_neu[ty][tx]) t_neu[ty][tx] = q->depth; }
+                else if (q->depth < t_alt[ty][tx]) t_alt[ty][tx] = q->depth;
+            }
+    }
+    has_q = re15_rdt_get_region_quad(&R.rdt, c, qx, qz);
+    lx = v.rot[0] / 4096.0; lz = v.rot[2] / 4096.0; ll = sqrt(lx * lx + lz * lz);
+    if (ll > 0) { lx /= ll; lz /= ll; }
+    for (b = 0; b < 16; b++)
+        for (gx = 0; gx < R.nx; gx++)
+            for (gz = 0; gz < R.nz; gz++) {
+                int wx = R.x0 + gx * SCHRITT, wz = R.z0 + gz * SCHRITT, on = 0, nh = 0, nv = 0, voll = 0;
+                int h0 = 9999, h1 = -1, i0 = 9999, i1 = -1, v0 = 9999, v1 = -1, j0 = 9999, j1 = -1;
+                if (!R.err[b][gx][gz] || (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz))) continue;
+                np = figur_raster(&v, wx, wz, b, lx, lz, pt, &nsp, &ges);
+                for (k = 0; k < np; k++) {
+                    int sx = pt[k].x, sy = pt[k].y;
+                    if (sx < 0 || sy < 0 || sx >= 320 || sy >= 240) continue;
+                    on++;
+                    if (d_neu[sy][sx]) {
+                        int occ_any = t_alle[sy][sx] != 0xFFFF && re15_pri_mask_occludes(t_alle[sy][sx], (long) pt[k].vz);
+                        int occ_neu = t_neu[sy][sx] != 0xFFFF && re15_pri_mask_occludes(t_neu[sy][sx], (long) pt[k].vz);
+                        int occ_alt = t_alt[sy][sx] != 0xFFFF && re15_pri_mask_occludes(t_alt[sy][sx], (long) pt[k].vz);
+                        if (occ_neu && !occ_alt) {
+                            nh++; if (sx < h0) h0 = sx; if (sx > h1) h1 = sx; if (sy < i0) i0 = sy; if (sy > i1) i1 = sy;
+                        }
+                        if (occ_any) voll = 1;
+                        else { nv++; if (sx < v0) v0 = sx; if (sx > v1) v1 = sx; if (sy < j0) j0 = sy; if (sy > j1) j1 = sy; }
+                    }
+                }
+                if (on * 9 < ges * 8) continue;      /* >= 8/9 der Figurpunkte im Bild (wie suche) */
+                if (nh > bh) { bh = nh; hx = wx; hz = wz; hb = b; hk[0] = h0; hk[1] = i0; hk[2] = h1; hk[3] = i1; }
+                if (!voll && nv > bv) {
+                    int sauber = 1;        /* im Kasten (+3) kein Figurpunkt von irgendeiner Maske verdeckt */
+                    for (k = 0; k < np && sauber; k++) {
+                        int sx = pt[k].x, sy = pt[k].y;
+                        if (sx < v0 - 3 || sx > v1 + 3 || sy < j0 - 3 || sy > j1 + 3 || sx < 0 || sy < 0 || sx >= 320 || sy >= 240) continue;
+                        if (t_alle[sy][sx] != 0xFFFF && re15_pri_mask_occludes(t_alle[sy][sx], (long) pt[k].vz)) sauber = 0;
+                    }
+                    if (sauber) { bv = nv; vx = wx; vz_ = wz; vb = b; vk[0] = v0; vk[1] = j0; vk[2] = v1; vk[3] = j1; }
+                }
+            }
+    printf("NEU ROOM%04X C%d H ", r, c);
+    if (bh > 0) printf("%d %d %d %d %d %d %d %d", hx, hz, hb, bh, hk[0], hk[1], hk[2], hk[3]); else printf("-");
+    printf(" | V ");
+    if (bv > 0) printf("%d %d %d %d %d %d %d %d", vx, vz_, vb, bv, vk[0], vk[1], vk[2], vk[3]); else printf("-");
+    printf("\n");
+    free(bss.roh); free(msk); free(R.roh); R.roh = NULL;
+    return 0;
+}
+
 static figpt_t g_pt[FIGPT_MAX];   /* Werkzeug fehl */
 
 /* Werkzeug punkt: eine beliebige Lage (nicht nur Gitterpunkte) - je Figurpunkt die vorderste Maske, ob sie verdeckt und ob
@@ -2154,6 +2239,8 @@ int main(int argc, char **argv)
         argc = j;
     }
     teil = (argc > 1) ? argv[1] : "alle";
+    if (!strcmp(teil, "neustellen") && argc > 4)        /* R41 NB5: HINTER-/DAVOR-Stelle an den neuen Rechtecken ab Index argv[4] */
+        return teil_neustellen((unsigned) strtoul(argv[2], NULL, 16), atoi(argv[3]), atoi(argv[4]));
     if (!strcmp(teil, "punkt") && argc > 5)
         return teil_punkt((unsigned) strtoul(argv[2], NULL, 16), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]),
                           argc > 6 ? atoi(argv[6]) : 0);
