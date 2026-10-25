@@ -8,7 +8,8 @@
   "Hoehe und Tiefe rechnet tiefe_zelle_r41.koerper_geometrie wie fuer jedes Objekt; ob ein Rechteck gezeichnet wird, entscheidet",
   "der Ausschluss (test_r37_masken36, 3D-Urteil: jeder verdeckte Figurpunkt hinter dem Koerper). Benutzt von zellen3d_r41.py.",
   "Bilder: analysis/befunde_runde41/M_bilder/NB2/NB2_zuordnung_*.png; Dossier M_masken36.md 'Nachbesserung 2'.",
-  "Nicht zulaessig (tiefe_zelle_r41: Kamera UEBER dem Grundriss der Zelle -> Nahfeld, keine Pruefung traegt die Tiefe): gemessen an 5050 C2 Pult vorn (381 verdeckte Gitterpunkte ohne jeden Koerper davor); deshalb auch nicht 5050 C1 Pult rechts, 30A0 C0 Moebel vorn, 5090 C11 Kiste vorn links (Dossier NB2)."
+  "Nicht zulaessig (tiefe_zelle_r41: Kamera UEBER dem Grundriss der Zelle -> Nahfeld, keine Pruefung traegt die Tiefe): gemessen an 5050 C2 Pult vorn (381 verdeckte Gitterpunkte ohne jeden Koerper davor); deshalb auch nicht 5050 C1 Pult rechts, 30A0 C0 Moebel vorn, 5090 C11 Kiste vorn links (Dossier NB2).",
+  "Nachbesserung 3 (Abnahme 2, Mangel 1): die oberen Trennwandfelder und Fussstreifen ROOM30A0 Cut 0/1 gehoeren zur Trennwand (Zelle 6) - vorher trugen sie die Tiefe der Rueckwand/Nordwand dahinter (Figur hinter der Trennwand als Halbfigur). Benutzt auch von kacheln_r41.py (Koerper je Objekt, Hoehe an allen Objekten derselben Zelle)."
  ],
  "ROOM5020": {
   "6": [
@@ -151,6 +152,45 @@
     ],
     "zelle": "0x0045C",
     "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Koerper-Silhouette bei gemessener Hoehe 525: IoU 0.30, 79 % des Objekts im Koerper; automatisch: Objekt: keine Zelle traegt die Mehrheit der Bodenkontakte (0.02); Bild M_bilder/NB2/NB2_zuordnung_30A0_00_-5_91.png"
+   },
+   {
+    "objekt": "Buero-Trennwand, rechtes Feld oben (Mattglas mit Zetteln)",
+    "verschiebung": [
+     232,
+     -24
+    ],
+    "punkt": [
+     270,
+     105
+    ],
+    "zelle": "0x0045C",
+    "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 1): Teil derselben Trennwand; Hoehe an ALLEN Trennwand-Objekten des Cuts gemessen (koerper_r41.hoehe_messen): 3025, IoU 0.908, 98 % der Objektpunkte im Koerper (nur die NB2-Teile: 1525, IoU 0.586); vorher automatisch: Zelle 8 @0x00474 (Rueckwand-Schraenke, R4/R5 Tiefe 200/199) - Abnahme 2 Mangel 1; Kamera C0 (-16896,-3600,9440) nicht ueber der Zelle; Bild M_bilder/NB3/NB3_zuordnung_30A0_00.png"
+   },
+   {
+    "objekt": "Buero-Trennwand, linkes Feld oben (Mattglas mit Plakat)",
+    "verschiebung": [
+     59,
+     43
+    ],
+    "punkt": [
+     200,
+     100
+    ],
+    "zelle": "0x0045C",
+    "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 1): Teil derselben Trennwand; Hoehe an ALLEN Trennwand-Objekten des Cuts gemessen (koerper_r41.hoehe_messen): 3025, IoU 0.908, 98 % der Objektpunkte im Koerper (nur die NB2-Teile: 1525, IoU 0.586); vorher automatisch: Zelle 0 @0x00414 (R19/R20/R21/R51 Tiefe 188..201, IoU 0.16) - Abnahme 2 Mangel 1; Kamera C0 (-16896,-3600,9440) nicht ueber der Zelle; Bild M_bilder/NB3/NB3_zuordnung_30A0_00.png"
+   },
+   {
+    "objekt": "Buero-Trennwand, Fussstreifen rechtes Feld",
+    "verschiebung": [
+     57,
+     86
+    ],
+    "punkt": [
+     280,
+     185
+    ],
+    "zelle": "0x0045C",
+    "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 1): Teil derselben Trennwand; Hoehe an ALLEN Trennwand-Objekten des Cuts gemessen (koerper_r41.hoehe_messen): 3025, IoU 0.908, 98 % der Objektpunkte im Koerper (nur die NB2-Teile: 1525, IoU 0.586); vorher automatisch: Zelle 6 mit Hoehe 25 (Bodenplatte, IoU 0.39); Kamera C0 (-16896,-3600,9440) nicht ueber der Zelle; Bild M_bilder/NB3/NB3_zuordnung_30A0_00.png"
    }
   ],
   "1": [
@@ -166,6 +206,32 @@
     ],
     "zelle": "0x0045C",
     "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Koerper-Silhouette bei gemessener Hoehe 1925: IoU 0.57, 98 % des Objekts im Koerper; automatisch: Objekt: keine Zelle traegt die Mehrheit der Bodenkontakte (0.46); Bild M_bilder/NB2/NB2_zuordnung_30A0_01_-120_118.png"
+   },
+   {
+    "objekt": "Buero-Trennwand, oberes Feld (Mattglas mit Zetteln)",
+    "verschiebung": [
+     -32,
+     70
+    ],
+    "punkt": [
+     40,
+     90
+    ],
+    "zelle": "0x0045C",
+    "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 1): Teil derselben Trennwand; Hoehe an ALLEN Trennwand-Objekten des Cuts gemessen (koerper_r41.hoehe_messen): 3225, IoU 0.930, 100 % der Objektpunkte im Koerper (nur der NB2-Teil: 1925, IoU 0.575); vorher automatisch: Zelle 1 @0x00420 (Nordwand, R4 Tiefe 207) - Abnahme 2 Mangel 1; Kamera C1 (-24744,-3300,9840) nicht ueber der Zelle; Bild M_bilder/NB3/NB3_zuordnung_30A0_01.png"
+   },
+   {
+    "objekt": "Buero-Trennwand, Fussstreifen",
+    "verschiebung": [
+     0,
+     126
+    ],
+    "punkt": [
+     20,
+     190
+    ],
+    "zelle": "0x0045C",
+    "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 1): Teil derselben Trennwand; Hoehe an ALLEN Trennwand-Objekten des Cuts gemessen (koerper_r41.hoehe_messen): 3225, IoU 0.930, 100 % der Objektpunkte im Koerper (nur der NB2-Teil: 1925, IoU 0.575); vorher automatisch: Zelle 6 mit Hoehe 275 (IoU 0.67); Kamera C1 (-24744,-3300,9840) nicht ueber der Zelle; Bild M_bilder/NB3/NB3_zuordnung_30A0_01.png"
    }
   ]
  },
