@@ -1367,7 +1367,8 @@ gleicher Code-Stand); Bildbelege im Baum unter `G_belege/nb4_*`.
 - [x] M3: Ursache belegt (Kopf/Kanister durch die Aussenwand), Kopf-Klemme + Regions-Test des Kanister-Zeichners (11.3, Riegel
       unit_r41_kanister2080_kopfklemme, kampf); Nachtrag waehrend der Messung: auch das andere Kanister-Ende (9009a99a), Endmessung 11.5
 - [x] M1: Rangfolge voller Todes-Clip zuerst (11.4, Riegel unit_r41_kanister2080_r1wahl, kampf + Plattform-Lauf)
-- [ ] Endmessung aller zehn Verlaeufe mit dem Endstand, Bildboegen, Tests gezielt, OFFEN, Fuer den Nutzer (11.5-11.8)
+- [x] Endmessung aller zehn Verlaeufe mit dem Endstand, Bildboegen (11.5), Tests gezielt unit 82/82 + integration 21/21 (11.6), OFFEN (11.7),
+      Fuer den Nutzer (11.8)
 
 ### 11.1 M2 - Kern-Zeilen 485..498 nach dem ersten 2090-Besuch in jedem Raum
 **Ursache (Code):** `re15_pc_gator_fx_draw` (gator_fx_r41_pc.c) lief in jedem Raum; der Zweig "kern485" pruefte weder Raum noch Herkunft,
@@ -1540,7 +1541,13 @@ dieselbe Verfolgung); die Logs sind verschieden (2090/2091, Werfer Marvin/John).
 - Integration (Zwischenstand vor dem zweiten Kanister-Ende): `-R "^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_kanister2080_raumfremd$|^integration_r41_re2gator$" -j4`
   -> `100% tests passed, 0 tests failed out of 4` (1448,40 s; kampf mit fuenf Laeufen: kampf_leon R1 (-4621,-8441), kampf_elza (-5153,-14712),
   nordost_leon (2321,-9486), west_elza (2971,-20467), plattform_leon).
-- Integration (Endstand): siehe 11.6a.
+- Integration (Endstand 63e50c22, gleiche Binaerdatei wie a863e029 - danach nur Kommentare): `ctest --test-dir re15_port/build -R "^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_kanister2080_raumfremd$|^integration_r41_re2gator$|^integration_r35_fenster$|^integration_r35_werfer$|^integration_r35_werfer_ton$|^integration_r35_werfer_elza$|^integration_r35_werfer_form$|^integration_r34_plattform_takt$|^integration_r34_plattform_esp_eintritt$|^integration_r36_schuss$|^integration_r39_hund1121$|^integration_r35_granate$|^integration_r36_granate$|^integration_r34_granaten$|^integration_r38_wasser$|^integration_r41_wasser20b0_npc$|^integration_r37_itemband$|^integration_r36_tueren$|^integration_r36_kartenitems_bild$" --timeout 3000 --output-on-failure -j4`
+  -> **`100% tests passed, 0 tests failed out of 21`** (Total Test time (real) = 1811.39 sec; kampf 1811,23 s, r37_itemband 868,33 s,
+  re2gator 344,48 s, kanister2080 214,73 s, raumfremd 68,88 s) - der Ausdruck der Abnahme 3 (20) plus integration_r41_kanister2080_raumfremd.
+  Riegel kampf (Lauf lauf_86a48c13, `<SP>/g4/r1sum.py`): kampf_leon R1 F1429 Cut 6, kampf_elza F2536 Cut 6, nordost_leon F1409 Cut 7,
+  west_elza F3040 Cut 1, plattform_leon F2659 Cut 1 - jeweils Kanister innerhalb der Aussenwaende, Start 8/8 (0 verdeckt, 0 ausserhalb),
+  Kopf ok, Kiefer ok, Todes-Clip 19/19, Spritzring-Quads 96..170, zehn Scherben-Bilder; dieselben Zahlen wie die Endmessung 11.5.
+- Messkopien re15_pc_g41nb4a..d.exe geloescht; Laeufe/Bilder im scratchpad `<SP>/g4`, im Baum nur `G_belege/nb4_*`.
 - Laufdauer des Riegels kampf: mit der Kopf-Klemme erreicht der Alligator Leon/Elza an der Wand nicht mehr mit dem Kopf durch die Wand;
   der passive Schuetze (Zielhilfe FUN_8003703c = naechster Gegner) zielt dann laenger auf die Spinnen (0x25/0x26, in diesem Zweig noch in
   2090; Hinweis B4 / Spur F entfernt sie). Gemessen mit dem Abnahme-Rezept (EXIT_AT 3000): die vier Elza-Laeufe mit Haken HP ohne R1 (k_elza:
@@ -1580,4 +1587,3 @@ Was sich im Spiel aendert:
 - Mit dem Kanister im Maul kommt der Alligator an Leon/Elza an einer Wand etwas weniger weit heran (der Kopf bleibt vor der Wand); beissen
   kann er weiterhin.
 Entscheidungsfragen: keine (V1 ist ohne Aenderung an render_pc.c geloest).
-
