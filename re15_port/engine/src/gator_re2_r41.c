@@ -323,13 +323,6 @@ static int gr2_fx(uint32_t a0, int16_t a1, const uint8_t mtx[32], const int16_t 
 {
     return re2fx_spawn_sofort(a0, a1, mtx, ofs);             /* FUN_8001bf10 = sofort lebendig */
 }
-/* Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M2): 1 = m ist eine Quellmatrix der R1-Folge (Fontaene FUN_80103eb4 an Part 6/7
- * `addiu a2,s2,1104` @0x80103f58 bzw. s2 + 1276, Spritzring FUN_8010338c an der Kanister-Matrix @0x8010344c-d0). Nur diese drei
- * Puffer reicht der Port an re2fx_spawn_sofort (Putz: Einheitsmatrix); Kinder erben den Zeiger (re2fx_platz_quelle). */
-int re15_gr2_fx_quelle_r1(const uint8_t *m)
-{
-    return m != NULL && (m == s_fx_mtx[GR2_FXM_TEIL6] || m == s_fx_mtx[GR2_FXM_TEIL7] || m == s_fx_mtx[GR2_FXM_KANISTER]);
-}
 
 /* ------------------------------------------------------------------------------------------ */
 void re15_gr2_reset(int slot, re15_gr2_se_fn se)
@@ -982,35 +975,36 @@ static void gr2_r1_beurteilen(int c, const re15_actor_t *e, const gr2_r1_pfad_t 
     }
     u->m = gr2_massstab(&g_room_rdt.cuts[c], P->start[0], gr2_scale(e));
 }
-/* Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M1): die Rangfolge als reine Funktion (Riegel unit_r41_kanister2080_r1wahl).
- * Stufe 0: VOLLE Kandidaten (Kopf und Kiefer im Start und in allen `proben` Proben des Todes-Clips) mit Massstab <= grenze oder
- * dem laufenden Cut; Stufe 1: volle ohne Grenze; Stufe 2: alle mit einem sichtbaren Punkt, die meisten Proben zuerst. Innerhalb
- * der Stufe: gueltiger Start, dann die meisten Start-Punkte, dann Kopf-Bildlage naechst (170,111); Gleichstand: frueherer Cut. */
+/* Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M1, Orchestrator-Entscheid G-E3): die Rangfolge als reine Funktion (Riegel
+ * unit_r41_kanister2080_r1wahl). G-E3: "1. Todes-Clip in allen Proben sichtbar, 2. Massstabsgrenze, 3. Naehe zur RE2-Lage
+ * (170,111)" - lexikografisch: VOLL (Kopf und Kiefer im Start und in allen `proben` Proben), dann die Zahl der sichtbaren Proben
+ * (fuer nicht volle), dann Massstab <= grenze oder der laufende Cut (kein Schnitt), dann Abstand der Kopf-Bildlage zu (170,111);
+ * erst bei Gleichstand gueltiger Start und Zahl der Start-Punkte, zuletzt der fruehere Cut. *stufe_aus: 0 = voll und unter der
+ * Grenze, 1 = voll ueber der Grenze, 2 = kein voller Kandidat. */
 int re15_gr2_r1_rang(const re15_gr2_r1_kand_t *k, int n, int cur, int32_t grenze, int proben, int *stufe_aus)
 {
-    for (int stufe = 0; stufe < 3; stufe++) {
-        int best = -1;
-        int64_t best_d = 0;
-        for (int i = 0; i < n; i++) {
-            const re15_gr2_r1_kand_t *u = &k[i];
-            const int voll = u->kopf_ok && u->kiefer_ok && proben > 0 && u->bilder == proben;
-            const int gok = stufe >= 1 || u->cut == cur || u->m <= grenze;
-            const int64_t d = (int64_t)(u->kx - GR2_R1_SOLL_X) * (u->kx - GR2_R1_SOLL_X) + (int64_t)(u->ky - GR2_R1_SOLL_Y) * (u->ky - GR2_R1_SOLL_Y);
-            if (!gok || (u->im == 0 && u->bilder == 0)) continue;
-            if (stufe < 2 && !voll) continue;
-            int besser = best < 0;
-            if (!besser) {
-                const re15_gr2_r1_kand_t *b = &k[best];
-                if (stufe == 2 && u->bilder != b->bilder) besser = u->bilder > b->bilder;   /* Stufe 2: Proben zuerst */
-                else if (u->start_ok != b->start_ok) besser = u->start_ok > b->start_ok;     /* (1) */
-                else if (u->im != b->im) besser = u->im > b->im;                             /* (2) */
-                else besser = d < best_d;                                                    /* (3) */
-            }
-            if (besser) { best = i; best_d = d; }
+    int best = -1, bv = 0, bg = 0;
+    int64_t bd = 0;
+    for (int i = 0; i < n; i++) {
+        const re15_gr2_r1_kand_t *u = &k[i];
+        if (u->im == 0 && u->bilder == 0) continue;
+        const int voll = u->kopf_ok && u->kiefer_ok && proben > 0 && u->bilder == proben;
+        const int gok = u->cut == cur || u->m <= grenze;
+        const int64_t d = (int64_t)(u->kx - GR2_R1_SOLL_X) * (u->kx - GR2_R1_SOLL_X) + (int64_t)(u->ky - GR2_R1_SOLL_Y) * (u->ky - GR2_R1_SOLL_Y);
+        int besser = best < 0;
+        if (!besser) {
+            const re15_gr2_r1_kand_t *b = &k[best];
+            if (voll != bv) besser = voll > bv;                                       /* 1. Todes-Clip in allen Proben */
+            else if (u->bilder != b->bilder) besser = u->bilder > b->bilder;          /*    (nicht volle: meiste Proben) */
+            else if (gok != bg) besser = gok > bg;                                    /* 2. Massstabsgrenze */
+            else if (d != bd) besser = d < bd;                                        /* 3. Naehe zu RE2 (170,111) */
+            else if (u->start_ok != b->start_ok) besser = u->start_ok > b->start_ok;  /* Gleichstand: gueltiger Start */
+            else besser = u->im > b->im;                                              /* dann Start-Punkte; sonst frueherer Cut */
         }
-        if (best >= 0) { if (stufe_aus) *stufe_aus = stufe; return best; }
+        if (besser) { best = i; bv = voll; bg = gok; bd = d; }
     }
-    return -1;
+    if (best >= 0 && stufe_aus) *stufe_aus = bv ? (bg ? 0 : 1) : 2;
+    return best;
 }
 static int gr2_r1_wahl(const re15_actor_t *e, const gr2_r1_pfad_t *P, int cur)
 {

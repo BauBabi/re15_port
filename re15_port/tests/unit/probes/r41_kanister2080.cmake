@@ -92,8 +92,8 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_kanister2080_kampf_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_kanister2080_kampf.cmake)
     set_tests_properties(integration_r41_kanister2080_kampf PROPERTIES TIMEOUT 3000)
-    # Nachbesserung 4 (Abnahme G 3 M2): Kern-CLUT-Zeilen 485..498 nur fuer die R1-Folge - derselbe Granatwerfer-Schuss in ROOM2080 mit
-    # und ohne vorherigen 2090-Besuch: gleiche Quads, in keinem Bild gezeichnet (s. Kopf des Skripts)
+    # Nachbesserung 4 (Abnahme G 3 M2, Entscheid G-E4): Kern-CLUT-Zeilen 485..498 ab dem Start in jedem Raum - derselbe Granatwerfer-Schuss in ROOM2080 mit
+    # und ohne vorherigen 2090-Besuch: gleiche Quads, alle gezeichnet (s. Kopf des Skripts)
     add_test(NAME integration_r41_kanister2080_raumfremd
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

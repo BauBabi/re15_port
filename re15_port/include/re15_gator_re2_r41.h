@@ -156,9 +156,6 @@ int  re15_gr2_kanister_welt(int32_t pos[3], int32_t rot[9]);
  * +0x1EC & 0x7fff. _weiter nach jedem gezeichneten Bild (FUN_800363f0 @0x800365bc-c8). */
 int  re15_gr2_kanister_scherben(int32_t *skala, uint32_t *farbe, int *bild);
 void re15_gr2_kanister_scherben_weiter(void);
-/* Runde 41 Spur G (Nachbesserung 4, M2): 1 = Matrix-Zeiger m (re2fx_platz_quelle) gehoert der R1-Folge (Fontaene Part 6/7,
- * Spritzring Kanister) - nur deren Plaetze zeichnet gator_fx_r41_pc.c mit den Kern-Zeilen 485..498. */
-int  re15_gr2_fx_quelle_r1(const uint8_t *m);
 /* Nachbesserung 4 (Abnahme 3, M1): Takt-ENDE des Boss-Takts (re15_gator_boss_tick nach der Wand-Klemme): Pose rechnen wie der
  * NPC-Zeichner sie in diesem Bild zeichnet (Ueberblendung + Kopf/Kiefer-az +0x22A/+0x228, ohne den Ueberblend-Schnappschuss zu
  * aendern), daraus Kanister-Anhaengen (FUN_8002d030 @0x801018f0 gegen die Part-6-Weltmatrix @0x801018d0-e0), Kanister-Weltlage
@@ -211,8 +208,8 @@ int  re15_gr2_kamera_wahl(int blick, const re15_actor_t *gator, const re15_actor
 extern int (*re15_gr2_maske_hook)(int cut, int sx, int sy, int32_t vz);
 /* Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M1): Rangfolge der R1-Kamerawahl als reine Funktion. Kandidat = Urteil einer
  * Zonenkamera (gr2_r1_beurteilen): start_ok/im = Start-Punkte (Kopf, Kiefer, 6 Spritzring-Punkte), bilder = sichtbare Proben des
- * Todes-Clips (von `proben`), kx/ky = Kopf-Bildlage, m = Massstab. Stufe 0: volle Kandidaten unter `grenze` (oder cut == cur),
- * Stufe 1: volle ohne Grenze, Stufe 2: meiste Proben. Rueckgabe = Index in k (-1 = keiner), *stufe = Stufe der Wahl. */
+ * Todes-Clips (von `proben`), kx/ky = Kopf-Bildlage, m = Massstab. Rangfolge G-E3: voller Todes-Clip, Massstabsgrenze (oder cut ==
+ * cur), Naehe zu (170,111). Rueckgabe = Index in k (-1 = keiner), *stufe = 0 voll/unter Grenze, 1 voll/darueber, 2 nicht voll. */
 typedef struct { int cut, start_ok, im, bilder, kopf_ok, kiefer_ok, kx, ky; int32_t m; } re15_gr2_r1_kand_t;
 int  re15_gr2_r1_rang(const re15_gr2_r1_kand_t *k, int n, int cur, int32_t grenze, int proben, int *stufe);
 /* Programm-Schnitt fuer Szenen (Spur F/G): Sperre setzen + auf die Wahl schneiden (Cut_chg-Zwilling);

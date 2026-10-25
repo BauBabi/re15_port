@@ -1727,13 +1727,3 @@ static void op_78(void)
     for (int o = 0x0C; o <= 0x10; o += 2)
         wr16(b, o, (uint16_t)(int16_t)(((int32_t)rds16(b, o) * s) / 3000));
 }
-
-/* Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M2): Herkunft eines Platzes = sein Matrix-Zeiger +0x6C (a2 des Spawns,
- * `sw a2,108(t0)` @0x8001cd6c; Mehrteil-Skripte kopieren ihn mit +0x18..+0x7B @0x8001ce38-6c, Kinder der Ops 41/42/69 erben ihn
- * ueber `lw a2,108(v1)` = kind_an_matrix). Der PC-Zeichner der Kanister-Explosion (gator_fx_r41_pc.c) zeichnet die Kern-Zeilen
- * 485..498 nur fuer Plaetze, deren Zeiger eine Quellmatrix der R1-Folge ist (re15_gr2_fx_quelle_r1). NULL = Platz frei. */
-const uint8_t *re2fx_platz_quelle(int i)
-{
-    if (i < 0 || i >= RE2FX_PLAETZE || rd16(s_pool[i].b, 0x18) == 0) return NULL;
-    return s_pool[i].mtx_src;
-}

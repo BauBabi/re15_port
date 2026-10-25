@@ -1,20 +1,21 @@
 # =============================================================================
-# Runde 41 Spur G "kanister2080", Nachbesserung 4 (Abnahme G 3, Mangel M2): die Zeichnung der RE2-Kern-CLUT-Zeilen 485..498
-# (platform/pc/src/gator_fx_r41_pc.c) darf nicht davon abhaengen, ob in diesem Prozess schon ROOM2090/2091 betreten wurde.
+# Runde 41 Spur G "kanister2080", Nachbesserung 4 (Abnahme G 3, Mangel M2; Orchestrator-Entscheid G-E4): die Zeichnung der RE2-Kern-
+# CLUT-Zeilen 485..498 (platform/pc/src/gator_fx_r41_pc.c) darf nicht davon abhaengen, ob in diesem Prozess schon ROOM2090/2091
+# betreten wurde.
 #
 # Vorher gemessen (Abnahme 3 Abschnitt 5): derselbe Granatwerfer-Schuss (Id 15, Runde 35) in ROOM2080, gleiche Lage (-9950,-25700)
 # Gier 2907 Cut 4 - ohne 2090-Besuch "gezeichnet G 0 (kern485 0 raum 0)", nach dem Leiterweg aus 2090 "gezeichnet G 6 (kern485 6
 # raum 0)" (Muendungsblitz 0x01002000 = Kern-Bank 1 Zeile 492, Granatkoerner 0x020c0a00 = Zeile 495).
-# Jetzt zeichnet der Zeichner Kern-485-Quads nur fuer Plaetze der R1-Folge des Alligators (Matrix-Zeiger +0x6C `sw a2,108(t0)`
-# @0x8001cd6c = Fontaene Part 6/7 bzw. Spritzring-Kanister; re2fx_platz_quelle / re15_gr2_fx_quelle_r1) - alle anderen laesst der
-# Port in jedem Raum aus wie re2fx_pc.c (Kommentar N5).
+# G-E4: RE2 haelt den Kern ab dem Start resident (Boot-Task 0x8002b6d4 laedt "TEX TIM" @0x8002b8b0-dc nach VRAM (768,256), CLUT
+# (256,480) 32 x 19; CORE00.ESP FUN_8001babc @0x8001bb38-8c, aus TITLE.BIN @0x801062dc) - der Port laedt die Zeilen 485..498 jetzt
+# beim ersten Bild (Platz 56) und zeichnet sie in jedem Raum.
 #
 # Zwei Laeufe (RE15_GATOR_FX_LOG=1):
 #   direkt    RE15_DEBUG_JUMP=2080, Schuss aus der Lage des Abnahme-Laufs gl_2080_direkt
 #   nach2090  RE15_DEBUG_JUMP=2090 (ohne Alligator), Leiter DOOR16 nach 2080, derselbe Schuss (Lauf gl_2080_nach2090)
-# Gefordert: in beiden Laeufen Kern-485-Quads in ROOM2080 vorhanden (der Schuss fand statt) und in KEINEM ROOM2080-Bild gezeichnet
-# ("gezeichnet G 0", alle als "kern485 fremd" gezaehlt); die Folge der Quad-Zahlen (Quads, kern480, kern485) nach dem Schuss ist in
-# beiden Laeufen gleich; im Lauf nach2090 war die Raum-ESP ROOM40A0 registriert (Atlas geladen) und wurde beim Verlassen ausgetragen.
+# Gefordert: in beiden Laeufen die Kern-Zeilen ab dem Start geladen; in ROOM2080 Kern-485-Quads vorhanden UND alle gezeichnet
+# ("gezeichnet G" = kern485, raum 0); die Folge (Quads, kern480, kern485, gezeichnet) nach dem Schuss in beiden Laeufen gleich; im Lauf
+# nach2090 war die Raum-ESP ROOM40A0 registriert und wurde beim Verlassen ausgetragen.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_kanister2080_raumfremd.cmake
 # =============================================================================
@@ -64,45 +65,46 @@ foreach(_lauf direkt nach2090)
     if(NOT _rv EQUAL 0)
         r41gr_fehler("Lauf ${_lauf}: exe exit=${_rv}")
     endif()
+    file(STRINGS "${WORKDIR}/debug.log" _kl REGEX "\\[gator-fx\\] F[0-9]+ Kern-Zeilen 485\\.\\.498 \\(RE2 TEX\\.TIM\\) Slot 56 ok")
+    if(NOT _kl)
+        r41gr_fehler("Lauf ${_lauf}: Kern-Zeilen 485..498 nicht ab dem Start geladen (G-E4)")
+    endif()
     file(STRINGS "${WORKDIR}/debug.log" _z REGEX "\\[gator-fx\\] F[0-9]+ ROOM2080 R1 0 reg40A0 0 ")
     set(_folge "")
     set(_vorhanden 0)
     foreach(_l IN LISTS _z)
-        if(NOT _l MATCHES "Quads ([0-9]+): kern480 ([0-9]+) kern485 ([0-9]+) raum [0-9]+ glas [0-9]+ rest [0-9]+ \\| gezeichnet G ([0-9]+) \\(kern485 ([0-9]+) raum ([0-9]+)\\).* \\| kern485 fremd ([0-9]+) ")
+        if(NOT _l MATCHES "Quads ([0-9]+): kern480 ([0-9]+) kern485 ([0-9]+) raum [0-9]+ glas [0-9]+ rest [0-9]+ \\| gezeichnet G ([0-9]+) \\(kern485 ([0-9]+) raum ([0-9]+)\\)")
             r41gr_fehler("Lauf ${_lauf}: Messzeile unlesbar: '${_l}'")
         endif()
-        if(NOT CMAKE_MATCH_4 EQUAL 0)
-            r41gr_fehler("Lauf ${_lauf}: Kern-485-Quads in ROOM2080 gezeichnet (Nebenwirkung M2): '${_l}'")
-        endif()
-        if(NOT CMAKE_MATCH_7 EQUAL CMAKE_MATCH_3)
-            r41gr_fehler("Lauf ${_lauf}: kern485 ${CMAKE_MATCH_3} != fremd ${CMAKE_MATCH_7}: '${_l}'")
+        if(NOT CMAKE_MATCH_5 EQUAL CMAKE_MATCH_3 OR NOT CMAKE_MATCH_6 EQUAL 0 OR NOT CMAKE_MATCH_4 EQUAL CMAKE_MATCH_3)
+            r41gr_fehler("Lauf ${_lauf}: nicht alle Kern-485-Quads gezeichnet (G-E4): '${_l}'")
         endif()
         if(CMAKE_MATCH_3 GREATER 0)
             set(_vorhanden 1)
         endif()
-        list(APPEND _folge "${CMAKE_MATCH_1}/${CMAKE_MATCH_2}/${CMAKE_MATCH_3}")
+        list(APPEND _folge "${CMAKE_MATCH_1}/${CMAKE_MATCH_2}/${CMAKE_MATCH_3}/${CMAKE_MATCH_4}")
     endforeach()
     if(NOT _vorhanden)
         r41gr_fehler("Lauf ${_lauf}: keine Kern-485-Quads in ROOM2080 - der Schuss hat nicht stattgefunden (Riegel prueft nichts)")
     endif()
     set(_folge_${_lauf} "${_folge}")
     list(LENGTH _folge _n)
-    message(STATUS "r41_kanister2080_raumfremd ${_lauf}: ${_n} ROOM2080-Bilder mit RE2-Effekten, gezeichnet G 0 in allen")
+    message(STATUS "r41_kanister2080_raumfremd ${_lauf}: ${_n} ROOM2080-Bilder mit RE2-Effekten, alle Kern-485-Quads gezeichnet")
 endforeach()
 
 # Im Lauf nach2090 war die Raum-ESP ROOM40A0 registriert und wurde beim Wechsel nach 2080 ausgetragen
 file(STRINGS "${_basis}/nach2090/debug.log" _reg REGEX "\\[gator-fx\\] F[0-9]+ ROOM2090: Raum-ESP ROOM40A0 -> re2fx_register_raum rc=0")
 file(STRINGS "${_basis}/nach2090/debug.log" _aus REGEX "\\[gator-fx\\] F[0-9]+ ROOM2080: Raum-ESP ROOM40A0 ausgetragen")
-file(STRINGS "${_basis}/nach2090/debug.log" _atl REGEX "\\[gator-fx\\] GATOR40A0.ESP [0-9]+ B .*Atlas Slot 54 ok")
+file(STRINGS "${_basis}/nach2090/debug.log" _atl REGEX "\\[gator-fx\\] GATOR40A0.ESP [0-9]+ B .*Raum-Atlas Slot 54 ok")
 if(NOT _reg OR NOT _aus OR NOT _atl)
     r41gr_fehler("Lauf nach2090: 2090-Besuch nicht belegt (Registrierung '${_reg}', Austragen '${_aus}', Atlas '${_atl}')")
 endif()
-# Derselbe Schuss: die Quad-Folge ab dem ersten Bild mit Kern-485-Quads gleich
+# Derselbe Schuss: die Folge ab dem ersten Bild mit Kern-485-Quads gleich
 foreach(_lauf direkt nach2090)
     set(_ab "")
     set(_an 0)
     foreach(_e IN LISTS _folge_${_lauf})
-        if(NOT _an AND _e MATCHES "/[1-9][0-9]*$")
+        if(NOT _an AND _e MATCHES "^[0-9]+/[0-9]+/[1-9][0-9]*/")
             set(_an 1)
         endif()
         if(_an)
@@ -116,8 +118,8 @@ foreach(_lauf direkt nach2090)
     set(_ab_${_lauf} "${_ab}")
 endforeach()
 if(NOT "${_ab_direkt}" STREQUAL "${_ab_nach2090}")
-    r41gr_fehler("Quad-Folge nach dem Schuss verschieden: direkt '${_ab_direkt}' / nach2090 '${_ab_nach2090}'")
+    r41gr_fehler("Folge nach dem Schuss verschieden: direkt '${_ab_direkt}' / nach2090 '${_ab_nach2090}'")
 endif()
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_kanister2080_raumfremd: derselbe Schuss mit/ohne 2090-Besuch gleich (Quads/kern480/kern485: ${_ab_direkt}), Kern-485 nie gezeichnet")
+message(STATUS "r41_kanister2080_raumfremd: derselbe Schuss mit/ohne 2090-Besuch gleich gezeichnet (Quads/kern480/kern485/gezeichnet: ${_ab_direkt})")
