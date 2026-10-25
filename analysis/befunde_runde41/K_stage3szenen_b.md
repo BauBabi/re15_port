@@ -489,11 +489,16 @@ Gegenproben: 3091-Auswertung am Vorher-Lauf lauf_7d91e6dc FAIL (0 Spruenge); mar
 * `ctest --test-dir re15_port/build -R "r41_stage3szenen" -j 3 --timeout 2400 --output-on-failure`
   -> **`100% tests passed, 0 tests failed out of 11`** (Total Test time (real) = 142.57 sec; Bau df63abea, die Weste-Korrektur
   896e3014 aendert nur sherry_r41.c + Riegel waffe, danach unit-Teile einzeln gruen)
-* `ctest --test-dir re15_port/build -R "^(unit|probe|prop)_" -j 5 --timeout 900` (alle Einheiten-Gruppen, weil der
+* Bau 896e3014: `ctest --test-dir re15_port/build -R "^(unit|probe|prop)_" -j 5 --timeout 900` (alle Einheiten-Gruppen, weil der
   player_common.c-Haken jeden Spieler-Plc_motion trifft) -> **`99% tests passed, 7 tests failed out of 924`**; die 7 roten
   sind ausschliesslich Zeitablaeufe der Release-/Android-Skripttests (unit_r35_android_pruefkette,
   unit_r35_android_bash_mutanten, unit_r38_releaseskript_{trocken,ablauf,fehler_bau,fehler_umfeld,cmd}; 1200-1500 s,
   Last durch parallele Spuren) - dieselbe Gruppe wie in Abnahme 0 (dort 6), Spur K beruehrt weder release/ noch
   platform/android/.
-* Integration (laeuft): Regex `K41nb1/integ_regex.txt` (63 Tests: Szenen-/Raumgruppen mit Spieler-Plc_motion + die 17 der
-  ersten Runde) - Ergebnis folgt.
+* Integration der beruehrten Module/Raeume (Szenen mit Spieler-Plc_motion, Weste/Kleidung/Zielen/Klettern/Raumwechsel,
+  Elza-EMS 3071/3091, Roy 1011/1021/1170, John 1041, Dining 1141, Heliport 1171, 11B0/11C0/10F0/1150):
+  `ctest --test-dir re15_port/build -R "^integration_(r37_elzaems_elza3091|r37_elzaems_elza3071|weste_load_pin|r36_kleidung_bild|r36_kleidung_spielweg|r39_zustand_kleidung|r39_dining1141_zielen|r36_klettern|room_transition|r36_elza_schuss|r36_schuss|r36_ziel1190_scheiben|r39_inventar_status|r37_szene11c0|r36_szene1150|r30_cut_blitz|r34n_g_schrift1150|r35_cut10f0|r35_cut1150|r36_szenenleon|r37_elzaems_elza1141|r37_roy_szene1011|r37_roy_szene1021|r37_roy_leon1170|r38_dining1141_.*|r38_elzatoene_.*|r38_heliport1171_.*|r38_szenenschutz|r38_werkstatt11b0|r39_dining1141_.*|r39_gegner_1141|r39_heliport1171_.*|r39_johnruf1041_.*|r39_parkplatz11c0_.*|r39_stimmen_.*|r39_toene_szene.*)$" -j 2 --timeout 2400 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 63`** (Total Test time (real) = 3951.97 sec)
+* Nach der Westen-Korrektur (896e3014) die eigenen Riegel erneut: `ctest --test-dir re15_port/build -R "r41_stage3szenen"
+  -j 3 --timeout 2400 --output-on-failure` -> **`100% tests passed, 0 tests failed out of 11`** (Total Test time (real) =
+  146.59 sec).
