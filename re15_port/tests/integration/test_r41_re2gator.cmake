@@ -65,6 +65,10 @@
 #   Kanister spaeter auf (gemessen Nachbesserung F 1: "RE2 KANISTER angehaengt ... F1227", vorher Abnahme B 3 C3n F1119), bis
 #   EXIT_AT 1400 nur 150 angehaengte Bilder -> RE15_EXIT_AT 1400 -> 1500 (+100 = Verschiebung 108 aufgerundet auf die naechsten
 #   100); die Schranke >= 200 Bilder bei Abweichung 0 bleibt.
+#   (d) Orchestrator-Entscheid F-E1 ("die 2090-Ankunftsszene ersetzt das RE2-Intro ... der Riegel prueft den Auftritt ueber F's
+#   Szene (Clip-Folge/Schnitte)"): SECHSTER Lauf "szene" ueber die Leiter ohne Bit 110 - kein RE2-Intro, Szenen-Schnitte
+#   DURCHBRUCH -> FINISHER -> Ende, Clip-Folge 6/4/5/11/0/10 am state.log. Die fuenf Laeufe oben pruefen B's Kampf (mit dem
+#   RE2-Intro beim WIEDER-Betreten nach der Szene, Bits 110/113) unveraendert.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_re2gator.cmake
 # =============================================================================
@@ -670,4 +674,82 @@ if(_mo2 LESS 145 OR _mo3 LESS 290)
     message(FATAL_ERROR "r41_re2gator: Lauf dash Clip-Bilder Clip 2 ${_mo2} / Clip 3 ${_mo3} (erwartet 150 / 300)")
 endif()
 r41b_gier_wache("${_basis}/dash" "dash" _gw2)
-message(STATUS "r41_re2gator: ok — ${_status1} | ${_status3} | ${_status4} | ${_status5} | dash: DASH ${_dash}/${_dash_ende} wand ${_dash_wand}, Putz ${_putz_runden} x 9 = ${_putz_gesamt}, gezeichnet bis ${_ps_gez} Quads/Bild in ${_ps_n} Messbildern, Clip 2/3 ${_mo2}/${_mo3}, ${_gw2}")
+
+# ---------------------------------------------------------------- Lauf 6: Auftritt ueber die 2090-Ankunftsszene (Spur F)
+# Querbezug Runde 41 Spur F, Orchestrator-Entscheid F-E1 (Abnahme F 0, M4): "die 2090-Ankunftsszene ersetzt das RE2-Intro
+# (Nachtrag 6) -> der Riegel prueft den Auftritt ueber F's Szene (Clip-Folge/Schnitte), B's uebrige Pruefungen bleiben
+# unveraendert gruen". Echter Weg wie integration_r41_gatorszene_leon: Rechner (3,245), Leiter ROOM2080 Slot 1 @0x00BC2 -> 2090,
+# ohne Bit 110. Verlangt im dritten 2090-Besuch (P3): (a) KEIN RE2-Intro ("RE2 INTRO start" fehlt - die Szene ersetzt Sub 0
+# @0x8010086c-948 beim ersten Betreten); (b) die Szenen-Schnitte der Kamera-API dieser Spur: DURCHBRUCH (RE2-Cut 10) vor
+# FINISHER (RE2-Cut 7, Fressen) und "KAMERA SZENE ... Ende"; (c) die Clip-Folge des Alligators im state.log (t=23 mo=): 6
+# (Durchbruch @0x801008ac-b8) -> 4 (FRESSEN P1 @0x801010ec-f4) -> 5 (P2 @0x80101180-88) -> 11 (P3 @0x801011d8-e0) -> 0
+# (Wende, Blend 32 @0x80100c38) -> 10 (Schrei R4 @0x80102c40-48); (d) keine Zeile "GIER-SPRUNG".
+set(_dir "${_basis}/szene")
+file(MAKE_DIRECTORY "${_dir}")
+file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")   # die Kopie entfernte der Lauf dash
+set(WORKDIR "${_dir}")
+re15_start_spiel(_rv 300
+    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
+    SDL_ASSERT=always_ignore
+    RE15_SET_FLAG=3:245
+    RE15_DEBUG_JUMP=2080@250 "RE15_FIRE_AOT=1@40#2080"
+    RE15_STATE_LOG=state.log
+    "RE15_EXIT_AT=420#2090"
+    "${_exe_kopie}")
+if(NOT _rv EQUAL 0)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf szene exe exit=${_rv} (erwartet 0 bis RE15_EXIT_AT), ${_dir}")
+endif()
+file(STRINGS "${_dir}/gator_boss.log" _sz_intro REGEX "^RE2 INTRO start")
+if(_sz_intro)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf szene - RE2-Intro trotz Ankunftsszene gestartet: ${_sz_intro}")
+endif()
+file(STRINGS "${_dir}/gator_boss.log" _sz_kam REGEX "^RE2 KAMERA SZENE ")
+set(_sz_durch -1)
+set(_sz_fin -1)
+set(_sz_ende 0)
+foreach(_l IN LISTS _sz_kam)
+    if(_l MATCHES "^RE2 KAMERA SZENE DURCHBRUCH RE2-Cut 10 -> Cut ([0-9]+) ")
+        set(_sz_durch ${CMAKE_MATCH_1})
+    elseif(_l MATCHES "^RE2 KAMERA SZENE FINISHER RE2-Cut 7 -> Cut ([0-9]+) " AND NOT _sz_durch EQUAL -1)
+        set(_sz_fin ${CMAKE_MATCH_1})
+    elseif(_l MATCHES "Ende" AND NOT _sz_fin EQUAL -1)
+        set(_sz_ende 1)
+    endif()
+endforeach()
+if(_sz_durch EQUAL -1 OR _sz_fin EQUAL -1 OR NOT _sz_ende)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf szene - Schnitte DURCHBRUCH ${_sz_durch} / FINISHER ${_sz_fin} / Ende ${_sz_ende} fehlen")
+endif()
+file(STRINGS "${_dir}/state.log" _sz_zl REGEX " t=23 ")
+set(_sz_folge "")
+set(_sz_letzt -1)
+foreach(_l IN LISTS _sz_zl)
+    if(_l MATCHES " t=23 st=[0-9]+ ss1=[0-9]+ ss2=[0-9]+ ss3=[0-9]+ g=[0-9a-f]+ mo=([0-9]+) af=")
+        if(NOT CMAKE_MATCH_1 EQUAL _sz_letzt)
+            list(APPEND _sz_folge ${CMAKE_MATCH_1})
+            set(_sz_letzt ${CMAKE_MATCH_1})
+        endif()
+    endif()
+endforeach()
+set(_sz_soll 6 4 5 11 0 10)
+set(_sz_i 0)
+list(LENGTH _sz_soll _sz_n)
+foreach(_m IN LISTS _sz_folge)
+    if(_sz_i LESS _sz_n)
+        list(GET _sz_soll ${_sz_i} _sz_w)
+        if(_m EQUAL _sz_w)
+            math(EXPR _sz_i "${_sz_i} + 1")
+        endif()
+    endif()
+endforeach()
+if(_sz_i LESS _sz_n)
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r41_re2gator: Lauf szene - Clip-Folge 6/4/5/11/0/10 nicht vollstaendig (erreicht ${_sz_i} von ${_sz_n}), "
+                        "state.log mo-Folge '${_sz_folge}'")
+endif()
+r41b_gier_wache("${_dir}" "szene" _gw6)
+set(_status6 "szene: kein RE2-Intro, Schnitte DURCHBRUCH Cut ${_sz_durch} -> FINISHER Cut ${_sz_fin} -> Ende, Clip-Folge 6/4/5/11/0/10, ${_gw6}")
+file(REMOVE "${_exe_kopie}")
+message(STATUS "r41_re2gator: ok — ${_status1} | ${_status3} | ${_status4} | ${_status5} | dash: DASH ${_dash}/${_dash_ende} wand ${_dash_wand}, Putz ${_putz_runden} x 9 = ${_putz_gesamt}, gezeichnet bis ${_ps_gez} Quads/Bild in ${_ps_n} Messbildern, Clip 2/3 ${_mo2}/${_mo3}, ${_gw2} | ${_status6}")

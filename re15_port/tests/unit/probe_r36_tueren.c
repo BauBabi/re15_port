@@ -363,6 +363,19 @@ static void teil_schott(void)
      * Aligator bekommt geoeffnet werden!"): 2090 Slot 1 @0x009B6 ist bis Bank 9 Bit 113 (Tor aufgeschlossen) ein sce-3-Ereignis
      * (gatorszene_r41.c tor_sperren), Bit 110 (Szene gesehen) haelt die Ankunftsszene fern. Gemessen wird hier weiter die Tuer
      * DOOR26 V0 dieses Durchgangs - also im Zustand NACH dem Aufschliessen. Das Gesperrt-Sein misst unit_r41_gatorszene_tor. */
+    /* Orchestrator-Entscheid F-E1: verschlossen VOR (9,113) - kein Door_aot_set nach 20A0 mehr aktiv (Slot 1 umgewidmet) -,
+     * begehbar DANACH (DOOR26 V0 wie bisher). */
+    s_n_flags = 1; s_flags[0][0] = 9; s_flags[0][1] = 110;
+    if (room_boot(0x2090) == 0) {
+        int tueren = 0;
+        for (int i = 0; i < RE15_AOT_MAX; i++) {
+            const re15_aot_t *a = &g_aot.slots[i];
+            if (a->active && a->type == RE15_AOT_TYPE_DOOR && g_aot.door_params[i].dest_room == 0x0A &&
+                g_aot.door_params[i].dest_stage == 1) tueren++;
+        }
+        printf("ROOM2090 ohne (9,113): %d begehbare Tuer(en) nach ROOM20A0\n", tueren);
+        PRUEF(tueren == 0, "ROOM2090: Tor nach ROOM20A0 vor (9,113) begehbar (%d Tuer-Saetze), soll verschlossen (Nachtrag 21)", tueren);
+    }
     s_n_flags = 2; s_flags[0][0] = 9; s_flags[0][1] = 110; s_flags[1][0] = 9; s_flags[1][1] = 113;
     durchgang_pruefen(0x2090, 0x20A0, 0x26, 0);
     s_n_flags = 0;

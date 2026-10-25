@@ -353,10 +353,10 @@ Belegbilder: `F_belege/n1_*.png`.
 
 | Riegel | Ursache | Querbezug / Aenderung | Ergebnis |
 |---|---|---|---|
-| unit_r36_tueren_schott | Nachtrag 21: 2090 Slot 1 @0x009B6 bis Bit 113 sce-3-Ereignis | Durchgang 2090 -> 20A0 (DOOR26 V0) mit (9,110)+(9,113) im Zustand NACH dem Aufschliessen; das Gesperrt-Sein misst unit_r41_gatorszene_tor | gruen |
-| unit_r38_spinnen (Teil D) | Nutzer-Punkt 2: Saetze @0x00AB0/@0x00AC4 verworfen | Zeile ROOM2090 misst die Spinnen-Mechanik an den Original-Saetzen, Verwerfen nur fuer diese Zeile aus (Muster probe_sca_wall_hit C2) | gruen |
+| unit_r36_tueren_schott | Nachtrag 21: 2090 Slot 1 @0x009B6 bis Bit 113 sce-3-Ereignis | nach Orchestrator-Entscheid F-E1: ohne (9,113) keine begehbare Tuer nach 20A0 (`ROOM2090 ohne (9,113): 0 begehbare Tuer(en)`), mit (9,110)+(9,113) Durchgang DOOR26 V0 wie bisher | gruen |
+| unit_r38_spinnen (Teil D) | Nutzer-Punkt 2: Saetze @0x00AB0/@0x00AC4 verworfen | nach F-E1: 2090 aus der Spinnen-Erwartung, die Zeile verlangt jetzt 0 Spinnen (`RE1.5/RE2 ROOM2090: 0 Spinnen`), uebrige Raeume unveraendert (erste Fassung dieser Nachbesserung mass 2090 mit abgeschaltetem Verwerfen - ersetzt) | gruen |
 | unit_r30_tuer_verschlossen | 20A0/20A1 Slot 0 @0x01746 zeigt jetzt msg 1 (Stelle von Platz 8) + M3 | 54 Plaetze (K 16 / M 38 / S 0), weiterhin 47 Stellen; je Platz 1 Ton | gruen |
-| integration_r41_re2gator (Spur B) | (a) ohne Bit 110 startet die Ankunftsszene, Tor 20A0 -> 2090 bis Bit 113 zu; (b) ohne Spinnen trafen Leon in "nische" zwei Spinnen-Treffer weniger (Abnahme B 6 Lauf A2: 100 -> 80 F57 -> 60 F175, Gator 10 F290 -> -40 F397); (c) "kanister": Aufnahme F1227 statt F1119 | alle Laeufe RE15_SET_FLAG=9:110,9:113; nische RE15_R41_HP_AT=175:60 (Messhaken Spur D) = dieselbe HP wie mit den Spinnen; kanister RE15_EXIT_AT 1400 -> 1500 (Schranke >= 200 Bilder bleibt). Querbezug im Kopf der Datei | gruen: nische hp 100 -> 60 F175 -> 10 F290 -> -40 F397, FINISHER Cut 6 ab F398; kanister angehaengt F1227, 270 Bilder, Abweichung 0 |
+| integration_r41_re2gator (Spur B) | (a) ohne Bit 110 startet die Ankunftsszene, Tor 20A0 -> 2090 bis Bit 113 zu; (b) ohne Spinnen trafen Leon in "nische" zwei Spinnen-Treffer weniger (Abnahme B 6 Lauf A2: 100 -> 80 F57 -> 60 F175, Gator 10 F290 -> -40 F397); (c) "kanister": Aufnahme F1227 statt F1119 | die fuenf Kampf-Laeufe RE15_SET_FLAG=9:110,9:113 (B's RE2-Intro beim WIEDER-Betreten nach der Szene); nische RE15_R41_HP_AT=175:60 (Messhaken Spur D) = dieselbe HP wie mit den Spinnen; kanister RE15_EXIT_AT 1400 -> 1500 (Schranke >= 200 Bilder bleibt); nach F-E1 SECHSTER Lauf "szene" (Leiter, ohne Bit 110): Auftritt ueber F's Szene. Querbezug im Kopf der Datei | gruen: nische hp 100 -> 60 F175 -> 10 F290 -> -40 F397, FINISHER Cut 6 ab F397; kanister angehaengt F1227, 270 Bilder, Abweichung 0; szene: kein RE2-Intro, Schnitte DURCHBRUCH Cut 7 -> FINISHER Cut 0 -> Ende, Clip-Folge 6/4/5/11/0/10, kein Gier-Sprung |
 
 ### N1.M5 Blinken in der Ankunftseinstellung gesaettigt
 
@@ -399,6 +399,9 @@ Nach der letzten Code-Aenderung (key_suche: Reihenfolge der Pruefungen nach Kost
 erneut die betroffene Gruppe: `ctest --test-dir "<baum>/re15_port/build" -R "^(unit_r41_gatorszene_|integration_r41_gatorszene_|integration_r41_re2gator$)" -j3 --timeout 900 -V`
 -> `100% tests passed, 0 tests failed out of 14` (Total Test time (real) = 242.85 sec; tod/tod_elza wieder 60/60 Bilder,
 75 -> 111, gleiche Lage (-1300,-1729,-24000)).
+Nach dem Orchestrator-Entscheid F-E1 (AUFTRAG.md 2026-10-25 02:51, waehrend dieser Nachbesserung in den Zweig gelegt) die drei
+angepassten Fremd-Riegel erneut: `ctest --test-dir "<baum>/re15_port/build" -R "^(unit_r36_tueren_schott|unit_r38_spinnen|
+integration_r41_re2gator)$" -j3 --timeout 1000 -V` -> `100% tests passed, 0 tests failed out of 3` (Total Test time (real) = 293.18 sec).
 
 ### N1 OFFEN
 
