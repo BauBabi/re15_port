@@ -909,3 +909,21 @@ Raketenwerfer ... hinunterwirft"). Marvin/John stehen beim Satz 42 und beim Wurf
 (RE2 ROOM7020 Dir_set 0x0e74 @0x0748, Blick 0,99), die Kanister-Bahn laeuft in Weltrichtung zur Landestelle, unabhaengig von der
 Gier des Werfers (Add_speed @0x80055abc-e0). Messen fuer Nord- und Suedwurf, Leon und Elza, Bildbogen Cut 7 F530-F630, Riegel
 (Blickwert je Wurfrichtung).
+
+## 2026-10-25 14:40 — Orchestrator-Entscheid F-E2 (Fragen der Nachbesserung F 4 zu Nachtrag 29; der Nutzer kann widersprechen)
+
+Fragen der Spur F: "Der Alligator ist beim Kampfbeginn jetzt rund 17500 Einheiten entfernt: stehend beisst er nach etwa 15 s,
+beim sofortigen Wegrennen nach etwa 17 s (vorher nach 2 s bzw. 1 s). Passt dir die Entfernung so, oder ist der Anlauf jetzt zu
+lang?" und "Die Leiche mit dem blinkenden Schluessel treibt jetzt im hinteren Nordbecken ... der Schluessel dunkler als vorher.
+Ist er fuer dich gut zu erkennen?" Keine Geschmacksfrage, wo das Original einen Wert hat (Memory reai-v2-original-oder-nicht):
+1. **Kampfbeginn = RE2, nicht "mindestens":** so nah wie moeglich an F's eigenem RE2-Beleg (ROOM40A0 Intro-Ende: Abstand 11430,
+   erster Kontakt nach 121 Bildern bei stehendem Leon; tools/r41_gatorszene/probe_re2_intro_ende.c), nicht darunter. 17539 und
+   470 Bilder sind fast das Vierfache und kein RE2-Kampfbeginn. Liegt der Unterschied an der Zonen-Dash-Sperre (300 Bilder beim
+   Wechsel in Leons Zone), die Lage so waehlen, dass die Zonenbeziehung am Kampfbeginn der von RE2 am Intro-Ende entspricht
+   (in RE2 belegen).
+2. **Schluessel:** mindestens so gut sichtbar wie in der abgenommenen Ankunftseinstellung (hellster Pixel Ruhe >= 72,
+   Blink-Spitze >= 108, Kasten >= 10 x 9), gemessen.
+3. **Fressen:** die Leiche im Maul ist zu sehen (Fress-Einstellung nicht von hinten, Frontalwert > 0); B8 bleibt (keine
+   erfundenen Hintergruende, Massstabsgrenze) - der Freiheitsgrad ist die Lage der Leiche (Nachtrag 6).
+Unter 1-3 die Lage mit dem besten Schluessel-Wert; geht nicht alles zugleich, gilt 1 vor 2 vor 3, Abweichungen mit Zahlen im
+Dossier. Riegel unit_r41_gatorszene_abstand/_flucht: Sollwert RE2 mit oberer UND unterer Grenze aus dem RE2-Beleg.
