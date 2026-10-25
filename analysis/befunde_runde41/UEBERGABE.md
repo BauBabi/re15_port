@@ -7,7 +7,7 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
-* 2026-10-25 14:50: Integration C+K: Tests GRUEN (unit/prop/probe 963/963 am Endstand 7cf41fc9, C 290/290 + 3/3 + 4/4, K-Spur 17/17, C-Raum 17/17, K-Integrationsgruppe 77/77, Querbezuege 40/40); Fixes d1edabbc (R36-Riegel 2050 obj 8 mit Bit 106, Beleg ROOM2050.RDT @0x01D30 / PSX.EXE @0x8003ed74) und 45cc6246 (E x K Sherry-Renntempo); Kette A+C in Ordnung (Leon und Elza bis 2050/2051), Riegel _kette flakig -> §3b. Gegenpruefung laeuft.
+* 2026-10-25 14:38: Integration C+K: Tests GRUEN (unit/prop/probe 963/963 am Endstand 7cf41fc9, C 290/290 + 3/3 + 4/4, K-Spur 17/17, C-Raum 17/17, K-Integrationsgruppe 77/77, Querbezuege 40/40); Fixes d1edabbc (R36-Riegel 2050 obj 8 mit Bit 106, Beleg ROOM2050.RDT @0x01D30 / PSX.EXE @0x8003ed74) und 45cc6246 (E x K Sherry-Renntempo); Kette A+C in Ordnung (Leon und Elza bis 2050/2051), Riegel _kette flakig -> §3b. Gegenpruefung laeuft.
 
 * 2026-10-25 14:30: M Nachbesserung 4 fertig (Mangel 1 an der exe widerlegt + Riegel _stirn, Mangel 3 Laufpruefung, Restliste nach M-E1 auf NB3 zurueck); Befund: Gelaender/Pfosten/Saeulen/Lampen STAGE3-6 liegen im Original-Vordergrundatlas (platzieren_r41.py, 437 Teile in 74 Sektionen) -> Entscheid M-E2 (a90bce6f): Original-Teile einsetzen, Tuer-Band-Fix @0x80042cac mitnehmen, teilen_r41.py nicht. M Abnahme 4 laeuft (wf_6d1c4408-277, letzte des Laufs) -> danach M-Lauf fuer M-E2. Integration nur mit bestandenem Stand.
 
