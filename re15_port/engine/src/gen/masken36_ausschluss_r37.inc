@@ -4,19 +4,19 @@
  * tests/unit/gen_r41_masken36_zellen.inc). Grundlagen und Messaufbau: Kopf von test_r37_masken36.c,
  * Dossier analysis/befunde_runde37/P_masken36.md. Spalten: Raum der MSK-Datei, Cut, Zahl, Bitfeld je Rechteck. */
 static const re15_masken36_zeile_t re15_masken36_zeilen[] = {
-    { 0x3040,  0,  11, { 0x0B00057Cu, 0x00000010u, 0x00000000u, 0x00000000u } },   /* 11 von 49 Masken, Stehplaetze 2710 */
+    { 0x3040,  0,   1, { 0x00000000u, 0x00000000u, 0x00000100u, 0x00000000u } },   /* 1 von 74 Masken, Stehplaetze 2710 */
     { 0x3040,  1,  19, { 0x0007FFFFu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 19 von 19 Masken, Stehplaetze 4716 */
     { 0x3040,  3,  21, { 0x00302600u, 0x2F800000u, 0x000027FAu, 0x00000000u } },   /* 21 von 105 Masken, Stehplaetze 4451 */
     { 0x3040,  7,   1, { 0x00000000u, 0x00000400u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 3817 */
     { 0x3040,  8,   4, { 0x00000000u, 0x88080000u, 0x00008000u, 0x00000000u } },   /* 4 von 105 Masken, Stehplaetze 2923 */
-    { 0x3040,  9,   4, { 0x00800008u, 0x00000000u, 0x00500000u, 0x00000000u } },   /* 4 von 105 Masken, Stehplaetze 4955 */
+    { 0x3040,  9,   4, { 0x00080000u, 0x00000000u, 0x0000A800u, 0x00000000u } },   /* 4 von 104 Masken, Stehplaetze 4955 */
     { 0x3040, 10,   1, { 0x00000040u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 15 Masken, Stehplaetze 5140 */
-    { 0x3041,  0,  11, { 0x0B00057Cu, 0x00000010u, 0x00000000u, 0x00000000u } },   /* 11 von 49 Masken, Stehplaetze 2710 */
+    { 0x3041,  0,   1, { 0x00000000u, 0x00000000u, 0x00000100u, 0x00000000u } },   /* 1 von 74 Masken, Stehplaetze 2710 */
     { 0x3041,  1,  19, { 0x0007FFFFu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 19 von 19 Masken, Stehplaetze 4716 */
     { 0x3041,  3,  21, { 0x00302600u, 0x2F800000u, 0x000027FAu, 0x00000000u } },   /* 21 von 105 Masken, Stehplaetze 4451 */
     { 0x3041,  7,   1, { 0x00000000u, 0x00000400u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 3817 */
     { 0x3041,  8,   4, { 0x00000000u, 0x88080000u, 0x00008000u, 0x00000000u } },   /* 4 von 105 Masken, Stehplaetze 2923 */
-    { 0x3041,  9,   4, { 0x00800008u, 0x00000000u, 0x00500000u, 0x00000000u } },   /* 4 von 105 Masken, Stehplaetze 4955 */
+    { 0x3041,  9,   4, { 0x00080000u, 0x00000000u, 0x0000A800u, 0x00000000u } },   /* 4 von 104 Masken, Stehplaetze 4955 */
     { 0x3041, 10,   1, { 0x00000040u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 15 Masken, Stehplaetze 5140 */
     { 0x3050,  1,   3, { 0x00000000u, 0x00041800u, 0x00000000u, 0x00000000u } },   /* 3 von 105 Masken, Stehplaetze 7242 */
     { 0x3050,  2,   3, { 0x00020000u, 0x00000000u, 0x00001000u, 0x00000020u } },   /* 3 von 105 Masken, Stehplaetze 16454 */
@@ -24,24 +24,24 @@ static const re15_masken36_zeile_t re15_masken36_zeilen[] = {
     { 0x3050,  5,  21, { 0x00FF0000u, 0x00008680u, 0x041CB800u, 0x00000002u } },   /* 21 von 105 Masken, Stehplaetze 23303 */
     { 0x3050,  6,  19, { 0x0007FFFFu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 19 von 19 Masken, Stehplaetze 19340 */
     { 0x3050,  7,  26, { 0x00001FFFu, 0x00000200u, 0x002FF320u, 0x00000000u } },   /* 26 von 88 Masken, Stehplaetze 9622 */
-    { 0x3050,  9,   1, { 0x01000000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 29106 */
+    { 0x3050,  9,   1, { 0x20000000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 80 Masken, Stehplaetze 29106 */
     { 0x3050, 13,  11, { 0x00110002u, 0x00000120u, 0x00000BA8u, 0x00000000u } },   /* 11 von 105 Masken, Stehplaetze 11941 */
-    { 0x3050, 15,  70, { 0xFFFFFFFFu, 0xFFFFFFFFu, 0x0000003Fu, 0x00000000u } },   /* 70 von 70 Masken, Stehplaetze 0 */
+    { 0x3050, 15,  66, { 0xFFFFFFFFu, 0xFFFFFFFFu, 0x00000003u, 0x00000000u } },   /* 66 von 66 Masken, Stehplaetze 0 */
     { 0x3051,  1,   3, { 0x00000000u, 0x00041800u, 0x00000000u, 0x00000000u } },   /* 3 von 105 Masken, Stehplaetze 7242 */
     { 0x3051,  2,   3, { 0x00020000u, 0x00000000u, 0x00001000u, 0x00000020u } },   /* 3 von 105 Masken, Stehplaetze 16454 */
     { 0x3051,  4,   7, { 0x00000020u, 0x00000000u, 0xC0000001u, 0x00000181u } },   /* 7 von 105 Masken, Stehplaetze 11976 */
     { 0x3051,  5,  21, { 0x00FF0000u, 0x00008680u, 0x041CB800u, 0x00000002u } },   /* 21 von 105 Masken, Stehplaetze 23303 */
     { 0x3051,  6,  19, { 0x0007FFFFu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 19 von 19 Masken, Stehplaetze 19340 */
     { 0x3051,  7,  26, { 0x00001FFFu, 0x00000200u, 0x002FF320u, 0x00000000u } },   /* 26 von 88 Masken, Stehplaetze 9622 */
-    { 0x3051,  9,   1, { 0x01000000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 29106 */
+    { 0x3051,  9,   1, { 0x20000000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 80 Masken, Stehplaetze 29106 */
     { 0x3051, 13,  11, { 0x00110002u, 0x00000120u, 0x00000BA8u, 0x00000000u } },   /* 11 von 105 Masken, Stehplaetze 11941 */
-    { 0x3051, 15,  70, { 0xFFFFFFFFu, 0xFFFFFFFFu, 0x0000003Fu, 0x00000000u } },   /* 70 von 70 Masken, Stehplaetze 0 */
-    { 0x30A0,  0,  11, { 0x80000000u, 0x0000003Fu, 0x00000000u, 0x000001E0u } },   /* 11 von 105 Masken, Stehplaetze 4172 */
-    { 0x30A0,  1,  13, { 0xB0000000u, 0x05000001u, 0x23000A30u, 0x00000000u } },   /* 13 von 105 Masken, Stehplaetze 3742 */
-    { 0x30A0,  3,  27, { 0x00300000u, 0x00003FF0u, 0xFA000000u, 0x000001FFu } },   /* 27 von 105 Masken, Stehplaetze 2014 */
-    { 0x30A1,  0,  11, { 0x80000000u, 0x0000003Fu, 0x00000000u, 0x000001E0u } },   /* 11 von 105 Masken, Stehplaetze 4172 */
-    { 0x30A1,  1,  13, { 0xB0000000u, 0x05000001u, 0x23000A30u, 0x00000000u } },   /* 13 von 105 Masken, Stehplaetze 3742 */
-    { 0x30A1,  3,  27, { 0x00300000u, 0x00003FF0u, 0xFA000000u, 0x000001FFu } },   /* 27 von 105 Masken, Stehplaetze 2014 */
+    { 0x3051, 15,  66, { 0xFFFFFFFFu, 0xFFFFFFFFu, 0x00000003u, 0x00000000u } },   /* 66 von 66 Masken, Stehplaetze 0 */
+    { 0x30A0,  0,   1, { 0x00000000u, 0x00000000u, 0x08000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 4172 */
+    { 0x30A0,  1,   1, { 0x00000000u, 0x02000000u, 0x00000000u, 0x00000000u } },   /* 1 von 61 Masken, Stehplaetze 3742 */
+    { 0x30A0,  3,   7, { 0x00000000u, 0x00000000u, 0x00000000u, 0x000001FCu } },   /* 7 von 105 Masken, Stehplaetze 2014 */
+    { 0x30A1,  0,   1, { 0x00000000u, 0x00000000u, 0x08000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 4172 */
+    { 0x30A1,  1,   1, { 0x00000000u, 0x02000000u, 0x00000000u, 0x00000000u } },   /* 1 von 61 Masken, Stehplaetze 3742 */
+    { 0x30A1,  3,   7, { 0x00000000u, 0x00000000u, 0x00000000u, 0x000001FCu } },   /* 7 von 105 Masken, Stehplaetze 2014 */
     { 0x30E0,  6,  35, { 0xFFFFFFFFu, 0x00000007u, 0x00000000u, 0x00000000u } },   /* 35 von 35 Masken, Stehplaetze 4290 */
     { 0x30E0,  7,  53, { 0xFFFFFFFFu, 0x001FFFFFu, 0x00000000u, 0x00000000u } },   /* 53 von 53 Masken, Stehplaetze 10657 */
     { 0x30E0,  8,  33, { 0xFFFFFFBFu, 0x00000003u, 0x00000000u, 0x00000000u } },   /* 33 von 36 Masken, Stehplaetze 5197 */
@@ -51,50 +51,44 @@ static const re15_masken36_zeile_t re15_masken36_zeilen[] = {
     { 0x30E1,  8,  33, { 0xFFFFFFBFu, 0x00000003u, 0x00000000u, 0x00000000u } },   /* 33 von 36 Masken, Stehplaetze 5197 */
     { 0x30E1,  9,  70, { 0xFFF7EFFFu, 0xC7FF7E7Fu, 0x0000FEFEu, 0x00000000u } },   /* 70 von 80 Masken, Stehplaetze 1738 */
     { 0x4040,  4,  11, { 0x00001FB7u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 11 von 13 Masken, Stehplaetze 6076 */
-    { 0x4040,  5,  27, { 0x287FC200u, 0x078599BCu, 0x00000000u, 0x00000000u } },   /* 27 von 59 Masken, Stehplaetze 11039 */
-    { 0x4040,  6,   7, { 0x540000E0u, 0x00000001u, 0x00000000u, 0x00000000u } },   /* 7 von 33 Masken, Stehplaetze 11948 */
-    { 0x4040,  7,   4, { 0x00003810u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 4 von 14 Masken, Stehplaetze 13896 */
-    { 0x4040,  9,   9, { 0xE0000050u, 0x000000E2u, 0x00000000u, 0x00000000u } },   /* 9 von 41 Masken, Stehplaetze 6845 */
-    { 0x4040, 10,   7, { 0x3C000013u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 7 von 32 Masken, Stehplaetze 8236 */
-    { 0x4040, 11,  10, { 0x0C000000u, 0x00000677u, 0x00000000u, 0x00000000u } },   /* 10 von 94 Masken, Stehplaetze 5426 */
+    { 0x4040,  5,   7, { 0x00002800u, 0x0000007Cu, 0x00000000u, 0x00000000u } },   /* 7 von 42 Masken, Stehplaetze 11039 */
+    { 0x4040,  9,   5, { 0x000000B0u, 0x00000030u, 0x00000000u, 0x00000000u } },   /* 5 von 38 Masken, Stehplaetze 6845 */
+    { 0x4040, 10,   2, { 0x00C00000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 2 von 25 Masken, Stehplaetze 8236 */
+    { 0x4040, 11,   4, { 0x00000000u, 0x00003000u, 0x80000000u, 0x00000001u } },   /* 4 von 99 Masken, Stehplaetze 5426 */
     { 0x4041,  4,  11, { 0x00001FB7u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 11 von 13 Masken, Stehplaetze 6076 */
-    { 0x4041,  5,  27, { 0x287FC200u, 0x078599BCu, 0x00000000u, 0x00000000u } },   /* 27 von 59 Masken, Stehplaetze 11039 */
-    { 0x4041,  6,   7, { 0x540000E0u, 0x00000001u, 0x00000000u, 0x00000000u } },   /* 7 von 33 Masken, Stehplaetze 11948 */
-    { 0x4041,  7,   4, { 0x00003810u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 4 von 14 Masken, Stehplaetze 13896 */
-    { 0x4041,  9,   9, { 0xE0000050u, 0x000000E2u, 0x00000000u, 0x00000000u } },   /* 9 von 41 Masken, Stehplaetze 6845 */
-    { 0x4041, 10,   7, { 0x3C000013u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 7 von 32 Masken, Stehplaetze 8236 */
-    { 0x4041, 11,  10, { 0x0C000000u, 0x00000677u, 0x00000000u, 0x00000000u } },   /* 10 von 94 Masken, Stehplaetze 5426 */
+    { 0x4041,  5,   7, { 0x00002800u, 0x0000007Cu, 0x00000000u, 0x00000000u } },   /* 7 von 42 Masken, Stehplaetze 11039 */
+    { 0x4041,  9,   5, { 0x000000B0u, 0x00000030u, 0x00000000u, 0x00000000u } },   /* 5 von 38 Masken, Stehplaetze 6845 */
+    { 0x4041, 10,   2, { 0x00C00000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 2 von 25 Masken, Stehplaetze 8236 */
+    { 0x4041, 11,   4, { 0x00000000u, 0x00003000u, 0x80000000u, 0x00000001u } },   /* 4 von 99 Masken, Stehplaetze 5426 */
     { 0x4080,  1,   6, { 0x00007068u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 6 von 15 Masken, Stehplaetze 12005 */
     { 0x4080,  2,  19, { 0x0FF850FFu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 19 von 28 Masken, Stehplaetze 12005 */
     { 0x4080,  3,  11, { 0x007E01F0u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 11 von 23 Masken, Stehplaetze 12005 */
     { 0x4080,  5,  18, { 0xFF802AF6u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 18 von 32 Masken, Stehplaetze 8768 */
     { 0x4080,  6,  19, { 0xFE400957u, 0x0000000Fu, 0x00000000u, 0x00000000u } },   /* 19 von 36 Masken, Stehplaetze 8768 */
-    { 0x4080,  7,   5, { 0x20021280u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 5 von 30 Masken, Stehplaetze 8768 */
+    { 0x4080,  7,   3, { 0x02400000u, 0x00000040u, 0x00000000u, 0x00000000u } },   /* 3 von 40 Masken, Stehplaetze 8768 */
     { 0x4081,  1,   6, { 0x00007068u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 6 von 15 Masken, Stehplaetze 12005 */
     { 0x4081,  2,  19, { 0x0FF850FFu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 19 von 28 Masken, Stehplaetze 12005 */
     { 0x4081,  3,  11, { 0x007E01F0u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 11 von 23 Masken, Stehplaetze 12005 */
     { 0x4081,  5,  18, { 0xFF802AF6u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 18 von 32 Masken, Stehplaetze 8768 */
     { 0x4081,  6,  19, { 0xFE400957u, 0x0000000Fu, 0x00000000u, 0x00000000u } },   /* 19 von 36 Masken, Stehplaetze 8768 */
-    { 0x4081,  7,   5, { 0x20021280u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 5 von 30 Masken, Stehplaetze 8768 */
-    { 0x5020,  0,   1, { 0x20000000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 6549 */
+    { 0x4081,  7,   3, { 0x02400000u, 0x00000040u, 0x00000000u, 0x00000000u } },   /* 3 von 40 Masken, Stehplaetze 8768 */
+    { 0x5020,  0,   1, { 0x00000000u, 0x00004000u, 0x00000000u, 0x00000000u } },   /* 1 von 104 Masken, Stehplaetze 6549 */
     { 0x5020,  6,  18, { 0x000036ACu, 0x00000000u, 0x40285C00u, 0x0000000Eu } },   /* 18 von 105 Masken, Stehplaetze 3804 */
-    { 0x5020,  7,   2, { 0x00000000u, 0x00000020u, 0x00008000u, 0x00000000u } },   /* 2 von 105 Masken, Stehplaetze 6615 */
+    { 0x5020,  7,   1, { 0x00000000u, 0x00000000u, 0x00010000u, 0x00000000u } },   /* 1 von 104 Masken, Stehplaetze 6615 */
     { 0x5020, 11,   2, { 0x00000003u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 2 von 105 Masken, Stehplaetze 4089 */
     { 0x5020, 12,   3, { 0x00030001u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 3 von 28 Masken, Stehplaetze 1050 */
-    { 0x5021,  0,   1, { 0x20000000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 6549 */
+    { 0x5021,  0,   1, { 0x00000000u, 0x00004000u, 0x00000000u, 0x00000000u } },   /* 1 von 104 Masken, Stehplaetze 6549 */
     { 0x5021,  6,  18, { 0x000036ACu, 0x00000000u, 0x40285C00u, 0x0000000Eu } },   /* 18 von 105 Masken, Stehplaetze 3804 */
-    { 0x5021,  7,   2, { 0x00000000u, 0x00000020u, 0x00008000u, 0x00000000u } },   /* 2 von 105 Masken, Stehplaetze 6615 */
+    { 0x5021,  7,   1, { 0x00000000u, 0x00000000u, 0x00010000u, 0x00000000u } },   /* 1 von 104 Masken, Stehplaetze 6615 */
     { 0x5021, 11,   2, { 0x00000003u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 2 von 105 Masken, Stehplaetze 4089 */
     { 0x5021, 12,   3, { 0x00030001u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 3 von 28 Masken, Stehplaetze 1050 */
     { 0x5050,  0,   5, { 0x00010708u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 5 von 22 Masken, Stehplaetze 5464 */
-    { 0x5050,  1,  20, { 0x00402EDFu, 0x0100A800u, 0x84000000u, 0x00000042u } },   /* 20 von 105 Masken, Stehplaetze 5464 */
+    { 0x5050,  1,   5, { 0x00000800u, 0x00000000u, 0x00017000u, 0x00000000u } },   /* 5 von 81 Masken, Stehplaetze 5464 */
     { 0x5050,  2,  86, { 0xFFFFFFFFu, 0xFF8001FFu, 0xFFFF2BFEu, 0x000001FFu } },   /* 86 von 105 Masken, Stehplaetze 5464 */
     { 0x5051,  0,   5, { 0x00010708u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 5 von 22 Masken, Stehplaetze 5464 */
-    { 0x5051,  1,  20, { 0x00402EDFu, 0x0100A800u, 0x84000000u, 0x00000042u } },   /* 20 von 105 Masken, Stehplaetze 5464 */
+    { 0x5051,  1,   5, { 0x00000800u, 0x00000000u, 0x00017000u, 0x00000000u } },   /* 5 von 81 Masken, Stehplaetze 5464 */
     { 0x5051,  2,  86, { 0xFFFFFFFFu, 0xFF8001FFu, 0xFFFF2BFEu, 0x000001FFu } },   /* 86 von 105 Masken, Stehplaetze 5464 */
-    { 0x5090, 13,   1, { 0x00000000u, 0x00000400u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 7892 */
     { 0x5090, 14,   5, { 0x00000000u, 0x05400000u, 0x80000000u, 0x00000008u } },   /* 5 von 105 Masken, Stehplaetze 2206 */
-    { 0x5091, 13,   1, { 0x00000000u, 0x00000400u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 7892 */
     { 0x5091, 14,   5, { 0x00000000u, 0x05400000u, 0x80000000u, 0x00000008u } },   /* 5 von 105 Masken, Stehplaetze 2206 */
     { 0x50B0,  1,   5, { 0x00000000u, 0x00030083u, 0x00000000u, 0x00000000u } },   /* 5 von 60 Masken, Stehplaetze 14960 */
     { 0x50B0,  2,   1, { 0x00000000u, 0x20000000u, 0x00000000u, 0x00000000u } },   /* 1 von 105 Masken, Stehplaetze 14960 */
@@ -113,15 +107,15 @@ static const re15_masken36_zeile_t re15_masken36_zeilen[] = {
     { 0x5101,  6,  41, { 0x03FF8000u, 0x06FF8100u, 0xFFEE0000u, 0x0000000Fu } },   /* 41 von 105 Masken, Stehplaetze 5844 */
     { 0x5101,  7,  19, { 0xF0003F00u, 0x000001FFu, 0x00000000u, 0x00000000u } },   /* 19 von 41 Masken, Stehplaetze 5045 */
     { 0x6000,  3,   1, { 0x00000080u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 11 Masken, Stehplaetze 31514 */
-    { 0x6000,  5,  23, { 0x007FE000u, 0x00000040u, 0xC1580004u, 0x000001F0u } },   /* 23 von 105 Masken, Stehplaetze 49536 */
-    { 0x6000,  7,  26, { 0x004139B7u, 0x00015C00u, 0x48500000u, 0x0000011Du } },   /* 26 von 105 Masken, Stehplaetze 15663 */
-    { 0x6000,  8,  27, { 0x00000000u, 0x065CF360u, 0x4010B800u, 0x000001DDu } },   /* 27 von 105 Masken, Stehplaetze 46983 */
-    { 0x6000,  9,  16, { 0x3A8001FFu, 0x00000003u, 0x00000000u, 0x00000000u } },   /* 16 von 35 Masken, Stehplaetze 38470 */
+    { 0x6000,  5,  14, { 0x03FEA000u, 0x00000000u, 0x00000000u, 0x0000000Eu } },   /* 14 von 103 Masken, Stehplaetze 49536 */
+    { 0x6000,  7,  26, { 0x004139B7u, 0x00057000u, 0x75214000u, 0x00000004u } },   /* 26 von 105 Masken, Stehplaetze 15663 */
+    { 0x6000,  8,   2, { 0x00000000u, 0x00000000u, 0xC0000000u, 0x00000000u } },   /* 2 von 105 Masken, Stehplaetze 46983 */
+    { 0x6000,  9,   1, { 0x00400000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 31 Masken, Stehplaetze 38470 */
     { 0x6001,  3,   1, { 0x00000080u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 11 Masken, Stehplaetze 31514 */
-    { 0x6001,  5,  23, { 0x007FE000u, 0x00000040u, 0xC1580004u, 0x000001F0u } },   /* 23 von 105 Masken, Stehplaetze 49536 */
-    { 0x6001,  7,  26, { 0x004139B7u, 0x00015C00u, 0x48500000u, 0x0000011Du } },   /* 26 von 105 Masken, Stehplaetze 15663 */
-    { 0x6001,  8,  27, { 0x00000000u, 0x065CF360u, 0x4010B800u, 0x000001DDu } },   /* 27 von 105 Masken, Stehplaetze 46983 */
-    { 0x6001,  9,  16, { 0x3A8001FFu, 0x00000003u, 0x00000000u, 0x00000000u } },   /* 16 von 35 Masken, Stehplaetze 38470 */
+    { 0x6001,  5,  14, { 0x03FEA000u, 0x00000000u, 0x00000000u, 0x0000000Eu } },   /* 14 von 103 Masken, Stehplaetze 49536 */
+    { 0x6001,  7,  26, { 0x004139B7u, 0x00057000u, 0x75214000u, 0x00000004u } },   /* 26 von 105 Masken, Stehplaetze 15663 */
+    { 0x6001,  8,   2, { 0x00000000u, 0x00000000u, 0xC0000000u, 0x00000000u } },   /* 2 von 105 Masken, Stehplaetze 46983 */
+    { 0x6001,  9,   1, { 0x00400000u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 31 Masken, Stehplaetze 38470 */
     { 0x6010, 11,   3, { 0x00002000u, 0x00120000u, 0x00000000u, 0x00000000u } },   /* 3 von 65 Masken, Stehplaetze 9151 */
     { 0x6010, 12,   4, { 0x00000000u, 0x42200000u, 0x00000001u, 0x00000000u } },   /* 4 von 105 Masken, Stehplaetze 9030 */
     { 0x6010, 13,  10, { 0x00000000u, 0x1F400800u, 0x00003008u, 0x00000000u } },   /* 10 von 105 Masken, Stehplaetze 9151 */
