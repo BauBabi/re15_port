@@ -107,7 +107,8 @@ def dp_streifen(hit, be, ba, c0, c1, k_max, fig=None):
     """Spaltengrenzen fuer K = 1..k_max Streifen ueber die Spalten c0..c1-1. -> {K: (verletzt, [(a, b, D)])}.
     Kosten eines Streifens [a, b) (D = max bucket(Eintritt) im Streifen): ohne fig die Koerperpunkte mit bucket(Austritt) <= D;
     mit fig (320 x 1025 Zaehler je Bildspalte und Stufe, test_r37_masken36 hinter) die erreichbaren Figurpunkte HINTER dem Koerper,
-    deren Stufe bucket(vz - 450) <= D ist - die blieben trotz des Teilrechtecks sichtbar."""
+    deren Stufe bucket(vz - 450) <= D ist - die blieben trotz des Teilrechtecks sichtbar (450 = Kollisionsradius des Spielers
+    DAT_80073e94[6]; als Ausdehnung der Figur zur Kamera hin PORT-WAHL, NB4 nach Hinweis der Abnahme 3)."""
     n = c1 - c0
     NB = 1024 + 1
     emax = np.where(hit, be, -1)

@@ -19,6 +19,9 @@ Baum: .claude/worktrees/r41_masken36 (Zweig r41/masken36, Basis b28c7236 = maste
       Zellen-Modell + Nahfeld-Sperre + Zuordnung von Hand (164 Rechtecke wieder drin, 956 982 Punkte), Restliste fuer den Nutzer
 - [x] Nachbesserung 3 (Abnahme 2): Trennwand 30A0 ganz zu (Zelle 6 + Teilrechtecke je Koerper), Mass/Riegel "zu fern" (1 360 606 ->
       40 276, Stage 3: 0), OFFEN 9 gegangen, 7 Restliste-Gegenstaende gezeichnet (983 624 Punkte), Verdachtsliste gesichtet
+- [x] Nachbesserung 4 (Abnahme 3): Ost-Stirn 30A0 mit Messung widerlegt (Kuenstler-Ausschnitt ganz gezeichnet), Saaten-Fehler Tuer-Band
+      (Gleisbett 6000 weg), 437 nie platzierte Kuenstler-Komponenten platziert (Gelaender u.a., 983 624 -> 1 159 393 Punkte), Wandecke
+      6000 C5 geteilt, Laeufer mit Laufpruefung
 
 ## Punkt 1 — STAGE3-6-Masken "ueberall Loecher"
 
@@ -922,34 +925,181 @@ wird nicht angefasst; seine Riegel bleiben gruen.
 
 ### Stand Nachbesserung 4
 - [x] Lektuere (AUFTRAG inkl. Nachtrag 11, VERTRAG, Abnahme 3, Dossier NB3, git log master..HEAD = 1ad2c96e)
-- [ ] Mangel 3: Laufpruefung im Laeufer (EXIT_AT-Zeile des Zielraums, Wiederholung, Gegenprobe abgebrochener Lauf)
-- [ ] Mangel 1: Messung vorher (Ost-Stirn), Beleg (Zelle 6, Kamera C0), Stirn-Rechtecke mit Zellen-Tiefe, Messung nachher, Riegel
-- [ ] Mangel 2: Restliste weiter messen (6000 C5 Band 0 begehbar?, Gelaender im Kuenstler-Atlas?), Rest mit Beleg
-- [ ] Bau, gezielte Tests, Abschluss-Commit
+- [x] Mangel 3: Laufpruefung im Laeufer (EXIT_AT-Zeile des Zielraums + Framedump davor, 3 Versuche), Gegenprobe-Riegel
+- [x] Mangel 1: gemessen - die "Ost-Stirn" ist die Flaeche der Kollisionszelle, nicht der Gegenstand im Bild; der Kuenstler-Ausschnitt der
+      Stirnplatte ist ganz gezeichnet (widerlegt mit Messung + Zellbytes), Riegel unit_r41_masken36_stirn + 6 Szenen im Riegel _fern
+- [x] Mangel 2: (a) Band-0-Gleisbett 6000 = Fehler der Saaten (Tuer-Band), behoben (OFFEN 10/14); (b) die Gelaender & Co. liegen als
+      Kuenstler-Komponenten im Original-Atlas, nur nie platziert -> platzieren_r41.py (437 Komponenten, +160 539 Punkte); (c) Traeger-Mitte
+      6000 C5 geteilt (Wandecke); Rest mit Messung (Pulte/Moebel: Kamera ueber der Zelle; Roboterarm: kein Bodenkontakt; 3050 C6 oben)
+- [x] Bau (exe md5 46823269...), gezielte Tests, Abschluss-Commit
 
-### NB4 Zwischenstand (laufend)
-* **Mangel 3:** Laeufer prueft jeden Lauf (debug.log nach dem letzten "loaded room<zr>.rdt": "[framedump] WxH -> f.ppm", danach
-  "[flow] EXIT_AT: Bild 120 in Raum <zr>"; main.c RE15_EXIT_AT wirkt nach re15_render_end_frame), bis zu 3 Versuche; Gegenprobe-Riegel
-  integration_r41_masken36_laufpruefung (RE15_EXIT_AT=60 im Zielraum, f.ppm = Boot-Bild). Pruef-Funktion an echten Logs: gut angenommen,
-  der d4040_09-Abbruch der Abnahme 3 (build/tests/integration/r41_masken36_zelle_wd/lauf_3c0f29fe_d4040_09_a) abgelehnt.
-* **Mangel 1 (Ost-Stirn 30A0 C0) - Messung:** der Kuenstler-Ausschnitt (SLD-Atlas ROOM30A0.BSS Cut 0, Komponenten 11/9/10 an den
-  Verschiebungen (232,-24)/(144,24)/(57,86), Farbabstand Median 10..11) == die gezeichneten Masken in den Spalten >= 282 (3344 = 3344
-  Punkte, 0 Abweichung). Die Kante des Ausschnitts liegt in der Ebene x = -19975 bei z 14802..14867 (Zeilen 118..194) und oben bei
-  y -2335 (Zeile 118): die Stirnseite im Bild ist ~705 tief und ~2335 hoch, Zelle 6 dagegen 1250 tief und (Rahmen) 3025 hoch.
-  Alle Leon-/Elza-Punkte der Abnahme-Szenen o1..o5, a30A0_00 "sichtbar hinter der Ost-Stirn" liegen AUSSERHALB des Ausschnitts
-  (0 von 2003; Abstand zur Kante >= 1 Spalte). Dort zeigt der Hintergrund den Boden HINTER der Zelle (Zeilen 150..196: Strahl kreuzt
-  x = -19975 bei z 14913..15295 in 209..1316 Hoehe und trifft den Boden bei z 15376..18289) bzw. die Rueckwand-Schraenke Zelle 8
-  @RDT+0x00474 (Front z 18225, Strahl bei x ~-22000, Zeilen 88..148). Die "Ost-Stirn" der Abnahme ist die Kollisionszelle, nicht der
-  Gegenstand -> Masken dort wuerden Leon ueber leerem Boden abschneiden. Bilder m41nb4/stirn_zoom.png, stirn_leon.png (Scratchpad).
-* **Mangel 2 - Saaten-Fehler gefunden (OFFEN 10/14):** die Band-0-Stehplaetze im Gleisbett ROOM6000 kamen aus Tuer-AOTs, deren Band
-  das Werkzeug falsch las (slots[].band statt door_params[].band = pc[4]; AOT-Scan @0x80042cac..0x80042ccc). ROOM6000-Tueren @RDT+0x00D58
-  `3b 00 02 31 02 ..`, +0x00D78, +0x00DDA: pc[4] = 2. Mit der Regel: Netz 6000/6001 Band 0 90 437 -> 0; Ausschluss aendert sich nur in
-  6000/6001 C5/C7/C8 (37 Rechtecke je Variante wieder gezeichnet). Naechster Schritt: Kette k6 fuer ROOM6000 mit der Regel neu.
-* **Mangel 2 - unplatzierte Kuenstler-Komponenten:** der Generator saet nur aus vollstaendig deckenden 16x16-Bloecken (gen_region
-  find_blocks); duenne Teile (Gelaender, Rohre) ohne solchen Block wurden NIE platziert. Maskierte SSD je Komponente ueber alle
-  Verschiebungen (m41nb4/py/platz1.py): 800 unplatzierte Komponenten (>= 16 Texel, 410 127 Texel) in den Stage-3..6-Sektionen, 484
-  eindeutig platzierbar (229 714 Texel; RMS 5..14 wie die platzierten, zweitbeste Lage >= 1,5x schlechter), 228 978 neue Bildpunkte in
-  79 Cuts. Beispiel ROOM30E0 C7: das ganze Gelaender des Stegs (m41nb4/platz_ROOM30E0_07.png).
+### NB4 Zusammenfassung je Mangel (Ursache, Messung vorher, Beleg, Aenderung, Messung nachher)
+**Mangel 1 - Ost-Stirn der Trennwand 30A0/30A1 Cut 0 "ohne Maske": mit Messung widerlegt.**
+* Ursache der Abnahme-Zahl: das Mass nahm die Flaeche der Kollisionszelle 6 (z bis 15375, Rahmenhoehe 3025) als Gegenstand. Die
+  Stirnplatte IM BILD endet bei z ~14870 (oben y -2335); dahinter zeigt das vorgerenderte Bild den Boden und die Rueckwand-Schraenke.
+* Messung vorher = nachher (keine Masken-Aenderung an dieser Stelle noetig): 0 von 2003 "sichtbar hinter der Ost-Stirn"-Punkten der Abnahme
+  liegen im Kuenstler-Ausschnitt; der Ausschnitt ist bitgleich gezeichnet (3344 = 3344).
+* Beleg: Zelle 6 @RDT+0x0045C `96 19 e2 04 63 98 2d 37 01 ff 00 03`; SLD-Atlas ROOM30A0.BSS Cut 0 (Engine-Entpacker re15_sld_* = FUN_800c47e8),
+  Komponenten 11/9/10 an (232,-24)/(144,24)/(57,86); Boden-Strahlen der Zeilen 150..196; Zelle 8 @RDT+0x00474. Einzelheiten unten.
+* Aenderung: nur Riegel (unit_r41_masken36_stirn; Szenen z30A0_o3/_o4/_a0 Art Z und v30A0_o2/_a0, v30A1_o5 Art V im Riegel _fern).
+**Mangel 2 - Restliste / Punkt 1 nicht geschlossen.**
+* (a) Ursache Gleisbett: die Saaten des Ausschluss-Werkzeugs nahmen fuer Tuer-AOTs das Band aus `slots[].band` (im Port fuer Door_aot_set
+  nie gesetzt) statt pc[4]; Beleg AOT-Scan @0x80042cac..0x80042ccc, ROOM6000-Tueren pc[4] = 2. Vorher: 90 437 Band-0-Stehplaetze in
+  6000/6001, "zu fern" Stage 6 39 934. Nachher: 0 bzw. 0; 37 Rechtecke je Variante in 6000 C5/C7/C8 wieder gezeichnet (u.a. Lok-Unterteil C7).
+* (b) Ursache Gelaender: der Generator saete nur aus vollen 16x16-Bloecken (gen_region.find_blocks `if cnt != n: continue`); duenne
+  Kuenstler-Komponenten (Gelaender, Pfosten, Lampen, Saeulen) waren nie platziert. Vorher: 800 unplatzierte Komponenten. Aenderung:
+  platzieren_r41.py (Lage per maskierter SSD, Schwellen an 422 Generator-Lagen kalibriert, Tiefe nach der Generator-Regel, Ausschluss R37)
+  + Kapazitaet 128 je Cut (re15_pri.h; Original ohne Grenze, FUN_80039270 @0x8003928c lbu v0,7(a0)). Nachher: 437 Komponenten in 74
+  Sektionen, 1627 neue Rechtecke (154 vom Ausschluss genommen), gezeichnet 998 854 -> 1 159 393 Punkte; an der exe 0 Uebermalungen
+  VOR den neuen Gegenstaenden (16 Stellen), Verdeckung HINTER ihnen (8 Stellen, z.B. Leon hinter der Saeule 6010 C2 274 Punkte).
+* (c) Ursache Wandecke 6000 C5: die Zelle-12-Teilung der Traeger-Mitte (Rechteck 37, Tiefe 176 aus der falschen NB2-Zeile Zelle 13) stand
+  auch ohne Band-0-Plaetze auf der Rueckholliste: in den Spalten 31..40 wuerde sie Figurpunkte im Gang oestlich der Ecke verdecken, die
+  NICHT hinter dem Prisma liegen (192 Band-2-Plaetze); in den Spalten 1..30 keinen. Aenderung: teilen_r41.py - Spalten 1..30 neues Rechteck
+  mit Zelle-12-Tiefe 59 (Modell-Zeile 127), Spalten 31..40 behalten 176. Nachher an der exe: Leon hinter dem Block sichtbar k6000_05a
+  964 -> 512, k6000_05b 617 -> 371, k6000_05c 876 -> 644, m6000_05 1066 -> 447; davor 0 uebermalt.
+* Rest (gemessen, mit Grund): Pulte/Schreibtisch 5050 C1/C2 und Moebel/Lampe 30A0 C0 - Kamera ueber dem Grundriss (Nahfeld-Sperre NB2) bzw.
+  alle 15 neuen Rechtecke der Lampe 30A0 C0 vom Ausschluss genommen; Roboterarm 50B0 C1 - die 7 Komponenten haben keinen Bodenkontakt
+  (unterster Punkt jeder Spalte ueber dem Horizont, keine Tiefe nach der Generator-Regel); Gelaender 3050 C6 oben - die Komponenten 2/3
+  (527/335 Texel, Lage (136,-2)/(142,-2)) ohne Bodenkontakt; 3040 C3 rechter Pfeiler (4743 Punkte) vom Ausschluss genommen.
+**Mangel 3 - Laeufer ohne Laufpruefung: behoben** (Ursache, Beleg, Aenderung, Gegenprobe unten).
+
+### NB4 Mangel 3 - Integrations-Laeufer ohne Laufpruefung (behoben)
+* **Ursache:** `tests/integration/test_r41_masken36_stage2.cmake` (Laeufer von _stage2/_zelle/_zellen3d/_fern) pruefte je Lauf nur
+  `EXISTS f.ppm`. `RE15_FRAMEDUMP=120:f.ppm` gilt fuer Bild 120 JEDES Raums (platform/pc/main.c: `if (f == s_fdd_frame)` mit
+  `f = g_engine.frame_count`, der Zaehler beginnt je Raum neu) - der Boot-Raum ROOM1240 schreibt f.ppm, bevor `RE15_DEBUG_JUMP=...@250`
+  springt.
+* **Messung vorher:** Abnahme 3, d4040_09 (Laufordner `build/tests/integration/r41_masken36_zelle_wd/lauf_3c0f29fe_d4040_09_a`): debug.log
+  zeigt `[framedump] 320x240 -> f.ppm` (Zeile 61, Boot), `[room] PC loaded room4040.rdt` (Zeile 70), danach nur `[walk] F120 ...` - kein
+  zweiter Framedump, kein EXIT_AT (Abbruch durch das 180-s-Limit unter Last) -> verglichen wurde das Boot-Bild (falsch rot 1185 von 1387).
+* **Beleg Mechanik:** main.c `RE15_EXIT_AT="<bild>[#<raum>]"` beendet am ENDE des Bilds, nach `re15_render_end_frame()` (also nach dem
+  Framedump desselben Bilds) mit `[flow] EXIT_AT: Bild %u in Raum %04x erreicht -> exit`; render_pc.c schreibt `[framedump] %dx%d -> %s`
+  bzw. `[framedump] SDL_RenderReadPixels failed`.
+* **Aenderung:** Funktion `r41m_lauf_pruefen` im Laeufer: gueltig nur, wenn debug.log NACH dem letzten `loaded room<zr>.rdt` den Satz
+  `[framedump] <w>x<h> -> f.ppm` und danach `[flow] EXIT_AT: Bild 120 in Raum <zr> erreicht` zeigt; sonst bis zu 3 Versuche, dann
+  Fehler (TIMEOUT der vier Riegel 1500 -> 2400 s). Neuer Riegel `integration_r41_masken36_laufpruefung` (-DGEGENPROBE=1): erster Lauf mit
+  `RE15_EXIT_AT=60#<zr>` (Abbruch im Zielraum VOR dessen Framedump, f.ppm = Boot-Bild) muss abgelehnt, der zweite volle Lauf angenommen
+  werden (PASS nur mit "Gegenprobe OK"). Dazu: Szenenfeld `W=<gier>` (Gier der Figur, Vorgabe 0).
+* **Messung nachher:** Pruef-Funktion gegen echte Logs (`m41nb4/lp/`): voller Lauf d30A0_00 angenommen; der d4040_09-Abbruch der Abnahme
+  abgelehnt ("kein '[flow] EXIT_AT: Bild 120 in Raum 4040' nach dem Laden des Zielraums"); EXIT_AT 60 abgelehnt; ReadPixels-Fehler
+  abgelehnt ("kein Framedump im Zielraum vor EXIT_AT"). An der exe: Riegel integration_r41_masken36_laufpruefung (Tests NB4).
+
+### NB4 Mangel 1 - "Ost-Stirn der Trennwand 30A0/30A1 Cut 0 ohne Maske" (mit Messung widerlegt)
+* **Messung (Abnahme-3-Laeufe derselben exe md5 597ba53a, eigener Leser `m41nb4/py/stirn10.py`):** alle "sichtbar hinter der Ost-Stirn"-
+  Punkte der Abnahme (o1 62, o2 353, o3 416, o4 266, Elza o5 272, a30A0_00 634 = 2003) liegen AUSSERHALB des verifizierten
+  Kuenstler-Ausschnitts (0 von 2003; Abstand zur Kante >= 1 Spalte) und auf keiner Maske.
+* **Beleg 1 - der Gegenstand im Bild ist gezeichnet:** der Kuenstler-Atlas des Cuts (SLD des BSS-Chunks ROOM30A0.BSS Cut 0, Entpacker
+  wie FUN_800c47e8 / re15_sld_*) hat die Trennwand als Komponenten 11/9/10 an den Verschiebungen (232,-24)/(144,24)/(57,86)
+  (Farbabstand zum Hintergrund Median 10..11); die verifizierte Region dieser Lagen ist in den Spalten >= 282 bitgleich die gezeichnete
+  Deckung (3344 = 3344 Punkte, 0 fehlen, 0 zu viel). Die Komponente 9 an ihrer zweiten Lage (175,-21) passt im Ostbereich NICHT
+  (Farbabstand Median 208,5, 1 % <= 24) - dort gehoert sie nicht hin.
+* **Beleg 2 - die Zellenflaeche ist nicht die Stirnplatte:** Zelle 6 @RDT+0x0045C (`96 19 e2 04 63 98 2d 37 01 ff 00 03`) reicht bis
+  z 15375 und (Rahmen) 3025 hoch. Die Kante der Zeichnung liegt, auf die Ebene x = -19975 projiziert, in JEDER Zeile 118..194 bei
+  z 14834..14904 (Bildpunktmitten; Stirnplatte ~750 tief) und oben bei y -2335 (Zeile 118); darueber nur der Pfosten (z 14255..14621).
+  Jenseits der Kante zeigt das Bild, was HINTER der Zelle liegt: Zeilen 150..196 den Boden mit Papieren (Sehstrahl kreuzt x = -19975 bei
+  z 14913..15295 in 209..1316 Hoehe und trifft den Boden bei z 15376..18289, z.B. (309,192) Boden (-20165,15457) Farbe (150,154,165)),
+  Zeilen 88..148 die Rueckwand-Schraenke Zelle 8 @RDT+0x00474 (Strahl bei z 18225 auf x ~-22000 in 321..2385 Hoehe; Pflanze, roter
+  Kasten, Schatten). Ein vorgerendertes Bild zeigt den Boden an einem Punkt nur, wenn davor nichts steht -> der Zellenkasten ist dort leer.
+* **Folgerung:** Leon/Elza sind an diesen Punkten im Bild VOR dem, was dort zu sehen ist (Boden hinter ihnen, Schraenke bei z >= 18225; die
+  Figur steht bei z 16000..16300) - sichtbar ist richtig. Eine Maske ueber der ganzen Zellenflaeche (Vorschlag der Abnahme, Tiefe der Zelle 6)
+  wuerde die Figur an einer Kante abschneiden, die es im Bild nicht gibt. Bild `M_bilder/NB4/NB4_M1_30A0_ost_stirn.png` (gruen = Kuenstler-
+  Ausschnitt = gezeichnet, magenta = Zellenflaeche, gelb = Kante der Stirnplatte, tuerkis = Leon sichtbar in o3_30A0 / a30A0_00).
+* **Riegel:** `unit_r41_masken36_stirn` (Zellbytes; 0 offene Kerben im Fenster x 282..319 y 80..215; Kante der Zeichnung z <= 14950 in den
+  Zeilen 118..194; KEIN gezeichneter Punkt mit Sehstrahl durch die Zellenflaeche bei z > 14950; Leon/Elza-Datei gleich) und im Riegel
+  `integration_r41_masken36_fern` sechs Szenen an den Abnahme-Stellen: z30A0_o3/_o4/_a0 (Art Z: Figur hinter der Stirnplatte, Fenster ganz in
+  der gezeichneten Platte x 288..306 -> V == 0) und v30A0_o2/_a0, v30A1_o5 Elza (Art V: Fenster rechts der Kante -> H == 0, Gegenprobe gegen
+  eine Maske ueber der Zellenflaeche).
+
+### NB4 Mangel 2 (a) - die Band-0-Stehplaetze im Gleisbett ROOM6000 waren ein Fehler der Saaten (OFFEN 10/14 geschlossen)
+* **Messung:** `test_r37_masken36 saaten 6000` (Stand NB3) lieferte die AOT-Saaten (2800,2750), (-4900,-8350), (1763,-10677) auf Band 0 -
+  das sind die Mitten der Tueren Slot 0/1/3 (ROOM6000.RDT @0x00D58 `3b 00 02 31 02 00 d0 07 98 08 40 06 4c 04 ..` Rechteck
+  (2000,2200,1600,1100), @0x00D78 Slot 1 (-5350,-9250,900,1800), @0x00DDA Slot 3 (693,-11104,2140,854)); in allen drei Saetzen ist
+  pc[4] = 2. Alle Aot_set/Door_aot_set von ROOM6000 tragen pc[4] = 2, es gibt keinen Treppensatz (Typ 12/13), die Pos_set des Raums setzen
+  y = -3600 (@0x00FA4 `32 00 d9 15 f0 f1 52 e1`, @0x0100A `32 00 f5 d6 f0 f1 c6 21`), alle Tuer-Ankuenfte kommen auf Band 2 an
+  (50B0 (5200,1600), 6010 (-4200,-8450)/(-4200,-20500), 6030 (1693,-10054)).
+* **Beleg (RE):** der AOT-Scan FUN_80042bac gated JEDEN Satz (der Satz beginnt bei pc+2, rec[2] = pc[4]) auf das Band des Spielers:
+  @0x80042cac `lbu v0,2(s0)` / @0x80042cb4 `andi v0,v0,0x80` (gesetzt = jedes Band, Sprung @0x80042cb8) / @0x80042cc0 `lbu v1,130(s1)`
+  (Spieler +0x82) / @0x80042cc4 `lbu v0,2(s0)` / @0x80042ccc `bne v1,v0,0x8004301c` (Satz uebersprungen); fuer das Tuer-Objekt dasselbe
+  @0x8002bf38 `lbu v1,846(s6)` / @0x8002bf3c `lbu v0,130(s2)` / @0x8002bf44 `bne` (FUN_8002bd44). Ein Satz sce 0 dispatcht auf
+  @0x8004305c (`jr ra` / `addu v0,zero,zero` nach zwei Merkern) - ohne Ereignis. Der Port legt pc[4] fuer Door_aot_set in
+  `g_aot.door_params[].band` ab (scd_vm.c op_door_aot_set), `slots[].band` bleibt dort 0; die Saaten-Sammlung des Ausschluss-Werkzeugs
+  (test_r37_masken36.c saaten_sammeln, R37 Spur P) las `slots[].band` -> jede Tuer saete auf Band 0.
+* **Aenderung:** saaten_sammeln nimmt fuer Tuer-Saetze (Typ DOOR, oder Typ NONE mit door_params.floor != 0 = traeger Tuersatz) das Band
+  aus door_params (pc[4]); Option `--saat-alt` = alter Stand (Gegenprobe/Werkzeug); Werkzeuge `saatband` und `netzvergleich`.
+* **Messung nachher:** 121 von 1465 AOT-Saaten aendern ihr Band (alle Tueren mit pc[4] != 0). Stehplaetze Stage 3..6 (`netzvergleich`):
+  ROOM6000/6001 Band 0 90 437 -> **0** (das ganze Gleisbett-Netz), ROOM3050/3051 Band 0 27 282 -> 18 855, ROOM5090/5091 Band 1 0 -> 42 987
+  (Tuer auf Band 1), ROOM6030/6031 Band 0 6 290 -> 6 056; alle anderen Raeume/Baender gleich. Ausschluss (`erzeuge`) mit der Regel auf
+  dem NB3-Stand: nur ROOM6000/6001 C5/C7/C8 aendern sich, 37 Rechtecke je Variante wieder gezeichnet, 0 neu ausgeschlossen; gezeichnete
+  Punkte 983 624 -> 998 854, "zu fern" 40 276 -> 342 (Stage 6 39 934 -> 0). Die Kette k6 der NB3 mit der Regel nachgefahren
+  (`m41nb4/kette_k8.sh`, Zerlegung mit den alten Saaten `--saat-alt`): andere Raeume bitgleich, 6000 C5 etwas mehr gezeichnet (+199), die
+  Wandecke aber schlechter (verdeckt 875 statt 900) - nicht uebernommen; der NB3-Stand + Regel bleibt, die Ecke s. (c).
+
+### NB4 Mangel 2 (b) - Gelaender & Co.: Kuenstler-Komponenten, die der Generator nie platziert hat (platzieren_r41.py)
+* **Messung vorher:** Die Restliste nannte "Gelaender 3050 C6, 30E0 C6..C9, 3040 C3: nicht in der Generator-Region". Im Original-Atlas der
+  Cuts (SLD, `original.atlas`) liegen sie aber: 30E0 C7 hat 31 Komponenten, nur 2 platziert (Bodenplatten), die Pfosten und Handlaeufe nicht
+  (Bild `m41nb4/atlas_ROOM30E0_07.png`); 3040 C3 49 Komponenten / 4 platziert; 3050 C6 15 / 2. Ueber alle 216 Generator-Sektionen: 800
+  unplatzierte Komponenten mit >= 16 Texeln (410 127 Texel).
+* **Ursache (Code):** `analysis/esp_masken_2026-09-03/gen_region.py find_blocks`: `if cnt != n: continue` - nur VOLLSTAENDIG deckende 16x16-Bloecke
+  werden als Saat gesucht; `region_grow` waechst nur innerhalb schon belegter Verschiebungen. Eine eigene Komponente ohne vollen 16x16-Block
+  (Gelaender, Pfosten, Rohre, Lampen) bekommt nie eine Lage.
+* **Regel (Kopf von `re15_port/tools/maske/platzieren_r41.py`):** Lage je Komponente per maskierter SSD (FFT) ueber alle Verschiebungen;
+  angenommen, wenn RMS <= 18,91 und die beste nicht benachbarte Lage >= 1,5x schlechter ist. **Kalibrierung** an den 422 vom Generator
+  platzierten Teilen (>= 16 Texel) derselben Sektionen (`m41nb4/py/kalib.py`): die SSD findet 410 an der Generator-Lage, RMS dort Median 9,66,
+  99 % 18,91, Max 20,24; die 12 abweichenden Faelle haben ein Verhaeltnis <= 1,47. Texel > 48 daneben bleiben weg (R37-Blit-Grenze);
+  Punkte unter vorhandenen Rechtecken bleiben weg; Tiefe = Regel des Generators je Komponente (Bodenkontakt je Spalte auf y = 0,
+  DEPTH_SAFETY 0,90; ohne Bodenkontakt keine Tiefe -> nicht gezeichnet); Rechtecke wie schliessen_r41 (Spaltentiefe, gierig zusammengelegt);
+  Palette je Blatt neu (255 Farben Median-Schnitt ueber alte + neue Texel; alte Texel aendern sich im Mittel <= 4,38/765); danach der
+  Ausschluss R37 (`erzeuge`). Alter Teil jeder Sektion bytegleich, Leon/Elza bytegleich.
+* **Kapazitaet:** 37 volle Cuts (105 Rechtecke) hatten platzierbare Komponenten. `re15_pri.h RE15_PRI_MAX_MASKS_PER_CUT` 105 -> 128: das
+  Original hat keine feste Grenze (FUN_80039270 @0x8003928c `lbu v0,7(a0)` = RDT-Kopfbyte 7 als Anzahl, u8; Puffer daraus @0x80039294..
+  @0x800392c8); 128 = Breite der Port-Tabelle des Ausschlusses (masken36_r37.c `uint32_t bits[4]`, `idx >= 128` -> 0). Original-Sektionen
+  (hoechstens 105) bleiben unberuehrt.
+* **Messung nachher (statisch, eigener Zaehler wie stat_nb3 der Abnahme, Lesekapazitaet 128):** 437 Komponenten in 74 Sektionen platziert,
+  1627 neue Rechtecke, 154 davon vom Ausschluss genommen; gezeichnet 998 854 -> **1 159 393** Punkte (+160 539), nur ausgeschlossen
+  232 089 -> 265 201 (die genommenen neuen Rechtecke). 72 Cuts geaendert (`M_bilder/NB4/NB4_zahlen.txt`): 648 007 -> 823 776 Punkte,
+  **0 weggefallen**. Riegel `unit_r41_masken36_platziert`: Lage jeder Komponente mit dem Spiel-Entpacker bestaetigt (437/437), Blit der neuen
+  Rechtecke Mittel 6,15 (je Sektion max 10,72), Gelaender 30E0 C6 1745 / C7 1670 / C8 2013 / C9 3558, 3050 C6 278, 3040 C3 9546 Punkte.
+* **Messung nachher (exe md5 d9a03044 / 46823269, eigene Laeufe `m41nb4/runs`, Leon-Dreiecke RE15_TRILOG; Stellen = `test_r37_masken36 suche 5`):**
+  | Szene | Cut | Stelle | Leon unter NEUEN Rechtecken | davon von neuen verdeckt | uebermalt |
+  |---|---|---|---|---|---|
+  | d3040_03 / d3040_02 / d3040_04 / d3040_06 / d3040_07 / d3040_09 / d3040_13 | 3040 C3/C2/C4/C6/C7/C9/C13 | DAVOR | 2460 / 424 / 2887 / 56 / 913 / 2584 / 212 | 0 | 0 (d3040_09: 1 Rand, nicht neu) |
+  | d30E0_06 / _07 / _08 / _09 | 30E0 C6/C7/C8/C9 | DAVOR | 925 / 82 / 0 / 368 | 0 | 0 |
+  | d3050_06 / d3050_11 / d5090_12 / d6000_02 / d6000_05 | 3050 C6/C11, 5090 C12, 6000 C2/C5 | DAVOR | 71 / 756 / 563 / 1948 / 303 | 0 | 0 |
+  | h3040_03 / h3040_07 / h3040_13 | 3040 C3/C7/C13 | HINTER | 475 / 99 / 81 | 36 / 99 / 78 | - |
+  | h30E0_07 / h30E0_08 | 30E0 C7/C8 | HINTER (Gelaender) | 37 / 62 | 26 / 47 | - |
+  | h50B0_03 / h6010_02 | 50B0 C3, 6010 C2 | HINTER | 69 / 274 | 49 / 274 | - |
+  Bilder: `M_bilder/NB4/NB4_exe_h3040_03.png` (Leon hinter dem Gelaender), `NB4_exe_h6010_02.png` (hinter der Saeule), `NB4_exe_d3040_03.png`,
+  `NB4_exe_h3040_07.png`; Vorher/Nachher-Boegen `M_bilder/NB4/NB4_bogen_ROOMxxxx_Cnn.png` (30E0 C6..C9, 3050 C6, 3040 C3, 50B0 C1/C3, 5050 C1/C2,
+  6000 C5/C7, 30A0 C0). Die Gelaender von 30E0 trennen den Steg von einer Maschinengrube; dahinter gibt es kaum Stehplaetze (`suche 60`:
+  keine HINTER-Stelle) - sie wirken vor allem auf Gegner/Effekte in der Grube und auf das Bild.
+
+### NB4 Mangel 2 (c) - Wandecke 6000 C5 (Traeger-Mitte, OFFEN 14)
+* **Messung vorher (Abnahme 3, an der exe):** hinter dem Wandblock Zelle 12 @RDT+0x007EC sichtbar k6000_05a 964, k6000_05b 617, k6000_05c 876;
+  eigener statischer Zaehler (`m41nb4/py/ecke6000.py`, Leon-Dreiecke der Abnahme-Laeufe) unverdeckt 1039 / 645 / 936, m6000_05 1038 - die
+  Punkte unter Rechteck 37 (Tiefe 176, NB2-Zeile Zelle 13 @RDT+0x007F8 = Wandblock JENSEITS des Gangs).
+* **Ursache (gemessen):** die NB3 hatte das Rechteck mit Zelle 12 geteilt, die Rueckholliste nahm die Teilung zurueck. Die NB3-Begruendung
+  "wegen Band-0-Stehplaetzen" ist widerlegt: auch ohne Band-0-Plaetze (Kette k8) steht Rechteck 33 (= heute 37) auf der Rueckholliste.
+  `m41nb4/py/r37ecke.py` (9492 erreichbare Band-2-Plaetze von Cut 5, Figur +-450 x 0..3000 in 25er-Schritten, Tiefe je Spalte = max
+  bucket(Eintritt in das Prisma der Zelle 12, Saeule) wie kacheln_r41): in den Spalten 31..40 des Rechtecks wuerden 175..6158 Figurpunkte
+  an 192 Plaetzen im Gang oestlich der Ecke (x 14833..15433, z -4984..-4384) verdeckt, deren Sehstrahl das Prisma NICHT vor ihnen trifft
+  (z.B. (15233,-4784): Strahl kreuzt z -5674 bei x ~12936 > 12578); in den Spalten 1..30 KEINER.
+* **Aenderung:** `re15_port/tools/maske/teilen_r41.py --raum 6000 --cut 5 --rechteck 37 --spalten 30 --zelle 0x007EC --hoehe -4100 --saeule 1`:
+  Spalten 1..30 = neues Rechteck 127 (gleiche Atlas-Abbildung, eigene Gruppe) mit Tiefe 59 = max bucket(Eintritt) seiner 960 Koerperpunkte,
+  Modell-Zeile Zelle 12 (Saeule, Hoehe 4100, IoU 0,71 wie die anderen Traegerteile); Spalten 31..40 behalten Tiefe 176. Ein Platz wurde mit
+  `platzieren_r41.py --reserve 6000:5:1` freigehalten (6000 C5: 26 statt 27 neue Rechtecke, gleiche Punkte). Ausschluss: das neue Rechteck
+  bleibt gezeichnet.
+* **Messung nachher:** statisch unverdeckt hinter dem Block k6000_05a 1039 -> 407, b 645 -> 179, c 936 -> 501, m6000_05 1038 -> 408, VOR dem
+  Block verdeckt 0; an der exe (eigene Laeufe, |A-B| > 24): hinter dem Block sichtbar k6000_05a 512 (Abnahme 964), b 371 (617), c 644 (876),
+  m6000_05 447 (1066); VOR dem Block uebermalt 0, d6000_05a 0. Bild `M_bilder/NB4/NB4_exe_k6000_05a.png`. Der Rest liegt unter den Spalten
+  31..40 (s. Ursache) und unter weiteren Traeger-Rechtecken.
+
+### NB4 Nebenbefunde der Abnahme 3 (Hinweise)
+* Zitat "Akteur-Cull FUN_8002c18c" berichtigt (Szenendateien, Laeufer, test_r37_masken36.c): Figuren-Cull am Regionsviereck FUN_80014368,
+  z.B. NPC-Zeichner FUN_80039ca0 @0x80039d68 `jal 0x80014368` / @0x80039d70 `beq v0,zero,0x80039e3c`; FUN_8002c18c ist der Objekt-Zeichner.
+* DAT_80073e94[6] = 450 ist der Kollisionsradius des Spielers; als Ausdehnung der Figur zur Kamera hin (test_r37_masken36 hinter /
+  kacheln_r41) PORT-WAHL - im Code so gekennzeichnet.
+* 6000 C5 Riegel-Szenen in Kamera-Wechselzonen (Hinweis Abnahme 3): die eigenen exe-Stellen k6000_05a/b/c (natuerlicher Cut-5-Bereich) sind oben
+  gemessen; die Riegel-Szenen m6000_05/d6000_05a bleiben (geometrisch richtig, s. NB3).
+
 
 ## Tests (gezielt, KEINE volle Suite)
 
