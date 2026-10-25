@@ -11,6 +11,7 @@
 #include "re15_player.h"
 #include "re15_enemy.h"
 #include "re15_szenenleon_r36.h"   /* re15_szl_schub_spieler_phase */
+#include "re15_rbj_binder_r41.h"   /* Runde 41 Spur K (NB1 M1): Spieler-Record = Binder FUN_8001b3f8 */
 
 static unsigned s_umlaeufe, s_halte;
 
@@ -28,7 +29,15 @@ static int rbj_spieler_clip_len(int clip)
     if (!rbj || size < 0x20 || clip < 0) return 0;
     uint32_t total = rd32(rbj), nrec = rbj[4];
     if (total == 0 || total > size || nrec == 0 || nrec > 8) return 0;
+    /* Runde 41 Spur K (Nachbesserung 1, M1): der Clip-Kopf, den 0x80050cb8 an f314 gibt, ist der des Spieler-KANALS
+     * (+0x180/+0x184: `lw a0,384(v0)` @0x80050d40, `lw a1,388(v0)` @0x80050d48). Den Kanal schreibt der Binder
+     * FUN_8001b3f8 fuer JEDEN Record mit Marker-Bit 0 (`andi v0,a0,0x1` @0x8001b440, `sw v0,0(t3)` @0x8001b450 /
+     * `sw v0,4(t3)` @0x8001b460, t3 = 0x800acbd4) - der LETZTE gewinnt, nicht der erste. ROOM3091: rec0 (Marker 1,
+     * 1 Clip) und rec2 (Marker 3) -> Kanal = rec2, Clip 13 = 40 Bilder (Original-RAM w180 = RBJ+rec2). */
+    int pr = re15_rbj_binder_spieler(rbj, size);
+    if (pr < 0) return 0;
     for (uint32_t r = 0; r < nrec; r++) {
+        if ((int)r != pr) continue;                             /* Runde 41 Spur K: Record des Binders */
         size_t toff = (size_t)total + (size_t)r * 8;
         if (toff + 8 > size) return 0;
         uint32_t pre = rd32(rbj + toff), edd = rd32(rbj + toff + 4);
