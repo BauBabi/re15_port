@@ -324,8 +324,8 @@ static void teil_leiche(void)
               "Leiche obj 2 an der Szenen-Lage (-5500,-23700) Gier 384 (leiche_lage.py)");
         PRUEF(ks >= 0 && g_scd.props[ks].active && g_scd.props[ks].parent_obj == RE15_GSZ_LEICHE_OBJ &&
               g_scd.props[ks].x == 1090 && g_scd.props[ks].y == -420 && g_scd.props[ks].z == -100 &&
-              g_scd.props[ks].rot_x == 608 && g_scd.props[ks].rot_z == -160,
-              "Schluessel obj 4 = Kind der Leiche, lokal (1090,-420,-100), Neigung rx 608 rz -160");
+              g_scd.props[ks].rot_x == 544 && g_scd.props[ks].rot_z == -464,
+              "Schluessel obj 4 = Kind der Leiche, lokal (1090,-420,-100), Neigung rx 544 rz -464 (leiche_lage.py, Puls-Grenze)");
         PRUEF(re15_blink_r41_aktiv(raeume[r], RE15_GSZ_KEY_OBJ), "Schluessel blinkt (re15_blink_r41)");
     }
 }

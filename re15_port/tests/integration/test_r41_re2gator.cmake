@@ -52,6 +52,20 @@
 #   2090-Bild, P3 laenger als die alten 120 Bilder, Opfer gehalten und frei von Raum-Objekten in allen Bildern; (c) die Finisher-Kamera
 #   ist nicht die Kamera des Biss-Bildes (Abnahme 5 M2). Lauf "nische" prueft (c) ebenso.
 #
+# Querbezug Runde 41 Spur F "gatorszene" (Nachbesserung 1, Abnahme F 0 Mangel M4; Datei von Spur B, nur die Umgebung der
+#   fuenf Laeufe ergaenzt): (a) ROOM2090 ohne Bank 9 Bit 110 startet die Ankunftsszene (Nutzer-Auftrag "neue Cutscene: Wenn man
+#   Room 2090 betritt ..."), und das Tor 20A0 -> 2090 ist bis Bit 113 verschlossen (Nachtrag 21) -> alle Laeufe mit
+#   RE15_SET_FLAG=9:110,9:113 (Szene gesehen, Tor aufgeschlossen = der Zustand, in dem dieser Riegel den Kampf misst).
+#   (b) Nutzer-Punkt "Entferne die Spinnen aus dem ROOM 2090": im Lauf "nische" trafen Leon vorher zwei Spinnen (state.log
+#   Abnahme B 6 Lauf A2: hp 100 -> 80 F57 -> 60 F175, dann Gator 10 F290 -> -40 F397 = FRESSEN beim zweiten Biss F403); ohne
+#   Spinnen 100 -> 50 F290 -> 0 F397 -> -50 F520 (FRESSEN erst beim dritten Biss, Finisher-Fenster verfehlt). RE15_R41_HP_AT=175:60
+#   (Messhaken Spur D, giftkugel_r41.c, kein Spielverhalten) setzt Leons HP im Bild 175 auf denselben Wert 60 wie die zwei
+#   Spinnen-Treffer -> beide Gator-Bisse wie vorher. Die uebrigen vier Laeufe halten Leons HP ohnehin per RE15_R39_MESS_SPIELER_HP.
+#   (c) Lauf "kanister": ohne die Spinne im Suedbecken (Satz @0x00AC4 (-2300,-23896), am Autopilot-Weg) nimmt der Gator den
+#   Kanister spaeter auf (gemessen Nachbesserung F 1: "RE2 KANISTER angehaengt ... F1227", vorher Abnahme B 3 C3n F1119), bis
+#   EXIT_AT 1400 nur 150 angehaengte Bilder -> RE15_EXIT_AT 1400 -> 1500 (+100 = Verschiebung 108 aufgerundet auf die naechsten
+#   100); die Schranke >= 200 Bilder bei Abweichung 0 bleibt.
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_re2gator.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -204,6 +218,8 @@ re15_start_spiel(_rv 300
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
     SDL_ASSERT=always_ignore
     RE15_DEBUG_JUMP=2090@250 RE15_GB_TEST=1
+    RE15_SET_FLAG=9:110,9:113   # Querbezug Runde 41 Spur F (Kopf: Szene gesehen + Tor offen)
+    RE15_R41_HP_AT=175:60       # Querbezug Runde 41 Spur F: Leons HP wie mit den zwei Spinnen-Treffern (Kopf)
     "RE15_GATOR_KANISTER=-6000,-15000"
     RE15_STATE_LOG=state.log
     "RE15_EXIT_AT=650#2090"
@@ -377,6 +393,7 @@ re15_start_spiel(_rv 300
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
     SDL_ASSERT=always_ignore
     RE15_DEBUG_JUMP=2090@250
+    RE15_SET_FLAG=9:110,9:113   # Querbezug Runde 41 Spur F (Kopf: Szene gesehen + Tor offen)
     "RE15_PLAYER_POS=-8200,-25550,3072" RE15_R39_MESS_SPIELER_HP=100
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=W2,U12,W40"
     "RE15_EXIT_AT=520#2090"
@@ -453,11 +470,12 @@ re15_start_spiel(_rv 300
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
     SDL_ASSERT=always_ignore
     RE15_DEBUG_JUMP=2090@250 RE15_GB_TEST=1
+    RE15_SET_FLAG=9:110,9:113   # Querbezug Runde 41 Spur F (Kopf: Szene gesehen + Tor offen)
     "RE15_PLAYER_POS=2500,-25000,2048" RE15_R39_MESS_SPIELER_HP=100
     "RE15_GATOR_KANISTER=-1500,-23400"
     "RE15_AUTOPILOT=xz:5500,-25500\;xz:5500,-20500\;xz:-1000,-21000\;xz:-1000,-25500\;xz:5500,-25500\;xz:5500,-20500\;xz:-1000,-21000\;noact"
     RE15_AUTOPILOT_ROOM=2090
-    "RE15_EXIT_AT=1400#2090"
+    "RE15_EXIT_AT=1500#2090"   # Querbezug Runde 41 Spur F (Kopf): ohne Spinnen Aufnahme F1227 statt F1119 -> Fenster +100
     "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
     file(REMOVE "${_exe_kopie}")
@@ -491,6 +509,7 @@ re15_start_spiel(_rv 300
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
     SDL_ASSERT=always_ignore
     RE15_DEBUG_JUMP=20A0@250 "RE15_FIRE_AOT=0@40#20A0" RE15_GB_TEST=1
+    RE15_SET_FLAG=9:110,9:113   # Querbezug Runde 41 Spur F (Kopf: Szene gesehen + Tor offen)
     RE15_STATE_LOG=state.log
     "RE15_EXIT_AT=251#1240"
     "${_exe_kopie}")
@@ -560,6 +579,7 @@ re15_start_spiel(_rv 300
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
     SDL_ASSERT=always_ignore
     RE15_DEBUG_JUMP=2090@250 RE15_GB_TEST=1
+    RE15_SET_FLAG=9:110,9:113   # Querbezug Runde 41 Spur F (Kopf: Szene gesehen + Tor offen)
     "RE15_PLAYER_POS=-4000,-24000,2048" RE15_R39_MESS_SPIELER_HP=100
     RE15_STATE_LOG=state.log
     "RE15_EXIT_AT=1100#2090"

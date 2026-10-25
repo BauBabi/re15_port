@@ -275,14 +275,16 @@ static int prop_slot(uint8_t obj_id)
 #define GSZ_KEY_BAND      0
 /* Lage auf dem Ruecken der Leiche, Objektraum von obj 2 (Elternobjekt, Anhaenge-Form 0xC0|n @0x80040a84-9c): hoechste Stelle
  * des Rueckens im Leichen-Modell MD1 @0x2054 (y -341 bei x 800..1100, z -100); die Mitte 420 darueber, weil das gekippte
- * Quadrat (180) in y bis +-73 reicht. Kippung zur Kamera von Cut 1, hoechstens 60 Grad (leiche_lage.py: lokal rx 608 / rz -160
- * in der Drehfolge von main.c pc_prop_rot_q12, 54,7 Grad): Bildflaeche cos 0,270 (flach) -> 0,925 bei Licht 216 -> 210,
- * ~10,4 x 9,6 Bildpunkte. PORT-WAHL. */
+ * Quadrat (180) in y bis +-73 reicht. Kippung zur Kamera von Cut 1, hoechstens 60 Grad, mit dem hoechsten Wert cos(Blick) x Licht
+ * UNTER der Puls-Grenze Licht x 0xBE / 0x80 <= 255 (Nachbesserung 1, M5; leiche_lage.py: Blink-Spitze 0xBE @0x8010290c-Folge,
+ * NCCT-Klemme 255 re15_light.h): lokal rx 544 / rz -464 in der Drehfolge von main.c pc_prop_rot_q12, 59,4 Grad -> Bildflaeche
+ * cos 0,270 (flach) -> 0,917, Licht 169,8 (Spitze 252 statt geklemmt 255), ~10,4 x 9,5 Bildpunkte. Die erste Fassung (rx 608 /
+ * rz -160, Licht 211,5) lief in die 255-Grenze: Puls 92 -> 112 mit Plateau (Abnahme 0, M5). PORT-WAHL. */
 #define GSZ_KEY_AUF_X     1090
 #define GSZ_KEY_AUF_Y     (-420)
 #define GSZ_KEY_AUF_Z     (-100)
-#define GSZ_KEY_AUF_RX    608
-#define GSZ_KEY_AUF_RZ    (-160)
+#define GSZ_KEY_AUF_RX    544
+#define GSZ_KEY_AUF_RZ    (-464)
 /* Item-Zone nach dem Tod (re15_aot_set_item_tk_prop = Item_aot_set @0x80040644-Form), Rechteck 1000 x 1000 wie ROOM2090 main00
  * @0x00A12 (`e8 03 e8 03`), AOT-Platz 15: frei in 2090 (main00 0..5, Kamerazonen 48..63). */
 #define GSZ_KEY_AOT       15

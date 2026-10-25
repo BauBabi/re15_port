@@ -51,6 +51,7 @@
 #include "re15_md1.h"
 #include "re15_spinnen_r38.h"
 #include "re15_zustand_r39.h"   /* Runde 39 Spur F: RE2-Gift-Takt */
+#include "re15_gatorszene_r41.h"   /* Runde 41 Spur F: Spinnen aus ROOM2090 entfernt (Querbezug Teil D) */
 #include "re15_math.h"
 
 #ifndef RE15_ASSET_PSX_DIR
@@ -757,7 +758,14 @@ static void teil_d(void)
     for (int fl = 0; fl < 2; fl++) {
         re15_ai_flavor_t flv = fl ? RE15_AI_FLAVOR_RE2 : RE15_AI_FLAVOR_RE15;
         for (size_t r = 0; r < sizeof R / sizeof R[0]; r++) {
-            if (!raum(R[r].datei, R[r].id, flv, R[r].x, R[r].y, R[r].z, R[r].rot, R[r].cut)) { s_fails++; continue; }
+            /* Querbezug Runde 41 Spur F (Nutzer: "Entferne die Spinnen aus dem ROOM 2090, die nutzen wir nicht mehr."): im
+             * Spiel verwirft der Port die zwei Sce_em_set-Saetze @0x00AB0/@0x00AC4 (gatorszene_r41.c, Form Kill-Flag-Tor
+             * @0x80042120-38; Riegel unit_r41_gatorszene_spinnen). Diese Zeile misst weiter die Spinnen-MECHANIK an den
+             * Original-Saetzen von 2090 (Boden/Schacht/Wasser) - das Verwerfen ist nur fuer sie aus (Muster probe_sca_wall_hit C2). */
+            const int sp_weg_alt = (R[r].id == 0x2090) ? re15_gatorszene_r41_spinnen_weg_setzen(0) : -1;
+            const int raum_ok = raum(R[r].datei, R[r].id, flv, R[r].x, R[r].y, R[r].z, R[r].rot, R[r].cut);
+            if (sp_weg_alt >= 0) re15_gatorszene_r41_spinnen_weg_setzen(sp_weg_alt);
+            if (!raum_ok) { s_fails++; continue; }
             re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
             int n_sp = 0, boden = 0, schacht = 0, schwebt = 0, im_block = 0;
             int32_t schwebt_y = 0, schwebt_gy = 0;

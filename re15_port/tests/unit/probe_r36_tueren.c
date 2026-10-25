@@ -358,8 +358,14 @@ static void teil_schott(void)
         PRUEF(b0 == 2, "DOOR26 V0: zwei Fluegel erwartet (Skript 3 @Datei 0x05914 obj 0 + obj 1), gefunden %d", b0);
         PRUEF(b3 == 1, "DOOR26 V3: ein Fluegel erwartet, gefunden %d", b3);
     }
-    /* echter Durchgang 2090 -> 20A0 (Band 1, Podest) */
+    /* echter Durchgang 2090 -> 20A0 (Band 1, Podest).
+     * Querbezug Runde 41 Spur F (Nachtrag 21 "Das Tor soll verschlossen sein, und dann mit den Schluessel den man vom
+     * Aligator bekommt geoeffnet werden!"): 2090 Slot 1 @0x009B6 ist bis Bank 9 Bit 113 (Tor aufgeschlossen) ein sce-3-Ereignis
+     * (gatorszene_r41.c tor_sperren), Bit 110 (Szene gesehen) haelt die Ankunftsszene fern. Gemessen wird hier weiter die Tuer
+     * DOOR26 V0 dieses Durchgangs - also im Zustand NACH dem Aufschliessen. Das Gesperrt-Sein misst unit_r41_gatorszene_tor. */
+    s_n_flags = 2; s_flags[0][0] = 9; s_flags[0][1] = 110; s_flags[1][0] = 9; s_flags[1][1] = 113;
     durchgang_pruefen(0x2090, 0x20A0, 0x26, 0);
+    s_n_flags = 0;
 }
 
 /* ---------------------------------------------------------------------------------------------

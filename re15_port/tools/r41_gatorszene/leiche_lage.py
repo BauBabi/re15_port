@@ -67,10 +67,10 @@ def norm(v):
     l = math.sqrt(sum(a * a for a in v)); return [a / l for a in v]
 
 
-def licht(ls, P, N):
-    """Gruen-Kanal des NCCT-Werts (re15_light.h): Umgebung + Summe Farbe x Abfall x max(0, L.N)."""
+def licht(ls, P, N, k=1):
+    """Kanal k (0 r, 1 g, 2 b; Standard Gruen) des NCCT-Werts (re15_light.h): Umgebung + Summe Farbe x Abfall x max(0, L.N)."""
     gs, typ, farbe, umg, lage, hell = ls
-    wert = umg[1]
+    wert = umg[k]
     for i in range(3):
         if typ[i] == 0:
             d = [(P[k] - lage[i][k]) / 16 for k in range(3)]
@@ -79,7 +79,7 @@ def licht(ls, P, N):
             n = norm(d); L = [-gs * a for a in n]
         else:
             ab = 1.0; n = norm(lage[i]); L = [-gs * a for a in n]
-        wert += farbe[i][1] * ab * max(0.0, sum(L[k] * N[k] for k in range(3)))
+        wert += farbe[i][k] * ab * max(0.0, sum(L[j] * N[j] for j in range(3)))
     return wert
 
 
@@ -150,19 +150,29 @@ def main():
     dv = norm([cam[i] - kw[i] for i in range(3)])
     flach_cos = sum(-Rp[3 * i + 1] * dv[i] for i in range(3))
     flach_l = licht(lichter[cut], kw, [-Rp[1], -Rp[4], -Rp[7]])
+    # Nachbesserung 1 (Abnahme F 0, M5): der Puls darf nicht in die 255-Grenze laufen. Der Blink-Puls (re15_blink_r41.h, Form
+    # TITLE.BIN FUN_801028ec) skaliert Umgebung und Lichtfarben bis 0xBE / 0x80 (0x80 + 31 x 2: `sltiu v0,v1,0x1f` @0x801028fc,
+    # `addiu a0,a0,2` @0x8010290c), der NCCT-Wert klemmt je Kanal bei 255 (re15_light.h `out_c = clamp(lit_c >> 4, 0, 255)` =
+    # GTE-Farbsaettigung). Die erste Fassung waehlte die hellste Neigung (Licht 211,5 -> Spitze 255 statt 314: Puls 92 -> 112
+    # mit Plateau, gemessen Abnahme 0). Jetzt: hoechster Wert cos(Blick) x Licht UNTER der Grenze Licht * 0xBE / 0x80 <= 255
+    # in jedem Kanal, Raster 16 statt 32 (die Grenze schneidet das alte Optimum).
+    grenze = 255 * 0x80 / 0xBE
     beste = None
-    for rx in range(-1024, 1025, 32):
-        for rz in range(-1024, 1025, 32):
+    for rx in range(-1024, 1025, 16):
+        for rz in range(-1024, 1025, 16):
             Rw = mul(Rp, M(rx, 0, rz))
             n = [-Rw[1], -Rw[4], -Rw[7]]
             kipp = math.degrees(math.acos(max(-1.0, min(1.0, -n[1]))))
             cv = sum(n[i] * dv[i] for i in range(3))
             if kipp > 60 or cv <= 0:
                 continue
-            l = licht(lichter[cut], kw, n)
+            l = max(licht(lichter[cut], kw, n, k) for k in range(3))
+            if l > grenze:
+                continue
             if beste is None or cv * l > beste[0]:
                 beste = (cv * l, rx, rz, kipp, cv, l)
     _, rx, rz, kipp, cv, l = beste
+    print("  Puls-Grenze Licht <= %.2f (255 * 0x80 / 0xBE): gewaehlt Licht %.1f -> Spitze %.1f" % (grenze, l, l * 0xBE / 0x80))
     print("  Schluessel Welt (%.0f,%.0f,%.0f), Blick zur Kamera %.1f Grad ueber dem Wasser" %
           (*kw, math.degrees(math.asin(-dv[1]))))
     print("  flach: cos %.3f Licht %.1f  ->  lokal rx %d rz %d (Kippung %.1f Grad): cos %.3f Licht %.1f; ~%.1f x %.1f Bildpunkte" %
