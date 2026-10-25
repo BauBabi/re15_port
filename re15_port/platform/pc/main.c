@@ -11147,6 +11147,8 @@ re_title:;
             re2fx_pc_draw();
             re15_pc_glas1120_draw(&cam_view, cx, cy, pc_fx_camf(),           /* Runde 35 Spur M */
                                   cam_has_region, cam_region_xs, cam_region_zs);
+            { extern void re15_pc_gator_fx_draw(const re15_camera_view_t *, int, int, int, int, const int16_t *, const int16_t *);
+              re15_pc_gator_fx_draw(&cam_view, cx, cy, pc_fx_camf(), cam_has_region, cam_region_xs, cam_region_zs); }   /* Runde 41 Spur G (Nachtrag 28): Raum-ESP ROOM40A0 + Kern-Zeilen 485..498 */
             re2fx_pc_set_ansicht(NULL, 0, 0, 0, 0, NULL, NULL);
             /* Runde 34 Nacht B: der Hebetisch-Cursor ueber dem Cut-4-Bild (eigene Abbildung ueber
              * Cut 10 von ROOM11F0, platform/pc/src/hebetisch_cursor_pc.c). */

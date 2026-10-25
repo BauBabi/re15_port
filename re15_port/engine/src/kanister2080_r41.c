@@ -134,6 +134,7 @@ static uint64_t s_kopf_ab;            /* Aktor-Bits: Kopf-ab gemeldet */
 static int      s_wurf_gier = -1;     /* Nachbesserung 2 (N3): gewaehlte Wurfrichtung dieser Szene (-1 = aus Bit 117) */
 static int      s_z42_an = -1, s_z42_aus = -1;   /* Nachbesserung 2 (N1): Messzeile Standzeit der Zeile 42 (Bildnummern) */
 static int      s_anschw;             /* Nachbesserung 2 (N3): Messzeile Anschwimmen (0 aus, 1 an) */
+static int      s_blick7_log;         /* Nachbesserung 3 (M2): Messzeile Blick des Werfers im ersten Cut-7-Bild (0 = noch nicht) */
 /* Nachtrag 26: RE2-Halsfuehrung (Part 5 Akku +0x98 Gier / +0x9a Neigung) und Kippen beim Greifen */
 static int16_t  s_hals_y, s_hals_p;
 static int      s_hals_slot = -1;
@@ -182,7 +183,7 @@ int re15_k2080_landepunkt(int32_t *x, int32_t *z)
 void re15_k2080_reset(void)
 {
     s_phase = RE15_K2080_AUS; s_kan_zustand = 0; s_ziel_slot = -1; s_ziel_n = 0; s_lande_ok = 0; s_set_2090 = 0;
-    s_wurf_gier = -1; s_z42_an = s_z42_aus = -1; s_anschw = 0; s_gator_slot = -1;
+    s_wurf_gier = -1; s_z42_an = s_z42_aus = -1; s_anschw = 0; s_gator_slot = -1; s_blick7_log = 0;
     s_hals_y = s_hals_p = 0; s_hals_slot = -1; s_hals_an = -1; s_kipp_k = 0;
     memset(s_zaehler, 0, sizeof s_zaehler);
 }
@@ -295,11 +296,13 @@ static void baue_szene(void)
     PUT(s_prog_szene, n, OP_SLEEP(RE15_K2080_AUFSTEHEN_HALT));            /* @0x01660 */
     /* ---- RE2 ROOM7020 sub12 ---- */
     PUT(s_prog_szene, n, OP_CUT(RE15_K2080_CUT_WURF));                   /* Cut_chg 7 @0x0726 */
-    /* Nachbesserung 2 (N2): die Wurfrichtung erst MIT dem Schnitt (RE2: Work_set(2,0) @0x073C, Pos_set @0x0740, Dir_set
+    /* Nachbesserung 2 (N2): die neue Gier erst MIT dem Schnitt (RE2: Work_set(2,0) @0x073C, Pos_set @0x0740, Dir_set
      * `33 00 00 00 74 0e 00 00` @0x0748 im ersten Bild von Cut 7, kein Sleep/Evt_next dazwischen); bis hierher behaelt der Werfer
      * die Gier des Laufs (Hinknien/Aufstehen mit Blick auf den Kanister). Vorher drehte der Takt ihn schon im Griffbild (Cut 5)
-     * in einem Bild um 98 Grad (Abnahme 1 N2). Work_set(2, NPC) steht seit dem Anlegen (ROOM1021 @0x020C2). */
-    PUT(s_prog_szene, n, OP_DIR(wurf_gier()));
+     * in einem Bild um 98 Grad (Abnahme 1 N2). Work_set(2, NPC) steht seit dem Anlegen (ROOM1021 @0x020C2).
+     * Nachbesserung 3 (Abnahme 2 M2, G-E2): der WERT ist wie bei Ada die der Kamera zugewandte Gier (RE15_K2080_ADA_BLICK_VERSATZ),
+     * nicht mehr die Wurfrichtung (beim Suedwurf stand er sonst mit dem Ruecken zur Kamera, frontal -0,45). */
+    PUT(s_prog_szene, n, OP_DIR(re15_k2080_werfer_gier()));
     /* Plc_motion @0x0750: RE2 spielt Adas Wurf-Clip `3f 0a 12 40` (Sub 0x0a, Clip 0x12 IHRER Bank). PORT-WAHL (Nachbesserung 1,
      * M5): Marvin/John haben keinen Wurf-Clip; ihr Eigen c6 hebt beide Haende von der Huefte nach vorn oben ((-31,-1602) ->
      * (764..917,-2534..-2458), Dossier 1.8/8.1) = das Hochstemmen ueber die Reling, dieselbe Bank wie ROOM1021 @0x020C6. */
@@ -437,8 +440,19 @@ static int wurf_gier_messhaken(void)
     return -1;
 #endif
 }
-/* Wurfrichtung (Gier des Werfers ab dem Schnitt auf Cut 7, die RE2-Bahn wird um sie gedreht). Nachbesserung 2 (N3): gewaehlt
- * beim Bau des Szenen-Programms (re15_k2080_wurf_gier_wahl), gemerkt in Bit 117 fuer den Raumaufbau ohne Laufzeit-Bahn. */
+/* Nachbesserung 3 (Abnahme 2 M2, G-E2): Gier des Werfers ab dem Schnitt auf Cut 7 = Gier zur Kamera des Wurf-Cuts (RID,
+ * g_room_rdt) vom Wurf-Stand + Adas Versatz (Herleitung am Header RE15_K2080_ADA_BLICK_VERSATZ). Mesh-Gier zur Richtung (dx,dz) =
+ * re15_atan2_q12(dz,dx) - 0x400 (re15_actor.h, wie nachfuehren). Ohne geladenen Cut: der Nennwert aus denselben Daten. */
+int re15_k2080_werfer_gier(void)
+{
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || g_room_rdt.cut_count <= RE15_K2080_CUT_WURF) return RE15_K2080_WERFER_GIER_NENN;
+    const re15_camera_cut_t *c = &g_room_rdt.cuts[RE15_K2080_CUT_WURF];
+    const int g = (int)re15_atan2_q12((int32_t)c->pos_z - RE15_K2080_NPC_STAND_Z, (int32_t)c->pos_x - RE15_K2080_NPC_WURF_X) - 0x400;
+    return (g + RE15_K2080_ADA_BLICK_VERSATZ) & 0xfff;
+}
+/* Wurfrichtung = Weltrichtung der RE2-Bahn (die Vektoren werden um sie gedreht; seit Nachbesserung 3 NICHT mehr die Gier des
+ * Werfers, G-E2). Nachbesserung 2 (N3): gewaehlt beim Bau des Szenen-Programms (re15_k2080_wurf_gier_wahl), gemerkt in Bit 117
+ * fuer den Raumaufbau ohne Laufzeit-Bahn. */
 static int wurf_gier(void)
 {
     const int m = wurf_gier_messhaken();
@@ -446,12 +460,13 @@ static int wurf_gier(void)
     if (s_wurf_gier >= 0) return s_wurf_gier;
     return bit(RE15_K2080_BIT_SUEDWURF) ? RE15_K2080_WURF_GIER_SUED : RE15_K2080_WURF_GIER_NORD;
 }
-/* Nennbahn einer Wurfrichtung g (Wurf-Stand RE15_K2080_NPC_WURF_X/STAND_Z + Haende am Ende von Eigen c6, gedreht um g) bis zur
- * 2090-Landeflaeche (RE2 sub13 @0x088E-08B0) - dieselbe Rechnung wie der Raumaufbau ohne Laufzeit-Bahn. */
+/* Nennbahn einer Wurfrichtung g (Wurf-Stand RE15_K2080_NPC_WURF_X/STAND_Z + Haende am Ende von Eigen c6, gedreht um die Gier des
+ * Werfers - seit Nachbesserung 3 die der Kamera zugewandte, G-E2) bis zur 2090-Landeflaeche (RE2 sub13 @0x088E-08B0) - dieselbe
+ * Rechnung wie der Raumaufbau ohne Laufzeit-Bahn. */
 static void nenn_landung(int g, int32_t out[2])
 {
     int32_t start[3], ende[3], dx = 0, dz = 0; int nb = 0;
-    vektor_drehen((int16_t)g, RE15_K2080_HAND_VOR, 0, &dx, &dz);
+    vektor_drehen((int16_t)re15_k2080_werfer_gier(), RE15_K2080_HAND_VOR, 0, &dx, &dz);
     start[0] = RE15_K2080_NPC_WURF_X + dx; start[1] = RE15_K2080_Y + RE15_K2080_HAND_HOCH; start[2] = RE15_K2080_NPC_STAND_Z + dz;
     re15_k2080_bahn_rechnen(start, (int16_t)g, wasser_2090(), ende, &nb);
     out[0] = ende[0]; out[1] = ende[2];
@@ -831,15 +846,31 @@ void re15_kanister2080_r41_tick(void)
         kanister_in_haenden(n);                          /* Super_reset @0x800558b8-d8: Weltlage der Haende */
         const int32_t start[3] = { s_kan_pos[0], s_kan_pos[1], s_kan_pos[2] };
         int32_t ende[3]; int nb = 0;
-        re15_k2080_bahn_rechnen(start, n->rot_y, wasser_2090(), ende, &nb);   /* FG-E4: der Fall endet im 2090-Becken */
+        /* Nachbesserung 3 (G-E2): die Bahn laeuft in der Weltrichtung zur Landestelle (wurf_gier), nicht in der Gier des Werfers -
+         * RE2 Add_speed = Weltaddition (@0x80055abc-e0), Adas Blick @0x0748 ist davon unabhaengig. */
+        re15_k2080_bahn_rechnen(start, (int16_t)wurf_gier(), wasser_2090(), ende, &nb);   /* FG-E4: der Fall endet im 2090-Becken */
         s_lande[0] = ende[0]; s_lande[1] = ende[2]; s_lande_ok = 1;
-        bahn_start(start, n->rot_y);
+        bahn_start(start, (int16_t)wurf_gier());
         s_kan_zustand = 2;
-        K_LOG("Wurf: Start (%d,%d,%d) v=(%d,%d,%d) a=(%d,%d,%d) -> Landung (%d,%d,%d) nach %d Bildern (Wasser 2090 y %d)",
+        K_LOG("Wurf: Start (%d,%d,%d) v=(%d,%d,%d) a=(%d,%d,%d) -> Landung (%d,%d,%d) nach %d Bildern (Wasser 2090 y %d), "
+              "Werfer-Gier %d, Wurfrichtung %d",
               (int)start[0], (int)start[1], (int)start[2], (int)s_kan_v[0], (int)s_kan_v[1], (int)s_kan_v[2],
-              (int)s_kan_a[0], (int)s_kan_a[1], (int)s_kan_a[2], (int)ende[0], (int)ende[1], (int)ende[2], nb, (int)wasser_2090());
+              (int)s_kan_a[0], (int)s_kan_a[1], (int)s_kan_a[2], (int)ende[0], (int)ende[1], (int)ende[2], nb, (int)wasser_2090(),
+              (int)n->rot_y & 0xfff, wurf_gier());
     }
     if (s_kan_zustand == 2) fall_takt(wasser_2090());   /* die ersten Fall-Bilder noch in 2080, dann der Raumwechsel (FG-E4) */
+    /* MESSZEILE (Nachbesserung 3, M2): Blick des Werfers zur Kamera des Wurf-Cuts im ersten Bild von Cut 7 - frontal = cos(Gier -
+     * Gier zur Kamera) in Q12 (RE2 Ada 0,985 = 4034, Herleitung RE15_K2080_ADA_BLICK_VERSATZ). */
+    if (n && !s_blick7_log && g_scd.cam_id == RE15_K2080_CUT_WURF && s_kan_zustand == 1 && g_room_rdt_ok && g_room_rdt.cuts &&
+        g_room_rdt.cut_count > RE15_K2080_CUT_WURF) {
+        const re15_camera_cut_t *c = &g_room_rdt.cuts[RE15_K2080_CUT_WURF];
+        const int zur = ((int)re15_atan2_q12((int32_t)c->pos_z - n->z, (int32_t)c->pos_x - n->x) - 0x400) & 0xfff;
+        const int d = (((int)n->rot_y - zur + 0x800) & 0xfff) - 0x800;
+        s_blick7_log = 1;
+        K_LOG("Werfer Cut %d: Gier %d, Gier zur Kamera %d, Versatz %d, frontal %d/4096 (RE2 ROOM7020 Ada: Versatz %d, frontal 4034), "
+              "Wurfrichtung %d", RE15_K2080_CUT_WURF, (int)n->rot_y & 0xfff, zur, d, (int)re15_cos_q12(d & 0xfff),
+              RE15_K2080_ADA_BLICK_VERSATZ, wurf_gier());
+    }
 }
 
 /* FG-E3: die Aktor-Kopie vom Ausloesen in DENSELBEN Slot zuruecklegen. Der main.c-Portblock setzt nur einen neuen Alligator,
@@ -1039,7 +1070,7 @@ void re15_kanister2080_r41_install(uint16_t room_id)
         }
         if (s_phase == RE15_K2080_NACH_2080) {
             s_phase = RE15_K2080_IN_2080;
-            s_kan_zustand = 0; s_ziel_slot = -1; s_ziel_n = 0; s_kopf_ab = 0; s_z42_an = s_z42_aus = -1;
+            s_kan_zustand = 0; s_ziel_slot = -1; s_ziel_n = 0; s_kopf_ab = 0; s_z42_an = s_z42_aus = -1; s_blick7_log = 0;
             /* Nachbesserung 2 (N3): Wurfrichtung nach der Lage des Alligators beim Ausloesen (Header RE15_K2080_WURF_GIER_NORD/_SUED) */
             s_wurf_gier = re15_k2080_wurf_gier_wahl(s_gator_slot, s_gator.x, s_gator.z);
             bit_setzen(RE15_K2080_BIT_SUEDWURF, s_wurf_gier == RE15_K2080_WURF_GIER_SUED);

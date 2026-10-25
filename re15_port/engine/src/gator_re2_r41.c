@@ -1673,18 +1673,24 @@ static void gr2_fontaene_takt(gr2_t *g, re15_actor_t *e)
     (void)e;
     int ok6 = s_fx_ok, ok7 = s_fx_ok;
     int16_t ofs[4];
-    if (g->fontaene == 1 && ok6) {                          /* @0x80103f20-70: 0x26032000 an Part 6 */
-        ofs[0] = (int16_t)(rnd8() * 2 + 300); ofs[1] = (int16_t)(rnd8() * 2); ofs[2] = (int16_t)(rnd8() * 4 + 200); ofs[3] = 0;
-        gr2_fx(0x26032000u, 0, s_fx_mtx[GR2_FXM_TEIL6], ofs);
-    } else if (g->fontaene >= 2 && g->fontaene < 9) {       /* @0x80103f74-40a8 */
-        if (ok7) {
+    /* Runde 41 Spur G (Nachbesserung 3, Nachtrag 28 "Explosionseffekt"): Folge 1:1 nach FUN_80103eb4 (Dossier G 10.1).
+     * Tick 1 (`beq v1,v0,0x80103f20` @0x80103ed8) spawnt 0x26032000 und laeuft OHNE Sprung in den Block der Ticks 1..8
+     * (@0x80103f74, vorher `else if`); 0x00064000 UND 0x00034000 an Part 7 (s2 + 1276, s0 erst im Verzoegerungsplatz
+     * @0x80104030 auf + 1104), beide mit Versatz (rnd*4+300, rnd*2, rnd*2+200) (`sra 22 / sra 23 / sra 23` @0x80103f80-a4,
+     * @0x80103fdc-0x80104000); 0x08024000 an Part 6 mit (rnd*2+300, rnd*2, rnd*4+200) (`sra v0,v0,22` @0x8010405c). */
+    if (g->fontaene >= 1 && g->fontaene < 9) {              /* `slti v0,v1,9` @0x80103ef8 */
+        if (g->fontaene == 1 && ok6) {                      /* @0x80103f20-70: 0x26032000 an Part 6 */
+            ofs[0] = (int16_t)(rnd8() * 2 + 300); ofs[1] = (int16_t)(rnd8() * 2); ofs[2] = (int16_t)(rnd8() * 4 + 200); ofs[3] = 0;
+            gr2_fx(0x26032000u, 0, s_fx_mtx[GR2_FXM_TEIL6], ofs);
+        }
+        if (ok7) {                                          /* @0x80103f74-0x80104028: Part 7 */
             ofs[0] = (int16_t)(rnd8() * 4 + 300); ofs[1] = (int16_t)(rnd8() * 2); ofs[2] = (int16_t)(rnd8() * 2 + 200); ofs[3] = 0;
             gr2_fx(0x00064000u, (int16_t)(rnd8() * 16), s_fx_mtx[GR2_FXM_TEIL7], ofs);
+            ofs[0] = (int16_t)(rnd8() * 4 + 300); ofs[1] = (int16_t)(rnd8() * 2); ofs[2] = (int16_t)(rnd8() * 2 + 200); ofs[3] = 0;
+            gr2_fx(0x00034000u, (int16_t)(rnd8() * 16), s_fx_mtx[GR2_FXM_TEIL7], ofs);
         }
-        if (ok6) {
+        if (ok6) {                                          /* @0x8010402c-0x801040a8: Part 6 */
             ofs[0] = (int16_t)(rnd8() * 2 + 300); ofs[1] = (int16_t)(rnd8() * 2); ofs[2] = (int16_t)(rnd8() * 4 + 200); ofs[3] = 0;
-            gr2_fx(0x00034000u, (int16_t)(rnd8() * 16), s_fx_mtx[GR2_FXM_TEIL6], ofs);
-            ofs[0] = (int16_t)(rnd8() * 2 + 300); ofs[1] = (int16_t)(rnd8() * 2); ofs[2] = (int16_t)(rnd8() * 2 + 200); ofs[3] = 0;
             gr2_fx(0x08024000u, (int16_t)(rnd8() * 16), s_fx_mtx[GR2_FXM_TEIL6], ofs);
             gr2_fx(0x08024000u, (int16_t)(rnd8() * 16), s_fx_mtx[GR2_FXM_TEIL6], ofs);
         }

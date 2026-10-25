@@ -199,6 +199,17 @@
  *   SUED 1024: Aufschlag (-6821,-22914), Fall samt Aufschlag in Cut 12 (17-19 Bilder, Dossier 8.9). */
 #define RE15_K2080_WURF_GIER_NORD  RE15_K2080_WURF_GIER
 #define RE15_K2080_WURF_GIER_SUED  1024
+/* Nachbesserung 3 (Abnahme 2 M2, Orchestrator-Entscheid G-E2 "Marvin/John stehen beim Satz 42 und beim Wurf in 2080 Cut 7 der
+ * Kamera zugewandt wie Ada ... die Kanister-Bahn laeuft in Weltrichtung zur Landestelle, unabhaengig von der Gier des Werfers"):
+ * RE2 ROOM7020 Cut 7 (selbst gelesen): Ada Pos_set `32 00 a0 92 b4 e2 14 ba` = (-28000,-7500,-17900) @SCD 0x0740, Dir_set
+ * `33 00 00 00 74 0e 00 00` = 3700 @0x0748; Kamera Cut 7 RID @RDT 0x144 Lage (-22158,-3852,-15174) -> Gier Ada -> Kamera 3811,4
+ * (Mesh-Gier zur Richtung (dx,dz) = atan2(dx,dz) - 1024, re15_actor.h re15_atan2_q12); Adas Gier liegt 111 darunter (3700 - 3811,4
+ * = -111,4 -> -111 = -9,8 Grad, frontal cos = 0,985). Port: Gier Werfer -> 2080/2081-Kamera Cut 7 (RID @RDT 0x140: (8095,-18819,
+ * -9867), in 2081 gleich) + derselbe Versatz. Vom Wurf-Stand (RE15_K2080_NPC_WURF_X, RE15_K2080_NPC_STAND_Z) = 3788 - 111 = 3677
+ * (RE15_K2080_WERFER_GIER_NENN, Rueckfall ohne geladenen Cut). Die Wurfrichtung (WURF_GIER_NORD/_SUED) dreht nur noch die RE2-Bahn
+ * (Add_speed = Weltaddition @0x80055abc-e0: RE2 wirft in Weltachsen, unabhaengig von Adas Blick). */
+#define RE15_K2080_ADA_BLICK_VERSATZ (-111)
+#define RE15_K2080_WERFER_GIER_NENN  3677
 /* Nachbesserung 2 (N3): ANSCHWIMMEN = RE2-Zielmodus +0x1C0 & 4 in der Beckengeometrie des Ports. RE2 (EM23_OVL_0000.BIN,
  * selbst gelesen): Bank 5 Bit 1 (Kanister liegt) und Stufe < 2 -> Zielmodus an (@0x80100a34-5c), Ziel = der Kanister
  * (x, y - 800, obj[1].z) @0x80100a4c-70; aus, sobald obj[1].z - z < 9000 - 120 = 8880 (`addiu v0,v0,-9000 / slti v0,v0,-120`
@@ -266,6 +277,8 @@ int  re15_k2080_r41_anschwimmen(int slot, re15_actor_t *e, int32_t dist);
 int  re15_k2080_r41_anschwimmen_aktiv(const re15_actor_t *e);
 /* Pruefhaken (Riegel landung): Wahl der Wurfrichtung fuer einen Alligator bei (gx,gz) (gslot < 0: kein Alligator gesichert). */
 int  re15_k2080_wurf_gier_wahl(int gslot, int32_t gx, int32_t gz);
+/* Nachbesserung 3 (G-E2): Gier des Werfers ab dem Schnitt auf Cut 7 (der Kamera zugewandt wie Ada, s. RE15_K2080_ADA_BLICK_VERSATZ). */
+int  re15_k2080_werfer_gier(void);
 /* Nachtrag 26: Hals-Akku (Gier, Neigung) des Alligators (Part 5) und ein Schritt der RE2-Halsfuehrung; Pruefhaken fuer die Riegel.
  * re15_k2080_hals_schritt: Akku-Ziel (zy, zp) -> Akku slewt um hoechstens RE15_K2080_HALS_SCHRITT (FUN_800177c0). */
 void re15_k2080_hals_lesen(int16_t *gier, int16_t *neigung);
