@@ -643,10 +643,12 @@ ihre Zahlen werden zitiert. Punkt 2 (erfuellt) wird nicht angefasst.
 
 ### Stand Nachbesserung 3
 - [x] Lektuere (AUFTRAG inkl. Nachtrag 11, VERTRAG, Abnahme 2, Dossier NB1/NB2, git log master..HEAD = 99f85a92)
-- [ ] Mangel 1: Ursache an den Daten nachrechnen (Zellen-Tiefe R4/R5/R19 gegen Zelle 6), Weg, Umsetzung, exe-Messung, Riegel "zu fern"
-- [ ] Mangel 1: Verdachtsliste scan_fern_alle.txt (127) systematisch sichten
-- [ ] Mangel 2: OFFEN 9 gehen (Rechteck teilen / Punkte ausserhalb des Koerpers durchsichtig), Restliste weiter schliessen
-- [ ] Bau, gezielte Tests, Abschluss-Commit
+- [x] Mangel 1: Ursache nachgerechnet (obere Felder auf Rueckwand-/Nordwand-Zelle, dazu Rechteck-Tiefe und Typ-2-Form), Zuordnung
+      Zelle 6, Teilrechtecke je Koerper, exe-Messung an den Abnahme-Stellen (0 sichtbar), Riegel unit/integration_r41_masken36_fern
+- [x] Mangel 1: Verdachtsliste scan_fern_alle.txt (127 Eintraege, 41 Gruppen) gegen den Endstand gesichtet (Werkzeug verdacht)
+- [x] Mangel 2: OFFEN 9 gegangen (Teilrechtecke, Atlaspunkte ausserhalb des Koerpers durchsichtig + Rest-Stueck), Restliste: 7 weitere
+      Gegenstaende von Hand zugeordnet und gezeichnet; was bleibt, hat keine Zelle / die Kamera steht darueber / liegt nicht in der Region
+- [x] Bau, gezielte Tests (unit 32/32, Integration s. Tests NB3), Abschluss-Commit
 
 ### NB3 Messung vorher: Mass "zu fern" (neu, test_r37_masken36 fern)
 Die Abnahme 2 verlangt einen Riegel gegen zu FERNE Tiefe. Neuer Modus `test_r37_masken36 fern` (dieselben erreichbaren Stehplaetze,
@@ -723,6 +725,103 @@ Ausschluss mit gefilterter Tabelle bitgleich. Gezeichnete Punkte der bearbeitete
 ROOM6000 liegt an duennen Koerpern (Zelle @0x00810 Hoehe 25/650, @0x007F8 Hoehe 150 = Bahnsteigkante): der Austritt folgt dort
 direkt auf den Eintritt, das Austritts-Kriterium kann die Spalten nicht unterscheiden - die Figuren dahinter stehen im Gleisbett
 (Band 0, OFFEN 10). Deshalb die Figurpunkt-DP (Kette k2).
+
+### NB3 Endstand Kette k6 (Messung nachher)
+`m41nb3/kette4.sh k6` (Runde 0 Austritts-Kriterium -> `test_r37_masken36 hinter` -> Runden mit Figurpunkt-DP -> Rueckholliste bis stabil
+(2 Runden) -> Modell-Tabelle auf gezeichnete Rechtecke (1050 -> 1025 Zeilen) -> Ausschluss mit gefilterter Tabelle bitgleich).
+| Mass | vor NB3 (99f85a92) | nach NB3 |
+|---|---|---|
+| zu fern (`test_r37_masken36 fern`, Leon + Elza) | 1 360 606 | **40 276** (Stage 3: 56 346 -> **0**, 4: 961 232 -> 72, 5: 914 -> 270, 6: 342 114 -> 39 934) |
+| gezeichnete Generator-Punkte Leon Stage 3..6 (Zaehler wie stat_nb2 der Abnahme, `m41nb3/py/stat.py`) | 956 982 | **983 624** (+26 642) |
+| Punkte nur in ausgeschlossenen Rechtecken | 273 961 | **247 319** |
+| geaenderte Cuts (Bogen `M_bilder/NB3/NB3_bogen_*.png`, Zahlen `NB3_zahlen.txt`) | - | 25 Cuts: 306 325 -> 332 967 Punkte, **0 Punkte weggefallen** |
+| offene Kerben (unit_r41_masken36_loecher) | 10 178 von 63 546 (16,0 %) | 9 036 von 63 116 (**14,3 %**) |
+| Modell-Zeilen (belegt, MSK-Tiefe == Zeile, gezeichnet) | 530 | 1025 (je 12 SCA-Bytes mit RDT-Offset, Riegel zellen3d) |
+Der Rest "zu fern" liegt zu 99 % in ROOM6000 auf **Band 0** (Gleisbett unter dem Bahnsteig: C5 17 331, C7 2 636 Punkte je Variante,
+`test_r37_masken36 fern -1 6000 5` druckt die Plaetze) - OFFEN 10; dazu 4080 C7 zwei Plaetze an der Zellkante (36) und 5090 C11 sechs
+Plaetze am Rand der Dreieckszelle 30 (135, der Randfall der Abnahme-Hinweise d5090_11).
+**exe (Spurbaum-exe md5 597ba53a..., Bild 120, RE15_TRILOG, `m41nb3/py/ana.py`: Leon = vorderstes Dreieck, Maskenschluessel (depth+1)*65536/1023
+wie der Zeichner; "sichtbar hinter Koerper" = Leon-Punkt, an dem der Koerper einer gezeichneten Modell-Maske VOR ihm beginnt, ohne dass eine
+Maske ihn verdeckt):**
+| Szene (Stellen der Abnahme 2) | Platz | Leon unter Masken | verdeckt | hinter Koerper sichtbar | Abnahme 2 (vorher) |
+|---|---|---|---|---|---|
+| s30A0_00 Cut 0 | (-21743,16263) | 1944 | 1943 | **0** | 1072 ueber dem oberen Feld |
+| u30A0_00 Cut 0 | (-23000,16300) | 1475 | 1475 | **0** | 986 |
+| t30A0_00 Cut 0 | (-24300,16400) | 1131 | 1131 | **0** | 858 |
+| h30A0_00 Cut 0 | (-22343,16063) | 1719 | 1717 | **0** | - |
+| e30A1_00 Elza Cut 0 | (-21743,16263) | 1382 | 1382 | **0** | 704 |
+| h30A0_01 Cut 1 (erzwungen) | (-19143,15863) | 1733 | 1733 | **0** | 988 |
+| d30A0_00 DAVOR | (-21943,13663) | 2155 | **0** | (2 Randpunkte) | 0 |
+| d30A0_01 DAVOR | (-21343,13663) | 2555 | **0** | (1) | 0 |
+| f30A0_00 / f30A1_00 (R37-FREI "Haar") | (-25400,13550) / (-24284,13657) | 503 / 843 | **0 / 0** | 0 | 0 |
+Ueber der Trennwand bleibt nur der Haarschopf sichtbar (s30A0_00 36 Punkte oberhalb der Oberkante, "ausser Kopf"); Bild
+`M_bilder/NB3/NB3_M1_30A0_trennwand.png` (rot verdeckt, blau sichtbar, magenta sichtbar obwohl hinter dem Koerper = 0). "uebermalt" (|A-B| > 24)
+DAVOR 1 / 4 Punkte = dieselben Rasterkanten wie in der Abnahme 2. Eigene Zusatzstelle l30A0_00 (-24843,15863), 488 hinter der Trennwand: 12 von
+1050 Punkten sichtbar, alle in EINER Bildspalte (x 208) mit Leon-z zwischen Eintritt und Austritt des Koerpers - Leons Modell ragt dort in den
+Zellen-Koerper (OFFEN 12).
+
+### NB3 Mangel 1 - Sichtung der Verdachtsliste der Abnahme 2 (`m41abn2/scan_fern_alle.txt`, 127 Eintraege)
+Die Abnahme hat im GRUNDRISS gesucht (>= 50 % der Sehstrahlen eines Modell-Rechtecks betreten vorher eine andere solide Zelle, Huellquader
+2400 hoch). Ob das im Spiel wirkt, entscheidet, ob dort eine Figur steht. Werkzeug `test_r37_masken36 verdacht` (Endstand): je gezeichnetem
+Modell-Rechteck die erreichbaren Figurpunkte an seinen Bildpunkten, die (i) von keiner Maske verdeckt sind, (ii) NICHT hinter dem eigenen
+Koerper liegen und (iii) deren Grundriss-Strecke eine solide Zelle des Bands kreuzt - nur dort kann eine zu ferne Tiefe eine Figur zeigen,
+die ein Gegenstand davor verdecken muesste. `verdacht <raum> <cut> <rechteck>` druckt die Stehplaetze. Ergebnis je Gruppe der Abnahme
+(Cut, Modellzelle, Zelle davor; Spalten: Abnahme-Rechtecke | Endstand-Rechtecke mit dieser Modellzelle | Verdachtspunkte):
+**27 von 41 Gruppen 0 Punkte** (darunter 30A0 C0 R4/R19 und C1 R4: Modellzelle 0/8/1 gibt es nicht mehr, die Felder tragen Zelle 6;
+3040 C9, 30A0 C4, 4040 C10/C12, 5020 C11, 5050 C1, 5100 C7, 6010 C6 ...). 14 Gruppen mit Punkten:
+| Cut | Modell (Grundriss-Ecke) | Zelle davor | Abnahme | Endstand | Verdachtspunkte |
+|---|---|---|---|---|---|
+| 3040 C8 | x-21825 z-12075 | @0x0087C | 4 | 7 | 19 |
+| 3040 C8 | x-21825 z-12075 | @0x00990 | 3 | 7 | 19 |
+| 3050 C1 | x-27225 z-16893 | @0x009D8 | 5 | 9 | 4564 |
+| 3050 C1 | x-27225 z-16893 | @0x00C00 | 1 | 9 | 4564 |
+| 4040 C6 | x-22741 z-2734 | @0x00818 | 2 | 3 | 8347 |
+| 4040 C11 | x-8875 z4500 | @0x00860 | 3 | 3 | 250 |
+| 4080 C8 | x1525 z-6775 | @0x00628 | 1 | 1 | 78326 |
+| 5020 C6 | x-16433 z-27516 | @0x00870 | 1 | 9 | 7768 |
+| 5020 C6 | x-7475 z-19375 | @0x00858 | 3 | 18 | 1906 |
+| 5090 C11 | x-5673 z-29750 | @0x009D4 | 6 | 6 | 854 |
+| 5090 C11 | x-425 z-27200 | @0x009D4 | 3 | 10 | 3618 |
+| 5090 C13 | x21642 z-29765 | @0x009D4 | 1 | 19 | 89377 |
+| 5090 C13 | x21642 z-22215 | @0x009C8 | 1 | 3 | 65212 |
+| 6000 C5 | x19313 z-25284 | @0x007F8 | 3 | 3 | 5340 |
+Davon nachgesehen: **6000 C5 (Gittertraeger)** - echter Fehler, die Mitte des Traegers trug die Bahnsteigzelle 13 @0x007F8 (Hoehe 150) statt
+der Traegerzelle 12 @0x007EC; Zuordnung von Hand (Bild `NB3_zuordnung_6000_05.png`), unterer Traeger jetzt gezeichnet (+4 698 Punkte). Die
+Teilung der Traeger-MITTE nimmt der Ausschluss wegen Figurpunkten im Gleisbett (Band 0) wieder heraus (Rueckholliste), sie bleibt im
+NB2-Stand - der Rest der 5 340 Punkte. **5090 C13 R12 (Kistenstapel rechts, Zelle 26)** - kein Fehler: die Verdachts-Plaetze liegen bei
+x 20717..21117 z -26365..-24965 direkt VOR dem Stapel (Zelle 26 beginnt bei x 21642); die "Zelle davor" ist die lange niedrige Kistenreihe
+@0x009D4, ueber die der Sehstrahl hinweggeht - die Figur steht vor dem Stapel und gehoert ueber die Maske. Die uebrigen 12 Gruppen sind
+nicht einzeln an der exe geprueft (OFFEN 13).
+
+### NB3 Mangel 2 - OFFEN 9 und Restliste
+* **OFFEN 9 gegangen ("Atlaspunkte ausserhalb des Koerpers durchsichtig / Rechteck teilen"):** kacheln_r41.py nimmt jetzt auch die Koerper
+  der vorher ausgeschlossenen Modell-Rechtecke (Bericht zellen3d_r41.json) auf; fuer Rechtecke mit NEUEM Koerper (vorher ausgeschlossen, ohne
+  Modell-Zeile oder mit anderer Zelle) werden die Punkte ausserhalb des Koerpers im eigenen Atlas durchsichtig und kommen in ein Rest-Stueck
+  mit der alten Tiefe (nur wo kein anderes Teil den Texel deckend braucht); die Teile zeigen dann nur Koerperpunkte, und das 3D-Urteil traegt
+  sie. Dazu: tote Rechtecke (vorher ausgeschlossen, ohne Koerper) je Objekt zusammengelegt - Platz fuer Teile in vollen Cuts (z.B. 30A0 C0:
+  die 11 Moebel-Rechtecke vorn, Kamera ueber der Zelle, sind jetzt 1 Rechteck, weiter ausgeschlossen).
+* **Restliste der Abnahme 2 (echte Gegenstaende) - jetzt gezeichnet** (Zuordnung von Hand mit Zellbytes, Messung und Bild in
+  `zuordnung_r41.json`, Bilder `M_bilder/NB3/NB3_zuordnung_*.png`):
+  | Gegenstand | Zelle | Hoehe / IoU | Punkte neu |
+  |---|---|---|---|
+  | 30A0 C3 Spinde (4 Objekte) | 6 @0x0045C | 3725 / 0,605 | +10 292 |
+  | 6000 C5 Gittertraeger (4 Objekte) | 12 @0x007EC (Saeule) | 4100 / 0,804 | +4 698 |
+  | 3040 C9 Kiste vorn (OFFEN 9) | Modell aus NB2-Bericht | - | +2 541 |
+  | 3040 C0 Schaltkasten oben + Kiste | 8 @0x00870 | 3475 / 0,526 | +2 471 |
+  | 5090 C13 Kistenstapel Mitte, obere Kiste | 27 @0x009BC | 3850 / 0,420 | +2 162 |
+  | 5020 C7 Container rechts (4 Objekte) | 11 @0x00864 | 3500 / 0,872 | +1 637 |
+  | 5020 C12 X-Kiste, unterer Teil | 12 @0x00870 | 1425 / 0,306 | +1 574 |
+  Restliste-Bilder des Endstands: `M_bilder/NB3_rest/NB3_rest_ROOMxxxx_Cnn.png` (gruen gezeichnet, rot nur ausgeschlossen).
+* **Was bleibt (die Daten tragen keine sichere Tiefe - je Fall gemessen):**
+  - Kamera UEBER dem Grundriss (Nahfeld-Sperre der NB2, gemessen an 5050 C2: 381 Gitterpunkte ohne Koerper davor): 5050 C1 Schreibtisch/Pult
+    (5 469 + 1 647 + 448), 5050 C2 Pult vorn (3 719 + 2 157), 30A0 C0 Moebel vorn (1 618).
+  - kein Koerper in den Daten: 6000 C7 Lok-Unterteil (6 710 + 2 387; die Lok-Zelle 15 @0x00810 liegt auf Band 2, ihr Unterteil reicht ins
+    Gleisbett, Band 0 hat dort keine Zelle - Kandidaten `m41nb3/py/kandidaten.py`: beste IoU 0,34, 40 % im Koerper), 50B0 C1/C3 Roboterarm
+    (1 182 + 217 / 3 310, haengt ohne Bodenkontakt, keine Zelle), 6000 C5 Restpunkte am Traeger (702 + 2 135, ausserhalb der Zelle 12).
+  - nicht in der Generator-Region: die Gelaender 3050 C6, 30E0 C6..C9, 3040 C3 - der Generator hat dort Boden (rot in den Bildern) statt der
+    Gelaenderstaebe gefunden; eine Maske braucht hier eine Freistellung wie in STAGE1/2 (Nutzerfrage).
+  - der Grossteil der 247 319 Punkte sind Waende, Boeden und Decken (Gruende NB2: keine Zelle mit der Mehrheit der Bodenkontakte) - eine
+    Figur steht nie hinter einer Raumwand oder dem eigenen Boden, dort verdeckt eine Maske nie richtig etwas.
 
 ## Tests (gezielt, KEINE volle Suite)
 
