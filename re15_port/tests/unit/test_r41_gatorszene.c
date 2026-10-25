@@ -21,6 +21,8 @@
  *               in der laufenden Kamera), Einstellung auf den Schluessel: Schnitt im Bild des Todes, Riegel, nach dem Halt
  *               Cut_old auf den Cut davor + Zonenkamera an + Riegel auf (Folge E / O)
  *   bilddiff    Auswerter des exe-Riegels integration_r41_gatorszene_tod*: Bilder mit/ohne Schluessel (s. bilddiff())
+ *   kamfolge    Auswerter des exe-Riegels integration_r41_gatorszene_tod_explosion*: Kamera je Bild ueber drei Referenzbilder
+ *               (Explosions-, Schluessel-, Zonen-Cut), verlangt die Folge E+K+ ohne ein Bild des Zonen-Cuts (s. kamfolge())
  * Nachbesserung 1 in bestehenden Teilen: leiche (M5 Puls-Kappung + Gegenprobe der ersten Neigung), tor (M3 genau ein
  * Verschlossen-Ton in 2090 und 20A0), szene/szene_elza (M1 Kamera-Uebergabe auf Cut 0, Spielfigur im Bild, Sperre frei).
  *   szene       die ganze Szene mit dem echten Boss-Takt (RE2-EM23-Bank): Ankunft ueber die Leiter -> Knall -> 2080 (8 Zombies
@@ -819,12 +821,66 @@ static int bilddiff(const char *da, const char *db, int f0, int f1, int st, int 
     return ok ? 0 : 1;
 }
 
+/* ---- Auswerter kamfolge (Nachbesserung 3, Abnahme 2 M1) -----------------------------------------------------------------
+ * Bilder fd_<f0..f1>.ppm eines Laufs mit Explosionsschnitt der Spur B (R1 P0, RE2 +0x218 |= 0x40 @0x80102248): je Bild die
+ * mittlere Abweichung (Summe |Delta| ueber alle Kanaele / Kanalzahl) zu drei Referenzbildern desselben Laufs - E (mitten in der
+ * Explosions-Einstellung), K (mitten in der Schluessel-Einstellung), X (Zonen-Cut nach Cut_old) - und die Klasse = naechste
+ * Referenz (keine Schwelle). Verlangt die Folge E+K+: zuerst Explosions-Cut, dann Schluessel-Cut, KEIN Bild des Zonen-Cuts
+ * dazwischen und kein Zurueck. Vorher (Abnahme 2 Lauf KW, Nachbesserung 3 Lauf V_KW): fd 197/198 = X (mittlere Abweichung zu X 3,31
+ * / 0,19 gegen E 14,34 / K 11,64) -> E+X+K+. */
+static int kamfolge(const char *d, int f0, int f1, int fe, int fk, int fx)
+{
+    const int refn[3] = { fe, fk, fx };
+    const char kl[3] = { 'E', 'K', 'X' };
+    unsigned char *ref[3] = { NULL, NULL, NULL };
+    int w = 0, h = 0, ok = 1;
+    for (int r = 0; r < 3; r++) {
+        char pr[700]; int wr, hr;
+        snprintf(pr, sizeof pr, "%s/fd_%06d.ppm", d, refn[r]);
+        if (!ppm_lesen(pr, &wr, &hr, &ref[r]) || (r > 0 && (wr != w || hr != h))) {
+            printf("kamfolge: Referenzbild %c fehlt/ungleich gross (%s) -> FEHLER\n", kl[r], pr);
+            for (int i = 0; i < 3; i++) free(ref[i]);
+            return 1;
+        }
+        w = wr; h = hr;
+    }
+    char folge[1024]; int nf = 0, n[3] = { 0, 0, 0 };
+    for (int f = f0; f <= f1 && nf < (int)sizeof folge - 1; f++) {
+        char pa[700]; int wa, ha; unsigned char *a = NULL;
+        snprintf(pa, sizeof pa, "%s/fd_%06d.ppm", d, f);
+        if (!ppm_lesen(pa, &wa, &ha, &a) || wa != w || ha != h) { printf("  F%d: Bild fehlt (%s)\n", f, pa); free(a); ok = 0; continue; }
+        long long sum[3] = { 0, 0, 0 };
+        const size_t nb = (size_t)w * (size_t)h * 3u;
+        for (int r = 0; r < 3; r++)
+            for (size_t i = 0; i < nb; i++) { const int dv = (int)a[i] - (int)ref[r][i]; sum[r] += dv < 0 ? -dv : dv; }
+        free(a);
+        int best = 0;
+        for (int r = 1; r < 3; r++) if (sum[r] < sum[best]) best = r;
+        n[best]++;
+        folge[nf++] = kl[best];
+        printf("  F%d: mittlere Abweichung E %lld.%02lld K %lld.%02lld X %lld.%02lld -> %c\n", f,
+               sum[0] * 100 / (long long)nb / 100, sum[0] * 100 / (long long)nb % 100, sum[1] * 100 / (long long)nb / 100,
+               sum[1] * 100 / (long long)nb % 100, sum[2] * 100 / (long long)nb / 100, sum[2] * 100 / (long long)nb % 100, kl[best]);
+    }
+    folge[nf] = 0;
+    for (int i = 0; i < 3; i++) free(ref[i]);
+    /* E+K+: erstes Bild E, letztes K, genau ein Wechsel E -> K, kein X */
+    int wechsel = 0;
+    for (int i = 1; i < nf; i++) if (folge[i] != folge[i - 1]) wechsel++;
+    ok = ok && nf > 1 && n[2] == 0 && folge[0] == 'E' && folge[nf - 1] == 'K' && wechsel == 1;
+    printf("kamfolge: %d Bilder F%d-F%d (Referenzen E F%d, K F%d, X F%d): E %d, K %d, X %d, %d Wechsel, Folge %s -> %s\n", nf, f0,
+           f1, fe, fk, fx, n[0], n[1], n[2], wechsel, folge, ok ? "OK" : "FEHLER");
+    return ok ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     if (!strcmp(teil, "bilddiff") && argc >= 7)
         return bilddiff(argv[2], argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), argc >= 9 ? atoi(argv[7]) : 0,
                         argc >= 9 ? atoi(argv[8]) : 0);
+    if (!strcmp(teil, "kamfolge") && argc >= 8)
+        return kamfolge(argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]));
     const int alle = !strcmp(teil, "alle");
     re15_door_seq_setze_laeufer(fang);
     if (alle || !strcmp(teil, "spinnen"))    teil_spinnen();

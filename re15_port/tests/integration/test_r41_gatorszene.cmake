@@ -29,6 +29,17 @@
 #   gleich; state.log cam=K in F<s+1>..F<e-3> und cam=L in F<e+1>..F<e+20> (Cut_old FUN_8004032c @0x8004033c/@0x80040364);
 #   bilddiff in den Bildern der Einstellung: jedes Bild mit Schluessel, Puls >= 1,40, Kasten mindestens 10 x 9 Bildpunkte (= der
 #   Ankunfts-Schluessel ~10,4 x 9,5, gatorszene_r41.c GSZ_KEY_AUF_*; Abnahme 1 mass 4 x 6 bzw. 6 x 4).
+# Nachbesserung 3 (Abnahme F 2, M1 "Zwischenbild der Zonenkamera zwischen Explosionsschnitt und Schluessel-Einstellung"):
+#   NEU tod_explosion/tod_explosion_elza (Rezept KW/KWE der Abnahme 2: natuerliche Leiter-Kamera Cut 0 nach dem Sprung, Kanister-
+#   Testhaken der Spur B, Schuesse ab F151). B's R1 P0 schneidet auf die Explosions-Kamera E (Kopf in Cut 0 nicht im Bild, RE2
+#   +0x218 |= 0x40 @0x80102248); am Clip-9-Ende (RE2 @0x8010249c) schnitte B auf den Ausgangs-Cut X zurueck (@0x801024a4-ec), das
+#   Tot-Flag kaeme zwei Takte spaeter (@0x8010265c-64). Der Schluessel-Schnitt ersetzt den Rueckschnitt im selben Takt (gatorszene_r41.c
+#   key_rueckschnitt_pruefen). Verlangt: gator_boss.log "KAMERA R1 EXPLOSION ... -> Cut E F<p>" (E >= 0), debug.log "Schluessel-
+#   Schnitt statt R1-Rueckschnitt: Explosions-Cut E -> Ausgangs-Cut X F<r>", "Schluessel-Einstellung: Cut K (vorher Cut X) F<r>",
+#   "... Ende: Cut X F<e>" (e - r 90..94), E/K/X paarweise verschieden, "R1 ende (Leiche)" und keine "KAMERA R1"-Zeile nach F<r>;
+#   state.log cam=E in F<p>..F<r-1> und cam=K in F<r>..F<e-3> (vorher cam 0 in F196-F197); Bilder je Bild ueber den Auswerter
+#   `test_r41_gatorszene kamfolge` (Referenzen E = Mitte der Explosions-Einstellung, K = F<r+45>, X = F<e+15>): Folge E+K+ ueber
+#   F<p+5>..F<r+10> (vorher fd 197/198 = X).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=leon|elza -P test_r41_gatorszene.cmake
 # =============================================================================
@@ -60,6 +71,153 @@ else()
     set(_r2080 2080)
     set(_r2090 2090)
     set(_wahl RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2)
+endif()
+
+# ---- Nachbesserung 3 (M1): kein Bild des Zonen-Cuts zwischen Explosionsschnitt und Schluessel-Einstellung (Leon / Elza) -------
+if(TEIL MATCHES "^tod_explosion")
+    if(NOT RE15_TOOL OR NOT EXISTS "${RE15_TOOL}")
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - RE15_TOOL (test_r41_gatorszene) fehlt: '${RE15_TOOL}'")
+    endif()
+    # 12 Schuesse ausgeschrieben (input_pc.c script_parse_once kennt keine Wiederholung, Abnahme F 2 H1)
+    set(_schuss "W5")
+    foreach(_i RANGE 1 12)
+        string(APPEND _schuss ",M0.3,MA0.1")
+    endforeach()
+    re15_start_spiel(_rv 300
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore
+        ${_wahl}
+        RE15_SET_FLAG=9:110
+        RE15_DEBUG_JUMP=${_r2090}@250
+        RE15_STATE_LOG=state.log
+        RE15_R39_MESS_SPIELER_HP=100 RE15_GB_TEST=5 "RE15_GATOR_KANISTER=4430,-26160" "RE15_GIVE=3:15,21:50" RE15_EQUIP=3
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schuss}"
+        "RE15_EXIT_AT=330#${_r2090}" "RE15_FRAMEDUMP=150-330/1:fd_"
+        "${_exe_kopie}")
+    file(REMOVE "${_exe_kopie}")
+    if(NOT _rv EQUAL 0)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} exe exit=${_rv} (erwartet 0 bis RE15_EXIT_AT), ${_dir}")
+    endif()
+    if(NOT EXISTS "${_dir}/gator_boss.log" OR NOT EXISTS "${_dir}/debug.log" OR NOT EXISTS "${_dir}/state.log")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} ohne gator_boss.log/debug.log/state.log (${_dir})")
+    endif()
+    # B's R1 mit Explosionsschnitt (der Fall dieses Riegels)
+    file(STRINGS "${_dir}/gator_boss.log" _gb REGEX "KAMERA R1 |R1 ende \\(Leiche\\)")
+    set(_ecut -1)
+    set(_p -1)
+    set(_tot 0)
+    foreach(_l IN LISTS _gb)
+        if(_l MATCHES "KAMERA R1 EXPLOSION RE2-Cut -?[0-9]+ -> Cut (-?[0-9]+) F([0-9]+)")
+            set(_ecut "${CMAKE_MATCH_1}")
+            set(_p "${CMAKE_MATCH_2}")
+        elseif(_l MATCHES "R1 ende \\(Leiche\\)")
+            set(_tot 1)
+        endif()
+    endforeach()
+    if(_ecut LESS 0 OR _p LESS 0 OR NOT _tot)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - kein R1 mit Explosionsschnitt bis zur Leiche (Cut ${_ecut} F${_p}, Leiche ${_tot}), ${_dir}")
+    endif()
+    file(STRINGS "${_dir}/debug.log" _rs REGEX "\\[gatorszene\\] Schluessel-Schnitt statt R1-Rueckschnitt: ")
+    file(STRINGS "${_dir}/debug.log" _e REGEX "\\[gatorszene\\] Schluessel-Einstellung: Cut [0-9]+ ")
+    file(STRINGS "${_dir}/debug.log" _o REGEX "\\[gatorszene\\] Schluessel-Einstellung Ende: Cut [0-9]+ ")
+    if(NOT _rs OR NOT _e OR NOT _o)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Rueckschnitt-Ersatz '${_rs}' / Einstellung '${_e}' / Ende '${_o}' fehlt (Abnahme 2 M1), ${_dir}")
+    endif()
+    list(GET _rs 0 _rs0)
+    list(GET _e 0 _e0)
+    list(GET _o 0 _o0)
+    if(NOT _rs0 MATCHES "Explosions-Cut ([0-9]+) -> Ausgangs-Cut ([0-9]+) F([0-9]+)")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Zeile unlesbar: ${_rs0}")
+    endif()
+    set(_rexpl "${CMAKE_MATCH_1}")
+    set(_x "${CMAKE_MATCH_2}")
+    set(_r "${CMAKE_MATCH_3}")
+    if(NOT _e0 MATCHES "Cut ([0-9]+) \\(vorher Cut ([0-9]+)\\) F([0-9]+)")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Einstellungs-Zeile unlesbar: ${_e0}")
+    endif()
+    set(_k "${CMAKE_MATCH_1}")
+    set(_ev "${CMAKE_MATCH_2}")
+    set(_s "${CMAKE_MATCH_3}")
+    if(NOT _o0 MATCHES "Ende: Cut ([0-9]+) F([0-9]+)")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Ende-Zeile unlesbar: ${_o0}")
+    endif()
+    set(_oc "${CMAKE_MATCH_1}")
+    set(_ee "${CMAKE_MATCH_2}")
+    if(NOT _rexpl EQUAL _ecut OR NOT _ev EQUAL _x OR NOT _s EQUAL _r OR NOT _oc EQUAL _x)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Folge passt nicht: Explosion Cut ${_ecut} (Ersatz-Zeile ${_rexpl}), Einstellung F${_s} "
+                            "(Ersatz F${_r}), vorher ${_ev} / zurueck ${_oc} (soll Ausgangs-Cut ${_x})")
+    endif()
+    if(_ecut EQUAL _k OR _k EQUAL _x OR _ecut EQUAL _x)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Kameras nicht verschieden (E ${_ecut}, K ${_k}, X ${_x}): der Riegel misst so keinen Schnitt")
+    endif()
+    math(EXPR _halt "${_ee} - ${_s}")
+    if(_halt LESS 90 OR _halt GREATER 94)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Einstellung ${_halt} Bilder (soll 90 = GSZ_LEICHE_BILDER + Faden-Ende)")
+    endif()
+    foreach(_l IN LISTS _gb)
+        if(_l MATCHES "KAMERA R1 .* F([0-9]+)")
+            if(CMAKE_MATCH_1 GREATER _r)
+                message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - B's R1-Kamera nach dem Schluessel-Schnitt F${_r} noch aktiv: ${_l}")
+            endif()
+        endif()
+    endforeach()
+    # state.log: letzter Raum-Abschnitt (Bildzaehler beginnt je Raum neu)
+    file(STRINGS "${_dir}/state.log" _sl REGEX "^F[0-9]+ ")
+    set(_letzt "")
+    set(_vor -1)
+    foreach(_z IN LISTS _sl)
+        if(_z MATCHES "^F([0-9]+) ")
+            if(CMAKE_MATCH_1 LESS _vor)
+                set(_letzt "")
+            endif()
+            set(_vor "${CMAKE_MATCH_1}")
+            list(APPEND _letzt "${_z}")
+        endif()
+    endforeach()
+    math(EXPR _r1 "${_r} - 1")
+    math(EXPR _k1 "${_ee} - 3")
+    set(_n_e 0)
+    set(_n_k 0)
+    foreach(_z IN LISTS _letzt)
+        if(NOT _z MATCHES "^F([0-9]+) ")
+            continue()
+        endif()
+        set(_f "${CMAKE_MATCH_1}")
+        if(_f GREATER_EQUAL _p AND _f LESS_EQUAL _r1)
+            if(NOT _z MATCHES " cam=${_ecut} ")
+                message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - in der Explosions-Einstellung nicht Cut ${_ecut}: ${_z}")
+            endif()
+            math(EXPR _n_e "${_n_e} + 1")
+        elseif(_f GREATER_EQUAL _r AND _f LESS_EQUAL _k1)
+            if(NOT _z MATCHES " cam=${_k} ")
+                message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Zwischenbild: nach dem Explosionsschnitt nicht Cut ${_k} (Abnahme 2 M1): ${_z}")
+            endif()
+            math(EXPR _n_k "${_n_k} + 1")
+        endif()
+    endforeach()
+    math(EXPR _soll_e "${_r} - ${_p}")
+    if(NOT _n_e EQUAL _soll_e OR _n_k LESS 80)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - state.log unvollstaendig (${_n_e}/${_soll_e} Explosions-, ${_n_k} Einstellungsbilder)")
+    endif()
+    # Bilder: Kamera je Bild ueber Referenzbilder (keine Schwelle), Folge E+K+
+    math(EXPR _b0 "${_p} + 5")
+    math(EXPR _b1 "${_r} + 10")
+    math(EXPR _re "(${_p} + ${_r}) / 2")
+    math(EXPR _rk "${_r} + 45")
+    math(EXPR _rx "${_ee} + 15")
+    execute_process(COMMAND "${RE15_TOOL}" kamfolge "${_dir}" ${_b0} ${_b1} ${_re} ${_rk} ${_rx}
+                    RESULT_VARIABLE _kr OUTPUT_VARIABLE _ko ERROR_VARIABLE _ke)
+    string(REGEX MATCH "kamfolge: [^\n]*" _kz "${_ko}")
+    if(NOT _kr EQUAL 0)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Bildfolge nicht Explosion -> Schluessel (Abnahme 2 M1): ${_kz}\n${_ko}")
+    endif()
+    file(GLOB _fd "${_dir}/fd_*.ppm")
+    if(_fd)
+        file(REMOVE ${_fd})
+    endif()
+    message(STATUS "r41_gatorszene: Lauf ${TEIL} - Explosion Cut ${_ecut} F${_p}-F${_r1}, Schluessel-Einstellung Cut ${_k} F${_r}-F${_ee} "
+                   "(${_halt} Bilder, statt B's Rueckschnitt auf Cut ${_x}), danach Cut ${_x}; state.log ${_n_e}/${_n_k}; ${_kz}")
+    return()
 endif()
 
 # ---- Nachbesserung 1/2 (M2): Schluessel nach dem Tod sichtbar und pulsierend (Todesrolle / R1, Leon / Elza) ----------------

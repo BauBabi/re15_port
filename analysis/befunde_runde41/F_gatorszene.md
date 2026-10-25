@@ -612,3 +612,56 @@ Plan:
   RE2-R1 P1-Ende/P2/P3 selbst disassemblieren (EM23_OVL_0000.BIN @0x80102488-0x801026a0), Schnitt auf den Schluessel dort,
   wo B auf die Zonenkamera zurueckschneiden wuerde, Messung nachher Bild fuer Bild (Leon + Elza), Riegel fuer den Fall mit
   Explosionsschnitt (state.log + Bildklassen je Bild).
+
+### N3.M1 Zwischenbild der Zonenkamera zwischen Explosionsschnitt und Schluessel-Einstellung (Leon und Elza)
+
+- **Ursache.** Spur B's R1 (gator_re2_r41.c re15_gr2_r1_tick) bildet RE2 ab: P0 schneidet auf die Explosions-Kamera E, wenn der
+  laufende Cut den Kopf nicht zeigt (r1_geschnitten), P1 laeuft Clip 9 bis zum letzten Bild und schneidet dann auf den Ausgangs-Cut
+  X zurueck (gr2_kam_zurueck), P2 ist ein Takt, P3 setzt das Tot-Flag und gibt die Sperre frei (gr2_kam_frei). F schnitt erst mit
+  dem Tot-Flag (key_tod_pruefen -> gator_tot -> re15_gr2_tot), zwei Takte nach B's Rueckschnitt - X stand zwei Bilder lang da. Die
+  Behauptung "kein Zwischenbild" der Nachbesserung 2 galt nur fuer "Sperre ohne Schnitt" (Lauf K4m, Riegel _tod_r1).
+- **Messung vorher** (exe am Stand d5321663 = 5c99bba8 + Doku, `ninja: no work to do`; Laeufe V_KW Leon / V_KWE Elza mit dem Rezept
+  KW/KWE der Abnahme: `RE15_DEBUG_JUMP=2090@250` (2091 + `RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1 RE15_TITLE_CONFIRM_MS=1500`),
+  `RE15_SET_FLAG=9:110 RE15_R39_MESS_SPIELER_HP=100 RE15_GB_TEST=5 RE15_GATOR_KANISTER=4430,-26160 RE15_GIVE=3:15,21:50 RE15_EQUIP=3
+  RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 RE15_INPUT_SCRIPT=W5,(M0.3,MA0.1 zwoelfmal ausgeschrieben)
+  RE15_EXIT_AT=330 RE15_FRAMEDUMP=150-330/1`):
+  - gator_boss.log: `KAMERA R1 EXPLOSION RE2-Cut 5 -> Cut 1 F160 clip=9 bild=0`, `KAMERA R1 zurueck -> Cut 0 F196 clip=9 bild=36`,
+    `R1 ende (Leiche) pos=(3413,-25001)`, `R1 VSync 2 F198`, `KAMERA R1 frei (Zonenkamera an) Cut 0 F198`; debug.log `Schluessel-
+    Einstellung: Cut 2 (vorher Cut 0) F198`, `... Ende: Cut 0 F290`; state.log cam=1 F160-F195, **cam=0 F196-F197**, cam=2 F198-F288,
+    cam=0 ab F289 - Leon (`Spieler-Familie PL00`) und Elza (`PL04`) gleich. Gator: F195 (3431,-24952) af 36, F196-F198 (3413,-25001)
+    af 36 = Endpose schon im P1-Ende-Takt (P2/P3 bewegen nichts).
+  - Bilder (scratchpad `F41n3/tools/kamklasse.py`: mittlere Abweichung je Kanal zu drei Referenzbildern desselben Laufs, E = fd 185,
+    K = fd 250, X = fd 310): fd 186-196 E (zu E 6,6-9,6 / zu X 11,0-15,8), **fd 197 X (X 3,31 / E 14,34 / K 11,64), fd 198 X (0,19)**,
+    fd 199-205 K (0,0-2,43) -> Folge `E+X+K+`. Die Zahl der Pixel mit |Delta| > 40 zum Vorbild liegt INNERHALB der Explosions-
+    Einstellung bei bis zu 5420 (Effekte), beim Schnitt E -> X bei 2682 - eine Schwelle auf Wechsel-Pixel trennt Schnitte also nicht;
+    darum klassifiziert der Riegel je Bild ueber Referenzbilder (keine Schwelle).
+- **RE-Belege (selbst disassembliert, `re2_disasm.py --bin EM23_OVL_0000.BIN`, RE2 PSX.EXE):**
+  - P1 Clip-9-Ende: `80102488 addu a0,s1,zero / 8010248c addiu a1,zero,9 / 80102494 jal 0x8001a330`, `8010249c beq v0,zero,0x8010252c`
+    (nicht am Ende -> weiter mit Clip 9).
+  - Rueckschnitt am Ende: `801024a4 lhu v1,536(s1)` (+0x218), `801024ac andi v0,v1,0x40`, `801024b0 beq v0,zero,0x8010251c` (ohne
+    P0-Schnitt kein Rueckschnitt), `801024b4 andi v0,v1,0xffbf` / `801024c0 sh v0,536(s1)` (0x40 loeschen), `801024c4-d0` 0x800cfbd8 &
+    0x40000000, `801024d8 jal 0x80077360` (a1 16), `801024e4/e8` a0 = 13 bzw. 6, **`801024ec jal 0x8002c7ac`** = Cut setzen (RE2 PSX.EXE
+    `8002c7b8 sb a0,-1038(at)` = 0x800cfbf2, `8002c7bc jal 0x8002c7dc` RVD-Satz des Cuts -> `8002c7c8 sw v0,-7364(at)` 0x800ce33c);
+    `801024f4-80102518` 0x800cfbf8 &= 0xfff7fbff, 0x800dfc1b = 1; `8010251c-28` +0x6 += 1.
+  - P2: `80102638 lbu v1,6(s1) / 8010263c lhu v0,536(s1) / 80102640 addiu v1,v1,1 / 80102644 andi v0,v0,0xfffb / 80102648 sh v0,536(s1)
+    / 8010264c j 0x80102698 / 80102650 sb v1,6(s1)`.
+  - P3: `80102654 lhu v0,270(s1) / 80102658 addiu a1,zero,30 / 8010265c ori v0,v0,0x4000 / 80102660 jal 0x8007730c / 80102664 sh
+    v0,270(s1)` (Tot-Flag +0x10E, Raumflag 30), `80102668 addiu v0,zero,2` / `8010267c sb v0,-998(at)` (VSync 2), **`80102684 lw
+    v0,-1064(v0) / 80102688 addiu v1,zero,-257 / 8010268c and v0,v0,v1 / 80102694 sw v0,-1064(at)`** = 0x800cfbd8 &= ~0x100 (Sperre frei).
+  - Folgerung: RE2 schneidet am Clip-9-Ende zurueck und haelt die Sperre bis P3; zwischen Rueckschnitt und Tot-Flag liegen genau
+    P2 und P3. Den Schluessel hat RE2 nicht (Port-Ergaenzung) - die Einstellung auf ihn steht jetzt an der Stelle des RE2-Rueckschnitts.
+  - RE1.5-Form der Einstellung unveraendert (Nachbesserung 2): Cut_chg-Zwilling LAB_800402a0 (`sh a0,4068(at)` @0x800402fc = work_vars
+    [0x0A]), Cut_old FUN_8004032c (`lbu a0,16251(a0)` @0x8004033c, Zonenkamera an @0x80040374-84). key_einstellung nimmt vorher =
+    work_vars[0x0A] = der von B's Rueckschnitt gesetzte Ausgangs-Cut X -> Cut_old kehrt auf X zurueck wie RE2.
+  - ROOM2090/2091-SCD (`scd_dump_room.py`): 0 Cut_chg/Cut_old/Cut_auto - kein SCD-Faden aendert den Cut; die Zonenkamera ist ab P0
+    gesperrt -> zwischen P0 und P3 aendert nur B's Rueckschnitt den Cut (Erkennungsmerkmal).
+- **Aenderung** (engine/src/gatorszene_r41.c, keine gemeinsame Datei, keine Aenderung in Spur B's Modul):
+  - `key_rueckschnitt_pruefen(slot)` im Nachtakt (vor key_tod_pruefen): R1 laeuft (`re15_gr2_r1_laeuft`), B haelt die Kamera
+    (`re15_gr2_kamera_gesperrt`) und der Cut ist ein anderer als im ersten R1-Takt (`s_r1_cut`, nach B's P0-Schnitt) = B hat in diesem
+    Takt zurueckgeschnitten. Dann, nur bei offenem Schluessel (2090/2091, (9,110), nicht (9,111)): `re15_gr2_kamera_frei(NULL)` (B's
+    Programm endet, Cut bleibt X, P3 gibt nichts mehr frei), Folge-Zeile `R E/X`, Logzeile `Schluessel-Schnitt statt R1-Rueckschnitt`,
+    dann `key_tod_setzen` (Lage, (9,111), Schluessel + Zone, Einstellung) - im selben Takt, vor dem Zeichnen.
+  - `key_tod_pruefen` = `key_tod_offen` + `gator_tot` -> `key_tod_setzen` (unveraendert fuer "Sperre ohne Schnitt" und Todesrolle).
+  - PORT-WAHL der Inszenierung (Kommentar im Code): die Explosions-Einstellung behaelt ihre RE2-Laenge (Clip 9 bis zum letzten Bild),
+    der Schluessel erscheint zwei Takte vor dem Tot-Flag (die Leiche liegt dann schon in ihrer Endpose).
+  - H4 der Abnahme: Zitat "Zonenkamera an" jetzt @0x80040374-84 (statt Funktionsanfang @0x8004032c).
