@@ -109,7 +109,9 @@ y < 0 = oben. Volltabelle G_belege/npc40_clipzensus.txt. Belegte Lesarten:
   = **Anheben/Zielen**; Eigen c7 (16 B.) haelt vorn oben = **Feuern** (ROOM1021 sub02 Plc_motion(2,6)/(2,7) @0x020C6/@0x020CE);
   c8 Halten; c9/c10 oben, c11/c12 unten.
 - Eigen c0 (22 B.): beide Haende vorn auf Brusthoehe (350..683, -1886..-1821), Abstand 722..1005 = **Tragen vor der Brust**.
-- Loco c2 (50 B.): Wurzel sinkt -1813 -> -1005 (f33), linke Hand am Boden (149,-328), dann zurueck = **Buecken + Aufheben**.
+- ~~Loco c2 (50 B.): Wurzel sinkt -1813 -> -1005 (f33), linke Hand am Boden (149,-328), dann zurueck = **Buecken + Aufheben**.~~
+  **FALSCH (Nachbesserung 1, 8.1):** Loco c2 = PL00-KLETTERN (Aufstieg, @0x80038134); Eigen c0 (oben "Tragen") = RUN-Gait
+  (@0x8005157c). Das Aufnehmen ist jetzt Loco c11 Hinknien/Aufstehen (ROOM11B0 sub06 @0x01650-0x01660).
 - Eigen c5 (30 B.): Gehen (Haende pendeln).
 
 ### 1.9 RE2-Ausloeser der Wurfszene (ROOM7020 sub10/sub11) und die Port-Form der Schwelle
@@ -230,7 +232,8 @@ RE15_R39_MESS_SPIELER_HP=100, Bildserie 30..900/30, Auswertung `tools/r41_kanist
 - 8 Zombies Band 8 zwischen Treppenabsatz und Balkon (Tabelle k_zombies, je >= 700 von Band-8-Waenden, paarweise >= 1393, in
   Cut 2 und Cut 7 mit Fuss UND Kopf im Bild), Blick auf den Treppenabsatz (Gier = atan2(-dz,dx)).
 - Marvin/John Start (-14800,-16500) Gier 0 (Treppenabsatz, in Cut 2 Bild (164,86..115)); Aufheben-Stand (-7245,-17625), RUN-Ziel
-  250 dahinter (Ankunft d < 300 @0x80051764); Wurf-Stand (-7100,-17625) per WALK (d < 100 @0x800513f8): Reling-Zelle @0x5A0 ab
+  250 dahinter (Ankunft d < 300 @0x80051764); ~~Wurf-Stand (-7100,-17625) per WALK~~ (seit Nachbesserung 1 wirft er vom Aufheb-Stand,
+  -7100 bleibt nur Nennlage der Bahn-Nachrechnung) (d < 100 @0x800513f8): Reling-Zelle @0x5A0 ab
   x -6700, Radius 400. Relingstange: Bodenlinie x -6350 (Pfosten in Gas_Can.bmp (139,151)/(200,151) rueckprojiziert),
   Oberkante ~ -15443 (31 px bei Tiefe ~7000, H 208).
 - Spieler-Parkplatz waehrend des 2080-Teils: (-23200,-9000,-16700) Band 5 = Eintritt von 2030 (re15_room_spawns.h).
@@ -240,17 +243,17 @@ RE15_R39_MESS_SPIELER_HP=100, Bildserie 30..900/30, Auswertung `tools/r41_kanist
 |---|---|---|
 | 2090: Riegel + Raumwechsel | Set(2,7,1) Set(1,27,1), Door_aot_set Slot 21 -> ROOM2080 Cut 2 Parkplatz, Aot_on | RE2 sub12 @0x06F2/6; Montage irons_tod_1150.c |
 | 2080 Abschnitt 1 | Sce_em_set NPC (Slot 8, grid 0x40, Etage 8) + 8 Zombies (Tot-Gate) + Sleep 1 | ROOM2000 @0x017B4 / ROOM2020 @0x008F6 |
-| Tuer-Ton | Signal -> DOOR06 Satz 1 | Door_exit @0x800141f0 |
+| Tuer-Ton | Signal -> DOOR06 Satz 1, kein Sleep danach (8.3) | Door_exit @0x800141f0; ROOM1021 @0x020C2-CA |
 | Anlegen | Work_set(2,8), Plc_motion(2,6), Sleep 110 | ROOM1021 @0x020C2/@0x020C6/@0x020CA |
-| je Zombie | Signal ZIEL, Sleep 10 (Nachdrehen 0xC8/Bild), Plc_motion(2,7), Signal SCHUSS, Sleep 30 | ROOM1021 @0x020CE/@0x020D2; Gun-FSM @0x80033f90 |
+| je Zombie | Signal ZIEL, Poll AUSGERICHTET (Nachdrehen 0xC8/Bild, 8.3), Plc_motion(2,7), Signal SCHUSS, Sleep 30 | ROOM1021 @0x020CE/@0x020D2; Gun-FSM @0x80033f90 |
 | Senken | Plc_motion(2,6) + Plc_flg 0x80, Sleep 20 | ROOM1021 @0x020EA/@0x020EE/@0x020F2 |
 | Lauf zum Kanister | Cut_chg 5, Plc_dest RUN + Ankunfts-Poll | ROOM1021 @0x020B2; ROOM1150 sub08 @0x0112A |
-| Aufheben | Plc_motion(1,2) Loco c2, Sleep 33, Signal AUFHEBEN, Sleep 17 | Zensus 1.8 |
-| an die Reling | Plc_dest WALK + Poll, Plc_motion(2,0) Tragen | Zensus 1.8 |
-| Wurf (RE2 sub12) | Cut_chg 7, Plc_motion(2,6), Message_on 42, Sleep 30, Plc_motion(2,6), Sleep 20, Signal WURF, Poll GELANDET, Sleep 15 | @0x0726/0750/0764/076A/0782/0786/078E/079C/07A8 |
+| Aufheben (Nachbesserung 1) | Plc_motion(1,11) Hinknien, Sleep 24, Signal AUFHEBEN, Sleep 36, Plc_motion(1,11)+Plc_flg 0x80 Aufstehen, Sleep 30 | ROOM11B0 sub06 @0x01650/@0x01654/@0x01658/@0x0165C/@0x01660 (8.1) |
+| ~~an die Reling~~ | entfernt (der Kanister steht an der Reling; vorher WALK + Plc_motion(2,0) = RUN-Gait) | 8.1 |
+| Wurf (RE2 sub12) | Cut_chg 7, Plc_motion(2,6) (PORT-WAHL fuer Adas Clip `3f 0a 12 40`, 8.3), Message_on 42, Sleep 30, Plc_motion(2,6), Sleep 20, Signal WURF, Poll GELANDET, Sleep 15 | @0x0726/0750/0764/076A/0782/0786/078E/079C/07A8 |
 | Fall (RE2 sub13) | Takt: Lage += v, v += a; v (25,20,10), a (5,20,0) im Blickrahmen; Ende y >= Wasser - 800; Aufschlag-Ton | @0x088E-08B0, @0x80055ab0/@0x80055b2c, ROOM40A0 @0x0686 |
 | Rueckkehr | Door_aot_set -> 2090 (Spielerlage/Cut beim Ausloesen), Aot_on | RE2 Cut_chg 11 @0x07D4 (Schnitt auf den Fangenden) |
-| 2090 Ende | Sleep 30, Work_set(1,0)+Plc_ret, Set(2,7,0) Set(1,27,0), Cut_auto 1; Bits 115/116; Kanister ins Becken (B-API) | RE2 sub18 @0x0A2C-0A38 |
+| 2090 Ende | Work_set(1,0)+Plc_ret, Set(2,7,0) Set(1,27,0), Cut_auto 1 (kein Sleep 30, 8.3); Bits 115/116; Kanister an die Spielstelle (B-API, 8.2) | RE2 sub18 @0x0A2C-0A38; Pos_set @0x08CA |
 
 Nicht uebernommen (benannt): RE2 sub12 `Sleep 1` + `Plc_dest 40 00 14 ..` @0x0754/@0x0758 (Adas Mode 0x14, kein
 Port-Gegenstueck); Adas Abgang Plc_dest @0x0812 (Marvin/John bleibt in 2080, der Schnitt geht nach 2090).
@@ -400,6 +403,8 @@ Grundumgebung: RE15_NO_INTRO=1 RE15_NOAUDIO=1 Titel-Autostart, RE15_WINDOW_SCALE
    diesem Zweig nicht messbar (F's Modul liegt nicht hier).
 
 ## 7. Fuer den Nutzer
+**Stand nach Nachbesserung 1: Abschnitt 8.8** (Aufnehmen = Hinknien, Kanister liegt im Nordbecken, neue Fragen). Der Text hier ist der
+Stand der Abnahme 0.
 Neue Assets (Paket-Gate):
 - `re15_port/shared_assets/RE2/KANISTER2080.VBS` (9864 B, md5 848c40f6c077d937fb025df9ae1bc62b) = RE2 ROOM40A0 Raumbank Satz 11
   (der Gaskanister faellt ins Wasser).
