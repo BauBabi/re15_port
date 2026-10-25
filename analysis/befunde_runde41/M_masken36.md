@@ -1385,7 +1385,85 @@ zellen3d (Gegenprobe 3 statt >= 127, mit der Saaten-Korrektur erwartet) - fuer d
 
 ## Fuer den Nutzer
 
-- **Freistellungen STAGE3-6 (Ihre Antwort "Ich kuemmere mich selbst drum", Nachtrag 27):** diese Gegenstaende haben keine verlaessliche
+- **Freistellungen STAGE3-6 - Stand Nachbesserung 5 (ersetzt die Liste der NB4; Entscheid M-E2):** Die Teile des Original-Vordergrundatlas sind jetzt
+  eingesetzt, wo ihre Lage (Bildvergleich) UND ihre Tiefe (Kollisionszelle mit RDT-Offset) belegt sind: 267 Teile in 61 Kameras, u.a. die
+  Gelaender ROOM30E0 Kamera 6..9, ROOM3050 Kamera 6, ROOM3040 Kamera 3 (Vorher/Nachher: `analysis/befunde_runde41/M_bilder/NB5/NB5_bogen_ROOMxxxx_Cnn.png`),
+  dazu das Lok-Unterteil ROOM6000 Kamera 7 (Lesefehler des Werkzeugs bei den Tueren behoben). **Nur das Folgende fehlt noch und braucht Ihre
+  Freistellung** (PNG unter pri/STAGEn/<raum>/, wie STAGE1/2). Je Kamera zeigt `analysis/befunde_runde41/M_bilder/NB5_rest/NB5_rest_ROOMxxxx_Cnn.png`
+  rot die Teile ohne Tiefe (Nummern T.. wie in `M_bilder/NB5/teile_nb5.txt`), gruen die eingesetzten. Grund-Kuerzel: **Z** keine Kollisionszelle
+  traegt die Mehrheit der Bodenkontakte (z.B. Treppen-/Plattformgelaender ohne Bodenkontakt auf einem begehbaren Band, Bodenmarkierungen),
+  **H** kein Bodenkontakt (haengt an Decke/Wand: Lampen, Rohre, Roboterarm), **B** dieselbe Zelle auf zwei Baendern (Hoehe nicht eindeutig),
+  **N** die Kamera haengt ueber dem Grundriss (Nahfeld, z.B. Pfeiler/Pulte direkt unter der Kamera); Zahl = Bildpunkte.
+  Teile, die nie vor einer Figur stehen koennen (Bodenmarkierungen, Lampen hoch an der Wand), brauchen keine Freistellung.
+  | Raum (Leon/Elza) | Kamera | Punkte | Teile | Gruende | Gegenstand |
+  |---|---|---|---|---|---|
+  | ROOM3040/3041 | 1 | 2478 | T1 T5 T6 T23 T27 T30 T37 | Z 2478 |  |
+  | ROOM3040/3041 | 2 | 2312 | T6 T8 T11 T16 T17 T18 T20 | N 1553, Z 630, B 129 |  |
+  | ROOM3040/3041 | 3 | 7013 | T7 T19 T20 T26 T31 T33 T35 T36 T38 T41 T43 T44 T45 | N 3436, Z 2316, B 1261 | Pfeiler rechts, Teile des Laufsteg-Gelaenders |
+  | ROOM3040/3041 | 4 | 1922 | T1 T4 T15 T16 T19 | Z 1678, H 244 |  |
+  | ROOM3040/3041 | 5 | 1629 | T2 T5 T15 T18 | Z 1366, H 263 |  |
+  | ROOM3040/3041 | 6 | 3357 | T1 T3 T4 T8 T11 | Z 1889, H 772, N 696 |  |
+  | ROOM3040/3041 | 7 | 2706 | T6 T14 T18 T19 T20 T23 T29 | N 1858, Z 666, B 182 |  |
+  | ROOM3040/3041 | 8 | 3531 | T4 T5 T7 T8 T11 T12 | Z 3489, H 42 |  |
+  | ROOM3040/3041 | 9 | 3046 | T2 T3 T4 T6 T11 T12 T15 | H 1923, Z 1123 |  |
+  | ROOM3040/3041 | 11 | 4594 | T1 T4 T5 T7 T9 T11 | H 2341, Z 2253 |  |
+  | ROOM3040/3041 | 12 | 2466 | T1 T6 T12 T14 T20 | Z 1069, N 1052, B 345 |  |
+  | ROOM3040/3041 | 13 | 2468 | T10 T13 T14 T17 T19 T23 T25 | B 1286, N 1182 |  |
+  | ROOM3050/3051 | 0 | 983 | T3 T5 | Z 983 |  |
+  | ROOM3050/3051 | 4 | 314 | T2 T9 | H 224, Z 90 |  |
+  | ROOM3050/3051 | 5 | 490 | T5 T9 | Z 258, H 232 |  |
+  | ROOM3050/3051 | 7 | 1322 | T4 T5 T8 T10 T11 T15 | Z 1126, H 196 |  |
+  | ROOM3050/3051 | 8 | 564 | T2 T12 | H 328, Z 236 |  |
+  | ROOM3050/3051 | 9 | 2780 | T1 T2 T4 T6 T9 T10 T14 T15 T19 | Z 2354, H 426 |  |
+  | ROOM3050/3051 | 11 | 4325 | T1 T2 T5 T6 | Z 3912, H 413 |  |
+  | ROOM3050/3051 | 12 | 2223 | T1 T3 T6 | B 1206, Z 1017 |  |
+  | ROOM3050/3051 | 13 | 1634 | T5 T6 T9 T10 | Z 1634 |  |
+  | ROOM30A0/30A1 | 0 | 1461 | T1 T3 T5 T6 | Z 1461 | Lampe/Stuhl/Moebel vorn links |
+  | ROOM30A0/30A1 | 1 | 986 | T1 | H 986 |  |
+  | ROOM30E0/30E1 | 6 | 2564 | T1 T2 T4 T5 T8 T9 T10 T11 T12 T14 | Z 2234, H 330 | Steg-Gelaender (Pfosten/Handlauf) |
+  | ROOM30E0/30E1 | 7 | 1147 | T1 T7 T26 T30 | Z 800, H 347 | Bodenstreifen am Stegrand, Lampen |
+  | ROOM30E0/30E1 | 8 | 487 | T15 T22 T27 | H 487 |  |
+  | ROOM30E0/30E1 | 9 | 2267 | T1 T5 T6 | H 1542, Z 725 | hinteres Steg-Gelaender, Lampe rechts oben |
+  | ROOM4040/4041 | 7 | 964 | T1 T2 | S 532, H 432 |  |
+  | ROOM4040/4041 | 12 | 1051 | T5 | N 1051 |  |
+  | ROOM4080/4081 | 2 | 924 | T2 | H 924 |  |
+  | ROOM4080/4081 | 3 | 523 | T4 | H 523 |  |
+  | ROOM4080/4081 | 8 | 1287 | T3 T4 T6 | N 1287 |  |
+  | ROOM5020/5021 | 2 | 520 | T10 | H 520 |  |
+  | ROOM5020/5021 | 3 | 630 | T3 T4 | Z 357, H 273 |  |
+  | ROOM5020/5021 | 5 | 1859 | T3 | H 1859 |  |
+  | ROOM5020/5021 | 7 | 1010 | T6 T7 | H 1010 |  |
+  | ROOM5020/5021 | 9 | 592 | T5 T6 | H 592 |  |
+  | ROOM5020/5021 | 11 | 2773 | T3 T4 T10 | Z 2286, B 487 |  |
+  | ROOM5090/5091 | 11 | 540 | T12 | Z 540 |  |
+  | ROOM5090/5091 | 12 | 2067 | T16 T17 T23 | Z 1153, H 914 |  |
+  | ROOM5090/5091 | 13 | 703 | T8 | H 703 |  |
+  | ROOM5090/5091 | 14 | 3872 | T1 T3 T5 T7 T13 T16 T17 T19 T20 T21 | N 1976, Z 1896 |  |
+  | ROOM50B0/50B1 | 1 | 3429 | T2 T3 T4 T5 T8 T9 T10 | H 3429 | Roboterarm oben |
+  | ROOM50B0/50B1 | 2 | 3064 | T4 T11 T12 T13 T17 T19 | H 2324, Z 740 |  |
+  | ROOM50B0/50B1 | 3 | 2610 | T1 T3 T14 T15 T18 | Z 1874, H 736 | Roboterarm/Maschine |
+  | ROOM5100/5101 | 2 | 4053 | T1 | H 4053 |  |
+  | ROOM5100/5101 | 3 | 1333 | T6 | H 1333 |  |
+  | ROOM5100/5101 | 5 | 3592 | T8 | H 3592 |  |
+  | ROOM5100/5101 | 6 | 2401 | T5 | H 2401 |  |
+  | ROOM5100/5101 | 7 | 3861 | T3 | Z 3861 |  |
+  | ROOM6000/6001 | 2 | 2429 | T4 T5 | Z 2429 |  |
+  | ROOM6000/6001 | 3 | 449 | T1 | H 449 |  |
+  | ROOM6000/6001 | 8 | 513 | T7 | Z 513 |  |
+  | ROOM6010/6011 | 2 | 7640 | T2 T3 T4 T5 T6 T9 T10 T11 T12 T13 T14 T15 T18 T19 T21 T22 T24 T25 T28 T29 | Z 7366, H 274 | Treppen- und Plattform-Gelaender |
+  | ROOM6010/6011 | 3 | 4184 | T1 T2 T5 T6 T7 T8 | B 4184 |  |
+  | ROOM6010/6011 | 5 | 2006 | T2 T6 | Z 1079, B 927 | Treppenwange/Gelaender |
+  | ROOM6010/6011 | 6 | 7020 | T1 T2 T3 T6 T7 T9 T13 T14 T17 T21 T24 T26 T27 T28 T29 T31 | Z 7020 |  |
+  | ROOM6010/6011 | 7 | 3416 | T1 T2 T5 T6 T15 | B 3416 |  |
+  | ROOM6010/6011 | 10 | 3167 | T2 T4 T5 T6 | Z 3167 |  |
+  | ROOM6010/6011 | 11 | 2186 | T3 T4 | Z 2186 |  |
+  | ROOM6010/6011 | 12 | 3275 | T1 T2 T3 T6 T7 T10 T14 | Z 2354, B 921 |  |
+  | ROOM6010/6011 | 13 | 1812 | T1 T2 T3 T8 T15 | Z 1812 |  |
+  | ROOM30A0/30A1 | 0 | 40 | - | kein Original-Teil | roter Ordner auf dem Schrank am Ostende der Trennwand (x 310..317 y 106..111; Abnahme 4 Mangel 2): der Kuenstler-Ausschnitt deckt den gruenen Ordner daneben, den roten nicht; Tiefe dann aus Zelle 6 @RDT+0x0045C |
+  | ROOM6000/6001 | 5 | - | - | teilen_r41.py nicht (M-E2) | Mitte des Gittertraegers an der Wandecke (Rechteck 37, Tiefe 176): die rechten 10 Spalten wuerden Leon im Gang oestlich der Ecke falsch verdecken (NB4) |
+  | ROOM5050/5051 | 1, 2 | - | - | N | Schreibtisch/Pulte vorn (Generator-Rechtecke, Kamera ueber den Zellen 6/7 bzw. 4/10, NB2) |
+
+- **[Ueberholt durch die Liste NB5 oben] Freistellungen STAGE3-6 (Ihre Antwort "Ich kuemmere mich selbst drum", Nachtrag 27):** diese Gegenstaende haben keine verlaessliche
   automatische Maske; die Masken stehen dort auf dem Stand der Nachbesserung 3 (nichts wurde schlechter). Zum Zeichnen liegen die
   Uebersichtsbilder unter pri/STAGEn/<raum>/<cc>_port.png.
   | Raum (Leon/Elza) | Kamera | Gegenstand | warum keine automatische Maske (Beleg) |
@@ -1399,11 +1477,11 @@ zellen3d (Gegenprobe 3 statt >= 127, mit der Saaten-Korrektur erwartet) - fuer d
   | ROOM6000/6001 | 7 | unterer Teil der Lok links | die Rechtecke sind nur wegen Stehplaetzen im Gleisbett ausgeschlossen, die es im Spiel nicht gibt (Lesefehler des Werkzeugs bei den Tueren, NB4 Mangel 2 (a)) - mit der Korrektur waeren sie gezeichnet |
   | ROOM50B0/50B1 | 1, 3 | Roboterarm oben | keine Kollisionszelle, haengt frei (kein Bodenkontakt) |
   | ROOM6000/6001 | 5 | Gittertraeger an der Wandecke (Mitte) | Rechteck mit der Tiefe einer Zelle jenseits des Gangs; Leon hinter der Ecke teilweise sichtbar (Abnahme 3: 617..964 Punkte). Die linken 30 Spalten koennten die Tiefe des Wandblocks bekommen, die rechten 10 wuerden Leon im Gang oestlich der Ecke falsch verdecken |
-- **Masken STAGE3-6, Nachbesserung 4 - was geprueft wurde:** Am Ostende der Buero-Trennwand ROOM30A0 Kamera 0 fehlt KEINE Maske: die graue
+- **Masken STAGE3-6, Nachbesserung 4 - was geprueft wurde (NB5 berichtigt: der rote Ordner am Ostende fehlt, s. Liste NB5):** Am Ostende der Buero-Trennwand ROOM30A0 Kamera 0 fehlt keine Maske an der Stirnplatte: die graue
   Stirnplatte ist so weit gezeichnet, wie sie im Bild reicht (Bild `analysis/befunde_runde41/M_bilder/NB4/NB4_M1_30A0_ost_stirn.png`); rechts
   davon zeigt das Bild den Boden und die Schraenke HINTER Leon - dort ist er zu Recht zu sehen. Der Testlaeufer der Masken-Riegel prueft
   jetzt, ob jeder Spiellauf wirklich im Zielraum zu Ende kam (vorher konnte ein abgebrochener Lauf das Bild des Startraums vergleichen).
-- **Entscheidungsfrage (Orchestrator/Nutzer):** Fuer die Gelaender usw. gibt es einen gemessenen automatischen Weg: die Teile liegen im
+- **[Beantwortet: Entscheid M-E2, umgesetzt in Nachbesserung 5] Entscheidungsfrage (Orchestrator/Nutzer):** Fuer die Gelaender usw. gibt es einen gemessenen automatischen Weg: die Teile liegen im
   Vordergrundatlas des Spiels selbst (vom Kuenstler ausgeschnitten), der Masken-Generator vom 2026-09-03 hatte sie nur nie gefunden. Das
   Werkzeug `re15_port/tools/maske/platzieren_r41.py` legt sie an ihre Stelle (437 Teile in 74 Kameras, +160 539 Maskenpunkte, im Spiel an 16
   Stellen geprueft: vor den Teilen wird Leon nicht uebermalt, dahinter verdeckt - z.B. Leon hinter der Saeule in ROOM6010 Kamera 2, Bild

@@ -22,6 +22,12 @@ cmake_minimum_required(VERSION 3.16)
 #        Objekt-Zeichner) =
 #        dieselben Masken ohne Figur (probe_r41_masken36_sicht, RE15_SICHT_TOOL). Verdeckt die Maske die Figur, ist A dort
 #        exakt A0.
+#   L    (Nachbesserung 5, Entscheid M-E2) wie V, aber nur die SPIELFIGUR zaehlt: dritter Lauf D OHNE Masken mit der Figur an A0=<x>,<z>
+#        ausserhalb des Regionsvierecks (Figuren-Cull FUN_80014368) - S = |B - D| > 24 (Figurpunkte der Spielfigur; Gegner, NPCs und
+#        3D-Objekte stehen in B und D gleich), H = davon |A - B| > 24. S > SMIN und H == 0. Grund (gemessen NB5, w3040_03): mit V zaehlte
+#        ein Gegner HINTER dem neuen Gelaender, den die Maske richtig verdeckt, als "uebermalt".
+#   SMIN=<n> (Nachbesserung 5): Untergrenze fuer S statt 50 (duenne Teile: das Fenster um wenige Figurpunkte ist kleiner; Wert = Zahl der
+#        Figurpunkte des Kasten-Modells in der Szenendatei).
 # Nachbesserung 1 (Abnahme 0): SZENEN waehlt die Szenendatei (test_r41_masken36_zelle_szenen.cmake = Stages 3..6, Mangel 1),
 # die Hintergruende kommen fuer jede Stage der Szenen; Feld G= stellt einen Gegner weg (RE15_GEGNER_POS).
 # Dazu muss das Log fuer den Cut "masks=<n> fg_atlas=1" (n > 0) zeigen.
@@ -141,6 +147,7 @@ foreach(_sz IN LISTS R41M_SZENEN)
     set(_zr "${_raum}")
     set(_gpos "")
     set(_gier 0)
+    set(_smin 50)
     if(_fl GREATER 11)
         math(EXPR _letzt "${_fl} - 1")
         foreach(_i RANGE 11 ${_letzt})
@@ -152,6 +159,8 @@ foreach(_sz IN LISTS R41M_SZENEN)
                 set(_gpos "${CMAKE_MATCH_1}")
             elseif(_wer MATCHES "^W=([0-9]+)$")     # NB4: Gier der Figur (RE15_PLAYER_POS x,z,gier,band; Vorgabe 0)
                 set(_gier "${CMAKE_MATCH_1}")
+            elseif(_wer MATCHES "^SMIN=([0-9]+)$")  # NB5: Untergrenze fuer S (Kopf)
+                set(_smin "${CMAKE_MATCH_1}")
             elseif(_wer MATCHES "^A0=(-?[0-9]+),(-?[0-9]+)$")
                 set(_a0x "${CMAKE_MATCH_1}")
                 set(_a0z "${CMAKE_MATCH_2}")
@@ -169,6 +178,12 @@ foreach(_sz IN LISTS R41M_SZENEN)
             message(FATAL_ERROR "r41_masken36_stage2[${_name}]: Art Z braucht RE15_SICHT_TOOL und A0=<x>,<z>")
         endif()
         list(APPEND _laeufe c)
+    elseif(_art STREQUAL "L")
+        if("${_a0x}" STREQUAL "")
+            file(REMOVE "${_exe_kopie}")
+            message(FATAL_ERROR "r41_masken36_stage2[${_name}]: Art L braucht A0=<x>,<z>")
+        endif()
+        list(APPEND _laeufe d)
     endif()
     foreach(_mit IN LISTS _laeufe)
         set(WORKDIR "${_basis_wd}/lauf_${_lauf_id}_${_name}_${_mit}")
@@ -180,6 +195,10 @@ foreach(_sz IN LISTS R41M_SZENEN)
         if(_mit STREQUAL "b")
             set(_extra "RE15_NO_PRI=1")
         elseif(_mit STREQUAL "c")
+            set(_px "${_a0x}")
+            set(_pz "${_a0z}")
+        elseif(_mit STREQUAL "d")                # NB5 Art L: ohne Masken, Figur ausserhalb des Regionsvierecks
+            set(_extra "RE15_NO_PRI=1")
             set(_px "${_a0x}")
             set(_pz "${_a0z}")
         endif()
@@ -256,6 +275,9 @@ foreach(_sz IN LISTS R41M_SZENEN)
         set(_h "${CMAKE_MATCH_2}")
         set(_v "${CMAKE_MATCH_3}")
     else()
+        if(_art STREQUAL "L")
+            list(GET _ppm 2 _pc)                 # NB5: "Hintergrund" = Lauf D (ohne Masken, ohne Spielfigur) -> S = nur die Spielfigur
+        endif()
         execute_process(COMMAND "${RE15_PPM_TOOL}" "${_pa}" "${_pb}" "${_pc}" ${_x0} ${_y0} ${_x1} ${_y1} 24
                         RESULT_VARIABLE _rv OUTPUT_VARIABLE _o TIMEOUT 60)
         string(REGEX MATCH "S=([0-9]+) H=([0-9]+)" _m "${_o}")
@@ -266,10 +288,12 @@ foreach(_sz IN LISTS R41M_SZENEN)
     math(EXPR _n "${_n} + 1")
     if(NOT _rv EQUAL 0 OR "${_s}" STREQUAL "")
         list(APPEND _fehler "${_name}: PPM-Werkzeug exit=${_rv} '${_o}'")
-    elseif(NOT _s GREATER 50)
-        list(APPEND _fehler "${_name}: Leon im Figurfenster nicht zu sehen (S=${_s}) - leeres Gruen")
+    elseif(NOT _s GREATER ${_smin})
+        list(APPEND _fehler "${_name}: Leon im Figurfenster nicht zu sehen (S=${_s}, verlangt > ${_smin}) - leeres Gruen")
     elseif(_art STREQUAL "V" AND NOT _h EQUAL 0)
         list(APPEND _fehler "${_name}: VOR der Freistellung ${_h} von ${_s} Figurpunkten uebermalt")
+    elseif(_art STREQUAL "L" AND NOT _h EQUAL 0)
+        list(APPEND _fehler "${_name}: VOR dem Teil ${_h} von ${_s} Punkten der Spielfigur uebermalt")
     elseif(_art STREQUAL "H")
         math(EXPR _h2 "${_h} * 2")
         if(_h2 LESS _s)
