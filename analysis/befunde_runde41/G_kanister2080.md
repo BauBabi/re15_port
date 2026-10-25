@@ -1448,7 +1448,7 @@ Regions-Test von FUN_80077924 (`jal 0x8002c820` @0x80077a30).
 2. REGIONS-TEST des Kanister-Zeichners (`platform/pc/src/gator_re2_pc.c` re15_gr2_pc_zeichnen): ausserhalb des Vierecks des aktiven
    Cuts (re15_rdt_get_region_quad + re15_aot_point_in_quad = FUN_8002c820) weder Mesh noch Scherben noch Scherben-Zaehler; Messzeile
    `[gator-re2] Kanister F<n> im/AUSSERHALB des Regions-Viereck(s) von Cut <c>` bei jedem Wechsel.
-**Messung nachher** (Messkopie re15_pc_g41nb4b.exe = Code dieses Abschnitts, Rezepte der Abnahme 3 unveraendert (`<SP>/g4/nach.sh` liest
+**Messung nachher, Zwischenstand** (Endstand mit dem zweiten Kanister-Ende: 11.5) (Messkopie re15_pc_g41nb4b.exe, Rezepte der Abnahme 3 unveraendert (`<SP>/g4/nach.sh` liest
 deren env.txt); die vier Elza-Laeufe mit Haken HP erreichten den R1 nicht mehr in EXIT_AT 3000 (11.5) und wurden mit 250 Schussbloecken
 und EXIT_AT 9000 nachgefahren (`<SP>/g4/runs/c_*`); Auswertung `<SP>/g4/r1sum.py`):
 
@@ -1493,4 +1493,56 @@ gator_boss.log): `r1wahl A (plat_leon F1278, laufender Cut 4 mit 6/19): Wahl Cut
 an RE2, Grenze bevorzugt, kein voller Cut -> meiste Proben). Im Spiel (Tabelle 11.3, alle zehn Verlaeufe): Kopf ok, Kiefer ok, Todes-Clip
 19/19 Proben, gewaehlt in Stufe 0; plat_leon jetzt R1 F1204 bei (3541,-8901): laufender Cut 4 mit 8/8 und 19/19 -> ohne Schnitt; plat_elza
 F3397: Schnitt Cut 4 8/8 19/19. Riegel `integration_r41_kanister2080_kampf` um den Lauf plattform_leon (Leon auf (0,-16000)) ergaenzt (11.5).
+
+### 11.5 Endmessung (Endstand 9009a99a + 63e50c22, Messkopie re15_pc_g41nb4d.exe)
+Waehrend der Zwischenmessung 11.3 nachgezogen: die Kopf-Klemme prueft auch das ANDERE Ende des Kanisters (Weltdrehung R6 x rel mal
+(0,-2784,0) = Modellhoehe von KANISTER40A0.MD1, ROOM40A0 Modell 1 @RDT 0x4024, y -2784..0; in diesem Bereich liegen die Spritzring-
+Punkte @0x801000a8, y 0..-2800) - im Zwischenstand lag in v1_leon das freie Ende bei x 8696, d.h. 1496 in der Ostwand. 63e50c22:
+gator_fx_r41_pc.c macht ausserhalb von 2090/2091 ohne Messzeile keinen Zeichenlauf (Hinweis H5; aendert keine gezeichneten Quads).
+Alle zehn Pflicht-Verlaeufe (Rezepte der Abnahme 3 `<SP>/g3abn/runs/*/env.txt`, Leon-Laeufe unveraendert, `<SP>/g4/runs/e_*`; * = Elza mit
+Haken HP und 250 Schussbloecken, EXIT_AT 9000 - siehe 11.6 Laufdauer):
+
+| Lauf | R1 (Bild nach der Rueckkehr) | Alligator beim R1 | Kanister beim R1 | R1-Kamera (G-E1) | gewaehlter Cut: Start / verdeckt / ausserhalb | Todes-Clip | Spritzring re2fx_pc max (Bilder) | Kopf-Klemme-Episoden |
+|---|---|---|---|---|---|---|---|---|
+| k_leon | F1429 | (-4160,-18621) | (-3557,-22674) | Schnitt Cut 6 | 8/8 / 0 / 0 | 19/19 | 170 (38) | 45 |
+| k_elza* | F2536 | (-4581,-16671) | (-6641,-19991) | Schnitt Cut 6 | 8/8 / 0 / 0 | 19/19 | 96 (12) | 58 |
+| d15_leon | F1022 | (-1994,-9624) | (-1139,-5493) | Schnitt Cut 4 | 5/8 / 0 / 0 (3 Sprite-Raender am Bildrand) | 19/19 | 96 (12) | 26 |
+| d15_elza* | F592 | (-3682,-7696) | (-7,-5573) | Schnitt Cut 4 | 8/8 / 0 / 0 | 19/19 | 96 (12) | 8 |
+| west_leon | F322 | (-6643,-13099) | (-6615,-9182) | Schnitt Cut 5 | 8/8 / 0 / 0 | 19/19 | 96 (12) | 6 |
+| west_elza* | F3040 | (3199,-22245) | (7200,-23609) | Schnitt Cut 1 | 8/8 / 0 / 0 | 19/19 | 96 (12) | 105 |
+| plat_leon | F2659 | (2822,-22589) | (7014,-22427) | Schnitt Cut 1 | 8/8 / 0 / 0 | 19/19 | 96 (12) | 65 |
+| plat_elza* | F2659 | (2293,-9057) | (6275,-7705) | Schnitt Cut 4 | 8/8 / 0 / 0 | 19/19 | 96 (12) | 102 |
+| **v1_leon (kein Haken)** | F2290 | (3294,-23729) | (6453,-20955) | Cut 1 ohne Schnitt | 8/8 / 0 / 0 | 19/19 | **96 (12)** (vorher 0) | 82 |
+| v1_elza (kein Haken) | F2290 | (3294,-23729) | (6453,-20955) | Cut 1 ohne Schnitt | 8/8 / 0 / 0 | 19/19 | 96 (12) | 82 |
+
+In allen zehn: Kanister beim R1 innerhalb der Aussenwaende, in KEINEM gewaehlten Cut ein Start-Punkt ausserhalb des Regions-Vierecks
+(M3), Kopf ok, Kiefer ok, Todes-Clip 19/19 Proben (M1), Raum-ESP ROOM40A0 registriert, `kern485 fremd 0` und `aus_fenster 0` in allen R1-
+Bildern, op_unbekannt 0, zehn Scherben-Bilder 180..1530, keine Zeile "AUSSERHALB des Regions-Viereck" (Kanister-Regionstest). Die
+Szene davor unveraendert (v1: Ausloeser F7375 Treffer 37, `Tuer-Ton DOOR06 Satz 1`, `Kanister aufgehoben`, `Zeile 42 stand F531..`,
+`Werfer Cut 7: Gier 3678, Gier zur Kamera 3791, Versatz -113, frontal 4035/4096`, Aufschlag, `derselbe Alligator`, Aufnahme Stufe 1 F143,
+angehaengt F155 - wie in der Abnahme 3). v1_leon und v1_elza enden im selben R1 (andere Landestelle (-6856/-6828,-12670/-12660), danach
+dieselbe Verfolgung); die Logs sind verschieden (2090/2091, Werfer Marvin/John).
+**Bilder** (RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1, Helligkeit x1,8):
+- `G_belege/nb4_m3_v1_leon_vorher_oben_nachher_unten.png` - natuerlicher Leon-Verlauf ohne Testhaken: oben Abnahme 3 (F446-F460: Kopf
+  und Explosion am rechten Bildrand in der Wand, nur Blut, keine Wolke), unten Endstand (F2292-F2306: Kopf mitten im Bild vor der Wand,
+  grau-weisse Spritzring-Wolke, Blutausbruch, Fontaene).
+- `G_belege/nb4_m3_v1_leon_r1_f2290-2310_x3.png` - derselbe R1 x3: F2290 Wolke + Blut am Kopf, F2292-F2296 Wolke und Blut-Spritzer,
+  F2300-F2310 die Fontaene steigt; Leon rechts, die gelb-schwarz gestreiften Figuren sind die Spinnen 0x25/0x26 dieses Zweigs (Spur F).
+- `G_belege/nb4_m1_plat_leon_r1_f2656-2698.png` - Plattform-Lage Leon: F2656/58 laufender Cut 2, Schnitt auf Cut 1 F2660, Explosion,
+  Fontaene bis F2690 mit Kopf und Kiefer im Bild, F2698 zurueck auf Cut 2 (Clip-Ende, RE2 @0x801024a4-ec).
+
+### 11.6 Tests (gezielt, keine volle Suite; local_build.sh, ctest mit msys64 zuerst im PATH)
+- Bau: `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`, `... build` -> `=== LOCAL-BUILD-OK (build)` (Stand 63e50c22).
+- Unit (Endstand): `ctest --test-dir re15_port/build -R "unit_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_|unit_msg_|unit_action_msg_gate|unit_alligator_ai|unit_gator_|unit_g5_boss|unit_r35_granate|unit_r34_reaktion|unit_re2_spider_water_2090|unit_r34_re2fx|unit_r34_plattform|unit_r34_wasser|unit_r34_wurf|unit_r35_fenster|unit_r35_werfer|unit_r36_granate|unit_r36_schuss|unit_r39_hund1121|unit_re2_gore_render|unit_marvin_render_pose" --timeout 600 -j4`
+  -> **`100% tests passed, 0 tests failed out of 82`** (Total Test time (real) = 166.29 sec) - der Ausdruck der Abnahme 3 (80) plus die
+  neuen unit_r41_kanister2080_kopfklemme und unit_r41_kanister2080_r1wahl.
+- Integration (Zwischenstand vor dem zweiten Kanister-Ende): `-R "^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_kanister2080_raumfremd$|^integration_r41_re2gator$" -j4`
+  -> `100% tests passed, 0 tests failed out of 4` (1448,40 s; kampf mit fuenf Laeufen: kampf_leon R1 (-4621,-8441), kampf_elza (-5153,-14712),
+  nordost_leon (2321,-9486), west_elza (2971,-20467), plattform_leon).
+- Integration (Endstand): siehe 11.6a.
+- Laufdauer des Riegels kampf: mit der Kopf-Klemme erreicht der Alligator Leon/Elza an der Wand nicht mehr mit dem Kopf durch die Wand;
+  der passive Schuetze (Zielhilfe FUN_8003703c = naechster Gegner) zielt dann laenger auf die Spinnen (0x25/0x26, in diesem Zweig noch in
+  2090; Hinweis B4 / Spur F entfernt sie). Gemessen mit dem Abnahme-Rezept (EXIT_AT 3000): die vier Elza-Laeufe mit Haken HP ohne R1 (k_elza:
+  Elza bei (-3315,-6197) an der Nordwand, der Alligator beisst mit Maul 864 vor ihr, `hr=1` (Elza in Trefferreaktion durch die Spinne), sie
+  schiesst auf Spinne 2 bei 1514); mit EXIT_AT 9000 R1 nach F592..F3040. Riegel: EXIT_AT 5000 statt 3000 (kein Spielverhalten).
 
