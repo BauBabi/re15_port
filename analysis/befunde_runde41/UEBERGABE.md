@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-25 17:24: Nachtrag 30d (Plakat NEU 1. GREEN 01 - 2. RED 02 - 3. BLACK 09 - 4. RED 08, Loesung 09-02-01-08; ersetzt 30c) und 30e (2010: Wasser die Leiter herunter und ueber den Weg zum Becken, bis zur Flut in 2030) an Spur N (Baum 4bd6c7e2). G Abnahme 3 NICHT bestanden (M1 Todeskamera Plattform, M2 Kern-CLUT erst nach 2090-Besuch, M3 Kopf in der Suedwand, V1 render_pc.c) -> Entscheide G-E3..G-E6 (5d6b6d8e, im G-Baum 29790441); G Nachbesserung 4 laeuft (wf_2bd33954-f59, letzte des Laufs).
+
 * 2026-10-25 17:10: Nutzer-Nachtrag 30/30b/30c (Schrank 2010 klappt auf -> Sicherungskasten wie 2060 nach fuse_box.bmp; Panel-Raetsel 2030 mit Druck 80 statt Ventil 13 - erst Entwuerfe, Bau nach Freigabe; Notiztext "green and red" + Nummern "black"/"green" -> Loesung 02-01-09-07 (Plakat-Zeilen GREEN 09 / BLACK 02 vertauscht; N-E1 09-02-01-08 war falsch und ist widerrufen); RE2-Ton der Plattformfahrt; RE2-Alarmton durchgehend; Lautstaerke fuer ALLE Toene, Tuersequenzen und Wassersprung folgen ihr nicht). **Neue Spur N** (nachtrag30, Baum r41_nachtrag30, Kopf cd48e3c7) = wf_bb3cf906-c56 (args orchestrator/args_n.json). Nutzer-Bilder bytegleich in N_belege/nutzer/.
 
 * 2026-10-25 16:39: Release-Notes-Entwurf A-L fertig und unabhaengig geprueft (wf_c85f5501-af8, in Ordnung; Korrekturen u. a. Nachtrag 4 ergaenzt, 12_02-Aussage gestrichen, Herkunft "Lower the bridge?" ungeklaert -> §3b). Paket-Gate fuer neue RE2-Dateien -> §4.
