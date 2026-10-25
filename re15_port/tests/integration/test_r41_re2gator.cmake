@@ -69,6 +69,10 @@
 #   Szene (Clip-Folge/Schnitte)"): SECHSTER Lauf "szene" ueber die Leiter ohne Bit 110 - kein RE2-Intro, Szenen-Schnitte
 #   DURCHBRUCH -> FINISHER -> Ende, Clip-Folge 6/4/5/11/0/10 am state.log. Die fuenf Laeufe oben pruefen B's Kampf (mit dem
 #   RE2-Intro beim WIEDER-Betreten nach der Szene, Bits 110/113) unveraendert.
+#   (e) Nachtrag 29 (Nutzer 2026-10-25 12:08: "Die Zombie Leiche inklusive der Kette ... muss weiter weg sein"), Spur F
+#   Nachbesserung 4: die Szene frisst jetzt obj 3 im Nordbecken (Obj_model_set @0x00A8E), die Wende auf Leon an der Leiter ist
+#   laenger (G5 F369 -> G6 F394 statt -> F376), "KAMERA SZENE ... Ende" kommt in F423 statt F405 -> Lauf "szene" RE15_EXIT_AT
+#   420 -> 440 (gemessen F41n4 Laeufe N_L/N_E: Folge C F423). Pruefungen unveraendert.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_re2gator.cmake
 # =============================================================================
@@ -694,7 +698,7 @@ re15_start_spiel(_rv 300
     RE15_SET_FLAG=3:245
     RE15_DEBUG_JUMP=2080@250 "RE15_FIRE_AOT=1@40#2080"
     RE15_STATE_LOG=state.log
-    "RE15_EXIT_AT=420#2090"
+    "RE15_EXIT_AT=440#2090"
     "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
     file(REMOVE "${_exe_kopie}")

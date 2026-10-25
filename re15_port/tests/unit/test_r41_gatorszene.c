@@ -306,10 +306,11 @@ static void teil_programme(void)
     const uint8_t *p2 = re15_gatorszene_r41_programm(2, &n2);
     const uint8_t *p3 = re15_gatorszene_r41_programm(3, &n3);
     {
-        static const uint8_t cut1[2] = { 0x29, 0x01 };
+        /* Nachbesserung 4 (Nachtrag 29, Querbezug): Leichen-Cut 5 (obj 3, leiche_lage_n4.py; Fassung 1: Cut 1) */
+        static const uint8_t cut1[2] = { 0x29, 0x05 };
         static const uint8_t knall[8] = { 0x22, 0x05, RE15_GSZ_SIG_KNALL, 0x01, 0x09, 0x0a, 45, 0x00 };
         const int ic = hat(p1, n1, cut1, 2), ik = hat(p1, n1, knall, 8), it = hat(p1, n1, (const uint8_t *)"\x3b\x14", 2);
-        PRUEF(ic >= 0 && ik > ic && it > ik, "P1: Cut 1 (@+%d), Knall Set(5,29,1) + Sleep 45 (@+%d), dann Door_aot_set (@+%d)",
+        PRUEF(ic >= 0 && ik > ic && it > ik, "P1: Cut 5 (@+%d), Knall Set(5,29,1) + Sleep 45 (@+%d), dann Door_aot_set (@+%d)",
               ic, ik, it);
     }
     {
@@ -946,6 +947,7 @@ static int32_t re2_vorn_x(const re15_enemy_bank_t *bk, int clip, int f, int32_t 
     }
     return vorn;
 }
+static int64_t s_re2_abstand2;   /* exaktes Abstandsquadrat Wurzel <-> Leon am RE2-Intro-Ende (fuer den exe-Riegel) */
 static int re2_soll(int32_t *abstand, int *bilder)
 {
     const re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
@@ -956,7 +958,8 @@ static int re2_soll(int32_t *abstand, int *bilder)
     for (int f = 0; f < bk->anim.clips[3].frame_count; f++) re2_clip_bild(bk, 3, f, &x, &z, yaw);
     yaw = (yaw + 1024) & 0xfff;
     const int32_t lx = -10800, lz = -25800;
-    *abstand = (int32_t)re15_squareroot0((uint32_t)((int64_t)(x - lx) * (x - lx) + (int64_t)(z - lz) * (z - lz)));
+    s_re2_abstand2 = (int64_t)(x - lx) * (x - lx) + (int64_t)(z - lz) * (z - lz);
+    *abstand = (int32_t)re15_squareroot0((uint32_t)s_re2_abstand2);   /* SquareRoot0 wie RE2 +0x1F0 (`jal 0x8008d2f4` @0x800265d4) */
     int sperre = 110, sub = 1, f0 = 0, f1 = 0;
     for (int t = 1; t <= 600; t++) {
         int clip, fr;
@@ -1154,6 +1157,12 @@ int main(int argc, char **argv)
                         argc >= 9 ? atoi(argv[8]) : 0);
     if (!strcmp(teil, "kamfolge") && argc >= 8)
         return kamfolge(argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]));
+    if (!strcmp(teil, "re2soll")) {   /* Auswerter des exe-Riegels integration_r41_gatorszene_* (Nachbesserung 4) */
+        int32_t ab = 0; int bi = 0;
+        if (!gator_bank() || !re2_soll(&ab, &bi)) { printf("re2soll: FEHLER (RE2-EM23-Bank)\n"); return 1; }
+        printf("re2soll: abstand=%d abstand2=%lld bilder=%d\n", (int)ab, (long long)s_re2_abstand2, bi);
+        return 0;
+    }
     const int alle = !strcmp(teil, "alle");
     re15_door_seq_setze_laeufer(fang);
     if (alle || !strcmp(teil, "spinnen"))    teil_spinnen();

@@ -17,6 +17,10 @@
 #                                   -> Schluessel ohne Bild des Zonen-Cuts 0; Gegenprobe (9,111) vorab: B's Rueckschnitt unberuehrt
 #   unit_r41_gatorszene_szene       die ganze Szene (Leon) mit dem echten Boss-Takt und der RE2-EM23-Bank
 #   unit_r41_gatorszene_szene_elza  dieselbe mit Elza (2091/2081)
+#   unit_r41_gatorszene_abstand     Nachbesserung 4 (Abnahme 3 M1 = Nachtrag 29): Szene ueber die Leiter bis zum Kampfbeginn, Abstand
+#                                   Gator-Wurzel <-> Spielfigur >= RE2-Intro-Ende ROOM40A0, erster Biss/Treffer (Leon steht) nicht vor
+#                                   den RE2-Bildern (beides im Riegel aus den RE2-Daten gerechnet); Gegenprobe Fassung-1-Lage
+#   unit_r41_gatorszene_abstand_elza  dieselbe mit Elza (2091/2081)
 #   integration_r41_gatorszene      echte exe (test_r41_gatorszene.cmake): Leiter 2080 -> 2090, Szene, Folge-Zeilen (Leon + Elza);
 #                                   Nachbesserung 1: Kamera-Uebergabe Cut 0 (M1); _tod/_tod_elza: Todesrolle, Schluessel sichtbar
 #                                   und pulsierend (Bildvergleich mit/ohne Schluessel ueber test_r41_gatorszene bilddiff, M2)
@@ -24,6 +28,9 @@
 #                                   Cut_old zurueck), Kasten >= 10 x 9; NEU _tod_r1/_tod_r1_elza: RE2-R1-Kanistertod, natuerliche Kamera
 #                                   Nachbesserung 3 (M1): NEU _tod_explosion/_tod_explosion_elza: R1 mit Explosionsschnitt der
 #                                   Spur B - Explosions-Cut -> Schluessel-Cut ohne Bild des Zonen-Cuts (state.log + kamfolge)
+#                                   Nachbesserung 4 (M1 = Nachtrag 29): leon/elza + NEU flucht/flucht_elza (Spielfigur rennt ab dem
+#                                   Kampfbeginn nach Osten): Abstand Gator-Wurzel <-> Spielfigur am Kampfbeginn >= RE2-Intro-Ende,
+#                                   kein Biss/Treffer in den RE2-Bildern danach (Sollwert: test_r41_gatorszene re2soll)
 add_executable(test_r41_gatorszene ${CMAKE_CURRENT_LIST_DIR}/../test_r41_gatorszene.c)
 target_link_libraries(test_r41_gatorszene PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_gatorszene PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -33,14 +40,14 @@ target_compile_definitions(test_r41_gatorszene PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_gatorszene PRIVATE m)
 endif()
-foreach(_teil spinnen programme leiche texte tor schluessel tod tod_explosion szene szene_elza)
+foreach(_teil spinnen programme leiche texte tor schluessel tod tod_explosion szene szene_elza abstand abstand_elza)
     add_test(NAME unit_r41_gatorszene_${_teil} COMMAND test_r41_gatorszene ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorszene_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()
 
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorszene.cmake)
-    foreach(_teil leon elza tod tod_elza tod_r1 tod_r1_elza tod_explosion tod_explosion_elza)
+    foreach(_teil leon elza tod tod_elza tod_r1 tod_r1_elza tod_explosion tod_explosion_elza flucht flucht_elza)
         add_test(NAME integration_r41_gatorszene_${_teil}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
