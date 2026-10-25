@@ -127,6 +127,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_bissarm_r37.h"  /* Runde 37 Spur J: Handkontakt im Griff */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
 #include "re15_hundeschatten.h"   /* Runde 35 Spur H: Hunde-Schatten auf die Boden-Referenz */
+#include "re15_spinnenanim_r41.h" /* Runde 41 Spur L: Zeichnen der Adultspinne (Drehung, Bild, Massstab) */
 #include "re15_npckante_r38.h"     /* Runde 38 Spur M: NPC-Schatten auf +0x1ba waehrend Kante/Fall */
 #include "re15_zombieki_r36.h"    /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache (Typ 0x27) */
 #include "re15_trage1200.h"      /* Runde 35 Spur H: ROOM1200 Trage-Zombie (Messschiene) */
@@ -9906,6 +9907,7 @@ re_title:;
                             crow_tinted = 1;
                         }
                     }
+                    re15_spinnenanim_r41_schatten_groesse(npc, &nhx, &nhz);   /* Runde 41 Spur L: Spinne +-1300 x +-1400 (FUN_8001af5c @0x80110d90) */
                     int32_t nsh_c[4][3] = {
                         { -nhx, 0,  nhz }, { -nhx, 0, -nhz },
                         {  nhx, 0,  nhz }, {  nhx, 0, -nhz },
@@ -9933,6 +9935,7 @@ re_title:;
                     { int32_t ky; if (re15_npckante_schatten_y(npc, &ky)) nsh_y = ky; }   /* Runde 38 Spur M: +0x1ba @0x8011dd78 */
                     re15_wasserzombie_schatten_y(npc, &nsh_y);   /* Runde 38 Spur U: Hochziehen -> +0x1ba (`lh a1,442` @0x801004fc) */
                     re15_r39_schatten_y(npc, &nsh_y);            /* Runde 39 Spur E: Gorilla 0x27 / Affe 0x29 -> +0x1ba (`lh a1,442` @0x80116f30 / @0x80110c78) */
+                    re15_spinnenanim_r41_schatten_y(npc, &nsh_y); /* Runde 41 Spur L: Spinne -> +0x1ba (`lh a1,442` @0x80110b4c) */
                     if (npc->type == 0x21)
                         nsh_y = re15_ai_re2_for_type(npc->type)
                                   ? (int32_t)npc->dog_floor_y      /* +0x1C2 @0x80100414 */
@@ -10163,11 +10166,14 @@ re_title:;
                 uint32_t ncur = (target_fps == 30)
                     ? (uint32_t)npc->anim_frame
                     : ((uint32_t)npc->anim_frame >> 1);
+                re15_spinnenanim_r41_zeichnen_beginn(npc, &ncur, target_fps);   /* Runde 41 Spur L: posiertes Bild/+0x8f VOR dem Vorschub (FUN_8001f3bc) */
                 int npc_kf = re15_compute_actor_kf(npc_anim, npc_skel, npc,
                                                    av.clip_override, ncur);
                 re15_skel_pose_t npc_poses[RE15_EMD_MAX_BONES];
                 g_anim_pose_actor = npc;   /* FRAC crossfade for this NPC/enemy body */
-                if (re15_skel_compute_pose(npc_skel, npc_kf, npc_poses) != 0) continue;
+                int npc_pose_rc = re15_skel_compute_pose(npc_skel, npc_kf, npc_poses);
+                re15_spinnenanim_r41_zeichnen_ende(npc);   /* Runde 41 Spur L: anim_frac des Spielstands zurueck */
+                if (npc_pose_rc != 0) continue;
                 /* Region-gecullt: Pose gerechnet (Takt-Zustand wie @0x8001e9b4 FUN_8001ef54),
                  * gezeichnet wird nichts. */
                 if (npc_region_culled) continue;
@@ -10213,7 +10219,7 @@ re_title:;
                  * @0x80104bc4 `jal 0x8008e1f4` (RotMatrix) auf e+0x74, Peitsche setzt +0x74/+0x78
                  * (@0x8010143c-5c), Speer/Wedeln/Zug aus den Tabellen @0x80105740/@0x80105770.
                  * Yaw-only (nyaw) == RotMatrix(0, yaw, 0), also fuer alle anderen Typen unveraendert. */
-                if (npc->type == 0x37u)
+                if (npc->type == 0x37u || re15_spinnenanim_r41_volle_drehung(npc))   /* Runde 41 Spur L: Spinne RotMatrix(+0x68) @0x8001e8f4 */
                     re15_skel_euler_matrix((int)npc->rot_x, npc_yaw_eff, (int)npc->rot_z, nyaw);
                 /* ENTITY-RENDER-SCALE +0x166 (Gate Flag 0x800): das Original skaliert die
                  * Root-Matrix VOR der Bone-Schleife uniform per ScaleMatrix (FUN_8001e8c8
@@ -10226,6 +10232,7 @@ re_title:;
                     for (k = 0; k < 9; k++)
                         nyaw[k] = (nyaw[k] * (int32_t)npc->render_scale_q12) >> 12;
                 }
+                re15_spinnenanim_r41_log_matrix(npc, nyaw);   /* Runde 41 Spur L: Messschiene RE15_SPINNENANIM_LOG (env) */
 
                 /* Canonical (2026-05-29): eval_pos = the NPC's own world
                  * position, matching PSX FUN_80053fc0 / FUN_80039ca0

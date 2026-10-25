@@ -29,6 +29,7 @@
 #include "re15_enemy_ai.h"      /* RE15_AI_STATE_CORPSE (Teil 3b) */
 #include "re15_engine.h"         /* g_engine.frame_count (Protokollzeile des Szenenschutzes) */
 #include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: re15_szenenschutz_haelt (Routine 25, Nachbesserung 1 Mangel 3) */
+#include "re15_spinnenanim_r41.h"   /* Runde 41 Spur L: Zeichen-Merker + Figur-Matrix (Gift-Anker) */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,6 +80,8 @@ static void lauer_clip(re15_actor_t *e, int re2, uint8_t re15_clip, uint8_t frac
  * Umbruch an der EM025-Cliplaenge, +0x8f-Ueberblendzaehler -1. Rueckgabe 1 im Umbruchbild. */
 static int lauer_anim(re15_actor_t *e, int re2)
 {
+    re15_spinnenanim_r41_vor_anim(e);   /* Runde 41 Spur L: posiertes Bild/Ueberblendung VOR dem Vorschub merken
+                                         * (FUN_8001f3bc posiert +0x95/+0x8f und zaehlt erst danach, @0x8001f5b0-b4 / @0x8001f610-1c) */
     uint8_t c = lauer_clip_re15(re2, e->motion);
     int fc = (c < 17) ? re15_spinnen_r38_em025_clip_len[c] : 1;
     if (e->anim_frac > 0) e->anim_frac--;
@@ -327,7 +330,9 @@ static void gift_anker(const re15_actor_t *e, const int32_t ofs[3], int32_t out[
     int32_t v[3] = { ofs[0], ofs[1], ofs[2] };
     re15_enemy_bank_t *b = re15_enemy_find(e->type);
     if (b && b->ok && b->skel.bone_count > 0) {
-        int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
+        int a_clip = -1, a_bild = e->anim_frame;
+        (void)re15_spinnenanim_r41_letzte_pose(e, &a_clip, &a_bild);   /* Runde 41 Spur L: Pose des vorigen Zeichnens */
+        int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, a_clip, (uint32_t)a_bild);
         re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
         void *save = g_anim_pose_actor;
         g_anim_pose_actor = NULL;                       /* Abfrage: Ueberblendung nicht anfassen */
@@ -342,7 +347,16 @@ static void gift_anker(const re15_actor_t *e, const int32_t ofs[3], int32_t out[
             }
         }
     }
-    re15_skel_bone_to_world(v, e->rot_y, e->x, e->y, e->z, out);
+    /* Runde 41 Spur L: Modell -> Welt mit der Figur-Matrix des Zeichners (RotMatrix(+0x68) @0x8001e8f4 x
+     * ScaleMatrix(+0x166 = 0xccc) @0x8001e940): die Teil-0-Weltmatrix *(+0x188)+0x40 des Originals kettet an
+     * Figur+0x20 (`lw s0,108(s2)` @0x8001ea0c / `jal 0x80022da0` @0x8001ea24) — vorher nur die Gier. */
+    {   int32_t m[9];
+        re15_spinnenanim_r41_figur_matrix(e, m);
+        const int32_t pos[3] = { e->x, e->y, e->z };
+        for (int i = 0; i < 3; i++)
+            out[i] = pos[i] + (int32_t)(((int64_t)m[i * 3 + 0] * v[0] + (int64_t)m[i * 3 + 1] * v[1]
+                                          + (int64_t)m[i * 3 + 2] * v[2]) >> 12);
+    }
 }
 
 static int gift_platz_index(const re15_esp_fx_t *f)
