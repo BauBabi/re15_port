@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-25 16:28: M Abnahme 4 NICHT bestanden (M1 = M-E2 nicht umgesetzt, kam nach NB4; M2 roter Ordner 30A0/30A1 C0 ohne Maske, steht in Zelle 6 VOR der Figur) -> **M Nachbesserung 5 = wf_919ed783-7b2** (args orchestrator/args_m_nb5.json). G Nachbesserung 3 fertig (Kanister-Explosion aus fuenf RE2-Quellen nachgebaut, Raum-ESP GATOR40A0, Todeskamera G-E1, Werfer G-E2) -> G Abnahme 3 laeuft (wf_2bd33954-f59). F Nachbesserung 5 laeuft (wf_f2e30b5e-2c4). Release-Notes-Entwurf A-L: Pruefung laeuft (wf_c85f5501-af8).
+
 * 2026-10-25 15:09: **Integration C+K fertig** (wf_9e0c61da-a3f): Merge C 2d20306d, K 4b313429, Fix 45cc6246 (E x K), Riegel-Fix d1edabbc, Tests gruen, Kette A+C in Ordnung, Gegenpruefung ohne Befund (C 48 Hunks, K 46 Hunks, keiner verloren). master-Doku in r41/integration (91ae1a79), **master ff 91ae1a79 = A B C D E H I J K L integriert**. Hauptbaum-exe neu gebaut 15:08:36 (configure + build, LOCAL-BUILD-OK). Offen: F (NB5 wf_f2e30b5e-2c4), G (NB3 wf_2bd33954-f59), M (Abnahme 4 wf_6d1c4408-277, danach M-E2).
 
 * 2026-10-25 15:04: F Abnahme 4 NICHT bestanden (wendete F-E2 an: M1 Kampfbeginn 17539/470 statt RE2 11430/121, M2 Schluessel Ruhe 47 statt >= 72, M3 Fressen von hinten, M4 Riegel nur mit Untergrenze) -> **F Nachbesserung 5 = wf_f2e30b5e-2c4** (args orchestrator/args_f_nb5.json). Laufend: Gegenpruefung C+K (wf_9e0c61da-a3f), M Abnahme 4 (wf_6d1c4408-277), G Nachbesserung 3 (wf_2bd33954-f59).
