@@ -140,3 +140,48 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
     set_tests_properties(integration_r41_masken36_laufpruefung PROPERTIES TIMEOUT 900 PASS_REGULAR_EXPRESSION "Gegenprobe OK")
 endif()
+
+# Nachbesserung 5 (Abnahme 4, Mangel 1 = Entscheid M-E2 "Teile des Original-Vordergrundatlas einsetzen, sofern je Teil Lage
+# (Bildvergleich) und Tiefe (Zelle mit RDT-Offset) belegt sind"): tools/maske/platzieren_r41.py (Regel 5/6 NB5), Tabelle
+# tests/unit/gen_r41_masken36_platziert.inc, Modell-Zeilen in tests/unit/gen_r41_masken36_zellen.inc.
+#   unit_r41_masken36_platziert  je Sektion: Rechteckzahl erstes + n, Leon/Elza bytegleich; neue Rechtecke = Hintergrund an der Zielstelle
+#                             (Blit); jedes Teil liegt dort, wo der Original-Atlas (Spiel-Entpacker re15_sld_*) es hat (>= 95 % der Texel
+#                             farbgleich); gezeichnet (nach dem Ausschluss) mindestens der gemessene Endstand; die Gelaender der Restliste
+#                             (30E0 C6..C9, 3050 C6, 3040 C3) sind dabei.
+add_test(NAME unit_r41_masken36_platziert COMMAND test_r41_masken36 platziert WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r41_masken36_platziert PROPERTIES TIMEOUT 900)
+#   unit_r41_masken36_teile  Mechanik "Tiefe aus der Zelle": jedes gezeichnete neue Rechteck hat eine Modell-Zeile (Zelle + 12 SCA-Bytes am
+#                             RDT-Offset, Tiefe == Zeile); an keinem deckenden Punkt liegt der Eintritt des Sehstrahls in den Koerper hinter
+#                             der Rechteck-Tiefe (unabhaengig in C nachgerechnet: Halbebenen der Resolver-Form, bucket = (1023*vz)>>16,
+#                             @0x8002565c / ZSF3 341 @0x80066c70 / Masken-OT @0x80039650) - keine Figur VOR dem Gegenstand wird verdeckt.
+add_test(NAME unit_r41_masken36_teile COMMAND test_r37_masken36 teile WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r41_masken36_teile PROPERTIES TIMEOUT 900)
+#   integration_r41_masken36_teile_a..d  echte exe: je Kamera mit eingesetzten Original-Atlas-Teilen eine HINTER-Stelle (Art M: die neuen
+#                             Rechtecke verdecken die Figur, H > 0) und eine DAVOR-Stelle (Art V: Figur ueberlappt die neuen Teile davor,
+#                             0 Punkte uebermalt), Leon; Elza je Raum die staerkste HINTER-/DAVOR-Stelle. Stellen = test_r37_masken36 neustellen
+#                             (dieselben Stehplaetze/Figur/Tabelle wie der Ausschluss). Gruppen: a = ROOM3040, b = 3050 + 4040, c = 30A0/30E0/
+#                             Stage 5, d = Stage 6; Szenen test_r41_masken36_teile_szenen_<g>.cmake, Laeufer wie integration_r41_masken36_stage2.
+if(TARGET re15_pc)
+    foreach(_g a b c d)
+        add_test(NAME integration_r41_masken36_teile_${_g}
+                 COMMAND "${CMAKE_COMMAND}"
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r37_masken36_ppm>
+                         -DRE15_BG_TOOL=$<TARGET_FILE:probe_bg_dump>
+                         -DCD_ROOT=${CMAKE_SOURCE_DIR}/shared_assets/PSX
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_masken36_teile_${_g}_wd
+                         -DSZENEN=${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_teile_szenen_${_g}.cmake
+                         -DPRAEFIX=r41m8${_g}
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
+        set_tests_properties(integration_r41_masken36_teile_${_g} PROPERTIES TIMEOUT 2400)
+    endforeach()
+endif()
+
+# Nachbesserung 5 (Abnahme 4, Mangel 2 "roter Ordner ROOM30A0/30A1 Cut 0 ohne Maske"): der Ordner ist KEIN Teil des Original-Vordergrundatlas
+# (der Kuenstler-Ausschnitt deckt den gruenen Ordner daneben, den roten nicht; das Original hat in 30A0/30A1 gar keine Masken) -> nach M-E2 /
+# M-E1 keine automatische Maske, Freistellung des Nutzers (Dossier "Fuer den Nutzer: Freistellungen").
+#   unit_r41_masken36_ordner  pri_offset Cut 0 -> ff ff ff ff + Kopfbyte 7 == 0 (beide Varianten); Atlas (Spiel-Entpacker) an der Verschiebung
+#                             des gezeichneten Rechtecks unter dem gruenen Ordner: gruen >= 91 Bildpunkte farbgleich, rot 0; kein eingesetztes
+#                             Teil auf dem roten Fenster; gezeichnet dort 0 (Leon und Elza).
+add_test(NAME unit_r41_masken36_ordner COMMAND test_r41_masken36 ordner WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r41_masken36_ordner PROPERTIES TIMEOUT 600)

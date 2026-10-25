@@ -716,12 +716,33 @@ static uint8_t *g_r41_ras[4096];     /* Formraster je Modellzeile (wie form0, We
 static int g_r41_rw[4096], g_r41_rd[4096];
 static long g_r41_echt3d;            /* Figurpunkte, die NUR das 3D-Urteil als "Gegenstand davor" belegt (Zaehler) */
 
+/* R41 NB5: die Tabelle ist nach (Raum, Cut, Rechteck) sortiert (platzieren_r41.tabelle_schreiben / kacheln_r41) - Suche binaer; seit
+ * NB5 2784 Zeilen, die lineare Suche je Figurpunkt machte "fern" unbrauchbar langsam. Unsortiert (Pruefung beim ersten Aufruf) -> linear. */
+static long r41_schluessel(unsigned raum, int cut, int rect) { return ((long) (raum & ~1u) << 16) | ((long) (cut & 0xFF) << 8) | (rect & 0xFF); }
 static const r41_zellen_modell_t *r41_modell(unsigned raum, int cut, int rect, int *idx)
 {
-    int i;
-    for (i = 0; i < R41_MODELLE && i < 4096; i++) {
-        const r41_zellen_modell_t *k = &r41_masken36_zellen[i];
-        if (k->raum == (uint16_t) (raum & ~1u) && k->cut == (uint8_t) cut && k->rect == (uint8_t) rect) { *idx = i; return k; }
+    static int sortiert = -1;
+    int i, lo = 0, hi, n = R41_MODELLE < 4096 ? R41_MODELLE : 4096;
+    long s = r41_schluessel(raum, cut, rect);
+    if (sortiert < 0) {
+        sortiert = 1;
+        for (i = 1; i < n; i++)
+            if (r41_schluessel(r41_masken36_zellen[i - 1].raum, r41_masken36_zellen[i - 1].cut, r41_masken36_zellen[i - 1].rect)
+                >= r41_schluessel(r41_masken36_zellen[i].raum, r41_masken36_zellen[i].cut, r41_masken36_zellen[i].rect)) sortiert = 0;
+    }
+    if (!sortiert) {
+        for (i = 0; i < n; i++) {
+            const r41_zellen_modell_t *k = &r41_masken36_zellen[i];
+            if (k->raum == (uint16_t) (raum & ~1u) && k->cut == (uint8_t) cut && k->rect == (uint8_t) rect) { *idx = i; return k; }
+        }
+        return NULL;
+    }
+    hi = n - 1;
+    while (lo <= hi) {
+        int mi = (lo + hi) / 2;
+        long km = r41_schluessel(r41_masken36_zellen[mi].raum, r41_masken36_zellen[mi].cut, r41_masken36_zellen[mi].rect);
+        if (km == s) { *idx = mi; return &r41_masken36_zellen[mi]; }
+        if (km < s) lo = mi + 1; else hi = mi - 1;
     }
     return NULL;
 }
@@ -793,6 +814,85 @@ static int r41_koerper_davor(unsigned raum, int cut, int rect, const double A[3]
     }
     return -3;
 }
+
+/* ---- Runde 41 Spur M, Nachbesserung 5 (Abnahme 4 Mangel 1 = Entscheid M-E2): Teile des Original-Vordergrundatlas ----------------
+ * tools/maske/platzieren_r41.py setzt die nie platzierten Teile des SLD-Atlas ein (Tabelle gen_r41_masken36_platziert.inc: je Sektion der
+ * erste neue Rechteck-Index und die Zahl). Ihre Tiefe kommt aus dem KOERPER ihrer Kollisionszelle (Modell-Zeile mit RDT-Offset): je
+ * Bildpunkt bucket(Eintritt des Sehstrahls in den Koerper), Rechteck-Tiefe = Maximum (Kopf von platzieren_r41.py, Regel 5/6).
+ * r41_eintritt rechnet den Eintritt hier unabhaengig nach: Strahl wie koerper_r41.ansicht (Richtung R^-1 (x - 160, y - 120, H), Punkt
+ * A + s D hat vz = s H), Prisma = Grundriss in der Form des Resolvers (Halbebenen wie koerper_r41.halbebenen: Typ 1 Kasten, 2 Raute
+ * push_diag2, 4..7 Schraegen; Typ 3 Kreis) x [Bandboden + Hoehe, Bandboden]. -> vz des Eintritts oder 0 (kein Treffer). */
+typedef struct { int raum, cut, erstes, n, punkte; } r41_platz_sek_t;
+typedef struct { int raum, cut, komp, x0, y0, x1, y1, dx, dy, texel; } r41_platz_komp_t;
+#include "gen_r41_masken36_platziert.inc"
+#ifndef R41_TEILE_TREFFER_MIN
+#define R41_TEILE_TREFFER_MIN 1L           /* gemessen NB5, s. Dossier (Riegel unit_r41_masken36_teile) */
+#endif
+
+static int r41_halbebenen(const r41_zellen_modell_t *k, double hs[6][3])
+{
+    double X0 = k->x, Z0 = k->z, X1 = (double) k->x + k->w, Z1 = (double) k->z + k->d, m;
+    int n = 0;
+    hs[n][0] = -1; hs[n][1] = 0; hs[n][2] = -X0; n++;
+    hs[n][0] = 1;  hs[n][1] = 0; hs[n][2] = X1;  n++;
+    hs[n][0] = 0;  hs[n][1] = -1; hs[n][2] = -Z0; n++;
+    hs[n][0] = 0;  hs[n][1] = 1; hs[n][2] = Z1;  n++;
+    if (k->typ == 1) return n;
+    if (k->typ == 2) {
+        double cx = k->x + (k->w >> 1), cz = k->z + (k->d >> 1), ex[4], ez[4]; int i;
+        ex[0] = X0; ez[0] = cz; ex[1] = cx; ez[1] = Z0; ex[2] = X1; ez[2] = cz; ex[3] = cx; ez[3] = Z1;
+        for (i = 0; i < 4; i++) {
+            double ax = ex[i], az = ez[i], bx = ex[(i + 1) % 4], bz = ez[(i + 1) % 4];
+            double nx = bz - az, nz = -(bx - ax), c = nx * ax + nz * az;
+            if (nx * cx + nz * cz > c) { nx = -nx; nz = -nz; c = -c; }
+            hs[i][0] = nx; hs[i][1] = nz; hs[i][2] = c;
+        }
+        return 4;
+    }
+    if (k->w <= 0) return -1;
+    m = (double) k->d / (double) k->w;
+    if (k->typ == 5) { hs[n][0] = m; hs[n][1] = -1; hs[n][2] = m * X0 - Z0; return n + 1; }
+    if (k->typ == 6) { hs[n][0] = -m; hs[n][1] = 1; hs[n][2] = Z0 - m * X0; return n + 1; }
+    if (k->typ == 4) { hs[n][0] = -m; hs[n][1] = -1; hs[n][2] = -Z1 - m * X0; return n + 1; }
+    if (k->typ == 7) { hs[n][0] = m; hs[n][1] = 1; hs[n][2] = Z1 + m * X0; return n + 1; }
+    return -1;
+}
+
+static double r41_eintritt(const r41_zellen_modell_t *k, const re15_camera_view_t *v, const double A[3], const double inv[9],
+                           double px, double py)
+{
+    double c[3], D[3], s0 = 1e-9, s1 = 1e300, y0 = -(double) k->band * BAND_Y, ylo, yhi = y0, hs[6][3], ve;
+    int i, nh;
+    c[0] = px - 160.0; c[1] = py - 120.0; c[2] = (double) v->fov_screen_dist;
+    for (i = 0; i < 3; i++) D[i] = 4096.0 * (inv[i * 3] * c[0] + inv[i * 3 + 1] * c[1] + inv[i * 3 + 2] * c[2]);
+    ylo = k->saeule ? -1e300 : y0 + k->hoehe;
+    if (fabs(D[1]) < 1e-12) { if (A[1] < ylo || A[1] > yhi) return 0; }
+    else {
+        double a = (ylo - A[1]) / D[1], b = (yhi - A[1]) / D[1];
+        if (a > b) { double q = a; a = b; b = q; }
+        if (a > s0) s0 = a;
+        if (b < s1) s1 = b;
+    }
+    if (k->typ == 3) {
+        double cr = k->w / 2.0, cx = k->x + cr, cz = k->z + cr, ox = A[0] - cx, oz = A[2] - cz;
+        double qa = D[0] * D[0] + D[2] * D[2], qb = 2.0 * (ox * D[0] + oz * D[2]), qc = ox * ox + oz * oz - cr * cr, disk = qb * qb - 4 * qa * qc;
+        if (disk < 0 || qa <= 1e-12) return 0;
+        { double w = sqrt(disk), r0 = (-qb - w) / (2 * qa), r1 = (-qb + w) / (2 * qa); if (r0 > s0) s0 = r0; if (r1 < s1) s1 = r1; }
+    } else {
+        nh = r41_halbebenen(k, hs);
+        if (nh < 0) return 0;
+        for (i = 0; i < nh; i++) {
+            double den = hs[i][0] * D[0] + hs[i][1] * D[2], num = hs[i][2] - (hs[i][0] * A[0] + hs[i][1] * A[2]);
+            if (fabs(den) < 1e-12) { if (num < 0) return 0; continue; }
+            if (den > 0) { if (num / den < s1) s1 = num / den; }
+            else if (num / den > s0) s0 = num / den;
+        }
+    }
+    if (!(s0 < s1)) return 0;
+    ve = s0 * c[2];                                    /* vz des Eintritts (koerper_r41._vz: s * H) */
+    return ve > 64 ? ve : 0;                           /* vor der Kamera (proj: vz <= 64 faellt weg) */
+}
+
 
 /* Werkzeug "warum" (kein Riegel): je Rechteck die Gruende der Fehlverdeckungen in der Runde, in der es ausgeschlossen wird:
  * [0] Punkt ohne Modell, [1] Kamera ueber dem Grundriss, [2] (frei), [3] Strecke verfehlt den Koerper, [4] Schranke
@@ -1107,6 +1207,76 @@ static void alle_sektionen(int iterieren, int mit_tabelle, sektion_fn fn, void *
  * des Rechtecks (Leon und Elza) ist die Zellen-Tiefe der Zeile, und die Engine-Tabelle zeichnet das Rechteck.
  * Mechanik: fuer jeden Cut mit Modell-Zeilen rechnet sektion_pruefen den Ausschluss MIT dem 3D-Urteil (== Engine-Tabelle) und
  * OHNE (Gegenprobe): Rechtecke, die nur das 3D-Urteil zeichnet, gibt es, und jedes davon hat eine Modell-Zeile. */
+/*   test_r37_masken36 teile   (Riegel unit_r41_masken36_teile) je Sektion der Tabelle:
+ *     (a) jedes GEZEICHNETE neue Rechteck hat eine Modell-Zeile (Zelle + 12 SCA-Bytes am RDT-Offset, geprueft in zellen3d);
+ *     (b) an KEINEM deckenden Bildpunkt eines neuen Rechtecks liegt der Eintritt in seinen Koerper hinter der Rechteck-Tiefe
+ *         (bucket(Eintritt) <= Tiefe): eine Figur VOR dem Gegenstand wird nie verdeckt;
+ *     (c) die Tiefe ist die der Zelle: der Sehstrahl trifft den Koerper an den deckenden Punkten direkt (die uebrigen erben den
+ *         naechsten Treffer desselben Teils, Regel 6) - Zahl gemessen und als Untergrenze gepinnt. */
+static void teil_teile(void)
+{
+    static raum_t R;
+    long px_alle = 0, px_treffer = 0, verletzt = 0, rechtecke = 0, gez = 0, ohne_modell = 0, aus = 0, tief_ok = 0;
+    int s;
+    printf("== r41_masken36 teile: Original-Atlas-Teile (platzieren_r41.py) mit der Tiefe ihrer Zelle ==\n");
+    for (s = 0; r41_platz_sek[s].raum; s++) {
+        const r41_platz_sek_t *S = &r41_platz_sek[s];
+        char p[700]; uint8_t *msk; size_t mn = 0; re15_pri_cut_t pri; atlas_t a; uint32_t off; re15_camera_view_t v; double A[3], inv[9];
+        int m; long sv = 0;
+        snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, (unsigned) S->raum);
+        msk = slurp(p, &mn);
+        if (!msk || !(off = re15_pri_msk_section_offset(msk, mn, S->cut)) || re15_pri_parse_section(msk, mn, off, &pri) <= 0
+            || !atlas_generator((unsigned) S->raum, S->cut, &a) || !raum_laden(&R, (unsigned) S->raum)
+            || re15_camera_build_view(&R.rdt.cuts[S->cut], &v) != 0) {
+            printf("  FAIL: ROOM%04X C%d nicht lesbar\n", (unsigned) S->raum, S->cut); g_fail = 1; free(msk); continue;
+        }
+        kamera_ort(&v, A);
+        {
+            const double a_ = v.rot[0], b = v.rot[1], cc = v.rot[2], d = v.rot[3], e = v.rot[4], f = v.rot[5], g = v.rot[6], h = v.rot[7],
+                         kk = v.rot[8], det = a_ * (e * kk - f * h) - b * (d * kk - f * g) + cc * (d * h - e * g);
+            inv[0] = (e * kk - f * h) / det; inv[1] = (cc * h - b * kk) / det; inv[2] = (b * f - cc * e) / det;
+            inv[3] = (f * g - d * kk) / det; inv[4] = (a_ * kk - cc * g) / det; inv[5] = (cc * d - a_ * f) / det;
+            inv[6] = (d * h - e * g) / det; inv[7] = (b * g - a_ * h) / det; inv[8] = (a_ * e - b * d) / det;
+        }
+        for (m = S->erstes; m < S->erstes + S->n && m < pri.draw_count; m++) {
+            const re15_pri_mask_t *q = &pri.masks[m]; const r41_zellen_modell_t *k; int idx_m, x, y;
+            const uint8_t *ix = (const uint8_t *) a.tim.pixels;
+            rechtecke++;
+            if (re15_masken36_ausgeschlossen((unsigned) S->raum, S->cut, m)) { aus++; continue; }
+            gez++;
+            k = r41_modell((unsigned) S->raum, S->cut, m, &idx_m);
+            if (!k) { ohne_modell++; printf("  ROOM%04X C%d R%d: gezeichnet ohne Modell-Zeile\n", (unsigned) S->raum, S->cut, m); continue; }
+            tief_ok += k->tiefe == q->depth;
+            for (y = 0; y < q->height; y++)
+                for (x = 0; x < q->width; x++) {
+                    int axx = q->srcX + x, ayy = q->srcY + y, tx = (int16_t) q->dstX + x, ty = (int16_t) q->dstY + y; double ve;
+                    if (axx >= a.tim.width || ayy >= a.tim.height || tx < 0 || ty < 0 || tx >= 320 || ty >= 240) continue;
+                    if (!ix[ayy * a.tim.width + axx]) continue;
+                    px_alle++;
+                    ve = r41_eintritt(k, &v, A, inv, (double) tx, (double) ty);
+                    if (ve <= 0) continue;
+                    px_treffer++;
+                    if (((1023L * (long) ve) >> 16) > (long) q->depth) {
+                        if (sv < 3) printf("  ROOM%04X C%d R%d (%d,%d): Eintritt Stufe %ld > Tiefe %u\n", (unsigned) S->raum, S->cut, m, tx, ty,
+                                           (1023L * (long) ve) >> 16, (unsigned) q->depth);
+                        sv++;
+                    }
+                }
+        }
+        verletzt += sv;
+        free(a.roh); free(msk); free(R.roh); R.roh = NULL;
+    }
+    printf("  neue Rechtecke %ld: gezeichnet %ld (Tiefe == Modell-Zeile %ld), ausgeschlossen %ld, gezeichnet ohne Modell %ld\n", rechtecke,
+           gez, tief_ok, aus, ohne_modell);
+    printf("  deckende Punkte der gezeichneten neuen Rechtecke %ld, davon Sehstrahl trifft den Koerper %ld (%.1f %%), Eintritt hinter der "
+           "Tiefe %ld\n", px_alle, px_treffer, px_alle ? 100.0 * px_treffer / px_alle : 0.0, verletzt);
+    CHECK("jedes gezeichnete neue Rechteck hat eine Modell-Zeile (Zelle mit RDT-Offset), Tiefe == Zeile", gez > 0 && ohne_modell == 0 && tief_ok == gez);
+    CHECK("an keinem deckenden Punkt liegt der Eintritt in den Koerper hinter der Rechteck-Tiefe (keine Figur VOR dem Gegenstand verdeckt)",
+          px_treffer > 0 && verletzt == 0);
+    CHECK("die Tiefe ist die der Zelle: der Sehstrahl trifft den Koerper direkt an mindestens R41_TEILE_TREFFER_MIN deckenden Punkten "
+          "(gemessen NB5; die uebrigen erben den naechsten Treffer desselben Teils, Regel 6)", px_treffer >= R41_TEILE_TREFFER_MIN);
+}
+
 static void teil_zellen3d(void)
 {
     static raum_t R;
@@ -2557,6 +2727,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "zensus")) teil_zensus();
     else if (!strcmp(teil, "ausschluss")) teil_ausschluss();
     else if (!strcmp(teil, "zellen3d")) teil_zellen3d();          /* Runde 41 Spur M NB2: Riegel unit_r41_masken36_zellen3d */
+    else if (!strcmp(teil, "teile")) teil_teile();                /* Runde 41 Spur M NB5: Riegel unit_r41_masken36_teile (M-E2) */
     else if (!strcmp(teil, "verdacht")) {
         if (argc > 4) { g_vd_raum = (unsigned) strtoul(argv[2], NULL, 16); g_vd_cut = atoi(argv[3]); g_vd_rect = atoi(argv[4]); }
         teil_verdacht();

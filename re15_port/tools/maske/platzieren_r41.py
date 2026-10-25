@@ -41,7 +41,8 @@ REGEL (je Cut, je unplatzierter Komponente K des Original-Atlas = SLD des BSS-Ch
      nicht modelliert), Kamera ueber dem Grundriss der Zelle (Nahfeld, kein 3D-Urteil: r41_koerper_davor -1), Saeule mit
      nicht-rechteckiger Zelle, kein Punkt des Teils getroffen. Beleg je Teil: RDT-Offset + 12 Bytes des SCA-Eintrags
      (zellen3d_r41.sca_beleg) in der Modell-Tabelle.
-  6. TIEFE je Bildpunkt = bucket(Eintritt des Sehstrahls in den Koerper) (koerper_r41.ein_aus; bucket(vz) = (1023*vz)>>16: Figur-OT
+  6. TIEFE je Bildpunkt = bucket(Eintritt des Sehstrahls in den Koerper) (koerper_r41.ein_aus mit der Kamera des SPIELS, ansicht_spiel():
+     SquareRoot0 wie re15_camera_build_view / FUN_80053ca4; bucket(vz) = (1023*vz)>>16: Figur-OT
      @0x8002565c sra v1,v1,4 mit ZSF3 = 341 @0x80066c70; Masken-OT = depth @0x80039650; re15_pri_mask_occludes: verdeckt gdw.
      depth < bucket(vz_Figur)). Punkte des Teils, die der Strahl nicht trifft (ueber der gemessenen Hoehe, neben dem Grundriss),
      erben den naechsten getroffenen Punkt DESSELBEN Teils (geometrie._erben - die Regel der Nutzer-Freistellungen raum.py "zelle"
@@ -170,6 +171,67 @@ def platzieren(idx, clut, bild, grown):
 
 
 HAND = {}                        # (raum, cut) -> Eintraege aus zuordnung_teile_r41.json (Kopf Regel 5a)
+_SQRT0 = []                      # SquareRoot0-Tabelle (lazy, aus PSX.EXE)
+
+
+def _sqrt0_tabelle():
+    """Mantissentabelle der BIOS-Wurzel SquareRoot0 (0x80065f60): 192 x u16 @0x8007d984, gelesen aus info/Re1.5/PSX.EXE
+    (Datei-Offset 0x800 + Adresse - t_addr, t_addr = Kopf +0x18) - dieselbe Tabelle wie engine/src/re15_math.c."""
+    if not _SQRT0:
+        exe = open(os.path.join(SR.REPO, "info", "Re1.5", "PSX.EXE"), "rb").read()
+        taddr = struct.unpack_from("<I", exe, 0x18)[0]
+        _SQRT0.extend(struct.unpack_from("<192H", exe, 0x800 + 0x8007d984 - taddr))
+    return _SQRT0
+
+
+def sqrt0(x):
+    """SquareRoot0 wie re15_squareroot0 (re15_math.c; LZCR, gerade Zahl, Tabelle, Q12)."""
+    x &= 0xFFFFFFFF
+    if x == 0:
+        return 0
+    y = (~x & 0xFFFFFFFF) if (x & 0x80000000) else x
+    n = 32 - y.bit_length()
+    t2 = n & ~1
+    t1 = (31 - t2) >> 1
+    t4 = ((x << (t2 - 24)) & 0xFFFFFFFF) if t2 >= 24 else (x >> (24 - t2))
+    return ((_sqrt0_tabelle()[t4 - 64] << t1) & 0xFFFFFFFF) >> 12
+
+
+def _tdiv(a, b):
+    q = abs(a) // abs(b)
+    return q if (a >= 0) == (b > 0) else -q
+
+
+def _s16(v):
+    return ((v + 0x8000) & 0xFFFF) - 0x8000
+
+
+def ansicht_spiel(rdt, cut):
+    """Kamera des Spiels (R[9], t[3], H) wie re15_camera_build_view = FUN_80053ca4: Betraege mit SquareRoot0 (jal 0x80053d60 /
+    0x80053dd8 -> 0x80065f60) statt exakter Wurzel, abschneidende Division, (int16)-Casts, >>12. geom.cut_view rechnet mit der exakten
+    Wurzel - die Sehstrahlen lagen dadurch bis zu einer OT-Stufe neben denen des Spiels (gemessen NB5: 3 880 von 98 740 Punkten,
+    test_r37_masken36 teile)."""
+    cam = struct.unpack_from("<I", rdt, 0x24)[0]
+    rec = cam + cut * 32
+    fov = struct.unpack_from("<H", rdt, rec + 2)[0]
+    px, py, pz = struct.unpack_from("<iii", rdt, rec + 4)
+    tx, ty, tz = struct.unpack_from("<iii", rdt, rec + 0x10)
+    dx, dy, dz = tx - px, ty - py, tz - pz
+    dist = sqrt0(dx * dx + dy * dy + dz * dz)
+    if dist == 0:
+        return None
+    horiz = sqrt0(dx * dx + dz * dz)
+    sp = _s16(_tdiv(-dy * 4096, dist))
+    cp = _s16(_tdiv(horiz * 4096, dist))
+    if horiz != 0:
+        sy = _s16(_tdiv(dx * 4096, horiz))
+        cy = _s16(_tdiv(dz * 4096, horiz))
+        R = [cy, 0, -sy, (sp * sy) >> 12, cp, (sp * cy) >> 12, (cp * sy) >> 12, -sp, (cp * cy) >> 12]
+    else:
+        R = [4096, 0, 0, 0, cp, sp, 0, -sp, cp]
+    t = [(R[0] * -px + R[1] * -py + R[2] * -pz) >> 12, (R[3] * -px + R[4] * -py + R[5] * -pz) >> 12,
+         (R[6] * -px + R[7] * -py + R[8] * -pz) >> 12]
+    return R, t, fov >> 7
 
 
 def koerper_aus_zelle(rdt, R, t, H, teil, z, band, anteil, quelle, off=None):
@@ -297,7 +359,7 @@ def cut_bearbeiten(rdt, room, cut, sek, idx_eigen, clut_eigen, idx_orig, clut_or
     if budget <= 0 or not ang:
         bericht["neu"] = 0
         return None, None, bericht, []
-    v = geom.cut_view(rdt, struct.unpack_from("<I", rdt, 0x24)[0], cut)
+    v = ansicht_spiel(rdt, cut)                           # Kamera des Spiels (SquareRoot0), nicht geom.cut_view
     if not v or v[2] <= 0:
         bericht["neu"] = 0
         bericht["grund"] = "keine Kamera"
@@ -561,8 +623,9 @@ def inc_schreiben(pfad, bericht):
                     komp.append((rid, int(cut), e["komp"], e["box"][0], e["box"][1], e["box"][2], e["box"][3], e["shift"][0],
                                  e["shift"][1], e["verifiziert"]))
     NL = chr(10)
-    kopf = ["/* Erzeugt von re15_port/tools/maske/platzieren_r41.py (Runde 41 Spur M, Nachbesserung 4) - NICHT von Hand aendern.",
-            " * Unplatzierte Kuenstler-Komponenten des SLD-Atlas der Stages 3..6, per Lage-Suche platziert (Regel im Kopf des Werkzeugs).",
+    kopf = ["/* Erzeugt von re15_port/tools/maske/platzieren_r41.py (Runde 41 Spur M, Nachbesserung 4/5) - NICHT von Hand aendern.",
+            " * Unplatzierte Kuenstler-Komponenten des SLD-Atlas der Stages 3..6, per Lage-Suche platziert, Tiefe aus der Kollisionszelle",
+            " * (Entscheid M-E2; Regel im Kopf des Werkzeugs). Nur Teile mit Koerper (Zelle mit RDT-Offset) stehen hier.",
             " * r41_platz_sek: Raum (Leon-Datei; Elza xxx1 bytegleich), Cut, erster neuer Rechteck-Index, Zahl neuer Rechtecke, neue Punkte.",
             " * r41_platz_komp: Raum, Cut, Komponente, Atlas-Kasten x0 y0 x1 y1 (exklusiv), Verschiebung Atlas->Bild dx dy, verifizierte Texel. */"]
     zeilen = kopf + ["static const r41_platz_sek_t r41_platz_sek[] = {"]

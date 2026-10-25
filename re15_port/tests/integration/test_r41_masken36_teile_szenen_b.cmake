@@ -1,0 +1,39 @@
+# Runde 41 Spur M, Nachbesserung 5 (Abnahme 4 Mangel 1 = Entscheid M-E2): Szenen fuer test_r41_masken36_stage2.cmake (SZENEN=diese Datei) an den
+# eingesetzten Teilen des Original-Vordergrundatlas (tools/maske/platzieren_r41.py, Tabelle tests/unit/gen_r41_masken36_platziert.inc), Gruppe b.
+# Stellen = test_r37_masken36 neustellen <raum> <cut> <erstes> (dieselben erreichbaren Stehplaetze, dasselbe Figurraster und dieselbe
+# Engine-Tabelle wie der Ausschluss): Fenster = Kasten der Figurpunkte, die NUR neue Rechtecke verdecken (M) bzw. der Figurpunkte auf neuen
+# Rechtecken, von denen keiner verdeckt ist (V), je +3. "erwartet" = Zahl dieser Figurpunkte im Kasten-Modell (Hoehe 3000, +-350).
+#   M = Figur HINTER dem Teil: die neue Maske verdeckt sie (H > 0) - vorher (Stand NB3) gab es dort keine Maske.
+#   V = Figur VOR dem Teil (ueberlappt es im Bild): 0 Figurpunkte uebermalt.
+#   E = Elza (Raumvariante xxx1, Masken bytegleich). Kameras ohne Zeile: es gibt keine erreichbare Stelle (Dossier NB5).
+#   name raum cut x z band art x0 y0 x1 y1 [E]
+set(R41M_SZENEN
+    "t3050_00 3050 0 -25100 -1568 0 M 164 162 180 173"   # erwartet 42
+    "w3050_00 3050 0 -24500 -8568 0 V 88 168 137 223"   # erwartet 941
+    "t3050_01 3050 1 -25100 -12568 0 M 184 121 205 163"   # erwartet 227
+    "w3050_01 3050 1 -24400 -5768 0 V 245 156 303 227"   # erwartet 1412
+    "t3050_04 3050 4 -16800 -19268 0 M 39 158 60 200"   # erwartet 494
+    "w3050_04 3050 4 -13500 -19268 0 V 0 157 60 224"   # erwartet 2909
+    "t3050_05 3050 5 -10800 -19268 0 M 264 145 276 173"   # erwartet 156
+    "w3050_05 3050 5 -14900 -19268 0 V 264 144 285 179"   # erwartet 438
+    "t3050_06 3050 6 -2900 -4368 4 M 191 2 206 21"   # erwartet 124
+    "w3050_06 3050 6 -7700 -11768 0 V 178 108 199 144"   # erwartet 247
+    "t3050_07 3050 7 -3400 -9068 0 M 147 112 167 160"   # erwartet 202
+    "w3050_07 3050 7 -8300 -11768 0 V 172 109 219 179"   # erwartet 1384
+    "t3050_08 3050 8 -3500 -4468 4 M 216 172 229 189"   # erwartet 83
+    "w3050_08 3050 8 -5500 -6868 4 V 193 136 240 229"   # erwartet 599
+    "t3050_09 3050 9 -4300 -7668 4 M 150 143 167 175"   # erwartet 189
+    "w3050_09 3050 9 -6100 -3968 4 V 134 112 180 183"   # erwartet 499
+    "t3050_11 3050 11 -10100 -18568 4 M 101 148 129 205"   # erwartet 1076
+    "w3050_11 3050 11 -12700 -18568 4 V 99 146 133 239"   # erwartet 2173
+    "t4040_12 4040 12 -4000 4678 0 M 72 70 88 96"   # erwartet 72
+    "w4040_12 4040 12 -1800 5078 0 V 73 72 108 109"   # erwartet 630
+    "t3050_12 3050 12 -23700 -16068 0 M 282 197 298 239"   # erwartet 429
+    "w3050_12 3050 12 -22500 -18568 4 V 258 112 265 142"   # erwartet 9
+    "t3050_13 3050 13 -22100 -20768 0 M 131 198 149 232"   # erwartet 206
+    "w3050_13 3050 13 -19300 -18568 4 V 116 194 149 238"   # erwartet 491
+    "t3050_11e 3050 11 -10100 -18568 4 M 101 148 129 205 E"   # erwartet 1076
+    "w3050_04e 3050 4 -13500 -19268 0 V 0 157 60 224 E"   # erwartet 2909
+    "t4040_12e 4040 12 -4000 4678 0 M 72 70 88 96 E"   # erwartet 72
+    "w4040_12e 4040 12 -1800 5078 0 V 73 72 108 109 E"   # erwartet 630
+)
