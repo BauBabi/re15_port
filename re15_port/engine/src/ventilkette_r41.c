@@ -79,6 +79,7 @@ static int      s_standbild_takte = 0;
 static unsigned s_ton_n[3];                     /* gespielte Toene je RE15_R41C_TON_* (Riegel)                   */
 static int      s_kasten_vorher = -1;           /* Flanke von Bit 125 (Protokoll)                                 */
 static int      s_zaehler_takte = 0;            /* Countdown: Takte seit dem Zaehlerstart (Sleep 1800)            */
+static int      s_flut_bilder = 0;              /* Nachbesserung 6: Bilder seit dem Flut-Beginn (0 = Bild des Beginns) */
 void (*re15_ventilkette_r41_ton_hook)(int ton) = NULL;
 
 static const int     k_ventil_nr[RE15_R41C_VENTILE_N]     = RE15_R41C_VENTIL_NUMMERN;
@@ -503,7 +504,7 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
     for (int i = 0; i < RE15_R41C_PANEL_N; i++) s_hebel_t[i] = 0;
     s_ventil_gewaehlt = -1; s_ventile_geloest = 0; s_falsch_offen = 0; s_plakat_offen = 0; s_plakat_takte = 0;
-    s_standbild_offen = 0; s_standbild_takte = 0; s_zaehler_takte = 0;
+    s_standbild_offen = 0; s_standbild_takte = 0; s_zaehler_takte = 0; s_flut_bilder = 0;
     for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
     if (ist(room_id, RE15_R41C_RAUM_2010))            /* Nachbesserung 5: ROOM2010/2011 benutzen Bank 5 nicht (scd_dump_room.py) */
@@ -540,7 +541,7 @@ void re15_ventilkette_r41_reset(void)
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
     s_ventil_gewaehlt = -1; s_ventile_geloest = 0; s_falsch_offen = 0; s_plakat_offen = 0; s_plakat_takte = 0;
-    s_standbild_offen = 0; s_standbild_takte = 0; s_kasten_vorher = -1; s_zaehler_takte = 0;
+    s_standbild_offen = 0; s_standbild_takte = 0; s_kasten_vorher = -1; s_zaehler_takte = 0; s_flut_bilder = 0;
     for (int i = 0; i < RE15_R41C_PANEL_N; i++) s_hebel_t[i] = 0;
     for (int i = 0; i < 3; i++) s_ton_n[i] = 0;
     for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
@@ -844,32 +845,49 @@ int re15_ventilkette_r41_standbild(unsigned *raum, int *cut)
 unsigned re15_ventilkette_r41_ton_zaehler(int t) { return (t >= 1 && t <= 2) ? s_ton_n[t] : 0u; }
 int re15_ventilkette_r41_ventil_rbj(unsigned room_id) { return ist((uint16_t)room_id, RE15_R41C_RAUM_2030); }
 
-/* Countdown (Nachbesserung 5, Nachtrag 18 Punkt 4): sichtbar, solange in 2030 der Zaehler laeuft und die Flut noch nicht
- * begonnen hat; Restbilder = 1800 - Takte seit dem Zaehlerstart (der Sleep 1800 desselben Fadens, Kopf). */
-int re15_ventilkette_r41_countdown(int *rest_bilder)
+/* Countdown (Nachbesserung 5 Nachtrag 18 Punkt 4; Form seit Nachbesserung 6 die RE2-Anzeige, Kopf "Countdown"): sichtbar
+ * vom ersten Bild des Zaehlers (Set(5,0x1D) = RE2 Set(1,4)) bis zum Bild des Flut-Beginns - das ist RE2s abgelaufenes Bild
+ * " 0^00=00" (@0x80026284), danach aus wie @0x800262f0..@0x80026320. *bild = Bilder seit dem Zaehlerstart, 0 = erstes Bild. */
+int re15_ventilkette_r41_countdown(int *bild)
 {
-    if (!s_timer || s_flut || s_ertrunken || !ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2030)) return 0;
-    int rest = RE15_R41C_ZAEHLER_BILDER - s_zaehler_takte;
-    if (rest < 0) rest = 0;
-    if (rest_bilder) *rest_bilder = rest;
+    if (!s_timer || s_ertrunken || (s_flut && s_flut_bilder > 0) ||
+        !ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2030)) return 0;
+    if (bild) *bild = s_zaehler_takte > 0 ? s_zaehler_takte - 1 : 0;
     return 1;
 }
 
-int re15_ventilkette_r41_countdown_text(int rest, uint8_t *out, int cap)
+/* Text wie FUN_8002fa54 ihn aus "%2d^%d%d=%d%d" (@0x800109a4) druckt; RE2-Zaehler nachgerechnet (Kopf "Countdown"):
+ * Sekunde = N - 1 - bild / 30 (erstes Bild N-1, @0x800260b8..@0x800260d8; je 30 Bilder -1, @0x80026094), s6 = bild % 30,
+ * s7 = 8 - 3 * (bild % 3) (8 @0x800260c8, -3 @0x8002634c, <= 0 -> 8 @0x80026360). */
+int re15_ventilkette_r41_countdown_re2(int bild, int sekunden, char *out)
 {
-    if (!out || cap < 14) return 0;
-    if (rest < 0) rest = 0;
-    const int min = rest / (60 * 30), sek = (rest / 30) % 60, hund = (rest % 30) * 100 / 30;
-    const int z[6] = { min / 10, min % 10, sek / 10, sek % 10, hund / 10, hund % 10 };
-    int n = 0;
-    out[n++] = 0x05; out[n++] = RE15_R41C_COUNTDOWN_FARBE;              /* Farbe 2 wie ROOM2040 msg 4 @0x19A6 */
-    for (int i = 0; i < 6; i++) {
-        if (i == 2 || i == 4) out[n++] = 0x16;                           /* ':' */
-        out[n++] = (uint8_t)(0x0C + z[i]);                               /* '0'..'9' */
+    if (!out) return 0;
+    if (bild < 0) bild = 0;
+    const int sek = sekunden - 1 - bild / RE15_R41C_CD_TAKTE;
+    if (sek < 0) {                                                   /* @0x800260fc bltz -> " 0^00=00" @0x800109b4 */
+        memcpy(out, " 0^00=00", RE15_R41C_CD_ZEICHEN + 1);
+        return RE15_R41C_CD_FARBE_ROT;                               /* @0x80026298 */
     }
-    out[n++] = 0x05; out[n++] = 0x00;
-    out[n++] = 0x01; out[n++] = 0x00;
-    return n;
+    const int s6 = bild % RE15_R41C_CD_TAKTE, s7 = 8 - 3 * (bild % 3);
+    const int min = (sek / 60) % 100, rest = sek % 60;
+    out[0] = (char)(min >= 10 ? '0' + min / 10 : ' ');              /* "%2d": fuehrendes Leerzeichen (FUN_8002fa54)   */
+    out[1] = (char)('0' + min % 10);
+    out[2] = '^';                                                    /* Minutenzeichen in der 14x14-Schrift (uv 56,70)  */
+    out[3] = (char)('0' + rest / 10);
+    out[4] = (char)('0' + rest % 10);
+    out[5] = '=';                                                    /* Sekundenzeichen (uv 98,42)                      */
+    out[6] = (char)('0' + (9 - s6 / 3));                             /* @0x80026188 `addiu v0,zero,9` / @0x800261b4    */
+    out[7] = (char)('0' + s7);                                       /* @0x8002617c..@0x80026184                       */
+    out[8] = 0;
+    return sek < RE15_R41C_CD_ROT_UNTER ? RE15_R41C_CD_FARBE_ROT : RE15_R41C_CD_FARBE_GRUEN;   /* @0x800260ec / @0x800260f8 */
+}
+
+/* RE2-Alarm SUB_25 (Nachbesserung 6, Kopf "Alarm"): vom Warntext 46 (richtige Folge -> Ereignis 26, s_ventile_geloest) bis zum
+ * Flut-Beginn (C-E4 "bis zur Flut") oder zum Tod; install() setzt s_ventile_geloest beim Raumwechsel zurueck. */
+int re15_ventilkette_r41_alarm(void)
+{
+    return ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2030) && s_ventile_geloest && !s_flut && !s_ertrunken &&
+           g_actors[RE15_ACTOR_SLOT_PLAYER].hp >= 0;
 }
 
 int re15_ventilkette_r41_timer_laeuft(void) { return s_timer; }
@@ -910,8 +928,10 @@ void re15_ventilkette_r41_tick(void)
           if (s_dok_vorher == 0 && dok) LOG("[ventilkette41] Dokument 6 \"Technician's Note\" abgelegt: Bit (9,107) = 1\n");
           s_dok_vorher = dok; }
         if (s_timer && !s_flut) s_zaehler_takte++;     /* Countdown (Nachbesserung 5) */
+        if (s_flut) s_flut_bilder++;                       /* Nachbesserung 6: Bild des Flut-Beginns = 0 (Countdown " 0^00=00") */
         if (!s_flut && re15_game_flag_get(5, RE15_R41C_FLAG_FLUT)) {
             s_flut = 1;
+            s_flut_bilder = 0;
             LOG("[ventilkette41] FLUT: Wasser steigt (Countdown-Takte %d von %d)\n", s_zaehler_takte, RE15_R41C_ZAEHLER_BILDER);
         }
         if (s_flut) flut_tick();

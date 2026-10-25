@@ -144,7 +144,9 @@
  *   Lift-Form sub03). Solange oben: Steg-Zelle 12 gesperrt (Sca_id_set-Form), Pult meldet msg 40 (Druck null,
  *   Ventil 13 zu); Ventil 13 (am Tank) oeffnen -> Pult fragt "Lower the bridge?" -> Fahrt unter Cut 4.
  * - Ventilraetsel (Nachbesserung 4, Nachtrag 13; ersetzt den Platzhalter): sechs Ventil-Plaetze an den Raedern, erst mit
- *   Bit 102 UND (3,108) (Nachtraege 9/10; vorher Satz 49 "I should look around here first."); je Platz Frage 50..55
+ *   Bit 102 (Bruecke unten, Nachtrag 9) UND Bit (9,125) (Sicherung im Ventil-Sicherungskasten 2010, Nachtrag 16 - ersetzt
+ *   die Bedingung (3,108) aus Nachtrag 10); sonst Satz 49 = Original "It's locked." (ROOM20A0 msg 1 @0x203C, Nachtrag 16
+ *   Folge 4; der fruehere Satz "I should look around here first." ist entfallen); je Platz Frage 50..55
  *   (Nummer + Farbe) -> Ja -> Drehung in (5,0x10..0x13) + Klick 0x0A; nach der VIERTEN: richtige Folge 09, 07, 02, 01
  *   (PORT-WAHL, Ableitung im Dossier §7) -> Ereignis 26 = Warnung -> Sleep 1800 (= 60 s bei 30 Takten) im selben Faden (Form ROOM2000 sub07 @0x01B36: For/Evt_next-Schleife eines
  *   Hintergrundfadens) -> Pad-Sperre, Cut 4, Wasser steigt 324 x 50 (Rate des Rechners @0x00CC8) vom Beckengrund
@@ -157,7 +159,7 @@
  *   Falsche Folge -> Ereignis 27 = (5,0x10..0x13) := 0 + Text 45 "The valves turned back to their original position." +
  *   Fehlerton 0x0B (Form oben).
  * - Dokument "Technician's Note" (Nachtrag 13 Folge 2): Dokument 6 = Item 0x4E (re15_files.c, Bildsatz FILE31, Satz
- *   tools/r41_ventilkette/dokument_satz.py aus dem Nutzer-Text), Blatt am Boden neben der Sicherung (in 2030 gibt es keine
+ *   tools/r41_ventilkette/dokument_satz.py aus dem Nutzer-Text), Fundort neben der Sicherung (in 2030 gibt es keine
  *   Leiche), Taken-Bit (9,107) (Zensus: frei im Original und im Port). Weltmodell seit Nachbesserung 5 (Abnahme 4 Mangel 1:
  *   das RE2-Blatt mesh01 flach am Boden war in 15 von 16 Kameras unsichtbar, in Cut 5 39 Pixel) ein Zettel AUFRECHT an der
  *   Suedwand neben dem Schrank mit der Sicherung (Schrank = SCA Zelle 8 x -6100..-5600, Sicherung Slot 9 @0x01BAA x -5900..
@@ -357,16 +359,33 @@
  * (Raeder 09/08/07 + Plakat, Dossier §0e B4-2), BSS/ROOM2030/BG07.BSS (= ROOM2031/BG07.BSS bytegleich). */
 #define RE15_R41C_STANDBILD_RAUM  0x2030u
 #define RE15_R41C_STANDBILD_CUT   7
-/* Countdown der 60 s (Nachbesserung 5, Nachtrag 18 Punkt 4, Dossier §0f B5-4): die verbleibenden Bilder des Sleep 1800
- * (RE15_R41C_ZAEHLER_BILDER, 30 Takte je Sekunde), angezeigt als MM:SS:HH in der Nachrichtenschrift des Spiels (TEX.TIM,
- * Glyphen 0x0C..0x15 = 0..9, 0x16 = ':', Vorschub DEBUG.BIN @0x4416: Ziffer 8 px ('1' 7), ':' 4 px) in Farbe 2 - die Farbe,
- * mit der das Original eine ablaufende Frist hervorhebt (ROOM2040 msg 4 @0x19A6 "Bomb activated, I have `05 02`10
- * seconds`05 00` before it detonates!", die Zeitbombe). Ein Countdown-Bild hat weder RE1.5 noch die vorliegenden RE2-Daten
- * (Suche im Dossier §0f B5-4) -> Format und Lage PORT-WAHL: oben rechts, rechter Rand wie der Rand der Nachrichtenbox
- * links (x 34, re15_render_pc_msg_text(34, 180, ...) in main.c) -> x 286 - 56 = 230, y 20. */
-#define RE15_R41C_COUNTDOWN_X     230
-#define RE15_R41C_COUNTDOWN_Y     20
-#define RE15_R41C_COUNTDOWN_FARBE 2
+/* Countdown der 60 s in der Form der RE2-Anzeige (Nachbesserung 6, Abnahme 5 Mangel 2, Nachtrag 25 (p); Dossier §0g B6-1;
+ * ersetzt die PORT-WAHL MM:SS:HH der Nachbesserung 5). RE2 (SLUS_007.48) zaehlt beim Labor-/Zug-Ende Restsekunden: Skript
+ * Set(1,4)=1 + Save(0x23, N) (ROOM6170 @0x038C6/@0x038CA N = 300, ROOM7010 @0x02376/@0x0237A, ROOM7030 @0x022AC/@0x022B0 N = 120),
+ * Status_flg 0x800cfbd8 Maske 0x08000000, Sekunden in 0x800d4832 (Save-Handler @0x8005451c). Die Hauptschleife @0x80025794
+ * zaehlt im Abwaerts-Zweig @0x8002608c: ein Bildzaehler s6 bis 30 (`slti v0,v0,30` @0x80026094), beim ersten Bild und je 30
+ * Bilder s6 = 0, s7 = 8, Sekunde - 1 (@0x800260b8..@0x800260d8) -> das erste Bild zeigt schon N-1; je Bild s6 + 1 und s7 - 3,
+ * s7 <= 0 -> 8 (@0x8002632c..@0x80026360). Anzeige FUN_8002fa28(x 104 @0x800261e8, y 32 @0x80026140, Farbe, Platz 2
+ * @0x80026144, "%2d^%d%d=%d%d" @0x800109a4) mit Minuten, Zehnern, Einern der Sekunden, 9 - s6/3 (@0x80026188) und s7; Farbe 1
+ * (@0x80025e1c), unter 60 Sekunden Farbe 2 (`slti v0,v1,60` @0x800260ec, @0x800260f8); unter 0: " 0^00=00" (@0x800109b4) in
+ * Farbe 2, danach aus (@0x80026284..@0x80026328). Gezeichnet in der 14x14-Schrift FUN_800318a4 (attr & 0x200 @0x800316e8):
+ * je Zeichen c ein SPRT 14x14 (@0x800319d8..@0x800319e0) mit uv ((c % 18) * 14, (c / 18) * 14) (@0x800319b0..@0x80031a24),
+ * Vorschub 14 (@0x80031978, Leerzeichen nur Vorschub @0x80031970), CLUT (256, 480 + 2 * Farbe) (@0x8003191c..@0x80031930),
+ * Seite (768,256) 4 bpp = TEX.TIM Seite 0 (FUN_80031af4; TEX.TIM @0x8002b8ac..@0x8002b8dc auf Seite 0x1c). '^' und '=' tragen
+ * dort das Minuten- und Sekundenzeichen ' und " -> die Anzeige liest sich ` 0'59"98`. Quelle der Schrift im Port:
+ * shared_assets/RE2/TEX.TIM (bytegleich info/re2leon/COMMON/DATA/TEX.TIM). Fuer 2030 ist N = RE15_R41C_ZAEHLER_BILDER / 30 = 60:
+ * " 0^59=98" .. " 0^00=02" in Rot, im Bild des Flut-Beginns " 0^00=00". */
+#define RE15_R41C_CD_X            104     /* @0x800261e8 `addiu a0,zero,104`                                      */
+#define RE15_R41C_CD_Y            32      /* @0x80026140 `addiu a1,zero,32`                                       */
+#define RE15_R41C_CD_SCHRITT      14      /* Vorschub FUN_800318a4 @0x80031978 `addiu t2,zero,14`                 */
+#define RE15_R41C_CD_GLYPHE       14      /* SPRT w = h = 14 (`0x000e000e` @0x800319d8..@0x800319e0)               */
+#define RE15_R41C_CD_SPALTEN      18      /* uv = (c % 18, c / 18) * 14 (`0x38e38e39` @0x800319b0)                 */
+#define RE15_R41C_CD_TAKTE        30      /* Bilder je Sekunde: `slti v0,v0,30` @0x80026094                       */
+#define RE15_R41C_CD_ROT_UNTER    60      /* `slti v0,v1,60` @0x800260ec -> Farbe 2                               */
+#define RE15_R41C_CD_FARBE_GRUEN  1       /* @0x80025e1c `addiu a2,zero,1` -> CLUT-Zeile 482                       */
+#define RE15_R41C_CD_FARBE_ROT    2       /* @0x800260f8 / @0x80026298 `addiu a2,zero,2` -> CLUT-Zeile 484         */
+#define RE15_R41C_CD_CLUT_Y0      480     /* CLUT y = 480 + 2 * Farbe (`addiu v1,a1,480` @0x80031924)              */
+#define RE15_R41C_CD_ZEICHEN      8       /* "%2d^%d%d=%d%d" bzw. " 0^00=00" = 8 Zeichen                          */
 /* Dokument (Nachbesserung 4, Nachtrag 13 Folge 2; Dossier §0e B4-4). */
 #define RE15_R41C_DOK_NR          6      /* re15_files.c s_docs[6]                                           */
 #define RE15_R41C_DOK_ITEM        0x4E   /* 0x48 + 6 (RE2 @0x80071d04, RE1.5-Basis u8 @0x800c7370)          */
@@ -531,10 +550,17 @@ int      re15_ventilkette_r41_ventil_nummer(int i);               /* 1, 2, 3, 7,
 int      re15_ventilkette_r41_standbild(unsigned *raum, int *cut);  /* 1 = Standbild der Ventile offen (2010), Quelle   */
 unsigned re15_ventilkette_r41_ton_zaehler(int ton);               /* gespielte Toene je RE15_R41C_TON_* (Riegel)      */
 int      re15_ventilkette_r41_ventil_rbj(unsigned room_id);       /* 1 = Raum bindet das RE2-RBJ VENTIL1080 (2030/2031) */
-int      re15_ventilkette_r41_countdown(int *rest_bilder);        /* 1 = Countdown sichtbar (2030, Zaehler laeuft)      */
+int      re15_ventilkette_r41_countdown(int *bild);               /* 1 = Countdown sichtbar (2030, Zaehler laeuft bzw. Bild
+                                                                   * des Flut-Beginns); *bild = Bilder seit dem Zaehlerstart */
 int      re15_ventilkette_r41_hebel_stellung(int i);              /* 0 (oben) .. 16 (unten), Hebel 0..3 im Pult 2050    */
-/* Countdown als Nachrichten-Bytes (`05 02` Ziffern/':' `05 00` `01 00`) fuer re15_render_pc_msg_text; Rueckgabe Laenge. */
-int      re15_ventilkette_r41_countdown_text(int rest_bilder, uint8_t *out, int cap);
+/* Nachbesserung 6: Countdown-Text in der RE2-Form (Kopf "Countdown"): bild = Bilder seit dem Zaehlerstart (0 = erstes Bild),
+ * sekunden = N (Save(0x23, N)); out[RE15_R41C_CD_ZEICHEN + 1] bekommt die Zeichen wie FUN_8002fa54 sie in die Druckwarteschlange
+ * schreibt (Leerzeichen, Ziffern, '^', '='), Rueckgabe die Farbe (RE15_R41C_CD_FARBE_GRUEN / _ROT). */
+int      re15_ventilkette_r41_countdown_re2(int bild, int sekunden, char *out);
+/* Nachbesserung 6 (Abnahme 5 Mangel 1, Nachtrag 25 (o), C-E4): 1 = der RE2-Alarm SUB_25 soll laufen - in 2030/2031 vom Warntext 46
+ * (richtige Folge, Ereignis 26) bis zum Flut-Beginn oder zum Tod; mit dem Raumwechsel endet er (install setzt den Zustand zurueck,
+ * den SUB-Platz uebernimmt der Raum-BGM-Lader). Die PC-Seite (ventilkette_r41_pc.c) schaltet damit re15_audio_r41_alarm. */
+int      re15_ventilkette_r41_alarm(void);
 /* Plattform-Haken fuer die Toene (PC setzt ihn; ohne Haken nur gezaehlt). */
 extern void (*re15_ventilkette_r41_ton_hook)(int ton);
 

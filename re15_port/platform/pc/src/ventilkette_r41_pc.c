@@ -17,6 +17,14 @@
  *   * RBJ (re15_ventilkette_r41_pc_rbj): ROOM2030/2031 haben kein eigenes RBJ (RDT-Kopfwort [21] = 0); der Raum bindet
  *     das RBJ von RE2 ROOM1080 (@0x39AC, 13128 B, shared_assets/RE2/VENTIL1080.RBJ) als Spieler-Overlay, damit
  *     Plc_motion(0,15..17) die Ventil-Animation spielt (main.c: Boot- und Tuer-Weg, neben der Leihe cut10f0_pc.c).
+ * Nachbesserung 6 (Abnahme 5 Maengel 1/2, Nachtrag 25 (o)/(p), C-E4; Dossier §0g):
+ *   * Countdown in der Form der RE2-Anzeige: 8 Zeichen aus re15_ventilkette_r41_countdown_re2, je Zeichen ein 14x14-Feld
+ *     aus RE2 TEX.TIM Seite 0 (shared_assets/RE2/TEX.TIM) bei x 104 + 14 i, y 32, CLUT-Zeile 480 + 2 * Farbe - Nachbau
+ *     von FUN_800318a4 (Kopf re15_ventilkette_r41.h "Countdown"); Texel mit CLUT-Wert 0x0000 sind durchsichtig (PSX-Regel).
+ *     Gezeichnet in die oberste Text-Ebene (re15_render_pc_config_tile_ov), wie die Druckwarteschlange FUN_800316a8 ueber dem
+ *     Bild liegt.
+ *   * RE2-Alarm SUB_25: re15_ventilkette_r41_alarm() an -> re15_audio_r41_alarm(1) (audio_pc.c, Haken "Runde 41 Spur C,
+ *     C-E4"); Flut/Tod in 2030 -> re15_audio_r41_alarm(0); beim Raumwechsel ersetzt der Raum-BGM-Lader den SUB-Platz.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -25,6 +33,7 @@
 
 #include "re15_engine.h"          /* SCREEN_XRES / SCREEN_YRES, re15_render_tile */
 #include "re15_ventilkette_r41.h"
+#include "re15_room.h"            /* g_current_room_id (Nachbesserung 6: Alarm nur in 2030 ausschalten) */
 #include "re15_bss.h"             /* re15_bss_parse_chunk / _vlc_decode / _mdec_decode */
 #include "re15_vab.h"
 #include "re15_audio.h"
@@ -36,6 +45,9 @@ extern void re15_render_pc_hide_fmv(void);
 extern void re15_audio_re2_karte_se(int se_id);                              /* audio_pc.c (Runde 36 Spur G) */
 extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
                                     const int *decoded_len, int satz);       /* audio_pc.c */
+extern void re15_render_pc_config_tile_ov(const re15_tim_t *t, int su, int sv, int w, int h, int dx, int dy); /* render_pc.c */
+extern int  re15_audio_r41_alarm(int an);                                    /* audio_pc.c, Runde 41 Spur C, C-E4 */
+extern long re15_audio_cap_tick(void);                                       /* audio_pc.c (Messtakt)           */
 
 #define R41C_KARTE_SE_AUF_HIER 3   /* gen/re2_karten_bank.inc RE2_KARTE_SE_AUF_HIER = RE2 ROOM20A0 Satz 0x26 */
 #include <math.h>
@@ -188,6 +200,66 @@ static int standbild_laden(unsigned raum, int cut)
     return ok;
 }
 
+/* ---- RE2-Countdown (Nachbesserung 6): Schrift aus RE2 TEX.TIM ---------------------------------------------------- */
+/* TEX.TIM (RE2 Datei 0xe1): 4 bpp, CLUT (256,480) 32 x 19, Bild 256 x 256 Halbworte; Seite 0 = Halbworte 0..63 je Zeile =
+ * Bytes 0..127 = Texel 0..255 (FUN_80031af4 GetTPage(0,0,0x300,0x100), TEX.TIM auf Seite 0x1c @0x8002b8cc). */
+static struct {
+    int      state;                        /* 0 ungeprueft, 1 geladen, -1 fehlt */
+    uint8_t  idx[2][256 * 256];            /* je Farbe: Texel-Index, 0 = durchsichtig (CLUT-Wert 0x0000)              */
+    uint16_t clut[2][16];                  /* CLUT-Zeile 480 + 2 * Farbe (Farbe 1 = Zeile 482, Farbe 2 = Zeile 484)    */
+} s_re2tex;
+
+static int re2tex_laden(void)
+{
+    int n = 0;
+    uint8_t *b = re15_pc_read_re2("TEX.TIM", &n);
+    int ok = 0;
+    if (b && n >= 20 + 32 * 19 * 2 + 12 + 256 * 256 * 2 && b[0] == 0x10 && (b[4] & 8) && (b[4] & 7) == 0) {
+        const uint8_t *c = b + 8;                                     /* CLUT-Block: Laenge, x, y, w, h, Daten          */
+        const int cx = c[4] | (c[5] << 8), cy = c[6] | (c[7] << 8), cw = c[8] | (c[9] << 8), ch = c[10] | (c[11] << 8);
+        const uint32_t clen = (uint32_t)c[0] | ((uint32_t)c[1] << 8) | ((uint32_t)c[2] << 16) | ((uint32_t)c[3] << 24);
+        const uint8_t *im = c + clen;                                 /* Bild-Block                                      */
+        const int iw = im[8] | (im[9] << 8), ih = im[10] | (im[11] << 8);
+        if (cx == 256 && cy == RE15_R41C_CD_CLUT_Y0 && cw == 32 && ch >= 5 && iw == 256 && ih == 256 &&
+            (size_t)(im - b) + 12u + 256u * 256u * 2u <= (size_t)n) {
+            for (int f = 0; f < 2; f++) {
+                const int zeile = 2 * (f + 1);                         /* Farbe f+1 -> CLUT y 480 + 2 (f+1)              */
+                for (int k = 0; k < 16; k++)
+                    s_re2tex.clut[f][k] = (uint16_t)(c[12 + (zeile * cw + k) * 2] | (c[12 + (zeile * cw + k) * 2 + 1] << 8));
+                for (int v = 0; v < 256; v++)
+                    for (int u = 0; u < 256; u++) {
+                        const uint8_t byte = im[12 + v * iw * 2 + u / 2];
+                        const uint8_t t = (u & 1) ? (uint8_t)(byte >> 4) : (uint8_t)(byte & 15);
+                        s_re2tex.idx[f][v * 256 + u] = s_re2tex.clut[f][t] ? t : 0;   /* 0x0000 = durchsichtig */
+                    }
+            }
+            ok = 1;
+        }
+    }
+    free(b);
+    fprintf(stderr, "[ventilkette41] RE2-Countdown-Schrift shared_assets/RE2/TEX.TIM %s\n", ok ? "geladen" : "FEHLT/defekt -> kein Countdown");
+    return ok ? 1 : -1;
+}
+
+/* FUN_800318a4 nachgebaut: je Zeichen c != ' ' ein 14x14-Feld uv ((c % 18) * 14, (c / 18) * 14) bei (x + 14 i, y). */
+static void re2_countdown_zeichnen(const char *txt, int farbe)
+{
+    if (!s_re2tex.state) s_re2tex.state = re2tex_laden();
+    if (s_re2tex.state != 1 || farbe < 1 || farbe > 2) return;
+    re15_tim_t t;
+    memset(&t, 0, sizeof t);
+    t.bpp = 8; t.has_clut = 1; t.clut_entries = 16; t.clut = s_re2tex.clut[farbe - 1];
+    t.width = 256; t.height = 256; t.pixels = (const uint16_t *)(const void *)s_re2tex.idx[farbe - 1];
+    for (int i = 0; txt[i]; i++) {
+        const uint8_t c = (uint8_t)txt[i];
+        if (c == 0x20) continue;                                      /* @0x80031970: Leerzeichen nur Vorschub */
+        re15_render_pc_config_tile_ov(&t, (c % RE15_R41C_CD_SPALTEN) * RE15_R41C_CD_GLYPHE,
+                                      (c / RE15_R41C_CD_SPALTEN) * RE15_R41C_CD_GLYPHE,
+                                      RE15_R41C_CD_GLYPHE, RE15_R41C_CD_GLYPHE,
+                                      RE15_R41C_CD_X + RE15_R41C_CD_SCHRITT * i, RE15_R41C_CD_Y);
+    }
+}
+
 /* ---- je Spielbild (main.c, nach dem Hintergrund) ----------------------------------------------------------- */
 void re15_ventilkette_r41_pc_bild(void)
 {
@@ -211,12 +283,35 @@ void re15_ventilkette_r41_pc_bild(void)
     if (bild) { re15_render_pc_show_fmv(bild, 320, 240); s_vollbild = 1; }
     else if (s_vollbild) { re15_render_pc_hide_fmv(); s_vollbild = 0; }
 
-    /* Countdown der 60 s in 2030 (Nachtrag 18 Punkt 4): Nachrichtenschrift, Farbe 2, oben rechts (Kopf des Moduls);
-     * Text-Ebene (nach dem 3D, wie Untertitel). */
-    int rest = 0;
-    if (re15_ventilkette_r41_countdown(&rest)) {
-        uint8_t t[24];
-        const int n = re15_ventilkette_r41_countdown_text(rest, t, (int)sizeof t);
-        if (n > 0) re15_render_pc_msg_text(RE15_R41C_COUNTDOWN_X, RE15_R41C_COUNTDOWN_Y, t, n);
+    /* Countdown der 60 s in 2030 (Nachtrag 18 Punkt 4) in der Form der RE2-Anzeige (Nachbesserung 6, Kopf "Countdown"). */
+    static int s_cd_vorher = 0;
+    int cd_bild = 0;
+    if (re15_ventilkette_r41_countdown(&cd_bild)) {
+        char txt[RE15_R41C_CD_ZEICHEN + 1];
+        const int farbe = re15_ventilkette_r41_countdown_re2(cd_bild, RE15_R41C_ZAEHLER_BILDER / RE15_R41C_CD_TAKTE, txt);
+        re2_countdown_zeichnen(txt, farbe);
+        if (!s_cd_vorher || cd_bild % RE15_R41C_CD_TAKTE == 0 || (txt[6] == '0' && txt[7] == '0'))
+            fprintf(stderr, "[ventilkette41] Countdown RE2-Form Bild %d \"%s\" Farbe %d (x %d y %d) F%u\n", cd_bild, txt, farbe,
+                    RE15_R41C_CD_X, RE15_R41C_CD_Y, (unsigned)g_engine.frame_count);
+        s_cd_vorher = 1;
+    } else s_cd_vorher = 0;
+
+    /* RE2-Alarm SUB_25 (Nachbesserung 6, Kopf "Alarm"): an mit dem Warntext 46, aus mit Flut/Tod in 2030; nach einem
+     * Raumwechsel hat der Raum-BGM-Lader den SUB-Platz schon neu belegt (audio_pc.c) -> hier nur vergessen. */
+    static int s_alarm = 0;
+    const int alarm_soll = re15_ventilkette_r41_alarm();
+    if (alarm_soll && !s_alarm) {
+        const int geladen = re15_audio_r41_alarm(1);
+        fprintf(stderr, "[bgm] Runde 41 Spur C: RE2-Alarm SUB_25 an (ROOM%04X, Warntext 46) %s capTick %ld F%u\n",
+                (unsigned)g_current_room_id, geladen ? "geladen" : "NICHT geladen", re15_audio_cap_tick(),
+                (unsigned)g_engine.frame_count);
+        s_alarm = 1;
+    } else if (!alarm_soll && s_alarm) {
+        const int in2030 = ((g_current_room_id & 0xFFFEu) == RE15_R41C_RAUM_2030);
+        if (in2030) re15_audio_r41_alarm(0);
+        fprintf(stderr, "[bgm] Runde 41 Spur C: RE2-Alarm SUB_25 aus (%s) capTick %ld F%u\n",
+                in2030 ? "Flut/Tod" : "Raumwechsel, SUB-Platz vom Raum-BGM-Lader", re15_audio_cap_tick(),
+                (unsigned)g_engine.frame_count);
+        s_alarm = 0;
     }
 }

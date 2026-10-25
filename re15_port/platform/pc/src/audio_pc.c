@@ -2952,6 +2952,7 @@ static uint32_t bgm_u32(const uint8_t *p) {
 }
 
 /* SUB-Container fuehren eine ZWEITE Sequenz; hier geparkt fuer re15_bgm_play_room. */
+static int s_r41_alarm = 0, s_r41_alarm_re2 = 0;   /* Runde 41 Spur C, C-E4: SUB-Platz traegt RE2 SUB_25 / Lader liest RE2 */
 static uint8_t *s_sub_seq2     = NULL;
 static int      s_sub_seq2_len = 0;
 
@@ -2993,7 +2994,7 @@ static int re15_bgm_load_track(ss_seq_t *s, const char *name, int slot) {
      * und der einkompilierte Wurzel-Default zeigte auf den Docker-Container-Pfad. Jetzt ueber
      * die gemeinsame CD-Wurzelliste (asset_root_pc.c). */
     snprintf(path, sizeof path, "SOUND/%s%02X.BGM", name, slot);
-    uint8_t *blob = re15_pc_read_cd(path, &sz);
+    uint8_t *blob = s_r41_alarm_re2 ? re15_pc_read_re2(path, &sz) : re15_pc_read_cd(path, &sz);   /* Runde 41 Spur C, C-E4 */
     if (!blob || sz < 0x40) { free(blob); fprintf(stderr, "[bgm] %s%02X.BGM nicht lesbar\n", name, slot); return -1; }
 
     const int is_sub = (name[0] == 'S');
@@ -3266,6 +3267,7 @@ static int re15_bgm_load_main(uint8_t main_b) {
 /* == FUN_80044774 @0x80044774: SUB-Bank laden + BEIDE Sequenzen starten.
  * Flags: SUB-A = (sub_b>>6)&1 (DAT_800b52b5), SUB-B = sub_b>>7 (DAT_800b52bd) — @0x8004439c/@0x800443a4. */
 static int re15_bgm_load_sub(uint8_t sub_b) {
+    s_r41_alarm = 0;                                     /* Runde 41 Spur C, C-E4: neuer SUB ersetzt den RE2-Alarm */
     ss_free_bank(&s_ss_sub);
     ss_free_bank(&s_ss_sub2);
     s_ss_sub2.tone_src = NULL;
@@ -3527,6 +3529,7 @@ void re15_audio_start_room_bgm(int stage, int room)
     static int cache_main = 0, cache_sub = 0;
     int main_same = ((main_b & 0x3f) == (cache_main & 0x3f));
     int sub_same  = ((sub_b  & 0x3f) == (cache_sub  & 0x3f));
+    if (s_r41_alarm) sub_same = 0;   /* Runde 41 Spur C, C-E4: der RE2-Alarm belegt den SUB-Platz -> Zielraum laedt seinen SUB */
 
     if (main_same && sub_same) {
         /* @0x80044280 -> LAB_800443b0: GAR NICHTS. Kein Stop, kein Reload, kein Play —
@@ -4253,4 +4256,30 @@ void re15_audio_re2_karte_se(int se_id)
     if (!g_audio.initialized) return;
     if (!load_re2_karte_se_pc()) return;
     se_play_layers(s_karte_edt, &s_karte_vab, s_karte_decoded, s_karte_decoded_len, se_id);
+}
+
+/* Runde 41 Spur C, C-E4 (Nachbesserung 6, Abnahme 5 Mangel 1; include/re15_ventilkette_r41.h "Alarm", Dossier §0g B6-2):
+ * RE2s Selbstzerstoerungs-Alarm SUB_25 im SUB-Platz von 2030/2031. Form RE2: ROOM6040 @0x022E8 `57 00 04 06 11 25 00 80` setzt
+ * den Raum-Eintrag auf Sub-Byte 0xA5 (FUN_8005b9f4) -> FUN_8005a444: SEQ0 spielt, SEQ#2 (Bit 7) stumm; Lautstaerke ROOM6040 sub23
+ * @0x038BA `51 01 00 01 64 40` (FUN_8005b6f0: ProgAtr[0].mvol = 0x63). Im Port der Weg "nur der SUB wechselt" (SsSeqStop beider
+ * SUB-Sequenzen @0x8004432C/@0x80044354, dann FUN_80044774) mit dem Container shared_assets/RE2/SOUND/SUB_25.BGM (bytegleich
+ * info/re2leon/COMMON/SOUND/SUB_25.BGM). an = 0 gibt den Platz frei (2030 hat keinen eigenen SUB, Eintrag 0xff08). */
+int re15_audio_r41_alarm(int an)
+{
+    if (!g_audio.initialized) return 0;
+    SDL_LockAudioDevice(s_audio_dev);
+    if (an) {
+        re15_bgm_stop_subs();
+        s_r41_alarm_re2 = 1;
+        const int rc = re15_bgm_load_sub(0xA5);          /* SUB 0x25 | Bit 7 (u16@6 = 0x8000 @0x022EE) */
+        s_r41_alarm_re2 = 0;
+        s_r41_alarm = (rc == 0);
+    } else if (s_r41_alarm) {
+        re15_bgm_stop_subs();
+        ss_free_bank(&s_ss_sub); ss_free_bank(&s_ss_sub2); s_ss_sub2.tone_src = NULL;
+        s_r41_alarm = 0;
+    }
+    SDL_UnlockAudioDevice(s_audio_dev);
+    if (an && s_r41_alarm) ss_seq_ctl_ex(1, 0, 1, 0x64, 0x40);   /* ROOM6040 sub23 @0x038BA `51 01 00 01 64 40` */
+    return s_r41_alarm;
 }
