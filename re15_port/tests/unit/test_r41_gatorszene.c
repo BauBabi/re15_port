@@ -306,11 +306,12 @@ static void teil_programme(void)
     const uint8_t *p2 = re15_gatorszene_r41_programm(2, &n2);
     const uint8_t *p3 = re15_gatorszene_r41_programm(3, &n3);
     {
-        /* Nachbesserung 4 (Nachtrag 29, Querbezug): Leichen-Cut 5 (obj 3, leiche_lage_n4.py; Fassung 1: Cut 1) */
-        static const uint8_t cut1[2] = { 0x29, 0x05 };
+        /* Nachbesserung 5 (Entscheid F-E2, Querbezug): Leichen-Cut 0 (obj 2 im Suedbecken, Lichtsatz RDT @0x468; Nachbesserung 4:
+         * Cut 5, Fassung 1: Cut 1) */
+        static const uint8_t cut1[2] = { 0x29, 0x00 };
         static const uint8_t knall[8] = { 0x22, 0x05, RE15_GSZ_SIG_KNALL, 0x01, 0x09, 0x0a, 45, 0x00 };
         const int ic = hat(p1, n1, cut1, 2), ik = hat(p1, n1, knall, 8), it = hat(p1, n1, (const uint8_t *)"\x3b\x14", 2);
-        PRUEF(ic >= 0 && ik > ic && it > ik, "P1: Cut 5 (@+%d), Knall Set(5,29,1) + Sleep 45 (@+%d), dann Door_aot_set (@+%d)",
+        PRUEF(ic >= 0 && ik > ic && it > ik, "P1: Cut 0 (@+%d), Knall Set(5,29,1) + Sleep 45 (@+%d), dann Door_aot_set (@+%d)",
               ic, ik, it);
     }
     {
@@ -349,15 +350,15 @@ static void teil_leiche(void)
         if (room_boot(raeume[r], -8200, 0, -25550, 0, 0) != 0) return;
         const int kl = prop_von(RE15_GSZ_LEICHE_OBJ), ks = prop_von(RE15_GSZ_KEY_OBJ);
         PRUEF(re15_gatorszene_r41_zustand() == RE15_GSZ_ANKUNFT, "ROOM%04X: Szene startet (Zustand ANKUNFT)", raeume[r]);
-        /* Nachbesserung 4 (Nachtrag 29, Querbezug): die Szenen-Leiche ist obj 3 (Obj_model_set @0x00A8E, Original (-25,-7423) Gier
-         * 1656) an der Lage mit dem besten Schluessel-Wert unter dem RE2-Abstand (leiche_lage_n4.py); Fassung 1 verlangte obj 2 bei
-         * (-5500,-23700) Gier 384. */
-        PRUEF(kl >= 0 && g_scd.props[kl].x == 700 && g_scd.props[kl].z == -8200 && g_scd.props[kl].rot_y == 2432,
-              "Leiche obj %d an der Szenen-Lage (700,-8200) Gier 2432 (leiche_lage_n4.py)", RE15_GSZ_LEICHE_OBJ);
+        /* Nachbesserung 5 (Entscheid F-E2, Querbezug): die Szenen-Leiche ist wieder obj 2 (Obj_model_set @0x00A6C, Original
+         * (-1725,-21723) Gier 685) im Suedbecken, an der Lage aus der Engine-Lagesuche (gatorszene_r41.c, test_r41_gatorszene
+         * lagesuche); Nachbesserung 4 verlangte obj 3 bei (700,-8200) Gier 2432 im Nordbecken. */
+        PRUEF(kl >= 0 && g_scd.props[kl].x == 0 && g_scd.props[kl].z == -26000 && g_scd.props[kl].rot_y == 2944,
+              "Leiche obj %d an der Szenen-Lage (0,-26000) Gier 2944 (Nachbesserung 5)", RE15_GSZ_LEICHE_OBJ);
         PRUEF(ks >= 0 && g_scd.props[ks].active && g_scd.props[ks].parent_obj == RE15_GSZ_LEICHE_OBJ &&
               g_scd.props[ks].x == 1090 && g_scd.props[ks].y == -420 && g_scd.props[ks].z == -100 &&
-              g_scd.props[ks].rot_x == 672 && g_scd.props[ks].rot_z == -144,
-              "Schluessel obj 4 = Kind der Leiche, lokal (1090,-420,-100), Neigung rx 672 rz -144 (leiche_lage_n4.py, Cut 5)");
+              g_scd.props[ks].rot_x == -48 && g_scd.props[ks].rot_z == -608,
+              "Schluessel obj 4 = Kind der Leiche, lokal (1090,-420,-100), Neigung rx -48 rz -608 (Nachbesserung 5, Cut 0)");
         PRUEF(re15_blink_r41_aktiv(raeume[r], RE15_GSZ_KEY_OBJ), "Schluessel blinkt (re15_blink_r41)");
         /* Nachbesserung 1 (M5): der Puls laeuft nicht in die Kappung des PC-Zeichners (Primitivfarbe 0x80 = Texel x 1,0,
          * render_pc.c psx_prim_to_sdl_vert). Nachbesserung 4: gemessen mit dem Zeichner-Licht der Szenenkamera Cut 5 (Lichtsatz
@@ -365,15 +366,21 @@ static void teil_leiche(void)
          * groesstes Licht < 255 * 0x80 / 0xBE = 171,8); die Gegenprobe prueft deshalb die Wahl selbst: flach (rx 0 / rz 0) ist
          * der Schluessel dunkler als mit der gewaehlten Neigung (Licht 103,8 geneigt). */
         int ruhe = -1, spitze = -1;
-        const int ok = re15_gatorszene_r41_key_prim_jetzt(5, &ruhe, &spitze);
+        const int ok = re15_gatorszene_r41_key_prim_jetzt(0, &ruhe, &spitze);
         PRUEF(ok && spitze <= 0x80 && ruhe > 0 && spitze * 128 >= ruhe * 0xBE - 128,
-              "Cut 5: Primitivfarbe Ruhe %d -> Blink-Spitze %d (<= 0x80, Verhaeltnis %d/%d ~ 0xBE/0x80 = voller Dreieckpuls)",
+              "Cut 0: Primitivfarbe Ruhe %d -> Blink-Spitze %d (<= 0x80, Verhaeltnis %d/%d ~ 0xBE/0x80 = voller Dreieckpuls)",
               ruhe, spitze, spitze, ruhe);
+        /* Nachbesserung 5 (Abnahme 4 M2, Entscheid F-E2 "mindestens so gut sichtbar wie in der abgenommenen Ankunftseinstellung"):
+         * UNTERGRENZE = die abgenommene Fassung 1 (Cut 1, Lichtsatz RDT @0x468 + 40 * 1, Neigung rx 544 / rz -464): Primitivfarbe
+         * Ruhe 84 -> Spitze 125 (im Bild hellster Pixel 72 -> 108, Abnahme 4 Abschnitt 2.3). Nachbesserung 4 (Cut 5) lag bei 51 -> 76
+         * und fiel diesem Riegel nicht auf. */
+        PRUEF(ok && ruhe >= 84 && spitze >= 125,
+              "Cut 0: Primitivfarbe Ruhe %d >= 84 und Spitze %d >= 125 (abgenommene Fassung 1; Nachbesserung 4: 51 -> 76)", ruhe, spitze);
         if (r == 0 && ks >= 0) {                     /* Gegenprobe: flacher Schluessel ist dunkler */
             const int16_t ax = g_scd.props[ks].rot_x, az = g_scd.props[ks].rot_z;
             g_scd.props[ks].rot_x = 0; g_scd.props[ks].rot_z = 0;
             int r2 = -1, s2 = -1;
-            re15_gatorszene_r41_key_prim_jetzt(5, &r2, &s2);
+            re15_gatorszene_r41_key_prim_jetzt(0, &r2, &s2);
             g_scd.props[ks].rot_x = ax; g_scd.props[ks].rot_z = az;
             PRUEF(r2 >= 0 && r2 < ruhe, "Gegenprobe flach (rx 0 / rz 0): Ruhe %d < %d mit der gewaehlten Neigung", r2, ruhe);
         }
@@ -849,10 +856,10 @@ static void teil_szene(int elza)
     /* Gehen braucht die Zombie-Bank (Clips + Wurzelbahn), die nur der Lader der Plattform haengt - das Laufen misst
      * integration_r41_gatorszene_* am state.log der exe (Lauf lad4: 8 von 8 bewegt, z.B. (-9900,-14700) -> (-10732,-18661)). */
     printf("    (ohne Zombie-Bank im Harness: %d von 8 bewegt - Laufen misst der exe-Riegel)\n", bewegt);
-    /* Nachbesserung 4 (Nachtrag 29, Querbezug): Rueckkehr-Cut = Leichen-Cut 5 (obj 3, leiche_lage_n4.py; Fassung 1: Cut 1) */
+    /* Nachbesserung 5 (Entscheid F-E2, Querbezug): Rueckkehr-Cut = Leichen-Cut 0 (obj 2 im Suedbecken; Nachbesserung 4: Cut 5) */
     PRUEF(g_room_change.pending && (g_room_change.room_id & 0xFFFEu) == 0x2090 && g_room_change.x == -8200 &&
-          g_room_change.z == -25550 && g_room_change.target_cut == 5,
-          "nach %d Bildern: zurueck nach ROOM%04X (%d,%d) Cut %d (soll Eintrittslage (-8200,-25550), Leichen-Cut 5)", f,
+          g_room_change.z == -25550 && g_room_change.target_cut == 0,
+          "nach %d Bildern: zurueck nach ROOM%04X (%d,%d) Cut %d (soll Eintrittslage (-8200,-25550), Leichen-Cut 0)", f,
           g_room_change.room_id, g_room_change.x, g_room_change.z, g_room_change.target_cut);
 
     if (room_boot(r2090, -8200, 0, -25550, 0, 1) != 0) return;
@@ -1033,7 +1040,8 @@ static re15_actor_t *szene_bis_kampf(int elza)
     for (int f = 0; f < 2000 && re15_gatorszene_r41_zustand() != RE15_GSZ_KAMPF; f++) frame(0, 0);
     return re15_gatorszene_r41_zustand() == RE15_GSZ_KAMPF ? g : NULL;
 }
-/* Leon steht (keine Taste): Bilder ab Kampfbeginn bis zum ersten Biss (Clip 4 des Boss-Moduls) und bis zum ersten Treffer. */
+/* Leon steht (keine Taste): Bilder ab Kampfbeginn bis zum ersten Biss (Clip 4 des Boss-Moduls), bis zum ersten Treffer und bis zum
+ * Kontakt-Mass der Szene (re15_gatorszene_r41_kontakt). */
 static int s_verfolgt_ab;   /* erstes Bild ab Kampfbeginn mit dem Boss in der Verfolgung (re15_gator_boss_verfolgt) */
 static void erster_angriff(re15_actor_t *g, int max_bilder, int *angriff, int *treffer)
 {
@@ -1047,6 +1055,20 @@ static void erster_angriff(re15_actor_t *g, int max_bilder, int *angriff, int *t
         if (*treffer < 0 && pl->hp < hp0) *treffer = f;
     }
 }
+/* Nachbesserung 5 (Abnahme 4 M4 / Hinweis H2): GLEICHES MASS auf beiden Seiten = "erster Kontakt oder Angriff": das erste Bild nach
+ * dem Kampfbeginn, in dem ein Knochen die Spielfigur laengs der Schwimmrichtung erreicht (Kontakt-Mass, re2_kontakt bzw.
+ * gatorszene_r41.c kontakt_pruefen) ODER der Gator zubeisst (Clip 4) ODER die Spielfigur getroffen wird. RE2 greift in Sub 1/2 nicht
+ * an (Sub 1 Main @0x80100c20: nur `FUN_8001a330(em, 0, 32, 0)` @0x80100c34-40; Sub 2 Main @0x80100cdc: nur Clip 1 @0x80100cf8-d04;
+ * FRESSEN = Sub 4 nur aus Sub 7 am Korridorende `addiu v0,zero,1025 / sw v0,4(s0)` @0x801012e0-e4) - dort ist das Mass der Kontakt
+ * (121 Bilder). Der Port beisst aus der Naehe (Boss-Modul, NUTZER-VORGABE "Clip-4-Schnapp"), bevor die Knochen Leon erreichen. */
+static int erster_kontakt_oder_angriff(int kontakt, int angriff, int treffer)
+{
+    int k = -1;
+    if (kontakt >= 0) k = kontakt;
+    if (angriff >= 0 && (k < 0 || angriff < k)) k = angriff;
+    if (treffer >= 0 && (k < 0 || treffer < k)) k = treffer;
+    return k;
+}
 static void teil_abstand(int elza)
 {
     printf("== abstand%s ==\n", elza ? "_elza" : "");
@@ -1054,27 +1076,47 @@ static void teil_abstand(int elza)
     PRUEF(g != NULL, "Szene ueber die Leiter bis zum Kampfbeginn (ROOM%04X)", 0x2090 + elza);
     if (!g) return;
     int32_t soll_ab = 0; int soll_bi = 0;
-    PRUEF(re2_soll(&soll_ab, &soll_bi), "RE2-Sollwert gerechnet (ROOM40A0-Intro-Ende): Abstand %d, vorderster Knochen auf Leons x nach %d Bildern",
-          (int)soll_ab, soll_bi);
+    PRUEF(re2_soll(&soll_ab, &soll_bi), "RE2-Sollband gerechnet (ROOM40A0): Abstand %d..%d (Intro-Ende .. fruehester Kampfbeginn Cut 1 + "
+          "%d), Kontakt %d..%d Bilder", (int)soll_ab, (int)s_re2_abstand_max, RE2_LEON_FRUEH, soll_bi, s_re2_bilder_max);
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     const int32_t ab = (int32_t)re15_squareroot0((uint32_t)((int64_t)(g->x - pl->x) * (g->x - pl->x) +
                                                             (int64_t)(g->z - pl->z) * (g->z - pl->z)));
+    int32_t kb_ab = -1; int zg = -1, zs = -1;
+    const int kb = re15_gatorszene_r41_kampfbeginn(&kb_ab, &zg, &zs);
     printf("    Kampfbeginn: Spieler (%d,%d), Gator-Wurzel (%d,%d) Gier %d\n", pl->x, pl->z, g->x, g->z, (int)g->rot_y);
-    PRUEF(soll_ab > 0 && ab >= soll_ab, "Abstand Gator-Wurzel <-> Spielfigur am Kampfbeginn %d >= RE2 %d", (int)ab, (int)soll_ab);
+    /* M1/M4: Abstand im RE2-Band (SquareRoot0 wie RE2 +0x1F0), untere UND obere Grenze */
+    PRUEF(kb && kb_ab == ab && soll_ab > 0 && ab >= soll_ab && ab <= s_re2_abstand_max,
+          "Abstand Gator-Wurzel <-> Spielfigur am Kampfbeginn %d im RE2-Band %d..%d (Messhaken %d)", (int)ab, (int)soll_ab,
+          (int)s_re2_abstand_max, (int)kb_ab);
+    /* M1: RE2-Zonenbeziehung am Intro-Ende (Gator und Leon in Zone 0, @0x80100990-ec) -> Port: Gator in Leons Beckenzone */
+    PRUEF(zg == zs && zs == 0, "Beckenzone am Kampfbeginn: Gator %d, Spielfigur %d (RE2: beide Zone 0, kein Zonenwechsel bis zum "
+          "Kontakt; Nachbesserung 4: Gator 1, Spielfigur 0 -> 300 Bilder Dash)", zg, zs);
     int an = -1, tr = -1;
     erster_angriff(g, 900, &an, &tr);
+    const int ko = re15_gatorszene_r41_kontakt();
+    const int k1 = erster_kontakt_oder_angriff(ko, an, tr);
     PRUEF(s_verfolgt_ab >= 1 && s_verfolgt_ab <= 2, "Boss in der Verfolgung ab Bild %d nach dem Kampfbeginn (Rueckgabe 3 des Szenen-"
           "Hakens im naechsten Boss-Takt)", s_verfolgt_ab);
-    PRUEF(soll_bi > 0 && (an < 0 || an >= soll_bi) && (tr < 0 || tr >= soll_bi),
-          "Leon steht: erster Biss nach %d, erster Treffer nach %d Bildern (-1 = keiner in 900) - nicht vor RE2 %d", an, tr, soll_bi);
-    /* Gegenprobe: Fassung-1-Lage am Kampfbeginn */
+    PRUEF(soll_bi > 0 && k1 >= soll_bi && k1 <= s_re2_bilder_max,
+          "Leon steht: erster Kontakt/Angriff nach %d Bildern im RE2-Band %d..%d (Biss %d, Treffer %d, Kontakt-Mass %d)", k1, soll_bi,
+          s_re2_bilder_max, an, tr, ko);
+    /* Gegenprobe untere Grenze: Fassung-1-Lage am Kampfbeginn (Abnahme 3) */
     g = szene_bis_kampf(elza);
     PRUEF(g != NULL, "Gegenprobe: Szene erneut bis zum Kampfbeginn");
     if (!g) return;
     g->x = -4254; g->z = -20984; g->rot_y = 1505;
     erster_angriff(g, 900, &an, &tr);
     PRUEF(an >= 0 && an < soll_bi, "Gegenprobe Fassung 1 (Gator (-4254,-20984) Gier 1505): erster Biss nach %d Bildern < RE2 %d "
-          "(der Riegel faengt den Befund der Abnahme 3)", an, soll_bi);
+          "(die untere Grenze faengt den Befund der Abnahme 3)", an, soll_bi);
+    /* Gegenprobe obere Grenze: Kampfbeginn-Lage der Nachbesserung 4 (Gator im Nordbecken, Abnahme 4: Biss nach 470) */
+    g = szene_bis_kampf(elza);
+    PRUEF(g != NULL, "Gegenprobe 2: Szene erneut bis zum Kampfbeginn");
+    if (!g) return;
+    g->x = -2178; g->z = -9077; g->rot_y = 1253;
+    erster_angriff(g, 900, &an, &tr);
+    const int k2 = erster_kontakt_oder_angriff(re15_gatorszene_r41_kontakt(), an, tr);
+    PRUEF(k2 < 0 || k2 > s_re2_bilder_max, "Gegenprobe Nachbesserung 4 (Gator (-2178,-9077) Gier 1253, Zone 1): erster Kontakt/Angriff "
+          "nach %d Bildern > RE2 %d (die obere Grenze faengt den Befund der Abnahme 4)", k2, s_re2_bilder_max);
 }
 
 /* ---- Werkzeug "lagesuche" (Nachbesserung 5): der ECHTE Szenenablauf je Lage-Kandidat ---------------------------------------

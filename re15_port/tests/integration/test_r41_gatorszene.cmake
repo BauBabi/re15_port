@@ -47,6 +47,17 @@
 #   Verlangt: Abstandsquadrat Gator-Wurzel <-> Spielfigur im Bild der Folge C >= RE2-Intro-Ende (Auswerter `test_r41_gatorszene
 #   re2soll`, aus den RE2-Daten gerechnet), in den RE2-Bildern danach kein Biss (Clip 4) und kein Treffer; leon/elza zusaetzlich
 #   cam=0 in F<c>..F<c+74> (vorher fest F405-F479), flucht zusaetzlich Spielfigur >= 5000 oestlich der Kampfbeginn-Lage.
+# Nachbesserung 5 (Abnahme F 4, M1-M4 = Orchestrator-Entscheid F-E2 "Kampfbeginn = RE2 ... Sollwert RE2 mit oberer UND unterer
+#   Grenze aus dem RE2-Beleg"): RE2-SOLLBAND aus dem Auswerter `test_r41_gatorszene re2soll` (tools/r41_gatorszene/probe_re2_band_n5.c):
+#   Abstand Intro-Ende (Cut 1 + 150) .. fruehester Kampfbeginn fuer Leon (sub03 Plc_ret @SCD 0x02B6 nach Cut 1 + 113), Kontakt
+#   121 .. 158 Bilder. GLEICHES MASS auf beiden Seiten: "erster Kontakt oder Angriff" = das erste Bild nach dem Kampfbeginn mit
+#   Kontakt-Mass (debug.log "[gatorszene] Kontakt F..: +N", ein Knochen erreicht die Spielfigur laengs der Schwimmrichtung - RE2
+#   Gier 2048 = "vorderster Knochen auf Leons x"), Biss (Clip 4) oder Treffer (HP faellt); RE2 greift in Sub 1/2 nicht an (Sub 1
+#   Main @0x80100c34-40, Sub 2 Main @0x80100cf8-d04, FRESSEN nur aus Sub 7 @0x801012e0-e4). leon/elza (Leon steht): Abstand im Band
+#   und erster Kontakt/Angriff im Band; Beckenzone Gator = Spielfigur = 0 (RE2 @0x80100990-ec, Zeile "Kampfbeginn F..: ... Zone").
+#   flucht/flucht_elza: die Spielfigur rennt ab dem Kampfbeginn nach NORDEN durch den Westkanal (der Gator kommt jetzt von Osten aus
+#   dem Suedbecken): RE15_INPUT_SCRIPT=W10,L0.6,UX5 (Linksdrehung F301-F318 auf Gier -1728, Rennen ab F319; gemessen F41n5 N_LW_test);
+#   Abstand im Band, kein Kontakt/Angriff vor dem RE2-Wert, Spielfigur >= 5000 nach Norden in den RE2-Bildern.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=leon|elza|flucht|flucht_elza -P test_r41_gatorszene.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -66,20 +77,24 @@ include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
 # vom Auswerter `test_r41_gatorszene re2soll` aus den RE2-Daten gerechnet (wie tools/r41_gatorszene/probe_re2_intro_ende.c):
 # Abstandsquadrat Gator-Wurzel <-> Leon (Pos_set @SCD 0x0736, Clip 6/3 @0x801008ac-948, Plc_dest @SCD 0x0286) und die Bilder, bis
 # der vorderste Knochen des stehenden Leons x erreicht (Sperre +0x238 = 110 @0x8010091c-20, Hysterese @0x80100b5c-64/@0x80100b88).
-function(r41f_re2soll out_ab2 out_bilder)
+function(r41f_re2soll out_ab2 out_bilder out_ab2_max out_bilder_max)
     execute_process(COMMAND "${RE15_TOOL}" re2soll RESULT_VARIABLE _r OUTPUT_VARIABLE _o ERROR_VARIABLE _e)
-    string(REGEX MATCH "re2soll: abstand=([0-9]+) abstand2=([0-9]+) bilder=([0-9]+)" _m "${_o}")
+    string(REGEX MATCH "re2soll: abstand=([0-9]+) abstand2=([0-9]+) bilder=([0-9]+) abstand_max=([0-9]+) abstand2_max=([0-9]+) bilder_max=([0-9]+)"
+           _m "${_o}")
     if(NOT _r EQUAL 0 OR NOT _m)
         message(FATAL_ERROR "r41_gatorszene: re2soll fehlgeschlagen (rc ${_r}): ${_o}")
     endif()
     set(${out_ab2} ${CMAKE_MATCH_2} PARENT_SCOPE)
     set(${out_bilder} ${CMAKE_MATCH_3} PARENT_SCOPE)
+    set(${out_ab2_max} ${CMAKE_MATCH_5} PARENT_SCOPE)
+    set(${out_bilder_max} ${CMAKE_MATCH_6} PARENT_SCOPE)
 endfunction()
 # Auswertung des LETZTEN Raum-Abschnitts von state.log (der Bildzaehler beginnt je Raum mit F0 neu) ab dem Kampfbeginn F<c>
 # (Folge C): Abstandsquadrat Gator-Wurzel <-> Spielfigur in F<c> >= RE2; in F<c+1>..F<c+bilder> kein Biss (Gator Clip 4 = Biss
 # des Boss-Moduls) und kein Treffer (HP faellt); mit_cam: F<c>..F<c+74> cam=0 (Nachbesserung 1 M1, Fassung 1: F405-F479).
 # Ergebnis: ab2 (Abstandsquadrat), x0/xb (Spieler-x in F<c> / F<c+bilder>), erster Biss/Treffer im Lauf (-1 = keiner).
-function(r41f_kampf dir c re2_ab2 re2_bilder mit_cam out_ab2 out_x0 out_xb out_biss out_treffer)
+function(r41f_kampf dir c re2_ab2 re2_bilder re2_ab2_max re2_bilder_max mit_cam out_ab2 out_x0 out_xb out_biss out_treffer
+                    out_z0 out_zb out_k)
     file(STRINGS "${dir}/state.log" _alle REGEX "^F[0-9]+ ")
     set(_ab "")
     foreach(_z IN LISTS _alle)
@@ -93,6 +108,8 @@ function(r41f_kampf dir c re2_ab2 re2_bilder mit_cam out_ab2 out_x0 out_xb out_b
     set(_ab2 -1)
     set(_x0 0)
     set(_xb -999999)
+    set(_z0 0)
+    set(_zb -999999)
     set(_hp0 -1)
     set(_biss -1)
     set(_treffer -1)
@@ -125,6 +142,7 @@ function(r41f_kampf dir c re2_ab2 re2_bilder mit_cam out_ab2 out_x0 out_xb out_b
             math(EXPR _ab2 "${_dx} * ${_dx} + ${_dz} * ${_dz}")
             set(_hp0 ${_hp})
             set(_x0 ${_px})
+            set(_z0 ${_pz})
         endif()
         if(mit_cam AND _f LESS_EQUAL _c_ende)
             math(EXPR _n_cam "${_n_cam} + 1")
@@ -143,6 +161,7 @@ function(r41f_kampf dir c re2_ab2 re2_bilder mit_cam out_ab2 out_x0 out_xb out_b
                 math(EXPR _n_b "${_n_b} + 1")
                 if(_f EQUAL _b_ende)
                     set(_xb ${_px})
+                    set(_zb ${_pz})
                 endif()
             endif()
         endif()
@@ -156,19 +175,53 @@ function(r41f_kampf dir c re2_ab2 re2_bilder mit_cam out_ab2 out_x0 out_xb out_b
     if(_n_b LESS re2_bilder)
         message(FATAL_ERROR "r41_gatorszene: nur ${_n_b} state.log-Bilder nach dem Kampfbeginn F${c} (verlangt ${re2_bilder}, EXIT_AT zu frueh?)")
     endif()
-    if(_ab2 LESS re2_ab2)
-        message(FATAL_ERROR "r41_gatorszene: Abstandsquadrat Gator-Wurzel <-> Spielfigur am Kampfbeginn F${c} ${_ab2} < RE2 ${re2_ab2} "
-                            "(Nachtrag 29: Leiche samt Kette weiter weg; Abnahme 3: 6162^2 = 37970244)")
+    if(_ab2 LESS re2_ab2 OR _ab2 GREATER re2_ab2_max)
+        message(FATAL_ERROR "r41_gatorszene: Abstandsquadrat Gator-Wurzel <-> Spielfigur am Kampfbeginn F${c} ${_ab2} nicht im RE2-Band "
+                            "${re2_ab2}..${re2_ab2_max} (Abnahme 3: 6162^2 = 37970244 zu nah, Abnahme 4: 17539^2 = 307616521 zu weit)")
     endif()
-    if((NOT _biss EQUAL -1 AND _biss LESS_EQUAL _b_ende) OR (NOT _treffer EQUAL -1 AND _treffer LESS_EQUAL _b_ende))
-        message(FATAL_ERROR "r41_gatorszene: erster Biss F${_biss} / Treffer F${_treffer} vor F${_b_ende} = Kampfbeginn + ${re2_bilder} "
-                            "RE2-Bilder (Abnahme 3: Biss nach 54/26, Treffer nach 61/33 Bildern)")
+    # Kampfbeginn-Zeile: Beckenzone Gator = Spielfigur = 0 (RE2-Zonenbeziehung am Intro-Ende, @0x80100990-ec)
+    file(STRINGS "${dir}/debug.log" _kb REGEX "\\[gatorszene\\] Kampfbeginn F${c}: .* Zone ([0-9]+), Spielfigur .* Zone ([0-9]+), Abstand")
+    if(NOT _kb)
+        message(FATAL_ERROR "r41_gatorszene: keine Zeile '[gatorszene] Kampfbeginn F${c}' in ${dir}/debug.log")
+    endif()
+    list(GET _kb -1 _kbz)
+    string(REGEX MATCH "Zone ([0-9]+), Spielfigur .* Zone ([0-9]+), Abstand" _m "${_kbz}")
+    if(NOT CMAKE_MATCH_1 EQUAL 0 OR NOT CMAKE_MATCH_2 EQUAL 0)
+        message(FATAL_ERROR "r41_gatorszene: Beckenzone am Kampfbeginn Gator ${CMAKE_MATCH_1} / Spielfigur ${CMAKE_MATCH_2} (RE2: beide 0, "
+                            "Abnahme 4: Gator 1 -> 300 Bilder Dash): ${_kbz}")
+    endif()
+    # gleiches Mass: erster Kontakt oder Angriff (Kontakt-Zeile, Biss, Treffer) in Bildern nach dem Kampfbeginn
+    set(_k -1)
+    file(STRINGS "${dir}/debug.log" _ko REGEX "\\[gatorszene\\] Kontakt F[0-9]+: \\+[0-9]+ Bilder nach dem Kampfbeginn")
+    if(_ko)
+        list(GET _ko -1 _koz)
+        string(REGEX MATCH "\\+([0-9]+) Bilder" _m "${_koz}")
+        set(_k ${CMAKE_MATCH_1})
+    endif()
+    foreach(_ev ${_biss} ${_treffer})
+        if(NOT _ev EQUAL -1)
+            math(EXPR _d "${_ev} - ${c}")
+            if(_k EQUAL -1 OR _d LESS _k)
+                set(_k ${_d})
+            endif()
+        endif()
+    endforeach()
+    if(NOT _k EQUAL -1 AND _k LESS re2_bilder)
+        message(FATAL_ERROR "r41_gatorszene: erster Kontakt/Angriff nach ${_k} Bildern < RE2 ${re2_bilder} (Biss F${_biss} / Treffer "
+                            "F${_treffer}, Kampfbeginn F${c}; Abnahme 3: Biss nach 54/26 Bildern)")
+    endif()
+    if(mit_cam AND (_k EQUAL -1 OR _k GREATER re2_bilder_max))
+        message(FATAL_ERROR "r41_gatorszene: Leon steht - erster Kontakt/Angriff nach ${_k} Bildern nicht im RE2-Band "
+                            "${re2_bilder}..${re2_bilder_max} (Abnahme 4: Biss nach 470 Bildern)")
     endif()
     set(${out_ab2} ${_ab2} PARENT_SCOPE)
     set(${out_x0} ${_x0} PARENT_SCOPE)
     set(${out_xb} ${_xb} PARENT_SCOPE)
     set(${out_biss} ${_biss} PARENT_SCOPE)
     set(${out_treffer} ${_treffer} PARENT_SCOPE)
+    set(${out_z0} ${_z0} PARENT_SCOPE)
+    set(${out_zb} ${_zb} PARENT_SCOPE)
+    set(${out_k} ${_k} PARENT_SCOPE)
 endfunction()
 function(r41f_folge_c dir out_c)
     file(STRINGS "${dir}/debug.log" _fc REGEX "\\[gatorszene\\] Folge C ROOM[0-9A-F]+ F[0-9]+ ")
@@ -508,10 +561,11 @@ endif()
 # Bildern, der 2080-Besuch nach ~150, der Gator-Ablauf ist ~F416 vorbei (gemessen 2026-10-24, Laeufe s4/lad2).
 set(_flucht "")
 if(TEIL MATCHES "^flucht")
-    # Nachbesserung 4: sofort weglaufen = Rennen nach Osten (UP + CROSS), gehalten ab F406 (W13.5); die Szene haelt die Figur
-    # (Set(2,7,1) / (1,27,1), ROOM1150 sub08 @0x01114/@0x01118) bis zum Kampfbeginn, gerannt wird ab dem ersten freien Bild
-    # (gemessen F41n4 Lauf N_LW2 = N_LW mit W14.1: Bild fuer Bild gleich)
-    set(_flucht RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=W13.5,UX4.6")
+    # Nachbesserung 5: der Gator beginnt den Kampf im Ostteil des Suedbeckens (Zone 0, gatorszene_r41.c) - weglaufen = nach NORDEN
+    # durch den Westkanal: Linksdrehung 0,6 s ab F301 (Kampfbeginn F297, die Szene haelt die Figur bis dahin: Set(2,7,1) / (1,27,1),
+    # ROOM1150 sub08 @0x01114/@0x01118), dann Rennen (UP + CROSS) 5 s (gemessen F41n5 N_LW_test: Gier -1728, x -8432, z -25550 ->
+    # -16150 in den RE2-Bildern). Nachbesserung 4: W13.5,UX4.6 nach Osten (Kampfbeginn F422).
+    set(_flucht RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=W10,L0.6,UX5")
 endif()
 re15_start_spiel(_rv 480
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore
@@ -580,24 +634,24 @@ if(NOT _ueb)
     message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - keine Kamera-Uebergabe auf Cut 0 mit Spielfigur im Bild (M1)")
 endif()
 r41f_folge_c("${_dir}" _c)
-r41f_re2soll(_re2_ab2 _re2_bilder)
+r41f_re2soll(_re2_ab2 _re2_bilder _re2_ab2_max _re2_bilder_max)
 if(TEIL MATCHES "^flucht")
     set(_mit_cam 0)
 else()
     set(_mit_cam 1)
 endif()
-r41f_kampf("${_dir}" ${_c} ${_re2_ab2} ${_re2_bilder} ${_mit_cam} _ab2 _x0 _xb _biss _treffer)
+r41f_kampf("${_dir}" ${_c} ${_re2_ab2} ${_re2_bilder} ${_re2_ab2_max} ${_re2_bilder_max} ${_mit_cam} _ab2 _x0 _xb _biss _treffer _z0 _zb _k)
 if(TEIL MATCHES "^flucht")
-    math(EXPR _weg "${_xb} - ${_x0}")
+    math(EXPR _weg "${_zb} - ${_z0}")
     if(_weg LESS 5000)
-        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Spielfigur nach ${_re2_bilder} Bildern nur ${_weg} nach Osten gelaufen (x ${_x0} -> ${_xb})")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Spielfigur nach ${_re2_bilder} Bildern nur ${_weg} nach Norden gelaufen (z ${_z0} -> ${_zb})")
     endif()
-    message(STATUS "r41_gatorszene: Lauf ${TEIL} - Kampfbeginn F${_c}, Abstandsquadrat ${_ab2} >= RE2 ${_re2_ab2}, weggelaufen ${_weg} "
-                   "(x ${_x0} -> ${_xb} in ${_re2_bilder} Bildern), kein Biss/Treffer bis F${_c}+${_re2_bilder} (erster Biss F${_biss}, "
-                   "Treffer F${_treffer}; -1 = keiner bis EXIT_AT)")
+    message(STATUS "r41_gatorszene: Lauf ${TEIL} - Kampfbeginn F${_c}, Abstandsquadrat ${_ab2} im RE2-Band ${_re2_ab2}..${_re2_ab2_max}, "
+                   "weggelaufen ${_weg} nach Norden (z ${_z0} -> ${_zb} in ${_re2_bilder} Bildern), erster Kontakt/Angriff nach ${_k} "
+                   "Bildern >= RE2 ${_re2_bilder} (Biss F${_biss}, Treffer F${_treffer}; -1 = keiner bis EXIT_AT)")
     return()
 endif()
-set(_status_kampf "Kampfbeginn F${_c}, Abstandsquadrat ${_ab2} >= RE2 ${_re2_ab2}, cam=0 F${_c}-F${_c}+74, kein Biss/Treffer bis F${_c}+${_re2_bilder} (erster Biss F${_biss}, Treffer F${_treffer})")
+set(_status_kampf "Kampfbeginn F${_c}, Abstandsquadrat ${_ab2} im RE2-Band ${_re2_ab2}..${_re2_ab2_max}, Zone 0/0, cam=0 F${_c}-F${_c}+74, erster Kontakt/Angriff nach ${_k} Bildern im RE2-Band ${_re2_bilder}..${_re2_bilder_max} (Biss F${_biss}, Treffer F${_treffer})")
 # Nachtrag 20: Zombies Typ 0x16 (state.log " t=16 ") oben und laufend. Die Treffer beginnen OHNE die oeffnende "[" des
 # Satzes: ein Listen-Element mit offener eckiger Klammer laesst CMake die folgenden ";" nicht trennen (sonst 1 statt 8).
 if(NOT EXISTS "${_dir}/state.log")

@@ -138,20 +138,27 @@ static void musik_takt_vor(void) { musik_takt(); }
  *      mit dem Gator von OSTEN erreichbar (Kette bis zur Kau-Lage; die Kette mit dem ganzen Clip 6 = 10715 passt von Osten nicht
  *      ins Becken: Ostwand x 7200) - darum endet der Durchbruch nach dem Aufsteigen (Clip 6 Bild 0..15: Kopf y +1611 -> -1392)
  *      und dem Vorstoss (Bild 15..31: Wurzel -5880 -> -1627 roh), dann der Biss (s. GSZ_DURCHBRUCH_BIS).
- *  (4) Fressen von vorn: Anlauf nach Westsuedwest -> Spur B's FINISHER-Wahl findet Cut 1 (bei (-7740,-25956), Blick nach Osten)
- *      vor dem Kopf, unter der Massstab-Grenze 1892 (Tiefe >= 4804).
- * Gewaehlt (Rechnung leiche_lage_n5.py, Messung mit dem echten Engine-Ablauf test_r41_gatorszene lagesuche): s. Werte unten. */
-#define GSZ_CUT_LEICHE        0
+ *  (4) Fressen von vorn: Anlauf nach Westen -> Spur B's FINISHER-Wahl (gator_re2_r41.c re15_gr2_kamera_wahl) findet Cut 1 (bei
+ *      (-7740,-25956), Blick nach Osten) vor dem Kopf, unter der Massstab-Grenze 1892 (Tiefe >= 4804).
+ * Wahl = Messung mit dem ECHTEN Ablauf (test_r41_gatorszene lagesuche: Szene ueber die Leiter, Boss-Takt mit Klemme, Spur-B-
+ * Kamerawahl) ueber 2873 Kandidaten aus leiche_lage_n5.py (Leiche ganz im Bild von Cut 0, Licht >= 168 moeglich, Kette mit
+ * Wurzel-Rand 1500 = ueber der Klemme hit_radius_min 1466): alle drei Punkte erfuellen 34 Leichen-Lagen; davon die mit dem
+ * groessten Schluessel (Quad-Kasten 11,7 x 12,0 Bildpunkte, 0,87 x Fassung 1) und Abstand am naechsten ueber dem RE2-Wert:
+ *   Leiche obj 2 (0,-1740,-26000) Gier 2944 (Original @0x00A6C pc[10..11] `43 f9` = -1725, pc[14..15] `25 ab` = -21723, Gier
+ *   `ad 02` = 685), Anlauf-Gier 1952, Durchbruch bis Bild 22 -> Kampfbeginn Gator (3197,-24407) Zone 0, Abstand 11448
+ *   (SquareRoot0; RE2 11402), erster Biss nach 131 / Treffer nach 138 Bildern (RE2-Band 121..158), Fress-Cut 1 frontal 4116.
+ *   (Anlauf-Gier 1920 gaebe genau 11402 = die Untergrenze; 1952 laesst 46 Rand fuer Rundung zwischen Riegel und exe.) */
+#define GSZ_CUT_LEICHE        0         /* RID @0x060 + 0 * 32: (2754,-3132,-26190) -> (-7992,-18,-21564), Lichtsatz @0x468 */
 #define GSZ_LEICHE_X_STD      0
 #define GSZ_LEICHE_Z_STD      (-26000)
 #define GSZ_LEICHE_ROT_Y_STD  2944
-#define GSZ_GATOR_GIER_STD    1952      /* Anlauf nach Westen */
+#define GSZ_GATOR_GIER_STD    1952      /* Anlauf nach Westen (Vorwaerts (cos, -sin) = (-0,99, -0,15)) */
 /* Letztes Durchbruch-Bild (Clip 6): Bild 0..15 steigt der Kopf aus dem Wasser (Rig-y +1611 -> -1392, EMR-Keyframes der
- * RE2-EM23-Bank, Sonde probe_clip6), Bild 15..31 der Vorstoss (Wurzel-Versatz -5880 -> -1627 roh, groesster Schritt 480); ab Bild
- * 32 gleitet er nur noch aus (bis Bild 124 weitere 1597 x 2/3). Danach der Biss (RE2 FRESSEN P1 Clip 4 @0x801010ec-f4). */
+ * RE2-EM23-Bank, Sonde probe_clip6), ab Bild 15 der Vorstoss (Wurzel-Versatz -5880 -> -1627 roh bis Bild 31, groesster Schritt
+ * 480); ab Bild 37 gleitet er nur noch aus (bis Bild 124 weitere 1597 x 2/3). Bild 22 = laengster Durchbruch, mit dem die Kette
+ * der gewaehlten Lage von Osten ins Becken passt (Wurzel-Rand 1500). Danach der Biss (RE2 FRESSEN P1 Clip 4 @0x801010ec-f4).
+ * PORT-WAHL der Inszenierung (Nachtrag 6), RE2 laesst Clip 6 im Intro bis zum Ende laufen (@0x801008ac-c8). */
 #define GSZ_DURCHBRUCH_BIS_STD 22
-/* Rumpfmitte (Mundpunkt) im Objektraum der Leiche: Leichen-Modell MD1 @0x2054 x -444..2626 (Kopf .. Beine), Rumpf oben
- * (y <= -100) bei x -100..1400 -> Mitte 1090 (leiche_lage.py MITTE_X). */
 #define GSZ_LEICHE_MITTE_X    1090
 #define GSZ_LEICHE_BILDER     90     /* Halt auf der Leiche (1,5 Blinkperioden 0x3c, re15_blink_r41.h) */
 #define GSZ_LEICHE2_BILDER    45     /* "erneut Kamera auf Zombie mit Schluessel" vor dem Gator-Signal */
@@ -336,7 +343,10 @@ static int prop_slot(uint8_t obj_id)
  * render_pc.c psx_prim_to_sdl_vert), Drehfolge main.c pc_prop_rot_q12. Nachbesserung 4: Kamera Cut 5, Lichtsatz RDT @0x468 +
  * 40 * 5 (Umgebung 63/73/63, die drei Lichter bei x -29490/-24699/2000 reichen kaum ins Nordbecken) -> lokal rx 672 / rz -144
  * (59,9 Grad), Bildflaeche cos 0,922, Licht 103,8 (Spitze 154 < 172), ~11,5 x 10,6 Bildpunkte (leiche_lage_n4.py; Fassung 1 Cut 1:
- * rx 544 / rz -464, Licht 169,8, ~10,4 x 9,5). PORT-WAHL. */
+ * rx 544 / rz -464, Licht 169,8, ~10,4 x 9,5). Nachbesserung 5: Kamera Cut 0, Lichtsatz RDT @0x468 + 40 * 0 (Licht bei
+ * (2510,-4000,-24087)); groesster projizierter Quad-Kasten bei Licht >= 168 (Primitivfarbe Ruhe >= 84 = abgenommen) und unter der
+ * Puls-Grenze -> lokal rx -48 / rz -608, Licht 171,5, Quad-Kasten 11,7 x 12,0 (Fassung 1: 13,3 x 13,8; gemessen an der exe:
+ * Ring 6 x 8 .. 7 x 9 Bildpunkte, hellster Pixel 86 .. 110; Fassung 1 8 x 10, 72 .. 108). Lage auf dem Ruecken wie bisher. PORT-WAHL. */
 #define GSZ_KEY_AUF_X_STD 1090
 #define GSZ_KEY_AUF_Y_STD (-420)
 #define GSZ_KEY_AUF_Z_STD (-100)

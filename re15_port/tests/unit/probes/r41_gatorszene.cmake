@@ -21,6 +21,9 @@
 #                                   Gator-Wurzel <-> Spielfigur >= RE2-Intro-Ende ROOM40A0, erster Biss/Treffer (Leon steht) nicht vor
 #                                   den RE2-Bildern (beides im Riegel aus den RE2-Daten gerechnet); Gegenprobe Fassung-1-Lage
 #   unit_r41_gatorszene_abstand_elza  dieselbe mit Elza (2091/2081)
+#   Nachbesserung 5: leiche (obj 2 bei (0,-26000) Cut 0, Untergrenze Primitivfarbe Ruhe 84 / Spitze 125 = abgenommene Fassung 1),
+#                    programme/szene (Leichen-Cut 0), abstand/_elza (RE2-Band mit oberer UND unterer Grenze, Zonen, Gegenprobe
+#                    Nachbesserung 4 ueber der oberen Grenze)
 #   integration_r41_gatorszene      echte exe (test_r41_gatorszene.cmake): Leiter 2080 -> 2090, Szene, Folge-Zeilen (Leon + Elza);
 #                                   Nachbesserung 1: Kamera-Uebergabe Cut 0 (M1); _tod/_tod_elza: Todesrolle, Schluessel sichtbar
 #                                   und pulsierend (Bildvergleich mit/ohne Schluessel ueber test_r41_gatorszene bilddiff, M2)
@@ -31,6 +34,9 @@
 #                                   Nachbesserung 4 (M1 = Nachtrag 29): leon/elza + NEU flucht/flucht_elza (Spielfigur rennt ab dem
 #                                   Kampfbeginn nach Osten): Abstand Gator-Wurzel <-> Spielfigur am Kampfbeginn >= RE2-Intro-Ende,
 #                                   kein Biss/Treffer in den RE2-Bildern danach (Sollwert: test_r41_gatorszene re2soll)
+#                                   Nachbesserung 5 (Abnahme 4 M1-M4 = Entscheid F-E2): RE2-SOLLBAND mit oberer UND unterer Grenze
+#                                   (re2soll: Abstand 11402..13890, erster Kontakt/Angriff 121..158 Bilder, gleiches Mass), Beckenzone
+#                                   Gator = Spielfigur = 0; flucht/flucht_elza rennen nach NORDEN (Gator kommt von Osten)
 add_executable(test_r41_gatorszene ${CMAKE_CURRENT_LIST_DIR}/../test_r41_gatorszene.c)
 target_link_libraries(test_r41_gatorszene PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_gatorszene PRIVATE ${CMAKE_SOURCE_DIR}/include)
