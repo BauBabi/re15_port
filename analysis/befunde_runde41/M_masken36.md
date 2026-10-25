@@ -678,6 +678,51 @@ Modell-Zeilen in 4040/4080 haben Tiefe und Hoehe vom Huellrechteck (13 289 x 13 
    Trennwand im Fenster des Gegenstands kein Figurpunkt sichtbar; DAVOR 0 uebermalt), Gegenprobe gegen den Stand vor NB3.
 5. OFFEN 9 mit derselben Zerlegung (Teile nur aus Koerperpunkten zeichnen), Restliste neu sichten.
 
+### NB3 Mangel 1 - Ursache und Beleg (obere Trennwandfelder 30A0/30A1 Cut 0/1)
+* **Ursache (an den Daten nachgerechnet, `m41nb3/py/rinfo.py`, `p30a0.py`):** Die Trennwand besteht in der Generator-Region aus
+  FUENF Objekten (C0: Verschiebungen (144,24) rechtes Feld unten, (-5,91) linkes Feld unten, (232,-24) rechtes Feld oben = R4..R9 +
+  Saum R62..R74, (59,43) linkes Feld oben = R19..R21 + R51..R57, (57,86) Fussstreifen = R38..R45 + R93..R100). NB2 hat nur die
+  beiden unteren Felder von Hand Zelle 6 zugeordnet; die oberen Felder liegen auf dem unteren Feld auf (kein Bodenkontakt) - ihre
+  "Bodenkontakte" (Unterkante zurueck auf y = 0 projiziert) fielen hinter die Trennwand und die Automatik nahm Zelle 8 @0x00474
+  (Rueckwand-Schraenke, R4/R5 Tiefe 200/199) bzw. Zelle 0 @0x00414 (R19/R20/R21/R51 Tiefe 188..201, IoU 0,16). In C1 ebenso
+  (-32,70) = R4 -> Zelle 1 @0x00420 (Nordwand, Tiefe 207).
+* **Beleg Zelle 6 (Messung, Bilder `M_bilder/NB3/NB3_zuordnung_30A0_00.png` / `_01.png`):** Koerper SCA-Zelle 6 @RDT+0x0045C =
+  `96 19 e2 04 63 98 2d 37 01 ff 00 03` (x -26525..-19975 z 14125..15375, Typ 1, Band 0) - Hoehe an ALLEN Trennwand-Objekten des
+  Cuts gemessen (IoU-Maximum, koerper_r41.hoehe_messen): **C0 3025, IoU 0,908, 98 % der Objektpunkte im Koerper** (nur die
+  NB2-Teile: 1525, IoU 0,586); **C1 3225, IoU 0,930, 100 %** (nur NB2-Teil: 1925, IoU 0,575). Kamera C0 (-16896,-3600,9440) und
+  C1 (-24744,-3300,9840) stehen nicht ueber der Zelle (z < 14125) - keine Nahfeld-Sperre. Eintraege in `zuordnung_r41.json`
+  (5 neue, je mit Zellbytes, Messung, Bild).
+* **Zweite Ursache derselben Wirkung (gemessen):** auch MIT richtiger Zelle bleibt die Figur hinter dem NAHEN Teil der Trennwand
+  sichtbar, wenn ein Rechteck nur EINE Tiefe hat: NB1/NB2 setzen sie auf max bucket(Eintritt) ueber das ganze Rechteck (keine Figur
+  VOR dem Koerper verdeckt). Eintritt im rechten oberen Feld R4 bucket 72..107, linkes oberes Feld R19 104..171, unteres R0 75..110.
+  Python-Simulation auf Leons Dreiecken der Abnahme-Laeufe (`m41nb3/py/sim30a0.py`): s30A0_00 R4 mit Zelle 6 und Rechteck-Tiefe
+  107: 306 von 1 075 Leon-Punkten weiter sichtbar, R0 (Tiefe 110) 136 von 854, t30A0_00 R19 200 von 200; mit Tiefe je Bildspalte:
+  0. Die Abnahme-Zahl "unten verdeckt 644" war also auch unten nicht vollstaendig.
+* **Dritte Ursache (gefunden beim Bau des Masses):** das Python-Koerpermodell (geom.zellen_solid_test, von NB1/NB2 benutzt) kennt
+  Zellentyp 2 nicht ("typ 2/8/9 gibt ebenfalls None (Form hier nicht modelliert)" -> Huellrechteck), der C-Ausschluss fragt die
+  RAUTE des Resolvers (form_drin -> push_diag2 = LAB_8003d00c, ghidra1_V2.txt:145450-145916: Quadrant aus quadrant_of mit
+  cx = x + (breite >> 1), cz = z + (tiefe >> 1), je Quadrant die Kante zwischen den Kantenmitten). 23 Modell-Zeilen in 4040/4080
+  hatten Tiefe und Hoehe vom 13 289 x 13 289-Kasten (z.B. 4040 C6 R4: Kasten 244, Raute 213; 4040 C11 R93: Kasten 151, Raute 190).
+  Dazu: geometrie.quader_auf_band hat keine BODENflaeche - ein Koerper ueber der Kamera (3050 C5 R40, Band 4, Kamera y -1781)
+  bekam die Tiefe der Austrittsflaeche (282 statt 259).
+
+### NB3 Umsetzung
+| Datei | Inhalt |
+|---|---|
+| `re15_port/tools/maske/koerper_r41.py` (neu) | Koerper einer SCA-Zelle als Prisma, Eintritt UND Austritt je Bildpunkt (Cyrus-Beck mit den Halbebenen der Form + Boden- und Deckelebene; Kreis quadratisch); Formen wie der Resolver: Typ 1 Kasten, Typ 2 Raute (push_diag2), Typ 4..7 Schraege (Belege geom.zellen_solid_test), Typ 3 Kreis; Hoehe per IoU wie geometrie.hoehe_messen. Gegenprobe gegen geometrie.quader_auf_band an allen 498 Typ-1-Zeilen: 480 bitgleich, die 18 anderen sind Saeulen (kollisionstiefe_schnell rechnet in 64er-Stufen) bzw. Koerper ueber der Kamera (Bodenflaeche fehlte dort). |
+| `re15_port/tools/maske/kacheln_r41.py` (neu) | Teilrechtecke je Koerper (Regel im Kopf): alte Rechtecke an Spaltengrenzen geteilt (gleiche Atlas-Abbildung, gleiche Gruppe - Texel und Lage unveraendert), Tiefe je Teil = max bucket(Eintritt) seiner Koerperpunkte; Saum-Rechtecke des Koerpers je Streifen zusammengelegt (eigener Atlasplatz, Koerperpunkte und Punkte ausserhalb getrennt) - schafft den Platz fuer die Teile in vollen Cuts (105); vorher ausgeschlossene Rechtecke (OFFEN 9) zusaetzlich in Zeilen nur mit Koerperpunkten und Rest-Zeilen geteilt. Spaltengrenzen per dynamischer Programmierung: Ziel = wenigste erreichbare Figurpunkte hinter dem Koerper, deren Stufe bucket(vz - 450) <= Tiefe des Teils ist (450 = Spielerradius DAT_80073e94[6]: so weit reicht die Figur hoechstens naeher an die Kamera als ihr Mittelpunkt), Daten aus `test_r37_masken36 hinter`; K je Koerper gierig nach dem groessten Gewinn je zusaetzlichem Rechteck. Auswahl: Zuordnungen von Hand, Koerper mit "zu fern"-Punkten, Koerper mit ausgeschlossenen Rechtecken. Rueckholliste: wird ein vorher GEZEICHNETES Rechteck nach der Teilung vom Ausschluss genommen, bleibt es ungeteilt mit alter Tiefe (Kette bis stabil). Modell-Zeilen unveraenderter Rechtecke wandern mit dem neuen Index mit. |
+| `re15_port/tests/unit/test_r37_masken36.c` | Modus `fern` (Mass + Riegel), Werkzeug `hinter` (Figurpunkte hinter den Koerpern je Spalte, fuer kacheln_r41.py) |
+| `re15_port/tools/maske/zuordnung_r41.json` | +15 Eintraege (30A0 C0/C1 Trennwand oben + Fussstreifen; Restliste: 30A0 C3 Spinde, 3040 C0 Schaltkasten/Kiste, 5090 C13 obere Kiste, 5020 C7 Container), je mit Zellbytes, Messung, Bild `M_bilder/NB3/NB3_zuordnung_*.png` |
+| `re15_port/tests/unit/probe_r41_masken36_sicht.c`, `tests/integration/test_r41_masken36_stage2.cmake` | Art Z im exe-Laeufer: dritter Lauf A0 (Masken an, Figur ausserhalb des Regionsvierecks = Masken ohne Figur), V = Figurpunkte mit A != A0 = im Endbild sichtbar |
+
+### NB3 Zwischenstand Kette k1 (nur Austritts-Kriterium, ohne Figurpunkt-DP und ohne die Restliste-Zuordnungen)
+`m41nb3/kette3.sh k1`: 2 Runden bis stabil (Rueckholliste 4040 C9 R7, C10 R22..R25), Tabelle 682 -> 663 Zeilen (nur gezeichnete),
+Ausschluss mit gefilterter Tabelle bitgleich. Gezeichnete Punkte der bearbeiteten Cuts 224 716 -> 225 041 (0 verloren).
+**zu fern 1 360 606 -> 353 986** (Stage 3: 56 346 -> **0**, 4: 961 232 -> 72, 5: 914 -> 136, 6: 342 114 -> 353 778). Der Rest in
+ROOM6000 liegt an duennen Koerpern (Zelle @0x00810 Hoehe 25/650, @0x007F8 Hoehe 150 = Bahnsteigkante): der Austritt folgt dort
+direkt auf den Eintritt, das Austritts-Kriterium kann die Spalten nicht unterscheiden - die Figuren dahinter stehen im Gleisbett
+(Band 0, OFFEN 10). Deshalb die Figurpunkt-DP (Kette k2).
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
