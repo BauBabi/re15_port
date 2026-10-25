@@ -1149,3 +1149,101 @@ Kern-Banken (CORE00.ESP, ohne Umlegen): 0x03/0x04 Zeile 480, 0x05 484, **0x00 48
 4. gr2_fontaene_takt: Tick 1 nur 0x26032000 (`else if`, RE2 faellt durch); 0x00034000 an Part 6 mit Versatz (rnd*2+300, rnd*2,
    rnd*4+200) statt Part 7 mit (rnd*4+300, rnd*2, rnd*2+200); 0x08024000 Versatz z rnd*2+200 statt rnd*4+200.
 5. FUN_80036eb4 (Kanister fliegt, Farbe 0x404040) fehlt: der Kanister steht 9 Bilder still und verschwindet.
+
+### 10.2 M3 - Explosionseffekt: Messung vorher, Ursache, Aenderung, Messung nachher
+**Messung vorher** (Bau e4121848 = Stand der Abnahme 2, Messkopie re15_pc_g41nb3a.exe; Lauf `<SP>/g3/runs/kk_vorher_leon`, Rezept der
+Spur B fuer den Kanister-Tod ohne Szene: `RE15_GB_TEST=5 RE15_PLAYER_POS=6500,-25000,3072 RE15_GATOR_KANISTER=4430,-26160`, Pistole):
+R1 F70 (`RE2 R1 start pos=(4997,-20318)`), Schnitt auf Cut 1. debug.log registriert nur `[re2fx] RE2 CORE00.ESP 8572 B ->
+re2fx_register_core rc=0` und `[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0` (Raum-ESP von room1090). Bilder F72-F80
+(`G_belege/nb3_m3_explosion_vorher_nachher_kk_leon_f70-94.png`, obere Haelfte): nur ein weiss-blauer Schleier am Kopf. RE15_TRILOG im
+Fenster (170,40)-(250,120), Bild F74: 144 Dreiecke auf Platz 52 (re2fx_pc) mit CLUT 0x7851 = Zeile 481, Bildbereich x 172..235,
+y 62..122 = genau der Schleier; dieselben Dreiecke mit TEX.TIM Zeile 481 additiv nachgerechnet (Python) ergeben denselben Schleier
+(6 Spritzring-Sprites ueberlagern sich). Der Schleier IST also der RE2-Spritzring (Kern-Bank 3 Sub 0x0f, 10.1) - alles andere fehlte.
+**Ursachen (Code + Messung):**
+1. Die Raum-ESP von ROOM40A0 war in 2090/2091 nicht registriert: Fontaene-Spawns 0x26032000 und 0x08024000 liefen in spawn_kern gegen
+   `s_bank_off[bank] < 0` (Rueckgabe -1), ihre Kinder (0x09, 0x1A) entstanden nie.
+2. Die Ops 4/6/37/38/41/42/69/78 fehlten im Verteiler (default `s_op_unbekannt++`).
+3. re2fx_pc.c zeichnet von RE2 TEX.TIM nur die CLUT-Zeilen 480..484 (Kommentar N5: Texturhoehe); die Kern-Bank 0 (Blut, Kopf
+   0x7A11 = Zeile 488) wurde ausgelassen.
+4. gr2_fontaene_takt wich von FUN_80103eb4 ab (Tick 1 ohne die vier Spawns der Ticks 1..8, 0x00034000 an Part 6 statt 7, Versaetze).
+**Aenderung (alle Konstanten mit Adresse im Code):**
+- `engine/src/re2_fx.c` Block "RUNDE 41 SPUR G": Ops 4 (0x8001df50), 6 (0x8001e11c), 37 (0x80020660), 38 (0x800206e0), 41 (0x800207e4),
+  42 (0x800208b8), 69 (0x80022ebc), 78 (0x800241c8) + Verteiler-Faelle + Kind-Spawn an *(Platz+0x6C) mit a3 = Platz + 0x2C.
+- `engine/src/gator_re2_r41.c` gr2_fontaene_takt 1:1 nach FUN_80103eb4 (Durchfall Tick 1 @0x80103f74, Part 7 @0x80104020, `sra 22`
+  @0x8010405c), markiert "Runde 41 Spur G (Nachbesserung 3, Nachtrag 28)".
+- NEU `platform/pc/src/gator_fx_r41_pc.c`: (a) beim Betreten von 2090/2091 GATOR40A0.ESP registrieren (re2fx_register_raum = FUN_8001bca0
+  mit Registry-Basis 8, wie der Raumlader FUN_8001bba4), beim Verlassen wieder GLAS1090.ESP (re15_pc_glas1120_init); (b) die Texturen und
+  Bankkoepfe so umlegen wie FUN_8001bd38 (Spalte 15/14, y laufend, CLUT 0x120 ab Zeile 480, Bankkopf +4/+6, Zell-v += y) in Textur-Platz
+  54; (c) RE2 TEX.TIM mit den Kern-Zeilen 485..498 in Platz 56; (d) Zeichner fuer genau die Quads, die re2fx_pc/glas1120 auslassen
+  (Mischmodus wie re2fx_pc); (e) Messhaken RE15_GATOR_FX_LOG.
+- `platform/pc/src/render_pc.c` RE15_TIM_SLOT_MAX 56 -> 57 (Platz 56), `platform/pc/main.c` 1 Aufruf nach re15_pc_glas1120_draw.
+- NEUE ASSETS `shared_assets/RE2/GATOR40A0.ESP` (= ROOM40A0.RDT[0x59CC:0x65E8], sha1 bcce378c) und `GATOR40A0_16/19/08/09/26/1A/18.TIM`
+  (= RDT[0x221FC + Offset], Offset-Tafel vor RDT[21] = 0x2FCFC; bytegleich info/re2leon/PL0/RDT/room40a0/espXX.tim).
+**Messung nachher** (Messkopie re15_pc_g41nb3b.exe, Lauf `kk_n1_leon`, dasselbe Rezept): Startzeilen `[gator-fx] Raumbank 0x16: TIM 32
+Zeilen -> TPage 0x0F y 0, CLUT-Zeilen 480..483` ... `0x18: TIM 48 Zeilen -> TPage 0x0E y 168, CLUT-Zeilen 495..495` (= Tabelle 10.1),
+`F0 ROOM2090: Raum-ESP ROOM40A0 -> re2fx_register_raum rc=0 (Banken 0x26 1, 0x08 1, 0x09 1, 0x1A 1)`. R1-Bilder (Messzeilen):
+`F70 ... Plaetze 24 (b00 12 b03 6 b08 2 b09 0 b26 4) ... gezeichnet G 0 ... re2fx_pc 27 | op_unbekannt 0 op69 1`,
+`F72 ... Plaetze 74 (b00 36 b03 6 b08 6 b09 16 b26 10) Quads 110: kern480 54 kern485 13 raum 43 | gezeichnet G 56 (kern485 13 raum 43)`,
+`F74 ... Plaetze 96 (b00 48 b03 6 b08 8 b09 24 b26 10) Quads 157: kern480 72 kern485 20 raum 65 | gezeichnet G 85`, bis F107 Quads > 0,
+op_unbekannt immer 0 (Pool voll mit 96 Plaetzen wie RE2 0x800D8CF0). Bilder (untere Haelfte desselben Bildbogens): F72 Schleier +
+Blutspritzer, F74-F78 grosser Blutausbruch mit Glut (orange), F80-F94 die Blut-Fontaene steigt vom Kopf auf.
+**RE2-Referenz** (unabhaengig vom Port aus den RE2-Dateien gerendert, `re15_port/tools/r41_kanister2080/re2_explosion_referenz.py`,
+Bild `G_belege/nb3_m3_re2_referenz_aus_re2_daten.png`): je Quelle die Anim-Bilder des Skripts wie FUN_80077ed0 (Zellen u/v/dx/dy,
+Groesse aus dem Anim-Eintrag), Palette aus dem Bankkopf + (Sub >> 3), Mischmodus aus Status 0x1000 / TPage | step[0x14]; Kern-Banken
+aus TEX.TIM, Raum-Banken aus IHRER RDT-TIM (ohne die VRAM-Umlage des Ports). Ergebnis: Spritzring = grau-weisse Wolke (Zeile 481,
+additiv, 12 Bilder), Kern 0/6 und 0/3 = dunkelrotes Blut (Zeile 488), Raum 0x26/0..2 = rote Blutspritzer (14 Bilder), Raum 0x08/2 =
+gluehende rot-orange Brocken (8 Bilder), Raum 0x09/8..12 = Fleischbrocken (Palette 1). Genau diese Formen und Farben zeigen die
+Port-Bilder nachher (Schleier, Blut, Glut, Brocken); vorher nur der Schleier.
+
+### 10.3 M1 - Tod nicht im Bild (G-E1): Ursache, Beleg, Aenderung, Messung
+**Ursache:** (1) wie die Abnahme: gr2_kam_r1_start schnitt nur, wenn der KOPFPUNKT im laufenden Cut nicht im Bild lag, und waehlte dann
+den besten Frontalwinkel - ohne Rand, ohne Masken; (2) neu gemessen: der Kopf wandert im Todes-Clip weit (Clip 9 + Rueckstoss, R1-Ende
+bis 6100 Einheiten vom Start), und der Zeichner verwirft Gegner und Effekt-Plaetze ausserhalb des Regions-Vierecks des Cuts; (3) neu
+gemessen (Lauf kg_elza, state.log Slot 35): die Leiche sprang durch die Beckenwand - F570..F578 haelt die Wandklemme sie bei
+(-7416,-6884), der Anker laeuft weiter, F580 z -1916 (5000 in einem Bild), F592 x -9274 ... R1 ende (-9599,-1916): der Port setzt die
+Lage im R1 absolut vom Anker, die Klemme korrigierte nur das Bild, nicht den Anker.
+**Belege (selbst gelesen):** R1 P0 schneidet nur, wenn der laufende Cut den Kopf nicht zeigt (Cut 6/13 und z < -13300, @0x80102218-34);
+RE2-Lage des Kopfes im R1-Schnitt Cut 5 = (170,111) (k_blick EXPLOSION, probe_kamera_re2.c der Spur B); Spritzring-Punkte = Kanister-
+Matrix x Tafel @0x801000a8 (FUN_8010338c @0x8010344c-d0); groesstes Sprite-Bild CORE00.ESP Bank 3 Anim 17/18 @0x98/@0xA0 (Zellen x -36..36,
+y -32..36 Texel, Zelltafel @0x190), Bildmass je Texel = Skala * camf * Aspekt / (SZ * 16 * 65536) (FUN_80077ed0, re2fx_quads), Aspekt
+0x1000 (@0x5BC); Regions-Test der Effekte `jal 0x8002c820` @0x80077a30, der Gegner main.c npc_region_culled; Maskenurteil STRIKT
+depth < Bucket(vz) @0x8001ce54; RE2 integriert die Lage im R1 selbst (FUN_800152c8 @0x801025a4-ac auf +0x38/+0x40).
+**Aenderung** (`engine/src/gator_re2_r41.c`, markiert "Runde 41 Spur G, G-E1"): gr2_r1_pfad (Start: Kopf, Kiefer, 6 Spritzring-Punkte,
+Wurzel; Vorausschau jedes zweiten Bildes von Clip 9 mit derselben Rechnung wie re15_gr2_r1_tick samt Wandklemme), gr2_r1_beurteilen
+(Bild + Sprite-Rand + Viereck + Masken-Haken), gr2_r1_wahl (Rangfolge: gueltiger Start, sichtbare Proben, sichtbare Startpunkte, Abstand
+der Kopf-Bildlage zu (170,111); Stufe 0 mit Spur B's Massstab-Grenze fuer Schnitte), gr2_kam_r1_start (laufender Cut bleibt, wenn er die
+Wahl ist = RE2-Form, sonst Schnitt + Rueckkehr am Clip-Ende wie bisher). `platform/pc/src/gator_fx_r41_pc.c`: re15_gr2_maske_hook =
+dieselbe Masken-Kette wie main.c (RDT-Sektion, sonst R15M-Container mit re15_masken36_filter / re15_optik_r39_kappen, draw_count).
+`engine/src/enemy_ai_boss_gator.c` (Wandklemme am Takt-Ende, 3 Zeilen): im R1 die Korrektur der Klemme in den Anker uebernehmen (RE2-Form
+der Lage-Integration).
+**Messung nachher** (Messkopien re15_pc_g41nb3h/i/j.exe; Rezept des Riegels kampf mit 40 bzw. 120 Schussbloecken; Leon/Elza;
+gator_boss.log; Bilder `G_belege/nb3_m1_r1_k_leon_k_elza_d15_plattform.png`, `nb3_m1_r1_k_elza_cut7_x2_hell.png`, `nb3_m1_r1_v1_leon_elza.png`):
+| Verlauf | laufender Cut beim R1 | G-E1-Wahl | Kopf im Bild | Start / Todes-Clip | Leiche |
+|---|---|---|---|---|---|
+| Riegel-Startlage Leon (kh_leon) | Cut 2, Kopf (83,160) | Schnitt Cut 1 | (142,104) | 8/8, 19/19 | (3208,-21484) |
+| Riegel-Startlage Elza (kh_elza) | Cut 0, Kopf (320,81) = am Rand | Schnitt Cut 7 | (110,101) | 6/8, 19/19 | (-7416,-6884) statt durch die Wand (-9599,-1916) |
+| d15 Leon (d15h) | Cut 0, Kopf (302,84) = am Rand | Schnitt Cut 5 | (168,92) | 8/8, 19/19 | (-7416,-11910) |
+| Plattform Leon (plath) | Cut 0, Kopf (299,82) | Schnitt Cut 5 | (208,91) | 5/8, 19/19 | (-7416,-6884) |
+| West Elza (westg, Bau i) | Cut 0, Kopf (321,85) draussen | Schnitt Cut 5 | (175,96) | 8/8, 19/19 | |
+| v1 Leon ohne Testhaken (v1b) | Cut 1, Kopf (265,100) | kein Schnitt (Cut 1 ist die Wahl) | (265,100) | 2/8, 19/19 | (5322,-25516) |
+| v1 Elza ohne Testhaken (v1b) | Cut 1, Kopf (223,95) | kein Schnitt | (223,95) | 5/8, 19/19 | (5716,-25516) |
+In allen Verlaeufen bleiben Kopf und Kiefer im Bild, im Viereck und unverdeckt, in jeder Probe des Todes-Clips; die Bildboegen zeigen die
+Blut-Fontaene am Kopf bis zum Clip-Ende. "Start a/8" < 8 heisst: Spritzring-Punkte liegen ausserhalb des Regions-Vierecks (ihr Sprite
+wird wie im Original verworfen, @0x80077a30); keine Zonenkamera hatte dort alle acht.
+
+### 10.4 M2 - Werfer in Cut 7 mit dem Ruecken zur Kamera (G-E2)
+**Messung vorher:** Abnahme 2 3.4 (Suedwurf frontal -0,45, Nordwurf 0,45; RE2 0,99). **Beleg:** RE2 ROOM7020 Ada Pos_set (-28000,-7500,
+-17900) @0x0740, Dir_set 0x0e74 = 3700 @0x0748, Kamera Cut 7 RID @RDT 0x144 (-22158,-3852,-15174): Gier Ada -> Kamera 3811,4, Versatz
+-111,4 (frontal 0,985) - unabhaengig nachgerechnet im Riegel unit_r41_kanister2080_blick. Add_speed = Weltaddition @0x80055abc-e0 (RE2
+wirft in Weltachsen, unabhaengig von Adas Blick).
+**Aenderung:** `engine/src/kanister2080_r41.c` re15_k2080_werfer_gier (Gier zur RID-Kamera Cut 7 vom Wurf-Stand + RE15_K2080_ADA_BLICK_VERSATZ
+-111, Nennwert RE15_K2080_WERFER_GIER_NENN 3677), das Dir_set nach Cut_chg 7 schreibt sie; Wurfbahn, Nennlandung und Rechnung beim
+Loslassen drehen die RE2-Vektoren um die Wurfrichtung (wurf_gier, Nord 3072 / Sued 1024), die Haende stehen vor dem Werfer; Messzeile
+"Werfer Cut 7".
+**Messung nachher** (Bilder `G_belege/nb3_m2_cut7_sued_oben_nord_unten_x3.png`, Laeufe s7_sued_leon / s7_nord_leon (Messhaken
+RE15_K2080_WURF_GIER=3072), s_sued_elza, v1 Leon/Elza (Nordwurf ohne Testhaken)): in allen `Werfer Cut 7: Gier 3678, Gier zur Kamera 3791,
+Versatz -113, frontal 4035/4096 (RE2 ROOM7020 Ada: Versatz -111, frontal 4034)`; Marvin/John halten den Kanister mit dem Gesicht zur
+Kamera ueber die Reling, Nord- und Suedwurf zeigen dasselbe Bild. Wurf: Sued `Start (-6476,-16896,-17135) v=(10,20,-25) a=(0,20,-5) ->
+Landung (-6096,-2076,-21600)`, Nord `v=(-10,20,25) a=(0,20,5) -> Landung (-6856,-2076,-12670)`; Fall in 2090 Cut 12 (unit landung:
+Nord 13, Sued 18 von 39 Fall-Bildern im Bild, vorher 14/22), Aufschlag + Kanister im Becken, Anschwimmen und Aufnahme wie zuvor
+(Laeufe s_sued_*: `ANSCHWIMMEN an ... Abstand 13931`, `KANISTER Stufe 1 ... F103`).
