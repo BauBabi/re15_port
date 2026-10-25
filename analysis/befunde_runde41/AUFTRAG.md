@@ -910,7 +910,7 @@ Raketenwerfer ... hinunterwirft"). Marvin/John stehen beim Satz 42 und beim Wurf
 Gier des Werfers (Add_speed @0x80055abc-e0). Messen fuer Nord- und Suedwurf, Leon und Elza, Bildbogen Cut 7 F530-F630, Riegel
 (Blickwert je Wurfrichtung).
 
-## 2026-10-25 14:40 — Orchestrator-Entscheid F-E2 (Fragen der Nachbesserung F 4 zu Nachtrag 29; der Nutzer kann widersprechen)
+## 2026-10-25 14:21 — Orchestrator-Entscheid F-E2 (Fragen der Nachbesserung F 4 zu Nachtrag 29; der Nutzer kann widersprechen)
 
 Fragen der Spur F: "Der Alligator ist beim Kampfbeginn jetzt rund 17500 Einheiten entfernt: stehend beisst er nach etwa 15 s,
 beim sofortigen Wegrennen nach etwa 17 s (vorher nach 2 s bzw. 1 s). Passt dir die Entfernung so, oder ist der Anlauf jetzt zu
