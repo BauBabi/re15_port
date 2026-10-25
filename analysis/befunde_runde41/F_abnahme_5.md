@@ -13,6 +13,17 @@ laufenden Kamera (Cut 0); der RE2-Kampfbeginn (F-E2 ...) bleibt. Mass: Abstand d
 die ersten ~150 Bilder (Riegel), Bildbogen Leon + Elza."; (3) Schluesselgroesse "Ja, gut genug" - "F-E2 Punkt 2 gilt fuer die Groesse
 damit als erfuellt (Helligkeit bleibt Pflicht)".
 
+Ebenfalls waehrend dieser Abnahme kamen `3e8296a2` (17:57, **Nachtrag 32** + Orchestrator-Entscheid **FG-E6**) und `ac24c1c6` (18:02,
+**Nachtrag 32b**, berichtigt FG-E6) in den Zweig (auch auf master: 65088fef/f5eb2f96). Nutzer-Wortlaut: "Wir müssen beim Aligator auch so
+langsam erst einmal zu einen Ende kommen ... gut ist erst einmal gut genug" / "Nein, Ziel ist langsam mit allen fertig zu werden, den build
+zu bauen, und mit neuen Tokens am Samstag die Sachen nachträglich zu verbessern....". Massgeblich fuer DIESE Abnahme:
+- FG-E6: "Abnahmen von F und G urteilen ab jetzt nach 'gut genug': NICHT BESTANDEN nur bei blockierenden Fehlern - Absturz,
+  Haenger/Softlock, Regression ausserhalb 2080/2090, ein Nutzer-Punkt fehlt ganz oder ist im Spiel kaputt. Feinheiten (Kamera-/
+  Lagefeinheiten, Bildanteile, Toleranzen, Messluecken) kommen als 'offen' in den Bericht und in die Release Notes und blockieren nicht."
+- 32b: "F: nur noch die laufende Abnahme 5 (keine Nachbesserung 6); Nachtrag 31 Punkt 2 (Kampfbeginn nicht vor der Kamera) -> Samstag."
+Ich messe und berichte trotzdem alles wie bisher (Abschnitte 1-7) und urteile in Abschnitt 8/9 nach FG-E6/32b; was nach dem strengen
+Massstab ein Mangel waere, steht dort als OFFEN (nicht blockierend) mit Zahlen.
+
 ## 0. Bau und Lektuere
 
 - Gelesen: AUFTRAG.md (Zweig, bis Nachtrag 31; master hat fuer F nichts Neueres als F-E2 14:21), VERTRAG.md, Dossier F_gatorszene.md
@@ -125,7 +136,8 @@ Bildern (`tools/anteil.py`: Vordergrund = max-Kanal-Differenz > 10 gegen den Med
 - Ursache: die Kette (Leiche (0,-26000), Anlauf-Gier 1952 von Osten, Kau-Lage (4118,-24249)) endet mit dem Gator 300 vor der Kamera
   Cut 0 (Kamera bei x 2754, Gator bei x 3197, beide an der Suedwand); die Kamera-Uebergabe geht am Kampfbeginn auf den Eintritts-Cut 0
   der Leiter. Kein Riegel misst Abstand Kamera <-> Gator-Teile oder Bildanteil (Nachtrag 31 verlangt ihn).
-- **Nachtrag 31 Punkt 2: nicht erfuellt** -> Mangel M1.
+- **Nachtrag 31 Punkt 2: nicht umgesetzt** (kam nach dem Abschluss-Commit) -> nach Nachtrag 32b auf Samstag verschoben: OFFEN O1
+  (Kamera-/Lagefeinheit + Bildanteil = nach FG-E6 nicht blockierend).
 
 ### 2.4 Schluessel in der Ankunftseinstellung (Wortlaut "mit einen blinkenden Schluessel"; F-E2 Punkt 2 / Nachtrag 31 Punkt 3)
 - L1a (Leon): `tools/lauf.sh L1a 240 RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore RE15_TITLE_SHOT=title.bmp
@@ -170,9 +182,11 @@ Bildern (`tools/anteil.py`: Vordergrund = max-Kanal-Differenz > 10 gegen den Med
   letztes Bild (-13898,-19753) .. (-10801,-19158) - alle laufen, alle x > -16650 (oberer Laufgang, Band 8).
 - Musik: `[bgm] stage=1 room=09 entry=FF3C -> MAIN3C` + `[bgm] loaded: 1 VAGs, SEQ 100B, PPQN=480 tempo=372670us` ab `B 1 F299`
   (= shared_assets/RE2/SOUND/MAIN1A.BGM), vorher MAIN2E.
-- **Urteil 1a (Ankunftsszene): teilweise** - Folge, Schluessel-Helligkeit (F-E2 2), Fressen von vorn (F-E2 3) und Kampfbeginn im RE2-Band
+- **Urteil 1a (Ankunftsszene): erfuellt nach FG-E6 ("gut genug")** - Folge, Schluessel-Helligkeit (F-E2 2), Fressen von vorn (F-E2 3) und Kampfbeginn im RE2-Band
   (F-E2 1, Leon + Elza, stehend + weglaufend) an der exe erfuellt; NICHT erfuellt ist Nachtrag 31 Punkt 2 (Gator am Kampfbeginn direkt vor
-  der Linse von Cut 0, 111 Bilder unter 2500 von der Kamera, rechte Bildhaelfte 121 Bilder > 25 % bedeckt) -> M1; Riegel dazu fehlt -> M2.
+  der Linse von Cut 0, 111 Bilder unter 2500 von der Kamera, rechte Bildhaelfte 121 Bilder > 25 % bedeckt) -> OFFEN O1, Riegel dazu fehlt
+  -> OFFEN O2; beides nach Nachtrag 32b fuer Samstag, nach FG-E6 nicht blockierend (der Kampf beginnt spielbar im RE2-Band, Ausweichen
+  gelingt).
 
 ## 3. Punkt 1b — Schluessel nach dem Tod bei der Leiche, blinkend (Regression)
 
@@ -252,28 +266,38 @@ shared_assets/PSX/STAGE2/ROOM2090.RDT (2091 bytegleich):
   treffer=F435 k=131`, LW/EW `k=190`; Abnahme-4-Lauf `F41a4/runs/L1` FEHLER `F422 307624213 nicht im RE2-Band 130647809..193864141`;
   Abnahme-3-Lauf `F41a3/runs/L1` FEHLER `F405 37971400 nicht im RE2-Band`. `test_r41_gatorszene abstand` direkt: 11448 im Band, Zone 0/0, Biss
   131 im Band 121..158, Gegenproben Fassung 1 (48 < 121) und N4-Lage (270 > 158); `... leiche`: Primitivfarbe 85 -> 126 >= 84/125.
-  Es fehlt ein Riegel fuer Nachtrag 31 Punkt 2 (Abstand Kamera <-> Gator-Teile / Bildanteil) -> M2.
+  Es fehlt ein Riegel fuer Nachtrag 31 Punkt 2 (Abstand Kamera <-> Gator-Teile / Bildanteil) -> OFFEN O2 (32b: Samstag).
 - Nebenwirkungen: Leon = Elza in allen Laeufen; Nachbarraeume 2080 (Montage, 8 Zombies oben) und 20A0 (Tor G2b, Schachtspinnen bleiben) gemessen.
   Querbezug Spur G: Kampfbeginn jetzt F297 mit dem Gator im Suedbecken (3197,-24407) - G's Kampf-/Kanister-Riegel liegen nur im G-Baum
   (Integration).
 
-## 8. Maengel (nummeriert, nachpruefbar)
+## 8. Blockierende Fehler nach FG-E6 (geprueft) und OFFEN
 
-- **M1 Kampfbeginn direkt vor der Linse von Cut 0 (Nachtrag 31 Punkt 2, Leon und Elza).** Gemessen (Abschnitt 2.3, Laeufe F41a5/runs/L1 und
-  E1, Leiterweg, Stand f83f619b): Kamera-Uebergabe in F297 auf Cut 0 (RID @0x0060: Kamera (2754,-3132,-26190)); die Gator-Wurzel beginnt
-  1837 von der Kamera (298 Tiefe laengs der Blickachse, 1813 seitlich) und bleibt 111 Bilder (F297..F407) unter 2500 (kleinster Abstand 1756);
-  Vordergrund-Anteil der rechten Bildhaelfte (max-Kanal-Differenz > 10 gegen den Median-Hintergrund von Cut 0) > 25 % in 121 Bildern
-  (F298..F429), > 50 % in 23 Bildern (F310..F392), Spitze 51,9 % in F347; Bildboegen `F41a5/L1_kampfbeginn.png` / `E1_kampfbeginn.png`
-  (Ruecken und Schwanz gross im Vordergrund, Leon klein an der Leiter; erst ab ~F417 schwimmt der Gator im Becken vor Leon). Ursache: die
-  Kette (Leiche (0,-26000), Anlauf 1952 von Osten) endet mit dem Gator an der Suedwand neben der Kamera Cut 0, und der Kampf beginnt auf
-  dem Eintritts-Cut 0. Soll (Nachtrag 31): Startlage so, dass der Gator beim Kampfbeginn im Becken VOR Leon zu sehen ist und nicht direkt
-  vor der Linse der laufenden Kamera; der RE2-Kampfbeginn (Abstand 11430..13924, erster Kontakt/Angriff 121..158, Zonen 0/0) bleibt;
-  gemessen ueber die ersten ~150 Bilder (Abstand der Gator-Teile zur Kamera / Bildanteil je Bild), Bildbogen Leon + Elza. Pruefen:
-  `kampf_a5.py` (Spalte "kam") und `anteil.py <lauf> 298 650 297 450 10` auf einem Leiterlauf.
-- **M2 Riegel fuer Nachtrag 31 Punkt 2 fehlt.** Weder test_r41_gatorszene.c noch test_r41_gatorszene.cmake pruefen Abstand Kamera <->
-  Gator-Teile oder Bildanteil am Kampfbeginn (grep "Linse|anteil|Kamera.*Abstand": nur eine fremde Zeile der Schluessel-Einstellung nach
-  dem Tod). Nachtrag 31 verlangt ihn ("Mass: ... je Bild ueber die ersten ~150 Bilder (Riegel)"); die heutige Lage (1837 / 121 Bilder)
-  muss ihn rot machen (Gegenprobe), Leon und Elza.
+Blockierende Fehler (FG-E6: Absturz, Haenger/Softlock, Regression ausserhalb 2080/2090, Nutzer-Punkt fehlt ganz oder ist im Spiel kaputt):
+**keine**.
+- Absturz: alle Messlaeufe `rc=0` bis RE15_EXIT_AT (L1, E1, LW, EW, L1a, E1a, L1a0, E1a0, KW, KWo, KWE, KWEo, G1b, G2b, LT3); LT/LT2 endeten
+  per `timeout` (rc=124), weil MEINE Lage falsch war (Vorwaertspunkt 18 neben dem Leiter-Rechteck, Abschnitt 2.6) - das Spiel lief weiter
+  (state.log bis F8649 bzw. F4206 in 2080), kein Absturz/Haenger.
+- Haenger/Softlock: die Szene endet in jedem Lauf mit `Folge C` und gibt die Steuerung zurueck (LW/EW: Leon rennt ab F319 per Eingabe 14100
+  nach Norden); Tor, Schluessel-Einstellung nach dem Tod (Ende F288, Zonenkamera an) und Montage 2080 laufen durch.
+- Regression ausserhalb 2080/2090: 221/221 gezielte Tests gruen (Abschnitt 1, darin Inventar/Item/Tueren/Wasser/Knall/Musik-Riegel anderer
+  Raeume und Spur B's Riegel).
+- Nutzer-Punkte: Punkt 1 (Szene, blinkender Schluessel, Fressen samt Schluessel, Schluessel nach dem Tod blinkend bei der Leiche) und Punkt 2
+  (Spinnen weg) sind im Spiel vorhanden und funktionieren (Leon und Elza).
+
+OFFEN (nicht blockierend; fuer den Bericht und die Release Notes "Ab Samstag"):
+- **O1 Kampfbeginn direkt vor der Linse von Cut 0 (Nachtrag 31 Punkt 2, Leon und Elza; 32b: Samstag).** Gemessen (Abschnitt 2.3, Laeufe
+  F41a5/runs/L1 und E1, Leiterweg, Stand f83f619b): Kamera-Uebergabe in F297 auf Cut 0 (RID @0x0060: Kamera (2754,-3132,-26190)); die
+  Gator-Wurzel beginnt 1837 von der Kamera (298 Tiefe laengs der Blickachse, 1813 seitlich) und bleibt 111 Bilder (F297..F407) unter 2500
+  (kleinster Abstand 1756); Vordergrund-Anteil der rechten Bildhaelfte (max-Kanal-Differenz > 10 gegen den Median-Hintergrund von Cut 0)
+  > 25 % in 121 Bildern (F298..F429), > 50 % in 23 Bildern (F310..F392), Spitze 51,9 % in F347; Bildboegen `F41a5/L1_kampfbeginn.png` /
+  `E1_kampfbeginn.png` (Ruecken und Schwanz gross im Vordergrund, Leon klein an der Leiter; erst ab ~F417 schwimmt der Gator im Becken vor
+  Leon). Ursache: die Kette (Leiche (0,-26000), Anlauf 1952 von Osten) endet mit dem Gator an der Suedwand neben der Kamera Cut 0, und der
+  Kampf beginnt auf dem Eintritts-Cut 0. Soll (Nachtrag 31): Startlage so, dass der Gator beim Kampfbeginn im Becken VOR Leon zu sehen ist
+  und nicht direkt vor der Linse der laufenden Kamera; der RE2-Kampfbeginn (Abstand 11430..13924, erster Kontakt/Angriff 121..158, Zonen
+  0/0) bleibt. Pruefen: `kampf_a5.py` (Spalte "kam") und `anteil.py <lauf> 298 650 298 450 10` auf einem Leiterlauf.
+- **O2 Riegel fuer Nachtrag 31 Punkt 2 fehlt (32b: Samstag).** Weder test_r41_gatorszene.c noch test_r41_gatorszene.cmake pruefen Abstand
+  Kamera <-> Gator-Teile oder Bildanteil am Kampfbeginn; die heutige Lage (1837 / 121 Bilder) muss ihn rot machen (Gegenprobe), Leon und Elza.
 
 Hinweise (keine Maengel):
 - H1 Fressen: im Kau-Kreis (Clip 11, F201-F266) liegt die Leiche sichtbar neben dem offenen Maul statt zwischen den Kiefern (Kind der
@@ -284,7 +308,7 @@ Hinweise (keine Maengel):
 - H3 `key_auf_leiche` prueft Bit (9,112) nicht (nur `key_bei_leiche`) - im Spiel ohne Folgen (112 kann vor der Szene nicht gesetzt sein),
   als Mess-Zwilling taugt `RE15_SET_FLAG=9:112` deshalb fuer die Ankunft nicht.
 - H4 Integration F+G: Kampfbeginn jetzt F297, Gator-Start (3197,-24407) im Suedbecken; G's Kampf-/Kanister-Riegel im Integrationsbaum neu
-  messen (aendert sich mit M1 erneut).
+  messen (aendert sich mit O1 erneut).
 - H5 Unveraendert offen (Bau-Agent): MAIN2E nach dem Tod, PSX-Bau ungeprueft, Schachtspinnen 20A0, Nachrichten-Ids 44-46 frei, nach dem Laden
   eines Spielstands keine Einstellung auf den Schluessel (Ersatzlage (-212,-24931)), Tod in diesem Baum nur ueber Spur B's Testhaken.
 
@@ -292,14 +316,16 @@ Hinweise (keine Maengel):
 
 | Punkt | Urteil | Beleg |
 |---|---|---|
-| 1a Ankunftsszene (Leiche + blinkender Schluessel, Knall, 2080 oben, erneut Leiche, Alligator aus dem Wasser frisst Leiche samt Schluessel, Schrei/Schuetteln zu Leon, RE2-Kampfmusik; Nachtraege 6/17/20/21/29, F-E2, Nachtrag 31) | teilweise | 2.1-2.7: Folge L1/E1/LT3 vollstaendig (C F297, MAIN1A), F-E2 1 erfuellt (11454 / Biss +131, Zone 0/0, kein Dash; weglaufend +190), F-E2 2 Helligkeit erfuellt (Ring 76 -> 112, Groesse 7 x 9 vom Nutzer angenommen), F-E2 3 erfuellt (Cut 1 frontal 4116, Leiche im Maul zu sehen); NICHT erfuellt Nachtrag 31 Punkt 2: Gator am Kampfbeginn direkt vor der Linse von Cut 0 (1837, 111 Bilder < 2500, 121 Bilder > 25 % der rechten Bildhaelfte) (M1), ohne Riegel (M2) |
+| 1a Ankunftsszene (Leiche + blinkender Schluessel, Knall, 2080 oben, erneut Leiche, Alligator aus dem Wasser frisst Leiche samt Schluessel, Schrei/Schuetteln zu Leon, RE2-Kampfmusik; Nachtraege 6/17/20/21/29, F-E2, Nachtrag 31) | erfuellt (FG-E6 "gut genug") | 2.1-2.7: Folge L1/E1/LT3 vollstaendig (C F297, MAIN1A), F-E2 1 erfuellt (11454 / Biss +131, Zone 0/0, kein Dash; weglaufend +190), F-E2 2 Helligkeit erfuellt (Ring 76 -> 112, Groesse 7 x 9 vom Nutzer angenommen), F-E2 3 erfuellt (Cut 1 frontal 4116, Leiche im Maul zu sehen); NICHT erfuellt Nachtrag 31 Punkt 2: Gator am Kampfbeginn direkt vor der Linse von Cut 0 (1837, 111 Bilder < 2500, 121 Bilder > 25 % der rechten Bildhaelfte) und ohne Riegel - nach 32b auf Samstag verschoben, nach FG-E6 nicht blockierend (OFFEN O1/O2) |
 | 1b Schluessel nach dem Tod bei der Leiche, blinkend | erfuellt | 3: KW/KWE Folge R F196, Einstellung Cut 2 F196-F287, 29 px, 13 x 15, 70 -> 102 (= Abnahme 4), tod-Riegel gruen |
 | 2 Spinnen aus 2090 entfernen | erfuellt | 4: 0 t=25-Zeilen in allen 2090/2091-Abschnitten, zwei "verworfen"-Zeilen je Besuch, Leon + Elza |
 | Nachtrag 21 Leiter statt Tor, Tor mit dem Schluessel | erfuellt | 2.6/5: Leiter per Aktionstaste (LT3), G1b "It's locked.", G2b "You've opened the lock." + Tuer nach 20A0 |
 | RE-Gate | erfuellt | 6: 8 Stichproben (EM23 Zonenbyte INIT/Zone 0->1/Zone 1->2, Intro Clip 6, FRESSEN Clip 4, RE2 SquareRoot0, ROOM40A0 sub03, ROOM2090-RDT) stimmen, Konstanten gekennzeichnet, keine Rate-Woerter, Fix erklaert die Befunde der Abnahme 4 |
-| Vertrag/Riegel | teilweise | 1/7: 221/221 gruen, nur erlaubte Pfade und zugeteilte Ressourcen, Riegel mit oberer und unterer Grenze messen (Gegenprobe); Riegel fuer Nachtrag 31 Punkt 2 fehlt (M2) |
+| Vertrag/Riegel | erfuellt (FG-E6) | 1/7: 221/221 gruen, nur erlaubte Pfade und zugeteilte Ressourcen, Riegel mit oberer und unterer Grenze messen (Gegenprobe); Riegel fuer Nachtrag 31 Punkt 2 fehlt (OFFEN O2, 32b: Samstag) |
 
-**Ergebnis: NICHT bestanden.** Die Maengel M1-M4 der Abnahme 4 (= F-E2) sind an der exe behoben (Leon und Elza; Riegel mit beiden Grenzen,
-selbst gegengeprobt), aber der vier Minuten nach dem Abschluss-Commit eingegangene, massgebliche Nachtrag 31 Punkt 2 ("Ändern: nicht vor der
-Kamera") ist nicht umgesetzt: M1 (Gator am Kampfbeginn direkt vor der Linse von Cut 0) und M2 (Riegel dafuer). Nachtrag 31 Punkt 1
-(Durchbruch-Kuerzung) und Punkt 3 (Schluesselgroesse) sind vom Nutzer angenommen.
+**Ergebnis: BESTANDEN nach FG-E6 / Nachtrag 32b ("gut genug").** Keine blockierenden Fehler (Abschnitt 8). Die Maengel M1-M4 der
+Abnahme 4 (= F-E2) sind an der exe behoben (Leon und Elza; Kampfbeginn 11454 / Biss +131 im RE2-Band ohne Dash, Schluessel 76 -> 112,
+Fressen von vorn Cut 1 frontal 4116, Riegel mit beiden Grenzen selbst gegengeprobt), Punkt 1b, Punkt 2 und Nachtrag 21 ohne Rueckschritt.
+OFFEN bleibt Nachtrag 31 Punkt 2 (O1: Gator am Kampfbeginn direkt vor der Linse von Cut 0; O2: Riegel dafuer) - nach dem strengen Massstab
+von Nachtrag 31 ein Mangel, nach Nachtrag 32b ausdruecklich auf Samstag verschoben und nach FG-E6 nicht blockierend; dazu H1-H5. Nachtrag 31
+Punkt 1 (Durchbruch-Kuerzung) und Punkt 3 (Schluesselgroesse) sind vom Nutzer angenommen.
