@@ -1,0 +1,122 @@
+{
+ "welle": [
+  "M"
+ ],
+ "slots": 1,
+ "basis": "master 4c667c97 (Baum r41_masken36)",
+ "max_nach": 2,
+ "modus": {
+  "M": "nachbesserung"
+ },
+ "runde0": {
+  "M": 2
+ },
+ "bau": {
+  "M": {
+   "status": "fertig",
+   "zusammenfassung": "NB2 Mangel 1 (Punkt 1 \"Masken schliessen\"), Weg (a) der Abnahme als Regel umgesetzt: der Ausschluss-Generator (re15_port/tests/unit/test_r37_masken36.c, r41_koerper_davor) prueft Rechtecke mit Zellen-Modell zusaetzlich in 3D. Eine Verdeckung zaehlt als richtig, wenn die Strecke Kamera -> Figurpunkt den Koerper der Zelle vor dem Punkt schneidet (Form ueber den Port-Resolver FUN_8003b0a4, Hoehe am Bild gemessen). Das Verdeckungs-Urteil ist das des Originals: depth < (1023*vz)>>16 (@0x8002565c sra v1,v1,4; ZSF3 341 @0x80066c70; Masken-OT @0x80039650).\nGemessene Nahfeld-Sperre: steht die Kamera ueber dem Grundriss der Zelle, gibt es kein Urteil. Grund: in 5050 C2 fand die unabhaengige Python-Gegenprobe 381 verdeckte Punkte ohne jeden Koerper davor.\nWeg (b) erweitert: 12 Gegenstaende haben ihre Zelle von Hand bekommen (re15_port/tools/maske/zuordnung_r41.json, je Eintrag Zellbytes, RDT-Offset und Bild), z.B. die X-Kiste 5020 C6 = Zelle 12 @RDT+0x00870.\nErgebnis (Kette k3, zweites erzeuge bitgleich): 164 Rechtecke wieder drin, 0 neu ausgeschlossen. Geaendert sind nur Tiefenfelder in ROOM3040/30A0/5020/5090/6000 (+Elza). Gezeichnet 889591 -> 956982 Punkte, nur in ausgeschlossenen Rechtecken 341352 -> 273961, Kerben 10178 von 63546 (16,0 %).\nLok 6000 C5/C7/C8/C9 und X-Kiste sind jetzt gezeichnet, auch im Uebersichtsbild.\nAn der exe: DAVOR 0 Leon-Punkte neu sichtbar uebermalt; Randpunkte nachgerechnet, sie liegen hinter dem Koerper. HINTER ist Leon verdeckt. An den R37-FREI-Stellen in 30A0 C0: 0.\nDie vier Cuts ohne Maske sind gemessen Boden-/Wandregionen; das Gelaender ist dort nicht in der Region.\nRestliste mit Bildern liegt in analysis/befunde_runde41/M_bilder/NB2_rest.",
+   "commits": [
+    "ff63ad75 fix(r41-masken36): Nachbesserung 2 - STAGE3-6-Masken weiter geschlossen (3D-Urteil fuer Rechtecke mit Zellen-Modell, Zuordnung von Hand), Restliste fuer den Nutzer",
+    "6d56f203 wip: Dossier Tests NB2 - Unit-Lauf Endstand k3 31/31",
+    "23643fe7 wip: Dossier Paket-Assets NB2",
+    "01807265 wip: Dossier NB2 auf Kette k3 umgestellt",
+    "8f2654e6 wip: loecher-Messwert nach Kette k3 (10178 von 63546 = 16,0 %)",
+    "55bb8f28 wip: NB2 Boegen/Uebersicht/Restliste nach Kette k3",
+    "95d82983 wip: Riegel nach Kette k3 - zellen3d Gegenprobe >= 79, Szenen 5050 C1/3040 C3 raus",
+    "b45f41dc wip: NB2 Kette k3 - 164 Rechtecke wieder drin, 0 neu aus, stabil; 889591 -> 956982 Punkte",
+    "430bfb89 wip: NB2 3D-Urteil - kein Urteil bei Kamera ueber dem Grundriss der Modellzelle (5050 C2)",
+    "f8e2fee0 wip: NB2 Zuordnung von Hand - Nahfeld-Sperre, 4 Eintraege raus, 12 bleiben",
+    "84c46976 wip: Dossier Stand oben um NB2 ergaenzt",
+    "d7a4736a wip: Dossier Tests NB2",
+    "7498662b wip: zuordnung_r41.json ohne Scratchpad-Bildpfade",
+    "992840fd wip: Dossier OFFEN 5",
+    "3567c452 wip: Dossier NB2 - Zusammenfassung Mangel 1",
+    "a2ef2cd5 wip: Riegel unit_r41_masken36_loecher - Messwert NB2",
+    "605fc46e wip: Riegel unit_r37_masken36_verdeckung - FREI-Szenen 30A0/30A1 C0 auf Modell-Maske frei",
+    "b30694aa wip: Dossier NB2 - Stand, OFFEN, Fuer den Nutzer",
+    "5f1614e8 wip: Dossier NB2 Ergebnis Kette k2, Restliste M_bilder/NB2_rest",
+    "b960b379 wip: NB2 Riegel nachgezogen (zellen3d, Szenen Zuordnung von Hand)",
+    "ec607347 wip: NB2 Boegen + Uebersichtsbilder nach Kette k2",
+    "558e5c76 wip: NB2 Kette k2 (Zwischenstand, durch k3 ersetzt)",
+    "ea0d4ba1 wip: Dossier NB2 - Zuordnung von Hand",
+    "f2295478 wip: NB2 Zuordnung von Hand - 16 Objekte (Zwischenstand)",
+    "c76090e8 wip: NB2 3D-Urteil - Figurpunkt im Koerper = verdeckt; Hoehe ueber alle Objekte derselben Zelle",
+    "6f4aded1 wip: Dossier NB2 - vier Cuts ohne Maske = Boden/Wand-Regionen",
+    "32031186 wip: NB2 Zuordnung von Hand (X-Kiste 5020 C6 = Zelle 12 @RDT+0x00870), koerper_geometrie ausgelagert",
+    "cfe7b3e2 wip: NB2 Boegen + Uebersichtsbilder der 6 geaenderten Cuts",
+    "507d93f4 wip: NB2 Riegel unit_r41_masken36_zellen3d und integration_r41_masken36_zellen3d",
+    "1c195394 wip: NB2 Mangel 1 (a) gemessen",
+    "6fbfbd84 wip: Dossier NB2 Mangel 1 (a) Umsetzung",
+    "4d348c37 wip: NB2 Mangel 1 (a) - erzeuge mit 3D-Regel: 80 Rechtecke wieder drin",
+    "fd844bf2 wip: NB2 Mangel 1 (a) - 3D-Urteil r41_koerper_davor, Werkzeug zellen3d_r41.py, Modell-Tabelle",
+    "280317eb wip: Dossier NB2 - Ausgangslage und Plan",
+    "6c9ca88f wip: Dossier - Abschnitt Nachbesserung 2 angelegt"
+   ],
+   "suite": "unit: ctest --test-dir re15_port/build -R \"unit_r41_masken36|unit_r37_masken36|unit_pri_|unit_r36_pri|unit_r37_pri1100|unit_sld_atlas|unit_r38_itemorte|unit_r39_optik|unit_r34n_e_dokumente|unit_bss|prop_bss|unit_stage6_hintergrund\" -j 3 --timeout 1500 -> \"100% tests passed, 0 tests failed out of 31\" (Endstand k3; danach nur die Messwert-Zeile in test_r41_masken36.c geaendert, neu gebaut, -R \"unit_r41_masken36_loecher\" -> \"100% tests passed, 0 tests failed out of 1\"). integration: ctest --test-dir re15_port/build -R \"integration_r41_masken36|integration_r37_masken36|integration_pri_masken|integration_r36_pri|integration_r37_pri1100|integration_r38_itemorte|integration_r39_optik|integration_r34n_e_dokumente|integration_r35_zgirl_5090|integration_r38_affen3|integration_r35_granate\" -j 2 --timeout 1800 -> \"100% tests passed, 0 tests failed out of 21\"",
+   "offene_punkte": [
+    "Punkt 1 ist ohne Freistellungen des Nutzers nicht ganz zu: 1022 Rechtecke (Leon) bleiben aus, 273961 Punkte nur in ausgeschlossenen Rechtecken. Das meiste sind Waende, Boeden und Decken (zu Recht aus). Die echten Gegenstaende ohne sichere Tiefe stehen in M_masken36.md unter 'Fuer den Nutzer' (Bilder M_bilder/NB2_rest/).",
+    "OFFEN 9: 105 Rechtecke haben ein Modell, bleiben aber aus, weil das Modell nicht jeden Punkt erklaert. Beispiel 6000 C5 unterer Gittertraeger (IoU 0,86). Der Weg waere Atlaspunkte ausserhalb des Koerpers je Rechteck durchsichtig zu machen bzw. das Rechteck zu teilen; das aendert Atlas/Rechtecke und ist nicht in NB2.",
+    "OFFEN 10: In ROOM6000 saet das Netz der Spur P die Gleisebene (Band 0) aus Aot_set-Saetzen mit Band 0. Ob der Spieler dort je steht, ist nicht gemessen. Die HINTER-Szenen in 6000 pruefen deshalb nur die Mechanik. Im Spiel wirken die Lok-Masken vor allem auf das 3D-Tor; die Verdeckung ist gerechnet geometrisch richtig (Tor 4500 hinter der Lokfront).",
+    "OFFEN 11 (Altbestand NB1, unveraendert): In 4040 C6/C7 liegt Leons Kopf ueber der gemessenen Blockhoehe 3025; die Maske zeigt dort den Block.",
+    "Orchestrator: die pri/STAGE3-6-Uebersichtsbilder ersetzen. NB2 hat 11 geaendert (M_bilder/uebersicht: STAGE3/3040/00, 30A0/00+01, STAGE5/5020/00+06, 5090/11+13, STAGE6/6000/05+07+08+09; die Elza-Ordner bekommen dasselbe Bild). pri/ ist fuer die Spur tabu.",
+    "OFFEN 7 (Altbestand): der Figurkasten +-350 des R37-Ausschlusses ist schmaler als Leons echte Silhouette. Deshalb zeigen die DAVOR-Szenen Randpunkte; jeder davon liegt nachgerechnet hinter dem Koerper.",
+    "PSX: platform/psx liest MASKS/*.MSK nicht (R37 OFFEN 5, unveraendert)."
+   ],
+   "fragen_an_nutzer": [
+    "Fuer diese echten Gegenstaende in STAGE3-6 geben die Daten keine sichere Tiefe her (keine passende Kollisionszelle, der Gegenstand ragt ueber seine Zelle hinaus oder die Kamera haengt direkt darueber): ROOM30A0 Kamera 3 hohe Spinde rechts; ROOM6000 Kamera 5 unterer Gittertraeger vorn links und Kamera 7 Lok-Unterteil links; ROOM5050 Kamera 1 Schreibtisch mit Monitor/Stuhl links und Pult vorn rechts, Kamera 2 Pult vorn unten; ROOM5090 Kamera 13 oberer Teil des Kistenstapels Mitte; ROOM3040 Kamera 0 Reste Schaltkasten/Kiste und Kamera 9 Kiste vorn; ROOM30A0 Kamera 0 Lampe/Stuhl/Moebel vorn links; ROOM50B0 Kamera 1/3 Roboterarm; ROOM5020 Kamera 7 Kiste rechts oben und Kamera 12 Unterseite der Kiste; Gelaender, die der Generator nie erfasst hat: ROOM3050 Kamera 6, ROOM30E0 Kamera 6/7/8/9, ROOM3040 Kamera 3. Moechten Sie dort eine Verdeckung? Dann bitte eine Freistellung wie in STAGE1/2 anlegen (PNG unter pri/STAGEn/<raum>/<cc>_xx.png). Bilder: analysis/befunde_runde41/M_bilder/NB2_rest/."
+   ],
+   "neue_assets": [
+    "re15_port/shared_assets/PSX/MASKS/ROOM3040.MSK, ROOM3041.MSK, ROOM30A0.MSK, ROOM30A1.MSK, ROOM5020.MSK, ROOM5021.MSK, ROOM5090.MSK, ROOM5091.MSK, ROOM6000.MSK, ROOM6001.MSK (nur Tiefenfelder, NB2)",
+    "re15_port/engine/src/gen/masken36_ausschluss_r37.inc (neu erzeugt, NB2)",
+    "re15_port/tests/unit/gen_r41_masken36_zellen.inc (neu, Testdaten)",
+    "re15_port/tools/maske/zellen3d_r41.py (neu, Werkzeug)",
+    "re15_port/tools/maske/zuordnung_r41.json (neu, Werkzeugdaten)"
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/tests/unit/test_r37_masken36.c (R37-Riegel: 3D-Urteil r41_koerper_davor, Modi zellen3d/warum, FREI-Pruefung mit Beleg angepasst)",
+    "re15_port/engine/src/gen/masken36_ausschluss_r37.inc (erzeugte Tabelle)",
+    "re15_port/tools/maske/tiefe_zelle_r41.py (NB1-Werkzeug der Spur: NAEHER, Zuordnung von Hand, Nahfeld-Sperre)"
+   ],
+   "sprachdateien": []
+  }
+ },
+ "abn": {
+  "M": {
+   "bestanden": false,
+   "urteile": [
+    {
+     "punkt": "1 STAGE3-6-Masken 'ueberall Loecher' -> 'Masken schliessen'",
+     "urteil": "teilweise",
+     "beleg": "NB2 bitgenau nachgerechnet (stat_nb2.py, vorher = c013e233): 164 Rechtecke wieder drin (Leon und Elza je 164), 0 neu ausgeschlossen, nur Tiefenfelder geaendert (0 Bytes ausserhalb), 889591 -> 956982 gezeichnete Punkte, Kerben 10178 von 63546 = 16,0 %. Eigene 3D-Suche mit breiterer Figur (Zylinder r 450 statt Kasten +-350): keine NB2-Verdeckung ohne irgendeine solide Zelle davor. An der exe (A/B + RE15_TRILOG): an 11 eigenen DAVOR-Stellen 0 Leon-Punkte von einem NB2-Rechteck uebermalt; HINTER neu verdeckt, z.B. 30A0 C0 15 -> 733, 5020 C0 0 -> 697, 5090 C13 0 -> 659, 6000 C5 1 -> 111; Elza zeigt dasselbe. X-Kiste 5020 C6 und Lok 6000 sind gezeichnet. OFFEN: Mangel 1 (30A0 obere Trennwandfelder, im Gehlauf mit Spiel-Cut 0 belegt) und Mangel 2 (Restliste)."
+    },
+    {
+     "punkt": "2 Neue Nutzer-PRIs STAGE2 sauber eingebaut (Sichtpruefung)",
+     "urteil": "erfuellt",
+     "beleg": "NB2 hat keine STAGE1/2-Maske beruehrt (git diff c013e233..HEAD -- MASKS: nur ROOM3040/30A0/5020/5090/6000 und deren Elza-Gegenstuecke), pri/ ist unveraendert. Der Stand der Abnahme 1 (Punkt 2 erfuellt) gilt weiter. integration_r41_masken36_stage2 (13 Szenen Leon/Elza) ist in meinem Lauf gruen (532 s)."
+    },
+    {
+     "punkt": "RE-Gate",
+     "urteil": "erfuellt",
+     "beleg": "Selbst disassembliert: @0x8001ce54 jal 0x80039590 (Masken-Zeichner) und @0x80039324/@0x80039338 (erstes PRI-Wort == 0xFFFFFFFF -> 0 Masken). Die PRI-Sektionen aller 11 geaenderten Cuts byte-gelesen: alle ff ff ff ff, die Generator-Masken sind also PORT-WAHL. DAT_80073e94 +6 = 450. Zellbytes der Zuordnungen von Hand stimmen mit dem RDT ueberein (z.B. 5020 @0x00870 = 28 0a 28 0a f5 ec bf c3 01 ff 00 03). Keine Rate-Woerter, keine neuen getenv."
+    },
+    {
+     "punkt": "Vertrag",
+     "urteil": "erfuellt",
+     "beleg": "Keine Aenderung unter release/, platform/android/, pri/ oder synchro/, keine CMakeLists. shared_assets nur unter PSX/MASKS/. Einziger Engine-Inhalt ist die erzeugte Tabelle. Keine Bits, Ids oder Slots belegt. Riegel je NB2-Aenderung vorhanden und messend; exe-Praefix r41m4."
+    },
+    {
+     "punkt": "Tests (gezielt)",
+     "urteil": "erfuellt",
+     "beleg": "unit 31/31 (unit_r37_masken36_ausschluss 519 s, unit_r41_masken36_zellen3d 119 s: Beleg 530/530, MSK-Tiefe 1060/1060, Ausschluss == Tabelle in 46 Cuts, Gegenprobe 79). Integration 22/22: Spur-Riegel, R37-Masken stage3..6 + nb2, PRI/Optik/Itemorte/Dokumente sowie affen3 x3, zgirl_5090, granate und elzaems_elza5091."
+    }
+   ],
+   "maengel": [
+    "1. ROOM30A0/30A1 Cut 0 (Cut 1 zeigt dasselbe Muster, aber nur erzwungen): Die oberen Trennwandfelder verdecken niemanden. Hinter der Trennwand erscheint die Figur als Halbfigur: NB2 verdeckt die Beine, der Oberkoerper wird ueber das obere Feld gezeichnet. Betroffen sind C0 R4 (Tiefe 200, Modell = Rueckwand-Zelle 8 @RDT+0x00474), C0 R5 (Tiefe 199), C0 R19 (Tiefe 188, Zelle 0 @0x00414) und C1 R4 (Tiefe 207, Nordwand-Zelle 1 @0x00420). Im master war R4 ausgeschlossen; NB1 hat es mit der Tiefe einer Wand HINTER der Trennwand wieder aufgenommen. 60-62 % ihrer Sehstrahlen treten vorher in die Trennwand-Zelle 6 @0x0045C ein. Gemessen an Spielstellen (Gehlauf w30A0b, Cut 0 durchgehend), Werte unten verdeckt / ueber dem oberen Feld sichtbar: s30A0_00 (-21743,16263) 644/1072, u30A0_00 (-23000,16300) 477/986, t30A0_00 (-24300,16400) 269/858, Elza e30A1_00 548/704. Das Uebersichtsbild 30A0/00_port.png zeigt die Felder trotzdem als geschlossen, und das eigene Bild NB2_k2_h30A0_01_g0_0.png zeigt die Halbfigur ebenfalls. Erwartet: oberes Feld der Zelle 6 zuordnen (Kamera C0/C1 steht nicht ueber Zelle 6), danach an denselben Stellen 'ueber dem oberen Feld' == 0 (ausser Kopf) und DAVOR (z.B. (-21943,13663)) weiter 0. Dazu ein Riegel gegen zu ferne Tiefe, Dossier-Aussage 'HINTER verdeckt' richtigstellen. Verdachtsliste m41abn2/scan_fern_alle.txt (127 Modell-Rechtecke, davon 9 aus NB2) sichten; an der exe bestaetigt ist bisher nur 30A0.",
+    "2. Punkt 1 ist weiter nicht geschlossen. 1022 Rechtecke bleiben ausgeschlossen, 273961 Punkte liegen nur in ausgeschlossenen Rechtecken. Echte Gegenstaende ohne Maske laut Restliste M_bilder/NB2_rest: 30A0 C3 Spinde, 6000 C5/C7 Traeger bzw. Lok-Unterteil, 5050 C1/C2, 5090 C13 oben, 3040 C0/C9, 50B0 C1/C3, 5020 C7/C12 sowie die Gelaender 3050 C6, 30E0 C6..C9 und 3040 C3. Fuer OFFEN 9 (105 Modell-Rechtecke) ist der Weg 'Atlaspunkte ausserhalb des Koerpers durchsichtig / Rechteck teilen' benannt, aber nicht gegangen. Ein Orchestrator-Entscheid, dass die Restliste an den Nutzer den Punkt schliesst, liegt nicht vor."
+   ],
+   "bericht": "Bericht: C:/workspace/git/reAi_v2/.claude/worktrees/r41_masken36/analysis/befunde_runde41/M_abnahme_2.md, Commit 99f85a92 'doc(r41-masken36): Abnahme 2', enthaelt nur diese Datei. Messordner: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/m41abn2/ mit Skripten stat_nb2.py, scan_nb2.py, ana2.py, warum_px.py, unter.py, scan_fern.py, walk.sh und den Bildern unter bilder/. Bau: local_build.sh configure OK, build 'ninja: no work to do'; die exe ist juenger als die erzeugte Tabelle. Die NB2-Zahlen des Bau-Agenten sind bitgenau bestaetigt. Fuer die 164 Rechtecke wurde an 11 eigenen DAVOR-Stellen keine Uebermalung gemessen, und die HINTER-Verdeckung wirkt. Neuer Befund: In ROOM30A0/30A1 C0 tragen die oberen Trennwandfelder seit NB1 die Tiefe der Wand dahinter. Hinter der Trennwand (im Gehlauf mit Spiel-Cut 0 belegt) erscheint Leon/Elza deshalb als Halbfigur: NB2 verdeckt die Beine, der Oberkoerper liegt ueber dem oberen Feld. Dazu bleibt die Restliste echter Gegenstaende ohne Maske. Punkt 1 ist damit teilweise erfuellt, Punkt 2 erfuellt; RE-Gate, Vertrag und Tests halten. Hinweise ohne Mangel: Randfall d5090_11 (Altbestand R37, 109 Punkte am Oberschenkel), Feuer/NPC in 5090 C11 von alten Rechtecken uebermalt, HINTER-Stellen in 6000 auf Band 0 (vermutlich nicht begehbar; das Tor liegt jetzt geometrisch richtig hinter der Lok), 11 Uebersichtsbilder fuer pri/ uebernehmen, veralteter Kommentar '18,4 %' in probes/r41_masken36.cmake.",
+   "suite": "unit (-j 3): 'unit_r41_masken36|unit_r37_masken36|unit_pri_|unit_r36_pri|unit_r37_pri1100|unit_sld_atlas|unit_r38_itemorte|unit_r39_optik|unit_r34n_e_dokumente|unit_bss|prop_bss|unit_stage6_hintergrund' -> 100% tests passed, 0 tests failed out of 31. integration (-j 2, --timeout 1800): 'integration_r41_masken36|integration_r37_masken36|integration_pri_masken|integration_r36_pri|integration_r37_pri1100|integration_r38_itemorte|integration_r39_optik|integration_r34n_e_dokumente|integration_r35_zgirl_5090|integration_r38_affen3|integration_r35_granate|integration_r37_elzaems_elza5091' -> 100% tests passed, 0 tests failed out of 22."
+  }
+ },
+ "stand": {}
+}
