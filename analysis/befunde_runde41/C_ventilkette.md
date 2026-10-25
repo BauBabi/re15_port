@@ -1313,6 +1313,94 @@ im Ghidra-Dump nur als Rohbytes steht (Z. 106243 ff.) und kein Zeit-Konstanten-M
 * 2026-10-25 ~04:0x Start: Baum sauber (`status --porcelain` nur `?? build/`), HEAD b8d56709 (Abnahme 5). Pflichtlektuere (AUFTRAG.md
   Nachtrag 25 + C-E4, VERTRAG.md, C_abnahme_5.md, Dossier §0f). RE B6-1/B6-2 (oben). Als Naechstes Code.
 
+**B6-3 Dynamische Gegenprobe im echten RE2 (DuckStation, Disc `re2leon.cue` = SLUS-00748).** Ein vorhandener RE2-Spielstand
+des Nutzers (`SLUS-00748_2.sav`, Stage 1 Raum 0x11, normales Spiel) als KOPIE im scratchpad gepatcht (Werkzeug `nb6/py/re2_ss.py`,
+RAM-Basis ueber eine Code-Signatur der RE2-EXE, Repack wie re15_ss_patch.py): Status_flg 0x800cfbd8 0x24800000 -> 0x2c800000
+(= Set(1,4)), 0x800d4832 = 60 bzw. 300 (= Save(0x23, N)); geladen mit `-batch -statefile`, ohne Eingaben, nach 12 s bzw. 8 s sanft
+geschlossen (SaveStateOnExit), VRAM ueber das Etikett "GPU-VRAM" gelesen. Die Spielstaende des Nutzers wurden vorher gesichert und
+danach Byte fuer Byte samt Zeitstempel zurueckgeschrieben (`nb6/py/re2_cap.py`; Liste der 11 `SLUS-00748*`-Dateien unveraendert).
+Ergebnis: RE2 zaehlt selbst (Sekunde 60 -> 56 bzw. 300 -> 295) und zeigt in beiden Bildpuffern oben mittig ` 0'56"95` / ` 0'56"98`
+in Rot bzw. ` 4'55"48` / ` 4'55"45` in Gruen - die Anzeige, die B6-1 aus dem Code gelesen hat (Lage, Schrift, Farbregel unter/ab 60,
+die letzten Stellen 98/95 aufeinanderfolgender Bilder). Bilder: `C_belege/nb6_countdown_re2_port.png` (oben RE2, unten Port
+nachher/vorher), `C_belege/nb6_countdown_ausschnitt.png` (6x).
+
+### Umsetzung der Nachbesserung 6 (Dateien, Konstanten - je mit Beleg im Kopf von re15_ventilkette_r41.h "Countdown"/"Alarm")
+* `include/re15_ventilkette_r41.h`: Kopf "Countdown" neu (B6-1) mit RE15_R41C_CD_X 104 / _Y 32 / _SCHRITT 14 / _GLYPHE 14 /
+  _SPALTEN 18 / _TAKTE 30 / _ROT_UNTER 60 / _FARBE_GRUEN 1 / _FARBE_ROT 2 / _CLUT_Y0 480 / _ZEICHEN 8 (je @0x...); die PORT-WAHL-
+  Konstanten RE15_R41C_COUNTDOWN_X/_Y/_FARBE (x 230, y 20, Farbe 2) sind entfernt. Neue API re15_ventilkette_r41_countdown_re2 (Text
+  wie FUN_8002fa54) und re15_ventilkette_r41_alarm. Mangel 3: Ventil-Bedingung "Bit 102 UND Bit (9,125)", Satz 49 "It's locked."
+  (ROOM20A0 msg 1 @0x203C), Fundort des Dokuments ohne "Blatt am Boden".
+* `engine/src/ventilkette_r41.c`: re15_ventilkette_r41_countdown liefert das Bild seit dem Zaehlerstart (0 = erstes Bild nach
+  Set(5,0x1D)) und ist bis einschliesslich des Bilds des Flut-Beginns sichtbar (s_flut_bilder; RE2s abgelaufenes Bild " 0^00=00");
+  re15_ventilkette_r41_countdown_re2 rechnet RE2s Zaehler nach (Sekunde N-1-Bild/30, 9-s6/3, s7 8/5/2); re15_ventilkette_r41_alarm =
+  2030/2031 && Folge richtig (Warntext 46) && keine Flut && nicht tot. Die alte Funktion re15_ventilkette_r41_countdown_text (MM:SS:HH)
+  ist entfernt.
+* `platform/pc/src/ventilkette_r41_pc.c`: RE2-TEX.TIM (shared_assets/RE2/TEX.TIM) Seite 0 je Farbe als Index-Bild mit der CLUT-Zeile
+  482/484 (Texel mit CLUT-Wert 0x0000 = 0 = durchsichtig), je Zeichen ein 14x14-Feld ueber re15_render_pc_config_tile_ov in die oberste
+  Text-Ebene (Nachbau FUN_800318a4); Protokollzeile "Countdown RE2-Form Bild k ..." beim ersten Bild, je volle Sekunde und beim Bild
+  " 0^00=00". Alarm-Schalter je Bild: an -> re15_audio_r41_alarm(1), aus in 2030 (Flut/Tod) -> re15_audio_r41_alarm(0), aus durch
+  Raumwechsel -> nur vergessen; Protokollzeilen "[bgm] Runde 41 Spur C: RE2-Alarm SUB_25 an/aus ... capTick".
+* `platform/pc/src/audio_pc.c` (gemeinsam, C-E4, je markiert "Runde 41 Spur C, C-E4"): 1 Zeile Zustand, 1 Zeile Quelle im Track-Lader
+  (re15_pc_read_re2 statt re15_pc_read_cd, nur waehrend des Alarm-Ladens), 1 Zeile in re15_bgm_load_sub (neuer SUB ersetzt den
+  Alarm), 1 Zeile in re15_audio_start_room_bgm (Alarm = gewechselter SUB), dazu am Dateiende der Schalter re15_audio_r41_alarm
+  (~20 Zeilen: SsSeqStop der SUB-Sequenzen, re15_bgm_load_sub(0xA5) aus RE2, ss_seq_ctl_ex(1,0,1,0x64,0x40) = RE2 `51 01 00 01 64 40`).
+* Neues Asset `re15_port/shared_assets/RE2/SOUND/SUB_25.BGM` (100688 B, md5 ef66256d0e847e428b11caedd5c655da) = bytegleich
+  `info/re2leon/COMMON/SOUND/SUB_25.BGM` (cmp, `git show :pfad | md5sum` gleich). Git behandelt es ueber die NUL-Bytes ab Byte 4
+  ("pQES" 00 00 00 01) als binaer; .gitattributes (gemeinsam) nicht angefasst.
+* Riegel: `tests/unit/test_r41_ventilkette.c` (Faelle R1/R2/R3, Werkzeug "re2cd"), `tests/integration/test_r41_ventilkette.cmake`
+  (Teil A: Bildvergleich statt Rot-Mittel), `tests/unit/probes/r41_ventilkette.cmake` (-DRE15_R41C_RE2TEX).
+
+### Messung nachher (exe 2026-10-25 04:4x, beschleunigter Renderer, RE15_WINDOW_SCALE=1, RE15_AUDIO_CAP_SYNC; scratchpad `nb6/mess/*`)
+Laeufe (Plan = Riegel A/v2b: die richtige Folge 09/07/02/01 zu Fuss am Sued-/Nord-Landeplatz, danach Treppe -> Ring): `al_flucht_leon`
+/ `al_flucht_elza` (zur Ost-Tuer -> 20B0/20B1), `al_flut_leon` / `al_flut_elza` (auf dem Ring stehen bleiben -> Flut -> Tod),
+`al_flut_leon_ohne` (Zwilling mit RE15_RE2_ASSET_ROOT -> 4-Byte-Stummel SOUND/SUB_25.BGM = Alarm laedt nicht).
+* **Alarm (Mangel 1):** `[bgm] Sce_bgm_control slot=1 op=0 (part=1 vol=100 pan=64)` + `[bgm] Runde 41 Spur C: RE2-Alarm SUB_25 an
+  (ROOM2030, Warntext 46) geladen capTick 4285 F4032`, unmittelbar vor `[msgtext] room=2030 id=46 "WARNING: ..."` (Elza: ROOM2031,
+  capTick 4994/4991). Zwilling: bis Takt 4285 bitgleich (max |A-B| = 0), erste Abweichung Takt 4288,04 (= SEQ0 erste Note bei Tick 100,
+  0,104 s), Alarm-RMS 667..718 in einem 4-s-Muster (SEQ0 wechselt die Notenpaare alle 3840 Ticks), Raummusik daneben 420..2400.
+  Flut: `FLUT: Wasser steigt (Countdown-Takte 1801 von 1800)` -> `RE2-Alarm SUB_25 aus (Flut/Tod) capTick 6537 F6284`; RMS der
+  Differenz 237 im Fenster 6535, danach 0,4 / 0,0. Elza-Flut-Lauf: Korrelation mit dem Alarm (Leon-Differenz) **0,571**, Gegenprobe
+  900 Takte frueher 0,013. Flucht: Leon 0,569 / Elza 0,571 bis zur Tuer; Raumwechsel `loaded room20b0.rdt` -> `entry=4A51 -> MAIN11`
+  -> der Alarm blendet mit der Raum-Ausblendung (60 Bilder, FUN_800449f4-Form) aus: Korrelation je 15 Takte 0,58 -> 0,46 -> 0,26 ->
+  0,07 -> ~0 in 20B0 (Leon 5746..5806, Elza 6444..6504). Bild `C_belege/nb6_alarm_messung.png`.
+* **Countdown (Mangel 2):** `[ventilkette41] Countdown RE2-Form Bild 0 " 0^59=98" Farbe 2 (x 104 y 32) F4484` (Leon und Elza),
+  Flut-Lauf: F6282 " 0^00=05", F6283 " 0^00=02", **F6284 " 0^00=00"** (Bild 1800 = Flut-Beginn), F6285 kein Countdown. Werkzeug
+  re2cd ueber alle 152 Framedumps der Laeufe: **141 exakte Treffer** (jedes deckende Texel gleich), die 11 ohne Treffer liegen vor dem
+  ersten Countdown-Bild; z. B. F4500 " 0^59=45", F4520 " 0^58=78", F4600 " 0^56=12", F5000 " 0^42=78" (Leon), F4510 " 0^59=12"
+  (Elza) - jeweils der Text, den RE2s Zaehler fuer Bild = Framedump - 4484 zeigt.
+* **Bildvergleich RE2 <-> Port:** re2cd auf den ECHTEN RE2-Bildern (B6-3): `RE2CD TREFFER " 0^56=95" FARBE 2 PIXEL 583` und
+  `" 0^56=98" FARBE 2 PIXEL 591` - der Nachbau im Riegel stimmt Pixel fuer Pixel mit dem Original; die gruene Phase liest die Zellen-
+  Pruefung als " 4^55=48"/" 4^55=45" Farbe 1 (557/549 deckende Pixel exakt). Port gegen RE2 direkt (gleiche Zeichen in derselben
+  Zelle, alle Port-Treffer von al_flucht_leon gegen das RE2-Bild " 0^56=98"): **10815 / 10815** deckende Pixel gleich.
+
+### Nachbesserung 6 je Mangel (Ursache / Messung vorher / Beleg / Aenderung / Messung nachher)
+**Mangel 1 (mittel) - der Alarm waehrend der 60 s fehlte.**
+* Ursache: kein Abspielweg; der SUB-Lader las nur RE1.5-Spuren (SOUND/SUB_25.BGM = 4-Byte-Stummel) und audio_pc.c gehoerte Spur D
+  (VERTRAG §1.3) - seit C-E4 ist der Haken erlaubt.
+* Messung vorher: Abnahme 5 KB/KB_ELZA (`C41abn5/`, cap.raw): waehrend des Zaehlers nur die Raummusik.
+* Beleg: B6-2 (ROOM6040 @0x022E8 / FUN_8005b9f4 / FUN_8005a444 Flags, @0x038BA `51 01 00 01 64 40` / FUN_8005b6f0, Datei-Trailer).
+* Aenderung: SUB_25 bytegleich nach shared_assets/RE2/SOUND/; Haken "Runde 41 Spur C, C-E4" in audio_pc.c; Schalter in
+  ventilkette_r41_pc.c nach re15_ventilkette_r41_alarm (Warntext 46 bis Flut/Tod/Raumwechsel).
+* Messung nachher: oben "Alarm" (Leon und Elza, Flut und Flucht); Riegel Unit R3 (Alarm erst nach der vierten Drehung mit dem
+  Warntext, aus mit dem Flut-Beginn, aus nach dem Raumwechsel; Leon + Elza).
+
+**Mangel 2 (mittel) - der Countdown hatte nicht die Form der RE2-Anzeige.**
+* Ursache: die RE2-Anzeige war nicht gefunden (Hauptschleife @0x80025794 im Ghidra-Dump nur Rohbytes); Port-Wahl MM:SS:HH oben rechts.
+* Messung vorher: Abnahme 5 `kb_countdown.png`/`kf_flut.png` ("00:59:06" .. oben rechts x 230 y 20).
+* Beleg: B6-1 (Code) + B6-3 (echtes RE2, Bilder).
+* Aenderung: Text und Zaehler wie RE2 (re15_ventilkette_r41_countdown_re2), 14x14-Schrift aus RE2 TEX.TIM bei x 104 y 32, Farbe nach
+  der 60-s-Regel (fuer die 60 s von 2030 durchgehend Rot), abgelaufenes Bild " 0'00"00" im Bild des Flut-Beginns.
+* Messung nachher: oben "Countdown" und "Bildvergleich"; Riegel A (Pixelvergleich mit dem Text des Bilds), Unit R1/R2/R3.
+
+**Mangel 3 (niedrig, Doku) - Kopf von re15_ventilkette_r41.h.** Z. 146-149 nennt jetzt "Bit 102 ... UND Bit (9,125) ... sonst Satz 49 =
+Original "It's locked."", Z. 162 "Fundort neben der Sicherung" (der Absatz beschreibt danach den Zettel an der Wand).
+
+### Protokoll der Nachbesserung 6 (Fortsetzung, neueste zuerst)
+* 05:0x-05:3x Messlaeufe (oben), RE2-Gegenprobe B6-3, Bildbogen; Unit-Gruppe (Regex `nb6/regex_unit6.txt` = Abnahme-5-Regex +
+  `unit_rotor_bgm_pin|unit_r35_cut10f0_.*|unit_r39_johnruf1041_.*`): **`100% tests passed, 0 tests failed out of 281`**
+  (`Total Test time (real) =  63.04 sec`); `unit_r41_ventilkette` **`PASS (557 Pruefungen)`**. Integrationsriegel laufen (unten).
+* 04:3x Code + Bau (`LOCAL-BUILD-OK`), Commits 81dadaab (Code) / ffcd86d5 (Riegel).
+
 ## 1. RE-Belege (Original, selbst aus den Bytes gelesen)
 
 Alle Datei-Offsets beziehen sich auf `re15_port/shared_assets/PSX/STAGE2/ROOMxxxx.RDT` (Leon); die Elza-Varianten
@@ -1880,6 +1968,17 @@ shared_assets/PSX, pri/, synchro/, release/.
   - `integration_r41_ventilkette_kette` weiter nur mit Spur A registriert (Configure: "uebersprungen: Spur A fehlt", C-E1).
 
 ## 6. OFFEN
+* **Nachbesserung 6 (2026-10-25, Abnahme 5 Maengel 1-3, Nachtrag 25 + C-E4):**
+  - Alarm und Countdown sind umgesetzt (§0g); die frueheren Punkte "Alarm nicht umgesetzt" und "Countdown PORT-WAHL" der
+    Nachbesserung 5 (unten) sind damit erledigt.
+  - Lautstaerke des Alarms: RE2 setzt Programm 0 in 6040 je Kamera (sub25 @0x038CE..@0x039B8, 0x3c..0x7f) und in 6050 auch
+    Programm 1 (sub17 @0x01F06) - an RE2s Kameras gebunden; uebernommen ist der Betretens-Wert von 6040 sub23 @0x038BA (Programm 0
+    = 99, Programm 1 bleibt wie in 6040 stumm). Eine Kamera-Staffel fuer 2030 waere eine eigene Wahl (nicht gebaut).
+  - Countdown und Alarm laufen nur auf dem PC-Ziel (Bild-/Ton-Ebene ventilkette_r41_pc.c / audio_pc.c); das PSX-Ziel ist weiter
+    ungebaut (wie H3).
+  - Formal: audio_pc.c traegt jetzt 4 markierte Einzeilen-Haken + den Schalter re15_audio_r41_alarm (~20 Zeilen am Dateiende) -
+    C-E4 erlaubt "einen kleinen, markierten Haken"; die Funktion braucht die statischen BGM-Zustaende der Datei und kann deshalb nicht
+    in ventilkette_r41_pc.c liegen (Bitte um Bestaetigung wie V1).
 * **Nachbesserung 5 (2026-10-25, Abnahme 4 Maengel 1-3, Nachtraege 16/18/19):**
   - **Alarm (Nachtrag 18 Punkt 4) nicht umgesetzt:** belegt ist RE2s Selbstzerstoerungs-Alarm SUB_25 (ROOM6040 sub04 @0x022E8
     `57 00 04 06 11 25 00 80`, `info/re2leon/COMMON/SOUND/SUB_25.BGM`); RE1.5 hat keine Alarm-Spur (SUB_25.BGM 4 Byte). Abspielen
@@ -1984,6 +2083,19 @@ shared_assets/PSX, pri/, synchro/, release/.
   RE2-Panel-Klick 0x0A wie lift2030_r37/hebetisch.
 
 ## 7. Fuer den Nutzer
+* **Stand Nachbesserung 6 (Nachtrag 25 (o)/(p), Abnahme 5) — was sich geaendert hat:**
+  - **Alarm (Nachtrag 18 Punkt 4 / 25 (o)):** mit dem Warntext 46 startet RE2s Selbstzerstoerungs-Alarm (SUB_25, wie in RE2s Labor
+    ROOM6040/6050) zusaetzlich zur Raummusik; er endet, wenn das Wasser zu steigen beginnt, wenn man stirbt oder wenn man den Raum
+    verlaesst (dann blendet er mit der Raummusik aus). Messung: C_belege/nb6_alarm_messung.png.
+  - **Countdown (Nachtrag 25 (p)):** jetzt genau die Anzeige aus RE2s Selbstzerstoerung: oben in der Mitte ` 0'59"98` .. ` 0'00"02`,
+    dann ` 0'00"00` im Augenblick der Flut, RE2-Schrift (14 x 14), unter 60 Sekunden Rot (RE2 zeigt ab 60 Sekunden Gruen - bei den
+    60 s von 2030 also durchgehend Rot). Die letzten zwei Stellen zaehlen wie in RE2 je Bild (98, 95, 92, 88, ...). Vergleich mit dem
+    echten RE2 (in DuckStation aus einer Kopie Ihres RE2-Spielstands erzeugt, Ihre Staende sind unveraendert):
+    C_belege/nb6_countdown_re2_port.png und C_belege/nb6_countdown_ausschnitt.png.
+  - **Neue Assets (Paket-Gate):** `re15_port/shared_assets/RE2/SOUND/SUB_25.BGM` (100688 B, bytegleich RE2
+    `COMMON/SOUND/SUB_25.BGM`). Die Countdown-Schrift ist die schon im Paket liegende `shared_assets/RE2/TEX.TIM`.
+  - **Sprachdateien:** keine neuen (main46.wav wie bisher).
+  - **Fragen:** keine neuen.
 * **Stand Nachbesserung 5 (Nachtraege 16/18/19, Abnahme 4) — was sich geaendert hat:**
   - **Ventil-Sicherungskasten in 2010 (Nachtrag 16).** Die Sicherung vom Sued-Landeplatz in 2030 kommt zuerst in einen
     Sicherungskasten in ROOM2010: an der Ostwand der Schaltschrank mit dem kleinen Tastenfeld (Kamera 3; 2010 erreicht man vor
