@@ -599,3 +599,26 @@ Leon/Elza schiessen alle ~4 s):
   bei (-1989,-6363)), danach kämpft der Gator mit ihm im Ostteil (x 1449..6732) - in 2700 Bildern keine Aufnahme. Der Alligator
   lenkt nicht zum Kanister (RE2 lenkt nur den Hals, Hals-Zielmodus FUN_800177c0 ist bei Spur B OFFEN §11.3); eine Liegestelle,
   die JEDEN Kampfverlauf trifft, gibt es nicht (Frage 8.8).
+
+### 8.5 M4 - Doku / Beleg
+- Dossier 6.3 berichtigt (p3h mit RE15_GB_TEST=5 ist kein Beleg für das Spiel: der Haken lässt den Boss aufgetaucht an der
+  Marker-Lage warten); der echte Ablauf steht jetzt in 8.2 und im Riegel integration_r41_kanister2080_kampf (Testhaken
+  ausdrücklich gelöscht).
+- k_port[] Bit 114 (tests/unit/test_r36_kartenbits.c): "2080: Knall (Knall-Bank Satz 0) beim ersten Betreten nach Bit 110".
+- Haken-Kommentare: scd_room_setup.c "2080 Knall (Knall-Bank Satz 0) + Zombies / Kanister-Szene", platform/pc/main.c "Knall
+  (gen/knall_bank.inc Satz 0), Tür-Ton DOOR06, Aufschlag, NPC-Schuss" (je nur der Kommentar der vorhandenen Zeile).
+- Überholte Aussagen im Dossier markiert: 1.8 (c2/c0 falsch gedeutet), 3.2 (Wurf-Stand), 3.3 (Ablauf-Tabelle), 7 (Stand).
+
+### 8.6 Tests (gezielt, keine volle Suite; Bau 2026-10-25 local_build.sh build, ctest mit msys64 zuerst im PATH)
+- `ctest --test-dir re15_port/build -R "unit_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_" --timeout 600
+  --output-on-failure` -> **`100% tests passed, 0 tests failed out of 34`** (Total Test time (real) = 26.41 sec); darin NEU
+  unit_r41_kanister2080_liege (Spielstelle im Wasser, < 9000 vom Lauerplatz, Installer legt den Kanister in 2090 UND 2091 dort
+  hin), geändert unit_r41_kanister2080_szene (Aufnehmen Byte für Byte gegen ROOM11B0 sub06 @0x01650..0x01663, kein (1,2)/(2,0),
+  Ausricht-Polls statt Sleep 10, nach dem Tür-Ton direkt Work_set) und _start (Rückkehr ohne Sleep 30).
+- `ctest --test-dir re15_port/build -R "^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_re2gator$"
+  --timeout 1800 --output-on-failure` -> siehe unten (Summenzeile).
+  - integration_r41_kanister2080 (175 s): szene_leon/elza zusätzlich "Kanister aufgehoben (Loco c11 Bild 24 ...)", Plc_motion(1,11)
+    zweimal, kein Kletter-/Lauf-Clip, "Kanister im Becken (-6500,-1200,-11000) = Spielstelle Nordbecken".
+  - integration_r41_kanister2080_kampf (NEU, 248 s): Leon + Elza ohne RE15_GB_TEST/RE15_GATOR_KANISTER: Auslöser -> Szene
+    (Hinknien) -> Rückkehr -> Kanister an der Spielstelle -> GATOR VERSCHWUNDEN -> AUFTAUCHEN -> KANISTER Stufe 1 -> angehängt ->
+    R1 start -> R1 ende (Leiche), in dieser Reihenfolge.
