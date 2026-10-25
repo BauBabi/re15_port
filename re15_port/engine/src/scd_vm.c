@@ -80,6 +80,7 @@
 #include "re15_elzazombies_r39.h" /* Runde 39 Spur Q: Elza-Zombie-Durchbrueche, Ereignis 30 (elzazombies_r39.c) */
 #include "re15_johnruf_r39.h"  /* Runde 39 Spur P: RE2 Xa_vol 0x5F + Sprach-/Warte-Zeilen 1041/1131 (johnruf_r39.c) */
 #include "re15_tuersperre_r39.h" /* Runde 39 Spur P: Tuersperren 1041/1051 (Panikphase), Kanaldeckel 10B1 (tuersperre_r39.c) */
+#include "re15_gatorszene_r41.h" /* Runde 41 Spur F: ROOM2090/2091 ohne Spinnen, Ankunftsszene (gatorszene_r41.c) */
 
 scd_vm_t g_scd;
 
@@ -686,6 +687,7 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_elzazombies_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur Q: 1041/1061/1031 Ereignis 30 */
     if (!pc) pc = re15_nahaufnahmen_r40_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 40: 11D0/1110/1100 Ereignis 31, 1110/3, 11F0/16 */
     if (!pc) pc = re15_ventilkette_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur C: 2030/17-27, 2050/2+4+9, 2010/20 (re15_ventilkette_r41.h; 2080 seit Nachtrag 7 Original) */
+    if (!pc) pc = re15_gatorszene_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur F: 2090/2091 + 2080/2081 Ereignis 18 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -764,6 +766,7 @@ void scd_vm_tick(void)
         scd_thread_reseed(1, s_current_rdt->sub_scd[1]);
     if (!s_vm_room_init) re15_irons_tod_tick();   /* Runde 35 Spur L: Signal (5,12) -> Irons' Arm faellt */
     if (!s_vm_room_init) re15_elza_r36_tick();    /* Runde 36 Spur L: verzoegerte Anker-Toene (re15_elza_r36.h) */
+    if (!s_vm_room_init) re15_gatorszene_r41_tick();   /* Runde 41 Spur F: Signale (5,28)/(5,29) der 2090-Szene */
     if (!s_vm_room_init) re15_elzazombies_r39_tick();   /* Runde 39 Spur Q: Flanke (9,97), Montage, Halten 1061 */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
@@ -3872,6 +3875,7 @@ static int op_sce_em_set(scd_thread_t *t)
     extern uint8_t re15_em_status_zone(void);
     uint8_t  persist  = t->pc[7];
     int      suppress = (persist != 0xFF) && re15_game_flag_get(re15_em_status_zone(), persist);
+    if (re15_gatorszene_r41_spawn_weg((uint16_t)g_current_room_id, type, x, z)) suppress = 1;   /* Runde 41 Spur F: Spinnen 2090/2091 verworfen wie am Kill-Flag-Tor @0x80042120-38 (re15_gatorszene_r41.h) */
 
     /* GLEICHZEITIG-LIMIT (byte-true @0x80042214-3c) — der Grund, warum ROOM1030 im Original nur
      * SECHS Zombies zeigt, obwohl 20 Records im RDT stehen:

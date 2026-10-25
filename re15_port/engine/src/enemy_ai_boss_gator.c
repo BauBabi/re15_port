@@ -60,6 +60,7 @@
 #include "re15_enemy_ai.h"   /* victim_force + Clip-Anker-Exporte (Fress-Finisher R6) */
 #include "re15_audio.h"     /* re15_audio_core_se - Leons Schrei im Fress-Finisher (@0x80102EF4) */
 #include "re15_engine.h"    /* Runde 41 Spur B NB3: g_engine.frame_count (Messzeile AUFTAUCHEN) */
+#include "re15_gatorszene_r41.h" /* Runde 41 Spur F: die 2090-Ankunftsszene fuehrt den Gator (gatorszene_r41.c) */
 #include "re15_gator_re2_r41.h" /* Runde 41 Spur B: RE2-Bausteine (Hysterese, Zonen-Dash, Intro, HURT-Selektor,
                                  * Kanister T2/R1, Schuetteln) - gator_re2_r41.c */
 
@@ -1252,6 +1253,7 @@ void re15_gator_boss_tick(int slot)
         e->x = nx; e->z = nz;
     }
     re15_gr2_nachtakt(slot, e);                               /* (3) */
+    re15_gatorszene_r41_nachtakt(slot, e);                    /* Runde 41 Spur F (Haken): Leiche im Maul = Kind der Part-6-Matrix */
     {   /* NB4 (Abnahme 3, M2) - MESSZEILE GIER-WACHE (gator_boss.log): je Bildpaar, dessen beide Takte in CHASE/GUARD enden, das
          * Gier-Delta. Erlaubt: Port-Wenderate 0x60/Bild (re15_enemy_steer_point(.., 0x60) "zackige Wende") und der RE2-Knick
          * +1024 am Clip-3-Ende (@0x80100938-48 / @0x80100eb0-c0, Lunge-Ende ebenso). "GIER-SPRUNG" je Verstoss, "GIER-WACHE"
@@ -1407,6 +1409,12 @@ static void gb_takt(int slot)
     /* Nachbesserung 3 (M1, B9): untergetaucht kein Kanister-Fenster - RE2 Sub-0-Pre = `jr ra` (Tafel @0x8010463c[0] =
      * 0x801007fc), das Fenster liegt nur im Sub-1/2-Pre @0x80100ab8-b18. */
     re15_gr2_takt(slot, e, pl, g->phase == GBP_CHASE || (g->phase == GBP_LURK && !g->untergetaucht));
+    {   /* Runde 41 Spur F (Haken): die 2090-Ankunftsszene fuehrt den Gator (re15_gatorszene_r41.h) - 1 = untergetaucht halten,
+         * 2 = Szene bewegt ihn (auftauchen), 3 = Szene vorbei -> Verfolgung wie nach dem RE2-Intro (Routine 0x101 @0x80100928-2c) */
+        const int sz = re15_gatorszene_r41_boss(slot, e);
+        if (sz >= 2 && g->untergetaucht) gb_auftauchen(e, g);
+        if (sz == 3 && g->phase == GBP_LURK) { g->aggro = 1; g->phase = GBP_CHASE; }
+        if (sz == 1 || sz == 2) return; }
 
     /* SELBST-BEFREIUNG (Sweep-Klasse "end==start", probe_gator_sweep
      * 2026-09-11): steckt das ZENTRUM im Klemm-Slab (Blockkante +

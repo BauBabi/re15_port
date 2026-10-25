@@ -2934,6 +2934,8 @@ static int ss_bgm_entry(int stage, int room) {
     { int k = re15_cut10f0_bgm_eintrag(stage, room); if (k >= 0) return k; }
     { extern int re15_johnruf_r39_bgm_eintrag(int, int);   /* Runde 39 Spur P: Elzas Panikphase (Bit 97) = MAIN01 wie Leon */
       int k = re15_johnruf_r39_bgm_eintrag(stage, room); if (k >= 0) return k; }
+    { extern int re15_gatorszene_r41_bgm_eintrag(int, int);   /* Runde 41 Spur F: RE2-Kampfmusik MAIN1A im Alligatorkampf 2090 */
+      int k = re15_gatorszene_r41_bgm_eintrag(stage, room); if (k >= 0) return k; }
     if (stage < 0 || stage > 5) return -1;
     int idx = room + SS_STAGE_OFF[stage];
     if (idx < 0 || idx >= (int)(sizeof SS_BGMTBL / sizeof SS_BGMTBL[0])) return -1;
@@ -3000,6 +3002,8 @@ static int re15_bgm_load_track(ss_seq_t *s, const char *name, int slot) {
      * die gemeinsame CD-Wurzelliste (asset_root_pc.c). */
     snprintf(path, sizeof path, "SOUND/%s%02X.BGM", name, slot);
     uint8_t *blob = s_r41_alarm_re2 ? re15_pc_read_re2(path, &sz) : re15_pc_read_cd(path, &sz);   /* Runde 41 Spur C, C-E4 */
+    { extern const char *re15_gatorszene_r41_bgm_re2(const char *, int);   /* Runde 41 Spur F: MAIN-Platz 0x3C = RE2 MAIN1A */
+      const char *re2 = re15_gatorszene_r41_bgm_re2(name, slot); if (re2) { free(blob); blob = re15_pc_read_re2(re2, &sz); } }
     if (!blob || sz < 0x40) { free(blob); fprintf(stderr, "[bgm] %s%02X.BGM nicht lesbar\n", name, slot); return -1; }
 
     const int is_sub = (name[0] == 'S');

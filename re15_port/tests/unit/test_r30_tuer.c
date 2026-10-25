@@ -532,9 +532,13 @@ static void teil_raeume(void)
            plaetze, ohne, offen, tab, tabK, tabM, tabS, n_stellen, still);
     /* Art S (ROOM5080/5081 msg 2) liegt im Frisch-Zustand NICHT auf einem Platz: erst sub02
      * (Generator) setzt ihn per Aot_reset. Den Weg prueft Teil (e). */
-    /* Runde 38 Spur F: + 1 Platz / 1 Stelle Art M (ROOM1131 Slot 0, Port-Nachricht 40, s. tabellen_art). */
-    CHECK(tab == 52 && tabK == 16 && tabM == 36 && tabS == 0 && n_stellen == 47,
-          "Tabellen-Plaetze %d (K %d / M %d / S %d, %d Stellen) statt 52 (16 / 36 / 0, 47)",
+    /* Runde 38 Spur F: + 1 Platz / 1 Stelle Art M (ROOM1131 Slot 0, Port-Nachricht 40, s. tabellen_art).
+     * Runde 41 Spur F (Querbezug Nachtrag 21 "Das Tor soll verschlossen sein ..."): + 2 Plaetze Art M, KEINE neue Stelle -
+     * ROOM20A0/20A1 Slot 0 (Door_aot_set @0x01746 -> 2090) ist bis Bank 9 Bit 113 ein sce-3-Ereignis, dessen Druck die
+     * Original-msg 1 @0x0203C "It's locked." zeigt (gatorszene_r41.c tor_druck) = dieselbe Tabellen-Stelle wie Platz 8
+     * (lock_se_sites.inc Zeile 49/50). Der Ton faellt dabei EINMAL (Zeile oben: 1 x Satz der Art). */
+    CHECK(tab == 54 && tabK == 16 && tabM == 38 && tabS == 0 && n_stellen == 47,
+          "Tabellen-Plaetze %d (K %d / M %d / S %d, %d Stellen) statt 54 (16 / 38 / 0, 47)",
           tab, tabK, tabM, tabS, n_stellen);
     CHECK(p10d0_0,  "Pflichtfall ROOM10D0 Platz 0 -> msg 6, 1 x ZU_E");
     CHECK(p1170_5,  "Pflichtfall ROOM1170 Platz 5 -> msg 12, 1 x ZU_A");
