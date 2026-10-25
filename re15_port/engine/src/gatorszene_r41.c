@@ -446,10 +446,12 @@ static void leiche_weg(void)
 
 static void tor_sperren(uint16_t room_id);   /* Abschnitt 5 */
 static int s_einst_slot;   /* Einstellung auf den Schluessel (Abschnitt "Schluessel nach dem Tod") */
+static int s_r1_cut = -1;  /* Nachbesserung 3: Cut im ersten R1-Takt (Abschnitt "Schluessel-Schnitt statt R1-Rueckschnitt") */
 void re15_gatorszene_r41_install(uint16_t room_id)
 {
     const uint16_t basis = (uint16_t)(room_id & 0xFFFEu);
     s_einst_slot = -1;                                      /* Nachbesserung 2: Raumaufbau setzt die SCD-Faeden neu */
+    s_r1_cut = -1;                                          /* Nachbesserung 3: kein R1 im neuen Raum */
     tor_sperren(room_id);
     if (basis == RE15_GSZ_RAUM) {
         if (s_zustand == RE15_GSZ_MONTAGE) {                /* zurueck aus 2080: Programm 3 */
@@ -875,13 +877,18 @@ static void euler_aus_matrix(const int32_t m[9], int16_t *rx, int16_t *ry, int16
     *rz = (int16_t)(((int)re15_atan2_q12(m[1], m[0]) - 1024) & 0xfff);
 }
 static void key_tod_pruefen(void);   /* Abschnitt "Schluessel nach dem Tod" (Nachbesserung 2, M2) */
+static void key_rueckschnitt_pruefen(int slot);   /* Abschnitt "Schluessel-Schnitt statt R1-Rueckschnitt" (Nachbesserung 3) */
 void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor)
 {
-    (void)slot;
     re15_actor_t *e = (re15_actor_t *)gator_actor;
+    /* Nachbesserung 3 (Abnahme 2, M1): hat B's R1 auf eine Explosions-Kamera geschnitten, ersetzt der Schluessel-Schnitt B's
+     * Rueckschnitt am Clip-9-Ende (RE2 P1-Ende @0x8010249c / @0x801024a4-ec) im SELBEN Takt - zwei Takte vor dem Tot-Flag. */
+    key_rueckschnitt_pruefen(slot);
     /* Nachbesserung 2 (M2): Tod im SELBEN Bild erkennen, in dem Spur B's R1 P3 das Tot-Flag setzt und die Szenen-Kamera
      * freigibt (@0x80102654-64 / @0x80102688-94) - der Schnitt auf die Schluessel-Kamera ersetzt dessen Rueckschnitt, bevor
-     * das Bild gezeichnet wird (sonst stuende der Zonen-Cut ein Bild lang da; der SCD-Takt laeuft vor dem Spielschritt). */
+     * das Bild gezeichnet wird (sonst stuende der Zonen-Cut ein Bild lang da; der SCD-Takt laeuft vor dem Spielschritt).
+     * Das gilt fuer R1 OHNE Explosionsschnitt ("Sperre ohne Schnitt") und die Todesrolle; MIT Schnitt hat key_rueckschnitt_pruefen
+     * den Schluessel schon gelegt (Bit 111). */
     key_tod_pruefen();
     if (!e || !s_ga.leiche_dran || s_ga.leiche_weg) return;
     int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
@@ -1237,7 +1244,7 @@ static void key_neigung_nachholen(void)
  * Beckenenden (RID @0x060, y -3132) war er in der LAUFENDEN Kamera nur 4-6 Bildpunkte gross (Abnahme 1: Todesrolle Cut 0 Tiefe
  * 4835, R1 Cut 1 Tiefe 5766). Jetzt: Lage fuer die Zonenkamera mit dem groessten Bild (key_lage_bei_tod), Schnitt im Bild des
  * Todes auf diese Kamera (Cut_chg-Zwilling LAB_800402a0, cut_chg_zwilling), Programm 4 haelt 90 Bilder mit Riegel und kehrt mit
- * Cut_old (FUN_8004032c: gemerkter angezeigter Cut DAT_800b3f7b @0x8004033c, Zonenkamera an @0x8004032c) + Cut_auto zurueck.
+ * Cut_old (FUN_8004032c: gemerkter angezeigter Cut DAT_800b3f7b @0x8004033c, Zonenkamera an @0x80040374-84) + Cut_auto zurueck.
  * FORM = RE1.5 "Kamera auf einen Gegenstand" ROOM2010 sub03 @0x008EE-0x008F8 / ROOM1180 sub02 @0x00B3C-0x00B46 (Cut_chg,
  * Message_on, Cut_old, Cut_auto) mit dem Halt der Leichen-Einstellung der Ankunft statt eines Textes (kein Text vorgegeben).
  * PORT-WAHL der Inszenierung (Nutzer: "Wenn der Aligator danach tot ist, soll der Schluessel in der Naehe seine Leiche sein und
@@ -1260,7 +1267,7 @@ static void key_einstellung(void)
         g_scd.cam_change_pending = 1;
         g_scd.work_vars[0x0C] = g_scd.work_vars[0x0A];       /* @0x8004035c */
         g_scd.work_vars[0x0A] = (int16_t)g_scd.cam_id_prev;  /* @0x80040364 */
-        g_scd.cut_auto_enabled = 1;                          /* @0x8004032c */
+        g_scd.cut_auto_enabled = 1;                          /* &= ~0x100 @0x80040374-84 (FUN_8004032c) */
         folge('X', 4, 0);
         return;
     }
@@ -1293,17 +1300,63 @@ int re15_gatorszene_r41_key_einstellung(int *cut, int *vorher, unsigned *bild)
     if (bild) *bild = s_einst_bild;
     return s_einst_slot >= 0;
 }
-/* Tod erkennen (Nachtakt im Bild des Todes, Rueckfall im SCD-Takt): Lage + Kamera, (9,111), Schluessel + Zone, Einstellung. */
-static void key_tod_pruefen(void)
+/* Schluessel nach dem Tod noch offen: Raum 2090/2091, Szene gesehen (9,110), Schluessel noch nicht gelegt (9,111). */
+static int key_tod_offen(void)
 {
-    if ((uint16_t)(g_current_room_id & 0xFFFEu) != RE15_GSZ_RAUM) return;
-    if (!re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN) || re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT)) return;
-    if (!gator_tot()) return;
+    if ((uint16_t)(g_current_room_id & 0xFFFEu) != RE15_GSZ_RAUM) return 0;
+    return re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN) && !re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT);
+}
+/* Lage + Kamera, (9,111), Schluessel + Zone, Einstellung. */
+static void key_tod_setzen(void)
+{
     key_lage_bei_tod();
     re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT, 1);
     key_bei_leiche((uint16_t)g_current_room_id);
     folge('L', (int)s_key_x, (int)s_key_z);
     key_einstellung();
+}
+/* Tod erkennen (Nachtakt im Bild des Todes, Rueckfall im SCD-Takt). */
+static void key_tod_pruefen(void)
+{
+    if (!key_tod_offen() || !gator_tot()) return;
+    key_tod_setzen();
+}
+/* ---- Schluessel-Schnitt statt R1-Rueckschnitt (Nachbesserung 3, Abnahme 2 M1) -------------------------------------------
+ * RE2 R1 (EM23_OVL_0000.BIN, selbst disassembliert): P0 schneidet nur, wenn der laufende Cut den Kopf nicht zeigt, und merkt das
+ * (+0x218 |= 0x40 @0x80102248); P1 laeuft Clip 9 bis zum letzten Bild (`jal 0x8001a330` a1 = 9 @0x80102494, `beq v0,zero,
+ * 0x8010252c` @0x8010249c) und schneidet DORT zurueck (`lhu v1,536(s1)` @0x801024a4, `andi v0,v1,0x40` @0x801024ac, `beq
+ * v0,zero` @0x801024b0, Cut 6/13 `jal 0x8002c7ac` @0x801024ec = Cut setzen 0x800cfbf2 @0x8002c7b8); die Sperre der Zonenkamera
+ * (0x800cfbd8 Bit 0x100) bleibt bis P3 (`addiu v1,zero,-257 / and / sw` @0x80102688-94), dazwischen P2 (+0x6 += 1 @0x80102638-50)
+ * und das Tot-Flag (+0x10E |= 0x4000 @0x8010265c-64). Spur B bildet das ab (gator_re2_r41.c re15_gr2_r1_tick: gr2_kam_zurueck am
+ * Clip-9-Ende, gr2_kam_frei in P3). Schnitt der Port erst mit dem Tot-Flag auf den Schluessel (Nachbesserung 2), stand der Zonen-
+ * Cut zwei Bilder lang dazwischen - gemessen Abnahme 2 Lauf KW/KWE und Nachbesserung 3 Lauf V_KW/V_KWE: state.log cam 1 F160-F195,
+ * cam 0 F196-F197, cam 2 ab F198 (Leon und Elza).
+ * PORT-WAHL der Inszenierung (Form wie Nachbesserung 2, RE1.5 "Kamera auf einen Gegenstand" ROOM2010 sub03 @0x008EE): der
+ * Schluessel-Schnitt ERSETZT diesen Rueckschnitt im selben Takt. Die Explosions-Einstellung behaelt damit ihre RE2-Laenge (Clip 9 bis
+ * zum letzten Bild), an der Stelle des RE2-Rueckschnitts steht die Einstellung auf den Schluessel, und deren Cut_old kehrt auf
+ * denselben Ausgangs-Cut zurueck (key_einstellung: vorher = work_vars[0x0A], von B's Rueckschnitt gesetzt = Cut_chg-Zwilling
+ * @0x800402fc). Die Leiche liegt schon in der Endpose (Clip 9 letztes Bild; P2/P3 bewegen sie nicht, re15_gr2_r1_tick), die Lage
+ * des Schluessels ist dieselbe wie im Tot-Bild. B's Programm endet mit re15_gr2_kamera_frei (Spur-B-API "Programm-Ende"), damit P3
+ * die Sperre der Einstellung nicht aufhebt (gr2_kam_frei laeuft dort nur bei aktivem Programm).
+ * Erkennung: R1 laeuft (re15_gr2_r1_laeuft, vor dem Tot-Flag), B haelt die Kamera (re15_gr2_kamera_gesperrt) und der Cut ist ein
+ * anderer als im ersten R1-Takt (nach B's P0-Schnitt) - zwischen P0 und P3 aendert B den Cut nur mit diesem Rueckschnitt, und die
+ * Zonenkamera ist gesperrt. Ohne Explosionsschnitt ("Sperre ohne Schnitt") aendert sich der Cut nicht: dann bleibt es beim Schnitt im
+ * Tot-Bild (key_tod_pruefen, Nachbesserung 2). Nur bei offenem Schluessel (key_tod_offen) - sonst bleibt B's Ablauf unberuehrt. */
+static void key_rueckschnitt_pruefen(int slot)
+{
+    if (!re15_gr2_r1_laeuft(slot)) { s_r1_cut = -1; return; }
+    const int cut = (int)g_scd.cam_id;
+    if (s_r1_cut < 0) { s_r1_cut = cut; return; }           /* erster R1-Takt: Cut nach B's P0 (Explosions-Cut oder Sperre) */
+    if (cut == s_r1_cut || !re15_gr2_kamera_gesperrt() || !key_tod_offen()) return;
+    const int expl = s_r1_cut;
+    s_r1_cut = cut;
+    re15_gr2_kamera_frei(NULL);                              /* B's R1-Programm endet hier (Cut bleibt, kein P3-Freigeben) */
+    folge('R', expl, cut);
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[gatorszene] Schluessel-Schnitt statt R1-Rueckschnitt: Explosions-Cut %d -> Ausgangs-Cut %d F%u (RE2 P1-Ende "
+                    "@0x801024a4-ec), Schluessel jetzt\n", expl, cut, (unsigned)g_engine.frame_count);
+#endif
+    key_tod_setzen();
 }
 int re15_gatorszene_r41_key_kamera(void) { return s_key_cut; }
 /* Pruefhaken (M5/M2): Primitivfarbe (hellster Kanal) des Schluessels JETZT, wie der Prop-Zeichner sie rechnet: Weltmatrix
