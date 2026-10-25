@@ -206,7 +206,8 @@ static int szene_pruefen(int elza, int tote)
     PRUEFE(p2 && p5 && p7 && p2 < p5 && p5 < p7, "Schnittfolge 2 -> 5 -> 7");
     /* FG-E4: mit dem Loslassen der Raumwechsel nach 2090 Cut 12 (der Rest der RE2-Folge laeuft dort, Programm 3) */
     const uint8_t wurf[] = { 0x29, 0x07, 0x3f, 0x02, 0x06, 0x00, 0x2b, 42, 0x00, 0x00, 0x09, 0x0a, 30, 0x00, 0x3f, 0x02, 0x06, 0x00,
-                             0x09, 0x0a, 20, 0x00, 0x22, 0x05, RE15_K2080_SIG_WURF, 0x01, 0x3b, RE15_K2080_TUER_SLOT };
+                             0x09, 0x0a, 20, 0x00, 0x22, 0x05, RE15_K2080_SIG_WURF, 0x01, 0x09, 0x0a, 0x01, 0x00,
+                             0x3b, RE15_K2080_TUER_SLOT };
     /* Nachbesserung 1 (M1): Aufnehmen = ROOM11B0 sub06 @0x01650..0x01663 (Marvin kniet am Gully und steht auf) - dieselben
      * Opcodes, das Sleep 60 @0x01654 am Griff-Bild 24 (letztes Bild von Loco c11, 25 Bilder) in 24 + Signal + 36 geteilt. */
     {

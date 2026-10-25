@@ -277,6 +277,8 @@ static void baue_szene(void)
     PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_ZIELEN));          /* @0x0782 (PORT-WAHL Clip wie @0x0750) */
     PUT(s_prog_szene, n, OP_SLEEP(20));                                  /* @0x0786 */
     PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_WURF));                   /* Super_reset @0x078E + Evt_exec sub13 @0x0796 */
+    PUT(s_prog_szene, n, OP_SLEEP(1));   /* Abschnittsende (irons_tod_1150.c OP_ABSCHNITT_ENDE): der Bildtakt sieht das Loslassen,
+                                          * bevor die Tuer feuert (Bank 5 ist Raum-Scratch, der 2090-Aufbau loescht ihn) */
     /* FG-E4 (Orchestrator-Entscheid 2026-10-25 00:56): der Fall laeuft "von unten" in ROOM2090/2091 Cut 12 - mit dem Loslassen
      * der Raumwechsel (Tuer ohne Sequenz, 1 Bild), Leon zurueck auf seine Lage beim Ausloesen; die RE2-Folge danach (Warten auf
      * den Aufschlag @0x079C-07A4, Sleep 15 @0x07A8, Schnitt auf den Fangenden @0x07D4) laeuft in 2090 (baue_rueck). */
@@ -790,6 +792,7 @@ void re15_kanister2080_r41_install(uint16_t room_id)
             gator_zuruecklegen(raum);                    /* FG-E3: derselbe Alligator (vor dem main.c-Portblock) */
             baue_rueck();
             const int slot = starten(s_prog_rueck, s_prog_rueck_n);
+            if (s_kan_zustand != 2) sig_setzen(RE15_K2080_SIG_GELANDET, 1);   /* kein Fall unterwegs: nicht auf den Aufschlag warten */
             K_LOG("ROOM%04X RUECKKEHR: Spieler (%d,%d,%d), Programm Faden %d, Bits %d/%d = 1, Zone-7-Tot-Bits %d..%d gesetzt: %d von %d",
                   raum, (int)s_leon[0], (int)s_leon[1], (int)s_leon[2], slot, RE15_K2080_BIT_SZENE, RE15_K2080_BIT_KANISTER,
                   RE15_K2080_TOT0, RE15_K2080_TOT0 + RE15_K2080_N_ZOMBIES - 1, RE15_K2080_N_ZOMBIES - lebende_zombies(),
