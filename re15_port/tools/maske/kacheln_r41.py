@@ -60,6 +60,21 @@ MAX_MASKEN = 105                 # re15_pri.h RE15_PRI_MAX_MASKS_PER_CUT (Origin
 K_MAX = 40                       # Obergrenze der DP je Koerper (Rechenaufwand; der Platz begrenzt frueher)
 
 
+def tim_mit_index(tb, idx):
+    """8-bpp-TIM: CLUT-Block bytegleich lassen, Indexbild ersetzen (Leser wie maskenbild.lies_tim_bytes)."""
+    magic, flag = struct.unpack_from("<II", tb, 0)
+    if magic != 0x10:
+        raise SystemExit("kein TIM")
+    o = 8
+    if flag & 8:
+        blen = struct.unpack_from("<I", tb, o)[0]
+        o += blen
+    blen, px, py, pw, ph = struct.unpack_from("<IHHHH", tb, o)
+    if idx.shape != (ph, pw * 2):
+        raise SystemExit("TIM-Groesse %s != %s" % (idx.shape, (ph, pw * 2)))
+    return tb[:o + 12] + idx.astype(np.uint8).tobytes() + tb[o + 12 + pw * 2 * ph:]
+
+
 def tabelle_lesen(pfad):
     out = {}
     rx = re.compile(r"\{ 0x([0-9A-F]{4}),\s*(\d+),\s*(\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+),\s*(\d+), (\d),\s*(\d+),\s*(-?\d+), (\d),"
@@ -88,15 +103,20 @@ def tabelle_schreiben(pfad, zeilen):
         t.write("    { 0x0000, 0xFF, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 } }   /* Ende */\n};\n")
 
 
-def dp_streifen(hit, be, ba, c0, c1, k_max):
+def dp_streifen(hit, be, ba, c0, c1, k_max, fig=None):
     """Spaltengrenzen fuer K = 1..k_max Streifen ueber die Spalten c0..c1-1. -> {K: (verletzt, [(a, b, D)])}.
-    Kosten eines Streifens [a, b): Koerperpunkte mit bucket(Austritt) <= D, D = max bucket(Eintritt) im Streifen."""
+    Kosten eines Streifens [a, b) (D = max bucket(Eintritt) im Streifen): ohne fig die Koerperpunkte mit bucket(Austritt) <= D;
+    mit fig (320 x 1025 Zaehler je Bildspalte und Stufe, test_r37_masken36 hinter) die erreichbaren Figurpunkte HINTER dem Koerper,
+    deren Stufe bucket(vz - 450) <= D ist - die blieben trotz des Teilrechtecks sichtbar."""
     n = c1 - c0
     NB = 1024 + 1
     emax = np.where(hit, be, -1)
     spm = emax[:, c0:c1].max(0).astype(np.int64)        # max Eintritt je Spalte
-    cnt = np.zeros((n, NB), np.int64)                  # je Spalte: Zahl der Austritts-Buckets <= D
+    cnt = np.zeros((n, NB), np.int64)                  # je Spalte: Zahl der Punkte mit Stufe <= D
     for j in range(n):
+        if fig is not None:
+            cnt[j] = np.cumsum(fig[c0 + j])
+            continue
         v = np.clip(ba[hit[:, c0 + j], c0 + j], 0, NB - 1).astype(np.int64)
         if len(v):
             h = np.bincount(v, minlength=NB)
@@ -155,11 +175,12 @@ def zerlegen(rechteck, grenzen):
     return teile
 
 
-def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle, bericht_cut, zuordnung, zurueck, rid):
+def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle, bericht_cut, zuordnung, zurueck, rid,
+                   auswahl=None, hinter=None):
     """-> (neue Sektion bytes oder None, Modell-Zeilen, Bericht)"""
     v = geom.cut_view(rdt, cam, cut)
     if not v or v[2] <= 0:
-        return None, [], {"grund": "keine Ansicht"}
+        return None, [], {"grund": "keine Ansicht"}, None
     R, t, H = v
     masks = sek["masks"]
     n = len(masks)
@@ -187,6 +208,9 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
         if shs:
             sh = shs[0]
             r["obj"] = (sh, tuple(sorted(set(int(c) for c in labs[sh][r["d"]]))))
+    for r in recs:
+        # alt = Generator-Rechteck an seiner BSS-Stelle: Ziel - Quelle == Verschiebung (schliessen_r41 Probe 1); sonst Saum-Rechteck
+        r["saum"] = r["obj"] is None or (r["X"] - r["sx"], r["Y"] - r["sy"]) != r["obj"][0]
     # ---- Koerper je Objekt (sh, comp) ----
     koerper = {}          # schluessel -> dict(typ, x, z, w, d, band, hoehe, saeule, off, bytes, iou, quelle)
     obj_koerper = {}      # (sh, comp) -> schluessel
@@ -269,9 +293,14 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
         if len(ks) == 1 and None not in ks:
             r["k"] = ks.pop()
             grp.setdefault(r["k"], []).append(r)
+    if auswahl is not None:
+        # nur Koerper mit gemessenen "zu fern"-Punkten (test_r37_masken36 fern), Zuordnungen von Hand und Koerper mit vorher
+        # ausgeschlossenen Rechtecken (OFFEN 9: Modell da, aber nicht jeder Punkt hinter dem Koerper -> Teile nur aus Koerperpunkten)
+        grp = {key: rl for key, rl in grp.items()
+               if key[0] == "hand" or any(r["i"] in auswahl for r in rl) or any(r["i"] in aus_set for r in rl)}
     bericht = {"koerper": {}, "n_vorher": n}
     if not grp:
-        return None, [], bericht
+        return None, [], bericht, None
     # ---- Eintritt/Austritt, DP je Koerper ----
     loes = {}
     for key, rl in grp.items():
@@ -286,77 +315,198 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
             continue
         cols = np.nonzero(hit.any(0))[0]
         c0, c1 = int(cols.min()), int(cols.max()) + 1
-        sol = dp_streifen(hit, be, ba, c0, c1, K_MAX)
-        loes[key] = dict(be=be, ba=ba, ok=ok, hit=hit, sol=sol, rl=rl, k=1)
-    # ---- Platz: gierig K erhoehen ----
-    def kosten(key, k):
-        gr = loes[key]["sol"][k][1]
-        return sum(len(zerlegen(r, gr)) for r in loes[key]["rl"]) - len(loes[key]["rl"])
+        fig = hinter.get((rid, cut, kp["off"], kp["hoehe"])) if hinter else None
+        sol = dp_streifen(hit, be, ba, c0, c1, K_MAX, fig)
+        saum_px = np.zeros((240, 320), bool)
+        for r in rl:
+            if r["saum"]:
+                saum_px |= r["d"]
+        loes[key] = dict(be=be, ba=ba, ok=ok, hit=hit, sol=sol, rl=rl, k=1, saum_px=saum_px)
+    # ---- Aufbau fuer eine Wahl (K je Koerper, Saum zusammenlegen ja/nein) ----
+    def saum_bereiche(gr):
+        """Spaltenbereiche der Streifen fuer Saum-Punkte (aeusserste Streifen bis an den Bildrand verlaengert)."""
+        out = []
+        for j, (a_, b_, _D) in enumerate(gr):
+            out.append((-10 ** 6 if j == 0 else a_, 10 ** 6 if j == len(gr) - 1 else b_))
+        return out
 
-    frei = MAX_MASKEN - n
-    while True:
-        bestg, bestq = None, 0.0
-        for key, L in loes.items():
-            ks = sorted(L["sol"])
-            nach = [k for k in ks if k > L["k"]]
-            if not nach:
-                continue
-            for k2 in nach:
-                dv = L["sol"][L["k"]][0] - L["sol"][k2][0]
-                dk = kosten(key, k2) - kosten(key, L["k"])
-                if dv <= 0 or dk > frei:
-                    continue
-                q = dv / max(dk, 0.5)
-                if q > bestq:
-                    bestq, bestg = q, (key, k2, dk)
-        if bestg is None:
-            break
-        key, k2, dk = bestg
-        loes[key]["k"] = k2
-        frei -= dk
-    # ---- neue Rechteckliste ----
-    neu = []              # (sx, sy, X, Y, w, h, dep, gi, herkunft, schluessel)
+    texel = {}
     for r in recs:
-        key = r["k"]
-        if key is None or key not in loes:
-            neu.append((r["sx"], r["sy"], r["X"], r["Y"], r["w"], r["h"], r["dep"], r["gi"], r["i"], None))
-            continue
-        L = loes[key]
-        gr = L["sol"][L["k"]][1]
-        for dx, ww in zerlegen(r, gr):
-            teil = np.zeros((240, 320), bool)
-            x0, x1 = max(0, r["X"] + dx), min(320, r["X"] + dx + ww)
-            if x1 > x0:
-                teil[:, x0:x1] = r["d"][:, x0:x1]
-            th = teil & L["ok"]
-            D = int(L["be"][th].max()) if th.any() else int(r["dep"])
-            neu.append((r["sx"] + dx, r["sy"], r["X"] + dx, r["Y"], ww, r["h"], D, r["gi"], r["i"], key if th.any() else None))
-    if len(neu) > MAX_MASKEN:
-        raise SystemExit("%s C%d: %d Rechtecke > %d" % (room, cut, len(neu), MAX_MASKEN))
-    # Gruppen: Zahl je Gruppe neu (Reihenfolge und Anker bleiben)
+        if r["saum"]:
+            ys, xs = np.nonzero(r["d"])
+            for y, x in zip(ys, xs):
+                texel.setdefault((int(y), int(x)), int(idx[r["sy"] + (y - r["Y"]), r["sx"] + (x - r["X"])]))
+
+    def bauen(wahl):
+        """wahl: {schluessel: (K, zusammenlegen)} -> (Liste neuer Rechtecke, neuer Atlas) oder (None, None) wenn der Atlas voll ist.
+        Rechteck: (sx, sy, X, Y, w, h, tiefe, gruppe oder None (= neue Einzelgruppe), herkunft, schluessel oder None)."""
+        entfernt = set()
+        for key, (k, zus) in wahl.items():
+            if zus:
+                entfernt |= set(r["i"] for r in loes[key]["rl"] if r["saum"])
+        belegt = np.zeros(idx.shape, bool)
+        for r in recs:
+            if r["i"] not in entfernt:
+                belegt[r["sy"]:r["sy"] + r["h"], r["sx"]:r["sx"] + r["w"]] = True
+        idx_neu = idx.copy()
+        idx_neu[~belegt] = 0                          # Flaechen entfernter Saum-Rechtecke freigeben
+        neu = []
+        for r in recs:
+            key = r["k"]
+            if key is None or key not in wahl:
+                # unveraendert; eine vorhandene Modell-Zeile wandert mit (neuer Index, gleiche Zelle und Tiefe)
+                neu.append((r["sx"], r["sy"], r["X"], r["Y"], r["w"], r["h"], r["dep"], r["gi"], [r["i"]],
+                            ("zeile", r["i"]) if (rid, cut, r["i"]) in modelle else None))
+                continue
+            L = loes[key]
+            k, zus = wahl[key]
+            gr = L["sol"][k][1]
+            if r["saum"]:
+                if zus:
+                    continue
+                th = r["d"] & L["ok"]                 # Saum-Rechteck bleibt, Tiefe aus dem Koerper
+                D = int(L["be"][th].max()) if th.any() else int(r["dep"])
+                neu.append((r["sx"], r["sy"], r["X"], r["Y"], r["w"], r["h"], D, r["gi"], [r["i"]], key if th.any() else None))
+                continue
+            for dx, ww in zerlegen(r, gr):
+                teil = np.zeros((240, 320), bool)
+                x0, x1 = max(0, r["X"] + dx), min(320, r["X"] + dx + ww)
+                if x1 > x0:
+                    teil[:, x0:x1] = r["d"][:, x0:x1]
+                # Zeilenlaeufe: vorher ausgeschlossene Rechtecke (OFFEN 9) in Zeilen nur mit Koerperpunkten und Zeilen mit Punkten
+                # ausserhalb des Koerpers trennen - die reinen Teile traegt das 3D-Urteil, die anderen entscheidet der Ausschluss
+                laeufe = [(0, r["h"])]
+                if r["i"] in aus_set:
+                    rein = []
+                    for yy in range(r["h"]):
+                        Yy = r["Y"] + yy
+                        zr = teil[Yy, :] if 0 <= Yy < 240 else np.zeros(320, bool)
+                        rein.append(bool(zr.any()) and bool((zr & L["ok"][Yy, :]).sum() == zr.sum()))
+                    laeufe, y0_ = [], 0
+                    for yy in range(1, r["h"] + 1):
+                        if yy == r["h"] or rein[yy] != rein[y0_]:
+                            laeufe.append((y0_, yy))
+                            y0_ = yy
+                for (ya, yb) in laeufe:
+                    tz = np.zeros((240, 320), bool)
+                    lo, hi = max(0, r["Y"] + ya), min(240, r["Y"] + yb)
+                    if hi > lo:
+                        tz[lo:hi] = teil[lo:hi]
+                    th = tz & L["ok"]
+                    D = int(L["be"][th].max()) if th.any() else int(r["dep"])
+                    neu.append((r["sx"] + dx, r["sy"] + ya, r["X"] + dx, r["Y"] + ya, ww, yb - ya, D, r["gi"], [r["i"]],
+                                key if th.any() else None))
+        for key in sorted(wahl, key=str):
+            k, zus = wahl[key]
+            if not zus:
+                continue
+            L = loes[key]
+            gr = L["sol"][k][1]
+            stuecke = []
+            for (a_, b_) in saum_bereiche(gr):
+                m = np.zeros((240, 320), bool)
+                lo, hi = max(0, a_), min(320, b_)
+                if hi > lo:
+                    m[:, lo:hi] = L["saum_px"][:, lo:hi]
+                stuecke += [m & L["ok"], m & ~L["ok"]]      # Koerperpunkte / Punkte ausserhalb des Koerpers getrennt
+            for m in stuecke:
+                if not m.any():
+                    continue
+                ys, xs = np.nonzero(m)
+                teile = [m]
+                if SR.frei_platz(belegt, int(xs.max() - xs.min() + 1), int(ys.max() - ys.min() + 1)) is None:
+                    lab, nl = ndimage.label(m, structure=np.ones((3, 3)))
+                    teile = [lab == j for j in range(1, nl + 1)]
+                for tm in teile:
+                    ys, xs = np.nonzero(tm)
+                    X0, Y0 = int(xs.min()), int(ys.min())
+                    w, h = int(xs.max() - X0 + 1), int(ys.max() - Y0 + 1)
+                    pl = SR.frei_platz(belegt, w, h)
+                    if pl is None:
+                        return None, None
+                    ax, ay = pl
+                    belegt[ay:ay + h, ax:ax + w] = True
+                    idx_neu[ay:ay + h, ax:ax + w] = 0
+                    for y, x in zip(ys, xs):
+                        idx_neu[ay + (y - Y0), ax + (x - X0)] = texel[(int(y), int(x))]
+                    th = tm & L["ok"]
+                    herk = sorted(set(r["i"] for r in L["rl"] if r["saum"] and (r["d"] & tm).any()))
+                    D = int(L["be"][th].max()) if th.any() else max(recs[i]["dep"] for i in herk)
+                    neu.append((ax, ay, X0, Y0, w, h, D, None, herk, key if th.any() else None))
+        return neu, idx_neu
+
+    def verletzt(wahl):
+        return sum(loes[key]["sol"][k][0] for key, (k, _z) in wahl.items())
+
+    # Start: K = 1, Saum zusammengelegt; passt es nicht, Koerper fuer Koerper den Saum stehen lassen
+    wahl = {key: (1, True) for key in loes}
+    neu, idx_neu = bauen(wahl)
+    for key in sorted(loes, key=lambda kk: -sum(1 for r in loes[kk]["rl"] if r["saum"])):
+        if neu is not None and len(neu) <= MAX_MASKEN:
+            break
+        wahl[key] = (1, False)
+        neu, idx_neu = bauen(wahl)
+    if neu is None or len(neu) > MAX_MASKEN:
+        wahl = {key: (1, False) for key in loes}
+        neu, idx_neu = bauen(wahl)
+    # Gierig: je Schritt der Koerper/K mit dem groessten Rueckgang der verletzten Punkte je zusaetzlichem Rechteck
+    while True:
+        best = None
+        for key, L in loes.items():
+            k, zus = wahl[key]
+            for k2 in sorted(kk for kk in L["sol"] if kk > k)[:6]:
+                dv = L["sol"][k][0] - L["sol"][k2][0]
+                if dv <= 0:
+                    continue
+                w2 = dict(wahl)
+                w2[key] = (k2, zus)
+                n2, i2 = bauen(w2)
+                if n2 is None or len(n2) > MAX_MASKEN:
+                    continue
+                q = dv / max(len(n2) - len(neu), 0.5)
+                if best is None or q > best[0]:
+                    best = (q, w2, n2, i2)
+        if best is None:
+            break
+        _q, wahl, neu, idx_neu = best
+    # Gruppen: alte Gruppen mit neuer Zahl (Reihenfolge und Anker bleiben), neue Saum-Stuecke je eine eigene Gruppe am Ende
     gcount = [0] * len(sek["groups"])
     for e in neu:
-        gcount[e[7]] += 1
+        if e[7] is not None:
+            gcount[e[7]] += 1
+    alte = [e for e in neu if e[7] is not None]
+    neue_saum = [e for e in neu if e[7] is None]
+    alte.sort(key=lambda e: e[7])                     # stabil: innerhalb der Gruppe bleibt die Reihenfolge
     groups = [(gcount[g], sek["groups"][g][2], sek["groups"][g][3]) for g in range(len(sek["groups"])) if gcount[g] > 0]
-    sec = geom.pack_section(groups, [(e[0], e[1], e[2], e[3], e[4], e[5], e[6]) for e in neu])
+    for e in neue_saum:
+        groups.append((1, e[2] - e[0], e[3] - e[1]))   # Anker = Ziel - Quelle (wie schliessen_r41)
+    alle = alte + neue_saum
+    sec = geom.pack_section(groups, [(e[0], e[1], e[2], e[3], e[4], e[5], e[6]) for e in alle])
     zeilen = []
-    for j, e in enumerate(neu):
+    for j, e in enumerate(alle):
         if e[9] is None:
+            continue
+        if e[9][0] == "zeile":                        # mitgewanderte Zeile eines unveraenderten Rechtecks
+            mz = modelle[(rid, cut, e[9][1])]
+            o, b_ = Z3.sca_beleg(rdt, (mz["x"], mz["z"], mz["w"], mz["d"]), mz["typ"], mz["band"])
+            zeilen.append((rid, cut, j, (mz["x"], mz["z"], mz["w"], mz["d"]), mz["typ"], mz["band"], mz["hoehe"], mz["saeule"],
+                           e[6], o, b_, mz["iou"]))
             continue
         kp = koerper[e[9]]
         zeilen.append((rid, cut, j, (kp["x"], kp["z"], kp["w"], kp["d"]), kp["typ"], kp["band"], kp["hoehe"], kp["saeule"], e[6],
                        kp["off"], kp["bytes"], kp["iou"]))
     for key, L in loes.items():
         kp = koerper[key]
+        k, zus = wahl[key]
         bericht["koerper"]["%s" % (key,)] = dict(quelle=kp["quelle"], zelle=[kp["x"], kp["z"], kp["w"], kp["d"]], typ=kp["typ"],
                                                   band=kp["band"], hoehe=kp["hoehe"], saeule=kp["saeule"], iou=round(kp["iou"], 3),
-                                                  rechtecke=[r["i"] for r in L["rl"]], K=L["k"],
-                                                  verletzt_1=L["sol"][1][0], verletzt=L["sol"][L["k"]][0],
+                                                  rechtecke=[r["i"] for r in L["rl"]], K=k, saum_zusammen=zus,
+                                                  verletzt_1=L["sol"][1][0], verletzt=L["sol"][k][0],
                                                   koerperpunkte=int(L["hit"].sum()),
-                                                  streifen=L["sol"][L["k"]][1])
-    bericht["n_nachher"] = len(neu)
-    bericht["herkunft"] = [e[8] for e in neu]
-    return sec, zeilen, bericht
+                                                  streifen=L["sol"][k][1])
+    bericht["n_nachher"] = len(alle)
+    bericht["herkunft"] = [e[8] for e in alle]
+    return sec, zeilen, bericht, idx_neu
 
 
 def main():
@@ -371,7 +521,24 @@ def main():
     ap.add_argument("--tabelle-aus", required=True)
     ap.add_argument("--zurueck", default=None, help="json {raum: {cut: [rechteck, ...]}}: ungeteilt lassen (Index der Quelle)")
     ap.add_argument("--zuordnung", default=os.path.join(HIER, "zuordnung_r41.json"))
+    ap.add_argument("--fern", default=None, help="Ausgabe von 'test_r37_masken36 fern': nur Koerper mit zu fernen Punkten (+ Hand)")
+    ap.add_argument("--hinter", default=None, help="Ausgabe von 'test_r37_masken36 hinter': Figurpunkte hinter den Koerpern je Spalte")
     a = ap.parse_args()
+    hinter = {}
+    if a.hinter:
+        for zl in open(a.hinter, encoding="utf-8", errors="replace"):
+            f = zl.split()
+            if len(f) == 8 and f[0] == "H":
+                key = (int(f[1], 16), int(f[2]), int(f[3]), int(f[4]))
+                if key not in hinter:
+                    hinter[key] = np.zeros((320, 1025), np.int64)
+                hinter[key][int(f[5]), min(int(f[6]), 1024)] += int(f[7])
+    fern = {}
+    if a.fern:
+        for zl in open(a.fern, encoding="utf-8", errors="replace"):
+            m = re.match(r"\s*ROOM([0-9A-F]{4}) C\s*(\d+)\s*: zu fern .*\|(.*)$", zl)
+            if m and not int(m.group(1), 16) & 1:
+                fern[(int(m.group(1), 16), int(m.group(2)))] = set(int(x) for x in re.findall(r" R(\d+) \d+ \(", m.group(3)))
     zuordnung = {}
     for room, cuts in json.load(open(a.zuordnung, encoding="utf-8")).items():
         if room.startswith("ROOM"):
@@ -399,6 +566,7 @@ def main():
         cam = struct.unpack_from("<I", rdt, 0x24)[0]
         secs, n_cut = SR.sektionen(blob)
         neue = {}
+        tims = {}
         b_raum = {}
         for cut, sek in sorted(secs.items()):
             tim = os.path.join(a.quelle, "%s_PRI%02d.TIM" % (room, cut))
@@ -409,10 +577,15 @@ def main():
             if not os.path.exists(cache):
                 continue
             zr = set(int(i) for i in zur.get(room, {}).get(str(cut), []))
-            sec, zeilen, b = cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus.get((rid, cut), set()), modelle,
-                                            berichtz.get(room, {}).get(str(cut), []), zuordnung, zr, rid)
+            ausw = None
+            if a.fern:
+                ausw = set(fern.get((rid, cut), set()))
+            sec, zeilen, b, idx_neu = cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus.get((rid, cut), set()),
+                                                     modelle, berichtz.get(room, {}).get(str(cut), []), zuordnung, zr, rid, ausw,
+                                                     hinter)
             if sec is not None:
                 neue[cut] = sec
+                tims[cut] = tim_mit_index(open(tim, "rb").read(), idx_neu)
                 bearbeitet.add((rid, cut))
                 alle_zeilen += zeilen
                 b_raum[cut] = b
@@ -430,6 +603,8 @@ def main():
         out = geom.pack_container(alt_secs, n_cut)
         for r in (rid, rid | 1):
             open(os.path.join(a.out, "ROOM%04X.MSK" % r), "wb").write(out)
+            for cut, tb in tims.items():
+                open(os.path.join(a.out, "ROOM%04X_PRI%02d.TIM" % (r, cut)), "wb").write(tb)
         gesamt[room] = b_raum
     # Modell-Zeilen: bearbeitete Cuts neu, uebrige unveraendert
     for (rid, cut, i), m in modelle.items():

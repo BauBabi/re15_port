@@ -15,6 +15,11 @@ cmake_minimum_required(VERSION 3.16)
 #        unit_r41_masken36_kurbel: Sichtlinie kreuzt die solide Zelle x -400..13100 z -2550..-2050), die Reling-Maske
 #        verdeckt seine Beine: S > 50 und H > 0 (gemessen 86 von 779).
 #   M    (Nachbesserung 1) Gegenprobe "die Maske wirkt": Figur HINTER dem Objekt, S > 50 und H > 0.
+#   Z    (Nachbesserung 3, Abnahme 2 Mangel 1 "zu fern") Figur HINTER dem Gegenstand: im Fenster (Flaeche des Gegenstands unter
+#        seiner Oberkante) ist KEIN Figurpunkt im Endbild zu sehen: S > 50 und V == 0. V = Figurpunkte mit |A - A0| > 24, A0 =
+#        dritter Lauf MIT Masken, Figur an der Stelle A0=<x>,<z> ausserhalb des Regionsvierecks (Akteur-Cull FUN_8002c18c) =
+#        dieselben Masken ohne Figur (probe_r41_masken36_sicht, RE15_SICHT_TOOL). Verdeckt die Maske die Figur, ist A dort
+#        exakt A0.
 # Nachbesserung 1 (Abnahme 0): SZENEN waehlt die Szenendatei (test_r41_masken36_zelle_szenen.cmake = Stages 3..6, Mangel 1),
 # die Hintergruende kommen fuer jede Stage der Szenen; Feld G= stellt einen Gegner weg (RE15_GEGNER_POS).
 # Dazu muss das Log fuer den Cut "masks=<n> fg_atlas=1" (n > 0) zeigen.
@@ -92,6 +97,8 @@ foreach(_sz IN LISTS R41M_SZENEN)
     list(LENGTH _f _fl)
     set(_figur "")
     set(_gegner "")
+    set(_a0x "")
+    set(_a0z "")
     set(_zr "${_raum}")
     set(_gpos "")
     if(_fl GREATER 11)
@@ -103,6 +110,9 @@ foreach(_sz IN LISTS R41M_SZENEN)
                 string(REGEX REPLACE ".$" "1" _zr "${_raum}")
             elseif(_wer MATCHES "^G=(.+)$")
                 set(_gpos "${CMAKE_MATCH_1}")
+            elseif(_wer MATCHES "^A0=(-?[0-9]+),(-?[0-9]+)$")
+                set(_a0x "${CMAKE_MATCH_1}")
+                set(_a0z "${CMAKE_MATCH_2}")
             endif()
         endforeach()
     endif()
@@ -110,18 +120,31 @@ foreach(_sz IN LISTS R41M_SZENEN)
         set(_gegner "RE15_GEGNER_POS=${_gpos}@0#${_zr}")
     endif()
     set(_ppm "")
-    foreach(_mit a b)
+    set(_laeufe a b)
+    if(_art STREQUAL "Z")
+        if(NOT RE15_SICHT_TOOL OR NOT EXISTS "${RE15_SICHT_TOOL}" OR "${_a0x}" STREQUAL "")
+            file(REMOVE "${_exe_kopie}")
+            message(FATAL_ERROR "r41_masken36_stage2[${_name}]: Art Z braucht RE15_SICHT_TOOL und A0=<x>,<z>")
+        endif()
+        list(APPEND _laeufe c)
+    endif()
+    foreach(_mit IN LISTS _laeufe)
         set(WORKDIR "${_basis_wd}/lauf_${_lauf_id}_${_name}_${_mit}")
         file(MAKE_DIRECTORY "${WORKDIR}")
         file(REMOVE "${WORKDIR}/f.ppm" "${WORKDIR}/debug.log")
         set(_extra "")
+        set(_px "${_x}")
+        set(_pz "${_z}")
         if(_mit STREQUAL "b")
             set(_extra "RE15_NO_PRI=1")
+        elseif(_mit STREQUAL "c")
+            set(_px "${_a0x}")
+            set(_pz "${_a0z}")
         endif()
         re15_start_spiel(_rv 180
             RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_AUDIODRIVER=dummy
             RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
-            "RE15_DEBUG_JUMP=${_raum}@250" "RE15_PLAYER_POS=${_x},${_z},0,${_band}" "RE15_FORCE_CUT=${_cut}"
+            "RE15_DEBUG_JUMP=${_raum}@250" "RE15_PLAYER_POS=${_px},${_pz},0,${_band}" "RE15_FORCE_CUT=${_cut}"
             "RE15_FRAMEDUMP=120:f.ppm" "RE15_EXIT_AT=120#${_zr}"
             ${_extra} ${_figur} ${_gegner}
             "${_exe_kopie}")
@@ -154,12 +177,23 @@ foreach(_sz IN LISTS R41M_SZENEN)
         set(_cc "${_cut}")
     endif()
     set(_pc "${_bg}/ROOM${_r3}${_cc}.ppm")
-    execute_process(COMMAND "${RE15_PPM_TOOL}" "${_pa}" "${_pb}" "${_pc}" ${_x0} ${_y0} ${_x1} ${_y1} 24
-                    RESULT_VARIABLE _rv OUTPUT_VARIABLE _o TIMEOUT 60)
-    string(REGEX MATCH "S=([0-9]+) H=([0-9]+)" _m "${_o}")
-    set(_s "${CMAKE_MATCH_1}")
-    set(_h "${CMAKE_MATCH_2}")
-    message(STATUS "r41_masken36_stage2[${_name}] ROOM${_zr} Cut ${_cut} (${_x},${_z}) Band ${_band} ${_art}: Figurpunkte ${_s}, uebermalt ${_h}")
+    set(_v "")
+    if(_art STREQUAL "Z")
+        list(GET _ppm 2 _pa0)
+        execute_process(COMMAND "${RE15_SICHT_TOOL}" "${_pa}" "${_pb}" "${_pc}" "${_pa0}" ${_x0} ${_y0} ${_x1} ${_y1} 24
+                        RESULT_VARIABLE _rv OUTPUT_VARIABLE _o TIMEOUT 60)
+        string(REGEX MATCH "S=([0-9]+) H=([0-9]+) V=([0-9]+)" _m "${_o}")
+        set(_s "${CMAKE_MATCH_1}")
+        set(_h "${CMAKE_MATCH_2}")
+        set(_v "${CMAKE_MATCH_3}")
+    else()
+        execute_process(COMMAND "${RE15_PPM_TOOL}" "${_pa}" "${_pb}" "${_pc}" ${_x0} ${_y0} ${_x1} ${_y1} 24
+                        RESULT_VARIABLE _rv OUTPUT_VARIABLE _o TIMEOUT 60)
+        string(REGEX MATCH "S=([0-9]+) H=([0-9]+)" _m "${_o}")
+        set(_s "${CMAKE_MATCH_1}")
+        set(_h "${CMAKE_MATCH_2}")
+    endif()
+    message(STATUS "r41_masken36_stage2[${_name}] ROOM${_zr} Cut ${_cut} (${_x},${_z}) Band ${_band} ${_art}: Figurpunkte ${_s}, uebermalt ${_h}, sichtbar ${_v}")
     math(EXPR _n "${_n} + 1")
     if(NOT _rv EQUAL 0 OR "${_s}" STREQUAL "")
         list(APPEND _fehler "${_name}: PPM-Werkzeug exit=${_rv} '${_o}'")
@@ -176,6 +210,8 @@ foreach(_sz IN LISTS R41M_SZENEN)
         list(APPEND _fehler "${_name}: Kurbel - die Reling-Maske verdeckt Leons Beine nicht (H=${_h})")
     elseif(_art STREQUAL "M" AND NOT _h GREATER 0)
         list(APPEND _fehler "${_name}: Gegenprobe - die Maske verdeckt die Figur HINTER dem Objekt nicht (H=${_h})")
+    elseif(_art STREQUAL "Z" AND NOT _v EQUAL 0)
+        list(APPEND _fehler "${_name}: HINTER dem Gegenstand ${_v} von ${_s} Figurpunkten im Fenster sichtbar (zu ferne Maske)")
     endif()
 endforeach()
 file(REMOVE "${_exe_kopie}")

@@ -80,6 +80,60 @@
     "zelle": "0x007F8",
     "beleg": "SCA-Zelle 2 @RDT+0x007F8 = b1 08 19 19 49 c6 ad ad 01 ff 00 03 (x -14775..-12550 z -21075..-14650 Typ 1 Band 0); Koerper-Silhouette bei gemessener Hoehe 4100: IoU 0.20, 86 % des Objekts im Koerper; automatisch: Objekt: kein Bodenkontakt; kein Bodenkontakt; Bild M_bilder/NB2/NB2_zuordnung_5020_00_180_20.png"
    }
+  ],
+  "7": [
+   {
+    "objekt": "rechter Container oben (Restliste NB2 Objekt 1)",
+    "verschiebung": [
+     275,
+     -128
+    ],
+    "punkt": [
+     282,
+     39
+    ],
+    "zelle": "0x00864",
+    "beleg": "SCA-Zelle 11 @RDT+0x00864 = 28 0a 28 0a cd e2 51 b4 01 ff 00 03 (x -7475..-4875 z -19375..-16775 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): rechter Container; Hoehe an allen vier Container-Objekten gemessen: 3500, IoU 0.872, 97 % im Koerper; Kamera C7 (-8517,-2427,-22045) nicht ueber der Zelle; vorher ausgeschlossen (R37, kein Bodenkontakt); Bild M_bilder/NB3/NB3_zuordnung_5020_07.png"
+   },
+   {
+    "objekt": "rechter Container Mitte",
+    "verschiebung": [
+     227,
+     -60
+    ],
+    "punkt": [
+     275,
+     105
+    ],
+    "zelle": "0x00864",
+    "beleg": "SCA-Zelle 11 @RDT+0x00864 = 28 0a 28 0a cd e2 51 b4 01 ff 00 03 (x -7475..-4875 z -19375..-16775 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): rechter Container; Hoehe an allen vier Container-Objekten gemessen: 3500, IoU 0.872, 97 % im Koerper; Kamera C7 (-8517,-2427,-22045) nicht ueber der Zelle; vorher gezeichnet, Generator- bzw. Zellen-Tiefe; Bild M_bilder/NB3/NB3_zuordnung_5020_07.png"
+   },
+   {
+    "objekt": "rechter Container unten",
+    "verschiebung": [
+     275,
+     70
+    ],
+    "punkt": [
+     304,
+     165
+    ],
+    "zelle": "0x00864",
+    "beleg": "SCA-Zelle 11 @RDT+0x00864 = 28 0a 28 0a cd e2 51 b4 01 ff 00 03 (x -7475..-4875 z -19375..-16775 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): rechter Container; Hoehe an allen vier Container-Objekten gemessen: 3500, IoU 0.872, 97 % im Koerper; Kamera C7 (-8517,-2427,-22045) nicht ueber der Zelle; vorher gezeichnet (R45/R47/R101 Zelle 11 Hoehe 950); Bild M_bilder/NB3/NB3_zuordnung_5020_07.png"
+   },
+   {
+    "objekt": "rechter Container Sockel",
+    "verschiebung": [
+     227,
+     118
+    ],
+    "punkt": [
+     298,
+     211
+    ],
+    "zelle": "0x00864",
+    "beleg": "SCA-Zelle 11 @RDT+0x00864 = 28 0a 28 0a cd e2 51 b4 01 ff 00 03 (x -7475..-4875 z -19375..-16775 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): rechter Container; Hoehe an allen vier Container-Objekten gemessen: 3500, IoU 0.872, 97 % im Koerper; Kamera C7 (-8517,-2427,-22045) nicht ueber der Zelle; vorher gezeichnet, Generator-Tiefe; Bild M_bilder/NB3/NB3_zuordnung_5020_07.png"
+   }
   ]
  },
  "ROOM5090": {
@@ -122,6 +176,19 @@
     ],
     "zelle": "0x009BC",
     "beleg": "SCA-Zelle 27 @RDT+0x009BC = 10 09 f6 14 8a 54 39 a9 01 ff 00 03 (x 21642..23962 z -22215..-16849 Typ 1 Band 0); Koerper-Silhouette bei gemessener Hoehe 1300: IoU 0.39, 72 % des Objekts im Koerper; automatisch: Modell [4050, -21700, 16175, 2000], im Ausschluss verfehlt; Bild M_bilder/NB2/NB2_zuordnung_5090_13_47_-16.png"
+   },
+   {
+    "objekt": "Kistenstapel Mitte links, oben (Restliste NB2 Objekt 1)",
+    "verschiebung": [
+     47,
+     -14
+    ],
+    "punkt": [
+     156,
+     72
+    ],
+    "zelle": "0x009BC",
+    "beleg": "SCA-Zelle 27 @RDT+0x009BC = 10 09 f6 14 8a 54 39 a9 01 ff 00 03 (x 21642..23962 z -22215..-16849 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): obere Kiste desselben Stapels wie 'Kistenstapel Mitte links, unten' (NB2); Hoehe an beiden Objekten gemessen: 3850, IoU 0.420, 87 % im Koerper; Kamera C13 (11050,-3109,-24812) nicht ueber der Zelle; vorher ausgeschlossen (R42, kein Bodenkontakt); Bild M_bilder/NB3/NB3_zuordnung_5090_13.png"
    }
   ]
  },
@@ -233,6 +300,60 @@
     "zelle": "0x0045C",
     "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 1): Teil derselben Trennwand; Hoehe an ALLEN Trennwand-Objekten des Cuts gemessen (koerper_r41.hoehe_messen): 3225, IoU 0.930, 100 % der Objektpunkte im Koerper (nur der NB2-Teil: 1925, IoU 0.575); vorher automatisch: Zelle 6 mit Hoehe 275 (IoU 0.67); Kamera C1 (-24744,-3300,9840) nicht ueber der Zelle; Bild M_bilder/NB3/NB3_zuordnung_30A0_01.png"
    }
+  ],
+  "3": [
+   {
+    "objekt": "Spinde oben (Restliste NB2 Objekt 2)",
+    "verschiebung": [
+     221,
+     0
+    ],
+    "punkt": [
+     254,
+     28
+    ],
+    "zelle": "0x0045C",
+    "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): hohe graue Spinde = Rueckseite der Trennwand-Zelle aus Kamera 3; Hoehe an allen vier Spind-Objekten gemessen (koerper_r41.hoehe_messen): 3725, IoU 0.605, 98 % des Objekts im Koerper; Kamera C3 (-26044,-3299,18039) nicht ueber der Zelle; vorher ausgeschlossen (R45, kein Bodenkontakt); Bild M_bilder/NB3/NB3_zuordnung_30A0_03.png"
+   },
+   {
+    "objekt": "Spinde Mitte oben (Restliste NB2 Objekt 1)",
+    "verschiebung": [
+     124,
+     51
+    ],
+    "punkt": [
+     237,
+     80
+    ],
+    "zelle": "0x0045C",
+    "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): hohe graue Spinde = Rueckseite der Trennwand-Zelle aus Kamera 3; Hoehe an allen vier Spind-Objekten gemessen (koerper_r41.hoehe_messen): 3725, IoU 0.605, 98 % des Objekts im Koerper; Kamera C3 (-26044,-3299,18039) nicht ueber der Zelle; vorher ausgeschlossen (R20/R21, keine Zelle mit Mehrheit); Bild M_bilder/NB3/NB3_zuordnung_30A0_03.png"
+   },
+   {
+    "objekt": "Spinde Mitte (gezeichnet, Modell Zelle 6 Hoehe 1325)",
+    "verschiebung": [
+     196,
+     51
+    ],
+    "punkt": [
+     279,
+     129
+    ],
+    "zelle": "0x0045C",
+    "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): hohe graue Spinde = Rueckseite der Trennwand-Zelle aus Kamera 3; Hoehe an allen vier Spind-Objekten gemessen (koerper_r41.hoehe_messen): 3725, IoU 0.605, 98 % des Objekts im Koerper; Kamera C3 (-26044,-3299,18039) nicht ueber der Zelle; vorher R27..R35 mit Zelle 6, Hoehe 1325 (IoU 0.32); Bild M_bilder/NB3/NB3_zuordnung_30A0_03.png"
+   },
+   {
+    "objekt": "Spinde unten (Restliste NB2 Objekt 3)",
+    "verschiebung": [
+     43,
+     154
+    ],
+    "punkt": [
+     257,
+     181
+    ],
+    "zelle": "0x0045C",
+    "beleg": "SCA-Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975 z 14125..15375 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): hohe graue Spinde = Rueckseite der Trennwand-Zelle aus Kamera 3; Hoehe an allen vier Spind-Objekten gemessen (koerper_r41.hoehe_messen): 3725, IoU 0.605, 98 % des Objekts im Koerper; Kamera C3 (-26044,-3299,18039) nicht ueber der Zelle; vorher ausgeschlossen (R36..R44, keine Zelle mit Mehrheit); Bild M_bilder/NB3/NB3_zuordnung_30A0_03.png"
+   }
   ]
  },
  "ROOM3040": {
@@ -249,6 +370,32 @@
     ],
     "zelle": "0x00870",
     "beleg": "SCA-Zelle 8 @RDT+0x00870 = 92 09 d0 07 14 a1 24 fa 01 ff 00 03 (x -24300..-21850 z -1500..500 Typ 1 Band 0); Koerper-Silhouette bei gemessener Hoehe 2725: IoU 0.24, 100 % des Objekts im Koerper; automatisch: Objekt: kein Bodenkontakt; keine Zelle traegt die Mehrheit der Bodenkontakte (0.05); Bild M_bilder/NB2/NB2_zuordnung_3040_00_73_96.png"
+   },
+   {
+    "objekt": "Schaltkasten oben (Restliste NB2 Objekt 1)",
+    "verschiebung": [
+     136,
+     72
+    ],
+    "punkt": [
+     193,
+     88
+    ],
+    "zelle": "0x00870",
+    "beleg": "SCA-Zelle 8 @RDT+0x00870 = 92 09 d0 07 14 a1 24 fa 01 ff 00 03 (x -24300..-21850 z -1500..500 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): Teil desselben Gegenstands wie 'Schaltkasten auf der Kiste' (NB2); Hoehe an allen drei Objekten gemessen: 3475, IoU 0.526, 100 % im Koerper; Kamera C0 (-25704,-1277,-8009) nicht ueber der Zelle; vorher ausgeschlossen (R8/R10/R24/R25/R27, kein Bodenkontakt); Bild M_bilder/NB3/NB3_zuordnung_3040_00.png"
+   },
+   {
+    "objekt": "Kiste unter dem Schaltkasten (Restliste NB2 Objekt 2)",
+    "verschiebung": [
+     -9,
+     124
+    ],
+    "punkt": [
+     143,
+     140
+    ],
+    "zelle": "0x00870",
+    "beleg": "SCA-Zelle 8 @RDT+0x00870 = 92 09 d0 07 14 a1 24 fa 01 ff 00 03 (x -24300..-21850 z -1500..500 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): Teil desselben Gegenstands wie 'Schaltkasten auf der Kiste' (NB2); Hoehe an allen drei Objekten gemessen: 3475, IoU 0.526, 100 % im Koerper; Kamera C0 (-25704,-1277,-8009) nicht ueber der Zelle; vorher ausgeschlossen (R2..R6/R36, kein Bodenkontakt); Bild M_bilder/NB3/NB3_zuordnung_3040_00.png"
    }
   ]
  }
