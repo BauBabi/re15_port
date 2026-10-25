@@ -1,0 +1,315 @@
+cmake_minimum_required(VERSION 3.16)
+# =============================================================================
+# DIE 53 NUTZER-MASKEN 11A0 + STAGE2 AN DER ECHTEN EXE (Runde 41, Spur M "masken36", Punkt 2).
+#
+# Nutzer: "Ich habe diverse neue PRIs fuer STAGE2 erstellt. die sollen alle sauber eingebaut werden!" (Masken aus den
+# Freistellungen in master 5924939d, Lage/Ebene be59e679). Dossier analysis/befunde_runde41/M_masken36.md Punkt 2.
+# Je Szene zwei Framedumps (Bild 120, RE15_WINDOW_SCALE=1, Leon per RE15_DEBUG_JUMP + RE15_PLAYER_POS, RE15_FORCE_CUT):
+#   A  mit Masken, B  ohne Masken (RE15_NO_PRI=1); C = Hintergrund des Cuts aus probe_bg_dump (der figurlose Spielrahmen
+#   ist bitgleich zu diesem Bild, gemessen ROOM3050 Cut 2: 0 Abweichung). probe_r37_masken36_ppm im Figurfenster:
+#   S = Figurpunkte |B - C| > 24, H = davon uebermalt |A - B| > 24.
+#   VOR (Leon an der begehbaren Stelle, die die Maskenflaeche am staerksten VOR der Standlinie der Freistellung
+#        ueberdeckt): S > 50 und H == 0.
+#   HINTER (staerkste Ueberdeckung HINTER der Standlinie): S > 50 und H >= S/2.
+#   KURBEL ROOM2020 Cut 3 (Pos_set @0x0A8C (3650,-1800,-2925)): Leon steht HINTER der Suedreling (Riegel
+#        unit_r41_masken36_kurbel: Sichtlinie kreuzt die solide Zelle x -400..13100 z -2550..-2050), die Reling-Maske
+#        verdeckt seine Beine: S > 50 und H > 0 (gemessen 86 von 779).
+#   M    (Nachbesserung 1) Gegenprobe "die Maske wirkt": Figur HINTER dem Objekt, S > 50 und H > 0.
+#   Z    (Nachbesserung 3, Abnahme 2 Mangel 1 "zu fern") Figur HINTER dem Gegenstand: im Fenster (Flaeche des Gegenstands unter
+#        seiner Oberkante) ist KEIN Figurpunkt im Endbild zu sehen: S > 50 und V == 0. V = Figurpunkte mit |A - A0| > 24, A0 =
+#        dritter Lauf MIT Masken, Figur an der Stelle A0=<x>,<z> ausserhalb des Regionsvierecks (Figuren-Cull FUN_80014368, z.B.
+#        NPC-Zeichner FUN_80039ca0 @0x80039d68 jal / @0x80039d70 beq; NB4: vorher hiess es hier falsch "Akteur-Cull FUN_8002c18c" =
+#        Objekt-Zeichner) =
+#        dieselben Masken ohne Figur (probe_r41_masken36_sicht, RE15_SICHT_TOOL). Verdeckt die Maske die Figur, ist A dort
+#        exakt A0.
+#   L    (Nachbesserung 5, Entscheid M-E2) wie V, aber nur die SPIELFIGUR zaehlt: dritter Lauf D OHNE Masken mit der Figur an A0=<x>,<z>
+#        ausserhalb des Regionsvierecks (Figuren-Cull FUN_80014368) - S = |B - D| > 24 (Figurpunkte der Spielfigur; Gegner, NPCs und
+#        3D-Objekte stehen in B und D gleich), H = davon |A - B| > 24. S > SMIN und H == 0. Grund (gemessen NB5, w3040_03): mit V zaehlte
+#        ein Gegner HINTER dem neuen Gelaender, den die Maske richtig verdeckt, als "uebermalt".
+#   SMIN=<n> (Nachbesserung 5): Untergrenze fuer S statt 50 (duenne Teile: das Fenster um wenige Figurpunkte ist kleiner; Wert = Zahl der
+#        Figurpunkte des Kasten-Modells in der Szenendatei).
+# Nachbesserung 1 (Abnahme 0): SZENEN waehlt die Szenendatei (test_r41_masken36_zelle_szenen.cmake = Stages 3..6, Mangel 1),
+# die Hintergruende kommen fuer jede Stage der Szenen; Feld G= stellt einen Gegner weg (RE15_GEGNER_POS).
+# Dazu muss das Log fuer den Cut "masks=<n> fg_atlas=1" (n > 0) zeigen.
+# Laufpruefung (Nachbesserung 4, Abnahme 3 Mangel 3): RE15_FRAMEDUMP=120:f.ppm schreibt schon im BOOT-Raum (Bild 120 vor dem
+# Sprung @250, g_engine.frame_count beginnt je Raum neu). Bricht ein Lauf nach dem Raumwechsel ab (gemessen: Abnahme 3, d4040_09
+# unter Last nach 180 s ohne zweiten Framedump), laege das Boot-Bild als f.ppm da - rot bei Art V/H, LEER GRUEN bei Art Z/V.
+# Ausgewertet wird deshalb nur ein Lauf, dessen debug.log NACH dem letzten "loaded room<zr>.rdt" den Framedump
+# "[framedump] <w>x<h> -> f.ppm" und danach "[flow] EXIT_AT: Bild 120 in Raum <zr> erreicht" zeigt (main.c: RE15_EXIT_AT
+# wirkt am Ende des Bilds nach re15_render_end_frame, also nach dem Framedump desselben Bilds). Sonst bis zu 3 Versuche, dann
+# Fehler. -DGEGENPROBE=1: absichtlich abgebrochener Lauf (RE15_EXIT_AT=60 im Zielraum, f.ppm = Boot-Bild) muss abgelehnt,
+# ein voller Lauf derselben Szene angenommen werden (Riegel integration_r41_masken36_laufpruefung).
+#
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PPM_TOOL=<probe_r37_masken36_ppm> -DRE15_BG_TOOL=<probe_bg_dump>
+#               -DCD_ROOT=<shared_assets/PSX> -DWORKDIR=<dir> -P <diese Datei>
+# =============================================================================
+foreach(_v RE15_PC_EXE RE15_PPM_TOOL RE15_BG_TOOL CD_ROOT)
+    if(NOT ${_v} OR NOT EXISTS "${${_v}}")
+        message(FATAL_ERROR "r41_masken36_stage2: ${_v} fehlt: '${${_v}}'")
+    endif()
+endforeach()
+if(NOT WORKDIR)
+    message(FATAL_ERROR "r41_masken36_stage2: WORKDIR fehlt")
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+
+# Laufpruefung (Kopf): setzt <aus> auf "" (Lauf gueltig) oder den Grund.
+function(r41m_lauf_pruefen _wd _zr _bild _aus)
+    set(_g "")
+    if(NOT EXISTS "${_wd}/f.ppm")
+        set(_g "kein Framedump f.ppm")
+    elseif(NOT EXISTS "${_wd}/debug.log")
+        set(_g "kein debug.log")
+    else()
+        file(READ "${_wd}/debug.log" _log)
+        string(TOLOWER "${_zr}" _zrl)
+        string(FIND "${_log}" "loaded room${_zrl}.rdt" _zp REVERSE)
+        if(_zp LESS 0)
+            set(_g "Zielraum ROOM${_zr} nie geladen")
+        else()
+            string(SUBSTRING "${_log}" ${_zp} -1 _rest)
+            string(FIND "${_rest}" "[flow] EXIT_AT: Bild ${_bild} in Raum ${_zrl} erreicht" _ep)
+            if(_ep LESS 0)
+                set(_g "kein '[flow] EXIT_AT: Bild ${_bild} in Raum ${_zrl}' nach dem Laden des Zielraums (Lauf abgebrochen)")
+            else()
+                string(SUBSTRING "${_rest}" 0 ${_ep} _vor)
+                if(NOT _vor MATCHES "\\[framedump\\] [0-9]+x[0-9]+ -> f\\.ppm")
+                    set(_g "kein Framedump im Zielraum vor EXIT_AT (f.ppm ist ein frueheres Bild)")
+                endif()
+            endif()
+        endif()
+    endif()
+    set(${_aus} "${_g}" PARENT_SCOPE)
+endfunction()
+
+string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
+get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
+get_filename_component(_exe_ext "${RE15_PC_EXE}" LAST_EXT)
+if(NOT PRAEFIX)                     # je Riegel ein eigenes Praefix (parallel-fest: kein Riegel loescht die Kopie eines anderen)
+    set(PRAEFIX "r41m2")
+endif()
+file(GLOB _alte_kopien "${_exe_dir}/re15_pc_${PRAEFIX}_*")
+foreach(_k IN LISTS _alte_kopien)
+    file(REMOVE "${_k}")
+endforeach()
+set(_exe_kopie "${_exe_dir}/re15_pc_${PRAEFIX}_${_lauf_id}${_exe_ext}")
+file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
+set(_basis_wd "${WORKDIR}")
+
+# Szenen: name raum(hex) cut x z band art(V/H/K/M/Z) fenster x0 y0 x1 y1 [E = Elza] [G=<akteur>,<x>,<z>,<rot>] [W=<gier>] [A0=<x>,<z>]
+# (Lagen/Fenster: Dossier Punkt 2 und Nachbesserung 1). SZENEN = Szenendatei (Vorgabe test_r41_masken36_szenen.cmake).
+# G= stellt den Akteur <akteur> ab Bild 0 im Szenenraum fest (RE15_GEGNER_POS, engine/src/pri1100_r37.c) - so zaehlt S nur die
+# Spielfigur, wenn ein Gegner direkt hinter ihr steht (Nachbesserung 1, Mangel 3: ROOM2030 C15 Spinne = Akteur 1).
+if(NOT SZENEN)
+    set(SZENEN "${CMAKE_CURRENT_LIST_DIR}/test_r41_masken36_szenen.cmake")
+endif()
+include("${SZENEN}")
+
+# Hintergruende der Stages der Szenen (C-Bilder, probe_bg_dump)
+set(_bg "${_basis_wd}/bg_${_lauf_id}")
+file(MAKE_DIRECTORY "${_bg}")
+set(_stages "")
+foreach(_sz IN LISTS R41M_SZENEN)
+    string(FIND "${_sz}" " " _sp)
+    math(EXPR _sp1 "${_sp} + 1")
+    string(SUBSTRING "${_sz}" ${_sp1} 1 _st)
+    list(APPEND _stages "${_st}")
+endforeach()
+list(REMOVE_DUPLICATES _stages)
+foreach(_st IN LISTS _stages)
+    execute_process(COMMAND "${RE15_BG_TOOL}" "${CD_ROOT}" "${_bg}" ${_st} RESULT_VARIABLE _rv OUTPUT_QUIET ERROR_QUIET TIMEOUT 300)
+    if(NOT _rv EQUAL 0)
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r41_masken36_stage2: probe_bg_dump Stage ${_st} exit=${_rv}")
+    endif()
+endforeach()
+
+set(_fehler "")
+set(_n 0)
+foreach(_sz IN LISTS R41M_SZENEN)
+    string(REPLACE " " ";" _f "${_sz}")
+    list(GET _f 0 _name)
+    list(GET _f 1 _raum)
+    list(GET _f 2 _cut)
+    list(GET _f 3 _x)
+    list(GET _f 4 _z)
+    list(GET _f 5 _band)
+    list(GET _f 6 _art)
+    list(GET _f 7 _x0)
+    list(GET _f 8 _y0)
+    list(GET _f 9 _x1)
+    list(GET _f 10 _y1)
+    list(LENGTH _f _fl)
+    set(_figur "")
+    set(_gegner "")
+    set(_a0x "")
+    set(_a0z "")
+    set(_zr "${_raum}")
+    set(_gpos "")
+    set(_gier 0)
+    set(_smin 50)
+    if(_fl GREATER 11)
+        math(EXPR _letzt "${_fl} - 1")
+        foreach(_i RANGE 11 ${_letzt})
+            list(GET _f ${_i} _wer)
+            if(_wer STREQUAL "E")     # Elza: der Sprung laedt ihre Raumvariante ROOMxxx1 (Zwilling-Masken, re15_pri_masken_raum)
+                set(_figur "RE15_TITLE_SHOT_CHAR=1")
+                string(REGEX REPLACE ".$" "1" _zr "${_raum}")
+            elseif(_wer MATCHES "^G=(.+)$")
+                set(_gpos "${CMAKE_MATCH_1}")
+            elseif(_wer MATCHES "^W=([0-9]+)$")     # NB4: Gier der Figur (RE15_PLAYER_POS x,z,gier,band; Vorgabe 0)
+                set(_gier "${CMAKE_MATCH_1}")
+            elseif(_wer MATCHES "^SMIN=([0-9]+)$")  # NB5: Untergrenze fuer S (Kopf)
+                set(_smin "${CMAKE_MATCH_1}")
+            elseif(_wer MATCHES "^A0=(-?[0-9]+),(-?[0-9]+)$")
+                set(_a0x "${CMAKE_MATCH_1}")
+                set(_a0z "${CMAKE_MATCH_2}")
+            endif()
+        endforeach()
+    endif()
+    if(_gpos)
+        set(_gegner "RE15_GEGNER_POS=${_gpos}@0#${_zr}")
+    endif()
+    set(_ppm "")
+    set(_laeufe a b)
+    if(_art STREQUAL "Z")
+        if(NOT RE15_SICHT_TOOL OR NOT EXISTS "${RE15_SICHT_TOOL}" OR "${_a0x}" STREQUAL "")
+            file(REMOVE "${_exe_kopie}")
+            message(FATAL_ERROR "r41_masken36_stage2[${_name}]: Art Z braucht RE15_SICHT_TOOL und A0=<x>,<z>")
+        endif()
+        list(APPEND _laeufe c)
+    elseif(_art STREQUAL "L")
+        if("${_a0x}" STREQUAL "")
+            file(REMOVE "${_exe_kopie}")
+            message(FATAL_ERROR "r41_masken36_stage2[${_name}]: Art L braucht A0=<x>,<z>")
+        endif()
+        list(APPEND _laeufe d)
+    endif()
+    foreach(_mit IN LISTS _laeufe)
+        set(WORKDIR "${_basis_wd}/lauf_${_lauf_id}_${_name}_${_mit}")
+        file(MAKE_DIRECTORY "${WORKDIR}")
+        file(REMOVE "${WORKDIR}/f.ppm" "${WORKDIR}/debug.log")
+        set(_extra "")
+        set(_px "${_x}")
+        set(_pz "${_z}")
+        if(_mit STREQUAL "b")
+            set(_extra "RE15_NO_PRI=1")
+        elseif(_mit STREQUAL "c")
+            set(_px "${_a0x}")
+            set(_pz "${_a0z}")
+        elseif(_mit STREQUAL "d")                # NB5 Art L: ohne Masken, Figur ausserhalb des Regionsvierecks
+            set(_extra "RE15_NO_PRI=1")
+            set(_px "${_a0x}")
+            set(_pz "${_a0z}")
+        endif()
+        set(_grund "?")
+        set(_versuch 0)
+        while(NOT "${_grund}" STREQUAL "" AND _versuch LESS 3)
+            math(EXPR _versuch "${_versuch} + 1")
+            file(REMOVE "${WORKDIR}/f.ppm" "${WORKDIR}/debug.log")
+            set(_ende 120)
+            if(GEGENPROBE AND _versuch EQUAL 1)
+                set(_ende 60)           # Gegenprobe: Abbruch im Zielraum VOR seinem Framedump (f.ppm = Boot-Bild 120)
+            endif()
+            re15_start_spiel(_rv 180
+                RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_AUDIODRIVER=dummy
+                RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+                "RE15_DEBUG_JUMP=${_raum}@250" "RE15_PLAYER_POS=${_px},${_pz},${_gier},${_band}" "RE15_FORCE_CUT=${_cut}"
+                "RE15_FRAMEDUMP=120:f.ppm" "RE15_EXIT_AT=${_ende}#${_zr}"
+                ${_extra} ${_figur} ${_gegner}
+                "${_exe_kopie}")
+            r41m_lauf_pruefen("${WORKDIR}" "${_zr}" 120 _grund)
+            if(GEGENPROBE AND _versuch EQUAL 1)
+                if(NOT EXISTS "${WORKDIR}/f.ppm" OR "${_grund}" STREQUAL "")
+                    file(REMOVE "${_exe_kopie}")
+                    message(FATAL_ERROR "r41_masken36_laufpruefung[${_name}]: Gegenprobe - der abgebrochene Lauf (EXIT_AT 60, f.ppm da: "
+                                        "${WORKDIR}) wurde NICHT abgelehnt ('${_grund}')")
+                endif()
+                message(STATUS "r41_masken36_laufpruefung[${_name}]: abgebrochener Lauf abgelehnt: ${_grund}")
+                set(_grund "?")         # zweiter Versuch = voller Lauf, muss angenommen werden
+            elseif(NOT "${_grund}" STREQUAL "")
+                message(STATUS "r41_masken36_stage2[${_name} ${_mit}] Versuch ${_versuch}: Lauf ungueltig (${_grund}, exit=${_rv}) - neu")
+            endif()
+        endwhile()
+        if(NOT "${_grund}" STREQUAL "")
+            file(REMOVE "${_exe_kopie}")
+            message(FATAL_ERROR "r41_masken36_stage2[${_name} ${_mit}]: Lauf ungueltig nach ${_versuch} Versuchen: ${_grund} (exit=${_rv}, ${WORKDIR})")
+        endif()
+        if(GEGENPROBE)
+            file(REMOVE "${_exe_kopie}")
+            message(STATUS "r41_masken36_laufpruefung[${_name}]: voller Lauf angenommen (Versuch ${_versuch}) - Gegenprobe OK")
+            return()
+        endif()
+        list(APPEND _ppm "${WORKDIR}/f.ppm")
+        if(_mit STREQUAL "a")
+            file(READ "${WORKDIR}/debug.log" _log)
+            string(TOLOWER "loaded room${_zr}.rdt" _zl)
+            string(FIND "${_log}" "${_zl}" _zp)
+            if(_zp LESS 0)
+                list(APPEND _fehler "${_name}: ROOM${_zr} nicht geladen")
+            else()
+                string(SUBSTRING "${_log}" ${_zp} -1 _log)
+                string(REGEX MATCH "\\[pri\\] cut=${_cut} pri_offset=0x[0-9A-F]+ masks=([0-9]+) fg_atlas=([0-9])" _m "${_log}")
+                if(NOT _m OR CMAKE_MATCH_1 EQUAL 0 OR NOT CMAKE_MATCH_2 EQUAL 1)
+                    list(APPEND _fehler "${_name}: Cut ${_cut} ohne gezeichnete Masken '${_m}'")
+                endif()
+            endif()
+        endif()
+    endforeach()
+    list(GET _ppm 0 _pa)
+    list(GET _ppm 1 _pb)
+    string(SUBSTRING "${_raum}" 0 3 _r3)
+    if(_cut LESS 10)
+        set(_cc "0${_cut}")
+    else()
+        set(_cc "${_cut}")
+    endif()
+    set(_pc "${_bg}/ROOM${_r3}${_cc}.ppm")
+    set(_v "")
+    if(_art STREQUAL "Z")
+        list(GET _ppm 2 _pa0)
+        execute_process(COMMAND "${RE15_SICHT_TOOL}" "${_pa}" "${_pb}" "${_pc}" "${_pa0}" ${_x0} ${_y0} ${_x1} ${_y1} 24
+                        RESULT_VARIABLE _rv OUTPUT_VARIABLE _o TIMEOUT 60)
+        string(REGEX MATCH "S=([0-9]+) H=([0-9]+) V=([0-9]+)" _m "${_o}")
+        set(_s "${CMAKE_MATCH_1}")
+        set(_h "${CMAKE_MATCH_2}")
+        set(_v "${CMAKE_MATCH_3}")
+    else()
+        if(_art STREQUAL "L")
+            list(GET _ppm 2 _pc)                 # NB5: "Hintergrund" = Lauf D (ohne Masken, ohne Spielfigur) -> S = nur die Spielfigur
+        endif()
+        execute_process(COMMAND "${RE15_PPM_TOOL}" "${_pa}" "${_pb}" "${_pc}" ${_x0} ${_y0} ${_x1} ${_y1} 24
+                        RESULT_VARIABLE _rv OUTPUT_VARIABLE _o TIMEOUT 60)
+        string(REGEX MATCH "S=([0-9]+) H=([0-9]+)" _m "${_o}")
+        set(_s "${CMAKE_MATCH_1}")
+        set(_h "${CMAKE_MATCH_2}")
+    endif()
+    message(STATUS "r41_masken36_stage2[${_name}] ROOM${_zr} Cut ${_cut} (${_x},${_z}) Band ${_band} ${_art}: Figurpunkte ${_s}, uebermalt ${_h}, sichtbar ${_v}")
+    math(EXPR _n "${_n} + 1")
+    if(NOT _rv EQUAL 0 OR "${_s}" STREQUAL "")
+        list(APPEND _fehler "${_name}: PPM-Werkzeug exit=${_rv} '${_o}'")
+    elseif(NOT _s GREATER ${_smin})
+        list(APPEND _fehler "${_name}: Leon im Figurfenster nicht zu sehen (S=${_s}, verlangt > ${_smin}) - leeres Gruen")
+    elseif(_art STREQUAL "V" AND NOT _h EQUAL 0)
+        list(APPEND _fehler "${_name}: VOR der Freistellung ${_h} von ${_s} Figurpunkten uebermalt")
+    elseif(_art STREQUAL "L" AND NOT _h EQUAL 0)
+        list(APPEND _fehler "${_name}: VOR dem Teil ${_h} von ${_s} Punkten der Spielfigur uebermalt")
+    elseif(_art STREQUAL "H")
+        math(EXPR _h2 "${_h} * 2")
+        if(_h2 LESS _s)
+            list(APPEND _fehler "${_name}: HINTER der Freistellung nur ${_h} von ${_s} verdeckt (Soll >= Haelfte)")
+        endif()
+    elseif(_art STREQUAL "K" AND NOT _h GREATER 0)
+        list(APPEND _fehler "${_name}: Kurbel - die Reling-Maske verdeckt Leons Beine nicht (H=${_h})")
+    elseif(_art STREQUAL "M" AND NOT _h GREATER 0)
+        list(APPEND _fehler "${_name}: Gegenprobe - die Maske verdeckt die Figur HINTER dem Objekt nicht (H=${_h})")
+    elseif(_art STREQUAL "Z" AND NOT _v EQUAL 0)
+        list(APPEND _fehler "${_name}: HINTER dem Gegenstand ${_v} von ${_s} Figurpunkten im Fenster sichtbar (zu ferne Maske)")
+    endif()
+endforeach()
+file(REMOVE "${_exe_kopie}")
+if(_fehler)
+    string(REPLACE ";" "\n  " _ft "${_fehler}")
+    message(FATAL_ERROR "r41_masken36_stage2: ${_n} Szenen, Fehler:\n  ${_ft}")
+endif()
+message(STATUS "r41_masken36_stage2: ${_n} Szenen OK")
