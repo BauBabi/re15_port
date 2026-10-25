@@ -789,3 +789,46 @@ Nachsatz des Nutzers zu 24b (Wortlaut): "marvin" — gesehen bei Marvin (Leons S
   braeuchte einen neuen Hintergrund. Gewaehlt wird die naechstliegende vorhandene Kamera (laut Abnahme 2090 Cut 12, knapp
   daneben) mit der RE2-Schnittfolge des Wurfs (ROOM7020 sub12/13: Bild, Dauer, Schnitte belegen); PORT-WAHL im Dossier mit
   Bildvergleich RE2 <-> Port. Der Nutzer wird darauf hingewiesen.
+
+## 2026-10-25 02:47 — Nachtrag 25 (Nutzer-Antworten per Auswahl zu den Fragen (o)/(p)/(q) der Spur C) + Orchestrator-Entscheid C-E4
+
+(o) "Soll waehrend der 60 Sekunden RE2s Selbstzerstoerungs-Alarm (SUB_25, RE2 ROOM6040) laufen?" — **"Ja, RE2-Alarm SUB_25"**.
+(p) "Countdown-Anzeige: gebaut MM:SS:HH oben rechts ... Passt das?" — **Antwort des Nutzers (Wortlaut): "Auch da gibt es
+    mindestens ein Alarm in Resident Evil 2."** -> RE2 HAT eine Countdown-Anzeige (Selbstzerstoerungs-Zeit am Spielende):
+    Spur C findet sie in RE2 (ghidra_re2_Leon.txt / RE2_Quellcode_V2: Zeit-Anzeige, Ziffern-Textur, Lage, Format, Ausloeser,
+    z. B. die Laborsequenz um ROOM6040 / den Zug) und baut den 2030-Countdown in GENAU dieser Form nach (Form/Lage/Ziffern/
+    Farbe mit Beleg), statt der Port-Wahl MM:SS:HH.
+(q) "A fuse box for the valve controls." — **"Freigeben"**.
+
+**C-E4:** Fuer den Alarm darf Spur C einen kleinen, markierten Haken im Musik-/BGM-Lader platform/pc/src/audio_pc.c setzen
+("Runde 41 Spur C, C-E4"; Spur D ist integriert, beidseitig mergen). SUB_25 aus info/re2leon/COMMON/SOUND/SUB_25.BGM bytegleich
+nach shared_assets/RE2/SOUND/ (Paket-Gate nennen). Alarm vom Warntext bis zur Flut bzw. bis zum Verlassen des Raums.
+
+## 2026-10-25 02:51 — Orchestrator-Entscheid F-E1 (Abnahme F 0, Mangel M4: alte Riegel durch Nutzer-Vorgaben widerlegt)
+
+Die von Spur F rot gemachten Riegel pruefen Zustaende, die der Nutzer ausdruecklich geaendert hat ("neue Regel widerlegt alten
+Riegel", Memory reai-v2-gezielte-integration-querbezug). Spur F zieht sie mit Beleg nach (Kommentar mit Nachtrag/Wortlaut) und
+faehrt sie gruen — kein Lockern ohne Grund:
+- unit_r36_tueren_schott ("ROOM2090: keine begehbare Tuer nach ROOM20A0"): Tor 2090<->20A0 verschlossen bis zum Alligator-
+  Schluessel (Nachtrag 21) -> Erwartung: verschlossen vor (9,113), begehbar danach.
+- unit_r38_spinnen ("ROOM2090 Cut 0: 0 Spinnen"): Spinnen in 2090/2091 entfernt (Nutzer-Auftrag) -> 2090/2091 aus der
+  Spinnen-Erwartung, uebrige Raeume unveraendert.
+- unit_r30_tuer_verschlossen (Tabellenzahl 54 statt 52): Tabelle um die zwei neuen Tor-Saetze ergaenzen UND M3 (doppelter Ton)
+  beheben -> genau 1 Ton.
+- integration_r41_re2gator (Spur B, "RE2-Intro ..."): die 2090-Ankunftsszene ersetzt das RE2-Intro (Nachtrag 6) -> der Riegel
+  prueft den Auftritt ueber F's Szene (Clip-Folge/Schnitte), B's uebrige Pruefungen bleiben unveraendert gruen.
+
+## 2026-10-25 08:16 — Nachtrag 26 (Nutzer-Antworten per Auswahl zu den Fragen der Nachbesserung G 1) + Entscheide FG-E5, C-E5
+
+1. "Soll der Alligator die RE2-Hals-/Anschwimm-Lenkung zum Kanister bekommen (RE2 FUN_800177c0, Zielmodus)?" —
+   **"Ja, RE2-Lenkung (Empfohlen)"**: im Kanister-Bereich lenkt er Hals und Schwimmweg zum Kanister und nimmt ihn
+   verlaesslich auf (RE2 Zielmodus +0x1C0&4, FUN_800177c0 Part 5, Ziel (x, y-800, obj[1].z) @0x80100a4c-70, Grenzen
+   560/312 @0x801005a0-c4; sonst FUN_80017d98 @0x80100344-74).
+2. "Wurf-Kamera: 2090 Kamera 12 (von unten) oder 2080 Kamera 7 (frontal)?" — **"2090 Kamera 12 (von unten)"** (wie gebaut).
+3. "Soll der Kanister beim Greifen sichtbar kippen (RE2-Kippen aus ROOM40A0)?" — **"Ja, RE2-Kippen (Empfohlen)"**.
+
+**FG-E5:** Spur G setzt 1. und 3. um; dafuer darf G (wie FG-E3) kleine markierte Haken/Funktionen in Spur B's Modulen setzen
+(Part-5-Gier-Kanal fuer den Hals, Kippen beim Anhaengen). B's Riegel bleiben gruen.
+**C-E5:** Der Alarm-Schalter re15_audio_r41_alarm (~20 Zeilen am Ende von audio_pc.c + 4 markierte Einzeiler) ist angenommen
+(braucht die statischen BGM-Zustaende der Datei). Die zwei RBJ-Haken der Spur C in main.c (V1 der Abnahme C 5) sind angenommen;
+Bit (9,125) (Ventil-Sicherungskasten) ist in VERTRAG 1.1 fuer C eingetragen.
