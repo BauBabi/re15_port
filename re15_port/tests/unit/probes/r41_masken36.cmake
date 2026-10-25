@@ -31,7 +31,7 @@ if(TARGET re15_pc)
                      -DCD_ROOT=${CMAKE_SOURCE_DIR}/shared_assets/PSX
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_masken36_s2_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
-    set_tests_properties(integration_r41_masken36_stage2 PROPERTIES TIMEOUT 1500)
+    set_tests_properties(integration_r41_masken36_stage2 PROPERTIES TIMEOUT 2400)
 endif()
 
 # Nachbesserung 1 (Abnahme 0, Mangel 1): ausgeschlossene Generator-Objekte der Stages 3..6 mit der Tiefe ihrer Kollisionszelle
@@ -49,7 +49,7 @@ if(TARGET re15_pc)
                      -DSZENEN=${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_zelle_szenen.cmake
                      -DPRAEFIX=r41m3
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
-    set_tests_properties(integration_r41_masken36_zelle PROPERTIES TIMEOUT 1500)
+    set_tests_properties(integration_r41_masken36_zelle PROPERTIES TIMEOUT 2400)
 endif()
 
 # Nachbesserung 2 (Abnahme 1, Mangel 1, Weg (a)): Generator-Rechtecke mit Zellen-Modell (tests/unit/gen_r41_masken36_zellen.inc,
@@ -76,7 +76,7 @@ if(TARGET re15_pc)
                      -DSZENEN=${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_zellen3d_szenen.cmake
                      -DPRAEFIX=r41m4
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
-    set_tests_properties(integration_r41_masken36_zellen3d PROPERTIES TIMEOUT 1500)
+    set_tests_properties(integration_r41_masken36_zellen3d PROPERTIES TIMEOUT 2400)
 endif()
 
 # Nachbesserung 3 (Abnahme 2, Mangel 1 "zu ferne Tiefe", Mangel 2 Restliste/OFFEN 9): Koerper in Teilrechtecke (tools/maske/kacheln_r41.py,
@@ -105,5 +105,27 @@ if(TARGET re15_pc)
                      -DSZENEN=${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_fern_szenen.cmake
                      -DPRAEFIX=r41m5
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
-    set_tests_properties(integration_r41_masken36_fern PROPERTIES TIMEOUT 1500)
+    set_tests_properties(integration_r41_masken36_fern PROPERTIES TIMEOUT 2400)
+endif()
+
+# Nachbesserung 4 (Abnahme 3, Mangel 3): der gemeinsame Laeufer test_r41_masken36_stage2.cmake (stage2/_zelle/_zellen3d/_fern) wertet
+# nur noch Laeufe aus, deren debug.log nach dem letzten Laden des Zielraums den Framedump und "[flow] EXIT_AT: Bild 120 in Raum <zr>"
+# zeigt (RE15_FRAMEDUMP=120 schreibt sonst schon im Boot-Raum; gemessen Abnahme 3: d4040_09 verglich das Boot-Bild), sonst bis zu
+# 3 Versuche, dann Fehler (TIMEOUT der vier Riegel deshalb 2400 s).
+#   integration_r41_masken36_laufpruefung  Gegenprobe an der echten exe: Lauf mit RE15_EXIT_AT=60 im Zielraum (f.ppm = Boot-Bild 120 liegt
+#                             da) wird abgelehnt, der volle Lauf derselben Szene angenommen ("Gegenprobe OK" Pflicht; Laeufer -DGEGENPROBE=1).
+if(TARGET re15_pc)
+    add_test(NAME integration_r41_masken36_laufpruefung
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r37_masken36_ppm>
+                     -DRE15_SICHT_TOOL=$<TARGET_FILE:probe_r41_masken36_sicht>
+                     -DRE15_BG_TOOL=$<TARGET_FILE:probe_bg_dump>
+                     -DCD_ROOT=${CMAKE_SOURCE_DIR}/shared_assets/PSX
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_masken36_laufpruefung_wd
+                     -DSZENEN=${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_fern_szenen.cmake
+                     -DPRAEFIX=r41m6
+                     -DGEGENPROBE=1
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
+    set_tests_properties(integration_r41_masken36_laufpruefung PROPERTIES TIMEOUT 900 PASS_REGULAR_EXPRESSION "Gegenprobe OK")
 endif()

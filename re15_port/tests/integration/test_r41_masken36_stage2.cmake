@@ -23,6 +23,14 @@ cmake_minimum_required(VERSION 3.16)
 # Nachbesserung 1 (Abnahme 0): SZENEN waehlt die Szenendatei (test_r41_masken36_zelle_szenen.cmake = Stages 3..6, Mangel 1),
 # die Hintergruende kommen fuer jede Stage der Szenen; Feld G= stellt einen Gegner weg (RE15_GEGNER_POS).
 # Dazu muss das Log fuer den Cut "masks=<n> fg_atlas=1" (n > 0) zeigen.
+# Laufpruefung (Nachbesserung 4, Abnahme 3 Mangel 3): RE15_FRAMEDUMP=120:f.ppm schreibt schon im BOOT-Raum (Bild 120 vor dem
+# Sprung @250, g_engine.frame_count beginnt je Raum neu). Bricht ein Lauf nach dem Raumwechsel ab (gemessen: Abnahme 3, d4040_09
+# unter Last nach 180 s ohne zweiten Framedump), laege das Boot-Bild als f.ppm da - rot bei Art V/H, LEER GRUEN bei Art Z/V.
+# Ausgewertet wird deshalb nur ein Lauf, dessen debug.log NACH dem letzten "loaded room<zr>.rdt" den Framedump
+# "[framedump] <w>x<h> -> f.ppm" und danach "[flow] EXIT_AT: Bild 120 in Raum <zr> erreicht" zeigt (main.c: RE15_EXIT_AT
+# wirkt am Ende des Bilds nach re15_render_end_frame, also nach dem Framedump desselben Bilds). Sonst bis zu 3 Versuche, dann
+# Fehler. -DGEGENPROBE=1: absichtlich abgebrochener Lauf (RE15_EXIT_AT=60 im Zielraum, f.ppm = Boot-Bild) muss abgelehnt,
+# ein voller Lauf derselben Szene angenommen werden (Riegel integration_r41_masken36_laufpruefung).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PPM_TOOL=<probe_r37_masken36_ppm> -DRE15_BG_TOOL=<probe_bg_dump>
 #               -DCD_ROOT=<shared_assets/PSX> -DWORKDIR=<dir> -P <diese Datei>
@@ -36,6 +44,35 @@ if(NOT WORKDIR)
     message(FATAL_ERROR "r41_masken36_stage2: WORKDIR fehlt")
 endif()
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+
+# Laufpruefung (Kopf): setzt <aus> auf "" (Lauf gueltig) oder den Grund.
+function(r41m_lauf_pruefen _wd _zr _bild _aus)
+    set(_g "")
+    if(NOT EXISTS "${_wd}/f.ppm")
+        set(_g "kein Framedump f.ppm")
+    elseif(NOT EXISTS "${_wd}/debug.log")
+        set(_g "kein debug.log")
+    else()
+        file(READ "${_wd}/debug.log" _log)
+        string(TOLOWER "${_zr}" _zrl)
+        string(FIND "${_log}" "loaded room${_zrl}.rdt" _zp REVERSE)
+        if(_zp LESS 0)
+            set(_g "Zielraum ROOM${_zr} nie geladen")
+        else()
+            string(SUBSTRING "${_log}" ${_zp} -1 _rest)
+            string(FIND "${_rest}" "[flow] EXIT_AT: Bild ${_bild} in Raum ${_zrl} erreicht" _ep)
+            if(_ep LESS 0)
+                set(_g "kein '[flow] EXIT_AT: Bild ${_bild} in Raum ${_zrl}' nach dem Laden des Zielraums (Lauf abgebrochen)")
+            else()
+                string(SUBSTRING "${_rest}" 0 ${_ep} _vor)
+                if(NOT _vor MATCHES "\\[framedump\\] [0-9]+x[0-9]+ -> f\\.ppm")
+                    set(_g "kein Framedump im Zielraum vor EXIT_AT (f.ppm ist ein frueheres Bild)")
+                endif()
+            endif()
+        endif()
+    endif()
+    set(${_aus} "${_g}" PARENT_SCOPE)
+endfunction()
 
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
@@ -141,16 +178,43 @@ foreach(_sz IN LISTS R41M_SZENEN)
             set(_px "${_a0x}")
             set(_pz "${_a0z}")
         endif()
-        re15_start_spiel(_rv 180
-            RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_AUDIODRIVER=dummy
-            RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
-            "RE15_DEBUG_JUMP=${_raum}@250" "RE15_PLAYER_POS=${_px},${_pz},0,${_band}" "RE15_FORCE_CUT=${_cut}"
-            "RE15_FRAMEDUMP=120:f.ppm" "RE15_EXIT_AT=120#${_zr}"
-            ${_extra} ${_figur} ${_gegner}
-            "${_exe_kopie}")
-        if(NOT EXISTS "${WORKDIR}/f.ppm")
+        set(_grund "?")
+        set(_versuch 0)
+        while(NOT "${_grund}" STREQUAL "" AND _versuch LESS 3)
+            math(EXPR _versuch "${_versuch} + 1")
+            file(REMOVE "${WORKDIR}/f.ppm" "${WORKDIR}/debug.log")
+            set(_ende 120)
+            if(GEGENPROBE AND _versuch EQUAL 1)
+                set(_ende 60)           # Gegenprobe: Abbruch im Zielraum VOR seinem Framedump (f.ppm = Boot-Bild 120)
+            endif()
+            re15_start_spiel(_rv 180
+                RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_AUDIODRIVER=dummy
+                RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+                "RE15_DEBUG_JUMP=${_raum}@250" "RE15_PLAYER_POS=${_px},${_pz},0,${_band}" "RE15_FORCE_CUT=${_cut}"
+                "RE15_FRAMEDUMP=120:f.ppm" "RE15_EXIT_AT=${_ende}#${_zr}"
+                ${_extra} ${_figur} ${_gegner}
+                "${_exe_kopie}")
+            r41m_lauf_pruefen("${WORKDIR}" "${_zr}" 120 _grund)
+            if(GEGENPROBE AND _versuch EQUAL 1)
+                if(NOT EXISTS "${WORKDIR}/f.ppm" OR "${_grund}" STREQUAL "")
+                    file(REMOVE "${_exe_kopie}")
+                    message(FATAL_ERROR "r41_masken36_laufpruefung[${_name}]: Gegenprobe - der abgebrochene Lauf (EXIT_AT 60, f.ppm da: "
+                                        "${WORKDIR}) wurde NICHT abgelehnt ('${_grund}')")
+                endif()
+                message(STATUS "r41_masken36_laufpruefung[${_name}]: abgebrochener Lauf abgelehnt: ${_grund}")
+                set(_grund "?")         # zweiter Versuch = voller Lauf, muss angenommen werden
+            elseif(NOT "${_grund}" STREQUAL "")
+                message(STATUS "r41_masken36_stage2[${_name} ${_mit}] Versuch ${_versuch}: Lauf ungueltig (${_grund}, exit=${_rv}) - neu")
+            endif()
+        endwhile()
+        if(NOT "${_grund}" STREQUAL "")
             file(REMOVE "${_exe_kopie}")
-            message(FATAL_ERROR "r41_masken36_stage2[${_name} ${_mit}]: kein Framedump (exit=${_rv}, ${WORKDIR})")
+            message(FATAL_ERROR "r41_masken36_stage2[${_name} ${_mit}]: Lauf ungueltig nach ${_versuch} Versuchen: ${_grund} (exit=${_rv}, ${WORKDIR})")
+        endif()
+        if(GEGENPROBE)
+            file(REMOVE "${_exe_kopie}")
+            message(STATUS "r41_masken36_laufpruefung[${_name}]: voller Lauf angenommen (Versuch ${_versuch}) - Gegenprobe OK")
+            return()
         endif()
         list(APPEND _ppm "${WORKDIR}/f.ppm")
         if(_mit STREQUAL "a")
