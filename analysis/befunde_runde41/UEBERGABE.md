@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-25 18:46: **F BESTANDEN** (Abnahme 5, wf_f2e30b5e-2c4, "gut genug" nach FG-E6): Folge vollstaendig, Kampfbeginn im RE2-Band (11454 / +131), Fressen frontal Cut 1, Schluessel hell (Groesse 7x9 vom Nutzer angenommen), Spinnen weg, Tor nur mit Schluessel; 221/221 gezielte Tests. OFFEN fuer Samstag: Nachtrag 31 Punkt 2 (Gator startet vor der Linse von Cut 0). Integration: EIN Lauf fuer F + G + M, sobald G (Abnahme 4) und M (Abnahme 5) fertig sind (Tokens sparen).
+
 * 2026-10-25 18:03: **ABSCHLUSSPLAN (Nachtrag 32b)**: jetzt abschliessen und v0.8.29 bauen, neue Tokens ab Samstag 31.10. fuer Nachbesserungen. F nur Abnahme 5 (bei Start von NB6 den Lauf wphjy3205 stoppen), G NB4 + Abnahme 4 (letzte), M NB5 + Abnahme 5 (bei Start von NB6 den Lauf wbqdkh8lq stoppen). **N ANGEHALTEN** (Task we66egvi6 gestoppt, Stand r41/nachtrag30 bb7a0df6 ungeprueft: Plakat 30d erzeugt; Dossier N_nachtrag30.md; Messung: Endstufe skaliert alle Quellen) -> Samstag. Danach Integration F/G/M ("gut genug"), volle Suite, Release.
 
 * 2026-10-25 17:58: Nachtrag 31 (F: Durchbruch bleibt, Kampfbeginn nicht vor der Kamera, Schluesselgroesse angenommen) und Nachtrag 32 + FG-E6: **Alligator "gut genug", Ziel v0.8.29 bis Samstag 2026-10-31**; F/G nur noch die laufenden Laeufe, Abnahmen nur bei blockierenden Fehlern rot. Laufend: F Abnahme 5, G NB4, M NB5, N Bau.
