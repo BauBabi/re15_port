@@ -8,9 +8,12 @@ und **25 + C-E4** (im Spurbaum vorhanden), den Entscheiden C-a..e, C-E1..C-E4, C
 Begonnen 2026-10-25 06:1x MEZ. Pruefer: Abnahme 6 (Opus). Der Bericht wird FORTLAUFEND geschrieben. Messordner scratchpad `C41abn6/`
 (unten `<a6>` = `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/C41abn6`).
 
-**Ergebnis: (folgt — Bericht UNVOLLSTAENDIG)**
+**Ergebnis (abgeschlossen 2026-10-25 ~08:0x MEZ): BESTANDEN.** Alle sechs Nutzer-Punkte erfuellt (Leon UND Elza, ueber echte Tueren gemessen); die drei Maengel der Abnahme 5 sind behoben: **Mangel 1** - der RE2-Alarm SUB_25 (bytegleich) laeuft mit dem Warntext 46 an und endet mit der Flut bzw. dem Raumwechsel (zwei unabhaengige Zwillinge: alte exe der Abnahme 5 und eigener Stummel-Zwilling, bitgleich ausserhalb des Alarm-Fensters; Elza per Korrelation); **Mangel 2** - der Countdown hat die RE2-Form (selbst disassembliert, gegen die RE2-VRAM und mit eigenem Nachbau Pixel fuer Pixel belegt: Port 55/55, 9/9, 54/54, 147/147 Bilder exakt; RE2 4/4 Bildpuffer exakt); **Mangel 3** - Kopfkommentar angepasst. Nachtraege 16/18/19/25 erfuellt. Gates G1 (6 Stichproben selbst disassembliert/gelesen), G2 (formale Hinweise V1/V2 offen, neu V3 audio_pc.c-Schalter) und G3 halten. Tests: Unit 290/290 + PASS (557), Integration 7/7 (6 r41 + cut10f0), Raumgruppe 17/17, `_kette` von Hand rc=0.
 
 ## 0. Stand / Protokoll (neueste zuerst)
+* 07:59 ABSCHLUSS: Urteile §4, Maengel/Hinweise §5. Kein Code geaendert; nur dieser Bericht committet.
+* 06:2x-07:5x Messlaeufe (§1): kb, kf, kf_ohne, kb_elza, kf_elza, p1r(+_elza), kbr(+_elza), p4(+_elza), p5v(+_elza), kh(+_elza), p5n,
+  p6(+_elza), ka3, kn_elza, flr; RE2-Staende selbst ausgelesen; Integration 7/7 und Raumgruppe (§3); `_kette` von Hand rc=0.
 * 06:2x Unit-Gruppe gruen, Integrationsstroeme gestartet, erste Messfahrt `kb` (Leon, echter Weg mit Ton) laeuft.
 * 06:19 Bau: `local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)` (Zeile 180 `integration_r41_ventilkette_kette uebersprungen:
   Spur A fehlt`), `local_build.sh build` -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)` (`<a6>/configure.txt`, `<a6>/build.txt`).
@@ -70,7 +73,8 @@ Start 2010 am Kasten (Bits 101/102, (3,108), (9,125)), MIT Ton (RE15_SE_DEBUG, R
     **`" 0^56=95" Farbe 2: 583/583 deckende Pixel gleich -> EXAKT`** (Puffer y 0) und **`" 0^56=98" Farbe 2: 591/591 -> EXAKT`** (y 240); 300er-Stand
     **`" 4^55=48" Farbe 1: 557/557 -> EXAKT`** / **`" 4^55=45" Farbe 1: 549/549 -> EXAKT`** (naechstbester Kandidat jeweils nur 85-94 %). Lage x 104,
     y 32, 14x14-Schrift aus TEX.TIM, Rot unter 60 s, Gruen ab 60 s, die letzten Stellen 98/95 zweier aufeinanderfolgender Bilder.
-  - Damit ist (transitiv, Pixel fuer Pixel) die Port-Anzeige = mein Nachbau = RE2.
+  - Damit ist (transitiv, Pixel fuer Pixel) die Port-Anzeige = mein Nachbau = RE2. Vergleichsbild 4x **`<a6>/bilder/re2_port_countdown_x4.png`**
+    (Zeilen 1/2 RE2 ` 0'56"98`/` 0'56"95` rot, 3/4 Port F5665/F5680 ` 0'56"58`/` 0'56"08`, 5 RE2 ` 4'55"48` gruen): gleiche Schrift, Farbe, Lage.
 * Die Nutzer-Spielstaende sind unversehrt: alle 11 `SLUS-00748*` in `%LOCALAPPDATA%/DuckStation/savestates` md5-gleich der Sicherung der
   Nachbesserung (`nb6/re2cap/nutzer_backup`), Zeitstempel unveraendert (juengster 2026-10-18 12:42). (Die Fensterfotos `fenster_*.png` der
   Nachbesserung zeigen nicht RE2, sondern andere Fenster — der Beleg ist allein die VRAM, oben selbst gelesen.)
@@ -164,6 +168,17 @@ Plan/Start = Abnahme 5 `kf` (Sued-Landeplatz, Bits 101/102, (3,108), 125; richti
 * Gegenprobe Anzeige: in 20B0 nach der Flucht (kb F250..F295) 0 rote Pixel im Countdown-Feld; im Lauf ohne Zaehler (kbr) kein Countdown.
 
 
+### FLR — Punkt 3 "Wasser in 2030: Ueber die Ringebene" (Leon `flr`; Plan des Riegels integration_r41_ventilkette_alarm: richtige Folge, dann auf den Ring)
+* `Folge 09 07 02 01 -> RICHTIG` -> `Countdown ... Bild 0 ... F4484` -> Spieler auf dem Ring (6602,-299) -> `FLUT: Wasser steigt (Countdown-Takte 1801
+  von 1800)` -> `Countdown ... Bild 1800 " 0^00=00" ... F6284` -> **`SPRITZER: Wasser y -5400 erreicht die Fuesse (Spieler y -5400)`** -> **`ERTRUNKEN:
+  Wasser y -6300, Spieler y -5400 -> hp -1, blaue Blende`** (der Ringboden liegt bei y -5400; das Wasser steht 900 darueber). Bild
+  **`<a6>/bilder/flr_ring.png`** (Cut 4, F6300 -> F6420): das Wasser steigt ueber Steg und Bruecke bis an die Ringwaende, danach die blaue Blende.
+
+### KE — `integration_r41_ventilkette_kette` von Hand (C-E1; im C-Baum nicht registriert)
+* configure: `-- integration_r41_ventilkette_kette uebersprungen: Spur A fehlt (...)`. Von Hand (`cmake -DRE15_PC_EXE=... -DRE15_SRC=re15_port
+  -DWORKDIR=<a6>/kette_hand -P test_r41_ventilkette_kette.cmake`, `<a6>/kette_hand.txt`, 07:46-07:49): **`r41_ventilkette_kette: 2030 richtige Folge
+  09/07/02/01 zu Fuss -> Warnung -> Ost-Tuer zu Fuss -> ROOM20B0, Bits 103 + 100; Teil ab der Szene uebersprungen: Haken der Spur A fehlt`**, rc=0.
+
 ## 2. Gates
 
 ### G1 RE-Gate (eigene Disassembly / eigene Byte-Lesung; `re2_disasm.py` auf `info/re2leon/PSX.EXE`, Rohbytes der RE2-RDTs)
@@ -194,6 +209,10 @@ Plan/Start = Abnahme 5 `kf` (Sued-Landeplatz, Bits 101/102, (3,108), 125; richti
    vol-1, prog_mpan = pan-1, audio_pc.c ~Z. 3617, vorbestehend). SUB_25-Datei selbst zerlegt: Trailer SEQ#2 @244, VH @824 ("pBAV", 8 Programme,
    6 VAGs), **ProgAtr[0].mvol 0, [1].mvol 0** (in der Datei stumm), SEQ0 ppqn 480 / Tempo 500000 / Schleife Tick 100..30820. `shared_assets/RE2/
    SOUND/SUB_25.BGM` md5 **ef66256d0e847e428b11caedd5c655da** = `info/re2leon/COMMON/SOUND/SUB_25.BGM` (auch der Git-Blob).
+6. **RE1.5-Gegenstueck im BGM-Lader** (auf das sich audio_pc.c beruft; `re15_disasm.py` auf `info/Re1.5/PSX.EXE`): @0x8004432c `jal 0x800603dc` mit
+   a0 = DAT_800b52b6 (SUB-SEQ0) und @0x80044354 `jal 0x800603dc` mit a0 = DAT_800b52be (SUB-SEQ#2) = "beide SUB-Sequenzen stoppen";
+   @0x8004439c..@0x800443ac `andi v0,v0,0x1` -> `sb DAT_800b52b5`, `sb v1 -> DAT_800b52bd` (Flags aus dem Sub-Byte); FUN_80044774 @0x80044774
+   (Prolog, `addiu s0,s0,0x52b6`) = SUB-Lader — **bestaetigt**.
 * Neue Konstanten im Diff seit Abnahme 5 (Kopf re15_ventilkette_r41.h "Countdown"): RE15_R41C_CD_X 104 / _Y 32 / _SCHRITT 14 / _GLYPHE 14 /
   _SPALTEN 18 / _TAKTE 30 / _ROT_UNTER 60 / _FARBE_GRUEN 1 / _FARBE_ROT 2 / _CLUT_Y0 480 / _ZEICHEN 8 — jede mit @0x... und alle oben selbst
   gefunden; audio_pc.c 0xA5 (@0x022EE) und `51 01 00 01 64 40` (@0x038BA) ebenso. Die PORT-WAHL-Konstanten der Nachbesserung 5
@@ -245,10 +264,50 @@ Plan/Start = Abnahme 5 `kf` (Sued-Landeplatz, Bits 101/102, (3,108), 125; richti
     `integration_r35_cut10f0 ... Passed 270.61 sec` (BGM-Lader, audio_pc.c beruehrt), `integration_r41_ventilkette_b ... Passed 534.57 sec`,
     `integration_r41_ventilkette_weg_elza ... Passed 1699.12 sec`, `integration_r41_ventilkette_sperre ... Passed 307.59 sec` ->
     **`100% tests passed, 0 tests failed out of 4`**.
-  - Raumgruppe der Abnahme 5 (`<a6>/regex_integ_raum.txt`, 17 Tests, -j 2) laeuft.
+  - Raumgruppe der Abnahme 5 (`<a6>/regex_integ_raum.txt`, 17 Tests: fahrstuhl_n1, spinnen_echtlauf, itemband(_lift), gegnerzahl,
+    wasser(zombie), kiste(2feld/regel), dachkiste, dokumente_bild, tagebuch_lesen/karte/leon, irons_tisch_laden/bild; -j 2,
+    `<a6>/ctest_integ_raum.txt`): **`100% tests passed, 0 tests failed out of 17`** (`Total Test time (real) = 2681.91 sec`; z. B. itemband_lift 1393.80 s, dachkiste 1552.57 s unter Last, kein Rot)
+  - `unit_r41_ventilkette` direkt: **`PASS (557 Pruefungen)`**.
+  - `_kette` von Hand rc=0 (KE).
 
-## 4. Urteil je Nutzer-Punkt
-(folgt)
+## 4. Urteil je Nutzer-Punkt (gegen den Wortlaut, AUFTRAG.md; gebauter Stand exe 04:59:05 = Code HEAD 1e17827f)
+AUFTRAG.md im Spurbaum enthaelt Nachtrag 25 + C-E4 (Massstab fuer Mangel 1/2 der Abnahme 5).
 
-## 5. Maengel
-(folgt)
+| Punkt | Urteil | Beleg (eigene Messung) |
+|---|---|---|
+| 1 Leiter 2000 -> 2050 mit herunterlaufendem Wasserstrom blockiert, "I cannot climb up the ladder because of the water pressure", bis die Flut gelaufen ist | **erfuellt** | P1 Leon + Elza ueber die echte Tuer 2010/2011 -> 2000/2001: Satz 40 woertlich (2x), kein Raumwechsel, Bit 100 = 0 vor/nach; Bild mit Strahl (`p1r.png`) |
+| 2 2030: Bruecke zunaechst OBEN; Pult links (Kamera 2, Nordwand): zu wenig Druck / Ventil 13 zu -> Ventil 13 -> "Lower the bridge?" -> Bruecke faehrt herunter; nicht die Kurbel | **erfuellt** | KBR Leon + Elza ueber die echte Tuer 2070 -> 2030/2031: oben + Zelle 12 gesperrt, 40, 41/42 (Bit 101), 43 -> Ja -> Bruecke -1800 (Bit 102), 44, Spieler auf dem Steg (`kbr_bruecke.png`) |
+| 3 Ventilraetsel -> Warnung (1 min, Raum verlassen) -> 60 s -> Wasser ueber die Ringebene; Ost-Tuer -> 20B0 (Auswasch-Szene); Zeit abgelaufen im Raum: Tod mit Ertrink-Effekt | **erfuellt** (die 20B0-Szene selbst nach C-E1 mit dem Haken der Spur A; `_kette` im C-Baum sauber uebersprungen, von Hand rc=0) | KB/KB_ELZA echter Weg: richtige Folge -> 46 -> Countdown -> zu Fuss zur Ost-Tuer -> 20B0/20B1, Bits 103 + 100; KF/KF_ELZA: Countdown bis " 0'00"00" im Bild des Flut-Beginns, Flut, Spritzer, ERTRUNKEN + blaue Blende (`kf_flut.png`); FLR: auf dem Ring Wasser y -6300 ueber Ringboden -5400 -> ertrunken (`flr_ring.png`) |
+| 4 Danach 20B0 statt 2000 (spaeter wieder frei ohne Wasser), Leiter frei (kein Wasser laeuft mehr herunter) | **erfuellt** | P4 Leon + Elza: 2010/2011-Tuer -> 20B0/20B1, Leiter -> 2050/2051 ohne Sperrtext, 2050-Leiter -> 20B0; Bild Cut 9 ohne Strahl (`p4_20b0.png`) |
+| 5 2050: Wasserlevel (Hebel) erst nach dem Pult-Raetsel (80 V wie 11F0) | **erfuellt** | P5 Leon + Elza: Hebel vorher Satz 40, (3,104) bleibt 0; Pult 43/41 -> Cut 15 -> 40/70/80 V -> "Power supply OK." -> Bit 106; mit Bit 106 Hebel = Original msg 0 -> (3,104) 0 -> 1 (`p5n`) |
+| 6 2080-Rechner entleert danach auch 2030 - ersetzt durch Nachtraege 7/8/12 (k) (Strom: 2030 bis knapp unter die Absperrung, Rechner = Original) | **erfuellt** | P6 Leon + Elza ueber die echte 20B0-Ost-Tuer: Pegel y -5350, Treppe 48, Lift B (3,220) 0 -> 1, 2080/2081 Rechner = Original msg 0 -> (3,245) 0 -> 1 -> 2090/2091 |
+| Nachtrag 18 Punkt 4 (typischer Timer + Alarm wie am Spielende + Voiceover beim Text) mit Nachtrag 25 (o) RE2-Alarm SUB_25, (p) Countdown in der RE2-Form, C-E4 | **erfuellt** | Countdown: RE2-Form selbst disassembliert (G1 Nr. 1/2) und gegen die RE2-VRAM belegt (4/4 Bildpuffer exakt); Port Leon 55/55 + 9/9 (Ende) + Elza 54/54 + 147/147 Bilder pixelgleich mit meinem Nachbau; erstes Bild " 0'59"98", letztes " 0'00"02", im Flut-Bild " 0'00"00", danach aus; alte MM:SS:HH-Anzeige weg (`kb_vorher_nachher.png`). Alarm: SUB_25 bytegleich, an mit Text 46, aus mit Flut (Zwilling: bitgleich bis 4349, RMS 734..764, letzte Abweichung Ende + 74) bzw. Raumwechsel (Zwilling alte exe: bitgleich bis 7190, RMS ~749, ab 8720 bitgleich), Form = SUB_25 SEQ0 (Periode 4,00 s); Elza Korrelation 0,515 (Gegenprobe 0,003), in 20B1 0,017. Voiceover: Aufnahme ausserhalb des Alarms bitgleich der Abnahme-5-Aufnahme, in der main46.wav mit 0,903 korrelierte; `[voice] Start ROOM2030/2031 Id 46` |
+| Nachtrag 16 (Ventil-Sicherungskasten 2010) | **erfuellt** (Code seit Abnahme 5 unveraendert; Regression) | KA3 Leon: 40 -> 41 -> Ja -> Bit 125 -> Standbild Cut 7 + Aufschliess-Ton -> 42; KN_ELZA: nach der Flut 43 -> 44 (Bit 125 = 0) -> zu Fuss bis 2061 -> "Will you use the Fuse?"; Riegel `_weg`/`_weg_elza` (k1/k2/k3, v2a) gruen |
+| Nachtrag 18 Punkte 1-3 (Plakat-Stil, 2050-Hebel gehen runter, RE2-Dreh-Animation) | **erfuellt** (Code seit Abnahme 5 unveraendert; Regression) | KB/KB_ELZA: RBJ von RE2 ROOM1080 gebunden, Ventil-Folge wie Abnahme 5; KH/KH_ELZA Hebel 3/1/4 -> 80 V; Riegel Unit F/Q + `_weg` v2p gruen; Urteile der Abnahme 5 bleiben |
+| Nachtrag 19 (Text 46 woertlich) | **erfuellt** | `[msgtext] room=2030/2031 id=46 "WARNING: The water will rise in one minute. Please leave the room immediately!"` (KB, KB_ELZA, KF, KF_ELZA) |
+| Abnahme 5 Mangel 1 (Alarm fehlt) | **behoben** | siehe Nachtrag 18 Punkt 4 (KB/KF/KB_ELZA/KF_ELZA, Zwillinge) |
+| Abnahme 5 Mangel 2 (Countdown nicht in der RE2-Form) | **behoben** | siehe Nachtrag 18 Punkt 4 (eigener Nachbau, RE2-VRAM, G1 Nr. 1-3) |
+| Abnahme 5 Mangel 3 (Kopf re15_ventilkette_r41.h) | **behoben** | Z. 146-149 "Bit 102 ... UND Bit (9,125) ... Satz 49 = Original 'It's locked.'", Z. 162 "Fundort neben der Sicherung", keine veralteten Reste (grep) |
+
+## 5. Maengel (nummeriert, nachpruefbar)
+**Keine.** Alle sechs Nutzer-Punkte und die Spur-C-Nachtraege sind am gebauten Stand erfuellt (Leon UND Elza), die drei Maengel der Abnahme 5
+sind behoben, die Gates G1-G3 halten.
+
+Hinweise (kein Mangel, an den Orchestrator):
+* (V1, formal, aus Abnahme 5) `platform/pc/main.c`: zwei RBJ-Haken der Spur C (Boot- und Tuer-Ladeweg) ueber die in C-E3 angenommenen "4 Stellen"
+  hinaus - bitte wie J-E1 annehmen oder ablehnen.
+* (V2, formal, aus Abnahme 5) Bank-9-Bit **125** (Ventilkasten) im master-VERTRAG eintragen ("125-133 vergibt der Orchestrator").
+* (V3, formal, neu) `platform/pc/src/audio_pc.c`: 4 markierte Einzeiler + der Schalter `re15_audio_r41_alarm` (~20 Codezeilen am Dateiende,
+  braucht die statischen BGM-Zustaende) - groesser als "1-5 Zeilen" (VERTRAG §1.3); C-E4 erlaubt "einen kleinen, markierten Haken" -> bitte
+  bestaetigen. Bei der Integration mit Spur D (audio_pc.c) beidseitig mergen.
+* (a) Alarm-Lautstaerke: uebernommen ist der Betretens-Wert RE2 ROOM6040 sub23 @0x038BA (`51 01 00 01 64 40`, ProgAtr[0].mvol 99); RE2 stuft
+  Programm 0 in 6040 je Kamera (sub25 @0x038E6..@0x039B8: 0x64 x6, 0x5a x5, 0x50 x2, 0x3c, 0x46, 0x7f - selbst gelesen). Eine Abbildung der
+  RE2-Kameras auf die 2030-Kameras gibt es nicht; der haeufigste Wert ist der uebernommene. Der Nutzer kann eine Staffel verlangen.
+* (b) Paket-Gate: `shared_assets/RE2/SOUND/SUB_25.BGM` (100688 B, md5 ef66256d...) in die Paket-Pruefliste aufnehmen (Dossier §7 nennt es);
+  die Countdown-Schrift ist die schon gepackte `shared_assets/RE2/TEX.TIM`.
+* (c) Countdown und Alarm nur auf dem PC (Bildebene/BGM-Lader der PC-Plattform); das PSX-Ziel ist weiter ungebaut (bekannt).
+* (d) Laufzeit: die sechs registrierten r41-Riegel brauchen zusammen ~92 min RUN_SERIAL (hier in zwei Stroemen 48 + 47 min) - fuer die
+  Release-Suite einplanen. Unter Last brauchte die Raumgruppe deutlich laenger als in Abnahme 5 (itemband_lift 1394 s statt ~860 s), ohne Rot.
+* (e) Die Fensterfotos `nb6/re2cap/*/fenster_*.png` der Nachbesserung zeigen nicht RE2 (andere Fenster im Vordergrund); der Beleg der RE2-Anzeige
+  ist die VRAM der Resume-Staende, hier selbst gelesen. Die Nutzer-Spielstaende `SLUS-00748*` sind unversehrt (md5 + Zeitstempel).
+* (f) Die 20B0-Auswasch-Szene selbst braucht weiter den AUTO-Haken der Spur A (C-E1); `_kette` im C-Baum nicht registriert, von Hand rc=0.
