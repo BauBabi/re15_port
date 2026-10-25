@@ -167,3 +167,30 @@ Bilder (RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1, Helligkeit x1,8):
 - fall_leon (`RE15_EXIT_AT=1000#2090 RE15_FRAMEDUMP=0-160/4:f_`): nach dem Wurf 2090 Cut 12 (F4-F56: Reling oben, der Kanister faellt, der
   Alligator schwimmt nah an der Kamera vorbei), `F43 Aufschlag im Wasser bei (-6096,-2076,-21600)`, `Kanister im Becken ... (Bit 116)`,
   `F43 ANSCHWIMMEN an`, ab F58 Cut 0, `KANISTER Stufe 1` F103 / angehaengt F115 im Hintergrund; Bild `<SP>/fall_leon_cut12_aufnahme_x2.png`.
+
+### 4.4 Nebenwirkung der Kopf-Klemme (M3/G-E5): Lagespruenge des Alligators beim Tragen (gemessen, im Dossier nicht benannt)
+Werkzeug `<SP>/spruenge.py` (selbst geschrieben): Wurzel-Lage des Alligators (state.log Slot 35) je Bildpaar im letzten 2090-Aufenthalt
+bis zum R1; dazu Spur Bs eigene Messzeile `[gator-re2] Sicht Lagesprung max` (gator_re2_pc.c, groesster Wurzelschritt zwischen zwei
+aufgetauchten Bildern; Spur Bs Riegel integration_r41_re2gator verlangt im natuerlichen Lauf <= 340 = "groesster authored Wurzelschritt").
+
+| Lauf | groesster Sprung je Bild bis zum R1 | Bildpaare > 300 / > 400 / > 600 / > 1000 | Abnahme 3 (vor der Kopf-Klemme), gleicher Verlauf |
+|---|---|---|---|
+| v1_leon (kein Haken) | **1517** F156 (-5173,-18311) -> (-3656,-18311) | 59 / 37 / 3 / 1 | F0..F445: max 258, 0 / 0 / 0 / 0 (Sicht-Messzeile dort max 1039 im ersten Aufenthalt, Spur B) |
+| v1_elza (kein Haken) | **1489** F156 | 59 / 37 / 3 / 1 | - |
+| k_leon (Haken HP) | 523 F708 (-7019,-10798) -> (-6496,-10818) | 17 / 8 / 0 / 0 | F0..F2290: max 307 (das R1-Bild selbst), 1 / 0 / 0 / 0 |
+| plat_leon / k_elza / plat_elza | 562 / 526 / 519 | 20/10/0/0, 28/11/0/0, 14/3/0/0 | - |
+
+Mechanismus (state.log + gator_boss.log v1_leon, Bild fuer Bild): F155 Kanister angehaengt, der Alligator dreht auf der Stelle
+(Gier 2785 -> 1921). Vorher (Abnahme 3) blieb die Wurzel dabei auf (-5173,-18311). Jetzt: `KOPF-KLEMME an F156: Ueberstand (1517,0)` ->
+Wurzel x -5173 -> -3656 -> -2996 -> -2472 -> -2105 -> -1899 -> -1867 (F161), dann F163 vor der Klemme x -3184 (zurueck um 1317), Klemme
++791 -> -2393, F165 wieder -3184. Ursache: Kopf + Kanister (2784 lang) passen beim Drehen nicht zwischen die Westwand (Innenflaeche x -8900,
+SCA @0x6F4) und den Plattform-Block (SCA[4] @0x724 x -1700..1850 z -20000..-12450): die Kopf-Klemme schiebt den ganzen Alligator nach
+Osten, die Wurzel-Klemme der Spur B (Radius) schiebt ihn von der Plattform zurueck nach Westen (-1700 - 1466 ~ -3184) - zwei Klemmen
+gegeneinander. An der Suedwand im Treffer-Clip 4 (F471..F474: +131/+457/+582/+379 nach Norden, `KOPF-KLEMME ... groesster Ueberstand
+601`) dasselbe Muster, im Lauf v1 an derselben Stelle F473/F584/F954/F1186/F1900 wiederholt.
+Bilder: `<SP>/v1j_leon_sprung_f153-168_x2.png` (Cut 1: der Alligator liegt beim 1517-Sprung fast ganz ausserhalb des Bildes, nur das
+Rumpfende am linken Rand ruckt), `<SP>/v1j2_leon_sprung_f468-479_x2.png` (Cut 1: der aufgerichtete Alligator rutscht im Treffer-Clip in
+3 Bildern rund 1400 Einheiten zur Kamera - als schnelles Schlagen lesbar, kein Bildfehler), `<SP>/kj_leon_sprung_f704-711_x2.png` (Cut 0:
+Alligator am rechten Rand, kaum zu sehen). Bewertung nach FG-E6: Feinheit (in den gemessenen Bildern kein kaputtes Bild, kein Haenger,
+der Kampf endet in allen Verlaeufen mit dem R1), aber eine neue, messbare Unstetigkeit, die die Nachbesserung einfuehrt und die das Dossier
+nicht nennt ("kommt ... etwas weniger weit heran" beschreibt sie nicht) -> offen O1 (Abschnitt 8).
