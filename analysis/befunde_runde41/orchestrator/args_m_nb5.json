@@ -1,0 +1,76 @@
+{
+ "welle": [
+  "M"
+ ],
+ "slots": 1,
+ "basis": "master 4c667c97 (Baum r41_masken36)",
+ "max_nach": 2,
+ "modus": {
+  "M": "nachbesserung"
+ },
+ "runde0": {
+  "M": 4
+ },
+ "bau": {
+  "M": {
+   "status": "fertig",
+   "zusammenfassung": "Mangel 1 (Ost-Stirn 30A0/30A1 C0) habe ich mit Messung widerlegt. Die \"Ost-Stirn\" der Abnahme ist die Flaeche der Kollisionszelle 6 @RDT+0x0045C (96 19 e2 04 63 98 2d 37 01 ff 00 03, reicht bis z 15375). Die Stirnplatte im Bild ist kleiner: ihr Kuenstler-Ausschnitt (SLD-Atlas ROOM30A0.BSS Cut 0, Entpacker FUN_800c47e8) ist bitgleich gezeichnet (3344 = 3344). Seine Kante liegt in der Ebene x = -19975 bei z 14834..14904, oben bei y -2335. Rechts davon zeigt das Bild den Boden (Strahlen treffen ihn bei z 15376..18289) und die Rueckwand-Schraenke Zelle 8 @0x00474, beides hinter der Figur. Von den 2003 Abnahme-Punkten liegt 0 im Ausschnitt. Dafuer gibt es den Riegel unit_r41_masken36_stirn und 6 Szenen in _fern (dahinter sichtbar 0, rechts der Kante uebermalt 0).\nMangel 3 ist behoben: der Laeufer wertet einen Lauf nur aus, wenn nach dem Laden des Zielraums der Framedump und \"[flow] EXIT_AT: Bild 120 in Raum <zr>\" im Log stehen (main.c, frame_count zaehlt je Raum). Sonst gibt es bis zu 3 Versuche. Die Gegenprobe ist der Riegel _laufpruefung mit RE15_EXIT_AT=60.\nMangel 2: Waehrend der NB4 ist im Spurbaum der Entscheid M-E1 eingegangen (d2621352, Nutzer \"Ich kuemmere mich selbst drum\"). Er verbietet weitere automatische Masken fuer die Restliste. MASKS, Tabellen und re15_pri.h stehen deshalb wieder auf NB3 (1ad2c96e).\nGemessen und nur als Vorschlag im Repo, nicht angewandt:\n- Tuer-Band der Saaten: der AOT-Scan @0x80042cac..0x80042ccc prueft pc[4]. Mit `--saat-tuer` verschwinden die 90 437 Band-0-Plaetze im Gleisbett 6000.\n- platzieren_r41.py: 437 nie platzierte Kuenstler-Teile (Gelaender usw.), +160 539 Punkte, an der exe 0 Uebermalungen an 16 Stellen.\n- teilen_r41.py: Teilung der Traeger-Mitte in 6000 C5.",
+   "commits": [
+    "5b8300c1",
+    "a7f2a534",
+    "0f84a5d4",
+    "9cc5942f",
+    "abd31f13",
+    "27e6594b",
+    "deffda66",
+    "33e758ae",
+    "822d90ba",
+    "d4113024",
+    "82a97fa3",
+    "9b868713",
+    "8ed58cbe",
+    "08e36f97"
+   ],
+   "suite": "-R \"unit_r41_masken36|unit_r37_masken36\": 100% tests passed, 0 tests failed out of 8 | -R \"integration_r41_masken36|integration_r37_masken36\": 100% tests passed, 0 tests failed out of 10",
+   "offene_punkte": [
+    "Restliste (nach M-E1 kein Mangel der Spur M): die Freistellungen zeichnet der Nutzer. Die Liste je Raum/Kamera/Gegenstand mit Beleg steht im Dossier unter 'Fuer den Nutzer: Freistellungen'.",
+    "Vorschlag Tuer-Band der Saaten (test_r37_masken36 --saat-tuer, AOT-Scan @0x80042cac..0x80042ccc): Vorgabe bleibt Stand NB3. Mit der Korrektur wuerden in 6000/6001 C5/C7/C8 je Variante 37 Rechtecke mehr gezeichnet, 'zu fern' sinkt von 40 276 auf 342.",
+    "Vorschlag platzieren_r41.py (437 nie platzierte Kuenstler-Teile in 74 Sektionen, +160 539 Punkte). Braucht re15_pri.h mit 128 Rechtecken je Cut. Kameras ausserhalb der Restliste nur nach Entscheid.",
+    "Vorschlag teilen_r41.py fuer 6000 C5: die Spalten 31..40 der Traeger-Mitte wuerden an 192 Gang-Plaetzen falsch verdecken; der Traeger hat keine eigene Zelle.",
+    "Die Begruendung der NB3 fuer OFFEN 14 ('Rueckholung wegen Band-0-Plaetzen') ist widerlegt: die Rueckholung bleibt auch ohne diese Plaetze. Grund sind Band-2-Plaetze im Gang (gemessen mit r37ecke.py).",
+    "Weiter offen wie in NB3: OFFEN 4 (platform/psx liest MASKS nicht), 12 (Leons Modell ragt in den Zellkoerper), 13 (12 Verdachtsgruppen nicht einzeln an der exe geprueft), 15 (das Mass 'zu fern' kennt nur Modell-Koerper).",
+    "Paralleler Schreiber vermerkt: der Orchestrator-Commit d2621352 (Nachtrag 27 / M-E1) kam waehrend der NB4 in den Spurbaum."
+   ],
+   "gemeinsame_dateien": [],
+   "neue_assets": [],
+   "sprachdateien": [],
+   "fragen_an_nutzer": [
+    "Die Gelaender, Pfosten, Saeulen und Lampen der Stages 3..6 liegen im Original-Vordergrundatlas des Spiels; der Generator hatte sie nur nie gefunden. Das Werkzeug re15_port/tools/maske/platzieren_r41.py setzt sie an ihre Stelle (437 Teile in 74 Kameras, im Spiel an 16 Stellen ohne Uebermalung geprueft). Wegen deiner Antwort 'Ich kuemmere mich selbst drum' ist es nicht eingebaut. Soll es fuer die Kameras ausserhalb deiner Freistellungsliste kommen, oder auch dort als Vorlage fuer deine Freistellungen?"
+   ]
+  }
+ },
+ "abn": {
+  "M": {
+   "bestanden": false,
+   "suite": "unit (-R \"^(unit_r41_masken36|unit_r37_masken36|unit_pri_|unit_r36_pri|unit_r37_pri1100|unit_sld_atlas|unit_bss_room_source|prop_bss_chunk|unit_r38_itemorte|unit_r39_optik|unit_r39_titelversion_maske)\" -j 3): 100% tests passed, 0 tests failed out of 32 | integration (-R \"^(integration_r41_masken36|integration_r37_masken36|integration_pri_masken|integration_r36_pri|integration_r37_pri1100|integration_r38_itemorte|integration_r39_optik|integration_r34n_e_dokumente|integration_r35_zgirl_5090|integration_r38_affen3|integration_r35_granate|integration_r37_elzaems_elza5091|integration_r36_dachkiste|integration_r37_beretta|integration_r37_itemband)\" -j 2): 100% tests passed, 0 tests failed out of 28 (4105 s; laufpruefung: Abbruch abgelehnt, voller Lauf angenommen, \"Gegenprobe OK\"; 0 Wiederholungen)",
+   "urteile": [
+    {
+     "punkt": "1: Masken STAGE3-6 haben ueberall Loecher -> Masken schliessen (gemessen an Mangel 1/3 der Abnahme 3, Restliste nach M-E1 und dem neuen Entscheid M-E2)",
+     "urteil": "teilweise",
+     "beleg": "Mangel 1 der Abnahme 3 ist fuer die Stirnflaeche widerlegt. Die Plattenunterkante liegt nach dem Bodenschnitt bei x ~-19950, z 14244..~14900. Rechts davon zeigt das Bild Teppich, RGB (75,81,94) mit B-R 18,9 wie der Teppich, die Platte ist neutral. An der exe ist die Figur nur ausserhalb der Masken sichtbar (a30A0 787, o3 546, o2 484, Elza o5e 403), VOR der Platte werden 0 Punkte uebermalt (v1, v3e). Mangel 3 ist behoben: echte Logs voll/ex60/t6-t9/ReadPixels-Fehler werden richtig angenommen bzw. abgelehnt, integration_r41_masken36_laufpruefung liefert 'Gegenprobe OK'. Die Restliste ist nicht schlechter, git diff 1ad2c96e..HEAD auf shared_assets/engine/include/platform ist leer. OFFEN: (a) M-E2 (AUFTRAG 14:29, nach der NB4) ist nicht umgesetzt: Original-Atlas-Teile und Tuer-Band-Korrektur fehlen. (b) Neues Rest-Loch: der rote Ordner in 30A0/30A1 C0 (x 310..317, y 106..111, 32 px) hat keine Maske. Er steht vor der Figur (Triangulation C0+C3 (-20231,-2423,14996)). Im natuerlichen Gehlauf liegt die Figur darueber: Leon F51..F60 mit 26/32/32/9 Punkten, Elza mit 10/19."
+    },
+    {
+     "punkt": "2: neue PRIs fuer STAGE2 sauber eingebaut (Sichtpruefung im Spiel, Abweichungen melden)",
+     "urteil": "erfuellt",
+     "beleg": "Die STAGE2-Masken sind seit NB1 unveraendert, NB3/NB4 beruehren keine STAGE1/2-Datei. 5924939d ist Vorfahr. Seit 5924939d gibt es in pri/ nur 919cc1ed (Orchestrator), git status pri/ ist leer. Riegel stage2: 18 Szenen OK. Eigene Elza-Stichprobe mit dem Riegelwerkzeug: 2041 C9 V H=0, 2031 C11 V H=0, 2041 C9 H 417/441, 2081 C3 H 882/924, 11A1 C1 H 824/871. Hinweis: v2050_00 liegt in der Kamerazone 0->1 @0x002BC. An natuerlichen Cut-0-Stellen verdeckt der nahe Handlauf die Unterschenkel; das passt zum gemalten Gelaender (x ~8800)."
+    }
+   ],
+   "maengel": [
+    "1. M-E2 nicht umgesetzt (Punkt 1; der Entscheid kam um 14:29, nach dem NB4-Abschluss 08e36f97 um 14:26). Gebaut ist der Stand NB3 (git diff 1ad2c96e..HEAD -- re15_port/shared_assets re15_port/engine re15_port/include ist leer). Die 437 nie platzierten Teile des Original-Vordergrundatlas (tools/maske/platzieren_r41.py, 74 Sektionen) sind nicht eingesetzt. Die Tuer-Band-Korrektur der Saaten (test_r37_masken36 --saat-tuer; AOT-Scan @0x80042cac..0x80042ccc selbst disassembliert) ist nicht angewandt. Erwartet nach M-E2: Lage je Teil per Bildvergleich UND Tiefe aus einer Kollisionszelle mit RDT-Offset; der Vorschlag nimmt bisher die Generator-Regel 'Bodenkontakt y=0, x 0,90'. Dazu: Kapazitaet je Cut belegt (FUN_80039270 @0x8003928c), je Kamera eine HINTER- und eine DAVOR-Stelle an der exe (Leon, Elza wo erreichbar), Rueckschritt-Suche wie NB3, Riegel, teilen_r41.py NICHT, Freistellungs-Liste neu.",
+    "2. ROOM30A0/30A1 Cut 0: der rote Ordner auf dem Schrank am Ostende der Trennwand hat keine Maske. Er liegt bei x 310..317, y 106..111 (32 Bildpunkte, mskio 0 gezeichnet), direkt neben dem gezeichneten gruenen Ordner (R24/R17/R100, Tiefe 76..87). Lage: Triangulation Cut 0 + Cut 3 ergibt (-20231,-2423,14996) bei 164 Strahlabstand. Gegenprobe entlang des Cut-0-Strahls: Cut 3 ist bei z ~14800 rot, am Rueckwandpunkt z 18225 hellgrau. Der Ordner steht also in Zelle 6 @RDT+0x0045C VOR der Figur. An der exe ist er bei a30A0 und o3 je 32/32 von der Figur ueberdeckt. Im natuerlichen Gehlauf ((-19000,16200), Gier 2048, U5, Cut 0) liegt Leon in F51..F60 mit 26/32/32/9 Punkten darueber, Elza in F54/F57 mit 10/19. Bild: scratchpad M41abn4/bilder/roter_ordner_F54.png. Die NB4-Aussage 'am Ostende fehlt KEINE Maske' stimmt hier nicht, der Ordner fehlt auch in der Freistellungs-Liste. Erwartet: Maske mit Zelle-6-Tiefe (Original-Atlas-Teil falls vorhanden, sonst Eintrag in die Nutzer-Liste) und eine Riegel-Szene Art Z mit Fenster x 310..317, y 106..111 (V == 0)."
+   ],
+   "bericht": "Abnahme 4 der Spur M: nicht bestanden. Punkt 1 ist teilweise erfuellt, Punkt 2 erfuellt.\n\nBericht: C:/workspace/git/reAi_v2/.claude/worktrees/r41_masken36/analysis/befunde_runde41/M_abnahme_4.md (Commit 2ea86d24, nur diese Datei). Messdaten liegen unter C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/M41abn4/.\n\n**Was die NB4 liefert, hält:**\n- **Mangel 1 der Abnahme 3 (Ost-Stirn):** Für die Stirnfläche widerlegt, selbst gemessen.\n  - Nach dem Bodenschnitt reicht die Platte nur bis z ~14900. Rechts davon zeigt das Cut-0-Bild Teppich und Hintergrund, die hinter der Figur liegen.\n  - An der exe ist die Figur nur außerhalb der Masken sichtbar. VOR der Platte wird nichts übermalt, bei Leon und Elza.\n- **Mangel 3 (Laufprüfung):** Behoben. Die Prüffunktion lehnt echte Abbruch-Logs ab und nimmt den vollen Lauf an. Der Riegel `_laufpruefung` meldet „Gegenprobe OK\".\n- **Restliste:** Nicht schlechter. MASKS, Engine, Include und Plattform sind bytegleich zu NB3.\n- **RE-Gate:** Selbst disassembliert und bestätigt:\n  - AOT-Bandprüfung @0x80042cac..ccc\n  - Figuren-Cull @0x80039d68/70 → 0x80014368\n  - SLD-Aufruf @0x80021db8 → 0x800c47e8\n- **Vertrag:** Hält.\n- **Tests:** Unit 32/32, Integration 28/28.\n\n**Offen:**\n1. **M-E2 nicht umgesetzt.** Der Entscheid kam um 14:29, nach dem NB4-Abschluss: Original-Atlas-Teile in allen Kameras einsetzen und die Tür-Band-Korrektur übernehmen. Gebaut ist weiter der Stand NB3.\n2. **Neues Loch am Ostende von 30A0/30A1 C0:** Der rote Ordner (32 px) steht vor der Figur, hat aber keine Maske.\n   - Leon und Elza werden auf dem natürlichen Weg darübergezeichnet (Leon bis 32/32 Punkte).\n   - Der grüne Ordner direkt daneben ist gezeichnet.\n   - Der Ordner steht weder in der NB4-Aussage „fehlt keine Maske\" noch in der Freistellungs-Liste für den Nutzer.\n\n**Hinweise (keine Mängel):**\n- Die Zahl der Plattenkante im Kopf der Szenendatei weicht vom Dossier ab (z 14802..14867 statt 14834..14904).\n- Die STAGE2-Szene v2050_00 liegt in einer Kamera-Umschaltzone; dort zeigt das Spiel Cut 1 statt Cut 0.\n- In 30A0 Cut 2 sind Bild und Kamera gegeneinander versetzt."
+  }
+ },
+ "stand": {}
+}
