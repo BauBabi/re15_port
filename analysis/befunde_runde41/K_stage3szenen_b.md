@@ -376,3 +376,82 @@ Textzeilen, gleiche Gesten; der Lichtton ist H2 der Abnahme, nicht Teil von K2).
 `szene` (6 Abschnitte, Laengen = Original, Bild = i % 40, Spruenge = (Laenge-1)/40). Gegenprobe am Vorher-Lauf
 lauf_7d91e6dc: `FAIL` (0 Spruenge, 721/453/189/117/367/121 Abweichungen).
 
+
+### NB1.M2 FUN_800314b0 ganz (Waffe, HP, Status beim Figurwechsel) — behoben, keine Wahlfrage mehr
+**Ursache.** `re15_sherry_r41_modell_setzen` setzte nur fuer 0x0F die Waffe (0) und gab beim Verlassen die vorige Waffe
+zurueck (PORT-WAHL); HP und Status blieben stehen (Sherry erbte Elzas Energie). Das Dossier legte das dem Nutzer als
+Entscheidungsfrage vor - die Regel "Original oder nicht" verbietet das.
+
+**Messung vorher** (Port, Bau a6fe8166-Stand des Moduls, Lauf `K41nb1/marvin_vorher`, gleicher Figurwechsel-Pfad wie
+3061/3091): `[sherry-r41] Spielermodell 0 -> 13, Waffe (aca5d) 3` - Waffe bleibt, HP/Status unberuehrt.
+
+**Original statisch** (selbst: `re15_disasm.py dis 0x80031660 50`, DEBUG.BIN mit `k0/disraw.py`):
+* `jal 0x800c00a8` @0x80031680 (Bytes `2a 00 03 0c`), `sb v0,-13731(at)` = aca5d @0x80031690 (`5d ca 22 a0`).
+  DEBUG.BIN @0x800c00a8: `lui t1,0x800b` / `lbu t1,-13732(t1)` (aca5c) / `lui t0,0x800c` / `addiu t0,t0,212` /
+  `addu t0,t0,t1` / `lbu v0,0(t0)` / `jr ra`; Tabelle @0x800c00d4 = `01` x15, `00`. Im Original-RAM (lauf2_30c1.sav,
+  sauberer Stub `0800e003`) stehen ab 0x800c00a8 dieselben 64 Bytes wie in DEBUG.BIN (`K_belege/nb1_m2_ss_status.py`)
+  -> resident.
+* `ori v0,zero,0xf` @0x80031694, `bne v1,v0,0x800316c8` @0x800316b8, `sb zero,-13731(at)` @0x800316c4 (0x0F -> Waffe 0).
+* `jal 0x80037c1c` @0x800316c8 (Wunden), `jal 0x800440c4(aca5c)` @0x800316e8 (CORE), `jal 0x80036b68` @0x800316f0
+  (Waffen-Bank), `jal 0x80043d8c(aca5d)` @0x80031708 (ARMS), **`ori v0,zero,0x64` @0x80031710 / `sh v0,-13586(at)`
+  @0x80031718 (HP +0x9a := 100)**, **`sh zero,-13588(at)` @0x80031720 (+0x98 := 0, Bit 0x2 = Gift)**.
+* Einziger Aufrufer: Raumlader FUN_800396fc `jal 0x800314b0` @0x80039788 hinter dem Nibble-Vergleich @0x80039770 - also
+  bei JEDEM Modell-Neuladen.
+* Zensus aller Modellwechsel (`K_belege/nb1_m2_zensus_modell.txt`, Save work_vars[0x10], opcode-exakt): Weste ROOM1190/
+  1191 sub15 (0<->1, 4<->5), U.S.S.-Ruestung ROOM40A0/40A1 sub06 (2 bzw. 6; msg 12 "There is one U.S.S. armor ... Will you
+  equip it?"), Marvin ROOM3020 sub02 @0x00D7A (13) / zurueck ROOM3060 sub03 @0x010D2/@0x010DE (0/1), Sherry ROOM3061 sub02
+  @0x011F6 (15) / zurueck ROOM3091 sub07 @0x01D9C/@0x01DA8 (4/5).
+* Figuren im Original: Waffen-Basis @0x800741e8 = 76 x4 (0..3), 97 x4 (4..7), 76 x7 (8..14), 118 (15); Figuren-Bit 2 der
+  Modell-Nibble `lbu v1,-13732(v1)` @0x8001207c / `andi v1,v1,0x4` @0x80012088.
+
+**Original dynamisch** (DuckStation-GDB, neues Werkzeug `re15_port/tools/r41_k/k2_orig_rueckwechsel.py`, sauberer Stand
+lauf2_30c1.sav, ganze 3091-Szene; Protokoll `K_belege/nb1_m2_orig_rueckwechsel_gdb.log`): bei Szenenbild 2800 Sherrys
+HP := 37 und Gift (Status 0000 -> 0002) gesetzt; bis Szenenbild 2952 bleibt `aca5d 0 HP 37 Status 0002 25c8 0`. Nach dem
+Rueckwechsel (Raum 30C, Cut 1, 11 Bilder lang gleich): **`aca5c 4 aca5d 1 HP 100 Status 0000 25c8 0`**, Inventar
+`(1,0)(3,15)(21,50)` unveraendert. settings.ini / resume.sav / Slot-1-Staende danach bytegleich zurueck.
+
+**Entscheid (Regel "Original oder nicht"):** FIGUREN-Wechsel (Leon<->Marvin, Elza<->Sherry) bekommen den
+Original-Schwanz: Waffe := @0x800c00d4[Modell] (Sherry 0, sonst 1 = Messer), Wunden := 0, HP := 100, Status := 0, CORE-
+und ARMS-Bank des neuen Modells. Der Ausruest-Platz 0x800b25c8 bleibt wie im Original unberuehrt. RUESTUNGS-Wechsel
+derselben Figur (Weste, U.S.S.-Ruestung; Modelle 0..3 bzw. 4..7) bleiben beim Port-Weg: dort gilt der Nutzer-Entscheid
+2026-08-30 "die Weste soll nicht heilen" (scd_room_setup.c `re15_vest_hp_on_model_reload`), siehe OFFEN 4.
+
+**Aenderung** (ac5ad9c4, 39f96d51): `engine/src/sherry_r41.c` - `re15_sherry_r41_modell_setzen` mit Tabelle
+`k_debug_waffe[16]` (@0x800c00d4), HP/Status/Wunden (@0x80031710/18/20, @0x800316c8), Log mit Vorher-Werten; neue
+`re15_sherry_r41_ruestungswechsel` (Gruppen 0..3 / 4..7, @0x800741e8, @0x80012088). `platform/pc/src/sherry_pc_r41.c` -
+CORE (`re15_audio_prime_core`, @0x800316e8) und ARMS (`re15_audio_prime_weapon`, @0x80031708) je Figurwechsel; der Wund-
+Reset wanderte ins Engine-Modul. PORT-WAHL "vorige Waffe zurueck" und `s_waffe_gemerkt` entfernt.
+
+**Messung nachher** (Bau df63abea):
+* Marvin-Lauf `K41nb1/marvin_nachher` (Leon mit Pistole + Gift): `Spielermodell 0 -> 13, Waffe (aca5d) 1, HP 100, Status
+  0000 (vorher Waffe 3, HP 94, Status 0002)` = Original-Schwanz.
+* 3091-Riegel (Elza mit Pistole + Gift in jedem Raum bei Bild 100): Hin `4 -> 15`: Waffe 0, HP 100, Status 0; Rueck
+  `15 -> 4`: Waffe 1 (Messer), HP 100, Status 0 - Werte s. Tests unten.
+
+### NB1.M3 Koerper bei jedem Neuladen (Marvin 0x0D) — behoben
+**Ursache.** `sherry_pc_r41.c` band EDD/EMR nur bei neuer Waffen-Familie und begruendete das mit "gleiche Familie =
+bytegleich". Eigener md5-Vergleich aller PLD-Teile (`K_belege/nb1_m3_pld_teile.txt`): bytegleich sind nur PL00/01/02
+(EDD 3160 038c9653, EMR 57136 b467407e) und PL04/05/06/07 (EDD 3156 de98dbdd, EMR 56576 145d7964); PL03 (EMR), PL08..PL0E
+und PL0F weichen ab. Im Spiel betroffen: Marvin 0x0D (Familie 76 wie Leon, PL0D EDD 3152 / EMR 56976).
+
+**Original:** FUN_800314b0 bindet EDD und EMR bei JEDEM Aufruf ohne Familienabfrage - `sw v0,-13376(at)` (0x800acbc0,
++0x16c) @0x8003154c, `sw v0,-13608(at)` (0x800acad8, +0x84) @0x80031578 - und baut das Skelett neu (`jal 0x8001e56c`
+@0x80031614, `jal 0x8001e5b0` @0x80031624).
+
+**Messung vorher** (Lauf `K41nb1/marvin_vorher`, `K_belege/nb1_m3_marvin_vorher_log.txt`): keine Koerper-Zeile, Bild 60 in
+30C0: Oberarm (Knochen 9 -> 10) im Bild 426.0 = PL00-Bindelage 426.1 -> Marvin auf Leons Skelett.
+
+**Aenderung** (ac5ad9c4): bei jedem Modellwechsel Bytevergleich EDD/EMR der neuen PLD gegen die PLD des gebundenen Modells;
+verschieden -> Koerper aus der neuen PLD binden (eigene Kopie); die W-Verbunde (main.c [wpn-bank]: Bindelage des Koerpers +
+Keyframes der PLW) bekommen die neue Bindelage, Keyframes und Banken der Familie bleiben. Familienwechsel (Sherry) wie
+bisher, beim Zurueckkehren nach dem Wiederherstellen erneut verglichen. Kopf von sherry_pc_r41.c berichtigt.
+
+**Messung nachher** (`K41nb1/marvin_nachher`, `K_belege/nb1_m3_marvin_nachher_log.txt`): `Koerper -> Familie 76 (PL00):
+15 Knochen, 24 Clips, W00 14 Clips, Wurzel-Bind y -1810 (Modell 13)` (PL0D -1810, Leon -1804); Bild 60: Oberarm 488.0 /
+Unterarm 454.5 = PL0D 488.8 / 455.4 (PL00 426.1 / 409.7). Bild `K_belege/nb1_m3_marvin_30c0_vorher_nachher.png`: vorher
+kurze Arme (Haende an der Huefte, Pistole), nachher Marvins Proportionen (Haende tiefer, Messer = Waffe 1).
+Kein Original-Spielstand mit Marvin als Spielfigur vorhanden (alle sauberen Staende in stage_saves/ und DuckStation-
+savestates/ durchsucht: Modell nur 0/1/4/5/15); der Beleg ist der Code (@0x8003154c/@0x80031578 ohne Bedingung).
+**Querbezug Spur J (3060 Marvin):** Marvins Abschnitt laeuft jetzt auf seinem eigenen Koerper mit Messer und HP 100 (wie
+das Original). J's Riegel `integration_r41_stage3szenen_a_3060` muss bei der Integration mit diesem Stand laufen.
+
