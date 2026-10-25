@@ -382,6 +382,7 @@ static int figur_raster(const re15_camera_view_t *v, double wx, double wz, int b
 typedef struct { unsigned raum; int x, z, band; char art; unsigned von; uint32_t off; } saat_t;   /* art: A = AOT, T = Tuer (VM), S = Tuer (Satz statisch) */
 static saat_t g_saat[SAAT_MAX];
 static int g_saat_n;
+static int g_saat_alt;       /* R41 NB4: 1 = Tuer-AOTs mit slots[].band (Stand vor NB4, Gegenprobe/Werkzeug) */
 
 static void saat_dazu(unsigned raum, int x, int z, int band, char art, unsigned von, uint32_t off)
 {
@@ -525,11 +526,25 @@ static void saaten_sammeln(void)
                         int zb = dp->spawn_y < 0 ? (-dp->spawn_y + BAND_Y / 2) / BAND_Y : 0;
                         saat_dazu(ziel, dp->spawn_x, dp->spawn_z, zb, 'T', raum, 0);
                     }
-                    if (q->band & 0x80) continue;
-                    /* Zonen ohne Stehplatz-Beleg: GENERIC (Ereignisflaeche), CAM_SWITCH, AUTO_EVENT */
-                    if (q->type == RE15_AOT_TYPE_GENERIC || q->type == RE15_AOT_TYPE_CAM_SWITCH
-                        || q->type == RE15_AOT_TYPE_AUTO_EVENT) continue;
-                    saat_dazu(raum, x, z, q->band, 'A', raum, 0);
+                    /* Runde 41 Spur M, Nachbesserung 4 (Abnahme 3 Mangel 2, OFFEN 10/14): das Band eines AOT-Satzes ist sein Byte
+                     * pc[4] (= rec[2], der Satz beginnt bei pc+2). Der AOT-Scan FUN_80042bac gated JEDEN Satz darauf:
+                     * @0x80042cac lbu v0,2(s0) / @0x80042cb4 andi 0x80 (gesetzt = jedes Band) / @0x80042cc0 lbu v1,130(s1) (Band
+                     * des Spielers, +0x82) / @0x80042cc4 lbu v0,2(s0) / @0x80042ccc bne v1,v0 -> Satz uebersprungen. Der Port legt
+                     * pc[4] fuer Door_aot_set in door_params[].band ab (scd_vm.c op_door_aot_set), slots[].band bleibt dort 0 - jede
+                     * Tuer saete deshalb auf Band 0 (gemessen ROOM6000: Tueren @RDT+0x00D58/0x00D78/0x00DDA mit pc[4] = 2 ergaben die
+                     * Band-0-Saaten (2800,2750), (-4900,-8350), (1763,-10677) und damit das Netz im Gleisbett). Traege Tuersaetze
+                     * (sce 0, Typ NONE) tragen ihr Band ebenso in door_params (floor = pc[3] != 0 nur nach einem Tuersatz). */
+                    {
+                        int tuer = q->type == RE15_AOT_TYPE_DOOR
+                                   || (q->type == RE15_AOT_TYPE_NONE && g_aot.door_params[i].floor != 0);
+                        int band = tuer ? (int) g_aot.door_params[i].band : (int) q->band;
+                        if (g_saat_alt) band = q->band;                 /* Werkzeug: Stand vor NB4 (Gegenprobe) */
+                        if (band & 0x80) continue;
+                        /* Zonen ohne Stehplatz-Beleg: GENERIC (Ereignisflaeche), CAM_SWITCH, AUTO_EVENT */
+                        if (q->type == RE15_AOT_TYPE_GENERIC || q->type == RE15_AOT_TYPE_CAM_SWITCH
+                            || q->type == RE15_AOT_TYPE_AUTO_EVENT) continue;
+                        saat_dazu(raum, x, z, band, 'A', raum, 0);
+                    }
                 }
                 m36_tueren_statisch(buf, n, raum);          /* Nachbesserung 1 (M1): jeder Tuersatz, nicht nur der VM-Stand */
                 free(buf);
@@ -2119,6 +2134,7 @@ int main(int argc, char **argv)
         int i, j = 1;
         for (i = 1; i < argc; i++) {
             if (!strcmp(argv[i], "--alt")) g_fz_alt = 1;
+            else if (!strcmp(argv[i], "--saat-alt")) g_saat_alt = 1;      /* R41 NB4: Tuer-Saaten wie vor NB4 (Gegenprobe) */
             else if (!strncmp(argv[i], "--zeilen=", 9) && atoi(argv[i] + 9) >= 2) g_fz = atoi(argv[i] + 9);
             else if (!strncmp(argv[i], "--spalten=", 10) && atoi(argv[i] + 10) >= 3) {
                 g_fs = atoi(argv[i] + 10) | 1;
@@ -2142,6 +2158,61 @@ int main(int argc, char **argv)
                    g_saat[i].von, (unsigned) g_saat[i].off);
         }
         printf("  ROOM%04X: AOT %d, Tuer (VM) %d, Tuer (Satz) %d | alle Saaten %d\nOK\n", r, na, nt, ns, g_saat_n);
+        return 0;
+    }
+    if (!strcmp(teil, "netzvergleich")) {               /* Werkzeug R41 NB4: Stehplaetze je Raum/Band mit Tuer-Saaten alt/neu */
+        static raum_t R; int stage, rr, var, b, gx, gz, alt_v;
+        static long n[2][16];
+        static saat_t s_neu[SAAT_MAX], s_alt[SAAT_MAX]; int n_neu, n_alt;
+        g_saat_alt = 0; saaten_sammeln(); memcpy(s_neu, g_saat, sizeof g_saat); n_neu = g_saat_n;
+        g_saat_alt = 1; saaten_sammeln(); memcpy(s_alt, g_saat, sizeof g_saat); n_alt = g_saat_n;
+        for (stage = 3; stage <= 6; stage++)
+            for (rr = 0; rr < 0x40; rr++)
+                for (var = 0; var < 2; var++) {
+                    unsigned raum = ((unsigned) stage << 12) | ((unsigned) rr << 4) | (unsigned) var;
+                    char p[700]; size_t mn = 0; uint8_t *msk;
+                    snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, raum);
+                    msk = slurp(p, &mn);
+                    if (!msk) continue;
+                    free(msk);
+                    for (alt_v = 0; alt_v < 2; alt_v++) {
+                        if (alt_v) { memcpy(g_saat, s_alt, sizeof g_saat); g_saat_n = n_alt; }
+                        else { memcpy(g_saat, s_neu, sizeof g_saat); g_saat_n = n_neu; }
+                        memset(n[alt_v], 0, sizeof n[alt_v]);
+                        if (!raum_laden(&R, raum)) continue;
+                        for (b = 0; b < 16; b++)
+                            for (gx = 0; gx < R.nx; gx++)
+                                for (gz = 0; gz < R.nz; gz++) n[alt_v][b] += R.err[b][gx][gz] != 0;
+                    }
+                    for (b = 0; b < 16; b++)
+                        if (n[0][b] != n[1][b])
+                            printf("  ROOM%04X Band %d: Stehplaetze alt %ld -> neu %ld\n", raum, b, n[1][b], n[0][b]);
+                }
+        g_saat_alt = 0;
+        printf("OK\n");
+        return 0;
+    }
+    if (!strcmp(teil, "saatband")) {                    /* Werkzeug R41 NB4: AOT-Saaten, deren Band die Tuer-Regel aendert */
+        static struct { unsigned raum; int x, z, band; } alt_s[SAAT_MAX];
+        int i, j, na = 0, geaendert = 0;
+        g_saat_alt = 1; saaten_sammeln();
+        for (i = 0; i < g_saat_n; i++) if (g_saat[i].art == 'A') {
+            alt_s[na].raum = g_saat[i].raum; alt_s[na].x = g_saat[i].x; alt_s[na].z = g_saat[i].z; alt_s[na].band = g_saat[i].band; na++;
+        }
+        g_saat_alt = 0; saaten_sammeln();
+        for (j = 0; j < na; j++) {
+            int gleich = 0, neu_b = -1;
+            for (i = 0; i < g_saat_n; i++)
+                if (g_saat[i].art == 'A' && g_saat[i].raum == alt_s[j].raum && g_saat[i].x == alt_s[j].x && g_saat[i].z == alt_s[j].z) {
+                    neu_b = g_saat[i].band; if (g_saat[i].band == alt_s[j].band) gleich = 1;
+                }
+            if (!gleich) {
+                geaendert++;
+                printf("  ROOM%04X (%d,%d) Band alt %d -> neu %d%s\n", alt_s[j].raum, alt_s[j].x, alt_s[j].z, alt_s[j].band, neu_b,
+                       neu_b < 0 ? " (entfaellt: Band & 0x80 = jedes Band)" : "");
+            }
+        }
+        printf("  AOT-Saaten alt %d, mit geaendertem Band %d\nOK\n", na, geaendert);
         return 0;
     }
     if (!strcmp(teil, "soll")) {                        /* Werkzeug: Maskenzahl je Generator-Sektion nach dem Ausschluss (exe-Liste) */
