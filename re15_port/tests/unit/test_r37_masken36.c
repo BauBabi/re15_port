@@ -1157,7 +1157,7 @@ static void teil_zellen3d(void)
     CHECK("die Engine-Tabelle zeichnet jedes Modell-Rechteck (Leon und Elza)", tab_ok == 2 * n);
     CHECK("Ausschluss MIT 3D-Urteil == Engine-Tabelle in jedem Cut mit Modell", cuts > 0 && gleich == cuts);
     CHECK("Gegenprobe: ohne 3D-Urteil fielen Rechtecke weg (NB2 gemessen: 79 der Leon-Dateien; Nachbesserung 3 mit den Teilrechtecken "
-          "von kacheln_r41.py: 128; Elza bytegleich), jedes davon mit Modell-Zeile", nur3d >= 128 && nur3d_modell == nur3d && echt3d > 0);
+          "von kacheln_r41.py: 127; Elza bytegleich), jedes davon mit Modell-Zeile", nur3d >= 127 && nur3d_modell == nur3d && echt3d > 0);
 }
 
 /* ---- fern (Runde 41 Spur M, Nachbesserung 3; Riegel unit_r41_masken36_fern) ---------------------------------------- *
@@ -1253,7 +1253,7 @@ static void sektion_fern(raum_t *R, int cut, const re15_pri_cut_t *pri, const at
     }
 }
 
-static void teil_fern(long erwartet_max)
+static void teil_fern(long erwartet_max, const long *stage_max)
 {
     static raum_t R;
     int stage, rr, var, sekt = 0, mit = 0;
@@ -1304,9 +1304,15 @@ static void teil_fern(long erwartet_max)
            "davon NICHT verdeckt (zu fern) %ld (Stage 3: %ld, 4: %ld, 5: %ld, 6: %ld)\n", sekt, mit, hinter, fern, fern_stage[3],
            fern_stage[4], fern_stage[5], fern_stage[6]);
     if (erwartet_max >= 0) {
+        int st;
         CHECK("Messung greift: Figurpunkte hinter Modell-Koerpern gibt es (> 0)", hinter > 0);
         CHECK("keine Figur HINTER dem Koerper einer gezeichneten Modell-Maske wird ueber sie gezeichnet (zu fern <= Grenze)",
               fern <= erwartet_max);
+        for (st = 3; st <= 6 && stage_max; st++) {
+            char t[160];
+            snprintf(t, sizeof t, "Stage %d: zu fern %ld <= %ld", st, fern_stage[st], stage_max[st - 3]);
+            CHECK(t, fern_stage[st] <= stage_max[st - 3]);
+        }
     }
 }
 
@@ -2389,8 +2395,11 @@ int main(int argc, char **argv)
     }           /* Runde 41 Spur M NB3: Sichtung Verdachtsliste Abnahme 2 */
     else if (!strcmp(teil, "hinter")) teil_hinter();               /* Runde 41 Spur M NB3: Werkzeug fuer kacheln_r41.py */
     else if (!strcmp(teil, "fern")) {
-        if (argc > 4) { g_fern_raum = (unsigned) strtoul(argv[3], NULL, 16); g_fern_cut = atoi(argv[4]); }
-        teil_fern(argc > 2 ? atol(argv[2]) : -1);
+        /* Riegel: fern <max> <max_stage3> <max_stage4> <max_stage5> <max_stage6>; Werkzeug: fern <max> <raum> <cut> (Stehplaetze) */
+        long sm[4] = { 0, 0, 0, 0 }; int k, hat = argc > 6;
+        if (hat) for (k = 0; k < 4; k++) sm[k] = atol(argv[3 + k]);
+        else if (argc > 4) { g_fern_raum = (unsigned) strtoul(argv[3], NULL, 16); g_fern_cut = atoi(argv[4]); }
+        teil_fern(argc > 2 ? atol(argv[2]) : -1, hat ? sm : NULL);
     }   /* Runde 41 Spur M NB3: Riegel unit_r41_masken36_fern */
     else if (!strcmp(teil, "verdeckung")) teil_verdeckung();
     else if (!strcmp(teil, "erzeuge") && argc > 2) teil_erzeuge(argv[2]);

@@ -19,7 +19,7 @@
  *       61672 = 25,1 %, Leon + Elza, Dossier 1.4; nach Nachbesserung 1 - Zellen-Tiefe fuer ausgeschlossene Rechtecke,
  *       tools/maske/tiefe_zelle_r41.py - 11494 von 62432 = 18,4 %; Nachbesserung 2, Zellen-Modelle mit 3D-Urteil und Zuordnung von
  *       Hand, tools/maske/zellen3d_r41.py - 10178 von 63546 = 16,0 %; Nachbesserung 3, Teilrechtecke je Koerper, tools/maske/
- *       kacheln_r41.py - 9160 von 63364 = 14,5 %) und VORHER > 10000 (Gegenprobe: das Mass findet die Kerben);
+ *       kacheln_r41.py - 9036 von 63116 = 14,3 %) und VORHER > 10000 (Gegenprobe: das Mass findet die Kerben);
  *     - Blit: die gezeichneten Punkte NACHHER passen zum Hintergrund (eigener Atlas = Hintergrund an der Zielstelle).
  */
 #include <stdio.h>
@@ -269,7 +269,7 @@ static void teil_loecher(void)
           sekt == 216 && eigen == 216 && quelle_eigen == 216);
     CHECK("die alten Generator-Rechtecke sind erkennbar (Quelle im BSS-Atlas voll deckend + Blit)", alt_n > 6000);
     CHECK("Gegenprobe: VORHER gibt es offene Kerben an den Objektkanten (> 10000)", k_alt > 10000);
-    CHECK("NACHHER hoechstens 30 % der Kerben von VORHER (gemessen nach Nachbesserung 3 9160 von 63364 = 14,5 %, nach NB2 16,0 %, nach NB1 18,4 %, vor NB1 25,1 %; der Rest sind Saum-Rechtecke, die der "
+    CHECK("NACHHER hoechstens 30 % der Kerben von VORHER (gemessen nach Nachbesserung 3 9036 von 63116 = 14,3 %, nach NB2 16,0 %, nach NB1 18,4 %, vor NB1 25,1 %; der Rest sind Saum-Rechtecke, die der "
           "Ausschluss nimmt, weil sie eine Figur VOR dem Objekt verdecken wuerden)", k_neu * 10 <= k_alt * 3);
     CHECK("Blit NACHHER: eigener Atlas = Hintergrund an der Zielstelle (Mittel je Sektion <= 12)", gemalt > 0 && mittel_max <= 12.0);
 }
