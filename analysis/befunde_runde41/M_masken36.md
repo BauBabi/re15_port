@@ -1255,7 +1255,7 @@ Ausdruck (alle Masken-/PRI-Riegel der Spur und die Nachbar-Riegel, die dieselben
    nicht hinter dem Koerper -> das ganze Rechteck bleibt aus. Groesster Fall 6000 C5 unterer Gittertraeger (Zelle x -7862..12578
    z -5674..-1634 Band 2, IoU 0,86; R13 4 020 px, davon 165 ausserhalb). Weg: die Atlas-Punkte ausserhalb des Koerpers je Rechteck
    durchsichtig machen bzw. das Rechteck teilen - aendert Atlas/Rechtecke (nicht nur Tiefen); nicht in NB2.
-10. **NB2 - Band-0-Stehplaetze in ROOM6000:** das Netz der Spur P saet Band 0 aus Aot_set-Saetzen mit Band 0 ((2800,2750),
+10. **[NB4 GESCHLOSSEN: die Band-0-Saaten waren Tueren mit falsch gelesenem Band, s. NB4 Mangel 2 (a)] NB2 - Band-0-Stehplaetze in ROOM6000:** das Netz der Spur P saet Band 0 aus Aot_set-Saetzen mit Band 0 ((2800,2750),
     (-4900,-8350), (1763,-10677), `test_r37_masken36 saaten 6000`) und fuellt die Gleisebene (40 044 Plaetze); ob der Spieler dort je
     steht, ist nicht gemessen. Die HINTER-Szenen 6000 (Band 0, im Grundriss der Lok) pruefen deshalb die Mechanik; im Spiel wirken
     die neuen Lok-Masken vor allem auf das 3D-Tor (OFFEN 2: Tor 4 500 hinter der Lokfront, Verdeckung geometrisch richtig).
@@ -1270,14 +1270,49 @@ Ausdruck (alle Masken-/PRI-Riegel der Spur und die Nachbar-Riegel, die dieselben
 13. **NB3 - Verdachtsliste, nicht einzeln geprueft:** 12 der 41 Gruppen (Tabelle in "Sichtung der Verdachtsliste") zeigen Figurpunkte VOR
     dem eigenen Koerper hinter einer soliden Zelle im Grundriss - ob die Zelle davor dort wirklich verdeckt (Hoehe), ist nicht je Fall an der
     exe gemessen. Werkzeug: `test_r37_masken36 verdacht <raum> <cut> <rechteck>` (Stehplaetze), Bilder m41nb3/verdacht.
-14. **NB3 - ROOM6000 Band 0 (vgl. OFFEN 10):** 39 934 der 40 276 "zu fern"-Punkte liegen im Gleisbett unter dem Bahnsteig; die Teilung der
+14. **[NB4: Band 0 geschlossen (Saaten); Traeger-Mitte Spalten 1..30 geteilt, 31..40 mit Grund offen = OFFEN 18] NB3 - ROOM6000 Band 0 (vgl. OFFEN 10):** 39 934 der 40 276 "zu fern"-Punkte liegen im Gleisbett unter dem Bahnsteig; die Teilung der
     Traeger-MITTE (6000 C5) nimmt der Ausschluss wegen eben dieser Plaetze wieder heraus. Ob der Spieler dort je steht, ist weiter nicht
     gemessen; wenn nicht, sind diese Punkte im Spiel ohne Wirkung. Dieselbe Rueckholung laesst im Gang hinter der Wandecke (Cut 5, m6000_05)
     Leons Rumpf unter R37 (Tiefe 176) sichtbar: 536 von 1574 Punkten hinter dem Block sind verdeckt.
 15. **NB3 - Mass "zu fern" kennt nur Modell-Koerper:** fuer Rechtecke ohne Modell (Generator-Tiefe) gibt es kein Urteil "zu fern"; die
     Verdachtsliste (Grundriss) deckt diesen Fall nur ohne Hoehe ab.
 
+16. **NB4 - platzierte Komponenten auf hoeheren Baendern:** die Tiefe der neuen Rechtecke folgt der Generator-Regel (Bodenkontakt je Spalte
+    auf y = 0). Steht der Gegenstand auf einem hoeheren Band (3050 Band 4, 3040 Band 1, 5090 Band 1), liegt der Bodenpunkt auf y = 0 HINTER
+    ihm: die Maske verdeckt dann weniger als moeglich (nie mehr - keine Uebermalung, an der exe gemessen 0 an 16 DAVOR-Stellen). Ein
+    Band-genauer Bodenkontakt (Band der Stehplaetze unter der Spalte) waere der naechste Schritt.
+17. **NB4 - Komponenten ohne Bodenkontakt:** der Roboterarm 50B0 C1 (7 Komponenten, 3448 Texel), zwei Gelaenderstuecke oben in 3050 C6
+    (Komponenten 2/3, 527/335 Texel, Lage (136,-2)/(142,-2)) und Deckenlampen haben in keiner Spalte einen Punkt unter dem Horizont - die
+    Generator-Regel gibt ihnen keine Tiefe, sie bleiben ungezeichnet (`m41nb4/pl_v1/platzieren_r41.json`, neu_px 0).
+18. **NB4 - 6000 C5 Traeger-Mitte Spalten 31..40 (Rechteck 37, Tiefe 176):** die Zelle-12-Tiefe wuerde an 192 Band-2-Plaetzen im Gang
+    oestlich der Ecke (x 14833..15433, z -4984..-4384) Figurpunkte verdecken, deren Sehstrahl das Prisma der Zelle 12 nicht trifft - der
+    Traeger selbst hat keine Zelle (er steht an der Ecke und ragt wohl ueber sie hinaus). An der exe bleiben hinter dem Block sichtbar:
+    k6000_05a 512, b 371, c 644, m6000_05 447 Leon-Punkte (vorher 964 / 617 / 876 / 1066).
+19. **NB4 - weiter ohne Maske (gemessen):** Pulte/Schreibtisch 5050 C1/C2 (Kamera ueber dem Grundriss, Nahfeld-Sperre NB2), Lampe/Moebel vorn
+    30A0 C0 (die 15 neu platzierten Rechtecke nimmt der Ausschluss R37: eine Figur VOR der Lampe wuerde ohne Gegenstand davor verdeckt),
+    3040 C3 rechter Pfeiler (4743 Punkte, ebenso vom Ausschluss genommen), 154 der 1627 neuen Rechtecke insgesamt. Dort waere eine
+    Freistellung des Nutzers (wie STAGE1/2) der Weg.
+
 ## Fuer den Nutzer
+
+- **Masken STAGE3-6, Nachbesserung 4:** In den Bildern der Stages 3..6 steckten viele Gegenstaende, die der Masken-Generator vom
+  2026-09-03 nie gefunden hatte, obwohl sie im Original-Vordergrundatlas des Spiels liegen - vor allem duenne Teile: Gelaender, Pfosten,
+  Rohre, Saeulen, Lampen. Sie sind jetzt platziert und gezeichnet (437 Teile in 72 Kameras, +160 539 Maskenpunkte; zusammen zeichnet das
+  Spiel jetzt 1 159 393 Generator-Maskenpunkte statt 983 624): z.B. die Gelaender in ROOM30E0 Kamera 6..9, ROOM3040 Kamera 3, ROOM3050
+  Kamera 6, die Saeule in ROOM6010 Kamera 2 (Leon steht jetzt dahinter statt davor). Vorher/Nachher-Boegen:
+  `analysis/befunde_runde41/M_bilder/NB4/NB4_bogen_ROOMxxxx_Cnn.png`, Spielbilder `M_bilder/NB4/NB4_exe_*.png`. Im Spiel geprueft: vor den
+  neuen Gegenstaenden wird Leon an keiner der 16 gemessenen Stellen uebermalt.
+- **ROOM6000 (Bahnsteig):** die Masken nahmen Ruecksicht auf "Stehplaetze" im Gleisbett unter dem Bahnsteig, die es im Spiel gar nicht
+  gibt (ein Lesefehler meines Werkzeugs bei den Tueren). Behoben - dadurch sind u.a. der untere Teil der Lok (Kamera 7) und weitere Teile in
+  Kamera 5/8 gezeichnet, und Leon ist hinter der Wandecke in Kamera 5 weitgehend verdeckt (ein schmaler Streifen am Traeger bleibt, s. unten).
+- **ROOM30A0, Ostende der Buero-Trennwand:** dort fehlt KEINE Maske. Die graue Stirnplatte ist so weit gezeichnet, wie sie im Bild reicht
+  (Bild `M_bilder/NB4/NB4_M1_30A0_ost_stirn.png`); rechts davon zeigt das Bild den Boden und die Schraenke HINTER Leon - dort ist Leon zu
+  Recht zu sehen. Die Abnahme hatte die Kollisionszelle (die groesser ist als die Platte) als Gegenstand genommen.
+- **Frage:** Fuer diese Stellen geben die Spieldaten keine sichere Tiefe her - sollen sie als Ihre Freistellungen (PNG unter
+  pri/STAGEn/<raum>/, wie in STAGE1/2) kommen? ROOM5050 Kamera 1/2 (Pulte/Schreibtisch, die Kamera haengt darueber), ROOM30A0 Kamera 0
+  (Lampe/Moebel vorn links), ROOM50B0 Kamera 1 (Roboterarm, haengt frei), ROOM6000 Kamera 5 (der Traeger an der Wandecke, schmaler Streifen).
+- Die Uebersichtsbilder der 72 durch Nachbesserung 4 geaenderten Kameras liegen unter `analysis/befunde_runde41/M_bilder/uebersicht/`
+  (Liste `M_bilder/NB4/NB4_zahlen.txt`) - das Ersetzen in pri/ bleibt dem Orchestrator (pri/ ist fuer die Spur tabu).
 
 - **Masken STAGE3-6, Nachbesserung 3:** Die Buero-Trennwand in ROOM30A0 (Kamera 0 und 1, Leon und Elza) verdeckt jetzt die GANZE Figur
   dahinter - vorher waren die oberen Mattglas-Felder einer Wand weiter hinten zugeordnet, und man sah Leon/Elza ab der Huefte aufwaerts
