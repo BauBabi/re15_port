@@ -647,6 +647,37 @@ ihre Zahlen werden zitiert. Punkt 2 (erfuellt) wird nicht angefasst.
 - [ ] Mangel 2: OFFEN 9 gehen (Rechteck teilen / Punkte ausserhalb des Koerpers durchsichtig), Restliste weiter schliessen
 - [ ] Bau, gezielte Tests, Abschluss-Commit
 
+### NB3 Messung vorher: Mass "zu fern" (neu, test_r37_masken36 fern)
+Die Abnahme 2 verlangt einen Riegel gegen zu FERNE Tiefe. Neuer Modus `test_r37_masken36 fern` (dieselben erreichbaren Stehplaetze,
+dasselbe pixelgenaue Figurraster und dieselbe Engine-Tabelle wie der Ausschluss): ein Figurpunkt F zaehlt als "zu fern", wenn an
+seinem Bildpunkt eine GEZEICHNETE Maske mit Zellen-Modell liegt, deren Koerper die Strecke Kamera -> F VOR F schneidet
+(r41_koerper_davor == 1), F aber von keiner gezeichneten Maske verdeckt wird (re15_pri_mask_occludes: depth < bucket(vz),
+@0x8002565c otz>>4 / ZSF3 341 @0x80066c70 / Masken-OT = depth @0x80039650). Stand vor NB3 (Spurbaum 99f85a92, Leon + Elza):
+**1 360 606 von 13 839 974 Figurpunkten hinter einem Modell-Koerper sind sichtbar** (Stage 3: 56 346, 4: 961 232, 5: 914,
+6: 342 114), in 13 Raumpaar-Cuts: 30A0 C0 (R0 27 169 / R22 1 004 - die unteren Trennwandfelder; die oberen R4/R5/R19 zaehlen hier
+noch gar nicht, weil ihr Modell die Rueckwand-Zelle ist), 4040 C6/C7/C9/C10/C11, 4080 C7, 5090 C11/C13, 6000 C5/C7/C8/C9.
+Ursache 1 (Mangel 1 der Abnahme): falsche Zelle (oberes Feld -> Rueckwand). Ursache 2 (dieselbe Wirkung, systematisch): EINE Tiefe
+je Rechteck = max bucket ueber alle Punkte des Rechtecks (NB1/NB2-Regel) - bei einem lang zurueckweichenden Gegenstand (Trennwand
+30A0: Eintritt bucket 72..110 im rechten Feld, 104..171 im linken) bleibt eine Figur hinter dem NAHEN Teil sichtbar (Python-Simulation
+auf Leons Dreiecken der Abnahme-Laeufe: s30A0_00 R0 136 von 854 Punkten, R4 mit Zelle 6 und Rechteck-Tiefe 107 noch 306 von 1075;
+je Bildspalte eigene Tiefe: 0). Ursache 3 (gefunden): das Python-Modell (geom.zellen_solid_test) kennt Zellentyp 2 nicht ("typ 2/8/9
+... None" = Huellrechteck), der C-Ausschluss fragt die Raute des Resolvers (push_diag2, LAB_8003d00c, re15_collision.c) - 23
+Modell-Zeilen in 4040/4080 haben Tiefe und Hoehe vom Huellrechteck (13 289 x 13 289) statt von der Raute.
+
+### NB3 Plan
+1. Zuordnung von Hand: obere Trennwandfelder 30A0 C0 (Verschiebungen (232,-24), (59,43)) + Fussstreifen (57,86), C1 oberes Feld
+   (-32,70) + Fussstreifen (0,126) -> Zelle 6 @0x0045C; Hoehe gemessen an ALLEN Trennwand-Objekten (C0: 3025, IoU 0,908 statt
+   1450/0,753 nur unten).
+2. Koerper-Modell mit der Form des Resolvers auch fuer Typ 2 (Raute, push_diag2), Eintritt UND Austritt je Bildpunkt.
+3. Streifen (Weg "Rechteck teilen" aus OFFEN 9): jedes Rechteck eines Koerper-Objekts wird in senkrechte Teilrechtecke derselben
+   Atlas-Abbildung zerlegt, Tiefe je Teil = max bucket(Eintritt) seiner Koerperpunkte (keine Figur VOR dem Koerper verdeckt) und die
+   Grenzen so, dass hinter dem Koerper (Austritt) moeglichst nichts frei bleibt; Saum-Rechtecke des Objekts werden je Streifen
+   zusammengelegt (Platz fuer die Teile, 105 je Cut, re15_pri.h). Simulation Trennwand 30A0 C0 mit 6 Streifen: an s/u/t/h30A0_00
+   0/0/0/1 von 1937/1439/1101/1691 Leon-Punkten hinter dem Koerper sichtbar, DAVOR d30A0_00 0 von 2144 verdeckt.
+4. Riegel: unit_r41_masken36_fern (Mass oben, Grenze = gemessener Endstand), integration_r41_masken36_fern (exe, Art Z: hinter der
+   Trennwand im Fenster des Gegenstands kein Figurpunkt sichtbar; DAVOR 0 uebermalt), Gegenprobe gegen den Stand vor NB3.
+5. OFFEN 9 mit derselben Zerlegung (Teile nur aus Koerperpunkten zeichnen), Restliste neu sichten.
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):

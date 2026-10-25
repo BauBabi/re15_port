@@ -1160,6 +1160,156 @@ static void teil_zellen3d(void)
           "Elza bytegleich), jedes davon mit Modell-Zeile", nur3d >= 79 && nur3d_modell == nur3d && echt3d > 0);
 }
 
+/* ---- fern (Runde 41 Spur M, Nachbesserung 3; Riegel unit_r41_masken36_fern) ---------------------------------------- *
+ * Abnahme 2, Mangel 1 (analysis/befunde_runde41/M_abnahme_2.md): die oberen Trennwandfelder ROOM30A0 Cut 0/1 trugen die Tiefe
+ * einer Zelle HINTER der Trennwand - gezeichnet, aber eine Figur zwischen Trennwand und Rueckwand wurde ueber sie gemalt
+ * ("Halbfigur"). Der Ausschluss (sektion_pruefen) misst nur die Gegenrichtung (Maske VOR der Figur ohne Gegenstand davor).
+ * MASS "zu fern": Figurpunkt F an einem erreichbaren Stehplatz (dieselben Plaetze, dasselbe pixelgenaue Figurraster und dieselbe
+ * Engine-Tabelle wie der Ausschluss), Bildpunkt p. F ist NICHT verdeckt (keine gezeichnete Maske an p mit depth < bucket(vz_F),
+ * re15_pri_mask_occludes: @0x8002565c otz>>4, ZSF3 = 341 @0x80066c70, Masken-OT = depth @0x80039650), obwohl an p eine
+ * gezeichnete Maske mit Zellen-Modell liegt, deren Koerper die Strecke Kamera -> F VOR F schneidet (r41_koerper_davor == 1):
+ * der Hintergrund zeigt an p den Gegenstand vor der Figur, die Figur wird trotzdem darueber gezeichnet. Ohne Urteil bleibt
+ * ein Koerper, ueber dessen Grundriss die Kamera steht (r41_koerper_davor -1, Nachbesserung 2 Nahfeld). Gezaehlt je Sektion
+ * und je Rechteck. */
+static long g_fern_rect[RE15_PRI_MAX_MASKS_PER_CUT];
+static unsigned g_fern_raum = 0xFFFFu; static int g_fern_cut = -1;   /* Werkzeug: Stehplaetze mit Treffern dieser Sektion drucken */
+
+static void sektion_fern(raum_t *R, int cut, const re15_pri_cut_t *pri, const atlas_t *a, const int *aus, long *n_fern,
+                         long *n_hinter, long *n_steh)
+{
+    static uint16_t tief[240][320];
+    static int16_t mod[240][320][4];
+    static uint8_t nmod[240][320];
+    static int sat[241][321];
+    static figpt_t pt[FIGPT_MAX];
+    re15_camera_view_t v; double cam[3], lx, lz, ll; int16_t qx[4], qz[4]; int has_q, m, x, y, b;
+    const uint8_t *idx = (const uint8_t *) a->tim.pixels;
+    *n_fern = *n_hinter = *n_steh = 0;
+    memset(g_fern_rect, 0, sizeof g_fern_rect);
+    if (re15_camera_build_view(&R->rdt.cuts[cut], &v) != 0) return;
+    kamera_ort(&v, cam);
+    has_q = re15_rdt_get_region_quad(&R->rdt, cut, qx, qz);
+    lx = v.rot[0] / 4096.0; lz = v.rot[2] / 4096.0; ll = sqrt(lx * lx + lz * lz);
+    if (ll > 0) { lx /= ll; lz /= ll; }
+    for (y = 0; y < 240; y++) for (x = 0; x < 320; x++) { tief[y][x] = 0xFFFF; nmod[y][x] = 0; }
+    for (m = 0; m < pri->draw_count; m++) {
+        const re15_pri_mask_t *q = &pri->masks[m];
+        int dx = (int16_t) q->dstX, dy = (int16_t) q->dstY, xx, yy, ii, hat = r41_modell(R->raum, cut, m, &ii) != NULL;
+        if (aus[m]) continue;
+        for (yy = 0; yy < q->height; yy++)
+            for (xx = 0; xx < q->width; xx++) {
+                int ax = q->srcX + xx, ay = q->srcY + yy, tx = dx + xx, ty = dy + yy;
+                if (ax >= a->tim.width || ay >= a->tim.height || tx < 0 || ty < 0 || tx >= 320 || ty >= 240) continue;
+                if (!idx[ay * a->tim.width + ax]) continue;
+                if (q->depth < tief[ty][tx]) tief[ty][tx] = q->depth;
+                if (hat && nmod[ty][tx] < 4) mod[ty][tx][nmod[ty][tx]++] = (int16_t) m;
+            }
+    }
+    for (y = 0; y <= 240; y++) sat[y][0] = 0;
+    for (x = 0; x <= 320; x++) sat[0][x] = 0;
+    for (y = 0; y < 240; y++)
+        for (x = 0; x < 320; x++) sat[y + 1][x + 1] = sat[y][x + 1] + sat[y + 1][x] - sat[y][x] + (nmod[y][x] > 0);
+    if (!sat[240][320]) return;
+    for (b = 0; b < 16; b++) {
+        int gx, gz;
+        for (gx = 0; gx < R->nx; gx++)
+            for (gz = 0; gz < R->nz; gz++) {
+                int wx = R->x0 + gx * SCHRITT, wz = R->z0 + gz * SCHRITT, np, nsp, ges, i; long nf_platz = 0;
+                if (!R->err[b][gx][gz]) continue;
+                if (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz)) continue;   /* Akteur-Cull (FUN_8002c18c) */
+                (*n_steh)++;
+                {   /* Grobsprung: keine Modell-Maske im Bildrechteck des Kastens */
+                    double sx, sy, vz, x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; int e, alle = 1, X0, Y0, X1, Y1;
+                    for (e = 0; e < 4; e++) {
+                        double o = (e & 1) ? FIGUR_HALB : -FIGUR_HALB, hy = -(double) b * BAND_Y - ((e & 2) ? FIGUR_HOCH : 0.0);
+                        if (!proj(&v, wx + o * lx, hy, wz + o * lz, &sx, &sy, &vz)) { alle = 0; break; }
+                        if (sx < x0) x0 = sx; if (sx > x1) x1 = sx; if (sy < y0) y0 = sy; if (sy > y1) y1 = sy;
+                    }
+                    if (alle) {
+                        X0 = (int) floor(x0) - 1; Y0 = (int) floor(y0) - 1; X1 = (int) floor(x1) + 1; Y1 = (int) floor(y1) + 1;
+                        if (X0 < 0) X0 = 0; if (Y0 < 0) Y0 = 0; if (X1 > 319) X1 = 319; if (Y1 > 239) Y1 = 239;
+                        if (X0 > X1 || Y0 > Y1) continue;
+                        if (sat[Y1 + 1][X1 + 1] - sat[Y0][X1 + 1] - sat[Y1 + 1][X0] + sat[Y0][X0] == 0) continue;
+                    }
+                }
+                np = figur_raster(&v, wx, wz, b, lx, lz, pt, &nsp, &ges);
+                for (i = 0; i < np; i++) {
+                    int px_ = pt[i].x, py_ = pt[i].y, k, treffer = -1;
+                    double o;
+                    if (px_ < 0 || px_ >= 320 || py_ < 0 || py_ >= 240 || !nmod[py_][px_]) continue;
+                    o = spalte_o(pt[i].spalte, nsp);
+                    for (k = 0; k < nmod[py_][px_] && treffer < 0; k++)
+                        if (r41_koerper_davor(R->raum, cut, mod[py_][px_][k], cam, wx + o * lx, -(double) b * BAND_Y - pt[i].h,
+                                              wz + o * lz) == 1)
+                            treffer = mod[py_][px_][k];
+                    if (treffer < 0) continue;
+                    (*n_hinter)++;
+                    if (re15_pri_mask_occludes(tief[py_][px_], (long) pt[i].vz)) continue;
+                    (*n_fern)++; g_fern_rect[treffer]++; nf_platz++;
+                }
+                if (nf_platz && R->raum == g_fern_raum && cut == g_fern_cut)
+                    printf("    PLATZ %d %d %d fern %ld\n", wx, wz, b, nf_platz);
+            }
+    }
+}
+
+static void teil_fern(long erwartet_max)
+{
+    static raum_t R;
+    int stage, rr, var, sekt = 0, mit = 0;
+    long fern = 0, hinter = 0, fern_stage[7] = {0};
+    printf("== r41_masken36 fern: Figurpunkte HINTER dem Koerper einer gezeichneten Modell-Maske, aber nicht verdeckt ==\n");
+    saaten_sammeln();
+    for (stage = 3; stage <= 6; stage++)
+        for (rr = 0; rr < 0x40; rr++)
+            for (var = 0; var < 2; var++) {
+                unsigned raum = ((unsigned) stage << 12) | ((unsigned) rr << 4) | (unsigned) var;
+                char p[700]; uint8_t *msk; size_t mn = 0; int c, ncut, geladen = 0;
+                snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, raum);
+                msk = slurp(p, &mn);
+                if (!msk) continue;
+                ncut = (mn >= 12) ? (int) (msk[8] | (msk[9] << 8)) : 0;
+                for (c = 0; c < ncut; c++) {
+                    re15_pri_cut_t pri; atlas_t a; uint32_t off; int aus[RE15_PRI_MAX_MASKS_PER_CUT], m, hat = 0, ii;
+                    long nf = 0, nh = 0, ns = 0;
+                    off = re15_pri_msk_section_offset(msk, mn, c);
+                    if (!off || re15_pri_parse_section(msk, mn, off, &pri) <= 0) continue;
+                    for (m = 0; m < pri.draw_count; m++) hat |= r41_modell(raum, c, m, &ii) != NULL;
+                    if (!hat || !atlas_generator(raum, c, &a)) continue;
+                    if (!geladen) { geladen = raum_laden(&R, raum) ? 1 : -1; }
+                    if (geladen < 0 || c >= R.rdt.cut_count) { free(a.roh); continue; }
+                    for (m = 0; m < RE15_PRI_MAX_MASKS_PER_CUT; m++)
+                        aus[m] = m < pri.draw_count ? re15_masken36_ausgeschlossen(re15_pri_masken_raum(raum), c, m) : 1;
+                    sekt++;
+                    sektion_fern(&R, c, &pri, &a, aus, &nf, &nh, &ns);
+                    mit += nh > 0;
+                    fern += nf; hinter += nh; fern_stage[stage] += nf;
+                    if (nf) {
+                        printf("  ROOM%04X C%-2d: zu fern %ld von %ld Figurpunkten hinter einem Modell-Koerper (Stehplaetze %ld) |", raum, c,
+                               nf, nh, ns);
+                        for (m = 0; m < pri.draw_count; m++)
+                            if (g_fern_rect[m]) {
+                                const r41_zellen_modell_t *k = r41_modell(raum, c, m, &ii);
+                                printf(" R%d %ld (Tiefe %d, Zelle @0x%05X H%d)", m, g_fern_rect[m], pri.masks[m].depth,
+                                       k ? (unsigned) k->rdt_off : 0u, k ? -k->hoehe : 0);
+                            }
+                        printf("\n");
+                    }
+                    free(a.roh);
+                }
+                free(R.roh); R.roh = NULL;
+                free(msk);
+            }
+    printf("  Sektionen mit Modell-Masken %d, davon mit Figurpunkten hinter einem Koerper %d | Figurpunkte hinter einem Koerper %ld, "
+           "davon NICHT verdeckt (zu fern) %ld (Stage 3: %ld, 4: %ld, 5: %ld, 6: %ld)\n", sekt, mit, hinter, fern, fern_stage[3],
+           fern_stage[4], fern_stage[5], fern_stage[6]);
+    if (erwartet_max >= 0) {
+        CHECK("Messung greift: Figurpunkte hinter Modell-Koerpern gibt es (> 0)", hinter > 0);
+        CHECK("keine Figur HINTER dem Koerper einer gezeichneten Modell-Maske wird ueber sie gezeichnet (zu fern <= Grenze)",
+              fern <= erwartet_max);
+    }
+}
+
 /* ---- warum (Werkzeug R41 NB2) ----------------------------------------------------------------------------------- */
 static void warum_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, const ergebnis_t *E, void *ctx)
 {
@@ -2011,6 +2161,10 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "zensus")) teil_zensus();
     else if (!strcmp(teil, "ausschluss")) teil_ausschluss();
     else if (!strcmp(teil, "zellen3d")) teil_zellen3d();          /* Runde 41 Spur M NB2: Riegel unit_r41_masken36_zellen3d */
+    else if (!strcmp(teil, "fern")) {
+        if (argc > 4) { g_fern_raum = (unsigned) strtoul(argv[3], NULL, 16); g_fern_cut = atoi(argv[4]); }
+        teil_fern(argc > 2 ? atol(argv[2]) : -1);
+    }   /* Runde 41 Spur M NB3: Riegel unit_r41_masken36_fern */
     else if (!strcmp(teil, "verdeckung")) teil_verdeckung();
     else if (!strcmp(teil, "erzeuge") && argc > 2) teil_erzeuge(argv[2]);
     else { teil_zensus(); teil_ausschluss(); teil_verdeckung(); }
