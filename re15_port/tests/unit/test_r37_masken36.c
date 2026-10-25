@@ -2410,6 +2410,27 @@ int main(int argc, char **argv)
         argc = j;
     }
     teil = (argc > 1) ? argv[1] : "alle";
+    if (!strcmp(teil, "aussen") && argc > 3) {          /* R41 NB5: erreichbarer Stehplatz AUSSERHALB des Regionsvierecks eines Cuts (A0 der
+                                                          * Szenen Art L: Figur nicht gezeichnet - Figuren-Cull FUN_80014368, NPC-Zeichner
+                                                          * FUN_80039ca0 @0x80039d68 jal / @0x80039d70 beq), am weitesten vom Viereck */
+        static raum_t R; unsigned r = (unsigned) strtoul(argv[2], NULL, 16); int c = atoi(argv[3]), b, gx, gz, hq, bx = 0, bz = 0, bb = -1;
+        int16_t qx[4], qz[4]; double best = -1;
+        saaten_sammeln();
+        if (!raum_laden(&R, r) || c >= R.rdt.cut_count || !(hq = re15_rdt_get_region_quad(&R.rdt, c, qx, qz))) { printf("FEHLER\n"); return 1; }
+        for (b = 0; b < 16; b++)
+            for (gx = 0; gx < R.nx; gx++)
+                for (gz = 0; gz < R.nz; gz++) {
+                    int wx = R.x0 + gx * SCHRITT, wz = R.z0 + gz * SCHRITT, k; double dmin = 1e18;
+                    if (!R.err[b][gx][gz] || re15_aot_point_in_quad(wx, wz, qx, qz)) continue;
+                    for (k = 0; k < 4; k++) {
+                        double dx = wx - qx[k], dz = wz - qz[k], d = dx * dx + dz * dz;
+                        if (d < dmin) dmin = d;
+                    }
+                    if (dmin > best) { best = dmin; bx = wx; bz = wz; bb = b; }
+                }
+        if (bb < 0) { printf("AUSSEN ROOM%04X C%d -\nOK\n", r, c); free(R.roh); return 0; }
+        printf("AUSSEN ROOM%04X C%d %d %d %d\nOK\n", r, c, bx, bz, bb); free(R.roh); return 0;
+    }
     if (!strcmp(teil, "neustellen") && argc > 4)        /* R41 NB5: HINTER-/DAVOR-Stelle an den neuen Rechtecken ab Index argv[4] */
         return teil_neustellen((unsigned) strtoul(argv[2], NULL, 16), atoi(argv[3]), atoi(argv[4]));
     if (!strcmp(teil, "punkt") && argc > 5)

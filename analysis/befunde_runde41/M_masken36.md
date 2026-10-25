@@ -1100,6 +1100,79 @@ angefasst; seine Riegel bleiben gruen.
   dort je `ff ff ff ff` (NULL-Sektion, FUN_800392d4 @0x80039324/0x8003932c), RDT-Kopfbyte 7 = 0 - beide Varianten. Die Port-Masken des Raums sind
   die Kuenstler-Ausschnitte des SLD-Atlas im BSS (Entpacker FUN_800c47e8).
 
+### NB5 Mangel 1 - Entscheid M-E2 umgesetzt (Umsetzung)
+* **Werkzeug `re15_port/tools/maske/platzieren_r41.py`** (Kopf = Regel, Lauf `--quelle <MASKS Stand NB3>`):
+  1. Lage je Teil wie NB4: maskierte SSD ueber alle Verschiebungen gegen den Hintergrund, Annahme RMS <= 18,91 und zweitbeste Lage >= 1,5x
+     (kalibriert an den 422 vom Generator platzierten Teilen, Dossier NB4) - **Bildvergleich gegen den Hintergrund** (M-E2).
+  2. **Koerper je Teil (neu, M-E2 "Tiefe aus einer Zelle mit RDT-Offset")**: die solide Sperrzelle mit der Mehrheit der Bodenkontakte des Teils
+     (`geometrie.standpunkte` + `zelle_zuordnen`, die Regel der Nutzer-Freistellungen raum.py "zelle" und der NB1/NB2-Objekte), genau ein
+     begehbares Band; Form des Resolvers (`koerper_r41`: Kasten, Raute push_diag2, Kreis, Schraegen). Hoehe = Oberkante des Teils auf der
+     Eintrittsflaeche (je Bildpunkt die Hoehe, in der der Sehstrahl in das Prisma ueber dem Grundriss eintritt, Maximum) - das IoU-Maximum der
+     Generator-Objekte faellt fuer duenne Teile auf breiten Zellen auf den Rand des Messbereichs (gemessen: 88 von 266 Teilen bei -25; wo es
+     traegt, stimmen beide ueberein: 30E0 C7 Gelaender IoU 1450..1525 / Oberkante 1494..1596, 3050 C6 925/650/2025 / 910/714/2075).
+     Kein Koerper = Teil bleibt weg (Grund je Teil in `M_bilder/NB5/teile_nb5.txt`).
+  3. **Tiefe** je Bildpunkt = bucket(Eintritt) mit der **Kamera des Spiels** (`ansicht_spiel()`: SquareRoot0 0x80065f60, Tabelle @0x8007d984
+     aus PSX.EXE, wie `re15_camera_build_view` / FUN_80053ca4); Fehltreffer erben den naechsten Treffer desselben Teils; Spaltenmaximum,
+     Rechteck-Tiefe = Maximum seiner Punkte. Erster Lauf mit `geom.cut_view` (exakte Wurzel): `unit_r41_masken36_teile` fand 3 880 von 98 740
+     Punkten eine Stufe hinter der Tiefe - die Python-Kamera lag neben der des Spiels (z.B. 30A0 C0 R = 1550/3800/... gegen 1547/3792/...);
+     mit `ansicht_spiel()` 0.
+  4. Kapazitaet 128 (Beleg oben); Atlas: neue Texel an freien Stellen, Palette je Blatt neu, alter Teil jeder Sektion bytegleich.
+  5. Modell-Zeile je neuem Rechteck (Zelle, Typ, Band, Hoehe, Tiefe, RDT-Offset + 12 SCA-Bytes) in `tests/unit/gen_r41_masken36_zellen.inc`;
+     danach `test_r37_masken36 erzeuge` mit dem 3D-Urteil (r41_koerper_davor) und den Tuer-Band-Saaten.
+* **Tuer-Band der Saaten** als Vorgabe (`g_saat_tuer = 1`, `--saat-alt` = NB3).
+* **teilen_r41.py NICHT angewandt** (M-E2): ROOM6000 C5 Rechteck 37 (Traeger-Mitte) Tiefe 176 wie NB3, alter Teil der Sektion bytegleich.
+* Dateien: `re15_port/shared_assets/PSX/MASKS/` (61 Sektionen in 15 Raumpaaren, MSK + _PRIcc.TIM Leon/Elza bytegleich),
+  `re15_port/engine/src/gen/masken36_ausschluss_r37.inc`, `re15_port/include/re15_pri.h` (128), `tests/unit/gen_r41_masken36_zellen.inc`
+  (1025 -> 2820 Zeilen), `tests/unit/gen_r41_masken36_platziert.inc`, `tests/unit/test_r37_masken36.c` (Saaten-Vorgabe, neustellen, teile,
+  binaere Modellsuche), `tests/unit/test_r41_masken36.c` (platziert, ordner), Szenen `tests/integration/test_r41_masken36_teile_szenen_{a,b,c,d}.cmake`,
+  Werkzeuge `platzieren_r41.py`, `rueckschritt_r41.py` (neu), `bilder_kacheln_r41.py` (--tag).
+
+### NB5 Mangel 1 - Messung nachher
+* **Teile** (`M_bilder/NB5/teile_nb5.txt`): 544 Teile mit Lage angenommen; **267 mit Koerper** (Zelle mit RDT-Offset) in **61 Sektionen**
+  (103 112 Punkte), **277 ohne Koerper** (144 225 Punkte, 70 Sektionen) -> Freistellungs-Liste. Gruende ohne Koerper: kein Bodenkontakt
+  (haengt/an der Wand: Lampen, Roboterarm 50B0, Rohre), keine Zelle traegt die Mehrheit der Bodenkontakte (Bodenmarkierungen, Treppen-
+  gelaender ohne Bodenkontakt auf einem begehbaren Band), Zelle auf mehreren Baendern (gleiche Zelle auf Band 0 und 1, z.B. 6010 C3/C7),
+  Kamera ueber dem Grundriss (Nahfeld, z.B. Pfeiler 3040 C3).
+* **Rechtecke**: 1804 neue je Variante, 9 vom Ausschluss genommen (3050 C12 R29/R30/R40, 3050 C13 R114..R117, 30A0 C5 R97, 5090 C11 R112);
+  35 Sektionen nutzen die 128 Plaetze. Alte Rechtecke: 6000/6001 C5/C7/C8 je 37 wieder gezeichnet (Tuer-Band), 0 neu ausgeschlossen;
+  zweites erzeuge bitgleich.
+* **Gezeichnet**: in den 61 Cuts vorher 559 470, nachher 675 980 Punkte (+116 510 = 101 280 neue Teile + 15 230 Lok-Rechtecke 6000), **0 weg**
+  (`M_bilder/NB5/NB5_zahlen.txt`, Boegen `M_bilder/NB5/NB5_bogen_ROOMxxxx_Cnn.png`). Restliste (Nachtrag 27): Gelaender 30E0 C6 189 / C7 1 670 /
+  C8 1 741 / C9 1 447, 3050 C6 1 224, 3040 C3 5 969 Punkte neu; Lok-Unterteil 6000 C7 (Tuer-Band) gezeichnet; 30A0 C0, 5050 C1, 50B0 C1 ohne
+  Teil mit Koerper (s. Liste).
+* **Mechanik** (`unit_r41_masken36_teile`): jedes der 1 795 gezeichneten neuen Rechtecke hat seine Modell-Zeile (Tiefe == Zeile); an 97 032 von
+  101 280 deckenden Punkten trifft der Sehstrahl den Koerper direkt (95,8 %), an **0** liegt der Eintritt hinter der Tiefe (unabhaengig in C
+  gerechnet) -> keine Figur VOR einem Teil wird verdeckt. `unit_r41_masken36_zellen3d`: 2 820 Zeilen byte-genau im RDT, Ausschluss mit
+  3D-Urteil == Engine-Tabelle in 85 Cuts.
+* **"zu fern"** (`test_r37_masken36 fern`): 40 276 (NB3) -> **3 360** (Stage 3 2 = 3040/3041 C4 R118 je 1 Punkt an einer Streifenkante, Stage 4 72 /
+  Stage 5 270 wie NB3, Stage 6 3 016 = 6010/6011 C5 R113..R117, neues Teil 8 auf Zelle @0x0092C: Restloch hinter einem neu gezeichneten Teil -
+  vorher dort keine Maske, der Platz im Cut ist mit 128 erschoepft). Das Gleisbett 6000 Band 0 (39 934) faellt mit dem Tuer-Band weg.
+* **Rueckschritt-Suche** (`re15_port/tools/maske/rueckschritt_r41.py`, wie Abnahme 3: Zylinder Radius 450 x Hoehe 50..1800, jeder 2. Platz je
+  Achse, Zell-Quader bis 2400, vorher = Stand NB3 MSK + Ausschluss, alle 61 Cuts Leon UND Elza = 122): neu verdeckt 937 570 Figurpunkte,
+  **neu frei 0**; ohne Zelle davor 1 158 an 250 Plaetzen, nur in 6010/6011 C5 (572 je Variante) und 6000/6001 C5 (7 je Variante).
+  - 6010/6011 C5: die Strahlen kreuzen die Treppe/den Bahnsteig ueber 2400 (Kamera (-23912,-9927,-23336), Figur bei (-12112,-7120) Bild
+    (131,112..128) hinter der Treppe); mit Quadern bis 7000 (wie Abnahme 3 fuer den Wandblock 6000): **0**.
+  - 6000/6001 C5 (15433, -4184..-4784) Band 2: die 7 Punkte liegen auf dem Rand des 450-Zylinders in Fusshoehe (x 15823/15883, y -3650) und
+    gehoeren zu den ALTEN Rechtecken 26/97/100 (Tiefe 129), die das Tuer-Band wieder zeichnet; der Ausschluss (Figurkasten wie R37) meldet an
+    (15433,-4584) 0 Punkte ohne Zelle davor (`test_r37_masken36 punkt 6000 5 15433 -4584 2`). An der exe: s. Szenen.
+
+### NB5 Mangel 2 - roter Ordner ROOM30A0/30A1 Cut 0: kein Teil des Original-Vordergrundatlas -> Freistellung des Nutzers
+* **Messung**: im Fenster x 310..317 y 106..111 liegen 40 rote Bildpunkte (R > G + 20 und R > B + 20; die 32 der Abnahme sind der Kern).
+  Der Kuenstler-Ausschnitt des SLD-Atlas Cut 0 (Spiel-Entpacker re15_sld_*, FUN_800c47e8) liegt an der Verschiebung (232,-24) der
+  Buero-Trennwand (Komponente 11; dieselbe Verschiebung hat das gezeichnete alte Rechteck unter dem gruenen Ordner, Ziel - Quelle) und deckt
+  den GRUENEN Ordner (91 von 120 Bildpunkten im Fenster x 304..315 y 108..117 farbgleich <= 48), aber **keinen** der 40 roten Bildpunkte
+  (Atlas-Index 0 bei x 78..85 y 130..135). Keine der 7 Generator-Verschiebungen des Cuts traegt dort einen farbgleichen Texel; keine der 5
+  unplatzierten Komponenten wird dort angenommen (platzieren_r41.py, Regel 1/2).
+* **Beleg Original**: ROOM30A0 und ROOM30A1 haben in ALLEN Cuts keine Masken (Kamerasatz +0x1C -> 0x3C0/0x3C4/0x3C8/0x3CC, dort je
+  `ff ff ff ff`; RDT-Kopfbyte 7 = 0). Die Port-Masken des Raums sind allein die Kuenstler-Ausschnitte des BSS-Atlas - der Ordner gehoert
+  nicht dazu.
+* **Folge**: nach Entscheid M-E2 ("M-E1 gilt weiter fuer AUTOMATISCHE Masken ohne Original-Teil") und der Erwartung der Abnahme ("Original-
+  Atlas-Teil, falls vorhanden ... sonst mit diesem Beleg in die Freistellungs-Liste fuer den Nutzer") keine automatische Maske; Eintrag
+  in "Fuer den Nutzer: Freistellungen" (unten). Die NB4-Aussage "am Ostende fehlt KEINE Maske" ist fuer diesen Gegenstand berichtigt.
+* **Riegel** `unit_r41_masken36_ordner` (pri_offset/Kopfbyte beider Varianten, Ausschnitt gruen >= 91 / rot 0, kein eingesetztes Teil auf
+  dem Fenster, gezeichnet 0 in Leon- und Elza-Datei) - PASS. Wenn die Freistellung des Nutzers kommt, wird (d) dort auf "gezeichnet"
+  umgestellt (Lage/Tiefe dann aus seiner PNG + Zelle 6 @RDT+0x0045C, wie die STAGE1/2-Freistellungen).
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
