@@ -917,3 +917,25 @@ im Rueckkehr-Besuch)
   Wurf-Gier faellt in das erste Bild von Cut 7 (F530), dem Bild des Schnitts - vorher F464 -> F465 mitten in Cut 5.
 - N1 in Zahlen: die Zeile 42 steht jetzt ihre volle Zeit (99 Bilder wie in Abnahme 0, vorher 52), das Loslassen folgt im Bild nach
   "Wsleeping frei"; der Fall laeuft weiter in 2090 Cut 12 (state.log cam=12 F1..F57, Aufschlag F43).
+
+**Bildbelege (Laeufe mit RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1; gleiche Bilder wie die Tabelle, die Laeufe sind bildgenau
+wiederholbar):**
+- N2 `G_belege/nb2_n2_griff_marvin_f438-530_cut5_x2.png` / `G_belege/nb2_n2_griff_john_f438-530_cut5_x2.png` (Laeufe s3_leon /
+  s3_elza, Cut 5, Ausschnitt 2x): F438-F446 steht er mit dem Ruecken zur Kamera an der Reling, F450-F462 kniet er (der stehende
+  Kanister ueber ihm), F466-F510 haelt er ihn quer, F514-F526 steht er auf - in JEDEM Bild von hinten, kein Profil mehr (vorher
+  F466 im Profil, Abnahme 1 `n2_griffbild_gier_sprung_x3.png`). F530 ist das Apply-Bild des Schnitts auf Cut 7: der Port dieses
+  Zweigs zeichnet darin noch den alten Hintergrund mit dem neuen Zustand (gedreht, Zeile 42) - s. `G_belege/nb2_n2_schnitt_
+  applybild_leon_f526-534.png` (F526/F528 Cut 5 von hinten, F530 Cut-5-Hintergrund + Profil + Zeile, F532 Cut 7). Das Original
+  zeigt dieses Bild nicht: im Apply-Bild eines Kamerawechsels bleibt das vorige Bild stehen (Present FUN_8002137c @0x80021558
+  `jal 0x80021bbc` + @0x80021560 `j 0x800215fc`, Spur E Nachbesserung 2 E-N1, auf master als kamerahalt_r41.c / bildhalt_r41_pc.c
+  - dieser Zweig steht auf 9f10bdb0 ohne Spur E). Nach der Integration mit E bleibt F529 (von hinten) stehen, bis Cut 7 da ist.
+- N1 `G_belege/nb2_n1_zeile42_leon_f530-630.png` / `..._elza_...` (Cut 7, je 10 Bilder): "Marvin: Hey, Leon, try with this!" bzw.
+  "John: Hey, Elza, try with this!" steht F530-F620, F630 ist sie weg; das Loslassen folgt F631.
+- N3 Fall: `G_belege/nb2_n3_fall_cut12_leon_f6-58.png` / `..._elza_...` (2090 Cut 12; der Suedwurf faellt F30-F42 von oben links
+  zur Wasserlinie - 22 von 39 Fall-Bildern im Bild statt 14 beim Nordwurf, unit landung).
+- N3 Aufnahme (Helligkeit x2 nur zur Lesbarkeit): kampf `G_belege/nb2_n3_aufnahme_kampf_leon_f60-138_cut0_hell2.png` /
+  `..._elza_...` (Cut 0: der Alligator schwimmt an der Westwand nach Sueden, F126-F132 hebt er den Kanister - gelb/grau - aus dem
+  Wasser); v1 `G_belege/nb2_n3_aufnahme_v1natur_leon_f112-184_cut1_hell2.png` (Cut 1, Kanister im Maul F178-F184 am linken Rand);
+  v5/v3 `G_belege/nb2_n3_aufnahme_v5west_leon_f60-126_cut0_hell2.png`, `..._v3west_elza_...` (F108 Kanister im Maul); v2/v4
+  `G_belege/nb2_n3_aufnahme_v2nordost_leon_f124-196_cut0_hell2.png`, `..._v4nordost_elza_...`. In allen Bildern stehen noch die
+  Spinnen (0x25) dieses Zweigs im Becken (Spur F entfernt sie).
