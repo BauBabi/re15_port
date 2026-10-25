@@ -5,14 +5,14 @@ Code-Commit e4121848). Pruefer: Abnahme-Agent 2 (glaubt nichts Ungemessenes). Be
 Laufordner/Bilder (nicht im Baum): `<SP>` = `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g2abn`.
 
 ## 0. Stand der Abnahme
-- [x] Lektuere AUFTRAG (inkl. Nachtraege 5/17/20-26, FG-E1..FG-E5), VERTRAG, Dossier §9, Abnahme 1, Code-Diff 9f10bdb0..HEAD
+- [x] Lektuere AUFTRAG (inkl. Nachtraege 5/17/20-26, FG-E1..FG-E5; Nachtrag 27/28 kamen waehrend der Abnahme per 6712fd1d dazu), VERTRAG, Dossier §9, Abnahme 1, Code-Diff 9f10bdb0..HEAD
 - [x] Bau (local_build.sh configure + build: `ninja: no work to do`, exe 09:15:21 = Stand e4121848, keine Quelle neuer)
 - [x] gezielte Unit-Tests (46/46)
 - [x] gezielte Integrations-Tests (9/9)
 - [x] RE-Gate Stichproben (Abschnitt 4)
 - [x] Messungen P1 / P2 / P3 (Leon + Elza; 27 exe-Laeufe)
 - [x] Vertrag
-- [x] Urteil: NICHT BESTANDEN (M1: R1-Tod in der Standard-Startlage nicht im Bild; M2: Werfer in Cut 7 beim Suedwurf von hinten); N1/N2/N3 der Abnahme 1 und Nachtrag 26 (Hals, Kippen) erfuellt
+- [x] Urteil: NICHT BESTANDEN (M1: R1-Tod in der Standard-Startlage nicht im Bild; M2: Werfer in Cut 7 beim Suedwurf von hinten; M3: Explosionseffekt fehlt, Nachtrag 28); N1/N2/N3 der Abnahme 1 und Nachtrag 26 (Hals, Kippen) erfuellt
 
 ## 1. Diff, Bau
 - Massgeblich ist `git diff 9f10bdb0..HEAD` (merge-base; `git diff master` enthaelt master-Stand nach dem Abzweig). Seit Abnahme 1
@@ -131,7 +131,8 @@ Bit 110 per RE15_SET_FLAG (Spur F fehlt in diesem Zweig). Zeit "nach dem Loslass
   (-6821,-2076,-22914)` + `Aufschlag-Ton KANISTER2080.VBS Satz 0` + `Kanister im Becken (-6821,-1200,-22914) = Aufschlagstelle (Bit 116)`.
 - Aufnahme (k_leon) <SP>/k_leon_aufnahme_f60-130.png: Cut 0, der Alligator schwimmt hinten heran, F130 Kanister (gelb) im Maul; im Vordergrund
   greift eine Spinne (0x25) Leon an (Spinnen sind in diesem Zweig noch in 2090, Spur F).
-- R1-Tod: im Bild bei v1 (<SP>/r1_v1_leon_f1548-1588_hell2.png: Explosion am Kopf F1550-F1560, Leiche F1570-F1588), west_elza
+- R1-Tod: im Bild bei v1 (<SP>/r1_v1_leon_f1548-1588_hell2.png: weiss-blauer Schimmer und Brocken am Kopf F1550-F1560 - KEIN Feuerball, M3 -,
+  Leiche F1570-F1588), west_elza
   (<SP>/r1_west_elza_f812-852_hell2.png), ne_leon (<SP>/r1_ne_leon_f898-934_hell2.png, klein hinten); **NICHT im Bild in der Riegel-Startlage**
   (k_leon = integration kampf_leon/kampf_elza, Lauf lauf_daccaba3 des Bau-Agenten mit denselben Zeilen `KAMERA R1 EXPLOSION RE2-Cut 5 -> Cut 2
   F826 ... kopf_bild=(8,106)`): <SP>/k_leon_r1_f818-828_x2.png / <SP>/k_leon_r1_f826-860_hell3.png - F818-F826 Cut 0 mit Alligator + Kanister
@@ -198,7 +199,7 @@ aus dem Hauptbaum, nur lesend; RDT-Bytes per Python aus info/re2leon/PL0/RDT)
   re15_pc_r41g(k)_<id>), Linux-fest (m, cmake_minimum_required). LUECKE: kein Riegel prueft, ob der R1-Tod im Bild ist (M1), und keiner die
   Wartezeit mit einer laengeren Stimme (3.2 nur hier gemessen).
 
-## 6. Urteile (gegen den Wortlaut, AUFTRAG.md inkl. Nachtraege 5/17/20-26 und Entscheide FG-E1..FG-E5)
+## 6. Urteile (gegen den Wortlaut, AUFTRAG.md inkl. Nachtraege 5/17/20-28 und Entscheide FG-E1..FG-E5)
 | Punkt | Urteil | Beleg |
 |---|---|---|
 | P1 erst Metalltuer-Sound (N17: Knall wie nach Irons), dann 8 gespawnte Zombies oben im Hauptbereich (N20) | **erfuellt** | 2.1/2.2: echter Leiterweg DOOR16, Leon + Elza: Knall-Bank Satz 0 (2 Lagen, Mitschnitt RE2_1060 r 0,891 im ersten 2080/2081-Bild) VOR 8 x Sce_em_set 0x16 y -14400, keiner auf der Treppe; Bild p1_leon_bogen.png |
@@ -211,7 +212,7 @@ aus dem Hauptbaum, nur lesend; RDT-Bytes per Python aus info/re2leon/PL0/RDT)
 | N5 / FG-E4 "GENAUSO ... von der Kamera" wie Adas Wurf (RE2-Schnittfolge: Cut 7 mit dem Werfer frontal, dann der Fall in 2090 Cut 12) | **teilweise** | Schnittfolge und Cut 12 wie entschieden (N26); aber beim Suedwurf (6 von 8 Verlaeufen, auch Riegel-Standard) steht der Werfer in Cut 7 mit dem Ruecken zur Kamera (frontal -0,45; RE2 0,99, Nordwurf 0,45) - Mangel M2 (3.4) |
 | P3 / N23 / N26 "wenn der Aligator dran vorbei kommt, ... aufnehmen, GENAUSO wie RE2" (Abnahme 1 N3), RE2-Lenkung von Hals und Schwimmweg | **erfuellt** | 3.3: Aufnahme 2,8-5,2 s nach dem Loslassen in JEDEM Verlauf mit Szene (10 Laeufe in 8 Verlaeufen, davon 4 neue: d15/d30/d45/Plattform; v1 Leon + Elza ohne jeden Testhaken), kein Biss davor, derselbe Alligator (FG-E3), Hals-Akku zum Kanister und zurueck |
 | P3 "Sobald er den Kanister im Maul hat, soll man auf ihn schiessen koennen" | **erfuellt** | R1 nach einem Treffer in 9 von 10 Laeufen; d30_elza ohne R1 in 2500 Bildern (stehender Test-Spieler unter Biss/Spinnen, H3) |
-| P3 "die Sterbe Animation mit geplatzten Kiefer etc. ... genauso wie im Original" | **teilweise** | R1-Clip 9 + Leiche laufen ab (Spur B), im Bild bei v1, west, ne (klein), Plattform, d45; **in der Riegel-Startlage (Leon + Elza) zeigt der R1-Schnitt Cut 2 keinen Alligator** (Kopf (8,106) unter der Maschine), bei d15 liegt der Kopf am Bildrand (296,81) - Mangel M1 |
+| P3 "die Sterbe Animation mit geplatzten Kiefer etc. ... genauso wie im Original" | **teilweise** | R1-Clip 9 + Leiche laufen ab (Spur B), im Bild bei v1, west, ne (klein), Plattform, d45; **in der Riegel-Startlage (Leon + Elza) zeigt der R1-Schnitt Cut 2 keinen Alligator** (Kopf (8,106) unter der Maschine), bei d15 liegt der Kopf am Bildrand (296,81) - Mangel M1; **der Explosionseffekt des Gaskanisters fehlt** (nur Schimmer; Nutzer Nachtrag 28 an genau diesen Laeufen) - Mangel M3 |
 | RE-Gate | **haelt** | 4: 11 Zitatgruppen selbst disassembliert/gelesen, alle stimmen; 0 Rate-Woerter; Abweichungen von RE2 (Warten vor dem Loslassen, Ziel-x, euklidische Grenze, Kipp-Achsen, Anschwimm-Lenkung) benannt und begruendet |
 | Vertrag | **haelt** | 5 |
 | Tests | gruen: 46/46 Unit, 9/9 Integration (1a/1b) | LUECKE: kein Riegel fuer "Tod im Bild" (M1) und fuer die Blickbeziehung in Cut 7 (M2) |
@@ -245,6 +246,16 @@ Im Dossier (9.2/9.3/9.7) nicht benannt; der Nutzer hat in Nachtrag 26 Frage 2 zw
 Kamera 7 ist beim Suedwurf nicht mehr frontal. Forderung: Entscheid Orchestrator/Nutzer; RE2-Form waere: Gier des Werfers in Cut 7 der Kamera
 zugewandt (wie Ada @0x0748), Wurfbahn in Weltrichtung Nord/Sued (der Wurf selbst faellt ohnehin erst in 2090 Cut 12, FG-E4); Messung Leon + Elza,
 Nord- und Suedwurf, Bildbogen Cut 7 F530-F630, Riegel auf die Blickbeziehung.
+
+**M3 (P3 "Sterbe Animation ... genauso wie im Original" / Nachtrag 28, 2026-10-25 11:58, waehrend dieser Abnahme in den Baum gelegt) - der
+Explosionseffekt des Gaskanisters fehlt.** Wortlaut: "Beim Ausschnitt gerade eben fehlte noch der Explosionseffekt vom Gaskanister vom Original."
+Der Nutzer sah dabei die Kampflaeufe DIESER Abnahme (Messkopien re15_pc_g41abn2c/d). Selbst gemessen: r1_v1_leon F1548-F1588
+(<SP>/r1_v1_leon_f1548-1588_hell2.png) und r1_west_elza / r1_d45_leon / r1_plat_leon zeigen am Kopf nur einen kleinen weiss-blauen Schimmer und die
+Kiefer-Brocken, keinen Feuerball/Explosionsbild; debug.log r1_v1_leon Z.24 `[re2fx] RE2 CORE00.ESP 8572 B -> re2fx_register_core rc=0`, Z.26
+`[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0` - die Raum-ESP des RE2-Alligatorraums ROOM40A0 ist nicht registriert (deckt sich mit
+der Orchestrator-Messung im Nachtrag). Forderung: der Auftrag an Spur G im Nachtrag 28 (RE2-Beleg der Effekte, Ursache, 1:1-Nachbau, Bildstreifen
+gegen RE2-Referenz, Riegel "Effekt-Bank in 2090 registriert + gezeichnete Explosions-Quads > 0"); zusammen mit M1 messen (der Effekt muss im
+gewaehlten R1-Schnitt auch zu sehen sein).
 
 ## 8. Hinweise (kein Mangel dieser Spur bzw. klein)
 - H1 Apply-Bild F530 (3.1): ein Bild Cut-5-Hintergrund mit gedrehtem Werfer, Kanister in alter Lage und Zeile 42 - bei JEDEM Cut_chg dieses Zweigs
