@@ -515,7 +515,8 @@ Plan:
   - Verdeckung: Alligator-Kasten {1000,-720,0,2200,720,800} @0x80118b98 (STAGE2.BIN, halbe Breite 800 = Kugelradius je Knochen).
   - Der Tod kommt im Spielschritt (Spur B R1 P3: Tot-Flag @0x80102654-64, Kamera frei @0x80102688-94); der SCD-Takt laeuft
     VOR dem Spielschritt (main.c) -> Erkennung im Nachtakt-Haken (enemy_ai_boss_gator.c ruft re15_gatorszene_r41_nachtakt nach
-    re15_gr2_nachtakt), damit der Schnitt im selben Bild wie der Rueckschnitt der Spur B kommt (kein Zwischenbild).
+    re15_gr2_nachtakt), damit der Schnitt im selben Bild wie der Rueckschnitt der Spur B kommt (kein Zwischenbild) - [berichtigt in
+    Nachbesserung 3: gilt nur fuer "Sperre ohne Schnitt"; mit Explosionsschnitt kam B's Rueckschnitt zwei Takte VOR dem Tot-Flag, N3.M1].
 - **Aenderung** (engine/src/gatorszene_r41.c, include/re15_gatorszene_r41.h; keine gemeinsame Datei):
   - key_lage_bei_tod: die Zonenkamera (RVD-Gruppe mit Wechselsatz, Cut 0..7) mit der kleinsten Tiefe (groesstes Bild), bei
     Gleichstand die laufende; Messzeile je Kandidat.
@@ -665,3 +666,23 @@ Plan:
   - PORT-WAHL der Inszenierung (Kommentar im Code): die Explosions-Einstellung behaelt ihre RE2-Laenge (Clip 9 bis zum letzten Bild),
     der Schluessel erscheint zwei Takte vor dem Tot-Flag (die Leiche liegt dann schon in ihrer Endpose).
   - H4 der Abnahme: Zitat "Zonenkamera an" jetzt @0x80040374-84 (statt Funktionsanfang @0x8004032c).
+- **Messung nachher** (exe mit 71641acd, `platform\pc\re15_pc.exe` neu gelinkt; Laeufe N_KW Leon / N_KWE Elza mit demselben Rezept,
+  Zwillinge N_KWo / N_KWEo mit `RE15_SET_FLAG=9:110,9:112` = ohne Schluessel):
+  - gator_boss.log: `KAMERA R1 EXPLOSION RE2-Cut 5 -> Cut 1 F160`, `KAMERA R1 zurueck -> Cut 0 F196 clip=9 bild=36`, **`KAMERA R1 frei
+    (Zonenkamera an) Cut 0 F196 clip=-1 bild=-1`** (Programm-Ende durch F), `R1 ende (Leiche) pos=(3413,-25001)`, `R1 VSync 2 F198` -
+    keine "KAMERA R1"-Zeile nach F196 (P3 gibt nichts mehr frei). debug.log: `Folge R ROOM2090 F196 wert=1/0`, `Schluessel-Schnitt statt
+    R1-Rueckschnitt: Explosions-Cut 1 -> Ausgangs-Cut 0 F196`, `Schluessel-Lage: Kamera 2 (groesstes Bild, laufende 0), Lage
+    (1400,-1704,-23300) Tiefe 2643, 1001 von der Leiche (22 Punkte, Naehe <= 3072), Neigung rx 640 rz -128, Primitivfarbe Ruhe 80 /
+    Blink-Spitze 118` (= bitgleich zur Lage vorher im Tot-Bild F198), `Schluessel-Einstellung: Cut 2 (vorher Cut 0) F196`, `... Ende:
+    Cut 0 F288 (Einstellung Cut 2 ab F196, vorher Cut 0), Zonenkamera an`. Elza (`PL04`, ROOM2091) Zeile fuer Zeile gleich.
+  - state.log 2090/2091-Abschnitt: cam=0 F1-F159, cam=1 F160-F195, **cam=2 F196-F286**, cam=0 ab F287 - kein cam=0 zwischen Explosion
+    und Schluessel (vorher F196-F197). Leon = Elza; die Zwillinge ohne Schluessel schneiden in denselben Bildern.
+  - Bilder (kamklasse.py, Referenzen E = fd 178, K = fd 241, X = fd 303): fd 165-196 E (zu E 3,4-8,1), **fd 197 K (K 2,43 / X 11,52 / E
+    12,22)**, fd 198-206 K (0,0-1,5) -> Folge `E+K+` (Leon und Elza). Bildbogen `F_belege/n3_m1_wechsel_leon.png` und
+    `n3_m1_wechsel_elza.png` (obere Reihe vorher fd 195-200: Explosion, Explosion, Cut 0 mit der Spielfigur an der Leiter, Cut 0,
+    Schluessel, Schluessel; untere Reihe nachher: Explosion, Explosion, Schluessel x 4).
+  - Schluessel in der Einstellung (diffserie.py N_KW gegen N_KWo, jede Abweichung zaehlt): fd 197-287 91 / 91 Bilder, je 29 Pixel, Kasten
+    (32,192)-(44,206) = 13 x 15, hellster 70 -> 103 (x1,47) - wie der Fall ohne Explosionsschnitt (Abnahme 2 KLm). Elza gleich. Im
+    letzten Explosionsbild fd 196 liegen 2 Pixel des Schluessels schon in Cut 1 (164,105)-(166,106): er wird im Takt des Schnitts gelegt,
+    angezeigt wird der neue Cut ab dem naechsten Bildanfang (re15_cam_present_tick) - wie im Fall ohne Explosionsschnitt (Abnahme 2: "KL
+    F84 schon mit den 2 Schluessel-Pixeln der Cut-1-Lage").
