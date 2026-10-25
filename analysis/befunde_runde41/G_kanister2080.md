@@ -663,3 +663,30 @@ Entscheidungsfragen:
 3. **Aufnahme in jedem Kampf:** soll Spur B dem Alligator die RE2-Hals-/Anschwimm-Lenkung zum Kanister geben (RE2 FUN_800177c0,
    B OFFEN §11.3), damit er ihn auch dann holt, wenn Leon weit weg kämpft? (Änderung in Spur B's Modul.)
 4. Soll der Kanister beim Greifen sichtbar kippen (RE2-Kippen aus ROOM40A0 sub10) statt in einem Bild quer zu liegen?
+
+### 8.9 Orchestrator-Entscheide FG-E3 / FG-E4 (AUFTRAG.md 2026-10-25 00:56, während dieser Nachbesserung in den Baum gelegt)
+Wortlaut-Kern: **FG-E3 (M2)** "Nach der Kanister-Szene setzt der Kampf mit DEMSELBEN Alligator fort (HP, Intro gesehen, Lage/Zustand
+bleiben; kein erneuter Durchbruch), und der Kanister landet so, dass der Alligator ihn im normalen Rundlauf aufnimmt (B's
+Aufnahme-Fenster)" - Haken in Spur B's Modulen erlaubt. **FG-E4 (M3)** "Gewählt wird die nächstliegende vorhandene Kamera (laut
+Abnahme 2090 Cut 12, knapp daneben) mit der RE2-Schnittfolge des Wurfs ... PORT-WAHL im Dossier mit Bildvergleich RE2 <-> Port".
+Folge: die Spielstelle Nordbecken (8.2, Relokation nach RE2 Pos_set @0x08CA) ist ÜBERHOLT - der Kanister liegt wieder dort, wo er
+aufschlägt; die Messungen 8.2 bleiben als Herleitung stehen (Rangfolge der Becken-Bereiche).
+
+**FG-E3 Umsetzung (ohne Änderung in Spur B's Dateien):** der Boss-Zustand liegt in Datei-Statics von Spur B (`s_gb[slot]`
+enemy_ai_boss_gator.c gb_state_t: Phase, aggro, untergetaucht, Routen-Latches; die RE2-Bausteine je Slot in gator_re2_r41.c,
+zurückgesetzt nur im Boss-INIT `re15_gr2_reset` beim Neuspawn). Der Raumwechsel löscht nur die Aktoren; der main.c-Portblock setzt
+einen neuen Alligator nur, wenn KEIN Typ 0x23 aktiv ist (`_hat`), und der Boss-Takt nullt `s_gb` nur bei `state == 0 && hp <= 0`
+(Neuspawn-Erkennung). G kopiert beim Auslösen den Aktor (`ausloesen`: `s_gator = g_actors[slot]`) und legt ihn beim Rückweg im
+2090-Installer (scd_room_setup.c-Haken, vor dem Portblock) in DENSELBEN Slot zurück (`gator_zuruecklegen`) - der Boss-Takt sieht
+state 1 / hp < 25000 und die alten Statics und kämpft weiter (kein INIT, kein Untertauchen, kein Intro).
+
+**FG-E4 Umsetzung:** RE2 sub12/sub13 (8.4, 1.2) auf 2080 + 2090 verteilt: in 2080 Cut 7 (frontal) Plc_motion(2,6) @0x0750 ->
+Message_on 42 @0x0764 -> Sleep 30 @0x076A -> Plc_motion(2,6) @0x0782 -> Sleep 20 @0x0786 -> Loslassen (Super_reset @0x078E) - die
+Zeile muss in 2080 stehen (Text-Id 42 ist G nur in 2080/2081 zugeteilt, 2090 42-46 gehört F). Mit dem Loslassen der Raumwechsel
+(Door_aot_set ohne Sequenz, 1 Bild) nach 2090 **Cut 12** (RID @0x60+12*32: pos (-1601,-2131,-11018) -> (-5184,-3926,-13767),
+flag 1; 59,6 Grad unter dem Werfer-Kopf, RE2 Cut 7 43,6 Grad - Bildvergleich `G_belege/nb1_fg4_re2c7_2090c12_2080c7.png`: links
+RE2 ROOM70207 (Ada-Laufgang von unten), Mitte 2090 Cut 12 (Wand unter dem Balkon von unten, oben links die Reling), rechts der
+bisherige 2080 Cut 7); dort fällt der Kanister zu Ende (RE2 sub13-Bahn, Landefläche 2090-Wasser y -1620 = Aot_set sce 8 @0x009D6
+p1 `ac f9`, Stopp 800 darüber @0x08B0), Aufschlag-Ton, dann wie RE2 Warten auf den Aufschlag @0x079C-07A4, Sleep 15 @0x07A8,
+Schnitt auf den Fangenden @0x07D4 (= Leons Cut beim Auslösen), Plc_ret/Riegel los/Cut_auto (sub18 @0x0A2C-0A38). Der Werfer ist in
+Cut 12 nicht im Bild (Balkonende y -14..-36 über dem Bildrand, eigene Projektion `g_nb1/src/projpt.c`).
