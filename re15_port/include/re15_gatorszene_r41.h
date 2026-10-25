@@ -182,7 +182,7 @@ int  re15_gatorszene_r41_key_einstellung(int *cut, int *vorher, unsigned *bild);
  * tools/r41_gatorszene/leiche_lage_n5.py): Leiche (Lage, Gier), Anlauf-Gier des Gators, letztes Bild des Durchbruchs (Clip 6) und
  * Neigung des Schluessels. Pruefhaken fuer Sonden/Riegel: _lage_setzen gilt ab dem naechsten Raumaufbau, NULL = Standard. Kein
  * Spielweg ruft ihn (kein Schalter, keine Umgebungsvariable). */
-typedef struct { int32_t x, z; int16_t rot_y, gier, durchbruch_bis, key_rx, key_rz; } re15_gsz_lage_t;
+typedef struct { int32_t x, z; int16_t rot_y, gier, durchbruch_bis, key_rx, key_rz, key_x, key_y, key_z; } re15_gsz_lage_t;
 void re15_gatorszene_r41_lage_setzen(const re15_gsz_lage_t *l);
 void re15_gatorszene_r41_lage(re15_gsz_lage_t *out);
 /* Messhaken KAMPFBEGINN (Folge C) und KONTAKT im Mass des RE2-Sollbands (tools/r41_gatorszene/probe_re2_band_n5.c): Kontakt = erstes

@@ -1083,13 +1083,14 @@ static void teil_abstand(int elza)
  * Primitivfarbe des Schluessels in der Ankunftskamera (Cut F_CUT_LEICHE), Fress-Kamera + Frontalwert, Kampfbeginn (Abstand,
  * Beckenzonen), Kontakt-Mass (Leon steht), erster Biss (Clip 4) und erster Treffer. Kein Riegel - Werkzeug der Lagewahl. */
 #define F_CUT_LEICHE 0   /* gatorszene_r41.c GSZ_CUT_LEICHE (Nachbesserung 5: Ankunftskamera Cut 0) */
-static void lage_eine(int32_t x, int32_t z, int ry, int gier, int bis, int rx, int rz)
+static void lage_eine(int32_t x, int32_t z, int ry, int gier, int bis, int rx, int rz, int kx, int ky, int kz)
 {
     re15_gsz_lage_t l;
     re15_gatorszene_r41_lage_setzen(NULL);
     re15_gatorszene_r41_lage(&l);
     l.x = x; l.z = z; l.rot_y = (int16_t)ry; l.gier = (int16_t)gier; l.durchbruch_bis = (int16_t)bis;
     if (rx != 99999) { l.key_rx = (int16_t)rx; l.key_rz = (int16_t)rz; }
+    if (kx != 99999) { l.key_x = (int16_t)kx; l.key_y = (int16_t)ky; l.key_z = (int16_t)kz; }
     re15_gatorszene_r41_lage_setzen(&l);
     int ruhe = -1, spitze = -1;
     re15_game_state_init();
@@ -1110,8 +1111,8 @@ static void lage_eine(int32_t x, int32_t z, int ry, int gier, int bis, int rx, i
         }
     }
     printf("LAGE %d %d %d %d %d %d %d | prim %d/%d | fress Cut %d frontal %d | kampf %s ab %d zone %d/%d | kontakt %d biss %d "
-           "treffer %d\n", (int)x, (int)z, ry, gier, bis, (int)l.key_rx, (int)l.key_rz, ruhe, spitze, fc, fr, g && kb ? "ok" : "NEIN",
-           (int)ab, zg, zs, kontakt, biss, treffer);
+           "treffer %d | key %d %d %d\n", (int)x, (int)z, ry, gier, bis, (int)l.key_rx, (int)l.key_rz, ruhe, spitze, fc, fr,
+           g && kb ? "ok" : "NEIN", (int)ab, zg, zs, kontakt, biss, treffer, (int)l.key_x, (int)l.key_y, (int)l.key_z);
     re15_gatorszene_r41_lage_setzen(NULL);
 }
 static int lagesuche(const char *datei)
@@ -1121,11 +1122,12 @@ static int lagesuche(const char *datei)
     re15_door_seq_setze_laeufer(fang);
     char zeile[256];
     while (fgets(zeile, sizeof zeile, f)) {
-        int x, z, ry, gier, bis, rx = 99999, rz = 0;
-        int n = sscanf(zeile, "%d %d %d %d %d %d %d", &x, &z, &ry, &gier, &bis, &rx, &rz);
+        int x, z, ry, gier, bis, rx = 99999, rz = 0, kx = 99999, ky = 0, kz = 0;
+        int n = sscanf(zeile, "%d %d %d %d %d %d %d %d %d %d", &x, &z, &ry, &gier, &bis, &rx, &rz, &kx, &ky, &kz);
         if (n < 5) continue;
         if (n < 7) rx = 99999;
-        lage_eine(x, z, ry, gier, bis, rx, rz);
+        if (n < 10) kx = 99999;
+        lage_eine(x, z, ry, gier, bis, rx, rz, kx, ky, kz);
         fflush(stdout);
     }
     fclose(f);

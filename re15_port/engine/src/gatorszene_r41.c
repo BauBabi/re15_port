@@ -142,14 +142,14 @@ static void musik_takt_vor(void) { musik_takt(); }
  *      vor dem Kopf, unter der Massstab-Grenze 1892 (Tiefe >= 4804).
  * Gewaehlt (Rechnung leiche_lage_n5.py, Messung mit dem echten Engine-Ablauf test_r41_gatorszene lagesuche): s. Werte unten. */
 #define GSZ_CUT_LEICHE        0
-#define GSZ_LEICHE_X_STD      200
-#define GSZ_LEICHE_Z_STD      (-25400)
+#define GSZ_LEICHE_X_STD      0
+#define GSZ_LEICHE_Z_STD      (-26000)
 #define GSZ_LEICHE_ROT_Y_STD  2944
-#define GSZ_GATOR_GIER_STD    1632      /* Anlauf nach Westsuedwest (Vorwaerts (cos, -sin) = (-0,93, -0,37)) */
+#define GSZ_GATOR_GIER_STD    1952      /* Anlauf nach Westen */
 /* Letztes Durchbruch-Bild (Clip 6): Bild 0..15 steigt der Kopf aus dem Wasser (Rig-y +1611 -> -1392, EMR-Keyframes der
  * RE2-EM23-Bank, Sonde probe_clip6), Bild 15..31 der Vorstoss (Wurzel-Versatz -5880 -> -1627 roh, groesster Schritt 480); ab Bild
  * 32 gleitet er nur noch aus (bis Bild 124 weitere 1597 x 2/3). Danach der Biss (RE2 FRESSEN P1 Clip 4 @0x801010ec-f4). */
-#define GSZ_DURCHBRUCH_BIS_STD 31
+#define GSZ_DURCHBRUCH_BIS_STD 22
 /* Rumpfmitte (Mundpunkt) im Objektraum der Leiche: Leichen-Modell MD1 @0x2054 x -444..2626 (Kopf .. Beine), Rumpf oben
  * (y <= -100) bei x -100..1400 -> Mitte 1090 (leiche_lage.py MITTE_X). */
 #define GSZ_LEICHE_MITTE_X    1090
@@ -337,16 +337,18 @@ static int prop_slot(uint8_t obj_id)
  * 40 * 5 (Umgebung 63/73/63, die drei Lichter bei x -29490/-24699/2000 reichen kaum ins Nordbecken) -> lokal rx 672 / rz -144
  * (59,9 Grad), Bildflaeche cos 0,922, Licht 103,8 (Spitze 154 < 172), ~11,5 x 10,6 Bildpunkte (leiche_lage_n4.py; Fassung 1 Cut 1:
  * rx 544 / rz -464, Licht 169,8, ~10,4 x 9,5). PORT-WAHL. */
-#define GSZ_KEY_AUF_X     1090
-#define GSZ_KEY_AUF_Y     (-420)
-#define GSZ_KEY_AUF_Z     (-100)
-#define GSZ_KEY_AUF_RX_STD (-208)
-#define GSZ_KEY_AUF_RZ_STD (-656)
+#define GSZ_KEY_AUF_X_STD 1090
+#define GSZ_KEY_AUF_Y_STD (-420)
+#define GSZ_KEY_AUF_Z_STD (-100)
+#define GSZ_KEY_AUF_RX_STD (-48)
+#define GSZ_KEY_AUF_RZ_STD (-608)
 /* Szenen-Lage (Nachbesserung 5): Standard = die PORT-WAHL oben; re15_gatorszene_r41_lage_setzen nur fuer Sonden/Riegel. */
 static const re15_gsz_lage_t k_lage_std = { GSZ_LEICHE_X_STD, GSZ_LEICHE_Z_STD, GSZ_LEICHE_ROT_Y_STD, GSZ_GATOR_GIER_STD,
-                                            GSZ_DURCHBRUCH_BIS_STD, GSZ_KEY_AUF_RX_STD, GSZ_KEY_AUF_RZ_STD };
+                                            GSZ_DURCHBRUCH_BIS_STD, GSZ_KEY_AUF_RX_STD, GSZ_KEY_AUF_RZ_STD,
+                                            GSZ_KEY_AUF_X_STD, GSZ_KEY_AUF_Y_STD, GSZ_KEY_AUF_Z_STD };
 static re15_gsz_lage_t s_lage = { GSZ_LEICHE_X_STD, GSZ_LEICHE_Z_STD, GSZ_LEICHE_ROT_Y_STD, GSZ_GATOR_GIER_STD,
-                                  GSZ_DURCHBRUCH_BIS_STD, GSZ_KEY_AUF_RX_STD, GSZ_KEY_AUF_RZ_STD };
+                                  GSZ_DURCHBRUCH_BIS_STD, GSZ_KEY_AUF_RX_STD, GSZ_KEY_AUF_RZ_STD,
+                                  GSZ_KEY_AUF_X_STD, GSZ_KEY_AUF_Y_STD, GSZ_KEY_AUF_Z_STD };
 void re15_gatorszene_r41_lage_setzen(const re15_gsz_lage_t *l) { s_lage = l ? *l : k_lage_std; }
 void re15_gatorszene_r41_lage(re15_gsz_lage_t *out) { if (out) *out = s_lage; }
 /* Item-Zone nach dem Tod (re15_aot_set_item_tk_prop = Item_aot_set @0x80040644-Form), Rechteck 1000 x 1000 wie ROOM2090 main00
@@ -419,7 +421,7 @@ static void key_auf_leiche(uint16_t room_id)
     if (k < 0) return;
     g_scd.props[k].active = 1;
     g_scd.props[k].parent_obj = RE15_GSZ_LEICHE_OBJ;
-    g_scd.props[k].x = GSZ_KEY_AUF_X; g_scd.props[k].y = GSZ_KEY_AUF_Y; g_scd.props[k].z = GSZ_KEY_AUF_Z;
+    g_scd.props[k].x = s_lage.key_x; g_scd.props[k].y = s_lage.key_y; g_scd.props[k].z = s_lage.key_z;
     g_scd.props[k].rot_x = s_lage.key_rx; g_scd.props[k].rot_y = 0; g_scd.props[k].rot_z = s_lage.key_rz;
     re15_blink_r41_setzen(room_id, RE15_GSZ_KEY_OBJ, 1);
 }
