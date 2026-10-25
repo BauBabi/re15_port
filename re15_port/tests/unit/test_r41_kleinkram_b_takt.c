@@ -57,6 +57,7 @@
 #include "re15_msgtakt_r41.h"
 #include "re15_kamerahalt_r41.h"
 #include "re15_rennstopp_r41.h"
+#include "re15_sherry_r41.h"     /* Runde 41 Integration C+K: Teil sherry (Querbezug E x K) */
 #include "re15_emd.h"
 #include "re15_md1.h"          /* re15_pld_part (PLW-Verzeichnis) */
 #include <stdio.h>
@@ -696,6 +697,92 @@ static void teil_frage(void)
           b.luecke, b.f_pos - b.f_zu);
 }
 
+/* ============================================================================================ sherry (Integration C+K) */
+/* Runde 41 Integration C+K, Querbezug E x K: Spur K fuehrt Sherry (Figur 0x0F) mit der Bewegungs-Zeile 15 (sherry_r41.c),
+ * Spur E das Renn-Tempo und den Renn-Stopp (rennstopp_r41.c). Original (selbst disassembliert, info/Re1.5/PSX.EXE):
+ *   Fall 0 @0x800327cc-@0x80032830: Tempo := lbu @0x80073f24 + DAT_800aca5c*2 (Zeile 15 @0x80073f42 = 120);
+ *   Fall 1 @0x8003288c-@0x80032898: Figur 0xf -> beq zum Vorschub @0x8003295c, ohne Fussweg FUN_800369f8 (@0x800328cc);
+ *   Fall 3 @0x80032930-@0x80032944: Tempo -= 40 je Bild -> Stopp 80/40/0/-40;
+ *   DECIDE 0x80032604 @0x8003262c-@0x800326a0: Drehen um lbu @0x80073f25 + DAT_800aca5c*2 (Zeile 15 @0x80073f43 = 64) in
+ *   jedem Bild des Unterzustands 2, danach DREHEN @0x80073f03 = 80 bzw. GEHEN @0x80073ec3 = 48.
+ * Vor dem Integrations-Fix gemessen: Stopp 160/120/80/40/0/40, mit Bank PL0FW00 Modul-Tempo 203 (Fussweg), Drehen -80/-48. */
+static re15_emd_skeleton_t  s_sh_bind, s_sh_roh, s_sh_sk;
+static re15_emd_animation_t s_sh_an;
+static int sh_bank(void)   /* Port-Verbund wie rt_laden: Bindepose PL0F.PLD + Keyframes/Clips PL0FW00.PLW */
+{
+    char p[600]; size_t nk = 0, nw = 0; unsigned long ko = 0, kl = 0, wo = 0, wl = 0, eo = 0, el = 0;
+    snprintf(p, sizeof p, "%s/PLD/PL0F.PLD", RE15_ASSET_PSX_DIR);   uint8_t *k = slurp(p, &nk);
+    snprintf(p, sizeof p, "%s/PLD/PL0FW00.PLW", RE15_ASSET_PSX_DIR); uint8_t *w = slurp(p, &nw);
+    if (!k || !w || !re15_pld_part(k, (long)nk, RE15_PLD_EMR, &ko, &kl) || !re15_pld_part(w, (long)nw, RE15_PLD_EMR, &wo, &wl) ||
+        !re15_pld_part(w, (long)nw, RE15_PLD_EDD, &eo, &el)) return 0;
+    if (re15_emd_parse_skeleton(k + ko, kl, &s_sh_bind) != 0 || re15_emd_parse_skeleton(w + wo, wl, &s_sh_roh) != 0 ||
+        re15_emd_parse_animation(w + eo, el, &s_sh_an) != 0) return 0;
+    s_sh_sk = s_sh_bind;
+    s_sh_sk.keyframe_data       = s_sh_roh.keyframe_data;
+    s_sh_sk.keyframe_data_size  = s_sh_roh.keyframe_data_size;
+    s_sh_sk.keyframe_count      = s_sh_roh.keyframe_count;
+    s_sh_sk.keyframe_size_bytes = s_sh_roh.keyframe_size_bytes;
+    return 1;                                       /* Puffer bleiben bis Prozessende (keyframe_data aliast w) */
+}
+
+static void teil_sherry(void)
+{
+    printf("== sherry ==\n");
+    const uint16_t U = RE15_PAD_BIT_UP, X = RE15_PAD_BIT_CROSS, L = RE15_PAD_BIT_LEFT;
+    extern void re15_player_waffe_roh(int id);
+    re15_player_waffe_roh(0);                                   /* Sherry fuehrt keine Waffe (@0x800316c4) */
+    re15_sherry_r41_modell_init(RE15_SHERRY_R41_MODELL);
+    /* Spieler-Takt (ROOM2020 Tunnel, Muster rennpfad) */
+    rp_t r0 = rp_start(0), r1 = rp_bild(U | X);
+    rp_t a0 = rp_start(0), a1 = rp_bild(L), a2 = rp_bild(L), a3 = rp_bild(L);
+    rp_t b0 = rp_start(0), b1 = rp_bild(U | L), b2 = rp_bild(U | L), b3 = rp_bild(U | L);
+    rp_t d[6]; d[0] = rp_start(0);
+    for (int i = 1; i < 6; i++) d[i] = rp_bild(0);
+    printf("  Rennen weg %d | A dreh %d %d %d weg %d | B dreh %d %d %d weg %d %d | D weg %d %d %d %d %d (Stopp %d%d%d%d%d)\n",
+           rp_weg(r0, r1), rp_drehung(a0, a1), rp_drehung(a1, a2), rp_drehung(a2, a3), rp_weg(a0, a1),
+           rp_drehung(b0, b1), rp_drehung(b1, b2), rp_drehung(b2, b3), rp_weg(b0, b1), rp_weg(b1, b2),
+           rp_weg(d[0], d[1]), rp_weg(d[1], d[2]), rp_weg(d[2], d[3]), rp_weg(d[3], d[4]), rp_weg(d[4], d[5]),
+           d[1].aktiv, d[2].aktiv, d[3].aktiv, d[4].aktiv, d[5].aktiv);
+    PRUEF(rp_weg(r0, r1) == 120, "Sherry rennt 120 je Bild (Zeile 15 @0x80073f42)");
+    PRUEF(rp_drehung(a0, a1) == -64 && rp_weg_um(a0, a1, 80) && a1.mo == 200 && a1.aktiv && rp_drehung(a1, a2) == -64 && a2.mo == 105 &&
+          rp_drehung(a2, a3) == -80,
+          "A nur LINKS: Stopp-Bild und Folgebild drehen 64 (@0x80073f43 ueber @0x8003266c-@0x800326a0), Stopp-Schritt 80, danach DREHEN 80 (@0x80073f03)");
+    PRUEF(rp_drehung(b0, b1) == -64 && rp_weg_um(b0, b1, 80) && rp_drehung(b1, b2) == -64 && rp_weg_um(b1, b2, 50) && rp_drehung(b2, b3) == -48,
+          "B OBEN+LINKS: 64 im Unterzustand 2, Gehen 50 (@0x80073ec2), danach GEHEN-Drehung 48 (@0x80073ec3)");
+    PRUEF(rp_weg(d[0], d[1]) == 80 && rp_weg(d[1], d[2]) == 40 && rp_weg(d[2], d[3]) == 0 && rp_weg(d[3], d[4]) == 40 && rp_weg(d[4], d[5]) == 0 &&
+          d[1].aktiv && d[3].aktiv && !d[4].aktiv,
+          "D loslassen: Stopp ab dem Tabellen-Tempo 120 = 80/40/0/-40 (Fall 3 @0x80032930-@0x80032944), 4 Bilder");
+    /* Fussweg mit gespiegelter Bank: Sherry ueberspringt ihn (@0x80032898), Leon (Gegenprobe) rechnet ihn */
+    if (!sh_bank()) { PRUEF(0, "PL0F.PLD / PL0FW00.PLW nicht lesbar"); re15_sherry_r41_modell_init(0); return; }
+    re15_player_set_w_banks(&s_sh_sk, &s_sh_an);
+    int32_t t[2][7], xs[8]; int nstopp = 0, fuss_leon = 0;
+    for (int fig = 0; fig < 2; fig++) {
+        re15_sherry_r41_modell_init(fig ? RE15_SHERRY_R41_MODELL : 0);
+        re15_rennstopp_r41_zuruecksetzen();
+        re15_actor_t a; memset(&a, 0, sizeof a);
+        a.state = 1; a.motion = 211; a.rot_y = 0; a.x = 4000; a.z = -3150;
+        for (int k = 0; k < 7; k++) {
+            if (k > 0) { a.anim_frame++; if (a.anim_frac > 0) a.anim_frac--; }
+            t[fig][k] = re15_rennstopp_r41_lauftempo(&a, a.motion != 100, a.rot_y, fig ? 120 : 200);
+            if (k == 0) { a.motion = 100; a.anim_frame = 0; a.anim_frac = 7; }
+            if (!fig && t[0][k] != 200) fuss_leon++;
+        }
+        if (fig) { int32_t x0 = a.x; while (nstopp < 8 && re15_rennstopp_r41_skript(&a, 100, 200, 120)) { xs[nstopp++] = a.x - x0; x0 = a.x; } }
+    }
+    printf("  Bank PL0FW00: Leon Tempo %d %d %d %d %d %d %d | Sherry Tempo %d %d %d %d %d %d %d, Stopp %d Schritte %d %d %d %d\n",
+           (int)t[0][0], (int)t[0][1], (int)t[0][2], (int)t[0][3], (int)t[0][4], (int)t[0][5], (int)t[0][6],
+           (int)t[1][0], (int)t[1][1], (int)t[1][2], (int)t[1][3], (int)t[1][4], (int)t[1][5], (int)t[1][6],
+           nstopp, nstopp > 0 ? (int)xs[0] : 0, nstopp > 1 ? (int)xs[1] : 0, nstopp > 2 ? (int)xs[2] : 0, nstopp > 3 ? (int)xs[3] : 0);
+    int sh120 = 1; for (int k = 0; k < 7; k++) if (t[1][k] != 120) sh120 = 0;
+    PRUEF(sh120 && nstopp == 4 && xs[0] == 80 && xs[1] == 40 && xs[2] == 0 && xs[3] == -40,
+          "Bank gespiegelt: Sherry bleibt beim Tabellen-Tempo 120 (Fussweg uebersprungen @0x8003288c-@0x80032898), Stopp 80/40/0/-40");
+    PRUEF(fuss_leon > 0, "Gegenprobe Leon mit derselben Bank: Fussweg gerechnet (%d von 7 Bildern != 200)", fuss_leon);
+    re15_player_set_w_banks(NULL, NULL);
+    re15_rennstopp_r41_zuruecksetzen();
+    re15_sherry_r41_modell_init(0);
+    re15_msgtakt_r41_zuruecksetzen(); re15_pauseflags_clear();
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -706,6 +793,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "frage")      || !strcmp(teil, "alle")) teil_frage();
     if (!strcmp(teil, "rennpfad")   || !strcmp(teil, "alle")) teil_rennpfad();
     if (!strcmp(teil, "uebernahme") || !strcmp(teil, "alle")) teil_uebernahme();
+    if (!strcmp(teil, "sherry")     || !strcmp(teil, "alle")) teil_sherry();   /* Integration C+K: zuletzt (setzt das Modell) */
     printf("%s: %d/%d bestanden\n", g_fail ? "FAIL" : "OK", g_n - g_fail, g_n);
     return g_fail ? 1 : 0;
 }

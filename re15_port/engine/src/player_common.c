@@ -22,6 +22,7 @@
 #include "re15_player.h"
 #include "re15_plcloop_r41.h"   /* Runde 41 Spur E: Spieler-Clip-Ende im Kommandowort 4 (plcloop_r41.c) */
 #include "re15_rennstopp_r41.h"  /* Runde 41 Spur E: Renn-Tempo + Renn-Stopp (rennstopp_r41.c) */
+#include "re15_sherry_r41.h"     /* Runde 41 Integration C+K: Querbezug E x K, Renn-Zeile je Figur (sherry_r41.c) */
 #include "re15_elza_r39.h"   /* Runde 39 Spur H: Eintritts-Latch vs. Kommandowort 4 (@0x80041bb0) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"   /* WELLE B: RE2-Flavor-Gates im Anim-Advancer (Clip-Pin-Konflikte) */
@@ -980,7 +981,9 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         int turn_rate = s2_41 ? TURN_RATE_RUN_PER_FRAME : !moving ? TURN_RATE_IN_PLACE_PER_FRAME
                                 : (run ? TURN_RATE_RUN_PER_FRAME : TURN_RATE_WALK_PER_FRAME);
         { extern int re15_sherry_r41_tabelle(int, int, int);   /* Runde 41 Spur K: Drehbyte Zeile 15 (@0x80073f03/@0x80073f43/@0x80073ec3) */
-          turn_rate = re15_sherry_r41_tabelle(!moving ? 2 : (run ? 3 : 0), 1, turn_rate); }
+          turn_rate = re15_sherry_r41_tabelle(s2_41 ? 3 : (!moving ? 2 : (run ? 3 : 0)), 1, turn_rate); }   /* Integration C+K (E x K):
+           * im Unterzustand 2 dreht DECIDE 0x80032604 in JEDEM Bild um `lbu @0x80073f25 + DAT_800aca5c*2` (@0x8003262c-@0x8003265c,
+           * @0x8003266c-@0x800326a0), unabhaengig von OBEN/RENNEN -> Spalte RENNEN (Sherry @0x80073f43 = 64) */
         if (pad_bits & RE15_PAD_BIT_LEFT)  yaw_delta -= turn_rate;
         if (pad_bits & RE15_PAD_BIT_RIGHT) yaw_delta += turn_rate;
         if (pad_bits & RE15_PAD_BIT_UP)    move_dir  += 1;
@@ -1015,7 +1018,8 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         int r1_held = (pad_bits & RE15_PAD_BIT_R1) != 0;
         int rs41;   /* Runde 41 Spur E: Renn-Stopp 0x80032604/0x80032778 (re15_rennstopp_r41.h): 1 Stopp-Bild, 2 Gehen @0x80032738 */
         { extern int re15_player_equipped_weapon(void);
-          rs41 = re15_rennstopp_r41_takt(p, pad_bits, RE15_MOTION_RUN, RE15_MOTION_IDLE, RUN_SPEED_PER_FRAME,
+          rs41 = re15_rennstopp_r41_takt(p, pad_bits, RE15_MOTION_RUN, RE15_MOTION_IDLE,
+                                         re15_sherry_r41_tabelle(3, 0, RUN_SPEED_PER_FRAME),   /* Integration C+K: @0x80073f24[Figur*2] */
                                          re15_player_equipped_weapon() != 0);
           if (rs41 == 1) { r1_held = 0; move_dir = 0; } else if (rs41 == 2) run = 0; }
         if (!r1_held && s_player_aim_phase != RE15_AIM_NONE &&
@@ -1278,7 +1282,9 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         } else if (rs41 == 1) { want_motion = p->motion;   /* Runde 41 Spur E: Stopp-Bild, Stehen-FSM erst nach dem Stopp (@0x80032958 -> 0x80032038 Fall 0) */
         } else if (move_dir > 0) {
             if (run) { want_motion = RE15_MOTION_RUN;  speed = re15_rennstopp_r41_lauftempo(p, p->motion != RE15_MOTION_RUN,   /* Runde 41 Spur E: */
-                           (int)p->rot_y - ((yaw_delta != 0 && (!zielt_schon || s2_41)) ? yaw_delta : 0), RUN_SPEED_PER_FRAME); }   /* Fussweg-Tempo @0x800328cc-@0x800328f4 */
+                           (int)p->rot_y - ((yaw_delta != 0 && (!zielt_schon || s2_41)) ? yaw_delta : 0),
+                           re15_sherry_r41_tabelle(3, 0, RUN_SPEED_PER_FRAME)); }   /* Fussweg-Tempo @0x800328cc-@0x800328f4; Integration C+K:
+                           * Fall 0 @0x800327cc-@0x80032830 `lbu @0x80073f24 + DAT_800aca5c*2` (Sherry @0x80073f42 = 120) */
             else     { want_motion = RE15_MOTION_WALK; speed = WALK_SPEED_PER_FRAME; }
             { extern int re15_sherry_r41_tabelle(int, int, int);   /* Runde 41 Spur K: Zeile 15 @0x80073f42 / @0x80073ec2 */
               speed = re15_sherry_r41_tabelle(run ? 3 : 0, 0, speed); }
@@ -1400,7 +1406,8 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * all left untouched. */
         extern int re15_r39k_reach_wartet(void);   /* Runde 39 Spur K NB1: im Ankunftsbild steht die Gang-Pose (f314 @0x80030c78) */
         if (!p->walk_active && !p->anim_freeze && !re15_r39k_reach_wartet() &&   /* Runde 41 Spur E: Renn-Stopp mit leerem Pad */
-            re15_rennstopp_r41_skript(p, RE15_MOTION_RUN, RE15_MOTION_IDLE, RUN_SPEED_PER_FRAME)) {
+            re15_rennstopp_r41_skript(p, RE15_MOTION_RUN, RE15_MOTION_IDLE,
+                                      re15_sherry_r41_tabelle(3, 0, RUN_SPEED_PER_FRAME))) {   /* Integration C+K: @0x80073f24[Figur*2] */
         } else if ((p->motion == 105 || p->motion == 100) && !p->walk_active && !p->anim_freeze && !re15_r39k_reach_wartet()) {
             p->motion = RE15_MOTION_IDLE;
             p->anim_frame = 0;

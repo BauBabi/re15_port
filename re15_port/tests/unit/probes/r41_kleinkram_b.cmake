@@ -90,7 +90,10 @@ endif()
 #   unit_r41_kleinkram_b_takt_uebernahme Treppe ROOM2040 / Plc_ret / Flinch im Stopp beenden ihn (Original +5/+6 neu
 #                                        geschrieben: @0x80043544/@0x80043594, @0x80038ea8/@0x80038eb0, @0x80041f94/98,
 #                                        @0x80035c80), gesperrte Durchlaeufe (bltz @0x80031c78) nicht; Gegenprobe vor NB4
-foreach(_teil msgtakt kamerahalt frage rennstopp renntempo rennpfad uebernahme)
+# Runde 41 Integration C+K (Querbezug E x K, Sherry = Figur 0x0F der Spur K):
+#   unit_r41_kleinkram_b_takt_sherry     Renn-Tempo 120 (@0x80073f42, Fall 0 @0x800327cc), kein Fussweg (@0x80032898),
+#                                        Stopp 80/40/0/-40, Drehen 64 im Unterzustand 2 (@0x80073f43 ueber @0x8003262c-@0x800326a0)
+foreach(_teil msgtakt kamerahalt frage rennstopp renntempo rennpfad uebernahme sherry)
     add_test(NAME unit_r41_kleinkram_b_takt_${_teil} COMMAND test_r41_kleinkram_b_takt ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_kleinkram_b_takt_${_teil} PROPERTIES TIMEOUT 300)

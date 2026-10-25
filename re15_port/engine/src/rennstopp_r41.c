@@ -10,6 +10,7 @@
 #include "re15_player.h"     /* RE15_PAD_BIT_*, re15_player_w_skel / re15_player_w_anim */
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 / re15_skel_euler_matrix (RotMatrix) */
 #include "re15_math.h"       /* re15_squareroot0 = SquareRoot0 0x80065f60 */
+#include "re15_sherry_r41.h"  /* Runde 41 Integration C+K: re15_sherry_r41_modell (Figur 0x0F, @0x80032894) */
 
 #define RS_ABZUG     40      /* @0x8003293c `addiu v0,v0,-40` */
 #define RS_MISCHUNG  7       /* @0x800327f4 / @0x80032908 `ori v0,zero,0x7` -> +0x8f (Fall 0 / Fall 2) */
@@ -159,6 +160,10 @@ int32_t re15_rennstopp_r41_lauftempo(re15_actor_t *p, int erstes_bild, int gier_
     if (s_pruef_aus) return tabelle;                /* Sonden-Gegenprobe: Stand vor Nachbesserung 3 */
     s_aktiv = 0;                                    /* Rennen = Unterzustand 1, kein Stopp */
     if (erstes_bild || !s_tempo_ok) { s_tempo = tabelle; s_tempo_ok = 1; }   /* Fall 0 @0x800327cc-@0x80032830 */
+    /* Runde 41 Integration C+K (Querbezug E x K): Figur 0x0F (Sherry, Spur K) - Fall 1 ueberspringt die Fussweg-Rechnung,
+     * das Tempo bleibt der Tabellenwert aus Fall 0: @0x8003288c `lbu v1,0x800aca5c` / @0x80032894 `ori v0,zero,0xf` /
+     * @0x80032898 `beq v1,v0,0x8003295c` (direkt zum Vorschub @0x8003295c, ohne FUN_800369f8 @0x800328cc). */
+    if (re15_sherry_r41_modell() == RE15_SHERRY_R41_MODELL) return s_tempo;
     int32_t t = 0;
     const int ok = re15_rennstopp_r41_fussrechnung(re15_player_w_skel(), re15_player_w_anim(), 0,
                                                    erstes_bild ? 0 : (int)p->anim_frame,
