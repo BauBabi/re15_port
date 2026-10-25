@@ -686,3 +686,10 @@ Plan:
     letzten Explosionsbild fd 196 liegen 2 Pixel des Schluessels schon in Cut 1 (164,105)-(166,106): er wird im Takt des Schnitts gelegt,
     angezeigt wird der neue Cut ab dem naechsten Bildanfang (re15_cam_present_tick) - wie im Fall ohne Explosionsschnitt (Abnahme 2: "KL
     F84 schon mit den 2 Schluessel-Pixeln der Cut-1-Lage").
+  - Weitere Lagen der Abnahme (Rezepte KN/KQ, Leon, exe mit 9e0347c8): **KN** (Teleport Nord (2000,-9000), Schuesse ab F151):
+    `Schluessel-Schnitt statt R1-Rueckschnitt: Explosions-Cut 1 -> Ausgangs-Cut 0 F196`, state.log cam=1 F160-F195, cam=2 F196-F286,
+    cam=0 ab F287, Bilder fd 165-206 `E+K+` (vorher Abnahme 2: Cut 1 -> Cut 0 F196/F197 -> Cut 2). **KQ** (Schuesse ab F991, Leiche
+    (4528,-12323) Ostbecken-Mitte): Explosions-Cut 3 = Schluessel-Cut 3 (`Schluessel-Lage: Kamera 3 ... Tiefe 2667, 2346 von der Leiche`),
+    `Explosions-Cut 3 -> Ausgangs-Cut 0 F1036`, Einstellung `Cut 3 (vorher Cut 0) F1036` bis `Ende: Cut 0 F1128`; state.log cam=3
+    durchgehend F1000-F1126, cam=0 ab F1127 (vorher Abnahme 2: Cut 3 -> Cut 0 F1036/F1037 -> Cut 3); Bilder fd 1005-1046: kein Bild der
+    Referenz X (Cut 0, Abweichung 12,2-12,7 gegen 0,5-6,0 zu den beiden Cut-3-Referenzen).
