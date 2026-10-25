@@ -4,7 +4,7 @@ Baum: `.claude/worktrees/r41_kanister2080`, Zweig `r41/kanister2080`, HEAD 8d7e7
 letzter Code-Commit 4c622ad4). Pruefer: Abnahme-Agent 3 (glaubt nichts Ungemessenes). Bericht wird FORTLAUFEND geschrieben (Sitzungslimit).
 Laufordner/Bilder (nicht im Baum): `<SP>` = `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g3abn`.
 
-Gegenstand: Nachbesserung 3 (Maengel M1-M3 der Abnahme 2 = G-E1 Tod im Bild, G-E2 Werfer der Kamera zugewandt, Nachtrag 28
+Gegenstand: Nachbesserung 3 (Maengel A2-M1..A2-M3 der Abnahme 2 = G-E1 Tod im Bild, G-E2 Werfer der Kamera zugewandt, Nachtrag 28
 Explosionseffekt des Gaskanisters) und Regression der in Abnahme 2 erfuellten Punkte P1/P2/P3.
 
 ## 0. Stand der Abnahme
@@ -12,11 +12,11 @@ Explosionseffekt des Gaskanisters) und Regression der in Abnahme 2 erfuellten Pu
 - [x] Code-Diff gelesen (9f10bdb0..HEAD, Schwerpunkt d09d5fff..HEAD = Nachbesserung 3)
 - [x] Bau (local_build.sh configure + build)
 - [x] gezielte Unit-Tests (80/80)
-- [ ] gezielte Integrations-Tests
+- [x] gezielte Integrations-Tests (20/20)
 - [x] RE-Gate Stichproben (Abschnitt 4: 14 Zitatgruppen selbst disassembliert/gelesen)
-- [x] Messungen M3 (Explosion), M1 (Tod im Bild), M2 (Werfer), Regression P1/P2/P3 (Leon + Elza; 28 exe-Laeufe, einer wegen falschem EXIT_AT selbst abgebrochen und neu gefahren)
+- [x] Messungen zu den Abnahme-2-Maengeln (A2-M3 Explosion, A2-M1 Tod im Bild, A2-M2 Werfer), Regression P1/P2/P3 (Leon + Elza; 28 exe-Laeufe, einer wegen falschem EXIT_AT selbst abgebrochen und neu gefahren)
 - [x] Vertrag
-- [ ] Urteil
+- [x] Urteil: NICHT BESTANDEN (M1: Plattform-Verlauf Todes-Clip 6/19; M2: Kern-Zeilen 485..498 nach dem ersten 2090-Besuch in jedem Raum; M3: im natuerlichen Leon-Verlauf fehlt die Explosionswolke, Kanister ausserhalb des Raums; V1 render_pc.c); G-E2 (Werfer) und P1/P2/uebrige P3-Teile erfuellt
 
 ## 1. Diff, Bau
 - Massgeblich ist `git diff 9f10bdb0..HEAD` (merge-base; master steht inzwischen auf 275d42d2 mit C+K, `git diff master` enthielte deren
@@ -44,10 +44,19 @@ Ausgaben (-V): blick `RE2 Ada: Gier zur Kamera 3811.4, Dir_set 3700, Versatz -11
 180..1530 Farbe 0x404040, weg ab Bild 10`; re2gator_kamera `R1-Fall 0 (aus Cut 7): G-E1 zeigt Cut 6 (Schnitt), Kopf (161,112)`, `R1-Fall 2:
 G-E1 Cut 3, Kopf (168,105)`.
 
-### 1b Gezielte Integrations-Tests
-(laeuft - Ergebnis folgt)
+### 1b Gezielte Integrations-Tests (Log `<SP>/ctest_integ.log`; -j3 neben fremden Laeufen anderer Agenten)
+`ctest --test-dir re15_port/build -R "^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_re2gator$|
+^integration_r35_fenster$|^integration_r35_werfer$|^integration_r35_werfer_ton$|^integration_r35_werfer_elza$|^integration_r35_werfer_form$|
+^integration_r34_plattform_takt$|^integration_r34_plattform_esp_eintritt$|^integration_r36_schuss$|^integration_r39_hund1121$|
+^integration_r35_granate$|^integration_r36_granate$|^integration_r34_granaten$|^integration_r38_wasser$|^integration_r41_wasser20b0_npc$|
+^integration_r37_itemband$|^integration_r36_tueren$|^integration_r36_kartenitems_bild$" --timeout 3000 --output-on-failure -j3`
+(G + B + alle Riegel der re2_fx.c-Nutzer + alle Riegel durch 2080/2081/2090/2091) -> **`100% tests passed, 0 tests failed out of 20`**
+(1355,71 s; kanister2080_kampf 724,56 s, re2gator 228,55 s, kanister2080 171,06 s, r37_itemband 829,42 s). Riegel-Lauf kampf
+(build/tests/integration/r41_kanister2080_kampf_wd/lauf_afd9b024): kampf_leon `-> Cut 1 F2290 ... Todes-Clip 19/19`, kampf_elza `-> Cut 7 F568
+... Start 6/8 ... 19/19`, nordost_leon `-> Cut 4 F1383 ... 19/19`, west_elza `-> Cut 5 F322 ... 19/19` - dieselben Zeilen wie meine Laeufe.
+Die Riegel sind gruen; sie fahren aber weder die Plattform-Lage (M1) noch einen zweiten Raum nach 2090 (M2) noch v1 (M3).
 
-## 2. Messungen M3 / M1 / M2 im echten Ablauf (Laufordner `<SP>/runs/<lauf>`; Helfer `<SP>/lauf.sh`, `<SP>/kampf.sh` = Rezept des Riegels
+## 2. Messungen zu A2-M3 (Explosion) / A2-M1 (Tod im Bild) / A2-M2 (Werfer) im echten Ablauf (Laufordner `<SP>/runs/<lauf>`; Helfer `<SP>/lauf.sh`, `<SP>/kampf.sh` = Rezept des Riegels
 integration_r41_kanister2080_kampf Stand 8d7e738a: 60 Schussbloecke, `RE15_GATOR_FX_LOG=1`; KEIN RE15_GB_TEST / RE15_GATOR_KANISTER /
 RE15_KEIN_GATOR / RE15_K2080_WURF_GIER, lauf.sh loescht sie zusaetzlich aus der Umgebung; Messkopien re15_pc_g41abn3{,b..f}.exe, md5 = re15_pc.exe)
 Gemeinsam: `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=2090@250` (Elza 2091 + `RE15_PSELECT_AUTO=1
@@ -105,14 +114,14 @@ das Rezept (Startlage/Bloecke) weicht offenbar ab. Mit dem Riegel-Rezept (60 Blo
   Schnitt auf Cut 5) hat das nichts zu tun; das Dossier (10.3/10.6.2 "wie im Original verworfen, keine Zonenkamera hatte dort alle acht")
   benennt die Ursache nicht.
 
-### 2.5 M2 (G-E2) Bilder Cut 7
+### 2.5 A2-M2 (G-E2) Bilder Cut 7
 - v1_leon_c7 (Nordwurf ohne Testhaken, `RE15_FRAMEDUMP=522-630/4`, `RE15_EXIT_AT=630#2080`): `<SP>/v1_leon_c7_nord_f526-626.png` (1x),
   `<SP>/v1_leon_c7_nord_marvin_x5.png` (x5): F534-F630 Marvin an der oberen Reling von vorn (Gesicht, Hemd), den Kanister vor sich, ab F546
   ueber dem Kopf gestemmt, Zeile "Marvin: Hey, Leon, try with this!" F530-F630; die gekoepften Zombies liegen hinter ihm. F530 = Apply-Bild
   (Cut 5 mit der Zeile, H1 der Abnahme 2, Zweig ohne Spur E).
 - Blickwert unabhaengig nachgerechnet (Python, RID von ROOM2080/2081.RDT @0x60, Cut 7 @0x144-Form: Kamera (8095,-18819,-9867)): Werfer
   laut state.log F531 Slot 9 `@(-7168,-17609,r3678)` -> Gier zur Kamera 3790,0, Versatz -112,0, frontal 0,9853 (RE2 Ada -111,4 / 0,985); 2081
-  gleich. Werfer-Zeile in ALLEN zehn Laeufen dieser Abnahme (Nord und Sued, Leon und Elza): `Werfer Cut 7: Gier 3678, Gier zur Kamera 3791,
+  gleich. Werfer-Zeile in ALLEN 17 Szenen-Laeufen dieser Abnahme (Nord und Sued, Leon und Elza; identisch): `Werfer Cut 7: Gier 3678, Gier zur Kamera 3791,
   Versatz -113, frontal 4035/4096`; Wurfbahn Sued v=(10,20,-25) -> (-6096,-21600), Nord v=(-10,20,25) -> (-6856,-12670) - Bahn in Weltrichtung.
 
 ### 2.6 Regression P1 / P2 (Code seit Abnahme 2 unveraendert; nachgemessen)
@@ -225,7 +234,7 @@ glas1120 auslassen") ist das nicht benannt und nicht gemessen; kein Riegel der S
 | P3 erneut schliessende Tuer, Marvin/John im Raum, 8 Kopfschuesse | **erfuellt** | alle Szenen-Laeufe: `Tuer-Ton DOOR06 Satz 1` F8, Marvin 0x40 / John 0x49, `Kopf ab ... 8 von 8` F352 |
 | P3 "rennt hin, nimmt ihn auf in beide Haende" (N24b/N26) | **erfuellt** (Regression) | Code seit Abnahme 2 unveraendert; `Kanister aufgehoben (Loco c11 Bild 24 ...)` F465 in allen Szenen-Laeufen |
 | P3 sagt "Hey, Leon/Elza, try with this!" | **erfuellt** | `Zeile 42 stand F531..F629 (99 Bilder)`, `Wsleeping frei` F630 vor dem Wurf; Zeile im Bild (2.5) |
-| P3 Wurf die Reling runter, Kamera "GENAUSO" wie Adas Wurf (N5/FG-E4/N26/G-E2) | **erfuellt** | 2.5: Werfer in Cut 7 der Kamera zugewandt in allen zehn Laeufen (Versatz -113, frontal 4035/4096; RE2 Ada -111 / 0,985 selbst nachgerechnet), Bilder Nord/Sued Leon + Elza von vorn; Bahn in Weltrichtung |
+| P3 Wurf die Reling runter, Kamera "GENAUSO" wie Adas Wurf (N5/FG-E4/N26/G-E2) | **erfuellt** | 2.5: Werfer in Cut 7 der Kamera zugewandt in allen 17 Szenen-Laeufen (Versatz -113, frontal 4035/4096; RE2 Ada -111 / 0,985 selbst nachgerechnet), Bilder Nord/Sued Leon + Elza von vorn; Bahn in Weltrichtung |
 | P3 "liegt dann in 2090 an der Stelle im Wasser" | **erfuellt** | `Aufschlag im Wasser`, `Kanister im Becken ... = Aufschlagstelle (Bit 116)` F43 in allen Laeufen |
 | P3 "wenn der Aligator dran vorbei kommt, ... aufnehmen, GENAUSO wie RE2" | **erfuellt** | ANSCHWIMMEN F43/F50, `KANISTER Stufe 1` F102/F103/F143 in allen Laeufen, auch v1 ohne Haken; derselbe Alligator (FG-E3) |
 | P3 "Sobald er den Kanister im Maul hat, soll man auf ihn schiessen koennen" | **erfuellt** | R1 in allen zehn Kampf-Laeufen (2.7) |
@@ -234,7 +243,7 @@ glas1120 auslassen") ist das nicht benannt und nicht gemessen; kein Riegel der S
 | Nebenwirkungen | **nicht ok** | Abschnitt 5 (M2) |
 | Vertrag | **teilweise** | V1 render_pc.c (Abschnitt 6) |
 
-## 8. Maengel (nummeriert, nachpruefbar)
+## 8. Maengel dieser Abnahme (nummeriert, nachpruefbar; M1..M3/V1 = neue Zaehlung, nicht die der Abnahme 2)
 
 **M1 (G-E1 "Tod im Bild", Pflicht-Verlauf Plattform) - im Plattform-Verlauf Leon bleibt der Tod groesstenteils unsichtbar.** Lauf plat_leon
 (Rezept 2, `RE15_PLAYER_POS=0,-16000,3072`, Haken HP; zweimal gefahren, deterministisch): gator_boss.log `RE2 R1 start pos=(5722,-7102)`,
