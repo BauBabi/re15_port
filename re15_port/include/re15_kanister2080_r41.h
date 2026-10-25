@@ -26,9 +26,9 @@
  * FORMEN (Belege im Dossier §1):
  *   - Raumwechsel in der Szene = Door_aot_set (0x3B) + Aot_on (0x47) "fire now" (Port-Montage irons_tod_1150.c /
  *     elzazombies_r39.c; Vorbilder ROOM1240 sub02/sub03, ROOM1080 sub07..10). 2080 und 2090 teilen x/z (RVD-Vierecke
- *     ROOM2080 @0x188 Cut 5/6/8 = ROOM2090 @0x220; Tuer 2080 Slot 1 @0x0BC2 (-9650,-26150) -> 2090 (-8200,0,-25550)); die
- *     Bahn endet sichtbar im 2080-Bild, in 2090 liegt der Kanister an seiner Spielstelle (RE2 ROOM7020 sub13 Pos_set nach dem
- *     Aufschlag @0x08CA, RE15_K2080_LIEGE_X/Z, Nachbesserung 1).
+ *     ROOM2080 @0x188 Cut 5/6/8 = ROOM2090 @0x220; Tuer 2080 Slot 1 @0x0BC2 (-9650,-26150) -> 2090 (-8200,0,-25550)), der
+ *     Kanister faellt nach dem Loslassen in 2090 (Cut 12, FG-E4) und liegt dort, wo er aufschlaegt (FG-E3).
+ *   - Derselbe Alligator nach der Szene (FG-E3): Aktor-Kopie beim Ausloesen, beim Rueckweg in denselben Slot zurueck.
  *   - Zombies = Sce_em_set-Saetze (Form ROOM2020 sub00 @0x008F6 `44 00 16 02 01 00 00 bc ..`: Typ 0x16 "Steher" grid 0x02),
  *     Etage 8 (y = -8*1800, @0x800421d4), Tot-Bits Zone 7 (Gate @0x80042128-38).
  *   - KNALL (P1, Nachtrag 17) = derselbe Tuerknall wie nach Irons (irons_tod_1150.c:1357 / elzazombies_r39.c:1123):
@@ -162,18 +162,18 @@
 #define RE15_K2080_WASSER_HOCH     (-10800)  /* ROOM2080 sub00 @0x0C2E Obj_model_set y, solange (3,245) = 0 */
 #define RE15_K2080_WASSER_TIEF     (-3420)   /* ROOM2080 sub00 @0x0C5E Obj_model_set y nach dem Rechner (3,245) = 1 */
 #define RE15_K2080_GATOR_WASSER_Y  (-1200)   /* B: Kanister-Hoehe im Becken = GB_WATER_Y (0x23-KI @0x8010c65c) */
-/* Liegestelle im 2090-Becken (Nachbesserung 1, M2 / Nachtrag 23 "Aligator nimmt irgendwann in dem weiteren Rundlauf den Kanister
- * auf"). FORM RE2: nach dem Aufschlag (Se_on 0x0e @0x08BA) legt ROOM7020 sub13 den Raketenwerfer per Pos_set an seine SPIELSTELLE
- * `32 00 b6 9f 00 00 10 aa` @0x08CA = (-24650,0,-21998) im Item-AOT 5 (@0x00DA: x -26200..-22800, z -23200..-20700), nicht ans
- * Bahnende: die Bahn bewegt z nur um v_z 10/Bild (Speed_set(2,10) @0x088E, Add_speed reine Weltaddition @0x80055abc-e0), Ada steht
- * bei z -17900 (Pos_set @0x0740) -> der Pos_set versetzt um mehrere tausend in z. PORT-WAHL der Spielstelle, GEMESSEN (Dossier
- * 8.2): nach der Szene taucht der Alligator nur auf, wenn Leon naeher als 9000 an seinen Lauerplatz (-7200,-9200) kommt (Spur B
- * GB_AGGRO/GB_START, Nutzer-Entscheid N22.2 "Erst beim Annaehern") - der weitere Kampf laeuft also im Nordbecken. Sonde
- * tools/r41_kanister2080/probe_liegestelle.c (echter Boss-Tick, 50 Leon-Lagen < 9000 vom Lauerplatz): Plateau 25/50 Aufnahmen um
- * (-6500..-5500, -11000..-9500), Kanalmitte (-5300,-16300) 15/50; echte exe (natuerlicher Gator, Leon/Elza schiessen, 7 Lagen):
- * hier 7/7 Aufnahmen und 7/7 R1-Tode, Kanalmitte 1/4 ohne Tod. */
-#define RE15_K2080_LIEGE_X         (-6500)
-#define RE15_K2080_LIEGE_Z         (-11000)
+/* FG-E4 (Orchestrator-Entscheid 2026-10-25 00:56, Abnahme G 0 M3): der Fall wird "von unten" in ROOM2090/2091 Cut 12 gezeigt
+ * (RID @0x60 + 12*32: pos (-1601,-2131,-11018) -> (-5184,-3926,-13767), flag 1; 59,6 Grad unter dem Werfer-Kopf, die
+ * naechstliegende vorhandene Kamera zu RE2 ROOM7020 Cut 7 von unten 43,6 Grad, Dossier 8.4/8.9). Landeflaeche dort = die
+ * Wasseroberflaeche des Beckens y -1620 (ROOM2090 main00 Aot_set sce 8 Slot 2/3/4 @0x009D6/@0x009EA/@0x009FE p1 `ac f9`;
+ * Obj_model_set Typ 3 Wasser y -1620); RE2 sub13 stoppt 800 darueber (Member_cmp y < -800 @0x08B0). Danach liegt der Kanister
+ * an der Aufschlagstelle auf der Becken-Hoehe der Aufnahme (RE15_K2080_GATOR_WASSER_Y, FG-E3 "der Kanister landet so"). */
+#define RE15_K2080_CUT_FALL        12
+#define RE15_K2080_WASSER_2090     (-1620)
+/* Wurfrichtung (Gier des Werfers beim Anheben; die RE2-Bahn v (25,20,10) a (5,20,0) @0x088E-08A2 wird um sie gedreht, wie
+ * seit Abnahme 0 - RE2 wirft in Weltachsen nach +x, die Reling-Richtung des Ports ist frei). PORT-WAHL, GEMESSEN Dossier 8.9:
+ * Sichtbarkeit des Falls in 2090 Cut 12 und Aufnahme durch denselben Alligator im weiteren Kampf. */
+#define RE15_K2080_WURF_GIER       1024
 /* Haende am Ende von Eigen c6 (Mitte der Bones 11/14, Zensus Dossier 1.8): Fallback, wenn die NPC-Bank nicht geladen ist. */
 #define RE15_K2080_HAND_VOR        840
 #define RE15_K2080_HAND_HOCH       (-2496)

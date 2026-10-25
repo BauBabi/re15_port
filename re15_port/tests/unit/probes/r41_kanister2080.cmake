@@ -12,8 +12,8 @@
 #                                 ROOM7020 sub12, Rueckkehr-Tuer nach 2090; mit 3 Toten nur 5 Schuesse
 #   unit_r41_kanister2080_start   Start-Programm (Riegel + Tuer -> 2080 Cut 2 Parkplatz) und Ende (RE2 sub18-Form)
 #   unit_r41_kanister2080_bahn    RE2 sub13 Fall (v/a, Stop y >= Wasser - 800) unabhaengig nachgerechnet; Landepunkt im Becken
-#   unit_r41_kanister2080_liege   Nachbesserung 1 (M2): Spielstelle des Kanisters im 2090-Wasser, < 9000 vom Lauerplatz, Installer legt
-#                                 ihn bei Bit 116 dort hin (2090 und 2091)
+#   unit_r41_kanister2080_landung Nachbesserung 1 (FG-E3/FG-E4): Nennbahn endet im 2090-Wasser, >= 10 Fall-Bilder in 2090 Cut 12,
+#                                 Installer legt den Kanister bei Bit 116 an die Aufschlagstelle (2090 und 2091)
 #   unit_r41_kanister2080_texte   Id 42 "Marvin: Hey, Leon, try with this!" / "John: Hey, Elza, try with this!" in Vorbildform
 #   unit_r41_kanister2080_ebene   Nachtrag 20: Band-8-Freiflaeche ab den Zombies geschlossen, nichts auf der Treppe @0x0BE2
 #                                 (Absatzwand @0x05C4 x -16650), Treppenfuss Band 5 unerreichbar
@@ -27,7 +27,7 @@ target_compile_definitions(test_r41_kanister2080 PRIVATE RE15_ASSET_PSX_DIR="${C
 if(NOT WIN32)
     target_link_libraries(test_r41_kanister2080 PRIVATE m)
 endif()
-foreach(_teil lage spawn szene start bahn texte ebene liege)
+foreach(_teil lage spawn szene start bahn texte ebene landung)
     add_test(NAME unit_r41_kanister2080_${_teil} COMMAND test_r41_kanister2080 ${_teil})
     set_tests_properties(unit_r41_kanister2080_${_teil} PROPERTIES TIMEOUT 120)
 endforeach()

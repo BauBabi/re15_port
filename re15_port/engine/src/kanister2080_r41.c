@@ -113,6 +113,13 @@ static int      s_lande_ok;
 static int      s_ziel_slot = -1;     /* Aktor, den der NPC gerade anvisiert */
 static int      s_ziel_n;             /* abgegebene Schuesse */
 static int      s_set_2090;           /* 1 = Kanister in 2090 gesetzt (beim Verlassen wieder entfernen) */
+/* Orchestrator-Entscheid FG-E3 (AUFTRAG.md 2026-10-25 00:56): nach der Szene kaempft DERSELBE Alligator weiter (HP, Intro
+ * gesehen, Lage/Zustand). Der Boss-Zustand des Moduls (s_gb[slot] in enemy_ai_boss_gator.c, die RE2-Bausteine je Slot in
+ * gator_re2_r41.c) liegt in Datei-Statics und ueberlebt den Raumwechsel; neu gesetzt wird nur der AKTOR (main.c-Portblock,
+ * state 0 -> Boss-INIT). Die Kopie des Aktors beim Ausloesen wird beim Rueckweg in DENSELBEN Slot zurueckgelegt, bevor der
+ * Portblock einen neuen setzt - der Boss-Takt sieht state/hp != 0 und ueberspringt INIT/Untertauchen/Intro. */
+static re15_actor_t s_gator;
+static int      s_gator_slot = -1;
 static uint64_t s_kopf_ab;            /* Aktor-Bits: Kopf-ab gemeldet */
 
 #ifdef RE15_PLATFORM_PC
@@ -270,10 +277,11 @@ static void baue_szene(void)
     PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_ZIELEN));          /* @0x0782 (PORT-WAHL Clip wie @0x0750) */
     PUT(s_prog_szene, n, OP_SLEEP(20));                                  /* @0x0786 */
     PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_WURF));                   /* Super_reset @0x078E + Evt_exec sub13 @0x0796 */
-    PUT(s_prog_szene, n, OP_POLL(RE15_K2080_SIG_GELANDET));              /* Do/Edwhile Ck(5,0x0e) @0x079C-07A4 */
-    PUT(s_prog_szene, n, OP_SLEEP(15));                                  /* @0x07A8 */
-    n = satz_tuer(b, n, cap, s_leon[0], s_leon[1], s_leon[2], s_leon[3], RE15_K2080_RAUM_BYTE_2090, (uint8_t)s_leon_cut,
-                  (uint8_t)s_leon_etage);                                /* Cut_chg 11 @0x07D4 = Schnitt auf den Fangenden */
+    /* FG-E4 (Orchestrator-Entscheid 2026-10-25 00:56): der Fall laeuft "von unten" in ROOM2090/2091 Cut 12 - mit dem Loslassen
+     * der Raumwechsel (Tuer ohne Sequenz, 1 Bild), Leon zurueck auf seine Lage beim Ausloesen; die RE2-Folge danach (Warten auf
+     * den Aufschlag @0x079C-07A4, Sleep 15 @0x07A8, Schnitt auf den Fangenden @0x07D4) laeuft in 2090 (baue_rueck). */
+    n = satz_tuer(b, n, cap, s_leon[0], s_leon[1], s_leon[2], s_leon[3], RE15_K2080_RAUM_BYTE_2090, RE15_K2080_CUT_FALL,
+                  (uint8_t)s_leon_etage);
     PUT(s_prog_szene, n, OP_AOT_ON);
     PUT(s_prog_szene, n, OP_END);
     s_prog_szene_n = n;
@@ -295,6 +303,10 @@ static void baue_rueck(void)
     int n = 0;
     PUT(s_prog_rueck, n, OP_SLEEP(1));                                   /* Abschnittsende */
     PUT(s_prog_rueck, n, OP_RIEGEL);
+    /* FG-E4: Cut 12 von der Tuer, der Kanister faellt (Takt fall_takt) - warten auf den Aufschlag wie RE2 sub12 */
+    PUT(s_prog_rueck, n, OP_POLL(RE15_K2080_SIG_GELANDET));              /* Do/Edwhile Ck(5,0x0e) @0x079C-07A4 */
+    PUT(s_prog_rueck, n, OP_SLEEP(15));                                  /* @0x07A8 */
+    PUT(s_prog_rueck, n, OP_CUT((uint8_t)s_leon_cut));                   /* Cut_chg 11 @0x07D4 = Schnitt auf den Fangenden */
     /* Nachbesserung 1 (M5): kein Sleep 30. RE2 wartet auf Cut 11 mit Wsleep/Wsleeping @0x081A/@0x081B - Wsleeping (@0x80053ac0)
      * gibt ab, solange 0x800cfbd8 & 0x20 (@0x80053acc) oder 0x800e873c & 0x80 (@0x80053ae4) steht; 0x800e873c = 0x80 setzt der
      * Nachrichten-Start FUN_8002fe38 (@0x8002fe80/88) fuer Leons Zeile @0x07E6/@0x07F4. Der Port hat diese Zeile nicht -> das
@@ -368,6 +380,20 @@ static int32_t wasser_2080(void)
 {
     return re15_game_flag_get(3, 245) ? RE15_K2080_WASSER_TIEF : RE15_K2080_WASSER_HOCH;   /* sub00 @0x0C02 Ck(3,245) */
 }
+/* FG-E4: der Wurf faellt in ROOM2090/2091 zu Ende (Cut 12); Landeflaeche = Wasseroberflaeche des Beckens. */
+static int32_t wasser_2090(void) { return RE15_K2080_WASSER_2090; }
+/* Wurfrichtung (Gier des Werfers beim Anheben, die RE2-Bahn wird um sie gedreht). MESSHAKEN RE15_K2080_WURF_GIER=<n> (nur PC,
+ * env-gegatet, KEIN Spielverhalten): eine andere Gier fuer Messlaeufe der Landestelle (Dossier 8.9). */
+static int wurf_gier(void)
+{
+#ifdef RE15_PLATFORM_PC
+    static int s_g = -0x7fff;
+    if (s_g == -0x7fff) { const char *e = getenv("RE15_K2080_WURF_GIER"); s_g = (e && *e) ? (atoi(e) & 0xfff) : RE15_K2080_WURF_GIER; }
+    return s_g;
+#else
+    return RE15_K2080_WURF_GIER;
+#endif
+}
 
 /* ---- NPC -------------------------------------------------------------------------------------------------------------- */
 static re15_actor_t *npc_aktor(void)
@@ -437,6 +463,10 @@ static void kanister_ursprung(const int32_t c[3], const int32_t rot[9], int32_t 
 
 int re15_k2080_kanister_lage(int32_t pos[3], int32_t rot[9])
 {
+    if (s_kan_zustand == 2 && raum_2090((unsigned)g_current_room_id & 0xFFFFu)) {   /* FG-E4: Fall in 2090 Cut 12 */
+        kanister_ursprung(s_kan_pos, s_kan_rot, pos); memcpy(rot, s_kan_rot, 9 * sizeof(int32_t));
+        return 1;
+    }
     if (!raum_2080((unsigned)g_current_room_id & 0xFFFFu)) return 0;
     if (s_phase != RE15_K2080_IN_2080 && bit(RE15_K2080_BIT_SZENE)) return 0;   /* Marvin/John hat ihn genommen */
     if (s_kan_zustand == 0) {
@@ -521,9 +551,14 @@ static int gator_frei(int *slot_out)
     return 0;
 }
 
-static void ausloesen(void)
+static void ausloesen(int gslot)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (gslot > 0 && gslot < RE15_ACTOR_MAX) {           /* FG-E3: derselbe Alligator nach der Szene */
+        s_gator = g_actors[gslot]; s_gator_slot = gslot;
+        K_LOG("FG-E3: Alligator gesichert Slot %d (%d,%d,%d) Gier %d hp %d Phase %d", gslot, (int)s_gator.x, (int)s_gator.y,
+              (int)s_gator.z, (int)s_gator.rot_y & 0xfff, (int)s_gator.hp, re15_gator_boss_phase(&g_actors[gslot]));
+    }
     s_leon[0] = pl->x; s_leon[1] = pl->y; s_leon[2] = pl->z; s_leon[3] = pl->rot_y & 0xfff;
     s_leon_cut = (int)g_scd.cam_id;
     s_leon_etage = (int)pl->floor;
@@ -594,6 +629,26 @@ static void messzeile_ebene(void)
 #endif
 }
 
+/* Ein Fall-Bild (RE2 ROOM7020 sub13: Add_speed/Add_aspeed bis y >= Landeflaeche - 800 @0x08B0); am Ende Aufschlag (Set(5,0x0e)
+ * @0x08B6, Se_on @0x08BA -> ROOM40A0 Satz 0x0b @0x0686) und - in 2090 - der Kanister liegt dort, wo er aufschlug (FG-E3 "der
+ * Kanister landet so ..."): Spur-B-API re15_gr2_kanister_setzen auf der Becken-Hoehe der Aufnahme (GB_WATER_Y). */
+static void fall_takt(int32_t wasser_y)
+{
+    if (bahn_schritt(wasser_y)) return;
+    s_kan_zustand = 3;
+    sig_setzen(RE15_K2080_SIG_GELANDET, 1);
+    if (re15_k2080_platsch_hook) re15_k2080_platsch_hook();
+    K_LOG("Aufschlag im Wasser bei (%d,%d,%d) Bild %d (RE2 ROOM40A0 Se_on Satz 0x0b @0x0686)",
+          (int)s_kan_pos[0], (int)s_kan_pos[1], (int)s_kan_pos[2], s_kan_bilder);
+    if (raum_2090((unsigned)g_current_room_id & 0xFFFFu)) {
+        re15_gr2_kanister_setzen(s_kan_pos[0], RE15_K2080_GATOR_WASSER_Y, s_kan_pos[2]);
+        s_set_2090 = 1;
+        s_zaehler[4]++;
+        K_LOG("ROOM%04X Kanister im Becken (%d,%d,%d) = Aufschlagstelle (Bit %d)", (unsigned)g_current_room_id & 0xFFFFu,
+              (int)s_kan_pos[0], RE15_K2080_GATOR_WASSER_Y, (int)s_kan_pos[2], RE15_K2080_BIT_KANISTER);
+    }
+}
+
 void re15_kanister2080_r41_tick(void)
 {
     const unsigned raum = (unsigned)g_current_room_id & 0xFFFFu;
@@ -604,10 +659,12 @@ void re15_kanister2080_r41_tick(void)
             bit_setzen(RE15_K2080_BIT_KANISTER, 0);
             K_LOG("Kanister verbraucht (R1-Tod) -> Bit %d = 0", RE15_K2080_BIT_KANISTER);
         }
+        int gslot = -1;
         if (s_phase == RE15_K2080_AUS && bit(RE15_K2080_BIT_F_SZENE) && !bit(RE15_K2080_BIT_SZENE) &&
             !re15_player_is_dead() && !re15_game_flag_get(1, 27) && !re15_game_flag_get(2, 7) &&
-            re15_gr2_geschwaecht() && gator_frei(NULL))
-            ausloesen();
+            re15_gr2_geschwaecht() && gator_frei(&gslot))
+            ausloesen(gslot);
+        if (s_kan_zustand == 2) fall_takt(wasser_2090());   /* FG-E4: der Fall laeuft in 2090 (Cut 12) zu Ende */
         return;
     }
     if (raum_2080(raum)) messzeile_ebene();
@@ -645,7 +702,7 @@ void re15_kanister2080_r41_tick(void)
         K_LOG("Kanister aufgehoben (Loco c%d Bild %d, Hinknien ROOM11B0 sub06 @0x01650)", (int)n->motion, (int)n->anim_frame);
     }
     if (n && s_kan_zustand == 1) {
-        n->rot_y = 0;                                    /* Blick nach Osten ueber die Reling (Gier 0 = +x) */
+        n->rot_y = (int16_t)wurf_gier();                 /* Blick in die Wurfrichtung (PORT-WAHL, Header RE15_K2080_WURF_GIER) */
         kanister_in_haenden(n);
     }
     if (n && sig(RE15_K2080_SIG_WURF)) {
@@ -653,23 +710,32 @@ void re15_kanister2080_r41_tick(void)
         kanister_in_haenden(n);                          /* Super_reset @0x800558b8-d8: Weltlage der Haende */
         const int32_t start[3] = { s_kan_pos[0], s_kan_pos[1], s_kan_pos[2] };
         int32_t ende[3]; int nb = 0;
-        re15_k2080_bahn_rechnen(start, n->rot_y, wasser_2080(), ende, &nb);
+        re15_k2080_bahn_rechnen(start, n->rot_y, wasser_2090(), ende, &nb);   /* FG-E4: der Fall endet im 2090-Becken */
         s_lande[0] = ende[0]; s_lande[1] = ende[2]; s_lande_ok = 1;
         bahn_start(start, n->rot_y);
         s_kan_zustand = 2;
-        K_LOG("Wurf: Start (%d,%d,%d) v=(%d,%d,%d) a=(%d,%d,%d) -> Landung (%d,%d,%d) nach %d Bildern (Wasser y %d)",
+        K_LOG("Wurf: Start (%d,%d,%d) v=(%d,%d,%d) a=(%d,%d,%d) -> Landung (%d,%d,%d) nach %d Bildern (Wasser 2090 y %d)",
               (int)start[0], (int)start[1], (int)start[2], (int)s_kan_v[0], (int)s_kan_v[1], (int)s_kan_v[2],
-              (int)s_kan_a[0], (int)s_kan_a[1], (int)s_kan_a[2], (int)ende[0], (int)ende[1], (int)ende[2], nb, (int)wasser_2080());
+              (int)s_kan_a[0], (int)s_kan_a[1], (int)s_kan_a[2], (int)ende[0], (int)ende[1], (int)ende[2], nb, (int)wasser_2090());
     }
-    if (s_kan_zustand == 2) {
-        if (!bahn_schritt(wasser_2080())) {
-            s_kan_zustand = 3;
-            sig_setzen(RE15_K2080_SIG_GELANDET, 1);
-            if (re15_k2080_platsch_hook) re15_k2080_platsch_hook();
-            K_LOG("Aufschlag im Wasser bei (%d,%d,%d) Bild %d (RE2 ROOM40A0 Se_on Satz 0x0b @0x0686)",
-                  (int)s_kan_pos[0], (int)s_kan_pos[1], (int)s_kan_pos[2], s_kan_bilder);
-        }
+    if (s_kan_zustand == 2) fall_takt(wasser_2090());   /* die ersten Fall-Bilder noch in 2080, dann der Raumwechsel (FG-E4) */
+}
+
+/* FG-E3: die Aktor-Kopie vom Ausloesen in DENSELBEN Slot zuruecklegen. Der main.c-Portblock setzt nur einen neuen Alligator,
+ * wenn keiner aktiv ist; der Boss-Takt findet state/hp != 0 und die Datei-Statics von Slot s (Phase, Aggro, nicht untergetaucht,
+ * Intro vorbei) und kaempft weiter. Ist der Slot belegt (anderer Raumaufbau), bleibt es beim neuen Alligator (Logzeile). */
+static void gator_zuruecklegen(unsigned raum)
+{
+    if (s_gator_slot <= 0 || s_gator_slot >= RE15_ACTOR_MAX) return;
+    re15_actor_t *e = &g_actors[s_gator_slot];
+    if (e->active) {
+        K_LOG("FG-E3: Slot %d belegt (Typ 0x%02X) - kein Zuruecklegen", s_gator_slot, (unsigned)e->type);
+    } else {
+        *e = s_gator;
+        K_LOG("FG-E3: ROOM%04X derselbe Alligator in Slot %d (%d,%d,%d) Gier %d hp %d Phase %d", raum, s_gator_slot, (int)e->x,
+              (int)e->y, (int)e->z, (int)e->rot_y & 0xfff, (int)e->hp, re15_gator_boss_phase(e));
     }
+    s_gator_slot = -1;
 }
 
 /* ---- Installer --------------------------------------------------------------------------------------------------------- */
@@ -721,6 +787,7 @@ void re15_kanister2080_r41_install(uint16_t room_id)
             s_phase = RE15_K2080_AUS;
             bit_setzen(RE15_K2080_BIT_SZENE, 1);
             bit_setzen(RE15_K2080_BIT_KANISTER, 1);
+            gator_zuruecklegen(raum);                    /* FG-E3: derselbe Alligator (vor dem main.c-Portblock) */
             baue_rueck();
             const int slot = starten(s_prog_rueck, s_prog_rueck_n);
             K_LOG("ROOM%04X RUECKKEHR: Spieler (%d,%d,%d), Programm Faden %d, Bits %d/%d = 1, Zone-7-Tot-Bits %d..%d gesetzt: %d von %d",
@@ -728,20 +795,22 @@ void re15_kanister2080_r41_install(uint16_t room_id)
                   RE15_K2080_TOT0, RE15_K2080_TOT0 + RE15_K2080_N_ZOMBIES - 1, RE15_K2080_N_ZOMBIES - lebende_zombies(),
                   RE15_K2080_N_ZOMBIES);
         }
-        if (bit(RE15_K2080_BIT_KANISTER)) {
-            /* Nachbesserung 1 (M2): Spielstelle statt Bahnende - RE2 ROOM7020 sub13 Pos_set @0x08CA nach dem Aufschlag (Header
-             * RE15_K2080_LIEGE_X/Z). Gilt auch fuer einen geladenen Spielstand (Bit 116 ohne Laufzeit-Bahn). */
-            re15_gr2_kanister_setzen(RE15_K2080_LIEGE_X, RE15_K2080_GATOR_WASSER_Y, RE15_K2080_LIEGE_Z);
+        if (bit(RE15_K2080_BIT_KANISTER) && s_kan_zustand != 2) {
+            /* Kanister liegt schon (der Fall laeuft sonst noch, fall_takt legt ihn an der Aufschlagstelle ab). Spielstand ohne
+             * Laufzeit-Bahn: dieselbe Bahn aus der Nennlage (Wurf-Stand + Eigen-c6-Ende, Wurf-Gier, 2090-Wasser). */
+            if (!s_lande_ok) {
+                int32_t start[3], ende[3], dx = 0, dz = 0; int nb = 0;
+                vektor_drehen((int16_t)wurf_gier(), RE15_K2080_HAND_VOR, 0, &dx, &dz);
+                start[0] = RE15_K2080_NPC_WURF_X + dx; start[1] = RE15_K2080_Y + RE15_K2080_HAND_HOCH;
+                start[2] = RE15_K2080_NPC_STAND_Z + dz;
+                re15_k2080_bahn_rechnen(start, (int16_t)wurf_gier(), wasser_2090(), ende, &nb);
+                s_lande[0] = ende[0]; s_lande[1] = ende[2]; s_lande_ok = 1;
+            }
+            re15_gr2_kanister_setzen(s_lande[0], RE15_K2080_GATOR_WASSER_Y, s_lande[1]);
             s_set_2090 = 1;
             s_zaehler[4]++;
-            if (s_lande_ok)
-                K_LOG("ROOM%04X Kanister im Becken (%d,%d,%d) = Spielstelle Nordbecken (RE2 Pos_set @0x08CA, gemessen Dossier 8.2), "
-                      "Aufschlag war bei (%d,%d) (Bit %d)", raum, RE15_K2080_LIEGE_X, RE15_K2080_GATOR_WASSER_Y, RE15_K2080_LIEGE_Z,
-                      (int)s_lande[0], (int)s_lande[1], RE15_K2080_BIT_KANISTER);
-            else
-                K_LOG("ROOM%04X Kanister im Becken (%d,%d,%d) = Spielstelle Nordbecken (RE2 Pos_set @0x08CA, gemessen Dossier 8.2), "
-                      "Spielstand (Bit %d)", raum, RE15_K2080_LIEGE_X, RE15_K2080_GATOR_WASSER_Y, RE15_K2080_LIEGE_Z,
-                      RE15_K2080_BIT_KANISTER);
+            K_LOG("ROOM%04X Kanister im Becken (%d,%d,%d) = Aufschlagstelle (Bit %d)", raum, (int)s_lande[0],
+                  RE15_K2080_GATOR_WASSER_Y, (int)s_lande[1], RE15_K2080_BIT_KANISTER);
         }
         return;
     }

@@ -442,11 +442,11 @@ Baum wie oben, Start auf 1608232e (Abnahme-Commit; Code-Stand = 489c0756). Mäng
 
 ### 8.0 Plan / Stand
 - [x] M1 RE: welcher Clip lief, was er ist, welcher Original-Clip "hinknien + aufnehmen + aufstehen" ist (8.1)
-- [ ] M1 Umsetzung + Bildbogen vorher/nachher Leon + Elza + Riegel
-- [ ] M2 Messung vorher (Gator-Bahn nach der Rückkehr), RE2-Form der Liegestelle, Umsetzung, echter Ablauf Leon + Elza, Riegel
-- [ ] M3 Entscheidungsvorlage (Kameras vermessen), kein "fertig" ohne Entscheid
-- [ ] M4 Doku (6.3, k_port[] Bit 114, main.c-Kommentar)
-- [ ] M5 Dauern belegen oder PORT-WAHL (OP_SLEEP 10/30/30, Adas Wurf-Clip)
+- [x] M1 Umsetzung + Bildbogen vorher/nachher Leon + Elza + Riegel (8.1, unit szene, integration szene/kampf)
+- [x] M2 Messung vorher, RE2-Form der Liegestelle, gemessene Wahl der Spielstelle, ganze Folge Leon + Elza, Riegel kampf (8.2)
+- [x] M3 Entscheidungsvorlage (alle neun 2080-Kameras vermessen, 8.4) - Entscheid steht aus (8.8 Frage 1)
+- [x] M4 Doku (6.3, k_port[] Bit 114, Haken-Kommentare, überholte Stellen markiert, 8.5)
+- [x] M5 Dauern belegt bzw. entfernt, Adas Wurf-Clip als PORT-WAHL (8.3)
 
 ### 8.1 M1 - Kletter-Animation vor dem Aufnehmen (Nachtrag 24b)
 **Ursache.** `baue_szene` spielte `Plc_motion(1, 2)` = Loco-Bank (Sub 1, dir[1]/dir[2]) Clip 2. Der Clip-Zensus 1.8 las ihn aus

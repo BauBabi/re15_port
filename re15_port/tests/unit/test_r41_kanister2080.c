@@ -19,10 +19,9 @@
  *              Nachbesserung 1 ohne Sleep 30 - RE2 Wsleeping @0x80053ac0 wartet dort nur auf Leons Zeile).
  *   bahn       RE2 sub13: unabhaengig nachgerechnete Bahn (Lage += v, v += a; Stop y >= Wasser - 800) == Modul; Landepunkt aus
  *              der Nennlage im 2090-Becken (Aussenwaende x[-8900..7200] z[-27000..-5400], ausserhalb Plattform-/Rampenblock).
- *   liege      Nachbesserung 1 (M2): Spielstelle des Kanisters (RE2-Form Pos_set ROOM7020 sub13 @0x08CA) im Wasser von ROOM2090
- *              (Aussenwaende x[-8900..7200] z[-27000..-5400], ausserhalb Plattform-/Rampenblock) und naeher als 9000 am Lauerplatz
- *              (-7200,-9200) = dort, wo der Alligator nach der Szene auftaucht (Spur B GB_START/GB_AGGRO); der Installer legt den
- *              Kanister bei Bit 116 genau dort hin (Spur-B-API re15_gr2_kanister_welt, Stufe 0) - in 2090 UND 2091.
+ *   landung    Nachbesserung 1 (FG-E3/FG-E4): Nennbahn mit der Wurf-Gier endet 800 ueber dem 2090-Wasser (y -1620) im Becken,
+ *              mindestens 10 Fall-Bilder in ROOM2090 Cut 12 sichtbar; Spielstand mit Bit 116: der Installer legt den Kanister an
+ *              diese Aufschlagstelle (Spur-B-API re15_gr2_kanister_welt, Stufe 0) - in 2090 UND 2091.
  *   texte      2080/2081 Id 42 in der Form ROOM2000 msg 1 @0x1BFD / ROOM2001 msg 0 @0x1E0A (Kopf 04 00 05 07 + Sprecher +
  *              05 00, Ende 04 01 01 63), Wortlaut dekodiert.
  *   ebene      Nachtrag 20: Treppen-Aot @0x0BE2 (sce 12, Band 0x80, x -22700..-16400, side 0, Bandsprung 3) und Absatzwand
@@ -34,6 +33,7 @@
 #include "re15_scd.h"
 #include "re15_gameflow.h"
 #include "re15_gator_re2_r41.h"
+#include "re15_skeleton.h"   /* re15_cos_q12 / re15_sin_q12 (Nennbahn, Teil landung) */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -204,10 +204,9 @@ static int szene_pruefen(int elza, int tote)
     const uint8_t c7[] = { 0x29, 7, 0x3f, 0x02, 0x06, 0x00 };
     const uint8_t *p2 = suche(p, n, 0, c2, sizeof c2), *p5 = suche(p, n, 0, c5, sizeof c5), *p7 = suche(p, n, 0, c7, sizeof c7);
     PRUEFE(p2 && p5 && p7 && p2 < p5 && p5 < p7, "Schnittfolge 2 -> 5 -> 7");
+    /* FG-E4: mit dem Loslassen der Raumwechsel nach 2090 Cut 12 (der Rest der RE2-Folge laeuft dort, Programm 3) */
     const uint8_t wurf[] = { 0x29, 0x07, 0x3f, 0x02, 0x06, 0x00, 0x2b, 42, 0x00, 0x00, 0x09, 0x0a, 30, 0x00, 0x3f, 0x02, 0x06, 0x00,
-                             0x09, 0x0a, 20, 0x00, 0x22, 0x05, RE15_K2080_SIG_WURF, 0x01,
-                             0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_K2080_SIG_GELANDET, 0x00,
-                             0x09, 0x0a, 15, 0x00, 0x3b, RE15_K2080_TUER_SLOT };
+                             0x09, 0x0a, 20, 0x00, 0x22, 0x05, RE15_K2080_SIG_WURF, 0x01, 0x3b, RE15_K2080_TUER_SLOT };
     /* Nachbesserung 1 (M1): Aufnehmen = ROOM11B0 sub06 @0x01650..0x01663 (Marvin kniet am Gully und steht auf) - dieselben
      * Opcodes, das Sleep 60 @0x01654 am Griff-Bild 24 (letztes Bild von Loco c11, 25 Bilder) in 24 + Signal + 36 geteilt. */
     {
@@ -236,6 +235,7 @@ static int szene_pruefen(int elza, int tote)
     if (pw) {
         const uint8_t *t = pw + sizeof wurf - 2;   /* Door_aot_set */
         PRUEFE(t[22] == RE15_K2080_STAGE_BYTE && t[23] == RE15_K2080_RAUM_BYTE_2090, "Rueckkehr-Tuer Stage/Raum %02x %02x", t[22], t[23]);
+        PRUEFE(t[24] == RE15_K2080_CUT_FALL, "Rueckkehr-Tuer Cut %d statt %d (FG-E4: Fall in 2090 Cut 12)", t[24], RE15_K2080_CUT_FALL);
         PRUEFE(t[32] == 0x47 && t[33] == RE15_K2080_TUER_SLOT && t[34] == 0x01, "Aot_on + Evt_end nach der Tuer");
     }
     return 0;
@@ -262,9 +262,13 @@ static int teil_start(void)
         PRUEFE(p[40] == 0x47 && p[41] == RE15_K2080_TUER_SLOT, "Aot_on");
     }
     p = re15_k2080_programm(3, &n);
+    /* FG-E4: in 2090 warten auf den Aufschlag (@0x079C-07A4), Sleep 15 (@0x07A8), Schnitt auf den Fangenden (@0x07D4, hier Cut 0 =
+     * die Lage beim Ausloesen im Test), dann die RE2 sub18-Form (@0x0A2C-0A38) */
     const uint8_t rueck[] = { 0x09, 0x0a, 0x01, 0x00, 0x22, 0x02, 0x07, 0x01, 0x22, 0x01, 0x1b, 0x01,
+                              0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_K2080_SIG_GELANDET, 0x00,
+                              0x09, 0x0a, 15, 0x00, 0x29, 0x00,
                               0x2e, 0x01, 0x00, 0x00, 0x42, 0x00, 0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1b, 0x00, 0x3c, 0x01, 0x01, 0x00 };
-    PRUEFE(p && n == (int)sizeof rueck && !memcmp(p, rueck, sizeof rueck), "Programm 3 = RE2 sub18-Form (@0x0A2C-0A38)");
+    PRUEFE(p && n == (int)sizeof rueck && !memcmp(p, rueck, sizeof rueck), "Programm 3 = Aufschlag/Sleep 15/Schnitt + RE2 sub18-Form");
     return fails != 0;
 }
 
@@ -296,17 +300,49 @@ static int teil_bahn(void)
     return fails != 0;
 }
 
-/* ---- liege (Nachbesserung 1, M2) ------------------------------------------------------------------------------------- */
-static int teil_liege(void)
+/* ---- landung (Nachbesserung 1, FG-E3/FG-E4) ------------------------------------------------------------------------ */
+static int teil_landung(void)
 {
-    const int32_t x = RE15_K2080_LIEGE_X, z = RE15_K2080_LIEGE_Z;
+    /* Nennbahn aus der Wurf-Lage (Werfer bei RE15_K2080_NPC_WURF_X, Haende Eigen c6 Ende, Blick RE15_K2080_WURF_GIER) */
+    const int32_t c = re15_cos_q12(RE15_K2080_WURF_GIER), sn = re15_sin_q12(RE15_K2080_WURF_GIER);
+    const int32_t start[3] = { RE15_K2080_NPC_WURF_X + (int32_t)(((int64_t)RE15_K2080_HAND_VOR * c) >> 12), RE15_K2080_Y + RE15_K2080_HAND_HOCH,
+                               RE15_K2080_NPC_STAND_Z - (int32_t)(((int64_t)RE15_K2080_HAND_VOR * sn) >> 12) };
+    int32_t ende[3]; int nb = 0;
+    re15_k2080_bahn_rechnen(start, RE15_K2080_WURF_GIER, RE15_K2080_WASSER_2090, ende, &nb);
+    const int32_t x = ende[0], z = ende[2];
     const int innen = x > -8900 && x < 7200 && z > -27000 && z < -5400;
     const int plat = x > -1700 && x < 1850 && z > -20000 && z < -12450;
     const int ramp = x > 1850 && x < 7200 && z > -18100 && z < -14500;
-    PRUEFE(innen && !plat && !ramp, "Spielstelle (%d,%d) nicht im Wasser des Beckens", (int)x, (int)z);
-    const int64_t dx = (int64_t)x + 7200, dz = (int64_t)z + 9200;   /* Lauerplatz GB_START (enemy_ai_boss_gator.c) */
-    PRUEFE(dx * dx + dz * dz < (int64_t)9000 * 9000, "Spielstelle %lld vom Lauerplatz (soll < 9000 = GB_AGGRO)",
-           (long long)(dx * dx + dz * dz));
+    printf("  Nennbahn Gier %d: Start (%d,%d,%d) -> Aufschlag (%d,%d,%d) nach %d Bilder\n", RE15_K2080_WURF_GIER, (int)start[0],
+           (int)start[1], (int)start[2], (int)x, (int)ende[1], (int)z, nb);
+    PRUEFE(innen && !plat && !ramp, "Aufschlag (%d,%d) nicht im Wasser des Beckens", (int)x, (int)z);
+    PRUEFE(ende[1] >= RE15_K2080_WASSER_2090 - 800, "Fall endet nicht 800 ueber dem 2090-Wasser (y %d)", (int)ende[1]);
+    /* FG-E4: Fall in ROOM2090 Cut 12 sichtbar (Projektion wie der Zeichner, re15_camera_build_view) */
+    long n90 = 0; uint8_t *r90 = slurp("STAGE2/ROOM2090.RDT", &n90);
+    PRUEFE(r90 && n90 > 0x60 + 13 * 32, "ROOM2090.RDT fehlt");
+    if (r90) {
+        re15_camera_cut_t c12; memcpy(&c12, r90 + rd32(r90 + 8 + 28) + 12 * 32, 32);
+        re15_camera_view_t v; PRUEFE(re15_camera_build_view(&c12, &v) == 0, "Cut 12 ohne Sicht");
+        int sicht = 0;
+        int32_t q[3] = { start[0], start[1], start[2] }, vel[3], acc[3];
+        vel[0] = (int32_t)((25 * (int64_t)c + 10 * (int64_t)sn) >> 12); vel[2] = (int32_t)((-25 * (int64_t)sn + 10 * (int64_t)c) >> 12); vel[1] = 20;
+        acc[0] = (int32_t)((5 * (int64_t)c) >> 12); acc[2] = (int32_t)((-5 * (int64_t)sn) >> 12); acc[1] = 20;
+        for (int k = 0; k <= nb; k++) {
+            const double vx = (v.rot[0] * (double)q[0] + v.rot[1] * (double)q[1] + v.rot[2] * (double)q[2]) / 4096.0 + v.trans[0];
+            const double vy = (v.rot[3] * (double)q[0] + v.rot[4] * (double)q[1] + v.rot[5] * (double)q[2]) / 4096.0 + v.trans[1];
+            const double vz = (v.rot[6] * (double)q[0] + v.rot[7] * (double)q[1] + v.rot[8] * (double)q[2]) / 4096.0 + v.trans[2];
+            if (vz > 0) {
+                const double sx = 160 + vx * v.fov_screen_dist / vz, sy = 120 + vy * v.fov_screen_dist / vz;
+                if (sx >= 0 && sx < 320 && sy >= 0 && sy < 240) sicht++;
+            }
+            for (int i = 0; i < 3; i++) q[i] += vel[i];
+            for (int i = 0; i < 3; i++) vel[i] += acc[i];
+        }
+        printf("  ROOM2090 Cut 12: %d von %d Fall-Bildern im Bild\n", sicht, nb + 1);
+        PRUEFE(sicht >= 10, "nur %d Fall-Bilder in 2090 Cut 12", sicht);
+        free(r90);
+    }
+    /* Spielstand mit Bit 116 ohne Laufzeit-Bahn: der Installer legt den Kanister an die Aufschlagstelle der Nennbahn (2090 und 2091) */
     for (int r = 0; r < 2; r++) {
         g_gameflow.character = r ? 4 : 0;
         re15_k2080_reset();
@@ -321,7 +357,7 @@ static int teil_liege(void)
         printf("  ROOM%04X: Kanister %s bei (%d,%d,%d), Stufe %d\n", (unsigned)g_current_room_id, da ? "liegt" : "FEHLT",
                (int)pos[0], (int)pos[1], (int)pos[2], re15_gr2_kanister_stufe());
         PRUEFE(da && pos[0] == x && pos[1] == RE15_K2080_GATOR_WASSER_Y && pos[2] == z && re15_gr2_kanister_stufe() == 0,
-               "ROOM%04X: Kanister nicht an der Spielstelle", (unsigned)g_current_room_id);
+               "ROOM%04X: Kanister nicht an der Aufschlagstelle", (unsigned)g_current_room_id);
     }
     re15_gr2_kanister_entfernen();
     for (int b = 110; b <= 116; b++) re15_game_flag_set(9, (uint8_t)b, 0);
@@ -472,7 +508,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "start")) rc = teil_start();
     else if (!strcmp(t, "bahn")) rc = teil_bahn();
     else if (!strcmp(t, "texte")) rc = teil_texte();
-    else if (!strcmp(t, "liege")) rc = teil_liege();
+    else if (!strcmp(t, "landung")) rc = teil_landung();
     else if (!strcmp(t, "ebene")) rc = teil_ebene();
     else printf("unbekannter Teil %s\n", t);
     printf("%s: %s (%d Fehler)\n", t, rc ? "FAIL" : "OK", fails);
