@@ -17,7 +17,9 @@ cmake_minimum_required(VERSION 3.16)
 #   M    (Nachbesserung 1) Gegenprobe "die Maske wirkt": Figur HINTER dem Objekt, S > 50 und H > 0.
 #   Z    (Nachbesserung 3, Abnahme 2 Mangel 1 "zu fern") Figur HINTER dem Gegenstand: im Fenster (Flaeche des Gegenstands unter
 #        seiner Oberkante) ist KEIN Figurpunkt im Endbild zu sehen: S > 50 und V == 0. V = Figurpunkte mit |A - A0| > 24, A0 =
-#        dritter Lauf MIT Masken, Figur an der Stelle A0=<x>,<z> ausserhalb des Regionsvierecks (Akteur-Cull FUN_8002c18c) =
+#        dritter Lauf MIT Masken, Figur an der Stelle A0=<x>,<z> ausserhalb des Regionsvierecks (Figuren-Cull FUN_80014368, z.B.
+#        NPC-Zeichner FUN_80039ca0 @0x80039d68 jal / @0x80039d70 beq; NB4: vorher hiess es hier falsch "Akteur-Cull FUN_8002c18c" =
+#        Objekt-Zeichner) =
 #        dieselben Masken ohne Figur (probe_r41_masken36_sicht, RE15_SICHT_TOOL). Verdeckt die Maske die Figur, ist A dort
 #        exakt A0.
 # Nachbesserung 1 (Abnahme 0): SZENEN waehlt die Szenendatei (test_r41_masken36_zelle_szenen.cmake = Stages 3..6, Mangel 1),

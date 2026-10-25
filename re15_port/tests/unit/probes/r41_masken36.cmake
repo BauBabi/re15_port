@@ -109,9 +109,9 @@ if(TARGET re15_pc)
 endif()
 
 # Nachbesserung 4 (Abnahme 3, Mangel 1 "Ost-Stirn der Trennwand 30A0/30A1 Cut 0 ohne Maske"):
-#   unit_r41_masken36_stirn  die Stirnseite IM BILD (Kuenstler-Ausschnitt des SLD-Atlas, Kante in der Ebene x = -19975 bei z 14802..14867)
+#   unit_r41_masken36_stirn  die Stirnseite IM BILD (Kuenstler-Ausschnitt des SLD-Atlas, Kante in der Ebene x = -19975 bei z 14834..14904)
 #                             ist gezeichnet (0 offene Kerben im Fenster x 282..319) und KEINE Maske liegt ueber der Zellenflaeche
-#                             jenseits der Kante (z > 14900 bis 15375, Zelle 6 @RDT+0x0045C) - dort zeigt das Bild den Boden hinter der
+#                             jenseits der Kante (z > 14950 bis 15375, Zelle 6 @RDT+0x0045C) - dort zeigt das Bild den Boden hinter der
 #                             Figur; Szenen z30A0_*/v30A0_*/v30A1_* im Riegel integration_r41_masken36_fern.
 add_test(NAME unit_r41_masken36_stirn COMMAND test_r41_masken36 stirn WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r41_masken36_stirn PROPERTIES TIMEOUT 600)

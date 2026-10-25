@@ -46,8 +46,12 @@ extern "C" {
  * cut 3, hdr byte[7] = 0x69 = 105, cut-3 pri header @0xdcc = `08 00 69 00`).
  * The old value 64 was a fabricated limit that silently dropped real masks in
  * 26 of 240 rooms (e.g. ROOM1090 cut 8 lost 3, two of them depth-1 = the
- * always-in-front bucket; ROOM3000 cut 3 lost 41 of 105). */
-#define RE15_PRI_MAX_MASKS_PER_CUT 105
+ * always-in-front bucket; ROOM3000 cut 3 lost 41 of 105).
+ * Runde 41 Spur M, Nachbesserung 4: 105 -> 128 fuer die PORT-Masken (R15M, MASKS/*.MSK): die Kuenstler-Komponenten der Stages 3..6,
+ * die der Generator nie platziert hatte (Gelaender, tools/maske/platzieren_r41.py), brauchen in 37 vollen Cuts mehr Platz. Das Original
+ * hat keine Grenze (Zahl = RDT-Kopfbyte 7, u8, @0x8003928c lbu v0,7(a0)); 128 ist die Breite der Port-Tabelle des Ausschlusses
+ * (masken36_r37.c bits[4] = 128 Rechtecke je Sektion). Original-Sektionen (hoechstens 105) sind davon unberuehrt. */
+#define RE15_PRI_MAX_MASKS_PER_CUT 128
 
 typedef struct {
     uint16_t srcX, srcY;       /* sample position in BG image (256-wide TIM) */

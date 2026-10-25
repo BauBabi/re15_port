@@ -2,7 +2,8 @@
 # die Buero-Trennwand ROOM30A0/30A1 Cut 0/1 (Zelle 6 @RDT+0x0045C, obere Felder von Hand zugeordnet, Teilrechtecke kacheln_r41.py).
 # Z = Figur HINTER der Trennwand: im Fenster (Trennwandflaeche unter ihrer Oberkante, Spalten der Figur) ist KEIN Figurpunkt im
 #     Endbild zu sehen (V == 0; A0 = Lauf mit Masken, Leon bei (-19800,19763) ausserhalb des Regionsvierecks von Cut 0 und 1 =
-#     Akteur-Cull FUN_8002c18c, gemessen: keine Figur-Dreiecke). Stellen = die Spielstellen der Abnahme 2 (Gehlauf w30A0b, Cut 0
+#     Figuren-Cull am Regionsviereck FUN_80014368, z.B. NPC-Zeichner FUN_80039ca0 @0x80039d68 jal / @0x80039d70 beq; gemessen: keine
+#     Figur-Dreiecke). Stellen = die Spielstellen der Abnahme 2 (Gehlauf w30A0b, Cut 0
 #     durchgehend; vorher sichtbar ueber dem oberen Feld s30A0_00 1072, u30A0_00 986, t30A0_00 858, Elza e30A1_00 704, h30A0_01 988).
 # V = Figur VOR der Trennwand (d30A0_00/01 der Abnahme 2, FREI-Stelle der R37 f30A1_00): im Fenster 0 Punkte uebermalt (die
 #     R37-Stelle f30A0_00 zeigt im Trennwand-Fenster nur 43 Figurpunkte - sie bleibt bei unit/integration_r37_masken36_verdeckung).

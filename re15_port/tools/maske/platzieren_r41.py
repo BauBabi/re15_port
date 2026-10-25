@@ -119,7 +119,7 @@ def platzieren(idx, clut, bild, grown):
         b1 = next((b for b in best[1:] if abs(b[0] - b0[0]) > 2 or abs(b[1] - b0[1]) > 2), None)
         rms = float(np.sqrt(b0[2]))
         rms2 = float(np.sqrt(b1[2])) if b1 else None
-        e = dict(komp=int(c), n=int(len(ys)), shift=(int(b0[0] - x0), int(b0[1] - y0)), rms=round(rms, 2),
+        e = dict(komp=int(c), n=int(len(ys)), box=(int(x0), int(y0), int(x1), int(y1)), shift=(int(b0[0] - x0), int(b0[1] - y0)), rms=round(rms, 2),
                  rms2=round(rms2, 2) if rms2 is not None else None)
         e["angenommen"] = bool(rms <= RMS_MAX and (rms2 is None or rms2 >= EINDEUTIG * max(rms, 1e-6)))
         if e["angenommen"]:
@@ -166,7 +166,7 @@ def cut_bearbeiten(rdt, cut, sek, idx_eigen, clut_eigen, idx_orig, clut_orig, bi
         deck_alt[Ys[ok], Xs[ok]] = True
     budget = MAX_MASKEN - len(alt)
     komps = platzieren(idx_orig, clut_orig, bild, grown)
-    bericht["komponenten"] = [{k: v for k, v in e.items() if k != "maske"} for e in komps]
+    bericht["komponenten"] = komps                      # Liste wird am Ende ohne Masken abgelegt (neu_px erst unten bekannt)
     ang = sorted([e for e in komps if e["angenommen"]], key=lambda e: -e["verifiziert"])
     bericht["budget"] = budget
     if budget <= 0 or not ang:
@@ -270,6 +270,7 @@ def main():
     ap.add_argument("--cache", required=True, help="Regionen-Cache des Generators (ROOMxxxx_cc.npz, schliessen_r41.gewachsen)")
     ap.add_argument("--out", required=True)
     ap.add_argument("--quelle", default=MASKS)
+    ap.add_argument("--inc", default=None, help="C-Tabelle fuer den Riegel (tests/unit/gen_r41_masken36_platziert.inc)")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     bericht = {}
@@ -306,6 +307,7 @@ def main():
             grown = {(int(k.split("_")[0]), int(k.split("_")[1])): z[k] for k in z.files}
             idx_o, clut_o = at[cut]
             sec, idx_neu, b = cut_bearbeiten(rdt, cut, sek, idx_e, clut_e, idx_o, clut_o, bild, grown)
+            b["komponenten"] = [{k: v for k, v in e.items() if k != "maske"} for e in b.get("komponenten", [])]
             b_raum[cut] = b
             if sec is None:
                 continue
@@ -330,6 +332,37 @@ def main():
                     open(os.path.join(a.out, "ROOM%04X_PRI%02d.TIM" % (r, cut)), "wb").write(tb)
         bericht[room] = b_raum
     json.dump(bericht, open(os.path.join(a.out, "platzieren_r41.json"), "w"), indent=1, default=str)
+    if a.inc:
+        inc_schreiben(a.inc, bericht)
+
+
+def inc_schreiben(pfad, bericht):
+    """Tabelle fuer tests/unit/test_r41_masken36.c (platziert): je Sektion der erste neue Rechteck-Index und die Zahl, je
+    angenommener Komponente ihr Atlas-Kasten, die Verschiebung und die Zahl der verifizierten Texel."""
+    sek, komp = [], []
+    for room, cuts in sorted(bericht.items()):
+        rid = int(room[4:], 16)
+        for cut, b in sorted(cuts.items(), key=lambda kv: int(kv[0])):
+            if not b.get("neu"):
+                continue
+            sek.append((rid, int(cut), b["erstes_neues"], b["neu"], b["neu_px"]))
+            for e in b["komponenten"]:
+                if e.get("angenommen") and e.get("neu_px", 0) > 0:
+                    komp.append((rid, int(cut), e["komp"], e["box"][0], e["box"][1], e["box"][2], e["box"][3], e["shift"][0],
+                                 e["shift"][1], e["verifiziert"]))
+    NL = chr(10)
+    kopf = ["/* Erzeugt von re15_port/tools/maske/platzieren_r41.py (Runde 41 Spur M, Nachbesserung 4) - NICHT von Hand aendern.",
+            " * Unplatzierte Kuenstler-Komponenten des SLD-Atlas der Stages 3..6, per Lage-Suche platziert (Regel im Kopf des Werkzeugs).",
+            " * r41_platz_sek: Raum (Leon-Datei; Elza xxx1 bytegleich), Cut, erster neuer Rechteck-Index, Zahl neuer Rechtecke, neue Punkte.",
+            " * r41_platz_komp: Raum, Cut, Komponente, Atlas-Kasten x0 y0 x1 y1 (exklusiv), Verschiebung Atlas->Bild dx dy, verifizierte Texel. */"]
+    zeilen = kopf + ["static const r41_platz_sek_t r41_platz_sek[] = {"]
+    zeilen += ["    { 0x%04X, %2d, %3d, %3d, %5d }," % s for s in sek]
+    zeilen += ["    { 0x0000, 0xFF, 0, 0, 0 }   /* Ende */", "};", "static const r41_platz_komp_t r41_platz_komp[] = {"]
+    zeilen += ["    { 0x%04X, %2d, %3d, %3d, %3d, %3d, %3d, %4d, %4d, %5d }," % k for k in komp]
+    zeilen += ["    { 0x0000, 0xFF, 0, 0, 0, 0, 0, 0, 0, 0 }   /* Ende */", "};"]
+    with open(pfad, "w", newline=NL) as f:
+        f.write(NL.join(zeilen) + NL)
+    print("Tabelle: %d Sektionen, %d Komponenten -> %s" % (len(sek), len(komp), pfad))
 
 
 def SR_tim_mit_index(tb, idx):

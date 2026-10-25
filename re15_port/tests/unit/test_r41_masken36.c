@@ -381,13 +381,13 @@ static void teil_kurbel(void)
  * und bis y -2335 (Zeile 118). Hinter der Kante zeigt das Bild Boden und Rueckwand-Schraenke HINTER der Figur.
  *   test_r41_masken36 stirn   (a) Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03; (b) offene Kerben im Fenster
  *     x 282..319 y 80..215 (wie loecher: Kuenstler-Atlas deckend + farbgleich direkt an der Kante eines alten Rechtecks, nicht
- *     gezeichnet) == 0; (c) die Kante der Zeichnung liegt in den Zeilen 118..194 in der Ebene x = -19975 bei z <= 14900 (Zelle bis
- *     15375); (d) KEIN gezeichneter Punkt im Fenster, dessen Sehstrahl die Zellenflaeche x = -19975 bei z > 14900 kreuzt - eine
+ *     gezeichnet) == 0; (c) die Kante der Zeichnung liegt in den Zeilen 118..194 in der Ebene x = -19975 bei z <= 14950 (Zelle bis
+ *     15375); (d) KEIN gezeichneter Punkt im Fenster, dessen Sehstrahl die Zellenflaeche x = -19975 bei z > 14950 kreuzt - eine
  *     Maske dort wuerde die Figur ueber dem Boden hinter der Zelle abschneiden; (e) Leon- und Elza-Datei gleich. */
 #define STIRN_X   (-19975)                 /* Ostkante der Zelle 6: x + breite = -26525 + 6550 */
 #define STIRN_Z0  14125
 #define STIRN_Z1  15375                    /* z + tiefe = 14125 + 1250 */
-#define STIRN_KANTE_Z 14900                /* gemessene Kante des Kuenstler-Ausschnitts z 14802..14867 (Dossier NB4) */
+#define STIRN_KANTE_Z 14950                /* gemessene Kante des Kuenstler-Ausschnitts: Bildpunktmitten z 14834..14904 (Dossier NB4) */
 
 static int stirn_ebene(const re15_camera_view_t *v, const double cam[3], double px, double py, double *ey, double *ez)
 {
@@ -463,7 +463,7 @@ static void teil_stirn(void)
     printf("  gezeichnete Punkte mit Sehstrahl durch die Zellenflaeche bei z > %d: %d\n", STIRN_KANTE_Z, jenseits);
     CHECK("Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975, z 14125..15375)", zelle_ok);
     CHECK("die Stirnseite IM BILD (Kuenstler-Ausschnitt) ist gezeichnet: 0 offene Kerben im Fenster x 282..319", kerben_fenster == 0);
-    CHECK("die Kante der Zeichnung liegt bei z <= 14900 (gemessen 14802..14867): Stirnplatte im Bild ~705 tief, die Zelle 1250",
+    CHECK("die Kante der Zeichnung liegt bei z <= 14950 (gemessen 14834..14904): Stirnplatte im Bild ~750 tief, die Zelle 1250",
           kante_n >= 60 && kante_ok);
     CHECK("keine Maske ueber der Zellenflaeche jenseits der Kante (dort zeigt das Bild den Boden/die Rueckwand hinter der Figur)",
           jenseits == 0 && im_fenster > 1000);

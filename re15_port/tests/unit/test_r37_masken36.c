@@ -35,7 +35,8 @@
  *     (re15_collision.h), solide Zelle = u0 & 1 und floor>>4 == Band (FUN_8003b0a4, re15_collision.c Kopf), erreichbar =
  *     Flutfuellung je Band ab den AOTs des Raums (Engine-SCD main00+sub00 wie probe_1190_props) und den Tuer-Ankuenften
  *     aller Raeume, innerhalb der Kamerazonen des Bands (RVD, zone.floor == Band oder 0xFF), Akteur-Cull im Regionsviereck
- *     des Cuts (re15_rdt_get_region_quad, FUN_8002c18c).
+ *     des Cuts (re15_rdt_get_region_quad; Figuren-Cull FUN_80014368, z.B. NPC-Zeichner FUN_80039ca0 @0x80039d68 - NB4: vorher
+ *     falsch FUN_8002c18c = Objekt-Zeichner).
  *   - Nachbesserung 1 (Abnahme 0 M1/M2, Dossier "Nachbesserung 1"): Tuer-Ankuenfte aus JEDEM Door_aot_set-Satz der RDTs
  *     (nicht nur dem VM-Stand des ersten Besuchs - ROOM3091 +0x14B2 machte die Tuer nach ROOM30A1 dort zur Nachricht);
  *     Saaten je Raumpaar xxx0/xxx1 (ein Hintergrund @0x80021c90, Tuerziel ohne Variante @0x8001d94c/@0x8001d960);
@@ -940,7 +941,7 @@ static void sektion_pruefen(raum_t *R, int cut, const re15_pri_cut_t *pri, const
                 for (gz = 0; gz < R->nz; gz++) {
                     int wx = R->x0 + gx * SCHRITT, wz = R->z0 + gz * SCHRITT, np, nsp, ges, i;
                     if (!R->err[b][gx][gz]) continue;
-                    if (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz)) continue;   /* Akteur-Cull (FUN_8002c18c) */
+                    if (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz)) continue;   /* Figuren-Cull (FUN_80014368 Regionsviereck, z.B. NPC-Zeichner FUN_80039ca0 @0x80039d68/@0x80039d70) */
                     E->stehplaetze++;
                     si++;
                     /* spaetere Runden: nur Plaetze mit Fehlverdeckung in der Vorrunde (Masken fallen nur weg - ein Punkt ohne
@@ -1231,7 +1232,7 @@ static void sektion_fern(raum_t *R, int cut, const re15_pri_cut_t *pri, const at
             for (gz = 0; gz < R->nz; gz++) {
                 int wx = R->x0 + gx * SCHRITT, wz = R->z0 + gz * SCHRITT, np, nsp, ges, i; long nf_platz = 0;
                 if (!R->err[b][gx][gz]) continue;
-                if (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz)) continue;   /* Akteur-Cull (FUN_8002c18c) */
+                if (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz)) continue;   /* Figuren-Cull (FUN_80014368 Regionsviereck, z.B. NPC-Zeichner FUN_80039ca0 @0x80039d68/@0x80039d70) */
                 (*n_steh)++;
                 {   /* Grobsprung: keine Modell-Maske im Bildrechteck des Kastens */
                     double sx, sy, vz, x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; int e, alle = 1, X0, Y0, X1, Y1;
@@ -1336,7 +1337,8 @@ static void teil_fern(long erwartet_max, const long *stage_max)
  * Stehplatz und Figurpunkt F (dasselbe Figurraster wie der Ausschluss) und je Koerper (Modell-Zeile eines an F's Bildpunkt
  * deckenden Rechtecks, gezeichnet oder nicht), dessen Koerper die Strecke Kamera -> F vor F schneidet (r41_koerper_davor == 1):
  * Zeilen "H raum cut rdt_off hoehe x stufe anzahl" (je Bildspalte x) und "R ... y stufe anzahl" (je Bildzeile y, fuer liegende
- * Koerper, deren Tiefe mit der Zeile laeuft) mit stufe = bucket(vz_F - PR). PR = 450 = Spielerradius (DAT_80073e94[6]):
+ * Koerper, deren Tiefe mit der Zeile laeuft) mit stufe = bucket(vz_F - PR). PR = 450 = Kollisionsradius des Spielers (DAT_80073e94[6]; als
+ * Ausdehnung der Figur zur Kamera hin PORT-WAHL, NB4 nach Hinweis der Abnahme 3):
  * die Figur reicht hoechstens um ihren Kollisionsradius naeher an die Kamera als der Mittelpunkt, an dem das Raster liegt. */
 #define HB_MAX 1024
 static void sektion_hinter(raum_t *R, int cut, const re15_pri_cut_t *pri, const atlas_t *a)
@@ -1392,7 +1394,7 @@ static void sektion_hinter(raum_t *R, int cut, const re15_pri_cut_t *pri, const 
             for (gz = 0; gz < R->nz; gz++) {
                 int wx = R->x0 + gx * SCHRITT, wz = R->z0 + gz * SCHRITT, np, nsp, ges;
                 if (!R->err[b][gx][gz]) continue;
-                if (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz)) continue;   /* Akteur-Cull (FUN_8002c18c) */
+                if (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz)) continue;   /* Figuren-Cull (FUN_80014368 Regionsviereck, z.B. NPC-Zeichner FUN_80039ca0 @0x80039d68/@0x80039d70) */
                 np = figur_raster(&v, wx, wz, b, lx, lz, pt, &nsp, &ges);
                 for (i = 0; i < np; i++) {
                     int px_ = pt[i].x, py_ = pt[i].y, k, st;
@@ -1615,7 +1617,7 @@ typedef struct {
  *   ROOM3050/3051 Cut 15: keine RVD-Zone schaltet auf Cut 15 (nur Zone 38 15 -> 0 = das Regionsviereck); einzig das
  *   Ereignis sub10 schaltet ihn (ROOM3050.RDT +0x2596 Cut_chg 15, ausgeloest am Pruef-AOT Slot 10, +0x1FB4 Aot_set
  *   Rechteck (-25900,-16900) 1000 x 2000). Die Figur steht dabei ausserhalb des Regionsvierecks (z >= 12500) und wird vom
- *   Akteur-Cull (FUN_8002c18c) nicht gezeichnet.
+ *   Figuren-Cull (FUN_80014368 Regionsviereck, z.B. NPC-Zeichner FUN_80039ca0 @0x80039d68/@0x80039d70) nicht gezeichnet.
  * Nachbesserung 2 (Abnahme 1 M1): "keine Figur" heisst NICHT "nichts zu uebermalen" - Cut 15 ist die Monitor-Nahaufnahme
  * der Kran-Konsole, in der der Spieler den Ziel-Cursor steuert (sub11..14 Work_set Objekt 3); die 36 Generator-Masken
  * uebermalten dessen dunkelgruenen Innenrand (Abnahme 1: 60 Punkte, Leon und Elza). Das Original hat fuer den Cut KEINE
