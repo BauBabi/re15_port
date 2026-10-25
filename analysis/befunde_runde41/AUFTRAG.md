@@ -1031,3 +1031,15 @@ B's Modul, FG-E3/FG-E5): waehrend R1 bleibt der Kopf (Part 6/7 + Kanister) inner
 Wurzel (Port-Wahl, Form im Dossier belegen); der Original-Regionstest @0x80077a30 bleibt. Zusaetzlich den vorgeschalteten
 Regionstest der Scherben (FUN_800363f0 @0x80036534) nachziehen. Natuerlicher Verlauf v1/west/k/plat (Leon + Elza) messen.
 **G-E6 (V1, render_pc.c RE15_TIM_SLOT_MAX 56 -> 57):** angenommen (eine markierte Zeile, Spur D ist integriert; wie B5/J-E1).
+
+## 2026-10-25 17:55 — Nachtrag 31 (Nutzer-Antworten per Auswahl zu den Fragen der Nachbesserung F 5; Spur F)
+
+Bezug: Bilder F_belege/n5_gator_szene.png, n5_kampfbeginn.png, n5_ankunft_cut0.png (Baum r41_gatorszene).
+1. "Passt der kurze Durchbruch (RE2-Clip 6 nach Bild 22 gekuerzt)?" — **"So lassen"** (PORT-WAHL angenommen).
+2. "Kampfbeginn: der Alligator kommt von der Kamera aus ins Bild und fuellt rund 100 Bilder lang gross die rechte Bildhaelfte" —
+   **"Ändern: nicht vor der Kamera"**: Startlage so waehlen, dass er beim Kampfbeginn im Becken VOR Leon zu sehen ist und nicht
+   direkt vor der Linse der laufenden Kamera (Cut 0); der RE2-Kampfbeginn (F-E2: Abstand im RE2-Band 11430..13924, erster Kontakt
+   121..158 Bilder, Zonenbeziehung wie RE2) bleibt. Mass: Abstand der Gator-Teile zur Kamera / Bildanteil je Bild ueber die ersten
+   ~150 Bilder (Riegel), Bildbogen Leon + Elza.
+3. "Schluessel etwas kleiner (7x9 statt 8x10), gut zu erkennen?" — **"Ja, gut genug"**: die Groesse aus Nachbesserung 5 ist
+   angenommen; F-E2 Punkt 2 gilt fuer die Groesse damit als erfuellt (Helligkeit bleibt Pflicht).
