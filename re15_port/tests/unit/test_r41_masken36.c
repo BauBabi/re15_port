@@ -269,7 +269,7 @@ static void teil_loecher(void)
           sekt == 216 && eigen == 216 && quelle_eigen == 216);
     CHECK("die alten Generator-Rechtecke sind erkennbar (Quelle im BSS-Atlas voll deckend + Blit)", alt_n > 6000);
     CHECK("Gegenprobe: VORHER gibt es offene Kerben an den Objektkanten (> 10000)", k_alt > 10000);
-    CHECK("NACHHER hoechstens 30 % der Kerben von VORHER (gemessen nach Nachbesserung 3 9036 von 63116 = 14,3 %, nach NB2 16,0 %, nach NB1 18,4 %, vor NB1 25,1 %; der Rest sind Saum-Rechtecke, die der "
+    CHECK("NACHHER hoechstens 30 % der Kerben von VORHER (gemessen nach Nachbesserung 5 8428 von 64424 = 13,1 %, nach NB3 14,3 %, nach NB2 16,0 %, nach NB1 18,4 %, vor NB1 25,1 %; der Rest sind Saum-Rechtecke, die der "
           "Ausschluss nimmt, weil sie eine Figur VOR dem Objekt verdecken wuerden)", k_neu * 10 <= k_alt * 3);
     CHECK("Blit NACHHER: eigener Atlas = Hintergrund an der Zielstelle (Mittel je Sektion <= 12)", gemalt > 0 && mittel_max <= 12.0);
 }

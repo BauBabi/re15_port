@@ -1347,7 +1347,8 @@ static void teil_zellen3d(void)
     CHECK("die Engine-Tabelle zeichnet jedes Modell-Rechteck (Leon und Elza)", tab_ok == 2 * n);
     CHECK("Ausschluss MIT 3D-Urteil == Engine-Tabelle in jedem Cut mit Modell", cuts > 0 && gleich == cuts);
     /* NB4: mit der Tuer-Band-Korrektur der Saaten (--saat-tuer) bleiben nur 3 (5090 C11) - die 124 Lok-/Traeger-Rechtecke 6000 brauchen das
-     * 3D-Urteil nur gegen die falschen Band-0-Figurpunkte im Gleisbett (Dossier NB4 Mangel 2 (a)); Vorgabe = Stand NB3. */
+     * 3D-Urteil nur gegen die falschen Band-0-Figurpunkte im Gleisbett (Dossier NB4 Mangel 2 (a)). NB5 (Korrektur = Vorgabe, Entscheid M-E2):
+     * gemessen 12 = 3 (5090 C11) + 9 neue Original-Atlas-Teile in 3050 C12 (platzieren_r41.py), alle mit Modell-Zeile. */
     CHECK("Gegenprobe: ohne 3D-Urteil fielen Rechtecke weg (NB2 gemessen: 79 der Leon-Dateien; Nachbesserung 3 mit den Teilrechtecken "
           "von kacheln_r41.py: 127; Elza bytegleich), jedes davon mit Modell-Zeile", nur3d >= (g_saat_tuer ? 3 : 127) && nur3d_modell == nur3d && echt3d > 0);
 }

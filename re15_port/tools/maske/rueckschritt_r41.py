@@ -206,6 +206,8 @@ def main():
     ap.add_argument("--plaetze", required=True)
     ap.add_argument("--schritt", type=int, default=1, help="nur jeder n-te Platz je Achse (100er-Gitter)")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--hoehe", type=float, default=2400.0, help="Hoehe der Zell-Quader ueber dem Bandboden (Abnahme 3: 2400; Wandbloecke/"
+                    "Treppen reichen hoeher - Gegenprobe mit 7000 wie Abnahme 3 fuer Zelle 12 ROOM6000)")
     a = ap.parse_args()
     IV, IN = ausschluss(a.vor_aus), ausschluss(a.nach_aus)
     res = {}
@@ -215,7 +217,7 @@ def main():
         V = deckung(a.vor_masks, IV, rid, cut)
         rdt = open(os.path.join(PSX, "STAGE%d" % (rid >> 12), "ROOM%04X.RDT" % rid), "rb").read()
         R, t, H, cam = ansicht(rdt, cut)
-        bx = kaesten(rdt)
+        bx = kaesten(rdt, a.hoehe)
         P = [tuple(int(v) for v in l.split()[1:4]) for l in open(os.path.join(a.plaetze, "p_%04X_%d.txt" % (rid, cut))) if l.startswith("P ")]
         P = [p for p in P if (p[0] // 100) % a.schritt == 0 and (p[1] // 100) % a.schritt == 0]
         n_im, neu_v, neu_f = 0, [], []

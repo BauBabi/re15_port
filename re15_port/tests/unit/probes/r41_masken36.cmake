@@ -4,7 +4,7 @@
 # aufweisen." -> "danach kannst du deine Masken schliessen in der naechsten Version."
 #   unit_r41_masken36_loecher  Mechanik des Schliessens an allen 216 Generator-Sektionen (test_r41_masken36.c): eigener Atlas,
 #                             den der Lader nimmt; offene Kerben (Kuenstler-Atlas deckend + farbgleich direkt an der Kante
-#                             eines alten Rechtecks, nicht gezeichnet) NACHHER <= 30 % von VORHER (gemessen nach NB3 14,3 %, NB2 16,0 %, NB1 18,4 %, vor NB1 25,1 %), Gegenprobe VORHER > 10000; Blit.
+#                             eines alten Rechtecks, nicht gezeichnet) NACHHER <= 30 % von VORHER (gemessen nach NB5 13,1 %, NB3 14,3 %, NB2 16,0 %, NB1 18,4 %, vor NB1 25,1 %), Gegenprobe VORHER > 10000; Blit.
 add_executable(test_r41_masken36 ${CMAKE_CURRENT_LIST_DIR}/../test_r41_masken36.c)
 target_link_libraries(test_r41_masken36 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_masken36 PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -88,9 +88,12 @@ endif()
 #                             Zellkante), Stage 5 <= 270 (5090 C11, Randfall an der Dreieckszelle), Stage 6 <= 39 934 (alles ROOM6000 Band 0
 #                             = Gleisbett unter dem Bahnsteig, OFFEN 10).
 # NB4: die 39 934 Punkte der Stage 6 liegen auf Band 0 im Gleisbett ROOM6000 - Saaten aus Tueren mit falsch gelesenem Band (AOT-Scan
-# @0x80042cac..0x80042ccc gated auf pc[4]); mit der Korrektur (test_r37_masken36 --saat-tuer) waeren es 0. Vorgabe bleibt Stand NB3
-# (Entscheid M-E1, Dossier NB4 Mangel 2 (a)).
-add_test(NAME unit_r41_masken36_fern COMMAND test_r37_masken36 fern 40276 0 72 270 39934 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+# @0x80042cac..0x80042ccc gated auf pc[4]); mit der Korrektur (test_r37_masken36 --saat-tuer) waeren es 0.
+# NB5 (Entscheid M-E2): Korrektur ist Vorgabe -> das Gleisbett faellt weg; dazu kommen die eingesetzten Original-Atlas-Teile (Modell-Zeilen).
+# Gemessen NB5: gesamt 3 360 = Stage 3 2 (ROOM3040/3041 C4 Rechteck 118, neues Teil auf Zelle @0x009C0: je 1 Figurpunkt an der Streifenkante),
+# Stage 4 72 / Stage 5 270 (unveraendert NB3), Stage 6 3 016 (ROOM6010/6011 C5 Rechtecke 113..117, neues Teil 8 auf Zelle @0x0092C: Resthoehle
+# HINTER einem neu gezeichneten Teil - vor NB5 waren diese Figurpunkte ohne jede Maske sichtbar; Platz im Cut 128/128 erschoepft, Dossier NB5).
+add_test(NAME unit_r41_masken36_fern COMMAND test_r37_masken36 fern 3360 2 72 270 3016 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r41_masken36_fern PROPERTIES TIMEOUT 1500)
 #   integration_r41_masken36_fern  echte exe (Leon und Elza): hinter der Buero-Trennwand ROOM30A0 Cut 0/1 an den Spielstellen der Abnahme 2
 #                             im Fenster der Trennwand KEIN Figurpunkt im Endbild sichtbar (Art Z, V == 0, probe_r41_masken36_sicht mit

@@ -10,7 +10,7 @@
 # Fenster = groesstes Rechteck der Trennwand-Region in den Spalten der Figur (aus den Dreiecken der Laeufe gerechnet, RE15_TRILOG).
 # Nachbesserung 4 (Abnahme 3, Mangel 1 "Ost-Stirn der Trennwand ohne Maske"): Stellen der Abnahme 3 am Ostende (o2..o5, a30A0_00,
 # Gier wie dort). Gemessen (Dossier NB4, Riegel unit_r41_masken36_stirn): die Stirnseite IM BILD ist der Kuenstler-Ausschnitt (SLD-Atlas
-# ROOM30A0.BSS Cut 0) und ganz gezeichnet; seine Kante liegt in der Ebene x = -19975 bei z 14802..14867, die Zelle 6 @RDT+0x0045C reicht bis
+# ROOM30A0.BSS Cut 0) und ganz gezeichnet; seine Kante liegt in der Ebene x = -19975 bei z 14834..14904 (Bildpunktmitten, unit_r41_masken36_stirn), die Zelle 6 @RDT+0x0045C reicht bis
 # z 15375 - dazwischen zeigt das Bild den Boden und die Rueckwand-Schraenke HINTER der Figur.
 #   z30A0_* (Art Z): Figur hinter der Stirnplatte, Fenster ganz IN der gezeichneten Platte (x 288..306) -> kein Figurpunkt sichtbar.
 #   v30A0_* / v30A1_* (Art V): Figur hinter dem Zellenkasten, aber im Bild NICHT hinter einem Gegenstand (Fenster rechts der Kante,

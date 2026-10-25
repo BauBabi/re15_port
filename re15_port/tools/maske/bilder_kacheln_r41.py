@@ -49,10 +49,12 @@ def main():
     ap.add_argument("--alt", required=True)
     ap.add_argument("--alt-aus", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--tag", default="NB3", help="Unterordner/Beschriftung (NB3; NB5 = Teile des Original-Atlas, Entscheid M-E2)")
     a = ap.parse_args()
+    tag = a.tag
     aus_alt = BR.ausschluss(a.alt_aus)
     aus_neu = BR.ausschluss(os.path.join(GEN, "masken36_ausschluss_r37.inc"))
-    os.makedirs(os.path.join(a.out, "NB3"), exist_ok=True)
+    os.makedirs(os.path.join(a.out, tag), exist_ok=True)
     summe = dict(vorher=0, nachher=0, neu=0, weg=0, cuts=0)
     zeilen = []
     for f in sorted(os.listdir(MASKS)):
@@ -111,10 +113,10 @@ def main():
             sheet2 = Image.new("RGB", (max(sheet.width, 640), sheet.height + 480), (20, 20, 20))
             sheet2.paste(sheet, (0, 0))
             sheet2.paste(unten, (0, sheet.height))
-            ImageDraw.Draw(sheet2).text((2, 1), "%s C%d | VORHER (NB2) %d px | NACHHER (NB3) %d px: +%d gruen, -%d rot | unten: gezeichnete "
-                                        "Rechtecke, Farbe = Tiefe %d (blau) .. %d (rot)" % (room, cut, d_alt.sum(), d_neu.sum(), zu.sum(),
+            ImageDraw.Draw(sheet2).text((2, 1), "%s C%d | VORHER %d px | NACHHER (%s) %d px: +%d gruen, -%d rot | unten: gezeichnete "
+                                        "Rechtecke, Farbe = Tiefe %d (blau) .. %d (rot)" % (room, cut, d_alt.sum(), tag, d_neu.sum(), zu.sum(),
                                                                                            weg.sum(), lo, int(hi)), fill=(255, 255, 255))
-            sheet2.quantize(colors=256, method=Image.MEDIANCUT).save(os.path.join(a.out, "NB3", "NB3_bogen_%s_C%02d.png" % (room, cut)),
+            sheet2.quantize(colors=256, method=Image.MEDIANCUT).save(os.path.join(a.out, tag, "%s_bogen_%s_C%02d.png" % (tag, room, cut)),
                                                                      optimize=True)
             rgba = BR.farbe(tim[0], tim[1], neu_blob, cut, aus_neu.get((rid, cut), set()))
             ys, xs = np.nonzero(rgba[:, :, 3])
@@ -128,7 +130,7 @@ def main():
                                                                                            optimize=True)
                 else:
                     Image.fromarray(np.zeros((240, 320, 4), np.uint8)).save(os.path.join(ud, "%02d_port.png" % cut), optimize=True)
-    with open(os.path.join(a.out, "NB3", "NB3_zahlen.txt"), "w") as fp:
+    with open(os.path.join(a.out, tag, "%s_zahlen.txt" % tag), "w") as fp:
         fp.write("\n".join(zeilen) + "\n")
         fp.write("SUMME %d geaenderte Cuts: vorher %d px, nachher %d px, neu %d, weg %d\n" % (
             summe["cuts"], summe["vorher"], summe["nachher"], summe["neu"], summe["weg"]))
