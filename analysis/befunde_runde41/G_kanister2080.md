@@ -25,6 +25,8 @@ Punkte (Wortlaut AUFTRAG.md):
 - 2026-10-25: Nachbesserung 2 (Abnahme 1, Maengel N1-N3) - Abschnitt 9 (N1 Zeile 42 volle Zeit = RE2 Wsleep/Wsleeping vor dem
   Loslassen; N2 Dir_set mit dem Schnitt auf Cut 7; N3 Wurf in das vom Alligator weitere Becken + Anschwimmen = RE2-Zielmodus;
   Messung 9.4, Tests 9.5, OFFEN 9.6, Nutzer 9.7). Massgeblich fuer den Stand ist Abschnitt 9, dann 8.
+- 2026-10-25 (ab 12:3x): Nachbesserung 3 (Abnahme 2 `G_abnahme_2.md`, Maengel M1-M3; Orchestrator-Entscheide G-E1/G-E2,
+  Nachtrag 28) - Abschnitt 10. Massgeblich fuer den Stand ist Abschnitt 10, dann 9, dann 8.
 
 ## 1. RE-Belege (selbst gelesen)
 
@@ -1047,3 +1049,21 @@ Was sich im Spiel aendert:
   schnappt ihn etwa 3 bis 5 Sekunden nach dem Wurf; dann ein Treffer -> Explosion, Kiefer, Tod.
 - Beim Aufheben kippt der stehende Kanister sichtbar in die Haende von Marvin/John (RE2-Kippen, deine Auswahl in Nachtrag 26).
 Entscheidungsfragen: keine offenen (Nachtrag 26 hat 8.8 beantwortet; Kamera 12 bleibt).
+
+## 10. Nachbesserung 3 (Abnahme 2 `G_abnahme_2.md`, 2026-10-25)
+Baum wie oben, Start auf 53321b00 (AUFTRAG Nachtrag 29; Code-Stand = e4121848, exe 09:15). Maengel M1-M3 der Abnahme 2,
+Entscheide G-E1 (M1: Kamerawahl des R1-Todes in Spur B's Modul, Mass = RE2-Cut-5-Lage des Kopfes) und G-E2 (M2: Werfer in
+2080 Cut 7 der Kamera zugewandt wie Ada, Bahn in Weltrichtung), Nachtrag 28 (M3: Explosionseffekt des Gaskanisters).
+Die erfuellten Punkte (P1, P2, Ausloeser, Kopfschuesse, Griff/Kippen, Zeile 42, Fall/Aufschlag, Anschwimmen/Hals, Aufnahme,
+R1 nach einem Treffer) bleiben, ihre Riegel bleiben gruen. Nachtrag 29 (Leiche/Kette weiter weg von der Leiter) ist Spur F.
+Laufordner/Bilder: `<SP>/g3` (scratchpad der Sitzung, nicht im Baum); Bildbelege im Baum unter `G_belege/nb3_*`.
+
+### 10.0 Plan / Stand
+- [ ] M3 RE: Zusammensetzung der RE2-Kanister-Explosion (R1 P0 @0x801021ec-0x80102374, Fontaene FUN_80103eb4, Spritzring
+      FUN_8010338c; Banken/Subs, Datei, TIM/CLUT/TPage, Zeitpunkt, Lage, Dauer)
+- [ ] M3 Messung vorher (Port, R1-Bilder: gespawnte Plaetze je Bank, gezeichnete Quads, Grund jedes Ausfalls)
+- [ ] M3 Umsetzung (Raum-ESP ROOM40A0 in 2090/2091, Texturen, Zeichner), Messung nachher, Bildstreifen gegen RE2-Referenz, Riegel
+- [ ] M1 Messung vorher / Umsetzung G-E1 / Messung aller Verlaeufe Leon + Elza / Riegel "Tod im Bild"
+- [ ] M2 RE (Ada-Blick Cut 7) / Umsetzung G-E2 / Messung Nord- und Suedwurf Leon + Elza / Riegel Blickwert
+- [ ] Tests gezielt, Dossier 10.x (OFFEN, Fuer den Nutzer), Abschluss-Commit
+
