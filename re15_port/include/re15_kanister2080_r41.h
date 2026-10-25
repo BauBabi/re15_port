@@ -165,12 +165,14 @@
  * auf"). FORM RE2: nach dem Aufschlag (Se_on 0x0e @0x08BA) legt ROOM7020 sub13 den Raketenwerfer per Pos_set an seine SPIELSTELLE
  * `32 00 b6 9f 00 00 10 aa` @0x08CA = (-24650,0,-21998) im Item-AOT 5 (@0x00DA: x -26200..-22800, z -23200..-20700), nicht ans
  * Bahnende: die Bahn bewegt z nur um v_z 10/Bild (Speed_set(2,10) @0x088E, Add_speed reine Weltaddition @0x80055abc-e0), Ada steht
- * bei z -17900 (Pos_set @0x0740) -> >= 2000 Versatz in z. PORT-WAHL der Spielstelle: der einzige Wasserweg zwischen Sued- und
- * Nordbecken, die Mitte der Westkanal-Wasserzone ROOM2090 main00 Aot_set Slot 4 sce 8 @0x009FE `2c 04 08 47 00 00 3c dd 4c b9 20
- * 1c 10 0e ..` (x -8900 + 7200/2, z -18100 + 3600/2) - hier schwimmt der Alligator durch, wenn er Leon von einem Becken ins andere
- * folgt (Aufnahme-Fenster der Spur B laengs 8601..9000 x Skala, quer Koerperradius + 267, gator_re2_r41.c Stufe 0). */
-#define RE15_K2080_LIEGE_X         (-5300)
-#define RE15_K2080_LIEGE_Z         (-16300)
+ * bei z -17900 (Pos_set @0x0740) -> der Pos_set versetzt um mehrere tausend in z. PORT-WAHL der Spielstelle, GEMESSEN (Dossier
+ * 8.2): nach der Szene taucht der Alligator nur auf, wenn Leon naeher als 9000 an seinen Lauerplatz (-7200,-9200) kommt (Spur B
+ * GB_AGGRO/GB_START, Nutzer-Entscheid N22.2 "Erst beim Annaehern") - der weitere Kampf laeuft also im Nordbecken. Sonde
+ * tools/r41_kanister2080/probe_liegestelle.c (echter Boss-Tick, 50 Leon-Lagen < 9000 vom Lauerplatz): Plateau 25/50 Aufnahmen um
+ * (-6500..-5500, -11000..-9500), Kanalmitte (-5300,-16300) 15/50; echte exe (natuerlicher Gator, Leon/Elza schiessen, 7 Lagen):
+ * hier 7/7 Aufnahmen und 7/7 R1-Tode, Kanalmitte 1/4 ohne Tod. */
+#define RE15_K2080_LIEGE_X         (-6500)
+#define RE15_K2080_LIEGE_Z         (-11000)
 /* Haende am Ende von Eigen c6 (Mitte der Bones 11/14, Zensus Dossier 1.8): Fallback, wenn die NPC-Bank nicht geladen ist. */
 #define RE15_K2080_HAND_VOR        840
 #define RE15_K2080_HAND_HOCH       (-2496)

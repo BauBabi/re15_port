@@ -735,11 +735,11 @@ void re15_kanister2080_r41_install(uint16_t room_id)
             s_set_2090 = 1;
             s_zaehler[4]++;
             if (s_lande_ok)
-                K_LOG("ROOM%04X Kanister im Becken (%d,%d,%d) = Spielstelle Westkanal (Aot_set Slot 4 @0x009FE, RE2 Pos_set @0x08CA), "
+                K_LOG("ROOM%04X Kanister im Becken (%d,%d,%d) = Spielstelle Nordbecken (RE2 Pos_set @0x08CA, gemessen Dossier 8.2), "
                       "Aufschlag war bei (%d,%d) (Bit %d)", raum, RE15_K2080_LIEGE_X, RE15_K2080_GATOR_WASSER_Y, RE15_K2080_LIEGE_Z,
                       (int)s_lande[0], (int)s_lande[1], RE15_K2080_BIT_KANISTER);
             else
-                K_LOG("ROOM%04X Kanister im Becken (%d,%d,%d) = Spielstelle Westkanal (Aot_set Slot 4 @0x009FE, RE2 Pos_set @0x08CA), "
+                K_LOG("ROOM%04X Kanister im Becken (%d,%d,%d) = Spielstelle Nordbecken (RE2 Pos_set @0x08CA, gemessen Dossier 8.2), "
                       "Spielstand (Bit %d)", raum, RE15_K2080_LIEGE_X, RE15_K2080_GATOR_WASSER_Y, RE15_K2080_LIEGE_Z,
                       RE15_K2080_BIT_KANISTER);
         }

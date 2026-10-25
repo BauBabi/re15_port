@@ -1,0 +1,81 @@
+50 Leon-Lagen, 1500 Bilder je Lauf
+Stelle ( -8000,-13500): 21/50 Aufnahmen, mittel  534, max 1186 Bilder nach dem Auftauchen
+Stelle ( -7500,-13500): 20/50 Aufnahmen, mittel  514, max 1173 Bilder nach dem Auftauchen
+Stelle ( -7000,-13500): 20/50 Aufnahmen, mittel  482, max 1176 Bilder nach dem Auftauchen
+Stelle ( -6500,-13500): 19/50 Aufnahmen, mittel  451, max 1183 Bilder nach dem Auftauchen
+Stelle ( -6000,-13500): 17/50 Aufnahmen, mittel  475, max 1228 Bilder nach dem Auftauchen
+Stelle ( -5500,-13500): 14/50 Aufnahmen, mittel  481, max 1343 Bilder nach dem Auftauchen
+Stelle ( -5000,-13500): 10/50 Aufnahmen, mittel  665, max 1333 Bilder nach dem Auftauchen
+Stelle ( -4500,-13500): 10/50 Aufnahmen, mittel  642, max 1288 Bilder nach dem Auftauchen
+Stelle ( -8000,-13000): 22/50 Aufnahmen, mittel  504, max  899 Bilder nach dem Auftauchen
+Stelle ( -7500,-13000): 22/50 Aufnahmen, mittel  494, max 1176 Bilder nach dem Auftauchen
+Stelle ( -7000,-13000): 23/50 Aufnahmen, mittel  531, max 1217 Bilder nach dem Auftauchen
+Stelle ( -6500,-13000): 20/50 Aufnahmen, mittel  550, max 1228 Bilder nach dem Auftauchen
+Stelle ( -6000,-13000): 18/50 Aufnahmen, mittel  532, max 1228 Bilder nach dem Auftauchen
+Stelle ( -5500,-13000): 18/50 Aufnahmen, mittel  588, max 1228 Bilder nach dem Auftauchen
+Stelle ( -5000,-13000): 14/50 Aufnahmen, mittel  733, max 1360 Bilder nach dem Auftauchen
+Stelle ( -4500,-13000): 16/50 Aufnahmen, mittel  723, max 1361 Bilder nach dem Auftauchen
+Stelle ( -8000,-12500): 22/50 Aufnahmen, mittel  535, max 1102 Bilder nach dem Auftauchen
+Stelle ( -7500,-12500): 21/50 Aufnahmen, mittel  497, max 1231 Bilder nach dem Auftauchen
+Stelle ( -7000,-12500): 23/50 Aufnahmen, mittel  539, max 1240 Bilder nach dem Auftauchen
+Stelle ( -6500,-12500): 21/50 Aufnahmen, mittel  540, max 1240 Bilder nach dem Auftauchen
+Stelle ( -6000,-12500): 19/50 Aufnahmen, mittel  463, max 1240 Bilder nach dem Auftauchen
+Stelle ( -5500,-12500): 21/50 Aufnahmen, mittel  547, max 1240 Bilder nach dem Auftauchen
+Stelle ( -5000,-12500): 17/50 Aufnahmen, mittel  576, max 1236 Bilder nach dem Auftauchen
+Stelle ( -4500,-12500): 22/50 Aufnahmen, mittel  625, max 1453 Bilder nach dem Auftauchen
+Stelle ( -8000,-12000): 22/50 Aufnahmen, mittel  615, max 1246 Bilder nach dem Auftauchen
+Stelle ( -7500,-12000): 22/50 Aufnahmen, mittel  514, max 1235 Bilder nach dem Auftauchen
+Stelle ( -7000,-12000): 21/50 Aufnahmen, mittel  515, max 1246 Bilder nach dem Auftauchen
+Stelle ( -6500,-12000): 23/50 Aufnahmen, mittel  500, max 1246 Bilder nach dem Auftauchen
+Stelle ( -6000,-12000): 24/50 Aufnahmen, mittel  543, max 1273 Bilder nach dem Auftauchen
+Stelle ( -5500,-12000): 22/50 Aufnahmen, mittel  547, max 1246 Bilder nach dem Auftauchen
+Stelle ( -5000,-12000): 16/50 Aufnahmen, mittel  634, max 1454 Bilder nach dem Auftauchen
+Stelle ( -4500,-12000): 20/50 Aufnahmen, mittel  594, max 1494 Bilder nach dem Auftauchen
+Stelle ( -8000,-11500): 21/50 Aufnahmen, mittel  635, max 1248 Bilder nach dem Auftauchen
+Stelle ( -7500,-11500): 21/50 Aufnahmen, mittel  565, max 1248 Bilder nach dem Auftauchen
+Stelle ( -7000,-11500): 19/50 Aufnahmen, mittel  496, max 1248 Bilder nach dem Auftauchen
+Stelle ( -6500,-11500): 24/50 Aufnahmen, mittel  498, max 1248 Bilder nach dem Auftauchen
+Stelle ( -6000,-11500): 23/50 Aufnahmen, mittel  500, max 1248 Bilder nach dem Auftauchen
+Stelle ( -5500,-11500): 22/50 Aufnahmen, mittel  540, max 1248 Bilder nach dem Auftauchen
+Stelle ( -5000,-11500): 17/50 Aufnahmen, mittel  588, max 1499 Bilder nach dem Auftauchen
+Stelle ( -4500,-11500): 15/50 Aufnahmen, mittel  476, max 1153 Bilder nach dem Auftauchen
+Stelle ( -8000,-11000): 20/50 Aufnahmen, mittel  682, max 1324 Bilder nach dem Auftauchen
+Stelle ( -7500,-11000): 16/50 Aufnahmen, mittel  563, max 1250 Bilder nach dem Auftauchen
+Stelle ( -7000,-11000): 19/50 Aufnahmen, mittel  505, max 1250 Bilder nach dem Auftauchen
+Stelle ( -6500,-11000): 25/50 Aufnahmen, mittel  587, max 1250 Bilder nach dem Auftauchen
+Stelle ( -6000,-11000): 22/50 Aufnahmen, mittel  482, max 1250 Bilder nach dem Auftauchen
+Stelle ( -5500,-11000): 25/50 Aufnahmen, mittel  585, max 1401 Bilder nach dem Auftauchen
+Stelle ( -5000,-11000): 18/50 Aufnahmen, mittel  574, max 1374 Bilder nach dem Auftauchen
+Stelle ( -4500,-11000): 15/50 Aufnahmen, mittel  435, max 1153 Bilder nach dem Auftauchen
+Stelle ( -8000,-10500): 17/50 Aufnahmen, mittel  630, max 1253 Bilder nach dem Auftauchen
+Stelle ( -7500,-10500): 19/50 Aufnahmen, mittel  676, max 1351 Bilder nach dem Auftauchen
+Stelle ( -7000,-10500): 22/50 Aufnahmen, mittel  622, max 1253 Bilder nach dem Auftauchen
+Stelle ( -6500,-10500): 24/50 Aufnahmen, mittel  611, max 1376 Bilder nach dem Auftauchen
+Stelle ( -6000,-10500): 25/50 Aufnahmen, mittel  526, max 1375 Bilder nach dem Auftauchen
+Stelle ( -5500,-10500): 25/50 Aufnahmen, mittel  491, max 1253 Bilder nach dem Auftauchen
+Stelle ( -5000,-10500): 16/50 Aufnahmen, mittel  471, max 1157 Bilder nach dem Auftauchen
+Stelle ( -4500,-10500): 16/50 Aufnahmen, mittel  492, max 1447 Bilder nach dem Auftauchen
+Stelle ( -8000,-10000): 18/50 Aufnahmen, mittel  558, max  878 Bilder nach dem Auftauchen
+Stelle ( -7500,-10000): 18/50 Aufnahmen, mittel  556, max 1354 Bilder nach dem Auftauchen
+Stelle ( -7000,-10000): 20/50 Aufnahmen, mittel  563, max 1172 Bilder nach dem Auftauchen
+Stelle ( -6500,-10000): 20/50 Aufnahmen, mittel  514, max 1131 Bilder nach dem Auftauchen
+Stelle ( -6000,-10000): 25/50 Aufnahmen, mittel  452, max 1209 Bilder nach dem Auftauchen
+Stelle ( -5500,-10000): 24/50 Aufnahmen, mittel  464, max 1212 Bilder nach dem Auftauchen
+Stelle ( -5000,-10000): 21/50 Aufnahmen, mittel  545, max 1223 Bilder nach dem Auftauchen
+Stelle ( -4500,-10000): 19/50 Aufnahmen, mittel  537, max 1447 Bilder nach dem Auftauchen
+Stelle ( -8000, -9500): 18/50 Aufnahmen, mittel  615, max 1213 Bilder nach dem Auftauchen
+Stelle ( -7500, -9500): 17/50 Aufnahmen, mittel  607, max 1174 Bilder nach dem Auftauchen
+Stelle ( -7000, -9500): 19/50 Aufnahmen, mittel  572, max 1278 Bilder nach dem Auftauchen
+Stelle ( -6500, -9500): 21/50 Aufnahmen, mittel  613, max 1401 Bilder nach dem Auftauchen
+Stelle ( -6000, -9500): 25/50 Aufnahmen, mittel  503, max 1154 Bilder nach dem Auftauchen
+Stelle ( -5500, -9500): 25/50 Aufnahmen, mittel  508, max 1154 Bilder nach dem Auftauchen
+Stelle ( -5000, -9500): 21/50 Aufnahmen, mittel  585, max 1353 Bilder nach dem Auftauchen
+Stelle ( -4500, -9500): 20/50 Aufnahmen, mittel  586, max 1447 Bilder nach dem Auftauchen
+Stelle ( -8000, -9000): 20/50 Aufnahmen, mittel  675, max 1422 Bilder nach dem Auftauchen
+Stelle ( -7500, -9000): 17/50 Aufnahmen, mittel  640, max 1348 Bilder nach dem Auftauchen
+Stelle ( -7000, -9000): 20/50 Aufnahmen, mittel  540, max  952 Bilder nach dem Auftauchen
+Stelle ( -6500, -9000): 19/50 Aufnahmen, mittel  557, max 1272 Bilder nach dem Auftauchen
+Stelle ( -6000, -9000): 22/50 Aufnahmen, mittel  524, max 1261 Bilder nach dem Auftauchen
+Stelle ( -5500, -9000): 23/50 Aufnahmen, mittel  481, max 1158 Bilder nach dem Auftauchen
+Stelle ( -5000, -9000): 19/50 Aufnahmen, mittel  547, max 1353 Bilder nach dem Auftauchen
+Stelle ( -4500, -9000): 17/50 Aufnahmen, mittel  564, max 1448 Bilder nach dem Auftauchen

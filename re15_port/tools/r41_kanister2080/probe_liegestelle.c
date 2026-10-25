@@ -5,6 +5,7 @@
  * Verfolgung. Leon steht (Statue, hp 100) an einer Lage P; der Kanister liegt (Spur-B-API re15_gr2_kanister_setzen, wie
  * kanister2080_r41.c) an einer Kandidaten-Stelle S. Gemessen je (P,S): Bild der Aufnahme (re15_gr2_kanister_stufe >= 1) oder nie.
  * Aufruf: probe_liegestelle <shared_assets/PSX> <shared_assets/RE2> [bilder] [sx sz]   (ohne sx/sz: Raster ueber den Westteil)
+ *         probe_liegestelle <PSX> <RE2> <bilder> raster <x0> <x1> <z0> <z1> <schritt>   (Raster in einem Ausschnitt)
  * Ausgabe: je Stelle Zahl der Leon-Lagen mit Aufnahme, Mittel/Max der Bilder nach dem Auftauchen; mit sx sz je Leon-Lage eine Zeile.
  * Grenze des Modells: Leon steht still (ein Spieler bewegt sich und schiesst) - das Raster ordnet die Stellen, die exe-Laeufe
  * (Dossier 8.2) messen den echten Ablauf. */
@@ -126,7 +127,10 @@ int main(int argc, char **argv)
             if (dx * dx + dz * dz >= (int64_t)9000 * 9000 || !wasser(x, z, 600)) continue;
             L[nl][0] = x; L[nl][1] = z; nl++;
         }
-    if (argc > 5) {                                    /* eine Stelle, je Leon-Lage eine Zeile */
+    int32_t gx0 = -8000, gx1 = -2500, gz0 = -24000, gz1 = -9000, gst = 500, gstz = 1000;
+    if (argc > 9 && !strcmp(argv[4], "raster")) {
+        gx0 = atoi(argv[5]); gx1 = atoi(argv[6]); gz0 = atoi(argv[7]); gz1 = atoi(argv[8]); gst = gstz = atoi(argv[9]);
+    } else if (argc > 5) {                             /* eine Stelle, je Leon-Lage eine Zeile */
         const int32_t sx = atoi(argv[4]), sz = atoi(argv[5]);
         int n = 0;
         for (int i = 0; i < nl; i++) {
@@ -140,8 +144,8 @@ int main(int argc, char **argv)
         return 0;
     }
     printf("%d Leon-Lagen, %d Bilder je Lauf\n", nl, bilder);
-    for (int32_t sz = -24000; sz <= -9000; sz += 1000)
-        for (int32_t sx = -8000; sx <= -2500; sx += 500) {
+    for (int32_t sz = gz0; sz <= gz1; sz += gstz)
+        for (int32_t sx = gx0; sx <= gx1; sx += gst) {
             if (!wasser(sx, sz, 300)) continue;
             int n = 0, summe = 0, maxb = 0;
             for (int i = 0; i < nl; i++) {
