@@ -1052,6 +1052,24 @@ ausgelieferten NB4-Stand gelten fuer MASKS/Tabellen die Zahlen der NB3 (983 624 
   kacheln_r41) PORT-WAHL - im Code so gekennzeichnet.
 
 
+## Nachbesserung 5 (2026-10-25, nach Abnahme 4 = analysis/befunde_runde41/M_abnahme_4.md)
+
+Grundlage: Abnahme 4 (Urteil "nicht bestanden": Punkt 1 teilweise, Punkt 2 erfuellt). Mangel 1 = Entscheid **M-E2** (AUFTRAG.md
+2026-10-25 14:29, nach dem NB4-Abschluss) nicht umgesetzt: die nie platzierten Teile des Original-Vordergrundatlas (platzieren_r41.py,
+74 Sektionen) mit Lage per Bildvergleich UND Tiefe aus einer Kollisionszelle mit RDT-Offset einsetzen, Tuer-Band der Saaten
+(AOT-Scan @0x80042cac..0x80042ccc) mitnehmen, Kapazitaet je Cut belegen (FUN_80039270 @0x8003928c), je Kamera eine HINTER- und eine
+DAVOR-Stelle an der exe, Rueckschritt-Suche wie NB3, Riegel, teilen_r41.py NICHT, Freistellungs-Liste neu. Mangel 2 = ROOM30A0/30A1
+Cut 0: roter Ordner auf dem Schrank am Ostende der Trennwand (x 310..317, y 106..111) ohne Maske. Punkt 2 (erfuellt) wird nicht
+angefasst; seine Riegel bleiben gruen.
+
+### Stand Nachbesserung 5
+- [x] Lektuere (AUFTRAG inkl. M-E2, VERTRAG, Abnahme 4, Dossier NB4, git log master..HEAD = 2ea86d24)
+- [ ] Mangel 1: Tuer-Band der Saaten als Vorgabe
+- [ ] Mangel 1: Original-Atlas-Teile mit Zellen-Tiefe (Lage + Zelle je Teil belegt), Kapazitaet je Cut
+- [ ] Mangel 1: HINTER/DAVOR je Kamera an der exe, Rueckschritt-Suche, Riegel
+- [ ] Mangel 2: roter Ordner 30A0/30A1 C0
+- [ ] Freistellungs-Liste neu, Bau, gezielte Tests, Abschluss-Commit
+
 ## Tests (gezielt, KEINE volle Suite)
 
 Neu (tests/unit/probes/r41_masken36.cmake, registriert nur dort):
