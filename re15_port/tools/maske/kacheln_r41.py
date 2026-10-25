@@ -340,9 +340,19 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
             out.append((-10 ** 6 if j == 0 else a_, 10 ** 6 if j == len(gr) - 1 else b_))
         return out
 
+    # TOTE Rechtecke: vorher ausgeschlossen und ohne Koerper (kein Modell, z.B. Kamera ueber der Zelle) - sie werden weder vor
+    # noch nach NB3 gezeichnet. Je Objekt werden sie zu EINEM Rechteck zusammengelegt (dieselben Punkte, eigener Atlasplatz,
+    # Tiefe = max ihrer Tiefen): im Spiel unveraendert (der Ausschluss rechnet es neu), aber Platz fuer Teilrechtecke in vollen
+    # Cuts (105 je Cut, re15_pri.h).
+    tote = {}
+    for r in recs:
+        if r["i"] in aus_set and r["k"] is None and r["i"] not in zurueck and r["obj"] is not None and r["d"].any():
+            tote.setdefault(r["obj"], []).append(r)
+    tote = {o: l for o, l in tote.items() if len(l) > 1}
+    tot_i = set(r["i"] for l in tote.values() for r in l)
     texel = {}
     for r in recs:
-        if r["saum"]:
+        if r["saum"] or r["i"] in tot_i:
             ys, xs = np.nonzero(r["d"])
             for y, x in zip(ys, xs):
                 texel.setdefault((int(y), int(x)), int(idx[r["sy"] + (y - r["Y"]), r["sx"] + (x - r["X"])]))
@@ -352,8 +362,11 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
         wenn der Atlas voll ist. zusammenlegen: Saum-Rechtecke des Koerpers je Streifen zusammenlegen; trennen: dabei Koerperpunkte und
         Punkte ausserhalb getrennt; zeilen: vorher ausgeschlossene alte Rechtecke quer zur Streifenrichtung in reine Koerper-Laeufe
         und Rest-Laeufe teilen (OFFEN 9). Rechteck: (sx, sy, X, Y, w, h, tiefe, gruppe oder None, herkunft, schluessel oder None)."""
-        entfernt = set()
-        for key, (ri, k, zus, tr_, zl) in wahl.items():
+        entfernt = set(tot_i) if wahl.get("__tote__", True) else set()
+        for key, w_ in wahl.items():
+            if key == "__tote__":
+                continue
+            ri, k, zus, tr_, zl = w_
             if zus:
                 entfernt |= set(r["i"] for r in loes[key]["rl"] if r["saum"])
         belegt = np.zeros(idx.shape, bool)
@@ -365,6 +378,8 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
         neu = []
         for r in recs:
             key = r["k"]
+            if r["i"] in tot_i and wahl.get("__tote__", True):
+                continue                              # unten zusammengelegt
             if key is None or key not in wahl:
                 # unveraendert; eine vorhandene Modell-Zeile wandert mit (neuer Index, gleiche Zelle und Tiefe)
                 neu.append((r["sx"], r["sy"], r["X"], r["Y"], r["w"], r["h"], r["dep"], r["gi"], [r["i"]],
@@ -419,7 +434,24 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
                     D = int(L["be"][th].max()) if th.any() else int(r["dep"])
                     neu.append((r["sx"] + ex, r["sy"] + ey, r["X"] + ex, r["Y"] + ey, ew, eh, D, r["gi"], [r["i"]],
                                 key if th.any() else None))
-        for key in sorted(wahl, key=str):
+        if wahl.get("__tote__", True):
+            for o, l in sorted(tote.items(), key=lambda kv: str(kv[0])):
+                m = np.zeros((240, 320), bool)
+                for r in l:
+                    m |= r["d"]
+                ys, xs = np.nonzero(m)
+                X0, Y0 = int(xs.min()), int(ys.min())
+                w, h = int(xs.max() - X0 + 1), int(ys.max() - Y0 + 1)
+                pl = SR.frei_platz(belegt, w, h)
+                if pl is None:
+                    return None, None
+                ax, ay = pl
+                belegt[ay:ay + h, ax:ax + w] = True
+                idx_neu[ay:ay + h, ax:ax + w] = 0
+                for y, x in zip(ys, xs):
+                    idx_neu[ay + (y - Y0), ax + (x - X0)] = texel[(int(y), int(x))]
+                neu.append((ax, ay, X0, Y0, w, h, max(r["dep"] for r in l), None, sorted(r["i"] for r in l), None))
+        for key in sorted((kk for kk in wahl if kk != "__tote__"), key=str):
             ri, k, zus, tr_, zl = wahl[key]
             if not zus:
                 continue
@@ -470,7 +502,11 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
     # Start: je Koerper die erste machbare Wahl mit K = 1 (Saum zusammen+getrennt, zusammen, stehen lassen; OFFEN-9-Teilung an/aus)
     optionen1 = [(True, True, True), (True, False, True), (False, False, True), (False, False, False)]
     wahl = {key: ("x", 1, False, False, False) for key in loes}
-    neu, idx_neu = bauen(wahl)                        # == Quelle (jedes Rechteck ein Teil, Tiefe aus dem Koerper)
+    wahl["__tote__"] = True
+    neu, idx_neu = bauen(wahl)
+    if neu is None or len(neu) > MAX_MASKEN:
+        wahl["__tote__"] = False
+        neu, idx_neu = bauen(wahl)                    # == Quelle (jedes Rechteck ein Teil, Tiefe aus dem Koerper)
     if neu is None or len(neu) > MAX_MASKEN:
         raise SystemExit("%s C%d: Grundfall passt nicht (%s)" % (room, cut, None if neu is None else len(neu)))
     for key in sorted(loes, key=str):
@@ -532,6 +568,7 @@ def cut_bearbeiten(room, cut, blob, sek, idx, rdt, cam, cache, aus_set, modelle,
         kp = koerper[e[9]]
         zeilen.append((rid, cut, j, (kp["x"], kp["z"], kp["w"], kp["d"]), kp["typ"], kp["band"], kp["hoehe"], kp["saeule"], e[6],
                        kp["off"], kp["bytes"], kp["iou"]))
+    bericht["tote_zusammengelegt"] = sorted(sorted(r["i"] for r in l) for l in tote.values()) if wahl.get("__tote__", True) else []
     for key, L in loes.items():
         kp = koerper[key]
         ri, k, zus, tr_, zl = wahl[key]
