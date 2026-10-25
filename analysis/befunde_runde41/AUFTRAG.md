@@ -849,3 +849,95 @@ Raum/Kamera/Gegenstand mit Beleg ins Dossier ("Fuer den Nutzer: Freistellungen")
 Offen fuer Spur M bleiben nur Mangel 1 (Ost-Stirn der Buero-Trennwand 30A0/30A1 C0: Zelle 6 @RDT+0x0045C, neuer Befund auf dem
 natuerlichen Weg, Tiefe aus der Zelle belegt) und Mangel 3 (Laufpruefung im gemeinsamen Laeufer). Abnahme M 4 urteilt Punkt 1
 an Mangel 1 und daran, dass keine Stelle der Restliste schlechter wurde; die Restliste selbst ist kein Mangel.
+
+## 2026-10-25 11:58 — Nachtrag 28 (Wortlaut; Explosionseffekt des Gaskanisters, Spur G)
+
+> Beim Ausschnitt gerade eben fehlte noch der Explosionseffekt vom Gaskanister vom Original.
+
+Gesehen hat der Nutzer die Kampflaeufe der Abnahme G 2 (re15_pc_g41abn2c/d auf seinem Bildschirm). Orchestrator-Messung am
+selben Stand (Baum r41_kanister2080, Lauf scratchpad/g2abn/runs/r1_v1_leon, Bildstreifen scratchpad/g2abn/
+r1_v1_leon_f1548-1588_hell2.png): R1-Start F1549 ("RE2 R1 start pos=(-7391,-25446)"), danach nur ein kleiner weiss-blauer
+Schimmer am Kopf (F1550-F1560) und die Kiefer-Brocken; KEIN Feuerball/Explosionsbild.
+Port-Stand (gator_re2_r41.c, re15_gr2_r1_start): Spritzring @0x80102374 -> 0x8010338c = 6 x re2fx Bank 3 Sub 0x0f
+(0x030f2000/0x030f3000, Versaetze @0x801000a8) an der Kanister-Matrix; Fontaenen FUN_80103eb4 = Bank 0x26 Sub 3, Bank 0 Sub 6/3,
+Bank 8 Sub 2 (spawn_kern: Bank = a0>>24, Sub = (a0>>16)&0xff @0x8001cbec-f8). Registriert waren im Lauf nur CORE00.ESP (Kern)
+und GLAS1090.ESP als Raum-ESP (Registry 8..15); die RE2-Raum-ESP des Alligatorraums ROOM40A0 ist NICHT registriert.
+
+**Auftrag an Spur G** (RE-Gate; FG-E3/FG-E5 gelten: kleine markierte Haken in B's Modulen und in re2_fx.c erlaubt):
+1. In RE2 belegen, woraus der Explosionseffekt des Gaskanisters besteht: welche Effekte/Banken/Subs (R1 @0x80102158, Spritzring
+   0x8010338c, Kanister T2 @0x801017c4, ggf. weitere Spawns/Sprites/Lichtblitz/Rauch), aus welcher Datei (CORE00.ESP, ESP-Abschnitt
+   von ROOM40A0.RDT, EM23-Daten) mit welcher TIM/CLUT/TPage, Zeitpunkt, Lage, Dauer, Reihenfolge.
+2. Messen, warum der Port ihn nicht zeigt (Bank registriert? Raum-ESP von 40A0 in 2090/2091 geladen? Textur/CLUT im VRAM?
+   Zeichenpass, Cull, Blend?) - Zahlen pro Bild (gespawnte/gezeichnete Quads in F1549ff).
+3. 1:1 nachbauen (jede Konstante mit @0x/Datei-Offset), beide Szenarien (2090/2091), ohne die bestehenden B-/G-Riegel zu brechen.
+4. Nachweis am Spiel: Bildstreifen der Explosion gegen ein RE2-Referenzbild desselben Effekts (aus den RE2-Daten gerendert oder
+   aufgenommen), Riegel: Effekt-Bank in 2090 registriert + gezeichnete Explosions-Quads > 0 in den R1-Bildern.
+
+## 2026-10-25 12:08 — Nachtrag 29 (Wortlaut; Lage der Zombie-Leiche mit dem Schluessel in 2090, Spur F)
+
+> Und eine weitere Auffälligkeit: Die Zombie Leiche mit dem Schlüssel ist zu nah an der Leiter. Das Krokodil frisst ihn,
+> und ist damit direkt beim Start des Kampfes quasi unmittelbar an der Leiter. Man hat keine Chance direkt am Anfang vom
+> Kampf den Aligator auszuweichen. Die Zombie Leiche inklusive der Kette - Schlüssel - Aligator Fressen etc. muss weiter
+> weg sein, damit man am Start des Kampfes eine Chance hat.
+
+Orchestrator-Messung (Baum r41_gatorszene da156ce6): Leon kommt ueber die Leiter bei (-8200, 0, -25550) Gier 0 in 2090 an
+(ROOM2080 Leiter-Tuer Slot 1 @0x0BC2: `3b 01 02 31 08 00 4e da da 99 e8 03 e8 03 f8 df 00 00 32 9c 00 00 01 09`). Leiche
+(-5500,-1740,-23700) Gier 384, Fressstelle = Rumpfmitte (-4594,-24306) - rund 3800 Einheiten von der Ankunft (gatorszene_r41.c
+GSZ_LEICHE_*; gewaehlt nach der Sichtbarkeit des Schluessels in Cut 1).
+
+**Auftrag an Spur F:** Leiche samt der ganzen Kette (Einstellung Leiche mit Schluessel, Zombies oben in 2080, erneut Leiche,
+Fressen, Schrei/Schuetteln Richtung Leon, Kampfbeginn mit RE2-Musik) so weit von der Leiter weg, dass man am Kampfbeginn
+ausweichen kann. Mass belegen statt schaetzen: Abstand Alligator <-> Leon und Bilder bis zum ersten Angriff (Biss-/Dash-Kontakt)
+am Kampfbeginn mindestens wie in RE2 am Ende des Alligator-Intros in ROOM40A0 (Intro-Startlage = Pos_set-Zwilling der Spur B,
+Dash-/Biss-Schwellen des RE2-Moduls mit @0x); reicht die Beckengeometrie von 2090 dafuer nicht, so weit wie die Wasserzonen
+erlauben, mit Zahlen im Dossier. Messen an der exe mit Leon UND Elza, einmal stehend, einmal sofort weglaufend (Ausweichen
+gelingt). Die Schluessel-Sichtbarkeit (Nachtrag 6: "sieht die Zombie Leiche mit dem Schluessel") an der neuen Lage neu waehlen
+und messen; die Szenenfolge bleibt sonst gleich. Riegel: Abstand und Bilder bis zum ersten Angriff >= Sollwert, bestehende
+F-Riegel mit Beleg (Nachtrag 29) nachziehen. Querbezug B/G: nur die Startlage des Kampfes aendert sich.
+
+## 2026-10-25 12:08 — Orchestrator-Entscheide G-E1/G-E2 (Abnahme G 2, Maengel M1/M2; der Nutzer kann widersprechen)
+
+**G-E1 (M1, Tod nicht im Bild):** Spur G behebt die Kamerawahl fuer den R1-Explosionstod in Spur B's Modul (gator_re2_r41.c,
+gr2_kam_r1_start / re15_gr2_kamera_wahl) mit markiertem Haken ("Runde 41 Spur G, G-E1"; FG-E3/FG-E5 gelten). Mass = RE2:
+R1 zeigt den Kopf in RE2-Cut 5 nahe der Bildmitte (Bild (170,111), Tabelle der Spur B "EXPLOSION"). Gewaehlt wird die
+2090/2091-Zonenkamera, in der Kopf und Kiefer mit Rand im Bild liegen und von keiner Maske verdeckt sind, am naechsten an der
+RE2-Lage; Messung in allen Verlaeufen (Riegel-Startlage (-6000,-17500), d15, v1, west, Plattform; Leon und Elza), Bildbogen,
+Riegel prueft den sichtbaren Kopf statt nur "R1 ende (Leiche)". Fs Schluessel-Einstellung nach dem Tod (F Nachbesserung 2)
+folgt danach; der Querbezug wird bei der Integration F+G gemessen.
+**G-E2 (M2, Werfer mit dem Ruecken zur Kamera):** Nachtrag 5 verlangt die RE2-Form ("GENAU wie die RE2-Szene, in der Ada den
+Raketenwerfer ... hinunterwirft"). Marvin/John stehen beim Satz 42 und beim Wurf in 2080 Cut 7 der Kamera zugewandt wie Ada
+(RE2 ROOM7020 Dir_set 0x0e74 @0x0748, Blick 0,99), die Kanister-Bahn laeuft in Weltrichtung zur Landestelle, unabhaengig von der
+Gier des Werfers (Add_speed @0x80055abc-e0). Messen fuer Nord- und Suedwurf, Leon und Elza, Bildbogen Cut 7 F530-F630, Riegel
+(Blickwert je Wurfrichtung).
+
+## 2026-10-25 14:21 — Orchestrator-Entscheid F-E2 (Fragen der Nachbesserung F 4 zu Nachtrag 29; der Nutzer kann widersprechen)
+
+Fragen der Spur F: "Der Alligator ist beim Kampfbeginn jetzt rund 17500 Einheiten entfernt: stehend beisst er nach etwa 15 s,
+beim sofortigen Wegrennen nach etwa 17 s (vorher nach 2 s bzw. 1 s). Passt dir die Entfernung so, oder ist der Anlauf jetzt zu
+lang?" und "Die Leiche mit dem blinkenden Schluessel treibt jetzt im hinteren Nordbecken ... der Schluessel dunkler als vorher.
+Ist er fuer dich gut zu erkennen?" Keine Geschmacksfrage, wo das Original einen Wert hat (Memory reai-v2-original-oder-nicht):
+1. **Kampfbeginn = RE2, nicht "mindestens":** so nah wie moeglich an F's eigenem RE2-Beleg (ROOM40A0 Intro-Ende: Abstand 11430,
+   erster Kontakt nach 121 Bildern bei stehendem Leon; tools/r41_gatorszene/probe_re2_intro_ende.c), nicht darunter. 17539 und
+   470 Bilder sind fast das Vierfache und kein RE2-Kampfbeginn. Liegt der Unterschied an der Zonen-Dash-Sperre (300 Bilder beim
+   Wechsel in Leons Zone), die Lage so waehlen, dass die Zonenbeziehung am Kampfbeginn der von RE2 am Intro-Ende entspricht
+   (in RE2 belegen).
+2. **Schluessel:** mindestens so gut sichtbar wie in der abgenommenen Ankunftseinstellung (hellster Pixel Ruhe >= 72,
+   Blink-Spitze >= 108, Kasten >= 10 x 9), gemessen.
+3. **Fressen:** die Leiche im Maul ist zu sehen (Fress-Einstellung nicht von hinten, Frontalwert > 0); B8 bleibt (keine
+   erfundenen Hintergruende, Massstabsgrenze) - der Freiheitsgrad ist die Lage der Leiche (Nachtrag 6).
+Unter 1-3 die Lage mit dem besten Schluessel-Wert; geht nicht alles zugleich, gilt 1 vor 2 vor 3, Abweichungen mit Zahlen im
+Dossier. Riegel unit_r41_gatorszene_abstand/_flucht: Sollwert RE2 mit oberer UND unterer Grenze aus dem RE2-Beleg.
+
+## 2026-10-25 14:29 — Orchestrator-Entscheid M-E2 (Befund der Nachbesserung M 4; ersetzt M-E1 fuer Original-Teile; der Nutzer kann widersprechen)
+
+Befund der Spur M (Nachbesserung 4): "Die Gelaender, Pfosten, Saeulen und Lampen der Stages 3..6 liegen im Original-
+Vordergrundatlas des Spiels; der Generator hatte sie nur nie gefunden." Werkzeug re15_port/tools/maske/platzieren_r41.py setzt
+437 nie platzierte Kuenstler-Teile in 74 Sektionen an ihre Stelle (+160 539 Punkte, an der exe an 16 Stellen ohne Uebermalung).
+Die Frage an den Nutzer (Nachtrag 27) ging davon aus, dass fuer diese Gegenstaende nur eine Freistellung hilft - das ist widerlegt.
+**M-E2:** Original-Grafik an ihrer Original-Stelle gehoert ins Spiel (Memory reai-v2-original-oder-nicht). Spur M setzt die
+Teile des Original-Atlas ein, in ALLEN Kameras (auch auf der Restliste von Nachtrag 27), sofern je Teil Lage (Bildvergleich
+gegen den Hintergrund) und Tiefe (Zelle mit RDT-Offset) belegt sind. M-E1 gilt weiter fuer AUTOMATISCHE Masken ohne
+Original-Teil. Pruefumfang: jede der 74 Kameras mit mindestens einer HINTER- und einer DAVOR-Stelle an der exe (Leon, Elza
+wo erreichbar), Rueckschritt-Suche wie in Nachbesserung 3, Riegel. Den belegten Generator-Fix "Tuer-Band der Saaten"
+(AOT-Scan pruefen pc[4] @0x80042cac..0x80042ccc) mitnehmen; teilen_r41.py fuer 6000 C5 NICHT (verdeckt 192 Gang-Plaetze falsch).
+Was danach noch fehlt, steht neu im Dossier ("Fuer den Nutzer: Freistellungen") - nur das zeichnet der Nutzer.
