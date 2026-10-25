@@ -531,3 +531,26 @@ schwimmt er hier geradeaus durch. Der Bahnendpunkt (Aufschlag im 2080-Bild, Ton)
 | `OP_SLEEP(30)` nach dem Tür-Ton | RE2-Wert @0x076A aus anderem Zusammenhang (dort nach Message_on) | ROOM1021 sub02: Work_set @0x020C2 -> Plc_motion(2,6) @0x020C6 -> Sleep 110 @0x020CA, kein Warten davor | entfernt: Signal Tür-Ton, dann direkt Work_set + Anlegen; der Ton läuft in den 110 Bildern (Riegel szene: nach dem Signal folgt `2e`) |
 | `OP_SLEEP(30)` in der Rückkehr | RE2 wartet dort mit Wsleep/Wsleeping @0x081A/@0x081B | Wsleeping @0x80053ac0: gibt ab (Rückgabe 2 @0x80053b18), solange `0x800cfbd8 & 0x20` (@0x80053acc) oder `0x800e873c & 0x80` (@0x80053adc-e4); 0x800e873c = 0x80 setzt der Nachrichten-Start FUN_8002fe38 (`addiu t2,zero,128` / `sb t2,-30916(at)` @0x8002fe80/88), hier für Leons Zeile Message_on @0x07E6/@0x07F4 | entfernt: der Port hat diese Zeile nicht -> 0 Bilder; Riegel start prüft die Form ohne Sleep |
 | Adas Wurf-Clip `3f 0a 12 40` @0x0750 durch Eigen c6 ersetzt, ohne Vermerk | - | Marvin/John haben keinen Wurf-Clip (Zensus 8.1: NPC-Plc_motion nur (1,7/11/22/23), (2,6/7)) | PORT-WAHL im Header (Formen) und am Opcode benannt: Eigen c6 hebt beide Hände von der Hüfte nach vorn oben = Hochstemmen über die Reling |
+
+### 8.4 M3 - Wurf-Kamera "GENAUSO" (Nachtrag 5): Entscheidungsvorlage, KEIN "fertig"
+Vorbild RE2 ROOM7020 Cut 7 (RID @RDT+0x24): pos (-22158,-3852,-15174) -> (-28368,-7434,-18234), Ada bei (-28000,-7500,-17900)
+mit Blick 0x0e74 (@0x0740/@0x0748): Kamera **43,6 Grad unter** Adas Kopf, Abstand 8908, frontal 0,99 (Dossier 3.4). Alle neun
+2080-Kameras gegen den Werfer an der Reling (Kopf (-7168,-16900,-17642), Blick +x = über die Reling; RID @0x60, eigene Rechnung
+in diesem Abschnitt, Werte aus ROOM2080.RDT):
+| Cut | pos -> Ziel | Höhe zum Kopf | Abstand | frontal | Bahn im Bild (proj_bahn, Abnahme-Werkzeug) |
+|---|---|---|---|---|---|
+| 0 | (-18060,-16688,-17526) -> (-21498,-7096,-16344) | 1,1 Grad unter | 10895 | -1,00 (Rücken) | nein |
+| 1 | (-23516,-11634,-17708) -> (-18791,-13598,-16767) | **17,9 Grad unter** | 17175 | -1,00 (Rücken) | ja, Bild 0-24 |
+| 2 | (-4832,-19777,-18507) -> (-14827,-14428,-16815) | 49,1 Grad über | 3806 | 0,94 | nein |
+| 3 | (-8446,-18889,-16448) -> (-11806,-16085,-11908) | 48,7 Grad über | 2649 | -0,73 | nein |
+| 4 | (-8667,-18479,-15322) -> (-12249,-15302,-22535) | 29,8 Grad über | 3182 | -0,54 | nein |
+| 5 | (-12826,-18695,-18043) -> (-5172,-15001,-17158) | 17,6 Grad über | 5949 | -1,00 (Rücken) | ja, Bild 0-36 |
+| 6 | (-7315,-17332,-17514) -> (449,-10461,-16726) | 65,7 Grad über | 474 | -0,75 | ja, Bild 0-36 |
+| **7 (gebaut)** | (8095,-18819,-9867) -> (-4415,-11874,-13977) | 6,4 Grad über | 17236 | **0,89** | ja, Bild 0-36 |
+| 8 (flag 1) | (1728,-7272,-21942) -> (7128,-3942,-16218) | **44,3 Grad unter** | 13796 | 0,90 | **nein** (blickt nach Osten weg) |
+In 2090 erreicht die Bahn erst ab Bild 30 von 36 ein Bild (Cut 12, Rand oben). **Keine vorhandene Kamera zeigt den Werfer
+frontal von unten**: von unten sieht ihn nur Cut 1 - von hinten (17,9 Grad, 17175 weit); frontal sind nur Cut 2 (von oben, nah)
+und Cut 7 (Totale, 6,4 Grad über dem Kopf). Neue Hintergründe werden nicht erfunden (Entscheid B8). Unverändert gebaut: Cut 7 (die
+RE2-Schnittfolge Cut_chg 7 @0x0726 -> Wurf -> Aufschlag -> Sleep 15 @0x07A8 -> Schnitt auf den Fangenden wie @0x07D4 bleibt).
+**Entscheidungsfrage an Orchestrator/Nutzer (Abschnitt 8.8, Frage 1):** A) Cut 7 frontal von der Grubenseite (gebaut), B) Cut 1
+von unten, aber von hinten, C) ein anderer Wunsch. Bis zum Entscheid bleibt M3 offen.
