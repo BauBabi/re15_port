@@ -147,3 +147,23 @@ Bilder (RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1, Helligkeit x1,8):
   in Cut 6 ist der Alligator klein (Massstab 587 gegen RE2 1154).
 - `<SP>/plat_leon_r1_f2658-2698_x2.png`: F2658 laufender Cut 2 (Koerper vor der Linse), Schnitt auf Cut 1, Explosion und Fontaene mit Kopf im
   Bild bis F2694, F2698 zurueck auf Cut 2 - M1 (Kopf hinter dem Maschinenblock) tritt hier nicht mehr auf.
+- Weitere Laeufe: **k_elza** (Haken HP, 250 Bloecke, EXIT_AT 9000#2091): Ausloeser F902, Aufnahme F102/F114, R1 F2536 (-4581,-16671),
+  Kanister (-6641,-2024,-19991) innen, laufender Cut 0 (264,102) 8/8 19/19 -> Wahl Stufe 0 Cut 6 (123,109) 8/8 19/19, Spritzring 96 in 12
+  Bildern, Scherben 10 = Dossier 11.5 k_elza*. Der Riegel integration_r41_kanister2080_kampf (eigener Lauf lauf_3d5e5348, mit meinem
+  auswertung.py nachgelesen): kampf_leon F1429 Cut 6, kampf_elza F2536 Cut 6, nordost_leon F1409 Cut 7 (200,119), plattform_leon F2659
+  Cut 1, west_elza F3040 Cut 1 (182,96) - jeweils Kanister innen, Start 8/8, Todes-Clip 19/19 "voll", Spritzring > 0.
+
+### 4.3 P3 Szene in 2080/2081 und Fall in 2090 (Bilder; Haken HP nur fuer einen schnellen Ausloeser, die Szene selbst laeuft ohne Haken)
+- s_leon (`RE15_EXIT_AT=630#2080 RE15_FRAMEDUMP=0-630/6:s_`): Zeitlinie debug.log `F118 Schuss 1: Treffer Slot 6 ... hp=-1 state=3` ->
+  `F119 Kopf ab: Slot 6 (Part 8 Flagwort 0x4B ...)`, ... `F351 Schuss 8` -> `F352 Kopf ab ... 8 von 8` (je Zombie EIN Schuss, Kopf ab im
+  Folgebild), `F405..F435 NPC Lauf Sub 5` zum Kanister, `F465 Kanister aufgehoben (Loco c11 Bild 24)`, `Zeile 42 stand F531..F629`, Wurf F631;
+  Kameras Cut 2 (F0-F360), Cut 5 (F420-F528), Cut 7 (ab F540).
+  Bilder `<SP>/s_leon_kopfschuesse_cut2_x2.png` (Marvin in der Tuer, die Koepfe platzen nacheinander als rote Wolke, die Zombies fallen,
+  F396 alle 8 am Boden) und `<SP>/s_leon_aufnahme_cut5_wurf_cut7_x2.png` (F426-F444 Marvin laeuft zur Reling-Luecke mit dem Kanister,
+  F456-F468 kniet, F480-F504 hebt den Kanister an und kippt ihn, F528 haelt ihn quer mit beiden Haenden vor sich; Cut 7 F540-F624 Marvin
+  oben an der Reling mit dem Kanister, Untertitel "Marvin: Hey, Leon, try with this!").
+- s_elza (2081): `ROOM2081 SZENE (John 0x49 ...)`, dieselbe Zeitlinie; Bild `<SP>/s_elza_john_szene_x2.png` (John koepft die 8 Zombies,
+  kniet, haelt den Kanister mit beiden Haenden, Cut 7 "John: Hey, Elza, try with this!").
+- fall_leon (`RE15_EXIT_AT=1000#2090 RE15_FRAMEDUMP=0-160/4:f_`): nach dem Wurf 2090 Cut 12 (F4-F56: Reling oben, der Kanister faellt, der
+  Alligator schwimmt nah an der Kamera vorbei), `F43 Aufschlag im Wasser bei (-6096,-2076,-21600)`, `Kanister im Becken ... (Bit 116)`,
+  `F43 ANSCHWIMMEN an`, ab F58 Cut 0, `KANISTER Stufe 1` F103 / angehaengt F115 im Hintergrund; Bild `<SP>/fall_leon_cut12_aufnahme_x2.png`.
