@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """plakat.py - Runde 41 Spur C, Nachbesserung 4 (Nachtrag 13 Folgen 2/3): das Plakat mit der FALSCHEN Ventil-Anleitung
-und die zwei Weltmodelle (Dokument-Blatt am Boden, Plakat an der Wand) fuer ROOM2030/2031.
+und die zwei Weltmodelle (Dokument - seit Nachbesserung 5 ein aufrechter Zettel an der Suedwand -, Plakat an der Wand) fuer ROOM2030/2031.
 
 Erzeugt re15_port/engine/src/gen/ventilkette_r41_plakat.inc und die Vorschau analysis/befunde_runde41/C_belege/nb4_plakat.png.
 Dossier: analysis/befunde_runde41/C_ventilkette.md §0e (B4-2..B4-5, §7 zur Freigabe).

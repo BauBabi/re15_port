@@ -374,7 +374,7 @@ if(_nr GREATER 4 OR _ng GREATER 4 OR _nb LESS 20)
     message(FATAL_ERROR "r41_ventilkette[c]: Ertrink-Blende F${_bild_nach} nicht blau (${_rgb_nach}; erwartet Rot/Gruen <= 4, Blau >= 20 - ABR 2 Maske Rot+Gruen @0x174a)")
 endif()
 
-# ---- D: Ventile ohne Sicherung (Nachtraege 9/10) ---------------------------------------------------------------------
+# ---- D: Ventile ohne Sicherung im Ventilkasten 2010 (Nachtraege 9/16) ---------------------------------------------------
 set(WORKDIR "${_basis}_d")
 file(MAKE_DIRECTORY "${WORKDIR}")
 re15_start_spiel(_rvd 240

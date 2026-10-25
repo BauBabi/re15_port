@@ -3,7 +3,7 @@
 # Mangel 1: auf die Kette der Nachbesserungen 3/4 umgestellt; Nachbesserung 5 - Abnahme 4 Mangel 3: Bedingung der Ventile ist
 # seit Nachtrag 16 die Sicherung im Ventilkasten 2010 (9,125), nach jedem Ja laeuft die RE2-Dreh-Animation (345 Takte, der
 # Wegplan ruht waehrend player_mode 2) -> WARTE 450): 2030 Sued-Landeplatz (Bruecke unten, Sicherung genommen =
-# Bedingung der Nachtraege 9/10) -> die richtige Ventil-Folge 09/07/02/01 ZU FUSS (Nachtrag 13) -> Warnung -> ZU FUSS ueber
+# + Sicherung im Ventilkasten 2010 (9,125) = Bedingung der Nachtraege 9/16) -> die richtige Ventil-Folge 09/07/02/01 ZU FUSS (Nachtrag 13) -> Warnung -> ZU FUSS ueber
 # Steg, Treppe und Ring durch die Ost-Tuer -> ROOM20B0 -> Auswasch-Szene des Originals bis zur Freigabe ((3,235)=1, Balken
 # weg) -> zu Fuss durch den Kanal an die Leiter -> ROOM2050. Dossier analysis/befunde_runde41/C_ventilkette.md §0b M2, §0e.
 #
