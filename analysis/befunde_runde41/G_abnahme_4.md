@@ -153,6 +153,11 @@ Bilder (RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1, Helligkeit x1,8):
   auswertung.py nachgelesen): kampf_leon F1429 Cut 6, kampf_elza F2536 Cut 6, nordost_leon F1409 Cut 7 (200,119), plattform_leon F2659
   Cut 1, west_elza F3040 Cut 1 (182,96) - jeweils Kanister innen, Start 8/8, Todes-Clip 19/19 "voll", Spritzring > 0.
 
+- west_leon (Haken HP, Leon (-8000,-16000)): Ausloeser F802 (Treffer 4), R1 F322 (-6643,-13099), Kanister (-6615,-1956,-9182) innen, Cut 5
+  (160,89) 8/8 19/19, Spritzring 96 in 12; d15_leon (`SCHIESS_W=W15.0`): R1 F1022 (-1994,-9624), Kanister (-1139,-1788,-5493) innen, Cut 4
+  (81,123) Start 5/8 "ungueltig" (3 Sprite-Raender am Bildrand), Todes-Clip 19/19 "voll" - beides = Dossier 11.5. Groesster Sprung je Bild
+  bis zum R1: 435 / 586.
+
 ### 4.3 P3 Szene in 2080/2081 und Fall in 2090 (Bilder; Haken HP nur fuer einen schnellen Ausloeser, die Szene selbst laeuft ohne Haken)
 - s_leon (`RE15_EXIT_AT=630#2080 RE15_FRAMEDUMP=0-630/6:s_`): Zeitlinie debug.log `F118 Schuss 1: Treffer Slot 6 ... hp=-1 state=3` ->
   `F119 Kopf ab: Slot 6 (Part 8 Flagwort 0x4B ...)`, ... `F351 Schuss 8` -> `F352 Kopf ab ... 8 von 8` (je Zombie EIN Schuss, Kopf ab im
@@ -183,9 +188,11 @@ aufgetauchten Bildern; Spur Bs Riegel integration_r41_re2gator verlangt im natue
 Mechanismus (state.log + gator_boss.log v1_leon, Bild fuer Bild): F155 Kanister angehaengt, der Alligator dreht auf der Stelle
 (Gier 2785 -> 1921). Vorher (Abnahme 3) blieb die Wurzel dabei auf (-5173,-18311). Jetzt: `KOPF-KLEMME an F156: Ueberstand (1517,0)` ->
 Wurzel x -5173 -> -3656 -> -2996 -> -2472 -> -2105 -> -1899 -> -1867 (F161), dann F163 vor der Klemme x -3184 (zurueck um 1317), Klemme
-+791 -> -2393, F165 wieder -3184. Ursache: Kopf + Kanister (2784 lang) passen beim Drehen nicht zwischen die Westwand (Innenflaeche x -8900,
-SCA @0x6F4) und den Plattform-Block (SCA[4] @0x724 x -1700..1850 z -20000..-12450): die Kopf-Klemme schiebt den ganzen Alligator nach
-Osten, die Wurzel-Klemme der Spur B (Radius) schiebt ihn von der Plattform zurueck nach Westen (-1700 - 1466 ~ -3184) - zwei Klemmen
++791 -> -2393, F165 wieder -3184. Naheliegende Ursache (Lage gemessen, der Einzelschritt der Gegenbewegung nicht im Code verfolgt): Kopf + Kanister (2784 lang)
+passen beim Drehen nicht zwischen die Westwand (Innenflaeche x -8900, SCA @0x6F4) und den Plattform-Block (SCA[4] @0x724 x -1700..1850
+z -20000..-12450, selbst gelesen): die Kopf-Klemme schiebt den ganzen Alligator nach Osten bis x -1867 (167 vor der Blockkante, im
+Klemmstreifen Kante + Koerperradius), im naechsten Takt steht die Wurzel schon VOR der Kopf-Klemme wieder bei x -3184 (gator_boss.log
+`DREH ... pos=(-3184,-18310)`) - die Wand-/Slab-Klemme der Spur B gegen die Plattform und die Kopf-Klemme gegen die Westwand arbeiten
 gegeneinander. An der Suedwand im Treffer-Clip 4 (F471..F474: +131/+457/+582/+379 nach Norden, `KOPF-KLEMME ... groesster Ueberstand
 601`) dasselbe Muster, im Lauf v1 an derselben Stelle F473/F584/F954/F1186/F1900 wiederholt.
 Bilder: `<SP>/v1j_leon_sprung_f153-168_x2.png` (Cut 1: der Alligator liegt beim 1517-Sprung fast ganz ausserhalb des Bildes, nur das
@@ -194,3 +201,43 @@ Rumpfende am linken Rand ruckt), `<SP>/v1j2_leon_sprung_f468-479_x2.png` (Cut 1:
 Alligator am rechten Rand, kaum zu sehen). Bewertung nach FG-E6: Feinheit (in den gemessenen Bildern kein kaputtes Bild, kein Haenger,
 der Kampf endet in allen Verlaeufen mit dem R1), aber eine neue, messbare Unstetigkeit, die die Nachbesserung einfuehrt und die das Dossier
 nicht nennt ("kommt ... etwas weniger weit heran" beschreibt sie nicht) -> offen O1 (Abschnitt 8).
+
+### 1b Gezielte Integrations-Tests (Log `<SP>/ctest_integ.log`; -j3 neben fremden Laeufen anderer Agenten)
+Ausdruck des Bau-Agenten (21) + integration_r30_granate_laden, integration_r36_elza_fenster, integration_fx_region_cull,
+integration_r41_wasser20b0, integration_r41_kleinkram_a_blink (alle Nutzer von re2_fx/Glas/Werfer/Granate bzw. Riegel, die durch Raeume mit
+den jetzt spielweit gezeichneten Kern-Zeilen laufen; `<SP>/integ_regex.txt`):
+`ctest --test-dir re15_port/build -R "<regex>" --timeout 3000 --output-on-failure -j3` -> **`100% tests passed, 0 tests failed out of 26`**
+(1570,32 s; kanister2080_kampf 1239,63 s, r37_itemband 797,59 s, r36_kartenitems_bild 443,84 s, re2gator 214,01 s, kanister2080 155,33 s,
+raumfremd 48,82 s). Kein Fenster-Haken rot, kein Nachfahren noetig. Riegel-Lauf kampf (`build/tests/integration/r41_kanister2080_kampf_wd/
+lauf_3d5e5348`, mit `<SP>/auswertung.py` nachgelesen): Zahlen siehe 4.2.
+
+## 5. Vertrag
+- Pfade (`git diff 9f10bdb0..HEAD --name-only`): keine release/, platform/android/, shared_assets/PSX/, pri/, synchro/, keine CMakeLists
+  (gezaehlt: 0). Neue RE2-Daten nur unter shared_assets/RE2/ (GATOR40A0.ESP + 7 TIM, KANISTER2080.VBS), im Dossier 11.8 fuer das
+  Paket-Gate genannt. tests/unit/probes/r41_kanister2080.cmake = Spur-Registrierung (wie in den Abnahmen 0-3 angenommen).
+- Bank-9-Bits 114-117 (Zuteilung 114-119), in test_r36_kartenbits.c k_port[] eingetragen, unit_r36_kartenbits gruen; Nachrichten-Id 42 in
+  2080/2081 (gen/kanister2080_r41_texte.inc: "Marvin: Hey, Leon, try with this!" / "John: Hey, Elza, try with this!"), Zuteilung 42-47.
+- Gemeinsame Dateien der Nachbesserung 4: enemy_ai_boss_gator.c (2b) 6 Zeilen markiert (FG-E3/FG-E5/G-E5 erlauben Haken in Bs Modulen),
+  gator_re2_r41.c (Rangfolge/Kopf-Klemme, markiert, G-E3/G-E5), gator_re2_pc.c (Regionstest, markiert, G-E5), render_pc.c eine Zeile
+  RE15_TIM_SLOT_MAX 57 = **G-E6 angenommen** (V1 der Abnahme 3 erledigt), re2_fx.c/re2_fx.h gegenueber Abnahme 3 unveraendert
+  (`git diff cc089cde..HEAD -- re15_port/engine/src/re2_fx.c re15_port/include/re2_fx.h` leer). Textur-Platz 54/56: auf master nicht belegt
+  (master render_pc.c RE15_TIM_SLOT_MAX 56; `git grep` auf master: 53 Kanister, 55 Glas) - kein Platz-Konflikt bei der Integration.
+- Fremde Riegel: tests/unit/test_r41_re2gator.c um die Teile "kopfklemme" (neu) erweitert, registriert in Gs probes-Datei; Bs Riegel
+  (unit_r41_re2gator_*, integration_r41_re2gator) gruen.
+- Tests je Punkt vorhanden und messend (P1 unit spawn/ebene/start + integration ankunft; P2 unit lage + integration kanister; P3 unit szene/
+  bahn/texte/landung/kippen/hals/blick/anschwimmen/r1wahl/fx_*/scherben/kopfklemme + integration szene/elza/kampf/raumfremd); neue Riegel
+  parallel-fest (raumfremd: eigene exe-Kopie re15_pc_r41gr_<zufall>, eigener Laufordner, unset der Testhaken) und Linux-fest (exe ohne
+  .exe ausserhalb WIN32, cmake_minimum_required).
+- Nicht pruefbar hier: PSX-Bau (kein PSn00bSDK auf der Maschine); die Engine-Aenderungen der Nachbesserung 4 sind reines C (int64-
+  Arithmetik in gator_re2_r41.c), gator_fx_r41_pc.c/gator_re2_pc.c sind PC-Dateien.
+
+## 6. Querbezug Nachtrag 29 (der Wortlaut, der diesen Lauf ausgeloest hat: Leiche/Kette zu nah an der Leiter, Spur F)
+- In diesem Zweig fehlt Spur F ganz (keine Ankunftsszene, kein Bit-110-Setzer; Bit 110 in allen Laeufen per RE15_SET_FLAG, Spinnen noch
+  in 2090/2091). G aendert die Startlage des Kampfes nicht; Gs Haken in enemy_ai_boss_gator.c wirken nur mit Kanister/R1 ((2b), G-E1-
+  Anker nur in GBP_RE2_TOD) bzw. bei geworfenem Kanister (Anschwimmen) - die Ankunftsszene/der Kampfbeginn der Spur F wird davon nicht
+  beruehrt (Kopf-Klemme ohne Kanister und ohne R1 aus: `traegt || r1_phase != 0`).
+- Spur F (r41/gatorszene 43cc5f57) setzt in enemy_ai_boss_gator.c zwei Haken: `re15_gatorszene_r41_nachtakt(slot, e)` DIREKT hinter
+  `re15_gr2_nachtakt(slot, e); /* (3) */` und einen Block in gb_takt - Gs (2b) steht unmittelbar davor: beim Merge F+G textueller Konflikt
+  im selben Bereich, beide Haken additiv zu behalten (Reihenfolge: (2) Wurzel-Klemme, (2b) Kopf-Klemme G, (3) nachtakt B, F-nachtakt).
+- Nach der Integration F+G aendern sich Kampfbeginn und -verlauf (Fs neue Startlage, keine Spinnen) - R1-Lagen, Kamerawahl, Kopf-Klemme
+  und die Lagespruenge (4.4) neu messen (Riegel kampf mit seinen fuenf Laeufen; Spinnen-bedingte EXIT_AT 5000 dann pruefen).
