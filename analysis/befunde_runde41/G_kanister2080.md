@@ -962,9 +962,17 @@ Aufnahme, R1-Tod; gemessen Aufnahme F113/F113/F154/F90, Leiche (-5502,-11705)/(-
   --output-on-failure` -> **`100% tests passed, 0 tests failed out of 1`** (Total Test time (real) = 63.97 sec).
 - Spur B's Riegel (unit_r41_re2gator_* 18 Teile, integration_r41_re2gator) gruen: der Haken greift nur fuer den Kanister DIESER
   Szene (Bit 116), Spur B's RE15_GATOR_KANISTER-Weg sieht ihn nicht.
-- Endstand (danach nur Kommentare in re15_kanister2080_r41.h / test_r41_kanister2080.c): `bash re15_port/tools/local_build.sh build`
-  -> `=== LOCAL-BUILD-OK (build)`, derselbe Unit-Lauf -> **`100% tests passed, 0 tests failed out of 43`** (Total Test time (real)
-  = 57.27 sec). Messkopie re15_pc_g41nb2a.exe geloescht; Laeufe/Bilder nur im scratchpad `<SP>/g2`, im Baum nur G_belege/nb2_*.
+- Stand vor Nachtrag 26 (danach nur Kommentare): `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`,
+  derselbe Unit-Lauf -> `100% tests passed, 0 tests failed out of 43` (Total Test time (real) = 57.27 sec).
+- **Endstand mit Nachtrag 26** (Hals + Kippen; neue Teile unit_r41_kanister2080_kippen / _hals, integration szene prueft die
+  Kipp-Folge "A 1:0 6:240 12:1056 18:2448 24:4096", kampf die Zeilen "HALS zum Kanister" / "HALS zurueck (Akku -> 0)"):
+  `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`;
+  `ctest --test-dir re15_port/build -R "unit_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_|unit_msg_|unit_action_msg_gate|unit_alligator_ai|unit_gator_|unit_r35_granate|unit_r34_reaktion|unit_re2_spider_water_2090" --timeout 600 --output-on-failure -j4`
+  -> **`100% tests passed, 0 tests failed out of 45`** (Total Test time (real) = 54.76 sec);
+  `ctest --test-dir re15_port/build -R "^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_re2gator$|^integration_r35_granate$|^integration_r38_wasser$|^integration_r41_wasser20b0_npc$|^integration_r37_itemband$|^integration_r36_tueren$" --timeout 3000 --output-on-failure -j3`
+  -> **`100% tests passed, 0 tests failed out of 8`** (Total Test time (real) = 927.54 sec; kanister2080 204,86 s, kanister2080_kampf
+  523,99 s, re2gator 248,31 s, r36_tueren 70,60 s, r37_itemband 927,46 s).
+  Messkopien re15_pc_g41nb2a/b.exe geloescht; Laeufe/Bilder nur im scratchpad `<SP>/g2`, im Baum nur G_belege/nb2_*.
 
 ### 9.5a Nachtrag 26 (2026-10-25 08:16, waehrend dieser Nachbesserung in den Baum gelegt) - Nutzer-Antworten auf 8.8 + FG-E5
 Wortlaut-Kern (AUFTRAG.md): 1. "Soll der Alligator die RE2-Hals-/Anschwimm-Lenkung zum Kanister bekommen?" - **"Ja, RE2-Lenkung
