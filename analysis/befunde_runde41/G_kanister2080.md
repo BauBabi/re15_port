@@ -892,3 +892,28 @@ Include (1 Zeile), Export `re15_gator_boss_steuerziel` (gb_kanten_umweg + Klemmf
 der Aufnahme-Lenksperre `if (re15_k2080_r41_anschwimmen(slot, e, dist)) break;`, GUARD `oben = 0` waehrend des Anschwimmens.
 Nur fuer den Kanister DIESER Szene (Bit 116, im Raum gelegt) - Spur B's eigene Riegel (RE15_GATOR_KANISTER-Weg) sehen den Haken
 nicht (Gegenprobe im Riegel anschwimmen).
+
+### 9.4 Messung nachher (Bau 2026-10-25 06:46, exe-Kopie re15_pc_g41nb2a.exe; Rezept des Riegels kampf, KEIN RE15_GB_TEST /
+RE15_GATOR_KANISTER / RE15_KEIN_GATOR / RE15_K2080_WURF_GIER; Ausloeser-Messhaken RE15_K2080_GATOR_HP=24990 wo angegeben; Laeufe
+`<SP>/g2/runs/<Lauf>`, Auswertung `<SP>/g2/auswertung.py`; Zeit seit dem Loslassen = 1 Bild bis zum Raumwechsel + Bild der Aufnahme
+im Rueckkehr-Besuch)
+
+| Lauf | Start | Ausloeser | Wurf-Gier -> Landung | Zeile 42 (state.log a=1) | Gier Slot 9 | ANSCHWIMMEN an | Aufnahme (Stufe 1) | R1 / Leiche |
+|---|---|---|---|---|---|---|---|---|
+| k_leon (Riegel kampf) | (-6000,-17500) | F902, Haken HP, Alligator (-4889,-7442) | 1024 Sued -> (-6821,-22914) | 99 Bilder F530..F628, Wsleeping frei F630, Wurf F631 | 93 ab dem Hinknien F440 bis F529, F530 (Cut 7) 1024 | F43, Abstand 15325 | **F113 = 114 Bilder = 3,8 s** nach dem Loslassen | R1 F826, Leiche (-5502,-11705) |
+| k_elza (John) | (-6000,-17500) | F902, (-4889,-7442) | 1024 -> (-6830,-22942) | 99 F530..F628, Wurf F631 | 93 -> F530 1024 | F43, 15354 | **F113 = 3,8 s** | R1 F826 |
+| **v1_natur_leon (ohne jeden Testhaken)** | (-6000,-17500) | **F7375, 37 echte Treffer**, Alligator (4664,-24479) (SO) | 3072 Nord -> (-7515,-12304) | 99 F530..F628, Wurf F631 | 93 -> F530 3072 | F50, 16925 | **F146 = 147 Bilder = 4,9 s** (vorher: keine Aufnahme in 9000 Bildern) | R1 F1549, Leiche (-6149,-20637) |
+| v5_west_leon | (-8000,-16000) | F802, Haken HP, (-4940,-9716) | 1024 -> (-6821,-22914) | 99, Wurf F631 | 93 -> 1024 | F43, 13195 | **F90 = 3,0 s** (vorher keine in 4000) | R1 F814, Leiche (-4670,-18747) |
+| v3_west_elza | (-8000,-16000) | F802, (-4940,-9716) | 1024 -> (-6830,-22942) | 99, Wurf F631 | 93 -> 1024 | F43, 13222 | **F90 = 3,0 s** (vorher keine in 4000) | R1 F814 |
+| v2_no_leon | (0,-7000) | F876, Haken HP, (5716,-7090) (NO) | 1024 -> (-6821,-22914) | 99, Wurf F631 | 93 -> 1024 | F43, 19719 | **F154 = 5,2 s** (vorher F3835) | R1 F899, Leiche (5716,-9033) |
+| v4_no_elza | (0,-7000) | F876, (5716,-7090) | 1024 -> (-6830,-22942) | 99, Wurf F631 | 93 -> 1024 | F43, 19747 | **F154 = 5,2 s** (vorher F3835) | R1 F899 |
+| lang_L3 (Fall des Bau-Agenten) | (-8000,-7000) | F950, Haken HP, (-7264,-6972) | 1024 -> (-6821,-22914) | 99, Wurf F631 | 93 -> 1024 | F43, 15994 | **F122 = 4,1 s** (vorher keine in 12000) | R1 F679, Leiche (-712,-10966) |
+
+- In allen acht Laeufen zwischen "KANISTER gesetzt" und "KANISTER Stufe 1" keine einzige BISS/LUNGE-Zeile im gator_boss.log
+  (RE2: kein Biss, solange der Zielmodus steht, @0x8010134c-58).
+- Kein "GATOR VERSCHWUNDEN"/"RE2 AUFTAUCHEN"/"INTRO ende" nach der Szene (FG-E3 unveraendert); "FG-E3: ROOM2090 derselbe Alligator
+  in Slot 35" mit der Lage/HP vom Ausloesen in jedem Lauf.
+- N2 in Zahlen: in Cut 5 aendert sich die Gier des Werfers nach dem Hinknien (F440) in keinem Bild mehr; der Wechsel auf die
+  Wurf-Gier faellt in das erste Bild von Cut 7 (F530), dem Bild des Schnitts - vorher F464 -> F465 mitten in Cut 5.
+- N1 in Zahlen: die Zeile 42 steht jetzt ihre volle Zeit (99 Bilder wie in Abnahme 0, vorher 52), das Loslassen folgt im Bild nach
+  "Wsleeping frei"; der Fall laeuft weiter in 2090 Cut 12 (state.log cam=12 F1..F57, Aufschlag F43).
