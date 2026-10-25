@@ -42,6 +42,8 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
   (scratchpad-Helfer `F41/lauf.sh`, Elza `F41/lauf_elza.sh`), RE15_WINDOW_SCALE=1, Bilder nur per RE15_FRAMEDUMP.
 * Commits: 467c766e (Dossier), 07950791/a11460cd (Punkt 2), f4b17b5f (Szene), e0f0635a (Water Key), 6abb940b (Belege),
   898ae6a8 (Cut 1/Licht, Knall, 2080 oben, Tor, Musik), ef13fe31 (Riegel), 73bf903f (r26-Riegel), Schluss-Commit.
+* Nachbesserung 1 (2026-10-25): 6e9a7b90 (Plan), f478ece5 (M1/M3/M6/N1), 5b08e96e (M4 + M5), ff5bdf11 (M2 + Riegel),
+  e01ea055 (M2 groesstes Bild), d224c392 (exe-Riegel + Bilder), 9d36260c (Dossier), Schluss-Commit fix(r41-gatorszene).
 
 ## Punkt 2 — Spinnen aus ROOM2090 entfernen
 
@@ -391,7 +393,12 @@ Neu/erweitert: unit_r41_gatorszene_tod (neu, M2), _leiche (M5), _tor (M3), _szen
 integration_r41_gatorszene_tod / _tod_elza (neu, M2: zwei exe-Laeufe mit/ohne Schluessel + Auswerter `test_r41_gatorszene
 bilddiff`), _leon / _elza (M1: Folge C 0, Kamera-Uebergabe-Zeile, state.log F405-F479 cam=0).
 Gezielt (keine volle Suite), Regex wie Abnahme 0 plus `integration_r41_re2gator$` (scratchpad `F41n1/final_regex.txt`):
-SUMMENZEILE_FOLGT
+`ctest --test-dir "<baum>/re15_port/build" -R "^(unit_r41_gatorszene_|integration_r41_gatorszene_|unit_r41_re2gator_|integration_r41_re2gator$|unit_r36_kartenbits$|unit_r26_inventar$|unit_r21_discard_wegwerfen$|unit_r39_inventar_|integration_r39_inventar_discard$|unit_item_|unit_inv_|unit_sca_wall_hit$|unit_re2_spider_|unit_spider_ai$|unit_adult_spider_ai$|unit_r38_spinnen$|integration_r38_spinnen_echtlauf$|unit_writher_ai$|unit_enemy_shootable$|unit_collision_layers$|unit_alligator_ai$|unit_gator_sweep$|unit_gator_fress$|unit_r36_schluessel_|integration_r36_schluessel|unit_r38_dining1141_(schluessel1011|tuer1131)$|unit_r38_rolltor20a0|integration_r38_rolltor20a0|unit_r37_feuerloescher_|integration_r37_feuerloescher$|unit_r39_optik_schluessel$|unit_r39_schluessel2_|unit_aot_sce_census$|unit_aot_edge$|unit_scd_|unit_door_seq$|unit_r38_wasser_aotbreite$|unit_r41_kleinkram_a$|integration_r41_kleinkram_a_blink$|r31_trefferboxen|unit_rotor_bgm_pin$|unit_r35_cut10f0_bgm$|unit_r39_johnruf1041_musik$|unit_r35_cut1150_knallbank$|unit_r36_szene1150_knall_re2$|integration_r39_elzazombies_knall$|unit_r36_inventar$|unit_r36_kartenitems$|unit_r37_itemband$|unit_r36_tueren_|unit_r33_tueren_|unit_r30_tuer|integration_(cross_stage|room_probe_sweep|rvd_coverage|door_traversal|door_lock|item_name_census|keydoor)$|prop_door_roundtrip$|prop_spawn_entered$)" -j3 --timeout 900 --output-on-failure`
+-> `100% tests passed, 0 tests failed out of 133` (Total Test time (real) = 657.29 sec).
+Nach der letzten Code-Aenderung (key_suche: Reihenfolge der Pruefungen nach Kosten, Ergebnis gleich; r_nah aus Knochen 6/0)
+erneut die betroffene Gruppe: `ctest --test-dir "<baum>/re15_port/build" -R "^(unit_r41_gatorszene_|integration_r41_gatorszene_|integration_r41_re2gator$)" -j3 --timeout 900 -V`
+-> `100% tests passed, 0 tests failed out of 14` (Total Test time (real) = 242.85 sec; tod/tod_elza wieder 60/60 Bilder,
+75 -> 111, gleiche Lage (-1300,-1729,-24000)).
 
 ### N1 OFFEN
 
@@ -402,6 +409,11 @@ SUMMENZEILE_FOLGT
 3. Unveraendert aus §O: Musik nach dem Tod (MAIN2E statt RE2-Ausblenden), Nachrichten-Ids 44-46 frei, PSX-Bau ungeprueft,
    Schachtspinnen 20A0.
 4. §O 1 (Spur-B-Riegel) und §O 3 (flacher Schluessel) sind mit dieser Nachbesserung erledigt (M4, M2).
+5. Ersatzlage nach dem Laden eines Spielstands in einem frischen Prozess (Todeslage nicht im RAM): Lauf P3/P3x (Bits 110+111,
+   RE15_KEIN_GATOR=1, Sprung-Cut 0): Neigung im ersten Takt zur Kamera 0 (rx -320 rz 576), 31 von 31 Bildern mit Unterschied,
+   aber nur eine Pixelspalte (127,102)-(127,105), 32 -> 63 - klein. Nicht geprueft (nicht F's Modul): ob der Alligator nach so
+   einem Laden wieder lebend gesetzt wird.
+6. PSX-Laufzeit von key_suche (einmal beim Tod; Rasterpruefung nur im Ring um die Leiche) ungemessen - PSX-Bau ungeprueft.
 
 ### N1 Fuer den Nutzer
 

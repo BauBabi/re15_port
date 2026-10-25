@@ -1013,19 +1013,23 @@ static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t
     int gefunden = 0;
     for (int32_t z = z0; z <= z1; z += GSZ_RASTER)
         for (int32_t x = x0; x <= x1; x += GSZ_RASTER) {
-            int32_t wy;
-            if (!wasser_quadrat(x, z, &wy)) continue;
-            const int32_t p[3] = { x, wy, z };
-            int sx = 0, sy = 0; int32_t vz;
-            if (!kam_proj(&v, p, &sx, &sy, &vz)) continue;
-            if (sx < GSZ_BILD_X0 || sx > GSZ_BILD_X1 || sy < GSZ_BILD_Y0 || sy > GSZ_BILD_Y1) continue;
-            if (vz >= vz_min - GSZ_GATOR_HALBBREITE) continue;          /* vor der ganzen Leiche */
+            /* Reihenfolge nach Kosten (Ergebnis gleich): Naehe zur Leiche, Bild/Tiefe, zuletzt die Wasserzonen (je bis zu
+             * RE15_AOT_MAX Saetze) - so laufen die teuren Pruefungen nur fuer den Ring um die Leiche (PSX-Laufzeit). */
             int64_t d2 = INT64_MAX;
             for (int i = 0; i < npk; i++) {
                 const int64_t dx = (int64_t)x - pk[i][0], dz = (int64_t)z - pk[i][2];
                 if (dx * dx + dz * dz < d2) d2 = dx * dx + dz * dz;
             }
             if (d2 > (int64_t)r_nah * r_nah) continue;                     /* nicht mehr "in der Naehe seiner Leiche" */
+            const int32_t wy0 = re15_aot_water_at(x, z);
+            if (!wy0) continue;
+            const int32_t p[3] = { x, wy0, z };
+            int sx = 0, sy = 0; int32_t vz;
+            if (!kam_proj(&v, p, &sx, &sy, &vz)) continue;
+            if (sx < GSZ_BILD_X0 || sx > GSZ_BILD_X1 || sy < GSZ_BILD_Y0 || sy > GSZ_BILD_Y1) continue;
+            if (vz >= vz_min - GSZ_GATOR_HALBBREITE) continue;          /* vor der ganzen Leiche */
+            int32_t wy;
+            if (!wasser_quadrat(x, z, &wy)) continue;
             if (!gefunden || vz < out->vz || (vz == out->vz && d2 < out->d2)) {
                 out->x = x; out->y = wy; out->z = z; out->vz = vz; out->d2 = d2; gefunden = 1;
             }
@@ -1104,8 +1108,8 @@ static void key_lage_bei_tod(void)
     const int npk = leichen_punkte(g, pk, kopf);
     /* Naehe = Kopf-Wurzel-Abstand der Leiche (Knochen 6 zu Knochen 0, xz); ohne Bank der Kopf-Versatz 3055 der Buehne */
     int32_t r_nah = 3055;
-    if (npk > 6) {
-        const int64_t dx = (int64_t)pk[6][0] - pk[0][0], dz = (int64_t)pk[6][2] - pk[0][2];
+    if (npk > 6) {                                          /* kopf = Knochen 6, pk[0] = Knochen 0 (leichen_punkte) */
+        const int64_t dx = (int64_t)kopf[0] - pk[0][0], dz = (int64_t)kopf[2] - pk[0][2];
         r_nah = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
     }
     gsz_lage_t l, b;
