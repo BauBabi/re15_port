@@ -49,7 +49,7 @@ NB1-Zeichenketten `vorher Waffe %d, HP %d` und `Wurzel-Bind y %d (Modell %d)` ->
   -> **`100% tests passed, 0 tests failed out of 924`** (577 s) — `k1/ctest_units.log`. Ausgenommen nur die 7 Release-/
   Android-Skripttests, die unter Last in Zeitablaeufe laufen (Abnahme 0 und Bau-Agent: dieselbe Gruppe); Spur K beruehrt
   weder `release/` noch `platform/android/`.
-* Integrationsgruppen: s. Abschnitt 8 (laeuft nach den Messlaeufen, um Last-Flattern zu vermeiden).
+* Integrationsgruppen: s. Abschnitt 9 (nach den Messlaeufen gefahren, um Last-Flattern zu vermeiden).
 
 ## 4. RE-Gate (Stichproben SELBST disassembliert / gelesen; richtige Binaerdatei)
 | Behauptung (Code/Dossier/Commit) | eigene Pruefung | Ergebnis |
@@ -77,7 +77,7 @@ Befehl: Karte `probe_r36_elza_karte re15_card.mcr 3061 -3500 -25500 1024 4:244 3
 RE15_INPUT_SCRIPT_START=420 RE15_INPUT_SCRIPT=U0.5,W0.5,(A0.1,W1.4)x70`, in 30C1 `RE15_PAD_AT` = Drehen links F600-612,
 Rennen F620-720, Drehen links F725-737, Gehen F745-776, Drehen rechts F785-797, Gehen F805-845, Viereck F850-950/10;
 `RE15_EXIT_AT=60#3091`. KEIN RE15_WORKVAR_AT, KEIN RE15_FIRE_AOT, KEIN Sprung. (Gegenprobe: die Tasten ab F600 fallen in
-3061 in die Kriech-Szene und wirken dort nicht — Cut_chg F497/F628/F785/F1391 und Spielerweg F600-F800 bitgleich zu
+3061 in die Kriech-Szene und wirken dort nicht — Cut_chg F497/F628/F785/F1391 und Spielerlage/-gier F600-F800 (je 10 Bilder) gleich
 Abnahme 0 Lauf A ohne Tasten.) debug.log:
 ```
 [save] CONTINUE: resumed in room 3061 (hp=100)
@@ -202,7 +202,8 @@ Abweichungen` = der Riegel misst).
   `Spielermodell 4 -> 15, Waffe (aca5d) 0, HP 100, Status 0000 (vorher Waffe 3, HP 100, Status 0000)` und
   `Spielermodell 15 -> 4, Waffe (aca5d) 1, HP 100, Status 0000 (vorher Waffe 0, ...)`, danach `[equip] W-bank -> W01` —
   die Pistole kommt NICHT zurueck (alte PORT-WAHL), Elza hat wie im Original (GDB: `aca5d 1`) das Messer; Bilder
-  `k1/k1_w_30c1_elza_nach.png` (Marvin-Szene 30C1 "Who are you?": Elza im eigenen Koerper PL04, Messer an der Hand).
+  `k1/k1_w_30c1_elza_nach.png` + Zoom `k1/k1_w_elza_zoom.png` (Marvin-Szene 30C1 "Who are you?": Elza im eigenen Koerper PL04,
+  Messerklinge an der Hand F220/F300).
   (Der Gift-Haken RE15_R39_GIFT_AT=1720 griff in diesem Lauf nicht — Spieler im Untersuchen-Takt nicht "aktiv"; HP/Status
   daher hier nicht trennscharf.)
 * HP/Status trennscharf: mein Lauf von `integration_r41_stage3szenen_b_3091` (lauf_929dc0b1, Auswertung selbst erneut
@@ -241,7 +242,16 @@ Abweichungen` = der Riegel misst).
   RE15_*-Umgebung geloescht), Linux-fest (`cmake_minimum_required` in allen -P-Skripten, libm, exe-Endung aus
   RE15_PC_EXE, keine Backslash-Pfade).
 
-## 9. Integrationsgruppen (laeuft)
+## 9. Integrationsgruppen (gezielt; nach den Messlaeufen, Maschine unter Fremdlast ~97 % CPU)
+Regex (`k1/integ_regex.txt`) = die 63 Gruppen des Bau-Agenten (Szenen mit Spieler-Plc_motion 1011/1021/1041/1141/1150/
+1170/1171/11B0/11C0/10F0, Weste/Kleidung/Zielen/Klettern/Raumwechsel, Elza-EMS 3071/3091/1141) PLUS 14 eigene:
+`r36_story_leon`, `r36_story_elza`, `r33_speichern`, `save_counter_pin`, `r38_elzaintro_stimme`, `r38_elzaintro_schwarz`,
+`elza_vollstart`, `r39_zustand_gift` (Status-Bit 0x2 wird jetzt beim Figurwechsel geloescht), `r39_funk10f1_echt`,
+`r37_feuerloescher`, `r39_elza_loescher`, `door_traversal`, `cross_stage`, `r37_masken36_stage3`:
+`ctest --test-dir re15_port/build -R "<regex>" -j 3 --timeout 2400 --output-on-failure` ->
+**`100% tests passed, 0 tests failed out of 77`** (Total Test time (real) = 3374.02 sec) — `k1/ctest_integ.log`.
+Zusaetzlich `integration_r36_dachkiste` (einziger Integrationslauf in einem Raum mit zwei Spieler-Records, ROOM2000 —
+dort aendert der Binder-Record die Clip-Laenge der Spieler-Schleife): s. unten.
 
 ## 10. Hinweise (kein Mangel der Spur K; fuer Integration/Orchestrator)
 * **H1 Integration plcloop_r41.c:** add/add gegen r41/integration — die K-Fassung nehmen (= E-Blob c5a86597 + Binder-Record,
