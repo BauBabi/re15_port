@@ -2,7 +2,7 @@
 
 Pruefer: Abnahme-Agent 1 (2026-10-25). Baum `.claude/worktrees/r41_stage3szenen_b`, Zweig `r41/stage3szenen_b`,
 HEAD `05655492` (Nachbesserung 1), merge-base mit master `4c667c97`. Nichts am Code geaendert; einzig diese Datei wird
-committet. Bericht wird fortlaufend geschrieben (Stand je Abschnitt).
+committet. Bericht fortlaufend geschrieben; Stand: ABGESCHLOSSEN (2026-10-25 ~05:15).
 Messdateien (Skripte, Logs, Bilder) dieser Abnahme:
 `C:\Users\MJOEDI~1\AppData\Local\Temp\claude\c--workspace-git-reAi-v2\c41eae99-e724-4cb3-afb9-119709f20a9d\scratchpad\k1\`
 (im Text kurz `k1/...`).
@@ -63,6 +63,8 @@ NB1-Zeichenketten `vorher Waffe %d, HP %d` und `Wurzel-Bind y %d (Modell %d)` ->
 | DEBUG.BIN @0x800c00a8 = `lui t1,0x800b / lbu t1,-13732(t1) / lui t0,0x800c / addiu t0,t0,0xd4 / addu / lbu v0,0(t0) / ... / jr ra`; Tabelle @0x800c00d4 = `01` x15, `00` | Rohbytes `info/Re1.5/PSX/BIN/DEBUG.BIN` @0xa8..0xe8 selbst dekodiert; Original-RAM (`K41/orig/lauf2_30c1.sav`, Stub @0x80026e4c `08 00 e0 03` = sauber) @0x800c00a8 64 Bytes = DEBUG.BIN @0xa8 (`gleich: True`), dort aca5c 15 / aca5d 0 / HP 100 / Status 0 | stimmt |
 | Modellwechsel-Bytes: ROOM3061 @0x011F6 `24 10 0f 00`, ROOM3091 @0x01D9C/@0x01DA8 `24 10 04/05 00`, ROOM3020 @0x00D7A `24 10 0d 00`, ROOM3060 @0x010D2/@0x010DE `24 10 00/01 00`; Plc_flg `43 00 04 00` ROOM3091 @0x01712/@0x01906/@0x01A36/@0x01B0E/@0x01B7A/@0x01CA0, `3f 00 0d 00` @0x0170E/@0x01902, ROOM3061 @0x010F8/@0x01126, ROOM6031 @0x0104E, ROOM1011 @0x00D9E | Rohbytes der RDTs (`shared_assets/PSX/STAGE*/`) | alle 18 Stellen stimmen |
 | PLD-Teile: bytegleich nur PL00/01/02 (EDD 3160 `038c9653`, EMR 57136 `b467407e`) und PL04..07 (EDD 3156 `de98dbdd`, EMR 56576 `145d7964`); PL03-EMR, PL08..PL0F weichen ab; PL0D EDD 3152 / EMR 56976 | eigener PLD-Verzeichnis-Leser + md5 ueber alle 16 PLD | stimmt (M3-Begruendung jetzt richtig) |
+| Ruestungs-/Figurenwechsel-Einteilung (sherry_r41.c): Figuren-Bit `lbu v1,aca5c` @0x8001207c / `andi v1,v1,0x4` @0x80012088; Waffen-Basis u16 @0x800741e8 | `dis 0x80012070 12`, `read 0x800741e8 16 --w 2` = [76 x4, 97 x4, 76 x7, 118] | stimmt |
+| 3091-Spieler-Record = rec2 (Clip 13 = 40 Bilder); erster Record rec0 = 1 Clip mit 2 Bildern -> Rueckfall PL0F-EDD Clip 13 = 1 Bild (Fehler der E-Fassung) | eigener RBJ-Leser ROOM3091 (+0x5C = 0x2510): rec0 Marker 1 w180/w184 80121d28/80121dd0, rec2 Marker 3 8012737c/8012da54 = Original-RAM des Spielers im GDB-Protokoll (B0 `w180=8012737c w184=8012da54`); rec2 Clips [20,30,30,20,30,25,30,50,18,24,20,15,30,40]; PL0F-EDD Clip 13 = 1 | stimmt |
 | Original-Rueckwechsel per GDB (`K_belege/nb1_m2_orig_rueckwechsel_gdb.log`): Szenenbild 2800 HP := 37 + Gift; danach `aca5c 4 aca5d 1 HP 100 Status 0000 25c8 0` | Protokoll selbst gelesen; Werkzeug schreibt HP @0x800acaee / Status @0x800acaec (= Disasm-Adressen +0x9a/+0x98) und liest dieselben | schluessig; dynamisch nicht wiederholt (DuckStation-Lauf), statisch durch @0x80031710-20 gedeckt |
 Suchworte im Diff (`deferred|tunable|interim|for now|faithful|plausib|TODO|FIXME|approx|geraten|vermut|vorerst|Platzhalter`):
 **keine**. Gekennzeichnet: Binder-Schutzgrenzen (J, PORT-WAHL), Ausruest-Sperre fuer Sherry (Nutzer-Wortlaut "keine Waffe",
@@ -251,7 +253,9 @@ Regex (`k1/integ_regex.txt`) = die 63 Gruppen des Bau-Agenten (Szenen mit Spiele
 `ctest --test-dir re15_port/build -R "<regex>" -j 3 --timeout 2400 --output-on-failure` ->
 **`100% tests passed, 0 tests failed out of 77`** (Total Test time (real) = 3374.02 sec) — `k1/ctest_integ.log`.
 Zusaetzlich `integration_r36_dachkiste` (einziger Integrationslauf in einem Raum mit zwei Spieler-Records, ROOM2000 —
-dort aendert der Binder-Record die Clip-Laenge der Spieler-Schleife): s. unten.
+dort aendert der Binder-Record die Clip-Laenge der Spieler-Schleife): `ctest -R "^integration_r36_dachkiste$"` ->
+**`100% tests passed, 0 tests failed out of 1`** (1398.5 s) — `k1/ctest_dachkiste.log`.
+Summe der gezielten Laeufe: 11 Spur + 924 Einheiten + 78 Integration = **1013/1013 gruen**, keine Wiederholung noetig.
 
 ## 10. Hinweise (kein Mangel der Spur K; fuer Integration/Orchestrator)
 * **H1 Integration plcloop_r41.c:** add/add gegen r41/integration — die K-Fassung nehmen (= E-Blob c5a86597 + Binder-Record,
@@ -281,4 +285,19 @@ dort aendert der Binder-Record die Clip-Laenge der Spieler-Schleife): s. unten.
 * **H7** Dossier OFFEN 4 (Ruestungs-Wechsel: Original setzt auch dort Waffe/Wunden/Status, Port behaelt sie) und OFFEN 8
   (Port-Spielstand im Sherry-Abschnitt laedt als Elza) sind vorbestehend und korrekt an den Orchestrator gegeben.
 
-(weitere Abschnitte folgen)
+## 11. Gesamturteil
+| Punkt / Gate | Urteil | Kern-Beleg |
+|---|---|---|
+| K1 Sherry ab 30C1: Modell falsch/kaputt, keine Waffe | **erfuellt** | Lauf A1 (echter Weg bis 3091, Tuer zu Fuss): PL0F-Koerper/W00, aca5d 0, Bild = Original-Puffer; Lauf W: auch mit Pistole vorher Waffe 0; Riegel sherry/waffe/koerper gruen |
+| K2 3091 "staendig falsche Animationen" | **erfuellt** | Lauf A2 (echter Weg): 6 Clip-13-Abschnitte 779/504/233/160/416/164, 19/12/5/3/10/4 Umlaeufe, 0 Abweichungen = Original-GDB (selbst zerlegt); Bild fuer Bild aller drei Figuren 2864/2868, 2639/2642, 2601/2613 gleich; Lagen gleich; 7 Bildpaare gleich, Sherry-Ausschnitt 32/11/95/49 (Original 28/22/123/51) |
+| Maengel der Abnahme 0 (M1/M2/M3) | behoben | 7.1-7.3 (Gegenproben der Riegel am Vorher-Stand FAIL) |
+| RE-Gate | erfuellt | 12 Pruefzeilen, ueber 40 Adressen/Bytestellen selbst disassembliert bzw. gelesen (PSX.EXE, DEBUG.BIN, Original-RAM, RDTs, PLDs): alle stimmen; keine Rate-Worte; Wahlen gekennzeichnet |
+| Vertrag | erfuellt | nur erlaubte Pfade, keine Bits/Ids, kleine markierte Haken; Integrationskonflikte benannt (H1) |
+| Riegel je Punkt, messend | erfuellt | 11/11 gruen; 3091-Riegel prueft jetzt Bild fuer Bild (Gegenprobe alter Lauf FAIL), marvinlauf Gegenprobe FAIL |
+| Tests | erfuellt | Spur 11/11, Einheiten 924/924 (ohne die 7 Release-/Android-Skripttests), Integration 77/77 + dachkiste 1/1 |
+
+## 12. Maengel
+**Keine.** (Hinweise H1-H7 in Abschnitt 10 sind fuer Integration/Orchestrator, kein Mangel der Spur K.)
+
+**bestanden = true** — K1 und K2 sind am echten Weg gemessen erfuellt, die Maengel M1-M3 der Abnahme 0 sind behoben und
+von messenden Riegeln abgesichert (Gegenproben am Vorher-Stand schlagen fehl), RE-Gate, Vertrag und Tests halten.
