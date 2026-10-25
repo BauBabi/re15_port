@@ -937,41 +937,80 @@ static void re2_clip_bild(const re15_enemy_bank_t *bk, int clip, int f, int32_t 
     *x += (int32_t)(((int64_t)c * dx + (int64_t)s * dz) >> 12);
     *z += (int32_t)((-(int64_t)s * dx + (int64_t)c * dz) >> 12);
 }
-static int32_t re2_vorn_x(const re15_enemy_bank_t *bk, int clip, int f, int32_t x, int32_t z, int yaw)
+/* Nachbesserung 5 (Abnahme 4 M4 / Hinweis H2): KONTAKT-MASS gleich auf beiden Seiten - erstes Bild, in dem ein Knochen die
+ * Spielfigur laengs der Schwimmrichtung erreicht: max_b <P_b - L, h> >= 0, h = (cos Gier, -sin Gier). RE2 schwimmt nach dem Intro
+ * geradeaus mit Gier 2048 (Koerper nie gelenkt, Root nur Hals FUN_80017d98 @0x8010036c-74) -> h = (-1,0) = "vorderster Knochen auf
+ * Leons x" (Nachbesserung 4). Der Port misst dasselbe am echten Boss-Takt (gatorszene_r41.c kontakt_pruefen). */
+static int re2_kontakt(const re15_enemy_bank_t *bk, int clip, int f, int32_t x, int32_t z, int yaw, int hy, int32_t lx, int32_t lz)
 {
     re15_skel_pose_t p[RE15_EMD_MAX_BONES];
     re15_skel_compute_pose(&bk->skel, re2_kf(bk, clip, f), p);
-    int32_t vorn = x;
+    const int64_t hx = re15_cos_q12(hy), hz = -re15_sin_q12(hy);
     for (int b = 0; b < bk->skel.bone_count; b++) {
         int32_t w[3]; re15_skel_bone_to_world(p[b].trans, (int16_t)yaw, x, -1800, z, w);
-        if (w[0] < vorn) vorn = w[0];
+        if (((int64_t)w[0] - lx) * hx + ((int64_t)w[2] - lz) * hz >= 0) return 1;
     }
-    return vorn;
+    return 0;
 }
-static int64_t s_re2_abstand2;   /* exaktes Abstandsquadrat Wurzel <-> Leon am RE2-Intro-Ende (fuer den exe-Riegel) */
+/* RE2-Lauf ab einem Zustand (Leon steht bei (lx,lz)): f3 >= 0 = Gator in Intro P2 (Clip 3 Bild f3 gezeigt, Gier vor dem Knick),
+ * sonst Intro vorbei (Sub 1, Sperre 110). Bilder bis zum Kontakt (-1 = keiner in 600). */
+static int re2_lauf(const re15_enemy_bank_t *bk, int32_t x, int32_t z, int yaw, int f3, int32_t lx, int32_t lz)
+{
+    const int n3 = bk->anim.clips[3].frame_count, nc0 = bk->anim.clips[0].frame_count, nc1 = bk->anim.clips[1].frame_count;
+    int sperre = (f3 < 0) ? 110 : 0, sub = 1, f0 = 0, f1 = 0;
+    for (int t = 1; t <= 600; t++) {
+        int clip, fr, hy;
+        if (f3 >= 0) {
+            f3++;
+            re2_clip_bild(bk, 3, f3, &x, &z, yaw);
+            clip = 3; fr = f3; hy = (yaw + 1024) & 0xfff;
+            if (f3 >= n3 - 1) { f3 = -1; yaw = (yaw + 1024) & 0xfff; sperre = 110; }   /* @0x8010091c-48 */
+        } else {
+            if (sub == 1) { clip = 0; fr = f0; re2_clip_bild(bk, 0, f0, &x, &z, yaw); f0 = (f0 + 1) % nc0; }
+            else          { clip = 1; fr = f1; re2_clip_bild(bk, 1, f1, &x, &z, yaw); f1 = (f1 + 1) % nc1; }
+            if (sperre > 0) sperre--;                                   /* @0x801004a8-b8 */
+            const uint32_t d = re15_squareroot0((uint32_t)((int64_t)(x - lx) * (x - lx) + (int64_t)(z - lz) * (z - lz)));
+            if (sub == 1 && sperre == 0 && d >= 0x65) sub = 2;          /* @0x80100b5c-64 / @0x80100b88 */
+            hy = yaw;
+        }
+        if (re2_kontakt(bk, clip, fr, x, z, yaw, hy, lx, lz)) return t;
+    }
+    return -1;
+}
+/* RE2-SOLLBAND des Kampfbeginns (Nachbesserung 5, Entscheid F-E2 "Sollwert RE2 mit oberer UND unterer Grenze aus dem RE2-Beleg";
+ * dieselbe Rechnung wie tools/r41_gatorszene/probe_re2_band_n5.c, Adressen dort und im Dossier):
+ *   Gator:  sub11 `Pos_set 32 00 cd 11 f8 f8 c3 b8` @SCD 0x0736 (4557,-18237), Gier 0x400 (Sce_em_set @RDT 0x25A0); Clip 6 bis
+ *           zum Ende (@0x801008ac-b8) -> Cut 1 (@0x801008c4-c8), z = -21212 (@0x801008d0-d4); Clip 3 ab dem naechsten Takt
+ *           (@0x801008e4-f0), 150 Bilder, dann Gier += 1024 (@0x80100938-48) = Intro-Ende Cut 1 + 150.
+ *   Leon:   sub03 `Plc_dest 40 00 08 0a d0 d5 38 9b` @SCD 0x0286 = (-10800,-25800); Ende der Zwischensequenz (Plc_ret @0x02B6,
+ *           Riegel auf `Set 22 02 07 00` @0x02B7 = dasselbe Ereignis wie der Port-Kampfbeginn Folge C) fruehestens Cut 1 + 113:
+ *           Warten auf Cut 1 @0x025E-6A (>= 1), Sleep 0x3c @0x0276, Sleep 0x32 @0x027E, Plc_dest + While @0x0286-98 (>= 1),
+ *           Plc_dest + While @0x029E-B0 (>= 1).
+ *   Untere Grenze = Intro-Ende (Abstand 11430 / Kontakt 121), obere = fruehester Kampfbeginn (13924 / 158). */
+#define RE2_LEON_FRUEH (1 + 0x3c + 0x32 + 1 + 1)   /* Cut 1 + 113 (s. oben) */
+static int64_t s_re2_abstand2, s_re2_abstand2_max;   /* exakte Abstandsquadrate Intro-Ende / fruehester Kampfbeginn */
+static int32_t s_re2_abstand_max;
+static int     s_re2_bilder_max;
 static int re2_soll(int32_t *abstand, int *bilder)
 {
     const re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
     if (!bk || !bk->ok || bk->anim.clip_count < 7) return 0;
+    const int32_t lx = -10800, lz = -25800;
     int32_t x = 4557, z = -18237; int yaw = 0x400;
     for (int f = 0; f < bk->anim.clips[6].frame_count; f++) re2_clip_bild(bk, 6, f, &x, &z, yaw);
     z = -21212;
-    for (int f = 0; f < bk->anim.clips[3].frame_count; f++) re2_clip_bild(bk, 3, f, &x, &z, yaw);
-    yaw = (yaw + 1024) & 0xfff;
-    const int32_t lx = -10800, lz = -25800;
+    int32_t fx = 0, fz = 0;
+    for (int f = 0; f < bk->anim.clips[3].frame_count; f++) {
+        re2_clip_bild(bk, 3, f, &x, &z, yaw);
+        if (f == RE2_LEON_FRUEH - 1) { fx = x; fz = z; }              /* Clip 3 Bild f in Cut 1 + 1 + f */
+    }
     s_re2_abstand2 = (int64_t)(x - lx) * (x - lx) + (int64_t)(z - lz) * (z - lz);
     *abstand = (int32_t)re15_squareroot0((uint32_t)s_re2_abstand2);   /* SquareRoot0 wie RE2 +0x1F0 (`jal 0x8008d2f4` @0x800265d4) */
-    int sperre = 110, sub = 1, f0 = 0, f1 = 0;
-    for (int t = 1; t <= 600; t++) {
-        int clip, fr;
-        if (sub == 1) { clip = 0; fr = f0; re2_clip_bild(bk, 0, f0, &x, &z, yaw); f0 = (f0 + 1) % bk->anim.clips[0].frame_count; }
-        else          { clip = 1; fr = f1; re2_clip_bild(bk, 1, f1, &x, &z, yaw); f1 = (f1 + 1) % bk->anim.clips[1].frame_count; }
-        if (sperre > 0) sperre--;
-        const uint32_t d = re15_squareroot0((uint32_t)((int64_t)(x - lx) * (x - lx) + (int64_t)(z - lz) * (z - lz)));
-        if (sub == 1 && sperre == 0 && d >= 0x65) sub = 2;
-        if (re2_vorn_x(bk, clip, fr, x, z, yaw) <= lx) { *bilder = t; return 1; }
-    }
-    return 0;
+    *bilder = re2_lauf(bk, x, z, (yaw + 1024) & 0xfff, -1, lx, lz);
+    s_re2_abstand2_max = (int64_t)(fx - lx) * (fx - lx) + (int64_t)(fz - lz) * (fz - lz);
+    s_re2_abstand_max = (int32_t)re15_squareroot0((uint32_t)s_re2_abstand2_max);
+    s_re2_bilder_max = re2_lauf(bk, fx, fz, yaw, RE2_LEON_FRUEH - 1, lx, lz);
+    return *bilder > 0 && s_re2_bilder_max > 0;
 }
 
 /* Die ganze Szene (wie teil_szene, ohne deren Pruefungen) bis zum Kampfbeginn; Rueckgabe der Alligator. */
@@ -1036,6 +1075,62 @@ static void teil_abstand(int elza)
     erster_angriff(g, 900, &an, &tr);
     PRUEF(an >= 0 && an < soll_bi, "Gegenprobe Fassung 1 (Gator (-4254,-20984) Gier 1505): erster Biss nach %d Bildern < RE2 %d "
           "(der Riegel faengt den Befund der Abnahme 3)", an, soll_bi);
+}
+
+/* ---- Werkzeug "lagesuche" (Nachbesserung 5): der ECHTE Szenenablauf je Lage-Kandidat ---------------------------------------
+ * Aufruf `test_r41_gatorszene lagesuche <datei>`, je Zeile "x z gier_leiche anlauf_gier durchbruch_bis [key_rx key_rz]" (Kandidaten
+ * aus tools/r41_gatorszene/leiche_lage_n5.py). Gemessen wie im Spiel (Szene ueber die Leiter, Boss-Takt, Kamerawahl der Spur B):
+ * Primitivfarbe des Schluessels in der Ankunftskamera (Cut F_CUT_LEICHE), Fress-Kamera + Frontalwert, Kampfbeginn (Abstand,
+ * Beckenzonen), Kontakt-Mass (Leon steht), erster Biss (Clip 4) und erster Treffer. Kein Riegel - Werkzeug der Lagewahl. */
+#define F_CUT_LEICHE 0   /* gatorszene_r41.c GSZ_CUT_LEICHE (Nachbesserung 5: Ankunftskamera Cut 0) */
+static void lage_eine(int32_t x, int32_t z, int ry, int gier, int bis, int rx, int rz)
+{
+    re15_gsz_lage_t l;
+    re15_gatorszene_r41_lage_setzen(NULL);
+    re15_gatorszene_r41_lage(&l);
+    l.x = x; l.z = z; l.rot_y = (int16_t)ry; l.gier = (int16_t)gier; l.durchbruch_bis = (int16_t)bis;
+    if (rx != 99999) { l.key_rx = (int16_t)rx; l.key_rz = (int16_t)rz; }
+    re15_gatorszene_r41_lage_setzen(&l);
+    int ruhe = -1, spitze = -1;
+    re15_game_state_init();
+    if (room_boot(0x2090, -8200, 0, -25550, 0, F_CUT_LEICHE) == 0) re15_gatorszene_r41_key_prim_jetzt(F_CUT_LEICHE, &ruhe, &spitze);
+    re15_actor_t *g = szene_bis_kampf(0);
+    int fr = 0, fc = re15_gatorszene_r41_fress_kamera(&fr);
+    int32_t ab = -1; int zg = -1, zs = -1;
+    const int kb = re15_gatorszene_r41_kampfbeginn(&ab, &zg, &zs);
+    int kontakt = -1, biss = -1, treffer = -1;
+    if (g) {
+        const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        const int hp0 = pl->hp;
+        for (int f = 1; f <= 600 && (kontakt < 0 || biss < 0 || treffer < 0); f++) {
+            frame(0, 0);
+            if (kontakt < 0) kontakt = re15_gatorszene_r41_kontakt();
+            if (biss < 0 && g->motion == 4) biss = f;
+            if (treffer < 0 && pl->hp < hp0) treffer = f;
+        }
+    }
+    printf("LAGE %d %d %d %d %d %d %d | prim %d/%d | fress Cut %d frontal %d | kampf %s ab %d zone %d/%d | kontakt %d biss %d "
+           "treffer %d\n", (int)x, (int)z, ry, gier, bis, (int)l.key_rx, (int)l.key_rz, ruhe, spitze, fc, fr, g && kb ? "ok" : "NEIN",
+           (int)ab, zg, zs, kontakt, biss, treffer);
+    re15_gatorszene_r41_lage_setzen(NULL);
+}
+static int lagesuche(const char *datei)
+{
+    FILE *f = fopen(datei, "r");
+    if (!f) { printf("lagesuche: %s fehlt\n", datei); return 1; }
+    re15_door_seq_setze_laeufer(fang);
+    char zeile[256];
+    while (fgets(zeile, sizeof zeile, f)) {
+        int x, z, ry, gier, bis, rx = 99999, rz = 0;
+        int n = sscanf(zeile, "%d %d %d %d %d %d %d", &x, &z, &ry, &gier, &bis, &rx, &rz);
+        if (n < 5) continue;
+        if (n < 7) rx = 99999;
+        lage_eine(x, z, ry, gier, bis, rx, rz);
+        fflush(stdout);
+    }
+    fclose(f);
+    re15_door_seq_setze_laeufer(NULL);
+    return 0;
 }
 
 /* ---- Auswerter fuer den exe-Riegel (integration_r41_gatorszene_tod*, Nachbesserung 1 M2) -------------------------------
@@ -1158,10 +1253,12 @@ int main(int argc, char **argv)
                         argc >= 9 ? atoi(argv[8]) : 0);
     if (!strcmp(teil, "kamfolge") && argc >= 8)
         return kamfolge(argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]));
+    if (!strcmp(teil, "lagesuche") && argc >= 3) return lagesuche(argv[2]);   /* Nachbesserung 5: Werkzeug der Lagewahl */
     if (!strcmp(teil, "re2soll")) {   /* Auswerter des exe-Riegels integration_r41_gatorszene_* (Nachbesserung 4) */
         int32_t ab = 0; int bi = 0;
         if (!gator_bank() || !re2_soll(&ab, &bi)) { printf("re2soll: FEHLER (RE2-EM23-Bank)\n"); return 1; }
-        printf("re2soll: abstand=%d abstand2=%lld bilder=%d\n", (int)ab, (long long)s_re2_abstand2, bi);
+        printf("re2soll: abstand=%d abstand2=%lld bilder=%d abstand_max=%d abstand2_max=%lld bilder_max=%d\n", (int)ab,
+               (long long)s_re2_abstand2, bi, (int)s_re2_abstand_max, (long long)s_re2_abstand2_max, s_re2_bilder_max);
         return 0;
     }
     const int alle = !strcmp(teil, "alle");

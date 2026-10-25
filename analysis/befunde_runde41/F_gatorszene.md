@@ -1006,3 +1006,49 @@ Plan:
 - (c) Umsetzung (Konstanten in gatorszene_r41.c, Herleitung im Kommentar), (d) Messung an der exe (Leon + Elza, stehend + weglaufend,
   Ankunftseinstellung keypix wie Abnahme 4, Fress-Einstellung), (e) Riegel mit oberer + unterer Grenze (abstand/_elza, leon/_elza,
   flucht/_elza) und Untergrenze fuer den Schluessel (leiche), (f) gezielte Tests, Dossier, Abschluss-Commit.
+
+### N5 RE-Belege (selbst disassembliert/gerechnet, vor dem Code)
+
+- **RE2-Zonenbeziehung am Intro-Ende** (`re2_disasm.py --bin EM23_OVL_0000.BIN`): Zonenbyte +0x21A aus INIT 0 (`sb zero,538(s0)`
+  @0x80100654); Wechsel NUR im Sub-1-Pre @0x80100964: `lbu v0,538(s0)` @0x8010097c / `bne v0,zero,0x801009c8` @0x80100988,
+  `lw v0,56(s0)` @0x80100990 / `slti v0,v0,-17877` @0x80100998 / `addiu v0,zero,1` @0x801009a0 / `sb v0,538(s0)` @0x801009a8 /
+  `addiu v0,zero,769` + `sw v0,4(s0)` @0x801009ac-b0 (Routine 0x301 LUNGE = Dash); Zone 1 -> 2: `lbu v1,538(s0)` @0x801009c8, `lw
+  v0,64(s0)` @0x801009d8 / `slti v0,v0,-7322` @0x801009e0 / `sb v0,538(s0)` @0x801009ec / `sw v1,4(s0)` (769) @0x801009fc. Gelesen
+  wird nur die GATOR-Lage (+0x38 x, +0x40 z), nie die Spielerlage. Am Intro-Ende: Wurzel (503,-24100) = Zone 0, Kontakt mit Leon
+  (-10800,-25800) nach 121 Bildern bei x > -17877, also ohne Zonenwechsel und ohne Dash (Sonde
+  `re15_port/tools/r41_gatorszene/probe_re2_band_n5.c`: "Zone beim Kontakt 0, Zonenwechsel vor dem Kontakt: nein").
+  Port-Gegenstueck: der Dash der Spur B kommt beim Wechsel des Gators IN Leons Beckenzone (gator_re2_r41.c re15_gr2_dash_zonenwechsel,
+  Zonen = sce-8-Wasserzonen ROOM2090 main00 @0x009D6/@0x009EA/@0x009FE: Sued z <= -18100, Nord z >= -14500). Nachbesserung 4 begann
+  mit dem Gator in Zone 1 (-2178,-9077), Leon an der Leiter in Zone 0 -> 300 Bilder Dash (Abnahme 4 M1). RE2-Beziehung = Kampfbeginn
+  mit dem Gator in Leons Zone 0, ohne Zonengrenze bis zum Kontakt.
+- **RE2-Sollband im selben Mass** (`probe_re2_band_n5.c`, Ausgabe scratchpad F41n5/probe_re2_band_n5.txt):
+  - Kontakt-Mass: erstes Bild, in dem ein Knochen die Spielfigur laengs der Schwimmrichtung erreicht, max_b <P_b - L, h> >= 0 mit
+    h = (cos Gier, -sin Gier); RE2 schwimmt nach dem Intro geradeaus mit Gier 2048 -> genau "vorderster Knochen auf Leons x".
+  - Kampfbeginn fuer den Spieler = Ende der Zwischensequenz sub03 `Plc_ret 42` @SCD 0x02B6 + `Set 22 02 07 00` @0x02B7 (Riegel auf)
+    = dasselbe Ereignis wie der Port-Kampfbeginn (Programm 3 Plc_ret + Riegel auf, Folge C). Fruehestens Cut 1 + 113: Warten auf
+    Cut 1 `While .. Cmp 23 00 1a 05 01 00` @0x025E-6A (>= 1 Bild), `Sleep 09 0a 3c 00` @0x0276 (60), `Sleep 09 0a 32 00` @0x027E
+    (50), `Plc_dest 40 00 08 0a ..` @0x0286 + `While .. Ck 21 05 0a 00` @0x028E-98 (>= 1), `Plc_dest 40 00 15 0a ..` @0x029E +
+    `While` @0x02A6-B0 (>= 1). Der Gator: Clip-6-Ende -> Cut 1 (`jal 0x8002c7ac` / `addiu a0,zero,1` @0x801008c4-c8), Clip 3 ab dem
+    naechsten Takt (@0x801008e4-ec, 150 Bilder) -> Intro-Ende Cut 1 + 150.
+  - Ergebnis RE2 1x: Intro-Ende **11430** (SquareRoot0 11402) / **121** Bilder; fruehester Kampfbeginn (Cut 1 + 113): **13924**
+    (SquareRoot0 13890) / **158** Bilder. Mit dem Zeichen-Massstab des Port-Gators (GB_SCALE_Q12 2731/4096): 146 / 189 Bilder.
+  - Damit Band fuer die Riegel (untere und obere Grenze aus dem RE2-Beleg, M4): Abstand 11402..13890 (SquareRoot0), Kontakt
+    121..158 Bilder.
+- **Schluessel wie abgenommen ist nur an der Fassung-1-Stelle moeglich** (`leiche_lage_n5.py`-Rechnung, scratchpad F41n5/m2_voll.txt;
+  Licht/NCCT wie leiche_lage.py, ganze Leiche (Huelle MD1 @0x2054) im Bild, beste Neigung <= 60 Grad unter der Puls-Grenze): Licht
+  >= 168 (= Primitivfarbe Ruhe >= 84 = abgenommene 72 -> 108 im Bild) UND >= 10,4 x 9,5 Bildpunkte (Fassung 1) gibt es in ROOM2090 in
+  ALLEN 13 Kameras nur in Cut 1 bei x -5500..-5200 / z -24700..-23700 (Gier 384) - das ist Fassung 1, 2700..3300 von der Leiter, also
+  gegen Nachtrag 29 ("Die Zombie Leiche ... muss weiter weg sein") und gegen (1) (Kampfbeginn dort 6162). Rangfolge F-E2: 1 vor 2.
+- **Lichter des Suedbeckens** (RDT @0x468 + 40 * Cut): Cut 0: (2510,-4000,-24087) und (2100,-4000,-30252), Cut 1/2: (-4790,-4000,
+  -24387) und (-5600,-4000,-30252), Cut 3..12 nur Lichter ausserhalb des Beckens (x -11890..-29490). Unter (1) (Kampfbeginn im
+  Ostteil des Suedbeckens) erreicht der Schluessel Licht >= 168 nur in Cut 0 (Leiche bei x 0..900, z -23800..-25500), dort aber
+  hoechstens ~10,5 x 6,5 Bildpunkte (Licht von Nordosten, Kamera im Suedosten: beste Neigung cos 0,60..0,62).
+- **Kette**: mit dem ganzen Durchbruch (Clip 6 Bild 1..124 = 6327) ist die Kette 10715 lang; an die Cut-0-Stelle kommt der Gator mit
+  dem Gesicht nach Westen (Kampfbeginn oestlich der Leiche, Fress-Kamera Cut 1 von vorn) nur von Osten - die Ostwand (x 7200) laesst
+  dafuer hoechstens ~6000..7500. Clip 6 je Bild (Sonde scratchpad F41n5/tools/probe_clip6.c, RE2-EM23-Bank): Bild 0..15 Kopf Rig-y
+  +1611 -> -1392 (Aufsteigen aus dem Wasser), Bild 15..31 Wurzel -5880 -> -1627 roh (Vorstoss, Schritte bis 480), ab Bild 37 nur noch
+  Ausgleiten (Bild 37..124: 1597 x 2/3). Mit dem Durchbruch bis Bild ~31 passt die Kette von Osten.
+- **Klemme**: die Dispatcher-Klemme des Boss-Takts (enemy_ai_boss_gator.c re15_gator_boss_tick: re15_collision_constrain_enemy mit
+  hit_radius_min 1466 nach JEDEM bewegten Takt, auch in der Szene) schiebt den Gator, wenn die Wurzel naeher als ~1466 an eine
+  SCA-Wand/-Insel kommt (erste Engine-Messung: Start S (6243,-19354) 1254 neben der Rampe -> Kampfbeginn im Nordbecken). Die
+  Lagewahl verlangt deshalb Wurzel-Rand 1500 (nicht 900 wie leiche_lage_n4.py).

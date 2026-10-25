@@ -119,10 +119,37 @@ static void musik_takt_vor(void) { musik_takt(); }
  * (-1725,-21723) @0x00A6C (Cut 0), 13739 entfernt. Szenenkamera Cut 5 (RID @0x060 + 5 * 32: (2754,-3132,-6408) ->
  * (-7992,-18,-10782)), die Kamera, in der auch das Original obj 3 zeigt: ganze Leiche im Bild (62,132)-(261,205), Rumpfmitte
  * (-206,-7594), Kau-Lage (-2077,-9725) = 16968 von der Leiter-Ankunft (Fassung 1: rund 3800). */
-#define GSZ_CUT_LEICHE        5
-#define GSZ_LEICHE_X          700       /* leiche_lage_n4.py (obj 3 Original @0x00A8E pc[10..11] `e7 ff` = -25) */
-#define GSZ_LEICHE_Z          (-8200)   /* leiche_lage_n4.py (obj 3 Original pc[14..15] `01 e3` = -7423) */
-#define GSZ_LEICHE_ROT_Y      2432      /* leiche_lage_n4.py (obj 3 Original pc[18..19] `78 06` = 1656) */
+/* Nachbesserung 5 (Abnahme 4 M1-M4 = Orchestrator-Entscheid F-E2, 2026-10-25 14:21: "Kampfbeginn = RE2 ... so nah wie moeglich
+ * ... nicht darunter", "Schluessel mindestens so gut sichtbar wie in der abgenommenen Ankunftseinstellung", "Fressen ... nicht von
+ * hinten, Frontalwert > 0 ... der Freiheitsgrad ist die Lage der Leiche", Rangfolge 1 vor 2 vor 3):
+ *  (1) RE2-Zonenbeziehung am Intro-Ende (probe_re2_band_n5.c): Zonenbyte +0x21A aus INIT 0 (`sb zero,538(s0)` @0x80100654),
+ *      Wechsel nur ueber die GATOR-Lage (`lw v0,56(s0) / slti v0,v0,-17877` @0x80100990-98, `lw v0,64(s0) / slti v0,v0,-7322`
+ *      @0x801009d8-e0); am Intro-Ende Wurzel (503,-24100) Zone 0, Kontakt mit Leon (-10800,-25800) nach 121 Bildern ohne
+ *      Zonenwechsel = ohne Dash. Port: der Dash kommt beim Wechsel des Gators IN Leons Beckenzone (gator_re2_r41.c
+ *      re15_gr2_dash_zonenwechsel) - Nachbesserung 4 begann mit dem Gator im Nordbecken (Zone 1), Leon an der Leiter in Zone 0:
+ *      300 Bilder Dash vor dem Biss (Abnahme 4 M1). Also Kampfbeginn mit dem Gator in Zone 0 (Suedbecken, z <= -18100).
+ *  (2) RE2-Sollband (probe_re2_band_n5.c): Abstand 11430 (Intro-Ende Cut 1 + 150) .. 13924 (fruehester Kampfbeginn fuer Leon:
+ *      sub03 Plc_ret @SCD 0x02B6 nach Cut 1 + 113), Kontakt 121 .. 158 Bilder. Zone 0 + Abstand >= 11430 heisst: Kampfbeginn im
+ *      Ostteil des Suedbeckens.
+ *  (3) Schluessel wie abgenommen (Licht >= 168 = Primitivfarbe Ruhe >= 84, >= 10,4 x 9,5 Bildpunkte, ganze Leiche im Bild) geht
+ *      in ROOM2090 NUR in Cut 1 bei x -5500..-5200 / z -24700..-23700 (= Fassung 1, 2700..3300 von der Leiter; leiche_lage_n5.py
+ *      --m2), also nicht zugleich mit (1) und Nachtrag 29 ("Die Zombie Leiche ... muss weiter weg sein"). Unter (1) liegt das
+ *      Licht >= 168 nur noch in Cut 0 (Lichtsatz RDT @0x468 + 40 * 0: Licht bei (2510,-4000,-24087)); dort ist die Leiche nur
+ *      mit dem Gator von OSTEN erreichbar (Kette bis zur Kau-Lage; die Kette mit dem ganzen Clip 6 = 10715 passt von Osten nicht
+ *      ins Becken: Ostwand x 7200) - darum endet der Durchbruch nach dem Aufsteigen (Clip 6 Bild 0..15: Kopf y +1611 -> -1392)
+ *      und dem Vorstoss (Bild 15..31: Wurzel -5880 -> -1627 roh), dann der Biss (s. GSZ_DURCHBRUCH_BIS).
+ *  (4) Fressen von vorn: Anlauf nach Westsuedwest -> Spur B's FINISHER-Wahl findet Cut 1 (bei (-7740,-25956), Blick nach Osten)
+ *      vor dem Kopf, unter der Massstab-Grenze 1892 (Tiefe >= 4804).
+ * Gewaehlt (Rechnung leiche_lage_n5.py, Messung mit dem echten Engine-Ablauf test_r41_gatorszene lagesuche): s. Werte unten. */
+#define GSZ_CUT_LEICHE        0
+#define GSZ_LEICHE_X_STD      200
+#define GSZ_LEICHE_Z_STD      (-25400)
+#define GSZ_LEICHE_ROT_Y_STD  2944
+#define GSZ_GATOR_GIER_STD    1632      /* Anlauf nach Westsuedwest (Vorwaerts (cos, -sin) = (-0,93, -0,37)) */
+/* Letztes Durchbruch-Bild (Clip 6): Bild 0..15 steigt der Kopf aus dem Wasser (Rig-y +1611 -> -1392, EMR-Keyframes der
+ * RE2-EM23-Bank, Sonde probe_clip6), Bild 15..31 der Vorstoss (Wurzel-Versatz -5880 -> -1627 roh, groesster Schritt 480); ab Bild
+ * 32 gleitet er nur noch aus (bis Bild 124 weitere 1597 x 2/3). Danach der Biss (RE2 FRESSEN P1 Clip 4 @0x801010ec-f4). */
+#define GSZ_DURCHBRUCH_BIS_STD 31
 /* Rumpfmitte (Mundpunkt) im Objektraum der Leiche: Leichen-Modell MD1 @0x2054 x -444..2626 (Kopf .. Beine), Rumpf oben
  * (y <= -100) bei x -100..1400 -> Mitte 1090 (leiche_lage.py MITTE_X). */
 #define GSZ_LEICHE_MITTE_X    1090
@@ -313,8 +340,15 @@ static int prop_slot(uint8_t obj_id)
 #define GSZ_KEY_AUF_X     1090
 #define GSZ_KEY_AUF_Y     (-420)
 #define GSZ_KEY_AUF_Z     (-100)
-#define GSZ_KEY_AUF_RX    672
-#define GSZ_KEY_AUF_RZ    (-144)
+#define GSZ_KEY_AUF_RX_STD (-208)
+#define GSZ_KEY_AUF_RZ_STD (-656)
+/* Szenen-Lage (Nachbesserung 5): Standard = die PORT-WAHL oben; re15_gatorszene_r41_lage_setzen nur fuer Sonden/Riegel. */
+static const re15_gsz_lage_t k_lage_std = { GSZ_LEICHE_X_STD, GSZ_LEICHE_Z_STD, GSZ_LEICHE_ROT_Y_STD, GSZ_GATOR_GIER_STD,
+                                            GSZ_DURCHBRUCH_BIS_STD, GSZ_KEY_AUF_RX_STD, GSZ_KEY_AUF_RZ_STD };
+static re15_gsz_lage_t s_lage = { GSZ_LEICHE_X_STD, GSZ_LEICHE_Z_STD, GSZ_LEICHE_ROT_Y_STD, GSZ_GATOR_GIER_STD,
+                                  GSZ_DURCHBRUCH_BIS_STD, GSZ_KEY_AUF_RX_STD, GSZ_KEY_AUF_RZ_STD };
+void re15_gatorszene_r41_lage_setzen(const re15_gsz_lage_t *l) { s_lage = l ? *l : k_lage_std; }
+void re15_gatorszene_r41_lage(re15_gsz_lage_t *out) { if (out) *out = s_lage; }
 /* Item-Zone nach dem Tod (re15_aot_set_item_tk_prop = Item_aot_set @0x80040644-Form), Rechteck 1000 x 1000 wie ROOM2090 main00
  * @0x00A12 (`e8 03 e8 03`), AOT-Platz 15: frei in 2090 (main00 0..5, Kamerazonen 48..63). */
 #define GSZ_KEY_AOT       15
@@ -323,8 +357,8 @@ static int prop_slot(uint8_t obj_id)
 /* Ersatzlage nach dem Laden eines Spielstands (die Todeslage lebt nur im RAM): die Rumpfmitte der gefressenen Leiche. */
 static void leiche_mitte_konst(int32_t *x, int32_t *z)
 {
-    *x = GSZ_LEICHE_X + (int32_t)(((int64_t)re15_cos_q12(GSZ_LEICHE_ROT_Y) * GSZ_LEICHE_MITTE_X) >> 12);
-    *z = GSZ_LEICHE_Z - (int32_t)(((int64_t)re15_sin_q12(GSZ_LEICHE_ROT_Y) * GSZ_LEICHE_MITTE_X) >> 12);
+    *x = s_lage.x + (int32_t)(((int64_t)re15_cos_q12(s_lage.rot_y) * GSZ_LEICHE_MITTE_X) >> 12);
+    *z = s_lage.z - (int32_t)(((int64_t)re15_sin_q12(s_lage.rot_y) * GSZ_LEICHE_MITTE_X) >> 12);
 }
 
 static int32_t s_key_x = 0, s_key_y = GSZ_WASSER_Y, s_key_z = 0;
@@ -386,7 +420,7 @@ static void key_auf_leiche(uint16_t room_id)
     g_scd.props[k].active = 1;
     g_scd.props[k].parent_obj = RE15_GSZ_LEICHE_OBJ;
     g_scd.props[k].x = GSZ_KEY_AUF_X; g_scd.props[k].y = GSZ_KEY_AUF_Y; g_scd.props[k].z = GSZ_KEY_AUF_Z;
-    g_scd.props[k].rot_x = GSZ_KEY_AUF_RX; g_scd.props[k].rot_y = 0; g_scd.props[k].rot_z = GSZ_KEY_AUF_RZ;
+    g_scd.props[k].rot_x = s_lage.key_rx; g_scd.props[k].rot_y = 0; g_scd.props[k].rot_z = s_lage.key_rz;
     re15_blink_r41_setzen(room_id, RE15_GSZ_KEY_OBJ, 1);
 }
 /* Nach dem Tod: Schluessel liegt bei der Leiche (Weltraum), Item-Zone mit Taken-Bit 112 und Prop-Verstecken. */
@@ -439,9 +473,9 @@ static void leiche_lage(void)
 {
     int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
     if (k < 0) return;
-    g_scd.props[k].x = GSZ_LEICHE_X;
-    g_scd.props[k].z = GSZ_LEICHE_Z;
-    g_scd.props[k].rot_y = GSZ_LEICHE_ROT_Y;
+    g_scd.props[k].x = s_lage.x;
+    g_scd.props[k].z = s_lage.z;
+    g_scd.props[k].rot_y = s_lage.rot_y;
 }
 static void leiche_weg(void)
 {
@@ -514,6 +548,19 @@ static struct {
     int     kampf_gemeldet;
 } s_ga;
 int re15_gatorszene_r41_gator_phase(void) { return s_ga.phase; }
+/* Nachbesserung 5 (M1/M3/M4): Messgroessen der Szene (nur RAM, Pruefhaken re15_gatorszene_r41_kampfbeginn/_kontakt/_fress_kamera). */
+static int      s_fress_cut = -1, s_fress_frontal = 0;    /* FINISHER-Schnitt der Spur B und sein Frontalwert (gr2_frontal-Form) */
+static int      s_kb_ok = 0, s_kb_zone_g = -1, s_kb_zone_s = -1, s_kb_takt = 0, s_kontakt = -1;
+static int32_t  s_kb_abstand = 0;
+int re15_gatorszene_r41_kampfbeginn(int32_t *abstand, int *zone_gator, int *zone_spieler)
+{
+    if (abstand) *abstand = s_kb_abstand;
+    if (zone_gator) *zone_gator = s_kb_zone_g;
+    if (zone_spieler) *zone_spieler = s_kb_zone_s;
+    return s_kb_ok;
+}
+int re15_gatorszene_r41_kontakt(void) { return s_kontakt; }
+int re15_gatorszene_r41_fress_kamera(int *frontal) { if (frontal) *frontal = s_fress_frontal; return s_fress_cut; }
 
 static inline int32_t q12m(int32_t a, int32_t b) { return (int32_t)(((int64_t)a * b) >> 12); }
 static int32_t ga_scale(const re15_actor_t *e) { return e->render_scale_q12 ? e->render_scale_q12 : 4096; }
@@ -616,11 +663,8 @@ static int ga_kopf_probe(const re15_actor_t *e, int clip, int frame, int32_t x, 
     return re15_gr2_bone_welt_pub(&b, 6, kopf);
 }
 
-/* Szenen-Gier (PORT-WAHL der Inszenierung, Nachbesserung 4): der Gator kommt aus dem Westkanal nach Nordosten (Gier 3552,
- * Vorwaerts (cos, -sin) = (0,67, 0,74)) ins Nordbecken auf obj 3 zu; Start S (-7381,-15553). leiche_lage_n4.py: unter den Gieren
- * (Raster 16), deren Kette mit dem RE2-Abstand im Wasser liegt (3440..3600), die mit dem groessten kleinsten Rand (Wurzelweg 1496,
- * Kopfweg 1534; Fassung 1: Gier 1024 aus dem Norden, Leiche im Suedbecken). */
-#define GSZ_GATOR_GIER        3552
+/* Szenen-Gier = s_lage.gier (PORT-WAHL-Block oben; Nachbesserung 4: 3552 aus dem Westkanal ins Nordbecken, Fassung 1: 1024 aus
+ * dem Norden). */
 /* Biss: Kopf (Part 6) im Koppelbild 13 von Clip 4 (RE2 FRESSEN P1 @0x80101104-34) auf dem Rumpf der Leiche. */
 #define GSZ_KOPPEL_BILD       13
 #define GSZ_WENDE_RATE        75     /* RE2 R1 Ziel-Gier 75/Bild (FUN_8001569c @0x801025f8-608, `addiu a2,zero,75` @0x80102608) */
@@ -647,20 +691,24 @@ static void leiche_punkt(int32_t p[3])
 }
 
 /* Buehne: Lage S und Gier des Clip-6-Starts so, dass der Kopf im Koppelbild 13 von Clip 4 auf dem Leichen-Rumpf liegt
- * (RE2 FRESSEN P0 setzt den Gator relativ zum Opfer, @0x80101048-84). Kette: S --Clip 6 Bild 1..124--> A --Clip 4 Bild
- * 1..13--> Koppelbild; Kopf(13) = A + Weg4 + Kopf-Versatz. */
+ * (RE2 FRESSEN P0 setzt den Gator relativ zum Opfer, @0x80101048-84). Kette: S --Clip 6 Bild 1..bis--> A --Clip 4 Bild
+ * 1..13--> Koppelbild; Kopf(13) = A + Weg4 + Kopf-Versatz. Nachbesserung 5: bis = s_lage.durchbruch_bis (vorher 124 = Clip-Ende). */
+static int ga_durchbruch_bis(const re15_enemy_bank_t *bk)
+{
+    const int n6 = bk->anim.clips[6].frame_count;
+    return (s_lage.durchbruch_bis > 0 && s_lage.durchbruch_bis < n6 - 1) ? s_lage.durchbruch_bis : n6 - 1;
+}
 static void ga_buehne(re15_actor_t *e, const re15_enemy_bank_t *bk)
 {
     int32_t c[3]; leiche_punkt(c);
-    const int yaw = GSZ_GATOR_GIER;
+    const int yaw = s_lage.gier;
     int32_t kopf[3] = { 0, 0, 0 };
     ga_kopf_probe(e, 4, GSZ_KOPPEL_BILD, 0, 0, yaw, kopf);      /* Kopf relativ zur Wurzel im Koppelbild */
     int32_t a0[3], a1[3], b0[3], b1[3], w4[2], w6[2];
     ga_off(bk, 4, 0, a0); ga_off(bk, 4, GSZ_KOPPEL_BILD, a1);
     int32_t v4[3] = { a1[0] - a0[0], 0, a1[2] - a0[2] };
     ga_rig_welt(e, yaw, v4, w4);
-    int n6 = bk->anim.clips[6].frame_count;
-    ga_off(bk, 6, 0, b0); ga_off(bk, 6, n6 - 1, b1);
+    ga_off(bk, 6, 0, b0); ga_off(bk, 6, ga_durchbruch_bis(bk), b1);
     int32_t v6[3] = { b1[0] - b0[0], 0, b1[2] - b0[2] };
     ga_rig_welt(e, yaw, v6, w6);
     int32_t ax = c[0] - kopf[0] - w4[0], az = c[2] - kopf[2] - w4[1];
@@ -738,9 +786,71 @@ static void kam_uebergabe(void)
 #endif
 }
 
+/* ---- Nachbesserung 5: Messungen im Mass des RE2-Sollbands (tools/r41_gatorszene/probe_re2_band_n5.c) ----------------------
+ * Beckenzone wie enemy_ai_boss_gator.c gb_zone (die drei sce-8-Wasserzonen von ROOM2090 main00 @0x009D6/@0x009EA/@0x009FE:
+ * Suedbecken z bis -18100, Nordbecken ab -14500, dazwischen der Westkanal-Streifen); der Dash der Spur B kommt beim Wechsel des
+ * Gators IN Leons Zone (gator_re2_r41.c re15_gr2_dash_zonenwechsel) = Gegenstueck der RE2-Zonenlinien @0x80100990-ec. */
+#define GSZ_ZONE_SUED_Z   (-18100)  /* @0x009D6 Aot_set sce 8: z -27000 + Tiefe 8900 */
+#define GSZ_ZONE_NORD_Z   (-14500)  /* @0x009EA Aot_set sce 8: z -14500 */
+static int gsz_zone(int32_t z) { return (z <= GSZ_ZONE_SUED_Z) ? 0 : (z >= GSZ_ZONE_NORD_Z) ? 1 : 2; }
+/* Frontalwert der Fress-Einstellung = gator_re2_r41.c gr2_frontal: cos(Blickachse Bone 1 -> Bone 6, Kopf -> Kamera) in xz, Q12. */
+static void fress_kamera_messen(const re15_actor_t *e, int cut)
+{
+    s_fress_cut = cut; s_fress_frontal = 0;
+    int32_t k6[3], k1[3];
+    if (cut < 0 || !g_room_rdt_ok || !g_room_rdt.cuts || cut >= g_room_rdt.cut_count) return;
+    if (!re15_gr2_bone_welt_pub(e, 6, k6) || !re15_gr2_bone_welt_pub(e, 1, k1)) return;
+    const int64_t ax = k6[0] - k1[0], az = k6[2] - k1[2];
+    const int64_t cx = (int64_t)g_room_rdt.cuts[cut].pos_x - k6[0], cz = (int64_t)g_room_rdt.cuts[cut].pos_z - k6[2];
+    const uint32_t la = re15_squareroot0((uint32_t)(ax * ax + az * az)), lc = re15_squareroot0((uint32_t)(cx * cx + cz * cz));
+    if (la && lc) s_fress_frontal = (int)(((ax * cx + az * cz) * 4096) / ((int64_t)la * lc));
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[gatorszene] Fress-Einstellung: Cut %d frontal %d (Kopf (%d,%d), Achse (%d,%d))\n", cut, s_fress_frontal,
+            k6[0], k6[2], (int)ax, (int)az);
+#endif
+}
+/* Kampfbeginn (Bild der Kamera-Uebergabe = Folge C): Abstand Wurzel <-> Spielfigur (SquareRoot0 wie RE2 +0x1F0 `jal 0x8008d2f4`
+ * @0x800265d4) und die Beckenzonen. */
+static void kampfbeginn_messen(const re15_actor_t *e)
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int64_t dx = (int64_t)e->x - pl->x, dz = (int64_t)e->z - pl->z;
+    s_kb_abstand = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+    s_kb_zone_g = gsz_zone(e->z); s_kb_zone_s = gsz_zone(pl->z);
+    s_kb_ok = 1; s_kb_takt = 0; s_kontakt = -1;
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[gatorszene] Kampfbeginn F%u: Gator (%d,%d) Gier %d Zone %d, Spielfigur (%d,%d) Zone %d, Abstand %d\n",
+            (unsigned)g_engine.frame_count, e->x, e->z, (int)e->rot_y, s_kb_zone_g, pl->x, pl->z, s_kb_zone_s, (int)s_kb_abstand);
+#endif
+}
+/* Kontakt-Mass (gleich auf beiden Seiten, probe_re2_band_n5.c): erstes Bild nach dem Kampfbeginn, in dem ein Knochen die
+ * Spielfigur laengs der Schwimmrichtung erreicht: max_b <P_b - L, h> >= 0, h = (cos Gier, -sin Gier) (FUN_800152c8-Konvention). */
+static void kontakt_pruefen(const re15_actor_t *e)
+{
+    const re15_enemy_bank_t *bk = re15_enemy_find(e->type);
+    if (!bk || !bk->ok) return;
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int64_t hx = re15_cos_q12(e->rot_y), hz = -re15_sin_q12(e->rot_y);
+    int64_t best = 0; int bb = -1;
+    for (int b = 0; b < bk->skel.bone_count; b++) {
+        int32_t p[3];
+        if (!re15_gr2_bone_welt_pub(e, b, p)) continue;
+        const int64_t v = ((int64_t)p[0] - pl->x) * hx + ((int64_t)p[2] - pl->z) * hz;
+        if (bb < 0 || v > best) { best = v; bb = b; }
+    }
+    if (bb < 0 || best < 0) return;
+    s_kontakt = s_kb_takt;
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[gatorszene] Kontakt F%u: +%d Bilder nach dem Kampfbeginn (Knochen %d, Gator (%d,%d) Gier %d Clip %d, "
+            "Spielfigur (%d,%d))\n", (unsigned)g_engine.frame_count, s_kontakt, bb, e->x, e->z, (int)e->rot_y, (int)e->motion,
+            pl->x, pl->z);
+#endif
+}
+
 static void ga_start(int slot, re15_actor_t *e, const re15_enemy_bank_t *bk)
 {
     memset(&s_ga, 0, sizeof s_ga);
+    s_fress_cut = -1; s_fress_frontal = 0; s_kb_ok = 0; s_kb_takt = 0; s_kontakt = -1;   /* Nachbesserung 5 (Messgroessen) */
     ga_buehne(e, bk);
     e->y = -1200;                                             /* GB_WATER_Y = Wasser-INIT-Y der 0x23-KI @0x8010c65c */
     ga_clip(e, 6, 0, 0);                                      /* Clip 6 (0) @0x801008ac-b8 */
@@ -759,6 +869,7 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
     if (!e || (g_current_room_id & 0xFFFEu) != RE15_GSZ_RAUM) return 0;
     if (s_zustand == RE15_GSZ_ANKUNFT || s_zustand == RE15_GSZ_RUECKKEHR) return 1;   /* untergetaucht halten (B9) */
     if (s_zustand == RE15_GSZ_KAMPF) {
+        if (s_kb_ok && s_kontakt < 0) s_kb_takt++;          /* Nachbesserung 5: Bilder seit dem Kampfbeginn (Kontakt-Mass) */
         if (!s_ga.kampf_gemeldet) { s_ga.kampf_gemeldet = 1; return 3; }
         return 0;
     }
@@ -769,11 +880,12 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
     e->y = -1200;
     s_ga.t++;
     switch (s_ga.phase) {
-    case GP_DURCHBRUCH:                                       /* Clip 6 Bild 1..124: aus dem Wasser, auf die Leiche zu */
-        if (ga_schritt(e, bk) == 2) {
+    case GP_DURCHBRUCH:                                       /* Clip 6 Bild 1..bis: aus dem Wasser, auf die Leiche zu */
+        if (ga_schritt(e, bk) == 2 || (int)e->anim_frame >= ga_durchbruch_bis(bk)) {
             ga_clip(e, 4, 0, 0);                              /* FRESSEN P1: FUN_8001a330(em,4,0,0) @0x801010ec-f4 */
             s_ga.phase = GP_BISS; s_ga.t = 0;
             int cut = re15_gr2_kamera_schnitt(RE15_GR2_BLICK_FINISHER, e, leiche_als_opfer(), "gatorszene Fressen");
+            fress_kamera_messen(e, cut);                      /* Nachbesserung 5 (M3): Frontalwert der Fress-Einstellung */
             folge('G', GP_BISS, cut);
         }
         break;
@@ -844,6 +956,7 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
             re15_gr2_kamera_frei("gatorszene");               /* Spur-B-Sperre auf (Cut_old-Zwilling auf P3s Leichen-Cut) */
             re15_gr2_kamera_auto(1);                          /* Nachbesserung 1 (N1): B's Programme R1/Finisher/Intro wieder an */
             kam_uebergabe();                                  /* Nachbesserung 1 (M1): im SELBEN Bild auf den Cut des Spielers */
+            kampfbeginn_messen(e);                            /* Nachbesserung 5 (M1/M4): Abstand + Zonen am Kampfbeginn */
             s_ga.phase = GP_ENDE; s_ga.t = 0;
             s_zustand = RE15_GSZ_KAMPF;
             re15_game_flag_set(5, RE15_GSZ_SIG_FERTIG, 1);    /* Programm 3 laeuft weiter (Ankunfts-Poll) */
@@ -901,6 +1014,7 @@ void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor)
      * Das gilt fuer R1 OHNE Explosionsschnitt ("Sperre ohne Schnitt") und die Todesrolle; MIT Schnitt hat key_rueckschnitt_pruefen
      * den Schluessel schon gelegt (Bit 111). */
     key_tod_pruefen();
+    if (e && s_zustand == RE15_GSZ_KAMPF && s_kb_ok && s_kontakt < 0 && s_kb_takt >= 1) kontakt_pruefen(e);   /* Nachbesserung 5 */
     if (!e || !s_ga.leiche_dran || s_ga.leiche_weg) return;
     int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
     int32_t r6[9], p6[3];

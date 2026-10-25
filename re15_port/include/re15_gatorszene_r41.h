@@ -67,8 +67,10 @@ int  re15_gatorszene_r41_spinnen_verworfen(void);
 #define RE15_GSZ_SIG_GATOR       28    /* 2090: Gator-Ablauf starten                                     */
 #define RE15_GSZ_SIG_KNALL       29    /* 2090: Knall des Hereinbrechens oben in 2080 (Nachtrag 17)       */
 #define RE15_GSZ_SIG_FERTIG      30    /* 2090: Port -> Programm: Gator-Ablauf fertig (Ankunfts-Poll)      */
-#define RE15_GSZ_LEICHE_OBJ      3     /* ROOM2090 main00 @0x00A8E Obj_model_set obj 3 = treibende Zombie-Leiche im Nordbecken
-                                        * (Bild Cut 5); Nachbesserung 4 (Nachtrag 29), vorher obj 2 @0x00A6C (Bild Cut 0) */
+#define RE15_GSZ_LEICHE_OBJ      2     /* ROOM2090 main00 @0x00A6C Obj_model_set obj 2 = treibende Zombie-Leiche im Suedbecken
+                                        * (Bild Cut 0). Nachbesserung 5 (Entscheid F-E2): die Leiche liegt wieder im Suedbecken
+                                        * (Ankunftskamera Cut 0, Kampfbeginn in Leons Beckenzone 0); Nachbesserung 4 nahm obj 3
+                                        * @0x00A8E im Nordbecken (Cut 5). */
 #define RE15_GSZ_KEY_OBJ         4     /* Port-Prop (nOmodel = 4, RDT-Kopf Byte 2), Muster dining_r38 obj 6                */
 
 /* Zustaende der Szene (nur RAM; waehrend der Szene kann weder gespeichert noch gekaempft werden). */
@@ -174,5 +176,23 @@ int  re15_gatorszene_r41_key_prim_jetzt(int cut, int *ruhe, int *spitze);
  * sub02 @0x00B3C-0x00B46), Riegel + Plc_ret + Riegel auf wie ROOM1150 sub08 (@0x01114/@0x01118, @0x012E0, @0x012E4/@0x012E8).
  * Pruefhaken: Kamera der Einstellung und der Cut davor (-1 = keine), Bild des Schnitts, 1 = Programm 4 laeuft noch. */
 int  re15_gatorszene_r41_key_einstellung(int *cut, int *vorher, unsigned *bild);
+
+/* ---- Nachbesserung 5 (Abnahme 4 M1-M4 = Orchestrator-Entscheid F-E2) -------------------------------------------------------
+ * SZENEN-LAGE (PORT-WAHL der Inszenierung nach Nachtrag 6/29 und F-E2, Herleitung im Kommentar von gatorszene_r41.c und
+ * tools/r41_gatorszene/leiche_lage_n5.py): Leiche (Lage, Gier), Anlauf-Gier des Gators, letztes Bild des Durchbruchs (Clip 6) und
+ * Neigung des Schluessels. Pruefhaken fuer Sonden/Riegel: _lage_setzen gilt ab dem naechsten Raumaufbau, NULL = Standard. Kein
+ * Spielweg ruft ihn (kein Schalter, keine Umgebungsvariable). */
+typedef struct { int32_t x, z; int16_t rot_y, gier, durchbruch_bis, key_rx, key_rz; } re15_gsz_lage_t;
+void re15_gatorszene_r41_lage_setzen(const re15_gsz_lage_t *l);
+void re15_gatorszene_r41_lage(re15_gsz_lage_t *out);
+/* Messhaken KAMPFBEGINN (Folge C) und KONTAKT im Mass des RE2-Sollbands (tools/r41_gatorszene/probe_re2_band_n5.c): Kontakt = erstes
+ * Bild nach dem Kampfbeginn, in dem ein Knochen des Gators die Spielfigur laengs seiner Schwimmrichtung erreicht
+ * (max_b <P_b - L, h> >= 0, h = (cos Gier, -sin Gier)); RE2 schwimmt mit Gier 2048 -> "vorderster Knochen auf Leons x".
+ * _kampfbeginn: 1 = gemessen; Abstand Wurzel <-> Spielfigur (SquareRoot0 wie RE2 +0x1F0 @0x800265d4), Beckenzonen (0 Sued,
+ * 1 Nord, 2 Westkanal-Streifen wie enemy_ai_boss_gator.c gb_zone). _kontakt: Bilder ab dem Kampfbeginn, -1 = keiner.
+ * _fress_kamera: Cut der Fress-Einstellung (FINISHER, Spur-B-Wahl) und ihr Frontalwert (Q12), -1 = keine. */
+int  re15_gatorszene_r41_kampfbeginn(int32_t *abstand, int *zone_gator, int *zone_spieler);
+int  re15_gatorszene_r41_kontakt(void);
+int  re15_gatorszene_r41_fress_kamera(int *frontal);
 
 #endif /* RE15_GATORSZENE_R41_H */
