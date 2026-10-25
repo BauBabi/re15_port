@@ -457,9 +457,10 @@ static void teil_schluessel(void)
     const int ks = prop_von(RE15_GSZ_KEY_OBJ);
     PRUEF(re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT) == 1, "Leiche (Zustand 7) -> (9,%d) = 1", RE15_GSZ_BIT_LIEGT);
     /* Nachbesserung 1 (M2): die Mitte liegt ueber der Wasseroberflaeche (-1620 = ROOM2090 @0x009D6 p0), die tiefste Ecke des
-     * zur Kamera gekippten Quadrats darauf. */
+     * zur Kamera gekippten Quadrats darauf - die Mitte also hoechstens eine halbe Diagonale (sqrt(2) x 90 = 127, Ecken +-90 der
+     * MD1 @0x354C) darueber (Nachbesserung 2: die Kippung zur Kamera mit dem groessten Bild dreht um beide Achsen). */
     PRUEF(ks >= 0 && g_scd.props[ks].active && g_scd.props[ks].parent_obj == -1 && g_scd.props[ks].y <= -1620 &&
-          g_scd.props[ks].y > -1620 - 90 && re15_aot_water_at(g_scd.props[ks].x, g_scd.props[ks].z) != 0,
+          g_scd.props[ks].y >= -1620 - 127 && re15_aot_water_at(g_scd.props[ks].x, g_scd.props[ks].z) != 0,
           "Schluessel liegt im Wasser bei der Leiche (%d,%d,%d)", ks >= 0 ? g_scd.props[ks].x : 0, ks >= 0 ? g_scd.props[ks].y : 0,
           ks >= 0 ? g_scd.props[ks].z : 0);
     PRUEF(a->active && a->type == RE15_AOT_TYPE_ITEM, "Zone Slot 15 = Item");
@@ -473,8 +474,8 @@ static void teil_schluessel(void)
     {
         int f = 0;
         while (f < 200 && re15_gatorszene_r41_key_einstellung(NULL, NULL, NULL)) { frame(0, 0); f++; }
-        PRUEF(f >= 90 && !re15_gatorszene_r41_key_einstellung(NULL, NULL, NULL) && !re15_game_flag_get(2, 7),
-              "Einstellung auf den Schluessel nach %d Bildern zu Ende, Riegel auf", f);
+        PRUEF(f < 200 && !re15_gatorszene_r41_key_einstellung(NULL, NULL, NULL) && !re15_game_flag_get(2, 7),
+              "Einstellung auf den Schluessel %d Bilder nach den 5 Takten zu Ende, Riegel auf (Dauer misst Teil tod)", f);
     }
     for (int f = 0; f < 20; f++) frame(0, 0);
     pl->x = kx + 620; pl->z = kz; pl->rot_y = 2048; pl->y = 0;
