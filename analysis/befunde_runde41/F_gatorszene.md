@@ -840,4 +840,24 @@ Plan:
     Wurzel nach 143. Sollwerte fuer den Port: Abstand Wurzel <-> Spielfigur am Kampfbeginn >= 11430, erster Angriff (Leon steht)
     >= 121 Bilder nach dem Kampfbeginn. Gleiche Einheiten (Leon ist in beiden Spielen gleich gross); der Port-Gator ist 2/3 so gross
     (GB_SCALE_Q12 2731) und entsprechend langsamer - ein gleicher Wurzelabstand ist im Port also eher grosszuegiger.
+- **Geometrie 2090 und Wahl der Lage (PORT-WAHL nach Nachtrag 6/29, Rechnung `tools/r41_gatorszene/leiche_lage_n4.py`, Ausgabe
+  `F41n4/leiche_lage_n4.txt`).** Wasser = Becken des Boss-Moduls (gb_becken_draussen: SCA-Aussenwaende x[-8900..7200]
+  z[-27000..-5400] ohne Plattform x[-1700..1850] z[-20000..-12450] und Rampe x[1850..7200] z[-18100..-14500]); Kette wie
+  ga_buehne (Kopf im Koppelbild 13 auf der Rumpfmitte, S = Mitte - Kopf13 - Weg4 - Weg6, zusammen 10715 laengs), Weg der Wurzel
+  S -> Kau-Lage mit Rand 900 und des Kopfes mit Rand 500 im Wasser; Abstand Kau-Lage <-> Leiter-Ankunft (-8200,-25550) minus 700
+  (Wende + Schrei) >= 11430; Leiche ganz im Bild des Cuts (Huelle des MD1 @0x2054), Wert = Bildgroesse^2 x Licht des Schluessels
+  (Fassung 1). Ergebnis:
+  - Die alte Lage (-5500,-23700) und die Original-Lage von obj 2 (-1725,-21723) @0x00A6C haben KEINE Kette mit dem RE2-Abstand
+    im Wasser (Suedbecken zu nah an der Leiter).
+  - Bester Wert ueber alle Lagen: obj 2 nach (700,-8200) in Cut 5 (Schluessel 11,5 Bildpunkte) - das liegt 1063 neben der zweiten
+    treibenden Leiche obj 3 (Obj_model_set `2d 03 00 00 02 00 0a 00 00 00 e7 ff 34 f9 01 e3 00 00 78 06 ...` @0x00A8E =
+    (-25,-1740,-7423) Gier 1656), also zwei Leichen nebeneinander - verworfen.
+  - **Gewaehlt: obj 3 an ihrer Original-Lage** (Nutzer-Wortlaut: "Es schwimmt bereits ein Zombie im Wasser, nimm vielleicht
+    diesen"): sie erfuellt alles ohne Verschieben - Kette mit Anlauf-Gier 3488 (Raster 16 mit dem groessten kleinsten Rand: Wurzel
+    1408 / Kopf 1443; Nachbarn 3456: 1272/1308, 3504: 1407/1507), S (-7283,-16663) im Westkanal, der Gator schwimmt nach
+    Nordosten aus dem Kanal ins Nordbecken; Kau-Lage (-2576,-10344), Abstand zur Leiter-Ankunft 16213 (- 700 = 15513 >= 11430).
+    Szenenkamera Cut 5 (RID @0x060 + 5*32: (2754,-3132,-6408) -> (-7992,-18,-10782)) = die Kamera, in der das Original obj 3
+    zeigt; ganze Leiche im Bild (114,120)-(203,189); Schluessel-Neigung lokal rx 144 / rz -672 (59,9 Grad), Licht 108,6 (Spitze
+    161 < 172), ~9,0 x 8,2 Bildpunkte (Fassung 1 in Cut 1: 10,4 x 9,5 bei Licht 170). obj 2 bleibt an seiner Original-Lage
+    (Suedbecken, Bild Cut 0) und ohne Schluessel. ROOM2091.RDT ist bytegleich zu ROOM2090.RDT (cmp) -> Elza gleich.
 
