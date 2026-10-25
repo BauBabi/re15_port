@@ -837,6 +837,7 @@ static void kampfbeginn_messen(const re15_actor_t *e)
 }
 /* Kontakt-Mass (gleich auf beiden Seiten, probe_re2_band_n5.c): erstes Bild nach dem Kampfbeginn, in dem ein Knochen die
  * Spielfigur laengs der Schwimmrichtung erreicht: max_b <P_b - L, h> >= 0, h = (cos Gier, -sin Gier) (FUN_800152c8-Konvention). */
+#ifdef RE15_PLATFORM_PC
 static void kontakt_pruefen(const re15_actor_t *e)
 {
     const re15_enemy_bank_t *bk = re15_enemy_find(e->type);
@@ -852,12 +853,11 @@ static void kontakt_pruefen(const re15_actor_t *e)
     }
     if (bb < 0 || best < 0) return;
     s_kontakt = s_kb_takt;
-#ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[gatorszene] Kontakt F%u: +%d Bilder nach dem Kampfbeginn (Knochen %d, Gator (%d,%d) Gier %d Clip %d, "
             "Spielfigur (%d,%d))\n", (unsigned)g_engine.frame_count, s_kontakt, bb, e->x, e->z, (int)e->rot_y, (int)e->motion,
             pl->x, pl->z);
-#endif
 }
+#endif
 
 static void ga_start(int slot, re15_actor_t *e, const re15_enemy_bank_t *bk)
 {
@@ -1026,7 +1026,9 @@ void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor)
      * Das gilt fuer R1 OHNE Explosionsschnitt ("Sperre ohne Schnitt") und die Todesrolle; MIT Schnitt hat key_rueckschnitt_pruefen
      * den Schluessel schon gelegt (Bit 111). */
     key_tod_pruefen();
+#ifdef RE15_PLATFORM_PC   /* Messhaken (je Bild eine Pose je Knochen) - nicht im PSX-Laufzeitbudget, die Spiellogik liest ihn nicht */
     if (e && s_zustand == RE15_GSZ_KAMPF && s_kb_ok && s_kontakt < 0 && s_kb_takt >= 1) kontakt_pruefen(e);   /* Nachbesserung 5 */
+#endif
     if (!e || !s_ga.leiche_dran || s_ga.leiche_weg) return;
     int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
     int32_t r6[9], p6[3];
