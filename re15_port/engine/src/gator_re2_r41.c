@@ -323,6 +323,13 @@ static int gr2_fx(uint32_t a0, int16_t a1, const uint8_t mtx[32], const int16_t 
 {
     return re2fx_spawn_sofort(a0, a1, mtx, ofs);             /* FUN_8001bf10 = sofort lebendig */
 }
+/* Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M2): 1 = m ist eine Quellmatrix der R1-Folge (Fontaene FUN_80103eb4 an Part 6/7
+ * `addiu a2,s2,1104` @0x80103f58 bzw. s2 + 1276, Spritzring FUN_8010338c an der Kanister-Matrix @0x8010344c-d0). Nur diese drei
+ * Puffer reicht der Port an re2fx_spawn_sofort (Putz: Einheitsmatrix); Kinder erben den Zeiger (re2fx_platz_quelle). */
+int re15_gr2_fx_quelle_r1(const uint8_t *m)
+{
+    return m != NULL && (m == s_fx_mtx[GR2_FXM_TEIL6] || m == s_fx_mtx[GR2_FXM_TEIL7] || m == s_fx_mtx[GR2_FXM_KANISTER]);
+}
 
 /* ------------------------------------------------------------------------------------------ */
 void re15_gr2_reset(int slot, re15_gr2_se_fn se)

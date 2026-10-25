@@ -156,6 +156,9 @@ int  re15_gr2_kanister_welt(int32_t pos[3], int32_t rot[9]);
  * +0x1EC & 0x7fff. _weiter nach jedem gezeichneten Bild (FUN_800363f0 @0x800365bc-c8). */
 int  re15_gr2_kanister_scherben(int32_t *skala, uint32_t *farbe, int *bild);
 void re15_gr2_kanister_scherben_weiter(void);
+/* Runde 41 Spur G (Nachbesserung 4, M2): 1 = Matrix-Zeiger m (re2fx_platz_quelle) gehoert der R1-Folge (Fontaene Part 6/7,
+ * Spritzring Kanister) - nur deren Plaetze zeichnet gator_fx_r41_pc.c mit den Kern-Zeilen 485..498. */
+int  re15_gr2_fx_quelle_r1(const uint8_t *m);
 /* Nachbesserung 4 (Abnahme 3, M1): Takt-ENDE des Boss-Takts (re15_gator_boss_tick nach der Wand-Klemme): Pose rechnen wie der
  * NPC-Zeichner sie in diesem Bild zeichnet (Ueberblendung + Kopf/Kiefer-az +0x22A/+0x228, ohne den Ueberblend-Schnappschuss zu
  * aendern), daraus Kanister-Anhaengen (FUN_8002d030 @0x801018f0 gegen die Part-6-Weltmatrix @0x801018d0-e0), Kanister-Weltlage

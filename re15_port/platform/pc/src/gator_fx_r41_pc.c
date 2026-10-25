@@ -18,10 +18,19 @@
  *      Raum-ESP der uebrigen Raeume, glas1120_pc.c), wie RE2 bei jedem Raumwechsel die Raum-ESP des neuen Raums registriert.
  *      Dateien (bytegleich ROOM40A0.RDT): GATOR40A0.ESP = RDT[0x59CC:0x65E8] (effect.esp, Ids 16 19 08 09 26 1A 18),
  *      GATOR40A0_<Id>.TIM = RDT[0x221FC + Offset] (Offset-Tafel rueckwaerts vor RDT[21] = 0x2FCFC).
- *   2. Textur-Platz 54 = das VRAM-Fenster x 896..1023 (TPage 0x0E/0x0F), y 0..215 mit den 16 Raum-CLUT-Zeilen 480..495 (x 288);
- *      Textur-Platz 56 = RE2 TEX.TIM Seiten 0x1E/0x1F mit den Kern-CLUT-Zeilen 485..498 (x 272), die re2fx_pc.c auslaesst.
+ *   2. EIN Textur-Platz 54 (Nachbesserung 4, Abnahme G 3 V1: render_pc.c bleibt unveraendert, RE15_TIM_SLOT_MAX 56) als
+ *      16-Bit-Atlas 512 x (16 x 216 + 256): je Raum-CLUT-Zeile 480..495 (x 288) ein Block mit dem VRAM-Fenster x 896..1023
+ *      (TPage 0x0E/0x0F) y 0..215, in dem FUN_8001bd38 die sieben ROOM40A0-Texturen ablegt (Spalte 15: 32+80+72+32, Spalte 14:
+ *      88+80+48 Zeilen), darunter EIN Block RE2 TEX.TIM Seiten 0x1E/0x1F mit der Kern-CLUT-Zeile 488 (x 272) = die Zeile der
+ *      Kern-Bank 0 (CORE00.ESP Kopf-CLUT 0x7A11, Sub 6/3 der Fontaene >> 3 = 0, CLUT nur beim Spawn @0x8001ccf4-d10). Die Texel
+ *      sind vorab ueber die CLUT aufgeloest - dieselbe Regel re15_tim_texel_argb, die render_pc.c fuer 4 bpp anwendet.
  *   3. Zeichnen: dieselben Quads wie re2fx_pc_draw (re2fx_quads = FUN_80077924/FUN_80077ed0), nur die Plaetze, die keiner der
- *      beiden vorhandenen Zeichner nimmt (Kern-Zeilen 485..498; Raum-TPage 0x0E/0x0F mit CLUT x 288). Mischmodus wie dort.
+ *      beiden vorhandenen Zeichner nimmt (Raum-TPage 0x0E/0x0F mit CLUT x 288 - nur solange die Raum-ESP ROOM40A0 registriert
+ *      ist; Kern-Zeilen 485..498 NUR fuer Plaetze der R1-Folge (Nachbesserung 4, Abnahme G 3 M2): Matrix-Zeiger +0x6C
+ *      (re2fx_platz_quelle, `sw a2,108(t0)` @0x8001cd6c, geerbt von Mehrteil-Skripten und Op-41/42/69-Kindern) = eine Quell-
+ *      matrix der Fontaene/des Spritzrings (re15_gr2_fx_quelle_r1). Alle anderen Kern-485-Quads laesst der Port in JEDEM Raum
+ *      aus wie re2fx_pc.c (Kommentar N5) - vorher zeichnete dieser Zeichner sie ab dem ersten 2090-Besuch ueberall (gemessen
+ *      Abnahme G 3 Abschnitt 5: Granatwerfer in ROOM2080 "gezeichnet G 0" ohne, "G 6" nach dem 2090-Besuch). Mischmodus wie dort.
  *   4. MESSHAKEN RE15_GATOR_FX_LOG=1 (nur Messzeilen in debug.log, kein Spielverhalten): je Bild mit lebenden RE2-FX-Plaetzen
  *      die Zahl der Plaetze je Bank, der Quads je Zeichner-Klasse und der gezeichneten Quads.
  *   5. Orchestrator-Entscheid G-E1 (Abnahme G 2 M1): Masken-Haken re15_gr2_maske_hook fuer die R1-Kamerawahl (gator_re2_r41.c) -
@@ -60,27 +69,30 @@ extern void re15_render_textured_tri(int x0, int y0, int u0, int v0,
                                      int tpage, int clut, int z,
                                      uint8_t r, uint8_t g, uint8_t b);
 
-#define G41FX_RAUM_SLOT     54      /* render_pc.c RE15_TIM_SLOT_MAX: 53 Kanister, 54 frei, 55 Glas */
-#define G41FX_KERN_SLOT     56      /* render_pc.c RE15_TIM_SLOT_MAX 57 (Runde 41 Spur G) */
+#define G41FX_SLOT          54      /* render_pc.c RE15_TIM_SLOT_MAX 56: 53 Kanister, 54 frei, 55 Glas (Nachbesserung 4: EIN Platz) */
 #define G41FX_RAUM_BREITE   512     /* TPage 0x0E + 0x0F = VRAM x 896..1023 = 2 x 256 Texel (4 bpp) */
 #define G41FX_RAUM_HOEHE    256     /* VRAM y 0..255 (TPage-Hoehe; ROOM40A0 belegt 0..215) */
+#define G41FX_ATLAS_MAX_H   4096    /* GLES-Grenze der Texturhoehe (re2fx_pc.c Kommentar N5) */
 #define G41FX_RAUM_CLUT_Y   480     /* `y = 0x1e0` FUN_8001bd38 */
 #define G41FX_RAUM_CLUT_X   0x120   /* GetClut(0x120, y) FUN_8001bd38 -> x-Feld 0x12 */
 #define G41FX_RAUM_CLUTS    16      /* Zeilen 480..495 (16 Paletten a 16 Farben) */
 #define G41FX_SPALTE_START  15      /* `iVar10 = 0xf` FUN_8001bd38: x = 15 * 64 = 960 */
 #define G41FX_KERN_CLUT0    485     /* erste Zeile, die re2fx_pc.c nicht laedt (RE2FX_CLUT_ERSTE 480 + 5) */
 #define G41FX_KERN_CLUTS    14      /* 485..498: TEX.TIM-CLUT 32 x 19 ab Zeile 480 (`20 00 13 00`) */
+#define G41FX_KERN_R1_ZEILE 488     /* Kern-Bank 0 (CORE00.ESP @0x88C): Kopf-CLUT 0x7A11 -> (0x7A11 >> 6) & 0x1FF = 488; die Fontaene
+                                     * spawnt Sub 6 und Sub 3 (0x00064000/0x00034000 @0x80103f74-0x80104028) -> + (Sub >> 3) * 0x40 = 0 */
 
 static uint8_t  *s_esp;            /* umgelegte Kopie von GATOR40A0.ESP (re2fx haelt den Zeiger) */
 static int       s_esp_sz;
 static int       s_geladen;        /* 0 ungeprueft, 1 ok, -1 fehlt */
 static int       s_reg;            /* 1 = Raum-ESP ROOM40A0 ist registriert */
-static int       s_raum_tex_ok, s_kern_tex_ok;
+static int       s_atlas_ok;       /* Textur-Platz 54 geladen (Atlas) */
+static int       s_raum_h;         /* belegte Hoehe des VRAM-Fensters nach FUN_8001bd38 (ROOM40A0: 216) = Blockhoehe im Atlas */
 static uint8_t   s_raum_pix[G41FX_RAUM_BREITE / 2 * G41FX_RAUM_HOEHE];
 static uint16_t  s_raum_clut[G41FX_RAUM_CLUTS * 16];
 static uint8_t   s_kern_pix[512 / 2 * 256];
-static uint16_t  s_kern_clut[G41FX_KERN_CLUTS * 16];
-static int       s_letzte_raum, s_letzte_kern;
+static uint16_t  s_kern_clut_r1[16];   /* Zeile 488, Eintraege 16..31 (x 272) */
+static int       s_letzte_raum, s_letzte_kern, s_letzte_fremd;
 static int       s_log = -1;
 
 int re15_pc_gator_fx_registriert(void) { return s_reg; }
@@ -112,6 +124,7 @@ static int raum_umlegen(void)
     const size_t al = ((size_t)s_esp_sz + 3u) & ~(size_t)3u;
     const int32_t ende = (int32_t)al - 4;
     int spalte = G41FX_SPALTE_START, y = 0, zeile = G41FX_RAUM_CLUT_Y, n = 0;
+    s_raum_h = 0;
     memset(s_raum_pix, 0, sizeof s_raum_pix);
     memset(s_raum_clut, 0, sizeof s_raum_clut);
     for (n = 0; n < 8; n++) {
@@ -145,10 +158,20 @@ static int raum_umlegen(void)
                 (unsigned)id, ti.h, (unsigned)bk[6], y, zeile, zeile + ti.clut_zeilen - 1);
         y += ti.h;                                                   /* iVar8 += h */
         zeile += ti.clut_zeilen;                                     /* y += crect->h */
+        if (y > s_raum_h) s_raum_h = y;                              /* Nachbesserung 4: Blockhoehe des Atlas */
     }
     return n;
 }
 
+/* 4-bpp-Index des Texels (x, y) in einem 512 x 256-Puffer (256 B je Zeile): gerades x = unteres Halbbyte (PSX-GPU; render_pc.c
+ * re15_render_pc_upload_tim_slot liest genauso). */
+static unsigned nib(const uint8_t *pix, int x, int y)
+{
+    const uint8_t b = pix[(size_t)y * 256u + (unsigned)x / 2u];
+    return (x & 1) ? (unsigned)(b >> 4) : (unsigned)(b & 0xFu);
+}
+
+static int s_kern_ok;              /* Kern-Block (TEX.TIM Zeile 488) im Atlas */
 static void laden(void)
 {
     if (s_geladen) return;
@@ -160,40 +183,51 @@ static void laden(void)
     }
     const int nb = raum_umlegen();
     if (nb <= 0) { fprintf(stderr, "[gator-fx] Raum-Texturen GATOR40A0_*.TIM fehlen/unlesbar (rc %d)\n", nb); return; }
-    re15_tim_t t;
-    memset(&t, 0, sizeof t);
-    t.bpp = 4; t.has_clut = 1;
-    t.clut_x = G41FX_RAUM_CLUT_X; t.clut_y = G41FX_RAUM_CLUT_Y; t.clut_entries = G41FX_RAUM_CLUTS * 16; t.clut = s_raum_clut;
-    t.data_x = 896; t.data_y = 0; t.width = G41FX_RAUM_BREITE; t.height = G41FX_RAUM_HOEHE;
-    t.pixels = (const uint16_t *)(const void *)s_raum_pix;
-    re15_render_pc_upload_tim_slot(&t, G41FX_RAUM_SLOT);
-    s_raum_tex_ok = re15_render_pc_dbg_slot_loaded(G41FX_RAUM_SLOT);
-    /* Kern-Zeilen 485..498 von RE2 TEX.TIM (Lage wie re2fx_pc_lade_tex: Bild (768,256), Seiten 0x1E/0x1F = Bild-hw 128..255,
+    /* Kern-Zeile 488 von RE2 TEX.TIM (Lage wie re2fx_pc_lade_tex: Bild (768,256), Seiten 0x1E/0x1F = Bild-hw 128..255,
      * CLUT (256,480) 32 x 19, Spalte x 272 = Eintraege 16..31). */
     int xsz = 0;
     uint8_t *x = re15_pc_read_re2("TEX.TIM", &xsz);
+    s_kern_ok = 0;
     if (x && xsz > 20 && le32(x) == 0x10u && (le32(x + 4) & 0xFu) == 0x8u && le16(x + 16) == 32 && le16(x + 18) == 19) {
         const uint32_t csz = le32(x + 8);
         const uint8_t *img = x + 8 + csz;
         if ((size_t)(img - x) + 12u + 256u * 256u * 2u <= (size_t)xsz && le16(img + 8) == 256 && le16(img + 10) == 256) {
-            for (int r = 0; r < G41FX_KERN_CLUTS; r++)
-                for (int k = 0; k < 16; k++)
-                    s_kern_clut[r * 16 + k] = le16(x + 20 + (size_t)((G41FX_KERN_CLUT0 - 480 + r) * 32 + 16 + k) * 2);
+            for (int k = 0; k < 16; k++)
+                s_kern_clut_r1[k] = le16(x + 20 + (size_t)((G41FX_KERN_R1_ZEILE - 480) * 32 + 16 + k) * 2);
             for (int yy = 0; yy < 256; yy++) memcpy(s_kern_pix + (size_t)yy * 256, img + 12 + (size_t)yy * 512 + 256, 256);
-            memset(&t, 0, sizeof t);
-            t.bpp = 4; t.has_clut = 1;
-            t.clut_x = 272; t.clut_y = G41FX_KERN_CLUT0; t.clut_entries = G41FX_KERN_CLUTS * 16; t.clut = s_kern_clut;
-            t.data_x = 896; t.data_y = 256; t.width = 512; t.height = 256;
-            t.pixels = (const uint16_t *)(const void *)s_kern_pix;
-            re15_render_pc_upload_tim_slot(&t, G41FX_KERN_SLOT);
-            s_kern_tex_ok = re15_render_pc_dbg_slot_loaded(G41FX_KERN_SLOT);
+            s_kern_ok = 1;
         }
     }
     free(x);
+    /* Atlas (Nachbesserung 4, V1): 16 Raum-Bloecke (CLUT-Zeile 480 + k) der belegten Fensterhoehe s_raum_h, darunter der Kern-
+     * Block (256 Zeilen). Texel = CLUT[Index] (16 Bit), dieselbe Wertregel wie der 4-bpp-Pfad von render_pc.c. */
+    const int kern_y0 = G41FX_RAUM_CLUTS * s_raum_h, h = kern_y0 + 256;
+    if (s_raum_h <= 0 || s_raum_h > G41FX_RAUM_HOEHE || h > G41FX_ATLAS_MAX_H) {
+        fprintf(stderr, "[gator-fx] Atlas unmoeglich: Fensterhoehe %d -> %d Zeilen (Grenze %d)\n", s_raum_h, h, G41FX_ATLAS_MAX_H);
+        return;
+    }
+    uint16_t *at = (uint16_t *)calloc((size_t)G41FX_RAUM_BREITE * (size_t)h, sizeof *at);
+    if (!at) return;
+    for (int c = 0; c < G41FX_RAUM_CLUTS; c++)
+        for (int yy = 0; yy < s_raum_h; yy++)
+            for (int xx = 0; xx < G41FX_RAUM_BREITE; xx++)
+                at[(size_t)(c * s_raum_h + yy) * G41FX_RAUM_BREITE + (size_t)xx] = s_raum_clut[c * 16 + (int)nib(s_raum_pix, xx, yy)];
+    if (s_kern_ok)
+        for (int yy = 0; yy < 256; yy++)
+            for (int xx = 0; xx < G41FX_RAUM_BREITE; xx++)
+                at[(size_t)(kern_y0 + yy) * G41FX_RAUM_BREITE + (size_t)xx] = s_kern_clut_r1[nib(s_kern_pix, xx, yy)];
+    re15_tim_t t;
+    memset(&t, 0, sizeof t);
+    t.bpp = 16; t.has_clut = 0;
+    t.width = G41FX_RAUM_BREITE; t.height = h;
+    t.pixels = at;
+    re15_render_pc_upload_tim_slot(&t, G41FX_SLOT);
+    free(at);
+    s_atlas_ok = re15_render_pc_dbg_slot_loaded(G41FX_SLOT);
     s_geladen = 1;
-    fprintf(stderr, "[gator-fx] GATOR40A0.ESP %d B (%d Raumbanken umgelegt), Raum-Texturen Slot %d %s, Kern-Zeilen %d..%d Slot %d %s\n",
-            s_esp_sz, nb, G41FX_RAUM_SLOT, s_raum_tex_ok ? "ok" : "FEHLT", G41FX_KERN_CLUT0, G41FX_KERN_CLUT0 + G41FX_KERN_CLUTS - 1,
-            G41FX_KERN_SLOT, s_kern_tex_ok ? "ok" : "FEHLT");
+    fprintf(stderr, "[gator-fx] GATOR40A0.ESP %d B (%d Raumbanken umgelegt), Atlas Slot %d %s: %d x %d (16 Raum-Bloecke a %d Zeilen, "
+                    "Kern-Zeile %d %s)\n", s_esp_sz, nb, G41FX_SLOT, s_atlas_ok ? "ok" : "FEHLT", G41FX_RAUM_BREITE, h, s_raum_h,
+            G41FX_KERN_R1_ZEILE, s_kern_ok ? "ok" : "FEHLT");
 }
 
 /* RE2-Raumlader FUN_8001bba4: Raum-ESP des NEUEN Raums registrieren (vorherige Raumbanken austragen, @0x8001bbc8-c0c). */
@@ -261,30 +295,40 @@ void re15_pc_gator_fx_draw(const re15_camera_view_t *cam, int cx, int cy, int ca
                            int has_region, const int16_t rxs[4], const int16_t rzs[4])
 {
     static re2fx_quad_t q[384];                                     /* 0x3C00 B Paketpuffer = 384 POLY_FT4 (re2fx_pc.c) */
-    s_letzte_raum = s_letzte_kern = 0;
+    s_letzte_raum = s_letzte_kern = s_letzte_fremd = 0;
     re15_gr2_maske_hook = maske_verdeckt;                           /* G-E1 (gator_re2_r41.c gr2_kam_r1_start) */
     raum_takt();
     if (s_log < 0) { const char *e = getenv("RE15_GATOR_FX_LOG"); s_log = (e && *e && *e != '0') ? 1 : 0; }
     if (!cam) return;
     const int n = re2fx_quads(cam, cx, cy, camf, has_region, rxs, rzs, q, (int)(sizeof q / sizeof q[0]));
-    int k480 = 0, k485 = 0, rr = 0, gl = 0, rest = 0, gebunden = -1;
+    int k480 = 0, k485 = 0, rr = 0, gl = 0, rest = 0, aus_fenster = 0, gebunden = 0;
     for (int i = n - 1; i >= 0; i--) {                              /* rueckwaerts wie re2fx_pc_draw (OT vorn) */
         const re2fx_quad_t *e = &q[i];
         const unsigned seite = e->tpage & 0x1Fu, cxf = e->clut & 0x3Fu;
         const int zeile = (e->clut >> 6) & 0x1FF;
         const uint8_t *pl = re2fx_platz(e->platz);
         const int bank = pl ? (int)pl[0x1C] : -1;
-        int slot = -1, uo = 0;
+        int kern = 0, uo = 0, vo = -1;
         if ((seite == 0x1E || seite == 0x1F) && cxf == 0x11u) {
             if (zeile >= 480 && zeile < G41FX_KERN_CLUT0) { k480++; continue; }      /* re2fx_pc_draw */
-            if (zeile >= G41FX_KERN_CLUT0 && zeile < G41FX_KERN_CLUT0 + G41FX_KERN_CLUTS) { k485++; slot = G41FX_KERN_SLOT; uo = (seite == 0x1F) ? 256 : 0; }
+            if (zeile >= G41FX_KERN_CLUT0 && zeile < G41FX_KERN_CLUT0 + G41FX_KERN_CLUTS) {
+                k485++;
+                /* Nachbesserung 4 (M2): nur Plaetze der R1-Folge (Herkunft = Matrix-Zeiger +0x6C, s. Kopf Punkt 3) */
+                if (!re15_gr2_fx_quelle_r1(re2fx_platz_quelle(e->platz))) { s_letzte_fremd++; continue; }
+                if (zeile != G41FX_KERN_R1_ZEILE || !s_kern_ok) { rest++; continue; }
+                kern = 1; uo = (seite == 0x1F) ? 256 : 0; vo = G41FX_RAUM_CLUTS * s_raum_h;
+            }
         } else if (s_reg && (seite == 0x0E || seite == 0x0F) && cxf == (G41FX_RAUM_CLUT_X >> 4) &&
                    zeile >= G41FX_RAUM_CLUT_Y && zeile < G41FX_RAUM_CLUT_Y + G41FX_RAUM_CLUTS) {
-            rr++; slot = G41FX_RAUM_SLOT; uo = (seite == 0x0F) ? 256 : 0;
+            rr++;
+            /* Atlas-Block der CLUT-Zeile; Zellen ausserhalb des belegten Fensters (v > s_raum_h) gaebe es nur bei einer
+             * fehlerhaften ESP (FUN_8001bd38 legt jede Zelle in ihre TIM) - gezaehlt, nicht gezeichnet. */
+            if (e->v0 > s_raum_h || e->v1 > s_raum_h) { aus_fenster++; continue; }
+            uo = (seite == 0x0F) ? 256 : 0; vo = (zeile - G41FX_RAUM_CLUT_Y) * s_raum_h;
         } else if (bank >= 0x10 && bank <= 0x14) { gl++; continue; }                 /* re15_pc_glas1120_draw */
-        if (slot < 0) { rest++; continue; }
-        if ((slot == G41FX_KERN_SLOT && !s_kern_tex_ok) || (slot == G41FX_RAUM_SLOT && !s_raum_tex_ok)) continue;
-        if (gebunden != slot) { re15_render_pc_bind_tim_slot(slot); gebunden = slot; }
+        if (vo < 0) { rest++; continue; }
+        if (!s_atlas_ok) continue;
+        if (!gebunden) { re15_render_pc_bind_tim_slot(G41FX_SLOT); gebunden = 1; }
         const int abe = (e->code & 2) != 0, abr = (e->tpage >> 5) & 3;     /* Mischmodus wie re2fx_pc_draw */
         if (abe) {
             switch (abr) {
@@ -294,13 +338,13 @@ void re15_pc_gator_fx_draw(const re15_camera_view_t *cam, int cx, int cy, int ca
             default: re15_render_pc_set_tri_alpha(128); break;                                    /* 0.5B + 0.5F */
             }
         }
-        const int u0 = e->u0 + uo, u1 = e->u1 + uo;
-        re15_render_textured_tri(e->x0, e->y0, u0, e->v0,  e->x1, e->y0, u1, e->v0,
-                                 e->x0, e->y1, u0, e->v1,  e->tpage, e->clut, e->vz, 255, 255, 255);
-        re15_render_textured_tri(e->x1, e->y0, u1, e->v0,  e->x1, e->y1, u1, e->v1,
-                                 e->x0, e->y1, u0, e->v1,  e->tpage, e->clut, e->vz, 255, 255, 255);
+        const int u0 = e->u0 + uo, u1 = e->u1 + uo, v0 = e->v0 + vo, v1 = e->v1 + vo;   /* Atlas: Block-Versatz vo statt CLUT-Slab */
+        re15_render_textured_tri(e->x0, e->y0, u0, v0,  e->x1, e->y0, u1, v0,
+                                 e->x0, e->y1, u0, v1,  e->tpage, e->clut, e->vz, 255, 255, 255);
+        re15_render_textured_tri(e->x1, e->y0, u1, v0,  e->x1, e->y1, u1, v1,
+                                 e->x0, e->y1, u0, v1,  e->tpage, e->clut, e->vz, 255, 255, 255);
         if (abe) { re15_render_pc_set_tri_blend(0); re15_render_pc_set_tri_alpha(255); }
-        if (slot == G41FX_KERN_SLOT) s_letzte_kern++; else s_letzte_raum++;
+        if (kern) s_letzte_kern++; else s_letzte_raum++;
     }
     if (s_log != 1) return;
     /* MESSZEILE (RE15_GATOR_FX_LOG): Plaetze je Bank, Quads je Zeichner-Klasse, gezeichnet. */
@@ -318,8 +362,9 @@ void re15_pc_gator_fx_draw(const re15_camera_view_t *cam, int cx, int cy, int ca
     }
     if (!leb) return;
     fprintf(stderr, "[gator-fx] F%u ROOM%04X R1 %d reg40A0 %d Plaetze %d (b00 %d b03 %d b08 %d b09 %d b1a %d b26 %d sonst %d) sichtbar %d "
-                    "Quads %d: kern480 %d kern485 %d raum %d glas %d rest %d | gezeichnet G %d (kern485 %d raum %d) re2fx_pc %d | op_unbekannt %u op69 %u op41 %u\n",
+                    "Quads %d: kern480 %d kern485 %d raum %d glas %d rest %d | gezeichnet G %d (kern485 %d raum %d) re2fx_pc %d | op_unbekannt %u op69 %u op41 %u"
+                    " | kern485 fremd %d aus_fenster %d\n",
             (unsigned)g_engine.frame_count, (unsigned)g_current_room_id & 0xFFFFu, r1_laeuft(), s_reg, leb, bk[0], bk[1], bk[2], bk[3],
             bk[4], bk[5], sonst, sicht, n, k480, k485, rr, gl, rest, s_letzte_raum + s_letzte_kern, s_letzte_kern, s_letzte_raum,
-            re2fx_pc_letzte_quads(), re2fx_op_unbekannt(), re2fx_op_zaehler(69), re2fx_op_zaehler(41));
+            re2fx_pc_letzte_quads(), re2fx_op_unbekannt(), re2fx_op_zaehler(69), re2fx_op_zaehler(41), s_letzte_fremd, aus_fenster);
 }

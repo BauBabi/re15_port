@@ -1369,3 +1369,41 @@ gleicher Code-Stand); Bildbelege im Baum unter `G_belege/nb4_*`.
 - [ ] M1: R1-Kamerawahl so, dass der Todes-Clip im Bild bleibt; Plattform Leon/Elza + alle Pflicht-Verlaeufe; Riegel um Plattform-Lauf
 - [ ] Tests gezielt, OFFEN, Fuer den Nutzer
 
+### 11.1 M2 - Kern-Zeilen 485..498 nach dem ersten 2090-Besuch in jedem Raum
+**Ursache (Code):** `re15_pc_gator_fx_draw` (gator_fx_r41_pc.c) lief in jedem Raum; der Zweig "kern485" pruefte weder Raum noch Herkunft,
+nur `s_kern_tex_ok`, das `laden()` beim ersten Betreten von 2090/2091 setzte und nie zuruecknahm. re2fx_pc.c laesst diese Zeilen in
+allen Raeumen bewusst aus (Kommentar N5, Runde 34 Spur D).
+**Messung vorher** (Abnahme 3 Abschnitt 5, Laeufe `<SP>/g3abn/runs/gl_2080_direkt` / `gl_2080_nach2090`, Granatwerfer Id 15, gleiche Lage
+(-9950,-25700) Gier 2907 Cut 4): ohne 2090-Besuch `F200 ROOM2080 ... kern485 6 ... | gezeichnet G 0 (kern485 0 raum 0)`, nach dem Leiterweg
+aus 2090 `F236 ROOM2080 ... kern485 6 ... | gezeichnet G 6 (kern485 6 raum 0)` (Muendungsblitz 0x01002000 = Kern-Bank 1 Zeile 492,
+Granatkoerner 0x020c0a00 = Zeile 495).
+**Beleg (selbst disassembliert, info/re2leon/PSX.EXE):** jeder RE2-Effektplatz merkt sich den Matrix-Zeiger seines Spawns (`sw a2,108(t0)`
+@0x8001cd6c = +0x6C); Mehrteil-Skripte kopieren +0x18..+0x7B des Hauptplatzes in jeden Teil (16-Byte-Schleife `lw/sw ... addiu a2,a2,16 /
+bne a2,t1` @0x8001ce38-60 + Restwort @0x8001ce64-6c), die Op-Kinder bekommen ihn als a2 (Op 41: `lw a2,108(v1)` @0x80020814 vor
+`jal 0x8001cbe8` @0x8002081c; Op 42/69 ebenso = re2_fx.c kind_an_matrix). Die R1-Folge spawnt nur an drei Matrizen: Fontaene FUN_80103eb4 an
+Part 6 (`addiu a2,s2,1104` @0x80103f58) und Part 7 (s2 + 1276), Spritzring FUN_8010338c an der Kanister-Matrix (@0x8010344c-d0). Die Kern-
+Zeilen 485..498 der R1-Folge sind genau die Kern-Bank 0 der Fontaene (0x00064000/0x00034000 @0x80103f74-0x80104028; Kopf-CLUT 0x7A11 ->
+Zeile 488, Sub 6/3 >> 3 = 0, die CLUT schreibt nur der Spawn @0x8001ccf4-d10).
+**Aenderung (PORT-WAHL "auf die R1-Folge beschraenken", Form = RE2-Herkunft +0x6C):** `engine/src/re2_fx.c` `re2fx_platz_quelle(i)` (Zeiger
++0x6C, NULL = frei) + Deklaration in re2_fx.h; `engine/src/gator_re2_r41.c` `re15_gr2_fx_quelle_r1(m)` = einer der drei R1-Puffer
+s_fx_mtx[TEIL6/TEIL7/KANISTER] (Putz nimmt die Einheitsmatrix); `platform/pc/src/gator_fx_r41_pc.c` zeichnet Kern-485-Quads nur noch fuer
+Plaetze mit R1-Herkunft und zaehlt die uebrigen in der Messzeile ("kern485 fremd n"). Alle markiert "Runde 41 Spur G (Nachbesserung 4)".
+**Messung nachher** (Messkopie re15_pc_g41nb4a.exe, dieselben Umgebungen, `<SP>/g4/runs/a_gl_2080_direkt` / `a_gl_2080_nach2090`):
+direkt `F200 ROOM2080 ... kern485 6 ... | gezeichnet G 0 (kern485 0 raum 0) | kern485 fremd 6`, nach dem 2090-Besuch `F236 ROOM2080 ... kern485
+6 ... | gezeichnet G 0 (kern485 0 raum 0) | kern485 fremd 6` - Bild fuer Bild F200..F211 bzw. F236..F247 dieselben Zahlen. In 2090 (Lauf
+a_k_leon_r1): in allen 38 R1-Bildern `kern485 fremd 0`, die R1-Messzeilen sind Zahl fuer Zahl gleich denen der Abnahme 3 (diff leer).
+
+### 11.2 V1 - render_pc.c (RE15_TIM_SLOT_MAX 56 -> 57) ohne Freigabe
+**Ursache:** Nachbesserung 3 legte die Raum-Texturen (Platz 54) und die Kern-Zeilen (Platz 56) in zwei Textur-Plaetze und erhoehte dafuer
+RE15_TIM_SLOT_MAX in render_pc.c (VERTRAG 1.3: nur Spur D).
+**Aenderung:** render_pc.c ist wieder bytegleich mit der Basis 9f10bdb0 (`git checkout 9f10bdb0 -- re15_port/platform/pc/src/render_pc.c`,
+RE15_TIM_SLOT_MAX 56). gator_fx_r41_pc.c legt beides in EINEN Platz 54 als 16-Bit-Atlas 512 x 3712: 16 Raum-Bloecke (CLUT-Zeile 480 + k) der
+Hoehe 216 = die von FUN_8001bd38 belegte Fensterhoehe (Spalte 15: 32+80+72+32, Spalte 14: 88+80+48; Zeile `[gator-fx] ... Atlas Slot 54 ok:
+512 x 3712 (16 Raum-Bloecke a 216 Zeilen, Kern-Zeile 488 ok)`), darunter EIN Kern-Block (TEX.TIM Seiten 0x1E/0x1F mit Zeile 488 - nach 11.1
+die einzige Kern-Zeile, die gezeichnet wird). Die Texel sind vorab ueber die CLUT aufgeloest, dieselbe Wertregel re15_tim_texel_argb wie der
+4-bpp-Pfad von render_pc.c; der Zeichner versetzt v um den Block statt ueber den CLUT-Slab. Hoehe 3712 < 4096 (GLES-Grenze N5; vorher Platz 54
+genau 4096). Raum-Quads mit v > 216 werden gezaehlt ("aus_fenster"), nicht gezeichnet: in allen gemessenen Bildern 0.
+**Messung nachher (Bildvergleich):** Lauf a_k_leon_r1 = Umgebung der Abnahme 3 k_leon_r1 (Haken HP, `RE15_FRAMEDUMP=2280-2340/2`) mit
+re15_pc_g41nb4a.exe gegen die Bilder der Abnahme 3 (`<SP>/g3abn/runs/k_leon_r1`, alter Stand mit zwei Plaetzen): `Bilder 31, davon verschieden 0`
+(`<SP>/g4/ppmdiff.py`, Pixel fuer Pixel, F2280..F2340 = Schnitt, Explosion, Fontaene, Scherben).
+

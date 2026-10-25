@@ -86,6 +86,10 @@ const uint8_t *re2fx_platz(int i);
 /** NUR SONDEN: beschreibbarer Zugriff auf das Platz-Abbild (Zustand fuer gezielte Taktproben setzen). */
 uint8_t *re2fx_platz_sonde(int i);
 
+/** Runde 41 Spur G (Nachbesserung 4, M2): Matrix-Zeiger +0x6C des Platzes i (a2 des Spawns `sw a2,108(t0)` @0x8001cd6c, von
+ *  Mehrteil-Skripten und den Kindern der Ops 41/42/69 geerbt) = die Herkunft des Effekts; NULL = Platz frei oder i ungueltig. */
+const uint8_t *re2fx_platz_quelle(int i);
+
 /** Die registrierte CORE00.ESP (NULL vor re2fx_register_core). */
 const uint8_t *re2fx_esp_daten(size_t *groesse);
 
