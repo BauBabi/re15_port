@@ -832,3 +832,20 @@ faehrt sie gruen — kein Lockern ohne Grund:
 **C-E5:** Der Alarm-Schalter re15_audio_r41_alarm (~20 Zeilen am Ende von audio_pc.c + 4 markierte Einzeiler) ist angenommen
 (braucht die statischen BGM-Zustaende der Datei). Die zwei RBJ-Haken der Spur C in main.c (V1 der Abnahme C 5) sind angenommen;
 Bit (9,125) (Ventil-Sicherungskasten) ist in VERTRAG 1.1 fuer C eingetragen.
+
+## 2026-10-25 11:10 — Nachtrag 27 (Nutzer-Antwort zur Masken-Frage der Spur M, Abnahme M 3 Mangel 2) + Orchestrator-Entscheid M-E1
+
+Frage: "Masken STAGE3–6 (Spur M): Die meisten Löcher sind geschlossen, aber einige Gegenstände haben automatisch keine
+verlässliche Tiefe und bleiben ohne Maske: Geländer 3050 Kamera 6, 30E0 Kamera 6–9, 3040 Kamera 3; Pulte 5050 Kamera 1/2;
+Möbel 30A0 Kamera 0; Lok-Unterteil 6000 Kamera 7; Roboterarm 50B0 Kamera 1/3; Wandecke 6000 Kamera 5. Der sichere Weg wären
+Freistellungen von dir wie bei STAGE1/2 (die berichtigten Übersichtsbilder liegen in pri/STAGE3-6). Wie möchtest du vorgehen?"
+Antwort des Nutzers (Wortlaut): **"Ich kümmere mich selbst drum."**
+
+**M-E1:** Die Restliste (Mangel 2 der Abnahme M 3: Gelaender 3050 C6, 30E0 C6..C9, 3040 C3, Pulte 5050 C1/C2, Moebel 30A0 C0,
+Lok-Unterteil 6000 C7, Roboterarm 50B0 C1/C3, Wandecke 6000 C5) ist KEIN Mangel der Spur M mehr. Die Freistellungen zeichnet
+der Nutzer selbst (pri/STAGE3-6); eingebaut werden sie, sobald sie vorliegen (naechste Version). Spur M baut fuer diese
+Gegenstaende KEINE weiteren automatischen Masken; der Stand der Nachbesserung 3 bleibt (kein Rueckschritt). Die Liste kommt je
+Raum/Kamera/Gegenstand mit Beleg ins Dossier ("Fuer den Nutzer: Freistellungen") und in die Release Notes v0.8.29.
+Offen fuer Spur M bleiben nur Mangel 1 (Ost-Stirn der Buero-Trennwand 30A0/30A1 C0: Zelle 6 @RDT+0x0045C, neuer Befund auf dem
+natuerlichen Weg, Tiefe aus der Zelle belegt) und Mangel 3 (Laufpruefung im gemeinsamen Laeufer). Abnahme M 4 urteilt Punkt 1
+an Mangel 1 und daran, dass keine Stelle der Restliste schlechter wurde; die Restliste selbst ist kein Mangel.
