@@ -81,6 +81,7 @@ static void musik_takt_vor(void) { musik_takt(); }
 #define GSZ_SLEEP(n)       0x09, 0x0a, GSZ_LE16(n)
 #define GSZ_CUT(c)         0x29, (c)
 #define GSZ_CUT_AUTO       0x3c, 0x01
+#define GSZ_CUT_OLD        0x2a, 0x00                             /* Cut_old + Nop: ROOM2010 sub03 @0x008F6/@0x008F7 */
 #define GSZ_PLC_RET        0x2e, 0x01, 0x00, 0x00, 0x42, 0x00
 #define GSZ_WAIT(bit)      0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, (bit), 0x00
 #define GSZ_EM(s,t,g,p6,x,y,z,band,rot) 0x44, (s), (t), (g), (band), 0x00, (p6), 0xff, GSZ_LE16(x), GSZ_LE16(y), \
@@ -210,12 +211,30 @@ static const uint8_t k_p3[] = {
     GSZ_RIEGEL_AUF,
     GSZ_END,
 };
+/* PROGRAMM 4 - ROOM2090/2091 nach dem Tod (Nachbesserung 2, M2): Einstellung auf den blinkenden Schluessel. Den Schnitt auf die
+ * Kamera macht der Port im Bild des Todes (key_einstellung, Cut_chg-Zwilling LAB_800402a0 - wie die Kamera-Uebergabe M1 im SELBEN
+ * Bild wie Spur B's Rueckschnitt, sonst stuende dessen Zonen-Cut ein Bild lang da); das Programm haelt mit Riegel und kehrt
+ * zurueck. FORM: RE1.5 "Kamera auf einen Gegenstand" ROOM2010 sub03 = `29 05` Cut_chg @0x008EE, `2b 02 ff ff` Message_on
+ * @0x008F0 (hier: Halt, kein Text), `2a` Cut_old @0x008F6, `00` @0x008F7, `3c 01` Cut_auto @0x008F8 (ROOM1180 sub02
+ * @0x00B3C-0x00B46 gleich); Riegel Set(2,7,1)/Set(1,27,1) + Plc_ret + Riegel auf wie ROOM1150 sub08 (@0x01114/@0x01118,
+ * @0x012E0, @0x012E4/@0x012E8); Halt = GSZ_LEICHE_BILDER (1,5 Blinkperioden 0x3c, wie die Leichen-Einstellung der Ankunft). */
+#define GSZ_KEY_SCHUSS_BILDER GSZ_LEICHE_BILDER
+static const uint8_t k_p4[] = {
+    GSZ_RIEGEL,
+    GSZ_SLEEP(GSZ_KEY_SCHUSS_BILDER),
+    GSZ_CUT_OLD,
+    GSZ_PLC_RET,
+    GSZ_CUT_AUTO,
+    GSZ_RIEGEL_AUF,
+    GSZ_END,
+};
 const uint8_t *re15_gatorszene_r41_programm(int nr, int *out_len)
 {
     const uint8_t *p = NULL; int n = 0;
     if (nr == 1) { p = k_p1; n = (int)sizeof k_p1; }
     else if (nr == 2) { p = k_p2; n = (int)sizeof k_p2; }
     else if (nr == 3) { p = k_p3; n = (int)sizeof k_p3; }
+    else if (nr == 4) { p = k_p4; n = (int)sizeof k_p4; }
     if (out_len) *out_len = n;
     return p;
 }
@@ -256,6 +275,7 @@ const uint8_t *re15_gatorszene_r41_ereignis(uint16_t room_id, uint8_t event_id)
     if (basis == RE15_GSZ_RAUM && s_zustand == RE15_GSZ_ANKUNFT) nr = 1;
     else if (basis == 0x2080u && s_zustand == RE15_GSZ_MONTAGE) nr = 2;
     else if (basis == RE15_GSZ_RAUM && s_zustand == RE15_GSZ_RUECKKEHR) nr = 3;
+    else if (basis == RE15_GSZ_RAUM && s_zustand == RE15_GSZ_SCHLUESSEL) nr = 4;   /* Nachbesserung 2 (M2) */
     if (!nr || !programm_bauen(nr)) return NULL;
     folge('P', nr, 0);
     return s_prog;
@@ -425,9 +445,11 @@ static void leiche_weg(void)
 }
 
 static void tor_sperren(uint16_t room_id);   /* Abschnitt 5 */
+static int s_einst_slot;   /* Einstellung auf den Schluessel (Abschnitt "Schluessel nach dem Tod") */
 void re15_gatorszene_r41_install(uint16_t room_id)
 {
     const uint16_t basis = (uint16_t)(room_id & 0xFFFEu);
+    s_einst_slot = -1;                                      /* Nachbesserung 2: Raumaufbau setzt die SCD-Faeden neu */
     tor_sperren(room_id);
     if (basis == RE15_GSZ_RAUM) {
         if (s_zustand == RE15_GSZ_MONTAGE) {                /* zurueck aus 2080: Programm 3 */
@@ -679,17 +701,21 @@ int re15_gatorszene_r41_spieler_im_bild(int cut) { int sx, sy; return spieler_im
  * Bild wie re15_gr2_kamera_frei (dessen Rueckschnitt auf Cut 1 sonst ein Bild lang zu sehen waere: SCD-Takt vor dem
  * Spielschritt, main.c). Cut_chg-Zwilling = LAB_800402a0 wie scd_vm.c op_cut_chg: alter Cut @0x800402c0/@0x800402e4,
  * work_vars[0x0C] @0x800402ec, work_vars[0x0A] @0x800402fc, Bit 0x100 (Zonenkamera aus) @0x800402d4. */
-static void kam_uebergabe(void)
+static void cut_chg_zwilling(int cut)
 {
-    const int cut = (int)s_leon_cut;
-    g_scd.cam_id_prev        = (uint8_t)g_scd.work_vars[0x0A];
+    g_scd.cam_id_prev        = (uint8_t)g_scd.work_vars[0x0A];   /* @0x800402c0 / @0x800402e4 */
     g_scd.cam_id             = (uint8_t)cut;
     g_scd.cam_arg2           = 0;
     g_scd.cam_arg3           = 0;
     g_scd.cam_change_pending = 1;
-    g_scd.work_vars[0x0C]    = g_scd.work_vars[0x0A];
-    g_scd.work_vars[0x0A]    = (int16_t)cut;
-    g_scd.cut_auto_enabled   = 0;
+    g_scd.work_vars[0x0C]    = g_scd.work_vars[0x0A];            /* @0x800402ec */
+    g_scd.work_vars[0x0A]    = (int16_t)cut;                     /* @0x800402fc */
+    g_scd.cut_auto_enabled   = 0;                                /* @0x800402d4 `ori ...,0x100` */
+}
+static void kam_uebergabe(void)
+{
+    const int cut = (int)s_leon_cut;
+    cut_chg_zwilling(cut);
     int sx = -1, sy = -1;
     const int im = spieler_im_bild(cut, &sx, &sy);
     folge('C', cut, im);
@@ -848,10 +874,15 @@ static void euler_aus_matrix(const int32_t m[9], int16_t *rx, int16_t *ry, int16
     *rx = (int16_t)(((int)re15_atan2_q12(m[5], m[8]) - 1024) & 0xfff);
     *rz = (int16_t)(((int)re15_atan2_q12(m[1], m[0]) - 1024) & 0xfff);
 }
+static void key_tod_pruefen(void);   /* Abschnitt "Schluessel nach dem Tod" (Nachbesserung 2, M2) */
 void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor)
 {
     (void)slot;
     re15_actor_t *e = (re15_actor_t *)gator_actor;
+    /* Nachbesserung 2 (M2): Tod im SELBEN Bild erkennen, in dem Spur B's R1 P3 das Tot-Flag setzt und die Szenen-Kamera
+     * freigibt (@0x80102654-64 / @0x80102688-94) - der Schnitt auf die Schluessel-Kamera ersetzt dessen Rueckschnitt, bevor
+     * das Bild gezeichnet wird (sonst stuende der Zonen-Cut ein Bild lang da; der SCD-Takt laeuft vor dem Spielschritt). */
+    key_tod_pruefen();
     if (!e || !s_ga.leiche_dran || s_ga.leiche_weg) return;
     int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
     int32_t r6[9], p6[3];
@@ -1116,12 +1147,22 @@ static void key_lage_bei_tod(void)
     memset(&l, 0, sizeof l);
     int cut = -1;
     const int lauf = (int)g_scd.cam_id;
-    if (key_suche(lauf, pk, npk, r_nah, &l)) cut = lauf;
-    else
-        for (int c = 0; c < g_room_rdt.cut_count; c++) {
-            if (!zonenkamera(c) || !key_suche(c, pk, npk, r_nah, &b)) continue;
-            if (cut < 0 || b.vz < l.vz) { l = b; cut = c; }
-        }
+    /* Nachbesserung 2 (Abnahme 1, M2): die Zonenkamera mit dem GROESSTEN Schluessel-Bild (kleinste Tiefe) unter allen, nicht
+     * mehr die laufende - die Einstellung nach dem Tod (key_einstellung) schneidet auf sie. Gemessen Abnahme 1: in der laufenden
+     * Kamera nur 4 Bildpunkte (Todesrolle Cut 0, Tiefe 4835) bzw. 6 (R1 Cut 1, Tiefe 5766). Gleiche Tiefe: die laufende, sonst
+     * der kleinere Cut. Zonenkamera = RVD-Gruppe mit Wechselsatz (ROOM2090 Cut 0..7): dort sieht der Spieler den Schluessel auch,
+     * wenn er hingeht; die Sonderkameras 8..12 tragen nur den Such-Anker (gator_re2_r41.c gr2_zonenkamera). */
+    for (int c = 0; c < g_room_rdt.cut_count; c++) {
+        if (!zonenkamera(c) || !key_suche(c, pk, npk, r_nah, &b)) continue;
+#ifdef RE15_PLATFORM_PC
+        {   re15_camera_view_t kv;
+            const int h = kam_sicht(c, &kv) ? (int)kv.fov_screen_dist : 0;
+            fprintf(stderr, "[gatorszene] Schluessel-Kandidat: Kamera %d%s, Lage (%d,%d,%d) Tiefe %d = Quadrat %d Bildpunkte\n", c,
+                    c == lauf ? " (laufende)" : "", (int)b.x, (int)b.y, (int)b.z, (int)b.vz,
+                    b.vz > 0 ? (int)((2 * GSZ_KEY_HALB * h) / b.vz) : 0); }
+#endif
+        if (cut < 0 || b.vz < l.vz || (b.vz == l.vz && c == lauf)) { l = b; cut = c; }
+    }
     if (cut < 0) {                                          /* keine Kamera: Kopf in eine Wasserzone gezogen (erste Fassung) */
         for (int i = 0; i <= 8; i++) {
             const int32_t x = kopf[0] + (int32_t)(((int64_t)(g->x - kopf[0]) * i) / 8);
@@ -1135,9 +1176,9 @@ static void key_lage_bei_tod(void)
     int16_t rx = 0, rz = 0; int32_t y = l.y;
     if (key_neigung(cut, p, &rx, &rz, &y, &s_key_prim_ruhe, &s_key_prim_spitze)) { s_key_rx = rx; s_key_rz = rz; s_key_y = y; }
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[gatorszene] Schluessel-Lage: Kamera %d (%s), Lage (%d,%d,%d) Tiefe %d, %u von der Leiche (%d Punkte, Naehe <= %d), "
-                    "Neigung rx %d rz %d, Primitivfarbe Ruhe %d / Blink-Spitze %d (Kappe 0x80)\n",
-            cut, cut == lauf ? "laufende" : "Zonenkamera mit dem groessten Bild", s_key_x, s_key_y, s_key_z, (int)l.vz,
+    fprintf(stderr, "[gatorszene] Schluessel-Lage: Kamera %d (groesstes Bild, laufende %d), Lage (%d,%d,%d) Tiefe %d, %u von der "
+                    "Leiche (%d Punkte, Naehe <= %d), Neigung rx %d rz %d, Primitivfarbe Ruhe %d / Blink-Spitze %d (Kappe 0x80)\n",
+            cut, lauf, s_key_x, s_key_y, s_key_z, (int)l.vz,
             (unsigned)re15_squareroot0((uint32_t)(l.d2 > 0xffffffffLL ? 0xffffffffLL : l.d2)), npk, (int)r_nah,
             (int)s_key_rx, (int)s_key_rz, s_key_prim_ruhe, s_key_prim_spitze);
 #endif
@@ -1170,6 +1211,79 @@ static void key_neigung_nachholen(void)
     fprintf(stderr, "[gatorszene] Schluessel-Ersatzlage (%d,%d,%d): Neigung rx %d rz %d zur Kamera %d\n", s_key_x, y, s_key_z,
             (int)rx, (int)rz, cut);
 #endif
+}
+/* ---- Einstellung auf den Schluessel nach dem Tod (Nachbesserung 2, Abnahme 1 M2) ----------------------------------------
+ * Der Schluessel ist das flache RE2-Bodenmodell Platform Key (Quadrat 180, ROOM7040 MD1 @0x354C); aus den Zonenkameras an den
+ * Beckenenden (RID @0x060, y -3132) war er in der LAUFENDEN Kamera nur 4-6 Bildpunkte gross (Abnahme 1: Todesrolle Cut 0 Tiefe
+ * 4835, R1 Cut 1 Tiefe 5766). Jetzt: Lage fuer die Zonenkamera mit dem groessten Bild (key_lage_bei_tod), Schnitt im Bild des
+ * Todes auf diese Kamera (Cut_chg-Zwilling LAB_800402a0, cut_chg_zwilling), Programm 4 haelt 90 Bilder mit Riegel und kehrt mit
+ * Cut_old (FUN_8004032c: gemerkter angezeigter Cut DAT_800b3f7b @0x8004033c, Zonenkamera an @0x8004032c) + Cut_auto zurueck.
+ * FORM = RE1.5 "Kamera auf einen Gegenstand" ROOM2010 sub03 @0x008EE-0x008F8 / ROOM1180 sub02 @0x00B3C-0x00B46 (Cut_chg,
+ * Message_on, Cut_old, Cut_auto) mit dem Halt der Leichen-Einstellung der Ankunft statt eines Textes (kein Text vorgegeben).
+ * PORT-WAHL der Inszenierung (Nutzer: "Wenn der Aligator danach tot ist, soll der Schluessel in der Naehe seine Leiche sein und
+ * blinken"; Nachtrag 6: "sieht die Zombie Leiche mit dem Schluessel in der Cutscene" = dieselbe Einstellung fuer den Schluessel). */
+static int      s_einst_slot = -1;      /* SCD-Faden von Programm 4 (-1 = keiner) */
+static int      s_einst_cut = -1, s_einst_vorher = -1;
+static unsigned s_einst_bild = 0;
+static void key_einstellung(void)
+{
+    const int cut = s_key_cut;
+    if (cut < 0 || !g_room_rdt_ok || !g_room_rdt.cuts || cut >= g_room_rdt.cut_count) return;
+    const int vorher = (int)g_scd.work_vars[0x0A];           /* angezeigter Cut = Ziel von Cut_old (@0x800402c0/@0x800402e4) */
+    cut_chg_zwilling(cut);
+    const int alt = s_zustand;
+    s_zustand = RE15_GSZ_SCHLUESSEL;                          /* nur fuer re15_gatorszene_r41_ereignis -> Programm 4 */
+    const int slot = scd_event_fire(RE15_GSZ_EREIGNIS);
+    s_zustand = alt;
+    if (slot < 0) {                                           /* kein Ereignis-Faden frei: sofort zurueck (Cut_old-Zwilling) */
+        g_scd.cam_id = g_scd.cam_id_prev;
+        g_scd.cam_change_pending = 1;
+        g_scd.work_vars[0x0C] = g_scd.work_vars[0x0A];       /* @0x8004035c */
+        g_scd.work_vars[0x0A] = (int16_t)g_scd.cam_id_prev;  /* @0x80040364 */
+        g_scd.cut_auto_enabled = 1;                          /* @0x8004032c */
+        folge('X', 4, 0);
+        return;
+    }
+    s_einst_slot = slot; s_einst_cut = cut; s_einst_vorher = vorher; s_einst_bild = (unsigned)g_engine.frame_count;
+    folge('E', cut, vorher);
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[gatorszene] Schluessel-Einstellung: Cut %d (vorher Cut %d) F%u, Halt %d Bilder mit Riegel, dann Cut_old + "
+                    "Cut_auto (Form ROOM2010 sub03 @0x008EE-0x008F8)\n", cut, vorher, (unsigned)g_engine.frame_count,
+            (int)GSZ_KEY_SCHUSS_BILDER);
+#endif
+}
+/* Ende von Programm 4 erkennen (Messzeile/Riegel): der Faden laeuft nicht mehr in s_prog. */
+static void key_einstellung_takt(void)
+{
+    if (s_einst_slot < 0 || s_einst_slot >= SCD_THREAD_COUNT) return;
+    const scd_thread_t *t = &g_scd.threads[s_einst_slot];
+    if (t->active && t->pc >= s_prog && t->pc < s_prog + s_prog_len) return;
+    s_einst_slot = -1;
+    folge('O', (int)g_scd.cam_id, s_einst_cut);
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[gatorszene] Schluessel-Einstellung Ende: Cut %d F%u (Einstellung Cut %d ab F%u, vorher Cut %d), Zonenkamera %s\n",
+            (int)g_scd.cam_id, (unsigned)g_engine.frame_count, s_einst_cut, s_einst_bild, s_einst_vorher,
+            g_scd.cut_auto_enabled ? "an" : "aus");
+#endif
+}
+int re15_gatorszene_r41_key_einstellung(int *cut, int *vorher, unsigned *bild)
+{
+    if (cut) *cut = s_einst_cut;
+    if (vorher) *vorher = s_einst_vorher;
+    if (bild) *bild = s_einst_bild;
+    return s_einst_slot >= 0;
+}
+/* Tod erkennen (Nachtakt im Bild des Todes, Rueckfall im SCD-Takt): Lage + Kamera, (9,111), Schluessel + Zone, Einstellung. */
+static void key_tod_pruefen(void)
+{
+    if ((uint16_t)(g_current_room_id & 0xFFFEu) != RE15_GSZ_RAUM) return;
+    if (!re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN) || re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT)) return;
+    if (!gator_tot()) return;
+    key_lage_bei_tod();
+    re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT, 1);
+    key_bei_leiche((uint16_t)g_current_room_id);
+    folge('L', (int)s_key_x, (int)s_key_z);
+    key_einstellung();
 }
 int re15_gatorszene_r41_key_kamera(void) { return s_key_cut; }
 /* Pruefhaken (M5/M2): Primitivfarbe (hellster Kanal) des Schluessels JETZT, wie der Prop-Zeichner sie rechnet: Weltmatrix
@@ -1219,13 +1333,8 @@ int re15_gatorszene_r41_key_prim(int *ruhe, int *spitze)
 void re15_gatorszene_r41_tick(void)
 {
     const uint16_t basis = (uint16_t)(g_current_room_id & 0xFFFEu);
-    if (basis == RE15_GSZ_RAUM && re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN)
-        && !re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT) && gator_tot()) {
-        key_lage_bei_tod();                                  /* Alligator tot (gator_tot) */
-        re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT, 1);
-        key_bei_leiche((uint16_t)g_current_room_id);
-        folge('L', (int)s_key_x, (int)s_key_z);
-    }
+    key_tod_pruefen();                                       /* Rueckfall ohne Boss-Takt (Nachtakt erkennt den Tod frueher) */
+    key_einstellung_takt();                                  /* Nachbesserung 2 (M2): Ende der Einstellung (Messzeile) */
     if (basis == RE15_GSZ_RAUM && s_key_neigung_offen) key_neigung_nachholen();   /* Ersatzlage nach dem Laden (M2) */
     if (basis == RE15_GSZ_RAUM && s_zustand == RE15_GSZ_ANKUNFT && re15_game_flag_get(5, RE15_GSZ_SIG_KNALL)) {
         re15_game_flag_set(5, RE15_GSZ_SIG_KNALL, 0);

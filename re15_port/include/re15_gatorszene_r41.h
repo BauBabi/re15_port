@@ -77,6 +77,7 @@ int  re15_gatorszene_r41_spinnen_verworfen(void);
 #define RE15_GSZ_RUECKKEHR  3   /* 2090: Programm 3 laeuft (Leiche, dann Gator)                  */
 #define RE15_GSZ_GATOR      4   /* 2090: Gator-Ablauf laeuft (Port-Takt)                         */
 #define RE15_GSZ_KAMPF      5   /* 2090: Ablauf fertig, Kampf                                    */
+#define RE15_GSZ_SCHLUESSEL 6   /* 2090: nur waehrend scd_event_fire der Schluessel-Einstellung (Programm 4, Nachbesserung 2) */
 
 /* HAKEN scd_room_setup.c (Ende des Installer-Blocks): Szene/Montage/Rueckkehr starten, Leiche/Schluessel herrichten. */
 void re15_gatorszene_r41_install(uint16_t room_id);
@@ -164,5 +165,13 @@ int  re15_gatorszene_r41_spieler_im_bild(int cut);
 int  re15_gatorszene_r41_key_kamera(void);
 int  re15_gatorszene_r41_key_prim(int *ruhe, int *spitze);
 int  re15_gatorszene_r41_key_prim_jetzt(int cut, int *ruhe, int *spitze);
+/* Nachbesserung 2 (Abnahme 1, M2): EINSTELLUNG AUF DEN SCHLUESSEL nach dem Tod. Der Schluessel liegt in der Zonenkamera mit dem
+ * GROESSTEN Schluessel-Bild in der Naehe der Leiche (nicht mehr in der laufenden); im Bild des Todes schneidet die Szene auf diese
+ * Kamera (Cut_chg-Zwilling LAB_800402a0 wie die Kamera-Uebergabe M1), haelt sie mit Riegel 90 Bilder (1,5 Blinkperioden wie die
+ * Leichen-Einstellung der Ankunft) und kehrt mit Cut_old + Cut_auto zurueck. FORM = RE1.5 "Kamera auf einen Gegenstand":
+ * ROOM2010 sub03 `29 05` Cut_chg @0x008EE ... `2a` Cut_old @0x008F6, `00` @0x008F7, `3c 01` Cut_auto @0x008F8 (ebenso ROOM1180
+ * sub02 @0x00B3C-0x00B46), Riegel + Plc_ret + Riegel auf wie ROOM1150 sub08 (@0x01114/@0x01118, @0x012E0, @0x012E4/@0x012E8).
+ * Pruefhaken: Kamera der Einstellung und der Cut davor (-1 = keine), Bild des Schnitts, 1 = Programm 4 laeuft noch. */
+int  re15_gatorszene_r41_key_einstellung(int *cut, int *vorher, unsigned *bild);
 
 #endif /* RE15_GATORSZENE_R41_H */
