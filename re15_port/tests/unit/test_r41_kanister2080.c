@@ -19,7 +19,9 @@
  *              Nachbesserung 1 ohne Sleep 30 - RE2 Wsleeping @0x80053ac0 wartet dort nur auf Leons Zeile).
  *   bahn       RE2 sub13: unabhaengig nachgerechnete Bahn (Lage += v, v += a; Stop y >= Wasser - 800) == Modul; Landepunkt aus
  *              der Nennlage im 2090-Becken (Aussenwaende x[-8900..7200] z[-27000..-5400], ausserhalb Plattform-/Rampenblock).
- *   landung    Nachbesserung 1 (FG-E3/FG-E4): Nennbahn mit der Wurf-Gier endet 800 ueber dem 2090-Wasser (y -1620) im Becken,
+ *   landung    Nachbesserung 2 (N3): Nord- UND Suedwurf enden im 2090-Wasser, >= 10 Fall-Bilder in Cut 12, Wahl des weiteren
+ *              Landepunkts nach der Lage des Alligators (>= 8880 x 2731/4096 entfernt), Bit 117 im Raumaufbau.
+ *              Nachbesserung 1 (FG-E3/FG-E4): Nennbahn mit der Wurf-Gier endet 800 ueber dem 2090-Wasser (y -1620) im Becken,
  *              mindestens 10 Fall-Bilder in ROOM2090 Cut 12 sichtbar; Spielstand mit Bit 116: der Installer legt den Kanister an
  *              diese Aufschlagstelle (Spur-B-API re15_gr2_kanister_welt, Stufe 0) - in 2090 UND 2091.
  *   texte      2080/2081 Id 42 in der Form ROOM2000 msg 1 @0x1BFD / ROOM2001 msg 0 @0x1E0A (Kopf 04 00 05 07 + Sprecher +

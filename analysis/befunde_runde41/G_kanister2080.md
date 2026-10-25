@@ -22,6 +22,9 @@ Punkte (Wortlaut AUFTRAG.md):
   gezielt 34/34 gruen (Abschnitt 5). Offen: Abschnitt 6, Fragen: Abschnitt 7.
 - 2026-10-25: Nachbesserung 1 (Abnahme 0, Maengel M1-M5; Orchestrator-Entscheide FG-E3/FG-E4 waehrend der Arbeit) -
   Abschnitt 8 (je Mangel Ursache, Messung vorher, Beleg, Aenderung, Messung nachher; Tests 8.6, OFFEN 8.7, Nutzer 8.8).
+- 2026-10-25: Nachbesserung 2 (Abnahme 1, Maengel N1-N3) - Abschnitt 9 (N1 Zeile 42 volle Zeit = RE2 Wsleep/Wsleeping vor dem
+  Loslassen; N2 Dir_set mit dem Schnitt auf Cut 7; N3 Wurf in das vom Alligator weitere Becken + Anschwimmen = RE2-Zielmodus;
+  Messung 9.4, Tests 9.5, OFFEN 9.6, Nutzer 9.7). Massgeblich fuer den Stand ist Abschnitt 9, dann 8.
 
 ## 1. RE-Belege (selbst gelesen)
 
@@ -776,11 +779,11 @@ Baum wie oben, Start auf 194bab1e (Abnahme-1-Commit; Code-Stand = ebe8445f). Mae
 Laufordner/Bilder dieser Nachbesserung: `<SP>/g2` (scratchpad der Sitzung, nicht im Baum); Bildbelege im Baum unter `G_belege/nb2_*`.
 
 ### 9.0 Plan / Stand
-- [ ] N1 RE (RE2 Wsleep/Wsleeping, Raumwechsel beendet Zeile/Stimme), Umsetzung, Messung Leon + Elza, Riegel Standzeit
-- [ ] N2 RE (RE2 Dir_set nach Cut_chg 7), Umsetzung, Bildbogen F437-F530 des End-Baus Leon + Elza, Riegel Gier im Griffbild
-- [ ] N3 Entscheid zu Frage 8.8.1 (nach RE2), Umsetzung, Messung v1 / v3+v5 / v2+v4 / kampf (Leon + Elza) mit Bild der Aufnahme
-      und Zeit seit dem Wurf, Riegel mit zweiter Startlage
-- [ ] Tests gezielt, Dossier 9.4-9.6, Abschluss-Commit
+- [x] N1 RE (RE2 Wsleep/Wsleeping, Raumwechsel beendet Zeile/Stimme), Umsetzung, Messung Leon + Elza, Riegel Standzeit (9.1, 9.4)
+- [x] N2 RE (RE2 Dir_set nach Cut_chg 7), Umsetzung, Bildbogen F438-F530 des End-Baus Leon + Elza, Riegel Gier im Griffbild (9.2, 9.4)
+- [x] N3 Entscheid zu Frage 8.8.1 (nach RE2), Umsetzung, Messung v1 / v3+v5 / v2+v4 / kampf / L3 (Leon + Elza) mit Bild der
+      Aufnahme und Zeit seit dem Wurf, Riegel mit zwei weiteren Startlagen + Boss-Takt-Riegel (9.3, 9.4)
+- [x] Tests gezielt (9.5), Dossier 9.6/9.7, Abschluss-Commit
 
 ### 9.1 N1 - Zeile 42 wird vom Raumwechsel abgeschnitten
 **Messung vorher** (Abnahme 1 §3.1/§3.3, Laeufe s_leon / k_leon / ctest lauf_0d602269, Bau ebe8445f): state.log
@@ -941,7 +944,24 @@ wiederholbar):**
   Spinnen (0x25) dieses Zweigs im Becken (Spur F entfernt sie).
 
 ### 9.5 Tests (gezielt, keine volle Suite; Bau 2026-10-25 local_build.sh build, ctest mit msys64 zuerst im PATH)
-(Ergebnis unten, sobald die Laeufe durch sind)
+Neu/geaendert: unit_r41_kanister2080_szene (Dir_set `33 00 00 00 00 0c 00 00` direkt nach `29 07`; `22 05 1f 00` + Poll Ck(5,0x1F)
+zwischen Sleep 20 und WURF), _landung (Nord- und Suedwurf im Wasser, 14 bzw. 22 von 39 Fall-Bildern in Cut 12, Wahl fuer fuenf
+Lagen, Bit 117 im Raumaufbau 2090/2091), NEU unit_r41_kanister2080_anschwimmen (echter Boss-Takt: fuenf Lagen beim Ausloesen ->
+Aufnahme Bild 131/419/407/424/319, kein Biss davor; Gegenprobe ohne Szene: keine Aufnahme, Haken inaktiv), integration_r41_kanister2080
+(szene_leon/elza: Zeile 42 >= 97 Bilder im Bild, Folge "Zeile 42 stand" -> "Wsleeping frei" -> "Wurf", Gier in Cut 5 ab dem
+Hinknien unveraendert, erstes Cut-7-Bild = Wurf-Gier, Zeile "Wurfrichtung"), integration_r41_kanister2080_kampf (vier Laeufe:
+kampf_leon/kampf_elza (-6000,-17500), nordost_leon (0,-7000), west_elza (-8000,-16000); je "Wurfrichtung", "ANSCHWIMMEN an",
+Aufnahme, R1-Tod; gemessen Aufnahme F113/F113/F154/F90, Leiche (-5502,-11705)/(-5502,-11705)/(5716,-9033)/(-4670,-18747)).
+- `ctest --test-dir re15_port/build -R "unit_r41_kanister2080|unit_r36_kartenbits|unit_scd_|unit_r41_re2gator_|unit_msg_|unit_action_msg_gate|unit_alligator_ai|unit_gator_|unit_r35_granate|unit_r34_reaktion|unit_re2_spider_water_2090" --timeout 600 --output-on-failure -j4`
+  -> **`100% tests passed, 0 tests failed out of 43`** (Total Test time (real) = 61.86 sec).
+- `ctest --test-dir re15_port/build -R "^integration_r41_kanister2080$|^integration_r41_kanister2080_kampf$|^integration_r41_re2gator$|^integration_r35_granate$|^integration_r38_wasser$|^integration_r41_wasser20b0_npc$|^integration_r37_itemband$|^integration_r36_tueren$" --timeout 3000 --output-on-failure -j3`
+  -> `88% tests passed, 1 tests failed out of 8` (Total Test time (real) = 968.51 sec): gruen kanister2080 (177,20 s),
+  kanister2080_kampf (491,86 s), re2gator (226,18 s), r35_granate, r38_wasser, r41_wasser20b0_npc, r37_itemband (838,17 s);
+  integration_r36_tueren "Endbild nicht erreicht (exit=Process terminated due to timeout)" - unter Last (-j3 plus vier parallele
+  Messlaeufe), einzeln nachgefahren: `ctest --test-dir re15_port/build -R "^integration_r36_tueren$" --timeout 1100
+  --output-on-failure` -> **`100% tests passed, 0 tests failed out of 1`** (Total Test time (real) = 63.97 sec).
+- Spur B's Riegel (unit_r41_re2gator_* 18 Teile, integration_r41_re2gator) gruen: der Haken greift nur fuer den Kanister DIESER
+  Szene (Bit 116), Spur B's RE15_GATOR_KANISTER-Weg sieht ihn nicht.
 
 ### 9.6 OFFEN (gemessen bzw. benannt, nicht geraten)
 1. **Apply-Bild F530** (N2): dieser Zweig (Basis 9f10bdb0) zeigt im Bild des Schnitts auf Cut 7 noch den alten Hintergrund mit dem

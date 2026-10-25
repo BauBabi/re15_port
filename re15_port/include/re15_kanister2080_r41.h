@@ -51,6 +51,9 @@
  *     y >= Boden - 800 (Member_cmp 0x0c Op 3 @0x08B0 -> @0x80056008/@0x80055f10), Aufschlag-Se_on @0x08BA, Sleep 15
  *     @0x07A8, Schnitt auf den Fangenden (Cut_chg 11 @0x07D4), Ende Plc_ret/Set(2,7,0)/Set(1,27,0)/Cut_auto (sub18
  *     @0x0A2C-0A38).
+ *   - Nachbesserung 2: Dir_set der Wurfrichtung erst mit dem Schnitt auf Cut 7 (RE2 @0x0726 -> @0x0748); Wsleep/Wsleeping
+ *     (RE2 @0x079A/@0x079B: Zeile + Stimme zu Ende) VOR dem Loslassen, weil der Raumwechsel nach 2090 sie beenden wuerde;
+ *     Wurfrichtung Nord/Sued nach der Lage des Alligators; Anschwimmen = RE2-Zielmodus (RE15_K2080_ANSCHWIMM_AB).
  *   - Aufschlag im Wasser = RE2 ROOM40A0 sub10 @SCD 0x0686 `36 02 0b 01 04 01 ..` (Satz 0x0b der Raumbank, der Kanister
  *     faellt ins Wasser) -> Mini-Bank shared_assets/RE2/KANISTER2080.VBS.
  *   - Kopfschuss = Treffer ueber den Anwender des Spielerschusses (re15_player_weapon_fire) mit der Magnum-Kritklasse w7
