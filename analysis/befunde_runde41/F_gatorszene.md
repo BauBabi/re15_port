@@ -788,3 +788,22 @@ Plan:
   den Abstand zur Leiter-Ankunft). (4) Umsetzung, (5) Messung nachher (Leon + Elza, stehend/weglaufend, Ausweichen gelingt),
   (6) Riegel fuer Abstand und Bilder bis zum ersten Angriff; bestehende F-Riegel mit Beleg (Nachtrag 29) nachziehen.
 
+### N4.M1 Leiche samt Kette weiter weg von der Leiter (Nachtrag 29, Leon und Elza)
+
+- **Messung vorher** (exe am Stand cc4a4646 = Code da156ce6, gebaut 10:37, Laeufe `F41n4/runs/V_*`, Rezept der Abnahme 3:
+  `RE15_SET_FLAG=3:245 RE15_DEBUG_JUMP=2080@250 RE15_FIRE_AOT=1@40#2080|2081 RE15_EXIT_AT=700#2090|2091`, weglaufend zusaetzlich
+  `RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 RE15_INPUT_SCRIPT=W13.5,UX4`; Auswertung `F41n4/py/kampf.py`: letzter
+  Raum-Abschnitt von state.log, Kampfbeginn = `Folge C`):
+
+  | Lauf | Figur | Kampfbeginn | Spieler | Gator-Wurzel (Gier) | Abstand | erster Angriff (Clip 4) | erster Treffer | HP 0 |
+  |---|---|---|---|---|---|---|---|---|
+  | V_L stehend | PL00 | F405 | (-8392,-25550) | (-4254,-20984) (1505) | 6162 | F459 (+54) | F466 (+61) | F573 |
+  | V_LW weglaufend (Osten) | PL00 | F405 | (-8392,-25550) | (-4254,-20984) | 6162 | F431 (+26) | F438 (+33) | F545 |
+  | V_E stehend | PL04 | F405 | (-8392,-25550) | (-4254,-20984) | 6162 | F459 (+54) | F466 (+61) | F573 |
+  | V_EW weglaufend | PL04 | F405 | (-8392,-25550) | (-4254,-20984) | 6162 | F431 (+26) | F438 (+33) | F545 |
+
+  = Abnahme 3 Abschnitt 2 (Bild fuer Bild gleich). Ursache: die Kette endet an der Leiche (-5500,-23700) / Rumpfmitte (-4594,-24306)
+  (GSZ_LEICHE_*, Fassung 1 von leiche_lage.py: Anlauf fest Gier 1024 aus dem Norden durch den Westkanal, Wert nur Bildgroesse^2 x
+  Licht des Schluessels in Cut 1 - der Abstand zur Leiter war kein Kriterium). Der einzige freie Weg von der Leiter ist Osten, also
+  am Maul vorbei.
+
