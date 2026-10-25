@@ -22,6 +22,11 @@
 #      `slti 300` @0x80051764 auf 17061 Kamera-Abstand, frontal >= 4023/4096); die Bahn laeuft in der Wurfrichtung (v_z-Vorzeichen).
 #   M3 Explosion: RE15_GATOR_FX_LOG - Raum-ESP ROOM40A0 in 2090/2091 registriert (Banken 0x26/0x08/0x09/0x1A), in den R1-Bildern
 #      gezeichnete Quads der Raumbanken UND der Kern-Zeilen 485..498 (> 0), keine unbekannten Ops.
+#   Laufdauer: seit G-E2 stehen die Haende vor dem der Kamera zugewandten Werfer (Gier 3678 statt 3072), der Kanister landet im
+#   Suedbecken bei (-6096,-21600) statt (-6821,-22914). Der passive Schuetze (Zielen/Feuern ohne Laufen) trifft den Alligator dann
+#   spaeter - gemessen R1 nach der Rueckkehr: kampf_leon F2290, nordost_leon F1383, kampf_elza F568, west_elza F322 (vorher
+#   F826/F899/F826/F814); dazwischen zielt die automatische Wahl auf die Spinnen (0x25) in 2090. Daher 60 Schussbloecke (statt 18,
+#   die nach gut 2400 Bildern endeten) und EXIT_AT 3000 Bilder nach der Rueckkehr (statt 1500).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_kanister2080_kampf.cmake
 # =============================================================================
@@ -58,9 +63,9 @@ unset(ENV{RE15_K2080_WURF_GIER})
 set(_basisenv RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore)
 set(_leon RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2)
 set(_elza RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1)
-# Zielen + Feuern (R1 / R1+Quadrat) nach 6 s alle ~4 s, 18 Bloecke
+# Zielen + Feuern (R1 / R1+Quadrat) nach 6 s alle ~4 s, 60 Bloecke (Nachbesserung 3: reicht ueber EXIT_AT 3000 hinaus)
 set(_schiess "W6.0")
-foreach(_i RANGE 1 18)
+foreach(_i RANGE 1 60)
     string(APPEND _schiess ",M0.6,MA0.1,M0.3,MA0.1,W3.0")
 endforeach()
 
@@ -85,7 +90,7 @@ foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leo
     re15_start_spiel(_rv 900 ${_basisenv} ${_wahl}
         RE15_DEBUG_JUMP=2090@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:60" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100
         RE15_K2080_GATOR_HP=24990 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schiess}"
-        RE15_STATE_LOG=state.log "RE15_PLAYER_POS=${_start}" "RE15_EXIT_AT=1500#${_r90}" RE15_GATOR_FX_LOG=1 "${_exe_kopie}")
+        RE15_STATE_LOG=state.log "RE15_PLAYER_POS=${_start}" "RE15_EXIT_AT=3000#${_r90}" RE15_GATOR_FX_LOG=1 "${_exe_kopie}")
     if(NOT _rv EQUAL 0)
         r41gk_fehler("Lauf ${_lname}_${_wer} exe exit=${_rv}")
     endif()
