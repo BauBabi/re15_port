@@ -167,6 +167,10 @@ Die Rest-Abweichungen sind einzelne Takte an Sub-Wechseln bzw. im Gang nach der 
 Animation. Ohne Rekonstruktion des posierten Bildes (`k1/vergleich.py`) erscheinen zusaetzlich die Halte-Phasen (Original
 zeigt +0x95 = 0 nach dem Wrap @0x8001f63c, posiert bleibt fc-1) und Rueckwaerts-Clips als "ungleich" — das ist
 Darstellung des Zaehlers, nicht Bild.
+Lage/Gier (`k1/lagen.py`, Original `pos()/dir` gegen Port `PL()`/`@()` an B1/306/706/1106/1506/1906/2306/2706): Sherry
+und John an allen Takten exakt gleich ((-23592,109) Gier 2048; John (-24750,1150) Gier 1024 bzw. 1831 bei B1906), Elza-NPC
+(-25758,-3) gegen (-25761,-8) = 3/5 Einheiten (unter einem Pixel), Gier gleich bzw. -4 bei B1906; erst im Abgang B2877 der
+bekannte 1-Takt-Versatz (John ein Schritt, Elza ein Drehschritt).
 
 ### 6.4 Bild gegen Bild (eigene Paare)
 7 Original-Spielstaende `K41/orig/k2_orig_3091_lauf5.log.lb_B{0300..2700}.sav` (Puffer mit Textzeile automatisch gewaehlt,
