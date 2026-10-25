@@ -868,4 +868,40 @@ Plan:
     Schluessel-Neigung lokal rx 672 / rz -144 (59,9 Grad), Licht 103,8 (Spitze 154 < 172), ~11,5 x 10,6 Bildpunkte (Fassung 1:
     10,4 x 9,5 bei Licht 170). `leiche_lage_n4.py` (ohne Schalter) rechnet genau diese Wahl nach, `--suche` die freie Suche,
     `--original` den Vergleich. ROOM2091.RDT ist bytegleich zu ROOM2090.RDT (cmp) -> Elza gleich.
+- **Umsetzung** (engine/src/gatorszene_r41.c, include/re15_gatorszene_r41.h; keine gemeinsame Datei, kein Eingriff in Spur B's
+  Modul; Form der Szene unveraendert - nur Lage/Kamera/Anlauf/Neigung, alles PORT-WAHL der Inszenierung nach Nachtrag 6/29):
+  - `RE15_GSZ_LEICHE_OBJ` 2 -> 3 (Obj_model_set obj 3 @0x00A8E), `GSZ_LEICHE_X/_Z/_ROT_Y` (-5500,-23700,384) -> (700,-8200,2432),
+    `GSZ_CUT_LEICHE` 1 -> 5 (RID @0x060 + 5 * 32), `GSZ_GATOR_GIER` 1024 -> 3552, `GSZ_KEY_AUF_RX/_RZ` 544/-464 -> 672/-144 - je mit
+    Herleitung im Kommentar (leiche_lage_n4.py; Lichtsatz RDT @0x468 + 40 * 5; Puls-Grenze @0x801028fc/@0x8010290c).
+  - Der Rueckkehr-Tuersatz von Programm 2 nimmt `GSZ_CUT_LEICHE` (2080 -> 2090 jetzt in Cut 5), ga_buehne rechnet die Buehne aus der
+    Prop-Lage (unveraendert), die Kamera-Uebergabe am Ende bleibt der Eintritts-Cut 0 der Leiter.
+  - Werkzeuge: `tools/r41_gatorszene/probe_re2_intro_ende.c` (RE2-Sollwert), `tools/r41_gatorszene/leiche_lage_n4.py` (Wahl).
+- **Messung nachher** (exe mit fb64e68c, eigene Kopien `re15_pc_f41n4_<lauf>.exe`, Rezept wie vorher; Laeufe `F41n4/runs/M_*`):
+
+  | Lauf | Figur | Kampfbeginn | Spieler | Gator-Wurzel (Gier) | Abstand | erster Angriff (Clip 4) | erster Treffer |
+  |---|---|---|---|---|---|---|---|
+  | M_L stehend | PL00 | F422 | (-8200,-25550) | (-2178,-9077) (1253) | 17539 | F892 (+470) | F899 (+477) |
+  | M_E stehend | PL04 | F422 | (-8200,-25550) | (-2178,-9077) (1253) | 17539 | F892 (+470) | F899 (+477) |
+  | M_LW weglaufend (UX ab F406 gehalten, rennt ab dem Kampfbeginn) | PL00 | F422 | (-8200,-25550) -> (5948,-26532) | (-2178,-9077) | 17539 | F947 (+525) | F954 (+532) |
+  | M_EW weglaufend | PL04 | F422 | wie M_LW | (-2178,-9077) | 17539 | F947 (+525) | F954 (+532) |
+
+  Vorher 6162 / +54 / +61 (stehend) bzw. +26 / +33 (weglaufend), RE2-Soll 11430 / 121. Folge Zeile fuer Zeile wie vorher bis auf
+  die Bilder: A F40, P 1, T F98, P 2 + M 8/2 (2080 F142), P 3 F156, S F53, Buehne `Leiche (-206,-7594) ... S (-7379,-15540) Gier
+  3552`, G 1 F53 (Cut 5), G 2 F176 (Cut 4), K 13 F189, G 3 F190, G 4 F310, V F369, G 5 F369, G 6 F393 (Cut 4), C F422 (Cut 0,
+  Spielfigur im Bild, Fuss-Bildpunkt 88,127), G 7 F422, B 1 F424 (MAIN3C = RE2 MAIN1A). Die Wende auf Leon dauert 24 Bilder
+  (vorher 7; G 5 -> G 6), deshalb kommt der Kampfbeginn 17 Bilder spaeter. Kameras der Spur-B-API: DURCHBRUCH -> Cut 5 (frontal 4085,
+  Soll 4092), FINISHER -> Cut 4 (frontal -1625; Cut 5 frontal 3933 liegt ueber der Massstab-Grenze 1892 von B8). Spinnen: je
+  2090-Besuch zwei Zeilen "verworfen". Der Weg des Gators (state.log M_L): 110 Bilder Schwimmen (Clip 0, Sperre 110), Paddeln durch
+  den Westkanal, ab F583 der RE2-Dash beim Wechsel in Leons Zone (Clip 2 + 3, 300 Bilder), Biss F892.
+  Bilder: `F_belege/n4_gator_szene.png` (F60/F120/F170 Cut 5: der Gator taucht im Westkanal auf und kommt frontal auf die Leiche
+  zu; F185-F400 Cut 4: Biss, Schuetteln, Kauen, Wende, Schrei; F425 Cut 0: Kampfbeginn, Leon an der Leiter, der Gator weit weg im
+  Nordbecken; F550/F700/F890: Anlauf und Biss), `F_belege/n4_flucht_leon.png` (M_LW: Leon rennt ab F423 nach Osten, steht ab ~F498
+  an der Ostwand, der Gator kommt nach dem Dash, Biss F947).
+- **Schluessel in der Ankunftseinstellung** (Cut 5, Laeufe M_L1a / M_E1a, Bilder F40-F136 je Bild, `F41n4/py/keypuls.py`,
+  Ausschnitt (155..184, 114..133) ueber dem Ruecken - die Leiche liegt darunter): hellster Pixel 47 -> 66 (x1,40), Kasten aller
+  Bilder (160,122)-(168,133) = 9 x 12, 1-16 Pixel ueber 25 je Bild (das Wippen der Leiche, sub03 @0x00B5E, dreht den Ring);
+  Spitzen um F76-F100. Zoom `F_belege/n4_ankunft_cut5.png` (oben fd 60/90 doppelt, unten fd 52/76/100/118 sechsfach: Ring mit Bart
+  in fd 76/100). Leon = Elza. Unit leiche: Primitivfarbe Ruhe 51 -> Spitze 76 (<= 0x80), flach 38. Vergleich: Original-Lage obj 3
+  48 -> 70 bei 2-9 Pixeln, Fassung 1 (Cut 1, Suedbecken) 72 -> 108 - der Schluessel ist jetzt etwa so gross wie in Fassung 1,
+  aber dunkler (Nordbecken nur im Umgebungslicht, s. oben).
 
