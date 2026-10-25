@@ -95,3 +95,55 @@ Hauptbaum, nur lesend, EXE = info/re2leon/PSX.EXE, Overlays info/re2leon/COMMON/
 - Nebenbefund (kein G-Mangel, gemessen): in diesen erzwungenen Cut-5-Bildern liegt ein grosses dunkles Viereck ueber Laufsteg/Reling.
   Gegenprobe `p2_cut5_bit115` (`RE15_SET_FLAG=9:115` = Szene gelaufen, kein Kanister-Prop) zeigt dasselbe Viereck -> nicht vom Kanister
   der Spur G; Abnahme 2/3 hatten dasselbe Bild (Bild `<SP>/p2_dunkel_test.png`). Im echten Szenen-Cut 5 siehe Abschnitt 4.
+
+## 4. Nachbesserung 4 / Entscheide G-E3..G-E6 - Messungen an der exe
+
+### 4.1 M2 / G-E4 - Kern-Zeilen 485..498 ab dem Start in jedem Raum (Messkopie re15_pc_g41abn4d.exe, `RE15_GATOR_FX_LOG=1`, Granatwerfer Id 15)
+Rezepte = Abnahme 3 Abschnitt 5 (`RE15_GIVE=15:6 RE15_EQUIP=15`):
+- gl_2080_direkt (`RE15_DEBUG_JUMP=2080@250 RE15_SET_FLAG=9:110,3:245 RE15_PLAYER_POS=-9950,-25700,2907,8 RE15_FORCE_CUT=4`, Eingabe
+  `W6.0,M0.6,MA1.5,M1.0,W4`, `RE15_FRAMEDUMP=196-260/2:f_`): `[gator-fx] F0 Kern-Zeilen 485..498 (RE2 TEX.TIM) Slot 56 ok - spielweit ab dem
+  Start (G-E4)` (im Startraum ROOM1240, vor jedem Sprung); `F200 ROOM2080 ... Quads 6: kern480 0 kern485 6 ... | gezeichnet G 6 (kern485 6
+  raum 0)`, F203..F206 `G 5`, F207..F209 `G 2`, ab F210 `G 0` (Abnahme 3: `G 0` in allen Bildern).
+- gl_2080_nach2090 (`RE15_DEBUG_JUMP=2090@250 ... RE15_KEIN_GATOR=1 RE15_PLAYER_POS=-8900,-25244,2048`, Leiter DOOR16 nach 2080, derselbe
+  Schuss): Atlas `Raum-Atlas Slot 54 ok: 512 x 3456 (16 Bloecke a 216 Zeilen)`, `ROOM2090: Raum-ESP ROOM40A0 -> re2fx_register_raum rc=0`,
+  `ROOM2080: Raum-ESP ROOM40A0 ausgetragen`; F236..F247 Zahl fuer Zahl dieselbe Folge wie direkt F200..F211 (6/6/6/5/5/5/5/2/2/2/0/0 bzw.
+  kern480 0/20/25/30/35/40/45/45/90/87/105/120).
+- gl_1140 (fremder Raum, Lage des Riegels r35_werfer, `RE15_AI_FLAVOR=re2`): `F21 ROOM1140 ... kern485 5 ... | gezeichnet G 5 (kern485 5
+  raum 0)` (Abnahme 3: `G 0`), op_unbekannt 0, aus_fenster 0 in allen Bildern.
+- Bild `<SP>/gl_werfer_2080_direkt_nach2090_1140_x2.png` (Zeile 1 2080 direkt F200-F206, Zeile 2 2080 nach 2090 F236-F242, Zeile 3 1140
+  F20-F26): in 2080 mit und ohne 2090-Besuch derselbe gelb-weisse Muendungsblitz und dieselben rot gluehenden Granatkoerner; in 1140
+  Muendungsblitz/Koerner und die Granaten-Explosion, keine Fehlzeichnung (keine falsche Textur/Riesen-Quads).
+- RE2-Referenz selbst erzeugt (`python re15_port/tools/r41_kanister2080/re2_explosion_referenz.py <SP>/re2_werfer_referenz.png werfer`,
+  liest nur CORE00.ESP + TEX.TIM): `Muendungsblitz Kern 1/0 (0x01002000): CLUT-Zeile 492, TPage 0x1F, ABR 0, 3 Bilder`, `Granatkoerner Kern
+  2/0x0c (0x020c0a00): CLUT-Zeile 495, TPage 0x1F, 8 Bilder` - pixelgleich mit G_belege/nb4_ge4_werfer_re2_referenz_aus_re2_daten.png;
+  Formen/Farben (weiss-gelber Kern mit rotem Rand -> rot -> dunkelrot; orange-rote Staebchen) wie im Port-Bild.
+- Riegel integration_r41_kanister2080_raumfremd prueft genau das (Abschnitt 1b).
+- Urteil M2/G-E4: **behoben** (RE2-Beleg selbst gelesen, Abschnitt 2).
+
+### 4.2 Kampf-Verlaeufe (M1/G-E3, M3/G-E5, P3 Ende-zu-Ende) - eigene Laeufe, eigene Auswertung
+Helfer `<SP>/kampf.sh` (= Rezept integration_r41_kanister2080_kampf: `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=2090@250`
+bzw. 2091 mit `RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1`, `RE15_SET_FLAG=9:110,3:245 RE15_GIVE=3:60 RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100`,
+`RE15_INPUT_SCRIPT=W6.0,n x (M0.6,MA0.1,M0.3,MA0.1,W3.0)`, `RE15_GATOR_FX_LOG=1`; KEIN RE15_GB_TEST/RE15_GATOR_KANISTER/RE15_KEIN_GATOR/
+RE15_K2080_WURF_GIER, lauf.sh loescht sie aus der Umgebung), Auswertung `<SP>/auswertung.py` (selbst geschrieben, liest debug.log/
+gator_boss.log). "Haken HP" = Messhaken RE15_K2080_GATOR_HP=24990 (ein echter Treffer statt 43); v1 = OHNE jeden G-Haken.
+
+| Lauf | Ausloeser | Aufnahme (Stufe 1 / angehaengt) | R1 / Alligator | Kanister beim R1 | R1-Kamera (G-E1/G-E3) | Explosion in den 38 R1-Bildern | Kopf-Klemme |
+|---|---|---|---|---|---|---|---|
+| **v1_leon** (kein Haken, 250 Bloecke, `RE15_GIVE=3:200,0x15:200`, EXIT_AT 8000#2090) | F7375, Treffer 37 | F143 / F155 | F2290 (3294,-23729) | (6453,-1932,-20955) innen | laufender Cut 1 (160,96) 8/8, 19/19 "voll" -> Wahl Stufe 0 Cut 1, Sperre ohne Schnitt | Spritzring re2fx_pc max 96 in 12 Bildern (Abnahme 3: 0), G kern485 max 31, raum max 64, op_unbekannt 0; Scherben 10 Bilder | 82 Episoden, groesster Ueberstand 1517 |
+| **v1_elza** (dto., 2091) | F7375, Treffer 37 | F143 / F155 | F2290 (3294,-23729) | (6453,-1932,-20955) innen | wie v1_leon | wie v1_leon | 82, groesster 1489 |
+| k_leon (Haken HP, Start (-6000,-17500)) | F902, Treffer 1 | F103 / F115 | F1429 (-4160,-18621) | (-3557,-1814,-22674) innen | laufender Cut 0 -> Schnitt Cut 6, (127,106), 8/8, 19/19, Stufe 0 | Spritzring max 170 in 38 Bildern, kern485 31, raum 53, op_unbekannt 0; Scherben 10 | 45, groesster 564 |
+| plat_leon (Haken HP, Leon (0,-16000)) | F2606, Treffer 1 | F109 / F121 | F2659 (2822,-22589) | (7014,-1864,-22427) innen | laufender Cut 2 (299,158) Start 2/8 ungueltig, 0/19 -> Schnitt Cut 1, (173,96), 8/8, 19/19, Stufe 0 | Spritzring max 96 in 12, kern485 30, raum 65; Scherben 10 | 65, groesster 714 |
+
+Alle vier stimmen Zahl fuer Zahl mit der Endmessung des Dossiers 11.5 (R1-Bild, Lagen, Wahl) - der Ablauf ist deterministisch. In allen:
+`Tuer-Ton DOOR06 Satz 1` F8, `Kopf ab ... 8 von 8` F352, `Kanister aufgehoben (Loco c11 Bild 24 ...)` F465, `Zeile 42 stand F531..F629
+(99 Bilder)`, `Wsleeping frei` F630, `Werfer Cut 7: Gier 3678, Gier zur Kamera 3791, Versatz -113, frontal 4035/4096`, `Aufschlag im Wasser`
+F43, `Kanister im Becken ... = Aufschlagstelle (Bit 116)`, `FG-E3: ... derselbe Alligator`, Kanister-Regionstest nur "im Regions-Viereck",
+keine Zeile AUSSERHALB.
+Bilder (RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1, Helligkeit x1,8):
+- `<SP>/v1_leon_elza_r1_f2288-2318_x2.png` (Zeilen 1-2 Leon, Zeile 3 Elza): F2288 der Alligator mit dem Kanister vor dem Maschinenblock,
+  F2290 grau-weisse Wolke und Gluehen am Kopf, ab F2292 Blutausbruch und -fontaene, Kopf und Koerper im Bild bis F2318 (vorher, Abnahme 3:
+  Kanister hinter der Suedwand, keine Wolke). Gelb-schwarze Figuren = Spinnen 0x25/0x26 dieses Zweigs (Spur F entfernt sie).
+- `<SP>/k_leon_r1_f1428-1466_x2.png`: F1428 Cut 0 (Leon schiesst), Schnitt auf Cut 6, Wolke + Fontaene am Kopf, F1466 zurueck auf Cut 0;
+  in Cut 6 ist der Alligator klein (Massstab 587 gegen RE2 1154).
+- `<SP>/plat_leon_r1_f2658-2698_x2.png`: F2658 laufender Cut 2 (Koerper vor der Linse), Schnitt auf Cut 1, Explosion und Fontaene mit Kopf im
+  Bild bis F2694, F2698 zurueck auf Cut 2 - M1 (Kopf hinter dem Maschinenblock) tritt hier nicht mehr auf.
