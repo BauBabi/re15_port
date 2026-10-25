@@ -472,3 +472,28 @@ savestates/ durchsucht: Modell nur 0/1/4/5/15); der Beleg ist der Code (@0x80031
 **Querbezug Spur J (3060 Marvin):** Marvins Abschnitt laeuft jetzt auf seinem eigenen Koerper mit Messer und HP 100 (wie
 das Original). J's Riegel `integration_r41_stage3szenen_a_3060` muss bei der Integration mit diesem Stand laufen.
 
+
+### NB1 Tests (gezielt, keine volle Suite; Bau 896e3014)
+Neue/erweiterte Riegel (alle in `re15_port/tests/unit/probes/r41_stage3szenen_b.cmake`):
+| Riegel | misst | Mangel |
+|---|---|---|
+| unit_r41_stage3szenen_b_schleife | echte RBJ ROOM3091: Binder rec2 (@0x8001b450), Clip 13 = 40; 779 Takte Vorschub -> Bild = i % 40, 19 Umlaeufe; ohne 0x04 Halten 39 (@0x80050da4); ROOM2020 (Spur E) = 40 | M1 |
+| integration_r41_stage3szenen_b_3091 (erweitert) | 6 Clip-13-Abschnitte 779/504/233/160/416/164, Bild = i % 40, Spruenge (L-1)/40 (= Original-GDB); beide Figurwechsel mit Pistole + Gift vorher: Hin Waffe 0/HP 100/Status 0, Rueck Waffe 1 (Messer)/HP 100/Status 0 | M1, M2 |
+| unit_r41_stage3szenen_b_waffe (umgebaut) | Original-Bytes DEBUG.BIN @0x800c00a8/@0x800c00d4 und FUN_800314b0 @0x80031680/90/@0x800316c8/@0x80031710/18/20; Figurwechsel 4<->15, 0->13 (Waffe/HP/Status), Ruestung 4->5 und 0->2 unveraendert, Weste: Leon(1)->Marvin 100, Marvin->Leon(1) 105 | M2 |
+| unit_r41_stage3szenen_b_koerper (angepasst) | zurueck auf Elza: Waffe 1 (statt "vorige Waffe"), CORE04 | M2 |
+| unit_r41_stage3szenen_b_marvin (neu) | PC-Modul am echten PL00/PL0D: Koerper PL0D (Knochen 10 = 485, Clip 1 = 32), W-Verbunde mit Marvins Bindelage, zurueck auf PL01 = Leon, Weste ab = nichts | M3 |
+| integration_r41_stage3szenen_b_marvin (neu) | echte exe ROOM3020 -> 30C0: Waffe 1/HP 100/Status 0 (vorher 3/94/2), Koerper-Zeile (Wurzel = PL0D aus der Datei), Ober-/Unterarm-Laenge im Bild = PL0D-Bindelage (drehungsfrei) | M2, M3 |
+Gegenproben: 3091-Auswertung am Vorher-Lauf lauf_7d91e6dc FAIL (0 Spruenge); marvinlauf am Vorher-Lauf marvin_vorher
+3 FAIL (Waffe 3 bleibt, keine Koerper-Zeile, Oberarm 426 = PL00).
+
+* `ctest --test-dir re15_port/build -R "r41_stage3szenen" -j 3 --timeout 2400 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 11`** (Total Test time (real) = 142.57 sec; Bau df63abea, die Weste-Korrektur
+  896e3014 aendert nur sherry_r41.c + Riegel waffe, danach unit-Teile einzeln gruen)
+* `ctest --test-dir re15_port/build -R "^(unit|probe|prop)_" -j 5 --timeout 900` (alle Einheiten-Gruppen, weil der
+  player_common.c-Haken jeden Spieler-Plc_motion trifft) -> **`99% tests passed, 7 tests failed out of 924`**; die 7 roten
+  sind ausschliesslich Zeitablaeufe der Release-/Android-Skripttests (unit_r35_android_pruefkette,
+  unit_r35_android_bash_mutanten, unit_r38_releaseskript_{trocken,ablauf,fehler_bau,fehler_umfeld,cmd}; 1200-1500 s,
+  Last durch parallele Spuren) - dieselbe Gruppe wie in Abnahme 0 (dort 6), Spur K beruehrt weder release/ noch
+  platform/android/.
+* Integration (laeuft): Regex `K41nb1/integ_regex.txt` (63 Tests: Szenen-/Raumgruppen mit Spieler-Plc_motion + die 17 der
+  ersten Runde) - Ergebnis folgt.
