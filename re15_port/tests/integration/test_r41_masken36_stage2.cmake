@@ -88,7 +88,7 @@ set(_exe_kopie "${_exe_dir}/re15_pc_${PRAEFIX}_${_lauf_id}${_exe_ext}")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 set(_basis_wd "${WORKDIR}")
 
-# Szenen: name raum(hex) cut x z band art(V/H/K/M) fenster x0 y0 x1 y1 [E = Elza] [G=<akteur>,<x>,<z>,<rot>]
+# Szenen: name raum(hex) cut x z band art(V/H/K/M/Z) fenster x0 y0 x1 y1 [E = Elza] [G=<akteur>,<x>,<z>,<rot>] [W=<gier>] [A0=<x>,<z>]
 # (Lagen/Fenster: Dossier Punkt 2 und Nachbesserung 1). SZENEN = Szenendatei (Vorgabe test_r41_masken36_szenen.cmake).
 # G= stellt den Akteur <akteur> ab Bild 0 im Szenenraum fest (RE15_GEGNER_POS, engine/src/pri1100_r37.c) - so zaehlt S nur die
 # Spielfigur, wenn ein Gegner direkt hinter ihr steht (Nachbesserung 1, Mangel 3: ROOM2030 C15 Spinne = Akteur 1).
@@ -138,6 +138,7 @@ foreach(_sz IN LISTS R41M_SZENEN)
     set(_a0z "")
     set(_zr "${_raum}")
     set(_gpos "")
+    set(_gier 0)
     if(_fl GREATER 11)
         math(EXPR _letzt "${_fl} - 1")
         foreach(_i RANGE 11 ${_letzt})
@@ -147,6 +148,8 @@ foreach(_sz IN LISTS R41M_SZENEN)
                 string(REGEX REPLACE ".$" "1" _zr "${_raum}")
             elseif(_wer MATCHES "^G=(.+)$")
                 set(_gpos "${CMAKE_MATCH_1}")
+            elseif(_wer MATCHES "^W=([0-9]+)$")     # NB4: Gier der Figur (RE15_PLAYER_POS x,z,gier,band; Vorgabe 0)
+                set(_gier "${CMAKE_MATCH_1}")
             elseif(_wer MATCHES "^A0=(-?[0-9]+),(-?[0-9]+)$")
                 set(_a0x "${CMAKE_MATCH_1}")
                 set(_a0z "${CMAKE_MATCH_2}")
@@ -190,7 +193,7 @@ foreach(_sz IN LISTS R41M_SZENEN)
             re15_start_spiel(_rv 180
                 RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_AUDIODRIVER=dummy
                 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
-                "RE15_DEBUG_JUMP=${_raum}@250" "RE15_PLAYER_POS=${_px},${_pz},0,${_band}" "RE15_FORCE_CUT=${_cut}"
+                "RE15_DEBUG_JUMP=${_raum}@250" "RE15_PLAYER_POS=${_px},${_pz},${_gier},${_band}" "RE15_FORCE_CUT=${_cut}"
                 "RE15_FRAMEDUMP=120:f.ppm" "RE15_EXIT_AT=${_ende}#${_zr}"
                 ${_extra} ${_figur} ${_gegner}
                 "${_exe_kopie}")

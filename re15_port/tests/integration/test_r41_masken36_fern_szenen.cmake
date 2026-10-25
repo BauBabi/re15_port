@@ -7,8 +7,21 @@
 # V = Figur VOR der Trennwand (d30A0_00/01 der Abnahme 2, FREI-Stelle der R37 f30A1_00): im Fenster 0 Punkte uebermalt (die
 #     R37-Stelle f30A0_00 zeigt im Trennwand-Fenster nur 43 Figurpunkte - sie bleibt bei unit/integration_r37_masken36_verdeckung).
 # Fenster = groesstes Rechteck der Trennwand-Region in den Spalten der Figur (aus den Dreiecken der Laeufe gerechnet, RE15_TRILOG).
-#   name raum cut x z band art x0 y0 x1 y1 [E] [A0=x,z]
+# Nachbesserung 4 (Abnahme 3, Mangel 1 "Ost-Stirn der Trennwand ohne Maske"): Stellen der Abnahme 3 am Ostende (o2..o5, a30A0_00,
+# Gier wie dort). Gemessen (Dossier NB4, Riegel unit_r41_masken36_stirn): die Stirnseite IM BILD ist der Kuenstler-Ausschnitt (SLD-Atlas
+# ROOM30A0.BSS Cut 0) und ganz gezeichnet; seine Kante liegt in der Ebene x = -19975 bei z 14802..14867, die Zelle 6 @RDT+0x0045C reicht bis
+# z 15375 - dazwischen zeigt das Bild den Boden und die Rueckwand-Schraenke HINTER der Figur.
+#   z30A0_* (Art Z): Figur hinter der Stirnplatte, Fenster ganz IN der gezeichneten Platte (x 288..306) -> kein Figurpunkt sichtbar.
+#   v30A0_* / v30A1_* (Art V): Figur hinter dem Zellenkasten, aber im Bild NICHT hinter einem Gegenstand (Fenster rechts der Kante,
+#           ausserhalb jeder Maske) -> 0 Figurpunkte uebermalt (Gegenprobe gegen eine Maske ueber der ganzen Zellenflaeche).
+#   name raum cut x z band art x0 y0 x1 y1 [E] [W=gier] [A0=x,z]
 set(R41M_SZENEN
+    "z30A0_o3 30A0 0 -20850 16300 0 Z 288 101 306 180 W=2048 A0=-19800,19763"
+    "z30A0_o4 30A0 0 -21225 16300 0 Z 288 100 306 177 W=2048 A0=-19800,19763"
+    "z30A0_a0 30A0 0 -20600 16000 0 Z 288 101 306 180 W=1024 A0=-19800,19763"
+    "v30A0_o2 30A0 0 -20475 16300 0 V 311 155 319 188 W=2048"
+    "v30A0_a0 30A0 0 -20600 16000 0 V 312 150 319 191 W=1024"
+    "v30A1_o5 30A0 0 -20475 16300 0 V 312 150 319 189 E W=2048"
     "s30A0_00 30A0 0 -21743 16263 0 Z 269 86 301 169 A0=-19800,19763"
     "u30A0_00 30A0 0 -23000 16300 0 Z 243 83 270 154 A0=-19800,19763"
     "t30A0_00 30A0 0 -24300 16400 0 Z 224 82 249 143 A0=-19800,19763"

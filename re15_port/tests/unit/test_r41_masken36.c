@@ -373,11 +373,110 @@ static void teil_kurbel(void)
     free(roh); free(msk); free(eig.roh);
 }
 
+/* ---- Nachbesserung 4 (Abnahme 3, Mangel 1): Ost-Stirn der Buero-Trennwand ROOM30A0/30A1 Cut 0 ------------------------
+ * Abnahme 3: "die Ost-Stirn der Buero-Trennwand (Zelle 6 @RDT+0x0045C, Flaeche x=-19975, z 14125..15375, Bildspalten 282..325)
+ * hat keine Maske". Gemessen (Dossier NB4): die Stirnseite IM BILD (die graue Stirnplatte rechts vom Rahmenpfosten) ist der
+ * Kuenstler-Ausschnitt des SLD-Atlas (Komponenten an den Verschiebungen (232,-24)/(144,24)/(57,86)) - und der ist ganz gezeichnet.
+ * Die Flaeche der KOLLISIONSZELLE reicht 1250 tief und 3025 hoch; die Stirnplatte im Bild nur bis z ~14870 (Zeilen 118..194)
+ * und bis y -2335 (Zeile 118). Hinter der Kante zeigt das Bild Boden und Rueckwand-Schraenke HINTER der Figur.
+ *   test_r41_masken36 stirn   (a) Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03; (b) offene Kerben im Fenster
+ *     x 282..319 y 80..215 (wie loecher: Kuenstler-Atlas deckend + farbgleich direkt an der Kante eines alten Rechtecks, nicht
+ *     gezeichnet) == 0; (c) die Kante der Zeichnung liegt in den Zeilen 118..194 in der Ebene x = -19975 bei z <= 14900 (Zelle bis
+ *     15375); (d) KEIN gezeichneter Punkt im Fenster, dessen Sehstrahl die Zellenflaeche x = -19975 bei z > 14900 kreuzt - eine
+ *     Maske dort wuerde die Figur ueber dem Boden hinter der Zelle abschneiden; (e) Leon- und Elza-Datei gleich. */
+#define STIRN_X   (-19975)                 /* Ostkante der Zelle 6: x + breite = -26525 + 6550 */
+#define STIRN_Z0  14125
+#define STIRN_Z1  15375                    /* z + tiefe = 14125 + 1250 */
+#define STIRN_KANTE_Z 14900                /* gemessene Kante des Kuenstler-Ausschnitts z 14802..14867 (Dossier NB4) */
+
+static int stirn_ebene(const re15_camera_view_t *v, const double cam[3], double px, double py, double *ey, double *ez)
+{
+    double cx = px - 160.0, cy = py - 120.0, cz = v->fov_screen_dist, dx, dy, dz, s;
+    dx = v->rot[0] * cx + v->rot[3] * cy + v->rot[6] * cz;      /* Richtung = R^T * (sx, sy, H) */
+    dy = v->rot[1] * cx + v->rot[4] * cy + v->rot[7] * cz;
+    dz = v->rot[2] * cx + v->rot[5] * cy + v->rot[8] * cz;
+    if (fabs(dx) < 1e-9) return 0;
+    s = (STIRN_X - cam[0]) / dx;
+    if (s <= 0) return 0;
+    *ey = cam[1] + s * dy; *ez = cam[2] + s * dz;
+    return 1;
+}
+
+static void teil_stirn(void)
+{
+    static const uint8_t soll6[12] = { 0x96, 0x19, 0xe2, 0x04, 0x63, 0x98, 0x2d, 0x37, 0x01, 0xff, 0x00, 0x03 };
+    static re15_rdt_t rdt;
+    static uint8_t rgb[320 * 240 * 3];
+    static uint8_t deck[240][320], d2[240][320];
+    re15_camera_view_t v; char p[700]; uint8_t *roh, *msk, *msk1; size_t rn = 0, mn = 0, mn1 = 0; re15_pri_cut_t pri, lader;
+    atlas_t eig, bss; uint32_t off; uint8_t alt[RE15_PRI_MAX_MASKS_PER_CUT]; double cam[3], ey, ez;
+    int m, x, y, zelle_ok, kante_ok = 1, kante_n = 0, jenseits = 0, im_fenster = 0;
+    long kerben_fenster;
+    double kante_min = 1e9, kante_max = -1e9;
+    printf("== r41_masken36 stirn: ROOM30A0/30A1 Cut 0, Ost-Stirn der Trennwand (Zelle 6 @RDT+0x0045C) ==\n");
+    snprintf(p, sizeof p, "%s/STAGE3/ROOM30A0.RDT", PSX);
+    roh = slurp(p, &rn);
+    if (!roh || rn < 0x468 || re15_rdt_parse(roh, rn, &rdt) < 0 || rdt.cut_count < 1 || re15_camera_build_view(&rdt.cuts[0], &v) != 0) {
+        printf("  FAIL: ROOM30A0.RDT / Kamera Cut 0\n"); g_fail = 1; free(roh); return;
+    }
+    zelle_ok = !memcmp(roh + 0x45C, soll6, 12);
+    kamera_ort(&v, cam);
+    snprintf(p, sizeof p, "%s/MASKS/ROOM30A0.MSK", PSX); msk = slurp(p, &mn);
+    snprintf(p, sizeof p, "%s/MASKS/ROOM30A1.MSK", PSX); msk1 = slurp(p, &mn1);
+    off = msk ? re15_pri_msk_section_offset(msk, mn, 0) : 0;
+    if (!off || re15_pri_parse_section(msk, mn, off, &pri) <= 0 || !atlas_eigen(0x30A0, 0, &eig) || !atlas_bss(0x30A0, 0, &bss)
+        || !bg_rgb(0x30A0, 0, rgb)) {
+        printf("  FAIL: MSK/Atlas/Hintergrund Cut 0\n"); g_fail = 1; free(roh); free(msk); free(msk1); return;
+    }
+    for (m = 0; m < pri.mask_count; m++) alt[m] = (uint8_t) alt_rechteck(&pri.masks[m], &bss, rgb);
+    lader = pri;
+    re15_masken36_filter(0x30A0, 0, &lader);                       /* wie der Lader (main.c) */
+    zeichnen(&lader, lader.draw_count, NULL, &eig, deck);
+    memcpy(d2, deck, sizeof d2);                                    /* (b) Kerben nur im Fenster zaehlen */
+    for (y = 0; y < 240; y++)
+        for (x = 0; x < 320; x++)
+            if (x < 282 || y < 80 || y > 215) d2[y][x] = 1;
+    kerben_fenster = kerben(&pri, alt, d2, &bss, rgb);
+    for (y = 80; y <= 215; y++) {
+        int rechts = -1;
+        for (x = 282; x < 320; x++) {
+            if (!stirn_ebene(&v, cam, x + 0.5, y + 0.5, &ey, &ez)) continue;
+            if (ez >= STIRN_Z0 && ez <= STIRN_Z1 && ey <= 0 && ey >= -3025) im_fenster++;
+            if (!deck[y][x]) continue;
+            rechts = x;
+            if (ez > STIRN_KANTE_Z && ez <= STIRN_Z1 && ey <= 0 && ey >= -3025) jenseits++;
+        }
+        if (y >= 118 && y <= 194 && rechts >= 282 && stirn_ebene(&v, cam, rechts + 0.5, y + 0.5, &ey, &ez)) {
+            kante_n++;
+            if (ez < kante_min) kante_min = ez;
+            if (ez > kante_max) kante_max = ez;
+            if (ez > STIRN_KANTE_Z) kante_ok = 0;
+        }
+    }
+    printf("  Zelle 6 @RDT+0x0045C: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x (%s)\n", roh[0x45C], roh[0x45D], roh[0x45E],
+           roh[0x45F], roh[0x460], roh[0x461], roh[0x462], roh[0x463], roh[0x464], roh[0x465], roh[0x466], roh[0x467],
+           zelle_ok ? "wie belegt" : "ANDERS");
+    printf("  Kamera Cut 0 (%.0f,%.0f,%.0f); Zellenflaeche x = %d im Fenster x 282..319 y 80..215: %d Bildpunkte\n", cam[0], cam[1],
+           cam[2], STIRN_X, im_fenster);
+    printf("  offene Kerben im Fenster: %ld | Kante der Zeichnung Zeilen 118..194 (%d Zeilen): z %.0f..%.0f (Zelle bis %d)\n",
+           kerben_fenster, kante_n, kante_min, kante_max, STIRN_Z1);
+    printf("  gezeichnete Punkte mit Sehstrahl durch die Zellenflaeche bei z > %d: %d\n", STIRN_KANTE_Z, jenseits);
+    CHECK("Zelle 6 @RDT+0x0045C = 96 19 e2 04 63 98 2d 37 01 ff 00 03 (x -26525..-19975, z 14125..15375)", zelle_ok);
+    CHECK("die Stirnseite IM BILD (Kuenstler-Ausschnitt) ist gezeichnet: 0 offene Kerben im Fenster x 282..319", kerben_fenster == 0);
+    CHECK("die Kante der Zeichnung liegt bei z <= 14900 (gemessen 14802..14867): Stirnplatte im Bild ~705 tief, die Zelle 1250",
+          kante_n >= 60 && kante_ok);
+    CHECK("keine Maske ueber der Zellenflaeche jenseits der Kante (dort zeigt das Bild den Boden/die Rueckwand hinter der Figur)",
+          jenseits == 0 && im_fenster > 1000);
+    CHECK("Leon- und Elza-Datei bytegleich", msk1 && mn1 == mn && !memcmp(msk, msk1, mn));
+    free(roh); free(msk); free(msk1); free(eig.roh); free(bss.roh);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "loecher";
     if (!strcmp(teil, "loecher")) teil_loecher();
     else if (!strcmp(teil, "kurbel")) teil_kurbel();
+    else if (!strcmp(teil, "stirn")) teil_stirn();
     else { printf("unbekannter Teil %s\n", teil); return 2; }
     return g_fail;
 }
