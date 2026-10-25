@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-25 15:09: **Integration C+K fertig** (wf_9e0c61da-a3f): Merge C 2d20306d, K 4b313429, Fix 45cc6246 (E x K), Riegel-Fix d1edabbc, Tests gruen, Kette A+C in Ordnung, Gegenpruefung ohne Befund (C 48 Hunks, K 46 Hunks, keiner verloren). master-Doku in r41/integration (91ae1a79), **master ff 91ae1a79 = A B C D E H I J K L integriert**. Hauptbaum-exe neu gebaut 15:08:36 (configure + build, LOCAL-BUILD-OK). Offen: F (NB5 wf_f2e30b5e-2c4), G (NB3 wf_2bd33954-f59), M (Abnahme 4 wf_6d1c4408-277, danach M-E2).
+
 * 2026-10-25 15:04: F Abnahme 4 NICHT bestanden (wendete F-E2 an: M1 Kampfbeginn 17539/470 statt RE2 11430/121, M2 Schluessel Ruhe 47 statt >= 72, M3 Fressen von hinten, M4 Riegel nur mit Untergrenze) -> **F Nachbesserung 5 = wf_f2e30b5e-2c4** (args orchestrator/args_f_nb5.json). Laufend: Gegenpruefung C+K (wf_9e0c61da-a3f), M Abnahme 4 (wf_6d1c4408-277), G Nachbesserung 3 (wf_2bd33954-f59).
 
 * 2026-10-25 14:38: Integration C+K: Tests GRUEN (unit/prop/probe 963/963 am Endstand 7cf41fc9, C 290/290 + 3/3 + 4/4, K-Spur 17/17, C-Raum 17/17, K-Integrationsgruppe 77/77, Querbezuege 40/40); Fixes d1edabbc (R36-Riegel 2050 obj 8 mit Bit 106, Beleg ROOM2050.RDT @0x01D30 / PSX.EXE @0x8003ed74) und 45cc6246 (E x K Sherry-Renntempo); Kette A+C in Ordnung (Leon und Elza bis 2050/2051), Riegel _kette flakig -> §3b. Gegenpruefung laeuft.
