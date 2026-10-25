@@ -939,3 +939,39 @@ wiederholbar):**
   v5/v3 `G_belege/nb2_n3_aufnahme_v5west_leon_f60-126_cut0_hell2.png`, `..._v3west_elza_...` (F108 Kanister im Maul); v2/v4
   `G_belege/nb2_n3_aufnahme_v2nordost_leon_f124-196_cut0_hell2.png`, `..._v4nordost_elza_...`. In allen Bildern stehen noch die
   Spinnen (0x25) dieses Zweigs im Becken (Spur F entfernt sie).
+
+### 9.5 Tests (gezielt, keine volle Suite; Bau 2026-10-25 local_build.sh build, ctest mit msys64 zuerst im PATH)
+(Ergebnis unten, sobald die Laeufe durch sind)
+
+### 9.6 OFFEN (gemessen bzw. benannt, nicht geraten)
+1. **Apply-Bild F530** (N2): dieser Zweig (Basis 9f10bdb0) zeigt im Bild des Schnitts auf Cut 7 noch den alten Hintergrund mit dem
+   schon gedrehten Werfer und der Zeile (`G_belege/nb2_n2_schnitt_applybild_leon_f526-534.png`). Das Original praesentiert dieses
+   Bild nicht (@0x80021558/@0x80021560, Spur E E-N1); auf master liegt das als kamerahalt_r41.c / bildhalt_r41_pc.c. Bei der
+   Integration pruefen: im Lauf s3_leon-Rezept bleibt F529 stehen, bis Cut 7 da ist (Messschiene RE15_KAMERAHALT_LOG).
+2. Griff-Bild: der Kanister wechselt beim Greifen (F462 -> F466) in einem Bild von stehend auf quer (wie 8.7.5). RE2 hat fuer das
+   Aufnehmen eines Gegenstands durch einen NPC keinen Clip (8.1); das Kippen aus ROOM40A0 sub10 @0x066E-0682 ist ein Fall ins
+   Wasser, kein Griff - nicht gebaut.
+3. Anschwimmen: die Wende auf der Stelle (Fehlwinkel > 0x300, Slew 0x60) und der Slew 0x30 sind die DESIGN-Werte der Verfolgung
+   der Spur B (enemy_ai_boss_gator.c "WENDE STATT BOGEN"), in kanister2080_r41.c mit Verweis uebernommen; der Kanten-Umweg und die
+   Klemmflaeche kommen ueber den Export re15_gator_boss_steuerziel unveraendert aus Spur B. Steht Leon auf der Plattform, verlaesst
+   der Alligator die Belagerung, solange der Kanister frei und >= 5920 entfernt liegt (GUARD-Haken).
+4. Unveraendert aus 8.7: RE2-Ausloeser-Mitglieder +0x1D8/+0x1DA (Tyrant-Overlay fehlt), Kanister in RE2-Groesse, Ton nur ueber die
+   Mischkette belegt; Werfer in 2090 Cut 12 nicht im Bild (FG-E4); waehrend des Falls schiebt der Alligator den gehaltenen
+   Spieler (8.7.3).
+5. Hinweis an Spur F: in diesem Zweig stehen die Spinnen (0x25) noch in 2090 (alle Aufnahme-Bilder 9.4).
+
+### 9.7 Fuer den Nutzer (Stand Nachbesserung 2)
+Neue Assets: keine (weiter `re15_port/shared_assets/RE2/KANISTER2080.VBS`). Sprachdateien (vom Nutzer aufzunehmen, unveraendert):
+`synchro/STAGE2/room2080/main42.wav` ("Marvin: Hey, Leon, try with this!"), `synchro/STAGE2/room2081/main42.wav` ("John: Hey,
+Elza, try with this!") - liegt eine Aufnahme dort, wartet Marvin/John mit dem Wurf, bis sie zu Ende ist (wie RE2 auf Adas Stimme).
+Was sich im Spiel aendert:
+- Die Zeile "Hey, Leon/Elza, try with this!" steht jetzt ganz (gut 3 s); erst danach wirft Marvin/John den Kanister - vorher brach
+  der Wechsel nach 2090 sie nach 1,7 s ab.
+- Beim Aufheben dreht sich Marvin/John nicht mehr ruckartig zur Seite; die Wurfrichtung nimmt er erst mit dem Schnitt auf die
+  Totale ein.
+- Der Kanister fliegt in das Becken, das weiter vom Alligator entfernt ist (Nord oder Sued). Der Alligator schwimmt danach sofort zu
+  ihm, beisst Leon/Elza bis dahin nicht (wie in RE2: dort liegt der Kanister auf seinem Weg, und solange er ihn anvisiert, beisst er
+  nicht) und schnappt ihn etwa 3 bis 5 Sekunden nach dem Wurf; dann ein Treffer -> Explosion, Kiefer, Tod.
+Entscheidungsfragen: keine offenen. Hinweis zum Entscheid 9.3 (Anschwimmen statt "vorbeilocken"): falls der Alligator den Kanister
+lieber nur zufaellig beim Vorbeischwimmen nehmen soll, kann das mit einem Wort zurueckgestellt werden - dann kann es im Kampf
+Minuten dauern (Abnahme 1: bis zu 5 min ohne Aufnahme).
