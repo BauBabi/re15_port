@@ -1156,8 +1156,8 @@ static void teil_zellen3d(void)
     CHECK("MSK-Tiefenfeld (Leon und Elza) == Zellen-Tiefe der Zeile", msk_ok == 2 * n);
     CHECK("die Engine-Tabelle zeichnet jedes Modell-Rechteck (Leon und Elza)", tab_ok == 2 * n);
     CHECK("Ausschluss MIT 3D-Urteil == Engine-Tabelle in jedem Cut mit Modell", cuts > 0 && gleich == cuts);
-    CHECK("Gegenprobe: ohne 3D-Urteil fielen Rechtecke weg (NB2 gemessen: 79 der Leon-Dateien - Lok 6000 C5/C7/C8/C9 76, 5090 C11 3; "
-          "Elza bytegleich), jedes davon mit Modell-Zeile", nur3d >= 79 && nur3d_modell == nur3d && echt3d > 0);
+    CHECK("Gegenprobe: ohne 3D-Urteil fielen Rechtecke weg (NB2 gemessen: 79 der Leon-Dateien; Nachbesserung 3 mit den Teilrechtecken "
+          "von kacheln_r41.py: 128; Elza bytegleich), jedes davon mit Modell-Zeile", nur3d >= 128 && nur3d_modell == nur3d && echt3d > 0);
 }
 
 /* ---- fern (Runde 41 Spur M, Nachbesserung 3; Riegel unit_r41_masken36_fern) ---------------------------------------- *
@@ -1445,6 +1445,7 @@ static void teil_hinter(void)
  * (r41_koerper_davor != 1) und (iii) deren Grundriss-Strecke Kamera -> F eine solide Zelle des Bands kreuzt (zelle_dazwischen, das
  * Netz der Spur P). Nur solche F koennen "zu fern" sein (Gegenstand vor der Figur, Maske hinter ihr); 0 = im Spiel ohne Wirkung.
  * Zeile "V raum cut rechteck anzahl" je Rechteck mit Treffern (vorderstes Modell-Rechteck am Bildpunkt). */
+static unsigned g_vd_raum = 0xFFFFu; static int g_vd_cut = -1, g_vd_rect = -1;   /* Werkzeug: Stehplaetze dieses Rechtecks drucken */
 static void sektion_verdacht(raum_t *R, int cut, const re15_pri_cut_t *pri, const atlas_t *a, const int *aus)
 {
     static uint16_t tief[240][320];
@@ -1477,7 +1478,7 @@ static void sektion_verdacht(raum_t *R, int cut, const re15_pri_cut_t *pri, cons
         int gx, gz;
         for (gx = 0; gx < R->nx; gx++)
             for (gz = 0; gz < R->nz; gz++) {
-                int wx = R->x0 + gx * SCHRITT, wz = R->z0 + gz * SCHRITT, np, nsp, ges, i;
+                int wx = R->x0 + gx * SCHRITT, wz = R->z0 + gz * SCHRITT, np, nsp, ges, i; long vp = 0;
                 if (!R->err[b][gx][gz]) continue;
                 if (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz)) continue;
                 np = figur_raster(&v, wx, wz, b, lx, lz, pt, &nsp, &ges);
@@ -1491,7 +1492,9 @@ static void sektion_verdacht(raum_t *R, int cut, const re15_pri_cut_t *pri, cons
                         continue;                                                                    /* (ii) = fern-Mass */
                     if (!zelle_dazwischen(&R->zel, b, cam[0], cam[2], wx + o * lx, wz + o * lz)) continue;   /* (iii) */
                     zahl[mm]++;
+                    if (mm == g_vd_rect) vp++;
                 }
+                if (vp && R->raum == g_vd_raum && cut == g_vd_cut) printf("VP %d %d %d %ld\n", wx, wz, b, vp);
             }
     }
     for (m = 0; m < pri->draw_count; m++)
@@ -2380,7 +2383,10 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "zensus")) teil_zensus();
     else if (!strcmp(teil, "ausschluss")) teil_ausschluss();
     else if (!strcmp(teil, "zellen3d")) teil_zellen3d();          /* Runde 41 Spur M NB2: Riegel unit_r41_masken36_zellen3d */
-    else if (!strcmp(teil, "verdacht")) teil_verdacht();           /* Runde 41 Spur M NB3: Sichtung Verdachtsliste Abnahme 2 */
+    else if (!strcmp(teil, "verdacht")) {
+        if (argc > 4) { g_vd_raum = (unsigned) strtoul(argv[2], NULL, 16); g_vd_cut = atoi(argv[3]); g_vd_rect = atoi(argv[4]); }
+        teil_verdacht();
+    }           /* Runde 41 Spur M NB3: Sichtung Verdachtsliste Abnahme 2 */
     else if (!strcmp(teil, "hinter")) teil_hinter();               /* Runde 41 Spur M NB3: Werkzeug fuer kacheln_r41.py */
     else if (!strcmp(teil, "fern")) {
         if (argc > 4) { g_fern_raum = (unsigned) strtoul(argv[3], NULL, 16); g_fern_cut = atoi(argv[4]); }

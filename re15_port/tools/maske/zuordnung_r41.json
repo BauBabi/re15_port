@@ -398,5 +398,61 @@
     "beleg": "SCA-Zelle 8 @RDT+0x00870 = 92 09 d0 07 14 a1 24 fa 01 ff 00 03 (x -24300..-21850 z -1500..500 Typ 1 Band 0); Nachbesserung 3 (Abnahme 2, Mangel 2 - Restliste): Teil desselben Gegenstands wie 'Schaltkasten auf der Kiste' (NB2); Hoehe an allen drei Objekten gemessen: 3475, IoU 0.526, 100 % im Koerper; Kamera C0 (-25704,-1277,-8009) nicht ueber der Zelle; vorher ausgeschlossen (R2..R6/R36, kein Bodenkontakt); Bild M_bilder/NB3/NB3_zuordnung_3040_00.png"
    }
   ]
+ },
+ "ROOM6000": {
+  "5": [
+   {
+    "objekt": "Gittertraeger oben",
+    "verschiebung": [
+     0,
+     -7
+    ],
+    "punkt": [
+     25,
+     76
+    ],
+    "zelle": "0x007EC",
+    "beleg": "SCA-Zelle 12 @RDT+0x007EC = d8 4f c8 0f 4a e1 d6 e9 01 ff 00 23 (x -7862..12578 z -5674..-1634 Typ 1 Band 2); Nachbesserung 3: Gittertraeger vorn links (Restliste NB2 'unterer Gittertraeger', OFFEN 9; Sichtung NB3 'verdacht': R36..R38 trugen die Zelle 13 @0x007F8 mit Hoehe 150 = Bahnsteigflaeche, eine Figur hinter dem Traeger blieb sichtbar); Hoehe an allen vier Traeger-Objekten gemessen: Saeule (IoU waechst bis 4100), IoU 0.804, 80 % im Koerper; Kamera C5 (8794,-9403,-7278) nicht ueber der Zelle (z -7278 < -5674); vorher automatisches Modell; Bild M_bilder/NB3/NB3_zuordnung_6000_05.png"
+   },
+   {
+    "objekt": "Gittertraeger Mitte",
+    "verschiebung": [
+     -32,
+     47
+    ],
+    "punkt": [
+     0,
+     128
+    ],
+    "zelle": "0x007EC",
+    "beleg": "SCA-Zelle 12 @RDT+0x007EC = d8 4f c8 0f 4a e1 d6 e9 01 ff 00 23 (x -7862..12578 z -5674..-1634 Typ 1 Band 2); Nachbesserung 3: Gittertraeger vorn links (Restliste NB2 'unterer Gittertraeger', OFFEN 9; Sichtung NB3 'verdacht': R36..R38 trugen die Zelle 13 @0x007F8 mit Hoehe 150 = Bahnsteigflaeche, eine Figur hinter dem Traeger blieb sichtbar); Hoehe an allen vier Traeger-Objekten gemessen: Saeule (IoU waechst bis 4100), IoU 0.804, 80 % im Koerper; Kamera C5 (8794,-9403,-7278) nicht ueber der Zelle (z -7278 < -5674); vorher Zelle 13 @0x007F8 Hoehe 150 (falsche Zelle); Bild M_bilder/NB3/NB3_zuordnung_6000_05.png"
+   },
+   {
+    "objekt": "Gittertraeger unten",
+    "verschiebung": [
+     -88,
+     79
+    ],
+    "punkt": [
+     34,
+     162
+    ],
+    "zelle": "0x007EC",
+    "beleg": "SCA-Zelle 12 @RDT+0x007EC = d8 4f c8 0f 4a e1 d6 e9 01 ff 00 23 (x -7862..12578 z -5674..-1634 Typ 1 Band 2); Nachbesserung 3: Gittertraeger vorn links (Restliste NB2 'unterer Gittertraeger', OFFEN 9; Sichtung NB3 'verdacht': R36..R38 trugen die Zelle 13 @0x007F8 mit Hoehe 150 = Bahnsteigflaeche, eine Figur hinter dem Traeger blieb sichtbar); Hoehe an allen vier Traeger-Objekten gemessen: Saeule (IoU waechst bis 4100), IoU 0.804, 80 % im Koerper; Kamera C5 (8794,-9403,-7278) nicht ueber der Zelle (z -7278 < -5674); vorher ausgeschlossen (OFFEN 9); Bild M_bilder/NB3/NB3_zuordnung_6000_05.png"
+   },
+   {
+    "objekt": "Gittertraeger Fuss",
+    "verschiebung": [
+     -24,
+     180
+    ],
+    "punkt": [
+     76,
+     211
+    ],
+    "zelle": "0x007EC",
+    "beleg": "SCA-Zelle 12 @RDT+0x007EC = d8 4f c8 0f 4a e1 d6 e9 01 ff 00 23 (x -7862..12578 z -5674..-1634 Typ 1 Band 2); Nachbesserung 3: Gittertraeger vorn links (Restliste NB2 'unterer Gittertraeger', OFFEN 9; Sichtung NB3 'verdacht': R36..R38 trugen die Zelle 13 @0x007F8 mit Hoehe 150 = Bahnsteigflaeche, eine Figur hinter dem Traeger blieb sichtbar); Hoehe an allen vier Traeger-Objekten gemessen: Saeule (IoU waechst bis 4100), IoU 0.804, 80 % im Koerper; Kamera C5 (8794,-9403,-7278) nicht ueber der Zelle (z -7278 < -5674); vorher ausgeschlossen (OFFEN 9); Bild M_bilder/NB3/NB3_zuordnung_6000_05.png"
+   }
+  ]
  }
 }

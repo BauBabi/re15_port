@@ -4,7 +4,7 @@
 # aufweisen." -> "danach kannst du deine Masken schliessen in der naechsten Version."
 #   unit_r41_masken36_loecher  Mechanik des Schliessens an allen 216 Generator-Sektionen (test_r41_masken36.c): eigener Atlas,
 #                             den der Lader nimmt; offene Kerben (Kuenstler-Atlas deckend + farbgleich direkt an der Kante
-#                             eines alten Rechtecks, nicht gezeichnet) NACHHER <= 30 % von VORHER (gemessen 18,4 %, vor NB1 25,1 %), Gegenprobe VORHER > 10000; Blit.
+#                             eines alten Rechtecks, nicht gezeichnet) NACHHER <= 30 % von VORHER (gemessen nach NB3 14,5 %, NB2 16,0 %, NB1 18,4 %, vor NB1 25,1 %), Gegenprobe VORHER > 10000; Blit.
 add_executable(test_r41_masken36 ${CMAKE_CURRENT_LIST_DIR}/../test_r41_masken36.c)
 target_link_libraries(test_r41_masken36 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_masken36 PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -55,7 +55,7 @@ endif()
 # Nachbesserung 2 (Abnahme 1, Mangel 1, Weg (a)): Generator-Rechtecke mit Zellen-Modell (tests/unit/gen_r41_masken36_zellen.inc,
 # tools/maske/zellen3d_r41.py) - der Ausschluss urteilt fuer sie in 3D (Koerper der Modellzelle vor dem Figurpunkt).
 #   unit_r41_masken36_zellen3d  jede Modell-Zeile byte-genau im RDT, MSK-Tiefe == Zeile, Engine zeichnet sie; Ausschluss MIT 3D-Urteil
-#                             == Engine-Tabelle in jedem Modell-Cut, Gegenprobe OHNE 3D-Urteil: >= 79 Rechtecke fielen weg (gemessen 79),
+#                             == Engine-Tabelle in jedem Modell-Cut, Gegenprobe OHNE 3D-Urteil: >= 128 Rechtecke fielen weg (gemessen NB3 128, NB2 79),
 #                             alle mit Modell-Zeile. Modelle auch aus der Zuordnung von Hand (tools/maske/zuordnung_r41.json, 12 Objekte).
 add_test(NAME unit_r41_masken36_zellen3d COMMAND test_r37_masken36 zellen3d WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r41_masken36_zellen3d PROPERTIES TIMEOUT 1500)
@@ -75,4 +75,30 @@ if(TARGET re15_pc)
                      -DPRAEFIX=r41m4
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
     set_tests_properties(integration_r41_masken36_zellen3d PROPERTIES TIMEOUT 1500)
+endif()
+
+# Nachbesserung 3 (Abnahme 2, Mangel 1 "zu ferne Tiefe", Mangel 2 Restliste/OFFEN 9): Koerper in Teilrechtecke (tools/maske/kacheln_r41.py,
+# Koerper-Form tools/maske/koerper_r41.py = Formen des Resolvers inkl. Raute Typ 2 push_diag2, Zuordnung von Hand tools/maske/zuordnung_r41.json).
+#   unit_r41_masken36_fern  Mass "zu fern" (test_r37_masken36 fern) ueber alle Generator-Sektionen mit Modell der Stages 3..6, Leon und Elza:
+#                             erreichbare Figurpunkte HINTER dem Koerper einer gezeichneten Modell-Maske, die keine gezeichnete Maske verdeckt
+#                             (re15_pri_mask_occludes) - gemessen nach NB3 3216 (vor NB3 1 360 606 = Gegenprobe, 30A0 C0 allein 56 346).
+add_test(NAME unit_r41_masken36_fern COMMAND test_r37_masken36 fern 3216 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r41_masken36_fern PROPERTIES TIMEOUT 1500)
+#   integration_r41_masken36_fern  echte exe (Leon und Elza): hinter der Buero-Trennwand ROOM30A0 Cut 0/1 an den Spielstellen der Abnahme 2
+#                             im Fenster der Trennwand KEIN Figurpunkt im Endbild sichtbar (Art Z, V == 0, probe_r41_masken36_sicht mit
+#                             Masken-Bild ohne Figur), davor 0 uebermalt (Art V); Szenen test_r41_masken36_fern_szenen.cmake.
+add_executable(probe_r41_masken36_sicht ${CMAKE_CURRENT_LIST_DIR}/../probe_r41_masken36_sicht.c)
+if(TARGET re15_pc)
+    add_test(NAME integration_r41_masken36_fern
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r37_masken36_ppm>
+                     -DRE15_SICHT_TOOL=$<TARGET_FILE:probe_r41_masken36_sicht>
+                     -DRE15_BG_TOOL=$<TARGET_FILE:probe_bg_dump>
+                     -DCD_ROOT=${CMAKE_SOURCE_DIR}/shared_assets/PSX
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_masken36_fern_wd
+                     -DSZENEN=${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_fern_szenen.cmake
+                     -DPRAEFIX=r41m5
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_masken36_stage2.cmake)
+    set_tests_properties(integration_r41_masken36_fern PROPERTIES TIMEOUT 1500)
 endif()
