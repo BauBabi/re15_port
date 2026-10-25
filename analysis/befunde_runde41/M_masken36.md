@@ -17,6 +17,8 @@ Baum: .claude/worktrees/r41_masken36 (Zweig r41/masken36, Basis b28c7236 = maste
 - [x] Tests (probes/r41_masken36.cmake), gezielte Laeufe 41/41
 - [x] Nachbesserung 1 (Abnahme 0) und Nachbesserung 2 (Abnahme 1): Abschnitte unten; NB2 = 3D-Urteil fuer Rechtecke mit
       Zellen-Modell + Nahfeld-Sperre + Zuordnung von Hand (164 Rechtecke wieder drin, 956 982 Punkte), Restliste fuer den Nutzer
+- [x] Nachbesserung 3 (Abnahme 2): Trennwand 30A0 ganz zu (Zelle 6 + Teilrechtecke je Koerper), Mass/Riegel "zu fern" (1 360 606 ->
+      40 276, Stage 3: 0), OFFEN 9 gegangen, 7 Restliste-Gegenstaende gezeichnet (983 624 Punkte), Verdachtsliste gesichtet
 
 ## Punkt 1 — STAGE3-6-Masken "ueberall Loecher"
 
@@ -650,6 +652,35 @@ ihre Zahlen werden zitiert. Punkt 2 (erfuellt) wird nicht angefasst.
       Gegenstaende von Hand zugeordnet und gezeichnet; was bleibt, hat keine Zelle / die Kamera steht darueber / liegt nicht in der Region
 - [x] Bau, gezielte Tests (unit 32/32, Integration s. Tests NB3), Abschluss-Commit
 
+### NB3 Zusammenfassung je Mangel (Ursache, Messung vorher, Beleg, Aenderung, Messung nachher)
+**Mangel 1 - 30A0/30A1 obere Trennwandfelder, Figur hinter der Trennwand als Halbfigur; Riegel gegen zu ferne Tiefe; Verdachtsliste.**
+* Ursache: (a) die oberen Felder (Objekte (232,-24), (59,43); C1 (-32,70)) liegen auf dem unteren Feld auf - ihre zurueckprojizierten
+  "Bodenkontakte" fielen hinter die Trennwand, die Automatik nahm Zelle 8 @0x00474 / 0 @0x00414 / 1 @0x00420 (Tiefe 188..207); (b) auch mit
+  richtiger Zelle hatte jedes Rechteck EINE Tiefe = max bucket ueber alle seine Punkte - hinter dem nahen Teil einer zurueckweichenden Wand
+  blieb die Figur sichtbar (unten R0: 136 von 854 Leon-Punkten bei s30A0_00); (c) das Python-Modell kannte Typ 2 nur als Kasten.
+* Messung vorher: Abnahme 2 (s30A0_00 1072, u30A0_00 986, t30A0_00 858, e30A1_00 704, h30A0_01 988 ueber dem oberen Feld sichtbar); neues
+  Mass "zu fern" 1 360 606 Figurpunkte (Stage 3: 56 346).
+* Beleg: Zelle 6 @RDT+0x0045C `96 19 e2 04 63 98 2d 37 01 ff 00 03`, Hoehe an allen Trennwand-Objekten gemessen 3025 (C0, IoU 0,908) /
+  3225 (C1, IoU 0,930); Verdeckt-Urteil des Originals depth < (1023*vz)>>16 (@0x8002565c `sra v1,v1,4`, ZSF3 341 @0x80066c70, Masken-OT
+  = depth @0x80039650); Raute Typ 2 = push_diag2 LAB_8003d00c (quadrant_of, cx = x + (breite >> 1)); Spielerradius 450 DAT_80073e94[6].
+  Die Masken selbst sind PORT-WAHL (Original-PRI dieser Cuts ff ff ff ff, @0x80039324/@0x80039338).
+* Aenderung: zuordnung_r41.json (+5 Trennwand-Eintraege), koerper_r41.py (Eintritt/Austritt mit der Resolver-Form), kacheln_r41.py
+  (Teilrechtecke je Koerper, Tiefe je Teil = max bucket(Eintritt) seiner Koerperpunkte - nie eine Figur VOR dem Koerper verdeckt; Grenzen
+  nach den erreichbaren Figurpunkten hinter dem Koerper), Ausschluss neu, Riegel unit_r41_masken36_fern (Stage 3 == 0) und
+  integration_r41_masken36_fern (Art Z: V == 0), Werkzeug verdacht.
+* Messung nachher: an allen Abnahme-Stellen 0 Leon-/Elza-Punkte hinter der Trennwand sichtbar (Haar ueber der Oberkante ausgenommen), DAVOR
+  0 verdeckt; zu fern 40 276 (Stage 3: 0; der Rest zu 99 % ROOM6000 Gleisbett Band 0); Verdachtsliste: 27 von 41 Gruppen ohne Wirkung, ein
+  echter Fehler gefunden und behoben (6000 C5 Traeger), 12 Gruppen OFFEN 13.
+**Mangel 2 - Punkt 1 weiter nicht geschlossen (Restliste, OFFEN 9).**
+* Ursache: echte Gegenstaende ohne automatisches Modell (Spinde, Kisten, Traeger, Container); OFFEN 9: Rechtecke mit Modell, deren Punkte
+  nicht alle hinter dem Koerper liegen, fielen ganz weg.
+* Messung vorher: 1022 Rechtecke aus, 273 961 Punkte nur in ausgeschlossenen Rechtecken, 956 982 gezeichnet.
+* Beleg: je Zuordnung Zellbytes + RDT-Offset + gemessene Hoehe/IoU + Bild (zuordnung_r41.json, Riegel zellen3d prueft 1025 Zeilen byte-genau).
+* Aenderung: 7 Gegenstaende von Hand zugeordnet; OFFEN 9 als "Atlaspunkte ausserhalb des Koerpers durchsichtig" + Rest-Stueck; tote
+  Rechtecke zusammengelegt.
+* Messung nachher: 983 624 gezeichnet (+26 642, 0 weggefallen), 247 319 nur ausgeschlossen; Restliste-Bilder M_bilder/NB3_rest; was bleibt,
+  ist begruendet (Kamera ueber der Zelle, keine Zelle, nicht in der Region, Waende/Boeden) - Nutzerfrage fuer die Gelaender.
+
 ### NB3 Messung vorher: Mass "zu fern" (neu, test_r37_masken36 fern)
 Die Abnahme 2 verlangt einen Riegel gegen zu FERNE Tiefe. Neuer Modus `test_r37_masken36 fern` (dieselben erreichbaren Stehplaetze,
 dasselbe pixelgenaue Figurraster und dieselbe Engine-Tabelle wie der Ausschluss): ein Figurpunkt F zaehlt als "zu fern", wenn an
@@ -897,6 +928,19 @@ Laeufe (Spurbaum, Bau `local_build.sh build` nach der letzten Aenderung; KEINE v
 Determinismus: zweiter Lauf von `zellen3d_r41.py` (letzter Schritt der Kette, Stand k2) -> 30 MSK und Modell-Tabelle bitgleich; Kette k3
 selbst: zweites erzeuge bitgleich zum ersten.
 
+### Tests Nachbesserung 3 (gezielt, KEINE volle Suite)
+Neu/geaendert (nur tests/unit/probes/r41_masken36.cmake + eigene Dateien):
+| Test | misst | Ergebnis |
+|---|---|---|
+| `unit_r41_masken36_fern` (neu, `test_r37_masken36 fern 40276 0 72 270 39934`) | Mangel 1 Mechanik: erreichbare Figurpunkte HINTER dem Koerper einer gezeichneten Modell-Maske, die keine Maske verdeckt - gesamt <= 40 276 und je Stage (Stage 3 == 0); Gegenprobe Stand vor NB3: 1 360 606 | PASS |
+| `integration_r41_masken36_fern` (neu, Szenen test_r41_masken36_fern_szenen.cmake, Werkzeug probe_r41_masken36_sicht) | Mangel 1 an der exe: hinter der Trennwand 30A0/30A1 Cut 0/1 an den Abnahme-Stellen im Trennwand-Fenster kein Figurpunkt im Endbild (Art Z, V = A != A0 mit A0 = Masken ohne Figur) - s/u/t/h30A0_00, e30A1_00, h30A0_01; davor 0 uebermalt (d30A0_00/01, f30A1_00) | s. Lauf |
+| `unit_r41_masken36_zellen3d` (Messwert) | 1025 Modell-Zeilen byte-genau im RDT, MSK-Tiefe == Zeile, Engine zeichnet jede; Ausschluss MIT 3D == Tabelle (48 Cuts); Gegenprobe ohne 3D-Urteil >= 127 Rechtecke weg (NB2: 79) | PASS |
+| `unit_r41_masken36_loecher` (Messwert) | Kerben NACHHER 9 036 von 63 116 = 14,3 % (NB2 16,0 %) | PASS |
+Laeufe (Spurbaum, `local_build.sh build` nach der letzten Aenderung):
+1. `ctest --test-dir re15_port/build -R "unit_r41_masken36|unit_r37_masken36|unit_pri_|unit_r36_pri|unit_r37_pri1100|unit_sld_atlas|unit_r38_itemorte|unit_r39_optik|unit_r34n_e_dokumente|unit_bss|prop_bss|unit_stage6_hintergrund" -j 3 --timeout 1800 --output-on-failure`
+   -> **`100% tests passed, 0 tests failed out of 32`** (unit_r37_masken36_ausschluss 490 s, unit_r41_masken36_fern 253 s, zellen3d 122 s).
+2. Integration: s. "Tests NB3 - Integrationslauf" unten.
+
 ## OFFEN
 
 0. **Stand Nachbesserung 2 (ersetzt die Zahlen von 1):** 1022 Rechtecke (Leon, Elza gleich) bleiben aus, 273 961 Punkte liegen nur
@@ -957,8 +1001,35 @@ selbst: zweites erzeuge bitgleich zum ersten.
     gemessenen Hoehe 3025 des Blocks (Strahl bei y -3110..-3200), die Maske deckt ihn trotzdem (die Region zeigt dort den Block,
     die Kunst ist hoeher als das IoU-Modell); 5 094 / 5 608 Gitterpunkte der strengen Gegenprobe `m41nb2/py/statisch.py`.
 
+12. **NB3 - Figur dicht hinter der Trennwand:** an der Zusatzstelle l30A0_00 (-24843,15863), 488 hinter der Rueckseite der Zelle 6, sind 12
+    von 1050 Leon-Punkten sichtbar - alle in einer Bildspalte (x 208), Leon-z zwischen Eintritt und Austritt des Koerpers: Leons Modell ragt
+    dort in den Zellenkoerper (der Kollisionsradius 450 haelt nur den Mittelpunkt fern). Die Teilung richtet sich nach den Figurpunkten des
+    Rasters (Mittelebene, Stufe bucket(vz - 450)); ein schmalerer Streifen an x 208 waere der Weg, der Platz im Cut (105) ist ausgeschoepft.
+13. **NB3 - Verdachtsliste, nicht einzeln geprueft:** 12 der 41 Gruppen (Tabelle in "Sichtung der Verdachtsliste") zeigen Figurpunkte VOR
+    dem eigenen Koerper hinter einer soliden Zelle im Grundriss - ob die Zelle davor dort wirklich verdeckt (Hoehe), ist nicht je Fall an der
+    exe gemessen. Werkzeug: `test_r37_masken36 verdacht <raum> <cut> <rechteck>` (Stehplaetze), Bilder m41nb3/verdacht.
+14. **NB3 - ROOM6000 Band 0 (vgl. OFFEN 10):** 39 934 der 40 276 "zu fern"-Punkte liegen im Gleisbett unter dem Bahnsteig; die Teilung der
+    Traeger-MITTE (6000 C5) nimmt der Ausschluss wegen eben dieser Plaetze wieder heraus. Ob der Spieler dort je steht, ist weiter nicht
+    gemessen; wenn nicht, sind diese Punkte im Spiel ohne Wirkung.
+15. **NB3 - Mass "zu fern" kennt nur Modell-Koerper:** fuer Rechtecke ohne Modell (Generator-Tiefe) gibt es kein Urteil "zu fern"; die
+    Verdachtsliste (Grundriss) deckt diesen Fall nur ohne Hoehe ab.
+
 ## Fuer den Nutzer
 
+- **Masken STAGE3-6, Nachbesserung 3:** Die Buero-Trennwand in ROOM30A0 (Kamera 0 und 1, Leon und Elza) verdeckt jetzt die GANZE Figur
+  dahinter - vorher waren die oberen Mattglas-Felder einer Wand weiter hinten zugeordnet, und man sah Leon/Elza ab der Huefte aufwaerts
+  "durch" die Trennwand (Bild `analysis/befunde_runde41/M_bilder/NB3/NB3_M1_30A0_trennwand.png`). Lange, schraeg zurueckweichende
+  Gegenstaende haben dafuer jetzt schmale Teilmasken mit eigener Tiefe (statt einer Tiefe fuer das ganze Stueck). Neu gezeichnet: die hohen
+  Spinde in ROOM30A0 Kamera 3, der Gittertraeger vorn links in ROOM6000 Kamera 5, die Kiste vorn in ROOM3040 Kamera 9, Schaltkasten + Kiste
+  in ROOM3040 Kamera 0, die obere Kiste des Stapels in ROOM5090 Kamera 13, der rechte Container in ROOM5020 Kamera 7 und die X-Kiste in
+  ROOM5020 Kamera 12 (Vorher/Nachher-Bilder `M_bilder/NB3/NB3_bogen_ROOMxxxx_Cnn.png`, 25 geaenderte Kameras, kein Maskenpunkt
+  weggefallen). Was weiterhin ohne Maske ist und warum: `M_bilder/NB3_rest/` (Pulte/Schreibtisch ROOM5050 und Moebel vorn ROOM30A0 Kamera 0 -
+  die Kamera haengt direkt darueber; Lok-Unterteil ROOM6000 Kamera 7 und Roboterarm ROOM50B0 - dafuer gibt es keine Kollisionszelle;
+  die Gelaender ROOM3050 Kamera 6, ROOM30E0 Kamera 6..9, ROOM3040 Kamera 3 - die hat der Generator nie gefunden).
+  **Frage:** Sollen die Gelaender (und ggf. die Pulte in ROOM5050) wie in STAGE1/2 als Ihre Freistellungen (PNG unter pri/STAGEn/<raum>/)
+  kommen? Aus den Spieldaten allein ist dort keine sichere Tiefe zu bekommen.
+- Uebersichtsbilder pri/STAGE3-6: durch NB3 geaendert sind die Bilder der 25 Kameras in `M_bilder/NB3/NB3_zahlen.txt` (neu unter
+  `M_bilder/uebersicht/`, Leon-Ordner; Elza-Ordner nur, wo es sie gab) - das Ersetzen in pri/ bleibt dem Orchestrator (pri/ ist fuer die Spur tabu).
 - **Die Loecher in den STAGE3-6-Uebersichtsbildern waren ein Fehler meines Werkzeugs**, nicht der Masken (Entpacker las jeden
   langen Rueckverweis 65536 Byte zu weit vorn; behoben, 359 von 359 Atlanten bytegleich mit dem Spiel). Die 204 Bilder sind
   ersetzt; die letzten 10 (3040/3041 01, 3050/3051 06 und 15, 30E0/30E1 06 und 07) liegen unter
