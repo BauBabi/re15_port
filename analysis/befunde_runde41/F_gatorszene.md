@@ -41,8 +41,9 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
       behoben und gemessen, Nebenbefund (R1-Tod aus frueherem Raumbesuch) behoben (Abschnitt "Nachbesserung 3")
 - [x] Nachbesserung 4: M1 der Abnahme 3 (Nachtrag 29: Leiche samt Kette weiter weg von der Leiter, Ausweichen am Kampfbeginn)
       behoben und gemessen (Abschnitt "Nachbesserung 4")
-- [ ] Nachbesserung 5: M1-M4 der Abnahme 4 (= Entscheid F-E2: Kampfbeginn beim RE2-Sollwert, Schluessel nicht dunkler als
-      abgenommen, Fressen nicht von hinten, Riegel mit oberer und unterer Grenze) (Abschnitt "Nachbesserung 5")
+- [x] Nachbesserung 5: M1-M4 der Abnahme 4 (= Entscheid F-E2: Kampfbeginn beim RE2-Sollwert, Schluessel nicht dunkler als
+      abgenommen, Fressen nicht von hinten, Riegel mit oberer und unterer Grenze) behoben und gemessen; M2-Groesse knapp darunter
+      (OFFEN 1 mit Zahlen) (Abschnitt "Nachbesserung 5")
 
 ## 0. Protokoll
 
@@ -60,7 +61,9 @@ Ressourcen (VERTRAG 1.1/1.2): Bits (9,110..113) = 110 Szene gesehen, 111 Schlues
 * Nachbesserung 4 (2026-10-25): aa7b3e8a (Plan), 0f990c9f (Messung vorher), f5be4f3d (RE2-Sollwert + Probe), 2b8f3739
   (Lagesuche), 5702190a (Code obj 3 + Unit-Riegel), ec012418 (exe-Riegel + Querbezuege), fb64e68c (beste Lage), 23cad995
   (Dossier Wahl), d9357d86 (Messung nachher + Bilder), Schluss-Commit fix(r41-gatorszene): Nachbesserung 4.
-* Nachbesserung 5 (2026-10-25): Commits im Abschnitt "Nachbesserung 5".
+* Nachbesserung 5 (2026-10-25): bf4220d3 (Plan), 0a2c973c (RE2-Sollband, Lage zur Laufzeit, Kontakt-Mass, lagesuche), 1b13a8be
+  (Lage), ab3d2616 (Riegel mit Band), 3cfa7681 (Dossier + Bilder), 2ba4ee86 (Werkzeuge --m2/--kandidaten, probe_clip6_n5), 8b503f93
+  (Dossier), 45096984 (Messhaken nur PC), Schluss-Commit fix(r41-gatorszene): Nachbesserung 5.
 
 ## Punkt 2 — Spinnen aus ROOM2090 entfernen
 
@@ -1154,6 +1157,15 @@ Neu/nachgezogen (nur F-eigene Riegel, registriert in tests/unit/probes/r41_gator
   130647809..193864141 (gemessen 131198058), Zone 0/0 (Zeile "Kampfbeginn"), erster Kontakt/Angriff im Band 121..158 (leon/elza: 131)
   bzw. nicht vor 121 (flucht: 190), flucht rennt nach Norden (Eingabe W10,L0.6,UX5; z -25550 -> -16150 in 121 Bildern).
 - Werkzeug-Modi (keine Riegel): `test_r41_gatorszene lagesuche <datei>`, `re2soll` (jetzt mit Band).
+
+Gezielt (keine volle Suite), Regex = die der Abnahme 4 (`F41a4/regex.txt` = `F41n5/regex.txt`, `ctest -N`: Total Tests: 221; deckt
+alle Testdateien, die gatorszene/RE15_GSZ_/re15_gr2_/GB_TEST/GATOR_KANISTER oder 2090/2091 nennen, dazu Spur B's integration_r41_re2gator):
+`ctest --test-dir "<baum>/re15_port/build" -R "$(cat F41n5/regex.txt)" -j4 --timeout 1200 --output-on-failure`
+-> **`100% tests passed, 0 tests failed out of 221`** (`Total Test time (real) = 1069.79 sec`; darin integration_r41_re2gator 267.72 s
+mit dem Lauf "szene": DURCHBRUCH Cut 1 frontal 4108, FINISHER Cut 1 frontal 4116, Clip-Folge 6/4/5/11/0/10, kein GIER-SPRUNG).
+Danach nur der Messhaken auf den PC beschraenkt (45096984, fuer den PC bitgleich), neu gebaut und die F-Riegel erneut:
+`ctest ... -R "^(unit_r41_gatorszene_|integration_r41_gatorszene_(leon|elza|flucht|flucht_elza)$)" -j4` -> **`100% tests passed, 0 tests
+failed out of 16`** (74.25 s).
 
 ### N5 OFFEN
 
