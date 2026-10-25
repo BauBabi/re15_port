@@ -111,7 +111,58 @@ Plan/Start = Abnahme 5 `kf` (Sued-Landeplatz, Bits 101/102, (3,108), 125; richti
   (F370), Frage Yes/No (F2650), Cut 4 Bruecke faehrt (F2770), "The bridge is d.." (F3070), Leon auf dem Steg (F3850/F4000). Kurbel nicht beteiligt;
   kein Countdown in diesem Lauf (richtig: kein Zaehler).
 
-(weitere Laeufe folgen)
+### KB_ELZA — dasselbe mit Elza (`kb_elza`, Plan = Abnahme 5 `kb_elza`, MIT Ton)
+* `Spieler-Familie PL04 (character=4, Elza-Bit=1)` -> `loaded room2011.rdt` -> `room2001.rdt` -> `room2071.rdt` -> `room2031.rdt` -> `ROOM2031 bindet
+  das RBJ von RE2 ROOM1080` -> `Folge 09 07 02 01 -> RICHTIG` -> **`RE2-Alarm SUB_25 an (ROOM2031, Warntext 46) geladen capTick 7868 F5115`** ->
+  `room=2031 id=46 "WARNING: ..."` -> `[voice] Start ROOM2031 Id 46 ... capTick 7869` -> **`Countdown RE2-Form Bild 0 " 0^59=98" ... F5567`** ...
+  `Bild 810 " 0^32=98" F6377` -> `loaded room20b1.rdt` -> `Bits 103 + 100` -> **`RE2-Alarm SUB_25 aus (Raumwechsel, ...) capTick 9306 F1`**.
+* Countdown gegen meinen Nachbau (Start F5567): **54 von 54 Bildern nach dem Start exakt**, 0 Abweichungen.
+* Ton: die Elza-Aufnahme der Abnahme 5 ist KEIN bitgleicher Zwilling (Abweichung schon ab Takt 80 - der Elza-Start ueber RE15_TITLE_CONFIRM_MS
+  ist wanduhrabhaengig); deshalb Korrelation (`alarmkorr.py`): Elza ab ihrem Alarm-Takt 7868 gegen das Alarm-Signal aus Leons Zwillings-Differenz
+  ab 7188, 1300 Takte: **0,515 bei Versatz 0** (Gegenprobe +61 Takte 0,003, -900 Takte 0,003). Ende: Leons Alarm-Signal ist schleifenperiodisch
+  (Phase 100..400 gegen 1060..1360: **1,000** = Schleife 960 Takte = 32 s); Elza vor dem Raumwechsel (Takte 9066..9246) **0,628**, in 20B1 ab
+  Alarm-Ende + 120 Takte (9426..9606) **0,017**, (9486..9606) **0,024** -> der Alarm laeuft in 2031 vom Warntext bis zum Raumwechsel und ist in
+  20B1 aus.
+
+### KF_ELZA — Flut/Tod mit Elza (`kf_elza` = Plan kf mit 2031, MIT Ton, Framedump jedes Bild ab F6200)
+* `RE2-Alarm SUB_25 an (ROOM2031, Warntext 46) geladen capTick 5017 F4094` -> `id=46` -> `Countdown ... Bild 0 ... F4546` -> 2x `ROOM2031 Ereignis 23:
+  Plakat gesperrt` -> `FLUT: Wasser steigt (Countdown-Takte 1801 von 1800)` -> **`Countdown RE2-Form Bild 1800 " 0^00=00" ... F6346`** -> **`RE2-Alarm
+  SUB_25 aus (Flut/Tod) capTick 7269 F6346`** -> **`ERTRUNKEN: Wasser y -2700, Spieler y -1800 -> hp -1, blaue Blende`**.
+* Countdown F6200..F6346 (147 Bilder, JEDES) gegen meinen Nachbau **147/147 exakt**; ab F6347 kein Countdown (0 rote Pixel F6347/F6400).
+
+### P4 — Punkt 4: nach der Flut 20B0 statt 2000, Leiter frei (Leon `p4`, Elza `p4_elza`; Plaene der Abnahme 5, Bits 103/100 + (3,235))
+* Leon: `ROOM2010: Tuer Slot 0 -> ROOM20B0 Cut 10 (Ziel ROOM2000)` -> `DOOR FIRE slot=0 ... target_cut=10` -> **`loaded room20b0.rdt`** -> Leiter
+  **`DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)`** (kein Sperrtext) -> `loaded room2050.rdt` ->
+  `ROOM2050: Tuer Slot 0 -> ROOM20B0 Cut 9` -> `loaded room20b0.rdt`. Bild **`<a6>/bilder/p4_20b0.png`** (Cut 9): das Gitterfenster ohne
+  Wasserstrahl (vgl. `p1r.png` mit Strahl), Leon an der Leiter. (Lauf per Zeitlimit beendet - Plan ohne EXIT_AT, wie Abnahme 5.)
+* Elza: `loaded room2011.rdt` -> `ROOM2011: Tuer Slot 0 -> ROOM20B0 Cut 10` -> **`loaded room20b1.rdt`** -> Leiter slot 4 -> `loaded room2051.rdt` ->
+  `ROOM2051: Tuer Slot 0 -> ROOM20B0 Cut 9` -> `loaded room20b1.rdt`.
+
+### P5 — Punkt 5: Hebel 2050 erst nach dem Pult (80 V) (Leon `p5v`/`kh`/`p5n`, Elza `p5v_elza`/`kh_elza`)
+* Vorher (`p5v`): `ROOM2050 Ereignis 4 -> 2050_hebel_sperre` -> **`id=40 "The pump has no power. The switchboard must be set first."`**, `FLAG (3,104) =
+  0` vorher (F63) und nachher (F532). Elza `room=2051 id=40` gleich, (3,104) bleibt 0.
+* Pult (`kh`, Eingabeskript der Abnahme 5): `2050_pult_ein` -> `id=43 "A high voltage switchboard. The pump needs 80 volts."` -> `id=41 "Will you
+  push them?"` -> `Cut_chg(15)` -> `Hebel 3 -> EIN ... 40 V` -> `Hebel 1 -> EIN ... 70 V` -> `Hebel 4 -> EIN ... 80 V` -> `id=42 "Power supply OK."`
+  -> **`Pult 2050 GELOEST: 80 V -> Bit 106`** -> `id=44 "The switchboard is set to 80 volts. The pump is powered."`. Elza `room=2051` Zeile fuer Zeile gleich.
+* Nachher (`p5n` = Plan p5v mit Bit 106): Hebel = Original **`id=0 "A lever to fill and drain water. Will you move it?"`** -> `FLAG (3,104)` **0 -> 1**.
+
+### P6 — Punkt 6 (ersetzt durch Nachtraege 7/8/12 (k)): mit dem Strom 2030 knapp unter der Absperrung, Rechner 2080 = Original (Leon `p6`, Elza `p6_elza`)
+* Leon ueber die echte 20B0-Ost-Tuer: `DOOR FIRE slot=3 rect=(5950,-6400,...)` -> `loaded room2030.rdt` -> **`ROOM2030: Strom (3,126) -> Wasser knapp unter
+  der Absperrung y -5350 (Schachtoeffnung), Treppe Slot 8 -> Sperrtext 48, Ring frei`**, `[prop-render] pi=4 oid=0x04 pos=(0,-5350,0)`, Treppe
+  `id=48 "I cannot go down the stairs because of the water."`, Lift B `FLAG (3,220)` 0 -> 1 -> `loaded room2080.rdt` -> **`id=0 "From here maybe I can
+  control the water level.Will you operate the computer?"`** -> `FLAG (3,245)` 0 -> 1 -> `loaded room2090.rdt`.
+* Elza Zeile fuer Zeile gleich (`room20b1` -> `room2031` Pegel -5350 -> `id=48` -> (3,220) 0 -> 1 -> `room2081 id=0` -> (3,245) 0 -> 1 -> `room2091`).
+
+### N16 — Nachtrag 16 (Regression): Ventil-Sicherungskasten 2010 (Leon `ka3`), nach der Flut Herausnehmen + Weg zu 2060 (Elza `kn_elza`)
+* `ka3`: 2070 -> `loaded room2000.rdt` -> `loaded room2010.rdt` -> `Ventil-Sicherungskasten Slot 8 ..., Sicherung fehlt` -> `id=40 "A fuse box for the valve
+  controls.One of the fuses is missing..."` -> `id=41 "Will you use the Fuse?"` -> **`Sicherung eingesetzt -> Bit (9,125) = 1`** -> **`Standbild der
+  Ventile offen (ROOM2030 Cut 7) + Aufschliess-Ton`** -> `Standbild BSS/ROOM2030/BG07.BSS dekodiert` -> `zu (nach 82 Bildern)` -> `id=42 "You've used
+  the Fuse."` - unveraendert gegen Abnahme 5.
+* `kn_elza` (nach der Flut, Bit 125): `loaded room20b1.rdt` -> `room2011.rdt` (`Sicherung steckt (Bit 125)`) -> `id=43 "The fuse is in place.Will you
+  take the Fuse?"` -> `id=44 "You've taken the Fuse."` -> **`Sicherung genommen -> Bit (9,125) = 0`** -> `room2051` -> `room2021` -> `room2031` ->
+  `room2061` -> `id=3 "One of the fuses is missing..."` -> **`id=4 "Will you use the Fuse?"`**.
+* Gegenprobe Anzeige: in 20B0 nach der Flucht (kb F250..F295) 0 rote Pixel im Countdown-Feld; im Lauf ohne Zaehler (kbr) kein Countdown.
+
 
 ## 2. Gates
 
@@ -155,7 +206,32 @@ Plan/Start = Abnahme 5 `kf` (Sued-Landeplatz, Bits 101/102, (3,108), 125; richti
   'It's locked.'" und "Fundort neben der Sicherung ... Zettel AUFRECHT an der Suedwand"; keine Reste ("look around"/"Blatt am Boden" nur als
   Geschichte).
 
-(G2/G3 folgen)
+### G2 Vertrag (VERTRAG.md §1/§2, Entscheide C-E3/C-E4)
+* **Pfade** (`git diff master...HEAD --name-only`, ohne analysis/): keine `release/`, `platform/android/`, `shared_assets/PSX/`, `pri/`, keine Test-
+  CMakeLists. `synchro/STAGE2/room2030|room2031/main46.wav` = Blob `2f750a04...` == master (Orchestrator-Commits 3da82407/f091aa04). Neu seit
+  Abnahme 5 nur `shared_assets/RE2/SOUND/SUB_25.BGM` (bytegleich RE2, von C-E4 verlangt; Paket-Gate im Dossier §0g genannt).
+* **Bits/Ids/Slots/Ereignisse:** seit Abnahme 5 keine neuen (Bits 100-103/106/107/125, Texte 2000/20B0 40-41, 2010 40-44, 2030 40-55, 2050 40-44,
+  2070 40 unveraendert; `unit_r36_kartenbits` in der Unit-Gruppe gruen).
+* **Gemeinsame Dateien:** `audio_pc.c` (C-E4 erlaubt den Haken): 4 markierte Einzeiler ("Runde 41 Spur C, C-E4": Zustand, Quelle im
+  Track-Lader nur waehrend des Alarm-Ladens, Zuruecksetzen in re15_bgm_load_sub, `sub_same = 0` in re15_audio_start_room_bgm nur mit aktivem Alarm)
+  + der Schalter `re15_audio_r41_alarm` am Dateiende (~20 Codezeilen, braucht die statischen BGM-Zustaende der Datei) -> **Hinweis V3 (formal)**:
+  groesser als "1-5 Zeilen" (VERTRAG §1.3), vom Orchestrator wie V1 zu bestaetigen. main.c unveraendert seit Abnahme 5 (V1 offen), Bit 125 im
+  master-VERTRAG (V2 offen).
+* **Tests je Mangel:** Mangel 1 -> `integration_r41_ventilkette_alarm` (Zwilling ohne SUB_25: vor bitgleich, waehrend RMS >= 300, nach bitgleich;
+  Elza-Korrelation) + Unit R3 (Alarm an/aus am Engine-Takt); Mangel 2 -> Teil A von `integration_r41_ventilkette` (Pixelvergleich gegen einen
+  eigenstaendigen RE2-Zeichner, Text aus der Bildnummer) + Unit R1 (15 Zaehlerstaende inkl. 300/120/700 s) / R2 / R3 (Bild fuer Bild ohne Luecke,
+  " 0^00=00" im Bild des Flut-Beginns, danach aus). Kein Riegel wurde entschaerft (im Unit-Diff seit Abnahme 5 keine entfernte Zeile; Teil A
+  ersetzt den Rot-Mittelwert durch den strengeren Pixelvergleich). Linux-fest: `m` fuer test_r41_ventilkette ausser WIN32, `cmake_minimum_required`
+  im neuen -P-Skript, `.exe` nur bedingt, eigener exe-Praefix `re15_pc_r41calarm_` + eigener Laufordner.
+* **G2 haelt** (formale Hinweise V1/V2 aus Abnahme 5 weiter offen, neu V3).
+
+### G3 Nebenwirkungen (beide Szenarien, Nachbarraeume)
+* Ton ausserhalb des Alarms unveraendert: KB-Zwilling (alte exe) bitgleich bis zum Alarm (2010, 2000, 2070, 2030 vor dem Text) und ab Alarm-Ende
+  + 86 Takte (20B0-Musik); KF-Zwilling bitgleich ausser im Alarm-Fenster. BGM-Lader-Riegel gruen (`integration_r35_cut10f0`, `unit_rotor_bgm_pin`,
+  `unit_r35_cut10f0_*`, `unit_r39_johnruf1041_*`, Stimmen-/Ton-Units in der Unit-Gruppe).
+* Countdown nur in 2030/2031 waehrend des Zaehlers (kein Countdown in kbr ohne Zaehler, in 20B0 nach der Flucht, nach dem Flut-Bild).
+* Alle Nutzer-Punkte mit Leon UND Elza ueber echte Tueren nachgemessen (§1), Ergebnisse gleich Abnahme 5.
+* **G3 haelt.**
 
 ## 3. Tests (gezielt, im Spurbaum; KEINE volle Suite)
 * Unit-Gruppe (`<a6>/regex_unit.txt` = Regex der Abnahme 5 + BGM-/Stimmen-Pfade, die audio_pc.c linken oder den BGM-Lader pruefen:
