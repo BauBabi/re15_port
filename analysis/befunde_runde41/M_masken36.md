@@ -1064,11 +1064,28 @@ angefasst; seine Riegel bleiben gruen.
 
 ### Stand Nachbesserung 5
 - [x] Lektuere (AUFTRAG inkl. M-E2, VERTRAG, Abnahme 4, Dossier NB4, git log master..HEAD = 2ea86d24)
-- [ ] Mangel 1: Tuer-Band der Saaten als Vorgabe
-- [ ] Mangel 1: Original-Atlas-Teile mit Zellen-Tiefe (Lage + Zelle je Teil belegt), Kapazitaet je Cut
-- [ ] Mangel 1: HINTER/DAVOR je Kamera an der exe, Rueckschritt-Suche, Riegel
-- [ ] Mangel 2: roter Ordner 30A0/30A1 C0
-- [ ] Freistellungs-Liste neu, Bau, gezielte Tests, Abschluss-Commit
+- [x] Mangel 1: Tuer-Band der Saaten als Vorgabe
+- [x] Mangel 1: Original-Atlas-Teile mit Zellen-Tiefe (Lage + Zelle je Teil belegt), Kapazitaet je Cut
+- [x] Mangel 1: HINTER/DAVOR je Kamera an der exe, Rueckschritt-Suche, Riegel
+- [x] Mangel 2: roter Ordner 30A0/30A1 C0 (kein Original-Teil -> Freistellungs-Liste, Riegel)
+- [x] Freistellungs-Liste neu, Bau, gezielte Tests, Abschluss-Commit
+
+### NB5 Zusammenfassung je Mangel (Ursache, Messung vorher, Beleg, Aenderung, Messung nachher)
+**Mangel 1 - Entscheid M-E2 nicht umgesetzt: umgesetzt.**
+* Ursache: M-E2 kam nach dem NB4-Abschluss (14:29 gegen 14:26); gebaut war der Stand NB3.
+* Messung vorher: MASKS/Tabellen = NB3 (983 624 gezeichnete Generator-Punkte, "zu fern" 40 276), Tueren saeten auf Band 0.
+* Beleg: Kapazitaet FUN_80039270 @0x8003928c `lbu v0,7(a0)` (Byte-Zahl, Grenze 255); Tuer-Band @0x80042cac..0x80042ccc; OT-Stufen
+  @0x8002565c / ZSF3 341 @0x80066c70 / Masken-OT @0x80039650; Kamera des Spiels FUN_80053ca4 mit SquareRoot0 0x80065f60 (Tabelle @0x8007d984).
+* Aenderung: platzieren_r41.py Regel 5/6/7 (Koerper je Teil aus der Zelle mit RDT-Offset, Oberkante, Tiefe = bucket(Eintritt) mit der Kamera des
+  Spiels, Rechteck-Tiefe = Maximum, 128 Plaetze); Tuer-Band als Vorgabe; Ausschluss + Modell-Tabelle neu; teilen_r41.py nicht.
+* Messung nachher: 267 Teile in 61 Kameras eingesetzt (+101 280 Punkte, Gelaender der Restliste dabei), Lok 6000 C5/C7/C8 +37 Rechtecke je Variante,
+  0 Punkte weg; 0 Punkte mit Eintritt hinter der Tiefe (C-Gegenrechnung); "zu fern" 3 360; Rueckschritt-Suche: neu frei 0, neu verdeckt ohne
+  Zelle davor nur an Treppe 6010 C5 (mit Quadern bis 7000: 0) und 7 Rand-Punkten 6000 C5 (alte Lok-Rechtecke); an der exe HINTER/DAVOR je
+  Kamera (Abschnitt "NB5 an der exe"); 277 Teile ohne Koerper -> Liste "Fuer den Nutzer".
+**Mangel 2 - roter Ordner 30A0/30A1 C0 ohne Maske: kein Teil des Original-Atlas -> Freistellung des Nutzers.**
+* Ursache: der Kuenstler-Ausschnitt (SLD Cut 0) enthaelt den gruenen Ordner, den roten nicht; das Original hat in 30A0/30A1 keine Masken.
+* Messung vorher: 0 von 40 roten Bildpunkten gezeichnet; Beleg: Atlas an (232,-24) 0 von 40 / gruen 91 von 120, pri_offset 0x3C0 -> ff ff ff ff.
+* Aenderung: keine Maske (M-E1/M-E2), Eintrag in der Freistellungs-Liste, Riegel unit_r41_masken36_ordner. Messung nachher: wie vorher (gewollt).
 
 ### NB5 Messung vorher (Stand 2ea86d24 = NB3-Masken)
 * `git diff 1ad2c96e..2ea86d24 -- re15_port/shared_assets re15_port/engine re15_port/include` leer (Abnahme 4): MASKS, Ausschluss-Tabelle,
@@ -1382,6 +1399,21 @@ zellen3d (Gegenprobe 3 statt >= 127, mit der Saaten-Korrektur erwartet) - fuer d
     ohne Bodenkontakt (Roboterarm 50B0 C1, zwei Gelaenderstuecke oben in 3050 C6) bleiben aus; (c) `teilen_r41.py`: Traeger-Mitte 6000 C5
     Spalten 1..30. Ob (a)/(b) fuer die Kameras AUSSERHALB der Restliste kommen sollen (dort waeren es weitere geschlossene Loecher), ist eine
     Entscheidung fuer den Orchestrator/Nutzer (s. "Fuer den Nutzer").
+
+17. **NB5 - Teile ohne Koerper (Entscheid M-E2, nur mit Zellbeleg eingesetzt):** 277 Teile des Original-Atlas (144 225 Punkte, 70 Kameras) haben keine
+    belegbare Tiefe (Gruende je Teil `M_bilder/NB5/teile_nb5.txt`) und bleiben weg -> Liste "Fuer den Nutzer: Freistellungen" (NB5).
+18. **NB5 - Restloch "zu fern" an neuen Teilen:** ROOM6010/6011 C5 neues Teil 8 (Zelle @0x0092C, Rechtecke 113..117: 1 508 Figurpunkte je Variante
+    hinter dem Koerper nicht verdeckt - je Bildspalte eine Tiefe, der Cut ist mit 128 Rechtecken voll) und 3040/3041 C4 Rechteck 118 (1 Punkt).
+    Vorher waren diese Punkte ohne jede Maske sichtbar (kein Rueckschritt).
+19. **NB5 - Kamera der Python-Werkzeuge:** `geom.cut_view` rechnet mit der exakten Wurzel, das Spiel mit SquareRoot0 (FUN_80053ca4 -> 0x80065f60):
+    bis zu einer OT-Stufe Unterschied (gemessen an den neuen Teilen: 3 880 von 98 740 Punkten). platzieren_r41.py nutzt jetzt `ansicht_spiel()`;
+    die Tiefen der NB1..NB3-Werkzeuge (tiefe_zelle, zellen3d, kacheln) sind mit der alten Kamera gerechnet - der Ausschluss (C, Kamera des Spiels)
+    hat sie geprueft, eine Gegenrechnung wie `unit_r41_masken36_teile` gibt es fuer sie nicht.
+20. **NB5 - Hoehe ueber mehrere Baender:** ein Koerper auf Band b reicht mit der Oberkante (z.B. Treppe 6010 C5: 7 427) ueber Band b+1; das 3D-Urteil
+    koennte dort eine Figur auf Band b+1 ueber dem Grundriss als "dahinter" werten. Die Rueckschritt-Suche (alle 61 Cuts, Leon + Elza) fand
+    keinen solchen Fall (6010 C5 mit Quadern bis 7000: 0), an der exe s. Szenen.
+21. **NB5 - Kameras ohne HINTER- bzw. DAVOR-Stelle:** 37 Faelle (Liste im Abschnitt "NB5 an der exe"): an keinem erreichbaren Stehplatz verdeckt ein
+    neues Teil die Figur bzw. ueberlappt sie (dieselbe Erreichbarkeit wie der Ausschluss) - dort ist an der exe nichts zu messen.
 
 ## Fuer den Nutzer
 
