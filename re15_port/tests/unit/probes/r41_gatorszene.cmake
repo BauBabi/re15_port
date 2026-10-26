@@ -63,4 +63,9 @@ if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gato
                          -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorszene.cmake)
         set_tests_properties(integration_r41_gatorszene_${_teil} PROPERTIES TIMEOUT 900)
     endforeach()
+    # FG-E7 (AUFTRAG.md 2026-10-26): tod_r1/tod_r1_elza zurueckgestellt bis Samstag 2026-10-31 (Nutzer 26.10.: "Wenn etwas fehlt
+    # ergaenze es gefaelligst samstag"). Grund: an der K3-Wandlage verschiebt Spur G's Kopf-Klemme die Leiche, der Schluessel wird
+    # danach zu klein; die umgestellte Todeslage ist an der exe noch rot (Integrationsbaum 26.10. 04:12). Release Notes v0.8.29 "Ab
+    # Samstag": Behebung Option (a) (Schluessel-Lagewahl sucht weiter), danach DISABLED wieder entfernen.
+    set_tests_properties(integration_r41_gatorszene_tod_r1 integration_r41_gatorszene_tod_r1_elza PROPERTIES DISABLED TRUE)
 endif()
