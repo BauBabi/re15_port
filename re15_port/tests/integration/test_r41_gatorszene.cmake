@@ -58,6 +58,28 @@
 #   flucht/flucht_elza: die Spielfigur rennt ab dem Kampfbeginn nach NORDEN durch den Westkanal (der Gator kommt jetzt von Osten aus
 #   dem Suedbecken): RE15_INPUT_SCRIPT=W10,L0.6,UX5 (Linksdrehung F301-F318 auf Gier -1728, Rennen ab F319; gemessen F41n5 N_LW_test);
 #   Abstand im Band, kein Kontakt/Angriff vor dem RE2-Wert, Spielfigur >= 5000 nach Norden in den RE2-Bildern.
+# FG-E7 (AUFTRAG.md 2026-10-26 01:19): Todeslage ohne Kopf-Klemme; die K3-Wandlage (4430,-26160) ist OFFEN (Release Notes 'Ab Samstag', Behebung Option (a))
+#   Befund der Integration F+G+M (tests:FGM): in den Rezepten K3/KW stirbt der Alligator SOFORT an der GB_TEST=5-Marke (4997,-20318)
+#   (Gier 1089 = Blick nach Sueden; der Kanister-Testhaken (4430,-26160) liegt 840 vor der Suedwand im Aufnahme-Fenster). Der
+#   R1-Todes-Clip traegt ihn ~4950 vorwaerts, der Kopf ragt ueber die Suedwand z -27000, Spur G's Kopf-Klemme (enemy_ai_boss_gator.c
+#   Haken (2b), gator_re2_r41.c re15_gr2_kopf_klemme) schiebt den Anker (gator_boss.log "KOPF-KLEMME an F62" bzw. "F176", groesster
+#   Ueberstand 67): Leiche (3413,-23942) statt (3413,-25001), Schluessel-Lage Kamera 1 Tiefe 5918 = Quadrat 6,3 < 10,4 Bildpunkte
+#   (tod_r1) bzw. K = E = 1 (tod_explosion).
+#   Neue Todeslagen (an der exe gemessen, Integrationsbaum e10a32c1; gator_boss.log ohne jede KOPF-KLEMME-Zeile; Leon und Elza
+#   bitgleich): Kanister-Testhaken und GB_TEST=5 bleiben, geschossen wird erst NACH dem Aggro der Marke (enemy_ai_boss_gator.c
+#   GBP_LURK mit GB_TEST=5: `if (++s_t5 >= 900) g->aggro = 1`) - dann dreht der Alligator auf die Spielfigur und schwimmt los:
+#   - tod_r1/_elza (K3-Start (-1000,-25550) Blick Ost, U1.2 ueber den RVD-Streifen 0 -> 1 @0x00234): Gier 1435 auf Leon, Schuss
+#     F931 -> R1 bei (5073,-20271) "Sperre ohne Schnitt" in Cut 1 (natuerliche Kamera), Leiche (1320,-23508), Schluessel-Lage
+#     Kamera 0 (laufende 1) Tiefe 2304 = Quadrat 16,2 Bildpunkte, Einstellung Cut 0 F969-F1061, zurueck Cut 1 (ebenso gemessen mit
+#     Schuss F916 und F955; ab F960 beisst der Alligator).
+#   - tod_explosion/_elza (Spieler im RVD-Streifen 0 -> 7 @0x00248 bei (-7000,-19000) Blick Nord = laufender Cut 7): Gier ~2005 nach
+#     Westen durch den Suedkanal, Schuss F1156 -> R1 bei (352,-22265), Explosions-Cut E 0, Leiche (-4582,-21497), Schluessel-Schnitt
+#     F1192 statt B's Rueckschnitt auf den Ausgangs-Cut X 7, Schluessel-Kamera K 1 Tiefe 2443 = Quadrat 15,3 Bildpunkte, Einstellung
+#     F1192-F1284 (E/K/X verschieden gemessen fuer Schuss F1111..F1186; F1066: K = E = 0, F1201: K = X = 7). Am Leiter-Cut 0 (Rezept
+#     KW) lag jede gemessene Lage ohne Kopf-Klemme im Suedkanal mit K = X = 0 (Schuss F1045..F1180).
+#   Vorbedingung im Riegel (r41f_fge7_ohne_klemme): keine KOPF-KLEMME-Zeile zwischen "R1 start" und "R1 ende (Leiche)", keine beim
+#   R1-Start offene Klemme; tod_r1 zusaetzlich R1 ohne Explosionsschnitt. Schwellen unveraendert (Quadrat >= 10,4 Bildpunkte,
+#   E/K/X paarweise verschieden).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=leon|elza|flucht|flucht_elza -P test_r41_gatorszene.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -232,6 +254,55 @@ function(r41f_folge_c dir out_c)
     string(REGEX MATCH "Folge C ROOM[0-9A-F]+ F([0-9]+) " _m "${_l}")
     set(${out_c} ${CMAKE_MATCH_1} PARENT_SCOPE)
 endfunction()
+# FG-E7 (AUFTRAG.md 2026-10-26 01:19): Vorbedingung der Todeslage in gator_boss.log (re15_gr2_log): zwischen "R1 start" und "R1 ende
+# (Leiche)" keine Zeile der Kopf-Klemme ("KOPF-KLEMME an/aus F..", gator_re2_r41.c re15_gr2_kopf_klemme), beim R1-Start keine offene
+# Klemme, genau ein R1. ohne_schnitt = 1: R1 mit der natuerlichen Kamera ("KAMERA R1 Sperre ohne Schnitt", kein "KAMERA R1 EXPLOSION").
+function(r41f_fge7_ohne_klemme dir teil ohne_schnitt)
+    if(NOT EXISTS "${dir}/gator_boss.log")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${teil} - kein gator_boss.log (FG-E7-Vorbedingung), ${dir}")
+    endif()
+    file(STRINGS "${dir}/gator_boss.log" _kk
+         REGEX "R1 start pos=|R1 ende \\(Leiche\\)|KOPF-KLEMME (an|aus) F|KAMERA R1 (EXPLOSION|Sperre ohne Schnitt)")
+    set(_offen 0)
+    set(_offen_z "")
+    set(_im_r1 0)
+    set(_n_r1 0)
+    set(_sperre 0)
+    set(_expl 0)
+    foreach(_l IN LISTS _kk)
+        if(_l MATCHES "R1 start pos=")
+            if(_offen)
+                message(FATAL_ERROR "r41_gatorszene: Lauf ${teil} - FG-E7-Vorbedingung verletzt: Kopf-Klemme beim R1-Start offen "
+                                    "('${_offen_z}'), ${dir}")
+            endif()
+            set(_im_r1 1)
+            math(EXPR _n_r1 "${_n_r1} + 1")
+        elseif(_l MATCHES "R1 ende \\(Leiche\\)")
+            set(_im_r1 0)
+        elseif(_l MATCHES "KOPF-KLEMME (an|aus) F")
+            if(_im_r1)
+                message(FATAL_ERROR "r41_gatorszene: Lauf ${teil} - FG-E7-Vorbedingung verletzt: Kopf-Klemme im R1 ('${_l}'), ${dir}")
+            endif()
+            if(_l MATCHES "KOPF-KLEMME an F")
+                set(_offen 1)
+                set(_offen_z "${_l}")
+            else()
+                set(_offen 0)
+            endif()
+        elseif(_l MATCHES "KAMERA R1 Sperre ohne Schnitt")
+            set(_sperre 1)
+        elseif(_l MATCHES "KAMERA R1 EXPLOSION")
+            set(_expl 1)
+        endif()
+    endforeach()
+    if(NOT _n_r1 EQUAL 1)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${teil} - ${_n_r1} R1-Starts in gator_boss.log (erwartet 1), ${dir}")
+    endif()
+    if(ohne_schnitt AND (NOT _sperre OR _expl))
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${teil} - R1 nicht mit der natuerlichen Kamera (Sperre ohne Schnitt ${_sperre}, "
+                            "Explosionsschnitt ${_expl}), ${dir}")
+    endif()
+endfunction()
 
 
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
@@ -258,8 +329,13 @@ if(TEIL MATCHES "^tod_explosion")
         file(REMOVE "${_exe_kopie}")
         message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - RE15_TOOL (test_r41_gatorszene) fehlt: '${RE15_TOOL}'")
     endif()
+    # FG-E7 (AUFTRAG.md 2026-10-26 01:19): Todeslage ohne Kopf-Klemme; die K3-Wandlage (4430,-26160) ist OFFEN (Release Notes 'Ab Samstag', Behebung Option (a))
+    # Rezept (Kopf des Skripts, Abschnitt FG-E7): Spieler im RVD-Streifen 0 -> 7 (@0x00248) bei (-7000,-19000) Blick Nord = laufender
+    # Cut 7 statt Leiter-Cut 0 (dort lag jede Lage ohne Kopf-Klemme im Suedkanal mit K = X = 0); erster Schuss nach dem Aggro der
+    # GB_TEST=5-Marke: W38.2 = 1146 Bilder warten, Zielen F1147-F1155, Feuer F1156 -> R1 F1156, Rueckschnitt-Ersatz F1192, Ende F1284.
+    # Vorher (Rezept KW/KWE der Abnahme 2): Leiter-Spawn, W5, R1 F160 an der Marke, EXIT_AT 330, Bilder 150-330.
     # 12 Schuesse ausgeschrieben (input_pc.c script_parse_once kennt keine Wiederholung, Abnahme F 2 H1)
-    set(_schuss "W5")
+    set(_schuss "W38.2")
     foreach(_i RANGE 1 12)
         string(APPEND _schuss ",M0.3,MA0.1")
     endforeach()
@@ -269,9 +345,10 @@ if(TEIL MATCHES "^tod_explosion")
         RE15_SET_FLAG=9:110
         RE15_DEBUG_JUMP=${_r2090}@250
         RE15_STATE_LOG=state.log
+        "RE15_PLAYER_POS=-7000,-19000,3072,0"
         RE15_R39_MESS_SPIELER_HP=100 RE15_GB_TEST=5 "RE15_GATOR_KANISTER=4430,-26160" "RE15_GIVE=3:15,21:50" RE15_EQUIP=3
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schuss}"
-        "RE15_EXIT_AT=330#${_r2090}" "RE15_FRAMEDUMP=150-330/1:fd_"
+        "RE15_EXIT_AT=1330#${_r2090}" "RE15_FRAMEDUMP=1146-1330/1:fd_"
         "${_exe_kopie}")
     file(REMOVE "${_exe_kopie}")
     if(NOT _rv EQUAL 0)
@@ -306,6 +383,7 @@ if(TEIL MATCHES "^tod_explosion")
     if(_ecut LESS 0 OR _p LESS 0 OR NOT _tot)
         message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - kein R1 mit Explosionsschnitt bis zur Leiche (Cut ${_ecut} F${_p}, Leiche ${_tot}), ${_dir}")
     endif()
+    r41f_fge7_ohne_klemme("${_dir}" "${TEIL}" 0)   # FG-E7: Todeslage ohne Kopf-Klemme (Vorbedingung, s. Kopf)
     file(STRINGS "${_dir}/debug.log" _rs REGEX "\\[gatorszene\\] Schluessel-Schnitt statt R1-Rueckschnitt: ")
     file(STRINGS "${_dir}/debug.log" _e REGEX "\\[gatorszene\\] Schluessel-Einstellung: Cut [0-9]+ ")
     file(STRINGS "${_dir}/debug.log" _o REGEX "\\[gatorszene\\] Schluessel-Einstellung Ende: Cut [0-9]+ ")
@@ -416,11 +494,18 @@ if(TEIL MATCHES "^tod")
         message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - RE15_TOOL (test_r41_gatorszene) fehlt: '${RE15_TOOL}'")
     endif()
     if(TEIL MATCHES "^tod_r1")
-        # Rezept K3 (Abnahme F 1, natuerliche Kamera): R1 ende F84, Einstellung F84-F176 (gemessen Nachbesserung F 2, Laeufe
-        # K4m/KEm).
+        # FG-E7 (AUFTRAG.md 2026-10-26 01:19): Todeslage ohne Kopf-Klemme; die K3-Wandlage (4430,-26160) ist OFFEN (Release Notes 'Ab Samstag', Behebung Option (a))
+        # Rezept K3 (Abnahme F 1, natuerliche Kamera) mit dem ersten Schuss NACH dem Aggro der GB_TEST=5-Marke (Kopf des Skripts,
+        # Abschnitt FG-E7): U1.2 (F1-F36, RVD-Streifen 0 -> 1), W29.5 = 885 Bilder warten, Zielen F922-F930, Feuer F931 -> R1 F931
+        # "Sperre ohne Schnitt" in Cut 1, Einstellung Cut 0 F969-F1061, zurueck Cut 1. Vorher: "U1.2,(M0.3,MA0.1)x12" (Feuer F46 an
+        # der Marke; "x12" = 12 s Kreuz), R1 ende F84, Einstellung F84-F176 (Nachbesserung F 2, Laeufe K4m/KEm), EXIT_AT 300.
+        set(_schuss_r1 "U1.2,W29.5")
+        foreach(_i RANGE 1 12)
+            string(APPEND _schuss_r1 ",M0.3,MA0.1")
+        endforeach()
         set(_lauf RE15_GB_TEST=5 "RE15_PLAYER_POS=-1000,-25550,0,0" "RE15_GATOR_KANISTER=4430,-26160" "RE15_GIVE=3:15,21:50"
-                  RE15_EQUIP=3 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=U1.2,(M0.3,MA0.1)x12"
-                  "RE15_EXIT_AT=300#${_r2090}" "RE15_FRAMEDUMP=60-300/2:fd_")
+                  RE15_EQUIP=3 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schuss_r1}"
+                  "RE15_EXIT_AT=1200#${_r2090}" "RE15_FRAMEDUMP=940-1100/2:fd_")
     else()
         # GB_TEST=3: Tod nach 300 Boss-Bildern + Todesrolle Clip 7 (165 Bilder) -> Leiche (Zustand 7) und Schluessel F469,
         # Einstellung F469-F561 (gemessen Nachbesserung F 2, Laeufe T2m/TEm).
@@ -447,6 +532,11 @@ if(TEIL MATCHES "^tod")
         endif()
     endforeach()
     file(REMOVE "${_exe_kopie}")
+    if(TEIL MATCHES "^tod_r1")   # FG-E7: Todeslage ohne Kopf-Klemme, R1 mit der natuerlichen Kamera (Vorbedingung, s. Kopf)
+        foreach(_v mit ohne)
+            r41f_fge7_ohne_klemme("${_dir}/${_v}" "${TEIL}/${_v}" 1)
+        endforeach()
+    endif()
     file(STRINGS "${_dir}/mit/debug.log" _lage REGEX "\\[gatorszene\\] Schluessel-Lage: Kamera [0-9]+ ")
     if(NOT _lage)
         message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - keine Zeile 'Schluessel-Lage' (Alligator nicht tot?), ${_dir}/mit")

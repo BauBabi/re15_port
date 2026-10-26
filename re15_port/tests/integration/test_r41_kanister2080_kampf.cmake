@@ -38,10 +38,16 @@
 #   M3 Kopf-Klemme: in jedem Lauf liegt der Kanister beim R1 (debug.log "Kanister Stufe 13 pos=") innerhalb der Aussenwaende
 #      x[-8900..7200] z[-27000..-5400] und der Spritzring (Kern-Bank 3, re2fx_pc) wird in den R1-Bildern gezeichnet (vorher im
 #      natuerlichen Leon-Verlauf 0 Quads: Kanister bei z -29290 jenseits der Suedwand, FUN_8002c820 @0x80077a30 verwarf alle sechs).
-#   Laufdauer: mit der Kopf-Klemme kommt der Alligator an Leon/Elza an der Wand nicht mehr mit dem Kopf durch die Wand heran; der
-#   passive Schuetze zielt dann laenger auf die Spinnen (0x25, in diesem Zweig noch in 2090 - Spur F entfernt sie) - gemessen R1
+#   Laufdauer (Messung im Zweig der Spur G, VOR der Integration mit F): mit der Kopf-Klemme kommt der Alligator an Leon/Elza an der
+#   Wand nicht mehr mit dem Kopf durch die Wand heran; der passive Schuetze zielte dort laenger auf die Spinnen (0x25) - gemessen R1
 #   nach der Rueckkehr: kampf_elza F3766, west_elza F3274 (EXIT_AT 3000 reichte nicht mehr), kampf_leon F814, nordost_leon F1383
-#   (vorher), plattform_leon F1204. Daher EXIT_AT 5000 Bilder nach der Rueckkehr.
+#   (vorher), plattform_leon F1204. Daher wurde EXIT_AT 5000 Bilder nach der Rueckkehr gesetzt.
+#   BERICHTIGT (FG-E7, Integration F+G+M, AUFTRAG.md 2026-10-26 01:19): diese Begruendung ist veraltet - Spur F verwirft die Spinnen
+#   0x25 in 2090/2091 (debug.log "[gatorszene] ROOM2090: Spinne 0x25 bei ... verworfen", Riegel unit_r41_gatorszene_spinnen), die
+#   Zielhilfe hat dort nur noch den Alligator. Gemessen im Integrationsbaum (tests:FGM, Lauf lauf_0530df92): schon der erste
+#   Schussblock nach der Rueckkehr trifft (mit RE15_INPUT_SCRIPT_BASIS=spiel beginnt das Skript je Raum neu: W6.0 + M0.6 -> Feuer
+#   F199), R1 mit Explosionsschnitt F199 in allen fuenf Laeufen. Das gilt ebenso fuer die Spinnen-Begruendung der 60 Schussbloecke
+#   (Nachbesserung 3). EXIT_AT 5000 und die 60 Bloecke bleiben unveraendert (Reserve, kein Spielverhalten).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_kanister2080_kampf.cmake
 # =============================================================================
