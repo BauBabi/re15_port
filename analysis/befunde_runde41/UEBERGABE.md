@@ -7,6 +7,8 @@ Zeiten IMMER aus der Uhr (date) oder der Commit-Zeit, nie schätzen.
 
 ## ✅ Fortschritt (neueste zuerst)
 
+* 2026-10-26 02:33: Integration F+G+M (wf_c43ce68b-6d7) fertig: Merges sauber, 0 verlorene Hunks (F 78/78, G 77/77, M 100/100 + Binaerdateien), 1003 unit/prop/probe gruen; ROT nur 4 F-Riegel (Querbezug F x G: Kopf-Klemme G-E5 verschiebt die Leiche, Schluessel 3x3 statt 13x15 in der K3-Wandlage) -> Entscheid FG-E7 (ab46f4d1): Riegel auf Todeslage ohne Kopf-Klemme, Wandlage OFFEN (Samstag: F-Lagewahl Option a). Umsetzung = wf_6b22fb51-d1a im Integrationsbaum (nach Merge master e10a32c1). Nicht blockierend fuer Samstag: kein Riegel prueft die F->G-Uebergabe ueber Fs echte Szene (von Hand an der exe gemessen, haelt fuer Leon + Elza). Release-Notes-Entwurf ergaenzt (888 Zeilen; Elza-Uebersichtsbilder 91aa781d nachgezogen).
+
 * 2026-10-25 22:13: Integration F+G+M: Merge fertig (F aa8bac53, G 93f64b0a, M 74c9d1d9; Bau ohne neue Warnung, Unit F/G/M 60/60), tests:FGM laeuft. Paket-Gate fuer die neuen RE2-Dateien + alle MASKS (master 76b50a0c). pri-Uebersichtsbilder ersetzt (Nachtrag 33, master 1e0d0618: 113 geaendert, 1 neu, nur *_port.png). Release-Notes-Ergaenzung F/G/M + "Ab Samstag" = wf_832f5f55-e87.
 
 * 2026-10-25 21:43: M Abnahme 5 nicht bestanden, aber alle 3 Maengel NICHT blockierend (Restloch 6010/6011 C5 Teil 8, veralteter Teile-Bericht teile_nb5.txt, HINTER-Beleg 4040 C12 mass das Tor) -> M NB6 sofort gestoppt (Task wbqdkh8lq), M wird mit dem NB5-Stand 284b0202 integriert ("gut genug", Liste fuer Samstag). **Integration F+G+M = wf_c43ce68b-6d7** (Task wksxxf9b4, args spuren F/G/M, kette_ac false, label FGM). Danach: pri-Uebersichtsbilder ersetzen (Nachtrag 33), Paket-Gate, volle Suite, Release-Notes, Release.
