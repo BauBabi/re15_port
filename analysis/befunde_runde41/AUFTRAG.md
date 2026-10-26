@@ -1075,3 +1075,13 @@ Frage: "M hat fuer die 61 geaenderten Kamerabilder neue Uebersichtsbilder mit de
 damit du am Samstag nach dem aktuellen Stand zeichnest?" — **"Ja, ersetzen (Empfohlen)"**: nur die *_port.png-Uebersichtsbilder
 dieser Kameras; Freistellungen und alles andere in pri/ bleiben unberuehrt. Ausfuehrung durch den Orchestrator NACH der
 Integration von M (endgueltiger Maskenstand), wie 919cc1ed.
+
+## 2026-10-26 01:19 — Orchestrator-Entscheid FG-E7 (Integration F+G+M: Querbezug Schluessel nach dem R1-Tod; der Nutzer kann widersprechen)
+
+Befund tests:FGM (wf_c43ce68b-6d7): vier F-Riegel rot (integration_r41_gatorszene_tod_r1/_elza, _tod_explosion/_elza). G's Kopf-Klemme
+(G-E5) verschiebt im R1-Todes-Clip den Anker: Leiche endet bei (3413,-23942) statt (3413,-25001); F's Schluessel-Lagewahl findet fuer
+Kamera 2 keinen Punkt mehr und nimmt Kamera 1 (Schluessel 3 x 3 statt 13 x 15 Bildpunkte). Rezept K3/KW (Kanister-Testhaken
+(4430,-26160), 840 vor der Suedwand). Im natuerlichen Ablauf (G-Kampfriegel, 5 Laeufe) haelt das Mass (10,6..16,3 px >= 10,4).
+**FG-E7 = Option (c) fuer v0.8.29 (Nachtrag 32b "gut genug", kein Blocker):** die vier Riegel bekommen eine Todeslage OHNE Kopf-Klemme
+(Lage aus G's natuerlichen Kampflaeufen, mit Beleg), die K3-Wandlage wird als OFFEN in die Release Notes ("Ab Samstag") geschrieben.
+Ab Samstag die eigentliche Behebung = Option (a): F's Schluessel-Lagewahl sucht weiter, wenn die beste Zonenkamera < 10,4 px liefert.

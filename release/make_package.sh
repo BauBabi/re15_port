@@ -283,6 +283,28 @@ check_tree() {           # $1 = fertiger Paketordner
         [[ -s "$out/shared_assets/RE2/$rs" ]] || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$rs (Runde-39-Toene waeren stumm)"
         cmp -s "$RE2/$rs" "$out/shared_assets/RE2/$rs" || die "RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/$rs"
     done
+    # Seit Runde 41: neue RE2-Dateien der Spuren C (Technikernotiz FILE31-Seiten, Alarm SOUND/SUB_25.BGM, Ventil-
+    # Animation VENTIL1080.*), B (GATOR40A0.VBS, Kanister KANISTER40A0.*), F (RE2-Kampfmusik SOUND/MAIN1A.BGM) und
+    # G (Raum-ESP GATOR40A0.ESP + Texturen, KANISTER2080.VBS). Fehlen sie, bleiben Notiz, Alarm, Ventile, Alligator-
+    # Kampf und Kanister-Explosion still stumm oder unsichtbar - Gate statt Stille, bytegleich wie TORSE.VBS.
+    for rs in FILES/FILE31_p00_page.TIM FILES/FILE31_p01_page.TIM FILES/FILE31_p02_page.TIM FILES/FILE31_title_page.TIM \
+              FILES/FILE31_title_paper.TIM SOUND/SUB_25.BGM VENTIL1080.EDT VENTIL1080.RBJ VENTIL1080.VB VENTIL1080.VH \
+              GATOR40A0.VBS KANISTER40A0.MD1 KANISTER40A0.TIM SOUND/MAIN1A.BGM \
+              GATOR40A0.ESP GATOR40A0_08.TIM GATOR40A0_09.TIM GATOR40A0_16.TIM GATOR40A0_18.TIM GATOR40A0_19.TIM \
+              GATOR40A0_1A.TIM GATOR40A0_26.TIM KANISTER2080.VBS; do
+        [[ -s "$out/shared_assets/RE2/$rs" ]] || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$rs (Runde-41-Szene waere stumm/unsichtbar)"
+        cmp -s "$RE2/$rs" "$out/shared_assets/RE2/$rs" || die "RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/$rs"
+    done
+    # Seit Runde 40/41 (Masken STAGE1-6, Spur M): jede Datei unter shared_assets/PSX/MASKS des Quellbaums muss im Paket
+    # liegen, darf nicht leer sein und muss bytegleich sein (wie die Tuerarchive unten) - sonst fehlen Masken still.
+    local n_msk=0 mf
+    for mf in "$ASSETS"/MASKS/*; do
+        [[ -e "$mf" ]] || die "Quellbaum ohne shared_assets/PSX/MASKS/* (Kameramasken fehlen)"
+        [[ -s "$out/shared_assets/PSX/MASKS/$(basename "$mf")" ]] || die "Maske fehlt/leer im Paket: shared_assets/PSX/MASKS/$(basename "$mf")"
+        cmp -s "$mf" "$out/shared_assets/PSX/MASKS/$(basename "$mf")" || die "Maske im Paket weicht vom Quellbaum ab: shared_assets/PSX/MASKS/$(basename "$mf")"
+        n_msk=$((n_msk + 1))
+    done
+    echo "  check_tree: $n_msk Masken-Dateien bytegleich"
     # Seit Runde 36 (Spur O, PRI): die Masken-Erzeugnisse der Nutzer-PRIs fuer ROOM10F0 Cut 2 (Absperrung) und ROOM1100
     # (Wandfuss) liegen im kopierten PSX-Baum (shared_assets/PSX/MASKS); fehlen sie, verdeckt die Absperrung Marvin nicht.
     for rs in MASKS/ROOM10F0.MSK MASKS/ROOM10F0_PRI02.TIM MASKS/ROOM1100.MSK MASKS/ROOM1100_PRI01.TIM MASKS/ROOM1100_PRI02.TIM; do
