@@ -9,6 +9,7 @@
 #include "re15_sicherung.h"   /* re15_sicherung_icon_einsetzen (Runde 30, Thema H) */
 #include "re15_schluessel_r36.h" /* re15_schluessel_r36_icon_einsetzen (Runde 36 Spur Q) */
 #include "re15_dining_r38.h"     /* re15_dining_r38_icon_einsetzen (Runde 38 Spur F) */
+#include "re15_gatorszene_r41.h" /* re15_gatorszene_r41_icon_einsetzen (Runde 41 Spur F) */
 #include <stddef.h>
 
 /* Platform asset reader (re15_asset_read_file lives in the PC/PSX backend; test_support stubs it). */
@@ -83,6 +84,7 @@ int re15_itemall_load(void)
     re15_sicherung_icon_einsetzen(pix, sz);
     re15_schluessel_r36_icon_einsetzen(pix, sz);   /* Runde 36 Spur Q: Tiles 0x42/0x45 */
     re15_dining_r38_icon_einsetzen(pix, sz);       /* Runde 38 Spur F: Tile 0x43 */
+    re15_gatorszene_r41_icon_einsetzen(pix, sz);   /* Runde 41 Spur F: Tile 0x34 (Water Key) */
     s_pix = pix;
     s_loaded = 1;
     return 0;

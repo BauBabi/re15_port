@@ -125,6 +125,7 @@ static inline int RNDI(float f) {
 extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c */
 #include "re2_ems.h"          /* WELLE A: RE2-Flavor-Asset-Loader (CDEMD0.EMS-TOC, PC-only) */
 #include "re15_gator_re2_r41.h" /* Runde 41 Spur B: RE2-Schuetteln (Hintergrund-Versatz) + Kanister-Zeichner */
+#include "re15_gatorszene_r41.h" /* Runde 41 Spur F: Water Key (Prop-Lader, Icon, Bild) + 2090-Ankunftsszene */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
 #include "re15_bissarm_r37.h"  /* Runde 37 Spur J: Handkontakt im Griff */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
@@ -1617,6 +1618,12 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         int msz = 0, tsz = 0; const uint8_t *mb = re15_ventilkette_r41_md1_bytes_k(vk, &msz); const uint8_t *tb = re15_ventilkette_r41_tim_bytes_k(vk, &tsz); re15_tim_t tt;
         if (v_oid >= 0 && nprops <= v_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[v_oid]) == 0) ok[v_oid] = 1;
         if (v_oid >= 0 && nprops <= v_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(v_oid)); }
+    {   /* Runde 41 Spur F: Water Key ROOM2090/2091 — eingebackenes RE2-MD1+TIM (gen/gatorszene_r41_schluessel.inc), Muster oben. */
+        const int w_oid = re15_gatorszene_r41_obj_id((uint16_t)g_current_room_id);
+        int msz = 0, tsz = 0; const uint8_t *mb = re15_gatorszene_r41_md1_bytes((uint16_t)g_current_room_id, &msz);
+        const uint8_t *tb = re15_gatorszene_r41_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
+        if (w_oid >= 0 && nprops <= w_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[w_oid]) == 0) ok[w_oid] = 1;
+        if (w_oid >= 0 && nprops <= w_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(w_oid)); }
 }
 
 /* ── FE-4 memory-card save/load ────────────────────────────────────────────── */
@@ -4035,6 +4042,8 @@ re_title:;
     { extern void re15_pc_dining_r38_init(void); re15_pc_dining_r38_init(); }     /* Runde 38 Spur F: Port-Banken 0x3B/0x3C/0x3D */
     { extern void re15_pc_toene_r39_init(void); re15_pc_toene_r39_init(); }   /* Runde 39 Spur B: TOENE39.VBS-Haken (Schublade 11F0, Gitter/Schrank 1190) */
     { extern void re15_pc_gator_re2_init(void); re15_pc_gator_re2_init(); }   /* Runde 41 Spur B: GATOR40A0.VBS-Haken + Kanister-Modell */
+    { extern void re15_pc_gatorszene_r41_init(void); re15_pc_gatorszene_r41_init(); }   /* Runde 41 Spur F: Gator-SE + Metalltuer der 2090-Ankunftsszene (gatorszene_r41_pc.c) */
+    { extern void re15_pc_kanister2080_init(void); re15_pc_kanister2080_init(); }   /* Runde 41 Spur G: Knall (gen/knall_bank.inc Satz 0), Tuer-Ton DOOR06, Aufschlag, NPC-Schuss */
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -4553,6 +4562,7 @@ re_title:;
         if (ipix) re15_sicherung_icon_einsetzen(ipix, isz);
         if (ipix) re15_schluessel_r36_icon_einsetzen(ipix, isz);   /* Runde 36 Spur Q: Tiles 0x42/0x45 */
         if (ipix) re15_dining_r38_icon_einsetzen(ipix, isz);       /* Runde 38 Spur F: Tile 0x43 */
+        if (ipix) re15_gatorszene_r41_icon_einsetzen(ipix, isz);   /* Runde 41 Spur F: Tile 0x34 (Water Key) */
         if (ipix) re15_itemall_set_pix(ipix, isz);   /* buffer intentionally kept for the program's life */
     }
     /* Item-get modal per-item PICTURE sheet (ITEM/ITPS.ITP, U11) — same cwd-independent root as the
@@ -4564,6 +4574,7 @@ re_title:;
         if (ipic) re15_sicherung_bild_einsetzen(ipic, psz);
         if (ipic) re15_schluessel_r36_bild_einsetzen(ipic, psz);   /* Runde 36 Spur Q: Bloecke 0x42/0x45 */
         if (ipic) re15_dining_r38_bild_einsetzen(ipic, psz);       /* Runde 38 Spur F: Block 0x43 */
+        if (ipic) re15_gatorszene_r41_bild_einsetzen(ipic, psz);   /* Runde 41 Spur F: Block 0x34 (Water Key) */
         if (ipic) re15_itps_set_data(ipic, psz);     /* kept for the program's life */
     }
     /* PRUEFZEILE der beiden Ladestellen oben (Runde 30, Nachbesserung): gelesen wird ueber
@@ -11158,6 +11169,7 @@ re_title:;
             }
 
             re15_gr2_pc_zeichnen(&cam_view, cx, cy);   /* Runde 41 Spur B: Kanister-Prop (ROOM40A0 Modell 1) */
+            { extern void re15_k2080_pc_zeichnen(const void *, int, int); re15_k2080_pc_zeichnen(&cam_view, cx, cy); }   /* Runde 41 Spur G: Kanister in 2080 */
 
             /* Cut/player HUD + projection marker silenced. */
             (void)active_cut_count;
@@ -11185,6 +11197,8 @@ re_title:;
             re2fx_pc_draw();
             re15_pc_glas1120_draw(&cam_view, cx, cy, pc_fx_camf(),           /* Runde 35 Spur M */
                                   cam_has_region, cam_region_xs, cam_region_zs);
+            { extern void re15_pc_gator_fx_draw(const re15_camera_view_t *, int, int, int, int, const int16_t *, const int16_t *);
+              re15_pc_gator_fx_draw(&cam_view, cx, cy, pc_fx_camf(), cam_has_region, cam_region_xs, cam_region_zs); }   /* Runde 41 Spur G (Nachtrag 28): Raum-ESP ROOM40A0 + Kern-Zeilen 485..498 */
             re2fx_pc_set_ansicht(NULL, 0, 0, 0, 0, NULL, NULL);
             /* Runde 34 Nacht B: der Hebetisch-Cursor ueber dem Cut-4-Bild (eigene Abbildung ueber
              * Cut 10 von ROOM11F0, platform/pc/src/hebetisch_cursor_pc.c). */

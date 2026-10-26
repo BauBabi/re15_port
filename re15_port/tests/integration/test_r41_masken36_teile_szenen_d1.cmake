@@ -1,0 +1,27 @@
+# Runde 41 Spur M, Nachbesserung 5 (Abnahme 4 Mangel 1 = Entscheid M-E2): Szenen fuer test_r41_masken36_stage2.cmake (SZENEN=diese Datei) an den
+# eingesetzten Teilen des Original-Vordergrundatlas (tools/maske/platzieren_r41.py, Tabelle tests/unit/gen_r41_masken36_platziert.inc), Gruppe d1.
+# Stellen = test_r37_masken36 neustellen <raum> <cut> <erstes> (dieselben erreichbaren Stehplaetze, dasselbe Figurraster und dieselbe
+# Engine-Tabelle wie der Ausschluss): Fenster = Kasten der Figurpunkte, die NUR neue Rechtecke verdecken (M) bzw. der Figurpunkte auf neuen
+# Rechtecken, von denen keiner verdeckt ist (V), je +3. "erwartet" = Zahl dieser Figurpunkte im Kasten-Modell (Hoehe 3000, +-350).
+#   M = Figur HINTER dem Teil: die neue Maske verdeckt sie (H > 0) - vorher (Stand NB3) gab es dort keine Maske.
+#   L = Figur VOR dem Teil (ueberlappt es im Bild): 0 Punkte der SPIELFIGUR uebermalt (Lauf D ohne Masken mit der Figur an A0 =
+#       test_r37_masken36 aussen: erreichbarer Platz ausserhalb des Regionsvierecks; Gegner/3D-Objekte zaehlen nicht). V = dasselbe fuer
+#       alle Figuren, wo es keinen Platz ausserhalb gibt (50B0 C2/C3). SMIN = Haelfte der erwarteten Punkte, wenn diese < 100 (L/V);
+#       M: SMIN=0 (H > 0 setzt Punkte der Figur im Fenster voraus).
+#   E = Elza (Raumvariante xxx1, Masken bytegleich). Kameras ohne Zeile: es gibt keine erreichbare Stelle (Dossier NB5).
+#   name raum cut x z band art x0 y0 x1 y1 [E]
+set(R41M_SZENEN
+    "t6000_05 6000 5 16933 -8484 2 M 147 118 157 133 SMIN=0"   # erwartet 57
+    "w6000_05 6000 5 13133 -9884 2 L 200 114 228 172 A0=5833,-22584"   # erwartet 586
+    "w6000_09 6000 9 6833 -20584 2 L 160 92 186 113 A0=7333,2816 SMIN=38"   # erwartet 77
+    "t6010_05 6010 5 -13512 -9520 0 M 127 117 142 143 SMIN=0"   # erwartet 85
+    # t6010_12 (-26312,-7120) Band 0 M: an der exe H = 0 von 24 (gemessen NB5) - Randfall: das Kasten-Modell sagt 31 Punkte knapp hinter dem
+    # Koerper voraus, die Engine sortiert die Figur je Polygon (OTZ-Mittel, @0x8002565c) und zeichnet die Fuesse davor; Dossier NB5
+    "w6010_12 6010 12 -14612 -6120 0 L 218 130 275 202 A0=-14512,-26320"   # erwartet 556
+    "w6000_07 6000 7 17633 -20684 2 L 262 157 301 211 A0=-4167,-18684"   # erwartet 380
+    "t6010_02 6010 2 -18312 -7920 0 M 134 92 153 155 SMIN=0"   # erwartet 715
+    "w6010_02 6010 2 -11312 -4520 0 L 130 82 175 173 A0=-14512,-26320"   # erwartet 1569
+    "t6010_06 6010 6 -17512 -20820 0 M 185 138 203 160 SMIN=0"   # erwartet 223
+    "w6010_06 6010 6 -10712 -24620 0 L 161 15 222 174 A0=-14712,-2720"   # erwartet 1674
+    "t6010_13 6010 13 -23812 -21020 0 M 81 121 100 152 SMIN=0"   # erwartet 375
+)

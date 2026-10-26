@@ -34,6 +34,8 @@
 #include "re15_math.h"        /* Nachbesserung 3: re15_squareroot0 (Messzeile Lagesprung) */
 #include "re15_zopf_r38.h"    /* Nachbesserung 6: Elzas Zopf-Glied 0 (Messzeile Maul-Sitz) */
 #include "re15_gameflow.h"    /* Nachbesserung 6: re15_char_variant (Elza) */
+#include "re15_rdt.h"         /* Runde 41 Spur G (NB4, M3): re15_rdt_get_region_quad (Regions-Test des Kanisters) */
+#include "re15_aot.h"         /* Runde 41 Spur G (NB4, M3): re15_aot_point_in_quad = FUN_8002c820 */
 
 #define R41_KANISTER_TIM_SLOT 53
 
@@ -252,6 +254,20 @@ static void fress_sitz(const re15_camera_view_t *cam, int cx, int cy)
 #undef R41_MAUL_ENDE
 }
 
+/* Runde 41 Spur G (Nachbesserung 3, M3): Scherben-Versatz eines Scheitels entlang der Prim-Normale n0 im Modellraum
+ * (FUN_8002d718 `lhu v0,0(a3) / sll v0,v0,16 / sra v0,v0,26 / mult v0,v1` @0x8002d7d8-ec, je Achse), und die flache Farbe. */
+static void scherbe_versetzen(re15_md1_vertex_t *v, const re15_md1_vertex_t *n, int32_t skala)
+{
+    int32_t x = v->x + ((int32_t)n->x >> 10) * skala, y = v->y + ((int32_t)n->y >> 10) * skala, z = v->z + ((int32_t)n->z >> 10) * skala;
+    v->x = (int16_t)(x > 32767 ? 32767 : x < -32768 ? -32768 : x);
+    v->y = (int16_t)(y > 32767 ? 32767 : y < -32768 ? -32768 : y);
+    v->z = (int16_t)(z > 32767 ? 32767 : z < -32768 ? -32768 : z);
+}
+static void scherbe_farbe(uint8_t c[3], uint32_t farbe)
+{
+    c[0] = (uint8_t)(farbe & 0xffu); c[1] = (uint8_t)((farbe >> 8) & 0xffu); c[2] = (uint8_t)((farbe >> 16) & 0xffu);
+}
+
 void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
 {
     putz_sicht((const re15_camera_view_t *)cam_view_v, cx, cy);   /* Messzeile (M2) */
@@ -259,6 +275,24 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
     fress_sitz((const re15_camera_view_t *)cam_view_v, cx, cy);   /* Messzeile Nachbesserung 5 (M1) */
     int32_t pos[3], rot[9];
     if (!re15_gr2_kanister_welt(pos, rot)) return;
+    {   /* Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M3): RE2-Objekt-Zeichner FUN_800363f0 - vor Mesh UND Scherben der Regions-Test
+         * der Weltlage (obj+0x68, `addiu s3,s1,104`) gegen das Viereck des aktiven Cuts (`lw a1,-8172(s4)` = 0x800ce014, `jal 0x8002c820`
+         * @0x80036530-34); ausserhalb und ohne Flag 0x10 (@0x80036544-50) weiter zum naechsten Objekt @0x800366a4 - kein Zeichnen und
+         * kein Scherben-Zaehler (+0x1EC += 1 erst @0x800365bc-c8). Der Kanister obj[1] hat word0 = 0x000B: Obj_model_set ROOM40A0.RDT
+         * @0x2A12 `2d 01 00 00 00 00 00 00 00 00 0a 00`, Halbwort @+10 | 1 (`lhu v0,10(s2) / ori v0,v0,0x1 / sw v0,0(s1)` @0x800552d0-e4)
+         * -> keine Ausnahme 0x10. */
+        static int s_drin = -1;
+        int16_t rx[4], rz[4];
+        const int drin = !(g_room_rdt_ok && g_re15_active_cut >= 0 &&
+                           re15_rdt_get_region_quad(&g_room_rdt, g_re15_active_cut, rx, rz)) || re15_aot_point_in_quad(pos[0], pos[2], rx, rz);
+        if (drin != s_drin) {
+            s_drin = drin;
+            fprintf(stderr, "[gator-re2] Kanister F%u %s Regions-Viereck von Cut %d (FUN_8002c820 @0x80036534) pos=(%d,%d,%d)\n",
+                    (unsigned)g_engine.frame_count, drin ? "im" : "AUSSERHALB des -> nicht gezeichnet,", (int)g_re15_active_cut,
+                    pos[0], pos[1], pos[2]);
+        }
+        if (!drin) return;
+    }
     if (!modell_laden()) return;
     const re15_camera_view_t *cam_view = (const re15_camera_view_t *)cam_view_v;
     re15_render_pc_bind_tim_slot(R41_KANISTER_TIM_SLOT);
@@ -272,6 +306,12 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
     }
     int32_t bm[9], bt[3];
     re15_camera_compose_view_bone(cam_view, rot, pos, bm, bt);
+    /* Runde 41 Spur G (Nachbesserung 3, M3): nach FUN_80036eb4 zeichnet RE2 den Kanister als SCHERBEN (Objekt-Zeichner FUN_800363f0
+     * @0x80036558-64 -> FUN_8002d3c8 Dreiecke / FUN_8002d718 Vierecke): jedes Prim um seine n0-Normale versetzt ((int16)n >> 10 =
+     * `sll v0,v0,16 / sra v0,v0,26`, mal Skala @0x8002d7d8-ec, MVMVA R*v+TR = Versatz im Modellraum), alle Scheitel flach in der
+     * Farbe +0x70 (GT3 | 0x34000000, GT4 `lui v0,0x3c00` @0x8002d858), unbeleuchtet. Wie die Gegner-Scherben in main.c. */
+    int32_t sch_skala = 0; uint32_t sch_farbe = 0; int sch_bild = 0;
+    const int scherben = re15_gr2_kanister_scherben(&sch_skala, &sch_farbe, &sch_bild);
 
     /* MESSSCHIENE (stderr, kein Verhalten): die ersten drei Bilder und jeder Stufenwechsel - Lage, Drehung,
      * Bildschirm-Kasten, Tiefe, Licht. Grund: Sichtlauf e 2026-10-23 - RE15_TRILOG zeigte 110 Dreiecke je Bild
@@ -290,8 +330,15 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
             if (tr->v0 >= (uint32_t)hm->tri_vertex_count || tr->v1 >= (uint32_t)hm->tri_vertex_count
                 || tr->v2 >= (uint32_t)hm->tri_vertex_count) continue;
             const re15_md1_vertex_t *vp[3] = { &hm->tri_vertices[tr->v0], &hm->tri_vertices[tr->v1], &hm->tri_vertices[tr->v2] };
+            re15_md1_vertex_t sv[3];
+            if (scherben && hm->tri_normals && tr->n0 < (uint32_t)hm->tri_normal_count)
+                for (int k = 0; k < 3; k++) { sv[k] = *vp[k]; scherbe_versetzen(&sv[k], &hm->tri_normals[tr->n0], sch_skala); vp[k] = &sv[k]; }
             int ax[3], ay[3], wz = 0;
-            if (!re15_objpoly_r38_tri_mesh(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, ax, ay, &wz)) { d_weg++; continue; }
+            const int ok3 = re15_objpoly_r38_tri_mesh(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, ax, ay, &wz);
+            /* Runde 41 Spur G (Nachbesserung 3, M3): Scherben-Dreiecke ohne NCLIP und ohne OTZ-Untergrenze - FUN_8002d3c8 rechnet
+             * RTPT (@0x8002d5a4) und AVSZ3 (@0x8002d5dc) und haengt JEDES Prim in die OT (kein NCLIP 0x4b400006 bis `jr ra`
+             * @0x8002d710); es bleibt nur die GPU-Groessenschranke der Hardware. */
+            if (scherben ? !re15_objpoly_r38_gpu_ok(ax[0], ay[0], ax[1], ay[1], ax[2], ay[2]) : !ok3) { d_weg++; continue; }
             d_tris++;
             const re15_md1_tri_uv_t *uv = &hm->triangle_uvs[ti];
             int po = (int)((uv->page & 0x000F) * 128);
@@ -301,6 +348,7 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
                 if (hm->tri_normals && ni < (uint32_t)hm->tri_normal_count)
                     re15_light_shade_vertex(&lctx, hm->tri_normals[ni].x, hm->tri_normals[ni].y, hm->tri_normals[ni].z, &c[k][0], &c[k][1], &c[k][2]);
                 else { c[k][0] = g_re15_light_tint[0]; c[k][1] = g_re15_light_tint[1]; c[k][2] = g_re15_light_tint[2]; }
+                if (scherben) scherbe_farbe(c[k], sch_farbe);
             }
             re15_render_textured_tri_lit(ax[0], ay[0], (int)uv->u0 + po, (int)uv->v0,
                                          ax[1], ay[1], (int)uv->u1 + po, (int)uv->v1,
@@ -314,8 +362,14 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
                 || qd->v2 >= (uint32_t)hm->quad_vertex_count || qd->v3 >= (uint32_t)hm->quad_vertex_count) continue;
             const re15_md1_vertex_t *vp[4] = { &hm->quad_vertices[qd->v0], &hm->quad_vertices[qd->v1],
                                                &hm->quad_vertices[qd->v2], &hm->quad_vertices[qd->v3] };
+            re15_md1_vertex_t sv[4];
+            if (scherben && hm->quad_normals && qd->n0 < (uint32_t)hm->quad_normal_count)
+                for (int k = 0; k < 4; k++) { sv[k] = *vp[k]; scherbe_versetzen(&sv[k], &hm->quad_normals[qd->n0], sch_skala); vp[k] = &sv[k]; }
             int ax[4], ay[4], wz = 0; uint8_t ok[2];
-            if (!re15_objpoly_r38_quad_mesh(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, ax, ay, &wz, ok)) { d_weg++; continue; }
+            const int ok4 = re15_objpoly_r38_quad_mesh(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, ax, ay, &wz, ok);
+            /* Runde 41 Spur G (Nachbesserung 3, M3): Scherben-Vierecke ebenso ohne NCLIP - FUN_8002d718 RTPT @0x8002d8ec, RTPS
+             * @0x8002d93c, AVSZ4 @0x8002d950, kein NCLIP bis `jr ra` @0x8002da78; GPU-Schranke je Dreieck (0,1,2)/(1,2,3). */
+            if (scherben ? (!ok[0] && !ok[1]) : !ok4) { d_weg++; continue; }
             d_tris++;
             const re15_md1_quad_uv_t *uv = &hm->quad_uvs[qi];
             int po = (int)((uv->page & 0x000F) * 128);
@@ -325,6 +379,7 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
                 if (hm->quad_normals && ni < (uint32_t)hm->quad_normal_count)
                     re15_light_shade_vertex(&lctx, hm->quad_normals[ni].x, hm->quad_normals[ni].y, hm->quad_normals[ni].z, &c[k][0], &c[k][1], &c[k][2]);
                 else { c[k][0] = g_re15_light_tint[0]; c[k][1] = g_re15_light_tint[1]; c[k][2] = g_re15_light_tint[2]; }
+                if (scherben) scherbe_farbe(c[k], sch_farbe);
             }
             if (diag) {
                 for (int k = 0; k < 4; k++) {
@@ -349,6 +404,12 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
                                              (int)uv->page, (int)uv->clut, wz,
                                              c[0][0], c[0][1], c[0][2], c[3][0], c[3][1], c[3][2], c[2][0], c[2][1], c[2][2]);
         }
+    }
+    if (scherben) {   /* Runde 41 Spur G: Messzeile je Scherben-Bild, dann +0x1EC += 1 wie FUN_800363f0 @0x800365bc-c8 */
+        fprintf(stderr, "[gator-re2] Kanister-Scherben F%u: Bild %d Skala %d Farbe 0x%06X, %d Prims gezeichnet, %d weg "
+                        "(FUN_80036eb4 @0x80102348; FUN_800363f0 @0x80036558 -> FUN_8002d3c8/FUN_8002d718)\n",
+                (unsigned)g_engine.frame_count, sch_bild, (int)sch_skala, (unsigned)sch_farbe, d_tris, d_weg);
+        re15_gr2_kanister_scherben_weiter();
     }
     if (diag) {
         s_diag_n++; s_diag_stufe = stufe;
