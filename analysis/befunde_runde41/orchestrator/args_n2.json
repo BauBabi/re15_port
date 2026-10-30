@@ -1,0 +1,15 @@
+{
+ "welle": [
+  "N"
+ ],
+ "slots": 1,
+ "basis": "master (Baum r41_nachtrag30)",
+ "max_nach": 1,
+ "modus": {},
+ "runde0": {},
+ "bau": {},
+ "abn": {},
+ "stand": {
+  "N": "FORTSETZUNG der am 25.10. angehaltenen Spur N, Stand Zweig r41/nachtrag30 (master ist gemergt). Schon im Baum, UNGEPRUEFT: Plakat 30d (plakat.py, gen/ventilkette_r41_plakat.inc, re15_ventilkette_r41.h), Dossier N_nachtrag30.md, Panel-Bilder N_belege/panel_entwurf_a.png. Messung: die Endstufe skaliert alle Quellen. MASSGEBLICH sind AUFTRAG.md Nachtraege 30, 30b, 30d, 30e, 34 (N-E2), 36, 37 (30c ist ersetzt). Aufgaben: (1) Notiz-Satz und Loesung 09-02-01-08 pruefen und bauen, Riegel nachziehen. (2) Panel-Raetsel Entwurf A bauen (Nachtrag 37), Ventil 13 als Ausloeser entfaellt, Fragen/Texte/Riegel nachziehen, Leon und Elza. (3) Schrank 2010/2011 klappt auf und sieht danach aus wie der Sicherungsschrank aus fuse_box.bmp (N_belege/nutzer/, per Bildvergleich ROOM2060-Cut bestimmen). Die LOGIK der Sicherung (Inventar statt Frage) macht Spur O parallel in r41_keyitems: N aendert nur Bild und Aufklappen und laesst die Einsetz-Logik der Spur C im Code stehen. (4) RE2-Ton der Plattformfahrt 2030 (vorher pruefen, ob lift2030_se_pc.c/LIFT6030.VBS die Bruecke schon bedient; RE2_SOUND_LISTE.md). (5) Alarm: Sirene aus ROOM6000 nach der Ansage durchgehend (Nachtrag 36) zusaetzlich zu SUB_25. (6) Lautstaerke N-E2: lautstaerke_r41.c, Verstaerkung (Wert/100)^2 in Q15, Standard 50 ohne Options-Datei; Pegel-Riegel messen mit RE15_AUDIO_CAP die volle Mischung: Messlaeufe ohne RE15_OPTIONS_FILE behalten 100 (markierter Messhaken), unit/integration_r41_kleinkram_a nachziehen. (7) Wasser 2010 die Leiter herunter und ueber den Weg zum Becken, bis zur Flut in 2030, wie der Strom an der Leiter in 2000 (Nachtrag 30e). Neue RE2-Dateien im Dossier nennen (Paket-Gate macht der Orchestrator)."
+ }
+}
