@@ -45,7 +45,8 @@
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
-#include "re15_affen3_r38.h"   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
+#include "re15_affen3_r38.h"
+#include "re15_birkin_opfer.h"   /* Birkin-Spieler-Haken 0x8011afd8 */   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
 #include "re15_gegner_r39.h"   /* Runde 39 Spur E: Gorillas 0x27 (HP x2, Flinch-Schwelle; alle Raeume), Hunde-Riegel-Tick */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
 #include "re15_spinnen_r38.h" /* Runde 38 Spur R: Schacht-Ausstieg + Gift der Stage-2-Spinne */
@@ -1523,7 +1524,8 @@ int re15_player_victim_own_bank(void)
 {
     return (g_player_victim != 0 && re15_player_victim_grabber_type() == 0x27
         && s_gthrow_phase != 0)
-        || (g_player_victim != 0 && re15_player_victim_grabber_type() == 0x29 && re15_affen3_opfer_eigenbank());   /* Runde 38 Spur S: aca5a 6..9 = acad8/acbc0 */
+        || (g_player_victim != 0 && re15_player_victim_grabber_type() == 0x29 && re15_affen3_opfer_eigenbank())   /* Runde 38 Spur S: aca5a 6..9 = acad8/acbc0 */
+        || (g_player_victim != 0 && re15_bk_opfer_cmd() && re15_bk_opfer_eigenbank());   /* Birkin-Haken: Phasen auf acad8/acbc0 (birkin_opfer.c) */
 }
 int re15_player_victim_gorilla(void) { return g_player_victim != 0 && (re15_player_victim_grabber_type() == 0x27 || re15_player_victim_grabber_type() == 0x29); }   /* Runde 35 Spur J (6d); Runde 38 Spur S: 0x29-Haken 0x80115d70/0x801160a4 platzieren wie 0x8011c118/0x8011c414 (ad68 -> @0x80031cbc -> @0x80031d70) */
 /* Runde 38 Spur S: Griff des kleinen Affen (B[15] P0 schreibt aca58 = 5 @0x8011440c) an / Haken-Ende (aca58 = 1 @0x80116018). */
@@ -1533,6 +1535,15 @@ void re15_player_victim_affen3(const re15_actor_t *greifer, int an)
     if (an && greifer) { g_player_victim_type = greifer->type; g_player_victim_zombie = (int)(greifer - g_actors);
                          g_player_victim_variant = 0; g_player_victim = 1; s_player_grabbed = 1; s_victim_fresh = 0; re15_player_aim_interrupt(); }
     else if (g_player_victim == 1 && re15_player_victim_grabber_type() == 0x29) g_player_victim = 0;
+}
+/* Birkin-Spieler-Haken 0x8011afd8 (birkin_opfer.c): Treffer-Schreibsatz an (acbfc = Birkin, acbcc/acbd0 =
+ * Birkin+0x178/+0x17c, aca58 = 5/6) bzw. Haken-Ende (aca58 = 1 @0x8011b3c0 / @0x8011b698 / @0x8011b93c). */
+void re15_player_victim_haken(const re15_actor_t *greifer, int an)
+{
+    extern void re15_player_aim_interrupt(void);   /* player_common.c */
+    if (an && greifer) { g_player_victim_type = greifer->type; g_player_victim_zombie = (int)(greifer - g_actors);
+                         g_player_victim_variant = 0; g_player_victim = 1; s_player_grabbed = 1; s_victim_fresh = 0; re15_player_aim_interrupt(); }
+    else if (g_player_victim == 1) g_player_victim = 0;
 }
 
 /* Platzierung mit dem byte-true Pose-Yaw (rot_y + PL+0x158), Basis-Yaw danach zurueck. */
@@ -1637,7 +1648,7 @@ void re15_player_victim_tick(void)
             fprintf(re15_re2_trace_out() ? re15_re2_trace_out() : stderr, "[victim] BANK-HART-RESET vs=%d type=0x%02x zslot=%d (vb=%p ok=%d)\n",
                     g_player_victim, g_player_victim_type, g_player_victim_zombie,
                     (void *)vb, vb ? vb->victim_ok : -1);
-        g_player_victim = 0; return;
+        g_player_victim = 0; re15_bk_opfer_reset(); return;
     }
     /* +0x8f blend counter decay — byte-true f314 decrements it once per call (FUN_8001f3bc line 78),
      * and the cmd-5/6 handlers call f314 every tick. The port's normal decay sites (re15_player_tick /
@@ -1646,7 +1657,8 @@ void re15_player_victim_tick(void)
      * Skipped on the seed tick (fresh) so the full 7 renders once — the same first-frame-87.5%
      * cadence the zombie side shows (F84 frac=7 in the pose dump). */
     if (g_player_victim == 2 && (re15_player_victim_grabber_type() == 0x27 || re15_player_victim_grabber_type() == 0x29)) { s_gthrow_phase = 0; re15_affen_finisher_tick(player, vb); return; }   /* Runde 35 Spur J (15): Finisher = cmd-6-Hook 0x8011c414, nicht der Wurf; Runde 38 Spur S: 0x29 = 0x801160a4 */
-    if (g_player_victim == 1 && re15_player_victim_grabber_type() == 0x29) { re15_affen3_opfer_tick(player, vb); return; }   /* Runde 38 Spur S: Griff-Haken cmd 5 0x80115d70 (affen3_r38.c) */
+    if (g_player_victim == 1 && re15_player_victim_grabber_type() == 0x29) { re15_affen3_opfer_tick(player, vb); return; }
+    if (g_player_victim == 1 && re15_bk_opfer_cmd()) { re15_bk_opfer_tick(player, vb); return; }   /* Birkin cmd 5/6 -> 0x8011afd8 */   /* Runde 38 Spur S: Griff-Haken cmd 5 0x80115d70 (affen3_r38.c) */
     if (player->anim_frac > 0 && !s_victim_fresh) player->anim_frac--;
     /* ==== GORILLA-BOSS (0x27): dedizierter Pin-Opfer-Handler 0x8011c118 — EIGENE
      * Leon-Timeline statt der generischen Zombie-Halte-Maschine (gorilla_11c0/
@@ -11870,7 +11882,7 @@ static void re15_birkin_ai_tick(int slot)
         if (e->sub_state_1 == 0) { e->sub_state_1 = 1; e->sub_state_2 = 0; }
         /* ---- DECIDE[1] 0x80116f6c HUB cascade (may re-target the sub; writes fall through, LAST match wins) ---- */
         if (e->sub_state_1 == 1) {
-            int grabbed = s_player_grabbed;            /* aca58==5 proxy */
+            int grabbed = re15_bk_opfer_cmd() ? (re15_bk_opfer_cmd() == 5) : s_player_grabbed;   /* aca58==5 (lbu @0x8011711c) */
             uint8_t nsub = 0;                          /* 0 = keep sub 1 (walk) */
             /* sub-3 (0x301) @0x80116fe8: +0x1df==0 && dist<0xc80 && aca58!=5 && arc(0x338) */
             if (e->birkin_atk_cd == 0 && !grabbed && dist < 0xc80 && re15_bk_arc(e, pl, 0xc80, 0x338)) nsub = 3;
@@ -11927,7 +11939,16 @@ static void re15_birkin_ai_tick(int slot)
                     /* damage window [0x24..0x2b] tested EVERY frame (attack-box 0x8001a5e0 -> re15_dog_arc proxy) @0x801176ec */
                     if (e->anim_frame >= 0x24 && e->anim_frame <= 0x2b && pl->hit_react == 0
                         && re15_bk_arc(e, pl, 2500, 0x400)) {
-                        s_player_grabbed = 1; e->birkin_grab = 1;      /* aca58 = (facing<<8)|5 grab latch @0x801177d0 */
+                        /* Gier-Latch @0x80117754-7a8: s0 = FUN_8001a6d4(Birkin -> Spieler), Birkin-Gier kurz s0-0x400
+                         * (= Blick auf Leon), v0 = FUN_8001a780(Spieler) (1 = Leon kehrt Birkin den Ruecken zu), Birkin-Gier
+                         * zurueck (@0x8011778c), Spieler-Gier acabe = s0 - (v0*0x800 - 0x400) @0x80117790-7a8; aca58 =
+                         * (v0 << 8) | 5 @0x801177b8-7d0 -> Haken [0] vorn / [1] hinten (birkin_opfer.c). */
+                        {
+                            int16_t blick = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0x0fff);
+                            uint8_t v0 = (uint8_t)(((((int)pl->rot_y - (int)blick) + 0x400) & 0xfff) < 0x800);
+                            pl->rot_y = (int16_t)(((int)blick + 0x800 - 0x800 * (int)v0) & 0x0fff);
+                            if (!re15_bk_opfer_start(e, 5, v0)) { s_player_grabbed = 1; e->birkin_grab = 1; }
+                        }
                         pl->hit_react |= 1; re15_audio_room_se(7);     /* Se(7) @0x801177dc */
                         pl->hp = (int16_t)(pl->hp - 10);               /* hp-=10 @0x801177f0 */
                         if (pl->hp < 0) pl->hp = 1;                    /* clamp-to-1 @0x80117810 */
@@ -11966,8 +11987,12 @@ static void re15_birkin_ai_tick(int slot)
                 } else {
                     if (e->anim_frame >= 0x23 && e->anim_frame <= 0x2a && pl->hit_react == 0
                         && re15_bk_arc(e, pl, 2500, 0x400)) {         /* box proxy @0x80117bec */
-                        if (e->anim_frame < 0x26) { s_player_grabbed = 1; e->birkin_grab = 1; }  /* aca58=0x205 grab @0x80117c1c */
-                        pl->hit_react |= 1;                            /* aca58=0x202 knockdown (frame>=0x26) @0x80117c38 -> hit_react proxy */
+                        if (e->anim_frame < 0x26) {                    /* aca58=0x205 @0x80117c1c -> Haken [2] Biss */
+                            if (!re15_bk_opfer_start(e, 5, 2)) { s_player_grabbed = 1; e->birkin_grab = 1; }
+                        } else {
+                            re15_player_stagger_cmd2(0x08);            /* aca58=0x202 @0x80117c38: cmd 2 [2] = Clip 8 (@0x80035e38-40) */
+                        }
+                        pl->hit_react |= 1;
                         re15_audio_room_se(7);                         /* Se(7) @0x80117c64 */
                         pl->hp = (int16_t)(pl->hp - 10);               /* hp-=10 @0x80117c78 */
                         if (pl->hp < 0) pl->hp = 1;                    /* clamp @0x80117c94 */
@@ -11991,7 +12016,10 @@ static void re15_birkin_ai_tick(int slot)
                 int done = re15_birkin_anim(e);
                 if (e->anim_frame == 0x2c) {                           /* frame 0x2c box overlap @0x80117e84 */
                     if (re15_bk_arc(e, pl, 2500, 0x400)) {            /* hit: throw (aca58=6) + Se(2) @0x80117ee4/f0c */
-                        s_player_grabbed = 1; pl->hit_react |= 1; re15_audio_room_se(2);
+                        /* aca58 = 6 (Wort, aca59 = 0) @0x80117ee4: STAGE5 registriert cmd 6 auf denselben Haken
+                         * 0x8011afd8 (@0x8011defc) -> Haken [0] vorn; STAGE3 = 0x8011b168 OFFEN (alter Pin). */
+                        if (!re15_bk_opfer_start(e, 6, 0)) s_player_grabbed = 1;
+                        pl->hit_react |= 1; re15_audio_room_se(2);
                     } else {
                         re15_audio_room_se(6);                         /* miss: Se(6) @0x80117f08 */
                     }
@@ -12040,7 +12068,8 @@ static void re15_birkin_ai_tick(int slot)
                 if (e->anim_frame == 1 || e->anim_frame == 0x12) re15_audio_room_se(4);  /* Se(4) whoosh @0x80118a94 */
                 if (((e->anim_frame >= 4 && e->anim_frame <= 13) || (e->anim_frame >= 0x12 && e->anim_frame <= 0x1b))
                     && pl->hit_react == 0 && re15_bk_arc(e, pl, 2500, 0x400)) {  /* box proxy @0x80118adc */
-                    pl->hit_react |= 1;                                /* aca58=0x202 knockdown @0x80118b04 -> hit_react proxy */
+                    re15_player_stagger_cmd2(0x08);                    /* aca58=0x202 @0x80118b04: cmd 2 [2] = Clip 8 (@0x80035e38-40) */
+                    pl->hit_react |= 1;
                     re15_audio_room_se(7);                             /* Se(7) on hit @0x80118b08 */
                     pl->hp = (int16_t)(pl->hp - 5);                    /* hp-=5 @0x80118b1c */
                     if (pl->hp < 0) pl->hp = 1;                        /* clamp @0x80118b38 */

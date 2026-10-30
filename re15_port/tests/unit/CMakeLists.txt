@@ -4082,6 +4082,15 @@ target_compile_definitions(test_birkin_szenen PRIVATE
 add_test(NAME unit_birkin_szenen COMMAND test_birkin_szenen)
 set_tests_properties(unit_birkin_szenen PROPERTIES TIMEOUT 60)
 
+# --- BIRKIN-SPIELER-HAKEN 0x8011afd8 (Leons Reaktion auf Kralle/Biss/Wurf, Nutzer-Report v0.8.29 ROOM5080) ---
+add_executable(test_birkin_opfer test_birkin_opfer.c)
+target_link_libraries(test_birkin_opfer PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_birkin_opfer PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_birkin_opfer PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_birkin_opfer COMMAND test_birkin_opfer)
+set_tests_properties(unit_birkin_opfer PROPERTIES TIMEOUT 60)
+
 # --- RAUMLICHT nach dem 80%-Video (50B0 rot, 2000 Glanzpunkte) ---
 add_executable(test_raumlicht test_raumlicht.c)
 target_link_libraries(test_raumlicht PRIVATE re15_engine re15_test_support m)

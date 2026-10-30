@@ -49,7 +49,8 @@
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13, Irons-Kopf, 11B0-Erweiterung */
 #include "re15_affen.h"         /* Runde 35 Spur J: Knockdown-Sonde FUN_8001c2dc (re15_affen_kd_sonde) */
 #include "re15_objfall_r36.h"   /* Runde 36 Spur A: Objekt-Fall FUN_8002c444 (objfall_r36.c) */
-#include "re15_gegner_r39.h"    /* Runde 39 Spur E: Querungs-Wache im Gorilla-Wurf (re15_r39_wurf_querung) */
+#include "re15_gegner_r39.h"
+#include "re15_birkin_opfer.h"   /* Birkin-Spieler-Haken (Vorschub vor dem Schwanz) */    /* Runde 39 Spur E: Querungs-Wache im Gorilla-Wurf (re15_r39_wurf_querung) */
 #include "re15_zellschub_r36.h" /* Runde 36 Spur R: Ruhe-Zweig LAB_8002c0b8 ohne Spieler-Schub (zellschub_r36.c) */
 #include "re15_kollision_r41.h"  /* Runde 41 Spur H: Spiegel obj+0x42 fuer den Objekt-gegen-Objekt-Pass */
 #include "re15_aufschliessen_r36.h" /* Runde 36 Spur G: Aufschliess-Tonfolge (aufschliessen_r36.c) */
@@ -337,6 +338,7 @@ int  re15_player_hit_flinch_active(void) { return s_hit_flinch > 0; }
  * PORT-AEQUIVALENT: ein Latch, der mit dem Reaktions-Clip armiert wird und genau so lange
  * haelt, wie der Aktor diesen Clip noch traegt (= solange kein anderer Setzer +0x94 neu
  * geschrieben hat). Keine neue Konstante, keine Frame-Zahl. */
+static uint8_t s_wand_bit = 0;   /* Spieler+0 & 0x10, Beleg bei re15_player_wand_bit */
 static uint8_t s_react_pose = 0;   /* 1 = +0x168 zeigt noch in die COMMON-Bank */
 static uint8_t s_react_clip = 0;   /* der Clip, den der Reaktions-Handler in +0x94 schrieb */
 
@@ -445,6 +447,8 @@ void re15_player_cmd_zero(void)
     s_ev_reach = 0; re15_r39k_reach_aus();   /* Runde 39 Spur K NB1: auch ein anstehender Sub-6-Start ist weg */
     re15_szl_schub_spieler_ende();           /* Runde 39 Spur K NB1: ... und Sub 0x13 (+0x5/+0x6 im selben Wort-Store) */
     s_prev_hp = -1;
+    re15_bk_opfer_reset();                   /* Birkin-Haken: derselbe Wort-Store loescht aca58/aca59/aca5a */
+    s_wand_bit = 0;
     { extern void re15_spinnen_r38_gift_cmd0(void);   /* Runde 38 Spur R: Gift-Zaehler 0x800acc27 := 0, */
       re15_spinnen_r38_gift_cmd0(); }                 /* `sb zero,-13273(at)` @0x8003196c (cmd-0-Handler) */
     re15_player_aim_interrupt();
@@ -589,16 +593,25 @@ int re15_schritt_station_hole(int idx, int32_t *x, int32_t *z)
     return 1;
 }
 
+/* Spieler+0 Bit 0x10 = "die Wandklemme FUN_8003b0a4 hat im letzten Dispatcher-Schwanz einen Kasten aufgeloest":
+ * geloescht beim Eintritt (`addiu v1,zero,-49` / `and` @0x8003b110-14), gesetzt bei Treffer (`ori v0,v0,0x10` @0x8003b504).
+ * Leser: der Birkin-Haken [0] (`andi v0,v0,0x10` @0x8011b140 / @0x8011b1e0 STAGE5) — er laeuft VOR der Klemme seines
+ * Bildes und sieht also das Ergebnis des Vorbilds. Port: "die Klemme hat die Lage veraendert". */
+int re15_player_wand_bit(void) { return s_wand_bit; }
+void re15_player_wand_bit_test(int an) { s_wand_bit = (uint8_t)(an != 0); }   /* nur Tests (test_birkin_opfer) */
+
 static void re15_player_body_and_walls(const re15_game_ctx_t *c, re15_actor_t *pl,
                                        int32_t alt_x, int32_t alt_z)
 {
     schritt_station(RE15_SCHRITT_TICK, pl->x, pl->z);   /* Lage NACH dem Kommando-Handler */
     re15_body_push_player();                                   /* @0x80031cbc */
     schritt_station(RE15_SCHRITT_SCHUB, pl->x, pl->z);
+    s_wand_bit = 0;                                            /* Spieler+0 &= ~0x30 @0x8003b110-14 (Klemmen-Eintritt) */
     if (!c->rdt_ok) return;
     {   int32_t nx = pl->x, nz = pl->z;
         re15_collision_ensure_band(pl->y);
         re15_collision_constrain(c->rdt, alt_x, alt_z, &nx, &nz);   /* @0x80031d70 */
+        if (nx != pl->x || nz != pl->z) s_wand_bit = 1;        /* |= 0x10 @0x8003b504-08 (Kasten getroffen, aufgeloest) */
         pl->x = nx; pl->z = nz;
         schritt_station(RE15_SCHRITT_KLEMME, pl->x, pl->z);
     }
@@ -1574,7 +1587,7 @@ void re15_game_step(const re15_game_ctx_t *c)
         /* @0x80031cbc/@0x80031d70: der GRAB haelt den Spieler, aber der Koerper-Schub laeuft
          * weiter (das Paar selbst ist per +0x1000-AND ausgenommen, FUN_8002af14 — ein DRITTER
          * Gegner schiebt sehr wohl). */
-        wurf = re15_player_victim_gorilla(); wurf_alt_x = pl->x; wurf_alt_z = pl->z;   /* Runde 35 Spur J (6d) */
+        wurf = re15_player_victim_gorilla() || re15_bk_opfer_cmd(); wurf_alt_x = pl->x; wurf_alt_z = pl->z;   /* Runde 35 Spur J (6d); Birkin-Haken: FUN_800245d8 im Haken -> Schwanz @0x80031cbc/@0x80031d70 danach */
         if (!wurf) re15_player_body_and_walls(c, pl, pl->x, pl->z);
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else if (c->rdt_ok && s_knockdown) {
@@ -2508,7 +2521,11 @@ void re15_game_step(const re15_game_ctx_t *c)
      * grab (re15_enemy_ai_live_grab) has latched the victim state this frame. Drives Leon's motion/
      * anim_frame off the grabbing zombie's bank 2 so he struggles + collapses instead of freezing
      * (byte-true player-command FSM @0x8010a28c/@0x8010a6f8). No-op when no zombie is grabbing. */
+    /* Birkin-Haken: der Treffer latcht in run_all (eben gelaufen) — schon dieser erste Haken-Tick schiebt Leon
+     * (P0 faellt in P1, FUN_800245d8 @0x8011b3f0), also braucht auch DIESES Bild den Schwanz danach. */
+    int bk_haken = re15_bk_opfer_cmd(); int32_t bk_alt_x = pl->x, bk_alt_z = pl->z;
     re15_player_victim_tick();
+    if (!wurf && (bk_haken || re15_bk_opfer_cmd())) { wurf = 1; wurf_alt_x = bk_alt_x; wurf_alt_z = bk_alt_z; }
     { extern void re15_r38i_rueckgriff_tick(void);   /* Runde 38 Spur I: Hook A [0x21][1] 0x80115b80 */
       re15_r38i_rueckgriff_tick(); }
     schritt_station(RE15_SCHRITT_OPFER, pl->x, pl->z);

@@ -6329,7 +6329,8 @@ re_title:;
                             wx[nw] = a; wz[nw] = b; wr[nw] = r; nw++;
                             c = strchr(c + 1, ';');
                         }
-                        if (nw > 0 && (int)g_engine.frame_count >= tf) {
+                        static int tp_fertig = 0;   /* RE15_POCC_TP_EINMAL: nach dem letzten Wegpunkt loslassen */
+                        if (nw > 0 && (int)g_engine.frame_count >= tf && !tp_fertig) {
                             static int have_start = 0, sx0 = 0, sz0 = 0, f0 = 0;
                             if (!have_start) {
                                 have_start = 1; sx0 = plz->x; sz0 = plz->z;
@@ -6348,6 +6349,7 @@ re_title:;
                                 }
                                 k -= steps; px = wx[w]; pz2 = wz[w];
                                 plz->x = px; plz->z = pz2; plz->rot_y = (int16_t)wr[w];
+                                if (w == nw - 1 && getenv("RE15_POCC_TP_EINMAL")) tp_fertig = 1;
                             }
                         }
                     }
