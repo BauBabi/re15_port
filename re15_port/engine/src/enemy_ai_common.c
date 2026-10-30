@@ -14812,6 +14812,7 @@ void re15_enemy_ai_run_all(int combat_active)
      * player grabbed-FSM, see s_player_grabbed): cleared here, then re15_enemy_ai_live_grab sets it
      * for any live zombie in the grab sub-mode this frame. A room with no grabbing zombie (or no
      * live zombie at all, e.g. ROOM1170) leaves it 0 → game_step never pins the player = 1170-safe. */
+    { extern void re15_zgore_messhaken(void); re15_zgore_messhaken(); }   /* RE15_ZGORE_TEST (Bildpruefung) */
     s_player_grabbed = 0;
     re15_r39_hund_riegel_tick();   /* Runde 39 Spur E: Hunde-Riegel PL+0x1D3&0x80 frei, wenn die Spieler-Reaktion vorbei ist (@0x8003f8b4) */
     /* just-escaped mercy timer (the thrower's +0x1d5, ticked by FUN_8010a8c8; clears DAT_800aca50&1
