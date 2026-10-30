@@ -4116,3 +4116,10 @@ foreach(_g5alt probe_p2_birkin_g5 probe_p3_birkin_rest unit_r30_birkin_frost
         set_property(TEST ${_g5alt} APPEND PROPERTY ENVIRONMENT "RE15_ENDKAMPF_NUR_G5=1")
     endif()
 endforeach()
+
+# 80%-Gore im RE2-Gehirn: Zerfetzen (Schrot-Krit, Zelle 66FC) + Spawn-Varianten-Umordnung (Gestaltung 2026-10-30)
+add_executable(test_re2_gore80 test_re2_gore80.c)
+target_link_libraries(test_re2_gore80 PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_re2_gore80 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_re2_gore80 COMMAND test_re2_gore80)
+set_tests_properties(unit_re2_gore80 PROPERTIES TIMEOUT 60)

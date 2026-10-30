@@ -42,6 +42,16 @@ void re15_teile_reset(int slot)
 }
 void re15_teile_reset_alle(void) { for (int i = 0; i < RE15_ACTOR_MAX; i++) re15_teile_reset(i); }
 
+void re15_teile_umordnen(int slot, const int8_t *perm, int n)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !perm || n <= 0) return;
+    if (n > RE15_TEILE_MAX) n = RE15_TEILE_MAX;
+    re15_teil_t alt[RE15_TEILE_MAX];
+    memcpy(alt, s_teile[slot], sizeof alt);
+    for (int i = 0; i < n; i++)
+        if (perm[i] >= 0 && perm[i] < RE15_TEILE_MAX) s_teile[slot][i] = alt[(int)perm[i]];
+}
+
 uint32_t re15_teil_tinte1(const re15_teil_t *t) { return (uint32_t)t->h94[0] | ((uint32_t)t->h94[1] << 16); }
 uint32_t re15_teil_tinte2(const re15_teil_t *t) { return (uint32_t)t->h94[2] | ((uint32_t)t->h94[3] << 16); }
 

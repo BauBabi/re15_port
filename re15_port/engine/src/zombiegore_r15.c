@@ -433,7 +433,7 @@ int re15_zgore_tod_lokobank(const re15_actor_t *a)
 }
 
 /* MESSHAKEN (kein Verhalten im Normalpfad): RE15_ZGORE_TEST="tick:waffe:hoehe[:krit]" gibt ab dem KI-Tick `tick` dem
- * naechsten RE1.5-Zombie einen toedlichen Treffer mit +0x5 = waffe, +0x6 = hoehe (Bildpruefung des Gores). */
+ * naechsten Zombie (RE1.5-Gehirn: +0x5 Waffe / +0x6 Hoehe; RE2-Gehirn: +0x5 RE2-Zeile / +0x1D2 Spalte) einen toedlichen Treffer mit +0x5 = waffe, +0x6 = hoehe (Bildpruefung des Gores). */
 void re15_zgore_messhaken(void)
 {
     static int an = -1, tick = 0, ziel = 0, w = 0, c = 0, krit = 0, erledigt = 0;
@@ -443,7 +443,8 @@ void re15_zgore_messhaken(void)
     int best = -1; int64_t bd = 0;
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *e = &g_actors[i];
-        if (!e->active || !re15_zgore_typ(e) || e->state == 3 || e->state == 7) continue;
+        int re2 = re15_ai_re2_for_type(e->type) && re15_re2z_owns_type(e->type);
+        if (!e->active || (!re15_zgore_typ(e) && !re2) || e->state == 3 || e->state == 7) continue;
         int64_t dx = e->x - pl->x, dz = e->z - pl->z, d = dx * dx + dz * dz;
         if (best < 0 || d < bd) { best = i; bd = d; }
     }
@@ -451,6 +452,7 @@ void re15_zgore_messhaken(void)
     re15_actor_t *e = &g_actors[best];
     e->hp = -1; e->state = 3; e->sub_state_1 = (uint8_t)w; e->sub_state_2 = (uint8_t)c; e->sub_state_3 = 0;
     e->hit_react = (uint8_t)((e->hit_react & 0x80) | 1 | (krit ? 0x40 : 0));
+    if (!re15_zgore_typ(e)) e->re2z_hits1d2 = (uint8_t)c;   /* RE2-Gehirn: waffe = RE2-Zeile, hoehe = Spalte (+0x1D2) */
     erledigt = 1;
     fprintf(stderr, "[zgore] Messhaken: Slot %d Typ 0x%02x Waffe %d Hoehe %d Krit %d\n", best, e->type, w, c, krit);
 }

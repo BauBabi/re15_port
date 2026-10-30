@@ -39,6 +39,10 @@ int          re15_teile_an(int slot);
 void         re15_teile_markieren(int slot);           /* ein Erzeuger schreibt -> Zeichner nimmt die Schicht */
 void         re15_teile_reset(int slot);               /* FUN_8001ee68: w = 1, col = 0x808080, Rest bleibt */
 void         re15_teile_reset_alle(void);
+/* Teilstand auf eine andere Rig-Ordnung umsetzen: neu[i] = alt[perm[i]] (perm = re2_hybrid_perm, RE2-Slot ->
+ * RE1.5-Index). Fuer RE2-Gehirn-Zombies, deren Zeichner RE2-Slots indiziert, waehrend der RE1.5-INIT (Spawn-Variante
+ * @0x801008b0) in RE1.5-Teilnummern geschrieben hat. */
+void         re15_teile_umordnen(int slot, const int8_t *perm, int n);
 
 /* Tinte/Felder lesen wie das Original (ueberlappende Halbwoerter). */
 uint32_t re15_teil_tinte1(const re15_teil_t *t);
