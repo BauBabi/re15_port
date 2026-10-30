@@ -24,6 +24,84 @@ Waehrend dieser Spur kamen Nachtrag 30d (17:23, Plakat NEU 1. GREEN 01 - 2. RED 
 6. Lautstaerke: ALLE Toene (Tuersequenzen, Wassersprung ...).
 7. (30e) 2010: Wasser die Leiter herunter und ueber den Weg zum Becken in der Mitte, bis zur Flut in 2030.
 
+## 2. Panel-Raetsel 2030 — Entwuerfe zur Freigabe (Nachtrag 30/30b; gebaut wird erst nach der Freigabe)
+
+Ziel aller Entwuerfe: die Druckanzeige zeigt 80, danach die bestehende Frage Id 43 "The pressure gauge reads 80. / Lower the
+bridge?". Bilder (320x240, doppelt): `N_belege/panel_entwurf_a.png`, `_b.png`, `_c.png`; Kamera und Ausschnitt:
+`N_belege/panel_ausschnitt.png`.
+
+**Kamera (gemessen).** Das Nutzerbild ist Cut 2: schaltschrank.png = Cut 2 um 10 px versetzt (Schablonenvergleich 0,999 bei
+Massstab 1,0; naechster Cut 0,25). `ROOM2030.RDT` Cut 2 @0x0A0 (3883,-8101,-7091)->(-11568,-5157,-9778) zeigt das ganze Panel
+schraeg, der linke Rand faellt aus dem Bild. Cut 1 @0x080 (-3858,-8101,-3691)->(11593,-5157,-12615) zeigt es fast von vorn, der
+untere Teil liegt hinter dem Gelaender. Beide fov 26684 -> H 208. Aus 15 Punkten in beiden Cuts trianguliert (Strahlenabstand
+<= 42): Tafelebene z -10550, Scheiben ca. 35 davor, Tafel ca. x -920..670, y -9030..-6390. Beide Cuts sind darauf entzerrt; die
+Quelle hat rund 3 px je 100 Einheiten.
+
+**Was wirklich auf dem Panel ist:** fuenf Roehrenelemente (Paar, einzeln, Paar: grauer Kopf, helles Schauglas oder Griff, Loch im
+Fuss); eine runde Anzeige; vier gleiche runde Scheiben in einer Reihe (weiss, schwarzer Balken ueber den Durchmesser); Schild oben
+rechts (rotes und helles Feld); rotes Warnschild; weisses Schild im Metallrahmen; blauer Kasten; fuenf runde Tasten (eine einzeln,
+vier in einer Reihe unter den Scheiben, darunter je ein schwarzes Feld). Der Beleg-Bogen benennt alle.
+
+**Vorbilder, nicht kopiert:** 2050 = vier Hebel ein/aus, feste Werte 30/20/40/10, Summe 80. 11F0 = zehn Schalter mit + und -,
+Summe 80. Beide Original-Nahansichten (2050 Cut 15, 11F0 Cut 10) tragen denselben blauen Stahlrahmen (Zeilen 0..15 und 224..239
+bitgleich).
+
+**Gemeinsam:** Rahmen pixelgleich aus 2050 Cut 15, EXIT-Feld pixelgleich aus 11F0 Cut 10 (x 210..238, y 175..204), Cursor aus einem
+echten Spielbild 2050. Lage, Farbverlauf und Wand stammen aus dem entzerrten Echtbild; Roehren, Scheiben und Schilder sind an den
+echten Stellen neu gezeichnet, weil die Quelle dafuer zu grob ist. Ausschnitt = oberer Teil der Tafel, unten sichtbar die
+Oberkanten von weissem Schild und blauem Kasten. Schild oben rechts neu beschriftet: BRIDGE / PRESSURE 80. Bedienung wie 2050:
+Steuerkreuz bewegt den Cursor, SQUARE betaetigt, CROSS oder EXIT verlaesst das Panel. Eingang "Will you operate the panel?"
+(Frageform ROOM2050 msg 0). Alle Raetselwerte und Texte sind PORT-WAHL. Beim Bau entfaellt Ventil 13 (Slot 13, Ereignis 25, Texte
+41/42/47), Bit 101 bedeutet dann "Druck 80 erreicht". Die Zeit unter einer Minute ist aus der Zugzahl geschaetzt, nicht am
+Spieler gemessen. Pruefung der Regeln: Durchsuchen aller Zustaende (Werte je Entwurf).
+
+### Entwurf A "Druckspeicher" (`panel_entwurf_a.png`, Stand 50/20/30, Quelle C gewaehlt)
+
+* Aufbau: drei Tanks auf einer Skala, A = linkes Paar (fasst 100), B = einzelne Roehre (50), C = rechtes Paar (30). Das Fenster im
+  Metall ist so lang, wie der Tank fasst. Die Anzeige liest Tank A, rote Marke bei 80.
+* Bedienung: Cursor auf einen Tank, SQUARE waehlt die Quelle (gruene Lampe), Cursor auf einen zweiten Tank, SQUARE fuellt um.
+* Regel: es fliesst, bis die Quelle leer oder das Ziel voll ist.
+* Loesung: Start 100/0/0; A nach B (50/50/0), B nach C (50/20/30), C nach A (80/20/0).
+* Weg dorthin: die Nadel steht ueber der roten 80, es muessen 20 weg; beim Probieren bleiben in B genau 20 zurueck, 50 + 30 = 80.
+* Fehlversuch: gibt es nicht, jeder Stand fuehrt weiter; EXIT setzt auf den Start zurueck. Leere Quelle oder volles Ziel: Fehlerton
+  wie 2050 und ein Satz.
+* Texte: "The pressure gauge reads 100." / "Pick a tank to drain, / then a tank to fill." / "The tank is empty." / "The tank is full."
+* Geprueft: 16 Zustaende, keine Sackgasse, genau eine kuerzeste Loesung (3 Zuege), von jedem Stand hoechstens 4 Zuege bis 80.
+
+### Entwurf B "Stellventile" (`panel_entwurf_b.png`, Stand 2-0-1-2, Anzeige 20)
+
+* Aufbau: die vier Scheiben sind Drehventile in einem aufgedruckten Leitungsbild von PUMP zur Anzeige. Offen = Balken in Linie mit
+  der Leitung (senkrecht), Lampe darueber leuchtet. Je offenes Ventil 20 auf der Anzeige.
+* Bedienung: Cursor auf eine Scheibe, SQUARE dreht 60 Grad.
+* Regel: jede Scheibe nimmt ihre rechte Nachbarin mit, die letzte dreht allein. Der Balken steht nach drei Klicks wieder senkrecht.
+* Loesung: Start 2-0-1-2 (Rasten, 0 = senkrecht): Ventil 1 einmal, Ventil 2 zweimal, Ventil 4 einmal; Reihenfolge egal.
+* Weg dorthin: schon der erste Klick zeigt die Kopplung; von links nach rechts klappt es immer.
+* Fehlversuch: gibt es nicht, weiterdrehen; EXIT setzt auf den Start zurueck.
+* Texte: "The pressure gauge reads 20." / "A valve is open when it stands / in line with the pipe." / "The valves are linked."
+* Geprueft: 81 Zustaende, jeder loesbar, aus diesem Start 4 Klicks (Anzeige 20, 20, 20, 60, 80 in der genannten Folge), aus dem
+  schlechtesten Start 8.
+
+### Entwurf C "Pumpe und Ablass" (`panel_entwurf_c.png`, Stand 60, Hitze 2)
+
+* Aufbau: linkes Paar = Griff PUMP, rechtes Paar = Griff BLEED, einzelne Roehre = OIL TEMP in drei Stufen (oberste rot), Anzeige =
+  Druck. Rotes Schild: DO NOT OVERHEAT / RELIEF VALVE.
+* Bedienung: Cursor auf einen Griff, SQUARE zieht ihn einmal.
+* Regel: PUMP +30 Druck, +1 Hitze. BLEED -10 Druck, -1 Hitze (nicht unter 0). Hitze 3 oder Druck ueber 100: das Ueberdruckventil
+  bricht auf, alles zurueck auf 0.
+* Loesung: PUMP, PUMP, BLEED, PUMP oder PUMP, BLEED, PUMP, PUMP. Dreimal PUMP geht nicht, die dritte Pumpe ueberhitzt.
+* Weg dorthin: die Werte stehen an den Griffen, die Hitze steigt sichtbar; wer ueberhitzt, sieht die Regel.
+* Fehlversuch: Zischen, Nadel und Hitze fallen auf 0, Satz, neuer Versuch.
+* Texte: "The pressure gauge reads zero." / "The oil overheated. / The relief valve blew!" / "The pressure is too high. / The relief
+  valve blew!"
+* Geprueft: 23 Zustaende, keine Sackgasse, genau die zwei genannten kuerzesten Folgen (4 Zuege), von jedem Stand hoechstens 5 Zuege.
+
+### Empfehlung
+
+**Entwurf A.** Er nutzt das Auffaelligste des Panels (Roehren neben der Anzeige), hat nichts zum Ein- und Ausschalten und ist darum
+am weitesten von 2050 entfernt, und die Loesung hat einen echten Aha-Moment ohne Rechenarbeit. Kein Fehlversuch, keine Sackgasse.
+Einziger Punkt zum Entscheiden: die Nadel startet bei 100 und muss herunter. B ist 2050 am naechsten (vier Elemente, je 20). C ist
+die Wahl, wenn ein Fehlversuch mit Folgen gewuenscht ist.
+
 ## 6. Lautstaerke — Messung vorher (Stand 89dfbe48 = master + nichts geaendert; exe 17:23)
 
 Nutzer-Einstellung im Hauptbaum (nur gelesen): `re15_port/build/platform/pc/re15_options.cfg` = `volume=20` / `sound=mono`
