@@ -140,8 +140,66 @@ Messzeilen Endstand (ctest -V): kamera/_elza Median 26 %, Spitze 45 %, > 25 %: 8
 
 ## Nachbesserung 1 (Abnahme 0, Nachtrag 35)
 
-Massgeblich: AUFTRAG.md Nachtrag 35 (Alligator-Befunde des Nutzers, 2026-10-30 16:46), sechs Punkte, Punkt 1 ist Pflicht fuer das Release. Die erste Fertigmeldung nannte sie nicht (M8).
-Stand der Maengel: siehe Unterabschnitte M1..M8; fortlaufend gefuellt.
+Massgeblich: AUFTRAG.md Nachtrag 35 (Alligator-Befunde des Nutzers, 2026-10-30 16:46), sechs Punkte, Punkt 1 ist Pflicht fuer das Release. Die erste Fertigmeldung nannte sie nicht (M8); dieser Abschnitt arbeitet alle sechs ab.
+Messordner (nicht im Repo): Scratchpad `P41n/` (`runs/<lauf>`, `lauf.sh`, `kampf.sh`, `rid2090.py`, `rid40a0.py`). RE2-Bytes selbst gelesen mit re2_disasm.py (EM23_OVL_0000.BIN, PSX.EXE), SCD ROOM40A0 mit dem Walker der Spur B.
+
+### M1 (BLOCKER, N35.1 + N35.3): die Aktionstaste kletterte auf den Schluessel
+- Ursache: key_prop legte obj 4 mit Band 0 an. Die Klettersonde FUN_8002d2c0 prueft nur Bit 0x101 und das Band, die Null-Box trifft FUN_8002da4c bei Rand -112 aus jeder Stellung mit |dx|, |dz| >= 112. Dasselbe erklaert "ich konnte auf den toten Alligator klettern": Elza stand auf y -1800 ueber dem Kadaver (Abnahme 0 k3Er), der Koerper selbst ist nicht erkletterbar.
+- Messung vorher (Abnahme 0): k3Lr/k3Er `sub=9 kind=0x81 obj=4`, 56,1 % der Stellungen ueber 1688 Lagen.
+- Beleg: `8002d364 lbu v1,0(s3)`, `8002d368 lbu v0,130(s0)`, `8002d370 bne v1,v0,0x8002d3a4` (Band-Gate). ROOM2090 selbst: obj 2 @0x00A6C `2d 02 00 00 02 00 0a 00`, obj 3 @0x00A8E `2d 03 00 00 02 00 0a 00` = pc[4] 2 fuer die schwimmenden Objekte, Obj_model_set legt es nach pool+130 (@0x8004096c-74). Zensus Runde 30: 100 von 121 Item-Props Band 1 = "Band ueber dem Boden".
+- Aenderung: GSZ_KEY_BAND 2 (gatorszene_r41.c). Band 1 waere auf der Plattform (Spielerband 1) derselbe Fehler; die SCA von ROOM2090 hat nur die Baender 0 und 1.
+- Messung nachher: Lauf k3r, dieselbe Eingabe und Stellung (-391,-26408) Blick 15: 0 x `sub=9`, itemband `F297 room=2090 ITEM slot 15 floor 0 item 0x34 tk 112 spieler-band 0 spieler=(-391,0,-26408) -> FREI`. Scan 1688 Todeslagen, 4 704 256 Stellungen: Klettern 0. Gegenprobe im Riegel (Band 0 von Hand): 1024 von 3600 Stellungen.
+
+### Nebenbefund zu N35.1: der Schluessel lag bei 202 von 1688 Lagen IN der Wand
+- Die Wasserzonen decken auch den Maschinenblock (x -2000..2300, z -8300..-6800) ab; key_suche pruefte nur Wasser und Bild. Das ist die Nutzer-Beobachtung "ob der in der Wand haengen geblieben ist". Karte: Abnahme p0_karte.
+- Aenderung: key_begehbar (Spieler-Klemme FUN_8003b0a4 mit Radius 450, Maske 1, Band 0 fest, Objekt-Kasten) in key_suche; der Rueckfall ohne Kamera nimmt den naechsten begehbaren Wasserpunkt am Kopf.
+- Messung nachher: `test_r41_alligator2 erreichbar_scan 1000`: 1688 Lagen, nicht erreicht 0 (Flutfuellung ab der Leiter, 24933 Zellen Raster 100).
+
+### M2 (BLOCKER, N35.1 + N35.3): der Kadaver sperrte den Westkanal
+- Ursache: RE2 nimmt dem Alligator mit dem Explosionstod jede Koerper-Kollision; der Port liess den Koerperlaengen-Push (k_gb_seg) und re15_body_push in GBP_RE2_TOD an.
+- Messung vorher (Abnahme 0): Elza stehen bei (-7143,-19051), (-8432,-18453), (-2168,-19264), Leon bei (-2168,-19677); Schluessel und Leiter unerreichbar in kl/ke/we.
+- Beleg RE2: R1 P0 `801022ec lw v0,0(s1)`, `801022f8 ori v0,v0,0x80a`, `801022fc sw v0,0(s1)`. FUN_80034d0c (einziger Spieler-Push, FUN_800355c4 aus dem Spieler-Tick) beginnt mit `((*param_1 | *param_2) & 2) == 0`. P3 `8010265c ori v0,v0,0x4000`, `80102664 sh v0,270(s1)`: FUN_8003db38 (Ziel) und FUN_800410cc (Schussprobe) fragen `(+0x10E & 0xc000) == 0`. Die Leiche ist in RE2 Kulisse. Zur Klettersonde: FUN_8002d474 fragt nur Objekte und SCA, nie Aktoren.
+- Aenderung: re15_gator_boss_ohne_koerper (Phase GBP_RE2_TOD) sperrt beide Pushs (Haken enemy_ai_common.c re15_body_push_player, Gate Koerperlaengen-Push); R1 P3 setzt hit_radius 0 (keine Zielhilfe, kein Treffer auf die Leiche).
+- Messung nachher: unit_r41_alligator2_koerper: lebend schieben 5 von 5 Koerperpunkten, im R1 und an der Leiche 0 von 63 Bildern; Lauf durch die Leiche im Westkanal; integration_r41_alligator2_schluessel(_elza): s. Tests.
+
+### M3 (N35.1): Riegel ueber viele Todeslagen, echter Lauf bis zum Aufheben
+- unit_r41_alligator2_erreichbar: Raster 3000, vier Gieren, zwei Leon-Lagen, dazu 13 Wand- und natuerliche Lagen: 221 Lagen, 640128 Stellungen mit der ECHTEN Sonde re15_climb_try_start, je Lage die echte Aktionstaste aus schraeger Stellung (|dx| = |dz| = 300) bis ins Inventar.
+- unit_r41_alligator2_weg: Eingabe-Lauf (Lenken ueber Pad-Bits, re15_game_step) von der Leiter und vom Nordbecken bis zum Aufheben, fuenf Lagen.
+- integration_r41_alligator2_schluessel(_elza): exe, natuerlicher Kampf bis zum R1, Lauf 1 liefert Figur und Schluessel, Werkzeug wegplan faehrt im Harness zum Schluessel und schreibt die Tasten, Lauf 2 spielt sie an der exe: Leon `[inv-r39] F688 R2090 ... inv=03:57,15:50,34:1`.
+
+### M4 (N35.2): Putz 1:1 wie RE2
+- Ursache: der Putz der Spur B war der falsche Effekt am falschen Ausloeser. sub14 (id 4, 54 Partikel) laeuft nur ueber sub13, sub11 startet es bei Cut 9 (`Cmp 23 00 1a 00 09 00` @SCD 0x0778, `Evt_exec 04 ff 18 0d` @0x0786), und Cut 9 setzt allein R2 P1 (`jal 0x8002c7ac`, `addiu a0,zero,9` @0x80102784-88): der Rueckzug nach Beschuss bei offenem Maul, den der Port nicht hat. Dazu kam Sleep 170 und die Lage an der Ecke Bein 2/3.
+- Der Putz, den man in RE2 sieht, haengt am Schuetteln. RE2-Belege (SCD ROOM40A0, Datei-Offset SCD-main 0x25C0 + Spalte):
+  - sub01 @0x008C (je Bild): `Ck 21 01 1d 01`, `Ck 21 05 10 00`, `Set 22 05 10 01`, `Evt_exec 04 ff 18 0f`. Flag-Tafel @0x800a78c8: [1] = 0x800cfbd8, [5] = 0x800d4874. FUN_80077360 `srlv v0,v0(0x80000000),a1`: Bit 0x1d = Wert 4. Das ist `0x800cfbd8 |= 4` der Ereignis-Maschine @0x80101dd8-f8 (R1 @0x801022a8-b4, @0x8010252c-58) = Stark-Schuetteln.
+  - sub15 @0x0916: `Evt_next`, `Switch 13 1a`: Cut 0,1,2 -> sub16; 3..6 -> sub18; 7,8,9 -> sub20; `Set 22 05 10 00` @0x0966.
+  - sub16/18/20: 5 x Gosub, `Sleep 1`, `Sleep 4`, `Se_on 36 02 0d 01 01` (@0x0978), `Sleep 3`, `Sleep 4`.
+  - sub17/19/21: `Sce_rnd` FUN_80052ca0, `Calc` (and/sub) @0x8005458c, `Work_copy` @0x800542b4 schreibt in die SKRIPTBYTES (Ziel = pc + 4 + Versatz, also x/z des folgenden Records), `Sce_espr_on 3a 00 19 00 00 00 00 06 x e8 ea z 00 00` -> FUN_8001bf10(0x19000600, 0, Einheitsmatrix, {x,-5400,z}) @0x800565a4-0x80056618.
+  - Bein 1: x = (r & 0x3fff) - 0x4a38, z = (r & 0xfff) - 0x66ce; Bein 2: x = (r & 0xfff) - 0x66ce, z = (r & 0x7fff) - 0x559e; Bein 3: x = (r & 0x3fff) - 0x61a8, z = (r & 0xfff) - 0x0abe.
+  - Raum-ESP Id-Liste @RDT 0x59CC `16 19 08 09 26 1a 18`, Bank 0x19 TIM = "DUS 0.00" (Bild P_belege/nb1_tim19.png): Bank-Op 21 = FUN_8001f5a4 (Tafel @0x8009d8bc): Staubspur Kern-Bank 3 Sub 9, Skala + 2816. Op 21 fehlte in re2_fx.c (Spur ergab `unbekannte Ops 62`, der Brocken ohne Staub).
+  - Raumbank EDT 13 `00 00 c3 01`, Se_on-Ruf @0x80056428 (a2 = pc[4] = 1: Lage der Spielerfigur).
+- Aenderung: gr2_putz_takt = sub01 + sub15..21 (fuenf Brocken in den Bildern 1/2/6/9/13 von sub15, Satz 13 mit dem dritten, Rechteck je Ringseite, y -5400), eigener Zufallsstrom wie Sce_rnd (die Spielzufaelle bleiben unberuehrt), Op 21 in re2_fx.c, GATOR40A0.VBS um Satz 2 (RE2-Satz 13) erweitert. Der Dash spawnt nichts mehr. PORT-WAHL nur die Lage: RE2 hat drei Beine, ROOM2090 einen Ring aus vier Seiten (k_putz_seite: Cut 0/1 Sued, 2/3 Ost, 4/5 Nord, 6/7 West, Masken wie RE2, Cut 8..12 wie RE2s Cut >= 10 ohne Putz).
+- Messung nachher: Lauf kl: 8 Stoesse in 360 Bildern, Stoss F41, F86, F130, F186, F276, F290, F323, F355 (je Schwimm-Stoss einer); fxspur Bank 0x19: 30 Bilder Fall 5220, Op 21 je Bild doppelt, unbekannte Ops 0; unit_r41_re2gator_putz: Bilder 0/1/5/8/12, 5 Brocken, Satz 13 einmal, Rechteck je Seite, Sonderkamera 0 Brocken. Bild P_belege/nb1_putz.png.
+- Nicht pruefbar: RE2 laeuft hier nicht (kein Image), der Vergleich steht auf den Bytes, nicht auf einem Bild aus dem Original.
+
+### M5 (N35.4): Finisher, Spieler verschwindet wie RE2
+- Beleg RE2 P2-Ende: `80101190 beq v0,zero,0x801011e8` (Clip 5 zu Ende), `80101194 lui v1,0x8`, `8010119c addiu a0,a0,-1032` = 0x800cfbf8 (Spieler-Entity, Lage +0x38 = 0x800cfc30), `801011a0 lw v0,0(a0)`, `801011a8 or v0,v0,v1`, `801011ac sw v0,0(a0)`, `801011b0-c0` Phase + 1. FUN_80027160: `(param_3 & 0x80000) == 0` sonst nur Teile mit 0x9000; FUN_80019b3c/FUN_80019cd0 zeichnen bei dem Bit nicht.
+- Aenderung: P3 setzt pl->no_draw (enemy_ai_boss_gator.c), Rueckweg ueber den vorhandenen Continue-Zweig/Raumlader. Spur B hatte "kein no_draw" festgeschrieben, das war der Befund.
+- Messung nachher: exe Lauf des Riegels: `RE2 FRESS P3: Spieler-Modell aus F639`, RE15_VIS_TRACE vis=1 bis F638, vis=0 ab F639 bis zum Raumwechsel F779; unit_r41_alligator2_finisher: Clip 4 sichtbar 14, Clip 5 sichtbar 120, Clip 11 aus.
+
+### M6 (N35.5): Leiche sitzt im Maul
+- Ursache: die eingefrorene Relation hielt den Prop-Ursprung, so wie er im Koppelbild lag; die Rumpfmitte hing unter Hals und Rumpf (Abnahme 0 zoom_fressen).
+- Beleg: RE2 hat keine Leiche im Maul; Form = der Kanister: Kind der Part-6-Weltmatrix (@0x801018d0-e0), Lokallage (1750,-210) (T2 @0x801019c4, @0x80101a4c), Schritte x/z 145 (@0x80101a30-38), y 55 (@0x80101ad4-dc); Beute verschwindet mit dem Clip-5-Ende (M5).
+- Aenderung: nach dem Koppelbild fuehrt re15_gatorszene_r41_nachtakt die Lokallage so heran, dass die Rumpfmitte (Modell 1090,-170,-100, MD1 @0x2054) auf der Maullage liegt; leiche_weg + Folge V jetzt beim Uebergang Clip 5 -> Clip 11. PORT-WAHL: Rumpfmitte y -170 = halbe Rueckenhoehe.
+- Messung nachher: unit_r41_alligator2_leiche(_elza): Start 1123 vom Maul, nach 8 Bildern da, danach hoechstens 35 ueber 121 Bilder, weg im Bild des Clip-5-Endes. Bild P_belege/nb1_leiche.png.
+
+### M7 (N35.6): Kanister gerade im Maul
+- Ursache: RE2 friert rel = R6^T * Rk ein (FUN_8002d030 @0x801018f0) und hat immer dieselbe Geometrie (Gier 0xC00, Kanister quer zur Bahn). Im Port kommt der Gator aus jeder Richtung, der Kanister liegt aber fest in Welt-Drehung: je nach Gier schief oder laengs (Abnahme 0 zoom_kan F120).
+- Beleg: Dir (0x690, 0, 0xfc00) ROOM40A0 sub05 @0x048C: Modell-y zeigt nach Welt +X. Gier 0xC00: Sce_em_set @0x25A0 Gier 0x400, Intro-Ende +0x400 @0x80100938-48, Dash +0x400 @0x80100eb0-c0. Kopf-Kippung +0x22A dreht um die Quer-Achse, also bleibt die Tank-Achse auf ihr. Querlage: Pos_set x -22816 @SCD 0x0484, Bahn x -23078 @0x80101048, kein Schreiber auf +0x40 in den Stufen 3-7: Rig-z -262.
+- Aenderung: rel = R6a^T * Y(d) * Rk, d laeuft in den 26 Bildern der Stufen 3..6 von 0 auf Gier - 0xC00 (kein Sprung beim Anhaengen); Querlage -262 statt 0 (ersetzt die PORT-WAHL der Nachbesserung 3).
+- Messung nachher: unit_r41_alligator2_kanister_sitz: acht Gieren, Tank-Achse * Quer-Achse -4073..-4083 von 4096, Lokallage (1750,-210,-262). Bild P_belege/nb1_kanister.png. Der Tank ragt wie in RE2 nach einer Seite aus dem Maul; im Port bleibt er in Originalgroesse am 2/3-Gator, die Ueberlaenge ist darum sichtbar laenger als in RE2 (OFFEN).
+
+### M8 (Dossier)
+Dieser Abschnitt; Fertigmeldung nennt Nachtrag 35 und den Release-Pflichtpunkt.
 
 ## OFFEN
 1. integration_r35_granate Teil birkin ist auf master rot (s.o.) - Orchestrator / Birkin-Zweig, nicht Spur P.
