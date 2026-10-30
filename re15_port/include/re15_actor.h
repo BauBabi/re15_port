@@ -1089,6 +1089,9 @@ typedef struct {
                               * of +0x4 each root tick (@0x80116698); HURT/revive resume +0x4=*(+0x1d8) */
     int16_t  birkin_runoff_x, birkin_runoff_z; /* +0x1d4/+0x1d6: death-morph run-off point (-22000,-12000) */
     uint8_t  birkin_pause;   /* +0x9e: ACT[1] two-phase close-in pause countdown (0x5a) */
+    uint8_t  birkin_rohr;    /* Birkin 0x30: Teil 15 zeichnet MD1-Mesh 16 (Hand mit Rohr) statt Mesh 15 (Klaue) — der INIT
+                              * kopiert die Geometrie-Woerter part16+0x8..0x14 -> part15 (@0x80116980-9e4 bei grid&0x10,
+                              * @0x80116c28-8c bei grid&0xf==0), der Auftritt Sub 10 bei Bild 0x5b (@0x80119754-7b8). */
     uint8_t  birkin_grab;    /* PORT-LOCAL persistent latch for the GLOBAL grab channel DAT_800aca58==5
                               * (aca58 is engine-global, and run_all clears s_player_grabbed each frame): set on
                               * a claw connect, re-asserts s_player_grabbed each tick so the HUB DECIDE grab-tail

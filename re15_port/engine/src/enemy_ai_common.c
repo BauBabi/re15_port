@@ -11867,6 +11867,10 @@ static void re15_birkin_ai_tick(int slot)
         e->birkin_flags = 0; e->birkin_hurt_cd = 0; e->birkin_atk_cd = 0;  /* +0x1dd=0 @0x801167f0, +0x1de=0 @0x80116810, +0x1df clear */
         e->birkin_saved_state = e->birkin_saved_sub = e->birkin_saved_ph2 = e->birkin_saved_ph3 = 0;  /* +0x1d8=0 @0x801167e0 */
         e->birkin_grab = 0; e->birkin_pause = 0;
+        /* ROHR: Teil 16 (+0x188 + 16*0xac) wird genullt (`sw zero,2752` @0x8011693c), seine Geometrie-Woerter
+         * +0x8..+0x14 nach Teil 15 kopiert, wenn grid & 0x10 (@0x80116974-9e4) ODER (grid & 0xf) == 0
+         * (@0x80116c14-8c); Unterzustand 4 springt an beiden vorbei (beq @0x8011692c -> 0x80116c90). */
+        e->birkin_rohr = (uint8_t)((e->grid_id & 0xf) != 4 && ((e->grid_id & 0x10) || (e->grid_id & 0xf) == 0));
         e->state = 1;                                  /* +0x4 = 1 -> BRAIN @0x801166f8 */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
         {
@@ -12126,6 +12130,10 @@ static void re15_birkin_ai_tick(int slot)
             if (re15_birkin_anim(e) || dist < 0x9c4) {                 /* clip end or bite range -> LUNGE */
                 e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* sub 3 @0x801194d8 */
                 e->grid_id = (uint8_t)(e->grid_id & ~1u);             /* grid &= ~1 */
+                /* Der Auftritt nimmt das Rohr auf (Teil 16 -> 15 bei +0x95 == 0x5b, SE 6 @0x80119728-7b8). Der
+                 * Port spielt den Auftritt verdichtet; der Zustand ist belegt, der ZEITPUNKT ist das Ende des
+                 * verdichteten Auftritts statt Bild 0x5b des Original-Clips. */
+                e->birkin_rohr = 1;
             }
             break;
         }

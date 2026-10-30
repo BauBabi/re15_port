@@ -10399,7 +10399,10 @@ re_title:;
                  * Nur aktiv, wenn es MEHR Meshes als Bones gibt - fuer jedes andere
                  * Modell (Mesh-Index == Bone-Index) aendert sich nichts. */
                 int npc_zeichen_n = npc_bones;
-                if (!npc_remap && npc_md1->mesh_count > npc_bones) {
+                /* Ausnahme RE1.5-Birkin (0x30): Teil 16 ist KEIN eigenstaendiges Teil — der INIT nullt es
+                 * (`sw zero,2752(v0)` = +0x188 + 16*0xac @0x8011693c) und nutzt nur seine Geometrie-Woerter fuer
+                 * den Rohr-Tausch auf Teil 15 (birkin_rohr). Vorher stand Mesh 16 unbewegt im Modellraum. */
+                if (!npc_remap && npc_md1->mesh_count > npc_bones && npc->type != 0x30u) {
                     npc_zeichen_n = npc_md1->mesh_count;
                     if (npc_zeichen_n > RE15_EMD_MAX_BONES)
                         npc_zeichen_n = RE15_EMD_MAX_BONES;
@@ -10428,6 +10431,10 @@ re_title:;
                 }
                 int gore_on = re15_re2z_gore_resolve(npc, npc_skel->bone_parent, npc_bones,
                                                      gore_draw, gore_tint, gore_mesh);
+                /* BIRKIN-ROHR (Typ 0x30): Teil 15 traegt die Geometrie von Mesh 16 (Hand mit Rohr), s. birkin_rohr
+                 * in re15_actor.h (@0x80116980-9e4 / @0x80116c28-8c / @0x80119754-7b8). */
+                int bk_rohr = (npc->type == 0x30u && npc->birkin_rohr && npc_md1->mesh_count > 16 && npc_bones > 15 &&
+                               !getenv("RE15_KEIN_BIRKIN_ROHR"));   /* Mess-Schalter A/B */
                 /* Runde 34 C7 (O-VB3 geklaert, Belege fx_plattform_pc.h): RE2 faerbt JEDE Entity
                  * ueber denselben Part-Zeichner (Entity-Schleife `jal 0x80027160` @0x8002689c,
                  * Farbwort `lw fp,112(s1)` @0x80027900 -> RGBC @0x80027c2c -> NCCT). Fuer RE2-KI-
@@ -10473,8 +10480,9 @@ re_title:;
                         FILE *df = fopen("enemy_dbg.log", "a");
                         gemeldet[t_] = 1;
                         if (df) {
-                            fprintf(df, "ZEICHNE Typ 0x%02X: %d Teile (Bones %d, Meshes %d)\n",
-                                    t_, npc_zeichen_n, npc_bones, npc_md1->mesh_count);
+                            fprintf(df, "ZEICHNE Typ 0x%02X: %d Teile (Bones %d, Meshes %d) grid 0x%02X rohr %d remap %d\n",
+                                    t_, npc_zeichen_n, npc_bones, npc_md1->mesh_count,
+                                    npc->grid_id, npc->birkin_rohr, npc_remap != NULL);
                             fclose(df);
                         }
                     }
@@ -10733,6 +10741,7 @@ re_title:;
                      * (Schienbein+Fuss fliegen weiter weg): im Hybrid gibt es KEINEN Stumpf.
                      * Selbst gemessen: KEIN RE1.5-Zombie-EMD (EM10/11/12/13/16/18) traegt ein
                      * 16. Mesh, aus dem sich ein Stumpf bauen liesse (mesh_count == bone_count). */
+                    if (bk_rohr && nbi == 15 && !gore_side) nmi = 16;   /* Teil 15 <- Geometrie von Teil 16 */
                     if (!gore_side && npc_remap) {
                         int r = (nmi >= 0 && nmi < RE15_EMD_MAX_BONES) ? (int)npc_remap[nmi] : -1;
                         if (r < 0) continue;
