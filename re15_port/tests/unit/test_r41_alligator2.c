@@ -868,6 +868,28 @@ static void teil_koerper(void)
     PRUEF(g->hit_radius_min == 0, "Leiche ohne Trefferbox (P3 +0x10E |= 0x4000 @0x8010265c-64: keine Zielhilfe, Schussprobe nimmt sie nicht)");
     int32_t tx, tz; pl->x = g->x + 1500; pl->z = g->z; pl->rot_y = 2048;
     PRUEF(!re15_player_aim_target(6000, &tx, &tz), "Zielhilfe nimmt die Leiche nicht");
+    /* Nachtrag 35 Punkt 3: an der Leiche greift die Klettersonde nichts (FUN_8002d474 fragt nur Objekte und SCA, nie Aktoren; RE2 kein Koerper). Die Leiche in den Westkanal gelegt, Lage der Abnahme 0 ken2. */
+    g->x = -5676; g->z = -19980; g->rot_y = 2095;
+    frame(0, 0);
+    int kletter = 0;
+    for (int i = 0; i < 5; i++)
+        for (int a = 0; a < 4096; a += 256) {
+            int32_t x, z; koerper_punkt(g, k_ofs[i], &x, &z);
+            pl->x = x; pl->z = z; pl->rot_y = (int16_t)a; pl->y = 0;
+            re15_collision_set_band(0);
+            re15_climb_reset();
+            re15_climb_standing_tick();
+            (void)re15_climb_try_start(&g_room_rdt, 1);
+            if (re15_climb_dbg_sub() == 9 && re15_climb_dbg_kind() == 0x81) kletter++;
+            re15_climb_reset();
+        }
+    PRUEF(kletter == 0, "an der Leiche kein Kletter-Start auf ein Objekt (%d)", kletter);
+    /* echter Lauf durch den Kanal: vorher sperrte der Kadaver (Abnahme 0 ken2: Elza blieb bei (-7143,-19051) stehen) */
+    pl->x = -5500; pl->z = -23000; pl->y = 0; pl->hp = 100; pl->rot_y = 1024;
+    re15_collision_set_band(0);
+    frame(0, 0);
+    const int b = laufen(-5500, -15000, 450, 900, NULL, 0);
+    PRUEF(b >= 0, "Lauf durch die Leiche im Westkanal: %d Bilder, Figur (%d,%d)", b, pl->x, pl->z);
 }
 
 /* ---- Teil finisher (M5, Nachtrag 35 Punkt 4): Modell aus mit dem Clip-5-Ende, RE2 P2-Ende Spieler-Wort |= 0x80000 @0x80101190-ac; P1/P2 sichtbar -------------------------- */
