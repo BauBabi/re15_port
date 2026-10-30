@@ -12,13 +12,13 @@ Wortlaut (AUFTRAG.md Nachtrag 34):
 
 ## Stand
 
-- [ ] Pflichtlektuere: AUFTRAG/VERTRAG/UEBERGABE gelesen
-- [ ] RE2: wie wird ein Key Item benutzt (Adressen)
-- [ ] Zensus der Stellen in RE1.5
-- [ ] Messung vorher (Kurbel-Bildbogen)
-- [ ] Umsetzung
-- [ ] Messung nachher
-- [ ] Riegel
+- [x] Pflichtlektuere: AUFTRAG/VERTRAG/UEBERGABE gelesen
+- [x] RE2: wie wird ein Key Item benutzt (Adressen)
+- [x] Zensus der Stellen in RE1.5
+- [x] Messung vorher (Kurbel-Bildbogen)
+- [x] Umsetzung
+- [x] Messung nachher
+- [x] Riegel
 
 ## RE-Belege RE2 (selbst disassembliert, info/re2leon/PSX.EXE, ghidra_re2_Leon.txt; Stand Schritt 1)
 
@@ -133,7 +133,8 @@ Haken in gemeinsamen Dateien (je 1-2 Zeilen, Kommentar "Runde 41 Spur O"):
 | scd_vm.c | op_message_on | Frage entfaellt (Aktion: Nein), USE-Lauf: alle Texte bis zur Frage entfallen (Ja) | RE2 ROOM1110 Slot 8 sce 4 / sub13 |
 | scd_vm.c | op_evt_next | Evt_next hinter einem entfallenen Text zaehlt nicht | damit Cut_chg/Pos_set im ERSTEN Skripttakt fallen |
 | scd_vm.c | op_sleep | Kurbel: der Sleep 20 @0x0A98 vor Plc_motion entfaellt | RE2 sub13 -> sub15 ohne Sleep |
-| scd_vm.c | op_plc_motion | Kurbel: Flag 0x40 keine Blende | RE2 @0x02FC1 `3f 00 0f 45`, RE1.5 @0x80050d24 |
+| scd_vm.c | op_plc_motion | Kurbel: Flag 0x40 keine Blende: anim_frac 0 statt "bleibt" (re15_actor_set_motion hat vorher 7 gesetzt) | RE2 @0x02FC1 `3f 00 0f 45`, RE1.5 @0x80050cfc 7, @0x80050d24 `andi 0x40`, @0x80050d30 `sb zero,143(v1)`; 0 von 1359 Plc_motion der RDTs tragen 0x40 |
+| scd_vm.c | op_plc_ret | Kurbel-Ende: Stehpose ohne Mischung, der Wechsel faellt in den Schnitt @0x0B0E | PORT-WAHL, Form RE2 sub13: Blende @0x02F24 `53 02 02 07 00 18`, Pos_set, Plc_ret, Blende @0x02F4E `53 02 02 07 00 e8` |
 | msg_common.c | re15_dialog_step Seitenumbruch | Kartenleser: Text endet vor der Frage-Seite (FSM 4 END_WAIT) | msg 7 `02 00` vor "Will you operate" |
 | game_step_common.c | vor ventilkette_tick | Besitz der Flag-Gegenstaende, Waffe zurueck, Ende des USE-Laufs | |
 | scd_room_setup.c | Ende des Blocks | Merker je Raum zuruecksetzen | |
@@ -165,3 +166,77 @@ soll und nirgends (Inventar, Kiste) -> Eintrag; soll faellt -> Eintrag weg (nur 
 kann). Das heilt auch Spielstaende von vor dieser Aenderung. Ist das Inventar dann voll, bleibt an der Stelle die alte Frage (keine tote
 Stelle). Beim Aufnehmen mit vollem Inventar: Item-Modal "You can't carry any more items" (Zustand 5/8) statt der Frage, Flag bleibt 0.
 Die Zuendkerze (Item 0x41, keine "used"-Zeile, also keine Wegwerf-Abfrage) verlaesst das Inventar mit (3,78) @0x0068C (RE2 sce_item_lost).
+
+Weitere PORT-WAHL "Szenenende": RE2 verdeckt den Wechsel Kurbel -> Stehen mit einer Blende um Pos_set und Plc_ret (sub13 @0x02F24 ... @0x02F4E). RE1.5 hat
+dort keine Blende, nur den Schnitt @0x0B0E `29 03` im selben Takt wie Plc_ret @0x0B16. Mit der Original-Mischung kippte Leon NACH dem Schnitt sieben Bilder lang
+aus der Kurbel-Pose in die Stehpose (Lauf n_ende vorher: F443 Kurbel-Pose, F444..F447 gekippt, F448 steht), also dasselbe "Fliegen" am anderen Ende. Darum steht
+die Stehpose im USE-Lauf ohne Mischung im ersten Bild nach dem Schnitt. Altstand-Weg (Frage + Ja) bleibt mit Mischung wie im Original (Gegenprobe im Riegel).
+
+ROOM2010 Kasten traegt `RE15_R41O_FLAGITEM`: ohne Eintrag (Altstand, Inventar voll) bleibt die Frage wie an den anderen Flag-Stellen.
+
+## Messung nachher (Bau be7f0c811, Laeufe in `$TEMP/o41/run`, RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1)
+
+Lauf n_stand (Leon, Weg von 2050, Handgun, wie Messung vorher, dann START, ITEM, Kurbel, USE):
+- F255 USE, F256..F262 Inventar blendet aus, F263 schwarz, **F264 Pos_set @0x0A8C, Cut_chg 3 und Plc_motion(flags=0x40) im selben Takt**, F264..F267 schwarz, F267/F268
+  erstes sichtbares Bild: Leon steht an der Kurbel und kurbelt (Zoom `O_belege/nachher_kurbel_leon.png`, Spalten F267..F282). Vorher lagen zwischen Pos_set und
+  Plc_motion 20 Bilder Stehen und danach fuenf Bilder Blende; beides gibt es auf diesem Weg nicht mehr.
+- Keine Pistole am Knochen 11 waehrend der Szene (Waffe 0, RE2 @0x80068d34); `[keyitems] Waffe 3 wieder in der Hand` genau bei Plc_ret.
+- Lage ab dem ersten Bild (3650,-3018) Gier 1024, Kommandowort 4.
+
+Anlauf und Richtung (je Lauf Bild N nach dem Pos_set gegen n_stand, Leon-Ausschnitt 100 x 130 = 13000 Pixel, Pixelbytes verglichen, N = 4..32):
+| Lauf | Anlauf | START bei | Pos_set-Bild | verschiedene Pixel | mittlere Abweichung (0..255) |
+|---|---|---|---|---|---|
+| n_renn | Rennen nach Westen | x 3617 | 341 | 23..58 | hoechstens 0,05 |
+| n_geh | Gehen nach Westen | x 3356 | 340 | 22..58 | hoechstens 0,06 |
+| n_west | Stand, Blick West (Gier 2048) | x 3300 z -3382 | 174 | 49..71 | hoechstens 0,07 |
+| n_nord | Stand, Blick Nord (Gier 1024) | (2600,-3018) | 334 | 24..45 | hoechstens 0,05 |
+| n_ost | Stand, Blick Ost (Gier 0) | (1700,-3388) | 334 | 24..45 | hoechstens 0,05 |
+| n_elza | Elza, Stand, ROOM2021 | (2914,-3388) | 174 | 886..955 | 2,1 (anderes Modell, gleiche Lage, Bogen `nachher_kurbel_elza.png`) |
+
+Die Reste sind einzelne Pixel im Licht-/Wasserflimmern, Anlauf und Richtung gehen in das Bild nicht ein: das ist der Sinn von "dann genau richtig steht".
+Rennen: `O_belege/nachher_kurbel_rennen.png`.
+
+Szenenende (Lauf n_ende nachher, `O_belege/nachher_kurbel_ende.png`, F440..F449): F442 letztes Bild Cut 4, F443 erstes Bild Cut 3, Leon steht schon, die Waffe ist da, kein Kippen.
+
+Inventar: `O_belege/nachher_check_kurbel.png` (Bild RE2 Crank, Text "The end is square-shaped"), `O_belege/nachher_check_bombe.png` (Bild Block 0x35 mit gesetzten Rechtecken, Text "Time Bomb").
+
+Rennen und Gehen laufen im Gang z -3388, weil (2600,-1500) in soliden Zellen liegt (Koerper-Schub auf z -3018 in F6/F7). Der Riegel rechnet ab Bild 260: eine Taste in einem
+frueheren Bild trifft sonst den Vorraum, und START waehrend dessen Text bleibt stehen (aca3c |= 0x8000 @0x8001cd48, game_step_common.c) und oeffnet das Inventar spaeter.
+
+## Tests
+
+Neu (nur probes/r41_keyitems.cmake, tests/unit/test_r41_keyitems.c, tests/unit/test_r41_keyitems_exe.c, tests/integration/test_r41_keyitems.cmake):
+- unit_r41_keyitems_stellen: jede Zeile der Tabelle gegen die ausgelieferte RDT (Message_on der Frage, Ck(12,31,0) dahinter, Aot_set Slot/Ereignis), 3010 @0x02302 ohne Frage.
+- unit_r41_keyitems_use: je Stelle und Raumvariante falsches Item -> 0, falscher Ort -> 0, USE an der Stelle -> 1, Frage entfallen, Antwort Ja, Wirkung des Ja-Zweigs.
+- unit_r41_keyitems_aktion: je Stelle Beschreibung ja, Ja/Nein-Auswahl nein, Antwort Nein, Wirkung nein; Kartenleser endet vor "Will you operate the card reader?".
+- unit_r41_keyitems_besitz / _voll: Eintrag aus dem Flag, Verbrauch, Kiste, Altstand, fremde Sicherung bleibt, volles Inventar (Aufnahme-Modal, Stelle bleibt mit Frage).
+- unit_r41_keyitems_kurbel: Pos_set und Plc_motion im ersten Skripttakt, anim_frac 0, Clip 0, Cut 3; Gegenprobe Altstand: Frage bleibt, Blende am Anfang und am Ende.
+- unit_r41_keyitems_waffe: Waffe 0 waehrend der Szene, zurueck bei Plc_ret, Platz 25c8 bleibt, Stehpose ohne Mischung.
+- unit_r41_keyitems_daten: Name, CHECK-Text, Icon, Bild gegen info/re2leon (tools/r41_keyitems/keyitems_export.py --pruefen).
+- integration_r41_keyitems_{kurbel,elza,renn,geh,west,nord,ost,falsch,aktion,karte,karte_aktion,aufnahme}: echte exe, echtes Menue (START, ITEM, Platz, USE).
+
+Nachgezogen, weil die Stellen keine Ja-Eingabe mehr kennen (Riegel bleibt inhaltlich, Weg neu):
+- probe_r26_inventar B3/B4/B4c (fuenfter Port-Name 0x33), test_1090_flame_out_pin, test_r37_feuerloescher, test_r37_kistenregel, test_room1050_sicherung, test_r34n_a_rolltor (W/L ueber Ja-Weg),
+  r21_discard_wegwerfen, test_r39_inventar (Teil discard: Beschreibung, dann USE), test_r41_kleinkram_b_kurbel (USE), test_r41_kleinkram_b_takt (Teil frage im Altstand: Inventar voll),
+  test_r41_kleinkram_b_exe (Pos_set und Plc_motion duerfen im selben Bild fallen).
+- integration: test_r37_codepanel, test_r37_kistenregel, test_r37_feuerloescher, test_r39_inventar (G), test_r41_kleinkram_b (kurbel = USE; geh/renn/losl = Altstand mit vollem Inventar).
+
+Gegenproben, die die Riegel selbst scharf gemacht haben: `use` lief zuerst rot, weil room_boot das Inventar leerte und die Karten-Zeilen das Bank-9-Bit nicht setzten (Ck(9,52,1) @0x019C0: ohne Bit
+kommt msg 8 statt msg 9); `kurbel` lief rot mit `anim_frac 7`: daraus kam der echte Mangel (Bit 0x40 nullte nicht, siehe Haken-Tabelle); `falsch` trug eine Lage, die der Koerper-Schub auf die Stelle schob.
+
+## OFFEN
+
+Aus den drei Punkten ist nichts offen. Bewusst nicht angefasst:
+- Die Stelle der Kurbel bleibt das Rechteck @0x009AE (x 2200..3000, z -4150..-3350): der Original-Platz der Aktionstaste liegt rund 1000 westlich der Kurbel, die Lage danach kommt aus Pos_set @0x0A8C.
+- Altstand: ein Spielstand mit gesetztem Flag und vollem Inventar behaelt an Kurbel, Bombe und Sicherung die alte Frage (samt Original-Blende), bis ein Platz frei ist; dann erscheint der Eintrag.
+- Gebaut und getestet nur am PC (Spurgrenze); keine Patches an shared_assets/PSX, keine neuen Assets unter shared_assets/RE2, keine Sprachdateien, keine neuen Nachrichten-Ids, keine Bits aus 126-133.
+
+## Fuer den Nutzer
+
+- **Bedienung:** START, ITEM, Gegenstand waehlen, USE. Steht man an der richtigen Stelle (gleiche Pruefung wie die Aktionstaste: Ebene und Blickpunkt), schliesst das Inventar und die Handlung startet sofort, ohne Text und ohne Frage. Sonst "You can't use it here.", das Inventar bleibt offen.
+- **Aktionstaste an diesen Stellen:** zeigt nur noch die Beschreibung, keine Frage mehr. Das gilt fuer Feuerloescher (1090), Zange (11E0), Minidisc-Spieler (1100), Kurbel (2020), Zeitbombe (2040), Sicherung (1050, 2010, 2060), Zuendkerze (4030) und die Karten unten.
+- **Kurbel:** das Spielbild kommt erst zurueck, wenn Leon an der Kurbel steht und schon dreht. Aus dem Stand, im Gehen, im Rennen und aus drei Blickrichtungen ist das Bild dasselbe (Tabelle oben), Elza ebenso. Am Ende der Szene kippt er nicht mehr zurueck, der Wechsel faellt in den Schnitt.
+- **Neu im Inventar:** Kurbel und Zeitbombe gab es im Original nur als Flag. Die Kurbel hat Name, Bild, Symbol und Text aus RE2, die Bombe das ausgelieferte Bild. Beide verschwinden bei der Benutzung. Das gilt auch fuer laufende Spielstaende. Volles Inventar beim Aufnehmen: "You can't carry any more items", der Gegenstand bleibt liegen.
+- **Karten wie in RE2:** Karte am LESER = USE aus dem Inventar (Blue/Yellow/Red Keycard 10D0, 11E0, 1230, Red Master Keycard 3050, Blue Master Keycard 4000), RE2-Vorbild Red Card Key. Karte als TUERSCHLOSS = Aktionstaste wie bisher (Green Keycard 3010), RE2-Vorbild Lab Card Key. Schluessel, Latch Key 3091 und "You don't need this key any more" bleiben unveraendert.
+- **Waffe:** waehrend der Kurbel-Szene hat Leon die Waffe nicht in der Hand wie in RE2, danach ist sie wieder da. RE2 legt sie erst beim naechsten Oeffnen des Inventars wieder an; das habe ich nicht uebernommen, weil in dem Raum vier Zombies warten.
+

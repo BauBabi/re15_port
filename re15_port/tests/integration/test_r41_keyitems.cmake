@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.16)
 #                      an der Kurbel ist schon das Kurbeln, kein Text, keine Frage, Plc_motion Flags 0x40 (RE2 ROOM1110 @0x02FC1).
 #   TEIL elza          dasselbe mit Elza in ROOM2021.
 #   TEIL renn / geh    START im Rennen / Gehen: nach dem USE dieselbe Lage und dasselbe Bild wie aus dem Stand.
-#   TEIL west          Blick nach Westen statt Norden (zweite Richtung).
+#   TEIL west / nord / ost  Stand mit Blick West, Nord, Ost (Gier 2048, 1024, 0): dieselbe Lage nach dem USE.
 #   TEIL falsch        USE fern der Stelle: "You can't use it here.", Kurbel bleibt, Leon bleibt.
 #   TEIL aktion        Aktionstaste an der Stelle: msg 0, keine Frage, Antwort Nein, Kurbel bleibt.
 #   TEIL karte         ROOM10D0 Blue Keycard USE: msg 9 "You've used the Blue Keycard." ohne msg 7.
@@ -84,8 +84,17 @@ elseif(TEIL STREQUAL "geh")
 elseif(TEIL STREQUAL "west")
     set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=3300,-3750,2048,1
              RE15_PRESS=start@100,square@125,down@140,square@150,square@165 RE15_SCD_TRACE=1 "RE15_EXIT_AT=420#2020")
+elseif(TEIL STREQUAL "nord")
+    # Blick Nord: 620 voraus = (2600,-3638), im Rechteck x 2200..3000, z -4150..-3350 (@0x009AE). Bilder >= 260 wie TEIL renn.
+    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-3018,1024,1
+             RE15_PRESS=start@260,square@285,down@300,square@310,square@325 RE15_SCD_TRACE=1 "RE15_EXIT_AT=560#2020")
+elseif(TEIL STREQUAL "ost")
+    # Blick Ost: 620 voraus = (2320,-3388), im selben Rechteck.
+    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=1700,-3388,0,1
+             RE15_PRESS=start@260,square@285,down@300,square@310,square@325 RE15_SCD_TRACE=1 "RE15_EXIT_AT=560#2020")
 elseif(TEIL STREQUAL "falsch")
-    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-1500,1024,1
+    # Gang z -3388, x 5000: 620 voraus = x 4380, weit ausserhalb des Rechtecks @0x009AE ((2600,-1500) schoebe der Koerper-Schub auf die Stelle).
+    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=5000,-3388,2016,1
              RE15_PRESS=start@100,square@125,down@140,square@150,square@165 RE15_SCD_TRACE=1 RE15_EXIT_AT=300)
 elseif(TEIL STREQUAL "aktion")
     set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2914,-3388,2016,1
@@ -121,7 +130,7 @@ if(_p LESS 0)
     message(FATAL_ERROR "r41_keyitems[${TEIL}]: Endbild nicht erreicht - Lauf vorher abgerissen (${_lauf})")
 endif()
 
-if(TEIL MATCHES "^(kurbel|elza|renn|geh|west)$")
+if(TEIL MATCHES "^(kurbel|elza|renn|geh|west|nord|ost)$")
     pruef(_d "Frage 1 entfaellt: Ja (USE)")
     pruef(_d "motion=0, flags=0x40)")
     pruef(_d "@0x0A8C op=0x32")                    # Pos_set
