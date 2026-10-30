@@ -346,6 +346,8 @@
 #define RE15_R41C_SE_FEHLER       0x0B   /* RE2 ROOM2130 sub04 @0x01800 `36 02 0b 01` (Bank PANEL2130, Satz 0x0B) */
 #define RE15_R41C_FLAG_TON        0x1A   /* 2030: Ventil-Ton jetzt (Programm statt RE2 se_on(2,5) @0x02168..)    */
 #define RE15_R41C_FLAG_STANDBILD  0x1F   /* 2010: Standbild der Ventile offen (2010/2011 benutzen Bank 5 nicht)   */
+#define RE15_R41C_FLAG_SCHRANK    0x1E   /* 2010: Schrank klappt auf (Spur N, Programm -> C-Takt, While im Programm)  */
+#define RE15_R41C_FLAG_NAHBILD    0x1D   /* 2010: Nahansichten ROOM2060 Cut 8/9 im Ja-Zweig (Spur N)                 */
 /* Ventil-Dreh-Animation (Nachbesserung 5, Nachtrag 18 Punkt 3, Dossier §0f B5-3): RE2 ROOM1080 (Hubschrauber-Landeplatz,
  * msg 0 @0x267A "A water pressure valve") sub08 @0x0210A..@0x0221E, Clips 15/16/17 aus dem RBJ @0x39AC derselben RDT
  * (13128 B, 1 Record, EMR 15 Knochen x 80 B, EDD 19 Clips: 15 = 30, 16 = 50, 17 = 40 Bilder) = shared_assets/RE2/
@@ -533,7 +535,7 @@ void re15_ventilkette_r41_tick(void);
 void re15_ventilkette_r41_reset(void);
 /* Eingebackene Port-Props fuer main.c (PC): k = 0/1 Wasserflaechen obj 4/5, k = 2 Dokument-Blatt obj 6, k = 3 Plakat-Aushang
  * obj 7 (Nachbesserung 4); obj_id im Raum oder -1, MD1/TIM-Bytes je k. */
-#define RE15_R41C_PROPS_N 5   /* k = 4: nasse Spur ROOM2000/2001 (Spur N, include/re15_wasserlauf_r41.h) */
+#define RE15_R41C_PROPS_N 8   /* k = 4: nasse Spur ROOM2000/2001 (Spur N, include/re15_wasserlauf_r41.h); k = 5..7: Schrank ROOM2010/2011 (Spur N, include/re15_schrank2010_r41.h) */
 int re15_ventilkette_r41_obj_id(uint16_t room_id, int k);
 const uint8_t *re15_ventilkette_r41_md1_bytes(int *out_size);
 const uint8_t *re15_ventilkette_r41_tim_bytes(int *out_size);

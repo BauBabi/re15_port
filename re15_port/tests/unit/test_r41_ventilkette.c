@@ -90,6 +90,7 @@
 #include "re15_fade.h"
 #include "re15_collision.h"
 #include "re15_ventilkette_r41.h"
+#include "re15_panel2030_r41.h"  /* Spur N: Pult = Panel-Raetsel */
 #include "gen/ventilkette_r41_original.inc"
 #include "re15_room_list.h"
 #include "re15_md1.h"
@@ -519,27 +520,19 @@ static void fall_c(uint16_t r)
     int pb = prop_von_obj(RE15_R41C_BRUECKE_OBJ);
     PRUEFE(pb >= 0 && g_scd.props[pb].y == RE15_R41C_BRUECKE_Y_OBEN, "ROOM%04X: Bruecke oben (y %d)", r, pb >= 0 ? (int)g_scd.props[pb].y : 0);
     for (int rg = 0; rg < 5; rg++) PRUEFE(zelle12_u0(rg) == 0xFF, "ROOM%04X: Zelle 12 Region %d gesperrt (%02x)", r, rg, zelle12_u0(rg));
-    const int slots[4] = { RE15_R41C_SLOT_PULT, RE15_R41C_SLOT_VENTIL13, RE15_R41C_SLOT_VENTIL0, RE15_R41C_SLOT_PLAKAT };
-    const int evs[4] = { RE15_R41C_EV_PULT, RE15_R41C_EV_VENTIL13, RE15_R41C_EV_VENTIL0, RE15_R41C_EV_PLAKAT };
-    for (int i = 0; i < 4; i++) {
+    const int slots[3] = { RE15_R41C_SLOT_PULT, RE15_R41C_SLOT_VENTIL0, RE15_R41C_SLOT_PLAKAT };   /* Spur N: Ventil 13 entfaellt */
+    const int evs[3] = { RE15_R41C_EV_PULT, RE15_R41C_EV_VENTIL0, RE15_R41C_EV_PLAKAT };
+    for (int i = 0; i < 3; i++) {
         const re15_aot_t *a = &g_aot.slots[slots[i]];
         PRUEFE(a->active && a->type == RE15_AOT_TYPE_GENERIC && a->event_id == evs[i] && (a->sce_flags & 0x7f) == 0x31,
                "ROOM%04X: Platz %d aktiv=%d Typ=%d Ereignis=%d sat=%02x", r, slots[i], a->active, a->type, a->event_id, a->sce_flags);
     }
-    /* Pult ohne Druck (Nordstreifen, Blick -z) */
-    lauf_t L = druecken(350, -9500, 1024, 0, 400); zeige("pult", r, &L);
-    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_PULT_OHNE, "ROOM%04X Pult ohne Druck: msg 40", r);
+    /* Pult ohne Druck (Nordstreifen, Blick -z): Spur N, Nachtrag 37: Frage 40, Nein -> nichts. Das Raetsel selbst faehrt unit_r41_nachtrag30. */
+    lauf_t L = druecken(350, -9500, 1024, 1, 400); zeige("pult", r, &L);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_PANEL_FRAGE && !re15_panel2030_r41_offen(), "ROOM%04X Pult ohne Druck: Frage 40", r);
     PRUEFE(prop_von_obj(0) >= 0 && g_scd.props[prop_von_obj(0)].y == RE15_R41C_BRUECKE_Y_OBEN, "ROOM%04X: Bruecke bleibt oben", r);
-    /* Ventil 13 (Landeplatz Band 1, Blick -x): Nein, dann Ja */
-    g_actors[RE15_ACTOR_SLOT_PLAYER].y = -1800;
-    L = druecken(-1500, -6400, 2048, 1, 400); zeige("v13 nein", r, &L);
-    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_V13_FRAGE && bit(RE15_R41C_BIT_VENTIL13) == 0, "ROOM%04X Ventil 13 Nein: nur Frage, Bit 101 = 0", r);
-    L = druecken(-1500, -6400, 2048, 0, 400); zeige("v13 ja", r, &L);
-    PRUEFE(L.n_msgs == 2 && L.msgs[0] == RE15_R41C_MSG_V13_FRAGE && L.msgs[1] == RE15_R41C_MSG_V13_OFFEN && bit(RE15_R41C_BIT_VENTIL13) == 1,
-           "ROOM%04X Ventil 13 Ja: Frage + \"opened\", Bit 101 = 1 (msgs %d)", r, L.n_msgs);
-    L = druecken(-1500, -6400, 2048, 0, 400); zeige("v13 zust", r, &L);
-    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_V13_ZUSTAND, "ROOM%04X Ventil 13 danach: Zustandssatz 47", r);
-    /* Pult: Lower the bridge? Nein -> nichts; Ja -> Fahrt */
+    /* Pult: Lower the bridge? Nein -> nichts; Ja -> Fahrt (Bit 101 wie nach dem geloesten Panel) */
+    re15_game_flag_set(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80, 1);
     g_actors[RE15_ACTOR_SLOT_PLAYER].y = -5400;
     L = druecken(350, -9500, 1024, 1, 400); zeige("pult nein", r, &L);
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_BRUECKE_FRAGE && bit(RE15_R41C_BIT_BRUECKE_UNTEN) == 0 &&
@@ -557,7 +550,7 @@ static void fall_c(uint16_t r)
     L = druecken(350, -9500, 1024, 0, 400); zeige("pult unten", r, &L);
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_BRUECKE_UNTEN, "ROOM%04X Pult danach: Zustandssatz 44", r);
     /* Neustart des Raums mit Bit 102 (wie ein Spielstand): unten, Zelle offen */
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     if (raum_hoch(r, 350, -5400, -9500) != 0) { PRUEFE(0, "Parse"); return; }
     pb = prop_von_obj(0);
     PRUEFE(pb >= 0 && g_scd.props[pb].y == RE15_R41C_BRUECKE_Y_UNTEN && zelle12_u0(0) == 0x00 && zelle12_u0(4) == 0x00,
@@ -572,7 +565,7 @@ static void fall_c(uint16_t r)
 static void fall_d(uint16_t r)
 {
     bits_leeren();
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);   /* Nachbesserung 5 (Nachtrag 16): Sicherung im Ventilkasten 2010 */
@@ -581,10 +574,10 @@ static void fall_d(uint16_t r)
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTIL0 + 5 && !re15_ventilkette_r41_timer_laeuft() && !g_scd.message_active &&
            re15_ventilkette_r41_drehungen() == 0,
            "ROOM%04X Ventil 09 Nein: nur Frage 55, keine Drehung (msgs %d, Drehungen %d)", r, L.n_msgs, re15_ventilkette_r41_drehungen());
-    /* richtige Folge 09, 07, 02, 01: nach der vierten Drehung Warnung, dann schlaeft der Faden (Abbruch nach 900 Takten) */
+    /* richtige Folge 09, 02, 01, 08 (Nachtrag 30d): nach der vierten Drehung Warnung, dann schlaeft der Faden (Abbruch nach 900 Takten) */
     L = ventile_richtig(900); zeige("folge ja", r, &L);
-    PRUEFE(L.n_msgs == 2 && L.msgs[0] == RE15_R41C_MSG_VENTIL0 + 0 && L.msgs[1] == RE15_R41C_MSG_WARNUNG,
-           "ROOM%04X richtige Folge: vierte Frage (01 = 50) + Warnung 46 (msgs %d)", r, L.n_msgs);
+    PRUEFE(L.n_msgs == 2 && L.msgs[0] == RE15_R41C_MSG_VENTIL0 + 4 && L.msgs[1] == RE15_R41C_MSG_WARNUNG,
+           "ROOM%04X richtige Folge: vierte Frage (08 = 54) + Warnung 46 (msgs %d)", r, L.n_msgs);
     PRUEFE(re15_ventilkette_r41_timer_laeuft() && re15_game_flag_get(5, RE15_R41C_FLAG_TIMER) == 1, "ROOM%04X: Zaehler laeuft ((5,0x3D)=1)", r);
     PRUEFE(re15_game_flag_get(2, 7) == 0 && g_scd.message_active == 0, "ROOM%04X: Spieler frei waehrend des Zaehlers", r);
     const re15_aot_door_params_t *d = &g_aot.door_params[RE15_R41C_SLOT_2030_OSTTUER];
@@ -660,7 +653,7 @@ static void fall_d(uint16_t r)
 static void fall_d2(uint16_t r)
 {
     bits_leeren();
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);   /* Nachbesserung 5 (Nachtrag 16): Sicherung im Ventilkasten 2010 */
@@ -696,7 +689,7 @@ static void fall_d2(uint16_t r)
 static void fall_e(uint16_t r2030, uint16_t r20b0, uint16_t r2000, uint16_t r2010, uint16_t r2050, uint16_t r2070, uint16_t r1260)
 {
     bits_leeren();
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);   /* Nachbesserung 5 (Nachtrag 16) */
@@ -1151,7 +1144,7 @@ static void fall_j2(uint16_t r11a0)
 static void fall_k(uint16_t r)
 {
     /* Bruecke oben, keine Sicherung: der Platz liegt am Sued-Landeplatz (Band 1), nicht mehr am Ring */
-    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
+    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80);
     if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
     for (int k = 0; k < RE15_R41C_VENTILE_N; k++) {
         const re15_aot_t *a = &g_aot.slots[RE15_R41C_SLOT_VENTIL0 + k];
@@ -1170,7 +1163,7 @@ static void fall_k(uint16_t r)
     PRUEFE(L.n_msgs == 0 && !re15_ventilkette_r41_timer_laeuft(), "ROOM%04X: am alten Ring-Platz kein Ventilraetsel (msgs %d)", r, L.n_msgs);
     g_actors[RE15_ACTOR_SLOT_PLAYER].y = -1800;
     /* Bruecke unten, Sicherung nur aufgehoben (Nachtrag 10 entfaellt mit Nachtrag 16): weiter Satz 49 */
-    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "Parse"); return; }
     L = ventil(0, 0, 300); zeige("ohne 108", r, &L);
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_VORHER && !re15_ventilkette_r41_timer_laeuft(),
@@ -1187,7 +1180,7 @@ static void fall_k(uint16_t r)
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_VENTILE_VORHER && re15_ventilkette_r41_drehungen() == 0,
            "ROOM%04X Bit 102 + (3,108) ohne Ventilkasten: Satz 49 (msgs %d, erste %d)", r, L.n_msgs, L.n_msgs ? L.msgs[0] : -1);
     /* mit der Sicherung im Ventilkasten 2010 (Bit 125): die Ventil-Fragen (Nein -> nichts) */
-    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    bits_leeren(); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);
     if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "Parse"); return; }
     L = ventil(5, 1, 300); zeige("mit 125", r, &L);
@@ -1287,7 +1280,7 @@ static void fall_o(uint16_t r)
 static void fall_p(uint16_t r)
 {
     bits_leeren();
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);
     if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
     /* Plakat offen, dann setzt das Flut-Programm seine Sperre (Form ROOM2030 sub02 @0x01E30) und den Marker (5,0x1E) */
@@ -1301,7 +1294,7 @@ static void fall_p(uint16_t r)
            "ROOM%04X: Plakat zu in der Flut -> Pad-Sperre (2,7)/(2,2) der Flut bleibt ((2,7)=%d)", r, re15_game_flag_get(2, 7));
     /* waehrend des Zaehlers oeffnet das Plakat nicht (der Spieler soll fliehen) */
     bits_leeren();
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);
     if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "Parse"); return; }
     L = ventile_richtig(600);
@@ -1316,7 +1309,7 @@ static void fall_p(uint16_t r)
 static void fall_q(uint16_t r)
 {
     bits_leeren();
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);
     for (int k = 0; k < 2; k++) {               /* Suedwand 09 (k 5) und Nordwand 01 (k 0) */
         const int vk = k ? 0 : 5;
@@ -1357,12 +1350,12 @@ static void fall_q(uint16_t r)
 static void fall_m(uint16_t r)
 {
     bits_leeren();
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);   /* Nachbesserung 5 (Nachtrag 16) */
     if (raum_hoch(r, VX, -1800, VZ) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
-    /* die Folge, wie das Plakat sie druckt (09, 01, 02, 07) = falsch: keine Rueckmeldung je Schritt, nach der vierten zurueck */
-    static const int plakat[4] = { 5, 0, 1, 3 };
+    /* die Folge, wie das Plakat sie druckt (Nachtrag 30d: 01, 02, 09, 08) = falsch: keine Rueckmeldung je Schritt, nach der vierten zurueck */
+    static const int plakat[4] = { 0, 1, 5, 4 };
     lauf_t L;
     for (int i = 0; i < 3; i++) {
         L = ventil(plakat[i], 0, 300);
@@ -1371,8 +1364,8 @@ static void fall_m(uint16_t r)
                "ROOM%04X falsche Folge Schritt %d: nur Frage, Drehung %d vermerkt (Drehungen %d)", r, i + 1, i + 1, re15_ventilkette_r41_drehungen());
     }
     L = ventil(plakat[3], 0, 400); zeige("falsch 4", r, &L);
-    PRUEFE(L.n_msgs == 2 && L.msgs[0] == RE15_R41C_MSG_VENTIL0 + 3 && L.msgs[1] == RE15_R41C_MSG_VENTILE_ZURUECK,
-           "ROOM%04X falsche Folge 09/01/02/07: vierte Frage + Text 45 (msgs %d, zweite %d)", r, L.n_msgs, L.n_msgs > 1 ? L.msgs[1] : -1);
+    PRUEFE(L.n_msgs == 2 && L.msgs[0] == RE15_R41C_MSG_VENTIL0 + 4 && L.msgs[1] == RE15_R41C_MSG_VENTILE_ZURUECK,
+           "ROOM%04X falsche Folge 01/02/09/08: vierte Frage + Text 45 (msgs %d, zweite %d)", r, L.n_msgs, L.n_msgs > 1 ? L.msgs[1] : -1);
     PRUEFE(re15_ventilkette_r41_drehungen() == 0 && re15_game_flag_get(5, 0x10) == 0 && re15_game_flag_get(5, 0x13) == 0 &&
            !re15_ventilkette_r41_timer_laeuft() && re15_game_flag_get(5, RE15_R41C_FLAG_TIMER) == 0 && bit(RE15_R41C_BIT_FLUT_GELAUFEN) == 0,
            "ROOM%04X falsche Folge: (5,0x10..0x13) zurueck, kein Zaehler, keine Flut", r);
@@ -1388,12 +1381,12 @@ static void fall_m(uint16_t r)
     /* richtige Folge -> 46 + Zaehler; die Folge im Protokoll */
     L = ventile_richtig(400); zeige("richtig", r, &L);
     PRUEFE(L.n_msgs == 2 && L.msgs[1] == RE15_R41C_MSG_WARNUNG && re15_ventilkette_r41_timer_laeuft() &&
-           re15_ventilkette_r41_folge(0) == 5 && re15_ventilkette_r41_folge(1) == 3 && re15_ventilkette_r41_folge(2) == 1 &&
-           re15_ventilkette_r41_folge(3) == 0,
-           "ROOM%04X richtige Folge 09/07/02/01 -> Warnung 46 + Zaehler", r);
+           re15_ventilkette_r41_folge(0) == 5 && re15_ventilkette_r41_folge(1) == 1 && re15_ventilkette_r41_folge(2) == 0 &&
+           re15_ventilkette_r41_folge(3) == 4,
+           "ROOM%04X richtige Folge 09/02/01/08 -> Warnung 46 + Zaehler", r);
     /* Dokument: Item-Zone Slot 20 (Item 0x4E, Bit 107, Weltmodell obj 6) neben der Sicherung -> der Leser wird angefordert */
     bits_leeren();
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     if (raum_hoch(r, -4850, -1800, 7280) != 0) { PRUEFE(0, "Parse"); return; }
     const re15_aot_t *dz = &g_aot.slots[RE15_R41C_SLOT_DOKUMENT];
     const re15_aot_item_params_t *ip = &g_aot.item_params[RE15_R41C_SLOT_DOKUMENT];
@@ -1712,7 +1705,7 @@ static void fall_r(uint16_t r)
 
     /* R3: echter Ablauf - Bruecke unten, Sicherung im Ventilkasten, richtige Folge */
     bits_leeren();
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);
@@ -1756,7 +1749,7 @@ static void fall_r(uint16_t r)
 
     /* Raumwechsel waehrend des Zaehlers: Alarm + Countdown enden (der Raum-BGM-Lader uebernimmt den SUB-Platz) */
     bits_leeren();
-    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13);
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
     vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
     vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);
@@ -1914,7 +1907,7 @@ int main(int argc, char **argv)
         int n = 0;
         for (int s = 0; s < RE15_AOT_MAX; s++)
             if (g_aot.slots[s].active && g_aot.slots[s].type == RE15_AOT_TYPE_GENERIC &&
-                (g_aot.slots[s].event_id == RE15_R41C_EV_PULT || g_aot.slots[s].event_id == RE15_R41C_EV_VENTIL13 ||
+                (g_aot.slots[s].event_id == RE15_R41C_EV_PULT ||
                  (g_aot.slots[s].event_id >= RE15_R41C_EV_VENTIL0 && g_aot.slots[s].event_id <= RE15_R41C_EV_PLAKAT))) n++;
         PRUEFE(n == 0 && re15_ventilkette_r41_wasser_prop(0) < 0, "ROOM2060: %d fremde Plaetze (obj 4 ist dort das Sicherungs-Panel)", n);
     }

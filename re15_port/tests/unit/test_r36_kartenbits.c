@@ -525,7 +525,7 @@ static const port_bit_t k_port[] = {
     { RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060, "RE15_R39Q_BIT_LEON_1060", "Leon: Umzug 10E0 -> 1060 gelaufen, elzazombies_r39.c re15_r39q_leon_umzug (Runde 39 Q, NB3)" },
     { RE15_R39P_BIT_BANK, RE15_R39P_BIT_PANIK, "RE15_R39P_BIT_PANIK", "Elzas Panikphase (1041-Ruf bis Johns Rettung), gen/johnruf_r39_programme.inc Set @+0048 (Runde 39 P)" },
     { RE15_R41C_BANK, RE15_R41C_BIT_LEITER_FREI,   "RE15_R41C_BIT_LEITER_FREI",   "Leiter 2000/20B0 nach 2050 frei, ventilkette_r41.c install (Runde 41 C)" },
-    { RE15_R41C_BANK, RE15_R41C_BIT_VENTIL13,      "RE15_R41C_BIT_VENTIL13",      "Zulaufventil 13 in 2030 offen, gen/ventilkette_r41_programme.inc Set (Runde 41 C)" },
+    { RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80,       "RE15_R41C_BIT_DRUCK80",       "Panel-Raetsel 2030 geloest (Anzeige 80), gen/ventilkette_r41_programme.inc Set (Runde 41 C)" },
     { RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN, "RE15_R41C_BIT_BRUECKE_UNTEN", "Bruecke 2030 gesenkt, gen/ventilkette_r41_programme.inc Set (Runde 41 C)" },
     { RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN, "RE15_R41C_BIT_FLUT_GELAUFEN", "Flut in 2030 gelaufen -> 2000 wird 20B0, ventilkette_r41.c install (Runde 41 C)" },
     { RE15_R41C_BANK, RE15_R41C_BIT_PULT2050,      "RE15_R41C_BIT_PULT2050",      "Schaltpult 2050 auf 80 V, ventilkette_r41.c panel_tick (Runde 41 C)" },

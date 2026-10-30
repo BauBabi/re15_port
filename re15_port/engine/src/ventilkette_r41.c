@@ -27,6 +27,7 @@
 #include "re15_wasser_r38.h" /* RE15_WASSER_R38_CODE_BODEN (Wasser-Schritt-Effekt FUN_80045630) */
 #include "re15_wasserlauf_r41.h" /* Runde 41 Spur N: Wasserlauf an der Leiter ROOM2000/2001 */
 #include "re15_panel2030_r41.h"  /* Runde 41 Spur N: Panel-Raetsel ROOM2030/2031 */
+#include "re15_schrank2010_r41.h" /* Runde 41 Spur N: Schrank ROOM2010/2011 klappt auf */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #include "re15_engine.h"     /* g_engine.frame_count (Protokoll), re15_render_tile (Zeichner) */
@@ -38,6 +39,7 @@
 #ifdef RE15_PLATFORM_PC
 #include "gen/ventilkette_r41_wasser.inc"
 #include "gen/ventilkette_r41_plakat.inc"   /* Nachbesserung 4: Plakat (Nahaufnahme + Aushang) und Dokument-Blatt */
+#include "gen/schrank2010_r41.inc"           /* Spur N: Schrank-Modelle */
 #endif
 
 extern uint16_t g_scd_pad_edge;    /* virtuelle Flanke (SQUARE = 0x40, CROSS = 0x8000; pad_common.c vtbl) */
@@ -509,8 +511,12 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
     s_standbild_offen = 0; s_standbild_takte = 0; s_zaehler_takte = 0; s_flut_bilder = 0;
     for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
-    if (ist(room_id, RE15_R41C_RAUM_2010))            /* Nachbesserung 5: ROOM2010/2011 benutzen Bank 5 nicht (scd_dump_room.py) */
+    if (ist(room_id, RE15_R41C_RAUM_2010)) {          /* Nachbesserung 5: ROOM2010/2011 benutzen Bank 5 nicht (scd_dump_room.py) */
         re15_game_flag_set(5, RE15_R41C_FLAG_STANDBILD, 0);
+        re15_game_flag_set(5, RE15_R41C_FLAG_SCHRANK, 0);   /* Spur N */
+        re15_game_flag_set(5, RE15_R41C_FLAG_NAHBILD, 0);
+    }
+    re15_schrank2010_r41_reset();
     if (ist(room_id, RE15_R41C_RAUM_2030)) {          /* nur der eigene Raum (Nachbesserung 1, M3): anderswo sind
                                                        * (5,0x1D)/(5,0x1E) Original-Bits, z. B. ROOM1171 sub02 @0x013B2
                                                        * `22 05 1e 01` im Init-Takt (Kraehen DIVE-ARM @0x801155e8) */
@@ -544,6 +550,7 @@ void re15_ventilkette_r41_reset(void)
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
     s_timer = 0; s_timer_gesehen = 0; s_flut = 0; s_ertrunken = 0; s_fuesse_nass = 0; s_spritzer_n = 0; s_letzter_raum = 0xFFFFu;
     re15_panel2030_r41_reset();
+    re15_schrank2010_r41_reset();
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
     s_ventil_gewaehlt = -1; s_ventile_geloest = 0; s_falsch_offen = 0; s_plakat_offen = 0; s_plakat_takte = 0;
@@ -847,6 +854,7 @@ static void kasten_tick(void)
     if (s_kasten_vorher >= 0 && k != s_kasten_vorher)
         LOG("[ventilkette41] Ventil-Sicherungskasten 2010: Sicherung %s -> Bit (9,125) = %d\n", k ? "eingesetzt" : "genommen", k);
     s_kasten_vorher = k;
+    re15_schrank2010_r41_tick();                                     /* Spur N: aufklappen, Nahansichten */
     if (!s_standbild_offen) {
         if (!re15_game_flag_get(5, RE15_R41C_FLAG_STANDBILD)) return;
         s_standbild_offen = 1; s_standbild_takte = 0;
@@ -864,6 +872,12 @@ static void kasten_tick(void)
 
 int re15_ventilkette_r41_standbild(unsigned *raum, int *cut)
 {
+    int nah = 0;
+    if (ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2010) && re15_schrank2010_r41_nahbild(&nah)) {   /* Spur N: Nahansichten 2060 */
+        if (raum) *raum = RE15_R41N_NAH_RAUM;
+        if (cut) *cut = nah;
+        return 1;
+    }
     if (!s_standbild_offen || !ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2010)) return 0;
     if (raum) *raum = RE15_R41C_STANDBILD_RAUM;
     if (cut) *cut = RE15_R41C_STANDBILD_CUT;
@@ -994,6 +1008,7 @@ static int reling_jetzt(void)
 int re15_ventilkette_r41_obj_id(uint16_t room_id, int k)
 {
     if (k == 4) return (ist(room_id, RE15_R41C_RAUM_2000) && re15_wasserlauf_r41_aktiv()) ? RE15_R41N_LAUF_OBJ : -1;   /* Spur N */
+    if (k >= 5 && k <= 7) return ist(room_id, RE15_R41C_RAUM_2010) ? RE15_R41N_SCHRANK_OBJ_INNEN + (k - 5) : -1;       /* Spur N */
     if (!ist(room_id, RE15_R41C_RAUM_2030)) return -1;
     if (k == 1 && reling_jetzt()) return -1;
     if (k == 2) return RE15_R41C_DOK_OBJ;        /* Nachbesserung 4: Dokument-Blatt */
@@ -1007,6 +1022,9 @@ const uint8_t *re15_ventilkette_r41_md1_bytes_k(int k, int *out_size)
     if (k == 2) { if (out_size) *out_size = (int)sizeof re15_r41c_blatt_md1;   return re15_r41c_blatt_md1; }
     if (k == 3) { if (out_size) *out_size = (int)sizeof re15_r41c_aushang_md1; return re15_r41c_aushang_md1; }
     if (k == 4) { if (out_size) *out_size = (int)sizeof re15_r41c_wasserlauf_md1; return re15_r41c_wasserlauf_md1; }   /* Spur N */
+    if (k == 5) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_innen_md1;  return re15_r41n_schrank_innen_md1; }
+    if (k == 6) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_aussen_md1; return re15_r41n_schrank_aussen_md1; }
+    if (k == 7) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_tuer_md1;   return re15_r41n_schrank_tuer_md1; }
 #endif
     if (k == 0 || k == 1) return re15_ventilkette_r41_md1_bytes(out_size);
     if (out_size) *out_size = 0;
@@ -1018,6 +1036,9 @@ const uint8_t *re15_ventilkette_r41_tim_bytes_k(int k, int *out_size)
 #ifdef RE15_PLATFORM_PC
     if (k == 2) { if (out_size) *out_size = (int)sizeof re15_r41c_blatt_tim;   return re15_r41c_blatt_tim; }
     if (k == 3) { if (out_size) *out_size = (int)sizeof re15_r41c_aushang_tim; return re15_r41c_aushang_tim; }
+    if (k == 5) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_innen_tim;  return re15_r41n_schrank_innen_tim; }
+    if (k == 6) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_aussen_tim; return re15_r41n_schrank_aussen_tim; }
+    if (k == 7) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_tuer_tim;   return re15_r41n_schrank_tuer_tim; }
 #endif
     if (k == 0 || k == 1 || k == 4) return re15_ventilkette_r41_tim_bytes(out_size);
     if (out_size) *out_size = 0;

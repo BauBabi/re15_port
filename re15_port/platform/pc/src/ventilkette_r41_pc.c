@@ -195,6 +195,8 @@ uint8_t *re15_ventilkette_r41_pc_rbj(unsigned room_id, int *size)
 /* ---- Standbild der Ventile (2030 Cut 7) --------------------------------------------------------------------- */
 static uint32_t s_standbild[RE15_BSS_FRAME_WIDTH * RE15_BSS_FRAME_HEIGHT];
 static int      s_standbild_ok = -1;           /* -1 ungeprueft, 0 fehlt, 1 dekodiert */
+static unsigned s_sb_raum = 0;                 /* Spur N: das dekodierte Bild (Ventile 2030 Cut 7, Nahansichten 2060 Cut 8/9) */
+static int      s_sb_cut  = -1;
 
 static int standbild_laden(unsigned raum, int cut)
 {
@@ -306,7 +308,9 @@ void re15_ventilkette_r41_pc_bild(void)
     const uint32_t *bild = pbild ? pbild : re15_ventilkette_r41_plakat_rgba();
     unsigned sraum = 0; int scut = 0;
     if (!bild && re15_ventilkette_r41_standbild(&sraum, &scut)) {
-        if (s_standbild_ok < 0) s_standbild_ok = standbild_laden(sraum, scut);
+        if (s_standbild_ok < 0 || sraum != s_sb_raum || scut != s_sb_cut) {
+            s_standbild_ok = standbild_laden(sraum, scut); s_sb_raum = sraum; s_sb_cut = scut;
+        }
         if (s_standbild_ok == 1) bild = s_standbild;
     }
     if (bild) { re15_render_pc_show_fmv(bild, 320, 240); s_vollbild = 1; }
