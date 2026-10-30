@@ -167,3 +167,69 @@ V2 (Auswahl sicherer Treffer, Cut korrekt zerlegt): 1170 Cut 2 (0:12), 1020 Cut 
    gegenpruefen (re15-port-visual-verify).
 4. H2: zusaetzliche Kamera in 2060 – nur mit neuem Hintergrund moeglich (nicht auf der Disc).
 5. PC-Screen Stage 3 („System Error“) – Vollbild-UI fehlt.
+
+---
+
+## 5. Video 3 `Resident_Evil_1.5_All_Footage.mp4` (14:19, 320x240, bioflames/survivhor)
+
+Sammelschnitt mehrerer Quellen (u.a. die Complete-Disc-Clips aus V1 und der Final-Build aus V2), dazu
+Szenen, die in V1/V2 nicht vorkommen, und am Ende (9:34-10:06) Tafeln des BIOHAZARD-2-Trailers.
+Zuordnung wie §1 (Score >= 0.80, 120 sichere Segmente), Schluesselstellen in 640x480 angesehen.
+
+### 5.1 Neu gegenueber V1/V2
+| Zeit | Raum, Cut | Inhalt | Unser Stand |
+|---|---|---|---|
+| 0:10-0:18 | Spielerwahl | „PLEASE SELECT MAIN CAST“, Leon/Elza mit PROFILE (178 cm/21/A, 169 cm/19/0) | vorhanden (Player-Select) |
+| 2:14-2:32 | 1030 Cut 6/11/5/1/9 | Elza im zerstoerten Wachraum, Zombies durch die Gitter | Raum vorhanden |
+| 2:40-2:48 | 1040 Cut 4/5 | **Nahschuss: Zombiekopf platzt** (rote Wolke, kopfloser Koerper faellt) | s. 5.2 |
+| 2:50-2:57 | 1150 Cut 1/2/3/5 | Elza in Irons' Buero | vorhanden |
+| 2:58-3:05 | 1190 Cut 1/3 | Elza gegen Hunde im Schiessstand | vorhanden (1190: 6x 0x20) |
+| 3:32-3:45 | 3000 Cut 2, 3010 Cut 4/3/2/0 | Elza am Lkw, Blut ueberall | vorhanden |
+| 4:06-5:12 | 2000/2070 | Leon gegen Zombie-Gruppen im Kanal (Zombies in Braun = Arbeitskleidung) | 2000/2070 setzen 0x16 bzw. 0x25 |
+| 5:42-6:00 | ?110/11B (gruenes Moos) | Elza in moosbewachsenem Gang mit Spinnen | **nicht sicher zugeordnet** (Score 0.7) |
+| 6:02-6:57 | 1040 Cut 6/2/1/4 | Leon; „ボタンがある 押しますか？ ▸Yes No“ | 1040 Msg 0 „It's a shutter switch. Will you push it?“ |
+| 7:00 | 11E0 Cut 3 | Einblendung „画面は開発中のものです。“ = **„Screens are from a game in development.“** | Disclaimer, kein Spieltext |
+| 7:44, 10:38-10:42, 12:52-13:02 | 5140 Cut 4-7 | brennende Zombies, Bodenfeuer | 5140: 13 Sce_espr_on (Laufzeit offen, s. G5) |
+| 8:06-8:42 | 1070 Cut 3/7 | **Elza mit Granaten: Zombies zerplatzen, Ober- und Unterkoerper getrennt, grosse Blutlachen** | s. 5.2 |
+| 8:46-9:05 | 1190 Cut 4 | Leon erschiesst Hunde | vorhanden |
+| 9:12-9:31 | 5120 Cut 2-6 (rot) | Leon und Zombie im Feuer | vorhanden (Licht/Effekte offen) |
+| 11:30-12:20 | 1070 Cut 5/4/3/7 | Leon und Elza (getrennt!) gegen Zombies im Buero | vorhanden |
+| 13:10-13:56 | 3070 Cut 1-5/9/12 | **Leon (mit Marvin) gegen den massigen Birkin** im Lastenaufzug-Raum | 3070 = Leon-Seite: 2x 0x30 + Marvin 0x40 + Ada 0x42 - passt |
+| 14:00-14:14 | ? (blau, rote Lampe) | Leon von einem Zombiepulk gefressen, Todesszene | **nicht zugeordnet** |
+
+### 5.2 Schadensmodell
+Video 3 zeigt eindeutig mehr Zerstoerung als der Auslieferungsstand:
+- **Granate (8:10-8:12, 8:22):** Explosion, Zombie wird in Ober- und Unterkoerper getrennt, der Oberkoerper
+  kriecht weiter; danach grosse Blutlachen am Boden.
+- **Nahschuss (2:44-2:46, 11:36):** der Kopf platzt in einer roten Wolke, der Koerper faellt kopflos.
+- Port: der RE2-Flavor kennt Abtrennung/Brocken (enemy_ai_re2_zombie.c, Gore-Bank, schuss_r36.c); ob der
+  RE1.5-Flavor beides zeigt, ist **nicht geprueft**. Offen als Aufgabe, nicht umgesetzt.
+
+### 5.3 Treffen Leon und Elza? (Frage des Nutzers zur Wiki-Aussage)
+- **In keinem der drei Videos stehen Leon und Elza im selben Bild.** Die blau uniformierten Figuren neben Elza
+  (Leichenhalle 3:14-3:16, Buero 0:44-0:47, 7:16, 10:16) sind RPD-Zombies, nicht Leon.
+- **Die Begleiter kreuzen sich aber** - belegt in den ausgelieferten RDTs, nicht nur im Video:
+  - ROOM30C1 (Elza-Seite) Msg 1-8: Elza trifft **Marvin** („I'm Marvin Branagh, RPD. I'm here with Leon
+    Kennedy.“ - „He's all right and he's helping me and Ada escape the city.“ - Elza: „Will you tell him that
+    me and John and Sherry are here and we're all right?“). V2 0:46 zeigt genau diese Szene (Theke ROOM30C).
+  - ROOM6030 (Leon-Seite, Zug): Leon trifft **John, Sherry und Annette**; John: „She's out there fighting
+    the monsters ... She told me to stay and keep an eye on Marvin here.“ / „Up front, trying to start the train.“
+  - Spawns: die Leon-Raeume (xxx0) setzen nie John/Sherry (0x49/0x4B) ausser 6030, die Elza-Raeume (xxx1) nie
+    Marvin/Ada (0x40/0x42) als Gegner-Spawn.
+- **Urteil:** Die Wiki-Aussage stimmt fuer die **Spielfiguren**: Leon und Elza begegnen sich nicht direkt,
+  jede Figur hat zwei eigene Begleiter (Leon: Marvin + Ada, Elza: John + Sherry). Sie ist aber zu absolut,
+  was die Geschichte angeht: die Wege beruehren sich ueber die Begleiter (Elza-Marvin in 30C1) und laufen am
+  Zug (6030) zusammen. Dass „Elza Marvin trifft“, ist also richtig - Elza trifft Marvin, nicht Leon.
+- Nebenbefund: ROOM3060.RDT (Leon-Datei) traegt die Elza/Sherry/John-Dialoge ohne Sprecher-Steuerbytes
+  (`05:xx` fehlt) - eine Kopie der Elza-Variante 3061, kein Hinweis auf ein Treffen.
+
+### 5.4 Texte (neu)
+| Zeit | Original | Englisch | Bezug |
+|---|---|---|---|
+| 0:10 | PLEASE SELECT MAIN CAST / Leon,S,Kennedy / Elza Walker / PROFILE | (Englisch) | Player-Select |
+| 0:20 | (Dach, Untertitel unscharf) | wie V1 0:49 | 1170 Msg 5/6 |
+| 0:54 | スイッチがある 押しますか？ | There's a switch. Push it? | 1190 Msg 0 |
+| 3:20-3:30 | …エルザ 私、ヒミツの入り口を知ってるの / ヒミツの入り口？ / ここよ この中から入れるの / シェリー！待って！ | wie V1 2:54-3:04 | 3060/3061 Msg 3-6 |
+| 6:48 | ボタンがある 押しますか？ ▸Yes No | There's a button. Push it? Yes / No | 1040 Msg 0 (bei uns „shutter switch“) |
+| 7:00 | 画面は開発中のものです。 | Screens are from a game in development. | Disclaimer |
+| 9:34-10:06 | あの惨劇から 2か月後 / ラクーンシティ全土に / 真の悪夢が始まった / 恐怖再び | Two months after that tragedy / across all of Raccoon City / the true nightmare began / The horror returns | BIOHAZARD-2-Trailer, kein Spieltext |
