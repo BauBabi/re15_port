@@ -2086,7 +2086,7 @@ void re15_enemy_ai_live_init(int slot)
      * re15_enemy_ai_live_tick keeps it mirroring the player (RAM-arbitrated, see there). */
     e->steer_x = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x;
     e->steer_z = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z;
-    /* OPEN (audit wf_827f186d zombie-live #4, LOW): the original INIT additionally rolls a 25%
+    /* (GEBAUT unten nach dem HP-Wurf) the original INIT additionally rolls a 25%
      * spawn-VARIANT (@0x801008b0-8f0: `jal rng; andi 3; bne zero,skip` else `jal rng; andi 7;
      * lw @0x8011f7ec[v0]; jalr` — table {0x80101058,0x80101008,0x801010a8,0x801010a8,0x80101008,
      * 0x8010118c,0x8010113c,0x8010118c}). The variant fns write MODEL-POOL render fields (e.g.
@@ -2118,6 +2118,36 @@ void re15_enemy_ai_live_init(int slot)
         }
         if (row >= 0) e->hp = (int16_t)z_hp[row][re15_engine_rand8() & 0xf];   /* +0x9a @0x801007f4 */
     }
+    /* SPAWN-VARIANTE (@0x801008b0-8ec): 25 % (`andi 3` / bne @0x801008bc-c0), dann Tabelle @0x8011f7ec[rng&7] =
+     * {58,08,a8,a8,08,18c,13c,18c}: ein oder zwei Gliedmassen abgemagert (Teil-Wort |= 0x400|0x80, Skala Q12 auf
+     * x/z) und verfaerbt (Tinten 0x80 / 0x8080e0) — RE1.5-Teilschicht. Liegt NACH HP/Stagger-Clip wie im Original. */
+    {
+        int zslot = (int)(e - g_actors);
+        re15_teile_reset(zslot);
+        if ((re15_engine_rand8() & 3) == 0) {
+            static const struct { int8_t a, b; int16_t sa, sb; } var[8] = {
+                { 12, -1, 0x5f4, 0 },      /* 0x80101058: Teil 12 (+0x810) */
+                {  2, -1, 0x7e8, 0 },      /* 0x80101008: Teil 2 (+0x158) */
+                {  8,  9, 0x5f4, 0x5f4 },  /* 0x801010a8: Teile 8 (+0x560) und 9 (+0x60c) */
+                {  8,  9, 0x5f4, 0x5f4 },
+                {  2, -1, 0x7e8, 0 },
+                {  4,  5, 0x7e8, 0x5f4 },  /* 0x8010118c: Teile 4 (+0x2b0) und 5 (+0x35c) */
+                {  5, -1, 0x7e8, 0 },      /* 0x8010113c: Teil 5 */
+                {  4,  5, 0x7e8, 0x5f4 },
+            };
+            int v = re15_engine_rand8() & 7;
+            re15_teil_t *t = re15_teile(zslot);
+            for (int k = 0; k < 2 && t; k++) {
+                int part = k ? var[v].b : var[v].a; int16_t sk = k ? var[v].sb : var[v].sa;
+                if (part < 0) continue;
+                t[part].w |= 0x480;
+                t[part].scale[0] = sk; t[part].scale[1] = 0x1000; t[part].scale[2] = sk;
+                t[part].h94[0] = 0x80; t[part].h94[1] = 0;            /* +0x94 = 0x80 */
+                t[part].h94[2] = 0x80e0; t[part].h94[3] = 0x80;       /* +0x98 = 0x8080e0 */
+            }
+            re15_teile_markieren(zslot);
+        }
+    }
     /* BYTE-TRUE SPAWN-STATE DECODER (@0x80100c20, branched from the init FUN_80100688 @0x80100904).
      * The Sce_em_set behavior byte (entity+0x9 = grid_id) carries, in its low nibble, the initial AI
      * state — NOT just the spawn pose. The port previously seeded only +0x94 (re15_enemy_spawn_action)
@@ -2131,6 +2161,7 @@ void re15_enemy_ai_live_init(int slot)
         } else if (sel == 0x0d) {       /* pre-engaged: +0x4=0x201 + grid=0 @0x80100f40-54 */
             e->sub_state_1 = 0x02; e->grid_id = 0; e->motion = 0x27;
         } else if (sel == 0x0e) {
+            re15_teile_reset((int)(e - g_actors));   /* FUN_8001ee68 @0x80100fe0: nur in diesem Zweig — die Variante verfaellt */
             /* SLEEPING-LYING (byte-true @0x80100f64-fd4, analysis/zombie_lyer_10d0.md D1
              * CONFIRMED — der alte "pose-only"-Kommentar war falsch): +0x94=0x2A (sb @0x80100f78),
              * +0x95=0 (@0x80100f88), +0x8f=0 (@0x80100f98), Word +0x4=0x1201 (@0x80100fc0-c4 =
