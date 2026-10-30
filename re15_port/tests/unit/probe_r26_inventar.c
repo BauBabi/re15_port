@@ -345,7 +345,7 @@ int main(void)
         /* Integration Runde 38: G (genaue Pruefung unter der Basis) + F (dritter Port-Name 0x43 < 0x48). */
         printf("  (B4c Laeufe 0x42/0x43/0x45: %d, davon mit Namens-Einsatz: %d)\n", port_namen, port_einsatz);
         PRUEFE("B4c 0x42/0x45 (Runde 36 Spur Q) + 0x43 (Runde 38 Spur F): Port-Name statt ausgeliefertem Namen, sonst bit-gleich",
-               port_ok && port_namen == 9 * 4 && port_einsatz >= 4 * 2);                            /* + 0x34 Runde 41 Spur F */
+               port_ok && port_namen == 9 * 5 && port_einsatz >= 4 * 2);                            /* + 0x34 Runde 41 Spur F, 0x33 Spur O */
         PRUEFE("B4b genau die Dokument-Ids der Tabelle ausgenommen (0x48..), je Schluessel einmal",
                dokumente == 9 * n_dok);
     }

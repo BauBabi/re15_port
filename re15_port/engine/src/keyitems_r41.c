@@ -64,7 +64,7 @@ static const stelle_t k_stellen[] = {
     /* Sicherung am Rolltor (Port-Programm rolltor_1050.c k_mit): Slot 7 @0x00C22, Frage = Port-Text 20 (2060 msg 4). */
     { 0x1050, 0x40, 7, 2, 20, 0, 0, 9, 63, 0 },                       /* Tor: noch nicht eingesetzt (k_mit, sonst sub02) */
     /* Kasten 2010 (Spur C): Port-Platz, Programm 2010_kasten_frage, Frage = Port-Text 41 (2060 msg 4). */
-    { 0x2010, 0x40, RE15_R41C_SLOT_KASTEN, RE15_R41C_EV_KASTEN, RE15_R41C_MSG_KASTEN_FRAGE, 0, 0, 3, 108, 1 },   /* Tor wie ventilkette_r41.c: sonst 2010_kasten_leer */
+    { 0x2010, 0x40, RE15_R41C_SLOT_KASTEN, RE15_R41C_EV_KASTEN, RE15_R41C_MSG_KASTEN_FRAGE, RE15_R41O_FLAGITEM, 0, 3, 108, 1 },   /* Tor wie ventilkette_r41.c: sonst 2010_kasten_leer */
     /* KURBEL: sub00 @0x009AE Slot 3 -> sub02 @0x00A5C msg 0, @0x00A62 msg 1, @0x00A6C Ck(12,31,0). */
     { 0x2020, RE15_R41O_KURBEL_ITEM, 3, 2, 1,
       RE15_R41O_SOFORT | RE15_R41O_WAFFE | RE15_R41O_FLAGITEM, 0, KEIN_TOR, 0, 0 },

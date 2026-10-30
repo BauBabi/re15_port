@@ -206,6 +206,16 @@ static const uint16_t JA   = 0x4000;             /* SELECT bestaetigen (msg_comm
 static const uint16_t NEIN = 0x1000 | 0x4000;    /* Links/Rechts schaltet, Bestaetigen im selben Bild
                                                   * wirkt erst nach dem Umschalten (case 3: lr vor act) */
 
+/* Runde 41 Spur O: Ja auf die entfallene Frage msg 20 (USE aus dem Inventar). */
+static lauf_t fahren_ja(int slot)
+{
+    extern void re15_keyitems_r41_test_ja(int);
+    re15_keyitems_r41_test_ja(1);
+    lauf_t L = fahren(slot, JA, JA, 1);
+    re15_keyitems_r41_test_ja(0);
+    return L;
+}
+
 /* Fall A / A-N (ohne Sicherung). */
 static void fall_ohne(const char *name, uint16_t raum, const uint8_t *d, long sz, uint16_t antwort)
 {
@@ -333,7 +343,7 @@ int main(void)
         raum_hoch(0x1050, k, sz0, &r, 1);
         sicherung_geben();
         int s = ausloesen("W vorher");
-        fahren(s, JA, JA, 1);
+        fahren_ja(s);
         PRUEFE(re15_game_flag_get(9, 63), "W: Einsetzen fehlgeschlagen");
         uint8_t *k2 = (uint8_t *)malloc((size_t)sz0); memcpy(k2, d1050, (size_t)sz0);
         re15_rdt_t r2;
@@ -352,7 +362,7 @@ int main(void)
         raum_hoch(0x1050, k, sz0, &r, 1);
         sicherung_geben();
         int s = ausloesen("L vorher");
-        fahren(s, JA, JA, 1);
+        fahren_ja(s);
         re15_savedata_t sd;
         re15_savedata_capture(&sd, 0, 1);
         uint8_t *k2 = (uint8_t *)malloc((size_t)sz0); memcpy(k2, d1050, (size_t)sz0);

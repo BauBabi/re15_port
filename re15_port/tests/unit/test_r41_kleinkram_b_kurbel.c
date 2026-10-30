@@ -29,6 +29,7 @@
 #include "re15_map_hint.h"     /* re15_host_clock_set_us */
 #include "re15_cut10f0.h"      /* re15_cine_active */
 #include "re15_plcloop_r41.h"
+#include "re15_keyitems_r41.h" /* Runde 41 Spur O: die Kurbel wird aus dem Inventar benutzt */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -153,9 +154,9 @@ static void teil_laenge(void)
 /* ============================================================================================ schleife */
 typedef struct { int max_frame, umlaeufe, plc_frames, frames_nach_plc, halt_bild; } lauf_t;
 
-/* Kurbel-Szene fahren: AOT Slot 3 feuern (= Aktionstaste an der Kurbel, Handler [3] @0x800430F0), Fragen mit
- * Quadrat bestaetigen, dann bis Plc_ret (player_mode faellt) oder 400 Bilder ticken. ohne_flag: Plc_flg(0,4) jeden
- * Takt wieder loeschen (Gegenprobe Halten). */
+/* Kurbel-Szene fahren: USE der Kurbel (Runde 41 Spur O: Ja-Zweig von sub02 ohne Texte, keyitems_r41.c; bis dahin Aktionstaste
+ * + Fragen), dann bis Plc_ret (player_mode faellt) oder 400 Bilder ticken. ohne_flag: Plc_flg(0,4) jeden Takt wieder
+ * loeschen (Gegenprobe Halten). */
 static lauf_t kurbel(uint16_t room, int ohne_flag)
 {
     lauf_t r = { -1, 0, 0, 0, -1 };
@@ -164,7 +165,7 @@ static lauf_t kurbel(uint16_t room, int ohne_flag)
     re15_game_flag_set(3, 0x72, 1);                     /* Kurbel aufgenommen (ROOM2010 sub02 @0x008CA) */
     if (room_boot(room, 2600, -2800, 2048, 1) != 0) return r;
     for (int f = 0; f < 5; f++) bild(0, 0);
-    re15_aot_fire_slot(3);                              /* Slot 3 sce 3 (sub00 @0x009AE) -> sub02 */
+    (void)re15_keyitems_r41_testlauf(RE15_R41O_KURBEL_ITEM);   /* Slot 3 sce 3 (sub00 @0x009AE) -> sub02 */
     unsigned u0 = re15_plcloop_r41_umlaeufe();
     int plc_seen = 0, vorher = -1;
     for (int f = 0; f < 420; f++) {
