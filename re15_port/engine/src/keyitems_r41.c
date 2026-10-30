@@ -344,6 +344,12 @@ int re15_keyitems_r41_plc_flags(void)
     return 0x40;   /* RE2 ROOM1110 sub15 @0x02FC1 `3f 00 0f 45`, RE1.5 @0x80050d24 `andi v0,v0,0x40` -> @0x80050d30 +0x8f := 0 */
 }
 
+/* Szenenende der Kurbel: RE2 ROOM1110 sub13 verdeckt den Wechsel Kurbel -> Stehen mit einer Blende um Pos_set und Plc_ret (@0x02F24
+ * `53 02 02 07 00 18` ... @0x02F4E `53 02 02 07 00 e8`). RE1.5 hat dort keine Blende, aber den Schnitt @0x0B0E `29 03` im selben
+ * Takt wie Plc_ret @0x0B16: ohne Mischung (wie Bit 0x40, @0x80050d30) faellt der Wechsel in den Schnitt, sonst kippt Leon nach dem
+ * Schnitt sieben Bilder lang von der Kurbel-Pose in die Stehpose zurueck. */
+int re15_keyitems_r41_plc_ret(void) { return s_waffe_szene; }
+
 int re15_keyitems_r41_text_ende(int parse)
 {
     if (s_text_ende < 0 || parse != s_text_ende) return 0;

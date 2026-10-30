@@ -53,6 +53,7 @@ int  re15_keyitems_r41_evt_next(void);
 int  re15_keyitems_r41_sleep(void);
 /* op_plc_motion: 0x40 = RE2-Flag "keine Blende" (ROOM1110 @0x02FC1), sonst 0. */
 int  re15_keyitems_r41_plc_flags(void);
+int  re15_keyitems_r41_plc_ret(void);      /* Plc_ret: 1 = Ende der Kurbel-Szene, Wechsel in die Stehpose ohne Mischung (Schnitt @0x0B0E) */
 /* re15_dialog_step Seitenumbruch: 1 = die Beschreibung endet hier (Karten-Leser: Text und Frage stehen in EINER Nachricht). */
 int  re15_keyitems_r41_text_ende(int parse);
 

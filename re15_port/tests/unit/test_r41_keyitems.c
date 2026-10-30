@@ -12,7 +12,7 @@
  *   besitz   Flag-Gegenstaende: Eintrag, Verbrauch, Kiste, Altstand, fremde Sicherung bleibt.
  *   voll     volles Inventar an den drei Aufnahme-Stellen: "You can't carry", kein Flag.
  *   kurbel   Mechanik des Fliegens: Pos_set und Plc_motion im ersten Skripttakt, keine Blende (Flag 0x40, anim_frac 0), Clip 0;
- *            Gegenprobe Aktionstaste + alte Frage: Blende 7.
+ *            Gegenprobe Aktionstaste + alte Frage: Blende 7 am Anfang und am Ende (Plc_ret).
  *   waffe    RE2 @0x80068cfc: Kurbel legt die Waffe ab, die naechste Oeffnung legt sie an.
  *   daten    Name, CHECK-Text, Icon, Bild, Rechtecke Block 0x35.
  */
@@ -520,6 +520,12 @@ static void teil_kurbel(void)
             if (pl->state == 4 && pl->motion == 0) blende = pl->anim_frac;
         }
         PRUEF(blende >= 6, "Gegenprobe Frage+Ja: Plc_motion mit Blende (+0x8f %d, @0x80050cfc)", blende);
+        int ende_frac = -1;
+        for (int b = 0; b < 400 && ende_frac < 0; b++) {
+            bild(0, 0);
+            if (pl->state != 4) ende_frac = pl->anim_frac;
+        }
+        PRUEF(ende_frac >= 6, "Gegenprobe Frage+Ja: Plc_ret @0x0B16 mit Mischung (+0x8f %d)", ende_frac);
     }
 }
 
@@ -535,13 +541,14 @@ static void teil_waffe(void)
     re15_keyitems_r41_schliessen();
     PRUEF(re15_player_equipped_weapon() == 0, "RE2 @0x80068d34 5bfa := 0: keine Waffe an Knochen 11");
     PRUEF(re15_inv_equipped_slot() == 0, "Ausruest-Platz 25c8 bleibt (Inventar zeigt die Waffe weiter)");
-    int ende = -1;
+    int ende = -1, ende_frac = -1, ende_mo = -1;
     for (int b = 0; b < 400 && ende < 0; b++) {
         bild(0, 0);
-        if (pl->state != 4 && b > 0) ende = b;
+        if (pl->state != 4 && b > 0) { ende = b; ende_frac = pl->anim_frac; ende_mo = pl->motion; }
         else PRUEF(b == 0 || re15_player_equipped_weapon() == 0 || pl->state != 4, "F%d unbewaffnet", b);
     }
     PRUEF(ende > 100, "Szene bis Plc_ret @0x0B16 (%d Bilder)", ende);
+    PRUEF(ende_frac == 0 && ende_mo == 200, "Plc_ret: Stehpose ohne Mischung, Wechsel faellt in den Schnitt @0x0B0E (frac %d, Clip %d)", ende_frac, ende_mo);
     bild(0, 0);
     PRUEF(re15_player_equipped_weapon() == 3, "PORT-WAHL: nach Plc_ret Waffe zurueck (%d)", re15_player_equipped_weapon());
     /* andere Stellen legen nicht ab */
