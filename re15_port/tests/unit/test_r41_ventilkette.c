@@ -8,7 +8,7 @@
  *   A  Original-Scheiben Byte fuer Byte gegen die RDTs; Port-Texte dekodiert; 2080 ohne Port-Programme/-Texte
  *      (Nachtrag 7); Netz der Relinghoehe (Nachtrag 8) = MD1-Form von ROOM2080 Prop 0 ueber der Schachtoeffnung
  *   B  2000/2001: Leiter Slot 4 = Sperrtext 40 (Aktion zeigt ihn), mit Bit 100 = Tuer
- *   C  2030/2031: Bruecke oben + Zelle 12 zu; Pult "kein Druck"; Ventil 13 (Frage, Ja, Bit 101, Klick-Zustand);
+ *   C  2030/2031: Bruecke oben + Zelle 12 zu; Pult ohne Druck = Frage 40 -> Panel (Spur N, Mechanik: test_r41_nachtrag30);
  *      Pult "Lower the bridge?" -> Fahrt 30 x 120 unter Cut 4 -> y -1800, Bit 102, Zelle 12 offen; mit 102 unten
  *   D  Ventile (Nachbesserung 4: sechs Raeder, Folge 09/07/02/01; Bits 101/102 + Sicherung (3,108)): Fragen 50..55, nach der
  *      vierten Drehung Warnung, Zaehler (5,0x1D) -> Ost-Tuer -> 20B0,
@@ -515,7 +515,7 @@ static void fall_b(uint16_t r2000, uint16_t r20b0)
     PRUEFE(n_ohne == 18, "ROOM%04X (3,235)=1 ohne Bit 100: %d Strahlen-Plaetze (Original 3 x 6)", r20b0, n_ohne);
 }
 
-/* ---- C: Bruecke, Pult, Ventil 13 --------------------------------------------------------------------------- */
+/* ---- C: Bruecke, Pult -------------------------------------------------------------------------------------- */
 static void fall_c(uint16_t r)
 {
     bits_leeren();

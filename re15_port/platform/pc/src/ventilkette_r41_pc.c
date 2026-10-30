@@ -154,7 +154,7 @@ static void ton_spielen(int ton)
         const int satz = (ton == RE15_R41C_TON_BRUECKE_FAHRT) ? RE15_R41C_BRUECKE_SE_MOTOR : RE15_R41C_BRUECKE_SE_HALT;
         if (s_bruecke.state != 1 || satz >= s_bruecke.edt_count) return;
         if (getenv("RE15_SE_DEBUG"))
-            fprintf(stderr, "[se] Runde 41 Spur N: Bruecke BRUECKE4080 Satz 0x%02X (RE2 ROOM4080 sub13) F%u\n", satz, (unsigned)g_engine.frame_count);
+            fprintf(stderr, "[se] Runde 41 Spur N: Bruecke BRUECKE4080 Satz 0x%02X (RE2 ROOM4080 sub13) F%u capTick %ld\n", satz, (unsigned)g_engine.frame_count, re15_audio_cap_tick());
         re15_audio_se_play_bank(s_bruecke.edt, &s_bruecke.vab, s_bruecke.decoded, s_bruecke.decoded_len, satz);
         return;
     }
@@ -352,8 +352,8 @@ void re15_ventilkette_r41_pc_bild(void)
     const int sirene_soll = re15_ventilkette_r41_sirene();
     if (sirene_soll != s_sirene) {
         const int geladen = re15_audio_r41_sirene(sirene_soll);
-        fprintf(stderr, "[ventilkette41] Sirene ROOM6000 (RE2 SUB_34) %s, ROOM%04X, cap-Takt %ld, Countdown-Bild %d\n",
-                sirene_soll ? (geladen ? "AN" : "NICHT geladen") : "AUS", (unsigned)g_current_room_id, re15_audio_cap_tick(), 0);
+        fprintf(stderr, "[ventilkette41] Sirene ROOM6000 (RE2 SUB_34) %s, ROOM%04X, capTick %ld F%u\n",
+                sirene_soll ? (geladen ? "AN" : "NICHT geladen") : "AUS", (unsigned)g_current_room_id, re15_audio_cap_tick(), (unsigned)g_engine.frame_count);
         s_sirene = sirene_soll;
     }
 }

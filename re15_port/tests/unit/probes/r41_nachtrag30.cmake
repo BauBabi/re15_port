@@ -14,3 +14,22 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r41_nachtrag30 COMMAND test_r41_nachtrag30)
 set_tests_properties(unit_r41_nachtrag30 PROPERTIES TIMEOUT 300)
+if(RE15_BUILD_PC AND TARGET re15_pc)
+    set(_n30_args -DRE15_PC_EXE=$<TARGET_FILE:re15_pc> -DRE15_N30_WERKZEUG=$<TARGET_FILE:test_r41_nachtrag30> -DRE15_R41C_WERKZEUG=$<TARGET_FILE:test_r41_ventilkette> -DRE15_R41C_PSX=${RE15_ASSETS_PATH})
+    foreach(_t panel schrank wasser)
+        foreach(_f leon elza)
+            add_test(NAME integration_r41_nachtrag30_${_t}_${_f}
+                     COMMAND ${CMAKE_COMMAND} ${_n30_args} -DTEIL=${_t} -DFIGUR=${_f}
+                             -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_nachtrag30_${_t}_${_f}
+                             -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_nachtrag30.cmake)
+            set_tests_properties(integration_r41_nachtrag30_${_t}_${_f} PROPERTIES TIMEOUT 1200)
+        endforeach()
+    endforeach()
+    foreach(_t ton laut)    # Mitschnitte: bildgenau, aber schwer -> seriell wie integration_r41_ventilkette_alarm
+        add_test(NAME integration_r41_nachtrag30_${_t}
+                 COMMAND ${CMAKE_COMMAND} ${_n30_args} -DTEIL=${_t} -DFIGUR=leon
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_nachtrag30_${_t}
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_nachtrag30.cmake)
+        set_tests_properties(integration_r41_nachtrag30_${_t} PROPERTIES TIMEOUT 1800 RUN_SERIAL TRUE)
+    endforeach()
+endif()

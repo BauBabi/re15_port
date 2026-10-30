@@ -1007,7 +1007,7 @@ static int reling_jetzt(void)
 
 int re15_ventilkette_r41_obj_id(uint16_t room_id, int k)
 {
-    if (k == 4) return (ist(room_id, RE15_R41C_RAUM_2000) && re15_wasserlauf_r41_aktiv()) ? RE15_R41N_LAUF_OBJ : -1;   /* Spur N */
+    if (k == 4) return re15_wasserlauf_r41_soll(room_id) ? RE15_R41N_LAUF_OBJ : -1;   /* Spur N */
     if (k >= 5 && k <= 7) return ist(room_id, RE15_R41C_RAUM_2010) ? RE15_R41N_SCHRANK_OBJ_INNEN + (k - 5) : -1;       /* Spur N */
     if (!ist(room_id, RE15_R41C_RAUM_2030)) return -1;
     if (k == 1 && reling_jetzt()) return -1;

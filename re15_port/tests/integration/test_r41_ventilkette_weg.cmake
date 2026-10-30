@@ -164,7 +164,7 @@ macro(_lauf _name _timeout _plan)
 endmacro()
 
 # Zustand nach der Flut (alles, was die Glieder davor setzen; Original-Raetsel ausserhalb der Kette als geloest):
-# 101/102 Ventil 13 + Bruecke, (3,108) Sicherung, 103/100 Flut + Leiter, (3,235) 20B0-Szene gelaufen, 106 Pult 2050,
+# 101/102 Panel 2030 (Spur N) + Bruecke, (3,108) Sicherung, 103/100 Flut + Leiter, (3,235) 20B0-Szene gelaufen, 106 Pult 2050,
 # (3,109) Kisten 2050, (3,114)/(3,113)/(3,219) Hinweis 2010 / Kurbel 2020 / Tuer 2020->2030; Spinnen 2030.
 set(_nach "9:101,9:102,3:108,9:103,9:100,3:235,9:106,3:109,3:114,3:113,3:219,7:155,7:156,7:157,7:158")
 

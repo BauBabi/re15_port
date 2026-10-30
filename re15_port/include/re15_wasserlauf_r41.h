@@ -46,6 +46,8 @@
 #define RE15_R41N_TAKT_RING       11       /* PORT-WAHL Spritz-Takt                                                         */
 #define RE15_R41N_TAKT_SPRITZ     7        /* PORT-WAHL                                                                     */
 
+/* 1 = dieser Raum zeigt den Wasserlauf (Kopf "ENDE"). Haengt nur an Raum und Bits, nicht am Install: der Prop-Lader (main.c) fragt je Raumwechsel und beim Boot-/CONTINUE-Weg. */
+int  re15_wasserlauf_r41_soll(uint16_t room_id);
 /* Aus install_2000 (ventilkette_r41.c), auch fuer ROOM2001: Strahlen und nasse Spur anlegen oder (Leiter frei) nichts tun. */
 void re15_wasserlauf_r41_install(uint16_t room_id);
 /* Aus re15_ventilkette_r41_tick: Spritzer auf dem Weg. */

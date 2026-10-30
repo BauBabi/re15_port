@@ -70,7 +70,7 @@
  * ROOM2030 Stelle Pult: Nordwand z -10350 (SCA Zelle 24 Band 3 z -12350..-10350), Rueckprojektion des roten
  *   Markers in schaltschrank.png (Cut 2, Bild (45,128)) auf z = -10350 -> Welt (-89,-7079); Pultkanten Bild
  *   (30,60)/(20,180) -> x 125..706, y -8506..-6242. Nordstreifen des Rings z -10350..-9000 (Gelaender Zelle 20).
- * ROOM2030 Stelle Ventil 13: der Tank rechts der Treppe (schaltschrank.png) = SCA Zelle 2 Band 1 (-3050,-6900,
+ * ROOM2030 Stelle Ventil 13 (bis Spur N, seit Nachtrag 37 ohne Platz): der Tank rechts der Treppe (schaltschrank.png) = SCA Zelle 2 Band 1 (-3050,-6900,
  *   1000,500) am Fuss der Treppe (Zone Slot 8 sce 12 @0x01B8E (-6050,-8400,3700,1400)); Landeplatz Band 1
  *   x -2550..-50, z -8500..-6900 (Zellen 1/6/11 ringsum).
  * ROOM2030 Stelle Ventile (Nachbesserung 3, Nachtrag 9): die nummerierten Ventile liegen ALLE im unteren Bereich

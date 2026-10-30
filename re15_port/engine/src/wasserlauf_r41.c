@@ -64,13 +64,17 @@ void re15_wasserlauf_r41_reset(void)
     s_aktiv = 0; s_strahlen = 0; s_prop = -1; s_takt = 0; s_spritzer = 0;
 }
 
+int re15_wasserlauf_r41_soll(uint16_t room_id)
+{
+    /* Ende: dieselbe Bedingung wie die Sperre der Leiter (install_2000), plus Flut gelaufen. */
+    return (room_id & 0xFFFEu) == RE15_R41C_RAUM_2000 && !re15_game_flag_get(RE15_R41C_BANK, RE15_R41C_BIT_LEITER_FREI) &&
+           !re15_game_flag_get(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN);
+}
+
 void re15_wasserlauf_r41_install(uint16_t room_id)
 {
     re15_wasserlauf_r41_reset();
-    if ((room_id & 0xFFFEu) != RE15_R41C_RAUM_2000) return;
-    /* Ende: dieselbe Bedingung wie die Sperre der Leiter (install_2000), plus Flut gelaufen. */
-    if (re15_game_flag_get(RE15_R41C_BANK, RE15_R41C_BIT_LEITER_FREI) ||
-        re15_game_flag_get(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN)) return;
+    if (!re15_wasserlauf_r41_soll(room_id)) return;
     s_aktiv = 1;
     s_prop = prop_lauf_anlegen();
     for (int i = 0; i < STRAHLEN_N; i++)
