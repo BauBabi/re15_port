@@ -79,10 +79,12 @@ def wasser():
             " * Prop 0 der RDT+0x30-Tabelle. */\n"
             % (mo, len(mb), hashlib.md5(mb).hexdigest(), to, len(tb), hashlib.md5(tb).hexdigest()))
     rb, rk = reling_netz(mb)
+    lb, lk = reling_netz(mb, LAUF_RECHTECKE)   # Runde 41 Spur N: nasse Spur ROOM2000 (include/re15_wasserlauf_r41.h)
     ziel = os.path.join(GEN, "ventilkette_r41_wasser.inc")
     open(ziel, "w", newline="\n").write(kopf + inc_array("re15_r41c_wasser_md1", mb) + "\n" +
                                         inc_array("re15_r41c_wasser_tim", tb) + "\n" + rk +
-                                        inc_array("re15_r41c_wasser_reling_md1", rb) + "\n")
+                                        inc_array("re15_r41c_wasser_reling_md1", rb) + "\n" + lk +
+                                        inc_array("re15_r41c_wasserlauf_md1", lb) + "\n")
     print("geschrieben:", ziel, "MD1 @0x%06X %d B, TIM @0x%06X %d B, Reling-Netz %d B" % (mo, len(mb), to, len(tb), len(rb)))
 
 
@@ -92,10 +94,14 @@ def wasser():
 # x -5400..-4200 z -8500..-6900 liegt damit unter Wasser (frueher bei -3600 ausgespart).
 RELING_RECHTECKE = [(-5400, 5400, -8500, -6400), (-7700, 5400, -6400, 2450), (-5850, 5400, 2450, 8150)]
 ZELLE = 1800   # Gitterschritt des Originals (ROOM2080 MD1: x 0..21600, z 0..16200 in 1800er Schritten)
+# Runde 41 Spur N (Nachtrag 30e): nasse Spur von der Leiter ROOM2000 bis zur Kante des Kanals = RE15_R41N_LAUF_RECHTECK
+# (include/re15_wasserlauf_r41.h, Lage aus Cut 10 gemessen). Dasselbe Netz-Format, Ursprung = Weltursprung von ROOM2000.
+LAUF_RECHTECKE = [(-26750, -25200, 9050, 9950)]
 
 
-def reling_netz(org):
+def reling_netz(org, rechtecke=None):
     """Netz der Relinghoehe in der MD1-Form von ROOM2080 Prop 0 (org = die 4572 Original-Bytes)."""
+    rechtecke = RELING_RECHTECKE if rechtecke is None else rechtecke
     laenge, unbek, oc = struct.unpack_from("<III", org, 0)
     h = struct.unpack_from("<14I", org, 12)
     assert oc == 2 and h[5] == 0 and h[10] == 1 and h[12] == 108, (oc, h)
@@ -116,10 +122,10 @@ def reling_netz(org):
             n = -(-(e - a) // ZELLE)
             aus += [a + ((e - a) * i) // n for i in range(n)]
         return aus + [g[-1]]
-    xs = teile([v for r in RELING_RECHTECKE for v in r[0:2]])
-    zs = teile([v for r in RELING_RECHTECKE for v in r[2:4]])
+    xs = teile([v for r in rechtecke for v in r[0:2]])
+    zs = teile([v for r in rechtecke for v in r[2:4]])
     def drin(x, z):
-        return any(r[0] <= x <= r[1] and r[2] <= z <= r[3] for r in RELING_RECHTECKE)
+        return any(r[0] <= x <= r[1] and r[2] <= z <= r[3] for r in rechtecke)
     ecken, vier, index = [], [], {}
     def ecke(x, z):
         if (x, z) not in index:
@@ -149,7 +155,7 @@ def reling_netz(org):
     k = ("/* Netz der Relinghoehe fuer ROOM2030/2031 (Nachbesserung 3, Nachtrag 8): MD1-Form von ROOM2080 Prop 0 (oben),\n"
          " * %d Ecken, %d Vierecke (<= %d x %d), Normale und UV-Satz (%s) Byte fuer Byte aus dem Original, Ursprung = Weltursprung\n"
          " * von ROOM2030; Rechtecke (x0,x1,z0,z1) %s. md5 %s */\n"
-         % (nv, nq, ZELLE, ZELLE, uv.hex(), RELING_RECHTECKE, hashlib.md5(bytes(b)).hexdigest()))
+         % (nv, nq, ZELLE, ZELLE, uv.hex(), rechtecke, hashlib.md5(bytes(b)).hexdigest()))
     return bytes(b), k
 
 

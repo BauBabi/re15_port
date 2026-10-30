@@ -25,6 +25,7 @@
 #include "re15_fade.h"       /* re15_fade_config / _kick / _kill */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_rows, re15_esp_room_bank */
 #include "re15_wasser_r38.h" /* RE15_WASSER_R38_CODE_BODEN (Wasser-Schritt-Effekt FUN_80045630) */
+#include "re15_wasserlauf_r41.h" /* Runde 41 Spur N: Wasserlauf an der Leiter ROOM2000/2001 */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #include "re15_engine.h"     /* g_engine.frame_count (Protokoll), re15_render_tile (Zeichner) */
@@ -377,6 +378,7 @@ static void install_2000(uint16_t room_id)
     }
     tueren_umlenken(room_id);
     if (ist(room_id, RE15_R41C_RAUM_20B0)) ring_sperren(room_id, RE15_R41C_SLOT_20B0_RING, RE15_R41C_MSG_RING_20B0);
+    else re15_wasserlauf_r41_install(room_id);          /* Runde 41 Spur N: Nachtrag 30e, gleiche Bedingung wie die Sperre oben */
 }
 
 static void install_2070(uint16_t room_id)
@@ -940,6 +942,8 @@ void re15_ventilkette_r41_tick(void)
         panel_tick();
     } else if (ist(room, RE15_R41C_RAUM_2010)) {
         kasten_tick();                                   /* Nachbesserung 5 */
+    } else if (ist(room, RE15_R41C_RAUM_2000)) {
+        re15_wasserlauf_r41_tick();                      /* Runde 41 Spur N */
     }
 }
 
@@ -952,6 +956,7 @@ static int reling_jetzt(void)
 
 int re15_ventilkette_r41_obj_id(uint16_t room_id, int k)
 {
+    if (k == 4) return (ist(room_id, RE15_R41C_RAUM_2000) && re15_wasserlauf_r41_aktiv()) ? RE15_R41N_LAUF_OBJ : -1;   /* Spur N */
     if (!ist(room_id, RE15_R41C_RAUM_2030)) return -1;
     if (k == 1 && reling_jetzt()) return -1;
     if (k == 2) return RE15_R41C_DOK_OBJ;        /* Nachbesserung 4: Dokument-Blatt */
@@ -964,6 +969,7 @@ const uint8_t *re15_ventilkette_r41_md1_bytes_k(int k, int *out_size)
 #ifdef RE15_PLATFORM_PC
     if (k == 2) { if (out_size) *out_size = (int)sizeof re15_r41c_blatt_md1;   return re15_r41c_blatt_md1; }
     if (k == 3) { if (out_size) *out_size = (int)sizeof re15_r41c_aushang_md1; return re15_r41c_aushang_md1; }
+    if (k == 4) { if (out_size) *out_size = (int)sizeof re15_r41c_wasserlauf_md1; return re15_r41c_wasserlauf_md1; }   /* Spur N */
 #endif
     if (k == 0 || k == 1) return re15_ventilkette_r41_md1_bytes(out_size);
     if (out_size) *out_size = 0;
@@ -976,7 +982,7 @@ const uint8_t *re15_ventilkette_r41_tim_bytes_k(int k, int *out_size)
     if (k == 2) { if (out_size) *out_size = (int)sizeof re15_r41c_blatt_tim;   return re15_r41c_blatt_tim; }
     if (k == 3) { if (out_size) *out_size = (int)sizeof re15_r41c_aushang_tim; return re15_r41c_aushang_tim; }
 #endif
-    if (k == 0 || k == 1) return re15_ventilkette_r41_tim_bytes(out_size);
+    if (k == 0 || k == 1 || k == 4) return re15_ventilkette_r41_tim_bytes(out_size);
     if (out_size) *out_size = 0;
     return NULL;
 }
