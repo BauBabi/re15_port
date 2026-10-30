@@ -125,6 +125,7 @@ static inline int RNDI(float f) {
 extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c */
 #include "re2_ems.h"          /* WELLE A: RE2-Flavor-Asset-Loader (CDEMD0.EMS-TOC, PC-only) */
 #include "re15_gator_re2_r41.h" /* Runde 41 Spur B: RE2-Schuetteln (Hintergrund-Versatz) + Kanister-Zeichner */
+#include "re15_keyitems_r41.h"   /* Runde 41 Spur O: Icon + Bild der Kurbel */
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: Water Key (Prop-Lader, Icon, Bild) + 2090-Ankunftsszene */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
 #include "re15_bissarm_r37.h"  /* Runde 37 Spur J: Handkontakt im Griff */
@@ -4592,6 +4593,7 @@ re_title:;
         if (ipix) re15_sicherung_icon_einsetzen(ipix, isz);
         if (ipix) re15_schluessel_r36_icon_einsetzen(ipix, isz);   /* Runde 36 Spur Q: Tiles 0x42/0x45 */
         if (ipix) re15_dining_r38_icon_einsetzen(ipix, isz);       /* Runde 38 Spur F: Tile 0x43 */
+        if (ipix) re15_keyitems_r41_icon_einsetzen(ipix, isz);     /* Runde 41 Spur O: Tile 0x33 (Crank) */
         if (ipix) re15_gatorszene_r41_icon_einsetzen(ipix, isz);   /* Runde 41 Spur F: Tile 0x34 (Water Key) */
         if (ipix) re15_itemall_set_pix(ipix, isz);   /* buffer intentionally kept for the program's life */
     }
@@ -4604,6 +4606,7 @@ re_title:;
         if (ipic) re15_sicherung_bild_einsetzen(ipic, psz);
         if (ipic) re15_schluessel_r36_bild_einsetzen(ipic, psz);   /* Runde 36 Spur Q: Bloecke 0x42/0x45 */
         if (ipic) re15_dining_r38_bild_einsetzen(ipic, psz);       /* Runde 38 Spur F: Block 0x43 */
+        if (ipic) re15_keyitems_r41_bild_einsetzen(ipic, psz);     /* Runde 41 Spur O: Block 0x33 (Crank), Rechtecke Block 0x35 */
         if (ipic) re15_gatorszene_r41_bild_einsetzen(ipic, psz);   /* Runde 41 Spur F: Block 0x34 (Water Key) */
         if (ipic) re15_itps_set_data(ipic, psz);     /* kept for the program's life */
     }

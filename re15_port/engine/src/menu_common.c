@@ -77,6 +77,7 @@
 #include "re15_cut10f0.h"       /* Runde 35 Spur K: Hinweiskette + zweites Kartenziel (cut_10f0.c) */
 #include "re15_kleinkram_r38.h"  /* Runde 38 Spur Q: RE2-Inventar-Ton Oeffnen/Schliessen (kleinkram_r38.c) */
 #include "re15_tagebuch_r38.h"  /* Runde 38 Spur G: Dokument schon in der Liste -> nur lesen (tagebuch_r38.c) */
+#include "re15_keyitems_r41.h"  /* Runde 41 Spur O: USE von Key Items in RE2-Form (keyitems_r41.c) */
 
 #define CAPACITY 10             /* DAT_800b0fbc (lbu @0x800c63e0; live 0x0a) */
 
@@ -580,6 +581,11 @@ static void state5_classifier(void)
                                                       * @0x8004ab54 (Red excluded) */
         s_c3 = 3;                                 /* HEAL @0x8004ab60 — c4 NOT reset here
                                                    * (relies on the terminal invariant) */
+        return;
+    }
+    if (re15_keyitems_r41_use(id)) {              /* Runde 41 Spur O: RE2 FUN_8006affc @0x8006b21c Bit-Test -> @0x8006b2e0 Schliessen */
+        s_c3 = 0; s_c4 = 0;
+        s_phase = 2;
         return;
     }
     s_c3 = 6;                                     /* cant-use @0x8004ab6c-ab74 (ammo
@@ -1444,6 +1450,7 @@ static void phase0_init(void)
     s_dbg_id      = 0;                     /* sb zero,9833(at) @0x80046494 */
     /* (5) DAT_800b25ce equip snapshot @0x8004649c.                                    */
     s_snapshot = equip_id_now();
+    re15_keyitems_r41_oeffnen();           /* Runde 41 Spur O: abgelegte Waffe zurueck (RE2 @0x80068be4-c34) */
     /* (6) FUN_8004dadc inventory compaction @0x800464a0. */
     re15_inv_compact();
     /* (7) screen init LAB_80049524 (prim arenas + register init = re15_inv_screen_open;
@@ -1560,6 +1567,7 @@ static void close_phase(void)
     re15_fade_config(0, 2, 7, (int16_t)-0x1800, 0);
     re15_fade_kick(0, 0);
     s_stage = 4;
+    if (re15_keyitems_r41_schliessen()) s_stage = 0;   /* Runde 41 Spur O: USE-Ereignis laeuft schon in der Blende (Kamera und Lage stehen, bevor das Spielbild kommt) */
 }
 
 /* ---------------------------------------------------------------------------------- */
