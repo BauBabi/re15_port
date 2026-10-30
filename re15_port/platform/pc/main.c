@@ -136,6 +136,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_trage1200.h"      /* Runde 35 Spur H: ROOM1200 Trage-Zombie (Messschiene) */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
 #include "re15_birkin_formen.h"   /* Beta-Birkin-Formen: raumabhaengige Ersatzmodelle */
+#include "re15_teile_r15.h"     /* RE1.5-Teilschicht (Teil-Wort-Bits, Gore) */
 #include "re15_raumlicht.h"       /* Lichtscheine nach dem 80%-Video */
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
 #include "re15_room_spawns.h" /* GENERATED per-room entry spawn (inbound-door landing spot) */
@@ -10465,6 +10466,13 @@ re_title:;
                  * Vertexfarben des Ports stehen im selben PSX-Primitiv-Raum
                  * (render_pc.c psx_prim_to_sdl_vert: "final = (tex x prim) / 0x80"),
                  * also ist ein Modulationsschritt genau `prim * tint / 0x80`. */
+                /* RE1.5-TEILSCHICHT (re15_teile_r15.h): Farbwort +0x68 multipliziert wie RE2 +0x70 (NCCT). */
+                re15_teil_t *r15_teile = re15_teile_an(npc_i) ? re15_teile(npc_i) : NULL;
+                if (r15_teile && !gore_on) {
+                    tint_on = 1;
+                    for (int gi = 0; gi < RE15_EMD_MAX_BONES; gi++)
+                        gore_tint[gi] = (gi < RE15_TEILE_MAX) ? (r15_teile[gi].col & 0xFFFFFFu) : 0x808080u;
+                }
 #define RE2_GORE_TINT(r_, g_, b_) do { if (tint_on && nbi < RE15_EMD_MAX_BONES) {      \
         uint32_t _t = gore_tint[nbi];                                                  \
         int _r = ((int)(r_) * (int)( _t         & 0xFFu)) >> 7;                        \
@@ -10665,6 +10673,20 @@ re_title:;
                      * `jal 0x80028DAC` @0x80027B98) — im Original haengt sie also am ZEICHNEN,
                      * genau wie hier. Der Aufruf schreibt Rotation UND Translation um; im
                      * RE1.5-Flavor liefert er immer 0 und laesst beide unberuehrt. */
+                    /* RE1.5-Teilstufe FUN_8001e9ec: 0x40 eigene Matrix, Kinder aus dem Eltern-ERGEBNIS, Flug 0x20;
+                     * Bit 0 aus -> nicht zeichnen (@0x8001ecc4), 2 = Scherben 0x08. */
+                    int r15_scherben = 0;
+                    if (r15_teile && nbi < RE15_TEILE_MAX) {
+                        int par = (npc_skel && nbi < npc_bones) ? (int)npc_skel->bone_parent[nbi] : -1;
+                        int rc = re15_teil_stufe(npc_i, nbi, par, nyawed_rot, nbone_world_trans,
+                                                 (int32_t)npc->dog_floor_y, 1);
+                        if (rc == 0) continue;
+                        r15_scherben = (rc == 2);
+                        const re15_teil_t *T = &r15_teile[nbi];
+                        if (T->w & 0x2000)                       /* S . R_welt, t unskaliert @0x8001ebec-c98 */
+                            for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++)
+                                nyawed_rot[r*3+c] = (int32_t)(((int64_t)nyawed_rot[r*3+c] * T->scale[r]) >> 12);
+                    }
                     if (gore_on)
                         (void)re15_re2z_gore_part_matrix(npc, nbi,
                                                          (uint32_t)g_engine.frame_count,
@@ -10681,6 +10703,9 @@ re_title:;
                     int32_t nbone_m[9], nbone_t[3];   /* Q12 view×bone (byte-true integer RTPS) */
                     for (int i = 0; i < 9; i++) nbone_m[i] = ncomb_rot[i];
                     for (int i = 0; i < 3; i++) nbone_t[i] = ncomb_trans[i];
+                    if (r15_teile && nbi < RE15_TEILE_MAX && (r15_teile[nbi].w & 0x400))   /* ScaleMatrix Spalten @0x8001ebb0-bdc */
+                        for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++)
+                            nbone_m[r*3+c] = (int32_t)(((int64_t)nbone_m[r*3+c] * r15_teile[nbi].scale[c]) >> 12);
 
                     /* AK-round F950 dump (2026-05-26): Elliot's root bone view-
                      * space + projected screen for cut 2 framing diagnosis. */
@@ -10781,6 +10806,7 @@ re_title:;
                     int32_t nburst_scale = 0; uint32_t nburst_tint = 0;
                     int nburst = gore_on ? re15_re2z_gore_part_burst(
                                      npc, nbi, &nburst_scale, &nburst_tint) : 0;
+                    if (r15_scherben) { nburst = 1; nburst_tint = r15_teile[nbi].col; }   /* flach +0x68, unbeleuchtet */
                     for (int ti = 0; ti < nm->triangle_count; ti++) {
                         const re15_md1_triangle_t *tri = &nm->triangles[ti];
                         if (tri->v0 >= (uint32_t)nm->tri_vertex_count) continue;
@@ -10799,6 +10825,10 @@ re_title:;
                                                                              * @0x8002D490-A4 */
                             bofs_y = ((int32_t)bn->y >> 10) * nburst_scale;
                             bofs_z = ((int32_t)bn->z >> 10) * nburst_scale;
+                        }
+                        if (r15_scherben) {   /* RE1.5: Versatz aus dem ZWEITEN Eckpunkt (@0x80023468, @0x80023528-78) */
+                            int32_t o[3]; re15_teil_scherbe(&r15_teile[nbi], vp[1]->x, vp[1]->y, vp[1]->z, o);
+                            bofs_x = o[0]; bofs_y = o[1]; bofs_z = o[2];
                         }
                         for (int v = 0; v < 3; v++) {
                             int32_t _x = vp[v]->x + bofs_x, _y = vp[v]->y + bofs_y,
@@ -10843,6 +10873,11 @@ re_title:;
                         RE2_GORE_TINT(nr0, ng0, nb0);
                         RE2_GORE_TINT(nr1, ng1, nb1);
                         RE2_GORE_TINT(nr2, ng2, nb2);
+                        if (r15_teile && nbi < RE15_TEILE_MAX && (r15_teile[nbi].w & 0x80)) {   /* FUN_8002441c: rgb1/rgb2 */
+                            uint32_t c1 = re15_teil_tinte1(&r15_teile[nbi]), c2 = re15_teil_tinte2(&r15_teile[nbi]);
+                            nr1 = (uint8_t)((nr1 + (c1 & 0xFF)) >> 1); ng1 = (uint8_t)((ng1 + ((c1 >> 8) & 0xFF)) >> 1); nb1 = (uint8_t)((nb1 + ((c1 >> 16) & 0xFF)) >> 1);
+                            nr2 = (uint8_t)((nr2 + (c2 & 0xFF)) >> 1); ng2 = (uint8_t)((ng2 + ((c2 >> 8) & 0xFF)) >> 1); nb2 = (uint8_t)((nb2 + ((c2 >> 16) & 0xFF)) >> 1);
+                        }
                         if (nburst) {   /* FLACH = Tint-Wort (FUN_8002d3c8.c:49/69-71),
                                          * ersetzt Beleuchtung UND Gore-Modulation */
                             nr0 = nr1 = nr2 = (uint8_t)(nburst_tint & 0xFFu);
@@ -10881,6 +10916,10 @@ re_title:;
                                                                              * dieselbe n0-Regel */
                             bofs_y = ((int32_t)bn->y >> 10) * nburst_scale;
                             bofs_z = ((int32_t)bn->z >> 10) * nburst_scale;
+                        }
+                        if (r15_scherben) {   /* Quads: zweiter Eckpunkt @0x8002376c */
+                            int32_t o[3]; re15_teil_scherbe(&r15_teile[nbi], vp[1]->x, vp[1]->y, vp[1]->z, o);
+                            bofs_x = o[0]; bofs_y = o[1]; bofs_z = o[2];
                         }
                         for (int v = 0; v < 4; v++) {
                             int32_t _x = vp[v]->x + bofs_x, _y = vp[v]->y + bofs_y,
@@ -10928,6 +10967,11 @@ re_title:;
                         RE2_GORE_TINT(nqr1, nqg1, nqb1);
                         RE2_GORE_TINT(nqr2, nqg2, nqb2);
                         RE2_GORE_TINT(nqr3, nqg3, nqb3);
+                        if (r15_teile && nbi < RE15_TEILE_MAX && (r15_teile[nbi].w & 0x80)) {   /* FUN_8002441c: Quad rgb1/rgb2 */
+                            uint32_t c1 = re15_teil_tinte1(&r15_teile[nbi]), c2 = re15_teil_tinte2(&r15_teile[nbi]);
+                            nqr1 = (uint8_t)((nqr1 + (c1 & 0xFF)) >> 1); nqg1 = (uint8_t)((nqg1 + ((c1 >> 8) & 0xFF)) >> 1); nqb1 = (uint8_t)((nqb1 + ((c1 >> 16) & 0xFF)) >> 1);
+                            nqr2 = (uint8_t)((nqr2 + (c2 & 0xFF)) >> 1); nqg2 = (uint8_t)((nqg2 + ((c2 >> 8) & 0xFF)) >> 1); nqb2 = (uint8_t)((nqb2 + ((c2 >> 16) & 0xFF)) >> 1);
+                        }
                         if (nburst) {   /* FLACH = Tint-Wort (FUN_8002d718.c:45) */
                             nqr0 = nqr1 = nqr2 = nqr3 = (uint8_t)(nburst_tint & 0xFFu);
                             nqg0 = nqg1 = nqg2 = nqg3 = (uint8_t)((nburst_tint >> 8) & 0xFFu);
@@ -10948,6 +10992,7 @@ re_title:;
                             0, (int)uv->clut, npc_qz2,
                             nqr0, nqg0, nqb0, nqr3, nqg3, nqb3, nqr2, nqg2, nqb2);
                     }
+                    if (r15_scherben) re15_teil_scherben_nach(npc_i, nbi, 1);   /* Bild++ / FUN_8001f1e0 */
                 }
 #undef RE2_GORE_TINT
             }

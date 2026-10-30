@@ -157,6 +157,7 @@ void re15_enemy_reset(void)
 {
     extern void re15_enemy_spawn_count_reset(void);
     re15_enemy_spawn_count_reset();          /* DAT_800aca4e room-init reset (@0x8003f014) */
+    { extern void re15_teile_reset_alle(void); re15_teile_reset_alle(); }   /* RE1.5-Teilschicht: Raumwechsel */
     for (int i = 0; i < RE15_ENEMY_MAX; i++) {
         if (g_enemy[i].buf) free(g_enemy[i].buf);   /* PC malloc'd buffer; PSX leaves NULL */
         memset(&g_enemy[i], 0, sizeof(g_enemy[i]));
