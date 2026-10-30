@@ -136,6 +136,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_trage1200.h"      /* Runde 35 Spur H: ROOM1200 Trage-Zombie (Messschiene) */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
 #include "re15_birkin_formen.h"   /* Beta-Birkin-Formen: raumabhaengige Ersatzmodelle */
+#include "re15_raumlicht.h"       /* Lichtscheine nach dem 80%-Video */
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
 #include "re15_room_spawns.h" /* GENERATED per-room entry spawn (inbound-door landing spot) */
 #include "re15_anim_select.h"  /* SHARED actor bank/clip selection view-model */
@@ -6245,6 +6246,47 @@ re_title:;
                 }
             }
             re15_camera_build_view(view_cut, &cam_view);
+
+            /* RAUMLICHT (Port-Ergaenzung nach dem 80%-Video, include/re15_raumlicht.h): additive
+             * Lichtscheine am Boden, projiziert wie die Schatten-Ecken (Integer-RTPS, Near-Clip 64). */
+            {
+                extern void re15_render_light_quad(int, int, int, int, int, int, int, int,
+                                                   uint8_t, uint8_t, uint8_t);
+                re15_raumlicht_t rl[16];
+                int nrl = re15_raumlicht_liste(g_current_room_id, g_engine.frame_count, rl, 16);
+                if (getenv("RE15_RAUMLICHT_LOG") && (g_engine.frame_count % 60) == 0)
+                    fprintf(stderr, "[raumlicht] F%u R%04X n=%d\n", (unsigned)g_engine.frame_count,
+                            g_current_room_id, nrl);
+                for (int li = 0; li < nrl; li++) {
+                    const int32_t ec[4][3] = {
+                        { rl[li].x - rl[li].hx, rl[li].y, rl[li].z + rl[li].hz },
+                        { rl[li].x - rl[li].hx, rl[li].y, rl[li].z - rl[li].hz },
+                        { rl[li].x + rl[li].hx, rl[li].y, rl[li].z + rl[li].hz },
+                        { rl[li].x + rl[li].hx, rl[li].y, rl[li].z - rl[li].hz } };
+                    int lx[4], ly[4], lok = 1;
+                    for (int v = 0; v < 4 && lok; v++) {
+                        const int64_t wx = ec[v][0], wy = ec[v][1], wz = ec[v][2];
+                        int32_t _vx = (int32_t)((wx*cam_view.rot[0] + wy*cam_view.rot[1] + wz*cam_view.rot[2]) >> 12) + cam_view.trans[0];
+                        int32_t _vy = (int32_t)((wx*cam_view.rot[3] + wy*cam_view.rot[4] + wz*cam_view.rot[5]) >> 12) + cam_view.trans[1];
+                        int32_t _vz = (int32_t)((wx*cam_view.rot[6] + wy*cam_view.rot[7] + wz*cam_view.rot[8]) >> 12) + cam_view.trans[2];
+                        if (_vz < 64) { lok = 0; break; }
+                        int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
+                        int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
+                        uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
+                        uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
+                        lx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
+                        ly[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
+                    }
+                    if (getenv("RE15_RAUMLICHT_LOG"))
+                        fprintf(stderr, "[raumlicht] F%u R%04X #%d ok=%d (%d,%d)(%d,%d)(%d,%d)(%d,%d)\n",
+                                (unsigned)g_engine.frame_count, g_current_room_id, li, lok,
+                                lx[0], ly[0], lx[1], ly[1], lx[2], ly[2], lx[3], ly[3]);
+                    if (lok)
+                        re15_render_light_quad(lx[0], ly[0], lx[1], ly[1], lx[2], ly[2], lx[3], ly[3],
+                                               rl[li].r, rl[li].g, rl[li].b);
+                }
+            }
+
 
             /* sprite.pri depth gate: project the player into camera + screen space
              * (same scale as the per-tri avg_z / mask depth<<3) so a mask BEHIND him
