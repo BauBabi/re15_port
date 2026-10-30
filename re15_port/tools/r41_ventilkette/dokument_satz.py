@@ -11,6 +11,9 @@ TEXT (keine Abschrift): analysis/befunde_runde41/AUFTRAG.md, Nachtrag 13, die Zi
 "> is anyone supposed to work with something like this....". Die Zeilenumbrueche dort sind die des AUFTRAGs (Umbruch
 mitten im Satz bei ~120 Zeichen) -> die Zeilen werden mit EINEM Leerzeichen zu dem einen Absatz des Nutzers verbunden
 (Nachtrag 13 Folge 2: "nur Umbruch/Seiten fuer den Leser"). Zitatpraefix '>' und genau EIN folgendes Leerzeichen weg.
+SEIT RUNDE 41 SPUR N (AUFTRAG.md Nachtrag 30 + 30b, NUTZER-VORGABE "nur gruen und rot verwechselt, nicht black ... ausserdem die
+Nummern verwechselt von "Schwarz" und "Gruen""): genau EIN Satz wird ersetzt (SATZ_ALT -> SATZ_NEU), die Anfuehrungszeichen sind
+die Ironie auf die falschen Plakatfarben. Der Rest bleibt der Nutzerwortlaut aus Nachtrag 13.
 EINZIGE ZEICHEN-ABBILDUNG: U+2014 (Gedankenstrich, im Nutzertext 2-mal) -> '-' (ASCII 0x2D). Die RE2-Dokumentschrift hat
 keinen Gedankenstrich (Atlas: 85 Zeichen, nur '-'), und RE2 setzt Gedankenstriche selbst als '-' ohne Leerzeichen:
 FILE22 S01 " -This report demands" / "  immediate attention-", FILE24 S11 "using the activator -VAM-". Sonst bleibt jedes
@@ -56,6 +59,94 @@ DOC = 31                                                     # Bildsatz: erster 
 VORLAGE = 17                                                 # RE2 "SEWER MANAGER DIARY"
 TITEL = "TECHNICIAN'S NOTE"
 GEDANKENSTRICH = "\u2014"
+# Nachtrag 30b (AUFTRAG.md 2026-10-25 17:03) woertlich; bleibt in Kraft nach 30c/30d ("Notiz-Satz wie Nachtrag 30b").
+SATZ_ALT = "They mixed up black, green, and red, and swapped the numbers for black!"
+SATZ_NEU = 'They mixed up green and red, and on top of that they swapped the numbers of "black" and "green"!'
+
+
+# Anfuehrungszeichen (Runde 41 Spur N): der Atlas (re2_doc_satz.atlas_bauen, 85 Zeichen) kennt '"' nicht, weil das Zeichen aus ZWEI
+# Spalten-Segmenten besteht und seine Zeilen verworfen werden ("Segmentzahl != Zeichenzahl"). Die RE2-Dokumente setzen es trotzdem:
+# 13 Zeilen in FILE03/04/10/17/20/23/24 (FILE17 S07 'the chief "to serve' / 'and protect"!?' = die Vorlage dieses Dokuments), in
+# ALLEN gilt Segmentzahl = Zeichenzahl + Zahl der '"' (gemessen 2026-10-30). Daher wird die Glyphe hier aus genau diesen Zeilen
+# gemessen (re2_doc_satz.py bleibt unveraendert, die md5-Listen von FILE25..30 bleiben gueltig): offen = erstes '"' eines Paars, zu =
+# zweites. Eigene Zeichen U+201C/U+201D nur im Satz (je Form EINE Bitmap wie alle Glyphen des Atlas); Vorschub/Linkslage = Modus
+# ueber die Nachbarn in den Originalzeilen.
+AUF, ZU = "“", "”"
+
+
+def anfuehrung_messen(font):
+    G = font["glyphen"]
+    bm = {AUF: Counter(), ZU: Counter()}
+    links = {AUF: Counter(), ZU: Counter()}
+    vor = {AUF: Counter(), ZU: Counter()}
+    zeilen = 0
+    for doc in range(25):
+        tr = R.transkription(doc)
+        for key, lines in tr.items():
+            if key == "TITEL":
+                continue
+            name = os.path.join(R.FILES, "FILE%02d_p%02d_page.TIM" % (doc, int(key[1:])))
+            if not os.path.exists(name):
+                continue
+            t = R.tim_lesen(name)
+            offen = False
+            for k in range(t["H"] // R.ZEILE):
+                txt = lines[k] if k < len(lines) else ""
+                if '"' not in txt:
+                    continue
+                y0, y1 = R.ZEILE * k, R.ZEILE * k + R.ZEILE - 1
+                sg = R.segmente(t, y0, y1)
+                soll = sum(1 for c in txt if c != " ") + txt.count('"')
+                if len(sg) != soll:
+                    raise SystemExit("FILE%02d %s Zeile %d: %d Segmente statt %d" % (doc, key, k, len(sg), soll))
+                zeilen += 1
+                i, items = 0, []
+                for j, c in enumerate(txt):
+                    if c == " ":
+                        continue
+                    if c == '"':
+                        items.append((ZU if offen else AUF, sg[i][0], sg[i + 1][1], j))
+                        offen = not offen
+                        i += 2
+                    else:
+                        items.append((c, sg[i][0], sg[i][1], j))
+                        i += 1
+                for m, (c, x0, x1, j) in enumerate(items):
+                    if c not in bm:
+                        continue
+                    bm[c][R.ausschnitt(t, x0, x1, y0, y1)] += 1
+                    if m > 0 and items[m - 1][0] in G:
+                        pc, px0, _, pj = items[m - 1]
+                        links[c][x0 - (px0 - G[pc]["links"] + G[pc]["vorschub"] + (j - pj - 1) * font["leer"])] += 1
+                    if m + 1 < len(items) and items[m + 1][0] in G:
+                        nc, nx0, _, nj = items[m + 1]
+                        vor[c][nx0 - G[nc]["links"] - (nj - j - 1) * font["leer"] - x0] += 1
+    bericht = []
+    for c in (AUF, ZU):
+        kanon, n = bm[c].most_common(1)[0]
+        lk = links[c].most_common(1)[0][0]
+        dv = vor[c].most_common(1)[0][0]
+        G[c] = {"breite": len(kanon[0]), "vorschub": dv + lk, "links": lk, "n": sum(bm[c].values()), "n_kanon": n,
+                "varianten": len(bm[c]), "quelle": "gemessen (dokument_satz.py anfuehrung_messen)", "gesichert": True,
+                "bitmap": ["".join("%x" % v for v in r) for r in kanon]}
+        bericht.append("Glyphe %s: %d Belege aus %d Zeilen, Bitmap %s (%d Varianten), links %d (%s), vorschub %d (Differenz %s)"
+                       % ("auf" if c == AUF else "zu", sum(bm[c].values()), zeilen, G[c]["bitmap"][4:7], len(bm[c]), lk,
+                          links[c].most_common(3), G[c]["vorschub"], vor[c].most_common(3)))
+    return bericht
+
+
+def satz_anfuehrung(text):
+    """Im Satz wechseln offen/zu; jedes '"' der Vorgabe gehoert zu einem Paar."""
+    aus, offen = [], False
+    for c in text:
+        if c == '"':
+            aus.append(ZU if offen else AUF)
+            offen = not offen
+        else:
+            aus.append(c)
+    if offen:
+        raise SystemExit("Anfuehrungszeichen nicht paarig")
+    return "".join(aus)
 
 
 def entpacken(z):
@@ -160,17 +251,21 @@ def main():
             os.makedirs(adir, exist_ok=True)
             R.atlas_bauen(adir)
     font = json.load(open(font_pfad, encoding="utf-8"))
+    anf_bericht = anfuehrung_messen(font)
 
     z0, z1, roh = text_aus_auftrag()
     nutzertext = " ".join(roh)
-    satztext = nutzertext.replace(GEDANKENSTRICH, "-")
+    if nutzertext.count(SATZ_ALT) != 1:
+        raise SystemExit("Satz aus Nachtrag 13 nicht genau einmal im Nutzertext: %r" % SATZ_ALT)
+    nutzertext = nutzertext.replace(SATZ_ALT, SATZ_NEU)            # Nachtrag 30b (Runde 41 Spur N)
+    satztext = satz_anfuehrung(nutzertext.replace(GEDANKENSTRICH, "-"))
     out = os.path.join(args.out, "FILE%02d" % DOC)
     os.makedirs(out, exist_ok=True)
     open(os.path.join(out, "nutzertext.txt"), "w", encoding="utf-8", newline="").write(nutzertext + "\n")
     open(os.path.join(out, "satz_eingabe.txt"), "w", encoding="utf-8", newline="").write(satztext + "\n")
     R.zeichen_pruefen(font, satztext, TITEL, out, False)
 
-    bericht = []
+    bericht = list(anf_bericht)
     bericht.append("Quelle: analysis/befunde_runde41/AUFTRAG.md (md5 %s) Nachtrag 13, Z. %d..%d (%d Zitatzeilen, mit einem "
                    "Leerzeichen verbunden)" % (hashlib.md5(open(AUFTRAG, "rb").read()).hexdigest(), z0, z1, len(roh)))
     nicht_ascii = Counter(c for c in nutzertext if ord(c) > 126)

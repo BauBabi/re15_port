@@ -126,4 +126,28 @@ Nutzer-Einstellung im Hauptbaum (nur gelesen): `re15_port/build/platform/pc/re15
 * Zwischenstand: der Mischweg skaliert JEDE Quelle, auch Tuersequenz und Wassersprung. Die Ursache der Beobachtung liegt woanders ->
   weiter (§6 unten).
 
+## FORTSETZUNG 2026-10-30 (Protokoll, neueste zuerst)
+
+Stand zu Beginn: master gemergt (89571618), Plakat 30d, Kopf `RE15_R41C_LOESUNG {5,1,0,4}`, Panel-Bilder, Lautstaerke-Messung vorher.
+Massgeblich: Nachtraege 30, 30b, 30d, 30e, 34 (N-E2), 36, 37. Baseline-Bau 21:37 gruen.
+
+## 3. Notiz und Loesung 09 -> 02 -> 01 -> 08
+
+**Messung vorher:** `shared_assets/RE2/FILES/FILE31_p01/p02` trugen noch den Satz aus Nachtrag 13 ("They mixed up black, green, and red,
+and swapped the numbers for black!"). Plakat (`gen/ventilkette_r41_plakat.inc`, 30d) und Kopf (`{5,1,0,4}`) waren schon neu.
+
+**Rechenweg fuer den Nutzer:** Plakat "1. GREEN 01 - 2. RED 02 - 3. BLACK 09 - 4. RED 08". Notiz: (1) gruen und rot verwechselt, (2) die Nummern von
+"black" und "green" (= der Zeilen BLACK und GREEN) vertauscht. Zeile 1 GREEN -> Farbe rot, Nummer aus der BLACK-Zeile 09 = 09 rot. Zeile 2 RED -> Farbe gruen, 02 =
+02 gruen. Zeile 3 BLACK -> Farbe bleibt, Nummer aus der GREEN-Zeile 01 = 01 schwarz. Zeile 4 RED -> Farbe gruen, 08 = 08 gruen. Jede Zeile trifft ein echtes Rad
+(Kopf "Ventil-RAEDER": 09 rot, 02 gruen, 01 schwarz, 08 gruen).
+
+**Beleg Schrift:** Der Satz braucht `"`. Der Atlas (85 Zeichen, re2_doc_satz.atlas_bauen) kennt es nicht, weil es aus zwei Spalten-Segmenten besteht und die Zeile dort
+verworfen wird. RE2 setzt es aber: 13 Zeilen in FILE03/04/10/17/20/23/24, darunter die Vorlage selbst (FILE17 S07 `the chief "to serve` / `and protect"!?`); in allen 13 gilt
+Segmentzahl = Zeichenzahl + Zahl der `"`. Gemessen aus genau diesen Zeilen (`dokument_satz.py anfuehrung_messen`): zwei Formen, offen `25025/40040/65065`
+(12 Belege), zu `52052/04004/56056` (12 Belege), links 1, Vorschub 9. re2_doc_satz.py bleibt unveraendert.
+
+**Umsetzung:** `tools/r41_ventilkette/dokument_satz.py` ersetzt genau einen Satz (SATZ_ALT -> SATZ_NEU, Wortlaut Nachtrag 30b); Rest = Nutzerwortlaut Nachtrag 13.
+FILE31 neu gesetzt und installiert: zwei Textseiten wie vorher (max_page 2). Rueckleseprobe am Artefakt: 77 Woerter WORTGLEICH, 0 Kernpixel ohne Glyphe.
+Seite 2: `that they swapped the / numbers of "black" and / "green"! What are they? / Colorblind? How is anyone / supposed to work with / something like this....`.
+
 (Abschnitte je Punkt: Messung vorher / RE-Belege / Umsetzung / Messung nachher / Tests / OFFEN.)
