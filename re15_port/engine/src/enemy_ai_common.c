@@ -46,7 +46,8 @@
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
 #include "re15_affen3_r38.h"
-#include "re15_birkin_opfer.h"   /* Birkin-Spieler-Haken 0x8011afd8 */   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
+#include "re15_birkin_opfer.h"
+#include "re15_teile_r15.h"     /* RE1.5-Teilschicht (Gore) */   /* Birkin-Spieler-Haken 0x8011afd8 */   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
 #include "re15_gegner_r39.h"   /* Runde 39 Spur E: Gorillas 0x27 (HP x2, Flinch-Schwelle; alle Raeume), Hunde-Riegel-Tick */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
 #include "re15_spinnen_r38.h" /* Runde 38 Spur R: Schacht-Ausstieg + Gift der Stage-2-Spinne */
@@ -11026,6 +11027,20 @@ static void re15_zgirl_ai_tick(int slot)
     }
 }
 
+/* RE1.5-Teilschicht fuer die erwachsene Spinne (STAGE2): ein Teil gruen zerplatzen lassen wie @0x80113cd4-cfc /
+ * @0x801146d0-734 (Farbwort 0x207f60, +0x94 0, +0x96 -50, +0x98 0, +0x9a 3, +0x9c/+0x9e 0, Wort |= 0x4a). */
+static void re15_aspider_teil_platzt(int slot, int k)
+{
+    re15_teil_t *t = re15_teile(slot);
+    if (!t || k < 0 || k >= RE15_TEILE_MAX) return;
+    t[k].col = 0x207f60u; memset(t[k].h94, 0, sizeof t[k].h94);
+    t[k].h94[1] = (uint16_t)(int16_t)-50; t[k].h94[3] = 3; t[k].w |= 0x4a;
+    re15_teile_markieren(slot);
+}
+/* Bein-Liste @0x80118f30 (Overlay-Daten, von allen Spinnen geteilt; Zaehler je Spinne +0x1de). */
+static uint8_t s_aspider_beine_weg[8];
+void re15_aspider_beine_reset(void) { memset(s_aspider_beine_weg, 0, sizeof s_aspider_beine_weg); }   /* Overlay-Neuladen */
+
 /* ============================ ADULT SPIDER (type 0x25, EM025 = SPIDER) ====================== *
  * BYTE-TRUE rebuild of the 0x801109e4 family (STAGE2.BIN, overlay base 0x80100000; audit wf_efd92a2c
  * adult-spider — all 25 finder claims re-verified against RAW disasm, none refuted). Root 0x801109e4
@@ -11342,7 +11357,26 @@ static void re15_adult_spider_ai_tick(int slot)
 
     case 2:   /* HURT 0x80113a0c: flinch clip 1 + Se(2); recover byte-true (@0x80113e84). +0xb0/+0x1ba
                * reset @0x80113a2c and the blood FX 0x80019700 + leg-dismember (+0x93&0x40) = OPEN. */
-        if (e->sub_state_3 == 0) { re15_aspider_clip(e, 1); re15_audio_room_se(2); e->sub_state_3 = 1; }  /* flinch @0x80113a0c */
+        if (e->sub_state_3 == 0) {
+            re15_aspider_clip(e, 1); re15_audio_room_se(2); e->sub_state_3 = 1;  /* flinch @0x80113a0c, SE 2 @0x80113b58 */
+            static const int32_t null3[3] = { 0, 0, 0 };   /* a3 = 0x80118f18 (Nullen) */
+            re15_enemy_fx19700(e, 0x00082000u, 0, null3);  /* Blut an Teil 0 @0x80113b50 */
+            if (e->hit_react & 0x40) {                     /* Krit `andi 0x40` @0x80113b74: ein Beinpaar faellt */
+                static const uint8_t bein[8] = { 3, 5, 7, 9, 11, 13, 15, 17 };   /* @0x80118f28 */
+                uint8_t leg = bein[re15_engine_rand8() & 7];                     /* rng&7 @0x80113b80-94 */
+                int schon = 0;
+                for (int j = 0; j < 8; j++) if (s_aspider_beine_weg[j] == leg) schon = 1;   /* Liste @0x80118f30, @0x80113bc4-c3c */
+                if (!schon && e->zg_9c < 8) {
+                    s_aspider_beine_weg[e->zg_9c] = leg;    /* used[+0x1de] = Bein @0x80113c5c-84 */
+                    re15_aspider_teil_platzt(slot, leg);    /* @0x80113cc8-cfc */
+                    re15_aspider_teil_platzt(slot, leg + 1);   /* @0x80113d50-d78 */
+                    re15_enemy_fx19700(e, 0x00082000u, leg + 2, null3);   /* a2 = pool+172*leg+408 @0x80113dc4 */
+                    re15_enemy_fx19700(e, 0x00082000u, leg + 2, null3);   /* @0x80113e1c */
+                    re15_audio_room_se(5);                  /* @0x80113e24 */
+                    e->zg_9c++;                             /* +0x1de++ @0x80113e38-44 */
+                }
+            }
+        }
         else if (re15_aspider_anim(e)) {                      /* recover @0x80113e84 */
             int los; int pp = re15_enemy_los_probe(slot, e, pl);  /* +0x1d0 bit0 @0x80113f04 */
             if (pp != 2) e->aspider_los = (uint8_t)(pp & 1);
@@ -11358,6 +11392,13 @@ static void re15_adult_spider_ai_tick(int slot)
     case 3:   /* DEATH 0x80113f40: entry kill-flag 0x8004ef90(0x800b1038,+0x1c6); collapse clip 1 + Se(5)
                * -> CORPSE (state 7). The 2-stage gore (part-detach x2, phased FX) = OPEN (render). */
         if (e->sub_state_3 == 0) {
+            if (e->hit_react & 0x40) {                         /* 0x8011461c Krit `andi 0x40` @0x801146b0: Koerper platzt */
+                static const int32_t null3[3] = { 0, 0, 0 };
+                re15_aspider_teil_platzt(slot, 0);             /* @0x801146d0-6f0 */
+                re15_aspider_teil_platzt(slot, 19);            /* +0xcc4 @0x80114708-734 */
+                re15_enemy_fx19700(e, 0x00082000u, 0, null3);  /* @0x8011474c */
+                re15_enemy_fx19700(e, 0x00082000u, 19, null3); /* a2 = +3332 @0x80114770 */
+            }
             re15_aspider_clip(e, 1); re15_audio_room_se(5); e->hit_react |= 2;
             if (e->em_flag_id != 0xFF)
                 re15_game_flag_set(re15_em_status_zone(), e->em_flag_id, 1);  /* kill-flag persist @0x80113fa0-ac */
@@ -13533,7 +13574,31 @@ static void re15_writher_ai_tick(int slot)
             e->motion = 3; e->anim_frame = 0;                     /* +0x94=3 @0x8010d520, +0x95=0 @0x8010d530 */
             e->anim_frac = 7;                                     /* +0x8f=7 @0x8010d540 */
             e->hit_react |= 1;                                    /* +0x93 |= 1 @0x8010d55c */
-            re15_enemy_death_fx(e);                               /* gore 0x80019700(0x2000) @0x8010d578 */
+            {   /* DEATH-Tisch @0x80120c94: Spalte 1 der Zeilen 7/8/18/19 = 0x8010D5D0 (HAND AB), sonst 0x8010D4C4. */
+                int w = e->sub_state_1;
+                if (e->sub_state_2 == 1 && (w == 7 || w == 8 || w == 18 || w == 19)) {
+                    static const int32_t o[3] = { 200, 0, 0 };   /* a3 = 0x8011fe84 @0x8010d678-7c */
+                    re15_enemy_fx19700(e, 0x2000, 1, o);          /* a2 = pool+236 = Teil 1 @0x8010d688-8c */
+                    e->speed_h = 0x12c;                           /* +0x8c = 300 @0x8010d698-9c */
+                    re15_teil_t *t = re15_teile(slot);
+                    if (t) {                                      /* Teil 1 (+0xac): Farbwort 0x8f, vy -50, +3, |= 0x4a
+                                                                   * @0x8010d6a0-6d0 */
+                        t[1].col = 0x8f; memset(t[1].h94, 0, sizeof t[1].h94);
+                        t[1].h94[1] = (uint16_t)(int16_t)-50; t[1].h94[3] = 3; t[1].w |= 0x4a;
+                        re15_teile_markieren(slot);
+                    }
+                    e->sub_state_2 = 0x81;                        /* Port-Merker: Hand-ab-Zweig (Phase 1 rutscht) */
+                } else
+                    re15_enemy_death_fx(e);                       /* gore 0x80019700(0x2000) @0x8010d578 */
+            }
+        } else if (e->sub_state_2 == 0x81) {                     /* 0x8010D5D0 Phase 1 @0x8010d6d4: anim_set(+0x84,+0x16c),
+                                                                   * FUN_800245d8(0x800), +0x8c -= 30 (>= 0) */
+            int ende = re15_enemy_clip_done(e);
+            e->x += (int32_t)(((int32_t)re15_cos_q12((int16_t)((e->rot_y + 0x800) & 0xfff)) * e->speed_h) >> 12);
+            e->z -= (int32_t)(((int32_t)re15_sin_q12((int16_t)((e->rot_y + 0x800) & 0xfff)) * e->speed_h) >> 12);
+            e->speed_h = (int16_t)(e->speed_h - 30); if (e->speed_h < 0) e->speed_h = 0;   /* @0x8010d724-74c */
+            if (ende) { e->state = 7; e->sub_state_1 = 0; e->sub_state_3 = 0; }   /* Phase 2 `sw 7,4` @0x8010d750 */
+            else e->anim_frame++;
         } else {                                                 /* +0x7==1 @0x8010d580: play clip 3 (anim_set) */
             if (re15_enemy_clip_done(e)) {                        /* clip complete -> +0x7->2 @0x8010d5b0 */
                 e->state = 7; e->sub_state_1 = 0; e->sub_state_3 = 0;  /* sw 7 into +0x4 @0x8010d5bc */

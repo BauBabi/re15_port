@@ -28,6 +28,7 @@
 #include "re15_player.h"
 #include "re15_room.h"
 #include "re15_teile_r15.h"
+void re15_aspider_beine_reset(void);
 
 static int fails = 0;
 #define CHECK(c, ...) do { if (!(c)) { fprintf(stderr, "FAIL: " __VA_ARGS__); fprintf(stderr, "\n"); fails++; } } while (0)
@@ -189,6 +190,27 @@ static void test_magnum_treffer(void)
     CHECK(e->z > 0, "Rueckstoss schiebt nicht nach hinten (z %d)", e->z);
 }
 
+/* Spinne 0x25 (STAGE2 0x80113aa4): Krit-Treffer -> ein Beinpaar platzt gruen (0x207f60); Tod mit Krit -> Teile 0/19. */
+static void test_spinne(void)
+{
+    re15_aspider_beine_reset();
+    re15_actor_t *e = &g_actors[Z];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = 0x25; e->hp = 100; e->em_flag_id = 0xFF;
+    re15_teile_reset(Z);
+    e->state = 2; e->sub_state_3 = 0; e->hit_react = 0x40 | 1;
+    re15_damage_seed_rng(2);
+    re15_enemy_ai_run_all(1);
+    re15_teil_t *t = re15_teile(Z);
+    int paar = 0;
+    for (int k = 3; k <= 17; k += 2) if ((t[k].w & 0x4a) == 0x4a && (t[k + 1].w & 0x4a) == 0x4a && t[k].col == 0x207f60u) paar++;
+    CHECK(paar == 1, "Spinne: %d Beinpaare geplatzt statt 1", paar);
+    re15_teile_reset(Z);
+    e->state = 3; e->sub_state_3 = 0; e->hit_react = 0x40 | 1;
+    re15_enemy_ai_run_all(1);
+    CHECK((t[0].w & 0x4a) == 0x4a && (t[19].w & 0x4a) == 0x4a, "Spinne: Koerper (Teile 0/19) nicht geplatzt");
+}
+
 static void test_scherben(void)
 {
     re15_teile_reset(Z);
@@ -218,6 +240,7 @@ int main(void)
     test_granate();
     test_beretta();
     test_magnum_treffer();
+    test_spinne();
     test_scherben();
     if (fails) { fprintf(stderr, "%d Fehler\n", fails); return 1; }
     fprintf(stderr, "OK\n");
