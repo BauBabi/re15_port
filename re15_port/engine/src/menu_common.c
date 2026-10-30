@@ -1450,7 +1450,6 @@ static void phase0_init(void)
     s_dbg_id      = 0;                     /* sb zero,9833(at) @0x80046494 */
     /* (5) DAT_800b25ce equip snapshot @0x8004649c.                                    */
     s_snapshot = equip_id_now();
-    re15_keyitems_r41_oeffnen();           /* Runde 41 Spur O: abgelegte Waffe zurueck (RE2 @0x80068be4-c34) */
     /* (6) FUN_8004dadc inventory compaction @0x800464a0. */
     re15_inv_compact();
     /* (7) screen init LAB_80049524 (prim arenas + register init = re15_inv_screen_open;

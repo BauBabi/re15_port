@@ -16,7 +16,7 @@
  *   Skript  = Raum-Task `cmp 0,2,0,<Id>` (ROOM1110 sub01 @0x02336) -> Ereignis OHNE Text und Frage.
  *   Aktion  = am selben Rechteck nur der Text (ROOM1110 Slot 8 sce 4 @0x020B4, keine Frage).
  *   Kurbel  = sub13 Pos_set @0x02EDA/@0x02EE6, sub15 @0x02FC1 `3f 00 0f 45` Plc_motion Flags 0x40 = KEINE Blende, Waffe abgelegt
- *             (@0x80068d0c `li v0,0x43`), Ende @0x02F66 `62 43` sce_item_lost.
+ *             (@0x80068d0c `li v0,0x43`, Waffe 0 @0x80068d34), Ende @0x02F66 `62 43` sce_item_lost.
  *   Karten  = Leser/Ereignis wie die Kurbel (Red Card Key ROOM2110 @0x01812/@0x01AD8), Karte als TUERSCHLOSS (Lab Card Key, Door_aot
  *             key_type 0x61, Handler 0x80051514) bei der Aktionstaste ohne Frage.
  *
@@ -45,10 +45,6 @@ int  re15_keyitems_r41_use(uint8_t item_id);
 /* Inventar-Teardown (close_phase): 1 = USE-Lauf vorgemerkt: das Ereignis ist gestartet und die Welt laeuft in der Blende, damit
  * Kamera und Lage stehen, bevor das Spielbild zurueckkommt. */
 int  re15_keyitems_r41_schliessen(void);
-/* Inventar-Oeffnen (phase0_init): RE2 @0x80068be4-c34 legt die fuer die Kurbel abgelegte Waffe wieder an. Hinter dem Schnappschuss
- * 25ce, damit das Schliessen die Waffe neu laedt. */
-void re15_keyitems_r41_oeffnen(void);
-
 /* op_message_on: 0 = normal weiter; 1 = Nachricht entfaellt (pc += 4, Antwort steht in (12,31)). */
 int  re15_keyitems_r41_message_on(uint8_t msg_id);
 /* op_evt_next: 1 = das Evt_next hinter einer entfallenen Nachricht zaehlt nicht (USE-Lauf: alles im ersten Skripttakt). */

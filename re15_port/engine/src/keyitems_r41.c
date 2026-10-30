@@ -15,7 +15,6 @@
 #include "re15_item_modal.h"   /* re15_item_modal_start: "You can't carry any more items"            */
 #include "re15_itembox.h"      /* g_itembox, RE15_BOX_SLOTS                                          */
 #include "re15_menu.h"         /* re15_menu_gameplay_frozen                                          */
-#include "re15_messer.h"       /* RE15_MESSER_NICHTS = 25c8 "nichts ausgeruestet"                    */
 #include "re15_msg.h"          /* re15_msg_get_raw                                                   */
 #include "re15_scd.h"          /* g_scd, re15_game_flag_*, scd_event_fire                            */
 #include "re15_skeleton.h"     /* re15_cos_q12 / re15_sin_q12                                        */
@@ -28,6 +27,7 @@
 
 extern unsigned g_current_room_id;
 extern int scd_event_fire(uint8_t event_id);
+extern void re15_player_waffe_roh(int id);     /* re15_damage.c, Runde 41 Spur K: aca5d ohne Ausruest-Platz */
 
 #define KEIN_TOR   0xFF        /* tor_bank: keine Zusatzbedingung */
 #define MARKER     0xFF        /* ereignis: sce-5-Platz, die Raum-sub01 fragt die Trefferzelle ab */
@@ -130,6 +130,7 @@ static int      s_evt_next_weg      = 0;       /* Evt_next direkt hinter einer e
 static int      s_plc_wartet        = 0;       /* Kurbel: Frage durch, Plc_motion kommt im selben Takt        */
 static int      s_text_ende         = -1;      /* Kombi-Text: Parse-Stelle des letzten Seitenumbruchs         */
 static int      s_waffe_id          = -1;      /* fuer die Kurbel abgelegte Waffe, RE2 69f3/69f5              */
+static int      s_waffe_szene       = 0;       /* Plc_motion gelaufen: Plc_ret beendet die Szene              */
 static int8_t   s_soll_alt[N_FLAGITEMS];       /* -1 = noch kein Vergleich in diesem Raum                     */
 static int      s_kerze_alt         = -1;
 static unsigned s_zaehler[2];
@@ -222,12 +223,6 @@ int re15_keyitems_r41_use(uint8_t item_id)
         return 0;
     }
     s_vormerkung = st;
-    if (st->art & RE15_R41O_WAFFE) {
-        /* RE2 @0x80068cf8-@0x80068d40: fuer Valve Handle, Manhole Opener und Crank 5bf8 := 0x80, 5bfa := 0, 69f3 := 1,
-         * 69f4/f5 := alter Platz/Id. Das Schliessen sieht den Unterschied zum Schnappschuss und laedt neu (@0x80068d80). */
-        s_waffe_id = re15_player_equipped_weapon();
-        re15_inv_set_equipped_slot(RE15_MESSER_NICHTS);
-    }
     LOG("[keyitems] USE 0x%02x ROOM%04X Slot %d Ereignis %d -> Inventar schliesst\n", (unsigned)item_id, g_current_room_id,
         (int)st->slot, (int)st->ereignis);
     return 1;
@@ -251,19 +246,26 @@ int re15_keyitems_r41_schliessen(void)
         LOG("[keyitems] Ereignis %d nicht gestartet (alle Plaetze belegt)\n", (int)st->ereignis);
         return 0;
     }
+    if (st->art & RE15_R41O_WAFFE) {
+        /* RE2 @0x80068cf8-@0x80068d40: fuer Valve Handle, Manhole Opener und Crank 5bf8 := 0x80, 5bfa := 0 (@0x80068d34), also
+         * Waffe 0 = kein Anhang an Knochen 11. Das RE1.5-Commit kennt 0 nicht (0x80 -> 1 @0x80046668), darum nur die Id.
+         * PORT-WAHL Rueckkehr: RE2 legt erst bei der naechsten Oeffnung wieder an (@0x80068be4-@0x80068c34, bis dahin unbewaffnet,
+         * gerade neben den vier Zombies von ROOM2020); der Port am Ende der Szene (Plc_ret @0x0B16), Platz 25c8 bleibt unberuehrt. */
+        s_waffe_id = re15_player_equipped_weapon();
+        s_waffe_szene = 0;
+        re15_player_waffe_roh(0);
+    }
     LOG("[keyitems] USE-Lauf ROOM%04X Ereignis %d Frage %d\n", g_current_room_id, (int)st->ereignis, (int)st->frage);
     return 1;
 }
 
-void re15_keyitems_r41_oeffnen(void)
+static void waffe_zurueck(void)
 {
     if (s_waffe_id < 0) return;
-    /* RE2 @0x80068be4-@0x80068c34: 69f3 gesetzt -> 5bf8/5bfa := 69f4/69f5, 5bf9/5bfb := keine. Der Platz folgt aus der Id, weil
-     * die Kompaktierung ihn verschoben haben kann (RE2 zieht 69f4 @0x80069818-@0x8006982c nach). */
-    const int slot = re15_inv_find_item((uint8_t)s_waffe_id);
-    if (slot >= 0) re15_inv_set_equipped_slot(slot);
-    LOG("[keyitems] Waffe 0x%02x wieder angelegt (Platz %d)\n", (unsigned)s_waffe_id, slot);
+    re15_player_waffe_roh(s_waffe_id);
+    LOG("[keyitems] Waffe %d wieder in der Hand\n", s_waffe_id);
     s_waffe_id = -1;
+    s_waffe_szene = 0;
 }
 
 /* Parse-Stelle des letzten Seitenumbruchs vor dem Ja/Nein-Code: dort endet die Beschreibung. Schrittweite wie re15_dialog_step. */
@@ -336,6 +338,7 @@ int re15_keyitems_r41_plc_flags(void)
 {
     if (!s_plc_wartet) return 0;
     s_plc_wartet = 0;
+    s_waffe_szene = 1;
     return 0x40;   /* RE2 ROOM1110 sub15 @0x02FC1 `3f 00 0f 45`, RE1.5 @0x80050d24 `andi v0,v0,0x40` -> @0x80050d30 +0x8f := 0 */
 }
 
@@ -358,6 +361,8 @@ void re15_keyitems_r41_tick(void)
             s_lauf = NULL;
         }
     }
+    /* Plc_ret (@0x80041f90 Spieler-Kommando zurueck auf 1): die Szene ist vorbei. */
+    if (s_waffe_szene && g_actors[RE15_ACTOR_SLOT_PLAYER].state != 4) waffe_zurueck();
     for (int i = 0; i < N_FLAGITEMS; i++) {
         const flagitem_t *f = &k_flagitems[i];
         const int soll = re15_game_flag_get(f->ja_bank, f->ja_bit) && !re15_game_flag_get(f->nein_bank, f->nein_bit) &&
@@ -386,6 +391,7 @@ void re15_keyitems_r41_tick(void)
 void re15_keyitems_r41_raum(uint16_t room_id)
 {
     (void)room_id;
+    waffe_zurueck();
     s_vormerkung = NULL;
     s_lauf = NULL;
     s_evt_next_weg = 0;
