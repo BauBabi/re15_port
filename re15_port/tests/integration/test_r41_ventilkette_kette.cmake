@@ -3,7 +3,7 @@
 # Mangel 1: auf die Kette der Nachbesserungen 3/4 umgestellt; Nachbesserung 5 - Abnahme 4 Mangel 3: Bedingung der Ventile ist
 # seit Nachtrag 16 die Sicherung im Ventilkasten 2010 (9,125), nach jedem Ja laeuft die RE2-Dreh-Animation (345 Takte, der
 # Wegplan ruht waehrend player_mode 2) -> WARTE 450): 2030 Sued-Landeplatz (Bruecke unten, Sicherung genommen =
-# + Sicherung im Ventilkasten 2010 (9,125) = Bedingung der Nachtraege 9/16) -> die richtige Ventil-Folge 09/07/02/01 ZU FUSS (Nachtrag 13) -> Warnung -> ZU FUSS ueber
+# + Sicherung im Ventilkasten 2010 (9,125) = Bedingung der Nachtraege 9/16) -> die richtige Ventil-Folge 09/02/01/08 ZU FUSS (Nachtrag 13) -> Warnung -> ZU FUSS ueber
 # Steg, Treppe und Ring durch die Ost-Tuer -> ROOM20B0 -> Auswasch-Szene des Originals bis zur Freigabe ((3,235)=1, Balken
 # weg) -> zu Fuss durch den Kanal an die Leiter -> ROOM2050. Dossier analysis/befunde_runde41/C_ventilkette.md §0b M2, §0e.
 #
@@ -117,13 +117,6 @@ AKTION
 WARTE 150
 AKTION
 WARTE 450
-GEHE 2600 7280 100
-BLICK 3072
-WARTE 10
-AKTION
-WARTE 150
-AKTION
-WARTE 450
 GEHE -1050 6900 100
 GEHE -1050 6000
 GEHE -1050 -6400
@@ -142,8 +135,23 @@ AKTION
 WARTE 150
 AKTION
 WARTE 450
+GEHE -1050 -7400 100
+GEHE -1050 -6400
+GEHE -1050 6000
+GEHE -1050 6900 100
+GEHE 400 7280 100
+BLICK 3072
+WARTE 10
+AKTION
+WARTE 150
+AKTION
+WARTE 450
 AKTION
 WARTE 30
+GEHE -1050 6900 100
+GEHE -1050 6000
+GEHE -1050 -6400
+GEHE -1050 -7400 100
 GEHE -1900 -7700 80
 BLICK 2048
 WARTE 20
@@ -213,10 +221,10 @@ else()
 endif()
 
 # ---- 2030: richtige Folge zu Fuss -> Warnung -> Flucht zu Fuss -> Ost-Tuer -> 20B0 (ohne RE15_FIRE_AOT) ----------------
-_danach("${_dbg}" "Ventil 09 gedreht (Drehung 1/4)" "Ventil 07 gedreht (Drehung 2/4)" "09, dann 07 (Suedwand)")
-_danach("${_dbg}" "Ventil 07 gedreht (Drehung 2/4)" "Ventil 02 gedreht (Drehung 3/4)" "dann 02 (Nordwand)")
-_danach("${_dbg}" "Ventil 02 gedreht (Drehung 3/4)" "Ventil 01 gedreht (Drehung 4/4)" "dann 01")
-_danach("${_dbg}" "Ventil 01 gedreht (Drehung 4/4)" "[ventilkette41] Folge 09 07 02 01 -> RICHTIG: Warnung, Zaehler, Flut" "richtige Folge")
+_danach("${_dbg}" "Ventil 09 gedreht (Drehung 1/4)" "Ventil 02 gedreht (Drehung 2/4)" "09, dann 07 (Suedwand)")
+_danach("${_dbg}" "Ventil 02 gedreht (Drehung 2/4)" "Ventil 01 gedreht (Drehung 3/4)" "dann 02 (Nordwand)")
+_danach("${_dbg}" "Ventil 01 gedreht (Drehung 3/4)" "Ventil 08 gedreht (Drehung 4/4)" "dann 01")
+_danach("${_dbg}" "Ventil 08 gedreht (Drehung 4/4)" "[ventilkette41] Folge 09 02 01 08 -> RICHTIG: Warnung, Zaehler, Flut" "richtige Folge")
 _muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile_flut" "Warnung + Zaehler (Ereignis 26)")
 _muss("${_dbg}" "[msg] room=2030 id=46" "Warnung 46")
 _muss("${_dbg}" "[ventilkette41] ROOM2030: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)" "Ost-Tuer umgelenkt")
@@ -228,7 +236,7 @@ _darf_nicht("${_dbg}" "FLUT: Wasser steigt" "der Weg zur Tuer passt in die 60 s"
 if(NOT _haken)
     _muss("${_dbg20}" "EXIT_AT: Bild 200 in Raum 20b0" "200 Bilder in ROOM20B0")
     file(REMOVE "${_exe_kopie}")
-    message(STATUS "r41_ventilkette_kette: 2030 richtige Folge 09/07/02/01 zu Fuss -> Warnung -> Ost-Tuer zu Fuss -> ROOM20B0, Bits 103 + 100; Teil ab der Szene uebersprungen: Haken der Spur A fehlt (aot_common.c re15_wasser20b0_r41_auto_aot)")
+    message(STATUS "r41_ventilkette_kette: 2030 richtige Folge 09/02/01/08 zu Fuss -> Warnung -> Ost-Tuer zu Fuss -> ROOM20B0, Bits 103 + 100; Teil ab der Szene uebersprungen: Haken der Spur A fehlt (aot_common.c re15_wasser20b0_r41_auto_aot)")
     return()
 endif()
 # ---- Szene sub02 -> Zone Slot 7 -> sub05 ------------------------------------------------------------------------

@@ -5,14 +5,14 @@
 # Wegplan-Treiber RE15_WEGPLAN (dachkiste_r36.c: echte Pad-Bits aus Spieler-/Ziellage, Aktionstaste, kein RE15_FIRE_AOT);
 # die zwei Raetsel in 2060 (Cursor-Steuerung) mit RE15_INPUT_SCRIPT (Spielbild-Achse). Glieder:
 #
-#   v1  2030 (Ankunft an der Ost-Tuer, Ring Band 3): Pult ohne Druck (Text 40) -> Treppe Slot 8 (@0x01B8E) hinab ->
-#       Steg-Zelle 12 gesperrt (u0 0xff, Bruecke oben) -> Ventil 13 (Text 41 -> Ja -> 42, Bit 101) -> Treppe hinauf ->
+#   v1  2030 (Ankunft an der Ost-Tuer, Ring Band 3, Bit 101 gesetzt; das Panel-Raetsel faehrt integration_r41_nachtrag30_panel): Treppe Slot 8 (@0x01B8E) hinab ->
+#       Steg-Zelle 12 gesperrt (u0 0xff, Bruecke oben) -> Treppe hinauf ->
 #       Pult "Lower the bridge?" (43) -> Ja -> Cut 4, Bruecke obj 0 auf -1800, Bit 102 -> Treppe hinab -> Zelle 12 offen.
 #   v2a 2030 (Nachbesserung 5, Nachtrag 16 Folge 4; vom Ring, Bits 101/102): Treppe -> Steg -> Sued-Landeplatz -> Ventil 09
 #       OHNE die Sicherung im Ventilkasten 2010 = Text 49 "It's locked." (Original ROOM20A0 msg 1 @0x203C), kein Zaehler ->
 #       Sicherung aufheben (Original Slot 9 @0x01BAA -> sub06: msg 2 -> Ja -> Set(3,108) @0x01FF2 -> msg 3) -> Ventil 09 bleibt
 #       "It's locked." (die Sicherung in der Hand gibt die Ventile nicht frei), Bit (9,125) bleibt 0.
-#   v2b 2030 (Sued-Landeplatz, Bits 101/102 + (3,108) + (9,125) = Sicherung im Ventilkasten): richtige Folge 09/07/02/01 zu
+#   v2b 2030 (Sued-Landeplatz, Bits 101/102 + (3,108) + (9,125) = Sicherung im Ventilkasten): richtige Folge 09/02/01/08 zu
 #       Fuss, je Drehung die RE2-Dreh-Animation (RBJ von RE2 ROOM1080, sub08 @0x0210A..@0x0221E, Clip 17 je Drehung 5x) ->
 #       Warnung 46 im Wortlaut des Nachtrags 19 -> Zaehler -> zu Fuss (Steg, Treppe, Ring) -> Ost-Tuer -> ROOM20B0 ("Zaehler lief
 #       beim Verlassen ... Bits 103 + 100"), keine Flut.
@@ -171,19 +171,9 @@ set(_nach "9:101,9:102,3:108,9:103,9:100,3:235,9:106,3:109,3:114,3:113,3:219,7:1
 # ---- v1: Bruecke zu Fuss -----------------------------------------------------------------------------------------------
 _lauf(v1 420 "RAUM 203${S}
 WARTE 30
-FLAG 9 101
 FLAG 9 102
 FLAG 3 108
 GEHE 6575 -9675
-GEHE 350 -9675
-BLICK 1024
-WARTE 10
-AKTION
-WARTE 150
-AKTION
-WARTE 120
-AKTION
-WARTE 60
 GEHE -6800 -9675
 GEHE -6350 -7700 80
 BLICK 0
@@ -193,16 +183,6 @@ WARTE 300
 GEHE -1050 -7700
 GEHE -1050 -7000 100
 ZELLE 0 12
-GEHE -1500 -6400
-BLICK 2048
-WARTE 10
-AKTION
-WARTE 150
-AKTION
-WARTE 150
-AKTION
-WARTE 60
-FLAG 9 101
 GEHE -1900 -7700 80
 BLICK 2048
 WARTE 20
@@ -231,18 +211,14 @@ GEHE -1050 -7700
 ZELLE 0 12
 FLAG 9 102
 ENDE
-" RE15_DEBUG_JUMP=2030@250 RE15_SET_FLAG=7:155,7:156,7:157 "RE15_PLAYER_POS=6550,-100,2048,3" "RE15_EXIT_AT=3900#203${S}")
-_muss("${_dbg}" "Ereignis 24 -> Port-Programm 2030_pult_ohne" v1 "Pult ohne Druck")
-_muss("${_dbg}" "[msgtext] room=203${S} id=40 \"A control panel for the bridge." v1 "Text 40")
+" RE15_DEBUG_JUMP=2030@250 RE15_SET_FLAG=7:155,7:156,7:157,9:101 "RE15_PLAYER_POS=6550,-100,2048,3" "RE15_EXIT_AT=3900#203${S}")
 _muss("${_wp}" "ZELLE r0[12] LAUFZEIT: x -2050..-50 z -5950..5450 typ 1 u0 0xff" v1 "Steg-Zelle 12 mit der Bruecke oben gesperrt")
-_danach("${_dbg}" "Port-Programm 2030_v13_frage" "[msgtext] room=203${S} id=42" v1 "Ventil 13 geoeffnet (Text 42)")
-_flagfolge("${_wp}" v1 9 101 "0;1")
 _danach("${_dbg}" "Port-Programm 2030_pult_senken" "Cut_chg(4)" v1 "Bruecke faehrt unter Cut 4")
 _muss("${_dbg}" "obj=0x00 m=1" v1 "Member_set der Bruecke (obj 0)")
 _flagfolge("${_wp}" v1 9 102 "0;1;1")
 _muss("${_wp}" "ZELLE r0[12] LAUFZEIT: x -2050..-50 z -5950..5450 typ 1 u0 0x00" v1 "Steg-Zelle 12 nach dem Senken offen")
 _darf_nicht("${_dbg}" "2030_ventil" v1 "kein Ventilraetsel in v1")
-message(STATUS "r41_ventilkette_weg[${FIGUR}] v1: Pult 40 -> Ventil 13 -> Pult 43 -> Bruecke unten (Bit 102), Steg offen")
+message(STATUS "r41_ventilkette_weg[${FIGUR}] v1: Bruecke oben, Steg gesperrt -> Pult 43 (Bit 101, Panel: integration_r41_nachtrag30_panel) -> Bruecke unten (Bit 102), Steg offen")
 
 # ---- v2a: Ventile ohne die Sicherung im Ventilkasten 2010 = "It's locked." - auch mit der Sicherung in der Hand -------------
 # (Nachbesserung 5, Nachtrag 16 Folge 4). Ventil-Plaetze (Kopf re15_ventilkette_r41.h "Ventil-RAEDER"): 09 (-2650) Suedwand
@@ -302,19 +278,12 @@ _darf_nicht("${_dbg}" "Port-Programm 2030_ventil_09" v2a "ohne Kasten-Sicherung 
 _darf_nicht("${_dbg}" "Zaehler laeuft" v2a "kein Zaehler")
 message(STATUS "r41_ventilkette_weg[${FIGUR}] v2a: Ventil 09 ohne Kasten-Sicherung = 49 \"It's locked.\" -> Sicherung aufgehoben -> weiter 49, Bit 125 = 0")
 
-# ---- v2b: richtige Folge 09/07/02/01 zu Fuss -> Warnung -> Zaehler -> Flucht zur Ost-Tuer -> 20B0 -------------------------
+# ---- v2b: richtige Folge 09/02/01/08 zu Fuss -> Warnung -> Zaehler -> Flucht zur Ost-Tuer -> 20B0 -------------------------
 # Nachbesserung 5: je Ja die RE2-Dreh-Animation (345 Takte; der Wegplan ruht waehrend player_mode 2) -> WARTE 450; gemessen
 # 2026-10-24 (Messlauf nb5 v2bc, Leon): Warnung zu F4483, Countdown ab F4500, Ost-Tuer zu Fuss, 20B0.
 _lauf(v2b 600 "RAUM 203${S}
 WARTE 30
 GEHE -2650 7280 100
-BLICK 3072
-WARTE 10
-AKTION
-WARTE 150
-AKTION
-WARTE 450
-GEHE 2600 7280 100
 BLICK 3072
 WARTE 10
 AKTION
@@ -339,9 +308,24 @@ AKTION
 WARTE 150
 AKTION
 WARTE 450
+GEHE -1050 -7400 100
+GEHE -1050 -6400
+GEHE -1050 6000
+GEHE -1050 6900 100
+GEHE 400 7280 100
+BLICK 3072
+WARTE 10
+AKTION
+WARTE 150
+AKTION
+WARTE 450
 AKTION
 WARTE 30
 FLAG 5 29
+GEHE -1050 6900 100
+GEHE -1050 6000
+GEHE -1050 -6400
+GEHE -1050 -7400 100
 GEHE -1900 -7700 80
 BLICK 2048
 WARTE 20
@@ -364,10 +348,10 @@ list(LENGTH _m17 _n_m17)
 if(NOT _n_m17 EQUAL 20)
     _fehler("[v2b]: ${_n_m17} Mal Clip 17 statt 20 (4 Drehungen x 5, RE2 ROOM1080 sub08 For 2 @0x02178, For 2 @0x021AE, einzeln @0x021CE)")
 endif()
-_danach("${_dbg}" "Ventil 09 gedreht (Drehung 1/4)" "Ventil 07 gedreht (Drehung 2/4)" v2b "09, dann 07")
-_danach("${_dbg}" "Ventil 07 gedreht (Drehung 2/4)" "Ventil 02 gedreht (Drehung 3/4)" v2b "dann 02 (Nordwand)")
-_danach("${_dbg}" "Ventil 02 gedreht (Drehung 3/4)" "Ventil 01 gedreht (Drehung 4/4)" v2b "dann 01")
-_danach("${_dbg}" "Ventil 01 gedreht (Drehung 4/4)" "[ventilkette41] Folge 09 07 02 01 -> RICHTIG: Warnung, Zaehler, Flut" v2b "richtige Folge")
+_danach("${_dbg}" "Ventil 09 gedreht (Drehung 1/4)" "Ventil 02 gedreht (Drehung 2/4)" v2b "09, dann 07")
+_danach("${_dbg}" "Ventil 02 gedreht (Drehung 2/4)" "Ventil 01 gedreht (Drehung 3/4)" v2b "dann 02 (Nordwand)")
+_danach("${_dbg}" "Ventil 01 gedreht (Drehung 3/4)" "Ventil 08 gedreht (Drehung 4/4)" v2b "dann 01")
+_danach("${_dbg}" "Ventil 08 gedreht (Drehung 4/4)" "[ventilkette41] Folge 09 02 01 08 -> RICHTIG: Warnung, Zaehler, Flut" v2b "richtige Folge")
 _danach("${_dbg}" "RICHTIG: Warnung" "[msgtext] room=203${S} id=46 \"WARNING: The water will rise in one minute. Please leave the room immediately!\"" v2b "Warnung 46 im Wortlaut des Nachtrags 19")
 _danach("${_dbg}" "id=46" "[ventilkette41] Zaehler laeuft: 1800 Takte" v2b "Zaehler gestartet")
 _flagfolge("${_wp}" v2b 5 29 "1")
@@ -378,19 +362,12 @@ _muss("${_dbg}" "[ventilkette41] Zaehler lief beim Verlassen von 2030 -> Bits 10
 _darf_nicht("${_dbg}" "FLUT: Wasser steigt" v2b "der Weg zur Tuer passt in die 60 s")
 _darf_nicht("${_dbg}" "ERTRUNKEN" v2b "nicht ertrunken")
 _darf_nicht("${_dbg}" "-> FALSCH: zurueckgesetzt" v2b "keine falsche Folge")
-message(STATUS "r41_ventilkette_weg[${FIGUR}] v2b: 09/07/02/01 zu Fuss mit RE2-Dreh-Animation (20 x Clip 17) -> RICHTIG -> 46 (Nachtrag 19) -> Zaehler -> zu Fuss zur Ost-Tuer -> 20B0 (103+100)")
+message(STATUS "r41_ventilkette_weg[${FIGUR}] v2b: 09/02/01/08 zu Fuss mit RE2-Dreh-Animation (20 x Clip 17) -> RICHTIG -> 46 (Nachtrag 19) -> Zaehler -> zu Fuss zur Ost-Tuer -> 20B0 (103+100)")
 
-# ---- v2c: die Folge des Plakats 09/01/02/07 = falsch -> zurueck (Nachtrag 13; Sicherung im Ventilkasten) ----------------------
+# ---- v2c: die Folge des Plakats 01/02/09/08 (Nachtrag 30d) = falsch -> zurueck (Nachtrag 13; Sicherung im Ventilkasten) -------
 # Gemessen 2026-10-25 (Messlauf nb5 v2c, Leon): FALSCH + Text 45 nach der vierten Drehung, letzte Lesung F4766 -> Ende F4900.
 _lauf(v2c 600 "RAUM 203${S}
 WARTE 30
-GEHE -2650 7280 100
-BLICK 3072
-WARTE 10
-AKTION
-WARTE 150
-AKTION
-WARTE 450
 GEHE -1050 6900 100
 GEHE -1050 6000
 GEHE -1050 -6400
@@ -413,7 +390,14 @@ GEHE -1050 -7400 100
 GEHE -1050 -6400
 GEHE -1050 6000
 GEHE -1050 6900 100
-GEHE 2600 7280 100
+GEHE -2650 7280 100
+BLICK 3072
+WARTE 10
+AKTION
+WARTE 150
+AKTION
+WARTE 450
+GEHE 400 7280 100
 BLICK 3072
 WARTE 10
 AKTION
@@ -428,20 +412,20 @@ FLAG 5 29
 ENDE
 " RE15_DEBUG_JUMP=2030@250 RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125 "RE15_PLAYER_POS=-2650,7280,3072,1"
       "RE15_EXIT_AT=4900#203${S}")
-_danach("${_dbg}" "[msgtext] room=203${S} id=55 \"Valve 09, red wheel. Will you turn it?\"" "Ventil 09 gedreht (Drehung 1/4)" v2c "Ventil 09: Frage 55 -> gedreht")
-_danach("${_dbg}" "Ventil 09 gedreht (Drehung 1/4)" "[msgtext] room=203${S} id=50 \"Valve 01, black wheel. Will you turn it?\"" v2c "Ventil 01 (Nordwand): Frage 50")
-_danach("${_dbg}" "Ventil 01 gedreht (Drehung 2/4)" "[msgtext] room=203${S} id=51 \"Valve 02, green wheel. Will you turn it?\"" v2c "Ventil 02: Frage 51")
-_danach("${_dbg}" "Ventil 02 gedreht (Drehung 3/4)" "[msgtext] room=203${S} id=53 \"Valve 07, black wheel. Will you turn it?\"" v2c "Ventil 07: Frage 53")
-_danach("${_dbg}" "Ventil 07 gedreht (Drehung 4/4)" "[ventilkette41] Folge 09 01 02 07 -> FALSCH: zurueckgesetzt" v2c "Pruefung erst nach der vierten Drehung")
+_danach("${_dbg}" "[msgtext] room=203${S} id=50 \"Valve 01, black wheel. Will you turn it?\"" "Ventil 01 gedreht (Drehung 1/4)" v2c "Ventil 09: Frage 55 -> gedreht")
+_danach("${_dbg}" "Ventil 01 gedreht (Drehung 1/4)" "[msgtext] room=203${S} id=51 \"Valve 02, green wheel. Will you turn it?\"" v2c "Ventil 01 (Nordwand): Frage 50")
+_danach("${_dbg}" "Ventil 02 gedreht (Drehung 2/4)" "[msgtext] room=203${S} id=55 \"Valve 09, red wheel. Will you turn it?\"" v2c "Ventil 02: Frage 51")
+_danach("${_dbg}" "Ventil 09 gedreht (Drehung 3/4)" "[msgtext] room=203${S} id=54 \"Valve 08, green wheel. Will you turn it?\"" v2c "Ventil 07: Frage 53")
+_danach("${_dbg}" "Ventil 08 gedreht (Drehung 4/4)" "[ventilkette41] Folge 01 02 09 08 -> FALSCH: zurueckgesetzt" v2c "Pruefung erst nach der vierten Drehung")
 _danach("${_dbg}" "FALSCH: zurueckgesetzt" "[msgtext] room=203${S} id=45 \"The valves turned back to their original position.\"" v2c "Text 45")
 # (5,0x13) und (5,0x10): das Programm 2030_ventile_falsch setzt die Drehungen sofort zurueck (vor dem Text 45), die
-# vierte Drehung selbst belegt die Zeile "Ventil 07 gedreht (Drehung 4/4)".
+# vierte Drehung selbst belegt die Zeile "Ventil 08 gedreht (Drehung 4/4)".
 _flagfolge("${_wp}" v2c 5 19 "0")
 _flagfolge("${_wp}" v2c 5 16 "0")
 _flagfolge("${_wp}" v2c 5 29 "0")
 _darf_nicht("${_dbg}" "Zaehler laeuft" v2c "falsche Folge: kein Zaehler")
 _darf_nicht("${_dbg}" "room=203${S} id=46" v2c "falsche Folge: keine Warnung")
-message(STATUS "r41_ventilkette_weg[${FIGUR}] v2c: Plakat-Folge 09/01/02/07 zu Fuss (Kasten-Sicherung gesteckt) -> FALSCH, Text 45, zurueck")
+message(STATUS "r41_ventilkette_weg[${FIGUR}] v2c: Plakat-Folge 01/02/09/08 zu Fuss (Kasten-Sicherung gesteckt) -> FALSCH, Text 45, zurueck")
 
 # ---- v2d: Dokument "Technician's Note" (Slot 20, Item 0x4E) -> Leser -> abgelegt, Bit (9,107) ----------------------------
 # (Framedump-Pfade relativ: die exe laeuft im Laufordner; ${WORKDIR} setzt erst das Makro _lauf.)
@@ -510,12 +494,12 @@ message(STATUS "r41_ventilkette_weg[${FIGUR}] g1/g2: Sicherung (3,144) + Generat
 
 # ---- k1: Ventil-Sicherungskasten 2010 - Sicherung einsetzen (Nachbesserung 5, Nachtrag 16 Folgen 1/2) --------------------
 # Spieler (4950,-2770) Blick +x -> Vorwaertspunkt (5570,-2770) im Platz x 4900..5900 z -3470..-2070 (Wandflaeche x 5400 +- 500).
-# Tasten wie der Messlauf nb5 bx2 (2026-10-24 21:32, Leon): F300 Ereignis 20 -> Text 40 (2 Seiten), F520 Frage 41, F600 Ja ->
-# Bit 125, Standbild + Aufschliess-Ton ab F603, F680 Bestaetigen -> Standbild zu (nach 77 Bildern), Text 42, F760 Text 42 zu.
-# Framedumps F560 (Frage ueber dem Raum) und F640 (Standbild); Flaeche x 40..280 y 20..120 (ueber dem Nachrichtenfenster).
+# Tasten wie der Messlauf nb5 bx2 (2026-10-24 21:32, Leon), seit Spur N + 18 Bilder Aufklappen und + 60 Bilder Nahansichten ROOM2060 Cut 8/9: F300 Aufklappen, F318
+# Ereignis 20 -> Text 40 (2 Seiten), F538 Frage 41, F618 Ja -> Nahansichten -> Bit 125, Standbild + Aufschliess-Ton ab ~F680, F780 Bestaetigen -> Standbild zu, Text 42, F860 Text 42 zu.
+# Framedumps F578 (Frage ueber dem Raum) und F740 (Standbild); Flaeche x 40..280 y 20..120 (ueber dem Nachrichtenfenster).
 _lauf(k1 180 "" RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2010@250 RE15_SET_FLAG=3:108 "RE15_PLAYER_POS=4950,-2770,0,0"
-      "RE15_PRESS=square@300,square@350,square@400,square@450,square@520,square@600,square@680,square@760"
-      "RE15_FRAMEDUMP=560-640/80:f_kasten_" "RE15_EXIT_AT=840#201${S}")
+      "RE15_PRESS=square@300,square@368,square@418,square@468,square@538,square@618,square@780,square@860"
+      "RE15_FRAMEDUMP=578-740/162:f_kasten_" "RE15_EXIT_AT=940#201${S}")
 _muss("${_dbg}" "[ventilkette41] ROOM201${S}: Ventil-Sicherungskasten Slot 8 (x 4900..5900 z -3470..-2070), Sicherung fehlt" k1 "Kasten angelegt")
 _muss("${_dbg}" "[ventilkette41] ROOM201${S} Ereignis 20 -> Port-Programm 2010_kasten_frage" k1 "Aktion am Kasten (mit (3,108))")
 _muss("${_dbg}" "[msgtext] room=201${S} id=40 \"A fuse box for the valve controls." k1 "Text 40")
@@ -545,9 +529,9 @@ function(_gleich _bild _out)
     endif()
     set(${_out} "${CMAKE_MATCH_2}" PARENT_SCOPE)
 endfunction()
-_gleich(640 _g_640)
-_gleich(560 _g_560)
-message(STATUS "r41_ventilkette_weg[${FIGUR}] k1: gleich BSS 2030 Cut 7: F640 ${_g_640} %, F560 ${_g_560} %")
+_gleich(740 _g_640)
+_gleich(578 _g_560)
+message(STATUS "r41_ventilkette_weg[${FIGUR}] k1: gleich BSS 2030 Cut 7: F740 ${_g_640} %, F578 ${_g_560} %")
 if(_g_640 LESS 95)
     _fehler("[k1]: F640 ist nicht das Standbild ROOM2030 Cut 7 (nur ${_g_640} % der Pixel gleich, erwartet >= 95)")
 endif()
