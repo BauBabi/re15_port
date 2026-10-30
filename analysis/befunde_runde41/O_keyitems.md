@@ -222,7 +222,12 @@ Nachgezogen, weil die Stellen keine Ja-Eingabe mehr kennen (Riegel bleibt inhalt
 - probe_r26_inventar B3/B4/B4c (fuenfter Port-Name 0x33), test_1090_flame_out_pin, test_r37_feuerloescher, test_r37_kistenregel, test_room1050_sicherung, test_r34n_a_rolltor (W/L ueber Ja-Weg),
   r21_discard_wegwerfen, test_r39_inventar (Teil discard: Beschreibung, dann USE), test_r41_kleinkram_b_kurbel (USE), test_r41_kleinkram_b_takt (Teil frage im Altstand: Inventar voll),
   test_r41_kleinkram_b_exe (Pos_set und Plc_motion duerfen im selben Bild fallen).
-- integration: test_r37_codepanel, test_r37_kistenregel, test_r37_feuerloescher, test_r39_inventar (G), test_r41_kleinkram_b (kurbel = USE; geh/renn/losl = Altstand mit vollem Inventar).
+- probe_r38_rekorder (Panel per USE).
+- integration: test_r37_codepanel, test_r37_kistenregel, test_r37_feuerloescher (A: USE auf dem Bild des alten Ja), test_r39_inventar (G), test_r41_kleinkram_b (kurbel = USE; geh/renn/losl = Altstand
+  mit vollem Inventar), test_r41_ventilkette_weg (g1, k1 USE; k2: Sicherung wieder im Inventar, Frage entfaellt), test_r38_rekorder (USE), test_r37_masken36_nb2 (USE), test_r36_dachkiste (weg2020 im Altstand).
+
+Querbezug geprueft, weil der Regex nur Namen trifft: Zensus aller Testquellen auf die betroffenen Gegenstaende und Flags (`give`, `RE15_GIVE`, `inv_grant`, `3:114`, `3:146`, `3:108`, `FIRE_AOT`/`FORCE_EVENT` auf
+Stelle und Ereignis). Vier Saetze lagen ausserhalb des Regex (r36_dachkiste, r37_masken36_nb2, r38_rekorder, r36_g2_cursor_rahmen) und wurden einzeln gefahren.
 
 Gegenproben, die die Riegel selbst scharf gemacht haben: `use` lief zuerst rot, weil room_boot das Inventar leerte und die Karten-Zeilen das Bank-9-Bit nicht setzten (Ck(9,52,1) @0x019C0: ohne Bit
 kommt msg 8 statt msg 9); `kurbel` lief rot mit `anim_frac 7`: daraus kam der echte Mangel (Bit 0x40 nullte nicht, siehe Haken-Tabelle); `falsch` trug eine Lage, die der Koerper-Schub auf die Stelle schob.

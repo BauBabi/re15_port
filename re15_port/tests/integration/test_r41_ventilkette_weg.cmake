@@ -675,7 +675,7 @@ _muss("${_dbg}" "loaded room${_k2060k}.rdt" k2 "2060 geladen")
 _darf_nicht("${_dbg}" "Generator-Kasten Slot 9 = Text 3" k2 "ohne Bit 125 gilt im Generator-Kasten wieder das Original")
 _danach("${_dbg}" "loaded room${_k2060k}.rdt" "[msgtext] room=206${S} id=3 \"One of the fuses is missing...\"" k2 "2060 Kasten: Original sub18 msg 3")
 # Runde 41 Spur O: die Sicherung ist wieder Inventar-Eintrag, die Stelle ist USE: Aktionstaste nur Text 3, Frage 4 entfaellt mit Nein.
-_danach("${_dbg}" "Sicherung genommen" "[keyitems] Gegenstand 0x40 ins Inventar" k2 "Sicherung aus dem Kasten im Inventar")
+_danach("${_dbg}" "room=201${S} id=44" "[keyitems] Gegenstand 0x40 ins Inventar" k2 "Sicherung aus dem Kasten im Inventar")
 _danach("${_dbg}" "room=206${S} id=3" "[keyitems] Frage 4 entfaellt: Nein (Aktionstaste)" k2 "2060 Kasten: Frage msg 4 entfaellt (Sicherung einsetzbar)")
 _flagfolge("${_wp}" k2 9 125 "1;0;0;0")
 message(STATUS "r41_ventilkette_weg[${FIGUR}] k2: nach der Flut zu Fuss 20B0 -> 2010 Kasten (43 -> Ja -> 44, Bit 125 = 0) -> 20B0 -> 2050 -> 2020 -> 2030 -> 2060 -> Text 3, Sicherung im Inventar")
