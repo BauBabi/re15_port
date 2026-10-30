@@ -13,6 +13,7 @@
  * aca3c |= 0x40 / acc0c sind Anzeige-/Sperrbits ohne Port-Gegenstueck (dokumentiert, nicht gebaut).
  */
 #include "re15_birkin_opfer.h"
+#include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 #include "re15_audio.h"         /* re15_audio_core_se = FUN_80045024(0x04ss0001, &Spieler+0x34) */
 #include "re15_ai_flavor.h"     /* re15_re2z_mash = FUN_80037024 */
 #include "re15_player.h"        /* re15_player_pl00_clip_frames (Leons eigene Bank) */
