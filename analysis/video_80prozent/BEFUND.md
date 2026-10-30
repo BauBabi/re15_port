@@ -206,6 +206,7 @@ Video 3 zeigt eindeutig mehr Zerstoerung als der Auslieferungsstand:
   RE1.5-Flavor beides zeigt, ist **nicht geprueft**. Offen als Aufgabe, nicht umgesetzt.
 
 ### 5.3 Treffen Leon und Elza? (Frage des Nutzers zur Wiki-Aussage)
+⛔ **Ueberholt (2026-10-31):** Dieser Abschnitt stuetzt sich auf die englischen Dialoge der Fan-Mod in `info/Re1.5`. Massgeblich ist `analysis/story_begegnungen/BERICHT.md` (40%-Disc von Capcom + Videos).
 - **In keinem der drei Videos stehen Leon und Elza im selben Bild.** Die blau uniformierten Figuren neben Elza
   (Leichenhalle 3:14-3:16, Buero 0:44-0:47, 7:16, 10:16) sind RPD-Zombies, nicht Leon.
 - **Die Begleiter kreuzen sich aber** - belegt in den ausgelieferten RDTs, nicht nur im Video:
