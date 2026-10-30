@@ -11735,10 +11735,12 @@ static void re15_cockroach_ai_tick(int slot)
  *  - Root motion FUN_8011b5c4 (per-clip skeleton root delta -> +0x8c) + nav-zone steer 0x80039e7c: the
  *    port advances by the byte-true ADDITIVE speed constants (+0x8c += 0x14 etc.) without the clip root
  *    delta, so approach speed is not pixel-exact.
- *  - aca58 player-command FSM (grab cmd 5 / throw cmd 6 / knockdown cmd 2) is unported port-wide; the
- *    port uses s_player_grabbed (via the birkin_grab latch) for cmd 5/6 and hit_react|=1 for the knockdown.
- *  - rng per-bone writhe/breathe (0x8003a95c) + gore/blood FX (0x80019700, ESP 0x1c/0x1d/0x1e/0x1f via
- *    0x8004ef90) are skeleton/effect render-side, not modeled (audio SE calls ARE ported).
+ *  - Spieler-Seite: cmd 5/6 laufen ueber den Typ-Haken 0x8011afd8 (birkin_opfer.c), cmd 2 ueber
+ *    re15_player_stagger_cmd2; die Treffergeometrie ist die Angriffsbox FUN_8001a5e0 (re15_bk_kontakt).
+ *  - Blut FUN_80019700 in HURT/Todes-Waechter ist gebaut. rng per-bone writhe/breathe (0x8003a95c) bleibt
+ *    render-side offen. FUN_8004ef90 ist das Spiel-FLAG-Setzen (z5 0x1c/0x1d/0x1e/0x1f), kein Effekt.
+ *  - grid & 0xf == 4 schaltet BRAIN @0x80116d38 ueber @0x8011eea4[4] = 0x80116e48 in einen Szenen-Modus
+ *    (Tabellen @0x8011ef28/@0x8011ef2c, Maschine 0x80118d00, Phasen @0x801003dc) — im Port NICHT gebaut.
  *  - DEATH phase 3 WAITS for (grid&0xf)==2 — an EXTERNAL room-SCD morph trigger — then run-off sub-11
  *    hands the fight to a room-SCD-spawned next form. The AI FSM is faithful; the SCD grid-nibble=2 flip
  *    and the next-form spawn are NOT wired -> the boss plays the collapse then HOLDS at phase 3 (gated on
@@ -12065,14 +12067,17 @@ static void re15_birkin_ai_tick(int slot)
             }
             break;
         }
-        case 6: {  /* MUTATION set-piece 0x80117f80 — THE PHASE-2 TRANSFORM: grid|=0x10 form-2, HP=150, ESP 0x1d */
+        case 6: {  /* MUTATION set-piece 0x80117f80 — THE PHASE-2 TRANSFORM: grid|=0x10 form-2, HP=150, Flag z5:0x1d */
             e->hit_stun = 9;                           /* +0x1dc = 9 re-armed EVERY tick @0x80117fb8 (unflinchable during mutation) */
             if (e->sub_state_2 == 0) {                 /* phase 0 @0x80118004: the transform */
                 re15_birkin_clip(e, 0x14); e->anim_frac = 0xf;         /* clip 0x14 @0x80118014 */
                 e->grid_id = (uint8_t)(e->grid_id | 0x10);            /* grid |= 0x10 FORM-2 FLAG @0x80118050-54 */
                 e->ai_timer = 0xfff;                                  /* +0x9c = 0xfff @0x80118064 */
                 e->birkin_pause = 1;                                  /* +0x9e = 1 @0x80118078 */
-                /* ESP effect 0x1d (0x8004ef90 gore/morph FX) @0x80118074 — render-side, OPEN */
+                /* FUN_8004ef90 ist KEIN Effekt, sondern das Spiel-Flag-Setzen (*(a0+(bit>>5)*4) |= 0x80000000>>(bit&31),
+                 * RE_15_Quellcode_V2/FUN_8004ef90.c): a0 = 0x800b1028 (Bank z5, `addiu a0,a0,4136` @0x8011804c),
+                 * a1 = 0x1d (`ori a1,zero,0x1d` @0x80118070), jal @0x80118074 = "Birkin hat mutiert". */
+                re15_game_flag_set(5, 0x1d, 1);
                 re15_audio_room_se(1); re15_audio_room_se(8);         /* Se(1) @0x8011807c + Se(8) @0x80118084 */
                 e->hp = 150;                                          /* HP RESET = 0x96 @0x80118094-98 */
                 e->birkin_flags |= 0x8;                               /* +0x1dd |= 8 mutating (revive-guard) @0x801180b0 */
@@ -12163,6 +12168,10 @@ static void re15_birkin_ai_tick(int slot)
                  * Port spielt den Auftritt verdichtet; der Zustand ist belegt, der ZEITPUNKT ist das Ende des
                  * verdichteten Auftritts statt Bild 0x5b des Original-Clips. */
                 e->birkin_rohr = 1;
+                /* Fortschritts-Flags des Auftritts (FUN_8004ef90, Bank z5 @0x80119654 / @0x801197a4): 0x1f bei Bild
+                 * 0x46 (@0x80119644-658), 0x1e mit dem Rohr bei Bild 0x5b (@0x801197b0-7b4) — Zeitpunkt wie oben verdichtet. */
+                re15_game_flag_set(5, 0x1f, 1);
+                re15_game_flag_set(5, 0x1e, 1);
             }
             break;
         }
