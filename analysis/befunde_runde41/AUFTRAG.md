@@ -1147,3 +1147,11 @@ Praezisiert Nachtrag 30 ("waehrend des Alerts und der Alert message ... durchweg
 (Warntext 46 / Stimme main46) laeuft die Alarm-Sirene durchgehend bis zur Flut bzw. bis zum Verlassen des Raums, zusaetzlich zu SUB_25.
 Quelle belegen: ROOM6000 in RE2 (info/re2leon/PL0/RDT, RE2_SOUND_LISTE.md) UND in RE1.5 (shared_assets/PSX/STAGE6) pruefen, welcher Ton das
 ist (Se_on-Satz, Bank, Schleife, Lautstaerke), Byte-Beleg, Schnitt nach shared_assets/RE2/ wie die Runde-38/39-Toene, Paket-Gate nennen.
+
+## 2026-10-30 21:36 — Nachtrag 37 (Nutzer-Freigabe Panel-Raetsel 2030, Spur N)
+
+Entwuerfe N_belege/panel_entwurf_a/b/c.png (Dossier N_nachtrag30.md Abschnitt 2). Nutzer-Wahl per Auswahl: **"A Druckspeicher (Empfohlen)"**.
+FREIGABE ERTEILT, Spur N baut Entwurf A: drei Tanks fassen 100/50/30, die Anzeige liest Tank A (Start 100/0/0); Cursor mit dem Steuerkreuz,
+Aktionstaste waehlt die Quelle, Aktionstaste auf dem zweiten Tank fuellt um, bis die Quelle leer oder das Ziel voll ist; Loesung A nach B,
+B nach C, C nach A = 80, kein Fehlversuch; EXIT verlaesst das Panel; bei 80 folgt Port-Text 2030 Id 43 "The pressure gauge reads 80. / Lower
+the bridge?". Ventil 13 als Ausloeser entfaellt. Oberflaeche wie das Bild panel_entwurf_a.png (Rahmen aus 2050 Cut 15, EXIT aus 11F0 Cut 10).
