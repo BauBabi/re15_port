@@ -72,3 +72,49 @@ Zensus aller 495 RE2-RDTs (Skript scratch re2_usezensus.py / re2_doorkeys.py):
 Plugs 3030; 0x43 Crank 1110; 0x44-46/0x50 Film 2080; 0x47 Unicorn Medal 2000; 0x48/49 Medaillen 4070; 0x4A G. Cogwheel 1110; 0x4B
 Manhole Opener 21A0; 0x4C Main Fuse 6080/6110; 0x4D Fuse Case 60D0; 0x54/55 Joint Plugs 7020; 0x56 Cord 2040/20F0; 0x5D/5E C. Panel
 Key 5040/5030; 0x60 MO Disk 6160.
+
+## Messung vorher (gebauter Stand master f5a5e2f7e, Lauf k_vor)
+
+Weg wie integration_r41_kleinkram_b_kurbel (Leon, Tuer 2050 -> 2020, Handgun, Lauf nach Westen, Aktionstaste, Text, Ja), Bilder
+RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1 (F325..F385):
+- F341 Frage zu, Lage (2914,-3388) Gier 1920; F342 Lage (3650,-3018) Gier 1024 (Pos_set @0x0A8C): gehaltenes Apply-Bild + 6 Bilddauern;
+  F343..F361 Stehen an der Kurbel, F362 Plc_motion (`[scd] Plc_motion(entity=0, motion=0, flags=0x00)`).
+- **F362..F366 ist das "Fliegen"**: die 7-Bild-Blende @0x80050cfc mischt die Stehpose in den ersten Kurbel-Schluessel: der Koerper
+  schiebt sich seitlich ueber die Reling, kippt in F364 mit abgespreiztem Bein nach links, in F366 steht die Kurbel-Pose
+  (Zoom: Spalten F361..F366 in `k_vor_z.png`, scratchpad). Die Lage aendert sich dabei nicht (F362..F399 (3650,-3018)): es ist der
+  Wurzel-Versatz des Raum-RBJ Clip 0 gegenueber der Stehpose, der interpoliert wird. Das passt zum Wortlaut "fliegt quasi an die
+  richtige Position bis das drehen dann los geht"; die Spuren davor haben Sprung und Standbild behandelt, nicht diese Blende.
+- Im Original steht dieselbe Blende (ROOM2020 @0x0A9C `3f 00 00 00`, E-Dossier: "Stehen, Zwischenpose, Kurbeln gleich"); RE2 hat sie
+  an der Kurbel NICHT: `3f 00 0f 45` (Flags 0x40 = keine Blende, siehe RE-Belege). Der Mechanismus des Nutzers ist damit belegt.
+
+## RE-Belege RE1.5 (Zensus aller 206 RDTs mit Header)
+
+Die Kurbel und die Zeitbombe sind in RE1.5 **keine Gegenstaende**, nur Flags: "You've taken the Crank." (3,114) ROOM2010 sub02 @0x008CA,
+"You've taken the Time Bomb." (3,146) ROOM1110 sub03 @0x00D32, "You've taken the Fuse." (3,108) ROOM2030 sub06 @0x01FF2. Im Inventar
+gibt es dafuer nichts auszuwaehlen. Namenstabelle 102 Eintraege (DEBUG.BIN @0x800c495c): 0x35 "Timer Bomb" (Bild im Block 0x35 vorhanden,
+Rechtecke RE2-Form), 0x40 "Fuse", kein "Crank". RE2: Item 0x43.
+
+| Raum | Item | Slot / Beleg Aot_set | Ereignis | Beschreibung | Frage | Besonderheit |
+|---|---|---|---|---|---|---|
+| 1090 | 0x31 Fire Extinguisher | 2 sub00 @0x02336 sat 0xB1 (Viereck) | sub06 @0x02702 | msg 7 | msg 8 @0x02708 | nur Leon-Raum |
+| 10D0/10D1 | 0x38 Blue Keycard | 1 main00 @0x0103E | sub20 | Kombi msg 7 | Kombi msg 7 @0x019AE (10D1 @0x01998) | Tastenfeld danach |
+| 11E0/11E1 | 0x39 Yellow Keycard | 4 main00 @0x0158E | sub20 @0x01F96 | Kombi msg 7 | Kombi msg 7 | |
+| 1230/1231 | 0x37 Red Keycard | 5 main00 @0x00BB0 | sub20 @0x01476 | Kombi msg 7 | Kombi msg 7 | |
+| 11E0/11E1 | 0x30 Pliers | 6 sub00 @0x017D0 | sub26 @0x020AC | msg 10 | msg 11 @0x020B2 | |
+| 1100/1101 | 0x44 Minidisc Player w/ Disc | 2 sub00 @0x00B14 | sub07 @0x00D50 | msg 1 | msg 3 @0x00D56 | |
+| 1050/1051 | 0x40 Fuse | 7 sub00 @0x00C22 | 2 (Port k_mit) | msg 0 + msg 2 | Port 20 | rolltor_1050.c |
+| 2010/2011 | 0x40 Fuse | 8 Port-Platz | 20 (Port) | Port 40 | Port 41 | ventilkette_r41.c |
+| 2020/2021 | **Crank** | 3 sub00 @0x009AE | sub02 @0x00A5C | msg 0 | msg 1 @0x00A62 | Flag-Item, Pos_set |
+| 2040/2041 | 0x35 Timer Bomb | 8 sub00 @0x01456 | sub07 @0x016E8 | msg 0 | msg 5 @0x016EE | Flag-Item |
+| 2060/2061 | 0x40 Fuse | 9 sub00 @0x010C6 | sub18 @0x01678 | msg 3 | msg 4 @0x0167E | Flag-Item |
+| 3050/3051 | 0x46 Red Master Keycard | 10 main00 @0x01FB4 | sub10 @0x02578 | msg 3 | msg 4 @0x0257E | |
+| 4000 | 0x47 Blue Master Keycard | 2 sce 5 main00 @0x010BC | sub01 @0x0137C -> sub02 @0x01426 | msg 0 | msg 1 @0x01440 | 4001: msg 1 ohne Message_on |
+| 4030/4031 | 0x41 Spark Plug | 5 sce 5 main00 @0x00516 | sub01 @0x005DE -> sub02 @0x00612 | msg 0 | msg 1 @0x0063A (4031 @0x0067C) | Tor Ck(5,3,1) @0x00636 |
+
+Bleiben wie im Original:
+- **Green Keycard 3010/3011**: Slot 6 sce 3 @0x020D2 -> sub02 @0x02302 ohne Frage ("You've used the Green Keycard.", Aot_on 2): Karte als
+  TUERSCHLOSS, genau die RE2-Form Lab Card Key (Aktionstaste, Item wird gesucht). USE dort: "You can't use it here." wie RE2 @0x8006b248.
+- **Latch Key 3091** und alle Tuerschluessel (Auftrag; RE2 Tuer-Handler @0x80051628).
+- **Research Center ID Card 40A0/40A1**: msg 4 "Use the Research Center ID Card?" hat in keinem Skript ein Message_on (Zensus), kein Item
+  in der 102er-Tabelle, msg 3 "An ID card is required" Text-Platz: nicht erreichbar, nichts zu tun.
+- **4001**: msg 1 ohne Message_on (Elzas Skript fuehrt dort anders), keine Stelle.
