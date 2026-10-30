@@ -20,3 +20,11 @@ Punkte (Wortlaut AUFTRAG.md, massgeblich):
 - Geometrie: Band (Abstand >= 11402) + Zone 0 (z <= -18100) + Bild von Cut 0 schliessen sich fuer die WURZEL aus (alle Punkte im Bild von Cut 0
   mit z <= -18100 liegen <= ~10000 von Leon): die Wurzel kann am Kampfbeginn nicht im Bild liegen, der Kopf aber schon - Ziel: Nordostteil des
   Suedbeckens, von dort schwimmt er rechts ins Bild, statt vor der Linse zu liegen.
+
+### Punkt 1 - Wahl (Stand wip f817b9e3)
+Werkzeug test_r41_alligator2 lagesuche2 (echter Szenenablauf + 150 Bilder Kamera-Mass je Kandidat), Vorauswahl 3437 Kandidaten (Scratch P41/tools/kand_p.py = Form
+leiche_lage_n5.py --kandidaten, Kampfbeginn >= 3500 von der Kamera). Gewaehlt Leiche (600,-24400) Gier 2560, Anlauf 1680, Durchbruch 22, Schluessel rx -640 rz -384.
+Messung nachher (exe, Lauf D_L1/D_E1, Leon = Elza Bild fuer Bild): Kampfbeginn F299, Gator (3033,-21904) Gier 1843 Zone 0, Leon Zone 0, Abstand 11810 (SquareRoot0
+11808), Biss +137, Treffer +144, Clip-Folge 0 F300, 1 F409, 4 F436 (kein Dash), Fress-Cut 1 frontal 4005, Wurzel <-> Kamera >= 4007 (vorher 1755), Knochen >= 2684
+(vorher 610), rechte Bildhaelfte Median 28 % (vorher 45 %), 0 Bilder > 50 % (vorher 18..23). Schluessel: Primitivfarbe 86 -> 128, Quad-Kasten 10,4 x 12,6.
+Riegel unit_r41_alligator2_kamera(_elza), integration_r41_alligator2_kamera(_elza).
