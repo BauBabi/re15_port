@@ -148,11 +148,23 @@ static void musik_takt_vor(void) { musik_takt(); }
  *   `ad 02` = 685), Anlauf-Gier 1952, Durchbruch bis Bild 22 -> Kampfbeginn Gator (3197,-24407) Zone 0, Abstand 11448
  *   (SquareRoot0; RE2 11402), erster Biss nach 131 / Treffer nach 138 Bildern (RE2-Band 121..158), Fress-Cut 1 frontal 4116.
  *   (Anlauf-Gier 1920 gaebe genau 11402 = die Untergrenze; 1952 laesst 46 Rand fuer Rundung zwischen Riegel und exe.) */
+/* Runde 41 Spur P (NUTZER-VORGABE Nachtrag 31 Punkt 2 "Aendern: nicht vor der Kamera": Startlage so waehlen, dass er beim Kampfbeginn im
+ * Becken VOR Leon zu sehen ist und nicht direkt vor der Linse der laufenden Kamera (Cut 0); der RE2-Kampfbeginn F-E2 bleibt). Die Lage der
+ * Nachbesserung 5 (0,-26000) Gier 2944 / Anlauf 1952 endete bei (3197,-24407), 1837 vor der Kamera Cut 0 (2754,-3132,-26190): kleinster
+ * Knochen-Abstand 610, > 50 % der rechten Bildhaelfte in 23 Bildern. Geometrie: alle Punkte im Bild von Cut 0 mit z <= -18100 (Zone 0) liegen
+ * <= ~10000 von der Leiter - die Wurzel KANN am Kampfbeginn im RE2-Band (>= 11402) nicht im Bild liegen; darum der Nordostteil des
+ * Suedbeckens, von dort schwimmt er an der Beckenmitte rechts ins Bild. Wahl = Messung mit dem ECHTEN Ablauf (test_r41_alligator2 lagesuche2,
+ * Vorauswahl wie leiche_lage_n5.py --kandidaten mit Kampfbeginn >= 3500 von der Kamera, Raster 100, 3437 Kandidaten; je Kandidat Szene,
+ * Spur-B-Kamerawahl, 150 Bilder Kamera-Mass): unter 62 Lagen mit Knochen-Abstand >= 2600 die mit dem hoechsten Schluessel-Kasten
+ * (10,4 x 12,6 Bildpunkte; Nachbesserung 5: 11,7 x 12,0, Primitivfarbe 86 -> 128 >= 84 / 125):
+ *   Leiche obj 2 (600,-1740,-24400) Gier 2560, Anlauf-Gier 1680, Durchbruch bis Bild 22 -> Kampfbeginn Gator (3033,-21904) Zone 0, Abstand
+ *   11808 (SquareRoot0; RE2-Band 11402..13890), erster Biss nach 137 / Treffer nach 144 Bildern (RE2-Band 121..158), Fress-Cut 1 frontal
+ *   4005, Wurzel >= 4007 und Knochen >= 2684 von der Kamera in den ersten 150 Bildern. */
 #define GSZ_CUT_LEICHE        0         /* RID @0x060 + 0 * 32: (2754,-3132,-26190) -> (-7992,-18,-21564), Lichtsatz @0x468 */
-#define GSZ_LEICHE_X_STD      0
-#define GSZ_LEICHE_Z_STD      (-26000)
-#define GSZ_LEICHE_ROT_Y_STD  2944
-#define GSZ_GATOR_GIER_STD    1952      /* Anlauf nach Westen (Vorwaerts (cos, -sin) = (-0,99, -0,15)) */
+#define GSZ_LEICHE_X_STD      600
+#define GSZ_LEICHE_Z_STD      (-24400)
+#define GSZ_LEICHE_ROT_Y_STD  2560
+#define GSZ_GATOR_GIER_STD    1680      /* Anlauf nach Suedwesten (Vorwaerts (cos, -sin) = (-0,83, -0,56)) */
 /* Letztes Durchbruch-Bild (Clip 6): Bild 0..15 steigt der Kopf aus dem Wasser (Rig-y +1611 -> -1392, EMR-Keyframes der
  * RE2-EM23-Bank, Sonde probe_clip6), ab Bild 15 der Vorstoss (Wurzel-Versatz -5880 -> -1627 roh bis Bild 31, groesster Schritt
  * 480); ab Bild 37 gleitet er nur noch aus (bis Bild 124 weitere 1597 x 2/3). Bild 22 = laengster Durchbruch, mit dem die Kette
@@ -350,8 +362,8 @@ static int prop_slot(uint8_t obj_id)
 #define GSZ_KEY_AUF_X_STD 1090
 #define GSZ_KEY_AUF_Y_STD (-420)
 #define GSZ_KEY_AUF_Z_STD (-100)
-#define GSZ_KEY_AUF_RX_STD (-48)
-#define GSZ_KEY_AUF_RZ_STD (-608)
+#define GSZ_KEY_AUF_RX_STD (-640)    /* Runde 41 Spur P: groesster Kasten an der neuen Lage unter der Puls-Grenze (Ruhe 86 -> Spitze 128) */
+#define GSZ_KEY_AUF_RZ_STD (-384)
 /* Szenen-Lage (Nachbesserung 5): Standard = die PORT-WAHL oben; re15_gatorszene_r41_lage_setzen nur fuer Sonden/Riegel. */
 static const re15_gsz_lage_t k_lage_std = { GSZ_LEICHE_X_STD, GSZ_LEICHE_Z_STD, GSZ_LEICHE_ROT_Y_STD, GSZ_GATOR_GIER_STD,
                                             GSZ_DURCHBRUCH_BIS_STD, GSZ_KEY_AUF_RX_STD, GSZ_KEY_AUF_RZ_STD,
@@ -1509,11 +1521,8 @@ int re15_gatorszene_r41_key_kamera(void) { return s_key_cut; }
 /* Pruefhaken (M5/M2): Primitivfarbe (hellster Kanal) des Schluessels JETZT, wie der Prop-Zeichner sie rechnet: Weltmatrix
  * und -lage ueber die Elternkette wie main.c pc_prop_world (Typ-4-Absenkung re15_prop_render_y), Lichtsatz des Cuts an der
  * Weltlage, Drehung, MD1-Normale (0,-4096,0); Ruhe = ohne Puls, Spitze = Blink-Takt 0x1f (Wert 0xBE). 0 = kein Schluessel. */
-int re15_gatorszene_r41_key_prim_jetzt(int cut, int *ruhe, int *spitze)
+static void key_welt(int k, int32_t r[9], int32_t t[3])
 {
-    int k = prop_slot(RE15_GSZ_KEY_OBJ);
-    if (k < 0 || !g_scd.props[k].active || !g_re15_room_lights_ok || cut < 0 || cut >= g_re15_room_lights.cut_count) return 0;
-    int32_t r[9], t[3];
     prop_matrix(g_scd.props[k].rot_x, g_scd.props[k].rot_y, g_scd.props[k].rot_z, r);
     t[0] = g_scd.props[k].x; t[1] = g_scd.props[k].y; t[2] = g_scd.props[k].z;
     for (int cur = k, tiefe = 0; tiefe < 4 && g_scd.props[cur].parent_obj >= 0; tiefe++) {
@@ -1528,10 +1537,17 @@ int re15_gatorszene_r41_key_prim_jetzt(int cut, int *ruhe, int *spitze)
                 nr[row*3+col] = (int32_t)(((int64_t)pr[row*3] * r[col] + (int64_t)pr[row*3+1] * r[3+col] + (int64_t)pr[row*3+2] * r[6+col]) >> 12);
             nt[row] = (int32_t)(((int64_t)pr[row*3] * t[0] + (int64_t)pr[row*3+1] * t[1] + (int64_t)pr[row*3+2] * t[2]) >> 12) + pt[row];
         }
-        memcpy(r, nr, sizeof r); memcpy(t, nt, sizeof t);
+        memcpy(r, nr, 9 * sizeof nr[0]); memcpy(t, nt, 3 * sizeof nt[0]);
         cur = ps;
     }
     t[1] = re15_prop_render_y((int)g_scd.props[k].obj_type, t[1]);
+}
+int re15_gatorszene_r41_key_prim_jetzt(int cut, int *ruhe, int *spitze)
+{
+    int k = prop_slot(RE15_GSZ_KEY_OBJ);
+    if (k < 0 || !g_scd.props[k].active || !g_re15_room_lights_ok || cut < 0 || cut >= g_re15_room_lights.cut_count) return 0;
+    int32_t r[9], t[3];
+    key_welt(k, r, t);
     re15_actor_lightctx_t welt, ctx, sp;
     uint8_t cr, cg, cb;
     re15_light_setup_actor(&g_re15_room_lights.cuts[cut], t, NULL, &welt);
@@ -1542,6 +1558,34 @@ int re15_gatorszene_r41_key_prim_jetzt(int cut, int *ruhe, int *spitze)
     re15_blink_r41_lichtctx((uint16_t)g_current_room_id, RE15_GSZ_KEY_OBJ, RE15_BLINK_R41_UP_BELOW, &sp);
     re15_light_shade_vertex(&sp, 0, -4096, 0, &cr, &cg, &cb);
     if (spitze) *spitze = cr > cg ? (cr > cb ? cr : cb) : (cg > cb ? cg : cb);
+    return 1;
+}
+/* Pruefhaken (Runde 41 Spur P, Nachtrag 31 Punkt 3 "Schluessel 7x9 ... gut genug"): Kasten des Schluessel-Quadrats (Ecken +-90 =
+ * GSZ_KEY_HALB, MD1 @0x354C+0x38) im Bild von Cut cut in Sechzehntel-Bildpunkten, Weltmatrix wie der Prop-Zeichner (key_welt). */
+int re15_gatorszene_r41_key_kasten(int cut, int *breite_16, int *hoehe_16, int32_t *tiefe)
+{
+    const int k = prop_slot(RE15_GSZ_KEY_OBJ);
+    re15_camera_view_t v;
+    if (k < 0 || !g_scd.props[k].active || !kam_sicht(cut, &v)) return 0;
+    int32_t r[9], t[3];
+    key_welt(k, r, t);
+    int64_t x0 = INT64_MAX, x1 = INT64_MIN, y0 = INT64_MAX, y1 = INT64_MIN;
+    for (int e = 0; e < 5; e++) {
+        const int32_t cx = (e == 4) ? 0 : ((e & 1) ? GSZ_KEY_HALB : -GSZ_KEY_HALB), cz = (e == 4) ? 0 : ((e & 2) ? GSZ_KEY_HALB : -GSZ_KEY_HALB);
+        int32_t w[3], vs[3];
+        for (int i = 0; i < 3; i++) w[i] = t[i] + (int32_t)(((int64_t)r[i*3] * cx + (int64_t)r[i*3+2] * cz) >> 12);
+        for (int i = 0; i < 3; i++)
+            vs[i] = (int32_t)(((int64_t)v.rot[i*3] * w[0] + (int64_t)v.rot[i*3+1] * w[1] + (int64_t)v.rot[i*3+2] * w[2]) >> 12) + v.trans[i];
+        if (vs[2] <= 0) return 0;
+        if (e == 4) { if (tiefe) *tiefe = vs[2]; break; }
+        const int64_t bx = ((int64_t)vs[0] * v.fov_screen_dist * 16) / vs[2], by = ((int64_t)vs[1] * v.fov_screen_dist * 16) / vs[2];
+        if (bx < x0) x0 = bx;
+        if (bx > x1) x1 = bx;
+        if (by < y0) y0 = by;
+        if (by > y1) y1 = by;
+    }
+    if (breite_16) *breite_16 = (int)(x1 - x0);
+    if (hoehe_16) *hoehe_16 = (int)(y1 - y0);
     return 1;
 }
 int re15_gatorszene_r41_key_prim(int *ruhe, int *spitze)

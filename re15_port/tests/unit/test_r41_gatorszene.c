@@ -353,12 +353,14 @@ static void teil_leiche(void)
         /* Nachbesserung 5 (Entscheid F-E2, Querbezug): die Szenen-Leiche ist wieder obj 2 (Obj_model_set @0x00A6C, Original
          * (-1725,-21723) Gier 685) im Suedbecken, an der Lage aus der Engine-Lagesuche (gatorszene_r41.c, test_r41_gatorszene
          * lagesuche); Nachbesserung 4 verlangte obj 3 bei (700,-8200) Gier 2432 im Nordbecken. */
-        PRUEF(kl >= 0 && g_scd.props[kl].x == 0 && g_scd.props[kl].z == -26000 && g_scd.props[kl].rot_y == 2944,
-              "Leiche obj %d an der Szenen-Lage (0,-26000) Gier 2944 (Nachbesserung 5)", RE15_GSZ_LEICHE_OBJ);
+        /* Runde 41 Spur P (Nachtrag 31 Punkt 2 "nicht vor der Kamera"): Lage (0,-26000) Gier 2944 endete 1837 vor der Linse von Cut 0;
+         * neu (600,-24400) Gier 2560 (gatorszene_r41.c PORT-WAHL-Block, test_r41_alligator2 lagesuche2). Querbezug mit Beleg. */
+        PRUEF(kl >= 0 && g_scd.props[kl].x == 600 && g_scd.props[kl].z == -24400 && g_scd.props[kl].rot_y == 2560,
+              "Leiche obj %d an der Szenen-Lage (600,-24400) Gier 2560 (Spur P, Nachtrag 31 Punkt 2)", RE15_GSZ_LEICHE_OBJ);
         PRUEF(ks >= 0 && g_scd.props[ks].active && g_scd.props[ks].parent_obj == RE15_GSZ_LEICHE_OBJ &&
               g_scd.props[ks].x == 1090 && g_scd.props[ks].y == -420 && g_scd.props[ks].z == -100 &&
-              g_scd.props[ks].rot_x == -48 && g_scd.props[ks].rot_z == -608,
-              "Schluessel obj 4 = Kind der Leiche, lokal (1090,-420,-100), Neigung rx -48 rz -608 (Nachbesserung 5, Cut 0)");
+              g_scd.props[ks].rot_x == -640 && g_scd.props[ks].rot_z == -384,
+              "Schluessel obj 4 = Kind der Leiche, lokal (1090,-420,-100), Neigung rx -640 rz -384 (Spur P, Cut 0)");
         PRUEF(re15_blink_r41_aktiv(raeume[r], RE15_GSZ_KEY_OBJ), "Schluessel blinkt (re15_blink_r41)");
         /* Nachbesserung 1 (M5): der Puls laeuft nicht in die Kappung des PC-Zeichners (Primitivfarbe 0x80 = Texel x 1,0,
          * render_pc.c psx_prim_to_sdl_vert). Nachbesserung 4: gemessen mit dem Zeichner-Licht der Szenenkamera Cut 5 (Lichtsatz

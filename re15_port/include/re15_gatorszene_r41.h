@@ -168,6 +168,8 @@ int  re15_gatorszene_r41_spieler_im_bild(int cut);
 int  re15_gatorszene_r41_key_kamera(void);
 int  re15_gatorszene_r41_key_prim(int *ruhe, int *spitze);
 int  re15_gatorszene_r41_key_prim_jetzt(int cut, int *ruhe, int *spitze);
+/* Pruefhaken (Runde 41 Spur P): Kasten des Schluessel-Quadrats im Bild von Cut cut in 1/16 Bildpunkten + Tiefe; 0 = kein Schluessel. */
+int  re15_gatorszene_r41_key_kasten(int cut, int *breite_16, int *hoehe_16, int32_t *tiefe);
 /* Nachbesserung 2 (Abnahme 1, M2): EINSTELLUNG AUF DEN SCHLUESSEL nach dem Tod. Der Schluessel liegt in der Zonenkamera mit dem
  * GROESSTEN Schluessel-Bild in der Naehe der Leiche (nicht mehr in der laufenden); im Bild des Todes schneidet die Szene auf diese
  * Kamera (Cut_chg-Zwilling LAB_800402a0 wie die Kamera-Uebergabe M1), haelt sie mit Riegel 90 Bilder (1,5 Blinkperioden wie die
