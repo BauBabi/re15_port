@@ -7690,6 +7690,18 @@ static const uint8_t re2z_death_tbl[19][9] = {
 /*17*/ { 2,5,0, 2,6,0, 2,1,0 },   /* @0x8010CE88 Rakete */
 /*18*/ { 1,1,0, 1,1,0, 1,1,0 }    /* @0x8010CEAC, Spalte 8 = 0x8010CECC[0] = NULL */
 };
+/* Zelle der DEATH-Tabelle mit der Spalten-Klemme (s. Dispatch) und der 80%-GESTALTUNG: Granaten-Zeilen 9..11
+ * (GL Explosiv/Saeure/Brand, im RE2-Original meist der normale Sturz 0x80108530) laufen in den Zerreiss-Tod
+ * 0x80108BEC — Video 3 8:10-8:22 (BEFUND.md 5.2): Zombie zerrissen, grosse Blutlachen. Abschaltbar mit
+ * RE15_KEIN_80PROZENT_GORE=1 (dann exakt die Tabelle). */
+int re15_zgore_80prozent(void);   /* zombiegore_r15.c */
+static uint8_t re2z_death_zelle(unsigned row, unsigned col)
+{
+    uint8_t h = (row < 19u && col < 9u) ? re2z_death_tbl[row][col] : (uint8_t)RE2ZD_NULL;
+    if (h == (uint8_t)RE2ZD_NULL && col != 1u && row < 19u) h = re2z_death_tbl[row][1];
+    if (row >= 9u && row <= 11u && re15_zgore_80prozent()) h = (uint8_t)RE2ZD_8BEC;
+    return h;
+}
 static int s_re2z_last_death_handler = 0;   /* Port-Diagnose (Tests) — 0 = keine Zelle gelaufen */
 int re15_re2z_last_death_handler(void) { return s_re2z_last_death_handler; }
 /* Port-Diagnose: EINE Zelle der Tabelle (Tests pinnen sie gegen den Dump). -1 = ausserhalb. */
@@ -7789,15 +7801,7 @@ int re15_re2z_poses_loco_bank(const re15_actor_t *a)
         return 0;
     }
     case 3: {
-        unsigned row = a->sub_state_1, col = a->re2z_hits1d2;
-        uint8_t h = (row < 19u && col < 9u) ? re2z_death_tbl[row][col] : (uint8_t)RE2ZD_NULL;
-        /* Spalten-Klemme wie im HURT-Dispatch: NULL-Zelle -> RUMPF-Spalte, sonst
-         * bekaeme "auf den Kopf zielen" mit Schrot den SCHWAECHSTEN Tod statt
-         * Burst/Zerreissen (Abtrennen-Dossier par.1.3). */
-        if (h == (uint8_t)RE2ZD_NULL && col != 1u && row < 19u) {
-            col = 1u;
-            h = re2z_death_tbl[row][col];
-        }
+        uint8_t h = re2z_death_zelle(a->sub_state_1, a->re2z_hits1d2);   /* Klemme + 80%-Granate */
         if (h == RE2ZD_92C4 && a->sub_state_2 == 4u) return 1;   /* MAGNUM P4 @0x801095D0 */
         if (h == RE2ZD_8BEC && a->sub_state_2 == 6u) return 1;   /* RIP    P6 @0x80109288 */
         return 0;
@@ -8145,14 +8149,12 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
 
     {   /* ZWEIG 4 — der 2D-Dispatch @0x801084E0-518 */
         unsigned row = e->sub_state_1;
-        unsigned col = e->re2z_hits1d2;
-        uint8_t h = (row < 19u && col < 9u) ? re2z_death_tbl[row][col] : (uint8_t)RE2ZD_NULL;
-        /* Spalten-Klemme wie im HURT-Dispatch: NULL-Zelle -> RUMPF-Spalte, sonst
-         * bekaeme "auf den Kopf zielen" mit Schrot den SCHWAECHSTEN Tod statt
-         * Burst/Zerreissen (Abtrennen-Dossier par.1.3). */
-        if (h == (uint8_t)RE2ZD_NULL && col != 1u && row < 19u) {
-            col = 1u;
-            h = re2z_death_tbl[row][col];
+        uint8_t h = re2z_death_zelle(row, e->re2z_hits1d2);   /* Spalten-Klemme (Abtrennen-Dossier par.1.3) + 80%-Granate */
+        if (row >= 9u && row <= 11u && h == (uint8_t)RE2ZD_8BEC && !(e->zg_9f & 0x40)) {
+            /* GESTALTUNG Video 3: grosse Blutlachen beim Granaten-Zerreissen (einmal je Tod). */
+            e->zg_9f |= 0x40;
+            re15_esp_fx_splatter(re15_esp_room_bank(), 0, 16, e->x, e->y - 900, e->z, e->y);
+            re15_esp_fx_splatter(re15_esp_room_bank(), 0, 16, e->x, e->y - 300, e->z, e->y);
         }
         s_re2z_last_death_handler = (int)h;
         switch (h) {
