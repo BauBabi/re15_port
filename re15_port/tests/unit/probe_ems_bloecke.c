@@ -26,8 +26,21 @@ int main(int argc, char **argv)
         printf("Block %2d Sektor %5zu Laenge %7zu rc=%d Knochen %2d Meshes %2d Clips %2d TIM %dx%d\n",
                i, off / 2048, len, rc, sk.bone_count, md1.mesh_count, an.clip_count, tim.width, tim.height);
         if (rc != 0) continue;
+        if (getenv("EMS_CLIPS")) { printf("   Clips:"); for (int k = 0; k < an.clip_count; k++) printf(" %d", an.clips[k].frame_count);
+            { static re15_emd_skeleton_t s2; static re15_emd_animation_t a2;
+              if (re15_emd_parse_loco_bank(blob, len, &s2, &a2) == 0) { printf("\n   Loco(+0x84):"); for (int k = 0; k < a2.clip_count; k++) printf(" %d", a2.clips[k].frame_count); }
+              if (re15_emd_parse_own_bank(blob, len, &s2, &a2) == 0) { printf("\n   Eigen(+0x170):"); for (int k = 0; k < a2.clip_count; k++) printf(" %d", a2.clips[k].frame_count); } }
+            printf("\n   Eltern:"); for (int k = 0; k < sk.bone_count; k++) printf(" %d", sk.bone_parent[k]); printf("\n"); }
         re15_skel_pose_t P[RE15_EMD_MAX_BONES];
-        if (re15_skel_compute_pose(&sk, 0, P) != 0) continue;
+        int kf0 = 0;
+        if (getenv("EMS_CLIP")) {   /* Pose aus Bank (EMS_BANK=loco|own), Clip, Bild */
+            static re15_emd_skeleton_t s3; static re15_emd_animation_t a3; const re15_emd_animation_t *A = &an;
+            const char *bk = getenv("EMS_BANK");
+            if (bk && !strcmp(bk, "loco") && re15_emd_parse_loco_bank(blob, len, &s3, &a3) == 0) A = &a3;
+            int c = atoi(getenv("EMS_CLIP")), fr = getenv("EMS_FRAME") ? atoi(getenv("EMS_FRAME")) : 0;
+            if (c < A->clip_count) { fr %= A->clips[c].frame_count; kf0 = (int)(A->frames[A->clips[c].first_frame + fr] & 0xFFFu); }
+        }
+        if (re15_skel_compute_pose(&sk, kf0, P) != 0) continue;
         char p[512]; snprintf(p, sizeof p, "%s/block%02d.obj", argv[2], i);
         FILE *o = fopen(p, "w"); if (!o) continue;
         int base = 1;

@@ -124,6 +124,7 @@ static inline int RNDI(float f) {
 #include "re15_g5_skin.h"     /* G5-Endkampf: Skinning/Augen-UV (Phase 2 birkin-g5.md) */
 extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c */
 #include "re2_ems.h"          /* WELLE A: RE2-Flavor-Asset-Loader (CDEMD0.EMS-TOC, PC-only) */
+#include "re15_boss_gator.h"
 #include "re15_gator_re2_r41.h" /* Runde 41 Spur B: RE2-Schuetteln (Hintergrund-Versatz) + Kanister-Zeichner */
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: Water Key (Prop-Lader, Icon, Bild) + 2090-Ankunftsszene */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
@@ -908,6 +909,9 @@ static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
     buf = pc_read_shared(rel, &sz);                    /* malloc'd if it exists */
     if (buf) { if (out_len) *out_len = (size_t)sz; return buf; }
     int idx = re15_ems_index_for_type(type);
+    /* RE15_GATOR_ORIGINAL (re15_boss_gator.h): der RE1.5-Alligator liegt als Block 25 in CDEMD0.EMS (Sektor 1922,
+     * 183328 B, eigene 43+6 Clips) — die Typtabelle der EXE (@0x80072f38) fuehrt ihn nicht. */
+    if (type == 0x23u && re15_gator_original()) idx = 25;
     size_t ems_sz = 0; const uint8_t *ems = (idx >= 0) ? pc_cdemd(&ems_sz) : NULL;
     size_t off = 0, len = 0;
     if (ems && re15_ems_get_entry(ems, ems_sz, idx, &off, &len) == 0) {
