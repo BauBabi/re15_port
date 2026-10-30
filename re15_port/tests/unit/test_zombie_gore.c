@@ -153,6 +153,18 @@ static void test_beine(void)
     CHECK(e->grid_id == 0x81 && e->hp == 30, "Beine ab: kein Kriecher (grid 0x%x hp %d)", e->grid_id, e->hp);
 }
 
+/* Gestaltung Video 3: Granaten-Tod -> Oberkoerper ab, kriecht weiter (immer, ohne Krit-Bit). */
+static void test_granate(void)
+{
+    re15_damage_seed_rng(11);
+    re15_actor_t *e = zombie(3, 9, 1, 1);
+    re15_enemy_ai_live_death(Z);
+    re15_teil_t *t = re15_teile(Z);
+    CHECK((t[7].w & 0x40) && e->sub_state_3 == 1, "Granate: Oberkoerper nicht ab (w7 0x%x ph %d)", t[7].w, e->sub_state_3);
+    for (int n = 0; n < 400 && e->grid_id != 0x81; n++) { t[7].fest = 1; takt(re15_enemy_ai_live_death); }
+    CHECK(e->grid_id == 0x81 && e->hp == 30, "Granate: kein Kriecher");
+}
+
 static void test_beretta(void)
 {
     re15_damage_seed_rng(7);
@@ -203,6 +215,7 @@ int main(void)
     test_kopflos();
     test_schrot();
     test_beine();
+    test_granate();
     test_beretta();
     test_magnum_treffer();
     test_scherben();

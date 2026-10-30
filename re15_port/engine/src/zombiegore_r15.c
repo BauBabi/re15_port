@@ -277,7 +277,7 @@ static void z_kopflos(re15_actor_t *e, int slot)
 }
 
 /* 0x80107ee0 — Schrot, Mitte. */
-static void z_schrot(re15_actor_t *e, int slot)
+static void z_schrot(re15_actor_t *e, int slot, int granate)
 {
     re15_teil_t *t7 = teil(e, 7);
     switch (e->sub_state_3) {
@@ -285,13 +285,13 @@ static void z_schrot(re15_actor_t *e, int slot)
         e->hit_react |= 1; e->sub_state_3 = 1;
         e->motion = (uint8_t)(13 - 2 * bit7(e)); e->anim_frame = (uint16_t)(re15_engine_rand8() & 3); e->anim_frac = 0xf;
         e->anim_flags &= (uint16_t)~0x04u;
-        if (!(e->hit_react & 0x40)) { e->sub_state_2 = 6; e->sub_state_3 = 0; return; }   /* @0x80107ff4-8008 -> 0x80106c18 */
+        if (!(e->hit_react & 0x40) && !granate) { e->sub_state_2 = 6; e->sub_state_3 = 0; return; }   /* @0x80107ff4-8008 -> 0x80106c18 */
         stumpf(e, 7); stumpf(e, 0);                               /* @0x8010800c-54 */
         if ((re15_engine_rand8() & 1) && e->type != 0x13) skala(e, 0, 0x5f4, 0x1000, 0x5f4);   /* @0x80108058-98 */
         fx(e, 0x2800, 0, OFS_016C);                               /* @0x801080b8 */
         re15_audio_room_se(9);
         int g = gore_teil(e);
-        if (re15_engine_rand8() & 1) {                            /* ZERFETZEN @0x801080c8-d4 */
+        if ((re15_engine_rand8() & 1) && !granate) {              /* ZERFETZEN @0x801080c8-d4 */
             e->sub_state_3 = 3;
             zerplatzen(e, g, 0, 0);                               /* @0x80108134 */
             if (re15_engine_rand8() & 1) { skala(e, 8, 0x5f4, 0xc18, 0x5f4); zerplatzen(e, 9, 0, 0); }   /* @0x8010818c */
@@ -319,6 +319,11 @@ static void z_schrot(re15_actor_t *e, int slot)
         fx(e, 0x2800, 7, OFS_016C);                               /* @0x801083cc */
         fx(e, 0x05002800u, 7, OFS_016C);                          /* @0x801083ec */
         fx(e, 0x2000, g, OFS_016C);                               /* @0x80108440 */
+        if (granate) {                                            /* GESTALTUNG Video 3 8:10-8:22: grosse Blutlachen */
+            int32_t p[3]; re15_enemy_part_point(e, 7, OFS_016C, p);
+            re15_esp_fx_splatter(re15_esp_room_bank(), 0, 16, p[0], p[1], p[2], e->y);
+            re15_esp_fx_splatter(re15_esp_room_bank(), 0, 16, e->x, e->y - 300, e->z, e->y);
+        }
     }   /* faellt in Phase 1 */
     /* fallthrough */
     case 1:                                                       /* Oberkoerper fliegt @0x80108448 */
@@ -399,6 +404,13 @@ static void z_beine(re15_actor_t *e)
     }
 }
 
+int re15_zgore_80prozent(void)
+{
+    static int an = -1;
+    if (an < 0) an = getenv("RE15_KEIN_80PROZENT_GORE") ? 0 : 1;
+    return an;
+}
+
 int re15_zgore_tod(re15_actor_t *e, int slot)
 {
     if (!re15_zgore_typ(e) || (e->grid_id & 0x80)) return 0;
@@ -406,7 +418,13 @@ int re15_zgore_tod(re15_actor_t *e, int slot)
     if ((w == 7 || w == 8 || w == 19) && c == 0) { z_beine(e); return 1; }
     if (w == 7 && c == 1) { z_kopfplatzer(e, slot); return 1; }
     if (w == 7 && c == 5) { z_kopflos(e, slot); return 1; }
-    if (w == 8 && c == 1) { z_schrot(e, slot); return 1; }
+    if (w == 8 && c == 1) { z_schrot(e, slot, 0); return 1; }
+    /* ⛔ GESTALTUNG (Nutzer-Auftrag "maximales Gore aus der 80%-Version", Video 3 8:10-8:22, BEFUND.md 5.2):
+     * Granaten-Tode (+0x5 = 9/10/11 aus FUN_80012d60, Tabelle DAT_8006f430) sind im Auslieferungsstand NULL-Zellen
+     * (DEATH[9..11][1] @0x8011feac = 0 -> jalr 0). Das Video zeigt Ober- und Unterkoerper getrennt, der Oberkoerper
+     * kriecht weiter, grosse Blutlachen — genau der Oberkoerper-Zweig von 0x80107ee0. Abschaltbar:
+     * RE15_KEIN_80PROZENT_GORE=1 (dann Standard-Tod wie bisher). */
+    if (w >= 9 && w <= 11 && re15_zgore_80prozent()) { z_schrot(e, slot, 1); return 1; }
     return 0;                                                     /* uebrige Zellen: Standard-Tod 0x80106c18 */
 }
 int re15_zgore_tod_lokobank(const re15_actor_t *a)
