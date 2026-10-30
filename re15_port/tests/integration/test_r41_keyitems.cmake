@@ -124,7 +124,15 @@ if(TEIL MATCHES "^(kurbel|elza|renn|geh|west)$")
     pruef(_d "@0x0A8C op=0x32")                    # Pos_set
     pruef(_d "Gegenstand 0x33 verlaesst das Inventar")
     pruef_nicht(_d "Frage 1 entfaellt: Nein")
-    pruef_nicht(_d "@0x0A98 op=0x09")              # der Sleep vor Plc_motion entfaellt: der Trace zaehlt ihn trotzdem -> s. unten
+    # Pos_set @0x0A8C und Plc_motion @0x0A9C im selben Skripttakt: der Sleep 20 @0x0A98 wartet nicht (RE2 ROOM1110 sub13 -> sub15)
+    string(REGEX MATCH "\\[scd\\] F([0-9]+) slot=[0-9]+ @0x0A8C" _m "${_d}")
+    set(_f_pos "${CMAKE_MATCH_1}")
+    string(REGEX MATCH "\\[scd\\] F([0-9]+) slot=[0-9]+ @0x0A9C" _m "${_d}")
+    set(_f_mot "${CMAKE_MATCH_1}")
+    message(STATUS "Pos_set F${_f_pos}, Plc_motion F${_f_mot}")
+    if(NOT _f_pos OR NOT "${_f_pos}" STREQUAL "${_f_mot}")
+        list(APPEND _fehler "Pos_set F${_f_pos} und Plc_motion F${_f_mot} nicht im selben Takt")
+    endif()
     execute_process(COMMAND "${RE15_WERKZEUG}" kurbel "${_lauf}/state.txt"
                     RESULT_VARIABLE _rw OUTPUT_VARIABLE _ow ERROR_VARIABLE _ew)
     message(STATUS "${_ow}${_ew}")

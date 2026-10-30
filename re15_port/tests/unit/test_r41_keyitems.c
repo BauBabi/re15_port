@@ -119,8 +119,10 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, int cut
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = cut;
     re15_game_state_t flags_vorher = g_game;
+    re15_inventory_t inv_vorher = g_inv;     /* das Raumskript liest den Besitz (Kistenregel), der Port-Start legt ihn vorher an */
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     g_game = flags_vorher;
+    g_inv = inv_vorher;
     re15_enemy_reset(); re15_enemy_ai_set_paused(1);
     re15_player_cmd_reset();
     re15_pauseflags_clear();
@@ -153,9 +155,9 @@ typedef struct {
 
 static const lauf_t k_laeufe[] = {
     { 0x1090, 0x31, {{3,133}},        3, 129, 0, 0 },     /* sub06 @0x0271E Set(3,129)                     */
-    { 0x10D0, 0x38, {{0,0}},       0xFF,   0, 9, 0 },     /* sub20 @0x019C4 Message_on 9                   */
-    { 0x11E0, 0x39, {{0,0}},       0xFF,   0, 9, 0 },     /* sub20 @0x01FAC                                */
-    { 0x1230, 0x37, {{0,0}},       0xFF,   0, 9, 0 },     /* sub20                                         */
+    { 0x10D0, 0x38, {{9,52}},      0xFF,   0, 9, 0 },     /* sub20 @0x019C0 Ck(9,52,1) -> @0x019C4 Message_on 9 */
+    { 0x11E0, 0x39, {{9,138}},     0xFF,   0, 9, 0 },     /* sub20 @0x01FA8 Ck(9,138,1) -> @0x01FAC        */
+    { 0x1230, 0x37, {{9,136}},     0xFF,   0, 9, 0 },     /* sub20 @0x01488 Ck(9,136,1) -> @0x0148C        */
     { 0x11E0, 0x30, {{3,127}},        5,  21, 0, 0 },     /* sub26 @0x020CC Set(5,21)                      */
     { 0x1100, 0x44, {{3,0x67}},       5,   0, 0, 0 },     /* sub07 @0x00D66 Set(5,0)                       */
     { 0x1050, 0x40, {{0,0}},          9,  63, 0, 0 },     /* k_mit +2A Set(9,63)                           */
@@ -299,12 +301,13 @@ static void teil_use(void)
             PRUEF(!g_scd.message_active || g_scd.message_id != frage, "ROOM%04X Frage nicht offen", r);
             PRUEF(re15_game_flag_get(12, 31) == 0, "ROOM%04X Antwort Ja", r);
             PRUEF(!re15_keyitems_r41_lauf_aktiv(), "ROOM%04X USE-Lauf beendet", r);
-            /* Wirkung: bis 40 Bilder, Nachrichten werden nicht bestaetigt, bis die Wirkung steht */
+            /* Wirkung: bis 120 Bilder. Texte HINTER der Frage bleiben und werden bestaetigt (ROOM4000 sub02 @0x0144A Message_on 2,
+             * erst danach @0x01450 Set(3,32)); bei w_bank 0xFF ist genau dieser Text die Wirkung. */
             int ok = 0;
-            for (int k = 0; k < 40 && !ok; k++) {
+            for (int k = 0; k < 120 && !ok; k++) {
                 ok = (l->w_bank == 0xFF) ? (g_scd.message_active && g_scd.message_id == l->w_msg)
                                          : re15_game_flag_get(l->w_bank, l->w_bit);
-                if (!ok) bild(0, 0);
+                if (!ok) bild((l->w_bank != 0xFF && (k % 8) == 7) ? RE15_PAD_BIT_SQUARE : 0, 0);
             }
             PRUEF(ok, "ROOM%04X Ja-Zweig wirkt (%d,%d / msg %d)", r, l->w_bank, l->w_bit, l->w_msg);
         }

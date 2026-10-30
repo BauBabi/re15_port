@@ -118,7 +118,7 @@ pruef(A _a "[kistenregel] ROOM1090 @0x0230A Ck(3,0x85) K1: Item 0x31 NICHT im In
 pruef(A _a "id=7 \"I must hurry up and get something to put out this fire to save that woman!\"")
 pruef_nicht(A _a "id=8 \"Will you use the Fire Extinguisher?\"")
 pruef_nicht(A _a "id=9 \"You've used the Fire Extinguisher.\"")
-kr_lauf(b 1090 "${_k1};give:0x31:1" "${_feuer}" 800 "RE15_USE_TEST=0x31@70#1090" _b)
+kr_lauf(b 1090 "${_k1};give:0x31:1" "${_feuer}" 800 "RE15_USE_TEST=0x31@351#1090" _b)
 pruef(B _b "[kistenregel] ROOM1090 @0x0230A Ck(3,0x85) K1: Item 0x31 im Inventar -> wie Original")
 pruef_nicht(B _b "id=8 \"Will you use the Fire Extinguisher?\"")
 pruef(B _b "id=9 \"You've used the Fire Extinguisher.\"")
