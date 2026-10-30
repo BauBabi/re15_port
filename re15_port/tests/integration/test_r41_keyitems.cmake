@@ -108,8 +108,9 @@ elseif(TEIL STREQUAL "karte_aktion")
     set(_env RE15_DEBUG_JUMP=10d0@240 RE15_GIVE=0x38:1 RE15_SET_FLAG=9:52 RE15_EQUIP=3 RE15_PLAYER_POS=1278,-5750,2048,0
              RE15_PRESS=square@260,square@340,square@420 RE15_MSG_LOG=1 RE15_EXIT_AT=500)
 elseif(TEIL STREQUAL "aufnahme")
-    # Platz 4 sub00 @0x00880 Rechteck (2700,-1550,1000,1000): 620 voraus = Mitte. Frage, Ja, "You've taken the Crank.", START, ITEM.
-    set(_env RE15_DEBUG_JUMP=2010@240 RE15_EQUIP=3 RE15_PLAYER_POS=2580,-1050,0,0 RE15_MSG_LOG=1
+    # Platz 4 sub00 @0x00880 Rechteck x 2700..3700, z -1550..-550; frei ab x 3618 (Koerper-Schub): Blick West, 620 voraus = x 2998.
+    # Frage, Ja, "You've taken the Crank.", START, ITEM.
+    set(_env RE15_DEBUG_JUMP=2010@240 RE15_EQUIP=3 RE15_PLAYER_POS=3618,-1050,2048,0 RE15_MSG_LOG=1
              RE15_PRESS=square@260,square@320,square@360,square@400,start@440,square@465,down@480,square@490,left@505,square@515
              RE15_EXIT_AT=630)
 else()

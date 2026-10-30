@@ -174,11 +174,11 @@ die Stehpose im USE-Lauf ohne Mischung im ersten Bild nach dem Schnitt. Altstand
 
 ROOM2010 Kasten traegt `RE15_R41O_FLAGITEM`: ohne Eintrag (Altstand, Inventar voll) bleibt die Frage wie an den anderen Flag-Stellen.
 
-## Messung nachher (Bau be7f0c811, Laeufe in `$TEMP/o41/run`, RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1)
+## Messung nachher (Engine-Stand be7f0c811, Laeufe in `$TEMP/o41/run`, RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1)
 
 Lauf n_stand (Leon, Weg von 2050, Handgun, wie Messung vorher, dann START, ITEM, Kurbel, USE):
-- F255 USE, F256..F262 Inventar blendet aus, F263 schwarz, **F264 Pos_set @0x0A8C, Cut_chg 3 und Plc_motion(flags=0x40) im selben Takt**, F264..F267 schwarz, F267/F268
-  erstes sichtbares Bild: Leon steht an der Kurbel und kurbelt (Zoom `O_belege/nachher_kurbel_leon.png`, Spalten F267..F282). Vorher lagen zwischen Pos_set und
+- F255 USE, F256..F262 Inventar blendet aus, F263 schwarz, **F264 Pos_set @0x0A8C, Cut_chg 3 und Plc_motion(flags=0x40) im selben Takt**, F265..F267 blendet ein (Lichter zuerst),
+  F268 erstes volles Bild: Leon steht an der Kurbel und kurbelt (Zoom `O_belege/nachher_kurbel_leon.png`, Spalten F267..F282). Vorher lagen zwischen Pos_set und
   Plc_motion 20 Bilder Stehen und danach fuenf Bilder Blende; beides gibt es auf diesem Weg nicht mehr.
 - Keine Pistole am Knochen 11 waehrend der Szene (Waffe 0, RE2 @0x80068d34); `[keyitems] Waffe 3 wieder in der Hand` genau bei Plc_ret.
 - Lage ab dem ersten Bild (3650,-3018) Gier 1024, Kommandowort 4.
@@ -199,6 +199,9 @@ Rennen: `O_belege/nachher_kurbel_rennen.png`.
 Szenenende (Lauf n_ende nachher, `O_belege/nachher_kurbel_ende.png`, F440..F449): F442 letztes Bild Cut 4, F443 erstes Bild Cut 3, Leon steht schon, die Waffe ist da, kein Kippen.
 
 Inventar: `O_belege/nachher_check_kurbel.png` (Bild RE2 Crank, Text "The end is square-shaped"), `O_belege/nachher_check_bombe.png` (Bild Block 0x35 mit gesetzten Rechtecken, Text "Time Bomb").
+
+Andere Stellen an der echten exe: ROOM10D0 USE Blue Keycard: Inventar zu, ohne msg 7 direkt "You've used the Blue Keycard." (Lauf n_karte, Riegel integration_r41_keyitems_karte);
+ROOM2040 USE Zeitbombe: Inventar zu, ohne Text das Zeitzuender-Feld (Lauf n_bombe); ROOM2010: "Will you take the Crank?", Ja, "You've taken the Crank.", Eintrag im Inventar, CHECK-Bild (Lauf n_auf).
 
 Rennen und Gehen laufen im Gang z -3388, weil (2600,-1500) in soliden Zellen liegt (Koerper-Schub auf z -3018 in F6/F7). Der Riegel rechnet ab Bild 260: eine Taste in einem
 frueheren Bild trifft sonst den Vorraum, und START waehrend dessen Text bleibt stehen (aca3c |= 0x8000 @0x8001cd48, game_step_common.c) und oeffnet das Inventar spaeter.
