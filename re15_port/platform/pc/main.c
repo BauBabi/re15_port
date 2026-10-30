@@ -881,8 +881,10 @@ static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
 /* Den RE1.5-EMD-Blob fuer `type` besorgen (Split-Datei oder Blob aus CDEMD0.EMS) — der
  * Aufrufer bekommt einen PRIVATEN malloc-Puffer und uebernimmt ihn als eb->buf. Aus
  * pc_enemy_load herausgezogen, weil der WELLE-G-Hybrid denselben Blob braucht. */
+static void pc_enemy_modell_neu(uint8_t type);
 static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
 {
+    { static int s_hook = 0; if (!s_hook) { s_hook = 1; re15_bf_modell_hook(pc_enemy_modell_neu); } }
     /* BETA-FORMEN (Nutzerwunsch 2026-10-30, re15_birkin_formen.h): raumabhaengiges Ersatzmodell, z.B.
      * EM30_HANGAR.EMD in 50A0/50A1, EM30_BAHNSTEIG.EMD in 5090/5091. ⛔ Nachbildungen nach dem
      * 80%-Video, nicht byte-true (tools/birkin_formen.py). Vor dem CDEMD1-Zweig, damit die Wahl auch
@@ -1349,6 +1351,18 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
 /* Default: der RE2-Zweig darf greifen (unveraendertes Verhalten fuer alle Typen ausser 0x26,
  * dessen Aufrufer die Herkunft mitgeben — s. Block ueber pc_enemy_load_ex). */
 static void pc_enemy_load(uint8_t type) { pc_enemy_load_ex(type, 1); }
+/* BETA-FORMEN (re15_birkin_formen.h): Bank eines Typs mitten im Raum neu laden - der 5090-Birkin wechselt
+ * nach seiner Mutation vom Original-EM30 auf EM30_BAHNSTEIG (gleiche Clips/Hierarchie, s. birkin_formen.py). */
+static void pc_enemy_modell_neu(uint8_t type)
+{
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
+    if (eb) {
+        if (eb->buf) free(eb->buf);
+        memset(eb, 0, sizeof *eb);
+        eb->pc_tex_slot = -1; eb->pc_tex_slot_gore = -1;
+    }
+    pc_enemy_load(type);
+}
 
 /* ─────────────────────────────────────────────────────────────────────────────────────
  * R.P.D.-RUESTUNG / SPIELERMODELL-WECHSEL — byte-true.

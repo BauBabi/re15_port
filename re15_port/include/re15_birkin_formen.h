@@ -31,6 +31,12 @@ const char *re15_bf_emd_datei(uint8_t type);
 int  re15_bf_bahnsteig_aktiv(void);      /* ROOM5090/5091 und nicht RE15_ENDKAMPF_NUR_G5 */
 int  re15_bf_hangar_aktiv(void);         /* ROOM50A0/50A1 und nicht RE15_KEIN_HANGAR_BIRKIN */
 
+/* 5090 Original -> Vierbein: bis zur ersten Mutation gilt der Spawn als Form 1 (Mutations-Tor @0x801164e8);
+ * am Ende der Mutation (sub 6 Phase 2 @0x8011888c) wechselt das Modell ueber den Plattform-Haken. */
+int  re15_bf_mutation_offen(void);
+void re15_bf_mutation_fertig(int slot);
+void re15_bf_modell_hook(void (*fn)(uint8_t type));
+
 /* Birkin (0x30) in 5090 nach Todesphase 2 an den G5 uebergeben (Typwechsel 0x30 -> 0x36). */
 void re15_bf_morph_zu_g5(int slot);
 

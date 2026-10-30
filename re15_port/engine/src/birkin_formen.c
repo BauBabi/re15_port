@@ -14,11 +14,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-void re15_g5_boss_spawn(int slot);                       /* enemy_ai_boss_g5.c: Ctor faellig */
+void re15_g5_boss_spawn(int slot);
+int  re15_g5_boss_zustand(int *sub, int *ph, int *timer);   /* enemy_ai_boss_g5.c */                       /* enemy_ai_boss_g5.c: Ctor faellig */
 int  re15_r38_birkin_anim(re15_actor_t *e);              /* enemy_ai_common.c: Clip-Vorschub des Typs */
 int  re15_r38_birkin_fc(const re15_actor_t *e);          /* enemy_ai_common.c: Clip-Laenge des Typs */
 
 /* ---- Modellwahl --------------------------------------------------------------------------- */
+static int s_bf_mutiert = 0;   /* 5090: Original-Birkin hat mutiert -> Vierbein-Modell */
 const char *re15_bf_emd_datei(uint8_t type)
 {
     /* Roter Affe (Video 1 4:11-4:19, tools/birkin_formen.py ROT_AFFE): nur die CLUTs von EM29 sind
@@ -34,8 +36,23 @@ const char *re15_bf_emd_datei(uint8_t type)
         if (!strcmp(form, "bahnsteig")) return "EMD/EM30_BAHNSTEIG.EMD";
     }
     if (re15_bf_hangar_aktiv())    return "EMD/EM30_HANGAR.EMD";
-    if ((g_current_room_id & 0xFFFEu) == 0x5090u) return "EMD/EM30_BAHNSTEIG.EMD";
+    /* 5090: der Original-Birkin (EM30, Auslieferung) kaempft zuerst; erst nach seiner Mutation (Clip 0x14,
+     * sub 6 @0x80117f80) traegt er das Vierbein-Modell. */
+    if (re15_bf_bahnsteig_aktiv() && s_bf_mutiert) return "EMD/EM30_BAHNSTEIG.EMD";
     return NULL;
+}
+
+int re15_bf_mutation_offen(void) { return re15_bf_bahnsteig_aktiv() && !s_bf_mutiert; }
+
+static void (*s_bf_modell_hook)(uint8_t) = 0;
+void re15_bf_modell_hook(void (*fn)(uint8_t type)) { s_bf_modell_hook = fn; }
+
+void re15_bf_mutation_fertig(int slot)
+{
+    (void)slot;
+    if (!re15_bf_bahnsteig_aktiv() || s_bf_mutiert) return;
+    s_bf_mutiert = 1;
+    if (s_bf_modell_hook) s_bf_modell_hook(0x30u);      /* Plattform laedt die 0x30-Bank neu (jetzt Vierbein) */
 }
 
 int re15_bf_bahnsteig_aktiv(void)
@@ -104,10 +121,13 @@ static struct {
     int      birkin_start;         /* Birkin-Clip laeuft */
 } s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0 };
 static int s_szene_gespielt = 0;
-static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */   /* einmal je Sitzung; Birkin selbst steht bei jedem Betreten */
+static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
+static int s_kam_g5 = 0;       /* G5-Auftritt: Kamera aufs Zugende halten (Slot+1, 0 = aus) */
+static void bf_kamera(int cut);
 
 void re15_bf_reset(void)
 {
+    s_bf_mutiert = 0; s_kam_g5 = 0;
     s_rs.slot = -1; s_rs.phase = 0; s_rs.t = 0;
     s_h.raum = 0; s_h.birkin = s_h.sm = -1; s_h.phase = 0; s_h.t = 0; s_h.birkin_start = 0;
 }
@@ -165,12 +185,21 @@ void re15_bf_raumtick(void)
       if (at == -2) { const char *v = getenv("RE15_BIRKIN_HP_AT"); at = v ? atoi(v) : -1; }
       if (at >= 0 && re15_bf_bahnsteig_aktiv()) {
           if (raum != g_current_room_id) { raum = g_current_room_id; t = 0; }
-          if (++t == at)
+          if (++t == at || (t == 2 * at && s_bf_mutiert))
               for (int i = 1; i < RE15_ACTOR_MAX; i++)
                   if (g_actors[i].active && g_actors[i].type == 0x30u && g_actors[i].state == 1) {
                       g_actors[i].hp = 0; g_actors[i].state = 3; g_actors[i].sub_state_3 = 0; }   /* = Todes-Commit nach Treffer */
       } }
     bf_rueckstoss_tick();
+    /* G5-AUFTRITT (wie RE2): die Kamera bleibt aufs Zugende gerichtet, waehrend zuerst die vier Tentakel
+     * hereingreifen ([T1] @0x80101214-2e0) und dann den Koerper nachziehen ([T2] Root-Spur +7014); mit dem
+     * Ende des Intros (Sub 2 verlassen) zurueck auf die Kampfkamera. */
+    if (s_kam_g5) {
+        int sub = -1;
+        if (re15_g5_boss_zustand(&sub, NULL, NULL) && sub != 2) { bf_kamera(0x0C); s_kam_g5 = 0; }
+        else bf_kamera(0x0B);
+        if (!re15_bf_bahnsteig_aktiv()) s_kam_g5 = 0;
+    }
     if (!re15_bf_hangar_aktiv()) { if (s_h.raum) re15_bf_reset(); return; }
     if (s_h.raum != g_current_room_id) {
         re15_bf_reset();
@@ -275,6 +304,14 @@ void re15_bf_raumtick(void)
 #define BF_RS_AUSGANG_Z  (-23482)     /* Mitte der Luecke z -24974..-21990 */
 #define BF_RS_MIN_TICKS  90           /* Gestaltung: mindestens 3 s Beschuss */
 #define BF_RS_PAUSE      45           /* Gestaltung: Pause hinter dem Zugende */
+/* Kameras ROOM5090 (RID): Cut 12 (18526,-24660)->(1496,-20370) = Kampfkamera (sub04 Cut_chg 0x0C @0x1342),
+ * Cut 11 (7626,-25360)->(-1504,-21970) = Blick auf das Zugende (Westende x -5683; derselbe Blick wie der
+ * Vierbein-Screenshot V2 1:56). RE2 room7040 hat eigene Kameras, die der RE1.5-Wagen nicht teilt. */
+#define BF_RS_ZUGENDE_KAM (-2500)     /* Gestaltung: ab hier schneidet die Szene aufs Zugende */
+static void bf_kamera(int cut)
+{
+    if ((int)g_scd.work_vars[0x0A] != cut || g_scd.cam_id != cut) { g_scd.cam_id = (uint8_t)cut; g_scd.cam_change_pending = 1; }
+}
 
 int re15_bf_rueckstoss_phase(void) { return s_rs.slot >= 0 ? s_rs.phase : 0; }
 
@@ -285,8 +322,7 @@ void re15_bf_rueckstoss_start(int slot)
     re15_actor_t *e = &g_actors[slot];
     e->hp = 1;                                           /* bleibt "am Ende", stirbt aber nicht */
     bf_clip(e, 7); e->anim_frac = 0xf;
-    /* Kampfkamera: ROOM5090 sub04 Cut_chg(0x0C) @0x1342 - sieht Spieler und Zugende in einem Bild */
-    g_scd.cam_id = 0x0C; g_scd.cam_change_pending = 1;
+    bf_kamera(0x0C);
 }
 
 uint16_t re15_bf_pad(uint16_t pad, uint16_t *pressed)
@@ -317,7 +353,7 @@ static void bf_rueckstoss_tick(void)
             e->x += (int32_t)((int64_t)dx * schritt / rest);
             e->z += (int32_t)((int64_t)dz * schritt / rest);
         }
-        if ((int)g_scd.work_vars[0x0A] != 0x0C) { g_scd.cam_id = 0x0C; g_scd.cam_change_pending = 1; }
+        bf_kamera(e->x < BF_RS_ZUGENDE_KAM ? 0x0B : 0x0C);
         /* rueckwaerts: Gesicht zum Spieler */
         e->rot_y = bf_blick(e, g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z);
         if (e->x <= BF_RS_AUSGANG_X - 600 && s_rs.t >= BF_RS_MIN_TICKS) {
@@ -328,11 +364,13 @@ static void bf_rueckstoss_tick(void)
         break;
     }
     case 2:
+        bf_kamera(0x0B);
         if (s_rs.t >= BF_RS_PAUSE) {
             int slot = s_rs.slot;
             s_rs.slot = -1; s_rs.phase = 0;
             e->no_draw = 0;
             re15_bf_morph_zu_g5(slot);
+            s_kam_g5 = slot + 1;                         /* Auftritt auf Cut 11 zeigen (bf_g5_kamera_tick) */
         }
         break;
     default: break;

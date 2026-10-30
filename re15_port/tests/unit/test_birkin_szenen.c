@@ -141,16 +141,33 @@ static void test_bahnsteig(void)
     uint8_t *buf = raum_laden("STAGE5/ROOM5090.RDT", 0x5090u);
     CHECK(buf != NULL, "ROOM5090 nicht ladbar");
     if (!buf) return;
-    CHECK(re15_bf_emd_datei(0x30u) && strstr(re15_bf_emd_datei(0x30u), "BAHNSTEIG"), "Modellwahl 5090 != BAHNSTEIG");
+    CHECK(re15_bf_emd_datei(0x30u) == NULL, "5090 vor der Mutation muss das Original-EM30 sein");
+    static int s_hook_rufe = 0;
+    re15_bf_modell_hook(NULL);
     int bs = -1;
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
         if (g_actors[s].active && (g_actors[s].type == 0x30u || g_actors[s].type == 0x36u)) bs = s;
     CHECK(bs > 0 && g_actors[bs].type == 0x30u, "5090-Spawn nicht 0x30 (slot %d type 0x%02X)",
           bs, bs > 0 ? g_actors[bs].type : 0);
     if (bs <= 0) { free(buf); return; }
-    CHECK(bank_laden(0x30u, 0, re15_bf_emd_datei(0x30u)), "EM30_BAHNSTEIG-Bank");
+    CHECK(bank_laden(0x30u, 0, NULL), "EM30-Original-Bank");
     re15_actor_t *b = &g_actors[bs];
     re15_game_flag_set(5, 0x1c, 0);
+    (void)s_hook_rufe;
+    /* 1. ORIGINAL -> VIERBEIN: toedlicher Treffer vor der Mutation fuehrt in die Mutation (sub 6, Clip 0x14) */
+    b->x = 1200; b->z = -23350; b->grid_id = 0x13;
+    b->state = 3; b->sub_state_3 = 0; b->hp = 0; b->birkin_flags = 0;
+    int m, mut_clip = 0;
+    for (m = 0; m < 600 && re15_bf_mutation_offen(); m++) {
+        re15_enemy_ai_run_all(0);
+        if (b->sub_state_1 == 6 && b->motion == 0x14) mut_clip = 1;
+    }
+    CHECK(mut_clip, "Mutations-Clip 0x14 nicht gespielt");
+    CHECK(!re15_bf_mutation_offen(), "Mutation endet nicht (%d Ticks)", m);
+    CHECK(b->hp == 150 && b->type == 0x30u, "nach Mutation hp %d type 0x%02X", b->hp, b->type);
+    CHECK(re15_bf_emd_datei(0x30u) && strstr(re15_bf_emd_datei(0x30u), "BAHNSTEIG"), "nach Mutation kein Vierbein-Modell");
+    fprintf(stderr, "Bahnsteig: Mutation Original->Vierbein nach %d Ticks\n", m);
+    CHECK(bank_laden(0x30u, 0, re15_bf_emd_datei(0x30u)), "EM30_BAHNSTEIG-Bank");
     /* Kampfposition wie nach sub04 (Pos_set(1200,0,-23350) @0x12FE), Spieler an der Kampfmarke (300,-23400) */
     b->x = 1200; b->z = -23350; b->grid_id = 0x13;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -173,6 +190,7 @@ static void test_bahnsteig(void)
     CHECK(b->type == 0x36u, "kein Morph zum G5 nach %d Ticks (state %d ph3 %d)", f, b->state, b->sub_state_3);
     CHECK(b->grid_id == 0x13u, "G5 nicht armiert (grid 0x%02X)", b->grid_id);
     CHECK(!b->no_draw, "G5 bleibt unsichtbar");
+    CHECK(g_scd.cam_id == 0x0B, "G5-Auftritt nicht auf Cut 11 (Zugende), cam %d", g_scd.cam_id);
     CHECK(re15_game_flag_get(5, 0x1c) == 0, "Birkin-Schalter z5:0x1C schon beim Vierbein-Tod gesetzt");
     fprintf(stderr, "Bahnsteig: Rueckstoss + Morph nach %d Ticks (min x %d)\n", f, x_min);
     free(buf);

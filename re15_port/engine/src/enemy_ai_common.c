@@ -12025,6 +12025,7 @@ static void re15_birkin_ai_tick(int slot)
                 e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* +0x4 = 0x101 */
                 e->grid_id = (uint8_t)(e->grid_id | 0x10);            /* grid |= 0x10 @0x801188a4 */
                 e->birkin_flags = (uint8_t)(e->birkin_flags & ~0x8u); /* +0x1dd &= ~8 @0x801188c0 */
+                re15_bf_mutation_fertig(slot);   /* Port-Ergaenzung 5090: Original-Birkin -> Vierbein-Modell */
             }
             break;
         }
@@ -12165,7 +12166,13 @@ static void re15_birkin_ai_tick(int slot)
         }
         /* PORT-ERGAENZUNG 5090/5091 (Nutzer 2026-10-30, re15_birkin_formen.h): kein Kollaps - Birkin wird
          * per Rueckstoss-Szene aus dem Zug geschossen und kehrt als G5 zurueck. */
-        if (e->sub_state_3 == 0 && re15_bf_bahnsteig_aktiv()) { re15_bf_rueckstoss_start(slot); break; }
+        if (e->sub_state_3 == 0 && re15_bf_bahnsteig_aktiv()) {
+            if (re15_bf_mutation_offen()) {             /* toedlicher Treffer vor der Mutation: erst mutieren */
+                e->state = 1; e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* wie sw 0x601 @0x80116684 */
+                break;
+            }
+            re15_bf_rueckstoss_start(slot); break;
+        }
         /* real death down-machine 0x8011a5d8 — 7-phase morph tail on +0x7 (sub_state_3) */
         switch (e->sub_state_3) {
         case 0:   /* phase 0 @0x8011a618: clip 9 collapse, +0x93|=1, Se(1), phase->1 */
@@ -12249,7 +12256,9 @@ static void re15_birkin_ai_tick(int slot)
     }
 
     /* ============================ ROOT post-dispatch (0x801164d4) ============================ */
-    if (!(e->grid_id & 0x10) && e->hp < 200) {         /* gate !(grid&0x10) @0x801164e8 && hp<200 @0x801164fc */
+    /* PORT-ERGAENZUNG 5090/5091 (Nutzer 2026-10-30 "Original -> Vierbein -> G5"): der Endkampf-Spawn traegt
+     * grid 0x33/0x13 (Form-2-Bit, sperrt die Mutation); bis zur ersten Mutation gilt er hier als Form 1. */
+    if ((!(e->grid_id & 0x10) || re15_bf_mutation_offen()) && e->hp < 200) {   /* gate !(grid&0x10) @0x801164e8 && hp<200 @0x801164fc */
         e->birkin_flags ^= 0x4;                        /* +0x1dd ^= 4 heave toggle @0x80116510 (wounded-breathing; DECIDE mutate gate) */
         if (e->hp < 100) {                             /* slti hp,100 @0x8011667c */
             e->state = 1; e->sub_state_1 = 6;          /* FORCE state1-sub6 MUTATION: sw 0x601 @0x80116684-88 (form-1 only) */
