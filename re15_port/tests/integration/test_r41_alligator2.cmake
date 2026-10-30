@@ -21,6 +21,10 @@
 #     "KANISTER angehaengt" und dem R1 kein Wurzelschritt > 340 (groesster authored Wurzelschritt, unit_r41_re2gator_lauer; gemessen mit der harten Klemme derselben
 #     Laeufe 446 bzw. 429, Abnahme G 4 v1 bis 1517); der Kanister beim R1 liegt innerhalb der Aussenwaende (G-E5, debug.log "Kanister Stufe 13 pos=").
 #
+# TEIL=schluessel|schluessel_elza|schluessel_west_elza  Nachbesserung 1 (M2, M3; AUFTRAG.md Nachtrag 35 Punkt 1, Pflicht fuer das Release): natuerlicher Kampf bis zum R1-Tod, Lauf 1 misst Figur und Schluessel, `test_r41_alligator2 wegplan`
+#     faehrt im Harness zum Schluessel und schreibt die Tasten, Lauf 2 spielt dieselbe Eingabe an der exe bis zum Aufheben: Water Key (34:1) im Inventar, kein Kletter-Start auf ein Objekt. west_elza: die Leiche liegt zwischen Figur und Schluessel.
+# TEIL=finisher|finisher_elza  Nachbesserung 1 (M5, Nachtrag 35 Punkt 4): RE15_VIS_TRACE: Spielerfigur sichtbar bis zum Clip-5-Ende, danach in keinem Bild (RE2 P2-Ende Spieler-Wort |= 0x80000 @0x80101190-ac).
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_TOOL=<test_r41_alligator2> -DWORKDIR=<dir> -DTEIL=<teil> -P test_r41_alligator2.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)

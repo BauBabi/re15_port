@@ -12,6 +12,7 @@ Punkte (Wortlaut AUFTRAG.md, massgeblich):
 
 ## Stand
 - [x] Punkt 1 Nachtrag 31.2 (Lage, Riegel) - [x] Punkt 2 FG-E7 (a) - [x] Punkt 3 Lagespruenge - [x] Punkt 4 Riegel F -> G
+- [x] Nachbesserung 1 (Abnahme 0): Nachtrag 35 Punkte 1..6 (M1..M8), s. Abschnitt "Nachbesserung 1"
 - Messordner (nicht im Repo): Scratchpad `P41/` (`runs/<lauf>`, `tools/`). Bildbelege: `P_belege/`.
 
 ## Punkt 1 - Nachtrag 31 Punkt 2 "nicht vor der Kamera"
@@ -198,6 +199,31 @@ Messordner (nicht im Repo): Scratchpad `P41n/` (`runs/<lauf>`, `lauf.sh`, `kampf
 - Aenderung: rel = R6a^T * Y(d) * Rk, d laeuft in den 26 Bildern der Stufen 3..6 von 0 auf Gier - 0xC00 (kein Sprung beim Anhaengen); Querlage -262 statt 0 (ersetzt die PORT-WAHL der Nachbesserung 3).
 - Messung nachher: unit_r41_alligator2_kanister_sitz: acht Gieren, Tank-Achse * Quer-Achse -4073..-4083 von 4096, Lokallage (1750,-210,-262). Bild P_belege/nb1_kanister.png. Der Tank ragt wie in RE2 nach einer Seite aus dem Maul; im Port bleibt er in Originalgroesse am 2/3-Gator, die Ueberlaenge ist darum sichtbar laenger als in RE2 (OFFEN).
 
+### Tests der Nachbesserung 1
+Neu (tests/unit/probes/r41_alligator2.cmake, tests/unit/test_r41_alligator2.c, tests/integration/test_r41_alligator2.cmake):
+| Riegel | misst | Ergebnis |
+|---|---|---|
+| unit_r41_alligator2_erreichbar | 221 Todeslagen inkl. Wand- und natuerliche Lagen: Schluessel erreichbar, echte Klettersonde in 640128 Stellungen nie auf ihm, Aktionstaste aus schraeger Stellung nimmt ihn auf; Gegenprobe Band 0 (1024 von 3600 Stellungen klettern) | gruen |
+| unit_r41_alligator2_weg | Lauf ueber die Pad-Eingabe bis zum Aufheben, fuenf Lagen, Figur im Sued- und im Nordbecken, Leiche im Westkanal | gruen |
+| unit_r41_alligator2_koerper | lebend 5 von 5 Koerperpunkten schieben, im R1 und an der Leiche 0; keine Trefferbox, keine Zielhilfe; kein Kletter-Start an der Leiche; Lauf durch die Leiche im Westkanal (118 Bilder) | gruen |
+| unit_r41_alligator2_finisher | Leon sichtbar in Clip 4 (14 Bilder) und Clip 5 (120), ab dem ersten Bild von Clip 11 aus | gruen |
+| unit_r41_alligator2_leiche, _leiche_elza | Rumpfmitte im Maul nach 8 Bildern, danach Abstand hoechstens 35, weg im Bild des Clip-5-Endes | gruen |
+| unit_r41_alligator2_kanister_sitz | acht Gieren: Tank-Achse * Quer-Achse -4073..-4083 von 4096, Lokallage (1750,-210,-262) | gruen |
+| integration_r41_alligator2_schluessel, _schluessel_elza, _schluessel_west_elza | exe: natuerlicher Kampf, R1, Eingabe-Lauf (Werkzeug wegplan), Aufheben: Inventar `34:1`, kein Kletter-Start auf ein Objekt | gruen |
+| integration_r41_alligator2_finisher, _finisher_elza | exe: RE15_VIS_TRACE, sichtbar bis zum Clip-5-Ende, danach kein Bild mit Spielerfigur | gruen |
+
+Nachgezogen mit Beleg: unit_r41_re2gator_putz + integration_r41_re2gator (statt 6 x 9 id 4 beim Dash: Stoss = 5 Brocken Bank 0x19 + Staub, Bilder 0/1/5/8/12, Satz 13, Lage je Ringseite, Sonderkamera ohne Putz, Op 21 gezaehlt); unit_r41_re2gator_aufnahme Fall 3 (Querlage -262 statt 0, RE2-Wert); integration_r41_gatorszene_tod_r1/_elza: Schuss F955 statt F931 (mit dem Kanister quer im Maul fuhr F916/F931 am Clip-Ende in die Kopf-Klemme, Ueberstand 62/55, Vorbedingung des Riegels FG-E7; F955 ohne Klemme: Leiche (1162,-23582), Kamera 2, Tiefe 2729 = 13,7 Bildpunkte, Leon = Elza).
+
+Gezielter Lauf (keine volle Suite), Regex = Lauf 1 oben + unit_enemy_body_push, unit_r34_re2fx*, unit_r34_plattform/_wasser/_wurf, unit/integration_r35_werfer*, unit_r35_fenster_glas, Flammenwerfer, unit_r41_wasser20b0, unit_r38_spinnen, unit_r35_affen, unit_1090_nodraw_pin, unit_r39_hund1121, unit_birkin_szenen, unit_r37_beretta, unit_r38_spiderman:
+1. Stand vor der letzten Kommentar-Aenderung, Regex = Scratch `regex2.txt` (Lauf 1 plus die Zusaetze oben): `ctest --test-dir "<baum>/re15_port/build" -R "<regex>" -j4 --timeout 1200 --output-on-failure`
+   -> **`99% tests passed, 1 tests failed out of 290`** (`Total Test time (real) = 2036.94 sec`). Rot nur `529 - integration_r35_granate`, Teil birkin `Slot 2: Typ 30 grid 10 im Bild 399 (soll 36 / 13 ...)`, dieselbe Zeile wie auf der Basis f5a5e2f7e (Tests oben, vorbestehend, nicht Spur P); wand/zombie/gator gruen.
+2. `ctest --test-dir "<baum>/re15_port/build" -R "^integration_r41_alligator2_schluessel" -j3 --timeout 1300 -V`
+   -> **`100% tests passed, 0 tests failed out of 3`** (`Total Test time (real) = 773.86 sec`). Messzeilen: Leon `Figur (-8432,-11485), Schluessel (-5700,-7500)`, `F688 R2090 ... 34:1`; Elza `Figur (-3143,-14991)`, `F706 R2091 ... 34:1`; west_elza `Figur (-3068,-19123), Schluessel (600,-26000)`, Leiche (-3217,-23328) dazwischen, `F837 R2091 ... 34:1`.
+3. Endstand: `ctest --test-dir "<baum>/re15_port/build" -R "^(unit_r41_alligator2_|unit_r41_gatorszene_|unit_r41_kanister2080_|unit_r41_re2gator_|integration_r41_alligator2_|integration_r41_gatorszene_tod|integration_r41_re2gator$)" -j4 --timeout 1300 --output-on-failure`
+   -> **`100% tests passed, 0 tests failed out of 81`** (`Total Test time (real) = 640.58 sec`).
+Timeouts der Laeufe im Riegel schluessel: 620 s je exe-Lauf, Test 1300 s (bei parallelen Agenten bis 3,7 Bilder/s gemessen, Lauf 1 lief sonst in die Zeitgrenze).
+Punkt 3 nachgemessen mit dem neuen Sitz: `TRAGSCAN: 306 Laeufe (270 ohne Aufnahme), 275400 Bilder, Sprung max 338 ... > 340: 0, > 400: 0, Ueberstand max 1366, Bilder Ueberstand > 300: 69` (vorher max 2282, 1192 Bilder). K3 mit begehbarer Lage: Schluessel (0,-1722,-26500), Kamera 0, Tiefe 2721 (vorher (0,-1723,-26800), die lag 200 vor der Suedwand).
+
 ### M8 (Dossier)
 Dieser Abschnitt; Fertigmeldung nennt Nachtrag 35 und den Release-Pflichtpunkt.
 
@@ -209,10 +235,20 @@ Dieser Abschnitt; Fertigmeldung nennt Nachtrag 35 und den Release-Pflichtpunkt.
 5. Schluessel an der neuen Lage: Ring in der Ankunft ~8 x 7 Bildpunkte (Spitzen 12 x 12), Helligkeit wie abgenommen; die Groesse hatte der Nutzer mit 7 x 9 angenommen (Nachtrag 31 Punkt 3) - Rangfolge F-E2: Kampfbeginn vor Schluessel.
 6. Stufen 1..3 der Lagewahl legen den Schluessel bis 2 x 3070 von der Leiche, wenn naeher keine Kamera 10,4 Bildpunkte zeigt (5 % der Lagen im Scan, vor allem Westkanal/Nordbecken).
 7. PSX-Bau hier nicht pruefbar.
+8. Nachbesserung 1: RE2 laeuft hier nicht (kein Image); Putz, Finisher und Kanister-Sitz stehen auf den Bytes, ein Bild aus dem Original gibt es nicht. Die Saat von Sce_rnd ist in RE2 eine laufend beschriebene Pool-Zelle (0x800d8cb8, FUN_8001c224), der Port nimmt eine feste Zahl plus Bildzaehler.
+9. Der Kanister bleibt in Originalgroesse am 2/3-Gator (GB_SCALE_Q12): Sitz und Achse sind RE2, die Ueberlaenge zur Seite ist 1,5 x so lang wie in RE2. Nicht angefasst: er liegt vorher in derselben Groesse im Wasser, eine Umskalierung beim Biss waere erfunden.
+10. RE2-R1 setzt mit 0x80a auch Bit 0x800 = Zeichen-Skala +0x176 (3678 -> 3478, FUN_80027160 ScaleMatrix, r1_176 in gator_re2_r41.c): die Leiche wird in RE2 10-15 % kleiner gezeichnet; der Port nicht. Nicht Teil von Nachtrag 35.
+11. Mit dem Kanister quer ragt sein Ende bis 2600 zur Seite; die Kopf-Klemme haelt ihn in den Waenden, der Alligator bleibt dadurch auf der Tank-Seite so weit von der Wand weg (Riegel tragen gruen, Bildschritt <= 340).
 
 ## Fuer den Nutzer
-- Keine neuen Assets, keine Sprachdateien, keine neuen Bits/Nachrichten-Ids.
-- Gemeinsame Dateien: enemy_ai_boss_gator.c (Haken (2b), gb_cross_begin, GBP_CROSS, je markiert "Runde 41 Spur P"), gator_re2_r41.c (Kopf-Klemme, re15_gr2_r1_start), gatorszene_r41.c/.h, re15_gator_re2_r41.h; Tests test_r41_gatorszene.c/.cmake, test_r41_re2gator.c, probes/r41_gatorszene.cmake.
+- Assets: `shared_assets/RE2/GATOR40A0.VBS` geaendert (39064 B, md5 8afd43aa998b8fcaeb843c5c9c9b4535; vorher 34296 B): neu Satz 2 = RE2-Raumbank Satz 13 (Putz). Name unveraendert, steht schon in make_package.sh. Keine Sprachdateien, keine neuen Bits/Nachrichten-Ids.
+- Gemeinsame Dateien: enemy_ai_boss_gator.c (Haken (2b), gb_cross_begin, GBP_CROSS, Push-Gate, P3 no_draw, je markiert "Runde 41 Spur P"), enemy_ai_common.c (1 Zeile re15_body_push_player), re2_fx.c (Op 21), gator_re2_r41.c (Kopf-Klemme, re15_gr2_r1_start, Putz, Kanister-Sitz), gatorszene_r41.c/.h, re15_gator_re2_r41.h, re15_boss_gator.h, platform/pc/src/gator_re2_pc.c (1 Zeile), tools/r41_re2gator/gator40a0_se_cut.py; Tests test_r41_gatorszene.c/.cmake, test_r41_re2gator.c/.cmake, probes/r41_gatorszene.cmake, probes/r41_re2gator.cmake.
 - Kampfbeginn: Der Alligator frisst die Leiche weiter vorn im Becken und schwimmt nach dem Schrei von rechts durch die Beckenmitte auf Leon zu; er liegt nicht mehr vor der Kamera. Abstand und Zeit bis zum ersten Biss bleiben im RE2-Bereich (rund 4,5 s).
 - Mit dem Kanister im Maul springt er nicht mehr; an der Wand weicht er zurueck, dabei kann der Kopf kurz in die Wand ragen.
 - Schluessel nach dem Tod: Er liegt jetzt auch in der Wandlage gut sichtbar (mindestens 10,4 Bildpunkte); die Kamera der Einstellung meidet Stellen, die Leon verdeckt.
+- Schluessel nach dem Tod (Nachtrag 35 Punkt 1): Er liegt immer dort, wo die Figur hinkommt, nie mehr im Maschinenblock. Die Aktionstaste hebt ihn auf; vorher kletterte die Figur oft auf ihn, das war auch das "Klettern auf den toten Alligator".
+- Die Leiche des Alligators hat wie in RE2 keine Kollision mehr: man laeuft durch sie hindurch, sie sperrt den Westkanal nicht mehr, und Leon zielt nicht mehr auf sie.
+- Putz: Er faellt jetzt bei jedem starken Stoss, wie in RE2 an die Stelle des Schuettelns gebunden: fuenf Brocken mit Staubspur, zufaellig in der Beckenseite der laufenden Kamera, mit dem RE2-Geraeusch. Der alte Staub ueber Leon beim Dash war der falsche Effekt (in RE2 gehoert er zum Rueckzug des Alligators nach Beschuss, den es hier nicht gibt). Weit hinten im Becken sind die Brocken klein, wie in RE2 auf Entfernung.
+- Finisher: Leon verschwindet mit dem Ende des Schuettelns, danach kaut der Alligator allein.
+- Fress-Szene: Die Leiche liegt quer im Maul, folgt dem Kopf Bild fuer Bild und ist mit dem Ende des Schuettelns weg.
+- Kanister: Er liegt quer im Maul wie in RE2 und ragt nach einer Seite heraus, egal aus welcher Richtung der Alligator kommt.

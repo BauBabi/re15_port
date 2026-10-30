@@ -1010,8 +1010,8 @@ static int     s_rel_ok = 0;
  * Rumpf hing dadurch unter Hals und Rumpf des Alligators, das Maul blieb leer (Abnahme 0 zoom_fressen F150-F240). Wie der RE2-Kanister wird die Lokallage nach dem Anhaengen ins Maul gefuehrt: Ziel = die Rumpfmitte der
  * Leiche (Modell x GSZ_LEICHE_MITTE_X, y -170 = halbe Hoehe des Rueckens y -341 @MD1 0x2054, z -100 ebenda) auf der RE2-Maullage (1750,-210) im Part-6-Rahmen (T2 @0x801019c4 / @0x80101a4c, RE15_GR2_KAN_LOKAL_X/Y) mal
  * Zeichen-Skala; Schritte die groessten der T2-Stufen (x/z 145 @0x80101a30-38, y 55 @0x80101ad4-dc). */
-#define GSZ_LEICHE_MITTE_Y    (-170)
-#define GSZ_LEICHE_MITTE_Z    (-100)
+#define GSZ_LEICHE_MITTE_Y    (-170)    /* PORT-WAHL: halbe Rueckenhoehe, y -341 @MD1 0x2054 */
+#define GSZ_LEICHE_MITTE_Z    (-100)    /* z der Rueckenlinie @MD1 0x2054 */
 #define GSZ_MAUL_SCHRITT_XZ   145
 #define GSZ_MAUL_SCHRITT_Y    55
 static int s_sitz_ok = 0;
@@ -1287,7 +1287,7 @@ static int spieler_punkte(int32_t sp[GSZ_SPIELER_PUNKTE][3])
  * (x -2000..2300, z -8300..-6800) und die Kanten ab - Abnahme 0: 202 von 1688 Lagen legten den Schluessel dort HINEIN, die Zonenmitte war fuer die Figur unerreichbar (Nutzer:
  * "ob der in der Wand haengen geblieben ist"). Begehbar = die Spieler-Klemme schiebt die Figur an diesem Punkt nicht weg: Radius 450 + Maske 1 wie re15_collision_constrain
  * (FUN_8003b0a4 mit den Spieler-Argumenten), Band 0 fest (Wasserboden; die Figur kann beim Tod auf der Plattform stehen), Objekt-Kasten wie der Spieler (FUN_8002cabc). */
-#define GSZ_SPIELER_KOLL_R  450
+#define GSZ_SPIELER_KOLL_R  450    /* Spielerradius 0x1c2: re15_collision_constrain PR (FUN_8003b0a4 mit den Spieler-Argumenten) */
 static int key_begehbar(int32_t x, int32_t z)
 {
     int32_t nx = x, nz = z;

@@ -522,7 +522,7 @@ static void gr2_kan_folgen(const re15_actor_t *e, const int32_t r6[9], const int
  * Bahn x -23078 (@0x80101048) = 262 nach Welt +X = Rig-z -262 bei Gier 0xC00 (x' = c*x + s*z, z' = -s*x + c*z: Rig-z zeigt nach Welt -X). Ersetzt die PORT-WAHL "z -> 0" der Nachbesserung 3. */
 #define RE15_GR2_KAN_GIER_RE2   0xC00          /* Bein 2: `yaw += 1024` @0x80100eb0-c0 zweimal ab 0x400 (Sce_em_set @0x25A0 Gier 0x400, Intro-Ende +0x400 @0x80100938-48) */
 #define RE15_GR2_KAN_LOKAL_Z    (-262)         /* -22816 - -23078 (@SCD 0x0484, @0x80101048), Vorzeichen s.o. */
-#define RE15_GR2_KAN_SITZ_BILDER 26            /* Stufen 3-6: 6 + 6 + 7 + 7 */
+#define RE15_GR2_KAN_SITZ_BILDER 26            /* Stufen 3-6: 6 @0x80101970 + 6 @0x801019dc + 7 @0x80101a64 + 7 @0x80101aec */
 static void gr2_kan_rel_setzen(void)
 {
     /* rel = R6a^T * Y(d) * Rk, Y(d) = [[c,0,s],[0,1,0],[-s,0,c]] (Konvention re15_skel_bone_to_world) */
