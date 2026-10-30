@@ -58,7 +58,9 @@
 #   flucht/flucht_elza: die Spielfigur rennt ab dem Kampfbeginn nach NORDEN durch den Westkanal (der Gator kommt jetzt von Osten aus
 #   dem Suedbecken): RE15_INPUT_SCRIPT=W10,L0.6,UX5 (Linksdrehung F301-F318 auf Gier -1728, Rennen ab F319; gemessen F41n5 N_LW_test);
 #   Abstand im Band, kein Kontakt/Angriff vor dem RE2-Wert, Spielfigur >= 5000 nach Norden in den RE2-Bildern.
-# FG-E7 (AUFTRAG.md 2026-10-26 01:19): Todeslage ohne Kopf-Klemme; die K3-Wandlage (4430,-26160) ist OFFEN (Release Notes 'Ab Samstag', Behebung Option (a))
+# FG-E7 (AUFTRAG.md 2026-10-26 01:19): Todeslage ohne Kopf-Klemme. Die K3-Wandlage (4430,-26160) deckt seit Spur P (Option (a)) der Riegel integration_r41_alligator2_k3(_elza).
+#   Spur P: tod_r1/_elza waren in dieser Lage rot, weil Leon (1325,-25550) den Schluessel in Cut 0 verdeckte (0 Pixel Unterschied) - die Lagewahl prueft jetzt die Spielfigur
+#   als Verdecker (gatorszene_r41.c kugeln_verdeckt) und sucht bis zum doppelten Abstand weiter, wenn die beste Zonenkamera < 10,4 Bildpunkte zeigt; Schluessel Kamera 2, 13 Bildpunkte.
 #   Befund der Integration F+G+M (tests:FGM): in den Rezepten K3/KW stirbt der Alligator SOFORT an der GB_TEST=5-Marke (4997,-20318)
 #   (Gier 1089 = Blick nach Sueden; der Kanister-Testhaken (4430,-26160) liegt 840 vor der Suedwand im Aufnahme-Fenster). Der
 #   R1-Todes-Clip traegt ihn ~4950 vorwaerts, der Kopf ragt ueber die Suedwand z -27000, Spur G's Kopf-Klemme (enemy_ai_boss_gator.c
@@ -329,7 +331,7 @@ if(TEIL MATCHES "^tod_explosion")
         file(REMOVE "${_exe_kopie}")
         message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - RE15_TOOL (test_r41_gatorszene) fehlt: '${RE15_TOOL}'")
     endif()
-    # FG-E7 (AUFTRAG.md 2026-10-26 01:19): Todeslage ohne Kopf-Klemme; die K3-Wandlage (4430,-26160) ist OFFEN (Release Notes 'Ab Samstag', Behebung Option (a))
+    # FG-E7 (AUFTRAG.md 2026-10-26 01:19): Todeslage ohne Kopf-Klemme; K3-Wandlage: integration_r41_alligator2_k3 (Spur P, Option (a))
     # Rezept (Kopf des Skripts, Abschnitt FG-E7): Spieler im RVD-Streifen 0 -> 7 (@0x00248) bei (-7000,-19000) Blick Nord = laufender
     # Cut 7 statt Leiter-Cut 0 (dort lag jede Lage ohne Kopf-Klemme im Suedkanal mit K = X = 0); erster Schuss nach dem Aggro der
     # GB_TEST=5-Marke: W38.2 = 1146 Bilder warten, Zielen F1147-F1155, Feuer F1156 -> R1 F1156, Rueckschnitt-Ersatz F1192, Ende F1284.
@@ -494,7 +496,7 @@ if(TEIL MATCHES "^tod")
         message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - RE15_TOOL (test_r41_gatorszene) fehlt: '${RE15_TOOL}'")
     endif()
     if(TEIL MATCHES "^tod_r1")
-        # FG-E7 (AUFTRAG.md 2026-10-26 01:19): Todeslage ohne Kopf-Klemme; die K3-Wandlage (4430,-26160) ist OFFEN (Release Notes 'Ab Samstag', Behebung Option (a))
+        # FG-E7 (AUFTRAG.md 2026-10-26 01:19): Todeslage ohne Kopf-Klemme; K3-Wandlage: integration_r41_alligator2_k3 (Spur P, Option (a))
         # Rezept K3 (Abnahme F 1, natuerliche Kamera) mit dem ersten Schuss NACH dem Aggro der GB_TEST=5-Marke (Kopf des Skripts,
         # Abschnitt FG-E7): U1.2 (F1-F36, RVD-Streifen 0 -> 1), W29.5 = 885 Bilder warten, Zielen F922-F930, Feuer F931 -> R1 F931
         # "Sperre ohne Schnitt" in Cut 1, Einstellung Cut 0 F969-F1061, zurueck Cut 1. Vorher: "U1.2,(M0.3,MA0.1)x12" (Feuer F46 an
