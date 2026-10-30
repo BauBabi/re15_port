@@ -5,6 +5,7 @@
  * only legitimate per-port divergence is architecture (render/input/audio/IO),
  * which stays in each main.c.
  */
+#include "re15_birkin_formen.h"
 #include <stdio.h>              /* fprintf — the dropped-event diagnostic below */
 #include <stdlib.h>             /* getenv — RE15_STAIR_DEMO */
 #include "re15_game_step.h"
@@ -1065,6 +1066,14 @@ static void re15_npc_neck_spawn_init(void)
 void re15_game_step(const re15_game_ctx_t *c)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    /* RUECKSTOSS-SZENE 5090 (Port-Ergaenzung, re15_birkin_formen.h): waehrend Birkin aus dem Zug geschossen
+     * wird, zielt und feuert der Spieler selbsttaetig - derselbe Schuss-Ablauf wie mit dem Pad. */
+    re15_game_ctx_t c_szene;
+    if (re15_bf_rueckstoss_phase() == 1) {
+        c_szene = *c;
+        c_szene.pad_current = re15_bf_pad(c->pad_current, &c_szene.pad_pressed);
+        c = &c_szene;
+    }
 
     /* ---- POSITIONS-SPIEGEL Spieler+0x40/+0x42/+0x44 --------------------------------------
      * Das Original schreibt ihn am ANFANG jedes Bildes aus der aktuellen Spielerposition,

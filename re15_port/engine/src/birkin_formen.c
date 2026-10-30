@@ -10,6 +10,7 @@
 #include "re15_damage.h"        /* re15_enemy_apply_hitbox, re15_enemy_bone_world_pos */
 #include "re15_scd.h"           /* g_scd.work_vars[0x0A] = angezeigter Cut, re15_game_flag_set */
 #include "re15_room.h"          /* g_current_room_id */
+#include "re15_audio.h"        /* re15_audio_room_se */
 #include <stdlib.h>
 #include <string.h>
 
@@ -102,18 +103,22 @@ static struct {
     int32_t  vy;                   /* Sturz */
     int      birkin_start;         /* Birkin-Clip laeuft */
 } s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0 };
-static int s_szene_gespielt = 0;   /* einmal je Sitzung; Birkin selbst steht bei jedem Betreten */
+static int s_szene_gespielt = 0;
+static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */   /* einmal je Sitzung; Birkin selbst steht bei jedem Betreten */
 
 void re15_bf_reset(void)
 {
+    s_rs.slot = -1; s_rs.phase = 0; s_rs.t = 0;
     s_h.raum = 0; s_h.birkin = s_h.sm = -1; s_h.phase = 0; s_h.t = 0; s_h.birkin_start = 0;
 }
 
 int re15_bf_hangar_phase(void) { return s_h.phase; }
 int re15_bf_hangar_slot(int birkin) { return birkin ? s_h.birkin : s_h.sm; }
 
+static void bf_rueckstoss_tick(void);
 int re15_bf_szene_besitzt(int slot)
 {
+    if (slot >= 0 && slot == s_rs.slot) return 1;       /* Rueckstoss-Szene 5090 */
     if (s_h.raum == 0 || slot < 0) return 0;
     if (slot == s_h.sm) return 1;                       /* der Spider-Man gehoert bis zum Raumwechsel der Szene */
     return slot == s_h.birkin && s_h.phase < 5;
@@ -154,6 +159,18 @@ static int bf_anim_halt(re15_actor_t *e)
 
 void re15_bf_raumtick(void)
 {
+    /* MESSHAKEN RE15_BIRKIN_HP_AT=<n>: n KI-Ticks nach Raumeintritt in 5090 die HP des 0x30 auf 0 (Sichtpruefung
+     * der Rueckstoss-Szene ohne Durchspielen). Im Normalpfad stumm. */
+    { static int at = -2; static unsigned raum = 0; static int t = 0;
+      if (at == -2) { const char *v = getenv("RE15_BIRKIN_HP_AT"); at = v ? atoi(v) : -1; }
+      if (at >= 0 && re15_bf_bahnsteig_aktiv()) {
+          if (raum != g_current_room_id) { raum = g_current_room_id; t = 0; }
+          if (++t == at)
+              for (int i = 1; i < RE15_ACTOR_MAX; i++)
+                  if (g_actors[i].active && g_actors[i].type == 0x30u && g_actors[i].state == 1) {
+                      g_actors[i].hp = 0; g_actors[i].state = 3; g_actors[i].sub_state_3 = 0; }   /* = Todes-Commit nach Treffer */
+      } }
+    bf_rueckstoss_tick();
     if (!re15_bf_hangar_aktiv()) { if (s_h.raum) re15_bf_reset(); return; }
     if (s_h.raum != g_current_room_id) {
         re15_bf_reset();
@@ -234,6 +251,88 @@ void re15_bf_raumtick(void)
             s_szene_gespielt = 1;
             b->state = 0;                                /* INIT -> HUB: Angriff auf den Spieler */
             b->sub_state_1 = b->sub_state_2 = b->sub_state_3 = 0;
+        }
+        break;
+    default: break;
+    }
+}
+
+/* ---- Bahnsteig: Rueckstoss-Szene Vierbein -> G5 -------------------------------------------
+ * Nutzer 2026-10-30: "Man schiesst Birkin energiemaessig runter. Dann kommt eine Cutscene, wie Birkin mit
+ * Schuessen nach hinten aus dem Zug rausgedraengt wird. Dann kommt er mit den Tentakeln in der finalen Form
+ * wieder rein - genauso wie in RE2."
+ * Ablauf (Gestaltung, keine Original-Szene; ausgeloest beim Todeseintritt des 0x30 in 5090/5091 statt der
+ * Kollaps-Kette @0x8011a5d8):
+ *   1 SCHIESSEN  der Spieler zielt und feuert selbst (Eingabe R1+Quadrat ueber re15_bf_pad, also der echte
+ *                Schuss-Ablauf mit Animation/Ton/Munition), Blick auf Birkin; Birkin zuckt (Flinch-Clip 7,
+ *                HURT @0x8011a2e0) und weicht Richtung Zugende zurueck.
+ *   2 HINAUS     Birkin passiert das Westende des Wagens (Eckbloecke x -5683, Luecke z -24974..-21990 -
+ *                derselbe Weg, auf dem der RE2-G5 hereinkommt, enemy_ai_boss_g5.c @0x801011d0) und
+ *                verschwindet; Pause mit Gebruell.
+ *   3 ZURUECK    Typwechsel zum G5 (re15_bf_morph_zu_g5): dessen RE2-Auftritt von (-9000,-23400) samt der
+ *                vier Tentakel uebernimmt. */
+#define BF_RS_AUSGANG_X  (-5683)      /* Eckbloecke Westende ROOM5090 (SCA [21]/[25]) */
+#define BF_RS_AUSGANG_Z  (-23482)     /* Mitte der Luecke z -24974..-21990 */
+#define BF_RS_MIN_TICKS  90           /* Gestaltung: mindestens 3 s Beschuss */
+#define BF_RS_PAUSE      45           /* Gestaltung: Pause hinter dem Zugende */
+
+int re15_bf_rueckstoss_phase(void) { return s_rs.slot >= 0 ? s_rs.phase : 0; }
+
+void re15_bf_rueckstoss_start(int slot)
+{
+    if (s_rs.slot >= 0) return;
+    s_rs.slot = slot; s_rs.phase = 1; s_rs.t = 0;
+    re15_actor_t *e = &g_actors[slot];
+    e->hp = 1;                                           /* bleibt "am Ende", stirbt aber nicht */
+    bf_clip(e, 7); e->anim_frac = 0xf;
+    /* Kampfkamera: ROOM5090 sub04 Cut_chg(0x0C) @0x1342 - sieht Spieler und Zugende in einem Bild */
+    g_scd.cam_id = 0x0C; g_scd.cam_change_pending = 1;
+}
+
+uint16_t re15_bf_pad(uint16_t pad, uint16_t *pressed)
+{
+    if (s_rs.slot < 0 || s_rs.phase != 1) return pad;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *e  = &g_actors[s_rs.slot];
+    pl->rot_y = bf_blick(pl, e->x, e->z);                /* Blick auf Birkin */
+    if (pressed) *pressed = (uint16_t)(((s_rs.t % 20) == 0) ? 0x8000u : 0u);   /* Quadrat-Flanke: Nachladen */
+    return (uint16_t)(0x0800u | 0x8000u);                /* RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE, keine Richtung */
+}
+
+static void bf_rueckstoss_tick(void)
+{
+    if (s_rs.slot < 0) return;
+    re15_actor_t *e = &g_actors[s_rs.slot];
+    if (!e->active || !re15_bf_bahnsteig_aktiv()) { s_rs.slot = -1; return; }
+    s_rs.t++;
+    e->state = 2; e->hp = 1;                             /* Treffer aendern nichts mehr am Ablauf */
+    switch (s_rs.phase) {
+    case 1: {
+        if (re15_r38_birkin_anim(e)) bf_clip(e, 7);      /* Zucken bei jedem Treffer: Clip 7 im Kreis */
+        int32_t dx = BF_RS_AUSGANG_X - 900 - e->x, dz = BF_RS_AUSGANG_Z - e->z;
+        int32_t rest = (int32_t)(dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
+        int32_t ticks = BF_RS_MIN_TICKS - s_rs.t; if (ticks < 20) ticks = 20;
+        int32_t schritt = rest / ticks; if (schritt < 40) schritt = 40;    /* Gestaltung */
+        if (rest > 0) {
+            e->x += (int32_t)((int64_t)dx * schritt / rest);
+            e->z += (int32_t)((int64_t)dz * schritt / rest);
+        }
+        if ((int)g_scd.work_vars[0x0A] != 0x0C) { g_scd.cam_id = 0x0C; g_scd.cam_change_pending = 1; }
+        /* rueckwaerts: Gesicht zum Spieler */
+        e->rot_y = bf_blick(e, g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z);
+        if (e->x <= BF_RS_AUSGANG_X - 600 && s_rs.t >= BF_RS_MIN_TICKS) {
+            s_rs.phase = 2; s_rs.t = 0;
+            e->no_draw = 1;
+            re15_audio_room_se(10);                      /* Gebruell (Birkin-Todes-SE 10, @0x8011a744) */
+        }
+        break;
+    }
+    case 2:
+        if (s_rs.t >= BF_RS_PAUSE) {
+            int slot = s_rs.slot;
+            s_rs.slot = -1; s_rs.phase = 0;
+            e->no_draw = 0;
+            re15_bf_morph_zu_g5(slot);
         }
         break;
     default: break;

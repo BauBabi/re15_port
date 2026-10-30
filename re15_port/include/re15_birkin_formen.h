@@ -34,6 +34,12 @@ int  re15_bf_hangar_aktiv(void);         /* ROOM50A0/50A1 und nicht RE15_KEIN_HA
 /* Birkin (0x30) in 5090 nach Todesphase 2 an den G5 uebergeben (Typwechsel 0x30 -> 0x36). */
 void re15_bf_morph_zu_g5(int slot);
 
+/* Rueckstoss-Szene 5090 (Vierbein -> G5): Start beim Todeseintritt des 0x30; re15_bf_pad ersetzt waehrend
+ * des Beschusses die Spieler-Eingabe (Zielen + Feuern, keine Richtung) und liefert die Quadrat-Flanke. */
+void     re15_bf_rueckstoss_start(int slot);
+int      re15_bf_rueckstoss_phase(void);   /* 0 = aus, 1 = Beschuss, 2 = hinter dem Zug */
+uint16_t re15_bf_pad(uint16_t pad, uint16_t *pressed);
+
 /* Je KI-Tick vor der Gegner-Schleife: setzt im Hangar Birkin + Spider-Man und spielt die Wurfszene. */
 void re15_bf_raumtick(void);
 /* 1 = dieser Slot wird gerade von der Szene gefuehrt (KI-Tick ueberspringen). */

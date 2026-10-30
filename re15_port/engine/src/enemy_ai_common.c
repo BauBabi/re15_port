@@ -12163,6 +12163,9 @@ static void re15_birkin_ai_tick(int slot)
             e->sub_state_3 = e->birkin_saved_ph3;
             break;
         }
+        /* PORT-ERGAENZUNG 5090/5091 (Nutzer 2026-10-30, re15_birkin_formen.h): kein Kollaps - Birkin wird
+         * per Rueckstoss-Szene aus dem Zug geschossen und kehrt als G5 zurueck. */
+        if (e->sub_state_3 == 0 && re15_bf_bahnsteig_aktiv()) { re15_bf_rueckstoss_start(slot); break; }
         /* real death down-machine 0x8011a5d8 — 7-phase morph tail on +0x7 (sub_state_3) */
         switch (e->sub_state_3) {
         case 0:   /* phase 0 @0x8011a618: clip 9 collapse, +0x93|=1, Se(1), phase->1 */
@@ -12206,10 +12209,10 @@ static void re15_birkin_ai_tick(int slot)
              * DIESEN einen Produzenten. */
             /* PORT-ERGAENZUNG (Beta-Birkin-Formen, re15_birkin_formen.h): in 5090/5091 ist das NICHT der
              * letzte Tod - wo das Original in Phase 3 auf den nie gesetzten Raum-Morph wartet, geht der
-             * Vierbein-Birkin in den G5 ueber; der Fortschritts-Schalter faellt erst mit dessen Tod
+             * Vierbein-Birkin in den G5 ueber (seit der Rueckstoss-Szene schon beim Todeseintritt, s. oben);
+             * der Fortschritts-Schalter faellt erst mit dessen Tod
              * (enemy_ai_boss_g5.c). Der Hangar-Birkin (50A0/50A1) ist ein Zusatzgegner und darf den
              * Birkin-Fortschritt der Original-Raeume nicht setzen. */
-            if (re15_bf_bahnsteig_aktiv()) { re15_bf_morph_zu_g5(slot); break; }
             if (!re15_bf_hangar_aktiv())
                 re15_game_flag_set(5, 0x1c, 1);        /* @0x8011a6b8 (STAGE3) / @0x8011aecc (STAGE5) */
             e->sub_state_3 = ((e->grid_id & 0xf) == 2) ? 4 : 3;       /* grid&0xf==2 -> skip the wait @0x8011a6d8 */

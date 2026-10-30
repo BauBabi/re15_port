@@ -151,13 +151,30 @@ static void test_bahnsteig(void)
     CHECK(bank_laden(0x30u, 0, re15_bf_emd_datei(0x30u)), "EM30_BAHNSTEIG-Bank");
     re15_actor_t *b = &g_actors[bs];
     re15_game_flag_set(5, 0x1c, 0);
-    b->state = 3; b->sub_state_3 = 0; b->grid_id = 0x13; b->hp = 0; b->birkin_flags = 0;
-    int f;
-    for (f = 0; f < 600 && b->type == 0x30u; f++) re15_enemy_ai_run_all(0);
+    /* Kampfposition wie nach sub04 (Pos_set(1200,0,-23350) @0x12FE), Spieler an der Kampfmarke (300,-23400) */
+    b->x = 1200; b->z = -23350; b->grid_id = 0x13;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = 300; pl->z = -23400; pl->hp = 100;
+    b->state = 3; b->sub_state_3 = 0; b->hp = 0; b->birkin_flags = 0;
+    int f, gefeuert = 0, versteckt = 0;
+    int32_t x_min = b->x;
+    for (f = 0; f < 900 && b->type == 0x30u; f++) {
+        re15_enemy_ai_run_all(0);
+        if (re15_bf_rueckstoss_phase() == 1) {
+            uint16_t pr = 0, pad = re15_bf_pad(0, &pr);
+            if ((pad & 0x0800u) && (pad & 0x8000u)) gefeuert = 1;
+        }
+        if (b->no_draw) versteckt = 1;
+        if (b->x < x_min) x_min = b->x;
+    }
+    CHECK(gefeuert, "Spieler zielt/feuert in der Rueckstoss-Szene nicht");
+    CHECK(x_min < -5683, "Birkin verlaesst den Zug nicht nach Westen (min x %d)", x_min);
+    CHECK(versteckt, "Birkin verschwindet hinter dem Zugende nicht");
     CHECK(b->type == 0x36u, "kein Morph zum G5 nach %d Ticks (state %d ph3 %d)", f, b->state, b->sub_state_3);
     CHECK(b->grid_id == 0x13u, "G5 nicht armiert (grid 0x%02X)", b->grid_id);
+    CHECK(!b->no_draw, "G5 bleibt unsichtbar");
     CHECK(re15_game_flag_get(5, 0x1c) == 0, "Birkin-Schalter z5:0x1C schon beim Vierbein-Tod gesetzt");
-    fprintf(stderr, "Bahnsteig: Morph nach %d Ticks\n", f);
+    fprintf(stderr, "Bahnsteig: Rueckstoss + Morph nach %d Ticks (min x %d)\n", f, x_min);
     free(buf);
 }
 
