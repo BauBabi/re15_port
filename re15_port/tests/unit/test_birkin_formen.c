@@ -7,7 +7,8 @@
  * platform/pc/main.c) mit den unveraenderten EM30-Clips und der EM30-KI laufen:
  *   - re15_emd_parse_container liest beide Dateien,
  *   - Mesh-/Knochen-/Clip-/Keyframe-Zahlen und Hierarchie sind gleich wie bei EM30,
- *   - EDD und die Keyframe-Daten sind byte-gleich zu EM30,
+ *   - EDD ist byte-gleich; Keyframes byte-gleich (Hangar) bzw. nur an den umgehaltenen
+ *     Knochen + Wurzelhoehe geaendert (Bahnsteig, Vierbein-Haltung),
  *   - die EM30-Topologie (Dreiecke/Quads, UVs) ist ein byte-gleiches Praefix; die Hangar-
  *     Form haengt ihren Schwanz nur an (Mesh 8) und jede Zusatz-Face zeigt in die Arrays,
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
@@ -50,7 +51,7 @@ typedef struct {
 
 static modell_t s_basis, s_form;
 
-static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
+static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len, int umgehalten)
 {
     char pfad[512];
     snprintf(pfad, sizeof pfad, RE15_ASSET_PSX_DIR "/EMD/%s", name);
@@ -82,11 +83,30 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                  sizeof(uint32_t) * (size_t)s_basis.anim.frame_count) == 0,
           "%s: EDD-Frames weichen von EM30 ab", name);
     /* nur die Keyframes, die das EDD referenziert: keyframe_count/-data_size reichen beim
-     * Container-Parse bis zum Blobende und umfassen damit auch die (geaenderte) MD1/TIM */
-    CHECK(memcmp(s_form.skel.keyframe_data, s_basis.skel.keyframe_data,
-                 (size_t)(s_basis.anim.last_keyframe_index + 1) *
-                 (size_t)s_basis.skel.keyframe_size_bytes) == 0,
-          "%s: Keyframes weichen von EM30 ab", name);
+     * Container-Parse bis zum Blobende und umfassen damit auch die (geaenderte) MD1/TIM.
+     * Hangar: byte-gleich. Bahnsteig: umgehalten (birkin_formen.py umhalten, Vierbein-
+     * Haltung) -> Wurzel-X/Z und die NICHT umgehaltenen Knochen 0/3/6/8/11/14 byte-gleich. */
+    {
+        int kn = s_basis.anim.last_keyframe_index + 1, ks = s_basis.skel.keyframe_size_bytes;
+        if (!umgehalten) {
+            CHECK(memcmp(s_form.skel.keyframe_data, s_basis.skel.keyframe_data,
+                         (size_t)kn * (size_t)ks) == 0, "%s: Keyframes weichen von EM30 ab", name);
+        } else {
+            static const int fest[] = {0, 3, 6, 8, 11, 14};
+            int abw = 0, y_neu = 0;
+            for (int k = 0; k < kn; k++) {
+                const uint8_t *a = s_basis.skel.keyframe_data + (size_t)k * ks;
+                const uint8_t *b = s_form.skel.keyframe_data + (size_t)k * ks;
+                abw += memcmp(a, b, 2) != 0 || memcmp(a + 4, b + 4, 2) != 0;
+                y_neu += memcmp(a + 2, b + 2, 2) != 0;
+                for (int i = 0; i < (int)(sizeof fest / sizeof fest[0]); i++)
+                    for (int bit = fest[i] * 36; bit < fest[i] * 36 + 36; bit++)
+                        abw += ((a[12 + bit / 8] ^ b[12 + bit / 8]) >> (bit & 7)) & 1;
+            }
+            CHECK(abw == 0, "%s: %d Abweichungen in Wurzel-X/Z bzw. festen Knochen", name, abw);
+            CHECK(y_neu > 0, "%s: Haltung ohne Wirkung (keine Wurzelhoehe geaendert)", name);
+        }
+    }
 
     long geaendert = 0, zusatz = 0;
     for (int m = 0; m < s_basis.md1.mesh_count; m++) {
@@ -150,8 +170,8 @@ int main(void)
                                       &s_basis.anim, &s_basis.tim);
     CHECK(rc == 0, "EM30: re15_emd_parse_container rc=%d", rc);
     if (rc == 0) {
-        vergleiche("EM30_HANGAR.EMD", ems + off, len);
-        vergleiche("EM30_BAHNSTEIG.EMD", ems + off, len);
+        vergleiche("EM30_HANGAR.EMD", ems + off, len, 0);
+        vergleiche("EM30_BAHNSTEIG.EMD", ems + off, len, 1);
     }
     free(ems);
     if (fails) { fprintf(stderr, "test_birkin_formen: %d Fehler\n", fails); return 1; }

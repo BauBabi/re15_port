@@ -15,14 +15,16 @@ unten ist eine GESTALTUNGSENTSCHEIDUNG nach diesen Bildern, kein RE-Wert, und ha
 absichtlich KEINE @0x-Adresse. Sie darf nirgends als Original-Konstante zitiert werden.
 
 Byte-true geerbt (unveraendert aus CDEMD0.EMS Blob 16 = EM30):
-    EDD (alle 21 Clips), EMR-Hierarchie + Keyframes (alle 912), Dreieckstopologie, UVs,
+    EDD (alle 21 Clips), EMR-Hierarchie, Keyframes (Hangar), Dreieckstopologie, UVs,
     TPages, CLUT-Zuordnung, TIM-Pixel. Nur diese Dinge aendern sich:
       1. MD1-Vertices je Knochen  - skaliert um den Knochenursprung (Mesh-lokaler Raum)
       2. MD1-Normalen             - inverse-transponiert mitgefuehrt, Laenge beibehalten
       3. EMR-Bindoffsets          - Kindgelenk mit der Skalierung des Elternmeshes mitgezogen,
                                     damit die Glieder verbunden bleiben
       4. Bahnsteig: TIM-CLUTs eingefaerbt
-      5. Hangar: Schwanz als ANGEHAENGTE Geometrie an Mesh 8 (MD1 waechst, TIM-Offset und
+      5. Bahnsteig: alle Keyframes umgehalten (Vierbein, umhalten()) - Clip-Tabelle, Timing,
+         Wurzel-X/Z und die Knochen 0/3/6/8/11/14 bleiben unveraendert
+      6. Hangar: Schwanz als ANGEHAENGTE Geometrie an Mesh 8 (MD1 waechst, TIM-Offset und
          Verzeichnis verschieben sich; die EM30-Faces bleiben ein unveraendertes Praefix)
     Der MD1-Serializer schreibt unveraendertes EM30 byte-gleich zurueck (Assert in main), und
     re15_emd_parse_container liest beide Dateien ohne Aenderung (tests/unit/test_birkin_formen.c).
@@ -91,9 +93,22 @@ FORMEN = {
             8:  (1.50, 1.35, 1.45),
             9:  (1.05, 1.05, 1.05),
             10: (1.35, 1.10, 1.35), 11: (1.40, 1.10, 1.40), 12: (1.30, 1.10, 1.30),
-            13: (1.85, 1.30, 1.85), 14: (1.95, 1.30, 1.95), 15: (1.70, 1.45, 1.70),
+            13: (1.85, 1.10, 1.85), 14: (1.95, 1.10, 1.95), 15: (1.70, 1.20, 1.70),
         },
         rel={9: (90, 260, 0)},
+        # Nutzerbefund 2026-10-30: "eher liegend, 4-beinig". Auf der Disc gibt es keine
+        # Vierbein-Haltung (EM36-Clips = Knien mit vorgestrecktem Arm), also werden ALLE
+        # Keyframes umgehalten (umhalten()): Rumpf vorgekippt, Arme behalten ihre Welt-
+        # orientierung (haengen vom vorgeschobenen Schultergurt senkrecht = Vorderbeine),
+        # Beine gehockt, Kopf gehoben; danach Bodenkontakt je Keyframe nachgefuehrt.
+        # Abgestimmt (Clip 0, Keyframe 0): Fussgelenk 285 / Handgelenke 266 + 393 ueber dem
+        # Boden (EM30 stehend: Fussgelenk 264) -> alle vier Gliedmassen tragen; Huefte 1324.
+        # Winkel in Grad um die Z-Achse (Seitenachse) im Elternraum: + = Oberseite nach vorn.
+        haltung=dict(
+            kippen={7: 80, 1: -80, 4: -80, 2: 80, 5: 80},
+            welt_halten=(10, 13),
+            nachkippen={9: -64, 10: -40, 13: -40, 12: -75, 15: -75},
+        ),
         tint=(np.array([[0.62, 0.00, 0.08],
                         [0.04, 0.40, 0.06],
                         [0.18, 0.12, 0.62]]), 0.62),
@@ -323,6 +338,91 @@ def faerbe_tim(tim, tint):
 
 
 # ═══════════════════════════════════════════════════ Zusammenbau
+# ═══════════════════════════════════════════════════ EMR: Keyframes umhalten
+def _rz(grad):
+    a = np.radians(grad)
+    return np.array([[np.cos(a), -np.sin(a), 0], [np.sin(a), np.cos(a), 0], [0, 0, 1.0]])
+
+
+def _zerlege(m):
+    """Umkehrung von EA.mat_euler (RotMatrix @0x80068130): m[0][2]=sy, m[1][2]=-cy*sx,
+    m[2][2]=cy*cx, m[0][0]=cz*cy, m[0][1]=-sz*cy. Roundtrip-Fehler <= 1/4096 Umdrehung."""
+    k = 4096 / (2*np.pi)
+    ay = np.arcsin(np.clip(m[0, 2], -1, 1))
+    ax = np.arctan2(-m[1, 2], m[2, 2])
+    az = np.arctan2(-m[0, 1], m[0, 0])
+    return [int(round(a*k)) & 0xFFF for a in (ax, ay, az)]
+
+
+def _bits_schreiben(buf, start, bitoff, wert):
+    for i in range(12):
+        bi = start + ((bitoff + i) >> 3)
+        mask = 1 << ((bitoff + i) & 7)
+        buf[bi] = (buf[bi] | mask) if (wert >> i) & 1 else (buf[bi] & ~mask)
+
+
+def _welt(skel, rel, lokal, wurzel):
+    n = skel.bone_count
+    R, T = [None]*n, [None]*n
+    for b in range(n):
+        p = skel.parent[b]
+        if p < 0:
+            R[b], T[b] = lokal[b], np.array(wurzel, float)
+        else:
+            R[b] = R[p] @ lokal[b]
+            T[b] = R[p] @ np.array(rel[b], float) + T[p]
+    return R, T
+
+
+def _tiefster_punkt(R, T, verts):
+    """Groesstes Y (Y zeigt nach unten) ueber alle Mesh-Vertices = Bodenkontakt."""
+    return max(float((v @ R[b].T + T[b])[:, 1].max()) for b, v in verts.items())
+
+
+def umhalten(vor, d, md1, haltung):
+    """Alle Keyframes aller drei Baenke (EMR dir[2]/[4]/[6]) umhalten. Arbeitet auf den
+    bereits angepassten Bindoffsets und der skalierten MD1, damit der Bodenkontakt zur
+    fertigen Geometrie passt."""
+    struktur = EA.emr_parse(bytes(vor[d[2]:d[3]]))
+    rel = struktur.rel
+    ks  = struktur.kf_size
+    verts = {}
+    for b, m in enumerate(EA.md1_parse(md1)[:struktur.bone_count]):
+        if m.tv:
+            verts[b] = np.array([v[:3] for v in m.tv], float)
+    for a, e in ((d[2], d[3]), (d[4], d[5]), (d[6], d[7])):
+        kf_off = u16(vor, a + 2)
+        n = (e - a - kf_off) // ks
+        for k in range(n):
+            o = a + kf_off + k*ks
+            sk = EA.Skel(); sk.kf_size, sk.kf_data = ks, bytes(vor[o:o+ks])
+            winkel = [EA.kf_angles(sk, 0, b) for b in range(struktur.bone_count)]
+            wurzel = list(EA.kf_pos(sk, 0))
+            lokal  = [EA.mat_euler(*w).astype(float) / 4096 for w in winkel]
+            R0, T0 = _welt(struktur, rel, lokal, wurzel)
+            # Anteil der Haltung = Aufrichtung des Rumpfs im Original (Y-Achse von Knochen 7
+            # gegen die Senkrechte): aufrecht -> voll, liegend (Niederschlag/Tod) -> nichts,
+            # sonst knickt ein schon liegender Rumpf um weitere 80 Grad durch.
+            f = float(np.clip(R0[7][1, 1], 0.0, 1.0))
+            neu = list(lokal)
+            for b, g in haltung['kippen'].items():
+                neu[b] = _rz(g * f) @ lokal[b]
+            # Arme: Weltorientierung wie vorher -> haengen senkrecht vom gekippten Rumpf
+            R1, _ = _welt(struktur, rel, neu, wurzel)
+            for b in haltung['welt_halten']:
+                p = struktur.parent[b]
+                neu[b] = R1[p].T @ R0[p] @ lokal[b]
+            for b, g in haltung['nachkippen'].items():
+                neu[b] = _rz(g * f) @ neu[b]
+            R1, T1 = _welt(struktur, rel, neu, wurzel)
+            wurzel[1] += int(round(_tiefster_punkt(R0, T0, verts) - _tiefster_punkt(R1, T1, verts)))
+            struct.pack_into('<h', vor, o + 2, max(-32768, min(32767, wurzel[1])))
+            geaendert = set(haltung['kippen']) | set(haltung['welt_halten']) | set(haltung['nachkippen'])
+            for b in geaendert:
+                for i, w in enumerate(_zerlege(neu[b])):
+                    _bits_schreiben(vor, o + 12, b*36 + i*12, w)
+
+
 def lade_em30():
     ems = open(EA.EMS_PFAD, 'rb').read()
     off, ln = EA.ems_entry(ems, EA.EMS_ORDER.index(TYP))
@@ -341,6 +441,8 @@ def baue(blob, form):
     vor = bytearray(blob[:md1_a])
     vor[emr_a:emr_e] = passe_emr_an(blob[emr_a:emr_e], form['skal'], form['rel'])
     md1 = skaliere_md1(blob[md1_a:md1_e], form['skal'])
+    if form.get('haltung'):
+        umhalten(vor, d, md1, form['haltung'])
     if form.get('schwanz'):
         md1 = md1_schreiben(haenge_schwanz_an(md1_lesen(md1), form['schwanz']))
     tim = faerbe_tim(blob[md1_e:dir_off], form['tint'])
@@ -390,7 +492,8 @@ def main():
             mo.untertitel = 'NACHBILDUNG nach Beta-Screenshots - ' + form['datei'] + ' - Basis CDEMD0.EMS Blob %d'
             mo.hinweis    = ('NICHT byte-true: Vertex-/Normalen-Skalierung, Bindoffsets und Farben sind Gestaltung '
                              '(birkin_formen.py FORMEN)' + (', Schwanz angehaengt an Mesh 8' if form.get('schwanz') else '')
-                             + '. Unveraendert aus EM30: Topologie, UVs, Skelett-Hierarchie, Clips, Keyframes.')
+                             + (', Keyframes umgehalten (Vierbein)' if form.get('haltung') else '')
+                             + '. Unveraendert aus EM30: Topologie, UVs, Skelett-Hierarchie, Clip-Tabelle.')
             EA.blatt(mo, a.clip,
                      os.path.join(a.blatt, 'birkin_%s.png' % name))
 
