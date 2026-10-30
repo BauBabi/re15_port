@@ -185,7 +185,7 @@ Messordner (nicht im Repo): Scratchpad `P41n/` (`runs/<lauf>`, `lauf.sh`, `kampf
 ### M5 (N35.4): Finisher, Spieler verschwindet wie RE2
 - Beleg RE2 P2-Ende: `80101190 beq v0,zero,0x801011e8` (Clip 5 zu Ende), `80101194 lui v1,0x8`, `8010119c addiu a0,a0,-1032` = 0x800cfbf8 (Spieler-Entity, Lage +0x38 = 0x800cfc30), `801011a0 lw v0,0(a0)`, `801011a8 or v0,v0,v1`, `801011ac sw v0,0(a0)`, `801011b0-c0` Phase + 1. FUN_80027160: `(param_3 & 0x80000) == 0` sonst nur Teile mit 0x9000; FUN_80019b3c/FUN_80019cd0 zeichnen bei dem Bit nicht.
 - Aenderung: P3 setzt pl->no_draw (enemy_ai_boss_gator.c), Rueckweg ueber den vorhandenen Continue-Zweig/Raumlader. Spur B hatte "kein no_draw" festgeschrieben, das war der Befund.
-- Messung nachher: exe Lauf des Riegels: `RE2 FRESS P3: Spieler-Modell aus F639`, RE15_VIS_TRACE vis=1 bis F638, vis=0 ab F639 bis zum Raumwechsel F779; unit_r41_alligator2_finisher: Clip 4 sichtbar 14, Clip 5 sichtbar 120, Clip 11 aus.
+- Messung nachher: exe Lauf des Riegels: `RE2 FRESS P3: Spieler-Modell aus F639`, RE15_VIS_TRACE vis=1 bis F638, vis=0 ab F639 bis zum Raumwechsel F779; unit_r41_alligator2_finisher: Clip 4 sichtbar 14, Clip 5 sichtbar 120, Clip 11 aus. Bild P_belege/nb1_finisher.png (F640 ff.: nur noch der kauende Alligator, Elzas Zopf haengt am selben Gate n_bones).
 
 ### M6 (N35.5): Leiche sitzt im Maul
 - Ursache: die eingefrorene Relation hielt den Prop-Ursprung, so wie er im Koppelbild lag; die Rumpfmitte hing unter Hals und Rumpf (Abnahme 0 zoom_fressen).
