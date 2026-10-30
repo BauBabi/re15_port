@@ -101,7 +101,7 @@ if(TEIL STREQUAL "kurbel")
     set(_skript "L0.36,U3.8,W2.0")
     set(_env RE15_DEBUG_JUMP=2050@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 "RE15_FIRE_AOT=1@30#2050"
              "RE15_INPUT_SCRIPT=${_skript}" RE15_INPUT_SCRIPT_START=60 RE15_INPUT_SCRIPT_BASIS=spiel
-             RE15_USE_TEST=0x33@190#2020
+             "RE15_USE_TEST=0x33@190#2020"
              RE15_SCD_TRACE=1 RE15_ANIM_TRACE=anim.txt RE15_STATE_LOG=state.txt "RE15_EXIT_AT=600#2020")
 elseif(TEIL STREQUAL "karte")
     # Abnahme 0 §4.1 Lauf "U0.8 / U1.0 / U1.5": Gang ROOM1230, Strom (4,0xF3), Ostkammer-Tuer offen (3,0x89), Hunde tot

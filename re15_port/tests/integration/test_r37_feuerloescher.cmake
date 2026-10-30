@@ -117,9 +117,10 @@ endfunction()
 
 # --- A: Ende-zu-Ende ---------------------------------------------------------------------------
 # Skript-Takte (30 Hz ab Spielbild 60): A@30 Aufnahme, A@138 Ja; Sprung F420; A@381 Feuer (msg 7),
-# A@444 weiter (msg 8), A@537 Ja (Loeschen), danach A je 2 s (msg 9 zu, Wegwerf-Abfrage Ja auf "Yes").
+# A@444 zu (Runde 41 Spur O: die Frage msg 8 entfaellt), Takt 537 = Raumbild 177 USE (RE15_USE_TEST, dort stand das Ja, darum W statt A),
+# danach A je 2 s (msg 9 zu, Wegwerf-Abfrage Ja auf "Yes").
 fl_lauf(a 1030 "1030;-4300;-17904;0;cut:0"
-    "W1,A0.1,W3.5,A0.1,W8,A0.1,W2,A0.1,W3,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W20"
+    "W1,A0.1,W3.5,A0.1,W8,A0.1,W2,A0.1,W3,W0.1,W2,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W20"
     1400 "RE15_DEBUG_JUMP=1090@420;RE15_PLAYER_POS=300,-300,0,1;RE15_FRAMEDUMP=300-1400/50:fd_;RE15_USE_TEST=0x31@177#1090" _a)
 pruef(A _a "[feuerloescher] ROOM1030: Loescher an der Wand obj 5 bei (-2813,-2122,-17904)")
 pruef(A _a "oid=0x05 pos=(-2813,-2122,-17904)")

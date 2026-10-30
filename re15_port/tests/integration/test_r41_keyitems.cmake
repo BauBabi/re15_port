@@ -61,7 +61,8 @@ endmacro()
 
 set(_gemein RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
             RE15_KEYITEMS_LOG=1 RE15_STATE_LOG=state.txt)
-# Leon: Platz 0 Browning, 1 Patronen, 2 Kurbel (Flag -> Eintrag): START, ITEM, runter auf Platz 2, Auswahl, USE
+# Leon: Platz 0 Browning, 1 Patronen, 2 Kurbel (Flag -> Eintrag): START, ITEM, runter auf Platz 2, Auswahl, USE.
+# Tasten ab Bild 260 (Sprung @240): RE15_PRESS zaehlt je Raum neu und traefe sonst auch das Titelbild davor und startete damit ein Neues Spiel.
 if(TEIL STREQUAL "kurbel")
     set(_env RE15_DEBUG_JUMP=2050@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 "RE15_FIRE_AOT=1@30#2050"
              "RE15_INPUT_SCRIPT=L0.36,U3.8,W2.0" RE15_INPUT_SCRIPT_START=60 RE15_INPUT_SCRIPT_BASIS=spiel
@@ -69,7 +70,7 @@ if(TEIL STREQUAL "kurbel")
 elseif(TEIL STREQUAL "elza")
     # Elza: Inventar leer, Kurbel auf Platz 0
     set(_env RE15_TITLE_SHOT_CHAR=1 RE15_DEBUG_JUMP=2021@240 RE15_SET_FLAG=3:0x72 RE15_PLAYER_POS=2914,-3388,2016,1
-             RE15_PRESS=start@100,square@125,square@150,square@165 RE15_SCD_TRACE=1 "RE15_EXIT_AT=420#2021")
+             RE15_PRESS=start@260,square@285,square@310,square@325 RE15_SCD_TRACE=1 "RE15_EXIT_AT=580#2021")
 elseif(TEIL STREQUAL "renn")
     # Gang z -3388 nach Westen (Weg von 2050, Riegel kleinkram_b): F266 x 3617, F268 x 3221 (Lauf m_renn), START F267 mit dem
     # Vorwaerts-Punkt im Rechteck x 2200..3000 (@0x009AE). Bilder >= 260: die liegen sicher im Raum (Sprung @240).
@@ -83,7 +84,7 @@ elseif(TEIL STREQUAL "geh")
              RE15_PRESS=start@266,square@291,down@306,square@316,square@331 RE15_SCD_TRACE=1 "RE15_EXIT_AT=560#2020")
 elseif(TEIL STREQUAL "west")
     set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=3300,-3750,2048,1
-             RE15_PRESS=start@100,square@125,down@140,square@150,square@165 RE15_SCD_TRACE=1 "RE15_EXIT_AT=420#2020")
+             RE15_PRESS=start@260,square@285,down@300,square@310,square@325 RE15_SCD_TRACE=1 "RE15_EXIT_AT=580#2020")
 elseif(TEIL STREQUAL "nord")
     # Blick Nord: 620 voraus = (2600,-3638), im Rechteck x 2200..3000, z -4150..-3350 (@0x009AE). Bilder >= 260 wie TEIL renn.
     set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-3018,1024,1
@@ -95,21 +96,22 @@ elseif(TEIL STREQUAL "ost")
 elseif(TEIL STREQUAL "falsch")
     # Gang z -3388, x 5000: 620 voraus = x 4380, weit ausserhalb des Rechtecks @0x009AE ((2600,-1500) schoebe der Koerper-Schub auf die Stelle).
     set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=5000,-3388,2016,1
-             RE15_PRESS=start@100,square@125,down@140,square@150,square@165 RE15_SCD_TRACE=1 RE15_EXIT_AT=300)
+             RE15_PRESS=start@260,square@285,down@300,square@310,square@325 RE15_SCD_TRACE=1 RE15_EXIT_AT=460)
 elseif(TEIL STREQUAL "aktion")
     set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2914,-3388,2016,1
-             RE15_PRESS=square@100,square@170 RE15_MSG_LOG=1 RE15_SCD_TRACE=1 RE15_EXIT_AT=300)
+             RE15_PRESS=square@260,square@330 RE15_MSG_LOG=1 RE15_SCD_TRACE=1 RE15_EXIT_AT=460)
 elseif(TEIL STREQUAL "karte")
-    set(_env RE15_DEBUG_JUMP=10d0@240 RE15_GIVE=0x38:1 RE15_SET_FLAG=9:52 RE15_EQUIP=3 RE15_PLAYER_POS=180,-5750,0,0
-             RE15_PRESS=start@100,square@125,down@140,square@150,square@165 RE15_MSG_LOG=1 RE15_EXIT_AT=300)
+    # Leser Slot 1 @0x0103E Rechteck x 400..1200, z -6150..-5350; der Gang beginnt bei x 1278 (Koerper-Schub): Blick West, 620 voraus = x 658.
+    set(_env RE15_DEBUG_JUMP=10d0@240 RE15_GIVE=0x38:1 RE15_SET_FLAG=9:52 RE15_EQUIP=3 RE15_PLAYER_POS=1278,-5750,2048,0
+             RE15_PRESS=start@260,square@285,down@300,square@310,square@325 RE15_MSG_LOG=1 RE15_EXIT_AT=460)
 elseif(TEIL STREQUAL "karte_aktion")
-    set(_env RE15_DEBUG_JUMP=10d0@240 RE15_GIVE=0x38:1 RE15_SET_FLAG=9:52 RE15_EQUIP=3 RE15_PLAYER_POS=180,-5750,0,0
-             RE15_PRESS=square@100,square@180,square@260 RE15_MSG_LOG=1 RE15_EXIT_AT=340)
+    set(_env RE15_DEBUG_JUMP=10d0@240 RE15_GIVE=0x38:1 RE15_SET_FLAG=9:52 RE15_EQUIP=3 RE15_PLAYER_POS=1278,-5750,2048,0
+             RE15_PRESS=square@260,square@340,square@420 RE15_MSG_LOG=1 RE15_EXIT_AT=500)
 elseif(TEIL STREQUAL "aufnahme")
     # Platz 4 sub00 @0x00880 Rechteck (2700,-1550,1000,1000): 620 voraus = Mitte. Frage, Ja, "You've taken the Crank.", START, ITEM.
     set(_env RE15_DEBUG_JUMP=2010@240 RE15_EQUIP=3 RE15_PLAYER_POS=2580,-1050,0,0 RE15_MSG_LOG=1
-             RE15_PRESS=square@100,square@160,square@200,square@240,start@280,square@305,down@320,square@330,left@345,square@355
-             RE15_EXIT_AT=470)
+             RE15_PRESS=square@260,square@320,square@360,square@400,start@440,square@465,down@480,square@490,left@505,square@515
+             RE15_EXIT_AT=630)
 else()
     message(FATAL_ERROR "r41_keyitems: TEIL '${TEIL}' unbekannt")
 endif()
