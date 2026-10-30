@@ -2,11 +2,17 @@
  * Port-Programme der Ventilkette (Runde 41 Spur C) als SCD-Bytecode; jede Zeile mit ihrem Vorbild.
  * Blocklaengen der Ifel_ck automatisch (Blockende = Ifel_ck + 4 + Laenge = hinter dem Endif). */
 
-/* re15_r41c_prg_2030_pult_ohne (8 B) */
-static const unsigned char re15_r41c_prg_2030_pult_ohne[8] = {
-    /* +000 */ 0x2b,0x28,0xff,0xff, /* Message_on 40, Maske ffff - A control panel... gauge reads zero... valve 13 is closed. */
+/* re15_r41c_prg_2030_panel_ein (30 B) */
+static const unsigned char re15_r41c_prg_2030_panel_ein[30] = {
+    /* +000 */ 0x2b,0x28,0xff,0xff, /* Message_on 40, Maske ffff - A control panel for the bridge. Will you operate the panel? (Frage, Ja/Nein) */
     /* +004 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +006 */ 0x01,0x00, /* Evt_end */
+    /* +006 */ 0x06,0x00,0x12,0x00, /* Ifel_ck (Laenge automatisch) Ja-Zweig */
+    /* +00A */ 0x21,0x0c,0x1f,0x00, /* Ck(12,31)=0 = Ja (ROOM2050 sub04 @0x022F0) */
+    /* +00E */ 0x22,0x02,0x07,0x01, /* Set(2,7)=1 Pad-Sperre (ROOM2030 sub02 @0x01E30) */
+    /* +012 */ 0x22,0x02,0x02,0x01, /* Set(2,2)=1 KI steht (ROOM2050 sub02 @0x0223C) */
+    /* +016 */ 0x22,0x05,0x16,0x01, /* Set(5,0x16)=1 Panel oeffnen (Marker fuer den C-Takt, Bank 5 Wort 0) */
+    /* +01A */ 0x08,0x00, /* Endif  */
+    /* +01C */ 0x01,0x00, /* Evt_end */
 };
 
 /* re15_r41c_prg_2030_pult_unten (8 B) */
@@ -16,53 +22,35 @@ static const unsigned char re15_r41c_prg_2030_pult_unten[8] = {
     /* +006 */ 0x01,0x00, /* Evt_end */
 };
 
-/* re15_r41c_prg_2030_pult_senken (86 B) */
-static const unsigned char re15_r41c_prg_2030_pult_senken[86] = {
+/* re15_r41c_prg_2030_pult_senken (94 B) */
+static const unsigned char re15_r41c_prg_2030_pult_senken[94] = {
     /* +000 */ 0x2b,0x2b,0xff,0xff, /* Message_on 43, Maske ffff - The pressure gauge reads 80. Lower the bridge? (Frage, Ja/Nein) */
     /* +004 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +006 */ 0x06,0x00,0x4a,0x00, /* Ifel_ck (Laenge automatisch) Ja-Zweig */
+    /* +006 */ 0x06,0x00,0x52,0x00, /* Ifel_ck (Laenge automatisch) Ja-Zweig */
     /* +00A */ 0x21,0x0c,0x1f,0x00, /* Ck(12,31)=0 = Ja (ROOM2050 sub04 @0x022F0) */
     /* +00E */ 0x22,0x02,0x07,0x01, /* Set(2,7)=1 Pad-Sperre (ROOM2030 sub02 @0x01E30) */
     /* +012 */ 0x3c,0x00, /* Cut_auto 0 (ROOM2030 sub02 @0x01E34) */
     /* +014 */ 0x29,0x04, /* Cut_chg 4 Draufsicht (Fahrt-Kamera; Form ROOM2030 sub02 @0x01E60 `29 0a`) */
     /* +016 */ 0x2e,0x03,0x00,0x00, /* Work_set(3,0) Bruecke + Nop (Form sub03 @0x01ED2 `2e 03 01`) */
     /* +01A */ 0x2f,0x01,0x78,0x00, /* Speed_set(1,+120) (sub03 @0x01EF2 `2f 01 78 00`) */
-    /* +01E */ 0x0d,0x00,0x06,0x00,0x1e,0x00, /* For 30 (Form sub03 @0x01EDA `0d 00 06 00 2d 00`; 30 x 120 = 3600) */
-    /* +024 */ 0x30,0x02,0x02,0x00, /* Add_speed, Evt_next, Evt_next, Nop (sub03 @0x01EE0..@0x01EE3) */
-    /* +028 */ 0x0e,0x00, /* Next (sub03 @0x01EE4) */
-    /* +02A */ 0x34,0x01,0xf8,0xf8, /* Member_set(1,-1800) Endlage = Original-Lage @0x01B6C (Form sub03 @0x01EE6) */
-    /* +02E */ 0x37,0x00,0x0c,0x00, /* Sca_id_set Region 0 Zelle 12 := 00 begehbar (Form ROOM2050 sub04 @0x02398 `37 00 32 00`) */
-    /* +032 */ 0x37,0x01,0x0c,0x00, /* Region 1 */
-    /* +036 */ 0x37,0x02,0x0c,0x00, /* Region 2 */
-    /* +03A */ 0x37,0x03,0x0c,0x00, /* Region 3 */
-    /* +03E */ 0x37,0x04,0x0c,0x00, /* Region 4 */
-    /* +042 */ 0x22,0x09,0x66,0x01, /* Set(9,102)=1 Bruecke unten (Port-Bit, VERTRAG) */
-    /* +046 */ 0x09,0x0a,0x14,0x00, /* Sleep 20 (ROOM2080 sub02 @0x00CD8 nach der Fahrt) */
-    /* +04A */ 0x2a,0x00, /* Cut_old + Nop (ROOM11D0 sub02 @0x01884) */
-    /* +04C */ 0x3c,0x01, /* Cut_auto 1 (ROOM2030 sub02 @0x01EC2) */
-    /* +04E */ 0x22,0x02,0x07,0x00, /* Set(2,7)=0 (ROOM2030 sub02 @0x01EC4) */
-    /* +052 */ 0x08,0x00, /* Endif  */
-    /* +054 */ 0x01,0x00, /* Evt_end */
-};
-
-/* re15_r41c_prg_2030_v13_frage (28 B) */
-static const unsigned char re15_r41c_prg_2030_v13_frage[28] = {
-    /* +000 */ 0x2b,0x29,0xff,0xff, /* Message_on 41, Maske ffff - Intake valve 13. Will you open it? */
-    /* +004 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +006 */ 0x06,0x00,0x10,0x00, /* Ifel_ck (Laenge automatisch) Ja-Zweig */
-    /* +00A */ 0x21,0x0c,0x1f,0x00, /* Ck(12,31)=0 = Ja (ROOM2050 sub04 @0x022F0) */
-    /* +00E */ 0x22,0x09,0x65,0x01, /* Set(9,101)=1 Ventil 13 offen (Port-Bit) */
-    /* +012 */ 0x2b,0x2a,0xff,0xff, /* Message_on 42, Maske ffff - You've opened valve 13. The pressure is rising. (Form ROOM2030 sub06 @0x02000 msg 3 nach dem Set) */
-    /* +016 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +018 */ 0x08,0x00, /* Endif  */
-    /* +01A */ 0x01,0x00, /* Evt_end */
-};
-
-/* re15_r41c_prg_2030_v13_zustand (8 B) */
-static const unsigned char re15_r41c_prg_2030_v13_zustand[8] = {
-    /* +000 */ 0x2b,0x2f,0xff,0xff, /* Message_on 47, Maske ffff - Intake valve 13 is open. */
-    /* +004 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +006 */ 0x01,0x00, /* Evt_end */
+    /* +01E */ 0x22,0x05,0x14,0x01, /* Set(5,0x14)=1 Bruecken-Ton: Marker fuer den C-Takt statt RE2 Se_on(2,0x0F) ROOM4080 sub13 @0x031F2 (Spur N) */
+    /* +022 */ 0x0d,0x00,0x06,0x00,0x1e,0x00, /* For 30 (Form sub03 @0x01EDA `0d 00 06 00 2d 00`; 30 x 120 = 3600) */
+    /* +028 */ 0x30,0x02,0x02,0x00, /* Add_speed, Evt_next, Evt_next, Nop (sub03 @0x01EE0..@0x01EE3) */
+    /* +02C */ 0x0e,0x00, /* Next (sub03 @0x01EE4) */
+    /* +02E */ 0x34,0x01,0xf8,0xf8, /* Member_set(1,-1800) Endlage = Original-Lage @0x01B6C (Form sub03 @0x01EE6) */
+    /* +032 */ 0x22,0x05,0x15,0x01, /* Set(5,0x15)=1 Halt: Marker statt RE2 Se_on(2,0x10) ROOM4080 sub13 @0x03314 am Ende der Fahrt (Spur N) */
+    /* +036 */ 0x37,0x00,0x0c,0x00, /* Sca_id_set Region 0 Zelle 12 := 00 begehbar (Form ROOM2050 sub04 @0x02398 `37 00 32 00`) */
+    /* +03A */ 0x37,0x01,0x0c,0x00, /* Region 1 */
+    /* +03E */ 0x37,0x02,0x0c,0x00, /* Region 2 */
+    /* +042 */ 0x37,0x03,0x0c,0x00, /* Region 3 */
+    /* +046 */ 0x37,0x04,0x0c,0x00, /* Region 4 */
+    /* +04A */ 0x22,0x09,0x66,0x01, /* Set(9,102)=1 Bruecke unten (Port-Bit, VERTRAG) */
+    /* +04E */ 0x09,0x0a,0x14,0x00, /* Sleep 20 (ROOM2080 sub02 @0x00CD8 nach der Fahrt) */
+    /* +052 */ 0x2a,0x00, /* Cut_old + Nop (ROOM11D0 sub02 @0x01884) */
+    /* +054 */ 0x3c,0x01, /* Cut_auto 1 (ROOM2030 sub02 @0x01EC2) */
+    /* +056 */ 0x22,0x02,0x07,0x00, /* Set(2,7)=0 (ROOM2030 sub02 @0x01EC4) */
+    /* +05A */ 0x08,0x00, /* Endif  */
+    /* +05C */ 0x01,0x00, /* Evt_end */
 };
 
 /* re15_r41c_prg_2030_ventil_01 (184 B) */
@@ -510,11 +498,9 @@ static const unsigned char re15_r41c_prg_2050_pult_zustand[8] = {
 
 typedef struct { const char *name; const unsigned char *b; int n; } re15_r41c_programm_t;
 static const re15_r41c_programm_t re15_r41c_programme[] = {
-    { "2030_pult_ohne", re15_r41c_prg_2030_pult_ohne, 8 },
+    { "2030_panel_ein", re15_r41c_prg_2030_panel_ein, 30 },
     { "2030_pult_unten", re15_r41c_prg_2030_pult_unten, 8 },
-    { "2030_pult_senken", re15_r41c_prg_2030_pult_senken, 86 },
-    { "2030_v13_frage", re15_r41c_prg_2030_v13_frage, 28 },
-    { "2030_v13_zustand", re15_r41c_prg_2030_v13_zustand, 8 },
+    { "2030_pult_senken", re15_r41c_prg_2030_pult_senken, 94 },
     { "2030_ventil_01", re15_r41c_prg_2030_ventil_01, 184 },
     { "2030_ventil_02", re15_r41c_prg_2030_ventil_02, 184 },
     { "2030_ventil_03", re15_r41c_prg_2030_ventil_03, 184 },

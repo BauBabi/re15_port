@@ -62,18 +62,24 @@ ENDE = ("01 00", "Evt_end")
 def bauen(cd):
     P = []
     # ---- 2030 Pult -------------------------------------------------------------------------------------------
-    P.append(("re15_r41c_prg_2030_pult_ohne",
-              [msg_on(40, "A control panel... gauge reads zero... valve 13 is closed."), EVT_NEXT, ENDE]))
+    # Spur N (Nachtrag 37): das Pult oeffnet das Panel-Raetsel; Frage in der Form ROOM2050 msg 0 @0x2446, Sperre wie die Nahaufnahmen (ROOM1051 sub03
+    # @0x00DA4, ROOM2050 sub02 @0x0223C), Marker (5,0x16) -> C-Takt (engine/src/panel2030_r41.c), der die Sperre am Ende zuruecknimmt.
+    P.append(("re15_r41c_prg_2030_panel_ein",
+              [msg_on(40, "A control panel for the bridge. Will you operate the panel? (Frage, Ja/Nein)"), EVT_NEXT,
+               ("IF", "Ja-Zweig"), JA, SPERRE_AN, ("22 02 02 01", "Set(2,2)=1 KI steht (ROOM2050 sub02 @0x0223C)"),
+               ("22 05 16 01", "Set(5,0x16)=1 Panel oeffnen (Marker fuer den C-Takt, Bank 5 Wort 0)"), ("ENDIF", ""), ENDE]))
     P.append(("re15_r41c_prg_2030_pult_unten", [msg_on(44, "The bridge is down."), EVT_NEXT, ENDE]))
     senken = [msg_on(43, "The pressure gauge reads 80. Lower the bridge? (Frage, Ja/Nein)"), EVT_NEXT,
               ("IF", "Ja-Zweig"), JA, SPERRE_AN, CUT_AUTO_0,
               ("29 04", "Cut_chg 4 Draufsicht (Fahrt-Kamera; Form ROOM2030 sub02 @0x01E60 `29 0a`)"),
               ("2e 03 00 00", "Work_set(3,0) Bruecke + Nop (Form sub03 @0x01ED2 `2e 03 01`)"),
               ("2f 01 " + le16(120), "Speed_set(1,+120) (sub03 @0x01EF2 `2f 01 78 00`)"),
+              ("22 05 14 01", "Set(5,0x14)=1 Bruecken-Ton: Marker fuer den C-Takt statt RE2 Se_on(2,0x0F) ROOM4080 sub13 @0x031F2 (Spur N)"),
               ("0d 00 06 00 " + le16(30), "For 30 (Form sub03 @0x01EDA `0d 00 06 00 2d 00`; 30 x 120 = 3600)"),
               ("30 02 02 00", "Add_speed, Evt_next, Evt_next, Nop (sub03 @0x01EE0..@0x01EE3)"),
               ("0e 00", "Next (sub03 @0x01EE4)"),
               ("34 01 " + le16(-1800), "Member_set(1,-1800) Endlage = Original-Lage @0x01B6C (Form sub03 @0x01EE6)"),
+              ("22 05 15 01", "Set(5,0x15)=1 Halt: Marker statt RE2 Se_on(2,0x10) ROOM4080 sub13 @0x03314 am Ende der Fahrt (Spur N)"),
               ("37 00 0c 00", "Sca_id_set Region 0 Zelle 12 := 00 begehbar (Form ROOM2050 sub04 @0x02398 `37 00 32 00`)"),
               ("37 01 0c 00", "Region 1"), ("37 02 0c 00", "Region 2"), ("37 03 0c 00", "Region 3"),
               ("37 04 0c 00", "Region 4"),
@@ -82,13 +88,6 @@ def bauen(cd):
               CUT_OLD, CUT_AUTO_1, SPERRE_AUS,
               ("ENDIF", ""), ENDE]
     P.append(("re15_r41c_prg_2030_pult_senken", senken))
-    # ---- 2030 Ventil 13 --------------------------------------------------------------------------------------
-    P.append(("re15_r41c_prg_2030_v13_frage",
-              [msg_on(41, "Intake valve 13. Will you open it?"), EVT_NEXT,
-               ("IF", "Ja-Zweig"), JA, ("22 09 65 01", "Set(9,101)=1 Ventil 13 offen (Port-Bit)"),
-               msg_on(42, "You've opened valve 13. The pressure is rising. (Form ROOM2030 sub06 @0x02000 msg 3 nach dem Set)"),
-               EVT_NEXT, ("ENDIF", ""), ENDE]))
-    P.append(("re15_r41c_prg_2030_v13_zustand", [msg_on(47, "Intake valve 13 is open."), EVT_NEXT, ENDE]))
     # ---- 2030 Ventilraetsel (Nachbesserung 4, Nachtrag 13): sechs Ventile (Raeder 01/02/03 Nordwand, 07/08/09 Suedwand) -------
     # Jede Drehung: Frage -> Ja -> Marker (5,0x1B); der C-Takt vermerkt sie in (5,0x10..0x13) (Raum-Scratch wie die Schalter-
     # bits ROOM11F0 (5,13..22) / ROOM2060 (5,6..9)) und prueft nach der VIERTEN (RE2 ROOM2130 sub04: Ergebnis erst am Ende,

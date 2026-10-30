@@ -144,8 +144,8 @@
  * PORT-WAHLEN (benannt; Form jeweils belegt)
  * ============================================================================================================
  * - Bruecke OBEN = Ringebene y -5400 (die naechste Ebene ueber Band 1 in diesem Raum; Fahrt 30 x 120 = 3600 in der
- *   Lift-Form sub03). Solange oben: Steg-Zelle 12 gesperrt (Sca_id_set-Form), Pult meldet msg 40 (Druck null,
- *   Ventil 13 zu); Ventil 13 (am Tank) oeffnen -> Pult fragt "Lower the bridge?" -> Fahrt unter Cut 4.
+ *   Lift-Form sub03). Solange oben: Steg-Zelle 12 gesperrt (Sca_id_set-Form). Seit Spur N (Nachtrag 37) oeffnet das Pult das Panel-Raetsel
+ *   (engine/src/panel2030_r41.c, Frage Id 40); Anzeige 80 -> Bit 101 -> Pult fragt "Lower the bridge?" (Id 43) -> Fahrt unter Cut 4. Ventil 13 entfaellt.
  * - Ventilraetsel (Nachbesserung 4, Nachtrag 13; ersetzt den Platzhalter): sechs Ventil-Plaetze an den Raedern, erst mit
  *   Bit 102 (Bruecke unten, Nachtrag 9) UND Bit (9,125) (Sicherung im Ventil-Sicherungskasten 2010, Nachtrag 16 - ersetzt
  *   die Bedingung (3,108) aus Nachtrag 10); sonst Satz 49 = Original "It's locked." (ROOM20A0 msg 1 @0x203C, Nachtrag 16
@@ -201,7 +201,7 @@
 /* ---- Bank-9-Bits (VERTRAG §1.1: C = 100-103, 106, 107; Zensus unit_r36_kartenbits) ------------------------- */
 #define RE15_R41C_BANK               9
 #define RE15_R41C_BIT_LEITER_FREI    100   /* 2000/20B0: Leiter nach 2050 frei (nach der Flut)              */
-#define RE15_R41C_BIT_VENTIL13       101   /* 2030: Zulaufventil 13 geoeffnet                               */
+#define RE15_R41C_BIT_DRUCK80        101   /* 2030: Panel-Raetsel geloest, Anzeige 80 (Spur N, Nachtrag 37; bis dahin "Ventil 13 offen") */
 #define RE15_R41C_BIT_BRUECKE_UNTEN  102   /* 2030: Bruecke gesenkt (y -1800, Zelle 12 offen)               */
 #define RE15_R41C_BIT_FLUT_GELAUFEN  103   /* 2030: Ventile geoeffnet und Raum verlassen -> 2000 wird 20B0  */
 #define RE15_R41C_BIT_PULT2050       106   /* 2050: Schaltpult auf 80 V                                     */
@@ -234,14 +234,14 @@
 
 /* ---- Text-Ids (VERTRAG §1.2) ---------------------------------------------------------------------------------- */
 #define RE15_R41C_MSG_LEITER          40   /* 2000/20B0 */
-#define RE15_R41C_MSG_PULT_OHNE       40   /* 2030 */
-#define RE15_R41C_MSG_V13_FRAGE       41
-#define RE15_R41C_MSG_V13_OFFEN       42
+#define RE15_R41C_MSG_PANEL_FRAGE     40   /* 2030 "A control panel for the bridge. / Will you operate the panel?" (Spur N)   */
+#define RE15_R41C_MSG_PANEL_START     41   /* 2030 "The pressure gauge reads 100. | Pick a tank to drain, / then a tank to fill." */
+#define RE15_R41C_MSG_PANEL_LEER      42   /* 2030 "The tank is empty."                                                     */
 #define RE15_R41C_MSG_BRUECKE_FRAGE   43
 #define RE15_R41C_MSG_BRUECKE_UNTEN   44
 #define RE15_R41C_MSG_VENTILE_ZURUECK 45   /* Nachbesserung 4: falsche Folge -> zurueckgesetzt (frueher Platzhalter-Frage) */
 #define RE15_R41C_MSG_WARNUNG         46
-#define RE15_R41C_MSG_V13_ZUSTAND     47
+#define RE15_R41C_MSG_PANEL_VOLL      47   /* 2030 "The tank is full."                                                      */
 /* Nachbesserung 3: Id 48 (frueher "valves are open ... flooded") und 49 (frueher "... drained", Bit 107) neu belegt —
  * nach der Flut liegen die Ventile unter Wasser (Nachtrag 9), den Zustand waehrend des Zaehlers zeigt die Warnung 46. */
 #define RE15_R41C_MSG_TREPPE_FLUT     48   /* Treppe Slot 8 bei "auf Relinghoehe" (Nachtrag 8) */
@@ -269,7 +269,6 @@
 
 /* ---- Ereignisse (Port-Ids < RE15_RDT_MAX_SUB_SCD, ausserhalb der Raum-Subs: 2030 hat sub00..06) ------------- */
 #define RE15_R41C_EV_PULT      24
-#define RE15_R41C_EV_VENTIL13  25
 #define RE15_R41C_EV_FLUT      26   /* vom C-Takt nach der richtigen Folge gefeuert: Warnung 46 -> Zaehler -> Flut        */
 #define RE15_R41C_EV_FALSCH    27   /* vom C-Takt nach vier Drehungen in falscher Folge: zuruecksetzen + Text 45          */
 #define RE15_R41C_EV_VENTIL0   17   /* 17..22 = Ventil 01/02/03/07/08/09 (Nachbesserung 4)                              */
@@ -289,7 +288,6 @@
 
 /* ---- Plaetze 2030 (frei: 0-3 Tueren, 4-7 Lifte, 8 Treppe, 9 Sicherung, 10/11 Items, 51-63 RVD) --------------- */
 #define RE15_R41C_SLOT_PULT      12
-#define RE15_R41C_SLOT_VENTIL13  13
 #define RE15_R41C_SLOT_VENTIL0   14   /* 14..19 = Ventil 01/02/03/07/08/09 (Nachbesserung 4)          */
 #define RE15_R41C_SLOT_DOKUMENT  20   /* Item-Zone "Technician's Note"                                 */
 #define RE15_R41C_SLOT_PLAKAT    21   /* Untersuchen des Plakats                                       */
@@ -324,8 +322,6 @@
 /* Rechtecke (x, z, Breite, Tiefe) + Band — Herleitung im Kopf. */
 #define RE15_R41C_PULT_RECT      -300, -10850, 1300, 1000
 #define RE15_R41C_PULT_BAND      3
-#define RE15_R41C_VENTIL13_RECT  -3050, -6900, 1300, 1000
-#define RE15_R41C_VENTIL13_BAND  1
 /* Ventile (Nachbesserung 4, Kopf "Ventil-RAEDER"): Nummer, Radmitte x (auf 50 gerundet), Wandflaeche z, Farbe 0 rot / 1 gruen /
  * 2 schwarz; Platz = x +- 500, Wand +- 500, Band 1. Reihenfolge = Ereignis 17.. / Slot 14.. / Text 50... */
 #define RE15_R41C_VENTILE_N       6
@@ -363,6 +359,23 @@
 /* Toene, die der C-Takt ueber den Plattform-Haken spielt (PC: platform/pc/src/ventilkette_r41_pc.c). */
 #define RE15_R41C_TON_VENTIL      1        /* RE2 ROOM1080 Satz 5 (Bank VENTIL1080)                                */
 #define RE15_R41C_TON_AUF         2        /* RE2 "You unlocked it." Satz 0x26 (EXE @0x800515f8; KARTSE AUF_HIER)  */
+/* Spur N, Nachtrag 30 "wenn die Plattform runter faehrt, fehlt mir noch der Original Sound von Resident Evil 2" (Dossier N_nachtrag30.md §4). RE2s zentrale
+ * Bruecke = ROOM4080 (msg 31 "Insert the valve handle and rotate it to move the central bridge up or down", ROOM4090 msg 37 "I can't cross unless the bridge
+ * is up"; Nutzer-Liste ROOM400.SAP "Center Bridge Moving sounds", ROOM408.SAP "Center bridge room sounds"). sub13 @0x031EE senkt sie: @0x031F2 `36 02 0f 00 ...`
+ * Se_on Raumbank Satz 0x0F = Motor vor der Fahrt, @0x03314 `36 02 10 01 ...` Se_on Satz 0x10 am Ende der Fahrt. EDT @0xA3C0 + 4*0x0F `00 01 53 16` -> Prog 1 Ton 5
+ * VAG 13 (12656 B, Flags 2 .. 3 = Dauerschleife), + 4*0x10 `00 01 64 16` -> Prog 1 Ton 6 VAG 14 (24448 B, einmal); beide Stimme 6 (Byte 3 = 0x16), der Halt
+ * schneidet also den Motor (Key-On auf dieselbe Stimme, se_voice_pump). Op 0x8C in sub13 ist Vibration (FUN_800395b8 -> FUN_80038bbc), kein Ton.
+ * Bank = shared_assets/RE2/BRUECKE4080.EDT/.VH/.VB (tools/r41_nachtrag30/re2_toene_export.py, bytegleich mit der RDT). Die lift2030-Anker (sub02/sub04 der
+ * zwei Lifte) greifen hier nicht: die Bruecke faehrt im Port-Programm 2030_pult_senken. */
+#define RE15_R41C_TON_BRUECKE_FAHRT 3      /* Satz 0x0F */
+#define RE15_R41C_TON_BRUECKE_HALT  4      /* Satz 0x10 */
+#define RE15_R41C_TON_N             5
+#define RE15_R41C_BRUECKE_SE_MOTOR  0x0F   /* @0x031F2 */
+#define RE15_R41C_BRUECKE_SE_HALT   0x10   /* @0x03314 */
+#define RE15_R41C_BRUECKE_MOTOR_VAG 13     /* Ton 5 von Programm 1, VAG 13 */
+#define RE15_R41C_FLAG_FAHRT        0x14   /* 2030: Marker Motor an (Port-Programm -> C-Takt, Bank 5 Wort 0)        */
+#define RE15_R41C_FLAG_HALT         0x15   /* 2030: Marker Halt                                                    */
+#define RE15_R41C_FLAG_PANEL        0x16   /* 2030: Programm 2030_panel_ein -> C-Takt: Panel-Raetsel oeffnen (Spur N) */
 /* Standbild beim Einsetzen (Nachtrag 16 Folge 2 "Kamera auf die Ventile"): die Ventil-Kamera der Suedwand ROOM2030 Cut 7
  * (Raeder 09/08/07 + Plakat, Dossier §0e B4-2), BSS/ROOM2030/BG07.BSS (= ROOM2031/BG07.BSS bytegleich). */
 #define RE15_R41C_STANDBILD_RAUM  0x2030u
@@ -569,6 +582,13 @@ int      re15_ventilkette_r41_countdown_re2(int bild, int sekunden, char *out);
  * (richtige Folge, Ereignis 26) bis zum Flut-Beginn oder zum Tod; mit dem Raumwechsel endet er (install setzt den Zustand zurueck,
  * den SUB-Platz uebernimmt der Raum-BGM-Lader). Die PC-Seite (ventilkette_r41_pc.c) schaltet damit re15_audio_r41_alarm. */
 int      re15_ventilkette_r41_alarm(void);
+/* Spur N, Nachtrag 36 "bei der Minute bis zum Wasser voll laufen ... ebenfalls die Alarm Sirene mit einbauen nach der Ansage. Die findest du zum Beispiel auch bei
+ * room6000" (Dossier N_nachtrag30.md §5). RE1.5 ROOM6000: Tabelle UNK_80074828[0x62 + 0] = 0xFF65 -> MAIN25 (Sce_bgm_control @0x00D52 `54 00 01 00 46 40`); MAIN25.BGM
+ * ist BYTEGLEICH RE2 MAIN11.BGM, und RE2 setzt ROOM6000 selbst darauf: ROOM6040 @0x02360 `57 00 00 06 11 ff 00 00` (mit allen Labor-Raeumen, @0x022E0..@0x02388). Die
+ * Sirene darin = Kanal 2, Programm 1, VAG 2 (4384 B), Note 60: 0,804 s an, 0,142 s aus, Periode 0,946 s. shared_assets/RE2/SOUND/SUB_34.BGM = RE2 SUB_34 traegt
+ * dieselbe Welle (VAG 2 bytegleich) und die Stimme (VAG 1 bytegleich) ohne die Musik. 1 = die Sirene soll laufen: vom Zaehlerstart (= nach der Ansage, Set(5,0x1D) hinter
+ * dem Warntext 46) bis zum Flut-Beginn, zum Tod oder zum Verlassen des Raums (install setzt s_timer zurueck). SUB_25 laeuft unveraendert daneben. */
+int      re15_ventilkette_r41_sirene(void);
 /* Plattform-Haken fuer die Toene (PC setzt ihn; ohne Haken nur gezaehlt). */
 extern void (*re15_ventilkette_r41_ton_hook)(int ton);
 

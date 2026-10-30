@@ -33,6 +33,7 @@
 
 #include "re15_engine.h"          /* SCREEN_XRES / SCREEN_YRES, re15_render_tile */
 #include "re15_ventilkette_r41.h"
+#include "re15_panel2030_r41.h"   /* Runde 41 Spur N: Panel-Raetsel 2030 */
 #include "re15_room.h"            /* g_current_room_id (Nachbesserung 6: Alarm nur in 2030 ausschalten) */
 #include "re15_bss.h"             /* re15_bss_parse_chunk / _vlc_decode / _mdec_decode */
 #include "re15_vab.h"
@@ -42,11 +43,13 @@
 extern void re15_render_pc_show_fmv(const uint32_t *rgba, int w, int h);
 extern int  re15_render_pc_msg_text(int x, int y, const unsigned char *raw, int len);   /* render_pc.c: TEX.TIM-Schrift */
 extern void re15_render_pc_hide_fmv(void);
+extern void re15_render_pc_fmv_text(int an);                                 /* render_pc.c, Runde 41 Spur N */
 extern void re15_audio_re2_karte_se(int se_id);                              /* audio_pc.c (Runde 36 Spur G) */
 extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
                                     const int *decoded_len, int satz);       /* audio_pc.c */
 extern void re15_render_pc_config_tile_ov(const re15_tim_t *t, int su, int sv, int w, int h, int dx, int dy); /* render_pc.c */
 extern int  re15_audio_r41_alarm(int an);                                    /* audio_pc.c, Runde 41 Spur C, C-E4 */
+extern int  re15_audio_r41_sirene(int an);                                   /* audio_pc.c, Runde 41 Spur N, Nachtrag 36 */
 extern long re15_audio_cap_tick(void);                                       /* audio_pc.c (Messtakt)           */
 
 #define R41C_KARTE_SE_AUF_HIER 3   /* gen/re2_karten_bank.inc RE2_KARTE_SE_AUF_HIER = RE2 ROOM20A0 Satz 0x26 */
@@ -88,38 +91,48 @@ static void hebel_zeichnen(void)
 }
 #define R41C_BSS_CHUNK 0x10000     /* eine Kamera-Scheibe (bg_pc.c / probe_bg_dump.c) */
 
-/* ---- Ventil-Bank VENTIL1080 (RE2 ROOM1080 snd0) ------------------------------------------------------------- */
-static struct {
+/* ---- RE2-Raumbaenke: VENTIL1080 (ROOM1080 snd0), BRUECKE4080 (ROOM4080 snd0, Spur N) ---------------------------------- */
+typedef struct {
     int        state;                         /* 0 ungeprueft, 1 geladen, -1 fehlt */
     re15_vab_t vab;
     uint8_t   *edt;
     int        edt_count;
     int16_t   *decoded[RE15_VAB_MAX_SAMPLES];
     int        decoded_len[RE15_VAB_MAX_SAMPLES];
-} s_ventil;
+} r41_bank_t;
+static r41_bank_t s_ventil, s_bruecke;
 
-static int ventil_bank_laden(void)
+/* Spur N: Motor-Welle in RE2 = Dauerschleife (VAG-Flags 2 .. 3, keine Schleifenmarke: die SPU springt an den Anfang) bis zum naechsten Key-On derselben
+ * Stimme. Die SE-Stimmen des Ports spielen einmal durch -> die PCM-Daten hier so oft aneinander, dass sie die laengste Fahrt ueberdauern. */
+#define R41N_MOTOR_WIEDERHOLUNG 3
+
+static int bank_laden(r41_bank_t *b, const char *name, int schleife_vag)
 {
+    char p[3][32];
+    snprintf(p[0], sizeof p[0], "%s.EDT", name); snprintf(p[1], sizeof p[1], "%s.VH", name); snprintf(p[2], sizeof p[2], "%s.VB", name);
     int es = 0, hs = 0, vs = 0;
-    uint8_t *edt = re15_pc_read_re2("VENTIL1080.EDT", &es);
-    uint8_t *vh  = re15_pc_read_re2("VENTIL1080.VH", &hs);
-    uint8_t *vb  = re15_pc_read_re2("VENTIL1080.VB", &vs);
-    if (!edt || !vh || !vb || es < 4 || re15_vab_parse(vh, (size_t)hs, &s_ventil.vab) != 0) {
+    uint8_t *edt = re15_pc_read_re2(p[0], &es);
+    uint8_t *vh  = re15_pc_read_re2(p[1], &hs);
+    uint8_t *vb  = re15_pc_read_re2(p[2], &vs);
+    if (!edt || !vh || !vb || es < 4 || re15_vab_parse(vh, (size_t)hs, &b->vab) != 0) {
         free(edt); free(vh); free(vb);
         return -1;
     }
-    for (int i = 0; i < s_ventil.vab.vag_count && i < RE15_VAB_MAX_SAMPLES; i++) {
-        uint32_t off = s_ventil.vab.samples[i].offset, sz = s_ventil.vab.samples[i].size;
+    for (int i = 0; i < b->vab.vag_count && i < RE15_VAB_MAX_SAMPLES; i++) {
+        uint32_t off = b->vab.samples[i].offset, sz = b->vab.samples[i].size;
         if (sz == 0 || off + sz > (uint32_t)vs) continue;
+        const int mal = (i == schleife_vag) ? R41N_MOTOR_WIEDERHOLUNG : 1;
         size_t cap = (sz / 16) * 28;
-        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        int16_t *pcm = (int16_t *)malloc(cap * (size_t)mal * sizeof(int16_t));
         if (!pcm) continue;
-        s_ventil.decoded[i]     = pcm;
-        s_ventil.decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+        const int n = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+        for (int k = 1; k < mal && n > 0; k++) memcpy(pcm + (size_t)k * (size_t)n, pcm, (size_t)n * sizeof(int16_t));
+        b->decoded[i]     = pcm;
+        b->decoded_len[i] = n * mal;
     }
     free(vh); free(vb);
-    s_ventil.edt = edt;
-    s_ventil.edt_count = es / 4;
+    b->edt = edt;
+    b->edt_count = es / 4;
     return 0;
 }
 
@@ -132,9 +145,22 @@ static void ton_spielen(int ton)
         re15_audio_re2_karte_se(R41C_KARTE_SE_AUF_HIER);
         return;
     }
+    if (ton == RE15_R41C_TON_BRUECKE_FAHRT || ton == RE15_R41C_TON_BRUECKE_HALT) {   /* Spur N, Nachtrag 30: RE2 ROOM4080 sub13 */
+        if (!s_bruecke.state) {
+            s_bruecke.state = bank_laden(&s_bruecke, "BRUECKE4080", RE15_R41C_BRUECKE_MOTOR_VAG) == 0 ? 1 : -1;
+            fprintf(stderr, "[ventilkette41] Bank BRUECKE4080 (RE2 ROOM4080 snd0) %s (%d VAGs, %d Saetze)\n",
+                    s_bruecke.state == 1 ? "geladen" : "FEHLT -> stumm", s_bruecke.vab.vag_count, s_bruecke.edt_count);
+        }
+        const int satz = (ton == RE15_R41C_TON_BRUECKE_FAHRT) ? RE15_R41C_BRUECKE_SE_MOTOR : RE15_R41C_BRUECKE_SE_HALT;
+        if (s_bruecke.state != 1 || satz >= s_bruecke.edt_count) return;
+        if (getenv("RE15_SE_DEBUG"))
+            fprintf(stderr, "[se] Runde 41 Spur N: Bruecke BRUECKE4080 Satz 0x%02X (RE2 ROOM4080 sub13) F%u\n", satz, (unsigned)g_engine.frame_count);
+        re15_audio_se_play_bank(s_bruecke.edt, &s_bruecke.vab, s_bruecke.decoded, s_bruecke.decoded_len, satz);
+        return;
+    }
     if (ton != RE15_R41C_TON_VENTIL) return;
     if (!s_ventil.state) {
-        s_ventil.state = ventil_bank_laden() == 0 ? 1 : -1;
+        s_ventil.state = bank_laden(&s_ventil, "VENTIL1080", -1) == 0 ? 1 : -1;
         fprintf(stderr, "[ventilkette41] Bank VENTIL1080 (RE2 ROOM1080 snd0) %s (%d VAGs, %d Saetze)\n",
                 s_ventil.state == 1 ? "geladen" : "FEHLT -> stumm", s_ventil.vab.vag_count, s_ventil.edt_count);
     }
@@ -273,8 +299,11 @@ void re15_ventilkette_r41_pc_bild(void)
     for (int vn = 1; vn <= 4; vn++)
         if (re15_ventilkette_r41_sicht(vn, &vx0, &vy0, &vw, &vh)) re15_render_tile(vx0, vy0, vw, vh, 0, 40, 200, 60);
 
-    /* Vollbild-Ebene: Plakat (2030) oder Standbild der Ventile (2010); nur die eigene Ebene wird wieder versteckt. */
-    const uint32_t *bild = re15_ventilkette_r41_plakat_rgba();
+    /* Vollbild-Ebene: Panel-Raetsel oder Plakat (2030) oder Standbild der Ventile (2010); nur die eigene Ebene wird wieder versteckt.
+     * Das Panel laesst die Text-Ebene darueber (Satze im Panel), das Plakat bleibt wie es ist. */
+    const uint32_t *pbild = re15_panel2030_r41_rgba();
+    re15_render_pc_fmv_text(pbild != NULL);
+    const uint32_t *bild = pbild ? pbild : re15_ventilkette_r41_plakat_rgba();
     unsigned sraum = 0; int scut = 0;
     if (!bild && re15_ventilkette_r41_standbild(&sraum, &scut)) {
         if (s_standbild_ok < 0) s_standbild_ok = standbild_laden(sraum, scut);
@@ -313,5 +342,14 @@ void re15_ventilkette_r41_pc_bild(void)
                 in2030 ? "Flut/Tod" : "Raumwechsel, SUB-Platz vom Raum-BGM-Lader", re15_audio_cap_tick(),
                 (unsigned)g_engine.frame_count);
         s_alarm = 0;
+    }
+    /* Spur N, Nachtrag 36: die Sirene aus ROOM6000 nach der Ansage (Zaehler laeuft) bis zur Flut, zum Tod oder zum Verlassen des Raums. */
+    static int s_sirene = 0;
+    const int sirene_soll = re15_ventilkette_r41_sirene();
+    if (sirene_soll != s_sirene) {
+        const int geladen = re15_audio_r41_sirene(sirene_soll);
+        fprintf(stderr, "[ventilkette41] Sirene ROOM6000 (RE2 SUB_34) %s, ROOM%04X, cap-Takt %ld, Countdown-Bild %d\n",
+                sirene_soll ? (geladen ? "AN" : "NICHT geladen") : "AUS", (unsigned)g_current_room_id, re15_audio_cap_tick(), 0);
+        s_sirene = sirene_soll;
     }
 }
