@@ -46,7 +46,7 @@ Spitze 57 %, > 25 %: 118 Bilder, > 50 %: 18 Bilder. Leon = Elza Bild fuer Bild. 
 | Clip-Folge | 0, 1 F407, 4 F428 | 0 F300, 1 F409, 4 F436 (kein Dash) | wie RE2 |
 | Wurzel <-> Kamera (150 Bilder) | min 1755 | min 4007 | >= 3800 (Riegel) |
 | Knochen <-> Kamera | min 610 | min 2684 | >= 2500 (Riegel) |
-| rechte Bildhaelfte Median / > 50 % | 45 % / 18 Bilder | ~28 % / 0 Bilder | <= 35 % / 0 |
+| rechte Bildhaelfte Median / Spitze / > 25 % / > 50 % | 45 % / 57 % / 118 / 18 Bilder | 26 % / 45 % / 86 / 0 Bilder | Median <= 35 %, 0 Bilder > 50 % |
 | Fress-Kamera | Cut 1 frontal 4116 | Cut 1 frontal 4005, Massstab 983 | frontal > 0 |
 | Schluessel Primitivfarbe | 85 -> 126 | 86 -> 128 | >= 84 / >= 125, <= 128 |
 | Schluessel im Bild (ring_a5) | hellster 76 .. 112, Ring ~7 x 9 | hellster bis 112, Ring ~8 x 7 (Spitzen 12 x 12) | Helligkeit Pflicht, Groesse vom Nutzer angenommen (31.3) |
@@ -108,3 +108,48 @@ Nur Riegel (keine Engine-Aenderung). integration_r41_alligator2_uebergabe / _elz
 Eingabe je Spielbild: Aktionstaste an der Leiter in 2080 (Slot 1 @0x00BC2), Szene bis Folge C, Linksdrehung 21 Bilder zur Leiter, Aktionstaste an der Tuer Slot 0 @0x0996 (DOOR16).
 Gemessen Leon und Elza: Folge DACDKNZ (D Tuerweg, A Ankunft, C Kampfbeginn, D Tuerweg zurueck, K Knall, N "nach Bit 110: 8 lebende Zombies", Z Zombies), 8 Sce_em_set Typ 0x16 behavior 0x02 alle y -14400, Knall-Stimme
 `se=0 layer=0 vag=0 note=67 fine=0 center=91` direkt hinter der Ausloese-Zeile. Vorher kein Riegel (UEBERGABE 2026-10-26 02:33).
+
+## Tests
+
+Neu (tests/unit/probes/r41_alligator2.cmake, tests/unit/test_r41_alligator2.c, tests/integration/test_r41_alligator2.cmake; der Harness ist test_r41_gatorszene.c, per #include):
+| Riegel | misst | Ergebnis |
+|---|---|---|
+| unit_r41_alligator2_kamera, _kamera_elza | Abstand Wurzel/Knochen zur Kamera Cut 0 ueber 150 Bilder, Gator ab Bild 0 im Bild; Gegenprobe Lage der Nachbesserung 5 (Wurzel 1755, Teil 610 fallen durch) | gruen |
+| integration_r41_alligator2_kamera, _kamera_elza | exe: Bildanteil rechte Bildhaelfte gegen Median-Hintergrund (Median <= 35 %, kein Bild > 50 %), cam=0, Wurzel >= 3800; Gegenprobe von Hand: der Auswerter faellt auf dem Vorher-Lauf V_L1 durch (Median 45 %, 18 Bilder > 50 %) | gruen |
+| unit_r41_alligator2_schluessel | FG-E7 (a): Westkanal-Lage sucht weiter (Stufe 2), Becken-Scan nie unter 10,4 | gruen |
+| integration_r41_alligator2_k3, _k3_elza | exe: K3-Wandlage mit Kopf-Klemme, Quadrat >= 10,4, bilddiff in jedem Bild der Einstellung, Kasten >= 10 x 9 | gruen |
+| integration_r41_gatorszene_tod_r1, _tod_r1_elza | DISABLED entfernt | gruen |
+| unit_r41_alligator2_tragen | echter Boss-Takt mit Kanister: Bildschritt <= 340; Gegenprobe harte Klemme (max 1005, 68 Bildpaare > 340) | gruen |
+| integration_r41_alligator2_tragen, _tragen_elza | exe: Wurzelschritt <= 340 zwischen Aufnahme und R1, Kanister beim R1 innerhalb der Aussenwaende | gruen |
+| integration_r41_alligator2_uebergabe, _uebergabe_elza | exe: Leiter -> Szene -> Leiter -> Knall -> 8 Zombies oben, ohne RE15_SET_FLAG=9:110 | gruen |
+
+Nachgezogen mit Beleg: unit_r41_gatorszene_leiche (neue Lage), unit_r41_gatorszene_tod (Verdeckung wie die Engine, Naehe bis zum Doppelten), unit_r41_gatorszene_tod_explosion (K = X = 0 moeglich; K != X bleibt im exe-Riegel),
+unit_r41_kanister2080_kopfklemme (Ueberstand wird ueber bis zu 9 Bilder abgebaut, Schritt <= 340).
+
+Gezielte Laeufe (keine volle Suite):
+1. Code-Stand ffb02351a (danach nur Dossier, Werkzeug, Kommentare), Regex = alle Testdateien, die gatorszene/re15_gr2_/GB_TEST/GATOR_KANISTER oder 2090/2091 nennen (Abnahme F 5) + Kanister + Spur P:
+   `ctest --test-dir "<baum>/re15_port/build" -R "<regex unten>" -j4 --timeout 1200 --output-on-failure`
+   -> **`99% tests passed, 1 tests failed out of 256`** (`Total Test time (real) = 2928.36 sec`). Rot nur `529 - integration_r35_granate`: Teil birkin (ROOM5090) `Slot 2: Typ 30 grid 10 im Bild 399 (soll 36 / 13)`.
+   VORBESTEHEND: derselbe Riegel faellt auf der Basis f5a5e2f7e mit derselben Zeile durch (`0% tests passed, 1 tests failed out of 1`, Baum kurz auf die Basis gesetzt und neu gebaut), die Teile wand/zombie/gator sind gruen. Nicht Spur P (Birkin-Zweig 2341475d0 ff.).
+2. Endstand: `ctest --test-dir "<baum>/re15_port/build" -R "^(unit_r41_alligator2_|unit_r41_gatorszene_|unit_r41_kanister2080_|unit_r41_re2gator_|integration_r41_alligator2_|integration_r41_gatorszene_tod)" -j4 --timeout 600 --output-on-failure`
+   -> **`100% tests passed, 0 tests failed out of 68`** (`Total Test time (real) = 463.01 sec`).
+
+Regex Lauf 1: `^(unit_r41_gatorszene_|integration_r41_gatorszene_|unit_r41_re2gator_|integration_r41_re2gator$|unit_r36_kartenbits$|unit_r26_inventar$|unit_r21_discard_wegwerfen$|unit_r39_inventar_|integration_r39_inventar_discard$|unit_item_|unit_inv_|unit_sca_wall_hit$|unit_re2_spider_|unit_spider_ai$|unit_adult_spider_ai$|unit_r38_spinnen$|integration_r38_spinnen_echtlauf$|unit_writher_ai$|unit_enemy_shootable$|unit_collision_layers$|unit_alligator_ai$|unit_gator_sweep$|unit_gator_fress$|unit_r36_schluessel_|integration_r36_schluessel|unit_r38_dining1141_(schluessel1011|tuer1131)$|unit_r38_rolltor20a0|integration_r38_rolltor20a0|unit_r37_feuerloescher_|integration_r37_feuerloescher$|unit_r39_optik_schluessel$|unit_r39_schluessel2_|unit_aot_sce_census$|unit_aot_edge$|unit_scd_|unit_door_seq$|unit_r38_wasser_|integration_r38_wasser$|unit_r41_kleinkram_a$|integration_r41_kleinkram_a_blink$|r31_trefferboxen|unit_rotor_bgm_pin$|unit_r35_cut10f0_bgm$|unit_r39_johnruf1041_musik$|unit_r35_cut1150_knallbank$|unit_r36_szene1150_knall_re2$|integration_r39_elzazombies_knall$|unit_r36_inventar$|unit_r36_kartenitems$|unit_r37_itemband$|integration_r37_itemband$|unit_r36_tueren_|unit_r33_tueren_|unit_r30_tuer|unit_r31_tuer_ton$|unit_r35_cut10f0_tuerton$|unit_r39_karten_tueren$|integration_r36_tueren$|unit_camera_view$|unit_cut_old_displayed$|unit_r34n_b_cut_old$|prop_zone_dispatch$|prop_scd_pc_advance$|unit_r38_montage_kameras$|integration_(cross_stage|room_probe_sweep|rvd_coverage|door_traversal|door_lock|item_name_census|keydoor)$|prop_door_roundtrip$|prop_spawn_entered$|integration_r35_granate$|integration_r41_wasser20b0_npc$|integration_r38_wasserzombie$|unit_r35_granate$|unit_irons_mittelmodell$|unit_r34_reaktion$|unit_1210_arme$|unit_r30_irons_tisch_licht$|unit_r35_affen_|unit_r36_szenenleon_|unit_r36_ziel1190$|unit_r37_pri1100_|unit_r38_npckante_|unit_r38_wasserzombie$|unit_r41_wasser20b0_|integration_r36_kartenitems_bild$|unit_r41_kanister2080_|integration_r41_kanister2080|unit_r41_alligator2_|integration_r41_alligator2_)`
+
+Messzeilen Endstand (ctest -V): kamera/_elza Median 26 %, Spitze 45 %, > 25 %: 86, > 50 %: 0, Wurzel-Abstand min 4008; k3/_elza Kamera 0, Tiefe 2606 = 14,3 Bildpunkte, Kasten 12 x 13, hellster 75 .. 111 (x1,48), 44/44 Bilder; tragen F114..F1792 max 338, Kanister beim R1 (-8900,-9351); tragen_elza F170..F919 max 338, Kanister (6864,-9489).
+
+## OFFEN
+1. integration_r35_granate Teil birkin ist auf master rot (s.o.) - Orchestrator / Birkin-Zweig, nicht Spur P.
+2. Punkt 1: die Wurzel kann im RE2-Band nicht im Bild von Cut 0 liegen (Rechnung oben): am Kampfbeginn ragen Kopf und Hals von rechts ins Bild, der Rumpf folgt ab +111 Bilder. Das ist das Beste, was Band + Zone 0 + Cut 0 zulassen.
+3. Punkt 3: die weiche Klemme laesst Kopf/Kanister-Ende kurz ueber die Wand ragen (0,43 % der Tragebilder ueber 300, max 2282, vor allem Biss-Ausholen an der Wand); in diesen Bildern gleitet der Alligator mit bis zu 340 je Bild zurueck. Sichtbar als schnelles Zurueckweichen, kein Sprung.
+4. CROSS mit dem Kanister: keine Kopf-Klemme (gb_klemme_aus, wie bisher); die Bahn beginnt jetzt an der Lage des Gators. Ohne Kanister bleibt der Sprung auf den Anlaufpunkt (bis ~1400, Spur B / Runde 9) - nicht Teil dieses Auftrags.
+5. Schluessel an der neuen Lage: Ring in der Ankunft ~8 x 7 Bildpunkte (Spitzen 12 x 12), Helligkeit wie abgenommen; die Groesse hatte der Nutzer mit 7 x 9 angenommen (Nachtrag 31 Punkt 3) - Rangfolge F-E2: Kampfbeginn vor Schluessel.
+6. Stufen 1..3 der Lagewahl legen den Schluessel bis 2 x 3070 von der Leiche, wenn naeher keine Kamera 10,4 Bildpunkte zeigt (5 % der Lagen im Scan, vor allem Westkanal/Nordbecken).
+7. PSX-Bau hier nicht pruefbar.
+
+## Fuer den Nutzer
+- Keine neuen Assets, keine Sprachdateien, keine neuen Bits/Nachrichten-Ids.
+- Gemeinsame Dateien: enemy_ai_boss_gator.c (Haken (2b), gb_cross_begin, GBP_CROSS, je markiert "Runde 41 Spur P"), gator_re2_r41.c (Kopf-Klemme, re15_gr2_r1_start), gatorszene_r41.c/.h, re15_gator_re2_r41.h; Tests test_r41_gatorszene.c/.cmake, test_r41_re2gator.c, probes/r41_gatorszene.cmake.
+- Kampfbeginn: Der Alligator frisst die Leiche weiter vorn im Becken und schwimmt nach dem Schrei von rechts durch die Beckenmitte auf Leon zu; er liegt nicht mehr vor der Kamera. Abstand und Zeit bis zum ersten Biss bleiben im RE2-Bereich (rund 4,5 s).
+- Mit dem Kanister im Maul springt er nicht mehr; an der Wand weicht er zurueck, dabei kann der Kopf kurz in die Wand ragen.
+- Schluessel nach dem Tod: Er liegt jetzt auch in der Wandlage gut sichtbar (mindestens 10,4 Bildpunkte); die Kamera der Einstellung meidet Stellen, die Leon verdeckt.
