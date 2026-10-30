@@ -71,14 +71,15 @@ foreach(_b 420 480 540 600 660 720 780 840 900 960)
     list(APPEND _druck "square@${_b}" "square@${_b2}")
 endforeach()
 string(REPLACE ";" "," _druck "${_druck}")
-set(_k15 "RE15_SET_FLAG=3:178" "RE15_DEBUG_JUMP=3050@250" "RE15_PLAYER_POS=-24757,-15900,3072" "RE15_FORCE_EVENT=10@300"
+# Runde 41 Spur O: die Karte kommt per USE (RE15_USE_TEST), Text msg 3 und Frage msg 4 entfallen; bis dahin RE15_FORCE_EVENT=10@300 + Ja.
+set(_k15 "RE15_SET_FLAG=3:178" "RE15_DEBUG_JUMP=3050@250" "RE15_PLAYER_POS=-24757,-15900,3072"
          "RE15_PRESS=${_druck}")
-lauf(k_a 3050 900:f.ppm 900 ${_k15} "RE15_GIVE=0x46:1")
-lauf(k_b 3050 900:f.ppm 900 ${_k15} "RE15_GIVE=0x46:1" RE15_NO_PRI=1)
-lauf(k_c 3050 900:f.ppm 900 ${_k15} RE15_NO_PRI=1)
-lauf(ek_a 3051 900:f.ppm 900 ${_k15} "RE15_GIVE=0x46:1" RE15_TITLE_SHOT_CHAR=1)
-lauf(ek_b 3051 900:f.ppm 900 ${_k15} "RE15_GIVE=0x46:1" RE15_TITLE_SHOT_CHAR=1 RE15_NO_PRI=1)
-lauf(ek_c 3051 900:f.ppm 900 ${_k15} RE15_TITLE_SHOT_CHAR=1 RE15_NO_PRI=1)
+lauf(k_a 3050 900:f.ppm 900 ${_k15} "RE15_GIVE=0x46:1" "RE15_USE_TEST=0x46@300#3050")
+lauf(k_b 3050 900:f.ppm 900 ${_k15} "RE15_GIVE=0x46:1" "RE15_USE_TEST=0x46@300#3050" RE15_NO_PRI=1)
+lauf(k_c 3050 900:f.ppm 900 ${_k15} "RE15_USE_TEST=0x46@300#3050" RE15_NO_PRI=1)
+lauf(ek_a 3051 900:f.ppm 900 ${_k15} "RE15_GIVE=0x46:1" "RE15_USE_TEST=0x46@300#3051" RE15_TITLE_SHOT_CHAR=1)
+lauf(ek_b 3051 900:f.ppm 900 ${_k15} "RE15_GIVE=0x46:1" "RE15_USE_TEST=0x46@300#3051" RE15_TITLE_SHOT_CHAR=1 RE15_NO_PRI=1)
+lauf(ek_c 3051 900:f.ppm 900 ${_k15} "RE15_USE_TEST=0x46@300#3051" RE15_TITLE_SHOT_CHAR=1 RE15_NO_PRI=1)
 
 # ---- M2: Zufallsweg ROOM30A0 (Abnahme 1, Seed 37014) ------------------------------------------------------------------
 set(_weg "RE15_DEBUG_JUMP=30A0@250" "RE15_INPUT_SCRIPT_START=520"
