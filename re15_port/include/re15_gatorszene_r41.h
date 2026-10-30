@@ -198,4 +198,7 @@ int  re15_gatorszene_r41_kampfbeginn(int32_t *abstand, int *zone_gator, int *zon
 int  re15_gatorszene_r41_kontakt(void);
 int  re15_gatorszene_r41_fress_kamera(int *frontal);
 
+/* Runde 41 Spur P (Nachbesserung 1, M6): Messhaken - Abstand Rumpfmitte der Leiche <-> Maullage (1750,-210) im Part-6-Rahmen x Zeichen-Skala; 1 = angehaengt und gemessen. */
+int re15_gatorszene_r41_leiche_sitz(int32_t *abw);
+
 #endif /* RE15_GATORSZENE_R41_H */

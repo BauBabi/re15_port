@@ -2641,6 +2641,8 @@ static void gb_takt(int slot)
              * bleiben jetzt bis zum Raumwechsel; den raeumt der Raumlader (re15_enemy_reset -> re15_player_victim_reset,
              * re15_actor_init setzt render_scale_q12 = 0). Takt-Zaehler im Clip-11-Kreis: 59 Bilder (EDD1-Clip-Tabelle EM23.EMD
              * @0x38 = 59/0x1180, s. u.), haelt den int16-Zaehler vom Ueberlauf fern; Bildfolge 0..58 wie bisher. */
+            if (!pl->no_draw) re15_gr2_log("FRESS P3: Spieler-Modell aus F%u", (unsigned)g_engine.frame_count);
+            pl->no_draw = 1;                               /* Runde 41 Spur P (Nachbesserung 1, M5), Beleg s.u. */
             if (g->timer >= 221 + 59) { g->timer -= 59; if (g->p3_kreise < 255) g->p3_kreise++; }
             e->motion = 11;
             /* ⛔ HIER STAND `% 30`. Clip 11 hat 59 Bilder (EDD1-Clip-Tabelle EM23.EMD
@@ -2664,7 +2666,6 @@ static void gb_takt(int slot)
                  * @0x80101190), dann Spieler-Wort +0 |= 0x80000 (`lui v1,0x8` @0x80101194, `lw v0,0(a0)` @0x801011a0 mit a0 = 0x800cfbf8, `or v0,v0,v1` @0x801011a8, `sw v0,0(a0)`
                  * @0x801011ac) und im selben Takt Phase + 1 (@0x801011b0-c0). Bit 0x80000 ist das Modell-Aus des Zeichners: FUN_80027160 ruft die Teile dann nur noch ueber den
                  * Nur-Matrix-Weg (`(param_3 & 0x80000) == 0` -> FUN_80027434), FUN_80019b3c/FUN_80019cd0 zeichnen nichts. Der Continue-Zweig oben nimmt no_draw zurueck. */
-                pl->no_draw = 1;
                 pl->motion = 1; pl->anim_frame = 119;
                 re15_clip_root_motion_abs_y3_pub(pl, &gb23->skel_victim,
                                                  &gb23->anim_victim, 1, 119);

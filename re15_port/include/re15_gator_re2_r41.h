@@ -275,7 +275,7 @@ int  re15_gr2_vsync(void);
 /* platform/pc/src/gator_re2_pc.c: Bildbudget der Hauptschleife (main.c Bild-Deckel) = Grundbudget x VSync / 2;
  * schreibt jeden Wechsel mit SDL_GetTicks nach debug.log ("[gator-re2] VSync ..."). */
 unsigned re15_gr2_pc_bildbudget(unsigned grund_ms);
-extern void (*re15_gr2_raum_se_hook)(int satz);   /* ROOM40A0-Raumbank: 15 = Explosionsbrueller (@0x8010237c-88) */
+extern void (*re15_gr2_raum_se_hook)(int satz);   /* ROOM40A0-Raumbank: 15 = Explosionsbrueller (@0x8010237c-88), 13 = Putz (sub16 Se_on @SCD 0x0978) */
 /* platform/pc/src/gator_re2_pc.c: Kanister-Prop zeichnen (Aufruf aus dem Prop-Pass von main.c). */
 struct re15_camera_view_s;
 void re15_gr2_pc_zeichnen(const void *cam_view, int cx, int cy);
@@ -288,6 +288,8 @@ int  re15_gr2_pc_untergetaucht(const re15_actor_t *npc, int gecullt);
 /* Messhaken: Zahl der gespawnten Putz-Partikel (re2fx) seit Start + Welt-Lage des letzten Spawns
  * (Nachbesserung 1, M2: die exe-Zeile "RE2 PUTZ runde ..." in gator_boss.log traegt beides). */
 int  re15_gr2_putz_spawns(void);
+/* Spur P (Nachbesserung 1, M4): Zahl der Putz-Stoesse = sub15-Laeufe mit Ringseite (ROOM40A0 sub01 @SCD 0x008C haengt am Stark-Schuetteln-Bit) */
+int  re15_gr2_putz_stoesse(void);
 void re15_gr2_putz_letzte(int32_t pos[3]);
 
 /* Messhaken: Log-Zeilen (gator_boss.log, "RE2 ...") an/aus. */

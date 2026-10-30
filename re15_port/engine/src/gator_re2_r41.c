@@ -89,9 +89,9 @@ typedef struct {
     int      treffer;
     int      letzter_clip;    /* Hysterese-Latch: 0 = Sub 1, 1 = Sub 2 */
     uint8_t  ziel_bit;        /* Nachbesserung 3 (M3): +0x1C0 & 4 = Zielmodus "Kanister" (Anschwimm-Sperre), s. gr2_zielmodus_takt */
-    /* Putz */
-    int      putz_t;          /* 0 = aus, sonst Bild der Sequenz (1..90) */
-    int32_t  putz_x, putz_y, putz_z;
+    /* Putz (Spur P, Nachbesserung 1, M4): sub15 des Raumskripts */
+    int      putz_t;          /* 0 = aus (Bank 5 Bit 0x10 frei), sonst Bild von sub15 */
+    int8_t   putz_seite;      /* Ringseite 0..3, -1 = Cut ohne Putz */
     /* Nachbesserung 5 (Abnahme 4, M1): Finisher-Buehne der FRESSEN-P0 (re15_gr2_finisher_buehne) */
     uint8_t  fin_geplant;     /* Buehne gewaehlt (toedlicher Biss): fin_x/z/gier/cut */
     uint8_t  fin_aktiv;       /* P0 gelaufen: Gator steht auf fin_x/z/gier (Bezug der Messzeile Maul-Sitz) */
@@ -117,6 +117,9 @@ static struct {
     int32_t  rot[9];          /* Welt-Rotation Q12 (frei) */
     int32_t  lokal[3];        /* 1x-Rig-Lokallage relativ zur Part-6-Matrix (angehaengt) */
     int32_t  rel[9];          /* relative Rotation zur Part-6-Matrix (angehaengt) */
+    int32_t  r6a[9];          /* Runde 41 Spur P (Nachbesserung 1, M7): Part-6-Matrix des Anhaengens, Bezug der Drehung auf den RE2-Sitz */
+    int32_t  sitz_gier;       /* Drehung um die Hochachse, die vom Liegen zum RE2-Sitz noch fehlt (Rest, Q12-Winkel) */
+    int32_t  sitz_akku;       /* bereits gedreht */
     int32_t  welt[3];         /* zuletzt berechnete Weltlage (angehaengt) */
     int32_t  welt_rot[9];
     uint8_t  anhaengen;       /* Nachbesserung 4 (M1): Stufe 2 hat t == 13 erreicht (@0x801018c4-cc) - die Lokallage zur
@@ -402,52 +405,78 @@ void re15_gr2_schuettel_offset(int *dx, int *dy) { if (dx) *dx = s_schuettel_dx;
 int  re15_gr2_schuettel_modus(void) { return s_schuettel_modus; }
 uint8_t re15_gr2_ereignis(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].ereignis : 0; }
 
-/* ---- Putz (ROOM40A0 sub14, 9x Sce_espr_on id 4, 6 Durchlaeufe) ------------------------------
- * PORT-WAHL: Bursts um Leon beim Dash-Start (RE2: Kamera 9 am Korridorende, sub13). Lage = RE2-Versatz
- * zur Mitte der neun Emitter (-24378, ., 1350) in x/z, Hoehe = RE2-Absolutwert ueber dem Steg y=0
- * (Leons Watt-Ebene ist ebenfalls y=0). */
-static const struct { int8_t bild; uint8_t typ; uint16_t param; int16_t dx, y, dz, dir; } k_putz[9] = {
-    { 0, 0x10, 0x0e00,   178, -3500,  -50,  824 },   /* @0x086E */
-    { 0, 0x08, 0x1000,   578, -2000,   50,  474 },   /* @0x087E */
-    { 2, 0x08, 0x1000, -1122, -3800,  -50, 1024 },   /* @0x0892 (Sleep 2) */
-    { 3, 0x08, 0x1200,   578, -2000,   50,  474 },   /* @0x08A4 (Evt_next) */
-    { 4, 0x10, 0x0800,   178, -4400,    0, 1124 },   /* @0x08B6 */
-    { 5, 0x10, 0x2000, -1022, -4000,  -50,  974 },   /* @0x08C8 */
-    { 7, 0x08, 0x1400,   578, -3500,  -50, 1074 },   /* @0x08DC (Sleep 2) */
-    { 9, 0x00, 0x2200,   178, -3000,  150, 1524 },   /* @0x08F0 (Sleep 2) */
-    { 9, 0x10, 0x1e00,  -622, -2400,  -50, 1024 },   /* @0x0900 */
+/* ---- Putz: Runde 41 Spur P (Nachbesserung 1, M4, Nachtrag 35 Punkt 2 "kam immer noch nicht so runter wie in RE2") --------------
+ * Der Ausloeser steht NICHT im Overlay, sondern im Raumskript ROOM40A0 und haengt am starken Schuetteln - so faellt der Putz in RE2 bei JEDEM Stoss des Alligators:
+ *   sub01 @SCD 0x008C (je Bild): `Ck 21 01 1d 01` = Bank 1 Bit 0x1d, `Ck 21 05 10 00` = Bank 5 Bit 0x10 frei -> `Set 22 05 10 01` + `Evt_exec 04 ff 18 0f` (sub15).
+ *     Bank 1 = 0x800cfbd8 (Flag-Tafel @0x800a78c8[1], Bank 5 = 0x800d4874 @0x800a78dc), Bitnummer von oben (FUN_80077360 @0x80077360: `srlv v0,0x80000000,a1`): Bit 0x1d = Wert 4 =
+ *     das Stark-Schuetteln-Bit der Ereignis-Maschine (`0x800cfbd8 |= 4` @0x80101dd8-f8, R1 @0x801022a8-b4 und @0x8010252c-58).
+ *   sub15 @0x0916: `Evt_next`, `Switch 13 1a` (var 0x1a = Cut): Cut 0..2 -> sub16, 3..6 -> sub18, 7..9 -> sub20, sonst nichts; am Ende `Set 22 05 10 00` @0x0966.
+ *   sub16/18/20 @0x096C/0x09F2/0x0A78: fuenf Brocken: Gosub, `Sleep 1`, Gosub, `Sleep 4`, `Se_on 36 02 0d 01 01` (Raumbank-Satz 13 an der Spielerlage), Gosub, `Sleep 3`, Gosub, `Sleep 4`, Gosub.
+ *   sub17/19/21 @0x0994/0x0A1A/0x0AA0: zwei `Sce_rnd` (FUN_80052ca0), Lage per `Work_copy` in die Skriptbytes (@0x800542b4: Ziel = pc + 4 + Versatz), dann `Sce_espr_on 3a 00 19 00 00 00 00 06 x e8 ea z 00 00`
+ *     = FUN_8001bf10(0x19000600, 0, Einheitsmatrix, {x,-5400,z}) @0x800565a4-0x80056618. Bein 1 x = (r & 0x3fff) - 0x4a38, z = (r & 0xfff) - 0x66ce; Bein 2 x = (r & 0xfff) - 0x66ce, z = (r & 0x7fff) -
+ *     0x559e; Bein 3 x = (r & 0x3fff) - 0x61a8, z = (r & 0xfff) - 0x0abe.
+ * Die alte PORT-WAHL (id 4, sub14, 54 Partikel um Leon beim Dash-Start) war der falsche Effekt: sub14 laeuft nur ueber sub13, das sub11 @0x0778-0x0786 bei Cut 9 startet, und Cut 9 setzt allein R2 P1
+ * (`jal 0x8002c7ac`, `addiu a0,zero,9` @0x80102784-88, der Rueckzug nach Beschuss bei offenem Maul in Cut 8) - den Ablauf hat der Port nicht; ohne R2 kein id 4.
+ * PORT-WAHL nur der Lage: RE2 hat drei Beine, ROOM2090 einen Ring aus vier (Zonenkameras Cut 0/1 Sued, 2/3 Ost, 4/5 Nord, 6/7 West, RID @0x60, Cut 8..12 wie RE2s Cut >= 10: kein Putz). Masken wie RE2 (Bein laengs
+ * 0x3fff, quer 0xfff; RE2 Bein 2 laengs 0x7fff laeuft ueber das Korridorende hinaus, hier 0x3fff = Ringseite), Rechteck mittig auf das Becken der Seite. Hoehe unveraendert -5400 (`e8 ea`): die Kameras stehen in beiden Raeumen
+ * auf y ~-3100 (RID @0x60), der Brocken lebt 30 Bilder und faellt 5220 (bis ~180 ueber y 0, Wassergitter ROOM40A0 Modell 0); in ROOM2090 taucht er die letzten Bilder durch die Wasserflaeche -1620 (@0x009D6). */
+#define GR2_PUTZ_ID       0x19000600u   /* `3a 00 19 00 00 00 00 06` @SCD 0x09E0: Bank 0x19, Sub 0, Skala 0x0600 */
+#define GR2_PUTZ_Y        (-5400)       /* `e8 ea` @SCD 0x09EA */
+#define GR2_PUTZ_SE       13            /* `36 02 0d 01 01` @SCD 0x0978: ROOM40A0-EDT Satz 13 (`00 00 c3 01`) */
+#define GR2_PUTZ_ENDE     13            /* Bild von sub15: 1 Evt_next + 12 (Sleep 1 + 4 + 3 + 4) */
+static const uint8_t k_putz_bild[5] = { 1, 2, 6, 9, 13 };   /* je 1 + Summe der Sleeps davor; SE im Bild des dritten Brockens */
+static const struct { int16_t x0; uint16_t xm; int16_t z0; uint16_t zm; } k_putz_seite[4] = {
+    { -9000, 0x3fff, -25750, 0x0fff },   /* Sued (Cut 0/1): Form Bein 1 */
+    {  2852, 0x0fff, -21800, 0x3fff },   /* Ost  (Cut 2/3): Form Bein 2 */
+    { -9000, 0x3fff, -11050, 0x0fff },   /* Nord (Cut 4/5): Form Bein 3 */
+    { -7548, 0x0fff, -21800, 0x3fff },   /* West (Cut 6/7): Form Bein 2 */
 };
-#define GR2_PUTZ_DAUER 15     /* letzter Spawn Bild 9 + Sleep 5 @0x0910 -> Evt_end */
-#define GR2_PUTZ_RUNDEN 6     /* sub13 `For 6: Gosub sub14` @0x0862-6A */
-static int s_putz_spawns, s_putz_runde_start;
-static int32_t s_putz_letzt[3];                              /* Messhaken: Welt-Lage des letzten Spawns */
+static int      s_putz_spawns, s_putz_stoesse;
+static int32_t  s_putz_letzt[3];                             /* Messhaken: Welt-Lage des letzten Spawns */
+static uint32_t s_putz_rnd;                                  /* Saat von FUN_80052ca0 (0x800d8cb8); eigener Strom wie RE2, die Spielzufaelle bleiben unberuehrt */
+static uint16_t gr2_putz_rnd(void)
+{
+    /* Sce_rnd FUN_80052ca0 @0x80052cd4-f8. Die Saat ist in RE2 eine laufend beschriebene Pool-Zelle (FUN_8001c224), hier eine feste Zahl mit gesetztem Oberteil: mit Oberteil 0 bliebe die Folge stehen. */
+    if (s_putz_rnd < 0x10000u) s_putz_rnd = 0x12345678u + (uint32_t)g_engine.frame_count;
+    const uint32_t a = s_putz_rnd << 1;
+    s_putz_rnd = ((s_putz_rnd + (a >> 16)) & 0xffffu) + (a & 0xffff0000u);
+    return (uint16_t)s_putz_rnd;
+}
 static void gr2_putz_takt(gr2_t *g)
 {
-    if (g->putz_t <= 0) return;
-    int t = g->putz_t - 1;                                  /* 0.. */
-    int bild = t % GR2_PUTZ_DAUER, runde = t / GR2_PUTZ_DAUER;
-    if (bild == 0) s_putz_runde_start = s_putz_spawns;
-    for (int i = 0; i < 9; i++) {
-        if (k_putz[i].bild != bild) continue;
-        int32_t pos[3] = { g->putz_x + k_putz[i].dx, g->putz_y + k_putz[i].y, g->putz_z + k_putz[i].dz };
-        uint32_t a0 = 0x04000000u | ((uint32_t)k_putz[i].typ << 16) | k_putz[i].param;
-        /* Sce_espr_on: FUN_8001bf10(a0, Richtung, 0x8009db44, &{x,y,z}) @0x800565a4-0x80056618 */
-        int16_t ofs[4] = { (int16_t)pos[0], (int16_t)pos[1], (int16_t)pos[2], 0 };
-        if (gr2_fx(a0, (int16_t)k_putz[i].dir, re2fx_einheitsmatrix, ofs) >= 0) {
-            s_putz_spawns++;
-            memcpy(s_putz_letzt, pos, sizeof s_putz_letzt);
+    if (g->putz_t == 0) {                                   /* sub01: Bit 4 && Bank 5 Bit 0x10 frei */
+        if (!(s_cfbd8 & 4u)) return;
+        g->putz_t = 1;
+        return;
+    }
+    const int t = g->putz_t++;                              /* Bild von sub15 (Evt_next = Bild 0 -> hier 1) */
+    if (t == 1) {
+        const int cut = (int)g_scd.cam_id;                  /* `Switch 13 1a` @0x0918 */
+        g->putz_seite = (int8_t)((cut >= 0 && cut <= 7) ? cut / 2 : -1);
+        if (g->putz_seite >= 0) {
+            s_putz_stoesse++;
+            re15_gr2_log("PUTZ Stoss %d Seite %d Cut %d F%u", s_putz_stoesse, (int)g->putz_seite, cut, (unsigned)g_engine.frame_count);
         }
     }
-    /* Messzeile je Durchlauf (Abnahme 0, M2: die exe hatte keine Zeile fuer die Putz-Spawns) - nach dem
-     * letzten Spawn-Bild 9 (@0x08F0/@0x0900) des Durchlaufs. */
-    if (bild == 9)
-        re15_gr2_log("PUTZ runde %d/%d spawns=%d gesamt=%d um=(%d,%d,%d) letzter=(%d,%d,%d)",
-                     runde + 1, GR2_PUTZ_RUNDEN, s_putz_spawns - s_putz_runde_start, s_putz_spawns,
-                     g->putz_x, g->putz_y, g->putz_z, s_putz_letzt[0], s_putz_letzt[1], s_putz_letzt[2]);
-    g->putz_t++;
-    if (g->putz_t > GR2_PUTZ_DAUER * GR2_PUTZ_RUNDEN) g->putz_t = 0;
+    if (g->putz_seite >= 0) {
+        if (t == k_putz_bild[2] && re15_gr2_raum_se_hook) re15_gr2_raum_se_hook(GR2_PUTZ_SE);
+        for (int i = 0; i < 5; i++) {
+            if (k_putz_bild[i] != t) continue;
+            const uint16_t r1 = gr2_putz_rnd(), r2 = gr2_putz_rnd();
+            const int s = g->putz_seite;
+            const int32_t pos[3] = { k_putz_seite[s].x0 + (int32_t)(r2 & k_putz_seite[s].xm), GR2_PUTZ_Y, k_putz_seite[s].z0 + (int32_t)(r1 & k_putz_seite[s].zm) };
+            const int16_t ofs[4] = { (int16_t)pos[0], (int16_t)pos[1], (int16_t)pos[2], 0 };
+            /* Sce_espr_on: FUN_8001bf10(a0, Richtung 0, 0x8009db44, &{x,y,z}) @0x800565a4-0x80056618 */
+            if (gr2_fx(GR2_PUTZ_ID, 0, re2fx_einheitsmatrix, ofs) >= 0) {
+                s_putz_spawns++;
+                memcpy(s_putz_letzt, pos, sizeof s_putz_letzt);
+            }
+        }
+    }
+    if (t >= GR2_PUTZ_ENDE) g->putz_t = 0;                  /* `Set 22 05 10 00` @0x0966 */
 }
 int  re15_gr2_putz_spawns(void) { return s_putz_spawns; }
+int  re15_gr2_putz_stoesse(void) { return s_putz_stoesse; }
 void re15_gr2_putz_letzte(int32_t pos[3]) { memcpy(pos, s_putz_letzt, sizeof s_putz_letzt); }
 
 /* ---- Kanister: Vorpass (Sub-1-Pre @0x80100a0c-b18) + T2-Maschine @0x801017c4 ---------------- */
@@ -483,6 +512,41 @@ static void gr2_kan_folgen(const re15_actor_t *e, const int32_t r6[9], const int
                                   + (int64_t)r6[r*3+2] * s_kan.rel[6+c]) >> 12);
     }
     gr2_kan_welt_setzen(rot, pos);
+}
+
+/* Runde 41 Spur P (Nachbesserung 1, M7, Nachtrag 35 Punkt 6 "haengt nicht gerade im Maul wie bei RE2"): RE2 friert beim Anhaengen rel = R6^T * Rk ein (FUN_8002d030 @0x801018f0). Dort gilt immer dieselbe
+ * Geometrie: der Alligator schwimmt Bein 2 mit Gier 0xC00 (+Z), der Kanister liegt quer dazu mit Dir (0x690, 0, 0xfc00) (ROOM40A0 sub05 @0x048C; Modell-y zeigt damit nach Welt +X): die Tank-Achse faellt auf die
+ * Quer-Achse des Kopfes, die Kopf-Kippung +0x22A dreht um genau diese Achse. Im Port kommt der Gator aus jeder Richtung, die Drehung des liegenden Kanisters bleibt aber Welt - der eingefrorene Sitz war je nach Gier schief
+ * (gemessen Lauf kln). Rechnung: rel = R6^T * Y(gier - 0xC00) * Rk ist bei jeder Gier die RE2-Relation (R6 = Y(gier) * Pose). Damit der Tank beim Anhaengen nicht springt, dreht er in den Stufen 3..6 (26 Bilder,
+ * dieselben Stufen, in denen RE2 die Lokallage heranfuehrt) um die Hochachse dorthin. Querlage: RE2 schreibt +0x40 nicht (Stufen 3-7), sie bleibt der Abstand der Fall-Lage zur Bahn: Kanister x -22816 (@SCD 0x0484),
+ * Bahn x -23078 (@0x80101048) = 262 nach Welt +X = Rig-z -262 bei Gier 0xC00 (x' = c*x + s*z, z' = -s*x + c*z: Rig-z zeigt nach Welt -X). Ersetzt die PORT-WAHL "z -> 0" der Nachbesserung 3. */
+#define RE15_GR2_KAN_GIER_RE2   0xC00          /* Bein 2: `yaw += 1024` @0x80100eb0-c0 zweimal ab 0x400 (Sce_em_set @0x25A0 Gier 0x400, Intro-Ende +0x400 @0x80100938-48) */
+#define RE15_GR2_KAN_LOKAL_Z    (-262)         /* -22816 - -23078 (@SCD 0x0484, @0x80101048), Vorzeichen s.o. */
+#define RE15_GR2_KAN_SITZ_BILDER 26            /* Stufen 3-6: 6 + 6 + 7 + 7 */
+static void gr2_kan_rel_setzen(void)
+{
+    /* rel = R6a^T * Y(d) * Rk, Y(d) = [[c,0,s],[0,1,0],[-s,0,c]] (Konvention re15_skel_bone_to_world) */
+    const int32_t c = re15_cos_q12(s_kan.sitz_akku & 0xfff), sn = re15_sin_q12(s_kan.sitz_akku & 0xfff);
+    int32_t w[9];
+    for (int k = 0; k < 3; k++) {
+        w[0*3+k] = (int32_t)(((int64_t)c * s_kan.rot[0*3+k] + (int64_t)sn * s_kan.rot[2*3+k]) >> 12);
+        w[1*3+k] = s_kan.rot[1*3+k];
+        w[2*3+k] = (int32_t)((-(int64_t)sn * s_kan.rot[0*3+k] + (int64_t)c * s_kan.rot[2*3+k]) >> 12);
+    }
+    for (int r = 0; r < 3; r++)
+        for (int k = 0; k < 3; k++)
+            s_kan.rel[r*3+k] = (int32_t)(((int64_t)s_kan.r6a[0*3+r] * w[0*3+k] + (int64_t)s_kan.r6a[1*3+r] * w[1*3+k] + (int64_t)s_kan.r6a[2*3+r] * w[2*3+k]) >> 12);
+}
+static void gr2_kan_sitz_takt(void)
+{
+    if (s_kan.sitz_gier == 0) return;
+    const int32_t schritt = s_kan.sitz_gier > 0 ? (s_kan.sitz_gier + RE15_GR2_KAN_SITZ_BILDER - 1) / RE15_GR2_KAN_SITZ_BILDER
+                                                 : -((-s_kan.sitz_gier + RE15_GR2_KAN_SITZ_BILDER - 1) / RE15_GR2_KAN_SITZ_BILDER);
+    int32_t rest = s_kan.sitz_gier - s_kan.sitz_akku;
+    if (rest == 0) return;
+    if ((schritt > 0 && rest > schritt) || (schritt < 0 && rest < schritt)) rest = schritt;
+    s_kan.sitz_akku += rest;
+    gr2_kan_rel_setzen();
 }
 
 /* Nachbesserung 3 (Abnahme 2 M3): RE2-ANSCHWIMM-SPERRE = Zielmodus +0x1C0 & 4 (EM23_OVL_0000.BIN, Sub-1/2-Pre, selbst gelesen):
@@ -596,7 +660,8 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         g->kiefer_az = (int16_t)(g->kiefer_az + gr2_ease_in(6, g->ease_t, -60));
         g->ease_t++;
         gr2_annaehern(&s_kan.lokal[0], RE15_GR2_KAN_LOKAL_X, 70);             /* @0x801019c4-cc */
-        gr2_annaehern(&s_kan.lokal[2], 0, 70);                                /* NB3 Quer-Ausgleich (PORT-WAHL, s. Quer-Ausgleich vor case 3) */
+        gr2_annaehern(&s_kan.lokal[2], RE15_GR2_KAN_LOKAL_Z, 70);             /* Spur P (NB1, M7): RE2-Querlage statt 0, s. RE15_GR2_KAN_LOKAL_Z */
+        gr2_kan_sitz_takt();
         if (g->ease_t == 6) { g->ease_t = 0; s_kan.stufe = 4; }               /* @0x801019d0-d8, 0x80101b3c-54 */
         break;
     case 4:                                                 /* @0x801019dc: ease-out 6 */
@@ -604,7 +669,8 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         g->kiefer_az = (int16_t)(g->kiefer_az + gr2_ease_out(6, g->ease_t, -60));
         g->ease_t++;
         gr2_annaehern(&s_kan.lokal[0], RE15_GR2_KAN_LOKAL_X, 145);            /* @0x80101a30-38 */
-        gr2_annaehern(&s_kan.lokal[2], 0, 145);                               /* NB3 Quer-Ausgleich, Schritt wie x */
+        gr2_annaehern(&s_kan.lokal[2], RE15_GR2_KAN_LOKAL_Z, 145);            /* NB3 Quer-Ausgleich, Schritt wie x */
+        gr2_kan_sitz_takt();
         gr2_annaehern(&s_kan.lokal[1], RE15_GR2_KAN_LOKAL_Y, 25);             /* @0x80101a4c-54 */
         if (g->ease_t == 6) { g->ease_t = 0; s_kan.stufe = 5; }
         break;
@@ -613,7 +679,8 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         g->kiefer_az = (int16_t)(g->kiefer_az + gr2_ease_in(7, g->ease_t, 100));
         g->ease_t++;
         gr2_annaehern(&s_kan.lokal[0], RE15_GR2_KAN_LOKAL_X, 100);            /* @0x80101ab8-c0 */
-        gr2_annaehern(&s_kan.lokal[2], 0, 100);                               /* NB3 Quer-Ausgleich, Schritt wie x */
+        gr2_annaehern(&s_kan.lokal[2], RE15_GR2_KAN_LOKAL_Z, 100);            /* NB3 Quer-Ausgleich, Schritt wie x */
+        gr2_kan_sitz_takt();
         gr2_annaehern(&s_kan.lokal[1], RE15_GR2_KAN_LOKAL_Y, 55);             /* @0x80101ad4-dc */
         if (g->ease_t == 7) { g->ease_t = 0; s_kan.stufe = 6; }
         break;
@@ -621,11 +688,12 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         g->kopf_az   = (int16_t)(g->kopf_az   + gr2_ease_out(7, g->ease_t, 75));
         g->kiefer_az = (int16_t)(g->kiefer_az + gr2_ease_out(7, g->ease_t, 100));
         g->ease_t++;
+        gr2_kan_sitz_takt();
         if (g->ease_t == 7) { g->ease_t = 0; s_kan.stufe = 7; re15_gr2_log("KANISTER getragen (Stufe 7)"); }
         break;
     case 7:                                                 /* @0x80101b58: halten */
         gr2_annaehern(&s_kan.lokal[0], RE15_GR2_KAN_LOKAL_X, 100);            /* @0x80101b68-70 */
-        gr2_annaehern(&s_kan.lokal[2], 0, 100);                               /* NB3 Quer-Ausgleich, Schritt wie x */
+        gr2_annaehern(&s_kan.lokal[2], RE15_GR2_KAN_LOKAL_Z, 100);            /* NB3 Quer-Ausgleich, Schritt wie x */
         gr2_annaehern(&s_kan.lokal[1], RE15_GR2_KAN_LOKAL_Y, 30);             /* @0x80101b84-8c */
         break;
     default: break;
@@ -1569,18 +1637,13 @@ static void gr2_dash_los(gr2_t *g, re15_actor_t *e)
     e->motion = 2; e->anim_frame = 0; gr2_blend(e, 16);     /* Clip 2 Blend 16 @0x80100dac-b4 */
     g->im_dash = 1; g->dash_phase = 1;                      /* +0x225 = 1 @0x80100e04-0c */
     g->dash_vor = 0;
-    g->putz_t = 1;
-    re15_gr2_log("DASH start pos=(%d,%d) yaw=%d putz_um=(%d,%d,%d)", e->x, e->z, (int)e->rot_y,
-                 g->putz_x, g->putz_y, g->putz_z);
+    re15_gr2_log("DASH start pos=(%d,%d) yaw=%d", e->x, e->z, (int)e->rot_y);
 }
 void re15_gr2_dash_start(int slot, re15_actor_t *e, const re15_actor_t *pl)
 {
     gr2_t *g = &s_g[slot];
     g->dash_vor = 0;                                        /* kein Rest einer abgebrochenen Vordrehung (R4/Treffer) */
-    /* PORT-WAHL: Putz-Sequenz um Leon (s. k_putz) - Lage = Leons Stand beim Dash-Start (RE2: Kamera 9 am
-     * Korridorende, dort laeuft Leon, sub13 @0x0778/0x0786). Nachbesserung 1 (M2): vorher blieb putz_x/y/z
-     * ungesetzt (0,0,0) = noerdlich ausserhalb des Beckens (z > -5400). */
-    g->putz_x = pl ? pl->x : e->x; g->putz_y = pl ? pl->y : 0; g->putz_z = pl ? pl->z : e->z;
+    (void)pl;
     /* Nachbesserung 2 (M2): erst auf die geplante Start-Gier drehen (gr2_dash_planen), dann SE 4 + Clip 2 */
     if (g->dash_gier >= 0 && gr2_wdiff(g->dash_gier, (int)e->rot_y & 0xfff) != 0) {
         g->dash_vor = 1; g->dash_phase = 0;
@@ -2274,10 +2337,12 @@ void re15_gr2_nachtakt(int slot, re15_actor_t *e)
         for (int r = 0; r < 3; r++) {
             int32_t v = (int32_t)(((int64_t)r6[0*3+r] * d[0] + (int64_t)r6[1*3+r] * d[1] + (int64_t)r6[2*3+r] * d[2]) >> 12);
             s_kan.lokal[r] = (int32_t)(((int64_t)v << 12) / s);
-            for (int c = 0; c < 3; c++)
-                s_kan.rel[r*3+c] = (int32_t)(((int64_t)r6[0*3+r] * s_kan.rot[0*3+c] + (int64_t)r6[1*3+r] * s_kan.rot[1*3+c]
-                                            + (int64_t)r6[2*3+r] * s_kan.rot[2*3+c]) >> 12);
         }
+        /* Runde 41 Spur P (Nachbesserung 1, M7): Beginn wie RE2 (rel = R6^T * Rk, kein Sprung), Ziel = die RE2-Relation (s. gr2_kan_rel_setzen) */
+        memcpy(s_kan.r6a, r6, sizeof s_kan.r6a);
+        s_kan.sitz_akku = 0;
+        s_kan.sitz_gier = (((int)e->rot_y - RE15_GR2_KAN_GIER_RE2 + 0x800) & 0xfff) - 0x800;
+        gr2_kan_rel_setzen();
         s_kan.angehaengt = 1; s_kan.anhaengen = 0;
         re15_gr2_log("KANISTER angehaengt lokal=(%d,%d,%d) F%u", s_kan.lokal[0], s_kan.lokal[1], s_kan.lokal[2],
                      (unsigned)g_engine.frame_count);

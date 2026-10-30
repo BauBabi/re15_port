@@ -944,15 +944,16 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
             ga_anker_lage(e, bk);
             s_ga.phase = GP_KAUEN; s_ga.t = 0;
             folge('G', GP_KAUEN, 0);
+            /* Runde 41 Spur P (Nachbesserung 1, M6): wie der Finisher (RE2 P2-Ende Opfer-Wort |= 0x80000 @0x80101190-ac, enemy_ai_boss_gator.c) ist die Beute mit dem Clip-5-Ende weg; Clip 11 kaut leer. */
+            s_ga.leiche_dran = 0; s_ga.leiche_weg = 1;
+            leiche_weg();
+            folge('V', 0, 0);                                 /* verschlungen: Leiche + Schluessel weg */
         } else { e->anim_frame++; ga_anker_lage(e, bk); }
         break;
     }
     case GP_KAUEN: {                                          /* Clip 11, ein Kau-Kreis (59 Bilder), dann verschlungen */
         int n = bk->anim.clips[11].frame_count;
         if ((int)e->anim_frame + 1 >= n) {
-            s_ga.leiche_dran = 0; s_ga.leiche_weg = 1;
-            leiche_weg();
-            folge('V', 0, 0);                                 /* verschlungen: Leiche + Schluessel weg */
             ga_clip(e, 0, 0, GSZ_SCHWIMM_BLEND);
             s_ga.phase = GP_WENDE; s_ga.t = 0;
             folge('G', GP_WENDE, 0);
@@ -1005,6 +1006,44 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
  * (Form gator_re2_r41.c re15_gr2_nachtakt / gr2_kan_folgen). Die Leiche haengt also so im Maul, wie sie im Koppelbild lag. */
 static int32_t s_rel[9], s_lokal[3];
 static int     s_rel_ok = 0;
+/* Runde 41 Spur P (Nachbesserung 1, M6, Nachtrag 35 Punkt 5 "haengt nicht mal sauber im Maul, sondern darunter"): Die eingefrorene Relation hielt nur den Prop-Ursprung so fest, wie er im Koppelbild lag - der Leichen-
+ * Rumpf hing dadurch unter Hals und Rumpf des Alligators, das Maul blieb leer (Abnahme 0 zoom_fressen F150-F240). Wie der RE2-Kanister wird die Lokallage nach dem Anhaengen ins Maul gefuehrt: Ziel = die Rumpfmitte der
+ * Leiche (Modell x GSZ_LEICHE_MITTE_X, y -170 = halbe Hoehe des Rueckens y -341 @MD1 0x2054, z -100 ebenda) auf der RE2-Maullage (1750,-210) im Part-6-Rahmen (T2 @0x801019c4 / @0x80101a4c, RE15_GR2_KAN_LOKAL_X/Y) mal
+ * Zeichen-Skala; Schritte die groessten der T2-Stufen (x/z 145 @0x80101a30-38, y 55 @0x80101ad4-dc). */
+#define GSZ_LEICHE_MITTE_Y    (-170)
+#define GSZ_LEICHE_MITTE_Z    (-100)
+#define GSZ_MAUL_SCHRITT_XZ   145
+#define GSZ_MAUL_SCHRITT_Y    55
+static int s_sitz_ok = 0;
+static void prop_matrix(int16_t rx, int16_t ry, int16_t rz, int32_t m[9]);
+static re15_actor_t *gator_aktor(void);
+/* Messhaken (Riegel unit_r41_alligator2_leiche, Messzeile der Szene): Abstand Rumpfmitte der Leiche <-> Maullage in der GEZEICHNETEN Pose; 1 = gemessen (angehaengt). */
+int re15_gatorszene_r41_leiche_sitz(int32_t *abw)
+{
+    int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
+    int32_t r6[9], p6[3], ro[9];
+    const re15_actor_t *e = gator_aktor();
+    if (k < 0 || !e || !s_sitz_ok || !s_ga.leiche_dran || !g_scd.props[k].active || !re15_gr2_part6_gezeichnet(r6, p6)) return 0;
+    prop_matrix(g_scd.props[k].rot_x, g_scd.props[k].rot_y, g_scd.props[k].rot_z, ro);
+    const int32_t sk = ga_scale(e);
+    const int32_t m[3] = { GSZ_LEICHE_MITTE_X, GSZ_LEICHE_MITTE_Y, GSZ_LEICHE_MITTE_Z };
+    const int32_t t[3] = { q12m(RE15_GR2_KAN_LOKAL_X, sk), q12m(RE15_GR2_KAN_LOKAL_Y, sk), 0 };
+    const int32_t c[3] = { g_scd.props[k].x + (int32_t)(((int64_t)ro[0] * m[0] + (int64_t)ro[1] * m[1] + (int64_t)ro[2] * m[2]) >> 12),
+                           g_scd.props[k].y + (int32_t)(((int64_t)ro[3] * m[0] + (int64_t)ro[4] * m[1] + (int64_t)ro[5] * m[2]) >> 12),
+                           g_scd.props[k].z + (int32_t)(((int64_t)ro[6] * m[0] + (int64_t)ro[7] * m[1] + (int64_t)ro[8] * m[2]) >> 12) };
+    const int32_t s[3] = { p6[0] + (int32_t)(((int64_t)r6[0] * t[0] + (int64_t)r6[1] * t[1]) >> 12),
+                           p6[1] + (int32_t)(((int64_t)r6[3] * t[0] + (int64_t)r6[4] * t[1]) >> 12),
+                           p6[2] + (int32_t)(((int64_t)r6[6] * t[0] + (int64_t)r6[7] * t[1]) >> 12) };
+    const int64_t dx = c[0] - s[0], dy = c[1] - s[1], dz = c[2] - s[2];
+    if (abw) *abw = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dy * dy + dz * dz));
+    return 1;
+}
+static int32_t ga_annaehern(int32_t v, int32_t ziel, int32_t schritt)
+{
+    if (v < ziel) { v += schritt; return v > ziel ? ziel : v; }
+    if (v > ziel) { v -= schritt; return v < ziel ? ziel : v; }
+    return v;
+}
 /* Prop-Drehmatrix wie main.c pc_prop_rot_q12 (RotMatrix-Konvention des Prop-Zeichners). */
 static void prop_matrix(int16_t rx, int16_t ry, int16_t rz, int32_t m[9])
 {
@@ -1064,10 +1103,20 @@ void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor)
         s_rel_ok = 1;
         folge('H', s_lokal[0], s_lokal[2]);
     }
+    {   /* Spur P (Nachbesserung 1, M6): Ziel = Maullage - rel * Rumpfmitte (s. s_rel) */
+        const int32_t sk = ga_scale(e);
+        const int32_t m[3] = { GSZ_LEICHE_MITTE_X, GSZ_LEICHE_MITTE_Y, GSZ_LEICHE_MITTE_Z };
+        const int32_t t[3] = { q12m(RE15_GR2_KAN_LOKAL_X, sk), q12m(RE15_GR2_KAN_LOKAL_Y, sk), 0 };
+        for (int r = 0; r < 3; r++) {
+            const int32_t ziel = t[r] - (int32_t)(((int64_t)s_rel[r*3] * m[0] + (int64_t)s_rel[r*3+1] * m[1] + (int64_t)s_rel[r*3+2] * m[2]) >> 12);
+            s_lokal[r] = ga_annaehern(s_lokal[r], ziel, r == 1 ? GSZ_MAUL_SCHRITT_Y : GSZ_MAUL_SCHRITT_XZ);
+        }
+    }
     int32_t rw[9];
     for (int r = 0; r < 3; r++)
         for (int c = 0; c < 3; c++)
             rw[r*3+c] = (int32_t)(((int64_t)r6[r*3] * s_rel[c] + (int64_t)r6[r*3+1] * s_rel[3+c] + (int64_t)r6[r*3+2] * s_rel[6+c]) >> 12);
+    s_sitz_ok = 1;                                            /* Messhaken re15_gatorszene_r41_leiche_sitz */
     g_scd.props[k].x = p6[0] + (int32_t)(((int64_t)r6[0] * s_lokal[0] + (int64_t)r6[1] * s_lokal[1] + (int64_t)r6[2] * s_lokal[2]) >> 12);
     g_scd.props[k].y = p6[1] + (int32_t)(((int64_t)r6[3] * s_lokal[0] + (int64_t)r6[4] * s_lokal[1] + (int64_t)r6[5] * s_lokal[2]) >> 12);
     g_scd.props[k].z = p6[2] + (int32_t)(((int64_t)r6[6] * s_lokal[0] + (int64_t)r6[7] * s_lokal[1] + (int64_t)r6[8] * s_lokal[2]) >> 12);
