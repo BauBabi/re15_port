@@ -25,8 +25,8 @@
  *     Ziel-Yaw +160 mit 75/F, Endzustand @0x80102654
  *
  * PORT-WAHL (keine RE2-Adresse, Pool-Geometrie ROOM2090): Zonenlinien = die drei sce-8-Wasserzonen
- * des RDT (gb_zone des Boss-Moduls) statt x<-17877 / z>=-7322; Putz-Bursts (ROOM40A0 sub14) um Leon
- * beim Dash-Start statt am Korridorende; Kanister-Aufnahme laengs der Blickachse statt laengs +Z.
+ * des RDT (gb_zone des Boss-Moduls) statt x<-17877 / z>=-7322; Kanister-Aufnahme laengs der Blickachse statt laengs +Z.
+ * (Runde 41 Spur P: der Putz laeuft seit Nachbesserung 1 wie ROOM40A0 sub01/sub15-21 am Stark-Schuetteln, s. gr2_putz_takt.)
  * (Nachbesserung 1: der Knick `yaw += 1024` nach Clip 3 ist RE2 - Dash @0x80100eb0-c0, Intro @0x80100938-48 -
  * und Dash/Intro haben kein Bahn-Gate mehr; die frueheren PORT-WAHLEN "kein yaw += 0x400" / "nur bei freier
  * Bahn" sind ueberholt, Abnahme 1 M4. Nachbesserung 2: Intro-Startlage = Pos_set-Zwilling, s. Intro.)

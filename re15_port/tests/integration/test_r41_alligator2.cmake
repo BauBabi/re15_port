@@ -416,7 +416,7 @@ if(TEIL MATCHES "^schluessel")
     if(NOT _ib MATCHES "ITEM slot 15 floor 0 item 0x34 [^\n]*-> FREI")
         r41p_fehler("Aufnahme-Zone des Water Key nicht frei/nicht erreicht")
     endif()
-    file(STRINGS "${_dir}/lauf2/debug.log" _inv REGEX "\\[inv-r39\\].*(0x34|=52\\b)")
+    file(STRINGS "${_dir}/lauf2/debug.log" _inv REGEX "inv-r39. F[0-9]+ R${_r2090} .*inv=[^ ]*34:1")
     file(STRINGS "${_dir}/lauf2/climb.log" _kl REGEX " room=${_r2090} .* sub=9 ")
     set(_kl_key 0)
     foreach(_l IN LISTS _kl)
@@ -439,7 +439,7 @@ if(TEIL MATCHES "^finisher")
     re15_start_spiel(_rv 400
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore ${_wahl}
         RE15_DEBUG_JUMP=${_r2090}@250 "RE15_SET_FLAG=9:110,3:245" RE15_GB_TEST=1 RE15_R39_MESS_SPIELER_HP=20 RE15_VIS_TRACE=1
-        "RE15_EXIT_AT=900#${_r2090}" RE15_STATE_LOG=state.log "${_exe_kopie}")
+        "RE15_EXIT_AT=720#${_r2090}" RE15_STATE_LOG=state.log "${_exe_kopie}")
     file(REMOVE "${_exe_kopie}")
     file(STRINGS "${_dir}/gator_boss.log" _p3 REGEX "FRESS P3: Spieler-Modell aus F[0-9]+")
     if(NOT _p3)

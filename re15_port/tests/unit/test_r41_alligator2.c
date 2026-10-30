@@ -757,6 +757,30 @@ static void teil_erreichbar(void)
     PRUEF(m.lagen > 150 && m.wand == 0, "Schluessel an jeder der %d Todeslagen auf einem Punkt, den die Figur erreicht (%d nicht)", m.lagen, m.wand);
     PRUEF(m.stellungen > 10000 && m.kletter == 0, "Klettersonde greift in %d Stellungen nie den Schluessel (%d)", m.stellungen, m.kletter);
     PRUEF(m.kein_aufheben == 0, "Aktionstaste aus schraeger Stellung nimmt ihn an jeder Lage auf (%d nicht)", m.kein_aufheben);
+    {   /* Gegenprobe: mit Band 0 (vorher) greift die Sonde den Schluessel - der Riegel misst */
+        int c, stf; int32_t dm;
+        (void)tod_lage(0, -20000, 0, -8200, -25550, 0, &c, &stf, &dm);
+        const int ks = prop_von(RE15_GSZ_KEY_OBJ);
+        err_mass_t g; memset(&g, 0, sizeof g);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        if (ks >= 0) {
+            const int32_t kx = g_scd.props[ks].x, kz = g_scd.props[ks].z;
+            g_scd.props[ks].band = 0;
+            for (int32_t dz = -1400; dz <= 1400; dz += 200)
+                for (int32_t dx = -1400; dx <= 1400; dx += 200)
+                    for (int a = 0; a < 4096; a += 256) {
+                        if (!erreicht(kx + dx, kz + dz)) continue;
+                        pl->x = kx + dx; pl->z = kz + dz; pl->rot_y = (int16_t)a; pl->y = 0;
+                        re15_collision_set_band(0);
+                        re15_climb_standing_tick();
+                        g.stellungen++;
+                        (void)re15_climb_try_start(&g_room_rdt, 1);
+                        if (re15_climb_dbg_sub() == 9 && re15_climb_dbg_kind() == 0x81 && re15_climb_dbg_obj() == ks) g.kletter++;
+                        re15_climb_reset();
+                    }
+        }
+        PRUEF(g.kletter > 0, "Gegenprobe Band 0: die Sonde greift den Schluessel in %d von %d Stellungen", g.kletter, g.stellungen);
+    }
 }
 
 /* ---- Teil weg (M3): echter Lauf bis zum Aufheben ueber die Eingabe, ab der Leiter und ab dem Nordbecken, Leon und Elza, auch quer durch den Westkanal -------------------------- */

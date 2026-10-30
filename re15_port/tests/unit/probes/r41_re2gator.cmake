@@ -18,7 +18,7 @@
 #                                Treffer beim Tragen -> R1: SE 4 + Raum-Satz 15 + Rumble (8,3)/(50,255->0) + Clip 9 (37) +
 #                                Kanister 9 Bilder spaeter weg + Leiche (Endpose), weitere Treffer wirkungslos
 #                                Fortsetzung 3: RE2-Zeitlupe VSync 4 von R1 P0 (@0x8010235c-64) bis P3 (@0x80102668/7c)
-#   unit_r41_re2gator_putz       Dash-Start -> 6 x 9 Putz-Partikel (RE2 CORE00.ESP id 4, Typen 0x10/0x08/0x00) ueber
+#   unit_r41_re2gator_putz       Spur P NB1: Stoss -> 5 Brocken Raumbank 0x19 + Staub wie ROOM40A0 sub15-21 (vorher RE2 CORE00.ESP id 4, Typen 0x10/0x08/0x00) ueber
 #                                re2fx ohne unbekannte Ops
 #                                Fortsetzung 3: WIRKSAME Pool-Lage der lebenden Teilchen um Leon (Einheitsmatrix 0x8009db44 +
 #                                Versatz wie Sce_espr_on @0x800565a4-0x80056618; vorher am Ursprung)
