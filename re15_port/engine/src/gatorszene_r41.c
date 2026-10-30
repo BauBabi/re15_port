@@ -49,6 +49,7 @@ int re15_gatorszene_r41_spawn_weg(uint16_t room_id, uint8_t type, int16_t x, int
 #include "re15_boss_gator.h"
 #include "re15_blink_r41.h"
 #include "re15_math.h"
+#include "re15_collision.h"   /* Spur P (Nachbesserung 1): key_begehbar */
 #include "re15_camera.h"   /* Nachbesserung 1 (M2): re15_camera_build_view (Schluessel-Lage im Bild der Kamera) */
 #include "re15_light.h"    /* Nachbesserung 1 (M2/M5): NCCT wie der Prop-Zeichner (Neigung unter der Puls-Kappung) */
 #include <string.h>
@@ -346,7 +347,12 @@ static int prop_slot(uint8_t obj_id)
 /* Prop-Felder wie Obj_model_set (LAB_80040914): flags pc[6..7] | 1 (@0x80040990-a4), Band pc[4] -> pool+0x82 (@0x8004096c-74).
  * attr 0 = NCCT-beleuchtet (FUN_8002c18c @0x8002c2ec-f8): Voraussetzung des Helligkeitspulses (re15_blink_r41.h). */
 #define GSZ_KEY_FLAGS     0x000B    /* ROOM2090 obj 2 @0x00A6C / obj 3 @0x00A8E pc[6..7] `0a 00` | 1 */
-#define GSZ_KEY_BAND      0
+/* Runde 41 Spur P (Nachbesserung 1, M1, Nachtrag 35 Punkte 1 + 3): Band 2 wie die schwimmenden Objekte desselben Raums - ROOM2090 obj 2 @0x00A6C und obj 3 @0x00A8E
+ * tragen pc[4] = 02 (`2d 02 00 00 02 00 0a 00` / `2d 03 00 00 02 00 0a 00`), Obj_model_set legt es nach pool+130 (@0x8004096c-74). Stand hier 0: das Band-Gate der Klettersonde
+ * FUN_8002d2c0 (`lbu v0,130(s0)` @0x8002d368, `bne v1,v0,0x8002d3a4` @0x8002d370) liess den Schluessel als Kletterobjekt zu, die Null-Box trifft FUN_8002da4c bei Rand -112 aus
+ * jeder schraegen Stellung (|dx| >= 112 und |dz| >= 112, gemessen Abnahme 0: 56 % der Stellungen, kind 0x81 obj 4, Figur auf y -1800 in der Luft). 2 statt 1 (Form der 100 von 121
+ * Item-Props "Band ueber dem Boden"): die SCA von ROOM2090 hat nur die Baender 0 und 1 (Plattform), Band 1 waere auf der Plattform wieder gleich dem Spielerband. */
+#define GSZ_KEY_BAND      2
 /* Lage auf dem Ruecken der Leiche, Objektraum der Leiche (Elternobjekt, Anhaenge-Form 0xC0|n @0x80040a84-9c): hoechste Stelle
  * des Rueckens im Leichen-Modell MD1 @0x2054 (y -341 bei x 800..1100, z -100); die Mitte 420 darueber, weil das gekippte
  * Quadrat (180) in y bis +-73 reicht. Kippung zur Szenenkamera, hoechstens 60 Grad, mit dem hoechsten Wert cos(Blick) x Licht
@@ -1228,6 +1234,18 @@ static int spieler_punkte(int32_t sp[GSZ_SPIELER_PUNKTE][3])
     }
     return GSZ_SPIELER_PUNKTE;
 }
+/* Runde 41 Spur P (Nachbesserung 1, Nachtrag 35 Punkt 1 "Lage nur auf einem Punkt, den die Spielfigur wirklich erreicht"): die Wasserzonen decken auch den Maschinenblock
+ * (x -2000..2300, z -8300..-6800) und die Kanten ab - Abnahme 0: 202 von 1688 Lagen legten den Schluessel dort HINEIN, die Zonenmitte war fuer die Figur unerreichbar (Nutzer:
+ * "ob der in der Wand haengen geblieben ist"). Begehbar = die Spieler-Klemme schiebt die Figur an diesem Punkt nicht weg: Radius 450 + Maske 1 wie re15_collision_constrain
+ * (FUN_8003b0a4 mit den Spieler-Argumenten), Band 0 fest (Wasserboden; die Figur kann beim Tod auf der Plattform stehen), Objekt-Kasten wie der Spieler (FUN_8002cabc). */
+#define GSZ_SPIELER_KOLL_R  450
+static int key_begehbar(int32_t x, int32_t z)
+{
+    int32_t nx = x, nz = z;
+    re15_collision_constrain_contact_band(&g_room_rdt, x, z, &nx, &nz, GSZ_SPIELER_KOLL_R, 0, 1u, NULL, NULL);
+    re15_collision_objects_actor(&nx, &nz, 0);
+    return nx == x && nz == z;
+}
 /* Beste Lage fuer Kamera cut (s. Kopf); r_nah = hoechster Abstand zum naechsten Knochen; 0 = keine. */
 static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t r_nah, gsz_lage_t *out)
 {
@@ -1277,6 +1295,7 @@ static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t
             if (kugeln_verdeckt(&v, sp, nsp, GSZ_SPIELER_RADIUS, sx, sy, vz)) continue;     /* Spur P: nicht von der Spielfigur verdeckt */
             int32_t wy;
             if (!wasser_quadrat(x, z, &wy)) continue;
+            if (!key_begehbar(x, z)) continue;                               /* Spur P (Nachbesserung 1): nur, wo die Figur hinkommt */
             if (!gefunden || vz < out->vz || (vz == out->vz && d2 < out->d2)) {
                 out->x = x; out->y = wy; out->z = z; out->vz = vz; out->d2 = d2; gefunden = 1;
             }
@@ -1388,12 +1407,15 @@ static void key_lage_bei_tod(void)
         re15_camera_view_t kv;
         if (cut >= 0 && kam_sicht(cut, &kv) && l.vz > 0 && (20 * GSZ_KEY_HALB * (int64_t)kv.fov_screen_dist) / l.vz >= GSZ_KEY_BILD_MIN10) break;
     }
-    if (cut < 0) {                                          /* keine Kamera: Kopf in eine Wasserzone gezogen (erste Fassung) */
-        for (int i = 0; i <= 8; i++) {
-            const int32_t x = kopf[0] + (int32_t)(((int64_t)(g->x - kopf[0]) * i) / 8);
-            const int32_t z = kopf[2] + (int32_t)(((int64_t)(g->z - kopf[2]) * i) / 8);
-            if (re15_aot_water_at(x, z) != 0) { s_key_x = x; s_key_z = z; break; }
-        }
+    if (cut < 0) {                                          /* keine Kamera: der naechste begehbare Wasserpunkt am Kopf (Spur P, Nachbesserung 1; vorher Kopf in eine Wasserzone gezogen) */
+        int64_t best = INT64_MAX;
+        for (int32_t z = (kopf[2] / GSZ_RASTER - 40) * GSZ_RASTER; z <= (kopf[2] / GSZ_RASTER + 40) * GSZ_RASTER; z += GSZ_RASTER)
+            for (int32_t x = (kopf[0] / GSZ_RASTER - 40) * GSZ_RASTER; x <= (kopf[0] / GSZ_RASTER + 40) * GSZ_RASTER; x += GSZ_RASTER) {
+                const int64_t dx = (int64_t)x - kopf[0], dz = (int64_t)z - kopf[2], d2 = dx * dx + dz * dz;
+                int32_t wy;
+                if (d2 >= best || !wasser_quadrat(x, z, &wy) || !key_begehbar(x, z)) continue;
+                best = d2; s_key_x = x; s_key_z = z; s_key_y = wy;
+            }
         return;
     }
     s_key_x = l.x; s_key_z = l.z; s_key_y = l.y; s_key_cut = cut;

@@ -2005,6 +2005,9 @@ int re15_gr2_r1_tick(int slot, re15_actor_t *e)
     /* P3 @0x80102654: +0x10E |= 0x4000, Raumflag 30 — Endzustand, Pose bleibt (Clip 9 letztes Bild) */
     if (!g->tot) {
         g->tot = 1; re15_gr2_log("R1 ende (Leiche) pos=(%d,%d)", e->x, e->z);
+        /* Runde 41 Spur P (Nachbesserung 1, M2): P3 `ori v0,v0,0x4000 / sh v0,270(s1)` @0x8010265c-64 = +0x10E Bit 0x4000 nimmt die Leiche aus Zielhilfe und Schussproben
+         * (FUN_8003db38 / FUN_800410cc: `(+0x10E & 0xc000) == 0`); im Port traegt das die Trefferbox (hit_radius_min <= 0, wie das Untertauchen, s. gb_untertauchen). */
+        e->hit_radius_min = 0; e->hit_radius_max = 0;
         s_vsync = 2;                                        /* `addiu v0,zero,2` @0x80102668, `sb` @0x8010267c */
         re15_gr2_log("R1 VSync 2 F%u", (unsigned)g_engine.frame_count);
         if (s_kam.aktiv && s_kam.programm == GR2_KAM_R1) gr2_kam_frei(e);   /* P3 `&= ~0x100` @0x80102688-94 */

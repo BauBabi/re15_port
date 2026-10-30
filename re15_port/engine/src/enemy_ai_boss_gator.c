@@ -1154,6 +1154,15 @@ static void gb_auftauchen(re15_actor_t *e, gb_state_t *g)
                  e->x, e->z, (int)e->rot_y & 0xfff, (int)g->phase, (int)e->motion, (int)e->anim_frame,
                  (int)e->hit_radius_min);
 }
+/* Runde 41 Spur P (Nachbesserung 1, M2, Nachtrag 35 Punkte 1 + 3): RE2 nimmt dem Alligator mit dem Explosionstod jede Koerper-Kollision. R1 P0 setzt im Entity-Wort +0 die Bits
+ * 0x80a (`lw v0,0(s1)` @0x801022ec, `ori v0,v0,0x80a` @0x801022f8, `sw v0,0(s1)` @0x801022fc, EM23_OVL_0000.BIN), Bit 2 sperrt den einzigen Spieler-Push FUN_80034d0c
+ * (Spieler-Tick FUN_800355c4: `((*a | *b) & 2) == 0` ist das Eingangs-Gate). Die Leiche hat also keine Masse: kein Rand, keine Stufe, nichts zum Klettern (FUN_8002d474 fragt
+ * nur Objekte und SCA, nie Aktoren). Vorher blieb der Koerperlaengen-Push (k_gb_seg, Port-Zusatz) in GBP_RE2_TOD an: der Kadaver sperrte den Westkanal, die einzige Verbindung
+ * Nord <-> Sued auf Band 0 (Abnahme 0: Schluessel und Leiter unerreichbar in kampf_leon, kampf_elza, west_elza). */
+int re15_gator_boss_ohne_koerper(const re15_actor_t *e)
+{
+    return re15_gator_boss_active(e) && s_gb[(int)(e - g_actors)].phase == GBP_RE2_TOD;
+}
 int re15_gator_boss_untergetaucht(const re15_actor_t *e)
 {
     if (!re15_gator_boss_active(e)) return 0;
@@ -2459,7 +2468,7 @@ static void gb_takt(int slot)
          *      Keyframes: dx 7541..10527 vorm Anker, dz -2648..+1254, y-Spitze -9177
          *      bei f60-75 aus dem POSE-Kanal - der Victim-Renderer traegt sie).
          *   P3: Gator-Clip 11 als Kau-Loop OHNE Bewegung (FUN_8001A240 @0x801011D8-E0);
-         *      Leon im letzten Opfer-Frame GEPARKT (kein no_draw - er haengt im Maul).
+         *      Leon im letzten Opfer-Frame GEPARKT, Modell aus (no_draw, RE2 Bit 0x80000 @0x80101194-ac).
          * SEs: Frame-Flags von Clip 5 (f2 SE1, f80 SE3) spielt der Frame-Flag-Spieler;
          * Clip 4 ist datenseitig stumm (SE-3-Zubeiss-Mapping bleibt separat, Runde 5). */
         re15_enemy_bank_t *gb23 = re15_enemy_find(e->type);
@@ -2651,6 +2660,11 @@ static void gb_takt(int slot)
                 re15_clip_root_motion_abs_y3_pub(e, &gb23->skel, &gb23->anim, 11,
                                                  (int)e->anim_frame);
             if (gb23 && gb23->victim_ok) {             /* Leon im letzten Opfer-Frame parken */
+                /* Runde 41 Spur P (Nachbesserung 1, M5, Nachtrag 35 Punkt 4): in P3 ist Leon verschluckt. RE2 P2-Ende: FUN_8001a330 meldet das Clip-Ende (`beq v0,zero,0x801011e8`
+                 * @0x80101190), dann Spieler-Wort +0 |= 0x80000 (`lui v1,0x8` @0x80101194, `lw v0,0(a0)` @0x801011a0 mit a0 = 0x800cfbf8, `or v0,v0,v1` @0x801011a8, `sw v0,0(a0)`
+                 * @0x801011ac) und im selben Takt Phase + 1 (@0x801011b0-c0). Bit 0x80000 ist das Modell-Aus des Zeichners: FUN_80027160 ruft die Teile dann nur noch ueber den
+                 * Nur-Matrix-Weg (`(param_3 & 0x80000) == 0` -> FUN_80027434), FUN_80019b3c/FUN_80019cd0 zeichnen nichts. Der Continue-Zweig oben nimmt no_draw zurueck. */
+                pl->no_draw = 1;
                 pl->motion = 1; pl->anim_frame = 119;
                 re15_clip_root_motion_abs_y3_pub(pl, &gb23->skel_victim,
                                                  &gb23->anim_victim, 1, 119);
@@ -2728,6 +2742,7 @@ static void gb_takt(int slot)
      * GANZEN Laenge ab. Y-Fenster wie der Body-Push (Zentrum auf Bodenniveau,
      * s. hit_offset_y im INIT): Leon OBEN auf dem Steg wird nicht geschoben. */
     if (g->phase != GBP_DIE && g->phase != GBP_DEAD
+        && g->phase != GBP_RE2_TOD            /* Runde 41 Spur P (Nachbesserung 1, M2): s. re15_gator_boss_ohne_koerper */
         && pl->hp >= 0 && !re15_player_is_grabbed()
         && !g->untergetaucht) {               /* Nachbesserung 3 (B9): 3000 unter dem Boden beruehrt er niemanden */
         const gb_seg_t *SEG = k_gb_seg;   /* Runde 41 Spur B NB2: Tabelle auf Dateiebene (gb_koerper_kontakt) */

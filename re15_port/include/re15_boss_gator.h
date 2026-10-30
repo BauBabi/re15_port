@@ -32,6 +32,8 @@ int  re15_gator_fressen_hold(void);
 /* RE2-Todes-Latch: laeuft der Fress-Finisher ab dem f13-Koppelframe? Ab da gehoert im
  * Original die Todes-Praesentation dazu (s. enemy_ai_boss_gator.c). */
 int  re15_gator_fress_todeslatch(void);
+/* Runde 41 Spur P (Nachbesserung 1, M2): 1 = RE2-R1 hat begonnen, der Koerper schiebt niemanden mehr (R1 P0 +0 |= 2 @0x801022f8-fc, Gate FUN_80034d0c). */
+int  re15_gator_boss_ohne_koerper(const re15_actor_t *e);
 /* ENEMSE-Anbindung (Bank 17, Dossier gator-biss-sound.md) - PC registriert beim
  * 0x23-Laden; se_fn(id, flag2000), bank_fn(bank). */
 void re15_gator_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int));
