@@ -23,6 +23,7 @@
 #include <stdio.h>
 #endif
 #include "re15_scd.h"
+#include "re15_birkin_formen.h"
 #include "re15_engine.h"
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 for Dir_set */
 #include "re15_aot.h"        /* Phase 4.4.6: AOT trigger ops */
@@ -3856,8 +3857,11 @@ static int op_sce_em_set(scd_thread_t *t)
      * KI-Wurzel 0x80116230 (null Typ-Abfragen dazwischen) - die beiden Formen
      * laufen byte-identisch, der Typ waehlt nur das Modell. Deshalb genuegt
      * hier die Umtypung; KI, Schaden und Tod bleiben unveraendert. */
+    /* SEIT 2026-10-30 (Nutzer: "Vierbein, dann G5"): der Spawn bleibt 0x30 und kaempft zuerst als
+     * Vierbein-Form (EM30_BAHNSTEIG.EMD), der G5 uebernimmt nach Todesphase 2 (re15_bf_morph_zu_g5,
+     * re15_birkin_formen.h). RE15_ENDKAMPF_NUR_G5=1 = der bisherige Ablauf. */
     if ((g_current_room_id == 0x5090u || g_current_room_id == 0x5091u) &&
-        type == 0x30u)
+        type == 0x30u && !re15_bf_bahnsteig_aktiv())
         type = 0x36u;
     /* Runde 35 Spur F: Zombies ROOM1010/1220 weiter von der Eintrittstuer (NUTZER-VORGABE, nur x/z
      * der genannten Original-Saetze; Herleitung include/re15_zombie_abstand.h). */

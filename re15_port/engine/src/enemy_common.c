@@ -166,6 +166,7 @@ void re15_enemy_reset(void)
     re15_rbj_bind_room(NULL, 0);  /* Raum-RBJ + Kanal-Cache fallen mit den Banks (Raumwechsel) */
     re15_player_victim_reset();   /* clear Leon's grab-victim anim state (banks just dropped) */
     { extern void re15_crow_flock_reset(void); re15_crow_flock_reset(); }  /* 0x800aca50 = 0 on room change (FUN_8010d13c) */
+    { extern void re15_bf_reset(void); re15_bf_reset(); }   /* Beta-Birkin-Formen: Hangar-Szene je Betreten neu (birkin_formen.c) */
 }
 
 /* Room-cinematic overlay — see re15_enemy.h. PC-port only (its boot + cross-room reload);

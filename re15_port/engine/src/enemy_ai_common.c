@@ -55,6 +55,7 @@
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
 #include "re15_bissarm_r37.h" /* Runde 37 Spur J: Wandklemme im Griff = ein Durchgang je Bild */
 #include "re15_heliport1171_r38.h" /* Runde 38 Spur I: Ereignis-Kraehe ROOM1171 (Rueckgriff, Wurf) */
+#include "re15_birkin_formen.h" /* Beta-Birkin-Formen: Hangar-Szene, Morph 5090 -> G5 */
 #include "re15_spiderman_r38.h" /* Runde 38 Spur T: Typ 0x2B Schacht-Austritt + Griffe mit Anker */
 #include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: kein Angriff, solange die Szene den Spieler haelt */
 #include "re15_npckante_r38.h" /* Runde 38 Spur M: NPC-Kanten (Sonde FUN_8002d7d8, Subs 0x12/0x16/0x17/0x18) */
@@ -12203,7 +12204,14 @@ static void re15_birkin_ai_tick(int slot)
              * die acht Raeume, die es abfragen (3070/3071, 5080/5081, 5090/5091,
              * 50E0/50F1), sahen den Birkin-Tod nie. Es gibt game-weit genau
              * DIESEN einen Produzenten. */
-            re15_game_flag_set(5, 0x1c, 1);            /* @0x8011a6b8 (STAGE3) / @0x8011aecc (STAGE5) */
+            /* PORT-ERGAENZUNG (Beta-Birkin-Formen, re15_birkin_formen.h): in 5090/5091 ist das NICHT der
+             * letzte Tod - wo das Original in Phase 3 auf den nie gesetzten Raum-Morph wartet, geht der
+             * Vierbein-Birkin in den G5 ueber; der Fortschritts-Schalter faellt erst mit dessen Tod
+             * (enemy_ai_boss_g5.c). Der Hangar-Birkin (50A0/50A1) ist ein Zusatzgegner und darf den
+             * Birkin-Fortschritt der Original-Raeume nicht setzen. */
+            if (re15_bf_bahnsteig_aktiv()) { re15_bf_morph_zu_g5(slot); break; }
+            if (!re15_bf_hangar_aktiv())
+                re15_game_flag_set(5, 0x1c, 1);        /* @0x8011a6b8 (STAGE3) / @0x8011aecc (STAGE5) */
             e->sub_state_3 = ((e->grid_id & 0xf) == 2) ? 4 : 3;       /* grid&0xf==2 -> skip the wait @0x8011a6d8 */
             break;
         case 3:   /* phase 3 @0x8011a6c0: WAIT for the room-SCD morph trigger (grid&0xf)==2. OPEN: not wired -> HOLD */
@@ -14529,10 +14537,12 @@ void re15_enemy_ai_run_all(int combat_active)
      * at 0 — port: the global timer stands in, see re15_grab_mercy_active). */
     if (s_grab_mercy_timer > 0) s_grab_mercy_timer--;
     re15_szenenschutz_durchlauf_beginn();   /* Runde 38 Spur B */
+    re15_bf_raumtick();                     /* Beta-Birkin-Formen: Hangar-Szene 50A0/50A1 (re15_birkin_formen.h) */
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
         re15_szenenschutz_gegner(s);        /* Runde 38 Spur B: Sicht je Gegner (re15_szenenschutz_r38.h) */
+        if (re15_bf_szene_besitzt(s)) continue;   /* von der Hangar-Szene gefuehrt (birkin_formen.c) */
         /* EM-STATUS KILL PERSISTENCE (FUN_80109554 @0x801096fc / FUN_80106edc @0x8010716c setzen
          * flag[entity+0x1C6] am Todes-Commit): ist ein Gegner CORPSE (state 7), wird sein
          * em-Status-Kill-Flag gesetzt, damit ein Wieder-Betreten des Raums ihn NICHT respawnt

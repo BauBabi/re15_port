@@ -4072,3 +4072,12 @@ target_compile_definitions(test_birkin_formen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_birkin_formen COMMAND test_birkin_formen)
 set_tests_properties(unit_birkin_formen PROPERTIES TIMEOUT 30)
+
+# --- BETA-BIRKIN-AUFTRITTE (2026-10-30): Hangar-Wurfszene ROOM50A0 + Morph Vierbein -> G5 ROOM5090 ---
+add_executable(test_birkin_szenen test_birkin_szenen.c)
+target_link_libraries(test_birkin_szenen PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_birkin_szenen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_birkin_szenen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_birkin_szenen COMMAND test_birkin_szenen)
+set_tests_properties(unit_birkin_szenen PROPERTIES TIMEOUT 60)

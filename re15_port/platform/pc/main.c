@@ -135,6 +135,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_zombieki_r36.h"    /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache (Typ 0x27) */
 #include "re15_trage1200.h"      /* Runde 35 Spur H: ROOM1200 Trage-Zombie (Messschiene) */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
+#include "re15_birkin_formen.h"   /* Beta-Birkin-Formen: raumabhaengige Ersatzmodelle */
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
 #include "re15_room_spawns.h" /* GENERATED per-room entry spawn (inbound-door landing spot) */
 #include "re15_anim_select.h"  /* SHARED actor bank/clip selection view-model */
@@ -881,23 +882,19 @@ static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
  * pc_enemy_load herausgezogen, weil der WELLE-G-Hybrid denselben Blob braucht. */
 static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
 {
-    /* BETA-BIRKIN-FORMEN (Nutzerwunsch 2026-10-30): RE15_BIRKIN_FORM=hangar|bahnsteig ersetzt
-     * das EM30-Modell durch eine NACHBILDUNG aus re15_port/tools/birkin_formen.py. ⛔ Kein
-     * Original-Asset und nicht byte-true (Gestaltung nach Beta-Screenshots); ohne die
-     * Variable bleibt EM30 aus CDEMD0.EMS. Clips/Skelett-Hierarchie sind EM30-identisch.
-     * Vor dem CDEMD1-Zweig, damit die Form auch im Elza-Szenario greift. */
-    if (type == 0x30) {
-        const char *form = getenv("RE15_BIRKIN_FORM");
-        const char *datei = !form ? NULL
-                          : !strcmp(form, "hangar")    ? "EMD/EM30_HANGAR.EMD"
-                          : !strcmp(form, "bahnsteig") ? "EMD/EM30_BAHNSTEIG.EMD" : NULL;
+    /* BETA-FORMEN (Nutzerwunsch 2026-10-30, re15_birkin_formen.h): raumabhaengiges Ersatzmodell, z.B.
+     * EM30_HANGAR.EMD in 50A0/50A1, EM30_BAHNSTEIG.EMD in 5090/5091. ⛔ Nachbildungen nach dem
+     * 80%-Video, nicht byte-true (tools/birkin_formen.py). Vor dem CDEMD1-Zweig, damit die Wahl auch
+     * im Elza-Szenario greift. Fehlt die Datei, bleibt das Auslieferungsmodell. */
+    {
+        const char *datei = re15_bf_emd_datei(type);
         int sz = 0; uint8_t *buf;
         if (datei && (buf = pc_read_shared(datei, &sz)) != NULL) {
             if (out_len) *out_len = (size_t)sz;
+            fprintf(stderr, "[enemy] EM%02X: Ersatzmodell %s (Raum %04X)\n", type, datei, g_current_room_id);
             return buf;
         }
-        if (form)
-            fprintf(stderr, "[enemy] RE15_BIRKIN_FORM=%s: unbekannt oder Datei fehlt -> EM30\n", form);
+        if (datei) fprintf(stderr, "[enemy] EM%02X: %s fehlt -> Auslieferungsmodell\n", type, datei);
     }
     { extern uint8_t *re15_roy_pc_emd(uint8_t, size_t *);   /* Runde 37 Spur K/N: JEDER Typ aus CDEMD1.EMS, */
       uint8_t *rb = re15_roy_pc_emd(type, out_len);          /* wenn das Elza-Bit beim Sce_em_set stand    */

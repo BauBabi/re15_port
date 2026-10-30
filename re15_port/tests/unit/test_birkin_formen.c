@@ -85,14 +85,14 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len, i
     /* nur die Keyframes, die das EDD referenziert: keyframe_count/-data_size reichen beim
      * Container-Parse bis zum Blobende und umfassen damit auch die (geaenderte) MD1/TIM.
      * Hangar: byte-gleich. Bahnsteig: umgehalten (birkin_formen.py umhalten, Vierbein-
-     * Haltung) -> Wurzel-X/Z und die NICHT umgehaltenen Knochen 0/3/6/8/11/14 byte-gleich. */
+     * Haltung) -> Wurzel-X/Z und die NICHT umgehaltenen Knochen 0/3/6/8 byte-gleich. */
     {
         int kn = s_basis.anim.last_keyframe_index + 1, ks = s_basis.skel.keyframe_size_bytes;
         if (!umgehalten) {
             CHECK(memcmp(s_form.skel.keyframe_data, s_basis.skel.keyframe_data,
                          (size_t)kn * (size_t)ks) == 0, "%s: Keyframes weichen von EM30 ab", name);
         } else {
-            static const int fest[] = {0, 3, 6, 8, 11, 14};
+            static const int fest[] = {0, 3, 6, 8};   /* 11/14 = Ellbogen: Vierbein-Gang (birkin_formen.py gang) */
             int abw = 0, y_neu = 0;
             for (int k = 0; k < kn; k++) {
                 const uint8_t *a = s_basis.skel.keyframe_data + (size_t)k * ks;

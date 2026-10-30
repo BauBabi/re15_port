@@ -23,7 +23,8 @@ Byte-true geerbt (unveraendert aus CDEMD0.EMS Blob 16 = EM30):
                                     damit die Glieder verbunden bleiben
       4. (faerbe_tim: CLUT-Einfaerbung, derzeit von keiner Form genutzt)
       5. Bahnsteig: alle Keyframes umgehalten (Vierbein, umhalten()) - Clip-Tabelle, Timing,
-         Wurzel-X/Z und die Knochen 0/3/6/8/11/14 bleiben unveraendert
+         Wurzel-X/Z und die Knochen 0/3/6/8 bleiben unveraendert (Ellbogen 11/14
+         knicken im Vierbein-Gang der Laufclips 1/0x0E)
       6. Hangar: Schwanz als ANGEHAENGTE Geometrie an Mesh 8 (MD1 waechst, TIM-Offset und
          Verzeichnis verschieben sich; die EM30-Faces bleiben ein unveraendertes Praefix)
     Der MD1-Serializer schreibt unveraendertes EM30 byte-gleich zurueck (Assert in main), und
@@ -108,6 +109,15 @@ FORMEN = {
             kippen={7: 80, 1: -80, 4: -80, 2: 80, 5: 80},
             welt_halten=(10, 13),
             nachkippen={9: -64, 10: -40, 13: -40, 12: -75, 15: -75},
+            # VIERBEIN-GANG (Nutzer 2026-10-30: "Bewegungsanimationen ausdenken, die dazu
+            # passen"). Erfunden, aber aus dem EM30-Takt abgeleitet: der menschliche Armschwung
+            # laeuft im Original schon diagonal zum Bein (linker Arm mit rechtem Bein) = Trab.
+            # In den Laufclips wird er zum Vorderbein-Schritt verstaerkt (Faktor), und in der
+            # Vorschwung-Phase knickt der Ellbogen ein (Vorderbein hebt ab, Klaue setzt auf).
+            # Clips (Bank 0, EDD dir[1]): 1 = WALK/REPOSITION/CHARGE, 0x0E = RUN-OFF
+            # (enemy_ai_common.c re15_birkin_ai_tick, Clip-Zuweisungen @0x80117220/@0x80119b78).
+            gang=dict(clips=(0x01, 0x0E), arme={10: 11, 13: 14}, faktor=1.8, anheben=40,
+                      fuesse=(3, 6)),
         ),
         # Farbe: wie EM30. Das Violett im Screenshot ist der Videoqualitaet geschuldet
         # (Nutzerbefund 2026-10-30), die Original-Textur bleibt unveraendert.
@@ -390,6 +400,7 @@ def umhalten(vor, d, md1, haltung):
     for b, m in enumerate(EA.md1_parse(md1)[:struktur.bone_count]):
         if m.tv:
             verts[b] = np.array([v[:3] for v in m.tv], float)
+    gang = _gang_plan(vor, d, struktur, haltung.get('gang'))
     for a, e in ((d[2], d[3]), (d[4], d[5]), (d[6], d[7])):
         kf_off = u16(vor, a + 2)
         n = (e - a - kf_off) // ks
@@ -414,13 +425,65 @@ def umhalten(vor, d, md1, haltung):
                 neu[b] = R1[p].T @ R0[p] @ lokal[b]
             for b, g in haltung['nachkippen'].items():
                 neu[b] = _rz(g * f) @ neu[b]
-            R1, T1 = _welt(struktur, rel, neu, wurzel)
-            wurzel[1] += int(round(_tiefster_punkt(R0, T0, verts) - _tiefster_punkt(R1, T1, verts)))
-            struct.pack_into('<h', vor, o + 2, max(-32768, min(32767, wurzel[1])))
             geaendert = set(haltung['kippen']) | set(haltung['welt_halten']) | set(haltung['nachkippen'])
+            if a == d[2] and k in gang:
+                # Vorderbein-Schritt: Zusatzdrehung um die Welt-Seitenachse Z (Laufrichtung +X),
+                # danach Ellbogen-Knick in der Vorschwung-Phase.
+                for arm, (zusatz, knick) in gang[k].items():
+                    R1, _ = _welt(struktur, rel, neu, wurzel)
+                    p = struktur.parent[arm]
+                    neu[arm] = R1[p].T @ _rz(zusatz) @ R1[arm]
+                    ell = haltung['gang']['arme'][arm]
+                    neu[ell] = _rz(knick) @ neu[ell]
+                    geaendert |= {arm, ell}
+            R1, T1 = _welt(struktur, rel, neu, wurzel)
+            # Bodenkontakt: im Lauf an den Hinterfuessen (sonst hoebe eine zurueckschwingende
+            # Klaue den ganzen Koerper an), sonst am tiefsten Punkt des Modells.
+            boden = verts
+            if a == d[2] and k in gang:
+                boden = {b: verts[b] for b in haltung['gang']['fuesse'] if b in verts}
+            wurzel[1] += int(round(_tiefster_punkt(R0, T0, boden) - _tiefster_punkt(R1, T1, boden)))
+            struct.pack_into('<h', vor, o + 2, max(-32768, min(32767, wurzel[1])))
             for b in geaendert:
                 for i, w in enumerate(_zerlege(neu[b])):
                     _bits_schreiben(vor, o + 12, b*36 + i*12, w)
+
+
+def _gang_plan(vor, d, struktur, gang):
+    """Je Keyframe der Laufclips (Bank 0) und je Vorderbein: (Zusatzwinkel, Ellbogenknick) in
+    Grad. Schwung p = Neigung der Original-Armachse in der Laufebene (atan2(x, y), Y = unten);
+    der Zusatz verstaerkt die Abweichung vom Clip-Mittel, der Knick folgt der Schwung-
+    Geschwindigkeit (nur vorwaerts, normiert auf das Clip-Maximum)."""
+    if not gang:
+        return {}
+    clips, frames = EA.edd_parse(bytes(vor[d[1]:d[2]]))
+    a = d[2]
+    kf_off, ks = u16(vor, a + 2), struktur.kf_size
+    plan = {}
+    for c in gang['clips']:
+        if c >= len(clips):
+            continue
+        f0, n = clips[c]
+        kfs = [frames[f0 + i] & 0xFFF for i in range(n)]
+        for arm in gang['arme']:
+            pw = []
+            for kf in kfs:
+                o = a + kf_off + kf*ks
+                sk = EA.Skel(); sk.kf_size, sk.kf_data = ks, bytes(vor[o:o+ks])
+                lokal = [EA.mat_euler(*EA.kf_angles(sk, 0, b)).astype(float) / 4096
+                         for b in range(struktur.bone_count)]
+                R, _ = _welt(struktur, struktur.rel, lokal, EA.kf_pos(sk, 0))
+                v = R[arm] @ np.array([0.0, 1.0, 0.0])
+                pw.append(np.degrees(np.arctan2(v[0], v[1])))
+            pw = np.array(pw)
+            mitte = pw.mean()
+            ges = np.roll(pw, -1) - np.roll(pw, 1)
+            gmax = max(ges.max(), 1e-6)
+            for i, kf in enumerate(kfs):
+                zusatz = -(gang['faktor'] - 1.0) * (pw[i] - mitte)
+                knick = gang['anheben'] * max(0.0, ges[i]) / gmax
+                plan.setdefault(kf, {})[arm] = (zusatz, knick)
+    return plan
 
 
 def lade_em30():
@@ -467,6 +530,27 @@ def modell_aus_blob(blob):
     return mo
 
 
+# ═══════════════════════════════════════════════════ Roter Affe (ROOM4080/4081)
+# Video 1 4:11-4:19 (farbtreu): der Affe in 4080 ist tief dunkelrot; gemessen an den roten Bildpunkten
+# r/g ~ 2.1 gegen r/g ~ 1.7 der EM29-Textur, deren Fell braun-grau ist (r/g ~ 1.2). Gestaltung: das ganze
+# Fell nach dunklem Weinrot ziehen (Zielwert r/g ~ 2.5-3, b ~ g), deutlich abdunkeln. Nur die CLUTs aendern sich.
+ROT_AFFE = dict(typ=0x29, datei='EM29_ROT.EMD',
+                tint=(np.array([[0.70, 0.40, 0.20],
+                                [0.08, 0.20, 0.08],
+                                [0.08, 0.14, 0.22]]), 0.62))
+
+
+def baue_rot_affe():
+    ems = open(EA.EMS_PFAD, 'rb').read()
+    off, ln = EA.ems_entry(ems, EA.EMS_ORDER.index(ROT_AFFE['typ']))
+    blob = bytearray(ems[off:off+ln])
+    d = EA.emd_dir(bytes(blob))
+    dir_off = u32(blob, 0)
+    tim_a = d[-1]                                   # letzte Sektion = TIM (dir[8])
+    blob[tim_a:dir_off] = faerbe_tim(bytes(blob[tim_a:dir_off]), ROT_AFFE['tint'])
+    return bytes(blob)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--blatt', help='Verzeichnis fuer Ansichtsblaetter (PNG)')
@@ -474,6 +558,24 @@ def main():
     ap.add_argument('--aus', default=AUS_DIR, help='Zielverzeichnis der EMDs')
     a = ap.parse_args()
 
+    affe = baue_rot_affe()
+    ziel = os.path.join(a.aus, ROT_AFFE['datei'])
+    os.makedirs(a.aus, exist_ok=True)
+    with open(ziel, 'wb') as f:
+        f.write(affe)
+    print('geschrieben: %s  (%d Byte, roter Affe)' % (ziel, len(affe)))
+    if a.blatt:
+        mo = EA.Modell.__new__(EA.Modell)
+        mo.blob, mo.typ, mo.blob_index, mo.blob_len = affe, 0x29, EA.EMS_ORDER.index(0x29), len(affe)
+        dd = EA.emd_dir(affe)
+        mo.meshes = EA.md1_parse(affe[dd[7]:dd[8]]); mo.skel = EA.emr_parse(affe[dd[2]:dd[3]])
+        mo.clips, mo.frames = EA.edd_parse(affe[dd[1]:dd[2]])
+        mo.tex, mo.pal, mo.clut_y = EA.tim_decode(affe[dd[8]:]); mo.texh, mo.texw = mo.tex.shape
+        mo.titel = 'Roter Affe ROOM4080 - abgeleitet von EM29 (Typ 0x29)'
+        mo.untertitel = 'NACHBILDUNG nach Video 1 4:11-4:19 - EM29_ROT.EMD - Basis CDEMD0.EMS Blob %d'
+        mo.hinweis = 'NICHT byte-true: nur die CLUTs sind umgefaerbt (birkin_formen.py ROT_AFFE). Alles andere = EM29.'
+        os.makedirs(a.blatt, exist_ok=True)
+        EA.blatt(mo, 0, os.path.join(a.blatt, 'affe_rot.png'))
     basis = lade_em30()
     d = EA.emd_dir(basis)
     roh = basis[d[7]:d[8]]
