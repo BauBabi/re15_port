@@ -27,8 +27,10 @@
  *     Quadrat speichert (wie @0x8002f2c0), Cross verwirft (wie @0x8002f27c), Eintritt laedt (wie @0x8002f244-4c).
  *   - WIRKUNG: EINE Endstufe am Ende der Mischkette audio_callback (audio_pc.c) nach der Mono-Faltung — dort laufen
  *     SE-Samples, XA-Stimmen, FMV-Ton, BGM und Ambience zusammen; RE15_AUDIO_CAP_SYNC rendert durch denselben
- *     Rueckruf. Linear wie die SPU-Hauptlautstaerke: Q15, 100 % = 0x8000 = unveraendert, 50 % = 0x4000 = halbe
- *     Amplitude (RMS halbiert).
+ *     Rueckruf. Q15, 100 % = 0x8000 = unveraendert. SEIT SPUR N (AUFTRAG.md Nachtrag 34, Nutzer "selbst mit Lautstaerke bei 10
+ *     ist es immer noch zu laut ... doppelt so viel gedreht ... Standard sollte dann 50 sein", N-E2): Verstaerkung = (Wert/100)^2
+ *     statt Wert/100 = doppelte Absenkung in dB bei gleicher Reglerstellung (100 = 1,0, 50 = 0,25, 30 = 0,09, 10 = 0,01); ohne
+ *     Options-Datei Standard 50. PORT-WAHL wie die ganze Zeile (RE1.5/RE2 haben keine Lautstaerke).
  *   - PERSISTENZ: der Port speicherte den Sound-Modus bisher gar nicht (s_config_sound = static in main.c). Textdatei
  *     RE15_LAUT_R41_DATEI am Ort der Speicherkarte re15_card.mcr (Arbeitsverzeichnis, main.c RE15_CARD_PATH),
  *     Zeilen `volume=<0..100>` und `sound=stereo|mono`; Umgebungs-Override RE15_OPTIONS_FILE (Messung/Tests). */
@@ -44,10 +46,13 @@ extern "C" {
 #define RE15_LAUT_R41_DATEI    "re15_options.cfg"   /* neben re15_card.mcr (main.c RE15_CARD_PATH, CWD-relativ) */
 #define RE15_LAUT_R41_ENV      "RE15_OPTIONS_FILE"  /* Override des Pfads (Messschiene/Tests)                  */
 #define RE15_LAUT_R41_MAX      100                  /* Prozent                                                   */
+#define RE15_LAUT_R41_STANDARD 50                   /* ohne Options-Datei: NUTZER-VORGABE Nachtrag 34, N-E2       */
 #define RE15_LAUT_R41_SCHRITT  10                   /* je LEFT/RIGHT                                             */
 #define RE15_LAUT_R41_Q15_VOLL 0x8000               /* 100 % = unveraendert (SPU-Hauptlautstaerke linear)        */
 
-/* Datei lesen (fehlt sie: 100 %, Stereo). Setzt gespeicherten Wert UND Arbeitskopie. */
+/* Voreinstellung ohne Datei: RE15_LAUT_R41_STANDARD; Messhaken: Mitschnitt ohne RE15_OPTIONS_FILE -> 100 (lautstaerke_r41.c). */
+int         re15_lautstaerke_r41_voreinstellung(void);
+/* Datei lesen (fehlt sie: Voreinstellung, Stereo). Setzt gespeicherten Wert UND Arbeitskopie. */
 void        re15_lautstaerke_r41_laden(void);
 /* gespeicherten Stand schreiben; 0 = ok, -1 = Datei nicht schreibbar. */
 int         re15_lautstaerke_r41_speichern(void);
@@ -55,7 +60,7 @@ const char *re15_lautstaerke_r41_pfad(void);
 
 /* Arbeitskopie (wird sofort angewendet = hoerbar). */
 int         re15_lautstaerke_r41_prozent(void);
-/* Q15-Faktor der Endstufe aus der Arbeitskopie: prozent * 0x8000 / 100. */
+/* Q15-Faktor der Endstufe aus der Arbeitskopie: (prozent/100)^2 * 0x8000 (N-E2). */
 int         re15_lautstaerke_r41_q15(void);
 /* Arbeitskopie um einen Schritt (richtung < 0 leiser, > 0 lauter), geklemmt 0..100. */
 void        re15_lautstaerke_r41_schritt(int richtung);
@@ -77,7 +82,7 @@ void        re15_lautstaerke_r41_verwerfen(void);
 /* Reiner Parser/Formatierer der Datei (Tests): Rueckgabe = Zahl erkannter Schluessel (volume, sound). */
 int         re15_lautstaerke_r41_parse(const char *text, int *prozent, int *stereo);
 int         re15_lautstaerke_r41_format(char *buf, size_t n, int prozent, int stereo);
-/* Test: Zustand auf die Voreinstellung (100, Stereo) ohne Datei. */
+/* Test: Zustand auf die Voreinstellung (re15_lautstaerke_r41_voreinstellung, Stereo) ohne Datei. */
 void        re15_lautstaerke_r41_reset(void);
 
 #ifdef __cplusplus
