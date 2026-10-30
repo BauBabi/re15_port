@@ -1085,3 +1085,28 @@ Kamera 2 keinen Punkt mehr und nimmt Kamera 1 (Schluessel 3 x 3 statt 13 x 15 Bi
 **FG-E7 = Option (c) fuer v0.8.29 (Nachtrag 32b "gut genug", kein Blocker):** die vier Riegel bekommen eine Todeslage OHNE Kopf-Klemme
 (Lage aus G's natuerlichen Kampflaeufen, mit Beleg), die K3-Wandlage wird als OFFEN in die Release Notes ("Ab Samstag") geschrieben.
 Ab Samstag die eigentliche Behebung = Option (a): F's Schluessel-Lagewahl sucht weiter, wenn die beste Zonenkamera < 10,4 px liefert.
+
+## 2026-10-30 16:40 — Nachtrag 34 (Wortlaut; nach v0.8.29) + Abschlussplan v0.8.30
+
+> Ok, ziehe die neuen branches mit rein, und schließe den Rest ab. Betreff der Lautstärke, die Option scheint doch zu
+> funktionieren, aber selbst mit Lautstärke bei 10 ist es immer noch zu laut. Da muss wahrscheinlich doppelt so viel gedreht
+> werden und Standard sollte dann 50 sein.
+> Auch das mit der Kurbel scheint noch nicht gefixed - leon "fliegt" quasi immer noch an die richtige Position bis das drehen
+> dann los geht.
+> Bei Resident Evil 2 ist die Kurbel Animation offenbar deshalb nicht kaputt/fliegend, weil man EXPLIZIT die Items im Player
+> Inventory auswählen muss und dann genau richtig steht bei der Nutzung. Das möchte ich bei Key Items, die nicht Schlüssel sind
+> bei unseren Port auch haben!
+
+Frage: Sollen die Karten (Keycards, Master Keycards, Research Center ID Card) auch ueber das Inventar gehen? Antwort (Wortlaut):
+**"Schaue wie es in Resident Evil 2 gemacht wird, und mache es genauso."**
+
+**Stand:** Zweig claude/birkin-model-extensions-0rj5i3 ist in master (ff 4aaea9713, Windows-Baufix 64ab7eebc, 12/12 Tests).
+**Befund:** Die Kurbel IST ein Key Item: ROOM2010 "Will you take the Crank?", ROOM2020 msg 0 "It's a square hole.", msg 1 "Will
+you use the Crank?". RE1.5 fragt am Ort; RE2 benutzt ueber das Inventar.
+**N-E2 (Lautstaerke; der Nutzer kann widersprechen):** Verstaerkung = (Wert/100)^2 statt Wert/100 = doppelte Absenkung in dB bei
+gleicher Reglerstellung (100 = 1,0 unveraendert, 50 = 0,25, 30 = 0,09 entspricht dem alten 10, 10 = 0,01). Standard ohne
+Options-Datei = 50. PORT-WAHL (RE1.5/RE2 haben keine Lautstaerke, D_kleinkram_a.md §1).
+**Abschlussplan:** Spuren O (Key Items + Kurbel), P (Alligator-Reste), N (Rest Nachtrag 30 + N-E2; Panel erst nach Freigabe der
+Entwuerfe), Q (Reste); danach Integration, volle Suite, Release v0.8.30. Regel wie FG-E6: Abnahmen fallen nur bei
+blockierenden Fehlern oder einem nicht erfuellten Nutzer-Punkt durch; Feinheiten kommen als "offen" in die Release Notes;
+hoechstens EINE Nachbesserung je Spur.
