@@ -11,6 +11,7 @@ cmake_minimum_required(VERSION 3.16)
 #   TEIL karte         ROOM10D0 Blue Keycard USE: msg 9 "You've used the Blue Keycard." ohne msg 7.
 #   TEIL karte_aktion  ROOM10D0 Aktionstaste: Beschreibung endet vor "Will you operate the card reader?".
 #   TEIL aufnahme      ROOM2010: "Will you take the Crank?" Ja -> Eintrag im Inventar, Name und CHECK-Text aus dem Port.
+#   TEIL bombe         ROOM2040: USE Zeitbombe -> Inventar zu, ohne Text und Frage das Zuender-Feld (Set(5,0) @0x016FE, Cut_chg 14 @0x016FC).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_WERKZEUG=<test_r41_keyitems_exe> -DWORKDIR=<dir> -DTEIL=<teil> -P test_r41_keyitems.cmake
 # =============================================================================
 foreach(_v RE15_PC_EXE RE15_WERKZEUG WORKDIR TEIL)
@@ -113,6 +114,10 @@ elseif(TEIL STREQUAL "aufnahme")
     set(_env RE15_DEBUG_JUMP=2010@240 RE15_EQUIP=3 RE15_PLAYER_POS=3618,-1050,2048,0 RE15_MSG_LOG=1
              RE15_PRESS=square@260,square@320,square@360,square@400,start@440,square@465,down@480,square@490,left@505,square@515
              RE15_EXIT_AT=630)
+elseif(TEIL STREQUAL "bombe")
+    # Platz 8 @0x01456 Rechteck x 4050..6050, z -6600..-5600 Band 3; frei ab z -5168 (Koerper-Schub): Blick Nord, 620 voraus = z -5788.
+    set(_env RE15_DEBUG_JUMP=2040@240 RE15_SET_FLAG=3:0x92 RE15_EQUIP=3 RE15_PLAYER_POS=5000,-5168,1024,3
+             RE15_PRESS=start@260,square@285,down@300,square@310,square@325 RE15_MSG_LOG=1 RE15_SCD_TRACE=1 RE15_EXIT_AT=460)
 else()
     message(FATAL_ERROR "r41_keyitems: TEIL '${TEIL}' unbekannt")
 endif()
@@ -172,6 +177,12 @@ elseif(TEIL STREQUAL "aufnahme")
     pruef(_d "[msg] room=2010 id=0")
     pruef(_d "Gegenstand 0x33 ins Inventar")
     pruef(_d "[msg] room=2010 id=1")
+elseif(TEIL STREQUAL "bombe")
+    pruef(_d "Gegenstand 0x35 ins Inventar")
+    pruef(_d "Frage 5 entfaellt: Ja (USE)")
+    pruef(_d "Cut_chg(14)")
+    pruef_nicht(_d "[msg] room=2040 id=0")
+    pruef_nicht(_d "[msg] room=2040 id=5")
 elseif(TEIL STREQUAL "karte_aktion")
     pruef(_d "Frage 7: nur Beschreibung")
     pruef_nicht(_d "[msg] room=10d0 id=9")

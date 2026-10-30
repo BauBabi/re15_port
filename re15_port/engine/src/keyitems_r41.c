@@ -17,7 +17,9 @@
 #include "re15_itembox.h"      /* g_itembox, RE15_BOX_SLOTS                                          */
 #include "re15_menu.h"         /* re15_menu_gameplay_frozen                                          */
 #include "re15_msg.h"          /* re15_msg_get_raw                                                   */
+#include "re15_rolltor.h"      /* (9,63) Sicherung im Rolltor ROOM1050                               */
 #include "re15_scd.h"          /* g_scd, re15_game_flag_*, scd_event_fire                            */
+#include "re15_sicherung.h"    /* (9,53) Sicherung vom Hebetisch ROOM1150 genommen                   */
 #include "re15_skeleton.h"     /* re15_cos_q12 / re15_sin_q12                                        */
 #include "re15_ventilkette_r41.h"   /* Kasten 2010: Slot, Ereignis, Frage (Spur C)                   */
 #ifdef RE15_PLATFORM_PC
@@ -169,6 +171,23 @@ static int in_box(uint8_t item)
 }
 
 static int hat_irgendwo(uint8_t item) { return re15_inv_find_item(item) >= 0 || in_box(item); }
+
+static int anzahl_irgendwo(uint8_t item)
+{
+    int n = 0;
+    for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) if (g_inv.slots[i].id == item) n++;
+    for (int i = 0; i < RE15_BOX_SLOTS; i++) if (g_itembox.slots[i].id == item) n++;
+    return n;
+}
+
+/* Eintraege desselben Gegenstands, die nicht am Flag haengen: die Sicherung vom Hebetisch ROOM1150 ist ein echter Eintrag ((9,53),
+ * sicherung_1150.c), bis sie im Rolltor sitzt ((9,63), rolltor_1050.c). Wer sie noch traegt, wenn er die aus ROOM2030 nimmt, hat zwei
+ * Sicherungen; die Benutzung der einen darf die andere nicht mitnehmen, sonst bleibt das Rolltor zu. */
+static int fremde_eintraege(const flagitem_t *f)
+{
+    return f->item == RE15_SICHERUNG_ITEM && re15_game_flag_get(9, RE15_SICHERUNG_TAKEN_BIT) &&
+           !re15_game_flag_get(RE15_ROLLTOR_EINGESETZT_BANK, RE15_ROLLTOR_EINGESETZT_BIT) ? 1 : 0;
+}
 
 static int platz_frei(void)
 {
@@ -375,13 +394,15 @@ void re15_keyitems_r41_tick(void)
         const flagitem_t *f = &k_flagitems[i];
         const int soll = re15_game_flag_get(f->ja_bank, f->ja_bit) && !re15_game_flag_get(f->nein_bank, f->nein_bit) &&
                          !(f->weg_bank != KEIN_TOR && re15_game_flag_get(f->weg_bank, f->weg_bit));
-        if (soll && !hat_irgendwo(f->item) && platz_frei()) {
+        const int fremd = fremde_eintraege(f);
+        const int ist = anzahl_irgendwo(f->item);
+        if (soll && ist < 1 + fremd && platz_frei()) {
             if (re15_inv_grant(f->item, 1) == 0)
                 LOG("[keyitems] Gegenstand 0x%02x ins Inventar ((%d,%d) gesetzt)\n", (unsigned)f->item, f->ja_bank, f->ja_bit);
         } else if (!soll && s_soll_alt[i] == 1) {
             /* NUR an der Flanke: Sicherung 0x40 kann auch die aus ROOM1150 sein ((3,108) = 0). RE2 sce_item_lost @0x800585e4. */
             const int p = re15_inv_find_item(f->item);
-            if (p >= 0) re15_inv_remove_slot(p);
+            if (p >= 0 && ist > fremd) re15_inv_remove_slot(p);
             LOG("[keyitems] Gegenstand 0x%02x verlaesst das Inventar (Platz %d)\n", (unsigned)f->item, p);
         }
         s_soll_alt[i] = (int8_t)soll;

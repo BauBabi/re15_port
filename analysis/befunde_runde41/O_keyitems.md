@@ -161,7 +161,8 @@ naechsten Inventar-Oeffnung wieder an (@0x80068be4-@0x80068c34): bis dahin ist d
 Szene (kein Anhang an Knochen 11, die kreisende Pistole ist weg). Abweichung: zurueck bei Plc_ret @0x0B16 statt bei der naechsten Oeffnung,
 weil ROOM2020 vier Zombies setzt (main00 @0x008F6..) und ein stilles Unbewaffnet-Sein wie ein Fehler aussaehe; der Ausruest-Platz 25c8 bleibt.
 
-Flag-Gegenstaende: soll = genommen && !benutzt (Kurbel (3,114)/(3,113), Bombe (3,146)/(3,53), Sicherung (3,108)/(3,144) + (9,125) im Kasten).
+Flag-Gegenstaende: soll = genommen && !benutzt (Kurbel (3,114)/(3,113), Bombe (3,146)/(3,53), Sicherung (3,108)/(3,144) + (9,125) im Kasten). Wer die Sicherung vom Hebetisch
+ROOM1150 ((9,53)) noch traegt, weil sie nicht im Rolltor sitzt ((9,63) = 0), hat mit der aus ROOM2030 zwei Eintraege; die Benutzung nimmt genau einen.
 soll und nirgends (Inventar, Kiste) -> Eintrag; soll faellt -> Eintrag weg (nur an der Flanke, weil Item 0x40 auch die Sicherung aus ROOM1150 sein
 kann). Das heilt auch Spielstaende von vor dieser Aenderung. Ist das Inventar dann voll, bleibt an der Stelle die alte Frage (keine tote
 Stelle). Beim Aufnehmen mit vollem Inventar: Item-Modal "You can't carry any more items" (Zustand 5/8) statt der Frage, Flag bleibt 0.
@@ -216,7 +217,7 @@ Neu (nur probes/r41_keyitems.cmake, tests/unit/test_r41_keyitems.c, tests/unit/t
 - unit_r41_keyitems_kurbel: Pos_set und Plc_motion im ersten Skripttakt, anim_frac 0, Clip 0, Cut 3; Gegenprobe Altstand: Frage bleibt, Blende am Anfang und am Ende.
 - unit_r41_keyitems_waffe: Waffe 0 waehrend der Szene, zurueck bei Plc_ret, Platz 25c8 bleibt, Stehpose ohne Mischung.
 - unit_r41_keyitems_daten: Name, CHECK-Text, Icon, Bild gegen info/re2leon (tools/r41_keyitems/keyitems_export.py --pruefen).
-- integration_r41_keyitems_{kurbel,elza,renn,geh,west,nord,ost,falsch,aktion,karte,karte_aktion,aufnahme}: echte exe, echtes Menue (START, ITEM, Platz, USE).
+- integration_r41_keyitems_{kurbel,elza,renn,geh,west,nord,ost,falsch,aktion,karte,karte_aktion,aufnahme,bombe}: echte exe, echtes Menue (START, ITEM, Platz, USE).
 
 Nachgezogen, weil die Stellen keine Ja-Eingabe mehr kennen (Riegel bleibt inhaltlich, Weg neu):
 - probe_r26_inventar B3/B4/B4c (fuenfter Port-Name 0x33), test_1090_flame_out_pin, test_r37_feuerloescher, test_r37_kistenregel, test_room1050_sicherung, test_r34n_a_rolltor (W/L ueber Ja-Weg),

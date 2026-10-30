@@ -366,6 +366,13 @@ static void teil_aktion(void)
 }
 
 /* ============================================================================================ besitz */
+static int sicherungen(void)
+{
+    int n = 0;
+    for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) if (g_inv.slots[i].id == 0x40) n++;
+    return n;
+}
+
 static void teil_besitz(void)
 {
     printf("== besitz ==\n");
@@ -404,6 +411,22 @@ static void teil_besitz(void)
     re15_game_flag_set(3, 144, 1);
     bild(0, 0);
     PRUEF(re15_inv_find_item(0x40) < 0, "(3,144) -> Sicherung weg");
+    /* Zwei Sicherungen: Hebetisch ROOM1150 genommen ((9,53)), noch nicht im Rolltor ((9,63) = 0), dazu ROOM2030 (3,108) */
+    flags_leer();
+    room_boot(0x2060, 0, 0, 0, 0);
+    re15_keyitems_r41_raum(0x2060);
+    re15_game_flag_set(9, 53, 1);
+    re15_inv_grant(0x40, 1);
+    bild(0, 0); bild(0, 0);
+    PRUEF(sicherungen() == 1, "Hebetisch-Sicherung allein: ein Eintrag (%d)", sicherungen());
+    re15_game_flag_set(3, 108, 1);
+    bild(0, 0);
+    PRUEF(sicherungen() == 2, "dazu (3,108): zwei Eintraege (%d)", sicherungen());
+    bild(0, 0);
+    PRUEF(sicherungen() == 2, "bleibt bei zwei Eintraegen (%d)", sicherungen());
+    re15_game_flag_set(3, 144, 1);
+    bild(0, 0);
+    PRUEF(sicherungen() == 1, "(3,144) nimmt genau eine, die fuer den Rolltor bleibt (%d)", sicherungen());
     /* Ventilkasten 2010: Bit 125 raus aus dem Inventar, zurueck beim Herausnehmen */
     flags_leer();
     room_boot(0x2010, 0, 0, 0, 0);
