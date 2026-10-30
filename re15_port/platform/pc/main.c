@@ -881,6 +881,24 @@ static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
  * pc_enemy_load herausgezogen, weil der WELLE-G-Hybrid denselben Blob braucht. */
 static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
 {
+    /* BETA-BIRKIN-FORMEN (Nutzerwunsch 2026-10-30): RE15_BIRKIN_FORM=hangar|bahnsteig ersetzt
+     * das EM30-Modell durch eine NACHBILDUNG aus re15_port/tools/birkin_formen.py. ⛔ Kein
+     * Original-Asset und nicht byte-true (Gestaltung nach Beta-Screenshots); ohne die
+     * Variable bleibt EM30 aus CDEMD0.EMS. Clips/Skelett-Hierarchie sind EM30-identisch.
+     * Vor dem CDEMD1-Zweig, damit die Form auch im Elza-Szenario greift. */
+    if (type == 0x30) {
+        const char *form = getenv("RE15_BIRKIN_FORM");
+        const char *datei = !form ? NULL
+                          : !strcmp(form, "hangar")    ? "EMD/EM30_HANGAR.EMD"
+                          : !strcmp(form, "bahnsteig") ? "EMD/EM30_BAHNSTEIG.EMD" : NULL;
+        int sz = 0; uint8_t *buf;
+        if (datei && (buf = pc_read_shared(datei, &sz)) != NULL) {
+            if (out_len) *out_len = (size_t)sz;
+            return buf;
+        }
+        if (form)
+            fprintf(stderr, "[enemy] RE15_BIRKIN_FORM=%s: unbekannt oder Datei fehlt -> EM30\n", form);
+    }
     { extern uint8_t *re15_roy_pc_emd(uint8_t, size_t *);   /* Runde 37 Spur K/N: JEDER Typ aus CDEMD1.EMS, */
       uint8_t *rb = re15_roy_pc_emd(type, out_len);          /* wenn das Elza-Bit beim Sce_em_set stand    */
       if (rb) return rb; }                                   /* (bltz @0x80022334, Datei 0x27), roy_pc.c   */

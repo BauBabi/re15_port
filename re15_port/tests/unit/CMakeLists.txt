@@ -4061,3 +4061,14 @@ file(GLOB _re15_probe_cmakes "${CMAKE_CURRENT_SOURCE_DIR}/probes/*.cmake")
 foreach(_pc ${_re15_probe_cmakes})
     include("${_pc}")
 endforeach()
+
+# --- BETA-BIRKIN-FORMEN (Nutzerwunsch 2026-10-30): EM30_HANGAR/EM30_BAHNSTEIG.EMD ---
+#     Nachbildungen aus tools/birkin_formen.py (nicht byte-true). Der Test haelt fest, dass
+#     nur Geometrie/Bindoffsets/CLUTs von EM30 abweichen (Clips/Keyframes/Topologie gleich).
+add_executable(test_birkin_formen test_birkin_formen.c)
+target_link_libraries(test_birkin_formen PRIVATE re15_engine m)
+target_include_directories(test_birkin_formen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_birkin_formen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_birkin_formen COMMAND test_birkin_formen)
+set_tests_properties(unit_birkin_formen PROPERTIES TIMEOUT 30)
