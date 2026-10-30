@@ -108,6 +108,8 @@ static uint8_t s_wander_mag[RE15_ACTOR_MAX];                   /* tentative def 
 static uint8_t s_wander_idx[RE15_ACTOR_MAX];                   /* tentative def (full def below) */
 /* FSM-CLOCK clip-end signal (defined below, used by the feeding stand-up + grab + death sub-FSMs). */
 static int re15_enemy_clip_done(const re15_actor_t *e);
+int re15_zgore_treffer_aktionsbank(const re15_actor_t *a);   /* zombiegore_r15.c: Bank 1 der Waffen-Treffer */
+int re15_zgore_tod_lokobank(const re15_actor_t *a);           /* zombiegore_r15.c: Gang des kopflosen Zombies */
 static void re15_enemy_ai_lying_phase(re15_actor_t *e);                                        /* fwd */
 /* ROOM1030 Kriechtor-Maschine (Grid-Wurzel 1 + Sub-Modus-0x10-Toggle) — fwd. re15_zgirl_
  * overflow_row11 IST FUN_801035f8 = Grid-1-DECIDE[0] (@0x8011F8E0[0]); definiert weiter unten. */
@@ -5104,7 +5106,8 @@ void re15_enemy_ai_live_hurt(int slot)
                 e->anim_frame  = 0;                         /* +0x95=0 @0x80106aac */
                 e->anim_frac   = 4;                         /* +0x8f=4 @0x80106abc */
                 e->anim_blend_rate = 0x200;                 /* f314 a3=0x200 @0x80106b2c */
-                re15_enemy_blood_at_bone(e, 0);             /* a2 = pool+0x40 = PART 0 @0x80106ad8 */
+                { static const int32_t o[3] = { 100, -200, 0 };   /* a3 = 0x8011fe9c @0x80106acc */
+                  re15_enemy_fx19700(e, 0x2000, 0, o); }      /* a2 = pool+0x40 = PART 0 @0x80106ad8 */
                 e->hit_react |= 1;                          /* +0x93|=1 @0x80106af4-fc */
                 if ((re15_engine_rand8() & 7) == 0)         /* 1/8 @0x80106b00-04 */
                     re15_audio_room_se(6);                  /* SE(6) @0x80106b0c-10 */
@@ -5114,7 +5117,8 @@ void re15_enemy_ai_live_hurt(int slot)
                 e->anim_frame  = 0;                         /* +0x95=0 @0x80106910 */
                 e->anim_frac   = 3;                         /* +0x8f=3 @0x8010691c-20 */
                 e->anim_blend_rate = 0x400;                 /* f314 a3=0x400 @0x801069bc */
-                re15_enemy_blood_at_bone(e, 7);             /* a2 = pool+0x4f4 = 172*7+64 = PART 7 @0x8010693c */
+                { static const int32_t o[3] = { 100, -200, 0 };   /* a3 = 0x8011fe9c @0x8010692c-30 */
+                  re15_enemy_fx19700(e, 0x1500, 7, o); }      /* a0 = 0x1500 @0x8010690c, PART 7 @0x8010693c/40 */
                 e->hit_react |= 1;                          /* +0x93|=1 @0x80106958-60 */
                 re15_audio_room_se(6);                      /* SE(6) UNCONDITIONAL @0x80106954-5c */
                 if (e->hit_stun == (int16_t)0x80) {         /* +0x1dc==0x80 downed sentinel @0x80106970-78 */
@@ -5137,6 +5141,10 @@ void re15_enemy_ai_live_hurt(int slot)
         }
     }
 
+    /* WAFFEN-ZELLEN des HURT-Tisches @0x8011fb90 [+0x5][+0x6] (zombiegore_r15.c): w5/6 -> 0x80106290,
+     * w7/8 Mitte -> 0x80106624, w19 -> 0x80106048; w1/3/4 laufen unten als 0x80105b7c weiter. */
+    { extern int re15_zgore_treffer(re15_actor_t *e, int slot);
+      if (re15_zgore_treffer(e, slot)) return; }
     /* CLUSTER-F CORRECTED MODEL (raw @0x80105b7c/@0x80105b18): POISE +0x1dc is decremented ONCE PER
      * HIT (the @0x8011fe30 step dispatch @0x80105d28 sits INSIDE the +0x7==0 phase-0 block), persists
      * across hits (seeded (rand&3)+4 at INIT @0x8010082c, re-armed at get-up / stagger-9 exit), the
@@ -5468,7 +5476,8 @@ int re15_actor_uses_loco_bank(const re15_actor_t *a)
                           (shares_root && (a->sub_state_1 == 0x00 ||
                                            a->sub_state_1 == 0x01 ||
                                            a->sub_state_1 == 0x08))))
-                  || (a->state == 2 && !(a->grid_id & 0x80))
+                  || (a->state == 2 && !(a->grid_id & 0x80) && !re15_zgore_treffer_aktionsbank(a))   /* 6290/6624/6048 = Bank 1 */
+                  || re15_zgore_tod_lokobank(a)                     /* 0x80107244 Gang: anim_set(+0x84,+0x16c) */
     /* POISE-BREAK-UEBERGABETICK — +0x168 zeigt hier noch auf BANK 0.
      *
      * Das Original hat KEINE Bank-Regel: es posiert das Frame-Wort, auf das +0x168 zuletzt
@@ -5576,6 +5585,7 @@ int re15_actor_clip_len(const re15_actor_t *a)
     return 0;
 }
 
+int re15_enemy_clip_done_pub(const re15_actor_t *e);
 static int re15_enemy_clip_done(const re15_actor_t *e)
 {
     /* RE15_CLIPDONE_LEGACY=1 restores the pre-fix behaviour (always the ACTION bank) so the two
@@ -5593,11 +5603,16 @@ static int re15_enemy_clip_done(const re15_actor_t *e)
     if (frames <= 0) return 1;
     return (e->anim_frame >= frames - 1) ? 1 : 0;
 }
+int re15_enemy_clip_done_pub(const re15_actor_t *e) { return re15_enemy_clip_done(e); }   /* zombiegore_r15.c */
 
 void re15_enemy_ai_live_death(int slot)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
     re15_actor_t *e = &g_actors[slot];
+    /* DEATH-Wurzel FUN_80106ba4 loest JEDEN Tick [+0x5][+0x6] @0x8011feac neu auf (zombiegore_r15.c):
+     * Kopfplatzer / kopflos / Schrot / Beine weg; alle anderen Zellen = der Standard-Tod unten. */
+    { extern int re15_zgore_tod(re15_actor_t *e, int slot);
+      if (re15_zgore_tod(e, slot)) return; }
 
     if (e->sub_state_3 == 0) {                         /* phase 0 — start the death anim */
         e->hit_react  |= 0x1;                          /* +0x93 |= 1 (@0x80107d08) */
@@ -5621,16 +5636,21 @@ void re15_enemy_ai_live_death(int slot)
                                                         * must NOT loop like the feeding/idle clip did (0x04 was
                                                         * set at spawn). Complements the state-7 corpse freeze. */
         e->sub_state_3 = 1;                            /* +0x7 = 1 (@0x80107d1c) */
-        re15_enemy_death_fx(e);                        /* burst at the per-type GORE BONE (@0x80106d2c
-                                                        * standing / @0x80107cf4 downed) */
+        if (e->grid_id & 0x80) {                       /* DOWNED FUN_80107cb0: 0x2500 an TEIL 0 (a0 @0x80107d5c,
+                                                        * a2 = pool+0x40 @0x80107d6c, a3 0x8012016c @0x80107d38-3c) */
+            static const int32_t o[3] = { 200, 0, 0 };
+            re15_enemy_fx19700(e, 0x2500, 0, o);
+        } else
+            re15_enemy_death_fx(e);                    /* STEHEND: Gore-Teil 0x2000 @0x80106d2c */
         if (!(e->grid_id & 0x80)) {
             /* STANDING death FUN_80106c18 fires TWO more bone-anchored bursts, gated on the hit zone
              * +0x6 (s1 = 1 @0x80106c34):
              *   @0x80106d48 bne +0x6,s1 -> @0x80106d5c/60 jal ; addiu a2,v0,64   = pool+64  = PART 0
              *   @0x80106d78 bne +0x6,zero -> @0x80106d8c/90 jal ; addiu a2,a2,408 = pool+408 = PART 2
              * (The downed death has no such pair.) */
-            if (e->sub_state_2 == 1)      re15_enemy_blood_at_bone(e, 0);
-            else if (e->sub_state_2 == 0) re15_enemy_blood_at_bone(e, 2);
+            static const int32_t o[3] = { 200, 0, 0 };   /* a3 = 0x8012016c */
+            if (e->sub_state_2 == 1)      re15_enemy_fx19700(e, 0x2000, 0, o);
+            else if (e->sub_state_2 == 0) re15_enemy_fx19700(e, 0x2000, 2, o);
         }
         return;
     }
@@ -14864,8 +14884,8 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_anim_sfx(e);        /* FUN_8001b38c: per-frame clip-flag SFX (footsteps/attack) */
             /* (hit blood moved INTO re15_enemy_ai_live_hurt phase 0 — the byte-true spot,
              * @0x80105c50-d8; the old call here could never fire, see the note there) */
-            re15_enemy_gore_tick(e);    /* FUN_80106a44 +0x93&2 -> gore effect spawn */
-            re15_enemy_gore_setup(e);   /* FUN_80106edc sub_state_1==0x58 -> effect-5 gore setup */
+            /* (re15_enemy_gore_tick / _setup entfernt: erfunden bzw. Fehllesung von DEATH[7][1] @0x8011ff90;
+             *  die echten Handler 0x80106edc/0x80107244 laufen ueber re15_zgore_tod, zombiegore_r15.c) */
             /* CONTACT CLEAR — byte-true FUN_8002b498 position (@0x801005f4, AFTER the state
              * dispatch, BEFORE the pushes): the handlers above read LAST tick's +0x1c2 (the grab-[5]
              * domino read @0x801029ec) — clearing at tick START kept the domino permanently dead =
@@ -15088,8 +15108,8 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_zgirl_ai_tick(s);
             re15_enemy_anim_sfx(e);        /* FUN_8001b38c @0x8010aad8 */
             /* (hit blood: see re15_enemy_ai_live_hurt phase 0 @0x80105c50-d8) */
-            re15_enemy_gore_tick(e);       /* +0x93&2 -> gore effect spawn */
-            re15_enemy_gore_setup(e);      /* sub_state_1==0x58 -> effect-5 gore setup */
+            /* (re15_enemy_gore_tick / _setup entfernt: erfunden bzw. Fehllesung von DEATH[7][1] @0x8011ff90;
+             *  die echten Handler 0x80106edc/0x80107244 laufen ueber re15_zgore_tod, zombiegore_r15.c) */
             e->contact_flags = 0;          /* FUN_8002b498 @0x8010aa98 (after dispatch, before pushes) */
             if (e->state != (uint8_t)RE15_AI_STATE_CORPSE && e->hit_radius_min != 0) {
                 re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];

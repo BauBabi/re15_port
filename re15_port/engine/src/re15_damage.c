@@ -3213,25 +3213,6 @@ void re15_player_clear_hit_guard(re15_actor_t *p)
     if (p) p->hit_react &= (uint8_t)~0x1;
 }
 
-/* Zombie gore effect — byte-true FUN_80106a44 @0x80106a98-0x80106abc (STAGE1 briefing zombie
- * behaviour handler): per frame, if the "took a 2nd hit while still hit-guarded" bit
- * (+0x93 & 2, set by re15_enemy_take_damage @0x80012fcc) is set, spawn the gore effect at the
- * zombie and clear the bit. Byte-true: a0 = 0x2000 -> effect-id 0, sub 0; a1 = entity+0x6a =
- * rot_y; spawn handler &DAT_8012017c. The original position is the model_inst bone block
- * (entity+0x188 + 0x4f4); the port has no such bone block, so it uses the actor's world
- * position (faithful-line, flagged). Bank-gated: effect-id 0 only resolves where the room RDT
- * loads it — ROOM1140 loads ids 05/07, so this no-ops there byte-true (the visible ROOM1140
- * gore is the effect-id-5 spawn at the behaviour SETUP, which needs the full FUN_80106a44 port).
- * The setup-spawn + the behaviour state machine are the next port unit (C3_RENDER_DESIGN.md §2d). */
-void re15_enemy_gore_tick(re15_actor_t *e)
-{
-    if (!e || !e->active) return;
-    if (e->hit_react & 0x2) {                                  /* +0x93 & 2 (@0x80106a98) */
-        re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/, 0x2000 /* Original-a0 (D6, bite_blood_fx.md F6) */,
-                          e->x, e->y, e->z, (int16_t)e->rot_y);  /* a1 = entity+0x6a = rot_y */
-        e->hit_react &= (uint8_t)~0x2;                         /* +0x93 &= 0xfd (@0x80106abc) */
-    }
-}
 
 /* Zombie gore-SETUP behaviour — byte-true FUN_80106edc @0x80106edc (STAGE1). Dispatched via
  * (*(code*)(&PTR_LAB_8011fe30)[entity+0x5])() at index 0x58 (0x8011fe30 + 0x58*4 = 0x8011ff90 =
@@ -3331,24 +3312,6 @@ static void re15_enemy_gore_bone_pos(const re15_actor_t *e, int32_t out[3])
     re15_enemy_bone_world_pos(e, (int)s_gore_bone[e->type], out);
 }
 
-void re15_enemy_gore_setup(re15_actor_t *e)
-{
-    if (!e || !e->active) return;
-    if (e->sub_state_1 != 0x58) return;      /* PTR_LAB_8011fe30[+0x5]==0x58 -> FUN_80106edc */
-    if (e->sub_state_3 != 0) return;         /* entity+7 != 0: setup already run (anim phase) */
-    if ((re15_engine_rand8() & 1) == 0) {    /* func_0x8001af20 & 1 == 0 -> defer, no spawn */
-        e->sub_state_2 = 5;                  /* entity+6 = 5 */
-        return;
-    }
-    e->hit_react   |= 0x1;                    /* entity+0x93 |= 1 */
-    e->sub_state_3  = 1;                      /* entity+7 = 1 (run the setup once) */
-    const re15_esp_t *bank = re15_esp_room_bank();
-    int32_t g[3];
-    re15_enemy_gore_bone_pos(e, g);          /* byte-true model_inst bone (LAB_8011f784[type]), not the root */
-    re15_esp_fx_spawn_ex(bank, 0, 0, 0x2000, g[0], g[1], g[2], (int16_t)e->rot_y);  /* a0=0x2000 */
-    re15_esp_fx_spawn_ex(bank, 0, 0, 0x2000, g[0], g[1], g[2], (int16_t)e->rot_y);  /* a0=0x2000 */
-    re15_esp_fx_spawn_ex(bank, 5, 0, 0x2800, g[0], g[1], g[2], (int16_t)e->rot_y);  /* a0=0x5002800 */
-}
 
 /* Zombie HURT hit-effect — byte-true: the master-table hurt dispatch FUN_80105a8c (entity+4==2)
  * calls master[entity+5=react-zone][entity+6=hit-dir] = the hit handler FUN_80105b7c (rows 1/3/4),
@@ -3399,12 +3362,25 @@ void re15_enemy_hurt_blood(re15_actor_t *e)
     int bone = (e->sub_state_2 == 1)
                  ? ((e->type < 0x30) ? (int)s_gore_bone[e->type] : 0)   /* @0x8011f784[type] */
                  : 2;                                                   /* @0x80105cd8: part 2 */
+    static const int32_t ofs_fe84[3] = { 200, 0, 0 };   /* a3 = 0x8011fe84 (`c8 00 ..`) @0x80105c9c / @0x80105cd4 */
     int32_t g[3];
-    re15_enemy_bone_world_pos(e, bone, g);
+    re15_enemy_part_point(e, bone, ofs_fe84, g);
     re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/, 0x2000 /* Original-a0 (D6, bite_blood_fx.md F6) */,
                       g[0], g[1], g[2], (int16_t)e->rot_y);
     re15_esp_fx_splatter(re15_esp_room_bank(), 0 /*blood*/, 8,
                          g[0], g[1], g[2], e->y);      /* floor = the actor's ground Y */
+}
+
+/* FUN_80019700(a0, +0x6a, Teil+0x40, a3) mit dem Teil-lokalen Versatz a3 (ApplyMatrix mit der Anker-R,
+ * @0x8001a248): a0 = Effekt<<24 | Sub<<16 | Skala. */
+void re15_enemy_fx19700(re15_actor_t *e, uint32_t a0, int part, const int32_t ofs[3])
+{
+    if (!e || !e->active) return;
+    static const int32_t null3[3] = { 0, 0, 0 };
+    int32_t p[3];
+    re15_enemy_part_point(e, part, ofs ? ofs : null3, p);
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), (uint8_t)(a0 >> 24), (uint8_t)((a0 >> 16) & 7), (uint16_t)(a0 & 0xffff),
+                         p[0], p[1], p[2], (int16_t)e->rot_y);
 }
 
 /* One blood burst anchored at ONE part's world transform — the shape every FUN_80019700 call in the
@@ -3434,7 +3410,8 @@ void re15_enemy_death_fx(re15_actor_t *e)
     if (!e || !e->active) return;
     int32_t g[3];
     int gore = (e->type < 0x30) ? (int)s_gore_bone[e->type] : 0;   /* @0x8011f784[type] */
-    re15_enemy_bone_world_pos(e, gore, g);
+    static const int32_t ofs_016c[3] = { 200, 0, 0 };   /* a3 = 0x8012016c @0x80106ce4-e8 */
+    re15_enemy_part_point(e, gore, ofs_016c, g);
     re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/, 0x2000 /* Original-a0 (D6, bite_blood_fx.md F6) */,
                       g[0], g[1], g[2], (int16_t)e->rot_y);        /* @0x80106d2c ALWAYS */
     /* The two ZONE-GATED extra bursts (@0x80106d5c part 0 / @0x80106d8c part 2) belong to the STANDING

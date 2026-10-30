@@ -52,16 +52,6 @@ int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
  * hit landed, 0 if the enemy was already hit this attack window. */
 int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type);
 
-/* Per-frame zombie gore effect (FUN_80106a44 @0x80106a98): if +0x93 & 2 (the 2nd-hit bit set
- * by re15_enemy_take_damage) is set, spawn the gore effect at the zombie and clear the bit.
- * Called per live zombie in re15_enemy_ai_run_all. */
-void re15_enemy_gore_tick(re15_actor_t *e);
-
-/* Zombie gore-SETUP behaviour (FUN_80106edc @0x80106edc, dispatch index sub_state_1==0x58): on
- * entry (sub_state_3==0) a 50% RNG spawns the gore burst (2x effect-id 0 + 1x effect-id 5 = the
- * VISIBLE ROOM1140 gore) at the zombie + sets sub_state_3=1. Called per live zombie in run_all. */
-void re15_enemy_gore_setup(re15_actor_t *e);
-
 /* Zombie HURT hit-effect (master hurt dispatch FUN_80105a8c -> FUN_80105b7c phase 0): on the hurt
  * entry (state==2, sub_state_3==0) spawn effect-id 0 (the universal hit/blood fx from the global
  * CORE00.ESP bank) at the zombie + advance the phase. Called per live zombie in run_all. */
@@ -70,6 +60,7 @@ void re15_enemy_hurt_blood(re15_actor_t *e);   /* HURT phase-0 blood, bone-ancho
 void re15_enemy_bone_world_pos(const re15_actor_t *e, int bone, int32_t out[3]);
 /* FUN_8001a5e0 Schritt 1+2: Weltpunkt von Teil `bone` + Teil-lokalem Versatz (re15_damage.c). */
 int  re15_enemy_part_point(const re15_actor_t *e, int bone, const int32_t ofs[3], int32_t out[3]);
+void re15_enemy_fx19700(re15_actor_t *e, uint32_t a0, int part, const int32_t ofs[3]);   /* FUN_80019700 mit a3-Versatz */
 void re15_enemy_blood_at_bone(re15_actor_t *e, int bone);   /* one burst at part `bone` */
 
 /* Zombie DEATH gore (death sub-FSM FUN_80107cb0): effect-id 0 blood burst at death-start and again

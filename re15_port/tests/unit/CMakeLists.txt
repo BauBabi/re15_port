@@ -4082,6 +4082,15 @@ target_compile_definitions(test_birkin_szenen PRIVATE
 add_test(NAME unit_birkin_szenen COMMAND test_birkin_szenen)
 set_tests_properties(unit_birkin_szenen PROPERTIES TIMEOUT 60)
 
+# --- ZOMBIE-GORE je Waffe (zombiegore_r15.c) + RE1.5-Teilschicht (teile_r15.c) ---
+add_executable(test_zombie_gore test_zombie_gore.c)
+target_link_libraries(test_zombie_gore PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_zombie_gore PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_zombie_gore PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_zombie_gore COMMAND test_zombie_gore)
+set_tests_properties(unit_zombie_gore PROPERTIES TIMEOUT 60)
+
 # --- BIRKIN-SPIELER-HAKEN 0x8011afd8 (Leons Reaktion auf Kralle/Biss/Wurf, Nutzer-Report v0.8.29 ROOM5080) ---
 add_executable(test_birkin_opfer test_birkin_opfer.c)
 target_link_libraries(test_birkin_opfer PRIVATE re15_engine re15_test_support m)
