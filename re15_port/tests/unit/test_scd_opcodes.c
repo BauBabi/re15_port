@@ -1136,84 +1136,8 @@ static int test_sce_espr_on_spawn(void)
     return fail;
 }
 
-/* re15_enemy_gore_tick (FUN_80106a44 @0x80106a98): the 2nd-hit bit (+0x93 & 2) -> spawn the
- * gore effect at the zombie + clear the bit. Byte-true effect-id 0, a1 = rot_y. */
-static int test_enemy_gore_tick(void)
-{
-    int fail = 0;
-    re15_esp_fx_reset();
-    re15_esp_set_room_bank(NULL);
-    re15_actor_t z;
-    memset(&z, 0, sizeof z);
-    z.active = 1; z.type = 0x10; z.hit_react = 0x2;
-    z.x = 100; z.y = 200; z.z = 300; z.rot_y = 0x40;
-
-    re15_enemy_gore_tick(&z);
-    const re15_esp_fx_t *f = re15_esp_fx_get(0);
-    if (re15_esp_fx_count() != 1 || (z.hit_react & 0x2) != 0 || !f ||
-        f->effect_id != 0 || f->x != 100 || f->y != 200 || f->z != 300 || f->param != 0x40) {
-        fprintf(stderr, "FAIL: gore_tick spawn/clear: count=%d hit=0x%x\n",
-                re15_esp_fx_count(), z.hit_react); fail = 1; }
-
-    /* bit cleared -> next tick must NOT re-spawn. */
-    re15_enemy_gore_tick(&z);
-    if (re15_esp_fx_count() != 1) { fprintf(stderr, "FAIL: gore_tick double-spawn\n"); fail = 1; }
-
-    /* no bit -> no spawn. */
-    re15_esp_fx_reset();
-    z.hit_react = 0;
-    re15_enemy_gore_tick(&z);
-    if (re15_esp_fx_count() != 0) { fprintf(stderr, "FAIL: gore_tick spawned without bit\n"); fail = 1; }
-
-    re15_esp_fx_reset();
-    if (!fail) printf("PASS: test_enemy_gore_tick (0x80106a44 +0x93&2 -> spawn + clear)\n");
-    return fail;
-}
-
-/* re15_enemy_gore_setup (FUN_80106edc, dispatch index sub_state_1==0x58): the effect-id-5 gore
- * setup. Gated on sub_state_1==0x58 + sub_state_3==0 + (rand&1); spawns 2x effect-0 + 1x effect-5. */
-static int test_enemy_gore_setup(void)
-{
-    int fail = 0;
-    re15_esp_fx_reset();
-    re15_esp_set_room_bank(NULL);
-    re15_actor_t z;
-    memset(&z, 0, sizeof z);
-    z.active = 1; z.type = 0x10; z.x = 10; z.y = 20; z.z = 30; z.rot_y = 7;
-
-    /* GATE: wrong sub_state_1 -> no spawn (deterministic). */
-    z.sub_state_1 = 0x10; z.sub_state_3 = 0;
-    re15_enemy_gore_setup(&z);
-    if (re15_esp_fx_count() != 0) { fprintf(stderr, "FAIL: (gore_setup) fired on wrong state\n"); fail = 1; }
-
-    /* GATE: sub_state_3 != 0 (already set up) -> no spawn. */
-    z.sub_state_1 = 0x58; z.sub_state_3 = 1;
-    re15_enemy_gore_setup(&z);
-    if (re15_esp_fx_count() != 0) { fprintf(stderr, "FAIL: (gore_setup) fired with sub_state_3!=0\n"); fail = 1; }
-
-    /* correct state (sub_state_1==0x58, sub_state_3==0): rand-gated -> loop until it spawns. */
-    int spawned = 0;
-    for (int k = 0; k < 60 && !spawned; k++) {
-        re15_esp_fx_reset();
-        z.sub_state_1 = 0x58; z.sub_state_3 = 0; z.sub_state_2 = 0;
-        re15_enemy_gore_setup(&z);
-        if (re15_esp_fx_count() == 3 && z.sub_state_3 == 1) {  /* 2x effect-0 + 1x effect-5 */
-            int has5 = 0;
-            for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
-                const re15_esp_fx_t *f = re15_esp_fx_get(i);
-                if (f && f->effect_id == 5 && f->x == 10 && f->param == 7) has5 = 1;
-            }
-            if (has5) spawned = 1;
-        } else if (z.sub_state_2 == 5 && re15_esp_fx_count() == 0) {
-            /* defer branch (rand even): no spawn, sub_state_2=5 — byte-true, keep looping. */
-        }
-    }
-    if (!spawned) { fprintf(stderr, "FAIL: (gore_setup) never spawned effect-5 in 60 tries\n"); fail = 1; }
-
-    re15_esp_fx_reset();
-    if (!fail) printf("PASS: test_enemy_gore_setup (0x80106edc sub_state_1==0x58 -> effect-5 gore burst)\n");
-    return fail;
-}
+/* (test_enemy_gore_tick / test_enemy_gore_setup entfernt: sie prueften erfundenes Verhalten — 0x80106a44 ist ein
+ * Prolog-Wort, 0x58 eine Fehllesung von DEATH[7][1] @0x8011ff90. Die echten Handler testet test_zombie_gore.) */
 
 /* re15_enemy_hurt_fx (FUN_80105a8c/FUN_80105b7c): on the hurt entry (state==2, sub_state_3==0)
  * spawn effect-id 0 (the universal hit/blood fx) at the zombie + advance the phase. */
@@ -1312,8 +1236,6 @@ int main(void)
     failures += test_flag_ck2();
     failures += test_cut_replace_no_camera_change();
     failures += test_sce_espr_on_spawn();
-    failures += test_enemy_gore_tick();
-    failures += test_enemy_gore_setup();
     failures += test_enemy_hurt_fx();
     failures += test_enemy_death_fx();
 

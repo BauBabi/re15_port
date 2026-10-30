@@ -190,7 +190,9 @@ static void vorschub(re15_actor_t *e)
  * Decke trifft (A[9..14], B[7]/B[8]). Port wie der Gorilla (re15_maggot_gore): Effekt 0 der Raum-Bank am Aktor. */
 static void blut(const re15_actor_t *e)
 {
-    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000, e->x, e->y, e->z, (int16_t)e->rot_y);
+    /* a2 = Record 0 + 0x40 = Teil 0, a3 = 0x8011ec84 = Woerter (200, -800, 0) (Teil-lokaler Versatz, @0x8001a248). */
+    static const int32_t ofs[3] = { 200, -800, 0 };
+    re15_enemy_fx19700((re15_actor_t *)e, 0x2000, 0, ofs);
 }
 
 /* A[9]..A[14] (+ B[7]/B[8] Phase 1/2): Schuss im Flug. Der Schaden fasst den Affen hier nicht an, weil +0x93 Bit 0

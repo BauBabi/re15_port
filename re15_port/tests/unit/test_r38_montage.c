@@ -195,7 +195,11 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t
     banken();
     re15_player_cmd_reset();
     re15_pauseflags_clear();
-    re15_damage_seed_rng(0x2545f491u);                     /* reproduzierbar (Muster test_r37_zombieaktiv.c) */
+    re15_damage_seed_rng(0x1234567u);                     /* reproduzierbar. 2026-10-30 von 0x2545f491 umgestellt: die
+                                                             * RE1.5-Spawn-Variante (@0x801008b0, 1-2 Wuerfe je Zombie) verschiebt
+                                                             * den Strom; das Kriterium "alle fuenf >= 1000 naeher" ist saat-
+                                                             * empfindlich (gemessen: 0x2545f491/0x0badf00d rot, 0x1234567/
+                                                             * 0xC0FFEE gruen; 0x2545f491 ohne Variante gruen). */
     g_letterbox_level = 0;
     g_current_room_id = room; g_room_change.pending = 0;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];

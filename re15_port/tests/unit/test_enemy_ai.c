@@ -566,7 +566,10 @@ static int test_live_active_lunge(void)
     int r = re15_enemy_ai_live_active(1);
     if (r != 1)                       { fprintf(stderr, "FAIL: armed @300 muss Lunge feuern (1), war %d\n", r); return 1; }
     if (e->ai_attack_timer != 0x12c)  { fprintf(stderr, "FAIL: timer 0x12d->0x12c, ist 0x%x\n", e->ai_attack_timer); return 1; }
-    if (e->lunge_frames != 0x20)      { fprintf(stderr, "FAIL: lunge_begin muss lunge_frames=0x20 setzen, ist %d\n", e->lunge_frames); return 1; }
+    /* 2026-10-30 KORRIGIERT: bei 300 kein Biss-Fenster. 8x FUN_80019d50(8,3,0x16,Teil) schaltet die angehaengten
+     * Flammen auf Routine 22 -> 23 -> 0x12 (@0x80017ecc / @0x80017f24), die Hitbox-Routine 0x18 wird nie erreicht
+     * (re15_brandzombie.h). */
+    if (e->lunge_frames != 0)         { fprintf(stderr, "FAIL: bei 300 kein Lunge-Fenster mehr, ist %d\n", e->lunge_frames); return 1; }
 
     /* A non-300 frame counts down without firing. */
     e = fresh_enemy(0x10);
@@ -662,10 +665,11 @@ static int test_live_step_chain(void)
     /* Frame 2: active counts 0x12d->0x12c (300) -> lunge_begin (window 0x20); then the lunge slice
      * fires the shared hitbox this same frame -> player -10 + hurt(2), bite-once resets the window. */
     re15_enemy_ai_live_step(s);
-    if (pl->hp != (int16_t)(hp_before - 10)) { fprintf(stderr, "FAIL: live chain lunge bite -10, HP %d->%d\n", hp_before, pl->hp); return 1; }
-    if (pl->state != 2)                      { fprintf(stderr, "FAIL: live chain player hurt(2), ist %d\n", pl->state); return 1; }
+    /* 2026-10-30: 300 = Aufflammen der Flammen (Routine 22, re15_brandzombie.h), KEIN Schaden. */
+    if (pl->hp != hp_before)                 { fprintf(stderr, "FAIL: live chain @300 darf nicht beissen, HP %d->%d\n", hp_before, pl->hp); return 1; }
+    if (e->ai_attack_timer != 0x12c)         { fprintf(stderr, "FAIL: live chain timer 0x12c, ist 0x%x\n", e->ai_attack_timer); return 1; }
 
-    printf("PASS: test_live_step_chain (live spawn->tick->arm->lunge@300->HP %d->%d)\n", hp_before, pl->hp);
+    printf("PASS: test_live_step_chain (live spawn->tick->arm->@300 Aufflammen, HP %d unveraendert)\n", pl->hp);
     return 0;
 }
 

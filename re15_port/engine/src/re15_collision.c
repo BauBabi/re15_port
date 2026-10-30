@@ -693,6 +693,10 @@ static int32_t coll_contact_dir(int32_t px, int32_t pz, const re15_sca_entry_t *
     return 0xf00;
 }
 
+/* +0x1b4-Kanal: Index der zuletzt geklemmten Zelle des letzten Aufrufs (-1 = keine), s. re15_collision_letzte_zelle. */
+static int s_letzte_zelle = -1;
+int re15_collision_letzte_zelle(void) { return s_letzte_zelle; }
+
 static int collision_constrain_impl(const re15_rdt_t *rdt,
                                     int32_t old_x, int32_t old_z,
                                     int32_t *x, int32_t *z,
@@ -718,6 +722,7 @@ static int collision_constrain_impl(const re15_rdt_t *rdt,
      * @0x8003b1fc-204) hat keine beobachtbare Wirkung und wird NICHT portiert. */
     if (contact)   *contact = (uint8_t)(*contact & 0xf0);
     if (cell_attr) *cell_attr = 0;
+    s_letzte_zelle = -1;                               /* +0x1b4 = 0 @0x8003b1ec */
 
     int any_hit = 0;                                   /* uVar14 / v0 = FUN_8003b0a4-Rueckgabe */
 
@@ -767,6 +772,7 @@ static int collision_constrain_impl(const re15_rdt_t *rdt,
                 *contact = (uint8_t)((coll_contact_dir(*x, *z, e) >> 4) + 8 + (e->u1 & 3));
             if (cell_attr)
                 *cell_attr = (uint16_t)((uint16_t)e->u1 | ((uint16_t)e->floor << 8));
+            s_letzte_zelle = i;                        /* `sw s4,436(v0)` @0x8003b4ec (letzte Zelle gewinnt) */
             any_hit = 1;
         }
     }

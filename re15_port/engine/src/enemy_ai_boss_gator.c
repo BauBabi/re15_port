@@ -324,9 +324,16 @@ static void gb_se_frameflag(int id)
 static gb_state_t s_gb[RE15_ACTOR_MAX];
 static unsigned   s_gb_room;       /* Raum, fuer den s_gb gilt (Reset bei Wechsel) */
 
+int re15_gator_original(void)
+{
+    static int an = -1;
+    if (an < 0) { const char *v = getenv("RE15_GATOR_ORIGINAL"); an = (v && *v && *v != '0') ? 1 : 0; }
+    return an;
+}
+
 int re15_gator_boss_active(const re15_actor_t *e)
 {
-    return e && e->type == 0x23u && ((g_current_room_id & 0xFFFEu) == 0x2090u);
+    return e && e->type == 0x23u && ((g_current_room_id & 0xFFFEu) == 0x2090u) && !re15_gator_original();
 }
 
 /* Klemme dieses Takts aussetzen? NUR die Bogen-Phase: der Anlauf laeuft seit GB_BAHN_M (Kante ausserhalb des Clamp-Radius)

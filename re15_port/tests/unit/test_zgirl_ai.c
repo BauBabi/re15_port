@@ -24,6 +24,7 @@
  *   (6) FLOOR-DROP: girl row [0xa] = FUN_8010bbe8 — floor+=1, y-=0x708.
  * ==========================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 
@@ -43,6 +44,9 @@ static void face_player(re15_actor_t *g, const re15_actor_t *pl)
 int main(void)
 {
     int fail = 0;
+    /* Auslieferungsstand: der Granaten-Tod (Art 2 -> +0x5 = 9) ist im Original eine NULL-Zelle; das Video-3-Gore
+     * (zombiegore_r15.c, Gestaltung) wuerde das Maedchen zum Kriecher machen. */
+    setenv("RE15_KEIN_80PROZENT_GORE", "1", 1);
     /* Dieser Test pinnt den byte-true RE1.5-AUSLIEFERUNGSSTAND. Seit 2026-08-22 zieht die
      * Port-Option re15_re15_re2z_import() (Default AN, Nutzer-Entscheidung "der fette Zombie muss
      * nicht jeden 2. Schuss umfallen") zusaetzlich die RE2-STURZREGEL in den RE1.5-Modus: die

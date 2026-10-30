@@ -506,6 +506,10 @@ void re15_gatorszene_r41_install(uint16_t room_id)
     const uint16_t basis = (uint16_t)(room_id & 0xFFFEu);
     s_einst_slot = -1;                                      /* Nachbesserung 2: Raumaufbau setzt die SCD-Faeden neu */
     s_r1_cut = -1; s_r1_lief = 0;                           /* Nachbesserung 3: kein R1 im neuen Raum */
+    /* RE15_GATOR_ORIGINAL: die ganze Szene (Ankunft, Montage 2080, Water-Key-Tor) gehoert zum Bosskampf-Design; der
+     * RE1.5-Alligator laeuft im ausgelieferten Raum ohne sie. Sonst haelt Programm 1 den Spieler (player_mode 2), und der
+     * Szenenschutz zeigt der RE1.5-KI Spieler+0x93 Bit 0 — ihr Wasser-Hub A[6] @0x8010da10-18 wartet dann ewig. */
+    if (re15_gator_original()) { s_zustand = RE15_GSZ_AUS; return; }
     tor_sperren(room_id);
     if (basis == RE15_GSZ_RAUM) {
         if (s_zustand == RE15_GSZ_MONTAGE) {                /* zurueck aus 2080: Programm 3 */

@@ -199,6 +199,12 @@ typedef struct {
      * Position jeden Tick uebernommen wird (EM26 hat 1 Bone — Part-Position == Entity-
      * Position). -1 = kein Eltern-Anker. */
     int8_t   follow_slot;
+    /* TEIL-ANKER (brennende Zombies 2026-10-30): FUN_80019700 bekommt a2 = Teil-Matrix (*(entity+0x188) + k*0xac
+     * + 0x40, z.B. @0x801009a8-c4) und a3 = Teil-lokaler Versatz; mit Flags-Bit 0x04 kopiert der Slot-Tick diese
+     * Matrix jeden Frame (@0x80019f68-f94). Port: follow_part >= 0 = Knochen der geladenen Bank, Lage =
+     * re15_enemy_part_point(follow_slot, follow_part, follow_ofs). -1 = Aktor-Wurzel (wie bisher). */
+    int8_t   follow_part;
+    int32_t  follow_ofs[3];
     /* ===== Runde 34 VERTRAG V1 (C0, BAUPLAN §3.0) — nur Felder, KEIN Verhalten in C0 =====
      * wpos = slot+0x28/+0x2a/+0x2c, die s16-WELTLAGE des Platzes. Das Original rechnet sie je
      * Tick im Hauptlauf von FUN_80019e20 neu (@0x8001a118-2a4: `jal 0x80068098` @0x8001a1a0,
@@ -273,6 +279,12 @@ re15_esp_fx_t *re15_esp_granate_spawn(const re15_esp_t *bank, uint8_t art,
 unsigned       re15_esp_granate_resolver_calls(void);
 
 void           re15_esp_fx_reset(void);
+/* FUN_80019d50: Routine A der passenden Plaetze umschalten (Anker = follow_slot/follow_part; slot < 0 = alle). */
+/* FUN_80019700 mit Teil-Anker (Zeilen-Maschine, Flags 0x04 = FOLLOW). */
+re15_esp_fx_t *re15_esp_fx_spawn_teil(const re15_esp_t *bank, uint8_t id, uint8_t sub, uint16_t scale16,
+                                      int32_t x, int32_t y, int32_t z, int16_t yaw,
+                                      int follow_slot, int follow_part, const int32_t ofs[3]);
+int            re15_esp_fx_routine_setzen(uint8_t id, uint8_t sub, uint16_t routine, int anker_slot, int anker_teil);
 int            re15_esp_fx_count(void);
 /** Spawn an op-0x3a effect particle. `bank` = the room's parsed ESP (resolves effect_id ->
  *  eff_idx for anim cycling; may be NULL -> eff_idx=-1, anim disabled). Returns the slot or NULL. */

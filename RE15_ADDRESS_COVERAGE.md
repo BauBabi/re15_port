@@ -1,6 +1,6 @@
 # RE1.5-Port — Adress-Coverage-Übersicht (zitierte Original-Adressen)
 
-**Stand: 2026-08-23** — generiert von `analysis/coverage/generate_address_coverage.py`
+**Stand: 2026-10-30** — generiert von `analysis/coverage/generate_address_coverage.py`
 aus `analysis/coverage/cited_addresses.json` (Zensus des Port-Quellcodes via
 `extract_cited_addresses.py`), `original_exe_inventory.json` und `original_overlay_inventory.json`.
 Rohdaten: `analysis/coverage/coverage_result.json`.
@@ -41,12 +41,12 @@ Zuordnungsregeln (implementiert in `generate_address_coverage.py`):
    Adressen `>= 0x80100000`. ⚠️ **Mehrdeutigkeit:** Alle Stages teilen sich den Adressraum
    ab `0x80100000` — eine zitierte Overlay-Adresse kann in **mehreren** Stages in einem
    Funktionsintervall liegen und wird dann für **jede** dieser Stages gezählt
-   (6973 von 6996 Overlay-Zitaten treffen mehr als eine Stage).
+   (9992 von 10062 Overlay-Zitaten treffen mehr als eine Stage).
    Aus dem Zitat allein ist NICHT entscheidbar, welche Stage gemeint war; die Stage-Spalten
    sind daher obere Schranken je Stage, keine disjunkte Aufteilung.
 3. **DAT_-Zitate (Daten-Globals):** Adressen, die mindestens einmal als `DAT_…` zitiert werden,
    zählen als Daten-Globals: separat gezählt, **nicht** auf Funktionen gemappt — auch wenn
-   dieselbe Adresse zusätzlich als rohes `0x…`-Literal zitiert wird (110 solcher Mischfälle).
+   dieselbe Adresse zusätzlich als rohes `0x…`-Literal zitiert wird (172 solcher Mischfälle).
 4. **Subsystem-Sicht:** Katalog-Adressen aus `RE15_FUN_CATALOG.md` (via `original_exe_inventory.json`)
    werden mit derselben Intervallregel auf EXE-Funktionen gemappt (exakter Start gewinnt, sonst
    niedrigste Katalog-Adresse im Intervall); der Kontext-Text wird auf sein Subsystem-Label gekürzt.
@@ -58,16 +58,16 @@ Nicht Teil des Nenners: die 872 benannten (PsyQ-/SDK-)Symbole aus
 
 | Metrik | Wert |
 |---|---|
-| Zitierte Original-Adressen im Port (unique) | **11703** |
-| … davon DAT_-Daten-Globals (separat, nicht gemappt) | 264 (EXE-Raum 256, Overlay-Raum 8) |
-| … davon Funktions-Zitate im EXE-Raum (< 0x80100000) | 4443 |
-| … davon Funktions-Zitate im Overlay-Raum (>= 0x80100000) | 6996 |
+| Zitierte Original-Adressen im Port (unique) | **20364** |
+| … davon DAT_-Daten-Globals (separat, nicht gemappt) | 326 (EXE-Raum 317, Overlay-Raum 9) |
+| … davon Funktions-Zitate im EXE-Raum (< 0x80100000) | 9976 |
+| … davon Funktions-Zitate im Overlay-Raum (>= 0x80100000) | 10062 |
 | EXE-Funktionen (Decompile-Inventar) | 386 |
-| EXE-Funktionen ZITIERT | **290** (75.1%) |
-| EXE-Funktionen NICHT zitiert | 96 |
-| EXE-Raum-Zitate auf Funktionen gemappt / ungemappt | 3774 / 669 (ungemappt = Datenraum oder > Start+0x4000) |
-| Overlay-Zitate, die mehrere Stages treffen (Mehrdeutigkeit) | 6973 |
-| Overlay-Zitate ohne Stage-Funktions-Treffer | 23 |
+| EXE-Funktionen ZITIERT | **332** (86.0%) |
+| EXE-Funktionen NICHT zitiert | 54 |
+| EXE-Raum-Zitate auf Funktionen gemappt / ungemappt | 8564 / 1412 (ungemappt = Datenraum oder > Start+0x4000) |
+| Overlay-Zitate, die mehrere Stages treffen (Mehrdeutigkeit) | 9992 |
+| Overlay-Zitate ohne Stage-Funktions-Treffer | 66 |
 
 ### Overlay-Coverage je Stage
 
@@ -75,12 +75,12 @@ Nicht Teil des Nenners: die 872 benannten (PsyQ-/SDK-)Symbole aus
 
 | Stage | Funktionen | zitiert | nicht zitiert | zitiert % | gemappte Zitate |
 |---|---:|---:|---:|---:|---:|
-| STAGE1 | 650 | 514 | 136 | 79.1% | 6829 |
-| STAGE2 | 456 | 410 | 46 | 89.9% | 6706 |
-| STAGE3 | 526 | 440 | 86 | 83.7% | 6933 |
-| STAGE4 | 459 | 417 | 42 | 90.8% | 6793 |
-| STAGE5 | 535 | 438 | 97 | 81.9% | 6973 |
-| STAGE6 | 73 | 72 | 1 | 98.6% | 3333 |
+| STAGE1 | 650 | 579 | 71 | 89.1% | 9784 |
+| STAGE2 | 456 | 435 | 21 | 95.4% | 9326 |
+| STAGE3 | 526 | 485 | 41 | 92.2% | 9932 |
+| STAGE4 | 459 | 436 | 23 | 95.0% | 9611 |
+| STAGE5 | 535 | 483 | 52 | 90.3% | 9992 |
+| STAGE6 | 73 | 72 | 1 | 98.6% | 4133 |
 
 ## Subsystem-Sicht (EXE-Funktionen × Katalog-Kontext)
 
@@ -90,14 +90,14 @@ dass der Katalog nur einen Teil des EXE-Inventars abdeckt.
 
 | Subsystem (Katalog-Kontext) | Funktionen | zitiert | nicht zitiert |
 |---|---:|---:|---:|
-| (ohne Katalog-Kontext) | 280 | 185 | 95 |
+| (ohne Katalog-Kontext) | 280 | 226 | 54 |
 | Player / animation | 16 | 16 | 0 |
 | Combat / player damage | 11 | 11 | 0 |
 | Prop / fixture rendering + perf | 11 | 11 | 0 |
 | Sprite / BG / MDEC / TIM | 11 | 11 | 0 |
 | Enemy AI | 8 | 8 | 0 |
 | RVD / AOT | 8 | 8 | 0 |
-| Render / fade / letterbox | 6 | 5 | 1 |
+| Render / fade / letterbox | 6 | 6 | 0 |
 | Stairs / floor-band traversal | 6 | 6 | 0 |
 | Camera | 5 | 5 | 0 |
 | Lighting / NCCT | 5 | 5 | 0 |
@@ -109,46 +109,33 @@ dass der Katalog nur einen Teil des EXE-Inventars abdeckt.
 
 ## Anhang A — nicht-zitierte EXE-FUN-Adressen
 
-96 von 386 EXE-Funktionen ohne Adress-Zitat im Port-Code
+54 von 386 EXE-Funktionen ohne Adress-Zitat im Port-Code
 (Semantik siehe oben: nicht zwingend unportiert, aber ohne Beleg im Code):
 
 ```
-80010140  800116f4  8001306c  800130c4  80013114  8001311c  80013404  800134f0
-80013a88  80013df0  80013f80  800160c4  8001613c  800166c4  800170e0  800171b4
-8001a504  8001f1e0  8001f220  80020610  80020894  800209b8  800209ec  80021eb4
-8002288c  8002441c  80025360  800253fc  80025940  80025a98  80026c34  80026ca8
-80026dd4  80026f90  80027108  800276b0  80027724  80027780  80027828  8002939c
-80029560  80029690  800297c8  800298b0  80029a28  80029e84  80029f40  8002a050
-8002a16c  8002a1b8  8002abec  8002ac38  8002ad34  8002ad64  8002adb0  8002adf4
-8002ae38  8002b7e8  8002bc04  8002d3d8  8002dacc  8002f3f0  8002f600  8002f884
-80037250  800396a8  80039a30  80039c2c  8003bc2c  8003da78  8003e9d4  8003ea3c
-8003edbc  80043850  80043b80  80044fec  8004694c  80046f68  800487b0  8004c830
-8004d4c4  8004d96c  8004df90  8004edfc  8004ee60  800537e4  80053a8c  8005ad40
-8005f87c  8005f89c  80060d8c  800614d0  80064768  80066d60  8006e170  8006e468
+80010140  8001306c  80013114  80013404  800134f0  80013f80  800160c4  800170e0
+8001a504  800209b8  800209ec  8002288c  80026c34  80026f90  80027108  800276b0
+80027724  80027780  80027828  8002939c  80029560  800297c8  8002a16c  8002a1b8
+8002abec  8002ac38  8002ad34  8002ad64  8002adb0  8002adf4  8002ae38  8002bc04
+8002f3f0  8002f600  80039c2c  8003e9d4  8003ea3c  8003edbc  80043b80  80044fec
+8004694c  80046f68  8004d4c4  8004d96c  8004df90  8004edfc  8004ee60  8005ad40
+8005f87c  8005f89c  80060d8c  800614d0  80064768  80066d60
 ```
 
 ## Anhang B — nicht-zitierte STAGE1-Overlay-Funktionen
 
-136 von 650 STAGE1-Overlay-Funktionen ohne Adress-Zitat:
+71 von 650 STAGE1-Overlay-Funktionen ohne Adress-Zitat:
 
 ```
-80103978  80106a24  80107c9c  801092dc  80109a44  80109d74  80109d78  80109ef8
-8010a8b8  8010af84  8010b26c  8010b2e8  8010b814  8010b87c  8010b8f8  8010b974
-8010b9ec  8010b9f0  8010ba6c  8010bae8  8010bb3c  8010be38  8010bf14  8010bf68
-8010c088  8010c138  8010c334  8010cb14  8010cfc8  8010cfe0  8010d5c0  8010e2f0
-8010e690  8010e6c4  8010ea24  8010efa4  8010f7f0  8010fc48  8010fdbc  801108d0
-8011099c  80110b98  80110db0  80111648  80112230  80112684  80112938  80113384
-8011340c  8011347c  801137fc  80113900  801152cc  8011539c  8011552c  80115efc
-80116750  8011696c  8011723c  8011926c  80119284  80119634  8011970c  8011971c
-80119770  80119998  801199f8  80119d0c  8011a160  8011a818  8011afb8  8011b750
-8011b988  8011bb8c  8011c084  8011c150  8011c1cc  8011c248  8011c290  8011c2d8
-8011c370  8011c414  8011c818  8011c8a8  8011c940  8011c950  8011c9cc  8011ca48
-8011ca90  8011cab8  8011cad8  8011ccac  8011cd30  8011cdac  8011cdf4  8011ce3c
-8011cf9c  8011d018  8011d04c  8011d060  8011d0a8  8011d1f4  8011d3d0  8011d460
-8011d4b4  8011d530  8011d598  8011d5ac  8011d5f4  8011d63c  8011d740  8011d904
-8011d94c  8011d994  8011dac4  8011db70  8011dbd0  8011de44  8011dec0  8011df3c
-8011df40  8011df84  8011dfcc  8011e00c  8011e064  8011e088  8011e104  8011e14c
-8011e194  8011e518  8011e634  8011e644  8011e6c0  8011e73c  8011e784  8011e7cc
+80106a24  801092dc  80109a44  80109d74  80109d78  80109ef8  8010a8b8  8010b26c
+8010be38  8010bf14  8010bf68  8010c088  8010c334  8010cb14  8010cfc8  8010d5c0
+8010e2f0  8010e690  8010e6c4  8010fc48  801108d0  80110db0  80112684  80115efc
+80116750  8011723c  8011970c  80119d0c  8011a818  8011b988  8011bb8c  8011c818
+8011c8a8  8011c940  8011c950  8011c9cc  8011ca48  8011ca90  8011cab8  8011cdf4
+8011ce3c  8011d018  8011d04c  8011d060  8011d1f4  8011d460  8011d4b4  8011d530
+8011d598  8011d5ac  8011d5f4  8011d63c  8011d994  8011db70  8011dbd0  8011df3c
+8011df40  8011df84  8011dfcc  8011e00c  8011e088  8011e104  8011e14c  8011e194
+8011e518  8011e634  8011e644  8011e6c0  8011e73c  8011e784  8011e7cc
 ```
 
 ## Anhang C — STAGE2–6 (nur Zählwerte)
@@ -159,9 +146,9 @@ die Funktionsinventare in `analysis/coverage/original_overlay_inventory.json`.
 
 | Stage | nicht zitiert / gesamt |
 |---|---:|
-| STAGE2 | 46 / 456 |
-| STAGE3 | 86 / 526 |
-| STAGE4 | 42 / 459 |
-| STAGE5 | 97 / 535 |
+| STAGE2 | 21 / 456 |
+| STAGE3 | 41 / 526 |
+| STAGE4 | 23 / 459 |
+| STAGE5 | 52 / 535 |
 | STAGE6 | 1 / 73 |
 

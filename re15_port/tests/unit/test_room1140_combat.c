@@ -174,10 +174,10 @@ int main(void)
 
     if (z->ai_attack_timer != 0x12c) {
         fprintf(stderr, "FAIL: armed windup 0x12d->0x12c through run_all, ist 0x%x\n", z->ai_attack_timer); fail = 1; }
-    if (pl->hp != (int16_t)(hp_before_bite - 10)) {
-        fprintf(stderr, "FAIL: lunge bite -10 through run_all, HP %d->%d\n", hp_before_bite, pl->hp); fail = 1; }
-    if (pl->state != 2) {
-        fprintf(stderr, "FAIL: bitten player -> hurt state 2, ist %d\n", pl->state); fail = 1; }
+    /* 2026-10-30 KORRIGIERT: 300 = Aufflammen der angehaengten Flammen (FUN_80019d50 Routine 22 -> 23 -> 0x12,
+     * @0x80017ecc/@0x80017f24), kein Biss (re15_brandzombie.h). */
+    if (pl->hp != hp_before_bite) {
+        fprintf(stderr, "FAIL: @300 darf nicht beissen, HP %d->%d\n", hp_before_bite, pl->hp); fail = 1; }
     printf("  (3) armed zombie slot %d lunge through run_all -> player HP %d->%d, hurt state %d\n",
            za, hp_before_bite, pl->hp, pl->state);
 

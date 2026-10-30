@@ -12,6 +12,10 @@
 
 /* 1, wenn dieser Aktor im aktuellen Raum als Boss laeuft (Typ 0x23 in ROOM2090/2091). */
 int  re15_gator_boss_active(const re15_actor_t *e);
+/* RE15_GATOR_ORIGINAL=1: der RE1.5-Alligator statt des Bosskampf-Designs — Modell CDEMD0.EMS Block 25 (Sektor 1922,
+ * im Auslieferungsstand ohne Eintrag in der Modell-Ladetabelle @0x80072f38, Typ 0x23 = 0/0) und die RE1.5-KI der
+ * Wurzel 0x8010c448 (STAGE2, registriert @0x80116f64; Port re15_alligator_ai_tick). */
+int  re15_gator_original(void);
 
 /* Der Boss-Tick — ersetzt re15_alligator_ai_tick fuer den Boss-Aktor. */
 void re15_gator_boss_tick(int slot);
