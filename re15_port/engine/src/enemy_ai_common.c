@@ -12017,7 +12017,7 @@ static void re15_birkin_ai_tick(int slot)
                 if (e->anim_frame == 0x2c) {                           /* frame 0x2c box overlap @0x80117e84 */
                     if (re15_bk_arc(e, pl, 2500, 0x400)) {            /* hit: throw (aca58=6) + Se(2) @0x80117ee4/f0c */
                         /* aca58 = 6 (Wort, aca59 = 0) @0x80117ee4: STAGE5 registriert cmd 6 auf denselben Haken
-                         * 0x8011afd8 (@0x8011defc) -> Haken [0] vorn; STAGE3 = 0x8011b168 OFFEN (alter Pin). */
+                         * 0x8011afd8 (@0x8011defc) -> Haken [0] vorn; STAGE3 = Stub 0x8011b168 -> Wurf-Tod 0x8011b1a8 (Variante 3). */
                         if (!re15_bk_opfer_start(e, 6, 0)) s_player_grabbed = 1;
                         pl->hit_react |= 1; re15_audio_room_se(2);
                     } else {

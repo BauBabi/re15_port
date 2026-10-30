@@ -42,15 +42,21 @@ void re15_bk_opfer_reset(void)    { s_cmd = 0; s_var = 0; s_ph = 0xff; s_tempo =
 
 int re15_bk_opfer_start(const re15_actor_t *birkin, uint8_t cmd, uint8_t variante)
 {
-    /* STAGE3 registriert cmd 6 auf die eigene Wurf-Maschine 0x8011b168 (`_DAT_800ac918 = 0x8011b168`,
-     * STAGE3_overlay.c:12761) — Opfer-Clip 1 + Blut an vier Koerperteilen, Ende cmd 7 (aca5a 2 @0x8011b5bc
-     * STAGE3-Spiegel von @0x8011bda8). OFFEN: nicht gebaut, der Aufrufer behaelt dort den alten Pin. */
-    if (cmd == 6 && ((g_current_room_id >> 12) & 0xFu) != 5u) return 0;
-    if (variante > 2) return 0;
+    /* cmd 6 (Wurf, aca59 = 0): STAGE5 registriert ihn auf den Haken selbst (@0x8011defc) -> [0]; STAGE3 auf den
+     * eigenen Stub 0x8011b168 (STAGE3_overlay.c:12761), dessen Tabelle @0x8011f4b0[0] = 0x8011b1a8 die WURF-
+     * TOD-Maschine ist (in STAGE5 als aca59-Eintrag [3] @0x8011b9bc mitgefuehrt, dort von keinem Treffer
+     * erreicht). Port: Variante 3. Andere Stages registrieren fuer 0x30 nichts. */
+    unsigned stage = (g_current_room_id >> 12) & 0xFu;
+    if (stage != 3u && stage != 5u) return 0;   /* Registrierungs-Scan aller sechs Overlays: nur STAGE3/5 setzen 0x800ac818 */
+    if (cmd == 6) {
+        if (stage == 3u) variante = 3;
+        else if (stage != 5u) return 0;
+    }
+    if (variante > 3) return 0;
     /* Ohne Opfer-Bank (EM30 dir[5]/[6] nicht geladen, z.B. Unit-Harness ohne Modell) kann der Haken Leon nicht
      * posieren — re15_player_victim_tick wuerde ihn sofort abbrechen; dann bleibt der alte Pin. */
     { const re15_enemy_bank_t *vb = birkin ? re15_enemy_find(birkin->type) : NULL;
-      if (!vb || !vb->victim_ok) return 0; }   /* [3] 0x8011b9bc ist der STAGE3-Wurf-Spiegel, kein 0x30-Treffer schreibt aca59 = 3 */
+      if (!vb || !vb->victim_ok) return 0; }
     s_cmd = cmd; s_var = variante; s_ph = 0;   /* Wort-Store aca58 = (aca59 << 8) | cmd: aca5a = 0 */
     s_f314 = 0; s_eigen = 0;
     re15_player_victim_haken(birkin, 1);       /* acbfc = Birkin, acbcc/acbd0 = Birkin+0x178/+0x17c */
@@ -262,6 +268,45 @@ static void haken_biss(re15_actor_t *pl, const re15_enemy_bank_t *vb)
     }
 }
 
+/* [3] STAGE3 0x8011b1a8 (cmd 6 aus dem Stub 0x8011b168) — WURF-TOD. Verzweigung nach aca5a @0x8011b1f4-234.
+ *   P0 @0x8011b23c: aca5a 1 @0x8011b244, acae3 3 @0x8011b24c, acae8 1 (Opfer-Clip 1, 66 Bilder) @0x8011b260,
+ *      acae0 0 @0x8011b280, acae9 0 @0x8011b278, +0x93 |= 1 @0x8011b288-298, SE 0x04030001 (`lui a0,0x403`
+ *      @0x8011b21c, `ori` @0x8011b258, jal @0x8011b29c); faellt in den Anim-Schwanz @0x8011b558.
+ *   P1 @0x8011b558: anim_set(acbcc, acbd0, 0, 0x400) @0x8011b56c, aca5a += @0x8011b588.
+ *   P2 @0x8011b594: aca58 = 7 (`ori v0,zero,0x7` @0x8011b230 im Delay-Slot, `sw` @0x8011b598) = cmd 7, die
+ *      Blutlache 0x8003694c; die ruft kein anim_set — die Pose bleibt die des letzten Bildes.
+ * ⛔ OFFEN (nicht gebaut, Adressen benannt): der P0-Block @0x8011b2a4-554 misst Koerperteile des Spielers
+ *   (acbdc + 0x40 + k*0xac, Translation +0x14/+0x1c) gegen den Trefferpunkt acc1c/acc1e, den der Wurf aus der
+ *   Angriffsbox FUN_8001a5e0 schreibt (@0x80117eec-f4 STAGE3), und setzt bei Abstand >= 301 (`slti 301`) Blut
+ *   FUN_80019700 (a0 0x3000/0x2800) plus Teil-Flags |= 0x2000|0x80 und +0x88..+0x98. Der Port hat FUN_8001a5e0
+ *   nicht (Abstand/Kegel-Proxy re15_bk_arc, kein Trefferpunkt) — ohne ihn waere jeder Abstand geraten. */
+static void haken_wurf3(re15_actor_t *pl, const re15_enemy_bank_t *vb)
+{
+    switch (s_ph) {
+    case 0:
+        s_ph = 1; pl->anim_frac = 3; pl->motion = 1;
+        pl->anim_frame = 0; s_tempo = 0;
+        pl->hit_react |= 1;
+        re15_audio_core_se(3);
+        /* faellt in den Anim-Schwanz @0x8011b558 */
+    case 1:
+        if (anim(pl, vb, 0, 0, 0x400)) {
+            s_ph = 2;
+            int fc = (vb && 1 < vb->anim_victim.clip_count) ? vb->anim_victim.clips[1].frame_count : 1;
+            pl->anim_frame = (uint8_t)(fc > 0 ? fc - 1 : 0);   /* Endpose halten (cmd 7 ruft kein anim_set) */
+        }
+        break;
+    case 2:
+        s_ph = 3;
+        if (pl->hp >= 0) pl->hp = -1;   /* PORT-PLUMBING wie beim Hund (@0x80111ea0): die Tod-/Gameover-FSM des Ports
+                                         * keyt auf hp < 0; das Original schreibt hier keine HP */
+        pl->state = 7;                  /* cmd 7 @0x8011b598 */
+        break;
+    default:
+        break;                          /* cmd 7 besitzt den Spieler; der Haken ruft nichts mehr */
+    }
+}
+
 void re15_bk_opfer_tick(re15_actor_t *pl, const re15_enemy_bank_t *vb)
 {
     if (!s_cmd || !pl) return;
@@ -271,7 +316,8 @@ void re15_bk_opfer_tick(re15_actor_t *pl, const re15_enemy_bank_t *vb)
     switch (s_var) {                                                   /* jalr @0x80120468[aca59] @0x8011afdc-b000 */
     case 0:  haken_vorn(pl, vb);   break;
     case 1:  haken_hinten(pl, vb); break;
-    default: haken_biss(pl, vb);   break;
+    case 2:  haken_biss(pl, vb);   break;
+    default: haken_wurf3(pl, vb);  break;
     }
     /* Messzeile (RE15_BIRKIN_DBG, stderr = debug.log): je Haken-Bild Variante/Phase/Clip/Bild/Lage. */
     { static int an = -1; if (an < 0) an = getenv("RE15_BIRKIN_DBG") ? 1 : 0;

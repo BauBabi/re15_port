@@ -8,8 +8,8 @@
  *   [1] Kralle von HINTEN (aca58 = 0x105, aca59 = FUN_8001a780 = 1)
  *   [2] Biss              (aca58 = 0x205 @0x80117c1c STAGE3, nur Bild < 0x26)
  * STAGE3 traegt denselben Haken @0x8011a7c4 (633 Wort instruktionsgleich, nur lui/addiu/j/jal verschoben),
- * registriert cmd 6 aber auf 0x8011b168 (eigene Wurf-Maschine, endet in cmd 7) — die ist hier NICHT gebaut
- * (OFFEN, s. birkin_opfer.c), in STAGE3 laeuft der Wurf deshalb weiter ueber den alten Pin.
+ * registriert cmd 6 aber auf den Stub 0x8011b168 -> Wurf-Tod-Maschine 0x8011b1a8 (Opfer-Clip 1, Ende cmd 7) =
+ * Port-Variante 3; ihr Blut-/Koerperteil-Block haengt am Trefferpunkt der Angriffsbox FUN_8001a5e0 (OFFEN).
  */
 #ifndef RE15_BIRKIN_OPFER_H
 #define RE15_BIRKIN_OPFER_H

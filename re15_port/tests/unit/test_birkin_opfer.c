@@ -9,6 +9,8 @@
  *           0x4b (@0x8011b288), Aufstehen 0x10 -> 0xb rueckwaerts, Loesen.
  *   hinten  Haken [1]: Clip 0xc (@0x8011b458), Tempo 0x190 -40, Ringkampf Zaehler 0x19 (@0x8011b55c), 0x10, 0xb.
  *   biss    Haken [2]: Opfer-Clip 2 zweimal (acaf2 = 2 @0x8011b754), Ringkampf Zaehler 0x32 (@0x8011b7f4), 0x10, 0xb.
+ *   wurf3   STAGE3-Wurf (cmd 6 -> Stub 0x8011b168 -> 0x8011b1a8): Opfer-Clip 1 (@0x8011b260) ganz, Endpose
+ *           gehalten, dann cmd 7 (@0x8011b598). In STAGE5 laeuft derselbe Wurf ueber [0] (@0x8011defc).
  *   ki      echte Birkin-KI (Typ 0x30) greift einen stehenden Spieler an: der Haken startet, Leon spielt eigene
  *           Clips statt der Steh-Pose, und er kommt wieder frei.
  */
@@ -28,6 +30,8 @@
 #include "re15_birkin_opfer.h"
 
 void re15_player_wand_bit_test(int an);   /* game_step_common.c (Testzugang) */
+void re15_player_victim_haken(const re15_actor_t *greifer, int an);   /* enemy_ai_common.c */
+static void re15_player_victim_haken_reset_test(void) { re15_player_victim_haken(NULL, 0); }
 
 static int fails = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { fprintf(stderr, "FAIL: " __VA_ARGS__); \
@@ -185,6 +189,34 @@ static void test_biss(void)
     CHECK(!re15_bk_opfer_cmd(), "Haken [2] endet nicht");
 }
 
+static void test_wurf3(void)
+{
+    re15_bk_opfer_reset();
+    re15_actor_t *pl = spieler();
+    birkin_setzen(0, 2000);
+    g_current_room_id = 0x3070u;
+    CHECK(re15_bk_opfer_start(&g_actors[s_birkin], 6, 0), "Start Wurf STAGE3");
+    CHECK(re15_bk_opfer_variante() == 3, "STAGE3-Wurf nicht Variante 3 (%d)", re15_bk_opfer_variante());
+    int fc1 = s_vb->anim_victim.clips[1].frame_count, n, clip1 = 0;
+    for (n = 0; n < 200 && pl->state != 7; n++) {
+        bild();
+        if (pl->motion == 1 && !re15_bk_opfer_eigenbank()) clip1++;
+    }
+    CHECK(pl->state == 7 && pl->hp < 0, "kein cmd 7 nach dem Wurf (state %d hp %d)", pl->state, pl->hp);
+    CHECK(clip1 == fc1 + 1, "Opfer-Clip 1: %d Bilder != %d + Tod-Bild", clip1, fc1);
+    CHECK(pl->anim_frame == fc1 - 1, "Endpose nicht gehalten (Bild %d)", pl->anim_frame);
+    for (int k = 0; k < 10; k++) bild();
+    CHECK(pl->anim_frame == fc1 - 1, "cmd 7 animiert weiter");
+    re15_bk_opfer_reset(); re15_player_victim_haken_reset_test();
+    g_current_room_id = 0x5080u;
+    pl = spieler();
+    CHECK(re15_bk_opfer_start(&g_actors[s_birkin], 6, 0) && re15_bk_opfer_variante() == 0, "STAGE5-Wurf nicht [0]");
+    re15_bk_opfer_reset(); re15_player_victim_haken_reset_test();
+    g_current_room_id = 0x1100u;
+    CHECK(!re15_bk_opfer_start(&g_actors[s_birkin], 5, 0), "Haken ausserhalb STAGE3/5 gestartet");
+    g_current_room_id = 0x5080u;
+}
+
 static void test_ki(void)
 {
     re15_bk_opfer_reset(); re15_player_wand_bit_test(0);
@@ -223,6 +255,7 @@ int main(void)
     test_wand();
     test_hinten();
     test_biss();
+    test_wurf3();
     test_ki();
     if (fails) { fprintf(stderr, "%d Fehler\n", fails); return 1; }
     fprintf(stderr, "OK\n");
