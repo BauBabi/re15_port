@@ -116,12 +116,13 @@ function(fl_lauf _name _raum _kartenargs _skript _ende _extra _out)
 endfunction()
 
 # --- A: Ende-zu-Ende ---------------------------------------------------------------------------
-# Skript-Takte (30 Hz ab Spielbild 60): A@30 Aufnahme, A@138 Ja; Sprung F420; A@381 Feuer (msg 7),
-# A@444 zu (Runde 41 Spur O: die Frage msg 8 entfaellt), Takt 537 = Raumbild 177 USE (RE15_USE_TEST, dort stand das Ja, darum W statt A),
-# danach A je 2 s (msg 9 zu, Wegwerf-Abfrage Ja auf "Yes").
+# Skript-Takte (30 Hz ab Spielbild 60, die Achse beginnt je Raum neu): ROOM1030 A@30 Aufnahme, A@138 Ja; Sprung F420;
+# ROOM1090 A@30 Feuer (msg 7), A@138 Seite, A@381 zu. Runde 41 Spur O: die Frage msg 8 entfaellt, darum fallen die Druecke
+# A@444 und A@537 (Ja) weg: sie oeffneten msg 7 neu. Dort steht das USE (RE15_USE_TEST Bild 597 = Takt 537).
+# Danach A je 2 s (msg 9 zu, Wegwerf-Abfrage Ja auf "Yes").
 fl_lauf(a 1030 "1030;-4300;-17904;0;cut:0"
-    "W1,A0.1,W3.5,A0.1,W8,A0.1,W2,A0.1,W3,W0.1,W2,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W20"
-    1400 "RE15_DEBUG_JUMP=1090@420;RE15_PLAYER_POS=300,-300,0,1;RE15_FRAMEDUMP=300-1400/50:fd_;RE15_USE_TEST=0x31@177#1090" _a)
+    "W1,A0.1,W3.5,A0.1,W8,A0.1,W2,W0.1,W3,W0.1,W2,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W20"
+    1400 "RE15_DEBUG_JUMP=1090@420;RE15_PLAYER_POS=300,-300,0,1;RE15_FRAMEDUMP=300-1400/50:fd_;RE15_USE_TEST=0x31@597#1090" _a)
 pruef(A _a "[feuerloescher] ROOM1030: Loescher an der Wand obj 5 bei (-2813,-2122,-17904)")
 pruef(A _a "oid=0x05 pos=(-2813,-2122,-17904)")
 pruef(A _a "[feuerloescher] Aufnahme Item 0x31 (9,0x86) -> Set(3,0x85)=1")
