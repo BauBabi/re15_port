@@ -1155,3 +1155,15 @@ FREIGABE ERTEILT, Spur N baut Entwurf A: drei Tanks fassen 100/50/30, die Anzeig
 Aktionstaste waehlt die Quelle, Aktionstaste auf dem zweiten Tank fuellt um, bis die Quelle leer oder das Ziel voll ist; Loesung A nach B,
 B nach C, C nach A = 80, kein Fehlversuch; EXIT verlaesst das Panel; bei 80 folgt Port-Text 2030 Id 43 "The pressure gauge reads 80. / Lower
 the bridge?". Ventil 13 als Ausloeser entfaellt. Oberflaeche wie das Bild panel_entwurf_a.png (Rahmen aus 2050 Cut 15, EXIT aus 11F0 Cut 10).
+
+## 2026-10-31 00:36 — Nachtrag 38 (Wortlaut; Bahnsteig-Birkin, Spur R)
+
+> Die von dir gebaute neue Birkin Version auf dem Bahnhof sieht nicht ansatzweise so aus, wie auf den Bildern, nach dem du diese bauen solltest.
+> Also wie bei: vlcsnap-2026-10-31-00h28m45s774.png und vlcsnap-2026-10-31-00h29m02s830.png. Es ist eine eigene Form und braucht dann auch eigene
+> Bewegungsanimationen.
+
+Orchestrator-Einordnung: Bilder liegen in Version_80%/ und stammen aus "Biohazard 1.5 Final Build.mp4" (1:54.8-1:55.1 Bahnsteig, 1:56.3-1:56.8 roter
+Gang mit der Frau im weissen Kittel). analysis/video_80prozent/BEFUND.md Zeile 74 ("kommt in keinem der beiden Videos vor") ist damit widerlegt.
+Gesehen (aufgehellter Ausschnitt): gerundeter, sehr grosser dunkler Buckel, vier massive Gliedmassen mit Wuelsten, rosa-rote Stellen, lange segmentierte
+Klaue. EM30_BAHNSTEIG.EMD (umgehaltener EM30 mit duennen Beinen und heller Haut) ist verworfen. Naechste Vorlage auf der RE2-Disc: G4, Typ 0x34.
+Spur R baut die Form neu, mit eigenen Bewegungsablaeufen; Beta -> Retail: RE2 ist das Vorbild.

@@ -32,6 +32,7 @@ volle Suite einmal am Ende im Release-Container, dann Release v0.8.29.
 | 5 | O | keyitems / r41_keyitems | Nachtrag 34: Key Items ueber das Inventar in RE2-Form, Kurbel ohne Fliegen |
 | 5 | P | alligator2 / r41_alligator2 | Nachtrag 31 Punkt 2, FG-E7 Option (a) + Riegel wieder scharf, Lagespruenge, Riegel F->G |
 | 6 | Q | restpunkte / r41_restpunkte | Masken-Restloch 6010, Teile-Bericht, Elza-Ketten-Riegel, Ketten-Riegel-Flake |
+| 7 | R | bahnsteig / r41_bahnsteig | Nachtrag 38: Bahnsteig-Birkin als eigene Form nach den Video-Bildern, eigene Bewegungsablaeufe (Vorlage RE2 G4) |
 
 Abhaengigkeiten: F und G bauen auf dem integrierten B (RE2-Alligator) und D (Blink-API) auf; G auf F (Bit "Szene
 gesehen"). C und A beruehren beide 20B0 (A: Effekt EM024; C: Raumwechsel/Weg) — verschiedene Stellen.
