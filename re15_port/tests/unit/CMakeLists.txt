@@ -4143,3 +4143,10 @@ target_include_directories(test_brandzombie PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_brandzombie PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_brandzombie COMMAND test_brandzombie)
 set_tests_properties(unit_brandzombie PROPERTIES TIMEOUT 60)
+
+# Tyrant/Spider-Man Wand-/Deckenwechsel B[11] 0x80113438 (STAGE4), Wand A/B[12], Decke B[13]
+add_executable(test_tyrant_b11 test_tyrant_b11.c)
+target_link_libraries(test_tyrant_b11 PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_tyrant_b11 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_tyrant_b11 COMMAND test_tyrant_b11)
+set_tests_properties(unit_tyrant_b11 PROPERTIES TIMEOUT 60)

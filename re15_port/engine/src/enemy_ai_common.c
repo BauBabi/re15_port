@@ -14040,6 +14040,129 @@ static void re15_fx_emitter_ai_tick(int slot)
 static const uint16_t s_tyrant_hp[16] =    /* HP pool @0x80118b00 (index = rng & 0xf) */
     { 86, 89, 103, 119, 91, 107, 121, 93, 109, 124, 117, 97, 113, 126, 99, 101 };
 
+/* ---- WAND-/DECKENWECHSEL des Tyrant/Spider-Man (2026-10-30, STAGE4.BIN selbst disassembliert; STAGE5-Zwillinge
+ * B[11] 0x801135b8 usw. byte-gleich verschoben). Grid-Nibble +0x9: 0/1 Boden, 8 Wand hoch, 9 Wand runter, 0x10 Decke.
+ * Kollisionsboxen: gross @0x8011a094 {0,-1710,0,800,1710,800} (Zeiger @0x8011a0ac), klein @0x8011a0a0 {0,-900,0,50,
+ * 900,50} (Zeiger @0x8011a0b0). +0xb0 (Schatten-Record) = 0x640 / 0 bleibt wie beim Hund unmodelliert. */
+static const int16_t s_ty_box_gross[6] = { 0, -1710, 0, 800, 1710, 800 };   /* @0x8011a094 */
+static const int16_t s_ty_box_klein[6] = { 0, -900, 0, 50, 900, 50 };       /* @0x8011a0a0 */
+static void ty_box(re15_actor_t *e, const int16_t b[6])
+{   /* +0x78 = Box (wie re15_enemy_apply_hitbox: r = box[3], h = box[4], Versatz = box[0..2]) */
+    e->hit_radius_min = e->hit_radius_max = (uint16_t)b[3]; e->hit_height = (uint16_t)b[4];
+    e->hit_offset_x = b[0]; e->hit_offset_y = b[1]; e->hit_offset_z = b[2];
+}
+static void ty_vorschub(re15_actor_t *e, int32_t sp, int ofs)   /* FUN_800245d8(ofs) mit +0x8c */
+{
+    int a = ((int)e->rot_y + ofs) & 0xfff;
+    e->x += (int32_t)(((int32_t)re15_cos_q12((int16_t)a) * sp) >> 12);
+    e->z -= (int32_t)(((int32_t)re15_sin_q12((int16_t)a) * sp) >> 12);
+}
+/* Kletter-Einstieg aus A[1] (@0x8011208c-0x80112110) / A[3] (@0x80112544-0x801125c8): berührte Zelle mit
+ * (u1|Boden<<8) & 0xc (`lw +0x1b4 / lhu 10 / andi 0xc`), (+0x9 & 0x19) == 0, Kontaktrichtung ((+0x90&0xf0)<<4)
+ * innerhalb ±0x200 vor dem Blick (`addiu 512 / andi 0xfff / slti 1024`) -> +0x9f = +0x90, +0x5 = 11, +0x6 = 0. */
+static int ty_kletter_einstieg(re15_actor_t *e, int vorhalt)
+{
+    if (!(e->coll_cell_attr & 0xc) || (e->grid_id & 0x19)) return 0;
+    int d = ((((int)e->ai_contact & 0xf0) << 4) - (int)e->rot_y + vorhalt) & 0xfff;
+    if (d >= 1024) return 0;
+    e->zg_9f = (int8_t)e->ai_contact; e->sub_state_1 = 11; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    return 1;
+}
+/* FUN_80115bec (Fusshalt): CompMatrix-Kette Entity+0x20 -> Teil 0 (`addiu a1,s0,24` @0x80115c20) -> Teile 19/20/21
+ * + 3*a1 (Block a1*516 + 3612, -320/-148/+24 @0x80115c24-60), dann +0x34 -= (m.tx - rec[84]) @0x80115c70-84,
+ * +0x3c -= (m.tz - rec[92]) @0x80115c90-a4 = verfolgter Knochen 21 + 3*a1 bleibt weltfest. Port: wie
+ * re15_maggot_footlock die Pose-Differenz Bild / Bild-1 aus der geladenen Bank. */
+static void ty_fusshalt(re15_actor_t *e, int a1)
+{
+    re15_enemy_bank_t *bank = re15_enemy_find(e->type);
+    if (!bank || !bank->ok) return;
+    const re15_emd_skeleton_t *sk = &bank->skel; const re15_emd_animation_t *an = &bank->anim;
+    int bone = 21 + 3 * a1, clip = e->motion;
+    if (clip >= an->clip_count || bone >= sk->bone_count) return;
+    const re15_emd_clip_t *c = &an->clips[clip];
+    if (c->frame_count <= 1) return;
+    int s_now = e->anim_frame % c->frame_count, s_prev = (s_now + c->frame_count - 1) % c->frame_count;
+    static re15_skel_pose_t P[RE15_EMD_MAX_BONES];
+    int32_t mn[3], mp[3], wn[3], wp[3];
+    void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    int rv = re15_skel_compute_pose(sk, (int)(an->frames[c->first_frame + s_now] & 0xFFFu), P);
+    for (int i = 0; i < 3; i++) mn[i] = P[bone].trans[i];
+    rv |= re15_skel_compute_pose(sk, (int)(an->frames[c->first_frame + s_prev] & 0xFFFu), P);
+    for (int i = 0; i < 3; i++) mp[i] = P[bone].trans[i];
+    g_anim_pose_actor = save;
+    if (rv) return;
+    re15_skel_bone_to_world(mn, e->rot_y, 0, 0, 0, wn);
+    re15_skel_bone_to_world(mp, e->rot_y, 0, 0, 0, wp);
+    e->x -= wn[0] - wp[0];
+    e->z -= wn[2] - wp[2];
+}
+/* B[11] 0x80113438: Phasen @0x801002ac[+0x6] (6 Eintraege). */
+static void ty_b11(re15_actor_t *e)
+{
+    switch (e->sub_state_2) {
+    case 0:                                                          /* @0x80113478 */
+        e->sub_state_2 = 1; re15_birkin_clip(e, 1); e->anim_frac = 7; /* +0x6=1, +0x94=1, +0x95=0, +0x8f=7 @0x80113478-b4 */
+        /* fallthrough */
+    case 1: {                                                        /* @0x801134b8 */
+        re15_birkin_anim(e);                                         /* anim_set(+0x84,+0x16c,0,0x200) @0x801134cc */
+        int ziel = (((int)e->zg_9f & 0xf0) << 4) + ((e->grid_id & 0x10) ? 2048 : 0);   /* lb 159 / andi 0xf0 / sll 4
+                                                                       * (+2048 bei +0x9&0x10) @0x801134e0-518 */
+        int st = re15_npc_yaw_step(e, ziel, 0x10);                   /* jal 0x8001aa68, a1 = 0x10 @0x8011351c */
+        e->rot_y = (int16_t)(((int)e->rot_y + st) & 0xffff);         /* +0x6a += v0 @0x80113534-40 */
+        if (st == 0) e->sub_state_2 = 2;                             /* @0x80113544-5c */
+        break; }
+    case 2:                                                          /* @0x80113560 */
+        e->hit_react |= 3;                                           /* +0x93 |= 3 @0x8011356c-78 */
+        e->sub_state_2 = 3; re15_birkin_clip(e, 0x16); e->anim_frac = 0;   /* +0x6=3, +0x94=0x16, +0x95=0, +0x8f=0 */
+        /* fallthrough */
+    case 3:                                                          /* @0x801135bc */
+        re15_birkin_anim(e);                                         /* @0x801135d0 */
+        switch (e->grid_id) {                                        /* lbu 9 @0x801135e4 */
+        case 8:    e->y -= 47; break;                                /* @0x80113628-38 */
+        case 9:    e->y += 47; break;                                /* @0x8011363c-48 (+0xb0 = 0x640 @0x80113654-5c) */
+        case 0x10: ty_vorschub(e, 0x2f, 0x800); break;               /* +0x8c = 0x2f, FUN_800245d8(0x800) @0x8011361c/60-74 */
+        case 0:    ty_vorschub(e, 0x2d, 0); break;                   /* +0x8c = 0x2d, FUN_800245d8(0) @0x80113600/6c-74 */
+        default: break;
+        }
+        if (e->anim_frame == 0x0a) ty_box(e, s_ty_box_klein);        /* +0x78 = *(0x8011a0b0) @0x80113688-a4 */
+        if (e->anim_frame == 0x23) e->sub_state_2 = 4;               /* @0x801136b8-c4 */
+        ty_fusshalt(e, (e->anim_frame >= 0x12) ? 1 : 0);             /* sltiu 0x12, jal 0x80115bec @0x801136d4-f8 */
+        break;
+    case 4:                                                          /* @0x80113708 */
+        e->motion = 0x16; e->anim_frame = 0x23; e->anim_frac = 0;    /* +0x94=0x16, +0x95=0x23, +0x8f=0 */
+        e->sub_state_2 = 5;                                          /* +0x6 = 5 @0x80113740-44 */
+        e->rot_z = (int16_t)(e->rot_z - 0x400);                      /* +0x6c -= 0x400 @0x80113754-60 */
+        re15_birkin_anim(e);                                         /* @0x80113778 */
+        switch (e->grid_id) {                                        /* @0x8011378c */
+        case 0:    e->grid_id = 8; e->y -= 2014; break;              /* @0x801137d0-f0 */
+        case 0x10: e->grid_id = 9; e->y += 1649; break;              /* @0x801137f4-814 */
+        case 8: case 9: {
+            int q = ((uint16_t)e->rot_y & 0xc00) >> 10;               /* andi 0xc00 / srl 10 @0x80113854-60 */
+            ty_box(e, s_ty_box_gross);                               /* +0x78 = *(0x8011a0ac) @0x80113818-24 / @0x801138a4-b0 */
+            if (e->grid_id == 8) {                                   /* -> Decke @0x80113828-44 */
+                e->grid_id = 0x10; e->y = -5400;
+                if (q == 0) e->x -= 1649; else if (q == 1) e->z += 1649; else if (q == 2) e->x += 1649; else e->z -= 1649;
+                                                                     /* @0x80113968 / @0x8011397c / @0x80113940 / @0x80113954 */
+            } else {                                                 /* -> Boden @0x801138b4-d0 (+0xb0 = 0) */
+                e->grid_id = 1; e->y = 0;
+                if (q == 0) e->x += 1649; else if (q == 1) e->z -= 1649; else if (q == 2) e->x -= 1649; else e->z += 1649;
+                                                                     /* @0x80113940 / @0x80113954 / @0x80113968 / @0x8011397c */
+            }
+            break; }
+        default: break;
+        }
+        break;
+    default:                                                         /* Phase 5 @0x80113990 */
+        e->hit_react = 0;                                            /* sb zero,147 @0x8011399c */
+        re15_birkin_clip(e, 1); e->anim_frac = 7;                    /* +0x94=1, +0x95=0, +0x8f=7 @0x801139ac-cc */
+        re15_birkin_anim(e);                                         /* @0x801139e4 */
+        if (e->grid_id == 0 || e->grid_id == 1) { e->sub_state_1 = 1;  e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* @0x801002c4[0/1] -> 0x80113a28 */
+        else if (e->grid_id == 8 || e->grid_id == 9) { e->sub_state_1 = 12; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* [8/9] -> 0x80113a38 */
+        else if (e->grid_id == 0x10) { e->sub_state_1 = 13; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* [0x10] -> 0x80113a48 */
+        break;                                                       /* sb v1,5 / sh zero,6 @0x80113a54-64 */
+    }
+}
+
 static void re15_tyrant_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
@@ -14081,6 +14204,7 @@ static void re15_tyrant_ai_tick(int slot)
             break;
         case 1:   /* A[1] walk-decide 0x80112024: in a804(8000,0xc0) && LOS +0x1d0&1 -> roar sub 2. */
             if (pl->hit_react == 0 && dist < 8000 && re15_dog_arc(e, pl, 8000, 0xc0)) { e->sub_state_1 = 2; e->sub_state_2 = 0; }
+            else (void)ty_kletter_einstieg(e, 512);                 /* @0x8011208c-0x80112110 */
             break;
         case 3:   /* A[3] charge/attack1/roar decide 0x801123e8 (all gated hit_react==0). */
             if (pl->hit_react == 0) {
@@ -14098,11 +14222,28 @@ static void re15_tyrant_ai_tick(int slot)
                 }
                 /* ROAR (sub 2): dist>=7001 (sltiu 0x1b59 @0x80112510). */
                 else if (dist >= 7001) { e->sub_state_1 = 2; e->sub_state_2 = 0; }
-            }
+                else (void)ty_kletter_einstieg(e, 512);             /* @0x80112544-0x801125c8 */
+            } else (void)ty_kletter_einstieg(e, 512);               /* Spieler reagiert: bne -> 0x80112544 @0x80112488 */
             break;
         case 13:  /* A[13] attack2-decide 0x80113c74: dist<2000 && +0x1de==0 && hit_react==0 -> sub 14
                    * (audit #4/#5/#10 — the ATTACK2 decide lives in the sub-13 regime, not sub 0). */
             if (dist < 2000 && e->birkin_hurt_cd == 0 && pl->hit_react == 0) { e->sub_state_1 = 14; e->sub_state_2 = 0; }
+            /* sonst Abstieg von der Decke: Zellbit &0xc und Kontakt in ((+0x90&0xf0)<<4) - Blick - 0x600 < 0x400
+             * (`addiu -1536` @0x80113cfc) -> +0x9f, +0x5 = 11, +0x6 = 0 @0x80113cc0-d30 (ohne den grid-Test). */
+            else if ((e->coll_cell_attr & 0xc) && (((((int)e->ai_contact & 0xf0) << 4) - (int)e->rot_y - 1536) & 0xfff) < 1024) {
+                e->zg_9f = (int8_t)e->ai_contact; e->sub_state_1 = 11; e->sub_state_2 = 0; e->sub_state_3 = 0;
+            }
+            break;
+        case 12:  /* A[12] 0x80113a78 (WAND): grid 8 klettert y -= 60 + (rand&0xf) bis y < -3600 (@0x80113a98-b04),
+                   * grid 9 y += 60 + (rand&0xf) bis y >= -1799 (@0x80113b20-b8c) -> +0x5 = 11, +0x6 = 2, +0x7 = 0. */
+            if (e->grid_id == 8) {
+                e->y -= 60 + (int32_t)(re15_engine_rand8() & 0xfu);
+                if (e->y < -3600) { e->sub_state_1 = 11; e->sub_state_2 = 2; e->sub_state_3 = 0; }
+            }
+            if (e->grid_id == 9) {
+                e->y += 60 + (int32_t)(re15_engine_rand8() & 0xfu);
+                if (e->y >= -1799) { e->sub_state_1 = 11; e->sub_state_2 = 2; e->sub_state_3 = 0; }
+            }
             break;
         default: break;
         }
@@ -14231,17 +14372,28 @@ static void re15_tyrant_ai_tick(int slot)
             if (re15_birkin_anim(e)) { e->sub_state_1 = 3; e->sub_state_2 = 0; }    /* done -> sub 3 @0x8011474c */
             break;
         }
-        case 11: { /* B[11] TURN 0x80113538: fast-turn clip 0x16 -> sub 13 regime (audit #10). */
-            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 0x16); e->anim_frac = 7; e->sub_state_2 = 1; }  /* clip 0x16 @0x80113598 */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
-            if (re15_birkin_anim(e)) { e->sub_state_1 = 13; e->sub_state_2 = 0; }   /* turn done -> sub 0xd(13) @0x80113a50-54 */
+        case 11:   /* B[11] 0x80113438 WAND-/DECKENWECHSEL (vorher als "TURN 0x80113538" angenaehert — die Startadresse
+                    * war eine Innenmarke; Tabelle @0x8011a114[11] = 0x80113438). Phasen @0x801002ac, ty_b11. */
+            ty_b11(e);
+            break;
+        case 12: { /* B[12] 0x80113b9c (WAND, still): +0x6==0 -> +0x8c=0, +0x6=1, +0x9e=0, Clip 1, +0x8f=7
+                    * (@0x80113bac-fc); anim_set; Bild%12 == 11 -> SE 5 (@0x80113c24-60). */
+            if (e->sub_state_2 == 0) { e->sub_state_2 = 1; re15_birkin_clip(e, 1); e->anim_frac = 7; }
+            re15_birkin_anim(e);
+            if ((e->anim_frame % 12) == 11) re15_audio_room_se(5);
             break;
         }
-        case 13: { /* B[13] WALK (sub-13 regime) 0x80113d3c: walk; A[13] decides ATTACK2 above. */
-            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 1); e->anim_frac = 7; e->sub_state_2 = 1; }
-            re15_enemy_steer_point(e, pl->x, pl->z, (int16_t)((re15_engine_rand8() & 0x1f) + 8));
-            re15_dog_advance(e, (int16_t)((re15_engine_rand8() & 0x3f) + 12));
+        case 13: { /* B[13] 0x80113d3c (DECKE): +0x6==0 -> +0x6=1, Clip 1, +0x95=0, +0x8f=7 (@0x80113d4c-8c); je Bild
+                    * +0x8c = (rand&0x3f)+12 (@0x80113d90-ac), +0x9e = (rand&0x1f)+8 (@0x80113da8-c0, im Original nur
+                    * geschrieben — kein Lenker in B[13]), anim_set, Bild%12 == 11 -> SE 6 (@0x80113de8-24),
+                    * FUN_800245d8(0x800) = RUECKWAERTS an der Decke (@0x80113e28). Vorher lenkte der Port zum
+                    * Spieler und lief vorwaerts. */
+            if (e->sub_state_2 == 0) { e->sub_state_2 = 1; re15_birkin_clip(e, 1); e->anim_frac = 7; }
+            int32_t sp13 = (int32_t)(re15_engine_rand8() & 0x3fu) + 12;
+            (void)re15_engine_rand8();                                             /* +0x9e-Wurf */
             re15_birkin_anim(e);
+            if ((e->anim_frame % 12) == 11) re15_audio_room_se(6);
+            ty_vorschub(e, sp13, 0x800);
             break;
         }
         default:
@@ -15287,11 +15439,10 @@ void re15_enemy_ai_run_all(int combat_active)
             int32_t ty_ox = e->x, ty_oz = e->z;
             re15_tyrant_ai_tick(s);
             re15_enemy_body_push_tail(s, e);
-            if (g_room_rdt_ok && (e->x != ty_ox || e->z != ty_oz)) {
-                int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, ty_ox, ty_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
-                e->x = nx; e->z = nz;
-            }
+            /* Wurzel-Schwanz @0x80111974-b4: FUN_8003b0a4 BEDINGUNGSLOS, Maske 4 bzw. 8 bei grid == 0x10
+             * (`ori s0,4` / `ori s0,8` @0x80111984-90), Rueckgabe -> +0x1d6; schreibt +0x90/+0x1b4, die der
+             * Kletter-Einstieg (A[1]/A[3]/A[13]) liest. Band = Zustands-Byte +0x82 (FUN_8003b0a4 liest es selbst). */
+            (void)re15_enemy_sca_clamp_band(e, ty_ox, ty_oz, (e->grid_id == 0x10) ? 8u : 4u);
         }
         else if (t == 0x2d) {   /* IVY plant-grappler (type 0x2d, EM02D, STAGE4) — DORMANT scripted prop.
                                  * The ivy root 0x801168c4 is pause-gate + state jalr ONLY: NO body-push,
