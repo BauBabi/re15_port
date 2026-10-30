@@ -10,6 +10,7 @@ cmake_minimum_required(VERSION 3.16)
 #   TEIL aktion        Aktionstaste an der Stelle: msg 0, keine Frage, Antwort Nein, Kurbel bleibt.
 #   TEIL karte         ROOM10D0 Blue Keycard USE: msg 9 "You've used the Blue Keycard." ohne msg 7.
 #   TEIL karte_aktion  ROOM10D0 Aktionstaste: Beschreibung endet vor "Will you operate the card reader?".
+#   TEIL aufnahme      ROOM2010: "Will you take the Crank?" Ja -> Eintrag im Inventar, Name und CHECK-Text aus dem Port.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_WERKZEUG=<test_r41_keyitems_exe> -DWORKDIR=<dir> -DTEIL=<teil> -P test_r41_keyitems.cmake
 # =============================================================================
 foreach(_v RE15_PC_EXE RE15_WERKZEUG WORKDIR TEIL)
@@ -92,6 +93,11 @@ elseif(TEIL STREQUAL "karte")
 elseif(TEIL STREQUAL "karte_aktion")
     set(_env RE15_DEBUG_JUMP=10d0@240 RE15_GIVE=0x38:1 RE15_SET_FLAG=9:52 RE15_EQUIP=3 RE15_PLAYER_POS=180,-5750,0,0
              RE15_PRESS=square@100,square@180,square@260 RE15_MSG_LOG=1 RE15_EXIT_AT=340)
+elseif(TEIL STREQUAL "aufnahme")
+    # Platz 4 sub00 @0x00880 Rechteck (2700,-1550,1000,1000): 620 voraus = Mitte. Frage, Ja, "You've taken the Crank.", START, ITEM.
+    set(_env RE15_DEBUG_JUMP=2010@240 RE15_EQUIP=3 RE15_PLAYER_POS=2580,-1050,0,0 RE15_MSG_LOG=1
+             RE15_PRESS=square@100,square@160,square@200,square@240,start@280,square@305,down@320,square@330,left@345,square@355
+             RE15_EXIT_AT=470)
 else()
     message(FATAL_ERROR "r41_keyitems: TEIL '${TEIL}' unbekannt")
 endif()
@@ -139,6 +145,10 @@ elseif(TEIL STREQUAL "aktion")
 elseif(TEIL STREQUAL "karte")
     pruef(_d "Frage 7 entfaellt: Ja (USE)")
     pruef(_d "[msg] room=10d0 id=9")
+elseif(TEIL STREQUAL "aufnahme")
+    pruef(_d "[msg] room=2010 id=0")
+    pruef(_d "Gegenstand 0x33 ins Inventar")
+    pruef(_d "[msg] room=2010 id=1")
 elseif(TEIL STREQUAL "karte_aktion")
     pruef(_d "Frage 7: nur Beschreibung")
     pruef_nicht(_d "[msg] room=10d0 id=9")

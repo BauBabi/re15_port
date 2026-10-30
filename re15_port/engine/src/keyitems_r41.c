@@ -462,8 +462,11 @@ void re15_keyitems_r41_testhaken(void)
     }
     if (id < 0 || fertig || (long)g_engine.frame_count < bild || (raum && g_current_room_id != raum)) return;
     fertig = 1;
-    LOG("[keyitems] Messhaken USE 0x%02x F%u: %d\n", (unsigned)id, (unsigned)g_engine.frame_count,
-        re15_keyitems_r41_testlauf((uint8_t)id));
+    {
+        const int r = re15_keyitems_r41_testlauf((uint8_t)id);
+        (void)r;
+        LOG("[keyitems] Messhaken USE 0x%02x F%u: %d\n", (unsigned)id, (unsigned)g_engine.frame_count, r);
+    }
 }
 
 int re15_keyitems_r41_stellen_anzahl(void) { return N_STELLEN; }

@@ -16,11 +16,11 @@ foreach(_teil stellen use aktion besitz voll kurbel waffe daten)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_keyitems_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
-#   integration_r41_keyitems_{kurbel,elza,renn,geh,west,falsch,aktion,karte,karte_aktion}
+#   integration_r41_keyitems_{kurbel,elza,renn,geh,west,falsch,aktion,karte,karte_aktion,aufnahme}
 #       an der ECHTEN exe (tests/integration/test_r41_keyitems.cmake), Auswerter test_r41_keyitems_exe.
 add_executable(test_r41_keyitems_exe ${CMAKE_CURRENT_LIST_DIR}/../test_r41_keyitems_exe.c)
 if(TARGET re15_pc)
-    foreach(_teil kurbel elza renn geh west falsch aktion karte karte_aktion)
+    foreach(_teil kurbel elza renn geh west falsch aktion karte karte_aktion aufnahme)
         add_test(NAME integration_r41_keyitems_${_teil}
             COMMAND ${CMAKE_COMMAND}
                 -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
