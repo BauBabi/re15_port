@@ -166,6 +166,7 @@ int  re15_gatorszene_r41_spieler_im_bild(int cut);
  * (hellster Kanal) Ruhe/Blink-Spitze dieser Wahl; und die Primitivfarben des Schluessels JETZT im Lichtsatz von Cut cut (wie
  * der Prop-Zeichner; 0 = kein Schluessel/kein Lichtsatz). Kappung des PC-Zeichners: 0x80 (render_pc.c psx_prim_to_sdl_vert). */
 int  re15_gatorszene_r41_key_kamera(void);
+int  re15_gatorszene_r41_key_stufe(void);       /* Spur P (FG-E7 Option (a)): Suchstufe der Lagewahl, 0 = Naehe wie bisher, -1 = keine Wahl */
 int  re15_gatorszene_r41_key_prim(int *ruhe, int *spitze);
 int  re15_gatorszene_r41_key_prim_jetzt(int cut, int *ruhe, int *spitze);
 /* Pruefhaken (Runde 41 Spur P): Kasten des Schluessel-Quadrats im Bild von Cut cut in 1/16 Bildpunkten + Tiefe; 0 = kein Schluessel. */

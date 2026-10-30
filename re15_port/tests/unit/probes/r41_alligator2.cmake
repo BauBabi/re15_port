@@ -10,14 +10,14 @@ target_compile_definitions(test_r41_alligator2 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_alligator2 PRIVATE m)
 endif()
-foreach(_teil kamera kamera_elza)
+foreach(_teil kamera kamera_elza schluessel)
     add_test(NAME unit_r41_alligator2_${_teil} COMMAND test_r41_alligator2 ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_alligator2_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()
 
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_alligator2.cmake)
-    foreach(_teil kamera kamera_elza uebergabe uebergabe_elza)
+    foreach(_teil kamera kamera_elza uebergabe uebergabe_elza k3 k3_elza)
         add_test(NAME integration_r41_alligator2_${_teil}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

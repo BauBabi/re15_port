@@ -1115,10 +1115,25 @@ static int gator_tot(void)
 #define GSZ_BILD_X1         296
 #define GSZ_BILD_Y0         40
 #define GSZ_BILD_Y1         205
+#define GSZ_BILD_RAND       4       /* Runde 41 Spur P: die Mitte des Quadrats steigt mit der Kippung bis 110 ueber die Wasserflaeche (key_neigung), das
+                                     * verschiebt sie im Bild um bis zu ~3 Bildpunkte (Fall r1: x 24 -> 22, unit_r41_gatorszene_tod) */
 #define GSZ_GATOR_HALBBREITE 800    /* RE1.5-Alligator-Kasten @0x80118b98 = {1000,-720,0,2200,720,800}, z 800 (re15_damage.c) */
 #define GSZ_KIPP_MIN_Q12    2048    /* cos 60 Grad = 0,5 (Kippung hoechstens 60 Grad, wie leiche_lage.py) */
 #define GSZ_PRIM_KAPPE      0x80    /* render_pc.c psx_prim_to_sdl_vert: Primitivfarbe 0x80 -> SDL 0xFF = Texel x 1,0 (Kappung) */
 #define GSZ_LEICHE_PUNKTE   40
+/* Runde 41 Spur P, Entscheid FG-E7 Option (a) (AUFTRAG.md 2026-10-26 01:19): "F's Schluessel-Lagewahl sucht weiter, wenn die beste Zonenkamera
+ * < 10,4 px liefert". 10,4 = Quadrat des Ankunfts-Schluessels der abgenommenen Fassung 1 (F-E2 Punkt 2, Riegel test_r41_gatorszene.cmake
+ * `_quad10 LESS 104`); gemessen vorher: K3-Wandlage 6,3 Bildpunkte (tests:FGM). Die Suche weitet den Naehe-Radius r_nah in Vierteln bis zum
+ * Doppelten (PORT-WAHL; die Form "der Leiche am naechsten, darin das groesste Bild" bleibt); reicht das nicht, gilt die beste gefundene Lage. */
+#define GSZ_KEY_BILD_MIN10  104
+#define GSZ_SUCH_STUFEN     4
+/* Runde 41 Spur P (Befund: integration_r41_gatorszene_tod_r1 rot mit 0 Pixeln Schluessel): die Einstellung zeigt den Schluessel nur, wenn die
+ * Spielfigur ihn in dieser Kamera nicht verdeckt - Lauf T0: Leon (1325,-25550), Kamera Cut 0 (2754,-26190), Schluessel (1200,-24800) hinter
+ * ihm. Fuenf Kugeln auf der Figur (Fuss bis Kopf: gemessen an der exe 60 Bildpunkte hoch bei Tiefe 10309 = ~3000 Einheiten, Lauf V_a F10) und zwei
+ * am Arm (900 lang, 2100 hoch: Lauf T1 F1000 Arm ~130 Bildpunkte bei Tiefe ~1450, Schulter); Radius 500: Rumpf ~125 Bildpunkte breit bei
+ * Tiefe 1390 = 835 Einheiten (PORT-WAHL, Form wie die Leichen-Kugeln der Nachbesserung 2). */
+#define GSZ_SPIELER_RADIUS  500
+#define GSZ_SPIELER_PUNKTE  7
 
 static int kam_sicht(int cut, re15_camera_view_t *v)
 {
@@ -1179,26 +1194,47 @@ typedef struct { int32_t x, y, z, vz; int64_t d2; } gsz_lage_t;
  * Fassung verlangte "vor JEDEM Knochen - 800" - das schloss jede Kamera aus, hinter der ein Teil der Leiche liegt oder vor der die
  * Leiche naeher als ihr Bildrand liegt (gemessen Lauf T1m dieser Nachbesserung: von acht Zonenkameras blieben Cut 0/3/6, der
  * groesste Schluessel 7 Bildpunkte). */
-static int leiche_verdeckt(const re15_camera_view_t *v, int32_t pk[][3], int npk, int sx, int sy, int32_t vz_key)
+/* Runde 41 Spur P (FG-E7 Option (a)): eine Kugel an der Bildebene verdeckt nur noch, wenn sie im Bild liegt (Tiefe auf den Radius geklemmt). Vorher
+ * "verdeckt immer": an der K3-Wandlage (Leiche (3413,-23942), Lauf K3/KW) sperrte ein Knochen dicht vor Cut 0/Cut 2, aber ausserhalb ihres Bildes,
+ * die ganze Kamera - es blieb Cut 1 mit 6,3 Bildpunkten (tests:FGM). Ebenso die Spielfigur an der Leiter-Ankunft unter Cut 1 (Tiefe 365, 3132
+ * unter der Kamera, Bildlage weit unterhalb des Bildes). */
+static int kugeln_verdeckt(const re15_camera_view_t *v, int32_t pk[][3], int npk, int32_t radius, int sx, int sy, int32_t vz_key)
 {
     const int64_t h = v->fov_screen_dist;
     const int64_t halb = vz_key > 0 ? (GSZ_KEY_HALB * h) / vz_key : 0;
     for (int i = 0; i < npk; i++) {
-        int bx = 0, by = 0; int32_t bz = 0;
-        if (!kam_proj(v, pk[i], &bx, &by, &bz)) continue;               /* Knochen hinter der Kamera */
-        if (bz - GSZ_GATOR_HALBBREITE >= vz_key) continue;              /* Kugel ganz hinter dem Schluessel */
-        if (bz <= GSZ_GATOR_HALBBREITE) return 1;                       /* Kugel schneidet die Bildebene */
-        const int64_t r = (GSZ_GATOR_HALBBREITE * h) / bz + halb;
-        const int64_t dx = sx - bx, dy = sy - by;
-        if (dx * dx + dy * dy <= r * r) return 1;
+        const int64_t px = pk[i][0], py = pk[i][1], pz = pk[i][2];
+        const int32_t vx = (int32_t)(((int64_t)v->rot[0]*px + (int64_t)v->rot[1]*py + (int64_t)v->rot[2]*pz) >> 12) + v->trans[0];
+        const int32_t vy = (int32_t)(((int64_t)v->rot[3]*px + (int64_t)v->rot[4]*py + (int64_t)v->rot[5]*pz) >> 12) + v->trans[1];
+        const int32_t vz = (int32_t)(((int64_t)v->rot[6]*px + (int64_t)v->rot[7]*py + (int64_t)v->rot[8]*pz) >> 12) + v->trans[2];
+        if (vz + radius <= 0 || vz - radius >= vz_key) continue;        /* Kugel ganz hinter der Kamera / ganz hinter dem Schluessel */
+        const int64_t d = vz > radius ? vz : radius;
+        const int64_t bx = 160 + (vx * h) / d, by = 120 + (vy * h) / d, r = (radius * h) / d + halb;
+        if ((sx - bx) * (sx - bx) + (sy - by) * (sy - by) <= r * r) return 1;
     }
     return 0;
+}
+/* Kugeln der Spielfigur (s. GSZ_SPIELER_RADIUS): Lage + y 0 .. -3000 in Fuenfteln, Arm 450 und 900 vor der Figur auf y -2100 (Vorwaerts (cos, -sin) =
+ * FUN_800152c8-Konvention); ohne aktive Figur (Riegel) keine. */
+static int spieler_punkte(int32_t sp[GSZ_SPIELER_PUNKTE][3])
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!pl->active) return 0;
+    for (int i = 0; i < 5; i++) { sp[i][0] = pl->x; sp[i][1] = pl->y - 750 * i; sp[i][2] = pl->z; }
+    for (int i = 0; i < 2; i++) {
+        sp[5 + i][0] = pl->x + (int32_t)(((int64_t)re15_cos_q12(pl->rot_y) * 450 * (i + 1)) >> 12);
+        sp[5 + i][1] = pl->y - 2100;
+        sp[5 + i][2] = pl->z - (int32_t)(((int64_t)re15_sin_q12(pl->rot_y) * 450 * (i + 1)) >> 12);
+    }
+    return GSZ_SPIELER_PUNKTE;
 }
 /* Beste Lage fuer Kamera cut (s. Kopf); r_nah = hoechster Abstand zum naechsten Knochen; 0 = keine. */
 static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t r_nah, gsz_lage_t *out)
 {
     re15_camera_view_t v;
     if (!kam_sicht(cut, &v)) return 0;
+    int32_t sp[GSZ_SPIELER_PUNKTE][3];
+    const int nsp = spieler_punkte(sp);
     int32_t x0 = 0x7fffffff, x1 = -0x7fffffff, z0 = 0x7fffffff, z1 = -0x7fffffff;
     for (int i = 0; i < RE15_AOT_MAX; i++) {                  /* Rasterbereich = Huelle der Wasserzonen */
         const re15_aot_t *a = &g_aot.slots[i];
@@ -1235,8 +1271,10 @@ static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t
             const int32_t p[3] = { x, wy0, z };
             int sx = 0, sy = 0; int32_t vz;
             if (!kam_proj(&v, p, &sx, &sy, &vz)) continue;
-            if (sx < GSZ_BILD_X0 || sx > GSZ_BILD_X1 || sy < GSZ_BILD_Y0 || sy > GSZ_BILD_Y1) continue;
-            if (leiche_verdeckt(&v, pk, npk, sx, sy, vz)) continue;    /* nicht von der Leiche verdeckt (Nachbesserung 2) */
+            if (sx < GSZ_BILD_X0 + GSZ_BILD_RAND || sx > GSZ_BILD_X1 - GSZ_BILD_RAND || sy < GSZ_BILD_Y0 + GSZ_BILD_RAND ||
+                sy > GSZ_BILD_Y1 - GSZ_BILD_RAND) continue;
+            if (kugeln_verdeckt(&v, pk, npk, GSZ_GATOR_HALBBREITE, sx, sy, vz)) continue;   /* nicht von der Leiche verdeckt (Nachbesserung 2) */
+            if (kugeln_verdeckt(&v, sp, nsp, GSZ_SPIELER_RADIUS, sx, sy, vz)) continue;     /* Spur P: nicht von der Spielfigur verdeckt */
             int32_t wy;
             if (!wasser_quadrat(x, z, &wy)) continue;
             if (!gefunden || vz < out->vz || (vz == out->vz && d2 < out->d2)) {
@@ -1303,12 +1341,13 @@ static int key_neigung(int cut, const int32_t p_wasser[3], int16_t *rx_out, int1
     return 1;
 }
 static int s_key_prim_ruhe = -1, s_key_prim_spitze = -1;
+static int s_key_stufe = -1;                            /* Spur P: Suchstufe der Lagewahl (0 = Naehe wie bisher, -1 = keine Wahl) */
 /* Lage + Kamera + Neigung beim Tod (Kopf oben). */
 static void key_lage_bei_tod(void)
 {
     re15_actor_t *g = gator_aktor();
     leiche_mitte_konst(&s_key_x, &s_key_z);
-    s_key_y = GSZ_WASSER_Y; s_key_rx = 0; s_key_rz = 0; s_key_cut = -1;
+    s_key_y = GSZ_WASSER_Y; s_key_rx = 0; s_key_rz = 0; s_key_cut = -1; s_key_stufe = -1;
     s_key_lage_ok = 1; s_key_neigung_offen = 0;
     re15_blink_r41_setzen((uint16_t)g_current_room_id, RE15_GSZ_KEY_OBJ, 1);   /* fuer die Spitzen-Rechnung (re15_blink_r41_lichtctx) */
     if (!g) return;
@@ -1330,16 +1369,24 @@ static void key_lage_bei_tod(void)
      * Kamera nur 4 Bildpunkte (Todesrolle Cut 0, Tiefe 4835) bzw. 6 (R1 Cut 1, Tiefe 5766). Gleiche Tiefe: die laufende, sonst
      * der kleinere Cut. Zonenkamera = RVD-Gruppe mit Wechselsatz (ROOM2090 Cut 0..7): dort sieht der Spieler den Schluessel auch,
      * wenn er hingeht; die Sonderkameras 8..12 tragen nur den Such-Anker (gator_re2_r41.c gr2_zonenkamera). */
-    for (int c = 0; c < g_room_rdt.cut_count; c++) {
-        if (!zonenkamera(c) || !key_suche(c, pk, npk, r_nah, &b)) continue;
+    /* Runde 41 Spur P (FG-E7 Option (a), s. GSZ_KEY_BILD_MIN10): ab Stufe 0 (Naehe wie bisher) weiter, bis die beste Zonenkamera mindestens
+     * 10,4 Bildpunkte zeigt. Die Gleichheit der Stufe 0 mit dem bisherigen Ablauf haelt unit_r41_gatorszene_tod fest. */
+    int stufe = 0;
+    for (; stufe <= GSZ_SUCH_STUFEN; stufe++) {
+        const int32_t r = r_nah + (r_nah * stufe) / GSZ_SUCH_STUFEN;
+        for (int c = 0; c < g_room_rdt.cut_count; c++) {
+            if (!zonenkamera(c) || !key_suche(c, pk, npk, r, &b)) continue;
 #ifdef RE15_PLATFORM_PC
-        {   re15_camera_view_t kv;
-            const int h = kam_sicht(c, &kv) ? (int)kv.fov_screen_dist : 0;
-            fprintf(stderr, "[gatorszene] Schluessel-Kandidat: Kamera %d%s, Lage (%d,%d,%d) Tiefe %d = Quadrat %d Bildpunkte\n", c,
-                    c == lauf ? " (laufende)" : "", (int)b.x, (int)b.y, (int)b.z, (int)b.vz,
-                    b.vz > 0 ? (int)((2 * GSZ_KEY_HALB * h) / b.vz) : 0); }
+            {   re15_camera_view_t kv;
+                const int h = kam_sicht(c, &kv) ? (int)kv.fov_screen_dist : 0;
+                fprintf(stderr, "[gatorszene] Schluessel-Kandidat: Kamera %d%s, Lage (%d,%d,%d) Tiefe %d = Quadrat %d Bildpunkte (Stufe %d, Naehe %d)\n", c,
+                        c == lauf ? " (laufende)" : "", (int)b.x, (int)b.y, (int)b.z, (int)b.vz,
+                        b.vz > 0 ? (int)((2 * GSZ_KEY_HALB * h) / b.vz) : 0, stufe, (int)r); }
 #endif
-        if (cut < 0 || b.vz < l.vz || (b.vz == l.vz && c == lauf)) { l = b; cut = c; }
+            if (cut < 0 || b.vz < l.vz || (b.vz == l.vz && c == lauf)) { l = b; cut = c; }
+        }
+        re15_camera_view_t kv;
+        if (cut >= 0 && kam_sicht(cut, &kv) && l.vz > 0 && (20 * GSZ_KEY_HALB * (int64_t)kv.fov_screen_dist) / l.vz >= GSZ_KEY_BILD_MIN10) break;
     }
     if (cut < 0) {                                          /* keine Kamera: Kopf in eine Wasserzone gezogen (erste Fassung) */
         for (int i = 0; i <= 8; i++) {
@@ -1350,6 +1397,7 @@ static void key_lage_bei_tod(void)
         return;
     }
     s_key_x = l.x; s_key_z = l.z; s_key_y = l.y; s_key_cut = cut;
+    s_key_stufe = stufe > GSZ_SUCH_STUFEN ? GSZ_SUCH_STUFEN : stufe;
     const int32_t p[3] = { l.x, l.y, l.z };
     int16_t rx = 0, rz = 0; int32_t y = l.y;
     if (key_neigung(cut, p, &rx, &rz, &y, &s_key_prim_ruhe, &s_key_prim_spitze)) { s_key_rx = rx; s_key_rz = rz; s_key_y = y; }
@@ -1359,6 +1407,7 @@ static void key_lage_bei_tod(void)
             cut, lauf, s_key_x, s_key_y, s_key_z, (int)l.vz,
             (unsigned)re15_squareroot0((uint32_t)(l.d2 > 0xffffffffLL ? 0xffffffffLL : l.d2)), npk, (int)r_nah,
             (int)s_key_rx, (int)s_key_rz, s_key_prim_ruhe, s_key_prim_spitze);
+    fprintf(stderr, "[gatorszene] Schluessel-Suche: Stufe %d (Naehe x %d/%d, FG-E7 Option (a))\n", s_key_stufe, GSZ_SUCH_STUFEN + s_key_stufe, GSZ_SUCH_STUFEN);
 #endif
 }
 /* Ersatzlage nach dem Laden: Neigung zur laufenden Kamera (oder zur Zonenkamera, in deren Bild sie liegt), im ersten Takt. */
@@ -1518,6 +1567,7 @@ static void key_rueckschnitt_pruefen(int slot)
     key_tod_setzen();
 }
 int re15_gatorszene_r41_key_kamera(void) { return s_key_cut; }
+int re15_gatorszene_r41_key_stufe(void) { return s_key_stufe; }
 /* Pruefhaken (M5/M2): Primitivfarbe (hellster Kanal) des Schluessels JETZT, wie der Prop-Zeichner sie rechnet: Weltmatrix
  * und -lage ueber die Elternkette wie main.c pc_prop_world (Typ-4-Absenkung re15_prop_render_y), Lichtsatz des Cuts an der
  * Weltlage, Drehung, MD1-Normale (0,-4096,0); Ruhe = ohne Puls, Spitze = Blink-Takt 0x1f (Wert 0xBE). 0 = kein Schluessel. */

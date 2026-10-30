@@ -8,6 +8,7 @@
  * Teile (Aufruf: test_r41_alligator2 <teil>):
  *   kamera / kamera_elza  Nachtrag 31 Punkt 2: Abstand der Gator-Teile zur laufenden Kamera und Bildanteil ueber die ersten 150
  *                         Bilder ab dem Kampfbeginn (s. kam_messen)
+ *   schluessel            FG-E7 Option (a): Schluessel-Lagewahl sucht weiter, Scan ueber das ganze Becken mindestens 10,4 Bildpunkte
  * Werkzeug (kein Riegel):
  *   lagesuche2 <datei>    wie lagesuche von test_r41_gatorszene, zusaetzlich Kampfbeginn-Lage und Kamera-Mass
  */
@@ -305,17 +306,104 @@ static int bildanteil(const char *d, int r0, int r1, int f0, int f1)
     return ok ? 0 : 1;
 }
 
+/* ---- Teil: schluessel (FG-E7 Option (a)) ----------------------------------------------------------------------------------
+ * Leiche im Zustand 7 an einer Lage, Leon an (px,pz): die Lagewahl des Schluessels wie im Spiel (Szenen-Takt). Rueckgabe Bild x 10. */
+static int tod_lage(int32_t gx, int32_t gz, int16_t gier, int32_t px, int32_t pz, int cam, int *cut, int *stufe, int32_t *d_min)
+{
+    *cut = -1; *stufe = -1; *d_min = -1;
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN, 1);
+    if (room_boot(0x2090, px, 0, pz, 0, (uint8_t)cam) != 0 || !gator_bank()) return -1;
+    re15_enemy_ai_set_paused(1);
+    re15_actor_t *g = gator_setzen();
+    re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+    if (!g || !bk || !bk->ok) return -1;
+    g->x = gx; g->z = gz; g->y = -1200; g->rot_y = gier; g->state = 7;
+    g->render_scale_q12 = 2731;                                /* GB_SCALE_Q12 = 2/3 */
+    g->motion = 0; g->anim_frame = 0; g->anim_frac = 0; g->anim_prev_valid = 0;
+    g_scd.cam_id = (uint8_t)cam; g_scd.work_vars[0x0A] = (int16_t)cam; s_shown = cam;
+    static int32_t kn[64][3]; int nb = 0;
+    for (int b = 0; b < bk->skel.bone_count && nb < 64; b++) if (re15_gr2_bone_welt_pub(g, b, kn[nb])) nb++;
+    frame(0, 0);
+    *cut = re15_gatorszene_r41_key_kamera(); *stufe = re15_gatorszene_r41_key_stufe();
+    const int ks = prop_von(RE15_GSZ_KEY_OBJ);
+    if (ks < 0 || *cut < 0) return 0;
+    int32_t dm = 0x7fffffff;
+    for (int b = 0; b < nb; b++) {
+        const int64_t dx = (int64_t)kn[b][0] - g_scd.props[ks].x, dz = (int64_t)kn[b][2] - g_scd.props[ks].z;
+        const int32_t d = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+        if (d < dm) dm = d;
+    }
+    *d_min = dm;
+    int kb = 0, kh = 0; int32_t tiefe = 0;
+    if (!re15_gatorszene_r41_key_kasten(*cut, &kb, &kh, &tiefe) || tiefe <= 0) return 0;
+    return (int)(1800 * 208 / tiefe);                          /* Quadrat 180 x H / Tiefe, x 10 (H = 208, RID @0x060) */
+}
+/* FG-E7 Option (a): ueber das ganze Becken (Raster schritt, vier Gieren, Leon an der Leiter und mitten im Suedbecken) zeigt die Lagewahl den Schluessel
+ * mit mindestens 10,4 Bildpunkten; die Stufen zaehlen, wie oft sie weitersuchen musste. Voller Lauf (Raster 1000, Werkzeug schluessel_scan): 1688 Lagen,
+ * Stufe 0: 1595, 1: 48, 2: 33, 3: 12, 4: 0, unter 10,4: 0. */
+static void schluessel_scan(int schritt, int zeigen, int *lagen, int *klein, int st[5], int32_t *d_max)
+{
+    static const int32_t sp[2][2] = { { -8200, -25550 }, { 1325, -25550 } };
+    *lagen = 0; *klein = 0; *d_max = 0;
+    for (int i = 0; i < 5; i++) st[i] = 0;
+    for (int p = 0; p < 2; p++)
+        for (int32_t z = -26000; z <= -6500; z += schritt)
+            for (int32_t x = -8000; x <= 6000; x += schritt) {
+                if (x > -1700 - 1466 && x < 1850 + 1466 && z > -20000 - 1466 && z < -12450 + 1466) continue;   /* Plattform-Block: keine Leichenlage */
+                if (x > 1850 && z > -18100 && z < -14500) continue;                                            /* Rampe */
+                for (int gi = 0; gi < 4; gi++) {
+                    int c, stf; int32_t dm;
+                    const int px = tod_lage(x, z, (int16_t)(gi * 1024), sp[p][0], sp[p][1], 0, &c, &stf, &dm);
+                    if (c < 0) continue;
+                    (*lagen)++;
+                    if (stf >= 0 && stf < 5) st[stf]++;
+                    if (px < 104) (*klein)++;
+                    if (dm > *d_max) *d_max = dm;
+                    if (zeigen && (stf > 0 || px < 104))
+                        printf("SCAN Leon (%d,%d) Leiche (%d,%d) Gier %d: Cut %d Stufe %d Bild %d.%d, %d von der Leiche\n", (int)sp[p][0], (int)sp[p][1],
+                               (int)x, (int)z, gi * 1024, c, stf, px / 10, px % 10, (int)dm);
+                }
+            }
+    printf("    Scan Raster %d: %d Lagen, Stufe 0: %d, 1: %d, 2: %d, 3: %d, 4: %d, unter 10,4: %d, groesster Abstand zur Leiche %d\n", schritt, *lagen, st[0], st[1],
+           st[2], st[3], st[4], *klein, (int)*d_max);
+}
+static void teil_schluessel_p(void)
+{
+    printf("== schluessel (FG-E7 Option (a)) ==\n");
+    int c, stf; int32_t dm;
+    int px = tod_lage(-4000, -17000, 0, -8200, -25550, 0, &c, &stf, &dm);
+    PRUEF(px >= 104 && stf >= 1, "Westkanal (-4000,-17000): die Lagewahl sucht weiter (Stufe %d), Cut %d, Bild %d.%d >= 10,4, %d von der Leiche", stf, c, px / 10,
+          px % 10, (int)dm);
+    px = tod_lage(3413, -25001, 2048, -8200, -25550, 1, &c, &stf, &dm);
+    PRUEF(px >= 104 && stf == 0, "Fall r1 (3413,-25001): Naehe wie bisher reicht (Stufe %d), Cut %d, Bild %d.%d", stf, c, px / 10, px % 10);
+    int n, kl, st[5]; int32_t d_max;
+    schluessel_scan(3000, 0, &n, &kl, st, &d_max);
+    PRUEF(n > 100 && kl == 0, "Becken-Scan: %d Lagen, keine unter 10,4 Bildpunkten (%d)", n, kl);
+    PRUEF(st[1] + st[2] + st[3] + st[4] > 0 && d_max <= 2 * 3100, "Scan: die Stufen 1..4 kommen vor (%d), Schluessel hoechstens %d von der Leiche (doppelte Naehe)",
+          st[1] + st[2] + st[3] + st[4], (int)d_max);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     if (!strcmp(teil, "lagesuche2") && argc >= 3) { if (!gator_bank()) return 1; return lagesuche2(argv[2]); }
     if (!strcmp(teil, "gsz")) return gsz_haupt(argc - 1, argv + 1);    /* Durchreiche auf die Teile von test_r41_gatorszene */
+    if (!strcmp(teil, "schluessel_scan")) {   /* Werkzeug: voller Scan */
+        int n, kl, st[5]; int32_t d_max;
+        if (!gator_bank()) return 1;
+        re15_door_seq_setze_laeufer(fang);
+        schluessel_scan(1000, 1, &n, &kl, st, &d_max);
+        return 0;
+    }
     if (!strcmp(teil, "bildanteil") && argc >= 7) return bildanteil(argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
     if (!gator_bank()) { printf("RE2-EM23-Bank fehlt\n"); return 1; }
     const int alle = !strcmp(teil, "alle");
     re15_door_seq_setze_laeufer(fang);
     if (alle || !strcmp(teil, "kamera"))      teil_kamera(0);
     if (alle || !strcmp(teil, "kamera_elza")) teil_kamera(1);
+    if (alle || !strcmp(teil, "schluessel"))  teil_schluessel_p();
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

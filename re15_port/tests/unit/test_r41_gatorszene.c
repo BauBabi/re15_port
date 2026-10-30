@@ -613,8 +613,13 @@ static void tod_fall(const char *name, uint16_t raum, int32_t gx, int32_t gz, in
         const int32_t *p = kn[b]; int bx = 0, by = 0; int32_t bz = 0;
         const int bf = kam_tiefe(kc, p, &bx, &by, &bz);
         if (bf > 0 && bz - 800 < vz) {
-            if (bz <= 800) verdeckt = 1;
-            else {
+            /* Runde 41 Spur P (FG-E7 Option (a), gatorszene_r41.c kugeln_verdeckt): an der Bildebene zaehlt die Kugel nur noch, wenn sie im Bild
+             * liegt - Tiefe auf den Radius geklemmt. */
+            if (bz <= 800) {
+                const int64_t dbx = (int64_t)sx - (160 + ((int64_t)(bx - 160) * bz) / 800), dby = (int64_t)sy - (120 + ((int64_t)(by - 120) * bz) / 800);
+                const int64_t rb = (int64_t)bf + (int64_t)90 * bf / vz;
+                if (dbx * dbx + dby * dby <= rb * rb) verdeckt = 1;
+            } else {
                 const int64_t r = (int64_t)800 * bf / bz + (int64_t)90 * bf / vz;
                 const int64_t ddx = sx - bx, ddy = sy - by;
                 if (ddx * ddx + ddy * ddy <= r * r) verdeckt = 1;
@@ -625,8 +630,9 @@ static void tod_fall(const char *name, uint16_t raum, int32_t gx, int32_t gz, in
     }
     const int32_t r_nah = nb > 6 ? (int32_t)re15_squareroot0((uint32_t)((int64_t)(kn[6][0]-kn[0][0])*(kn[6][0]-kn[0][0]) +
                                                                     (int64_t)(kn[6][2]-kn[0][2])*(kn[6][2]-kn[0][2]))) : 3055;
-    PRUEF(nb >= 10 && !verdeckt && d_min <= r_nah, "von der Leiche nicht verdeckt (%d Knochen-Kugeln 800), naechster Knochen %d "
-          "entfernt (<= Kopf-Wurzel-Abstand der Leiche %d)", nb, (int)d_min, (int)r_nah);
+    /* Runde 41 Spur P (FG-E7 Option (a)): die Lagewahl sucht weiter, bis 10,4 Bildpunkte erreicht sind - hoechstens bis zum doppelten Abstand. */
+    PRUEF(nb >= 10 && !verdeckt && d_min <= 2 * r_nah, "von der Leiche nicht verdeckt (%d Knochen-Kugeln 800), naechster Knochen %d "
+          "entfernt (<= doppelter Kopf-Wurzel-Abstand der Leiche %d)", nb, (int)d_min, (int)r_nah);
     int wasser = re15_aot_water_at(kp[0], kp[2]) != 0;
     for (int e = 0; e < 4; e++) wasser &= re15_aot_water_at(kp[0] + ((e & 1) ? 90 : -90), kp[2] + ((e & 2) ? 90 : -90)) != 0;
     PRUEF(wasser, "Mitte und vier Ecken (+-90) im Wasser");
@@ -774,10 +780,14 @@ static void tod_explosion_fall(uint16_t raum, int gegenprobe)
     const re15_gsz_folge_t *fr = r_i >= 0 ? re15_gatorszene_r41_folge(r_i) : NULL;
     PRUEF(fr && fr->wert == ecut && fr->wert2 == 0, "Folge R %d/%d: Schluessel-Schnitt statt B's Rueckschnitt (Explosions-Cut %d, "
           "Ausgangs-Cut 0)", fr ? fr->wert : -1, fr ? fr->wert2 : -1, ecut);
-    PRUEF(einst_bild >= 0 && tot_bild >= 0 && tot_bild - einst_bild == 2 && k_cut >= 0 && k_cut != ecut && k_cut != 0,
+    /* Runde 41 Spur P (FG-E7 Option (a), Querbezug): seit eine Kugel an der Bildebene nur noch im Bild verdeckt, ist in dieser Lage Cut 0 die Kamera
+     * mit dem groessten Schluessel (K = X = 0, Einstellung im Ausgangs-Cut). Der Fall K != X (Schnitt Explosion -> Schluessel -> Cut_old) bleibt im
+     * exe-Riegel integration_r41_gatorszene_tod_explosion (E/K/X paarweise verschieden). */
+    PRUEF(einst_bild >= 0 && tot_bild >= 0 && tot_bild - einst_bild == 2 && k_cut >= 0 && k_cut != ecut,
           "Einstellung Cut %d ab Bild %d, Tot-Flag Bild %d (P1-Ende -> P2 -> P3 = zwei Takte, @0x80102638-50 / @0x8010265c-64)", k_cut,
           einst_bild, tot_bild);
-    PRUEF(null_bilder == 0, "kein angezeigtes Bild mit Cut 0 vor dem Tot-Flag (%d; vorher zwei, Abnahme 2 M1)", null_bilder);
+    PRUEF(null_bilder == (k_cut == 0 ? tot_bild - einst_bild : 0), "kein Zonen-Cut 0 ausser der Einstellung vor dem Tot-Flag (%d; vorher zwei, Abnahme 2 M1)",
+          null_bilder);
     {   /* Laeufe der Bildfolge: E (Explosion), K (Einstellung, >= 90 Bilder Halt = GSZ_LEICHE_BILDER), danach hoechstens Cut 0
          * (Cut_old) - kein drittes Bild dazwischen */
         char lauf_c[8]; int lauf_n[8], nl2 = 0;

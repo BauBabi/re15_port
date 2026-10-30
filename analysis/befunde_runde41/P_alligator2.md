@@ -28,3 +28,19 @@ Messung nachher (exe, Lauf D_L1/D_E1, Leon = Elza Bild fuer Bild): Kampfbeginn F
 11808), Biss +137, Treffer +144, Clip-Folge 0 F300, 1 F409, 4 F436 (kein Dash), Fress-Cut 1 frontal 4005, Wurzel <-> Kamera >= 4007 (vorher 1755), Knochen >= 2684
 (vorher 610), rechte Bildhaelfte Median 28 % (vorher 45 %), 0 Bilder > 50 % (vorher 18..23). Schluessel: Primitivfarbe 86 -> 128, Quad-Kasten 10,4 x 12,6.
 Riegel unit_r41_alligator2_kamera(_elza), integration_r41_alligator2_kamera(_elza).
+
+## Punkt 2 (FG-E7 Option (a)) - Stand
+Messung vorher (Baum nach Punkt 1, Riegel entsperrt): integration_r41_gatorszene_tod_r1/_elza rot - `bilddiff: 43 Bilder, 0 mit Schluessel-Unterschied`. Ursache NICHT die Groesse,
+sondern Verdeckung: Lauf T0 (F1000, Bild P41/t0.png) Schluessel (1200,-1699,-24800) Kamera 0, Leon (1325,-25550) steht 1570 vor der Kamera direkt davor.
+K3-Lage (Rezept FG-E7, Lauf K3/KW): Stufe 0 nur Kamera 1 Tiefe 5918 = 6,3 Bildpunkte; Kamera 0/2 fehlten ganz, weil leiche_verdeckt jede Kugel an der Bildebene
+(0 < Tiefe <= 800) als "verdeckt immer" zaehlte - auch Knochen ausserhalb des Bildes.
+Umsetzung (engine/src/gatorszene_r41.c, PORT-WAHL der Form, Massstab 10,4 = F-E2 Punkt 2):
+- key_lage_bei_tod: Suchstufen r_nah x (1 + n/4), n = 0..4, Abbruch bei >= 10,4 Bildpunkten (GSZ_KEY_BILD_MIN10 104, GSZ_SUCH_STUFEN 4).
+- kugeln_verdeckt: Kugel an der Bildebene zaehlt nur, wenn sie im Bild liegt (Tiefe auf den Radius geklemmt).
+- Spielfigur als Verdecker: 5 Kugeln Fuss..Kopf (3000 hoch, gemessen 60 Bildpunkte bei Tiefe 10309, Lauf V_a), 2 am Arm, Radius 500 (Rumpf 835 breit, Lauf T1 F1000).
+- GSZ_BILD_RAND 4 (Quadrat-Mitte steigt mit der Kippung, Fall r1 x 24 -> 22).
+Messung nachher: tod_r1/_elza gruen (Kamera 2, Tiefe 2729, 13 Bildpunkte, 1173 von der Leiche); K3 (mit Kopf-Klemme): Kamera 0, Tiefe 2606 = 14,3 Bildpunkte, 1639 von der
+Leiche; Scan ueber das ganze Becken (test_r41_alligator2 schluessel_scan, Raster 1000, 4 Gieren, 2 Leon-Lagen): 1688 Lagen, Stufe 0: 1595, 1: 48, 2: 33, 3: 12, 4: 0, unter 10,4: 0.
+Riegel: integration_r41_gatorszene_tod_r1/_elza (DISABLED entfernt), unit_r41_alligator2_schluessel, integration_r41_alligator2_k3/_k3_elza.
+Querbezug: unit_r41_gatorszene_tod (Naehe <= 2 x Kopf-Wurzel, Verdeckung mit derselben Regel), unit_r41_gatorszene_tod_explosion (dort jetzt K = X = 0; K != X bleibt im
+exe-Riegel integration_r41_gatorszene_tod_explosion).
