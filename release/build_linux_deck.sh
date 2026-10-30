@@ -117,5 +117,5 @@ KOPIE=(
 NIE=( release/lbuild release/linux_out )
 SKRIPT=release/docker_linux_build.sh
 AUSGABE=release/linux_out
-ENV_WEITER=( RE15_CTEST_JOBS RE15_VERSION )   # RE15_VERSION: Runde 39 Spur T -> docker_linux_build.sh -> cmake
+ENV_WEITER=( RE15_CTEST_JOBS RE15_VERSION RE15_CTEST_UEBERSPRINGEN )   # RE15_VERSION: Runde 39 Spur T -> docker_linux_build.sh -> cmake
 container_lauf

@@ -125,6 +125,7 @@ static inline int RNDI(float f) {
 extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c */
 #include "re2_ems.h"          /* WELLE A: RE2-Flavor-Asset-Loader (CDEMD0.EMS-TOC, PC-only) */
 #include "re15_gator_re2_r41.h" /* Runde 41 Spur B: RE2-Schuetteln (Hintergrund-Versatz) + Kanister-Zeichner */
+#include "re15_gatorszene_r41.h" /* Runde 41 Spur F: Water Key (Prop-Lader, Icon, Bild) + 2090-Ankunftsszene */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
 #include "re15_bissarm_r37.h"  /* Runde 37 Spur J: Handkontakt im Griff */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
@@ -134,6 +135,8 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_zombieki_r36.h"    /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache (Typ 0x27) */
 #include "re15_trage1200.h"      /* Runde 35 Spur H: ROOM1200 Trage-Zombie (Messschiene) */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
+#include "re15_birkin_formen.h"   /* Beta-Birkin-Formen: raumabhaengige Ersatzmodelle */
+#include "re15_raumlicht.h"       /* Lichtscheine nach dem 80%-Video */
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
 #include "re15_room_spawns.h" /* GENERATED per-room entry spawn (inbound-door landing spot) */
 #include "re15_anim_select.h"  /* SHARED actor bank/clip selection view-model */
@@ -878,8 +881,24 @@ static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
 /* Den RE1.5-EMD-Blob fuer `type` besorgen (Split-Datei oder Blob aus CDEMD0.EMS) — der
  * Aufrufer bekommt einen PRIVATEN malloc-Puffer und uebernimmt ihn als eb->buf. Aus
  * pc_enemy_load herausgezogen, weil der WELLE-G-Hybrid denselben Blob braucht. */
+static void pc_enemy_modell_neu(uint8_t type);
 static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
 {
+    { static int s_hook = 0; if (!s_hook) { s_hook = 1; re15_bf_modell_hook(pc_enemy_modell_neu); } }
+    /* BETA-FORMEN (Nutzerwunsch 2026-10-30, re15_birkin_formen.h): raumabhaengiges Ersatzmodell, z.B.
+     * EM30_HANGAR.EMD in 50A0/50A1, EM30_BAHNSTEIG.EMD in 5090/5091. ⛔ Nachbildungen nach dem
+     * 80%-Video, nicht byte-true (tools/birkin_formen.py). Vor dem CDEMD1-Zweig, damit die Wahl auch
+     * im Elza-Szenario greift. Fehlt die Datei, bleibt das Auslieferungsmodell. */
+    {
+        const char *datei = re15_bf_emd_datei(type);
+        int sz = 0; uint8_t *buf;
+        if (datei && (buf = pc_read_shared(datei, &sz)) != NULL) {
+            if (out_len) *out_len = (size_t)sz;
+            fprintf(stderr, "[enemy] EM%02X: Ersatzmodell %s (Raum %04X)\n", type, datei, g_current_room_id);
+            return buf;
+        }
+        if (datei) fprintf(stderr, "[enemy] EM%02X: %s fehlt -> Auslieferungsmodell\n", type, datei);
+    }
     { extern uint8_t *re15_roy_pc_emd(uint8_t, size_t *);   /* Runde 37 Spur K/N: JEDER Typ aus CDEMD1.EMS, */
       uint8_t *rb = re15_roy_pc_emd(type, out_len);          /* wenn das Elza-Bit beim Sce_em_set stand    */
       if (rb) return rb; }                                   /* (bltz @0x80022334, Datei 0x27), roy_pc.c   */
@@ -1332,6 +1351,18 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
 /* Default: der RE2-Zweig darf greifen (unveraendertes Verhalten fuer alle Typen ausser 0x26,
  * dessen Aufrufer die Herkunft mitgeben — s. Block ueber pc_enemy_load_ex). */
 static void pc_enemy_load(uint8_t type) { pc_enemy_load_ex(type, 1); }
+/* BETA-FORMEN (re15_birkin_formen.h): Bank eines Typs mitten im Raum neu laden - der 5090-Birkin wechselt
+ * nach seiner Mutation vom Original-EM30 auf EM30_BAHNSTEIG (gleiche Clips/Hierarchie, s. birkin_formen.py). */
+static void pc_enemy_modell_neu(uint8_t type)
+{
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
+    if (eb) {
+        if (eb->buf) free(eb->buf);
+        memset(eb, 0, sizeof *eb);
+        eb->pc_tex_slot = -1; eb->pc_tex_slot_gore = -1;
+    }
+    pc_enemy_load(type);
+}
 
 /* ─────────────────────────────────────────────────────────────────────────────────────
  * R.P.D.-RUESTUNG / SPIELERMODELL-WECHSEL — byte-true.
@@ -1617,6 +1648,12 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         int msz = 0, tsz = 0; const uint8_t *mb = re15_ventilkette_r41_md1_bytes_k(vk, &msz); const uint8_t *tb = re15_ventilkette_r41_tim_bytes_k(vk, &tsz); re15_tim_t tt;
         if (v_oid >= 0 && nprops <= v_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[v_oid]) == 0) ok[v_oid] = 1;
         if (v_oid >= 0 && nprops <= v_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(v_oid)); }
+    {   /* Runde 41 Spur F: Water Key ROOM2090/2091 — eingebackenes RE2-MD1+TIM (gen/gatorszene_r41_schluessel.inc), Muster oben. */
+        const int w_oid = re15_gatorszene_r41_obj_id((uint16_t)g_current_room_id);
+        int msz = 0, tsz = 0; const uint8_t *mb = re15_gatorszene_r41_md1_bytes((uint16_t)g_current_room_id, &msz);
+        const uint8_t *tb = re15_gatorszene_r41_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
+        if (w_oid >= 0 && nprops <= w_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[w_oid]) == 0) ok[w_oid] = 1;
+        if (w_oid >= 0 && nprops <= w_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(w_oid)); }
 }
 
 /* ── FE-4 memory-card save/load ────────────────────────────────────────────── */
@@ -4035,6 +4072,8 @@ re_title:;
     { extern void re15_pc_dining_r38_init(void); re15_pc_dining_r38_init(); }     /* Runde 38 Spur F: Port-Banken 0x3B/0x3C/0x3D */
     { extern void re15_pc_toene_r39_init(void); re15_pc_toene_r39_init(); }   /* Runde 39 Spur B: TOENE39.VBS-Haken (Schublade 11F0, Gitter/Schrank 1190) */
     { extern void re15_pc_gator_re2_init(void); re15_pc_gator_re2_init(); }   /* Runde 41 Spur B: GATOR40A0.VBS-Haken + Kanister-Modell */
+    { extern void re15_pc_gatorszene_r41_init(void); re15_pc_gatorszene_r41_init(); }   /* Runde 41 Spur F: Gator-SE + Metalltuer der 2090-Ankunftsszene (gatorszene_r41_pc.c) */
+    { extern void re15_pc_kanister2080_init(void); re15_pc_kanister2080_init(); }   /* Runde 41 Spur G: Knall (gen/knall_bank.inc Satz 0), Tuer-Ton DOOR06, Aufschlag, NPC-Schuss */
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -4553,6 +4592,7 @@ re_title:;
         if (ipix) re15_sicherung_icon_einsetzen(ipix, isz);
         if (ipix) re15_schluessel_r36_icon_einsetzen(ipix, isz);   /* Runde 36 Spur Q: Tiles 0x42/0x45 */
         if (ipix) re15_dining_r38_icon_einsetzen(ipix, isz);       /* Runde 38 Spur F: Tile 0x43 */
+        if (ipix) re15_gatorszene_r41_icon_einsetzen(ipix, isz);   /* Runde 41 Spur F: Tile 0x34 (Water Key) */
         if (ipix) re15_itemall_set_pix(ipix, isz);   /* buffer intentionally kept for the program's life */
     }
     /* Item-get modal per-item PICTURE sheet (ITEM/ITPS.ITP, U11) — same cwd-independent root as the
@@ -4564,6 +4604,7 @@ re_title:;
         if (ipic) re15_sicherung_bild_einsetzen(ipic, psz);
         if (ipic) re15_schluessel_r36_bild_einsetzen(ipic, psz);   /* Runde 36 Spur Q: Bloecke 0x42/0x45 */
         if (ipic) re15_dining_r38_bild_einsetzen(ipic, psz);       /* Runde 38 Spur F: Block 0x43 */
+        if (ipic) re15_gatorszene_r41_bild_einsetzen(ipic, psz);   /* Runde 41 Spur F: Block 0x34 (Water Key) */
         if (ipic) re15_itps_set_data(ipic, psz);     /* kept for the program's life */
     }
     /* PRUEFZEILE der beiden Ladestellen oben (Runde 30, Nachbesserung): gelesen wird ueber
@@ -6220,6 +6261,47 @@ re_title:;
             }
             re15_camera_build_view(view_cut, &cam_view);
 
+            /* RAUMLICHT (Port-Ergaenzung nach dem 80%-Video, include/re15_raumlicht.h): additive
+             * Lichtscheine am Boden, projiziert wie die Schatten-Ecken (Integer-RTPS, Near-Clip 64). */
+            {
+                extern void re15_render_light_quad(int, int, int, int, int, int, int, int,
+                                                   uint8_t, uint8_t, uint8_t);
+                re15_raumlicht_t rl[16];
+                int nrl = re15_raumlicht_liste(g_current_room_id, g_engine.frame_count, rl, 16);
+                if (getenv("RE15_RAUMLICHT_LOG") && (g_engine.frame_count % 60) == 0)
+                    fprintf(stderr, "[raumlicht] F%u R%04X n=%d\n", (unsigned)g_engine.frame_count,
+                            g_current_room_id, nrl);
+                for (int li = 0; li < nrl; li++) {
+                    const int32_t ec[4][3] = {
+                        { rl[li].x - rl[li].hx, rl[li].y, rl[li].z + rl[li].hz },
+                        { rl[li].x - rl[li].hx, rl[li].y, rl[li].z - rl[li].hz },
+                        { rl[li].x + rl[li].hx, rl[li].y, rl[li].z + rl[li].hz },
+                        { rl[li].x + rl[li].hx, rl[li].y, rl[li].z - rl[li].hz } };
+                    int lx[4], ly[4], lok = 1;
+                    for (int v = 0; v < 4 && lok; v++) {
+                        const int64_t wx = ec[v][0], wy = ec[v][1], wz = ec[v][2];
+                        int32_t _vx = (int32_t)((wx*cam_view.rot[0] + wy*cam_view.rot[1] + wz*cam_view.rot[2]) >> 12) + cam_view.trans[0];
+                        int32_t _vy = (int32_t)((wx*cam_view.rot[3] + wy*cam_view.rot[4] + wz*cam_view.rot[5]) >> 12) + cam_view.trans[1];
+                        int32_t _vz = (int32_t)((wx*cam_view.rot[6] + wy*cam_view.rot[7] + wz*cam_view.rot[8]) >> 12) + cam_view.trans[2];
+                        if (_vz < 64) { lok = 0; break; }
+                        int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
+                        int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
+                        uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
+                        uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
+                        lx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
+                        ly[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
+                    }
+                    if (getenv("RE15_RAUMLICHT_LOG"))
+                        fprintf(stderr, "[raumlicht] F%u R%04X #%d ok=%d (%d,%d)(%d,%d)(%d,%d)(%d,%d)\n",
+                                (unsigned)g_engine.frame_count, g_current_room_id, li, lok,
+                                lx[0], ly[0], lx[1], ly[1], lx[2], ly[2], lx[3], ly[3]);
+                    if (lok)
+                        re15_render_light_quad(lx[0], ly[0], lx[1], ly[1], lx[2], ly[2], lx[3], ly[3],
+                                               rl[li].r, rl[li].g, rl[li].b);
+                }
+            }
+
+
             /* sprite.pri depth gate: project the player into camera + screen space
              * (same scale as the per-tri avg_z / mask depth<<3) so a mask BEHIND him
              * that he OVERLAPS on screen is skipped — he stops being occluded by
@@ -6247,7 +6329,8 @@ re_title:;
                             wx[nw] = a; wz[nw] = b; wr[nw] = r; nw++;
                             c = strchr(c + 1, ';');
                         }
-                        if (nw > 0 && (int)g_engine.frame_count >= tf) {
+                        static int tp_fertig = 0;   /* RE15_POCC_TP_EINMAL: nach dem letzten Wegpunkt loslassen */
+                        if (nw > 0 && (int)g_engine.frame_count >= tf && !tp_fertig) {
                             static int have_start = 0, sx0 = 0, sz0 = 0, f0 = 0;
                             if (!have_start) {
                                 have_start = 1; sx0 = plz->x; sz0 = plz->z;
@@ -6266,6 +6349,7 @@ re_title:;
                                 }
                                 k -= steps; px = wx[w]; pz2 = wz[w];
                                 plz->x = px; plz->z = pz2; plz->rot_y = (int16_t)wr[w];
+                                if (w == nw - 1 && getenv("RE15_POCC_TP_EINMAL")) tp_fertig = 1;
                             }
                         }
                     }
@@ -11158,6 +11242,7 @@ re_title:;
             }
 
             re15_gr2_pc_zeichnen(&cam_view, cx, cy);   /* Runde 41 Spur B: Kanister-Prop (ROOM40A0 Modell 1) */
+            { extern void re15_k2080_pc_zeichnen(const void *, int, int); re15_k2080_pc_zeichnen(&cam_view, cx, cy); }   /* Runde 41 Spur G: Kanister in 2080 */
 
             /* Cut/player HUD + projection marker silenced. */
             (void)active_cut_count;
@@ -11185,6 +11270,8 @@ re_title:;
             re2fx_pc_draw();
             re15_pc_glas1120_draw(&cam_view, cx, cy, pc_fx_camf(),           /* Runde 35 Spur M */
                                   cam_has_region, cam_region_xs, cam_region_zs);
+            { extern void re15_pc_gator_fx_draw(const re15_camera_view_t *, int, int, int, int, const int16_t *, const int16_t *);
+              re15_pc_gator_fx_draw(&cam_view, cx, cy, pc_fx_camf(), cam_has_region, cam_region_xs, cam_region_zs); }   /* Runde 41 Spur G (Nachtrag 28): Raum-ESP ROOM40A0 + Kern-Zeilen 485..498 */
             re2fx_pc_set_ansicht(NULL, 0, 0, 0, 0, NULL, NULL);
             /* Runde 34 Nacht B: der Hebetisch-Cursor ueber dem Cut-4-Bild (eigene Abbildung ueber
              * Cut 10 von ROOM11F0, platform/pc/src/hebetisch_cursor_pc.c). */

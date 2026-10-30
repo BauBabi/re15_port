@@ -90,6 +90,22 @@ CTEST_JOBS="${RE15_CTEST_JOBS:-1}"
 # brauchen, melden sich damit SICHTBAR als uebersprungen (integration_r30_titel_puls);
 # ihre Engine-Pruefungen bleiben Pflicht. Unter Windows (echte GPU) laufen sie voll.
 export RE15_OHNE_GPU=1
+# Runde 41 (v0.8.29): RE15_CTEST_UEBERSPRINGEN=<Pfad relativ zum Repo> = gruenes ctest_out.txt eines FRUEHEREN Laufs desselben
+# Commits (z. B. nach einem Abbruch AUSSERHALB von ctest). ctest laeuft dann nicht erneut; Pflicht: das fruehere Ergebnis ist gruen
+# (100 %, 0 failed) und gelaufen + abgeschaltet = registriert in DIESEM Bau. Grund und Zahlen stehen im Protokoll.
+if [[ -n "${RE15_CTEST_UEBERSPRINGEN:-}" ]]; then
+    ALT="$REPO/$RE15_CTEST_UEBERSPRINGEN"
+    echo "!!! ctest UEBERSPRUNGEN - frueheres gruenes Ergebnis: $RE15_CTEST_UEBERSPRINGEN"
+    [[ -f "$ALT" ]] || die "ctest uebersprungen, aber $ALT fehlt"
+    grep -aqE '100% tests passed, 0 tests failed out of [0-9]+' "$ALT" || die "frueheres ctest-Ergebnis ist nicht gruen: $ALT"
+    RAN="$(grep -aoE 'tests failed out of [0-9]+' "$ALT" | tail -1 | grep -oE '[0-9]+$' || true)"
+    DIS="$(grep -acF 'Not Run (Disabled)' "$ALT" || true)"
+    REG="$(cd "$BUILD" && ctest -N | grep -aoE 'Total Tests: [0-9]+' | grep -oE '[0-9]+$' || true)"
+    [[ -n "$RAN" && -n "$REG" ]] || die "Testzahl nicht lesbar (frueher gelaufen '$RAN', registriert '$REG')"
+    [[ "$((RAN + DIS))" == "$REG" ]] || die "frueheres Ergebnis: $RAN gelaufen + $DIS abgeschaltet, dieser Bau registriert $REG"
+    echo "   Tests: $RAN gelaufen = $REG registriert - $DIS abgeschaltet (frueherer gruener Lauf, ctest hier uebersprungen)"
+    phase ctest-uebersprungen
+else
 ( cd "$BUILD" && ctest --timeout 600 -j"$CTEST_JOBS" --output-on-failure > ctest_out.txt 2>&1 ) || CT_RC=$?
 CT_RC="${CT_RC:-0}"
 phase ctest
@@ -121,14 +137,18 @@ fi
 RAN="$(grep -aoE 'tests failed out of [0-9]+' "$BUILD/ctest_out.txt" | tail -1 | grep -oE '[0-9]+$' || true)"
 REG="$(cd "$BUILD" && ctest -N | grep -aoE 'Total Tests: [0-9]+' | grep -oE '[0-9]+$' || true)"
 [[ -n "$RAN" && -n "$REG" ]] || die "Testzahl nicht lesbar (gelaufen '$RAN', registriert '$REG')"
-[[ "$RAN" == "$REG" ]] || die "ctest lief $RAN Tests, registriert sind $REG"
+# Runde 41: ausdruecklich abgeschaltete Tests (set_tests_properties DISABLED, mit Begruendung im Repo) zaehlen als registriert,
+# laufen aber nicht - ctest fuehrt sie unter "did not run ... (Disabled)" auf.
+DIS="$(grep -acF 'Not Run (Disabled)' "$BUILD/ctest_out.txt" || true)"
+[[ "$((RAN + DIS))" == "$REG" ]] || die "ctest lief $RAN Tests (+ $DIS abgeschaltet), registriert sind $REG"
 MIN="$(grep -oE 'RE15_MIN_TESTS:-[0-9]+' "$REPO/re15_port/tools/local_build.sh" 2>/dev/null | head -1 | grep -oE '[0-9]+$' || true)"
 # Gegenpruefer Runde 30: ohne gefundene Untergrenze fiele dieses Gate STILL weg -> abbrechen.
 [[ -n "$MIN" ]] || die "Untergrenze RE15_MIN_TESTS in re15_port/tools/local_build.sh nicht gefunden - Gate waere still aus"
 if [[ -n "$MIN" ]]; then
     [[ "$RAN" -ge "$MIN" ]] || die "nur $RAN Tests, local_build.sh verlangt >= $MIN - Suite kollabiert?"
 fi
-echo "   Tests: $RAN gelaufen = $REG registriert (Untergrenze ${MIN:-keine})"
+echo "   Tests: $RAN gelaufen = $REG registriert - $DIS abgeschaltet (Untergrenze ${MIN:-keine})"
+fi
 
 cp "$BUILD/platform/pc/re15_pc" "$OUT/"
 ldd    "$OUT/re15_pc" > "$OUT/ldd.txt" 2>&1 || true

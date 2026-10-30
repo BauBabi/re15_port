@@ -17,6 +17,7 @@
 #include "gen/discard_sites.inc"
 #include "re15_schluessel_r36.h"  /* Runde 36 Spur Q: Port-Benutzungsstellen 11B0 msg 29 (0x45) / 1211 msg 9 (0x42) */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: weggeworfener Loescher liegt in ROOM1090 */
+#include "re15_gatorszene_r41.h"    /* Runde 41 Spur F: Port-Benutzungsstelle Tor 2090/2091 msg 43 (Water Key 0x34) */
 #include "re15_dining_r38.h"      /* Runde 38 Spur F: Port-Benutzungsstelle 1131 msg 41 (0x43 Dining Room Key) */
 
 /* Port-Prompt-Schluessel 8 -> BSS-Skript [6] (item_prompt_common.c:60). */
@@ -115,7 +116,8 @@ int re15_discard_besitz_vor_nachricht(unsigned room_id, uint8_t msg_id)
     if (!s) {   /* Runde 36 Spur Q: Port-Stellen 11B0 msg 29 / 1211 msg 9 (re15_schluessel_r36.h) */
         static re15_discard_site_t q;
         if (re15_schluessel_r36_discard_stelle(room_id, msg_id, &q.item) ||
-            re15_dining_r38_discard_stelle(room_id, msg_id, &q.item)) {   /* Runde 38 Spur F: 1131 msg 41 */
+            re15_dining_r38_discard_stelle(room_id, msg_id, &q.item) ||   /* Runde 38 Spur F: 1131 msg 41 */
+            re15_gatorszene_r41_discard_stelle(room_id, msg_id, &q.item)) {   /* Runde 41 Spur F: 2090/2091 msg 43 */
             q.room = (uint16_t)room_id; q.msg = msg_id; q.gate_zone = 0; q.gate_bit = 0; s = &q; } }
     if (!s) return 0;                          /* keine Benutzungsstelle                 */
 

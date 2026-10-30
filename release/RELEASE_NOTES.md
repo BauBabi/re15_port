@@ -1,3 +1,912 @@
+# v0.8.29 - 2026-10-26
+
+Ihr Auftrag vom 23.10. (Runde 41): "Gehe die von vorhin besprochenen noch offenen Punkte an, aslo: Runde 41 startet mit
+dem Wasserschwall in 20B0 im Original. Danach folgen die Ventil- und Brueckenkette in STAGE2 und das Schliessen der
+STAGE3-6-Masken, wie mit Ihnen vereinbart." - dazu Ihre weiteren Punkte vom selben Tag und 33 Nachtraege bis zum 25.10.
+Wie gewohnt hat ein zweiter Agent jeden Punkt unabhaengig am gebauten Spiel gegen Ihren Wortlaut nachgemessen; wo eine
+Abnahme nicht bestand, wurde nachgebessert und erneut abgenommen. Fuer den Alligator und die Masken galt in der letzten
+Abnahme Ihr Wort vom 25.10. ("gut ist erst einmal gut genug" und "mit neuen Tokens am Samstag die Sachen nachtraeglich
+zu verbessern"): Aufgehalten haette dort nur noch ein blockierender Fehler (Absturz, Haenger, Rueckschritt, ein Punkt
+fehlt oder ist im Spiel kaputt). Es wurde keiner gefunden. Die letzte Masken-Abnahme lautet trotzdem "nicht
+bestanden", weil sie drei kleinere Maengel fand; keiner davon ist blockierend, nachgebessert wird dort erst ab Samstag.
+Was noch nicht stimmt, und Ihr angehaltener Nachtrag 30 stehen unter "Ab Samstag (neue Tokens)".
+Geprueft unter Windows im Integrationsbaum: alle 1003 Unit-, Eigenschafts- und Sonden-Riegel und die gezielten Spiel-Laeufe
+jeder Spur und ihrer Querbezuege - gruen (die vier Schluessel-Riegel nach dem Alligator-Tod nach Entscheid FG-E7 umgestellt).
+Die volle Suite laeuft beim Bau im Linux-Container; ein roter Test haelt das Release an.
+Die volle Suite laeuft beim Bau im Linux-Container; ein roter Test haelt das Release an.
+
+## Was Sie merken
+
+### STAGE2-Kanalisation: Ventile, Flut und Strom
+
+Ihr Entwurf vom 23.10. ("Meine Idee war zunaechst in ROOM 2000 die Leiter zu ROOM 2050 mit herunterlaufenden
+Wasserstrom zu blockieren mit einer Message wie "I cannot climb up the ladder because of the water pressure".") ist als
+Kette eingebaut, mit allen Nachtraegen dazu bis auf Nachtrag 30 (siehe "Ab Samstag"); dieser Abschnitt beschreibt den
+Stand von v0.8.29. Jeder Punkt der Kette wurde mit Leon und mit Elza (Raeume 20x1) ueber die echten Tueren nachgemessen.
+Eine zusaetzliche Tuer gibt es nicht (Ihr Nachtrag 6: "Nein, du darfst keine zusaetzliche Tuer oeffnen um die Kette zu
+loesen.").
+
+**ROOM2000: Leiter gesperrt.** Bis die Flut gelaufen ist, laeuft Wasser die Leiter nach 2050 herunter; die Aktionstaste
+zeigt Ihren Satz "I cannot climb up the ladder because of the water pressure."
+
+**ROOM2030: Bruecke, Pult und Ventil 13.** Die Bruecke steht zu Beginn oben, auf Hoehe der Ringebene. Das Pult an der
+Nordwand (Kamera 2, Ihr schaltschrank.png) meldet "A control panel for the bridge. The pressure gauge reads zero." und
+"Intake valve 13 is closed.". Die Treppe hinab, am Tank: "Intake valve 13. Will you open it?" -> "You've opened valve 13.
+The pressure is rising.". Zurueck am Pult: "The pressure gauge reads 80. Lower the bridge?" - mit Ja faehrt die Bruecke in
+der Draufsicht herunter ("The bridge is down."). Die Kurbel braucht es dafuer nicht, wie Sie es wollten.
+
+**Sued-Landeplatz: Sicherung, Notiz und Plakat.** Ueber die gesenkte Bruecke erreichen Sie den Sued-Landeplatz. Dort liegt
+die Sicherung an ihrem Original-Platz; daneben haengt ein beschriebener Zettel an der Wand: das Dokument "Technician's
+Note" mit Ihrem Text woertlich (im Dokumentleser eine Titelseite und zwei Textseiten; den Gedankenstrich schreibt die
+RE2-Dokumentschrift als Bindestrich, wie RE2 selbst). An der Suedwand zwischen dem gelb-schwarzen Pfosten und Ventil 09
+haengt das Plakat. Die Aktionstaste zeigt es als Nahaufnahme im Stil der Nahaufnahmen des Spiels (Stahlwand, vergilbtes
+Papier, Schreibmaschinenschrift, Flecken, Klebeband - Ihr Nachtrag 18) mit der absichtlich falschen Anleitung
+"1. GREEN 09 - 2. RED 01 - 3. BLACK 02 - 4. RED 07". Am Ostende des Landeplatzes liegen Shotgun Shells x14 - nehmen Sie
+sie vor der Flut mit (siehe unten).
+
+**ROOM2010/2011: der Ventil-Sicherungskasten (Ihr Nachtrag 16: "Kannst du evtl. noch einen zweiten Sicherungskasten
+irgendwo einbauen - ausserhalb des Raumes, wo man die Sicherung zuerst einsetzen muss.").** An der Ostwand haengt ein
+Schaltschrank mit kleinem Tastenfeld (Kamera 3). 2010 erreichen Sie vor der Flut ueber 2000, danach ueber 20B0, jeweils
+durch die Tuer im Westgang. Aktionstaste: "A fuse box for the valve controls." / "One of the fuses is missing..." ->
+"Will you use the Fuse?" -> Ja -> eine kurze Einstellung auf die Ventile in 2030 (das Hintergrundbild der Ventil-Kamera
+mit den Raedern 09/08/07 und dem Plakat) mit dem Aufschliess-Ton aus RE2 -> "You've used the Fuse.". Herausnehmen geht
+jederzeit, auch nach der Flut: "The fuse is in place." / "Will you take the Fuse?" -> "You've taken the Fuse."; danach
+sind die Ventile wieder gesperrt, und die Sicherung gehoert wie im Original in den Generator-Kasten von 2060. Solange sie
+im Ventilkasten steckt, meldet der Kasten in 2060 "One of the fuses is missing...". Bis auf "A fuse box for the valve
+controls." (Ihre Freigabe, Nachtrag 25) sind alle Saetze aus dem Spiel.
+
+**Das Ventilraetsel (Ihre Nachtraege 13, 15 und 18).** Im unteren Bereich von 2030 stehen sechs Ventile, je ein Rad unter
+einem Nummernschild: Nordwand 03 rot, 02 gruen, 01 schwarz; Suedwand 09 rot, 08 gruen, 07 schwarz. Vor einem Rad fragt
+das Spiel z. B. "Valve 09, red wheel. Will you turn it?". Mit Ja spielt die Figur die Ventil-Dreh-Animation aus RE2 (das
+Wasserdruck-Ventil am Hubschrauber-Landeplatz, RE2 ROOM1080) mit dem RE2-Drehgeraeusch, je Drehung etwa 11,5 s wie in
+RE2. Erst nach der vierten Drehung wird geprueft: richtig ist 09 -> 07 -> 02 -> 01 (Ihre Freigabe vom 24.10.,
+Nachtrag 15); bei falscher Folge kommt "The valves turned back to their original position." mit Fehlerton, und alle
+Drehungen sind zurueckgesetzt. Drehen
+lassen sich die Ventile erst, wenn die Bruecke unten ist (Ihr Nachtrag 9) und die Sicherung im Kasten in 2010 steckt;
+sonst sagen sie "It's locked." (ein Satz aus ROOM20A0) - auch wenn die Figur die Sicherung bei sich traegt.
+
+**Warnung, Countdown und Alarm (Ihre Nachtraege 18, 19 und 25).** Nach der richtigen Folge erscheint "WARNING: The water
+will rise in one minute. Please leave the room immediately!" (Ihr Wortlaut, drei Zeilen) mit Ihrem Voiceover. Zugleich
+startet RE2s Selbstzerstoerungs-Alarm (SUB_25, wie in RE2s Labor) zusaetzlich zur Raummusik, und oben in der Mitte laeuft
+die Countdown-Anzeige von RE2s Selbstzerstoerung: " 0'59"98" bis " 0'00"02", im Augenblick der Flut " 0'00"00", in der
+RE2-Schrift und rot (RE2 zeigt erst ab 60 Sekunden gruen). Die letzten zwei Stellen zaehlen wie in RE2 je Bild (98, 95,
+92, 88, ...); die Anzeige wurde Pixel fuer Pixel gegen das echte RE2 verglichen. Der Alarm endet, wenn das Wasser zu
+steigen beginnt, wenn die Figur stirbt oder wenn sie den Raum verlaesst (dann blendet er mit der Raummusik aus). Waehrend
+des Countdowns zeigen die Ventile die Warnung erneut.
+
+**Flucht oder Ertrinken.** Von den letzten Ventilen an der Nordwand sind es zu Fuss ueber Treppe und Ring bis zur
+Ost-Tuer etwa 27 s. Wer im Raum bleibt, sieht in der Draufsicht das Wasser ueber Bruecke und Ring steigen und ertrinkt
+mit Spritzer und blauem Schleier (ohne eigenen Ton). Zum Ansehen vorher die drei Spinnen des Raums erledigen, sonst
+toeten sie die Figur zuerst. Verlaesst man 2030 waehrend des Countdowns durch eine andere Tuer, gilt die Flut ebenfalls
+als gelaufen.
+
+**ROOM20B0/20B1: der Wasserschwall, im Original gemessen (Ihr Hinweis: "Uebrigens ist das in unseren Port noch
+kaputt!").** Durch die Ost-Tuer landen Leon bzw. Elza in 20B0/20B1: aus der Ost-Tuer schiesst das Wasser (zwei Kaskaden
+und sechs grosse Spritzer je Front), die Front laeuft den Gang hinunter, die Westtuer fliegt auf, und die Szene laeuft bis
+zum Ende - die Figur ist danach frei. Vorher (20B0 war nur per Debug-Sprung erreichbar) war dort kein Wasser zu sehen,
+und die Figur blieb unter der Szenensperre vor der Westtuer stehen. An sechs Zeitpunkten der Original-Szene
+(DuckStation-Savestates) sind Kameraschnitt, Lage, Blickrichtung und Zustand der Figur gleich, ebenso die Zahl der
+Spritzer zum selben Zeitpunkt (22 = 22). Hinweis fuer eigene Vergleiche: ein DuckStation-Video glaettet die
+Spritzerwolke (Skalierung und Videokompression) zu einer helleren, dichteren Flaeche; gleich ist der Port am
+Bildspeicher eines Savestates.
+
+**Danach: 20B0 statt 2000.** Im Kanal laeuft kein Wasser mehr die Leiter herunter; sie fuehrt jetzt nach 2050. Jede Tuer,
+die nach 2000 fuehrte, fuehrt von nun an nach 20B0. Solange 2030 geflutet ist, sind die Tueren in seinen Ring (Ost-Tuer
+von 20B0, Tueren aus 2070) gesperrt: "I cannot open the door because of the water pressure."; die oberen Lift-Rufzonen
+in 2030 melden in dieser Zeit den Original-Satz "The elevator is not responding...Maybe it should be activated from
+somewhere.".
+
+**ROOM2050/2051: erst das Pult, dann der Hebel.** Solange das Pult nicht auf 80 V steht, meldet der Hebel fuer den
+Wasserstand "The pump has no power. The switchboard must be set first." - das gilt auch fuer den Hebel nach dem
+Kistenraetsel. Am Pult an der Saeule: "A high voltage switchboard. The pump needs 80 volts." und "Will you push them?".
+In der Bedienansicht waehlt das Steuerkreuz einen Hebel, Viereck legt ihn um, Kreuz verlaesst das Pult. Die Lampen
+unten zeigen den Zustand, und der umgelegte Hebel kippt jetzt sichtbar in 16 Bildern nach unten (beim Zuruecklegen
+wieder hoch; Takt der Original-Hebel in 11F0) - Ihr Nachtrag 18: "bei den ausgewaehlten hebel, muss dann auch der Heben
+runter gehen wenn er ausgewaehlt wurde.". Bei 80 V folgt "Power supply OK."; danach arbeitet der Hebel wie im Original,
+und das Pult meldet "The switchboard is set to 80 volts. The pump is powered.".
+
+**ROOM2020: die Kurbel (Ihr Punkt "Leon hat eine komische herumfliegende Animation im ROOM 2020 am Anfang wenn er die
+Kurbel nutzt." und Nachtrag 14: "Ja, direkt am Anfang springt Leon so komisch zu der Kurbel. So halb fliegend.").** Nach
+dem "Yes" bleibt das Bild jetzt so lange stehen wie im Original, das in dieser Zeit den Hintergrund von CD laedt - am
+Fenster gemessen 250-267 ms (Original-Video 284 ms, vorher 75 ms) -, erst dann steht Leon an der Kurbel, ohne
+Zwischenbild. Der Sprung selbst ist Original: das Skript setzt Leon an die Kurbel. Ausserdem kurbelt Leon jetzt
+durchgehend, bis die Buehne unten ist (vorher spielte er die Kurbel einmal und blieb vorgebeugt stehen), und waehrend der
+beiden Fragen bleibt er in der Pose, in der er angekommen ist. Kommt er gerannt, rutscht er nach dem "Yes" noch ein
+Stueck weiter und kurbelt etwa 35 cm daneben - wie das Original. Steht Leon im Gang genau auf der Grenze zweier
+Kamerazonen (z. B. bei x 9000), flackert das Bild nicht mehr zwischen zwei Kameras.
+
+**Strom aus 2060: 2030 laeuft bis knapp unter die Absperrung leer (Ihre Nachtraege 7, 8 und 12: "Wasserstand nach dem
+Strom:: unterhalb der Absperrung, sodass es nicht drueber "rein" laufen wuerde.").** Nach der Flut holen Sie die
+Sicherung aus dem Kasten in 2010 und setzen sie wie im Original in 2060 ein. Mit dem Strom steht das Wasser in 2030 nur
+noch 50 Einheiten unter dem Ringboden, knapp unter der Absperrung: der Ring ist trocken und begehbar (Lifte und
+Ring-Tueren wieder offen), Bruecke, Landeplaetze, Treppe und Tank bleiben unter Wasser. Die Treppe hinab sagt "I cannot go
+down the stairs because of the water.". **Nach der Flut nicht mehr erreichbar:** die Shotgun Shells x14 am
+Sued-Landeplatz sowie Plakat und Notiz, falls noch nicht gelesen.
+
+**Weg nach der Flut (zu Fuss gemessen, Leon und Elza):** 20B0 -> 2010 (Sicherung heraus) -> 20B0 -> Leiter -> 2050
+(Pult, Kisten) -> 2020 (Kurbel) -> 2030 Nordgalerie -> 2060 (Sicherung, Generator) -> zurueck ueber 2020, 2050 und die
+Leiter nach 20B0 -> Ost-Tuer -> 2030 Ring (trocken) -> Lift B -> Suedgalerie -> 2080 -> Rechner (wie im Original: senkt
+das Wasser in 2080) -> Leiter -> 2090. Dort geht es weiter wie unter "Alligator" beschrieben: Ankunftsszene, Kampf, dann
+mit dem Water Key durch das Tor nach 20A0.
+
+### Wasser: Sprung und NPCs
+
+Ihr Punkt: "In STAGE2 fehlt noch der Wassereffekt vom rein springen von der Kante in das Wasser. Auch die NPCs teilen
+die gleichen Effekte wenn sie durch das Wasser gehen." und Ihr Nachtrag 3: "ja alles: Effekte wenn sie sich im Wasser
+bewegen fussschritt sounds wenn sie laufen. All das muss auch fuer die NPCs gelten."
+
+**Sprung ins Wasser.** Springt die Figur von einer Kante ins Wasser (z. B. im Kanal von 2000 oder ins Becken von
+2090/2091), spritzt es an der Landestelle (acht Spritzer im Faecher). Das Tor von 20A0 nach 2090 oeffnet jetzt erst der
+Water Key (siehe Alligator).
+
+**NPCs im Wasser und an Land.** Alle NPCs (u. a. Ada, Marvin, Irons, Roy/Elliot, John, Sherry) machen beim Gehen, Laufen,
+Rueckwaertsgehen und Drehen auf der Stelle Schrittgeraeusche und spritzen im Wasser wie der Spieler - in Szenen und im
+freien Lauf, in beiden Szenarien. Zu sehen z. B. in der Szene in ROOM2000, wenn Ada und Marvin durch den Kanal gehen (in
+ROOM2001 liegen Johns Kanal-Schritte hinter der Kamera). Der Ton ist der NPC-Ton des Originals, wo der Raum einen hat
+(15 von 280 Boden-Faellen der 52 NPC-Raeume), sonst - wie in RE2 - derselbe Bodenton wie beim Spieler; stumm bleiben nur
+Bodenstellen, an denen auch der Spieler keinen Ton hat (ROOM6030/6031). Lautstaerke und Seite folgen der Kamera wie im
+Original: ein NPC weit hinten ist leiser (ROOM2000: Abstand 41 -> Pegel 104, Abstand 125 -> Pegel 56 von 127), ein NPC
+links oder rechts klingt auf dieser Seite staerker. Ihre eigenen Schritte klingen noch wie bisher (siehe "Noch offen").
+
+### Alligator: Ankunft, Kampf und Kanister (ROOM2080/2081, ROOM2090/2091)
+
+Ihr Wortlaut: "Generell: Du kannst fast alles vom Aligator Fight von Resident Evil 2 uebernehmen." und "Ich will das du
+den Finisher und fehlende Animationen aus Resident Evil 2 extrahierst!" - und am 25.10.: "gut ist erst einmal gut genug".
+Was am Alligator noch nicht stimmt, steht unter "Ab Samstag".
+
+**Ankunft in 2090: die neue Szene (Ihr Punkt "Ich moechte eine neue Cutscene: Wenn man Room 2090 betritt, soll der
+Charakter einen Zombie am Boden liegen sehen mit einen blinkenden Schluessel ..." und Ihre Nachtraege 6, 17, 20, 21 und
+29).** Zum Alligator kommt man ueber die Leiter aus 2080, sobald der Rechner dort das Wasser gesenkt hat (Nachtrag 21:
+"man kommt ueber die Leiter zum Aligator, nicht ueber das Tor"). Die Szene laeuft in der Folge Ihres Nachtrags 6: Leon
+bzw. Elza steht an der Leiter, vorn im Becken nahe der Suedwand treibt die Zombie-Leiche, auf ihrem Ruecken der
+Schluessel, der blinkt wie der Feuerloescher in 1030. Dann knallt es von oben - derselbe Knall wie am Ende der
+STAGE1-Szene nach Irons (Nachtrag 17) -, ein Schnitt zeigt 2080, wo acht Zombies oben auf dem Laufgang laufen, nicht
+unten an der Treppe (Nachtrag 20), danach wieder die Leiche. Der Alligator springt am Ostende aus dem Wasser, stoesst auf
+die Leiche zu und frisst sie samt Schluessel (von vorn zu sehen), schuettelt sie, schluckt, dreht sich zu Leon bzw. Elza
+und schreit. Dann geht die Kamera zurueck an die Leiter, und der Kampf beginnt mit der Kampfmusik des RE2-Alligators.
+Damit man am Start des Kampfes eine Chance hat (Nachtrag 29: "... muss weiter weg sein, damit man am Start des Kampfes
+eine Chance hat"), treibt die Leiche rund 8000 Einheiten von der Leiter entfernt: Beim Kampfbeginn ist der Alligator rund
+11450 Einheiten weg, wie in RE2 am Ende seines Alligator-Intros (11430). Wer stehen bleibt, wird nach etwa 4,4 s gebissen;
+wer sofort nach Norden durch den Westkanal rennt, hat gut 6 s bis zum ersten Biss. Gemessen mit Leon und Elza. Die
+Spinnen sind aus 2090/2091 entfernt ("Entferne die Spinnen aus dem ROOM 2090, die nutzen wir nicht mehr."). Noch nicht
+umgesetzt ist Ihre Antwort "Aendern: nicht vor der Kamera" (Nachtrag 31) - siehe "Ab Samstag".
+
+**Verfolgung wie RE2.** Der Alligator schwimmt und paddelt mit den RE2-Animationen und dem RE2-Tempo (Paddeln etwa 149 je
+Bild), beschleunigt an denselben Stellen wie in RE2 (Dash mit Bruellen) und blendet zwischen den Animationen wie RE2
+ueber. Beim Dash wackelt das Bild wie in RE2 (der Hintergrund ruckt), und an den RE2-Stellen - beim Start eines Dashs -
+faellt sichtbar Putz um Leon (sechs Runden zu je neun Brocken). Ueber die Plattform hinten klettert er weiterhin. Wo er
+Leon nicht erreicht (Tuernische, oben auf der Rampe), bleibt er an der Wand und schaut zu ihm, statt sich ruckartig
+umzudrehen.
+
+**Kameraschnitte wie RE2 (Ihr Nachtrag 4: "Ja, ich moechte RE2-artige Kameraschnitte").** Fuer das Fressen in der
+Ankunftsszene nimmt der Port die Kamera von 2090, die den Alligator von vorn zeigt. Das RE2-Intro mit seinen Schnitten
+(erst von vorn, dann seitlich und zum Angriff erneut, danach zurueck auf Leons Kamera) laeuft nur noch, wenn Sie 2090
+nach der Szene erneut betreten und der Alligator noch lebt. Bei der Kiefer-Explosion bleibt die Kamera, wenn das laufende
+Bild Kopf und Kiefer zeigt; sonst schneidet sie auf eine Kamera von 2090, in der Kopf und geplatzter Kiefer waehrend der
+ganzen Todesanimation zu sehen und von keiner Maske verdeckt sind (unter diesen auf die, die RE2s Bild am naechsten
+kommt), und am Ende zurueck. Beim Finisher schneidet es immer. Neue Hintergruende werden dafuer nicht erfunden - wo 2090
+keine Kamera vor dem Kopf hat, ist die Sicht seitlich.
+
+**Vor seinem Auftritt** ist der Alligator nicht zu sehen und nicht zu treffen - wie in RE2 liegt er unter Wasser, bis er
+auftaucht (beim ersten Mal in der Ankunftsszene).
+
+**Treffer.** Wie in RE2 toeten Schuesse allein ihn nicht mehr. Nach einem Treffer zeigt er mit 25 % Wahrscheinlichkeit
+die grosse Treffer-Reaktion aus RE2; danach kommt sie wie in RE2 fuer 120 bis 183 Bilder nicht erneut. Sterben kann er
+nur ueber den Gaskanister. Ab 300 Schaden kommt dafuer die Kanister-Szene (unten).
+
+**Die Kanister-Szene in 2080/2081 (Ihr Punkt "Hat man den Aligator oft genug angeschossen, soll eine Cutscene Triggern."
+und Ihre Nachtraege 5, 22, 23, 24b und 26).** Hat der Alligator 300 Schaden genommen (die Schwelle aus RE2, Ihre Wahl in
+Nachtrag 22; nach seiner Schadenstabelle etwa 43 Treffer mit der Pistole, 11 mit der Schrotflinte, 7 mit der Magnum, 5
+mit dem Granatwerfer), schneidet das Bild, sobald er Leon bzw. Elza verfolgt und nicht gerade beisst, nach 2080 bzw.
+2081: Mit dem Ton der Stahltuer (Nachtrag 22: "Stahltuer-Ton lassen") kommt Marvin (Leon) bzw. John (Elza) herein und
+erschiesst die acht Zombies oben mit je einem Kopfschuss - der Kopf platzt, der Zombie faellt. Dann rennt er zum
+Gaskanister, der von Anfang an am Rand der Reling steht wie auf Ihrem Gas_Can.bmp, kniet sich hin, nimmt ihn mit beiden
+Haenden (der Kanister kippt dabei sichtbar in die Haende, wie in RE2, Nachtrag 26) und steht damit auf; die
+Kletter-Animation davor ist weg (Nachtrag 24b). Mit dem Gesicht zur Kamera, wie Ada in RE2, sagt er "Hey, Leon, try with
+this!" bzw. "Hey, Elza, try with this!" (gut 3 s; liegt Ihre Aufnahme vor, wartet er, bis sie zu Ende ist) und wirft den
+Kanister ueber die Reling. Ein Schnitt zeigt aus Kamera 12 in 2090 (von unten an der Wand unter dem Balkon, Ihre Wahl in
+Nachtrag 26), wie der Kanister ins Wasser faellt, mit dem Aufschlag-Ton aus RE2; eine halbe Sekunde danach steuern Sie
+wieder Leon bzw. Elza. Eine Kamera wie bei Adas Raketenwerfer-Wurf in RE2 (Nachtrag 5), die die Werferin von unten
+zeigt, gibt es in 2080/2090 nicht; Marvin bzw. John selbst ist in Kamera 12 nicht zu sehen. Der Kampf geht mit demselben
+Alligator weiter, Lebenspunkte und Lage bleiben (Nachtrag 23: "Kampf geht weiter, Aligator nimmt irgendwann in dem
+weiteren Rundlauf den Kanister auf"). Der Kanister fliegt in das Becken, das weiter vom Alligator entfernt ist; der
+Alligator schwimmt zu ihm und schnappt ihn etwa 3 bis 5 Sekunden nach dem Wurf. Wer vor der Kanister-Szene die Leiter
+wieder hinaufsteigt, hoert beim ersten Betreten von 2080 bzw. 2081 den Knall, und die acht Zombies stehen oben; die
+Treppe gehen sie nicht hinunter.
+
+**Kanister und Kiefer (RE2-Mechanik).** Liegt der Kanister im Wasser, schwimmt der Alligator darauf zu, richtet Hals und
+Kopf auf ihn (RE2-Lenkung, Ihre Wahl in Nachtrag 26) und nimmt ihn schwimmend auf; bis dahin schnappt er nicht nach Leon
+bzw. Elza. Der Kanister sitzt in jedem Bild zwischen den Kiefern. Mit ihm im Maul steckt der Alligator Kopf und Kanister
+nicht mehr durch die Beckenwand und kommt dafuer an einer Wand etwas weniger weit an die Figur heran (beissen kann er
+weiterhin). Ein Treffer, waehrend er den Kanister im Maul traegt, loest den RE2-Tod aus: halbe Bildrate (Zeitlupe, etwa
+2,5 s) und die ganze RE2-Explosion (Ihr Nachtrag 28: "Beim Ausschnitt gerade eben fehlte noch der Explosionseffekt vom
+Gaskanister vom Original.") mit grau-weisser Wolke, dunkelrotem Blutausbruch mit gluehenden Brocken und Fleischfetzen,
+Wasserspritzern und einer Blutfontaene, die gut zwei Sekunden aus dem Kopf steigt; der Kanister zerplatzt in dunkle
+Scherben. Die Explosion ist jetzt in jedem gemessenen Verlauf zu sehen, auch an der Wand. Der Unterkiefer platzt in
+dunkelroten Scherben, danach liegt die Leiche mit geplatztem Unterkiefer im Wasser; durch die Beckenwand rutscht sie nicht
+mehr. Neue Toene: die RE2-Raumbrueller fuer Tod und Explosion.
+
+**Tod durch den Alligator (RE2-Finisher).** Stirbt Leon oder Elza durch den Alligator - auch durch den Hochbiss auf der
+Rampe oder dem Plattformblock -, schneidet das Bild immer auf eine Kamera, die den Alligator von vorn und nah zeigt. Der
+Ort ist fest (Westkanal mit Kamera 6; laeuft gerade Kamera 6, das Suedostbecken mit Kamera 1), so wie RE2 seinen Finisher
+an einem festen Ort spielt. Die Figur steht bis zur Huefte aus dem Wasser, der Alligator packt zu, schuettelt, wirft sie
+hoch und behaelt sie im Maul, bis das Spiel zum Game Over wechselt (der RE2-Finisher endet nicht); keine Weissblende und
+keine kreisende Todeskamera. Elzas Zopf bleibt dabei am Kopf.
+
+**Nach seinem Tod: Schluessel und Tor (Ihr Punkt "Wenn der Aligator danach tot ist, soll der Schluessel in der Naehe
+seine Leiche sein und blinken." und Nachtrag 21: "Das Tor soll verschlossen sein, und dann mit den Schluessel den man vom
+Aligator bekommt geoeffnet werden!").** Nach der Todesanimation schneidet das Bild fuer 1,5 s auf die Kamera, in der der
+blinkende Schluessel neben der Leiche am groessten zu sehen ist (Balken oben und unten, Leon bzw. Elza stehen still),
+dann zurueck. Aufheben mit der Aktionstaste an der gezeigten Stelle: "Water Key" - ein Schluessel, den das Original in
+seinen Daten hat, aber nie auslegt (Beschreibung: The label says: "Sewer Mainteinance Room.", so geschrieben im
+Original); im Wasser liegt er als RE2-Modell "Platform Key". Das Tor zwischen 2090 und 20A0 ist bis dahin verschlossen
+("It's locked."); mit dem Water Key kommt "You've opened the lock." und die Frage, ob Sie ihn wegwerfen, danach ist das
+Tor offen. Von 20A0 aus bleibt es bis dahin ebenfalls verschlossen. Beide Saetze sind Original-Saetze von 20A0.
+
+### Zombies am Boden (ROOM2000/2001, 3000/3001, 3010/3011)
+
+Ihr Punkt: "In ROOM 2000 und ROOM 2001 ist die Animation/Aktion der Zombies durchgehend falsch. Sind sind am Boden und
+fressen, anstatt aufzustehen wenn man ihnen naeher kommt."
+
+**Liegen statt fressen.** Diese Zombies sind im Original Liegende mit Naehe-Wecker, keine Fresser. Jetzt liegen sie
+flach - in 2000/2001 im Abwasserkanal, in 3000/3010 auf dem Boden - und fressen nicht mehr. Kommt die Figur naeher als
+4000 Einheiten, stehen sie nach hoechstens einer halben Sekunde auf und greifen an; im Kanal ziehen sie sich dazu an der
+Kante hoch. Solange sie liegen, sind sie wie im Original nicht zu treffen; weiter entfernte bleiben liegen. Die echten
+Fresser im Speisesaal (1140) und in 10E0 bleiben Fresser. Mit der RE2-KI (Voreinstellung) schnappt ein Kanal-Zombie, der
+direkt unter der Figur steht, nach oben (RE2-Verhalten); einen Schritt vom Kanalrand weg laeuft er zur Kante und
+klettert hoch. Mit "AI RE1.5" liegen diese Zombies (und die Liegenden in STAGE1, z. B. 1070/1140) vor dem Aufstehen in
+der Original-Liegepose (flach, Arme abgespreizt).
+
+**Laden in 2000/2001.** Ein Spielstand, der in ROOM2000 (Leon) bzw. ROOM2001 (Elza) geladen wird, zeigt die beiden
+Kanal-Zombies jetzt wie beim Betreten durch die Tuer (vorher fehlten sie). Dieselbe Korrektur gilt fuer alle Raeume, deren
+Raumskript beim Betreten sofort eine Szene startet (z. B. 1021, 1031, 4010, 4031, 5011): beim Laden laeuft der Raum wie
+beim Betreten an, wie im Original. Nur der Hubschrauber-Vorspann in 1170 haelt den Raumablauf weiter bis zum Ende der
+Erzaehlung zurueck.
+
+### STAGE3-Szenen (3060, 3061, ab 30C1, 3091)
+
+**ROOM3060 (Leon) - Ihr Punkt "Auch die Animation von Marvin, am Ende seine Abschnitten in STAGE3, bevor zurueck
+gewechselt wird zu Leon ist falsch in ROOM 3060."** Marvin dreht sich zu den Hunden, hebt die Arme mit der Waffe vor die
+Brust und haelt die Haltung bis zur Tuer (vorher kniete er sich hin); danach steht Leon in 3020 wie im Original. Die
+Bildfolge deckt sich mit dem Original-Video.
+
+**ROOM3061 (Elza) - "In Elzas Szenario, in ROOM 3061 in der cutscene klappt das rein krabbeln von Sherry in den Schacht
+nicht. Am Ende von dieser Cutscene hat Elza auch erneut eine falsche Animation."** Nach der Aktionstaste an der Wand beim
+Gitter zieht Sherry das Gitter mit beiden Haenden heraus, legt es links ab, geht auf alle Viere und kriecht in die
+Oeffnung, bis sie verschwunden ist (vorher lag sie vor der Wand). Am Ende dreht sich Elza zum Hund und hebt die Arme mit
+der Waffe (vorher kniete sie), John ebenso; dann geht es als Sherry in 30C1 weiter.
+
+**Ab 30C1: Sherry als Spielfigur - "Ab 30C1 wird es richtig wild... Sherrys Charakter Modell ist voellig falsch und
+kaputt. Ausserdem sollte sie keine Waffe haben."** Wie im Original spielen Sie nach der Kriech-Szene Sherry - jetzt mit
+ihrem echten Kind-Modell, eigenem Skelett und eigenen Bewegungen, ohne Waffe (eine vorher ausgeruestete Schusswaffe wird
+beim Wechsel abgelegt, Ausruesten ist als Sherry gesperrt), ohne Zielen und im Tempo des Originals (Gehen 50, Rennen 120
+je Bild; nach dem Loslassen rutscht sie wie im Original kurz aus).
+
+**ROOM3091 - "Die Cutscene im ROOM 3091 hat STAENDIG falsche Animationen...."** In der Szene ist Sherry die Spielfigur,
+Elza steht als NPC mit ihrer Pistole daneben. Alle drei Figuren spielen dieselben Gesten in derselben Reihenfolge wie das
+Original (Bild fuer Bild gegen eine Mitschrift des Originals verglichen), und Sherrys Haltung zwischen den Gesten bewegt
+sich durchgehend, statt nach 40 Bildern einzufrieren.
+
+**Figurwechsel wie im Original.** Beim Wechsel bekommt die neue Figur volle Energie (100) und ist entgiftet; nach der
+3091-Szene hat Elza das Messer in der Hand, die Pistole bleibt im Inventar. Dasselbe beim Wechsel Leon -> Marvin (3020)
+und zurueck (3060). Marvin hat als Spielfigur jetzt seinen eigenen Koerper (laengere Arme) statt Leons Skelett. Weste und
+U.S.S.-Ruestung heilen weiter nicht (Ihr Entscheid vom 30.08.).
+
+**Szenen-Animationen in weiteren Raeumen.** Welche Animationsdaten eine Szene einer Figur zuordnet, bestimmt der Port
+jetzt wie das Original; das betrifft zwoelf Raeume (2000, 3060, 3091, 30E0, 4000, 4001, 4010, 5011, 6030, 6031, 1040,
+1041). Sichtbar z. B. in ROOM4010: Marvin liegt verwundet auf der Liege, statt im Vordergrund zu stehen.
+
+### Spinnen
+
+**Schachtspinne in 2060/2061 und 20A0/20A1 - Ihr Punkt "Die Spinnen Animation beim herausklettern vom Gitter und runter
+klettern an der Wand stimmen noch nicht ganz."** Am Ende des Herauskriechens kippt die Spinne kopfueber ueber die
+Gitterkante und klettert kopfueber, mit dem Bauch an der Wand, hinunter (vorher lag sie waagrecht in der Luft und schwebte
+vor der Wand herab); unten dreht sie sich wieder auf den Boden. Sie springt nicht mehr kurz in die Ausgangspose zurueck,
+und jedes Bild erscheint im selben Takt wie im Original (gemessen mit Leon in beiden KI-Einstellungen und mit Elza). Zum
+Ansehen: ROOM2060 ueber die obere Tuer aus 2030 betreten und auf die Kamera mit dem Gitter (vordere Raumhaelfte) zugehen.
+
+**Alle grossen Spinnen sind 20 % kleiner** - so gross wie im Original (Massstab 0.8), in beiden KI-Einstellungen. Ihr
+Schatten ist groesser (1300 x 1400 wie im Original) und liegt beim Herunterklettern auf dem Boden unter ihr; der
+Giftklumpen startet genau dort, wo er im Original startet.
+
+**Giftklumpen bei Danger - Ihr Punkt "Der Spieler kann nicht sterben, wenn er noch mal mit Gift von den Spinnen
+angeschossen wird, aber bereits auf Danger ist...".** Mit der RE2-KI (Voreinstellung) nimmt ein Giftklumpen wie in RE2
+20 HP: bei Danger (unter 20 HP) ist jeder Treffer toedlich (Todesanimation, Neuladen); mit genau 20 HP bleibt die Figur
+mit 0 am Leben. Mit "AI RE1.5" bleibt der Wert des Originals (10 HP, Tod erst unter 0).
+
+### NPCs und Kisten
+
+**NPCs sind fest - Ihr Punkt "Die NPCs z.B. Ada und Marvin koennen ineinander rein laufen, das ist falsch, die sind beide
+fest."** Zwei NPCs laufen nicht mehr ineinander, auch nicht in Gegner; laeuft die Figur in eine NPC hinein, weicht diese
+aus - wie im Original (dort gemessen: Ada und Marvin in ROOM3070 nie naeher als 901). Zum Ansehen: ROOM3070 (Ada und
+Marvin folgen Leon), ROOM30E0 nach der Szene, ROOM3001/3011 (John und Sherry folgen Elza). Wie im Original kommt eine
+folgende NPC nicht mehr durch die Figur hindurch, sondern bleibt vor ihr stehen.
+
+**Kisten in ROOM2050/2051 - "In ROOM 2050 lassen sich die Kisten in einander schieben, das ist falsch".** Die Kisten
+sperren sich jetzt gegenseitig, mit derselben Pruefung wie im Original. Das Raetsel bleibt loesbar, braucht aber
+Genauigkeit: die drei Kerben an der Westwand liegen 1900 bzw. 1850 auseinander, die Kisten sind 1800 tief. Erprobter
+Weg: (1) die mittlere Kiste gerade nach Westen in die suedliche Kerbe; (2) die suedoestliche Kiste nach Norden bis knapp
+hinter die Linie der Kerben-Mitte, dann nach Westen in die mittlere Kerbe; (3) die noerdliche Kiste nach Sueden nur bis
+zur Linie der noerdlichen Kerbe (schiebt man sie zu weit, stoesst sie beim Westschub an die mittlere Kiste), dann nach
+Westen. Steckt eine Kiste fest, beruehrt sie eine andere.
+
+### Bewegung und Kamera (im ganzen Spiel)
+
+- **Kamerawechsel:** Bei jedem Kamerawechsel steht das alte Bild kurz (gut 1/4 s), wie im Original, das in dieser Zeit den
+  Hintergrund von CD laedt; die Spiellogik laeuft dabei nicht weiter. Das erste Bild eines Raums ist ausgenommen.
+- **Rennen:** Das Renn-Tempo folgt dem Schritt (im Mittel 196 statt 200 je Bild). Laesst man Rennen oder die Richtung
+  los, rutscht die Figur 6 Bilder aus (zusammen etwa 360-450 Einheiten), statt sofort zu stehen; dreht man direkt aus dem
+  Rennen, gilt in den ersten zwei Bildern die Renn-Drehrate; drueckt man waehrend des Ausrutschens wieder Oben + Rennen,
+  geht sie ein Bild, bevor sie wieder rennt. Nach einer Treppe, einem Griff oder einer Szene rutscht sie nicht nach.
+- **Texte:** Nach dem Schliessen eines Textes laeuft die Figur ein Bild spaeter wieder los, wie im Original.
+
+### Kleinigkeiten
+
+- **Lautstaerke - "Mir fehlt in den Optionen eine Lautstaerke Option bei der ich alles lauter oder leiser machen
+  kann."** OPTIONS -> SOUND: Links/Rechts stellt die Lautstaerke 0-100 in Zehnerschritten (sofort hoerbar, auch der
+  Menueton), Kreis/Viereck speichert zusammen mit Stereo/Mono, Kreuz verwirft. Die Zeile "VOLUME <Zahl>" steht im freien
+  Streifen unter dem Options-Kasten, damit keine Original-Beschriftung verdeckt wird. Gespeichert wird in
+  `re15_options.cfg` neben `re15_card.mcr` (Spielordner); Loeschen der Datei = 100 %, Stereo. Damit bleibt jetzt auch
+  Stereo/Mono nach einem Neustart erhalten.
+- **Feuerloescher ROOM1030 - "Kannst du den Feuerloescher in room 1030 einen leichten Blink Effekt geben, das man sieht,
+  das der aufnehmbar ist? Ich glaube so etwas existiert bereits in Resident Evil 2, uebernehme den."** Der Loescher
+  pulsiert jetzt in der Helligkeit (Periode 2 s, bis +48 %). RE2 hat kein Blinken aufnehmbarer Gegenstaende (im RE2-Code
+  nachgelesen); die Form ist deshalb der Helligkeitspuls der Titelzeile dieses Spiels. Nur in 1030 bei Leon (Elzas 1031
+  hat keinen Loescher; der liegende in 1090/1091 ist nur zum Untersuchen).
+- **Karte B1 - "... bevor man in den vorderen Teil der Waffen Armory - room 1090 - geht - also die vordere Tuer - macht
+  der Spieler auf der Map einen Sprung zum hinteren Teil, obwohl man garnicht da ist."** Gemeint ist ROOM1190: vor der
+  vorderen Tuer aus dem Gang 1230 in die Ostkammer wanderte der Marker um 9 Bildpunkte zur Halle. Jetzt bleibt er auf der
+  Ostkammer - auch mit Elza und im Rennen.
+- **Werkstatt-Tuer ROOM11B1 (Elza) - "Ich wollte das sie dauerhaft geschlossen bleibt in Elzas Szenario."** Nach der
+  Sherry-Suche ist die Werkstatt-Tuer dauerhaft verschlossen ("The door is locked."), auch beim Wiederbetreten; zurueck
+  geht es durch den Bodenschacht (Kanal 1261 -> Zwinger 11D1 / Kanaldeckel 10B1 / Kanalisation 2001). Leons 11B0 ist
+  unveraendert.
+- **Granatwerfer (im ganzen Spiel):** Muendungsblitz und die rot gluehenden Granatkoerner aus RE2 sind jetzt in jedem
+  Raum zu sehen - RE2 haelt diese Effekt-Farben ab dem Start geladen. Bisher liess der Port sie beim Zeichnen weg, weil
+  er nur einen Teil der RE2-Effekt-Farben geladen hatte. Gegen ein Bild aus RE2s eigenen Daten verglichen: dieselben
+  Formen und Farben.
+
+### Masken
+
+**STAGE3-6: Loecher geschlossen (Ihr Auftrag "... und das Schliessen der STAGE3-6-Masken, wie mit Ihnen vereinbart";
+vereinbart war "danach kannst du deine Masken schliessen in der naechsten Version.").** Die Loecher in den alten
+Uebersichtsbildern unter pri/ kamen von einem Fehler des Werkzeugs, das diese Bilder erzeugt (behoben). Im Spiel fehlten
+unter anderem Gelaender, Pfosten, Saeulen und Lampen: Sie liegen im Vordergrund-Atlas des Originals, der
+Masken-Generator hatte sie nur nie gefunden. 267 dieser Original-Teile sind jetzt in 61 Kameras an ihrer Original-Stelle
+eingesetzt, jedes mit belegter Lage (Bildvergleich mit dem Hintergrund) und Tiefe (Kollisionszelle des Raums), u. a. die
+Steg-Gelaender in ROOM30E0 Kamera 6-9, das Treppengelaender in ROOM3050 Kamera 6 und das Laufsteg-Gelaender in ROOM3040
+Kamera 3. Neu verdeckt auch das Unterteil der Lok in ROOM6000 Kamera 7 (ein Lesefehler des Masken-Werkzeugs bei den
+Tueren ist behoben). Weitere Gegenstaende verdecken jetzt mit der Tiefe ihrer Kollisionszelle: die Lok in ROOM6000
+(Kameras 5, 7, 8, 9) samt oberem Gittertraeger und dem Gittertraeger vorn links in Kamera 5, die Buero-Trennwand in
+ROOM30A0 Kamera 0/1 (sie verdeckt jetzt die ganze Figur; vorher sah man Leon bzw. Elza ab der Huefte durch die oberen
+Mattglasfelder), die hohen Spinde in ROOM30A0 Kamera 3, Kisten und Container in ROOM5020 Kamera 6, 7 und 12 und in
+ROOM5090 Kamera 11 und 13, Schaltkasten und Kisten in ROOM3040 Kamera 0 und 9, die Maschine links in ROOM3050 Kamera 5.
+An Stichproben im Spiel geprueft, mit Leon und Elza: Hinter den Gegenstaenden ist die Figur verdeckt (bis auf ein
+Restloch an der Treppe in ROOM6010/6011 Kamera 5, siehe "Ab Samstag"), davor uebermalen die neuen Teile sie nicht; keine
+bisherige Maske ist weggefallen. Was ohne Original-Teil oder ohne belegte Tiefe bleibt, zeichnen Sie selbst (Nachtrag
+27: "Ich kuemmere mich selbst drum.") - die Liste steht unter "Ab Samstag".
+
+**STAGE2: Ihre 53 Freistellungen am Spiel geprueft (Ihr Punkt "Ich habe diverse neue PRIs fuer STAGE2 erstellt. die
+sollen alle sauber eingebaut werden!").** Sie sind als 53 Kameramasken drin (ROOM11A0, 2010, 2020, 2030, 2040, 2050,
+2080, 20A0; Elzas Raeume 11A1, 2011 usw. zeichnen dieselben Masken). Die Pruefung am Spiel (Leon, Stichproben mit Elza)
+fand zwei Fehler, beide behoben: In ROOM2030 Kamera 7 und ROOM2040 Kamera 7 verdeckte der Handlauf des Gelaenders die
+Figur dahinter nicht (er hatte eine viel zu ferne Tiefe, jetzt die der Gelaenderzelle; in 2030 ist Ihre Freistellung
+07_01 dafuer an der Gelaenderecke in zwei Teile geteilt, Ihre PNG bleibt unveraendert). Ihre Freistellung 12_02 in
+ROOM20A0 Kamera 12 ist der Bodenstreifen vor der Schwelle unter dem Rolladen; wer darauf stand, verlor die Fuesse. Sie
+ist wie entschieden nicht mehr eingebaut (Nachtrag 11: "Weglassen ist ok"), 12_01 bleibt. An der Kurbel in 2020
+(Kamera 3) liegt Ihre Freistellung 03_01 zu Recht ueber Leons Beinen: Leon steht dort hinter der Reling (die Kamera
+haengt ueber dem Becken); das Original hat in dieser Kamera gar keine Maske und zeichnet ihn deshalb obenauf. In ROOM2030
+Kamera 15 uebermalt die Reling die Figur nicht - was dort zuerst gezaehlt wurde, war die Spinne hinter Leon.
+
+**Uebersichtsbilder zum Zeichnen.** Die Bilder `pri/STAGEn/<raum>/<cc>_port.png` der Stages 3-6 sind ersetzt (Ihr
+"Ja, ersetzen" vom 24.10. und Nachtrag 33 vom 25.10.): am 24.10. 204 von 214; am 25.10. kamen 113 Bilder auf den
+Maskenstand dieser Version - darunter die zehn, die am 24.10. noch fehlten -, eines kam neu dazu (ROOM4040 Kamera 5),
+22 hatten diesen Stand schon. Damit zeigen alle Bilder in Leons Ordnern (z. B. pri/STAGE3/3040) den Stand dieser
+Version, und auch die 57 betroffenen Bilder in Elzas Ordnern (z. B. pri/STAGE3/3041) sind nachgezogen - Elzas Raeume
+zeichnen dieselben Masken wie Leons. Ihre Freistellungen in pri/ sind unberuehrt.
+
+## Zu entscheiden
+
+So ist es jetzt gebaut; ein Wort von Ihnen genuegt, um etwas zu aendern.
+
+Entscheide des Orchestrators waehrend der Runde:
+* **A-E4** - NPC-Schritte werden wie im Original nach Abstand und Seite zur Kamera leiser bzw. seitlich gespielt (nur
+  NPCs; Ihre eigenen Schritte siehe "Noch offen").
+* **B1** - Alligator-Tempo = RE2 ohne Deckel (Schwimmen 24,5 je Bild in der Biss-Sperre, Paddeln etwa 149 je Bild,
+  Zonen-Dashes); bitte im Becken testen.
+* **B2** - Schuesse allein toeten den Alligator nicht (RE2-Sockel 25300), er stirbt nur ueber den Kanister; grosse
+  Treffer-Reaktion mit 25 % je Treffer wie RE2.
+* **B3** - Putz faellt nur an den RE2-Stellen (Dash-Start), nicht bei jedem Wackeln.
+* **B6** - Beim Tod durch den Alligator bleibt die Finisher-Kamera bis zum Game Over; die RE1.5-Todeskamera (Weissblende,
+  kreisende Kamera) entfaellt dort.
+* **B7** - Der Durchbruch beginnt dort, wo die RE2-Wende ins Becken passt und auf Leon zeigt (Lage gewaehlt, Bewegung =
+  RE2); der Kopf ragt nicht in die Wand. Das gilt jetzt fuer das RE2-Intro beim erneuten Betreten von 2090; den ersten
+  Auftritt zeigt die Ankunftsszene.
+* **B8** - Explosion und Finisher bleiben in den vorhandenen Kameras von 2090 (teils seitlich); neue Hintergruende werden
+  nicht erfunden.
+* **B9** - Vor seinem Auftritt ist der Alligator unsichtbar und nicht zu treffen (RE2: unter Wasser).
+* **C-a** - Pult 2050: Hebelgewichte 30/20/40/10, Loesung 80 V = Hebel 1 + 3 + der kleine.
+* **C-b** - Die Bruecke in 2030 steht "oben" auf Hoehe der Ringebene.
+* **C-c** - Verlaesst man 2030 waehrend des Countdowns durch eine andere Tuer, gilt die Flut ebenfalls als gelaufen (die
+  20B0-Szene laeuft beim naechsten Betreten von 2000).
+* **C-d** - Solange 2030 geflutet ist, melden die oberen Lift-Rufzonen den Original-Satz "The elevator is not
+  responding...Maybe it should be activated from somewhere.".
+* **C-e** - Ertrinken = Tod mit blauem Schleier und Spritzer, ohne eigenen Ton (RE2 hat keinen).
+* **C-E2** (angepasst an Ihren Nachtrag 7) - Solange 2030 geflutet ist (Flut gelaufen, Strom aus), sind die Ring-Tueren
+  aus 20B0 und 2070 mit "I cannot open the door because of the water pressure." gesperrt.
+* **C-E4** - Der RE2-Alarm laeuft vom Warntext bis zur Flut bzw. bis zum Verlassen des Raums, zusaetzlich zur Raummusik.
+* **D1** - Pulsieren nur bei Port-Gegenstaenden (Feuerloescher 1030 und jetzt der Water Key in 2090); die
+  Original-Gegenstaende der Raeume pulsieren nicht.
+* **D2** - Der Giftklumpen hat keine RE2-Rettung "einmal je Raum": Danger + Treffer = Tod.
+* **D3** - Die VOLUME-Zeile steht im freien Streifen unter dem Options-Kasten.
+* **E-E1** - Kamerawechsel und Texte laufen im ganzen Spiel im Takt des Originals: beim Kamerawechsel bleibt das alte
+  Bild gut 1/4 s stehen, nach einem Text laeuft die Figur ein Bild spaeter los.
+* **E-E2** - Der Renn-Stopp des Originals (Ausrutschen nach dem Rennen) gilt im ganzen Spiel.
+* **Texte** (Entscheid vom 23.10.: Port-Texte gelten bis zu Ihrer Freigabe als Vorschlag). Noch nicht freigegeben:
+  2030 Id 40 "A control panel for the bridge. / The pressure gauge reads zero. | Intake valve 13 is closed.", Id 41
+  "Intake valve 13. / Will you open it?", Id 42 "You've opened valve 13. / The pressure is rising.", Id 43 "The pressure
+  gauge reads 80. / Lower the bridge?", Id 44 "The bridge is down.", Id 47 "Intake valve 13 is open."; 2050 Id 40 "The
+  pump has no power. / The switchboard must be set first.", Id 43 "A high voltage switchboard. / The pump needs 80
+  volts.", Id 44 "The switchboard is set to 80 volts. / The pump is powered."; 20B0 Id 41 = 2070 Id 40 "I cannot open
+  the door / because of the water pressure."; 2081 Id 42 "John: Hey, Elza, try with this!" (Elzas Fassung Ihres
+  Satzes). Von Ihnen oder freigegeben: 2000/20B0 Id 40, 2030 Id 45, 46, 48 (vorerst), 50-55, 2010 Id 40, 2080 Id 42
+  "Marvin: Hey, Leon, try with this!", Plakat, Loesung und "Technician's Note". Original-Saetze aus ROOM20A0 sind
+  2090/2091 Id 42 "It's locked." und Id 43 "You've opened the lock.".
+* **2030 Id 49** (Ventile ohne Sicherung im Kasten) ist jetzt der Original-Satz "It's locked." aus ROOM20A0; der
+  Ventil-Satz, den Sie nach Nachtrag 12 spaeter aendern wollten, ist damit ersetzt.
+* **F-E2** - Kampfbeginn wie in RE2 am Ende des Alligator-Intros, nicht weiter weg: Abstand 11430 bis 13924, erster
+  Angriff 121 bis 158 Bilder nach dem Kampfbeginn (gemessen 11450 und 131). Die Leiche liegt dafuer im vorderen Becken;
+  der Schluessel ist dort mindestens so hell wie in der zuerst abgenommenen Fassung (die etwas kleinere Groesse haben Sie
+  in Nachtrag 31 angenommen), das Fressen ist von vorn zu sehen.
+* **FG-E1** - Die acht Zombies der 2080-Einstellung in der Ankunftsszene sind eigene Szenen-Figuren; danach stehen acht
+  Zombies an denselben Stellen oben in 2080 - die, die Marvin bzw. John erschiesst.
+* **FG-E3** - Nach der Kanister-Szene kaempft derselbe Alligator weiter (Lebenspunkte, Lage und Zustand bleiben, kein
+  neuer Durchbruch); der Kanister landet so, dass er ihn im normalen Rundlauf aufnimmt.
+* **G-E1/G-E3** - Todeskamera am Kanister: Zuerst muessen Kopf, Kiefer und die ganze Todesanimation im Bild und
+  unverdeckt sein, erst danach zaehlen die Obergrenze der Bildgroesse (der groesste RE2-Schnitt) und die Naehe zu RE2s
+  Bildausschnitt. Eine Mindestgroesse gibt es nicht; in manchen Lagen ist der Alligator klein im Bild (siehe "Ab
+  Samstag").
+* **G-E2** - Marvin bzw. John steht bei der Zeile und beim Wurf mit dem Gesicht zur Kamera wie Ada in RE2; der Kanister
+  fliegt unabhaengig davon zur Landestelle.
+* **G-E4** - Die RE2-Effekt-Farben sind wie in RE2 ab dem Start geladen; RE2-Effekte sehen damit in allen Raeumen gleich
+  aus, mit und ohne Besuch im Alligator-Becken (sichtbar am Granatwerfer).
+* **G-E5** - Mit dem Kanister im Maul und beim Kanister-Tod bleiben Kopf und Kanister innerhalb der Beckenwand - eine
+  Klemme, die RE2 nicht hat (Wahl des Ports); Nebenwirkung siehe "Ab Samstag".
+* **FG-E7** - Die vier Tests der Schluessel-Einstellung nach dem Tod pruefen jetzt eine Todeslage, an der die Kopf-Klemme
+  nicht greift; die Lage an der Suedwand, an der der Schluessel danach sehr klein wird, steht unter "Ab Samstag".
+* **M-E2** - Original-Teile des Vordergrund-Atlas gehoeren an ihre Original-Stelle: In den Stages 3-6 sind sie
+  eingesetzt, wo Lage und Tiefe belegt sind, auch fuer Gegenstaende Ihrer Liste aus Nachtrag 27; wo es kein
+  Original-Teil gibt oder seine Tiefe nicht belegt ist, baut der Port keine Maske - das zeichnen Sie (Liste unter "Ab
+  Samstag").
+* (Nicht aufgefuehrt sind FG-E2 - widerrufen -, FG-E4 und FG-E5 - von Ihnen in Nachtrag 26 entschieden -, FG-E6 - von
+  Ihrem Nachtrag 32b berichtigt, die Regel "gut genug" steht in der Einleitung -, M-E1 - Ihre Antwort in Nachtrag 27,
+  fuer Original-Teile durch M-E2 ersetzt - sowie F-E1 und G-E6, die nur Tests bzw. Code betreffen.)
+
+Fragen aus der Runde, die noch niemand entschieden hat (so ist es jetzt):
+* Alligator: Ein Granaten-Treffer am Lauerplatz weckt den untergetauchten Alligator; RE2 kennt diesen Fall nicht.
+* Alligator: Steht Leon unerreichbar hinter einer Wand (Tuernische, Rampe oben), bleibt der Alligator an der Wand und
+  schaut zu ihm, statt sich abzuwenden und neu anzuschwimmen.
+* Alligator: Der Finisher spielt immer am selben Ort (Westkanal mit Kamera 6, sonst Suedostbecken mit Kamera 1); Alligator
+  und Figur werden dafuer hinter dem Kameraschnitt umgesetzt. Naeher am Ort des Bisses gewuenscht?
+* Alligator: Nach seinem Tod schneidet das Bild 1,5 s auf den blinkenden Schluessel; diese Form haben Sie noch nicht
+  bestaetigt.
+* Alligator: Beim Kauen nach dem Schuetteln haengt die Leiche sichtbar neben dem offenen Maul statt zwischen den Kiefern
+  (sie haelt fest am Kopf in der Lage des Zubeissens - so haelt RE2 den Kanister).
+* Alligator: Nach seinem Tod spielt wieder die Raummusik von 2090; RE2 blendet in seinem Alligator-Raum die Musik aus und
+  bleibt still. Nicht nachgebaut, weil Sie nur den Kampf mit RE2-Musik verlangt hatten.
+* 20A0: Die Schachtspinnen in 20A0/20A1 bleiben; entfernt sind nur die Spinnen in 2090/2091.
+* 2030: Die Ost-Tuer fuehrt nach der Flut dauerhaft nach 20B0 (vorher in den Mittelgang von 2070); soll sie nach dem
+  Strom wieder nach 2070 fuehren?
+* 2030: Ertrinkt die Figur bei den Ventilen, bleibt die Kamera auf der Flut-Draufsicht; ihren Spritzer sieht man dort
+  nicht.
+* 2030: Der Alarm laeuft mit dem festen RE2-Wert beim Betreten von ROOM6040 (99); RE2 staffelt die Lautstaerke je Kamera
+  seiner Raeume.
+* Sherry: Der Statusschirm zeigt bei "Equip Arms" das Messer, obwohl sie keine Waffe fuehrt (im Original genauso).
+
+## Fuer Sie zum Aufnehmen
+
+Ohne Datei laufen die Zeilen stumm mit Untertitel; der Port bindet jede Datei nach Raum und Nachricht.
+* **Drin:** `synchro/STAGE2/room2030/main46.wav` - Ihr Voiceover zum Warntext "WARNING: The water will rise in one
+  minute. Please leave the room immediately!" (Aufnahme vom 24.10., unveraendert); fuer Elza dieselbe Datei als
+  `synchro/STAGE2/room2031/main46.wav`. Ihre zweite Fassung liegt unbenutzt unter
+  `synchro/unused/STAGE2/room2030/main46_02.wav`.
+* **Optional** - die Texte des neuen Ventil-Sicherungskastens (Spielfigur): `synchro/STAGE2/room2010/main40.wav` bis
+  `main44.wav` (Leon) bzw. `synchro/STAGE2/room2011/main40.wav` bis `main44.wav` (Elza):
+  - main40: "A fuse box for the valve controls." / "One of the fuses is missing..."
+  - main41: "Will you use the Fuse?"
+  - main42: "You've used the Fuse."
+  - main43: "The fuse is in place." / "Will you take the Fuse?"
+  - main44: "You've taken the Fuse."
+* **Neu - die Kanister-Szene:** `synchro/STAGE2/room2080/main42.wav` - Marvin: "Hey, Leon, try with this!" (Leon) und
+  `synchro/STAGE2/room2081/main42.wav` - John: "Hey, Elza, try with this!" (Elza). Die Ordner `room2080` und `room2081`
+  gibt es unter `synchro/STAGE2/` noch nicht. Liegt eine Datei dort, wartet Marvin bzw. John mit dem Wurf, bis sie zu
+  Ende ist (wie RE2 auf Adas Stimme).
+* Die uebrigen Punkte dieser Runde (auch die Ankunftsszene in 2090 und die Masken) brauchen keine Aufnahmen.
+
+## Noch offen
+
+Ton
+* Ihre eigenen Schritte (Leon/Elza) klingen weiter mittig und unabhaengig vom Abstand; das Original rechnet sie mit
+  derselben Routine wie die NPC-Schritte nach Lage. Die Umstellung aendert die Schritt-Lautstaerke in jedem Raum und ist
+  ein eigener Auftrag.
+* Mono: Der Port mischt Links und Rechts zur Haelfte, das Original nimmt fuer beide Kanaele das Lautere; stark seitliche
+  NPC-Schritte klingen in Mono deshalb leiser als im Original.
+* Die Lautstaerkekurve aller Toene ist im Port linear, im Original quadratisch (spielweit, spaetere Runde).
+* Hubschrauber-Rotor (Raumton): Der Port bestimmt die Richtung mit einer Winkeltabelle statt wie das Original gerechnet
+  (bis eine Pan-Stufe Abweichung); links/rechts sind gegenueber dem Original moeglicherweise vertauscht (nicht geprueft).
+
+Bild und Takt
+* Beim Kamerawechsel haelt der Port das Bild einheitlich gut 1/4 s; im Original haengt die Dauer am CD-Laufwerk (gemessen
+  0,2-0,25 s, nach einem Waffenwechsel bis etwa 0,6 s).
+* Abweichungen von je 1-3 Bildern: Im ersten Bild nach einem Kamerawechsel zeichnet der Port Effekt-Sprites, die das
+  Original dort weglaesst; in 20B0 schaltet die Kamera 12 -> 13 2-3 Bilder frueher; Gegner werden beim Betreten schon
+  gezeichnet, bevor ihr erster Takt gelaufen ist - in 2060/2061 haengen dadurch im letzten Einblendbild fuer ein Bild die
+  grossen Spinnenbeine aus dem Schacht.
+* Schneidet die Kamera waehrend der Kiefer-Explosion des Alligators, steht das gehaltene Bild etwas zu lange (16 statt der
+  erwarteten etwa 14 Sechzigstelsekunden); vor einer Aenderung wird RE2 an dieser Stelle nachgemessen.
+
+Bewegung
+* Geh-Tempo: Der Port geht fest mit 75 je Bild; das Original rechnet es wie das Renn-Tempo aus dem Schritt.
+* Elza und Marvin (als Spielfigur) nehmen noch Leons Tabellenwerte (Gehen 75, Rueckwaerts 70, Rennen 200); das Original
+  hat fuer beide 70/65/210. Beim Gehen und Rennen ersetzt das Original den Tabellenwert durch die Schrittrechnung (der
+  Port beim Rennen jetzt auch).
+* Beim Wechsel Stehen -> Gehen/Rennen und Gehen -> Rennen nimmt der Port fuer ein Bild eine andere Drehrate als das
+  Original.
+* Bei Texten, die das Spiel ohne Spieler-Pause zeigt, bleibt die Figur im Port stehen; im Original laeuft sie weiter
+  (schon vor dieser Runde so).
+* Gorillas in ROOM11C0 koennen an drei Stellen haengen bleiben (gefunden mit einer Zufallsgang-Sonde; an allen drei
+  haengt auch die Regel des Originals) - Folgeauftrag.
+
+Alligator
+* Der Kanister ist im dunklen Becken kaum zu sehen (graue RE2-Textur im Licht von 2090); eine Aufhellung ist nicht
+  eingebaut.
+* Bei der Belagerung an der Rampe und beim Klettern ueber die Plattform spielt der Alligator weiter die Animation Ihres
+  Designs (Clip 0), keine aus RE2.
+* Beim Hochbiss von der Rampe (Ihr Belagerungs-Design prueft nur den Abstand) schnappt der Alligator im Bild der laufenden
+  Kamera seitlich an Leon vorbei; der Finisher danach zeigt den Biss wie RE2.
+* Die offenen Punkte der Ankunftsszene und der Kanister-Szene (u. a. der Kampfbeginn vor der Kamera und Lagespruenge mit
+  dem Kanister im Maul) stehen unter "Ab Samstag".
+
+Zombies
+* Nach dem Loesen aus dem RE2-Griff gleiten die Kanal-Zombies in 2000/2001 etwa 2500 Einheiten weg - eigener Auftrag,
+  falls gewuenscht.
+
+STAGE3
+* Am Ende der 3061-Szene laeuft der Hund im Port direkt zu Elza; im Original geht er langsam nach rechts vorn (eigener
+  Auftrag empfohlen).
+* Ein Spielstand aus dem Sherry-Abschnitt (30C1, 3071, 3081, 3091) laedt als Elza.
+* Weste (1190/1191) und U.S.S.-Ruestung (40A0/40A1): Das Original setzt beim Anlegen auch Waffe, Wunden und Status
+  zurueck; der Port behaelt alles (gedeckt ist nur "heilt nicht", Ihr Entscheid vom 30.08.).
+* Nach dem Rueckwechsel auf Elza kann das Inventar die vorher ausgeruestete Waffe noch als ausgeruestet zeigen, obwohl
+  das Messer in der Hand ist; dieselbe Waffe wieder auszuruesten geht erst ueber eine andere Waffe (im Original genauso;
+  aus dem Code abgeleitet, nicht am Spiel gemessen).
+* Lichtton in 3091: Original gelbgruen, Port neutral.
+
+Spinnen und Gift
+* Die Spinne wirkt im Port heller als im Original-Video (Beleuchtung, nicht Animation).
+* Die Trefferweite des Giftklumpens ist die des RE1.5-Geschosses (500), nicht die von RE2 (800).
+* Der Biss der Spinne (RE2-KI) zieht 20 HP ueber die RE2-Regel mit der Rettung "einmal je Raum" und loest an der Figur
+  keine Treffer- bzw. Todesfolge aus - schon vor dieser Runde so (wie beim Hundebiss).
+
+NPCs
+* An einer Wand koennen zwei NPCs noch leicht ineinander stehen: die Wandklemme laeuft wie im Original nach dem Schub (in
+  einem gestellten Aufbau in 3011 Abstand 664-670 statt 750; auf dem echten Weg nicht).
+* Eine folgende NPC kann Elza vor sich herschieben (3001, zweiter Besuch: etwa 570 Einheiten in etwa 100 Bildern); gegen
+  das Original nicht gemessen.
+
+Masken
+* Was an den Masken noch fehlt (Ihre Freistellungen fuer STAGE3-6, ein Restloch in ROOM6010/6011 Kamera 5), steht unter
+  "Ab Samstag".
+* An wenigen Stellen VOR einem Gegenstand uebermalt eine Maske einzelne Randpunkte der Figur (Hand oder Arm am Rand,
+  z. B. ROOM5090 Kamera 12); das kommt von Masken, die schon vor den neu eingesetzten Original-Teilen da waren.
+
+## Ab Samstag (neue Tokens)
+
+Ihr Plan vom 25.10.: "Nein, Ziel ist langsam mit allen fertig zu werden, den build zu bauen, und mit neuen Tokens am
+Samstag die Sachen nachtraeglich zu verbessern....". Vorgemerkt sind diese Punkte; keine der hier genannten Aenderungen
+ist in v0.8.29 enthalten.
+
+**Ihr Nachtrag 30 (Ventilkette, Toene, Lautstaerke) - am 25.10. angehalten, nicht in v0.8.29.** Im Spiel gilt fuer diese
+Punkte deshalb noch der vorherige Stand: der Schaltschrank mit Tastenfeld in 2010, Pult und Ventil 13 fuer die Bruecke
+in 2030, die Notiz mit Ihrem Text aus Nachtrag 13, das Plakat "1. GREEN 09 - 2. RED 01 - 3. BLACK 02 - 4. RED 07" und
+die Loesung 09 -> 07 -> 02 -> 01. Verlangt haben Sie:
+* Schrank 2010: "In ROOM 2010, beim Anklicken des Schranks, mache das er aufklappt und dann so aussieht wie in 2060 der
+  Fuse Kasten - siehe fuse_box.bmp. Ab da soll auch der Mechanismus gleich - das Einsetzen der Sicherung etc."
+* Panel-Raetsel in 2030 statt Ventil 13: "in ROOM 2030 am Kasten, damit die Platform runter faehrt, erstelle ein Raetsel,
+  das so aussieht wie das Panel in Nahansicht, anstatt das komische - dreh an Valve 13." Zuerst kommen zwei bis drei
+  Entwuerfe mit Bildern zu Ihrer Freigabe (Ihre Wahl: "C entwirft, ich gebe frei"), jeder mit dem Ziel Druck 80 ("Zum
+  2030er Raetsel ist noch wichtig das die Pressure irgendwie 80 betragen muss, wenn du das schon so hin schreibst.");
+  gebaut wird erst nach Ihrer Freigabe.
+* Notiz: "beim Text soll nur drin stehen das gruen und rot verwechselt wurde, nicht black, das soll raus. Bei der
+  verwechselten Nummer soll drin stehen das sie ausserdem die Nummern verwechselt haben von "Schwarz" und "Gruen". Hier
+  dienen die Anfuehrungszeichen als Ironie fuer die falschen Farben auf den Poster." Vorschlag fuer den Satz: "They mixed
+  up green and red, and on top of that they swapped the numbers of "black" and "green"!"
+* Plakat neu nach Ihrer Wahl (Nachtrag 30d): "1. GREEN 01 - 2. RED 02 - 3. BLACK 09 - 4. RED 08", Loesung
+  09 -> 02 -> 01 -> 08. Im angehaltenen Stand (Zweig r41/nachtrag30, bb7a0df6) sind das neue Plakat und diese Loesung
+  schon eingetragen, aber ungeprueft; die uebrigen Punkte dieser Liste sind dort noch nicht umgesetzt.
+* Plattform 2030: "Und wenn die Plattform runter faehrt, fehlt mir noch der Original Sound von Resident Evil 2."
+* Alarm 2030: "Und waehrend des Alerts und der Alert message fehlt mir noch zusaetzlich durchweg der Alert sound aus
+  Resident Evil 2." In v0.8.29 laeuft waehrend des Countdowns RE2s Alarm SUB_25 neben der Raummusik.
+* Lautstaerke: "Und bei der reduzierten Volume sollen ALLE Volumes reduziert werden, nicht nur ein paar." und "Die
+  Tuersequenzen und Sounds der Reinsprung SOunds ins wasser etc, scheint davon nicht betroffen." Eine erste, noch
+  ungepruefte Messung fand im Mischer keine Quelle, die an der Einstellung vorbeigeht (Tuersequenz und Sprung ins Wasser
+  waren bei 50 % genau halb so laut); woher Ihr Eindruck kommt, ist noch nicht gefunden.
+* Wasser in 2010 (Nachtrag 30e): "in room 2010 soll - bis zum ablassen der Wassers, auch ein Wasser Effekt die Leiter
+  runter kommen und ueber den Weg bis zum Wasser Pool in der Mitte laufen." Nach Ihrer Wahl bis zur Flut in 2030, wie der
+  Strom an der Leiter in 2000.
+
+**Alligator.**
+* Kampfbeginn nicht vor der Kamera (Ihre Antwort in Nachtrag 31: "Aendern: nicht vor der Kamera"). In v0.8.29 beginnt
+  der Alligator den Kampf an der Suedwand gut 1800 Einheiten vor der Leiter-Kamera (Kamera 0): rund 120 Bilder (4 s) lang
+  fuellen Ruecken und Schwanz gross die rechte Bildhaelfte, erst dann schwimmt er im Becken vor Leon bzw. Elza (gemessen
+  mit beiden). Ziel: eine Startlage, in der er beim Kampfbeginn im Becken vor der Figur zu sehen ist, mit Abstand und
+  erstem Angriff weiter wie in RE2; dazu ein Riegel, der Abstand zur Kamera und Bildanteil misst.
+* Mit dem Kanister im Maul springt der Alligator stellenweise in einem Bild ein Stueck zur Seite: an der Westwand neben
+  dem Plattform-Block um bis zu etwa 1500 Einheiten, an der Suedwand um bis zu knapp 600. Die neue Klemme, die Kopf und
+  Kanister vor der Wand haelt, und die bisherige Klemme des Koerpers (an der Westwand die am Plattform-Block) arbeiten
+  gegeneinander. In den gemessenen Bildern liegt er dabei meist am Bildrand oder wirkt wie ein schneller Schlag (gemessen
+  im Stand der Kanister-Szene, vor der Zusammenfuehrung mit der Ankunftsszene).
+* Ohne Kanister (beim Verfolgen, Beissen und Belagern) kann der Kopf des RE2-grossen Modells weiter ueber eine
+  Aussenwand ragen; die neue Klemme wirkt nur mit dem Kanister im Maul und beim Kanister-Tod.
+* Beim Kanister-Tod ist der Alligator in manchen Lagen klein im Bild (in den Kameras 6 und 7 etwa halb so gross wie in
+  RE2). Die Regel fuer die Todeskamera (siehe "Zu entscheiden") verlangt Kopf, Kiefer und die ganze Todesanimation im
+  Bild, aber keine Mindestgroesse.
+* In Marvins bzw. Johns Haenden ragt der Kanister quer vor der Brust weit zur Seite: Er ist so gross wie in RE2, ein
+  eigener Massstab ist nicht erfunden.
+* Beim Schnitt auf die Wurf-Kamera in 2080 zeigte die Kanister-Szene vor der Zusammenfuehrung ein Bild lang noch den
+  alten Hintergrund mit dem schon gedrehten Werfer; ob das Standbild beim Kamerawechsel (siehe "Bewegung und Kamera")
+  das jetzt abdeckt, ist im Gesamtstand nicht gemessen.
+* Nach dem Laden eines Spielstands, in dem der Alligator tot und der Schluessel nicht aufgehoben ist, liegt der Schluessel
+  an einer Ersatzstelle (Mitte der gefressenen Leiche), ohne die Einstellung auf ihn.
+* Stahltuer- und Aufschlag-Ton der Kanister-Szene sind ueber die Ton-Zeilen und den Pegel im Mitschnitt belegt, nicht ueber
+  die Wellenform - bitte beim Spielen darauf achten.
+* Schluessel nach dem Tod an der Suedwand (Entscheid FG-E7): Stirbt der Alligator mit dem Kanister nahe der Suedwand
+  (gemessen mit der Kanister-Lage (4430,-26160), 840 vor der Wand), verschiebt die neue Kopf-Klemme seine Leiche um rund
+  1000 Einheiten, und die Einstellung auf den Schluessel waehlt danach eine Kamera, in der er nur etwa 3 x 3 Bildpunkte
+  gross ist (sonst 10 bis 16). In den fuenf natuerlich gespielten Kampflaeufen trat das nicht auf. Behebung: die Wahl der
+  Schluessel-Lage sucht weiter, wenn die beste Kamera ihn zu klein zeigt.
+* Die Uebergabe von der Ankunftsszene in 2090 zum Teil in 2080 (Knall und acht Zombies nach der Rueckkehr ueber die
+  Leiter) prueft noch kein automatischer Test ueber den echten Weg; von Hand an der exe gemessen haelt sie fuer Leon und
+  Elza.
+
+**Masken.**
+* Restloch an der Treppe in ROOM6010/6011 Kamera 5: Steht die Figur unter der Treppe an ihrer Westkante, ragen Kopf und
+  Schulter ueber die neu eingesetzte Treppenwange (gemessen: 82 von 96 Bildpunkten sichtbar). Die Kamera nutzt alle 128
+  Maskenplaetze, die der Port je Kamera hat; das Original erlaubt 255. Vorher hatte die Stelle gar keine Maske.
+* Die Datei `analysis/befunde_runde41/M_bilder/NB5/teile_nb5.txt` mit Teilnummern und Gruenden stammt aus einem
+  frueheren Lauf; bei 21 Teilen steht dort ein anderes Ergebnis als im Spiel. Die Tabelle im Dossier
+  `analysis/befunde_runde41/M_masken36.md` ("Fuer den Nutzer") passt zum Spiel. Ein Pruefstueck (ROOM4040/4041 Kamera 12)
+  misst statt der Figur ein 3D-Tor; im Spiel ohne Folge, die Figur ist dort von den alten Masken ganz verdeckt.
+
+**Ihre Freistellungen STAGE3-6 (Ihre Antwort "Ich kuemmere mich selbst drum.", Nachtrag 27).** Ohne Maske bleibt nur,
+was kein Original-Teil mit belegbarer Tiefe hat - meist Gelaender ohne eigenen Boden, Teile ohne Bodenkontakt (Lampen,
+Rohre, der Roboterarm), Teile, deren Hoehe nicht eindeutig ist, oder Stellen, ueber denen die Kamera direkt haengt.
+Teile, die nie vor einer Figur stehen koennen (Bodenmarkierungen, Lampen hoch an der Wand), brauchen keine Freistellung.
+Je Kamera zeigt `analysis/befunde_runde41/M_bilder/NB5_rest/NB5_rest_ROOMxxxx_Cnn.png` rot die fehlenden und gruen die
+eingesetzten Teile; Bildpunkte und Teilnummern stehen in der Tabelle des Dossiers. Zum Zeichnen liegen die
+Uebersichtsbilder unter `pri/STAGEn/<raum>/<cc>_port.png`; nehmen Sie die aus Leons Ordnern (Stand dieser Version, siehe
+"Masken"), Elzas Raeume (xxx1) zeichnen dieselben Masken.
+* ROOM3040: Kameras 1-9 und 11-13 (in Kamera 3 der Pfeiler rechts und Teile des Laufsteg-Gelaenders)
+* ROOM3050: Kameras 0, 4, 5, 7, 8, 9, 11, 12, 13
+* ROOM30A0: Kamera 0 (Lampe, Stuhl, Moebel vorn links; dazu der rote Ordner auf dem Schrank am Ostende der Trennwand,
+  fuer den es kein Original-Teil gibt) und Kamera 1
+* ROOM30E0: Kameras 6-9 (Pfosten und Handlauf des Stegs, soweit noch offen, Bodenstreifen am Stegrand, Lampen)
+* ROOM4040: Kameras 7 und 12; ROOM4080: Kameras 2, 3, 8
+* ROOM5020: Kameras 2, 3, 5, 7, 9, 11; ROOM5050: Kameras 1 und 2 (Schreibtisch und Pulte vorn, die Kamera haengt direkt
+  darueber); ROOM5090: Kameras 11-14
+* ROOM50B0: Kameras 1-3 (Roboterarm oben, Maschine); ROOM5100: Kameras 2, 3, 5, 6, 7
+* ROOM6000: Kameras 2, 3, 8, dazu in Kamera 5 die Mitte des Gittertraegers an der Wandecke; ROOM6010: Kameras 2, 3, 5,
+  6, 7, 10-13 (in Kamera 2 Treppen- und Plattform-Gelaender, in Kamera 5 Treppenwange und Gelaender)
+* In der Tabelle fehlen noch acht kleine Stellen (je 106 bis 275 Bildpunkte, ebenfalls ohne Tiefe): ROOM3040 Kamera 10,
+  ROOM3050 Kamera 1 und 6, ROOM5050 Kamera 1 und 2, ROOM6000 Kamera 7 und 9, ROOM6030 Kamera 12.
+
+**Pruefungen und weitere Folgeauftraege.**
+* Der Ketten-Riegel `integration_r41_ventilkette_kette` (Leon: Ventile -> Flut -> 20B0 -> 2050) endete im
+  Integrationsbaum viermal still nach etwa 220 s und einmal mit einer SDL-Meldung, danach viermal gruen; die Ursache ist
+  offen (Verdacht: fremde Last auf der Maschine). Fuer die Elza-Kette gibt es noch keinen eigenen Riegel. Im Spiel ist
+  die Kette mit Leon und Elza gemessen.
+* Ankunftsszene und Kanister-Szene sind getrennt abgenommen: die Kanister-Szene mit ihren Kampf-Zahlen (Aufnahme nach 3
+  bis 5 s, Explosion in jedem Verlauf, Lagespruenge) noch ohne die Ankunftsszene und mit den Spinnen in 2090, die
+  Ankunftsszene ohne die Kanister-Szene. Das Zusammenspiel prueft die Integration (siehe "Technisch").
+* Der PSX-Bau der neuen Alligator-Teile ist nicht geprueft (kein PSn00bSDK auf der Maschine).
+* Weitere Folgeauftraege, die Sie im Spiel merken koennen (beschrieben unter "Noch offen"; ob Samstag oder spaeter, ist
+  nicht festgelegt): Ihre eigenen Schritte nach Lage und Abstand, die Lautstaerkekurve, die Richtung des
+  Hubschrauber-Rotors, die Gorilla-Haenger in ROOM11C0, das etwas zu lange gehaltene Bild beim Explosionsschnitt des
+  Alligators, die Abweichungen von 1-3 Bildern nach einem Kamerawechsel.
+
+## Technisch
+
+* **Stand:** r41/integration 74c9d1d9 = master 91ae1a79 (Spuren A, B, C, D, E, H, I, J, K, L; Merges D db7205c2,
+  A 5705fafb, I ce081e16, B 9f10bdb0, H 6bbda67a, E b23e4887, J 7c61ed8b, L 1fcfde5a, C 2d20306d, K 4b313429) + Doku bis
+  e81d99e0 + Merges F aa8bac53, G 93f64b0a, M 74c9d1d9. F und G sind nach FG-E6/Nachtrag 32b bestanden (Abnahme F 5,
+  G 4); M ist mit dem Stand der Nachbesserung 5 integriert (Abnahme M 5 "nicht bestanden", alle drei Maengel nicht
+  blockierend). Auf master kommen dazu 76b50a0c (Paket-Gate) und 1e0d0618 (Uebersichtsbilder pri/).
+* **Integration F+G+M:** Bau ohne neue Warnung, gezielte Unit-Riegel F/G/M 60/60; tests:FGM: 1003 unit/prop/probe gruen, alle Spur- und Querbezugsgruppen gruen bis auf vier F-Riegel (Kopf-Klemme x Schluessel-Lagewahl) - nach FG-E7 auf eine Todeslage ohne Kopf-Klemme umgestellt.
+* **Integrations-Fixes:**
+  - bf470083 - enemy_common.c wieder in der Fassung der Spur J (nur Kommentar; gleicher Patch wie Ks Cherry-Pick
+    299b6deb, Entscheid A-E5).
+  - 40afa677 - Querbezug J x E: die Spieler-Schleife (plcloop_r41.c) misst die Cliplaenge an dem Record, den der
+    RBJ-Binder in den Spieler-Kanal schreibt (@0x8001b450); vorher abweichende Cliplaengen in 3091, 4001, 4010, 5011,
+    6030, 6031.
+  - 45cc6246 - Querbezug E x K: Sherry (Figur 0x0F) im Renn-Tempo/Renn-Stopp (Tempo 120 @0x80073f42, ohne Fussweg
+    @0x80032898, Drehen @0x80073f43 im Unterzustand 2); Riegel unit_r41_kleinkram_b_takt_sherry.
+  - d1edabbc - Riegel unit_r36_g2_cursor_rahmen prueft ROOM2050 obj 8 mit Bank-9-Bit 106 (Pult geloest); der Port-Zusatz
+    der Spur C widerlegte den alten Riegel.
+  - Konfliktloesungen in den Merges: 7c61ed8b enemy_common.c rbj_resolve_slot = Seite J (der Spur-A-Haken d1809dbf geht
+    darin auf); 2d20306d scd_room_setup.c beide Seiten (L vor C); 4b313429 player_common.c (Ks Waffe-0-Sperre vor Es
+    Drehbedingung).
+  - Merges F/G/M (je beide Seiten wortgleich, keine neue Konstante): aa8bac53 scd_room_setup.c (Installer L, C, dann F),
+    scd_vm.c (Ereignis-Kette C, dann F; Raeume disjunkt), main.c (Prop-Lader C, dann F), audio_pc.c re15_bgm_load_track
+    (Cs Alarm-Zeile ersetzt Fs gleichlautende Lesezeile, Fs Umleitung auf MAIN1A danach), test_r36_kartenbits.c (C, dann
+    F); 93f64b0a scd_room_setup.c (C, F, dann G), main.c Init (F, dann G), k_port[] (C, F, G ohne Doppelbelegung),
+    enemy_ai_boss_gator.c automatisch in der von Abnahme G 4 geforderten Reihenfolge (Wurzel-Klemme, Kopf-Klemme G,
+    nachtakt B, nachtakt F), render_pc.c RE15_TIM_SLOT_MAX 57 (G-E6); 74c9d1d9 ohne Code-Konflikt (re15_pri.h 105 -> 128,
+    alle Verbraucher ueber die Konstante, auch gator_fx_r41_pc.c).
+* **Kette A+C im Integrationsbaum gemessen** (analysis/befunde_runde41/INT_belege/, 7cf41fc9): Leon 2030 -> 20B0 -> 2050
+  und Elza 2031 -> 20B1 -> 2051, alle Pruefungen des Ketten-Riegels erfuellt.
+* **Vor dem Release:** integration_r41_ventilkette_kette (nur Leon) endete im Integrationsbaum viermal still nach 20B0
+  F750 (~220 s) und einmal mit der SDL-Assertion WIN_AddDisplay, danach viermal gruen; das debug.log der roten Laeufe ist
+  bytegleich mit gruenen. Ursache offen (Verdacht Fremdlast) - in der vollen Suite auf ruhiger Maschine pruefen. Die
+  Elza-Kette hat keinen registrierten Riegel (nur der eigene Lauf). Auch unter "Ab Samstag".
+* **A wasser20b0** - NEU `engine/src/wasser20b0_r41.c` (+ `include/re15_wasser20b0_r41.h`): EM024-Partikel-Sequencer grid
+  0/1 (Typ 0x24) der Flut 20B0/20B1. NEU `engine/src/wassersprung_r41.c` (+ `.h`): Landespritzer und NPC-Schritte
+  (Aufsetzer aus der OWN-Bank, Retail-Zeile nach RE2 FUN_8005c040 wo die Original-Zeile leer ist, Lage/Seite
+  FUN_80045a64). RE15_ACTOR_MAX 21 -> 36 (35 Emitter in 20B0, Entscheid E2); der Alligator steht damit auf Platz 35.
+  Haken: aot_common.c (AUTO-Ereignis in 20B0/20B1 trotz Szenensperre, ENV-Stempel WATER/RAMP ohne Szenen-Gate),
+  enemy_ai_common.c (EM024-Zweig; NPC-Schritt in re15_npc_sub_walk), climb_common.c (Landespritzer), wasser_r38.c
+  (Stempel-Getter), scd_vm.c (EM024 ohne Zeichnen in op_sce_em_set), platform/pc/main.c (kein Figurenschatten fuer Typ
+  0x24; 4. Wert von RE15_PLAYER_POS = Band), audio_pc.c (4 Zeilen Schritt-Lage, A-E4). Riegel probes/r41_wasser20b0.cmake,
+  integration_r41_wasser20b0 und _npc.
+* **B re2gator** - NEU `engine/src/gator_re2_r41.c` (+ `include/re15_gator_re2_r41.h`): RE2-EM23-Ablauf (Zonen-Dash,
+  Hysterese, Ereignis-Schuetteln, Putz, Kanister-Aufnahme, Kanister-Tod, Treffer-Selektor, HP-Sockel 25300,
+  Finisher-Buehne). NEU `platform/pc/src/gator_re2_pc.c` (Kanister-Prop, Raumbank),
+  `engine/src/gen/r41_gator40a0_bank.inc` aus `tools/r41_re2gator/gator40a0_se_cut.py`. Eigentuemer-Datei
+  enemy_ai_boss_gator.c. Haken: main.c (Hintergrund-Versatz beim Schuetteln, Kanister-Zeichner, Bank-Init, Bildbudget
+  der Zeitlupe, untergetauchter Alligator, Elzas Zopf im Maul-Massstab), enemy_ai_re2_zombie.c (Part-Bruecke fuer Typ
+  0x23 = geplatzter Kiefer), re2_fx.c (Op 11/73 fuer den Putz). API re15_gr2_* fuer die Szenen. Riegel
+  probes/r41_re2gator.cmake, integration_r41_re2gator.
+* **C ventilkette** - NEU `engine/src/ventilkette_r41.c` (+ `include/re15_ventilkette_r41.h`, alle Konstanten mit Beleg
+  im Kopf), Daten `engine/src/gen/ventilkette_r41_{texte,original,programme,wasser,plakat,hebel}.inc` aus
+  `tools/r41_ventilkette/`; NEU `platform/pc/src/ventilkette_r41_pc.c` (Ventil-Standbild, Plakat, Hebel, Countdown).
+  Haken: scd_room_setup.c, scd_vm.c, game_step_common.c, main.c (Boot/CONTINUE-Installer, Prop-Lader, Zeichner, zwei
+  RBJ-Haken), audio_pc.c (Alarm-Schalter re15_audio_r41_alarm, C-E4/C-E5). Riegel unit_r41_ventilkette,
+  integration_r41_ventilkette, _b, _weg, _weg_elza, _sperre, _alarm, _kette (nur mit Spur A registriert, C-E1).
+* **D kleinkram_a** - NEU `engine/src/lautstaerke_r41.c` + `platform/pc/src/lautstaerke_r41_pc.c` (VOLUME-Zeile, Datei
+  re15_options.cfg, Override RE15_OPTIONS_FILE); NEU `engine/src/blink_r41.c` (Puls = Titelzeilen-Puls FUN_801028ec,
+  API re15_blink_r41_setzen); NEU `engine/src/giftkugel_r41.c` (RE2 Op 32, Schaden 20). Haken: audio_pc.c (Endstufe),
+  main.c, feuerloescher_r37.c, spinnen_r38.c, game_step_common.c. Riegel unit_r41_kleinkram_a,
+  integration_r41_kleinkram_a_lautstaerke / _blink / _gift.
+* **E kleinkram_b** - NEU `werkstatt11b1_r41.c` (Port-Ereignis 24 in 11B1), `karte_r41.c` (Kartenmarke ueber die Zielzone
+  der Tuer), `plcloop_r41.c` (Spieler-Schleife beim Kurbeln), `kamerahalt_r41.c` + `platform/pc/src/bildhalt_r41_pc.c`
+  (Apply-Bild ungezeichnet gehalten, 1 + 6 Bilddauern), `msgtakt_r41.c` (Nachrichten-Takt hinter dem Spiel-Takt),
+  `rennstopp_r41.c` (Renn-Tempo und Renn-Stopp nach 0x80032604/0x80032778). Haken: scd_room_setup.c, re15_inv_screen.c,
+  player_common.c, game_step_common.c, scd_vm.c, msg_common.c, main.c, render_pc.c. Riegel probes/r41_kleinkram_b.cmake,
+  integration_r41_kleinkram_b_* (kurbel, karte, werkstatt_szene/_tuer, kante, geh, renn, spawn_kante, treppe, losl).
+* **H kollision** - NEU `engine/src/kollision_r41.c`: NPC-Schub vor der Wandklemme (aec4/b544 in allen 28 NPC-Wurzeln),
+  Kisten-Pruefung FUN_8002cdf4 im Objekt-Pass. Haken: enemy_ai_common.c, aot_common.c, game_step_common.c. Riegel
+  probes/r41_kollision.cmake, integration_r41_kollision_* (kiste, raetsel_leon/_elza, npc3070, npc3001).
+* **I zombiefresser** - NEU `engine/src/zombiefresser_r41.c`: Liege-Wecker der Deskriptoren 0x84/0x85 (Wecker-Distanz
+  0xFA0, Wartezeit rand & 0xf). Haken: enemy_ai_re2_zombie.c, enemy_ai_common.c, player_common.c, anim_select_common.c,
+  main.c (Ladepfad startet sub00 wie FUN_8003ef6c). Werkzeuge `tools/r41_zombiefresser/`. Riegel
+  probes/r41_zombiefresser.cmake, integration_r41_zombiefresser_* (8 Laeufe, u. a. laden2000/2001).
+* **J stage3szenen_a** - NEU `rbj_binder_r41.c` (RBJ-Marker-Binder FUN_8001b3f8, Commit e4a9f39c; 1040/1041 ohne
+  Spieler-Record -> PL00/PL04-Basis), `wclip_r41.c` (W-Bank-Clip fuer Plc_motion(2,c)), `fussanker_r41.c` (Glied-Anker
+  FUN_800369f8), `superobj_r41.c` (Super_set/Super_reset 0x48/0x49). Haken: enemy_common.c, enemy_ai_common.c, scd_vm.c
+  (J-E1), main.c (pc_prop_world, Spieler-Kanal), dining_r39.c, platform/psx/src/asset_psx.c. Werkzeuge `tools/r41_j/`.
+  Riegel probes/r41_stage3szenen_a.cmake und _rbj.cmake, integration_r41_stage3szenen_a_3060 / _3061.
+* **K stage3szenen_b** - NEU `engine/src/sherry_r41.c` + `platform/pc/src/sherry_pc_r41.c` (+ `.h`): Figurwechsel wie
+  FUN_800314b0 (EDD/EMR, Waffe, HP, Status), Sherry PL0F/PL0FW00 ohne Waffe, Tempo Zeile 15, Kletter-Ausloesebild 0x63;
+  Binder per Cherry-Pick (299b6deb). Haken: player_common.c, climb_common.c, re15_damage.c, main.c. Werkzeuge
+  `tools/r41_k/`. Riegel probes/r41_stage3szenen_b.cmake, integration_r41_stage3szenen_b_sherry / _3091 / _marvin.
+* **L spinnenanim** - NEU `engine/src/spinnenanim_r41.c`: Figur-Matrix aus der vollen Drehung (+0x68), Massstab 0xccc,
+  im Schacht-Ablauf das Bild vor dem Vorschub, Schatten 1300 x 1400. Haken: main.c, enemy_ai_common.c, spinnen_r38.c,
+  scd_room_setup.c. Riegel probes/r41_spinnenanim.cmake, integration_r41_spinnenanim.
+* **F gatorszene** - NEU `engine/src/gatorszene_r41.c` (+ `include/re15_gatorszene_r41.h`,
+  `platform/pc/src/gatorszene_r41_pc.c`): 2090-Ankunftsszene als Programme aus Original-Befehlen (Ereignis 18: P1
+  Ankunft + Knall = Knall-Bank Satz 0, RE2 ROOM1060 Se_on 0x0a @0x00F48; P2 2080-Montage mit acht Sce_em_set auf Band 8;
+  P3 Rueckkehr, Bit 110), Gator-Ablauf der Szene (Clip 6 bis Bild 22, dann Clips 4/5/11/0/10, Leiche als Kind der
+  Part-6-Matrix), Kamera-Uebergabe auf den Eintritts-Cut (Cut_chg-Zwilling LAB_800402a0), Einstellung auf den Schluessel
+  nach dem Tod (90 Bilder, Form ROOM2010 sub03 Cut_chg/Cut_old/Cut_auto), Tor 2090/20A0 (RE2-Tuer-Handler LAB_80051514,
+  Ereignisse 19/20), Water Key = Item 0x34 mit Name/Text/Icon/Bild des nie ausgelegten Original-Eintrags 0x45 (DEBUG.BIN
+  @0x800c495c / @0x800c50de), Weltmodell RE2 Platform Key (ROOM7040 MD1 @0x00354C), eingebacken in
+  `engine/src/gen/gatorszene_r41_schluessel.inc`; Spinnen 0x25 in 2090/2091 verworfen. Haken ("Runde 41 Spur F"):
+  scd_vm.c, scd_room_setup.c, enemy_ai_boss_gator.c, platform/pc/main.c, audio_pc.c (BGM-Weiche 0xFF3C -> MAIN-Platz 0x3C
+  aus RE2/SOUND/MAIN1A.BGM), item_prompt_common.c, item_icon_common.c, itps_common.c, item_discard_common.c,
+  re15_inv_screen.c, inv_render_pc.c. Riegel probes/r41_gatorszene.cmake: 12 unit_r41_gatorszene_* (u. a. _abstand mit
+  dem RE2-Band 11402..13890 und 121..158 Bilder, aus den RE2-Daten gerechnet), integration_r41_gatorszene_leon / _elza /
+  _flucht / _flucht_elza / _tod / _tod_elza / _tod_r1 / _tod_r1_elza / _tod_explosion / _tod_explosion_elza. Werkzeuge
+  `tools/r41_gatorszene/`.
+* **G kanister2080** - NEU `engine/src/kanister2080_r41.c` (+ `include/re15_kanister2080_r41.h`): Installer 2080/2081/
+  2090/2091; P1 Knall + acht Zombies auf Band 8 (Tot-Bits 236..243); Szene nach der RE2-Schwaeche (HP < 25000
+  @0x80101ebc-dc): Kopfschuss ueber den Spielerschuss (RE2-Zeile 5, FUN_801092C4), Aufheben nach ROOM11B0 sub06, Kippen
+  nach RE2 ROOM40A0 sub10, Zeile 42 mit Wsleep wie RE2, Wurf und Fall nach RE2 ROOM7020 sub12/13, Rueckkehr mit demselben
+  Alligator (FG-E3), Anschwimmen im RE2-Zielmodus (FUN_800177c0). NEU `platform/pc/src/kanister2080_pc.c`
+  (Kanister-Zeichner, Knall, Tuer-Ton DOOR06 Satz 1, Aufschlag KANISTER2080.VBS, NPC-Schuss) und
+  `platform/pc/src/gator_fx_r41_pc.c` (Raum-ESP GATOR40A0 der Explosion; RE2-Kern-Zeilen 485..498 ab dem Start wie RE2
+  Boot 0x8002b6d4 / CORE00.ESP FUN_8001babc, G-E4). Daten `engine/src/gen/kanister2080_r41_texte.inc` und
+  `gen/r41_kanister2080_bank.inc`. Haken: re2_fx.c (Ops 4/6/37/38/41/42/69/78, Nachtrag 28), gator_re2_r41.c +
+  re15_gator_re2_r41.h (Todeskamera G-E1/G-E3, Kopf-Klemme G-E5, Fontaene, Scherben, Hals-Lenkung, Kippen; FG-E3/FG-E5),
+  enemy_ai_boss_gator.c (G-E1-Anker, Kopf-Klemme, Anschwimmen), gator_re2_pc.c (Scherben, Regionstest @0x80036534),
+  scd_room_setup.c, scd_vm.c, platform/pc/main.c, render_pc.c (RE15_TIM_SLOT_MAX 57, G-E6). Riegel
+  probes/r41_kanister2080.cmake: 20 unit_r41_kanister2080_*, integration_r41_kanister2080 / _kampf / _raumfremd.
+  Werkzeuge `tools/r41_kanister2080/`.
+* **M masken36** - Daten `shared_assets/PSX/MASKS/` (216 neue `ROOMxxxx_PRIcc.TIM` der Stages 3-6; 40 geaenderte
+  Dateien: 30 MSK der Stages 3-6, ROOM2030/2040 Kamera 7, ROOM20A0 Kamera 12 ohne 12_02), Ausschluss-Tabelle
+  `engine/src/gen/masken36_ausschluss_r37.inc`; gemeinsame Datei `include/re15_pri.h` RE15_PRI_MAX_MASKS_PER_CUT
+  105 -> 128 (Original: Maskenzahl als Byte @0x8003928c, Grenze 255; 128 = Breite der Ausschluss-Tabelle). Werkzeuge
+  `tools/maske/` (NEU platzieren_r41.py: Original-Atlas-Teile mit Lage per Bildvergleich und Tiefe aus der Kollisionszelle
+  mit RDT-Offset, Kamera des Spiels mit SquareRoot0 0x80065f60; dazu schliessen_r41.py, tiefe_zelle_r41.py,
+  zellen3d_r41.py, kacheln_r41.py, koerper_r41.py, rueckschritt_r41.py, zuordnung_r41.json; teilen_r41.py nicht
+  angewandt, M-E2), Tuer-Band der Saaten nach dem AOT-Scan @0x80042cac..0x80042ccc;
+  `analysis/esp_masken_2026-09-03/auswahl.json`: ROOM20A0 12_02 unter "_r41_nicht_gebaut". Riegel
+  probes/r41_masken36.cmake: unit_r41_masken36_loecher / _kurbel / _zellen3d / _fern / _stirn / _platziert / _teile /
+  _ordner, integration_r41_masken36_stage2 / _zelle / _zellen3d / _fern / _laufpruefung / _teile_a1..d2.
+* **pri/** (Nachtrag 33, master 1e0d0618): 113 Uebersichtsbilder `pri/STAGE3-6/<raum>/<cc>_port.png` ersetzt und eines
+  neu (STAGE4/4040/05_port.png), 22 schon gleich; Quelle `analysis/befunde_runde41/M_bilder/uebersicht/` (Stand M
+  Nachbesserung 5, 284b0202: 136 Bilder, davon 28 in Elza-Ordnern); nur *_port.png, keine Nutzer-Freistellung beruehrt.
+  Vorher 919cc1ed (Nachtrag 11, 204 von 214). Dazu 91aa781d: 57 Elza-Bilder (xxx1) bekommen das neue Leon-Bild, jeweils
+  nur wo das alte Elza-Bild bytegleich mit dem alten Leon-Bild war (Masken Leon/Elza bytegleich).
+* **Nicht geprueft:** PSX-Bau der Module F und G (kein PSn00bSDK auf der Maschine); die PSX-Fassung liest die
+  Port-Masken (MASKS) weiterhin nicht.
+* **Neue Assets:**
+  - `shared_assets/RE2/KANISTER40A0.MD1` (4964 B) und `.TIM` (33824 B) - byteidentisch aus RE2 ROOM40A0.RDT (Modell 1).
+  - `shared_assets/RE2/GATOR40A0.VBS` (34296 B) - RE2-Raumbrueller aus ROOM40A0 (Satz 0 Tod, Satz 1 Explosion),
+    geschnitten mit tools/r41_re2gator/gator40a0_se_cut.py.
+  - `shared_assets/RE2/VENTIL1080.RBJ` (13128 B), `.EDT`, `.VH`, `.VB` - bytegleich aus RE2 ROOM1080 (Dreh-Animation
+    und Drehgeraeusch; tools/r41_ventilkette/re2_ventil_export.py).
+  - `shared_assets/RE2/SOUND/SUB_25.BGM` (100688 B) - bytegleich `info/re2leon/COMMON/SOUND/SUB_25.BGM` (Alarm).
+  - `shared_assets/RE2/FILES/FILE31_title_page.TIM`, `FILE31_p00_page.TIM`, `FILE31_p01_page.TIM`, `FILE31_p02_page.TIM`,
+    `FILE31_title_paper.TIM` - Dokument "Technician's Note", gesetzt mit tools/r41_ventilkette/dokument_satz.py
+    (title_paper = Kopie von FILE17).
+  - `shared_assets/RE2/SOUND/MAIN1A.BGM` (228152 B) - RE2-Kampfmusik des Alligators, bytegleich aus
+    `info/re2leon/COMMON/SOUND/MAIN1A.BGM` (md5 01835748815e388e2519d4977d48aab5).
+  - `shared_assets/RE2/GATOR40A0.ESP` (3100 B) und `GATOR40A0_08/09/16/18/19/1A/26.TIM` - Effekt-Datei der
+    Kanister-Explosion und ihre sieben Texturen, bytegleich aus RE2 ROOM40A0.RDT.
+  - `shared_assets/RE2/KANISTER2080.VBS` (9864 B, md5 848c40f6c077d937fb025df9ae1bc62b) - RE2 ROOM40A0 Raumbank Satz 11
+    (der Kanister faellt ins Wasser), geschnitten mit tools/r41_kanister2080/kanister2080_se_cut.py.
+  - `shared_assets/PSX/MASKS/`: 53 Kameramasken aus Ihren Freistellungen (5924939d); dazu die Dateien der Spur M (216
+    neu, 40 geaendert, siehe oben).
+  - Eingebacken, ohne Paketdatei: Plakat, Zettel, Hebelbilder, Wasserflaeche (aus ROOM2080), Water Key (Modell, Textur,
+    Name, Icon, Bild), Texte der Kanister-Szene. Die Countdown-Schrift ist die schon gepackte `shared_assets/RE2/TEX.TIM`,
+    der Knall die schon vorhandene `engine/src/gen/knall_bank.inc`.
+  - Paket-Gate (release/make_package.sh check_tree, master 76b50a0c): die 23 neuen RE2-Dateien der Runde 41 (C:
+    FILE31-Seiten, SOUND/SUB_25.BGM, VENTIL1080.*; B: GATOR40A0.VBS, KANISTER40A0.*; F: SOUND/MAIN1A.BGM; G:
+    GATOR40A0.ESP + 7 TIM, KANISTER2080.VBS) muessen im Paket liegen, nicht leer und bytegleich sein; ebenso jede Datei
+    unter shared_assets/PSX/MASKS (am Stand 76b50a0c 474 Dateien, mit Spur M 690). Die Release-Skript-Tests nutzen eine
+    Attrappe und sind nicht betroffen.
+* **Speicher-Bits Bank 9** (eingetragen in tests/unit/test_r36_kartenbits.c k_port[]): Spur C 100 Leiter frei,
+  101 Ventil 13 offen, 102 Bruecke unten, 103 Flut gelaufen, 106 Pult 2050 auf 80 V, 107 "Technician's Note" genommen,
+  125 Sicherung im Ventilkasten 2010; Spur F 110 Ankunftsszene gesehen, 111 Water Key liegt, 112 Water Key genommen,
+  113 Tor 2090/20A0 aufgeschlossen; Spur G 114 2080 nach der Szene betreten (Knall), 115 Kanister-Szene gelaufen,
+  116 Kanister liegt im Becken, 117 Wurf ins Suedbecken.
+* **Port-Text-Ids** (Spur C): 2000/2001/20B0/20B1 Id 40; 2030/2031 Ids 40-55 (49 = Original-Satz); 2050/2051 Ids 40-44;
+  2010/2011 Ids 40-44; 20B0/20B1 Id 41; 2070/2071 Id 40. Spur F: 2090/2091 Ids 42/43 (Original-Saetze aus ROOM20A0).
+  Spur G: 2080/2081 Id 42.
+* **Angenommene Haken in gemeinsamen Dateien:** B5, A-E3, C-E3, C-E4/C-E5, E-E1/E-E5, H-E1, I-E1, J-E1. Formal noch
+  offen: Haken der Spur I in anim_select_common.c und platform/pc/main.c (Abnahme I 1, V2) und der Spur L in
+  platform/pc/main.c und scd_room_setup.c (Abnahme L 0, H4), je ausserhalb der Liste VERTRAG 1.3. Dazu FG-E3/FG-E5
+  (Spur G in Spur Bs Modulen), Nachtrag 28 (re2_fx.c), G-E6 (render_pc.c); die markierten Haken der Spur F (auch in
+  audio_pc.c und den Item-/Inventar-Dateien) bewertet Abnahme F 5 als vertragsgemaess; Spur M aendert in re15_pri.h nur
+  eine Konstante.
+* **Nachgezogene fremde Riegel** (neue Regel widerlegt alten Riegel, je mit Beleg): unit/integration_r36_gegnerzahl
+  (36 Plaetze, 35 Emitter), integration_r35_granate (Alligator-Platz aus re15_actor.h), probe_gator_sweep /
+  probe_r34_reaktion / probe_gator_fress, test_r36_dachkiste.cmake / test_r37_itemband.cmake (Querbezugs-Flags, C-E3),
+  unit_r38_spinnen teil_b (RE2-Giftkugel 100 - 20), unit_r36_zombieki_affen_block (E-E4: Haenger-Mass je Seed, drei
+  benannte Stellen), test_r39_dining1141_kampf (WARTE 60 -> 240, H-E1), unit_r36_g2_cursor_rahmen (d1edabbc). Spur F
+  (F-E1 und Querbezuege): unit_r36_tueren_schott, unit_r38_spinnen (2090 ohne Spinnen), unit_r30_tuer_verschlossen
+  (54 Plaetze, je ein Ton), integration_r41_re2gator (Kampf-Laeufe mit Bits 110/113, sechster Lauf ueber die
+  Ankunftsszene), integration_r38_wasser, integration_r37_itemband, integration_r41_wasser20b0_npc (je mit Bit 110 bzw.
+  110/113), probe_r26_inventar; Spur G: test_r41_re2gator.c um die Teile kamera, scherben und kopfklemme erweitert.
+* **Tests:** 14 Registrierdateien `tests/unit/probes/r41_*.cmake`, 38 Ablaufskripte `tests/integration/test_r41_*.cmake`
+  (mit F, G, M; F, G und M registrieren zusammen 67 Riegel, ctest -N im Integrationsbaum). Die sechs Ventilketten-Riegel
+  der Spur C (ohne _kette) brauchen zusammen etwa 92 min (RUN_SERIAL), _kette etwa 4 min, integration_r41_kanister2080_kampf
+  etwa 21 min (Abnahme G 4: 1240 s); fuer die Release-Suite einplanen (Abnahme C 6 (d), INT_belege/riegel_kette_laeufe.txt).
+* **Messschienen (nur Diagnose):** RE15_NPCSCHRITT_LOG, RE15_FOOT_DEBUG (NPC-Schritte); gator_boss.log, Testhaken
+  RE15_GATOR_KANISTER und RE15_GB_TEST=5 (Alligator); RE15_KAMERAHALT_LOG (Standbild); RE15_ZOMBIEFRESSER_LOG;
+  RE15_SPINNENANIM_LOG; RE15_FUSSANKER_LOG; RE15_KOLLISION_LOG; RE15_R41_HP_AT (Gift); RE15_K2080_GATOR_HP
+  (Alligator-HP beim Raumeintritt, Kanister-Szene nach einem Treffer), RE15_K2080_WURF_GIER (Wurfrichtung),
+  RE15_GATOR_FX_LOG (Explosions- und Kern-Quads je Bild); Zeilen [gatorszene] und [k2080] im debug.log.
+
 # v0.8.28 - 2026-10-23
 
 Ihr Auftrag vom 23.10. (Runde 40): "Also, bei ROOM 1120/1121: 1, 3 und 4 koennen wir gerne zuordnen. 1070/1071 wuerde

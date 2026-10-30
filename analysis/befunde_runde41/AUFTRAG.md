@@ -1031,3 +1031,82 @@ B's Modul, FG-E3/FG-E5): waehrend R1 bleibt der Kopf (Part 6/7 + Kanister) inner
 Wurzel (Port-Wahl, Form im Dossier belegen); der Original-Regionstest @0x80077a30 bleibt. Zusaetzlich den vorgeschalteten
 Regionstest der Scherben (FUN_800363f0 @0x80036534) nachziehen. Natuerlicher Verlauf v1/west/k/plat (Leon + Elza) messen.
 **G-E6 (V1, render_pc.c RE15_TIM_SLOT_MAX 56 -> 57):** angenommen (eine markierte Zeile, Spur D ist integriert; wie B5/J-E1).
+
+## 2026-10-25 17:55 — Nachtrag 31 (Nutzer-Antworten per Auswahl zu den Fragen der Nachbesserung F 5; Spur F)
+
+Bezug: Bilder F_belege/n5_gator_szene.png, n5_kampfbeginn.png, n5_ankunft_cut0.png (Baum r41_gatorszene).
+1. "Passt der kurze Durchbruch (RE2-Clip 6 nach Bild 22 gekuerzt)?" — **"So lassen"** (PORT-WAHL angenommen).
+2. "Kampfbeginn: der Alligator kommt von der Kamera aus ins Bild und fuellt rund 100 Bilder lang gross die rechte Bildhaelfte" —
+   **"Ändern: nicht vor der Kamera"**: Startlage so waehlen, dass er beim Kampfbeginn im Becken VOR Leon zu sehen ist und nicht
+   direkt vor der Linse der laufenden Kamera (Cut 0); der RE2-Kampfbeginn (F-E2: Abstand im RE2-Band 11430..13924, erster Kontakt
+   121..158 Bilder, Zonenbeziehung wie RE2) bleibt. Mass: Abstand der Gator-Teile zur Kamera / Bildanteil je Bild ueber die ersten
+   ~150 Bilder (Riegel), Bildbogen Leon + Elza.
+3. "Schluessel etwas kleiner (7x9 statt 8x10), gut zu erkennen?" — **"Ja, gut genug"**: die Groesse aus Nachbesserung 5 ist
+   angenommen; F-E2 Punkt 2 gilt fuer die Groesse damit als erfuellt (Helligkeit bleibt Pflicht).
+
+## 2026-10-25 17:57 — Nachtrag 32 (Wortlaut) + Orchestrator-Entscheid FG-E6 (Abschluss Alligator, Spuren F und G)
+
+> Wir müssen beim Aligator auch so langsam erst einmal zu einen Ende kommen, bis nächsten Samstag.... gut ist erst einmal gut genug
+
+**FG-E6:** Ziel: v0.8.29 bis Samstag 2026-10-31. Fuer F und G gibt es nach den LAUFENDEN Laeufen keine weiteren Laeufe (F: hoechstens
+die automatisch folgende Nachbesserung 6 des laufenden Laufs, darin Nachtrag 31 Punkt 2; G: Abnahme 4 ist die letzte). Abnahmen von
+F und G urteilen ab jetzt nach "gut genug": NICHT BESTANDEN nur bei blockierenden Fehlern - Absturz, Haenger/Softlock, Regression
+ausserhalb 2080/2090, ein Nutzer-Punkt fehlt ganz oder ist im Spiel kaputt. Feinheiten (Kamera-/Lagefeinheiten, Bildanteile,
+Toleranzen, Messluecken) kommen als "offen" in den Bericht und in die Release Notes und blockieren nicht. Danach integriert der
+Orchestrator F und G mit dieser Liste.
+
+## 2026-10-25 18:02 — Nachtrag 32b (Wortlaut; BERICHTIGT FG-E6) + Abschlussplan Runde 41
+
+> Nein, Ziel ist langsam mit allen fertig zu werden, den build zu bauen, und mit neuen Tokens am Samstag die Sachen nachträglich
+> zu verbessern....
+
+Nutzer-Wahl per Auswahl: **"Laufende Schritte fertig, N anhalten (Empfohlen)"**. Der "Samstag" ist KEIN Termin fuer v0.8.29,
+sondern der Zeitpunkt neuer Tokens fuer Nachbesserungen. Abschlussplan (ersetzt das Ziel in FG-E6; die Regel "gut genug" bleibt):
+- F: nur noch die laufende Abnahme 5 (keine Nachbesserung 6); Nachtrag 31 Punkt 2 (Kampfbeginn nicht vor der Kamera) -> Samstag.
+- G: laufende Nachbesserung 4 + Abnahme 4 (letzte). M: laufende Nachbesserung 5 + Abnahme 5 (keine Nachbesserung 6).
+- N (Nachtrag 30-30e): ANGEHALTEN 18:0x, Stand gesichert (r41/nachtrag30 bb7a0df6, Plakat 30d erzeugt, ungeprueft) -> Samstag.
+- Danach: Integration F/G/M ("gut genug": nur blockierende Fehler halten auf), volle Suite, Release v0.8.29; offene Punkte in die
+  Release Notes ("Ab Samstag").
+
+## 2026-10-25 19:34 — Nachtrag 33 (Nutzer-Entscheid per Auswahl; Spur M / Orchestrator)
+
+Frage: "M hat fuer die 61 geaenderten Kamerabilder neue Uebersichtsbilder mit dem jetzigen Maskenstand erzeugt
+(analysis/befunde_runde41/M_bilder/uebersicht/STAGEn/<raum>/<cc>_port.png). Sollen sie die alten unter pri/STAGE3-6 ersetzen,
+damit du am Samstag nach dem aktuellen Stand zeichnest?" — **"Ja, ersetzen (Empfohlen)"**: nur die *_port.png-Uebersichtsbilder
+dieser Kameras; Freistellungen und alles andere in pri/ bleiben unberuehrt. Ausfuehrung durch den Orchestrator NACH der
+Integration von M (endgueltiger Maskenstand), wie 919cc1ed.
+
+## 2026-10-26 01:19 — Orchestrator-Entscheid FG-E7 (Integration F+G+M: Querbezug Schluessel nach dem R1-Tod; der Nutzer kann widersprechen)
+
+Befund tests:FGM (wf_c43ce68b-6d7): vier F-Riegel rot (integration_r41_gatorszene_tod_r1/_elza, _tod_explosion/_elza). G's Kopf-Klemme
+(G-E5) verschiebt im R1-Todes-Clip den Anker: Leiche endet bei (3413,-23942) statt (3413,-25001); F's Schluessel-Lagewahl findet fuer
+Kamera 2 keinen Punkt mehr und nimmt Kamera 1 (Schluessel 3 x 3 statt 13 x 15 Bildpunkte). Rezept K3/KW (Kanister-Testhaken
+(4430,-26160), 840 vor der Suedwand). Im natuerlichen Ablauf (G-Kampfriegel, 5 Laeufe) haelt das Mass (10,6..16,3 px >= 10,4).
+**FG-E7 = Option (c) fuer v0.8.29 (Nachtrag 32b "gut genug", kein Blocker):** die vier Riegel bekommen eine Todeslage OHNE Kopf-Klemme
+(Lage aus G's natuerlichen Kampflaeufen, mit Beleg), die K3-Wandlage wird als OFFEN in die Release Notes ("Ab Samstag") geschrieben.
+Ab Samstag die eigentliche Behebung = Option (a): F's Schluessel-Lagewahl sucht weiter, wenn die beste Zonenkamera < 10,4 px liefert.
+
+## 2026-10-30 16:40 — Nachtrag 34 (Wortlaut; nach v0.8.29) + Abschlussplan v0.8.30
+
+> Ok, ziehe die neuen branches mit rein, und schließe den Rest ab. Betreff der Lautstärke, die Option scheint doch zu
+> funktionieren, aber selbst mit Lautstärke bei 10 ist es immer noch zu laut. Da muss wahrscheinlich doppelt so viel gedreht
+> werden und Standard sollte dann 50 sein.
+> Auch das mit der Kurbel scheint noch nicht gefixed - leon "fliegt" quasi immer noch an die richtige Position bis das drehen
+> dann los geht.
+> Bei Resident Evil 2 ist die Kurbel Animation offenbar deshalb nicht kaputt/fliegend, weil man EXPLIZIT die Items im Player
+> Inventory auswählen muss und dann genau richtig steht bei der Nutzung. Das möchte ich bei Key Items, die nicht Schlüssel sind
+> bei unseren Port auch haben!
+
+Frage: Sollen die Karten (Keycards, Master Keycards, Research Center ID Card) auch ueber das Inventar gehen? Antwort (Wortlaut):
+**"Schaue wie es in Resident Evil 2 gemacht wird, und mache es genauso."**
+
+**Stand:** Zweig claude/birkin-model-extensions-0rj5i3 ist in master (ff 4aaea9713, Windows-Baufix 64ab7eebc, 12/12 Tests).
+**Befund:** Die Kurbel IST ein Key Item: ROOM2010 "Will you take the Crank?", ROOM2020 msg 0 "It's a square hole.", msg 1 "Will
+you use the Crank?". RE1.5 fragt am Ort; RE2 benutzt ueber das Inventar.
+**N-E2 (Lautstaerke; der Nutzer kann widersprechen):** Verstaerkung = (Wert/100)^2 statt Wert/100 = doppelte Absenkung in dB bei
+gleicher Reglerstellung (100 = 1,0 unveraendert, 50 = 0,25, 30 = 0,09 entspricht dem alten 10, 10 = 0,01). Standard ohne
+Options-Datei = 50. PORT-WAHL (RE1.5/RE2 haben keine Lautstaerke, D_kleinkram_a.md §1).
+**Abschlussplan:** Spuren O (Key Items + Kurbel), P (Alligator-Reste), N (Rest Nachtrag 30 + N-E2; Panel erst nach Freigabe der
+Entwuerfe), Q (Reste); danach Integration, volle Suite, Release v0.8.30. Regel wie FG-E6: Abnahmen fallen nur bei
+blockierenden Fehlern oder einem nicht erfuellten Nutzer-Punkt durch; Feinheiten kommen als "offen" in die Release Notes;
+hoechstens EINE Nachbesserung je Spur.

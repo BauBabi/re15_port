@@ -71,11 +71,13 @@
 #include "re15_elzazombies_r39.h" /* Runde 39 Spur Q: Bank-9-Bits 95 + 96 (VERTRAG Runde 39 1.1; 96 Nachbesserung 3) */
 #include "re15_johnruf_r39.h"  /* Runde 39 Spur P: Bank-9-Bit 97 (VERTRAG Runde 39 1.1) */
 #include "re15_ventilkette_r41.h" /* Runde 41 Spur C: Bank-9-Bits 100-103, 106, 107 (VERTRAG Runde 41 1.1; 107 = Dokument, Nachbesserung 4) */
+#include "re15_gatorszene_r41.h" /* Runde 41 Spur F: Bank-9-Bits 110-113 (VERTRAG Runde 41 1.1) */
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "re15_kanister2080_r41.h"   /* Runde 41 Spur G: Bits 114-117 */
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -529,6 +531,14 @@ static const port_bit_t k_port[] = {
     { RE15_R41C_BANK, RE15_R41C_BIT_PULT2050,      "RE15_R41C_BIT_PULT2050",      "Schaltpult 2050 auf 80 V, ventilkette_r41.c panel_tick (Runde 41 C)" },
     { RE15_R41C_BANK, RE15_R41C_BIT_DOKUMENT,      "RE15_R41C_BIT_DOKUMENT",      "Dokument Technician's Note genommen (Taken-Bit Item 0x4E), ventilkette_r41.c install_2030 (Runde 41 C)" },
     { RE15_R41C_BANK, RE15_R41C_BIT_KASTEN,        "RE15_R41C_BIT_KASTEN",        "Sicherung im Ventil-Sicherungskasten 2010, gen/ventilkette_r41_programme.inc Set (Runde 41 C, Nachtrag 16)" },
+    { RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN, "RE15_GSZ_BIT_GESEHEN", "2090-Ankunftsszene gesehen, gatorszene_r41.c Programm 3 (Runde 41 F)" },
+    { RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT, "RE15_GSZ_BIT_LIEGT", "Water Key liegt beim toten Alligator, gatorszene_r41.c (Runde 41 F)" },
+    { RE15_GSZ_BANK, RE15_GSZ_BIT_GENOMMEN, "RE15_GSZ_BIT_GENOMMEN", "Water Key genommen (Item-Zone Taken-Bit), gatorszene_r41.c (Runde 41 F)" },
+    { RE15_GSZ_BANK, RE15_GSZ_BIT_TOR, "RE15_GSZ_BIT_TOR", "Tor 2090<->20A0 aufgeschlossen, gatorszene_r41.c (Runde 41 F)" },
+    { RE15_K2080_BANK, RE15_K2080_BIT_ANKUNFT, "RE15_K2080_BIT_ANKUNFT", "2080: Knall (Knall-Bank Satz 0) beim ersten Betreten nach Bit 110, kanister2080_r41.c (Runde 41 G)" },
+    { RE15_K2080_BANK, RE15_K2080_BIT_SZENE, "RE15_K2080_BIT_SZENE", "Marvin/John-Kanister-Szene gelaufen, kanister2080_r41.c (Runde 41 G)" },
+    { RE15_K2080_BANK, RE15_K2080_BIT_KANISTER, "RE15_K2080_BIT_KANISTER", "Kanister liegt im 2090-Becken, kanister2080_r41.c (Runde 41 G)" },
+    { RE15_K2080_BANK, RE15_K2080_BIT_SUEDWURF, "RE15_K2080_BIT_SUEDWURF", "Kanister-Wurf ins Suedbecken (sonst Nord), kanister2080_r41.c (Runde 41 G NB2)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 

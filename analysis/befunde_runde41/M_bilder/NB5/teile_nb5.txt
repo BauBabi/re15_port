@@ -1,0 +1,630 @@
+# Runde 41 Spur M, Nachbesserung 5 (Entscheid M-E2): Teile des Original-Vordergrundatlas je Sektion (platzieren_r41.py, Lauf pl_a2).
+# Lage: SSD-Verschiebung (dx,dy) Atlas->Bild, RMS / zweitbeste RMS (Regel 1/2). Koerper: Zelle x z breite tiefe, Typ, Band, Hoehe
+# (Oberkante auf der Eintrittsflaeche), RDT-Offset + 12 SCA-Bytes; Tiefe min..max der Bildpunkte (bucket(Eintritt)); px = neue Punkte.
+# OHNE = kein Koerper (Grund) -> nicht eingesetzt (Liste 'Fuer den Nutzer: Freistellungen').
+ROOM3040 Cut 1: neue Rechtecke 36 (erstes 19), neue Punkte 443
+  T1   ( -10, 126) RMS 11.78/19.19 px   327 | Zelle [-23700, -14400, 1950, 2300] Typ 1 Band 0 Hoehe -3285 @0x008E8 [9e 07 fc 08 6c a3 c0 c7 01 ff 00 03] automatisch | Tiefe 184..200, geerbt 36
+  T2   ( -53, 131) RMS 14.84/36.75 px   116 | Zelle [-24525, -16250, 4950, 2025] Typ 1 Band 0 Hoehe -3296 @0x00864 [56 13 e9 07 33 a0 86 c0 01 ff 00 03] automatisch | Tiefe 216..232, geerbt 0
+  T5   ( -34,  67) RMS 10.81/16.24 px   335 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T6   (  73,  89) RMS 14.24/30.01 px   320 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T23  (  64,   0) RMS 14.39/23.27 px    39 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T27  (-150, -42) RMS 11.67/63.54 px   405 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T30  (  17, -59) RMS  9.22/22.37 px   378 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T37  ( -92,   9) RMS  9.10/14.53 px   674 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.30)
+ROOM3040 Cut 2: neue Rechtecke 23 (erstes 105), neue Punkte 2451
+  T1   ( 149, 141) RMS 12.02/32.0 px   911 | Zelle [-21825, -12075, 2200, 13025] Typ 1 Band 1 Hoehe -2042 @0x00978 [98 08 e1 32 bf aa d5 d0 01 ff 00 13] automatisch | Tiefe 61..81, geerbt 0
+  T3   (  13, 107) RMS  8.98/22.01 px   761 | Zelle [-23700, -14400, 1950, 2300] Typ 1 Band 0 Hoehe -2032 @0x008E8 [9e 07 fc 08 6c a3 c0 c7 01 ff 00 03] automatisch | Tiefe 108..132, geerbt 0
+  T6   (  13, 107) RMS 12.39/25.05 px   129 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T8   ( 178,  96) RMS 12.90/21.09 px   219 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T9   (  53,  81) RMS 12.80/25.05 px   108 | Zelle [-23700, -14400, 1950, 2300] Typ 1 Band 0 Hoehe -2569 @0x008E8 [9e 07 fc 08 6c a3 c0 c7 01 ff 00 03] automatisch | Tiefe 101..117, geerbt 0
+  T11  (  47,  56) RMS 12.58/32.45 px   256 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.10)
+  T15  (  33,  63) RMS 13.67/51.61 px   117 | Zelle [-23700, -14400, 1950, 2300] Typ 1 Band 0 Hoehe -1374 @0x008E8 [9e 07 fc 08 6c a3 c0 c7 01 ff 00 03] automatisch | Tiefe 116..132, geerbt 37
+  T16  ( -21, 107) RMS 11.96/40.94 px   935 | OHNE: Kamera ueber dem Grundriss der Zelle (-17975,-16500 1775x13250): kein 3D-Urteil
+  T17  ( -35,  44) RMS 10.89/58.78 px   441 | OHNE: Kamera ueber dem Grundriss der Zelle (-17975,-16500 1775x13250): kein 3D-Urteil
+  T18  ( 200,  -4) RMS 12.83/22.38 px   155 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T19  ( 200,  -4) RMS 10.90/31.05 px   369 | Zelle [-21825, -12075, 2200, 13025] Typ 1 Band 1 Hoehe -2421 @0x00978 [98 08 e1 32 bf aa d5 d0 01 ff 00 13] automatisch | Tiefe 57..67, geerbt 0
+  T20  (-102,  -2) RMS 10.02/16.33 px   177 | OHNE: Kamera ueber dem Grundriss der Zelle (-17975,-16500 1775x13250): kein 3D-Urteil
+  T21  ( 241,   9) RMS 12.31/36.98 px    61 | Zelle [-21825, -12075, 2200, 13025] Typ 1 Band 1 Hoehe -1774 @0x00978 [98 08 e1 32 bf aa d5 d0 01 ff 00 13] automatisch | Tiefe 64..68, geerbt 0
+  T22  ( 200,  -4) RMS 12.56/25.96 px   124 | Zelle [-21825, -12075, 2200, 13025] Typ 1 Band 1 Hoehe -1971 @0x00978 [98 08 e1 32 bf aa d5 d0 01 ff 00 13] automatisch | Tiefe 62..70, geerbt 0
+ROOM3040 Cut 3: neue Rechtecke 23 (erstes 105), neue Punkte 4929
+  T2   ( -38, 109) RMS 10.10/74.12 px  1049 | Zelle [-16450, -18075, 2000, 14825] Typ 1 Band 1 Hoehe -1628 @0x0093C [d0 07 e9 39 be bf 65 b9 01 ff 00 13] automatisch | Tiefe 75..121, geerbt 353
+  T4   ( -79, 120) RMS  9.81/59.83 px  1069 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -1630 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 55..65, geerbt 1
+  T6   ( -69,  83) RMS 12.67/39.01 px   113 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.40); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.12)
+  T7   (  66,   6) RMS 10.98/18.07 px  3436 | OHNE: Kamera ueber dem Grundriss der Zelle (-21825,-12075 2200x13025): kein 3D-Urteil
+  T8   (  46,  83) RMS 10.22/16.43 px   147 | Zelle [-10425, -14850, 1625, 2450] Typ 1 Band 1 Hoehe -793 @0x009A8 [59 06 92 09 47 d7 fe c5 01 ff 00 13] automatisch | Tiefe 220..239, geerbt 20
+  T10  ( -67,  82) RMS 12.41/42.39 px   166 | Zelle [-16450, -18075, 2000, 14825] Typ 1 Band 1 Hoehe -1114 @0x0093C [d0 07 e9 39 be bf 65 b9 01 ff 00 13] automatisch | Tiefe 119..161, geerbt 0
+  T11  (  40,  48) RMS  9.24/33.92 px   665 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -1178 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 129..171, geerbt 0
+  T12  ( -70,  78) RMS 11.69/31.32 px   130 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -1087 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 78..98, geerbt 0
+  T15  (  40,  48) RMS  7.35/12.12 px   356 | Zelle [-8800, -13025, 4750, 1625] Typ 1 Band 0 Hoehe -1053 @0x00888 [8e 12 59 06 a0 dd 1f cd 01 ff 00 03] automatisch | Tiefe 209..228, geerbt 53
+  T17  ( -57,  35) RMS 10.70/18.54 px   158 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -589 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 131..148, geerbt 0
+  T19  (  17, -12) RMS 14.14/31.83 px    78 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T20  (  16,  16) RMS  9.61/20.85 px   320 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T21  (  17,   6) RMS  9.82/21.43 px   185 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T22  (  17, -12) RMS 11.41/22.68 px   184 | Zelle [-16450, -18075, 2000, 14825] Typ 1 Band 1 Hoehe -1530 @0x0093C [d0 07 e9 39 be bf 65 b9 01 ff 00 13] automatisch | Tiefe 163..189, geerbt 0
+  T23  (  17, -12) RMS 11.34/23.83 px    76 | Zelle [-16450, -18075, 2000, 14825] Typ 1 Band 1 Hoehe -1531 @0x0093C [d0 07 e9 39 be bf 65 b9 01 ff 00 13] automatisch | Tiefe 149..160, geerbt 0
+  T26  (  94, -47) RMS 13.54/33.59 px    74 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T29  (  94, -47) RMS  9.44/35.4 px   203 | Zelle [-12525, -18000, 3375, 3675] Typ 1 Band 1 Hoehe -1184 @0x00990 [2f 0d 5b 0e 13 cf b0 b9 01 ff 00 13] automatisch | Tiefe 215..228, geerbt 0
+  T31  ( 123,  72) RMS  9.27/65.74 px   941 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T33  (  94, -47) RMS  8.82/18.63 px   300 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T35  ( -55, -93) RMS 12.61/35.71 px   618 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.36)
+  T36  ( -55, -93) RMS 11.40/28.2 px   109 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.32); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.27)
+  T38  ( -55, -93) RMS  9.48/25.55 px   430 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.43); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.11)
+  T39  (  18, -66) RMS 10.47/17.7 px   337 | Zelle [-16450, -18075, 2000, 14825] Typ 1 Band 1 Hoehe -1022 @0x0093C [d0 07 e9 39 be bf 65 b9 01 ff 00 13] automatisch | Tiefe 68..77, geerbt 0
+  T40  ( -42,-126) RMS 12.75/53.56 px   389 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -2050 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 97..169, geerbt 0
+  T41  (  69,-138) RMS 11.27/46.82 px   147 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T42  ( -55, -93) RMS  9.71/37.44 px   742 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.47)
+  T43  (  69,-138) RMS 11.18/39.31 px   133 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T44  ( 244,-130) RMS 11.34/27.93 px   384 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.14)
+  T45  (  69,-138) RMS 10.80/23.0 px    43 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+ROOM3040 Cut 4: neue Rechtecke 23 (erstes 105), neue Punkte 3399
+  T1   ( 113,  42) RMS  9.45/52.37 px   244 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T4   (  89,  65) RMS  8.91/33.71 px   126 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.10)
+  T5   (  89,  65) RMS 10.11/23.06 px   102 | Zelle [-6950, -7900, 2000, 7400] Typ 1 Band 1 Hoehe -1120 @0x00960 [d0 07 e8 1c da e4 24 e1 01 ff 00 13] automatisch | Tiefe 177..183, geerbt 0
+  T8   (  90,  86) RMS  9.74/49.88 px   350 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -749 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 71..83, geerbt 6
+  T9   (  91,  59) RMS 14.11/34.61 px    22 | Zelle [-16450, -18075, 2000, 14825] Typ 1 Band 1 Hoehe -397 @0x0093C [d0 07 e9 39 be bf 65 b9 01 ff 00 13] automatisch | Tiefe 93..100, geerbt 0
+  T10  (  91,  59) RMS 10.72/21.28 px   132 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -1119 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 62..68, geerbt 0
+  T11  ( 103,  67) RMS  9.62/44.64 px   334 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -899 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 56..62, geerbt 0
+  T12  ( 100,  55) RMS  9.21/23.37 px   103 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -1122 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 53..56, geerbt 0
+  T14  (  59, -61) RMS  9.82/61.27 px   516 | Zelle [-20900, -1525, 15925, 1025] Typ 1 Band 1 Hoehe -638 @0x00924 [35 3e 01 04 5c ae 0b fa 01 ff 00 13] automatisch | Tiefe 155..231, geerbt 295
+  T15  (  59, -61) RMS 11.55/21.63 px    17 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T16  (  99,   0) RMS  9.60/31.21 px   971 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T17  (  59, -61) RMS 12.71/21.67 px    22 | Zelle [-8000, -5050, 2000, 1575] Typ 1 Band 1 Hoehe -398 @0x0096C [d0 07 27 06 c0 e0 46 ec 01 ff 00 13] automatisch | Tiefe 175..180, geerbt 0
+  T18  (  59, -61) RMS 10.11/61.65 px   402 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -1527 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 71..90, geerbt 0
+  T19  (  64, -94) RMS  9.66/66.65 px   564 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.30)
+  T20  ( 169, -75) RMS  8.92/16.19 px   476 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -1640 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 70..141, geerbt 21
+  T21  ( 161, -90) RMS 10.03/41.48 px   191 | Zelle [-20900, -1525, 15925, 1025] Typ 1 Band 1 Hoehe -598 @0x00924 [35 3e 01 04 5c ae 0b fa 01 ff 00 13] automatisch | Tiefe 153..167, geerbt 93
+  T22  ( 208, -77) RMS  8.79/63.48 px   464 | Zelle [-14700, -6900, 2000, 2000] Typ 5 Band 1 Hoehe -1026 @0x009C0 [d0 07 d0 07 94 c6 0c e5 05 ff 00 13] automatisch | Tiefe 85..97, geerbt 0
+  T24  ( 168, -66) RMS 10.40/45.98 px   216 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -1329 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 62..71, geerbt 0
+  T25  ( 193, -57) RMS  9.65/24.48 px    69 | Zelle [-16450, -18075, 2000, 14825] Typ 1 Band 1 Hoehe -1098 @0x0093C [d0 07 e9 39 be bf 65 b9 01 ff 00 13] automatisch | Tiefe 63..65, geerbt 0
+ROOM3040 Cut 5: neue Rechtecke 23 (erstes 105), neue Punkte 2713
+  T2   (  65,  98) RMS 10.17/21.27 px   932 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T3   (  96,  95) RMS 10.80/52.42 px   366 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -1805 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 57..63, geerbt 0
+  T5   (  33,  84) RMS 11.51/63.31 px   434 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.05)
+  T6   (   3, 126) RMS 12.10/68.41 px   175 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -1012 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 63..76, geerbt 0
+  T7   (  -3, 111) RMS 13.99/55.13 px    85 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -1027 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 87..105, geerbt 0
+  T13  (  66,  14) RMS  9.66/23.74 px   818 | Zelle [-12525, -18000, 3375, 3675] Typ 1 Band 0 Hoehe -2545 @0x0087C [2f 0d 5b 0e 13 cf b0 b9 01 ff 00 03] automatisch | Tiefe 186..209, geerbt 4
+  T15  (  -2,-110) RMS 11.06/86.11 px   242 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T16  (  76,  15) RMS 11.00/38.1 px   229 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -1047 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 64..90, geerbt 0
+  T18  (  -2,-110) RMS 16.57/67.8 px    21 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T19  (  66,  14) RMS 10.60/16.23 px   115 | Zelle [-16450, -18075, 2000, 14825] Typ 1 Band 1 Hoehe -1172 @0x0093C [d0 07 e9 39 be bf 65 b9 01 ff 00 13] automatisch | Tiefe 43..47, geerbt 0
+  T21  ( 230,  -9) RMS  8.62/27.86 px   617 | Zelle [-8800, -13025, 4750, 1625] Typ 1 Band 0 Hoehe -963 @0x00888 [8e 12 59 06 a0 dd 1f cd 01 ff 00 03] automatisch | Tiefe 205..223, geerbt 310
+  T22  ( 230,  -9) RMS 10.91/28.24 px   308 | Zelle [-14700, -6900, 2000, 2000] Typ 5 Band 1 Hoehe -639 @0x009C0 [d0 07 d0 07 94 c6 0c e5 05 ff 00 13] automatisch | Tiefe 76..86, geerbt 0
+ROOM3040 Cut 6: neue Rechtecke 23 (erstes 105), neue Punkte 5986
+  T1   (  -1,  90) RMS  8.46/31.49 px   772 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T3   (  -1, 103) RMS  8.97/43.86 px   897 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.04)
+  T4   ( -12, 126) RMS  7.41/33.37 px   772 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.02)
+  T5   ( 256,  92) RMS  9.09/38.45 px  1438 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -2020 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 31..40, geerbt 0
+  T6   ( 125,  48) RMS  9.53/29.81 px    60 | Zelle [-20900, -1525, 15925, 1025] Typ 1 Band 1 Hoehe -1212 @0x00924 [35 3e 01 04 5c ae 0b fa 01 ff 00 13] automatisch | Tiefe 183..188, geerbt 0
+  T7   ( 125,  48) RMS  8.11/16.03 px    39 | Zelle [-20900, -1525, 15925, 1025] Typ 1 Band 1 Hoehe -1171 @0x00924 [35 3e 01 04 5c ae 0b fa 01 ff 00 13] automatisch | Tiefe 189..193, geerbt 0
+  T8   (-170, 152) RMS  6.25/16.34 px   696 | OHNE: Kamera ueber dem Grundriss der Zelle (-16450,-18075 2000x14825): kein 3D-Urteil
+  T9   (-156,  40) RMS  8.83/24.59 px   152 | Zelle [-20900, -1525, 15925, 1025] Typ 1 Band 1 Hoehe -1236 @0x00924 [35 3e 01 04 5c ae 0b fa 01 ff 00 13] automatisch | Tiefe 152..159, geerbt 0
+  T10  ( 125,  48) RMS  7.26/44.8 px    85 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -840 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 121..129, geerbt 0
+  T11  (  46,  45) RMS  7.79/34.24 px   220 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T12  ( 125,  48) RMS  8.70/20.19 px    93 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -854 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 115..120, geerbt 0
+  T13  (  95,  83) RMS  7.95/36.05 px   335 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -1074 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 59..74, geerbt 0
+  T14  (  46,  45) RMS  8.12/29.83 px    92 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -739 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 119..125, geerbt 0
+  T15  (  32,  71) RMS  9.37/22.23 px   583 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -1260 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 36..61, geerbt 0
+  T16  (  -6,  36) RMS  9.24/27.02 px   439 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -745 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 101..117, geerbt 0
+  T17  (-165,  40) RMS  7.49/55.72 px   137 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -857 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 99..105, geerbt 0
+  T18  (-165,  40) RMS  8.41/28.34 px   164 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -854 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 97..100, geerbt 0
+  T19  (  -6,  36) RMS  9.48/23.23 px    37 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -747 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 99..102, geerbt 0
+  T20  (-113,  32) RMS  9.56/46.81 px   789 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -746 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 82..97, geerbt 0
+  T21  (  15,  21) RMS  8.56/14.48 px    18 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -1336 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 55..56, geerbt 0
+  T23  (  15,  21) RMS  8.17/55.03 px   517 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -1124 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 60..85, geerbt 57
+  T24  (  15,  21) RMS  4.52/7.8 px   103 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -1175 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 55..64, geerbt 0
+  T26  (  82, -25) RMS  6.97/16.29 px   553 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -1945 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 38..54, geerbt 0
+  T28  (  -7, -57) RMS  8.13/23.77 px   105 | Zelle [-6950, -7900, 2000, 7400] Typ 1 Band 1 Hoehe -875 @0x00960 [d0 07 e8 1c da e4 24 e1 01 ff 00 13] automatisch | Tiefe 156..174, geerbt 0
+  T29  (  -7, -57) RMS  9.70/24.43 px   247 | Zelle [-8000, -5050, 2000, 1575] Typ 1 Band 1 Hoehe -553 @0x0096C [d0 07 27 06 c0 e0 46 ec 01 ff 00 13] automatisch | Tiefe 152..168, geerbt 2
+ROOM3040 Cut 7: neue Rechtecke 23 (erstes 105), neue Punkte 5867
+  T3   (  -2, 138) RMS 10.11/58.69 px   890 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -2277 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 47..72, geerbt 0
+  T4   (  36, 114) RMS 12.02/32.61 px   126 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -2007 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 72..81, geerbt 0
+  T6   (  47,  69) RMS 11.82/42.83 px   303 | OHNE: Kamera ueber dem Grundriss der Zelle (-16450,-18075 2000x14825): kein 3D-Urteil
+  T7   ( 152,  56) RMS 11.10/43.53 px   823 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -2700 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 35..71, geerbt 0
+  T9   ( 157,  28) RMS 12.84/66.82 px   791 | Zelle [-17700, -28900, 13700, 2000] Typ 1 Band 0 Hoehe -2500 @0x00828 [84 35 d0 07 dc ba 1c 8f 01 ff 00 03] automatisch | Tiefe 339..360, geerbt 44
+  T12  (  27,  22) RMS 11.77/34.4 px   825 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -2157 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 52..109, geerbt 0
+  T14  ( 171,  31) RMS 12.20/22.7 px    83 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -2239 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 48..64, geerbt 0
+  T16  ( 136,  16) RMS 10.18/39.45 px   970 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -2535 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 25..36, geerbt 0
+  T18  ( 160,   3) RMS 11.16/37.14 px   211 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -2236 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 34..45, geerbt 0
+  T19  ( 103,  41) RMS  9.38/34.12 px  1017 | OHNE: Kamera ueber dem Grundriss der Zelle (-16450,-18075 2000x14825): kein 3D-Urteil
+  T20  ( 159, -12) RMS 10.83/18.11 px   538 | OHNE: Kamera ueber dem Grundriss der Zelle (-16450,-18075 2000x14825): kein 3D-Urteil
+  T21  ( 136,  16) RMS 12.20/35.78 px    69 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -2258 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 32..35, geerbt 0
+  T22  ( 160,   3) RMS 10.02/32.81 px   536 | Zelle [-17975, -16500, 1775, 13250] Typ 1 Band 1 Hoehe -2233 @0x00948 [ef 06 c2 33 c9 b9 8c bf 01 ff 00 13] automatisch | Tiefe 28..40, geerbt 0
+  T23  ( -98, -79) RMS 10.85/35.51 px   372 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.22); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.30)
+  T25  ( -98, -79) RMS  9.00/24.43 px    52 | Zelle [-12525, -18000, 3375, 3675] Typ 1 Band 1 Hoehe -884 @0x00990 [2f 0d 5b 0e 13 cf b0 b9 01 ff 00 13] automatisch | Tiefe 159..163, geerbt 0
+  T26  (  29, -56) RMS 10.60/24.02 px   404 | Zelle [-12525, -18000, 3375, 3675] Typ 1 Band 0 Hoehe -1319 @0x0087C [2f 0d 5b 0e 13 cf b0 b9 01 ff 00 03] automatisch | Tiefe 163..196, geerbt 0
+  T28  ( -98, -79) RMS 11.81/19.2 px    57 | Zelle [-10425, -14850, 1625, 2450] Typ 1 Band 1 Hoehe -915 @0x009A8 [59 06 92 09 47 d7 fe c5 01 ff 00 13] automatisch | Tiefe 137..143, geerbt 0
+  T29  (  29, -56) RMS 11.25/17.3 px   182 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T30  ( -98, -79) RMS 13.43/20.81 px    30 | Zelle [-10800, -18750, 2000, 2075] Typ 1 Band 0 Hoehe -1291 @0x008AC [d0 07 1b 08 d0 d5 c2 b6 01 ff 00 03] automatisch | Tiefe 207..209, geerbt 0
+ROOM3040 Cut 8: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T4   (  82, 123) RMS 11.38/40.62 px   442 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.45); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.05)
+  T5   (  46,  -1) RMS 10.23/18.18 px    42 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T7   ( -15,  63) RMS 12.32/31.46 px   112 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T8   (  27,   7) RMS 10.15/35.17 px  1325 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.17); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T11  (-224,  -6) RMS 10.52/20.89 px  1560 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T12  (  46,  -1) RMS  9.02/27.52 px    50 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+ROOM3040 Cut 9: neue Rechtecke 25 (erstes 103), neue Punkte 3721
+  T2   ( -35,   0) RMS  8.65/13.81 px   505 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T3   (  98,  52) RMS 10.30/87.4 px   380 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T4   (   1,  -2) RMS  8.75/16.06 px   599 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T6   (  17,  43) RMS  9.65/36.59 px   838 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T7   (  17,  43) RMS  9.17/35.65 px  2375 | Zelle [-10800, -18750, 2000, 2075] Typ 1 Band 0 Hoehe -4093 @0x008AC [d0 07 1b 08 d0 d5 c2 b6 01 ff 00 03] automatisch | Tiefe 80..88, geerbt 0
+  T8   ( 193,  72) RMS  9.98/45.61 px  1346 | Zelle [-12525, -18000, 3375, 3675] Typ 1 Band 0 Hoehe -2435 @0x0087C [2f 0d 5b 0e 13 cf b0 b9 01 ff 00 03] automatisch | Tiefe 53..62, geerbt 0
+  T11  (  54,  24) RMS  9.33/16.75 px   285 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T12  ( 243, -26) RMS  9.40/44.75 px   227 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T15  ( 243, -26) RMS  9.71/34.99 px   212 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T17  ( 285,  91) RMS  9.74/15.22 px   704 | OHNE: Zelle auf mehreren Baendern [0, 1]
+ROOM3040 Cut 10: neue Rechtecke 8 (erstes 15), neue Punkte 117
+  T2   (  -2, 201) RMS  9.31/76.12 px   117 | Zelle [-17700, -28900, 13700, 2000] Typ 1 Band 0 Hoehe -1340 @0x00828 [84 35 d0 07 dc ba 1c 8f 01 ff 00 03] automatisch | Tiefe 41..48, geerbt 0
+  T3   (   2,  30) RMS  9.03/18.9 px   102 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T4   ( -19,  39) RMS 10.22/75.93 px   116 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+ROOM3040 Cut 11: neue Rechtecke 23 (erstes 105), neue Punkte 528
+  T1   (  46,   0) RMS 10.62/18.41 px  2077 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T4   (  12,  -1) RMS  9.92/24.5 px  1142 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T5   (  73,  -1) RMS 10.55/17.53 px   520 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T7   (  16,  41) RMS  9.85/41.77 px   285 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T8   ( -44,  68) RMS 11.45/18.1 px   822 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.48); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.03)
+  T9   (  16,  41) RMS 10.65/21.63 px   176 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.33)
+  T11  ( 156, -31) RMS 10.75/60.71 px   394 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt
+  T12  (  -9,  -5) RMS 11.80/33.65 px   528 | Zelle [-16350, -21600, 6650, 2150] Typ 1 Band 0 Hoehe -3721 @0x008B8 [fa 19 66 08 22 c0 a0 ab 01 ff 00 03] automatisch | Tiefe 245..280, geerbt 0
+ROOM3040 Cut 12: neue Rechtecke 23 (erstes 105), neue Punkte 3245
+  T1   ( -58, 127) RMS 10.87/45.29 px   515 | OHNE: Kamera ueber dem Grundriss der Zelle (-20900,-1525 15925x1025): kein 3D-Urteil
+  T6   (  50,  58) RMS 12.07/23.03 px   222 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.12)
+  T8   (   8,   8) RMS 12.20/24.37 px    46 | Zelle [-6950, -7900, 2000, 7400] Typ 1 Band 1 Hoehe -1467 @0x00960 [d0 07 e8 1c da e4 24 e1 01 ff 00 13] automatisch | Tiefe 129..137, geerbt 0
+  T9   ( 117,  66) RMS 12.77/28.87 px    43 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -3023 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 59..63, geerbt 0
+  T10  ( 117,  66) RMS 12.63/25.89 px   296 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -2725 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 49..67, geerbt 0
+  T11  (  50,  58) RMS 11.33/27.91 px   590 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -3071 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 47..63, geerbt 0
+  T12  ( 145,  38) RMS 10.97/35.58 px   847 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.30)
+  T13  (   8,   8) RMS 12.19/30.56 px   154 | Zelle [-8000, -5050, 2000, 1575] Typ 1 Band 1 Hoehe -1502 @0x0096C [d0 07 27 06 c0 e0 46 ec 01 ff 00 13] automatisch | Tiefe 120..138, geerbt 0
+  T14  (  76,  72) RMS  9.75/64.03 px   537 | OHNE: Kamera ueber dem Grundriss der Zelle (-20900,-1525 15925x1025): kein 3D-Urteil
+  T15  ( 141,   4) RMS 11.48/39.74 px  1299 | Zelle [-16500, -5325, 6675, 2075] Typ 1 Band 1 Hoehe -3134 @0x00954 [13 1a 1b 08 8c bf 33 eb 01 ff 00 13] automatisch | Tiefe 47..95, geerbt 0
+  T16  ( 117,  66) RMS 10.88/24.29 px    61 | Zelle [-14700, -6900, 2000, 2000] Typ 5 Band 1 Hoehe -763 @0x009C0 [d0 07 d0 07 94 c6 0c e5 05 ff 00 13] automatisch | Tiefe 80..84, geerbt 0
+  T17  (  50,  58) RMS 10.27/38.17 px    83 | Zelle [-14700, -6900, 2000, 2000] Typ 5 Band 1 Hoehe -789 @0x009C0 [d0 07 d0 07 94 c6 0c e5 05 ff 00 13] automatisch | Tiefe 77..82, geerbt 0
+  T19  ( 106, -88) RMS 11.42/59.17 px   426 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -2534 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 92..124, geerbt 0
+  T20  ( 218,-126) RMS 12.22/50.68 px   345 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T21  (  65,  16) RMS 10.72/19.71 px    91 | Zelle [-14700, -6900, 2000, 2000] Typ 5 Band 1 Hoehe -1880 @0x009C0 [d0 07 d0 07 94 c6 0c e5 05 ff 00 13] automatisch | Tiefe 68..73, geerbt 0
+  T22  ( 217,-115) RMS 12.42/20.06 px   128 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -2648 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 99..114, geerbt 0
+  T25  (  65,  16) RMS 10.91/27.12 px    28 | Zelle [-14700, -6900, 2000, 2000] Typ 5 Band 1 Hoehe -1088 @0x009C0 [d0 07 d0 07 94 c6 0c e5 05 ff 00 13] automatisch | Tiefe 74..76, geerbt 0
+ROOM3040 Cut 13: neue Rechtecke 23 (erstes 105), neue Punkte 3014
+  T4   (   4,  92) RMS 12.03/66.84 px  1286 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -3450 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 47..92, geerbt 0
+  T8   (-106,  78) RMS  9.84/41.12 px  1172 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -2773 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 44..79, geerbt 0
+  T10  (-143,   1) RMS  9.20/14.52 px   375 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T13  (  99, -35) RMS 10.18/15.45 px    98 | Zelle [-10425, -14850, 1625, 2450] Typ 1 Band 1 Hoehe -500 @0x009A8 [59 06 92 09 47 d7 fe c5 01 ff 00 13] automatisch | Tiefe 108..115, geerbt 0
+  T14  (-143,   6) RMS 10.92/24.28 px    38 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T15  (-143,   6) RMS  9.32/32.24 px    39 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -2067 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 62..66, geerbt 0
+  T17  ( 107,  65) RMS  9.25/34.79 px   158 | OHNE: Kamera ueber dem Grundriss der Zelle (-16450,-18075 2000x14825): kein 3D-Urteil
+  T18  (-143,   6) RMS 10.29/20.27 px   159 | Zelle [-12500, -12800, 7500, 5600] Typ 1 Band 1 Hoehe -2060 @0x00984 [4c 1d e0 15 2c cf 00 ce 01 ff 00 13] automatisch | Tiefe 57..63, geerbt 0
+  T19  (  94, -11) RMS  9.20/58.27 px  1024 | OHNE: Kamera ueber dem Grundriss der Zelle (-16450,-18075 2000x14825): kein 3D-Urteil
+  T22  (-101, -74) RMS  9.90/34.38 px   260 | Zelle [-10425, -14850, 1625, 2450] Typ 1 Band 0 Hoehe -2069 @0x008DC [59 06 92 09 47 d7 fe c5 01 ff 00 03] automatisch | Tiefe 110..126, geerbt 0
+  T23  (-101, -74) RMS 13.25/41.58 px   226 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T25  ( -72,-125) RMS 11.00/31.35 px   549 | OHNE: Zelle auf mehreren Baendern [0, 1]
+ROOM3050 Cut 0: neue Rechtecke 30 (erstes 98), neue Punkte 1924
+  T3   ( 221, 140) RMS  8.97/46.37 px   920 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.44); Band 4: kein Bodenkontakt
+  T4   ( 197, 200) RMS  8.68/29.83 px   621 | Zelle [-22975, -7975, 1450, 1450] Typ 3 Band 0 Hoehe -834 @0x009CC [aa 05 aa 05 41 a6 d9 e0 03 ff 00 03] automatisch | Tiefe 51..55, geerbt 0
+  T5   (  37, 111) RMS 13.20/46.47 px    63 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.43); Band 4: kein Bodenkontakt
+  T6   (  46, 131) RMS  9.28/23.09 px    30 | Zelle [-22125, -13100, 2000, 17050] Typ 1 Band 0 Hoehe -859 @0x008C4 [d0 07 9a 42 93 a9 d4 cc 01 ff 00 03] automatisch | Tiefe 98..152, geerbt 0
+  T7   (  62, 161) RMS  9.68/26.99 px   211 | Zelle [-25900, -8050, 1450, 1450] Typ 3 Band 0 Hoehe -575 @0x009C0 [aa 05 aa 05 d4 9a 8e e0 03 ff 00 03] automatisch | Tiefe 64..68, geerbt 0
+  T8   (   7,  95) RMS  5.57/21.65 px   256 | Zelle [-27600, -13400, 2000, 17325] Typ 1 Band 0 Hoehe -1678 @0x008B8 [d0 07 ad 43 30 94 a8 cb 01 ff 00 03] automatisch | Tiefe 151..242, geerbt 0
+  T10  ( -15, 130) RMS  8.22/25.47 px   598 | Zelle [-27600, -13400, 2000, 17325] Typ 1 Band 0 Hoehe -856 @0x008B8 [d0 07 ad 43 30 94 a8 cb 01 ff 00 03] automatisch | Tiefe 73..107, geerbt 0
+  T11  ( -97, 160) RMS  7.70/30.07 px   113 | Zelle [-25900, -8050, 1450, 1450] Typ 3 Band 0 Hoehe -577 @0x009C0 [aa 05 aa 05 d4 9a 8e e0 03 ff 00 03] automatisch | Tiefe 64..65, geerbt 0
+  T12  ( -25, 106) RMS  7.30/21.62 px    95 | Zelle [-25900, -3525, 1450, 1450] Typ 3 Band 0 Hoehe -567 @0x009B4 [aa 05 aa 05 d4 9a 3b f2 03 ff 00 03] automatisch | Tiefe 131..136, geerbt 0
+ROOM3050 Cut 1: neue Rechtecke 23 (erstes 105), neue Punkte 3262
+  T1   (  46, 124) RMS 11.39/42.79 px    77 | Zelle [-27000, -25200, 7575, 2000] Typ 1 Band 0 Hoehe -1509 @0x00918 [97 1d d0 07 88 96 90 9d 01 ff 00 03] automatisch | Tiefe 311..313, geerbt 0
+  T7   (  46, 144) RMS  8.78/29.21 px    86 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.43); Band 4: kein Bodenkontakt
+  T9   (  71, 108) RMS 10.81/23.68 px    20 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T10  ( 263, 126) RMS  2.26/8.04 px  1242 | Zelle [-25900, -8050, 1450, 1450] Typ 3 Band 0 Hoehe -1031 @0x009C0 [aa 05 aa 05 d4 9a 8e e0 03 ff 00 03] automatisch | Tiefe 57..61, geerbt 105
+  T14  ( 187,  19) RMS  8.32/37.02 px   424 | Zelle [-25900, -12100, 1450, 1450] Typ 3 Band 0 Hoehe -1750 @0x009D8 [aa 05 aa 05 d4 9a bc d0 03 ff 00 03] automatisch | Tiefe 120..129, geerbt 0
+  T17  (  59,  53) RMS  4.63/7.82 px   250 | Zelle [-27600, -13400, 2000, 17325] Typ 1 Band 0 Hoehe -831 @0x008B8 [d0 07 ad 43 30 94 a8 cb 01 ff 00 03] automatisch | Tiefe 80..92, geerbt 0
+  T18  ( 169,  89) RMS  6.10/19.94 px   101 | Zelle [-25900, -8050, 1450, 1450] Typ 3 Band 0 Hoehe -399 @0x009C0 [aa 05 aa 05 d4 9a 8e e0 03 ff 00 03] automatisch | Tiefe 59..62, geerbt 0
+  T19  (  13,  71) RMS  3.47/11.21 px   411 | Zelle [-22975, -7975, 1450, 1450] Typ 3 Band 0 Hoehe -501 @0x009CC [aa 05 aa 05 41 a6 d9 e0 03 ff 00 03] automatisch | Tiefe 52..54, geerbt 0
+  T20  ( -70,  39) RMS  3.57/10.16 px   522 | Zelle [-22125, -13100, 2000, 17050] Typ 1 Band 0 Hoehe -1073 @0x008C4 [d0 07 9a 42 93 a9 d4 cc 01 ff 00 03] automatisch | Tiefe 38..106, geerbt 208
+  T21  (  58,  86) RMS  3.35/10.87 px   235 | Zelle [-22975, -7975, 1450, 1450] Typ 3 Band 0 Hoehe -243 @0x009CC [aa 05 aa 05 41 a6 d9 e0 03 ff 00 03] automatisch | Tiefe 52..54, geerbt 2
+ROOM3050 Cut 4: neue Rechtecke 11 (erstes 105), neue Punkte 3007
+  T2   (  27,   0) RMS 13.22/32.65 px    90 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T4   ( -59, 159) RMS 12.33/19.9 px  3007 | Zelle [-16375, -20250, 1100, 1100] Typ 3 Band 0 Hoehe -1053 @0x009FC [4c 04 4c 04 09 c0 e6 b0 03 ff 00 03] automatisch | Tiefe 59..68, geerbt 68
+  T9   ( -14,  52) RMS  9.05/106.81 px   224 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+ROOM3050 Cut 5: neue Rechtecke 10 (erstes 105), neue Punkte 485
+  T5   ( 164,  28) RMS  8.66/26.0 px   232 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T6   ( 141,  65) RMS 11.14/17.34 px   405 | Zelle [-12325, -20250, 1100, 1100] Typ 3 Band 0 Hoehe -1098 @0x00A08 [4c 04 4c 04 db cf e6 b0 03 ff 00 03] automatisch | Tiefe 104..109, geerbt 0
+  T9   ( -45, -96) RMS  6.79/13.77 px   258 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.15)
+  T10  ( -45, -96) RMS 10.69/20.38 px    58 | Zelle [-10350, -18050, 2225, 22000] Typ 1 Band 4 Hoehe -1306 @0x00A44 [b1 08 f0 55 92 d7 7e b9 01 ff 00 43] automatisch | Tiefe 172..179, geerbt 0
+  T14  ( 258, -70) RMS 11.52/22.6 px   369 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.27)
+  T16  ( -40, -13) RMS 17.15/39.61 px    22 | Zelle [-4500, -6350, 5200, 1200] Typ 1 Band 0 Hoehe -1968 @0x00984 [50 14 b0 04 6c ee 32 e7 01 ff 00 03] automatisch | Tiefe 316..321, geerbt 0
+ROOM3050 Cut 6: neue Rechtecke 61 (erstes 19), neue Punkte 1224
+  T2   ( 136,  -2) RMS 11.30/25.32 px   525 | Zelle [-4950, -11075, 1100, 2000] Typ 1 Band 4 Hoehe -911 @0x00A68 [4c 04 d0 07 aa ec bd d4 01 ff 00 43] automatisch | Tiefe 147..175, geerbt 234
+  T3   ( 142,  -2) RMS 11.50/19.89 px   335 | Zelle [-4950, -11250, 6050, 200] Typ 1 Band 4 Hoehe -715 @0x00A74 [a2 17 c8 00 aa ec 0e d4 01 ff 00 43] automatisch | Tiefe 149..168, geerbt 0
+  T6   (  37,  94) RMS 14.95/36.9 px   211 | Zelle [-4950, -7200, 1100, 2650] Typ 1 Band 0 Hoehe -2076 @0x00954 [4c 04 5a 0a aa ec e0 e3 01 ff 00 03] automatisch | Tiefe 209..235, geerbt 0
+  T8   (  53,  94) RMS 14.87/33.88 px   209 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.40); Band 4: kein Bodenkontakt
+  T15  (   6, 117) RMS 12.48/19.45 px   153 | Zelle [-20700, -13300, 8650, 1550] Typ 1 Band 0 Hoehe -581 @0x00924 [ca 21 0e 06 24 af 0c cc 01 ff 00 03] automatisch | Tiefe 78..81, geerbt 0
+ROOM3050 Cut 7: neue Rechtecke 40 (erstes 88), neue Punkte 2140
+  T4   (-114, 108) RMS 16.05/32.06 px    93 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T5   (-103,  93) RMS 16.37/35.36 px   103 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T6   (  12,  49) RMS  8.68/45.48 px   994 | Zelle [-4950, -11975, 1100, 2675] Typ 1 Band 0 Hoehe -2381 @0x00960 [4c 04 73 0a aa ec 39 d1 01 ff 00 03] automatisch | Tiefe 105..123, geerbt 0
+  T7   (-147,  43) RMS 10.52/46.19 px   153 | Zelle [-4950, -7200, 1100, 2650] Typ 1 Band 0 Hoehe -2149 @0x00954 [4c 04 5a 0a aa ec e0 e3 01 ff 00 03] automatisch | Tiefe 135..145, geerbt 0
+  T8   (-147,  43) RMS 10.33/50.87 px   146 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T9   (-147,  43) RMS 10.99/24.85 px   117 | Zelle [-4950, -7200, 1100, 2650] Typ 1 Band 0 Hoehe -1733 @0x00954 [4c 04 5a 0a aa ec e0 e3 01 ff 00 03] automatisch | Tiefe 135..139, geerbt 0
+  T10  ( 106, -81) RMS 10.99/34.23 px   137 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T11  (  49,  79) RMS  8.32/34.4 px   501 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.02); Band 4: kein Bodenkontakt
+  T12  (  86,  56) RMS 10.29/28.21 px   432 | Zelle [-4950, -11975, 1100, 2675] Typ 1 Band 0 Hoehe -1034 @0x00960 [4c 04 73 0a aa ec 39 d1 01 ff 00 03] automatisch | Tiefe 110..117, geerbt 0
+  T13  (  86,  56) RMS 10.57/19.79 px    98 | Zelle [-4950, -11975, 1100, 2675] Typ 1 Band 0 Hoehe -1050 @0x00960 [4c 04 73 0a aa ec 39 d1 01 ff 00 03] automatisch | Tiefe 109..111, geerbt 0
+  T14  (  86,  56) RMS 10.72/31.54 px   142 | Zelle [-4950, -7200, 1100, 2650] Typ 1 Band 0 Hoehe -460 @0x00954 [4c 04 5a 0a aa ec e0 e3 01 ff 00 03] automatisch | Tiefe 134..139, geerbt 0
+  T15  (  86,  56) RMS  9.93/30.15 px   342 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.02); Band 4: kein Bodenkontakt
+  T16  (  86,  56) RMS 11.27/35.42 px   204 | Zelle [-4950, -11975, 1100, 2675] Typ 1 Band 0 Hoehe -451 @0x00960 [4c 04 73 0a aa ec 39 d1 01 ff 00 03] automatisch | Tiefe 117..122, geerbt 0
+ROOM3050 Cut 8: neue Rechtecke 79 (erstes 44), neue Punkte 2025
+  T2   ( 154, 142) RMS 10.22/48.03 px   236 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.04)
+  T3   (  36, 132) RMS 11.16/76.36 px   869 | Zelle [-900, -25268, 2000, 29150] Typ 1 Band 4 Hoehe -1721 @0x00A80 [d0 07 de 71 7c fc 4c 9d 01 ff 00 43] automatisch | Tiefe 112..190, geerbt 76
+  T4   ( 144, 173) RMS 10.51/33.62 px   203 | Zelle [-4950, -7200, 1100, 2000] Typ 1 Band 4 Hoehe -1326 @0x00A5C [4c 04 d0 07 aa ec e0 e3 01 ff 00 43] automatisch | Tiefe 69..72, geerbt 0
+  T5   ( 150, 201) RMS 11.85/18.04 px   219 | Zelle [-4950, -7200, 1100, 2000] Typ 1 Band 4 Hoehe -1134 @0x00A5C [4c 04 d0 07 aa ec e0 e3 01 ff 00 43] automatisch | Tiefe 58..61, geerbt 0
+  T6   ( 135, 165) RMS 10.86/38.61 px   218 | Zelle [-4500, -6350, 5200, 1200] Typ 1 Band 4 Hoehe -1415 @0x00AA4 [50 14 b0 04 6c ee 32 e7 01 ff 00 43] automatisch | Tiefe 73..77, geerbt 0
+  T7   ( 145, 167) RMS 10.30/19.76 px    69 | Zelle [-4950, -7200, 1100, 2000] Typ 1 Band 4 Hoehe -824 @0x00A5C [4c 04 d0 07 aa ec e0 e3 01 ff 00 43] automatisch | Tiefe 82..84, geerbt 0
+  T9   (  28, 153) RMS 11.68/29.8 px    70 | Zelle [-4500, -6350, 5200, 1200] Typ 1 Band 4 Hoehe -1060 @0x00AA4 [50 14 b0 04 6c ee 32 e7 01 ff 00 43] automatisch | Tiefe 77..79, geerbt 0
+  T10  (  98, 193) RMS 11.16/56.43 px   377 | Zelle [-4950, -7200, 1100, 2000] Typ 1 Band 4 Hoehe -844 @0x00A5C [4c 04 d0 07 aa ec e0 e3 01 ff 00 43] automatisch | Tiefe 58..65, geerbt 0
+  T12  ( 205,  24) RMS 10.36/101.46 px   328 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+ROOM3050 Cut 9: neue Rechtecke 39 (erstes 89), neue Punkte 532
+  T1   (  14, 131) RMS 13.22/44.23 px   219 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.48)
+  T2   (  -1, 118) RMS 12.90/69.56 px   285 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.33)
+  T4   (  -1,  70) RMS 14.28/80.87 px    94 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T6   (  27, 145) RMS  9.56/30.83 px   441 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.17)
+  T8   (  -6,  66) RMS 12.83/120.3 px   307 | Zelle [-900, -25268, 2000, 29150] Typ 1 Band 4 Hoehe -1767 @0x00A80 [d0 07 de 71 7c fc 4c 9d 01 ff 00 43] automatisch | Tiefe 190..342, geerbt 47
+  T9   (  40,  63) RMS 12.71/51.85 px   174 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.35)
+  T10  (  44,  56) RMS 12.12/51.97 px   965 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.46)
+  T13  (  40,  63) RMS 13.66/29.34 px   103 | Zelle [-4950, -7200, 1100, 2000] Typ 1 Band 4 Hoehe -1428 @0x00A5C [4c 04 d0 07 aa ec e0 e3 01 ff 00 43] automatisch | Tiefe 102..107, geerbt 0
+  T14  (  13,  75) RMS 17.15/58.04 px    44 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T15  ( -20,  64) RMS 12.17/61.37 px   226 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T17  ( -20,  64) RMS 15.32/72.02 px   122 | Zelle [-4950, -7200, 1100, 2000] Typ 1 Band 4 Hoehe -985 @0x00A5C [4c 04 d0 07 aa ec e0 e3 01 ff 00 43] automatisch | Tiefe 95..104, geerbt 0
+  T19  ( -43, -49) RMS 12.56/116.82 px   332 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+ROOM3050 Cut 11: neue Rechtecke 5 (erstes 95), neue Punkte 3031
+  T1   (  19, 123) RMS 10.27/50.53 px   413 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T2   (  93, 148) RMS  9.77/18.24 px  3031 | Zelle [-12100, -18850, 1500, 1000] Typ 1 Band 4 Hoehe -2021 @0x00A98 [dc 05 e8 03 bc d0 5e b6 01 ff 00 43] automatisch | Tiefe 69..73, geerbt 143
+  T5   (-156, 118) RMS  9.93/28.53 px   443 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T6   (-158,  91) RMS 14.01/40.09 px   438 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+ROOM3050 Cut 12: neue Rechtecke 23 (erstes 19), neue Punkte 1861
+  T1   ( 190, 179) RMS  9.00/16.3 px   987 | OHNE: Zelle auf mehreren Baendern [0, 4]
+  T2   (  69, 192) RMS  9.88/23.49 px  1452 | Zelle [-22925, -18050, 14750, 1250] Typ 1 Band 4 Hoehe -1869 @0x00A38 [9e 39 e2 04 73 a6 7e b9 01 ff 00 43] automatisch | Tiefe 43..104, geerbt 44
+  T3   ( 233, 139) RMS  9.76/20.31 px  1017 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.06)
+  T4   ( 149, 112) RMS  9.66/32.22 px   409 | Zelle [-25000, -18050, 2050, 1250] Typ 1 Band 4 Hoehe -2505 @0x00AD4 [02 08 e2 04 58 9e 7e b9 01 01 02 40] automatisch | Tiefe 245..271, geerbt 86
+  T6   (  62, 209) RMS  7.39/83.66 px   219 | OHNE: Zelle auf mehreren Baendern [0, 4]
+ROOM3050 Cut 13: neue Rechtecke 23 (erstes 105), neue Punkte 2322
+  T4   ( -49, 128) RMS  9.62/27.88 px  1314 | Zelle [-22925, -18050, 14750, 1250] Typ 1 Band 4 Hoehe -5244 @0x00A38 [9e 39 e2 04 73 a6 7e b9 01 ff 00 43] automatisch | Tiefe 9..15, geerbt 0
+  T5   ( -49, 128) RMS  9.34/16.78 px   209 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.37); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T6   ( 172,  57) RMS  9.91/80.27 px   826 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.38)
+  T7   ( 173,  87) RMS 10.22/52.95 px   335 | Zelle [-27000, -25250, 2000, 8350] Typ 1 Band 0 Hoehe -5769 @0x008F4 [d0 07 9e 20 88 96 5e 9d 01 ff 00 03] automatisch | Tiefe 167..212, geerbt 0
+  T8   (  65, 121) RMS  9.56/27.19 px   673 | Zelle [-21450, -25200, 2000, 5450] Typ 1 Band 0 Hoehe -5520 @0x0090C [d0 07 4a 15 36 ac 90 9d 01 ff 00 03] automatisch | Tiefe 112..171, geerbt 132
+  T9   (  64,  87) RMS 10.17/46.53 px   318 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.29); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T10  ( -49, 128) RMS  9.16/14.01 px   281 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.42); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+ROOM30A0 Cut 0: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T1   (  81, 159) RMS  7.33/36.81 px   881 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T3   (  33, 199) RMS  7.42/17.56 px   274 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T5   ( -25, 211) RMS 10.79/45.74 px   148 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.25)
+  T6   ( 129, 205) RMS  8.97/22.77 px   158 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+ROOM30A0 Cut 1: neue Rechtecke 11 (erstes 61), neue Punkte 453
+  T1   (   0,  33) RMS  9.72/29.05 px   986 | OHNE: Band 0: kein Bodenkontakt
+  T5   ( 127,  65) RMS  6.34/13.68 px   381 | Zelle [-19700, 8800, 3350, 2125] Typ 1 Band 0 Hoehe -2031 @0x00468 [16 0d 4d 08 0c b3 60 22 01 ff 00 03] automatisch | Tiefe 77..82, geerbt 0
+  T7   (  13,  94) RMS  9.51/40.28 px    72 | Zelle [-19700, 8800, 3350, 2125] Typ 1 Band 0 Hoehe -1369 @0x00468 [16 0d 4d 08 0c b3 60 22 01 ff 00 03] automatisch | Tiefe 77..79, geerbt 0
+ROOM30A0 Cut 2: neue Rechtecke 3 (erstes 17), neue Punkte 524
+  T1   (   0, 102) RMS 10.06/19.91 px   524 | Zelle [-28575, 18225, 9200, 2450] Typ 1 Band 0 Hoehe -1609 @0x00474 [f0 23 92 09 61 90 31 47 01 ff 00 03] automatisch | Tiefe 84..91, geerbt 0
+ROOM30A0 Cut 3: neue Rechtecke 15 (erstes 105), neue Punkte 872
+  T4   ( -52, 121) RMS  7.86/29.1 px   872 | Zelle [-24419, 17438, 1635, 1635] Typ 3 Band 0 Hoehe -1541 @0x00498 [63 06 63 06 9d a0 1e 44 03 ff 00 03] automatisch | Tiefe 35..47, geerbt 0
+  T5   ( -20,  81) RMS  9.58/22.76 px   427 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+ROOM30A0 Cut 4: neue Rechtecke 56 (erstes 42), neue Punkte 1839
+  T3   ( -14, 114) RMS  8.74/25.16 px  1501 | Zelle [-24419, 17438, 1635, 1635] Typ 3 Band 0 Hoehe -1855 @0x00498 [63 06 63 06 9d a0 1e 44 03 ff 00 03] automatisch | Tiefe 51..67, geerbt 0
+  T4   ( -25,  84) RMS 10.14/18.0 px   338 | Zelle [-28575, 18225, 9200, 2450] Typ 1 Band 0 Hoehe -1476 @0x00474 [f0 23 92 09 61 90 31 47 01 ff 00 03] automatisch | Tiefe 78..138, geerbt 26
+ROOM30A0 Cut 5: neue Rechtecke 61 (erstes 67), neue Punkte 1618
+  T2   ( 180, 125) RMS  9.59/33.69 px   333 | Zelle [-28575, 18225, 9200, 2450] Typ 1 Band 0 Hoehe -2419 @0x00474 [f0 23 92 09 61 90 31 47 01 ff 00 03] automatisch | Tiefe 38..70, geerbt 0
+  T6   ( -27, 204) RMS  9.57/16.44 px    53 | Zelle [-28575, 18225, 9200, 2450] Typ 1 Band 0 Hoehe -2411 @0x00474 [f0 23 92 09 61 90 31 47 01 ff 00 03] automatisch | Tiefe 34..42, geerbt 0
+  T7   ( 204, 101) RMS  7.91/30.78 px   159 | Zelle [-28575, 18225, 9200, 2450] Typ 1 Band 0 Hoehe -2405 @0x00474 [f0 23 92 09 61 90 31 47 01 ff 00 03] automatisch | Tiefe 41..70, geerbt 0
+  T8   ( -27, 204) RMS  7.47/12.26 px    50 | Zelle [-28575, 18225, 9200, 2450] Typ 1 Band 0 Hoehe -2419 @0x00474 [f0 23 92 09 61 90 31 47 01 ff 00 03] automatisch | Tiefe 32..41, geerbt 0
+  T9   ( 120,  98) RMS 10.07/15.86 px   551 | Zelle [-28575, 18225, 9200, 2450] Typ 1 Band 0 Hoehe -2413 @0x00474 [f0 23 92 09 61 90 31 47 01 ff 00 03] automatisch | Tiefe 36..78, geerbt 211
+  T10  (  88, 130) RMS 10.43/19.88 px   472 | Zelle [-28575, 18225, 9200, 2450] Typ 1 Band 0 Hoehe -2406 @0x00474 [f0 23 92 09 61 90 31 47 01 ff 00 03] automatisch | Tiefe 34..72, geerbt 41
+ROOM30E0 Cut 6: neue Rechtecke 22 (erstes 35), neue Punkte 189
+  T1   (  43,  25) RMS  9.62/97.77 px   289 | OHNE: Band 0: kein Bodenkontakt
+  T2   ( 104, 146) RMS 11.75/22.7 px   700 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.17)
+  T3   (  -8, 124) RMS  9.85/32.66 px    61 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1462 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 164..175, geerbt 0
+  T4   (  16, 126) RMS  8.18/42.15 px   162 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.18)
+  T5   (  64, 130) RMS  8.87/37.68 px   548 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.13)
+  T6   (  -9, 123) RMS  8.51/33.51 px    68 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1479 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 152..163, geerbt 0
+  T7   (  -7, 121) RMS  8.77/20.08 px    60 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1499 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 177..190, geerbt 0
+  T8   (  -4, 117) RMS  8.99/29.76 px    84 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.20)
+  T9   (  34, 120) RMS  9.71/16.14 px   319 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.43)
+  T10  (  -9, 109) RMS  8.53/44.05 px    76 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.40)
+  T11  (  24,  93) RMS  8.83/23.36 px    41 | OHNE: Band 0: kein Bodenkontakt
+  T12  (  14, 110) RMS  8.33/32.93 px   241 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.18)
+  T14  ( -17, 102) RMS  8.43/35.55 px   104 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.15)
+ROOM30E0 Cut 7: neue Rechtecke 75 (erstes 53), neue Punkte 1670
+  T1   ( 235,  79) RMS  7.75/56.86 px    73 | OHNE: Band 0: kein Bodenkontakt
+  T3   (  58, 125) RMS  9.27/30.18 px   164 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1597 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 204..278, geerbt 0
+  T5   (  15, 126) RMS  9.49/15.88 px    53 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1542 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 180..191, geerbt 0
+  T6   (-214, 130) RMS  8.94/31.39 px   407 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1495 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 67..79, geerbt 0
+  T7   ( 250,  29) RMS  8.20/90.63 px   274 | OHNE: Band 0: kein Bodenkontakt
+  T8   ( -83, 126) RMS  9.10/44.21 px   137 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1526 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 118..130, geerbt 0
+  T12  (   0, 124) RMS  9.40/24.63 px    58 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1545 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 168..179, geerbt 0
+  T13  ( -16, 125) RMS 10.14/26.51 px    63 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1502 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 156..166, geerbt 0
+  T14  ( -55, 125) RMS  8.70/33.13 px    85 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1517 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 130..141, geerbt 0
+  T24  (-176, 122) RMS  8.73/19.07 px   273 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1497 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 80..92, geerbt 0
+  T25  ( -37, 118) RMS  8.83/32.63 px    72 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1510 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 143..154, geerbt 0
+  T26  ( 128, 124) RMS 11.08/22.06 px   339 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.32)
+  T27  (-147, 111) RMS  8.86/31.85 px   204 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1504 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 93..105, geerbt 0
+  T28  (-120, 103) RMS  8.14/42.47 px   154 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1501 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 105..117, geerbt 0
+  T30  (-124,  90) RMS 12.41/26.98 px   461 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.32)
+ROOM30E0 Cut 8: neue Rechtecke 81 (erstes 36), neue Punkte 1741
+  T2   (-219, 123) RMS  9.18/26.41 px   450 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1498 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 59..67, geerbt 0
+  T7   (-175, 115) RMS  8.64/55.76 px   339 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1511 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 68..80, geerbt 0
+  T10  (-143, 106) RMS  9.04/48.33 px   242 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1506 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 80..91, geerbt 0
+  T12  (-116,  96) RMS  9.97/37.21 px   181 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1524 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 92..104, geerbt 0
+  T13  ( -93,  88) RMS  9.55/27.34 px   129 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1518 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 104..115, geerbt 0
+  T14  ( -72,  79) RMS  9.12/31.69 px   122 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1547 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 116..127, geerbt 0
+  T15  (-138,  69) RMS  9.20/22.18 px   135 | OHNE: Band 0: kein Bodenkontakt
+  T17  (-138,  69) RMS  9.43/17.38 px    36 | Zelle [22275, 7200, 2000, 10050] Typ 1 Band 0 Hoehe -1209 @0x00600 [d0 07 42 27 03 57 20 1c 01 ff 00 03] automatisch | Tiefe 153..154, geerbt 0
+  T18  (-138,  69) RMS  9.00/13.66 px    38 | Zelle [22275, 7200, 2000, 10050] Typ 1 Band 0 Hoehe -1222 @0x00600 [d0 07 42 27 03 57 20 1c 01 ff 00 03] automatisch | Tiefe 148..148, geerbt 0
+  T20  (-138,  69) RMS  9.66/17.11 px    48 | Zelle [22275, 7200, 2000, 10050] Typ 1 Band 0 Hoehe -1146 @0x00600 [d0 07 42 27 03 57 20 1c 01 ff 00 03] automatisch | Tiefe 159..160, geerbt 0
+  T22  (-115,  37) RMS  9.32/14.21 px   138 | OHNE: Band 0: kein Bodenkontakt
+  T23  (-116,  37) RMS  9.95/21.68 px    75 | Zelle [1775, 7150, 22500, 2000] Typ 1 Band 0 Hoehe -1450 @0x005E8 [e4 57 d0 07 ef 06 ee 1b 01 ff 00 03] automatisch | Tiefe 108..110, geerbt 0
+  T24  (-116,  37) RMS 10.03/21.41 px    81 | Zelle [22275, 7200, 2000, 10050] Typ 1 Band 0 Hoehe -1391 @0x00600 [d0 07 42 27 03 57 20 1c 01 ff 00 03] automatisch | Tiefe 126..127, geerbt 0
+  T27  ( 133, -91) RMS 11.69/127.36 px   214 | OHNE: Band 0: kein Bodenkontakt
+ROOM30E0 Cut 9: neue Rechtecke 48 (erstes 80), neue Punkte 1447
+  T1   ( 172, 142) RMS  9.21/45.58 px   421 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.22)
+  T2   ( -56, 198) RMS  8.77/50.79 px   546 | Zelle [22275, 7200, 2000, 10050] Typ 1 Band 0 Hoehe -1556 @0x00600 [d0 07 42 27 03 57 20 1c 01 ff 00 03] automatisch | Tiefe 52..72, geerbt 0
+  T3   ( -67, 172) RMS  9.47/42.26 px   351 | Zelle [22275, 7200, 2000, 10050] Typ 1 Band 0 Hoehe -1604 @0x00600 [d0 07 42 27 03 57 20 1c 01 ff 00 03] automatisch | Tiefe 65..83, geerbt 0
+  T4   ( -73, 156) RMS  9.28/37.78 px   243 | Zelle [22275, 7200, 2000, 10050] Typ 1 Band 0 Hoehe -1626 @0x00600 [d0 07 42 27 03 57 20 1c 01 ff 00 03] automatisch | Tiefe 76..94, geerbt 0
+  T5   ( -51, 132) RMS  9.27/38.37 px   304 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.15)
+  T6   ( 281,  35) RMS  7.81/94.21 px  1542 | OHNE: Band 0: kein Bodenkontakt
+  T7   ( -77, 135) RMS  9.79/34.5 px   168 | Zelle [22275, 7200, 2000, 10050] Typ 1 Band 0 Hoehe -1672 @0x00600 [d0 07 42 27 03 57 20 1c 01 ff 00 03] automatisch | Tiefe 87..105, geerbt 0
+  T8   ( -88, 116) RMS 10.03/23.17 px   139 | Zelle [22250, 15300, 7200, 2000] Typ 1 Band 0 Hoehe -1526 @0x0060C [20 1c d0 07 ea 56 c4 3b 01 ff 00 03] automatisch | Tiefe 115..123, geerbt 0
+ROOM4040 Cut 7: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T1   ( 119,  45) RMS  9.33/26.38 px   432 | OHNE: Band 0: kein Bodenkontakt
+  T2   (  95,  69) RMS  8.53/40.99 px   532 | OHNE: kein Sehstrahl des Teils tritt in den Grundriss der Zelle (-29449,-20886 19540x19499)
+ROOM4040 Cut 12: neue Rechtecke 19 (erstes 105), neue Punkte 723
+  T2   ( -45,  57) RMS 10.54/22.65 px   723 | Zelle [-8875, 4500, 11200, 11200] Typ 2 Band 0 Hoehe -3329 @0x00830 [c0 2b c0 2b 55 dd 94 11 02 ff 00 03] automatisch | Tiefe 125..170, geerbt 0
+  T5   (  81,  32) RMS 10.48/32.84 px  1051 | OHNE: Kamera ueber dem Grundriss der Zelle (-2075,-2300 11200x11200): kein 3D-Urteil
+ROOM4080 Cut 2: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T2   (  61,   0) RMS  9.99/67.29 px   924 | OHNE: Band 0: kein Bodenkontakt
+ROOM4080 Cut 3: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T4   ( -73,   0) RMS  7.93/52.91 px   523 | OHNE: Band 0: kein Bodenkontakt
+ROOM4080 Cut 8: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T3   ( -33, 139) RMS 11.06/26.68 px   412 | OHNE: Kamera ueber dem Grundriss der Zelle (-6550,-2325 8300x8300): kein 3D-Urteil
+  T4   ( -91, 128) RMS 10.91/51.65 px   505 | OHNE: Kamera ueber dem Grundriss der Zelle (-6550,-2325 8300x8300): kein 3D-Urteil
+  T6   ( 211,  24) RMS 14.27/34.64 px   370 | OHNE: Kamera ueber dem Grundriss der Zelle (-6550,-2325 8300x8300): kein 3D-Urteil
+ROOM40A0 Cut 7: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T4   (-152, 154) RMS  8.40/14.55 px  1462 | OHNE: Zelltyp 8 (Kapsel, Form nicht modelliert)
+ROOM5020 Cut 2: neue Rechtecke 21 (erstes 11), neue Punkte 678
+  T3   (  -8, 152) RMS 11.86/22.32 px   305 | Zelle [-16428, -27516, 24875, 1250] Typ 1 Band 0 Hoehe -1427 @0x007EC [2b 61 e2 04 d4 bf 84 94 01 ff 00 03] automatisch | Tiefe 90..99, geerbt 0
+  T4   ( -24, 176) RMS 14.94/42.74 px   373 | Zelle [-8525, -27525, 1500, 1525] Typ 1 Band 0 Hoehe -903 @0x00810 [dc 05 f5 05 b3 de 7b 94 01 ff 00 03] automatisch | Tiefe 83..91, geerbt 0
+  T10  (-169,  42) RMS  9.73/28.86 px   520 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+ROOM5020 Cut 3: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T3   ( -45,  82) RMS  7.26/14.93 px   357 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T4   ( -60, 124) RMS  8.44/19.48 px   273 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+ROOM5020 Cut 5: neue Rechtecke 31 (erstes 53), neue Punkte 577
+  T3   (  65,  43) RMS  9.03/15.29 px  1859 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T7   (  90,  34) RMS  9.11/15.67 px   577 | Zelle [6367, -27516, 2070, 16695] Typ 1 Band 0 Hoehe -2466 @0x0087C [16 08 37 41 df 18 84 94 01 ff 00 03] automatisch | Tiefe 227..258, geerbt 0
+ROOM5020 Cut 7: neue Rechtecke 23 (erstes 105), neue Punkte 793
+  T6   ( -96, -45) RMS 10.50/26.43 px   496 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T7   (-119,   6) RMS  9.57/21.04 px   514 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T8   (-116,  16) RMS  9.25/24.9 px   793 | Zelle [-14775, -21075, 2225, 6425] Typ 1 Band 0 Hoehe -1884 @0x007F8 [b1 08 19 19 49 c6 ad ad 01 ff 00 03] automatisch | Tiefe 82..110, geerbt 0
+ROOM5020 Cut 9: neue Rechtecke 23 (erstes 105), neue Punkte 658
+  T5   ( -37,  78) RMS  7.39/19.67 px   310 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T6   ( -42,  52) RMS  7.16/20.58 px   282 | OHNE: Band 0: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T10  ( -54, -15) RMS  7.43/25.9 px   129 | Zelle [-16433, -27516, 2070, 16695] Typ 1 Band 4 Hoehe -1 @0x00960 [16 08 37 41 cf bf 84 94 01 ff 00 43] automatisch | Tiefe 252..268, geerbt 1
+  T12  ( -56, -29) RMS  8.45/16.63 px    99 | Zelle [-16433, -27516, 2070, 16695] Typ 1 Band 4 Hoehe -496 @0x00960 [16 08 37 41 cf bf 84 94 01 ff 00 43] automatisch | Tiefe 239..256, geerbt 0
+  T16  (  73,  36) RMS  8.78/14.84 px   430 | Zelle [-16433, -27516, 2070, 16695] Typ 1 Band 0 Hoehe -517 @0x007E0 [16 08 37 41 cf bf 84 94 01 ff 00 03] automatisch | Tiefe 71..139, geerbt 67
+ROOM5020 Cut 11: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T3   (-200, 118) RMS  7.84/16.51 px   308 | OHNE: Band 0: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T4   (-208, 144) RMS  9.82/41.51 px   487 | OHNE: Zelle auf mehreren Baendern [0, 4]
+  T10  ( -90,  23) RMS  9.92/18.66 px  1978 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.36); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+ROOM5050 Cut 1: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T7   ( -35,  63) RMS 10.12/25.91 px   193 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T8   ( -35,  63) RMS 10.55/21.22 px    82 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.12)
+ROOM5050 Cut 2: neue Rechtecke 18 (erstes 105), neue Punkte 488
+  T6   ( 100,  23) RMS 14.26/39.48 px   174 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T7   (  52,  47) RMS 11.45/66.41 px   119 | Zelle [-15300, -25250, 2000, 7675] Typ 1 Band 0 Hoehe -1467 @0x003A0 [d0 07 fb 1d 3c c4 5e 9d 01 ff 00 03] automatisch | Tiefe 129..138, geerbt 0
+  T8   ( 264,  49) RMS 11.55/35.08 px    21 | Zelle [-13892, -28100, 2220, 13340] Typ 1 Band 0 Hoehe -645 @0x00370 [ac 08 1c 34 bc c9 3c 92 01 ff 00 03] automatisch | Tiefe 153..155, geerbt 0
+  T9   ( 264,  49) RMS 13.95/81.27 px   348 | Zelle [-15300, -25250, 2000, 7675] Typ 1 Band 0 Hoehe -1139 @0x003A0 [d0 07 fb 1d 3c c4 5e 9d 01 ff 00 03] automatisch | Tiefe 128..136, geerbt 0
+ROOM5050 Cut 3: neue Rechtecke 23 (erstes 105), neue Punkte 1511
+  T3   (  67,  93) RMS 10.22/43.93 px  1104 | Zelle [-20825, -26025, 7500, 2575] Typ 1 Band 0 Hoehe -3504 @0x003AC [4c 1d 0f 0a a7 ae 57 9a 01 ff 00 03] automatisch | Tiefe 34..42, geerbt 0
+  T4   (  29, 180) RMS 10.68/36.23 px   407 | Zelle [-20825, -26025, 7500, 2575] Typ 1 Band 0 Hoehe -2629 @0x003AC [4c 1d 0f 0a a7 ae 57 9a 01 ff 00 03] automatisch | Tiefe 40..55, geerbt 0
+ROOM5090 Cut 11: neue Rechtecke 23 (erstes 104), neue Punkte 1199
+  T3   (  95, 120) RMS 13.08/42.17 px  1199 | Zelle [2700, -21150, 1325, 1325] Typ 3 Band 0 Hoehe -2046 @0x009EC [2d 05 2d 05 8c 0a 62 ad 03 ff 00 03] automatisch | Tiefe 81..100, geerbt 5
+  T12  (  18,  34) RMS 11.50/18.42 px   540 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+ROOM5090 Cut 12: neue Rechtecke 23 (erstes 105), neue Punkte 4995
+  T1   ( 189,  66) RMS 17.17/37.93 px   911 | Zelle [-2473, -15600, 29565, 2866] Typ 1 Band 0 Hoehe -3128 @0x00908 [7d 73 32 0b 57 f6 10 c3 01 ff 00 03] automatisch | Tiefe 242..349, geerbt 128
+  T8   ( 270,  47) RMS 16.57/30.71 px   562 | Zelle [-2473, -15600, 29565, 2866] Typ 1 Band 0 Hoehe -1868 @0x00908 [7d 73 32 0b 57 f6 10 c3 01 ff 00 03] automatisch | Tiefe 153..175, geerbt 0
+  T10  ( 232, 114) RMS 17.69/36.06 px  2045 | Zelle [4050, -21700, 16175, 2000] Typ 1 Band 0 Hoehe -1172 @0x009C8 [2f 3f d0 07 d2 0f 3c ab 01 ff 00 03] automatisch | Tiefe 47..62, geerbt 0
+  T14  ( 282,  25) RMS 18.10/28.49 px   324 | Zelle [-2473, -15600, 29565, 2866] Typ 1 Band 0 Hoehe -825 @0x00908 [7d 73 32 0b 57 f6 10 c3 01 ff 00 03] automatisch | Tiefe 144..175, geerbt 25
+  T16  ( -19, -46) RMS 15.30/23.51 px   626 | OHNE: Band 0: kein Bodenkontakt
+  T17  (  60,   0) RMS 17.72/41.38 px  1153 | Zelle [4050, -21700, 16175, 2000] Typ 1 Band 0 Hoehe -2229 @0x009C8 [2f 3f d0 07 d2 0f 3c ab 01 ff 00 03] automatisch | Tiefe 56..67, geerbt 0
+  T23  (  -4,-124) RMS 14.50/29.09 px   288 | OHNE: Band 0: kein Bodenkontakt
+ROOM5090 Cut 13: neue Rechtecke 44 (erstes 84), neue Punkte 1479
+  T8   (  62, -64) RMS 13.53/35.7 px   703 | OHNE: Band 0: kein Bodenkontakt
+  T10  (  36,  75) RMS 16.89/41.21 px   442 | Zelle [4050, -21700, 16175, 2000] Typ 1 Band 0 Hoehe -1571 @0x009C8 [2f 3f d0 07 d2 0f 3c ab 01 ff 00 03] automatisch | Tiefe 77..86, geerbt 0
+  T15  ( -73,  38) RMS 14.72/33.08 px   249 | Zelle [4050, -21700, 16175, 2000] Typ 1 Band 0 Hoehe -731 @0x009C8 [2f 3f d0 07 d2 0f 3c ab 01 ff 00 03] automatisch | Tiefe 84..94, geerbt 0
+  T16  (-129,  29) RMS 16.78/34.64 px   333 | Zelle [4050, -21700, 16175, 2000] Typ 1 Band 0 Hoehe -1280 @0x009C8 [2f 3f d0 07 d2 0f 3c ab 01 ff 00 03] automatisch | Tiefe 68..79, geerbt 0
+  T18  ( -73,  38) RMS 14.51/31.67 px   455 | Zelle [4050, -21700, 16175, 2000] Typ 1 Band 0 Hoehe -1125 @0x009C8 [2f 3f d0 07 d2 0f 3c ab 01 ff 00 03] automatisch | Tiefe 68..80, geerbt 0
+ROOM5090 Cut 14: neue Rechtecke 23 (erstes 105), neue Punkte 2288
+  T1   ( 161, 124) RMS 11.47/26.6 px   638 | OHNE: Kamera ueber dem Grundriss der Zelle (21642,-29765 2320x5016): kein 3D-Urteil
+  T3   (  23, 130) RMS 11.21/19.67 px   650 | Zelle [5300, -27200, 14950, 2000] Typ 1 Band 0 Hoehe -2105 @0x009D4 [66 3a d0 07 b4 14 c0 95 01 ff 00 03] automatisch | Tiefe 101..133, geerbt 73
+  T5   ( -67, 149) RMS 10.48/20.25 px   895 | Zelle [5300, -27200, 14950, 2000] Typ 1 Band 0 Hoehe -2250 @0x009D4 [66 3a d0 07 b4 14 c0 95 01 ff 00 03] automatisch | Tiefe 89..122, geerbt 1
+  T7   (  47, 153) RMS  8.13/37.27 px   156 | OHNE: Kamera ueber dem Grundriss der Zelle (21642,-29765 2320x5016): kein 3D-Urteil
+  T11  (   6,  -6) RMS 14.89/23.54 px   531 | Zelle [-5673, -19870, 33730, 3006] Typ 1 Band 0 Hoehe -2721 @0x0098C [c2 83 be 0b d7 e9 62 b2 01 ff 00 03] automatisch | Tiefe 164..201, geerbt 148
+  T13  (  34, -18) RMS 11.93/49.64 px   796 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T14  ( 142, -29) RMS 14.52/28.74 px    94 | Zelle [21642, -22215, 2320, 5366] Typ 1 Band 0 Hoehe -3277 @0x009BC [10 09 f6 14 8a 54 39 a9 01 ff 00 03] automatisch | Tiefe 120..145, geerbt 0
+  T15  (  97, -43) RMS 15.35/30.7 px   118 | Zelle [21642, -22215, 2320, 5366] Typ 1 Band 0 Hoehe -3342 @0x009BC [10 09 f6 14 8a 54 39 a9 01 ff 00 03] automatisch | Tiefe 123..150, geerbt 0
+  T16  (  95,  54) RMS 10.32/62.57 px   161 | OHNE: Kamera ueber dem Grundriss der Zelle (21642,-29765 2320x5016): kein 3D-Urteil
+  T17  (-114,  36) RMS 10.84/55.64 px   290 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.33)
+  T19  (  47,  77) RMS  9.77/21.79 px   160 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.07)
+  T20  ( -23,  46) RMS  5.48/8.4 px    70 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.45)
+  T21  ( -21,  40) RMS  5.66/8.63 px    56 | OHNE: Kamera ueber dem Grundriss der Zelle (21642,-29765 2320x5016): kein 3D-Urteil
+ROOM50B0 Cut 1: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T2   ( 187,  49) RMS  9.76/17.24 px   162 | OHNE: Band 0: kein Bodenkontakt
+  T3   ( 108,  29) RMS  9.78/41.63 px  1261 | OHNE: Band 0: kein Bodenkontakt
+  T4   (  80,  57) RMS 10.18/24.64 px   315 | OHNE: Band 0: kein Bodenkontakt
+  T5   ( 187,  49) RMS 10.18/29.76 px   283 | OHNE: Band 0: kein Bodenkontakt
+  T8   ( 186, -56) RMS  9.68/57.9 px   901 | OHNE: Band 0: kein Bodenkontakt
+  T9   ( 169, -19) RMS 10.71/29.32 px   204 | OHNE: Band 0: kein Bodenkontakt
+  T10  (  48,   2) RMS  9.36/17.27 px   303 | OHNE: Band 0: kein Bodenkontakt
+ROOM50B0 Cut 2: neue Rechtecke 23 (erstes 105), neue Punkte 2088
+  T4   ( -47,  71) RMS  9.89/48.49 px  1047 | OHNE: Band 0: kein Bodenkontakt
+  T5   (-120, 154) RMS 11.18/31.95 px   464 | Zelle [-23750, -30328, 3016, 27880] Typ 1 Band 0 Hoehe -1887 @0x002C4 [c8 0b e8 6c 3a a3 88 89 01 ff 00 03] automatisch | Tiefe 189..212, geerbt 0
+  T9   (  23, 107) RMS  9.86/26.5 px   291 | Zelle [-23768, -5517, 16116, 3000] Typ 1 Band 0 Hoehe -1871 @0x00288 [f4 3e b8 0b 28 a3 73 ea 01 ff 00 03] automatisch | Tiefe 240..250, geerbt 0
+  T10  ( -93, 102) RMS 10.20/19.43 px   529 | Zelle [-23750, -30328, 3016, 27880] Typ 1 Band 0 Hoehe -2263 @0x002C4 [c8 0b e8 6c 3a a3 88 89 01 ff 00 03] automatisch | Tiefe 206..258, geerbt 0
+  T11  (-104, -25) RMS 10.03/47.87 px   638 | OHNE: Band 0: kein Bodenkontakt
+  T12  (-183,  -8) RMS  9.27/14.97 px   181 | OHNE: Band 0: kein Bodenkontakt
+  T13  (-129,  68) RMS 11.09/19.82 px    28 | OHNE: Band 0: kein Bodenkontakt
+  T15  (   0,  -1) RMS 10.76/16.56 px   804 | Zelle [-23750, -30328, 3016, 27880] Typ 1 Band 0 Hoehe -3388 @0x002C4 [c8 0b e8 6c 3a a3 88 89 01 ff 00 03] automatisch | Tiefe 114..123, geerbt 0
+  T17  ( 113,  33) RMS  9.78/35.3 px   740 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.35)
+  T19  (-123, -56) RMS  9.72/24.13 px   430 | OHNE: Band 0: kein Bodenkontakt
+ROOM50B0 Cut 3: neue Rechtecke 23 (erstes 105), neue Punkte 1949
+  T1   (   0,  39) RMS 10.00/23.35 px   271 | OHNE: Band 0: kein Bodenkontakt
+  T3   (  70, 142) RMS  8.13/31.72 px  1874 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.46)
+  T6   ( -42,  61) RMS  8.48/26.2 px  1597 | Zelle [-23750, -30328, 3016, 27880] Typ 1 Band 0 Hoehe -2364 @0x002C4 [c8 0b e8 6c 3a a3 88 89 01 ff 00 03] automatisch | Tiefe 116..184, geerbt 6
+  T13  (  79,  21) RMS  7.83/30.24 px   352 | Zelle [-23768, -5517, 16116, 3000] Typ 1 Band 0 Hoehe -1249 @0x00288 [f4 3e b8 0b 28 a3 73 ea 01 ff 00 03] automatisch | Tiefe 148..153, geerbt 0
+  T14  ( -72,-124) RMS  8.60/46.85 px   186 | OHNE: Band 0: kein Bodenkontakt
+  T15  ( -72,-124) RMS  8.44/40.04 px   194 | OHNE: Band 0: kein Bodenkontakt
+  T18  (-128, -76) RMS  7.99/12.44 px    85 | OHNE: Band 0: kein Bodenkontakt
+ROOM5100 Cut 2: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T1   ( 198,   0) RMS  9.94/15.72 px  4053 | OHNE: Band 0: kein Bodenkontakt
+ROOM5100 Cut 3: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T6   ( -89,  41) RMS 10.12/15.49 px  1333 | OHNE: Band 0: kein Bodenkontakt
+ROOM5100 Cut 5: neue Rechtecke 14 (erstes 21), neue Punkte 528
+  T7   (-162, 102) RMS 13.31/44.53 px   528 | Zelle [-8600, -28100, 1200, 29800] Typ 1 Band 0 Hoehe -3049 @0x005FC [b0 04 68 74 68 de 3c 92 01 ff 00 03] automatisch | Tiefe 94..180, geerbt 0
+  T8   ( 176,   0) RMS 10.68/17.86 px  3592 | OHNE: Band 0: kein Bodenkontakt
+ROOM5100 Cut 6: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T5   ( -17,  37) RMS 10.71/16.33 px  2401 | OHNE: Band 0: kein Bodenkontakt
+ROOM5100 Cut 7: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T3   (-112,  56) RMS 10.97/18.44 px  3861 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+ROOM6000 Cut 2: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T4   (   6, 147) RMS 11.33/25.64 px  1140 | OHNE: Band 2: keine Zelle traegt die Mehrheit der Bodenkontakte (0.07)
+  T5   ( -74, 195) RMS  9.26/15.57 px  1289 | OHNE: Band 2: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+ROOM6000 Cut 3: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T1   ( 127, 117) RMS 11.98/33.06 px   449 | OHNE: Band 2: kein Bodenkontakt
+ROOM6000 Cut 4: neue Rechtecke 11 (erstes 28), neue Punkte 91
+  T1   ( 121, 147) RMS 14.63/33.02 px    91 | Zelle [16350, -19900, 2450, 10950] Typ 1 Band 2 Hoehe -1320 @0x00870 [92 09 c6 2a de 3f 44 b2 01 01 02 21] automatisch | Tiefe 248..279, geerbt 33
+ROOM6000 Cut 5: neue Rechtecke 27 (erstes 101), neue Punkte 1407
+  T2   (  99, 140) RMS 12.24/23.53 px   314 | Zelle [-7857, -18219, 24237, 7645] Typ 1 Band 2 Hoehe -1518 @0x00810 [ad 5e dd 1d 4f e1 d5 b8 01 ff 00 23] automatisch | Tiefe 107..138, geerbt 0
+  T4   (  -2, 128) RMS 16.48/42.44 px   215 | Zelle [15900, -20775, 500, 12800] Typ 1 Band 2 Hoehe -795 @0x00834 [f4 01 00 32 1c 3e d9 ae 01 ff 00 23] automatisch | Tiefe 137..146, geerbt 1
+  T7   (  -2, 106) RMS 18.12/67.12 px   164 | Zelle [15900, -20775, 500, 12800] Typ 1 Band 2 Hoehe -1189 @0x00834 [f4 01 00 32 1c 3e d9 ae 01 ff 00 23] automatisch | Tiefe 133..143, geerbt 0
+  T8   (  43,  77) RMS 12.86/27.61 px   118 | Zelle [16350, -19900, 2450, 10950] Typ 1 Band 2 Hoehe -1048 @0x00870 [92 09 c6 2a de 3f 44 b2 01 01 02 21] automatisch | Tiefe 141..161, geerbt 20
+  T9   (  59,  78) RMS 10.43/30.7 px    99 | Zelle [-7857, -18219, 24237, 7645] Typ 1 Band 2 Hoehe -1965 @0x00810 [ad 5e dd 1d 4f e1 d5 b8 01 ff 00 23] automatisch | Tiefe 113..126, geerbt 0
+  T11  (  88,  13) RMS 11.19/44.08 px    47 | Zelle [16350, -19900, 2450, 10950] Typ 1 Band 2 Hoehe -645 @0x00870 [92 09 c6 2a de 3f 44 b2 01 01 02 21] automatisch | Tiefe 153..159, geerbt 0
+  T12  (  88,  13) RMS  8.74/16.09 px    31 | Zelle [-7857, -18219, 24237, 7645] Typ 1 Band 2 Hoehe -1556 @0x00810 [ad 5e dd 1d 4f e1 d5 b8 01 ff 00 23] automatisch | Tiefe 114..118, geerbt 0
+  T14  (-104, -30) RMS 10.51/30.82 px    98 | Zelle [19313, -25284, 2962, 31940] Typ 1 Band 2 Hoehe -1591 @0x007D4 [92 0b c4 7c 71 4b 3c 9d 01 ff 00 23] automatisch | Tiefe 158..168, geerbt 0
+  T15  ( 235,  31) RMS 11.49/26.67 px   321 | Zelle [-7857, -18219, 24237, 7645] Typ 1 Band 2 Hoehe -1098 @0x00810 [ad 5e dd 1d 4f e1 d5 b8 01 ff 00 23] automatisch | Tiefe 85..104, geerbt 0
+ROOM6000 Cut 7: neue Rechtecke 23 (erstes 105), neue Punkte 1352
+  T4   (-163,  30) RMS 16.90/40.98 px   172 | OHNE: Band 2: keine Zelle traegt die Mehrheit der Bodenkontakte (0.46)
+  T5   (  19, 175) RMS 11.24/18.75 px   417 | Zelle [15900, -20775, 500, 12800] Typ 1 Band 2 Hoehe -1941 @0x00834 [f4 01 00 32 1c 3e d9 ae 01 ff 00 23] automatisch | Tiefe 53..70, geerbt 0
+  T12  ( 141,  48) RMS 14.88/35.57 px   366 | Zelle [16350, -19900, 2450, 10950] Typ 1 Band 2 Hoehe -833 @0x00870 [92 09 c6 2a de 3f 44 b2 01 01 02 21] automatisch | Tiefe 74..96, geerbt 103
+  T13  ( 114,   9) RMS 18.03/86.02 px   569 | Zelle [19313, -25284, 2962, 31940] Typ 1 Band 2 Hoehe -711 @0x007D4 [92 0b c4 7c 71 4b 3c 9d 01 ff 00 23] automatisch | Tiefe 87..112, geerbt 224
+ROOM6000 Cut 8: neue Rechtecke 23 (erstes 105), neue Punkte 1157
+  T7   (  -8,  56) RMS 13.11/29.17 px   513 | Zelle [-7857, -18219, 24237, 7645] Typ 1 Band 2 Hoehe -1630 @0x00810 [ad 5e dd 1d 4f e1 d5 b8 01 ff 00 23] automatisch | Tiefe 106..137, geerbt 0
+  T8   ( 140,  -9) RMS 16.60/64.66 px   203 | Zelle [16350, -19900, 2450, 10950] Typ 1 Band 2 Hoehe -1147 @0x00870 [92 09 c6 2a de 3f 44 b2 01 01 02 21] automatisch | Tiefe 133..157, geerbt 88
+  T9   (  43, -19) RMS 15.87/69.81 px    66 | Zelle [16350, -19900, 2450, 10950] Typ 1 Band 2 Hoehe -678 @0x00870 [92 09 c6 2a de 3f 44 b2 01 01 02 21] automatisch | Tiefe 152..159, geerbt 1
+  T10  (  71,  -6) RMS 17.05/55.02 px   375 | Zelle [15900, -20775, 500, 12800] Typ 1 Band 2 Hoehe -1350 @0x00834 [f4 01 00 32 1c 3e d9 ae 01 ff 00 23] automatisch | Tiefe 123..140, geerbt 0
+ROOM6000 Cut 9: neue Rechtecke 7 (erstes 31), neue Punkte 84
+  T3   ( -34,  87) RMS 14.44/35.52 px    84 | Zelle [19313, -25284, 2962, 31940] Typ 1 Band 2 Hoehe -624 @0x007D4 [92 0b c4 7c 71 4b 3c 9d 01 ff 00 23] automatisch | Tiefe 306..312, geerbt 44
+  T5   ( -48,  94) RMS 10.13/18.95 px   108 | OHNE: Band 2: keine Zelle traegt die Mehrheit der Bodenkontakte (0.33)
+ROOM6010 Cut 2: neue Rechtecke 46 (erstes 15), neue Punkte 2898
+  T1   ( 133,  85) RMS 10.35/27.74 px  1454 | Zelle [-17338, -7355, 2141, 5730] Typ 1 Band 0 Hoehe -3165 @0x00884 [5d 08 62 16 46 bc 45 e3 01 ff 00 03] automatisch | Tiefe 112..121, geerbt 0
+  T2   ( 121, 110) RMS  8.30/14.6 px   451 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.07); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T3   ( 124, 132) RMS  7.28/15.04 px   604 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.44); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T4   ( -77,  28) RMS 13.66/34.13 px  1216 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.40); Band 4: kein Bodenkontakt
+  T5   ( -75,  -1) RMS 10.88/29.0 px  1531 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.07)
+  T6   ( -72, -32) RMS 10.08/31.06 px  1014 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T7   ( 169,  54) RMS  9.75/17.75 px  1362 | Zelle [-17338, -7355, 2141, 5730] Typ 1 Band 0 Hoehe -1777 @0x00884 [5d 08 62 16 46 bc 45 e3 01 ff 00 03] automatisch | Tiefe 95..103, geerbt 0
+  T9   (  -1, -17) RMS 14.15/109.19 px   903 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.05); Band 4: kein Bodenkontakt
+  T10  ( 225, -24) RMS 18.64/65.37 px   554 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T11  (  71, -95) RMS 14.28/49.89 px    67 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T12  (  64, -63) RMS 12.44/23.91 px    46 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T13  (  64, -63) RMS 12.66/26.93 px    31 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T14  (  71, -95) RMS 11.02/27.31 px   288 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T15  (  64, -63) RMS 10.87/22.88 px   154 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T17  ( -79,-140) RMS 12.88/89.08 px    82 | Zelle [-19944, -10400, 2915, 5940] Typ 1 Band 4 Hoehe -1 @0x00950 [63 0b 34 17 18 b2 60 d7 01 ff 00 43] automatisch | Tiefe 163..202, geerbt 7
+  T18  ( -79,-140) RMS 13.17/77.28 px    36 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T19  (  64, -63) RMS 17.10/38.14 px    43 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T21  ( -79,-140) RMS 13.47/39.71 px    18 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.11)
+  T22  ( -79,-140) RMS  9.48/51.14 px    25 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T24  ( -79,-140) RMS  9.06/41.52 px   218 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.10)
+  T25  ( -79,-140) RMS 11.26/26.12 px    28 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T28  ( 198, -55) RMS 11.05/17.3 px   343 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T29  ( -79,-140) RMS 12.62/29.78 px    70 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+ROOM6010 Cut 3: neue Rechtecke 23 (erstes 105), neue Punkte 234
+  T1   ( 109, 149) RMS 10.82/26.17 px   423 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T2   ( 117, 171) RMS 10.80/28.79 px   642 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T5   (  97, 127) RMS 10.83/27.2 px   527 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T6   (  85, 137) RMS 10.47/35.14 px   729 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T7   (  82,  98) RMS 10.83/27.04 px   720 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T8   (  74, 110) RMS 11.41/31.79 px  1143 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T14  ( -54, -23) RMS  8.58/28.61 px   234 | Zelle [-23050, -7100, 1945, 5225] Typ 1 Band 1 Hoehe -2128 @0x00914 [99 07 69 14 f6 a5 44 e4 01 ff 00 13] automatisch | Tiefe 48..70, geerbt 0
+ROOM6010 Cut 5: neue Rechtecke 114 (erstes 14), neue Punkte 1942
+  T1   (  34,  50) RMS  9.39/40.34 px   635 | Zelle [-23367, -2525, 8125, 6210] Typ 1 Band 1 Hoehe -6198 @0x008D8 [bd 1f 42 18 b9 a4 23 f6 01 ff 00 13] automatisch | Tiefe 277..329, geerbt 0
+  T2   (  52,  71) RMS 11.25/33.56 px  1079 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.46); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T3   (  42, 120) RMS 12.48/38.48 px  1307 | Zelle [-32000, -18830, 33513, 8785] Typ 1 Band 0 Hoehe -7430 @0x00830 [e9 82 51 22 00 83 72 b6 01 ff 00 03] automatisch | Tiefe 93..142, geerbt 0
+  T6   (-146,  58) RMS  8.38/25.52 px   927 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T8   (  34, 172) RMS 13.88/21.25 px   426 | OHNE: Zelle auf mehreren Baendern [0, 1]
+ROOM6010 Cut 6: neue Rechtecke 78 (erstes 21), neue Punkte 1654
+  T1   ( 271,   0) RMS  8.77/29.09 px   728 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T2   (  98,  23) RMS 12.75/38.96 px  1593 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.02); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T3   ( -49,  71) RMS 13.13/43.43 px   540 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T6   ( 213, -40) RMS  9.47/29.19 px  1415 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.05)
+  T7   (  48, -30) RMS 16.09/43.51 px    84 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T9   (  48, -30) RMS 14.82/37.78 px    52 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T13  (  48, -30) RMS 11.81/19.07 px   255 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T14  ( -27,   0) RMS 10.68/19.61 px   126 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T17  ( -27,   0) RMS 12.97/20.37 px    43 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T19  ( 141, -89) RMS 15.97/52.57 px    55 | Zelle [-19919, -24100, 2865, 6445] Typ 1 Band 4 Hoehe -1 @0x0095C [31 0b 2d 19 31 b2 dc a1 01 ff 00 43] automatisch | Tiefe 166..202, geerbt 0
+  T20  ( 141, -89) RMS 10.81/37.54 px    19 | Zelle [-19919, -24100, 2865, 6445] Typ 1 Band 4 Hoehe -1 @0x0095C [31 0b 2d 19 31 b2 dc a1 01 ff 00 43] automatisch | Tiefe 167..171, geerbt 0
+  T21  (  48, -30) RMS 13.25/28.17 px   159 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T22  ( 141, -89) RMS 14.04/52.48 px    55 | Zelle [-19919, -24100, 2865, 6445] Typ 1 Band 4 Hoehe -1 @0x0095C [31 0b 2d 19 31 b2 dc a1 01 ff 00 43] automatisch | Tiefe 172..199, geerbt 0
+  T24  ( 141, -89) RMS 10.24/55.51 px    29 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.33)
+  T26  (-114,  21) RMS 10.41/17.97 px   786 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.08); Band 1: kein Bodenkontakt; Band 4: kein Bodenkontakt
+  T27  ( 141, -89) RMS 11.12/37.27 px   242 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.14)
+  T28  ( 112, -56) RMS 16.92/96.28 px   812 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.38); Band 4: kein Bodenkontakt
+  T29  ( 141, -89) RMS 14.70/33.19 px    39 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T30  (  96, -41) RMS 11.07/18.76 px   864 | Zelle [-32000, -18830, 33513, 8785] Typ 1 Band 0 Hoehe -4029 @0x00830 [e9 82 51 22 00 83 72 b6 01 ff 00 03] automatisch | Tiefe 213..295, geerbt 0
+  T31  ( 141, -89) RMS 11.09/28.85 px   117 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T33  (   4,  -3) RMS  9.83/20.81 px   661 | Zelle [-17339, -27450, 2359, 6029] Typ 1 Band 0 Hoehe -1056 @0x0083C [37 09 8d 17 45 bc c6 94 01 ff 00 03] automatisch | Tiefe 108..116, geerbt 0
+ROOM6010 Cut 7: neue Rechtecke 23 (erstes 105), neue Punkte 1182
+  T1   ( 177, 156) RMS 10.61/30.31 px   768 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T2   (  73, 154) RMS 10.02/29.88 px   583 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T3   (  -4, 153) RMS 11.46/27.37 px   423 | Zelle [-23050, -27250, 1945, 5625] Typ 1 Band 1 Hoehe -2319 @0x00908 [99 07 f9 15 f6 a5 8e 95 01 ff 00 13] automatisch | Tiefe 37..43, geerbt 0
+  T5   ( 101, 154) RMS 10.90/30.41 px  1128 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T6   (  18, 152) RMS 10.71/26.89 px   700 | OHNE: Zelle auf mehreren Baendern [0, 1]
+  T7   ( -65, 146) RMS 10.56/26.32 px   522 | Zelle [-23050, -27250, 1945, 5625] Typ 1 Band 1 Hoehe -2316 @0x00908 [99 07 f9 15 f6 a5 8e 95 01 ff 00 13] automatisch | Tiefe 33..38, geerbt 0
+  T15  ( 194, -26) RMS 13.08/24.55 px   237 | Zelle [-23050, -27250, 1945, 5625] Typ 1 Band 1 Hoehe -2481 @0x00908 [99 07 f9 15 f6 a5 8e 95 01 ff 00 13] automatisch | Tiefe 38..56, geerbt 0
+ROOM6010 Cut 10: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T2   ( 130,  36) RMS 10.63/29.26 px  1390 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T4   ( 106,   0) RMS  9.49/16.46 px   988 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.12)
+  T5   ( 119,  14) RMS  9.95/17.07 px    99 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.19)
+  T6   ( 119,  14) RMS  9.68/15.53 px   690 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+ROOM6010 Cut 11: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T3   ( -14,  14) RMS 10.16/27.35 px  1155 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T4   ( -87,   0) RMS  9.12/22.43 px  1031 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.03)
+ROOM6010 Cut 12: neue Rechtecke 18 (erstes 105), neue Punkte 471
+  T1   ( 227,   0) RMS 16.87/93.09 px   650 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T2   ( 227,   0) RMS 14.74/41.25 px   265 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T3   (  99,   0) RMS 16.08/30.58 px   230 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T5   (  29, 169) RMS 11.64/19.36 px   336 | Zelle [-17338, -7355, 2141, 5730] Typ 1 Band 0 Hoehe -1107 @0x00884 [5d 08 62 16 46 bc 45 e3 01 ff 00 03] automatisch | Tiefe 54..56, geerbt 0
+  T6   (  29, 123) RMS 12.90/27.0 px   259 | OHNE: Band 0: kein Bodenkontakt; Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.03); Band 4: kein Bodenkontakt
+  T7   ( 221, 106) RMS  9.91/23.15 px   824 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.30); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T8   (  30, 117) RMS 17.38/28.64 px   135 | Zelle [-32000, -32005, 5188, 35690] Typ 1 Band 0 Hoehe -794 @0x0080C [44 14 6a 8b 00 83 fb 82 01 ff 00 03] automatisch | Tiefe 207..221, geerbt 0
+  T9   (  30, 117) RMS 15.65/24.58 px   130 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.29); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T10  (  31, 117) RMS 16.48/28.53 px   126 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.21); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T14  ( 190,   1) RMS 12.41/21.53 px   921 | OHNE: Zelle auf mehreren Baendern [0, 1]
+ROOM6010 Cut 13: neue Rechtecke 23 (erstes 105), neue Punkte 1095
+  T1   (   0,   0) RMS 10.11/21.87 px   302 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T2   (   0,   0) RMS 15.01/92.88 px   814 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T3   ( -64,  42) RMS 13.19/79.02 px   248 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T4   ( -86, 124) RMS  9.44/18.97 px   482 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T5   (-111, 167) RMS 11.19/17.72 px   377 | Zelle [-17339, -27450, 2359, 6029] Typ 1 Band 0 Hoehe -1216 @0x0083C [37 09 8d 17 45 bc c6 94 01 ff 00 03] automatisch | Tiefe 54..56, geerbt 0
+  T6   (-143, 123) RMS  8.12/19.68 px   123 | Zelle [-23334, -22099, 8349, 728] Typ 1 Band 0 Hoehe -1700 @0x00848 [9d 20 d8 02 da a4 ad a9 01 ff 00 03] automatisch | Tiefe 133..166, geerbt 2
+  T8   ( -36,  -8) RMS 10.78/27.54 px   292 | OHNE: Band 0: kein Bodenkontakt; Band 1: kein Bodenkontakt; Band 4: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+  T13  (   6,  67) RMS 10.98/23.02 px   281 | Zelle [-17339, -27450, 2359, 6029] Typ 1 Band 1 Hoehe -166 @0x008C0 [37 09 8d 17 45 bc c6 94 01 ff 00 13] automatisch | Tiefe 49..53, geerbt 0
+  T14  (   6,  61) RMS 12.30/25.68 px   149 | Zelle [-32000, -32005, 5188, 35690] Typ 1 Band 0 Hoehe -783 @0x0080C [44 14 6a 8b 00 83 fb 82 01 ff 00 03] automatisch | Tiefe 209..226, geerbt 0
+  T15  (   6,  61) RMS 12.93/24.71 px   156 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 4: kein Bodenkontakt
+  T16  (   6,  61) RMS 12.61/28.81 px   165 | Zelle [-23050, -27250, 1945, 5625] Typ 1 Band 0 Hoehe -573 @0x00890 [99 07 f9 15 f6 a5 8e 95 01 ff 00 03] automatisch | Tiefe 132..142, geerbt 0
+ROOM6030 Cut 7: neue Rechtecke 5 (erstes 20), neue Punkte 1507
+  T3   (  87, 214) RMS  8.77/16.71 px  1507 | Zelle [-23080, -27221, 4240, 2000] Typ 1 Band 0 Hoehe -2158 @0x00768 [90 10 d0 07 d8 a5 ab 95 01 ff 00 03] automatisch | Tiefe 39..44, geerbt 0
+ROOM6030 Cut 9: neue Rechtecke 2 (erstes 90), neue Punkte 114
+  T5   ( -87, 215) RMS 10.00/18.6 px   114 | Zelle [-23080, -27221, 4240, 2000] Typ 1 Band 0 Hoehe -1214 @0x00768 [90 10 d0 07 d8 a5 ab 95 01 ff 00 03] automatisch | Tiefe 60..63, geerbt 0
+ROOM6030 Cut 10: neue Rechtecke 28 (erstes 43), neue Punkte 727
+  T1   (  36, 136) RMS 11.12/43.95 px   686 | Zelle [-29061, -28697, 15900, 2000] Typ 1 Band 0 Hoehe -1080 @0x00720 [1c 3e d0 07 7b 8e e7 8f 01 ff 00 03] automatisch | Tiefe 84..109, geerbt 0
+  T4   (-101, 176) RMS 13.78/21.04 px    41 | Zelle [-23080, -27221, 4240, 2000] Typ 1 Band 0 Hoehe -646 @0x00768 [90 10 d0 07 d8 a5 ab 95 01 ff 00 03] automatisch | Tiefe 82..85, geerbt 0
+ROOM6030 Cut 12: neue Rechtecke 0 (erstes -), neue Punkte 0
+  T3   (  34, 203) RMS 12.07/50.22 px   139 | OHNE: Band 0: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00); Band 1: keine Zelle traegt die Mehrheit der Bodenkontakte (0.00)
+# Summe: mit Koerper 266 Teile / 104448 Punkte, ohne Koerper 278 Teile / 142889 Punkte

@@ -29,6 +29,9 @@ volle Suite einmal am Ende im Release-Container, dann Release v0.8.29.
 | 3 | K | stage3szenen_b / r41_stage3szenen_b | ab 30C1 Sherrys Modell kaputt + ohne Waffe; 3091-Szene mit staendig falschen Animationen |
 | 3 | L | spinnenanim / r41_spinnenanim | Spinnen: Herausklettern aus dem Gitter + Herunterklettern an der Wand |
 | 4 | N | nachtrag30 / r41_nachtrag30 | Nachtrag 30/30b: Schrank 2010 klappt auf -> Sicherungskasten wie 2060 (fuse_box.bmp, Mechanismus wie 2060); Panel-Raetsel 2030 (Druck 80, Entwuerfe zur Freigabe, statt Ventil 13); Notiztext + Loesung 09-02-01-08 (N-E1); RE2-Ton der Plattformfahrt; RE2-Alarmton durchgehend; Lautstaerke fuer ALLE Toene (Tuersequenzen, Wassersprung) |
+| 5 | O | keyitems / r41_keyitems | Nachtrag 34: Key Items ueber das Inventar in RE2-Form, Kurbel ohne Fliegen |
+| 5 | P | alligator2 / r41_alligator2 | Nachtrag 31 Punkt 2, FG-E7 Option (a) + Riegel wieder scharf, Lagespruenge, Riegel F->G |
+| 6 | Q | restpunkte / r41_restpunkte | Masken-Restloch 6010, Teile-Bericht, Elza-Ketten-Riegel, Ketten-Riegel-Flake |
 
 Abhaengigkeiten: F und G bauen auf dem integrierten B (RE2-Alligator) und D (Blink-API) auf; G auf F (Bit "Szene
 gesehen"). C und A beruehren beide 20B0 (A: Effekt EM024; C: Raumwechsel/Weg) — verschiedene Stellen.
@@ -54,6 +57,8 @@ Stimmen `synchro/STAGE2/room2080/main42.wav` und `room2081/main42.wav` — im Do
 **N** (Nachtrag 30, 2026-10-25): uebernimmt C's Zuteilung (Bits 100-103/106/107/125; Ids 2000/20B0 40, 2030 40-55,
 2010/2011 40-44, 2050 40-44) und D's Lautstaerke-Modul (lautstaerke_r41.c, Endstufe audio_pc.c); weitere Bits nur 126-133 nach
 Zensus + Eintrag hier; neue RE2-Daten nach shared_assets/RE2/ (Paket-Gate im Dossier nennen).
+
+**O/P/Q** (Nachtrag 34): keine neuen Nachrichten-Ids; Bits nur 126-133 nach Zensus + Eintrag hier. O darf re15_inv_screen.c, aot_common.c, msg_common.c, scd_vm.c mit markierten Haken aendern; die 2010-Stelle der Spur C gehoert O (Logik), N aendert dort nur Bild/Aufklappen.
 
 ### 1.3 Gemeinsame Dateien (nur kleine Haken, 1-5 Zeilen, Kommentar "Runde 41 Spur X")
 scd_room_setup.c (Installer-Zeile am ENDE des Blocks: C, E, F, G, I), scd_vm.c (C, F, G), platform/pc/main.c (D

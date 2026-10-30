@@ -2140,13 +2140,28 @@
   "7": {
    "objekte": [
     {
-     "name": "ROOM2030 Cut 7 Objekt 07_01",
+     "name": "ROOM2030 Cut 7 Objekt 07_01 Nordgelaender",
      "png": "pri/STAGE2/2030/07_01.png",
      "x": 0,
      "y": 104,
      "massstab": 1,
      "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 5315 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Ringsteg Band 3 (y -5400): Tuer 2070->2030 setzt den Spieler auf (6550,-5400,-100); die Umschaltzonen (RVD, RDT+0x28) dieses Cuts liegen auf y -5400 auf dem gemalten Ringboden (Pruefbild zonen_bilder).",
-     "ebene": -5400
+     "ebene": -5400,
+     "minus": "179,0,320,240",
+     "zelle": [-6350, 8150, 12250, 500],
+     "r41": "Runde 41 Spur M Nachbesserung 1 (analysis/befunde_runde41/M_masken36.md, NB1 Mangel 4): 07_01 = Ring-Gelaender Band 3 mit Ecke bei Bildspalte 173..186 (Zellen x -6350..5900 z 8150..8650 und x 5400..5900 z -9000..8650, Hoehe 1875 gemessen). Links der Ecke Tiefe aus der Nordzelle, rechts (Objekt 07_01 Ostgelaender) aus der Ostzelle. Vorher eine Profil-Tiefe fuer beide Teile (84..258): an der Ecke 186..256, Leon HINTER dem Gelaender bei (4500,9150) Bucket 179..193 blieb ungedeckt (exe: 277 von 297 Leon-Punkten unter der Maske; nachher 83 verdeckt, Rest unter 07_02 HINTER Leon). Kamera (-23,-8310,-2043); 767 erreichbare Plaetze mit Figur im Bild, 0 VOR dem Gelaender (3D-Sehstrahl)."
+    },
+    {
+     "name": "ROOM2030 Cut 7 Objekt 07_01 Ostgelaender",
+     "png": "pri/STAGE2/2030/07_01.png",
+     "x": 0,
+     "y": 104,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 5315 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Ringsteg Band 3 (y -5400): Tuer 2070->2030 setzt den Spieler auf (6550,-5400,-100); die Umschaltzonen (RVD, RDT+0x28) dieses Cuts liegen auf y -5400 auf dem gemalten Ringboden (Pruefbild zonen_bilder).",
+     "ebene": -5400,
+     "minus": "0,0,179,240",
+     "zelle": [5400, -9000, 500, 17650],
+     "r41": "Runde 41 Spur M Nachbesserung 1: rechter Teil von 07_01 (Bildspalten 179..319), Tiefe aus der Ostzelle x 5400..5900 z -9000..8650 Band 3 (s. 07_01 Nordgelaender)."
     },
     {
      "name": "ROOM2030 Cut 7 Objekt 07_02",
@@ -2396,7 +2411,9 @@
      "y": 110,
      "massstab": 1,
      "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2981 Maskenpixel. Ebene y=-5400 GEMESSEN (2026-10-23): Band 3 (y -5400): Kamera y -7311 nur 111 ueber Band 4 (Zone dort als Strich auf Augenhoehe); die Umschaltzone liegt auf y -5400 auf dem Gitterboden.",
-     "ebene": -5400
+     "ebene": -5400,
+     "zelle": [-18250, -6500, 22400, 450],
+     "r41": "Runde 41 Spur M Nachbesserung 1 (analysis/befunde_runde41/M_masken36.md, NB1 Mangel 4): Tiefe aus der Gelaenderzelle Band 3 x -18250..4150 z -6500..-6050 (SCA, Typ 1; Hoehe 1800 gemessen). Vorher Profil-Tiefe 43..631: der Handlauf ohne Bodenkontakt im Bild bekam die Tiefe 391/392 und verdeckte Leon HINTER dem Gelaender nicht (exe (-17500,-5600): 209 von 355 Leon-Punkten unter der Maske ungedeckt; nachher 355 von 355 verdeckt). Kamera (-17264,-7310,-9105) liegt vor dem Gelaender; 2378 erreichbare Plaetze mit Figur im Bild, 0 VOR dem Gelaender (3D-Sehstrahl)."
     }
    ]
   },
@@ -2782,7 +2799,10 @@
      "massstab": 1,
      "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 1 gleich gute Lage(n), 2064 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Band 4 (y -7200): Blickziel (11754,-8335,-20268) liegt am Austritt der Leiter-Tuer 20A0->20A0 (16500,-7200,-20000); Zelle Band 4 traegt 12_01 (IoU 0,81).",
      "ebene": -7200
-    },
+    }
+
+   ],
+   "_r41_nicht_gebaut": [
     {
      "name": "ROOM20A0 Cut 12 Objekt 12_02",
      "png": "pri/STAGE2/20A0/12_02.png",
@@ -2790,7 +2810,8 @@
      "y": 126,
      "massstab": 1,
      "grund": "Freistellung des Nutzers (Runde 40, Lieferung 19.-22.10.2026). Lage gemessen: Uebereinstimmung 100.0 %, 237 gleich gute Lage(n), 3572 Maskenpixel. Ebene y=-7200 GEMESSEN (2026-10-23): Band 4 (y -7200): Blickziel (11754,-8335,-20268) liegt am Austritt der Leiter-Tuer 20A0->20A0 (16500,-7200,-20000); Zelle Band 4 traegt 12_01 (IoU 0,81).",
-     "ebene": -7200
+     "ebene": -7200,
+     "r41": "Runde 41 Spur M (analysis/befunde_runde41/M_masken36.md 2.3, berichtigt in Nachbesserung 1): NICHT GEBAUT, Nutzer-Entscheid AUFTRAG.md Nachtrag 11 \"Weglassen ist ok\". 12_02 ist der Streifen BODEN vor der Schwelle unter dem Rolladen (Zelle 32 x 8000..14700 z -21000..-20500 Band 4 = Wand unter dem Rolladen obj 1, Obj_model_set @0x01932 (7942,-7200,-20510); geoeffnet setzt Sca_id_set @0x01E5E-6E u0 = 0, dahinter ein Schacht - Runde 38 W_rolltor20a0.md). Lage fein gemessen (94,126) Fehler 1,65; Oberkante = Vorderkante der Zelle 32 auf y -7200. Mit der Profil-Tiefe (119..151, Bodenkontakt an der Unterkante, rund 1400 vor der Schwelle) verlor jede Figur AUF dem Streifen die Fuesse (exe: Leon (14000,-18900) 30, (14000,-19300) 50 Punkte uebermalt). 12_01 (Mauerecke, Tiefe aus der Zelle x14700..15800) bleibt."
     }
    ]
   }

@@ -198,7 +198,7 @@ if(DEFINED _f)
 endif()
 file(REMOVE "${_exe_kopie}")
 
-# Log: der Cut zeichnet Masken mit Atlas, ueber den Weg der Spur P
+# Log: der Cut zeichnet Masken mit Atlas (seit Runde 41 dem eigenen, geschlossenen)
 function(log_pruefen _name _cutnr _zr)
     file(READ "${_log_${_name}}" _log)
     # nur der Teil nach dem Laden des Zielraums (vor dem Sprung zeigt der Startraum eigene [pri]-Zeilen)
@@ -212,9 +212,12 @@ function(log_pruefen _name _cutnr _zr)
     if(NOT _m OR CMAKE_MATCH_1 EQUAL 0 OR NOT CMAKE_MATCH_2 EQUAL 1)
         message(FATAL_ERROR "r37_masken36[${STUFE} ${_name}]: ROOM${_zr} Cut ${_cutnr} ohne gezeichnete Masken: '${_m}'")
     endif()
+    # Runde 41 Spur M: die Generator-Sektionen tragen jetzt ihren eigenen, geschlossenen Atlas (MASKS/ROOMxxxx_PRIcc.TIM,
+    # tools/maske/schliessen_r41.py) - der Lader nimmt ihn (re15_pri_atlas_quelle), die Zeile der Spur P (BSS-Atlas) darf
+    # nicht mehr kommen. Vorher (R37..R40) war sie Pflicht.
     string(FIND "${_log}" "Cut ${_cutnr}: Port-Masken ohne eigenen Atlas -> BSS-Atlas des Cuts (Runde 37 Spur P)" _p)
-    if(_p LESS 0)
-        message(FATAL_ERROR "r37_masken36[${STUFE} ${_name}]: Logzeile der Spur P fehlt")
+    if(NOT _p LESS 0)
+        message(FATAL_ERROR "r37_masken36[${STUFE} ${_name}]: Cut ${_cutnr} zeichnet mit dem BSS-Atlas statt dem eigenen (Runde 41)")
     endif()
     message(STATUS "r37_masken36[${STUFE} ${_name}]: ${_m}")
 endfunction()

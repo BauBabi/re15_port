@@ -417,10 +417,13 @@ def blatt(mo, clip, ziel, einzel=False):
     dr    = ImageDraw.Draw(sheet)
 
     name_typ = {0x27: 'GORILLA-BOSS'}.get(mo.typ, 'EM%02X' % mo.typ)
-    dr.text((PAD, 26), 'EM%03X - %s (Typ 0x%02x)' % (mo.typ, name_typ, mo.typ),
+    # titel/untertitel/hinweis: optionale Attribute fuer abgeleitete Modelle (birkin_formen.py)
+    dr.text((PAD, 26), getattr(mo, 'titel', None)
+            or 'EM%03X - %s (Typ 0x%02x)' % (mo.typ, name_typ, mo.typ),
             font=F_TITLE, fill=FG)
-    dr.text((PAD, 76), 'Resident Evil 1.5 - CDEMD0.EMS Blob %d - Bank 0, Clip 0x%02x, Keyframe %d'
-            % (mo.blob_index, clip, kf0), font=F_SUB, fill=DIM)
+    dr.text((PAD, 76), (getattr(mo, 'untertitel', None)
+            or 'Resident Evil 1.5 - CDEMD0.EMS Blob %d') % mo.blob_index
+            + ' - Bank 0, Clip 0x%02x, Keyframe %d' % (clip, kf0), font=F_SUB, fill=DIM)
     dr.line([(PAD, HEAD-8), (SHEET_W-PAD, HEAD-8)], fill=(60, 63, 72), width=1)
 
     cell_xy = lambda c, r: (PAD + c*(TILE+PAD), HEAD + PAD + r*(TILE+LBL_H))
@@ -536,6 +539,7 @@ def blatt(mo, clip, ziel, einzel=False):
       'Massstab im Spiel   Das Original rendert diesen Gegner uniform 1,7x vergroessert: entity+0x166 = 0x1b33 (Q12) mit Flag-Bit 0x800, gesetzt im INIT FUN_80116f50, angewandt per ScaleMatrix @0x80065ff0',
       '                    im Render-Root FUN_8001e8c8 @0x8001e904-40. Die Masse oben sind daher die MODELL-Masse - auf der Buehne mal 1,7 (Hoehe %d -> %d).' % (round(ext[1]), round(ext[1]*1.7)),
       'Pipeline   EMS-Index re15_ems.c - Containerverzeichnis dir[2]=EMR, dir[7]=MD1, dir[8]=TIM - Posenkette re15_skel_compute_pose (skeleton_common.c:659-710) - RotMatrix @0x80068130.',
+      getattr(mo, 'hinweis', None) or
       'Nicht byte-true ist allein die Darstellung: Orthogonalprojektion, Z-Buffer und Lambert-Beleuchtung dienen der Lesbarkeit. Geometrie, Skelett, Pose und Textur stammen unveraendert aus dem Original.',
     ]
     ty = fy + 12

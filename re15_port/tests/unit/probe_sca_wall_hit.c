@@ -75,6 +75,7 @@
 #include "re15_msg.h"
 #include "re15_emd.h"
 #include "re15_ems.h"
+#include "re15_gatorszene_r41.h"   /* Runde 41 Spur F: Spinnen-Verwerfen 2090 fuer die Messung aus */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -433,6 +434,10 @@ int main(void)
          * wird bei Kontaktfreiheit auf 0 gesetzt); Folge-Leser @0x801111d0/@0x8011144c
          * (`+0x1dc >= 31 -> +0x5=1, +0x6=0xa`). */
         setup_t su = { 1, 0, 0, 0, 1, 0 };
+        /* Runde 41 Spur F: der Port verwirft die zwei Spinnen-Saetze von ROOM2090/2091 (NUTZER-VORGABE "Entferne die
+         * Spinnen aus dem ROOM 2090", include/re15_gatorszene_r41.h). Dieser Riegel misst die SCA-Klemme der Adult-Spinne an
+         * der 2090-Geometrie mit dem ORIGINAL-Satz @0x00AB0 als Messobjekt -> Verwerfen fuer die Messung aus, danach zurueck. */
+        const int r41f_alt = re15_gatorszene_r41_spinnen_weg_setzen(0);
         printf("   [C2] ROOM2090 Adult Spider 0x25 — Steckenbleib-Zaehler +0x1dc @0x80111008\n");
         live_run(RE15_ASSET_PSX_DIR "/STAGE2/ROOM2090.RDT", 0x2090, 0x25, &su, 1, 240, 1, &w);
         live_run(RE15_ASSET_PSX_DIR "/STAGE2/ROOM2090.RDT", 0x2090, 0x25, &su, 0, 240, 1, &fr);
@@ -441,6 +446,7 @@ int main(void)
         CHECK(fr.hit_new == 0, "C2/FREI: Rueckgabewert %d mal gesetzt ohne jede Zelle", fr.hit_new);
         CHECK(w.consumer_max > 0, "C2/WAND: +0x1dc blieb 0 trotz Wandkontakt (@0x80111008)");
         CHECK(fr.consumer_max == 0, "C2/FREI: +0x1dc stieg auf %d ohne jede Zelle", fr.consumer_max);
+        (void)re15_gatorszene_r41_spinnen_weg_setzen(r41f_alt);   /* Runde 41 Spur F: zurueck auf Spielstand */
     }
 
     {   /* HUND 0x20, ROOM1190 — RE1.5: +0x1dc @0x8010dd80. */

@@ -785,6 +785,14 @@ static void teil_d(void)
                     }
                 }
             }
+            /* Querbezug Runde 41 Spur F, Orchestrator-Entscheid F-E1 (Nutzer: "Entferne die Spinnen aus dem ROOM 2090, die nutzen
+             * wir nicht mehr."): 2090 (und 2091, bytegleich) ist aus der Spinnen-Erwartung - der Port verwirft die zwei Sce_em_set-
+             * Saetze @0x00AB0/@0x00AC4 (gatorszene_r41.c, Form Kill-Flag-Tor @0x80042120-38). Die Zeile verlangt jetzt 0 Spinnen;
+             * die uebrigen Raeume bleiben unveraendert. */
+            if (R[r].id == 0x2090) {
+                CHECK(n_sp == 0, "%s ROOM2090: %d Spinnen (Nutzer-Punkt Runde 41: entfernt, soll 0)", fl ? "RE2" : "RE1.5", n_sp);
+                continue;
+            }
             CHECK(n_sp > 0 && schwebt == 0 && im_block == 0,
                   "%s ROOM%04X Cut %u: %d Spinnen, Spinnen-Bilder am SCA-Boden %d, im Schacht wartend %d, schwebend %d, "
                   "im Block %d%s", fl ? "RE2" : "RE1.5", R[r].id, (unsigned)R[r].cut, n_sp, boden, schacht, schwebt,

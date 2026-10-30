@@ -13,6 +13,14 @@
 #   leon2090  Leon, ROOM2090 (Becken, sce-8-Stempel -1620), (-8438,-25550) Band 0 Blick 0, "U1.6,W1" ab Bild 30
 #             (der Alligator greift ab ~F52 an, der erste Schritt liegt davor):
 #               zweig=stempel code=0x06032000 part=6 stempel=-1620 edt=0x1a, [foot] type=26 vag=3 (Watschritt).
+#             Querbezug Runde 41 Spur F (Nachbesserung 2, Muster Orchestrator-Entscheid F-E1 "neue Regel widerlegt alten
+#             Riegel"): Nutzer "Ich moechte eine neue Cutscene: Wenn man Room 2090 betritt, soll der Charakter einen Zombie
+#             am Boden liegen sehen ..." - das ERSTE Betreten von 2090 startet die Ankunftsszene (gatorszene_r41.c Programm 1,
+#             Riegel Set(2,7,1)/Set(1,27,1) = ROOM1150 sub08 @0x01114/@0x01118) und haelt die Spielfigur. Dieser Lauf misst den
+#             Watschritt, nicht die Szene -> RE15_SET_FLAG=9:110 (Bit 110 "Szene gesehen", VERTRAG 1.1) = der Kampfzustand
+#             nach der Szene, wie vor Runde 41. Gemessen 2026-10-25 (Dossier F_gatorszene.md N2.M1): ohne das Bit
+#             'Folge P ROOM2090 F250 wert=1/0', Leon steht (pm=2, pad=0010), kein wasser.log; mit dem Bit 3 Watschritte
+#             zweig=stempel code=0x06032000 edt=0x1a und [foot] type=26 vag=3.
 #   leon10b0_tuer  echter Weg: Sprung nach 10B0, durch die Tuer nach 1260 (Ankunft vor Fleck P5), Wasserschritt + Spritzer.
 #   elza10b1_tuer  echter Weg mit Elza: 10B1 -> Tuer -> 1261, Wasserschritt + Spritzer + VAG 7 im Fleck P5, Beton ohne Effekt.
 # v0.8.25 (2077bb8e) faellt hier durch: kein RE15_WASSER_LOG, kein id=6 im FX_LOG, im Becken Betonschritt vag=1.
@@ -46,7 +54,7 @@ function(r38n_fehler _lauf _text)
     message(FATAL_ERROR "${_tag} [${_lauf}]: ${_text}")
 endfunction()
 
-# _start: "leon" (Titelbild-Weg) oder "elza" (Spielerwahl -> Elza)
+# _start: "leon" (Titelbild-Weg) oder "elza" (Spielerwahl -> Elza); weitere Argumente = zusaetzliche Umgebung des Laufs
 function(r38n_exe _lauf _start _raum _pos _input _beginn _exit)
     set(_dir "${_wurzel}/${_lauf}")
     file(MAKE_DIRECTORY "${_dir}")
@@ -70,6 +78,7 @@ function(r38n_exe _lauf _start _raum _pos _input _beginn _exit)
     if(NOT _input STREQUAL "-")          # "-" = keine Eingabe (Skriptlauf)
         list(APPEND _env RE15_INPUT_SCRIPT_BASIS=spiel "RE15_INPUT_SCRIPT_START=${_beginn}" "RE15_INPUT_SCRIPT=${_input}")
     endif()
+    list(APPEND _env ${ARGN})             # z.B. RE15_SET_FLAG (Querbezug leon2090, Runde 41 Spur F)
     re15_start_spiel(_rv 300 ${_env} "${RE15_PC_EXE}")
     set(_z "")
     if(EXISTS "${_dir}/debug.log")
@@ -144,7 +153,8 @@ r38n_fx_bilder(elza1261 "${_d}/fx.log" 13)
 r38n_zeile(elza1261 "${_d}/debug.log" "type=23 vag=7" "Wasser-Schritt-Ton Elza (VAG 7)")
 
 # ---- Leon ROOM2090 (sce-8-Stempel) -----------------------------------------------------------------------------
-r38n_exe(leon2090 leon 2090 "-8438,-25550,0,0" "U1.6,W1" 30 80)
+# Bit (9,110) "Szene gesehen": Querbezug Runde 41 Spur F (s. Kopf, leon2090) - sonst haelt die Ankunftsszene Leon fest.
+r38n_exe(leon2090 leon 2090 "-8438,-25550,0,0" "U1.6,W1" 30 80 RE15_SET_FLAG=9:110)
 set(_d "${_wurzel}/leon2090")
 r38n_zeile(leon2090 "${_d}/wasser.log" "room=2090;stempel=-1620;zweig=stempel;code=0x06032000;part=6;edt=0x1a"
            "Watschritt im Becken (Effekt 6 Sub 3 an Part a1-1, Watsatz 0x1a)")

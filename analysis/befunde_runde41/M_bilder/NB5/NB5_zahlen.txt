@@ -1,0 +1,62 @@
+ROOM3040 C1  vorher      0 px ( 19 Rechtecke) | nachher    116 px ( 37 Rechtecke) | neu   116 | weg 0
+ROOM3040 C2  vorher  16870 px (105 Rechtecke) | nachher  19321 px (128 Rechtecke) | neu  2451 | weg 0
+ROOM3040 C3  vorher   5615 px (105 Rechtecke) | nachher  11584 px (128 Rechtecke) | neu  5969 | weg 0
+ROOM3040 C4  vorher  10254 px (105 Rechtecke) | nachher  13653 px (128 Rechtecke) | neu  3399 | weg 0
+ROOM3040 C5  vorher  14007 px (105 Rechtecke) | nachher  16720 px (128 Rechtecke) | neu  2713 | weg 0
+ROOM3040 C6  vorher   6180 px (105 Rechtecke) | nachher  12166 px (128 Rechtecke) | neu  5986 | weg 0
+ROOM3040 C7  vorher  14869 px (105 Rechtecke) | nachher  20442 px (128 Rechtecke) | neu  5573 | weg 0
+ROOM3040 C9  vorher   8284 px (103 Rechtecke) | nachher  12709 px (128 Rechtecke) | neu  4425 | weg 0
+ROOM3040 C10 vorher   1342 px ( 15 Rechtecke) | nachher   1459 px ( 23 Rechtecke) | neu   117 | weg 0
+ROOM3040 C11 vorher  11593 px (105 Rechtecke) | nachher  12943 px (128 Rechtecke) | neu  1350 | weg 0
+ROOM3040 C12 vorher  15063 px (105 Rechtecke) | nachher  18308 px (128 Rechtecke) | neu  3245 | weg 0
+ROOM3040 C13 vorher  24201 px (105 Rechtecke) | nachher  27117 px (128 Rechtecke) | neu  2916 | weg 0
+ROOM3050 C0  vorher   6323 px ( 98 Rechtecke) | nachher   8247 px (128 Rechtecke) | neu  1924 | weg 0
+ROOM3050 C1  vorher  12978 px (105 Rechtecke) | nachher  16240 px (128 Rechtecke) | neu  3262 | weg 0
+ROOM3050 C4  vorher  10851 px (105 Rechtecke) | nachher  13858 px (117 Rechtecke) | neu  3007 | weg 0
+ROOM3050 C5  vorher  17238 px (105 Rechtecke) | nachher  18092 px (118 Rechtecke) | neu   854 | weg 0
+ROOM3050 C6  vorher      0 px ( 19 Rechtecke) | nachher   1224 px ( 85 Rechtecke) | neu  1224 | weg 0
+ROOM3050 C7  vorher   5221 px ( 88 Rechtecke) | nachher   7361 px (128 Rechtecke) | neu  2140 | weg 0
+ROOM3050 C8  vorher   1336 px ( 44 Rechtecke) | nachher   3361 px (125 Rechtecke) | neu  2025 | weg 0
+ROOM3050 C9  vorher  12416 px ( 89 Rechtecke) | nachher  12948 px (128 Rechtecke) | neu   532 | weg 0
+ROOM3050 C12 vorher   1541 px ( 19 Rechtecke) | nachher   3303 px ( 41 Rechtecke) | neu  1762 | weg 0
+ROOM3050 C13 vorher   6660 px (105 Rechtecke) | nachher   7444 px (128 Rechtecke) | neu   784 | weg 0
+ROOM30A0 C1  vorher  12770 px ( 61 Rechtecke) | nachher  13223 px ( 73 Rechtecke) | neu   453 | weg 0
+ROOM30A0 C2  vorher   2655 px ( 17 Rechtecke) | nachher   3179 px ( 21 Rechtecke) | neu   524 | weg 0
+ROOM30A0 C3  vorher  26981 px (105 Rechtecke) | nachher  28280 px (128 Rechtecke) | neu  1299 | weg 0
+ROOM30A0 C4  vorher  14997 px ( 42 Rechtecke) | nachher  16836 px ( 93 Rechtecke) | neu  1839 | weg 0
+ROOM30A0 C5  vorher   7681 px ( 67 Rechtecke) | nachher   9212 px (128 Rechtecke) | neu  1531 | weg 0
+ROOM30E0 C6  vorher      0 px ( 35 Rechtecke) | nachher    189 px ( 57 Rechtecke) | neu   189 | weg 0
+ROOM30E0 C7  vorher      0 px ( 53 Rechtecke) | nachher   1670 px (128 Rechtecke) | neu  1670 | weg 0
+ROOM30E0 C8  vorher     37 px ( 36 Rechtecke) | nachher   1778 px (118 Rechtecke) | neu  1741 | weg 0
+ROOM30E0 C9  vorher    202 px ( 80 Rechtecke) | nachher   1649 px (128 Rechtecke) | neu  1447 | weg 0
+ROOM4040 C12 vorher  15029 px (105 Rechtecke) | nachher  15752 px (126 Rechtecke) | neu   723 | weg 0
+ROOM40A0 C7  vorher   3956 px ( 40 Rechtecke) | nachher   5418 px ( 71 Rechtecke) | neu  1462 | weg 0
+ROOM5020 C2  vorher   7511 px ( 11 Rechtecke) | nachher   8189 px ( 32 Rechtecke) | neu   678 | weg 0
+ROOM5020 C5  vorher   9258 px ( 53 Rechtecke) | nachher   9835 px ( 83 Rechtecke) | neu   577 | weg 0
+ROOM5020 C7  vorher  20081 px (105 Rechtecke) | nachher  20874 px (128 Rechtecke) | neu   793 | weg 0
+ROOM5020 C9  vorher  18726 px (105 Rechtecke) | nachher  19384 px (128 Rechtecke) | neu   658 | weg 0
+ROOM5050 C2  vorher   2266 px (105 Rechtecke) | nachher   2754 px (123 Rechtecke) | neu   488 | weg 0
+ROOM5050 C3  vorher   6521 px (105 Rechtecke) | nachher   8032 px (128 Rechtecke) | neu  1511 | weg 0
+ROOM5090 C11 vorher  10660 px (104 Rechtecke) | nachher  11751 px (128 Rechtecke) | neu  1091 | weg 0
+ROOM5090 C12 vorher   9362 px (105 Rechtecke) | nachher  13204 px (128 Rechtecke) | neu  3842 | weg 0
+ROOM5090 C13 vorher  16398 px ( 84 Rechtecke) | nachher  17877 px (128 Rechtecke) | neu  1479 | weg 0
+ROOM5090 C14 vorher  11860 px (105 Rechtecke) | nachher  12603 px (128 Rechtecke) | neu   743 | weg 0
+ROOM50B0 C2  vorher  14867 px (105 Rechtecke) | nachher  16955 px (128 Rechtecke) | neu  2088 | weg 0
+ROOM50B0 C3  vorher  14324 px (105 Rechtecke) | nachher  16273 px (128 Rechtecke) | neu  1949 | weg 0
+ROOM5100 C5  vorher   3815 px ( 21 Rechtecke) | nachher   4343 px ( 35 Rechtecke) | neu   528 | weg 0
+ROOM6000 C4  vorher   2648 px ( 28 Rechtecke) | nachher   2739 px ( 38 Rechtecke) | neu    91 | weg 0
+ROOM6000 C5  vorher  24749 px (101 Rechtecke) | nachher  27703 px (128 Rechtecke) | neu  2954 | weg 0
+ROOM6000 C7  vorher  15235 px (105 Rechtecke) | nachher  25726 px (128 Rechtecke) | neu 10491 | weg 0
+ROOM6000 C8  vorher  15045 px (105 Rechtecke) | nachher  20233 px (128 Rechtecke) | neu  5188 | weg 0
+ROOM6000 C9  vorher   4068 px ( 31 Rechtecke) | nachher   4152 px ( 39 Rechtecke) | neu    84 | weg 0
+ROOM6010 C2  vorher   1369 px ( 15 Rechtecke) | nachher   4267 px ( 61 Rechtecke) | neu  2898 | weg 0
+ROOM6010 C3  vorher  12610 px (105 Rechtecke) | nachher  12844 px (128 Rechtecke) | neu   234 | weg 0
+ROOM6010 C5  vorher   1440 px ( 14 Rechtecke) | nachher   3808 px (128 Rechtecke) | neu  2368 | weg 0
+ROOM6010 C6  vorher   1474 px ( 21 Rechtecke) | nachher   3128 px (100 Rechtecke) | neu  1654 | weg 0
+ROOM6010 C7  vorher  11150 px (105 Rechtecke) | nachher  12095 px (124 Rechtecke) | neu   945 | weg 0
+ROOM6010 C12 vorher  14531 px (105 Rechtecke) | nachher  15132 px (128 Rechtecke) | neu   601 | weg 0
+ROOM6010 C13 vorher  13356 px (105 Rechtecke) | nachher  14933 px (128 Rechtecke) | neu  1577 | weg 0
+ROOM6030 C7  vorher   2792 px ( 20 Rechtecke) | nachher   4299 px ( 26 Rechtecke) | neu  1507 | weg 0
+ROOM6030 C9  vorher   3976 px ( 90 Rechtecke) | nachher   4090 px ( 91 Rechtecke) | neu   114 | weg 0
+ROOM6030 C10 vorher   2228 px ( 43 Rechtecke) | nachher   2955 px ( 73 Rechtecke) | neu   727 | weg 0
+SUMME 61 geaenderte Cuts: vorher 559470 px, nachher 675980 px, neu 116510, weg 0

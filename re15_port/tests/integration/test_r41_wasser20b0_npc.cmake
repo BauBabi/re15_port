@@ -14,6 +14,9 @@
 #   (b) Landung ueber den ECHTEN Weg: Tuer 20A0 -> 2090 (Leon) bzw. 20A1 -> 2091 (Elza; Satz @0x1754 byte-gleich:
 #       Rect (3450,4500) 3000x1000, Ziel (6300,-1800,-16250), rot 0x800, Cut 2, Band 1), Steg, Drehung auf rot 3072,
 #       Kante: Kletter-Sub 9/10 -> Landung @0x80038730-d0 -> 8 x FUN_80019700(0x06033000) = fx.log "id=6 sub=3".
+#       Querbezug Runde 41 Spur F (Nachbesserung 2, Muster Orchestrator-Entscheid F-E1): das Tor 20A0/20A1 slot 0 ist seit
+#       Nachtrag 21 bis Bit (9,113) verschlossen und das erste Betreten von 2090/2091 startet bis Bit (9,110) die
+#       Ankunftsszene -> beide Laeufe mit RE15_SET_FLAG=9:110,9:113 (s. landung_lauf-Aufrufe).
 #       Eingabeskript = Abnahme 0 Lauf E2 (Tick 270 + Raumbild; LEFT -96/Bild).
 #       Beide Laeufe starten ueber RE15_TITLE_SHOT (+_AF=2) mit fester Bildzahl im Vorspann; Elza ueber
 #       RE15_TITLE_SHOT_CHAR=1 = re15_gameflow_new_game(1), derselbe Aufruf wie das Player-Select-Ende (main.c).
@@ -255,8 +258,15 @@ function(landung_lauf _name _raum_ab _raum_ziel _elza_bit _extra)
     endif()
 endfunction()
 
-landung_lauf(landung_leon 20a0 2090 0 "RE15_TITLE_SHOT=title.bmp;RE15_TITLE_SHOT_AF=2")
-landung_lauf(landung_elza 20a1 2091 1 "RE15_TITLE_SHOT=title.bmp;RE15_TITLE_SHOT_AF=2;RE15_TITLE_SHOT_CHAR=1")
+# Querbezug Runde 41 Spur F: Nutzer (Nachtrag 21) "man kommt ueber die Leiter zum Aligator, nicht ueber das Tor. Das Tor soll
+# verschlossen sein, und dann mit den Schluessel den man vom Aligator bekommt geoeffnet werden!" + Punkt "neue Cutscene: Wenn
+# man Room 2090 betritt ...". Die Tuer 20A0 -> 2090 ist also nur nach Szene (Bit 110) und Schluessel (Bit 113 "Tor
+# aufgeschlossen", VERTRAG 1.1) begehbar. Gemessen 2026-10-25 (Dossier F_gatorszene.md N2.M1): ohne die Bits 'ROOM20A0 Slot 0
+# (Tor) gesperrt', 'Folge Z' F27/F215/F245, keine Landung; mit den Bits Leon und Elza je DOOR FIRE slot=0, 1 Landung,
+# 104 Zeilen id=6 sub=3 (wie Abnahme A 2).
+landung_lauf(landung_leon 20a0 2090 0 "RE15_TITLE_SHOT=title.bmp;RE15_TITLE_SHOT_AF=2;RE15_SET_FLAG=9:110,9:113")
+landung_lauf(landung_elza 20a1 2091 1
+             "RE15_TITLE_SHOT=title.bmp;RE15_TITLE_SHOT_AF=2;RE15_TITLE_SHOT_CHAR=1;RE15_SET_FLAG=9:110,9:113")
 
 file(REMOVE "${_exe_kopie}")
 message(STATUS "r41_wasser20b0_npc: OK (NPC-Schritte 2000 + Landung Leon 2090 / Elza 2091)")

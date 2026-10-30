@@ -880,6 +880,10 @@ static void op_84(void);
 /* Runde 41 Spur B (Putz der RE2-CORE00.ESP id 4, ROOM40A0 sub14), definiert am Dateiende. */
 static void op_11(void);
 static void op_73(void);
+/* Runde 41 Spur G (Nachbesserung 3, Nachtrag 28): die Ops der RE2-Kanister-Explosion (Raum-ESP ROOM40A0 + Kern-Bank 0),
+ * definiert am Dateiende; Belege G_kanister2080.md 10.1. */
+static void op_4(void);  static void op_6(void);  static void op_37(void); static void op_38(void);
+static void op_41(void); static void op_42(void); static void op_69(void); static void op_78(void);
 
 static void op_rufen(unsigned op)
 {
@@ -916,6 +920,14 @@ static void op_rufen(unsigned op)
     case 58: op_58(); break;    /* 0x80022254 */
     case 64: op_64(); break;    /* 0x80022728 */
     case 84: op_84(); break;    /* 0x80025348 (Runde 35 Spur M) */
+    case 4:  op_4();  break;    /* 0x8001df50 (Runde 41 Spur G, Nachtrag 28) */
+    case 6:  op_6();  break;    /* 0x8001e11c (Runde 41 Spur G, Nachtrag 28) */
+    case 37: op_37(); break;    /* 0x80020660 (Runde 41 Spur G, Nachtrag 28) */
+    case 38: op_38(); break;    /* 0x800206e0 (Runde 41 Spur G, Nachtrag 28) */
+    case 41: op_41(); break;    /* 0x800207e4 (Runde 41 Spur G, Nachtrag 28) */
+    case 42: op_42(); break;    /* 0x800208b8 (Runde 41 Spur G, Nachtrag 28) */
+    case 69: op_69(); break;    /* 0x80022ebc (Runde 41 Spur G, Nachtrag 28) */
+    case 78: op_78(); break;    /* 0x800241c8 (Runde 41 Spur G, Nachtrag 28) */
     default: s_op_unbekannt++; break;   /* von keinem Aufschlag-Skript erreicht (bau_d.md §3) */
     }
 }
@@ -1590,4 +1602,128 @@ static void op_73(void)
     int16_t v = rds16(b, 0x0C);
     b[0x00] = 0;
     wr16(b, 0x0C, (uint16_t)(int16_t)(v / 2));
+}
+/* ============================================================================================
+ * RUNDE 41 SPUR G (Nachbesserung 3, Nachtrag 28 "der Explosionseffekt vom Gaskanister vom Original") - die Ops, die die
+ * R1-Folge des RE2-Alligators (EM23 Fontaene FUN_80103eb4 @0x80102368, Spritzring FUN_8010338c @0x80102374) ueber die
+ * Raum-ESP von ROOM40A0 (Banken 0x26/0x08/0x09/0x1A) und die Kern-Bank 0 erreicht. Alle aus der RE2-Op-Tafel 0x8009D868
+ * selbst disassembliert (info/re2leon/PSX.EXE, Dossier G_kanister2080.md 10.1). `cur` = 0x800DCBD0 (laufender Platz).
+ * ========================================================================================== */
+
+/* Kind-Spawn mit a2 = *(Platz+0x6C) (`lw a2,108`) und a3 = Platz + 0x2C (`addiu a3,v1,44`): FUN_8001cbe8 kopiert die zwei Worte
+ * +0x2C..+0x33 des Elternplatzes nach +0x2C..+0x33 des Kindes; +0x32 ueberschreibt der Spawn danach mit der CLUT. */
+static void kind_an_matrix(uint32_t a0, int16_t a1)
+{
+    const uint8_t *b = cur();
+    const int16_t ofs[4] = { rds16(b, 0x2C), rds16(b, 0x2E), rds16(b, 0x30), rds16(b, 0x32) };
+    (void)re2fx_spawn(a0, a1, s_pool[s_cur].mtx_src, ofs);          /* `jal 0x8001cbe8` (aufgeschoben, 0x4000) */
+}
+
+/* Op 4 = FUN_8001df50: Warten - +3 != 0 -> +3 -= 1 (`lbu v0,3 / beq / addiu v0,v0,-1 / sb v0,3` @0x8001df60-74),
+ * sonst Op 1 (`jal 0x8001dc30` @0x8001df78). */
+static void op_4(void)
+{
+    uint8_t *b = cur();
+    if (b[0x03] != 0) { b[0x03]--; return; }
+    op_1();
+}
+
+/* Op 6 = FUN_8001e11c: Lebensdauer - +2 != 0 -> +2 -= 1 (@0x8001e128-3c), sonst Platz frei: Op B := 0, Op A := 0,
+ * Status := 0 (`sb zero,1 / sb zero,0 / sh zero,24` @0x8001e140-48). */
+static void op_6(void)
+{
+    uint8_t *b = cur();
+    if (b[0x02] != 0) { b[0x02]--; return; }
+    b[0x01] = 0; b[0x00] = 0; wr16(b, 0x18, 0);
+}
+
+/* Op 37 = FUN_80020660: liegen bleiben - Op A/B/[2]/[3] := 0 (`sw zero,0` @0x8002066c), Beschl. x/y := 0 (`sb zero,9 /
+ * sb zero,8` @0x8002067c-80), Anim := 6 (`addiu v0,zero,6 / sb v0,33` @0x8002068c-90), vy/vx := 0 (`sh zero,14 / sh zero,12`
+ * @0x8002069c-a0), Countdown := Anim[6].Dauer (`lbu v0,2(v1) / sb v0,32` @0x800206b4-bc), Status &= 0xA001 (`andi v0,v0,0xa001`
+ * @0x800206d4). */
+static void op_37(void)
+{
+    uint8_t *b = cur();
+    wr32(b, 0x00, 0);
+    b[0x09] = 0; b[0x08] = 0;
+    b[0x21] = 6;
+    wr16(b, 0x0E, 0); wr16(b, 0x0C, 0);
+    b[0x20] = anim_eintrag(b, b[0x21])[2];
+    wr16(b, 0x18, rd16(b, 0x18) & 0xA001u);
+}
+
+/* Op 38 = FUN_800206e0: Beschl. x := 0, vx := 0, +3 := 0 (`sb zero,8 / sh zero,12 / sb zero,3` @0x800206ec-f8). */
+static void op_38(void)
+{
+    uint8_t *b = cur();
+    b[0x08] = 0; wr16(b, 0x0C, 0); b[0x03] = 0;
+}
+
+/* Op 41 = FUN_800207e4: drei Brocken der Raumbank 9 - Sub step[2]+0/+1/+2 mit Skala 0x0800/0x1000/0x0c00 (`lui t0,0x900 /
+ * ori t0,t0,0x800|0x1000|0xc00` @0x800207f4/@0x8002082c/@0x80020868, Sub `lbu a0,2 / addiu a0,a0,1|2 / sll a0,a0,16`),
+ * Gier a1 = rnd << 4 (`sll v0,v0,20 / sra a1,v0,16` @0x800207fc-0x80020808); danach Op A := 42 (`addiu v0,zero,42 / sb v0,0`
+ * @0x800208a4-ac). */
+static void op_41(void)
+{
+    static const uint16_t k_skala[3] = { 0x0800, 0x1000, 0x0c00 };
+    for (unsigned k = 0; k < 3; k++) {
+        const int16_t a1 = (int16_t)(((int32_t)(rng() << 20)) >> 16);   /* `jal 0x80015fe8` vor dem Spawn */
+        kind_an_matrix(0x09000000u | ((uint32_t)(cur()[0x02] + k) << 16) | k_skala[k], a1);
+    }
+    cur()[0x00] = 42;
+}
+
+/* Op 42 = FUN_800208b8: zwei weitere Brocken - Sub step[2]+3/+4 mit Skala 0x0c00/0x0a00 (`ori t0,t0,0xc00` @0x800208cc,
+ * `ori t0,t0,0xa00` @0x80020908, `addiu a0,a0,3|4` @0x800208ec/@0x80020928), danach Op A := 0 (`sb zero,0` @0x80020944). */
+static void op_42(void)
+{
+    static const uint16_t k_skala[2] = { 0x0c00, 0x0a00 };
+    for (unsigned k = 0; k < 2; k++) {
+        const int16_t a1 = (int16_t)(((int32_t)(rng() << 20)) >> 16);
+        kind_an_matrix(0x09000000u | ((uint32_t)(cur()[0x02] + 3 + k) << 16) | k_skala[k], a1);
+    }
+    cur()[0x00] = 0;
+}
+
+/* Op 69 = FUN_80022ebc: Blut-Sprueher der Raumbank 0x26 (Fontaene Tick 1 `0x26032000` @0x80103f4c-6c).
+ *   +2 == 0 (`beq a0,zero,0x80022f08`): Status := 0x8002 (`ori v0,zero,0x8002 / sh v0,24` @0x80022f08-0c), +2 := 1, +3 := 90
+ *            (`addiu v0,zero,90 / sb v0,3` @0x80022f20-24), dann wie +2 == 1 (kein Ruecksprung @0x80022f24 -> 0x80022f28).
+ *   +2 == 1: +3 == 0 -> Platz frei (`sb zero,1 / sb zero,0 / sh zero,24` @0x800231d4-dc); sonst 3 Kinder je Bild:
+ *            a0 = 0x26<<24 | ((rnd % 3) + (Sub & 0xf8))<<16 | Skala(+0x3A) (`andi s2,v0,0xf8` @0x80022ef0, /3 ueber 0x55555556
+ *            @0x80022f48-7c, `lui s1,0x2600` @0x80022f68, `lhu v0,58` @0x80022f8c), a1 = +0x22 + 400 * (rnd % 30) (/30 ueber
+ *            0x88888889 @0x80022fa0-d8, *25 *16 @0x80022fdc-f0, `lhu a1,34` @0x80022fec), `jal 0x8001cbe8` @0x80022ffc;
+ *            +3 < 65 (`sltiu v0,v0,0x41` @0x80023170) -> Skala := Skala * 955 / 1000 (@0x8002317c-b0); +3 -= 1 (@0x800231c8).
+ *   sonst nichts (`j 0x800231e0` @0x80022f00). */
+static void op_69(void)
+{
+    uint8_t *b = cur();
+    const unsigned s2 = b[0x1E] & 0xF8u;
+    if (b[0x02] == 0) { wr16(b, 0x18, 0x8002u); b[0x02] = 1; b[0x03] = 90; }
+    else if (b[0x02] != 1) return;
+    b = cur();
+    if (b[0x03] == 0) { b[0x01] = 0; b[0x00] = 0; wr16(b, 0x18, 0); return; }
+    for (int k = 0; k < 3; k++) {
+        const uint32_t sub = (rng() % 3u) + s2;               /* `addu s0,s0,s2` @0x80022f88 */
+        const uint32_t a0  = (sub << 16) | (0x26000000u | rd16(cur(), 0x3A));
+        const uint32_t r30 = rng() % 30u;
+        const int16_t  a1  = (int16_t)(rd16(cur(), 0x22) + r30 * 400u);
+        kind_an_matrix(a0, a1);
+    }
+    b = cur();
+    if (b[0x03] < 0x41) wr16(b, 0x3A, (uint16_t)mal_durch_1000(rd16(b, 0x3A), 955, 1));
+    b[0x03]--;
+}
+
+/* Op 78 = FUN_800241c8: Op 2 (`jal 0x8001dd2c` @0x800241d0), dann Beschl. +8/+9/+10 und v +0xC/+0xE/+0x10 := Feld * Skala / 3000
+ * (Magic 0x057619f1 `lui a3,0x576 / ori a3,a3,0x19f1` @0x800241f8-fc, `mfhi / sra 6 / subu` je Feld @0x80024200-0x80024340) -
+ * dieselbe Rechnung wie Op 11 nach Op 1. */
+static void op_78(void)
+{
+    op_2();
+    uint8_t *b = cur();
+    int32_t s = (int32_t)rd16(b, 0x3A);
+    for (int o = 8; o <= 10; o++)
+        b[o] = (uint8_t)(int8_t)(((int32_t)(int8_t)b[o] * s) / 3000);
+    for (int o = 0x0C; o <= 0x10; o += 2)
+        wr16(b, o, (uint16_t)(int16_t)(((int32_t)rds16(b, o) * s) / 3000));
 }
