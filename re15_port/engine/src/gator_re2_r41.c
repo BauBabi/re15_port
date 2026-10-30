@@ -929,6 +929,7 @@ typedef struct {
 typedef struct { int start_ok, im, vd, aus, kx, ky, bilder, kopf_ok, kiefer_ok; int32_t m; } gr2_r1_urteil_t;
 static int gr2_r1_pfad(const re15_actor_t *e, gr2_r1_pfad_t *P);                 /* nach k_ring definiert */
 static int gr2_kk_takt(const re15_actor_t *e, int mit_kanister, int32_t *dx, int32_t *dz);   /* NB4 Kopf-Klemme, s. re15_gr2_kopf_klemme */
+static void gr2_kk_punkt(const int32_t p[3], int32_t u[4]);
 static uint16_t gr2_r1_skala(int ring);                                          /* ebenso */
 static int gr2_fin_proj(const re15_camera_view_t *v, const int32_t p[3], int *sx, int *sy, int32_t *vz_aus);
 /* Ein Punkt in Cut c: 1 = im Bild (+ Rand bei ring >= 0), im Viereck, unverdeckt; *sx/*sy Bildlage; *aus/*vd Gruende. */
@@ -1883,6 +1884,16 @@ void re15_gr2_r1_start(int slot, re15_actor_t *e)
     if (s_kan.aktiv) {
         s_kan.anhaengen = 0;
         if (!s_kan.angehaengt) gr2_kan_welt_setzen(s_kan.rot, s_kan.pos);
+        else {                                              /* Runde 41 Spur P: Rest-Ueberstand der weichen Klemme (s. GR2_KK_SCHRITT) */
+            int32_t u[4] = { 0, 0, 0, 0 };
+            const int32_t kf[3] = { s_kan.welt[0] + (int32_t)(((int64_t)s_kan.welt_rot[1] * -2784) >> 12),
+                                    s_kan.welt[1] + (int32_t)(((int64_t)s_kan.welt_rot[4] * -2784) >> 12),
+                                    s_kan.welt[2] + (int32_t)(((int64_t)s_kan.welt_rot[7] * -2784) >> 12) };   /* Modellhoehe 2784, s. gr2_kk_rechnen */
+            gr2_kk_punkt(s_kan.welt, u);
+            gr2_kk_punkt(kf, u);
+            s_kan.welt[0] += u[0] - u[1];
+            s_kan.welt[2] += u[2] - u[3];
+        }
         memcpy(s_kan.pos, s_kan.welt, sizeof s_kan.pos);
         memcpy(s_kan.rot, s_kan.welt_rot, sizeof s_kan.rot);
         s_kan.angehaengt = 0; s_kan.stufe = 13;
@@ -2190,6 +2201,24 @@ static int gr2_kk_takt(const re15_actor_t *e, int mit_kanister, int32_t *dx, int
     return rv == 0 && gr2_kk_rechnen(e, poses, mit_kanister, dx, dz);
 }
 static struct { uint8_t an; uint32_t f0; int n; int32_t max; } s_kk;   /* Messzeile KOPF-KLEMME (gator_boss.log) */
+/* Runde 41 Spur P (Abnahme G 4 O1, Nutzer-Punkt "Lagespruenge mit dem Kanister im Maul ... ohne sichtbaren Sprung"): beim Tragen baut die Klemme den
+ * Ueberstand ueber mehrere Bilder ab - hoechstens GR2_KK_SCHRITT je Bild = groesster authored Wurzelschritt der Clips 6/3/0/1 x Skala 2731 (Clip 6: 340,
+ * unit_r41_re2gator_lauer; Massstab des Riegels integration_r41_re2gator "sichtbarer Lagesprung"). Vorher der ganze Ueberstand in EINEM Bild: bis 1517 je
+ * Bild beim Anhaengen (Lauf v1_leon F156), +457/+582/+379 im Biss-Clip an der Suedwand. G-E5 (der Kanister beim R1 liegt innerhalb der Aussenwaende, Spritzring
+ * im Regions-Viereck) haelt re15_gr2_r1_start: der Kanister loest sich beim Schuss, ein Rest-Ueberstand verschiebt nur ihn (im selben Bild zerplatzt er). */
+#define GR2_KK_SCHRITT 340
+#define GR2_KK_SCHRITT_R1 500                                  /* im R1-Tod: der Vortrieb selbst beginnt mit -500 je Bild (`g->r1_speed` @0x8010246c-70) */
+static int s_kk_hart = 0;                                     /* Gegenprobe der Riegel: Klemme wie bis Spur P (ganzer Ueberstand in einem Bild) */
+void re15_gr2_kk_hart_setzen(int an) { s_kk_hart = an; }
+int  re15_gr2_kk_hart(void) { return s_kk_hart; }
+void re15_gr2_kk_schritt(int32_t ox, int32_t oz, int32_t *nx, int32_t *nz)
+{
+    const int64_t tx = (int64_t)*nx - ox, tz = (int64_t)*nz - oz, d2 = tx * tx + tz * tz;
+    if (d2 <= (int64_t)GR2_KK_SCHRITT * GR2_KK_SCHRITT) return;
+    const int32_t d = (int32_t)re15_squareroot0((uint32_t)(d2 > 0xffffffffLL ? 0xffffffffLL : d2)) + 1;   /* + 1: SquareRoot0 rundet ab */
+    *nx = ox + (int32_t)((tx * GR2_KK_SCHRITT) / d);
+    *nz = oz + (int32_t)((tz * GR2_KK_SCHRITT) / d);
+}
 int re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz)
 {
     *dx = *dz = 0;
@@ -2209,6 +2238,15 @@ int re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz)
                          (int)e->motion, (int)e->anim_frame);
         }
         s_kk.n++; if (b > s_kk.max) s_kk.max = b;
+        if (!s_kk_hart) {                                     /* Spur P: Abbau ueber mehrere Bilder (s. GR2_KK_SCHRITT) */
+            const int64_t d2 = (int64_t)*dx * *dx + (int64_t)*dz * *dz;
+            const int32_t l = s_g[slot].r1_phase != 0 ? GR2_KK_SCHRITT_R1 : GR2_KK_SCHRITT;
+            if (d2 > (int64_t)l * l) {
+                const int32_t d = (int32_t)re15_squareroot0((uint32_t)(d2 > 0xffffffffLL ? 0xffffffffLL : d2));
+                *dx = (int32_t)(((int64_t)*dx * l) / d);
+                *dz = (int32_t)(((int64_t)*dz * l) / d);
+            }
+        }
     } else if (s_kk.an) {
         s_kk.an = 0;
         re15_gr2_log("KOPF-KLEMME aus F%u: %d Bilder ab F%u, groesster Ueberstand %d", (unsigned)g_engine.frame_count, s_kk.n,

@@ -166,6 +166,10 @@ void re15_gr2_nachtakt(int slot, re15_actor_t *e);
  * z[-27000..-5400]; *dx/*dz = Verschiebung des ganzen Alligators nach innen (Aufruf re15_gator_boss_tick nach der Wurzel-Klemme,
  * vor re15_gr2_nachtakt). Messzeilen "KOPF-KLEMME an/aus" in gator_boss.log. */
 int  re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz);
+/* Runde 41 Spur P (Abnahme G 4 O1): Bildschritt (ox,oz) -> (nx,nz) auf hoechstens 340 kuerzen (groesster authored Wurzelschritt, gator_re2_r41.c GR2_KK_SCHRITT). */
+void re15_gr2_kk_schritt(int32_t ox, int32_t oz, int32_t *nx, int32_t *nz);
+void re15_gr2_kk_hart_setzen(int an);   /* Pruefhaken (Gegenprobe der Riegel, kein Spielweg, kein Env-Schalter): 1 = Klemme wie bis Spur P */
+int  re15_gr2_kk_hart(void);
 /* Messhaken (Riegel unit_r41_re2gator_sitz): Part-6-Weltmatrix der letzten re15_gr2_nachtakt-Pose (Rotation ohne Skala, Lage
  * mit Zeichen-Skala) und die Effekt-Quellpuffer (0 = Part 6, 1 = Part 7, 2 = Kanister; 32-Byte-MATRIX-Abbild). 0 = keine. */
 int  re15_gr2_part6_gezeichnet(int32_t rot[9], int32_t pos[3]);

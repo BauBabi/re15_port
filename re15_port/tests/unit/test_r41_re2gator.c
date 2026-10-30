@@ -2142,11 +2142,17 @@ static int teil_kopfklemme(void)
     printf("kopfklemme: Wurzel (2000,-25400) Gier 0x400 mit Kanister -> Ueberstand vor dem Takt (%d,%d)\n", (int)dx, (int)dz);
     CHECK(vorher && dz > 0, "Lage ohne Ueberstand - der Riegel prueft nichts (dz %d)", (int)dz);
     int32_t kmin = 0x7fffffff, kp[3], kr[9];
+    /* Runde 41 Spur P (Abnahme G 4 O1, Querbezug): die Klemme baut den Ueberstand ueber mehrere Bilder ab, hoechstens 340 je Bild (gator_re2_r41.c
+     * GR2_KK_SCHRITT = groesster authored Wurzelschritt) - dieser Aufbau setzt den Alligator mit ~2850 Ueberstand an die Wand: ab Bild 9 innerhalb. */
     for (int f = 0; f < 30; f++) {
         leon_statue(5800, -26500);
+        const int32_t ax = e->x, az = e->z;
         tick();
+        const int32_t sdx = e->x - ax, sdz = e->z - az;
+        CHECK((int64_t)sdx * sdx + (int64_t)sdz * sdz <= (int64_t)341 * 341, "Bild %d: Lagesprung (%d,%d) > 340", f, (int)sdx, (int)sdz);
         CHECK(re15_gr2_kanister_welt(kp, kr), "Bild %d: kein Kanister", f);
         if (kp[2] < kmin) kmin = kp[2];
+        if (f < 9) continue;
         CHECK(kp[0] >= -8900 && kp[0] <= 7200 && kp[2] >= -27000 && kp[2] <= -5400, "Bild %d: Kanister (%d,%d) ausserhalb der Aussenwaende",
               f, kp[0], kp[2]);
         /* anderes Ende des Kanisters: Weltdrehung x (0,-2784,0) (KANISTER40A0.MD1 y -2784..0) */

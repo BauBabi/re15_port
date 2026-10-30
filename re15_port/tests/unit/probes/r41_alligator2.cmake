@@ -10,7 +10,7 @@ target_compile_definitions(test_r41_alligator2 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_alligator2 PRIVATE m)
 endif()
-foreach(_teil kamera kamera_elza schluessel)
+foreach(_teil kamera kamera_elza schluessel tragen)
     add_test(NAME unit_r41_alligator2_${_teil} COMMAND test_r41_alligator2 ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_alligator2_${_teil} PROPERTIES TIMEOUT 600)

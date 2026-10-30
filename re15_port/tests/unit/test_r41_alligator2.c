@@ -9,6 +9,7 @@
  *   kamera / kamera_elza  Nachtrag 31 Punkt 2: Abstand der Gator-Teile zur laufenden Kamera und Bildanteil ueber die ersten 150
  *                         Bilder ab dem Kampfbeginn (s. kam_messen)
  *   schluessel            FG-E7 Option (a): Schluessel-Lagewahl sucht weiter, Scan ueber das ganze Becken mindestens 10,4 Bildpunkte
+ *   tragen                Abnahme G 4 O1: mit dem Kanister im Maul kein Lagesprung (Bildschritt <= 340), Gegenprobe harte Klemme
  * Werkzeug (kein Riegel):
  *   lagesuche2 <datei>    wie lagesuche von test_r41_gatorszene, zusaetzlich Kampfbeginn-Lage und Kamera-Mass
  */
@@ -385,11 +386,142 @@ static void teil_schluessel_p(void)
           st[1] + st[2] + st[3] + st[4], (int)d_max);
 }
 
+/* ---- Teil: tragen (Lagespruenge mit dem Kanister im Maul, Abnahme G 4 O1) ----------------------------------------------------
+ * Echter Boss-Takt: Szene bis zum Kampf, Alligator an (x,z) Gier gier, Kanister vor dem Maul (Form teil_kopfklemme test_r41_re2gator.c: Wurzel fest,
+ * 8800 x Skala voraus @Fenster), Aufnahme, dann frei: bilder Takte mit stehendem Spieler an (lx,lz). Mass je Bildpaar = Wurzelschritt (Sicht-Messzeile der
+ * Spur B, Schranke 340 = groesster authored Wurzelschritt, integration_r41_re2gator). */
+typedef struct {
+    int     bilder, s300, s340, s400, s600, s1000;
+    int32_t max_d; int max_f; int32_t max_von[2], max_nach[2]; int max_clip;
+    int32_t ueber_max;       /* groesster Ueberstand von Kopf/Kanister ueber die Aussenwaende */
+    int     ueber_n;         /* Bilder mit Ueberstand > 300 (Rand der Ueberblendung, teil_kopfklemme) */
+} trag_mass_t;
+static int32_t ueberstand(const int32_t p[3])
+{
+    int32_t u = 0;
+    if (-8900 - p[0] > u) u = -8900 - p[0];
+    if (p[0] - 7200 > u) u = p[0] - 7200;
+    if (-27000 - p[2] > u) u = -27000 - p[2];
+    if (p[2] + 5400 > u) u = p[2] + 5400;
+    return u;
+}
+static int trag_lauf(int32_t x, int32_t z, int gier, int32_t lx, int32_t lz, int bilder, trag_mass_t *m, int zeige)
+{
+    memset(m, 0, sizeof *m);
+    re15_actor_t *g = szene_bis_kampf(0);
+    if (!g) return 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int32_t sk = g->render_scale_q12 ? g->render_scale_q12 : 4096;
+    const int32_t vx = (int32_t)(((int64_t)re15_cos_q12(gier) * 8800 * sk) >> 24), vz = (int32_t)(((int64_t)-re15_sin_q12(gier) * 8800 * sk) >> 24);
+    if (!re15_aot_water_at(x + vx, z + vz)) return 0;          /* der geworfene Kanister liegt im Wasser (kanister2080_r41.c Aufschlag) */
+    re15_gr2_kanister_setzen(x + vx, -1200, z + vz);
+    for (int f = 0; f < 200 && !re15_gr2_traegt(); f++) {
+        g->x = x; g->z = z; g->rot_y = (int16_t)gier;
+        pl->x = lx; pl->z = lz; pl->hp = 100;
+        frame(0, 0);
+    }
+    if (!re15_gr2_traegt()) return 0;
+    int32_t ax = g->x, az = g->z;
+    for (int f = 1; f <= bilder && re15_gr2_traegt(); f++) {
+        pl->x = lx; pl->z = lz; pl->hp = 100;
+        frame(0, 0);
+        const int64_t dx = (int64_t)g->x - ax, dz = (int64_t)g->z - az;
+        const int32_t d = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+        m->bilder++;
+        if (d > 300) m->s300++;
+        if (d > 340) m->s340++;
+        if (d > 400) m->s400++;
+        if (d > 600) m->s600++;
+        if (d > 1000) m->s1000++;
+        if (d > m->max_d) { m->max_d = d; m->max_f = f; m->max_von[0] = ax; m->max_von[1] = az; m->max_nach[0] = g->x; m->max_nach[1] = g->z; m->max_clip = g->motion; }
+        if (zeige > 1) printf("    F+%d d %d (%d,%d) Gier %d Clip %d Bild %d\n", f, (int)d, g->x, g->z, (int)g->rot_y, (int)g->motion, (int)g->anim_frame);
+        if (zeige && d > 340) printf("    F+%d Sprung %d (%d,%d) -> (%d,%d) Gier %d Clip %d Bild %d\n", f, (int)d, (int)ax, (int)az, g->x, g->z, (int)g->rot_y, (int)g->motion, (int)g->anim_frame);
+        ax = g->x; az = g->z;
+        int32_t kp[3], kr[9], u = 0;
+        if (re15_gr2_kanister_welt(kp, kr)) {
+            const int32_t fp[3] = { kp[0] + (int32_t)(((int64_t)kr[1] * -2784) >> 12), kp[1], kp[2] + (int32_t)(((int64_t)kr[7] * -2784) >> 12) };
+            const int32_t u1 = ueberstand(kp), u2 = ueberstand(fp);
+            u = u1 > u2 ? u1 : u2;
+        }
+        int32_t k6[3];
+        if (re15_gr2_bone_welt_pub(g, 6, k6)) { const int32_t u3 = ueberstand(k6); if (u3 > u) u = u3; }
+        if (u > m->ueber_max) m->ueber_max = u;
+        if (u > 300) m->ueber_n++;
+    }
+    return 1;
+}
+static void trag_scan(int zeige)
+{
+    static const int32_t leon[6][2] = { { -8200, -25550 }, { -6000, -17500 }, { 0, -7000 }, { -8000, -16000 }, { 5800, -26500 }, { 6000, -21000 } };
+    static const int32_t start[][2] = { { -5173, -18311 }, { -6096, -21600 }, { -4000, -24000 }, { 3000, -23000 }, { -5000, -10000 }, { 2000, -8000 },
+                                        { -6500, -15700 }, { -5500, -7000 }, { 5000, -24500 }, { 0, -25000 }, { -7000, -13000 }, { -3000, -22500 } };
+    trag_mass_t ges; memset(&ges, 0, sizeof ges);
+    int laeufe = 0, ohne = 0;
+    for (size_t si = 0; si < sizeof start / sizeof start[0]; si++)
+        for (int gi = 0; gi < 8; gi++)
+            for (int li = 0; li < 6; li++) {
+                trag_mass_t m;
+                const int gier = gi * 512;
+                if (!trag_lauf(start[si][0], start[si][1], gier, leon[li][0], leon[li][1], 900, &m, 0)) { ohne++; continue; }
+                laeufe++;
+                ges.bilder += m.bilder; ges.s300 += m.s300; ges.s340 += m.s340; ges.s400 += m.s400; ges.s600 += m.s600; ges.s1000 += m.s1000; ges.ueber_n += m.ueber_n;
+                if (m.ueber_max > ges.ueber_max) ges.ueber_max = m.ueber_max;
+                if (m.max_d > ges.max_d) ges = (trag_mass_t){ ges.bilder, ges.s300, ges.s340, ges.s400, ges.s600, ges.s1000, m.max_d, m.max_f, { m.max_von[0], m.max_von[1] },
+                                                             { m.max_nach[0], m.max_nach[1] }, m.max_clip, ges.ueber_max, ges.ueber_n };
+                if (zeige && m.max_d > 340)
+                    printf("TRAG Start (%d,%d) Gier %d Leon (%d,%d): %d Bilder, max %d F+%d (%d,%d)->(%d,%d) Clip %d, >340: %d, Ueberstand max %d, Bilder > 300: %d\n", (int)start[si][0],
+                           (int)start[si][1], gier, (int)leon[li][0], (int)leon[li][1], m.bilder, (int)m.max_d, m.max_f, (int)m.max_von[0], (int)m.max_von[1], (int)m.max_nach[0],
+                           (int)m.max_nach[1], m.max_clip, m.s340, (int)m.ueber_max, m.ueber_n);
+            }
+    printf("TRAGSCAN: %d Laeufe (%d ohne Aufnahme), %d Bilder, Sprung max %d (F+%d (%d,%d)->(%d,%d) Clip %d), > 300: %d, > 340: %d, > 400: %d, > 600: %d, > 1000: %d, Ueberstand max %d, "
+           "Bilder Ueberstand > 300: %d\n", laeufe, ohne, ges.bilder, (int)ges.max_d, ges.max_f, (int)ges.max_von[0], (int)ges.max_von[1], (int)ges.max_nach[0], (int)ges.max_nach[1],
+           ges.max_clip, ges.s300, ges.s340, ges.s400, ges.s600, ges.s1000, (int)ges.ueber_max, ges.ueber_n);
+}
+
+/* Riegel: Auswahl der Scan-Laeufe, die ohne die weiche Klemme springen (Scan trag_scan, Stand vor Spur P: > 340 in 946 Bildpaaren, > 1000 in 68). */
+static void teil_tragen(void)
+{
+    printf("== tragen (Abnahme G 4 O1) ==\n");
+    static const struct { int32_t x, z; int gier; int32_t lx, lz; } k[] = {
+        { -6096, -21600, 3072, -8200, -25550 }, { -6096, -21600, 2560, -6000, -17500 }, { -7000, -13000, 3072, -8000, -16000 }, { 5000, -24500, 2560, 5800, -26500 },
+        { 3000, -23000, 2560, 0, -7000 },       { 0, -25000, 2560, 0, -7000 },          { 2000, -8000, 1536, 6000, -21000 },    { 2000, -8000, 3584, 5800, -26500 },
+        { -5500, -7000, 512, 0, -7000 },        { -3000, -22500, 1024, -8200, -25550 } };
+    const int n = (int)(sizeof k / sizeof k[0]);
+    for (int hart = 0; hart < 2; hart++) {
+        re15_gr2_kk_hart_setzen(hart);
+        trag_mass_t ges; memset(&ges, 0, sizeof ges);
+        int laeufe = 0;
+        for (int i = 0; i < n; i++) {
+            trag_mass_t m;
+            if (!trag_lauf(k[i].x, k[i].z, k[i].gier, k[i].lx, k[i].lz, 900, &m, 0)) continue;
+            laeufe++;
+            ges.bilder += m.bilder; ges.s340 += m.s340; ges.s600 += m.s600; ges.ueber_n += m.ueber_n;
+            if (m.max_d > ges.max_d) ges.max_d = m.max_d;
+            if (m.ueber_max > ges.ueber_max) ges.ueber_max = m.ueber_max;
+        }
+        printf("    %s: %d Laeufe, %d Bilder, Schritt max %d, > 340: %d, > 600: %d, Ueberstand max %d, Bilder Ueberstand > 300: %d\n", hart ? "Gegenprobe harte Klemme" : "weiche Klemme",
+               laeufe, ges.bilder, (int)ges.max_d, ges.s340, ges.s600, (int)ges.ueber_max, ges.ueber_n);
+        if (!hart) PRUEF(laeufe >= 7 && ges.max_d <= 340, "mit dem Kanister im Maul kein Lagesprung ueber den groessten authored Wurzelschritt 340 (max %d, %d Bildpaare, %d Laeufe)",
+                         (int)ges.max_d, ges.bilder, laeufe);
+        else PRUEF(ges.s340 > 0, "Gegenprobe: die harte Klemme springt (max %d, %d Bildpaare > 340) - der Riegel misst", (int)ges.max_d, ges.s340);
+    }
+    re15_gr2_kk_hart_setzen(0);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     if (!strcmp(teil, "lagesuche2") && argc >= 3) { if (!gator_bank()) return 1; return lagesuche2(argv[2]); }
     if (!strcmp(teil, "gsz")) return gsz_haupt(argc - 1, argv + 1);    /* Durchreiche auf die Teile von test_r41_gatorszene */
+    if (!strcmp(teil, "trag_scan")) { if (!gator_bank()) return 1; re15_door_seq_setze_laeufer(fang); trag_scan(argc > 2); return 0; }
+    if (!strcmp(teil, "trag_eins") && argc >= 7) {
+        trag_mass_t m;
+        if (!gator_bank()) return 1;
+        re15_door_seq_setze_laeufer(fang);
+        const int r = trag_lauf(atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), argc > 7 ? atoi(argv[7]) : 900, &m, argc > 8 ? 2 : 1);
+        printf("trag_eins: rc %d, %d Bilder, Sprung max %d F+%d, > 340: %d, Ueberstand max %d, Bilder > 300: %d\n", r, m.bilder, (int)m.max_d, m.max_f, m.s340, (int)m.ueber_max, m.ueber_n);
+        return 0;
+    }
     if (!strcmp(teil, "schluessel_scan")) {   /* Werkzeug: voller Scan */
         int n, kl, st[5]; int32_t d_max;
         if (!gator_bank()) return 1;
@@ -404,6 +536,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "kamera"))      teil_kamera(0);
     if (alle || !strcmp(teil, "kamera_elza")) teil_kamera(1);
     if (alle || !strcmp(teil, "schluessel"))  teil_schluessel_p();
+    if (alle || !strcmp(teil, "tragen"))      teil_tragen();
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

@@ -1084,6 +1084,8 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued,
     g->cx0 = cx; g->cx1 = ziel_x;
     if (von_sued) { g->cz0 = GB_RAMP_Z0 - GB_BAHN_M; g->cz1 = GB_RAMP_Z1 + GB_BAHN_M; }
     else          { g->cz0 = GB_RAMP_Z1 + GB_BAHN_M; g->cz1 = GB_RAMP_Z0 - GB_BAHN_M; }
+    const int kan = re15_gr2_traegt();                /* Runde 41 Spur P (Abnahme G 4 O1): mit dem Kanister im Maul beginnt die Bahn an der Lage des Gators */
+    if (kan) { g->cx0 = e->x; g->cz0 = e->z; }        /* statt des Anlaufpunkts (Sprung bis 1425 je Bild, trag_scan), Wende mit 0x60/Bild (GIER-WACHE) */
     {
         int64_t ldx = g->cx1 - g->cx0, ldz = g->cz1 - g->cz0;
         int64_t l2 = ldx * ldx + ldz * ldz;
@@ -1107,7 +1109,7 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued,
     g->ct = 0; g->bite_done = 0;
     g->phase = GBP_CROSS;
     e->motion = 0; e->anim_frame = 0;
-    re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);   /* Blick ueber die Insel */
+    re15_enemy_steer_point(e, g->cx1, g->cz1, kan ? 0x60 : 0x800);   /* Blick ueber die Insel */
     {   /* CROSS-Start-Telemetrie (Diagnose) */
         static FILE *s_cl = NULL;
         if (!s_cl) s_cl = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
@@ -1265,8 +1267,20 @@ void re15_gator_boss_tick(int slot)
     {   /* (2b) Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M3): Kopf-Klemme - Kanister im Maul / R1-Tod: Hals, Kopf, Kiefer und Kanister
          * innerhalb der Aussenwaende (gator_re2_r41.c re15_gr2_kopf_klemme); nicht im FRESSEN (eigene Buehne) und nicht bei Klemme aus. */
         int32_t kx, kz;
-        if (g_room_rdt_ok && !gb_klemme_aus(&s_gb[slot]) && s_gb[slot].phase != GBP_FRESSEN && re15_gr2_kopf_klemme(slot, e, &kx, &kz))
-        { e->x += kx; e->z += kz; e->anchor_x += kx; e->anchor_z += kz; }
+        if (g_room_rdt_ok && !gb_klemme_aus(&s_gb[slot]) && s_gb[slot].phase != GBP_FRESSEN && re15_gr2_kopf_klemme(slot, e, &kx, &kz)) {
+            /* Runde 41 Spur P (Abnahme G 4 O1): beim Tragen darf die Kopf-Klemme die Wurzel nicht in den Slab der Wurzel-Klemme schieben - dort warf sie (2) im
+             * naechsten Takt zurueck (Lauf v1_leon F163 x -1867 -> -3184, Hin- und Rueckspruenge 1517/-1317). */
+            if (s_gb[slot].phase != GBP_RE2_TOD && !re15_gr2_kk_hart()) {
+                int32_t nx = e->x + kx, nz = e->z + kz;
+                re15_gr2_kk_schritt(ox, oz, &nx, &nz);    /* ganzer Bildschritt (Takt + Klemme) hoechstens GR2_KK_SCHRITT */
+                re15_collision_constrain_enemy(&g_room_rdt, e->x, e->z, &nx, &nz, e->hit_radius_min, e->y, 4u);
+                int32_t tx = nx, tz = nz;
+                re15_gr2_kk_schritt(ox, oz, &tx, &tz);    /* die Wurzel-Klemme fuehrt um die Slab-Ecke: dann kein Klemmen in diesem Bild (Lauf trag_scan: 482) */
+                if (tx != nx || tz != nz) { nx = e->x; nz = e->z; }
+                kx = nx - e->x; kz = nz - e->z;
+            }
+            e->x += kx; e->z += kz; e->anchor_x += kx; e->anchor_z += kz;
+        }
     }
     re15_gr2_nachtakt(slot, e);                               /* (3) */
     re15_gatorszene_r41_nachtakt(slot, e);                    /* Runde 41 Spur F (Haken): Leiche im Maul = Kind der Part-6-Matrix */
@@ -2307,6 +2321,7 @@ static void gb_takt(int slot)
 
     case GBP_CROSS: {                         /* Punkt 8: Bogen ueber die Rampe */
         g->ct++;
+        if (re15_gr2_traegt()) re15_enemy_steer_point(e, g->cx1, g->cz1, 0x60);   /* Runde 41 Spur P: Wende weiter (s. gb_cross_begin) */
         int32_t t = g->ct;                    /* 0..GB_CROSS_FRAMES */
         /* ANTI-HILFLOSIGKEIT (Nutzer 2026-09-11: "waehrend seiner Kletter-
          * phase ist der Aligator absolut hilflos" - Leon sprang die Stufe
