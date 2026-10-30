@@ -189,6 +189,10 @@ typedef struct {
                              * ZEIGER auf die Zelle (`sw s4,436(v0)` @0x8003b4ec, `sw zero,436` beim
                              * Clear @0x8003b1ec); der Port legt gleich den einzigen gelesenen Wert ab
                              * (Hund: `lw +0x1b4; lhu 10(v0); sh -> +0x1ea` @0x8010e294-2a4 / @0x8010e668-78). */
+    int16_t  coll_cell;     /* +0x1b4 als ZELLEN-INDEX in g_room_rdt.sca (-1 = keine; Clear @0x8003b1ec, Treffer
+                             * `sw s4,436(v0)` @0x8003b4ec). Die Spinne 0x25 liest daraus ausser +0x0a auch
+                             * Breite +0, Tiefe +2, x +4, z +6 (@0x80111a00-ab4, STAGE2). Schreiber:
+                             * re15_enemy_sca_clamp(_band) ueber re15_collision_letzte_zelle(). */
     uint8_t  contact_flags; /* +0x1c2: BODY-push contact bits (FUN_8002aec4: |=1 player pushed me,
                              * |=2 an enemy did); cleared per tick (FUN_8002b498). */
     int16_t  render_scale_q12; /* +0x166 (s16, Q12) UNIFORMER Render-Scale, Gate = Entity-Flag-Bit

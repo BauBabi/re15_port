@@ -11127,6 +11127,8 @@ static int re15_aspider_anim(re15_actor_t *e)
     if (e->anim_frac > 0) e->anim_frac--;
     return done;
 }
+#include "re15_spinne_r42.h"
+#include "spinne_r42.inc"   /* Runde 42: Wand/Absatz/Decke 0x801118a8 + ACT 9/10/12/13 (STAGE2) */
 static void re15_adult_spider_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
@@ -11158,6 +11160,7 @@ static void re15_adult_spider_ai_tick(int slot)
         e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* +0x1bc/+0x1be = player @0x80110bd8/bf0 */
         e->ai_timer = 0; e->dog_atk_cd = 0; e->dog_dist = 0; e->ai_target_x = 0;  /* clear +0x9c/+0x1d6/+0x1dc */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
+        re15_spinne42_reset(slot); e->coll_cell = -1;   /* Runde 42: Kletterfelder leer, +0x1b4 = 0 bis zur ersten Klemme */
         /* INIT pose-cluster (byte-true @0x80110c20-cc8): grid<2 -> rot_x/rot_z=0, Y=-1800*floor
          * (@0x80110c34-74); grid 2..0x1f -> rot_x=0, rot_z(pitch)=0x800, Y=-10800, grid:=2 (ceiling-
          * drop, @0x80110c84-cc8). @0x80110df8 +0x166=0xccc (unidentified consumer, no port field, OPEN). */
@@ -11184,8 +11187,11 @@ static void re15_adult_spider_ai_tick(int slot)
         dist = re15_enemy_player_dist(e, pl);                 /* SquareRoot0 -> +0x1d4 @0x80110efc */
         e->dog_dist = (int16_t)dist;
 
-        if (e->sub_state_1 == 0) {                            /* grid-DECIDE gated on +0x5==0 @0x80110f20 */
-            int grid = e->grid_id & 0xf;
+        if (e->sub_state_1 == 0 && (e->grid_id <= 2 || e->grid_id == 5)) {   /* grid-DECIDE gated on +0x5==0 @0x80110f20;
+                                                               * Tabelle @0x80118e44[+0x9 GANZES Byte, `lbu 9 / sll 2`
+                                                               * @0x80110f30-38]: 3/4/6/7 = `jr ra` @0x801115bc-dc (Runde 42;
+                                                               * vorher fielen 3/4 ins ROAM) */
+            int grid = e->grid_id;
             if (grid == 1 || grid == 5) {                     /* APPROACH 0x80111240 — 7-branch cascade */
                 int faced80  = re15_dog_arc(e, pl, 0x7fff, 0x80);   /* +0x1e2 = arc_test(0x80) @0x80111258 (==0 -> faced) */
                 if (los && re15_dog_arc(e, pl, 0x7fff, 0x100)) {}   /* +0x1e4 = arc_test(0x100) @0x80111270 (stored, no reachable consumer) */
@@ -11239,10 +11245,9 @@ static void re15_adult_spider_ai_tick(int slot)
         case 1:   /* WALK 0x801117fc: clip 3, LOS-steer 0x10, +0x8c += 60, advance (grid2 = rear 0x800) */
             if (e->motion != 3) re15_aspider_clip(e, 3);      /* clip 3 @0x80111808 */
             if (los) re15_enemy_steer_point(e, pl->x, pl->z, 0x10);  /* rot += (LOS&1)*arc(0x10) @0x8011181c-50 */
-            e->crow_speed = (int16_t)(e->crow_speed + 60);    /* +0x8c += 60 @0x80111868 */
-            /* wall-helper 0x801118a8 (SCA-driven CLIMB transit) = OPEN */
-            re15_dog_advance(e, e->crow_speed >> 5);          /* pos_advance @0x80111890 (grid2 rear-0x800 offset = OPEN, ceiling only) */
-            re15_aspider_anim(e);
+            re15_spinne42_lauf(e);                            /* jal 0x801118a8 @0x8011184c (Wand/Absatz, Lauf-Zeit, Anim, Fussweg) */
+            e->crow_speed = (int16_t)(e->crow_speed + 60);    /* +0x8c += 60 @0x80111860-6c (auch im Umschalt-Bild) */
+            re15_dog_advance_ofs(e, (e->grid_id == 2) ? 0x800 : 0);   /* pos_advance(grid==2 ? 0x800 : 0) @0x8011187c-90 */
             break;
         case 2:   /* SCAN 0x80111c5c: clip 3, sweep step ±0x18 LATCHED once, faced(±0x18) -> CHASE */
             if (e->sub_state_3 == 0) {                        /* phase 0 @0x80111c8c */
@@ -11279,20 +11284,20 @@ static void re15_adult_spider_ai_tick(int slot)
         case 4:   /* CHASE 0x80112004: clip 2, steer 0x30, +0x8c += 100, advance. NO exit (persists). */
             if (e->motion != 2) re15_aspider_clip(e, 2);      /* clip 2 @0x80112028 */
             re15_enemy_steer_point(e, pl->x, pl->z, 0x30);    /* rot += arc(0x30) @0x80112024-48 */
-            /* wall-helper 0x801118a8 = OPEN */
+            re15_spinne42_lauf(e);                            /* jal 0x801118a8 @0x80112044 */
             e->crow_speed = (int16_t)(e->crow_speed + 100);   /* +0x8c += 100 @0x80112060 */
-            re15_dog_advance(e, e->crow_speed >> 5);           /* pos_advance @0x80112064 */
-            re15_aspider_anim(e);
+            re15_dog_advance_ofs(e, 0);                        /* pos_advance(0) @0x80112064 */
             break;
         case 11:  /* CREEP 0x8011302c: clip 3, steer 0x10, +0x8c -= 20 UNCONDITIONAL, advance. */
             if (e->motion != 3) re15_aspider_clip(e, 3);      /* clip 3 @0x80113038 */
             re15_enemy_steer_point(e, pl->x, pl->z, 0x10);    /* rot += arc(0x10) @0x8011304c-70 */
-            /* wall-helper 0x801118a8 = OPEN */
-            e->crow_speed = (int16_t)(e->crow_speed - 20);     /* +0x8c -= 20 every frame (no init/clamp) @0x80113088 */
-            re15_dog_advance(e, e->crow_speed >> 5);           /* pos_advance @0x8011308c */
-            re15_aspider_anim(e);
+            re15_spinne42_lauf(e);                            /* jal 0x801118a8 @0x8011306c */
+            e->crow_speed = (int16_t)(e->crow_speed - 20);     /* +0x8c -= 20 @0x80113088 */
+            re15_dog_advance_ofs(e, 0);                        /* pos_advance(0) @0x8011308c */
             break;
         case 6:   /* GRAB-A 0x801120b8 (walking lunge-bite, +0x7 9-phase @0x8010019c). NON-DAMAGING. */
+            if (e->grid_id < 2 && re15_spinne42_wand(e, 0)) break;   /* Wandkopf @0x801120cc-288: 9 @0x80112148 /
+                                                                        * 12 @0x801121c0, Ausstieg j 0x801126c0 */
             if (e->sub_state_3 == 0) { re15_aspider_clip(e, 8); e->sub_state_3 = 1; }         /* [0] clip 8 windup @0x801122cc */
             else if (e->sub_state_3 <= 2) {                                                    /* [1] advance @0x8011262c */
                 re15_dog_advance(e, 100 >> 5);
@@ -11359,8 +11364,13 @@ static void re15_adult_spider_ai_tick(int slot)
                 e->sub_state_1 = 0; e->sub_state_2 = 0;                                        /* +0x5=0, +0x6=0 ONLY (no lockout, no grid keep) @0x80112ad0-e0 */
             }
             break;
-        default:  /* CLIMB/HOP/CEILING subs 9/10/12/13/14/15 = SCA-driven, subsystem-scale -> OPEN.
-                   * Minimal fallback: resume the driver so a spawned actor never wedges. */
+        case 9:  re15_spinne42_absatz(e);     break;          /* 0x80112af8 */
+        case 10: re15_spinne42_ausweichen(e); break;          /* 0x80112e58 */
+        case 12: re15_spinne42_wechsel(e);    break;          /* 0x801130a4 */
+        case 13: re15_spinne42_wand_lauf(e);  break;          /* 0x80113734 */
+        case 14: case 15: break;                              /* 0x8011387c / 0x80113884 = `jr ra` */
+        default:  /* +0x6 >= 16 liegt hinter der Tabelle @0x80118e64 (16 Eintraege) — vom Original nicht erzeugt;
+                   * Rueckfall, damit kein Aktor haengt. */
             e->sub_state_1 = 0; e->sub_state_2 = (uint8_t)(los ? 4 : 0); e->sub_state_3 = 0;
             re15_aspider_anim(e);
             break;
@@ -11390,7 +11400,8 @@ static void re15_adult_spider_ai_tick(int slot)
             }
         } else {                                              /* grid-0x40 @0x80114e60: hold while grid==0x40 @0x80114e74 */
             if (e->grid_id != 0x40) {                         /* externally triggered -> CLIMB(9) descent */
-                e->grid_id = 0; e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 9; e->sub_state_3 = 0;  /* grid:=0, sh 0x101,4, +0x6=9 @0x80114e7c-bc (CLIMB = OPEN) */
+                e->grid_id = 0; e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 9; e->sub_state_3 = 0;  /* grid:=0, sh 0x101,4, +0x6=9 @0x80114e7c-bc */
+                re15_spinne42_setzen(slot, 0x1ec, 0); e->zg_9f = 0;   /* +0x1ec = 0 @0x80114e8c, +0x9f = 0 @0x80114e9c */
             }
         }
         re15_aspider_anim(e);
@@ -11399,6 +11410,8 @@ static void re15_adult_spider_ai_tick(int slot)
     case 2:   /* HURT 0x80113a0c: flinch clip 1 + Se(2); recover byte-true (@0x80113e84). +0xb0/+0x1ba
                * reset @0x80113a2c and the blood FX 0x80019700 + leg-dismember (+0x93&0x40) = OPEN. */
         if (e->sub_state_3 == 0) {
+            re15_spinne42_setzen(slot, 0xb0, 0);                                  /* +0xb0 = 0 @0x80113a2c */
+            e->dog_floor_y = (int16_t)(-1800 * (int32_t)e->floor);                /* +0x1ba = -1800*(+0x82) @0x80113a3c-5c */
             re15_aspider_clip(e, 1); re15_audio_room_se(2); e->sub_state_3 = 1;  /* flinch @0x80113a0c, SE 2 @0x80113b58 */
             static const int32_t null3[3] = { 0, 0, 0 };   /* a3 = 0x80118f18 (Nullen) */
             re15_enemy_fx19700(e, 0x00082000u, 0, null3);  /* Blut an Teil 0 @0x80113b50 */
@@ -14567,6 +14580,7 @@ static int re15_enemy_sca_clamp(re15_actor_t *e, int32_t ox, int32_t oz, uint32_
                                                &e->ai_contact, &e->coll_cell_attr);
     e->x = nx; e->z = nz;
     e->sca_wall_hit = (uint8_t)(hit != 0);   /* +0x1d6/+0x1da/+0x1d1 = v0 (@0x8003b520) */
+    e->coll_cell = (int16_t)re15_collision_letzte_zelle();   /* +0x1b4 @0x8003b1ec / @0x8003b4ec */
     return hit;
 }
 
@@ -14587,6 +14601,7 @@ static int re15_enemy_sca_clamp_band(re15_actor_t *e, int32_t ox, int32_t oz, ui
                                                     &e->ai_contact, &e->coll_cell_attr);
     e->x = nx; e->z = nz;
     e->sca_wall_hit = (uint8_t)(hit != 0);
+    e->coll_cell = (int16_t)re15_collision_letzte_zelle();   /* +0x1b4 @0x8003b1ec / @0x8003b4ec */
     return hit;
 }
 
@@ -15125,7 +15140,14 @@ void re15_enemy_ai_run_all(int combat_active)
                                                           * FUN_80034d0c(Spieler, self) schreibt self x/z
                                                           * (`sw v0,56(s1)` / `sw v1,64(s1)` @0x800350c8/cc) */
                 re15_enemy_body_push_tail(s, e);
-                re15_enemy_sca_clamp(e, asp_ox, asp_oz, 4u);
+                re15_spinne42_altlage(e, &asp_ox, &asp_oz);   /* Runde 42: +0x40/+0x44 := Lage nach dem Absatz @0x80112df4-e0c */
+                if (re15_ai_re2_for_type(e->type) && re15_re2spider_owns(e))
+                    re15_enemy_sca_clamp(e, asp_ox, asp_oz, 4u);
+                else                                          /* Runde 42: RE1.5-Spinne klemmt am Zustandsbyte +0x82 (FUN_8003b0a4
+                                                               * `lbu v1,130(a3)` @0x8003b228-3c) — an der Wand/Decke liegt y weit
+                                                               * ueber dem Band; +0x82 pflegen INIT/Absatz/Sprung selbst */
+                    re15_enemy_sca_clamp_band(e, asp_ox, asp_oz, 4u);
+                re15_spinne42_nach_klemme(e);                 /* Fusslagen = Zeichenstand fuer 0x8011388c */
             }
         }
         else if (t == 0x29) {   /* COCKROACH (type 0x29, EM029, STAGE3) — small FLYING scurrier. Root 0x80110b00

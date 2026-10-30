@@ -170,6 +170,13 @@ static uint16_t elev_pad_for(const re15_actor_t *e)
         if (e->aim_band == 1) return RE15_PAD_BIT_DOWN;
         return 0;
     }
+    /* RE1.5-Spinne: ihr Band ist der ACTIVE-Stempel FUN_80012aa4(0xfa0) (@0x80110fd0-d4, aim_band
+     * wie bei der Kraehe) — eine Spinne drei Stockwerke hoeher (ROOM2050: y -5400) traegt NUR UP. */
+    if (e->type == 0x25 && !re15_ai_re2_for_type(0x25)) {
+        if (e->aim_band & 4) return RE15_PAD_BIT_UP;
+        if (e->aim_band == 1) return RE15_PAD_BIT_DOWN;
+        return 0;
+    }
     if (e->grid_id & 0x80) return RE15_PAD_BIT_DOWN;
     return 0;
 }
@@ -214,7 +221,12 @@ static void run_ex(const char *tag, re15_ai_flavor_t flavor, uint8_t type, int w
 
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_actor_t *e  = &g_actors[slot];
-    const int32_t back = (weapon < 3) ? 900 : 2000;   /* Messer braucht Naehe (reach+Radius) */
+    int32_t back = (weapon < 3) ? 900 : 2000;         /* Messer braucht Naehe (reach+Radius) */
+    /* RE1.5-Spinne in ROOM2050 sitzt auf y -5400 (Sce_em_set), der Spieler auf 0: FUN_80012aa4 gibt bei
+     * s0 = vd/1800 = 3 nur UP, und nur im Ring 3*1000 < dist < 0xfa0 + 3000 (@0x80012b64-ba0). Bei 2000
+     * ist sie byte-true KEIN Ziel (Band leer -> `beq` @0x800120ec). Der alte Stand traf nur, weil die
+     * CREEP-Rate ohne 0x801118a8 unbegrenzt negativ lief (-3400) und die Spinne aus dem Raum trug. */
+    if (type == 0x25u && flavor == RE15_AI_FLAVOR_RE15) back = 5000;
 
     pl->hp = 100;
     re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
