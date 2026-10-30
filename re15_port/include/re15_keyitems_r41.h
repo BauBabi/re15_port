@@ -69,6 +69,13 @@ const uint8_t *re15_keyitems_r41_desc(uint8_t item_id);
 void re15_keyitems_r41_icon_einsetzen(uint8_t *itemall, int size);
 void re15_keyitems_r41_bild_einsetzen(uint8_t *itps, int size);
 
+/* Pruefhaken (Riegel): Ja-Zweig der Stelle von `item_id` im aktuellen Raum starten, ohne Menue und Lage-Pruefung (das Gegenstueck zu
+ * re15_aot_fire_slot der Aktionstaste); Messhaken RE15_USE_TEST="<item>@<bild>#<hexraum>" (main.c neben RE15_FIRE_AOT). */
+int  re15_keyitems_r41_testlauf(uint8_t item_id);
+/* Pruefhaken fuer Riegel, die den Skript-Zweig HINTER der Frage messen (Wegwerf-Abfrage, Tastenfeld, Rolltor): die entfallene Frage
+ * gilt als Ja. Das Spiel ruft das nie; dort fuehrt nur USE in den Ja-Zweig. */
+void re15_keyitems_r41_test_ja(int an);
+void re15_keyitems_r41_testhaken(void);
 /* Pruefhaken (Riegel). */
 int  re15_keyitems_r41_stellen_anzahl(void);
 int  re15_keyitems_r41_stelle(int i, uint16_t *raum, uint8_t *item, int *slot, int *ereignis, uint8_t *frage, uint8_t *art);

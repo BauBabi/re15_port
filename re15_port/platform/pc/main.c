@@ -8167,6 +8167,7 @@ re_title:;
                     s_fa_done = 1;
                 }
             }
+            re15_keyitems_r41_testhaken();   /* Runde 41 Spur O: Messhaken RE15_USE_TEST (Gegenstueck zu RE15_FIRE_AOT) */
             /* DEBUG: RE15_SUBSTART="N@F" — startet sub_scd[N] des AKTUELLEN Raums direkt als
              * Thread (exakt die probe_marvin_10d0-Methode scd_thread_start(3, sub_scd[N])),
              * ohne Event-Slot/Prompt-Interferenz. Fuer Render-Verifikation von Cutscenes. */

@@ -245,13 +245,16 @@ static void fall_mit(const char *name, uint16_t raum, const uint8_t *d, long sz,
     re15_rdt_t r;
     PRUEFE(raum_hoch(raum, k, sz, &r, 1) == 0, "%s: Raumaufbau", name);
     sicherung_geben();
+    /* Runde 41 Spur O: die Frage msg 20 entfaellt (keyitems_r41.c); Ja = USE aus dem Inventar, Nein = Aktionstaste. */
+    { extern void re15_keyitems_r41_test_ja(int); re15_keyitems_r41_test_ja(antw2 == JA); }
     int slot = ausloesen(name);
     int plen = 0; const uint8_t *prog = re15_rolltor_programm(1, &plen);
     PRUEFE(g_scd.threads[slot].pc == prog, "%s: scd_event_fire startet NICHT das Port-Programm MIT", name);
     lauf_t L = fahren(slot, JA, antw2, 1);
+    { extern void re15_keyitems_r41_test_ja(int); re15_keyitems_r41_test_ja(0); }
     zeige(name, &L, &r);
     PRUEFE(L.fremd == 0, "%s: %d Bilder mit PC ausserhalb des Plans", name, L.fremd);
-    PRUEFE(L.msg2 >= 0 && L.msg20 > L.msg2, "%s: Reihenfolge msg 2 -> msg 20 verletzt", name);
+    PRUEFE(L.msg2 >= 0 && L.msg20 < 0, "%s: msg 2 da, Frage msg 20 entfaellt", name);
     PRUEFE(L.falscher_cut == 0, "%s: %d Bilder Text im falschen Cut", name, L.falscher_cut);
     PRUEFE(g_scd.cam_id == 3 && g_scd.cut_auto_enabled == 1, "%s: nicht zurueck in Cut 3 / Auto", name);
     PRUEFE(!re15_game_flag_get(3, 121), "%s: Tor oeffnet schon beim Einsetzen", name);

@@ -118,3 +118,50 @@ Bleiben wie im Original:
 - **Research Center ID Card 40A0/40A1**: msg 4 "Use the Research Center ID Card?" hat in keinem Skript ein Message_on (Zensus), kein Item
   in der 102er-Tabelle, msg 3 "An ID card is required" Text-Platz: nicht erreichbar, nichts zu tun.
 - **4001**: msg 1 ohne Message_on (Elzas Skript fuehrt dort anders), keine Stelle.
+
+## Umsetzung
+
+Neue Dateien: engine/src/keyitems_r41.c, include/re15_keyitems_r41.h, engine/src/gen/keyitems_r41.inc (erzeugt von
+tools/r41_keyitems/keyitems_export.py aus info/re2leon, md5 im Kopf; `--pruefen`). Keine neuen Bits, keine neuen Nachrichten-Ids, kein
+Patch an shared_assets/PSX, die RDT-Skripte bleiben bytegleich.
+
+Haken in gemeinsamen Dateien (je 1-2 Zeilen, Kommentar "Runde 41 Spur O"):
+| Datei | Stelle | Wirkung | Beleg |
+|---|---|---|---|
+| menu_common.c | state5_classifier vor c3=6 | USE auf der Stelle: Inventar schliesst (s_phase 2) | RE2 @0x8006b21c, @0x8006b2e0 |
+| menu_common.c | close_phase Ende | Ereignis startet, s_stage 0: die Welt laeuft in der Blende | PORT-WAHL, siehe unten |
+| scd_vm.c | op_message_on | Frage entfaellt (Aktion: Nein), USE-Lauf: alle Texte bis zur Frage entfallen (Ja) | RE2 ROOM1110 Slot 8 sce 4 / sub13 |
+| scd_vm.c | op_evt_next | Evt_next hinter einem entfallenen Text zaehlt nicht | damit Cut_chg/Pos_set im ERSTEN Skripttakt fallen |
+| scd_vm.c | op_sleep | Kurbel: der Sleep 20 @0x0A98 vor Plc_motion entfaellt | RE2 sub13 -> sub15 ohne Sleep |
+| scd_vm.c | op_plc_motion | Kurbel: Flag 0x40 keine Blende | RE2 @0x02FC1 `3f 00 0f 45`, RE1.5 @0x80050d24 |
+| msg_common.c | re15_dialog_step Seitenumbruch | Kartenleser: Text endet vor der Frage-Seite (FSM 4 END_WAIT) | msg 7 `02 00` vor "Will you operate" |
+| game_step_common.c | vor ventilkette_tick | Besitz der Flag-Gegenstaende, Waffe zurueck, Ende des USE-Laufs | |
+| scd_room_setup.c | Ende des Blocks | Merker je Raum zuruecksetzen | |
+| re15_inv_screen.c, item_prompt_common.c, item_icon_common.c, itps_common.c, inv_render_pc.c, main.c | Muster re15_gatorszene_r41_* | Name, CHECK-Text, Icon, Bild der Kurbel; Rechtecke Block 0x35 | tools/r41_keyitems |
+| main.c | neben RE15_FIRE_AOT | Messhaken RE15_USE_TEST (kein Spielverhalten) | |
+
+Konstanten:
+- RE15_R41O_KURBEL_ITEM 0x33: PORT-WAHL, nie platziert (0 von 164 Item_aot_set), Eigenschaftssatz @0x8007500c wie Schluesselkarten, Name/CHECK/
+  Icon/Bild im Muster re15_schluessel_r36 ersetzt. Form = RE2 Item 0x43 (Name @0x8F041, CHECK @0x9206D, Tile 67, Block 67).
+- RE15_R41O_BOMBE_ITEM 0x35: DEBUG.BIN Name "Timer Bomb", CHECK "Time Bomb", Bild vorhanden, Rechtecke auf (0,489)/(832,256) gesetzt.
+- VORWAERTS 620: @0x80042bd0 `ori 0x26c`. INV_KAPAZITAET 10: 0x800b0fbc, FUN_8004df2c @0x8001df14.
+
+Ablauf USE (Kurbel): Klassifizierer -> re15_keyitems_r41_use (Band, Vorwaerts-Punkt/Zentrum wie die Aktionstaste) -> close_phase (Blende aus,
+Teardown wie EXIT) -> scd_event_fire(2), s_stage 0 -> erster Skripttakt: msg 0/1 entfallen, Ck(12,31,0) wahr, Aot_reset, Set(3,113), Cut_chg 3,
+Pos_set, Gier, Sleep entfaellt, Plc_motion ohne Blende -> Spielbild blendet ein, Leon kurbelt schon.
+
+PORT-WAHL "Welt laeuft in der Blende": RE1.5 @0x8001cc34 und RE2 @0x80025cb0 halten das Skript waehrend der Einblende an; RE2 setzt danach
+Pos_set sichtbar, faellt dort aber kaum auf, weil die Kurbel im Rechteck liegt (ROOM1110). In ROOM2020 liegt Pos_set 870 Einheiten neben dem
+Standort beim Druecken (Rechteck @0x009AE ist 1000 westlich der Kurbel), also muss die Lage VOR dem ersten Bild stehen (Auftrag: "Cut_chg und
+Pos_set laufen, BEVOR das Spielbild zurueckkommt").
+
+PORT-WAHL Waffe: RE2 legt die Waffe bei Valve Handle/Manhole Opener/Crank ab (@0x80068cfc-@0x80068d40, Waffe 0 @0x80068d34) und erst bei der
+naechsten Inventar-Oeffnung wieder an (@0x80068be4-@0x80068c34): bis dahin ist der Spieler unbewaffnet. Uebernommen: Waffe 0 waehrend der
+Szene (kein Anhang an Knochen 11, die kreisende Pistole ist weg). Abweichung: zurueck bei Plc_ret @0x0B16 statt bei der naechsten Oeffnung,
+weil ROOM2020 vier Zombies setzt (main00 @0x008F6..) und ein stilles Unbewaffnet-Sein wie ein Fehler aussaehe; der Ausruest-Platz 25c8 bleibt.
+
+Flag-Gegenstaende: soll = genommen && !benutzt (Kurbel (3,114)/(3,113), Bombe (3,146)/(3,53), Sicherung (3,108)/(3,144) + (9,125) im Kasten).
+soll und nirgends (Inventar, Kiste) -> Eintrag; soll faellt -> Eintrag weg (nur an der Flanke, weil Item 0x40 auch die Sicherung aus ROOM1150 sein
+kann). Das heilt auch Spielstaende von vor dieser Aenderung. Ist das Inventar dann voll, bleibt an der Stelle die alte Frage (keine tote
+Stelle). Beim Aufnehmen mit vollem Inventar: Item-Modal "You can't carry any more items" (Zustand 5/8) statt der Frage, Flag bleibt 0.
+Die Zuendkerze (Item 0x41, keine "used"-Zeile, also keine Wegwerf-Abfrage) verlaesst das Inventar mit (3,78) @0x0068C (RE2 sce_item_lost).

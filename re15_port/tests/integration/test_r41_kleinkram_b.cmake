@@ -95,16 +95,13 @@ endmacro()
 
 set(_gemein RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1)
 if(TEIL STREQUAL "kurbel")
-    # Lauf t2_weg2050 des Dossiers: links drehen 0,36 s (3072 -> 2016), 3,8 s gehen (x 11350 -> 2914), dann auf der Stelle
-    # links drehen und Aktion abwechselnd (je 1 Bild); Ausloesung an der Kurbel-Zone Slot 3 (@0x009AE), Dialog per PRESS.
-    set(_skript "L0.36,U3.8")
-    foreach(_i RANGE 1 8)
-        string(APPEND _skript ",LA0.034,L0.034")
-    endforeach()
-    string(APPEND _skript ",W2.0")
+    # Lauf t2_weg2050 des Dossiers: links drehen 0,36 s (3072 -> 2016), 3,8 s gehen (x 11350 -> 2914).
+    # Runde 41 Spur O (RE2-Form, O_keyitems.md): die Kurbel wird aus dem Inventar benutzt; RE15_USE_TEST = USE ohne Menue
+    # (der Weg ueber START/ITEM/USE: integration_r41_keyitems_kurbel). Die Frage gibt es an dieser Stelle nicht mehr.
+    set(_skript "L0.36,U3.8,W2.0")
     set(_env RE15_DEBUG_JUMP=2050@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 "RE15_FIRE_AOT=1@30#2050"
              "RE15_INPUT_SCRIPT=${_skript}" RE15_INPUT_SCRIPT_START=60 RE15_INPUT_SCRIPT_BASIS=spiel
-             RE15_PRESS=square@260,square@300,square@340,square@380
+             RE15_USE_TEST=0x33@190#2020
              RE15_SCD_TRACE=1 RE15_ANIM_TRACE=anim.txt RE15_STATE_LOG=state.txt "RE15_EXIT_AT=600#2020")
 elseif(TEIL STREQUAL "karte")
     # Abnahme 0 §4.1 Lauf "U0.8 / U1.0 / U1.5": Gang ROOM1230, Strom (4,0xF3), Ostkammer-Tuer offen (3,0x89), Hunde tot
@@ -135,14 +132,17 @@ elseif(TEIL STREQUAL "spawn_kante")
              "RE15_INPUT_SCRIPT=W2.0,D1.0,W1.0" RE15_INPUT_SCRIPT_START=10 RE15_INPUT_SCRIPT_BASIS=spiel
              RE15_STATE_LOG=state.txt RE15_KAMERAHALT_LOG=1 "RE15_EXIT_AT=200#2020")
 elseif(TEIL STREQUAL "geh")
-    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-1500,1024,1
+    # Runde 41 Spur O: die Frage an der Kurbel gibt es nur noch im Altstand (Flag ohne Inventar-Eintrag, Inventar voll): RE15_GIVE
+    # fuellt die zehn Plaetze, damit dieser Riegel weiter den Geh-Stopp hinter der Frage misst.
+    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-1500,1024,1 RE15_GIVE=0x16:1,0x17:1,0x18:1,0x19:1,0x1a:1,0x1b:1,0x1c:1,0x1d:1
              "RE15_INPUT_SCRIPT=U0.3,UA0.1,U0.1,UA0.1,U0.1,UA0.1,U0.1,UA0.1,U0.1,UA0.1,U1.0" RE15_INPUT_SCRIPT_START=300
              RE15_INPUT_SCRIPT_BASIS=spiel RE15_PRESS=square@380,square@430,square@470,square@510 RE15_SCD_TRACE=1
              RE15_MOTRACE=1 RE15_STATE_LOG=state.txt RE15_KAMERAHALT_LOG=1 "RE15_EXIT_AT=420#2020")
 elseif(TEIL STREQUAL "renn")
     # Stehclip 2 (Wiegen) beginnt in ROOM2020 bei F113 (Port-Idle-FSM, gemessen <sp>/E41n3/runs/idle2020): F156 = Bild 43 ->
     # Rennen ab F157 (6 Bilder XU + 1 Bild XU mit Aktion = o_renn2 n0..n6), Fragen per Quadrat.
-    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-3018,1024,1
+    # Runde 41 Spur O: Altstand wie TEIL geh (Inventar voll, die Frage bleibt).
+    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-3018,1024,1 RE15_GIVE=0x16:1,0x17:1,0x18:1,0x19:1,0x1a:1,0x1b:1,0x1c:1,0x1d:1
              "RE15_INPUT_SCRIPT=XU0.2,XUA0.034,XU1.0" RE15_INPUT_SCRIPT_START=157 RE15_INPUT_SCRIPT_BASIS=spiel
              RE15_PRESS=square@200,square@240,square@280,square@320
              RE15_SCD_TRACE=1 RE15_MOTRACE=1 RE15_STATE_LOG=state.txt RE15_KAMERAHALT_LOG=1 "RE15_EXIT_AT=420#2020")
@@ -154,7 +154,8 @@ elseif(TEIL STREQUAL "treppe")
              RE15_INPUT_SCRIPT_BASIS=spiel RE15_STATE_LOG=state.txt RE15_MOTRACE=1 "RE15_EXIT_AT=420#2040")
 elseif(TEIL STREQUAL "losl")
     # Abnahme 3 §3.2 `P1_renn_losl_aktion` (Original o_renn_losl): 6 Bilder Rennen aus dem Stehclip 2, im 7. Bild nur Quadrat.
-    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-3018,1024,1
+    # Runde 41 Spur O: Altstand wie TEIL geh (Inventar voll, die Frage bleibt).
+    set(_env RE15_DEBUG_JUMP=2020@240 RE15_SET_FLAG=3:0x72 RE15_EQUIP=3 RE15_PLAYER_POS=2600,-3018,1024,1 RE15_GIVE=0x16:1,0x17:1,0x18:1,0x19:1,0x1a:1,0x1b:1,0x1c:1,0x1d:1
              "RE15_INPUT_SCRIPT=XU0.2,A0.034,W1.0" RE15_INPUT_SCRIPT_START=157 RE15_INPUT_SCRIPT_BASIS=spiel
              RE15_PRESS=square@200,square@240,square@280,square@320
              RE15_SCD_TRACE=1 RE15_MOTRACE=1 RE15_STATE_LOG=state.txt RE15_KAMERAHALT_LOG=1 "RE15_EXIT_AT=420#2020")

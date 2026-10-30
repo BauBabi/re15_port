@@ -59,6 +59,7 @@
 extern re15_aot_state_t g_aot;
 extern uint8_t          g_aot_action_pressed;
 extern int scd_event_fire(uint8_t event_id);
+#include "re15_keyitems_r41.h"   /* Runde 41 Spur O: USE aus dem Inventar */
 void re15_actor_step_all_walkers(void);
 
 #ifndef RE15_ASSET_PSX_DIR
@@ -474,14 +475,9 @@ static void loeschen_fahren(raum_t *r90, uint16_t antwort, const char *was)
     for (int f = 0; f < 30; f++) bild(0, 0, 0);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->x = 0; pl->z = 250; pl->rot_y = 0;     /* Messpunkt der Runde 36: 620 voraus = (620,250) im Viereck */
-    bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE, 0);
-    int m7 = warte_msg(7, 300);
-    CHECK(m7, "L %s: Druck am Feuer -> sub06 msg 7 (@0x02702)", was);
-    for (int f = 0; f < 600 && !(g_scd.message_active && g_scd.message_id == 8 && g_scd.message_fsm == 3); f++)
-        bild(f % 25 == 0 ? RE15_PAD_BIT_SQUARE : 0, f % 25 == 0 ? RE15_PAD_BIT_SQUARE : 0, 0);
-    CHECK(g_scd.message_active && g_scd.message_id == 8 && g_scd.message_fsm == 3,
-          "L %s: Frage msg 8 \"Will you use the Fire Extinguisher?\" mit Ja/Nein", was);
-    bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE, 0);          /* Ja (Ck(12,0x1F)==0 @0x02712) */
+    /* Runde 41 Spur O: Benutzung ueber das Inventar (RE2-Form): USE am Messpunkt, sub06 ohne Text und Frage, Antwort Ja. */
+    CHECK(re15_keyitems_r41_use(RE15_FL37_ITEM) == 1, "L %s: USE am Feuer trifft die Stelle (Slot 2 Viereck)", was);
+    CHECK(re15_keyitems_r41_schliessen() == 1, "L %s: Inventar zu -> sub06 startet", was);
     /* Selbst-Tuer (Aot_on 3 @0x02726): Ziel == aktueller Raum -> g_scd_pending_scenario, der Spielschritt
      * steigt im selben Bild neu ein (game_step_common.c, scd_room_reenter mit allen Port-Installern; Original
      * FUN_8001d600 @0x8001d988 `jal 0x800396fc` laedt unbedingt). */

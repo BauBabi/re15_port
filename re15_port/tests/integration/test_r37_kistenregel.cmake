@@ -7,12 +7,12 @@ cmake_minimum_required(VERSION 3.16)
 #
 #   A  1090 Loescher in der KISTE, Leon am Feuer (Spielstand wie Lauf I der Spur I): Aktion -> NUR msg 7 "I must
 #      hurry up ...", KEINE Frage msg 8, kein Loeschen (msg 9)                         (Auftrag Q, erster Fall)
-#   B  1090 Loescher im INVENTAR (Gegenprobe, dieselbe Eingabe): msg 7, Frage msg 8, Ja -> msg 9 wie bisher
+#   B  1090 Loescher im INVENTAR (Gegenprobe): Runde 41 Spur O: USE aus dem Inventar (RE15_USE_TEST) -> msg 9, keine Frage
 #   I  1090 ueber den ECHTEN Kisten-Weg: Box ROOM1150 (Tausch im Box-Schirm), Sprung nach ROOM1090, Aktion am Feuer
 #      -> nur msg 7, keine Frage, kein Loeschen
-#   C  10D0 Kartenleser, Blue Keycard in der KISTE (Aktion per RE15_FIRE_AOT=1): msg 7 -> Ja -> msg 8 "You have not
-#      the Blue Keycard to operate it." statt msg 9;  D  dasselbe mit der Karte im INVENTAR -> msg 9
-#   E  Elza 11E1 Kartenleser, Yellow Keycard in der KISTE -> msg 8
+#   C  10D0 Kartenleser, Blue Keycard in der KISTE (Aktion per RE15_FIRE_AOT=1): Runde 41 Spur O: nur die Beschreibung msg 7, weder
+#      msg 8 noch msg 9;  D  Karte im INVENTAR, USE (RE15_USE_TEST) -> msg 9
+#   E  Elza 11E1 Kartenleser, Yellow Keycard in der KISTE -> nur msg 7
 #   F  Elza 1211 Zelle, Prison Key in der KISTE -> Platz 8 = msg 10 "It's locked.It seems that there is someone
 #      inside..." (keine Befreiung)
 #   G  3010 Tuer, Green Keycard in der KISTE -> msg 0 "It's locked.An ID card is required to open it." statt msg 1
@@ -118,9 +118,9 @@ pruef(A _a "[kistenregel] ROOM1090 @0x0230A Ck(3,0x85) K1: Item 0x31 NICHT im In
 pruef(A _a "id=7 \"I must hurry up and get something to put out this fire to save that woman!\"")
 pruef_nicht(A _a "id=8 \"Will you use the Fire Extinguisher?\"")
 pruef_nicht(A _a "id=9 \"You've used the Fire Extinguisher.\"")
-kr_lauf(b 1090 "${_k1};give:0x31:1" "${_feuer}" 800 "" _b)
+kr_lauf(b 1090 "${_k1};give:0x31:1" "${_feuer}" 800 "RE15_USE_TEST=0x31@70#1090" _b)
 pruef(B _b "[kistenregel] ROOM1090 @0x0230A Ck(3,0x85) K1: Item 0x31 im Inventar -> wie Original")
-pruef(B _b "id=8 \"Will you use the Fire Extinguisher?\"")
+pruef_nicht(B _b "id=8 \"Will you use the Fire Extinguisher?\"")
 pruef(B _b "id=9 \"You've used the Fire Extinguisher.\"")
 
 # --- I: 1090 ueber den ECHTEN Kisten-Weg (Fortsetzung 2026-10-13) ------------------------------------------------
@@ -142,16 +142,17 @@ pruef(I _i "EXIT_AT: Bild 500 in Raum 1090")
 
 # --- C/D: Kartenleser 10D0 (Leon) ------------------------------------------------------------------------------
 kr_lauf(c 10d0 "10D0;800;-5000;2048;flag:9:0x34;leer;kiste:0x38:1" "${_ja}" 700 "RE15_FIRE_AOT=1@70#10D0" _c)
-pruef(C _c "[kistenregel] ROOM10D0 @0x019C0 Ck(9,0x34) K2: Item 0x38 NICHT im Inventar (Item-Box Platz 2)")
-pruef(C _c "id=8 \"You have not the Blue Keycard to operate it.\"")
+pruef(C _c "id=7 \"A card reader.")
+pruef_nicht(C _c "id=8 \"You have not the Blue Keycard to operate it.\"")
 pruef_nicht(C _c "id=9 \"You've used the Blue Keycard.\"")
-kr_lauf(d 10d0 "10D0;800;-5000;2048;flag:9:0x34;leer;give:0x38:1" "${_ja}" 700 "RE15_FIRE_AOT=1@70#10D0" _d)
+kr_lauf(d 10d0 "10D0;800;-5000;2048;flag:9:0x34;leer;give:0x38:1" "${_ja}" 700 "RE15_USE_TEST=0x38@70#10D0" _d)
 pruef(D _d "id=9 \"You've used the Blue Keycard.\"")
 pruef_nicht(D _d "id=8 \"You have not the Blue Keycard to operate it.\"")
 
 # --- E: Kartenleser 11E1 (Elza) --------------------------------------------------------------------------------
 kr_lauf(e 11e1 "11E1;11050;4250;0;elza;flag:9:0x8a;leer;kiste:0x39:1" "${_ja}" 700 "RE15_FIRE_AOT=4@70#11E1" _e)
-pruef(E _e "id=8 \"You have not the Yellow Keycard to operate it.\"")
+pruef(E _e "id=7 \"A card reader.")
+pruef_nicht(E _e "id=8 \"You have not the Yellow Keycard to operate it.\"")
 pruef_nicht(E _e "id=9 \"You've used the Yellow Keycard.\"")
 
 # --- F: Zelle 1211 (Elza), Prison Key in der Kiste ----------------------------------------------------------------

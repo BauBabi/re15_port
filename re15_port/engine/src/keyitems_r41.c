@@ -11,6 +11,7 @@
 #include "re15_aot.h"          /* g_aot, re15_aot_point_in_quad                                      */
 #include "re15_collision.h"    /* re15_collision_debug_band = Spieler-Band (+0x82)                   */
 #include "re15_damage.h"       /* re15_player_equipped_weapon                                        */
+#include "re15_engine.h"       /* g_engine.frame_count: nur Messhaken RE15_USE_TEST                  */
 #include "re15_inventory.h"    /* g_inv, re15_inv_find_item, re15_inv_grant, re15_inv_remove_slot    */
 #include "re15_item_modal.h"   /* re15_item_modal_start: "You can't carry any more items"            */
 #include "re15_itembox.h"      /* g_itembox, RE15_BOX_SLOTS                                          */
@@ -61,9 +62,9 @@ static const stelle_t k_stellen[] = {
     /* Minidisc-Spieler: sub00 @0x00B14 Slot 2 -> sub07 @0x00D50 msg 1, @0x00D56 msg 3 */
     { 0x1100, 0x44, 2, 7, 3, 0, 0, KEIN_TOR, 0, 0 },
     /* Sicherung am Rolltor (Port-Programm rolltor_1050.c k_mit): Slot 7 @0x00C22, Frage = Port-Text 20 (2060 msg 4). */
-    { 0x1050, 0x40, 7, 2, 20, 0, 0, KEIN_TOR, 0, 0 },
+    { 0x1050, 0x40, 7, 2, 20, 0, 0, 9, 63, 0 },                       /* Tor: noch nicht eingesetzt (k_mit, sonst sub02) */
     /* Kasten 2010 (Spur C): Port-Platz, Programm 2010_kasten_frage, Frage = Port-Text 41 (2060 msg 4). */
-    { 0x2010, 0x40, RE15_R41C_SLOT_KASTEN, RE15_R41C_EV_KASTEN, RE15_R41C_MSG_KASTEN_FRAGE, 0, 0, KEIN_TOR, 0, 0 },
+    { 0x2010, 0x40, RE15_R41C_SLOT_KASTEN, RE15_R41C_EV_KASTEN, RE15_R41C_MSG_KASTEN_FRAGE, 0, 0, 3, 108, 1 },   /* Tor wie ventilkette_r41.c: sonst 2010_kasten_leer */
     /* KURBEL: sub00 @0x009AE Slot 3 -> sub02 @0x00A5C msg 0, @0x00A62 msg 1, @0x00A6C Ck(12,31,0). */
     { 0x2020, RE15_R41O_KURBEL_ITEM, 3, 2, 1,
       RE15_R41O_SOFORT | RE15_R41O_WAFFE | RE15_R41O_FLAGITEM, 0, KEIN_TOR, 0, 0 },
@@ -134,6 +135,7 @@ static int      s_waffe_szene       = 0;       /* Plc_motion gelaufen: Plc_ret b
 static int8_t   s_soll_alt[N_FLAGITEMS];       /* -1 = noch kein Vergleich in diesem Raum                     */
 static int      s_kerze_alt         = -1;
 static unsigned s_zaehler[2];
+static int      s_test_ja           = 0;       /* Pruefhaken: die entfallene Frage gilt als Ja                */
 
 static int logan(void)
 {
@@ -312,7 +314,7 @@ int re15_keyitems_r41_message_on(uint8_t msg_id)
         if (st->frage != msg_id || !raum_passt(st, raum)) continue;
         /* Altstand: Flag-Gegenstand ohne Eintrag (volles Inventar) -> die Frage bleibt, sonst waere die Stelle tot. */
         if ((st->art & RE15_R41O_FLAGITEM) && !hat_irgendwo(st->item)) return 0;
-        re15_game_flag_set(12, 31, 1);                 /* Antwort Nein */
+        re15_game_flag_set(12, 31, s_test_ja ? 0 : 1);  /* Antwort Nein */
         s_zaehler[0]++;
         if (st->art & RE15_R41O_KOMBI) {
             s_text_ende = kombi_ende((int)msg_id);
@@ -425,6 +427,43 @@ void re15_keyitems_r41_bild_einsetzen(uint8_t *itps, int size)
         b[0x0C] = 0;    b[0x0D] = 0;    b[0x0E] = 0xE9; b[0x0F] = 0x01;
         b[0x218] = 0x40; b[0x219] = 0x03; b[0x21A] = 0x00; b[0x21B] = 0x01;
     }
+}
+
+void re15_keyitems_r41_test_ja(int an) { s_test_ja = an; }
+
+/* Pruefhaken: der Ja-Zweig einer Stelle ohne Menue und ohne Lage-Pruefung (Gegenstueck zu re15_aot_fire_slot der Aktionstaste). */
+int re15_keyitems_r41_testlauf(uint8_t item_id)
+{
+    const unsigned raum = g_current_room_id;
+    for (int i = 0; i < N_STELLEN; i++) {
+        const stelle_t *st = &k_stellen[i];
+        if (st->item != item_id || !raum_passt(st, raum)) continue;
+        s_vormerkung = st;
+        return re15_keyitems_r41_schliessen();
+    }
+    return 0;
+}
+
+/* Messhaken RE15_USE_TEST="<item>@<bild>#<hexraum>" (Muster RE15_FIRE_AOT, main.c): einmal re15_keyitems_r41_testlauf. */
+void re15_keyitems_r41_testhaken(void)
+{
+    static int init = 0, id = -1, fertig = 0;
+    static long bild = 0;
+    static unsigned raum = 0;
+    if (!init) {
+        const char *e = getenv("RE15_USE_TEST");
+        init = 1;
+        if (e && *e) {
+            id = (int)strtol(e, NULL, 0);
+            const char *at = strchr(e, 0x40), *hs = strchr(e, 0x23);
+            if (at) bild = atol(at + 1);
+            if (hs) raum = (unsigned)strtol(hs + 1, NULL, 16);
+        }
+    }
+    if (id < 0 || fertig || (long)g_engine.frame_count < bild || (raum && g_current_room_id != raum)) return;
+    fertig = 1;
+    LOG("[keyitems] Messhaken USE 0x%02x F%u: %d\n", (unsigned)id, (unsigned)g_engine.frame_count,
+        re15_keyitems_r41_testlauf((uint8_t)id));
 }
 
 int re15_keyitems_r41_stellen_anzahl(void) { return N_STELLEN; }
