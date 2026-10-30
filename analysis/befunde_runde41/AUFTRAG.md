@@ -1137,3 +1137,13 @@ Orchestrator-Einordnung (RE-Gate gilt, erst messen, dann RE2 belegen, dann bauen
    Matrix @0x801018d0-60) messen und angleichen. Der Alligator muss sich mit dem Kanister danach normal bewegen wie in RE2; Verdacht: Kopf-
    Klemme G-E5 gegen Koerper-Klemme (auch Punkt "Lagespruenge" der Spur P). Messen in natuerlichen Laeufen, Leon und Elza.
 Die Abnahme der Spur P prueft diese sechs Punkte mit; Punkt 1 ist Pflicht fuer das Release.
+
+## 2026-10-30 17:05 — Nachtrag 36 (Wortlaut; Alarm-Sirene in der Flut-Minute 2030, Spur N)
+
+> bei der Minute bis zum Wasser voll laufen in STAGE2 solltest du ebenfalls die Alarm Sirene mit einbauen nach der Ansage. Die findest
+> du zum Beispiel auch bei room6000.
+
+Praezisiert Nachtrag 30 ("waehrend des Alerts und der Alert message ... durchweg der Alert sound aus Resident Evil 2"): Nach der Ansage
+(Warntext 46 / Stimme main46) laeuft die Alarm-Sirene durchgehend bis zur Flut bzw. bis zum Verlassen des Raums, zusaetzlich zu SUB_25.
+Quelle belegen: ROOM6000 in RE2 (info/re2leon/PL0/RDT, RE2_SOUND_LISTE.md) UND in RE1.5 (shared_assets/PSX/STAGE6) pruefen, welcher Ton das
+ist (Se_on-Satz, Bank, Schleife, Lautstaerke), Byte-Beleg, Schnitt nach shared_assets/RE2/ wie die Runde-38/39-Toene, Paket-Gate nennen.
