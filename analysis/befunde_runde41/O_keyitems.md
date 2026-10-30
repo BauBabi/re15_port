@@ -230,6 +230,13 @@ Nachgezogen, weil die Stellen keine Ja-Eingabe mehr kennen (Riegel bleibt inhalt
 Querbezug geprueft, weil der Regex nur Namen trifft: Zensus aller Testquellen auf die betroffenen Gegenstaende und Flags (`give`, `RE15_GIVE`, `inv_grant`, `3:114`, `3:146`, `3:108`, `FIRE_AOT`/`FORCE_EVENT` auf
 Stelle und Ereignis). Vier Saetze lagen ausserhalb des Regex (r36_dachkiste, r37_masken36_nb2, r38_rekorder, r36_g2_cursor_rahmen) und wurden einzeln gefahren.
 
+Laeufe (nur gezielt, keine volle Suite):
+- Regex `r41_keyitems|kleinkram_b|ventilkette|discard|codepanel|kartenl|sicherung|rolltor|generator|nahaufn|feuerl|loescher|aot|_msg|msg_|menu|inv_|inventar|item|kurbel|11e0|1100|10d0|1230|3050|4000|4030|2060|2040|1090|1110|2010|2030|re2_|savepoint|nachricht|kistenregel|schluessel|dining|keycard|karte`, 301 Tests, -j 5: 295 gruen, 4 rot, 2 nicht mehr gestartet (Lauf von mir abgebrochen, die Roten waren schon erklaert, deshalb keine Summenzeile). Rot: integration_r41_keyitems_aufnahme und integration_r37_feuerloescher (Riegel-Lage bzw. Skript-Achse, nachgezogen), integration_r41_ventilkette_weg (Log-Reihenfolge in k2, nachgezogen), integration_r41_ventilkette_kette (interne 300-s-Grenze, weil ich parallel weitere Riegel fuhr; einzeln gruen).
+- Wiederholung `^(unit_r38_rekorder_ablauf|integration_r38_rekorder|integration_r41_keyitems_(aufnahme|falsch|karte|karte_aktion|nord|ost|west|elza|aktion)|integration_r41_kleinkram_b_kurbel)$`: `100% tests passed, 0 tests failed out of 12`
+- Wiederholung `^(integration_r37_masken36_nb2|integration_r36_dachkiste|integration_r37_feuerloescher|integration_keypad|integration_keydoor|integration_r36_story_leon|integration_r36_story_elza|integration_r36_tueren|integration_r37_sperre1050)$`: `100% tests passed, 0 tests failed out of 9`
+- Wiederholung seriell `^integration_r41_ventilkette_(kette|weg|weg_elza|sperre)$`: `100% tests passed, 0 tests failed out of 4`
+- Endstand (mit der Zwei-Sicherungen-Regel und Teil bombe) `^(unit_r41_keyitems_.*|integration_r41_keyitems_.*|unit_r41_ventilkette|.*rolltor.*|.*sicherung.*)$`: `100% tests passed, 0 tests failed out of 37`
+
 Gegenproben, die die Riegel selbst scharf gemacht haben: `use` lief zuerst rot, weil room_boot das Inventar leerte und die Karten-Zeilen das Bank-9-Bit nicht setzten (Ck(9,52,1) @0x019C0: ohne Bit
 kommt msg 8 statt msg 9); `kurbel` lief rot mit `anim_frac 7`: daraus kam der echte Mangel (Bit 0x40 nullte nicht, siehe Haken-Tabelle); `falsch` trug eine Lage, die der Koerper-Schub auf die Stelle schob.
 
