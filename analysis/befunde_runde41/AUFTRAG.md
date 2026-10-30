@@ -1110,3 +1110,30 @@ Options-Datei = 50. PORT-WAHL (RE1.5/RE2 haben keine Lautstaerke, D_kleinkram_a.
 Entwuerfe), Q (Reste); danach Integration, volle Suite, Release v0.8.30. Regel wie FG-E6: Abnahmen fallen nur bei
 blockierenden Fehlern oder einem nicht erfuellten Nutzer-Punkt durch; Feinheiten kommen als "offen" in die Release Notes;
 hoechstens EINE Nachbesserung je Spur.
+
+## 2026-10-30 16:46 — Nachtrag 35 (Wortlaut; Alligator-Kampf, AUFTRAG AN SPUR P, gilt fuer den laufenden Bau und die Abnahme)
+
+> Bei den Aligator fight gab es noch einige findings:
+> - Zum einen kam der Putz immer noch nicht so runter wie beim Aligator fight in Resident Evil 2, das heißt der Teil funktioniert da noch nicht 1 zu 1
+> - Nach dem Aligator Tot fand man den Schlüssel nicht, ich weiß nicht, ob der In der Wand hängen geblieben ist oder so, aber ich kam auf jeden Fall nicht ran
+> - Ich konnte beim Aligator nach seinen Tot drauf klettern
+> - Der Spieler ist beim Tod durch den Aligator in seinen Finisher noch halb hängend in der Luft sichtbar, nicht wie in Resident Evil 2. Er muss ja irgendwann mal verschwinden, das es so aussieht als ob er wirklich gefressen wird.
+> - Bei der Zombie Leiche die der Aligator am Anfang Frisst ist es noch schlimmer. Der Hängt nicht mal sauber im Maul und bewegt sich dynamisch mit, sondern hängt darunter....
+> - Der Kanister hängt auch nicht gerade im Maul wie bei Resident Evil 2 und der Aligator kann sich mit Kanister danach offenbar auch nicht mehr richtig bewegen.....
+
+Orchestrator-Einordnung (RE-Gate gilt, erst messen, dann RE2 belegen, dann bauen):
+1. **Schluessel (BLOCKER, Spielweg haengt daran):** Der Water Key oeffnet das Tor 2090/20A0. Er muss nach JEDEM Tod des Alligators fuer
+   Leon und Elza erreichbar sein, an jeder Todeslage. Lage nur auf einem Punkt, den die Spielfigur wirklich erreicht (Kollision, Wasser-
+   zonen, AOT-Reichweite); Riegel ueber viele Todeslagen inkl. Wandlagen, dazu ein echter Lauf bis zum Aufheben. Gehoert mit FG-E7 Option (a)
+   zusammen (key_suche in gatorszene_r41.c).
+2. **Putz 1:1 wie RE2:** RE2 ROOM40A0 sub14 und die Ausloeser in EM23 gegen B's PORT-WAHL "Putz-Bursts um Leon beim Dash-Start" pruefen
+   (gator_re2_r41.c Kopf); Ort, Zeitpunkt, Menge, Effekte (Raum-ESP GATOR40A0 ist seit G registriert). Bildbogen gegen die RE2-Daten.
+3. **Klettern auf den toten Alligator:** ausschliessen; in RE2 belegen, was die Leiche an Kollision hat (keine Kletter-/Stufen-Hoehe).
+4. **Finisher (Tod durch den Alligator):** Der Spieler darf nicht halb in der Luft haengen; in RE2 FRESSEN belegen, wann und wie die Figur
+   verschwindet (Part/Flag, Bild; @0x80100fbc-0x801010e4 ist der Einstieg), bytegleich nachbauen.
+5. **Leiche in der Fress-Szene:** Sie haengt unter dem Maul und bewegt sich nicht mit. Sie muss sauber im Maul sitzen und der Kiefer-/Kopf-
+   Bewegung Bild fuer Bild folgen (Anhaengen an die Part-Matrix wie beim Kanister; gatorszene_r41.c GSZ_KOPPEL_BILD, leiche_dran).
+6. **Kanister im Maul:** Er haengt schief. Lage und Drehung wie RE2 (T2 @0x801017c4, Lokallage (1750,-210) @0x801019c4-0x80101b8c, Part-6-
+   Matrix @0x801018d0-60) messen und angleichen. Der Alligator muss sich mit dem Kanister danach normal bewegen wie in RE2; Verdacht: Kopf-
+   Klemme G-E5 gegen Koerper-Klemme (auch Punkt "Lagespruenge" der Spur P). Messen in natuerlichen Laeufen, Leon und Elza.
+Die Abnahme der Spur P prueft diese sechs Punkte mit; Punkt 1 ist Pflicht fuer das Release.
