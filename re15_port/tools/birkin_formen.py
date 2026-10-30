@@ -21,7 +21,7 @@ Byte-true geerbt (unveraendert aus CDEMD0.EMS Blob 16 = EM30):
       2. MD1-Normalen             - inverse-transponiert mitgefuehrt, Laenge beibehalten
       3. EMR-Bindoffsets          - Kindgelenk mit der Skalierung des Elternmeshes mitgezogen,
                                     damit die Glieder verbunden bleiben
-      4. Bahnsteig: TIM-CLUTs eingefaerbt
+      4. (faerbe_tim: CLUT-Einfaerbung, derzeit von keiner Form genutzt)
       5. Bahnsteig: alle Keyframes umgehalten (Vierbein, umhalten()) - Clip-Tabelle, Timing,
          Wurzel-X/Z und die Knochen 0/3/6/8/11/14 bleiben unveraendert
       6. Hangar: Schwanz als ANGEHAENGTE Geometrie an Mesh 8 (MD1 waechst, TIM-Offset und
@@ -79,7 +79,7 @@ FORMEN = {
             uv=dict(clut=30720, page=128, u=(4, 60), v=(4, 124)),
         ),
     ),
-    # Bild 1 (Bahnsteig): die naechste Stufe. Insgesamt wuchtiger und dunkel violett-blau,
+    # Bild 1 (Bahnsteig): die naechste Stufe. Insgesamt wuchtiger,
     # der rechte Arm riesig mit grosser Klaue, der linke dicker, Brust/Buckel stark
     # vergroessert, Kopf fast im Rumpf, Beine kraeftiger.
     'bahnsteig': dict(
@@ -109,9 +109,9 @@ FORMEN = {
             welt_halten=(10, 13),
             nachkippen={9: -64, 10: -40, 13: -40, 12: -75, 15: -75},
         ),
-        tint=(np.array([[0.62, 0.00, 0.08],
-                        [0.04, 0.40, 0.06],
-                        [0.18, 0.12, 0.62]]), 0.62),
+        # Farbe: wie EM30. Das Violett im Screenshot ist der Videoqualitaet geschuldet
+        # (Nutzerbefund 2026-10-30), die Original-Textur bleibt unveraendert.
+        tint=None,
     ),
 }
 
