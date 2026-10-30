@@ -19,11 +19,15 @@
 #include "re15_math.h"
 #include "re15_damage.h"        /* re15_cos_q12 / re15_sin_q12 */
 #include "re15_room.h"          /* g_current_room_id */
+#include "re15_esp.h"           /* re15_esp_fx_spawn_ex = FUN_80019700 */
+#include "re15_skeleton.h"      /* re15_cos_q12 / re15_sin_q12 */
 #include <stdio.h>
 #include <stdlib.h>
 
 int  re15_player_wand_bit(void);                                          /* game_step_common.c: Spieler+0 & 0x10 */
 void re15_player_victim_haken(const re15_actor_t *greifer, int an);       /* enemy_ai_common.c */
+void re15_player_victim_bone_pos_pub(int bone, int32_t out[3]);           /* enemy_ai_common.c: Teil in der Opfer-Pose */
+void re15_bk_treffpunkt(int16_t *x, int16_t *z);                         /* enemy_ai_common.c: acc1c/acc1e */
 
 static uint8_t s_cmd  = 0;      /* aca58-Byte; 0 = kein Haken */
 static uint8_t s_var  = 0;      /* aca59 */
@@ -288,6 +292,29 @@ static void haken_wurf3(re15_actor_t *pl, const re15_enemy_bank_t *vb)
         pl->anim_frame = 0; s_tempo = 0;
         pl->hit_react |= 1;
         re15_audio_core_se(3);
+        /* Abriss-Pruefung @0x8011b2a4-554: Spieler-Teil k (Translation +0x54/+0x5c im Raster 0xac) gegen den
+         * Trefferpunkt acc1c/acc1e der Angriffsbox; SquareRoot0 >= 301 (`slti v0,v0,301` / bne) -> Blut
+         * FUN_80019700 am Teil (a1 = 0, a3 = Versatz @0x80100068 = 0). Die Teil-Woerter |= 0x2000|0x80 und die
+         * Flugwerte (+0x94 0x70, +0x98 0x20, +0x88..0x8c 5000/3000/5000) sind OFFEN (RE1.5-Teil-Flag-Schicht). */
+        {
+            static const struct { uint8_t pruef, a, b; uint16_t skala; } abriss[4] = {
+                { 0, 0, 0xff, 0x3000 },   /* @0x8011b2b4-33c */
+                { 2, 2, 5,    0x2800 },   /* @0x8011b350-418: Pruefteil 2 reisst Teil 2 UND Teil 5 */
+                { 1, 1, 0xff, 0x3000 },   /* @0x8011b42c-4b4 */
+                { 8, 8, 0xff, 0x3000 },   /* @0x8011b4c8-550 */
+            };
+            int16_t tx = 0, tz = 0; re15_bk_treffpunkt(&tx, &tz);
+            for (int i = 0; i < 4; i++) {
+                int32_t p[3]; re15_player_victim_bone_pos_pub(abriss[i].pruef, p);
+                int32_t dx = (int32_t)tx - p[0], dz = (int32_t)tz - p[2];
+                if ((int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz)) < 301) continue;
+                uint8_t t[2] = { abriss[i].a, abriss[i].b };
+                for (int k = 0; k < 2 && t[k] != 0xff; k++) {
+                    int32_t q[3]; re15_player_victim_bone_pos_pub(t[k], q);
+                    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, abriss[i].skala, q[0], q[1], q[2], 0);
+                }
+            }
+        }
         /* faellt in den Anim-Schwanz @0x8011b558 */
     case 1:
         if (anim(pl, vb, 0, 0, 0x400)) {

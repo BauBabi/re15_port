@@ -28,6 +28,7 @@
 #include "re15_player.h"
 #include "re15_room.h"
 #include "re15_birkin_opfer.h"
+#include "re15_esp.h"
 
 void re15_player_wand_bit_test(int an);   /* game_step_common.c (Testzugang) */
 void re15_player_victim_haken(const re15_actor_t *greifer, int an);   /* enemy_ai_common.c */
@@ -217,6 +218,20 @@ static void test_wurf3(void)
     g_current_room_id = 0x5080u;
 }
 
+/* Treffer-Blut im HURT-Zustand (@0x8011a144-1d8): ein Spawn je Treffer an Teil 2/8/9 nach +0x6. */
+static void test_blut(void)
+{
+    re15_actor_t *pl = spieler();
+    birkin_setzen(0, 2000);
+    re15_actor_t *b = &g_actors[s_birkin];
+    b->state = 2; b->sub_state_3 = 0; b->sub_state_2 = 1; b->hit_stun = 5; b->hp = 300;
+    re15_esp_fx_reset();
+    int vor = re15_esp_fx_count();
+    re15_enemy_ai_run_all(1);
+    CHECK(re15_esp_fx_count() == vor + 1, "HURT-Blut: %d Spawns statt 1", re15_esp_fx_count() - vor);
+    (void)pl;
+}
+
 static void test_ki(void)
 {
     re15_bk_opfer_reset(); re15_player_wand_bit_test(0);
@@ -256,6 +271,7 @@ int main(void)
     test_hinten();
     test_biss();
     test_wurf3();
+    test_blut();
     test_ki();
     if (fails) { fprintf(stderr, "%d Fehler\n", fails); return 1; }
     fprintf(stderr, "OK\n");

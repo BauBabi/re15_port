@@ -11795,6 +11795,32 @@ static int re15_bk_arc(re15_actor_t *e, re15_actor_t *pl, int32_t range, int arc
     return re15_dog_arc(e, pl, range + s_bk_masse, arc);
 }
 
+/* ANGRIFFSBOX FUN_8001a5e0 (PSX.EXE @0x8001a5e0-6d0), nur von der Birkin-KI gerufen (STAGE3 @0x80117710 /
+ * @0x80117bec / @0x80117ea0 / @0x80118adc, STAGE5 identisch +0x814): a0 = Teil 15 (+0x188 + 0xa14, die Klaue),
+ * a1 = Teil-lokaler Versatz, a2[0] = Reichweite, a3 = Spieler.
+ *   Weltpunkt = ApplyMatrixSV(Teil15, a1) + Teil15.T (re15_enemy_part_point), als s16 (`sh` @0x8001a620-644);
+ *   d = SquareRoot0(dx^2 + dz^2) gegen Spieler +0x34/+0x3c (@0x8001a648-690, Y ungeprueft);
+ *   Treffer = d < Spieler-Radius + Reichweite (`slt v0,v0,s0` @0x8001a6b4). Radius = *(Spieler+0x78)+6, geschrieben
+ *   nur @0x80031664 aus 0x80073e94 = {0,-1530,0,450,1530,450} -> 450.
+ *   a2 <- Weltpunkt (@0x8001a694-6b0); der Wurf legt X/Z nach acc1c/acc1e (@0x80117eec-f4).
+ * Versatz-/Reichweiten-Saetze (STAGE3, s16): Kralle @0x80100390 (800,337,0) / 900; Biss @0x801003bc (900,337,0) /
+ * 500 (@0x801003c4); Wurf @0x801003cc (1000,337,0) / 700 (@0x801003d4); Tackle @0x801003bc / 900 (@0x80100398).
+ * Ohne geladene Bank (Unit-Harness) bleibt der alte Abstand/Kegel-Proxy. */
+#define RE15_BK_SPIELER_RADIUS 450   /* 0x80073e94 + 6 (s.o.) */
+static int16_t s_bk_treffer_x = 0, s_bk_treffer_z = 0;   /* acc1c / acc1e */
+void re15_bk_treffpunkt(int16_t *x, int16_t *z) { if (x) *x = s_bk_treffer_x; if (z) *z = s_bk_treffer_z; }
+static int re15_bk_kontakt(re15_actor_t *e, re15_actor_t *pl, int32_t ox, int32_t reach, int merken)
+{
+    const int32_t ofs[3] = { ox, 337, 0 };
+    int32_t w[3];
+    if (e->type != 0x30 || !re15_enemy_part_point(e, 15, ofs, w))
+        return re15_bk_arc(e, pl, 2500, 0x400);                 /* Proxy (keine Bank / 0x36-Masse-Pfad) */
+    int32_t dx = (int32_t)(int16_t)w[0] - pl->x, dz = (int32_t)(int16_t)w[2] - pl->z;
+    int32_t d = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+    if (merken) { s_bk_treffer_x = (int16_t)w[0]; s_bk_treffer_z = (int16_t)w[2]; }
+    return d < RE15_BK_SPIELER_RADIUS + reach;
+}
+
 static void re15_birkin_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
@@ -11940,17 +11966,20 @@ static void re15_birkin_ai_tick(int slot)
                 if (!re15_bk_arc(e, pl, 0xfa1, 0x400) && e->anim_frame < 0x1e) {
                     e->sub_state_2 = 2;                                /* abort @0x801176b8 */
                 } else {
-                    /* damage window [0x24..0x2b] tested EVERY frame (attack-box 0x8001a5e0 -> re15_dog_arc proxy) @0x801176ec */
+                    /* damage window [0x24..0x2b] tested EVERY frame @0x801176ec, Angriffsbox @0x80117710 */
                     if (e->anim_frame >= 0x24 && e->anim_frame <= 0x2b && pl->hit_react == 0
-                        && re15_bk_arc(e, pl, 2500, 0x400)) {
+                        && re15_bk_kontakt(e, pl, 800, 900, 0)) {
                         /* Gier-Latch @0x80117754-7a8: s0 = FUN_8001a6d4(Birkin -> Spieler), Birkin-Gier kurz s0-0x400
-                         * (= Blick auf Leon), v0 = FUN_8001a780(Spieler) (1 = Leon kehrt Birkin den Ruecken zu), Birkin-Gier
-                         * zurueck (@0x8011778c), Spieler-Gier acabe = s0 - (v0*0x800 - 0x400) @0x80117790-7a8; aca58 =
-                         * (v0 << 8) | 5 @0x801177b8-7d0 -> Haken [0] vorn / [1] hinten (birkin_opfer.c). */
+                         * (quer zur Peilung), v0 = FUN_8001a780(Spieler), Birkin-Gier zurueck (@0x8011778c), Spieler-Gier
+                         * acabe = s0 - (v0*0x800 - 0x400) @0x80117790-7a8 = quer zur Peilung -> der Haken schleudert Leon
+                         * SEITLICH weg (Hieb); aca58 = (v0 << 8) | 5 @0x801177b8-7d0 -> Haken [0] / [1] (birkin_opfer.c). */
                         {
-                            int16_t blick = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0x0fff);
-                            uint8_t v0 = (uint8_t)(((((int)pl->rot_y - (int)blick) + 0x400) & 0xfff) < 0x800);
-                            pl->rot_y = (int16_t)(((int)blick + 0x800 - 0x800 * (int)v0) & 0x0fff);
+                            /* s0 = FUN_8001a6d4 roh = re15_atan2_q12 - 0x400 (actor_locomotion.c atan2_q12: Port = roh +
+                             * 0x400); Birkin-Gier kurz s0 - 0x400 (`addiu v0,s0,-1024` @0x80117770). */
+                            int s0 = ((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0x0fff;
+                            int tmp = (s0 - 0x400) & 0x0fff;
+                            uint8_t v0 = (uint8_t)(((((int)pl->rot_y - tmp) + 0x400) & 0xfff) < 0x800);   /* FUN_8001a780 @0x8001a788-a4 */
+                            pl->rot_y = (int16_t)((s0 - (0x800 * (int)v0 - 0x400)) & 0x0fff);   /* sll 11 / -1024 / subu @0x80117790-7a0 */
                             if (!re15_bk_opfer_start(e, 5, v0)) { s_player_grabbed = 1; e->birkin_grab = 1; }
                         }
                         pl->hit_react |= 1; re15_audio_room_se(7);     /* Se(7) @0x801177dc */
@@ -11990,7 +12019,7 @@ static void re15_birkin_ai_tick(int slot)
                     e->sub_state_2 = 2;                                /* abort @0x80117b60 */
                 } else {
                     if (e->anim_frame >= 0x23 && e->anim_frame <= 0x2a && pl->hit_react == 0
-                        && re15_bk_arc(e, pl, 2500, 0x400)) {         /* box proxy @0x80117bec */
+                        && re15_bk_kontakt(e, pl, 900, 500, 0)) {     /* Angriffsbox @0x80117bec */
                         if (e->anim_frame < 0x26) {                    /* aca58=0x205 @0x80117c1c -> Haken [2] Biss */
                             if (!re15_bk_opfer_start(e, 5, 2)) { s_player_grabbed = 1; e->birkin_grab = 1; }
                         } else {
@@ -12019,7 +12048,7 @@ static void re15_birkin_ai_tick(int slot)
             if (e->sub_state_2 == 1) {
                 int done = re15_birkin_anim(e);
                 if (e->anim_frame == 0x2c) {                           /* frame 0x2c box overlap @0x80117e84 */
-                    if (re15_bk_arc(e, pl, 2500, 0x400)) {            /* hit: throw (aca58=6) + Se(2) @0x80117ee4/f0c */
+                    if (re15_bk_kontakt(e, pl, 1000, 700, 1)) {      /* Angriffsbox @0x80117ea0; Treffer: aca58=6 + Se(2) @0x80117ee4/f0c */
                         /* aca58 = 6 (Wort, aca59 = 0) @0x80117ee4: STAGE5 registriert cmd 6 auf denselben Haken
                          * 0x8011afd8 (@0x8011defc) -> Haken [0] vorn; STAGE3 = Stub 0x8011b168 -> Wurf-Tod 0x8011b1a8 (Variante 3). */
                         if (!re15_bk_opfer_start(e, 6, 0)) s_player_grabbed = 1;
@@ -12071,7 +12100,7 @@ static void re15_birkin_ai_tick(int slot)
                 int done = re15_birkin_anim(e);
                 if (e->anim_frame == 1 || e->anim_frame == 0x12) re15_audio_room_se(4);  /* Se(4) whoosh @0x80118a94 */
                 if (((e->anim_frame >= 4 && e->anim_frame <= 13) || (e->anim_frame >= 0x12 && e->anim_frame <= 0x1b))
-                    && pl->hit_react == 0 && re15_bk_arc(e, pl, 2500, 0x400)) {  /* box proxy @0x80118adc */
+                    && pl->hit_react == 0 && re15_bk_kontakt(e, pl, 900, 900, 0)) {  /* Angriffsbox @0x80118adc */
                     re15_player_stagger_cmd2(0x08);                    /* aca58=0x202 @0x80118b04: cmd 2 [2] = Clip 8 (@0x80035e38-40) */
                     pl->hit_react |= 1;
                     re15_audio_room_se(7);                             /* Se(7) on hit @0x80118b08 */
@@ -12167,7 +12196,19 @@ static void re15_birkin_ai_tick(int slot)
             re15_enemy_steer_point(e, pl->x, pl->z, 0x20);            /* steer 0x20 @0x8011a0fc */
             re15_audio_room_se(0);                     /* Se(0) @0x8011a104 */
             if (dist >= 0xfa1) e->hp = (int16_t)(e->hp + 5);          /* long-range hit refund: boss hp+=5 @0x8011a138 */
-            /* blood FX 0x80019700 by hit-dir bone (+0x6) — render-side, OPEN */
+            /* TREFFER-BLUT FUN_80019700 (@0x8011a144-1d8): a0 = 0x3000, ab +0x1d0 >= 0xfa1 0x2400 (`sltiu 0xfa1` /
+             * `ori s0,0x2400` @0x8011a120-130) = Effekt 0, Skala Q12; a1 = s1 = FUN_8001a6d4(Birkin -> Spieler)
+             * (@0x8011a0e4, roh = re15_atan2_q12 - 0x400); a2 = Teil nach +0x6: 0 -> Teil 2 (+0x198 @0x8011a16c),
+             * 1 -> Teil 8 (+0x5a0 @0x8011a1a4), 2 -> Teil 9 (+0x64c @0x8011a1d8); a3 = Versatz @0x80100068 = 0. */
+            {
+                static const uint8_t teil[3] = { 2, 8, 9 };
+                if (e->sub_state_2 < 3) {
+                    int32_t bp[3]; re15_enemy_bone_world_pos(e, teil[e->sub_state_2], bp);
+                    int16_t s1 = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0x0fff);
+                    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, (uint16_t)((dist >= 0xfa1) ? 0x2400 : 0x3000),
+                                         bp[0], bp[1], bp[2], s1);
+                }
+            }
             if (e->hit_stun == 0) {                    /* +0x1dc==0 @0x8011a1f4: FLINCH */
                 re15_birkin_clip(e, 7); e->anim_frac = 0xf;          /* clip 7 @0x8011a2e0 */
                 e->hit_stun = (int16_t)((re15_engine_rand8() & 3) + 3);  /* re-arm +0x1dc = (rng&3)+3 @0x8011a31c */
@@ -12193,6 +12234,16 @@ static void re15_birkin_ai_tick(int slot)
         /* revive guard @0x8011a43c: a lethal hit DURING the mutation (+0x1dd&8) does NOT kill -> HP=50, resume */
         if (e->sub_state_3 == 0 && (e->birkin_flags & 0x8)) {         /* +0x7==0 && +0x1dd&8 */
             e->birkin_hurt_cd = 9;                     /* +0x1de = 9 @0x8011a458 */
+            /* Blut FUN_80019700(0x2000, FUN_8001a6d4(Birkin -> Spieler) @0x8011a47c, Teil nach +0x6: 2 / 8 / 9 =
+             * +0x198 @0x8011a4b4 / +0x5a0 @0x8011a4ec / +0x64c @0x8011a520, Versatz @0x80100068 = 0). */
+            {
+                static const uint8_t teil[3] = { 2, 8, 9 };
+                if (e->sub_state_2 < 3) {
+                    int32_t bp[3]; re15_enemy_bone_world_pos(e, teil[e->sub_state_2], bp);
+                    int16_t s0 = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0x0fff);
+                    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000, bp[0], bp[1], bp[2], s0);
+                }
+            }
             e->hp = 50;                                /* HP = 0x32 revive @0x8011a534 */
             e->hit_react = (uint8_t)(e->hit_react & ~1u);            /* +0x93 &= ~1 @0x8011a550 */
             e->state = e->birkin_saved_state;          /* resume +0x4 = *(+0x1d8) @0x8011a568 */

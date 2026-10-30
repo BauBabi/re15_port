@@ -3297,6 +3297,32 @@ void re15_enemy_bone_world_pos(const re15_actor_t *e, int bone, int32_t out[3])
     }
 }
 
+/* Punkt in Teil `bone` mit Teil-lokalem Versatz `ofs` in Weltkoordinaten — die ersten beiden Schritte von
+ * FUN_8001a5e0: ApplyMatrixSV(Teil+0x40, ofs) (`jal 0x80067a28` @0x8001a604, MVMVA ohne Translation) plus die
+ * Teil-Translation +0x54/+0x58/+0x5c (`lhu 84/88/92(s0)` @0x8001a610-638, als s16 addiert). Rueckgabe 0 ohne Bank
+ * (dann bleibt out = Aktor-Wurzel). */
+int re15_enemy_part_point(const re15_actor_t *e, int bone, const int32_t ofs[3], int32_t out[3])
+{
+    if (!e) return 0;
+    out[0] = e->x; out[1] = e->y; out[2] = e->z;
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || b->skel.bone_count <= 0 || bone < 0 || bone >= b->skel.bone_count) return 0;
+    int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor;
+    g_anim_pose_actor = NULL;                          /* QUERY wie re15_enemy_bone_world_pos */
+    int rv = re15_skel_compute_pose(&b->skel, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return 0;
+    const int32_t *m = poses[bone].rot;
+    int32_t lokal[3] = {
+        poses[bone].trans[0] + ((m[0] * ofs[0] + m[1] * ofs[1] + m[2] * ofs[2]) >> 12),
+        poses[bone].trans[1] + ((m[3] * ofs[0] + m[4] * ofs[1] + m[5] * ofs[2]) >> 12),
+        poses[bone].trans[2] + ((m[6] * ofs[0] + m[7] * ofs[1] + m[8] * ofs[2]) >> 12) };
+    re15_skel_bone_to_world(lokal, e->rot_y, e->x, e->y, e->z, out);
+    return 1;
+}
+
 /* The gore/death anchor keeps its own per-type bone table (LAB_8011f784[type]). */
 static void re15_enemy_gore_bone_pos(const re15_actor_t *e, int32_t out[3])
 {
