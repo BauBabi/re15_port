@@ -138,6 +138,11 @@ Regex Lauf 1: `^(unit_r41_gatorszene_|integration_r41_gatorszene_|unit_r41_re2ga
 
 Messzeilen Endstand (ctest -V): kamera/_elza Median 26 %, Spitze 45 %, > 25 %: 86, > 50 %: 0, Wurzel-Abstand min 4008; k3/_elza Kamera 0, Tiefe 2606 = 14,3 Bildpunkte, Kasten 12 x 13, hellster 75 .. 111 (x1,48), 44/44 Bilder; tragen F114..F1792 max 338, Kanister beim R1 (-8900,-9351); tragen_elza F170..F919 max 338, Kanister (6864,-9489).
 
+## Nachbesserung 1 (Abnahme 0, Nachtrag 35)
+
+Massgeblich: AUFTRAG.md Nachtrag 35 (Alligator-Befunde des Nutzers, 2026-10-30 16:46), sechs Punkte, Punkt 1 ist Pflicht fuer das Release. Die erste Fertigmeldung nannte sie nicht (M8).
+Stand der Maengel: siehe Unterabschnitte M1..M8; fortlaufend gefuellt.
+
 ## OFFEN
 1. integration_r35_granate Teil birkin ist auf master rot (s.o.) - Orchestrator / Birkin-Zweig, nicht Spur P.
 2. Punkt 1: die Wurzel kann im RE2-Band nicht im Bild von Cut 0 liegen (Rechnung oben): am Kampfbeginn ragen Kopf und Hals von rechts ins Bild, der Rumpf folgt ab +111 Bilder. Das ist das Beste, was Band + Zone 0 + Cut 0 zulassen.
