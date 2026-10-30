@@ -4150,3 +4150,9 @@ target_link_libraries(test_tyrant_b11 PRIVATE re15_engine re15_test_support m)
 target_include_directories(test_tyrant_b11 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_tyrant_b11 COMMAND test_tyrant_b11)
 set_tests_properties(unit_tyrant_b11 PROPERTIES TIMEOUT 60)
+
+# Zombie-Nibble 3 (Lauerer ROOM3010/3011): DECIDE[5] 0x80104760 ohne Loskriechen
+add_executable(test_grid3_lauerer test_grid3_lauerer.c)
+target_link_libraries(test_grid3_lauerer PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_grid3_lauerer PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_grid3_lauerer COMMAND test_grid3_lauerer)

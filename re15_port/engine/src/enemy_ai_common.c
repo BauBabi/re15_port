@@ -4735,10 +4735,10 @@ int re15_enemy_ai_live_active(int slot)
          * It commits the attack (state word 0x701 -> +0x5=7) when the player is in range/off-arc.
          * The briefing zombies SPAWN in the non-0 sub-modes (+0x9 & 0xf = 6 feeding / 8 lying); the
          * feeding handler is the dist-gated WAKE-UP that transitions them to combat (sub 0). The FUN_8001bc08 sensor + the +0x1d8 update are IMPLEMENTED
-         * (re15_enemy_los_probe @L2113-2121). DEFERRED (cited): the ATTACK-ARM (+0x1d8 |= 0x100 +
-         * the +0x1da windup seed; FUN_8010ab2c) — which is DORMANT in this prototype (DAT_800aca3c & 1
-         * is never set, savestate-proven), so the in-game attack is the GRAB the engage brain commits
-         * (8.8), not the lunge. */
+         * (re15_enemy_los_probe @L2113-2121). 2026-10-30: der ARM (+0x1d8 |= 0x100 + +0x1da)
+         * haengt an DAT_800aca3c & 1 = Flag Zone 1/31 — in STAGE1 nie gesetzt, aber von ROOM5120/5121/
+         * 5140/5141; das sind die BRENNENDEN Zombies (re15_brandzombie.h). Der Angriff im Spiel bleibt der
+         * GRIFF; 300 schaltet nur die Flammen um (kein Lunge-Biss). */
         switch (e->grid_id & 0xf) {                       /* @0x8011f80c[+0x9 & 0xf] sub-mode */
             case 2:    /* STEHENDER SCHLAEFER (@0x8011f80c[2]=FUN_80101784, behavior 0x02 — der
                         * Re-Entry-Zweig von 10D0/1140 u.a., 91 Records game-weit; NACHGEPRUEFT
@@ -4827,7 +4827,11 @@ int re15_enemy_ai_live_active(int slot)
                     re15_enemy_ai_live_engage_animate(slot, e);
                 break;
             }
-            case 1: {  /* GRID-WURZEL 1 = die KRIECH-MASCHINE (@0x8011f80c[1]=FUN_80101708,
+            case 1: case 3: {  /* GRID-WURZEL 1 = die KRIECH-MASCHINE (@0x8011f80c[1]=FUN_80101708,
+                        * 2026-10-30 auch NIBBLE 3 (@0x8011f80c[3]=FUN_80101800, ROOM3010/3011 Deskriptor 0x83):
+                        * DECIDE @0x8011F9B0[+0x5] (`addiu at,-1616` @0x80101820) = dieselbe Tabelle wie
+                        * @0x8011F8E0 bis auf [5] = 0x80104760 und [6] = 0x80103980; ANIMATE dieselbe @0x8011F920
+                        * (`addiu at,-1760` @0x80101854). Grid 1:
                         * Dossier Glied 10): DOPPEL-Dispatch — DECIDE @0x8011F8E0[+0x05]
                         * (@0x80101728 jalr), danach +0x05 FRISCH lesen (@0x8010174c), ANIMATE
                         * @0x8011F920[+0x05] (@0x8010175c jalr). HARTE INVARIANTE: Indizes 7..14
@@ -4841,7 +4845,9 @@ int re15_enemy_ai_live_active(int slot)
                               * @0x801036b8 -> Wort 0x601 = Toggle/Aufstehen). */
                         re15_zgirl_overflow_row11(e, player);
                         break;
-                    case 6:  /* [6]=0x80104F78 = `jr ra`-Stub (Tabellen-Dump, Glied 9) */
+                    case 6:  /* [6]=0x80104F78 = `jr ra`-Stub (Tabellen-Dump, Glied 9);
+                              * Nibble 3: [6]=0x80103980 = der Naehe-Wecker (@0x8011F9C8) */
+                        if ((e->grid_id & 0xf) == 3) (void)re15_r41_liegewecker_re15_decide(e);
                         break;
                     case 1: case 2:  /* [1,2]=0x80103B8C = `jr ra; nop` (roh @0x80103b8c-90):
                                       * waehrend Grab/Lauern laeuft KEIN Decide — insbesondere
@@ -4878,8 +4884,11 @@ int re15_enemy_ai_live_active(int slot)
                         }
                         /* BLOCK B @0x80104704 — der wirksame Zweig: in Sicht und naeher als
                          * 3000 -> Wort 1 = Zustand 1 / Sub 0 = die Kriech-Lokomotion
-                         * (ANIMATE[0] = FUN_801036DC). */
-                        if (e->ai_dist < 0xbb8u &&                           /* sltiu 0xbb8
+                         * (ANIMATE[0] = FUN_801036DC). NIBBLE 3 (DECIDE[5] = 0x80104760) hat Block B
+                         * NICHT: Block A endet dort im Epilog (@0x801047f0 -> jr ra @0x80104800) — der
+                         * Lauerer greift nur zu, er kriecht nicht los. */
+                        if ((e->grid_id & 0xf) != 3 &&
+                            e->ai_dist < 0xbb8u &&                           /* sltiu 0xbb8
                                                                               * @0x80104718 */
                             re15_ai_arc_test(e, player->x, player->z, 0x200) == 0)
                                                                              /* @0x8010472C-34 */
@@ -13971,11 +13980,10 @@ static void re15_alligator_ai_tick(int slot)
  * so ~91% of emitters dispatch the NOP leaf and run drift-only — for THEM the port's tick below is
  * byte-true. INIT copies grid once to +0x5 (sb @0x8010f00c) and nothing else writes +0x5, so the
  * finder's cited "grid-5 handler 0x80110338" is actually table index [4] (grid 4), which never spawns
- * and is dead code. HONEST-OPEN (subsystem gap, NOT faked): only the 1x grid-0 + 2x grid-1 ambient
- * emitters reach real handlers (grid-0 0x8010f130 -> +0x6 table @0x80118d88, grid-1 0x8010f3fc ->
- * @0x80118d90) that fire timed particle bursts via helpers 0x801108cc/0x80110988 -> 0x80019700 (the
- * EXE ESP/particle FX-spawn family) on a +0x6 tick budget. That is render-side ambience only (no
- * player interaction) and belongs to the un-ported ESP/particle subsystem -> OPEN.
+ * and is dead code. The 1x grid-0 + 2x grid-1 ambient emitters
+ * (grid-0 0x8010f130 -> +0x6 table @0x80118d88, grid-1 0x8010f3fc -> @0x80118d90, timed bursts via
+ * 0x80019700) sind seit Runde 41 portiert (wasser20b0_r41.c). Grid 2..4 (Phasen 0x8010f9bc/0x8010fc28/
+ * 0x8010fe6c/0x801100d8/0x801103e4 ...) spawnt kein ausgeliefertes RDT -> toter Code (Vergleich 2026-10-30).
  *
  * INIT also flips a GLOBAL: DAT_800acc0c := 1 (ori v1,0x1 @0x8010ef28; sb v1,-13300(at) @0x8010ef34).
  * Consumer EXE FUN_80024c30 (@0x80024ce0 lbu) skips a player secondary-motion pose add (+0x5f4) while
@@ -14002,8 +14010,7 @@ static void re15_fx_emitter_ai_tick(int slot)
     case 1:   /* ACTIVE 0x8010f020: accelerating leftward X-drift. No damage. */
         /* Original runs the +0x5 sub-dispatch (jalr @0x8010f0a8) BEFORE this drift: for grid-5 (~91% of
          * spawns) it is the `jr ra` NOP @0x8011084c, so drift-only is byte-true here. The grid-0/grid-1
-         * particle-burst sequencer (0x80019700 ESP FX) is render-side ambience only -> OPEN (dormant #1).
-         * The +0x1d4 SquareRoot0 dist cache (sh @0x8010f078) feeds only that sequencer -> also OPEN. */
+         * particle-burst sequencer laeuft in re15_wasser20b0_r41_sub (Runde 41 Spur A). */
         (void)re15_wasser20b0_r41_sub(e);        /* Runde 41 Spur A: jalr @0x80118d58[+0x5] @0x8010f0a8 - grid 0/1 Spawns 0x80019700 */
         e->ai_timer++;                           /* timer++ @0x8010f0c8 */
         e->x -= e->ai_timer;                     /* X -= timer @0x8010f0e8 */
