@@ -4123,3 +4123,10 @@ target_link_libraries(test_re2_gore80 PRIVATE re15_engine re15_test_support m)
 target_include_directories(test_re2_gore80 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_re2_gore80 COMMAND test_re2_gore80)
 set_tests_properties(unit_re2_gore80 PROPERTIES TIMEOUT 60)
+
+# MESSSONDE Vergleich Original<->Port: ein Raum, 600 Takte re15_game_step ohne Eingabe (kein ctest).
+add_executable(probe_raum_sweep probe_raum_sweep.c)
+target_link_libraries(probe_raum_sweep PRIVATE re15_engine re15_test_support m)
+target_include_directories(probe_raum_sweep PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_raum_sweep PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
