@@ -13,7 +13,7 @@
  *   Umfuellen in 16 Bildern: Form der Original-Hebel ROOM11F0 sub06 For 16 @0x01336.
  * Bild: gen/panel2030_r41.inc (tools/r41_nachtrag30/panel_bild.py), Vollbild-Ebene wie die Plakat-Nahaufnahme, der Text liegt darueber
  * (render_pc.c re15_render_pc_fmv_text, nur solange das Panel offen ist). Massen = Schirmpixel 320 x 240 wie im Generator.
- * Der Faden des Pults (Programm 2030_panel_ein) endet nach dem Ja; der C-Takt fuehrt das Panel, Sperre (2,7)/(2,2) gibt der C-Takt zurueck.
+ * Der Faden des Pults (Programm 2030_panel_ein) endet nach dem Ja; der C-Takt fuehrt das Panel, die Bits (2,0)/(2,2) gibt der C-Takt zurueck.
  */
 #ifndef RE15_PANEL2030_R41_H
 #define RE15_PANEL2030_R41_H

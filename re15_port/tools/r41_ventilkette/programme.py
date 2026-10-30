@@ -62,11 +62,13 @@ ENDE = ("01 00", "Evt_end")
 def bauen(cd):
     P = []
     # ---- 2030 Pult -------------------------------------------------------------------------------------------
-    # Spur N (Nachtrag 37): das Pult oeffnet das Panel-Raetsel; Frage in der Form ROOM2050 msg 0 @0x2446, Sperre wie die Nahaufnahmen (ROOM1051 sub03
-    # @0x00DA4, ROOM2050 sub02 @0x0223C), Marker (5,0x16) -> C-Takt (engine/src/panel2030_r41.c), der die Sperre am Ende zuruecknimmt.
+    # Spur N (Nachtrag 37): das Pult oeffnet das Panel-Raetsel; Frage in der Form ROOM2050 msg 0 @0x2446, Spieler/KI stehen wie am Pult 2050 (sub01 @0x021FA
+    # Set(2,0)=1 Set(2,2)=1: die SCD-Pad-Woerter bleiben offen, Sperre (2,7) wuerde sie maskieren), Marker (5,0x16) -> C-Takt (engine/src/panel2030_r41.c), der beide
+    # Bits am Ende zuruecknimmt.
     P.append(("re15_r41c_prg_2030_panel_ein",
               [msg_on(40, "A control panel for the bridge. Will you operate the panel? (Frage, Ja/Nein)"), EVT_NEXT,
-               ("IF", "Ja-Zweig"), JA, SPERRE_AN, ("22 02 02 01", "Set(2,2)=1 KI steht (ROOM2050 sub02 @0x0223C)"),
+               ("IF", "Ja-Zweig"), JA, ("22 02 00 01", "Set(2,0)=1 Spieler steht (ROOM2050 sub01 @0x021FA)"),
+               ("22 02 02 01", "Set(2,2)=1 KI steht (ROOM2050 sub01 @0x021FA)"),
                ("22 05 16 01", "Set(5,0x16)=1 Panel oeffnen (Marker fuer den C-Takt, Bank 5 Wort 0)"), ("ENDIF", ""), ENDE]))
     P.append(("re15_r41c_prg_2030_pult_unten", [msg_on(44, "The bridge is down."), EVT_NEXT, ENDE]))
     senken = [msg_on(43, "The pressure gauge reads 80. Lower the bridge? (Frage, Ja/Nein)"), EVT_NEXT,

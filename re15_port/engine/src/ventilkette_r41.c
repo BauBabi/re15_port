@@ -739,8 +739,8 @@ static void flut_tick(void)
     }
 }
 
-/* ---- 2030 Panel-Raetsel (Spur N, Nachtrag 37): Marker des Programms 2030_panel_ein oeffnet, der Takt fuehrt, die Sperre (2,7)/(2,2) des Programms
- * gibt der Takt am Ende zurueck (Form Plakat-Nahaufnahme) --------------------------------------------------------------------- */
+/* ---- 2030 Panel-Raetsel (Spur N, Nachtrag 37): Marker des Programms 2030_panel_ein oeffnet, der Takt fuehrt, die Bits (2,0)/(2,2) des Programms (Pult 2050
+ * sub01 @0x021FA) gibt der Takt am Ende zurueck (sub10 @0x0240C) -------------------------------------------------------------- */
 static void panel30_tick(void)
 {
     if (re15_game_flag_get(5, RE15_R41C_FLAG_PANEL)) {
@@ -753,8 +753,8 @@ static void panel30_tick(void)
     const int nachricht = g_scd.message_display_frames > 0 || g_scd.message_active;
     const int erg = re15_panel2030_r41_takt(g_scd_pad_edge, g_scd_pad_held, nachricht);
     if (erg == RE15_R41N_ERG_NICHTS) return;
-    re15_game_flag_set(2, 7, 0);                                 /* Form ROOM1051 sub03 @0x00DD2 */
-    re15_game_flag_set(2, 2, 0);                                 /* Form ROOM11F0 sub17 @0x016EC */
+    re15_game_flag_set(2, 0, 0);                                 /* ROOM2050 sub10 @0x0240C */
+    re15_game_flag_set(2, 2, 0);
     if (erg == RE15_R41N_ERG_GELOEST) {
         bit_setzen(RE15_R41C_BIT_DRUCK80);
         LOG("[ventilkette41] Panel 2030 GELOEST: Anzeige 80 -> Bit (9,101), Frage Id 43\n");

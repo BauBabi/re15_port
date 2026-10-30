@@ -8,8 +8,8 @@ static const unsigned char re15_r41c_prg_2030_panel_ein[30] = {
     /* +004 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
     /* +006 */ 0x06,0x00,0x12,0x00, /* Ifel_ck (Laenge automatisch) Ja-Zweig */
     /* +00A */ 0x21,0x0c,0x1f,0x00, /* Ck(12,31)=0 = Ja (ROOM2050 sub04 @0x022F0) */
-    /* +00E */ 0x22,0x02,0x07,0x01, /* Set(2,7)=1 Pad-Sperre (ROOM2030 sub02 @0x01E30) */
-    /* +012 */ 0x22,0x02,0x02,0x01, /* Set(2,2)=1 KI steht (ROOM2050 sub02 @0x0223C) */
+    /* +00E */ 0x22,0x02,0x00,0x01, /* Set(2,0)=1 Spieler steht (ROOM2050 sub01 @0x021FA) */
+    /* +012 */ 0x22,0x02,0x02,0x01, /* Set(2,2)=1 KI steht (ROOM2050 sub01 @0x021FA) */
     /* +016 */ 0x22,0x05,0x16,0x01, /* Set(5,0x16)=1 Panel oeffnen (Marker fuer den C-Takt, Bank 5 Wort 0) */
     /* +01A */ 0x08,0x00, /* Endif  */
     /* +01C */ 0x01,0x00, /* Evt_end */

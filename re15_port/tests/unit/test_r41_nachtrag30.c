@@ -1,0 +1,503 @@
+/*
+ * test_r41_nachtrag30.c — Runde 41 Spur N "nachtrag30": Mechanik-Riegel der Nutzer-Punkte (echte RDTs, Leon + Elza, Raumaufbau wie test_r41_ventilkette.c).
+ * Dossier analysis/befunde_runde41/N_nachtrag30.md.
+ *   A  Panel 2030 (Nachtrag 37): Regel je Zug, Vollsuche aller Zustaende: 16 Staende, keine Sackgasse, kuerzeste Loesung A->B, B->C, C->A = 80
+ *   B  Panel im Raum: Pult -> Frage 40 -> Ja -> Panel offen, Text 41; Zuege ueber Cursor + SQUARE; EXIT/CROSS setzen zurueck; 80 -> Bit 101 -> Frage 43 -> Ja -> Bruecke;
+ *      die RE2-Toene der Bruecke (Satz 0x0F vor der Fahrt, 0x10 am Ende) kommen in dieser Reihenfolge; Ventil 13 gibt es nicht mehr
+ *   C  Schrank 2010/2011: erster Klick klappt auf (16 Bilder, rot_y 1024), danach Text; zweiter Klick ohne Fahrt; Ja-Zweig: Nahansicht Cut 8, Cut 9, dann Bit 125 + Standbild;
+ *      Raumwechsel schliesst
+ *   D  Wasserlauf ROOM2000/2001: Strahlen + nasse Spur + Spritzer laufen, Leiter bleibt gesperrt; mit Bit 100 oder 103 nichts; 20B0 nichts; ROOM2010 hat keine Leiter
+ *   E  Sirene: an mit dem Zaehler (nach der Ansage), aus mit der Flut, dem Tod und dem Verlassen des Raums
+ *   F  Notiz + Plakat: FILE31 (FNV der Seiten), Loesung {5,1,0,4} = 09/02/01/08
+ * Werkzeug: "bild <ppm> <x0> <y0> <x1> <y1>" = mittlere Helligkeit, "diff <a.ppm> <b.ppm> <x0> <y0> <x1> <y1>" = mittlere Abweichung, "volle <cap_a> <cap_b> <q>" = Endstufe bitgleich.
+ */
+#include "re15_rdt.h"
+#include "re15_scd.h"
+#include "re15_actor.h"
+#include "re15_aot.h"
+#include "re15_room.h"
+#include "re15_msg.h"
+#include "re15_inventory.h"
+#include "re15_esp.h"
+#include "re15_fade.h"
+#include "re15_collision.h"
+#include "re15_ventilkette_r41.h"
+#include "re15_panel2030_r41.h"
+#include "re15_schrank2010_r41.h"
+#include "re15_wasserlauf_r41.h"
+#include "re15_files.h"
+
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void scd_register_current_rdt(const re15_rdt_t *rdt);
+void re15_game_state_init(void);
+extern uint16_t g_scd_pad_edge;
+extern uint16_t g_scd_pad_held;
+
+static int s_fail = 0, s_pruef = 0;
+#define PRUEFE(cond, ...) do { s_pruef++; if (!(cond)) { printf("FAIL: " __VA_ARGS__); printf("\n"); s_fail = 1; } } while (0)
+
+static uint8_t *slurp(const char *path, long *out_sz)
+{
+    FILE *f = fopen(path, "rb");
+    if (!f) return NULL;
+    fseek(f, 0, SEEK_END); long sz = ftell(f); fseek(f, 0, SEEK_SET);
+    uint8_t *d = (uint8_t *)malloc((size_t)sz);
+    if (!d || fread(d, 1, (size_t)sz, f) != (size_t)sz) { fclose(f); free(d); return NULL; }
+    fclose(f);
+    *out_sz = sz;
+    return d;
+}
+
+static uint8_t *s_daten = NULL;
+static re15_rdt_t s_rdt;
+static re15_esp_t s_esp;
+static struct { uint8_t zone, idx; } s_vf[16];
+static int s_nvf = 0;
+static void vorflag(uint8_t zone, uint8_t idx) { if (s_nvf < 16) { s_vf[s_nvf].zone = zone; s_vf[s_nvf].idx = idx; s_nvf++; } }
+static void band_aus_y(int32_t y) { re15_collision_set_band(re15_collision_band_from_y(y)); }
+static int bit(int b) { return re15_game_flag_get(RE15_R41C_BANK, (uint8_t)b) ? 1 : 0; }
+static void bits_leeren(void) { re15_game_state_init(); re15_ventilkette_r41_reset(); s_nvf = 0; }
+
+static int raum_hoch(uint16_t raum, int32_t x, int32_t y, int32_t z)
+{
+    long sz = 0;
+    char pfad[256];
+    snprintf(pfad, sizeof pfad, RE15_ASSET_PSX_DIR "/STAGE%d/ROOM%04X.RDT", (raum >> 12), raum);
+    free(s_daten);
+    s_daten = slurp(pfad, &sz);
+    if (!s_daten || re15_rdt_parse(s_daten, (size_t)sz, &s_rdt) != 0) return -1;
+    re15_actor_init(); re15_aot_init();
+    scd_vm_init(); re15_inv_init();
+    for (int i = 0; i < s_nvf; i++) re15_game_flag_set(s_vf[i].zone, s_vf[i].idx, 1);
+    memset(&g_room_change, 0, sizeof g_room_change);
+    g_current_room_id = raum;
+    scd_register_current_rdt(&s_rdt);
+    re15_msg_clear_room_block();
+    re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
+    { uint32_t idh = 0, pe = 0, tb = 0, te = 0;
+      memcpy(&idh, s_daten + 0x4C, 4); memcpy(&pe, s_daten + 0x50, 4); memcpy(&tb, s_daten + 0x54, 4); memcpy(&te, s_daten + 0x58, 4);
+      if (re15_esp_parse(s_daten, (size_t)sz, idh, pe, tb, te, &s_esp) == 0) re15_esp_set_room_bank(&s_esp); else re15_esp_set_room_bank(NULL); }
+    re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    p->active = 1; p->type = 0; p->hp = 100;
+    p->x = x; p->y = y; p->z = z; p->rot_y = 0; p->state = 1;
+    re15_collision_reset_band(); band_aus_y(y);
+    g_scd.player_mode = 0;
+    scd_register_room_events(&s_rdt);
+    scd_room_reenter(&s_rdt, p->x, p->z, 0);
+    for (int i = 0; i < 60; i++) { scd_vm_tick(); re15_ventilkette_r41_tick(); re15_aot_scan(p->x, p->z, 0xFF); (void)re15_cam_present_tick(); }
+    { scd_audio_event_t ev; while (scd_audio_queue_pop(&ev)) {} }
+    return 0;
+}
+
+static void takt(void)
+{
+    re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_msg_tick(0, 0, 0);
+    scd_vm_tick();
+    re15_ventilkette_r41_tick();
+    re15_aot_scan(p->x, p->z, 0xFF);
+    (void)re15_cam_present_tick();
+}
+
+typedef struct { int msgs[8], n_msgs, takte; } lauf_t;
+
+/* Spieler an (x,z,rot), Aktion, dann Bilder bis kein Faden mehr laeuft. nein = 1: in der Auswahl einmal umschalten. */
+static lauf_t druecken(int32_t x, int32_t z, int rot, int nein, int max_takte)
+{
+    lauf_t L; memset(&L, 0, sizeof L);
+    re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    p->x = x; p->z = z; p->rot_y = (int16_t)rot;
+    band_aus_y(p->y);
+    g_aot.fired_event_id_this_frame = 0;
+    g_aot_action_pressed = 1;
+    re15_aot_scan(p->x, p->z, 0xFF);
+    g_aot_action_pressed = 0;
+    if (g_aot.fired_event_id_this_frame) (void)scd_event_fire(g_aot.fired_event_id_this_frame);
+    int offen = -1, umgeschaltet = 0;
+    for (int i = 0; i < max_takte; i++) {
+        g_scd_pad_edge = 0; g_scd_pad_held = 0;
+        if (g_scd.message_active) {
+            if (g_scd.message_id != offen && L.n_msgs < 8) { offen = g_scd.message_id; L.msgs[L.n_msgs++] = offen; }
+            if ((i & 7) == 7 && (g_scd.message_fsm == 1 || g_scd.message_fsm == 3 || g_scd.message_fsm == 4 || g_scd.message_fsm == 7)) {
+                if (nein && !umgeschaltet && g_scd.message_fsm == 3) { g_scd_pad_edge = 0x1000; umgeschaltet = 1; }
+                else g_scd_pad_edge = 0x4000;
+            }
+        } else offen = -1;
+        takt();
+        L.takte = i + 1;
+        g_scd_pad_edge = 0;
+        int laeuft = g_scd.message_active;
+        for (int k = SCD_EVENT_SLOT_FIRST; k <= SCD_EVENT_SLOT_LAST; k++) if (g_scd.threads[k].active) laeuft = 1;
+        if (!laeuft && i > 30) break;
+    }
+    { scd_audio_event_t ev; while (scd_audio_queue_pop(&ev)) {} }
+    return L;
+}
+
+/* Nachricht wegdruecken, bis keine mehr steht (Panel offen: das Spiel laeuft weiter). */
+static void nachricht_weg(void)
+{
+    for (int i = 0; i < 400 && (g_scd.message_active || g_scd.message_display_frames > 0); i++) {
+        g_scd_pad_edge = (i & 7) == 7 ? 0x4000 : 0;
+        g_scd_pad_held = 0;
+        takt();
+        g_scd_pad_edge = 0;
+    }
+}
+
+/* Cursor per Steuerkreuz zur Stelle (x,y) fahren und SQUARE druecken (virtuelle Bits 1 hoch, 2 rechts, 4 runter, 8 links, 0x40 SQUARE). */
+static void cursor_fahren(int zx, int zy)
+{
+    for (int i = 0; i < 400; i++) {
+        int x = 0, y = 0;
+        re15_panel2030_r41_cursor(&x, &y);
+        uint16_t h = 0;
+        if (x < zx - 2) h |= 2; else if (x > zx + 2) h |= 8;
+        if (y < zy - 2) h |= 4; else if (y > zy + 2) h |= 1;
+        if (!h) break;
+        g_scd_pad_held = h; g_scd_pad_edge = 0;
+        takt();
+    }
+    g_scd_pad_held = 0;
+}
+static void druck(void) { g_scd_pad_edge = 0x40; g_scd_pad_held = 0; takt(); g_scd_pad_edge = 0; for (int i = 0; i < 20; i++) takt(); }
+static void zug(int von_x, int nach_x) { cursor_fahren(von_x, 90); druck(); cursor_fahren(nach_x, 90); druck(); }
+#define X_A 71
+#define X_B 147
+#define X_C 191
+
+/* ---- A: Regel + Vollsuche ---------------------------------------------------------------------------------------- */
+static void fall_a(void)
+{
+    re15_panel2030_r41_oeffnen();
+    PRUEFE(re15_panel2030_r41_stand(0) == 100 && re15_panel2030_r41_stand(1) == 0 && re15_panel2030_r41_stand(2) == 0, "Start 100/0/0");
+    PRUEFE(re15_panel2030_r41_aktion(1) == 4 && re15_panel2030_r41_quelle() == -1, "leere Quelle B: Rueckgabe 4, keine Wahl");
+    PRUEFE(re15_panel2030_r41_aktion(0) == 1 && re15_panel2030_r41_quelle() == 0, "Quelle A gewaehlt");
+    PRUEFE(re15_panel2030_r41_aktion(0) == 2 && re15_panel2030_r41_quelle() == -1, "A nochmal: Wahl zurueck");
+    (void)re15_panel2030_r41_aktion(0);
+    PRUEFE(re15_panel2030_r41_aktion(1) == 3 && re15_panel2030_r41_stand(0) == 50 && re15_panel2030_r41_stand(1) == 50 && re15_panel2030_r41_stand(2) == 0,
+           "A nach B: bis das Ziel voll ist: 50/50/0");
+    (void)re15_panel2030_r41_aktion(1);
+    PRUEFE(re15_panel2030_r41_aktion(2) == 3 && re15_panel2030_r41_stand(0) == 50 && re15_panel2030_r41_stand(1) == 20 && re15_panel2030_r41_stand(2) == 30,
+           "B nach C: 50/20/30");
+    (void)re15_panel2030_r41_aktion(2);
+    PRUEFE(re15_panel2030_r41_aktion(0) == 3 && re15_panel2030_r41_stand(0) == 80 && re15_panel2030_r41_stand(1) == 20 && re15_panel2030_r41_stand(2) == 0,
+           "C nach A: 80/20/0 = Ziel");
+    (void)re15_panel2030_r41_aktion(1);
+    (void)re15_panel2030_r41_aktion(0);   /* B nach A: bis A voll */
+    PRUEFE(re15_panel2030_r41_stand(0) == 100 && re15_panel2030_r41_stand(1) == 0, "B nach A: 100/0/0");
+    (void)re15_panel2030_r41_aktion(0);
+    (void)re15_panel2030_r41_aktion(1);   /* 50/50/0 */
+    (void)re15_panel2030_r41_aktion(0);
+    PRUEFE(re15_panel2030_r41_aktion(1) == 5 && re15_panel2030_r41_quelle() == 0, "Ziel voll: Rueckgabe 5, Quelle bleibt");
+    /* Vollsuche ueber die Regel selbst: von jedem erreichbaren Stand ein Weg zu 80, kuerzester Weg 3 Zuege */
+    enum { MAXS = 64 };
+    int st[MAXS][3], dist[MAXS], n = 1, kopf = 0, ziel_d = -1;
+    st[0][0] = 100; st[0][1] = 0; st[0][2] = 0; dist[0] = 0;
+    static const int kap[3] = RE15_R41N_KAPAZITAET;
+    int kante[MAXS][6];
+    while (kopf < n) {
+        const int *s = st[kopf];
+        if (s[0] == RE15_R41N_ZIEL && ziel_d < 0) ziel_d = dist[kopf];
+        int e = 0;
+        for (int q = 0; q < 3; q++) for (int t = 0; t < 3; t++) {
+            if (q == t) continue;
+            int d[3] = { s[0], s[1], s[2] };
+            int menge = d[q] < kap[t] - d[t] ? d[q] : kap[t] - d[t];
+            d[q] -= menge; d[t] += menge;
+            int k = -1;
+            for (int i = 0; i < n; i++) if (st[i][0] == d[0] && st[i][1] == d[1] && st[i][2] == d[2]) k = i;
+            if (k < 0 && n < MAXS) { k = n++; memcpy(st[k], d, sizeof d); dist[k] = dist[kopf] + 1; }
+            kante[kopf][e++] = k;
+        }
+        kopf++;
+    }
+    PRUEFE(n == 16, "16 erreichbare Staende (%d)", n);
+    PRUEFE(ziel_d == 3, "kuerzeste Loesung 3 Zuege (%d)", ziel_d);
+    /* keine Sackgasse: von jedem Stand ist ein Stand mit A = 80 erreichbar */
+    int gut[MAXS]; memset(gut, 0, sizeof gut);
+    for (int i = 0; i < n; i++) gut[i] = st[i][0] == RE15_R41N_ZIEL;
+    for (int r = 0; r < n; r++) for (int i = 0; i < n; i++) for (int e = 0; e < 6; e++) if (gut[kante[i][e]]) gut[i] = 1;
+    int alle = 1; for (int i = 0; i < n; i++) if (!gut[i]) alle = 0;
+    PRUEFE(alle, "keine Sackgasse");
+    re15_panel2030_r41_reset();
+}
+
+/* ---- B: Panel im Raum ----------------------------------------------------------------------------------------------- */
+static void fall_b(uint16_t r)
+{
+    bits_leeren();
+    if (raum_hoch(r, 350, -5400, -9500) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+    int vs = 0;
+    for (int s = 0; s < RE15_AOT_MAX; s++) if (g_aot.slots[s].active && g_aot.slots[s].event_id == 25 && g_aot.slots[s].type == RE15_AOT_TYPE_GENERIC) vs++;
+    PRUEFE(vs == 0 && re15_ventilkette_r41_programm("2030_v13_frage", NULL) == NULL && re15_ventilkette_r41_programm("2030_pult_ohne", NULL) == NULL,
+           "ROOM%04X: Ventil 13 entfaellt (Plaetze %d)", r, vs);
+    lauf_t L = druecken(350, -9500, 1024, 1, 300);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_PANEL_FRAGE && !re15_panel2030_r41_offen() && re15_game_flag_get(5, RE15_R41C_FLAG_PANEL) == 0,
+           "ROOM%04X Nein: nur Frage 40, kein Panel", r);
+    L = druecken(350, -9500, 1024, 0, 400);
+    PRUEFE(L.n_msgs == 2 && L.msgs[0] == RE15_R41C_MSG_PANEL_FRAGE && L.msgs[1] == RE15_R41C_MSG_PANEL_START && re15_panel2030_r41_offen(), "ROOM%04X Ja: Panel offen, Text 41 (msgs %d)", r, L.n_msgs);
+    PRUEFE(re15_game_flag_get(2, 0) == 1 && re15_game_flag_get(2, 2) == 1 && re15_game_flag_get(2, 7) == 0, "ROOM%04X: Spieler + KI stehen, keine Pad-Sperre", r);
+    PRUEFE(re15_panel2030_r41_rgba() != NULL, "ROOM%04X: Vollbild steht", r);
+    { const uint32_t *b = re15_panel2030_r41_rgba(); int bunt = 0; for (int i = 0; i < 320 * 240; i += 97) if ((b[i] >> 8) != 0) bunt++;
+      PRUEFE(bunt > 400, "ROOM%04X: Vollbild traegt Bildinhalt (%d)", r, bunt); }
+    nachricht_weg();
+    /* EXIT verlaesst, naechstes Oeffnen startet bei 100/0/0 */
+    zug(X_A, X_B);
+    PRUEFE(re15_panel2030_r41_stand(1) == 50, "ROOM%04X: A nach B per Cursor: B %d", r, re15_panel2030_r41_stand(1));
+    cursor_fahren(254, 195); g_scd_pad_edge = 0x40; takt(); g_scd_pad_edge = 0;
+    PRUEFE(!re15_panel2030_r41_offen() && re15_game_flag_get(2, 0) == 0 && re15_game_flag_get(2, 2) == 0 && bit(RE15_R41C_BIT_DRUCK80) == 0, "ROOM%04X: EXIT verlaesst, Bit 101 = 0", r);
+    L = druecken(350, -9500, 1024, 0, 400);
+    PRUEFE(re15_panel2030_r41_offen() && re15_panel2030_r41_stand(0) == 100 && re15_panel2030_r41_stand(1) == 0, "ROOM%04X: neu offen = Start", r);
+    nachricht_weg();
+    /* volle Aufgabe: leere Quelle -> Text 42 + Fehlerton, volles Ziel -> Text 47; CROSS verlaesst */
+    cursor_fahren(X_B, 90); g_scd_pad_edge = 0x40; takt(); g_scd_pad_edge = 0; takt();
+    PRUEFE(g_scd.message_active && g_scd.message_id == RE15_R41C_MSG_PANEL_LEER, "ROOM%04X: leere Quelle: Text 42 (ist %d)", r, g_scd.message_id);
+    nachricht_weg();
+    g_scd_pad_edge = 0x8000; takt(); g_scd_pad_edge = 0;
+    PRUEFE(!re15_panel2030_r41_offen() && re15_game_flag_get(2, 0) == 0, "ROOM%04X: CROSS verlaesst", r);
+    /* Loesung */
+    L = druecken(350, -9500, 1024, 0, 400);
+    nachricht_weg();
+    zug(X_A, X_B); zug(X_B, X_C); zug(X_C, X_A);
+    PRUEFE(re15_panel2030_r41_stand(0) == 80 && re15_panel2030_r41_stand(1) == 20 && re15_panel2030_r41_stand(2) == 0, "ROOM%04X: Loesung 80/20/0 (A %d)", r, re15_panel2030_r41_stand(0));
+    PRUEFE(re15_panel2030_r41_ziel_erreicht(), "ROOM%04X: Ziel erreicht", r);
+    int frage = 0;
+    for (int i = 0; i < 80 && !frage; i++) { takt(); if (g_scd.message_active && g_scd.message_id == RE15_R41C_MSG_BRUECKE_FRAGE) frage = 1; }
+    PRUEFE(frage && !re15_panel2030_r41_offen() && bit(RE15_R41C_BIT_DRUCK80) == 1, "ROOM%04X: bei 80 folgt Text 43, Panel zu, Bit 101", r);
+    /* Ja: Fahrt mit den RE2-Toenen, Satz 0x0F vor der Fahrt, 0x10 am Ende (ROOM4080 sub13 @0x031F2/@0x03314) */
+    const unsigned f0 = re15_ventilkette_r41_ton_zaehler(RE15_R41C_TON_BRUECKE_FAHRT), h0 = re15_ventilkette_r41_ton_zaehler(RE15_R41C_TON_BRUECKE_HALT);
+    int fahrt_y = 0, halt_bei = -1, fahrt_bei = -1, y_fahrt = 0, y_halt = 0;
+    int bruecke = -1;
+    for (int k = 0; k < (int)g_scd.prop_count; k++) if (g_scd.props[k].active && g_scd.props[k].obj_id == RE15_R41C_BRUECKE_OBJ) bruecke = k;
+    for (int i = 0; i < 400; i++) {
+        g_scd_pad_edge = (g_scd.message_active && (i & 7) == 7) ? 0x4000 : 0;
+        takt();
+        g_scd_pad_edge = 0;
+        if (fahrt_bei < 0 && re15_ventilkette_r41_ton_zaehler(RE15_R41C_TON_BRUECKE_FAHRT) > f0) { fahrt_bei = i; y_fahrt = g_scd.props[bruecke].y; }
+        if (halt_bei < 0 && re15_ventilkette_r41_ton_zaehler(RE15_R41C_TON_BRUECKE_HALT) > h0) { halt_bei = i; y_halt = g_scd.props[bruecke].y; }
+        fahrt_y = g_scd.props[bruecke].y;
+    }
+    PRUEFE(fahrt_y == RE15_R41C_BRUECKE_Y_UNTEN && bit(RE15_R41C_BIT_BRUECKE_UNTEN) == 1, "ROOM%04X: Bruecke unten (y %d)", r, fahrt_y);
+    PRUEFE(fahrt_bei >= 0 && halt_bei > fahrt_bei && y_fahrt <= RE15_R41C_BRUECKE_Y_OBEN + 2 * RE15_R41C_BRUECKE_SCHRITT && y_halt == RE15_R41C_BRUECKE_Y_UNTEN,
+           "ROOM%04X: Motor-Ton am Fahrtbeginn (Takt %d, y %d), Halt am Ende (Takt %d, y %d)", r, fahrt_bei, y_fahrt, halt_bei, y_halt);
+    PRUEFE(halt_bei - fahrt_bei >= 2 * RE15_R41C_BRUECKE_SCHRITTE - 2 && halt_bei - fahrt_bei <= 2 * RE15_R41C_BRUECKE_SCHRITTE + 2,
+           "ROOM%04X: Abstand Motor -> Halt = Fahrt 60 Bilder (%d)", r, halt_bei - fahrt_bei);
+    PRUEFE(re15_ventilkette_r41_ton_zaehler(RE15_R41C_TON_BRUECKE_FAHRT) == f0 + 1 && re15_ventilkette_r41_ton_zaehler(RE15_R41C_TON_BRUECKE_HALT) == h0 + 1,
+           "ROOM%04X: je ein Bruecken-Ton", r);
+}
+
+/* ---- C: Schrank -------------------------------------------------------------------------------------------------------- */
+static void fall_c(uint16_t r)
+{
+    enum { KX = 4300, KZ = -2770 };
+    bits_leeren();
+    if (raum_hoch(r, KX, 0, KZ) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+    PRUEFE(re15_schrank2010_r41_prop(RE15_R41N_SCHRANK_OBJ_AUSSEN) < 0 && !re15_schrank2010_r41_offen(), "ROOM%04X: geschlossen kein Modell im Raum", r);
+    PRUEFE(re15_ventilkette_r41_obj_id(r, 5) == RE15_R41N_SCHRANK_OBJ_INNEN && re15_ventilkette_r41_obj_id(r, 7) == RE15_R41N_SCHRANK_OBJ_TUER, "ROOM%04X: Modelle gebunden", r);
+    /* Klick: Fahrt zaehlen */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = 0;
+    band_aus_y(0);
+    g_aot.fired_event_id_this_frame = 0;
+    g_aot_action_pressed = 1; re15_aot_scan(KX, KZ, 0xFF); g_aot_action_pressed = 0;
+    PRUEFE(g_aot.fired_event_id_this_frame == RE15_R41C_EV_KASTEN, "ROOM%04X: Aktion am Schrank = Ereignis 20", r);
+    (void)scd_event_fire(g_aot.fired_event_id_this_frame);
+    int bilder = 0, winkel_alt = 0, stetig = 1, sperre = 0;
+    for (int i = 0; i < 60 && !re15_schrank2010_r41_offen(); i++) {
+        takt();
+        const int w = re15_schrank2010_r41_winkel();
+        if (w != winkel_alt) { bilder++; if (w - winkel_alt != RE15_R41N_AUF_SCHRITT) stetig = 0; winkel_alt = w; }
+        if (re15_game_flag_get(2, 7)) sperre = 1;
+    }
+    PRUEFE(re15_schrank2010_r41_offen() && bilder == RE15_R41N_AUF_TAKTE && stetig && re15_schrank2010_r41_winkel() == 1024 && sperre,
+           "ROOM%04X: klappt in 16 Bildern um 90 Grad auf (Bilder %d, Winkel %d, Pad-Sperre %d)", r, bilder, re15_schrank2010_r41_winkel(), sperre);
+    const int a = re15_schrank2010_r41_prop(RE15_R41N_SCHRANK_OBJ_AUSSEN), b = re15_schrank2010_r41_prop(RE15_R41N_SCHRANK_OBJ_TUER), c = re15_schrank2010_r41_prop(RE15_R41N_SCHRANK_OBJ_INNEN);
+    PRUEFE(a >= 0 && b >= 0 && c >= 0 && g_scd.props[a].rot_y == 1024 && g_scd.props[b].rot_y == 1024 && g_scd.props[a].x == RE15_R41N_ANGEL_X && g_scd.props[a].z == RE15_R41N_ANGEL_Z,
+           "ROOM%04X: Tuer steht in der Angel offen", r);
+    int md = 0, ok = 0;
+    const uint8_t *m = re15_ventilkette_r41_md1_bytes_k(6, &md);
+    ok = m && md > 0 && re15_ventilkette_r41_tim_bytes_k(5, &md) && md > 0;
+    PRUEFE(ok, "ROOM%04X: Modelle eingebacken", r);
+    /* Text 40 danach */
+    int text = 0;
+    for (int i = 0; i < 400; i++) {
+        if (g_scd.message_active && g_scd.message_id == RE15_R41C_MSG_KASTEN_LEER) text = 1;
+        g_scd_pad_edge = (g_scd.message_active && (i & 7) == 7) ? 0x4000 : 0;
+        takt(); g_scd_pad_edge = 0;
+        if (text && !g_scd.message_active) break;
+    }
+    PRUEFE(text && re15_game_flag_get(2, 7) == 0, "ROOM%04X: nach dem Aufklappen Text 40, Spieler frei", r);
+    /* zweiter Klick: keine zweite Fahrt */
+    lauf_t L = druecken(KX, KZ, 0, 0, 300);
+    PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_KASTEN_LEER && re15_schrank2010_r41_winkel() == 1024, "ROOM%04X: zweiter Klick nur Text, Tuer bleibt auf", r);
+    /* Ja-Zweig: Nahansichten Cut 8, Cut 9, DANN Bit 125 + Standbild */
+    vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
+    if (raum_hoch(r, KX, 0, KZ) != 0) { PRUEFE(0, "Parse"); return; }
+    PRUEFE(!re15_schrank2010_r41_offen() && re15_schrank2010_r41_winkel() == 0, "ROOM%04X: Raumstart: Schrank wieder zu", r);
+    g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = 0; band_aus_y(0);
+    g_aot.fired_event_id_this_frame = 0;
+    g_aot_action_pressed = 1; re15_aot_scan(KX, KZ, 0xFF); g_aot_action_pressed = 0;
+    (void)scd_event_fire(g_aot.fired_event_id_this_frame);
+    int cut8 = 0, cut9 = 0, bit_bei_8 = -1, standbild = 0;
+    for (int i = 0; i < 700 && !standbild; i++) {
+        int cn = 0; unsigned sr = 0; int sc = -1;
+        g_scd_pad_edge = (g_scd.message_active && (i & 7) == 7) ? 0x4000 : 0;
+        takt(); g_scd_pad_edge = 0;
+        if (re15_schrank2010_r41_nahbild(&cn)) {
+            if (cn == 8) { cut8++; if (bit_bei_8 < 0) bit_bei_8 = bit(RE15_R41C_BIT_KASTEN); }
+            if (cn == 9) cut9++;
+            PRUEFE(re15_ventilkette_r41_standbild(&sr, &sc) == 1 && sr == 0x2060 && sc == cn, "ROOM%04X: Vollbild = ROOM2060 Cut %d", r, cn);
+        } else if (re15_ventilkette_r41_standbild(&sr, &sc) == 1 && sr == RE15_R41C_STANDBILD_RAUM) standbild = 1;
+    }
+    PRUEFE(cut8 >= RE15_R41N_NAHBILD_TAKTE - 1 && cut9 >= RE15_R41N_NAHBILD_TAKTE - 1 && bit_bei_8 == 0 && standbild && bit(RE15_R41C_BIT_KASTEN) == 1,
+           "ROOM%04X Ja: Cut 8 %d Bilder, Cut 9 %d Bilder, Bit 125 danach, Standbild der Ventile", r, cut8, cut9);
+}
+
+/* ---- D: Wasserlauf --------------------------------------------------------------------------------------------------- */
+static int esp_0b(void)
+{
+    int n = 0;
+    for (int i = 0; i < 96; i++) { const re15_esp_fx_t *f = re15_esp_fx_get(i); if (f && f->effect_id == 0x0b) n++; }
+    return n;
+}
+static void fall_d(uint16_t r)
+{
+    bits_leeren();
+    if (raum_hoch(r, -26300, -1800, 9000) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+    PRUEFE(re15_wasserlauf_r41_aktiv() && re15_wasserlauf_r41_strahlen() == 6, "ROOM%04X: Wasserlauf an, 6 Strahlen (%d)", r, re15_wasserlauf_r41_strahlen());
+    const int p = re15_wasserlauf_r41_prop();
+    PRUEFE(p >= 0 && g_scd.props[p].obj_id == RE15_R41N_LAUF_OBJ && g_scd.props[p].y == RE15_R41N_LAUF_Y && g_scd.props[p].obj_type == RE15_R41C_WASSER_TYP, "ROOM%04X: nasse Spur", r);
+    PRUEFE(re15_ventilkette_r41_obj_id(r, 4) == RE15_R41N_LAUF_OBJ, "ROOM%04X: Modell gebunden", r);
+    /* Strahlen liegen an der Leiter, Anker von oben bis Fuss - 3300 (Kopf "LAGE") */
+    for (int i = 0; i < 6; i++) {
+        const int32_t *s = re15_wasserlauf_r41_strahl(i);
+        PRUEFE(s && s[0] >= -26800 && s[0] <= -26700 && s[2] >= 9034 && s[2] <= 9945 && s[1] <= -5100, "ROOM%04X: Strahl %d an der Leiter", r, i);
+    }
+    const int n3 = esp_0b();
+    PRUEFE(n3 >= 18 + 6 * 6 - 6, "ROOM%04X: Original 3 x 6 + Wasserlauf 6 x 6 Plaetze (%d)", r, n3);
+    const unsigned s0 = re15_wasserlauf_r41_spritzer();
+    for (int i = 0; i < 90; i++) takt();
+    PRUEFE(re15_wasserlauf_r41_spritzer() >= s0 + 15, "ROOM%04X: Spritzer laufen (%u -> %u)", r, s0, re15_wasserlauf_r41_spritzer());
+    PRUEFE(g_aot.slots[RE15_R41C_SLOT_2000_LEITER].type == RE15_AOT_TYPE_MESSAGE, "ROOM%04X: Leiter bleibt Sperrtext", r);
+    /* bis zur Flut: mit Bit 100 oder 103 nichts */
+    for (int b = 0; b < 2; b++) {
+        bits_leeren(); vorflag(RE15_R41C_BANK, b ? RE15_R41C_BIT_FLUT_GELAUFEN : RE15_R41C_BIT_LEITER_FREI);
+        if (raum_hoch(r, -26300, -1800, 9000) != 0) { PRUEFE(0, "Parse"); return; }
+        PRUEFE(!re15_wasserlauf_r41_aktiv() && re15_wasserlauf_r41_prop() < 0 && re15_ventilkette_r41_obj_id(r, 4) < 0, "ROOM%04X: Bit %d: kein Wasserlauf", r, b ? 103 : 100);
+    }
+    const uint16_t r20b0 = (uint16_t)(0x20B0 + (r & 1));
+    bits_leeren(); vorflag(3, 235);
+    if (raum_hoch(r20b0, -25950, -1800, 10300) != 0) { PRUEFE(0, "Parse"); return; }
+    PRUEFE(!re15_wasserlauf_r41_aktiv(), "ROOM%04X: kein Wasserlauf", r20b0);
+}
+
+/* ---- E: Sirene ------------------------------------------------------------------------------------------------------- */
+static void fall_e(uint16_t r)
+{
+    bits_leeren();
+    vorflag(RE15_R41C_BANK, RE15_R41C_BIT_DRUCK80); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_BRUECKE_UNTEN);
+    if (raum_hoch(r, 6500, -5400, -200) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+    PRUEFE(!re15_ventilkette_r41_sirene(), "ROOM%04X: ohne Zaehler keine Sirene", r);
+    re15_game_flag_set(5, RE15_R41C_FLAG_TIMER, 1);       /* Programm 2030_ventile_flut hinter dem Warntext */
+    takt();
+    PRUEFE(re15_ventilkette_r41_timer_laeuft() && re15_ventilkette_r41_sirene(), "ROOM%04X: Sirene an mit dem Zaehler (nach der Ansage)", r);
+    re15_game_flag_set(5, RE15_R41C_FLAG_FLUT, 1);
+    takt();
+    PRUEFE(re15_ventilkette_r41_flut_laeuft() && !re15_ventilkette_r41_sirene(), "ROOM%04X: Flut: Sirene aus", r);
+    /* Verlassen des Raums */
+    bits_leeren();
+    if (raum_hoch(r, 6500, -5400, -200) != 0) { PRUEFE(0, "Parse"); return; }
+    re15_game_flag_set(5, RE15_R41C_FLAG_TIMER, 1); takt();
+    g_current_room_id = 0x20B0; re15_ventilkette_r41_install(0x20B0, NULL);
+    PRUEFE(!re15_ventilkette_r41_sirene() && bit(RE15_R41C_BIT_FLUT_GELAUFEN) == 1, "ROOM%04X: Raum verlassen: Sirene aus, Flut gelaufen", r);
+    /* Tod */
+    bits_leeren();
+    if (raum_hoch(r, 6500, -5400, -200) != 0) { PRUEFE(0, "Parse"); return; }
+    re15_game_flag_set(5, RE15_R41C_FLAG_TIMER, 1); takt();
+    g_actors[RE15_ACTOR_SLOT_PLAYER].hp = -1;
+    PRUEFE(!re15_ventilkette_r41_sirene(), "ROOM%04X: tot: Sirene aus", r);
+}
+
+/* ---- F: Notiz + Plakat ------------------------------------------------------------------------------------------------- */
+static uint32_t fnv(const uint8_t *d, long n) { uint32_t h = 2166136261u; for (long i = 0; i < n; i++) h = (h ^ d[i]) * 16777619u; return h; }
+static void fall_f(void)
+{
+    static const int l[4] = RE15_R41C_LOESUNG;
+    static const int nr[6] = RE15_R41C_VENTIL_NUMMERN, farbe[6] = RE15_R41C_VENTIL_FARBE;
+    PRUEFE(nr[l[0]] == 9 && nr[l[1]] == 2 && nr[l[2]] == 1 && nr[l[3]] == 8, "Loesung 09, 02, 01, 08 (Nachtrag 30d)");
+    PRUEFE(farbe[l[0]] == 0 && farbe[l[1]] == 1 && farbe[l[2]] == 2 && farbe[l[3]] == 1, "Farben rot, gruen, schwarz, gruen = die echten Raeder");
+    long n = 0;
+    uint8_t *d = slurp(RE15_ASSET_RE2_DIR "/FILES/FILE31_p01_page.TIM", &n);
+    PRUEFE(d && fnv(d, n) == RE15_N30_FILE31_P01, "FILE31 Seite 1 = Satz Nachtrag 30b (FNV %08X)", d ? fnv(d, n) : 0u);
+    free(d);
+    d = slurp(RE15_ASSET_RE2_DIR "/FILES/FILE31_p02_page.TIM", &n);
+    PRUEFE(d && fnv(d, n) == RE15_N30_FILE31_P02, "FILE31 Seite 2 = Satz Nachtrag 30b (FNV %08X)", d ? fnv(d, n) : 0u);
+    free(d);
+}
+
+/* ---- Werkzeuge -------------------------------------------------------------------------------------------------------- */
+static uint8_t *ppm_lesen(const char *p)
+{
+    long n = 0;
+    uint8_t *d = slurp(p, &n);
+    if (!d || n < 230415) { free(d); return NULL; }
+    return d;
+}
+static const uint8_t *ppm_px(const uint8_t *d) { return d + 15; }   /* "P6\n320 240\n255\n" */
+
+int main(int argc, char **argv)
+{
+    if (argc >= 7 && !strcmp(argv[1], "bild")) {
+        uint8_t *d = ppm_lesen(argv[2]);
+        if (!d) { printf("kein Bild\n"); return 2; }
+        const int x0 = atoi(argv[3]), y0 = atoi(argv[4]), x1 = atoi(argv[5]), y1 = atoi(argv[6]);
+        long s = 0, n = 0;
+        for (int y = y0; y < y1; y++) for (int x = x0; x < x1; x++) { const uint8_t *q = ppm_px(d) + 3 * (y * 320 + x); s += q[0] + q[1] + q[2]; n += 3; }
+        printf("BILD %ld\n", n ? s / n : 0);
+        return 0;
+    }
+    if (argc >= 8 && !strcmp(argv[1], "diff")) {
+        uint8_t *a = ppm_lesen(argv[2]), *b = ppm_lesen(argv[3]);
+        if (!a || !b) { printf("kein Bild\n"); return 2; }
+        const int x0 = atoi(argv[4]), y0 = atoi(argv[5]), x1 = atoi(argv[6]), y1 = atoi(argv[7]);
+        long s = 0, n = 0;
+        for (int y = y0; y < y1; y++) for (int x = x0; x < x1; x++) for (int c = 0; c < 3; c++) {
+            const int d = (int)ppm_px(a)[3 * (y * 320 + x) + c] - (int)ppm_px(b)[3 * (y * 320 + x) + c];
+            s += d < 0 ? -d : d; n++;
+        }
+        printf("DIFF %ld\n", n ? s * 10 / n : 0);    /* Zehntel Graustufen */
+        return 0;
+    }
+    if (argc >= 5 && !strcmp(argv[1], "endstufe")) {
+        /* volle Mischung a (100 %) gegen b: b == (a * q) >> 15 fuer JEDEN Abtastwert (Tuersequenz, Spritzer, alles) */
+        long na = 0, nb = 0;
+        uint8_t *a = slurp(argv[2], &na), *b = slurp(argv[3], &nb);
+        const int q = (int)strtol(argv[4], NULL, 0);
+        if (!a || !b || na != nb) { printf("Laenge %ld %ld\n", na, nb); return 2; }
+        long falsch = 0, laut = 0; int spitze = 0;
+        for (long i = 0; i + 1 < na; i += 2) {
+            const int16_t va = (int16_t)(uint16_t)(a[i] | (a[i + 1] << 8)), vb = (int16_t)(uint16_t)(b[i] | (b[i + 1] << 8));
+            if ((int16_t)(((int32_t)va * q) >> 15) != vb) falsch++;
+            if (va > 2000 || va < -2000) laut++;
+            if (abs(va) > spitze) spitze = abs(va);
+        }
+        printf("ENDSTUFE falsch %ld von %ld, laut %ld, Spitze %d\n", falsch, na / 2, laut, spitze);
+        return falsch ? 1 : 0;
+    }
+    /* Mechanik */
+    fall_a();
+    fall_f();
+    for (int v = 0; v < 2; v++) {
+        fall_b((uint16_t)(0x2030 + v));
+        fall_c((uint16_t)(0x2010 + v));
+        fall_d((uint16_t)(0x2000 + v));
+        fall_e((uint16_t)(0x2030 + v));
+    }
+    printf("%s (%d Pruefungen)\n", s_fail ? "FAIL" : "PASS", s_pruef);
+    free(s_daten);
+    return s_fail;
+}

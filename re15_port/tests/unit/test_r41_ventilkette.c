@@ -381,13 +381,16 @@ static void fall_a(void)
           if (p[i] == 0x22 && p[i + 1] == 5 && p[i + 2] == RE15_R41C_FLAG_STANDBILD && p[i + 3] == 1) still = 1;
           if (p[i] == 0x0f && p[i + 1] == 4 && p[i + 4] == 0x21 && p[i + 5] == 5 && p[i + 6] == RE15_R41C_FLAG_STANDBILD) wart = 1;
       }
-      PRUEFE(p && p[0] == 0x2b && p[1] == RE15_R41C_MSG_KASTEN_LEER && setz && still && wart,
+      int o = 0; while (p && o < n && p[o] != 0x2b) o++;   /* Spur N: vor dem Text steht das Aufklappen (Marker (5,0x1E)) */
+      PRUEFE(p && o < n && p[o + 1] == RE15_R41C_MSG_KASTEN_LEER && setz && still && wart,
              "2010_kasten_frage: Text 40, Frage 41, Ja -> Set(9,125), Standbild-Marker, While bis zu (Form ROOM2000 @0x01AD4)"); }
     { int n = 0; const uint8_t *p = re15_ventilkette_r41_programm("2010_kasten_drin", &n); int loesch = 0;
       for (int i = 0; p && i + 3 < n; i++) if (p[i] == 0x22 && p[i + 1] == 9 && p[i + 2] == RE15_R41C_BIT_KASTEN && p[i + 3] == 0) loesch = 1;
-      PRUEFE(p && p[1] == RE15_R41C_MSG_KASTEN_DRIN && loesch, "2010_kasten_drin: Text 43 (Frage) -> Ja -> Set(9,125)=0");
+      int o = 0; while (p && o < n && p[o] != 0x2b) o++;
+      PRUEFE(p && o < n && p[o + 1] == RE15_R41C_MSG_KASTEN_DRIN && loesch, "2010_kasten_drin: Text 43 (Frage) -> Ja -> Set(9,125)=0");
       p = re15_ventilkette_r41_programm("2010_kasten_leer", &n);
-      PRUEFE(p && p[0] == 0x2b && p[1] == RE15_R41C_MSG_KASTEN_LEER && p[4] == 0x02, "2010_kasten_leer: nur Text 40"); }
+      o = 0; while (p && o < n && p[o] != 0x2b) o++;
+      PRUEFE(p && o < n && p[o + 1] == RE15_R41C_MSG_KASTEN_LEER && p[o + 4] == 0x02, "2010_kasten_leer: nur Text 40"); }
     { int n = 0; const uint8_t *p = re15_ventilkette_r41_programm("2030_ventile_falsch", &n);
       static const uint8_t soll[16] = { 0x22,5,0x10,0, 0x22,5,0x11,0, 0x22,5,0x12,0, 0x22,5,0x13,0 };
       PRUEFE(p && n > 20 && memcmp(p, soll, 16) == 0 && p[16] == 0x2b && p[17] == RE15_R41C_MSG_VENTILE_ZURUECK,
@@ -1219,7 +1222,7 @@ static void fall_n(uint16_t r)
            "ROOM%04X Nein: Text 40 + Frage 41, Bit 125 bleibt 0", r);
     /* Ja: Bit 125, Standbild der Ventile (2030 Cut 7) + Aufschliess-Ton; das Programm wartet, bis bestaetigt wird */
     const unsigned auf0 = re15_ventilkette_r41_ton_zaehler(RE15_R41C_TON_AUF);
-    L = druecken(KX, KZ, 0, 0, 200); zeige("ja", r, &L);
+    L = druecken(KX, KZ, 0, 0, 300); zeige("ja", r, &L);   /* Spur N: + zwei Nahansichten je 30 Bilder vor dem Standbild */
     unsigned raum = 0; int cut = -1;
     PRUEFE(L.n_msgs == 2 && L.msgs[1] == RE15_R41C_MSG_KASTEN_FRAGE && bit(RE15_R41C_BIT_KASTEN) == 1 &&
            re15_ventilkette_r41_standbild(&raum, &cut) == 1 && raum == RE15_R41C_STANDBILD_RAUM && cut == RE15_R41C_STANDBILD_CUT &&

@@ -106,6 +106,8 @@ int re15_panel2030_r41_takt(uint16_t edge, uint16_t held, int nachricht)
     }
     if (nachricht) return RE15_R41N_ERG_NICHTS;
     /* Cursor: Steuerkreuz je Bild wie ROOM2050 sub01 @0x02182..@0x021E0 -> sub05..08 (Schritt im Kopf). */
+    { static uint16_t s_vorher = 0;
+      if ((held & 0xFu) != s_vorher) { LOG("[panel2030] Steuerkreuz 0x%X, Cursor %d,%d\n", held & 0xFu, s_cx_q8 >> 8, s_cy_q8 >> 8); s_vorher = (uint16_t)(held & 0xFu); } }
     if (held & RE15_HC_ZUG_HOCH)   s_cy_q8 -= RE15_R41N_SCHRITT_Q8;
     if (held & RE15_HC_ZUG_RUNTER) s_cy_q8 += RE15_R41N_SCHRITT_Q8;
     if (held & RE15_HC_ZUG_RECHTS) s_cx_q8 += RE15_R41N_SCHRITT_Q8;
