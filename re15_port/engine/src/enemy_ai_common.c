@@ -10636,7 +10636,14 @@ static void re15_npc_ai_tick(int slot)
      * alles ausser Sub 0 (Marvins Mode-6-Idle lief nie, marvin_10d0.md D3); seit die NPC-Plc_dest-
      * Walks byte-true in der Sub-VM laufen (state=4/+0x5=mode @0x80041c14-18, marvin_glide_end.md
      * Fix #1), gilt das auch fuer 4/5/7/8/9. */
-    int in_motion_pose = (e->state == 4 && e->sub_state_1 <= 9) ||
+    /* INIT (state 0) laeuft IMMER: die Original-Wurzeln sperren nur ueber aca40 & 0x20000000 und grid & 0x20
+     * (oben; z.B. STAGE4-Marvin-Wurzel 0x80116be4 @0x80116bf8-c04 / @0x80116c18-24), nicht ueber einen SCD-Besitz.
+     * ⛔ Nutzer-Report (wiederkehrend): ROOM4000/4001 Lift-Szene — Ada/Marvin werden schon im Init-Lauf per
+     * Work_set gehalten (ROOM4000 sub05 Work_set(2,0) @0x0156E, sub08 Work_set(2,1) @0x01720), der INIT lief nie
+     * (Marvin stand auf Bild 0 von Clip 2, Ada loopte Clip 2). Mit dem INIT erreicht Marvin grid&0x40 -> +0x4 = 4 /
+     * +0x5 = 6 (@0x80116ea4 / @0x80116eb0) und damit die Mode-6-Maschine 0x800517f0 (eigene Bank-1-Clips 1/2). */
+    int in_motion_pose = (e->state == 0) ||
+                         (e->state == 4 && e->sub_state_1 <= 9) ||
                          re15_szl_schub_npc_kanal(e) ||   /* Runde 36 Spur J: auch Schub-Sub 0x13 laeuft im Executor */
                          re15_npckante_aktiv(e);          /* Runde 38 Spur M: Kanten-Subs 0x12/0x16/0x17/0x18 ebenso */
     if (e->walk_active || (re15_scd_slot_event_controlled(slot) && !in_motion_pose)) {
