@@ -1089,6 +1089,8 @@ typedef struct {
                               * of +0x4 each root tick (@0x80116698); HURT/revive resume +0x4=*(+0x1d8) */
     int16_t  birkin_runoff_x, birkin_runoff_z; /* +0x1d4/+0x1d6: death-morph run-off point (-22000,-12000) */
     uint8_t  birkin_pause;   /* +0x9e: ACT[1] two-phase close-in pause countdown (0x5a) */
+    int16_t  birkin_zuck;    /* Birkin Szenen-Modus: Zuck-Amplitude Teil 15 +0x7e (Teile 8/9/13/14/15 laufen gleich): INIT-Zweig
+                              * Nibble 4 setzt 0xfff (@0x80116c94-d20), Phasen 3/5 ziehen +0x9c ab (@0x80118f14-34). */
     uint8_t  birkin_rohr;    /* Birkin 0x30: Teil 15 zeichnet MD1-Mesh 16 (Hand mit Rohr) statt Mesh 15 (Klaue) — der INIT
                               * kopiert die Geometrie-Woerter part16+0x8..0x14 -> part15 (@0x80116980-9e4 bei grid&0x10,
                               * @0x80116c28-8c bei grid&0xf==0), der Auftritt Sub 10 bei Bild 0x5b (@0x80119754-7b8). */

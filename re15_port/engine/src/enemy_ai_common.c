@@ -11823,6 +11823,85 @@ static int re15_bk_kontakt(re15_actor_t *e, re15_actor_t *pl, int32_t ox, int32_
     return d < RE15_BK_SPIELER_RADIUS + reach;
 }
 
+/* ACT[0] des Szenen-Modus 0x80118d00 (Phasen +0x6 @0x801003dc, `sltiu v0,v1,0xf` @0x80118d38). anim_set(+0x84, +0x16c)
+ * mit a3 = 0x100 bis Phase 7, danach 0x400; a2 = 1 nur in Phase 13. FUN_8003a95c (Teil-Zucken, a1 = 1) ist die
+ * Render-Seite und bleibt offen; ihr Zaehler +0x7e (birkin_zuck) steuert aber den Phasenwechsel und ist gebaut. */
+static int re15_birkin_anim(re15_actor_t *e);
+static void re15_birkin_clip(re15_actor_t *e, uint8_t c);
+static void re15_birkin_zucken(re15_actor_t *e)       /* @0x80118e10-f54 bzw. @0x80118fcc-110c */
+{
+    e->birkin_zuck = (int16_t)(e->birkin_zuck - e->ai_timer);     /* +0x7e -= +0x9c, `bgez`/`sh zero` (Teil 15 @0x80118f14-30) */
+    if (e->birkin_zuck < 0) e->birkin_zuck = 0;
+    e->ai_timer = (int16_t)(e->ai_timer + 10);                    /* +0x9c += 10 @0x80118f50 */
+}
+static void re15_birkin_szene(re15_actor_t *e)
+{
+    switch (e->sub_state_2) {
+    case 0:                                                        /* @0x80118d60 */
+        e->sub_state_2 = 1; e->motion = 0; e->anim_frame = 0; e->anim_frac = 0;   /* +0x6 1, +0x94 0, +0x95 0, +0x8f 0 */
+        e->anim_flags &= (uint16_t)~0x80u;
+        re15_audio_room_se(3); re15_audio_room_se(6);              /* @0x80118d9c / @0x80118da4 */
+        /* j 0x80119278 */
+    case 1:
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* anim_set a3 0x100, += @0x80119294 */
+        break;
+    case 2:                                                        /* @0x80118dc8 */
+        e->ai_timer = 0xa; e->sub_state_2 = 3; e->motion = 2; e->anim_frac = 0xf;   /* @0x80118dd8-e0c */
+        re15_audio_room_se(8);                                     /* a0 = 8 @0x80118dc8, jal @0x80118e08 */
+        /* faellt in [3] @0x80118e10 */
+    case 3:
+        re15_birkin_zucken(e);
+        if (e->birkin_zuck <= 0) e->sub_state_2 = 6;               /* `bgtz` / +0x6 = 6 @0x80118f58-74 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* j 0x80119278 @0x80118f8c */
+        break;
+    case 4:                                                        /* @0x80118f94 */
+        e->sub_state_2 = 5; e->motion = 3; e->anim_frac = 0xf;     /* @0x80118fa0-fc8 */
+        re15_audio_room_se(9);                                     /* a0 = 9, jal @0x80118fc4 */
+        /* faellt in [5] @0x80118fcc */
+    case 5:
+        re15_birkin_zucken(e);
+        if (e->birkin_zuck <= 0) e->sub_state_2 = 6;               /* @0x80119114-130 */
+        (void)re15_birkin_anim(e);                                 /* anim_set @0x80119148, KEIN += (j @0x80119150) */
+        break;
+    case 6:                                                        /* @0x80119158 */
+        e->sub_state_2 = 7; e->motion = 1; e->anim_frac = 0xf; e->anim_frame = 0;   /* @0x80119168-1a0 */
+        re15_game_flag_set(5, 0x1d, 1);                            /* FUN_8004ef90(z5, 0x1d) @0x8011919c */
+        /* faellt in [7] @0x801191a4 */
+    case 7:
+        if (e->anim_frame == 0x14) re15_audio_room_se(4);         /* @0x801191b0-1c4 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* j 0x80119278 (a3 0x100) */
+        break;
+    case 8:                                                        /* @0x801191e4 */
+        re15_game_flag_set(5, 0x1f, 1);                            /* @0x8011921c */
+        e->sub_state_2 = 9; e->motion = 4; e->anim_frac = 3;       /* @0x801191f8-220 */
+        re15_audio_room_se(0);                                     /* j 0x80119258, a0 = 0 @0x80119228 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* a3 0x400 @0x80119274 */
+        break;
+    case 9: case 11:                                               /* @0x80119260 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));
+        break;
+    case 10:                                                       /* @0x8011922c */
+        e->sub_state_2 = 0xb; e->anim_frac = 3;                    /* @0x80119238-250 */
+        re15_audio_room_se(0); re15_audio_room_se(1);              /* @0x8011924c / a0 = 1 @0x80119254, jal @0x80119258 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));
+        break;
+    case 12:                                                       /* @0x801192a0 */
+        re15_game_flag_set(5, 0x1e, 1);                            /* @0x801192f4 */
+        e->sub_state_2 = 0xd; e->motion = 0; e->anim_frame = 0x14; /* @0x801192b0-2d4 */
+        e->crow_speed = 0x12c; e->anim_frac = 3;                   /* +0x8c = 0x12c @0x801192e0-e4, +0x8f 3 */
+        re15_audio_room_se(6);                                     /* @0x801192fc */
+        /* faellt in [13] @0x80119304 */
+    case 13:
+        e->anim_flags |= 0x80u;                                    /* a2 = 1 @0x8011930c */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x80119318-338 */
+        e->crow_speed = (uint16_t)(e->crow_speed + 50);            /* +0x8c += 50 @0x80119350 */
+        re15_dog_advance_ofs(e, 0x800);                            /* FUN_800245d8(0x800) @0x80119354 */
+        break;
+    default:
+        break;                                                     /* [14] @0x8011935c: steht */
+    }
+}
+
 static void re15_birkin_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
@@ -11899,6 +11978,7 @@ static void re15_birkin_ai_tick(int slot)
          * +0x8..+0x14 nach Teil 15 kopiert, wenn grid & 0x10 (@0x80116974-9e4) ODER (grid & 0xf) == 0
          * (@0x80116c14-8c); Unterzustand 4 springt an beiden vorbei (beq @0x8011692c -> 0x80116c90). */
         e->birkin_rohr = (uint8_t)((e->grid_id & 0xf) != 4 && ((e->grid_id & 0x10) || (e->grid_id & 0xf) == 0));
+        e->birkin_zuck = (int16_t)(((e->grid_id & 0xf) == 4) ? 0xfff : 0);   /* `ori s0,zero,0xfff` / sh +0x7e @0x80116c94-d20 */
         e->state = 1;                                  /* +0x4 = 1 -> BRAIN @0x801166f8 */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
         {
@@ -11910,6 +11990,15 @@ static void re15_birkin_ai_tick(int slot)
         break;
 
     case 1: {  /* BRAIN 0x80116d38: DECIDE[sub]@0x8011eeb8 then ACT[sub]@0x8011eef0 (both by +0x5). +0x6 = ACT phase byte. */
+        /* SZENEN-MODUS: BRAIN verteilt zuerst nach grid & 0xf (`andi v0,v0,0xf` @0x80116d98, Tabelle @0x8011eea4 =
+         * {0x80116dcc x4, [4] = 0x80116e48}). Nibble 4 nimmt DECIDE @0x8011ef28 ([0] = `jr ra` 0x80118cf8) und ACT
+         * @0x8011ef2c ([0] = 0x80118d00): eine reine Zwischensequenz ohne Angriff. Gesetzt von ROOM3080 (Slot 2,
+         * Typ 0x36 grid 0x24 @0x007D4; Member_set(0x0c,4) @0x00934). Vorher kaempfte der Port dort normal und
+         * griff Leon/Elza mitten in der Szene an. */
+        if ((e->grid_id & 0xf) == 4) {
+            if (e->sub_state_1 == 0) re15_birkin_szene(e);
+            break;
+        }
         /* ---- DECIDE[0] 0x80116ec4: promote sub 0 -> sub 1 ---- */
         if (e->sub_state_1 == 0) { e->sub_state_1 = 1; e->sub_state_2 = 0; }
         /* ---- DECIDE[1] 0x80116f6c HUB cascade (may re-target the sub; writes fall through, LAST match wins) ---- */
@@ -12155,23 +12244,79 @@ static void re15_birkin_ai_tick(int slot)
             }
             break;
         }
-        case 10: {  /* CHARGE-COMBO 0x80119524: 14-phase grid-1 SPAWN ENTRANCE (effects 0x1f/0x1e, clips 1/0xf/0xd/0x13).
-                     * The full spawn choreography is a cinematic gap (OPEN); the AI-relevant behavior is the charge-in
-                     * that EXITS to sub 3 (LUNGE) + grid&=~1 (@0x801194d8/0x80119ae8). Faithful-compact: charge -> sub 3. */
-            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 1); e->anim_frac = 0xf; e->sub_state_2 = 1; }
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
-            re15_dog_advance(e, 0x14);                                 /* charge approach (byte-true +0x8c base 0x14; root-motion OPEN) */
-            if (re15_birkin_anim(e) || dist < 0x9c4) {                 /* clip end or bite range -> LUNGE */
-                e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* sub 3 @0x801194d8 */
-                e->grid_id = (uint8_t)(e->grid_id & ~1u);             /* grid &= ~1 */
-                /* Der Auftritt nimmt das Rohr auf (Teil 16 -> 15 bei +0x95 == 0x5b, SE 6 @0x80119728-7b8). Der
-                 * Port spielt den Auftritt verdichtet; der Zustand ist belegt, der ZEITPUNKT ist das Ende des
-                 * verdichteten Auftritts statt Bild 0x5b des Original-Clips. */
-                e->birkin_rohr = 1;
-                /* Fortschritts-Flags des Auftritts (FUN_8004ef90, Bank z5 @0x80119654 / @0x801197a4): 0x1f bei Bild
-                 * 0x46 (@0x80119644-658), 0x1e mit dem Rohr bei Bild 0x5b (@0x801197b0-7b4) — Zeitpunkt wie oben verdichtet. */
-                re15_game_flag_set(5, 0x1f, 1);
-                re15_game_flag_set(5, 0x1e, 1);
+        case 10: {  /* AUFTRITT 0x80119524 (grid-Nibble 1, z.B. ROOM3071 sub02 Member_set(0x0c,1) @0x03645): 14 Phasen
+                     * ueber @0x80100434 (`sltiu v0,v1,0xe` @0x80119558). anim_set(+0x84,+0x16c,0,0x100) wo nicht anders
+                     * vermerkt; FUN_8011b5c4 (Clip-Wurzelvortrieb) ist port-weit offen und wird wie in WALK ueber den
+                     * additiven +0x8c-Schritt abgebildet (re15_dog_advance). ROOM3071 sub02 WARTET auf die beiden Flags
+                     * (While/Ck(5,31)==0 @0x0364D, Ck(5,30) @0x03669) — der verdichtete Auftritt setzte sie zu spaet bzw.
+                     * nie (Nutzer-Report "Elza Stage 3 bleibt bei der Birkin-Szene haengen"). */
+            switch (e->sub_state_2) {
+            case 0:                                                    /* @0x80119580 */
+                e->sub_state_2 = 1; e->motion = 1; e->anim_frame = 0; e->anim_frac = 0xf;   /* @0x80119588-5bc */
+                e->ai_timer = 0x78;                                    /* +0x9c = 120 @0x801195c8-cc */
+                /* faellt in [1] */
+            case 1:                                                    /* @0x801195d0 */
+                (void)re15_birkin_anim(e);                             /* @0x801195e4, kein += */
+                if (e->ai_timer >= 71) re15_dog_advance(e, 10);       /* `slti 71` @0x80119600; 8011b5c4(1,1) + +0x8c += 10 + 245d8(0) @0x8011960c-62c */
+                if (e->ai_timer == 0x46) re15_game_flag_set(5, 0x1f, 1);   /* FUN_8004ef90(z5,0x1f) @0x80119644-65c */
+                if (e->ai_timer-- == 0) e->sub_state_2 = 2;           /* @0x8011966c-690 */
+                break;
+            case 2:                                                    /* @0x80119694 */
+                e->sub_state_2 = 3; e->motion = 0x0f; e->anim_frame = 0; e->anim_frac = 0xf;   /* @0x8011969c-6d0 */
+                e->ai_timer = 0x96;                                    /* @0x801196dc-6e0 */
+                /* faellt in [3] */
+            case 3:                                                    /* @0x801196e4 */
+                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x801196f8-718 */
+                if (e->anim_frame == 0x5b) {                           /* @0x80119728-730 */
+                    re15_audio_room_se(6);                             /* @0x80119738 */
+                    e->birkin_rohr = 1;                                /* Teil 16 -> 15 @0x80119754-7b8 */
+                    re15_game_flag_set(5, 0x1e, 1);                    /* @0x801197b0-7b4 */
+                }
+                break;
+            case 4:                                                    /* @0x801197c4 */
+                e->sub_state_2 = 5; e->motion = 1; e->anim_frame = 0; e->anim_frac = 0xf;   /* @0x801197cc-800 */
+                e->ai_timer = 0x46;                                    /* @0x8011980c-810 */
+                /* faellt in [5] */
+            case 5:                                                    /* @0x80119814 */
+                (void)re15_birkin_anim(e);                             /* @0x80119828 */
+                re15_dog_advance(e, 10);                               /* @0x80119834-854 */
+                if (e->ai_timer-- == 0) {                              /* @0x80119868-878 */
+                    e->sub_state_2 = 6; e->ai_timer = 0x28;            /* @0x80119888-8a0 */
+                    re15_audio_room_se(0xa);                           /* a0 = 0xa @0x8011987c, jal @0x8011989c */
+                }
+                break;
+            case 6:                                                    /* @0x801198ac: setzt Clip/Phase/Blende JEDES Bild */
+                e->motion = 0x0d; e->sub_state_2 = 6; e->anim_frac = 0xf;   /* @0x801198b4-8d8 */
+                if (e->anim_frame == 0x3c) re15_audio_room_se(3);     /* @0x801198e8-8fc */
+                /* faellt in [7] @0x80119900 */
+            case 7:
+                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x80119914-938; 8011b5c4(0,1) */
+                break;
+            case 8:                                                    /* @0x80119944 */
+                e->motion = 0x13; e->sub_state_2 = 9; e->anim_frac = 0xf;   /* @0x8011994c-970 */
+                /* faellt in [9] @0x80119974 */
+            case 9:
+                (void)re15_birkin_anim(e);                             /* @0x80119988 */
+                if (e->anim_frame >= 0x12) { e->sub_state_2 = 0xa; e->ai_timer = 2; }   /* `sltiu 0x12` @0x801199a4-9c4 */
+                break;
+            case 10:                                                   /* @0x801199c8 */
+                if (e->ai_timer-- == 0) e->sub_state_2 = 0xb;         /* @0x801199d4-9f8 */
+                break;
+            case 11:                                                   /* @0x801199fc */
+                e->sub_state_2 = 0xc; e->motion = 1; e->anim_frame = 0; e->anim_frac = 0xf;   /* @0x80119a04-a38 */
+                e->ai_timer = 0x1e;                                    /* @0x80119a44-a48 */
+                /* faellt in [12] @0x80119a4c */
+            case 12:
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x40);         /* FUN_8001aac4(plX, plZ, 0x40) @0x80119a5c */
+                (void)re15_birkin_anim(e);                             /* @0x80119a78 */
+                re15_dog_advance(e, 10);                               /* @0x80119a84-aa4 */
+                if (e->ai_timer-- == 0) e->sub_state_2 = 0xd;         /* @0x80119ab8-adc */
+                break;
+            default:                                                   /* [13] @0x80119ae0 */
+                e->sub_state_1 = 3; e->sub_state_2 = 0;                /* +0x5 = 3 @0x80119aec, +0x6 = 0 @0x80119afc */
+                e->grid_id = (uint8_t)(e->grid_id & 0xfe);             /* @0x80119b14-18 */
+                /* Wort0 &= ~8 @0x80119b2c-34 (INIT setzt es fuer Nibble 1): Port-Gegenstueck offen */
+                break;
             }
             break;
         }
