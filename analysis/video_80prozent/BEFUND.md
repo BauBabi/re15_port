@@ -25,7 +25,8 @@ Quellen (Nutzer-Uploads):
 
 Typ-Namen nach Modell-Ansicht/Port-Modul: 0x10/0x11/0x16/0x18 Zombie-Familie, 0x1A Gitterhaende,
 0x20 Hund, 0x21 Kraehe, 0x25 Spinne, 0x27 Gorilla, **0x29 kleiner Affe** (EM029, `affen3_r38.c`; das alte
-Label „Cockroach“ in RE15_ENEMY_AI_AUDIT.md ist ueberholt), 0x2B grosse Spinnen-Kreatur, 0x30 Birkin,
+Label „Cockroach“ in RE15_ENEMY_AI_AUDIT.md ist ueberholt), **0x2B Spider-Man** (`spiderman_r38.c`; Audit-Label
+„Tyrant“ ebenfalls ueberholt), 0x30 Birkin,
 0x40 Marvin, 0x42 Ada, 0x45 Irons, 0x47 Elliot, 0x49 John, 0x4B Sherry, 0x4D Annette.
 
 ---
@@ -36,9 +37,9 @@ Label „Cockroach“ in RE15_ENEMY_AI_AUDIT.md ist ueberholt), 0x2B grosse Spin
 
 | # | Video | Raum, Cut | 80%-Material | Unser Stand (Beleg) | Einstufung |
 |---|---|---|---|---|---|
-| G1 | V1 4:36–4:40 | **50A0/50A1 Cut 12** (Hangar C-2, Score 0.87) | **Birkin** (massig, Jeans) packt einen **Affen**, stemmt ihn hoch und schleudert ihn zu Boden; danach kommt Birkin auf die Kamera zu | 50A0/50A1: 4x 0x29 (Affe), **kein 0x30** | **fehlt**: Birkin im Hangar + Birkin-gegen-Affe-Szene. Modell: `EM30_HANGAR.EMD` |
+| G1 | V1 4:36–4:40 | **50A0/50A1 Cut 12** (Hangar C-2, Score 0.87) | **Birkin** (massig, Jeans) packt einen **Spider-Man (0x2B)** – menschlicher Rumpf, lange orange-braun gestreifte Beine –, stemmt ihn hoch und schleudert ihn zu Boden; danach kommt Birkin auf die Kamera zu. Kein Affe im Bild (Nutzerbefund, Modellvergleich mit em0x2B) | 50A0/50A1: 4x **0x29 (Affe)**, **kein 0x30, kein 0x2B**. Spider-Man setzen wir nur in 4001, 5040/41, 5070/71, 5110/11, 5130/31 | **abweichend**: Birkin fehlt, Spider-Man statt Affe; Birkin-gegen-Spider-Man-Szene fehlt. Modell: `EM30_HANGAR.EMD` |
 | G2 | V1 1:34–1:39 | **1200/1201 Cut 2** (Leichenhalle) | Leon verbrennt mit dem **Flammenwerfer** einen Zombie auf der Bahre | Flammenwerfer liegt in ROOM30E0, Msg 15: „…This weapon is not available in this preview.“ | **fehlt**: Flammenwerfer benutzbar |
-| G3 | V1 4:11–4:19 | 4080/4081 Cut 1/2 | Elza gegen ein massiges, **tief dunkelrotes** Affenwesen | 4080/4081: 2x 0x29 (Affe) – Gestalt passt; unser Fell ist grau-/braun (0x29) bzw. orangebraun (0x27). Der Hangar-Affe (G1) hat im selben Video unsere Farbe | **wahrscheinlich andere Textur/CLUT** fuer den 4080-Affen |
+| G3 | V1 4:11–4:19 | 4080/4081 Cut 1/2 | Elza gegen ein massiges, **tief dunkelrotes** Affenwesen | 4080/4081: 2x 0x29 (Affe) – Gestalt passt; unser Fell ist grau-/braun (0x29) bzw. orangebraun (0x27). Video 1 ist farbtreu (Elzas Rot, Hintergruende) | **wahrscheinlich andere Textur/CLUT** fuer den 4080-Affen |
 | G4 | V1 2:32–2:39, 2:06–2:15 | 2070 Cut 0–3, 2000 Cut 2 | mehrfach **weisse, leuchtende Partikelwolken** am Boden (bei den Spinnen in 2070; im Wasserkanal in 2000) | 2070: 12x 0x25, 2 Objekte, **keine** `Sce_espr_on` | **zu pruefen** (Babyspinnen-Schwarm / Giftwolke?) |
 | G5 | V1 4:26–4:35 | 5140 Cut 4/5/6, 5120 Cut 6 | brennende Zombies laufen weiter, Bodenfeuer ueberall | 5140: 4x 0x18 + 13 `Sce_espr_on`; 5120: 2x 0x18 + 27 `Sce_espr_on` | Effekte in den Daten vorhanden – **Laufzeit-Abgleich offen** |
 | G6 | V2 0:10/0:14 | 1141 (Halle; Dialog belegt, s. §2) | John warnt Elza, grosses rotes Monster im Raum | 1141: 4x 0x27 (Gorilla) + Msg 5 | vorhanden |
@@ -158,7 +159,8 @@ V2 (Auswahl sicherer Treffer, Cut korrekt zerlegt): 1170 Cut 2 (0:12), 1020 Cut 
 
 ## 4. Naechste Schritte (Vorschlag)
 
-1. G1: Birkin (0x30) im Hangar 50A0/50A1 einsetzen, Modell `EM30_HANGAR.EMD`, Szene Birkin-gegen-Affe.
+1. G1: Hangar 50A0/50A1: Birkin (0x30, Modell `EM30_HANGAR.EMD`) + Spider-Man (0x2B) statt der Affen, Szene
+   Birkin-gegen-Spider-Man.
 2. G2: Flammenwerfer freischalten (ROOM30E0 Msg 15 ersetzt durch Aufnahme; Waffe 0x0E im Inventar/
    Schaden/ESP).
 3. H1/G3/G4: rotes Bodenlicht 50B0, roter Affe 4080, weisse Partikel 2070/2000 – je am Laufzeit-Port
