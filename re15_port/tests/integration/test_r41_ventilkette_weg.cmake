@@ -30,13 +30,13 @@
 #   g2  2060: Generator = Original sub12 (msg 0, Ja, Cut 7, Cursor obj 3) -> Schalter 1 (Zone 3) + 3 (Zone 5) ->
 #       Loesung sub01 @0x01296..@0x012A6 -> sub13 + Set(3,126) @0x012AE, msg 2 "It seems that the generator is working now."
 #   k1  2010 Ventil-Sicherungskasten (Nachbesserung 5, Nachtrag 16 Folgen 1/2; Slot 8, Ereignis 20, Ostwand x 5400): mit der
-#       aufgehobenen Sicherung (3,108) Text 40 -> Frage 41 -> Ja -> Set(9,125) -> Standbild der Ventile (ROOM2030 Cut 7, Vollbild;
+#       aufgehobenen Sicherung (3,108) Text 40, dann USE (Runde 41 Spur O: die Frage 41 entfaellt) -> Set(9,125) -> Standbild der Ventile (ROOM2030 Cut 7, Vollbild;
 #       Framedump == BSS/ROOM2030/BG07.BSS ueber das Werkzeug "bss") + Aufschliess-Ton -> Bestaetigen schliesst -> Text 42.
 #       Das Standbild steht unter der Pad-Sperre (2,7) (player_mode 2, der Wegplan gibt dort keine Tasten) -> RE15_PRESS.
 #   k2  nach der Flut, die Sicherung steckt im Ventilkasten (Nachtrag 16 Folgen 3/6, ganzer Weg zu Fuss): 20B0 -> Kanal ->
 #       Westgang -> Tuer slot 2 (@0x019A2) -> 2010 -> Kasten: Text 43 -> Ja -> Set(9,125)=0, Text 44 -> Tuer slot 0 (nach der Flut
 #       auf 20B0 umgelenkt) -> Leiter -> 2050 -> 2020 -> 2030 Nordgalerie -> 2060 -> Generator-Kasten = Original sub18 (msg 3,
-#       Frage msg 4 "Will you use the Fuse?").
+#       Text msg 3, die Sicherung ist wieder im Inventar; die Frage msg 4 "Will you use the Fuse?" entfaellt, Runde 41 Spur O).
 #   k3  2060 mit der Sicherung im Ventilkasten (Bit 125): Generator-Kasten Slot 9 = Text 3 des Else-Zweigs @0x010A6, keine Frage,
 #       kein Set(3,144).
 #   w1  nach der Flut, ohne Strom: 20B0 (nach der Szene) -> Kanal (Sprung hinab / Aufstieg) -> Leiter -> 2050 (Kisten-
@@ -490,10 +490,13 @@ message(STATUS "r41_ventilkette_weg[${FIGUR}] v2p: Plakat -> Nahaufnahme (helles
 # ---- g1/g2: 2060 Sicherung + Generator (Original-Raetsel) ---------------------------------------------------------------
 _lauf(g1 240 "" RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2060@250 RE15_SET_FLAG=3:108,7:122,7:123 "RE15_PLAYER_POS=-4000,3800,3072,0"
       RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330
-      "RE15_INPUT_SCRIPT=A0.1,W3,A0.1,W3,A0.1,W3,A0.1,W3,R0.2,W0.5,A0.1,W3,A0.1,W3"
+      "RE15_INPUT_SCRIPT=A0.1,W3,A0.1,W3,W0.1,W3,A0.1,W3,R0.2,W0.5,A0.1,W3,A0.1,W3"
+      "RE15_USE_TEST=0x40@516#206${S}"
       "RE15_EXIT_AT=1100#206${S}")
-_muss("${_dbg}" "[msgtext] room=206${S} id=4 \"Will you use the Fuse?\"" g1 "Frage am Sicherungskasten (sub18)")
-_danach("${_dbg}" "Will you use the Fuse?" "Cut_chg(8)" g1 "Einsetz-Ansicht Cut 8")
+# Runde 41 Spur O: Aktionstaste nur Text 3, die Frage msg 4 entfaellt; auf dem Bild des alten Ja (Takt 186 = F516) steht das USE.
+_muss("${_dbg}" "[msgtext] room=206${S} id=3 \"One of the fuses is missing...\"" g1 "Text am Sicherungskasten (sub18)")
+_darf_nicht("${_dbg}" "id=4 \"Will you use the Fuse?\"" g1 "die Frage entfaellt")
+_danach("${_dbg}" "One of the fuses is missing" "Cut_chg(8)" g1 "Einsetz-Ansicht Cut 8")
 _danach("${_dbg}" "Cut_chg(8)" "WRITE Set  zone=3 idx=144 op=1" g1 "Sicherung eingesetzt: sub19 Set(3,144) @0x0169E")
 _muss("${_dbg}" "[msgtext] room=206${S} id=5 \"You've used the Fuse.\"" g1 "Text 5")
 _lauf(g2 240 "" RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2060@250 RE15_SET_FLAG=3:108,3:144,7:122,7:123 "RE15_PLAYER_POS=-3200,3400,0,0"
@@ -510,17 +513,18 @@ message(STATUS "r41_ventilkette_weg[${FIGUR}] g1/g2: Sicherung (3,144) + Generat
 
 # ---- k1: Ventil-Sicherungskasten 2010 - Sicherung einsetzen (Nachbesserung 5, Nachtrag 16 Folgen 1/2) --------------------
 # Spieler (4950,-2770) Blick +x -> Vorwaertspunkt (5570,-2770) im Platz x 4900..5900 z -3470..-2070 (Wandflaeche x 5400 +- 500).
-# Tasten wie der Messlauf nb5 bx2 (2026-10-24 21:32, Leon): F300 Ereignis 20 -> Text 40 (2 Seiten), F520 Frage 41, F600 Ja ->
+# Tasten wie der Messlauf nb5 bx2 (2026-10-24 21:32, Leon): F300 Ereignis 20 -> Text 40 (2 Seiten), F520 Text zu (Runde 41 Spur O:
+# die Frage 41 entfaellt), F600 USE (RE15_USE_TEST auf dem Bild des alten Ja) ->
 # Bit 125, Standbild + Aufschliess-Ton ab F603, F680 Bestaetigen -> Standbild zu (nach 77 Bildern), Text 42, F760 Text 42 zu.
-# Framedumps F560 (Frage ueber dem Raum) und F640 (Standbild); Flaeche x 40..280 y 20..120 (ueber dem Nachrichtenfenster).
+# Framedumps F560 (Raum) und F640 (Standbild); Flaeche x 40..280 y 20..120 (ueber dem Nachrichtenfenster).
 _lauf(k1 180 "" RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2010@250 RE15_SET_FLAG=3:108 "RE15_PLAYER_POS=4950,-2770,0,0"
-      "RE15_PRESS=square@300,square@350,square@400,square@450,square@520,square@600,square@680,square@760"
+      "RE15_PRESS=square@300,square@350,square@400,square@450,square@520,square@680,square@760" "RE15_USE_TEST=0x40@600#201${S}"
       "RE15_FRAMEDUMP=560-640/80:f_kasten_" "RE15_EXIT_AT=840#201${S}")
 _muss("${_dbg}" "[ventilkette41] ROOM201${S}: Ventil-Sicherungskasten Slot 8 (x 4900..5900 z -3470..-2070), Sicherung fehlt" k1 "Kasten angelegt")
 _muss("${_dbg}" "[ventilkette41] ROOM201${S} Ereignis 20 -> Port-Programm 2010_kasten_frage" k1 "Aktion am Kasten (mit (3,108))")
 _muss("${_dbg}" "[msgtext] room=201${S} id=40 \"A fuse box for the valve controls." k1 "Text 40")
-_danach("${_dbg}" "id=40 \"A fuse box" "[msgtext] room=201${S} id=41 \"Will you use the Fuse?\"" k1 "Frage 41")
-_danach("${_dbg}" "id=41 \"Will you use the Fuse?\"" "WRITE Set  zone=9 idx=125 op=1" k1 "Ja -> Set(9,125) (`22 09 7d 01`)")
+_darf_nicht("${_dbg}" "id=41 \"Will you use the Fuse?\"" k1 "die Frage entfaellt")
+_danach("${_dbg}" "id=40 \"A fuse box" "WRITE Set  zone=9 idx=125 op=1" k1 "USE -> Set(9,125) (`22 09 7d 01`)")
 _danach("${_dbg}" "zone=9 idx=125 op=1" "[ventilkette41] Standbild der Ventile offen (ROOM2030 Cut 7) + Aufschliess-Ton" k1 "Standbild + Ton")
 _danach("${_dbg}" "Standbild der Ventile offen" "[ventilkette41] Standbild der Ventile zu" k1 "Bestaetigen schliesst das Standbild")
 _danach("${_dbg}" "Standbild der Ventile zu" "[msgtext] room=201${S} id=42 \"You've used the Fuse.\"" k1 "Text 42 nach dem Standbild")
@@ -554,7 +558,7 @@ endif()
 if(_g_560 GREATER 50)
     _fehler("[k1]: Gegenprobe ungueltig - F560 (Raum 2010) gleicht schon dem Standbild (${_g_560} % gleich)")
 endif()
-message(STATUS "r41_ventilkette_weg[${FIGUR}] k1: Kasten 2010 -> 40 -> 41 -> Ja -> Bit 125 -> Standbild 2030 Cut 7 (${_g_640} % gleich) + Ton -> 42")
+message(STATUS "r41_ventilkette_weg[${FIGUR}] k1: Kasten 2010 -> 40, USE -> Bit 125 -> Standbild 2030 Cut 7 (${_g_640} % gleich) + Ton -> 42")
 
 # ---- k2: nach der Flut die Sicherung aus dem Ventilkasten holen und zum Generator 2060 - ganzer Weg zu Fuss -----------------
 # (Nachbesserung 5, Nachtrag 16 Folgen 3/6). Zustand nach der Flut (_nach) + Bit 125 (die Sicherung steckt). Tueren: 20B0 slot 2
@@ -648,7 +652,7 @@ AKTION
 WARTE 150
 FLAG 9 125
 ENDE
-" RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=20B0@250 "RE15_SET_FLAG=${_nach},9:125,7:122,7:123" "RE15_PLAYER_POS=-20620,-9705,2048,1"
+" RE15_FLAG_CENSUS=1 RE15_KEYITEMS_LOG=1 RE15_DEBUG_JUMP=20B0@250 "RE15_SET_FLAG=${_nach},9:125,7:122,7:123" "RE15_PLAYER_POS=-20620,-9705,2048,1"
       "RE15_EXIT_AT=1100#206${S}")
 _darf_nicht("${_wp}" "KLEMME" k2 "der Weg klemmte")
 _muss("${_dbg}" "[aot] DOOR FIRE slot=2 rect=(-27100,-2650,hw=500,hh=1000) target_cut=0 spawn=(-4600,0,-4950)" k2 "20B0 Westgang Tuer slot 2 nach 2010")
@@ -670,9 +674,11 @@ string(TOLOWER "206${S}" _k2060k)
 _muss("${_dbg}" "loaded room${_k2060k}.rdt" k2 "2060 geladen")
 _darf_nicht("${_dbg}" "Generator-Kasten Slot 9 = Text 3" k2 "ohne Bit 125 gilt im Generator-Kasten wieder das Original")
 _danach("${_dbg}" "loaded room${_k2060k}.rdt" "[msgtext] room=206${S} id=3 \"One of the fuses is missing...\"" k2 "2060 Kasten: Original sub18 msg 3")
-_danach("${_dbg}" "room=206${S} id=3" "[msgtext] room=206${S} id=4 \"Will you use the Fuse?\"" k2 "2060 Kasten: Frage msg 4 (Sicherung einsetzbar)")
+# Runde 41 Spur O: die Sicherung ist wieder Inventar-Eintrag, die Stelle ist USE: Aktionstaste nur Text 3, Frage 4 entfaellt mit Nein.
+_danach("${_dbg}" "Sicherung genommen" "[keyitems] Gegenstand 0x40 ins Inventar" k2 "Sicherung aus dem Kasten im Inventar")
+_danach("${_dbg}" "room=206${S} id=3" "[keyitems] Frage 4 entfaellt: Nein (Aktionstaste)" k2 "2060 Kasten: Frage msg 4 entfaellt (Sicherung einsetzbar)")
 _flagfolge("${_wp}" k2 9 125 "1;0;0;0")
-message(STATUS "r41_ventilkette_weg[${FIGUR}] k2: nach der Flut zu Fuss 20B0 -> 2010 Kasten (43 -> Ja -> 44, Bit 125 = 0) -> 20B0 -> 2050 -> 2020 -> 2030 -> 2060 -> \"Will you use the Fuse?\"")
+message(STATUS "r41_ventilkette_weg[${FIGUR}] k2: nach der Flut zu Fuss 20B0 -> 2010 Kasten (43 -> Ja -> 44, Bit 125 = 0) -> 20B0 -> 2050 -> 2020 -> 2030 -> 2060 -> Text 3, Sicherung im Inventar")
 
 # ---- k3: Generator-Kasten 2060, waehrend die Sicherung im Ventilkasten steckt (Bit 125) ---------------------------------------
 # Gemessen 2026-10-24 (Messlauf nb5 k3m, Leon): Slot 9 = Text 3 "One of the fuses is missing..." (Else-Zweig @0x010A6), keine
