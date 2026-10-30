@@ -157,6 +157,8 @@ void re15_enemy_reset(void)
 {
     extern void re15_enemy_spawn_count_reset(void);
     re15_enemy_spawn_count_reset();          /* DAT_800aca4e room-init reset (@0x8003f014) */
+    { extern void re15_teile_reset_alle(void); re15_teile_reset_alle(); }
+    { extern void re15_aspider_beine_reset(void); re15_aspider_beine_reset(); }   /* RE1.5-Teilschicht: Raumwechsel */
     for (int i = 0; i < RE15_ENEMY_MAX; i++) {
         if (g_enemy[i].buf) free(g_enemy[i].buf);   /* PC malloc'd buffer; PSX leaves NULL */
         memset(&g_enemy[i], 0, sizeof(g_enemy[i]));
@@ -166,6 +168,7 @@ void re15_enemy_reset(void)
     re15_rbj_bind_room(NULL, 0);  /* Raum-RBJ + Kanal-Cache fallen mit den Banks (Raumwechsel) */
     re15_player_victim_reset();   /* clear Leon's grab-victim anim state (banks just dropped) */
     { extern void re15_crow_flock_reset(void); re15_crow_flock_reset(); }  /* 0x800aca50 = 0 on room change (FUN_8010d13c) */
+    { extern void re15_bf_reset(void); re15_bf_reset(); }   /* Beta-Birkin-Formen: Hangar-Szene je Betreten neu (birkin_formen.c) */
 }
 
 /* Room-cinematic overlay — see re15_enemy.h. PC-port only (its boot + cross-room reload);

@@ -55,6 +55,9 @@ int  re15_collision_constrain_contact(const re15_rdt_t *rdt,
 /* Dito, aber mit EXPLIZITEM Band statt band_from_y(y) — fuer Gegner, deren Band das
  * Original als ZUSTANDS-Byte +0x82 fuehrt (Gorilla-Zonen-Leap: +0x82=1 @0x80118af0,
  * Landung 0 @0x80118ca4; FUN_8003b0a4 liest +0x82 selbst @0x8003b228-3c). S5 2026-09-05. */
+/* +0x1b4 des letzten FUN_8003b0a4-Aufrufs als Zellenindex in rdt->sca (-1 = keine Zelle getroffen; Clear
+ * @0x8003b1ec, Treffer @0x8003b4ec). */
+int  re15_collision_letzte_zelle(void);
 int  re15_collision_constrain_contact_band(const re15_rdt_t *rdt,
                                            int32_t old_x, int32_t old_z,
                                            int32_t *x, int32_t *z,

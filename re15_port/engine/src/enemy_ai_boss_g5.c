@@ -65,6 +65,7 @@
  * DEVOUR-VICTIM-ANIM: EDD-Paar 3 laeuft auf dem 15-Bone-PL0-Rig — DEFERRED (Dossier §7);
  *   der Kill traegt Schaden 500 + Grab-Latch + Yaw-Snap.
  * ============================================================================================ */
+#include "re15_birkin_formen.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1132,7 +1133,13 @@ static void g5_tod_tick(re15_actor_t *e)
         g->gewicht[2] = t;
         e->y = (int32_t)(((int64_t)t * 2950) >> 12);   /* y=(t*2950)>>12 @0x801037c4-f4:
                                                         * der Kriecher versinkt in die Masse */
-        if (t >= 4097) g->ph = 5;
+        if (t >= 4097) {
+            g->ph = 5;
+            /* Beta-Birkin-Formen (re15_birkin_formen.h): der G5 ist hier die LETZTE Form, also faellt
+             * der Birkin-Fortschrittsschalter z5:0x1C (einziger Original-Produzent @0x8011aecc im
+             * 0x30-Morph-Tail, den der Vierbein-Birkin dafuer uebersprungen hat) erst jetzt. */
+            if (re15_bf_bahnsteig_aktiv()) re15_game_flag_set(5, 0x1c, 1);
+        }
         break;
     }
     default: break;                                    /* [T21] Kadaver-Ruhe */

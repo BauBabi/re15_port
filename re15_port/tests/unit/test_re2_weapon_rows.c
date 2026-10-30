@@ -391,7 +391,9 @@ int main(void)
             /* Der RE1.5-HURT-Handler (FUN_80105a8c/0x80105b7c) ist NICHT tabellen-gegated: er
              * spielt den Stagger fuer JEDEN Treffer. Erwartet werden Zustandswechsel, ein
              * Pose-Wechsel und der Treffer-SE 6 (`FUN_800453d0(6)` @0x80105c0c). */
-            int reacted = (r.state == 2 && r.se_n > 0 && (r.clip_changed || r.bend_seen))
+            /* Ausnahme w19: der MC51-Handler 0x80106048 (HURT[19] @0x8011fb90) spielt SE 6 nur bei
+             * rng&7 == 0 (@0x80106188) — der Zufallsclip {6,8,6,7,..} @0x8011fe94 ist die Reaktion. */
+            int reacted = (r.state == 2 && (r.se_n > 0 || w == 19) && (r.clip_changed || r.bend_seen))
                           || r.state == 3;
             if (!reacted) silent++;
             printf("   w=%-2d %-16s -> +0x5=%-2d state=%d HURT-Frames=%-2d Bend=%d Clip%s SE=%-2d HP %d->%d\n",

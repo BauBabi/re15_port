@@ -83,6 +83,12 @@ static int           s_shadow_verworfen = 0;   /* Messhaken RE15_SCHATTEN_LOG: S
 static int32_t       s_shadow_vz[SHADOW_QUAD_MAX];
 static uint8_t       s_shadow_spieler[SHADOW_QUAD_MAX];
 static int32_t       s_shadow_next_vz = -1;
+/* RAUMLICHT (Port-Ergaenzung nach dem 80%-Video, engine/src/raumlicht.c): dieselbe Blob-Form wie der
+ * Schatten, aber ADDITIV und farbmoduliert = weicher Lichtschein am Boden, beim Hochladen in das 2D-Bild
+ * eingerechnet (light_tri) - liegt damit unter Figuren und Masken. Bildweise Warteschlange. */
+#define LIGHT_QUAD_MAX 32
+static shadow_quad_t s_light_quads[LIGHT_QUAD_MAX];
+static int           s_light_quad_count = 0;
 static int           s_shadow_next_spieler = 0;
 void re15_render_pc_shadow_tiefe(int32_t vz_summe4, int ist_spieler)
 {
@@ -553,6 +559,7 @@ void re15_render_pc_clear_scene_overlays(void)
 {
     s_textri_count = 0;
     s_shadow_quad_count = 0;
+    s_light_quad_count = 0;
     s_pri_suppress = 1;
 }
 
@@ -772,6 +779,65 @@ void re15_render_shadow_quad_c(int x0, int y0, int x1, int y1,
     }
 }
 
+/* Raumlicht in das 2D-Bild einrechnen: je Quad zwei Dreiecke, UV affin interpoliert (wie SDL_RenderGeometry),
+ * Blob-RGB x Lichtfarbe/255 ADDITIV mit Saettigung. In den Framebuffer statt als SDL-Geometrie, weil der
+ * SDL-Software-Renderer additive Geometrie nicht zeichnet (gemessen: rc 0, Bild unveraendert) - so gilt das
+ * Licht in jedem Renderer und liegt wie der Hintergrund unter Figuren und Masken. */
+static uint32_t s_fb_licht[SCREEN_XRES * SCREEN_YRES];
+static void light_tri(uint32_t *fb, const SDL_Vertex *a, const SDL_Vertex *b, const SDL_Vertex *c)
+{
+    float minx = SDL_min(a->position.x, SDL_min(b->position.x, c->position.x));
+    float maxx = SDL_max(a->position.x, SDL_max(b->position.x, c->position.x));
+    float miny = SDL_min(a->position.y, SDL_min(b->position.y, c->position.y));
+    float maxy = SDL_max(a->position.y, SDL_max(b->position.y, c->position.y));
+    int x0 = SDL_max(0, (int)minx), x1 = SDL_min(SCREEN_XRES - 1, (int)maxx + 1);
+    int y0 = SDL_max(0, (int)miny), y1 = SDL_min(SCREEN_YRES - 1, (int)maxy + 1);
+    float d = (b->position.y - c->position.y) * (a->position.x - c->position.x) +
+              (c->position.x - b->position.x) * (a->position.y - c->position.y);
+    if (d > -1e-6f && d < 1e-6f) return;
+    for (int y = y0; y <= y1; y++)
+        for (int x = x0; x <= x1; x++) {
+            float px = x + 0.5f, py = y + 0.5f;
+            float l0 = ((b->position.y - c->position.y) * (px - c->position.x) +
+                        (c->position.x - b->position.x) * (py - c->position.y)) / d;
+            float l1 = ((c->position.y - a->position.y) * (px - c->position.x) +
+                        (a->position.x - c->position.x) * (py - c->position.y)) / d;
+            float l2 = 1.f - l0 - l1;
+            if (l0 < 0.f || l1 < 0.f || l2 < 0.f) continue;
+            float u = l0 * a->tex_coord.x + l1 * b->tex_coord.x + l2 * c->tex_coord.x;
+            float v = l0 * a->tex_coord.y + l1 * b->tex_coord.y + l2 * c->tex_coord.y;
+            int tu = SDL_min(RE15_SHADOW_BLOB_W - 1, SDL_max(0, (int)(u * RE15_SHADOW_BLOB_W)));
+            int tv = SDL_min(RE15_SHADOW_BLOB_H - 1, SDL_max(0, (int)(v * RE15_SHADOW_BLOB_H)));
+            unsigned m = re15_shadow_blob_rgba[tv * RE15_SHADOW_BLOB_W + tu] & 0xFFu;   /* Blob-Staerke */
+            if (!m) continue;
+            uint32_t p = fb[y * SCREEN_XRES + x];
+            unsigned r = (p >> 24) & 0xFF, g = (p >> 16) & 0xFF, bl = (p >> 8) & 0xFF;
+            r  = SDL_min(255u, r  + (unsigned)a->color.r * m / 255u);
+            g  = SDL_min(255u, g  + (unsigned)a->color.g * m / 255u);
+            bl = SDL_min(255u, bl + (unsigned)a->color.b * m / 255u);
+            fb[y * SCREEN_XRES + x] = (r << 24) | (g << 16) | (bl << 8) | (p & 0xFF);
+        }
+}
+
+/* Additiver Lichtschein am Boden (Raumlicht), Ecken in derselben Reihenfolge wie der Schatten. */
+void re15_render_light_quad(int x0, int y0, int x1, int y1,
+                            int x2, int y2, int x3, int y3,
+                            uint8_t r, uint8_t g, uint8_t b)
+{
+    if (s_light_quad_count >= LIGHT_QUAD_MAX) return;
+    const SDL_Color col = { r, g, b, 255 };
+    SDL_FPoint p[4] = { {(float)x0,(float)y0}, {(float)x1,(float)y1},
+                        {(float)x2,(float)y2}, {(float)x3,(float)y3} };
+    SDL_FPoint t[4] = { {0.f,0.f}, {1.f,0.f}, {0.f,1.f}, {1.f,1.f} };
+    const int idx[6] = { 0, 2, 3, 0, 3, 1 };
+    shadow_quad_t *q = &s_light_quads[s_light_quad_count++];
+    for (int i = 0; i < 6; i++) {
+        q->v[i].position  = p[idx[i]];
+        q->v[i].tex_coord = t[idx[i]];
+        q->v[i].color     = col;
+    }
+}
+
 void re15_render_shadow_quad(int x0, int y0, int x1, int y1,
                              int x2, int y2, int x3, int y3)
 {
@@ -981,7 +1047,27 @@ void re15_render_end_frame(void)
     memcpy(s_sb_fb, s_framebuffer, sizeof s_sb_fb);            /* STANDBILD, s. Deklaration */
     s_sb_text_used = s_text_overlay_used;
     if (s_text_overlay_used) memcpy(s_sb_text, s_text_overlay, sizeof s_sb_text);
-    SDL_UpdateTexture(s_texture, NULL, s_framebuffer, SCREEN_XRES * sizeof(uint32_t));
+    if (s_light_quad_count > 0) {                              /* Raumlicht, s. light_tri */
+        memcpy(s_fb_licht, s_framebuffer, sizeof s_fb_licht);
+        for (int i = 0; i < s_light_quad_count; i++) {
+            const SDL_Vertex *v = s_light_quads[i].v;
+            light_tri(s_fb_licht, &v[0], &v[1], &v[2]);
+            light_tri(s_fb_licht, &v[3], &v[4], &v[5]);
+        }
+        if (getenv("RE15_RAUMLICHT_LOG")) {
+            long sum = 0;
+            for (int i = 0; i < SCREEN_XRES * SCREEN_YRES; i++) sum += (long)((s_fb_licht[i] >> 24) & 0xFF) - (long)((s_framebuffer[i] >> 24) & 0xFF);
+            fprintf(stderr, "[raumlicht] upload %d Quads, R-Zuwachs %ld, v0=(%.0f,%.0f)\n", s_light_quad_count, sum,
+                    s_light_quads[0].v[0].position.x, s_light_quads[0].v[0].position.y);
+            const char *dp = getenv("RE15_RAUMLICHT_DUMP");
+            if (dp) { FILE *f = fopen(dp, "wb"); if (f) { fprintf(f, "P6\n%d %d\n255\n", SCREEN_XRES, SCREEN_YRES);
+                for (int i = 0; i < SCREEN_XRES * SCREEN_YRES; i++) { unsigned char c[3] = { (unsigned char)(s_fb_licht[i] >> 24),
+                    (unsigned char)(s_fb_licht[i] >> 16), (unsigned char)(s_fb_licht[i] >> 8) }; fwrite(c, 1, 3, f); } fclose(f); } }
+        }
+        s_light_quad_count = 0;
+        SDL_UpdateTexture(s_texture, NULL, s_fb_licht, SCREEN_XRES * sizeof(uint32_t));
+    } else
+        SDL_UpdateTexture(s_texture, NULL, s_framebuffer, SCREEN_XRES * sizeof(uint32_t));
     SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
     SDL_RenderClear(s_renderer);
     if (!s_black_bg) {

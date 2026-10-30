@@ -36,6 +36,7 @@
 #include "re15_damage.h"   /* re15_enemy_player_dist, re15_ai_arc_test, re15_engine_rand8,
                             * re15_enemy_apply_hitbox */
 #include "re15_skeleton.h" /* re15_sin_q12 / re15_cos_q12 — forward-walk root-motion step (8.19) */
+#include <string.h>
 #include "re15_actor.h"    /* re15_atan2_q12 — heading toward the player for the approach/walk */
 #include "re15_boss_gator.h" /* ROOM2090 Nutzer-Design-Bosskampf (2026-09-10) */
 #include "re15_gameflow.h" /* g_gameflow.character — der aca5c-&4-Gore-Zweig des Kriech-Grab-Abwurfs */
@@ -45,7 +46,10 @@
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
-#include "re15_affen3_r38.h"   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
+#include "re15_affen3_r38.h"
+#include "re15_birkin_opfer.h"
+#include "re15_teile_r15.h"     /* RE1.5-Teilschicht (Gore) */   /* Birkin-Spieler-Haken 0x8011afd8 */   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
+#include "re15_brandzombie.h"   /* brennende Zombies (Flag Zone 1/31) */
 #include "re15_gegner_r39.h"   /* Runde 39 Spur E: Gorillas 0x27 (HP x2, Flinch-Schwelle; alle Raeume), Hunde-Riegel-Tick */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
 #include "re15_spinnen_r38.h" /* Runde 38 Spur R: Schacht-Ausstieg + Gift der Stage-2-Spinne */
@@ -55,6 +59,7 @@
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
 #include "re15_bissarm_r37.h" /* Runde 37 Spur J: Wandklemme im Griff = ein Durchgang je Bild */
 #include "re15_heliport1171_r38.h" /* Runde 38 Spur I: Ereignis-Kraehe ROOM1171 (Rueckgriff, Wurf) */
+#include "re15_birkin_formen.h" /* Beta-Birkin-Formen: Hangar-Szene, Morph 5090 -> G5 */
 #include "re15_spiderman_r38.h" /* Runde 38 Spur T: Typ 0x2B Schacht-Austritt + Griffe mit Anker */
 #include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: kein Angriff, solange die Szene den Spieler haelt */
 #include "re15_npckante_r38.h" /* Runde 38 Spur M: NPC-Kanten (Sonde FUN_8002d7d8, Subs 0x12/0x16/0x17/0x18) */
@@ -106,6 +111,8 @@ static uint8_t s_wander_mag[RE15_ACTOR_MAX];                   /* tentative def 
 static uint8_t s_wander_idx[RE15_ACTOR_MAX];                   /* tentative def (full def below) */
 /* FSM-CLOCK clip-end signal (defined below, used by the feeding stand-up + grab + death sub-FSMs). */
 static int re15_enemy_clip_done(const re15_actor_t *e);
+int re15_zgore_treffer_aktionsbank(const re15_actor_t *a);   /* zombiegore_r15.c: Bank 1 der Waffen-Treffer */
+int re15_zgore_tod_lokobank(const re15_actor_t *a);           /* zombiegore_r15.c: Gang des kopflosen Zombies */
 static void re15_enemy_ai_lying_phase(re15_actor_t *e);                                        /* fwd */
 /* ROOM1030 Kriechtor-Maschine (Grid-Wurzel 1 + Sub-Modus-0x10-Toggle) — fwd. re15_zgirl_
  * overflow_row11 IST FUN_801035f8 = Grid-1-DECIDE[0] (@0x8011F8E0[0]); definiert weiter unten. */
@@ -1522,7 +1529,8 @@ int re15_player_victim_own_bank(void)
 {
     return (g_player_victim != 0 && re15_player_victim_grabber_type() == 0x27
         && s_gthrow_phase != 0)
-        || (g_player_victim != 0 && re15_player_victim_grabber_type() == 0x29 && re15_affen3_opfer_eigenbank());   /* Runde 38 Spur S: aca5a 6..9 = acad8/acbc0 */
+        || (g_player_victim != 0 && re15_player_victim_grabber_type() == 0x29 && re15_affen3_opfer_eigenbank())   /* Runde 38 Spur S: aca5a 6..9 = acad8/acbc0 */
+        || (g_player_victim != 0 && re15_bk_opfer_cmd() && re15_bk_opfer_eigenbank());   /* Birkin-Haken: Phasen auf acad8/acbc0 (birkin_opfer.c) */
 }
 int re15_player_victim_gorilla(void) { return g_player_victim != 0 && (re15_player_victim_grabber_type() == 0x27 || re15_player_victim_grabber_type() == 0x29); }   /* Runde 35 Spur J (6d); Runde 38 Spur S: 0x29-Haken 0x80115d70/0x801160a4 platzieren wie 0x8011c118/0x8011c414 (ad68 -> @0x80031cbc -> @0x80031d70) */
 /* Runde 38 Spur S: Griff des kleinen Affen (B[15] P0 schreibt aca58 = 5 @0x8011440c) an / Haken-Ende (aca58 = 1 @0x80116018). */
@@ -1532,6 +1540,15 @@ void re15_player_victim_affen3(const re15_actor_t *greifer, int an)
     if (an && greifer) { g_player_victim_type = greifer->type; g_player_victim_zombie = (int)(greifer - g_actors);
                          g_player_victim_variant = 0; g_player_victim = 1; s_player_grabbed = 1; s_victim_fresh = 0; re15_player_aim_interrupt(); }
     else if (g_player_victim == 1 && re15_player_victim_grabber_type() == 0x29) g_player_victim = 0;
+}
+/* Birkin-Spieler-Haken 0x8011afd8 (birkin_opfer.c): Treffer-Schreibsatz an (acbfc = Birkin, acbcc/acbd0 =
+ * Birkin+0x178/+0x17c, aca58 = 5/6) bzw. Haken-Ende (aca58 = 1 @0x8011b3c0 / @0x8011b698 / @0x8011b93c). */
+void re15_player_victim_haken(const re15_actor_t *greifer, int an)
+{
+    extern void re15_player_aim_interrupt(void);   /* player_common.c */
+    if (an && greifer) { g_player_victim_type = greifer->type; g_player_victim_zombie = (int)(greifer - g_actors);
+                         g_player_victim_variant = 0; g_player_victim = 1; s_player_grabbed = 1; s_victim_fresh = 0; re15_player_aim_interrupt(); }
+    else if (g_player_victim == 1) g_player_victim = 0;
 }
 
 /* Platzierung mit dem byte-true Pose-Yaw (rot_y + PL+0x158), Basis-Yaw danach zurueck. */
@@ -1636,7 +1653,7 @@ void re15_player_victim_tick(void)
             fprintf(re15_re2_trace_out() ? re15_re2_trace_out() : stderr, "[victim] BANK-HART-RESET vs=%d type=0x%02x zslot=%d (vb=%p ok=%d)\n",
                     g_player_victim, g_player_victim_type, g_player_victim_zombie,
                     (void *)vb, vb ? vb->victim_ok : -1);
-        g_player_victim = 0; return;
+        g_player_victim = 0; re15_bk_opfer_reset(); return;
     }
     /* +0x8f blend counter decay — byte-true f314 decrements it once per call (FUN_8001f3bc line 78),
      * and the cmd-5/6 handlers call f314 every tick. The port's normal decay sites (re15_player_tick /
@@ -1645,7 +1662,8 @@ void re15_player_victim_tick(void)
      * Skipped on the seed tick (fresh) so the full 7 renders once — the same first-frame-87.5%
      * cadence the zombie side shows (F84 frac=7 in the pose dump). */
     if (g_player_victim == 2 && (re15_player_victim_grabber_type() == 0x27 || re15_player_victim_grabber_type() == 0x29)) { s_gthrow_phase = 0; re15_affen_finisher_tick(player, vb); return; }   /* Runde 35 Spur J (15): Finisher = cmd-6-Hook 0x8011c414, nicht der Wurf; Runde 38 Spur S: 0x29 = 0x801160a4 */
-    if (g_player_victim == 1 && re15_player_victim_grabber_type() == 0x29) { re15_affen3_opfer_tick(player, vb); return; }   /* Runde 38 Spur S: Griff-Haken cmd 5 0x80115d70 (affen3_r38.c) */
+    if (g_player_victim == 1 && re15_player_victim_grabber_type() == 0x29) { re15_affen3_opfer_tick(player, vb); return; }
+    if (g_player_victim == 1 && re15_bk_opfer_cmd()) { re15_bk_opfer_tick(player, vb); return; }   /* Birkin cmd 5/6 -> 0x8011afd8 */   /* Runde 38 Spur S: Griff-Haken cmd 5 0x80115d70 (affen3_r38.c) */
     if (player->anim_frac > 0 && !s_victim_fresh) player->anim_frac--;
     /* ==== GORILLA-BOSS (0x27): dedizierter Pin-Opfer-Handler 0x8011c118 — EIGENE
      * Leon-Timeline statt der generischen Zombie-Halte-Maschine (gorilla_11c0/
@@ -2070,7 +2088,7 @@ void re15_enemy_ai_live_init(int slot)
      * re15_enemy_ai_live_tick keeps it mirroring the player (RAM-arbitrated, see there). */
     e->steer_x = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x;
     e->steer_z = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z;
-    /* OPEN (audit wf_827f186d zombie-live #4, LOW): the original INIT additionally rolls a 25%
+    /* (GEBAUT unten nach dem HP-Wurf) the original INIT additionally rolls a 25%
      * spawn-VARIANT (@0x801008b0-8f0: `jal rng; andi 3; bne zero,skip` else `jal rng; andi 7;
      * lw @0x8011f7ec[v0]; jalr` — table {0x80101058,0x80101008,0x801010a8,0x801010a8,0x80101008,
      * 0x8010118c,0x8010113c,0x8010118c}). The variant fns write MODEL-POOL render fields (e.g.
@@ -2102,6 +2120,39 @@ void re15_enemy_ai_live_init(int slot)
         }
         if (row >= 0) e->hp = (int16_t)z_hp[row][re15_engine_rand8() & 0xf];   /* +0x9a @0x801007f4 */
     }
+    /* SPAWN-VARIANTE (@0x801008b0-8ec): 25 % (`andi 3` / bne @0x801008bc-c0), dann Tabelle @0x8011f7ec[rng&7] =
+     * {58,08,a8,a8,08,18c,13c,18c}: ein oder zwei Gliedmassen abgemagert (Teil-Wort |= 0x400|0x80, Skala Q12 auf
+     * x/z) und verfaerbt (Tinten 0x80 / 0x8080e0) — RE1.5-Teilschicht. Liegt NACH HP/Stagger-Clip wie im Original. */
+    {
+        int zslot = (int)(e - g_actors);
+        re15_teile_reset(zslot);
+        if ((re15_engine_rand8() & 3) == 0) {
+            static const struct { int8_t a, b; int16_t sa, sb; } var[8] = {
+                { 12, -1, 0x5f4, 0 },      /* 0x80101058: Teil 12 (+0x810) */
+                {  2, -1, 0x7e8, 0 },      /* 0x80101008: Teil 2 (+0x158) */
+                {  8,  9, 0x5f4, 0x5f4 },  /* 0x801010a8: Teile 8 (+0x560) und 9 (+0x60c) */
+                {  8,  9, 0x5f4, 0x5f4 },
+                {  2, -1, 0x7e8, 0 },
+                {  4,  5, 0x7e8, 0x5f4 },  /* 0x8010118c: Teile 4 (+0x2b0) und 5 (+0x35c) */
+                {  5, -1, 0x7e8, 0 },      /* 0x8010113c: Teil 5 */
+                {  4,  5, 0x7e8, 0x5f4 },
+            };
+            int v = re15_engine_rand8() & 7;
+            re15_teil_t *t = re15_teile(zslot);
+            for (int k = 0; k < 2 && t; k++) {
+                int part = k ? var[v].b : var[v].a; int16_t sk = k ? var[v].sb : var[v].sa;
+                if (part < 0) continue;
+                t[part].w |= 0x480;
+                t[part].scale[0] = sk; t[part].scale[1] = 0x1000; t[part].scale[2] = sk;
+                t[part].h94[0] = 0x80; t[part].h94[1] = 0;            /* +0x94 = 0x80 */
+                t[part].h94[2] = 0x80e0; t[part].h94[3] = 0x80;       /* +0x98 = 0x8080e0 */
+            }
+            re15_teile_markieren(zslot);
+        }
+    }
+    /* BRENNENDE ZOMBIES (@0x801008f4-0x80100c14, direkt hinter der Spawn-Variante): nur bei Flag Zone 1/31
+     * (DAT_800aca3c & 1) — Arm, Zeitzaehler, acht Flammen. include/re15_brandzombie.h. */
+    re15_brand_init(e, (int)(e - g_actors));
     /* BYTE-TRUE SPAWN-STATE DECODER (@0x80100c20, branched from the init FUN_80100688 @0x80100904).
      * The Sce_em_set behavior byte (entity+0x9 = grid_id) carries, in its low nibble, the initial AI
      * state — NOT just the spawn pose. The port previously seeded only +0x94 (re15_enemy_spawn_action)
@@ -2115,6 +2166,7 @@ void re15_enemy_ai_live_init(int slot)
         } else if (sel == 0x0d) {       /* pre-engaged: +0x4=0x201 + grid=0 @0x80100f40-54 */
             e->sub_state_1 = 0x02; e->grid_id = 0; e->motion = 0x27;
         } else if (sel == 0x0e) {
+            re15_teile_reset((int)(e - g_actors));   /* FUN_8001ee68 @0x80100fe0: nur in diesem Zweig — die Variante verfaellt */
             /* SLEEPING-LYING (byte-true @0x80100f64-fd4, analysis/zombie_lyer_10d0.md D1
              * CONFIRMED — der alte "pose-only"-Kommentar war falsch): +0x94=0x2A (sb @0x80100f78),
              * +0x95=0 (@0x80100f88), +0x8f=0 (@0x80100f98), Word +0x4=0x1201 (@0x80100fc0-c4 =
@@ -4683,10 +4735,10 @@ int re15_enemy_ai_live_active(int slot)
          * It commits the attack (state word 0x701 -> +0x5=7) when the player is in range/off-arc.
          * The briefing zombies SPAWN in the non-0 sub-modes (+0x9 & 0xf = 6 feeding / 8 lying); the
          * feeding handler is the dist-gated WAKE-UP that transitions them to combat (sub 0). The FUN_8001bc08 sensor + the +0x1d8 update are IMPLEMENTED
-         * (re15_enemy_los_probe @L2113-2121). DEFERRED (cited): the ATTACK-ARM (+0x1d8 |= 0x100 +
-         * the +0x1da windup seed; FUN_8010ab2c) — which is DORMANT in this prototype (DAT_800aca3c & 1
-         * is never set, savestate-proven), so the in-game attack is the GRAB the engage brain commits
-         * (8.8), not the lunge. */
+         * (re15_enemy_los_probe @L2113-2121). 2026-10-30: der ARM (+0x1d8 |= 0x100 + +0x1da)
+         * haengt an DAT_800aca3c & 1 = Flag Zone 1/31 — in STAGE1 nie gesetzt, aber von ROOM5120/5121/
+         * 5140/5141; das sind die BRENNENDEN Zombies (re15_brandzombie.h). Der Angriff im Spiel bleibt der
+         * GRIFF; 300 schaltet nur die Flammen um (kein Lunge-Biss). */
         switch (e->grid_id & 0xf) {                       /* @0x8011f80c[+0x9 & 0xf] sub-mode */
             case 2:    /* STEHENDER SCHLAEFER (@0x8011f80c[2]=FUN_80101784, behavior 0x02 — der
                         * Re-Entry-Zweig von 10D0/1140 u.a., 91 Records game-weit; NACHGEPRUEFT
@@ -4775,7 +4827,11 @@ int re15_enemy_ai_live_active(int slot)
                     re15_enemy_ai_live_engage_animate(slot, e);
                 break;
             }
-            case 1: {  /* GRID-WURZEL 1 = die KRIECH-MASCHINE (@0x8011f80c[1]=FUN_80101708,
+            case 1: case 3: {  /* GRID-WURZEL 1 = die KRIECH-MASCHINE (@0x8011f80c[1]=FUN_80101708,
+                        * 2026-10-30 auch NIBBLE 3 (@0x8011f80c[3]=FUN_80101800, ROOM3010/3011 Deskriptor 0x83):
+                        * DECIDE @0x8011F9B0[+0x5] (`addiu at,-1616` @0x80101820) = dieselbe Tabelle wie
+                        * @0x8011F8E0 bis auf [5] = 0x80104760 und [6] = 0x80103980; ANIMATE dieselbe @0x8011F920
+                        * (`addiu at,-1760` @0x80101854). Grid 1:
                         * Dossier Glied 10): DOPPEL-Dispatch — DECIDE @0x8011F8E0[+0x05]
                         * (@0x80101728 jalr), danach +0x05 FRISCH lesen (@0x8010174c), ANIMATE
                         * @0x8011F920[+0x05] (@0x8010175c jalr). HARTE INVARIANTE: Indizes 7..14
@@ -4789,7 +4845,9 @@ int re15_enemy_ai_live_active(int slot)
                               * @0x801036b8 -> Wort 0x601 = Toggle/Aufstehen). */
                         re15_zgirl_overflow_row11(e, player);
                         break;
-                    case 6:  /* [6]=0x80104F78 = `jr ra`-Stub (Tabellen-Dump, Glied 9) */
+                    case 6:  /* [6]=0x80104F78 = `jr ra`-Stub (Tabellen-Dump, Glied 9);
+                              * Nibble 3: [6]=0x80103980 = der Naehe-Wecker (@0x8011F9C8) */
+                        if ((e->grid_id & 0xf) == 3) (void)re15_r41_liegewecker_re15_decide(e);
                         break;
                     case 1: case 2:  /* [1,2]=0x80103B8C = `jr ra; nop` (roh @0x80103b8c-90):
                                       * waehrend Grab/Lauern laeuft KEIN Decide — insbesondere
@@ -4826,8 +4884,11 @@ int re15_enemy_ai_live_active(int slot)
                         }
                         /* BLOCK B @0x80104704 — der wirksame Zweig: in Sicht und naeher als
                          * 3000 -> Wort 1 = Zustand 1 / Sub 0 = die Kriech-Lokomotion
-                         * (ANIMATE[0] = FUN_801036DC). */
-                        if (e->ai_dist < 0xbb8u &&                           /* sltiu 0xbb8
+                         * (ANIMATE[0] = FUN_801036DC). NIBBLE 3 (DECIDE[5] = 0x80104760) hat Block B
+                         * NICHT: Block A endet dort im Epilog (@0x801047f0 -> jr ra @0x80104800) — der
+                         * Lauerer greift nur zu, er kriecht nicht los. */
+                        if ((e->grid_id & 0xf) != 3 &&
+                            e->ai_dist < 0xbb8u &&                           /* sltiu 0xbb8
                                                                               * @0x80104718 */
                             re15_ai_arc_test(e, player->x, player->z, 0x200) == 0)
                                                                              /* @0x8010472C-34 */
@@ -4975,7 +5036,10 @@ int re15_enemy_ai_live_active(int slot)
     int fired = 0;
     e->ai_attack_timer = (int16_t)(e->ai_attack_timer - 1);   /* +0x1da -= 1 */
     if (e->ai_attack_timer == 0x12c) {             /* == 300: fire the lunge (8x action-0x16 inject) */
-        re15_enemy_lunge_begin(slot);
+        re15_brand_aufflammen_300(e, slot);   /* 8x FUN_80019d50(8,3,0x16,Teil) @0x80101284-0x80101504: AUFFLAMMEN der
+                                               * angehaengten Flammen (Routine 22 -> 23 -> 18), KEIN Schaden — der
+                                               * fruehere Lunge-Hitbox-Stand-in war eine Fehldeutung (0x16 -> 0x17 ->
+                                               * 0x12 @0x80017ecc/@0x80017f24, nie 0x18) */
         fired = 1;
     }
     if (e->ai_attack_timer == 0) {                 /* windup done -> post-attack recovery state */
@@ -5003,13 +5067,12 @@ void re15_enemy_ai_live_arm(int slot)
     e->ai_p5f8 = 0x60;    /* +0x5f8 */
     e->ai_p5fa = 0x30;    /* +0x5fa */
     e->ai_p5fe = 0x138;   /* +0x5fe */
-    if (!s_live_combat_active) return;                       /* DAT_800aca3c & 1 gate */
-    e->ai_flags |= 0x100;                                    /* +0x1d8 |= 0x100 (attack-arm) */
-    if (re15_engine_rand8() & 1) e->ai_flags |= 0x200;       /* (rng & 1) << 9 (variant) */
-    {
-        int seed = (int)re15_engine_rand8() + (int)re15_engine_rand8() + 600;   /* +0x1da seed */
-        e->ai_attack_timer = (int16_t)seed;
-    }
+    /* DAT_800aca3c & 1 gate (`lw -13764` @0x8010ace8). 2026-10-30: das Bit IST Flag Zone 1 / Index 31 (MSB-first,
+     * scd_room_setup.c) — gesetzt von ROOM5120/5121/5140/5141 (`Set 1,31,1`). Vorher hing das Gate an
+     * g_scd.combat_active, das niemand schreibt; s_live_combat_active bleibt als Test-Schalter. */
+    if (!s_live_combat_active && !re15_game_flag_get(1, 31)) return;
+    re15_brand_scharf(e, slot);   /* +0x1d8 |= 0x100 | (rng&1)<<9, +0x1da = 600 + 2 Wuerfe, acht Flammen
+                                   * @0x8010ad10-0x8010af.. (byte-gleich zum Standard @0x80100918-0x80100c14) */
 }
 
 /* HURT — FUN_80105a8c (@0x8011f7b4[2], STAGE1.BIN). The live zombie's stagger reaction to a hit:
@@ -5091,7 +5154,8 @@ void re15_enemy_ai_live_hurt(int slot)
                 e->anim_frame  = 0;                         /* +0x95=0 @0x80106aac */
                 e->anim_frac   = 4;                         /* +0x8f=4 @0x80106abc */
                 e->anim_blend_rate = 0x200;                 /* f314 a3=0x200 @0x80106b2c */
-                re15_enemy_blood_at_bone(e, 0);             /* a2 = pool+0x40 = PART 0 @0x80106ad8 */
+                { static const int32_t o[3] = { 100, -200, 0 };   /* a3 = 0x8011fe9c @0x80106acc */
+                  re15_enemy_fx19700(e, 0x2000, 0, o); }      /* a2 = pool+0x40 = PART 0 @0x80106ad8 */
                 e->hit_react |= 1;                          /* +0x93|=1 @0x80106af4-fc */
                 if ((re15_engine_rand8() & 7) == 0)         /* 1/8 @0x80106b00-04 */
                     re15_audio_room_se(6);                  /* SE(6) @0x80106b0c-10 */
@@ -5101,7 +5165,8 @@ void re15_enemy_ai_live_hurt(int slot)
                 e->anim_frame  = 0;                         /* +0x95=0 @0x80106910 */
                 e->anim_frac   = 3;                         /* +0x8f=3 @0x8010691c-20 */
                 e->anim_blend_rate = 0x400;                 /* f314 a3=0x400 @0x801069bc */
-                re15_enemy_blood_at_bone(e, 7);             /* a2 = pool+0x4f4 = 172*7+64 = PART 7 @0x8010693c */
+                { static const int32_t o[3] = { 100, -200, 0 };   /* a3 = 0x8011fe9c @0x8010692c-30 */
+                  re15_enemy_fx19700(e, 0x1500, 7, o); }      /* a0 = 0x1500 @0x8010690c, PART 7 @0x8010693c/40 */
                 e->hit_react |= 1;                          /* +0x93|=1 @0x80106958-60 */
                 re15_audio_room_se(6);                      /* SE(6) UNCONDITIONAL @0x80106954-5c */
                 if (e->hit_stun == (int16_t)0x80) {         /* +0x1dc==0x80 downed sentinel @0x80106970-78 */
@@ -5124,6 +5189,10 @@ void re15_enemy_ai_live_hurt(int slot)
         }
     }
 
+    /* WAFFEN-ZELLEN des HURT-Tisches @0x8011fb90 [+0x5][+0x6] (zombiegore_r15.c): w5/6 -> 0x80106290,
+     * w7/8 Mitte -> 0x80106624, w19 -> 0x80106048; w1/3/4 laufen unten als 0x80105b7c weiter. */
+    { extern int re15_zgore_treffer(re15_actor_t *e, int slot);
+      if (re15_zgore_treffer(e, slot)) return; }
     /* CLUSTER-F CORRECTED MODEL (raw @0x80105b7c/@0x80105b18): POISE +0x1dc is decremented ONCE PER
      * HIT (the @0x8011fe30 step dispatch @0x80105d28 sits INSIDE the +0x7==0 phase-0 block), persists
      * across hits (seeded (rand&3)+4 at INIT @0x8010082c, re-armed at get-up / stagger-9 exit), the
@@ -5455,7 +5524,8 @@ int re15_actor_uses_loco_bank(const re15_actor_t *a)
                           (shares_root && (a->sub_state_1 == 0x00 ||
                                            a->sub_state_1 == 0x01 ||
                                            a->sub_state_1 == 0x08))))
-                  || (a->state == 2 && !(a->grid_id & 0x80))
+                  || (a->state == 2 && !(a->grid_id & 0x80) && !re15_zgore_treffer_aktionsbank(a))   /* 6290/6624/6048 = Bank 1 */
+                  || re15_zgore_tod_lokobank(a)                     /* 0x80107244 Gang: anim_set(+0x84,+0x16c) */
     /* POISE-BREAK-UEBERGABETICK — +0x168 zeigt hier noch auf BANK 0.
      *
      * Das Original hat KEINE Bank-Regel: es posiert das Frame-Wort, auf das +0x168 zuletzt
@@ -5563,6 +5633,7 @@ int re15_actor_clip_len(const re15_actor_t *a)
     return 0;
 }
 
+int re15_enemy_clip_done_pub(const re15_actor_t *e);
 static int re15_enemy_clip_done(const re15_actor_t *e)
 {
     /* RE15_CLIPDONE_LEGACY=1 restores the pre-fix behaviour (always the ACTION bank) so the two
@@ -5580,11 +5651,17 @@ static int re15_enemy_clip_done(const re15_actor_t *e)
     if (frames <= 0) return 1;
     return (e->anim_frame >= frames - 1) ? 1 : 0;
 }
+int re15_enemy_clip_done_pub(const re15_actor_t *e) { return re15_enemy_clip_done(e); }   /* zombiegore_r15.c */
 
 void re15_enemy_ai_live_death(int slot)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
     re15_actor_t *e = &g_actors[slot];
+    /* DEATH-Wurzel FUN_80106ba4 loest JEDEN Tick [+0x5][+0x6] @0x8011feac neu auf (zombiegore_r15.c):
+     * Kopfplatzer / kopflos / Schrot / Beine weg; alle anderen Zellen = der Standard-Tod unten. */
+    { extern int re15_zgore_tod(re15_actor_t *e, int slot);
+      if (re15_zgore_tod(e, slot)) return; }
+    if (re15_brand_tod(e, slot)) return;   /* DEATH[21][0] = 0x80108d74 (@0x8012014c; Maedchen @0x801208dc) */
 
     if (e->sub_state_3 == 0) {                         /* phase 0 — start the death anim */
         e->hit_react  |= 0x1;                          /* +0x93 |= 1 (@0x80107d08) */
@@ -5608,16 +5685,21 @@ void re15_enemy_ai_live_death(int slot)
                                                         * must NOT loop like the feeding/idle clip did (0x04 was
                                                         * set at spawn). Complements the state-7 corpse freeze. */
         e->sub_state_3 = 1;                            /* +0x7 = 1 (@0x80107d1c) */
-        re15_enemy_death_fx(e);                        /* burst at the per-type GORE BONE (@0x80106d2c
-                                                        * standing / @0x80107cf4 downed) */
+        if (e->grid_id & 0x80) {                       /* DOWNED FUN_80107cb0: 0x2500 an TEIL 0 (a0 @0x80107d5c,
+                                                        * a2 = pool+0x40 @0x80107d6c, a3 0x8012016c @0x80107d38-3c) */
+            static const int32_t o[3] = { 200, 0, 0 };
+            re15_enemy_fx19700(e, 0x2500, 0, o);
+        } else
+            re15_enemy_death_fx(e);                    /* STEHEND: Gore-Teil 0x2000 @0x80106d2c */
         if (!(e->grid_id & 0x80)) {
             /* STANDING death FUN_80106c18 fires TWO more bone-anchored bursts, gated on the hit zone
              * +0x6 (s1 = 1 @0x80106c34):
              *   @0x80106d48 bne +0x6,s1 -> @0x80106d5c/60 jal ; addiu a2,v0,64   = pool+64  = PART 0
              *   @0x80106d78 bne +0x6,zero -> @0x80106d8c/90 jal ; addiu a2,a2,408 = pool+408 = PART 2
              * (The downed death has no such pair.) */
-            if (e->sub_state_2 == 1)      re15_enemy_blood_at_bone(e, 0);
-            else if (e->sub_state_2 == 0) re15_enemy_blood_at_bone(e, 2);
+            static const int32_t o[3] = { 200, 0, 0 };   /* a3 = 0x8012016c */
+            if (e->sub_state_2 == 1)      re15_enemy_fx19700(e, 0x2000, 0, o);
+            else if (e->sub_state_2 == 0) re15_enemy_fx19700(e, 0x2000, 2, o);
         }
         return;
     }
@@ -5810,6 +5892,7 @@ int re15_enemy_ai_live_tick(int slot)
             }
             e->re2z_re15_pose = 0;                       /* Zustand anderweitig verlassen */
         }
+        re15_brand_re2_takt(&g_actors[slot], slot);   /* GESTALTUNG: brennende Zombies im RE2-Gehirn (re15_brandzombie.h) */
         re15_re2z_tick(slot);
         return 1;
     }
@@ -10623,7 +10706,14 @@ static void re15_npc_ai_tick(int slot)
      * alles ausser Sub 0 (Marvins Mode-6-Idle lief nie, marvin_10d0.md D3); seit die NPC-Plc_dest-
      * Walks byte-true in der Sub-VM laufen (state=4/+0x5=mode @0x80041c14-18, marvin_glide_end.md
      * Fix #1), gilt das auch fuer 4/5/7/8/9. */
-    int in_motion_pose = (e->state == 4 && e->sub_state_1 <= 9) ||
+    /* INIT (state 0) laeuft IMMER: die Original-Wurzeln sperren nur ueber aca40 & 0x20000000 und grid & 0x20
+     * (oben; z.B. STAGE4-Marvin-Wurzel 0x80116be4 @0x80116bf8-c04 / @0x80116c18-24), nicht ueber einen SCD-Besitz.
+     * ⛔ Nutzer-Report (wiederkehrend): ROOM4000/4001 Lift-Szene — Ada/Marvin werden schon im Init-Lauf per
+     * Work_set gehalten (ROOM4000 sub05 Work_set(2,0) @0x0156E, sub08 Work_set(2,1) @0x01720), der INIT lief nie
+     * (Marvin stand auf Bild 0 von Clip 2, Ada loopte Clip 2). Mit dem INIT erreicht Marvin grid&0x40 -> +0x4 = 4 /
+     * +0x5 = 6 (@0x80116ea4 / @0x80116eb0) und damit die Mode-6-Maschine 0x800517f0 (eigene Bank-1-Clips 1/2). */
+    int in_motion_pose = (e->state == 0) ||
+                         (e->state == 4 && e->sub_state_1 <= 9) ||
                          re15_szl_schub_npc_kanal(e) ||   /* Runde 36 Spur J: auch Schub-Sub 0x13 laeuft im Executor */
                          re15_npckante_aktiv(e);          /* Runde 38 Spur M: Kanten-Subs 0x12/0x16/0x17/0x18 ebenso */
     if (e->walk_active || (re15_scd_slot_event_controlled(slot) && !in_motion_pose)) {
@@ -10829,6 +10919,7 @@ static void re15_zgirl_ai_tick(int slot)
     /* PORT OPTION (WELLE B): RE2 folds kind 0x13 onto the SAME zombie overlay (loader clamp
      * 0x10..0x1F -> 0x10, @0x8001B738-48), so the girl runs the full RE2 brain too. */
     if (re15_ai_re2_for_type(e->type) && re15_re2z_owns_type(e->type)) {
+        re15_brand_re2_takt(&g_actors[slot], slot);   /* GESTALTUNG: brennende Zombies im RE2-Gehirn (re15_brandzombie.h) */
         re15_re2z_tick(slot);
         return;
     }
@@ -10891,7 +10982,7 @@ static void re15_zgirl_ai_tick(int slot)
          * (+0x5-3)*3 families via FUN_80102548). */
         if (e->ai_flags & 0x100) {
             e->ai_attack_timer = (int16_t)(e->ai_attack_timer - 1);
-            if (e->ai_attack_timer == 0x12c) re15_enemy_lunge_begin(slot);
+            if (e->ai_attack_timer == 0x12c) re15_brand_aufflammen_300(e, slot);   /* Maedchen @0x8010b2dc-b554, wie oben */
             if (e->ai_attack_timer == 0) {
                 re15_ai_set_state_word(e, 0x1503);
                 e->motion = (uint8_t)((e->grid_id & 0x80) ? 0x1f : 0x0b);
@@ -10986,6 +11077,20 @@ static void re15_zgirl_ai_tick(int slot)
     }
 }
 
+/* RE1.5-Teilschicht fuer die erwachsene Spinne (STAGE2): ein Teil gruen zerplatzen lassen wie @0x80113cd4-cfc /
+ * @0x801146d0-734 (Farbwort 0x207f60, +0x94 0, +0x96 -50, +0x98 0, +0x9a 3, +0x9c/+0x9e 0, Wort |= 0x4a). */
+static void re15_aspider_teil_platzt(int slot, int k)
+{
+    re15_teil_t *t = re15_teile(slot);
+    if (!t || k < 0 || k >= RE15_TEILE_MAX) return;
+    t[k].col = 0x207f60u; memset(t[k].h94, 0, sizeof t[k].h94);
+    t[k].h94[1] = (uint16_t)(int16_t)-50; t[k].h94[3] = 3; t[k].w |= 0x4a;
+    re15_teile_markieren(slot);
+}
+/* Bein-Liste @0x80118f30 (Overlay-Daten, von allen Spinnen geteilt; Zaehler je Spinne +0x1de). */
+static uint8_t s_aspider_beine_weg[8];
+void re15_aspider_beine_reset(void) { memset(s_aspider_beine_weg, 0, sizeof s_aspider_beine_weg); }   /* Overlay-Neuladen */
+
 /* ============================ ADULT SPIDER (type 0x25, EM025 = SPIDER) ====================== *
  * BYTE-TRUE rebuild of the 0x801109e4 family (STAGE2.BIN, overlay base 0x80100000; audit wf_efd92a2c
  * adult-spider — all 25 finder claims re-verified against RAW disasm, none refuted). Root 0x801109e4
@@ -11031,6 +11136,8 @@ static int re15_aspider_anim(re15_actor_t *e)
     if (e->anim_frac > 0) e->anim_frac--;
     return done;
 }
+#include "re15_spinne_r42.h"
+#include "spinne_r42.inc"   /* Runde 42: Wand/Absatz/Decke 0x801118a8 + ACT 9/10/12/13 (STAGE2) */
 static void re15_adult_spider_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
@@ -11062,6 +11169,7 @@ static void re15_adult_spider_ai_tick(int slot)
         e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* +0x1bc/+0x1be = player @0x80110bd8/bf0 */
         e->ai_timer = 0; e->dog_atk_cd = 0; e->dog_dist = 0; e->ai_target_x = 0;  /* clear +0x9c/+0x1d6/+0x1dc */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
+        re15_spinne42_reset(slot); e->coll_cell = -1;   /* Runde 42: Kletterfelder leer, +0x1b4 = 0 bis zur ersten Klemme */
         /* INIT pose-cluster (byte-true @0x80110c20-cc8): grid<2 -> rot_x/rot_z=0, Y=-1800*floor
          * (@0x80110c34-74); grid 2..0x1f -> rot_x=0, rot_z(pitch)=0x800, Y=-10800, grid:=2 (ceiling-
          * drop, @0x80110c84-cc8). @0x80110df8 +0x166=0xccc (unidentified consumer, no port field, OPEN). */
@@ -11088,8 +11196,11 @@ static void re15_adult_spider_ai_tick(int slot)
         dist = re15_enemy_player_dist(e, pl);                 /* SquareRoot0 -> +0x1d4 @0x80110efc */
         e->dog_dist = (int16_t)dist;
 
-        if (e->sub_state_1 == 0) {                            /* grid-DECIDE gated on +0x5==0 @0x80110f20 */
-            int grid = e->grid_id & 0xf;
+        if (e->sub_state_1 == 0 && (e->grid_id <= 2 || e->grid_id == 5)) {   /* grid-DECIDE gated on +0x5==0 @0x80110f20;
+                                                               * Tabelle @0x80118e44[+0x9 GANZES Byte, `lbu 9 / sll 2`
+                                                               * @0x80110f30-38]: 3/4/6/7 = `jr ra` @0x801115bc-dc (Runde 42;
+                                                               * vorher fielen 3/4 ins ROAM) */
+            int grid = e->grid_id;
             if (grid == 1 || grid == 5) {                     /* APPROACH 0x80111240 — 7-branch cascade */
                 int faced80  = re15_dog_arc(e, pl, 0x7fff, 0x80);   /* +0x1e2 = arc_test(0x80) @0x80111258 (==0 -> faced) */
                 if (los && re15_dog_arc(e, pl, 0x7fff, 0x100)) {}   /* +0x1e4 = arc_test(0x100) @0x80111270 (stored, no reachable consumer) */
@@ -11143,10 +11254,9 @@ static void re15_adult_spider_ai_tick(int slot)
         case 1:   /* WALK 0x801117fc: clip 3, LOS-steer 0x10, +0x8c += 60, advance (grid2 = rear 0x800) */
             if (e->motion != 3) re15_aspider_clip(e, 3);      /* clip 3 @0x80111808 */
             if (los) re15_enemy_steer_point(e, pl->x, pl->z, 0x10);  /* rot += (LOS&1)*arc(0x10) @0x8011181c-50 */
-            e->crow_speed = (int16_t)(e->crow_speed + 60);    /* +0x8c += 60 @0x80111868 */
-            /* wall-helper 0x801118a8 (SCA-driven CLIMB transit) = OPEN */
-            re15_dog_advance(e, e->crow_speed >> 5);          /* pos_advance @0x80111890 (grid2 rear-0x800 offset = OPEN, ceiling only) */
-            re15_aspider_anim(e);
+            re15_spinne42_lauf(e);                            /* jal 0x801118a8 @0x8011184c (Wand/Absatz, Lauf-Zeit, Anim, Fussweg) */
+            e->crow_speed = (int16_t)(e->crow_speed + 60);    /* +0x8c += 60 @0x80111860-6c (auch im Umschalt-Bild) */
+            re15_dog_advance_ofs(e, (e->grid_id == 2) ? 0x800 : 0);   /* pos_advance(grid==2 ? 0x800 : 0) @0x8011187c-90 */
             break;
         case 2:   /* SCAN 0x80111c5c: clip 3, sweep step ±0x18 LATCHED once, faced(±0x18) -> CHASE */
             if (e->sub_state_3 == 0) {                        /* phase 0 @0x80111c8c */
@@ -11183,20 +11293,20 @@ static void re15_adult_spider_ai_tick(int slot)
         case 4:   /* CHASE 0x80112004: clip 2, steer 0x30, +0x8c += 100, advance. NO exit (persists). */
             if (e->motion != 2) re15_aspider_clip(e, 2);      /* clip 2 @0x80112028 */
             re15_enemy_steer_point(e, pl->x, pl->z, 0x30);    /* rot += arc(0x30) @0x80112024-48 */
-            /* wall-helper 0x801118a8 = OPEN */
+            re15_spinne42_lauf(e);                            /* jal 0x801118a8 @0x80112044 */
             e->crow_speed = (int16_t)(e->crow_speed + 100);   /* +0x8c += 100 @0x80112060 */
-            re15_dog_advance(e, e->crow_speed >> 5);           /* pos_advance @0x80112064 */
-            re15_aspider_anim(e);
+            re15_dog_advance_ofs(e, 0);                        /* pos_advance(0) @0x80112064 */
             break;
         case 11:  /* CREEP 0x8011302c: clip 3, steer 0x10, +0x8c -= 20 UNCONDITIONAL, advance. */
             if (e->motion != 3) re15_aspider_clip(e, 3);      /* clip 3 @0x80113038 */
             re15_enemy_steer_point(e, pl->x, pl->z, 0x10);    /* rot += arc(0x10) @0x8011304c-70 */
-            /* wall-helper 0x801118a8 = OPEN */
-            e->crow_speed = (int16_t)(e->crow_speed - 20);     /* +0x8c -= 20 every frame (no init/clamp) @0x80113088 */
-            re15_dog_advance(e, e->crow_speed >> 5);           /* pos_advance @0x8011308c */
-            re15_aspider_anim(e);
+            re15_spinne42_lauf(e);                            /* jal 0x801118a8 @0x8011306c */
+            e->crow_speed = (int16_t)(e->crow_speed - 20);     /* +0x8c -= 20 @0x80113088 */
+            re15_dog_advance_ofs(e, 0);                        /* pos_advance(0) @0x8011308c */
             break;
         case 6:   /* GRAB-A 0x801120b8 (walking lunge-bite, +0x7 9-phase @0x8010019c). NON-DAMAGING. */
+            if (e->grid_id < 2 && re15_spinne42_wand(e, 0)) break;   /* Wandkopf @0x801120cc-288: 9 @0x80112148 /
+                                                                        * 12 @0x801121c0, Ausstieg j 0x801126c0 */
             if (e->sub_state_3 == 0) { re15_aspider_clip(e, 8); e->sub_state_3 = 1; }         /* [0] clip 8 windup @0x801122cc */
             else if (e->sub_state_3 <= 2) {                                                    /* [1] advance @0x8011262c */
                 re15_dog_advance(e, 100 >> 5);
@@ -11263,8 +11373,13 @@ static void re15_adult_spider_ai_tick(int slot)
                 e->sub_state_1 = 0; e->sub_state_2 = 0;                                        /* +0x5=0, +0x6=0 ONLY (no lockout, no grid keep) @0x80112ad0-e0 */
             }
             break;
-        default:  /* CLIMB/HOP/CEILING subs 9/10/12/13/14/15 = SCA-driven, subsystem-scale -> OPEN.
-                   * Minimal fallback: resume the driver so a spawned actor never wedges. */
+        case 9:  re15_spinne42_absatz(e);     break;          /* 0x80112af8 */
+        case 10: re15_spinne42_ausweichen(e); break;          /* 0x80112e58 */
+        case 12: re15_spinne42_wechsel(e);    break;          /* 0x801130a4 */
+        case 13: re15_spinne42_wand_lauf(e);  break;          /* 0x80113734 */
+        case 14: case 15: break;                              /* 0x8011387c / 0x80113884 = `jr ra` */
+        default:  /* +0x6 >= 16 liegt hinter der Tabelle @0x80118e64 (16 Eintraege) — vom Original nicht erzeugt;
+                   * Rueckfall, damit kein Aktor haengt. */
             e->sub_state_1 = 0; e->sub_state_2 = (uint8_t)(los ? 4 : 0); e->sub_state_3 = 0;
             re15_aspider_anim(e);
             break;
@@ -11294,7 +11409,8 @@ static void re15_adult_spider_ai_tick(int slot)
             }
         } else {                                              /* grid-0x40 @0x80114e60: hold while grid==0x40 @0x80114e74 */
             if (e->grid_id != 0x40) {                         /* externally triggered -> CLIMB(9) descent */
-                e->grid_id = 0; e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 9; e->sub_state_3 = 0;  /* grid:=0, sh 0x101,4, +0x6=9 @0x80114e7c-bc (CLIMB = OPEN) */
+                e->grid_id = 0; e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 9; e->sub_state_3 = 0;  /* grid:=0, sh 0x101,4, +0x6=9 @0x80114e7c-bc */
+                re15_spinne42_setzen(slot, 0x1ec, 0); e->zg_9f = 0;   /* +0x1ec = 0 @0x80114e8c, +0x9f = 0 @0x80114e9c */
             }
         }
         re15_aspider_anim(e);
@@ -11302,7 +11418,28 @@ static void re15_adult_spider_ai_tick(int slot)
 
     case 2:   /* HURT 0x80113a0c: flinch clip 1 + Se(2); recover byte-true (@0x80113e84). +0xb0/+0x1ba
                * reset @0x80113a2c and the blood FX 0x80019700 + leg-dismember (+0x93&0x40) = OPEN. */
-        if (e->sub_state_3 == 0) { re15_aspider_clip(e, 1); re15_audio_room_se(2); e->sub_state_3 = 1; }  /* flinch @0x80113a0c */
+        if (e->sub_state_3 == 0) {
+            re15_spinne42_setzen(slot, 0xb0, 0);                                  /* +0xb0 = 0 @0x80113a2c */
+            e->dog_floor_y = (int16_t)(-1800 * (int32_t)e->floor);                /* +0x1ba = -1800*(+0x82) @0x80113a3c-5c */
+            re15_aspider_clip(e, 1); re15_audio_room_se(2); e->sub_state_3 = 1;  /* flinch @0x80113a0c, SE 2 @0x80113b58 */
+            static const int32_t null3[3] = { 0, 0, 0 };   /* a3 = 0x80118f18 (Nullen) */
+            re15_enemy_fx19700(e, 0x00082000u, 0, null3);  /* Blut an Teil 0 @0x80113b50 */
+            if (e->hit_react & 0x40) {                     /* Krit `andi 0x40` @0x80113b74: ein Beinpaar faellt */
+                static const uint8_t bein[8] = { 3, 5, 7, 9, 11, 13, 15, 17 };   /* @0x80118f28 */
+                uint8_t leg = bein[re15_engine_rand8() & 7];                     /* rng&7 @0x80113b80-94 */
+                int schon = 0;
+                for (int j = 0; j < 8; j++) if (s_aspider_beine_weg[j] == leg) schon = 1;   /* Liste @0x80118f30, @0x80113bc4-c3c */
+                if (!schon && e->zg_9c < 8) {
+                    s_aspider_beine_weg[e->zg_9c] = leg;    /* used[+0x1de] = Bein @0x80113c5c-84 */
+                    re15_aspider_teil_platzt(slot, leg);    /* @0x80113cc8-cfc */
+                    re15_aspider_teil_platzt(slot, leg + 1);   /* @0x80113d50-d78 */
+                    re15_enemy_fx19700(e, 0x00082000u, leg + 2, null3);   /* a2 = pool+172*leg+408 @0x80113dc4 */
+                    re15_enemy_fx19700(e, 0x00082000u, leg + 2, null3);   /* @0x80113e1c */
+                    re15_audio_room_se(5);                  /* @0x80113e24 */
+                    e->zg_9c++;                             /* +0x1de++ @0x80113e38-44 */
+                }
+            }
+        }
         else if (re15_aspider_anim(e)) {                      /* recover @0x80113e84 */
             int los; int pp = re15_enemy_los_probe(slot, e, pl);  /* +0x1d0 bit0 @0x80113f04 */
             if (pp != 2) e->aspider_los = (uint8_t)(pp & 1);
@@ -11318,6 +11455,13 @@ static void re15_adult_spider_ai_tick(int slot)
     case 3:   /* DEATH 0x80113f40: entry kill-flag 0x8004ef90(0x800b1038,+0x1c6); collapse clip 1 + Se(5)
                * -> CORPSE (state 7). The 2-stage gore (part-detach x2, phased FX) = OPEN (render). */
         if (e->sub_state_3 == 0) {
+            if (e->hit_react & 0x40) {                         /* 0x8011461c Krit `andi 0x40` @0x801146b0: Koerper platzt */
+                static const int32_t null3[3] = { 0, 0, 0 };
+                re15_aspider_teil_platzt(slot, 0);             /* @0x801146d0-6f0 */
+                re15_aspider_teil_platzt(slot, 19);            /* +0xcc4 @0x80114708-734 */
+                re15_enemy_fx19700(e, 0x00082000u, 0, null3);  /* @0x8011474c */
+                re15_enemy_fx19700(e, 0x00082000u, 19, null3); /* a2 = +3332 @0x80114770 */
+            }
             re15_aspider_clip(e, 1); re15_audio_room_se(5); e->hit_react |= 2;
             if (e->em_flag_id != 0xFF)
                 re15_game_flag_set(re15_em_status_zone(), e->em_flag_id, 1);  /* kill-flag persist @0x80113fa0-ac */
@@ -11722,10 +11866,12 @@ static void re15_cockroach_ai_tick(int slot)
  *  - Root motion FUN_8011b5c4 (per-clip skeleton root delta -> +0x8c) + nav-zone steer 0x80039e7c: the
  *    port advances by the byte-true ADDITIVE speed constants (+0x8c += 0x14 etc.) without the clip root
  *    delta, so approach speed is not pixel-exact.
- *  - aca58 player-command FSM (grab cmd 5 / throw cmd 6 / knockdown cmd 2) is unported port-wide; the
- *    port uses s_player_grabbed (via the birkin_grab latch) for cmd 5/6 and hit_react|=1 for the knockdown.
- *  - rng per-bone writhe/breathe (0x8003a95c) + gore/blood FX (0x80019700, ESP 0x1c/0x1d/0x1e/0x1f via
- *    0x8004ef90) are skeleton/effect render-side, not modeled (audio SE calls ARE ported).
+ *  - Spieler-Seite: cmd 5/6 laufen ueber den Typ-Haken 0x8011afd8 (birkin_opfer.c), cmd 2 ueber
+ *    re15_player_stagger_cmd2; die Treffergeometrie ist die Angriffsbox FUN_8001a5e0 (re15_bk_kontakt).
+ *  - Blut FUN_80019700 in HURT/Todes-Waechter ist gebaut. rng per-bone writhe/breathe (0x8003a95c) bleibt
+ *    render-side offen. FUN_8004ef90 ist das Spiel-FLAG-Setzen (z5 0x1c/0x1d/0x1e/0x1f), kein Effekt.
+ *  - grid & 0xf == 4 schaltet BRAIN @0x80116d38 ueber @0x8011eea4[4] = 0x80116e48 in einen Szenen-Modus
+ *    (Tabellen @0x8011ef28/@0x8011ef2c, Maschine 0x80118d00, Phasen @0x801003dc) — im Port NICHT gebaut.
  *  - DEATH phase 3 WAITS for (grid&0xf)==2 — an EXTERNAL room-SCD morph trigger — then run-off sub-11
  *    hands the fight to a room-SCD-spawned next form. The AI FSM is faithful; the SCD grid-nibble=2 flip
  *    and the next-form spawn are NOT wired -> the boss plays the collapse then HOLDS at phase 3 (gated on
@@ -11780,6 +11926,111 @@ static int32_t s_bk_masse = 0;
 static int re15_bk_arc(re15_actor_t *e, re15_actor_t *pl, int32_t range, int arc)
 {
     return re15_dog_arc(e, pl, range + s_bk_masse, arc);
+}
+
+/* ANGRIFFSBOX FUN_8001a5e0 (PSX.EXE @0x8001a5e0-6d0), nur von der Birkin-KI gerufen (STAGE3 @0x80117710 /
+ * @0x80117bec / @0x80117ea0 / @0x80118adc, STAGE5 identisch +0x814): a0 = Teil 15 (+0x188 + 0xa14, die Klaue),
+ * a1 = Teil-lokaler Versatz, a2[0] = Reichweite, a3 = Spieler.
+ *   Weltpunkt = ApplyMatrixSV(Teil15, a1) + Teil15.T (re15_enemy_part_point), als s16 (`sh` @0x8001a620-644);
+ *   d = SquareRoot0(dx^2 + dz^2) gegen Spieler +0x34/+0x3c (@0x8001a648-690, Y ungeprueft);
+ *   Treffer = d < Spieler-Radius + Reichweite (`slt v0,v0,s0` @0x8001a6b4). Radius = *(Spieler+0x78)+6, geschrieben
+ *   nur @0x80031664 aus 0x80073e94 = {0,-1530,0,450,1530,450} -> 450.
+ *   a2 <- Weltpunkt (@0x8001a694-6b0); der Wurf legt X/Z nach acc1c/acc1e (@0x80117eec-f4).
+ * Versatz-/Reichweiten-Saetze (STAGE3, s16): Kralle @0x80100390 (800,337,0) / 900; Biss @0x801003bc (900,337,0) /
+ * 500 (@0x801003c4); Wurf @0x801003cc (1000,337,0) / 700 (@0x801003d4); Tackle @0x801003bc / 900 (@0x80100398).
+ * Ohne geladene Bank (Unit-Harness) bleibt der alte Abstand/Kegel-Proxy. */
+#define RE15_BK_SPIELER_RADIUS 450   /* 0x80073e94 + 6 (s.o.) */
+static int16_t s_bk_treffer_x = 0, s_bk_treffer_z = 0;   /* acc1c / acc1e */
+void re15_bk_treffpunkt(int16_t *x, int16_t *z) { if (x) *x = s_bk_treffer_x; if (z) *z = s_bk_treffer_z; }
+static int re15_bk_kontakt(re15_actor_t *e, re15_actor_t *pl, int32_t ox, int32_t reach, int merken)
+{
+    const int32_t ofs[3] = { ox, 337, 0 };
+    int32_t w[3];
+    if (e->type != 0x30 || !re15_enemy_part_point(e, 15, ofs, w))
+        return re15_bk_arc(e, pl, 2500, 0x400);                 /* Proxy (keine Bank / 0x36-Masse-Pfad) */
+    int32_t dx = (int32_t)(int16_t)w[0] - pl->x, dz = (int32_t)(int16_t)w[2] - pl->z;
+    int32_t d = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+    if (merken) { s_bk_treffer_x = (int16_t)w[0]; s_bk_treffer_z = (int16_t)w[2]; }
+    return d < RE15_BK_SPIELER_RADIUS + reach;
+}
+
+/* ACT[0] des Szenen-Modus 0x80118d00 (Phasen +0x6 @0x801003dc, `sltiu v0,v1,0xf` @0x80118d38). anim_set(+0x84, +0x16c)
+ * mit a3 = 0x100 bis Phase 7, danach 0x400; a2 = 1 nur in Phase 13. FUN_8003a95c (Teil-Zucken, a1 = 1) ist die
+ * Render-Seite und bleibt offen; ihr Zaehler +0x7e (birkin_zuck) steuert aber den Phasenwechsel und ist gebaut. */
+static int re15_birkin_anim(re15_actor_t *e);
+static void re15_birkin_clip(re15_actor_t *e, uint8_t c);
+static void re15_birkin_zucken(re15_actor_t *e)       /* @0x80118e10-f54 bzw. @0x80118fcc-110c */
+{
+    e->birkin_zuck = (int16_t)(e->birkin_zuck - e->ai_timer);     /* +0x7e -= +0x9c, `bgez`/`sh zero` (Teil 15 @0x80118f14-30) */
+    if (e->birkin_zuck < 0) e->birkin_zuck = 0;
+    e->ai_timer = (int16_t)(e->ai_timer + 10);                    /* +0x9c += 10 @0x80118f50 */
+}
+static void re15_birkin_szene(re15_actor_t *e)
+{
+    switch (e->sub_state_2) {
+    case 0:                                                        /* @0x80118d60 */
+        e->sub_state_2 = 1; e->motion = 0; e->anim_frame = 0; e->anim_frac = 0;   /* +0x6 1, +0x94 0, +0x95 0, +0x8f 0 */
+        e->anim_flags &= (uint16_t)~0x80u;
+        re15_audio_room_se(3); re15_audio_room_se(6);              /* @0x80118d9c / @0x80118da4 */
+        /* j 0x80119278 */
+    case 1:
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* anim_set a3 0x100, += @0x80119294 */
+        break;
+    case 2:                                                        /* @0x80118dc8 */
+        e->ai_timer = 0xa; e->sub_state_2 = 3; e->motion = 2; e->anim_frac = 0xf;   /* @0x80118dd8-e0c */
+        re15_audio_room_se(8);                                     /* a0 = 8 @0x80118dc8, jal @0x80118e08 */
+        /* faellt in [3] @0x80118e10 */
+    case 3:
+        re15_birkin_zucken(e);
+        if (e->birkin_zuck <= 0) e->sub_state_2 = 6;               /* `bgtz` / +0x6 = 6 @0x80118f58-74 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* j 0x80119278 @0x80118f8c */
+        break;
+    case 4:                                                        /* @0x80118f94 */
+        e->sub_state_2 = 5; e->motion = 3; e->anim_frac = 0xf;     /* @0x80118fa0-fc8 */
+        re15_audio_room_se(9);                                     /* a0 = 9, jal @0x80118fc4 */
+        /* faellt in [5] @0x80118fcc */
+    case 5:
+        re15_birkin_zucken(e);
+        if (e->birkin_zuck <= 0) e->sub_state_2 = 6;               /* @0x80119114-130 */
+        (void)re15_birkin_anim(e);                                 /* anim_set @0x80119148, KEIN += (j @0x80119150) */
+        break;
+    case 6:                                                        /* @0x80119158 */
+        e->sub_state_2 = 7; e->motion = 1; e->anim_frac = 0xf; e->anim_frame = 0;   /* @0x80119168-1a0 */
+        re15_game_flag_set(5, 0x1d, 1);                            /* FUN_8004ef90(z5, 0x1d) @0x8011919c */
+        /* faellt in [7] @0x801191a4 */
+    case 7:
+        if (e->anim_frame == 0x14) re15_audio_room_se(4);         /* @0x801191b0-1c4 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* j 0x80119278 (a3 0x100) */
+        break;
+    case 8:                                                        /* @0x801191e4 */
+        re15_game_flag_set(5, 0x1f, 1);                            /* @0x8011921c */
+        e->sub_state_2 = 9; e->motion = 4; e->anim_frac = 3;       /* @0x801191f8-220 */
+        re15_audio_room_se(0);                                     /* j 0x80119258, a0 = 0 @0x80119228 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* a3 0x400 @0x80119274 */
+        break;
+    case 9: case 11:                                               /* @0x80119260 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));
+        break;
+    case 10:                                                       /* @0x8011922c */
+        e->sub_state_2 = 0xb; e->anim_frac = 3;                    /* @0x80119238-250 */
+        re15_audio_room_se(0); re15_audio_room_se(1);              /* @0x8011924c / a0 = 1 @0x80119254, jal @0x80119258 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));
+        break;
+    case 12:                                                       /* @0x801192a0 */
+        re15_game_flag_set(5, 0x1e, 1);                            /* @0x801192f4 */
+        e->sub_state_2 = 0xd; e->motion = 0; e->anim_frame = 0x14; /* @0x801192b0-2d4 */
+        e->crow_speed = 0x12c; e->anim_frac = 3;                   /* +0x8c = 0x12c @0x801192e0-e4, +0x8f 3 */
+        re15_audio_room_se(6);                                     /* @0x801192fc */
+        /* faellt in [13] @0x80119304 */
+    case 13:
+        e->anim_flags |= 0x80u;                                    /* a2 = 1 @0x8011930c */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x80119318-338 */
+        e->crow_speed = (uint16_t)(e->crow_speed + 50);            /* +0x8c += 50 @0x80119350 */
+        re15_dog_advance_ofs(e, 0x800);                            /* FUN_800245d8(0x800) @0x80119354 */
+        break;
+    default:
+        break;                                                     /* [14] @0x8011935c: steht */
+    }
 }
 
 static void re15_birkin_ai_tick(int slot)
@@ -11854,6 +12105,11 @@ static void re15_birkin_ai_tick(int slot)
         e->birkin_flags = 0; e->birkin_hurt_cd = 0; e->birkin_atk_cd = 0;  /* +0x1dd=0 @0x801167f0, +0x1de=0 @0x80116810, +0x1df clear */
         e->birkin_saved_state = e->birkin_saved_sub = e->birkin_saved_ph2 = e->birkin_saved_ph3 = 0;  /* +0x1d8=0 @0x801167e0 */
         e->birkin_grab = 0; e->birkin_pause = 0;
+        /* ROHR: Teil 16 (+0x188 + 16*0xac) wird genullt (`sw zero,2752` @0x8011693c), seine Geometrie-Woerter
+         * +0x8..+0x14 nach Teil 15 kopiert, wenn grid & 0x10 (@0x80116974-9e4) ODER (grid & 0xf) == 0
+         * (@0x80116c14-8c); Unterzustand 4 springt an beiden vorbei (beq @0x8011692c -> 0x80116c90). */
+        e->birkin_rohr = (uint8_t)((e->grid_id & 0xf) != 4 && ((e->grid_id & 0x10) || (e->grid_id & 0xf) == 0));
+        e->birkin_zuck = (int16_t)(((e->grid_id & 0xf) == 4) ? 0xfff : 0);   /* `ori s0,zero,0xfff` / sh +0x7e @0x80116c94-d20 */
         e->state = 1;                                  /* +0x4 = 1 -> BRAIN @0x801166f8 */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
         {
@@ -11865,11 +12121,20 @@ static void re15_birkin_ai_tick(int slot)
         break;
 
     case 1: {  /* BRAIN 0x80116d38: DECIDE[sub]@0x8011eeb8 then ACT[sub]@0x8011eef0 (both by +0x5). +0x6 = ACT phase byte. */
+        /* SZENEN-MODUS: BRAIN verteilt zuerst nach grid & 0xf (`andi v0,v0,0xf` @0x80116d98, Tabelle @0x8011eea4 =
+         * {0x80116dcc x4, [4] = 0x80116e48}). Nibble 4 nimmt DECIDE @0x8011ef28 ([0] = `jr ra` 0x80118cf8) und ACT
+         * @0x8011ef2c ([0] = 0x80118d00): eine reine Zwischensequenz ohne Angriff. Gesetzt von ROOM3080 (Slot 2,
+         * Typ 0x36 grid 0x24 @0x007D4; Member_set(0x0c,4) @0x00934). Vorher kaempfte der Port dort normal und
+         * griff Leon/Elza mitten in der Szene an. */
+        if ((e->grid_id & 0xf) == 4) {
+            if (e->sub_state_1 == 0) re15_birkin_szene(e);
+            break;
+        }
         /* ---- DECIDE[0] 0x80116ec4: promote sub 0 -> sub 1 ---- */
         if (e->sub_state_1 == 0) { e->sub_state_1 = 1; e->sub_state_2 = 0; }
         /* ---- DECIDE[1] 0x80116f6c HUB cascade (may re-target the sub; writes fall through, LAST match wins) ---- */
         if (e->sub_state_1 == 1) {
-            int grabbed = s_player_grabbed;            /* aca58==5 proxy */
+            int grabbed = re15_bk_opfer_cmd() ? (re15_bk_opfer_cmd() == 5) : s_player_grabbed;   /* aca58==5 (lbu @0x8011711c) */
             uint8_t nsub = 0;                          /* 0 = keep sub 1 (walk) */
             /* sub-3 (0x301) @0x80116fe8: +0x1df==0 && dist<0xc80 && aca58!=5 && arc(0x338) */
             if (e->birkin_atk_cd == 0 && !grabbed && dist < 0xc80 && re15_bk_arc(e, pl, 0xc80, 0x338)) nsub = 3;
@@ -11923,10 +12188,22 @@ static void re15_birkin_ai_tick(int slot)
                 if (!re15_bk_arc(e, pl, 0xfa1, 0x400) && e->anim_frame < 0x1e) {
                     e->sub_state_2 = 2;                                /* abort @0x801176b8 */
                 } else {
-                    /* damage window [0x24..0x2b] tested EVERY frame (attack-box 0x8001a5e0 -> re15_dog_arc proxy) @0x801176ec */
+                    /* damage window [0x24..0x2b] tested EVERY frame @0x801176ec, Angriffsbox @0x80117710 */
                     if (e->anim_frame >= 0x24 && e->anim_frame <= 0x2b && pl->hit_react == 0
-                        && re15_bk_arc(e, pl, 2500, 0x400)) {
-                        s_player_grabbed = 1; e->birkin_grab = 1;      /* aca58 = (facing<<8)|5 grab latch @0x801177d0 */
+                        && re15_bk_kontakt(e, pl, 800, 900, 0)) {
+                        /* Gier-Latch @0x80117754-7a8: s0 = FUN_8001a6d4(Birkin -> Spieler), Birkin-Gier kurz s0-0x400
+                         * (quer zur Peilung), v0 = FUN_8001a780(Spieler), Birkin-Gier zurueck (@0x8011778c), Spieler-Gier
+                         * acabe = s0 - (v0*0x800 - 0x400) @0x80117790-7a8 = quer zur Peilung -> der Haken schleudert Leon
+                         * SEITLICH weg (Hieb); aca58 = (v0 << 8) | 5 @0x801177b8-7d0 -> Haken [0] / [1] (birkin_opfer.c). */
+                        {
+                            /* s0 = FUN_8001a6d4 roh = re15_atan2_q12 - 0x400 (actor_locomotion.c atan2_q12: Port = roh +
+                             * 0x400); Birkin-Gier kurz s0 - 0x400 (`addiu v0,s0,-1024` @0x80117770). */
+                            int s0 = ((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0x0fff;
+                            int tmp = (s0 - 0x400) & 0x0fff;
+                            uint8_t v0 = (uint8_t)(((((int)pl->rot_y - tmp) + 0x400) & 0xfff) < 0x800);   /* FUN_8001a780 @0x8001a788-a4 */
+                            pl->rot_y = (int16_t)((s0 - (0x800 * (int)v0 - 0x400)) & 0x0fff);   /* sll 11 / -1024 / subu @0x80117790-7a0 */
+                            if (!re15_bk_opfer_start(e, 5, v0)) { s_player_grabbed = 1; e->birkin_grab = 1; }
+                        }
                         pl->hit_react |= 1; re15_audio_room_se(7);     /* Se(7) @0x801177dc */
                         pl->hp = (int16_t)(pl->hp - 10);               /* hp-=10 @0x801177f0 */
                         if (pl->hp < 0) pl->hp = 1;                    /* clamp-to-1 @0x80117810 */
@@ -11964,9 +12241,13 @@ static void re15_birkin_ai_tick(int slot)
                     e->sub_state_2 = 2;                                /* abort @0x80117b60 */
                 } else {
                     if (e->anim_frame >= 0x23 && e->anim_frame <= 0x2a && pl->hit_react == 0
-                        && re15_bk_arc(e, pl, 2500, 0x400)) {         /* box proxy @0x80117bec */
-                        if (e->anim_frame < 0x26) { s_player_grabbed = 1; e->birkin_grab = 1; }  /* aca58=0x205 grab @0x80117c1c */
-                        pl->hit_react |= 1;                            /* aca58=0x202 knockdown (frame>=0x26) @0x80117c38 -> hit_react proxy */
+                        && re15_bk_kontakt(e, pl, 900, 500, 0)) {     /* Angriffsbox @0x80117bec */
+                        if (e->anim_frame < 0x26) {                    /* aca58=0x205 @0x80117c1c -> Haken [2] Biss */
+                            if (!re15_bk_opfer_start(e, 5, 2)) { s_player_grabbed = 1; e->birkin_grab = 1; }
+                        } else {
+                            re15_player_stagger_cmd2(0x08);            /* aca58=0x202 @0x80117c38: cmd 2 [2] = Clip 8 (@0x80035e38-40) */
+                        }
+                        pl->hit_react |= 1;
                         re15_audio_room_se(7);                         /* Se(7) @0x80117c64 */
                         pl->hp = (int16_t)(pl->hp - 10);               /* hp-=10 @0x80117c78 */
                         if (pl->hp < 0) pl->hp = 1;                    /* clamp @0x80117c94 */
@@ -11989,8 +12270,11 @@ static void re15_birkin_ai_tick(int slot)
             if (e->sub_state_2 == 1) {
                 int done = re15_birkin_anim(e);
                 if (e->anim_frame == 0x2c) {                           /* frame 0x2c box overlap @0x80117e84 */
-                    if (re15_bk_arc(e, pl, 2500, 0x400)) {            /* hit: throw (aca58=6) + Se(2) @0x80117ee4/f0c */
-                        s_player_grabbed = 1; pl->hit_react |= 1; re15_audio_room_se(2);
+                    if (re15_bk_kontakt(e, pl, 1000, 700, 1)) {      /* Angriffsbox @0x80117ea0; Treffer: aca58=6 + Se(2) @0x80117ee4/f0c */
+                        /* aca58 = 6 (Wort, aca59 = 0) @0x80117ee4: STAGE5 registriert cmd 6 auf denselben Haken
+                         * 0x8011afd8 (@0x8011defc) -> Haken [0] vorn; STAGE3 = Stub 0x8011b168 -> Wurf-Tod 0x8011b1a8 (Variante 3). */
+                        if (!re15_bk_opfer_start(e, 6, 0)) s_player_grabbed = 1;
+                        pl->hit_react |= 1; re15_audio_room_se(2);
                     } else {
                         re15_audio_room_se(6);                         /* miss: Se(6) @0x80117f08 */
                     }
@@ -12003,14 +12287,17 @@ static void re15_birkin_ai_tick(int slot)
             }
             break;
         }
-        case 6: {  /* MUTATION set-piece 0x80117f80 — THE PHASE-2 TRANSFORM: grid|=0x10 form-2, HP=150, ESP 0x1d */
+        case 6: {  /* MUTATION set-piece 0x80117f80 — THE PHASE-2 TRANSFORM: grid|=0x10 form-2, HP=150, Flag z5:0x1d */
             e->hit_stun = 9;                           /* +0x1dc = 9 re-armed EVERY tick @0x80117fb8 (unflinchable during mutation) */
             if (e->sub_state_2 == 0) {                 /* phase 0 @0x80118004: the transform */
                 re15_birkin_clip(e, 0x14); e->anim_frac = 0xf;         /* clip 0x14 @0x80118014 */
                 e->grid_id = (uint8_t)(e->grid_id | 0x10);            /* grid |= 0x10 FORM-2 FLAG @0x80118050-54 */
                 e->ai_timer = 0xfff;                                  /* +0x9c = 0xfff @0x80118064 */
                 e->birkin_pause = 1;                                  /* +0x9e = 1 @0x80118078 */
-                /* ESP effect 0x1d (0x8004ef90 gore/morph FX) @0x80118074 — render-side, OPEN */
+                /* FUN_8004ef90 ist KEIN Effekt, sondern das Spiel-Flag-Setzen (*(a0+(bit>>5)*4) |= 0x80000000>>(bit&31),
+                 * RE_15_Quellcode_V2/FUN_8004ef90.c): a0 = 0x800b1028 (Bank z5, `addiu a0,a0,4136` @0x8011804c),
+                 * a1 = 0x1d (`ori a1,zero,0x1d` @0x80118070), jal @0x80118074 = "Birkin hat mutiert". */
+                re15_game_flag_set(5, 0x1d, 1);
                 re15_audio_room_se(1); re15_audio_room_se(8);         /* Se(1) @0x8011807c + Se(8) @0x80118084 */
                 e->hp = 150;                                          /* HP RESET = 0x96 @0x80118094-98 */
                 e->birkin_flags |= 0x8;                               /* +0x1dd |= 8 mutating (revive-guard) @0x801180b0 */
@@ -12024,6 +12311,7 @@ static void re15_birkin_ai_tick(int slot)
                 e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* +0x4 = 0x101 */
                 e->grid_id = (uint8_t)(e->grid_id | 0x10);            /* grid |= 0x10 @0x801188a4 */
                 e->birkin_flags = (uint8_t)(e->birkin_flags & ~0x8u); /* +0x1dd &= ~8 @0x801188c0 */
+                re15_bf_mutation_fertig(slot);   /* Port-Ergaenzung 5090: Original-Birkin -> Vierbein-Modell */
             }
             break;
         }
@@ -12037,8 +12325,9 @@ static void re15_birkin_ai_tick(int slot)
                 int done = re15_birkin_anim(e);
                 if (e->anim_frame == 1 || e->anim_frame == 0x12) re15_audio_room_se(4);  /* Se(4) whoosh @0x80118a94 */
                 if (((e->anim_frame >= 4 && e->anim_frame <= 13) || (e->anim_frame >= 0x12 && e->anim_frame <= 0x1b))
-                    && pl->hit_react == 0 && re15_bk_arc(e, pl, 2500, 0x400)) {  /* box proxy @0x80118adc */
-                    pl->hit_react |= 1;                                /* aca58=0x202 knockdown @0x80118b04 -> hit_react proxy */
+                    && pl->hit_react == 0 && re15_bk_kontakt(e, pl, 900, 900, 0)) {  /* Angriffsbox @0x80118adc */
+                    re15_player_stagger_cmd2(0x08);                    /* aca58=0x202 @0x80118b04: cmd 2 [2] = Clip 8 (@0x80035e38-40) */
+                    pl->hit_react |= 1;
                     re15_audio_room_se(7);                             /* Se(7) on hit @0x80118b08 */
                     pl->hp = (int16_t)(pl->hp - 5);                    /* hp-=5 @0x80118b1c */
                     if (pl->hp < 0) pl->hp = 1;                        /* clamp @0x80118b38 */
@@ -12086,15 +12375,79 @@ static void re15_birkin_ai_tick(int slot)
             }
             break;
         }
-        case 10: {  /* CHARGE-COMBO 0x80119524: 14-phase grid-1 SPAWN ENTRANCE (effects 0x1f/0x1e, clips 1/0xf/0xd/0x13).
-                     * The full spawn choreography is a cinematic gap (OPEN); the AI-relevant behavior is the charge-in
-                     * that EXITS to sub 3 (LUNGE) + grid&=~1 (@0x801194d8/0x80119ae8). Faithful-compact: charge -> sub 3. */
-            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 1); e->anim_frac = 0xf; e->sub_state_2 = 1; }
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
-            re15_dog_advance(e, 0x14);                                 /* charge approach (byte-true +0x8c base 0x14; root-motion OPEN) */
-            if (re15_birkin_anim(e) || dist < 0x9c4) {                 /* clip end or bite range -> LUNGE */
-                e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* sub 3 @0x801194d8 */
-                e->grid_id = (uint8_t)(e->grid_id & ~1u);             /* grid &= ~1 */
+        case 10: {  /* AUFTRITT 0x80119524 (grid-Nibble 1, z.B. ROOM3071 sub02 Member_set(0x0c,1) @0x03645): 14 Phasen
+                     * ueber @0x80100434 (`sltiu v0,v1,0xe` @0x80119558). anim_set(+0x84,+0x16c,0,0x100) wo nicht anders
+                     * vermerkt; FUN_8011b5c4 (Clip-Wurzelvortrieb) ist port-weit offen und wird wie in WALK ueber den
+                     * additiven +0x8c-Schritt abgebildet (re15_dog_advance). ROOM3071 sub02 WARTET auf die beiden Flags
+                     * (While/Ck(5,31)==0 @0x0364D, Ck(5,30) @0x03669) — der verdichtete Auftritt setzte sie zu spaet bzw.
+                     * nie (Nutzer-Report "Elza Stage 3 bleibt bei der Birkin-Szene haengen"). */
+            switch (e->sub_state_2) {
+            case 0:                                                    /* @0x80119580 */
+                e->sub_state_2 = 1; e->motion = 1; e->anim_frame = 0; e->anim_frac = 0xf;   /* @0x80119588-5bc */
+                e->ai_timer = 0x78;                                    /* +0x9c = 120 @0x801195c8-cc */
+                /* faellt in [1] */
+            case 1:                                                    /* @0x801195d0 */
+                (void)re15_birkin_anim(e);                             /* @0x801195e4, kein += */
+                if (e->ai_timer >= 71) re15_dog_advance(e, 10);       /* `slti 71` @0x80119600; 8011b5c4(1,1) + +0x8c += 10 + 245d8(0) @0x8011960c-62c */
+                if (e->ai_timer == 0x46) re15_game_flag_set(5, 0x1f, 1);   /* FUN_8004ef90(z5,0x1f) @0x80119644-65c */
+                if (e->ai_timer-- == 0) e->sub_state_2 = 2;           /* @0x8011966c-690 */
+                break;
+            case 2:                                                    /* @0x80119694 */
+                e->sub_state_2 = 3; e->motion = 0x0f; e->anim_frame = 0; e->anim_frac = 0xf;   /* @0x8011969c-6d0 */
+                e->ai_timer = 0x96;                                    /* @0x801196dc-6e0 */
+                /* faellt in [3] */
+            case 3:                                                    /* @0x801196e4 */
+                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x801196f8-718 */
+                if (e->anim_frame == 0x5b) {                           /* @0x80119728-730 */
+                    re15_audio_room_se(6);                             /* @0x80119738 */
+                    e->birkin_rohr = 1;                                /* Teil 16 -> 15 @0x80119754-7b8 */
+                    re15_game_flag_set(5, 0x1e, 1);                    /* @0x801197b0-7b4 */
+                }
+                break;
+            case 4:                                                    /* @0x801197c4 */
+                e->sub_state_2 = 5; e->motion = 1; e->anim_frame = 0; e->anim_frac = 0xf;   /* @0x801197cc-800 */
+                e->ai_timer = 0x46;                                    /* @0x8011980c-810 */
+                /* faellt in [5] */
+            case 5:                                                    /* @0x80119814 */
+                (void)re15_birkin_anim(e);                             /* @0x80119828 */
+                re15_dog_advance(e, 10);                               /* @0x80119834-854 */
+                if (e->ai_timer-- == 0) {                              /* @0x80119868-878 */
+                    e->sub_state_2 = 6; e->ai_timer = 0x28;            /* @0x80119888-8a0 */
+                    re15_audio_room_se(0xa);                           /* a0 = 0xa @0x8011987c, jal @0x8011989c */
+                }
+                break;
+            case 6:                                                    /* @0x801198ac: setzt Clip/Phase/Blende JEDES Bild */
+                e->motion = 0x0d; e->sub_state_2 = 6; e->anim_frac = 0xf;   /* @0x801198b4-8d8 */
+                if (e->anim_frame == 0x3c) re15_audio_room_se(3);     /* @0x801198e8-8fc */
+                /* faellt in [7] @0x80119900 */
+            case 7:
+                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x80119914-938; 8011b5c4(0,1) */
+                break;
+            case 8:                                                    /* @0x80119944 */
+                e->motion = 0x13; e->sub_state_2 = 9; e->anim_frac = 0xf;   /* @0x8011994c-970 */
+                /* faellt in [9] @0x80119974 */
+            case 9:
+                (void)re15_birkin_anim(e);                             /* @0x80119988 */
+                if (e->anim_frame >= 0x12) { e->sub_state_2 = 0xa; e->ai_timer = 2; }   /* `sltiu 0x12` @0x801199a4-9c4 */
+                break;
+            case 10:                                                   /* @0x801199c8 */
+                if (e->ai_timer-- == 0) e->sub_state_2 = 0xb;         /* @0x801199d4-9f8 */
+                break;
+            case 11:                                                   /* @0x801199fc */
+                e->sub_state_2 = 0xc; e->motion = 1; e->anim_frame = 0; e->anim_frac = 0xf;   /* @0x80119a04-a38 */
+                e->ai_timer = 0x1e;                                    /* @0x80119a44-a48 */
+                /* faellt in [12] @0x80119a4c */
+            case 12:
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x40);         /* FUN_8001aac4(plX, plZ, 0x40) @0x80119a5c */
+                (void)re15_birkin_anim(e);                             /* @0x80119a78 */
+                re15_dog_advance(e, 10);                               /* @0x80119a84-aa4 */
+                if (e->ai_timer-- == 0) e->sub_state_2 = 0xd;         /* @0x80119ab8-adc */
+                break;
+            default:                                                   /* [13] @0x80119ae0 */
+                e->sub_state_1 = 3; e->sub_state_2 = 0;                /* +0x5 = 3 @0x80119aec, +0x6 = 0 @0x80119afc */
+                e->grid_id = (uint8_t)(e->grid_id & 0xfe);             /* @0x80119b14-18 */
+                /* Wort0 &= ~8 @0x80119b2c-34 (INIT setzt es fuer Nibble 1): Port-Gegenstueck offen */
+                break;
             }
             break;
         }
@@ -12128,7 +12481,19 @@ static void re15_birkin_ai_tick(int slot)
             re15_enemy_steer_point(e, pl->x, pl->z, 0x20);            /* steer 0x20 @0x8011a0fc */
             re15_audio_room_se(0);                     /* Se(0) @0x8011a104 */
             if (dist >= 0xfa1) e->hp = (int16_t)(e->hp + 5);          /* long-range hit refund: boss hp+=5 @0x8011a138 */
-            /* blood FX 0x80019700 by hit-dir bone (+0x6) — render-side, OPEN */
+            /* TREFFER-BLUT FUN_80019700 (@0x8011a144-1d8): a0 = 0x3000, ab +0x1d0 >= 0xfa1 0x2400 (`sltiu 0xfa1` /
+             * `ori s0,0x2400` @0x8011a120-130) = Effekt 0, Skala Q12; a1 = s1 = FUN_8001a6d4(Birkin -> Spieler)
+             * (@0x8011a0e4, roh = re15_atan2_q12 - 0x400); a2 = Teil nach +0x6: 0 -> Teil 2 (+0x198 @0x8011a16c),
+             * 1 -> Teil 8 (+0x5a0 @0x8011a1a4), 2 -> Teil 9 (+0x64c @0x8011a1d8); a3 = Versatz @0x80100068 = 0. */
+            {
+                static const uint8_t teil[3] = { 2, 8, 9 };
+                if (e->sub_state_2 < 3) {
+                    int32_t bp[3]; re15_enemy_bone_world_pos(e, teil[e->sub_state_2], bp);
+                    int16_t s1 = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0x0fff);
+                    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, (uint16_t)((dist >= 0xfa1) ? 0x2400 : 0x3000),
+                                         bp[0], bp[1], bp[2], s1);
+                }
+            }
             if (e->hit_stun == 0) {                    /* +0x1dc==0 @0x8011a1f4: FLINCH */
                 re15_birkin_clip(e, 7); e->anim_frac = 0xf;          /* clip 7 @0x8011a2e0 */
                 e->hit_stun = (int16_t)((re15_engine_rand8() & 3) + 3);  /* re-arm +0x1dc = (rng&3)+3 @0x8011a31c */
@@ -12154,6 +12519,16 @@ static void re15_birkin_ai_tick(int slot)
         /* revive guard @0x8011a43c: a lethal hit DURING the mutation (+0x1dd&8) does NOT kill -> HP=50, resume */
         if (e->sub_state_3 == 0 && (e->birkin_flags & 0x8)) {         /* +0x7==0 && +0x1dd&8 */
             e->birkin_hurt_cd = 9;                     /* +0x1de = 9 @0x8011a458 */
+            /* Blut FUN_80019700(0x2000, FUN_8001a6d4(Birkin -> Spieler) @0x8011a47c, Teil nach +0x6: 2 / 8 / 9 =
+             * +0x198 @0x8011a4b4 / +0x5a0 @0x8011a4ec / +0x64c @0x8011a520, Versatz @0x80100068 = 0). */
+            {
+                static const uint8_t teil[3] = { 2, 8, 9 };
+                if (e->sub_state_2 < 3) {
+                    int32_t bp[3]; re15_enemy_bone_world_pos(e, teil[e->sub_state_2], bp);
+                    int16_t s0 = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0x0fff);
+                    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000, bp[0], bp[1], bp[2], s0);
+                }
+            }
             e->hp = 50;                                /* HP = 0x32 revive @0x8011a534 */
             e->hit_react = (uint8_t)(e->hit_react & ~1u);            /* +0x93 &= ~1 @0x8011a550 */
             e->state = e->birkin_saved_state;          /* resume +0x4 = *(+0x1d8) @0x8011a568 */
@@ -12161,6 +12536,15 @@ static void re15_birkin_ai_tick(int slot)
             e->sub_state_2 = e->birkin_saved_ph2;
             e->sub_state_3 = e->birkin_saved_ph3;
             break;
+        }
+        /* PORT-ERGAENZUNG 5090/5091 (Nutzer 2026-10-30, re15_birkin_formen.h): kein Kollaps - Birkin wird
+         * per Rueckstoss-Szene aus dem Zug geschossen und kehrt als G5 zurueck. */
+        if (e->sub_state_3 == 0 && re15_bf_bahnsteig_aktiv()) {
+            if (re15_bf_mutation_offen()) {             /* toedlicher Treffer vor der Mutation: erst mutieren */
+                e->state = 1; e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* wie sw 0x601 @0x80116684 */
+                break;
+            }
+            re15_bf_rueckstoss_start(slot); break;
         }
         /* real death down-machine 0x8011a5d8 — 7-phase morph tail on +0x7 (sub_state_3) */
         switch (e->sub_state_3) {
@@ -12203,7 +12587,14 @@ static void re15_birkin_ai_tick(int slot)
              * die acht Raeume, die es abfragen (3070/3071, 5080/5081, 5090/5091,
              * 50E0/50F1), sahen den Birkin-Tod nie. Es gibt game-weit genau
              * DIESEN einen Produzenten. */
-            re15_game_flag_set(5, 0x1c, 1);            /* @0x8011a6b8 (STAGE3) / @0x8011aecc (STAGE5) */
+            /* PORT-ERGAENZUNG (Beta-Birkin-Formen, re15_birkin_formen.h): in 5090/5091 ist das NICHT der
+             * letzte Tod - wo das Original in Phase 3 auf den nie gesetzten Raum-Morph wartet, geht der
+             * Vierbein-Birkin in den G5 ueber (seit der Rueckstoss-Szene schon beim Todeseintritt, s. oben);
+             * der Fortschritts-Schalter faellt erst mit dessen Tod
+             * (enemy_ai_boss_g5.c). Der Hangar-Birkin (50A0/50A1) ist ein Zusatzgegner und darf den
+             * Birkin-Fortschritt der Original-Raeume nicht setzen. */
+            if (!re15_bf_hangar_aktiv())
+                re15_game_flag_set(5, 0x1c, 1);        /* @0x8011a6b8 (STAGE3) / @0x8011aecc (STAGE5) */
             e->sub_state_3 = ((e->grid_id & 0xf) == 2) ? 4 : 3;       /* grid&0xf==2 -> skip the wait @0x8011a6d8 */
             break;
         case 3:   /* phase 3 @0x8011a6c0: WAIT for the room-SCD morph trigger (grid&0xf)==2. OPEN: not wired -> HOLD */
@@ -12238,7 +12629,9 @@ static void re15_birkin_ai_tick(int slot)
     }
 
     /* ============================ ROOT post-dispatch (0x801164d4) ============================ */
-    if (!(e->grid_id & 0x10) && e->hp < 200) {         /* gate !(grid&0x10) @0x801164e8 && hp<200 @0x801164fc */
+    /* PORT-ERGAENZUNG 5090/5091 (Nutzer 2026-10-30 "Original -> Vierbein -> G5"): der Endkampf-Spawn traegt
+     * grid 0x33/0x13 (Form-2-Bit, sperrt die Mutation); bis zur ersten Mutation gilt er hier als Form 1. */
+    if ((!(e->grid_id & 0x10) || re15_bf_mutation_offen()) && e->hp < 200) {   /* gate !(grid&0x10) @0x801164e8 && hp<200 @0x801164fc */
         e->birkin_flags ^= 0x4;                        /* +0x1dd ^= 4 heave toggle @0x80116510 (wounded-breathing; DECIDE mutate gate) */
         if (e->hp < 100) {                             /* slti hp,100 @0x8011667c */
             e->state = 1; e->sub_state_1 = 6;          /* FORCE state1-sub6 MUTATION: sw 0x601 @0x80116684-88 (form-1 only) */
@@ -13244,7 +13637,31 @@ static void re15_writher_ai_tick(int slot)
             e->motion = 3; e->anim_frame = 0;                     /* +0x94=3 @0x8010d520, +0x95=0 @0x8010d530 */
             e->anim_frac = 7;                                     /* +0x8f=7 @0x8010d540 */
             e->hit_react |= 1;                                    /* +0x93 |= 1 @0x8010d55c */
-            re15_enemy_death_fx(e);                               /* gore 0x80019700(0x2000) @0x8010d578 */
+            {   /* DEATH-Tisch @0x80120c94: Spalte 1 der Zeilen 7/8/18/19 = 0x8010D5D0 (HAND AB), sonst 0x8010D4C4. */
+                int w = e->sub_state_1;
+                if (e->sub_state_2 == 1 && (w == 7 || w == 8 || w == 18 || w == 19)) {
+                    static const int32_t o[3] = { 200, 0, 0 };   /* a3 = 0x8011fe84 @0x8010d678-7c */
+                    re15_enemy_fx19700(e, 0x2000, 1, o);          /* a2 = pool+236 = Teil 1 @0x8010d688-8c */
+                    e->speed_h = 0x12c;                           /* +0x8c = 300 @0x8010d698-9c */
+                    re15_teil_t *t = re15_teile(slot);
+                    if (t) {                                      /* Teil 1 (+0xac): Farbwort 0x8f, vy -50, +3, |= 0x4a
+                                                                   * @0x8010d6a0-6d0 */
+                        t[1].col = 0x8f; memset(t[1].h94, 0, sizeof t[1].h94);
+                        t[1].h94[1] = (uint16_t)(int16_t)-50; t[1].h94[3] = 3; t[1].w |= 0x4a;
+                        re15_teile_markieren(slot);
+                    }
+                    e->sub_state_2 = 0x81;                        /* Port-Merker: Hand-ab-Zweig (Phase 1 rutscht) */
+                } else
+                    re15_enemy_death_fx(e);                       /* gore 0x80019700(0x2000) @0x8010d578 */
+            }
+        } else if (e->sub_state_2 == 0x81) {                     /* 0x8010D5D0 Phase 1 @0x8010d6d4: anim_set(+0x84,+0x16c),
+                                                                   * FUN_800245d8(0x800), +0x8c -= 30 (>= 0) */
+            int ende = re15_enemy_clip_done(e);
+            e->x += (int32_t)(((int32_t)re15_cos_q12((int16_t)((e->rot_y + 0x800) & 0xfff)) * e->speed_h) >> 12);
+            e->z -= (int32_t)(((int32_t)re15_sin_q12((int16_t)((e->rot_y + 0x800) & 0xfff)) * e->speed_h) >> 12);
+            e->speed_h = (int16_t)(e->speed_h - 30); if (e->speed_h < 0) e->speed_h = 0;   /* @0x8010d724-74c */
+            if (ende) { e->state = 7; e->sub_state_1 = 0; e->sub_state_3 = 0; }   /* Phase 2 `sw 7,4` @0x8010d750 */
+            else e->anim_frame++;
         } else {                                                 /* +0x7==1 @0x8010d580: play clip 3 (anim_set) */
             if (re15_enemy_clip_done(e)) {                        /* clip complete -> +0x7->2 @0x8010d5b0 */
                 e->state = 7; e->sub_state_1 = 0; e->sub_state_3 = 0;  /* sw 7 into +0x4 @0x8010d5bc */
@@ -13576,11 +13993,10 @@ static void re15_alligator_ai_tick(int slot)
  * so ~91% of emitters dispatch the NOP leaf and run drift-only — for THEM the port's tick below is
  * byte-true. INIT copies grid once to +0x5 (sb @0x8010f00c) and nothing else writes +0x5, so the
  * finder's cited "grid-5 handler 0x80110338" is actually table index [4] (grid 4), which never spawns
- * and is dead code. HONEST-OPEN (subsystem gap, NOT faked): only the 1x grid-0 + 2x grid-1 ambient
- * emitters reach real handlers (grid-0 0x8010f130 -> +0x6 table @0x80118d88, grid-1 0x8010f3fc ->
- * @0x80118d90) that fire timed particle bursts via helpers 0x801108cc/0x80110988 -> 0x80019700 (the
- * EXE ESP/particle FX-spawn family) on a +0x6 tick budget. That is render-side ambience only (no
- * player interaction) and belongs to the un-ported ESP/particle subsystem -> OPEN.
+ * and is dead code. The 1x grid-0 + 2x grid-1 ambient emitters
+ * (grid-0 0x8010f130 -> +0x6 table @0x80118d88, grid-1 0x8010f3fc -> @0x80118d90, timed bursts via
+ * 0x80019700) sind seit Runde 41 portiert (wasser20b0_r41.c). Grid 2..4 (Phasen 0x8010f9bc/0x8010fc28/
+ * 0x8010fe6c/0x801100d8/0x801103e4 ...) spawnt kein ausgeliefertes RDT -> toter Code (Vergleich 2026-10-30).
  *
  * INIT also flips a GLOBAL: DAT_800acc0c := 1 (ori v1,0x1 @0x8010ef28; sb v1,-13300(at) @0x8010ef34).
  * Consumer EXE FUN_80024c30 (@0x80024ce0 lbu) skips a player secondary-motion pose add (+0x5f4) while
@@ -13607,8 +14023,7 @@ static void re15_fx_emitter_ai_tick(int slot)
     case 1:   /* ACTIVE 0x8010f020: accelerating leftward X-drift. No damage. */
         /* Original runs the +0x5 sub-dispatch (jalr @0x8010f0a8) BEFORE this drift: for grid-5 (~91% of
          * spawns) it is the `jr ra` NOP @0x8011084c, so drift-only is byte-true here. The grid-0/grid-1
-         * particle-burst sequencer (0x80019700 ESP FX) is render-side ambience only -> OPEN (dormant #1).
-         * The +0x1d4 SquareRoot0 dist cache (sh @0x8010f078) feeds only that sequencer -> also OPEN. */
+         * particle-burst sequencer laeuft in re15_wasser20b0_r41_sub (Runde 41 Spur A). */
         (void)re15_wasser20b0_r41_sub(e);        /* Runde 41 Spur A: jalr @0x80118d58[+0x5] @0x8010f0a8 - grid 0/1 Spawns 0x80019700 */
         e->ai_timer++;                           /* timer++ @0x8010f0c8 */
         e->x -= e->ai_timer;                     /* X -= timer @0x8010f0e8 */
@@ -13644,6 +14059,129 @@ static void re15_fx_emitter_ai_tick(int slot)
  * s_player_grabbed + re15_player_victim_devour, as Birkin/Dog do; (d) corpse tint/sink is render-side. */
 static const uint16_t s_tyrant_hp[16] =    /* HP pool @0x80118b00 (index = rng & 0xf) */
     { 86, 89, 103, 119, 91, 107, 121, 93, 109, 124, 117, 97, 113, 126, 99, 101 };
+
+/* ---- WAND-/DECKENWECHSEL des Tyrant/Spider-Man (2026-10-30, STAGE4.BIN selbst disassembliert; STAGE5-Zwillinge
+ * B[11] 0x801135b8 usw. byte-gleich verschoben). Grid-Nibble +0x9: 0/1 Boden, 8 Wand hoch, 9 Wand runter, 0x10 Decke.
+ * Kollisionsboxen: gross @0x8011a094 {0,-1710,0,800,1710,800} (Zeiger @0x8011a0ac), klein @0x8011a0a0 {0,-900,0,50,
+ * 900,50} (Zeiger @0x8011a0b0). +0xb0 (Schatten-Record) = 0x640 / 0 bleibt wie beim Hund unmodelliert. */
+static const int16_t s_ty_box_gross[6] = { 0, -1710, 0, 800, 1710, 800 };   /* @0x8011a094 */
+static const int16_t s_ty_box_klein[6] = { 0, -900, 0, 50, 900, 50 };       /* @0x8011a0a0 */
+static void ty_box(re15_actor_t *e, const int16_t b[6])
+{   /* +0x78 = Box (wie re15_enemy_apply_hitbox: r = box[3], h = box[4], Versatz = box[0..2]) */
+    e->hit_radius_min = e->hit_radius_max = (uint16_t)b[3]; e->hit_height = (uint16_t)b[4];
+    e->hit_offset_x = b[0]; e->hit_offset_y = b[1]; e->hit_offset_z = b[2];
+}
+static void ty_vorschub(re15_actor_t *e, int32_t sp, int ofs)   /* FUN_800245d8(ofs) mit +0x8c */
+{
+    int a = ((int)e->rot_y + ofs) & 0xfff;
+    e->x += (int32_t)(((int32_t)re15_cos_q12((int16_t)a) * sp) >> 12);
+    e->z -= (int32_t)(((int32_t)re15_sin_q12((int16_t)a) * sp) >> 12);
+}
+/* Kletter-Einstieg aus A[1] (@0x8011208c-0x80112110) / A[3] (@0x80112544-0x801125c8): berührte Zelle mit
+ * (u1|Boden<<8) & 0xc (`lw +0x1b4 / lhu 10 / andi 0xc`), (+0x9 & 0x19) == 0, Kontaktrichtung ((+0x90&0xf0)<<4)
+ * innerhalb ±0x200 vor dem Blick (`addiu 512 / andi 0xfff / slti 1024`) -> +0x9f = +0x90, +0x5 = 11, +0x6 = 0. */
+static int ty_kletter_einstieg(re15_actor_t *e, int vorhalt)
+{
+    if (!(e->coll_cell_attr & 0xc) || (e->grid_id & 0x19)) return 0;
+    int d = ((((int)e->ai_contact & 0xf0) << 4) - (int)e->rot_y + vorhalt) & 0xfff;
+    if (d >= 1024) return 0;
+    e->zg_9f = (int8_t)e->ai_contact; e->sub_state_1 = 11; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    return 1;
+}
+/* FUN_80115bec (Fusshalt): CompMatrix-Kette Entity+0x20 -> Teil 0 (`addiu a1,s0,24` @0x80115c20) -> Teile 19/20/21
+ * + 3*a1 (Block a1*516 + 3612, -320/-148/+24 @0x80115c24-60), dann +0x34 -= (m.tx - rec[84]) @0x80115c70-84,
+ * +0x3c -= (m.tz - rec[92]) @0x80115c90-a4 = verfolgter Knochen 21 + 3*a1 bleibt weltfest. Port: wie
+ * re15_maggot_footlock die Pose-Differenz Bild / Bild-1 aus der geladenen Bank. */
+static void ty_fusshalt(re15_actor_t *e, int a1)
+{
+    re15_enemy_bank_t *bank = re15_enemy_find(e->type);
+    if (!bank || !bank->ok) return;
+    const re15_emd_skeleton_t *sk = &bank->skel; const re15_emd_animation_t *an = &bank->anim;
+    int bone = 21 + 3 * a1, clip = e->motion;
+    if (clip >= an->clip_count || bone >= sk->bone_count) return;
+    const re15_emd_clip_t *c = &an->clips[clip];
+    if (c->frame_count <= 1) return;
+    int s_now = e->anim_frame % c->frame_count, s_prev = (s_now + c->frame_count - 1) % c->frame_count;
+    static re15_skel_pose_t P[RE15_EMD_MAX_BONES];
+    int32_t mn[3], mp[3], wn[3], wp[3];
+    void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    int rv = re15_skel_compute_pose(sk, (int)(an->frames[c->first_frame + s_now] & 0xFFFu), P);
+    for (int i = 0; i < 3; i++) mn[i] = P[bone].trans[i];
+    rv |= re15_skel_compute_pose(sk, (int)(an->frames[c->first_frame + s_prev] & 0xFFFu), P);
+    for (int i = 0; i < 3; i++) mp[i] = P[bone].trans[i];
+    g_anim_pose_actor = save;
+    if (rv) return;
+    re15_skel_bone_to_world(mn, e->rot_y, 0, 0, 0, wn);
+    re15_skel_bone_to_world(mp, e->rot_y, 0, 0, 0, wp);
+    e->x -= wn[0] - wp[0];
+    e->z -= wn[2] - wp[2];
+}
+/* B[11] 0x80113438: Phasen @0x801002ac[+0x6] (6 Eintraege). */
+static void ty_b11(re15_actor_t *e)
+{
+    switch (e->sub_state_2) {
+    case 0:                                                          /* @0x80113478 */
+        e->sub_state_2 = 1; re15_birkin_clip(e, 1); e->anim_frac = 7; /* +0x6=1, +0x94=1, +0x95=0, +0x8f=7 @0x80113478-b4 */
+        /* fallthrough */
+    case 1: {                                                        /* @0x801134b8 */
+        re15_birkin_anim(e);                                         /* anim_set(+0x84,+0x16c,0,0x200) @0x801134cc */
+        int ziel = (((int)e->zg_9f & 0xf0) << 4) + ((e->grid_id & 0x10) ? 2048 : 0);   /* lb 159 / andi 0xf0 / sll 4
+                                                                       * (+2048 bei +0x9&0x10) @0x801134e0-518 */
+        int st = re15_npc_yaw_step(e, ziel, 0x10);                   /* jal 0x8001aa68, a1 = 0x10 @0x8011351c */
+        e->rot_y = (int16_t)(((int)e->rot_y + st) & 0xffff);         /* +0x6a += v0 @0x80113534-40 */
+        if (st == 0) e->sub_state_2 = 2;                             /* @0x80113544-5c */
+        break; }
+    case 2:                                                          /* @0x80113560 */
+        e->hit_react |= 3;                                           /* +0x93 |= 3 @0x8011356c-78 */
+        e->sub_state_2 = 3; re15_birkin_clip(e, 0x16); e->anim_frac = 0;   /* +0x6=3, +0x94=0x16, +0x95=0, +0x8f=0 */
+        /* fallthrough */
+    case 3:                                                          /* @0x801135bc */
+        re15_birkin_anim(e);                                         /* @0x801135d0 */
+        switch (e->grid_id) {                                        /* lbu 9 @0x801135e4 */
+        case 8:    e->y -= 47; break;                                /* @0x80113628-38 */
+        case 9:    e->y += 47; break;                                /* @0x8011363c-48 (+0xb0 = 0x640 @0x80113654-5c) */
+        case 0x10: ty_vorschub(e, 0x2f, 0x800); break;               /* +0x8c = 0x2f, FUN_800245d8(0x800) @0x8011361c/60-74 */
+        case 0:    ty_vorschub(e, 0x2d, 0); break;                   /* +0x8c = 0x2d, FUN_800245d8(0) @0x80113600/6c-74 */
+        default: break;
+        }
+        if (e->anim_frame == 0x0a) ty_box(e, s_ty_box_klein);        /* +0x78 = *(0x8011a0b0) @0x80113688-a4 */
+        if (e->anim_frame == 0x23) e->sub_state_2 = 4;               /* @0x801136b8-c4 */
+        ty_fusshalt(e, (e->anim_frame >= 0x12) ? 1 : 0);             /* sltiu 0x12, jal 0x80115bec @0x801136d4-f8 */
+        break;
+    case 4:                                                          /* @0x80113708 */
+        e->motion = 0x16; e->anim_frame = 0x23; e->anim_frac = 0;    /* +0x94=0x16, +0x95=0x23, +0x8f=0 */
+        e->sub_state_2 = 5;                                          /* +0x6 = 5 @0x80113740-44 */
+        e->rot_z = (int16_t)(e->rot_z - 0x400);                      /* +0x6c -= 0x400 @0x80113754-60 */
+        re15_birkin_anim(e);                                         /* @0x80113778 */
+        switch (e->grid_id) {                                        /* @0x8011378c */
+        case 0:    e->grid_id = 8; e->y -= 2014; break;              /* @0x801137d0-f0 */
+        case 0x10: e->grid_id = 9; e->y += 1649; break;              /* @0x801137f4-814 */
+        case 8: case 9: {
+            int q = ((uint16_t)e->rot_y & 0xc00) >> 10;               /* andi 0xc00 / srl 10 @0x80113854-60 */
+            ty_box(e, s_ty_box_gross);                               /* +0x78 = *(0x8011a0ac) @0x80113818-24 / @0x801138a4-b0 */
+            if (e->grid_id == 8) {                                   /* -> Decke @0x80113828-44 */
+                e->grid_id = 0x10; e->y = -5400;
+                if (q == 0) e->x -= 1649; else if (q == 1) e->z += 1649; else if (q == 2) e->x += 1649; else e->z -= 1649;
+                                                                     /* @0x80113968 / @0x8011397c / @0x80113940 / @0x80113954 */
+            } else {                                                 /* -> Boden @0x801138b4-d0 (+0xb0 = 0) */
+                e->grid_id = 1; e->y = 0;
+                if (q == 0) e->x += 1649; else if (q == 1) e->z -= 1649; else if (q == 2) e->x -= 1649; else e->z += 1649;
+                                                                     /* @0x80113940 / @0x80113954 / @0x80113968 / @0x8011397c */
+            }
+            break; }
+        default: break;
+        }
+        break;
+    default:                                                         /* Phase 5 @0x80113990 */
+        e->hit_react = 0;                                            /* sb zero,147 @0x8011399c */
+        re15_birkin_clip(e, 1); e->anim_frac = 7;                    /* +0x94=1, +0x95=0, +0x8f=7 @0x801139ac-cc */
+        re15_birkin_anim(e);                                         /* @0x801139e4 */
+        if (e->grid_id == 0 || e->grid_id == 1) { e->sub_state_1 = 1;  e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* @0x801002c4[0/1] -> 0x80113a28 */
+        else if (e->grid_id == 8 || e->grid_id == 9) { e->sub_state_1 = 12; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* [8/9] -> 0x80113a38 */
+        else if (e->grid_id == 0x10) { e->sub_state_1 = 13; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* [0x10] -> 0x80113a48 */
+        break;                                                       /* sb v1,5 / sh zero,6 @0x80113a54-64 */
+    }
+}
 
 static void re15_tyrant_ai_tick(int slot)
 {
@@ -13686,6 +14224,7 @@ static void re15_tyrant_ai_tick(int slot)
             break;
         case 1:   /* A[1] walk-decide 0x80112024: in a804(8000,0xc0) && LOS +0x1d0&1 -> roar sub 2. */
             if (pl->hit_react == 0 && dist < 8000 && re15_dog_arc(e, pl, 8000, 0xc0)) { e->sub_state_1 = 2; e->sub_state_2 = 0; }
+            else (void)ty_kletter_einstieg(e, 512);                 /* @0x8011208c-0x80112110 */
             break;
         case 3:   /* A[3] charge/attack1/roar decide 0x801123e8 (all gated hit_react==0). */
             if (pl->hit_react == 0) {
@@ -13703,11 +14242,28 @@ static void re15_tyrant_ai_tick(int slot)
                 }
                 /* ROAR (sub 2): dist>=7001 (sltiu 0x1b59 @0x80112510). */
                 else if (dist >= 7001) { e->sub_state_1 = 2; e->sub_state_2 = 0; }
-            }
+                else (void)ty_kletter_einstieg(e, 512);             /* @0x80112544-0x801125c8 */
+            } else (void)ty_kletter_einstieg(e, 512);               /* Spieler reagiert: bne -> 0x80112544 @0x80112488 */
             break;
         case 13:  /* A[13] attack2-decide 0x80113c74: dist<2000 && +0x1de==0 && hit_react==0 -> sub 14
                    * (audit #4/#5/#10 — the ATTACK2 decide lives in the sub-13 regime, not sub 0). */
             if (dist < 2000 && e->birkin_hurt_cd == 0 && pl->hit_react == 0) { e->sub_state_1 = 14; e->sub_state_2 = 0; }
+            /* sonst Abstieg von der Decke: Zellbit &0xc und Kontakt in ((+0x90&0xf0)<<4) - Blick - 0x600 < 0x400
+             * (`addiu -1536` @0x80113cfc) -> +0x9f, +0x5 = 11, +0x6 = 0 @0x80113cc0-d30 (ohne den grid-Test). */
+            else if ((e->coll_cell_attr & 0xc) && (((((int)e->ai_contact & 0xf0) << 4) - (int)e->rot_y - 1536) & 0xfff) < 1024) {
+                e->zg_9f = (int8_t)e->ai_contact; e->sub_state_1 = 11; e->sub_state_2 = 0; e->sub_state_3 = 0;
+            }
+            break;
+        case 12:  /* A[12] 0x80113a78 (WAND): grid 8 klettert y -= 60 + (rand&0xf) bis y < -3600 (@0x80113a98-b04),
+                   * grid 9 y += 60 + (rand&0xf) bis y >= -1799 (@0x80113b20-b8c) -> +0x5 = 11, +0x6 = 2, +0x7 = 0. */
+            if (e->grid_id == 8) {
+                e->y -= 60 + (int32_t)(re15_engine_rand8() & 0xfu);
+                if (e->y < -3600) { e->sub_state_1 = 11; e->sub_state_2 = 2; e->sub_state_3 = 0; }
+            }
+            if (e->grid_id == 9) {
+                e->y += 60 + (int32_t)(re15_engine_rand8() & 0xfu);
+                if (e->y >= -1799) { e->sub_state_1 = 11; e->sub_state_2 = 2; e->sub_state_3 = 0; }
+            }
             break;
         default: break;
         }
@@ -13836,17 +14392,28 @@ static void re15_tyrant_ai_tick(int slot)
             if (re15_birkin_anim(e)) { e->sub_state_1 = 3; e->sub_state_2 = 0; }    /* done -> sub 3 @0x8011474c */
             break;
         }
-        case 11: { /* B[11] TURN 0x80113538: fast-turn clip 0x16 -> sub 13 regime (audit #10). */
-            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 0x16); e->anim_frac = 7; e->sub_state_2 = 1; }  /* clip 0x16 @0x80113598 */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
-            if (re15_birkin_anim(e)) { e->sub_state_1 = 13; e->sub_state_2 = 0; }   /* turn done -> sub 0xd(13) @0x80113a50-54 */
+        case 11:   /* B[11] 0x80113438 WAND-/DECKENWECHSEL (vorher als "TURN 0x80113538" angenaehert — die Startadresse
+                    * war eine Innenmarke; Tabelle @0x8011a114[11] = 0x80113438). Phasen @0x801002ac, ty_b11. */
+            ty_b11(e);
+            break;
+        case 12: { /* B[12] 0x80113b9c (WAND, still): +0x6==0 -> +0x8c=0, +0x6=1, +0x9e=0, Clip 1, +0x8f=7
+                    * (@0x80113bac-fc); anim_set; Bild%12 == 11 -> SE 5 (@0x80113c24-60). */
+            if (e->sub_state_2 == 0) { e->sub_state_2 = 1; re15_birkin_clip(e, 1); e->anim_frac = 7; }
+            re15_birkin_anim(e);
+            if ((e->anim_frame % 12) == 11) re15_audio_room_se(5);
             break;
         }
-        case 13: { /* B[13] WALK (sub-13 regime) 0x80113d3c: walk; A[13] decides ATTACK2 above. */
-            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 1); e->anim_frac = 7; e->sub_state_2 = 1; }
-            re15_enemy_steer_point(e, pl->x, pl->z, (int16_t)((re15_engine_rand8() & 0x1f) + 8));
-            re15_dog_advance(e, (int16_t)((re15_engine_rand8() & 0x3f) + 12));
+        case 13: { /* B[13] 0x80113d3c (DECKE): +0x6==0 -> +0x6=1, Clip 1, +0x95=0, +0x8f=7 (@0x80113d4c-8c); je Bild
+                    * +0x8c = (rand&0x3f)+12 (@0x80113d90-ac), +0x9e = (rand&0x1f)+8 (@0x80113da8-c0, im Original nur
+                    * geschrieben — kein Lenker in B[13]), anim_set, Bild%12 == 11 -> SE 6 (@0x80113de8-24),
+                    * FUN_800245d8(0x800) = RUECKWAERTS an der Decke (@0x80113e28). Vorher lenkte der Port zum
+                    * Spieler und lief vorwaerts. */
+            if (e->sub_state_2 == 0) { e->sub_state_2 = 1; re15_birkin_clip(e, 1); e->anim_frac = 7; }
+            int32_t sp13 = (int32_t)(re15_engine_rand8() & 0x3fu) + 12;
+            (void)re15_engine_rand8();                                             /* +0x9e-Wurf */
             re15_birkin_anim(e);
+            if ((e->anim_frame % 12) == 11) re15_audio_room_se(6);
+            ty_vorschub(e, sp13, 0x800);
             break;
         }
         default:
@@ -14172,6 +14739,7 @@ static int re15_enemy_sca_clamp(re15_actor_t *e, int32_t ox, int32_t oz, uint32_
                                                &e->ai_contact, &e->coll_cell_attr);
     e->x = nx; e->z = nz;
     e->sca_wall_hit = (uint8_t)(hit != 0);   /* +0x1d6/+0x1da/+0x1d1 = v0 (@0x8003b520) */
+    e->coll_cell = (int16_t)re15_collision_letzte_zelle();   /* +0x1b4 @0x8003b1ec / @0x8003b4ec */
     return hit;
 }
 
@@ -14192,6 +14760,7 @@ static int re15_enemy_sca_clamp_band(re15_actor_t *e, int32_t ox, int32_t oz, ui
                                                     &e->ai_contact, &e->coll_cell_attr);
     e->x = nx; e->z = nz;
     e->sca_wall_hit = (uint8_t)(hit != 0);
+    e->coll_cell = (int16_t)re15_collision_letzte_zelle();   /* +0x1b4 @0x8003b1ec / @0x8003b4ec */
     return hit;
 }
 
@@ -14523,16 +15092,19 @@ void re15_enemy_ai_run_all(int combat_active)
      * player grabbed-FSM, see s_player_grabbed): cleared here, then re15_enemy_ai_live_grab sets it
      * for any live zombie in the grab sub-mode this frame. A room with no grabbing zombie (or no
      * live zombie at all, e.g. ROOM1170) leaves it 0 → game_step never pins the player = 1170-safe. */
+    { extern void re15_zgore_messhaken(void); re15_zgore_messhaken(); }   /* RE15_ZGORE_TEST (Bildpruefung) */
     s_player_grabbed = 0;
     re15_r39_hund_riegel_tick();   /* Runde 39 Spur E: Hunde-Riegel PL+0x1D3&0x80 frei, wenn die Spieler-Reaktion vorbei ist (@0x8003f8b4) */
     /* just-escaped mercy timer (the thrower's +0x1d5, ticked by FUN_8010a8c8; clears DAT_800aca50&1
      * at 0 — port: the global timer stands in, see re15_grab_mercy_active). */
     if (s_grab_mercy_timer > 0) s_grab_mercy_timer--;
     re15_szenenschutz_durchlauf_beginn();   /* Runde 38 Spur B */
+    re15_bf_raumtick();                     /* Beta-Birkin-Formen: Hangar-Szene 50A0/50A1 (re15_birkin_formen.h) */
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
         re15_szenenschutz_gegner(s);        /* Runde 38 Spur B: Sicht je Gegner (re15_szenenschutz_r38.h) */
+        if (re15_bf_szene_besitzt(s)) continue;   /* von der Hangar-Szene gefuehrt (birkin_formen.c) */
         /* EM-STATUS KILL PERSISTENCE (FUN_80109554 @0x801096fc / FUN_80106edc @0x8010716c setzen
          * flag[entity+0x1C6] am Todes-Commit): ist ein Gegner CORPSE (state 7), wird sein
          * em-Status-Kill-Flag gesetzt, damit ein Wieder-Betreten des Raums ihn NICHT respawnt
@@ -14593,8 +15165,8 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_anim_sfx(e);        /* FUN_8001b38c: per-frame clip-flag SFX (footsteps/attack) */
             /* (hit blood moved INTO re15_enemy_ai_live_hurt phase 0 — the byte-true spot,
              * @0x80105c50-d8; the old call here could never fire, see the note there) */
-            re15_enemy_gore_tick(e);    /* FUN_80106a44 +0x93&2 -> gore effect spawn */
-            re15_enemy_gore_setup(e);   /* FUN_80106edc sub_state_1==0x58 -> effect-5 gore setup */
+            /* (re15_enemy_gore_tick / _setup entfernt: erfunden bzw. Fehllesung von DEATH[7][1] @0x8011ff90;
+             *  die echten Handler 0x80106edc/0x80107244 laufen ueber re15_zgore_tod, zombiegore_r15.c) */
             /* CONTACT CLEAR — byte-true FUN_8002b498 position (@0x801005f4, AFTER the state
              * dispatch, BEFORE the pushes): the handlers above read LAST tick's +0x1c2 (the grab-[5]
              * domino read @0x801029ec) — clearing at tick START kept the domino permanently dead =
@@ -14727,7 +15299,14 @@ void re15_enemy_ai_run_all(int combat_active)
                                                           * FUN_80034d0c(Spieler, self) schreibt self x/z
                                                           * (`sw v0,56(s1)` / `sw v1,64(s1)` @0x800350c8/cc) */
                 re15_enemy_body_push_tail(s, e);
-                re15_enemy_sca_clamp(e, asp_ox, asp_oz, 4u);
+                re15_spinne42_altlage(e, &asp_ox, &asp_oz);   /* Runde 42: +0x40/+0x44 := Lage nach dem Absatz @0x80112df4-e0c */
+                if (re15_ai_re2_for_type(e->type) && re15_re2spider_owns(e))
+                    re15_enemy_sca_clamp(e, asp_ox, asp_oz, 4u);
+                else                                          /* Runde 42: RE1.5-Spinne klemmt am Zustandsbyte +0x82 (FUN_8003b0a4
+                                                               * `lbu v1,130(a3)` @0x8003b228-3c) — an der Wand/Decke liegt y weit
+                                                               * ueber dem Band; +0x82 pflegen INIT/Absatz/Sprung selbst */
+                    re15_enemy_sca_clamp_band(e, asp_ox, asp_oz, 4u);
+                re15_spinne42_nach_klemme(e);                 /* Fusslagen = Zeichenstand fuer 0x8011388c */
             }
         }
         else if (t == 0x29) {   /* COCKROACH (type 0x29, EM029, STAGE3) — small FLYING scurrier. Root 0x80110b00
@@ -14817,8 +15396,8 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_zgirl_ai_tick(s);
             re15_enemy_anim_sfx(e);        /* FUN_8001b38c @0x8010aad8 */
             /* (hit blood: see re15_enemy_ai_live_hurt phase 0 @0x80105c50-d8) */
-            re15_enemy_gore_tick(e);       /* +0x93&2 -> gore effect spawn */
-            re15_enemy_gore_setup(e);      /* sub_state_1==0x58 -> effect-5 gore setup */
+            /* (re15_enemy_gore_tick / _setup entfernt: erfunden bzw. Fehllesung von DEATH[7][1] @0x8011ff90;
+             *  die echten Handler 0x80106edc/0x80107244 laufen ueber re15_zgore_tod, zombiegore_r15.c) */
             e->contact_flags = 0;          /* FUN_8002b498 @0x8010aa98 (after dispatch, before pushes) */
             if (e->state != (uint8_t)RE15_AI_STATE_CORPSE && e->hit_radius_min != 0) {
                 re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -14889,11 +15468,10 @@ void re15_enemy_ai_run_all(int combat_active)
             int32_t ty_ox = e->x, ty_oz = e->z;
             re15_tyrant_ai_tick(s);
             re15_enemy_body_push_tail(s, e);
-            if (g_room_rdt_ok && (e->x != ty_ox || e->z != ty_oz)) {
-                int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, ty_ox, ty_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
-                e->x = nx; e->z = nz;
-            }
+            /* Wurzel-Schwanz @0x80111974-b4: FUN_8003b0a4 BEDINGUNGSLOS, Maske 4 bzw. 8 bei grid == 0x10
+             * (`ori s0,4` / `ori s0,8` @0x80111984-90), Rueckgabe -> +0x1d6; schreibt +0x90/+0x1b4, die der
+             * Kletter-Einstieg (A[1]/A[3]/A[13]) liest. Band = Zustands-Byte +0x82 (FUN_8003b0a4 liest es selbst). */
+            (void)re15_enemy_sca_clamp_band(e, ty_ox, ty_oz, (e->grid_id == 0x10) ? 8u : 4u);
         }
         else if (t == 0x2d) {   /* IVY plant-grappler (type 0x2d, EM02D, STAGE4) — DORMANT scripted prop.
                                  * The ivy root 0x801168c4 is pause-gate + state jalr ONLY: NO body-push,

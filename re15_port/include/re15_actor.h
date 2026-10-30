@@ -189,6 +189,10 @@ typedef struct {
                              * ZEIGER auf die Zelle (`sw s4,436(v0)` @0x8003b4ec, `sw zero,436` beim
                              * Clear @0x8003b1ec); der Port legt gleich den einzigen gelesenen Wert ab
                              * (Hund: `lw +0x1b4; lhu 10(v0); sh -> +0x1ea` @0x8010e294-2a4 / @0x8010e668-78). */
+    int16_t  coll_cell;     /* +0x1b4 als ZELLEN-INDEX in g_room_rdt.sca (-1 = keine; Clear @0x8003b1ec, Treffer
+                             * `sw s4,436(v0)` @0x8003b4ec). Die Spinne 0x25 liest daraus ausser +0x0a auch
+                             * Breite +0, Tiefe +2, x +4, z +6 (@0x80111a00-ab4, STAGE2). Schreiber:
+                             * re15_enemy_sca_clamp(_band) ueber re15_collision_letzte_zelle(). */
     uint8_t  contact_flags; /* +0x1c2: BODY-push contact bits (FUN_8002aec4: |=1 player pushed me,
                              * |=2 an enemy did); cleared per tick (FUN_8002b498). */
     int16_t  render_scale_q12; /* +0x166 (s16, Q12) UNIFORMER Render-Scale, Gate = Entity-Flag-Bit
@@ -1089,6 +1093,13 @@ typedef struct {
                               * of +0x4 each root tick (@0x80116698); HURT/revive resume +0x4=*(+0x1d8) */
     int16_t  birkin_runoff_x, birkin_runoff_z; /* +0x1d4/+0x1d6: death-morph run-off point (-22000,-12000) */
     uint8_t  birkin_pause;   /* +0x9e: ACT[1] two-phase close-in pause countdown (0x5a) */
+    int16_t  zg_9c, zg_9e;  /* Zombie-Gore (zombiegore_r15.c): +0x9c Fontaenen-Zaehler / +0x9e Abbremsung bzw. Drehrate */
+    int8_t   zg_9f;         /* +0x9f: Rueckstoss-Richtung bzw. Laufdauer des kopflosen Zombies */
+    int16_t  birkin_zuck;    /* Birkin Szenen-Modus: Zuck-Amplitude Teil 15 +0x7e (Teile 8/9/13/14/15 laufen gleich): INIT-Zweig
+                              * Nibble 4 setzt 0xfff (@0x80116c94-d20), Phasen 3/5 ziehen +0x9c ab (@0x80118f14-34). */
+    uint8_t  birkin_rohr;    /* Birkin 0x30: Teil 15 zeichnet MD1-Mesh 16 (Hand mit Rohr) statt Mesh 15 (Klaue) — der INIT
+                              * kopiert die Geometrie-Woerter part16+0x8..0x14 -> part15 (@0x80116980-9e4 bei grid&0x10,
+                              * @0x80116c28-8c bei grid&0xf==0), der Auftritt Sub 10 bei Bild 0x5b (@0x80119754-7b8). */
     uint8_t  birkin_grab;    /* PORT-LOCAL persistent latch for the GLOBAL grab channel DAT_800aca58==5
                               * (aca58 is engine-global, and run_all clears s_player_grabbed each frame): set on
                               * a claw connect, re-asserts s_player_grabbed each tick so the HUB DECIDE grab-tail

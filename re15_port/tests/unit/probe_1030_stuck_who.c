@@ -203,7 +203,10 @@ static void run(re15_ai_flavor_t fl, const char *name, int32_t px, int32_t pz, i
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     re15_player_cmd_reset();
-    re15_damage_seed_rng(0x2545f491u);
+    { const char *sd = getenv("PROBE_SEED"); re15_damage_seed_rng(sd ? (uint32_t)strtoul(sd, NULL, 0) : 8u); }
+    /* Seed 8 statt 0x2545f491 (2026-10-30): der Zombie-INIT wuerfelt jetzt auch die Spawn-Variante (@0x801008b0-ec,
+     * zwei rng-Zuege mehr je Zombie) — die Ankunftsreihenfolge und damit, wer den Budget-Nachzuegler stellt, ist
+     * seed-abhaengig. Gepinnt wird der MECHANISMUS (5 scharf / 5 durch / ein Nachzuegler); PROBE_SEED=x waehlt frei. */
     g_current_room_id = 0x1030;
 
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];

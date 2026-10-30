@@ -296,6 +296,9 @@ int main(int argc, char **argv)
     int kriecher  = kriecher5 || (argc > 2 && strcmp(argv[2], "kriecher") == 0);
     int grp_b = rip || arm || burst || glied || kriecher;     /* nur Pruefung (G) + Zaehler, keine Pistolen-Familien */
     if (arm) tief = 1;
+    /* Der Pin misst die RE2-Original-Zelle 66FC (Remington nah, Rumpf): die 80%-Gestaltung "Zerfetzen"
+     * (re2z_80_zerfetzen) wuerde sie bei Krit zur Haelfte ersetzen -> hier aus. */
+    setenv("RE15_KEIN_80PROZENT_GORE", "1", 1);
     const char *base = getenv("RE15_ASSET_DIR");
     char path[600];
     snprintf(path, sizeof path, "%s/STAGE1/ROOM1140.RDT", (base && *base) ? base : RE15_ASSET_PSX_DIR);

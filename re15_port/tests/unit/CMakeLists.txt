@@ -4061,3 +4061,111 @@ file(GLOB _re15_probe_cmakes "${CMAKE_CURRENT_SOURCE_DIR}/probes/*.cmake")
 foreach(_pc ${_re15_probe_cmakes})
     include("${_pc}")
 endforeach()
+
+# --- BETA-BIRKIN-FORMEN (Nutzerwunsch 2026-10-30): EM30_HANGAR/EM30_BAHNSTEIG.EMD ---
+#     Nachbildungen aus tools/birkin_formen.py (nicht byte-true). Der Test haelt fest, dass
+#     nur Geometrie/Bindoffsets/CLUTs von EM30 abweichen (Clips/Keyframes/Topologie gleich).
+add_executable(test_birkin_formen test_birkin_formen.c)
+target_link_libraries(test_birkin_formen PRIVATE re15_engine m)
+target_include_directories(test_birkin_formen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_birkin_formen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_birkin_formen COMMAND test_birkin_formen)
+set_tests_properties(unit_birkin_formen PROPERTIES TIMEOUT 30)
+
+# --- BETA-BIRKIN-AUFTRITTE (2026-10-30): Hangar-Wurfszene ROOM50A0 + Morph Vierbein -> G5 ROOM5090 ---
+add_executable(test_birkin_szenen test_birkin_szenen.c)
+target_link_libraries(test_birkin_szenen PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_birkin_szenen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_birkin_szenen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_birkin_szenen COMMAND test_birkin_szenen)
+set_tests_properties(unit_birkin_szenen PROPERTIES TIMEOUT 60)
+
+# --- ZOMBIE-GORE je Waffe (zombiegore_r15.c) + RE1.5-Teilschicht (teile_r15.c) ---
+add_executable(test_zombie_gore test_zombie_gore.c)
+target_link_libraries(test_zombie_gore PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_zombie_gore PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_zombie_gore PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_zombie_gore COMMAND test_zombie_gore)
+set_tests_properties(unit_zombie_gore PROPERTIES TIMEOUT 60)
+
+# --- BIRKIN-SPIELER-HAKEN 0x8011afd8 (Leons Reaktion auf Kralle/Biss/Wurf, Nutzer-Report v0.8.29 ROOM5080) ---
+add_executable(test_birkin_opfer test_birkin_opfer.c)
+target_link_libraries(test_birkin_opfer PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_birkin_opfer PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_birkin_opfer PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_birkin_opfer COMMAND test_birkin_opfer)
+set_tests_properties(unit_birkin_opfer PROPERTIES TIMEOUT 60)
+
+# --- RAUMLICHT nach dem 80%-Video (50B0 rot, 2000 Glanzpunkte) ---
+add_executable(test_raumlicht test_raumlicht.c)
+target_link_libraries(test_raumlicht PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_raumlicht PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_raumlicht COMMAND test_raumlicht)
+set_tests_properties(unit_raumlicht PROPERTIES TIMEOUT 30)
+
+# --- G5-SOFORT-PFAD weiter gepinnt (2026-10-30): seit "Vierbein, dann G5" spawnt ROOM5090/5091 zuerst den
+#     0x30 (birkin_formen.c). Diese Tests pinnen das G5-Modul selbst bzw. den alten Spawn 0x30 -> 0x36 und
+#     laufen deshalb mit RE15_ENDKAMPF_NUR_G5=1; den neuen Ablauf deckt unit_birkin_szenen ab.
+foreach(_g5alt probe_p2_birkin_g5 probe_p3_birkin_rest unit_r30_birkin_frost
+               unit_r35_zgirl_wiedereintritt unit_r37_elzaems_raeume)
+    if(TEST ${_g5alt})
+        set_property(TEST ${_g5alt} APPEND PROPERTY ENVIRONMENT "RE15_ENDKAMPF_NUR_G5=1")
+    endif()
+endforeach()
+
+# 80%-Gore im RE2-Gehirn: Zerfetzen (Schrot-Krit, Zelle 66FC) + Spawn-Varianten-Umordnung (Gestaltung 2026-10-30)
+add_executable(test_re2_gore80 test_re2_gore80.c)
+target_link_libraries(test_re2_gore80 PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_re2_gore80 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_re2_gore80 COMMAND test_re2_gore80)
+set_tests_properties(unit_re2_gore80 PROPERTIES TIMEOUT 60)
+
+# MESSSONDE Vergleich Original<->Port: ein Raum, 600 Takte re15_game_step ohne Eingabe (kein ctest).
+add_executable(probe_raum_sweep probe_raum_sweep.c)
+target_link_libraries(probe_raum_sweep PRIVATE re15_engine re15_test_support m)
+target_include_directories(probe_raum_sweep PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_raum_sweep PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# MESSSONDE Alligator-Suche: alle EMD-Bloecke eines EMS-Archivs parsen + OBJ (kein ctest).
+add_executable(probe_ems_bloecke probe_ems_bloecke.c)
+target_link_libraries(probe_ems_bloecke PRIVATE re15_engine re15_test_support m)
+target_include_directories(probe_ems_bloecke PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# Brennende Zombies (Flag Zone 1/31, ROOM5120/5140): INIT-Flammen, Aufflammen bei 300, DEATH[21], RE2-Gehirn
+add_executable(test_brandzombie test_brandzombie.c)
+target_link_libraries(test_brandzombie PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_brandzombie PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_brandzombie PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_brandzombie COMMAND test_brandzombie)
+set_tests_properties(unit_brandzombie PROPERTIES TIMEOUT 60)
+
+# Tyrant/Spider-Man Wand-/Deckenwechsel B[11] 0x80113438 (STAGE4), Wand A/B[12], Decke B[13]
+add_executable(test_tyrant_b11 test_tyrant_b11.c)
+target_link_libraries(test_tyrant_b11 PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_tyrant_b11 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_tyrant_b11 COMMAND test_tyrant_b11)
+set_tests_properties(unit_tyrant_b11 PROPERTIES TIMEOUT 60)
+
+# Zombie-Nibble 3 (Lauerer ROOM3010/3011): DECIDE[5] 0x80104760 ohne Loskriechen
+add_executable(test_grid3_lauerer test_grid3_lauerer.c)
+target_link_libraries(test_grid3_lauerer PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_grid3_lauerer PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_grid3_lauerer COMMAND test_grid3_lauerer)
+
+# Runde 42: erwachsene Spinne 0x25 an Wand/Absatz/Decke (RE1.5-KI, STAGE2 0x801118a8 + ACT 9/10/12/13)
+add_executable(test_spinne_klettern test_spinne_klettern.c)
+target_link_libraries(test_spinne_klettern PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_spinne_klettern PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_spinne_klettern PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_spinne_klettern COMMAND test_spinne_klettern)
+set_tests_properties(unit_spinne_klettern PROPERTIES TIMEOUT 60)
+# MESSSONDE: EM025-Skelett und Cliplaengen (kein ctest)
+add_executable(probe_spinne_skel probe_spinne_skel.c)
+target_link_libraries(probe_spinne_skel PRIVATE re15_engine re15_test_support m)
+target_include_directories(probe_spinne_skel PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_spinne_skel PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
