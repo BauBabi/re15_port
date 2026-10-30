@@ -24,6 +24,7 @@
 #include "re15_game_step.h"
 #include "re15_collision.h"
 #include "re15_msg.h"
+#include "re15_esp.h"
 
 static re15_rdt_t         s_rdt;
 static re15_camera_view_t s_cam;
@@ -64,6 +65,12 @@ int main(int argc, char **argv)
     size_t sz = 0; uint8_t *buf = slurp(path, &sz);
     if (!buf) { printf("RAUM %04X FEHLT\n", room); return 2; }
     if (re15_rdt_parse(buf, sz, &s_rdt) != 0) { printf("RAUM %04X PARSE-FEHLER\n", room); return 1; }
+    /* Effekt-Baenke wie main.c: Raum-ESP (RDT+0x4C..0x58) + CORE00.ESP */
+    static re15_esp_t rb, gb;
+    {   uint32_t o[4]; for (int i = 0; i < 4; i++) o[i] = (uint32_t)buf[0x4C + 4*i] | (uint32_t)buf[0x4D + 4*i] << 8 | (uint32_t)buf[0x4E + 4*i] << 16 | (uint32_t)buf[0x4F + 4*i] << 24;
+        if (re15_esp_parse(buf, sz, o[0], o[1], o[2], o[3], &rb) == 0) re15_esp_set_room_bank(&rb);
+        size_t gn = 0; uint8_t *g = slurp(RE15_ASSET_PSX_DIR "/DATA/CORE00.ESP", &gn);
+        if (g && re15_esp_parse_global(g, gn, &gb) == 0) re15_esp_set_global_bank(&gb); }
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
 
@@ -80,13 +87,22 @@ int main(int argc, char **argv)
     scd_room_reenter(&s_rdt, pl->x, pl->z, 0);
 
     int spawns = 0; int seen[256] = {0};
-    for (int f = 0; f < 600; f++) {
+    int takte = getenv("RAUM_TAKTE") ? atoi(getenv("RAUM_TAKTE")) : 600;
+    for (int f = 0; f < takte; f++) {
         for (int s = 1; s < RE15_ACTOR_MAX; s++)
             if (g_actors[s].active && !seen[g_actors[s].type]) { seen[g_actors[s].type] = 1; bank(g_actors[s].type); }
         const unsigned char *raw; int len, id;
         re15_msg_tick(&raw, &len, &id);
         s_ctx.pad_current = 0; s_ctx.pad_pressed = (f % 40 == 20) ? 0x0040 : 0;   /* gelegentlich bestaetigen (Texte) */
         re15_game_step(&s_ctx);
+    }
+    if (getenv("RAUM_FX")) {
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active)
+            printf("  Aktor %d Typ %02x st %d/%d pos (%d,%d,%d) +0x1d8 %04x +0x1da %d hp %d\n", s, g_actors[s].type, g_actors[s].state,
+                   g_actors[s].sub_state_1, g_actors[s].x, g_actors[s].y, g_actors[s].z, g_actors[s].ai_flags, g_actors[s].ai_attack_timer, g_actors[s].hp);
+        for (int i = 0; i < 256; i++) { const re15_esp_fx_t *f = re15_esp_fx_get(i);
+            if (f && f->follow_slot > 0) printf("  fx %d id %d sub %d an Aktor %d Teil %d pos (%d,%d,%d) Routine %d\n", i, f->effect_id, f->sub_index,
+                   f->follow_slot, f->follow_part, f->x, f->y, f->z, f->row[0] | f->row[1] << 8); }
     }
     int aktiv = 0, tot = 0; char typen[400] = ""; int cnt[256] = {0};
     for (int s = 1; s < RE15_ACTOR_MAX; s++) {

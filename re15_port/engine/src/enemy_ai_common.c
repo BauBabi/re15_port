@@ -36,6 +36,7 @@
 #include "re15_damage.h"   /* re15_enemy_player_dist, re15_ai_arc_test, re15_engine_rand8,
                             * re15_enemy_apply_hitbox */
 #include "re15_skeleton.h" /* re15_sin_q12 / re15_cos_q12 — forward-walk root-motion step (8.19) */
+#include <string.h>
 #include "re15_actor.h"    /* re15_atan2_q12 — heading toward the player for the approach/walk */
 #include "re15_boss_gator.h" /* ROOM2090 Nutzer-Design-Bosskampf (2026-09-10) */
 #include "re15_gameflow.h" /* g_gameflow.character — der aca5c-&4-Gore-Zweig des Kriech-Grab-Abwurfs */
@@ -48,6 +49,7 @@
 #include "re15_affen3_r38.h"
 #include "re15_birkin_opfer.h"
 #include "re15_teile_r15.h"     /* RE1.5-Teilschicht (Gore) */   /* Birkin-Spieler-Haken 0x8011afd8 */   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
+#include "re15_brandzombie.h"   /* brennende Zombies (Flag Zone 1/31) */
 #include "re15_gegner_r39.h"   /* Runde 39 Spur E: Gorillas 0x27 (HP x2, Flinch-Schwelle; alle Raeume), Hunde-Riegel-Tick */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
 #include "re15_spinnen_r38.h" /* Runde 38 Spur R: Schacht-Ausstieg + Gift der Stage-2-Spinne */
@@ -2148,6 +2150,9 @@ void re15_enemy_ai_live_init(int slot)
             re15_teile_markieren(zslot);
         }
     }
+    /* BRENNENDE ZOMBIES (@0x801008f4-0x80100c14, direkt hinter der Spawn-Variante): nur bei Flag Zone 1/31
+     * (DAT_800aca3c & 1) — Arm, Zeitzaehler, acht Flammen. include/re15_brandzombie.h. */
+    re15_brand_init(e, (int)(e - g_actors));
     /* BYTE-TRUE SPAWN-STATE DECODER (@0x80100c20, branched from the init FUN_80100688 @0x80100904).
      * The Sce_em_set behavior byte (entity+0x9 = grid_id) carries, in its low nibble, the initial AI
      * state — NOT just the spawn pose. The port previously seeded only +0x94 (re15_enemy_spawn_action)
@@ -5022,7 +5027,10 @@ int re15_enemy_ai_live_active(int slot)
     int fired = 0;
     e->ai_attack_timer = (int16_t)(e->ai_attack_timer - 1);   /* +0x1da -= 1 */
     if (e->ai_attack_timer == 0x12c) {             /* == 300: fire the lunge (8x action-0x16 inject) */
-        re15_enemy_lunge_begin(slot);
+        re15_brand_aufflammen_300(e, slot);   /* 8x FUN_80019d50(8,3,0x16,Teil) @0x80101284-0x80101504: AUFFLAMMEN der
+                                               * angehaengten Flammen (Routine 22 -> 23 -> 18), KEIN Schaden — der
+                                               * fruehere Lunge-Hitbox-Stand-in war eine Fehldeutung (0x16 -> 0x17 ->
+                                               * 0x12 @0x80017ecc/@0x80017f24, nie 0x18) */
         fired = 1;
     }
     if (e->ai_attack_timer == 0) {                 /* windup done -> post-attack recovery state */
@@ -5050,13 +5058,12 @@ void re15_enemy_ai_live_arm(int slot)
     e->ai_p5f8 = 0x60;    /* +0x5f8 */
     e->ai_p5fa = 0x30;    /* +0x5fa */
     e->ai_p5fe = 0x138;   /* +0x5fe */
-    if (!s_live_combat_active) return;                       /* DAT_800aca3c & 1 gate */
-    e->ai_flags |= 0x100;                                    /* +0x1d8 |= 0x100 (attack-arm) */
-    if (re15_engine_rand8() & 1) e->ai_flags |= 0x200;       /* (rng & 1) << 9 (variant) */
-    {
-        int seed = (int)re15_engine_rand8() + (int)re15_engine_rand8() + 600;   /* +0x1da seed */
-        e->ai_attack_timer = (int16_t)seed;
-    }
+    /* DAT_800aca3c & 1 gate (`lw -13764` @0x8010ace8). 2026-10-30: das Bit IST Flag Zone 1 / Index 31 (MSB-first,
+     * scd_room_setup.c) — gesetzt von ROOM5120/5121/5140/5141 (`Set 1,31,1`). Vorher hing das Gate an
+     * g_scd.combat_active, das niemand schreibt; s_live_combat_active bleibt als Test-Schalter. */
+    if (!s_live_combat_active && !re15_game_flag_get(1, 31)) return;
+    re15_brand_scharf(e, slot);   /* +0x1d8 |= 0x100 | (rng&1)<<9, +0x1da = 600 + 2 Wuerfe, acht Flammen
+                                   * @0x8010ad10-0x8010af.. (byte-gleich zum Standard @0x80100918-0x80100c14) */
 }
 
 /* HURT — FUN_80105a8c (@0x8011f7b4[2], STAGE1.BIN). The live zombie's stagger reaction to a hit:
@@ -5645,6 +5652,7 @@ void re15_enemy_ai_live_death(int slot)
      * Kopfplatzer / kopflos / Schrot / Beine weg; alle anderen Zellen = der Standard-Tod unten. */
     { extern int re15_zgore_tod(re15_actor_t *e, int slot);
       if (re15_zgore_tod(e, slot)) return; }
+    if (re15_brand_tod(e, slot)) return;   /* DEATH[21][0] = 0x80108d74 (@0x8012014c; Maedchen @0x801208dc) */
 
     if (e->sub_state_3 == 0) {                         /* phase 0 — start the death anim */
         e->hit_react  |= 0x1;                          /* +0x93 |= 1 (@0x80107d08) */
@@ -5875,6 +5883,7 @@ int re15_enemy_ai_live_tick(int slot)
             }
             e->re2z_re15_pose = 0;                       /* Zustand anderweitig verlassen */
         }
+        re15_brand_re2_takt(&g_actors[slot], slot);   /* GESTALTUNG: brennende Zombies im RE2-Gehirn (re15_brandzombie.h) */
         re15_re2z_tick(slot);
         return 1;
     }
@@ -10901,6 +10910,7 @@ static void re15_zgirl_ai_tick(int slot)
     /* PORT OPTION (WELLE B): RE2 folds kind 0x13 onto the SAME zombie overlay (loader clamp
      * 0x10..0x1F -> 0x10, @0x8001B738-48), so the girl runs the full RE2 brain too. */
     if (re15_ai_re2_for_type(e->type) && re15_re2z_owns_type(e->type)) {
+        re15_brand_re2_takt(&g_actors[slot], slot);   /* GESTALTUNG: brennende Zombies im RE2-Gehirn (re15_brandzombie.h) */
         re15_re2z_tick(slot);
         return;
     }
@@ -10963,7 +10973,7 @@ static void re15_zgirl_ai_tick(int slot)
          * (+0x5-3)*3 families via FUN_80102548). */
         if (e->ai_flags & 0x100) {
             e->ai_attack_timer = (int16_t)(e->ai_attack_timer - 1);
-            if (e->ai_attack_timer == 0x12c) re15_enemy_lunge_begin(slot);
+            if (e->ai_attack_timer == 0x12c) re15_brand_aufflammen_300(e, slot);   /* Maedchen @0x8010b2dc-b554, wie oben */
             if (e->ai_attack_timer == 0) {
                 re15_ai_set_state_word(e, 0x1503);
                 e->motion = (uint8_t)((e->grid_id & 0x80) ? 0x1f : 0x0b);

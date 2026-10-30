@@ -4130,3 +4130,16 @@ target_link_libraries(probe_raum_sweep PRIVATE re15_engine re15_test_support m)
 target_include_directories(probe_raum_sweep PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_raum_sweep PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# MESSSONDE Alligator-Suche: alle EMD-Bloecke eines EMS-Archivs parsen + OBJ (kein ctest).
+add_executable(probe_ems_bloecke probe_ems_bloecke.c)
+target_link_libraries(probe_ems_bloecke PRIVATE re15_engine re15_test_support m)
+target_include_directories(probe_ems_bloecke PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# Brennende Zombies (Flag Zone 1/31, ROOM5120/5140): INIT-Flammen, Aufflammen bei 300, DEATH[21], RE2-Gehirn
+add_executable(test_brandzombie test_brandzombie.c)
+target_link_libraries(test_brandzombie PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_brandzombie PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_brandzombie PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_brandzombie COMMAND test_brandzombie)
+set_tests_properties(unit_brandzombie PROPERTIES TIMEOUT 60)

@@ -377,6 +377,7 @@ re15_esp_fx_t *re15_esp_fx_spawn_ex(const re15_esp_t *bank, uint8_t effect_id, u
         f->x = x; f->y = y; f->z = z;
         f->param     = param;
         f->follow_slot = -1;  /* kein Eltern-Anker (Flags-Bit 0x04 wirkt nur mit Slot) */
+        f->follow_part = -1;  /* Teil-Anker aus (Aktor-Wurzel) */
         return f;
     }
     return NULL;   /* pool full */
@@ -499,6 +500,20 @@ re15_esp_fx_t *re15_esp_type26_emerge(const re15_esp_t *bank, uint8_t grid_id,
     return f;
 }
 
+/* FUN_80019700 mit Teil-Anker (brennende Zombies, re15_brandzombie.h): derselbe Zeilen-Weg wie die 1090-Feuer
+ * (Sub-3-Stream: Routine 17 FEUER-Init -> 18 Oszillator), a2 = Teil-Matrix -> follow_slot/follow_part/ofs. */
+re15_esp_fx_t *re15_esp_fx_spawn_teil(const re15_esp_t *bank, uint8_t id, uint8_t sub, uint16_t scale16,
+                                      int32_t x, int32_t y, int32_t z, int16_t yaw,
+                                      int follow_slot, int follow_part, const int32_t ofs[3])
+{
+    re15_esp_fx_t *f = esp_fx_spawn_rows_one(bank, id, sub, scale16, x, y, z, yaw);
+    if (f) {
+        f->follow_slot = (int8_t)follow_slot; f->follow_part = (int8_t)follow_part;
+        for (int i = 0; i < 3; i++) f->follow_ofs[i] = ofs ? ofs[i] : 0;
+    }
+    return f;
+}
+
 /* ===== the ROW VM (stage 2, blood subset — trace wf_a18487d9) ==============================
  * Row helpers: identity-copy row `idx` into the slot (the spawner row-0 copy @0x80019908-44
  * and the advance FUN_800174e4 both do the same 40-byte copy) — accel/velocity/selectors are
@@ -527,7 +542,25 @@ static void esp_fx_row_advance(re15_esp_fx_t *f)
     f->row_cursor++;
     esp_fx_row_load(f, f->row_cursor);
 }
-void re15_esp_fx_zeile_weiter(re15_esp_fx_t *f) { esp_fx_row_advance(f); }   /* Runde 35 Spur D (esp_brocken.c) */
+void re15_esp_fx_zeile_weiter(re15_esp_fx_t *f) { esp_fx_row_advance(f); }
+
+/* FUN_80019d50 (selbst disassembliert 2026-10-30): alle Pool-Plaetze (0x60 x 0x84 ab 0x800a73b8) mit Effekt-Id
+ * +0x70 == id und Sub +0x71 == sub (@0x80019d68-84) und - wenn a3 != 0 - Anker +0x74 == a3 (@0x80019d88-90)
+ * bekommen Routine A +0x00 := routine (`sh a2,0(v1)` @0x80019d98 / @0x80019de0). Port-Anker = (follow_slot,
+ * follow_part); anker_slot < 0 = a3 == 0 (Id/Sub allein). Rueckgabe = Zahl der umgeschalteten Plaetze. */
+static void row_set16(re15_esp_fx_t *f, int off, uint16_t v);
+int re15_esp_fx_routine_setzen(uint8_t id, uint8_t sub, uint16_t routine, int anker_slot, int anker_teil)
+{
+    int n = 0;
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        re15_esp_fx_t *f = &s_esp_fx[i];
+        if (!f->active || f->effect_id != id || f->sub_index != sub || !f->rows_base) continue;
+        if (anker_slot >= 0 && (f->follow_slot != anker_slot || f->follow_part != anker_teil)) continue;
+        row_set16(f, 0x00, routine);
+        n++;
+    }
+    return n;
+}   /* Runde 35 Spur D (esp_brocken.c) */
 
 /* The loop-1 routineA dispatch (FUN_80019e20 @0x80019e84-9c) — the BLOOD subset:
  *   0  noop (@0x80017248 jr-ra)
@@ -847,6 +880,33 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
                 f->row[0x0e] = (uint8_t)e14; f->row[0x0f] = (uint8_t)((uint16_t)e14 >> 8);
                 f->row[0x1e] = (uint8_t)e1e; f->row[0x1f] = (uint8_t)((uint16_t)e1e >> 8);
                 f->row[0x26] = (uint8_t)e26; f->row[0x27] = (uint8_t)((uint16_t)e26 >> 8);
+            }
+            break;
+        }
+        case 22: {  /* LAB_80017eb0 (brennende Zombies 2026-10-30, selbst disassembliert):
+                     *   sh 0x20,14(v1)  @0x80017eb8-bc   Zaehler +0x0e := 0x20
+                     *   sh 0x40,30(v1) / sh 0x40,22(v1)  @0x80017ec0-c8   Deltas +0x1e/+0x16 := 0x40
+                     *   sh 0x17,0(v1)   @0x80017ecc-d4   naechste Routine A := 23 */
+            row_set16(f, 0x0e, 0x20);
+            row_set16(f, 0x1e, 0x40);
+            row_set16(f, 0x16, 0x40);
+            row_set16(f, 0x00, 23);
+            break;
+        }
+        case 23: {  /* LAB_80017ed8: AUFFLAMMEN. Zaehler != 0 (@0x80017ee4-ec): +0x04 += +0x16, +0x06 += +0x1e,
+                     * Zaehler-- (@0x80017ef4-f20). Zaehler == 0: Routine A := 0x12 (18, Flammen-Oszillator)
+                     * mit den Seeds +0x0e = 1, +0x16 = 10, +0x1e = -20, +0x26 = 100 (@0x80017f24-44). */
+            uint16_t cnt = row_u16(f->row, 0x0e);
+            if (cnt != 0) {
+                row_set16(f, 0x04, (uint16_t)(row_u16(f->row, 0x04) + row_u16(f->row, 0x16)));
+                row_set16(f, 0x06, (uint16_t)(row_u16(f->row, 0x06) + row_u16(f->row, 0x1e)));
+                row_set16(f, 0x0e, (uint16_t)(cnt - 1));
+            } else {
+                row_set16(f, 0x00, 18);
+                row_set16(f, 0x0e, 1);
+                row_set16(f, 0x16, 10);
+                row_set16(f, 0x1e, 0xffec);
+                row_set16(f, 0x26, 100);
             }
             break;
         }
@@ -1598,7 +1658,13 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
          * und die Feuer reiten mit (Savestate-Beleg im Dossier). */
         if (f->follow_slot >= 0 && (f->flags & 0x04)) {
             const re15_actor_t *pa = &g_actors[f->follow_slot];
-            if (pa->active) { f->x = pa->x; f->y = pa->y; f->z = pa->z; }
+            if (pa->active) {
+                if (f->follow_part >= 0) {               /* Teil-Matrix @0x80019f68-f94 (re15_esp.h follow_part) */
+                    int32_t q[3];
+                    re15_enemy_part_point(pa, f->follow_part, f->follow_ofs, q);
+                    f->x = q[0]; f->y = q[1]; f->z = q[2];
+                } else { f->x = pa->x; f->y = pa->y; f->z = pa->z; }
+            }
         }
 
         /* (d) WELTLAGE slot+0x28/2a/2c (V1a) — VOR Routine B, die sie liest (Routine 29). */
