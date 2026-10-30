@@ -508,6 +508,41 @@ static void teil_tragen(void)
     re15_gr2_kk_hart_setzen(0);
 }
 
+/* ---- Auswerter tragelog (exe-Riegel integration_r41_alligator2_tragen*): Wurzelschritte des Alligators je Bild aus state.log -----------------------------
+ * Aufruf `test_r41_alligator2 tragelog <state.log> <f0> <f1>`: letzter Raum-Abschnitt (der Bildzaehler beginnt je Raum neu), Bildpaare f0..f1. */
+static int tragelog(const char *pfad, int f0, int f1)
+{
+    FILE *fp = fopen(pfad, "r");
+    if (!fp) { printf("tragelog: %s fehlt\n", pfad); return 1; }
+    static char z[8192];
+    int vor = -1, n = 0, s340 = 0, s600 = 0, lf = -1, mf = -1, ma = 0;
+    int32_t lx = 0, lz = 0, maxd = 0;
+    while (fgets(z, sizeof z, fp)) {
+        int f = -1;
+        if (z[0] != 'F' || sscanf(z + 1, "%d", &f) != 1) continue;
+        if (f < vor) { n = 0; s340 = 0; s600 = 0; maxd = 0; lf = -1; mf = -1; ma = 0; }   /* neuer Raum-Abschnitt */
+        vor = f;
+        if (f < f0 || f > f1) continue;
+        const char *t = strstr(z, " t=23 ");
+        const char *a = t ? strchr(t, '@') : NULL;
+        int x, zz;
+        if (!a || sscanf(a, "@(%d,%d,", &x, &zz) != 2) { lf = -1; continue; }
+        if (lf == f - 1) {
+            const int64_t dx = (int64_t)x - lx, dz = (int64_t)zz - lz;
+            const int32_t d = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+            n++;
+            if (d > 340) s340++;
+            if (d > 600) s600++;
+            if (d > maxd) { maxd = d; mf = f; }
+            ma = 1;
+        }
+        lf = f; lx = x; lz = zz;
+    }
+    fclose(fp);
+    printf("tragelog: %d Bildpaare F%d-F%d, Wurzelschritt max %d (F%d), > 340: %d, > 600: %d\n", n, f0, f1, (int)maxd, mf, s340, s600);
+    return (ma && n >= 50 && maxd <= 340) ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -529,6 +564,7 @@ int main(int argc, char **argv)
         schluessel_scan(1000, 1, &n, &kl, st, &d_max);
         return 0;
     }
+    if (!strcmp(teil, "tragelog") && argc >= 5) return tragelog(argv[2], atoi(argv[3]), atoi(argv[4]));
     if (!strcmp(teil, "bildanteil") && argc >= 7) return bildanteil(argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
     if (!gator_bank()) { printf("RE2-EM23-Bank fehlt\n"); return 1; }
     const int alle = !strcmp(teil, "alle");

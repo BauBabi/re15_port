@@ -17,7 +17,7 @@ foreach(_teil kamera kamera_elza schluessel tragen)
 endforeach()
 
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_alligator2.cmake)
-    foreach(_teil kamera kamera_elza uebergabe uebergabe_elza k3 k3_elza)
+    foreach(_teil kamera kamera_elza uebergabe uebergabe_elza k3 k3_elza tragen tragen_elza)
         add_test(NAME integration_r41_alligator2_${_teil}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

@@ -2238,7 +2238,7 @@ int re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz)
                          (int)e->motion, (int)e->anim_frame);
         }
         s_kk.n++; if (b > s_kk.max) s_kk.max = b;
-        if (!s_kk_hart) {                                     /* Spur P: Abbau ueber mehrere Bilder (s. GR2_KK_SCHRITT) */
+        if (!re15_gr2_kk_hart()) {                            /* Spur P: Abbau ueber mehrere Bilder (s. GR2_KK_SCHRITT) */
             const int64_t d2 = (int64_t)*dx * *dx + (int64_t)*dz * *dz;
             const int32_t l = s_g[slot].r1_phase != 0 ? GR2_KK_SCHRITT_R1 : GR2_KK_SCHRITT;
             if (d2 > (int64_t)l * l) {

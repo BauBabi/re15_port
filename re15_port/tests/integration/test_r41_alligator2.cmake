@@ -16,6 +16,11 @@
 #     (3413,-23942) statt (3413,-25001)). Vorher: Schluessel in Kamera 1, Tiefe 5918 = 6,3 Bildpunkte. Verlangt (Lauf mit/ohne Schluessel): Quadrat
 #     >= 10,4 Bildpunkte (1800 * 208 / Tiefe >= 104), Einstellung 90 Bilder, bilddiff: in jedem Bild der Einstellung sichtbar, Puls, Kasten >= 10 x 9.
 #
+# TEIL=tragen|tragen_elza  Abnahme G 4 O1 (Lagespruenge mit dem Kanister im Maul): echter Ablauf bis zur Aufnahme (Messhaken RE15_K2080_GATOR_HP=24990: EIN Treffer
+#     bis zur Szene, Rezept integration_r41_kanister2080_kampf), Schussbloecke erst ab F900, damit er lange traegt. Auswerter `test_r41_alligator2 tragelog`: zwischen
+#     "KANISTER angehaengt" und dem R1 kein Wurzelschritt > 340 (groesster authored Wurzelschritt, unit_r41_re2gator_lauer; gemessen mit der harten Klemme derselben
+#     Laeufe 446 bzw. 429, Abnahme G 4 v1 bis 1517); der Kanister beim R1 liegt innerhalb der Aussenwaende (G-E5, debug.log "Kanister Stufe 13 pos=").
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_TOOL=<test_r41_alligator2> -DWORKDIR=<dir> -DTEIL=<teil> -P test_r41_alligator2.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -312,6 +317,59 @@ if(TEIL MATCHES "^k3")
         endif()
     endforeach()
     message(STATUS "r41_alligator2: Lauf ${TEIL}: Wandlage mit Kopf-Klemme, Kamera ${_kam}, Tiefe ${_tiefe} = ${_quad10}/10 Bildpunkte, Einstellung F${_es}-F${_ee}; ${_bz}")
+    return()
+endif()
+if(TEIL MATCHES "^tragen")
+    if(NOT RE15_TOOL OR NOT EXISTS "${RE15_TOOL}")
+        r41p_fehler("RE15_TOOL (test_r41_alligator2) fehlt: '${RE15_TOOL}'")
+    endif()
+    set(_schuss "W30")
+    foreach(_i RANGE 1 40)
+        string(APPEND _schuss ",M0.6,MA0.1,M0.3,MA0.1,W3.0")
+    endforeach()
+    if(TEIL MATCHES "elza$")
+        set(_pos "0,-7000,2048")
+    else()
+        set(_pos "-6000,-17500,3072")
+    endif()
+    re15_start_spiel(_rv 480
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore ${_wahl}
+        RE15_DEBUG_JUMP=${_r2090}@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:60" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schuss}" RE15_STATE_LOG=state.log "RE15_PLAYER_POS=${_pos}"
+        "RE15_EXIT_AT=2400#${_r2090}" RE15_GATOR_FX_LOG=1 "${_exe_kopie}")
+    file(REMOVE "${_exe_kopie}")
+    if(NOT _rv EQUAL 0)
+        r41p_fehler("exe exit=${_rv} (erwartet 0 bis RE15_EXIT_AT)")
+    endif()
+    file(STRINGS "${_dir}/gator_boss.log" _kl REGEX "KANISTER angehaengt .* F[0-9]+|R1 VSync 4 \\(Zeitlupe\\) F[0-9]+")
+    set(_f_a -1)
+    set(_f_r -1)
+    foreach(_l IN LISTS _kl)
+        if(_l MATCHES "KANISTER angehaengt .* F([0-9]+)")
+            set(_f_a "${CMAKE_MATCH_1}")
+        elseif(_l MATCHES "R1 VSync 4 \\(Zeitlupe\\) F([0-9]+)")
+            set(_f_r "${CMAKE_MATCH_1}")
+        endif()
+    endforeach()
+    if(_f_a LESS 0 OR _f_r LESS 0)
+        r41p_fehler("keine Aufnahme (F${_f_a}) oder kein R1 (F${_f_r}) bis RE15_EXIT_AT")
+    endif()
+    execute_process(COMMAND "${RE15_TOOL}" tragelog "${_dir}/state.log" ${_f_a} ${_f_r}
+                    RESULT_VARIABLE _tr OUTPUT_VARIABLE _to ERROR_VARIABLE _te)
+    string(REGEX MATCH "tragelog: [^\n]*" _tz "${_to}")
+    if(NOT _tr EQUAL 0)
+        r41p_fehler("Lagesprung mit dem Kanister im Maul: ${_tz}")
+    endif()
+    file(STRINGS "${_dir}/debug.log" _k13 REGEX "\\[gator-re2\\] Kanister Stufe 13 pos=\\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\)")
+    if(NOT _k13)
+        r41p_fehler("keine Zeile 'Kanister Stufe 13 pos='")
+    endif()
+    list(GET _k13 0 _k0)
+    string(REGEX MATCH "pos=\\((-?[0-9]+),(-?[0-9]+),(-?[0-9]+)\\)" _m "${_k0}")
+    if(CMAKE_MATCH_1 LESS -8900 OR CMAKE_MATCH_1 GREATER 7200 OR CMAKE_MATCH_3 LESS -27000 OR CMAKE_MATCH_3 GREATER -5400)
+        r41p_fehler("Kanister beim R1 ausserhalb der Aussenwaende: ${_k0}")
+    endif()
+    message(STATUS "r41_alligator2: Lauf ${TEIL}: Aufnahme F${_f_a}, R1 F${_f_r}, ${_tz}; Kanister beim R1 (${CMAKE_MATCH_1},${CMAKE_MATCH_3}) innerhalb")
     return()
 endif()
 r41p_fehler("unbekannter Teil")
