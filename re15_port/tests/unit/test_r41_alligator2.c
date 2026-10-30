@@ -1045,6 +1045,11 @@ static int wegplan(const char *dir, unsigned raum, double w_s, int block_bilder,
     if (n_dreh > 0) fprintf(fp, ",%c%.3f", d > 0 ? 'R' : 'L', n_dreh / 30.0);
     fprintf(fp, ",W0.300,A0.200,W3.000,A0.200,W1.000,A0.200,W1.000,A0.200,W1.000,A0.200,W1.000,A0.200,W1.000,A0.200,W2.000\n");
     fclose(fp);
+    snprintf(p, sizeof p, "%s.ende", aus);                    /* letztes Bild des Skripts (11,5 s Aufnahme + Rest), Lauf 2 endet dort */
+    fp = fopen(p, "w");
+    if (!fp) return 1;
+    fprintf(fp, "%d\n", fb + b + n_dreh + 400);
+    fclose(fp);
     return 0;
 }
 
