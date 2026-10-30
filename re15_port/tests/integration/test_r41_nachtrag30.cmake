@@ -6,6 +6,7 @@
 #                -> Bit 125 -> Standbild der Ventile.
 #   TEIL=wasser  FIGUR leon/elza: 2000 Cut 10: Wasserlauf an der Leiter und auf dem Weg (Bildvergleich gegen den Lauf mit Bit 100), Weg durch die echte Tuer 2010 -> 2000,
 #                Leiter weiter gesperrt, mit Bit 100 nichts.
+#   TEIL=laden   FIGUR leon/elza: der echte Weg: Spielstand + CONTINUE (Wasserlauf 2000, Schrank 2010, Panel 2030 samt Bruecke) und Ring-Tuer 2070 -> 2030 zu Fuss zum Pult -> Panel geloest.
 #   TEIL=ton     Mitschnitt-Zwillinge RE15_AUDIO_CAP_SYNC: Bruecke (Stummel BRUECKE4080.*) und Sirene (Stummel SOUND/SUB_34.BGM): vorher bitgleich, waehrend RMS, danach bitgleich
 #   TEIL=laut    volle Mischung volume=100 gegen 50 und 10 (N-E2): Tuersequenz DOOR26 + Sprung ins Wasser 2090, jeder Abtastwert == (v100 * q) >> 15
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_N30_WERKZEUG=<test_r41_nachtrag30> -DRE15_R41C_WERKZEUG=<test_r41_ventilkette> -DRE15_R41C_PSX=<RE15_ASSETS_PATH>
@@ -214,6 +215,72 @@ if("${TEIL}" STREQUAL "wasser")
     _darf_nicht("${_dbg}" "loaded room205" "die Leiter fuehrt nicht nach 2050")
 endif()
 
+# ---- laden --------------------------------------------------------------------------------------------------------------------
+if("${TEIL}" STREQUAL "laden")
+    # Lade-Weg: Spielstand vom Werkzeug "karte" (Muster probe_r36_elza_karte.c, mit y: das Band folgt beim Laden aus y), danach RE15_CONTINUE_TEST + RE15_CARD_AUTO.
+    macro(_karte_lauf _name _timeout _karte)
+        set(WORKDIR "${_basis}_${_name}")
+        file(MAKE_DIRECTORY "${WORKDIR}")
+        execute_process(COMMAND "${RE15_N30_WERKZEUG}" karte re15_card.mcr ${_karte} WORKING_DIRECTORY "${WORKDIR}" OUTPUT_VARIABLE _ok RESULT_VARIABLE _rk)
+        if(NOT _rk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")
+            _fehler(": [${_name}] Karte: ${_ok}")
+        endif()
+        re15_start_spiel(_rv ${_timeout} SDL_ASSERT=always_ignore RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1
+            RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0 ${ARGN} "${_exe_kopie}")
+        if(NOT EXISTS "${WORKDIR}/debug.log")
+            _fehler(": [${_name}] kein debug.log (exit=${_rv})")
+        endif()
+        file(READ "${WORKDIR}/debug.log" _dbg)
+        _muss("${_dbg}" "[save] CONTINUE: resumed" "${_name}: Spielstand geladen")
+        if("${FIGUR}" STREQUAL "elza")
+            _muss("${_dbg}" "Spieler-Familie PL04" "Elza geladen")
+        endif()
+    endmacro()
+    set(_spinnen "7:155;7:156;7:157")
+    # Wasserlauf: Modell und Strahlen auch am Lade-Weg, Gegenlauf mit Bit 100
+    _karte_lauf(wan 180 "200${S};-26300;-1800;6500;1024" RE15_FORCE_CUT=10 RE15_FRAMEDUMP=200:f.ppm "RE15_EXIT_AT=210#200${S}")
+    _muss("${_dbg}" "[wasserlauf41] ROOM200${S}: 6 Strahlen, nasse Spur Prop" "Wasserlauf nach CONTINUE")
+    set(_an "${WORKDIR}/f.ppm")
+    _karte_lauf(waus 180 "200${S};-26300;-1800;6500;1024;9:100" RE15_FORCE_CUT=10 RE15_FRAMEDUMP=200:f.ppm "RE15_EXIT_AT=210#200${S}")
+    _darf_nicht("${_dbg}" "[wasserlauf41]" "mit Bit 100 kein Wasserlauf")
+    _wert("diff;${_an};${WORKDIR}/f.ppm;20;60;80;170" "^DIFF ([0-9]+)" _l)
+    _wert("diff;${_an};${WORKDIR}/f.ppm;76;146;118;168" "^DIFF ([0-9]+)" _w)
+    _wert("diff;${_an};${WORKDIR}/f.ppm;230;40;310;200" "^DIFF ([0-9]+)" _g)
+    message(STATUS "r41_nachtrag30[laden ${FIGUR}]: Wasserlauf nach CONTINUE: Leiter ${_l}, Weg ${_w}, Gegenprobe ${_g}")
+    if(_l LESS 60 OR _w LESS 60 OR _g GREATER 12)
+        _fehler(": Wasserlauf nach CONTINUE nicht im Bild (Leiter ${_l}, Weg ${_w}, Gegenprobe ${_g})")
+    endif()
+    # Schrank nach CONTINUE
+    _karte_lauf(s 180 "201${S};4300;0;-2770;0" RE15_FORCE_CUT=3 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=120 RE15_INPUT_SCRIPT=A0.1 RE15_FRAMEDUMP=116-156/40:f_ "RE15_EXIT_AT=170#201${S}")
+    _danach("${_dbg}" "Port-Programm 2010_kasten_leer" "[schrank2010] Tuer auf (rot_y 1024)" "Klick klappt auf")
+    _wert("diff;${WORKDIR}/f_000116.ppm;${WORKDIR}/f_000156.ppm;224;30;258;200" "^DIFF ([0-9]+)" _d)
+    message(STATUS "r41_nachtrag30[laden ${FIGUR}]: Schrank nach CONTINUE: Flaeche ${_d}")
+    if(_d LESS 150)
+        _fehler(": Schrank klappt nach CONTINUE nicht sichtbar auf (${_d})")
+    endif()
+    # Panel: das Skript wie im Teil panel, 210 Bilder frueher
+    set(_skript "A0.1,W1.5,A0.1,W1,A0.1,W2,A0.1,W1.5,A0.1,W1.5,A0.1,W2,A0.1,W2,A0.1,W2,L1.2,W0.3,A0.1,W0.3,R1.0,W0.3,A0.1,W1.5,A0.1,W0.3,R0.6,W0.3,A0.1,W1.5,A0.1,W0.3,L1.6,W0.3,A0.1,W3,A0.1,W1,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W6")
+    _karte_lauf(p 300 "203${S};350;-5400;-9500;1024;${_spinnen}" RE15_SE_DEBUG=1 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=120 "RE15_INPUT_SCRIPT=${_skript}" "RE15_EXIT_AT=1210#203${S}")
+    _danach("${_dbg}" "[panel2030] offen: A 100 B 0 C 0" "[panel2030] GELOEST: A 80 B 20 C 0" "Panel nach CONTINUE geloest")
+    _danach("${_dbg}" "[panel2030] GELOEST" "Bruecke BRUECKE4080 Satz 0x10" "Fahrt nach dem Raetsel")
+    # Tuer: 2070 Slot 1 @0x00A5A = Ring-Tuer (Ankunft (6550,-5400,-100) nfloor 3), zu Fuss zum Pult (Wegplan), ab dem Pult das Skript. Der Plan endet in Bild ~344 (Messlauf kt, Leon).
+    file(WRITE "${_basis}_plan.txt" "RAUM 203${S}
+WARTE 30
+GEHE 6575 -9675
+GEHE 350 -9675
+BLICK 1024
+WARTE 10
+ENDE
+")
+    _karte_lauf(t 300 "207${S};0;0;0;0;${_spinnen}" "RE15_FIRE_AOT=1@60#207${S}" "RE15_WEGPLAN=${_basis}_plan.txt" RE15_WEGPLAN_LOG=wegplan.txt RE15_SE_DEBUG=1
+                RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=400 "RE15_INPUT_SCRIPT=${_skript}" "RE15_EXIT_AT=1490#203${S}")
+    _muss("${_dbg}" "[aot] DOOR FIRE slot=1" "Ring-Tuer")
+    _muss("${_dbg}" "loaded room203${S}.rdt" "Ring-Tuer -> 2030")
+    _danach("${_dbg}" "[panel2030] offen: A 100 B 0 C 0" "[panel2030] GELOEST: A 80 B 20 C 0" "Panel nach der Tuer geloest")
+    _danach("${_dbg}" "[panel2030] GELOEST" "Bruecke BRUECKE4080 Satz 0x10" "Fahrt nach dem Raetsel")
+    message(STATUS "r41_nachtrag30[laden ${FIGUR}]: Panel nach CONTINUE und nach der Ring-Tuer geloest, Bruecke mit RE2-Ton")
+endif()
+
 # ---- ton ----------------------------------------------------------------------------------------------------------------------
 if("${TEIL}" STREQUAL "ton")
     # Zwilling: Stummel der RE2-Dateien, alles andere bleibt (asset_root_pc.c re15_pc_read_re2: erst RE15_RE2_ASSET_ROOT, dann <shared>/RE2)
@@ -251,14 +318,23 @@ if("${TEIL}" STREQUAL "ton")
     if(NOT _o MATCHES "^CAPDIFF VOR ([0-9]+) WAEHREND ([0-9]+)\\.[0-9] NACH ([0-9]+) ")
         _fehler(": capdiff: ${_o}")
     endif()
-    if(NOT CMAKE_MATCH_1 EQUAL 0 OR CMAKE_MATCH_2 LESS 300)
+    if(NOT CMAKE_MATCH_1 EQUAL 0 OR CMAKE_MATCH_2 LESS 300 OR NOT CMAKE_MATCH_3 EQUAL 0)
         _fehler(": Bruecken-Ton nicht belegt: ${_o}")
     endif()
-    # Sirene: (5,0x1D) = Zaehler (nach dem Warntext, Programm 2030_ventile), danach die Ost-Tuer: der Raum wird verlassen
+    # Der Motor laeuft bis zum Halt (Dauerschleife in RE2, Stimme 6) und nicht darueber hinaus: letzte 10 Bilder der Fahrt hoerbar
+    math(EXPR _t10 "${_t_aus} - 10")
+    execute_process(COMMAND "${RE15_R41C_WERKZEUG}" capdiff "${_a_cap}" "${WORKDIR}/cap.raw" ${_t10} ${_t_aus} OUTPUT_VARIABLE _o RESULT_VARIABLE _r)
+    string(STRIP "${_o}" _o)
+    message(STATUS "r41_nachtrag30[ton]: letzte 10 Bilder vor dem Halt: ${_o}")
+    if(NOT _o MATCHES "^CAPDIFF VOR [0-9]+ WAEHREND ([0-9]+)\\.[0-9] " OR CMAKE_MATCH_1 LESS 300)
+        _fehler(": Motor bricht vor dem Halt ab: ${_o}")
+    endif()
+    # Sirene: (5,0x1D) = Zaehler (nach dem Warntext, Programm 2030_ventile), die ganze Minute (Schleife 14,3 s mehrfach, "durchgehend"), danach die Ost-Tuer: der Raum wird verlassen.
+    # Ende mit der Flut: integration_r41_ventilkette_alarm.
     macro(_sirene _name)
         _lauf(${_name} 240 RE15_SOFTWARE_RENDER=1 RE15_AUDIO_CAP_SYNC=cap.raw
               RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=6550,-100,0,3" "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102"
-              "RE15_SET_FLAG_AT=5:29@420" "RE15_FIRE_AOT=0@900#2030" ${ARGN} "RE15_EXIT_AT=200#20B0")
+              "RE15_SET_FLAG_AT=5:29@420" "RE15_FIRE_AOT=0@2300#2030" ${ARGN} "RE15_EXIT_AT=200#20B0")
     endmacro()
     _sirene(sa)
     _muss("${_dbg}" "[ventilkette41] Zaehler laeuft: 1800 Takte" "Zaehler")
@@ -282,20 +358,34 @@ if("${TEIL}" STREQUAL "ton")
     if(NOT _vor EQUAL 0 OR _w LESS 300 OR NOT _n EQUAL 0)
         _fehler(": Sirene: vor ${_vor} (0), waehrend ${_w} (>= 300), nach ${_n} (0)")
     endif()
+    math(EXPR _d "${_t_aus} - ${_t_an}")
+    if(_d LESS 1800)
+        _fehler(": Sirene nur ${_d} Takte vermessen, verlangt die ganze Minute (1800)")
+    endif()
+    execute_process(COMMAND "${RE15_N30_WERKZEUG}" luecke "${_a_cap}" "${WORKDIR}/cap.raw" ${_t_an} ${_t_aus} 100 OUTPUT_VARIABLE _o RESULT_VARIABLE _r)
+    string(STRIP "${_o}" _o)
+    message(STATUS "r41_nachtrag30[ton]: Sirene durchgehend: ${_o}")
+    if(NOT _o MATCHES "^LUECKE 0 TAKTE")
+        _fehler(": Sirene setzt aus: ${_o}")
+    endif()
 endif()
 
 # ---- laut ---------------------------------------------------------------------------------------------------------------------
 if("${TEIL}" STREQUAL "laut")
-    # 20A0 -> Tuer Slot 0 (Tuersequenz DOOR26 mit Schliesston) -> 2090, Sprung ins Becken: die Toene aus Nachtrag 30b. Eine Endstufe am Ende der Mischung: jeder Abtastwert folgt.
+    # 20A0 -> Tuer Slot 0 (Tuersequenz DOOR26 mit Schliesston; Tor offen (9,113), Szene gesehen (9,110)) -> 2090, Sprung ins Becken (Absprung y -1800, Landung y 0): die Toene aus
+    # Nachtrag 30b. Eine Endstufe am Ende der Mischung: jeder Abtastwert folgt.
     macro(_mix _name _v)
         file(MAKE_DIRECTORY "${_basis}_${_name}")
         file(WRITE "${_basis}_${_name}/opt.cfg" "volume=${_v}\nsound=stereo\n")
-        _lauf(${_name} 300 RE15_DEBUG_JUMP=20A0@240 "RE15_PLAYER_POS=4950,5000,2048,2" "RE15_OPTIONS_FILE=${_basis}_${_name}/opt.cfg" RE15_AUDIO_CAP_SYNC=cap.raw RE15_SE_DEBUG=1
-              "RE15_INPUT_SCRIPT=W9,A0.2,W4,R0.37,W0.3,U0.7,W0.2,A0.2,W0.3,A0.2,W0.3,A0.2,W0.3,A0.2,W4" RE15_INPUT_SCRIPT_START=0 RE15_CLIMB_LOG=climb.log "RE15_EXIT_AT=420#2090")
+        _lauf(${_name} 300 RE15_DEBUG_JUMP=20A0@240 "RE15_PLAYER_POS=4950,5000,2048,2" RE15_SET_FLAG=9:113,9:110 "RE15_OPTIONS_FILE=${_basis}_${_name}/opt.cfg" RE15_AUDIO_CAP_SYNC=cap.raw RE15_SE_DEBUG=1
+              "RE15_INPUT_SCRIPT=W9,A0.2,W4,R0.37,W0.3,U0.7,W0.2,A0.2,W0.3,A0.2,W0.3,A0.2,W0.3,A0.2,W4" RE15_INPUT_SCRIPT_START=0 "RE15_EXIT_AT=420#2090")
     endmacro()
     _mix(v100 100)
     _muss("${_dbg}" "[tuer] Bild 60 Se_on Tonkopf-Eintrag 0" "Tuersequenz gelaufen")
-    _muss("${_dbg}" "[se] Stimme: se=10 " "Sprung-Ton gelaufen")
+    _muss("${_dbg}" "[tuer] Sequenz fertig: 286 Bilder + 1 Warten, 1 Se_on, Schliesston 1" "Tuersequenz mit Schliesston")
+    if(NOT _dbg MATCHES "F210 cut=3 mo=[0-9]+ af=[0-9]+ frz=0 . pl pos=.6363,0,-14032.")
+        _fehler(": Sprung ins Becken: Landung (6363,0,-14032) fehlt im Log")
+    endif()
     set(_c100 "${WORKDIR}/cap.raw")
     _mix(v50 50)
     set(_c50 "${WORKDIR}/cap.raw")

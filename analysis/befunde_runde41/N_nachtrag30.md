@@ -150,4 +150,85 @@ Segmentzahl = Zeichenzahl + Zahl der `"`. Gemessen aus genau diesen Zeilen (`dok
 FILE31 neu gesetzt und installiert: zwei Textseiten wie vorher (max_page 2). Rueckleseprobe am Artefakt: 77 Woerter WORTGLEICH, 0 Kernpixel ohne Glyphe.
 Seite 2: `that they swapped the / numbers of "black" and / "green"! What are they? / Colorblind? How is anyone / supposed to work with / something like this....`.
 
-(Abschnitte je Punkt: Messung vorher / RE-Belege / Umsetzung / Messung nachher / Tests / OFFEN.)
+## 1. Schrank 2010/2011 klappt auf (Nachtrag 30; Logik der Sicherung = Spur O)
+
+**Messung vorher:** Aktion am Ventil-Sicherungskasten (Slot 8, x 4900..5900, z -3470..-2070) zeigte nur Text 40; Cut 3 blieb unveraendert (die Spur-C-Fassung hat kein Bild und keine Bewegung).
+
+**RE-Belege:**
+* `fuse_box.bmp` (320 x 240) ist ROOM2060 Cut 6: mittlere Abweichung 1,04 je Kanal bei Verschiebung 0; Cut 10 = 1,15, alle anderen Cuts >= 21,3 (Bildvergleich gegen alle BSS-Cuts von ROOM2060). Cut 10 ist derselbe Blick nach dem Einsetzen
+  (sub19 @0x016C5 `4b 06 0a` Cut_replace 6 <-> 10).
+* Nahansichten des Sicherungsfelds: Cut 8 = Sicherung fehlt, rote Lampe (sub18 @0x0168C `29 08`), Cut 9 = eingesetzt, gruene Lampe (sub19 @0x016A2 `29 09`).
+* Form "aufklappen": Original-Hebel ROOM11F0 sub06 `2f 05 40 00` Speed_set(5,+0x40) @0x01332, For 16 `0d 00 04 00 10 00` @0x01336 = 16 Bilder, 64 je Bild = 1024 = 90 Grad. Die Original-RDTs haben keinen Schrank-Fluegel als Modell;
+  der Fluegel selbst ist Port-Modell im Format des Aushangs.
+* Das Original-Einsetzen in ROOM2060 hat einen Cursor-Schritt (obj 4, sub14..17 +-200, Member_cmp @0x01324 == 7, SQUARE @0x0132E -> sub19). Nicht gebaut: laut Auftrag aendert N nur Bild und Aufklappen, siehe Frage unten.
+
+**Umsetzung:** `engine/src/schrank2010_r41.c`, `include/re15_schrank2010_r41.h`, `gen/schrank2010_r41.inc` (Generator `tools/r41_nachtrag30/schrank_bild.py`: Innenflaeche = Schrank aus BG06 auf die Rueckwand entzerrt, Viereck Q_INNEN; Tuer-Innenseite = Tuer aus
+BG06, Viereck Q_TUER; Tuer-Aussenseite = BG03 auf die Tuerebene zurueckprojiziert, darum deckt sie sich geschlossen mit dem Hintergrund). Lage gemessen in Cut 3 @0xC0, Projektion H 208: Ostwand x 5400, z -3300..-2000, y -3650..-50, Angel (5400,-2000). Drei Port-Props obj 5/6/7,
+Band 2, Licht neutral (`re15_schrank2010_r41_licht`: Textur 1:1, sonst schluckt das Raumlicht die Innenseite). Programme `2010_kasten_*` bekommen den Vorspann "Aufklappen" (Marker (5,0x1E), Sperre an/aus), der Ja-Zweig davor die Nahansichten (Marker (5,0x1D), je 30 Bilder = PORT-WAHL:
+Sleep 20 aus ROOM2080 sub02 @0x00CD8 + 10 zum Lesen). Einsetz-Logik der Spur C (Fragen, Bit 125, Standbild, Ton) laeuft unveraendert dahinter. Der offene Zustand ist Raum-Scratch: beim naechsten Betreten geht die Tuer wieder auf (Original zeigt in 2060 den Schrank offen, die Tuer in 2010 ist Port-Form).
+
+**Messung nachher (Leon + Elza, Riegel `integration_r41_nachtrag30_schrank_*`, `_laden_*`):** Klick F330 -> Text erst nach `[schrank2010] Tuer auf (rot_y 1024)`; Flaeche x 224..258 aendert sich um 25,7 Graustufen, Gegenprobe links 0,0. Ja-Zweig: F635 == ROOM2060 BG08, F665 == BG09 (100 % gleich), danach Bit 125, Standbild.
+Bilder: `N_belege/schrank_cut3_zu.png`, `schrank_cut3_offen.png` (beschleunigter Renderer).
+
+## 2. Panel-Raetsel 2030 (Nachtrag 37, Entwurf A) — Umsetzung
+
+**Messung vorher:** Pult ohne Ventil 13 = Text 40 "kein Druck"; Ventil 13 am Tank (Slot, Ereignis, Texte 41/42).
+
+**Belege Form:** Vorbild ROOM2050 (Cursor, Steuerkreuz je Bild, SQUARE, CROSS bricht ab, Bits (2,0)/(2,2) sub01 @0x021FA, zurueck sub10 @0x0240C). Cursor-Schritt ROOM2050 sub05..08 @0x023C2 `2f 02 c8 00` = +-200 Welt je Bild = 2,515 Bildpunkte unter Cut 15. Zielwert 80, Ruhe 30 Bilder, Toene: RE2 ROOM2130 sub04
+@0x01752 / @0x0171C / @0x01762 / @0x01192 / @0x01800 (re15_panel_zeiger.h). Umfuellen in 16 Bildern wie ROOM11F0 sub06 @0x01336. Tankwerte 100/50/30, Start, Loesung, Text 43, EXIT = NUTZER-VORGABE Nachtrag 37. Die Pad-Sperre (2,7) waere falsch: sie maskiert die SCD-Pad-Woerter auf 0xf000, der Cursor stand still; (2,0)/(2,2) wie sub01.
+
+**Umsetzung:** `engine/src/panel2030_r41.c`, `include/re15_panel2030_r41.h`, `gen/panel2030_r41.inc` (Generator `tools/r41_nachtrag30/panel_kit.py`, `panel_bild.py`), Programm `2030_panel_ein`, `panel30_tick` in ventilkette_r41.c, Vollbild-Ebene ventilkette_r41_pc.c, Textebene `re15_render_pc_fmv_text` (render_pc.c).
+Bit 101 heisst jetzt BIT_DRUCK80. Texte: 40 Frage, 41 Anleitung ("The pressure gauge reads 100." / "Pick a tank to drain, then a tank to fill."), 42 "The tank is empty.", 47 "The tank is full.", 43/44 wie bisher. Ventil 13 (Slot, Rechteck, Programme `2030_v13_*`, `2030_pult_ohne`) entfernt.
+Vollsuche im Riegel: 16 Staende, keine Sackgasse, kuerzeste Loesung A->B, B->C, C->A.
+
+**Messung nachher (Leon + Elza, echte exe):** Tasten-Skript: Pult -> Frage 40 -> Ja -> `[panel2030] offen: A 100 B 0 C 0` -> Text 41 -> `Tank B: umgefuellt -> A 50 B 50 C 0` -> `Tank C: umgefuellt -> A 50 B 20 C 30` -> `Tank A: umgefuellt -> A 80 B 20 C 0` -> `Anzeige 80 erreicht` -> 30 Bilder -> `GELOEST` -> Text 43 -> Ja -> Cut 4 ->
+Bruecke -> Text 44. Das gleiche nach CONTINUE und nach der Ring-Tuer 2070 Slot 1 @0x00A5A zu Fuss zum Pult (`_laden_*`). Fenster Tank B im Bild: leer 28, voll 146 (F780/F900). Bilder: `N_belege/panel_spiel_start.png`, `panel_spiel_a_nach_b.png`, `panel_spiel_80.png`.
+
+## 4. RE2-Ton der Plattformfahrt
+
+**Messung vorher:** `lift2030_se_pc.c`/`LIFT6030.VBS` bedienen die zwei Lifte (Anker sub02/sub04); die Bruecke faehrt im Port-Programm `2030_pult_senken`, dort liefen keine Se_on: stumm (Riegel Zwilling unten zeigt den Ton allein).
+
+**RE-Belege:** RE2s zentrale Bruecke = ROOM4080: msg 31 "Insert the valve handle and rotate it to move the central bridge up or down", ROOM4090 msg 37 "I can't cross unless the bridge is up"; `RE2_SOUND_LISTE.md`: ROOM400.SAP "Center Bridge Moving sounds", ROOM408.SAP "Center bridge room sounds".
+sub13 @0x031EE senkt sie: @0x031F2 `36 02 0f 00 ...` Se_on Raumbank Satz 0x0F vor der Fahrt, @0x03314 `36 02 10 01 ...` Se_on Satz 0x10 am Ende. EDT @0xA3C0 + 4*0x0F `00 01 53 16` -> Programm 1, Taste 64 (Ton 5), VAG-Nummer 13 (12656 B, Flags 2 .. 3 = Dauerschleife), + 4*0x10 `00 01 64 16` -> Taste 65 (Ton 6), VAG-Nummer 14 (24448 B, einmal). Beide Stimme 6
+(Byte 3 = 0x16), der Halt schneidet den Motor (Key-On auf dieselbe Stimme). Op 0x8C in sub13 ist Vibration (0x800593e4 -> FUN_800395b8 -> FUN_80038bbc), kein Ton.
+
+**Umsetzung:** Bank `shared_assets/RE2/BRUECKE4080.EDT/.VH/.VB` (`tools/r41_nachtrag30/re2_toene_export.py --pruefen`, bytegleich mit der RDT). Port-Programm setzt Marker (5,0x14) vor dem For und (5,0x15) nach Member_set; der C-Takt spielt die Saetze (`ton_spielen`). Die Port-SE-Stimmen kennen keine Schleife: die PCM-Daten der Motor-Welle liegen dreimal aneinander (R41N_MOTOR_WIEDERHOLUNG, 121 Takte >= Fahrt 60).
+
+**Gefunden durch die Messung:** Der erste Mitschnitt zeigte den Motor nach 40 Takten aus und den Halt dreimal: die Wiederholung lag auf der falschen Welle. `samples[]` zaehlt ab 0, die VH-Nummer ab 1 (Log `se=15 ... vag=12`). Behoben (`RE15_R41C_BRUECKE_MOTOR_VAG - 1`), der Riegel verlangt jetzt die letzten 10 Bilder hoerbar und +120 Takte bitgleich.
+
+**Messung nachher (Zwilling mit Stummel-Bank, `integration_r41_nachtrag30_ton`):** Motor capTick 667, Halt 727 (60 Bilder). `CAPDIFF VOR 0 WAEHREND 1903.5 NACH 0`; letzte 10 Bilder vor dem Halt RMS 2093,1.
+
+## 5. Alarm: Sirene aus ROOM6000 (Nachtrag 36), zusaetzlich zu SUB_25
+
+**Messung vorher:** In der Minute lief nur RE2-SUB_25 (Spur C).
+
+**RE-Belege:** RE1.5 ROOM6000: Tabelle UNK_80074828[0x62] = 0xFF65 -> MAIN25 (Sce_bgm_control @0x00D52 `54 00 01 00 46 40`). MAIN25.BGM ist bytegleich RE2 MAIN11.BGM (md5 52613db8df9fbcb41a9000663c7143b2), RE2 setzt ROOM6000 selbst darauf: ROOM6040 @0x02360 `57 00 00 06 11 ff 00 00`.
+Sirene darin = Kanal 2, Programm 1, VAG 2 (4384 B), Note 60: 0,804 s an, 0,142 s aus, Periode 0,946 s. RE2 `SUB_34.BGM` traegt dieselbe Welle (VAG 2 sha1 9d010af0e8e9) und die Stimme (VAG 1 sha1 52678419f9ef) ohne die Musik: Kanal 1 Sirene, 2 Echo, 0 Stimme, 3 Brummen, Schleife 14,3 s. In keinem Leon-RDT per 57er-Satz referenziert, SEQ#2 leer.
+
+**Umsetzung:** `shared_assets/RE2/SOUND/SUB_34.BGM`; audio_pc.c eigener Sequencer `s_ss_r41_sirene` + `re15_audio_r41_sirene(an)` (Lader des SUB-Platzes wiederverwendet, Bank Id 6, Schleife); `re15_ventilkette_r41_sirene()` = in 2030/2031, Zaehler laeuft, keine Flut, nicht tot; Flanke in `pc_bild`. Start = Zaehlerstart = nach der Ansage (Set(5,0x1D) steht hinter dem Warntext 46).
+SUB_25 laeuft unveraendert daneben.
+
+**Messung nachher:** Zwilling mit Stummel-SUB_34 ueber die ganze Minute: an capTick 674, bis 2653 kein Takt mit RMS(A-B) < 100, 1-s-Mittel 1960..2287 (Schleife 14,3 s mehrfach durchlaufen), vorher bitgleich, nach dem Verlassen des Raums (+120) bitgleich. Echte Folge (Riegel `integration_r41_ventilkette_alarm`, Leon + Elza): Warntext 46 -> Sirene an -> Flut, Sirene aus im Bild des
+Flut-Beginns. Elza-Korrelation mit dem reinen SUB_25-Signal sinkt durch die Sirene von 0,571 auf 0,432 (verlangt >= 0,3), Kontrolle 0,025.
+
+## 6. Lautstaerke N-E2 — nachher
+
+**Beleg/Herkunft:** NUTZER-VORGABE Nachtrag 34 "selbst mit Lautstaerke bei 10 ist es immer noch zu laut. Da muss wahrscheinlich doppelt so viel gedreht werden und Standard sollte dann 50 sein." Die Endstufe bleibt die letzte Zeile der Mischung (Messung vorher oben: jeder Ton laeuft dort durch).
+
+**Umsetzung:** `engine/src/lautstaerke_r41.c`: `q15 = Wert * Wert * 0x8000 / (100 * 100)`, also 100 -> 0x8000, 50 -> 0x2000, 10 -> 327; Standard 50 ohne Options-Datei. Messhaken `re15_lautstaerke_r41_voreinstellung`: ohne RE15_OPTIONS_FILE und mit RE15_AUDIO_CAP/_SYNC bleibt es bei 100, damit die Pegel-Riegel weiter die volle Mischung messen.
+
+**Messung nachher (`integration_r41_nachtrag30_laut`):** Lauf 20A0 -> Tuersequenz DOOR26 + Schliesston -> 2090, Sprung ins Becken (Landung (6363,0,-14032)). Alle 2 499 000 Abtastwerte exakt `v50 == (v100 * 0x2000) >> 15` und `v10 == (v100 * 327) >> 15`; 477 850 Werte ueber +-2000, Spitze 16681. `integration_r41_kleinkram_a_lautstaerke`: RMS(50)/RMS(100) = 0,25 auch mit fehlender Options-Datei.
+
+## 7. Wasser die Leiter herunter (Nachtrag 30e)
+
+**Messung vorher:** ROOM2010/2011 ist das Buero (Schreibmaschine, Computer, BG00..BG05): nur die Tuer Slot 0 @0x00746 nach 2000, keine Band-Stufe, kein Kletter-Platz, kein Sce_espr_on, kein Wasser-Objekt. Der Wortlaut "die Leiter runter ... ueber den Weg bis zum Wasser Pool in der Mitte" trifft Wort fuer Wort ROOM2000/2001, die Nachbartuer: Leiter nach 2050 (Slot 4 @0x0169E, Holme (-26748,-1800,9034)/(-26715,-1800,9945)),
+Weg = West-Steg Band 1, y -1800, x -27000..-25200, Pool in der Mitte = Kanal x -25200..-21650, Wasser-Objekte obj 0..2 @0x016E6/@0x01708/@0x0172A Typ 3, y -900. Gebaut wurde dort; Rueckfrage unten.
+
+**RE-Belege Form:** Leiterstrom = derselbe Effekt wie die drei Strahlen am Gitter derselben Wand, ROOM2000 main00 @0x0174C/@0x0175C/@0x0176C `3a 00 0b 00 00 00 00 19 x y z 00 04` = Sce_espr_on Effekt 0x0B, Sub 0, Skala 0x1900, Parameter 0x400 (FUN_80041864 -> FUN_80019700), absolut, dauerhaft; die Teilchen fallen in Welt-y. Spritzen = Wasser-Effekt 6:
+`lui a0,0x605` / `ori a0,a0,0xd00` @0x800456b8/bc = Effekt 6, Sub 5, Skala 0x0D00 (Wasserboden FUN_80045630). Nasse Spur = Wasserflaeche des Moduls Ventilkette (ROOM2080 Prop 0).
+
+**Umsetzung:** `engine/src/wasserlauf_r41.c`, `include/re15_wasserlauf_r41.h`, `gen/ventilkette_r41_wasser.inc` (`re15_r41c_wasserlauf_md1`, Rechteck x -26750..-25200, z 9050..9950). 6 Dauer-Strahlen Skala 0x0C00, Spritzer Effekt 6 Sub 5/Sub 3 auf dem Weg und im Kanal, Takt 11/7 (PORT-WAHLEN: Skala, Takt, Punkte; gemessen Laenge 3300 je Strahl, deshalb Anker y -6900/-6000/-5100).
+Ende = dieselbe Bedingung wie die Sperre der Leiter: Bit (9,100) oder (9,103) gesetzt. `re15_wasserlauf_r41_soll` haengt nur an Raum und Bits (der Prop-Lader fragt unabhaengig vom Install).
+
+**Messung nachher (Leon + Elza, `integration_r41_nachtrag30_wasser_*`, `_laden_*`):** Cut 10 gegen den Lauf mit Bit 100: Leiter 20,7, Weg 8,0, Gegenprobe rechte Bildhaelfte 0,0 Graustufen; auch nach der echten Tuer 2010 -> 2000 und nach CONTINUE (Leiter 17,3, Weg 8,5). Leiter bleibt gesperrt (Text 40). Bilder: `N_belege/wasser_2000_cut10.png`, `wasser_2000_cut9.png`.
+

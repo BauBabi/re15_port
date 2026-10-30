@@ -147,7 +147,7 @@ static void ton_spielen(int ton)
     }
     if (ton == RE15_R41C_TON_BRUECKE_FAHRT || ton == RE15_R41C_TON_BRUECKE_HALT) {   /* Spur N, Nachtrag 30: RE2 ROOM4080 sub13 */
         if (!s_bruecke.state) {
-            s_bruecke.state = bank_laden(&s_bruecke, "BRUECKE4080", RE15_R41C_BRUECKE_MOTOR_VAG) == 0 ? 1 : -1;
+            s_bruecke.state = bank_laden(&s_bruecke, "BRUECKE4080", RE15_R41C_BRUECKE_MOTOR_VAG - 1) == 0 ? 1 : -1;   /* VH-Nummer ab 1 -> samples[] ab 0 (Messung: Log vag=12) */
             fprintf(stderr, "[ventilkette41] Bank BRUECKE4080 (RE2 ROOM4080 snd0) %s (%d VAGs, %d Saetze)\n",
                     s_bruecke.state == 1 ? "geladen" : "FEHLT -> stumm", s_bruecke.vab.vag_count, s_bruecke.edt_count);
         }

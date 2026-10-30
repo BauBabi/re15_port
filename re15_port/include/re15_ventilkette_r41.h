@@ -374,7 +374,7 @@
 #define RE15_R41C_TON_N             5
 #define RE15_R41C_BRUECKE_SE_MOTOR  0x0F   /* @0x031F2 */
 #define RE15_R41C_BRUECKE_SE_HALT   0x10   /* @0x03314 */
-#define RE15_R41C_BRUECKE_MOTOR_VAG 13     /* Ton 5 von Programm 1, VAG 13 */
+#define RE15_R41C_BRUECKE_MOTOR_VAG 13     /* BRUECKE4080.VH Programm 1 Ton 5 (Taste 64): VAG-Nummer 13 (zaehlt ab 1, Log vag=12); Halt = Ton 6, VAG-Nummer 14 */
 #define RE15_R41C_FLAG_FAHRT        0x14   /* 2030: Marker Motor an (Port-Programm -> C-Takt, Bank 5 Wort 0)        */
 #define RE15_R41C_FLAG_HALT         0x15   /* 2030: Marker Halt                                                    */
 #define RE15_R41C_FLAG_PANEL        0x16   /* 2030: Programm 2030_panel_ein -> C-Takt: Panel-Raetsel oeffnen (Spur N) */
