@@ -21,6 +21,7 @@
 #include "re15_room.h"          /* g_current_room_id */
 #include "re15_esp.h"           /* re15_esp_fx_spawn_ex = FUN_80019700 */
 #include "re15_skeleton.h"      /* re15_cos_q12 / re15_sin_q12 */
+#include "re15_teile_r15.h"     /* Spieler-Teile beim Wurf-Tod */
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -279,7 +280,7 @@ static void haken_biss(re15_actor_t *pl, const re15_enemy_bank_t *vb)
  *   P1 @0x8011b558: anim_set(acbcc, acbd0, 0, 0x400) @0x8011b56c, aca5a += @0x8011b588.
  *   P2 @0x8011b594: aca58 = 7 (`ori v0,zero,0x7` @0x8011b230 im Delay-Slot, `sw` @0x8011b598) = cmd 7, die
  *      Blutlache 0x8003694c; die ruft kein anim_set — die Pose bleibt die des letzten Bildes.
- * ⛔ OFFEN (nicht gebaut, Adressen benannt): der P0-Block @0x8011b2a4-554 misst Koerperteile des Spielers
+ * Abriss-Block @0x8011b2a4-554 (gebaut mit Angriffsbox + Teilschicht): misst Koerperteile des Spielers
  *   (acbdc + 0x40 + k*0xac, Translation +0x14/+0x1c) gegen den Trefferpunkt acc1c/acc1e, den der Wurf aus der
  *   Angriffsbox FUN_8001a5e0 schreibt (@0x80117eec-f4 STAGE3), und setzt bei Abstand >= 301 (`slti 301`) Blut
  *   FUN_80019700 (a0 0x3000/0x2800) plus Teil-Flags |= 0x2000|0x80 und +0x88..+0x98. Der Port hat FUN_8001a5e0
@@ -312,6 +313,16 @@ static void haken_wurf3(re15_actor_t *pl, const re15_enemy_bank_t *vb)
                 for (int k = 0; k < 2 && t[k] != 0xff; k++) {
                     int32_t q[3]; re15_player_victim_bone_pos_pub(t[k], q);
                     re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, abriss[i].skala, q[0], q[1], q[2], 0);
+                    /* Teil-Wort |= 0x2000|0x80, +0x88/+0x8c 5000, +0x8a 3000, +0x94 0x70, +0x98 0x20 (@0x8011b308-33c,
+                     * @0x8011b39c-418, @0x8011b47c-4b4, @0x8011b51c-554): flachgedrueckt (Weltachsen) und rot. */
+                    re15_teil_t *pt = re15_teile(0);
+                    if (pt && t[k] < RE15_TEILE_MAX) {
+                        re15_teil_t *x = &pt[t[k]];
+                        x->w |= 0x2000 | 0x80;
+                        x->scale[0] = 5000; x->scale[1] = 3000; x->scale[2] = 5000;
+                        x->h94[0] = 0x70; x->h94[1] = 0; x->h94[2] = 0x20; x->h94[3] = 0;
+                        re15_teile_markieren(0);
+                    }
                 }
             }
         }

@@ -9331,6 +9331,14 @@ re_title:;
                         active_cut_idx, player_visible);
                     fflush(stderr);
                 }
+                /* RE1.5-Teilschicht auch am Spieler (derselbe Zeichner FUN_8001e8c8 @0x8001d09c): 0x2000 = Weltachsen-
+                 * Skalierung S . R (@0x8001ebec-c98), z.B. der Birkin-Wurf-Tod STAGE3 @0x8011b2f4ff. */
+                const re15_teil_t *pl_teil = (re15_teile_an(RE15_ACTOR_SLOT_PLAYER) && bi < RE15_TEILE_MAX)
+                                             ? &re15_teile(RE15_ACTOR_SLOT_PLAYER)[bi] : NULL;
+                if (pl_teil && !(pl_teil->w & 1)) continue;          /* Bit 0 @0x8001ecc4 */
+                if (pl_teil && (pl_teil->w & 0x2000))
+                    for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++)
+                        yawed_rot[r*3+c] = (int32_t)(((int64_t)yawed_rot[r*3+c] * pl_teil->scale[r]) >> 12);
                 int32_t combined_rot[9];
                 int32_t combined_trans[3];
                 re15_camera_compose_view_bone(&cam_view, yawed_rot, bone_world_trans,
@@ -9499,6 +9507,11 @@ re_title:;
                         g0t = g1t = g2t = g_re15_light_tint[1];
                         b0t = b1t = b2t = g_re15_light_tint[2];
                     }
+                    if (pl_teil && (pl_teil->w & 0x80)) {   /* FUN_8002441c: rgb1/rgb2 mit den Tinten mitteln */
+                        uint32_t c1 = re15_teil_tinte1(pl_teil), c2 = re15_teil_tinte2(pl_teil);
+                        r1t = (uint8_t)((r1t + (c1 & 0xFF)) >> 1); g1t = (uint8_t)((g1t + ((c1 >> 8) & 0xFF)) >> 1); b1t = (uint8_t)((b1t + ((c1 >> 16) & 0xFF)) >> 1);
+                        r2t = (uint8_t)((r2t + (c2 & 0xFF)) >> 1); g2t = (uint8_t)((g2t + ((c2 >> 8) & 0xFF)) >> 1); b2t = (uint8_t)((b2t + ((c2 >> 16) & 0xFF)) >> 1);
+                    }
                     re15_render_textured_tri_lit(
                         sx0, sy0, (int)uv->u0 + page_x_offset, (int)uv->v0,
                         sx1, sy1, (int)uv->u1 + page_x_offset, (int)uv->v1,
@@ -9553,6 +9566,11 @@ re_title:;
                         qr0 = qr1 = qr2 = qr3 = g_re15_light_tint[0];
                         qg0 = qg1 = qg2 = qg3 = g_re15_light_tint[1];
                         qb0 = qb1 = qb2 = qb3 = g_re15_light_tint[2];
+                    }
+                    if (pl_teil && (pl_teil->w & 0x80)) {   /* FUN_8002441c Quads: rgb1/rgb2 */
+                        uint32_t c1 = re15_teil_tinte1(pl_teil), c2 = re15_teil_tinte2(pl_teil);
+                        qr1 = (uint8_t)((qr1 + (c1 & 0xFF)) >> 1); qg1 = (uint8_t)((qg1 + ((c1 >> 8) & 0xFF)) >> 1); qb1 = (uint8_t)((qb1 + ((c1 >> 16) & 0xFF)) >> 1);
+                        qr2 = (uint8_t)((qr2 + (c2 & 0xFF)) >> 1); qg2 = (uint8_t)((qg2 + ((c2 >> 8) & 0xFF)) >> 1); qb2 = (uint8_t)((qb2 + ((c2 >> 16) & 0xFF)) >> 1);
                     }
                     /* Quad → 2 tris with (v0,v1,v3,v2) winding (matches PSX). */
                     re15_render_textured_tri_lit(
