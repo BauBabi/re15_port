@@ -131,12 +131,16 @@ function(_flagfolge _wp _name _bank _bit _soll)
 endfunction()
 
 # Figur: Leon = Titel-Bild-Haken, Elza = Spielerwahl wie integration_r36_dachkiste; Raum-Endziffer 0/1.
+# SDL_ASSERT=always_ignore wie test_r41_nachtrag30.cmake:82: jede Neuverbindung der Remote-Desktop-Sitzung schickt WM_DISPLAYCHANGE an alle Fenster, und ohne die
+# Variable oeffnet SDL an der Assertion WIN_AddDisplay (SDL_windowsmodes.c:380) den modalen Dialog (SDL_assert.c:208, :250). Das Spiel steht, der Lauf laeuft in sein
+# Zeitlimit (gemessen 2026-10-31: Neuverbindung 14:43:30, v2b 600 s statt 229 s, Log bis F5610 gleich dem gruenen Lauf); eine zweite Neuverbindung bei offenem Dialog
+# beendet die exe (SDL_assert.c:366-369). Nur Lokalbau: im Release-Bau ist SDL_assert aus (SDL_assert.h, SDL_ASSERT_LEVEL 1).
 if(FIGUR STREQUAL "leon")
-    set(_env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1
+    set(_env SDL_ASSERT=always_ignore RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1
              RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2)
     set(S 0)
 else()
-    set(_env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1
+    set(_env SDL_ASSERT=always_ignore RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1
              RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1)
     set(S 1)
 endif()
