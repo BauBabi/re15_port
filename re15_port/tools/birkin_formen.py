@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-"""Zwei Beta-Weiterentwicklungen des Birkin-Modells EM30 (Typ 0x30) erzeugen.
+"""Beta-Weiterentwicklung des Birkin-Modells EM30 (Typ 0x30) und roter Affe erzeugen.
 
-    python re15_port/tools/birkin_formen.py                 # beide EMDs schreiben
+    python re15_port/tools/birkin_formen.py                 # EMDs schreiben
     python re15_port/tools/birkin_formen.py --blatt DIR     # + Ansichtsblaetter nach DIR
 
 Ausgabe (vom PC-Port ueber RE15_BIRKIN_FORM geladen, platform/pc/main.c):
     re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD     RE15_BIRKIN_FORM=hangar
-    re15_port/shared_assets/PSX/EMD/EM30_BAHNSTEIG.EMD  RE15_BIRKIN_FORM=bahnsteig
 
-⛔ KEIN BYTE-TRUE-ASSET. Diese beiden Formen existieren auf der ausgelieferten Disc nicht.
-Sie sind NUR aus Beta-Screenshots bekannt (Hangar C-2: Birkin packt Elza und schleudert sie,
-Bahnsteig: dunkle Form mit Riesenarm vor dem Zugwaggon, bioflames.com). Jede Zahl in FORMEN
+⛔ KEIN BYTE-TRUE-ASSET. Diese Form existiert auf der ausgelieferten Disc nicht. Sie ist NUR aus
+Beta-Screenshots bekannt (Hangar C-2: Birkin packt Elza und schleudert sie). Jede Zahl in FORMEN
 unten ist eine GESTALTUNGSENTSCHEIDUNG nach diesen Bildern, kein RE-Wert, und hat deshalb
 absichtlich KEINE @0x-Adresse. Sie darf nirgends als Original-Konstante zitiert werden.
+
+Die Bahnsteig-Form ist seit Nachtrag 38 kein umgehaltener EM30 mehr, sondern RE2-G4 als Vorlage:
+tools/birkin_bahnsteig.py. umhalten()/haltung/gang bleiben hier als Werkzeug, keine Form nutzt sie derzeit.
 
 Byte-true geerbt (unveraendert aus CDEMD0.EMS Blob 16 = EM30):
     EDD (alle 21 Clips), EMR-Hierarchie, Keyframes (Hangar), Dreieckstopologie, UVs,
@@ -22,13 +23,10 @@ Byte-true geerbt (unveraendert aus CDEMD0.EMS Blob 16 = EM30):
       3. EMR-Bindoffsets          - Kindgelenk mit der Skalierung des Elternmeshes mitgezogen,
                                     damit die Glieder verbunden bleiben
       4. (faerbe_tim: CLUT-Einfaerbung, derzeit von keiner Form genutzt)
-      5. Bahnsteig: alle Keyframes umgehalten (Vierbein, umhalten()) - Clip-Tabelle, Timing,
-         Wurzel-X/Z und die Knochen 0/3/6/8 bleiben unveraendert (Ellbogen 11/14
-         knicken im Vierbein-Gang der Laufclips 1/0x0E)
-      6. Hangar: Schwanz als ANGEHAENGTE Geometrie an Mesh 8 (MD1 waechst, TIM-Offset und
+      5. Hangar: Schwanz als ANGEHAENGTE Geometrie an Mesh 8 (MD1 waechst, TIM-Offset und
          Verzeichnis verschieben sich; die EM30-Faces bleiben ein unveraendertes Praefix)
     Der MD1-Serializer schreibt unveraendertes EM30 byte-gleich zurueck (Assert in main), und
-    re15_emd_parse_container liest beide Dateien ohne Aenderung (tests/unit/test_birkin_formen.c).
+    re15_emd_parse_container liest die Datei ohne Aenderung (tests/unit/test_birkin_formen.c).
 
 Knochen von EM30 (aus dem EMR gelesen, Parent in Klammern):
     0 Becken (Wurzel)   1-3 Bein rechts  4-6 Bein links   7 Bauch (0)   8 Brust (7)
@@ -79,49 +77,6 @@ FORMEN = {
             # Fleischtextur links oben (TPage 128, CLUT-Zeile 0 wie der Rumpf, u<128)
             uv=dict(clut=30720, page=128, u=(4, 60), v=(4, 124)),
         ),
-    ),
-    # Bild 1 (Bahnsteig): die naechste Stufe. Insgesamt wuchtiger,
-    # der rechte Arm riesig mit grosser Klaue, der linke dicker, Brust/Buckel stark
-    # vergroessert, Kopf fast im Rumpf, Beine kraeftiger.
-    'bahnsteig': dict(
-        datei='EM30_BAHNSTEIG.EMD',
-        titel='Birkin Bahnsteig-Form',
-        skal={
-            0:  (1.20, 1.00, 1.20),
-            1:  (1.30, 1.00, 1.30), 2: (1.30, 1.00, 1.30), 3: (1.20, 1.00, 1.15),
-            4:  (1.30, 1.00, 1.30), 5: (1.30, 1.00, 1.30), 6: (1.20, 1.00, 1.15),
-            7:  (1.30, 1.15, 1.30),
-            8:  (1.50, 1.35, 1.45),
-            9:  (1.05, 1.05, 1.05),
-            10: (1.35, 1.10, 1.35), 11: (1.40, 1.10, 1.40), 12: (1.30, 1.10, 1.30),
-            13: (1.85, 1.10, 1.85), 14: (1.95, 1.10, 1.95), 15: (1.70, 1.20, 1.70),
-        },
-        rel={9: (90, 260, 0)},
-        # Nutzerbefund 2026-10-30: "eher liegend, 4-beinig". Auf der Disc gibt es keine
-        # Vierbein-Haltung (EM36-Clips = Knien mit vorgestrecktem Arm), also werden ALLE
-        # Keyframes umgehalten (umhalten()): Rumpf vorgekippt, Arme behalten ihre Welt-
-        # orientierung (haengen vom vorgeschobenen Schultergurt senkrecht = Vorderbeine),
-        # Beine gehockt, Kopf gehoben; danach Bodenkontakt je Keyframe nachgefuehrt.
-        # Abgestimmt (Clip 0, Keyframe 0): Fussgelenk 285 / Handgelenke 266 + 393 ueber dem
-        # Boden (EM30 stehend: Fussgelenk 264) -> alle vier Gliedmassen tragen; Huefte 1324.
-        # Winkel in Grad um die Z-Achse (Seitenachse) im Elternraum: + = Oberseite nach vorn.
-        haltung=dict(
-            kippen={7: 80, 1: -80, 4: -80, 2: 80, 5: 80},
-            welt_halten=(10, 13),
-            nachkippen={9: -64, 10: -40, 13: -40, 12: -75, 15: -75},
-            # VIERBEIN-GANG (Nutzer 2026-10-30: "Bewegungsanimationen ausdenken, die dazu
-            # passen"). Erfunden, aber aus dem EM30-Takt abgeleitet: der menschliche Armschwung
-            # laeuft im Original schon diagonal zum Bein (linker Arm mit rechtem Bein) = Trab.
-            # In den Laufclips wird er zum Vorderbein-Schritt verstaerkt (Faktor), und in der
-            # Vorschwung-Phase knickt der Ellbogen ein (Vorderbein hebt ab, Klaue setzt auf).
-            # Clips (Bank 0, EDD dir[1]): 1 = WALK/REPOSITION/CHARGE, 0x0E = RUN-OFF
-            # (enemy_ai_common.c re15_birkin_ai_tick, Clip-Zuweisungen @0x80117220/@0x80119b78).
-            gang=dict(clips=(0x01, 0x0E), arme={10: 11, 13: 14}, faktor=1.8, anheben=40,
-                      fuesse=(3, 6)),
-        ),
-        # Farbe: wie EM30. Das Violett im Screenshot ist der Videoqualitaet geschuldet
-        # (Nutzerbefund 2026-10-30), die Original-Textur bleibt unveraendert.
-        tint=None,
     ),
 }
 

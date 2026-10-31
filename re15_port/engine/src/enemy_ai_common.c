@@ -12311,7 +12311,7 @@ static void re15_birkin_ai_tick(int slot)
                 e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* +0x4 = 0x101 */
                 e->grid_id = (uint8_t)(e->grid_id | 0x10);            /* grid |= 0x10 @0x801188a4 */
                 e->birkin_flags = (uint8_t)(e->birkin_flags & ~0x8u); /* +0x1dd &= ~8 @0x801188c0 */
-                re15_bf_mutation_fertig(slot);   /* Port-Ergaenzung 5090: Original-Birkin -> Vierbein-Modell */
+                re15_bf_mutation_fertig(slot);   /* Port-Ergaenzung 5090: Original-Birkin -> Bahnsteig-Form */
             }
             break;
         }
@@ -12588,8 +12588,8 @@ static void re15_birkin_ai_tick(int slot)
              * 50E0/50F1), sahen den Birkin-Tod nie. Es gibt game-weit genau
              * DIESEN einen Produzenten. */
             /* PORT-ERGAENZUNG (Beta-Birkin-Formen, re15_birkin_formen.h): in 5090/5091 ist das NICHT der
-             * letzte Tod - wo das Original in Phase 3 auf den nie gesetzten Raum-Morph wartet, geht der
-             * Vierbein-Birkin in den G5 ueber (seit der Rueckstoss-Szene schon beim Todeseintritt, s. oben);
+             * letzte Tod - wo das Original in Phase 3 auf den nie gesetzten Raum-Morph wartet, geht die
+             * Bahnsteig-Form in den G5 ueber (seit der Rueckstoss-Szene schon beim Todeseintritt, s. oben);
              * der Fortschritts-Schalter faellt erst mit dessen Tod
              * (enemy_ai_boss_g5.c). Der Hangar-Birkin (50A0/50A1) ist ein Zusatzgegner und darf den
              * Birkin-Fortschritt der Original-Raeume nicht setzen. */
@@ -12629,7 +12629,7 @@ static void re15_birkin_ai_tick(int slot)
     }
 
     /* ============================ ROOT post-dispatch (0x801164d4) ============================ */
-    /* PORT-ERGAENZUNG 5090/5091 (Nutzer 2026-10-30 "Original -> Vierbein -> G5"): der Endkampf-Spawn traegt
+    /* PORT-ERGAENZUNG 5090/5091 (Nutzer 2026-10-30 "Original -> Bahnsteig-Form -> G5"): der Endkampf-Spawn traegt
      * grid 0x33/0x13 (Form-2-Bit, sperrt die Mutation); bis zur ersten Mutation gilt er hier als Form 1. */
     if ((!(e->grid_id & 0x10) || re15_bf_mutation_offen()) && e->hp < 200) {   /* gate !(grid&0x10) @0x801164e8 && hp<200 @0x801164fc */
         e->birkin_flags ^= 0x4;                        /* +0x1dd ^= 4 heave toggle @0x80116510 (wounded-breathing; DECIDE mutate gate) */
@@ -15007,7 +15007,8 @@ static void re15_birkin_root(int s)
     if (e->grid_id & 0x20) return;                     /* @0x80116a7c-a88 / @0x80116268-274:
                                                         * -> nur FUN_8001b064 (Schatten, Renderer) */
     int32_t bk_ox = e->x, bk_oz = e->z;
-    re15_birkin_ai_tick(s);
+    if (re15_bb_bank_da(e)) re15_bb_tick(s);           /* Runde 41 Spur R: Bahnsteig-Form, eigene G4-Ablaeufe */
+    else re15_birkin_ai_tick(s);
     re15_enemy_body_push_tail(s, e);
     if (g_room_rdt_ok && (e->x != bk_ox || e->z != bk_oz)) {
         int32_t nx = e->x, nz = e->z;

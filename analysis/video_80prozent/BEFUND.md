@@ -71,8 +71,7 @@ Label „Cockroach“ in RE15_ENEMY_AI_AUDIT.md ist ueberholt), **0x2B Spider-Ma
 | F7 | Debug-Menue (V2 0:25, 2:07), Einblendung „Door: x-y“ unten rechts (V2 2:01–2:09) | Entwickler-Overlays, kein Spielinhalt; Debug-Menue im Port vorhanden |
 | F8 | Titelbild (V2 0:00) | Logo „BIOHAZARD 2“ mit Menue – Zeilen nicht lesbar, nicht verglichen |
 
-**Bahnsteig-Form:** kommt in keinem der beiden Videos vor. Ihr Violett im Screenshot ist
-Videoqualitaet; die Form nutzt die EM30-Textur (`tools/birkin_formen.py`, `tint=None`).
+**Bahnsteig-Form:** kommt im Final-Build-Video vor (Berichtigung Nachtrag 38, die fruehere Aussage "in keinem der beiden Videos" war falsch): V2 1:54.8-1:55.1 Bahnsteig mit rotem Zug und Leon, V2 1:56.3-1:56.8 ROOM5090 Cut 11 mit Feuer und der Frau im Kittel. Beide Stellen sind STANDBILDER (Diashow, Schnitt alle 24 Videobilder), die Kreatur bewegt sich im Video nicht. Ihr Violett ist Videoqualitaet. Umsetzung: `tools/birkin_bahnsteig.py` (RE2-G4 kind 0x34), Messung `analysis/befunde_runde41/R_bahnsteig.md`.
 
 ---
 

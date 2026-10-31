@@ -4062,8 +4062,8 @@ foreach(_pc ${_re15_probe_cmakes})
     include("${_pc}")
 endforeach()
 
-# --- BETA-BIRKIN-FORMEN (Nutzerwunsch 2026-10-30): EM30_HANGAR/EM30_BAHNSTEIG.EMD ---
-#     Nachbildungen aus tools/birkin_formen.py (nicht byte-true). Der Test haelt fest, dass
+# --- BETA-BIRKIN-FORMEN (Nutzerwunsch 2026-10-30): EM30_HANGAR.EMD ---
+#     Nachbildung aus tools/birkin_formen.py (nicht byte-true). Der Test haelt fest, dass
 #     nur Geometrie/Bindoffsets/CLUTs von EM30 abweichen (Clips/Keyframes/Topologie gleich).
 add_executable(test_birkin_formen test_birkin_formen.c)
 target_link_libraries(test_birkin_formen PRIVATE re15_engine m)
@@ -4072,6 +4072,14 @@ target_compile_definitions(test_birkin_formen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_birkin_formen COMMAND test_birkin_formen)
 set_tests_properties(unit_birkin_formen PROPERTIES TIMEOUT 30)
+# --- Bahnsteig-Birkin (Runde 41 Spur R): Asset gegen RE2-G4, Bodenhoehe, G4-Ablaeufe in 5090/5091.
+add_executable(test_birkin_bahnsteig test_birkin_bahnsteig.c)
+target_link_libraries(test_birkin_bahnsteig PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_birkin_bahnsteig PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_birkin_bahnsteig PRIVATE
+    RE15_ASSET_PSX_DIR="${RE15_ASSETS_PATH}")
+add_test(NAME unit_birkin_bahnsteig COMMAND test_birkin_bahnsteig)
+set_tests_properties(unit_birkin_bahnsteig PROPERTIES TIMEOUT 60)
 
 # --- BETA-BIRKIN-AUFTRITTE (2026-10-30): Hangar-Wurfszene ROOM50A0 + Morph Vierbein -> G5 ROOM5090 ---
 add_executable(test_birkin_szenen test_birkin_szenen.c)

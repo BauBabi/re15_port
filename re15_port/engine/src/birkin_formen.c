@@ -20,7 +20,7 @@ int  re15_r38_birkin_anim(re15_actor_t *e);              /* enemy_ai_common.c: C
 int  re15_r38_birkin_fc(const re15_actor_t *e);          /* enemy_ai_common.c: Clip-Laenge des Typs */
 
 /* ---- Modellwahl --------------------------------------------------------------------------- */
-static int s_bf_mutiert = 0;   /* 5090: Original-Birkin hat mutiert -> Vierbein-Modell */
+static int s_bf_mutiert = 0;   /* 5090: Original-Birkin hat mutiert -> Bahnsteig-Form */
 const char *re15_bf_emd_datei(uint8_t type)
 {
     /* Roter Affe (Video 1 4:11-4:19, tools/birkin_formen.py ROT_AFFE): nur die CLUTs von EM29 sind
@@ -33,13 +33,20 @@ const char *re15_bf_emd_datei(uint8_t type)
     if (form) {
         if (!strcmp(form, "original"))  return NULL;
         if (!strcmp(form, "hangar"))    return "EMD/EM30_HANGAR.EMD";
-        if (!strcmp(form, "bahnsteig")) return "EMD/EM30_BAHNSTEIG.EMD";
+        if (!strcmp(form, "bahnsteig")) return NULL;     /* eigene Bank: re15_bf_bahnsteig_bank_faellig */
     }
     if (re15_bf_hangar_aktiv())    return "EMD/EM30_HANGAR.EMD";
-    /* 5090: der Original-Birkin (EM30, Auslieferung) kaempft zuerst; erst nach seiner Mutation (Clip 0x14,
-     * sub 6 @0x80117f80) traegt er das Vierbein-Modell. */
-    if (re15_bf_bahnsteig_aktiv() && s_bf_mutiert) return "EMD/EM30_BAHNSTEIG.EMD";
     return NULL;
+}
+
+/* 5090: der Original-Birkin (EM30, Auslieferung) kaempft zuerst; erst nach seiner Mutation (Clip 0x14, sub 6
+ * @0x80117f80) traegt er die Bahnsteig-Form (RE2/BAHNSTEIG_G4.EMD, Lader platform/pc/main.c). */
+int re15_bf_bahnsteig_bank_faellig(uint8_t type)
+{
+    if (type != 0x30u) return 0;
+    const char *form = getenv("RE15_BIRKIN_FORM");
+    if (form) return !strcmp(form, "bahnsteig");
+    return re15_bf_bahnsteig_aktiv() && s_bf_mutiert;
 }
 
 int re15_bf_mutation_offen(void) { return re15_bf_bahnsteig_aktiv() && !s_bf_mutiert; }
@@ -52,7 +59,7 @@ void re15_bf_mutation_fertig(int slot)
     (void)slot;
     if (!re15_bf_bahnsteig_aktiv() || s_bf_mutiert) return;
     s_bf_mutiert = 1;
-    if (s_bf_modell_hook) s_bf_modell_hook(0x30u);      /* Plattform laedt die 0x30-Bank neu (jetzt Vierbein) */
+    if (s_bf_modell_hook) s_bf_modell_hook(0x30u);      /* Plattform laedt die 0x30-Bank neu (jetzt Bahnsteig-Form) */
 }
 
 int re15_bf_bahnsteig_aktiv(void)
@@ -124,10 +131,12 @@ static int s_szene_gespielt = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_kam_g5 = 0;       /* G5-Auftritt: Kamera aufs Zugende halten (Slot+1, 0 = aus) */
 static void bf_kamera(int cut);
+static void bf_zucken(re15_actor_t *e);
 
 void re15_bf_reset(void)
 {
     s_bf_mutiert = 0; s_kam_g5 = 0;
+    re15_bb_reset();
     s_rs.slot = -1; s_rs.phase = 0; s_rs.t = 0;
     s_h.raum = 0; s_h.birkin = s_h.sm = -1; s_h.phase = 0; s_h.t = 0; s_h.birkin_start = 0;
 }
@@ -139,6 +148,7 @@ static void bf_rueckstoss_tick(void);
 int re15_bf_szene_besitzt(int slot)
 {
     if (slot >= 0 && slot == s_rs.slot) return 1;       /* Rueckstoss-Szene 5090 */
+    if (slot >= 0 && re15_bb_pose_aktiv() && g_actors[slot].type == 0x30u) return 1;   /* Messhaken: Pose steht fest */
     if (s_h.raum == 0 || slot < 0) return 0;
     if (slot == s_h.sm) return 1;                       /* der Spider-Man gehoert bis zum Raumwechsel der Szene */
     return slot == s_h.birkin && s_h.phase < 5;
@@ -179,12 +189,18 @@ static int bf_anim_halt(re15_actor_t *e)
 
 void re15_bf_raumtick(void)
 {
+    re15_bb_pose_tick();                                 /* Messhaken der Sichtpruefung, im Normalpfad stumm */
     /* MESSHAKEN RE15_BIRKIN_HP_AT=<n>: n KI-Ticks nach Raumeintritt in 5090 die HP des 0x30 auf 0 (Sichtpruefung
-     * der Rueckstoss-Szene ohne Durchspielen). Im Normalpfad stumm. */
+     * der Rueckstoss-Szene ohne Durchspielen). Der Debug-Sprung setzt keinen Tuer-Schnitt, die Zonen laufen dann
+     * nie; RE15_BIRKIN_CUT=<n> stellt beim Raumeintritt den Schnitt (12 = Kampfstart sub01 @0x1290). Stumm im Normalpfad. */
     { static int at = -2; static unsigned raum = 0; static int t = 0;
       if (at == -2) { const char *v = getenv("RE15_BIRKIN_HP_AT"); at = v ? atoi(v) : -1; }
       if (at >= 0 && re15_bf_bahnsteig_aktiv()) {
-          if (raum != g_current_room_id) { raum = g_current_room_id; t = 0; }
+          if (raum != g_current_room_id) {
+              const char *c = getenv("RE15_BIRKIN_CUT");
+              raum = g_current_room_id; t = 0;
+              if (c) bf_kamera(atoi(c));
+          }
           if (++t == at || (t == 2 * at && s_bf_mutiert))
               for (int i = 1; i < RE15_ACTOR_MAX; i++)
                   if (g_actors[i].active && g_actors[i].type == 0x30u && g_actors[i].state == 1) {
@@ -286,7 +302,7 @@ void re15_bf_raumtick(void)
     }
 }
 
-/* ---- Bahnsteig: Rueckstoss-Szene Vierbein -> G5 -------------------------------------------
+/* ---- Bahnsteig: Rueckstoss-Szene Bahnsteig-Form -> G5 -------------------------------------
  * Nutzer 2026-10-30: "Man schiesst Birkin energiemaessig runter. Dann kommt eine Cutscene, wie Birkin mit
  * Schuessen nach hinten aus dem Zug rausgedraengt wird. Dann kommt er mit den Tentakeln in der finalen Form
  * wieder rein - genauso wie in RE2."
@@ -305,9 +321,18 @@ void re15_bf_raumtick(void)
 #define BF_RS_MIN_TICKS  90           /* Gestaltung: mindestens 3 s Beschuss */
 #define BF_RS_PAUSE      45           /* Gestaltung: Pause hinter dem Zugende */
 /* Kameras ROOM5090 (RID): Cut 12 (18526,-24660)->(1496,-20370) = Kampfkamera (sub04 Cut_chg 0x0C @0x1342),
- * Cut 11 (7626,-25360)->(-1504,-21970) = Blick auf das Zugende (Westende x -5683; derselbe Blick wie der
- * Vierbein-Screenshot V2 1:56). RE2 room7040 hat eigene Kameras, die der RE1.5-Wagen nicht teilt. */
+ * Cut 11 (7626,-25360)->(-1504,-21970) = Blick auf das Zugende (Westende x -5683; dieselbe Kamera wie das
+ * Kreatur-Standbild V2 1:56.3, SIFT-Beleg analysis/befunde_runde41/R_bahnsteig.md). RE2 room7040 hat eigene Kameras, die der RE1.5-Wagen nicht teilt. */
 #define BF_RS_ZUGENDE_KAM (-2500)     /* Gestaltung: ab hier schneidet die Szene aufs Zugende */
+/* Zuckt die Form unter dem Beschuss: mit der G4-Bank Clip 8 ab Bild 5 (@0x80107224), sonst EM30 Clip 7 (HURT
+ * @0x8011a2e0). */
+static void bf_zucken(re15_actor_t *e)
+{
+    e->anim_flags &= (uint16_t)~0x80u;                   /* Form kann gerade rueckwaerts gelaufen sein */
+    if (re15_bb_bank_da(e)) { e->motion = 8; e->anim_frame = 5; e->anim_frac = 7; }
+    else { bf_clip(e, 7); e->anim_frac = 0xf; }
+}
+
 static void bf_kamera(int cut)
 {
     if ((int)g_scd.work_vars[0x0A] != cut || g_scd.cam_id != cut) { g_scd.cam_id = (uint8_t)cut; g_scd.cam_change_pending = 1; }
@@ -321,7 +346,7 @@ void re15_bf_rueckstoss_start(int slot)
     s_rs.slot = slot; s_rs.phase = 1; s_rs.t = 0;
     re15_actor_t *e = &g_actors[slot];
     e->hp = 1;                                           /* bleibt "am Ende", stirbt aber nicht */
-    bf_clip(e, 7); e->anim_frac = 0xf;
+    bf_zucken(e);
     bf_kamera(0x0C);
 }
 
@@ -344,7 +369,7 @@ static void bf_rueckstoss_tick(void)
     e->state = 2; e->hp = 1;                             /* Treffer aendern nichts mehr am Ablauf */
     switch (s_rs.phase) {
     case 1: {
-        if (re15_r38_birkin_anim(e)) bf_clip(e, 7);      /* Zucken bei jedem Treffer: Clip 7 im Kreis */
+        if (re15_r38_birkin_anim(e)) bf_zucken(e);       /* Zucken bei jedem Treffer: Clip im Kreis */
         int32_t dx = BF_RS_AUSGANG_X - 900 - e->x, dz = BF_RS_AUSGANG_Z - e->z;
         int32_t rest = (int32_t)(dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
         int32_t ticks = BF_RS_MIN_TICKS - s_rs.t; if (ticks < 20) ticks = 20;
