@@ -684,7 +684,7 @@ void re15_render_init(void)
     {
         SDL_RendererInfo ri;
         const char *rname = (SDL_GetRendererInfo(s_renderer, &ri) == 0) ? ri.name : "?";
-        if (rname != (const char *)"?") s_cpu_rasterer = (ri.flags & SDL_RENDERER_SOFTWARE) != 0;   /* Runde 41 Spur Q: re15_gpu_grenze_r41.h */
+        if (rname == ri.name) s_cpu_rasterer = (ri.flags & SDL_RENDERER_SOFTWARE) != 0;   /* Runde 41 Spur Q: re15_gpu_grenze_r41.h */
         const char *vname = SDL_GetCurrentVideoDriver();
         SDL_BlendMode abr2 = SDL_ComposeCustomBlendMode(
             SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
