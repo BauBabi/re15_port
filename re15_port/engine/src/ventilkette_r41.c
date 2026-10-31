@@ -854,7 +854,7 @@ static void kasten_tick(void)
     if (s_kasten_vorher >= 0 && k != s_kasten_vorher)
         LOG("[ventilkette41] Ventil-Sicherungskasten 2010: Sicherung %s -> Bit (9,125) = %d\n", k ? "eingesetzt" : "genommen", k);
     s_kasten_vorher = k;
-    re15_schrank2010_r41_tick();                                     /* Spur N: aufklappen, Nahansichten */
+    re15_schrank2010_r41_tick();                                     /* Spur N: aufklappen, Einsetzen mit Cursor */
     if (!s_standbild_offen) {
         if (!re15_game_flag_get(5, RE15_R41C_FLAG_STANDBILD)) return;
         s_standbild_offen = 1; s_standbild_takte = 0;
@@ -873,7 +873,7 @@ static void kasten_tick(void)
 int re15_ventilkette_r41_standbild(unsigned *raum, int *cut)
 {
     int nah = 0;
-    if (ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2010) && re15_schrank2010_r41_nahbild(&nah)) {   /* Spur N: Nahansichten 2060 */
+    if (ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2010) && re15_schrank2010_r41_nahbild(&nah)) {   /* Spur N: Einsetz-Ansicht 2060 */
         if (raum) *raum = RE15_R41N_NAH_RAUM;
         if (cut) *cut = nah;
         return 1;

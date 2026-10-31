@@ -347,7 +347,7 @@
 #define RE15_R41C_FLAG_TON        0x1A   /* 2030: Ventil-Ton jetzt (Programm statt RE2 se_on(2,5) @0x02168..)    */
 #define RE15_R41C_FLAG_STANDBILD  0x1F   /* 2010: Standbild der Ventile offen (2010/2011 benutzen Bank 5 nicht)   */
 #define RE15_R41C_FLAG_SCHRANK    0x1E   /* 2010: Schrank klappt auf (Spur N, Programm -> C-Takt, While im Programm)  */
-#define RE15_R41C_FLAG_NAHBILD    0x1D   /* 2010: Nahansichten ROOM2060 Cut 8/9 im Ja-Zweig (Spur N)                 */
+#define RE15_R41C_FLAG_NAHBILD    0x1D   /* 2010: Einsetz-Ansicht ROOM2060 Cut 8 + Cursor im Ja-Zweig (Spur N), faellt mit Zone 7 + SQUARE */
 /* Ventil-Dreh-Animation (Nachbesserung 5, Nachtrag 18 Punkt 3, Dossier §0f B5-3): RE2 ROOM1080 (Hubschrauber-Landeplatz,
  * msg 0 @0x267A "A water pressure valve") sub08 @0x0210A..@0x0221E, Clips 15/16/17 aus dem RBJ @0x39AC derselben RDT
  * (13128 B, 1 Record, EMR 15 Knochen x 80 B, EDD 19 Clips: 15 = 30, 16 = 50, 17 = 40 Bilder) = shared_assets/RE2/
