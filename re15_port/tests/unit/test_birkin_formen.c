@@ -1,14 +1,13 @@
-/* test_birkin_formen.c — Formpruefung der beiden Beta-Birkin-Nachbildungen.
+/* test_birkin_formen.c — Formpruefung der Hangar-Nachbildung (Bahnsteig-Form: test_birkin_bahnsteig.c).
  *
- * EM30_HANGAR.EMD / EM30_BAHNSTEIG.EMD (re15_port/tools/birkin_formen.py) sind KEINE
- * Original-Assets, sondern aus EM30 (CDEMD0.EMS, Typ 0x30) abgeleitete Gestaltung. Der
- * Generator verspricht, dass nur MD1-Vertices/-Normalen, EMR-Bindoffsets und TIM-CLUTs
- * anders sind. Dieser Test haelt das fest, damit die Dateien im Port (RE15_BIRKIN_FORM,
- * platform/pc/main.c) mit den unveraenderten EM30-Clips und der EM30-KI laufen:
- *   - re15_emd_parse_container liest beide Dateien,
+ * EM30_HANGAR.EMD (re15_port/tools/birkin_formen.py) ist KEIN Original-Asset, sondern aus
+ * EM30 (CDEMD0.EMS, Typ 0x30) abgeleitete Gestaltung. Der Generator verspricht, dass nur
+ * MD1-Vertices/-Normalen, EMR-Bindoffsets und TIM-CLUTs anders sind. Dieser Test haelt das
+ * fest, damit die Datei im Port (RE15_BIRKIN_FORM, platform/pc/main.c) mit den unveraenderten
+ * EM30-Clips und der EM30-KI laeuft:
+ *   - re15_emd_parse_container liest die Datei,
  *   - Mesh-/Knochen-/Clip-/Keyframe-Zahlen und Hierarchie sind gleich wie bei EM30,
- *   - EDD ist byte-gleich; Keyframes byte-gleich (Hangar) bzw. nur an den umgehaltenen
- *     Knochen + Wurzelhoehe geaendert (Bahnsteig, Vierbein-Haltung),
+ *   - EDD und Keyframes sind byte-gleich,
  *   - die EM30-Topologie (Dreiecke/Quads, UVs) ist ein byte-gleiches Praefix; die Hangar-
  *     Form haengt ihren Schwanz nur an (Mesh 8) und jede Zusatz-Face zeigt in die Arrays,
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
@@ -171,7 +170,6 @@ int main(void)
     CHECK(rc == 0, "EM30: re15_emd_parse_container rc=%d", rc);
     if (rc == 0) {
         vergleiche("EM30_HANGAR.EMD", ems + off, len, 0);
-        vergleiche("EM30_BAHNSTEIG.EMD", ems + off, len, 1);
     }
     free(ems);
     if (fails) { fprintf(stderr, "test_birkin_formen: %d Fehler\n", fails); return 1; }

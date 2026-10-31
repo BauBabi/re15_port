@@ -888,9 +888,10 @@ static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
 {
     { static int s_hook = 0; if (!s_hook) { s_hook = 1; re15_bf_modell_hook(pc_enemy_modell_neu); } }
     /* BETA-FORMEN (Nutzerwunsch 2026-10-30, re15_birkin_formen.h): raumabhaengiges Ersatzmodell, z.B.
-     * EM30_HANGAR.EMD in 50A0/50A1, EM30_BAHNSTEIG.EMD in 5090/5091. ⛔ Nachbildungen nach dem
-     * 80%-Video, nicht byte-true (tools/birkin_formen.py). Vor dem CDEMD1-Zweig, damit die Wahl auch
-     * im Elza-Szenario greift. Fehlt die Datei, bleibt das Auslieferungsmodell. */
+     * EM30_HANGAR.EMD in 50A0/50A1. ⛔ Nachbildung nach dem 80%-Video, nicht byte-true
+     * (tools/birkin_formen.py). Vor dem CDEMD1-Zweig, damit die Wahl auch im Elza-Szenario greift.
+     * Fehlt die Datei, bleibt das Auslieferungsmodell. Die Bahnsteig-Form hat ihren eigenen Lader
+     * (pc_enemy_load_bahnsteig). */
     {
         const char *datei = re15_bf_emd_datei(type);
         int sz = 0; uint8_t *buf;
@@ -1086,12 +1087,53 @@ void pc_gator_se_re15(int se_id, int flag2000)
     re15_audio_re2_enemy_se(se_id, flag2000);
 }
 
+/* BAHNSTEIG-FORM (Runde 41 Spur R, re15_birkin_formen.h): RE2-G4 umgeformt, tools/birkin_bahnsteig.py. RE2-Format
+ * (8 Verzeichnis-Eintraege, TIM getrennt), liegt deshalb unter shared_assets/RE2/. Die Spieler-Haken der
+ * Birkin-Treffer (birkin_opfer.c) sind auf die Opfer-Bank von EM30 zugeschnitten (3 Clips 25/66/5 Bilder, dir[5]/[6]);
+ * die G4-Bank fuehrt unter denselben Nummern andere Ablaeufe (78/84/48), also bleibt die Opfer-Bank die von EM30. */
+static int pc_enemy_load_bahnsteig(uint8_t type, re15_enemy_bank_t *eb)
+{
+    extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
+    int esz = 0, tsz = 0;
+    uint8_t *emd = re15_pc_read_re2("BAHNSTEIG_G4.EMD", &esz);
+    uint8_t *tb  = re15_pc_read_re2("BAHNSTEIG_G4.TIM", &tsz);
+    if (!emd || !tb || re2_emd_parse_bank(emd, (size_t)esz, eb) != 0) {
+        free(emd); free(tb);
+        fprintf(stderr, "[enemy] Bahnsteig-Form: RE2/BAHNSTEIG_G4.EMD/.TIM fehlt oder defekt -> Auslieferungsmodell\n");
+        memset(eb, 0, sizeof *eb); eb->type = type; eb->pc_tex_slot = -1; eb->pc_tex_slot_gore = -1;
+        return 0;
+    }
+    eb->buf = emd;                                     /* md1/skel/anim zeigen in diesen Puffer */
+    eb->re2_rig = 1;
+    {   /* Opfer-Bank EM30: privater Blob, bleibt fuer die Laufzeit des Prozesses (Bank zeigt hinein) */
+        static uint8_t *s_em30 = NULL; static size_t s_em30_len = 0;
+        if (!s_em30) s_em30 = pc_enemy_read_re15_emd(type, &s_em30_len);
+        eb->victim_ok = s_em30 && re15_emd_parse_victim_bank(s_em30, s_em30_len, &eb->skel_victim, &eb->anim_victim) == 0;
+    }
+    {
+        re15_tim_t tim = {0};
+        int slot = 11 + (int)(eb - g_enemy);
+        if (re15_tim_parse(tb, tsz, &tim) == 0 && tim.width > 0 && tim.height > 0 && slot < 24) {
+            re15_render_pc_upload_tim_slot(&tim, slot);
+            eb->pc_tex_slot = slot;
+        }
+    }
+    free(tb);
+    eb->ok = 1;
+    re15_bb_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
+    fprintf(stderr, "[enemy] Bahnsteig-Form: %d Meshes, %d Knochen, %d Clips -> Slot %d\n",
+            eb->md1.mesh_count, eb->skel.bone_count, eb->anim.clip_count, eb->pc_tex_slot);
+    return 1;
+}
+
 static void pc_enemy_load_ex(uint8_t type, int allow_re2)
 {
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
     if (type == 0 || re15_enemy_find(type)) return;
     re15_enemy_bank_t *eb = re15_enemy_alloc(type);
     if (!eb) return;                                   /* registry full */
+
+    if (re15_bf_bahnsteig_bank_faellig(type) && pc_enemy_load_bahnsteig(type, eb)) return;
 
     /* ⛔ FINALER BIRKIN IM ENDKAMPF: RE2-Modell EM36 statt des RE1.5-Modells.
      * Anders als beim Alligator (dort gibt es kein RE1.5-Gegenstueck) FUEHRT das
@@ -1357,7 +1399,7 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
  * dessen Aufrufer die Herkunft mitgeben — s. Block ueber pc_enemy_load_ex). */
 static void pc_enemy_load(uint8_t type) { pc_enemy_load_ex(type, 1); }
 /* BETA-FORMEN (re15_birkin_formen.h): Bank eines Typs mitten im Raum neu laden - der 5090-Birkin wechselt
- * nach seiner Mutation vom Original-EM30 auf EM30_BAHNSTEIG (gleiche Clips/Hierarchie, s. birkin_formen.py). */
+ * nach seiner Mutation vom Original-EM30 auf die Bahnsteig-Form (RE2/BAHNSTEIG_G4.EMD). */
 static void pc_enemy_modell_neu(uint8_t type)
 {
     re15_enemy_bank_t *eb = re15_enemy_find(type);
@@ -10008,6 +10050,8 @@ re_title:;
                             }
                         }
                     }
+                    /* Runde 41 Spur R: Bahnsteig-Form, Schatten-Halbmasse wie G4 (+0x16c +4/+6 = 2300/1300 am Boden, @0x801002cc / @0x80100300). */
+                    if (re15_bb_bank_da(npc)) { nhx = 2300; nhz = 1300; }
                     /* Runde 36 Spur F: GORILLA 0x27 — Record +0xBC/+0xBE (1700/1800 @0x801171e8/f0) und
                      * Lache der Leiche (0x00ffff38 + 8/Takt @0x8011bed0-bf14); vorher 500x600-Standard. */
                     re15_r36_affen_lache_render(npc, &nhx, &nhz, &corpse_pool, &sh_r, &sh_g, &sh_b);

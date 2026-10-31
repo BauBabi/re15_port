@@ -3858,7 +3858,7 @@ static int op_sce_em_set(scd_thread_t *t)
      * laufen byte-identisch, der Typ waehlt nur das Modell. Deshalb genuegt
      * hier die Umtypung; KI, Schaden und Tod bleiben unveraendert. */
     /* SEIT 2026-10-30 (Nutzer: "Vierbein, dann G5"): der Spawn bleibt 0x30 und kaempft zuerst als
-     * Vierbein-Form (EM30_BAHNSTEIG.EMD), der G5 uebernimmt nach Todesphase 2 (re15_bf_morph_zu_g5,
+     * Bahnsteig-Form (RE2/BAHNSTEIG_G4.EMD), der G5 uebernimmt nach Todesphase 2 (re15_bf_morph_zu_g5,
      * re15_birkin_formen.h). RE15_ENDKAMPF_NUR_G5=1 = der bisherige Ablauf. */
     if ((g_current_room_id == 0x5090u || g_current_room_id == 0x5091u) &&
         type == 0x30u && !re15_bf_bahnsteig_aktiv())

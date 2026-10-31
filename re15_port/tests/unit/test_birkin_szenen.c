@@ -23,6 +23,7 @@
 #include "re15_damage.h"
 #include "re15_room.h"
 #include "re15_birkin_formen.h"
+#include "re2_ems.h"
 
 static int fails = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { fprintf(stderr, "FAIL: " __VA_ARGS__); \
@@ -63,6 +64,23 @@ static int bank_laden(uint8_t type, int idx, const char *ersatz)
     if (!eb) return 0;
     if (re15_emd_parse_container(s_ems_buf[idx], len, &eb->md1, &eb->skel, &eb->anim, NULL) != 0) return 0;
     eb->ok = 1; eb->buf = NULL;
+    return 1;
+}
+
+/* Bank der Bahnsteig-Form wie pc_enemy_load_bahnsteig (RE2-Format, Opfer-Bank EM30). */
+static uint8_t *s_form_emd = NULL;
+static int bank_form_laden(void)
+{
+    size_t len = 0;
+    if (!s_form_emd) s_form_emd = slurp(RE15_ASSET_PSX_DIR "/../RE2/BAHNSTEIG_G4.EMD", &len);
+    else return 0;
+    if (!s_form_emd) return 0;
+    re15_enemy_bank_t *eb = re15_enemy_find(0x30u);
+    if (!eb) return 0;
+    uint8_t typ = eb->type;
+    memset(eb, 0, sizeof *eb); eb->type = typ;
+    if (re2_emd_parse_bank(s_form_emd, len, eb) != 0) return 0;
+    eb->ok = 1; eb->re2_rig = 1; eb->buf = NULL;
     return 1;
 }
 
@@ -154,7 +172,7 @@ static void test_bahnsteig(void)
     re15_actor_t *b = &g_actors[bs];
     re15_game_flag_set(5, 0x1c, 0);
     (void)s_hook_rufe;
-    /* 1. ORIGINAL -> VIERBEIN: toedlicher Treffer vor der Mutation fuehrt in die Mutation (sub 6, Clip 0x14) */
+    /* 1. ORIGINAL -> BAHNSTEIG-FORM: toedlicher Treffer vor der Mutation fuehrt in die Mutation (sub 6, Clip 0x14) */
     b->x = 1200; b->z = -23350; b->grid_id = 0x13;
     b->state = 3; b->sub_state_3 = 0; b->hp = 0; b->birkin_flags = 0;
     int m, mut_clip = 0;
@@ -165,9 +183,9 @@ static void test_bahnsteig(void)
     CHECK(mut_clip, "Mutations-Clip 0x14 nicht gespielt");
     CHECK(!re15_bf_mutation_offen(), "Mutation endet nicht (%d Ticks)", m);
     CHECK(b->hp == 150 && b->type == 0x30u, "nach Mutation hp %d type 0x%02X", b->hp, b->type);
-    CHECK(re15_bf_emd_datei(0x30u) && strstr(re15_bf_emd_datei(0x30u), "BAHNSTEIG"), "nach Mutation kein Vierbein-Modell");
-    fprintf(stderr, "Bahnsteig: Mutation Original->Vierbein nach %d Ticks\n", m);
-    CHECK(bank_laden(0x30u, 0, re15_bf_emd_datei(0x30u)), "EM30_BAHNSTEIG-Bank");
+    CHECK(re15_bf_emd_datei(0x30u) == NULL && re15_bf_bahnsteig_bank_faellig(0x30u), "nach Mutation keine Bahnsteig-Form");
+    fprintf(stderr, "Bahnsteig: Mutation Original->Form nach %d Ticks\n", m);
+    CHECK(bank_form_laden(), "Bank der Bahnsteig-Form");
     /* Kampfposition wie nach sub04 (Pos_set(1200,0,-23350) @0x12FE), Spieler an der Kampfmarke (300,-23400) */
     b->x = 1200; b->z = -23350; b->grid_id = 0x13;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -191,7 +209,7 @@ static void test_bahnsteig(void)
     CHECK(b->grid_id == 0x13u, "G5 nicht armiert (grid 0x%02X)", b->grid_id);
     CHECK(!b->no_draw, "G5 bleibt unsichtbar");
     CHECK(g_scd.cam_id == 0x0B, "G5-Auftritt nicht auf Cut 11 (Zugende), cam %d", g_scd.cam_id);
-    CHECK(re15_game_flag_get(5, 0x1c) == 0, "Birkin-Schalter z5:0x1C schon beim Vierbein-Tod gesetzt");
+    CHECK(re15_game_flag_get(5, 0x1c) == 0, "Birkin-Schalter z5:0x1C schon beim Tod der Form gesetzt");
     fprintf(stderr, "Bahnsteig: Rueckstoss + Morph nach %d Ticks (min x %d)\n", f, x_min);
     free(buf);
 }
