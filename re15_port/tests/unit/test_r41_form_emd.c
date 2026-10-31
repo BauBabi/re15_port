@@ -1,7 +1,7 @@
 /* test_r41_form_emd.c — Runde 41 Form-Werkzeug: das Probemodell aus tools/form_emd.py durch die echten Parser des Ports.
  *
  * tests/unit/form_probe/FORM_PROBE.EMD/.TIM schreibt `python re15_port/tools/form_emd.py probe --aus re15_port/tests/unit/form_probe`.
- * Drei Knochen aus Quadern, zwei Clips (2 + 32 Bilder); die Erwartungswerte unten stehen von Hand in probe_form().
+ * Drei Knochen aus Quadern, Spitze aus Dreiecken, zwei Clips (2 + 32 Bilder); die Erwartungswerte unten stehen von Hand in probe_form().
  * Keine Original-Konstanten: dieser Test haelt fest, dass der Schreiber das Format trifft, das
  * re2_emd_parse_bank / re15_md1_parse / re15_tim_parse lesen, inklusive freier Knochenzahl (Bank-Bit bb_form).
  */
@@ -91,16 +91,33 @@ static int gewunden_wie_regel(const re15_md1_mesh_t *m, const re15_md1_quad_t *q
     return kx * n->x + ky * n->y + kz * n->z < 0;
 }
 
+static int gewunden_wie_regel_d(const re15_md1_mesh_t *m, const re15_md1_triangle_t *t)
+{
+    const re15_md1_vertex_t *a = &m->tri_vertices[t->v0], *b = &m->tri_vertices[t->v1], *c = &m->tri_vertices[t->v2];
+    const re15_md1_vertex_t *n = &m->tri_normals[t->n2];
+    int64_t ux = b->x - a->x, uy = b->y - a->y, uz = b->z - a->z, vx = c->x - a->x, vy = c->y - a->y, vz = c->z - a->z;
+    int64_t kx = uy * vz - uz * vy, ky = uz * vx - ux * vz, kz = ux * vy - uy * vx;
+    return kx * n->x + ky * n->y + kz * n->z < 0;
+}
+
 static void pruefe_mesh(const re15_enemy_bank_t *eb)
 {
     const re15_md1_t *md = &eb->md1;
     CHECK(md->mesh_count == 3, "Meshes %d", md->mesh_count);
     for (int i = 0; i < md->mesh_count && i < 3; i++) {
         const re15_md1_mesh_t *m = &md->meshes[i];
-        CHECK(m->triangle_count == 0 && m->quad_count == 6, "Mesh %d: %d Dreiecke, %d Vierecke", i, m->triangle_count, m->quad_count);
-        CHECK(m->quad_vertex_count == 8 && m->quad_normal_count == 6, "Mesh %d: %d Ecken, %d Normalen", i, m->quad_vertex_count, m->quad_normal_count);
+        const int kopf = (i == 1);                     /* Kopf: Quader plus Spitze aus vier Dreiecken */
+        CHECK(m->triangle_count == (kopf ? 4 : 0) && m->quad_count == 6, "Mesh %d: %d Dreiecke, %d Vierecke", i, m->triangle_count, m->quad_count);
+        CHECK(m->quad_vertex_count == (kopf ? 13 : 8) && m->quad_normal_count == (kopf ? 11 : 6), "Mesh %d: %d Ecken, %d Normalen", i, m->quad_vertex_count, m->quad_normal_count);
         for (int q = 0; q < m->quad_count; q++)
             CHECK(gewunden_wie_regel(m, &m->quads[q]), "Mesh %d Viereck %d falsch gewunden", i, q);
+        for (int t = 0; t < m->triangle_count; t++) {
+            /* Tri- und Quad-Teil teilen den Eckblock (wie das Muster); die Spitze zeigt mit ihren Normalen nach aussen (+X) */
+            CHECK(m->tri_vertices == m->quad_vertices && m->tri_normals == m->quad_normals, "Mesh %d: getrennte Bloecke", i);
+            CHECK(m->tri_vertices[m->triangles[t].v2].x == 600, "Dreieck %d: dritte Ecke ist nicht die Spitze", t);
+            CHECK(m->tri_normals[m->triangles[t].n2].x > 0, "Dreieck %d: Normale zeigt nach innen", t);
+            CHECK(gewunden_wie_regel_d(m, &m->triangles[t]), "Dreieck %d falsch gewunden", t);
+        }
     }
     if (md->mesh_count < 3) return;
     {   /* Kopf: Texel-x 130 liegt in TPage 1 (main.c page_off), CLUT-Wort Zeile 0 = 480 << 6 */

@@ -6,7 +6,14 @@
     python re15_port/tools/form_buehne.py --emd X.EMD --tim X.TIM --clip 5 --bild 0 --lage 1500,0,-23000,0 \
         --kamera analysis/befunde_runde41/form/kamera_bild2.json --aus blatt.png
 
+    python re15_port/tools/form_buehne.py ... --rundum 8 --aus rundum.png        # acht Gierwinkel
+    python re15_port/tools/form_buehne.py ... --clip 5 --streifen 6 --aus film.png   # jedes sechste Bild des Clips
+
+Als Bibliothek: buehne(emd, tim, clip, bild, lage, gier, kam, licht, hintergrund) -> (Bild, Maske), Kamera.aus_rid(), Raum(), deckung().
+
 Blatt: Original | Render | Render durch video_filter (form_video.py, falls vorhanden) | Original mit Umriss.
+Hintergrund: --hintergrund PNG oder, mit --raum, das BSS-Bild des Schnitts (Werkzeug probe_bg_dump, Zwischenablage build/form_bg). Fuer eine
+Vorlage ohne Raum im Spiel (Bahnsteig) dient die Vorlage selbst als Hintergrund, Licht dann mit --licht-raum/--licht-schnitt oder --kein-licht.
 --spiel BILD.png legt ein Fensterbild aus form_spiel.sh daneben und misst die Deckung (bester Versatz, Farbabstand).
 
 Nachbau des Port-Zeichenwegs, Stelle fuer Stelle (nur fuer Typ 0x30 ohne Teilschicht, Tinte, Gore, Skalierung):
@@ -390,6 +397,7 @@ def main():
     ap.add_argument('--bild', type=int, default=0)
     ap.add_argument('--kf', type=int, help='Keyframe direkt statt Clip/Bild')
     ap.add_argument('--lage', default='0,0,0,0', help='x,y,z,gier des Aktors')
+    ap.add_argument('--pose', help='x,z,gier,clip,bild,schnitt wie form_spiel.sh; ersetzt --lage, --clip, --bild, --schnitt')
     ap.add_argument('--kamera', help='kamera_bildN.json')
     ap.add_argument('--raum', help='z.B. 5090: RID und Licht aus dem RDT')
     ap.add_argument('--schnitt', type=int, default=0)
@@ -408,6 +416,9 @@ def main():
     emd = open(a.emd, 'rb').read()
     tim = open(a.tim, 'rb').read()
     x, y, z, gier = (int(v) for v in a.lage.split(','))
+    if a.pose:
+        x, z, gier, a.clip, a.bild, a.schnitt = (int(v) for v in a.pose.split(','))
+        y = 0                                           # RE15_BB_POSE setzt e->y = 0
     raum = Raum(a.raum) if a.raum else None
     if a.kamera:
         kam = kamera_laden(a.kamera)

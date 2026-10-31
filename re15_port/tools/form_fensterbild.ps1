@@ -1,8 +1,9 @@
 # form_fensterbild.ps1 -Hwnd <dezimal> -Aus <datei.png>
 # Fensterinhalt von aussen holen, wenn gdigrab nicht geht: PrintWindow mit PW_RENDERFULLCONTENT (Flag 2) laesst die
 # Fensterverwaltung den D3D11-Inhalt selbst zusammensetzen. Kein Readback im Spielprozess, also nicht RE15_AUTOSHOT.
-# Gebraucht in getrennten Sitzungen: dort meldet gdigrab "Failed to capture image (error 5)" fuer den Desktop und schwarze
-# Bilder fuer hwnd= (gemessen 2026-10-31, qwinsta Status Getr.).
+# Gebraucht in getrennten Sitzungen (qwinsta Status Getr.): dort meldet gdigrab "Failed to capture image (error 5)" fuer den
+# Desktop und liefert fuer hwnd= schwarze oder unbrauchbare Bilder (gemessen 2026-10-31). Auch PrintWindow lieferte einmal ein
+# schwarzes Bild, deshalb prueft form_spiel.sh die Helligkeit und wiederholt.
 param([long]$Hwnd, [string]$Aus)
 Add-Type -AssemblyName System.Drawing
 Add-Type @"

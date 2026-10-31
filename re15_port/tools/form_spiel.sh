@@ -8,8 +8,8 @@
 # shared_assets/RE2 zurueck), Debug-Sprung in den Raum, Haken RE15_BB_POSE haelt Lage, Clip und Schnitt
 # (engine/src/birkin_bahnsteig.c), gdigrab per Fenster-Handle (Skill re15-port-visual-verify), Ende nur der eigenen PID.
 # Kein AUTOSHOT, kein SOFTWARE_RENDER. Das Skript beendet nie fremde Prozesse.
-# In einer getrennten Sitzung (qwinsta Status Getr.) liefert gdigrab nur Schwarz: dann holt form_fensterbild.ps1 den Inhalt des
-# echten D3D11-Fensters von aussen ueber PrintWindow(PW_RENDERFULLCONTENT). Die Ausgabezeile "Verfahren:" nennt den Weg.
+# In einer getrennten Sitzung (qwinsta Status Getr.) geht gdigrab nicht: dann holt form_fensterbild.ps1 den Inhalt des echten
+# D3D11-Fensters von aussen ueber PrintWindow(PW_RENDERFULLCONTENT). Die Ausgabezeile "Verfahren:" nennt den Weg.
 #
 # Optionen:
 #   --emd DATEI --tim DATEI   Kandidat. Ohne beide laeuft das Asset aus shared_assets/RE2.
@@ -59,6 +59,9 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$POSE" ] && [ -n "$AUS" ] || { echo "--pose und --aus sind Pflicht" >&2; exit 2; }
 [ -f "$EXE" ] || { echo "exe fehlt: $EXE (bash re15_port/tools/local_build.sh build)" >&2; exit 2; }
+# Helligkeitspruefung braucht das Python der Werkbank (mit PIL). msys64-Python hat kein PIL: mit /c/msys64/mingw64/bin vorn im PATH
+# meldete die Pruefung jedes Bild als schwarz.
+python -c "import PIL, numpy" 2>/dev/null || { echo "python ohne PIL/numpy: $(command -v python)" >&2; exit 2; }
 if [ -n "$EMD$TIM" ]; then
     [ -f "$EMD" ] && [ -f "$TIM" ] || { echo "Kandidat unvollstaendig: '$EMD' '$TIM'" >&2; exit 2; }
 fi
@@ -84,7 +87,6 @@ export RE15_BIRKIN_FORM=bahnsteig RE15_BB_POSE="$POSE" RE15_SPAWN_DIAG=1
 export RE15_EXIT_AT="9000#$RAUM"                        # Selbstabbruch, falls dieses Skript stirbt
 [ -n "$EMD" ] && [ "$EINSETZEN" = 0 ] && export RE15_RE2_ASSET_ROOT="$LAUF/re2"
 for kv in $ZUSATZ; do export "$kv"; done
-export PATH="/c/msys64/mingw64/bin:$PATH"               # DLLs der exe
 
 cd "$LAUF" || exit 2
 timeout "$ZEIT" "./$NAME.exe" >exe_stdout.log 2>exe_stderr.log &
@@ -124,21 +126,24 @@ if [ "$ANWESEND" = 1 ] && [ -n "$HWND" ] && [ "$HWND" != "0" ]; then
     sleep 1
     HX=$(printf '0x%x' "$HWND")
     mkdir -p "$(dirname -- "$AUS")"
+    # gdigrab nur in einer verbundenen Sitzung; getrennt scheitert der Desktop mit error 5, und hwnd= liefert Schwarz oder Muell.
+    if "$FFMPEG" -hide_banner -loglevel quiet -f gdigrab -framerate 1 -i desktop -frames:v 1 -f null - 2>/dev/null; then WEG=gdigrab
+    else WEG=PrintWindow; echo "Sitzung ohne Desktop: $(/c/Windows/System32/qwinsta.exe 2>/dev/null | grep -a '^>' | tr -s ' ')"; fi
     i=1; RC=0
     while [ "$i" -le "$BILDER" ]; do
         ZIEL="$AUS"; [ "$BILDER" -gt 1 ] && ZIEL="${AUS%.png}_$i.png"
-        VERFAHREN=""
+        GUT=0
         for versuch in 1 2 3 4 5 6; do
-            # drei Bilder, das letzte zaehlt: das erste gdigrab-Bild kann noch vom Fensterwechsel stammen
-            "$FFMPEG" -hide_banner -loglevel error -y -f gdigrab -framerate 5 -draw_mouse 0 -i "hwnd=$HX" -frames:v 3 -update 1 "$ZIEL" 2>/dev/null
-            if [ "$(hellstes "$ZIEL")" -ge 8 ]; then VERFAHREN=gdigrab; break; fi
-            # Getrennte Sitzung (qwinsta Status Getr.): gdigrab liefert schwarz -> Fensterverwaltung fragen (form_fensterbild.ps1)
-            [ "$versuch" = 1 ] && echo "gdigrab: leeres Bild, Sitzung: $(/c/Windows/System32/qwinsta.exe 2>/dev/null | grep -a '^>' | tr -s ' ')"
-            "$PS" -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$BAUM/re15_port/tools/form_fensterbild.ps1")" -Hwnd "$HWND" -Aus "$(cygpath -w "$ZIEL")" | tr -d ''
-            if [ "$(hellstes "$ZIEL")" -ge 8 ]; then VERFAHREN=PrintWindow; break; fi
+            if [ "$WEG" = gdigrab ]; then
+                # drei Bilder, das letzte zaehlt: das erste kann noch vom Fensterwechsel stammen
+                "$FFMPEG" -hide_banner -loglevel error -y -f gdigrab -framerate 5 -draw_mouse 0 -i "hwnd=$HX" -frames:v 3 -update 1 "$ZIEL" 2>/dev/null
+            else
+                "$PS" -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$BAUM/re15_port/tools/form_fensterbild.ps1")" -Hwnd "$HWND" -Aus "$(cygpath -w "$ZIEL")" | tr -d ''
+            fi
+            if [ "$(hellstes "$ZIEL")" -ge 8 ]; then GUT=1; break; fi
             sleep 2                     # Abblende oder noch kein Bild: gleich nochmal
         done
-        if [ -n "$VERFAHREN" ]; then echo "Verfahren: $VERFAHREN (Versuch $versuch)"; echo "Bild: $ZIEL"
+        if [ "$GUT" = 1 ]; then echo "Verfahren: $WEG (Versuch $versuch)"; echo "Bild: $ZIEL"
         else echo "kein Bild: alle Versuche schwarz" >&2; RC=1; fi
         i=$((i + 1))
         [ "$i" -le "$BILDER" ] && sleep 1

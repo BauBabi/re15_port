@@ -719,13 +719,15 @@ def probe_tim():
 
 
 def probe_form():
-    """Drei Knochen aus Quadern, zwei Clips. Maße sind Werkzeugtest, sie bilden nichts ab."""
+    """Drei Knochen aus Quadern, am Kopf eine Spitze aus Dreiecken, zwei Clips. Masse sind Werkzeugtest, sie bilden nichts ab."""
     f = neu()
     rumpf = knochen_dazu(f, 'rumpf', -1, (0, -1000, 0))
     kopf = knochen_dazu(f, 'kopf', rumpf, (1100, -300, 0))
     arm = knochen_dazu(f, 'arm', rumpf, (600, 300, 700))
     quader(f, rumpf, (-900, -400, -500), (900, 400, 500), tex=[(0, 0, 59, 59), (64, 0, 123, 59)] * 3)
     quader(f, kopf, (-250, -250, -250), (250, 250, 250), tex=(130, 0, 189, 59))
+    netz(f, kopf, [(250, -150, -150), (250, -150, 150), (250, 150, 150), (250, 150, -150), (600, 0, 0)],
+         [(0, 1, 4), (1, 2, 4), (2, 3, 4), (3, 0, 4)], [(130, 0), (189, 0), (189, 59), (130, 59), (160, 30)])
     quader(f, arm, (-150, 0, -150), (150, 900, 150), tex=(194, 0, 253, 59), zeile=1)
     h = (0, -1000, 0)
     stehen = [bild(f, wurzel=h), bild(f, wurzel=(0, -1000, 0), winkel={kopf: (0, 200, 0)})]
