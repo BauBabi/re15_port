@@ -82,3 +82,16 @@ An der exe (Leon, je 4 Laeufe mit/ohne/leer/leer0, A0 = (20000,20000), Bild 120,
 | (-20112,-19620) vor der Wange | 29 | - | 2 / 27 |
 Bilder `Q_belege/m1_p2_vorher.png`, `m1_p2_nachher.png` (je A0, B, A, Lupe mit Rest in Rot).
 Die 63 Punkte der Abnahme-Stelle sind kein Loch: die Stelle liegt 7 Einheiten neben der Westflaeche, der Kopf ragt zur Kamera vor die Flaeche. Gegenprobe mit um k Stufen vorgezogener Maske (nur fuer die Messung, Datei danach zurueck): k = 1: 59 sichtbar, 2: 48, 4: 23, 8: 0. Diese Punkte liegen also bis 8 Stufen VOR dem Koerper, sie zu verdecken waere der Fehler, den Regel 6 verbietet (Figur vor dem Gegenstand wird nie verdeckt).
+
+## Punkt 2 - Teile-Bericht, Freistellungs-Liste, 4040 C12
+
+### Messung vorher
+Abnahme M 5 Mangel 2/3: `M_bilder/NB5/teile_nb5.txt` aus pl_a2 (266/278), MASKS aus pl_a3 (267/277), 21 Teile anders, 34 von 61 Sektionskoepfen falsch; 8 Sektionen fehlen in der Liste; Szenen t4040_12/t4040_12e messen das 3D-Tor (S_bau 440, S_fig 0).
+
+### Umsetzung
+- tools/maske/teile_bericht_r41.py schreibt den Bericht aus platzieren_r41.json. Eichung: aus pl_a2 gerechnet 625 von 625 Datenzeilen gleich der alten Datei (0 Abweichungen), danach aus pl_a3 geschrieben. Zusatz am Teil 6010 C5 T8: Tiefe je OT-Stufe.
+- Nachher: `Q41/tools/teile_vergleich.py` (Skript der Abnahme): `pl_a3 ... OHNE 277, MIT 267 | teile_nb5.txt ... OHNE 277, MIT 267`, `Teile mit anderem Ergebnis: 0`. Summen 267 Teile / 103 112 Punkte, 277 Teile / 144 225 Punkte = Dossier M Z. 1161.
+- Liste: Abgleich aller 62 Zeilen gegen pl_a3 ohne Abweichung, die 8 fehlenden eingefuegt (3040 C10 218, 3050 C1 106, 3050 C6 209, 5050 C1 275, 5050 C2 174, 6000 C7 172, 6000 C9 108, 6030 C12 139), keine Mindestgroesse mehr; je Stelle Restbild `M_bilder/NB5_rest/NB5_rest_ROOMxxxx_Cnn.png` (70 Bilder).
+- 4040 C12: das Teil ist der schmale Streifen am Torrahmen (Rechtecke 105..125, Bild X 75..106, 723 Punkte). Reale Stellensuche (`Q41/tools/stellen_q.py` ueber alle 1062 erreichbaren Plaetze von `test_r37_masken36 plaetze 4040 12`): HINTER-Kandidaten nur (-4000,4678), (-3900,4578), (-3800,4478). An der exe je 4 Laeufe: Figur X 45..70, Figur auf dem Teil 0/0/0. Jenseits des Tors gibt es keinen Stehplatz. Damit gibt es dort KEINE HINTER-Stelle: Szenen t4040_12/t4040_12e entfernt, Dossier M Tabelle und OFFEN 21 berichtigt.
+- Laeufer test_r41_masken36_stage2.cmake: Art M mit A0 zaehlt nur die Spielfigur (S = |B - D|, dritter Lauf). Alle 38 verbliebenen M-Szenen der Gruppen a1..d2 tragen A0 aus der Liste der Abnahme (`M41abn5/aussen_alle.txt`), 6010 C5 hat keinen erreichbaren Platz draussen: A0=20000,20000 wie Lauf o6010_05. So faellt ein 3D-Objekt im Fenster ab jetzt auf ("Leon im Figurfenster nicht zu sehen").
+- Szenenzahl: 106 laut Dateien (Dossier/Commit nannten 108), jetzt 104.

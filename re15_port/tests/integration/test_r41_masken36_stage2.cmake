@@ -14,7 +14,9 @@ cmake_minimum_required(VERSION 3.16)
 #   KURBEL ROOM2020 Cut 3 (Pos_set @0x0A8C (3650,-1800,-2925)): Leon steht HINTER der Suedreling (Riegel
 #        unit_r41_masken36_kurbel: Sichtlinie kreuzt die solide Zelle x -400..13100 z -2550..-2050), die Reling-Maske
 #        verdeckt seine Beine: S > 50 und H > 0 (gemessen 86 von 779).
-#   M    (Nachbesserung 1) Gegenprobe "die Maske wirkt": Figur HINTER dem Objekt, S > 50 und H > 0.
+#   M    (Nachbesserung 1) Gegenprobe "die Maske wirkt": Figur HINTER dem Objekt, S > 50 und H > 0. Mit A0=<x>,<z> (Runde 41 Spur Q, Abnahme M 5 Mangel 3) zaehlt
+#        wie bei L nur die SPIELFIGUR (dritter Lauf D ohne Masken, Figur an A0, S = |B - D| > 24): gegen den Hintergrund C zaehlte ein 3D-Objekt mit (4040 C12: das
+#        geschlossene Tor ergab S 440, H 20 ohne jeden Punkt der Figur).
 #   Z    (Nachbesserung 3, Abnahme 2 Mangel 1 "zu fern") Figur HINTER dem Gegenstand: im Fenster (Flaeche des Gegenstands unter
 #        seiner Oberkante) ist KEIN Figurpunkt im Endbild zu sehen: S > 50 und V == 0. V = Figurpunkte mit |A - A0| > 24, A0 =
 #        dritter Lauf MIT Masken, Figur an der Stelle A0=<x>,<z> ausserhalb des Regionsvierecks (Figuren-Cull FUN_80014368, z.B.
@@ -184,6 +186,8 @@ foreach(_sz IN LISTS R41M_SZENEN)
             message(FATAL_ERROR "r41_masken36_stage2[${_name}]: Art L braucht A0=<x>,<z>")
         endif()
         list(APPEND _laeufe d)
+    elseif(_art STREQUAL "M" AND NOT "${_a0x}" STREQUAL "")    # Runde 41 Spur Q: nur die Spielfigur (Kopf Art M)
+        list(APPEND _laeufe d)
     endif()
     foreach(_mit IN LISTS _laeufe)
         set(WORKDIR "${_basis_wd}/lauf_${_lauf_id}_${_name}_${_mit}")
@@ -275,7 +279,7 @@ foreach(_sz IN LISTS R41M_SZENEN)
         set(_h "${CMAKE_MATCH_2}")
         set(_v "${CMAKE_MATCH_3}")
     else()
-        if(_art STREQUAL "L")
+        if(_art STREQUAL "L" OR (_art STREQUAL "M" AND NOT "${_a0x}" STREQUAL ""))
             list(GET _ppm 2 _pc)                 # NB5: "Hintergrund" = Lauf D (ohne Masken, ohne Spielfigur) -> S = nur die Spielfigur
         endif()
         execute_process(COMMAND "${RE15_PPM_TOOL}" "${_pa}" "${_pb}" "${_pc}" ${_x0} ${_y0} ${_x1} ${_y1} 24
