@@ -267,3 +267,23 @@ Maengel aus O_abnahme_0.md: M1 Riegel unit_r36_tueren_aufschliessen rot, M2 zwei
 Bytes selbst gelesen, ROOM10D0: Slot 1 @0x0103E `2c 01 03 31 00 00 90 01 fa e7 20 03 20 03 ff 00 18 14` (sce 3, Ereignis 0x14 = 20);
 sub20 @0x019AE `2b 07 ff ff` Message_on 7, @0x019B8 `21 0c 1f 00` Ck(12,31,0), @0x019C0 `21 09 34 01` Ck(9,0x34,1), @0x019C4 `2b 09 ff ff` Message_on 9,
 Else @0x019D2 `2b 08 ff ff`. Ton: gen/r36_aufschliessen.inc `{ 0x10D0, 9, RE15_AUF_ART_KARTE_EIN, 2 }` (sub20 @0x019C4), Besitz kistenregel_r37.c `{ 0x10D0, 0x019C0, 9, 0x34, 1, 0x38, ... }`.
+
+### M1 Aenderung (nur Test, kein Engine-Code)
+tests/unit/probe_r36_tueren.c Teil 5b': USE statt Aktionstaste + Quadrat (`re15_keyitems_r41_testlauf(0x38)`, ohne jede Taste). Blue Keycard liegt ueber room_boot und die Kistenregel-Zeile @0x019C0 im Inventar, der Riegel prueft das. Erwartung unveraendert ein Ton Satz 0 bei Bild 0; neu dazu: Ton im ersten Skripttakt, Frage entfallen (Zaehler), msg 9 @0x019C4.
+Der alte Weg bleibt als Gegenprobe (Aktionstaste, Quadrat wie vor Runde 41): Frage erreicht (Zaehler), 0 Toene, kein msg 9, (9,0x34) bleibt. Form RE2 ROOM2110: Leser-USE @0x01812/@0x01AD8, Aktionstaste Slot 5 @0x017FE nur Text.
+Schaerfe einmalig gemessen (nicht committet): mit `re15_keyitems_r41_test_ja(1)` vor dem Aot-Druck, also Antwort Ja am alten Weg: `FEHLER: ROOM10D0 Aktionstaste: 1 Toene statt 0`, `FEHLER: ROOM10D0 Aktionstaste: msg 9 ohne USE`, `aufschliessen: ROT (2 Fehler)`.
+
+### M1 Messung nachher
+`ROOM10D0 Kartenleser USE (KARTE_EIN): Ton 0 = Satz 0 bei Bild +0`, `aufschliessen: GRUEN (0 Fehler)`, `100% tests passed, 0 tests failed out of 1`.
+
+### M2 Ursache, Beleg, Aenderung
+Die Entscheidungen standen nur im Dossier, der Code nannte weder Abweichung noch Wort. Vor dem Kommentar selbst nachgelesen, nicht von der Abnahme uebernommen:
+- RE1.5 Stufe 4 @0x8001cc34: `lui a1,0x800b`/`addiu a1,a1,-13760` (g_pauseflags), @0x8001cc54 `lui v0,0xff00`, @0x8001cc5c `or a0,a0,v0`, @0x8001cc6c `sw a0,0(a1)`; 5359 := 5 @0x8001cc50; Stufe 5 stellt nach der Blende zurueck (@0x8001cc94). Skript-Gate FUN_8003f038: @0x8003f040 `lw v0,-13760(v0)`, @0x8003f044 `lui v1,0x200`, @0x8003f04c `bne`.
+- RE2 @0x80025ca8 `lw v0,-1060(v0)` (0x800cfbdc), @0x80025cb0 `lui v1,0xef00`, @0x80025cbc `sw`. Skript-Gate FUN_80053644: @0x80053658 `lw`, @0x8005365c `lui v1,0x200`, @0x80053664 `bne`. 0xef00.... enthaelt 0x0200...., das Skript steht also auch in RE2.
+- ROOM2020 @0x0B0E `29 03` Cut_chg, @0x0B16 `42 00` Plc_ret; RE2 ROOM1110 @0x02F24 `53 02 02 07 00 18`, @0x02F4E `53 02 02 07 00 e8`.
+Geaendert: menu_common.c close_phase (Kommentarblock, Wort PORT-WAHL, Adressen), scd_vm.c op_plc_ret (Wort PORT-WAHL, @0x0B16), keyitems_r41.c re15_keyitems_r41_plc_ret, Kopf re15_keyitems_r41.h, zusaetzlich k_flagitems (NUTZER-VORGABE). Alle PORT-WAHL des Dossiers stehen jetzt auch im Code (Id 0x33, Waffe, Welt in der Blende, Szenenende).
+
+Berichtigung: der Abstand steht oben im Dossier und in Abnahme 0 als 870. Gemessen (2914,-3388) -> (3650,-3018) sind es 823,8. Der Kommentar nennt 824.
+
+### M2 Messung nachher: nur Kommentare
+objdump gegen die vor der Aenderung gesicherten Objekte: `.text`, `.rdata`, `.data`, `.bss` von keyitems_r41, menu_common, scd_vm gleich. Das Spielverhalten ist also unveraendert, die Messlaeufe der Abnahme gelten weiter.

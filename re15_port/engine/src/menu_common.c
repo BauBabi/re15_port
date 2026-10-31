@@ -1566,7 +1566,11 @@ static void close_phase(void)
     re15_fade_config(0, 2, 7, (int16_t)-0x1800, 0);
     re15_fade_kick(0, 0);
     s_stage = 4;
-    if (re15_keyitems_r41_schliessen()) s_stage = 0;   /* Runde 41 Spur O: USE-Ereignis laeuft schon in der Blende (Kamera und Lage stehen, bevor das Spielbild kommt) */
+    /* Runde 41 Spur O, PORT-WAHL "Welt laeuft in der Blende": beim USE-Lauf entfallen die Stufen 4/5, das Skript laeuft schon in der Einblende, damit Cut_chg und
+     * Pos_set stehen, bevor das Spielbild kommt (Auftrag Nachtrag 34; ROOM2020 Pos_set @0x0A8C liegt 824 neben dem Standort in der Stelle @0x009AE). Das Original haelt
+     * das Skript dort an: RE1.5 Stufe 4 @0x8001cc34 pauseflags |= 0xff000000 (@0x8001cc54, Gate Bit 0x02000000 @0x8003f044), RE2 @0x80025cb0 |= 0xef000000 (Gate
+     * @0x8005365c). Form: RE2 ROOM1110 verdeckt Pos_set am Szenenende im Schwarz (Blende @0x02F24/@0x02F4E). */
+    if (re15_keyitems_r41_schliessen()) s_stage = 0;
 }
 
 /* ---------------------------------------------------------------------------------- */

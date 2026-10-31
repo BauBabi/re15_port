@@ -43,7 +43,7 @@
  * schliessen (RE2 @0x8006b2e0); 0 = "You can't use it here." (RE2 @0x8006b248 / RE1.5 c3=6 @0x8004ab6c). */
 int  re15_keyitems_r41_use(uint8_t item_id);
 /* Inventar-Teardown (close_phase): 1 = USE-Lauf vorgemerkt: das Ereignis ist gestartet und die Welt laeuft in der Blende, damit
- * Kamera und Lage stehen, bevor das Spielbild zurueckkommt. */
+ * Kamera und Lage stehen, bevor das Spielbild zurueckkommt (PORT-WAHL, Abweichung und Belege in close_phase, menu_common.c). */
 int  re15_keyitems_r41_schliessen(void);
 /* op_message_on: 0 = normal weiter; 1 = Nachricht entfaellt (pc += 4, Antwort steht in (12,31)). */
 int  re15_keyitems_r41_message_on(uint8_t msg_id);
@@ -53,7 +53,7 @@ int  re15_keyitems_r41_evt_next(void);
 int  re15_keyitems_r41_sleep(void);
 /* op_plc_motion: 0x40 = RE2-Flag "keine Blende" (ROOM1110 @0x02FC1), sonst 0. */
 int  re15_keyitems_r41_plc_flags(void);
-int  re15_keyitems_r41_plc_ret(void);      /* Plc_ret: 1 = Ende der Kurbel-Szene, Wechsel in die Stehpose ohne Mischung (Schnitt @0x0B0E) */
+int  re15_keyitems_r41_plc_ret(void);      /* Plc_ret: 1 = Ende der Kurbel-Szene, Wechsel in die Stehpose ohne Mischung (PORT-WAHL, Schnitt @0x0B0E) */
 /* re15_dialog_step Seitenumbruch: 1 = die Beschreibung endet hier (Karten-Leser: Text und Frage stehen in EINER Nachricht). */
 int  re15_keyitems_r41_text_ende(int parse);
 

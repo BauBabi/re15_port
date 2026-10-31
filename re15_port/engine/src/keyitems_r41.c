@@ -85,7 +85,8 @@ static const stelle_t k_stellen[] = {
 #define N_STELLEN ((int)(sizeof k_stellen / sizeof k_stellen[0]))
 
 /* ---- Gegenstaende, die RE1.5 nur als Flag kennt -------------------------------------------------------------------------
- * Der Port fuehrt sie als Inventar-Eintrag, sonst gaebe es im Inventar nichts auszuwaehlen. soll = genommen && !benutzt. */
+ * Der Port fuehrt sie als Inventar-Eintrag (NUTZER-VORGABE Nachtrag 34: ohne Eintrag gaebe es im Inventar nichts auszuwaehlen; Form
+ * RE2 Crank 0x43, Verbrauch sce_item_lost @0x800585e4). soll = genommen && !benutzt. */
 typedef struct {
     uint8_t item;
     uint8_t ja_bank, ja_bit;      /* genommen                                  */
@@ -363,7 +364,7 @@ int re15_keyitems_r41_plc_flags(void)
     return 0x40;   /* RE2 ROOM1110 sub15 @0x02FC1 `3f 00 0f 45`, RE1.5 @0x80050d24 `andi v0,v0,0x40` -> @0x80050d30 +0x8f := 0 */
 }
 
-/* Szenenende der Kurbel: RE2 ROOM1110 sub13 verdeckt den Wechsel Kurbel -> Stehen mit einer Blende um Pos_set und Plc_ret (@0x02F24
+/* PORT-WAHL Szenenende der Kurbel: RE2 ROOM1110 sub13 verdeckt den Wechsel Kurbel -> Stehen mit einer Blende um Pos_set und Plc_ret (@0x02F24
  * `53 02 02 07 00 18` ... @0x02F4E `53 02 02 07 00 e8`). RE1.5 hat dort keine Blende, aber den Schnitt @0x0B0E `29 03` im selben
  * Takt wie Plc_ret @0x0B16: ohne Mischung (wie Bit 0x40, @0x80050d30) faellt der Wechsel in den Schnitt, sonst kippt Leon nach dem
  * Schnitt sieben Bilder lang von der Kurbel-Pose in die Stehpose zurueck. */

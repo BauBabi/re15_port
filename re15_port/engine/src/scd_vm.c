@@ -2874,7 +2874,7 @@ static int op_plc_ret(scd_thread_t *t)
      * bank-independent rest for the 1-frame handoff. (Same fix family as the post-walk reset.) */
     re15_actor_set_motion(pl, 200);   /* = the +5..7 walk-scratch clear → idle/rest pose */
     pl->anim_frame    = 0;
-    { extern int re15_keyitems_r41_plc_ret(void); if (re15_keyitems_r41_plc_ret()) pl->anim_frac = 0; }   /* Runde 41 Spur O: Kurbel-Ende im Schnitt @0x0B0E ohne Mischung (RE2 ROOM1110 Blende @0x02F24/@0x02F4E um Plc_ret) */
+    { extern int re15_keyitems_r41_plc_ret(void); if (re15_keyitems_r41_plc_ret()) pl->anim_frac = 0; }   /* Runde 41 Spur O, PORT-WAHL Szenenende: USE-Lauf ohne Mischung, der Wechsel Kurbel -> Stehen faellt in den Schnitt @0x0B0E vor Plc_ret @0x0B16; RE1.5 mischt dort sieben Bilder nach dem Schnitt (Altstand-Weg bleibt so), Form RE2 ROOM1110: Blende @0x02F24/@0x02F4E um Plc_ret */
     g_scd.player_mode = 1;          /* gameplay/PAD live next frame (zero delay) */
     /* DAS KOMMANDOWORT — jetzt wirklich geschrieben (Fix-Runde Cluster 4, 2026-08-17).
      * Selbst nachdisassembliert, Handler 0x80041f88 = PTR_LAB_800744a8[0x42]
