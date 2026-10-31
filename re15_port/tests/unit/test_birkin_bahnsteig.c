@@ -903,6 +903,122 @@ static void test_r2_clip_ende(unsigned raum, const char *rdt)
     free(buf);
 }
 
+/* Abnahme 3 N4: Austritt aus dem Weichen. A[8] setzt nur 0x201 @0x80104158, die Richtung ist Argument des FUN_8002959c (@0x8010427c-84), der
+ * Austritts-Tick zeichnet also dieselbe Pose. Solange bb_weichen Bit 0x80 loeschte, kam im Austritt Slot N statt 88-N: Abnahme Mittel 1230.
+ * Gemessen wird der Knochen-Weg im Austritts-Tick, normal in Clip 5 sind hoechstens 211 je Bild. Der Tick danach ist die Ueberblendung in den
+ * neuen Clip (Gewicht 14 * 0x100 / 4096), sie ist in jedem Hieb-Eintritt dieselbe und gehoert nicht zum Austritt. */
+static void weichen_stellen(re15_actor_t *b, re15_actor_t *pl, re15_enemy_bank_t *eb, int32_t alt[27][3], int ticks)
+{
+    beruhigen(b, pl, 3);
+    b->state = 1; b->sub_state_1 = 8; b->sub_state_2 = 0; b->sub_state_3 = 0;
+    (void)knochen_weg(eb, b, alt, 1);
+    for (int f = 0; f < ticks; f++) {
+        pl->x = b->x + 1600; pl->z = b->z; pl->hit_react = 0;
+        tick(1);
+        (void)knochen_weg(eb, b, alt, 1);
+    }
+}
+static void test_n4_weichen_austritt(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    re15_enemy_bank_t *eb = re15_enemy_find(0x30u);
+    static int32_t alt[27][3];
+    int32_t max_hieb = -1, max_gehen = -1;
+    int n_hieb = 0, n_gehen = 0;
+    beruhigen(b, pl, 170);
+    for (int r = 0; r < 6; r++) {
+        /* in den Hieb: dist 2501..3999, Kegel 512, Sperre 0 @0x80104130-58 */
+        weichen_stellen(b, pl, eb, alt, 12 + 3 * r);
+        CHECK(b->sub_state_1 == 8, "N4 %s: kein Weichen (Sub %d)", rdt, b->sub_state_1);
+        for (int f = 0; f < 3 && b->sub_state_1 == 8; f++) {
+            pl->x = b->x + 3000; pl->z = b->z; pl->hit_react = 1;
+            tick(1);
+            if (b->sub_state_1 == 2) {
+                int32_t s = knochen_weg(eb, b, alt, 1);
+                if (s > max_hieb) max_hieb = s;
+                n_hieb++;
+            } else (void)knochen_weg(eb, b, alt, 1);
+        }
+        pl->hit_react = 0;
+        /* ins Gehen: Uhr 40 @0x80104294-a8, Spieler bleibt nah */
+        beruhigen(b, pl, 170);
+        weichen_stellen(b, pl, eb, alt, 4 + r);
+        for (int f = 0; f < 60 && b->sub_state_1 == 8; f++) {
+            pl->x = b->x + 1600; pl->z = b->z; pl->hit_react = 1;
+            tick(1);
+            if (b->sub_state_1 != 8) {
+                int32_t s = knochen_weg(eb, b, alt, 1);
+                if (s > max_gehen) max_gehen = s;
+                n_gehen++;
+            } else (void)knochen_weg(eb, b, alt, 1);
+        }
+        pl->hit_react = 0;
+        beruhigen(b, pl, 170);
+    }
+    fprintf(stderr, "%s N4: Weichen -> Hieb %d Austritte, Sprung %d; -> Gehen %d Austritte, Sprung %d\n", rdt, n_hieb, (int)max_hieb, n_gehen, (int)max_gehen);
+    CHECK(n_hieb >= 3, "N4 %s: nur %d Austritte in den Hieb", rdt, n_hieb);
+    CHECK(n_gehen >= 3, "N4 %s: nur %d Austritte ins Gehen", rdt, n_gehen);
+    CHECK(max_hieb >= 0 && max_hieb < 300, "N4 %s: Weichen -> Hieb springt %d", rdt, (int)max_hieb);
+    CHECK(max_gehen >= 0 && max_gehen < 300, "N4 %s: Weichen -> Gehen springt %d", rdt, (int)max_gehen);
+    free(buf);
+}
+
+/* Abnahme 3, Gering: Rennen a1 = 1 @0x80102f10 toetet nie; Doppelschlag loest die Sperre @0x80101c94-a8; Hieb-Eintritt nullt +0x232 @0x80101b00. */
+static void test_n_rennen_doppel(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    {   /* Rennen bei HP 3: Schaden 5, FUN_800401d4(20, 1) klemmt auf 0 */
+        int getroffen = 0;
+        beruhigen(b, pl, 170);
+        stelle(b, pl, 6000);
+        pl->hp = 3;
+        b->state = 1; b->sub_state_1 = 4; b->sub_state_2 = 0; b->sub_state_3 = 0;
+        for (int f = 0; f < 240 && !getroffen; f++) {
+            tick(1);
+            if (pl->hp != 3) getroffen = 1;
+            else { pl->x = b->x + 1500; pl->z = b->z; }
+        }
+        CHECK(getroffen, "Rennen %s: trifft nicht (Clip %d)", rdt, b->motion);
+        CHECK(b->anim_blend_rate == 0x100, "Rennen %s: Rate 0x%x statt 0x100 (a3 @0x80102d08)", rdt, b->anim_blend_rate);
+        CHECK(pl->hp == 0, "Rennen %s: HP %d statt 0, a1 = 1 @0x80102f10 toetet nie", rdt, pl->hp);
+        CHECK(!re15_player_is_dead(), "Rennen %s: Spieler tot", rdt);
+        pl->hp = 100; pl->hit_react = 0; re15_player_clear_hit_guard(pl);
+    }
+    {   /* Doppelschlag: Spieler in der Reaktion, der Clip-Wechsel loest die Sperre, ein zweiter Treffer ist moeglich */
+        int geloest = 0, wechsel = 0;
+        for (int r = 0; r < 12 && !wechsel; r++) {
+            int alt = -1;
+            beruhigen(b, pl, 170);
+            stelle(b, pl, 3700);
+            b->state = 1; b->sub_state_1 = 2; b->sub_state_2 = 0;
+            for (int f = 0; f < 90; f++) {
+                pl->hit_react = 1;
+                pl->x = b->x + 2600; pl->z = b->z;
+                tick(1);
+                if (b->sub_state_1 == 2 && (b->motion == 3 || b->motion == 4)) {
+                    if (alt >= 0 && alt != b->motion) { wechsel = 1; geloest = (pl->hit_react & 1) == 0; break; }
+                    alt = b->motion;
+                }
+            }
+        }
+        CHECK(wechsel, "Doppelschlag %s: kein Clip-Wechsel", rdt);
+        CHECK(b->anim_blend_rate == 0x100, "Hieb %s: Rate 0x%x statt 0x100 (a3 @0x80101b34)", rdt, b->anim_blend_rate);
+        CHECK(geloest, "Doppelschlag %s: Sperre bleibt, der zweite Hieb laeuft ins Leere (@0x80101c94-a8)", rdt);
+        pl->hit_react = 0; re15_player_clear_hit_guard(pl);
+    }
+    {   /* Hieb-Eintritt: `sb zero,562(s2)` @0x80101b00 */
+        beruhigen(b, pl, 170);
+        re15_bb_cd_lauf_test(90);
+        stelle(b, pl, 3700);
+        b->state = 1; b->sub_state_1 = 2; b->sub_state_2 = 0;
+        tick(1);
+        CHECK(re15_bb_cd_lauf_test(-1) == 0, "Hieb %s: Sperre +0x232 steht auf %d, Hieb bleibt stumm", rdt, re15_bb_cd_lauf_test(-1));
+    }
+    free(buf);
+}
+
 /* M12: Tabelle @0x8010b0fb je Waffe (+0x5 im Trefferzustand @0x80107130), nicht je KI-Unterphase. */
 static void test_m12_waffe(unsigned raum, const char *rdt)
 {
@@ -1040,6 +1156,8 @@ int main(void)
         test_m11_rennen(id, rdt);
         test_r2_koerper(id, rdt);
         test_r2_clip_ende(id, rdt);
+        test_n4_weichen_austritt(id, rdt);
+        test_n_rennen_doppel(id, rdt);
         test_m12_waffe(id, rdt);
         test_m13_blut(id, rdt);
         test_m14_tod(id, rdt);

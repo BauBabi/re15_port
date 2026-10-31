@@ -331,8 +331,9 @@ int main(int argc, char **argv)
                  *  - Griff (Routine 5, Zug-Ruck 0x801042c4, Spiess 0x801046ac) faehrt den Spieler SELBST, bis 1592 je Bild. Das ist
                  *    kein Schub und gehoert nicht in diesen Riegel: alle Wege ueber 1250 lagen in opfer >= 0, Lage begehbar.
                  *  - Die Kind-Kollision der Tentakel laeuft im Arm-Tick NACH der Spieler-Klemme des Bildes (FUN_80034D0C aus
-                 *    0x80104F64). Das Bildende darf dadurch in einer Wand liegen, die Klemme des Folgebilds loest es (Zwischenstand
-                 *    11 von 8000 Bildern, Station KLEMME jedes Mal begehbar). Massgeblich ist deshalb die Lage NACH der Klemme. */
+                 *    0x80104F64). Massgeblich ist deshalb die Lage NACH der Klemme. Der Satz "die Klemme des Folgebilds loest es" stand hier
+                 *    und war falsch: mit der Vorlage in der Wand hielt sie Leon dort fest (Abnahme 3 N2). Seit Abnahme 3 klemmt der
+                 *    Spieler-Schritt nach dem Gegner-Pass nach (re15_player_nachklemme), Riegel: test_r41_birkin_wand. */
                 if (re15_g5_opfer_variante() < 0 && sp > m_maxsprung) { m_maxsprung = sp; m_sprung_x = pl->x; m_sprung_z = pl->z; }
                 lx = pl->x; lz = pl->z;
                 re15_collision_set_band(0);

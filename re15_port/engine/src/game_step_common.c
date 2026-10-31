@@ -506,6 +506,61 @@ static void kd_clip(re15_actor_t *pl, uint8_t clip, int rev)
                                          * @0x80036518/@0x80036640) */
 }
 
+/* RE2-RETAIL-KLEMME IM BIRKIN-KAMPF (Runde 41 Spur R, Abnahme 3, N1/N2/N6). Der Kampf ist RE2: G5 und Arme schieben ueber
+ * FUN_80034D0C bis 5000 Einheiten in einem Bild, die Griffe ziehen mit 800, der Wurf faehrt 1050. RE2 faengt das in der Spieler-Klemme
+ * selbst ab (FUN_8003567c, Bytes am Kopf von re15_collision_constrain_re2). Die RE1.5-Beta FUN_8003b0a4 kann es nicht, und im Port hat
+ * der Spieler in ROOM5090 eine viel engere Bahn als RE2 room7040 (SCA #29, #30, #28 gibt es dort nicht, Gangbreite 2582 statt 6114).
+ * Die Regel gilt solange ein Birkin (0x30 EM30 und Form, 0x36 G5) im Raum aktiv ist; sonst bleibt es Byte fuer Byte FUN_8003b0a4. */
+static struct { int32_t x, z; uint8_t da; } s_klemme_ende;   /* letzte geklemmte Lage dieses Bildes, RE2 +0x118/+0x11a */
+
+int re15_birkin_klemme_aktiv(void)
+{
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && (g_actors[s].type == 0x30u || g_actors[s].type == 0x36u)) return 1;
+    return 0;
+}
+
+static void spieler_klemme(const re15_rdt_t *rdt, int32_t alt_x, int32_t alt_z, int32_t *x, int32_t *z)
+{
+    if (re15_birkin_klemme_aktiv()) re15_collision_constrain_re2(rdt, alt_x, alt_z, x, z);   /* FUN_8003567c */
+    else                            re15_collision_constrain(rdt, alt_x, alt_z, x, z);       /* FUN_8003b0a4 @0x80031d70 */
+    s_klemme_ende.x = *x; s_klemme_ende.z = *z; s_klemme_ende.da = 1;
+}
+
+/* ⛔ PORT-WAHL (Abnahme 3 N1): die eigene Bewegung wird VOR dem Koerper-Schub geklemmt, RE2 klemmt beides zusammen (@0x80026628 Schub,
+ * @0x80026634 Klemme). Grund ist die Diagonale #30 in ROOM5090, die RE2 room7040 nicht hat: dort stiess der Schub (bis 1800 je Bild) an den
+ * Grenzwert 400 von @0x8004d8f0, die Rueckstellung auf die Vorlage verwarf auch die Eingabe, Leon stand im Lauf z_w4 F1360 bis F2100 in der
+ * Ecke #29/#30 und konnte nicht mehr laufen. Mit diesem Schritt verwirft die Rueckstellung nur den Schub. Rechteck-Waende sind nicht
+ * betroffen: FUN_8004c900 korrigiert je Achse und laesst die andere stehen. */
+static void birkin_vorklemme(const re15_game_ctx_t *c, re15_actor_t *pl, int32_t *alt_x, int32_t *alt_z)
+{
+    if (!c->rdt_ok || !re15_birkin_klemme_aktiv()) return;
+    int32_t nx = pl->x, nz = pl->z;
+    re15_collision_ensure_band(pl->y);
+    re15_collision_constrain_re2(c->rdt, *alt_x, *alt_z, &nx, &nz);
+    pl->x = nx; pl->z = nz; *alt_x = nx; *alt_z = nz;
+}
+
+/* RE2 schiebt ERST (Entity-Schleife @0x80026570-604: Kind-Kollision 0x80104F64, Griff-Haken) und klemmt DANACH (`jal 0x8003567c`
+ * @0x80026634). Im Port laufen die Gegner nach dem Spieler-Schritt (Blockkommentar vor re15_enemy_ai_run_all). Lag das Bildende durch
+ * einen Arm in der Wand, sah die Klemme des Folgebilds eine Vorlage in der Wand: Lauf z_fern F1187-F1573, Lage (6865,-25290), 388 Bilder
+ * ohne Eingabe. Deshalb hier dieselbe Klemme nach dem Gegner-Pass, Vorlage = die Lage nach der Klemme dieses Bildes. Damit gilt im
+ * Kampf: Bildanfang = letzte geklemmte Lage = +0x118, und gezeichnet wird, wie in RE2, nie eine Lage vor der Klemme. */
+static void re15_player_nachklemme(const re15_game_ctx_t *c, re15_actor_t *pl)
+{
+    if (!c->rdt_ok || !s_klemme_ende.da || (pl->x == s_klemme_ende.x && pl->z == s_klemme_ende.z)) return;
+    if (!re15_birkin_klemme_aktiv()) return;
+    int32_t nx = pl->x, nz = pl->z;
+    re15_collision_ensure_band(pl->y);
+    re15_collision_constrain_re2(c->rdt, s_klemme_ende.x, s_klemme_ende.z, &nx, &nz);
+    /* ⛔ PORT-WAHL (N2): fuehrt der Nach-Schub in die Wand, verfaellt er ganz, statt nur in der Wandachse. Der Arm besteht aus vier
+     * Kreisen in Folge (r 800 + 450 und 600 + 450, @0x80100674-c4), und FUN_80034D0C schiebt radial. Lag er auf der Suedwand, sass Leon in
+     * der Kerbe zwischen zwei Kreisen: der Schub warf jeden Schritt um die eigene Weite zurueck (Lauf z_wand_a F1404-F1476: Gehen mit 60
+     * je Bild, Lage (6862,-24749) unveraendert). RE2 room7040 ist 6114 breit, dort liegt der Arm nicht auf der Wandlinie. */
+    if (nx != pl->x || nz != pl->z) { nx = s_klemme_ende.x; nz = s_klemme_ende.z; }
+    pl->x = nx; pl->z = nz;
+}
+
 /* Bewegung entlang facing+0x800 (back=1, 245d8(0x800) @0x80036200) bzw. facing (back=0,
  * 245d8(0) @0x800365b8) mit Wand-Klemme; Rueckgabe 1 = Wand getroffen. mag darf negativ
  * werden ([4] hat KEINEN Decel-Clamp @0x800361c8-e0 — byte-true Vorwaerts-Drift). */
@@ -516,7 +571,7 @@ static int kd_move(const re15_game_ctx_t *c, re15_actor_t *pl, int32_t mag, int 
     re15_player_knockback_delta(back ? pl->rot_y : (int16_t)(pl->rot_y + 0x800), mag, &dx, &dz);
     int32_t nx = ox + dx, nz = oz + dz;
     re15_collision_ensure_band(pl->y);
-    re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
+    spieler_klemme(c->rdt, ox, oz, &nx, &nz);
     re15_collision_objects(&nx, &nz);
     int wall = re15_affen_kd_sonde(c->rdt, ox + dx, pl->y, oz + dz, RE15_KD_SONDE_RADIUS);   /* Runde 35 Spur J: Sonde @0x80036214 (re15_affen.h (4a)) */
     pl->x = nx; pl->z = nz;
@@ -604,13 +659,16 @@ static void re15_player_body_and_walls(const re15_game_ctx_t *c, re15_actor_t *p
                                        int32_t alt_x, int32_t alt_z)
 {
     schritt_station(RE15_SCHRITT_TICK, pl->x, pl->z);   /* Lage NACH dem Kommando-Handler */
+    const int32_t vor_x = pl->x, vor_z = pl->z;
+    birkin_vorklemme(c, pl, &alt_x, &alt_z);                   /* PORT-WAHL, s. dort */
+    const int vor_traf = (pl->x != vor_x || pl->z != vor_z);   /* gehoert zum selben Bit: der Griff-Haken liest es (@0x8011b140) */
     re15_body_push_player();                                   /* @0x80031cbc */
     schritt_station(RE15_SCHRITT_SCHUB, pl->x, pl->z);
-    s_wand_bit = 0;                                            /* Spieler+0 &= ~0x30 @0x8003b110-14 (Klemmen-Eintritt) */
+    s_wand_bit = (uint8_t)vor_traf;                            /* Spieler+0 &= ~0x30 @0x8003b110-14 (Klemmen-Eintritt) */
     if (!c->rdt_ok) return;
     {   int32_t nx = pl->x, nz = pl->z;
         re15_collision_ensure_band(pl->y);
-        re15_collision_constrain(c->rdt, alt_x, alt_z, &nx, &nz);   /* @0x80031d70 */
+        spieler_klemme(c->rdt, alt_x, alt_z, &nx, &nz);             /* @0x80031d70 */
         if (nx != pl->x || nz != pl->z) s_wand_bit = 1;        /* |= 0x10 @0x8003b504-08 (Kasten getroffen, aufgeloest) */
         pl->x = nx; pl->z = nz;
         schritt_station(RE15_SCHRITT_KLEMME, pl->x, pl->z);
@@ -1121,6 +1179,7 @@ void re15_game_step(const re15_game_ctx_t *c)
     pl->pos_s_y = (uint16_t)(int32_t)pl->y;      /* @0x8001d0dc */
     pl->pos_s_z = (uint16_t)(int32_t)pl->z;      /* @0x8001d0e4 */
     schritt_station(RE15_SCHRITT_ANFANG, pl->x, pl->z);   /* Mess-Schiene, s. Kopf */
+    s_klemme_ende.da = 0;
     re15_wasser_r38_bildanfang(c);   /* Runde 38 Spur N: Schnappschuss + Stempel +0x88 latchen/loeschen @0x80031da4 */
 
     /* PL00-Baenke an den Spieler-FSM spiegeln: der Schiebe-Substate 8 braucht die Cliplaengen
@@ -1777,6 +1836,7 @@ void re15_game_step(const re15_game_ctx_t *c)
          * enemy cylinder (450 + 400) — the "walk through zombies" fix. */
         int32_t dbg_tx = pl->x, dbg_tz = pl->z;      /* nach player_tick, VOR dem Koerper-Schub */
         schritt_station(RE15_SCHRITT_TICK, pl->x, pl->z);
+        birkin_vorklemme(c, pl, &ox, &oz);           /* PORT-WAHL, s. dort */
         re15_body_push_player();
         schritt_station(RE15_SCHRITT_SCHUB, pl->x, pl->z);
         if (c->rdt_ok) {
@@ -1785,7 +1845,7 @@ void re15_game_step(const re15_game_ctx_t *c)
              * props (helipad BOX). Walls first, then objects. */
             int32_t nx = pl->x, nz = pl->z;
             re15_collision_ensure_band(pl->y);
-            re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
+            spieler_klemme(c->rdt, ox, oz, &nx, &nz);
             /* MESS-SCHIENE RE15_PUSH_LOG (Runde 20, Befund "von birkin rausgeschoben"):
              * je Bild die vier Stationen des Spieler-Schritts — Pos vor player_tick,
              * nach player_tick, nach dem Koerper-Schub, nach der Wandklemme. Nur lesend. */
@@ -2556,7 +2616,7 @@ void re15_game_step(const re15_game_ctx_t *c)
     {   extern int re15_re2arm_take_pin_bild(void);    /* Runde 35 Spur H NB3: RE2 schiebt im Pin-Bild */
         if (re15_re2arm_take_pin_bild()) grabbed_branch = 1; }   /* nach dem Pin (FUN_800355C4 @0x80026628) */
     if (wurf && c->rdt_ok) { re15_player_body_and_walls(c, pl, wurf_alt_x, wurf_alt_z);   /* Runde 35 Spur J (6d): Platzierung -> @0x80031cbc -> @0x80031d70 */
-                             re15_r39_wurf_querung(pl, wurf_alt_x, wurf_alt_z); }      /* Runde 39 Spur E (Nachbesserung 3): kein Wurf durch eine Wand (gegner_r39.c (5)) */
+                             if (!re15_birkin_klemme_aktiv()) re15_r39_wurf_querung(pl, wurf_alt_x, wurf_alt_z); }      /* Runde 39 Spur E (Nachbesserung 3): kein Wurf durch eine Wand (gegner_r39.c (5)); die RE2-Klemme bringt die Regel selbst mit */
     else if (c->rdt_ok && grabbed_branch && re15_player_is_grabbed()) {
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         int32_t ox = pl->x, oz = pl->z;                   /* the anchored placement = the valid pos */
@@ -2564,12 +2624,13 @@ void re15_game_step(const re15_game_ctx_t *c)
         if (pl->x != ox || pl->z != oz) {                 /* pushed -> wall-resolve the push delta */
             int32_t nx = pl->x, nz = pl->z;
             re15_collision_ensure_band(pl->y);
-            re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
+            spieler_klemme(c->rdt, ox, oz, &nx, &nz);
             re15_collision_objects(&nx, &nz);
             pl->x = nx;
             pl->z = nz;
         }
     }
+    re15_player_nachklemme(c, pl);   /* Runde 41 Spur R (N1/N2): der Gegner-Pass liegt im Port hinter der Klemme */
     schritt_station(RE15_SCHRITT_GRIFF, pl->x, pl->z);
 
     /* GLIED-1-STEMPEL + OBJEKT-NOTCH ALS LETZTER ZUSTANDS-TICK DES FRAMES. Frame-Position

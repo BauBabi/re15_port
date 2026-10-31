@@ -68,6 +68,7 @@ void re15_bb_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(
 /* Testhaken, kein Verhalten: Trefferzaehler +0x21d und Zahl der abgesetzten Treffer-Blutspawns der Form. */
 int  re15_bb_zaehler(void);
 int  re15_bb_blut_zaehler(void);
+int  re15_bb_cd_lauf_test(int setzen);
 /* Messhaken RE15_BB_POSE="x,z,gier,clip,bild,schnitt" (Sichtpruefung): der 0x30 steht fest, bild < 0 spielt ab. */
 int  re15_bb_pose_aktiv(void);
 void re15_bb_pose_tick(void);
