@@ -2,6 +2,9 @@
  * Belege und Herleitung: include/re15_nclip_r38.h, analysis/befunde_runde38/A_cursor.md. */
 #include "re15_nclip_r38.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 unsigned g_re15_nclip_r38_verworfen = 0;
 
 static int32_t saettige(int v)
@@ -19,6 +22,20 @@ int32_t re15_nclip_r38_mac0(int x0, int y0, int x1, int y1, int x2, int y2)
     const int64_t sx1 = saettige(x1), sy1 = saettige(y1);
     const int64_t sx2 = saettige(x2), sy2 = saettige(y2);
     return (int32_t)(sx0 * sy1 + sx1 * sy2 + sx2 * sy0 - sx0 * sy2 - sx1 * sy0 - sx2 * sy1);
+}
+
+unsigned g_re15_nclip_r41_weg = 0;
+
+int re15_nclip_r41_birkin(unsigned typ) { return typ == 0x30u || typ == 0x36u || typ == 0x37u; }
+
+int re15_nclip_r41_weg(int viereck, int x0, int y0, int x1, int y1, int x2, int y2)
+{
+    const int32_t m = re15_nclip_r38_mac0(x0, y0, x1, y1, x2, y2);
+    const int weg = viereck ? (m < 0) : (m <= 0);
+    if (!weg) return 0;
+    if (g_re15_nclip_r41_weg++ == 0 && getenv("RE15_SPAWN_DIAG"))    /* Nachweis fuer integration_r41_birkin_pistole: der Zeichner ruft das hier */
+        fprintf(stderr, "[nclip-r41] Birkin-Rueckseiten werden verworfen\n");
+    return 1;
 }
 
 int re15_nclip_r38_verwerfen(int x0, int y0, int x1, int y1, int x2, int y2)

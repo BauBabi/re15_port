@@ -10876,6 +10876,7 @@ re_title:;
                     int32_t nburst_scale = 0; uint32_t nburst_tint = 0;
                     int nburst = gore_on ? re15_re2z_gore_part_burst(
                                      npc, nbi, &nburst_scale, &nburst_tint) : 0;
+                    const int npc_nclip = re15_nclip_r41_birkin(npc->type);   /* Runde 41 Spur R (N3): die Kamera kann im Modell stehen */
                     if (r15_scherben) { nburst = 1; nburst_tint = r15_teile[nbi].col; }   /* flach +0x68, unbeleuchtet */
                     for (int ti = 0; ti < nm->triangle_count; ti++) {
                         const re15_md1_triangle_t *tri = &nm->triangles[ti];
@@ -10916,6 +10917,7 @@ re_title:;
                             wz[v] = (float)_vz;
                         }
                         if (!ok) continue;
+                        if (npc_nclip && re15_nclip_r41_weg(0, (int)ax[0], (int)ay[0], (int)ax[1], (int)ay[1], (int)ax[2], (int)ay[2])) continue;   /* FUN_80027bec, re15_nclip_r38.h */
                         const re15_md1_tri_uv_t *uv = &nm->triangle_uvs[ti];
                         int page_off = (int)((uv->page & 0x000F) * 128);
                         /* G-round (2026-05-24): use real avg_z for depth sort
@@ -11007,6 +11009,7 @@ re_title:;
                             wz[v] = (float)_vz;
                         }
                         if (!ok) continue;
+                        if (npc_nclip && re15_nclip_r41_weg(1, (int)ax[0], (int)ay[0], (int)ax[1], (int)ay[1], (int)ax[2], (int)ay[2])) continue;   /* FUN_80027dbc */
                         const re15_md1_quad_uv_t *uv = &nm->quad_uvs[qi];
                         int page_off = (int)((uv->page & 0x000F) * 128);
                         /* G-round: real depth for both quad-split triangles. */

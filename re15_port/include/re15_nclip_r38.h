@@ -46,4 +46,13 @@ int re15_nclip_r38_verwerfen(int x0, int y0, int x1, int y1, int x2, int y2);
 /* Messhaken: Anzahl verworfener Objekt-Flaechen seit Programmstart (nur lesen). */
 extern unsigned g_re15_nclip_r38_verworfen;
 
+/* Runde 41 Spur R (Abnahme 3 N3): Rueckseiten der Birkin-Formen, RE2-Modellroutinen. Dreieck FUN_80027bec (Aufrufer FUN_80019cd0): NCLIP @0x80027ca8,
+ * `bgtz v0,0x80027ce4` @0x80027cc8, MAC0 <= 0 = weg. Viereck FUN_80027dbc: MAC0 < 0 = weg, ueber die ersten drei Ecken. Dem NPC-Zweig des
+ * Zeichners fehlte der Verwurf. Von aussen faellt das nicht auf, die Vorderseite kommt spaeter in der Reihenfolge; steht die Kamera aber im
+ * Modell (ROOM5090 Cut 13, RID @0x200, x 11050, G5 um x 10000), zeigte der Port die Innenseite. Nur 0x30, 0x36, 0x37: der Rest des NPC-Zweigs
+ * bleibt wie er ist, das Dossier fuehrt ihn als offen. */
+int re15_nclip_r41_birkin(unsigned typ);
+int re15_nclip_r41_weg(int viereck, int x0, int y0, int x1, int y1, int x2, int y2);
+extern unsigned g_re15_nclip_r41_weg;
+
 #endif /* RE15_NCLIP_R38_H */
