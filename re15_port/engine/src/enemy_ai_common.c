@@ -12033,6 +12033,34 @@ static void re15_birkin_szene(re15_actor_t *e)
     }
 }
 
+/* FUN_8011b5c4(Modus, Bein) @0x8011b5c4: Vortrieb aus dem Fuss. Kette Teil 0 -> 4 -> 5 -> 6 fuer Bein 1 (Schrittweite 0x204 = drei
+ * Teile @0x8011b61c-2c), verglichen wird die neue Welt-Lage des Fusses mit der des Vorbilds (+0x54/+0x5c des Teils): Modus 1 legt
+ * die Schrittlaenge nach +0x8c (`jal SquareRoot0` @0x8011b6ec, `sh v0,140(v1)` @0x8011b700), Modus 0 schiebt die Lage um den
+ * Schritt zurueck (@0x8011b668-a8). Weil das Vorbild aus derselben Lage kommt, ist der Schritt rein der Unterschied der zwei
+ * Posen. Port: nur fuer den Auftritt Sub 10 gebaut (gemessen EM30 Clip 1: im Mittel 25 Einheiten je Bild); WALK & Co. bleiben
+ * beim additiven Teil, s. Block-Kopf. anim_set lief schon, das gezeichnete Bild ist anim_frame - 1. */
+static void re15_birkin_fuss_schritt(re15_actor_t *e, int32_t schritt[2])
+{
+    static const int32_t null3[3] = { 0, 0, 0 };
+    const int fc = re15_birkin_fc(e);
+    const uint32_t bild = e->anim_frame;
+    int32_t neu[3], alt[3];
+    schritt[0] = schritt[1] = 0;
+    e->anim_frame = (bild + (uint32_t)fc - 1u) % (uint32_t)fc;
+    const int ok_neu = re15_enemy_part_point(e, 6, null3, neu);
+    e->anim_frame = (bild + (uint32_t)fc - 2u) % (uint32_t)fc;
+    const int ok_alt = re15_enemy_part_point(e, 6, null3, alt);
+    e->anim_frame = bild;
+    if (ok_neu && ok_alt) { schritt[0] = neu[0] - alt[0]; schritt[1] = neu[2] - alt[2]; }
+}
+/* 8011b5c4(1,1) + (+0x8c += 10) + FUN_800245d8(0): @0x8011960c-62c, @0x80119834-854, @0x80119a84-aa4 */
+static void re15_birkin_fuss_gang(re15_actor_t *e)
+{
+    int32_t d[2];
+    re15_birkin_fuss_schritt(e, d);
+    re15_dog_advance(e, (int32_t)re15_squareroot0((uint32_t)(d[0] * d[0] + d[1] * d[1])) + 10);
+}
+
 static void re15_birkin_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
@@ -12377,8 +12405,10 @@ static void re15_birkin_ai_tick(int slot)
         }
         case 10: {  /* AUFTRITT 0x80119524 (grid-Nibble 1, z.B. ROOM3071 sub02 Member_set(0x0c,1) @0x03645): 14 Phasen
                      * ueber @0x80100434 (`sltiu v0,v1,0xe` @0x80119558). anim_set(+0x84,+0x16c,0,0x100) wo nicht anders
-                     * vermerkt; FUN_8011b5c4 (Clip-Wurzelvortrieb) ist port-weit offen und wird wie in WALK ueber den
-                     * additiven +0x8c-Schritt abgebildet (re15_dog_advance). ROOM3071 sub02 WARTET auf die beiden Flags
+                     * vermerkt; FUN_8011b5c4 s. re15_birkin_fuss_schritt. Der Auftritt fuehrt Birkin durch das Tor im Lager
+                     * (SCA 17 x -27055..-26505) in die Halle, darum schaltet INIT die Wandklemme ab (+0x0 |= 8 @0x801168d0, s.
+                     * re15_birkin_root); ohne Vortrieb stand er danach fuer immer hinter dem Tor, ohne Sichtlinie: 0 von 90
+                     * Schuessen trafen (Runde 41 Spur R, Nachbesserung). ROOM3071 sub02 WARTET auf die beiden Flags
                      * (While/Ck(5,31)==0 @0x0364D, Ck(5,30) @0x03669) — der verdichtete Auftritt setzte sie zu spaet bzw.
                      * nie (Nutzer-Report "Elza Stage 3 bleibt bei der Birkin-Szene haengen"). */
             switch (e->sub_state_2) {
@@ -12388,7 +12418,7 @@ static void re15_birkin_ai_tick(int slot)
                 /* faellt in [1] */
             case 1:                                                    /* @0x801195d0 */
                 (void)re15_birkin_anim(e);                             /* @0x801195e4, kein += */
-                if (e->ai_timer >= 71) re15_dog_advance(e, 10);       /* `slti 71` @0x80119600; 8011b5c4(1,1) + +0x8c += 10 + 245d8(0) @0x8011960c-62c */
+                if (e->ai_timer >= 71) re15_birkin_fuss_gang(e);      /* `slti 71` @0x80119600; 8011b5c4(1,1) + +0x8c += 10 + 245d8(0) @0x8011960c-62c */
                 if (e->ai_timer == 0x46) re15_game_flag_set(5, 0x1f, 1);   /* FUN_8004ef90(z5,0x1f) @0x80119644-65c */
                 if (e->ai_timer-- == 0) e->sub_state_2 = 2;           /* @0x8011966c-690 */
                 break;
@@ -12410,7 +12440,7 @@ static void re15_birkin_ai_tick(int slot)
                 /* faellt in [5] */
             case 5:                                                    /* @0x80119814 */
                 (void)re15_birkin_anim(e);                             /* @0x80119828 */
-                re15_dog_advance(e, 10);                               /* @0x80119834-854 */
+                re15_birkin_fuss_gang(e);                              /* @0x80119834-854 */
                 if (e->ai_timer-- == 0) {                              /* @0x80119868-878 */
                     e->sub_state_2 = 6; e->ai_timer = 0x28;            /* @0x80119888-8a0 */
                     re15_audio_room_se(0xa);                           /* a0 = 0xa @0x8011987c, jal @0x8011989c */
@@ -12421,7 +12451,11 @@ static void re15_birkin_ai_tick(int slot)
                 if (e->anim_frame == 0x3c) re15_audio_room_se(3);     /* @0x801198e8-8fc */
                 /* faellt in [7] @0x80119900 */
             case 7:
-                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x80119914-938; 8011b5c4(0,1) */
+                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x80119914-938 */
+                {   int32_t d[2];                              /* 8011b5c4(0,1) @0x80119934 */
+                    re15_birkin_fuss_schritt(e, d);
+                    e->x -= d[0]; e->z -= d[1];
+                }
                 break;
             case 8:                                                    /* @0x80119944 */
                 e->motion = 0x13; e->sub_state_2 = 9; e->anim_frac = 0xf;   /* @0x8011994c-970 */
@@ -12440,13 +12474,13 @@ static void re15_birkin_ai_tick(int slot)
             case 12:
                 re15_enemy_steer_point(e, pl->x, pl->z, 0x40);         /* FUN_8001aac4(plX, plZ, 0x40) @0x80119a5c */
                 (void)re15_birkin_anim(e);                             /* @0x80119a78 */
-                re15_dog_advance(e, 10);                               /* @0x80119a84-aa4 */
+                re15_birkin_fuss_gang(e);                              /* @0x80119a84-aa4 */
                 if (e->ai_timer-- == 0) e->sub_state_2 = 0xd;         /* @0x80119ab8-adc */
                 break;
             default:                                                   /* [13] @0x80119ae0 */
                 e->sub_state_1 = 3; e->sub_state_2 = 0;                /* +0x5 = 3 @0x80119aec, +0x6 = 0 @0x80119afc */
                 e->grid_id = (uint8_t)(e->grid_id & 0xfe);             /* @0x80119b14-18 */
-                /* Wort0 &= ~8 @0x80119b2c-34 (INIT setzt es fuer Nibble 1): Port-Gegenstueck offen */
+                /* Wort0 &= ~8 @0x80119b2c-34 (INIT setzt es fuer Nibble 1): Port-Gegenstueck = Sub 10 in re15_birkin_root */
                 break;
             }
             break;
@@ -12500,18 +12534,32 @@ static void re15_birkin_ai_tick(int slot)
                 re15_audio_room_se((re15_engine_rand8() & 1) ? 1 : 3);   /* Se(rng&1 ? 1 : 3) @0x8011a330 */
                 re15_enemy_steer_point(e, pl->x, pl->z, 0x50);       /* @0x8011a348 */
                 e->sub_state_3 = 1;                    /* enter flinch phase 1 @0x8011a2d0 */
+                /* faellt in Phase 1 @0x8011a350 (kein Sprung zwischen @0x8011a34c und @0x8011a350) */
             } else {                                   /* +0x1dc>0: SOAK -> resume the saved pre-hit action */
                 e->hit_stun--;                         /* +0x1dc-- @0x8011a1f8 */
                 e->state = e->birkin_saved_state;      /* +0x4 = *(+0x1d8) resume @0x8011a208 */
                 e->sub_state_1 = e->birkin_saved_sub;
                 e->sub_state_2 = e->birkin_saved_ph2;
                 e->sub_state_3 = e->birkin_saved_ph3;
+                break;
             }
-        } else {                                       /* +0x7!=0: flinch clip 7 playing @0x8011a350 */
-            if (re15_birkin_anim(e)) {                 /* clip end -> HUB (0x101) @0x8011a3a8 */
-                e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
-                e->hit_react |= 1;                     /* +0x93 |= 1 @0x8011a39c */
+        }
+        /* FLINCH @0x8011a284 (STAGE5 @0x8011aa98; Tabelle [+5][+6] @0x8011ef44, Waffe 1, 3..8, 18 -> dieselbe Maschine).
+         * ⛔ Abnahme 1 M2: der Port setzte Bit 0 nur einmal am Clip-Ende und loeschte es nie. Stand +0x1de dort schon auf
+         * 0, gab niemand den Riegel frei: Birkin unverwundbar, mit der Pistole keine Mutation, in jedem 0x30-Kampf.
+         * Original: Phase 1 setzt das Bit JE BILD (`ori v0,v0,0x1` @0x8011a39c, STAGE5 @0x8011abb0) und laeuft bis zum
+         * Clip-Ende (+0x7 += Rueckgabe anim_set @0x8011a378-84); Phase 2 schreibt 0x101 und LOESCHT es
+         * (`sw v0,4(a0)` @0x8011a3a8 mit v0 = 0x101 aus @0x8011a2c4, `andi v0,v0,0xfe` @0x8011a3c0; STAGE5 @0x8011abbc/@0x8011abd4). */
+        if (e->sub_state_3 == 2) {
+            e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
+            e->hit_react = (uint8_t)(e->hit_react & ~1u);
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x50);     /* @0x8011a3d8 */
+        } else {
+            if (re15_birkin_anim(e)) {                 /* +0x7 += 1 am Clip-Ende */
+                e->sub_state_3 = 2;
+                e->anim_frame = re15_birkin_fc(e) - 1; /* Phase 2 ruft kein anim_set: das letzte Bild bleibt stehen */
             }
+            e->hit_react |= 1;
         }
         break;
 
@@ -12541,6 +12589,10 @@ static void re15_birkin_ai_tick(int slot)
          * per Rueckstoss-Szene aus dem Zug geschossen und kehrt als G5 zurueck. */
         if (e->sub_state_3 == 0 && re15_bf_bahnsteig_aktiv()) {
             if (re15_bf_mutation_offen()) {             /* toedlicher Treffer vor der Mutation: erst mutieren */
+                /* Riegel wie der Revive-Zweig oben (+0x1de = 9 @0x8011a458, +0x93 &= 0xfe @0x8011a54c-50): der tragende
+                 * Treffer setzt Bit 0, und ohne laufenden Zaehler loest es sonst niemand (Abnahme 1 M4). */
+                e->birkin_hurt_cd = 9;
+                e->hit_react = (uint8_t)(e->hit_react & ~1u);
                 e->state = 1; e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* wie sw 0x601 @0x80116684 */
                 break;
             }
@@ -12630,8 +12682,12 @@ static void re15_birkin_ai_tick(int slot)
 
     /* ============================ ROOT post-dispatch (0x801164d4) ============================ */
     /* PORT-ERGAENZUNG 5090/5091 (Nutzer 2026-10-30 "Original -> Bahnsteig-Form -> G5"): der Endkampf-Spawn traegt
-     * grid 0x33/0x13 (Form-2-Bit, sperrt die Mutation); bis zur ersten Mutation gilt er hier als Form 1. */
-    if ((!(e->grid_id & 0x10) || re15_bf_mutation_offen()) && e->hp < 200) {   /* gate !(grid&0x10) @0x801164e8 && hp<200 @0x801164fc */
+     * grid 0x33/0x13 (Form-2-Bit, sperrt die Mutation); bis zur ersten Mutation gilt er hier als Form 1.
+     * ⛔ Abnahme 1 M3: "bis zur ersten Mutation" heisst bis zu ihrem START. Das Original-Tor schliesst in Phase 0
+     * (`ori v0,v0,0x10` / `sb v0,9(v1)` @0x80118050-54), der offene Merker erst am Clip-Ende (@0x8011888c): HP < 100 im
+     * laufenden Sub 6 erzwang 0x601 neu (HP 150, Clip 0x14 von vorn), solange der Spieler weiterschoss. +0x1dd & 8
+     * @0x801180b0 ist genau "Mutation laeuft"; der Fall HP < 0 geht wie im Original ueber den Revive-Waechter. */
+    if ((!(e->grid_id & 0x10) || (re15_bf_mutation_offen() && !(e->birkin_flags & 0x8))) && e->hp < 200) {   /* gate !(grid&0x10) @0x801164e8 && hp<200 @0x801164fc */
         e->birkin_flags ^= 0x4;                        /* +0x1dd ^= 4 heave toggle @0x80116510 (wounded-breathing; DECIDE mutate gate) */
         if (e->hp < 100) {                             /* slti hp,100 @0x8011667c */
             e->state = 1; e->sub_state_1 = 6;          /* FORCE state1-sub6 MUTATION: sw 0x601 @0x80116684-88 (form-1 only) */
@@ -15010,7 +15066,9 @@ static void re15_birkin_root(int s)
     if (re15_bb_bank_da(e)) re15_bb_tick(s);           /* Runde 41 Spur R: Bahnsteig-Form, eigene G4-Ablaeufe */
     else re15_birkin_ai_tick(s);
     re15_enemy_body_push_tail(s, e);
-    if (g_room_rdt_ok && (e->x != bk_ox || e->z != bk_oz)) {
+    /* +0x0 & 8 = keine Wandklemme: gesetzt von INIT fuer Nibble 1 @0x801168d0 (nur diesen Weg gibt es in Sub 10), Abfrage
+     * FUN_8003b0a4 @0x8003b134-40 (Rueckgabe ohne Klemme), geloescht am Ende von Sub 10 @0x80119b28-34. */
+    if (g_room_rdt_ok && (e->x != bk_ox || e->z != bk_oz) && !(e->state == 1 && e->sub_state_1 == 10)) {
         int32_t nx = e->x, nz = e->z;
         /* BAND = +0x82-ZUSTANDS-BYTE (e->floor), NICHT band_from_y (Runde 30, Nachschliff
          * room5080, analysis/befunde_runde30/nachschliff-room5080.md Abschnitt 8.1 und 9).

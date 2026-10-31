@@ -190,11 +190,15 @@ static void test_bahnsteig(void)
     b->x = 1200; b->z = -23350; b->grid_id = 0x13;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->x = 300; pl->z = -23400; pl->hp = 100;
+    re15_enemy_ai_run_all(0);                            /* erster Formen-Tick: Ctor-Teil, eigene HP 150 */
+    CHECK(b->hp == 150, "Form kommt mit HP %d statt 150", b->hp);
     b->state = 3; b->sub_state_3 = 0; b->hp = 0; b->birkin_flags = 0;
-    int f, gefeuert = 0, versteckt = 0;
+    int f, gefeuert = 0, versteckt = 0, zonen_an = 0;
     int32_t x_min = b->x;
+    g_scd.cut_auto_enabled = 1;                          /* ROOM5090 sub04 Cut_auto 01 @0x134C */
     for (f = 0; f < 900 && b->type == 0x30u; f++) {
         re15_enemy_ai_run_all(0);
+        if (re15_bf_rueckstoss_phase() != 0 && g_scd.cut_auto_enabled) zonen_an++;
         if (re15_bf_rueckstoss_phase() == 1) {
             uint16_t pr = 0, pad = re15_bf_pad(0, &pr);
             if ((pad & 0x0800u) && (pad & 0x8000u)) gefeuert = 1;
@@ -202,6 +206,7 @@ static void test_bahnsteig(void)
         if (b->no_draw) versteckt = 1;
         if (b->x < x_min) x_min = b->x;
     }
+    CHECK(zonen_an == 0, "M9: Kamerazonen in %d Szenen-Bildern an", zonen_an);
     CHECK(gefeuert, "Spieler zielt/feuert in der Rueckstoss-Szene nicht");
     CHECK(x_min < -5683, "Birkin verlaesst den Zug nicht nach Westen (min x %d)", x_min);
     CHECK(versteckt, "Birkin verschwindet hinter dem Zugende nicht");
@@ -210,6 +215,20 @@ static void test_bahnsteig(void)
     CHECK(!b->no_draw, "G5 bleibt unsichtbar");
     CHECK(g_scd.cam_id == 0x0B, "G5-Auftritt nicht auf Cut 11 (Zugende), cam %d", g_scd.cam_id);
     CHECK(re15_game_flag_get(5, 0x1c) == 0, "Birkin-Schalter z5:0x1C schon beim Tod der Form gesetzt");
+    /* M9: der Auftritt haelt die Zonen aus; mit dem Ende (Sub 2 verlassen) wieder an, sonst folgt die Kamera nie mehr */
+    {
+        int zonen_im_auftritt = 0, frei = -1, sub = 2, n;
+        extern int re15_g5_boss_zustand(int *sub, int *ph, int *timer);
+        for (n = 0; n < 1500 && frei < 0; n++) {
+            pl->x = 300; pl->z = -23400; pl->hp = 100; pl->hit_react = 0;
+            re15_enemy_ai_run_all(0);
+            if (re15_g5_boss_zustand(&sub, NULL, NULL) && sub == 2 && g_scd.cut_auto_enabled) zonen_im_auftritt++;
+            if (g_scd.cut_auto_enabled) frei = n;
+        }
+        CHECK(zonen_im_auftritt == 0, "M9: Kamerazonen in %d Auftritts-Bildern an", zonen_im_auftritt);
+        CHECK(frei >= 0, "M9: Kamerazonen nach dem G5-Auftritt nicht wieder an (%d Ticks, Sub %d)", n, sub);
+        fprintf(stderr, "Bahnsteig: Kamerazonen %d Ticks nach dem Morph wieder an\n", frei);
+    }
     fprintf(stderr, "Bahnsteig: Rueckstoss + Morph nach %d Ticks (min x %d)\n", f, x_min);
     free(buf);
 }

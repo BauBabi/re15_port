@@ -62,6 +62,9 @@ int  re15_bb_bank_da(const re15_actor_t *e);    /* 1 = dieser 0x30 traegt die G4
 void re15_bb_tick(int slot);                    /* ersetzt re15_birkin_ai_tick fuer die Form */
 void re15_bb_reset(void);
 void re15_bb_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(int bank));
+/* Testhaken, kein Verhalten: Trefferzaehler +0x21d und Zahl der abgesetzten Treffer-Blutspawns der Form. */
+int  re15_bb_zaehler(void);
+int  re15_bb_blut_zaehler(void);
 /* Messhaken RE15_BB_POSE="x,z,gier,clip,bild,schnitt" (Sichtpruefung): der 0x30 steht fest, bild < 0 spielt ab. */
 int  re15_bb_pose_aktiv(void);
 void re15_bb_pose_tick(void);

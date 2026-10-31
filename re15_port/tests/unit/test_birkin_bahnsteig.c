@@ -28,6 +28,7 @@
 #include "re15_birkin_formen.h"
 #include "re15_birkin_opfer.h"
 #include "re2_ems.h"
+#include "re15_anim_select.h"
 
 static int fails = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { fprintf(stderr, "FAIL: " __VA_ARGS__); \
@@ -225,10 +226,10 @@ static void test_ablauf(unsigned raum, const char *rdt)
     b->grid_id = 0x13; b->state = 1; b->sub_state_1 = 6; b->hp = 150; b->no_draw = 0;
     stelle(b, pl, 6000);
 
-    /* Auftritt: Clip 10 (T0[6] @0x80101528), doppelter Takt, dann Gang Clip 5 */
+    /* Auftritt: Clip 10 (T0[6] @0x80101528), ein Bild je Tick (126 Bilder), dann Gang Clip 5 */
     tick(1);
     CHECK(b->motion == 10 && b->sub_state_1 == 0, "Auftritt: Clip %d sub %d", b->motion, b->sub_state_1);
-    for (int i = 0; i < 70; i++) { stelle(b, pl, 6000); tick(1); }
+    for (int i = 0; i < 130; i++) { stelle(b, pl, 6000); tick(1); }
     CHECK(b->motion == 5 && b->sub_state_1 == 3, "nach dem Auftritt kein Gang: Clip %d sub %d", b->motion, b->sub_state_1);
 
     /* Vortrieb aus der Keyframe-Spur: Clip 5 traegt 2666 Einheiten je Durchlauf (kumulierte Spur, 89 Bilder) */
@@ -293,14 +294,14 @@ static void test_ablauf(unsigned raum, const char *rdt)
         (void)x0;
     }
 
-    /* Trefferzaehler: ein Treffer im Gang (Zuwachs 3 @0x8010b0fb) unterbricht nicht; dann Reaktion Clip 8 ab Bild 5 */
+    /* Trefferzaehler: ein Pistolentreffer (Waffe 3, Zuwachs 3 @0x8010b0fb) unterbricht nicht; ab 12 Reaktion Clip 8 ab Bild 5 */
     beruhigen(b, pl, 200);
     stelle(b, pl, 7000);
-    b->state = 2; b->sub_state_1 = 1; b->sub_state_2 = 1;     /* Port-Trefferpfad @80013018 */
+    b->state = 2; b->sub_state_1 = 3; b->sub_state_2 = 1;     /* Port-Trefferpfad @80013018, +5 = Waffen-Id */
     tick(1);
     CHECK(b->state == 1 && b->motion != 8, "ein Treffer darf nicht zucken (Clip %d)", b->motion);
-    for (int i = 0; i < 6; i++) { stelle(b, pl, 7000); b->state = 2; b->sub_state_1 = 1; b->sub_state_2 = 1; tick(1); }
-    CHECK(b->motion == 8, "kein Zucken nach sieben Treffern (Clip %d)", b->motion);
+    for (int i = 0; i < 3; i++) { stelle(b, pl, 7000); b->state = 2; b->sub_state_1 = 3; b->sub_state_2 = 1; tick(1); }
+    CHECK(b->motion == 8, "kein Zucken nach vier Pistolentreffern (Clip %d)", b->motion);
 
     /* Tod: Rueckstoss-Szene mit Clip 8, dann G5 */
     beruhigen(b, pl, 30);
@@ -315,6 +316,491 @@ static void test_ablauf(unsigned raum, const char *rdt)
         CHECK(b->type == 0x36u && b->grid_id == 0x13u, "kein G5 (Typ 0x%02X)", b->type);
         fprintf(stderr, "%s: Rueckstoss + G5 nach %d Ticks\n", rdt, f);
     }
+    free(buf);
+}
+
+/* ---- Nachbesserung nach Abnahme 1 (analysis/befunde_runde41/R_abnahme_1.md, Dossier R_bahnsteig.md "Nachbesserung") --
+ * Je ein Riegel fuer einen Mangel; alle waren vor dem jeweiligen Fix rot (Lauf im Dossier). Adressen: G4-Overlay
+ * CDEMD0.EMS rec 1 @0x80100000, RE2-EXE SLUS_007.48, RE1.5 STAGE3.BIN (STAGE5 = +0x814). */
+static re15_enemy_bank_t *em30_bank(void)
+{
+    re15_enemy_bank_t *eb = re15_enemy_find(0x30u);
+    if (!eb) eb = re15_enemy_alloc(0x30u);
+    if (!eb) return NULL;
+    {
+        uint8_t typ = eb->type;
+        memset(eb, 0, sizeof *eb); eb->type = typ;
+    }
+    if (re15_emd_parse_container(s_em30, s_em30_n, &eb->md1, &eb->skel, &eb->anim, NULL) != 0) return NULL;
+    eb->ok = 1; eb->buf = NULL;
+    eb->victim_ok = re15_emd_parse_victim_bank(s_em30, s_em30_n, &eb->skel_victim, &eb->anim_victim) == 0;
+    return eb;
+}
+
+/* Wie der Plattform-Haken pc_enemy_modell_neu: die Bank wechselt synchron im KI-Tick. */
+static void hook_form(uint8_t type) { if (type == 0x30u) (void)form_bank(); }
+
+static re15_actor_t *form_start(uint8_t **buf, unsigned raum, const char *rdt)
+{
+    *buf = raum_laden(rdt, raum);
+    if (!*buf) { CHECK(0, "%s nicht ladbar", rdt); return NULL; }
+    re15_bf_modell_hook(NULL);
+    re15_actor_t *b = birkin_finden();
+    if (!b || !form_bank()) { CHECK(0, "%s: kein 0x30 oder keine Form-Bank", rdt); free(*buf); return NULL; }
+    re15_bk_opfer_reset();
+    b->grid_id = 0x13; b->state = 1; b->sub_state_1 = 6; b->hp = 150; b->no_draw = 0;
+    stelle(b, &g_actors[RE15_ACTOR_SLOT_PLAYER], 6000);
+    tick(1);
+    return b;
+}
+
+static void halten(re15_actor_t *b, re15_actor_t *pl, int32_t abstand, int n)
+{
+    for (int i = 0; i < n; i++) { pl->x = b->x + abstand; pl->z = b->z; tick(1); }
+}
+
+/* Treffer-Applier wie re15_damage.c @0x800124bc: +0x5 = Waffen-Id, Zustand 2. */
+static void treffer(re15_actor_t *b, uint8_t waffe)
+{
+    b->state = 2; b->sub_state_1 = waffe; b->sub_state_2 = 1; b->sub_state_3 = 0;
+    b->anim_flags &= (uint16_t)~0x80u;
+}
+
+/* Bis zur Mutation mit der EM30-Bank, Hook wie im Spiel: Lage wie sub04, Spieler weit vorn (kein Angriff). */
+static re15_actor_t *em30_start(uint8_t **buf, unsigned raum, const char *rdt)
+{
+    *buf = raum_laden(rdt, raum);
+    if (!*buf) { CHECK(0, "%s nicht ladbar", rdt); return NULL; }
+    re15_actor_t *b = birkin_finden();
+    if (!b || !em30_bank()) { CHECK(0, "%s: kein 0x30 oder keine EM30-Bank", rdt); free(*buf); return NULL; }
+    re15_bk_opfer_reset();
+    b->x = 1200; b->z = -23350; b->grid_id = 0x13; b->no_draw = 0; b->birkin_flags = 0;
+    b->state = 1; b->sub_state_1 = 1; b->sub_state_2 = 0; b->sub_state_3 = 0; b->hp = 300; b->hit_react = 0;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].x = b->x + 7000; g_actors[RE15_ACTOR_SLOT_PLAYER].z = b->z;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 100; g_actors[RE15_ACTOR_SLOT_PLAYER].hit_react = 0;
+    return b;
+}
+
+/* M1: Treffer zwischen Modelltausch und erstem Formen-Tick (Waffe laeuft vor der KI, game_step_common.c). */
+static void test_m1_tauschbild(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = em30_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    re15_bf_modell_hook(hook_form);
+    b->hp = 90;                                         /* HP < 100 -> Sub 6 @0x80116684 */
+    int m;
+    for (m = 0; m < 900 && re15_bf_mutation_offen(); m++) { pl->x = b->x + 7000; pl->z = b->z; tick(1); }
+    CHECK(!re15_bf_mutation_offen() && re15_bb_bank_da(b), "M1 %s: kein Modelltausch nach %d Ticks", rdt, m);
+    CHECK(re15_enemy_take_damage(b, 5) == 1, "M1 %s: Schuss im Tauschbild prallt ab", rdt);
+    tick(1);
+    CHECK(b->birkin_hurt_cd > 0, "M1 %s: Treffer im Tauschbild verworfen (state %d cd %d)", rdt, b->state, b->birkin_hurt_cd);
+    halten(b, pl, 7000, 12);
+    CHECK(!(b->hit_react & 1u), "M1 %s: Riegel +0x93 bleibt stehen (0x%02X)", rdt, b->hit_react);
+    {
+        int hp = b->hp;
+        CHECK(re15_enemy_take_damage(b, 5) == 1 && b->hp < hp, "M1 %s: Form unverwundbar", rdt);
+    }
+    re15_bf_modell_hook(NULL);
+    free(buf);
+}
+
+/* M2: Zucken des 0x30 @0x8011a284: Bit 0 je Bild gesetzt @0x8011a39c, Phase 2 loescht es @0x8011a3c0. Gilt fuer jeden
+ * 0x30-Kampf; die Bank ist hier EM30, der Raum spielt nur ueber die Stage eine Rolle (RE15-Tick je Raum gleich). */
+static void test_m2_zucken(unsigned raum, const char *rdt)
+{
+    uint8_t *buf = raum_laden(rdt, raum);
+    CHECK(buf != NULL, "M2 %s nicht ladbar", rdt);
+    if (!buf) return;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER], *b = birkin_finden();
+    if (!b) {                                           /* Raum spawnt erst auf Skript-Flag: Aktor wie Sce_em_set */
+        b = &g_actors[3];
+        memset(b, 0, sizeof *b);
+        b->active = 1; b->type = 0x30u; b->em_flag_id = 0xFF;
+        re15_enemy_apply_hitbox(b, 0x30u);
+    }
+    CHECK(em30_bank() != NULL, "M2 %s: EM30-Bank", rdt);
+    re15_bk_opfer_reset();
+    b->grid_id = 0x10; b->state = 1; b->sub_state_1 = 1; b->sub_state_2 = 0; b->sub_state_3 = 0;
+    b->hp = 300; b->hit_react = 0; b->birkin_hurt_cd = 0; b->birkin_flags = 0; b->no_draw = 0;
+    b->x = 1000; b->z = -20000; b->rot_y = 0; b->y = 0;
+    pl->x = b->x + 7000; pl->z = b->z; pl->hp = 100; pl->hit_react = 0;
+    b->hit_stun = 0;                                    /* naechster Treffer zuckt (+0x1dc == 0 @0x8011a1f4) */
+    halten(b, pl, 7000, 2);
+    CHECK(re15_enemy_take_damage(b, 0) == 1, "M2 %s: erster Treffer prallt ab", rdt);
+    tick(1);
+    CHECK(b->state == 2 && b->sub_state_3 == 1 && b->motion == 7, "M2 %s: kein Zucken (st %d/%d clip %d)", rdt, b->state, b->sub_state_3, b->motion);
+    {
+        int n = 0, frei = 0, trotz = 0;
+        for (n = 0; n < 80 && b->state == 2; n++) {
+            pl->x = b->x + 7000; pl->z = b->z;
+            if (!(b->hit_react & 1u)) frei++;
+            if (n % 10 == 9 && re15_enemy_take_damage(b, 0)) trotz++;
+            tick(1);
+        }
+        CHECK(frei == 0, "M2 %s: Riegel in %d Zuck-Bildern offen (@0x8011a39c setzt ihn je Bild)", rdt, frei);
+        CHECK(trotz == 0, "M2 %s: %d Treffer im Zucken angenommen", rdt, trotz);
+        CHECK(b->state == 1 && b->sub_state_1 == 1, "M2 %s: Zucken endet nicht (st %d/%d, %d Ticks)", rdt, b->state, b->sub_state_1, n);
+    }
+    CHECK(!(b->hit_react & 1u), "M2 %s: nach dem Zucken bleibt der Riegel stehen (0x%02X, cd %d)", rdt, b->hit_react, b->birkin_hurt_cd);
+    {
+        int hp = b->hp;
+        CHECK(re15_enemy_take_damage(b, 0) == 1 && b->hp < hp, "M2 %s: unverwundbar nach dem Zucken", rdt);
+    }
+    free(buf);
+}
+
+/* M3: Dauerfeuer in der Mutation: Tor @0x801164e8 ist nach Phase 0 zu (grid |= 0x10 @0x80118054), Clip 0x14 laeuft einmal. */
+static void test_m3_mutation(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = em30_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    re15_bf_modell_hook(NULL);
+    b->hp = 90;
+    int n, neu = 0, alt = -1, treffer_n = 0;
+    for (n = 0; n < 3000 && re15_bf_mutation_offen(); n++) {
+        pl->x = b->x + 7000; pl->z = b->z; pl->hit_react = 0;
+        if (n > 3 && n % 12 == 0 && re15_enemy_take_damage(b, 5)) treffer_n++;
+        tick(1);
+        if (b->sub_state_1 == 6 && b->motion == 0x14) {
+            if ((int)b->anim_frame < alt) neu++;
+            alt = b->anim_frame;
+        }
+    }
+    CHECK(treffer_n >= 5, "M3 %s: nur %d Treffer in der Mutation", rdt, treffer_n);
+    CHECK(neu <= 1, "M3 %s: Clip 0x14 %d-mal neu gestartet", rdt, neu - 1);     /* einmal wickelt das Clip-Ende */
+    CHECK(!re15_bf_mutation_offen(), "M3 %s: Mutation endet unter Dauerfeuer nicht (%d Ticks)", rdt, n);
+    CHECK(n < 260, "M3 %s: Mutation dauert %d Ticks unter Beschuss", rdt, n);
+    fprintf(stderr, "%s M3: Mutation %d Ticks unter Dauerfeuer, %d Treffer, HP %d\n", rdt, n, treffer_n, b->hp);
+    free(buf);
+}
+
+/* M4: toedlicher Erst-Treffer: Riegel wie im Revive-Zweig (+0x1de = 9 @0x8011a458, +0x93 &= 0xfe @0x8011a54c-50). */
+static void test_m4_toedlich(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = em30_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    re15_bf_modell_hook(hook_form);
+    CHECK(re15_enemy_take_damage(b, 9) == 1 && b->state == 3, "M4 %s: Rakete nicht toedlich (hp %d st %d)", rdt, b->hp, b->state);
+    int m;
+    for (m = 0; m < 900 && re15_bf_mutation_offen(); m++) { pl->x = b->x + 7000; pl->z = b->z; tick(1); }
+    CHECK(!re15_bf_mutation_offen() && re15_bb_bank_da(b), "M4 %s: kein Modelltausch", rdt);
+    halten(b, pl, 7000, 3);
+    CHECK(!(b->hit_react & 1u), "M4 %s: Form kommt mit gesetztem Riegel (0x%02X)", rdt, b->hit_react);
+    {
+        int hp = b->hp;
+        CHECK(re15_enemy_take_damage(b, 5) == 1 && b->hp < hp, "M4 %s: Form unverwundbar", rdt);
+    }
+    re15_bf_modell_hook(NULL);
+    free(buf);
+}
+
+/* M5/M6: Bild +1 je Tick (@0x80029b28-34), a3 ist das Ueberblendgewicht (@0x800296b8-bc). */
+static void test_m5_takt(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    re15_enemy_bank_t *eb = re15_enemy_find(0x30u);
+    const int fc10 = eb->anim.clips[10].frame_count, fc27 = eb->anim.clips[27].frame_count, fc8 = eb->anim.clips[8].frame_count;
+    {   /* Auftritt @0x801015d0 a3 0x200 */
+        int n = 0;
+        CHECK(b->motion == 10 && b->anim_blend_rate == 0x200, "M6 %s: Auftritt Rate 0x%x (Clip %d)", rdt, b->anim_blend_rate, b->motion);
+        while (b->motion == 10 && n < 400) { stelle(b, pl, 6000); tick(1); n++; }
+        CHECK(n >= fc10 - 2 && n <= fc10 + 2, "M5 %s: Auftritt %d Ticks, Clip hat %d Bilder", rdt, n, fc10);
+    }
+    {   /* Griff @0x801053ac a3 0x200, Bild 8 @0x80105408-10 */
+        int griff_t = -1, griff_n = 0, griff = 0;
+        beruhigen(b, pl, 5);
+        stelle(b, pl, 3000);
+        for (int f = 0; f < 80 && !griff; f++) { tick(1); griff = (b->motion == 27); }
+        CHECK(griff, "M5 %s: kein Griff", rdt);
+        CHECK(b->anim_blend_rate == 0x200, "M6 %s: Griff Rate 0x%x", rdt, b->anim_blend_rate);
+        for (griff_n = 1; griff_n < 400 && b->motion == 27; griff_n++) {
+            int hp = pl->hp;
+            tick(1);
+            if (griff_t < 0 && pl->hp < hp) griff_t = griff_n;
+        }
+        CHECK(griff_n >= fc27 - 2 && griff_n <= fc27 + 2, "M5 %s: Griff %d Ticks, Clip hat %d Bilder", rdt, griff_n, fc27);
+        CHECK(griff_t >= 7 && griff_t <= 9, "M5 %s: Griff greift nach %d Ticks statt 8", rdt, griff_t);
+        re15_bk_opfer_reset(); re15_player_clear_hit_guard(pl);
+    }
+    {   /* Zucken @0x80107240 a3 0x200, Clip 8 ab Bild 5 */
+        int n = 0;
+        beruhigen(b, pl, 30);
+        treffer(b, 7); tick(1);
+        treffer(b, 7); tick(1);
+        CHECK(b->motion == 8, "M5 %s: kein Zucken nach zwei Magnum-Treffern (Clip %d)", rdt, b->motion);
+        CHECK(b->anim_blend_rate == 0x200, "M6 %s: Zucken Rate 0x%x", rdt, b->anim_blend_rate);
+        while (b->motion == 8 && n < 200) { stelle(b, pl, 7000); tick(1); n++; }
+        CHECK(n >= fc8 - 5 - 3 && n <= fc8 - 5 + 2, "M5 %s: Zucken %d Ticks, Clip %d ab Bild 5", rdt, n, fc8);
+    }
+    {   /* Weichen @0x80104280 a3 0x10080: ein Bild je Tick rueckwaerts, Gewicht 0x80, Uhr 40 @0x801041f0 */
+        int w = 0, schritte = 0, sprung = 0, alt = -1;
+        beruhigen(b, pl, 3);
+        for (int f = 0; f < 400 && !w; f++) {
+            pl->x = b->x + 1600; pl->z = b->z; pl->hit_react = 0;
+            tick(1);
+            if (b->sub_state_1 == 8) w = 1;
+            if (re15_bk_opfer_cmd()) { re15_bk_opfer_reset(); re15_player_clear_hit_guard(pl); }
+        }
+        CHECK(w, "M5 %s: kein Weichen", rdt);
+        CHECK(b->anim_blend_rate == 0x80, "M6 %s: Weichen Rate 0x%x", rdt, b->anim_blend_rate);
+        alt = b->anim_frame;
+        while (b->sub_state_1 == 8 && schritte < 60) {
+            pl->x = b->x + 1600; pl->z = b->z; pl->hit_react = 0;
+            tick(1); schritte++;
+            if (b->sub_state_1 == 8 && (int)b->anim_frame != alt + 1) sprung++;
+            alt = b->anim_frame;
+        }
+        CHECK(sprung == 0, "M5 %s: Weichen %d Bilder ohne Schritt +1", rdt, sprung);
+    }
+    free(buf);
+}
+
+/* M6: gerenderte Pose steht nicht: a3 je Stelle @0x80104284 (0x80) / @0x80102a34, @0x80101b34 (0x100). */
+static re15_skel_pose_t s_po[RE15_EMD_MAX_BONES];
+static void pose_folgen(re15_actor_t *b, re15_enemy_bank_t *eb)
+{
+    int kf = re15_compute_actor_kf(&eb->anim, &eb->skel, b, -1, b->anim_frame);
+    g_anim_pose_actor = b; re15_skel_compute_pose(&eb->skel, kf, s_po); g_anim_pose_actor = NULL;
+}
+static int pose_abstand(const re15_actor_t *b, int16_t alt[32][3])
+{
+    int m = 0;
+    for (int bn = 0; bn < 27; bn++)
+        for (int c = 0; c < 3; c++) {
+            int d = (b->prev_angles[bn][c] - alt[bn][c]) & 0xfff;
+            if (d > 0x800) d = 0x1000 - d;
+            if (d > m) m = d;
+        }
+    memcpy(alt, b->prev_angles, sizeof b->prev_angles[0] * 32);
+    return m;
+}
+static void test_m6_pose(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    re15_enemy_bank_t *eb = re15_enemy_find(0x30u);
+    int16_t alt[32][3];
+    beruhigen(b, pl, 170);
+    stelle(b, pl, 7000);
+    pose_folgen(b, eb);
+    {   /* Gehen: kein Standbild am Clip-Eintritt */
+        int still = 0;
+        b->state = 1; b->sub_state_1 = 3; b->sub_state_2 = 0;
+        memcpy(alt, b->prev_angles, sizeof alt);
+        for (int i = 0; i < 30; i++) { stelle(b, pl, 7000); tick(1); pose_folgen(b, eb); if (pose_abstand(b, alt) == 0) still++; }
+        CHECK(b->anim_blend_rate == 0x100, "M6 %s: Gehen Rate 0x%x", rdt, b->anim_blend_rate);
+        CHECK(still <= 1, "M6 %s: Gehen %d von 30 Ticks Standbild", rdt, still);
+    }
+    {   /* Weichen */
+        int w = 0, still = 0, n = 0;
+        for (int f = 0; f < 400 && !w; f++) {
+            pl->x = b->x + 1600; pl->z = b->z; pl->hit_react = 0;
+            tick(1); pose_folgen(b, eb);
+            if (b->sub_state_1 == 8) w = 1;
+            if (re15_bk_opfer_cmd()) { re15_bk_opfer_reset(); re15_player_clear_hit_guard(pl); }
+        }
+        CHECK(w, "M6 %s: kein Weichen", rdt);
+        memcpy(alt, b->prev_angles, sizeof alt);
+        while (b->sub_state_1 == 8 && n < 60) {
+            pl->x = b->x + 1600; pl->z = b->z; pl->hit_react = 0;
+            tick(1); pose_folgen(b, eb); n++;
+            if (pose_abstand(b, alt) == 0) still++;
+        }
+        CHECK(still * 4 <= n, "M6 %s: Weichen %d von %d Ticks Standbild", rdt, still, n);
+    }
+    free(buf);
+}
+
+/* M7/M8: Richtung ist Argument je Aufruf (a3 = 1 @0x80104248, 0x10080 @0x80104280), kein Zustand. */
+static void test_m7_weichen_treffer(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    beruhigen(b, pl, 170);
+    {
+        int w = 0;
+        for (int f = 0; f < 400 && !(w && b->anim_frame >= 13); f++) {
+            pl->x = b->x + 1600; pl->z = b->z; pl->hit_react = 0;
+            tick(1);
+            w = (b->sub_state_1 == 8);
+            if (re15_bk_opfer_cmd()) { re15_bk_opfer_reset(); re15_player_clear_hit_guard(pl); }
+        }
+        CHECK(w, "M7 %s: kein Weichen", rdt);
+    }
+    CHECK(re15_enemy_take_damage(b, 0) == 1, "M7 %s: Treffer prallt ab", rdt);
+    {
+        int32_t maxs = 0;
+        for (int i = 0; i < 10 && (b->sub_state_1 == 8 || b->state == 2); i++) {
+            int32_t x0 = b->x, z0 = b->z;
+            pl->x = b->x + 1600; pl->z = b->z; pl->hit_react = 0;
+            tick(1);
+            int32_t dx = b->x - x0, dz = b->z - z0, s = (dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
+            if (s > maxs) maxs = s;
+            if (b->sub_state_1 == 8) CHECK(b->anim_flags & 0x80u, "M7 %s: Weichen laeuft nach dem Treffer vorwaerts", rdt);
+        }
+        CHECK(maxs <= 60, "M7/M8 %s: Sprung %d Einheiten je Tick nach Treffer im Weichen", rdt, maxs);
+    }
+    free(buf);
+}
+
+/* M10/M17: Doppelschlag ruft FUN_80015e7c zweimal (@0x80101c4c, @0x80101c60): Schritt 0, kein Spur-Sprung. */
+static void test_m10_doppelschlag(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    int wechsel = 0, runden = 0;
+    int32_t maxs = 0;
+    for (int r = 0; r < 12 && wechsel < 3; r++) {
+        int alt = -1, im_hieb = 0;
+        beruhigen(b, pl, 170);
+        stelle(b, pl, 3700);
+        pl->hit_react = 1;                              /* kein Griff, kein Biss: der Spieler ist "in Reaktion" */
+        b->state = 1; b->sub_state_1 = 2; b->sub_state_2 = 0;
+        for (int f = 0; f < 90; f++) {
+            int32_t x0 = b->x, z0 = b->z;
+            tick(1);
+            if (b->sub_state_1 == 2 && (b->motion == 3 || b->motion == 4)) {
+                int32_t dx = b->x - x0, dz = b->z - z0, s = (dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
+                if (im_hieb && s > maxs) maxs = s;
+                im_hieb = 1;
+                if (alt >= 0 && alt != b->motion) wechsel++;
+                alt = b->motion;
+            }
+            pl->x = b->x + 2600; pl->z = b->z;
+        }
+        runden++;
+    }
+    pl->hit_react = 0;
+    CHECK(wechsel >= 1, "M10 %s: kein Doppelschlag in %d Runden", rdt, runden);
+    CHECK(maxs < 300, "M10/M17 %s: Schritt %d im Hieb (Doppelschlag-Sprung), %d Wechsel", rdt, maxs, wechsel);
+    fprintf(stderr, "%s M10: %d Wechsel, groesster Schritt im Hieb %d\n", rdt, wechsel, maxs);
+    free(buf);
+}
+
+/* M11: Rennen @0x80102b90 kein Lenken nach dem Treffer, beim Treffer steer -0x80 @0x80102f8c, +0x15a = 6 @0x80102f68, je
+ * Tick steer -0x10 @0x80103014. */
+static int gier_abstand(const re15_actor_t *b, int32_t x, int32_t z)
+{
+    int soll = ((int)re15_atan2_q12(z - b->z, x - b->x) - 0x400) & 0x0fff;
+    int d = (soll - (int)b->rot_y) & 0xfff;
+    return d > 0x800 ? 0x1000 - d : d;
+}
+static void test_m11_rennen(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    beruhigen(b, pl, 170);
+    stelle(b, pl, 9000);
+    {
+        int32_t px = pl->x, pz = pl->z;
+        int f, getroffen = -1;
+        for (f = 0; f < 200; f++) {
+            int hp = pl->hp;
+            tick(1);
+            if (pl->hp < hp && getroffen < 0) getroffen = f;
+            pl->x = px; pl->z = pz;
+            if (getroffen >= 0 && f == getroffen + 7) break;  /* Treffer-Ruck + sechs Bilder Abdrehen */
+        }
+        CHECK(getroffen >= 0, "M11 %s: Rennen trifft nicht", rdt);
+        CHECK(b->motion == 0, "M11 %s: nach dem Treffer kein Rennen (Clip %d)", rdt, b->motion);
+        CHECK(gier_abstand(b, px, pz) >= 0x60, "M11 %s: lenkt nach dem Treffer weiter zum Spieler (Abweichung %d)", rdt, gier_abstand(b, px, pz));
+    }
+    free(buf);
+}
+
+/* M12: Tabelle @0x8010b0fb je Waffe (+0x5 im Trefferzustand @0x80107130), nicht je KI-Unterphase. */
+static void test_m12_waffe(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    static const struct { uint8_t waffe, zuwachs; } soll[] = {
+        { 3, 3 }, { 4, 3 }, { 7, 10 }, { 8, 5 }, { 12, 2 }, { 13, 8 }, { 19, 4 }, { 20, 10 },   /* Zeile 3,2,5,7,15,8,18,5 */
+    };
+    for (unsigned i = 0; i < sizeof soll / sizeof soll[0]; i++) {
+        beruhigen(b, pl, 220);
+        stelle(b, pl, 7000);
+        CHECK(re15_bb_zaehler() == 0, "M12 %s: Zaehler baut nicht ab (%d)", rdt, re15_bb_zaehler());
+        treffer(b, soll[i].waffe); tick(1);
+        CHECK(re15_bb_zaehler() == soll[i].zuwachs, "M12 %s: Waffe %d zaehlt %d statt %d", rdt, soll[i].waffe, re15_bb_zaehler(), soll[i].zuwachs);
+    }
+    /* Dieselbe Waffe im Biss (Sub 14): kein Zucken beim ersten Pistolentreffer */
+    beruhigen(b, pl, 220);
+    stelle(b, pl, 7000);
+    b->state = 1; b->sub_state_1 = 14; b->sub_state_2 = 0; tick(1);
+    treffer(b, 3); tick(1);
+    CHECK(b->sub_state_1 == 14 && b->motion == 26, "M12 %s: Pistole bricht den Biss ab (Sub %d Clip %d)", rdt, b->sub_state_1, b->motion);
+    free(buf);
+}
+
+/* M13/M16: Treffer-Blut Handler 2 (Bodenphase): vier jal 0x8001bf10 @0x80107454/94/b8/f8, nicht bei +5 == 0x10/0xc. */
+static void test_m13_blut(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    beruhigen(b, pl, 30);
+    stelle(b, pl, 7000);
+    {
+        int n0 = re15_bb_blut_zaehler();
+        treffer(b, 3); tick(1);
+        CHECK(re15_bb_blut_zaehler() == n0 + 4, "M13 %s: %d Blutspawns statt 4", rdt, re15_bb_blut_zaehler() - n0);
+        n0 = re15_bb_blut_zaehler();
+        treffer(b, 14); tick(1);                        /* Port-14 -> RE2-Zeile 16 = 0x10 @0x80107414 */
+        CHECK(re15_bb_blut_zaehler() == n0, "M13 %s: Waffe 14 darf nicht bluten", rdt);
+    }
+    free(buf);
+}
+
+/* M14: Griff und Biss toeten wie RE2 (FUN_800401d4 Rueckgabe 2, @0x801052c4-d0 / @0x80105028), keine Klemme auf 1. */
+static void test_m14_tod(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    {   /* Griff bei niedriger HP: Griff-Gate hp < 15 @0x801024b4 */
+        beruhigen(b, pl, 5);
+        stelle(b, pl, 3000);
+        pl->hp = 14;
+        for (int f = 0; f < 120 && pl->hp >= 0; f++) { tick(1); pl->x = b->x + 3000; pl->z = b->z; }
+        CHECK(pl->hp < 0, "M14 %s: Griff toetet nicht (hp %d, Clip %d)", rdt, pl->hp, b->motion);
+        CHECK(re15_player_is_dead(), "M14 %s: Griff: Spieler nicht tot", rdt);
+        CHECK(!re15_bk_opfer_cmd(), "M14 %s: toter Spieler im Rueckstoss-Haken", rdt);
+        re15_bk_opfer_reset(); re15_player_clear_hit_guard(pl);
+    }
+    {   /* Biss */
+        beruhigen(b, pl, 170);
+        stelle(b, pl, 1900);
+        pl->hp = 5; pl->hit_react = 0;
+        b->state = 1; b->sub_state_1 = 14; b->sub_state_2 = 0;
+        for (int f = 0; f < 120 && pl->hp >= 5; f++) { tick(1); pl->x = b->x + 1900; pl->z = b->z; }
+        CHECK(pl->hp < 0, "M14 %s: Biss toetet nicht (hp %d)", rdt, pl->hp);
+    }
+    pl->hp = 100; pl->hit_react = 0;
+    free(buf);
+}
+
+/* M15: Griff von hinten: Spieler zeigt der Form das Gesicht (Haken [0] "von vorn" @0x8011b018 schiebt rueckwaerts
+ * @0x8011b3f0), sonst flog er in die Form hinein. */
+static void test_m15_griff_hinten(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    beruhigen(b, pl, 5);
+    stelle(b, pl, 3000);
+    pl->rot_y = 0;                                      /* Blick +X = von der Form weg, Ruecken zur Form */
+    {
+        int griff = 0;
+        for (int f = 0; f < 90 && !re15_bk_opfer_cmd(); f++) { tick(1); griff = griff || (b->motion == 27); }
+        CHECK(griff && re15_bk_opfer_cmd(), "M15 %s: Griff packt nicht (Clip %d)", rdt, b->motion);
+        int soll = ((int)re15_atan2_q12(b->z - pl->z, b->x - pl->x) - 0x400) & 0x0fff;
+        int d = (soll - (int)pl->rot_y) & 0xfff; if (d > 0x800) d = 0x1000 - d;
+        CHECK(d < 0x40, "M15 %s: Spieler zeigt nicht zur Form (Gier %d, soll %d)", rdt, pl->rot_y, soll);
+    }
+    {   /* Haken [0]: Rueckstoss entgegen der Gier, also von der Form weg */
+        int32_t d0 = pl->x - b->x;
+        for (int f = 0; f < 3; f++) re15_player_victim_tick();
+        CHECK(pl->x - b->x > d0, "M15 %s: Griff wirft zur Form (Abstand %d -> %d)", rdt, d0, pl->x - b->x);
+    }
+    re15_bk_opfer_reset(); re15_player_clear_hit_guard(pl);
     free(buf);
 }
 
@@ -338,6 +824,30 @@ int main(void)
     test_masse();
     test_ablauf(0x5090u, "STAGE5/ROOM5090.RDT");
     test_ablauf(0x5091u, "STAGE5/ROOM5091.RDT");
+    {
+        static const struct { unsigned id; const char *rdt; } g_kampf[] = {
+            { 0x3070u, "STAGE3/ROOM3070.RDT" }, { 0x3071u, "STAGE3/ROOM3071.RDT" },
+            { 0x5080u, "STAGE5/ROOM5080.RDT" }, { 0x5081u, "STAGE5/ROOM5081.RDT" },
+            { 0x5090u, "STAGE5/ROOM5090.RDT" }, { 0x5091u, "STAGE5/ROOM5091.RDT" },
+        };
+        for (unsigned i = 0; i < sizeof g_kampf / sizeof g_kampf[0]; i++) test_m2_zucken(g_kampf[i].id, g_kampf[i].rdt);
+    }
+    for (int r = 0; r < 2; r++) {
+        const unsigned id = r ? 0x5091u : 0x5090u;
+        const char *rdt = r ? "STAGE5/ROOM5091.RDT" : "STAGE5/ROOM5090.RDT";
+        test_m1_tauschbild(id, rdt);
+        test_m3_mutation(id, rdt);
+        test_m4_toedlich(id, rdt);
+        test_m5_takt(id, rdt);
+        test_m6_pose(id, rdt);
+        test_m7_weichen_treffer(id, rdt);
+        test_m10_doppelschlag(id, rdt);
+        test_m11_rennen(id, rdt);
+        test_m12_waffe(id, rdt);
+        test_m13_blut(id, rdt);
+        test_m14_tod(id, rdt);
+        test_m15_griff_hinten(id, rdt);
+    }
     if (fails) { fprintf(stderr, "test_birkin_bahnsteig: %d Fehler\n", fails); return 1; }
     fprintf(stderr, "test_birkin_bahnsteig: OK\n");
     return 0;
