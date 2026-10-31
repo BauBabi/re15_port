@@ -32,7 +32,12 @@
 # Die Kill-Bits der drei Spinnen (Sce_em_set pc[7] 0x9b/0x9c/0x9d @0x01C18/@0x01C2C/@0x01C40) stehen fuer den
 # Spielzustand "schon getoetet" (Messmittel wie integration_r41_ventilkette C / Abnahme 0 L3).
 #
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_SRC=<re15_port> -DWORKDIR=<dir> -P test_r41_ventilkette_kette.cmake
+# Runde 41 Spur Q (UEBERGABE 3b): -DFIGUR=elza faehrt dieselbe Kette als Elza (2031 -> 20B1 -> 2051, Riegel integration_r41_ventilkette_kette_elza,
+# registriert in probes/r41_restpunkte.cmake). Jede Fehlermeldung nennt den exit-Code der exe und die letzte Zeile des debug.log (vorher ging beides verloren,
+# Dossier Q_restpunkte.md Punkt 3); SDL_ASSERT=always_ignore wie alle Riegel der Runde 41 (Lauf 1 von INT_belege/riegel_kette_laeufe.txt endete an der
+# SDL-Assertion WIN_AddDisplay).
+#
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_SRC=<re15_port> -DWORKDIR=<dir> [-DFIGUR=elza] -P test_r41_ventilkette_kette.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -43,6 +48,24 @@ if(NOT RE15_SRC OR NOT EXISTS "${RE15_SRC}/engine/src/aot_common.c")
 endif()
 if(NOT WORKDIR)
     message(FATAL_ERROR "r41_ventilkette_kette: WORKDIR fehlt")
+endif()
+
+if(FIGUR STREQUAL "elza")
+    set(_r30 2031)
+    set(_rb0 20B1)
+    set(_rb0k 20b1)
+    set(_r50 2051)
+    set(_wahl RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1)
+    set(_fam PL04)
+    set(_pref re15_pc_r41cke_)
+else()
+    set(_r30 2030)
+    set(_rb0 20B0)
+    set(_rb0k 20b0)
+    set(_r50 2050)
+    set(_wahl RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2)
+    set(_fam PL00)
+    set(_pref re15_pc_r41ck_)
 endif()
 
 file(READ "${RE15_SRC}/engine/src/aot_common.c" _aot_src)
@@ -58,23 +81,31 @@ include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_basis "${WORKDIR}/lauf_${_lauf_id}")
 
-# Eigener exe-Name (Praefix re15_pc_r41ck_; Teil A raeumt re15_pc_r41c_haken_*, Teil B re15_pc_r41cb_*).
+# Eigener exe-Name (Praefix re15_pc_r41ck_, Elza re15_pc_r41cke_; Teil A raeumt re15_pc_r41c_haken_*, Teil B re15_pc_r41cb_*).
 get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
-file(GLOB _alte_kopien "${_exe_dir}/re15_pc_r41ck_*")
+file(GLOB _alte_kopien "${_exe_dir}/${_pref}*")
 foreach(_k IN LISTS _alte_kopien)
     file(REMOVE "${_k}")
 endforeach()
 get_filename_component(_exe_name "${RE15_PC_EXE}" NAME)
 if(_exe_name MATCHES "\\.exe$")
-    set(_exe_kopie "${_exe_dir}/re15_pc_r41ck_${_lauf_id}.exe")
+    set(_exe_kopie "${_exe_dir}/${_pref}${_lauf_id}.exe")
 else()
-    set(_exe_kopie "${_exe_dir}/re15_pc_r41ck_${_lauf_id}")
+    set(_exe_kopie "${_exe_dir}/${_pref}${_lauf_id}")
 endif()
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
 function(_fehler _was)
     file(REMOVE "${_exe_kopie}")
-    message(FATAL_ERROR "r41_ventilkette_kette: ${_was}")
+    set(_ende "")
+    if(EXISTS "${WORKDIR}/debug.log")
+        file(STRINGS "${WORKDIR}/debug.log" _z)
+        list(LENGTH _z _n)
+        if(_n GREATER 0)
+            list(GET _z -1 _ende)
+        endif()
+    endif()
+    message(FATAL_ERROR "r41_ventilkette_kette[${FIGUR}]: ${_was} (exe exit=${_rv}, ${WORKDIR}, letzte debug.log-Zeile: ${_ende})")
 endfunction()
 function(_muss _text _wort _was)
     string(FIND "${_text}" "${_wort}" _p)
@@ -108,7 +139,7 @@ macro(_kette_lauf _name _exit _timeout)
     set(WORKDIR "${_basis}_${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     file(WRITE "${WORKDIR}/kette.txt"
-"RAUM 2030
+"RAUM ${_r30}
 WARTE 30
 GEHE -2650 7280 100
 BLICK 3072
@@ -155,7 +186,7 @@ GEHE 6550 -200
 BLICK 0
 WARTE 10
 AKTION
-RAUM 20B0
+RAUM ${_rb0}
 WARTE 30
 FLAG 3 235
 FLAG 9 103
@@ -174,13 +205,13 @@ GEHE -26000 10300 100
 BLICK 2048
 WARTE 10
 AKTION
-RAUM 2050
+RAUM ${_r50}
 WARTE 30
 ENDE
 ")
     re15_start_spiel(_rv ${_timeout}
-        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
-        RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore
+        ${_wahl}
         RE15_MSG_LOG=1 RE15_FLAG_CENSUS=1
         RE15_DEBUG_JUMP=2030@250
         "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125"
@@ -192,13 +223,17 @@ ENDE
         _fehler("[${_name}] kein debug.log (exit=${_rv}, ${WORKDIR})")
     endif()
     file(READ "${WORKDIR}/debug.log" _dbg)
+    string(FIND "${_dbg}" "[pl] Spieler-Familie ${_fam} " _pf)
+    if(_pf LESS 0)
+        _fehler("[${_name}] Spielfigur nicht ${_fam}")
+    endif()
     set(_wp "")
     if(EXISTS "${WORKDIR}/wegplan.txt")
         file(READ "${WORKDIR}/wegplan.txt" _wp)
     endif()
     set(_dbg20 "")
     set(_sub05 "")
-    string(FIND "${_dbg}" "[room] PC loaded room20b0.rdt" _p20)
+    string(FIND "${_dbg}" "[room] PC loaded room${_rb0k}.rdt" _p20)
     if(NOT _p20 LESS 0)
         string(SUBSTRING "${_dbg}" ${_p20} -1 _dbg20)
         string(REGEX MATCH "thread start slot=[0-9]+ first_op=0x46" _sub05 "${_dbg20}")
@@ -207,9 +242,9 @@ endmacro()
 
 # Ohne den Haken der Spur A haengt die Szene (Spieler nie frei) -> dann nur bis zur 20B0-Ankunft (200 Bilder in 20B0).
 if(_haken)
-    _kette_lauf(voll "60#2050" 720)
+    _kette_lauf(voll "60#${_r50}" 720)
 else()
-    _kette_lauf(bis20b0 "200#20B0" 600)
+    _kette_lauf(bis20b0 "200#${_rb0}" 600)
 endif()
 
 # ---- 2030: richtige Folge zu Fuss -> Warnung -> Flucht zu Fuss -> Ost-Tuer -> 20B0 (ohne RE15_FIRE_AOT) ----------------
@@ -217,29 +252,29 @@ _danach("${_dbg}" "Ventil 09 gedreht (Drehung 1/4)" "Ventil 07 gedreht (Drehung 
 _danach("${_dbg}" "Ventil 07 gedreht (Drehung 2/4)" "Ventil 02 gedreht (Drehung 3/4)" "dann 02 (Nordwand)")
 _danach("${_dbg}" "Ventil 02 gedreht (Drehung 3/4)" "Ventil 01 gedreht (Drehung 4/4)" "dann 01")
 _danach("${_dbg}" "Ventil 01 gedreht (Drehung 4/4)" "[ventilkette41] Folge 09 07 02 01 -> RICHTIG: Warnung, Zaehler, Flut" "richtige Folge")
-_muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile_flut" "Warnung + Zaehler (Ereignis 26)")
-_muss("${_dbg}" "[msg] room=2030 id=46" "Warnung 46")
-_muss("${_dbg}" "[ventilkette41] ROOM2030: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)" "Ost-Tuer umgelenkt")
+_muss("${_dbg}" "[ventilkette41] ROOM${_r30} Ereignis 26 -> Port-Programm 2030_ventile_flut" "Warnung + Zaehler (Ereignis 26)")
+_muss("${_dbg}" "[msg] room=${_r30} id=46" "Warnung 46")
+_muss("${_dbg}" "[ventilkette41] ROOM${_r30}: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)" "Ost-Tuer umgelenkt")
 _darf_nicht("${_dbg}" "[fire-aot]" "die Ost-Tuer muss zu Fuss (Aktionstaste) feuern, nicht per RE15_FIRE_AOT")
 _muss("${_dbg}" "[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11" "Ost-Tuer zu Fuss gefeuert")
-_danach("${_dbg}" "[aot] DOOR FIRE slot=0 rect=(7350,-200" "[room] PC loaded room20b0.rdt" "ROOM20B0 geladen")
-_danach("${_dbg}" "[room] PC loaded room20b0.rdt" "Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100" "Bits 103 + 100 beim Verlassen")
+_danach("${_dbg}" "[aot] DOOR FIRE slot=0 rect=(7350,-200" "[room] PC loaded room${_rb0k}.rdt" "ROOM${_rb0} geladen")
+_danach("${_dbg}" "[room] PC loaded room${_rb0k}.rdt" "Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100" "Bits 103 + 100 beim Verlassen")
 _darf_nicht("${_dbg}" "FLUT: Wasser steigt" "der Weg zur Tuer passt in die 60 s")
 if(NOT _haken)
-    _muss("${_dbg20}" "EXIT_AT: Bild 200 in Raum 20b0" "200 Bilder in ROOM20B0")
+    _muss("${_dbg20}" "EXIT_AT: Bild 200 in Raum ${_rb0k}" "200 Bilder in ROOM${_rb0}")
     file(REMOVE "${_exe_kopie}")
     message(STATUS "r41_ventilkette_kette: 2030 richtige Folge 09/07/02/01 zu Fuss -> Warnung -> Ost-Tuer zu Fuss -> ROOM20B0, Bits 103 + 100; Teil ab der Szene uebersprungen: Haken der Spur A fehlt (aot_common.c re15_wasser20b0_r41_auto_aot)")
     return()
 endif()
 # ---- Szene sub02 -> Zone Slot 7 -> sub05 ------------------------------------------------------------------------
-_danach("${_dbg}" "[room] PC loaded room20b0.rdt" "Plc_dest(slot=0 mode=0x05 dest=(-15920,-6355)" "sub02: Plc_dest Modus 5 (@0x01F24)")
+_danach("${_dbg}" "[room] PC loaded room${_rb0k}.rdt" "Plc_dest(slot=0 mode=0x05 dest=(-15920,-6355)" "sub02: Plc_dest Modus 5 (@0x01F24)")
 if("${_sub05}" STREQUAL "")
     _fehler("sub05 @0x01F5C (Zone Slot 7, AUTO) startet nicht - der AUTO-Haken der Spur A (aot_common.c re15_wasser20b0_r41_auto_aot, FUN_800436a8 @0x8001ce1c) fehlt oder wirkt nicht (Haken im Quelltext: ${_haken})")
 endif()
 _danach("${_dbg20}" "${_sub05}" "Cut_chg(7)" "sub05: Cut 7 (@0x01F6A)")
 _danach("${_dbg20}" "Cut_chg(7)" "Cut_chg(15)" "sub05: Cut 15 (@0x01F9C)")
 _danach("${_dbg20}" "Cut_chg(15)" "Cut_chg(6)" "sub05: Cut 6 (@0x01FB6)")
-_danach("${_dbg20}" "Cut_chg(6)" "[flagcensus] room=20B0 WRITE Set  zone=3 idx=235 op=1" "sub05: Set(3,235)=1 (@0x01FBC)")
+_danach("${_dbg20}" "Cut_chg(6)" "[flagcensus] room=${_rb0} WRITE Set  zone=3 idx=235 op=1" "sub05: Set(3,235)=1 (@0x01FBC)")
 _danach("${_dbg20}" "zone=3 idx=235 op=1" "letterbox closed -> gameplay (player_mode=0)" "Szene beendet, Spieler frei")
 _muss("${_wp}" "FLAG (3,235) = 1" "Wegplan: (3,235) nach der Szene")
 _muss("${_wp}" "FLAG (9,103) = 1" "Wegplan: Bit 103")
@@ -248,8 +283,8 @@ _muss("${_wp}" "FLAG (9,100) = 1" "Wegplan: Bit 100 (Leiter frei)")
 _darf_nicht("${_wp}" "KLEMME" "der Weg zur Leiter klemmte")
 _darf_nicht("${_dbg20}" "-> Sperrtext 40" "mit Bit 100 ist die Leiter eine Tuer")
 _muss("${_dbg20}" "[aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)" "Leiter feuert")
-_danach("${_dbg20}" "[aot] DOOR FIRE slot=4" "[room] PC loaded room2050.rdt" "ROOM2050 geladen")
-_muss("${_dbg20}" "EXIT_AT: Bild 60 in Raum 2050" "Endbild in ROOM2050")
+_danach("${_dbg20}" "[aot] DOOR FIRE slot=4" "[room] PC loaded room${_r50}.rdt" "ROOM${_r50} geladen")
+_muss("${_dbg20}" "EXIT_AT: Bild 60 in Raum ${_r50}" "Endbild in ROOM${_r50}")
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_ventilkette_kette: 2030 richtige Folge zu Fuss -> Ost-Tuer zu Fuss -> 20B0 Szene sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> ROOM2050 in einem Lauf (Haken der Spur A: ${_haken})")
+message(STATUS "r41_ventilkette_kette: ${_r30} richtige Folge zu Fuss -> Ost-Tuer zu Fuss -> ${_rb0} Szene sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> ROOM${_r50} in einem Lauf (Haken der Spur A: ${_haken})")

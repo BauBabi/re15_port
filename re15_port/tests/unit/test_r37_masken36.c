@@ -1751,6 +1751,58 @@ static void warum_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, const
     memset(g_r41_grund, 0, sizeof g_r41_grund);
 }
 
+/* ---- stufen (Runde 41 Spur Q, Riegel unit_r41_restpunkte_teil8[_elza]): ein Fenster je OT-Stufe (tools/maske/stufen_r41.py) --------- *
+ * Abnahme M 5 Mangel 1: je Bildspalte EINE Tiefe liess Figurpunkte hinter den nahen Punkten einer Spalte sichtbar. Geprueft fuer die Rechtecke
+ * von..bis der Sektion: an JEDEM deckenden Punkt ist bucket(Eintritt in den Koerper der Modell-Zeile) == Rechteck-Tiefe (bucket = (1023*vz)>>16,
+ * @0x8002565c sra v1,v1,4, ZSF3 341 @0x80066c70, Masken-OT = depth @0x80039650), jede Stufe hat genau ein Rechteck, kein Rechteck ist ausgeschlossen.
+ * Damit heisst "Figur hinter dem Eintritt und nicht verdeckt" genau OT-Gleichstand. Gegenprobe: im Stand NB5 spannte R113 die Stufen 116..126. */
+static void teil_stufen(unsigned r, int c, int von, int bis, int punkte_soll)
+{
+    static raum_t R;
+    char p[700]; uint8_t *msk; size_t mn = 0; re15_pri_cut_t pri; atlas_t a; uint32_t off; re15_camera_view_t v; double A[3], inv[9];
+    const unsigned mr = re15_pri_masken_raum(r);
+    int m, doppelt = 0; long punkte = 0, daneben = 0, ohne = 0; int gesehen[1024];
+    memset(gesehen, 0, sizeof gesehen);
+    printf("== r41_restpunkte stufen ROOM%04X C%d R%d..R%d ==\n", r, c, von, bis);
+    snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, mr);
+    msk = slurp(p, &mn);
+    if (!msk || !(off = re15_pri_msk_section_offset(msk, mn, c)) || re15_pri_parse_section(msk, mn, off, &pri) <= 0
+        || !atlas_generator(r, c, &a) || !raum_laden(&R, r) || re15_camera_build_view(&R.rdt.cuts[c], &v) != 0) {
+        printf("  FAIL: ROOM%04X C%d nicht lesbar\n", r, c); g_fail = 1; free(msk); return;
+    }
+    kamera_ort(&v, A);
+    {
+        const double a_ = v.rot[0], b = v.rot[1], cc = v.rot[2], d = v.rot[3], e = v.rot[4], f = v.rot[5], g = v.rot[6], h = v.rot[7],
+                     kk = v.rot[8], det = a_ * (e * kk - f * h) - b * (d * kk - f * g) + cc * (d * h - e * g);
+        inv[0] = (e * kk - f * h) / det; inv[1] = (cc * h - b * kk) / det; inv[2] = (b * f - cc * e) / det;
+        inv[3] = (f * g - d * kk) / det; inv[4] = (a_ * kk - cc * g) / det; inv[5] = (cc * d - a_ * f) / det;
+        inv[6] = (d * h - e * g) / det; inv[7] = (b * g - a_ * h) / det; inv[8] = (a_ * e - b * d) / det;
+    }
+    for (m = von; m <= bis && m < pri.draw_count; m++) {
+        const re15_pri_mask_t *q = &pri.masks[m]; int idx_m, x, y; const r41_zellen_modell_t *k = r41_modell(mr & ~1u, c, m, &idx_m);   /* Tabelle: Leon-Datei, Elza bytegleich */
+        const uint8_t *ix = (const uint8_t *) a.tim.pixels;
+        CHECK("Rechteck wird gezeichnet", !re15_masken36_ausgeschlossen(mr, c, m));
+        CHECK("Rechteck hat eine Modell-Zeile mit seiner Tiefe", k && k->tiefe == q->depth);
+        if (!k) continue;
+        if (q->depth < 1024) { doppelt += gesehen[q->depth]; gesehen[q->depth] = 1; }
+        for (y = 0; y < q->height; y++)
+            for (x = 0; x < q->width; x++) {
+                int axx = q->srcX + x, ayy = q->srcY + y, tx = (int16_t) q->dstX + x, ty = (int16_t) q->dstY + y; double ve;
+                if (axx >= a.tim.width || ayy >= a.tim.height || tx < 0 || ty < 0 || tx >= 320 || ty >= 240) continue;
+                if (!ix[ayy * a.tim.width + axx]) continue;
+                punkte++;
+                ve = r41_eintritt(k, &v, A, inv, (double) tx, (double) ty);
+                if (ve <= 0) { ohne++; continue; }
+                if (((1023L * (long) ve) >> 16) != (long) q->depth) daneben++;
+            }
+    }
+    printf("  %ld deckende Punkte, Stufe != Rechteck-Tiefe %ld, ohne Treffer %ld, Stufen doppelt %d\n", punkte, daneben, ohne, doppelt);
+    CHECK("alle Punkte des Teils da", punkte == punkte_soll);
+    CHECK("an jedem deckenden Punkt ist die Rechteck-Tiefe genau bucket(Eintritt)", daneben == 0 && ohne == 0);
+    CHECK("je OT-Stufe ein Rechteck", doppelt == 0);
+    free(a.roh); free(msk); free(R.roh); R.roh = NULL;
+}
+
 /* ---- erzeuge ---------------------------------------------------------------------------------------------------- */
 static void erzeuge_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, const ergebnis_t *E, void *ctx)
 {
@@ -2430,6 +2482,11 @@ int main(int argc, char **argv)
                 }
         if (bb < 0) { printf("AUSSEN ROOM%04X C%d -\nOK\n", r, c); free(R.roh); return 0; }
         printf("AUSSEN ROOM%04X C%d %d %d %d\nOK\n", r, c, bx, bz, bb); free(R.roh); return 0;
+    }
+    if (!strcmp(teil, "stufen") && argc > 6) {          /* Runde 41 Spur Q: stufen <raum> <cut> <von> <bis> <punkte> */
+        teil_stufen((unsigned) strtoul(argv[2], NULL, 16), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
+        printf("%s\n", g_fail ? "FAIL" : "OK");
+        return g_fail;
     }
     if (!strcmp(teil, "neustellen") && argc > 4)        /* R41 NB5: HINTER-/DAVOR-Stelle an den neuen Rechtecken ab Index argv[4] */
         return teil_neustellen((unsigned) strtoul(argv[2], NULL, 16), atoi(argv[3]), atoi(argv[4]));
