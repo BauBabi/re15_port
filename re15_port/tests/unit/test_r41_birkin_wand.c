@@ -243,6 +243,11 @@ static void test_rein(void)
         re15_collision_constrain_re2(&s_rdt, 3878, -25190, &x, &z);
         CHECK(x == 3878 && z == -25190, "f006: Vorlage @0x8004d8f0 erwartet, (%d,%d)", (int)x, (int)z);
     }
+    /* Tiefe ohne Ueberlauf, aber ueber der Grenze 400: off_z = -475 (`slti v0,v0,401` @0x8004d878) -> Vorlage */
+    {   int32_t x = 3000, z = -26213;
+        re15_collision_constrain_re2(&s_rdt, 3000, -25500, &x, &z);
+        CHECK(x == 3000 && z == -25500, "Grenze 400: Vorlage erwartet, (%d,%d)", (int)x, (int)z);
+    }
     /* flache Tiefe: Schrift auf die Linie, kein Rueckfall */
     {   int32_t x = 3200, z = -25700;
         re15_collision_constrain_re2(&s_rdt, 3150, -25480, &x, &z);
@@ -288,6 +293,13 @@ static void test_nclip(void)
     CHECK(re15_nclip_r41_weg(0, 0, 0, 10, 0, 20, 0), "MAC0 = 0 Dreieck weg (`bgtz` @0x80027cc8)");
     CHECK(re15_nclip_r41_weg(1, 0, 0, 0, 10, 10, 0), "Rueckseite Viereck weg");
     CHECK(!re15_nclip_r41_weg(1, 0, 0, 10, 0, 20, 0), "MAC0 = 0 Viereck bleibt (FUN_80027dbc Z.40)");
+    /* Die Lage, um die es geht: Cut 13 steht im G5. RID @0x200, Rand der Masse = Ursprung + 4494 (Blob-Bind 1800 @0x80100680 + Mesh-2-Bbox 2694). */
+    if (raum_boot("STAGE5/ROOM5090.RDT", 0x5090u, 8000, -24000, 14)) {
+        const re15_camera_cut_t *c = &s_rdt.cuts[13];
+        CHECK(c->pos_x == 11050 && c->pos_y == -3110 && c->pos_z == -24812, "RID @0x200 Cut 13: (%d,%d,%d)", (int)c->pos_x, (int)c->pos_y, (int)c->pos_z);
+        CHECK(c->target_x > c->pos_x, "Cut 13 blickt nach Osten");
+        CHECK(12000 + 4494 > c->pos_x && 7000 + 4494 > c->pos_x, "Kappe X 12000 @0x80100fd0: die Masse reicht ueber die Kamera");
+    }
 }
 
 /* --- g5: Startlagen entlang aller Waende, G5 und Arme im echten Spielschritt ---------------------------------------------------- */
@@ -360,6 +372,22 @@ static void test_g5(const char *rel, unsigned id)
         CHECK(n_kontakt > 0, "N2: kein Arm-Kontakt, der Riegel misst nichts");
         CHECK(n_wand == 0, "N2: %d Bildenden in der Wand", n_wand);
         CHECK(lauf_try > 0 && lauf_ok == lauf_try, "N2: Eingabe wirkt nicht (%d/%d)", lauf_ok, lauf_try);
+    }
+
+    /* N1: Leon in der Ecke #29/#30, der G5 (x 1960, Rand 4410 um x -40) drueckt mit gut 1000 je Bild. Die Rueckstellung @0x8004d8f0 nimmt den Schub
+     * zurueck; ohne die Vor-Klemme nahm sie auch die Eingabe (Lauf z_w4 F1360-F2100). */
+    {
+        int32_t weg = 0;
+        for (int f = 0; f < 240 && (re15_player_is_grabbed() || re15_player_hit_flinch_active() || re15_player_knockdown_active()); f++) { pl->hp = 100; bild(0); }
+        pl->x = 4597; pl->z = -25030; pl->rot_y = 3072;        /* Blick nach Norden, weg von der Diagonale */
+        for (int f = 0; f < 30; f++) {
+            const int32_t ax = pl->x, az = pl->z;
+            e->x = 1960; e->z = -23400; pl->hp = 100; pl->hit_react = 0;
+            bild(RE15_PAD_BIT_UP);
+            weg += abs((int)(pl->x - ax)) + abs((int)(pl->z - az));
+        }
+        fprintf(stderr, "N1: Ecke #29/#30 unter dem Koerper, 30 Bilder Vorwaerts: Weg %d, Ende (%d,%d)\n", (int)weg, (int)pl->x, (int)pl->z);
+        CHECK(weg >= 200, "N1: Eingabe wirkt in der Ecke nicht (Weg %d)", (int)weg);
     }
 
     lagen_bauen(-900, 20400, -26500, -20340, 300);
@@ -466,7 +494,8 @@ static void griff_raum(const char *rel, unsigned id, int32_t kx, int32_t kz, int
     fprintf(stderr, "griff %s: %d Lagen, %d Faelle, Wand-Griffe %d, Bildenden in fester Zelle %d (Folge %d), eingekeilt %d, groesster Weg %d\n",
             rel, s_lagen, n_faelle, n_wandhalt, n_wandbilder, laengste, n_eingekeilt, (int)weg_max);
     CHECK(n_faelle >= 60, "%s: zu wenige Faelle %d", rel, n_faelle);
-    CHECK(n_wandhalt > 0, "%s: kein Griff lief an die Wand, der Riegel misst das nicht", rel);
+    /* Der Griff-Haken liest das Wand-Bit (@0x8011b140): von den Griffen [0] muss ein guter Teil an die Wand laufen. Ohne Bit aus der Vor-Klemme: 2 Prozent. */
+    CHECK(n_wandhalt * 5 >= n_faelle, "%s: nur %d von %d Griffen liefen an die Wand (Wand-Bit)", rel, n_wandhalt, n_faelle);
     CHECK(n_wandbilder == 0, "%s: %d Bildenden in fester Zelle", rel, n_wandbilder);
     CHECK(n_eingekeilt == 0, "%s: %d Faelle eingekeilt", rel, n_eingekeilt);
 }

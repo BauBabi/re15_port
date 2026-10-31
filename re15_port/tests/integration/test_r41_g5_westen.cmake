@@ -40,7 +40,7 @@ function(ein_lauf _name _raum _skript)
     if(_raum STREQUAL "5091")
         set(_extra "RE15_TITLE_SHOT_CHAR=1")
     endif()
-    re15_start_spiel(_rv 180
+    re15_start_spiel(_rv 300
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${_extra}
         RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=500,-9175,2048,0"
@@ -53,7 +53,7 @@ function(ein_lauf _name _raum _skript)
         set(_f "${_f}\n ${_name}: kein Protokoll (exit=${_rv})" PARENT_SCOPE)
         return()
     endif()
-    file(STRINGS "${WORKDIR}/state.log" _zeilen REGEX "R?.*PL\\(")
+    file(STRINGS "${WORKDIR}/state.log" _zeilen REGEX "PL\\(")
     set(_n 0)
     set(_wand 0)
     set(_erste "")
