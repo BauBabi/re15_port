@@ -425,8 +425,9 @@ if(_an)
     # G5 EM36 in ROOM5090: HP 600 (@0x801003fc), Granate = RE2-Record Zeile 9 K0 = 80 (E16 @0x800A5F7C).
     # ARMIERT: sub04 (Kampfstart) ueber RE15_DEBUG_SUB=4@255 -> grid 0x13, Vorspann bis ~Bild 346, danach kriecht
     # der Boss (gemessen nb1/birkin_c: F380 x -8808, F400 x -7373). Explosion im Bild 400.
+    # RE15_ENDKAMPF_NUR_G5=1: dieser Lauf pinnt den G5; seit "Vierbein, dann G5" spawnt 5090 sonst zuerst den 0x30.
     set(_dir "${_wurzel}/birkin")
-    r35_exe(birkin "${_dir}" 300 ${_env_basis}
+    r35_exe(birkin "${_dir}" 300 ${_env_basis} RE15_ENDKAMPF_NUR_G5=1
         RE15_DEBUG_JUMP=5090@250 RE15_DEBUG_SUB=4@255 "RE15_FORCE_EXPLOSION=2@400:2" "RE15_EXIT_AT=460#5090")
     r35_zustand("${_dir}/state.log")
     r35_gegner("${_Z_399}" 2 _V)

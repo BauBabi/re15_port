@@ -16,6 +16,8 @@
 #   2  state.log: nach der Tuer Boss-HP 600 am Ende, nie < 0 (Leon schiesst nicht; das Spawn-Bild darf 0 zeigen)
 #   3  state.log: der Boss laeuft an (x von -9000 = [T0] @0x801011d0 um >= 1500 nach vorn)
 # RE15_SOFTWARE_RENDER=1 nur fuer die Robustheit; Bilder belegt das Dossier (Framedump).
+# RE15_ENDKAMPF_NUR_G5=1: seit "Vierbein, dann G5" (birkin_formen.c) spawnt 5090 zuerst den 0x30; dieser Test
+# pinnt den Neuspawn des G5 und laeuft wie die fuenf G5-Tests in tests/unit/CMakeLists.txt auf dem alten Spawn.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r35_zgirl_5090.cmake
 # =============================================================================
@@ -42,7 +44,7 @@ set(_exe_kopie "${_exe_dir}/re15_pc_r35c_5090_${_lauf_id}.exe")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
 re15_start_spiel(_rv 300
-    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1 RE15_ENDKAMPF_NUR_G5=1
     RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_DEBUG_JUMP=5090@gp "RE15_PLAYER_POS=500,-9175,2048,0"
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=A0.1,W1,U12"

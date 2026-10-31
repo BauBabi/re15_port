@@ -415,9 +415,15 @@ foreach(_ki re2 re15)
             continue()
         endif()
         set(_dir "${_wurzel}/${_lauf}")
+        # RE1.5-Gehirn: dieser Lauf pinnt den Standard-Tod bis Zustand 7. Das 80%-Gore (zombiegore_r15.c) macht aus dem
+        # Granaten-Tod einen kriechenden Oberkoerper (g=0x81, HP 30); den deckt unit_zombie_gore ab.
+        set(_gore "")
+        if(_ki STREQUAL "re15")
+            set(_gore RE15_KEIN_80PROZENT_GORE=1)
+        endif()
         r34_exe("${_lauf}" "${_dir}" 240
             RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
-            RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=1140@250 "RE15_PLAYER_POS=${_pos}"
+            RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=1140@250 "RE15_PLAYER_POS=${_pos}" ${_gore}
             RE15_AI_FLAVOR=${_ki} RE15_GIVE=${_id}:5 RE15_EQUIP=${_id}
             RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_skript_wurf}"
             RE15_STATE_LOG=state.log RE15_GRANATE_LOG=gr.log RE15_WAFFEN_LOG=wf.log
