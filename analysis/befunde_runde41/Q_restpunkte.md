@@ -158,3 +158,13 @@ Die Masken-Gruppen a1..c3 liefen auf dem Stand vor der letzten Aenderung am Rend
 - Freistellungs-Liste (Dossier M "Fuer den Nutzer") ist vollstaendig: 8 Stellen dazu, je mit Restbild, Teile-Bericht aus dem ausgelieferten Lauf. ROOM4040/4041 Kamera 12 hat keine HINTER-Stelle.
 - Assets fuer das Paket: nur geaenderte Dateien `shared_assets/PSX/MASKS/ROOM6010.MSK`, `ROOM6011.MSK`, `ROOM6010_PRI05.TIM`, `ROOM6011_PRI05.TIM`. Keine neuen Dateien unter shared_assets/RE2, keine Sprachdateien, keine Bank-9-Bits (Bit 126 bleibt frei), keine Nachrichten-Ids. Neue Quelle `platform/pc/src/endgrund_r41_pc.c` (nur Windows, beim naechsten Configure erfasst).
 - Entscheidung: Soll die GPU-Grenze auch im Spiel fuer die Effekt-Quader gelten (OFFEN 1)? Dann verschwinden die Bloecke im Westgang von 20B0.
+
+## Nachbesserung 1 (Abnahme 0, Mangel M1, Weg (a): Teil 8 auf die Ebene der Wange)
+
+### Beleg: wo die Wange liegt (Triangulation, Schritt 1, UNGEBAUT)
+Die Zelle @0x0092C (Westflaeche x -19919) ist eine Kollisionszelle, keine Wange. Kameras 4 (-24312,-10127,-6937) und 5 (-23912,-9927,-23336) sehen die Aussenflaeche der Westwange, Basislinie rund 16 000. Bildkanten je Zeile aus dem Hintergrund (Helligkeitsprofil, Sprung olive/schwarz), Sehebene je Kamera, Schnitt der zwei Ebenen:
+| Kante | Bildkante Cut 5 | Bildkante Cut 4 | x bei z -20000 | y bei z -20000 | dx/dz | dy/dz |
+|---|---|---|---|---|---|---|
+| Unterkante der Aussenflaeche | (147.5,204)..(165.7,236) | (259.5,110)..(271.6,134) | -20630 (Sigma 7) | -4044 | 0,013 | -0,834 |
+| Oberkante der Aussenflaeche | (158.5,204)..(177.6,236) | (265.5,110)..(277.6,134) | -20552 (Sigma 6) | -4717 | 0,008 | -0,815 |
+dx/dz ~ 0: beide Linien laufen parallel zur Treppe (achsparallel), die Paarung der Kanten stimmt. dy/dz passt zur Zellenlaenge (5400/6445 = 0,838), nicht zum Stair-Record (5400/6895 = 0,783, das ist der Laufbereich). Die Stufenlinie der Zelle (y = -1800 - 0,838 (z + 24100)) liegt bei z -20000 auf -5236, die Unterkante also 1192 darunter: das ist der Abstand, den die Abnahme an der Ostwange in Cut 6/11 mass (1125..1225).
