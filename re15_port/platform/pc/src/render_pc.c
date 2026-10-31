@@ -875,6 +875,9 @@ void re15_render_begin_frame(void)
     while (SDL_PollEvent(&e)) {
         re15_touch_pc_event(&e);   /* Finger-Events -> On-Screen-Pad (inert ohne Overlay) */
         if (e.type == SDL_QUIT) {
+            /* Runde 41 Spur Q (UEBERGABE 3b): dieses Ende war in debug.log unsichtbar ("stilles Ende" des Ketten-Riegels). */
+            fprintf(stderr, "[flow] SDL_QUIT (Fenster geschlossen) -> exit\n");
+            fflush(stderr);
             exit(0);
         } else if (e.type == SDL_KEYDOWN &&
                    (e.key.keysym.sym == SDLK_F11 ||

@@ -234,6 +234,7 @@ if(TEIL MATCHES "^gator")
 endif()
 
 if(TEIL MATCHES "^original")
+    set(WORKDIR "${_dir}")
     re15_start_spiel(_rv 200
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore ${_wahl}
         RE15_GATOR_ORIGINAL=1 RE15_SPAWN_DIAG=1 RE15_R39_MESS_SPIELER_HP=100 RE15_DEBUG_JUMP=${_r2090}@250 "RE15_SET_FLAG=3:245" RE15_STATE_LOG=state.log
