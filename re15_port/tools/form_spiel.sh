@@ -138,7 +138,7 @@ if [ "$ANWESEND" = 1 ] && [ -n "$HWND" ] && [ "$HWND" != "0" ]; then
                 # drei Bilder, das letzte zaehlt: das erste kann noch vom Fensterwechsel stammen
                 "$FFMPEG" -hide_banner -loglevel error -y -f gdigrab -framerate 5 -draw_mouse 0 -i "hwnd=$HX" -frames:v 3 -update 1 "$ZIEL" 2>/dev/null
             else
-                "$PS" -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$BAUM/re15_port/tools/form_fensterbild.ps1")" -Hwnd "$HWND" -Aus "$(cygpath -w "$ZIEL")" | tr -d ''
+                "$PS" -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$BAUM/re15_port/tools/form_fensterbild.ps1")" -Hwnd "$HWND" -Aus "$(cygpath -w "$ZIEL")" | tr -d '\r'
             fi
             if [ "$(hellstes "$ZIEL")" -ge 8 ]; then GUT=1; break; fi
             sleep 2                     # Abblende oder noch kein Bild: gleich nochmal

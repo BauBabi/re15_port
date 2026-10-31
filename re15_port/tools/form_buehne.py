@@ -145,11 +145,12 @@ class Kamera:
 
 
 def kamera_laden(pfad):
-    """kamera_bildN.json aus form_kamera.py. Erwartet pos/ziel und fov oder h, oder V/t/h; optional abbildung."""
+    """kamera_bildN.json aus form_kamera.py. Erwartet pos/ziel und fov oder h, oder V/t/h, flach oder unter `kamera`; optional abbildung."""
     with open(pfad, encoding='utf-8') as f:
         j = json.load(f)
     ab = j.get('abbildung')
     nm = j.get('name') or os.path.basename(pfad)
+    j = j.get('kamera', j)
     if 'V' in j:
         return Kamera(j['V'], j['t'], j['h'], ab, nm)
     return Kamera.aus_rid(j['pos'], j.get('ziel', j.get('target')), j.get('fov'), j.get('h'), ab, nm)
@@ -233,14 +234,21 @@ def dreiecke(mo, kf, lage, gier, kam, licht=None, teile=None):
     return aus
 
 
+def abbilden(x, y, ab):
+    """Port-Pixel -> Zielbild. ab = {ax, bx, ay, by} oder {matrix: 3 x 3} (projektiv, Spaltenvektor x, y, 1)."""
+    if 'matrix' in ab:
+        m = np.asarray(ab['matrix'], float).reshape(3, 3)
+        w = m[2, 0] * x + m[2, 1] * y + m[2, 2]
+        return (m[0, 0] * x + m[0, 1] * y + m[0, 2]) / w, (m[1, 0] * x + m[1, 1] * y + m[1, 2]) / w
+    return x * ab['ax'] + ab['bx'], y * ab['ay'] + ab['by']
+
+
 def rastern(tris, tex, ziel, abbildung):
     """Fern zuerst in `ziel` (H x W x 3 uint8) zeichnen; Rueckgabe = Maske der getroffenen Pixel."""
     H, W = ziel.shape[:2]
     maske = np.zeros((H, W), bool)
-    ax, bx, ay, by = abbildung['ax'], abbildung['bx'], abbildung['ay'], abbildung['by']
     for _t, p, uv, zeile, farbe in sorted(tris, key=lambda t: -t[0]):
-        x = np.array([(q[0] + PHASE) * ax + bx for q in p])
-        y = np.array([(q[1] + PHASE) * ay + by for q in p])
+        x, y = abbilden(np.array([q[0] + PHASE for q in p], float), np.array([q[1] + PHASE for q in p], float), abbildung)
         fl = (x[1] - x[0]) * (y[2] - y[0]) - (x[2] - x[0]) * (y[1] - y[0])
         if abs(fl) < 1e-9:
             continue
