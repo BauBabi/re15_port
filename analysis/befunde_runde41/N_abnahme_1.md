@@ -6,7 +6,29 @@ Messordner (nicht committet): scratchpad `n1/`, Laeufe `n1/l/<name>/`, Treiber `
 
 ## Ergebnis
 
-(Zwischenstand) Im Spurbaum alle sieben Punkte erfuellt, die fuenf Maengel aus Abnahme 0 behoben. Am Stand von master (Merge mit Spur O) verpufft das erste USE der Sicherung am geschlossenen Schrank, siehe "Merge mit master".
+**NICHT BESTANDEN**, wegen des Zusammenspiels mit Spur O in master. Im Spurbaum selbst sind alle sieben Punkte erfuellt und alle fuenf Maengel aus Abnahme 0 behoben; RE-Gate und Vertrag halten. Master traegt Spur O aber schon (91cd9ec82), und dort geht die Sicherung ueber das Inventar. Am gebauten Merge (Baum c0b70826f) verpufft das USE am geschlossenen Schrank: die Tuer klappt auf, es kommt "One of the fuses is missing...", die Sicherung bleibt im Inventar. Erst ein zweites USE wirkt. Kein Riegel faengt das, und die Angabe "Konflikt nur in k1" stimmt nicht.
+
+| Punkt | Urteil | Kern |
+|---|---|---|
+| 1 Wasser 2010 | erfuellt | Strom ueber die Leiter, Wasser laeuft messbar ueber den Weg bis in den Kanal, endet mit Bit 100/103; Raum durch das Nutzer-Design belegt |
+| 2 Schrank 2010 | teilweise | Spurbaum: Aufklappen, Bild, Cursor-Schritt pixelgleich 2060. Mit Spur O: erstes USE am geschlossenen Schrank wirkungslos (Mangel 1) |
+| 3 Panel 2030 | erfuellt | Entwurf A, Regeln, Text 43, Fahrt, START gesperrt, Farben wie der Entwurf |
+| 4 Notiz | erfuellt | Satz wortgleich, Plakat 30d, Folge 09/02/01/08 |
+| 5 Plattform-Ton | erfuellt | RE2 ROOM4080 sub13, Motor bis zum Halt, bytegleiche Bank |
+| 6 Alarm | erfuellt | Sirene nach der Ansage durchgehend, Leon + Elza, Quelle belegt |
+| 7 Lautstaerke | erfuellt | jeder Abtastwert folgt, Tuersequenz und Wassersprung eingeschlossen |
+
+## Maengel
+
+1. **Merge mit Spur O: USE der Sicherung am geschlossenen Schrank verpufft.** Nachpruefen am Merge-Baum: `RE15_DEBUG_JUMP=2010@240 RE15_SET_FLAG=3:108 RE15_EQUIP=3 RE15_PLAYER_POS=4950,-2770,0,0 RE15_KEYITEMS_LOG=1 RE15_PRESS=start@260,square@285,down@300,square@310,square@325`. Erwartet Cursor-Schritt, gemessen `USE-Lauf ohne Frage beendet (Ereignis 20)`, Text 40, `Frage 41 entfaellt: Nein`. Ursache: keyitems_r41.c `re15_keyitems_r41_tick` beendet den USE-Lauf nach zwei Takten, der Vorspann AUF haelt die Frage um die 16 Bilder Aufklappen zurueck. Der Zaehler muss stehen, solange der Marker (5,0x1E) gesetzt ist, oder die Programme muessen den USE-Lauf anders fuehren; dazu ein Riegel "USE bei geschlossener Tuer", Leon + Elza.
+2. **Riegel `integration_r41_nachtrag30_schrank_{leon,elza}` wird nach dem Merge rot**, Zeile 176 (Frage 41 entfaellt mit Sicherung im Inventar, gemessen mit `cmake -P` auf der Merge-exe). OFFEN 1 im Dossier nennt nur k1. Lauf b auf USE umstellen, Dossier und "Bedienung Sicherung 2010" nachziehen.
+
+Feinheiten, kein Grund zum Durchfallen (Regel Nachtrag 34):
+* Effekt-Pool Spitze 86 von 96, Dossier sagt 80.
+* Die Tuer schwenkt durch die Figur und hat keine Kollision (OFFEN 2).
+* Die Schrank-Innenseite bleibt nach dem Einsetzen auf Cut 6, also rote Lampe im Raumbild (OFFEN 3).
+* Stirbt die Figur bei offenem Panel, liegt "YOU DIED" ueber dem Panel, danach geht es normal zum Titel; Gift allein kann das nicht ausloesen.
+* Veralteter Kommentar "Modell der nassen Spur" in `test_r41_nachtrag30.cmake`.
 
 ## Punkt 1: Wasser 2010
 
@@ -29,7 +51,7 @@ Messordner (nicht committet): scratchpad `n1/`, Laeufe `n1/l/<name>/`, Treiber `
 * **Folge:** Log `s_ja`: Frage 41 -> `Nahansicht ROOM2060 Cut 8, Cursor obj 4 bei (19571,-22542)` -> `Cut 9, Cursor (19771,-22542) auf Zone 7` -> Bit 125 -> Text 42 -> Standbild + Ton -> Cut_old. Klick von Norden `s_n`: Cut 4 -> Cut_chg(3) -> Tuer -> Text -> Cursor -> Standbild -> Cut 4, Bilder `n1/sh_sn.png`. Echtes Fenster `n1/g_s.png`: Cursor wandert, Text 42 auf Cut 9.
 * **Cut 4 (Mangel 4):** `s_geh`: nach dem Klick zu Fuss nach Cut 4 und zurueck, Tuer nur unter Cut 3, `n1/sh_sg2.png`.
 
-**Urteil im Spurbaum: erfuellt.** Merge-Lage siehe Abschnitt "Merge".
+**Urteil: teilweise.** Im Spurbaum erfuellt; am Merge mit Spur O verpufft das erste USE (Mangel 1).
 
 ## Punkt 3: Panel 2030
 
@@ -45,7 +67,7 @@ Messordner (nicht committet): scratchpad `n1/`, Laeufe `n1/l/<name>/`, Treiber `
 
 * FILE31 selbst dekodiert (`n1/tim_beide.png`): "They mixed up / green and red, and on top of" + `that they swapped the / numbers of "black" and / "green"! What are they? ...`. Kein "black" in der Vertauschung, Anfuehrungszeichen sichtbar.
 * Plakat im Spiel Leon + Elza (`n_pl`, `n_pl_e`, `n1/sh_nl.png`): 1. GREEN 01, 2. RED 02, 3. BLACK 09, 4. RED 08.
-* Folge: Riegel `_weg`, `_weg_elza` (siehe Tests).
+* Folge: `integration_r41_ventilkette_weg` und `_weg_elza` gruen (eigene Laeufe, 1452 s / 1686 s).
 
 **Urteil: erfuellt.**
 
@@ -59,7 +81,8 @@ Messordner (nicht committet): scratchpad `n1/`, Laeufe `n1/l/<name>/`, Treiber `
 ## Punkt 6: RE2-Alarmton
 
 * SUB_34.BGM bytegleich info/re2leon/COMMON/SOUND/SUB_34.BGM; MAIN25 == MAIN11 (md5 52613db8..); Tabelle 0x80074828[0x62] = 0xFF65; ROOM6000 @0x00D52 `54 00 01 00 46 40`; RE2 ROOM6040 @0x02360 `57 00 00 06 11 ff 00 00`.
-* Zwilling Lauf sa/sb, eigene Auswertung: Sirene ab capTick 674, RMS(A-B) 2146..2232 in jedem 30-Bilder-Fenster bis zum Verlassen 2724, Gesamtpegel 2240..2750. Reihenfolge Warntext/Sirene/Flut: `integration_r41_ventilkette_alarm` (siehe Tests).
+* Zwilling Lauf sa/sb, eigene Auswertung: Sirene ab capTick 674, RMS(A-B) 2146..2232 in jedem 30-Bilder-Fenster bis zum Verlassen 2724, Gesamtpegel 2240..2750.
+* Eigener Lauf `integration_r41_ventilkette_alarm`, Log Leon und Elza gleich: F4227 SUB_25 an + Text 46, F4680 Sirene AN (Text zu, Zaehler laeuft), `FLUT: Wasser steigt`, F6480 SUB_25 aus und Sirene AUS im selben Bild.
 
 **Urteil: erfuellt.**
 
@@ -86,7 +109,7 @@ Messordner (nicht committet): scratchpad `n1/`, Laeufe `n1/l/<name>/`, Treiber `
   ```
   Dann `Frage 41 entfaellt: Nein (Aktionstaste)` (Lauf `m_b`), kein Cursor, keine Sicherung, Bild `n1/sh_mr.png`. Elza gleich (`m_be`, ROOM2011). Ursache: `re15_keyitems_r41_tick` (master keyitems_r41.c:386) beendet den USE-Lauf nach zwei Takten ("die Frage faellt in allen Stellen im ersten Skripttakt"); der Vorspann AUF von Spur N schiebt die Frage um die 16 Bilder Aufklappen dahinter. Mit offener Tuer geht es: `m_a` (erst Klick, dann USE) und `m_c` (Klick von Norden, USE unter Cut 4): `Frage 41 entfaellt: Ja (USE)` -> Cursor -> Bit 125 -> Text 42 -> Standbild. Kein Haenger, ein zweites USE wirkt, die Sicherung bleibt im Inventar. Aber der erste Griff zur Sicherung am geschlossenen Schrank, also der Weg, den Nachtrag 34 fuer Key Items verlangt, verpufft mit dem Satz "One of the fuses is missing...".
 * **Mangel 2, gemessen.** Die Aussage des Bau-Agenten "Konflikt nur in test_r41_ventilkette_weg.cmake k1" reicht nicht: `test_r41_nachtrag30.cmake` Teil schrank faellt auf der gemergten exe durch (`cmake -P`, Zeile 176 `_danach "[schrank2010] Tuer auf" ... id=41 "Will you use the Fuse?"`), denn O laesst die Frage entfallen, sobald die Sicherung im Inventar liegt. Teil schrank Lauf b (Leon, Elza) muss auf USE umgestellt werden, das Dossier ("Bedienung Sicherung 2010: nach Yes ...", OFFEN 1) ebenso.
-* Teil panel auf der gemergten exe gruen (Lauf `m_p` und `cmake -P`), Teile wasser und laden siehe Tests.
+* Teile panel, wasser, laden (Leon) auf der gemergten exe gruen (`cmake -P`, `n1/m_riegel_*.log`), Lauf `m_p` bis Text 44.
 
 ## Gates
 
@@ -102,4 +125,24 @@ Ungenau, kein Mangel: "ROOM2050 sub01 @0x021FA Set(2,0)=1" zeigt auf den Block (
 
 **Riegel.** Aenderungen an alten Riegeln seit Abnahme 0 gelesen: k1 und unit Teil Kasten strenger (Cursor, Reihenfolge), nichts aufgeweicht. Veralteter Kommentar `test_r41_nachtrag30.cmake` "Modell der nassen Spur".
 
-**Merge.** Haelt nicht, siehe oben.
+**Merge.** Haelt nicht, siehe "Merge mit master".
+
+## Tests (eigene Laeufe, keine volle Suite)
+
+```
+ctest -R "r41_nachtrag30" -j3                                  11/11 gruen, 819 s
+ctest -R "^unit_|^prop_|^probe_" -j2                           1024/1024 gruen, 3 uebersprungen (unit_r17_birkin_1zu1_pin, unit_r18_birkin_restluecken_pin, unit_r20_birkin_push_pin)
+integration_r41_ventilkette_weg / _weg_elza                    gruen, 1452 s / 1686 s
+integration_r36_dachkiste / integration_r37_itemband_lift      gruen, 1361 s / 1374 s
+integration_r41_ventilkette, _alarm, _b, _sperre               gruen, 716 / 716 / 511 / 299 s
+integration_r41_kleinkram_a_lautstaerke, r41_wasser20b0        gruen
+integration_r41_zombiefresser_tuer2000, _elza2001              gruen
+integration_r39_inventar_status                                gruen (START-Poll)
+integration_r41_ventilkette_kette                              einmal rot, einzeln gruen (s. u.)
+integration_r35_granate                                        rot Teil birkin, mit RE15_ENDKAMPF_NUR_G5=1 gruen (s. u.)
+```
+
+* `integration_r41_ventilkette_kette`: der rote Lauf endet still mit `[walk] F750 cut=10`, ohne EXIT_AT und ohne WER-Eintrag. Das ist das Muster aus Dossier Q (`Q_restpunkte.md` Punkt 3, Baum r41_restpunkte): Absturz im CPU-Rasterer von SDL unter RE15_SOFTWARE_RENDER, Effekt-Quader 20B0 vor der Kamera, 6 von 19 Laeufen, Korrektur dort. Einzeln nachgefahren: `ctest -R ^integration_r41_ventilkette_kette$` gruen (252 s), direkter Lauf `k_voll0` exit 0 bis ROOM2050. Kein Bezug zu Spur N.
+* `integration_r35_granate`: `[birkin]: Slot 2: Typ 30 grid 10 im Bild 399 (soll 36 / 13)`. Dem Zweig fehlt master 31745dd08, der genau diesen Lauf auf RE15_ENDKAMPF_NUR_G5=1 stellt; mit der Variable gruen. Angabe des Bau-Agenten bestaetigt.
+* `integration_r41_ventilkette` war in diesem Lauf gruen; die Assertion WIN_AddDisplay des Bau-Agenten trat nicht auf.
+* Abgebrochen wegen der Laufzeit (je rund 23 Minuten unter Last): uebrige r36_elza, r37_fahrstuhl, r38_wasser, restliche r39_inventar, r41_kleinkram_a_gift/_blink, restliche zombiefresser. Abnahme 0 hatte sie gruen, die Nachbesserung beruehrt sie nur ueber den START-Poll (dafuer inventar_status) und die Prop-Haken in main.c (auf 2010 begrenzt).
