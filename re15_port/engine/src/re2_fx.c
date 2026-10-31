@@ -880,6 +880,8 @@ static void op_84(void);
 /* Runde 41 Spur B (Putz der RE2-CORE00.ESP id 4, ROOM40A0 sub14), definiert am Dateiende. */
 static void op_11(void);
 static void op_73(void);
+/* Runde 41 Spur P (Nachbesserung 1, M4): Staubspur des Brockens Raumbank 0x19 (ROOM40A0 sub17/19/21), definiert am Dateiende. */
+static void op_21(void);
 /* Runde 41 Spur G (Nachbesserung 3, Nachtrag 28): die Ops der RE2-Kanister-Explosion (Raum-ESP ROOM40A0 + Kern-Bank 0),
  * definiert am Dateiende; Belege G_kanister2080.md 10.1. */
 static void op_4(void);  static void op_6(void);  static void op_37(void); static void op_38(void);
@@ -904,6 +906,7 @@ static void op_rufen(unsigned op)
     case 5:  op_5();  break;    /* 0x8001df90 (Runde 35 Spur M) */
     case 11: op_11(); break;    /* 0x8001e4b4 (Runde 41 Spur B) */
     case 73: op_73(); break;    /* 0x8002387c (Runde 41 Spur B) */
+    case 21: op_21(); break;    /* 0x8001f5a4 (Runde 41 Spur P) */
     case 16: op_16(); break;    /* 0x8001f128 (Runde 35 Spur M) */
     case 19: op_19(); break;    /* 0x8001f2c0 */
     case 25: op_25(); break;    /* 0x8001fa08 */
@@ -1602,6 +1605,20 @@ static void op_73(void)
     int16_t v = rds16(b, 0x0C);
     b[0x00] = 0;
     wr16(b, 0x0C, (uint16_t)(int16_t)(v / 2));
+}
+/* Op 21 = FUN_8001f5a4 (Tafelplatz [21] @0x8009d8bc der Op-Tabelle @0x8009d868; Runde 41 Spur P, Nachbesserung 1, M4): die Staubspur des fallenden Brockens. Solange step[2] != 0 (`lbu v0,2 / beq`
+ * @0x8001f5b4-bc): bei geradem step[2] (`andi v0,v0,0x1 / bne` @0x8001f5c0-c4), wenn die Weltlage nicht in der Summe 0 ist (@0x8001f5cc-e0), ein aufgeschobener Kind-Spawn Kern-Bank 3 Sub 9 mit Skala
+ * eigene Skala + 2816 (`lui v0,0x309`, `lhu a0,58(a3)`, `addiu a0,a0,2816`, `or a0,a0,v0` @0x8001f5e4-604, Einheitsmatrix a2, a3 = Platz + 52); danach step[2] -= 1 (@0x8001f614-20). Die Bank laeuft ihn als Op A UND Op B. */
+static void op_21(void)
+{
+    uint8_t *b = cur();
+    if (b[0x02] == 0) return;
+    if (!(b[0x02] & 1u) && (int32_t)rds16(b, 0x34) + (int32_t)rds16(b, 0x36) + (int32_t)rds16(b, 0x38) != 0) {
+        const int16_t ofs[4] = { rds16(b, 0x34), rds16(b, 0x36), rds16(b, 0x38), rds16(b, 0x3A) };
+        (void)re2fx_spawn(0x03090000u | (uint16_t)(rd16(b, 0x3A) + 2816u), 0, re2fx_einheitsmatrix, ofs);
+        b = cur();
+    }
+    b[0x02]--;
 }
 /* ============================================================================================
  * RUNDE 41 SPUR G (Nachbesserung 3, Nachtrag 28 "der Explosionseffekt vom Gaskanister vom Original") - die Ops, die die

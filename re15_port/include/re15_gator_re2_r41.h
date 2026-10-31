@@ -87,7 +87,7 @@ int  re15_gr2_zielmodus(int slot);
  * Insel-Probe des Boss-Moduls; die Quer-Komponente (RE2-Korridor-Ecke) nimmt die Dispatcher-Klemme.
  * Nachbesserung 1 (Abnahme 0, M1): die Bahn laeuft bildweise (FUN_80015e7c/152c8-Delta) statt absolut. */
 int  re15_gr2_dash_zonenwechsel(int slot, const re15_actor_t *e, int zone, int zone_leon, int32_t ziel_vor[2]);
-/* SE 4 @0x80100d64/84, Clip 2 (16); `pl` = Leon (Putz-Lage, PORT-WAHL "um Leon"). */
+/* SE 4 @0x80100d64/84, Clip 2 (16); `pl` unbenutzt seit Spur P (Nachbesserung 1, M4): der Putz haengt am Stark-Schuetteln, nicht am Dash. */
 /* Nachbesserung 2 (Abnahme 1 M2, Entscheid B7): Start-Gier mit freier RE2-Wende (Kopf/Rumpf im Wasser, Wurzel
  * ausserhalb der Klemmzone, Bahn nicht durch Leon; Drehung <= 0x400, kleinste Drehung vor Ausrichtung auf Leon) -
  * 0 = kein Dash an diesem Zonenwechsel. */
@@ -166,6 +166,10 @@ void re15_gr2_nachtakt(int slot, re15_actor_t *e);
  * z[-27000..-5400]; *dx/*dz = Verschiebung des ganzen Alligators nach innen (Aufruf re15_gator_boss_tick nach der Wurzel-Klemme,
  * vor re15_gr2_nachtakt). Messzeilen "KOPF-KLEMME an/aus" in gator_boss.log. */
 int  re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz);
+/* Runde 41 Spur P (Abnahme G 4 O1): Bildschritt (ox,oz) -> (nx,nz) auf hoechstens 340 kuerzen (groesster authored Wurzelschritt, gator_re2_r41.c GR2_KK_SCHRITT). */
+void re15_gr2_kk_schritt(int32_t ox, int32_t oz, int32_t *nx, int32_t *nz);
+void re15_gr2_kk_hart_setzen(int an);   /* Pruefhaken (Gegenprobe der Riegel, kein Spielweg, kein Env-Schalter): 1 = Klemme wie bis Spur P */
+int  re15_gr2_kk_hart(void);
 /* Messhaken (Riegel unit_r41_re2gator_sitz): Part-6-Weltmatrix der letzten re15_gr2_nachtakt-Pose (Rotation ohne Skala, Lage
  * mit Zeichen-Skala) und die Effekt-Quellpuffer (0 = Part 6, 1 = Part 7, 2 = Kanister; 32-Byte-MATRIX-Abbild). 0 = keine. */
 int  re15_gr2_part6_gezeichnet(int32_t rot[9], int32_t pos[3]);
@@ -271,7 +275,7 @@ int  re15_gr2_vsync(void);
 /* platform/pc/src/gator_re2_pc.c: Bildbudget der Hauptschleife (main.c Bild-Deckel) = Grundbudget x VSync / 2;
  * schreibt jeden Wechsel mit SDL_GetTicks nach debug.log ("[gator-re2] VSync ..."). */
 unsigned re15_gr2_pc_bildbudget(unsigned grund_ms);
-extern void (*re15_gr2_raum_se_hook)(int satz);   /* ROOM40A0-Raumbank: 15 = Explosionsbrueller (@0x8010237c-88) */
+extern void (*re15_gr2_raum_se_hook)(int satz);   /* ROOM40A0-Raumbank: 15 = Explosionsbrueller (@0x8010237c-88), 13 = Putz (sub16 Se_on @SCD 0x0978) */
 /* platform/pc/src/gator_re2_pc.c: Kanister-Prop zeichnen (Aufruf aus dem Prop-Pass von main.c). */
 struct re15_camera_view_s;
 void re15_gr2_pc_zeichnen(const void *cam_view, int cx, int cy);
@@ -281,9 +285,10 @@ void re15_gr2_pc_zeichnen(const void *cam_view, int cx, int cy);
  * Messzeilen debug.log "[gator-re2] Sicht ...": Wechsel untergetaucht/aufgetaucht mit Bild, Lage, Clip/Bild; erstes
  * gezeichnetes Bild; groesster Lagesprung zwischen zwei aufgetauchten Bildern. */
 int  re15_gr2_pc_untergetaucht(const re15_actor_t *npc, int gecullt);
-/* Messhaken: Zahl der gespawnten Putz-Partikel (re2fx) seit Start + Welt-Lage des letzten Spawns
- * (Nachbesserung 1, M2: die exe-Zeile "RE2 PUTZ runde ..." in gator_boss.log traegt beides). */
+/* Messhaken: Zahl der gespawnten Putz-Brocken (Raumbank 0x19) seit Start + Welt-Lage des letzten Spawns; exe-Zeile "RE2 PUTZ Stoss ..." in gator_boss.log. */
 int  re15_gr2_putz_spawns(void);
+/* Spur P (Nachbesserung 1, M4): Zahl der Putz-Stoesse = sub15-Laeufe mit Ringseite (ROOM40A0 sub01 @SCD 0x008C haengt am Stark-Schuetteln-Bit) */
+int  re15_gr2_putz_stoesse(void);
 void re15_gr2_putz_letzte(int32_t pos[3]);
 
 /* Messhaken: Log-Zeilen (gator_boss.log, "RE2 ...") an/aus. */

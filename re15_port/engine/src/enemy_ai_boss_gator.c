@@ -1091,6 +1091,8 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued,
     g->cx0 = cx; g->cx1 = ziel_x;
     if (von_sued) { g->cz0 = GB_RAMP_Z0 - GB_BAHN_M; g->cz1 = GB_RAMP_Z1 + GB_BAHN_M; }
     else          { g->cz0 = GB_RAMP_Z1 + GB_BAHN_M; g->cz1 = GB_RAMP_Z0 - GB_BAHN_M; }
+    const int kan = re15_gr2_traegt();                /* Runde 41 Spur P (Abnahme G 4 O1): mit dem Kanister im Maul beginnt die Bahn an der Lage des Gators */
+    if (kan) { g->cx0 = e->x; g->cz0 = e->z; }        /* statt des Anlaufpunkts (Sprung bis 1425 je Bild, trag_scan), Wende mit 0x60/Bild (GIER-WACHE) */
     {
         int64_t ldx = g->cx1 - g->cx0, ldz = g->cz1 - g->cz0;
         int64_t l2 = ldx * ldx + ldz * ldz;
@@ -1114,7 +1116,7 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued,
     g->ct = 0; g->bite_done = 0;
     g->phase = GBP_CROSS;
     e->motion = 0; e->anim_frame = 0;
-    re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);   /* Blick ueber die Insel */
+    re15_enemy_steer_point(e, g->cx1, g->cz1, kan ? 0x60 : 0x800);   /* Blick ueber die Insel */
     {   /* CROSS-Start-Telemetrie (Diagnose) */
         static FILE *s_cl = NULL;
         if (!s_cl) s_cl = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
@@ -1158,6 +1160,15 @@ static void gb_auftauchen(re15_actor_t *e, gb_state_t *g)
     re15_gr2_log("AUFTAUCHEN F%u pos=(%d,%d) yaw=%d phase=%d clip=%d bild=%d r=%d", (unsigned)g_engine.frame_count,
                  e->x, e->z, (int)e->rot_y & 0xfff, (int)g->phase, (int)e->motion, (int)e->anim_frame,
                  (int)e->hit_radius_min);
+}
+/* Runde 41 Spur P (Nachbesserung 1, M2, Nachtrag 35 Punkte 1 + 3): RE2 nimmt dem Alligator mit dem Explosionstod jede Koerper-Kollision. R1 P0 setzt im Entity-Wort +0 die Bits
+ * 0x80a (`lw v0,0(s1)` @0x801022ec, `ori v0,v0,0x80a` @0x801022f8, `sw v0,0(s1)` @0x801022fc, EM23_OVL_0000.BIN), Bit 2 sperrt den einzigen Spieler-Push FUN_80034d0c
+ * (Spieler-Tick FUN_800355c4: `((*a | *b) & 2) == 0` ist das Eingangs-Gate). Die Leiche hat also keine Masse: kein Rand, keine Stufe, nichts zum Klettern (FUN_8002d474 fragt
+ * nur Objekte und SCA, nie Aktoren). Vorher blieb der Koerperlaengen-Push (k_gb_seg, Port-Zusatz) in GBP_RE2_TOD an: der Kadaver sperrte den Westkanal, die einzige Verbindung
+ * Nord <-> Sued auf Band 0 (Abnahme 0: Schluessel und Leiter unerreichbar in kampf_leon, kampf_elza, west_elza). */
+int re15_gator_boss_ohne_koerper(const re15_actor_t *e)
+{
+    return re15_gator_boss_active(e) && s_gb[(int)(e - g_actors)].phase == GBP_RE2_TOD;
 }
 int re15_gator_boss_untergetaucht(const re15_actor_t *e)
 {
@@ -1272,8 +1283,20 @@ void re15_gator_boss_tick(int slot)
     {   /* (2b) Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M3): Kopf-Klemme - Kanister im Maul / R1-Tod: Hals, Kopf, Kiefer und Kanister
          * innerhalb der Aussenwaende (gator_re2_r41.c re15_gr2_kopf_klemme); nicht im FRESSEN (eigene Buehne) und nicht bei Klemme aus. */
         int32_t kx, kz;
-        if (g_room_rdt_ok && !gb_klemme_aus(&s_gb[slot]) && s_gb[slot].phase != GBP_FRESSEN && re15_gr2_kopf_klemme(slot, e, &kx, &kz))
-        { e->x += kx; e->z += kz; e->anchor_x += kx; e->anchor_z += kz; }
+        if (g_room_rdt_ok && !gb_klemme_aus(&s_gb[slot]) && s_gb[slot].phase != GBP_FRESSEN && re15_gr2_kopf_klemme(slot, e, &kx, &kz)) {
+            /* Runde 41 Spur P (Abnahme G 4 O1): beim Tragen darf die Kopf-Klemme die Wurzel nicht in den Slab der Wurzel-Klemme schieben - dort warf sie (2) im
+             * naechsten Takt zurueck (Lauf v1_leon F163 x -1867 -> -3184, Hin- und Rueckspruenge 1517/-1317). */
+            if (s_gb[slot].phase != GBP_RE2_TOD && !re15_gr2_kk_hart()) {
+                int32_t nx = e->x + kx, nz = e->z + kz;
+                re15_gr2_kk_schritt(ox, oz, &nx, &nz);    /* ganzer Bildschritt (Takt + Klemme) hoechstens GR2_KK_SCHRITT */
+                re15_collision_constrain_enemy(&g_room_rdt, e->x, e->z, &nx, &nz, e->hit_radius_min, e->y, 4u);
+                int32_t tx = nx, tz = nz;
+                re15_gr2_kk_schritt(ox, oz, &tx, &tz);    /* die Wurzel-Klemme fuehrt um die Slab-Ecke: dann kein Klemmen in diesem Bild (Lauf trag_scan: 482) */
+                if (tx != nx || tz != nz) { nx = e->x; nz = e->z; }
+                kx = nx - e->x; kz = nz - e->z;
+            }
+            e->x += kx; e->z += kz; e->anchor_x += kx; e->anchor_z += kz;
+        }
     }
     re15_gr2_nachtakt(slot, e);                               /* (3) */
     re15_gatorszene_r41_nachtakt(slot, e);                    /* Runde 41 Spur F (Haken): Leiche im Maul = Kind der Part-6-Matrix */
@@ -2314,6 +2337,7 @@ static void gb_takt(int slot)
 
     case GBP_CROSS: {                         /* Punkt 8: Bogen ueber die Rampe */
         g->ct++;
+        if (re15_gr2_traegt()) re15_enemy_steer_point(e, g->cx1, g->cz1, 0x60);   /* Runde 41 Spur P: Wende weiter (s. gb_cross_begin) */
         int32_t t = g->ct;                    /* 0..GB_CROSS_FRAMES */
         /* ANTI-HILFLOSIGKEIT (Nutzer 2026-09-11: "waehrend seiner Kletter-
          * phase ist der Aligator absolut hilflos" - Leon sprang die Stufe
@@ -2451,7 +2475,7 @@ static void gb_takt(int slot)
          *      Keyframes: dx 7541..10527 vorm Anker, dz -2648..+1254, y-Spitze -9177
          *      bei f60-75 aus dem POSE-Kanal - der Victim-Renderer traegt sie).
          *   P3: Gator-Clip 11 als Kau-Loop OHNE Bewegung (FUN_8001A240 @0x801011D8-E0);
-         *      Leon im letzten Opfer-Frame GEPARKT (kein no_draw - er haengt im Maul).
+         *      Leon im letzten Opfer-Frame GEPARKT, Modell aus (no_draw, RE2 Bit 0x80000 @0x80101194-ac).
          * SEs: Frame-Flags von Clip 5 (f2 SE1, f80 SE3) spielt der Frame-Flag-Spieler;
          * Clip 4 ist datenseitig stumm (SE-3-Zubeiss-Mapping bleibt separat, Runde 5). */
         re15_enemy_bank_t *gb23 = re15_enemy_find(e->type);
@@ -2624,6 +2648,8 @@ static void gb_takt(int slot)
              * bleiben jetzt bis zum Raumwechsel; den raeumt der Raumlader (re15_enemy_reset -> re15_player_victim_reset,
              * re15_actor_init setzt render_scale_q12 = 0). Takt-Zaehler im Clip-11-Kreis: 59 Bilder (EDD1-Clip-Tabelle EM23.EMD
              * @0x38 = 59/0x1180, s. u.), haelt den int16-Zaehler vom Ueberlauf fern; Bildfolge 0..58 wie bisher. */
+            if (!pl->no_draw) re15_gr2_log("FRESS P3: Spieler-Modell aus F%u", (unsigned)g_engine.frame_count);
+            pl->no_draw = 1;                               /* Runde 41 Spur P (Nachbesserung 1, M5), Beleg s.u. */
             if (g->timer >= 221 + 59) { g->timer -= 59; if (g->p3_kreise < 255) g->p3_kreise++; }
             e->motion = 11;
             /* ⛔ HIER STAND `% 30`. Clip 11 hat 59 Bilder (EDD1-Clip-Tabelle EM23.EMD
@@ -2643,6 +2669,10 @@ static void gb_takt(int slot)
                 re15_clip_root_motion_abs_y3_pub(e, &gb23->skel, &gb23->anim, 11,
                                                  (int)e->anim_frame);
             if (gb23 && gb23->victim_ok) {             /* Leon im letzten Opfer-Frame parken */
+                /* Runde 41 Spur P (Nachbesserung 1, M5, Nachtrag 35 Punkt 4): in P3 ist Leon verschluckt. RE2 P2-Ende: FUN_8001a330 meldet das Clip-Ende (`beq v0,zero,0x801011e8`
+                 * @0x80101190), dann Spieler-Wort +0 |= 0x80000 (`lui v1,0x8` @0x80101194, `lw v0,0(a0)` @0x801011a0 mit a0 = 0x800cfbf8, `or v0,v0,v1` @0x801011a8, `sw v0,0(a0)`
+                 * @0x801011ac) und im selben Takt Phase + 1 (@0x801011b0-c0). Bit 0x80000 ist das Modell-Aus des Zeichners: FUN_80027160 ruft die Teile dann nur noch ueber den
+                 * Nur-Matrix-Weg (`(param_3 & 0x80000) == 0` -> FUN_80027434), FUN_80019b3c/FUN_80019cd0 zeichnen nichts. Der Continue-Zweig oben nimmt no_draw zurueck. */
                 pl->motion = 1; pl->anim_frame = 119;
                 re15_clip_root_motion_abs_y3_pub(pl, &gb23->skel_victim,
                                                  &gb23->anim_victim, 1, 119);
@@ -2720,6 +2750,7 @@ static void gb_takt(int slot)
      * GANZEN Laenge ab. Y-Fenster wie der Body-Push (Zentrum auf Bodenniveau,
      * s. hit_offset_y im INIT): Leon OBEN auf dem Steg wird nicht geschoben. */
     if (g->phase != GBP_DIE && g->phase != GBP_DEAD
+        && g->phase != GBP_RE2_TOD            /* Runde 41 Spur P (Nachbesserung 1, M2): s. re15_gator_boss_ohne_koerper */
         && pl->hp >= 0 && !re15_player_is_grabbed()
         && !g->untergetaucht) {               /* Nachbesserung 3 (B9): 3000 unter dem Boden beruehrt er niemanden */
         const gb_seg_t *SEG = k_gb_seg;   /* Runde 41 Spur B NB2: Tabelle auf Dateiebene (gb_koerper_kontakt) */

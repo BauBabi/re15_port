@@ -166,8 +166,11 @@ int  re15_gatorszene_r41_spieler_im_bild(int cut);
  * (hellster Kanal) Ruhe/Blink-Spitze dieser Wahl; und die Primitivfarben des Schluessels JETZT im Lichtsatz von Cut cut (wie
  * der Prop-Zeichner; 0 = kein Schluessel/kein Lichtsatz). Kappung des PC-Zeichners: 0x80 (render_pc.c psx_prim_to_sdl_vert). */
 int  re15_gatorszene_r41_key_kamera(void);
+int  re15_gatorszene_r41_key_stufe(void);       /* Spur P (FG-E7 Option (a)): Suchstufe der Lagewahl, 0 = Naehe wie bisher, -1 = keine Wahl */
 int  re15_gatorszene_r41_key_prim(int *ruhe, int *spitze);
 int  re15_gatorszene_r41_key_prim_jetzt(int cut, int *ruhe, int *spitze);
+/* Pruefhaken (Runde 41 Spur P): Kasten des Schluessel-Quadrats im Bild von Cut cut in 1/16 Bildpunkten + Tiefe; 0 = kein Schluessel. */
+int  re15_gatorszene_r41_key_kasten(int cut, int *breite_16, int *hoehe_16, int32_t *tiefe);
 /* Nachbesserung 2 (Abnahme 1, M2): EINSTELLUNG AUF DEN SCHLUESSEL nach dem Tod. Der Schluessel liegt in der Zonenkamera mit dem
  * GROESSTEN Schluessel-Bild in der Naehe der Leiche (nicht mehr in der laufenden); im Bild des Todes schneidet die Szene auf diese
  * Kamera (Cut_chg-Zwilling LAB_800402a0 wie die Kamera-Uebergabe M1), haelt sie mit Riegel 90 Bilder (1,5 Blinkperioden wie die
@@ -194,5 +197,8 @@ void re15_gatorszene_r41_lage(re15_gsz_lage_t *out);
 int  re15_gatorszene_r41_kampfbeginn(int32_t *abstand, int *zone_gator, int *zone_spieler);
 int  re15_gatorszene_r41_kontakt(void);
 int  re15_gatorszene_r41_fress_kamera(int *frontal);
+
+/* Runde 41 Spur P (Nachbesserung 1, M6): Messhaken - Abstand Rumpfmitte der Leiche <-> Maullage (1750,-210) im Part-6-Rahmen x Zeichen-Skala; 1 = angehaengt und gemessen. */
+int re15_gatorszene_r41_leiche_sitz(int32_t *abw);
 
 #endif /* RE15_GATORSZENE_R41_H */
