@@ -229,7 +229,7 @@ Vorgabe-KI und `RE15_AI_FLAVOR=re15` liefern in 5090/5091 dieselben Bilder. `int
 
 - **Verworfen und unveraendert:** Leon steht im Vorderkoerper der Form, das ist RE2 (Abschnitt 6).
 - ⛔ Berichtigt in Abschnitt 9: **G5 im gehaltenen Dauerbeschuss.** Hier stand, der Masse-Kill bei F2879 sei das Original (dist < 6000, u >= 9001, 500 Schaden @0x80103ea0-ec4). Falsch: das Original frisst nur den Spieler mit HP <= 0 (`bgtz` @0x80103e80), die X-Schwelle gehoert zu Pfad 1. Der G5 faellt jetzt unter der Pistole, s. 9.5.
-- **G5 blutet nicht:** `blut=n/0/0/0`, Wache `g->ph == 0` (enemy_ai_boss_g5.c:1612). Nebenbefund der Abnahme, nicht bearbeitet.
+- ⛔ Behoben in 10.4: **G5 blutet nicht.** `blut=n/0/0/0`, die Wache `g->ph == 0` las die KI-Phase statt +6 des Trefferzustands.
 - **EM30:** Die 0x30-KI setzt weiter keine anim_blend_rate; an jedem Clip-Eintritt mit frac 15 steht die Pose 7 Bilder (dieselbe Wirkung wie M6). Fuss-Vortrieb nur in Sub 10, WALK bleibt langsamer als das Original.
 - **Treffer in der Mutation:** zaehlen wie im Original (Revive @0x8011a43c), die Form bringt danach trotzdem 150 mit. Die Schuesse in Sub 6 bleiben also ohne Wirkung auf den Kampf.
 
@@ -297,7 +297,7 @@ Das Bit 0x1000 der Gnade fuehrt der Port nicht; es faellt nur beim Heilen (@0x80
 
 Nachher, ohne Taste nach dem Tod der Form, Leon und Elza bildgleich: HP 100 -> 60 Biss F1842 -> 45 Arm F2809 -> 5 Biss F2853 -> 0 Arm F3612 -> -1 Devour F3623. finisher.log: FSM-START, BLACKBG, YOUDIED, jeweils `isdead=0`, also traegt der neue Latch. Danach Titel, zweiter Spiel-Boot. Bild: YOU DIED ueber dem laufenden Fressen. `integration_r41_g5_tod` faehrt das ohne Messhaken.
 
-Der Biss bleibt die Rohzahl 40 von RE2 auf 100 Port-HP: drei Bisse bis HP 0, in RE2 fuenf. Das stand vorher so und ist nicht Teil der Meldung.
+⛔ Ueberholt durch 10.5: Hier blieb der Biss die Rohzahl 40 von RE2 auf 100 Port-HP. Jetzt gilt die Griff-Regel, Biss 20, Arme 7, 7, 5, 7. Die HP-Reihe oben ist die alte.
 
 ### 9.5 Startwaffe bis zum G5-Tod
 
@@ -328,7 +328,7 @@ Gegenprobe: je Fix heraus (Objektdatei im Scratch, Baum unberuehrt), Test neu ge
 
 Tentakel a1: kein eigener Unit-Riegel, `integration_r41_g5_tod` (Tod bei HP 5 statt 0, siehe 9.4).
 
-**Geaendert, nicht nur ergaenzt:** `unit_r20_birkin_push_pin`. Der Pin war gruen, weil der Boss nach dem ersten Fressen fuer immer in Sub 4 stand: 7876 Bilder, die meisten gegen einen stummen Boss. Jetzt kaempft er alle 8000 Bilder, das zeigte zweierlei. Der Griff der Arme (Routine 5, Zug-Ruck 0x801042c4, Spiess 0x801046ac) faehrt den Spieler selbst, im Endstand bis 1592 je Bild; alle Wege ueber der Fallen-Schwelle 1250 lagen in Griff-Bildern, Lage begehbar. Und die Kind-Kollision der Arme laeuft nach der Spieler-Klemme des Bildes, das Bildende kann in einer Wand liegen (Zwischenstand 11 von 8000, Endstand 0), die Klemme des Folgebilds loest es. Der Pin misst deshalb an der Station KLEMME und nimmt Griff-Bilder aus dem Wege-Maximum. Liegt ein Startplatz durch den wandernden Boss nicht mehr im Gang, zaehlt der naechste. M9 in test_birkin_szenen prueft die Sperre jetzt bis [T2].
+**Geaendert, nicht nur ergaenzt:** `unit_r20_birkin_push_pin`. Der Pin war gruen, weil der Boss nach dem ersten Fressen fuer immer in Sub 4 stand: 7876 Bilder, die meisten gegen einen stummen Boss. Jetzt kaempft er alle 8000 Bilder, das zeigte zweierlei. Der Griff der Arme (Routine 5, Zug-Ruck 0x801042c4, Spiess 0x801046ac) faehrt den Spieler selbst, im Endstand bis 1592 je Bild; alle Wege ueber der Fallen-Schwelle 1250 lagen in Griff-Bildern, Lage begehbar. Und die Kind-Kollision der Arme laeuft nach der Spieler-Klemme des Bildes, das Bildende kann in einer Wand liegen (Zwischenstand 11 von 8000, Endstand 0), die Klemme des Folgebilds loest es (⛔ falsch, s. 10.1: im echten Lauf warf genau diese Klemme jede Eingabe auf die Lage in der Wand zurueck, z_fern 388 Bilder). Der Pin misst deshalb an der Station KLEMME und nimmt Griff-Bilder aus dem Wege-Maximum. Liegt ein Startplatz durch den wandernden Boss nicht mehr im Gang, zaehlt der naechste. M9 in test_birkin_szenen prueft die Sperre jetzt bis [T2].
 
 ### 9.7 Offen
 
@@ -337,7 +337,149 @@ Tentakel a1: kein eigener Unit-Riegel, `integration_r41_g5_tod` (Tod bei HP 5 st
 - **EM30, Selbstschub:** die 0x30-Wurzel ruft ihn im Original ebenfalls (`jal 0x8002aec4` @0x80116cb0), der Port nicht. Der Kommentar in re15_enemy_selfpush_from_player verlangt dafuer eine eigene Runde. Hier nicht gemeldet.
 - **Wandzaehler des Rennens:** +0x158 zaehlt Bilder an der Wand, ab 91 steuert die Form 4 Bilder von der Box weg (@0x80102dc8-e7c). Nicht gebaut; das Rennen endet vorher am Clip-Ende.
 - **Griff-Treffer:** G5-Biss auf den von einem Arm gehaltenen Spieler (@0x8010411c-64) nicht gebaut, Devour-Blut Clip 9 Bild 16-29 (@0x80101bf0-c60) nicht gebaut.
-- **Griff-Zug der Arme:** bis 1592 je Bild ohne eigene Klemme im Bild; alle gemessenen Enden waren begehbar, die Fallen-Schwelle 1250 ist damit aber nicht ausgeschlossen. Nicht gegen Wandlagen durchgetestet.
-- **G5-Biss-Zahl:** s. 9.4.
-- **Rueckstoss-Szene:** haelt Cut 12 bzw. 11 fest; Leon weit im Osten sieht sich in den rund 80 Bildern bis zum Schnitt auf Cut 11 nicht. Nicht gemeldet.
-- **G5 blutet nicht:** weiter offen (8.2).
+- ⛔ Erledigt in 10.1: **Griff-Zug der Arme.** Hier stand, die Wandlagen seien nicht durchgetestet. Der Griff lief wirklich in die Wand (Abnahme 3 N2), jetzt Nach-Klemme und Fuzz.
+- ⛔ Erledigt in 10.5: **G5-Biss-Zahl.**
+- **Rueckstoss-Szene:** haelt Cut 12 bzw. 11 fest; Leon weit im Osten sieht sich bis zum Ende des G5-Auftritts nicht. ⛔ Berichtigt: hier stand "rund 80 Bilder", Abnahme 3 misst ueber 400, rund 14 s. Ob die Szene kuerzer wird, ist eine Gestaltungsfrage.
+- ⛔ Erledigt in 10.4: **G5 blutet nicht.**
+
+## 10. Nachbesserung nach Abnahme 3
+
+Sechs Punkte aus `R_abnahme_3.md`, bearbeitet nach Schwere. Jeder lief so: Lauf vorher im echten Fenster, Disassembly, Fix, Lauf nachher, Riegel, Gegenprobe. Laeufe wie in Abschnitt 9, Eingaben der Abnahme. Massgeblich ist `state.log`, das das Spiel am Bildende schreibt. Die Abnahme-Sonde jb.log liest mitten im Bild und zeigt Einzelbilder, die nie gezeichnet werden. Bilder: `R_belege/nb3_westen.jpg`, `nb3_suedwand.jpg`, `nb3_griff_wand.jpg`, `nb3_cut13_nclip.jpg`, `nb3_cut13_tod.jpg`.
+
+### 10.1 N1, N2, N6: Spieler-Klemme aus RE2 Retail
+
+Der Vorschlag der Abnahme, nach dem Schub noch einmal zu klemmen, reicht nicht: die Klemme selbst war der Fehler. Der Port klemmt den Spieler mit der RE1.5-Beta FUN_8003b0a4, und die versagt bei grossen Versaetzen dreifach:
+
+| Fehler | Stelle | Beleg |
+|---|---|---|
+| 32-Bit-Ueberlauf im Typ-6-Handler: ab rund 740 Tiefe kippt das Vorzeichen, der Spieler wird IN die Diagonale geworfen | LAB_8003cb9c, `mult v1,a2` @0x8003cf88 | f006 F1267 (4542,-25795) -> (4287,-26207), Soll (4287,-25153); z_w4 F1354 |
+| Naehere Kante der Zelle, auch die hinter der Wand | FUN_8003bca8 | Box 29 -> z -27668, das ist der Softlock aus N1 |
+| Code 0 setzt zurueck auf die Vorlage, auch wenn sie selbst in der Wand liegt | `*lx = prevx` | Bildende in Box 29, jede Eingabe verworfen (N2) |
+
+RE2 Retail hat alle drei behoben. FUN_8003567c ruft FUN_8004c1bc mit Bit 0x01000000 (@0x800356bc-c4), der Zweig nimmt die Tabelle @0x800a737c je Zelltyp. Vorlage ist +0x118/+0x11a, die letzte geklemmte Lage (`sh v0,280(s0)` @0x800356f4). Das Rechteck FUN_8004c900 bleibt auf der Herkunftsseite, Innenfall FUN_8004ca68 mit Grenzen 401 und 801, Diagonalen @0x8004d508 und @0x8004d9b4 schreiben nur bis 400 je Achse (`slti v0,v0,401` @0x8004d878), Raute @0x8004de64 ebenso, Kreis @0x8004ec50 radial. Reihenfolge in RE2: Gegner-Schleife @0x80026570-604, Schub `jal 0x800355c4` @0x80026628, Klemme `jal 0x8003567c` @0x80026634. Damit wird der Weg des Originals gebaut, nicht der Vorschlag.
+
+Gebaut: `re15_collision_constrain_re2`, gilt nur solange ein Birkin (0x30 EM30 und Form, 0x36 G5) aktiv ist, sonst bleibt es Byte fuer Byte FUN_8003b0a4. Der Port zieht die Gegner erst nach dem Spieler, deshalb `re15_player_nachklemme` nach dem Gegner-Pass. Der Wurf braucht `re15_r39_wurf_querung` damit nicht mehr, die Klemme traegt ihn. Das Wand-Bit fuer den Griff-Haken (@0x8011b140) kommt aus der Vor-Klemme.
+
+**Drei PORT-WAHLen, im Code so markiert.** RE1.5 hat in ROOM5090 eine viel engere Bahn als RE2 room7040: Gang 2582 statt 6114, #29, #30 und #31 gibt es dort nicht. Die Regeln decken genau diese Luecke, Details an den Fundstellen:
+
+1. **Rueckstellung auf die Vorlage** (`re15_collision_constrain_re2`, RE15_RE2_RUHE 16): endet die Kette nicht frei, gilt die Vorlage. Kreis #31 drueckt zurueck in #23 und #28, in ROOM5080 laesst Raute #12 eine Tasche. Dieselbe Rueckstellung wie @0x8004d8f0, aber auch fuer diese beiden Faelle.
+2. **Vor-Klemme** (`birkin_vorklemme`): die eigene Bewegung wird vor dem Koerper-Schub geklemmt, RE2 klemmt beides zusammen. Sonst verwarf die Rueckstellung an #30 auch die Eingabe (z_w4 F1360 bis F2100).
+3. **Nach-Schub verfaellt ganz** (`re15_player_nachklemme`): fuehrt der Arm-Schub in die Wand, gilt er gar nicht, nicht nur in der Wandachse. Der Arm besteht aus vier Kreisen, Leon sass in der Kerbe dazwischen und wurde je Schritt zurueckgeworfen (z_wand_a F1404 bis F1476).
+
+Bildenden in fester Zelle, gemessen im `state.log`:
+
+| Lauf | vorher | nachher |
+|---|---|---|
+| p_falle (Pistole, Leon) | 2626 | 0 |
+| p_falle_e (Elza) | | 0 |
+| z_aus_a, z_aus_c | 1347 | 0 |
+| z_w3 | 1078 | 0 |
+| z_w4 | 747 | 0 |
+| z_w4c | | 0 |
+| z_fern, z_wand_a | 388 | 0 |
+| z_wand_b | | 0 |
+| freies Spiel f001 bis f016 | 3085 Bilder in 6 Laeufen (f016 2909, f006 150, f009 12, f004 8, f013 4, f007 2) | 0 in 16 von 16 |
+
+p_falle endet nicht mehr im Softlock: der Koerper traegt Leon ostwaerts bis x 13255, die Arme nehmen ihm die HP, der G5 frisst ihn, Game Over (a_p_falle, a_p_falle_e, HP 0 bei F3000). In z_wand_a laeuft Leon aus der Lage bis x 14500 (`nb3_suedwand.jpg`). N6 f006: Elza bleibt im Griff vor der Wand (`nb3_griff_wand.jpg`).
+
+Fuzz `test_r41_birkin_wand`, Startlagen entlang aller Waende, Mass aus dem Auftrag:
+
+| Modus | Raum | Faelle | Griff-Bilder oder Wuerfe | Bildenden fest | eingekeilt | Kennzahl |
+|---|---|---|---|---|---|---|
+| g5 | 5090 | 424 je 300 Bilder | 3601 Griff-Bilder | 0 | 0 | kleinster Laufweg 658, 5 Lagen warten bis 15 Bilder auf den Koerper |
+| g5 | 5091 | 424 | 3557 | 0 | 0 | 561, 2 Lagen bis 22 Bilder |
+| griff | 5090, 5091 | 3392 Griffe je Raum | 1696 Wuerfe je Raum | 0 | 0 | groesster Bildweg 1554 |
+| griff | 5080, 5081 | 2864 je Raum | 1432 je Raum | 0 | 0 | 1318 |
+| griff | 3070, 3071 | 3824 je Raum | keine, STAGE3 hat nur den Wurf-Tod | 0 | 0 | 1790 |
+
+Der Griff der Form laeuft ueber cmd 6 Variante 0 (`bb_griff`), das faehrt der Modus griff als Wurf mit. Der G5-Griff der Arme laeuft im Modus g5 (Zug, Peitsche, Spiess). N2 gesondert: 90 Bilder Arm-Kontakt an der Suedwand, 0 Bildenden in der Wand, 3 von 3 Laufproben kommen frei. Ecke #29/#30 unter dem Koerper bei gehaltenem G5: 30 Bilder Vorwaerts, Weg 2143. `integration_r41_g5_westen`: Leon und Elza im Westen ohne Feuer, Leon fern, mit Spiel-Exe.
+
+### 10.2 N3: Cut 13 im G5
+
+Erst RE2 geprueft: dieselbe Kamera (room7040 Cut 12 @0x1e4 (11250,-1710,-24912) gegen ROOM5090 Cut 13 (11050,-3110,-24812), RID @0x200), derselbe Zonenweg (Streifen 6 -> 12 @0x40c ab x 16400, hier 12 -> 13 @0x4cc x 14000 bis 15400), und die Overlays EM36 und EM37 schreiben den Schnitt 0x800cfbd8 nicht. RE2 hat also keine Kamera-Regel. Es hat etwas anderes: die Modell-Routinen verwerfen Rueckseiten, FUN_80027bec Dreiecke mit MAC0 <= 0 (@0x80027ca8, `bgtz` @0x80027cc8), FUN_80027dbc Vierecke mit MAC0 < 0, Aufrufer FUN_80019cd0. Der NPC-Zweig in `platform/pc/main.c` hatte das nicht. Steht die Kamera im Koerper, zeigte der Port dessen Innenseite, das waren die 57 Prozent der Abnahme.
+
+Gebaut: `re15_nclip_r41_birkin` (0x30, 0x36, 0x37) und `re15_nclip_r41_weg` im Dreieck- und Viereck-Zweig. Andere Gegner bleiben unberuehrt, s. 10.7.
+
+**Verworfen:** Eine Port-Kamera-Regel, die Cut 13 im G5 sperrt und auf Cut 12 oder Cut 14 legt, war gebaut. Im Fenster stand Leon in Cut 14 nicht im Bild, Cut 14 zeigt erst ab x rund 17000. Komplett zurueckgenommen, keine Kamera-Regel im Stand.
+
+Bildmass Cut 13 im G5 (Pixel mit Abweichung ueber 30 gegen den leeren Hintergrund, jedes 16. Bild):
+
+| Lauf | Median | Bilder ueber 40 Prozent |
+|---|---|---|
+| vorher g_leon | 43,3 Prozent | 74 Prozent |
+| vorher p_leon_pistole | 41,2 Prozent | 87 Prozent |
+| nachher n4_leon, Spieler lebt | 13,1 Prozent | 1 von 56 |
+| nachher n4_elza, Spieler lebt | 11,9 Prozent | 1 von 56 |
+| nachher n4_pist, Pistole bis G5-Tod | 16,8 Prozent | 1 von 82 |
+
+Die uebrigen Bilder ueber 40 Prozent in n4_leon und n4_elza liegen nach dem Tod (HP -1, Weissblende, YOU DIED), das sind 13 von 73. Sichtpruefung: Leon steht ganz im Bild, Arme liegen davor (`nb3_cut13_nclip.jpg`), Bisse, Griff und Weissblende sind zu sehen (`nb3_cut13_tod.jpg`). Riegel: `test_nclip` mit RID-Pin Cut 13 und Vorzeichen, `integration_r41_birkin_pistole` prueft, dass der Zeichner den Verwurf ruft.
+
+### 10.3 N4: Austritt aus dem Weichen
+
+Beide Bit-Loeschungen in `bb_weichen` sind entfernt, wie vorgeschlagen; bb_anim des naechsten Zustands loescht das Bit im selben Zug wie die neue Pose. Original: A[8] setzt 0x201 @0x80104158, die Richtung ist Argument je Aufruf (@0x8010427c-84). Knochen-Sprung im Austritts-Tick: Hieb 1259 -> 65, Gehen 548 -> 55. Riegel `test_n4_weichen_austritt`, Schwelle 300, misst nur den Austritts-Tick; der Folge-Tick ist die regulaere Ueberblendung.
+
+### 10.4 N5: G5 blutet
+
+Die Wache las die KI-Phase. Im Original ist es +6 des Trefferzustands (`lbu v0,6(s3)` / `bnez` @0x801025e8-f0), der Applier nullt es (@0x80047288), also im ersten Treffer-Tick immer 0. Stehen bleibt `g->sub != 0xF`. Dazu Zeilen-Wache 16 und 9 bis 12 (@0x80102658-64) und der fehlende Ton SE 8 (@0x8010293c-40). Biss-Serie @0x801042d8-420 gebaut: `g5_biss_blut` im Schwanz jeder Biss-Phase, 3 Spawns je Bild, 10 Bilder (@0x801041a8), `g->blut_serie = 0` @0x80103f54.
+
+Lauf Pistole nachher: `blut=39/37/37/118`, Abnahme 27/0/0/0. Blut faellt weiter nur, wenn der Spieler nach Westen blickt (`slti v0,a1,-64` @0x80102640), das ist Original. Riegel `test_g5_blut`: Spawns in KI-Phase 1, Zeile 9 ohne Blut, Biss-Serie 30 Spawns.
+
+### 10.5 Aus "Gering", im selben Codeweg
+
+| Punkt | Gebaut | Beleg |
+|---|---|---|
+| Rennen toetet | Rennen a1 = 1, klemmt auf HP 0 | @0x80102f10 |
+| Doppelschlag | zweiter Hieb trifft, Sperre faellt am Clip-Wechsel, Gate HP >= 0 | @0x80101c8c, @0x80101c94-a8 |
+| Hieb stumm | Eintritt nullt +0x232 | `sb zero,562(s2)` @0x80101b00 |
+| G5-Schaden | halb wie beim Griff: Biss 20, Arme 7, 7, 5, 7 (`RE15_G5_HP`, `RE15_ARM_HP`) | 200 HP RE2 auf 100 Port-HP, Regel @0x801052a8-b4 |
+| Mutanten | Tentakel-a1-Riegel, Rate Hieb und Rennen | a1 = 0 @0x801016d4, a3 @0x80101b34, @0x80102d08 |
+| Arme versetzen seitlich | geprueft, unveraendert im freien Gang, an der Wand verfaellt der Schub (10.1) | FUN_80034D0C |
+| Dossier Rueckstoss | 9.7 berichtigt | Abnahme 3 |
+
+Folge der Halbierung und des Doppelschlags: f001 und f002 sterben jetzt in der Form (F1612, F1703), vorher ueberlebt. Der Doppelschlag trifft wie im Original zweimal. Das ist eine spuerbare Aenderung der Schwierigkeit, gemessen in zwei von 16 freien Laeufen.
+
+### 10.6 Riegel, Gegenprobe
+
+Je Fix heraus, Objektdatei im Scratch, Baum unberuehrt:
+
+| Fix heraus | Test | FAIL-Zeilen | erste Meldung |
+|---|---|---|---|
+| RE2-Klemme an allen drei Stellen | wand g5 | 8 | N2: 186 Bildenden in der Wand |
+| dieselbe | wand griff | 9 | 5090: 4036 Bildenden in fester Zelle |
+| Nach-Klemme | wand g5 | 7 | N2: 186 Bildenden in der Wand |
+| Nach-Schub bleibt | wand g5 | 2 | N2: Eingabe wirkt nicht (1/7) |
+| Vor-Klemme | wand g5 | 2 | N1: Eingabe wirkt in der Ecke nicht (Weg 0) |
+| Wand-Bit | wand griff | 6 | nur 78 von 3392 Griffen an der Wand |
+| Ruhe-Pruefung | wand griff | 2 | 5080: 3 Faelle eingekeilt |
+| beide Proben der Diagonale | wand rein | 1 | Grenze 400: (2812,-25738) statt der Vorlage |
+| Herkunftsseite Rechteck | wand rein | 1 | Schub durch Box 29 in Box 22: z -30201 |
+| Weichen-Bit, Hieb | bahnsteig | 2 | Weichen -> Hieb springt 1212 |
+| Weichen-Bit, Gehen | bahnsteig | 2 | Weichen -> Gehen springt 548 |
+| Rennen a1 | bahnsteig | 4 | HP -1 statt 0 |
+| Doppelschlag | bahnsteig | 2 | Sperre bleibt, zweiter Hieb ins Leere |
+| Hieb +0x232 | bahnsteig | 2 | Sperre steht auf 89 |
+| Blut-Wache KI-Phase | szenen | 1 | KI-Phase 1: 0 Spawns statt mindestens 2 |
+| Blut-Zeile | szenen | 1 | Zeile 9: 2 Spawns statt 0 |
+| Biss-Serie | szenen | 1 | 0 Spawns statt 30 |
+| G5-HP roh | szenen | 1 | nur 1 Biss vor dem Fressen |
+| NCLIP-Vorzeichen | wand rein | 1 | MAC0 = 0 Dreieck weg (`bgtz` @0x80027cc8) |
+| NPC-Verwurf in main.c | birkin_pistole | rot fuer Leon und Elza | Zeichner ruft den Verwurf nicht |
+
+Ueberlebt: die Grenze 401 allein. Die Probe @0x8004d8dc greift frueher (341 gegen 465 Tiefe), mit beiden Proben heraus ist der Riegel rot (Zeile "beide Proben").
+
+**Geaendert, nicht nur ergaenzt:** `probe_g5_tentakel.c` Schaden 7 statt 15 (Halbierung), `probe_r20_birkin_push.c` nur Kommentar (die Klemme des Folgebilds loest nichts, s. Berichtigung in 9.6).
+
+Stand: Zielauswahl 75 von 75 gruen (birkin, g5, tentakel, kollision, collision, nclip, 5090, r20, r21, knock, griff, wand, push, schub), darin `integration_r41_birkin_pistole`, `integration_r41_g5_tod`, `integration_r41_g5_westen`. Keine volle Suite, Auftrag. Die Unit-Tests lagen auf dem Abschlussstand, die Gegenprobe ebenfalls.
+
+### 10.7 Offen
+
+- **Leon unter dem G5 im Westen:** In der Tasche zwischen #29 und #30 kann der Schub ihn nicht mehr ostwaerts tragen, sein Vektor zeigt in die Diagonale, also rollt der G5 ueber ihn. Er ist dann in Cut 12 verdeckt: z_w4 203 Bilder am Stueck, z_aus_a 334 (Abstand zur Koerpermitte unter 5000). Er bleibt frei und kann laufen. Das tritt nur auf, wenn er dort stehen bleibt und nicht schiesst: im freien Spiel 0 Bilder in 16 Laeufen, mit Pistole ebenfalls 0. Bild `nb3_westen.jpg`. Naeher an ihm laege Cut 11 (7626,-3256,-25360, Blick West). Nicht gebaut: keine Kamera-Regel ohne Fall aus dem freien Spiel, Gestaltungsfrage.
+- **Eingabe in der Ecke unter dem Koerper:** Lage (4849,-24749), bis 118 Bilder ohne Wirkung (a_z_aus_c), RE2-Code 3 traegt ihn nicht aus der Ecke. Nach Eckdruck springt der Koerper-Schub weit (a_z_aus_a F2231 4235, a_z_aus_c F2188 3385), ohne Tunnel, Ende frei.
+- **NPC-Zweig ohne NCLIP** ausser Birkin. Ein globaler Fix gehoert in eine eigene Runde, er aendert alle Gegner.
+- **Griff laeuft nach dem Wurf 92 Bilder leer:** Gestaltungsfrage aus der Abnahme, nicht entschieden, nicht angefasst.
+- **Treffer-Handler G5:** Zeilen 9 und 17, 10, 11, 14 (0x8010221c, 0x80101d9c, 0x80101ff0, 0x801022d0) nicht gebaut.
+- **PORT-WAHL im Blut:** Zeile 1 z und der Biss-Blut-Anker am Spieler-Ursprung, Leons Teile fuehrt der Port nicht engine-seitig.
+- **Mutanten:** Tempo-Riegel fuers Rennen fehlt, die uebrigen Punkte der Liste aus der Abnahme sind nicht vollstaendig abgearbeitet (10.5).
+- **SDL-Assertion beim Anzeigewechsel:** ohne Bezug, nicht angefasst.
+- **Rueckstoss-Szene:** s. 9.7, Gestaltungsfrage.
+- Aus 9.7 weiter offen: EM30 Clip-Ende und Selbstschub, Wandzaehler des Rennens, Griff-Treffer, Devour-Blut.

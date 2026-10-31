@@ -4092,7 +4092,7 @@ add_test(NAME unit_r41_birkin_wand_g5 COMMAND test_r41_birkin_wand g5)
 add_test(NAME unit_r41_birkin_wand_griff COMMAND test_r41_birkin_wand griff)
 set_tests_properties(unit_r41_birkin_wand_rein PROPERTIES TIMEOUT 30)
 set_tests_properties(unit_r41_birkin_wand_g5 PROPERTIES TIMEOUT 240 ENVIRONMENT "RE15_ENDKAMPF_NUR_G5=1")
-set_tests_properties(unit_r41_birkin_wand_griff PROPERTIES TIMEOUT 240)
+set_tests_properties(unit_r41_birkin_wand_griff PROPERTIES TIMEOUT 360)
 
 # --- BETA-BIRKIN-AUFTRITTE (2026-10-30): Hangar-Wurfszene ROOM50A0 + Morph Vierbein -> G5 ROOM5090 ---
 add_executable(test_birkin_szenen test_birkin_szenen.c)

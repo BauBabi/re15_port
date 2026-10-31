@@ -3,7 +3,8 @@
  * Modi (Argument):
  *   rein   Die Klemme allein an den gemessenen Faellen der Abnahme, ohne Gegner.
  *   g5     Echter re15_game_step in ROOM5090 mit G5 und Armen (RE15_ENDKAMPF_NUR_G5=1, s. CMake): Startlagen entlang aller Waende.
- *   griff  Echter re15_game_step mit EM30-Griff (Haken 0x8011afd8) aus allen Wandlagen in ROOM5090, ROOM5080, ROOM3070.
+ *   griff  Echter re15_game_step mit EM30-Griff (Haken 0x8011afd8, cmd 5) und Wurf (cmd 6, derselbe Einstieg wie der Griff der Form bb_griff)
+ *          aus allen Wandlagen in ROOM5090, ROOM5080, ROOM3070.
  *
  * Mass je Startlage: nach 300 Bildern steht der Spieler frei und kann laufen. "Frei" = Mittelpunkt in keiner festen Zelle, an JEDEM
  * Bildende, denn dort zeichnet der Port. "Kann laufen" = in mindestens einer von vier Richtungen 40 Bilder Vorwaerts bewegen ihn um
@@ -442,7 +443,7 @@ static void test_g5(const char *rel, unsigned id)
     CHECK(n_eingekeilt == 0, "%d Faelle eingekeilt", n_eingekeilt);
 }
 
-/* --- griff: EM30-Griff aus allen Wandlagen ------------------------------------------------------------------------------------- */
+/* --- griff: EM30-Griff und Wurf aus allen Wandlagen ---------------------------------------------------------------------------- */
 static void griff_raum(const char *rel, unsigned id, int32_t kx, int32_t kz, int32_t bx, int32_t bz, int32_t x0, int32_t x1, int32_t z0, int32_t z1, int raster)
 {
     if (!raum_boot(rel, id, kx, kz, 0)) { CHECK(0, "%s", rel); return; }
@@ -459,28 +460,32 @@ static void griff_raum(const char *rel, unsigned id, int32_t kx, int32_t kz, int
     CHECK(re15_birkin_klemme_aktiv(), "Birkin-Klemme nicht aktiv");
 
     lagen_bauen(x0, x1, z0, z1, raster);
-    int n_faelle = 0, n_wandbilder = 0, n_eingekeilt = 0, n_wandhalt = 0, laengste = 0;
+    int n_faelle = 0, n_wandbilder = 0, n_eingekeilt = 0, n_wandhalt = 0, laengste = 0, n_griff5 = 0, n_wurf = 0;
     int32_t weg_max = 0;
     for (int i = 0; i < s_lagen; i++) {
-        for (int k = 0; k < 8; k++) {
-            const int v = k & 1;                                  /* Haken [0] von vorn, [1] von hinten */
+        for (int k = 0; k < ((id >> 12) == 5u ? 12 : 8); k++) {
+            /* k 0..7: cmd 5 (Griff des 0x30), Haken [0] von vorn, [1] von hinten. k 8..11: cmd 6, Wurf: EM30 @0x8011defc und die Form (bb_griff).
+             * STAGE3 hat fuer cmd 6 nur die Wurf-Tod-Maschine (re15_bk_opfer_start Variante 3), die endet nicht im freien Stand. */
+            const int wurf = (k >= 8);
+            const int v = wurf ? 0 : (k & 1);
             pl->x = s_lage[i][0]; pl->z = s_lage[i][1]; pl->y = 0; pl->hp = 100;
             pl->state = 1; pl->sub_state_1 = 0; pl->sub_state_2 = 0; pl->hit_react = 0; pl->anim_flags = 0;
-            pl->rot_y = (int16_t)(((k >> 1) * 1024 + (int)zufall(200)) & 0xfff);
-            if (!re15_bk_opfer_start(e, 5, (uint8_t)v)) { CHECK(0, "Griff startet nicht"); return; }
+            pl->rot_y = (int16_t)((((wurf ? k - 8 : k >> 1)) * 1024 + (int)zufall(200)) & 0xfff);
+            if (!re15_bk_opfer_start(e, wurf ? 6 : 5, (uint8_t)v)) { CHECK(0, "Griff startet nicht"); return; }
             int folge = 0, phase5 = 0;
             for (int f = 0; f < 420 && re15_bk_opfer_cmd(); f++) {
                 const int32_t ax = pl->x, az = pl->z;
                 pl->hp = 100;
                 bild((uint16_t)(f & 1 ? RE15_PAD_BIT_CROSS : 0));        /* Ruetteln: kuerzt den Ringkampf */
                 {   const int32_t d = abs((int)(pl->x - ax)) + abs((int)(pl->z - az)); if (d > weg_max) weg_max = d; }
-                if (re15_bk_opfer_phase() >= 5 && re15_bk_opfer_phase() <= 8 && v == 0) phase5 = 1;
+                if (re15_bk_opfer_phase() >= 5 && re15_bk_opfer_phase() <= 8 && v == 0 && !wurf) phase5 = 1;
                 if (fest(pl->x, pl->z)) {
                     n_wandbilder++; if (++folge > laengste) laengste = folge;
                     if (n_wandbilder <= 3) fprintf(stderr, "  Wandbild %s: Start (%d,%d) Bild %d Lage (%d,%d) Zelle %d Gier %d\n", rel, (int)s_lage[i][0], (int)s_lage[i][1], f, (int)pl->x, (int)pl->z, fest(pl->x, pl->z) - 1, (int)pl->rot_y);
                 } else folge = 0;
             }
             n_wandhalt += phase5;
+            if (wurf) n_wurf++; else n_griff5++;
             CHECK(!re15_bk_opfer_cmd(), "%s: Griff endet nicht", rel);
             for (int f = 0; f < 60 && re15_player_hit_flinch_active(); f++) { pl->hp = 100; bild(0); }
             {   const int32_t kx2 = pl->x, kz2 = pl->z;
@@ -491,11 +496,11 @@ static void griff_raum(const char *rel, unsigned id, int32_t kx, int32_t kz, int
         }
     }
     re15_enemy_ai_set_paused(0);
-    fprintf(stderr, "griff %s: %d Lagen, %d Faelle, Wand-Griffe %d, Bildenden in fester Zelle %d (Folge %d), eingekeilt %d, groesster Weg %d\n",
-            rel, s_lagen, n_faelle, n_wandhalt, n_wandbilder, laengste, n_eingekeilt, (int)weg_max);
+    fprintf(stderr, "griff %s: %d Lagen, %d Griffe, %d Wuerfe, Wand-Griffe %d, Bildenden in fester Zelle %d (Folge %d), eingekeilt %d, groesster Weg %d\n",
+            rel, s_lagen, n_griff5, n_wurf, n_wandhalt, n_wandbilder, laengste, n_eingekeilt, (int)weg_max);
     CHECK(n_faelle >= 60, "%s: zu wenige Faelle %d", rel, n_faelle);
     /* Der Griff-Haken liest das Wand-Bit (@0x8011b140): von den Griffen [0] muss ein guter Teil an die Wand laufen. Ohne Bit aus der Vor-Klemme: 2 Prozent. */
-    CHECK(n_wandhalt * 5 >= n_faelle, "%s: nur %d von %d Griffen liefen an die Wand (Wand-Bit)", rel, n_wandhalt, n_faelle);
+    CHECK(n_wandhalt * 5 >= n_griff5, "%s: nur %d von %d Griffen liefen an die Wand (Wand-Bit)", rel, n_wandhalt, n_griff5);
     CHECK(n_wandbilder == 0, "%s: %d Bildenden in fester Zelle", rel, n_wandbilder);
     CHECK(n_eingekeilt == 0, "%s: %d Faelle eingekeilt", rel, n_eingekeilt);
 }
