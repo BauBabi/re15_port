@@ -51,6 +51,9 @@ void     re15_bf_rueckstoss_start(int slot);
 int      re15_bf_rueckstoss_phase(void);   /* 0 = aus, 1 = Beschuss, 2 = hinter dem Zug */
 uint16_t re15_bf_pad(uint16_t pad, uint16_t *pressed);
 
+/* Kameraschnitt zur Spielerlage in ROOM5090/5091 (Baender der RVD-Zonen, s. birkin_formen.c). */
+int      re15_bf_schnitt_aus_lage(int32_t x);
+
 /* Je KI-Tick vor der Gegner-Schleife: setzt im Hangar Birkin + Spider-Man und spielt die Wurfszene. */
 void re15_bf_raumtick(void);
 /* 1 = dieser Slot wird gerade von der Szene gefuehrt (KI-Tick ueberspringen). */

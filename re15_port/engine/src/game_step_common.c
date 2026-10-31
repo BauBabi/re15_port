@@ -806,7 +806,8 @@ static void re15_gameover_fsm_reset(void)
 int re15_death_presentation_active(void)
 {
     extern int re15_gator_fress_todeslatch(void);
-    return re15_player_is_dead() || re15_gator_fress_todeslatch();
+    extern int re15_g5_fress_todeslatch(void);   /* Fressen des G5: Latch @0x800402d8 (enemy_ai_boss_g5.c) */
+    return re15_player_is_dead() || re15_gator_fress_todeslatch() || re15_g5_fress_todeslatch();
 }
 
 /* ⛔ MESS-SCHIENE (Nutzer 2026-09-13, zweite Meldung: "Die Fressanimation findet immer

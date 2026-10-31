@@ -15063,7 +15063,16 @@ static void re15_birkin_root(int s)
     if (e->grid_id & 0x20) return;                     /* @0x80116a7c-a88 / @0x80116268-274:
                                                         * -> nur FUN_8001b064 (Schatten, Renderer) */
     int32_t bk_ox = e->x, bk_oz = e->z;
-    if (re15_bb_bank_da(e)) re15_bb_tick(s);           /* Runde 41 Spur R: Bahnsteig-Form, eigene G4-Ablaeufe */
+    if (re15_bb_bank_da(e)) {                          /* Runde 41 Spur R: Bahnsteig-Form, eigene G4-Ablaeufe */
+        re15_bb_tick(s);
+        /* G4-Wurzel-Schwanz: `lw a0,-492(a0)` = 0x800CFE14 = Listenkopf = Spieler, a1 = Form, `jal 0x80034d0c` @0x80100520-2c,
+         * danach erst die Wandklemme `jal 0x8003567c` @0x80100554. FUN_80034d0c bewegt den ZWEITEN (`sw v0,56(s1)` /
+         * `sw v1,64(s1)` @0x800350c8-cc): die Form weicht dem Spieler in ihrem eigenen Tick aus und gleitet an ihm vorbei.
+         * Ohne das trug allein der Spieler-Pass die Ueberdeckung, und an einer Wand, wo Leon nicht seitlich ausweichen kann,
+         * schob ihn das Rennen mit voller Laufgeschwindigkeit mit (Abnahme 2 M11: Nordspur 7472 Einheiten, zweiter Treffer)
+         * oder 500 Einheiten je Bild durch die Diagonale Box 30 (Lauf rw_24700, z -25630 -> -27668). */
+        re15_enemy_selfpush_from_player(s, e);
+    }
     else re15_birkin_ai_tick(s);
     re15_enemy_body_push_tail(s, e);
     /* +0x0 & 8 = keine Wandklemme: gesetzt von INIT fuer Nibble 1 @0x801168d0 (nur diesen Weg gibt es in Sub 10), Abfrage

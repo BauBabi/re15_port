@@ -12,6 +12,8 @@
 #   2  Modelltausch (debug.log "Bahnsteig-Form"), danach kommt die Form mit HP 150 und laeuft (Clip 10, Clip 5)
 #   3  Die Form nimmt weiter Schaden: HP faellt unter 100
 #   4  Rueckstoss-Szene (Clip 8, HP 1), danach Typ 0x36 mit HP 600 (G5)
+#   5  Abnahme 2: der G5 faellt unter derselben Pistole (HP < 0), der Spieler lebt dabei noch. Bis zur Nachbesserung frass er den
+#      gesunden Spieler bei F2879 kurz vor dem Ziel (Polaritaet `bgtz` @0x801008e0 / @0x80103e80).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_birkin_pistole.cmake
 # =============================================================================
@@ -55,7 +57,7 @@ function(ein_lauf _name _raum)
         RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=500,-9175,2048,0"
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=${_skript}"
         RE15_SPAWN_DIAG=1 RE15_STATE_LOG=state.log "RE15_GIVE=3:400,21:250" RE15_EQUIP=3
-        "RE15_EXIT_AT=2000#${_raum}"
+        "RE15_EXIT_AT=3100#${_raum}"
         "${_exe_kopie}")
     set(_g "")
     if(NOT EXISTS "${WORKDIR}/debug.log" OR NOT EXISTS "${WORKDIR}/state.log")
@@ -75,6 +77,7 @@ function(ein_lauf _name _raum)
     set(_war_mut 0)
     set(_clip10 0)
     set(_clip5 0)
+    set(_g5_tot 0)
     foreach(_z IN LISTS _zeilen)
         string(REGEX MATCH "t=(3[06]) st=([0-9]+) ss1=([0-9]+) ss2=([0-9]+) ss3=[0-9]+ g=[0-9a-f]+ mo=([0-9]+) [^]]*\\] hp=(-?[0-9]+)" _m "${_z}")
         if(NOT _m)
@@ -89,6 +92,8 @@ function(ein_lauf _name _raum)
         if(_typ STREQUAL "36")
             if(_hp GREATER 0)
                 set(_g5 1)
+            elseif(_g5 AND _hp LESS 0)
+                set(_g5_tot 1)
             endif()
             continue()
         endif()
@@ -131,7 +136,10 @@ function(ein_lauf _name _raum)
     if(NOT _g5)
         string(APPEND _g "\n ${_name}: kein G5 (Typ 0x36)")
     endif()
-    message(STATUS "r41_birkin_pistole ${_name}: Mutationen ${_mut}, Form-HP ${_form_hp} bis ${_form_min}, Rueckstoss ${_rueck}, G5 ${_g5}")
+    if(NOT _g5_tot)
+        string(APPEND _g "\n ${_name}: G5 faellt unter der Pistole nicht bis F3100")
+    endif()
+    message(STATUS "r41_birkin_pistole ${_name}: Mutationen ${_mut}, Form-HP ${_form_hp} bis ${_form_min}, Rueckstoss ${_rueck}, G5 ${_g5}, G5 tot ${_g5_tot}")
     set(_f "${_f}${_g}" PARENT_SCOPE)
 endfunction()
 

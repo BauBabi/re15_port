@@ -211,13 +211,18 @@ void re15_bf_raumtick(void)
       } }
     bf_rueckstoss_tick();
     /* G5-AUFTRITT (wie RE2): die Kamera bleibt aufs Zugende gerichtet, waehrend zuerst die vier Tentakel
-     * hereingreifen ([T1] @0x80101214-2e0) und dann den Koerper nachziehen ([T2] Root-Spur +7014); mit dem
-     * Ende des Intros (Sub 2 verlassen) zurueck auf die Kampfkamera. */
+     * hereingreifen ([T1] @0x80101214-2e0) und dann den Koerper nachziehen ([T2] Root-Spur +7014).
+     * GESTALTUNG (Abnahme 2): die Szenenkamera endet mit [T2], nicht mit Sub 2. Sub 2 dauert ohne Treffer 1126 Bilder
+     * (37,5 s), der Spieler hat dabei volle Kontrolle und sah sich oft nicht, ab [T6] (+3946) fuellte der Koerper Cut 11
+     * ganz. Ab [T3] laufen die Zonen wieder, der Schnitt kommt aus der Spielerlage (bf_schnitt_aus_lage). */
     if (s_kam_g5) {
-        int sub = -1;
-        if (re15_g5_boss_zustand(&sub, NULL, NULL) && sub != 2) { bf_kamera(0x0C); bf_kamera_frei(); s_kam_g5 = 0; }
-        else bf_kamera(0x0B);
+        int sub = -1, ph = 0;
         if (!re15_bf_bahnsteig_aktiv()) { bf_kamera_frei(); s_kam_g5 = 0; }
+        else if (re15_g5_boss_zustand(&sub, &ph, NULL) && (sub != 2 || ph >= 3)) {
+            bf_kamera_setzen(re15_bf_schnitt_aus_lage(g_actors[RE15_ACTOR_SLOT_PLAYER].x));
+            bf_kamera_frei(); s_kam_g5 = 0;
+        }
+        else bf_kamera(0x0B);
     }
     if (!re15_bf_hangar_aktiv()) { if (s_h.raum) re15_bf_reset(); return; }
     if (s_h.raum != g_current_room_id) {
@@ -354,6 +359,20 @@ static void bf_kamera(int cut)
 }
 
 static void bf_kamera_frei(void) { g_scd.cut_auto_enabled = 1; }
+
+/* Schnitt zur Spielerlage ROOM5090/5091, Abnahme 2. Die RVD-Zonen sind Streifen, sie loesen nur aus dem passenden Schnitt aus:
+ * @0x490 11->12 x 2800..4200, @0x4b8 12->11 x 1203..2703, @0x4cc 12->13 x 14000..15400, @0x4f4 13->12 x 12249..13873, @0x508
+ * 13->14 x 20250..21750, @0x530 14->13 x 18502..20252. Ein fester Cut 12 am Szenenende liess Leon oestlich von x 15400 ohne Zone
+ * und ohne Bild (Lauf z_ende F2102). Cut_old (`lbu a0,0x3f7b(a0)` @0x8004033c, `sh a0,0xfe4(at)` @0x80040364) hilft hier
+ * nicht: der Spieler bewegt sich waehrend der Szene frei, der gemerkte Schnitt passt dann nicht mehr. Die Grenzen liegen so, dass kein
+ * Streifen des gewaehlten Schnitts sofort zurueckschaltet. */
+int re15_bf_schnitt_aus_lage(int32_t x)
+{
+    if (x < 2750)  return 0x0B;
+    if (x < 14000) return 0x0C;
+    if (x < 20250) return 0x0D;
+    return 0x0E;
+}
 
 int re15_bf_rueckstoss_phase(void) { return s_rs.slot >= 0 ? s_rs.phase : 0; }
 

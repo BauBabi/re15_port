@@ -45,6 +45,7 @@ extern void re15_g5_push_stats_reset(void);
 extern int  re15_g5_boss_zustand(int *sub, int *ph, int *timer);
 extern int  re15_g5_body_segment(int idx, int32_t *wx, int32_t *wy, int32_t *wz, int32_t *r);
 extern int  re15_g5_body_push_player(re15_actor_t *pl);
+extern int  re15_g5_opfer_variante(void);
 
 static re15_rdt_t         s_rdt;
 static re15_camera_view_t s_cam;
@@ -269,7 +270,9 @@ int main(int argc, char **argv)
         const int N_START = 40;
         printf("-- MESS: %d Startplaetze x 200 Bilder, echter re15_game_step ----------\n",
                N_START);
-        for (int si = 0; si < N_START; si++) {
+        /* Abnahme 2: der Boss steht nicht mehr nach dem ersten Fressen still, er faehrt bis zur Kappe X 12000 und zurueck. Liegt der Platz
+         * dann nicht mehr im Gang, zaehlt der naechste: 40 gemessene Plaetze, nicht 40 Versuche. */
+        for (int si = 0; si < N_START * 3 && m_starts < N_START; si++) {
             int32_t g0x = 0, g0z = 0, g0r = 0, g1x = 0, g1z = 0, g1r = 0;
             int32_t sx, sz, lx = 0, lz = 0;
             int frei = 1;
@@ -308,6 +311,7 @@ int main(int argc, char **argv)
                 re15_g5_push_stats(&rufe0, &wirk0, NULL);
                 flip0 = re15_g5_push_flips();
                 hr = (int)pl->hit_react;
+                re15_schritt_station_reset();
                 frame();
                 re15_g5_push_stats(&rufe1, &wirk1, NULL);
                 flip1 = re15_g5_push_flips();
@@ -321,12 +325,24 @@ int main(int argc, char **argv)
                     pl->pos_s_z != (uint16_t)(int32_t)vz) m_spiegel_falsch++;
                 sp = (pl->x > lx ? pl->x - lx : lx - pl->x)
                    + (pl->z > lz ? pl->z - lz : lz - pl->z);
-                if (sp > m_maxsprung) { m_maxsprung = sp; m_sprung_x = pl->x; m_sprung_z = pl->z; }
+                /* ⛔ Runde 41 Spur R, Abnahme 2: bis dahin frass der Boss den gesunden Spieler (Polaritaet `bgtz` @0x80103e80 /
+                 * @0x801008e0 umgekehrt) und stand danach fuer immer in Sub 4: die Startplaetze dahinter liefen gegen einen stummen
+                 * Boss (gemessen 7876 Bilder, groesster Weg 1029). Jetzt kaempft er alle 8000 Bilder. Zwei Folgen, beide gemessen:
+                 *  - Griff (Routine 5, Zug-Ruck 0x801042c4, Spiess 0x801046ac) faehrt den Spieler SELBST, bis 1592 je Bild. Das ist
+                 *    kein Schub und gehoert nicht in diesen Riegel: alle Wege ueber 1250 lagen in opfer >= 0, Lage begehbar.
+                 *  - Die Kind-Kollision der Tentakel laeuft im Arm-Tick NACH der Spieler-Klemme des Bildes (FUN_80034D0C aus
+                 *    0x80104F64). Das Bildende darf dadurch in einer Wand liegen, die Klemme des Folgebilds loest es (Zwischenstand
+                 *    11 von 8000 Bildern, Station KLEMME jedes Mal begehbar). Massgeblich ist deshalb die Lage NACH der Klemme. */
+                if (re15_g5_opfer_variante() < 0 && sp > m_maxsprung) { m_maxsprung = sp; m_sprung_x = pl->x; m_sprung_z = pl->z; }
                 lx = pl->x; lz = pl->z;
                 re15_collision_set_band(0);
-                if (!begehbar(pl->x, pl->z, 0)) {
-                    if (!m_raus) { m_raus_x = pl->x; m_raus_z = pl->z; }
-                    m_raus++;
+                {
+                    int32_t kx = pl->x, kz = pl->z;
+                    (void)re15_schritt_station_hole(RE15_SCHRITT_KLEMME, &kx, &kz);
+                    if (!begehbar(kx, kz, 0)) {
+                        if (!m_raus) { m_raus_x = kx; m_raus_z = kz; }
+                        m_raus++;
+                    }
                 }
                 /* GEGENPROBE-Zaehler: Bilder, in denen der Koerper-Schub GAR NICHT gerufen
                  * wurde, obwohl der Boss lebt und der Spieler lebt. Im Original ist

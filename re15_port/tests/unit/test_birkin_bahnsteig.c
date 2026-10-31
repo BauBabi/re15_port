@@ -29,6 +29,8 @@
 #include "re15_birkin_opfer.h"
 #include "re2_ems.h"
 #include "re15_anim_select.h"
+#include "re15_collision.h"
+#include "re15_math.h"
 
 static int fails = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { fprintf(stderr, "FAIL: " __VA_ARGS__); \
@@ -742,6 +744,165 @@ static void test_m11_rennen(unsigned raum, const char *rdt)
     free(buf);
 }
 
+/* Abnahme 2, Nachtrag M11 + Diagonale: echter Ablauf aus Spieler-Pass (Schub, Klemme @0x80031cbc/@0x80031d70) und Gegner-Pass, Wandklemme der
+ * Wurzel scharf. Form-Wurzel @0x8010052c schiebt die FORM aus dem Spieler, sonst traegt sie ihn an der Wand mit. */
+static void bild_mit_klemme(re15_actor_t *pl)
+{
+    int32_t ax = pl->x, az = pl->z;
+    re15_body_push_player();
+    re15_collision_set_band(0);
+    re15_collision_constrain(&s_rdt, ax, az, &pl->x, &pl->z);
+    tick(1);
+}
+
+static void rennen_start(re15_actor_t *b, re15_actor_t *pl, int32_t bx, int32_t bz, int gier, int32_t px, int32_t pz)
+{
+    beruhigen(b, pl, 170);
+    b->x = bx; b->z = bz; b->rot_y = (int16_t)gier; b->hit_react = 0;
+    b->state = 1; b->sub_state_1 = 4; b->sub_state_2 = 0; b->sub_state_3 = 0;
+    pl->x = px; pl->z = pz; pl->y = 0; pl->hp = 100; pl->hit_react = 0;
+}
+
+static int32_t weg_nach_treffer(re15_actor_t *b, re15_actor_t *pl, int bilder, int *treffer, int32_t *z_min)
+{
+    int t0 = -1, n = 0, frei_ab = -1;
+    int32_t weg = 0, ax = pl->x, az = pl->z;
+    *treffer = 0;
+    *z_min = pl->z;
+    for (int f = 0; f < 600 && (t0 < 0 || f < t0 + bilder); f++) {
+        int hp = pl->hp;
+        bild_mit_klemme(pl);
+        if (pl->hp < hp) { (*treffer)++; if (t0 < 0) t0 = f; frei_ab = f + 23; }   /* Treffer-Reaktion wie im Lauf: F739 -> F762 */
+        if (f == frei_ab) pl->hit_react = 0;
+        if (t0 >= 0) {
+            int32_t dx = pl->x - ax, dz = pl->z - az;
+            weg += (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+            n++;
+        }
+        ax = pl->x; az = pl->z;
+        if (pl->z < *z_min) *z_min = pl->z;
+    }
+    return weg;
+}
+
+static void test_r2_koerper(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1;
+    {   /* Nordspur: Leon an der Wand z -22168, Form rennt nach Osten, Lage s. Lauf r_13000_22300 */
+        int treffer = 0; int32_t z_min = 0;
+        rennen_start(b, pl, 7400, -22800, 4035, 13000, -22300);
+        int32_t weg = weg_nach_treffer(b, pl, 40, &treffer, &z_min);
+        CHECK(treffer >= 1, "M11 %s Nordspur: Rennen trifft nicht", rdt);
+        CHECK(weg < 1500, "M11 %s Nordspur: Leon %d Einheiten getragen, %d Treffer", rdt, weg, treffer);
+        fprintf(stderr, "%s Nordspur: Leon %d Einheiten nach dem Treffer, %d Treffer, Lage (%d,%d)\n", rdt, weg, treffer, pl->x, pl->z);
+    }
+    {   /* Diagonale Box 30: Form rennt nach Westen auf z -24182, Leon steht an der Diagonale. Lage aus Lauf rw_24700 F759-F763: dort kam
+         * er mit dem Rennen an, bei d 914 versetzte ihn der Schub ueber die Linie (z -25630 -> -26664 -> -27668). */
+        int treffer = 0, fest; int32_t z_min = 0, nx, nz;
+        rennen_start(b, pl, 9000, -24182, 1733, 3085, -25630);
+        (void)weg_nach_treffer(b, pl, 120, &treffer, &z_min);
+        nx = pl->x; nz = pl->z;
+        re15_collision_constrain(&s_rdt, nx, nz, &nx, &nz);       /* Klemme verschiebt nicht = begehbar, Typ-6-Kasten ist dreieckig */
+        fest = (nx != pl->x || nz != pl->z);
+        CHECK(treffer >= 1, "Diagonale %s: Rennen trifft nicht", rdt);
+        CHECK(z_min > -26000, "Diagonale %s: Leon durch die Wand gedrueckt, z %d", rdt, z_min);
+        CHECK(!fest, "Diagonale %s: Leon steht im festen Bereich (%d,%d)", rdt, pl->x, pl->z);
+        fprintf(stderr, "%s Diagonale: Leon z min %d, Lage (%d,%d), %d Treffer\n", rdt, z_min, pl->x, pl->z, treffer);
+    }
+    g_room_rdt_ok = 0;
+    free(buf);
+}
+
+/* Abnahme 2, Pose am Clip-Ende: das Original posiert im Ende-Tick das letzte Bild, +0x14d faellt erst danach (@0x80029b28-4c); der Port zeichnet
+ * anim_frame nach dem Vorschub. Knochen-Verschiebung im Ende-Tick gegen den Tick davor, Form rund 3000 hoch. */
+static int32_t knochen_weg(re15_enemy_bank_t *eb, re15_actor_t *b, int32_t alt[27][3], int merken)
+{
+    int32_t m = 0;
+    pose_folgen(b, eb);
+    for (int i = 0; i < 27 && i < eb->skel.bone_count; i++) {
+        for (int c = 0; c < 3; c++) {
+            int32_t d = s_po[i].trans[c] - alt[i][c];
+            if (d < 0) d = -d;
+            if (d > m) m = d;
+            if (merken) alt[i][c] = s_po[i].trans[c];
+        }
+    }
+    return m;
+}
+static int32_t clip_ende_sprung(re15_enemy_bank_t *eb, re15_actor_t *b, re15_actor_t *pl, int clip, int32_t abstand)
+{
+    static int32_t alt[27][3];
+    int32_t letzter = -1;
+    (void)knochen_weg(eb, b, alt, 1);
+    for (int f = 0; f < 400; f++) {
+        int war = (b->motion == clip);
+        int bild = b->anim_frame;
+        pl->x = b->x + abstand; pl->z = b->z; pl->hit_react = 1;   /* kein neuer Angriff, Clip laeuft zu Ende */
+        tick(1);
+        if (!war) { (void)knochen_weg(eb, b, alt, 1); continue; }
+        int32_t s = knochen_weg(eb, b, alt, 1);
+        if (b->motion != clip || bild + 1 >= eb->anim.clips[clip].frame_count) { letzter = s; break; }
+    }
+    pl->hit_react = 0;
+    return letzter;
+}
+static void test_r2_clip_ende(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    re15_enemy_bank_t *eb = re15_enemy_find(0x30u);
+    static const struct { int sub, clip; int32_t abstand; const char *name; } fall[] = {
+        { 14, 26, 1900, "Biss" }, { 15, 27, 3000, "Griff" },
+    };
+    {   /* Auftritt laeuft schon */
+        int32_t s = clip_ende_sprung(eb, b, pl, 10, 6000);
+        CHECK(s >= 0 && s < 150, "Clip-Ende %s Auftritt: Knochen %d Einheiten im Ende-Tick", rdt, s);
+    }
+    for (unsigned i = 0; i < sizeof fall / sizeof fall[0]; i++) {
+        beruhigen(b, pl, 170);
+        stelle(b, pl, fall[i].abstand);
+        b->state = 1; b->sub_state_1 = (uint8_t)fall[i].sub; b->sub_state_2 = 0; b->sub_state_3 = 0;
+        tick(1);
+        CHECK(b->motion == fall[i].clip, "Clip-Ende %s %s: Clip %d", rdt, fall[i].name, b->motion);
+        int32_t s = clip_ende_sprung(eb, b, pl, fall[i].clip, fall[i].abstand);
+        CHECK(s >= 0 && s < 150, "Clip-Ende %s %s: Knochen %d Einheiten im Ende-Tick", rdt, fall[i].name, s);
+        fprintf(stderr, "%s Clip-Ende %s: %d\n", rdt, fall[i].name, s);
+        re15_bk_opfer_reset(); re15_player_clear_hit_guard(pl);
+    }
+    {   /* Hieb: Clip 3 oder 4 aus der Seite +0x16a */
+        beruhigen(b, pl, 170);
+        stelle(b, pl, 3700);
+        b->state = 1; b->sub_state_1 = 2; b->sub_state_2 = 0; b->sub_state_3 = 0;
+        tick(1);
+        CHECK(b->motion == 3 || b->motion == 4, "Clip-Ende %s Hieb: Clip %d", rdt, b->motion);
+        int32_t s = clip_ende_sprung(eb, b, pl, b->motion, 4200);   /* dist >= 0xfa0: kein Doppelschlag @0x80101b80-c4 */
+        CHECK(s >= 0 && s < 150, "Clip-Ende %s Hieb: Knochen %d Einheiten im Ende-Tick", rdt, s);
+        fprintf(stderr, "%s Clip-Ende Hieb: %d\n", rdt, s);
+    }
+    {   /* Zucken: Clip 8 ab Bild 5 */
+        beruhigen(b, pl, 30);
+        treffer(b, 7); tick(1);
+        treffer(b, 7); tick(1);
+        CHECK(b->motion == 8, "Clip-Ende %s Zucken: Clip %d", rdt, b->motion);
+        int32_t s = clip_ende_sprung(eb, b, pl, 8, 7000);
+        CHECK(s >= 0 && s < 150, "Clip-Ende %s Zucken: Knochen %d Einheiten im Ende-Tick", rdt, s);
+    }
+    {   /* Schleifen laufen weiter: Gang-Clip wickelt auf 0, kein Stehen */
+        int gewickelt = 0, alt = -1;
+        beruhigen(b, pl, 3);
+        b->state = 1; b->sub_state_1 = 3; b->sub_state_2 = 0;
+        for (int f = 0; f < 200 && !gewickelt; f++) {
+            stelle(b, pl, 7000); tick(1);
+            if (b->motion == 5 && alt > 10 && (int)b->anim_frame < alt) gewickelt = 1;
+            alt = b->anim_frame;
+        }
+        CHECK(gewickelt, "Clip-Ende %s: Gang haelt am Clip-Ende, Schleife wickelt nicht", rdt);
+    }
+    free(buf);
+}
+
 /* M12: Tabelle @0x8010b0fb je Waffe (+0x5 im Trefferzustand @0x80107130), nicht je KI-Unterphase. */
 static void test_m12_waffe(unsigned raum, const char *rdt)
 {
@@ -877,6 +1038,8 @@ int main(void)
         test_m7_weichen_treffer(id, rdt);
         test_m10_doppelschlag(id, rdt);
         test_m11_rennen(id, rdt);
+        test_r2_koerper(id, rdt);
+        test_r2_clip_ende(id, rdt);
         test_m12_waffe(id, rdt);
         test_m13_blut(id, rdt);
         test_m14_tod(id, rdt);

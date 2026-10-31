@@ -144,7 +144,12 @@ static void bb_clip(re15_actor_t *e, uint8_t c, uint8_t bild, uint8_t blende)
  *   untere 16 Bit = Ueberblendgewicht je +0x14e (@0x800296b8-bc) -> anim_blend_rate; ohne sie nimmt der Zeichenpfad 0x200,
  *     und ab frac >= 8 klemmt das Gewicht auf 100 % Vor-Pose (Abnahme 1 M6, skeleton_common.c).
  *   Bild +1 (@0x80029b28-34), +0x14e -1 (@0x800299c0-cc), Rueckgabe 1 am Clip-Ende (@0x80029b48-4c).
- * +0x178 zeigt danach auf das Wort des GEZEICHNETEN Bildes, also vor dem +1 (`sw a2,376(a0)` @0x800295f8). */
+ * +0x178 zeigt danach auf das Wort des GEZEICHNETEN Bildes, also vor dem +1 (`sw a2,376(a0)` @0x800295f8).
+ * CLIP-ENDE (Abnahme 2): das Original posiert im Ende-Tick noch das letzte Bild und nullt +0x14d erst danach
+ * (`sb zero,333(s2)` @0x80029b48); die Ueberblendung des naechsten Clips startet aus dieser Pose. Der Port zeichnet
+ * anim_frame NACH dem Vorschub, der Umlauf auf 0 zeigte also im Ende-Tick Bild 0 des alten Clips (Hieb: 4283 Einheiten
+ * Knochensprung bei 3000 hoher Form), und der neue Clip blendete von dort. Wie sm_anim_halten (spiderman_r38.c): das letzte
+ * Bild bleibt stehen, ausser in den Schleifen Gehen und Rennen, die im naechsten Tick mit Bild 0 weiterlaufen. */
 #define BB_A3_RUECK 0x10000u
 static int bb_anim(re15_actor_t *e, uint32_t a3)
 {
@@ -157,7 +162,12 @@ static int bb_anim(re15_actor_t *e, uint32_t a3)
     }
     e->anim_blend_rate = (uint16_t)(a3 & 0xffffu);
     if (rueck) e->anim_flags |= 0x80u; else e->anim_flags &= (uint16_t)~0x80u;
-    return re15_r38_birkin_anim(e);
+    {
+        const int ende = re15_r38_birkin_anim(e);
+        if (ende && e->motion != BB_C_GEHEN && e->motion != BB_C_RENNEN)
+            e->anim_frame = (uint8_t)(re15_r38_birkin_fc(e) - 1);
+        return ende;
+    }
 }
 
 /* FUN_80016028: Ton des gezeichneten Bildes, Bit 27 / Wort >> 28 (Aufruf @0x801004ec). */
@@ -224,9 +234,9 @@ static void bb_schieben(re15_actor_t *e)
  * RE1.5-KI, Rennen 5 @0x80118b1c. Griff: bb_griff.
  * ⛔ Abnahme 1 M14, Entscheidung: RE2 ist das Vorbild, die Form toetet. FUN_800401d4 liefert 2 fuer den Todeszweig
  * (@0x8004027c-8c, Aufrufer @0x80101ddc / @0x80105028), den Treffer-Clip gibt es dann nicht (@0x80101dfc: cmd 6 statt
- * cmd 2). Die Klemme auf 1 (@0x80117810) gehoert der 0x30-KI und gilt fuer die Form nicht. Tod = hp < 0 wie beim G5
- * (enemy_ai_boss_g5.c); der Detektor in game_step setzt dann cmd 3 (@0x80012ee8), Fressen Sub 10 / cmd 6 ist nicht
- * gebaut. Die Gnaden-Regel @0x80040288-b4 (einmal -1..-14 -> HP 0) hat der Port-Spieler nicht, wie beim G5. */
+ * cmd 2). Die Klemme auf 1 (@0x80117810) gehoert der 0x30-KI und gilt fuer die Form nicht. Tod = hp < 0; der Detektor in
+ * game_step setzt dann cmd 3 (@0x80012ee8), Fressen Sub 10 / cmd 6 ist nicht gebaut. Die Gnaden-Regel @0x80040288-b4 (einmal
+ * -1..-14 -> HP 0) hat der Port-Spieler nicht. Der Aufruf hier ist a1 = 0 (toedlich), anders als der G5-Biss a1 = 1. */
 static void bb_schaden(re15_actor_t *pl, int schaden)
 {
     pl->hp = (int16_t)(pl->hp - schaden);

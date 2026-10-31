@@ -782,11 +782,16 @@ static void tent_sonde(re15_actor_t *e, tent_t *t)
     if (tip[2] >= -19799) t->ph = 4;
 }
 
-static void tent_treffer(re15_actor_t *pl, tent_t *t, int schaden)
+/* FUN_800401d4(schaden, a1). a1 = 1 toetet nie: `bltz v0,0x800402a8` @0x80040264, dort HP = 0 @0x800402b0 (Aufrufer EM037 @0x80102d7c,
+ * @0x80103734, @0x801037ec, Biss EM036 @0x80104170). a1 = 0 (@0x801016d4): -14..-1 einmal HP 0 (`slti v0,v0,-14` @0x80040288, Bit
+ * 0x1000 @0x80040294-a0), darunter Todeszweig @0x800402c0. Getoetet wird also ueber den Devour bei HP <= 0 (enemy_ai_boss_g5.c). Das
+ * Bit 0x1000 fuehrt der Port nicht: es faellt nur beim Heilen (@0x80040308), die Gnade gilt, solange der Spieler vor dem Treffer HP hatte. */
+static void tent_treffer(re15_actor_t *pl, tent_t *t, int schaden, int a1)
 {
+    const int hp_vor = pl->hp;
     t->getroffen = 1;
     pl->hp = (int16_t)(pl->hp - schaden);
-    if (pl->hp < 0) pl->hp = -1;
+    if (pl->hp < 0) pl->hp = (a1 == 1 || (pl->hp >= -14 && hp_vor > 0)) ? 0 : -1;
     pl->hit_react |= 1;
     tent_se(3);                                             /* @0x80101790 */
 }
@@ -915,7 +920,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
                 /* `+0x220 & 4` @0x80101684-94 = die Kind-Kollision dieses Bildes. */
                 if (!t->getroffen && pl->hit_react == 0 && g5->hp >= 0 && (t->kontakt & 4u) &&
                     opfer_frei(pl)) {                        /* 0x800CFDCB == 0 @0x801016a4-ac */
-                    tent_treffer(pl, t, 15);                 /* 15 @0x801016D0 */
+                    tent_treffer(pl, t, 15, 0);              /* 15 @0x801016CC, a1 = 0 @0x801016D4 */
                     if (pl->hp >= 0) {
                         /* Variante = NICHT-Blickkontakt (`nor/andi 1/sll 8` @0x80101700-10 auf
                          * FUN_80015910(Arm, Spieler) @0x801016f8); ab 6,0 m Distanz
@@ -968,7 +973,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
                 if (fr > 26 && fr < 32 && (t->kontakt & 4u)) {
                     if (!t->getroffen && pl->hit_react == 0 && g5->hp >= 0 &&
                         opfer_frei(pl)) {                    /* 0x800CFDCB == 0 @0x80103720-28 */
-                        tent_treffer(pl, t, 15);             /* 15 @0x80103730 */
+                        tent_treffer(pl, t, 15, 1);          /* 15 @0x8010372C, a1 = 1 @0x80103734 */
                         /* Routine-Wort 0x305 = Variante 3 (@0x80103760-68) + `sb 1,363`
                          * (+0x16B, der Zweittreffer-Riegel) @0x8010378c. */
                         if (pl->hp >= 0) { re15_g5_opfer_start(pl, 3); t->variante = 1; }
@@ -977,7 +982,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
                          * (@0x801037a0-854): Schaden 10 (`addiu a0,zero,10` @0x801037e4,
                          * FUN_800401d4(10,1) @0x801037e8), Routine-Wort 0x405 = Variante 4
                          * (@0x80103818-20), Riegel +0x16B = 1 @0x80103844. */
-                        tent_treffer(pl, t, 10);
+                        tent_treffer(pl, t, 10, 1);          /* a1 = 1 @0x801037EC */
                         if (pl->hp >= 0) { re15_g5_opfer_start(pl, 4); t->variante = 1; }
                     }
                 }
@@ -1170,7 +1175,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
              * @0x80102d90-c8) = Variante 0 oder 1. */
             if ((t->kontakt & 2u) && !t->getroffen && pl->hit_react == 0 && g5->hp >= 0 &&
                 opfer_frei(pl)) {
-                tent_treffer(pl, t, 15);
+                tent_treffer(pl, t, 15, 1);                  /* a1 = 1 @0x80102D7C */
                 if (pl->hp >= 0) {
                     int facing = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800;
                     re15_g5_opfer_start(pl, facing ? 0 : 1);

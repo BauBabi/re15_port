@@ -4097,6 +4097,13 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_birkin_pistole_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_birkin_pistole.cmake)
     set_tests_properties(integration_r41_birkin_pistole PROPERTIES TIMEOUT 640)
+    # Abnahme 2 Spur R: G5 frisst den Spieler, YOU DIED, Titel, Leon und Elza, kein Messhaken.
+    add_test(NAME integration_r41_g5_tod
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_g5_tod_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_g5_tod.cmake)
+    set_tests_properties(integration_r41_g5_tod PROPERTIES TIMEOUT 640)
 endif()
 
 # --- ZOMBIE-GORE je Waffe (zombiegore_r15.c) + RE1.5-Teilschicht (teile_r15.c) ---
