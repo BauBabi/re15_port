@@ -787,6 +787,227 @@ void re15_collision_constrain(const re15_rdt_t *rdt,
     collision_constrain_impl(rdt, old_x, old_z, x, z, s_coll_band, PR, 1u, NULL, NULL);
 }
 
+/* ================== RE2-RETAIL-KLEMME DES SPIELERS (Runde 41 Spur R, Abnahme 3, N1/N2/N6) ==================
+ * WARUM. Die Port-Klemme ist die RE1.5-Beta FUN_8003b0a4. Sie versagt bei grossen Versaetzen auf drei Arten, alle gemessen:
+ *  (1) UEBERLAUF im Typ-6-Handler LAB_8003cb9c: `mult v0,v0` @0x8003cf48 / `mult v1,a2` @0x8003cf88 rechnen q*q*a2 in 32 Bit; ab
+ *      rund 740 Einheiten Tiefe kippt das Vorzeichen, und der Spieler wird IN die Diagonale geworfen statt heraus. Lauf f006 F1267:
+ *      (4542,-25795) -> (4287,-26207), Soll (4287,-25153). Lauf z_w4 F1354: (5572,-25642) -> (4590,-26204).
+ *  (2) NAEHERE KANTE: FUN_8003bca8 nimmt die naehere Kante der Zelle, auch die hinter der Wand (Box 29 -> z -27668).
+ *  (3) ZURUECK AUF DIE VORLAGE: `*lx = prevx` (Code 0) haelt den Spieler fest, wenn die Vorlage selbst in der Wand liegt. Die
+ *      Kind-Kollision der Arme laeuft im Port nach der Klemme, das Bildende lag in Box 29, jede Eingabe wurde verworfen (N2).
+ * RE2 RETAIL hat alle drei behoben. Die Aktor-Klemme FUN_8003567c ruft FUN_8004c1bc mit Bit 0x01000000 @0x800356bc-c4, der Zweig
+ * nimmt die Tabelle @0x800a737c je Zelltyp (`lw v0,29564(at)` @0x8004c434, `jalr v0` @0x8004c448). Alle Handler lesen die Vorlage
+ * +0x118/+0x11a, die FUN_8003567c nach jeder Klemme schreibt (`sh v0,280(s0)` / `sh v1,282(s0)` @0x800356f4-f8). Sie ist also immer
+ * die letzte GEKLEMMTE Lage. Im Port ist sie die Bildanfangs-Lage, denn der Spieler-Schritt klemmt am Bildende nach
+ * (re15_player_nachklemme, game_step_common.c).
+ *   Rechteck  FUN_8004c900 [0]: lag die Vorlage in einer Achse ausserhalb, kommt der Spieler in dieser Achse auf ihre Seite.
+ *   Diagonale @0x8004cbd0 [1], @0x8004d048 [2], @0x8004d508 [3], @0x8004d9b4 [4]: Schrift nur bis 400 je Achse, sonst Vorlage.
+ *   Raute     @0x8004de64 [5]: ebenso (`slti v0,v0,401` @0x8004e088 / @0x8004e0a0, Vorlage @0x8004e9e0).
+ *   Kreis     @0x8004ec50 [6]: radial ohne Vorlage, wie RE1.5 push_circle.
+ * Zellen-Typen: RE1.5 6 = RE2 [3] (Linie (s0 * (px - (X-r))) / t4 @0x8004d55c-c8), RE1.5 7 = RE2 [4] (@0x8004da10-4c), RE1.5 2 = RE2 [5]
+ * (Quadrant um die Zellmitte @0x8004deb0-cc). Die Birkin-Raeume enthalten nur 1, 2, 3, 6, 7 (Zensus 3070/3071/5080/5081/5090/5091).
+ * Die Multiplikationen bleiben 32 Bit wie im Original: ein Ueberlauf endet in RE2 am Grenzwert 401 oder an der Vorzeichenprobe. */
+static int32_t re2_betrag(int32_t v) { return v < 0 ? -v : v; }
+
+/* FUN_8004ca68: die Vorlage lag in beiden Achsen in der Zelle. Code wie RE1.5 @0x8004ca7c-98; anders als RE1.5 kein Halten auf der
+ * Vorlage in Code 0, dafuer Rueckfall auf die Vorlage ab 801 Tiefe. */
+static void re2_rechteck_innen(int32_t *x, int32_t *z, int32_t vx, int32_t vz, int32_t ax0, int32_t az0)
+{
+    const int32_t px = *x, pz = *z;
+    const unsigned code = ((uint32_t)(ax0 ^ (px - vx)) >> 31) | (((uint32_t)(az0 ^ (pz - vz)) >> 30) & 2u);
+    const int32_t ax = re2_betrag(ax0), az = re2_betrag(az0);
+    if (code == 2u && az < 401) { *z = pz + az0; return; }     /* `slti v0,v0,401` @0x8004cb08, @0x8004cba8 */
+    if (code == 1u && ax < 401) { *x = px + ax0; return; }     /* `slti v0,v0,401` @0x8004cae4, @0x8004caf0 */
+    if (code == 0u) {                                          /* @0x8004cb6c-a8 */
+        if (ax < az) *x = px + ax0; else *z = pz + az0;
+        return;
+    }
+    if (ax < az) { if (ax < 801) { *x = px + ax0; return; } }  /* `slti v0,a0,801` @0x8004cb34, @0x8004cb40 */
+    else if (az < 801) { *z = pz + az0; return; }              /* `slti v0,v1,801` @0x8004cb4c, @0x8004cb58 */
+    *x = vx; *z = vz;                                          /* @0x8004cbb0-c0 */
+}
+
+/* FUN_8004c900 mit FUN_8004c858. */
+static void re2_rechteck(const re15_sca_entry_t *e, int32_t *x, int32_t *z, int32_t vx, int32_t vz, int32_t r)
+{
+    const int32_t cx = e->x, cz = e->z;
+    const uint32_t t2 = (uint32_t)(2 * r + (int32_t)e->width);           /* @0x8004c91c-20 */
+    const uint32_t t1 = (uint32_t)(2 * r + (int32_t)e->density);         /* @0x8004c928-2c */
+    const uint32_t a0 = (uint32_t)((int32_t)(int16_t)vx + r - cx);       /* @0x8004c930-3c */
+    const uint32_t a1 = (uint32_t)((int32_t)(int16_t)vz + r - cz);       /* @0x8004c94c-58 */
+    unsigned code = (a0 >= t2 ? 2u : 0u) | (a1 >= t1 ? 1u : 0u);         /* @0x8004c940-48, @0x8004c95c-64 */
+    if (a0 == 0xffffffffu || a0 == t2 + 1u) code = 2u;                   /* @0x8004c968-7c */
+    if (a1 == 0xffffffffu || a1 == t1 + 1u) code = 1u;                   /* @0x8004c984-a8 */
+    if (code == 0u) {                                                    /* @0x8004c9ac-bc -> FUN_8004c858 */
+        int32_t ax = ((int32_t)e->width + cx + r - *x) + 1;              /* @0x8004c868-84 */
+        int32_t t  = (cx - r - *x) - 1;                                  /* @0x8004c888-90 */
+        int32_t az;
+        if (-t < ax) ax = t;                                             /* @0x8004c894-a4 */
+        az = ((int32_t)e->density + cz + r - *z) + 1;                    /* @0x8004c8a8-c0 */
+        t  = (cz - r - *z) - 1;                                          /* @0x8004c8c4-cc */
+        if (-t < az) az = t;                                             /* @0x8004c8d0-e0 */
+        re2_rechteck_innen(x, z, vx, vz, ax, az);
+        return;
+    }
+    if (code & 2u) {                                                     /* @0x8004c9d0-ca08 */
+        const int32_t h = (int32_t)(e->width >> 1), t = r + h + 1;       /* `addiu t2,v0,1` @0x8004c9f0 */
+        *x = (*x - (int32_t)(int16_t)vx < 0) ? cx + h + t : cx + h - t;  /* `bltz a1` @0x8004c9f4, @0x8004ca00, @0x8004ca04 */
+    }
+    if (code & 1u) {                                                     /* @0x8004ca18-50 */
+        const int32_t h = (int32_t)(e->density >> 1), t = r + h + 1;     /* `addiu t1,v0,1` @0x8004ca38 */
+        *z = (*z - (int32_t)(int16_t)vz < 0) ? cz + h + t : cz + h - t;  /* `bltz a1` @0x8004ca3c, @0x8004ca48, @0x8004ca4c */
+    }
+}
+
+/* Gemeinsamer Schwanz von [3] und [4]: Schrift aus der Tiefe a1 (32 Bit wie im Original), Grenze 400 je Achse, Vorlage. */
+static void re2_schraeg(int32_t q, int32_t a1, int32_t *off_x, int32_t *off_z, int *zu_gross)
+{
+    const int32_t qq = m32(q, q), n = qq + m32(a1, a1);                  /* @0x8004d7b4-dc, @0x8004dc5c-84 */
+    *off_x = 0; *off_z = 0; *zu_gross = 1;
+    if (n == 0) return;
+    *off_x = m32(m32(q, a1), a1) / n;                                    /* @0x8004d7a4-a8, @0x8004d7d4-e4 */
+    *off_z = m32(qq, a1) / n;                                            /* @0x8004d818-28 */
+    *zu_gross = (re2_betrag(*off_x) >= 401 || re2_betrag(*off_z) >= 401);   /* `slti v0,v0,401` @0x8004d860, @0x8004d878 */
+}
+
+/* Tabelle [3] @0x8004d508 = RE1.5 Typ 6. */
+static void re2_diag6(const re15_sca_entry_t *e, int32_t *x, int32_t *z, int32_t vx, int32_t vz, int32_t r)
+{
+    const int32_t X = (int16_t)e->x, Z = (int16_t)e->z;
+    const int32_t XM = (int16_t)(X + (int32_t)e->width), ZM = (int16_t)(Z + (int32_t)e->density);
+    const int32_t px = *x, pz = *z;
+    const int32_t s0 = (ZM + r) - Z;                                     /* @0x8004d55c-6c */
+    const int32_t t4 = XM - (X - r);                                     /* @0x8004d59c */
+    const int32_t s7 = m32(s0, px - (X - r)) / t4;                       /* @0x8004d580, @0x8004d5a0 */
+    const int32_t s6 = pz - Z;                                           /* @0x8004d5d4 */
+    if (!(s6 < s7)) return;                                              /* @0x8004d5d8-dc */
+    const int32_t X18 = (int16_t)(X / 18), Z18 = (int16_t)(Z / 18);      /* 0x38e38e39 @0x8004d5e0-e8 */
+    const int32_t s4 = (int16_t)(ZM / 18) - Z18, s1 = (int16_t)(XM / 18) - X18;   /* @0x8004d694, @0x8004d6cc */
+    const int32_t quer = m32(s4, (int16_t)vx / 18) - m32(s1, (int16_t)vz / 18)
+                       - m32(X18, (int16_t)(ZM / 18)) + m32((int16_t)(XM / 18), Z18);   /* @0x8004d6ac-714 */
+    if (quer > 0) {                                                      /* `blez v0` @0x8004d718: Vorlage auf der Rechteckseite */
+        if (!((uint32_t)(px - X) < (uint32_t)((int32_t)e->width + r))) return;              /* @0x8004d71c-28 */
+        if (!((uint32_t)(pz - (Z - r)) < (uint32_t)((int32_t)e->density + r))) return;      /* @0x8004d72c-40 */
+        re2_rechteck(e, x, z, vx, vz, r);                                /* `jal 0x8004c900` @0x8004d74c */
+        return;
+    }
+    {   const int32_t a1 = s6 - s7;                                      /* @0x8004d75c */
+        const int32_t q = m32(t4, a1) / s0;                              /* @0x8004d760-98 */
+        int32_t ox, oz; int zu_gross;
+        re2_schraeg(q, a1, &ox, &oz, &zu_gross);
+        if (zu_gross) { *x = vx; *z = vz; return; }                      /* @0x8004d864, @0x8004d87c -> @0x8004d8f0 */
+        *x = px + ox; *z = pz - oz;                                      /* @0x8004d8c8-d4 */
+        /* Liegt die ungeschobene Lage schon jenseits der echten Linie, gilt die Vorlage: `bgtz v0,0x8004d8f0` @0x8004d8e0. */
+        if (m32(px / 18 - X18, s4) - m32(pz / 18 - Z18, s1) > 0) { *x = vx; *z = vz; }   /* @0x8004d8a8, @0x8004d8c0, @0x8004d8dc */
+    }
+}
+
+/* Tabelle [4] @0x8004d9b4 = RE1.5 Typ 7. */
+static void re2_diag7(const re15_sca_entry_t *e, int32_t *x, int32_t *z, int32_t vx, int32_t vz, int32_t r)
+{
+    const int32_t X = (int16_t)e->x, Z = (int16_t)e->z;
+    const int32_t XM = (int16_t)(X + (int32_t)e->width), ZM = (int16_t)(Z + (int32_t)e->density);
+    const int32_t px = *x, pz = *z;
+    const int32_t s0 = ZM + r;                                           /* @0x8004da10 */
+    const int32_t t4 = (XM + r) - X;                                     /* @0x8004da44-48 */
+    const int32_t s7 = m32(Z - s0, px - X) / t4;                         /* @0x8004da18-28, @0x8004da4c */
+    const int32_t s6 = pz - s0;                                          /* @0x8004da80 */
+    if (!(s6 < s7)) return;                                              /* @0x8004da84-88 */
+    const int32_t X18 = (int16_t)(X / 18), Z18 = (int16_t)(Z / 18);
+    const int32_t s4 = Z18 - (int16_t)(ZM / 18), s1 = (int16_t)(XM / 18) - X18;   /* @0x8004db38, @0x8004db70 */
+    const int32_t quer = m32(s4, (int16_t)vx / 18) - m32(s1, (int16_t)vz / 18)
+                       - m32(X18, Z18) + m32((int16_t)(XM / 18), (int16_t)(ZM / 18));   /* @0x8004db50-b8 */
+    if (quer > 0) {                                                      /* `blez v0` @0x8004dbbc */
+        if (!((uint32_t)(px - (X - r)) < (uint32_t)((int32_t)e->width + r))) return;        /* @0x8004dbc0-d0 */
+        if (!((uint32_t)(pz - (Z - r)) < (uint32_t)((int32_t)e->density + r))) return;      /* @0x8004dbd4-e8 */
+        re2_rechteck(e, x, z, vx, vz, r);                                /* `jal 0x8004c900` @0x8004dbf4 */
+        return;
+    }
+    {   const int32_t a1 = s6 - s7;                                      /* @0x8004dc04 */
+        const int32_t q = m32(t4, a1) / (s0 - Z);                        /* @0x8004dc08-18 */
+        int32_t ox, oz; int zu_gross;
+        re2_schraeg(q, a1, &ox, &oz, &zu_gross);
+        if (zu_gross) { *x = vx; *z = vz; return; }                      /* @0x8004dd0c, @0x8004dd24 -> @0x8004dd98 */
+        *x = px - ox; *z = pz - oz;                                      /* @0x8004dd70-7c */
+        /* `subu v0,v0,t5` @0x8004dd64: hier ZM/18, nicht Z/18 wie in [3] (t5 = `mult a2,a3` @0x8004daa4 mit a2 = ZM). */
+        if (m32(px / 18 - X18, s4) - m32(pz / 18 - (int16_t)(ZM / 18), s1) > 0) { *x = vx; *z = vz; }   /* `bgtz v0,0x8004dd98` @0x8004dd88 */
+    }
+}
+
+/* Mittelpunkt in der echten, nicht aufgeblasenen Form einer festen Zelle des Bandes. */
+static int re2_mittelpunkt_fest(const re15_rdt_t *rdt, int start, int end, int32_t x, int32_t z)
+{
+    for (int i = start; i < end; i++) {
+        const re15_sca_entry_t *e = &rdt->sca[i];
+        const int32_t X = e->x, Z = e->z, W = e->width, D = e->density;
+        if (s_coll_band != (e->floor >> 4) || (1u & e->u0) == 0) continue;
+        if (x < X || x >= X + W || z < Z || z >= Z + D) continue;
+        if (e->type == 1) return 1;
+        if (e->type == 6 && (int64_t)(z - Z) * W < (int64_t)(x - X) * D) return 1;            /* unter (X,Z)-(XM,ZM) */
+        if (e->type == 7 && (int64_t)(z - Z) * W < (int64_t)(X + W - x) * D) return 1;        /* unter (X,ZM)-(XM,Z) */
+        if (e->type == 2) {                                                                  /* Raute um die Zellmitte */
+            const int64_t dx = 2 * (int64_t)x - (2 * (int64_t)X + W), dz = 2 * (int64_t)z - (2 * (int64_t)Z + D);
+            if ((dx < 0 ? -dx : dx) * D + (dz < 0 ? -dz : dz) * W < (int64_t)W * D) return 1;
+        }
+        if (e->type == 3) {
+            const int64_t q = W / 2, dx = x - (X + q), dz = z - (Z + q);
+            if (dx * dx + dz * dz < q * q) return 1;
+        }
+    }
+    return 0;
+}
+
+/* FUN_8004c1bc mit Bit 0x01000000 (Tabellen-Zweig @0x8004c434-48), Radius und Maske des Spielers wie re15_collision_constrain. */
+static void re2_durchlauf(const re15_rdt_t *rdt, int32_t vx, int32_t vz, int32_t *x, int32_t *z, int *start_out, int *end_out)
+{
+    int q = quadrant_of(*x, *z, (int16_t)rdt->ceiling_x, (int16_t)rdt->ceiling_z);
+    int start = 0; for (int i = 0; i < q && i < 5; i++) start += rdt->sca_rgn[i];
+    int end = start + (q < 5 ? rdt->sca_rgn[q] : 0);
+    if (end > rdt->sca_count) end = rdt->sca_count;
+    if (start < 0) start = 0;
+    for (int i = start; i < end; i++) {
+        const re15_sca_entry_t *e = &rdt->sca[i];
+        if (s_coll_band != (e->floor >> 4)) continue;
+        if ((1u & e->u0) == 0) continue;
+        if (!((unsigned)(*x - ((int32_t)e->x - PR)) < (unsigned)((int32_t)e->width   + PR * 2) &&
+              (unsigned)(*z - ((int32_t)e->z - PR)) < (unsigned)((int32_t)e->density + PR * 2))) continue;
+        if      (e->type == 1) re2_rechteck(e, x, z, vx, vz, PR);
+        else if (e->type == 6) re2_diag6(e, x, z, vx, vz, PR);
+        else if (e->type == 7) re2_diag7(e, x, z, vx, vz, PR);
+        else if (e->type == 2) {                                         /* [5] @0x8004de64: gleiche Rechnung, Grenze 400 @0x8004e088/@0x8004e0a0 */
+            const int32_t bx = *x, bz = *z;
+            push_diag2(e, x, z, vx, vz, PR);
+            if (re2_betrag(*x - bx) >= 401 || re2_betrag(*z - bz) >= 401) { *x = vx; *z = vz; }   /* @0x8004e9e0 */
+        }
+        else if (e->type == 3) push_circle(e, x, z, PR);                 /* [6] @0x8004ec50 */
+        else if (e->type == 4) push_diag4(e, x, z, vx, vz, PR);
+        else if (e->type == 5) push_diag5(e, x, z, vx, vz, PR);
+        else if (e->type == 8) push_caps8(e, x, z, vx, vz, PR);
+        else if (e->type == 9) push_caps9(e, x, z, vx, vz, PR);
+    }
+    *start_out = start; *end_out = end;
+}
+
+/* ⛔ PORT-WAHL (N1, N6): Rueckstellung auf die Vorlage, wenn die Kette nicht in einer freien Lage endet. RE2 laeuft die Zellen genau einmal,
+ * die letzte gewinnt. Das reicht dort, weil room7040 im Kampfgebiet nur Rechtecke hat; in den RE1.5-Raeumen bleiben zwei Luecken:
+ *  - In ROOM5090 steht der Kreis #31 hinter #23 und #28 in der Liste und drueckt radial in sie zurueck. Fuzz: Start (3900,-22600) endet
+ *    (2584,-19691) in #23, Start (2400,-22000) endet (4147,-21276) in #28.
+ *  - In ROOM5080 beruehrt die Raute #12 die Wand #3 und laesst keinen Gang frei, der Wurf (1050 je Bild) sprang darueber in die Tasche
+ *    zwischen #3, #7 und #12, Lage (-22568,-26756). Dort stoesst jede Zelle in die naechste, und kein Schritt kommt mehr heraus.
+ * Frei heisst: Mittelpunkt in keiner festen Form, und ein zweiter Durchlauf bewegt die Lage nicht mehr als RE15_RE2_RUHE (PORT-WAHL,
+ * Rundung der Schraeg-Handler). Sonst gilt die Vorlage, dieselbe Rueckstellung wie @0x8004d8f0. */
+#define RE15_RE2_RUHE 16
+void re15_collision_constrain_re2(const re15_rdt_t *rdt, int32_t vx, int32_t vz, int32_t *x, int32_t *z)
+{
+    int start = 0, end = 0;
+    int32_t nx, nz;
+    if (!rdt || !rdt->sca || rdt->sca_count <= 0 || s_coll_band < 0) return;
+    re2_durchlauf(rdt, vx, vz, x, z, &start, &end);
+    nx = *x; nz = *z;
+    re2_durchlauf(rdt, *x, *z, &nx, &nz, &start, &end);
+    if (re2_betrag(nx - *x) + re2_betrag(nz - *z) > RE15_RE2_RUHE || re2_mittelpunkt_fest(rdt, start, end, *x, *z)) { *x = vx; *z = vz; }
+}
+
 /* ENEMY wall clamp — byte-true args: the enemy's OWN radius (box[+0x78][6] = hit_radius_min), the
  * enemy solid-mask (entity+0x1d7 — GENAU ZWEI Original-Leser: Zombie-Root @0x80100624
  * `lbu a2,471(a0)` + ZGirl-Root @0x8010aac8; 4 = aufrecht, 8 = kriechend @0x801050f4/@0x8010374c;

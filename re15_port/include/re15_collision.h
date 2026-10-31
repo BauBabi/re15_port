@@ -25,6 +25,10 @@ void re15_collision_constrain(const re15_rdt_t *rdt,
                               int32_t old_x, int32_t old_z,
                               int32_t *x, int32_t *z);
 
+/* Spieler-Klemme nach RE2 RETAIL (FUN_8003567c -> FUN_8004c1bc, Tabelle @0x800a737c): (vx,vz) = die letzte geklemmte Lage
+ * (+0x118/+0x11a). Nur im Birkin-Kampf, Begruendung und Bytes am Funktionskopf (re15_collision.c, Runde 41 Spur R). */
+void re15_collision_constrain_re2(const re15_rdt_t *rdt, int32_t vx, int32_t vz, int32_t *x, int32_t *z);
+
 /* ENEMY wall clamp (byte-true FUN_8003b0a4 with the enemy's own args): radius = the enemy's box
  * radius (hit_radius_min), solid-mask = entity+0x1d7 (Zombie @0x80100624 / ZGirl @0x8010aac8 lesen
  * das Feld — 4 aufrecht, 8 kriechend; ALLE anderen Aufrufer uebergeben hart 4), band = from

@@ -4081,6 +4081,19 @@ target_compile_definitions(test_birkin_bahnsteig PRIVATE
 add_test(NAME unit_birkin_bahnsteig COMMAND test_birkin_bahnsteig)
 set_tests_properties(unit_birkin_bahnsteig PROPERTIES TIMEOUT 60)
 
+# --- Runde 41 Spur R, Abnahme 3 N1/N2/N6: kein Schub, Griff oder Wurf laesst den Spieler in fester Kollision stehen ---
+add_executable(test_r41_birkin_wand test_r41_birkin_wand.c)
+target_link_libraries(test_r41_birkin_wand PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_r41_birkin_wand PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r41_birkin_wand PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r41_birkin_wand_rein COMMAND test_r41_birkin_wand rein)
+add_test(NAME unit_r41_birkin_wand_g5 COMMAND test_r41_birkin_wand g5)
+add_test(NAME unit_r41_birkin_wand_griff COMMAND test_r41_birkin_wand griff)
+set_tests_properties(unit_r41_birkin_wand_rein PROPERTIES TIMEOUT 30)
+set_tests_properties(unit_r41_birkin_wand_g5 PROPERTIES TIMEOUT 240 ENVIRONMENT "RE15_ENDKAMPF_NUR_G5=1")
+set_tests_properties(unit_r41_birkin_wand_griff PROPERTIES TIMEOUT 240)
+
 # --- BETA-BIRKIN-AUFTRITTE (2026-10-30): Hangar-Wurfszene ROOM50A0 + Morph Vierbein -> G5 ROOM5090 ---
 add_executable(test_birkin_szenen test_birkin_szenen.c)
 target_link_libraries(test_birkin_szenen PRIVATE re15_engine re15_test_support m)
@@ -4097,6 +4110,13 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_birkin_pistole_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_birkin_pistole.cmake)
     set_tests_properties(integration_r41_birkin_pistole PROPERTIES TIMEOUT 640)
+    # Abnahme 3 Spur R (N1, N2): G5 und Arme druecken den Spieler nicht in die Wand, die Eingabe wirkt.
+    add_test(NAME integration_r41_g5_westen
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_g5_westen_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_g5_westen.cmake)
+    set_tests_properties(integration_r41_g5_westen PROPERTIES TIMEOUT 640)
     # Abnahme 2 Spur R: G5 frisst den Spieler, YOU DIED, Titel, Leon und Elza, kein Messhaken.
     add_test(NAME integration_r41_g5_tod
              COMMAND "${CMAKE_COMMAND}"

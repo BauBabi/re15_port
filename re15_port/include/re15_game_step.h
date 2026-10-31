@@ -46,6 +46,9 @@ typedef struct {
 
 void re15_game_step(const re15_game_ctx_t *ctx);
 
+/* 1 = ein Birkin (0x30, 0x36) ist im Raum aktiv: der Spieler klemmt nach RE2 RETAIL (game_step_common.c, Runde 41 Spur R). */
+int re15_birkin_klemme_aktiv(void);
+
 /* SHARED per-frame helicopter-rotor spatialization driver. While the heli prop
  * (Obj_model_set obj_id 2) is on stage, attenuate + pan the rotor (BGM SUB layer)
  * by the active cut's camera→heli distance + azimuth (FUN_80045a64, applied in the
