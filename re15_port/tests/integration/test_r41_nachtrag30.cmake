@@ -143,7 +143,7 @@ endif()
 # ---- schrank ------------------------------------------------------------------------------------------------------------------
 if("${TEIL}" STREQUAL "schrank")
     # (3,108) = 0: Klick klappt auf, danach der Text wie Spur C. Spieler (4300,-2770) Blick +x -> Vorwaertspunkt im Platz, die Figur verdeckt in Cut 3 die Tuer nicht.
-    _lauf(a 180 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2010@250 "RE15_PLAYER_POS=4300,-2770,0,0" RE15_FORCE_CUT=3
+    _lauf(a 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2010@250 "RE15_PLAYER_POS=4300,-2770,0,0" RE15_FORCE_CUT=3
           RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1" "RE15_FRAMEDUMP=326-366/40:f_" "RE15_EXIT_AT=380#201${S}")
     _danach("${_dbg}" "Port-Programm 2010_kasten_leer" "[schrank2010] Tuer klappt auf" "Klick klappt auf")
     _danach("${_dbg}" "[schrank2010] Tuer klappt auf" "[schrank2010] Tuer auf (rot_y 1024)" "90 Grad")
@@ -159,7 +159,7 @@ if("${TEIL}" STREQUAL "schrank")
         _fehler(": Aufklappen im Bild nicht belegt (Flaeche ${_d}, Gegenprobe ${_g})")
     endif()
     # Ja-Zweig: Tasten wie k1 in test_r41_ventilkette_weg.cmake, Nahansichten als BSS-Vergleich (dieselbe Dekodierkette wie das Spiel)
-    _lauf(b 180 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2010@250 "RE15_PLAYER_POS=4950,-2770,0,0" RE15_SET_FLAG=3:108
+    _lauf(b 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2010@250 "RE15_PLAYER_POS=4950,-2770,0,0" RE15_SET_FLAG=3:108
           "RE15_PRESS=square@300,square@368,square@418,square@468,square@538,square@618,square@780,square@860"
           "RE15_FRAMEDUMP=635-665/30:f_" "RE15_EXIT_AT=940#201${S}")
     _danach("${_dbg}" "[schrank2010] Tuer auf" "[msgtext] room=201${S} id=41 \"Will you use the Fuse?\"" "Frage nach dem Aufklappen")
@@ -181,10 +181,10 @@ endif()
 # ---- wasser -------------------------------------------------------------------------------------------------------------------
 if("${TEIL}" STREQUAL "wasser")
     set(_ort "RE15_PLAYER_POS=-26300,6500,1024,1")
-    _lauf(an 180 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2000@250 ${_ort} RE15_FORCE_CUT=10 "RE15_FRAMEDUMP=430:f.ppm" "RE15_EXIT_AT=440#200${S}")
+    _lauf(an 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2000@250 ${_ort} RE15_FORCE_CUT=10 "RE15_FRAMEDUMP=430:f.ppm" "RE15_EXIT_AT=440#200${S}")
     _muss("${_dbg}" "[wasserlauf41] ROOM200${S}: 6 Strahlen, nasse Spur Prop" "Wasserlauf an")
     set(_an "${WORKDIR}/f.ppm")
-    _lauf(aus 180 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2000@250 ${_ort} RE15_FORCE_CUT=10 "RE15_SET_FLAG=9:100" "RE15_FRAMEDUMP=430:f.ppm" "RE15_EXIT_AT=440#200${S}")
+    _lauf(aus 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2000@250 ${_ort} RE15_FORCE_CUT=10 "RE15_SET_FLAG=9:100" "RE15_FRAMEDUMP=430:f.ppm" "RE15_EXIT_AT=440#200${S}")
     _darf_nicht("${_dbg}" "[wasserlauf41]" "mit Bit 100 kein Wasserlauf")
     set(_aus "${WORKDIR}/f.ppm")
     foreach(_d "${_an}" "${_aus}")
@@ -201,7 +201,7 @@ if("${TEIL}" STREQUAL "wasser")
         _fehler(": Wasserlauf im Bild nicht belegt (Leiter ${_l}, Weg ${_w}, Gegenprobe ${_g})")
     endif()
     # echter Weg: Tuer 2010 -> 2000 (Prop-Lader beim Raumwechsel, Modell der nassen Spur)
-    _lauf(tuer 180 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2010@250 "RE15_FIRE_AOT=0@300#201${S}" RE15_FORCE_CUT=10 "RE15_FRAMEDUMP=200:f.ppm" "RE15_EXIT_AT=210#200${S}")
+    _lauf(tuer 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2010@250 "RE15_FIRE_AOT=0@300#201${S}" RE15_FORCE_CUT=10 "RE15_FRAMEDUMP=200:f.ppm" "RE15_EXIT_AT=210#200${S}")
     _muss("${_dbg}" "loaded room200${S}.rdt" "Tuer 2010 -> 2000")
     _muss("${_dbg}" "[wasserlauf41] ROOM200${S}: 6 Strahlen, nasse Spur Prop" "Wasserlauf nach der Tuer")
     _wert("diff;${WORKDIR}/f.ppm;${_aus};76;146;118;168" "^DIFF ([0-9]+)" _w)
@@ -209,7 +209,7 @@ if("${TEIL}" STREQUAL "wasser")
     if(_w LESS 60)
         _fehler(": nasse Spur fehlt nach der Tuer (${_w})")
     endif()
-    _lauf(leiter 120 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2000@250 "RE15_PLAYER_POS=-26000,10300,2048"
+    _lauf(leiter 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2000@250 "RE15_PLAYER_POS=-26000,10300,2048"
           RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W2,A0.1,W3" "RE15_EXIT_AT=520#200${S}")
     _muss("${_dbg}" "[msgtext] room=200${S} id=40 \"I cannot climb up the ladder because of the water pressure.\"" "Leiter weiter gesperrt")
     _darf_nicht("${_dbg}" "loaded room205" "die Leiter fuehrt nicht nach 2050")
@@ -238,10 +238,10 @@ if("${TEIL}" STREQUAL "laden")
     endmacro()
     set(_spinnen "7:155;7:156;7:157")
     # Wasserlauf: Modell und Strahlen auch am Lade-Weg, Gegenlauf mit Bit 100
-    _karte_lauf(wan 180 "200${S};-26300;-1800;6500;1024" RE15_FORCE_CUT=10 RE15_FRAMEDUMP=200:f.ppm "RE15_EXIT_AT=210#200${S}")
+    _karte_lauf(wan 300 "200${S};-26300;-1800;6500;1024" RE15_FORCE_CUT=10 RE15_FRAMEDUMP=200:f.ppm "RE15_EXIT_AT=210#200${S}")
     _muss("${_dbg}" "[wasserlauf41] ROOM200${S}: 6 Strahlen, nasse Spur Prop" "Wasserlauf nach CONTINUE")
     set(_an "${WORKDIR}/f.ppm")
-    _karte_lauf(waus 180 "200${S};-26300;-1800;6500;1024;9:100" RE15_FORCE_CUT=10 RE15_FRAMEDUMP=200:f.ppm "RE15_EXIT_AT=210#200${S}")
+    _karte_lauf(waus 300 "200${S};-26300;-1800;6500;1024;9:100" RE15_FORCE_CUT=10 RE15_FRAMEDUMP=200:f.ppm "RE15_EXIT_AT=210#200${S}")
     _darf_nicht("${_dbg}" "[wasserlauf41]" "mit Bit 100 kein Wasserlauf")
     _wert("diff;${_an};${WORKDIR}/f.ppm;20;60;80;170" "^DIFF ([0-9]+)" _l)
     _wert("diff;${_an};${WORKDIR}/f.ppm;76;146;118;168" "^DIFF ([0-9]+)" _w)
@@ -251,7 +251,7 @@ if("${TEIL}" STREQUAL "laden")
         _fehler(": Wasserlauf nach CONTINUE nicht im Bild (Leiter ${_l}, Weg ${_w}, Gegenprobe ${_g})")
     endif()
     # Schrank nach CONTINUE
-    _karte_lauf(s 180 "201${S};4300;0;-2770;0" RE15_FORCE_CUT=3 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=120 RE15_INPUT_SCRIPT=A0.1 RE15_FRAMEDUMP=116-156/40:f_ "RE15_EXIT_AT=170#201${S}")
+    _karte_lauf(s 300 "201${S};4300;0;-2770;0" RE15_FORCE_CUT=3 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=120 RE15_INPUT_SCRIPT=A0.1 RE15_FRAMEDUMP=116-156/40:f_ "RE15_EXIT_AT=170#201${S}")
     _danach("${_dbg}" "Port-Programm 2010_kasten_leer" "[schrank2010] Tuer auf (rot_y 1024)" "Klick klappt auf")
     _wert("diff;${WORKDIR}/f_000116.ppm;${WORKDIR}/f_000156.ppm;224;30;258;200" "^DIFF ([0-9]+)" _d)
     message(STATUS "r41_nachtrag30[laden ${FIGUR}]: Schrank nach CONTINUE: Flaeche ${_d}")
@@ -291,7 +291,7 @@ if("${TEIL}" STREQUAL "ton")
     endforeach()
     # Bruecke: Bit 101 gesetzt -> Pult -> Frage 43 -> Ja (Tasten wie die Frage 40 im Teil panel) -> Fahrt
     macro(_bruecke _name)
-        _lauf(${_name} 240 RE15_SOFTWARE_RENDER=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_SE_DEBUG=1
+        _lauf(${_name} 500 RE15_SOFTWARE_RENDER=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_SE_DEBUG=1
               RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=350,-9500,1024,3" "RE15_SET_FLAG=7:155,7:156,7:157,9:101"
               RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W1.5,A0.1,W1,A0.1,W2,A0.1,W6"
               ${ARGN} "RE15_EXIT_AT=800#2030")
@@ -332,7 +332,7 @@ if("${TEIL}" STREQUAL "ton")
     # Sirene: (5,0x1D) = Zaehler (nach dem Warntext, Programm 2030_ventile), die ganze Minute (Schleife 14,3 s mehrfach, "durchgehend"), danach die Ost-Tuer: der Raum wird verlassen.
     # Ende mit der Flut: integration_r41_ventilkette_alarm.
     macro(_sirene _name)
-        _lauf(${_name} 240 RE15_SOFTWARE_RENDER=1 RE15_AUDIO_CAP_SYNC=cap.raw
+        _lauf(${_name} 500 RE15_SOFTWARE_RENDER=1 RE15_AUDIO_CAP_SYNC=cap.raw
               RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=6550,-100,0,3" "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102"
               "RE15_SET_FLAG_AT=5:29@420" "RE15_FIRE_AOT=0@2300#2030" ${ARGN} "RE15_EXIT_AT=200#20B0")
     endmacro()

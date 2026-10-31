@@ -13,8 +13,10 @@
 #      der Alarm laedt NICHT ("nicht lesbar"), sonst bitgleich. A - B = der Alarm allein.
 #      Erwartet (Messlauf nb6 al_flut_leon / al_flut_leon_ohne 2026-10-25): vor dem Alarm-Takt bitgleich (max |A-B| = 0), waehrend
 #      des Alarms RMS(A-B) 667..718 (>= 300 verlangt), ab dem Alarm-Ende + 120 Takte wieder bitgleich (Hall abgeklungen; gemessen letzte Abweichung Ende + 78).
-#   C  Elza, 2031, derselbe Plan: Alarm an/aus in 2031; die Aufnahme ab ihrem Alarm-Takt korreliert mit A - B (gemessen 0,571,
+#   C  Elza, 2031, derselbe Plan: Alarm an/aus in 2031; die Aufnahme ab ihrem Alarm-Takt korreliert mit A - B (gemessen 0,571, seit der Sirene der Spur N 0,432,
 #      Gegenprobe 300 Takte vorher ~0; verlangt >= 0,3 bzw. <= 0,1).
+#   Spur N, Nachtrag 36: in A und C laeuft die Sirene ROOM6000 (RE2 SUB_34) nach Warntext + Zaehlerstart mit und endet im Bild des Flut-Beginns; ihren Pegel und "durchgehend" misst
+#   integration_r41_nachtrag30_ton.
 #   Je Lauf: der Alarm geht MIT dem Warntext an und im Bild des Flut-Beginns aus - das ist das Bild, in dem der Countdown RE2s
 #   abgelaufenes " 0^00=00" zeigt (Bild 1800, @0x80026284).
 #
