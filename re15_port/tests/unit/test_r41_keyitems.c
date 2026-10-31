@@ -40,6 +40,7 @@
 #include "re15_keyitems_r41.h"
 #include "re15_sicherung.h"
 #include "re15_ventilkette_r41.h"
+#include "re15_schrank2010_r41.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -297,10 +298,20 @@ static void teil_use(void)
             PRUEF(re15_keyitems_r41_use(item) == 1, "ROOM%04X USE an der Stelle -> 1", r);
             PRUEF(re15_keyitems_r41_schliessen() == 1, "ROOM%04X Ereignis gestartet", r);
             bild(0, 0);
+            /* Schrank 2010/2011 (Spur N, N_abnahme_1.md Mangel 1): die Frage steht hinter dem Vorspann AUF (2010_kasten_frage +006 `22 05 1e 01`, While +00A), 16 Bilder Aufklappen
+             * ROOM11F0 sub06 @0x01336. Bis dahin haelt der USE-Lauf, in allen anderen Stellen faellt die Frage im ersten Bild. */
+            const int schrank = (r & 0xFFFEu) == RE15_R41C_RAUM_2010;
+            if (schrank) {
+                PRUEF(re15_keyitems_r41_lauf_aktiv() && re15_keyitems_r41_verschluckt(1) == ja0, "ROOM%04X USE-Lauf haelt, solange die Tuer faehrt", r);
+                for (int k = 0; k <= RE15_R41N_AUF_TAKTE + 1 && re15_keyitems_r41_verschluckt(1) == ja0; k++) bild(0, 0);
+                PRUEF(re15_schrank2010_r41_offen(), "ROOM%04X die Frage faellt erst bei offener Tuer", r);
+            }
             PRUEF(re15_keyitems_r41_verschluckt(1) == ja0 + 1, "ROOM%04X Frage %d entfallen", r, frage);
             PRUEF(!g_scd.message_active || g_scd.message_id != frage, "ROOM%04X Frage nicht offen", r);
             PRUEF(re15_game_flag_get(12, 31) == 0, "ROOM%04X Antwort Ja", r);
             PRUEF(!re15_keyitems_r41_lauf_aktiv(), "ROOM%04X USE-Lauf beendet", r);
+            /* Schrank: das Bit setzt erst der Cursor-Schritt wie ROOM2060 (sub16 @0x01664 rechts in Zone 7, SQUARE gehalten @0x0132E), Spur N */
+            if (schrank) { bild(0, 0); bild(0, RE15_PAD_BIT_RIGHT); bild(0, RE15_PAD_BIT_SQUARE); }
             /* Wirkung: bis 120 Bilder. Texte HINTER der Frage bleiben und werden bestaetigt (ROOM4000 sub02 @0x0144A Message_on 2,
              * erst danach @0x01450 Set(3,32)); bei w_bank 0xFF ist genau dieser Text die Wirkung. */
             int ok = 0;
