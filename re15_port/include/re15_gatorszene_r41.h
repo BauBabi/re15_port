@@ -82,6 +82,9 @@ int  re15_gatorszene_r41_spinnen_verworfen(void);
 #define RE15_GSZ_KAMPF      5   /* 2090: Ablauf fertig, Kampf                                    */
 #define RE15_GSZ_SCHLUESSEL 6   /* 2090: nur waehrend scd_event_fire der Schluessel-Einstellung (Programm 4, Nachbesserung 2) */
 
+/* HAKEN platform/pc/main.c (Alligator-Pool): 0 = der Alligator ist tot, der Raum setzt ihn nicht mehr (Runde 41 Spur Q, Form RE2
+ * ROOM40A0 @0x0054 / sub02 @0x00AE, Herleitung gatorszene_r41.c). */
+int  re15_gatorszene_r41_gator_kommt(void);
 /* HAKEN scd_room_setup.c (Ende des Installer-Blocks): Szene/Montage/Rueckkehr starten, Leiche/Schluessel herrichten. */
 void re15_gatorszene_r41_install(uint16_t room_id);
 /* HAKEN scd_vm.c scd_event_fire: Port-Programm fuer (Raum, RE15_GSZ_EREIGNIS, Zustand), sonst NULL. */

@@ -3,6 +3,7 @@
  * include/re15_gatorszene_r41.h, Dossier analysis/befunde_runde41/F_gatorszene.md.
  */
 #include "re15_gatorszene_r41.h"
+#include "re15_boss_gator.h"   /* Runde 41 Spur Q (Punkt 5): re15_gator_original im Spinnen-Filter */
 
 #include <stddef.h>
 #ifdef RE15_PLATFORM_PC
@@ -24,7 +25,9 @@ int re15_gatorszene_r41_spinnen_verworfen(void) { return s_spinnen_verworfen; }
 
 int re15_gatorszene_r41_spawn_weg(uint16_t room_id, uint8_t type, int16_t x, int16_t z)
 {
-    if (!s_spinnen_weg) return 0;
+    /* Runde 41 Spur Q (Punkt 5): die Spinnen wegzunehmen gehoert zum Bosskampf-Design (Nutzer "Entferne die Spinnen aus dem ROOM
+     * 2090"). RE15_GATOR_ORIGINAL zeigt den ausgelieferten Raum: die Saetze @0x00AB0/@0x00AC4 kommen wie im Original. */
+    if (!s_spinnen_weg || re15_gator_original()) return 0;
     if ((uint16_t)(room_id & 0xFFFEu) != RE15_GSZ_RAUM || type != RE15_GSZ_SPINNE_TYP) return 0;
     if (!((x == RE15_GSZ_SPINNE0_X && z == RE15_GSZ_SPINNE0_Z) ||
           (x == RE15_GSZ_SPINNE1_X && z == RE15_GSZ_SPINNE1_Z))) return 0;      /* Satz-Waechter: nur die RDT-Saetze */
@@ -1640,6 +1643,18 @@ static void key_rueckschnitt_pruefen(int slot)
                     "@0x801024a4-ec), Schluessel jetzt\n", expl, cut, (unsigned)g_engine.frame_count);
 #endif
     key_tod_setzen();
+}
+/* Runde 41 Spur Q (Punkt 4, Abnahme P H3): der tote Alligator kommt nicht wieder. Form RE2 ROOM40A0: Raum-Init Ifel_ck @0x0050
+ * `Ck 21 04 33 00` @0x0054 vor `Sce_em_set 44 00 00 23` @0x00A0 (Bit gesetzt = kein Satz), `Set 22 04 33 01` sub02 @0x00AE. RE2 setzt
+ * das Sperrbit schon beim Kampfbeginn; dort endet der Kampf auch, wenn man flieht (die Tuer oeffnet sub26 @0x0CC8 mitten im Kampf).
+ * Hier traegt der Alligator den Water Key (Nutzer-Auftrag, Tor 2090/20A0): eine Flucht darf ihn nicht wegnehmen. Das Sperrbit ist
+ * deshalb das Tot-Bit: RE2 kennt es als (5,0x1E), gesetzt in R1 P3 `addiu a0,s2,17240` @0x801021e0 (0x800d4874) + `addiu a1,zero,30`
+ * @0x80102658 + `jal 0x8007730c` @0x80102660. Im Port ist das (9,111) (key_tod_setzen; kein eigenes Port-Bit noetig, Bit 126 bleibt
+ * frei). Unter RE15_GATOR_ORIGINAL laeuft das Bosskampf-Design nicht; dort entscheidet nichts anderes als der Raum. */
+int re15_gatorszene_r41_gator_kommt(void)
+{
+    if (re15_gator_original()) return 1;
+    return !re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT);
 }
 int re15_gatorszene_r41_key_kamera(void) { return s_key_cut; }
 int re15_gatorszene_r41_key_stufe(void) { return s_key_stufe; }
