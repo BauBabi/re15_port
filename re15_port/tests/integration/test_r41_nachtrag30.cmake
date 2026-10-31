@@ -258,6 +258,27 @@ if("${TEIL}" STREQUAL "laden")
     if(_d LESS 150)
         _fehler(": Schrank klappt nach CONTINUE nicht sichtbar auf (${_d})")
     endif()
+    # Schrank zu Fuss: quer durch den Raum, die Kamera schaltet selbst auf Cut 3 (der Riegel oben erzwingt den Cut, weil die Figur dort sonst die Flaeche verdeckt)
+    file(WRITE "${_basis}_plan_s.txt" "RAUM 201${S}
+WARTE 30
+GEHE 4950 -2770 100
+BLICK 0
+WARTE 10
+AKTION
+WARTE 60
+ENDE
+")
+    _karte_lauf(sw 300 "201${S};-4600;0;-4950;0" "RE15_WEGPLAN=${_basis}_plan_s.txt" RE15_WEGPLAN_LOG=wegplan.txt "RE15_EXIT_AT=420#201${S}")
+    string(FIND "${_dbg}" "[schrank2010] Tuer klappt auf" _p)
+    if(_p LESS 0)
+        _fehler(": zu Fuss: kein Aufklappen")
+    endif()
+    string(SUBSTRING "${_dbg}" 0 ${_p} _vor)
+    string(FIND "${_vor}" "[pri] cut=" _q REVERSE)
+    string(SUBSTRING "${_vor}" ${_q} 12 _z)
+    if(NOT "${_z}" STREQUAL "[pri] cut=3 ")
+        _fehler(": zu Fuss: Kamera beim Aufklappen '${_z}' statt Cut 3")
+    endif()
     # Panel: das Skript wie im Teil panel, 210 Bilder frueher
     set(_skript "A0.1,W1.5,A0.1,W1,A0.1,W2,A0.1,W1.5,A0.1,W1.5,A0.1,W2,A0.1,W2,A0.1,W2,L1.2,W0.3,A0.1,W0.3,R1.0,W0.3,A0.1,W1.5,A0.1,W0.3,R0.6,W0.3,A0.1,W1.5,A0.1,W0.3,L1.6,W0.3,A0.1,W3,A0.1,W1,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W6")
     _karte_lauf(p 300 "203${S};350;-5400;-9500;1024;${_spinnen}" RE15_SE_DEBUG=1 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=120 "RE15_INPUT_SCRIPT=${_skript}" "RE15_EXIT_AT=1210#203${S}")

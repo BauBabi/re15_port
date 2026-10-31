@@ -150,6 +150,9 @@ Segmentzahl = Zeichenzahl + Zahl der `"`. Gemessen aus genau diesen Zeilen (`dok
 FILE31 neu gesetzt und installiert: zwei Textseiten wie vorher (max_page 2). Rueckleseprobe am Artefakt: 77 Woerter WORTGLEICH, 0 Kernpixel ohne Glyphe.
 Seite 2: `that they swapped the / numbers of "black" and / "green"! What are they? / Colorblind? How is anyone / supposed to work with / something like this....`.
 
+**Messung nachher:** Leser im Spiel (Plan v2d, `integration_r41_ventilkette_weg{,_elza}`): Seite 1 endet "They mixed up / green and red, and on top of", Seite 2 wie oben, Anfuehrungszeichen sichtbar (`N_belege/notiz_seite3.png`, Zaehler 3/3 = Titel + 2 Seiten).
+Falsche Folge 01/02/09/08 setzt zurueck, richtige Folge 09/02/01/08 startet Warntext und Zaehler (`integration_r41_ventilkette`, `_alarm`, `_kette`, `_weg`).
+
 ## 1. Schrank 2010/2011 klappt auf (Nachtrag 30; Logik der Sicherung = Spur O)
 
 **Messung vorher:** Aktion am Ventil-Sicherungskasten (Slot 8, x 4900..5900, z -3470..-2070) zeigte nur Text 40; Cut 3 blieb unveraendert (die Spur-C-Fassung hat kein Bild und keine Bewegung).
@@ -168,7 +171,7 @@ Band 2, Licht neutral (`re15_schrank2010_r41_licht`: Textur 1:1, sonst schluckt 
 Sleep 20 aus ROOM2080 sub02 @0x00CD8 + 10 zum Lesen). Einsetz-Logik der Spur C (Fragen, Bit 125, Standbild, Ton) laeuft unveraendert dahinter. Der offene Zustand ist Raum-Scratch: beim naechsten Betreten geht die Tuer wieder auf (Original zeigt in 2060 den Schrank offen, die Tuer in 2010 ist Port-Form).
 
 **Messung nachher (Leon + Elza, Riegel `integration_r41_nachtrag30_schrank_*`, `_laden_*`):** Klick F330 -> Text erst nach `[schrank2010] Tuer auf (rot_y 1024)`; Flaeche x 224..258 aendert sich um 25,7 Graustufen, Gegenprobe links 0,0. Ja-Zweig: F635 == ROOM2060 BG08, F665 == BG09 (100 % gleich), danach Bit 125, Standbild.
-Bilder: `N_belege/schrank_cut3_zu.png`, `schrank_cut3_offen.png` (beschleunigter Renderer).
+Zu Fuss quer durch den Raum schaltet die Kamera selbst auf Cut 3, dann klappt die Tuer auf (Lauf sw im Riegel `_laden_*`, Leon + Elza). Bilder: `N_belege/schrank_cut3_zu.png`, `schrank_cut3_offen.png`, Gegenueberstellung mit fuse_box.bmp `schrank_vergleich_fuse_box.png` (beschleunigter Renderer).
 
 ## 2. Panel-Raetsel 2030 (Nachtrag 37, Entwurf A) — Umsetzung
 
@@ -232,3 +235,37 @@ Ende = dieselbe Bedingung wie die Sperre der Leiter: Bit (9,100) oder (9,103) ge
 
 **Messung nachher (Leon + Elza, `integration_r41_nachtrag30_wasser_*`, `_laden_*`):** Cut 10 gegen den Lauf mit Bit 100: Leiter 20,7, Weg 8,0, Gegenprobe rechte Bildhaelfte 0,0 Graustufen; auch nach der echten Tuer 2010 -> 2000 und nach CONTINUE (Leiter 17,3, Weg 8,5). Leiter bleibt gesperrt (Text 40). Bilder: `N_belege/wasser_2000_cut10.png`, `wasser_2000_cut9.png`.
 
+## Tests
+
+Neu: `unit_r41_nachtrag30` (232 Pruefungen: Panel-Regel + Vollsuche, Panel im Raum Leon/Elza, Bruecken-Toene, Schrank, Wasserlauf, Sirene, Notiz) und `integration_r41_nachtrag30_{panel,schrank,wasser,laden}_{leon,elza}`, `_ton`, `_laut`
+(Registrierung `tests/unit/probes/r41_nachtrag30.cmake`, Laufordner + exe-Kopie je Test, Mitschnitte seriell). Nachgezogen: `unit_r41_ventilkette`, `unit_r36_kartenbits`, `unit_r41_kleinkram_a`, `integration_r41_kleinkram_a_lautstaerke`, `integration_r41_ventilkette{,_b,_alarm,_kette,_weg,_weg_elza}`.
+
+Gezielter Lauf (keine volle Suite), Bau 2026-10-31:
+
+```
+ctest --test-dir re15_port/build -R "r41_nachtrag30|r41_ventilkette|unit_r36_kartenbits|r41_kleinkram_a|r41_wasser20b0|r37_fahrstuhl|r37_itemband_lift|unit_audio|unit_se_|unit_rotor_bgm_pin|unit_voice_ausreden|r34_plattform_ton|r34n_e_dokumente|r38_tagebuch_dokument|r35_werfer_ton|r36_elza|r36_tueren|r37_codepanel|r38_dining1141|r38_elzaintro|r38_elzatoene|r38_kleinkram|r38_rekorder|r38_wasser|r38_werkstatt11b0|r39_dining1141|r39_elzazombies|r39_funk10f1|r39_gegner|r39_hund1121|r39_johnruf1041|r39_parkplatz11c0|r39_stimmen|r39_toene|r41_kanister2080" -j3 --timeout 600
+99% tests passed, 1 tests failed out of 281
+    1280 - integration_r41_ventilkette_b (Failed)   <- Testskript: die Taste X fiel in die offene Nachricht Text 41 (zwei Seiten = vier Tastendruecke), Skript nachgezogen, kein Code geaendert
+ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_b$" --timeout 900
+100% tests passed, 0 tests failed out of 1
+```
+
+## OFFEN
+
+1. **Querbezug Spur O (r41_keyitems):** O ersetzt die Fragen am Kasten durch das Inventar. Der Vorspann "Aufklappen" (Marker (5,0x1E)) und die Nahansichten (Marker (5,0x1D)) stehen in den Programmen `2010_kasten_*` (`tools/r41_ventilkette/programme.py`, Praefixe AUF und NAH) und muessen in Os Fassung erhalten bleiben; `integration_r41_ventilkette_weg` k1 traegt die Takte + 18 und + 60 Bilder.
+2. Die offene Schranktuer hat keine Kollision (Port-Prop, die Figur kann durch den Fluegel gehen).
+3. Die Schrank-Innenseite zeigt nach dem Einsetzen weiter Cut 6, nicht Cut 10: 89 von 12480 Bildpunkten der Schrankwand (Sicherung und Lampe). Die Nahansichten Cut 8 -> Cut 9 zeigen den Wechsel.
+4. Das Original-Einsetzen in 2060 hat einen Cursor-Schritt im Sicherungsfeld, in 2010 gibt es ihn nicht (Frage unten).
+5. `audio_pc.c` traegt 23 Zeilen statt eines Haken-Einzeilers: die Sirene braucht die statischen `ss_*`-Funktionen, Muster `re15_audio_r41_alarm` der Spur C.
+
+## Fuer den Nutzer
+
+**Neue Assets (Paket-Gate):** `re15_port/shared_assets/RE2/SOUND/SUB_34.BGM`, `re15_port/shared_assets/RE2/BRUECKE4080.EDT`, `.VH`, `.VB`; geaendert `re15_port/shared_assets/RE2/FILES/FILE31_p01_page.TIM`, `FILE31_p02_page.TIM`.
+**Sprachdateien:** keine neuen. `synchro/STAGE2/room2030` und `room2031` enthalten nur `main46.wav` (Warntext), die Panel-Texte 40/41/42/47 sind stumm wie die uebrigen Port-Texte.
+**Bedienung Panel 2030:** am Pult "Yes", dann Cursor mit dem Steuerkreuz, Aktionstaste auf den ersten Tank (Quelle), Aktionstaste auf den zweiten Tank (Ziel). EXIT oder die Abbruchtaste verlaesst das Panel, beim naechsten Oeffnen steht es wieder auf 100/0/0. Loesung A nach B, B nach C, C nach A.
+**Notiz, Rechenweg:** §3.
+**Lautstaerke:** vorhandene `re15_options.cfg` behaelt ihren Wert; der wirkt jetzt quadratisch (20 -> 0,04). Ohne Datei gilt 50.
+
+**Entscheidungsfragen:**
+1. ROOM2010/2011 ist das Buero ohne Leiter und ohne Wasser. Die Beschreibung passt Wort fuer Wort auf ROOM2000/2001 (dort steht "I cannot climb up the ladder because of the water pressure."), der Wasserlauf ist dort gebaut, auch fuer Elza in 2001. Ist das der gemeinte Raum (2001 statt 2010)?
+2. Soll das Einsetzen der Sicherung in 2010 den Cursor-Schritt aus 2060 bekommen (Sicherung mit dem Steuerkreuz ins Feld fuehren), oder bleibt es bei den zwei Nahansichten?

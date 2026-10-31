@@ -207,7 +207,7 @@ _kisten_gesperrt(e4 2051)
 # ---- F: Bruecken-Pult 2030 ohne Druck (Bit 101) = Frage 40 -> Panel-Raetsel (Spur N, Nachtrag 37), CROSS verlaesst, keine Fahrt ------
 _lauf(f 240 ${_leon}
       RE15_DEBUG_JUMP=2030@240 "RE15_PLAYER_POS=350,-9500,1024,3" "RE15_SET_FLAG=7:155,7:156,7:157"
-      RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W1.5,A0.1,W1,A0.1,W2,A0.1,W1.5,A0.1,W1.5,A0.1,W2,X0.1,W2"
+      RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W1.5,A0.1,W1,A0.1,W2,A0.1,W1.5,A0.1,W1.5,A0.1,W2,A0.1,W2,A0.1,W2,X0.1,W2"
       "RE15_EXIT_AT=1000#2030")
 _muss("${_dbg}" "[ventilkette41] ROOM2030: Bruecke obj 0 oben y -5400, Zelle 12 gesperrt" f "Bruecke oben")
 _muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 24 -> Port-Programm 2030_panel_ein" f "Aktion am Pult ohne Druck")
