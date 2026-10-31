@@ -155,10 +155,11 @@ void re15_panel2030_r41_cursor_setzen(int x, int y) { s_cx_q8 = x << 8; s_cy_q8 
 #ifdef RE15_PLATFORM_PC
 static uint32_t s_rgba[RE15_R41N_PANEL_W * RE15_R41N_PANEL_H];
 
+/* 15 Bit wie die Hintergruende (Generator panel_bild.py); 5 -> 8 Bit mit voller Spanne */
 static uint32_t farbe(unsigned v)
 {
-    const uint8_t *c = &re15_r41n_panel_pal[v * 3];
-    return ((uint32_t)c[0] << 24) | ((uint32_t)c[1] << 16) | ((uint32_t)c[2] << 8) | 0xFFu;
+    const uint32_t r = v & 31u, g = (v >> 5) & 31u, b = (v >> 10) & 31u;
+    return (((r << 3) | (r >> 2)) << 24) | (((g << 3) | (g >> 2)) << 16) | (((b << 3) | (b >> 2)) << 8) | 0xFFu;
 }
 
 static void punkt_mischen(int x, int y, int r, int g, int b, int a)    /* a 0..256 */

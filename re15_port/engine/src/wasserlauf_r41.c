@@ -6,10 +6,9 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 #include "re15_esp.h"            /* re15_esp_fx_spawn_rows = FUN_80019700, re15_esp_room_bank */
 #include "re15_room.h"           /* g_current_room_id                                         */
-#include "re15_scd.h"            /* g_scd.props, re15_game_flag_get                           */
+#include "re15_scd.h"            /* re15_game_flag_get, RE15_PAUSE_ACTION                     */
 #include "re15_ventilkette_r41.h"
 
 #ifdef RE15_PLATFORM_PC
@@ -29,39 +28,27 @@ static const int32_t k_strahlen[][4] = {
 };
 #define STRAHLEN_N ((int)(sizeof k_strahlen / sizeof k_strahlen[0]))
 
-/* Spritzer: { x, y, z }, wechselnd von der Leiter ueber den Weg bis ins Wasser des Kanals (y -900 @0x016E6). */
-static const int32_t k_ring[][3]   = { { -26300, RE15_R41N_LAUF_Y, 9700 }, { -25900, RE15_R41N_LAUF_Y, 9300 }, { -25500, RE15_R41N_LAUF_Y, 9700 },
-                                       { -25050, RE15_R41N_KANAL_Y, 9300 }, { -25050, RE15_R41N_KANAL_Y, 9700 } };
-static const int32_t k_spritz[][3] = { { -26650, RE15_R41N_LAUF_Y, 9400 }, { -26500, RE15_R41N_LAUF_Y, 9650 }, { -26100, RE15_R41N_LAUF_Y, 9500 },
-                                       { -25700, RE15_R41N_LAUF_Y, 9400 }, { -25300, RE15_R41N_LAUF_Y, 9600 } };
+/* Lauf: { x, z, Sub }. Flach von der Leiter bis vor die Kante (13 Bilder x 100 = 1300), kurz vor der Kante die fallenden. */
+static const struct { int32_t x, z; uint8_t sub; } k_lauf[] = {
+    { -26650, 9200, RE15_R41N_LAUF_SUB_FLACH }, { -26650, 9500, RE15_R41N_LAUF_SUB_FLACH }, { -26650, 9800, RE15_R41N_LAUF_SUB_FLACH },
+    { -25500, 9350, RE15_R41N_LAUF_SUB_FALL },  { -25500, 9650, RE15_R41N_LAUF_SUB_FALL },
+};
+#define LAUF_N ((int)(sizeof k_lauf / sizeof k_lauf[0]))
+static const int16_t k_lauf_z[5] = { 0, 130, -90, 60, -130 };    /* PORT-WAHL: Versatz quer zum Lauf je Spawn */
+static const uint8_t k_lauf_abstand[8] = { 3, 6, 4, 8, 3, 5, 7, 4 };   /* PORT-WAHL: Bilder bis zum naechsten Spawn eines Punkts, Mittel 5. Ein fester Takt ergaebe ein stehendes Muster: gemessen wiederholte sich das Bild alle 4 Bilder (Korrelation 0,89) */
 
-static int      s_aktiv = 0, s_strahlen = 0, s_prop = -1, s_takt = 0;
-static unsigned s_spritzer = 0;
+/* Einschlaege im Wasser des Kanals (y -900 @0x016E6). */
+static const int32_t k_ring[][3] = { { -24800, RE15_R41N_KANAL_Y, 9350 }, { -24800, RE15_R41N_KANAL_Y, 9650 } };
+#define RING_N ((int)(sizeof k_ring / sizeof k_ring[0]))
 
-static int prop_lauf_anlegen(void)
-{
-    int p = -1;
-    for (int k = 0; k < (int)g_scd.prop_count; k++)
-        if (g_scd.props[k].active && g_scd.props[k].obj_id == RE15_R41N_LAUF_OBJ) p = k;
-    if (p < 0) {
-        if (g_scd.prop_count >= RE15_SCD_MAX_PROPS) return -1;
-        p = (int)g_scd.prop_count++;
-        memset(&g_scd.props[p], 0, sizeof g_scd.props[p]);
-        g_scd.props[p].active     = 1;
-        g_scd.props[p].obj_id     = RE15_R41N_LAUF_OBJ;
-        g_scd.props[p].obj_type   = RE15_R41C_WASSER_TYP;      /* Form der Wasserflaeche ROOM2080 @0x00C2E */
-        g_scd.props[p].band       = RE15_R41N_LAUF_BAND;
-        g_scd.props[p].parent_obj = -1;
-        g_scd.props[p].flags      = RE15_R41C_WASSER_FLAGS;
-        g_scd.props[p].attr       = RE15_R41C_WASSER_ATTR;
-    }
-    g_scd.props[p].x = 0; g_scd.props[p].y = RE15_R41N_LAUF_Y; g_scd.props[p].z = 0;   /* Netz in Weltkoordinaten (Generator) */
-    return p;
-}
+static int      s_aktiv = 0, s_strahlen = 0, s_takt = 0;
+static unsigned s_spritzer = 0, s_laeufer = 0;
+static uint8_t  s_warte[LAUF_N], s_schritt[LAUF_N];
 
 void re15_wasserlauf_r41_reset(void)
 {
-    s_aktiv = 0; s_strahlen = 0; s_prop = -1; s_takt = 0; s_spritzer = 0;
+    s_aktiv = 0; s_strahlen = 0; s_takt = 0; s_spritzer = 0; s_laeufer = 0;
+    for (int i = 0; i < LAUF_N; i++) { s_warte[i] = (uint8_t)(1 + i); s_schritt[i] = (uint8_t)(3 * i); }
 }
 
 int re15_wasserlauf_r41_soll(uint16_t room_id)
@@ -76,28 +63,28 @@ void re15_wasserlauf_r41_install(uint16_t room_id)
     re15_wasserlauf_r41_reset();
     if (!re15_wasserlauf_r41_soll(room_id)) return;
     s_aktiv = 1;
-    s_prop = prop_lauf_anlegen();
     for (int i = 0; i < STRAHLEN_N; i++)
         if (re15_esp_fx_spawn_rows(re15_esp_room_bank(), RE15_R41N_ESP_STRAHL, 0, (uint16_t)k_strahlen[i][3], k_strahlen[i][0],
                                    k_strahlen[i][1], k_strahlen[i][2], k_strahlen[i][1], RE15_R41N_ESP_PARAM) > 0)
             s_strahlen++;
-    LOG("[wasserlauf41] ROOM%04X: %d Strahlen, nasse Spur Prop %d\n", (unsigned)room_id, s_strahlen, s_prop);
+    LOG("[wasserlauf41] ROOM%04X: %d Strahlen, Lauf ueber den Weg Effekt 0x%02X\n", (unsigned)room_id, s_strahlen, RE15_R41N_ESP_LAUF);
 }
 
 void re15_wasserlauf_r41_tick(void)
 {
-    if (!s_aktiv) return;
+    if (!s_aktiv || (g_re15_pauseflags & RE15_PAUSE_ACTION)) return;     /* steht wie der Effekt-Takt selbst (@0x80019e28), sonst liefe der Pool unter einem Text voll */
     s_takt++;
+    for (int i = 0; i < LAUF_N; i++) {
+        if (--s_warte[i]) continue;
+        s_warte[i] = k_lauf_abstand[s_schritt[i]++ & 7];
+        if (re15_esp_fx_spawn_rows(re15_esp_room_bank(), RE15_R41N_ESP_LAUF, k_lauf[i].sub, RE15_R41N_LAUF_SKALA, k_lauf[i].x, RE15_R41N_LAUF_HOEHE, k_lauf[i].z + k_lauf_z[s_laeufer % 5],
+                                   k_lauf[i].sub == RE15_R41N_LAUF_SUB_FALL ? RE15_R41N_KANAL_Y : INT32_MAX, 0) > 0)
+            s_laeufer++;
+    }
     if ((s_takt % RE15_R41N_TAKT_RING) == 0) {
-        const int i = (s_takt / RE15_R41N_TAKT_RING) % 5;
+        const int i = (s_takt / RE15_R41N_TAKT_RING) % RING_N;
         if (re15_esp_fx_spawn_rows(re15_esp_room_bank(), RE15_R41N_ESP_WASSER, RE15_R41N_ESP_RING_SUB, RE15_R41N_ESP_RING_SKALA, k_ring[i][0],
                                    k_ring[i][1], k_ring[i][2], INT32_MAX, 0) > 0)
-            s_spritzer++;
-    }
-    if ((s_takt % RE15_R41N_TAKT_SPRITZ) == 0) {
-        const int i = (s_takt / RE15_R41N_TAKT_SPRITZ) % 5;
-        if (re15_esp_fx_spawn_rows(re15_esp_room_bank(), RE15_R41N_ESP_WASSER, RE15_R41N_ESP_SPRITZ_SUB, RE15_R41N_ESP_SPRITZ_SKALA, k_spritz[i][0],
-                                   k_spritz[i][1], k_spritz[i][2], INT32_MAX, 0) > 0)
             s_spritzer++;
     }
 }
@@ -105,5 +92,5 @@ void re15_wasserlauf_r41_tick(void)
 int      re15_wasserlauf_r41_aktiv(void)    { return s_aktiv; }
 int      re15_wasserlauf_r41_strahlen(void) { return s_strahlen; }
 unsigned re15_wasserlauf_r41_spritzer(void) { return s_spritzer; }
-int      re15_wasserlauf_r41_prop(void)     { return s_prop; }
+unsigned re15_wasserlauf_r41_laeufer(void)  { return s_laeufer; }
 const int32_t *re15_wasserlauf_r41_strahl(int i) { return (i >= 0 && i < STRAHLEN_N) ? k_strahlen[i] : NULL; }

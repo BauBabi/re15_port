@@ -6,10 +6,12 @@
  *      die RE2-Toene der Bruecke (Satz 0x0F vor der Fahrt, 0x10 am Ende) kommen in dieser Reihenfolge; Ventil 13 gibt es nicht mehr
  *   C  Schrank 2010/2011: erster Klick klappt auf (16 Bilder, rot_y 1024), danach Text; zweiter Klick ohne Fahrt; nur unter Cut 3 gezeichnet; Ja-Zweig wie ROOM2060: Cut 8 + Cursor ohne Zeitgrenze,
  *      SQUARE neben der Zone nichts, Steuerkreuz +-200 je Bild mit Rahmen, Zone 7 + SQUARE -> Cut 9 + Bit 125 + Text 42, dann Standbild; START bleibt gesperrt; Raumwechsel schliesst
- *   D  Wasserlauf ROOM2000/2001: Strahlen + nasse Spur + Spritzer laufen, Leiter bleibt gesperrt; mit Bit 100 oder 103 nichts; 20B0 nichts; ROOM2010 hat keine Leiter
+ *   D  Wasserlauf ROOM2000/2001: Strahlen + Lauf ueber den Weg (Effekt 0x0F wandert 100 je Bild +x bis vor die Kante, faellt dahinter) + Einschlaege, unter einem Text steht der Lauf,
+ *      Leiter bleibt gesperrt; mit Bit 100 oder 103 nichts; 20B0 nichts; ROOM2010 hat keine Leiter
  *   E  Sirene: an mit dem Zaehler (nach der Ansage), aus mit der Flut, dem Tod und dem Verlassen des Raums
  *   F  Notiz + Plakat: FILE31 (FNV der Seiten), Loesung {5,1,0,4} = 09/02/01/08
  * Werkzeug: "bild <ppm> <x0> <y0> <x1> <y1>" = mittlere Helligkeit, "diff <a.ppm> <b.ppm> <x0> <y0> <x1> <y1>" = mittlere Abweichung, "endstufe <cap_a> <cap_b> <q>" = Endstufe bitgleich,
+ * "fluss <ordner> <von> <bis> <x0> <y0> <x1> <y1>" = Bewegung in Bildern f_<n>.ppm: je Abstand 1..3 Bilder die beste Verschiebung in x des Bildes ohne sein Zeitmittel, Korrelation dort und bei 0, dazu Bildpunkte, die sich je 6 Bilder aendern,
  * "luecke <cap_a> <cap_b> <an> <aus> <schwelle>" = laengste Folge leiser Takte, "karte <datei> <raum-hex> <x> <y> <z> <gier> [bank:bit ...]" = Spielstand fuer den Lade-Weg (RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0; Muster probe_r36_elza_karte.c, mit y:
  * das Band folgt beim Laden aus y, re15_savedata.c @re15_collision_band_from_y; der Ring von 2030 liegt auf y -5400).
  */
@@ -435,9 +437,6 @@ static void fall_d(uint16_t r)
     bits_leeren();
     if (raum_hoch(r, -26300, -1800, 9000) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
     PRUEFE(re15_wasserlauf_r41_aktiv() && re15_wasserlauf_r41_strahlen() == 6, "ROOM%04X: Wasserlauf an, 6 Strahlen (%d)", r, re15_wasserlauf_r41_strahlen());
-    const int p = re15_wasserlauf_r41_prop();
-    PRUEFE(p >= 0 && g_scd.props[p].obj_id == RE15_R41N_LAUF_OBJ && g_scd.props[p].y == RE15_R41N_LAUF_Y && g_scd.props[p].obj_type == RE15_R41C_WASSER_TYP, "ROOM%04X: nasse Spur", r);
-    PRUEFE(re15_ventilkette_r41_obj_id(r, 4) == RE15_R41N_LAUF_OBJ, "ROOM%04X: Modell gebunden", r);
     /* Strahlen liegen an der Leiter, Anker von oben bis Fuss - 3300 (Kopf "LAGE") */
     for (int i = 0; i < 6; i++) {
         const int32_t *s = re15_wasserlauf_r41_strahl(i);
@@ -445,15 +444,44 @@ static void fall_d(uint16_t r)
     }
     const int n3 = esp_0b();
     PRUEFE(n3 >= 18 + 6 * 6 - 6, "ROOM%04X: Original 3 x 6 + Wasserlauf 6 x 6 Plaetze (%d)", r, n3);
-    const unsigned s0 = re15_wasserlauf_r41_spritzer();
-    for (int i = 0; i < 90; i++) takt();
-    PRUEFE(re15_wasserlauf_r41_spritzer() >= s0 + 15, "ROOM%04X: Spritzer laufen (%u -> %u)", r, s0, re15_wasserlauf_r41_spritzer());
+    const unsigned s0 = re15_wasserlauf_r41_spritzer(), l0 = re15_wasserlauf_r41_laeufer();
+    /* Lauf: jeder Spritzer der flachen Punkte wandert 100 je Bild nach +x, keiner geht ueber die Kante hinaus; die fallenden sinken hinter der Kante */
+    re15_esp_fx_reset();      /* der Raumaufbau oben taktet den Pool nicht */
+    int32_t alt_x[96], flach = 0, schritt_ok = 1, ueber_kante = 0, gefallen = 0, max_0f = 0;
+    for (int i = 0; i < 96; i++) alt_x[i] = INT32_MIN;
+    for (int i = 0; i < 90; i++) {
+        takt();
+        re15_esp_fx_tick(re15_esp_room_bank());
+        int n0f = 0;
+        for (int k = 0; k < 96; k++) {
+            const re15_esp_fx_t *f = re15_esp_fx_get(k);
+            if (!f || f->effect_id != RE15_R41N_ESP_LAUF) { alt_x[k] = INT32_MIN; continue; }
+            n0f++;
+            if (f->sub_index == RE15_R41N_LAUF_SUB_FLACH) {
+                if (alt_x[k] != INT32_MIN) { flach++; if (f->wpos[0] - alt_x[k] != RE15_R41N_LAUF_VEL) schritt_ok = 0; }
+                alt_x[k] = f->wpos[0];
+                if (f->wpos[0] > RE15_R41N_LAUF_KANTE) ueber_kante++;
+            } else if (f->wpos[0] > RE15_R41N_LAUF_KANTE && f->wpos[1] > RE15_R41N_LAUF_Y) gefallen = 1;
+        }
+        if (n0f > max_0f) max_0f = n0f;
+    }
+    PRUEFE(flach > 100 && schritt_ok, "ROOM%04X: flache Spritzer wandern 100 je Bild (%d Schritte)", r, flach);
+    PRUEFE(ueber_kante == 0, "ROOM%04X: kein flacher Spritzer ueber der Kante (%d)", r, ueber_kante);
+    PRUEFE(gefallen, "ROOM%04X: hinter der Kante faellt das Wasser unter den Weg", r);
+    PRUEFE(max_0f <= 20, "ROOM%04X: Lauf belegt hoechstens 20 Plaetze (%d)", r, max_0f);
+    PRUEFE(re15_wasserlauf_r41_laeufer() >= l0 + 100 && re15_wasserlauf_r41_spritzer() >= s0 + 7, "ROOM%04X: Lauf und Einschlaege (%u, %u)", r, re15_wasserlauf_r41_laeufer(), re15_wasserlauf_r41_spritzer());
+    /* unter einem Text steht der Lauf mit den Effekten (@0x80019e28), der Pool laeuft nicht voll */
+    { const unsigned l1 = re15_wasserlauf_r41_laeufer();
+      g_re15_pauseflags |= RE15_PAUSE_ACTION;
+      for (int i = 0; i < 40; i++) takt();
+      g_re15_pauseflags &= ~RE15_PAUSE_ACTION;
+      PRUEFE(re15_wasserlauf_r41_laeufer() == l1, "ROOM%04X: unter einem Text kein Spawn", r); }
     PRUEFE(g_aot.slots[RE15_R41C_SLOT_2000_LEITER].type == RE15_AOT_TYPE_MESSAGE, "ROOM%04X: Leiter bleibt Sperrtext", r);
     /* bis zur Flut: mit Bit 100 oder 103 nichts */
     for (int b = 0; b < 2; b++) {
         bits_leeren(); vorflag(RE15_R41C_BANK, b ? RE15_R41C_BIT_FLUT_GELAUFEN : RE15_R41C_BIT_LEITER_FREI);
         if (raum_hoch(r, -26300, -1800, 9000) != 0) { PRUEFE(0, "Parse"); return; }
-        PRUEFE(!re15_wasserlauf_r41_aktiv() && re15_wasserlauf_r41_prop() < 0 && re15_ventilkette_r41_obj_id(r, 4) < 0, "ROOM%04X: Bit %d: kein Wasserlauf", r, b ? 103 : 100);
+        PRUEFE(!re15_wasserlauf_r41_aktiv() && re15_wasserlauf_r41_laeufer() == 0, "ROOM%04X: Bit %d: kein Wasserlauf", r, b ? 103 : 100);
     }
     const uint16_t r20b0 = (uint16_t)(0x20B0 + (r & 1));
     bits_leeren(); vorflag(3, 235);
@@ -515,6 +543,64 @@ static uint8_t *ppm_lesen(const char *p)
 }
 static const uint8_t *ppm_px(const uint8_t *d) { return d + 15; }   /* "P6\n320 240\n255\n" */
 
+/* Werkzeug "fluss" (Abnahme 0, Mangel 2: die Riegel mussten messen, dass es LAEUFT, nicht nur, dass es heller ist). Das Zeitmittel je Bildpunkt faellt weg: eine stehende Flaeche bleibt 0, ein
+ * Muster, das sich mit festem Takt wiederholt, zeigt seinen Takt, ein wanderndes eine mit dem Abstand wachsende Verschiebung. */
+static int fluss(char **argv)
+{
+    const int von = atoi(argv[3]), bis = atoi(argv[4]), x0 = atoi(argv[5]), y0 = atoi(argv[6]), x1 = atoi(argv[7]), y1 = atoi(argv[8]);
+    const int n = bis - von + 1, w = x1 - x0, h = y1 - y0;
+    if (n < 8 || w <= 20 || h <= 0) return 2;
+    float *b = (float *)calloc((size_t)(n * w * h), sizeof(float)), *m = (float *)calloc((size_t)(w * h), sizeof(float));
+    if (!b || !m) return 2;
+    for (int t = 0; t < n; t++) {
+        char pfad[512];
+        snprintf(pfad, sizeof pfad, "%s/f_%06d.ppm", argv[2], von + t);
+        uint8_t *d = ppm_lesen(pfad);
+        if (!d) { printf("FEHLT %s\n", pfad); return 2; }
+        const uint8_t *q = ppm_px(d);
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++) {
+                const uint8_t *c = q + 3 * ((y0 + y) * 320 + x0 + x);
+                const float g = ((float)c[0] + (float)c[1] + (float)c[2]) / 3.0f;
+                b[(t * h + y) * w + x] = g;
+                m[y * w + x] += g / (float)n;
+            }
+        free(d);
+    }
+    long aend = 0, proben = 0;
+    for (int t = 0; t + 6 < n; t += 3, proben++)
+        for (int i = 0; i < w * h; i++)
+            if (fabsf(b[(size_t)(t + 6) * (size_t)(w * h) + (size_t)i] - b[(size_t)t * (size_t)(w * h) + (size_t)i]) > 16.0f) aend++;
+    double null = 0;
+    for (int t = 0; t < n; t++)
+        for (int i = 0; i < w * h; i++) {
+            float *r = &b[(size_t)t * (size_t)(w * h) + (size_t)i];
+            *r -= m[i];
+            null += (double)*r * (double)*r;
+        }
+    null /= (double)(n * w * h);
+    printf("FLUSS");
+    for (int lag = 1; lag <= 3; lag++) {
+        int beste = 0; double k_beste = -1e30, k_null = 0;
+        for (int d = -10; d <= 10; d++) {
+            double sum = 0; long zahl = 0;
+            for (int t = 0; t + lag < n; t++)
+                for (int y = 0; y < h; y++)
+                    for (int x = (d < 0 ? -d : 0); x < w - (d > 0 ? d : 0); x++) {
+                        sum += (double)b[(size_t)(t * h + y) * (size_t)w + (size_t)x] * (double)b[(size_t)((t + lag) * h + y) * (size_t)w + (size_t)(x + d)];
+                        zahl++;
+                    }
+            sum /= (double)zahl;
+            if (d == 0) k_null = sum;
+            if (sum > k_beste) { k_beste = sum; beste = d; }
+        }
+        printf(" %d %d %d", beste, (int)(100.0 * k_beste / (null > 0 ? null : 1)), (int)(100.0 * k_null / (null > 0 ? null : 1)));
+    }
+    printf(" AENDERUNG %ld VON %d\n", proben ? aend / proben : 0, w * h);
+    free(b); free(m);
+    return 0;
+}
+
 /* Werkzeug "karte": Figur aus der RDT-Variante (xxx1 = Elza, Charakter-Byte 4, Kopf probe_r36_elza_karte.c). */
 static int karte(int argc, char **argv)
 {
@@ -547,6 +633,7 @@ static int karte(int argc, char **argv)
 int main(int argc, char **argv)
 {
     if (argc >= 8 && !strcmp(argv[1], "karte")) return karte(argc, argv);
+    if (argc >= 9 && !strcmp(argv[1], "fluss")) return fluss(argv);
     if (argc >= 7 && !strcmp(argv[1], "bild")) {
         uint8_t *d = ppm_lesen(argv[2]);
         if (!d) { printf("kein Bild\n"); return 2; }

@@ -3,9 +3,8 @@
 """panel_bild.py - Runde 41 Spur N (AUFTRAG.md Nachtrag 37, Nutzer-Freigabe "A Druckspeicher"): Bild des Panel-Raetsels ROOM2030.
 
 Dossier analysis/befunde_runde41/N_nachtrag30.md §2 (Kamera, Lage, Regeln). Erzeugt engine/src/gen/panel2030_r41.inc:
-  re15_r41n_panel_grund  8 bpp 320 x 240: Panel mit LEEREN Tanks, ohne Zeiger, Lampen aus, ohne Cursor
-  re15_r41n_panel_voll   8 bpp je Fenster: dieselbe Stelle mit VOLLEM Tank (engine/src/panel2030_r41.c setzt beide je Fuellstand zusammen)
-  re15_r41n_panel_pal    gemeinsame Palette 256 x RGB
+  re15_r41n_panel_grund  RGB555 320 x 240 wie die Hintergruende (15 Bit je Bildpunkt): Panel mit LEEREN Tanks, ohne Zeiger, Lampen aus, ohne Cursor
+  re15_r41n_panel_voll   RGB555 je Fenster: dieselbe Stelle mit VOLLEM Tank (engine/src/panel2030_r41.c setzt beide je Fuellstand zusammen)
   re15_r41n_panel_cursor Cursor-Stempel aus dem Spielbild 2050 (C_belege/pult2050_loesung_sheet.png, Kachel F540)
 Rahmen pixelgleich aus ROOM2050 Cut 15, EXIT-Feld pixelgleich aus ROOM11F0 Cut 10 (x 210..238, y 175..204).
 
@@ -243,10 +242,15 @@ def bild(voll):
     return fertig(img, None, None)
 
 
-def inc_array(name, b, zeile=32):
-    z = ["static const unsigned char %s[%d] = {" % (name, len(b))]
+def rgb555(bild):
+    a = np.asarray(bild).astype(np.uint16)
+    return (a[..., 0] >> 3) | ((a[..., 1] >> 3) << 5) | ((a[..., 2] >> 3) << 10)
+
+
+def inc_array(name, b, zeile=20):
+    z = ["static const unsigned short %s[%d] = {" % (name, len(b))]
     for i in range(0, len(b), zeile):
-        z.append(",".join(str(x) for x in b[i:i + zeile]) + ",")
+        z.append(",".join(str(int(x)) for x in b[i:i + zeile]) + ",")
     z.append("};")
     return "\n".join(z)
 
@@ -254,25 +258,21 @@ def inc_array(name, b, zeile=32):
 def main():
     leer = bild(0).convert("RGB")
     voll = bild(1).convert("RGB")
-    bogen = Image.new("RGB", (W, H * 2))
-    bogen.paste(leer, (0, 0)); bogen.paste(voll, (0, H))
-    q = bogen.quantize(colors=256, method=Image.MEDIANCUT, dither=Image.NONE)
-    pal = bytes(q.getpalette()[:768]).ljust(768, b"\0")
-    pix = np.asarray(q)
-    p_leer, p_voll = pix[:H], pix[H:]
+    # Abnahme 0, Mangel 5: 256 gemeinsame Farben (Median-Schnitt) zogen die kleinen gruenen Flaechen ins Grau (EXIT-Pfeil 82,107,88 -> 91,98,96). Direkte 15 Bit wie die BSS-Hintergruende.
+    p_leer, p_voll = rgb555(leer), rgb555(voll)
     z = ["/* AUTOMATISCH ERZEUGT von re15_port/tools/r41_nachtrag30/panel_bild.py - nicht von Hand aendern.",
          " * Panel-Raetsel ROOM2030 (Runde 41 Spur N, Nachtrag 37, Entwurf A). Herleitung: Dossier N_nachtrag30.md Abschnitt 2. */",
-         "#define RE15_R41N_PANEL_W %d" % W, "#define RE15_R41N_PANEL_H %d" % H, inc_array("re15_r41n_panel_pal", pal),
-         inc_array("re15_r41n_panel_grund", p_leer.tobytes())]
+         "#define RE15_R41N_PANEL_W %d" % W, "#define RE15_R41N_PANEL_H %d" % H,
+         inc_array("re15_r41n_panel_grund", p_leer.ravel())]
     fenster = []
-    teile = bytearray()
+    teile = []
     for i, k in TANK:
         x0, x1 = T[i]
         fx0, fx1 = int(x0 + 3.3) - 1, int(x1 - 3.3) + 2
         fy0, fy1 = int(yw(KAP[k])) - 1, int(GB) + 2
         fenster.append((fx0, fy0, fx1 - fx0, fy1 - fy0, "ABC".index(k), len(teile)))
-        teile += p_voll[fy0:fy1, fx0:fx1].tobytes()
-    z.append(inc_array("re15_r41n_panel_voll", bytes(teile)))
+        teile += [int(v) for v in p_voll[fy0:fy1, fx0:fx1].ravel()]
+    z.append(inc_array("re15_r41n_panel_voll", teile))
     z.append("typedef struct { short x, y, w, h, tank; int off; } re15_r41n_fenster_t;")
     z.append("static const re15_r41n_fenster_t re15_r41n_panel_fenster[%d] = {" % len(fenster))
     for f in fenster:
@@ -287,8 +287,6 @@ def main():
     ziel = os.path.join(GEN, "panel2030_r41.inc")
     open(ziel, "w", newline="\n").write("\n".join(z) + "\n")
     print("geschrieben:", ziel, "Grund md5", hashlib.md5(p_leer.tobytes()).hexdigest(), "Cursor-Pixel", len(c), "Fenster", len(fenster))
-    if "--beleg" in sys.argv:
-        bogen.resize((W * 2, H * 4), Image.NEAREST).save(sys.argv[sys.argv.index("--beleg") + 1])
 
 
 if __name__ == "__main__":

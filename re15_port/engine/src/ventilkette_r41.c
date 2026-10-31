@@ -1017,7 +1017,6 @@ static int reling_jetzt(void)
 
 int re15_ventilkette_r41_obj_id(uint16_t room_id, int k)
 {
-    if (k == 4) return re15_wasserlauf_r41_soll(room_id) ? RE15_R41N_LAUF_OBJ : -1;   /* Spur N */
     if (k >= 5 && k <= 7) return ist(room_id, RE15_R41C_RAUM_2010) ? RE15_R41N_SCHRANK_OBJ_INNEN + (k - 5) : -1;       /* Spur N */
     if (!ist(room_id, RE15_R41C_RAUM_2030)) return -1;
     if (k == 1 && reling_jetzt()) return -1;
@@ -1031,7 +1030,6 @@ const uint8_t *re15_ventilkette_r41_md1_bytes_k(int k, int *out_size)
 #ifdef RE15_PLATFORM_PC
     if (k == 2) { if (out_size) *out_size = (int)sizeof re15_r41c_blatt_md1;   return re15_r41c_blatt_md1; }
     if (k == 3) { if (out_size) *out_size = (int)sizeof re15_r41c_aushang_md1; return re15_r41c_aushang_md1; }
-    if (k == 4) { if (out_size) *out_size = (int)sizeof re15_r41c_wasserlauf_md1; return re15_r41c_wasserlauf_md1; }   /* Spur N */
     if (k == 5) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_innen_md1;  return re15_r41n_schrank_innen_md1; }
     if (k == 6) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_aussen_md1; return re15_r41n_schrank_aussen_md1; }
     if (k == 7) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_tuer_md1;   return re15_r41n_schrank_tuer_md1; }
@@ -1050,7 +1048,7 @@ const uint8_t *re15_ventilkette_r41_tim_bytes_k(int k, int *out_size)
     if (k == 6) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_aussen_tim; return re15_r41n_schrank_aussen_tim; }
     if (k == 7) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_tuer_tim;   return re15_r41n_schrank_tuer_tim; }
 #endif
-    if (k == 0 || k == 1 || k == 4) return re15_ventilkette_r41_tim_bytes(out_size);
+    if (k == 0 || k == 1) return re15_ventilkette_r41_tim_bytes(out_size);
     if (out_size) *out_size = 0;
     return NULL;
 }

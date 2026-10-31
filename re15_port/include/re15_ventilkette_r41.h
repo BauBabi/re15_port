@@ -535,7 +535,7 @@ void re15_ventilkette_r41_tick(void);
 void re15_ventilkette_r41_reset(void);
 /* Eingebackene Port-Props fuer main.c (PC): k = 0/1 Wasserflaechen obj 4/5, k = 2 Dokument-Blatt obj 6, k = 3 Plakat-Aushang
  * obj 7 (Nachbesserung 4); obj_id im Raum oder -1, MD1/TIM-Bytes je k. */
-#define RE15_R41C_PROPS_N 8   /* k = 4: nasse Spur ROOM2000/2001 (Spur N, include/re15_wasserlauf_r41.h); k = 5..7: Schrank ROOM2010/2011 (Spur N, include/re15_schrank2010_r41.h) */
+#define RE15_R41C_PROPS_N 8   /* k = 4: frei; k = 5..7: Schrank ROOM2010/2011 (Spur N, include/re15_schrank2010_r41.h) */
 int re15_ventilkette_r41_obj_id(uint16_t room_id, int k);
 const uint8_t *re15_ventilkette_r41_md1_bytes(int *out_size);
 const uint8_t *re15_ventilkette_r41_tim_bytes(int *out_size);
