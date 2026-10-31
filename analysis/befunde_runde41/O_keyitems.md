@@ -287,3 +287,18 @@ Berichtigung: der Abstand steht oben im Dossier und in Abnahme 0 als 870. Gemess
 
 ### M2 Messung nachher: nur Kommentare
 objdump gegen die vor der Aenderung gesicherten Objekte: `.text`, `.rdata`, `.data`, `.bss` von keyitems_r41, menu_common, scd_vm gleich. Das Spielverhalten ist also unveraendert, die Messlaeufe der Abnahme gelten weiter.
+
+### Querbezug, von Bau-Agent und Abnahme nicht gesehen
+**Bit 0x40 wirkt auch auf Spur C.** "0 von 1359 Plc_motion tragen 0x40" gilt nur fuer die RDTs. Die Port-Programme engine/src/gen/ventilkette_r41_programme.inc tragen 12 Zeilen `3f 00 10 c0` / `3f 00 0f c0` (RE2 ROOM1080 @0x021EC `3f 00 10 c0`, @0x021F6 `3f 00 0f c0`, selbst gelesen). Bis zu dieser Spur blieb die Blende dort 7, der Kommentar "ohne Ueberblendung" stimmte nicht; jetzt 0 wie RE2. Darum gemessen, ob beim Loslassen des Ventils ein Pose-Sprung entsteht.
+Lauf: ROOM2030, Plan wie integration_r41_ventilkette Teil A (Ventil 09), RE15_ANIM_TRACE, RE15_FRAMEDUMP je Bild, RE15_WINDOW_SCALE=1, RE15_FORCE_CUT=5, Leon-Ausschnitt 100 x 150, Schwelle 24:
+```
+F493 Clip 17 Slot 39 -> F494 Clip 16 Slot 49 rueckwaerts   F487..F502 = 60 27 0 0 0 0 0 0 39 75 85 55 74 67 64 71
+F543 Clip 16 Slot  0 -> F544 Clip 15 Slot 29 rueckwaerts   F539..F552 = 82 121 46 63 87 90 34 29 65 72 26 47 105 74
+F573 Clip 15 Slot  0 -> F574 Stehen                        F569..F578 = 165 179 196 163 51 0 0 0 0 0
+```
+Keine Spitze: F494 = 0 (Schluesselbilder pixelgleich), F544 = 90 bei Nachbarn 87 und 34. Bogen O_belege/nb1_ventil_0xc0.png (F493, 494, 495, 500, 543, 544, 545, 574). Die Blenden-Korrektur schadet der Ventil-Szene nicht.
+Falle dabei: der erste Lauf ergab ueberall 0, weil Leon ausserhalb von Kamera 0/1 stand (Sprung setzt ihn in eine fremde Zone, Plan kreuzt keine Grenze). md5 von F300/F400/F500/F600 gleich, Bild angesehen, Lauf verworfen. Kamera 5 aus einem Bogen aller 9 Kameras bestimmt.
+
+**Lage an der Kurbel gegen das Original.** Pos_set @0x0A8C `32 00 42 0e f8 f8 93 f4` schreibt z -2925, der Port steht bei -3018. Die Abnahme mass nur Gleichheit zwischen den Anlaeufen, nicht den Sollwert. Original Stand-Anlauf (Spur E, DuckStation-GDB o_stand1.txt): `n89 ... pl=3650,-2925 ... spd=0`, `n90 ... pl=3650,-3018 ... spd=0`, bleibt bis Plc_motion (n124 cmd=4 pl=3650,-3018). Also Schub ohne Schritt, und -3018 ist der Sollwert aus dem Stand. Im Original haengt die Lage vom Anlauf ab (Rennen -3369, o_renn2); im USE-Lauf nicht mehr. Kein Mangel.
+
+**Zensus der ungefahrenen Tests.** 187 von 1342 Tests lagen ausserhalb aller Regexe von Bau-Agent und Abnahme. Aus `ctest --show-only=json-v1` die echten Befehle und Skripte gegen die 14 Stellen geprueft: kein FIRE_AOT, FORCE_EVENT oder USE_TEST trifft ein Paar (Raum, Slot) der Tabelle (Treffer in 1171, 1021, 1041, 1110/1111, 10D1 Slot 0, 11F0, 20A0, 2080 sind andere Slots oder Raeume), kein RE15_GIVE mit betroffener Id, von den Flags nur (9,53) in r30_granate_laden ohne (3,108). Die Tests mit betroffenen Raeumen und die STAGE2-Kette fahre ich trotzdem.

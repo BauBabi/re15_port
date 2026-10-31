@@ -2538,7 +2538,7 @@ static int op_plc_motion(scd_thread_t *t)
      * motion (e.g. the ROOM1150 stand→kneel pelvis fold) lives in the CLIP keyframes — which is
      * why playing the correct bank (PL00.EDD clip 11, set above via anim_use_pl00) is what makes
      * the kneel descend smoothly, NOT a longer crossfade. */
-    g_actors[slot].anim_frac = (anim_flags & 0x40) ? 0 : 7;   /* Runde 41 Spur O: 0x40 = 0, nicht "bleibt": @0x80050cfc 7, @0x80050d24 andi 0x40 -> @0x80050d30 sb zero; re15_actor_set_motion oben hat 7 gesetzt. 0 von 1359 Plc_motion der RDTs tragen 0x40. */
+    g_actors[slot].anim_frac = (anim_flags & 0x40) ? 0 : 7;   /* Runde 41 Spur O: 0x40 = 0, nicht "bleibt": @0x80050cfc 7, @0x80050d24 andi 0x40 -> @0x80050d30 sb zero; re15_actor_set_motion oben hat 7 gesetzt. 0 von 1359 Plc_motion der RDTs tragen 0x40, aber 12 Zeilen 0xC0 der Port-Programme ventilkette_r41_programme.inc (RE2 ROOM1080 @0x021EC/@0x021F6). */
     /* T-round: pc[3] high byte → actor.anim_flags (RE2 +0x1c4).
      * Plc_motion UNCONDITIONALLY overwrites anim_flags (clears prior
      * REVERSE bit etc.) — Plc_flg AFTER Plc_motion is what re-installs
