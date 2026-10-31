@@ -27,7 +27,7 @@ const GEMEINSAM = `
 - Bauen NUR: cd "${BAUM}" && bash re15_port/tools/local_build.sh configure && bash re15_port/tools/local_build.sh build (nie cmake --build aus Git-Bash). Nie zwei Bauten gleichzeitig im selben build/. Bau-/Testausgaben in Dateien unter dem Scratchpad umleiten, nur Ende/Fehler lesen.
 - Tests: ctest --test-dir "${BAUM}/re15_port/build" ... (KEINE volle Suite; die kommt vor dem Release). exe-Laeufe mit timeout, Messkopie der exe unter eigenem Namen, NIE taskkill /IM re15_pc.exe. Fenster-Riegel flattern unter Last (andere Agenten bauen parallel): rote Fenster-Riegel einzeln 2-3x nachfahren, bevor sie als Regression gelten.
 - Commits per git commit -F <datei>, Nachricht endet mit "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>". Jede Code-Aenderung im Integrationsbaum (Konfliktloesung, Querbezugs-Fix) braucht einen Beleg (Adresse/Byte-Offset oder Messung) im Commit; Konstanten ohne @0x... sind verboten (CLAUDE.md RE-Gate).
-`
+` + (CFG.zusatz ? NL + '## Zusatz des Orchestrators (bindend)' + NL + CFG.zusatz + NL : '')
 
 const MERGE_SCHEMA = {
   type: 'object',
