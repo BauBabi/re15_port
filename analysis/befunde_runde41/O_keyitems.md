@@ -256,3 +256,14 @@ Aus den drei Punkten ist nichts offen. Bewusst nicht angefasst:
 - **Karten wie in RE2:** Karte am LESER = USE aus dem Inventar (Blue/Yellow/Red Keycard 10D0, 11E0, 1230, Red Master Keycard 3050, Blue Master Keycard 4000), RE2-Vorbild Red Card Key. Karte als TUERSCHLOSS = Aktionstaste wie bisher (Green Keycard 3010), RE2-Vorbild Lab Card Key. Schluessel, Latch Key 3091 und "You don't need this key any more" bleiben unveraendert.
 - **Waffe:** waehrend der Kurbel-Szene hat Leon die Waffe nicht in der Hand wie in RE2, danach ist sie wieder da. RE2 legt sie erst beim naechsten Oeffnen des Inventars wieder an; das habe ich nicht uebernommen, weil in dem Raum vier Zombies warten.
 
+
+## Nachbesserung 1 (nach Abnahme 0, Stand 6fd81d33b; fortlaufend)
+
+Maengel aus O_abnahme_0.md: M1 Riegel unit_r36_tueren_aufschliessen rot, M2 zwei PORT-WAHL ohne Kennzeichnung im Code.
+
+### M1 Messung vorher
+`ctest -R "^unit_r36_tueren_aufschliessen$"` am Stand 6fd81d33b (Bau `ninja: no work to do`), deterministisch:
+`FEHLER: ROOM10D0 Kartenleser Ja (KARTE_EIN): 0 Toene statt 1`, `aufschliessen: ROT (1 Fehler)`, `0% tests passed, 1 tests failed out of 1`.
+Bytes selbst gelesen, ROOM10D0: Slot 1 @0x0103E `2c 01 03 31 00 00 90 01 fa e7 20 03 20 03 ff 00 18 14` (sce 3, Ereignis 0x14 = 20);
+sub20 @0x019AE `2b 07 ff ff` Message_on 7, @0x019B8 `21 0c 1f 00` Ck(12,31,0), @0x019C0 `21 09 34 01` Ck(9,0x34,1), @0x019C4 `2b 09 ff ff` Message_on 9,
+Else @0x019D2 `2b 08 ff ff`. Ton: gen/r36_aufschliessen.inc `{ 0x10D0, 9, RE15_AUF_ART_KARTE_EIN, 2 }` (sub20 @0x019C4), Besitz kistenregel_r37.c `{ 0x10D0, 0x019C0, 9, 0x34, 1, 0x38, ... }`.
