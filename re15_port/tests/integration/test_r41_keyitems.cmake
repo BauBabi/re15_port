@@ -4,7 +4,8 @@ cmake_minimum_required(VERSION 3.16)
 #   TEIL kurbel        Leon, ECHTER Weg ROOM2050 Tuer Slot 1 -> ROOM2020, gehen, START, ITEM, Kurbel, USE: Inventar zu, erstes Bild
 #                      an der Kurbel ist schon das Kurbeln, kein Text, keine Frage, Plc_motion Flags 0x40 (RE2 ROOM1110 @0x02FC1).
 #   TEIL elza          dasselbe mit Elza in ROOM2021.
-#   TEIL renn / geh    START im Rennen / Gehen: nach dem USE dieselbe Lage und dasselbe Bild wie aus dem Stand.
+#   TEIL renn / geh    START im Rennen / Gehen: nach dem USE dieselbe Lage wie aus dem Stand: Sollwert (3650,-3018) im Auswerter
+#                      (Original Stand-Anlauf o_stand1 n90). Der Bildvergleich ist Messung im Dossier, kein Teil dieses Riegels.
 #   TEIL west / nord / ost  Stand mit Blick West, Nord, Ost (Gier 2048, 1024, 0): dieselbe Lage nach dem USE.
 #   TEIL falsch        USE fern der Stelle: "You can't use it here.", Kurbel bleibt, Leon bleibt.
 #   TEIL aktion        Aktionstaste an der Stelle: msg 0, keine Frage, Antwort Nein, Kurbel bleibt.

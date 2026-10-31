@@ -1,8 +1,8 @@
 /*
  * Runde 41 Spur O "keyitems": Auswerter des Integrationstests tests/integration/test_r41_keyitems.cmake.
  *   kurbel <state.txt>   letzter Lauf-Abschnitt von RE15_STATE_LOG: das erste Bild an der Kurbel (x = 3650) ist schon das
- *                        Kurbeln (Kommando 4, Clip 0, Gier 1024, kein Text), ab dort jedes Bild an der Kurbel bis Plc_ret,
- *                        Mindestlaenge der Szene.
+ *                        Kurbeln (Kommando 4, Clip 0, Gier 1024, kein Text) an der Soll-Lage z -3018, ab dort jedes Bild an der
+ *                        Kurbel bis Plc_ret, Mindestlaenge der Szene.
  * Keine Engine-Abhaengigkeit (reiner Text-Auswerter), Linux-fest.
  */
 #include <stdio.h>
@@ -48,6 +48,10 @@ static int kurbel(const char *pfad)
     if (e->pst != 4 || e->mo != 0) { printf("FAIL: erstes Bild an der Kurbel ist nicht das Kurbeln\n"); fehler++; }
     if (e->rot != 1024) { printf("FAIL: Gier\n"); fehler++; }
     if (e->msg) { printf("FAIL: Text offen\n"); fehler++; }
+    /* Sollwert aus dem ORIGINAL, Stand-Anlauf (Spur E, DuckStation-GDB o_stand1.txt): n89 Pos_set @0x0A8C (3650,-2925), n90 Schub ohne
+     * Schritt (spd=0) auf (3650,-3018), dort bis Plc_motion. Der Vergleich mit e->z weiter unten liesse jede Lage durch, die still steht,
+     * auch die Anlauf-Lage des Originals beim Rennen (3650,-3369, o_renn2), die es im USE-Lauf nicht geben darf. */
+    if (e->z != -3018) { printf("FAIL: erstes Kurbelbild z %d statt -3018\n", e->z); fehler++; }
     int ende = -1;
     for (int i = i0; i < s_n; i++) {
         if (s_z[i].pst != 4) { ende = i; break; }

@@ -512,7 +512,7 @@ static void teil_kurbel(void)
         re15_keyitems_r41_schliessen();
         bild(0, 0);
         PRUEF(pl->x == 3650, "ROOM%04X erstes Bild: Pos_set @0x0A8C x (%d)", r, (int)pl->x);
-        PRUEF(pl->z <= -2925 && pl->z >= -3018, "ROOM%04X erstes Bild: z an der Kurbel (%d)", r, (int)pl->z);
+        PRUEF(pl->z == -3018, "ROOM%04X erstes Bild: z %d statt -3018 (Pos_set @0x0A8C -2925, Schub wie Original o_stand1 n90)", r, (int)pl->z);
         PRUEF(pl->rot_y == 1024, "ROOM%04X erstes Bild: Gier @0x0A94 (%d)", r, (int)pl->rot_y);
         PRUEF(pl->anim_flags & 0x40, "ROOM%04X Plc_motion ohne Blende: Flags 0x%02x", r, (unsigned)pl->anim_flags);
         PRUEF(pl->anim_frac == 0, "ROOM%04X anim_frac 0 (%d)", r, (int)pl->anim_frac);

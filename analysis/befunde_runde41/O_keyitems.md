@@ -152,7 +152,7 @@ Teardown wie EXIT) -> scd_event_fire(2), s_stage 0 -> erster Skripttakt: msg 0/1
 Pos_set, Gier, Sleep entfaellt, Plc_motion ohne Blende -> Spielbild blendet ein, Leon kurbelt schon.
 
 PORT-WAHL "Welt laeuft in der Blende": RE1.5 @0x8001cc34 und RE2 @0x80025cb0 halten das Skript waehrend der Einblende an; RE2 setzt danach
-Pos_set sichtbar, faellt dort aber kaum auf, weil die Kurbel im Rechteck liegt (ROOM1110). In ROOM2020 liegt Pos_set 870 Einheiten neben dem
+Pos_set sichtbar, faellt dort aber kaum auf, weil die Kurbel im Rechteck liegt (ROOM1110). In ROOM2020 liegt Pos_set 824 Einheiten neben dem
 Standort beim Druecken (Rechteck @0x009AE ist 1000 westlich der Kurbel), also muss die Lage VOR dem ersten Bild stehen (Auftrag: "Cut_chg und
 Pos_set laufen, BEVOR das Spielbild zurueckkommt").
 
@@ -261,6 +261,9 @@ Aus den drei Punkten ist nichts offen. Bewusst nicht angefasst:
 
 Maengel aus O_abnahme_0.md: M1 Riegel unit_r36_tueren_aufschliessen rot, M2 zwei PORT-WAHL ohne Kennzeichnung im Code.
 
+### M1 Ursache
+Teil 5b' feuerte `re15_aot_fire_slot(1)` und bestaetigte mit Quadrat die Frage in msg 7, die es seit dieser Spur nicht mehr gibt. Das Spiel ist richtig (Lauf kton der Abnahme: msg 9, auf.log art=KARTE_EIN satz=0 bild=+0), nur der Riegel stand auf dem alten Weg. Warum der Bau-Agent ihn nicht fand: der Name unit_r36_tueren_aufschliessen trifft seinen Regex nicht (nachgeprueft), und sein Zensus suchte FIRE_AOT/FORCE_EVENT in Skripten, nicht den C-Aufruf `re15_aot_fire_slot(` in Sonden. Der Aufruf steht in 15 Testquellen, `scd_event_fire(` in 66; alle sind Unit-Tests und liegen im Lauf unten.
+
 ### M1 Messung vorher
 `ctest -R "^unit_r36_tueren_aufschliessen$"` am Stand 6fd81d33b (Bau `ninja: no work to do`), deterministisch:
 `FEHLER: ROOM10D0 Kartenleser Ja (KARTE_EIN): 0 Toene statt 1`, `aufschliessen: ROT (1 Fehler)`, `0% tests passed, 1 tests failed out of 1`.
@@ -283,7 +286,7 @@ Die Entscheidungen standen nur im Dossier, der Code nannte weder Abweichung noch
 - ROOM2020 @0x0B0E `29 03` Cut_chg, @0x0B16 `42 00` Plc_ret; RE2 ROOM1110 @0x02F24 `53 02 02 07 00 18`, @0x02F4E `53 02 02 07 00 e8`.
 Geaendert: menu_common.c close_phase (Kommentarblock, Wort PORT-WAHL, Adressen), scd_vm.c op_plc_ret (Wort PORT-WAHL, @0x0B16), keyitems_r41.c re15_keyitems_r41_plc_ret, Kopf re15_keyitems_r41.h, zusaetzlich k_flagitems (NUTZER-VORGABE). Alle PORT-WAHL des Dossiers stehen jetzt auch im Code (Id 0x33, Waffe, Welt in der Blende, Szenenende).
 
-Berichtigung: der Abstand steht oben im Dossier und in Abnahme 0 als 870. Gemessen (2914,-3388) -> (3650,-3018) sind es 823,8. Der Kommentar nennt 824.
+Berichtigung: der Abstand stand im Abschnitt Umsetzung als 870 (in Abnahme 0 auch). Gemessen (2914,-3388) -> (3650,-3018) sind es 823,8. Abschnitt Umsetzung und Code-Kommentar nennen jetzt 824.
 
 ### M2 Messung nachher: nur Kommentare
 objdump gegen die vor der Aenderung gesicherten Objekte: `.text`, `.rdata`, `.data`, `.bss` von keyitems_r41, menu_common, scd_vm gleich. Das Spielverhalten ist also unveraendert, die Messlaeufe der Abnahme gelten weiter.
@@ -302,3 +305,48 @@ Falle dabei: der erste Lauf ergab ueberall 0, weil Leon ausserhalb von Kamera 0/
 **Lage an der Kurbel gegen das Original.** Pos_set @0x0A8C `32 00 42 0e f8 f8 93 f4` schreibt z -2925, der Port steht bei -3018. Die Abnahme mass nur Gleichheit zwischen den Anlaeufen, nicht den Sollwert. Original Stand-Anlauf (Spur E, DuckStation-GDB o_stand1.txt): `n89 ... pl=3650,-2925 ... spd=0`, `n90 ... pl=3650,-3018 ... spd=0`, bleibt bis Plc_motion (n124 cmd=4 pl=3650,-3018). Also Schub ohne Schritt, und -3018 ist der Sollwert aus dem Stand. Im Original haengt die Lage vom Anlauf ab (Rennen -3369, o_renn2); im USE-Lauf nicht mehr. Kein Mangel.
 
 **Zensus der ungefahrenen Tests.** 187 von 1342 Tests lagen ausserhalb aller Regexe von Bau-Agent und Abnahme. Aus `ctest --show-only=json-v1` die echten Befehle und Skripte gegen die 14 Stellen geprueft: kein FIRE_AOT, FORCE_EVENT oder USE_TEST trifft ein Paar (Raum, Slot) der Tabelle (Treffer in 1171, 1021, 1041, 1110/1111, 10D1 Slot 0, 11F0, 20A0, 2080 sind andere Slots oder Raeume), kein RE15_GIVE mit betroffener Id, von den Flags nur (9,53) in r30_granate_laden ohne (3,108). Die Tests mit betroffenen Raeumen und die STAGE2-Kette fahre ich trotzdem.
+
+### Hinweise der Abnahme 0 (kein Mangel, fuer Release Notes und Nutzer uebernommen)
+- H1 Stelle der Kurbel: auf der Kurbel-Lage selbst (3650,-3018), Blick Nord, meldet USE "You can't use it here.", die Aktionstaste zeigt dort nichts. Es gilt das Original-Rechteck @0x009AE (x 2200..3000, z -4150..-3350), rund 1000 westlich der Kurbel. Wo "It's a square hole." kommt, geht USE. Ob USE auch direkt an der Kurbel gehen soll, entscheidet der Nutzer (siehe Fragen).
+- H2 Altstand: Flag gesetzt, Inventar voll, kein Eintrag: Frage und Blende bleiben, bis ein Platz frei ist. Betrifft nur alte Spielstaende.
+- H3 Text in der Einblende: die Welt laeuft bei allen 14 Stellen in der Blende, gebraucht wird das nur an der Kurbel. "You've used ..." beginnt dadurch auf fast schwarzem Bild.
+- H4 Karten an Tueren: 3010 bleibt Aktionstaste (RE2-Form Lab Card Key), 4000 ist USE (Panel, im Original mit Frage). Beide haben ein RE2-Vorbild, der Spieler sieht aber zwei Wege.
+- H5 Sicherung aus 2030 am Rolltor: USE am Rolltor 1050 nimmt den Eintrag, der Besitz-Takt legt ihn wieder an, weil (3,108) gilt. Sie reicht dann fuer Rolltor und Generator, keine Sackgasse.
+- H6 Name: Inventar "Timer Bomb" (DEBUG.BIN), Skripte und CHECK "Time Bomb"; beides ausgeliefert.
+- H7 Android: neue Datei engine/src/keyitems_r41.c, Memory reai-v2-android-glob-cache beachten (app/.cxx friert den Configure). Nur PC gebaut.
+
+### Riegel-Haertung: Sollwert der Lage (nur Testcode)
+Der Kopf von test_r41_keyitems.cmake versprach "dieselbe Lage und dasselbe Bild wie aus dem Stand", der Auswerter test_r41_keyitems_exe.c verglich aber nur mit dem eigenen ersten Bild desselben Laufs. Ein Rueckfall auf die Renn-Lage des Originals (-3369, o_renn2) waere gruen geblieben, und unit_r41_keyitems_kurbel liess mit `z <= -2925 && z >= -3018` einen Bereich zu. Das ist genau der Punkt "genau richtig steht". Jetzt pinnen beide z == -3018 (Pos_set @0x0A8C -2925, Schub wie Original o_stand1 n90); der Kopf nennt, was der Riegel prueft, der Bildvergleich bleibt Messung der Abnahme.
+Messung, Auswerter je Lauf am Endstand:
+```
+kurbel  vorher F263 (2914,-3388) Gier 2016   erstes Kurbelbild F264 (3650,-3018) Gier 1024 pst=4 mo=0
+elza    vorher F333 (2914,-3388) Gier 2016   erstes Kurbelbild F334 (3650,-3018) Gier 1024 pst=4 mo=0
+renn    vorher F340 (3617,-3382) Gier 2016   erstes Kurbelbild F341 (3650,-3018) Gier 1024 pst=4 mo=0
+geh     vorher F339 (3356,-3385) Gier 2016   erstes Kurbelbild F340 (3650,-3018) Gier 1024 pst=4 mo=0
+west    vorher F333 (3300,-3382) Gier 2048   erstes Kurbelbild F334 (3650,-3018) Gier 1024 pst=4 mo=0
+nord    vorher F333 (2600,-3018) Gier 1024   erstes Kurbelbild F334 (3650,-3018) Gier 1024 pst=4 mo=0
+ost     vorher F333 (1700,-3388) Gier 0      erstes Kurbelbild F334 (3650,-3018) Gier 1024 pst=4 mo=0
+```
+Schaerfe mit synthetischem Log im Parser-Format: Soll-Lage `rc=0`; z -3369: `FAIL: erstes Kurbelbild z -3369 statt -3018`, `rc=1`.
+
+### Tests am Endstand
+Keine volle Suite. Lauf 1 (Engine wie am Endstand, vor der Riegel-Haertung; -j 5, Dauer 2006,68 s, unter Last anderer Spuren):
+`-R "^(unit_|prop_|probe_)|^(unit_r36_tueren_.*|integration_r36_tueren|integration_r41_keyitems_.*|integration_r38_wasserzombie|integration_r39_toene_schublade(_elza)?|integration_r39_funk10f1_.*|integration_r37_beretta|integration_r39_stimmen_1050|integration_r39_johnruf1041_tuer_t1051.*|integration_r41_kanister2080.*|integration_r41_re2gator|integration_door_traversal|integration_room_transition)$"`
+`100% tests passed, 0 tests failed out of 1061`
+Nicht gelaufen: unit_r17_birkin_1zu1_pin, unit_r18_birkin_restluecken_pin, unit_r20_birkin_push_pin (Skipped, wie in Abnahme 0). unit_r35_android_bash_mutanten, in Abnahme 0 unter Last rot, ist gruen.
+Lauf 2 (Endstand mit Riegel-Haertung):
+`-R "r41_keyitems|^unit_r36_tueren_|^integration_r36_tueren$"`
+`100% tests passed, 0 tests failed out of 26`
+Nachlauf der sieben Anlaeufe `-R "^integration_r41_keyitems_(kurbel|elza|renn|geh|west|nord|ost)$"`: `100% tests passed, 0 tests failed out of 7`
+
+Die Ventilketten-Laeufe und die breiten Integrationslaeufe der Abnahme habe ich nicht wiederholt: an Engine-Code hat sich seit 08b21b48e nichts geaendert, Kommentar-Diff und Sektionsvergleich oben belegen das fuer die drei Objekte. Die zehn Quellen mit re15_keyitems_r41.h sehen nur eine Kommentar-Aenderung im Kopf. Die Pruefsumme der exe aendert sich trotzdem (7b1fe8eb... -> 18978cc1...), sie ist also kein Beleg, der Sektionsvergleich schon.
+
+### OFFEN nach Nachbesserung 1
+- 171 Integrationstests sind auf diesem Zweig nie gefahren (187 ausserhalb aller Regexe, 16 davon jetzt mit). Der Zensus fand fuer sie keinen Treffer auf die 14 Stellen, er ist aber eine Mustersuche und kein Beweis. Das entscheidet erst die volle Suite bei der Integration.
+- Nur am PC gebaut und getestet (Spurgrenze), kein PSX- oder Android-Bau, siehe H7.
+- Die Hinweise H1 bis H7 oben bleiben bewusst unveraendert; H1 und H4 sind Fragen an den Nutzer.
+
+### Fuer den Nutzer (Ergaenzung)
+- Keine neuen Assets unter shared_assets/RE2, keine Sprachdateien, keine neuen Bits oder Nachrichten-Ids.
+- Ventil: seit dieser Spur laeuft das Loslassen des Ventils (Runde 41 Spur C) wirklich ohne Ueberblendung, wie RE2 ROOM1080 und wie dort im Kommentar schon behauptet. Gemessen entsteht kein Pose-Sprung (Bogen O_belege/nb1_ventil_0xc0.png).
+- Kurbel: aus jedem Anlauf steht Leon an derselben Stelle, und das ist die Lage, die das Original aus dem Stand erreicht (3650,-3018). Im Original rutscht er nach einem Lauf bis -3369 weiter und passt nicht an den Griff; das gibt es ueber USE nicht mehr.
