@@ -62,6 +62,21 @@ static void teil_gpu(void)
         x0 = -5000; y0 = -9000; x1 = 300; y1 = 9000; x2 = 300; y2 = 100;
         PRUEF(re15_gpu_dreieck_verwerfen(0, 0, &x0, &y0, &x1, &y1, &x2, &y2) == 1 && y0 == -0x400 && y1 == 0x3FF, "gesaettigt immer noch ueber 511: weg");
     }
+    /* Z2 ESP-Quader: Vertex-Wort psx-spx "0-10 X-coordinate (signed, -1024..+1023)", "11-15 ... ignored by hardware". Quader aus dem Lauf int_qr/v1 (ROOM20B0, Mitte gesaettigt, Ecken wie FUN_800534c4). */
+    PRUEF(re15_gpu_vertex(1023) == 1023 && re15_gpu_vertex(-1024) == -1024, "Vertex: Randwerte bleiben");
+    PRUEF(re15_gpu_vertex(1024) == -1024 && re15_gpu_vertex(-1025) == 1023, "Vertex: Bit 11 und hoeher zaehlen nicht");
+    PRUEF(re15_gpu_vertex(10250) == 10, "Vertex: Koordinate aus ROOM20B0");
+    {
+        int x0 = -53, y0 = -36, x1 = 340, y1 = 357;     /* F755, 393 breit */
+        PRUEF(re15_gpu_quad_verwerfen(&x0, &y0, &x1, &y1) == 0 && x0 == -53 && y1 == 357, "393 x 393 zeichnet die Hardware");
+        x0 = -761; y0 = 519; x1 = -25; y1 = 1255;       /* F756, 736 breit: y1 wickelt auf -793, Abstand 1312 */
+        PRUEF(re15_gpu_quad_verwerfen(&x0, &y0, &x1, &y1) == 1 && y1 == -793, "736 x 736 unten am Bild: weg");
+        x0 = -53; y0 = -100; x1 = 459; y1 = 412;        /* 512 hoch */
+        PRUEF(re15_gpu_quad_verwerfen(&x0, &y0, &x1, &y1) == 1, "512 hoch: weg");
+        x0 = -6122; y0 = -4075; x1 = 4074; y1 = 6121;   /* F762, 10196 breit: gewickelt (22,21) .. (-22,-23), Abstand 44 */
+        PRUEF(re15_gpu_quad_verwerfen(&x0, &y0, &x1, &y1) == 0 && x0 == 22 && y0 == 21 && x1 == -22 && y1 == -23, "ueber 11 Bit: gewickelt und gespiegelt, unter der Grenze, die Hardware zeichnet ihn");
+    }
+    PRUEF(re15_gte_saettigen(-4422) == -0x400 && re15_gte_saettigen(3399) == 0x3FF && re15_gte_saettigen(143) == 143, "Mitte aus der GTE: Saettigung");
     {
         const long long flaeche_max = 4LL * 2 * RE15_GPU_MAX_DX * RE15_GPU_MAX_DY / 2;   /* cross_product von Koordinaten << FP_BITS (1) */
         PRUEF(767 * flaeche_max < 2147483648LL, "groesste zugelassene Flaeche %lld x hoechste Texturzeile 767 bleibt unter 2^31", flaeche_max);

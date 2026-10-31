@@ -10,6 +10,7 @@
 #   integration_r41_restpunkte_original(_elza)  exe: RE15_GATOR_ORIGINAL zeigt die Spinnen des ausgelieferten Raums und den RE1.5-Alligator, keine Szene
 #   integration_r41_restpunkte_masken      exe: Teil 8 HINTER verdeckt, DAVOR nicht uebermalt, Leon und Elza
 #   integration_r41_ventilkette_kette_elza exe: die Kette als Elza, 2031 -> 20B1 -> 2051 (UEBERGABE 3b)
+#   integration_r41_restpunkte_effektquader(_elza)  exe, beschleunigter Renderer: Effekt-Quader ueber der GPU-Grenze verworfen, Hintergrund bleibt, Wasser bleibt (Z2, Dossier Q OFFEN 1)
 add_executable(test_r41_restpunkte ${CMAKE_CURRENT_LIST_DIR}/../test_r41_restpunkte.c)
 target_link_libraries(test_r41_restpunkte PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_restpunkte PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/..)
@@ -64,6 +65,21 @@ if(TARGET re15_pc)
                          -DFIGUR=${_fig}
                          -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_restpunkte_treppe.cmake)
         set_tests_properties(${_name} PROPERTIES TIMEOUT 900)
+    endforeach()
+    foreach(_fig leon elza)
+        if(_fig STREQUAL "leon")
+            set(_name integration_r41_restpunkte_effektquader)
+        else()
+            set(_name integration_r41_restpunkte_effektquader_${_fig})
+        endif()
+        add_test(NAME ${_name}
+                 COMMAND "${CMAKE_COMMAND}"
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DRE15_N30_WERKZEUG=$<TARGET_FILE:test_r41_nachtrag30>
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_restpunkte_effektquader_${_fig}_wd
+                         -DFIGUR=${_fig}
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_restpunkte_effektquader.cmake)
+        set_tests_properties(${_name} PROPERTIES TIMEOUT 420)
     endforeach()
     if(EXISTS ${CMAKE_SOURCE_DIR}/engine/src/wasser20b0_r41.c)
         add_test(NAME integration_r41_ventilkette_kette_elza

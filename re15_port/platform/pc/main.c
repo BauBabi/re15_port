@@ -163,6 +163,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Hochziehen der Wasserzombies (Bank, Pose, Schatten) */
 #include "re15_gegner_r39.h"       /* Runde 39 Spur E: Gorilla-/Affen-Schatten auf +0x1ba (@0x80116f30 / @0x80110c78) */
 #include "re15_inventar_r39.h"  /* Runde 39 Spur C: Spind 1000, Stapeln, Status-Bild, Messschiene RE15_INV_LOG */
+#include "re15_gpu_grenze_r41.h"  /* Integration Q+R, Z2: GPU-Grenze fuer die ESP-Quader */
 #include "re15_parkplatz_r39.h" /* Runde 39 Spur O: Tuersperre ROOM11C0 (Boot-/CONTINUE-Weg, Messhaken RE15_R39O_*) */
 #include "re15_rbj_binder_r41.h" /* Runde 41 Spur J: Spieler-Record des RBJ-Marker-Binders FUN_8001b3f8 */
 
@@ -563,15 +564,25 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
             default: re15_render_pc_set_tri_alpha(128); break;   /* ABR0 = 0.5*B + 0.5*F */
             }
         }
+        /* Integration Q+R, Z2 (Dossier Q OFFEN 1, Entscheid des Orchestrators; Belege re15_gpu_grenze_r41.h): die Mitte ist die GTE-Ausgabe SXY2 (RTPS @0x80053534, SWC2 @0x8005354c, s6 = SX<<16
+         * @0x80053558), also gesaettigt auf -400h..+3FFh; die Ecken rechnet die CPU ohne Klemme. */
+        const int sx_gte = re15_gte_saettigen(sx), sy_gte = re15_gte_saettigen(sy);
         for (int q = 0; q < nspr; q++) {
             re15_esp_coord_t c;
             if (!bank || f->eff_idx < 0 ||
                 re15_esp_coord(bank, f->eff_idx, cstart + q, &c) != 0) break;
-            int x0 = sx + (int)(((int64_t)(int8_t)c.w * stepX) >> 16);
-            int y0 = sy + (int)(((int64_t)(int8_t)c.h * stepY) >> 16);
-            int x1 = sx + (int)((((int64_t)(int8_t)c.w * stepX) + w16) >> 16);
-            int y1 = sy + (int)((((int64_t)(int8_t)c.h * stepY) + h16) >> 16);
+            int x0 = sx_gte + (int)(((int64_t)(int8_t)c.w * stepX) >> 16);
+            int y0 = sy_gte + (int)(((int64_t)(int8_t)c.h * stepY) >> 16);
+            int x1 = sx_gte + (int)((((int64_t)(int8_t)c.w * stepX) + w16) >> 16);
+            int y1 = sy_gte + (int)((((int64_t)(int8_t)c.h * stepY) + h16) >> 16);
             if (x1 <= x0 || y1 <= y0) continue;
+            /* Z2: die GPU liest 11 Bit je Koordinate und zeichnet nichts ueber 1023 x 511 (psx-spx "Vertex", "Size Restriction"), in beiden Renderern gleich. ROOM20B0 F755..F767: Effekt 0x0f sub 7 kurz vor
+             * der Kamera, bis 16815 breit (Lauf int_qr/v1). */
+            if (re15_gpu_quad_verwerfen(&x0, &y0, &x1, &y1)) {
+                FILE *fg = pc_fx_log_handle();
+                if (fg) fprintf(fg, "   -> gpu-grenze q=%d (%d,%d) (%d,%d) verworfen F=%u\n", q, x0, y0, x1, y1, (unsigned)g_engine.frame_count);
+                continue;
+            }
             int u0 = c.u, v0 = c.v, u1 = c.u + S - ute, v1 = c.v + S - vte;
             /* clut_wort waehlt im Seiten-Slot die Palette (render_pc.c: Zeile - clut_base_y =
              * Stapel-Index); 0 = erste Palette (Altweg der Ein-Paletten-Blaetter).
