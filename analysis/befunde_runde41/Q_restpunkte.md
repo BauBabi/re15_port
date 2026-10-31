@@ -221,3 +221,11 @@ Ausserhalb von Teil 8 uebermalt: an allen 22 Stellen 0. (-20312,-20020), (-20412
 - `integration_r41_restpunkte_masken`: 10 Szenen Art Z, Stelle des Mangels q8a, Fenster nur aus Figurpunkten auf dem Teil (`Q41n1/tools/fenster.py`). Die Szenen q8v/q8ve ("Figur VOR der Wange") sind weg: die Figur stand dort hinter der Wange.
 - `integration_r41_restpunkte_treppe(_elza)`: neu.
 - `unit_r41_masken36_fern`: Schranke 344, Stage 6 == 0.
+
+### Gegenprobe
+Die vier Maskendateien des Stands davor (6887d9b88) eingesetzt, Szenen unveraendert, `integration_r41_restpunkte_masken`: FAILED, 9 von 10 Szenen rot, q8a 41 von 66 sichtbar, q8b 26 von 89, q8c 44 von 45, q8d 26 von 26, q8h2 6 von 119, Elza q8ea 13 von 37, q8eb 11 von 88, q8ec 12 von 65, q8ed 14 von 14. Nur q8h1 besteht dort, das ist die Stelle, die der Erststand behoben hatte. Damit unterscheiden auch die Elza-Szenen beide Staende (Hinweis H7 der Abnahme erledigt). Dateien danach zurueck, `git status` leer.
+
+### OFFEN aus Nachbesserung 1
+1. Teil 8 ist nicht die ganze Wange. In den Bildzeilen 202..239 deckt es 232 von 438 Punkten der Aussenflaeche (Band aus den Kanten UNTEN5/OBEN5), mehr hat der Atlas dort nicht. Ausserhalb des Teils bleiben an den Stellen 0..18 Figurpunkte auf der Flaeche sichtbar (meist (165,235), (166,237); groesste Stelle (-19912,-19320) 18 Punkte um (160,224)). Von Band-0-Stellen erreicht die Figur die Flaeche oberhalb von Bildzeile 202 nicht (0 Punkte an allen Stellen). Das sieht man nur mit RE15_FORCE_CUT.
+2. Die Ebene ist eine Messung am Bild, keine Spielkonstante. Die beiden Kanten liegen 80 auseinander (-20631 / -20551), die Fehlergrenze aus 0,5 Bildpunkten je Probe ist Sigma 7; ob die Flaeche leicht schraeg steht oder die Kanten verschiedene Flansche sind, ist nicht bestimmt. Fuer das Bild aendert das nichts: die Abnahme mass k = 12..20 Stufen ohne Unterschied, die Ebene liegt mit 19..22 Stufen dahinter nur um wenige Stufen weiter, und vor ihr steht keine Figur auf dem Teil.
+3. Wer `platzieren_r41.py` neu laufen laesst, muss danach `stufen_r41.py --von 113 --wange -20591 --tabelle-aus ... --platziert ...` fahren, sonst steht Teil 8 wieder auf der Zelle. Die Riegel `unit_r41_restpunkte_teil8` und `unit_r41_masken36_fern` fallen dann rot.
