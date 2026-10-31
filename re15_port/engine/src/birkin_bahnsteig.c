@@ -127,7 +127,7 @@ int re15_bb_cd_lauf_test(int setzen) { if (setzen >= 0) s_bb.cd_lauf = (uint8_t)
 int re15_bb_bank_da(const re15_actor_t *e)
 {
     const re15_enemy_bank_t *b = e ? re15_enemy_find(e->type) : NULL;
-    return e && e->type == 0x30u && b && b->ok && b->re2_rig && b->skel.bone_count == 27;
+    return e && e->type == 0x30u && b && b->ok && b->re2_rig && (b->bb_form || b->skel.bone_count == 27);
 }
 
 /* ---- Bausteine ---------------------------------------------------------------------------- */

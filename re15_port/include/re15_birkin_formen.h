@@ -61,7 +61,7 @@ int  re15_bf_szene_besitzt(int slot);
 void re15_bf_reset(void);                /* Raumwechsel */
 
 /* Bahnsteig-Form, Ablaeufe nach dem RE2-G4-Overlay (engine/src/birkin_bahnsteig.c). */
-int  re15_bb_bank_da(const re15_actor_t *e);    /* 1 = dieser 0x30 traegt die G4-Bank (27 Knochen) */
+int  re15_bb_bank_da(const re15_actor_t *e);    /* 1 = dieser 0x30 traegt die Bahnsteig-Form (Bank-Bit bb_form, sonst 27 Knochen) */
 void re15_bb_tick(int slot);                    /* ersetzt re15_birkin_ai_tick fuer die Form */
 void re15_bb_reset(void);
 void re15_bb_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(int bank));

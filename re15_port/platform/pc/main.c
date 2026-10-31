@@ -1106,6 +1106,7 @@ static int pc_enemy_load_bahnsteig(uint8_t type, re15_enemy_bank_t *eb)
     }
     eb->buf = emd;                                     /* md1/skel/anim zeigen in diesen Puffer */
     eb->re2_rig = 1;
+    eb->bb_form = 1;                                   /* re15_bb_bank_da: Knochenzahl frei (tools/form_emd.py) */
     {   /* Opfer-Bank EM30: privater Blob, bleibt fuer die Laufzeit des Prozesses (Bank zeigt hinein) */
         static uint8_t *s_em30 = NULL; static size_t s_em30_len = 0;
         if (!s_em30) s_em30 = pc_enemy_read_re15_emd(type, &s_em30_len);
