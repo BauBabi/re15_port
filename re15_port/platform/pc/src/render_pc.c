@@ -590,6 +590,7 @@ int re15_render_pc_standbild_wiederholen(void)
 /* Per-tri vertex alpha for SUBSEQUENTLY queued tris (PSX ABE semi-transparency: the effect
  * sprites draw ABR0 = 0.5*back + 0.5*front -> alpha 128 with SDL BLEND). Reset to 255 after. */
 static int s_tri_alpha = 255;
+static int s_cpu_rasterer = 0;   /* Runde 41 Spur Q: 1 = SDLs CPU-Rasterer (RE15_SOFTWARE_RENDER oder Rueckfall), Schutz re15_gpu_grenze_r41.h */
 void re15_render_pc_set_tri_alpha(int a) { s_tri_alpha = (a < 0) ? 0 : (a > 255) ? 255 : a; }
 /* Per-tri BLEND MODE for subsequently queued tris — die PSX-ABR-Modi der Effekt-Sprites
  * (POLY-Code-Bit 0x02 = ABE aus flags Bit4, ABR = TPAGE-Bits 5-6; Draw FUN_800534c4,
@@ -683,6 +684,7 @@ void re15_render_init(void)
     {
         SDL_RendererInfo ri;
         const char *rname = (SDL_GetRendererInfo(s_renderer, &ri) == 0) ? ri.name : "?";
+        if (rname != (const char *)"?") s_cpu_rasterer = (ri.flags & SDL_RENDERER_SOFTWARE) != 0;   /* Runde 41 Spur Q: re15_gpu_grenze_r41.h */
         const char *vname = SDL_GetCurrentVideoDriver();
         SDL_BlendMode abr2 = SDL_ComposeCustomBlendMode(
             SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
@@ -2745,7 +2747,7 @@ void re15_render_textured_tri(int x0, int y0, int u0, int v0,
     (void) tpage;
     if (!s_tim_texture || s_textri_count >= TEXTRI_QUEUE_MAX) return;
     if (s_tim_w == 0 || s_tim_h == 0) return;
-    if (re15_gpu_dreieck_verwerfen((unsigned)g_engine.frame_count, s_active_slot, &x0, &y0, &x1, &y1, &x2, &y2)) return;   /* Runde 41 Spur Q: GTE-Saettigung + GPU-Grenze 1023 x 511 */
+    if (s_cpu_rasterer && re15_gpu_dreieck_verwerfen((unsigned)g_engine.frame_count, s_active_slot, &x0, &y0, &x1, &y1, &x2, &y2)) return;   /* Runde 41 Spur Q: Schutz vor SDL_triangle.c:618 */
 
     /* Phase 4.5.7.7: `z` is the sort key for back-to-front rendering.
      * Higher z = farther from camera = drawn first (painted UNDER closer
@@ -2848,7 +2850,7 @@ void re15_render_textured_tri_lit(int x0, int y0, int u0, int v0,
     (void) tpage;
     if (!s_tim_texture || s_textri_count >= TEXTRI_QUEUE_MAX) return;
     if (s_tim_w == 0 || s_tim_h == 0) return;
-    if (re15_gpu_dreieck_verwerfen((unsigned)g_engine.frame_count, s_active_slot, &x0, &y0, &x1, &y1, &x2, &y2)) return;   /* Runde 41 Spur Q: GTE-Saettigung + GPU-Grenze 1023 x 511 */
+    if (s_cpu_rasterer && re15_gpu_dreieck_verwerfen((unsigned)g_engine.frame_count, s_active_slot, &x0, &y0, &x1, &y1, &x2, &y2)) return;   /* Runde 41 Spur Q: Schutz vor SDL_triangle.c:618 */
 
     /* MESSHAKEN: die ECHTE Tiefenspanne der gezeichneten Dreiecke.
      * Die F9-Marke gab bisher nur Fuss/Huefte/Kopf aus der AKTORPOSITION aus - damit war

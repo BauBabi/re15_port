@@ -1,7 +1,9 @@
 #ifndef RE15_GPU_GRENZE_R41_H
 #define RE15_GPU_GRENZE_R41_H
 
-/* Runde 41 Spur Q (UEBERGABE 3b, Dossier analysis/befunde_runde41/Q_restpunkte.md Punkt 3): was die PSX-Hardware mit grossen Dreiecken tut.
+/* Runde 41 Spur Q (UEBERGABE 3b, Dossier analysis/befunde_runde41/Q_restpunkte.md Punkt 3): Schutz des CPU-Rasterers von SDL vor riesigen Dreiecken, nach dem Vorbild dessen, was die
+ * PSX-Hardware mit grossen Dreiecken tut. Er gilt NUR fuer SDLs CPU-Rasterer (RE15_SOFTWARE_RENDER oder Rueckfall ohne GPU): im beschleunigten Renderer des Spielers tritt der Fehler nicht
+ * auf, und Port-eigene grosse Flaechen (Wasserflaechen als Prop) sind nicht gegen diese Hardware-Grenze gebaut.
  *
  * GTE (psx-spx geometrytransformationenginegte.md Z. 418/419): "ScrX FIFO -400h..+3FFh", "ScrY FIFO -400h..+3FFh" = Bildkoordinaten saettigen. Der Modell-Zeichner des Originals
  * prueft dafuer kein FLAG (@0x80025640 AVSZ3, @0x80025658 beq nur auf otz>>6 == 0), die Dreiecke gehen so an die GPU.
