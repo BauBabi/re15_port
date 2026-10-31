@@ -19,6 +19,8 @@
  *                 sub01 -> sub19 Message_on 5) = Piep, 15 Bilder spaeter Aufschliessen; ROOM3010 Green Keycard
  *                 (Platz 6 -> sub02 Message_on 1) = Karte ein / +15 Piep / +30 Aufschliessen; ROOM1140 Riegel
  *                 (Platz 2 -> sub02 Message_on 0) = Satz AUF_HIER im selben Bild; ohne Ausloeser: kein Ton.
+ *                 ROOM10D0 Kartenleser (Runde 41 Spur O, RE2-Form): USE der Blue Keycard = Karte ein; die Aktionstaste
+ *                 zeigt nur die Beschreibung und bleibt stumm.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -37,6 +39,7 @@
 #include "re15_door_seq.h"
 #include "re15_aufschliessen_r36.h"
 #include "re15_kistenregel_r37.h"
+#include "re15_keyitems_r41.h"
 #include "re15_tim.h"
 #include <math.h>
 
@@ -494,19 +497,42 @@ static void teil_aufschliessen(void)
         folge_pruefen("ROOM10D0 Code richtig (KARTE_AUF)", sa, bi, 2);
         PRUEF(re15_game_flag_get(3, 0x32), "ROOM10D0: sub01 hat (3,0x32) nicht gesetzt - Skriptweg nicht gelaufen");
     }
-    /* 5b'. ROOM10D0 Kartenleser: Blue Keycard (9,0x34) da, Platz 1 sce 3 -> sub20 @0x019AE Message_on 7 (Ja/Nein),
-     * Ja (Ck(12,0x1F)==0) -> @0x019C4 Message_on 9 "You've used the Blue Keycard." = KARTE_EIN (nur Karte ein;
-     * Piep + Aufschliessen erst nach dem Code, 5b). Bestaetigt wird mit QUADRAT (Ja ist vorgewaehlt), Text mehrseitig -> alle 8 Bilder druecken. */
+    /* 5b'. ROOM10D0 Kartenleser: Blue Keycard (9,0x34) da (room_boot legt sie ueber die Kistenregel-Zeile @0x019C0 ins Inventar).
+     * Runde 41 Spur O, RE2-Form Red Card Key (ROOM2110 @0x01812, @0x01AD8): die Karte geht ueber USE. Das Ereignis 20 (Platz 1 sce 3
+     * @0x0103E) -> sub20 @0x019AE Message_on 7 entfaellt mit Antwort Ja, Ck(12,0x1F)==0 @0x019B8, Ck(9,0x34,1) @0x019C0 -> @0x019C4
+     * Message_on 9 "You've used the Blue Keycard." = KARTE_EIN (nur Karte ein; Piep + Aufschliessen erst nach dem Code, 5b).
+     * Ton und Text fallen ohne jede Taste im ersten Skripttakt. */
     s_n_flags = 1; s_flags[0][0] = 9; s_flags[0][1] = 0x34;
     if (room_boot(0x10D0) == 0) {
+        PRUEF(re15_inv_find_item(0x38) >= 0, "ROOM10D0: Blue Keycard 0x38 nicht im Inventar");
+        const unsigned ja0 = re15_keyitems_r41_verschluckt(1);
+        s_spion_n = 0; s_bild = 0;
+        PRUEF(re15_keyitems_r41_testlauf(0x38) == 1, "ROOM10D0: USE der Blue Keycard hat Ereignis 20 nicht gestartet");
+        for (int f = 0; f < 900 && s_spion_n == 0; f++, s_bild++) frame(0, 0);
+        static const int sa[1] = { 0 }, bi[1] = { 0 };
+        folge_pruefen("ROOM10D0 Kartenleser USE (KARTE_EIN)", sa, bi, 1);
+        PRUEF(s_spion_n > 0 && s_spion_bild[0] == 0, "ROOM10D0 USE: Ton erst in Bild %d statt im ersten Skripttakt", s_spion_bild[0]);
+        PRUEF(re15_keyitems_r41_verschluckt(1) == ja0 + 1, "ROOM10D0 USE: Frage msg 7 nicht entfallen");
+        PRUEF(g_scd.message_id == 9, "ROOM10D0 USE: msg %d statt msg 9 @0x019C4", (int)g_scd.message_id);
+    }
+    /* Gegenprobe der alte Weg: die Aktionstaste (re15_aot_fire_slot = dieselbe Stelle, Quadrat wie vor Runde 41) zeigt nur die
+     * Beschreibung, die Frage entfaellt mit Antwort Nein (RE2 ROOM2110 Slot 5 sce 5 @0x017FE -> sub10 nur Text): sub20 endet vor
+     * @0x019C0, kein msg 9, kein Ton. */
+    s_n_flags = 1; s_flags[0][0] = 9; s_flags[0][1] = 0x34;
+    if (room_boot(0x10D0) == 0) {
+        const unsigned nein0 = re15_keyitems_r41_verschluckt(0);
         s_spion_n = 0; s_bild = 0;
         re15_aot_fire_slot(1);
-        for (int f = 0; f < 900 && s_spion_n == 0; f++, s_bild++) {
+        int msg9 = 0;
+        for (int f = 0; f < 900; f++, s_bild++) {
             uint16_t e = (f >= 8 && (f % 8) == 0) ? RE15_PAD_BIT_SQUARE : 0;
             frame(e, e);
+            if (g_scd.message_active && g_scd.message_id == 9) msg9 = 1;
         }
-        static const int sa[1] = { 0 }, bi[1] = { 0 };
-        folge_pruefen("ROOM10D0 Kartenleser Ja (KARTE_EIN)", sa, bi, 1);
+        PRUEF(re15_keyitems_r41_verschluckt(0) == nein0 + 1, "ROOM10D0 Aktionstaste: Frage msg 7 nicht erreicht");
+        PRUEF(s_spion_n == 0, "ROOM10D0 Aktionstaste: %d Toene statt 0", s_spion_n);
+        PRUEF(!msg9, "ROOM10D0 Aktionstaste: msg 9 ohne USE");
+        PRUEF(re15_game_flag_get(9, 0x34) == 1, "ROOM10D0 Aktionstaste: Blue Keycard (9,0x34) verschwunden");
     }
     /* 5c. ROOM3010 Green Keycard: (3,0x3B) = Karte da -> Platz 6 sce 3 -> sub02 Message_on 1 */
     s_n_flags = 1; s_flags[0][0] = 3; s_flags[0][1] = 0x3B;

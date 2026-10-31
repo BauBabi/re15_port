@@ -44,6 +44,7 @@
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: "Empty Fire Extinguisher" (Nachtrag 4c) */
 #include "re15_dining_r38.h"     /* Runde 38 Spur F: "Dining Room Key" (Id 0x43) */
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: "Water Key" (Id 0x34) */
+#include "re15_keyitems_r41.h"    /* Runde 41 Spur O: "Crank" (Id 0x33) */
 #include "gen/item_prompt_data.inc"
 
 /* Port-Prompt-Schluessel -> BSS-Skriptindex. Die Zuordnung der vier bisher genutzten
@@ -180,6 +181,7 @@ int re15_item_prompt_walk(int prompt_type, uint8_t item_id, int max_glyphs,
                 const uint8_t *nm = re15_schluessel_r36_name(item_id);
                 if (!nm) nm = re15_feuerloescher_r37_name(item_id);   /* Runde 37 Spur I: leerer Loescher */
                 if (!nm) nm = re15_dining_r38_name(item_id);          /* Runde 38 Spur F: Dining Room Key */
+                if (!nm) nm = re15_keyitems_r41_name(item_id);        /* Runde 41 Spur O: Crank (Id 0x33) */
                 if (!nm) nm = re15_gatorszene_r41_name(item_id);      /* Runde 41 Spur F: Water Key (Id 0x34) */
                 if (nm) { for (; *nm != 0x07; nm++) { if (cb && total < max_glyphs) cb(ctx, *nm, attr, 0); total++; } continue; }
             }

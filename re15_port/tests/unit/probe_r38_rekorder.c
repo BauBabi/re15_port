@@ -45,6 +45,7 @@
 #include "re15_item_discard.h"
 #include "re15_aufschliessen_r36.h"
 #include "re15_rekorder_r38.h"
+#include "re15_keyitems_r41.h"    /* Runde 41 Spur O: das Panel startet per USE des Minidisc-Spielers */
 
 #include <math.h>
 #include <stdint.h>
@@ -348,12 +349,11 @@ static int warten_auf_flag(int bank, int bit, int wert, int max)
     return -1;
 }
 
-/* Echter Weg bis sub02: Panel (Platz 2 sce 3 -> sub07), msg 1, msg 3 "Ja", Cursor ON/OFF (Platz 4) -> sub08,
+/* Echter Weg bis sub02: Panel (Platz 2 sce 3 -> sub07) per USE (Runde 41 Spur O: msg 1 und Frage msg 3 entfallen), Cursor ON/OFF (Platz 4) -> sub08,
  * SAY HELLO ((5,5) = 1 @0x00D8C), Cursor Mikrofon (Platz 5). Rueckgabe 1 = Viereck auf dem Mikrofon gedrueckt. */
 static int bis_mikrofon(void)
 {
-    re15_aot_fire_slot(2);
-    /* msg 1 (2 Seiten) und msg 3 (Ja/Nein, Vorauswahl Ja) mit Viereck jedes 4. Bild, bis sub07 den Cursor freigibt */
+    (void)re15_keyitems_r41_testlauf(0x44);
     int frei = 0;
     for (int f = 0; f < 900 && !frei; f++) {
         uint16_t b = (g_scd.message_active && f % 4 == 0) ? RE15_PAD_BIT_SQUARE : 0;

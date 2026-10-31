@@ -58,6 +58,7 @@
 #include "re15_kamerahalt_r41.h"
 #include "re15_rennstopp_r41.h"
 #include "re15_sherry_r41.h"     /* Runde 41 Integration C+K: Teil sherry (Querbezug E x K) */
+#include "re15_inventory.h"      /* Runde 41 Spur O: frage_lauf im Altstand (Inventar voll) */
 #include "re15_emd.h"
 #include "re15_md1.h"          /* re15_pld_part (PLW-Verzeichnis) */
 #include <stdio.h>
@@ -450,6 +451,11 @@ static frage_t frage_lauf(int r41)
     re15_msgtakt_r41_zuruecksetzen();
     re15_game_flag_set(3, 0x72, 1);                     /* Kurbel aufgenommen (ROOM2010 sub02 @0x008CA) */
     if (room_boot(0x2020, 2600, -1500, 1024, 1) != 0) return r;
+    /* Runde 41 Spur O: die Frage bleibt nur im Altstand (Flag gesetzt, Inventar voll, keyitems_r41.c "FLAGITEM"): dieser Riegel
+     * misst weiter den Takt der Original-Fragen, also zehn belegte Plaetze (25bc-Grid @0x800b0fbc). Hinter room_boot, weil
+     * dessen Inits das Inventar leeren. */
+    re15_inv_init();
+    for (int i = 0; i < 10; i++) { g_inv.slots[i].id = (uint8_t)(0x16 + i); g_inv.slots[i].qty = 1; }
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     for (int f = 0; f < 3; f++) bild(0, 0);
     int offen_vorher = 0, id_vorher = -1, letzte_bestaet = -100, frame_bei_msg0 = -1;

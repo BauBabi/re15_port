@@ -188,15 +188,11 @@ macro(_seg _a _n _k)
     endforeach()
 endmacro()
 
-# Eingaben (gemessen, Dossier §2/§4): Viereck alle 10 Bilder 170..360 (msg 1, msg 3 "Ja"), Cursor LEFT 15 / DOWN 19,
+# Eingaben (gemessen, Dossier §2/§4): Runde 41 Spur O: statt Aktionstaste + Viereck auf msg 1 und msg 3 "Ja" das USE des Spielers
+# (RE15_USE_TEST F300, Elza F430: das Panel steht vor dem Cursor-Weg), Cursor LEFT 15 / DOWN 19,
 # Viereck 406 (ON/OFF), RIGHT 30 / DOWN 16, Viereck 498 (Mikrofon) - _o verschiebt alles (Elza).
 macro(_weg _o)
     set(_pad "")
-    math(EXPR _a0 "170 + ${_o}")
-    math(EXPR _a1 "360 + ${_o}")
-    foreach(_f RANGE ${_a0} ${_a1} 10)
-        list(APPEND _pad "${_f}:A")
-    endforeach()
     math(EXPR _x "370 + ${_o}")
     _seg(${_x} 15 L)
     math(EXPR _x "385 + ${_o}")
@@ -218,7 +214,7 @@ foreach(_f RANGE 530 800 10)
 endforeach()
 list(JOIN _pad "," _pad_s)
 j_lauf(l 820 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_AUDIO_CAP_SYNC=cap.raw
-       RE15_DEBUG_JUMP=1100@120 RE15_SET_FLAG=3:0x67 RE15_GIVE=0x44:1 "RE15_FIRE_AOT=2@150#1100"
+       RE15_DEBUG_JUMP=1100@120 RE15_SET_FLAG=3:0x67 RE15_GIVE=0x44:1 "RE15_USE_TEST=0x44@300#1100"
        "RE15_PAD_AT=${_pad_s}" "RE15_EXIT_AT=820#1100" "RE15_FRAMEDUMP=660-700/1:fd_")
 j_muss(l "${_dbg}" "\\[msgtext\\] room=1100 id=4 \"You've used the Minidisc Player w/ Disc.\"")
 j_muss(l "${_dbg}" "\\[msgtext\\] room=1100 id=2 \"You've opened the lock.\"")
@@ -249,7 +245,7 @@ foreach(_f RANGE 660 760 10)
 endforeach()
 list(JOIN _pad "," _pad_s)
 j_lauf(s 780 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_AUDIO_CAP_SYNC=cap.raw
-       RE15_DEBUG_JUMP=1100@120 RE15_SET_FLAG=3:0x67 RE15_GIVE=0x44:1 "RE15_FIRE_AOT=2@150#1100"
+       RE15_DEBUG_JUMP=1100@120 RE15_SET_FLAG=3:0x67 RE15_GIVE=0x44:1 "RE15_USE_TEST=0x44@300#1100"
        "RE15_PAD_AT=${_pad_s}" "RE15_EXIT_AT=780#1100")
 j_folge(s 1100)
 string(REGEX MATCH "F([0-9]+) raum=1100 stimme zu Ende: ([0-9]+) Bilder" _m "${_rk}")
@@ -277,7 +273,7 @@ endforeach()
 list(JOIN _pad "," _pad_s)
 j_lauf(e 950 SDL_ASSERT=always_ignore RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1
        RE15_AUDIO_CAP_SYNC=cap.raw RE15_DEBUG_JUMP=1100@250 RE15_SET_FLAG=3:0x67 RE15_GIVE=0x44:1
-       "RE15_FIRE_AOT=2@280#1101" "RE15_PAD_AT=${_pad_s}" "RE15_EXIT_AT=950#1101")
+       "RE15_USE_TEST=0x44@430#1101" "RE15_PAD_AT=${_pad_s}" "RE15_EXIT_AT=950#1101")
 j_muss(e "${_dbg}" "\\[pl\\] Spieler-Familie PL04")
 j_muss(e "${_dbg}" "\\[msgtext\\] room=1101 id=4 \"You've used the Minidisc Player w/ Disc.\"")
 j_folge(e 1101)
@@ -292,7 +288,7 @@ foreach(_f RANGE 530 800 10)
 endforeach()
 list(JOIN _pad "," _pad_s)
 j_lauf(t 900 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_NOAUDIO=1
-       RE15_DEBUG_JUMP=1100@120 RE15_SET_FLAG=3:0x67 RE15_GIVE=0x44:1 "RE15_FORCE_EVENT=7@150"
+       RE15_DEBUG_JUMP=1100@120 RE15_SET_FLAG=3:0x67 RE15_GIVE=0x44:1 "RE15_USE_TEST=0x44@300#1100"
        "RE15_FIRE_AOT=1@860#1100" "RE15_PAD_AT=${_pad_s}" "RE15_EXIT_AT=900")
 j_muss(t "${_rk}" "raum=1100 Tuer frei: Platz 1 aktiv 1 typ 1")
 j_muss(t "${_dbg}" "\\[aot\\] DOOR FIRE slot=1 ")

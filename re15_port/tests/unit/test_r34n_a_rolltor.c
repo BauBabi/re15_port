@@ -206,6 +206,16 @@ static const uint16_t JA   = 0x4000;             /* SELECT bestaetigen (msg_comm
 static const uint16_t NEIN = 0x1000 | 0x4000;    /* Links/Rechts schaltet, Bestaetigen im selben Bild
                                                   * wirkt erst nach dem Umschalten (case 3: lr vor act) */
 
+/* Runde 41 Spur O: Ja auf die entfallene Frage msg 20 (USE aus dem Inventar). */
+static lauf_t fahren_ja(int slot)
+{
+    extern void re15_keyitems_r41_test_ja(int);
+    re15_keyitems_r41_test_ja(1);
+    lauf_t L = fahren(slot, JA, JA, 1);
+    re15_keyitems_r41_test_ja(0);
+    return L;
+}
+
 /* Fall A / A-N (ohne Sicherung). */
 static void fall_ohne(const char *name, uint16_t raum, const uint8_t *d, long sz, uint16_t antwort)
 {
@@ -245,13 +255,16 @@ static void fall_mit(const char *name, uint16_t raum, const uint8_t *d, long sz,
     re15_rdt_t r;
     PRUEFE(raum_hoch(raum, k, sz, &r, 1) == 0, "%s: Raumaufbau", name);
     sicherung_geben();
+    /* Runde 41 Spur O: die Frage msg 20 entfaellt (keyitems_r41.c); Ja = USE aus dem Inventar, Nein = Aktionstaste. */
+    { extern void re15_keyitems_r41_test_ja(int); re15_keyitems_r41_test_ja(antw2 == JA); }
     int slot = ausloesen(name);
     int plen = 0; const uint8_t *prog = re15_rolltor_programm(1, &plen);
     PRUEFE(g_scd.threads[slot].pc == prog, "%s: scd_event_fire startet NICHT das Port-Programm MIT", name);
     lauf_t L = fahren(slot, JA, antw2, 1);
+    { extern void re15_keyitems_r41_test_ja(int); re15_keyitems_r41_test_ja(0); }
     zeige(name, &L, &r);
     PRUEFE(L.fremd == 0, "%s: %d Bilder mit PC ausserhalb des Plans", name, L.fremd);
-    PRUEFE(L.msg2 >= 0 && L.msg20 > L.msg2, "%s: Reihenfolge msg 2 -> msg 20 verletzt", name);
+    PRUEFE(L.msg2 >= 0 && L.msg20 < 0, "%s: msg 2 da, Frage msg 20 entfaellt", name);
     PRUEFE(L.falscher_cut == 0, "%s: %d Bilder Text im falschen Cut", name, L.falscher_cut);
     PRUEFE(g_scd.cam_id == 3 && g_scd.cut_auto_enabled == 1, "%s: nicht zurueck in Cut 3 / Auto", name);
     PRUEFE(!re15_game_flag_get(3, 121), "%s: Tor oeffnet schon beim Einsetzen", name);
@@ -330,7 +343,7 @@ int main(void)
         raum_hoch(0x1050, k, sz0, &r, 1);
         sicherung_geben();
         int s = ausloesen("W vorher");
-        fahren(s, JA, JA, 1);
+        fahren_ja(s);
         PRUEFE(re15_game_flag_get(9, 63), "W: Einsetzen fehlgeschlagen");
         uint8_t *k2 = (uint8_t *)malloc((size_t)sz0); memcpy(k2, d1050, (size_t)sz0);
         re15_rdt_t r2;
@@ -349,7 +362,7 @@ int main(void)
         raum_hoch(0x1050, k, sz0, &r, 1);
         sicherung_geben();
         int s = ausloesen("L vorher");
-        fahren(s, JA, JA, 1);
+        fahren_ja(s);
         re15_savedata_t sd;
         re15_savedata_capture(&sd, 0, 1);
         uint8_t *k2 = (uint8_t *)malloc((size_t)sz0); memcpy(k2, d1050, (size_t)sz0);

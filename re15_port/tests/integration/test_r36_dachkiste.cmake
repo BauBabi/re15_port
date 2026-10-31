@@ -338,8 +338,10 @@ AKTION
 WARTE 200
 ENDE
 ")
+# Runde 41 Spur O: die drei Druecke gibt es nur noch im Altstand (Flag gesetzt, Inventar voll, keyitems_r41.c "FLAGITEM"), sonst USE:
+# RE15_GIVE fuellt die zehn Plaetze, dieser Riegel misst den Ersatzweg, nicht die Bedienung.
 _lauf(weg2020 400 ${_grund} "RE15_WEGPLAN=${_sub2020}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt RE15_MSG_LOG=1
-      RE15_SET_FLAG=3:114 RE15_DEBUG_JUMP=2020@250 "RE15_PLAYER_POS=11350,-3150,2048,1" "RE15_EXIT_AT=300#2030")
+      RE15_SET_FLAG=3:114 RE15_GIVE=0x16:1,0x17:1,0x18:1,0x19:1,0x1a:1,0x1b:1,0x1c:1,0x1d:1 RE15_DEBUG_JUMP=2020@250 "RE15_PLAYER_POS=11350,-3150,2048,1" "RE15_EXIT_AT=300#2030")
 _muss("loaded room2020.rdt" _dbg "weg2020: ROOM2020 nicht geladen")
 set(_wp2020 "")
 if(EXISTS "${_sub}/wegplan_log.txt")

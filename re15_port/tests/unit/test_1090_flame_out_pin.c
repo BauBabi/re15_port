@@ -186,8 +186,9 @@ int main(void)
     CHECK(fx0 > 0, "es brennen SICHTBAR Partikel (%d) — genau die blieben vorher stehen "
                    "(gemessen: Effekt-Id 0x10 x4 und 0x08 x3)", fx0);
 
-    /* Das Loesch-Event feuern — der Weg, den der Feuerloescher im Spiel nimmt. */
-    scd_event_fire(6);
+    /* Das Loesch-Event feuern — der Weg, den der Feuerloescher im Spiel nimmt (Runde 41 Spur O: USE aus dem
+     * Inventar, RE2-Form; ohne Lage-Pruefung, die prueft unit_r41_keyitems_use). */
+    { extern int re15_keyitems_r41_testlauf(uint8_t); re15_keyitems_r41_testlauf(0x31); }
     for (int f = 0; f < 400; f++) frame_step();
 
     int em1 = count_emitters(), fx1 = count_particles();
