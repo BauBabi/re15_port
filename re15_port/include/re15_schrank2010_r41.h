@@ -25,6 +25,7 @@
  *
  * NUR CUT 3 (Nachbesserung 1, Mangel 4): die drei Texturen sind aus BG03/BG06 auf die Flaechen gerechnet und passen nur unter Cut 3 @0xC0. Der Fluegel steht in Cut 4 direkt vor der Kamera
  * (Lauf s_geh2: Spalten 0..86), die Hintergruende aller anderen Cuts zeigen den Schrank geschlossen: dort werden die Modelle nicht gezeichnet (main.c, Haken im Prop-Durchlauf). PORT-WAHL.
+ * Damit das Aufklappen auch im Bild ist, wenn der Klick von Norden unter Cut 4 faellt (Lauf wk: (4946,-3999)), schalten die Programme 2010_kasten_* auf Cut 3 und mit Cut_old zurueck.
  */
 #ifndef RE15_SCHRANK2010_R41_H
 #define RE15_SCHRANK2010_R41_H

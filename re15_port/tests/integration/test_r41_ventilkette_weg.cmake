@@ -16,7 +16,7 @@
 #       Fuss, je Drehung die RE2-Dreh-Animation (RBJ von RE2 ROOM1080, sub08 @0x0210A..@0x0221E, Clip 17 je Drehung 5x) ->
 #       Warnung 46 im Wortlaut des Nachtrags 19 -> Zaehler -> zu Fuss (Steg, Treppe, Ring) -> Ost-Tuer -> ROOM20B0 ("Zaehler lief
 #       beim Verlassen ... Bits 103 + 100"), keine Flut.
-#   v2c 2030 (wie v2b; vormals zweite Haelfte von v2a): die Folge des Plakats 09/01/02/07 zu Fuss (Sued, Nord, Nord, Sued) ->
+#   v2c 2030 (wie v2b; vormals zweite Haelfte von v2a): die Folge des Plakats 01/02/09/08 (Nachtrag 30d) zu Fuss (Nord, Nord, Sued, Sued) ->
 #       nach der vierten Drehung "FALSCH: zurueckgesetzt" + Text 45, (5,0x10) = 0, kein Zaehler.
 #   v2d Dokument "Technician's Note" (Slot 20; seit Nachbesserung 5 ein Zettel an der Suedwand neben dem Schrank mit der
 #       Sicherung, Platz x -5100..-4600 z 7400..8400): Aktion -> Leser (Titel, 2 Seiten, RECHTS blaettert, wie

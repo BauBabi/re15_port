@@ -469,7 +469,7 @@ static void fall_d(uint16_t r)
     PRUEFE(ueber_kante == 0, "ROOM%04X: kein flacher Spritzer ueber der Kante (%d)", r, ueber_kante);
     PRUEFE(gefallen, "ROOM%04X: hinter der Kante faellt das Wasser unter den Weg", r);
     PRUEFE(max_0f <= 20, "ROOM%04X: Lauf belegt hoechstens 20 Plaetze (%d)", r, max_0f);
-    PRUEFE(re15_wasserlauf_r41_laeufer() >= l0 + 100 && re15_wasserlauf_r41_spritzer() >= s0 + 7, "ROOM%04X: Lauf und Einschlaege (%u, %u)", r, re15_wasserlauf_r41_laeufer(), re15_wasserlauf_r41_spritzer());
+    PRUEFE(re15_wasserlauf_r41_laeufer() >= l0 + 80 && re15_wasserlauf_r41_spritzer() >= s0 + 7, "ROOM%04X: 5 Punkte, Abstand im Mittel 5 Bilder: 90 Spawns in 90 Bildern (%u -> %u), Einschlaege (%u)", r, l0, re15_wasserlauf_r41_laeufer(), re15_wasserlauf_r41_spritzer());
     /* unter einem Text steht der Lauf mit den Effekten (@0x80019e28), der Pool laeuft nicht voll */
     { const unsigned l1 = re15_wasserlauf_r41_laeufer();
       g_re15_pauseflags |= RE15_PAUSE_ACTION;

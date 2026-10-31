@@ -422,76 +422,82 @@ static const unsigned char re15_r41c_prg_2030_plakat[14] = {
     /* +00C */ 0x01,0x00, /* Evt_end */
 };
 
-/* re15_r41c_prg_2010_kasten_leer (32 B) */
-static const unsigned char re15_r41c_prg_2010_kasten_leer[32] = {
+/* re15_r41c_prg_2010_kasten_leer (36 B) */
+static const unsigned char re15_r41c_prg_2010_kasten_leer[36] = {
     /* +000 */ 0x22,0x02,0x07,0x01, /* Set(2,7)=1 Pad-Sperre (ROOM2030 sub02 @0x01E30) */
-    /* +004 */ 0x22,0x05,0x1e,0x01, /* Set(5,0x1E)=1 Schrank klappt auf (Marker fuer den C-Takt, engine/src/schrank2010_r41.c) */
-    /* +008 */ 0x0f,0x04,0x08,0x00, /* While (Form ROOM2000 @0x01AD4): solange die Tuer faehrt */
-    /* +00C */ 0x21,0x05,0x1e,0x01, /* Ck(5,0x1E)=1 */
-    /* +010 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +012 */ 0x10,0x00, /* Ewhile */
-    /* +014 */ 0x22,0x02,0x07,0x00, /* Set(2,7)=0 (ROOM2030 sub02 @0x01EC4) */
-    /* +018 */ 0x2b,0x28,0xff,0xff, /* Message_on 40, Maske ffff - A fuse box for the valve controls. | One of the fuses is missing... (ROOM2060 msg 3) */
-    /* +01C */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +01E */ 0x01,0x00, /* Evt_end */
+    /* +004 */ 0x29,0x03, /* Cut_chg 3 Blick auf den Schrank (Form ROOM2030 sub02 @0x01E60; merkt den alten Cut @0x800402e4) */
+    /* +006 */ 0x22,0x05,0x1e,0x01, /* Set(5,0x1E)=1 Schrank klappt auf (Marker fuer den C-Takt, engine/src/schrank2010_r41.c) */
+    /* +00A */ 0x0f,0x04,0x08,0x00, /* While (Form ROOM2000 @0x01AD4): solange die Tuer faehrt */
+    /* +00E */ 0x21,0x05,0x1e,0x01, /* Ck(5,0x1E)=1 */
+    /* +012 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +014 */ 0x10,0x00, /* Ewhile */
+    /* +016 */ 0x22,0x02,0x07,0x00, /* Set(2,7)=0 (ROOM2030 sub02 @0x01EC4) */
+    /* +01A */ 0x2b,0x28,0xff,0xff, /* Message_on 40, Maske ffff - A fuse box for the valve controls. | One of the fuses is missing... (ROOM2060 msg 3) */
+    /* +01E */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +020 */ 0x2a,0x00, /* Cut_old + Nop (ROOM11D0 sub02 @0x01884) */
+    /* +022 */ 0x01,0x00, /* Evt_end */
 };
 
-/* re15_r41c_prg_2010_kasten_frage (114 B) */
-static const unsigned char re15_r41c_prg_2010_kasten_frage[114] = {
+/* re15_r41c_prg_2010_kasten_frage (118 B) */
+static const unsigned char re15_r41c_prg_2010_kasten_frage[118] = {
     /* +000 */ 0x22,0x02,0x07,0x01, /* Set(2,7)=1 Pad-Sperre (ROOM2030 sub02 @0x01E30) */
-    /* +004 */ 0x22,0x05,0x1e,0x01, /* Set(5,0x1E)=1 Schrank klappt auf (Marker fuer den C-Takt, engine/src/schrank2010_r41.c) */
-    /* +008 */ 0x0f,0x04,0x08,0x00, /* While (Form ROOM2000 @0x01AD4): solange die Tuer faehrt */
-    /* +00C */ 0x21,0x05,0x1e,0x01, /* Ck(5,0x1E)=1 */
-    /* +010 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +012 */ 0x10,0x00, /* Ewhile */
-    /* +014 */ 0x22,0x02,0x07,0x00, /* Set(2,7)=0 (ROOM2030 sub02 @0x01EC4) */
-    /* +018 */ 0x2b,0x28,0xff,0xff, /* Message_on 40, Maske ffff - A fuse box ... | One of the fuses is missing... */
-    /* +01C */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +01E */ 0x2b,0x29,0xff,0xff, /* Message_on 41, Maske ffff - Will you use the Fuse? = ROOM2060 msg 4 @0x1855 (Form sub18 @0x0167E) */
-    /* +022 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +024 */ 0x06,0x00,0x48,0x00, /* Ifel_ck (Laenge automatisch) Ja-Zweig */
-    /* +028 */ 0x21,0x0c,0x1f,0x00, /* Ck(12,31)=0 = Ja (ROOM2050 sub04 @0x022F0) */
-    /* +02C */ 0x22,0x02,0x00,0x01, /* Set(2,0)=1 Spieler steht (ROOM2060 sub01 @0x01288) */
-    /* +030 */ 0x22,0x02,0x02,0x01, /* Set(2,2)=1 KI steht (ROOM2060 sub01 @0x0128C) */
-    /* +034 */ 0x22,0x05,0x1d,0x01, /* Set(5,0x1D)=1 Einsetz-Ansicht ROOM2060 Cut 8 + Cursor (Marker fuer den C-Takt, Form sub18 @0x0168C..@0x01696) */
-    /* +038 */ 0x0f,0x04,0x08,0x00, /* While: bis der Cursor in Zone 7 bestaetigt ist (sub01 @0x01324/@0x0132E) */
-    /* +03C */ 0x21,0x05,0x1d,0x01, /* Ck(5,0x1D)=1 */
-    /* +040 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +042 */ 0x10,0x00, /* Ewhile */
-    /* +044 */ 0x22,0x02,0x00,0x00, /* Set(2,0)=0 (ROOM2060 sub19 @0x016B0) */
-    /* +048 */ 0x22,0x02,0x07,0x01, /* Set(2,7)=1 Pad-Sperre (ROOM2030 sub02 @0x01E30) */
-    /* +04C */ 0x22,0x09,0x7d,0x01, /* Set(9,125)=1 Sicherung im Ventilkasten (Form ROOM2060 sub19 @0x0169E `22 03 90 01`) */
-    /* +050 */ 0x2b,0x2a,0xff,0xff, /* Message_on 42, Maske ffff - You've used the Fuse. = ROOM2060 msg 5 @0x1875 (sub19 @0x016C8, auf Cut 9 @0x016A2) */
-    /* +054 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +056 */ 0x22,0x05,0x1f,0x01, /* Set(5,0x1F)=1 Standbild der Ventile + Aufschliess-Ton (Marker fuer den C-Takt; Bank 5 Wort 0, ROOM2010 benutzt Bank 5 nicht) */
-    /* +05A */ 0x0f,0x04,0x08,0x00, /* While (Form ROOM2000 @0x01AD4): solange das Standbild offen ist */
-    /* +05E */ 0x21,0x05,0x1f,0x01, /* Ck(5,0x1F)=1 */
-    /* +062 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +064 */ 0x10,0x00, /* Ewhile */
-    /* +066 */ 0x22,0x02,0x02,0x00, /* Set(2,2)=0 (ROOM2060 sub19 @0x016B4) */
-    /* +06A */ 0x22,0x02,0x07,0x00, /* Set(2,7)=0 (ROOM2030 sub02 @0x01EC4) */
-    /* +06E */ 0x08,0x00, /* Endif  */
-    /* +070 */ 0x01,0x00, /* Evt_end */
+    /* +004 */ 0x29,0x03, /* Cut_chg 3 Blick auf den Schrank (Form ROOM2030 sub02 @0x01E60; merkt den alten Cut @0x800402e4) */
+    /* +006 */ 0x22,0x05,0x1e,0x01, /* Set(5,0x1E)=1 Schrank klappt auf (Marker fuer den C-Takt, engine/src/schrank2010_r41.c) */
+    /* +00A */ 0x0f,0x04,0x08,0x00, /* While (Form ROOM2000 @0x01AD4): solange die Tuer faehrt */
+    /* +00E */ 0x21,0x05,0x1e,0x01, /* Ck(5,0x1E)=1 */
+    /* +012 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +014 */ 0x10,0x00, /* Ewhile */
+    /* +016 */ 0x22,0x02,0x07,0x00, /* Set(2,7)=0 (ROOM2030 sub02 @0x01EC4) */
+    /* +01A */ 0x2b,0x28,0xff,0xff, /* Message_on 40, Maske ffff - A fuse box ... | One of the fuses is missing... */
+    /* +01E */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +020 */ 0x2b,0x29,0xff,0xff, /* Message_on 41, Maske ffff - Will you use the Fuse? = ROOM2060 msg 4 @0x1855 (Form sub18 @0x0167E) */
+    /* +024 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +026 */ 0x06,0x00,0x48,0x00, /* Ifel_ck (Laenge automatisch) Ja-Zweig */
+    /* +02A */ 0x21,0x0c,0x1f,0x00, /* Ck(12,31)=0 = Ja (ROOM2050 sub04 @0x022F0) */
+    /* +02E */ 0x22,0x02,0x00,0x01, /* Set(2,0)=1 Spieler steht (ROOM2060 sub01 @0x01288) */
+    /* +032 */ 0x22,0x02,0x02,0x01, /* Set(2,2)=1 KI steht (ROOM2060 sub01 @0x0128C) */
+    /* +036 */ 0x22,0x05,0x1d,0x01, /* Set(5,0x1D)=1 Einsetz-Ansicht ROOM2060 Cut 8 + Cursor (Marker fuer den C-Takt, Form sub18 @0x0168C..@0x01696) */
+    /* +03A */ 0x0f,0x04,0x08,0x00, /* While: bis der Cursor in Zone 7 bestaetigt ist (sub01 @0x01324/@0x0132E) */
+    /* +03E */ 0x21,0x05,0x1d,0x01, /* Ck(5,0x1D)=1 */
+    /* +042 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +044 */ 0x10,0x00, /* Ewhile */
+    /* +046 */ 0x22,0x02,0x00,0x00, /* Set(2,0)=0 (ROOM2060 sub19 @0x016B0) */
+    /* +04A */ 0x22,0x02,0x07,0x01, /* Set(2,7)=1 Pad-Sperre (ROOM2030 sub02 @0x01E30) */
+    /* +04E */ 0x22,0x09,0x7d,0x01, /* Set(9,125)=1 Sicherung im Ventilkasten (Form ROOM2060 sub19 @0x0169E `22 03 90 01`) */
+    /* +052 */ 0x2b,0x2a,0xff,0xff, /* Message_on 42, Maske ffff - You've used the Fuse. = ROOM2060 msg 5 @0x1875 (sub19 @0x016C8, auf Cut 9 @0x016A2) */
+    /* +056 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +058 */ 0x22,0x05,0x1f,0x01, /* Set(5,0x1F)=1 Standbild der Ventile + Aufschliess-Ton (Marker fuer den C-Takt; Bank 5 Wort 0, ROOM2010 benutzt Bank 5 nicht) */
+    /* +05C */ 0x0f,0x04,0x08,0x00, /* While (Form ROOM2000 @0x01AD4): solange das Standbild offen ist */
+    /* +060 */ 0x21,0x05,0x1f,0x01, /* Ck(5,0x1F)=1 */
+    /* +064 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +066 */ 0x10,0x00, /* Ewhile */
+    /* +068 */ 0x22,0x02,0x02,0x00, /* Set(2,2)=0 (ROOM2060 sub19 @0x016B4) */
+    /* +06C */ 0x22,0x02,0x07,0x00, /* Set(2,7)=0 (ROOM2030 sub02 @0x01EC4) */
+    /* +070 */ 0x08,0x00, /* Endif  */
+    /* +072 */ 0x2a,0x00, /* Cut_old + Nop (ROOM11D0 sub02 @0x01884) */
+    /* +074 */ 0x01,0x00, /* Evt_end */
 };
 
-/* re15_r41c_prg_2010_kasten_drin (52 B) */
-static const unsigned char re15_r41c_prg_2010_kasten_drin[52] = {
+/* re15_r41c_prg_2010_kasten_drin (56 B) */
+static const unsigned char re15_r41c_prg_2010_kasten_drin[56] = {
     /* +000 */ 0x22,0x02,0x07,0x01, /* Set(2,7)=1 Pad-Sperre (ROOM2030 sub02 @0x01E30) */
-    /* +004 */ 0x22,0x05,0x1e,0x01, /* Set(5,0x1E)=1 Schrank klappt auf (Marker fuer den C-Takt, engine/src/schrank2010_r41.c) */
-    /* +008 */ 0x0f,0x04,0x08,0x00, /* While (Form ROOM2000 @0x01AD4): solange die Tuer faehrt */
-    /* +00C */ 0x21,0x05,0x1e,0x01, /* Ck(5,0x1E)=1 */
-    /* +010 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +012 */ 0x10,0x00, /* Ewhile */
-    /* +014 */ 0x22,0x02,0x07,0x00, /* Set(2,7)=0 (ROOM2030 sub02 @0x01EC4) */
-    /* +018 */ 0x2b,0x2b,0xff,0xff, /* Message_on 43, Maske ffff - The fuse is in place. (ROOM2060 msg 6) | Will you take the Fuse? (ROOM2030 msg 2) */
-    /* +01C */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +01E */ 0x06,0x00,0x10,0x00, /* Ifel_ck (Laenge automatisch) Ja-Zweig */
-    /* +022 */ 0x21,0x0c,0x1f,0x00, /* Ck(12,31)=0 = Ja (ROOM2050 sub04 @0x022F0) */
-    /* +026 */ 0x22,0x09,0x7d,0x00, /* Set(9,125)=0 Sicherung wieder genommen (Form ROOM2030 sub06 @0x01FF2 `22 03 6c 01`) */
-    /* +02A */ 0x2b,0x2c,0xff,0xff, /* Message_on 44, Maske ffff - You've taken the Fuse. = ROOM2030 msg 3 @0x20AC (sub06 @0x02000) */
-    /* +02E */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
-    /* +030 */ 0x08,0x00, /* Endif  */
-    /* +032 */ 0x01,0x00, /* Evt_end */
+    /* +004 */ 0x29,0x03, /* Cut_chg 3 Blick auf den Schrank (Form ROOM2030 sub02 @0x01E60; merkt den alten Cut @0x800402e4) */
+    /* +006 */ 0x22,0x05,0x1e,0x01, /* Set(5,0x1E)=1 Schrank klappt auf (Marker fuer den C-Takt, engine/src/schrank2010_r41.c) */
+    /* +00A */ 0x0f,0x04,0x08,0x00, /* While (Form ROOM2000 @0x01AD4): solange die Tuer faehrt */
+    /* +00E */ 0x21,0x05,0x1e,0x01, /* Ck(5,0x1E)=1 */
+    /* +012 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +014 */ 0x10,0x00, /* Ewhile */
+    /* +016 */ 0x22,0x02,0x07,0x00, /* Set(2,7)=0 (ROOM2030 sub02 @0x01EC4) */
+    /* +01A */ 0x2b,0x2b,0xff,0xff, /* Message_on 43, Maske ffff - The fuse is in place. (ROOM2060 msg 6) | Will you take the Fuse? (ROOM2030 msg 2) */
+    /* +01E */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +020 */ 0x06,0x00,0x10,0x00, /* Ifel_ck (Laenge automatisch) Ja-Zweig */
+    /* +024 */ 0x21,0x0c,0x1f,0x00, /* Ck(12,31)=0 = Ja (ROOM2050 sub04 @0x022F0) */
+    /* +028 */ 0x22,0x09,0x7d,0x00, /* Set(9,125)=0 Sicherung wieder genommen (Form ROOM2030 sub06 @0x01FF2 `22 03 6c 01`) */
+    /* +02C */ 0x2b,0x2c,0xff,0xff, /* Message_on 44, Maske ffff - You've taken the Fuse. = ROOM2030 msg 3 @0x20AC (sub06 @0x02000) */
+    /* +030 */ 0x02,0x00, /* Evt_next + Nop (ROOM2050 sub04 @0x022EA) */
+    /* +032 */ 0x08,0x00, /* Endif  */
+    /* +034 */ 0x2a,0x00, /* Cut_old + Nop (ROOM11D0 sub02 @0x01884) */
+    /* +036 */ 0x01,0x00, /* Evt_end */
 };
 
 /* re15_r41c_prg_2050_hebel_sperre (8 B) */
@@ -540,9 +546,9 @@ static const re15_r41c_programm_t re15_r41c_programme[] = {
     { "2030_ventile_laeuft", re15_r41c_prg_2030_ventile_laeuft, 8 },
     { "2030_ventile_vorher", re15_r41c_prg_2030_ventile_vorher, 8 },
     { "2030_plakat", re15_r41c_prg_2030_plakat, 14 },
-    { "2010_kasten_leer", re15_r41c_prg_2010_kasten_leer, 32 },
-    { "2010_kasten_frage", re15_r41c_prg_2010_kasten_frage, 114 },
-    { "2010_kasten_drin", re15_r41c_prg_2010_kasten_drin, 52 },
+    { "2010_kasten_leer", re15_r41c_prg_2010_kasten_leer, 36 },
+    { "2010_kasten_frage", re15_r41c_prg_2010_kasten_frage, 118 },
+    { "2010_kasten_drin", re15_r41c_prg_2010_kasten_drin, 56 },
     { "2050_hebel_sperre", re15_r41c_prg_2050_hebel_sperre, 8 },
     { "2050_pult_ein", re15_r41c_prg_2050_pult_ein, 44 },
     { "2050_pult_zustand", re15_r41c_prg_2050_pult_zustand, 8 },

@@ -196,12 +196,14 @@ def bauen(cd):
     # ROOM11F0 sub06 @0x01332/@0x01336, ist sie schon auf, loescht er den Marker sofort). Im Ja-Zweig das Einsetzen wie ROOM2060: Spieler und KI stehen ((2,0)/(2,2) wie sub01 @0x01288/
     # @0x0128C, keine Pad-Sperre: sie maskiert die SCD-Pad-Woerter), Marker (5,0x1D) -> C-Takt: Cut 8 + Cursor, wartet ohne Zeitgrenze auf SQUARE in Zone 7 (sub18 @0x0168C, sub01 @0x01324/
     # @0x0132E), loescht den Marker -> Bit 125 (sub19 @0x0169E), Text 42 auf Cut 9 (@0x016A2/@0x016C8), dann das Standbild der Ventile (Nachtrag 16).
-    AUF = [SPERRE_AN, ("22 05 1e 01", "Set(5,0x1E)=1 Schrank klappt auf (Marker fuer den C-Takt, engine/src/schrank2010_r41.c)"),
+    # Der Platz reicht von Norden bis unter Cut 4 (Lauf wk: (4946,-3999) Blick +z): der Schrank ist nur unter Cut 3 zu sehen, deshalb Cut_chg 3 vorweg und Cut_old am Ende (Form Pult senken: `29 04` .. Cut_old).
+    AUF = [SPERRE_AN, ("29 03", "Cut_chg 3 Blick auf den Schrank (Form ROOM2030 sub02 @0x01E60; merkt den alten Cut @0x800402e4)"),
+           ("22 05 1e 01", "Set(5,0x1E)=1 Schrank klappt auf (Marker fuer den C-Takt, engine/src/schrank2010_r41.c)"),
            ("0f 04 08 00", "While (Form ROOM2000 @0x01AD4): solange die Tuer faehrt"), ("21 05 1e 01", "Ck(5,0x1E)=1"), EVT_NEXT, ("10 00", "Ewhile"), SPERRE_AUS]
     NAH = [("22 05 1d 01", "Set(5,0x1D)=1 Einsetz-Ansicht ROOM2060 Cut 8 + Cursor (Marker fuer den C-Takt, Form sub18 @0x0168C..@0x01696)"),
            ("0f 04 08 00", "While: bis der Cursor in Zone 7 bestaetigt ist (sub01 @0x01324/@0x0132E)"), ("21 05 1d 01", "Ck(5,0x1D)=1"), EVT_NEXT, ("10 00", "Ewhile")]
     P.append(("re15_r41c_prg_2010_kasten_leer",
-              AUF + [msg_on(40, "A fuse box for the valve controls. | One of the fuses is missing... (ROOM2060 msg 3)"), EVT_NEXT, ENDE]))
+              AUF + [msg_on(40, "A fuse box for the valve controls. | One of the fuses is missing... (ROOM2060 msg 3)"), EVT_NEXT, CUT_OLD, ENDE]))
     P.append(("re15_r41c_prg_2010_kasten_frage",
               AUF + [msg_on(40, "A fuse box ... | One of the fuses is missing..."), EVT_NEXT,
                msg_on(41, "Will you use the Fuse? = ROOM2060 msg 4 @0x1855 (Form sub18 @0x0167E)"), EVT_NEXT,
@@ -216,13 +218,13 @@ def bauen(cd):
                ("21 05 1f 01", "Ck(5,0x1F)=1"),
                EVT_NEXT, ("10 00", "Ewhile"),
                ("22 02 02 00", "Set(2,2)=0 (ROOM2060 sub19 @0x016B4)"), SPERRE_AUS,
-               ("ENDIF", ""), ENDE]))
+               ("ENDIF", ""), CUT_OLD, ENDE]))
     P.append(("re15_r41c_prg_2010_kasten_drin",
               AUF + [msg_on(43, "The fuse is in place. (ROOM2060 msg 6) | Will you take the Fuse? (ROOM2030 msg 2)"), EVT_NEXT,
                ("IF", "Ja-Zweig"), JA,
                ("22 09 7d 00", "Set(9,125)=0 Sicherung wieder genommen (Form ROOM2030 sub06 @0x01FF2 `22 03 6c 01`)"),
                msg_on(44, "You've taken the Fuse. = ROOM2030 msg 3 @0x20AC (sub06 @0x02000)"), EVT_NEXT,
-               ("ENDIF", ""), ENDE]))
+               ("ENDIF", ""), CUT_OLD, ENDE]))
     # ---- 2050 ------------------------------------------------------------------------------------------------
     P.append(("re15_r41c_prg_2050_hebel_sperre",
               [msg_on(40, "The pump has no power. The switchboard must be set first. (Form ROOM2060 sub12 @0x015D0)"),

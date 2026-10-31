@@ -139,7 +139,7 @@ if("${TEIL}" STREQUAL "panel")
     endif()
     # Abnahme 0, Mangel 3: START bei offenem Panel oeffnet nichts (die Vollbild-Ebene liegt ueber dem Inventar), die Tasten bleiben im Panel, CROSS verlaesst es
     _lauf(st 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=350,-9500,1024,3" "RE15_SET_FLAG=7:155,7:156,7:157"
-          RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W1.5,A0.1,W1,A0.1,W2,A0.1,W1.5,A0.1,W1.5,A0.1,W2,A0.1,W2,A0.1,W2,S0.1,W2,L1.2,W0.3,S0.1,W2,E0.1,W2,S0.1,W2" "RE15_EXIT_AT=1000#203${S}")
+          RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W1.5,A0.1,W1,A0.1,W2,A0.1,W1.5,A0.1,W1.5,A0.1,W2,A0.1,W2,A0.1,W2,S0.1,W2,L1.2,W0.3,S0.1,W2,X0.1,W2,S0.1,W2" "RE15_EXIT_AT=1000#203${S}")
     _danach("${_dbg}" "[panel2030] offen: A 100 B 0 C 0" "[panel2030] Steuerkreuz 0x8" "Tasten bleiben im Panel")
     _danach("${_dbg}" "[panel2030] Steuerkreuz 0x8" "[panel2030] Abbruch" "CROSS verlaesst das Panel")
     string(FIND "${_dbg}" "[panel2030] Abbruch" _p)
@@ -196,7 +196,7 @@ if("${TEIL}" STREQUAL "schrank")
     if(_z LESS 100 OR NOT _s EQUAL 0)
         _fehler(": Cursor im Bild nicht belegt (${_z}, ${_s})")
     endif()
-    # Abnahme 0, Mangel 4: zu Fuss nach Cut 4 steht die offene Tuer nicht im Bild (Plan wie Lauf s_geh2); Spalten 0..60 = Hintergrund BG04, Figur steht weiter rechts
+    # Abnahme 0, Mangel 4: zu Fuss nach Cut 4 steht die offene Tuer nicht im Bild (Plan wie Lauf s_geh2); Spalten 0..27 = Hintergrund BG04 (Lauf s_geh3 100 %, mit Tuer s_geh2 29 %), Figur steht weiter rechts
     file(WRITE "${_basis}_plan_c4.txt" "RAUM 201${S}
 WARTE 30
 GEHE 4950 -2770 100
@@ -225,12 +225,45 @@ ENDE
     if(NOT "${_z}" STREQUAL "[pri] cut=4 ")
         _fehler(": Plan endet nicht in Cut 4 ('${_z}')")
     endif()
-    execute_process(COMMAND "${RE15_R41C_WERKZEUG}" bssdiff "${RE15_R41C_PSX}/BSS/ROOM2010/BG04.BSS" "${WORKDIR}/f.ppm" 0 0 60 240 OUTPUT_VARIABLE _o RESULT_VARIABLE _r)
+    execute_process(COMMAND "${RE15_R41C_WERKZEUG}" bssdiff "${RE15_R41C_PSX}/BSS/ROOM2010/BG04.BSS" "${WORKDIR}/f.ppm" 0 0 28 240 OUTPUT_VARIABLE _o RESULT_VARIABLE _r)
     string(REGEX MATCH "ABWEICHUNG ([0-9]+) GLEICH ([0-9]+)" _m "${_o}")
-    message(STATUS "r41_nachtrag30[schrank ${FIGUR}]: Cut 4 Spalten 0..59 gegen BG04: ${_o}")
+    message(STATUS "r41_nachtrag30[schrank ${FIGUR}]: Cut 4 Spalten 0..27 gegen BG04: ${_o}")
     if(NOT _m OR CMAKE_MATCH_2 LESS 95)
         _fehler(": offene Tuer steht in Cut 4 im Bild: ${_o}")
     endif()
+    # Klick von Norden: der Platz reicht bis unter Cut 4 (Lauf wk): Cut_chg 3, die Tuer klappt im Bild auf, Cut_old zurueck nach Cut 4
+    file(WRITE "${_basis}_plan_n.txt" "RAUM 201${S}
+WARTE 30
+GEHE 3000 -5000 100
+GEHE 4950 -4500 100
+GEHE 4950 -3950 100
+BLICK 3072
+WARTE 10
+AKTION
+WARTE 60
+AKTION
+WARTE 30
+AKTION
+WARTE 30
+AKTION
+WARTE 60
+ENDE
+")
+    _lauf(n 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2010@250 "RE15_WEGPLAN=${_basis}_plan_n.txt" RE15_WEGPLAN_LOG=wegplan.txt "RE15_EXIT_AT=520#201${S}")
+    string(FIND "${_dbg}" "Port-Programm 2010_kasten_leer" _p)
+    if(_p LESS 0)
+        _fehler(": Klick von Norden traf den Schrank nicht")
+    endif()
+    string(SUBSTRING "${_dbg}" 0 ${_p} _vor)
+    string(FIND "${_vor}" "[pri] cut=" _q REVERSE)
+    string(SUBSTRING "${_vor}" ${_q} 12 _z)
+    if(NOT "${_z}" STREQUAL "[pri] cut=4 ")
+        _fehler(": Klick von Norden: Kamera vor dem Klick '${_z}' statt Cut 4")
+    endif()
+    _danach("${_dbg}" "Port-Programm 2010_kasten_leer" "Cut_chg(3)" "Klick von Norden schaltet auf Cut 3")
+    _danach("${_dbg}" "Cut_chg(3)" "[pri] cut=3" "Cut 3 im Bild")
+    _danach("${_dbg}" "[pri] cut=3" "[schrank2010] Tuer auf (rot_y 1024)" "Aufklappen unter Cut 3")
+    _danach("${_dbg}" "[schrank2010] Tuer auf (rot_y 1024)" "[pri] cut=4" "Cut_old zurueck nach Cut 4")
 endif()
 
 # ---- wasser -------------------------------------------------------------------------------------------------------------------
@@ -241,7 +274,7 @@ if("${TEIL}" STREQUAL "wasser")
         execute_process(COMMAND "${RE15_N30_WERKZEUG}" fluss "${_ordner}" 430 461 ${_x0} ${_y0} ${_x1} ${_y1} OUTPUT_VARIABLE _o RESULT_VARIABLE _r)
         string(STRIP "${_o}" _o)
         message(STATUS "r41_nachtrag30[wasser ${FIGUR}]: ${_was}: ${_o}")
-        if(NOT _r EQUAL 0 OR NOT _o MATCHES "^FLUSS (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) AENDERUNG ([0-9]+) VON ([0-9]+)")
+        if(NOT _r EQUAL 0 OR NOT _o MATCHES "^FLUSS (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) AENDERUNG")
             _fehler(": fluss ${_was}: ${_o}")
         endif()
         set(_s1 ${CMAKE_MATCH_1})
@@ -249,9 +282,11 @@ if("${TEIL}" STREQUAL "wasser")
         set(_n1 ${CMAKE_MATCH_3})
         set(_s2 ${CMAKE_MATCH_4})
         set(_s3 ${CMAKE_MATCH_7})
-        set(_a ${CMAKE_MATCH_10})
-        set(_f ${CMAKE_MATCH_11})
-        math(EXPR _viertel "${_f} / 6")
+        if(NOT _o MATCHES "AENDERUNG ([0-9]+) VON ([0-9]+)")
+            _fehler(": fluss ${_was}: ${_o}")
+        endif()
+        set(_a ${CMAKE_MATCH_1})
+        math(EXPR _viertel "${CMAKE_MATCH_2} / 6")
         if(_laeuft)
             if(_s1 LESS 1 OR NOT _s2 GREATER _s1 OR NOT _s3 GREATER _s2 OR NOT _k1 GREATER _n1 OR _a LESS _viertel)
                 _fehler(": ${_was}: es laeuft nichts nach rechts (${_o})")
