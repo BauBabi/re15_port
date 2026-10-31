@@ -435,7 +435,9 @@ int main(void)
         /* (6ii) MIT Sicherung (Fundstelle Hebetisch ROOM1150, sicherung_1150.c): Aktion -> Ja ->
          * "Will you use the Fuse?" -> Ja -> eingesetzt. */
         g_inv.slots[0].id = RE15_SICHERUNG_ITEM; g_inv.slots[0].qty = 1; g_inv.slots[0].flags = 0;
+        { extern void re15_keyitems_r41_test_ja(int); re15_keyitems_r41_test_ja(1); }   /* Runde 41 Spur O: im Spiel USE */
         if (schalter_ja(pl, 8) != 0) fail = 1;
+        { extern void re15_keyitems_r41_test_ja(int); re15_keyitems_r41_test_ja(0); }
         if (!re15_game_flag_get(RE15_ROLLTOR_EINGESETZT_BANK, RE15_ROLLTOR_EINGESETZT_BIT) ||
             re15_inv_find_item(RE15_SICHERUNG_ITEM) >= 0 || re15_game_flag_get(3, 121)) {
             fprintf(stderr, "FAIL: (6ii) Einsetzen: (9,63)=%d Sicherung-Platz=%d (3,121)=%d\n",

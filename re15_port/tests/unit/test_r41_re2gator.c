@@ -10,7 +10,7 @@
  *   sockel    HP 25300, 200 Pistolentreffer toeten nicht, geschwaecht < 25000, SE 0 xor SE 5, R4-Sperre 120..183
  *   kanister  Fenster -> Stufen 1..7 (Kopf/Kiefer-az), Anhaengen an Part 6, Treffer -> R1 (SE 4, Raum-Satz 15,
  *             Rumble, Clip 9, Kanister nach 9 Bildern weg, Leiche)
- *   putz      Dash-Start -> 54 Putz-Partikel (RE2 CORE00.ESP id 4) ohne unbekannte re2fx-Ops, Lage um Leon
+ *   putz      Stoss (Stark-Schuetteln) -> 5 Brocken Raumbank 0x19 + Staub, Bilder/Lage wie ROOM40A0 sub15-21, ohne unbekannte re2fx-Ops
  *   wand      Nachbesserung 1 (M1): Intro ohne Bahn-Gate + Dash auf der Westwand-Klemmlinie nach Sueden (Klemme
  *             nimmt den RE2-Korridor-Seitversatz), yaw += 1024 nach Clip 3 (@0x80100938-48 / @0x80100eb0-c0)
  *   lauer     Nachbesserung 3 (Abnahme 2 M1, Entscheid B9): bis zum Durchbruch untergetaucht wie RE2 (Sce_em_set y=+3000
@@ -577,61 +577,85 @@ static int teil_scherben(void)
 }
 
 /* ================================================================================================ */
+/* Runde 41 Spur P (Nachbesserung 1, M4, AUFTRAG.md Nachtrag 35 Punkt 2): der Putz haengt in RE2 am Stark-Schuetteln-Bit (ROOM40A0 sub01 @SCD 0x008C: Bank 1 Bit 0x1d = 0x800cfbd8 & 4), nicht am Dash; sub15 -> sub16/18/20:
+ * fuenf Brocken Raumbank 0x19 (Skala 0x0600, y -5400) in den Bildern 0/1/5/8/12, Raumbank-Satz 13 mit dem dritten; je Brocken Staubspur Kern-Bank 3 Sub 9 (Op 21 @0x8001f5a4). Die Fassung "54 Partikel id 4 um Leon
+ * beim Dash-Start" war sub14 = nur der R2-Rueckzug (Cut 9 @0x80102784-88). */
+static int s_putz_se13;
+static void putz_se(int satz) { if (satz == 13) s_putz_se13++; }
 static int teil_putz(void)
 {
     if (!setup(1)) return 1;
-    size_t n = 0;
-    uint8_t *esp = slurp(RE15_ASSET_RE2_DIR "/CORE00.ESP", &n);
-    if (!esp) { printf("FAIL: shared_assets/RE2/CORE00.ESP fehlt\n"); return 1; }
+    size_t n = 0, nr = 0;
+    uint8_t *esp = slurp(RE15_ASSET_RE2_DIR "/CORE00.ESP", &n), *raum = slurp(RE15_ASSET_RE2_DIR "/GATOR40A0.ESP", &nr);
+    if (!esp || !raum) { printf("FAIL: shared_assets/RE2/CORE00.ESP oder GATOR40A0.ESP fehlt\n"); return 1; }
     re2fx_reset();
     CHECK(re2fx_register_core(esp, n) == 0, "re2fx_register_core schlug fehl");
+    CHECK(re2fx_register_raum(raum, nr) == 0, "re2fx_register_raum schlug fehl");
+    re15_gr2_raum_se_hook = putz_se;
     leon_statue(-6500, -8000);
     tick();
     intro_abwarten();
     e->x = -6500; e->z = -22000; e->y = -1200; e->rot_y = 0xC00;
-    int f_start, n2, n3;
-    int spawns0 = re15_gr2_putz_spawns();
-    /* bis zum Dash-Start fahren, dann 120 Bilder re2fx mitticken */
-    int gestartet = 0;
-    for (int f = 0; f < 1200 && !gestartet; f++) {
+    /* ohne Stoss kein Putz: kein Bit, kein Brocken */
+    int s0 = re15_gr2_putz_spawns(), st0 = re15_gr2_putz_stoesse();
+    g_scd.cam_id = 1;
+    re15_gr2_frame_wort(slot, 0x28000000u);                     /* Bildwort `lui v1,0x2800` @0x801003f0-40c -> Ereignis 1 -> `|= 4` @0x80101dd8-f8 */
+    int bild[8], b = 0, f0 = -1, staub = 0, brocken = 0, se0 = 0;
+    for (int f = 0; f < 120 && !(f0 >= 0 && f > f0 + 12); f++) {      /* ein Stoss; die Bildwoerter des Schwimm-Clips stossen danach von selbst nach */
+        const int vor = re15_gr2_putz_spawns();
+        g_scd.cam_id = 1;
         leon_statue(-6500, -8000); tick(); re2fx_tick();
-        if (re15_gr2_im_dash(slot)) gestartet = 1;
-    }
-    (void)f_start; (void)n2; (void)n3;
-    CHECK(gestartet, "kein Dash");
-    /* Fortsetzung 3: WIRKSAME Lage der lebenden Putz-Teilchen (Pool-Platz +0x34/+0x36/+0x38 nach FUN_8001d894,
-     * Bank 4 in +0x1C) - vorher lagen sie bei (67,-2000,2) .. (-634,-4000,-722) um den Ursprung, weil die Lage nur in
-     * einer Stack-Matrix stand (haengender Zeiger +0x6C, @0x8001cd6c) statt als Versatz zur Einheitsmatrix 0x8009db44
-     * (Sce_espr_on @0x800565a4-0x80056618). */
-    int lebend_max = 0, weit_max = 0, gesehen = 0;
-    for (int f = 0; f < 120; f++) {
-        leon_statue(-6500, -8000); tick(); re2fx_tick();
-        int lebend = 0;
+        const int neu = re15_gr2_putz_spawns() - vor;
+        if (neu > 0) {
+            if (f0 < 0) { f0 = f; se0 = s_putz_se13; }
+            for (int k = 0; k < neu && b < 8; k++) bild[b++] = f - f0;
+            int32_t lp[3]; re15_gr2_putz_letzte(lp);
+            CHECK(lp[1] == -5400, "Brocken-Hoehe %d statt -5400 (`e8 ea` @SCD 0x09EA)", lp[1]);
+            CHECK(lp[0] >= -9000 && lp[0] <= 7383 && lp[2] >= -25750 && lp[2] <= -21655, "Brocken (%d,%d) ausserhalb der Suedseite", lp[0], lp[2]);
+        }
         for (int i = 0; i < RE2FX_PLAETZE; i++) {
             const uint8_t *pb = re2fx_platz(i);
-            if (!pb || !(pb[0x18] | pb[0x19]) || (pb[0x1C] | (pb[0x1D] << 8)) != 4) continue;
-            int wx = (int16_t)(pb[0x34] | (pb[0x35] << 8)), wz = (int16_t)(pb[0x38] | (pb[0x39] << 8));
-            int dx = wx - (-6500), dz = wz - (-8000), d = (int)sqrt((double)dx * dx + (double)dz * dz);
-            if (d > weit_max) weit_max = d;
-            lebend++; gesehen++;
+            if (!pb || !(pb[0x18] | pb[0x19])) continue;
+            const int bank = pb[0x1C] | (pb[0x1D] << 8);
+            if (bank == 0x19) brocken++;
+            if (bank == 3 && pb[0x1E] == 9) staub++;
         }
-        if (lebend > lebend_max) lebend_max = lebend;
     }
-    CHECK(gesehen > 0 && weit_max <= 3000,
-          "Putz-Teilchen nicht um Leon: %d Beobachtungen, groesster xz-Abstand %d (Soll <= 3000; RE2-Versaetze <= 1122)", gesehen, weit_max);
-    printf("putz: lebende Teilchen max %d/Bild, groesster xz-Abstand zu Leon %d\n", lebend_max, weit_max);
-    int spawns = re15_gr2_putz_spawns() - spawns0;
-    CHECK(spawns == 54, "Putz-Spawns %d statt 54 (6 x 9, ROOM40A0 sub13/sub14)", spawns);
-    CHECK(re2fx_op_unbekannt() == 0, "re2fx meldet %u unbekannte Ops fuer Effekt 4", re2fx_op_unbekannt());
-    {   /* Nachbesserung 1 (M2): Lage um LEON (putz_x/y/z war vorher ungesetzt = (0,0,0) ausserhalb des Beckens).
-         * Letzter Spawn jeder Runde = k_putz[8] @0x0900: Versatz (-622, -2400, -50) zu Leons Stand (-6500, 0, -8000). */
-        int32_t lp[3]; re15_gr2_putz_letzte(lp);
-        CHECK(lp[0] == -6500 - 622 && lp[1] == -2400 && lp[2] == -8000 - 50,
-              "letzter Putz-Spawn bei (%d,%d,%d) statt (-7122,-2400,-8050) um Leon", lp[0], lp[1], lp[2]);
+    CHECK(re15_gr2_putz_stoesse() == st0 + 1, "Stoesse %d statt 1 (sub15 sperrt sich ueber Bank 5 Bit 0x10)", re15_gr2_putz_stoesse() - st0);
+    CHECK(re15_gr2_putz_spawns() - s0 == 5, "Brocken %d statt 5 (sub16: 5 x Gosub sub17)", re15_gr2_putz_spawns() - s0);
+    CHECK(b == 5 && bild[0] == 0 && bild[1] == 1 && bild[2] == 5 && bild[3] == 8 && bild[4] == 12, "Bilder der Brocken %d/%d/%d/%d/%d statt 0/1/5/8/12 (Sleep 1, 4, 3, 4)", bild[0], bild[1], bild[2], bild[3], bild[4]);
+    CHECK(s_putz_se13 - se0 == 1, "Raumbank-Satz 13 %d x statt 1 x (`Se_on 36 02 0d 01 01` @SCD 0x0978)", s_putz_se13 - se0);
+    CHECK(staub > 0 && brocken > 0, "Brocken %d / Staub %d Platz-Bilder", brocken, staub);
+    CHECK(re2fx_op_zaehler(21) > 0, "Op 21 (Staubspur @0x8001f5a4) nicht gelaufen");
+    CHECK(re2fx_op_unbekannt() == 0, "re2fx meldet %u unbekannte Ops fuer Bank 0x19", re2fx_op_unbekannt());
+    /* Cut ausserhalb 0..7 (RE2: Switch ohne Fall fuer Cut >= 10): Schuetteln ohne Putz, die Sperre loest sich */
+    s0 = re15_gr2_putz_spawns(); st0 = re15_gr2_putz_stoesse();
+    g_scd.cam_id = 9;
+    re15_gr2_frame_wort(slot, 0x28000000u);
+    for (int f = 0; f < 40; f++) { g_scd.cam_id = 9; leon_statue(-6500, -8000); tick(); re2fx_tick(); }
+    CHECK(re15_gr2_putz_spawns() == s0 && re15_gr2_putz_stoesse() == st0, "Sonderkamera: %d Brocken statt 0", re15_gr2_putz_spawns() - s0);
+    /* alle vier Ringseiten: Lage in der Seite */
+    static const int32_t k_s[4][4] = { { -9000, 7383, -25750, -21655 }, { 2852, 6947, -21800, -5417 }, { -9000, 7383, -11050, -6955 }, { -7548, -3453, -21800, -5417 } };
+    for (int c = 0; c < 8; c += 2) {
+        const int si = c / 2;
+        for (int r = 0; r < 3; r++) {
+            g_scd.cam_id = (uint8_t)(c + (r & 1));
+            re15_gr2_frame_wort(slot, 0x28000000u);
+            for (int f = 0; f < 40; f++) {
+                const int vor = re15_gr2_putz_spawns();
+                g_scd.cam_id = (uint8_t)(c + (r & 1));
+                leon_statue(-6500, -8000); tick(); re2fx_tick();
+                if (re15_gr2_putz_spawns() != vor) {
+                    int32_t lp[3]; re15_gr2_putz_letzte(lp);
+                    CHECK(lp[0] >= k_s[si][0] && lp[0] <= k_s[si][1] && lp[2] >= k_s[si][2] && lp[2] <= k_s[si][3], "Cut %d: Brocken (%d,%d) ausserhalb der Ringseite %d", c, lp[0], lp[2], si);
+                }
+            }
+        }
     }
-    printf("putz: spawns %d, unbekannte Ops %u; Op-Zaehler:", spawns, re2fx_op_unbekannt());
+    printf("putz: Stoss = 5 Brocken Bild 0/1/5/8/12, Staub %d Platz-Bilder, unbekannte Ops %u; Op-Zaehler:", staub, re2fx_op_unbekannt());
     for (int op = 0; op < 96; op++) if (re2fx_op_zaehler(op)) printf(" %d:%u", op, re2fx_op_zaehler(op));
     printf("\n");
+    re15_gr2_raum_se_hook = NULL;
     return fails ? 1 : 0;
 }
 
@@ -1326,7 +1350,7 @@ static int teil_schleppen(void)
          * Querlage ist darin kleiner als in der Keyframe-Matrix ohne +0x22A (vorher > 1000), aber nicht 0 - der Quer-Ausgleich
          * hat weiter etwas zu tun. */
         CHECK(anh && l_anh[2] != 0, "Fall 3: beim Anhaengen keine Querlage (lokal z %d)", l_anh[2]);
-        CHECK(ok && l[0] == RE15_GR2_KAN_LOKAL_X && l[1] == RE15_GR2_KAN_LOKAL_Y && l[2] == 0,
+        CHECK(ok && l[0] == RE15_GR2_KAN_LOKAL_X && l[1] == RE15_GR2_KAN_LOKAL_Y && l[2] == -262,
               "Fall 3: Lokallage nach Stufe 7 + 40 Takte (%d,%d,%d) statt (1750,-210,0) - x/y @0x801019c4-0x80101b8c, z Quer-Ausgleich",
               l[0], l[1], l[2]);
         printf("schleppen: Fall 3 (quer 1200): Lokallage beim Anhaengen (%d,%d,%d) -> nach Stufe 7 + 40 Takte (%d,%d,%d)\n",
@@ -2142,11 +2166,17 @@ static int teil_kopfklemme(void)
     printf("kopfklemme: Wurzel (2000,-25400) Gier 0x400 mit Kanister -> Ueberstand vor dem Takt (%d,%d)\n", (int)dx, (int)dz);
     CHECK(vorher && dz > 0, "Lage ohne Ueberstand - der Riegel prueft nichts (dz %d)", (int)dz);
     int32_t kmin = 0x7fffffff, kp[3], kr[9];
+    /* Runde 41 Spur P (Abnahme G 4 O1, Querbezug): die Klemme baut den Ueberstand ueber mehrere Bilder ab, hoechstens 340 je Bild (gator_re2_r41.c
+     * GR2_KK_SCHRITT = groesster authored Wurzelschritt) - dieser Aufbau setzt den Alligator mit ~2850 Ueberstand an die Wand: ab Bild 9 innerhalb. */
     for (int f = 0; f < 30; f++) {
         leon_statue(5800, -26500);
+        const int32_t ax = e->x, az = e->z;
         tick();
+        const int32_t sdx = e->x - ax, sdz = e->z - az;
+        CHECK((int64_t)sdx * sdx + (int64_t)sdz * sdz <= (int64_t)341 * 341, "Bild %d: Lagesprung (%d,%d) > 340", f, (int)sdx, (int)sdz);
         CHECK(re15_gr2_kanister_welt(kp, kr), "Bild %d: kein Kanister", f);
         if (kp[2] < kmin) kmin = kp[2];
+        if (f < 9) continue;
         CHECK(kp[0] >= -8900 && kp[0] <= 7200 && kp[2] >= -27000 && kp[2] <= -5400, "Bild %d: Kanister (%d,%d) ausserhalb der Aussenwaende",
               f, kp[0], kp[2]);
         /* anderes Ende des Kanisters: Weltdrehung x (0,-2784,0) (KANISTER40A0.MD1 y -2784..0) */

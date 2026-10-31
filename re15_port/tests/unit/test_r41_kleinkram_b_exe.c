@@ -110,7 +110,8 @@ static int kurbel(const char *dlog, const char *state, const char *anim)
 {
     long f_pos = scd_bild(dlog, "@0x0A8C"), f_mot = scd_bild(dlog, "@0x0A9C"), f_ret = scd_bild(dlog, "@0x0B16");
     printf("SCD Pos_set F%ld Plc_motion F%ld Plc_ret F%ld\n", f_pos, f_mot, f_ret);
-    if (f_pos < 0 || f_mot <= f_pos || f_ret <= f_mot || f_ret >= MAXF) { printf("FAIL Szene nicht vollstaendig\n"); return 1; }
+    /* Runde 41 Spur O: ueber das Inventar fallen Pos_set und Plc_motion in dasselbe Bild (RE2 ROOM1110 sub13 -> sub15), daher `<`. */
+    if (f_pos < 0 || f_mot < f_pos || f_ret <= f_mot || f_ret >= MAXF) { printf("FAIL Szene nicht vollstaendig\n"); return 1; }
 
     /* state.txt: "F<n> pad=xxxx PL(x,z,rot=..)" — Bildzaehler beginnt je Raum neu, der letzte Eintrag je Bild gilt. */
     static int sx[MAXF], sz[MAXF], sv[MAXF];

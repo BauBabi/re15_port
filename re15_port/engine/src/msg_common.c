@@ -16,6 +16,7 @@
 #include <string.h>     /* memset — re15_msg_clear_room_block (Per-Raum-Teardown) */
 #include "re15_room.h"       /* g_current_room_id — Runde 36 Spur P (Text-Overrides) */
 #include "re15_story_r36.h"  /* re15_story_r36_texte — Runde 36 Spur P */
+#include "re15_keyitems_r41.h" /* Runde 41 Spur O: Karten-Leser, Beschreibung ohne Frage */
 
 #define DIALOG_BASE_SCROLL_SPEED  2  /* "g_dialogBasisGeschwindigkeit = 2 << istZweiterPuffer" */
 
@@ -501,6 +502,7 @@ static void re15_dialog_step(void)
                 break;
             }
             if (b == 0x02) {               /* page break: arg 0 → wait button, N → timed */
+                if (re15_keyitems_r41_text_ende(g_scd.message_parse)) { g_scd.message_fsm = 4; break; }   /* Runde 41 Spur O: Text endet vor der Frage */
                 unsigned char a = (g_scd.message_parse + 1 < rlen) ? raw[g_scd.message_parse + 1] : 0;
                 if (a == 0) g_scd.message_fsm = 1;
                 else { g_scd.message_fsm = 2; g_scd.message_timer = a; }

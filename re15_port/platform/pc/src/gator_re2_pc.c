@@ -462,7 +462,7 @@ static int bank_laden(void)
 
 static void raum_se(int satz_re2)
 {
-    int satz = (satz_re2 == 15) ? R41_GATOR_SE_EXPLOSION : (satz_re2 == 14) ? R41_GATOR_SE_TOD : -1;
+    int satz = (satz_re2 == 15) ? R41_GATOR_SE_EXPLOSION : (satz_re2 == 14) ? R41_GATOR_SE_TOD : (satz_re2 == 13) ? R41_GATOR_SE_PUTZ : -1;
     int ok = bank_laden();
     /* Messzeile (Abnahme 0, M6): der Raum-Brueller war in der exe nicht nachweisbar - debug.log traegt
      * jetzt jeden Ruf des Hakens (15 = Explosion @0x8010237c-88, 14 = Tod). */

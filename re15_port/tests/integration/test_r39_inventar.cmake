@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.16)
 #   status   E Elza ROOM1001, START, Framedump Bild 145: "[inv] Status-Bild ITEM/STPIC_04.TIM (Figur 4" und der Block
 #              bei (14,26) == STPIC_04 (>= 90 % der Texel, Zeilen 0..62 = Driver License), nicht == STPIC_00 (< 50 %)
 #            F Leon ROOM1000 dasselbe: STPIC_00 geladen, Block == STPIC_00
-#   discard  G Elza ROOM11E1 mit Yellow Keycard + (9,0x8A): Leser -> Ja -> msg 9 -> Tastenfeld -> Code-Bits per
+#   discard  G Elza ROOM11E1 mit Yellow Keycard + (9,0x8A): Leser -> USE -> msg 9 -> Tastenfeld -> Code-Bits per
 #              RE15_SET_FLAG_AT -> msg 5 -> Wegwerf-Abfrage (wegwerf=1, bereit) -> Ja -> Inventar ohne 39:1
 #            H Leon ROOM11E0 mit (3,139) (wie nach ROOM1240 @0x0055A) + Karte: kein msg 7, keine Abfrage, Karte bleibt
 #
@@ -190,12 +190,13 @@ elseif(TEIL STREQUAL "status")
     endif()
 
 elseif(TEIL STREQUAL "discard")
-    # G: Bildnummern aus C_belege (Lauf m4c_nachher): msg 7 hat vier Seiten (fsm 1 = Seitenende F127/F260/F304, Ja/Nein
-    # fsm 3 ab F386), Ja F420 -> msg 9 F423 (zu F501) -> Tastenfeld msg 0 F502 (zu F561) -> Code-Bits F600 -> sub19
+    # G: Bildnummern aus C_belege (Lauf m4c_nachher): msg 7 hat vier Seiten (fsm 1 = Seitenende F127/F260/F304). Runde 41 Spur O:
+    # die Aktionstaste endet vor der Frage-Seite, die Karte kommt per USE (RE15_USE_TEST = USE ohne Menue), wo vorher das Ja
+    # stand: USE F420 -> msg 9 (zu F501) -> Tastenfeld msg 0 F502 (zu F561) -> Code-Bits F600 -> sub19
     # msg 5 F601 mit wegwerf=1 -> zu F700 (Karte 39:0 = Zaehler @0x80051810) -> Abfrage getippt (bereit=1 F788) ->
     # Ja F1000 -> Inventar ohne 0x39.
     c_lauf(g 11E1 "11E1;10400;4250;0;elza;give:0x39:1;flag:9:0x8A" 1100
-           "RE15_PRESS=square@100,square@140,square@270,square@320,square@420,square@500,square@560,square@700,square@1000;RE15_SET_FLAG_AT=5:13,5:14,5:15,5:16@600" _g)
+           "RE15_PRESS=square@100,square@140,square@270,square@320,square@500,square@560,square@700,square@1000;RE15_SET_FLAG_AT=5:13,5:14,5:15,5:16@600;RE15_USE_TEST=0x39@420#11E1" _g)
     pruef(G1 _g "[inv-r39] F0 R11E1 eq=128 inv=03:15,15:50,39:1,00:0")
     pruef(G2 _g "[msgtext] room=11e1 id=7 \"A card reader.")
     pruef(G3 _g "[msgtext] room=11e1 id=9 \"You've used the Yellow Keycard.\"")
@@ -204,7 +205,7 @@ elseif(TEIL STREQUAL "discard")
     pruef(G6 _g "wegwerf=1 fsm=6 sel=0 bereit=1")
     pruef(G7 _g "R11E1 eq=128 inv=03:15,15:50,39:0,00:0")
     pruef(G8 _g "[inv-r39] F1000 R11E1 eq=128 inv=03:15,15:50,00:0,00:0")
-    pruef_nicht(G9 _g "[inv-r39-menu] F423 offen=0 sub=0 st=0 cur=0 cur2=0 cmd=0 msg=1/9 wegwerf=1")
+    pruef_nicht(G9 _g "msg=1/9 wegwerf=1")
     c_lauf(h 11E0 "11E0;10400;4250;0;give:0x39:1;flag:9:0x8A;flag:3:139" 400
            "RE15_PRESS=square@100,square@200,square@300" _h)
     pruef_nicht(H1 _h "[msgtext] room=11e0 id=7")

@@ -2470,6 +2470,8 @@ static void teil_s(void)
 }
 int main(void)
 {
+    /* Runde 41 Spur O: dieser Riegel misst den Ja-Zweig der Benutzungsstellen; die Frage entfaellt seit der RE2-Form, Ja = USE. */
+    { extern void re15_keyitems_r41_test_ja(int); re15_keyitems_r41_test_ja(1); }
     printf("=== r21_discard_wegwerfen — \"You don't need this key any more. Discard it?\"\n");
     printf("    Wortlaut: DEBUG.BIN @0x800C508B, Prompt-Skript [6] der Tabelle @0x800C4FC6\n");
     printf("    Regel:    RE2 LAB_80051718 (Zaehler @0x80051810, Frage @0x80051834)\n");

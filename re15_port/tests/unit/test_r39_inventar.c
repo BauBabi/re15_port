@@ -47,6 +47,7 @@
 #include "re15_inv_screen.h"
 #include "re15_itembox.h"
 #include "re15_map_hint.h"
+#include "re15_keyitems_r41.h"  /* Runde 41 Spur O: USE am Kartenleser (Teil discard) */
 #include "gen/discard_sites.inc"
 
 extern uint8_t g_aot_action_pressed;
@@ -567,7 +568,8 @@ static void teil_discard(void)
     re15_inv_init(); re15_discard_reset();
     CHECK(re15_discard_besitz_vor_nachricht(0x11E1, 5) == 0, "E ohne Karte: kein Treffer");
 
-    /* W: der ECHTE Weg bei Elza (ROOM11E1): Kartenleser (10650,3850) 800x800 -> msg 7 (Ja) -> msg 9 -> Tastenfeld;
+    /* W: der ECHTE Weg bei Elza (ROOM11E1): Kartenleser (10650,3850) 800x800 -> USE (Runde 41 Spur O, RE2 Red Card Key ROOM2110
+     * Slot 9 @0x01812; die Aktionstaste zeigt nur die Beschreibung) -> msg 9 -> Tastenfeld;
      * Code-Bits (5,13..16) wie die vier Ziffern-Riegel sub01 @0x01A76..@0x01A82 -> Evt_exec sub19 @0x01A86 ->
      * Set(3,0x8B) @0x01A8A -> msg 5 @0x01F86 -> Wegwerf-Abfrage -> Ja -> Karte weg. */
     raum_t r;
@@ -581,14 +583,12 @@ static void teil_discard(void)
     CHECK(!re15_game_flag_get(3, 139) && menge(0x39) == 1, "W Elza-Start: (3,139)=0, Yellow Keycard im Beutel");
     int ev = druck();
     int m7 = (g_scd.message_active && g_scd.message_id == 7) || warte_msg(7, 60);
-    CHECK(ev == 20 && m7, "W Druck am Leser: Ereignis sub%d, msg 7 \"Will you operate the card reader?\"", ev);
-    /* Ja: bis zur Auswahl tippen lassen (Viereck = Schnellvorlauf/Seite), dann Viereck bei sel=1. */
-    int ja = 0;
-    for (int f = 0; f < 900 && !ja; f++) {
-        if (g_scd.message_active && g_scd.message_id == 7 && g_scd.message_select) {
-            bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE, 0); ja = 1;
-        } else bild(f % 15 == 0 ? RE15_PAD_BIT_SQUARE : 0, f % 15 == 0 ? RE15_PAD_BIT_SQUARE : 0, 0);
-    }
+    CHECK(ev == 20 && m7, "W Druck am Leser: Ereignis sub%d, msg 7 \"A card reader.\" ohne Frage-Seite", ev);
+    /* Beschreibung durchtippen (endet vor "Will you operate the card reader?"), dann USE der Karte aus dem Inventar. */
+    for (int f = 0; f < 900 && g_scd.message_active; f++)
+        bild(f % 15 == 0 ? RE15_PAD_BIT_SQUARE : 0, f % 15 == 0 ? RE15_PAD_BIT_SQUARE : 0, 0);
+    for (int f = 0; f < 10; f++) bild(0, 0, 0);
+    const int ja = re15_keyitems_r41_use(0x39) == 1 && re15_keyitems_r41_schliessen() == 1;
     int m9 = warte_msg(9, 120);
     CHECK(ja && m9, "W Ja -> msg 9 \"You've used the Yellow Keycard.\" (sub20 @0x01FAC) — noch KEINE Abfrage (%d)",
           re15_discard_active());

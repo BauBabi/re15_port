@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.16)
 # bleibt auf dem Panel, waehrend Piep und Aufschliess-Ton kommen.
 #
 #   B  ROOM10D0 ECHTER WEG: Blue Keycard im Inventar (RE15_GIVE 0x38) + Taken-Bit (9,52) (sub20 @0x019C0), Kartenleser
-#      per RE15_FIRE_AOT=1 (main00 @0x0103E Aot_set Platz 1 sce 3 -> sub20), "Ja" auf msg 7, "You've used the Blue
+#      per RE15_USE_TEST (Runde 41 Spur O: USE aus dem Inventar auf Platz 1 main00 @0x0103E -> sub20 ohne msg 7), "You've used the Blue
 #      Keycard." (msg 9), Tastenfeld (sub17), Code 4312 per Cursor (D-Pad) + Viereck, "You've opened the lock.",
 #      Wegwerf-Abfrage. MUSS: Lampe ZU ab dem Panel, Piep P und Aufschliessen P+15 (auf.log), der angezeigte Cut ist an
 #      P+15 noch 11 (cut.log), die Kamera geht erst NACH P+15 zurueck, Lampe OFFEN (blau) ab P+1; Bild 700 (zwischen den
@@ -165,7 +165,7 @@ list(APPEND _pad "730:A" "793:A")                      # "1" (Platz 3), msg 3 zu
 _seg(803 13 R)
 list(APPEND _pad "818:A" "908:A" "960:A" "1010:A")     # "2" (Platz 4); msg 5 zu; Wegwerf-Abfrage Ja; Meldung zu
 list(JOIN _pad "," _pad_s)
-e_lauf(b 1060 RE15_DEBUG_JUMP=10D0@120 RE15_GIVE=0x38:1 RE15_SET_FLAG=9:52 "RE15_FIRE_AOT=1@150#10D0"
+e_lauf(b 1060 RE15_DEBUG_JUMP=10D0@120 RE15_GIVE=0x38:1 RE15_SET_FLAG=9:52 "RE15_USE_TEST=0x38@150#10D0"
        "RE15_PAD_AT=${_pad_s}" "RE15_EXIT_AT=1060#10D0" "RE15_FRAMEDUMP=700-900/200:fd_")
 e_muss(b "${_dbg}" "\\[msgtext\\] room=10d0 id=9 \"You've used the Blue Keycard.\"")
 e_muss(b "${_dbg}" "\\[msgtext\\] room=10d0 id=3 \"Enter the fourth number.\"")

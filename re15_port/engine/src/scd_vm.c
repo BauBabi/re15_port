@@ -51,6 +51,7 @@
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
 #include "re15_rolltor.h"   /* Runde 34 Nacht, Spur A: Rolltor ROOM1050/1051 (rolltor_1050.c) */
 #include "re15_ventilkette_r41.h"   /* Runde 41 Spur C: Ereignis-Kette + Strahlen 20B0 (ventilkette_r41.c) */
+#include "re15_keyitems_r41.h"       /* Runde 41 Spur O: Key Items in RE2-Form (keyitems_r41.c) */
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Cursor haelt sub04 vor For @0x0FC0 (op_for) */
 #include "re15_nahaufnahmen_r40.h" /* Runde 40: Nahaufnahmen-Programme (nahaufnahmen_r40.c) */
 #include "re15_leiche.h"     /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
@@ -965,6 +966,7 @@ static int op_evt_end(scd_thread_t *t)
  * input) time to update state before the next condition re-evaluation. */
 static int op_evt_next(scd_thread_t *t)
 {
+    if (re15_keyitems_r41_evt_next()) { t->pc += 1; return 1; }   /* Runde 41 Spur O: USE-Lauf, entfallener Text kostet keinen Takt (RE2 ROOM1110 sub13) */
     t->pc += 1;
     return 2;   /* yield → next tick resumes after Evt_next */
 }
@@ -1300,6 +1302,7 @@ static int op_evt_exec(scd_thread_t *t)
  * 0x0A — Sleeping: decrement counter at sleep slot; PC advances 3 when done. */
 static int op_sleep(scd_thread_t *t)
 {
+    if (re15_keyitems_r41_sleep()) { t->pc += 4; return 1; }   /* Runde 41 Spur O: Kurbel, kein Warten vor Plc_motion (RE2 ROOM1110 sub13 -> sub15) */
     /* Sleep advances PC by 1 (past opcode byte). Sleeping reads u16 at
      * Sleeping_pc+2 (i.e. original Sleep_pc+3).
      *
@@ -1805,6 +1808,8 @@ static int op_message_on(scd_thread_t *t)
         t->pc += 4;   /* skip the flavor message — the box screen is its replacement */
         return 1;
     }
+    /* Runde 41 Spur O: Key Items in RE2-Form (keyitems_r41.c): Frage entfaellt, USE-Lauf ohne Texte. */
+    if (g_scd.message_query == 0 && re15_keyitems_r41_message_on(t->pc[1])) { t->pc += 4; return 1; }
     if (getenv("RE15_MSG_LOG"))
         fprintf(stderr, "[msg] room=%04x id=%d savepoint=0\n", g_current_room_id, t->pc[1]);
 
@@ -2393,7 +2398,7 @@ static int op_plc_motion(scd_thread_t *t)
      * anim flag word (high byte → actor+0x1c4). Was incorrectly read as
      * one 16-bit motion id — values 256+ wrapped to wrong clip. */
     uint8_t  motion_id  = t->pc[2];
-    uint8_t  anim_flags = t->pc[3];
+    uint8_t  anim_flags = (uint8_t)(t->pc[3] | re15_keyitems_r41_plc_flags());   /* Runde 41 Spur O: Kurbel ohne Blende (RE2 ROOM1110 @0x02FC1 Flags 0x45, RE1.5 @0x80050d24) */
     /* Phase 4.5.13-RE2 (2026-05-21): route to correct actor slot.
      * Previously this hard-coded slot 0 (player), which meant sub-scripts
      * controlling NPCs (e.g. Elliot's gesture commands) hijacked Leon's
@@ -2533,7 +2538,7 @@ static int op_plc_motion(scd_thread_t *t)
      * motion (e.g. the ROOM1150 stand→kneel pelvis fold) lives in the CLIP keyframes — which is
      * why playing the correct bank (PL00.EDD clip 11, set above via anim_use_pl00) is what makes
      * the kneel descend smoothly, NOT a longer crossfade. */
-    if (!(anim_flags & 0x40)) g_actors[slot].anim_frac = 7;
+    g_actors[slot].anim_frac = (anim_flags & 0x40) ? 0 : 7;   /* Runde 41 Spur O: 0x40 = 0, nicht "bleibt": @0x80050cfc 7, @0x80050d24 andi 0x40 -> @0x80050d30 sb zero; re15_actor_set_motion oben hat 7 gesetzt. 0 von 1359 Plc_motion der RDTs tragen 0x40, aber 12 Zeilen 0xC0 der Port-Programme ventilkette_r41_programme.inc (RE2 ROOM1080 @0x021EC/@0x021F6). */
     /* T-round: pc[3] high byte → actor.anim_flags (RE2 +0x1c4).
      * Plc_motion UNCONDITIONALLY overwrites anim_flags (clears prior
      * REVERSE bit etc.) — Plc_flg AFTER Plc_motion is what re-installs
@@ -2869,6 +2874,7 @@ static int op_plc_ret(scd_thread_t *t)
      * bank-independent rest for the 1-frame handoff. (Same fix family as the post-walk reset.) */
     re15_actor_set_motion(pl, 200);   /* = the +5..7 walk-scratch clear → idle/rest pose */
     pl->anim_frame    = 0;
+    { extern int re15_keyitems_r41_plc_ret(void); if (re15_keyitems_r41_plc_ret()) pl->anim_frac = 0; }   /* Runde 41 Spur O, PORT-WAHL Szenenende: USE-Lauf ohne Mischung, der Wechsel Kurbel -> Stehen faellt in den Schnitt @0x0B0E vor Plc_ret @0x0B16; RE1.5 mischt dort sieben Bilder nach dem Schnitt (Altstand-Weg bleibt so), Form RE2 ROOM1110: Blende @0x02F24/@0x02F4E um Plc_ret */
     g_scd.player_mode = 1;          /* gameplay/PAD live next frame (zero delay) */
     /* DAS KOMMANDOWORT — jetzt wirklich geschrieben (Fix-Runde Cluster 4, 2026-08-17).
      * Selbst nachdisassembliert, Handler 0x80041f88 = PTR_LAB_800744a8[0x42]

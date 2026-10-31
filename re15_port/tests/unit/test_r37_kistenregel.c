@@ -168,6 +168,7 @@ static void bild(uint16_t held, uint16_t edge)
 /* Druck auf den Platz `slot` (re15_aot_fire_slot = der Pfad des Aktionsdrucks / Aot_on, aot_common.c), dann
  * `n` Bilder; QUADRAT alle 6 Bilder, solange eine Nachricht offen ist (= weiter / Ja auf jede Frage, Cursor steht
  * auf Ja). Liefert die Folge der aufgegangenen Nachrichten-Ids in `ids` (Ende -1). */
+#include "re15_keyitems_r41.h"   /* Runde 41 Spur O: re15_keyitems_r41_test_ja */
 static int s_ids[64], s_ids_n = 0;
 static void druck_und_ablauf(raum_t *r, int slot, int n)
 {
@@ -407,16 +408,19 @@ static const int F_K4[] = { 9, 0x8A, -1 };
 
 static const ab_fall_t k_ab[] = {
     /* name        raum   elza  x       y      z       flags item  slot  n    Kiste soll/nicht   Inventar soll */
-    { "K1 1090",   0x1090, 0,      0, -1800,    250, F_K1, 0x31,  2, 600,  7,  8,               7,  8 },
-    { "K2 10D0",   0x10D0, 0,    800,     0,  -5000, F_K2, 0x38,  1, 600,  8,  9,               7,  9 },
-    { "K2 10D1",   0x10D1, 1,    800,     0,  -5000, F_K2, 0x38,  1, 600,  8,  9,               7,  9 },
-    { "K3 1230",   0x1230, 0,  -1650,     0,  12300, F_K3, 0x37,  5, 600,  8,  9,               7,  9 },
-    { "K3 1231",   0x1231, 1,  -1650,     0,  12300, F_K3, 0x37,  5, 600,  8,  9,               7,  9 },
-    { "K4 11E1",   0x11E1, 1,  11050,     0,   4250, F_K4, 0x39,  4, 600,  8,  9,               7,  9 },
-    { "K5 11E1",   0x11E1, 1, -12450,     0,  -8200, F_K5, 0x30,  6, 400, 10, 11,              10, 11 },
-    { "K6 1100",   0x1100, 0, -25450,     0,  -9000, F_K6, 0x44,  2, 400,  1,  3,               1,  3 },
+    /* Runde 41 Spur O (RE2-Form): an den Stellen der Tabelle keyitems_r41.c gibt es keine Frage mehr. KISTE: Aktionstaste, also nur
+     * die Beschreibung (Karten: msg 7 ohne die letzte Seite, msg 8 "You have not" entfaellt mit der Frage). INVENTAR: Ja-Zweig
+     * (Pruefhaken re15_keyitems_r41_test_ja, im Spiel USE): Beschreibung + Benutzungstext; die Frage selbst kommt nie. */
+    { "K1 1090",   0x1090, 0,      0, -1800,    250, F_K1, 0x31,  2, 600,  7,  8,               7,  7 },
+    { "K2 10D0",   0x10D0, 0,    800,     0,  -5000, F_K2, 0x38,  1, 600,  7,  9,               7,  9 },
+    { "K2 10D1",   0x10D1, 1,    800,     0,  -5000, F_K2, 0x38,  1, 600,  7,  9,               7,  9 },
+    { "K3 1230",   0x1230, 0,  -1650,     0,  12300, F_K3, 0x37,  5, 600,  7,  9,               7,  9 },
+    { "K3 1231",   0x1231, 1,  -1650,     0,  12300, F_K3, 0x37,  5, 600,  7,  9,               7,  9 },
+    { "K4 11E1",   0x11E1, 1,  11050,     0,   4250, F_K4, 0x39,  4, 600,  7,  9,               7,  9 },
+    { "K5 11E1",   0x11E1, 1, -12450,     0,  -8200, F_K5, 0x30,  6, 400, 10, 11,              10, 10 },
+    { "K6 1100",   0x1100, 0, -25450,     0,  -9000, F_K6, 0x44,  2, 400,  1,  3,               1,  1 },
     { "K7 3010",   0x3010, 0, -26750, -1800, -19800, F_K7, 0x36,  6, 300,  0,  1,               1,  1 },
-    { "K8 3050",   0x3050, 0, -25400,     0, -15900, F_K8, 0x46, 10, 400,  3,  4,               3,  4 },
+    { "K8 3050",   0x3050, 0, -25400,     0, -15900, F_K8, 0x46, 10, 400,  3,  4,               3,  3 },
     { "K11 1211",  0x1211, 1, -21500,     0, -21600, F_K11,0x42,  8, 300, 10, -1,              -1, -1 },
 };
 
@@ -434,7 +438,9 @@ static void teil_ablauf(void)
               c->kiste_soll, c->kiste_nicht);
         if (c->inv_soll1 >= 0) {
             start(&r, c->x, c->y, c->z, c->flags, c->item, INVENTAR, c->elza);
+            re15_keyitems_r41_test_ja(1);                 /* Runde 41 Spur O: im Spiel USE */
             druck_und_ablauf(&r, c->slot, c->n);
+            re15_keyitems_r41_test_ja(0);
             CHECK(gesehen(c->inv_soll1) && gesehen(c->inv_soll2),
                   "%s INVENTAR (Gegenprobe): Druck auf Platz %d -> Nachrichten [%s]: msg %d und msg %d wie bisher",
                   c->name, c->slot, folge(), c->inv_soll1, c->inv_soll2);
@@ -450,7 +456,9 @@ static void teil_ablauf(void)
               "K1 1090 KISTE: Feuer brennt weiter ((3,0x81)=%d, (3,0x84)=%d), keine Rettungsszene",
               re15_game_flag_get(3, 0x81), re15_game_flag_get(3, 0x84));
         start(&r, 0, -1800, 250, F_K1, 0x31, INVENTAR, 0);
+        re15_keyitems_r41_test_ja(1);                     /* Runde 41 Spur O: im Spiel USE */
         druck_und_ablauf(&r, 2, 700);
+        re15_keyitems_r41_test_ja(0);
         CHECK(re15_game_flag_get(3, 0x81), "K1 1090 INVENTAR (Gegenprobe): geloescht ((3,0x81)=%d, sub06 @0x0271E)",
               re15_game_flag_get(3, 0x81));
         raum_frei(&r);
