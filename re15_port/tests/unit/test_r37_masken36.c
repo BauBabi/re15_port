@@ -752,6 +752,22 @@ static void r41_eintrag(const r41_zellen_modell_t *k, re15_sca_entry_t *e)
     memcpy(e, k->sca, sizeof *e < sizeof k->sca ? sizeof *e : sizeof k->sca);
 }
 
+/* Runde 41 Spur Q, Nachbesserung 1 (Abnahme 0 Mangel M1): Koerper, fuer die das RDT keine Zelle hat. Teil 8 in ROOM6010 Cut 5 ist die Aussenflaeche der Westwange;
+ * ihre Modell-Zeile bleibt die Zelle @0x0092C (Sued-, Nord-, Ostkante, 12 Bytes als Beleg), die Westkante kommt aus zwei Kameras: x -20596 = tools/maske/wange_r41.py,
+ * Riegel unit_r41_restpunkte_wange rechnet sie hier nach (teil_wange). */
+typedef struct { uint16_t raum; uint8_t cut; int16_t x_west; } r41_wange_t;
+static const r41_wange_t r41_wangen[] = { { 0x6010, 5, -20596 } };
+
+/* Zeile = Zelle e bis zur Westflaeche der Wange? */
+static int r41_wange_koerper(const r41_zellen_modell_t *k, const re15_sca_entry_t *e)
+{
+    size_t i;
+    for (i = 0; i < sizeof r41_wangen / sizeof r41_wangen[0]; i++)
+        if (r41_wangen[i].raum == k->raum && r41_wangen[i].cut == k->cut)
+            return k->x == r41_wangen[i].x_west && (long) k->x + k->w == (long) e->x + e->width;
+    return 0;
+}
+
 /* Punkt (x,z) in der Form der Modellzelle (Radius 0)? Rechteck = Kasten; sonst Raster aus form_drin (wie form0). */
 static int r41_form(int i, const r41_zellen_modell_t *k, double x, double z)
 {
@@ -1290,8 +1306,8 @@ static void teil_zellen3d(void)
         roh = slurp(p, &rn);
         if (roh && k->rdt_off + 12 <= rn && !memcmp(roh + k->rdt_off, k->sca, 12)) {
             re15_sca_entry_t e; r41_eintrag(k, &e);
-            ok = e.x == k->x && e.z == k->z && e.width == k->w && e.density == k->d && (e.type & 15) == k->typ
-                 && (e.floor >> 4) == k->band && (e.u0 & 1);
+            ok = ((e.x == k->x && e.width == k->w) || r41_wange_koerper(k, &e)) && e.z == k->z && e.density == k->d
+                 && (e.type & 15) == k->typ && (e.floor >> 4) == k->band && (e.u0 & 1);
         }
         beleg_ok += ok;
         if (!ok) printf("  BELEG FEHLT: ROOM%04X C%d R%d +0x%X\n", k->raum, k->cut, k->rect, (unsigned) k->rdt_off);
@@ -1801,6 +1817,96 @@ static void teil_stufen(unsigned r, int c, int von, int bis, int punkte_soll)
     CHECK("an jedem deckenden Punkt ist die Rechteck-Tiefe genau bucket(Eintritt)", daneben == 0 && ohne == 0);
     CHECK("je OT-Stufe ein Rechteck", doppelt == 0);
     free(a.roh); free(msk); free(R.roh); R.roh = NULL;
+}
+
+/* ---- wange (Runde 41 Spur Q Nachbesserung 1, Riegel unit_r41_restpunkte_wange): Ebene der Westwange ROOM6010 aus den Kameras 4 und 5 -------------------------- *
+ * Die Zelle @0x0092C (Westflaeche x -19919) ist nicht die Wange, Abnahme 0 Mangel M1. Bildkanten der Aussenflaeche (Sprung im Helligkeitsprofil des Hintergrunds, tools/maske/
+ * wange_r41.py --ppm prueft sie), je Kamera Sehebene, 3D-Kante = Schnitt. Geprueft: beide Kanten laufen parallel zur Treppe (dx/dz ~ 0, dy/dz ~ 5400/6445 = Laenge der
+ * Zelle @0x0092C), ihr Mittel auf der Hoehe von Teil 8 (z -20500) ist r41_wangen[].x_west. Kameras aus dem RDT (re15_camera_build_view). */
+#define R41_NPROBEN(a) ((int) (sizeof (a) / sizeof (a)[0]))
+static const double r41_w_unten5[][2] = { { 147.5, 204 }, { 149.5, 208 }, { 150.7, 212 }, { 156.5, 220 }, { 158.5, 224 }, { 160.7, 228 }, { 162.7, 232 }, { 165.7, 236 } };
+static const double r41_w_oben5[][2] = { { 158.5, 204 }, { 160.5, 208 }, { 162.6, 212 }, { 165.5, 216 }, { 167.6, 220 }, { 170.5, 224 }, { 172.5, 228 }, { 174.5, 232 }, { 177.6, 236 } };
+static const double r41_w_unten4[][2] = { { 259.5, 110 }, { 260.7, 113 }, { 261.7, 116 }, { 263.6, 119 }, { 265.5, 122 }, { 266.7, 125 }, { 268.6, 128 }, { 270.5, 131 }, { 271.6, 134 } };
+static const double r41_w_oben4[][2] = { { 265.5, 110 }, { 267.5, 113 }, { 268.5, 116 }, { 271.5, 119 }, { 271.5, 122 }, { 273.5, 125 }, { 274.5, 128 }, { 275.5, 131 }, { 277.6, 134 } };
+
+typedef struct { double n[3], c; } r41_ebene_t;
+
+/* Richtung des Sehstrahls durch (px,py): R^-1 (x - 160, y - 120, H), wie r41_eintritt */
+static void r41_strahl(const re15_camera_view_t *v, double px, double py, double D[3])
+{
+    const double a = v->rot[0], b = v->rot[1], cc = v->rot[2], d = v->rot[3], e = v->rot[4], f = v->rot[5], g = v->rot[6], h = v->rot[7], k = v->rot[8];
+    const double c0 = px - 160.0, c1 = py - 120.0, c2 = (double) v->fov_screen_dist;
+    D[0] = (e * k - f * h) * c0 + (cc * h - b * k) * c1 + (b * f - cc * e) * c2;
+    D[1] = (f * g - d * k) * c0 + (a * k - cc * g) * c1 + (cc * d - a * f) * c2;
+    D[2] = (d * h - e * g) * c0 + (b * g - a * h) * c1 + (a * e - b * d) * c2;
+    {
+        const double det = a * (e * k - f * h) - b * (d * k - f * g) + cc * (d * h - e * g), s = det < 0 ? -1.0 : 1.0;
+        D[0] *= s; D[1] *= s; D[2] *= s;
+    }
+}
+
+/* Ebene durch die Kamera und die Bildgerade (Hauptachse) der Proben */
+static void r41_sehebene(const re15_camera_view_t *v, const double (*p)[2], int n, r41_ebene_t *E)
+{
+    double mx = 0, my = 0, sxx = 0, syy = 0, sxy = 0, w, A[3], D0[3], D1[3], l; int i;
+    for (i = 0; i < n; i++) { mx += p[i][0]; my += p[i][1]; }
+    mx /= n; my /= n;
+    for (i = 0; i < n; i++) {
+        const double dx = p[i][0] - mx, dy = p[i][1] - my;
+        sxx += dx * dx; syy += dy * dy; sxy += dx * dy;
+    }
+    w = 0.5 * atan2(2.0 * sxy, sxx - syy);
+    kamera_ort(v, A);
+    r41_strahl(v, mx - 20.0 * cos(w), my - 20.0 * sin(w), D0);
+    r41_strahl(v, mx + 20.0 * cos(w), my + 20.0 * sin(w), D1);
+    E->n[0] = D0[1] * D1[2] - D0[2] * D1[1];
+    E->n[1] = D0[2] * D1[0] - D0[0] * D1[2];
+    E->n[2] = D0[0] * D1[1] - D0[1] * D1[0];
+    l = sqrt(E->n[0] * E->n[0] + E->n[1] * E->n[1] + E->n[2] * E->n[2]);
+    E->n[0] /= l; E->n[1] /= l; E->n[2] /= l;
+    E->c = E->n[0] * A[0] + E->n[1] * A[1] + E->n[2] * A[2];
+}
+
+/* Schnittgerade zweier Ebenen: Punkt (x,y) bei z, Steigungen dx/dz, dy/dz */
+static void r41_schnitt(const r41_ebene_t *e1, const r41_ebene_t *e2, double z, double *x, double *y, double *dxdz, double *dydz)
+{
+    const double a = e1->n[0], b = e1->n[1], c = e2->n[0], d = e2->n[1], det = a * d - b * c;
+    const double r1 = e1->c - e1->n[2] * z, r2 = e2->c - e2->n[2] * z;
+    *x = (d * r1 - b * r2) / det;
+    *y = (a * r2 - c * r1) / det;
+    *dxdz = (d * -e1->n[2] - b * -e2->n[2]) / det;
+    *dydz = (a * -e2->n[2] - c * -e1->n[2]) / det;
+}
+
+static void teil_wange(unsigned r, int c)
+{
+    static raum_t R;
+    re15_camera_view_t v5, v4; r41_ebene_t u5, o5, u4, o4;
+    double xu, yu, xo, yo, xu20, yu20, xo20, yo20, dxu, dyu, dxo, dyo, mitte; int soll = 0, i;
+    printf("== r41_restpunkte wange ROOM%04X C%d ==\n", r, c);
+    for (i = 0; i < (int) (sizeof r41_wangen / sizeof r41_wangen[0]); i++)
+        if (r41_wangen[i].raum == (uint16_t) (r & ~1u) && r41_wangen[i].cut == (uint8_t) c) soll = r41_wangen[i].x_west;
+    if (!soll || !raum_laden(&R, r) || re15_camera_build_view(&R.rdt.cuts[5], &v5) != 0 || re15_camera_build_view(&R.rdt.cuts[4], &v4) != 0) {
+        printf("  FAIL: ROOM%04X C%d nicht lesbar oder keine Wange\n", r, c); g_fail = 1; free(R.roh); R.roh = NULL; return;
+    }
+    r41_sehebene(&v5, r41_w_unten5, R41_NPROBEN(r41_w_unten5), &u5);
+    r41_sehebene(&v5, r41_w_oben5, R41_NPROBEN(r41_w_oben5), &o5);
+    r41_sehebene(&v4, r41_w_unten4, R41_NPROBEN(r41_w_unten4), &u4);
+    r41_sehebene(&v4, r41_w_oben4, R41_NPROBEN(r41_w_oben4), &o4);
+    r41_schnitt(&u5, &u4, -20000.0, &xu20, &yu20, &dxu, &dyu);
+    r41_schnitt(&o5, &o4, -20000.0, &xo20, &yo20, &dxo, &dyo);
+    r41_schnitt(&u5, &u4, -20500.0, &xu, &yu, &dxu, &dyu);
+    r41_schnitt(&o5, &o4, -20500.0, &xo, &yo, &dxo, &dyo);
+    mitte = (xu + xo) / 2.0;
+    printf("  Unterkante: z -20000 (%.0f,%.0f), z -20500 (%.0f,%.0f), dx/dz %.3f, dy/dz %.3f\n", xu20, yu20, xu, yu, dxu, dyu);
+    printf("  Oberkante : z -20000 (%.0f,%.0f), z -20500 (%.0f,%.0f), dx/dz %.3f, dy/dz %.3f\n", xo20, yo20, xo, yo, dxo, dyo);
+    printf("  Ebene x %.1f, Tabelle %d, Zellflaeche @0x0092C x -19919\n", mitte, soll);
+    CHECK("beide Kanten laufen parallel zur Treppe: |dx/dz| < 0,02", fabs(dxu) < 0.02 && fabs(dxo) < 0.02);
+    CHECK("Steigung der Kanten = Treppe: -0,87 < dy/dz < -0,80 (Zelle @0x0092C 5400/6445 = 0,838)", dyu > -0.87 && dyu < -0.80 && dyo > -0.87 && dyo < -0.80);
+    CHECK("Oberkante liegt ueber der Unterkante (PSX-Y nach unten)", yo < yu);
+    CHECK("Tabelle = Mittel der beiden Kanten auf der Hoehe von Teil 8", fabs(mitte - soll) <= 1.0);
+    CHECK("die Wange liegt westlich der Zellflaeche x -19919", soll < -19919);
+    free(R.roh); R.roh = NULL;
 }
 
 /* ---- erzeuge ---------------------------------------------------------------------------------------------------- */
@@ -2485,6 +2591,11 @@ int main(int argc, char **argv)
     }
     if (!strcmp(teil, "stufen") && argc > 6) {          /* Runde 41 Spur Q: stufen <raum> <cut> <von> <bis> <punkte> */
         teil_stufen((unsigned) strtoul(argv[2], NULL, 16), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
+        printf("%s\n", g_fail ? "FAIL" : "OK");
+        return g_fail;
+    }
+    if (!strcmp(teil, "wange") && argc > 3) {           /* Runde 41 Spur Q Nachbesserung 1: wange <raum> <cut> */
+        teil_wange((unsigned) strtoul(argv[2], NULL, 16), atoi(argv[3]));
         printf("%s\n", g_fail ? "FAIL" : "OK");
         return g_fail;
     }

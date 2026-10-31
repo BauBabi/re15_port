@@ -2,7 +2,8 @@
 #   unit_r41_restpunkte_gator              Tor vor dem Alligator: Bit 110 sperrt nicht, (9,111) sperrt (RE2 ROOM40A0 @0x0054, sub02 @0x00AE, Tot-Bit @0x80102660)
 #   unit_r41_restpunkte_original           Prozess mit RE15_GATOR_ORIGINAL=1: Spinnen-Filter aus, Tor aus
 #   unit_r41_restpunkte_gpu                Groessengrenze der PSX-GPU 1023 x 511 (psx-spx), Rechnung gegen den Ueberlauf in SDL_triangle.c:618
-#   unit_r41_restpunkte_teil8(_elza)       ROOM6010/6011 Cut 5 Teil 8: je OT-Stufe ein Rechteck, Tiefe == bucket(Eintritt) an jedem Punkt (Abnahme M 5 Mangel 1)
+#   unit_r41_restpunkte_teil8(_elza)       ROOM6010/6011 Cut 5 Teil 8: je OT-Stufe ein Rechteck, Tiefe == bucket(Eintritt in die Wange) an jedem Punkt (Abnahme M 5 Mangel 1, Abnahme 0 Mangel M1)
+#   unit_r41_restpunkte_wange              Ebene der Wange x -20596 aus den Kameras 4 und 5 des RDT nachgerechnet (tools/maske/wange_r41.py)
 #   integration_r41_restpunkte_gator(_elza)     exe: natuerlicher R1-Tod, Tuer, Spielstand, Leiter: kein Alligator, CONTINUE: kein Alligator, Water Key zu Fuss aufgehoben, danach Raum leer
 #   integration_r41_restpunkte_original(_elza)  exe: RE15_GATOR_ORIGINAL zeigt die Spinnen des ausgelieferten Raums und den RE1.5-Alligator, keine Szene
 #   integration_r41_restpunkte_masken      exe: Teil 8 HINTER verdeckt, DAVOR nicht uebermalt, Leon und Elza
@@ -17,9 +18,10 @@ add_test(NAME unit_r41_restpunkte_gator COMMAND test_r41_restpunkte gator WORKIN
 add_test(NAME unit_r41_restpunkte_original COMMAND test_r41_restpunkte original WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_test(NAME unit_r41_restpunkte_gpu COMMAND test_r41_restpunkte gpu WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r41_restpunkte_original PROPERTIES ENVIRONMENT "RE15_GATOR_ORIGINAL=1")
-add_test(NAME unit_r41_restpunkte_teil8 COMMAND test_r37_masken36 stufen 6010 5 113 127 426 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-add_test(NAME unit_r41_restpunkte_teil8_elza COMMAND test_r37_masken36 stufen 6011 5 113 127 426 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(unit_r41_restpunkte_gator unit_r41_restpunkte_original unit_r41_restpunkte_gpu unit_r41_restpunkte_teil8 unit_r41_restpunkte_teil8_elza PROPERTIES TIMEOUT 300)
+add_test(NAME unit_r41_restpunkte_teil8 COMMAND test_r37_masken36 stufen 6010 5 113 125 426 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME unit_r41_restpunkte_teil8_elza COMMAND test_r37_masken36 stufen 6011 5 113 125 426 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME unit_r41_restpunkte_wange COMMAND test_r37_masken36 wange 6010 5 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r41_restpunkte_gator unit_r41_restpunkte_original unit_r41_restpunkte_gpu unit_r41_restpunkte_teil8 unit_r41_restpunkte_teil8_elza unit_r41_restpunkte_wange PROPERTIES TIMEOUT 300)
 
 if(TARGET re15_pc)
     foreach(_teil gator gator_elza original original_elza)

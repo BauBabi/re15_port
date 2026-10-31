@@ -16,8 +16,14 @@ alten Rechtecks, deshalb neue Fenster an freien Stellen (schliessen_r41.frei_pla
 alle Fenster der uebrigen Rechtecke bleiben bytegleich, Rechteck-Zahl, Reihenfolge und Modell-Tabelle (Rechteck -> Tiefe) ebenso, solange
 die Stufen des Teils die Tiefen seiner Rechtecke sind. Leon- und Elza-Datei bleiben bytegleich.
 
+NACHBESSERUNG 1 (Abnahme 0 Mangel M1), --wange: die Stufen oben kamen aus der Modell-Zeile, und die war die Kollisionszelle @0x0092C, nicht die Wange. Mit --wange <x>
+(Ebene aus wange_r41.py, zwei Kameras) ist der Koerper die Zelle bis zur Westflaeche x, Hoehe neu = Oberkante des Teils auf dieser Flaeche (platzieren_r41.oberkante, Kopf Regel 5),
+Stufe je Punkt = bucket(Eintritt) wie oben. Die Zahl der Stufen aendert sich damit, also auch die Rechteckzahl; Modell-Tabelle (--tabelle-aus) und Sektions-Tabelle
+(--platziert) werden mitgeschrieben. Die Rechtecke stehen wie bisher am Ende der Sektion, je Stufe eines, naechste Tiefe zuletzt.
+
 Aufruf:
   python re15_port/tools/maske/stufen_r41.py --raum 6010 --cut 5 --von 113 --tabelle <gen_r41_masken36_zellen.inc>
+  python re15_port/tools/maske/stufen_r41.py --raum 6010 --cut 5 --von 113 --tabelle <inc> --wange -20596 --tabelle-aus <inc> --platziert <gen_r41_masken36_platziert.inc>
 """
 import argparse
 import os
@@ -52,6 +58,39 @@ def modell_zeilen(pfad, rid, cut):
     return z
 
 
+def tabelle_nachziehen(ein, aus, rid, cut, von, kz, stufen, wange):
+    """Modell-Zeilen des Teils ersetzen: die Zelle und ihre 12 Bytes bleiben Beleg fuer Sued-, Nord- und Ostkante, Westkante und Hoehe aus wange_r41.py / oberkante."""
+    roh = open(ein, "rb").read().decode("utf-8")
+    nl = "\r\n" if "\r\n" in roh else "\n"
+    zeilen, neu, frei, beleg = [], [], None, None
+    for s in roh.split(nl):
+        m = ZEILE.match(s)
+        if m and int(m.group(1), 16) == rid and int(m.group(2)) == cut and int(m.group(3)) >= von:
+            if frei is None:
+                frei = len(zeilen)
+                beleg = re.search(r"(0x[0-9A-Fa-f]{5}, \{[^}]*\})", s).group(1)
+            continue
+        zeilen.append(s)
+    for i, d in enumerate(stufen):
+        neu.append("    { 0x%04X, %2d, %3d, %6d, %6d, %5d, %5d, %d, %2d, %5d, %d, %3d, %s },   /* Zelle bis zur Westflaeche der Wange x %d (wange_r41.py, Nachbesserung 1 Spur Q) */"
+                   % (rid, cut, von + i, kz["x"], kz["z"], kz["w"], kz["d"], kz["typ"], kz["band"], kz["hoehe"], kz["saeule"], d, beleg, wange))
+    zeilen[frei:frei] = neu
+    open(aus, "wb").write(nl.join(zeilen).encode("utf-8"))
+    print("Modell-Tabelle: %d Zeilen neu -> %s" % (len(neu), aus))
+
+
+def platziert_nachziehen(pfad, rid, cut, delta):
+    """Sektions-Tabelle: Zahl der neuen Rechtecke der Sektion um delta aendern, alle uebrigen Bytes bleiben."""
+    roh = open(pfad, "rb").read().decode("utf-8")
+    rx = re.compile(r"(\{ 0x%04X,\s*%d,\s*\d+,\s*)(\d+)(,\s*\d+ \},)" % (rid, cut))
+    m = rx.search(roh)
+    if not m:
+        raise SystemExit("Sektion fehlt in %s" % pfad)
+    roh = roh[:m.start(2)] + ("%3d" % (int(m.group(2)) + delta)) + roh[m.end(2):]
+    open(pfad, "wb").write(roh.encode("utf-8"))
+    print("Sektions-Tabelle: Zahl %s -> %d" % (m.group(2), int(m.group(2)) + delta))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--raum", required=True)
@@ -59,6 +98,9 @@ def main():
     ap.add_argument("--von", type=int, required=True, help="erstes Rechteck des Teils; das Teil reicht bis zum Ende der Sektion")
     ap.add_argument("--tabelle", required=True, help="tests/unit/gen_r41_masken36_zellen.inc (nur gelesen)")
     ap.add_argument("--trocken", action="store_true")
+    ap.add_argument("--wange", type=int, help="x der Aussenflaeche (wange_r41.py): Koerper = Zelle bis zu dieser Westflaeche, neue Hoehe und Stufen")
+    ap.add_argument("--tabelle-aus", help="mit --wange: Modell-Tabelle schreiben")
+    ap.add_argument("--platziert", help="mit --wange: gen_r41_masken36_platziert.inc nachziehen (Zahl der Rechtecke der Sektion)")
     a = ap.parse_args()
     rid = int(a.raum, 16)
     room = "ROOM%04X" % rid
@@ -75,7 +117,6 @@ def main():
         raise SystemExit("Rechtecke %d.. tragen nicht genau einen Koerper: %s" % (a.von, koerper))
     kz = z[a.von]
     R, t, H = P.ansicht_spiel(rdt, a.cut)
-    ve, _va, hit = K.ein_aus(R, t, H, kz["typ"], kz["x"], kz["z"], kz["w"], kz["d"], kz["band"], kz["hoehe"], bool(kz["saeule"]))
     tp = os.path.join(MASKS, "%s_PRI%02d.TIM" % (room, a.cut))
     tb = open(tp, "rb").read()
     idx = maskenbild.lies_tim(tp)[0].copy()
@@ -84,7 +125,7 @@ def main():
     belegt = np.zeros(idx.shape, bool)
     for m in masks[:a.von]:
         belegt[m[1]:m[1] + m[7], m[0]:m[0] + m[6]] = True
-    punkte = {}                                  # Stufe -> [(x, y, Index)]
+    alle = []                                    # (x, y, Index) aller Punkte des Teils
     for i in range(a.von, len(masks)):
         m = masks[i]
         X, Y = SR.bildlage(sek, m)
@@ -97,17 +138,28 @@ def main():
                 px, py = X + xx, Y + yy
                 if not (0 <= px < 320 and 0 <= py < 240):
                     continue
-                if not hit[py, px]:
-                    raise SystemExit("Punkt (%d,%d) trifft den Koerper nicht: Erben (Regel 6) hier nicht vorgesehen" % (px, py))
-                punkte.setdefault(int(K.bucket(ve[py, px])), []).append((px, py, v))
+                alle.append((px, py, v))
         if belegt[sy:sy + h, sx:sx + w].any():
             raise SystemExit("Fenster von R%d teilt Texel mit einem fremden Rechteck" % i)
         idx[sy:sy + h, sx:sx + w] = 0
+    if a.wange is not None:                      # Koerper = Zelle bis zur Westflaeche der Wange, Hoehe = Oberkante des Teils auf ihr
+        teil = np.zeros((240, 320), bool)
+        for px, py, _v in alle:
+            teil[py, px] = True
+        kz = dict(kz, w=kz["w"] + kz["x"] - a.wange, x=a.wange)
+        kz["hoehe"] = P.oberkante(R, t, H, kz["typ"], kz["x"], kz["z"], kz["w"], kz["d"], kz["band"], teil)
+        print("Koerper: x %d..%d z %d..%d Band %d Hoehe %d" % (kz["x"], kz["x"] + kz["w"], kz["z"], kz["z"] + kz["d"], kz["band"], kz["hoehe"]))
+    ve, _va, hit = K.ein_aus(R, t, H, kz["typ"], kz["x"], kz["z"], kz["w"], kz["d"], kz["band"], kz["hoehe"], bool(kz["saeule"]))
+    punkte = {}                                  # Stufe -> [(x, y, Index)]
+    for px, py, v in alle:
+        if not hit[py, px]:
+            raise SystemExit("Punkt (%d,%d) trifft den Koerper nicht: Erben (Regel 6) hier nicht vorgesehen" % (px, py))
+        punkte.setdefault(int(K.bucket(ve[py, px])), []).append((px, py, v))
     stufen = sorted(punkte, reverse=True)
     n_alt = len(masks) - a.von
     alt_tiefen = [masks[i][4] for i in range(a.von, len(masks))]
     print("%s C%d: Rechtecke %d..%d (%d), Stufen %s (%d), alte Tiefen %s" % (room, a.cut, a.von, len(masks) - 1, n_alt, stufen, len(stufen), alt_tiefen))
-    if stufen != alt_tiefen:
+    if a.wange is None and stufen != alt_tiefen:
         raise SystemExit("Stufen des Teils sind nicht die Tiefen seiner Rechtecke - Modell-Tabelle und Rechteckzahl wuerden sich aendern")
     neu = []
     flaeche = 0
@@ -153,6 +205,10 @@ def main():
         open(os.path.join(MASKS, "ROOM%04X.MSK" % r), "wb").write(out)
         open(os.path.join(MASKS, "ROOM%04X_PRI%02d.TIM" % (r, a.cut)), "wb").write(tim)
     print("geschrieben: %s + Elza-Datei, MSK und _PRI%02d.TIM" % (room, a.cut))
+    if a.wange is not None and a.tabelle_aus:
+        tabelle_nachziehen(a.tabelle, a.tabelle_aus, rid, a.cut, a.von, kz, stufen, a.wange)
+    if a.wange is not None and a.platziert:
+        platziert_nachziehen(a.platziert, rid, a.cut, len(stufen) - n_alt)
 
 
 if __name__ == "__main__":
