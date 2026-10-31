@@ -104,13 +104,17 @@ Clip-Bedeutung aus dem Zensus aller Schreiber von +0x14c (Clip-Wort: Clip | Bild
 | 3 + 0x0A | CLAW + Erholung | **3/4 + 9** | Hieb, Seite aus +0x16a, Doppelschlag, Nachhieb | @0x80101ad0, @0x8010b0f0, @0x8010224c |
 | 4 | FAST BITE | **26** | Biss | B[14] @0x80104e84 |
 | 5 | TACKLE | **0** | Rennen mit Ueberrennen | B[4] @0x80102b10 |
-| 0x0B | GRAB-THROW | **27** | Griff, doppelter Takt | B[15] @0x80105254, @0x801053b0 |
-| 7 | FLINCH | **8 ab Bild 5** | Zucken, doppelter Takt | @0x80107224, @0x80107244 |
+| 0x0B | GRAB-THROW | **27** | Griff, ein Bild je Tick, Gewicht 0x200 | B[15] @0x80105254, a3 @0x801053b0 |
+| 7 | FLINCH | **8 ab Bild 5** | Zucken, ein Bild je Tick, Gewicht 0x200 | @0x80107224, a3 @0x80107244 |
 | 0x0D/0x10 | EMERGENCE | **10** | Auftritt nach dem Modellwechsel | T0[6] @0x8010153c |
 | 9, 0x0C | Kollaps | entfaellt | Rueckstoss-Szene mit Clip 8 | birkin_formen.c |
 | 0x0E | RUN-OFF | entfaellt | in 5090 nicht erreicht | |
 | 0x14 | MUTATION | bleibt EM30 | laeuft vor dem Modellwechsel | @0x80118014 |
-| neu | | **5 rueckwaerts** | Weichen bei dist < 2000 | B[8] @0x8010419c |
+| neu | | **5 rueckwaerts** | Weichen bei dist < 2000, Gewicht 0x80, Anlauf mit halbem Tempo solange +0x14e >= 21 | B[8] @0x8010419c, a3 0x10080 @0x8010427c-84, @0x80104254-70 |
+
+⛔ Berichtigung: Die erste Fassung las a3 von FUN_8002959c als Takt ("doppelter Takt" bei 0x200, "halber Takt" bei 0x80). Das war falsch. a3 ist das
+Ueberblendgewicht je +0x14e-Schritt (`andi v0,a3,0xffff` / `mult v0,t3` @0x800296b8-bc), Bit 16 die Richtung (@0x800295b8-c4); das Bild laeuft in jedem
+Aufruf um genau 1 (@0x80029b28-34), und jeder Zustand ruft genau einmal je Tick. Griff 100 Ticks, Auftritt 126, Zucken 25, Weichen 40.
 
 Clip 2 (RE2-Hauptgang Sub 1) ist **nicht** uebernommen: die Vorderhaende reichen +1019..+1282 unter die Sohle (gemessen je Clip). RE2 hat
 zwei Phasen; unter HP 700 wechselt es ueber die Kette 11 -> 12 -> 10 -> 5 in die Bodenform. Der Port nimmt die Bodenphase.
@@ -129,7 +133,7 @@ zwei Phasen; unter HP 700 wechselt es ueber die Kette 11 -> 12 -> 10 -> 5 in die
 | Treffer Biss, Rennen | Teil 10 + (1400,0,0), Radius 1500 | gleich | @0x80102eb4, @0x80104f88 |
 | Trefferprobe | sqrt(dx^2+dz^2) < Radius, Y frei | gleich | FUN_80015834 @0x800158c0-f0 |
 | Zucken | Zaehler nach Tabelle, ab 12 | gleich | @0x8010b0fb, @0x80107168 |
-| Schaden | RE2 15/20/70 von 200 HP | Hieb/Biss 10, Rennen 5 (0x30-Rollen @0x801177f0, @0x80118b1c), Griff 10 | Port-Spieler rechnet mit 100 HP |
+| Schaden | RE2 15/20/70 von 200 HP | Hieb/Biss 10, Rennen 5 (0x30-Rollen @0x801177f0, @0x80118b1c); Griff 35, ab 86 HP so viel, dass 50 bleiben (RE2 halbiert, @0x801052a8-b4) | Port-Spieler rechnet mit 100 HP. Griff und Biss toeten, Tod = hp < 0 wie beim G5 |
 | Griff | Griff beim Eintritt, Opfer-Spur | Griff bei Bild 8 @0x80105408, Spieler-Haken cmd 6 | Abweichung, s. 6 |
 | Kasten | RE2 Versatz 400, Halbmass 1100 | 0x30-Kasten 1000/1440, Versatz 800 | Gestaltung |
 
@@ -141,8 +145,11 @@ packt, Hieb trifft an den EDD-Bildern, Weichen statt Schieben, Zaehler < 12 ohne
 
 Nebenbefund: `integration_r35_zgirl_5090` war seit a48c4d4f0 (Beta-Formen) rot und damit nicht Folge dieser Spur: der Test erwartet den Spawn `type=0x36`, seither bleibt er 0x30. Er bekam dieselbe Umgebung wie die Unit-Tests des alten Ablaufs (`RE15_ENDKAMPF_NUR_G5=1`, tests/unit/CMakeLists.txt) und ist gruen. Drei Pins (`unit_r17_birkin_1zu1_pin`, `unit_r18_birkin_restluecken_pin`, `unit_r20_birkin_push_pin`) uebersprangen sich aus demselben Grund still ("FEHLT: kein Boss"); sie stehen jetzt in derselben Liste und laufen.
 
-Echter Ablauf im Fenster, beide Szenarien: EM30 -> Clip 20 -> Form -> Griff, Gang, Biss -> Rueckstoss -> G5. Vor dem Weichen schob die Form Leon von x 6500 bis 12700
+Echter Ablauf im Fenster, beide Szenarien: EM30 -> Clip 20 -> Form -> Griff, Gang, Biss -> Rueckstoss -> G5. Vor dem Weichen schob die Form Leon im Gang von x 6500 bis 12700
 durch den Wagen, danach pendelt der Abstand 2030-2350.
+
+⛔ Berichtigung: "Schieben behoben" galt nur fuer den Gang. Im Rennen fehlte das Abdrehen nach dem Treffer, der Koerperschub trug Leon weiter rund 9900 Einheiten
+(Abnahme 1 M11). Behoben in Abschnitt 8.
 
 ## 5. Abnahme-Bilder (`R_belege/`)
 
@@ -166,8 +173,62 @@ Alle Port-Bilder: echtes Fenster per gdigrab `hwnd=`, kein AUTOSHOT, kein SOFTWA
 - **Schatten:** auf dem orangen Boden von ROOM5090 wirkt der subtraktive Schatten dunkelrot; in der Groesse 2300 x 1300 faellt das auf (auch Leons Schatten ist dort rot). Das ist das vorhandene Schattenverhalten des Raums.
 - **Haut:** G4 hat vorn den hellen Kopf mit Stacheln. Die Videobilder zeigen nur die Rueckseite, ueber die Vorderseite sagen sie nichts. Von vorn sieht man also reines G4.
 - **Modellwechsel:** EM30 geht nach Clip 0x14 hart in die Form ueber (ein Bild), es gibt keine Ueberblendung, weil die Skelette verschieden sind.
-- **Griff:** Griff bei Bild 8 mit dem Rueckstoss-Haken statt der G4-Opfer-Sequenz; Leon fliegt, statt von der Kreatur gehalten zu werden. Die Form kann dem Spieler wie die 0x30-KI nicht unter 1 HP schlagen (@0x80117810).
+- **Griff:** Griff bei Bild 8 mit dem Rueckstoss-Haken statt der G4-Opfer-Sequenz; Leon fliegt, statt von der Kreatur gehalten zu werden. Toedlich laeuft er ueber cmd 3 (Standard-Tod), RE2-cmd 6 Variante 2 @0x801052cc-d0 ist nicht gebaut.
+- **Treffer-Handler:** Die Form spielt die Bodenphase, RE2 nimmt dort Handler 2 @0x80107280 (kein Zucken, 25 % Absprung 0xb01/0x501, +0x238 += 20, se(0xd)). Der Port behaelt das Zucken ab Zaehler 12 aus Handler 1 @0x80106d7c und se(2), weil Sub 5/11 nicht gebaut sind und Id 13 in Bank 24 leer ist (FFFFFFFF). Blut kommt aus Handler 2.
+- **Leon im Vorderkoerper:** Steht Leon vor der Form, verschwindet sein Oberkoerper in ihr. Das ist das RE2-Verhalten (Abnahme 1, verworfen), bleibt so.
 
 ## 7. Was das volle G4-Overlay noch braeuchte
 
-Nicht verlangt, hier als Bestandsliste: Phase 1 mit Clip 2 samt Bodenlage (Sub 1/7), Verwandlungskette Clip 11/12 (Sub 0), Wandsprung und Laufen an Waenden (Sub 5/6/16/17, Clips 6/7/13/14/16), Fressen am toten Spieler (Sub 10, Clip 18), Sprung und Sturz (Sub 11, Clips 19/20), Klammern (Sub 12, Clips 21/22/4; Sub 13, Clips 23/25/9), Tod Clips 17/28, Griff mit Opfer-Bank Paar 3 und Spielerspur FUN_80015cb8, Morph-Block dir[0], Partikel 0x8001bf10 und Schuetteln 0x80039514/0x8003947c, Blick-Nachfuehrung 0x8010a58c (ruft wie beim G5 FUN_80017fdc), Wegziel 0x8004aab8 (+0x1c4).
+Nicht verlangt, hier als Bestandsliste: Phase 1 mit Clip 2 samt Bodenlage (Sub 1/7), Verwandlungskette Clip 11/12 (Sub 0), Wandsprung und Laufen an Waenden (Sub 5/6/16/17, Clips 6/7/13/14/16), Fressen am toten Spieler (Sub 10, Clip 18), Sprung und Sturz (Sub 11, Clips 19/20), Klammern (Sub 12, Clips 21/22/4; Sub 13, Clips 23/25/9), Tod Clips 17/28, Griff mit Opfer-Bank Paar 3 und Spielerspur FUN_80015cb8, Morph-Block dir[0], Partikel 0x8001bf10 ausser dem Treffer-Blut (gebaut, Abschnitt 8) und Schuetteln 0x80039514/0x8003947c, Blick-Nachfuehrung 0x8010a58c (ruft wie beim G5 FUN_80017fdc), Wegziel 0x8004aab8 (+0x1c4).
+
+## 8. Nachbesserung nach Abnahme 1 (`R_abnahme_1.md`, M1 bis M17)
+
+Riegel: `tests/unit/test_birkin_bahnsteig.c`, `tests/unit/test_birkin_szenen.c`, `integration_r41_birkin_pistole`. Der Riegel-Satz lief zuerst gegen den unveraenderten Code:
+124 FAIL-Zeilen, jeder Mangel rot (Messung vorher). M9, Form-HP, Sub 10 und der Integrationslauf wurden nach dem Fix einzeln gegengeprueft: Fix heraus, rot.
+Laeufe: echtes Fenster, Exe-Kopie, kein AUTOSHOT, kein SOFTWARE_RENDER, ausser wo der ctest-Lauf genannt ist.
+
+| Nr. | Fix | Beleg | vorher | nachher |
+|---|---|---|---|---|
+| M1 | Eintritt behaelt den Trefferzustand, Auftritt ist der gesicherte Zustand | @0x80107180-8c | Riegel rot: `state 1 cd 0`, 21 Schuesse ohne Wirkung | Lauf m1_b: Tausch F1296, Treffer F1297 `hit=01 hurt9`, F1306 frei, F1345 HP 135 |
+| M2 | Bit 0 je Bild in Phase 1, Phase 2 loescht | STAGE3 @0x8011a39c, @0x8011a3a8, @0x8011a3c0; STAGE5 @0x8011abb0, @0x8011abbc, @0x8011abd4 | HP 155 bis Laufende | s. 8.1 |
+| M3 | Tor zu, sobald Sub 6 laeuft (+0x1dd & 8) | @0x801164e8, @0x80118054, @0x801180b0 | Riegel 124 Neustarts, 3000 Ticks | Pistole, Flinte (Id 8), GL (Id 15): je ein Start, Leon F1124 bis F1304 |
+| M4 | Riegel im Zweig Tod -> Mutation | @0x8011a458, @0x8011a54c-50 | Riegel `hit=01` | Rakete m4_rak: F413 HP -700, F414 `hit=00 hurt9`, Form, Rueckstoss, G5 |
+| M5 | ein bb_anim je Tick | @0x800296b8-bc, @0x80029b28-34 | Auftritt 63, Griff 51, Griff greift nach 4, Weichen 20 Bilder ohne +1 | Auftritt 126 (F280-405), Griff 100 (F643-742), greift nach 8, Zucken 25, Weichen 40 Bilder je +1 |
+| M6 | Gewicht je Aufruf: 0x100 Gang, Hieb, Biss, Rennen; 0x200 Griff, Auftritt, Zucken; 0x80 Weichen | a3 @0x80102a34, @0x80101b34, @0x80104ec0, @0x80102d08, @0x801053b0, @0x801015d4, @0x80107244, @0x80104284 | Rate 0, Weichen 40 von 40 Ticks ohne Pose-Aenderung, Gang 7 von 30 | Weichen 0 von 40, Gang <= 1 von 30 |
+| M7/M8 | Richtung je Aufruf statt Aktor-Bit | @0x80104248, @0x8010427c-84, @0x800295b8-c4 | Sprung 2022 je Tick, danach vorwaerts | Riegel <= 60; m1_b Treffer F1633 und F1681 im Weichen: Schritt 54 und 18, Bit bleibt |
+| M9 | Szene schaltet Zonen ab wie Cut_chg, frei wie Cut_old | @0x800402d4, @0x8004032c, Gate @0x8001cce0-e4, RVD @0x490/@0x4b8/@0x4cc | HALTEN F1410-1477 und F1642-2138 | x 14615: Einzel-HALTEN F430, F496, 8 im Lauf; x 2741-3217 im G5-Auftritt: kein HALTEN ab F496, 6 im Lauf |
+| M10/M17 | Spur neu aufsetzen, Schub am Tick-Ende | FUN_80015e7c @0x80101c4c, @0x80101c60, @0x80102348 | Schritt 544 bis 701 | Wechsel F535: Schritt 0, groesster Schritt im Hieb 284 (Summe dx+dz) |
+| M11 | Kein Lenken nach dem Treffer, Ruck und 6 x Abdrehen | @0x80102b90-94, @0x80102f8c, @0x80102f68, @0x80103014 | Leon 9896 Einheiten getragen, 2 Treffer | f_fern: ein Treffer F433, Leon 13775 -> 14699, Form faehrt bei z -22718 vorbei |
+| M12 | Zuwachs je Waffe ueber die RE2-Id, 19 Eintraege | @0x80107130-4c, @0x8010b0fb bis 4 @0x8010b10d | jede Waffe im Gang +3, im Biss +20 | Waffe 3/4/7/8/12/13/19/20 = 3/3/10/5/2/8/4/10; Pistole bricht den Biss nicht ab |
+| M13/M16 | Vier Blutspawns Handler 2, Anker Teil 10, nicht bei +5 = 0x10/0xc | @0x80107414-1c, @0x80107390-b8, @0x80107454/94/b8/f8 | 0 Spawns | f_schuss: 4 Effekte Id 0 je Treffer ueber 11 Bilder (F400-410 ...), Riegel 4 |
+| M14 | Keine Klemme fuer die Form, Griff RE2-Schaden halbiert, Hieb-Ende wie @0x80101b60 | @0x801052a8-d0, @0x801024b4, @0x8004027c-8c | HP 1 fuer immer | f_nah: Griff bei HP 10 -> -1, Clip 7, cmd 7, YOU DIED, Titel (Video) |
+| M15 | Griff stellt den Spieler mit dem Gesicht zur Form | Haken [0] @0x8011b018, @0x8011b3f0, Richtung @0x80105358-68 | Abstand 2463 -> 970 | f_griff: Gier -537 -> 2129, x 8650 -> 15191, Form bei 6388 |
+
+**Zwei Fixe ausserhalb der Liste**, beide Folge der Messung:
+
+- **Eigene HP der Form.** Mit M3 kam die Form unter Dauerfeuer mit dem Mutationsrest an: Lauf a1_leon HP 30, tot nach 49 Bildern noch im Auftritt, kein Angriff. RE2 schreibt dem G4 im Ctor eigene HP (+0x156 @0x8010067c-b8, 1000/900/1100), wie dem G5 (@0x801003fc). Der Eintritt setzt deshalb 150 (0x96 @0x80118094, das Port-Mass der Waffen). Lauf a2_leon: Form lebt F1304 bis F1627, Griff trifft.
+- **ROOM3071, Elzas Kampf.** Birkin blieb nach dem Auftritt hinter dem Tor (SCA 17, x -27055..-26505), ohne Sichtlinie: 0 Treffer bei rund 90 Schuessen, der Kampf war nicht zu gewinnen (Lauf b_3071). Ursache: Sub 10 lief mit 10 Einheiten je Tick ohne den Fuss-Vortrieb FUN_8011b5c4(1,1) (@0x8011960c, Modus 0 @0x80119934), und die Wandklemme griff, obwohl INIT sie abschaltet (+0x0 |= 8 @0x801168d0, FUN_8003b0a4 @0x8003b134-40, geloescht @0x80119b28-34). Gebaut fuer Sub 10: Birkin endet bei (-24079,-10917) in der Halle. WALK & Co. behalten den additiven Teil (Block-Kopf).
+
+### 8.1 Startwaffe, Dauerbeschuss, kein Messhaken (M2)
+
+Debug-Sprung, Ausloeser wie die Tuer, Id 3, RE15_GIVE nur fuer Patronen. Gehalten = Zielen + Feuer durchgehend (alle 22 Bilder), getippt = 0,3 s an, 0,1 s aus (Quadrat-Flanken zaehlen als Ruetteln).
+
+| Raum | Figur | Feuer | Ergebnis |
+|---|---|---|---|
+| 3070 | Leon | getippt | Tod Birkin F1612 |
+| 3070 | Leon | gehalten | Leon stirbt F1310 am Wurf (cmd 6 STAGE3, Wurf-Tod 0x8011b1a8, Original): ohne Ruetteln kommt er nicht aus dem Griff |
+| 3071 | Elza | gehalten / getippt | Mutation einmal, Tod Birkin F1730 / F1746 |
+| 5080 | Leon | gehalten | Tod Birkin F1697 |
+| 5081 | Elza | gehalten | Tod Birkin F1698 |
+| 5090 | Leon | gehalten | Mutation F1124, Form F1304, Rueckstoss F1627, G5 F1784 |
+| 5091 | Elza | gehalten | identisch |
+
+Vorgabe-KI und `RE15_AI_FLAVOR=re15` liefern in 5090/5091 dieselben Bilder. `integration_r41_birkin_pistole` faehrt 5090 und 5091 mit Software-Renderer als Riegel (165 s).
+
+### 8.2 Offen
+
+- **Verworfen und unveraendert:** Leon steht im Vorderkoerper der Form, das ist RE2 (Abschnitt 6).
+- **G5 im gehaltenen Dauerbeschuss:** Leon und Elza bringen ihn bis auf HP 30, dann greift bei F2879 der Masse-Kill (dist < 6000, u >= 9001, 500 Schaden @0x80103ea0-ec4). Es fehlen zwei Treffer; die Pistole erreicht den G5 erst ab Tick 300. Der G5 ist nicht Teil dieser Spur und unveraendert; ob er mit der Startwaffe ohne Ausweichen fallen muss, ist damit nicht geloest.
+- **G5 blutet nicht:** `blut=n/0/0/0`, Wache `g->ph == 0` (enemy_ai_boss_g5.c:1612). Nebenbefund der Abnahme, nicht bearbeitet.
+- **EM30:** Die 0x30-KI setzt weiter keine anim_blend_rate; an jedem Clip-Eintritt mit frac 15 steht die Pose 7 Bilder (dieselbe Wirkung wie M6). Fuss-Vortrieb nur in Sub 10, WALK bleibt langsamer als das Original.
+- **Treffer in der Mutation:** zaehlen wie im Original (Revive @0x8011a43c), die Form bringt danach trotzdem 150 mit. Die Schuesse in Sub 6 bleiben also ohne Wirkung auf den Kampf.
