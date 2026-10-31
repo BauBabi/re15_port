@@ -3372,6 +3372,9 @@ int main(int argc, char *argv[])
     /* Phase 4.5.10-J: redirect stderr to debug.log so user can read
      * exact numerical state. */
     freopen("debug.log", "w", stderr);
+#if defined(_WIN32) && !defined(__ANDROID__)
+    { extern void re15_endgrund_r41_einrichten(void); re15_endgrund_r41_einrichten(); }   /* Runde 41 Spur Q: Absturz im debug.log (endgrund_r41_pc.c) */
+#endif
     setvbuf(stderr, NULL, _IONBF, 0);   /* unbuffered for live tail */
 
 #if defined(__ANDROID__)
@@ -7776,11 +7779,13 @@ re_title:;
                  * dritte, leere Wasserzone (Slot 4: x[-8900..-1700] z[-18100..-14500]),
                  * Spawn in deren Mitte. grid_id 0 (gerade) = Wasser-Start der byte-true
                  * KI-INIT (default water sub6, +0x1e0=1, Y=-1200 setzt die KI selbst);
-                 * em_flag_id 0xFF = kein Persist-Gate (Boss erscheint je Betreten).
+                 * em_flag_id 0xFF = kein Persist-Gate; bis Runde 41 erschien der Boss je Betreten, seit Spur Q nur,
+                 * solange er lebt (re15_gatorszene_r41_gator_kommt, Form RE2 ROOM40A0 @0x0054 / sub02 @0x00AE).
                  * Der Slot wird RUECKWAERTS gesucht, damit kein Script-Slot des Raums
                  * kollidiert; die RL-4-Schleife direkt darunter laedt die Bank mit
                  * (Typ 0x23 -> RE2-EM23-Modell, s. pc_enemy_load_ex). */
-                if (!getenv("RE15_KEIN_GATOR") && (g_current_room_id & 0xFFFEu) == 0x2090u) {
+                if (!getenv("RE15_KEIN_GATOR") && (g_current_room_id & 0xFFFEu) == 0x2090u &&
+                    re15_gatorszene_r41_gator_kommt()) {   /* Runde 41 Spur Q: tot bleibt tot */
                     int _hat = 0, _frei = -1;
                     for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
                         if (g_actors[_pi].active && g_actors[_pi].type == 0x23u) _hat = 1;

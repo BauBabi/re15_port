@@ -1245,7 +1245,7 @@ teile/platziert/ordner, Kamera des Spiels) .. 5461e972 (Boegen/Uebersicht/Rest) 
   | 30E0 | 7 | 90/41 | 2449/0 |  |
   | 30E0 | 8 | 225/94 | 1613/0 | M 168/64, L 1496/0 |
   | 30E0 | 9 | - | 1643/0 |  |
-  | 4040 | 12 | 361/9 | 814/0 | M 361/9, L 825/0 |
+  | 4040 | 12 | - (berichtigt Spur Q: die Zeile "361/9" mass das geschlossene 3D-Tor, nicht die Spielfigur; an den drei Kandidaten liegt die Figur bei X 45..70, das Teil bei X 75..106, 0 Punkte auf dem Teil) | 814/0 | L 825/0 |
   | 40A0 | 7 | - | 1410/0 | L 1383/0 |
   | 5020 | 2 | - | 651/0 |  |
   | 5020 | 7 | - | 996/0 | L 1081/0 |
@@ -1271,7 +1271,7 @@ teile/platziert/ordner, Kamera des Spiels) .. 5461e972 (Boegen/Uebersicht/Rest) 
   | 6010 | 12 | 24/0 | 2642/0 |  |
   | 6010 | 13 | 211/162 | 2661/0 |  |
   | 6030 | 10 | - | 1750/0 | L 1287/0 |
-* 108 Szenen (9 Gruppen a1..d2 zu hoechstens 13) (`integration_r41_masken36_teile_a1..d2`): HINTER in jeder Kamera mit Stelle verdeckt (H > 0, z.B. Leon hinter dem Steg-Gelaender
+* 106 Szenen laut Szenendateien (die Zahl 108 dieser Zeile war falsch, Abnahme 5 Mangel 2; Spur Q: 104 nach dem Entfernen von t4040_12/t4040_12e) (9 Gruppen a1..d2 zu hoechstens 13) (`integration_r41_masken36_teile_a1..d2`): HINTER in jeder Kamera mit Stelle verdeckt (H > 0, z.B. Leon hinter dem Steg-Gelaender
   ROOM30E0 C8 94 von 225, Bild `M_bilder/NB5/NB5_exe_t30E0_08.png`; hinter dem Laufsteg-Gelaender ROOM3040 C3 91 von 309, `NB5_exe_t3040_03.png`),
   DAVOR in jeder Kamera 0 Punkte der Spielfigur uebermalt. Drei Szenen genommen bzw. geaendert (Messung bleibt hier): t3050_06 (S 26 im Fenster
   am oberen Bildrand, H 18: verdeckt - M bekommt SMIN=0, weil H > 0 die Figur im Fenster voraussetzt); t6010_12 (H 0 von 24: Randfall, das
@@ -1517,7 +1517,7 @@ exe-Praefix je Gruppe (r41m8a1..r41m8d2), eigene Laufordner.
 
 17. **NB5 - Teile ohne Koerper (Entscheid M-E2, nur mit Zellbeleg eingesetzt):** 277 Teile des Original-Atlas (144 225 Punkte, 70 Kameras) haben keine
     belegbare Tiefe (Gruende je Teil `M_bilder/NB5/teile_nb5.txt`) und bleiben weg -> Liste "Fuer den Nutzer: Freistellungen" (NB5).
-18. **NB5 - Restloch "zu fern" an neuen Teilen:** ROOM6010/6011 C5 neues Teil 8 (Zelle @0x0092C, Rechtecke 113..117: 1 508 Figurpunkte je Variante
+18. **[6010/6011 C5 geschlossen durch Spur Q, Q_restpunkte.md "Nachbesserung 1": Teil 8 liegt auf der Ebene der Wange x -20591 (Kameras 4 und 5), je OT-Stufe ein Rechteck R113..R125, 1 508 -> 0 je Variante. 3040/3041 C4 Rechteck 118 bleibt, 1 Punkt] NB5 - Restloch "zu fern" an neuen Teilen:** ROOM6010/6011 C5 neues Teil 8 (Zelle @0x0092C, Rechtecke 113..117: 1 508 Figurpunkte je Variante
     hinter dem Koerper nicht verdeckt - je Bildspalte eine Tiefe, der Cut ist mit 128 Rechtecken voll) und 3040/3041 C4 Rechteck 118 (1 Punkt).
     Vorher waren diese Punkte ohne jede Maske sichtbar (kein Rueckschritt).
 19. **NB5 - Kamera der Python-Werkzeuge:** `geom.cut_view` rechnet mit der exakten Wurzel, das Spiel mit SquareRoot0 (FUN_80053ca4 -> 0x80065f60):
@@ -1527,7 +1527,7 @@ exe-Praefix je Gruppe (r41m8a1..r41m8d2), eigene Laufordner.
 20. **NB5 - Hoehe ueber mehrere Baender:** ein Koerper auf Band b reicht mit der Oberkante (z.B. Treppe 6010 C5: 7 427) ueber Band b+1; das 3D-Urteil
     koennte dort eine Figur auf Band b+1 ueber dem Grundriss als "dahinter" werten. Die Rueckschritt-Suche (alle 61 Cuts, Leon + Elza) fand
     keinen solchen Fall (6010 C5 mit Quadern bis 7000: 0), an der exe s. Szenen.
-21. **NB5 - Kameras ohne HINTER- bzw. DAVOR-Stelle:** 37 Faelle (Liste im Abschnitt "NB5 an der exe"): an keinem erreichbaren Stehplatz verdeckt ein
+21. **NB5 - Kameras ohne HINTER- bzw. DAVOR-Stelle (Spur Q: dazu 4040/4041 C12 ohne HINTER-Stelle, 2 Faelle; die Szenen t4040_12/t4040_12e sind entfernt, s. Tabelle "NB5 an der exe"):** 37 Faelle (Liste im Abschnitt "NB5 an der exe"): an keinem erreichbaren Stehplatz verdeckt ein
     neues Teil die Figur bzw. ueberlappt sie (dieselbe Erreichbarkeit wie der Ausschluss) - dort ist an der exe nichts zu messen.
 
 ## Fuer den Nutzer
@@ -1542,6 +1542,8 @@ exe-Praefix je Gruppe (r41m8a1..r41m8d2), eigene Laufordner.
   **H** kein Bodenkontakt (haengt an Decke/Wand: Lampen, Rohre, Roboterarm), **B** dieselbe Zelle auf zwei Baendern (Hoehe nicht eindeutig),
   **N** die Kamera haengt ueber dem Grundriss (Nahfeld, z.B. Pfeiler/Pulte direkt unter der Kamera); Zahl = Bildpunkte.
   Teile, die nie vor einer Figur stehen koennen (Bodenmarkierungen, Lampen hoch an der Wand), brauchen keine Freistellung.
+  Stand Spur Q (Abnahme 5 Mangel 2): der Teile-Bericht ist aus dem ausgelieferten Lauf pl_a3 neu geschrieben (`tools/maske/teile_bericht_r41.py`), die Liste ist vollstaendig
+  (70 Sektionen, 277 Teile, 144 225 Punkte, keine Mindestgroesse mehr; die 8 Stellen unter 300 Punkten sind dazugekommen, jede mit Restbild).
   | Raum (Leon/Elza) | Kamera | Punkte | Teile | Gruende | Gegenstand |
   |---|---|---|---|---|---|
   | ROOM3040/3041 | 1 | 2478 | T1 T5 T6 T23 T27 T30 T37 | Z 2478 |  |
@@ -1553,12 +1555,15 @@ exe-Praefix je Gruppe (r41m8a1..r41m8d2), eigene Laufordner.
   | ROOM3040/3041 | 7 | 2706 | T6 T14 T18 T19 T20 T23 T29 | N 1858, Z 666, B 182 |  |
   | ROOM3040/3041 | 8 | 3531 | T4 T5 T7 T8 T11 T12 | Z 3489, H 42 |  |
   | ROOM3040/3041 | 9 | 3046 | T2 T3 T4 T6 T11 T12 T15 | H 1923, Z 1123 |  |
+  | ROOM3040/3041 | 10 | 218 | T3 T4 | H 218 |  |
   | ROOM3040/3041 | 11 | 4594 | T1 T4 T5 T7 T9 T11 | H 2341, Z 2253 |  |
   | ROOM3040/3041 | 12 | 2466 | T1 T6 T12 T14 T20 | Z 1069, N 1052, B 345 |  |
   | ROOM3040/3041 | 13 | 2468 | T10 T13 T14 T17 T19 T23 T25 | B 1286, N 1182 |  |
   | ROOM3050/3051 | 0 | 983 | T3 T5 | Z 983 |  |
+  | ROOM3050/3051 | 1 | 106 | T7 T9 | Z 106 |  |
   | ROOM3050/3051 | 4 | 314 | T2 T9 | H 224, Z 90 |  |
   | ROOM3050/3051 | 5 | 490 | T5 T9 | Z 258, H 232 |  |
+  | ROOM3050/3051 | 6 | 209 | T8 | Z 209 |  |
   | ROOM3050/3051 | 7 | 1322 | T4 T5 T8 T10 T11 T15 | Z 1126, H 196 |  |
   | ROOM3050/3051 | 8 | 564 | T2 T12 | H 328, Z 236 |  |
   | ROOM3050/3051 | 9 | 2780 | T1 T2 T4 T6 T9 T10 T14 T15 T19 | Z 2354, H 426 |  |
@@ -1582,6 +1587,8 @@ exe-Praefix je Gruppe (r41m8a1..r41m8d2), eigene Laufordner.
   | ROOM5020/5021 | 7 | 1010 | T6 T7 | H 1010 |  |
   | ROOM5020/5021 | 9 | 592 | T5 T6 | H 592 |  |
   | ROOM5020/5021 | 11 | 2773 | T3 T4 T10 | Z 2286, B 487 |  |
+  | ROOM5050/5051 | 1 | 275 | T7 T8 | Z 275 |  |
+  | ROOM5050/5051 | 2 | 174 | T6 | Z 174 |  |
   | ROOM5090/5091 | 11 | 540 | T12 | Z 540 |  |
   | ROOM5090/5091 | 12 | 2067 | T16 T17 T23 | Z 1153, H 914 |  |
   | ROOM5090/5091 | 13 | 703 | T8 | H 703 |  |
@@ -1596,7 +1603,9 @@ exe-Praefix je Gruppe (r41m8a1..r41m8d2), eigene Laufordner.
   | ROOM5100/5101 | 7 | 3861 | T3 | Z 3861 |  |
   | ROOM6000/6001 | 2 | 2429 | T4 T5 | Z 2429 |  |
   | ROOM6000/6001 | 3 | 449 | T1 | H 449 |  |
+  | ROOM6000/6001 | 7 | 172 | T4 | Z 172 |  |
   | ROOM6000/6001 | 8 | 513 | T7 | Z 513 |  |
+  | ROOM6000/6001 | 9 | 108 | T5 | Z 108 |  |
   | ROOM6010/6011 | 2 | 7640 | T2 T3 T4 T5 T6 T9 T10 T11 T12 T13 T14 T15 T18 T19 T21 T22 T24 T25 T28 T29 | Z 7366, H 274 | Treppen- und Plattform-Gelaender |
   | ROOM6010/6011 | 3 | 4184 | T1 T2 T5 T6 T7 T8 | B 4184 |  |
   | ROOM6010/6011 | 5 | 2006 | T2 T6 | Z 1079, B 927 | Treppenwange/Gelaender |
@@ -1606,6 +1615,7 @@ exe-Praefix je Gruppe (r41m8a1..r41m8d2), eigene Laufordner.
   | ROOM6010/6011 | 11 | 2186 | T3 T4 | Z 2186 |  |
   | ROOM6010/6011 | 12 | 3275 | T1 T2 T3 T6 T7 T10 T14 | Z 2354, B 921 |  |
   | ROOM6010/6011 | 13 | 1812 | T1 T2 T3 T8 T15 | Z 1812 |  |
+  | ROOM6030/6031 | 12 | 139 | T3 | Z 139 |  |
   | ROOM30A0/30A1 | 0 | 40 | - | kein Original-Teil | roter Ordner auf dem Schrank am Ostende der Trennwand (x 310..317 y 106..111; Abnahme 4 Mangel 2): der Kuenstler-Ausschnitt deckt den gruenen Ordner daneben, den roten nicht; Tiefe dann aus Zelle 6 @RDT+0x0045C |
   | ROOM6000/6001 | 5 | - | - | teilen_r41.py nicht (M-E2) | Mitte des Gittertraegers an der Wandecke (Rechteck 37, Tiefe 176): die rechten 10 Spalten wuerden Leon im Gang oestlich der Ecke falsch verdecken (NB4) |
   | ROOM5050/5051 | 1, 2 | - | - | N | Schreibtisch/Pulte vorn (Generator-Rechtecke, Kamera ueber den Zellen 6/7 bzw. 4/10, NB2) |
