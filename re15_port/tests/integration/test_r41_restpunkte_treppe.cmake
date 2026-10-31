@@ -6,7 +6,8 @@ cmake_minimum_required(VERSION 3.16)
 # davon nichts abbekommen: der Weg ist der echte Treppen-Handler (AOT Typ 13, Aktionstaste am Treppenfuss, stair_common.c), auf der westlichsten Spur x -19700, die Slot 9/10 zulaesst
 # (Mitte -18487, halbe Breite 1282). Cut 5 gibt RE15_FORCE_CUT vor: nur so steht die Figur ueber die ganze Treppe in dieser Kamera.
 #   A = mit Masken, B = ohne Masken (RE15_NO_PRI=1), C = ohne Masken, Figur ausserhalb des Regionsvierecks (20000,20000), Bild 120.
-#   Fenster = Kasten von Teil 8 (162,202)..(185,240). Gemessen Leon Bilder 123/126/129: 35/51/59 Figurpunkte im Kasten, 7,2 Bildpunkte Abstand zum Teil, 0 auf dem Teil.
+#   Fenster = Kasten von Teil 8 (162,202)..(185,240). Gemessen (Bildpunkt-Differenz je Kanal > 24): Leon Bilder 123/126/129 20/27/38 Figurpunkte im Kasten, kleinster Abstand zum Teil 7,2 Bildpunkte;
+#   Elza ist schmaler, Bilder 126/130/131 7/6/5 Figurpunkte, kleinster Abstand 10,8. Auf dem Teil liegt in keinem Bild ein Figurpunkt (Leon 41 Bilder F60..F180, Elza 23 Bilder F114..F136).
 #   Verlangt je Figur: in den Bildern zusammen S > SMIN und H == 0.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PPM_TOOL=<probe_r37_masken36_ppm> -DWORKDIR=<dir> [-DFIGUR=elza] -P <diese Datei>
 # =============================================================================
@@ -23,10 +24,14 @@ include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
 set(_figur "")
 set(_zr 6010)
 set(_pref "re15_pc_r41qt_")
+set(_bilder 123 126 129)
+set(SMIN 60)
 if(FIGUR STREQUAL "elza")
     set(_figur "RE15_TITLE_SHOT_CHAR=1")
     set(_zr 6011)
     set(_pref "re15_pc_r41qte_")
+    set(_bilder 126 130 131)
+    set(SMIN 10)
 endif()
 
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
@@ -48,7 +53,7 @@ foreach(_art a b c)
         set(_extra RE15_NO_PRI=1 "RE15_PLAYER_POS=20000,20000,0,0" "RE15_FRAMEDUMP=120:f.ppm" "RE15_EXIT_AT=120#${_zr}")
     else()
         set(_extra "RE15_PLAYER_POS=-19700,-24568,3072,1" "RE15_INPUT_SCRIPT=W1,U0.3,A0.2,W9" RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=30
-                   "RE15_FRAMEDUMP=123-129/3:s" "RE15_EXIT_AT=132#${_zr}")
+                   "RE15_FRAMEDUMP=123-131/1:s" "RE15_EXIT_AT=132#${_zr}")
         if(_art STREQUAL "b")
             list(APPEND _extra RE15_NO_PRI=1)
         endif()
@@ -72,7 +77,7 @@ foreach(_art a b c)
                     if(_rest MATCHES "EXIT_AT: Bild 120 in Raum" AND EXISTS "${WORKDIR}/f.ppm")
                         set(_ok 1)
                     endif()
-                elseif(_rest MATCHES "EXIT_AT: Bild 132 in Raum" AND EXISTS "${WORKDIR}/s000129.ppm")
+                elseif(_rest MATCHES "EXIT_AT: Bild 132 in Raum" AND EXISTS "${WORKDIR}/s000131.ppm")
                     set(_ok 1)
                 endif()
             endif()
@@ -90,7 +95,7 @@ file(REMOVE "${_exe_kopie}")
 
 set(_summe_s 0)
 set(_summe_h 0)
-foreach(_b 123 126 129)
+foreach(_b IN LISTS _bilder)
     execute_process(COMMAND "${RE15_PPM_TOOL}" "${_basis}_a/s000${_b}.ppm" "${_basis}_b/s000${_b}.ppm" "${_basis}_c/f.ppm" 162 202 185 240 24
                     RESULT_VARIABLE _rv OUTPUT_VARIABLE _o TIMEOUT 60)
     if(NOT _rv EQUAL 0 OR NOT _o MATCHES "S=([0-9]+) H=([0-9]+)")
@@ -100,9 +105,6 @@ foreach(_b 123 126 129)
     math(EXPR _summe_s "${_summe_s} + ${CMAKE_MATCH_1}")
     math(EXPR _summe_h "${_summe_h} + ${CMAKE_MATCH_2}")
 endforeach()
-if(NOT SMIN)
-    set(SMIN 60)
-endif()
 if(NOT _summe_s GREATER ${SMIN})
     message(FATAL_ERROR "r41_restpunkte_treppe: Figur nicht im Kasten von Teil 8 (S=${_summe_s}, verlangt > ${SMIN}) - leeres Gruen")
 endif()
