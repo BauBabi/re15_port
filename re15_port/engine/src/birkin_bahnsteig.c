@@ -122,6 +122,7 @@ void re15_bb_reset(void)
 
 int re15_bb_zaehler(void) { return s_bb.meter; }
 int re15_bb_blut_zaehler(void) { return s_bb_blut; }
+int re15_bb_cd_lauf_test(int setzen) { if (setzen >= 0) s_bb.cd_lauf = (uint8_t)setzen; return s_bb.cd_lauf; }   /* nur Tests */
 
 int re15_bb_bank_da(const re15_actor_t *e)
 {
@@ -236,16 +237,19 @@ static void bb_schieben(re15_actor_t *e)
  * (@0x8004027c-8c, Aufrufer @0x80101ddc / @0x80105028), den Treffer-Clip gibt es dann nicht (@0x80101dfc: cmd 6 statt
  * cmd 2). Die Klemme auf 1 (@0x80117810) gehoert der 0x30-KI und gilt fuer die Form nicht. Tod = hp < 0; der Detektor in
  * game_step setzt dann cmd 3 (@0x80012ee8), Fressen Sub 10 / cmd 6 ist nicht gebaut. Die Gnaden-Regel @0x80040288-b4 (einmal
- * -1..-14 -> HP 0) hat der Port-Spieler nicht. Der Aufruf hier ist a1 = 0 (toedlich), anders als der G5-Biss a1 = 1. */
+ * -1..-14 -> HP 0) hat der Port-Spieler nicht. Hieb, Biss und Griff sind a1 = 0 (toedlich), das Rennen und der G5-Biss a1 = 1. */
 static void bb_schaden(re15_actor_t *pl, int schaden)
 {
     pl->hp = (int16_t)(pl->hp - schaden);
     if (pl->hp < 0) pl->hp = -1;
 }
 
-static void bb_schlag(re15_actor_t *pl, int schaden, int ton)
+/* a1 von FUN_800401d4: Hieb und Biss 0, das Rennen 1 (`addiu a0,zero,20` @0x80102f0c, `addiu a1,zero,1` @0x80102f10, `jal` @0x80102f30):
+ * a1 = 1 toetet nie, `bltz v0,0x800402a8` @0x80040264, HP = 0 @0x800402b0. */
+static void bb_schlag(re15_actor_t *pl, int schaden, int ton, int a1)
 {
-    bb_schaden(pl, schaden);
+    if (a1) { pl->hp = (int16_t)(pl->hp - schaden); if (pl->hp < 0) pl->hp = 0; }
+    else bb_schaden(pl, schaden);
     if (pl->hp >= 0) re15_player_stagger_cmd2(0x08);  /* cmd 2: 0x800cfbfc = ((Seite|2) << 8) | 2 @0x80101de4-f0 */
     pl->hit_react |= 1;
     bb_se(ton);
@@ -326,7 +330,10 @@ static void bb_weichen(re15_actor_t *e, re15_actor_t *pl, int32_t dist)
         s_bb.uhr = 40;
     }
     if (bb_kegel(e, pl->x, pl->z, 512) && dist >= BB_L(2501) && dist < BB_L(4000) && s_bb.cd_nah == 0) {
-        e->anim_flags &= (uint16_t)~0x80u;
+        /* Bit 0x80 bleibt stehen: A[8] setzt nur 0x201 @0x80104158, die Richtung ist Argument des naechsten FUN_8002959c
+         * (@0x8010427c-84), bb_anim des Hiebs nimmt sie im selben Zug wie die neue Pose. HIER STAND ein Loeschen des Bits. Dieser
+         * Tick endet ohne neues Bild, der Zeichner nahm Clip 5 dann vorwaerts, Slot N statt 88-N: ein Bild lang 1259 Einheiten
+         * Knochensprung, vor jedem Hieb aus dem Weichen (Abnahme 3 N4). */
         s_bb.wort = 0;                                 /* kein neues Bild in diesem Tick, also auch kein Bild-Ton */
         bb_setze(e, BB_HIEB);                          /* 0x201 @0x80104158 */
         return;
@@ -337,10 +344,7 @@ static void bb_weichen(re15_actor_t *e, re15_actor_t *pl, int32_t dist)
     if (e->anim_frac >= 0x15) s_bb.tempo >>= 1;        /* @0x80104254-70 */
     (void)bb_anim(e, BB_A3_RUECK | 0x80u);             /* @0x8010427c-84 */
     bb_schieben(e);                                    /* @0x8010428c */
-    if (s_bb.uhr-- == 0) {                             /* @0x80104294-a8 */
-        e->anim_flags &= (uint16_t)~0x80u;
-        bb_zu_gehen(e);
-    }
+    if (s_bb.uhr-- == 0) bb_zu_gehen(e);               /* @0x80104294-a8, Bit 0x80 faellt in bb_anim des Gehens (s. oben) */
 }
 
 /* Doppelschlag @0x8010b0f0: {Bild im Clip, Einstiegsbild im Gegen-Clip} je Seite. */
@@ -355,6 +359,7 @@ static void bb_hieb(re15_actor_t *e, re15_actor_t *pl, int32_t dist)
         bb_clip(e, (uint8_t)(BB_C_HIEB + s_bb.seite), 0, 0xf);   /* 0x000f0003 + Seite @0x80101ab0-d0 */
         e->sub_state_2 = 1;
         s_bb.doppelt = 0; s_bb.getroffen = 0;          /* @0x80101af8-b0c */
+        s_bb.cd_lauf = 0;                              /* `sb zero,562(s2)` @0x80101b00: sonst bleibt der Hieb nach Rennen oder Biss bis 3 s stumm */
         re15_enemy_steer_point(e, pl->x, pl->z, 32);   /* @0x80101ae4 */
         bb_se(0);
         /* faellt in [11] */
@@ -383,6 +388,7 @@ static void bb_hieb(re15_actor_t *e, re15_actor_t *pl, int32_t dist)
             bb_spur(e, 0);                             /* @0x80101c4c */
             bb_spur(e, 0);                             /* @0x80101c60 */
             re15_enemy_steer_point(e, pl->x, pl->z, 32);   /* @0x80101c78 */
+            if (pl->hp >= 0) pl->hit_react &= (uint8_t)~1u;   /* Gate `bltz v0` @0x80101c8c, Sperre weg @0x80101c94-a8: der zweite Hieb trifft */
         }
         if (s_bb.wort & BB_FL_TREFFER) {               /* @0x80101cb8-c0 */
             int teil = s_bb.seite ? 13 : 18;           /* Kette 0x80109494 bzw. 0x801093d8 bis Teil 13 / 18 */
@@ -390,7 +396,7 @@ static void bb_hieb(re15_actor_t *e, re15_actor_t *pl, int32_t dist)
             if (pl->hit_react == 0 &&
                 (bb_nah(e, pl, teil, 0, 0, BB_L(1700)) ||        /* @0x80101d38 */
                  bb_nah(e, pl, teil, 0, BB_L(600), BB_L(1500)))) {   /* @0x80101d50, Versatz (0,600,0) @0x80101ce0 */
-                bb_schlag(pl, 10, 3);                  /* se(3) @0x80101e74 */
+                bb_schlag(pl, 10, 3, 0);               /* se(3) @0x80101e74 */
                 s_bb.getroffen = 1;
             }
             if (s_bb.cd_lauf == 0) { bb_se(4); s_bb.cd_lauf = 7; }   /* @0x80102034-40 */
@@ -434,7 +440,7 @@ static void bb_biss(re15_actor_t *e, re15_actor_t *pl)
     if (s_bb.wort & BB_FL_TREFFER) {                   /* @0x80104f4c-60 */
         re15_enemy_steer_point(e, pl->x, pl->z, 16);   /* @0x80104f7c */
         if (pl->hit_react == 0 && bb_nah(e, pl, BB_TEIL_RUMPF, BB_L(1400), 0, BB_L(1500))) {   /* @0x80104f88-a4 */
-            bb_schlag(pl, 10, 6);                      /* se(6) @0x801050a0 */
+            bb_schlag(pl, 10, 6, 0);                   /* se(6) @0x801050a0 */
             s_bb.getroffen = 1;
         }
     }
@@ -511,7 +517,7 @@ static void bb_rennen(re15_actor_t *e, re15_actor_t *pl, int32_t dist)
     s_bb.tempo += BB_L(10);                            /* +0x144 += 10 @0x80102dc4-cc */
     if (s_bb.tempo >= BB_L(201) && pl->hit_react == 0 &&                         /* @0x80102e80-88 */
         bb_nah(e, pl, BB_TEIL_RUMPF, BB_L(1400), 0, BB_L(1500))) {               /* @0x80102eb4-cc */
-        bb_schlag(pl, 5, 7);                           /* se(7) @0x80102f98 */
+        bb_schlag(pl, 5, 7, 1);                        /* se(7) @0x80102f98, a1 = 1 @0x80102f10 */
         s_bb.getroffen = 1;                            /* +0x21a |= 2 @0x80102f6c-70 */
         s_bb.abdrehen = 6;                             /* @0x80102f3c / @0x80102f68 */
         re15_enemy_steer_point(e, pl->x, pl->z, -128); /* @0x80102f8c */

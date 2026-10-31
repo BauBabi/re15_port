@@ -26,6 +26,9 @@
 #include "re2_ems.h"
 
 extern int re15_g5_boss_zustand(int *sub, int *ph, int *timer);
+extern int re15_g5_blut_zaehler(int idx);
+extern int re15_g5_biss_blut_zahl(void);
+extern void re15_g5_boss_spawn(int slot);
 
 static int fails = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { fprintf(stderr, "FAIL: " __VA_ARGS__); \
@@ -326,7 +329,7 @@ static void test_g5_fressen(void)
             if (reaktion > 0) reaktion--; else pl->hit_react = 0;   /* Treffer-Reaktion des Spielers, je Biss ein Treffer */
             e->hp = 600;
             re15_g5_boss_tick(2);
-            if (vor - pl->hp == 40) biss++;                   /* 40 @0x80104118; Tentakel 15 @0x801016d0 zaehlt nicht */
+            if (vor - pl->hp == 20) biss++;                   /* 40 @0x80104118, halb auf Port-HP; Tentakel 15 @0x801016d0 zaehlt nicht */
             if (pl->hp < vor) reaktion = 30;
             if (pl->hp == 0) null_gesehen = 1;
             if (pl->hp < 0) { frass_bei = vor; break; }
@@ -365,6 +368,81 @@ static void test_g5_fressen(void)
     free(ems);
 }
 
+/* Abnahme 3 N5: der G5 blutet. Wache `lbu v0,6(s3)` @0x801025e8 ist die Phase der Treffer-Routine (im ersten Tick 0), nicht die KI-Phase; Blick
+ * `slti v0,a1,-64` @0x80102640, Zeilen 16 und 9..12 ohne Blut @0x80102658-64. Biss-Serie @0x801042d8: 3 Spawns je Bild, 10 Bilder (@0x801041a8). */
+static void test_g5_blut(void)
+{
+    size_t ems_n = 0;
+    uint8_t *ems = slurp(RE15_ASSET_PSX_DIR "/../RE2/CDEMD0.EMS", &ems_n);
+    CHECK(ems != NULL, "RE2 CDEMD0.EMS fehlt");
+    if (!ems) return;
+    re15_enemy_reset(); re15_actor_init();
+    {   re15_enemy_bank_t *eb = re15_enemy_alloc(0x36u);
+        CHECK(eb && re2_ems_load_bank(ems, ems_n, 0x36u, eb, NULL) == 0, "G5-Bank");
+        if (eb) { eb->buf = NULL; eb->ok = 1; }
+        eb = re15_enemy_alloc(0x37u);
+        CHECK(eb && re2_ems_load_bank(ems, ems_n, 0x37u, eb, NULL) == 0, "Arm-Bank");
+        if (eb) { eb->buf = NULL; eb->ok = 1; }
+    }
+    g_current_room_id = 0x5090u;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER], *e = &g_actors[2];
+    pl->active = 1; pl->hp = 100; pl->x = 14000; pl->z = -23400; pl->rot_y = 2048;   /* Blick nach Westen: dirx = -4096 */
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = 0x36u; e->flags = 1; e->grid_id = 0x13u; e->hp = 600; e->x = 8000; e->z = -23400;
+    re15_g5_boss_spawn(2);
+    re15_g5_boss_tick(2);
+    {   int sub = -1, ph = -1, n = 0;                         /* bis in die Lauf-Phase: KI-Phase != 0 */
+        for (; n < 2000; n++) { re15_g5_boss_tick(2); (void)re15_g5_boss_zustand(&sub, &ph, NULL); if (sub <= 1 && ph != 0) break; pl->hp = 100; pl->hit_react = 0; }
+        CHECK(n < 2000 && ph != 0, "G5: keine KI-Phase != 0 (Sub %d Phase %d)", sub, ph);
+    }
+    #define TREFFER(waffe) do { e->hit_react |= 1u; e->sub_state_1 = (waffe); e->re2z_self1d3 = 0; re15_g5_boss_tick(2); e->hit_react = 0; e->re2z_self1d3 = 0; re15_g5_boss_tick(2); } while (0)
+    {   int a = re15_g5_blut_zaehler(3), sub = -1, ph = -1;
+        (void)re15_g5_boss_zustand(&sub, &ph, NULL);
+        TREFFER(3);
+        CHECK(re15_g5_blut_zaehler(3) >= a + 2, "N5: Pistole, KI-Phase %d: %d Spawns statt mindestens 2 (@0x801027ec, @0x80102848)", ph, re15_g5_blut_zaehler(3) - a);
+        fprintf(stderr, "G5: Pistole in KI-Phase %d: %d Blut-Spawns\n", ph, re15_g5_blut_zaehler(3) - a);
+    }
+    for (int i = 0; i < 30; i++) { pl->hp = 100; pl->hit_react = 0; re15_g5_boss_tick(2); }
+    {   int a = re15_g5_blut_zaehler(3);
+        pl->rot_y = 0;                                        /* Blick nach Osten: dirx = +4096, `slti v0,a1,-64` @0x80102640 */
+        TREFFER(3);
+        CHECK(re15_g5_blut_zaehler(3) == a, "N5: Blick nach Osten, %d Spawns statt 0", re15_g5_blut_zaehler(3) - a);
+        pl->rot_y = 2048;
+    }
+    for (int i = 0; i < 30; i++) { pl->hp = 100; pl->hit_react = 0; re15_g5_boss_tick(2); }
+    {   int a = re15_g5_blut_zaehler(3);                      /* Waffe 15 -> Zeile 9 (Tabelle s_g5_zeile_von_waffe) */
+        TREFFER(15);
+        CHECK(re15_g5_blut_zaehler(3) == a, "N5: Zeile 9 %d Spawns statt 0 (@0x80102660-64)", re15_g5_blut_zaehler(3) - a);
+    }
+    {   /* a1-Regel FUN_800401d4: a1 = 0 @0x801016d4 Gnade -14..-1 -> HP 0 (`slti v0,v0,-14` @0x80040288), bei HP 0 tot; a1 = 1 toetet nie (`bltz` @0x80040264) */
+        extern void re15_g5_tent_treffer_test(re15_actor_t *p, int schaden, int a1);
+        pl->hp = 5;  re15_g5_tent_treffer_test(pl, 7, 0);
+        CHECK(pl->hp == 0, "Arm a1 = 0 bei HP 5: HP %d statt 0 (Gnade)", pl->hp);
+        pl->hp = 0;  re15_g5_tent_treffer_test(pl, 7, 0);
+        CHECK(pl->hp < 0, "Arm a1 = 0 bei HP 0: HP %d, muss toeten", pl->hp);
+        pl->hp = 0;  re15_g5_tent_treffer_test(pl, 7, 1);
+        CHECK(pl->hp == 0, "Arm a1 = 1 bei HP 0: HP %d, toetet nie", pl->hp);
+        pl->hp = 3;  re15_g5_tent_treffer_test(pl, 7, 1);
+        CHECK(pl->hp == 0, "Arm a1 = 1 bei HP 3: HP %d", pl->hp);
+        pl->hp = 100; pl->hit_react = 0;
+    }
+    {   /* Biss: Lunge trifft den stehenden Spieler vor der Masse, danach 10 Bilder je 3 Spawns */
+        int a = re15_g5_biss_blut_zahl(), hp0, gebissen = 0;
+        pl->x = e->x + 4500; pl->z = e->z; pl->rot_y = 2048;
+        for (int i = 0; i < 2400 && !gebissen; i++) {
+            pl->hit_react = 0;
+            hp0 = pl->hp = 100;
+            pl->x = e->x + 4500; pl->z = e->z;
+            re15_g5_boss_tick(2);
+            if (pl->hp < hp0) gebissen = 1;
+        }
+        CHECK(gebissen, "G5 beisst nicht");
+        for (int i = 0; i < 40; i++) { pl->hp = 100; re15_g5_boss_tick(2); }
+        CHECK(re15_g5_biss_blut_zahl() - a == 30, "N5: Biss-Serie %d Spawns statt 30 (@0x801042d8, +0x21B = 10 @0x801041a8)", re15_g5_biss_blut_zahl() - a);
+    }
+    free(ems);
+}
+
 int main(void)
 {
     test_modellwahl();
@@ -373,6 +451,7 @@ int main(void)
     test_schnitt_aus_lage("STAGE5/ROOM5090.RDT");
     test_schnitt_aus_lage("STAGE5/ROOM5091.RDT");
     test_g5_fressen();
+    test_g5_blut();
     if (fails) { fprintf(stderr, "test_birkin_szenen: %d Fehler\n", fails); return 1; }
     fprintf(stderr, "test_birkin_szenen: OK\n");
     return 0;

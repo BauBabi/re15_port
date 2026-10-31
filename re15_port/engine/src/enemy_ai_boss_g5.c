@@ -380,6 +380,13 @@ static void g5_root_motion(re15_actor_t *e, int neu_verankert, int32_t skala_q12
 
 static void g5_fressen_beginn(re15_actor_t *e, re15_actor_t *pl);
 
+/* RE2 rechnet mit 200 HP, der Port-Spieler mit 100. Dieselbe Regel wie beim Griff der Form (birkin_bahnsteig.c, @0x801052a8-b4): alle Zahlen halb.
+ * Die rohen 40/15/10 trafen seit dem Ablauf der Bisssperre (+0x229) bei jedem Biss (Abnahme 3): HP 70 waren zwei Bisse bis HP 0, in RE2 vier. */
+#define RE15_G5_HP(roh) ((roh) / 2)
+
+static int s_biss_blut_zahl;                            /* Zaehler fuer den Riegel, kein Verhalten */
+int re15_g5_biss_blut_zahl(void) { return s_biss_blut_zahl; }
+
 /* Kau-Blut, FUN_8001bf10 (Packung s. Block BLUT-SPAWNS unten): Teil 4 (a2 = +0x198 + 760 = Teil 4 + 0x48 @0x80104a60),
  * Versatz (0, 256 - (rng & 0xff) * 2, 256 - (rng & 0xff) * 2) @0x80104a1c-48, Skala 8096 + (rng & 0xff) * 4 @0x80104a4c-54,
  * Winkel = Boss-Gier @0x80104a5c. */
@@ -392,6 +399,36 @@ static void g5_kau_blut(const re15_actor_t *e, uint8_t sub)
         uint16_t skala = (uint16_t)(8096u + (re15_engine_rand8() & 0xFFu) * 4u);
         (void)re15_enemy_part_point(e, 4, ofs, w);
         re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0u, sub, skala, w[0], w[1], w[2], e->rot_y);
+    }
+}
+
+/* Biss-Blut @0x801042d8-420: jedes Bild, solange +0x21B != 0, im Schwanz JEDER Biss-Phase (alle `j 0x801042d8`). Zweimal am Masse-Teil 4
+ * (a2 = +0x198 + 760 @0x8010434c) mit Winkel = Boss-Gier (`lh a1,118(s2)` @0x80104348), einmal am Spieler-Teil 0 (a2 = 0x800cfd90 + 72
+ * @0x80104420, a1 = 0 @0x80104414). Leons Teile fuehrt der Port nicht engine-seitig; re15_player_victim_bone_pos_pub liefert ohne Opferbank
+ * den Spieler-Ursprung (PORT-WAHL fuer den Anker, Versatz und Skala wie im Original). */
+extern void re15_player_victim_bone_pos_pub(int bone, int32_t out[3]);
+static void g5_biss_blut(const re15_actor_t *e)
+{
+    static const int32_t ofs_x[2] = { 1200, 1400 };    /* @0x801042f4, @0x80104358 */
+    int32_t ofs[3], w[3];
+    for (int k = 0; k < 2; k++) {
+        ofs[0] = ofs_x[k];
+        ofs[1] = (int32_t)(re15_engine_rand8() & 0xFFu) * 2 + 56;   /* @0x80104300-08 */
+        ofs[2] = (int32_t)(re15_engine_rand8() & 0xFFu) + 128;      /* @0x80104314-18 */
+        {   const unsigned sub = re15_engine_rand8() & 1u;          /* @0x8010432c */
+            const unsigned skala = (re15_engine_rand8() & 0xFFu) * 4u + 10096u;   /* @0x80104334-3c */
+            (void)re15_enemy_part_point(e, 4, ofs, w);
+            s_biss_blut_zahl++;
+            re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0u, (uint8_t)sub, (uint16_t)skala, w[0], w[1], w[2], e->rot_y);
+        }
+    }
+    ofs[0] = 256 - (int32_t)((re15_engine_rand8() & 0xFFu) * 2u);   /* @0x801043c8-d4 */
+    ofs[2] = 256 - (int32_t)((re15_engine_rand8() & 0xFFu) * 2u);   /* @0x801043e0-f0, y = 0 @0x801043dc */
+    {   const unsigned sub = re15_engine_rand8() & 1u;              /* @0x801043fc */
+        const unsigned skala = (re15_engine_rand8() & 0xFFu) * 4u + 6096u;   /* @0x80104404-0c */
+        re15_player_victim_bone_pos_pub(0, w);
+        s_biss_blut_zahl++;
+        re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0u, (uint8_t)sub, (uint16_t)skala, w[0] + ofs[0], w[1], w[2] + ofs[2], 0);
     }
 }
 
@@ -461,7 +498,7 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
     }
     case 1: {   /* MASSEN-BISS [T22..T26] — Lunge + 40 Schaden @0x8010416c. */
         switch (g->blob_ph) {
-        case 0: g->blob_ph = 1; g->blob_speed = 0; break;
+        case 0: g->blob_ph = 1; g->blob_speed = 0; g->blut_serie = 0; break;   /* `sb zero,539(s2)` @0x80103f54 */
         case 1:                                        /* AUSHOLEN @0x80103F58 */
             /* KORRIGIERT (g5-morph.md 3.3 Punkt 5): Original rechnet
              * w3 = (w3>>1) + (speed>>1) mit der ALTEN Geschwindigkeit und
@@ -501,7 +538,7 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
                     /* FUN_800401d4(40, 1): a0 = 40 @0x80104118, a1 = 1 @0x80104170. Mit a1 = 1 toetet der Biss NIE:
                      * `bne a1,v0,0x80040274` @0x80040258, `bltz v0,0x800402a8` @0x80040264, dort `sh zero,342(a2)` HP = 0
                      * @0x800402b0. Getoetet wird erst der Spieler mit HP 0, ueber Devour Pfad 1/2 (500, a1 = 0). */
-                    pl->hp = (int16_t)(pl->hp - 40);
+                    pl->hp = (int16_t)(pl->hp - RE15_G5_HP(40));
                     if (pl->hp < 0) pl->hp = 0;
                     g5_se(14);
                     pl->hit_react |= 1;
@@ -527,6 +564,10 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
                 g->biss_cd = 5;                        /* +0x229=5 @0x801042a0-ac */
             }
             break;
+        }
+        if (g->blut_serie != 0) {                      /* `lb v0,539(s2)` / `beq` @0x801042d8-e0 */
+            g->blut_serie--;                           /* `sb v0,539(s2)` @0x801042f0 */
+            g5_biss_blut(e);
         }
         break;
     }
@@ -861,7 +902,7 @@ int re15_g5_blut_kamera(int32_t *yaw, int32_t *dirx, int32_t *dirz)
 }
 
 /* Die vier Spawns. `e` = der Boss, `pl` = der Spieler. */
-static void g5_treffer_blut(const re15_actor_t *e, const re15_actor_t *pl)
+static void g5_treffer_blut(const re15_actor_t *e, const re15_actor_t *pl, unsigned zeile)
 {
     const re15_esp_t *bank = re15_esp_room_bank();
     int32_t plyaw, dirx, dirz, zz, px, py, pz, r;
@@ -881,6 +922,9 @@ static void g5_treffer_blut(const re15_actor_t *e, const re15_actor_t *pl)
      * Spieler ungefaehr von +X weg blickt. */
     s_blut_diag[2] = dirx; s_blut_diag[3] = dirz;
     if (!(dirx < -64)) return;
+    /* Dieselbe Sprungmarke @0x80102870 nimmt die Trefferzeile +5: nicht bei Zeile 16 (`beq v1,v0` @0x80102658), nicht bei 9..12
+     * (`sltiu v0,v0,0x4` @0x80102660-64). Die Zeile ist dasselbe Byte wie beim Flinch-Zuschlag (`lbu v0,5(s3)` @0x801029b0). */
+    if (zeile == 16u || zeile - 9u < 4u) return;
     s_blut_zaehler[2]++;
 
     /* Z der Spawns 1+2: Strahl-Schnitt entlang der Blickachse auf die Ebene des Bosses.
@@ -896,6 +940,9 @@ static void g5_treffer_blut(const re15_actor_t *e, const re15_actor_t *pl)
     px = e->x + 3183;                                  /* @0x801026d4-d8 */
     py = -1400;                                        /* @0x801026cc-d0 */
     pz = zz;
+
+    /* Zeile 1 (Messer) nimmt z aus Spieler-Teil 11 (`lw v0,1992(v0)` @0x801027a4 auf PL+0x198, +0x5C + 11 * 0xAC + 8). Der Port fuehrt
+     * Leons Teile nicht engine-seitig; beim Messer ist die Strahl-Ebene ohnehin der Standort, das z oben bleibt (PORT-WAHL). */
 
     /* SPAWN 1 @0x801027ec — scale16 = 8096 + (rng&0xff)*8, Sub = rng&1.
      * Reihenfolge der Wuerfel: `jal 0x80015fe8` @0x801027b0 (Sub) und @0x801027b8 (Skala). */
@@ -943,6 +990,7 @@ static void g5_treffer_blut(const re15_actor_t *e, const re15_actor_t *pl)
                                  (uint16_t)(8096 + rsc4 * 8), px, py, pz, winkel);
         }
     }
+    if (zeile != 1u) g5_se(8);                         /* `beq v0,s4` @0x80102938, `addiu a0,zero,8` / `jal 0x8005bd6c` @0x8010293c-40 */
 }
 
 /* ============================================================================================
@@ -1671,10 +1719,6 @@ void re15_g5_boss_tick(int slot)
         }
     }
 
-    /* Blut-Serie des Biss-Treffers (+0x21B): -1 je Bild nur im Biss-Schwanz (`sb v0,539(s2)` @0x801042f0). Im Kauen ist
-     * dasselbe Byte die feste Beschleunigung der Rate (@0x80104b58-6c) und darf hier nicht ablaufen. */
-    if (g->blob == 1 && g->blut_serie > 0) g->blut_serie--;
-
     /* TOD-Trigger ((+0x226&6)==4-Analogon): HP <= 0 und nicht busy. */
     if (e->hp <= 0 && g->routine != 3) {
         if (g->busy & 2u) { g->busy |= 4u; }           /* busy: Zug zu Ende spielen */
@@ -1718,16 +1762,16 @@ void re15_g5_boss_tick(int slot)
         static const uint8_t s_g5_zeile_von_waffe[22] = {    /* == re2z_row_from_weapon */
             1, 1, 1, 3, 2, 4, 4, 5, 7, 9, 11, 10, 15, 8, 16, 9, 11, 10, 17, 18, 13, 1 };
         g->treffer_offen = 1u;
-        /* BLUT-AUSWURF an der Trefferstelle (RE2-Routine 2). Wache `lbu v0,6(s3)` +
-         * `bne v0,zero,0x80102a94` @0x801025e8-f0: nur in Phase 0. Die beiden weiteren
-         * RE2-Wachen auf `+0x05` (== 16 @0x80102658, 9..12 @0x80102660-64) betreffen
-         * Sub-Zustaende, die der Port nicht fuehrt (seine Menge ist {0..4, 0xF}); der
-         * Flinch-Pseudo-Sub 0xF ist hier das einzige Gegenstueck und wird gesperrt. */
+        /* BLUT-AUSWURF an der Trefferstelle (RE2-Routine 2). Wache `lbu v0,6(s3)` + `bne v0,zero,0x80102a94` @0x801025e8-f0: Phase der
+         * TREFFER-Routine, nicht der KI. Der Applier schreibt das ganze Wort (`sw v0,4(s1)` @0x80047288) und nullt +6, im ersten
+         * Treffer-Tick ist sie also immer 0. HIER STAND `g->ph == 0`, das ist die KI-Phase: Lauf b1 27 Treffer, 0 Blut (Abnahme 3 N5).
+         * Der Port fuehrt die Routine nicht als Zustand, der erste Tick ist genau `treffer_offen` frisch gesetzt. Eine laufende
+         * Stagger-Routine (Phase != 0) ist der Flinch-Pseudo-Sub 0xF. */
+        const uint8_t w = e->sub_state_1;
+        const uint8_t zeile = (w < 22u) ? s_g5_zeile_von_waffe[w] : 1u;   /* PORT-SICHERUNG */
         s_blut_zaehler[0]++;
-        if (g->ph == 0 && g->sub != 0xF) g5_treffer_blut(e, pl);
+        if (g->sub != 0xF) g5_treffer_blut(e, pl, zeile);
         if (!(g->busy & 2u)) {
-            const uint8_t w = e->sub_state_1;
-            const uint8_t zeile = (w < 22u) ? s_g5_zeile_von_waffe[w] : 1u;   /* PORT-SICHERUNG */
             const int add = (zeile < 21u) ? (int)s_g5_flinch_byte[zeile] : 0;
             g->flinch_akku += add;
             if (!(g->busy & 1u)) { g->busy |= 1u; g->flinch_takt = 15; }   /* @0x80102a38-4c */

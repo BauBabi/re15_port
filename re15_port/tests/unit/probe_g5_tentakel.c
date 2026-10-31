@@ -10,7 +10,7 @@
  *  PIN 3  KOMMANDO: ein Peitschen-Wort (0x301) bringt Tentakel 0 in sub3, setzt
  *         sein Beschaeftigt-Bit in der +0x228-Maske (Bit i+4 @0x8010146C) und
  *         loescht es am Ende wieder (@0x80101808).
- *  PIN 4  SCHADEN: ein Spieler im Schlagfenster verliert 15 HP (@0x801016D0).
+ *  PIN 4  SCHADEN: ein Spieler im Schlagfenster verliert 15 HP (@0x801016D0), halb auf Port-HP = 7 (Abnahme 3 Spur R).
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -191,11 +191,11 @@ int main(void)
         printf("Peitsche: Maske gesetzt=%d (vorher 0x%02X), Schaden %d\n",
                maske_gesetzt, maske_vor, getroffen);
         CHECK(maske_gesetzt, "Beschaeftigt-Bit (+0x228 Bit 4) wurde nie gesetzt");
-        CHECK(getroffen == 15, "Peitschen-Schaden %d != 15", getroffen);
+        CHECK(getroffen == 7, "Peitschen-Schaden %d != 7 (15 @0x801016CC, halb auf 100 Port-HP)", getroffen);
     }
 
     free(ems);
     if (g_fail) { printf("=== FAIL ===\n"); return 1; }
-    printf("=== PASS: Spawn, Anker, Austritt, Kommando/Maske, 15 Schaden ===\n");
+    printf("=== PASS: Spawn, Anker, Austritt, Kommando/Maske, 7 Schaden ===\n");
     return 0;
 }
