@@ -34,6 +34,7 @@
 #include "re15_engine.h"          /* SCREEN_XRES / SCREEN_YRES, re15_render_tile */
 #include "re15_ventilkette_r41.h"
 #include "re15_panel2030_r41.h"   /* Runde 41 Spur N: Panel-Raetsel 2030 */
+#include "re15_schrank2010_r41.h" /* Runde 41 Spur N: Einsetzen 2010, Cursor auf der Vollbild-Ebene */
 #include "re15_room.h"            /* g_current_room_id (Nachbesserung 6: Alarm nur in 2030 ausschalten) */
 #include "re15_bss.h"             /* re15_bss_parse_chunk / _vlc_decode / _mdec_decode */
 #include "re15_vab.h"
@@ -304,14 +305,17 @@ void re15_ventilkette_r41_pc_bild(void)
     /* Vollbild-Ebene: Panel-Raetsel oder Plakat (2030) oder Standbild der Ventile (2010); nur die eigene Ebene wird wieder versteckt.
      * Das Panel laesst die Text-Ebene darueber (Satze im Panel), das Plakat bleibt wie es ist. */
     const uint32_t *pbild = re15_panel2030_r41_rgba();
-    re15_render_pc_fmv_text(pbild != NULL);
+    re15_render_pc_fmv_text(pbild != NULL || re15_schrank2010_r41_nahbild(NULL));   /* Einsetzen 2010: Text 42 auf Cut 9 wie ROOM2060 sub19 @0x016C8 */
     const uint32_t *bild = pbild ? pbild : re15_ventilkette_r41_plakat_rgba();
     unsigned sraum = 0; int scut = 0;
     if (!bild && re15_ventilkette_r41_standbild(&sraum, &scut)) {
         if (s_standbild_ok < 0 || sraum != s_sb_raum || scut != s_sb_cut) {
             s_standbild_ok = standbild_laden(sraum, scut); s_sb_raum = sraum; s_sb_cut = scut;
         }
-        if (s_standbild_ok == 1) bild = s_standbild;
+        if (s_standbild_ok == 1) {
+            const uint32_t *mit_cursor = re15_schrank2010_r41_cursor_rgba(s_standbild);     /* Cut 8: Cursor obj 4 */
+            bild = mit_cursor ? mit_cursor : s_standbild;
+        }
     }
     if (bild) { re15_render_pc_show_fmv(bild, 320, 240); s_vollbild = 1; }
     else if (s_vollbild) { re15_render_pc_hide_fmv(); s_vollbild = 0; }

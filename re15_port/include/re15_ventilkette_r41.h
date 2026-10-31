@@ -570,6 +570,7 @@ int      re15_ventilkette_r41_folge(int i);                       /* Ventil-Inde
 int      re15_ventilkette_r41_plakat_offen(void);                 /* 1 = Nahaufnahme offen                            */
 int      re15_ventilkette_r41_ventil_nummer(int i);               /* 1, 2, 3, 7, 8, 9                                 */
 /* Nachbesserung 5 */
+int      re15_ventilkette_r41_vollbild_sperrt(void);                /* Spur N: 1 = Panel 2030 / Einsetzen 2010 offen, START-Poll aus (game_step_common.c) */
 int      re15_ventilkette_r41_standbild(unsigned *raum, int *cut);  /* 1 = Standbild der Ventile offen (2010), Quelle   */
 unsigned re15_ventilkette_r41_ton_zaehler(int ton);               /* gespielte Toene je RE15_R41C_TON_* (Riegel)      */
 int      re15_ventilkette_r41_ventil_rbj(unsigned room_id);       /* 1 = Raum bindet das RE2-RBJ VENTIL1080 (2030/2031) */

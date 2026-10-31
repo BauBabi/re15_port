@@ -883,6 +883,16 @@ int re15_ventilkette_r41_standbild(unsigned *raum, int *cut)
     if (cut) *cut = RE15_R41C_STANDBILD_CUT;
     return 1;
 }
+/* Spur N, Nachbesserung 1 Mangel 3: die Vollbild-Ebene liegt ueber dem Inventar. Der Original-Riegel des START-Polls ist g_pauseflags & 0x01000000 (@0x8001cd14..@0x8001cd20, gesetzt von
+ * der Sperre (2,7)); Panel 2030 und Einsetzen 2010 laufen ohne (2,7), weil die Sperre die SCD-Pad-Woerter maskiert (game_step_common.c). Hier gilt sie fuer den Poll allein. PORT-WAHL. */
+int re15_ventilkette_r41_vollbild_sperrt(void)
+{
+    const uint16_t room = (uint16_t)g_current_room_id;
+    if (ist(room, RE15_R41C_RAUM_2030)) return re15_panel2030_r41_offen();
+    if (ist(room, RE15_R41C_RAUM_2010)) return re15_schrank2010_r41_nahbild(NULL);
+    return 0;
+}
+
 unsigned re15_ventilkette_r41_ton_zaehler(int t) { return (t >= 1 && t < RE15_R41C_TON_N) ? s_ton_n[t] : 0u; }
 int re15_ventilkette_r41_ventil_rbj(unsigned room_id) { return ist((uint16_t)room_id, RE15_R41C_RAUM_2030); }
 

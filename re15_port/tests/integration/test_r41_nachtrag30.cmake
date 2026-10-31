@@ -2,8 +2,8 @@
 # SPUR N "nachtrag30" MIT DER ECHTEN EXE (Runde 41, AUFTRAG.md Nachtraege 30, 30b, 30d, 30e, 34 (N-E2), 36, 37). Dossier analysis/befunde_runde41/N_nachtrag30.md.
 #   TEIL=panel   FIGUR leon/elza: Pult -> Frage 40 -> Panel -> A nach B, B nach C, C nach A -> 80 -> Text 43 -> Ja -> Fahrt unter Cut 4 mit den Toenen RE2 ROOM4080
 #                Satz 0x0F / 0x10 -> Text 44. Bild: Fenster von Tank B vor und nach dem Umfuellen.
-#   TEIL=schrank FIGUR leon/elza: 2010 Cut 3: Aktion -> Tuer klappt auf (Bilder geschlossen / offen), Text 40; mit (3,108) Ja -> Nahansichten ROOM2060 Cut 8/9 (BSS-Vergleich)
-#                -> Bit 125 -> Standbild der Ventile.
+#   TEIL=schrank FIGUR leon/elza: 2010 Cut 3: Aktion -> Tuer klappt auf (Bilder geschlossen / offen), Text 40; mit (3,108) Ja -> Cut 8 + Cursor wartet (BSS-Vergleich), SQUARE neben der Zone nichts,
+#                Cursor im Bild an der Stelle wie ROOM2060, rechts + SQUARE -> Cut 9 + Bit 125 + Text 42 -> Standbild der Ventile; START im Cursor-Schritt oeffnet nichts; zu Fuss nach Cut 4: keine Tuer im Bild.
 #   TEIL=wasser  FIGUR leon/elza: 2000 Cut 10: Wasserlauf an der Leiter und auf dem Weg (Bildvergleich gegen den Lauf mit Bit 100), Weg durch die echte Tuer 2010 -> 2000,
 #                Leiter weiter gesperrt, mit Bit 100 nichts.
 #   TEIL=laden   FIGUR leon/elza: der echte Weg: Spielstand + CONTINUE (Wasserlauf 2000, Schrank 2010, Panel 2030 samt Bruecke) und Ring-Tuer 2070 -> 2030 zu Fuss zum Pult -> Panel geloest.
@@ -137,6 +137,16 @@ if("${TEIL}" STREQUAL "panel")
     if(_d LESS 60)
         _fehler(": Tank B fuellt sich im Bild nicht (leer ${_b_leer}, voll ${_b_voll})")
     endif()
+    # Abnahme 0, Mangel 3: START bei offenem Panel oeffnet nichts (die Vollbild-Ebene liegt ueber dem Inventar), die Tasten bleiben im Panel, CROSS verlaesst es
+    _lauf(st 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=350,-9500,1024,3" "RE15_SET_FLAG=7:155,7:156,7:157"
+          RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W1.5,A0.1,W1,A0.1,W2,A0.1,W1.5,A0.1,W1.5,A0.1,W2,A0.1,W2,A0.1,W2,S0.1,W2,L1.2,W0.3,S0.1,W2,E0.1,W2,S0.1,W2" "RE15_EXIT_AT=1000#203${S}")
+    _danach("${_dbg}" "[panel2030] offen: A 100 B 0 C 0" "[panel2030] Steuerkreuz 0x8" "Tasten bleiben im Panel")
+    _danach("${_dbg}" "[panel2030] Steuerkreuz 0x8" "[panel2030] Abbruch" "CROSS verlaesst das Panel")
+    string(FIND "${_dbg}" "[panel2030] Abbruch" _p)
+    string(SUBSTRING "${_dbg}" 0 ${_p} _vor)
+    _darf_nicht("${_vor}" "Inventar-Ton Satz 6" "START oeffnet bei offenem Panel nichts")
+    string(SUBSTRING "${_dbg}" ${_p} -1 _nach)
+    _muss("${_nach}" "Inventar-Ton Satz 6" "nach dem Panel oeffnet START wieder")
     message(STATUS "r41_nachtrag30[panel ${FIGUR}]: A nach B, B nach C, C nach A = 80 -> Text 43 -> Bruecke mit RE2-Ton")
 endif()
 
@@ -158,24 +168,69 @@ if("${TEIL}" STREQUAL "schrank")
     if(_d LESS 150 OR NOT _g EQUAL 0)
         _fehler(": Aufklappen im Bild nicht belegt (Flaeche ${_d}, Gegenprobe ${_g})")
     endif()
-    # Ja-Zweig: Tasten wie k1 in test_r41_ventilkette_weg.cmake, Nahansichten als BSS-Vergleich (dieselbe Dekodierkette wie das Spiel)
-    _lauf(b 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2010@250 "RE15_PLAYER_POS=4950,-2770,0,0" RE15_SET_FLAG=3:108
-          "RE15_PRESS=square@300,square@368,square@418,square@468,square@538,square@618,square@780,square@860"
-          "RE15_FRAMEDUMP=635-665/30:f_" "RE15_EXIT_AT=940#201${S}")
+    # Ja-Zweig: Tasten wie k1 in test_r41_ventilkette_weg.cmake. Cursor-Schritt wie ROOM2060 sub18/sub19 (Dossier Nachbesserung 1): F640 Cut 8 + Cursor, F650 SQUARE neben der Zone und F660 START tun nichts,
+    # F680 Cursor unveraendert, F700 rechts = Zone 7, F710 SQUARE -> F730 Cut 9 + Text 42, F790 Text zu, Standbild.
+    _lauf(b 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_FLAG_CENSUS=1 RE15_SE_DEBUG=1 RE15_DEBUG_JUMP=2010@250 "RE15_PLAYER_POS=4950,-2770,0,0" RE15_SET_FLAG=3:108
+          "RE15_PRESS=square@300,square@368,square@418,square@468,square@538,square@618,square@650,start@660,right@700,square@710,square@790,square@870"
+          "RE15_FRAMEDUMP=640-730/10:f_" "RE15_EXIT_AT=960#201${S}")
     _danach("${_dbg}" "[schrank2010] Tuer auf" "[msgtext] room=201${S} id=41 \"Will you use the Fuse?\"" "Frage nach dem Aufklappen")
-    _danach("${_dbg}" "[schrank2010] Nahansicht ROOM2060 Cut 8" "[schrank2010] Nahansicht ROOM2060 Cut 9" "Cut 8, dann Cut 9")
-    _danach("${_dbg}" "[schrank2010] Nahansicht ROOM2060 Cut 9" "WRITE Set  zone=9 idx=125 op=1" "Bit 125 hinter den Nahansichten")
-    _danach("${_dbg}" "zone=9 idx=125 op=1" "[ventilkette41] Standbild der Ventile offen" "Standbild wie Spur C")
-    foreach(_paar "8;635" "9;665")
+    _danach("${_dbg}" "[schrank2010] Nahansicht ROOM2060 Cut 8, Cursor obj 4 bei (19571,-22542)" "[schrank2010] Nahansicht ROOM2060 Cut 9, Cursor (19771,-22542) auf Zone 7" "Cut 8, dann Cut 9")
+    _darf_nicht("${_dbg}" "Inventar-Ton Satz 6" "START im Cursor-Schritt oeffnet nichts")
+    _danach("${_dbg}" "[schrank2010] Nahansicht ROOM2060 Cut 9" "WRITE Set  zone=9 idx=125 op=1" "Bit 125 hinter dem Cursor-Schritt")
+    _danach("${_dbg}" "zone=9 idx=125 op=1" "[msgtext] room=201${S} id=42 \"You've used the Fuse.\"" "Text 42 auf Cut 9")
+    _danach("${_dbg}" "id=42 \"You've used the Fuse.\"" "[ventilkette41] Standbild der Ventile offen" "Standbild wie Spur C")
+    foreach(_paar "8;640" "8;680" "9;730")
         list(GET _paar 0 _c)
         list(GET _paar 1 _f)
-        execute_process(COMMAND "${RE15_R41C_WERKZEUG}" bssdiff "${RE15_R41C_PSX}/BSS/ROOM2060/BG0${_c}.BSS" "${WORKDIR}/f_000${_f}.ppm" 0 0 320 240 OUTPUT_VARIABLE _o RESULT_VARIABLE _r)
+        execute_process(COMMAND "${RE15_R41C_WERKZEUG}" bssdiff "${RE15_R41C_PSX}/BSS/ROOM2060/BG0${_c}.BSS" "${WORKDIR}/f_000${_f}.ppm" 0 0 320 170 OUTPUT_VARIABLE _o RESULT_VARIABLE _r)
         string(REGEX MATCH "ABWEICHUNG ([0-9]+) GLEICH ([0-9]+)" _m "${_o}")
         if(NOT _m OR CMAKE_MATCH_2 LESS 95)
             _fehler(": F${_f} ist nicht ROOM2060 Cut ${_c}: ${_o}")
         endif()
         message(STATUS "r41_nachtrag30[schrank ${FIGUR}]: F${_f} = ROOM2060 Cut ${_c}, ${CMAKE_MATCH_2} % gleich")
     endforeach()
+    # Der Cursor steht im Bild: Stempel an der Startlage (Rahmen x 147..171, y 108..130), gegen ROOM2060 nach links verschoben ist die Flaeche leer
+    _wert("diff;${WORKDIR}/f_000640.ppm;${WORKDIR}/f_000730.ppm;147;108;172;131" "^DIFF ([0-9]+)" _z)
+    _wert("diff;${WORKDIR}/f_000640.ppm;${WORKDIR}/f_000680.ppm;147;108;172;131" "^DIFF ([0-9]+)" _s)
+    message(STATUS "r41_nachtrag30[schrank ${FIGUR}]: Cursor F640 gegen Cut 9 ${_z}, gegen F680 (SQUARE neben der Zone, START) ${_s}")
+    if(_z LESS 100 OR NOT _s EQUAL 0)
+        _fehler(": Cursor im Bild nicht belegt (${_z}, ${_s})")
+    endif()
+    # Abnahme 0, Mangel 4: zu Fuss nach Cut 4 steht die offene Tuer nicht im Bild (Plan wie Lauf s_geh2); Spalten 0..60 = Hintergrund BG04, Figur steht weiter rechts
+    file(WRITE "${_basis}_plan_c4.txt" "RAUM 201${S}
+WARTE 30
+GEHE 4950 -2770 100
+BLICK 0
+WARTE 10
+AKTION
+WARTE 60
+AKTION
+WARTE 30
+AKTION
+WARTE 30
+AKTION
+WARTE 30
+GEHE 3500 -1500 100
+WARTE 30
+GEHE 3000 -5000 100
+WARTE 30
+GEHE -1000 -5000 100
+WARTE 90
+ENDE
+")
+    _lauf(c4 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2010@250 "RE15_WEGPLAN=${_basis}_plan_c4.txt" RE15_WEGPLAN_LOG=wegplan.txt "RE15_FRAMEDUMP=700:f.ppm" "RE15_EXIT_AT=720#201${S}")
+    _muss("${_dbg}" "[schrank2010] Tuer auf (rot_y 1024)" "Tuer offen")
+    string(FIND "${_dbg}" "[pri] cut=" _q REVERSE)
+    string(SUBSTRING "${_dbg}" ${_q} 12 _z)
+    if(NOT "${_z}" STREQUAL "[pri] cut=4 ")
+        _fehler(": Plan endet nicht in Cut 4 ('${_z}')")
+    endif()
+    execute_process(COMMAND "${RE15_R41C_WERKZEUG}" bssdiff "${RE15_R41C_PSX}/BSS/ROOM2010/BG04.BSS" "${WORKDIR}/f.ppm" 0 0 60 240 OUTPUT_VARIABLE _o RESULT_VARIABLE _r)
+    string(REGEX MATCH "ABWEICHUNG ([0-9]+) GLEICH ([0-9]+)" _m "${_o}")
+    message(STATUS "r41_nachtrag30[schrank ${FIGUR}]: Cut 4 Spalten 0..59 gegen BG04: ${_o}")
+    if(NOT _m OR CMAKE_MATCH_2 LESS 95)
+        _fehler(": offene Tuer steht in Cut 4 im Bild: ${_o}")
+    endif()
 endif()
 
 # ---- wasser -------------------------------------------------------------------------------------------------------------------

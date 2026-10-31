@@ -193,26 +193,29 @@ def bauen(cd):
     # @0x80028698), danach der Satz (die Vollbild-Ebene liegt ueber dem Text). Warten = While-Form ROOM2000 @0x01AD4
     # `0f 04 08 00` `21 05 00 00` `02 00` `10 00`.
     # Spur N (Nachtrag 30): jedes Kasten-Programm beginnt mit dem Aufklappen (Pad-Sperre, Marker (5,0x1E), While wie unten; der C-Takt dreht die Tuer 16 Bilder lang,
-    # ROOM11F0 sub06 @0x01332/@0x01336, ist sie schon auf, loescht er den Marker sofort). Im Ja-Zweig die Nahansichten ROOM2060 Cut 8 -> Cut 9 (sub18 @0x0168C, sub19 @0x016A2).
+    # ROOM11F0 sub06 @0x01332/@0x01336, ist sie schon auf, loescht er den Marker sofort). Im Ja-Zweig das Einsetzen wie ROOM2060: Spieler und KI stehen ((2,0)/(2,2) wie sub01 @0x01288/
+    # @0x0128C, keine Pad-Sperre: sie maskiert die SCD-Pad-Woerter), Marker (5,0x1D) -> C-Takt: Cut 8 + Cursor, wartet ohne Zeitgrenze auf SQUARE in Zone 7 (sub18 @0x0168C, sub01 @0x01324/
+    # @0x0132E), loescht den Marker -> Bit 125 (sub19 @0x0169E), Text 42 auf Cut 9 (@0x016A2/@0x016C8), dann das Standbild der Ventile (Nachtrag 16).
     AUF = [SPERRE_AN, ("22 05 1e 01", "Set(5,0x1E)=1 Schrank klappt auf (Marker fuer den C-Takt, engine/src/schrank2010_r41.c)"),
            ("0f 04 08 00", "While (Form ROOM2000 @0x01AD4): solange die Tuer faehrt"), ("21 05 1e 01", "Ck(5,0x1E)=1"), EVT_NEXT, ("10 00", "Ewhile"), SPERRE_AUS]
-    NAH = [("22 05 1d 01", "Set(5,0x1D)=1 Nahansichten ROOM2060 Cut 8, Cut 9 (Marker fuer den C-Takt)"),
-           ("0f 04 08 00", "While: solange die Nahansichten stehen"), ("21 05 1d 01", "Ck(5,0x1D)=1"), EVT_NEXT, ("10 00", "Ewhile")]
+    NAH = [("22 05 1d 01", "Set(5,0x1D)=1 Einsetz-Ansicht ROOM2060 Cut 8 + Cursor (Marker fuer den C-Takt, Form sub18 @0x0168C..@0x01696)"),
+           ("0f 04 08 00", "While: bis der Cursor in Zone 7 bestaetigt ist (sub01 @0x01324/@0x0132E)"), ("21 05 1d 01", "Ck(5,0x1D)=1"), EVT_NEXT, ("10 00", "Ewhile")]
     P.append(("re15_r41c_prg_2010_kasten_leer",
               AUF + [msg_on(40, "A fuse box for the valve controls. | One of the fuses is missing... (ROOM2060 msg 3)"), EVT_NEXT, ENDE]))
     P.append(("re15_r41c_prg_2010_kasten_frage",
               AUF + [msg_on(40, "A fuse box ... | One of the fuses is missing..."), EVT_NEXT,
                msg_on(41, "Will you use the Fuse? = ROOM2060 msg 4 @0x1855 (Form sub18 @0x0167E)"), EVT_NEXT,
                ("IF", "Ja-Zweig"), JA,
-               SPERRE_AN, ("22 02 02 01", "Set(2,2)=1 KI steht (ROOM2050 sub02 @0x0223C)")] + NAH + [
+               ("22 02 00 01", "Set(2,0)=1 Spieler steht (ROOM2060 sub01 @0x01288)"), ("22 02 02 01", "Set(2,2)=1 KI steht (ROOM2060 sub01 @0x0128C)")] + NAH + [
+               ("22 02 00 00", "Set(2,0)=0 (ROOM2060 sub19 @0x016B0)"), SPERRE_AN,
                ("22 09 7d 01", "Set(9,125)=1 Sicherung im Ventilkasten (Form ROOM2060 sub19 @0x0169E `22 03 90 01`)"),
+               msg_on(42, "You've used the Fuse. = ROOM2060 msg 5 @0x1875 (sub19 @0x016C8, auf Cut 9 @0x016A2)"), EVT_NEXT,
                ("22 05 1f 01", "Set(5,0x1F)=1 Standbild der Ventile + Aufschliess-Ton (Marker fuer den C-Takt; Bank 5 Wort 0, "
                                "ROOM2010 benutzt Bank 5 nicht)"),
                ("0f 04 08 00", "While (Form ROOM2000 @0x01AD4): solange das Standbild offen ist"),
                ("21 05 1f 01", "Ck(5,0x1F)=1"),
                EVT_NEXT, ("10 00", "Ewhile"),
-               msg_on(42, "You've used the Fuse. = ROOM2060 msg 5 @0x1875 (sub19 @0x016C8)"), EVT_NEXT,
-               ("22 02 02 00", "Set(2,2)=0 (ROOM11F0 sub17 @0x016EC)"), SPERRE_AUS,
+               ("22 02 02 00", "Set(2,2)=0 (ROOM2060 sub19 @0x016B4)"), SPERRE_AUS,
                ("ENDIF", ""), ENDE]))
     P.append(("re15_r41c_prg_2010_kasten_drin",
               AUF + [msg_on(43, "The fuse is in place. (ROOM2060 msg 6) | Will you take the Fuse? (ROOM2030 msg 2)"), EVT_NEXT,

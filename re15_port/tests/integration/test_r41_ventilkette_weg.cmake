@@ -30,8 +30,8 @@
 #   g2  2060: Generator = Original sub12 (msg 0, Ja, Cut 7, Cursor obj 3) -> Schalter 1 (Zone 3) + 3 (Zone 5) ->
 #       Loesung sub01 @0x01296..@0x012A6 -> sub13 + Set(3,126) @0x012AE, msg 2 "It seems that the generator is working now."
 #   k1  2010 Ventil-Sicherungskasten (Nachbesserung 5, Nachtrag 16 Folgen 1/2; Slot 8, Ereignis 20, Ostwand x 5400): mit der
-#       aufgehobenen Sicherung (3,108) Text 40 -> Frage 41 -> Ja -> Set(9,125) -> Standbild der Ventile (ROOM2030 Cut 7, Vollbild;
-#       Framedump == BSS/ROOM2030/BG07.BSS ueber das Werkzeug "bss") + Aufschliess-Ton -> Bestaetigen schliesst -> Text 42.
+#       aufgehobenen Sicherung (3,108) Text 40 -> Frage 41 -> Ja -> Cursor (Spur N, ROOM2060 sub18) -> Zone 7 + SQUARE -> Set(9,125) -> Text 42 -> Standbild der Ventile (ROOM2030 Cut 7, Vollbild;
+#       Framedump == BSS/ROOM2030/BG07.BSS ueber das Werkzeug "bss") + Aufschliess-Ton -> Bestaetigen schliesst.
 #       Das Standbild steht unter der Pad-Sperre (2,7) (player_mode 2, der Wegplan gibt dort keine Tasten) -> RE15_PRESS.
 #   k2  nach der Flut, die Sicherung steckt im Ventilkasten (Nachtrag 16 Folgen 3/6, ganzer Weg zu Fuss): 20B0 -> Kanal ->
 #       Westgang -> Tuer slot 2 (@0x019A2) -> 2010 -> Kasten: Text 43 -> Ja -> Set(9,125)=0, Text 44 -> Tuer slot 0 (nach der Flut
@@ -494,20 +494,22 @@ message(STATUS "r41_ventilkette_weg[${FIGUR}] g1/g2: Sicherung (3,144) + Generat
 
 # ---- k1: Ventil-Sicherungskasten 2010 - Sicherung einsetzen (Nachbesserung 5, Nachtrag 16 Folgen 1/2) --------------------
 # Spieler (4950,-2770) Blick +x -> Vorwaertspunkt (5570,-2770) im Platz x 4900..5900 z -3470..-2070 (Wandflaeche x 5400 +- 500).
-# Tasten wie der Messlauf nb5 bx2 (2026-10-24 21:32, Leon), seit Spur N + 18 Bilder Aufklappen und + 60 Bilder Nahansichten ROOM2060 Cut 8/9: F300 Aufklappen, F318
-# Ereignis 20 -> Text 40 (2 Seiten), F538 Frage 41, F618 Ja -> Nahansichten -> Bit 125, Standbild + Aufschliess-Ton ab ~F680, F780 Bestaetigen -> Standbild zu, Text 42, F860 Text 42 zu.
-# Framedumps F578 (Frage ueber dem Raum) und F740 (Standbild); Flaeche x 40..280 y 20..120 (ueber dem Nachrichtenfenster).
+# Tasten wie der Messlauf nb5 bx2 (2026-10-24 21:32, Leon), seit Spur N + 18 Bilder Aufklappen: F300 Aufklappen, F318 Ereignis 20 -> Text 40 (2 Seiten), F538 Frage 41, F618 Ja -> Cut 8 + Cursor,
+# F640 rechts = Zone 7 (x 19771), F650 SQUARE -> Bit 125, Cut 9 + Text 42, F730 Text 42 zu -> Standbild + Aufschliess-Ton, F810 Bestaetigen -> Standbild zu, Spieler frei.
+# Framedumps F578 (Frage ueber dem Raum) und F770 (Standbild); Flaeche x 40..280 y 20..120 (ueber dem Nachrichtenfenster).
 _lauf(k1 180 "" RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2010@250 RE15_SET_FLAG=3:108 "RE15_PLAYER_POS=4950,-2770,0,0"
-      "RE15_PRESS=square@300,square@368,square@418,square@468,square@538,square@618,square@780,square@860"
-      "RE15_FRAMEDUMP=578-740/162:f_kasten_" "RE15_EXIT_AT=940#201${S}")
+      "RE15_PRESS=square@300,square@368,square@418,square@468,square@538,square@618,right@640,square@650,square@730,square@810"
+      "RE15_FRAMEDUMP=578-770/192:f_kasten_" "RE15_EXIT_AT=900#201${S}")
 _muss("${_dbg}" "[ventilkette41] ROOM201${S}: Ventil-Sicherungskasten Slot 8 (x 4900..5900 z -3470..-2070), Sicherung fehlt" k1 "Kasten angelegt")
 _muss("${_dbg}" "[ventilkette41] ROOM201${S} Ereignis 20 -> Port-Programm 2010_kasten_frage" k1 "Aktion am Kasten (mit (3,108))")
 _muss("${_dbg}" "[msgtext] room=201${S} id=40 \"A fuse box for the valve controls." k1 "Text 40")
 _danach("${_dbg}" "id=40 \"A fuse box" "[msgtext] room=201${S} id=41 \"Will you use the Fuse?\"" k1 "Frage 41")
-_danach("${_dbg}" "id=41 \"Will you use the Fuse?\"" "WRITE Set  zone=9 idx=125 op=1" k1 "Ja -> Set(9,125) (`22 09 7d 01`)")
-_danach("${_dbg}" "zone=9 idx=125 op=1" "[ventilkette41] Standbild der Ventile offen (ROOM2030 Cut 7) + Aufschliess-Ton" k1 "Standbild + Ton")
+_danach("${_dbg}" "id=41 \"Will you use the Fuse?\"" "[schrank2010] Nahansicht ROOM2060 Cut 8, Cursor obj 4" k1 "Ja -> Cursor")
+_danach("${_dbg}" "Cursor obj 4" "[schrank2010] Nahansicht ROOM2060 Cut 9, Cursor (19771,-22542) auf Zone 7" k1 "Zone 7 + SQUARE")
+_danach("${_dbg}" "auf Zone 7" "WRITE Set  zone=9 idx=125 op=1" k1 "-> Set(9,125) (`22 09 7d 01`)")
+_danach("${_dbg}" "zone=9 idx=125 op=1" "[msgtext] room=201${S} id=42 \"You've used the Fuse.\"" k1 "Text 42 auf Cut 9 (ROOM2060 sub19 @0x016C8)")
+_danach("${_dbg}" "id=42 \"You've used the Fuse.\"" "[ventilkette41] Standbild der Ventile offen (ROOM2030 Cut 7) + Aufschliess-Ton" k1 "Standbild + Ton")
 _danach("${_dbg}" "Standbild der Ventile offen" "[ventilkette41] Standbild der Ventile zu" k1 "Bestaetigen schliesst das Standbild")
-_danach("${_dbg}" "Standbild der Ventile zu" "[msgtext] room=201${S} id=42 \"You've used the Fuse.\"" k1 "Text 42 nach dem Standbild")
 # Das Standbild ist der Hintergrund ROOM2030 Cut 7: der Framedump F640 wird Pixel fuer Pixel mit der dekodierten BSS-Scheibe
 # verglichen (Werkzeug "bssdiff", dieselbe Dekodierkette wie ventilkette_r41_pc.c standbild_laden): GLEICH = Anteil der Pixel
 # mit Abweichung <= 4 in Prozent. Gegenprobe F560 (Raum 2010 mit der Frage). Gemessen 2026-10-25 (Riegel-Lauf lauf_dfe7a2ea_k1,
@@ -529,16 +531,16 @@ function(_gleich _bild _out)
     endif()
     set(${_out} "${CMAKE_MATCH_2}" PARENT_SCOPE)
 endfunction()
-_gleich(740 _g_640)
+_gleich(770 _g_640)
 _gleich(578 _g_560)
-message(STATUS "r41_ventilkette_weg[${FIGUR}] k1: gleich BSS 2030 Cut 7: F740 ${_g_640} %, F578 ${_g_560} %")
+message(STATUS "r41_ventilkette_weg[${FIGUR}] k1: gleich BSS 2030 Cut 7: F770 ${_g_640} %, F578 ${_g_560} %")
 if(_g_640 LESS 95)
     _fehler("[k1]: F640 ist nicht das Standbild ROOM2030 Cut 7 (nur ${_g_640} % der Pixel gleich, erwartet >= 95)")
 endif()
 if(_g_560 GREATER 50)
     _fehler("[k1]: Gegenprobe ungueltig - F560 (Raum 2010) gleicht schon dem Standbild (${_g_560} % gleich)")
 endif()
-message(STATUS "r41_ventilkette_weg[${FIGUR}] k1: Kasten 2010 -> 40 -> 41 -> Ja -> Bit 125 -> Standbild 2030 Cut 7 (${_g_640} % gleich) + Ton -> 42")
+message(STATUS "r41_ventilkette_weg[${FIGUR}] k1: Kasten 2010 -> 40 -> 41 -> Ja -> Cursor -> Bit 125 -> 42 -> Standbild 2030 Cut 7 (${_g_640} % gleich) + Ton")
 
 # ---- k2: nach der Flut die Sicherung aus dem Ventilkasten holen und zum Generator 2060 - ganzer Weg zu Fuss -----------------
 # (Nachbesserung 5, Nachtrag 16 Folgen 3/6). Zustand nach der Flut (_nach) + Bit 125 (die Sicherung steckt). Tueren: 20B0 slot 2

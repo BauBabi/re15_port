@@ -10984,6 +10984,8 @@ re_title:;
                 if (re15_itemorte_r38_verdeckt((uint16_t)g_current_room_id, active_cut_idx,
                                                (int)g_scd.props[pi].obj_id))
                     continue;   /* Runde 38 Spur K: Port-Gegenstand hinter maskenlosem Vordergrund (re15_itemorte_r38.h) */
+                { extern int re15_schrank2010_r41_verdeckt(uint16_t, int, int);   /* Runde 41 Spur N: Schrank 2010 nur unter Cut 3 (re15_schrank2010_r41.h) */
+                  if (re15_schrank2010_r41_verdeckt((uint16_t)g_current_room_id, active_cut_idx, (int)g_scd.props[pi].obj_id)) continue; }
                 int oid = (int)g_scd.props[pi].obj_id;
 #ifdef RE15_PROP_TRACE
                 { static int pn=0; if((pn++%60)==0)

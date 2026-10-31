@@ -4,8 +4,8 @@
  *   A  Panel 2030 (Nachtrag 37): Regel je Zug, Vollsuche aller Zustaende: 16 Staende, keine Sackgasse, kuerzeste Loesung A->B, B->C, C->A = 80
  *   B  Panel im Raum: Pult -> Frage 40 -> Ja -> Panel offen, Text 41; Zuege ueber Cursor + SQUARE; EXIT/CROSS setzen zurueck; 80 -> Bit 101 -> Frage 43 -> Ja -> Bruecke;
  *      die RE2-Toene der Bruecke (Satz 0x0F vor der Fahrt, 0x10 am Ende) kommen in dieser Reihenfolge; Ventil 13 gibt es nicht mehr
- *   C  Schrank 2010/2011: erster Klick klappt auf (16 Bilder, rot_y 1024), danach Text; zweiter Klick ohne Fahrt; Ja-Zweig: Nahansicht Cut 8, Cut 9, dann Bit 125 + Standbild;
- *      Raumwechsel schliesst
+ *   C  Schrank 2010/2011: erster Klick klappt auf (16 Bilder, rot_y 1024), danach Text; zweiter Klick ohne Fahrt; nur unter Cut 3 gezeichnet; Ja-Zweig wie ROOM2060: Cut 8 + Cursor ohne Zeitgrenze,
+ *      SQUARE neben der Zone nichts, Steuerkreuz +-200 je Bild mit Rahmen, Zone 7 + SQUARE -> Cut 9 + Bit 125 + Text 42, dann Standbild; START bleibt gesperrt; Raumwechsel schliesst
  *   D  Wasserlauf ROOM2000/2001: Strahlen + nasse Spur + Spritzer laufen, Leiter bleibt gesperrt; mit Bit 100 oder 103 nichts; 20B0 nichts; ROOM2010 hat keine Leiter
  *   E  Sirene: an mit dem Zaehler (nach der Ansage), aus mit der Flut, dem Tod und dem Verlassen des Raums
  *   F  Notiz + Plakat: FILE31 (FNV der Seiten), Loesung {5,1,0,4} = 09/02/01/08
@@ -340,7 +340,12 @@ static void fall_c(uint16_t r)
     /* zweiter Klick: keine zweite Fahrt */
     lauf_t L = druecken(KX, KZ, 0, 0, 300);
     PRUEFE(L.n_msgs == 1 && L.msgs[0] == RE15_R41C_MSG_KASTEN_LEER && re15_schrank2010_r41_winkel() == 1024, "ROOM%04X: zweiter Klick nur Text, Tuer bleibt auf", r);
-    /* Ja-Zweig: Nahansichten Cut 8, Cut 9, DANN Bit 125 + Standbild */
+    /* Nur unter Cut 3 (Abnahme 0, Mangel 4) */
+    for (int c = 0; c < 6; c++)
+        for (int o = RE15_R41N_SCHRANK_OBJ_INNEN; o <= RE15_R41N_SCHRANK_OBJ_TUER; o++)
+            PRUEFE(re15_schrank2010_r41_verdeckt(r, c, o) == (c != 3), "ROOM%04X: Cut %d obj %d", r, c, o);
+    PRUEFE(!re15_schrank2010_r41_verdeckt(r, 4, 4) && !re15_schrank2010_r41_verdeckt(0x2030, 4, 6), "ROOM%04X: nur die drei Modelle, nur 2010/2011", r);
+    /* Ja-Zweig wie ROOM2060 (Abnahme 0, Mangel 1) */
     vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
     if (raum_hoch(r, KX, 0, KZ) != 0) { PRUEFE(0, "Parse"); return; }
     PRUEFE(!re15_schrank2010_r41_offen() && re15_schrank2010_r41_winkel() == 0, "ROOM%04X: Raumstart: Schrank wieder zu", r);
@@ -348,19 +353,74 @@ static void fall_c(uint16_t r)
     g_aot.fired_event_id_this_frame = 0;
     g_aot_action_pressed = 1; re15_aot_scan(KX, KZ, 0xFF); g_aot_action_pressed = 0;
     (void)scd_event_fire(g_aot.fired_event_id_this_frame);
-    int cut8 = 0, cut9 = 0, bit_bei_8 = -1, standbild = 0;
-    for (int i = 0; i < 700 && !standbild; i++) {
-        int cn = 0; unsigned sr = 0; int sc = -1;
+    int cn = 0;
+    for (int i = 0; i < 700 && !re15_schrank2010_r41_nahbild(&cn); i++) {
         g_scd_pad_edge = (g_scd.message_active && (i & 7) == 7) ? 0x4000 : 0;
         takt(); g_scd_pad_edge = 0;
-        if (re15_schrank2010_r41_nahbild(&cn)) {
-            if (cn == 8) { cut8++; if (bit_bei_8 < 0) bit_bei_8 = bit(RE15_R41C_BIT_KASTEN); }
-            if (cn == 9) cut9++;
-            PRUEFE(re15_ventilkette_r41_standbild(&sr, &sc) == 1 && sr == 0x2060 && sc == cn, "ROOM%04X: Vollbild = ROOM2060 Cut %d", r, cn);
-        } else if (re15_ventilkette_r41_standbild(&sr, &sc) == 1 && sr == RE15_R41C_STANDBILD_RAUM) standbild = 1;
     }
-    PRUEFE(cut8 >= RE15_R41N_NAHBILD_TAKTE - 1 && cut9 >= RE15_R41N_NAHBILD_TAKTE - 1 && bit_bei_8 == 0 && standbild && bit(RE15_R41C_BIT_KASTEN) == 1,
-           "ROOM%04X Ja: Cut 8 %d Bilder, Cut 9 %d Bilder, Bit 125 danach, Standbild der Ventile", r, cut8, cut9);
+    unsigned sr = 0; int sc = -1; int32_t cx = 0, cz = 0;
+    re15_schrank2010_r41_cursor(&cx, &cz);
+    PRUEFE(cn == 8 && re15_ventilkette_r41_standbild(&sr, &sc) == 1 && sr == 0x2060 && sc == 8, "ROOM%04X Ja: Vollbild ROOM2060 Cut 8", r);
+    PRUEFE(cx == 19571 && cz == -22542, "ROOM%04X: Cursor startet an der Lage obj 4 @0x00F12 (%d,%d)", r, (int)cx, (int)cz);
+    PRUEFE(re15_game_flag_get(2, 0) && re15_game_flag_get(2, 2) && !re15_game_flag_get(2, 7), "ROOM%04X: (2,0)/(2,2) wie sub01 @0x01288, keine Pad-Sperre", r);
+    PRUEFE(re15_ventilkette_r41_vollbild_sperrt(), "ROOM%04X: START im Cursor-Schritt gesperrt", r);
+    /* wartet ohne Zeitgrenze, ohne Taste geht nichts weiter */
+    g_scd_pad_held = 0; g_scd_pad_edge = 0;
+    for (int i = 0; i < 600; i++) takt();
+    PRUEFE(re15_schrank2010_r41_nahbild(&cn) && cn == 8 && bit(RE15_R41C_BIT_KASTEN) == 0, "ROOM%04X: 600 Bilder ohne Taste: weiter Cut 8, Bit 125 = 0", r);
+    /* SQUARE neben der Zone: Start x 19571 < 19700 @0x0100C */
+    PRUEFE(!re15_schrank2010_r41_auf_zone(), "ROOM%04X: Start liegt neben Zone 7", r);
+    g_scd_pad_held = 0x40;
+    for (int i = 0; i < 10; i++) takt();
+    g_scd_pad_held = 0;
+    PRUEFE(re15_schrank2010_r41_nahbild(&cn) && cn == 8 && bit(RE15_R41C_BIT_KASTEN) == 0, "ROOM%04X: SQUARE neben der Zone tut nichts", r);
+    /* Steuerkreuz: je Bild 200 (sub14..17) */
+    g_scd_pad_held = 1; takt(); g_scd_pad_held = 0;
+    re15_schrank2010_r41_cursor(&cx, &cz);
+    PRUEFE(cx == 19571 && cz == -22342, "ROOM%04X: oben +200 z (%d,%d)", r, (int)cx, (int)cz);
+    g_scd_pad_held = 4; takt(); g_scd_pad_held = 8; takt(); g_scd_pad_held = 0;
+    re15_schrank2010_r41_cursor(&cx, &cz);
+    PRUEFE(cx == 19371 && cz == -22542, "ROOM%04X: unten -200 z, links -200 x (%d,%d)", r, (int)cx, (int)cz);
+    int bx = 0, by = 0;
+    re15_schrank2010_r41_cursor_bild(&bx, &by);
+    PRUEFE(bx == 156 && by == 119, "ROOM%04X: Bild 2,667 Bildpunkte je 200 (%d,%d)", r, bx, by);
+    /* Rahmen: Original G2_belege/orig_zensus/log.txt */
+    g_scd_pad_held = 1; for (int i = 0; i < 60; i++) takt();
+    re15_schrank2010_r41_cursor(&cx, &cz);
+    PRUEFE(cz == -15968, "ROOM%04X: Rahmen oben z -15968 (%d)", r, (int)cz);
+    g_scd_pad_held = 8; for (int i = 0; i < 80; i++) takt();
+    re15_schrank2010_r41_cursor(&cx, &cz);
+    PRUEFE(cx == 9418, "ROOM%04X: Rahmen links x 9418 (%d)", r, (int)cx);
+    g_scd_pad_held = 4; for (int i = 0; i < 90; i++) takt();
+    re15_schrank2010_r41_cursor(&cx, &cz);
+    PRUEFE(cz == -29132, "ROOM%04X: Rahmen unten z -29132 (%d)", r, (int)cz);
+    g_scd_pad_held = 2; for (int i = 0; i < 120; i++) takt();
+    re15_schrank2010_r41_cursor(&cx, &cz);
+    PRUEFE(cx == 29532, "ROOM%04X: Rahmen rechts x 29532 (%d)", r, (int)cx);
+    /* In die Zone fahren, bis der Cursor drinsteht, und erst dann bestaetigen */
+    int auf_zone = 0;
+    for (int i = 0; i < 200 && !auf_zone; i++) {
+        re15_schrank2010_r41_cursor(&cx, &cz);
+        g_scd_pad_held = (uint16_t)((cx > 20725 ? 8 : 0) | (cz < -23275 ? 1 : 0));
+        takt();
+        auf_zone = re15_schrank2010_r41_auf_zone();
+    }
+    g_scd_pad_held = 0; takt();
+    PRUEFE(auf_zone && re15_schrank2010_r41_nahbild(&cn) && cn == 8, "ROOM%04X: Cursor in Zone 7, ohne Taste weiter Cut 8", r);
+    g_scd_pad_held = 0x40; takt(); g_scd_pad_held = 0;
+    PRUEFE(re15_schrank2010_r41_nahbild(&cn) && cn == 9 && re15_ventilkette_r41_standbild(&sr, &sc) == 1 && sr == 0x2060 && sc == 9, "ROOM%04X: Zone 7 + SQUARE -> Cut 9", r);
+    PRUEFE(re15_ventilkette_r41_vollbild_sperrt(), "ROOM%04X: START auf Cut 9 gesperrt", r);
+    for (int i = 0; i < 8; i++) takt();
+    PRUEFE(bit(RE15_R41C_BIT_KASTEN) == 1, "ROOM%04X: Bit 125 hinter dem Cursor-Schritt", r);
+    int text42 = 0, standbild = 0, cut9_bei_text = 0;
+    for (int i = 0; i < 400 && !standbild; i++) {
+        if (g_scd.message_active && g_scd.message_id == RE15_R41C_MSG_KASTEN_BENUTZT) { text42 = 1; if (re15_schrank2010_r41_nahbild(&cn) && cn == 9) cut9_bei_text = 1; }
+        g_scd_pad_edge = (g_scd.message_active && (i & 7) == 7) ? 0x4000 : 0;
+        takt(); g_scd_pad_edge = 0;
+        if (re15_ventilkette_r41_standbild(&sr, &sc) == 1 && sr == RE15_R41C_STANDBILD_RAUM) standbild = 1;
+    }
+    PRUEFE(text42 && cut9_bei_text && standbild && !re15_schrank2010_r41_nahbild(NULL), "ROOM%04X: Text 42 auf Cut 9, dann Standbild der Ventile", r);
+    PRUEFE(!re15_ventilkette_r41_vollbild_sperrt(), "ROOM%04X: die Sperre haengt nur am Vollbild ohne (2,7)", r);
 }
 
 /* ---- D: Wasserlauf --------------------------------------------------------------------------------------------------- */

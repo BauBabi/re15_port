@@ -90,6 +90,7 @@
 #include "re15_fade.h"
 #include "re15_collision.h"
 #include "re15_ventilkette_r41.h"
+#include "re15_schrank2010_r41.h"
 #include "re15_panel2030_r41.h"  /* Spur N: Pult = Panel-Raetsel */
 #include "gen/ventilkette_r41_original.inc"
 #include "re15_room_list.h"
@@ -1220,26 +1221,35 @@ static void fall_n(uint16_t r)
     L = druecken(KX, KZ, 0, 1, 300); zeige("nein", r, &L);
     PRUEFE(L.n_msgs == 2 && L.msgs[0] == RE15_R41C_MSG_KASTEN_LEER && L.msgs[1] == RE15_R41C_MSG_KASTEN_FRAGE && bit(RE15_R41C_BIT_KASTEN) == 0,
            "ROOM%04X Nein: Text 40 + Frage 41, Bit 125 bleibt 0", r);
-    /* Ja: Bit 125, Standbild der Ventile (2030 Cut 7) + Aufschliess-Ton; das Programm wartet, bis bestaetigt wird */
+    /* Ja: Einsetz-Ansicht mit Cursor (Spur N, ROOM2060 sub18), rechts in Zone 7 + SQUARE (sub19) -> Bit 125, Text 42 auf Cut 9, Standbild der Ventile (2030 Cut 7) + Aufschliess-Ton;
+     * das Programm wartet, bis bestaetigt wird */
     const unsigned auf0 = re15_ventilkette_r41_ton_zaehler(RE15_R41C_TON_AUF);
-    L = druecken(KX, KZ, 0, 0, 300); zeige("ja", r, &L);   /* Spur N: + zwei Nahansichten je 30 Bilder vor dem Standbild */
+    L = druecken(KX, KZ, 0, 0, 300); zeige("ja", r, &L);
     unsigned raum = 0; int cut = -1;
-    PRUEFE(L.n_msgs == 2 && L.msgs[1] == RE15_R41C_MSG_KASTEN_FRAGE && bit(RE15_R41C_BIT_KASTEN) == 1 &&
-           re15_ventilkette_r41_standbild(&raum, &cut) == 1 && raum == RE15_R41C_STANDBILD_RAUM && cut == RE15_R41C_STANDBILD_CUT &&
-           re15_ventilkette_r41_ton_zaehler(RE15_R41C_TON_AUF) == auf0 + 1 && re15_game_flag_get(2, 7) == 1 && !g_scd.message_active,
-           "ROOM%04X Ja: Bit 125, Standbild ROOM%04X Cut %d offen, 1 Aufschliess-Ton, Pad-Sperre, noch kein Text 42", r, raum, cut);
-    for (int i = 0; i < 20; i++) { g_scd_pad_edge = 0; takt(); }
-    PRUEFE(re15_ventilkette_r41_standbild(NULL, NULL) == 1, "ROOM%04X: Standbild bleibt ohne Taste offen", r);
-    g_scd_pad_edge = 0x4000; takt(); g_scd_pad_edge = 0;
-    int msg42 = 0, frei = -1;
-    for (int i = 0; i < 400; i++) {
+    PRUEFE(L.n_msgs == 2 && L.msgs[1] == RE15_R41C_MSG_KASTEN_FRAGE && bit(RE15_R41C_BIT_KASTEN) == 0 &&
+           re15_ventilkette_r41_standbild(&raum, &cut) == 1 && raum == RE15_R41N_NAH_RAUM && cut == RE15_R41N_NAH_LEER,
+           "ROOM%04X Ja: Cut 8 mit Cursor, Bit 125 noch 0 (ROOM%04X Cut %d)", r, raum, cut);
+    g_scd_pad_held = 2; takt(); g_scd_pad_held = 0x40; takt(); g_scd_pad_held = 0;
+    int msg42 = 0, offen = 0;
+    for (int i = 0; i < 400 && !offen; i++) {
         if (g_scd.message_active && g_scd.message_id == RE15_R41C_MSG_KASTEN_BENUTZT) msg42 = 1;
         g_scd_pad_edge = (g_scd.message_active && (i & 7) == 7) ? 0x4000 : 0;
         takt(); g_scd_pad_edge = 0;
-        if (msg42 && !g_scd.message_active && re15_game_flag_get(2, 7) == 0) { frei = i; break; }
+        offen = re15_ventilkette_r41_standbild(&raum, &cut) == 1 && raum == RE15_R41C_STANDBILD_RAUM;
     }
-    PRUEFE(re15_ventilkette_r41_standbild(NULL, NULL) == 0 && msg42 && frei >= 0 && re15_game_flag_get(5, RE15_R41C_FLAG_STANDBILD) == 0,
-           "ROOM%04X: Bestaetigen schliesst das Standbild, danach Text 42, Spieler frei (Takt %d)", r, frei);
+    PRUEFE(msg42 && bit(RE15_R41C_BIT_KASTEN) == 1 && offen && cut == RE15_R41C_STANDBILD_CUT &&
+           re15_ventilkette_r41_ton_zaehler(RE15_R41C_TON_AUF) == auf0 + 1 && re15_game_flag_get(2, 7) == 1 && !g_scd.message_active,
+           "ROOM%04X: Bit 125, Text 42, dann Standbild ROOM%04X Cut %d offen, 1 Aufschliess-Ton, Pad-Sperre", r, raum, cut);
+    for (int i = 0; i < 20; i++) { g_scd_pad_edge = 0; takt(); }
+    PRUEFE(re15_ventilkette_r41_standbild(NULL, NULL) == 1, "ROOM%04X: Standbild bleibt ohne Taste offen", r);
+    g_scd_pad_edge = 0x4000; takt(); g_scd_pad_edge = 0;
+    int frei = -1;
+    for (int i = 0; i < 100; i++) {
+        takt();
+        if (re15_game_flag_get(2, 7) == 0) { frei = i; break; }
+    }
+    PRUEFE(re15_ventilkette_r41_standbild(NULL, NULL) == 0 && frei >= 0 && re15_game_flag_get(5, RE15_R41C_FLAG_STANDBILD) == 0,
+           "ROOM%04X: Bestaetigen schliesst das Standbild, Spieler frei (Takt %d)", r, frei);
     /* steckt sie (Bit 125): Text 43 (Frage) -> Ja -> Bit 125 = 0, Text 44 */
     bits_leeren(); vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT); vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);
     if (raum_hoch(r, KX, 0, KZ) != 0) { PRUEFE(0, "Parse"); return; }
