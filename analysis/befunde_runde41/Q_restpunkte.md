@@ -13,12 +13,12 @@ Vorgaenger hinterliess keine Commits (`git log master..HEAD` leer beim Start, Ba
 5. Spinnen-Filter in gatorszene_r41.c unter RE15_GATOR_ORIGINAL pruefen/abschalten; Riegel Leon und Elza.
 
 ## Stand
-- [ ] Bau im Spurbaum
-- [ ] Punkt 1
-- [ ] Punkt 2
-- [ ] Punkt 3
-- [ ] Punkt 4
-- [ ] Punkt 5
+- [x] Bau im Spurbaum
+- [x] Punkt 1
+- [x] Punkt 2
+- [x] Punkt 3
+- [x] Punkt 4
+- [x] Punkt 5
 
 ## Punkt 4 - Der tote Alligator bleibt tot
 
@@ -116,3 +116,45 @@ Der Spieler sieht diesen Absturz nicht: der beschleunigte Renderer hat die Rechn
 - include/re15_gpu_grenze_r41.h, platform/pc/src/render_pc.c beide Dreiecks-Eingaenge: zuerst GTE-Saettigung der Ecken auf -400h..+3FFh (psx-spx geometrytransformationenginegte.md Z. 418/419; der Modell-Zeichner prueft kein FLAG, @0x80025640 AVSZ3, @0x80025658 beq nur auf otz>>6), dann GPU-Grenze 1023 / 511 (psx-spx, oben); die ersten 16 Verwerfungen je Prozess stehen als `[gpu-grenze]` im Log. Wichtig: ohne die Saettigung fielen die grossen Dreiecke der Spielfigur nah vor der Kamera (2030 F1088.., Koordinaten bis 12 288) ganz weg, die Hardware zeichnet sie gesaettigt. Der Schutz gilt NUR im CPU-Rasterer (`s_cpu_rasterer`, aus SDL_GetRendererInfo: RE15_SOFTWARE_RENDER oder Rueckfall ohne GPU): der beschleunigte Renderer des Spielers hat den Fehler nicht, und Port-eigene Flaechen (Wasserflaechen als Prop, ventilkette_r41.c) sind nicht gegen die Hardware-Grenze gebaut. Das Bild des Spielers aendert sich dadurch nicht.
 - render_pc.c SDL_QUIT schreibt jetzt `[flow] SDL_QUIT (Fenster geschlossen) -> exit`; platform/pc/src/endgrund_r41_pc.c (Haken in main.c): Ausnahme mit Adresse und Stapel im debug.log, nur Log, EXCEPTION_CONTINUE_SEARCH. Kein Ende der exe ist mehr still.
 - test_r41_ventilkette_kette.cmake: -DFIGUR=elza, Fehlermeldung mit exit-Code und letzter Log-Zeile, SDL_ASSERT=always_ignore (Lauf 1 der INT-Liste endete an der Assertion WIN_AddDisplay). Riegel integration_r41_ventilkette_kette_elza in probes/r41_restpunkte.cmake.
+
+### Messung nachher
+Serien mit dem Rezept des Riegels ohne gdb, parallel zu anderen Agenten und zu ctest (`Q41/kette_serie.txt`):
+| Stand | Laeufe | rv=139 |
+|---|---|---|
+| vorher (kn1, kb1, kb2, ku1, ku2) Leon | 19 | 6 |
+| Grenze ohne Saettigung (kc1..kc3 Leon, kc4 Elza) | 20 | 0 |
+| Endstand (kd1, kd2 Leon, kd3 Elza) | 12 | 0 |
+Riegel auf dem Endstand: integration_r41_ventilkette_kette Passed 236,64 s, integration_r41_ventilkette_kette_elza Passed 252,14 s (`2031 richtige Folge zu Fuss -> Ost-Tuer zu Fuss -> 20B1 Szene sub02/sub05 -> (3,235)=1 -> frei -> Kanal -> Leiter -> ROOM2051 in einem Lauf`).
+Der beschleunigte Renderer bleibt unberuehrt: Lauf vg1 (direct3d) 0 Zeilen `[gpu-grenze]`.
+
+## Punkt 4/5 - Riegel am Endstand
+integration_r41_restpunkte_gator Passed 185,44 s, _gator_elza Passed 215,71 s: R1-Tod, Tuer, Spielstand, Leiter: 510 Bilder ohne t=23, genau 1 x `Alligator (0x23) in Wasserzone gesetzt`, Schluessel da, keine Kampfmusik; CONTINUE in 2080/2081, Leiter: kein Alligator, Ersatzlage; zu Fuss aufgehoben (Elza `[inv-r39] F212 R2091 ... 34:1`); Bits 110/111/112: kein Alligator, keine Zone.
+integration_r41_restpunkte_original Passed 19,32 s, _original_elza Passed 36,04 s: 2 Spinnen, RE1.5-Alligator (15/15/43), keine Szene.
+
+## Punkt 1 - Riegel am Endstand
+unit_r41_restpunkte_teil8(_elza): 426 Punkte, Stufe != Rechteck-Tiefe 0. Gegenprobe mit dem Stand NB5: 381 von 426 daneben, FAIL.
+integration_r41_restpunkte_masken Passed 230,05 s, "6 Szenen OK". Gegenprobe mit dem Stand NB5: q8h1 1 von 118 sichtbar, q8h2 12 von 39 sichtbar, FAIL. Die beiden Elza-Szenen q8h1e/q8h2e bestehen auch im Stand NB5 (Elza steht dort anders zur Wange): fuer Elza traegt unit_r41_restpunkte_teil8_elza und `fern`.
+unit_r41_masken36_fern auf die neue Schranke gezogen (1188, Stage 6: 844). Alle Masken-Gruppen a1..d2 mit Art M gegen Lauf D gruen.
+
+## Tests (gezielt, keine volle Suite)
+- `ctest -R "^(unit_r41_masken36|unit_r37_masken36|unit_pri_|unit_r36_pri|unit_r37_pri1100|unit_sld_atlas|unit_bss_room_source|prop_bss_chunk|unit_r38_itemorte|unit_r39_optik|unit_stage6_hintergrund|unit_r41_restpunkte|unit_r36_kartenbits|unit_r41_gatorszene|unit_r41_alligator2|unit_r41_kanister2080|unit_r41_re2gator)" -j 2`: `100% tests passed, 0 tests failed out of 102`
+- `ctest -R "^(integration_r41_masken36_teile_(a1|a2|b1|b2|c1|c2|c3|d1|d2)|integration_r41_masken36_laufpruefung|integration_r41_masken36_stage2|integration_r41_masken36_fern)$" -j 3`: `100% tests passed, 0 tests failed out of 12`
+- Endstand: `ctest -R "^integration_r41_(gatorszene|alligator2|kanister2080|re2gator|restpunkte|ventilkette_kette|wasser20b0)|^integration_r41_masken36_teile_d[12]|^integration_r38_wasser" -j 3 --timeout 1500`: `100% tests passed, 0 tests failed out of 40`, 2893,99 s
+- Endstand: `ctest -R "^(unit_r41_restpunkte|unit_r41_masken36_fern|unit_r41_masken36_teile|unit_r41_masken36_platziert|unit_r41_masken36_zellen3d|unit_r37_masken36_ausschluss)" -j 2`: `100% tests passed, 0 tests failed out of 10`
+Die Masken-Gruppen a1..c3 liefen auf dem Stand vor der letzten Aenderung am Renderer (nur CPU-Rasterer-Schutz und Log); d1, d2 und die Teil-8-Szenen auf dem Endstand. Die 102 Unit-Tests liefen vor dieser Aenderung, sie beruehrt nur platform/pc.
+
+## OFFEN
+1. **Nebenbefund fuer den Spieler, nicht behoben (Bild `Q_belege/n3_westgang_F753_F768.png`):** ROOM20B0 nach der Szene, Leon im Westgang, beschleunigter Renderer (Lauf vg1, direct3d): F755..F768 fuellen grobe grau-gruene Bloecke 50-90 % des Bildes (Helligkeit 41 -> 109). Es sind dieselben Effekt-Quader ESP 0x0f. Das Original baut sie als POLY_FT4 (`sb v0,7(t2)` @0x8005369c, Code 0x2C/0x2E), Mitte aus der GTE (`0x4a180001` RTPS @0x80053534), einzige Sperre SZ < 4 (`sra v0,a0,2` @0x80053578, `beq` @0x8005357c); danach greift die GPU-Grenze, Quader ueber 1023 x 511 zeichnet die Hardware nicht. Der Port zeichnet sie. Vorschlag: `re15_gpu_dreieck_verwerfen` auch fuer die ESP-Quader im beschleunigten Renderer (zwei Zeilen an main.c:589/591); ob die kleineren Quader danach dem Original entsprechen, braucht einen DuckStation-Vergleich desselben Wegs. Liegt ausserhalb der Spur Q, das Bild des Spielers ist hier unveraendert.
+2. Abnahme-Stelle (-19912,-19720): 63 von 96 Punkten bleiben sichtbar. Sie liegen bis 8 Stufen VOR der Westflaeche des Modell-Koerpers (Gegenprobe k = 1, 2, 4, 8). Wer die Stelle anders sieht, muss die Wange frei stellen; das Teil ist ein Prisma aus Zelle @0x0092C, die echte Wange steigt schraeg.
+3. 422 + 422 Punkte "zu fern" in 6010/6011 C5 sind OT-Gleichstand (bucket(Figur) == Tiefe), mit einer Tiefe je Stufe nicht weiter zu trennen, ohne eine Figur vor der Flaeche zu verdecken.
+4. Der Port setzt das Sperrbit beim Tod, RE2 beim Kampfbeginn: fliehen laesst den Alligator im Port leben, weil er den Water Key traegt (PORT-WAHL, Punkt 4).
+5. Der Spielstand in 2080 ist ein Testhaken: STAGE2 hat nur den Speicherpunkt 2010/2011 (re15_savepoint.c). Geprueft ist Laden + Tuerweg nach 2090; ein Laden IN 2090 kommt im Spiel nicht vor, der Boot-Weg ruft re15_gatorszene_r41_install nicht.
+6. Abnahme P H1 (Access violation F56, direct3d, 2091) ist damit nicht erklaert, das ist ein anderer Renderer. Der neue Ausnahme-Haken zeigt beim naechsten Mal Adresse und Stapel.
+
+## Fuer den Nutzer
+- Der tote Alligator bleibt tot: nach dem Verlassen des Raums, ueber Spielstand laden und nach dem Aufheben des Water Key, Leon und Elza. Flieht man vor seinem Tod ueber die Leiter, ist er beim Zurueckkommen weiter da, sonst waere der Schluessel weg.
+- RE15_GATOR_ORIGINAL zeigt jetzt den ausgelieferten Raum mit den zwei Spinnen.
+- Treppenwange ROOM6010/6011 Kamera 5: Figuren hinter der Wange sind jetzt verdeckt (Stelle (-19712,-19820): 9 statt 41 Punkte sichtbar).
+- Freistellungs-Liste (Dossier M "Fuer den Nutzer") ist vollstaendig: 8 Stellen dazu, je mit Restbild, Teile-Bericht aus dem ausgelieferten Lauf. ROOM4040/4041 Kamera 12 hat keine HINTER-Stelle.
+- Assets fuer das Paket: nur geaenderte Dateien `shared_assets/PSX/MASKS/ROOM6010.MSK`, `ROOM6011.MSK`, `ROOM6010_PRI05.TIM`, `ROOM6011_PRI05.TIM`. Keine neuen Dateien unter shared_assets/RE2, keine Sprachdateien, keine Bank-9-Bits (Bit 126 bleibt frei), keine Nachrichten-Ids. Neue Quelle `platform/pc/src/endgrund_r41_pc.c` (nur Windows, beim naechsten Configure erfasst).
+- Entscheidung: Soll die GPU-Grenze auch im Spiel fuer die Effekt-Quader gelten (OFFEN 1)? Dann verschwinden die Bloecke im Westgang von 20B0.
