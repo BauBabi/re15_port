@@ -24,7 +24,7 @@ Renderer `direct3d` (kein RE15_SOFTWARE_RENDER), `RE15_NO_INTRO=1 RE15_WINDOW_SC
 1. **Punkt 2, Mechanismus nicht gleich (nicht erfuellter Wortlaut).** "Ab da soll auch der Mechanismus gleich - das Einsetzen der Sicherung etc." Gemessen in 2060 (Lauf `m2060`, `m2060c`, Originalskript im Port):
    Frage -> Ja -> F476 Cut 8 mit CURSOR obj 4 (`prop-render oid=0x04`), der wartet ohne Zeitgrenze; SQUARE neben der Zone tut nichts (F522/F585/F648, bis F720 weiter Cut 8); Steuerkreuz RECHTS (sub16 @0x01660, +200) bringt obj 4 in Zone 7
    (Aot_set Slot 7 @0x0100C, rect (19700,-24300,2050,2050), Cursor startet bei x 19571), SQUARE (@0x0132E) -> sub19: F619 Cut 9 + Text 5 "You've used the Fuse.", F713 Cut 10.
-   In 2010 (Lauf `s_ja`): Ja -> F~606 Cut 8 ohne Cursor, 30 Bilder -> F~636 Cut 9, 30 Bilder -> Standbild, ohne eine Eingabe. Der Bau-Agent nennt das selbst als offen und als Frage an den Nutzer; `O_keyitems.md` (Stand r41/keyitems f53f2cfec) enthaelt keinen Cursor-Schritt fuer 2010: der Punkt hat keinen Eigentuemer.
+   In 2010 (Lauf `s_ja`): Ja -> nach F600 Cut 8 ohne Cursor, 30 Bilder -> nach F630 Cut 9, 30 Bilder -> Standbild der Ventile, ohne eine Eingabe. Der Bau-Agent nennt das selbst als offen und als Frage an den Nutzer; `O_keyitems.md` (Stand r41/keyitems f53f2cfec) enthaelt keinen Cursor-Schritt fuer 2010: der Punkt hat keinen Eigentuemer.
    Nachpruefen: `RE15_DEBUG_JUMP=2060@250 RE15_PLAYER_POS=-4000,4450,2048,0 RE15_SET_FLAG=3:108`, Skript `A0.1,W1.5,A0.1,W1,A0.1,W2,A0.1,W1.5,A0.1,W2,R0.1,W1,A0.1,W3` gegen `RE15_DEBUG_JUMP=2010@250 RE15_PLAYER_POS=4950,-2770,0,0 RE15_SET_FLAG=3:108`, `RE15_PRESS=square@300,square@368,square@418,square@468,square@538,square@618`.
 2. **Punkt 1, "ueber den Weg bis zum Wasser Pool ... laufen": es laeuft nichts.** Lauf `wzan`/`wzaus` (Cut 10, Spieler weg, F430..F460 je 6 Bilder): die nasse Spur ist ein dunkles Rechteck mit harten Kanten (Bild `n/wz_crop.png`), mittlere Farbe (30,36,29). Innerhalb der Flaeche x 72..104, y 154..170 aendern sich je 6 Bilder nur 9 bis 91 von 512 Bildpunkten, das sind die einzelnen Spritzer-Punkte; die Flaeche selbst steht. In Cut 9 ist sie hinter der Figur kaum zu sehen (Lauf `wgeh`, F180..F240), in Cut 8 und 13 gar nicht. Der Leiterstrom ist dagegen klar da. Die Riegel messen nur Helligkeit gegen den Lauf mit Bit 100 (Weg 8,0 Graustufen), also nur "dunkler", nicht "fliesst".
 3. **Panel: START oeffnet ein unsichtbares Inventar.** Lauf `p_st` (Panel offen, Skript `...,S0.1,W3,S0.1`): F759 `[r38q] Inventar-Ton Satz 6 (Oeffnen)`, `[inv] Status-Bild ...`; die Bilder F810 zeigen weiter das Panel, das Inventar liegt unter der Vollbild-Ebene und nimmt die Tasten; F852 `Inventar-Ton Satz 5 (Abbruch)`. Das Panel laeuft ohne die Sperre (2,7) (Dossier §2), deshalb kommt START durch. Kein Haenger, zweites START schliesst. Das Plakat ist nicht betroffen (Sperre (2,7)).
@@ -47,7 +47,7 @@ Renderer `direct3d` (kein RE15_SOFTWARE_RENDER), `RE15_NO_INTRO=1 RE15_WINDOW_SC
 ## Punkt 2: Schrank 2010
 
 * **Aufklappen:** `s3` (Cut 3): Tuer auf, `[schrank2010] Tuer auf (rot_y 1024)`, dann Text 40. Zu Fuss vom Spawn (`s_geh2`): Kamera selbst Cut 4 -> 3, dann Klick, kein erzwungener Cut.
-* **Bild:** `n/s3zoom.png` neben fuse_box.bmp: Innenseite und Tuerinnenseite mit Aufklebern wie der Kasten aus 2060. Erfuellt fuer Cut 3.
+* **Bild:** `n/s3zoom.png` neben fuse_box.bmp: Innenseite und Tuerinnenseite mit Aufklebern wie der Kasten aus 2060. Erfuellt fuer Cut 3. fuse_box.bmp selbst gegen die BSS gemessen (`test_r41_ventilkette bssdiff`): BG06 92 % gleich, Abweichung 3; BG10 92 %; BG08/BG03/BG00 10..13 %. Der Rest ist die rote Umrandung des Nutzers.
 * **Nahansichten:** Riegel `_schrank_*`: F635/F665 == BG08/BG09. Stimmt, aber als Standbilder (Mangel 1).
 * **Quelle:** ROOM2060 @0x0168C `29 08`, @0x016A2 `29 09`, @0x016C5 `4b 06 0a`, @0x01324 `3e 00 0f 00 07 00`, @0x0132E `51 01 40 00` selbst gelesen. ROOM11F0 @0x01332 `2f 05 40 00`, @0x01336 `0d 00 04 00 10 00` selbst gelesen.
 * Keine Kollision am Fluegel: Figur geht hindurch (`s_geh2` F1005/F1095), im Dossier genannt.
@@ -59,7 +59,8 @@ Renderer `direct3d` (kein RE15_SOFTWARE_RENDER), `RE15_NO_INTRO=1 RE15_WINDOW_SC
 * **Oberflaeche:** Lauf `p_a` gegen `panel_entwurf_a.png`, Stand 50/20/30, Quelle C: deckungsgleich, Bild `n/p_cmp.png`; Farben Mangel 5. Fensterskala 3 (`p_sk3`): Text ueber dem Band, sauber.
 * **Regeln:** Log `p_a`: `offen: A 100 B 0 C 0`, A->B `A 50 B 50 C 0`, B->C `A 50 B 20 C 30`. `t_panel` (mit Ton): weiter C->A `A 80 B 20 C 0`, `GELOEST`, Text 43, Ja, Motor F1250, Halt F1310. `p_vl`: B->A erlaubt. `p_voll`: Text 47, Quelle bleibt. `p_bed`: Text 42; die Taste, die die Nachricht schliesst, loest nichts Neues aus.
 * **Verlassen:** `p_ex`: EXIT mit dem Cursor bei (258,194), Figur geht wieder, Wiederoeffnen steht auf 100/0/0, CROSS `Abbruch`.
-* **Lebende Spinnen:** `p_sp` ohne Kill-Bits, 40 s im Panel: kein Treffer im Log, Bits (2,0)/(2,2) halten die KI.
+* **Lebende Spinnen:** `p_sp` ohne Kill-Bits: Treffer F122 und F250 (`[giftkugel]`) vor dem Pult, ab Panel offen (F474) 40 s lang keiner mehr. Bits (2,0)/(2,2) halten die KI.
+* **Elza:** Lauf `e_p`: ROOM2031, gleiche Folge bis Text 44, Motor F1250, Halt F1310. Schrank `e_s` (ROOM2011) und Wasserlauf `e_w` (ROOM2001, 6 Strahlen) ebenso, Bild `n/e_all.png`.
 * **Echte Wege:** Riegel `_laden_*` (CONTINUE, Ring-Tuer 2070 zu Fuss) gruen, Leon + Elza. Ring-Tuer @0x00A5A `3b 01 02 31 ... 96 19 e8 ea 9c ff` = (6550,-5400,-100) selbst gelesen.
 * **Toene im Panel:** `t_panel`: `se=10` je Klick, `se=12` bei GELOEST, geladen und gespielt.
 
@@ -71,11 +72,13 @@ Renderer `direct3d` (kein RE15_SOFTWARE_RENDER), `RE15_NO_INTRO=1 RE15_WINDOW_SC
 * Plakat im Spiel (`n_pl` Leon, `n_pl_e` Elza, `n/n_pl.png`): 1. GREEN 01, 2. RED 02, 3. BLACK 09, 4. RED 08.
 * `RE15_R41C_LOESUNG {5,1,0,4}` auf {1,2,3,7,8,9} = 09, 02, 01, 08. Farben {2,1,0,2,1,0} = 1 schwarz, 2 gruen, 3 rot, 7 schwarz, 8 gruen, 9 rot, wie der Nutzer sie in 30c aufzaehlt.
 
-**Urteil: erfuellt** (Folge am Spiel: siehe Gates, Riegel `_weg*`).
+* Folge am Spiel: Riegel `_weg`, `_weg_elza`, `_kette`, `_alarm` gruen (eigene Laeufe): `Folge 09 02 01 08 -> RICHTIG`, `Folge 01 02 09 08 -> FALSCH: zurueckgesetzt` + Text 45.
+
+**Urteil: erfuellt.** (Kopfkommentar `test_r41_ventilkette_weg.cmake` Zeile 19 nennt noch die alte Plakatfolge; der Testcode ist richtig.)
 
 ## Punkt 5: Bruecken-Ton
 
-* RE2 ROOM4080 selbst dumpt (`re2_scd_dump.py ROOM4080 MAIN 13`): @0x031F2 Se_on 0x0F vor der Fahrt, @0x03314 Se_on 0x10 am Ende, danach Spritz-Effekte 0x1A: die Bruecke landet im Wasser. sub12 endet mit Satz 0x0E (hoch). EDT @0xA3FC `00 01 53 16`, @0xA400 `00 01 64 16`.
+* RE2 ROOM4080 selbst dumpt (`re2_scd_dump.py ROOM4080 MAIN 13`): @0x031F2 Se_on 0x0F vor der Fahrt, @0x03314 Se_on 0x10 am Ende, danach Spritz-Effekte 0x1A: die Bruecke landet im Wasser. sub13 startet bei y -9000 (@0x031FE) und endet bei y -1800 (@0x03314): senken; sub12 faehrt umgekehrt und endet mit Satz 0x0E. EDT @0xA3FC `00 01 53 16`, @0xA400 `00 01 64 16`.
 * `re2_toene_export.py --pruefen`: EDT/VH/VB bytegleich mit der RDT, Offsets 0x0A3C0/0x0A480/0x0B2A0. Op 0x8C: 0x800593e4 `jal 0x800395b8` selbst disassembliert.
 * Echte Folge `t_panel`: F1250 Satz 0x0F, F1310 Satz 0x10, je mit Stimme 6. Riegel `_ton` eigener Lauf gruen (Motor 60 Bilder, vorher/nachher bitgleich).
 
@@ -86,7 +89,7 @@ Renderer `direct3d` (kein RE15_SOFTWARE_RENDER), `RE15_NO_INTRO=1 RE15_WINDOW_SC
 * ROOM6000 am Spiel (`b6000`): `[bgm] stage=5 room=00 entry=FF65 -> MAIN25`, `Sce_bgm_control ... vol=70`. Tabelle PSX.EXE 0x80074828[0x62] = 0xFF65, DAT_800748fc[5] = 0x62 selbst gelesen.
 * MAIN25 == RE2 MAIN11 (Pruefung), SUB_34 VAG 1/2 == MAIN25 VAG 1/2 (eigener Parser `n/sub34.py`, sha1 52678419f9ef / 9d010af0e8e9). SUB_34 == info/re2leon/COMMON/SOUND/SUB_34.BGM (cmp). SEQ selbst gelesen: Kanal 1 Note 60 Programm 1, Kanal 2 Echo, Kanal 3 Brummen, Kanal 0 VAG 1 (0,9 s Toene 1,5..2,3 kHz, keine Sprache), Ende 14,3 s `b0 63 1e`.
 * Mitschnitt des eigenen `_ton`-Laufs (`n/cap.py`): an capTick 674, aus 2724; in der Minute RMS mit Sirene 2444, ohne 1030, Differenz 2216, also deutlich ueber dem Rest. Riegel: keine Luecke.
-* Reihenfolge, Ende im Flut-Bild, Leon + Elza: Riegel `_alarm` (siehe Gates).
+* Reihenfolge am Log des eigenen `_alarm`-Laufs, Leon: F4227 SUB_25 an + Text 46, F4680 Sirene AN (Text geschlossen), `FLUT: Wasser steigt`, F6480 SUB_25 aus und Sirene AUS im selben Bild; Elza (ROOM2031): dieselben Bilder. Die 453 Bilder zwischen Text und Sirene sind die Wartezeit des Wegplans bis zur Taste, die Sirene haengt am Schliessen des Texts.
 * "waehrend der Alert message" laeuft SUB_25, die Sirene setzt nach der Ansage ein. Das folgt Nachtrag 36 ("nach der Ansage").
 
 **Urteil: erfuellt.**
@@ -113,6 +116,7 @@ Port-Wahlen sind als solche benannt (Skala, Spritz-Takt, Lage, 30 Bilder je Naha
 
 **Merge.** `git merge-tree HEAD master`: konfliktfrei (29 Commits voraus). Gegen r41/keyitems: genau ein Konflikt `test_r41_ventilkette_weg.cmake`, wie vom Bau-Agenten vorhergesagt.
 
-**Tests.** `ctest -R r41_nachtrag30`: 11/11 gruen (eigener Lauf). Breite Gruppe: siehe unten.
+**Tests (eigene Laeufe, kein voller Suite-Lauf).** `ctest -R r41_nachtrag30`: 11/11 gruen. Weg-Riegel: `integration_r41_ventilkette_weg` und `_weg_elza` gruen (1452 s / 1676 s), dazu `integration_r38_dining1141_s`, `r41_kleinkram_a_gift`, `r39_dining1141_d`, `r41_kanister2080_kampf`.
+Dann die Gruppe der beruehrten Module (Regex in scratchpad `n/regex2.txt`, 99 Tests, dazu r36_dachkiste, r37_itemband, g2_cursor, re2doc_bildebene, die der Bau-Agent nicht in seinem Regex hatte): `100% tests passed, 0 tests failed out of 99`, darin `integration_r41_ventilkette` (722 s), `_alarm` (719 s), `_kette`, `_sperre`, `_b` (511 s, der Test, den der Bau-Agent nachgezogen hat), `integration_r41_kleinkram_a_lautstaerke`. Die uebrigen Story-Riegel aus dem Regex des Bau-Agenten (r38_*, r39_*) habe ich nach sechs gruenen Laeufen abgebrochen: 3,5 h Laufzeit, kein Bezug zum Diff ausser dem Messhaken der Lautstaerke, und der haelt 100 %.
 
 **Riegel-Qualitaet.** Aenderungen an alten Riegeln fachlich nachvollzogen (Folge, Panel statt Ventil 13, Takte), nichts aufgeweicht ausser der Elza-Korrelation in `_alarm`, deren Messwert sinkt, die Schwelle 0,3 bleibt. Luecken: Mangel 2 und 4 fangen die Riegel nicht, START im Panel auch nicht.
