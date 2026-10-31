@@ -23,7 +23,7 @@ Stufe je Punkt = bucket(Eintritt) wie oben. Die Zahl der Stufen aendert sich dam
 
 Aufruf:
   python re15_port/tools/maske/stufen_r41.py --raum 6010 --cut 5 --von 113 --tabelle <gen_r41_masken36_zellen.inc>
-  python re15_port/tools/maske/stufen_r41.py --raum 6010 --cut 5 --von 113 --tabelle <inc> --wange -20596 --tabelle-aus <inc> --platziert <gen_r41_masken36_platziert.inc>
+  python re15_port/tools/maske/stufen_r41.py --raum 6010 --cut 5 --von 113 --tabelle <inc> --wange -20591 --tabelle-aus <inc> --platziert <gen_r41_masken36_platziert.inc>
 """
 import argparse
 import os

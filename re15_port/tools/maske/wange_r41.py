@@ -46,7 +46,7 @@ def kamera(rdt, cut):
 
 def strahl(k, u, v):
     R, _t, h, _c = k
-    return R.T.dot(np.array([(u - 160.0) / h, (v - 120.0) / h, 1.0]))
+    return np.linalg.inv(R).dot(np.array([(u - 160.0) / h, (v - 120.0) / h, 1.0]))     # R ist gerundet: die Inverse, nicht die Transponierte (wie koerper_r41.ansicht)
 
 
 def sehebene(k, pts):

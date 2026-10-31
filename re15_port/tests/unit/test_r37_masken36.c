@@ -753,10 +753,10 @@ static void r41_eintrag(const r41_zellen_modell_t *k, re15_sca_entry_t *e)
 }
 
 /* Runde 41 Spur Q, Nachbesserung 1 (Abnahme 0 Mangel M1): Koerper, fuer die das RDT keine Zelle hat. Teil 8 in ROOM6010 Cut 5 ist die Aussenflaeche der Westwange;
- * ihre Modell-Zeile bleibt die Zelle @0x0092C (Sued-, Nord-, Ostkante, 12 Bytes als Beleg), die Westkante kommt aus zwei Kameras: x -20596 = tools/maske/wange_r41.py,
+ * ihre Modell-Zeile bleibt die Zelle @0x0092C (Sued-, Nord-, Ostkante, 12 Bytes als Beleg), die Westkante kommt aus zwei Kameras: x -20591 = tools/maske/wange_r41.py,
  * Riegel unit_r41_restpunkte_wange rechnet sie hier nach (teil_wange). */
 typedef struct { uint16_t raum; uint8_t cut; int16_t x_west; } r41_wange_t;
-static const r41_wange_t r41_wangen[] = { { 0x6010, 5, -20596 } };
+static const r41_wange_t r41_wangen[] = { { 0x6010, 5, -20591 } };
 
 /* Zeile = Zelle e bis zur Westflaeche der Wange? */
 static int r41_wange_koerper(const r41_zellen_modell_t *k, const re15_sca_entry_t *e)
