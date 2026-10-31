@@ -449,6 +449,33 @@ static void test_m2_zucken(unsigned raum, const char *rdt)
     free(buf);
 }
 
+/* ROOM3071 (Elza): der Auftritt Sub 10 fuehrt Birkin durch das Tor in die Halle: Fuss-Vortrieb FUN_8011b5c4(1,1) @0x8011960c und
+ * keine Wandklemme (+0x0 |= 8 @0x801168d0, FUN_8003b0a4 @0x8003b134-40). Sonst stand er fuer immer hinter SCA 17
+ * (x -27055..-26505), ohne Sichtlinie, und der Kampf war mit keiner Waffe zu gewinnen. */
+static void test_sub10_tor(void)
+{
+    uint8_t *buf = raum_laden("STAGE3/ROOM3071.RDT", 0x3071u);
+    CHECK(buf != NULL, "ROOM3071 nicht ladbar");
+    if (!buf) return;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER], *b = birkin_finden();
+    CHECK(b != NULL, "ROOM3071: kein 0x30");
+    if (!b) { free(buf); return; }
+    CHECK(em30_bank() != NULL, "ROOM3071: EM30-Bank");
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1;              /* Wandklemme der Wurzel scharf */
+    b->x = -29000; b->z = -11850; b->rot_y = 0; b->y = 0; b->no_draw = 0;
+    b->grid_id = 0x01; b->state = 1; b->sub_state_1 = 10; b->sub_state_2 = 0; b->sub_state_3 = 0;   /* sub02 Member_set(0x0c,1) @0x03645 */
+    pl->x = -23544; pl->z = -7004; pl->hp = 100; pl->hit_react = 0;
+    {
+        int n;
+        for (n = 0; n < 900 && b->sub_state_1 == 10; n++) tick(1);
+        CHECK(b->sub_state_1 != 10, "Sub 10 endet nicht (%d Ticks, Phase %d)", n, b->sub_state_2);
+        CHECK(b->x > -26505, "Birkin bleibt hinter dem Tor (x %d), Halle ab x -26505", b->x);
+        fprintf(stderr, "ROOM3071: Auftritt endet nach %d Ticks bei (%d,%d)\n", n, b->x, b->z);
+    }
+    g_room_rdt_ok = 0;
+    free(buf);
+}
+
 /* M3: Dauerfeuer in der Mutation: Tor @0x801164e8 ist nach Phase 0 zu (grid |= 0x10 @0x80118054), Clip 0x14 laeuft einmal. */
 static void test_m3_mutation(unsigned raum, const char *rdt)
 {
@@ -608,6 +635,7 @@ static void test_m6_pose(unsigned raum, const char *rdt)
             if (pose_abstand(b, alt) == 0) still++;
         }
         CHECK(still * 4 <= n, "M6 %s: Weichen %d von %d Ticks Standbild", rdt, still, n);
+        fprintf(stderr, "%s M6: Weichen %d von %d Ticks ohne Pose-Aenderung\n", rdt, still, n);
     }
     free(buf);
 }
@@ -832,6 +860,7 @@ int main(void)
         };
         for (unsigned i = 0; i < sizeof g_kampf / sizeof g_kampf[0]; i++) test_m2_zucken(g_kampf[i].id, g_kampf[i].rdt);
     }
+    test_sub10_tor();
     for (int r = 0; r < 2; r++) {
         const unsigned id = r ? 0x5091u : 0x5090u;
         const char *rdt = r ? "STAGE5/ROOM5091.RDT" : "STAGE5/ROOM5090.RDT";

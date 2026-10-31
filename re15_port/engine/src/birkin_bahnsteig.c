@@ -317,6 +317,7 @@ static void bb_weichen(re15_actor_t *e, re15_actor_t *pl, int32_t dist)
     }
     if (bb_kegel(e, pl->x, pl->z, 512) && dist >= BB_L(2501) && dist < BB_L(4000) && s_bb.cd_nah == 0) {
         e->anim_flags &= (uint16_t)~0x80u;
+        s_bb.wort = 0;                                 /* kein neues Bild in diesem Tick, also auch kein Bild-Ton */
         bb_setze(e, BB_HIEB);                          /* 0x201 @0x80104158 */
         return;
     }
