@@ -55,3 +55,30 @@ ROOM2090 main00 `@0x00AB0 44 00 25 ...` und `@0x00AC4 44 01 25 ...` (F_gatorszen
 
 ### Umsetzung, Messung nachher (Lauf Q41/runs/o1L)
 gatorszene_r41.c `re15_gatorszene_r41_spawn_weg`: `if (!s_spinnen_weg || re15_gator_original()) return 0;`. Nachher: keine Zeile `verworfen`, F500 `[1 t=25 ... @(-1027,-11432..)]`, `[2 t=25 ... @(-6995,-25679..)]`, `EM23 loaded: 15 meshes, 15 bones, 43 clips`, keine einzige `[gatorszene]`-Zeile.
+
+## Punkt 1 - Restloch ROOM6010/6011 Cut 5 Teil 8
+
+### Messung vorher
+Abnahme M 5 (Lauf o6010_05, `M41abn5/bilder/o6010_05_voll.png`): (-19912,-19720) Band 0, 96 Figurpunkte auf Teil 8, davon 82 sichtbar. `unit_r41_masken36_fern`: ROOM6010/6011 C5 je 1508 Punkte "zu fern", R113..R124.
+Eigene Vermessung (`Q41/tools/t8.py`, Kamera des Spiels `ansicht_spiel`, Koerper Modell-Zeile Zelle @0x0092C `31 0b 2d 19 31 b2 dc a1 01 ff 00 13` Typ 1 Band 1 Hoehe -2311):
+Teil 8 = 426 Punkte in R113..R127, Bild X 162..184, Y 202..239, je Rechteck eine Tiefe (126..112), aber die Stufen der Punkte eines Rechtecks spannen bis zu 11 Stufen (R113: bucket 116..126, Tiefe 126).
+
+### Weg, der verworfen wurde (gemessen)
+Einstieg des Auftrags: Kapazitaet 128 -> 255, Ausschluss-Tabelle bits[8], Spalten teilen. Gebaut und gemessen (Lauf `aus_s1.inc`, `fern_s1.log`): Spalten exakt je Stufe = 155 Stuecke, 113 + 155 = 268 > 255 (Byte-Grenze @0x8003928c `lbu v0,7(a0)`), geht also nicht. Spanne 1 = 82 Stuecke, Sektion 195 Rechtecke: 6010 C5 "zu fern" 675. Beides zurueckgenommen: es gibt einen genaueren Weg ohne Aenderung an der Engine.
+
+### Umsetzung
+Die Stufen des Teils sind nur 15 (112..126), genau so viele wie es Rechtecke hat, und sie sind die alten Rechteck-Tiefen. tools/maske/stufen_r41.py legt je Stufe EIN Rechteck an: Fenster im Vordergrundatlas `ROOM6010_PRI05.TIM` mit genau den Punkten dieser Stufe, Rest Index 0. Die Atlas-Flaeche reicht (3 808 von 65 536 Texeln belegt, neue Fenster 4 209 Flaeche).
+Rechteckzahl 128, Index-Lage R113..R127, Tiefe je Index, Palette, alle uebrigen Rechtecke und Fenster bleiben: `gen_r41_masken36_zellen.inc`, `gen_r41_masken36_platziert.inc`, Ausschluss-Tabelle (Neurechnung `aus_st.inc` bytegleich), `re15_pri.h` unveraendert. Dateien: `shared_assets/PSX/MASKS/ROOM6010.MSK`, `ROOM6011.MSK`, `ROOM6010_PRI05.TIM`, `ROOM6011_PRI05.TIM` (Leon = Elza bytegleich).
+Konstanten: bucket = (1023*vz)>>16 (@0x8002565c `sra v1,v1,4`, ZSF3 341 @0x80066c70), Masken-OT = depth (@0x80039650 `lh a0,2(s3)`), Vergleich depth < bucket(Figur) wie bisher.
+
+### Messung nachher
+`test_r37_masken36 teile`: 101 280 Punkte, Eintritt hinter der Tiefe 0. `test_r37_masken36 fern`: ROOM6010/6011 C5 je 422 statt 1508, gesamt 1188 (Stage 3: 2, 4: 72, 5: 270, 6: 844). Die 422 sind OT-Gleichstand: Rechteck-Tiefe = bucket(Eintritt) an JEDEM Punkt, also heisst "hinter dem Eintritt und nicht verdeckt" genau bucket(Figur) == Tiefe; Plaetze nur noch x -20112..-19712 (`fern_plaetze.log`, vorher -20112..-19512), also auf der Westflaeche der Zelle (x -19919).
+An der exe (Leon, je 4 Laeufe mit/ohne/leer/leer0, A0 = (20000,20000), Bild 120, `Q41/runs/`, `tools/sz_ausw.py`):
+| Stelle | Figur auf Teil 8 | vorher verdeckt / sichtbar | nachher verdeckt / sichtbar |
+|---|---|---|---|
+| (-19612,-19720) | 195 | 192 / 3 | 195 / 0 |
+| (-19712,-19820) | 155 | 114 / 41 | 146 / 9 |
+| (-19912,-19720) Stelle der Abnahme | 96 | 14 / 82 | 33 / 63 |
+| (-20112,-19620) vor der Wange | 29 | - | 2 / 27 |
+Bilder `Q_belege/m1_p2_vorher.png`, `m1_p2_nachher.png` (je A0, B, A, Lupe mit Rest in Rot).
+Die 63 Punkte der Abnahme-Stelle sind kein Loch: die Stelle liegt 7 Einheiten neben der Westflaeche, der Kopf ragt zur Kamera vor die Flaeche. Gegenprobe mit um k Stufen vorgezogener Maske (nur fuer die Messung, Datei danach zurueck): k = 1: 59 sichtbar, 2: 48, 4: 23, 8: 0. Diese Punkte liegen also bis 8 Stufen VOR dem Koerper, sie zu verdecken waere der Fehler, den Regel 6 verbietet (Figur vor dem Gegenstand wird nie verdeckt).
