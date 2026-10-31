@@ -10505,7 +10505,10 @@ re_title:;
                                                      gore_draw, gore_tint, gore_mesh);
                 /* BIRKIN-ROHR (Typ 0x30): Teil 15 traegt die Geometrie von Mesh 16 (Hand mit Rohr), s. birkin_rohr
                  * in re15_actor.h (@0x80116980-9e4 / @0x80116c28-8c / @0x80119754-7b8). */
+                /* Die Bahnsteig-Form erbt birkin_rohr aus dem Spawn (INIT @0x80116974: grid 0x33 hat Bit 0x10), ihr Teil 15 ist aber kein
+                 * Klauenarm: ohne das Tor zeichnete jede Form mit mehr als 16 Meshes an Teil 15 die Geometrie von Mesh 16. */
                 int bk_rohr = (npc->type == 0x30u && npc->birkin_rohr && npc_md1->mesh_count > 16 && npc_bones > 15 &&
+                               !re15_bb_bank_da(npc) &&
                                !getenv("RE15_KEIN_BIRKIN_ROHR"));   /* Mess-Schalter A/B */
                 /* Runde 34 C7 (O-VB3 geklaert, Belege fx_plattform_pc.h): RE2 faerbt JEDE Entity
                  * ueber denselben Part-Zeichner (Entity-Schleife `jal 0x80027160` @0x8002689c,

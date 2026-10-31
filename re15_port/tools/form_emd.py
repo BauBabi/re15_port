@@ -74,6 +74,9 @@ def ton(ton_id):
 TICK_CLIPS = {0: 'BB_C_RENNEN', 3: 'BB_C_HIEB', 4: 'BB_C_HIEB+1', 5: 'BB_C_GEHEN', 8: 'BB_C_ZUCKEN',
               9: 'BB_C_NACHHIEB', 10: 'BB_C_DROHEN', 26: 'BB_C_BISS', 27: 'BB_C_GRIFF'}
 TICK_TEILE = {10: 'BB_TEIL_RUMPF', 13: 'Hieb Seite 1', 18: 'Hieb Seite 0'}
+# Bildnummern, die der Tick anspringt: Doppelschlag k_doppel (Clip 3 Bild 30, Clip 4 Bild 19), Zucken ab Bild 5, Griff bei Bild 8.
+TICK_CLIP_BILD = {3: 31, 4: 20, 8: 6, 27: 9}
+TICK_TREFFERCLIPS = (3, 4, 26)      # BB_FL_TREFFER liest bb_hieb und bb_biss aus dem EDD-Wort
 
 
 class FormFehler(Exception):
@@ -164,6 +167,35 @@ def quader(form, knochen, lo, hi, tex, zeile=0):
         n = normale(m, nv)
         viereck(m, (c[ia], c[ib], c[ic], c[id_]), (n, n, n, n),
                 ((r[0], r[1]), (r[2], r[1]), (r[0], r[3]), (r[2], r[3])), zeile)
+
+
+def netz(form, knochen, punkte, flaechen, tex, zeile=0, normalen=None):
+    """Fertiges Netz in den Raum von `knochen` uebernehmen. punkte n x 3, flaechen = Index-Tripel oder -Quadrupel als RING um die
+    Flaeche (wird hier in die Z-Reihenfolge des Formats gebracht), tex n x 2 Texel je Punkt. Ohne normalen: glatte Normalen,
+    flaechengewichtet, Aussenseite aus der Ringrichtung, von aussen gesehen im Uhrzeigersinn. Rueckgabe: Index der ersten Ecke."""
+    m = form['meshes'][knochen]
+    p = np.asarray(punkte, float)
+    if normalen is None:
+        nsum = np.zeros_like(p)
+        for f in flaechen:
+            for i in range(1, len(f) - 1):
+                k = np.cross(p[f[i + 1]] - p[f[0]], p[f[i]] - p[f[0]])     # Regel des Formats: Windung gegen die Normale
+                for j in (f[0], f[i], f[i + 1]):
+                    nsum[j] += k
+        normalen = nsum
+    v0, n0 = len(m['ecken']), len(m['normalen'])
+    for q in p:
+        ecke(m, q)
+    for q in np.asarray(normalen, float):
+        normale(m, q if np.any(q) else (0, -1, 0))
+    t = [[int(round(c)) for c in x] for x in tex]
+    for f in flaechen:
+        if len(f) == 3:
+            dreieck(m, [v0 + i for i in f], [n0 + i for i in f], [t[i] for i in f], zeile)
+        else:
+            z = (f[0], f[1], f[3], f[2])
+            viereck(m, [v0 + i for i in z], [n0 + i for i in z], [t[i] for i in z], zeile)
+    return v0
 
 
 def bild(form, wurzel=(0, 0, 0), spur=(0, 0, 0), winkel=None, wort=0):
@@ -573,6 +605,12 @@ def pruefe(form):
     fehlt = [('%d %s' % (i, nm)) for i, nm in TICK_CLIPS.items() if i >= len(cl)]
     if fehlt:
         W.append('Tick der Form erwartet Clips, die fehlen (Modulo in re15_compute_actor_kf): ' + ', '.join(fehlt))
+    for i, mind in TICK_CLIP_BILD.items():
+        if i < len(cl) and len(cl[i]['bilder']) < mind:
+            W.append('Clip %d hat %d Bilder, der Tick braucht mindestens %d (birkin_bahnsteig.c)' % (i, len(cl[i]['bilder']), mind))
+    for i in TICK_TREFFERCLIPS:
+        if i < len(cl) and not any(int(b.get('wort', 0)) & BILD_TREFFER for b in cl[i]['bilder']):
+            W.append('Clip %d ohne BILD_TREFFER: dieser Angriff trifft nie (BB_FL_TREFFER)' % i)
     fehlt = [('%d %s' % (i, nm)) for i, nm in TICK_TEILE.items() if i >= n]
     if fehlt:
         W.append('Tick der Form erwartet Teile, die fehlen (re15_enemy_part_point -> Treffer gehen ins Leere): ' + ', '.join(fehlt))
