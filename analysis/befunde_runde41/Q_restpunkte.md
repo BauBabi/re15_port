@@ -72,7 +72,7 @@ Rechteckzahl 128, Index-Lage R113..R127, Tiefe je Index, Palette, alle uebrigen 
 Konstanten: bucket = (1023*vz)>>16 (@0x8002565c `sra v1,v1,4`, ZSF3 341 @0x80066c70), Masken-OT = depth (@0x80039650 `lh a0,2(s3)`), Vergleich depth < bucket(Figur) wie bisher.
 
 ### Messung nachher
-`test_r37_masken36 teile`: 101 280 Punkte, Eintritt hinter der Tiefe 0. `test_r37_masken36 fern`: ROOM6010/6011 C5 je 422 statt 1508, gesamt 1188 (Stage 3: 2, 4: 72, 5: 270, 6: 844). Die 422 sind OT-Gleichstand: Rechteck-Tiefe = bucket(Eintritt) an JEDEM Punkt, also heisst "hinter dem Eintritt und nicht verdeckt" genau bucket(Figur) == Tiefe; Plaetze nur noch x -20112..-19712 (`fern_plaetze.log`, vorher -20112..-19512), also auf der Westflaeche der Zelle (x -19919).
+`test_r37_masken36 teile`: 101 280 Punkte, Eintritt hinter der Tiefe 0. `test_r37_masken36 fern`: ROOM6010/6011 C5 je 422 statt 1508, gesamt 1188 (Stage 3: 2, 4: 72, 5: 270, 6: 844). Die 422 waren OT-Gleichstand mit der Zellflaeche: Plaetze nur noch x -20112..-19712 (`fern_plaetze.log`, vorher -20112..-19512). Stand der Nachbesserung 1: je 0, gesamt 344.
 An der exe (Leon, je 4 Laeufe mit/ohne/leer/leer0, A0 = (20000,20000), Bild 120, `Q41/runs/`, `tools/sz_ausw.py`):
 | Stelle | Figur auf Teil 8 | vorher verdeckt / sichtbar | nachher verdeckt / sichtbar |
 |---|---|---|---|
@@ -81,7 +81,7 @@ An der exe (Leon, je 4 Laeufe mit/ohne/leer/leer0, A0 = (20000,20000), Bild 120,
 | (-19912,-19720) Stelle der Abnahme | 96 | 14 / 82 | 33 / 63 |
 | (-20112,-19620) vor der Wange | 29 | - | 2 / 27 |
 Bilder `Q_belege/m1_p2_vorher.png`, `m1_p2_nachher.png` (je A0, B, A, Lupe mit Rest in Rot).
-Die 63 Punkte der Abnahme-Stelle sind kein Loch: die Stelle liegt 7 Einheiten neben der Westflaeche, der Kopf ragt zur Kamera vor die Flaeche. Gegenprobe mit um k Stufen vorgezogener Maske (nur fuer die Messung, Datei danach zurueck): k = 1: 59 sichtbar, 2: 48, 4: 23, 8: 0. Diese Punkte liegen also bis 8 Stufen VOR dem Koerper, sie zu verdecken waere der Fehler, den Regel 6 verbietet (Figur vor dem Gegenstand wird nie verdeckt).
+**Berichtigt (Nachbesserung 1):** Hier stand, die 63 Punkte der Abnahme-Stelle seien kein Loch und sie zu verdecken verstosse gegen Regel 6. Das galt nur gegen das Modell: der Koerper war die Kollisionszelle @0x0092C, nicht die Wange. Die Wange liegt 672 Einheiten naeher an der Kamera, die Figur steht hinter ihr. Die Verschiebe-Probe (k = 1: 59 sichtbar, 2: 48, 4: 23, 8: 0) mass gegen dieselbe Zelle, die sie belegen sollte. Stand jetzt: Abschnitt "Nachbesserung 1".
 
 ## Punkt 2 - Teile-Bericht, Freistellungs-Liste, 4040 C12
 
@@ -92,7 +92,7 @@ Abnahme M 5 Mangel 2/3: `M_bilder/NB5/teile_nb5.txt` aus pl_a2 (266/278), MASKS 
 - tools/maske/teile_bericht_r41.py schreibt den Bericht aus platzieren_r41.json. Eichung: aus pl_a2 gerechnet 625 von 625 Datenzeilen gleich der alten Datei (0 Abweichungen), danach aus pl_a3 geschrieben. Zusatz am Teil 6010 C5 T8: Tiefe je OT-Stufe.
 - Nachher: `Q41/tools/teile_vergleich.py` (Skript der Abnahme): `pl_a3 ... OHNE 277, MIT 267 | teile_nb5.txt ... OHNE 277, MIT 267`, `Teile mit anderem Ergebnis: 0`. Summen 267 Teile / 103 112 Punkte, 277 Teile / 144 225 Punkte = Dossier M Z. 1161.
 - Liste: Abgleich aller 62 Zeilen gegen pl_a3 ohne Abweichung, die 8 fehlenden eingefuegt (3040 C10 218, 3050 C1 106, 3050 C6 209, 5050 C1 275, 5050 C2 174, 6000 C7 172, 6000 C9 108, 6030 C12 139), keine Mindestgroesse mehr; je Stelle Restbild `M_bilder/NB5_rest/NB5_rest_ROOMxxxx_Cnn.png` (70 Bilder).
-- 4040 C12: das Teil ist der schmale Streifen am Torrahmen (Rechtecke 105..125, Bild X 75..106, 723 Punkte). Reale Stellensuche (`Q41/tools/stellen_q.py` ueber alle 1062 erreichbaren Plaetze von `test_r37_masken36 plaetze 4040 12`): HINTER-Kandidaten nur (-4000,4678), (-3900,4578), (-3800,4478). An der exe je 4 Laeufe: Figur X 45..70, Figur auf dem Teil 0/0/0. Jenseits des Tors gibt es keinen Stehplatz. Damit gibt es dort KEINE HINTER-Stelle: Szenen t4040_12/t4040_12e entfernt, Dossier M Tabelle und OFFEN 21 berichtigt.
+- 4040 C12: das Teil ist der schmale Streifen am Torrahmen (Rechtecke 105..125, Bild X 75..106, 723 Punkte). Reale Stellensuche (`Q41/tools/stellen_q.py` ueber alle 1060 erreichbaren Plaetze von `test_r37_masken36 plaetze 4040 12`, berichtigt nach Abnahme 0 H6, Ausgabe `PLAETZE 1060`): HINTER-Kandidaten nur (-4000,4678), (-3900,4578), (-3800,4478). An der exe je 4 Laeufe: Figur X 45..70, Figur auf dem Teil 0/0/0. Jenseits des Tors gibt es keinen Stehplatz. Damit gibt es dort KEINE HINTER-Stelle: Szenen t4040_12/t4040_12e entfernt, Dossier M Tabelle und OFFEN 21 berichtigt.
 - Laeufer test_r41_masken36_stage2.cmake: Art M mit A0 zaehlt nur die Spielfigur (S = |B - D|, dritter Lauf). Alle 38 verbliebenen M-Szenen der Gruppen a1..d2 tragen A0 aus der Liste der Abnahme (`M41abn5/aussen_alle.txt`), 6010 C5 hat keinen erreichbaren Platz draussen: A0=20000,20000 wie Lauf o6010_05. So faellt ein 3D-Objekt im Fenster ab jetzt auf ("Leon im Figurfenster nicht zu sehen").
 - Szenenzahl: 106 laut Dateien (Dossier/Commit nannten 108), jetzt 104.
 
@@ -145,8 +145,8 @@ Die Masken-Gruppen a1..c3 liefen auf dem Stand vor der letzten Aenderung am Rend
 
 ## OFFEN
 1. **Nebenbefund fuer den Spieler, nicht behoben (Bild `Q_belege/n3_westgang_F753_F768.png`):** ROOM20B0 nach der Szene, Leon im Westgang, beschleunigter Renderer (Lauf vg1, direct3d): F755..F768 fuellen grobe grau-gruene Bloecke 50-90 % des Bildes (Helligkeit 41 -> 109). Es sind dieselben Effekt-Quader ESP 0x0f. Das Original baut sie als POLY_FT4 (`sb v0,7(t2)` @0x8005369c, Code 0x2C/0x2E), Mitte aus der GTE (`0x4a180001` RTPS @0x80053534), einzige Sperre SZ < 4 (`sra v0,a0,2` @0x80053578, `beq` @0x8005357c); danach greift die GPU-Grenze, Quader ueber 1023 x 511 zeichnet die Hardware nicht. Der Port zeichnet sie. Vorschlag: `re15_gpu_dreieck_verwerfen` auch fuer die ESP-Quader im beschleunigten Renderer (zwei Zeilen an main.c:589/591); ob die kleineren Quader danach dem Original entsprechen, braucht einen DuckStation-Vergleich desselben Wegs. Liegt ausserhalb der Spur Q, das Bild des Spielers ist hier unveraendert.
-2. Abnahme-Stelle (-19912,-19720): 63 von 96 Punkten bleiben sichtbar. Sie liegen bis 8 Stufen VOR der Westflaeche des Modell-Koerpers (Gegenprobe k = 1, 2, 4, 8). Wer die Stelle anders sieht, muss die Wange frei stellen; das Teil ist ein Prisma aus Zelle @0x0092C, die echte Wange steigt schraeg.
-3. 422 + 422 Punkte "zu fern" in 6010/6011 C5 sind OT-Gleichstand (bucket(Figur) == Tiefe), mit einer Tiefe je Stufe nicht weiter zu trennen, ohne eine Figur vor der Flaeche zu verdecken.
+2. Geschlossen durch Nachbesserung 1: Abnahme-Stelle (-19912,-19720) 0 von 96 sichtbar.
+3. Geschlossen durch Nachbesserung 1: "zu fern" in 6010/6011 C5 0 + 0. Die fruehere Aussage "nicht weiter zu trennen" war falsch, der Fehler lag in der Ebene.
 4. Der Port setzt das Sperrbit beim Tod, RE2 beim Kampfbeginn: fliehen laesst den Alligator im Port leben, weil er den Water Key traegt (PORT-WAHL, Punkt 4).
 5. Der Spielstand in 2080 ist ein Testhaken: STAGE2 hat nur den Speicherpunkt 2010/2011 (re15_savepoint.c). Geprueft ist Laden + Tuerweg nach 2090; ein Laden IN 2090 kommt im Spiel nicht vor, der Boot-Weg ruft re15_gatorszene_r41_install nicht.
 6. Abnahme P H1 (Access violation F56, direct3d, 2091) ist damit nicht erklaert, das ist ein anderer Renderer. Der neue Ausnahme-Haken zeigt beim naechsten Mal Adresse und Stapel.
@@ -154,9 +154,9 @@ Die Masken-Gruppen a1..c3 liefen auf dem Stand vor der letzten Aenderung am Rend
 ## Fuer den Nutzer
 - Der tote Alligator bleibt tot: nach dem Verlassen des Raums, ueber Spielstand laden und nach dem Aufheben des Water Key, Leon und Elza. Flieht man vor seinem Tod ueber die Leiter, ist er beim Zurueckkommen weiter da, sonst waere der Schluessel weg.
 - RE15_GATOR_ORIGINAL zeigt jetzt den ausgelieferten Raum mit den zwei Spinnen.
-- Treppenwange ROOM6010/6011 Kamera 5: Figuren hinter der Wange sind jetzt verdeckt (Stelle (-19712,-19820): 9 statt 41 Punkte sichtbar).
+- Treppenwange ROOM6010/6011 Kamera 5: Figuren hinter der Wange sind verdeckt, an allen gemessenen Stellen 0 Punkte auf dem Teil sichtbar (Leon und Elza). Im Spiel selbst steht an diesen Plaetzen nie Kamera 5 (Abnahme 0: Cut 7, Cut 13), die Aenderung sieht man nur mit RE15_FORCE_CUT=5; eine Figur auf der Treppe in dieser Kamera bleibt unberuehrt.
 - Freistellungs-Liste (Dossier M "Fuer den Nutzer") ist vollstaendig: 8 Stellen dazu, je mit Restbild, Teile-Bericht aus dem ausgelieferten Lauf. ROOM4040/4041 Kamera 12 hat keine HINTER-Stelle.
-- Assets fuer das Paket: nur geaenderte Dateien `shared_assets/PSX/MASKS/ROOM6010.MSK`, `ROOM6011.MSK`, `ROOM6010_PRI05.TIM`, `ROOM6011_PRI05.TIM`. Keine neuen Dateien unter shared_assets/RE2, keine Sprachdateien, keine Bank-9-Bits (Bit 126 bleibt frei), keine Nachrichten-Ids. Neue Quelle `platform/pc/src/endgrund_r41_pc.c` (nur Windows, beim naechsten Configure erfasst).
+- Assets fuer das Paket: nur geaenderte Dateien `shared_assets/PSX/MASKS/ROOM6010.MSK`, `ROOM6011.MSK` (Sektion 5 jetzt 126 statt 128 Rechtecke, Datei 40 Byte kuerzer), `ROOM6010_PRI05.TIM`, `ROOM6011_PRI05.TIM`. Keine neuen Dateien unter shared_assets/RE2, keine Sprachdateien, keine Bank-9-Bits (Bit 126 bleibt frei), keine Nachrichten-Ids. Neue Quelle `platform/pc/src/endgrund_r41_pc.c` (nur Windows, beim naechsten Configure erfasst).
 - Entscheidung: Soll die GPU-Grenze auch im Spiel fuer die Effekt-Quader gelten (OFFEN 1)? Dann verschwinden die Bloecke im Westgang von 20B0.
 
 ## Nachbesserung 1 (Abnahme 0, Mangel M1, Weg (a): Teil 8 auf die Ebene der Wange)
@@ -168,3 +168,56 @@ Die Zelle @0x0092C (Westflaeche x -19919) ist eine Kollisionszelle, keine Wange.
 | Unterkante der Aussenflaeche | (147.5,204)..(165.7,236) | (259.5,110)..(271.6,134) | -20630 (Sigma 7) | -4044 | 0,013 | -0,834 |
 | Oberkante der Aussenflaeche | (158.5,204)..(177.6,236) | (265.5,110)..(277.6,134) | -20552 (Sigma 6) | -4717 | 0,008 | -0,815 |
 dx/dz ~ 0: beide Linien laufen parallel zur Treppe (achsparallel), die Paarung der Kanten stimmt. dy/dz passt zur Zellenlaenge (5400/6445 = 0,838), nicht zum Stair-Record (5400/6895 = 0,783, das ist der Laufbereich). Die Stufenlinie der Zelle (y = -1800 - 0,838 (z + 24100)) liegt bei z -20000 auf -5236, die Unterkante also 1192 darunter: das ist der Abstand, den die Abnahme an der Ostwange in Cut 6/11 mass (1125..1225).
+
+### Ursache des Mangels
+Tiefe von Teil 8 kam aus dem Koerper der Modell-Zeile, und der war die Kollisionszelle @0x0092C (Westflaeche x -19919). Diese Flaeche liegt mitten unter den Stufen, die Wange 672 Einheiten westlich davon. Die Stufen 112..126 waren je Punkt 19..22 Stufen zu fern; eine Figur zwischen Wange und Zellflaeche lag vor der Tiefe und blieb sichtbar. Der Erststand hat nur die Spaltentiefe behoben, und seine Begruendung mass gegen dasselbe Modell. Die Abnahme hat das richtig bewertet.
+
+### Messung vorher
+Liegt aus Abnahme 0 vor, nicht wiederholt: (-19912,-19720) 63 von 96 sichtbar, (-19812,-19620) 50 von 141, (-20012,-19820) 58 von 61; Elza (-19612,-19720) 14 von 114. `fern` 844 in Stage 6. Abnahme: k = 12 ergibt an 8 Stellen 0 sichtbar, 0 uebermalt.
+
+### Beleg
+- Kameras 4 und 5 aus dem RDT (@RDT+0x24 Kamerasatz, `re15_camera_build_view`). `tools/maske/wange_r41.py`, Proben je Bildzeile im Helligkeitsprofil des Hintergrunds, `--ppm` prueft jede Probe am Bild: 0 neben dem Sprung, Spruenge 16..83.
+- Ergebnis mit der exakten Inverse der gerundeten Kamera-Matrix: Unterkante z -20500 (-20631,-3606), dx/dz 0,011, dy/dz -0,835; Oberkante (-20551,-4291), dx/dz 0,006, dy/dz -0,815. Ebene x -20591. Die Tabelle oben entstand noch mit der Transponierten (-20630 / -20552); der Riegel in C fiel darauf auf, das Werkzeug rechnet jetzt wie `koerper_r41.ansicht`.
+- Gegenprobe der Paarung: die Kanten mit Cut 11 geschnitten ergeben keine Treppenlinie (x -19688, Oberkante dx/dz 0,075): Cut 11 zeigt die Ostwange, wie die Abnahme schrieb.
+- Stair-Record slot 9/10 `corner=-24300 extent=6895` ist der Laufbereich: mit ihm rechnete die Abnahme 5400/6895 = 0,783, die Treppe im Bild steigt wie die Zelle @0x0092C (5400/6445 = 0,838). Der echte Aufstieg bestaetigt das: (-19704,-4384,-21134), (-19701,-6184,-19025), Steigung 0,853.
+
+### Aenderung
+- Koerper = Zelle @0x0092C bis zur Westflaeche der Wange: x -20591..-17054, z -24100..-17655, Band 1, Hoehe -3290 (`platzieren_r41.oberkante`). Sued-, Nord-, Ostkante und die 12 Bytes bleiben Beleg, Westkante und Hoehe sind Messung. Eine Zelle fuer die Wange gibt es im RDT nicht: Band 4 @0x938 x -20284..-19945 reicht nur z -18284..-9741 und die Strahlen von Teil 8 treffen z -20963..-20069.
+- `tools/maske/stufen_r41.py --wange -20591`: 13 Stufen 105..93, je Stufe ein Rechteck R113..R125 (vorher 15, R113..R127, 126..112). 426 Punkte, Fensterflaeche im Atlas neu vergeben, R0..R112 bytegleich. Sektion 126 Rechtecke.
+- `gen_r41_masken36_zellen.inc` Zeilen R113..R125, R126/R127 weg; `gen_r41_masken36_platziert.inc` Sektion 114 -> 112; Ausschluss-Tabelle unveraendert (Riegel `unit_r37_masken36_ausschluss` gruen), `engine/` nicht beruehrt.
+- `test_r37_masken36.c`: Tabelle `r41_wangen[]` (x -20591, Beleg der Zeilen: Zelle + Westkante, Ostkante gleich), Modus `wange`.
+- Konstanten: Ebene -20591 aus `wange_r41.py`; bucket = (1023*vz)>>16 (@0x8002565c `sra v1,v1,4`, ZSF3 341 @0x80066c70), Masken-OT = depth (@0x80039650). Die Form "Tiefe = bucket(Eintritt in den Koerper)" ist Regel 6 von platzieren_r41.py. Teil 8 ist im Original nicht eingesetzt: Teile-Einsatz ist Entscheid M-E2, die Ebene eine Messung am Bild, keine Spielkonstante.
+
+### Messung nachher (exe, Bild 120, A mit, B ohne, A0 mit ohne Figur, D ohne ohne Figur, Laeufe Q41n1/runs)
+| Stelle Leon | Figur auf dem Teil | sichtbar vorher | sichtbar nachher |
+|---|---|---|---|
+| (-19912,-19720) Stelle des Mangels | 96 | 63 | 0 |
+| (-19812,-19620) | 141 | 50 | 0 |
+| (-20012,-19820) | 61 | 58 | 0 |
+| (-20112,-19920) | 32 | 32 | 0 |
+| (-20212,-19920) | 16 | 16 | 0 |
+| (-20312,-19820) | 1 | 1 | 0 |
+| (-19812,-19920) | 103 | 47 | 0 |
+| (-19912,-19520) | 98 | 54 | 0 |
+| (-19912,-19320) | 77 | 32 | 0 |
+| (-19612,-19720) | 195 | 0 | 0 |
+| (-19712,-19820) | 155 | 9 | 0 |
+| (-20112,-19620) | 29 | 27 | 0 |
+| (-20212,-19620) | 8 | nicht gemessen | 0 |
+| Stelle Elza | | | |
+| (-19812,-19620) | 62 | 23 | 0 |
+| (-19612,-19720) | 114 | 14 | 0 |
+| (-19712,-19820) | 74 | 14 | 0 |
+| (-20012,-19820) | 20 | 20 | 0 |
+| (-20112,-19620) | 1 | nicht gemessen | 0 |
+Ausserhalb von Teil 8 uebermalt: an allen 22 Stellen 0. (-20312,-20020), (-20412,-19920), (-20312,-19620), Elza (-20212,-19920): 0 Figurpunkte auf dem Teil.
+`fern`: ROOM6010/6011 C5 422 + 422 -> 0 + 0, Stage 6 844 -> 0, gesamt 1188 -> 344. `neustellen 6010 5 113`: `V -`, an keinem erreichbaren Platz steht eine Figur VOR dem Teil auf ihm.
+**Figur auf der Treppe** (echter Handler, Aktionstaste am Fuss, RE15_FORCE_CUT=5, westlichste Spur x -19700): Leon 41 Bilder F60..F180, Elza 23 Bilder F114..F136: 0 Figurpunkte auf dem Teil. Sie kommt bis 7,2 Bildpunkte heran (Elza 10,8), im Kasten von Teil 8 liegen Bild 123/126/129 20/27/38 Figurpunkte, davon 0 uebermalt (Elza Bild 126/130/131 7/6/5, 0). Andere Teile uebermalen sie in 4 Bildern mit 22 Punkten: das sind die alten Rechtecke, bytegleich zum Stand davor.
+
+### Riegel
+- `unit_r41_restpunkte_wange`: Ebene aus den RDT-Kameras nachgerechnet, dx/dz, dy/dz, Tabelle.
+- `unit_r41_restpunkte_teil8(_elza)` jetzt R113..R125: jeder Punkt bucket(Eintritt in die Wange) == Rechteck-Tiefe.
+- `unit_r41_restpunkte_teil8_davor`: `V -`.
+- `integration_r41_restpunkte_masken`: 10 Szenen Art Z, Stelle des Mangels q8a, Fenster nur aus Figurpunkten auf dem Teil (`Q41n1/tools/fenster.py`). Die Szenen q8v/q8ve ("Figur VOR der Wange") sind weg: die Figur stand dort hinter der Wange.
+- `integration_r41_restpunkte_treppe(_elza)`: neu.
+- `unit_r41_masken36_fern`: Schranke 344, Stage 6 == 0.

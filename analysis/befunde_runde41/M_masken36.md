@@ -1517,7 +1517,7 @@ exe-Praefix je Gruppe (r41m8a1..r41m8d2), eigene Laufordner.
 
 17. **NB5 - Teile ohne Koerper (Entscheid M-E2, nur mit Zellbeleg eingesetzt):** 277 Teile des Original-Atlas (144 225 Punkte, 70 Kameras) haben keine
     belegbare Tiefe (Gruende je Teil `M_bilder/NB5/teile_nb5.txt`) und bleiben weg -> Liste "Fuer den Nutzer: Freistellungen" (NB5).
-18. **[Geschlossen durch Spur Q, Q_restpunkte.md Punkt 1: je OT-Stufe ein Rechteck, 1 508 -> 422 je Variante, der Rest ist OT-Gleichstand] NB5 - Restloch "zu fern" an neuen Teilen:** ROOM6010/6011 C5 neues Teil 8 (Zelle @0x0092C, Rechtecke 113..117: 1 508 Figurpunkte je Variante
+18. **[6010/6011 C5 geschlossen durch Spur Q, Q_restpunkte.md "Nachbesserung 1": Teil 8 liegt auf der Ebene der Wange x -20591 (Kameras 4 und 5), je OT-Stufe ein Rechteck R113..R125, 1 508 -> 0 je Variante. 3040/3041 C4 Rechteck 118 bleibt, 1 Punkt] NB5 - Restloch "zu fern" an neuen Teilen:** ROOM6010/6011 C5 neues Teil 8 (Zelle @0x0092C, Rechtecke 113..117: 1 508 Figurpunkte je Variante
     hinter dem Koerper nicht verdeckt - je Bildspalte eine Tiefe, der Cut ist mit 128 Rechtecken voll) und 3040/3041 C4 Rechteck 118 (1 Punkt).
     Vorher waren diese Punkte ohne jede Maske sichtbar (kein Rueckschritt).
 19. **NB5 - Kamera der Python-Werkzeuge:** `geom.cut_view` rechnet mit der exakten Wurzel, das Spiel mit SquareRoot0 (FUN_80053ca4 -> 0x80065f60):
