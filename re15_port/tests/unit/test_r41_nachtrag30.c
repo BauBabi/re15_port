@@ -6,6 +6,8 @@
  *      die RE2-Toene der Bruecke (Satz 0x0F vor der Fahrt, 0x10 am Ende) kommen in dieser Reihenfolge; Ventil 13 gibt es nicht mehr
  *   C  Schrank 2010/2011: erster Klick klappt auf (16 Bilder, rot_y 1024), danach Text; zweiter Klick ohne Fahrt; nur unter Cut 3 gezeichnet; Ja-Zweig wie ROOM2060: Cut 8 + Cursor ohne Zeitgrenze,
  *      SQUARE neben der Zone nichts, Steuerkreuz +-200 je Bild mit Rahmen, Zone 7 + SQUARE -> Cut 9 + Bit 125 + Text 42, dann Standbild; START bleibt gesperrt; Raumwechsel schliesst
+ *   C2 USE der Sicherung am geschlossenen Schrank (Integration N x O, N_abnahme_1.md Mangel 1): der USE-Lauf haelt ueber die 16 Bilder Aufklappen, kein Text, direkt der Cursor-Schritt ->
+ *      Bit 125 -> Text 42 -> Standbild; zweite Sicherung aus ROOM1150 bei steckender Sicherung / bestuecktem Generator: Text 43 / 40 mit Bit 125 unberuehrt (kein stummes Ja)
  *   D  Wasserlauf ROOM2000/2001: Strahlen + Lauf ueber den Weg (Effekt 0x0F wandert 100 je Bild +x bis vor die Kante, faellt dahinter) + Einschlaege, unter einem Text steht der Lauf,
  *      Leiter bleibt gesperrt; mit Bit 100 oder 103 nichts; 20B0 nichts; ROOM2010 hat keine Leiter
  *   E  Sirene: an mit dem Zaehler (nach der Ansage), aus mit der Flut, dem Tod und dem Verlassen des Raums
@@ -26,6 +28,7 @@
 #include "re15_fade.h"
 #include "re15_collision.h"
 #include "re15_ventilkette_r41.h"
+#include "re15_keyitems_r41.h"
 #include "re15_panel2030_r41.h"
 #include "re15_schrank2010_r41.h"
 #include "re15_wasserlauf_r41.h"
@@ -427,6 +430,78 @@ static void fall_c(uint16_t r)
     PRUEFE(!re15_ventilkette_r41_vollbild_sperrt(), "ROOM%04X: die Sperre haengt nur am Vollbild ohne (2,7)", r);
 }
 
+/* ---- C2: USE am geschlossenen Schrank (Integration N x O) ------------------------------------------------------------------
+ * Reihenfolge wie im Spiel: main.c scd_vm_tick, dann re15_game_step: re15_keyitems_r41_tick (game_step_common.c:1364) VOR re15_ventilkette_r41_tick (:1365). Die Sicherung wird
+ * Eintrag ueber den Besitz-Takt ((3,108) @0x01FF2), USE laeuft ueber dieselbe Stellen-Pruefung wie das Inventar (Vorwaertspunkt 620 @0x80042bd0). */
+static void takt_use(void)
+{
+    re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_msg_tick(0, 0, 0);
+    scd_vm_tick();
+    re15_keyitems_r41_tick();
+    re15_ventilkette_r41_tick();
+    re15_aot_scan(p->x, p->z, 0xFF);
+    (void)re15_cam_present_tick();
+}
+
+static void fall_c_use(uint16_t r)
+{
+    enum { KX = 4300, KZ = -2770, SICHERUNG = 0x40 };
+    bits_leeren();
+    vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
+    if (raum_hoch(r, KX, 0, KZ) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+    re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    p->rot_y = 0; band_aus_y(0);
+    re15_keyitems_r41_tick();
+    PRUEFE(re15_inv_find_item(SICHERUNG) >= 0 && re15_game_flag_get(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT), "ROOM%04X USE: Sicherung im Inventar", r);
+    PRUEFE(!re15_schrank2010_r41_offen() && re15_ventilkette_r41_kasten_fragt(), "ROOM%04X USE: Tuer zu, Kasten fragt", r);
+    PRUEFE(re15_keyitems_r41_use(SICHERUNG) == 1 && re15_keyitems_r41_schliessen() == 1, "ROOM%04X USE: trifft den Kasten", r);
+    /* Mangel 1: der Lauf endete 2 Takte nach dem Start, die Tuer braucht 16 (Vorfix: "USE-Lauf ohne Frage beendet", dann Text 40) */
+    int cn = 0, text = 0, lauf_hielt = 1, bilder = 0;
+    for (int i = 0; i < 40 && !re15_schrank2010_r41_nahbild(&cn); i++) {
+        takt_use();
+        bilder++;
+        if (g_scd.message_active) text = 1;
+        if (!re15_schrank2010_r41_offen() && !re15_keyitems_r41_lauf_aktiv()) lauf_hielt = 0;
+    }
+    PRUEFE(lauf_hielt, "ROOM%04X USE: Lauf haelt bis die Tuer offen ist", r);
+    PRUEFE(cn == 8 && re15_schrank2010_r41_offen() && re15_schrank2010_r41_winkel() == 1024 && bilder >= RE15_R41N_AUF_TAKTE, "ROOM%04X USE: Tuer ganz auf, dann Cut 8 + Cursor (Bilder %d, Cut %d)", r, bilder, cn);
+    PRUEFE(!text, "ROOM%04X USE: kein Text bis zum Cursor (RE2 ROOM1110 sub01 @0x02336: Ereignis ohne Text und Frage)", r);
+    PRUEFE(!re15_keyitems_r41_lauf_aktiv(), "ROOM%04X USE: Lauf mit der Frage beendet", r);
+    PRUEFE(bit(RE15_R41C_BIT_KASTEN) == 0 && re15_inv_find_item(SICHERUNG) >= 0, "ROOM%04X USE: Sicherung noch nicht drin", r);
+    /* Zone 7: x 19571 + 200 >= 19700 @0x0100C, SQUARE @0x0132E */
+    g_scd_pad_held = 2; takt_use(); g_scd_pad_held = 0x40; takt_use(); g_scd_pad_held = 0;
+    PRUEFE(re15_schrank2010_r41_nahbild(&cn) && cn == 9, "ROOM%04X USE: Zone 7 + SQUARE -> Cut 9 (%d)", r, cn);
+    int text42 = 0, standbild = 0; unsigned sr = 0; int sc = -1;
+    for (int i = 0; i < 400 && !standbild; i++) {
+        if (g_scd.message_active && g_scd.message_id == RE15_R41C_MSG_KASTEN_BENUTZT) text42 = 1;
+        g_scd_pad_edge = (g_scd.message_active && (i & 7) == 7) ? 0x4000 : 0;
+        takt_use(); g_scd_pad_edge = 0;
+        if (re15_ventilkette_r41_standbild(&sr, &sc) == 1 && sr == RE15_R41C_STANDBILD_RAUM) standbild = 1;
+    }
+    PRUEFE(bit(RE15_R41C_BIT_KASTEN) == 1 && text42 && standbild, "ROOM%04X USE: Bit 125 -> Text 42 -> Standbild", r);
+    PRUEFE(re15_inv_find_item(SICHERUNG) < 0, "ROOM%04X USE: Sicherung verlaesst das Inventar", r);
+
+    /* Gegenprobe: zweite Sicherung (Eintrag aus ROOM1150), Stelle offen, aber kein 2010_kasten_frage. Der Lauf darf die Texte hinter der Tuer nicht verschlucken (gemessen Lauf r_drin_fix) */
+    for (int fall = 0; fall < 2; fall++) {
+        bits_leeren();
+        vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
+        if (fall == 0) vorflag(RE15_R41C_BANK, RE15_R41C_BIT_KASTEN);
+        else           vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_GENERATOR_BIT);
+        if (raum_hoch(r, KX, 0, KZ) != 0) { PRUEFE(0, "ROOM%04X Parse", r); return; }
+        g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = 0; band_aus_y(0);
+        PRUEFE(!re15_ventilkette_r41_kasten_fragt(), "ROOM%04X Fall %d: Kasten fragt nicht", r, fall);
+        (void)re15_inv_grant(SICHERUNG, 1);
+        PRUEFE(re15_keyitems_r41_use(SICHERUNG) == 1 && re15_keyitems_r41_schliessen() == 1, "ROOM%04X Fall %d: Stelle offen (Tor (3,108))", r, fall);
+        const int soll = fall == 0 ? RE15_R41C_MSG_KASTEN_DRIN : RE15_R41C_MSG_KASTEN_LEER;
+        int gesehen = 0;
+        for (int i = 0; i < 60 && !gesehen; i++) { takt_use(); if (g_scd.message_active && g_scd.message_id == soll) gesehen = 1; }
+        PRUEFE(gesehen && re15_schrank2010_r41_offen(), "ROOM%04X Fall %d: Text %d hinter der Tuer", r, fall, soll);
+        PRUEFE(bit(RE15_R41C_BIT_KASTEN) == (fall == 0), "ROOM%04X Fall %d: Bit 125 unberuehrt", r, fall);
+        for (int i = 0; i < 300 && g_scd.message_active; i++) { g_scd_pad_edge = (i & 7) == 7 ? 0x4000 : 0; takt_use(); g_scd_pad_edge = 0; }
+    }
+}
+
 /* ---- D: Wasserlauf --------------------------------------------------------------------------------------------------- */
 static int esp_0b(void)
 {
@@ -699,6 +774,7 @@ int main(int argc, char **argv)
     for (int v = 0; v < 2; v++) {
         fall_b((uint16_t)(0x2030 + v));
         fall_c((uint16_t)(0x2010 + v));
+        fall_c_use((uint16_t)(0x2010 + v));
         fall_d((uint16_t)(0x2000 + v));
         fall_e((uint16_t)(0x2030 + v));
     }

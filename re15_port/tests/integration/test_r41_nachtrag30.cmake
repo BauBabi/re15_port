@@ -2,8 +2,9 @@
 # SPUR N "nachtrag30" MIT DER ECHTEN EXE (Runde 41, AUFTRAG.md Nachtraege 30, 30b, 30d, 30e, 34 (N-E2), 36, 37). Dossier analysis/befunde_runde41/N_nachtrag30.md.
 #   TEIL=panel   FIGUR leon/elza: Pult -> Frage 40 -> Panel -> A nach B, B nach C, C nach A -> 80 -> Text 43 -> Ja -> Fahrt unter Cut 4 mit den Toenen RE2 ROOM4080
 #                Satz 0x0F / 0x10 -> Text 44. Bild: Fenster von Tank B vor und nach dem Umfuellen.
-#   TEIL=schrank FIGUR leon/elza: 2010 Cut 3: Aktion -> Tuer klappt auf (Bilder geschlossen / offen), Text 40; mit (3,108) Ja -> Cut 8 + Cursor wartet (BSS-Vergleich), SQUARE neben der Zone nichts,
+#   TEIL=schrank FIGUR leon/elza: 2010 Cut 3: Aktion -> Tuer klappt auf (Bilder geschlossen / offen), Text 40; mit (3,108) die Frage 41 entfaellt (Spur O), USE -> Cut 8 + Cursor wartet (BSS-Vergleich), SQUARE neben der Zone nichts,
 #                Cursor im Bild an der Stelle wie ROOM2060, rechts + SQUARE -> Cut 9 + Bit 125 + Text 42 -> Standbild der Ventile; START im Cursor-Schritt oeffnet nichts; zu Fuss nach Cut 4: keine Tuer im Bild.
+#                USE ueber das Inventar am GESCHLOSSENEN Schrank (N_abnahme_1.md Mangel 1): Tuer klappt auf -> Cursor -> Bit 125 -> Text 42 -> Standbild -> Cut_old, ohne Text 40 und ohne Frage.
 #   TEIL=wasser  FIGUR leon/elza: 2000 Cut 10 + Cut 9: Wasserlauf an der Leiter und auf dem Weg (Bildvergleich gegen den Lauf mit Bit 100), der Weg LAEUFT (Werkzeug fluss: Verschiebung waechst mit dem
 #                Abstand der Bilder, Gegenlauf mit Bit 100 steht), Weg durch die echte Tuer 2010 -> 2000, Leiter weiter gesperrt, mit Bit 100 nichts.
 #   TEIL=laden   FIGUR leon/elza: der echte Weg: Spielstand + CONTINUE (Wasserlauf 2000, Schrank 2010, Panel 2030 samt Bruecke) und Ring-Tuer 2070 -> 2030 zu Fuss zum Pult -> Panel geloest.
@@ -168,12 +169,16 @@ if("${TEIL}" STREQUAL "schrank")
     if(_d LESS 150 OR NOT _g EQUAL 0)
         _fehler(": Aufklappen im Bild nicht belegt (Flaeche ${_d}, Gegenprobe ${_g})")
     endif()
-    # Ja-Zweig: Tasten wie k1 in test_r41_ventilkette_weg.cmake. Cursor-Schritt wie ROOM2060 sub18/sub19 (Dossier Nachbesserung 1): F640 Cut 8 + Cursor, F650 SQUARE neben der Zone und F660 START tun nichts,
+    # Ja-Zweig: Tasten wie k1 in test_r41_ventilkette_weg.cmake (Spur O: die Frage 41 entfaellt, F618 USE auf dem Bild des alten Ja, Tuer ist schon auf). Cursor-Schritt wie ROOM2060 sub18/sub19 (Dossier Nachbesserung 1): F640 Cut 8 + Cursor, F650 SQUARE neben der Zone und F660 START tun nichts,
     # F680 Cursor unveraendert, F700 rechts = Zone 7, F710 SQUARE -> F730 Cut 9 + Text 42, F790 Text zu, Standbild.
-    _lauf(b 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_FLAG_CENSUS=1 RE15_SE_DEBUG=1 RE15_DEBUG_JUMP=2010@250 "RE15_PLAYER_POS=4950,-2770,0,0" RE15_SET_FLAG=3:108
-          "RE15_PRESS=square@300,square@368,square@418,square@468,square@538,square@618,square@650,start@660,right@700,square@710,square@790,square@870"
+    _lauf(b 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_FLAG_CENSUS=1 RE15_SE_DEBUG=1 RE15_KEYITEMS_LOG=1 RE15_DEBUG_JUMP=2010@250 "RE15_PLAYER_POS=4950,-2770,0,0" RE15_SET_FLAG=3:108
+          "RE15_PRESS=square@300,square@368,square@418,square@468,square@538,square@650,start@660,right@700,square@710,square@790,square@870" "RE15_USE_TEST=0x40@618#201${S}"
           "RE15_FRAMEDUMP=640-730/10:f_" "RE15_EXIT_AT=960#201${S}")
-    _danach("${_dbg}" "[schrank2010] Tuer auf" "[msgtext] room=201${S} id=41 \"Will you use the Fuse?\"" "Frage nach dem Aufklappen")
+    _danach("${_dbg}" "[schrank2010] Tuer auf" "[msgtext] room=201${S} id=40 \"A fuse box for the valve controls." "Text 40 nach dem Aufklappen")
+    _danach("${_dbg}" "id=40 \"A fuse box" "[keyitems] Frage 41 entfaellt: Nein (Aktionstaste)" "Aktionstaste: die Frage entfaellt (Spur O)")
+    _darf_nicht("${_dbg}" "id=41 \"Will you use the Fuse?\"" "die Frage entfaellt mit der Sicherung im Inventar")
+    _danach("${_dbg}" "Frage 41 entfaellt: Nein (Aktionstaste)" "[keyitems] Frage 41 entfaellt: Ja (USE)" "USE bei offener Tuer")
+    _danach("${_dbg}" "Frage 41 entfaellt: Ja (USE)" "[schrank2010] Nahansicht ROOM2060 Cut 8, Cursor obj 4 bei (19571,-22542)" "USE -> Cursor")
     _danach("${_dbg}" "[schrank2010] Nahansicht ROOM2060 Cut 8, Cursor obj 4 bei (19571,-22542)" "[schrank2010] Nahansicht ROOM2060 Cut 9, Cursor (19771,-22542) auf Zone 7" "Cut 8, dann Cut 9")
     _darf_nicht("${_dbg}" "Inventar-Ton Satz 6" "START im Cursor-Schritt oeffnet nichts")
     _danach("${_dbg}" "[schrank2010] Nahansicht ROOM2060 Cut 9" "WRITE Set  zone=9 idx=125 op=1" "Bit 125 hinter dem Cursor-Schritt")
@@ -196,6 +201,36 @@ if("${TEIL}" STREQUAL "schrank")
     if(_z LESS 100 OR NOT _s EQUAL 0)
         _fehler(": Cursor im Bild nicht belegt (${_z}, ${_s})")
     endif()
+    # N_abnahme_1.md Mangel 1: USE am GESCHLOSSENEN Schrank, echter Weg START/ITEM/USE. Der Vorspann AUF von 2010_kasten_frage (+006 `22 05 1e 01`, While +00A) schiebt die Frage um die 16 Bilder Aufklappen
+    # (ROOM11F0 sub06 @0x01336) hinter den USE-Lauf; der Lauf haelt dafuer (keyitems_r41.c re15_keyitems_r41_tick). Inventar wie integration_r41_keyitems_*: Leon Platz 2 (Browning, Patronen), Elza Platz 0.
+    # Takte gemessen 2026-10-31 (Laeufe n_leon, n_elza): F325 USE, F334 Cut_chg(3), rund F350 Cursor, F400 rechts = Zone 7, F410 SQUARE -> Bit 125, Text 42, F490 Text zu -> Standbild, F570 Bestaetigen.
+    if("${FIGUR}" STREQUAL "elza")
+        set(_tasten "start@260,square@285,square@310,square@325")
+        set(_waffe "")
+    else()
+        set(_tasten "start@260,square@285,down@300,square@310,square@325")
+        set(_waffe "RE15_EQUIP=3")
+    endif()
+    _lauf(u 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_FLAG_CENSUS=1 RE15_KEYITEMS_LOG=1 RE15_DEBUG_JUMP=2010@240 "RE15_PLAYER_POS=4950,-2770,0,0" RE15_SET_FLAG=3:108 ${_waffe}
+          "RE15_PRESS=${_tasten},right@400,square@410,square@490,square@570" "RE15_EXIT_AT=660#201${S}")
+    _muss("${_dbg}" "[keyitems] USE 0x40 ROOM201${S} Slot 8 Ereignis 20 -> Inventar schliesst" "USE trifft den Schrank")
+    _danach("${_dbg}" "[keyitems] USE 0x40" "Port-Programm 2010_kasten_frage" "USE startet das Programm")
+    _danach("${_dbg}" "Port-Programm 2010_kasten_frage" "Cut_chg(3)" "Vorspann: Cut_chg 3")
+    _danach("${_dbg}" "Cut_chg(3)" "[schrank2010] Tuer klappt auf" "Vorspann: Tuer klappt auf")
+    _danach("${_dbg}" "[schrank2010] Tuer klappt auf" "[schrank2010] Tuer auf (rot_y 1024)" "90 Grad")
+    _danach("${_dbg}" "[schrank2010] Tuer auf (rot_y 1024)" "[keyitems] Frage 41 entfaellt: Ja (USE)" "die Frage entfaellt erst hinter dem Aufklappen")
+    _danach("${_dbg}" "Frage 41 entfaellt: Ja (USE)" "[schrank2010] Nahansicht ROOM2060 Cut 8, Cursor obj 4 bei (19571,-22542)" "USE fuehrt direkt zum Cursor")
+    _danach("${_dbg}" "Cursor obj 4" "[schrank2010] Nahansicht ROOM2060 Cut 9, Cursor (19771,-22542) auf Zone 7" "Cursor -> Zone 7 + SQUARE")
+    _danach("${_dbg}" "auf Zone 7" "WRITE Set  zone=9 idx=125 op=1" "Cursor -> Bit 125 (`22 09 7d 01`)")
+    _danach("${_dbg}" "zone=9 idx=125 op=1" "[msgtext] room=201${S} id=42 \"You've used the Fuse.\"" "Bit 125 -> Text 42 (ROOM2060 sub19 @0x016C8)")
+    _danach("${_dbg}" "id=42 \"You've used the Fuse.\"" "[ventilkette41] Standbild der Ventile offen" "Text 42 -> Standbild")
+    _danach("${_dbg}" "Standbild der Ventile offen" "[ventilkette41] Standbild der Ventile zu" "Bestaetigen schliesst")
+    _danach("${_dbg}" "Standbild der Ventile zu" "[pri] cut=0 " "Cut_old zurueck (ROOM11D0 sub02 @0x01884): der Sprung steht unter Cut 0")
+    _danach("${_dbg}" "zone=9 idx=125 op=1" "[keyitems] Gegenstand 0x40 verlaesst das Inventar" "die Sicherung ist verbraucht")
+    _darf_nicht("${_dbg}" "USE-Lauf ohne Frage beendet" "der USE-Lauf haelt ueber das Aufklappen")
+    _darf_nicht("${_dbg}" "[msgtext] room=201${S} id=40" "USE ohne Text 40")
+    _darf_nicht("${_dbg}" "id=41 \"Will you use the Fuse?\"" "USE ohne Frage")
+    _darf_nicht("${_dbg}" "Frage 41 entfaellt: Nein" "USE gibt Ja")
     # Abnahme 0, Mangel 4: zu Fuss nach Cut 4 steht die offene Tuer nicht im Bild (Plan wie Lauf s_geh2); Spalten 0..27 = Hintergrund BG04 (Lauf s_geh3 100 %, mit Tuer s_geh2 29 %), Figur steht weiter rechts
     file(WRITE "${_basis}_plan_c4.txt" "RAUM 201${S}
 WARTE 30

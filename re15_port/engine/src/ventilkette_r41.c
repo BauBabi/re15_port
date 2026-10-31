@@ -102,6 +102,8 @@ static void bit_setzen(int b) { re15_game_flag_set(RE15_R41C_BANK, (uint8_t)b, 1
 static int strom(void) { return re15_game_flag_get(RE15_R41C_STROM_BANK, RE15_R41C_STROM_BIT) ? 1 : 0; }   /* (3,126) @0x012AE */
 static int sicherung(void) { return re15_game_flag_get(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT) ? 1 : 0; } /* (3,108) @0x01FF2 */
 static int generator(void) { return re15_game_flag_get(RE15_R41C_SICHERUNG_BANK, RE15_R41C_GENERATOR_BIT) ? 1 : 0; } /* (3,144) @0x0169E */
+/* Ereignis 20 fuehrt zur Frage 41 (Programm 2010_kasten_frage): Zustand "Frage" des Original-Kastens ROOM2060 sub00 @0x0109E..@0x010DE (Dispatch unten, USE-Lauf keyitems_r41.c). */
+int re15_ventilkette_r41_kasten_fragt(void) { return !bit(RE15_R41C_BIT_KASTEN) && sicherung() && !generator(); }
 
 /* Ton ueber den Plattform-Haken (PC: platform/pc/src/ventilkette_r41_pc.c); gezaehlt wird immer (Riegel). */
 static void ton(int t)
@@ -597,7 +599,7 @@ const uint8_t *re15_ventilkette_r41_ereignis(uint16_t room_id, uint8_t event_id)
          * Generator ((3,144)) -> Frage zum Einsetzen; sonst nur der Text "One of the fuses is missing...". */
         if (event_id == RE15_R41C_EV_KASTEN)
             name = bit(RE15_R41C_BIT_KASTEN) ? "2010_kasten_drin"
-                 : (sicherung() && !generator()) ? "2010_kasten_frage" : "2010_kasten_leer";
+                 : re15_ventilkette_r41_kasten_fragt() ? "2010_kasten_frage" : "2010_kasten_leer";
     } else if (ist(room_id, RE15_R41C_RAUM_2050)) {
         /* Hebel-Platz Slot 6: Ereignis 4 (sub00 @0x01E28 -> sub04 @0x022E6) UND Ereignis 2 (Kisten im Becken, sub01
          * @0x0201A -> sub02 @0x0220E, Speed -20 For 180 @0x0227C) heben das Wasser -> beide erst nach dem Pult

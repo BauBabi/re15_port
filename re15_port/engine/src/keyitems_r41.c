@@ -383,8 +383,17 @@ void re15_keyitems_r41_tick(void)
     if (re15_menu_gameplay_frozen()) return;
     if (s_lauf) {
         /* die Frage faellt in allen Stellen im ersten Skripttakt (Riegel unit_r41_keyitems_stellen): kam sie nicht, gilt die
-         * Stelle nicht mehr, und die naechste Aktionstaste darf kein Ja erben. */
-        if (++s_lauf_takte > 1) {
+         * Stelle nicht mehr, und die naechste Aktionstaste darf kein Ja erben.
+         * Einzige Ausnahme Schrank ROOM2010/2011 (Integration N x O, N_abnahme_1.md Mangel 1): 2010_kasten_frage steht vor Text 40 und
+         * Frage 41 im Vorspann AUF (+006 `22 05 1e 01` Marker, +00A While `0f 04 08 00` + `21 05 1e 01`), die Tuer braucht 16 Bilder
+         * (ROOM11F0 sub06 @0x01336 `0d 00 04 00 10 00`, geschlossen gemessen: Lauf endete 2 Takte nach dem Start, vor "Tuer auf").
+         * Solange der Marker steht, beginnt die Zaehlung von vorn; den Marker loescht der Schrank-Takt, die VM liest das im naechsten
+         * Bild VOR diesem Takt (main.c scd_vm_tick, dann re15_game_step). Bank 5 ist Raum-Scratch: nur an der Stelle in 2010/2011, und nur
+         * wenn die Frage wirklich folgt: in 2010_kasten_drin/_leer (zweite Sicherung aus ROOM1150) wuerde der Lauf sonst Text 43 als Ja
+         * verschlucken und die steckende Sicherung stumm herausnehmen (gemessen, Lauf r_drin_fix: `Set zone=9 idx=125 op=0` ohne Text). */
+        if (s_lauf->raum == RE15_R41C_RAUM_2010 && re15_ventilkette_r41_kasten_fragt() && re15_game_flag_get(5, RE15_R41C_FLAG_SCHRANK)) {
+            s_lauf_takte = 0;
+        } else if (++s_lauf_takte > 1) {
             LOG("[keyitems] USE-Lauf ohne Frage beendet (Ereignis %d)\n", (int)s_lauf->ereignis);
             s_lauf = NULL;
         }
