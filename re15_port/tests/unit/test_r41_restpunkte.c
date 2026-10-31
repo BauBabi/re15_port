@@ -56,6 +56,12 @@ static void teil_gpu(void)
     PRUEF(!re15_gpu_dreieck_zu_gross(-300, -100, 300, 100, 0, 400), "Abstand zaehlt, nicht die Lage (psx-spx: Y1 -100, Y2 +400 wird gezeichnet)");
     PRUEF(re15_gpu_dreieck_zu_gross(0, -300, 0, 300, 10, 0), "psx-spx: Y1 -300, Y2 +300 nicht");
     PRUEF(re15_gpu_dreieck_zu_gross(100, 100, 10250, 100, 100, 8000), "Quader F767 aus ROOM20B0 weg");
+    {   /* GTE-Saettigung vor der Grenze (psx-spx: ScrX/ScrY FIFO -400h..+3FFh) */
+        int x0 = 12288, y0 = 100, x1 = 200, y1 = 100, x2 = 200, y2 = 150;
+        PRUEF(re15_gpu_dreieck_verwerfen(0, 0, &x0, &y0, &x1, &y1, &x2, &y2) == 0 && x0 == 0x3FF, "Ecke ausserhalb: saettigt auf 3FFh, Abstand 823, die Hardware zeichnet");
+        x0 = -5000; y0 = -9000; x1 = 300; y1 = 9000; x2 = 300; y2 = 100;
+        PRUEF(re15_gpu_dreieck_verwerfen(0, 0, &x0, &y0, &x1, &y1, &x2, &y2) == 1 && y0 == -0x400 && y1 == 0x3FF, "gesaettigt immer noch ueber 511: weg");
+    }
     {
         const long long flaeche_max = 4LL * 2 * RE15_GPU_MAX_DX * RE15_GPU_MAX_DY / 2;   /* cross_product von Koordinaten << FP_BITS (1) */
         PRUEF(767 * flaeche_max < 2147483648LL, "groesste zugelassene Flaeche %lld x hoechste Texturzeile 767 bleibt unter 2^31", flaeche_max);

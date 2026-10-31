@@ -3338,19 +3338,6 @@ static void pc_title_pulse_log(uint64_t now_us, uint64_t due, int phase, uint64_
     fflush(lf);
 }
 
-#if defined(_WIN32) && !defined(__ANDROID__)
-/* Runde 41 Spur Q (UEBERGABE 3b): auf dieser Maschine hinterlaesst ein Absturz der exe keinen WER-Eintrag (Abnahme P H1); hier steht er wenigstens im debug.log. */
-static LONG WINAPI r41q_ausnahme(EXCEPTION_POINTERS *e)
-{
-    void *f[24]; const USHORT n = RtlCaptureStackBackTrace(0, 24, f, NULL); const char *b = (const char *)GetModuleHandleA(NULL);
-    fprintf(stderr, "[flow] AUSNAHME 0x%08lX Modul %p Adresse +0x%llx Ziel %p Stapel", e->ExceptionRecord->ExceptionCode, (void *)b,
-            (unsigned long long)((const char *)e->ExceptionRecord->ExceptionAddress - b), (void *)e->ExceptionRecord->ExceptionInformation[1]);
-    for (USHORT i = 0; i < n; i++) fprintf(stderr, " +0x%llx", (unsigned long long)((const char *)f[i] - b));
-    fprintf(stderr, "\n"); fflush(stderr);
-    return EXCEPTION_CONTINUE_SEARCH;
-}
-#endif
-
 int main(int argc, char *argv[])
 {
 #if defined(__ANDROID__)
@@ -3386,7 +3373,7 @@ int main(int argc, char *argv[])
      * exact numerical state. */
     freopen("debug.log", "w", stderr);
 #if defined(_WIN32) && !defined(__ANDROID__)
-    SetUnhandledExceptionFilter(r41q_ausnahme);   /* Runde 41 Spur Q */
+    { extern void re15_endgrund_r41_einrichten(void); re15_endgrund_r41_einrichten(); }   /* Runde 41 Spur Q: Absturz im debug.log (endgrund_r41_pc.c) */
 #endif
     setvbuf(stderr, NULL, _IONBF, 0);   /* unbuffered for live tail */
 
