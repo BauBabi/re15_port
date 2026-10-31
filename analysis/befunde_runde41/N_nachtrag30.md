@@ -252,11 +252,12 @@ ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_b$" --timeout 
 
 ## OFFEN
 
-1. **Querbezug Spur O (r41_keyitems), Merge von `test_r41_ventilkette_weg.cmake` k1:** O ersetzt die Fragen am Kasten durch das Inventar. Der Vorspann "Aufklappen" (Cut_chg 3, Marker (5,0x1E)), der Cursor-Schritt (Marker (5,0x1D)) und Cut_old stehen in den Programmen `2010_kasten_*` (`tools/r41_ventilkette/programme.py`, Praefixe AUF und NAH) und muessen in Os Fassung erhalten bleiben; Os USE laeuft in denselben Ja-Zweig. Fuer k1 gilt nach dem Merge: nach dem USE (Takt des alten Ja) `right` +22 Bilder, `square` +32 (Zone 7), +112 Text 42 zu, +192 Standbild zu; Reihenfolge im Log Cursor -> Bit 125 -> Text 42 -> Standbild. Text 42 steht jetzt VOR dem Standbild.
+1. ERLEDIGT in der Integration: Querbezug Spur O (k1, Riegel `_schrank_*`, USE am geschlossenen Schrank), Abschnitt "Integration mit Spur O". Der Vorspann "Aufklappen" (Cut_chg 3, Marker (5,0x1E)), der Cursor-Schritt (Marker (5,0x1D)) und Cut_old stehen unveraendert in den Programmen `2010_kasten_*`; Spur O hat `tools/r41_ventilkette/programme.py` nicht angefasst. k1 nach dem USE: `right` +22 Bilder, `square` +32 (Zone 7), +112 Text 42 zu, +192 Standbild zu; Log Cursor -> Bit 125 -> Text 42 -> Standbild.
 2. Die offene Schranktuer hat keine Kollision (Port-Prop, die Figur kann durch den Fluegel gehen).
 3. Die Schrank-Innenseite zeigt nach dem Einsetzen weiter Cut 6, nicht Cut 10: 89 von 12480 Bildpunkten der Schrankwand (Sicherung und Lampe). Die Einsetz-Ansicht zeigt den Wechsel Cut 8 -> Cut 9.
 4. Die Schranktuer ist nur unter Cut 3 zu sehen (M4). Der Fluegel stuende in Cut 4 im Bild, dafuer gibt es keine brauchbare Textur; der Hintergrund dort zeigt den Schrank geschlossen.
 5. `audio_pc.c` traegt 23 Zeilen statt eines Haken-Einzeilers: die Sirene braucht die statischen `ss_*`-Funktionen, Muster `re15_audio_r41_alarm` der Spur C.
+6. Neu aus der Integration, nicht behoben (Spur O, ausserhalb Mangel 1/2): zweite Sicherung aus ROOM1150 im Inventar, Sicherung steckt im Kasten, Tuer OFFEN: USE nimmt die steckende Sicherung stumm heraus (Laeufe r2_a, r2_b: `Set zone=9 idx=125 op=0`, kein Text). Grund: das Tor der Zeile in `k_stellen` prueft nur (3,108), nicht den Zustand des Kastens. Vorschlag: `re15_ventilkette_r41_kasten_fragt()` ins Tor der Stelle, dann gilt dort "You can't use it here." (RE2 @0x8006b248).
 
 ## Fuer den Nutzer
 
@@ -266,8 +267,8 @@ ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_b$" --timeout 
 **Notiz, Rechenweg:** §3.
 **Lautstaerke:** vorhandene `re15_options.cfg` behaelt ihren Wert; der wirkt jetzt quadratisch (20 -> 0,04). Ohne Datei gilt 50.
 
-**Bedienung Sicherung 2010:** nach "Yes" wie in 2060: Cursor mit dem Steuerkreuz auf die Luecke in der dritten Reihe (ein Schritt nach rechts reicht), Aktionstaste. Einen Abbruch gibt es dort wie im Original nicht.
-**Entscheidungsfrage:** ROOM2010/2011 ist das Buero ohne Leiter und ohne Wasser. Die Beschreibung passt Wort fuer Wort auf ROOM2000/2001 (dort steht "I cannot climb up the ladder because of the water pressure."), der Wasserlauf ist dort gebaut, auch fuer Elza in 2001. Ist das der gemeinte Raum (2001 statt 2010)?
+**Bedienung Sicherung 2010:** vor dem Schrank START, ITEM, die Sicherung waehlen, USE. Das Inventar schliesst, der Schrank klappt auf (ist er offen, entfaellt das), dann wie in 2060: Cursor mit dem Steuerkreuz auf die Luecke in der dritten Reihe (ein Schritt nach rechts reicht), Aktionstaste. Einen Abbruch gibt es dort wie im Original nicht. Die Aktionstaste allein klappt den Schrank auf und zeigt nur "One of the fuses is missing..."; eine Frage gibt es nur noch mit vollem Inventar (Altstand, Spur O).
+**Entscheid zur Frage aus Spur N (Orchestrator):** Der Wasserlauf bleibt in ROOM2000/2001, dort ist die Leiter. ROOM2010/2011 ist das Buero ohne Leiter und ohne Wasser.
 
 ## Nachbesserung 1 (nach Abnahme 0, N_abnahme_0.md; fortlaufend)
 
@@ -308,7 +309,7 @@ Laeufe c_fein / c_lauf / c_klemme (Original-Skript ROOM2060 im Port, Cut 8, 2060
 * Gegenlauf Bit 100: AENDERUNG 0 (Riegel). Bilder `N_belege/wasser_lauf_cut10.png`, `wasser_lauf_cut9.png`.
 * Effekt-Pool: hoechstens 80 von 96 Plaetzen (Lauf fx, RE15_WAFFEN_LOG, vorher 69, ohne Wasserlauf 29).
 
-**Raum:** die Rueckfrage 2001 statt 2010 bleibt beim Nutzer (Abschnitt "Fuer den Nutzer").
+**Raum:** entschieden, der Wasserlauf bleibt in ROOM2000/2001 (Abschnitt "Fuer den Nutzer").
 
 ### M3 START im Panel
 
@@ -351,4 +352,37 @@ ctest --test-dir re15_port/build -R "^integration_r41_ventilkette$" --timeout 90
 100% tests passed, 0 tests failed out of 1
 ctest --test-dir re15_port/build -R "^unit_r41_nachtrag30$" --timeout 90     (nach dem letzten Bau, zwei Pruefungen START-Sperre im Panel dazu)
 100% tests passed, 0 tests failed out of 1
+```
+
+## Integration mit Spur O (N_abnahme_1.md Mangel 1 und 2, 2026-10-31)
+
+Merge c5d7ba18a, Fix 90df9edd7, Riegel 333e128cc. Messordner scratchpad `int_n/` (Treiber `run.py`, nicht committet), Umgebung wie der Riegel, eigene exe-Kopien `re15_pc_intn_*`.
+
+**Messung vorher (Merge, Laeufe v_leon, v_elza2, Kommando der Abnahme; Elza ohne RE15_EQUIP und ohne `down`, ihr Inventar ist leer, die Sicherung liegt auf Platz 0):** USE -> `USE-Lauf ROOM201x Ereignis 20 Frage 41` -> `Cut_chg(3)` -> `Tuer klappt auf` -> `USE-Lauf ohne Frage beendet` -> `Tuer auf (rot_y 1024)` -> Text 40. Leon und Elza gleich.
+
+**Ursache:** `re15_keyitems_r41_tick` beendet den Lauf nach zwei Takten ("die Frage faellt im ersten Skripttakt"). `2010_kasten_frage` steht vor Text 40 und Frage 41 im Vorspann: +006 `22 05 1e 01`, +00A `0f 04 08 00`, +00E `21 05 1e 01`, +012 Evt_next, +01A `2b 28 ff ff`, +020 `2b 29 ff ff`. Die Tuer braucht 16 Bilder: ROOM11F0 @0x1332 `2f 05 40 00`, @0x1336 `0d 00 04 00 10 00`. Takt: `scd_vm_tick` (main.c:5849) vor `re15_game_step` (:7900), darin Keyitems (game_step_common.c:1364) vor Ventilkette (:1365).
+
+**Aenderung:** Solange der Marker (5,0x1E) steht, beginnt die Zaehlung von vorn, nur an der Stelle in 2010/2011 und nur im Programm `2010_kasten_frage` (`re15_ventilkette_r41_kasten_fragt`, dieselbe Bedingung wie der Dispatch, Form ROOM2060 sub00 @0x0109E `06 00 1c 00 21 03 6c 00` / @0x010BE `06 00 1c 00 21 03 90 00`). Keine neue Konstante.
+
+**Messung nachher (Laeufe n_leon, n_elza, echter Weg START/ITEM/USE):** `Cut_chg(3)` -> `Tuer klappt auf` -> `Tuer auf (rot_y 1024)` -> `Frage 41 entfaellt: Ja (USE)` -> Cut 8 + Cursor -> Cut 9 Zone 7 -> Bit 125 -> Text 42 -> `Gegenstand 0x40 verlaesst das Inventar` -> Standbild, 78 Bilder -> Cut_old. Kein Text 40, keine Frage. k1 (Laeufe k1_leon, k1_elza): F770 gegen BG07 `ABWEICHUNG 0 GLEICH 100`, Gegenprobe F578 `ABWEICHUNG 26 GLEICH 13`.
+
+**Dabei gefunden:**
+* Die erste Fassung ohne `kasten_fragt` hielt den Lauf auch in `2010_kasten_drin`/`_leer`. Zweite Sicherung aus ROOM1150, Tuer zu: Text 43 wurde als Ja verschluckt, `Set zone=9 idx=125 op=0` ohne Text (Lauf r_drin_fix; vorher echte Frage, r_drin_vorfix), in `_leer` fiel Text 40 aus (r_gen_fix). Jetzt Text 43 / Text 40 mit Bit 125 unberuehrt (r2_drin_zu, r2_gen_zu).
+* `unit_r41_keyitems_use` wurde mit Spur N rot (sechs Pruefungen, Raeume 2010 und 2011), in Abnahme 1 nicht genannt: der Riegel wartete ein Bild auf die Frage und setzte Bit 125 ohne Cursor-Schritt voraus. Nachgezogen und strenger: "USE-Lauf haelt, solange die Tuer faehrt", "die Frage faellt erst bei offener Tuer".
+* OFFEN 6: dieselbe zweite Sicherung bei offener Tuer, nicht behoben.
+
+**Riegel:** `unit_r41_nachtrag30` Fall C2 (Leon, Elza; Takt wie das Spiel, Gegenproben). Mutationen: ohne Halten rot ("Lauf haelt bis die Tuer offen ist" und Folgen), ohne `kasten_fragt` rot ("Fall 0: Text 43 hinter der Tuer", "Bit 125 unberuehrt", "Fall 1: Text 40"). `integration_r41_nachtrag30_schrank_*`: Lauf u = USE ueber das Inventar am geschlossenen Schrank, Lauf b auf USE umgestellt (`RE15_USE_TEST=0x40@618`). `test_r41_ventilkette_weg.cmake` k1: USE auf dem Bild des alten Ja, Vorspann vor Text 40 geprueft.
+
+**Tests (keine volle Suite):**
+
+```
+ctest --test-dir re15_port/build -R "^unit_(r41_nachtrag30|r41_keyitems_|r41_ventilkette|r36_kartenbits|r41_kleinkram_a|room1050|r34n_a_rolltor)" -j3 --timeout 300
+100% tests passed, 0 tests failed out of 14
+ctest --test-dir re15_port/build -R "^integration_r41_nachtrag30_schrank_(leon|elza)$" -j2 --timeout 1200
+100% tests passed, 0 tests failed out of 2      Leon 154 s, Elza 235 s
+ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_weg(_elza)?$" -j2 --timeout 2400
+integration_r41_ventilkette_weg        Passed  1468 s
+integration_r41_ventilkette_weg_elza   Failed   578 s   <- Lauf v2a endete bei rund F720 an der SDL-Assertion WIN_AddDisplay (Anzeige-Ereignis von Windows, das Skript setzt kein SDL_ASSERT=always_ignore), vor k1, kein Bezug zu Spur N oder O
+ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_weg_elza$" --timeout 3000      (einzeln wiederholt)
+100% tests passed, 0 tests failed out of 1      1690 s
 ```
