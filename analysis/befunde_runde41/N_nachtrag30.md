@@ -269,3 +269,17 @@ ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_b$" --timeout 
 **Entscheidungsfragen:**
 1. ROOM2010/2011 ist das Buero ohne Leiter und ohne Wasser. Die Beschreibung passt Wort fuer Wort auf ROOM2000/2001 (dort steht "I cannot climb up the ladder because of the water pressure."), der Wasserlauf ist dort gebaut, auch fuer Elza in 2001. Ist das der gemeinte Raum (2001 statt 2010)?
 2. Soll das Einsetzen der Sicherung in 2010 den Cursor-Schritt aus 2060 bekommen (Sicherung mit dem Steuerkreuz ins Feld fuehren), oder bleibt es bei den zwei Nahansichten?
+
+## Nachbesserung 1 (nach Abnahme 0, N_abnahme_0.md; fortlaufend)
+
+Stand zu Beginn: 7250b974a. Messordner scratchpad `nb1/` (Treiber `run.py`, nicht committet).
+
+### M1 Cursor-Schritt 2010: Messung vorher und Belege (2026-10-31)
+
+Laeufe c_fein / c_lauf / c_klemme (Original-Skript ROOM2060 im Port, Cut 8, 2060@250, Sicherung (3,108)):
+* Cursor-Mitte Start (159,119), Schirmrahmen des Stempels 25 x 23. 15 Bilder halten = 40 Bildpunkte in x und y (F586..F600, F607..F621): 1 Schritt je Bild, 2,667 Bildpunkte je 200 Welt.
+* Rahmen des Cursors: Riegel `unit_r36_g2_cursor_rahmen` / `G2_belege/orig_zensus/log.txt` (Original, DuckStation + GDB, obj 4): OBEN z -15968, UNTEN z -29132, LINKS x 9418, RECHTS x 29532. Am Spiel gemessen Mitte x 24..291, y 32..207; mit Bild = (159 + (x-19571)*2/150, 119 - (z+22542)*2/150) gerechnet 23,6 / 291,8 / 31,3 / 206,9.
+* Start obj 4 (19571,-22542) Obj_model_set @0x00F12. Schritte sub14 @0x01648 (+200 z, Taste 1 @0x012C0), sub15 @0x01654 (-200 z, Taste 4 @0x012D8), sub16 @0x01660 (+200 x, Taste 2 @0x012F0), sub17 @0x0166C (-200 x, Taste 8 @0x01308).
+* Zone 7: Aot_set Slot 7 @0x0100C rect (19700,-24300,2050,2050) sce 5 flags 0x44 = Mitte (20725,-23275), halb 1025 (op_aot_set). Bestaetigung: sub01 @0x01314 Ck(5,11) -> @0x01324 Member_cmp(15 == 7) -> @0x0132E Sce_key_ck 0x40 (GEHALTEN, op_sce_key_ck) -> @0x01332 sub19.
+* sub18 @0x0168C `29 08`, @0x0168E (5,10)=1, @0x01692 (5,11)=1, @0x01696 (5,5)=1 -> sub01 @0x01288/@0x0128C setzt je Bild (2,0)=1, (2,2)=1 (keine Pad-Sperre (2,7)). sub19 @0x0169E Set(3,144), @0x016A2 Cut 9, @0x016C8 Message_on 5, @0x016CE Cut 10, @0x016D0 Cut_auto 1. Ohne Abbruch: sub01/sub18 kennen CROSS hier nicht.
+* START im Cursor-Schritt 2060 (Lauf c_start): F600 `Inventar-Ton Satz 6`, das Inventar geht auf und ist sichtbar (kein Vollbild ueber dem Spiel), die Sperre (2,7) fehlt auch im Original. In 2010 liegt die Vollbild-Ebene ueber dem Inventar, also wie Mangel 3.
