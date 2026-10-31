@@ -163,14 +163,14 @@ Falsche Folge 01/02/09/08 setzt zurueck, richtige Folge 09/02/01/08 startet Warn
 * Nahansichten des Sicherungsfelds: Cut 8 = Sicherung fehlt, rote Lampe (sub18 @0x0168C `29 08`), Cut 9 = eingesetzt, gruene Lampe (sub19 @0x016A2 `29 09`).
 * Form "aufklappen": Original-Hebel ROOM11F0 sub06 `2f 05 40 00` Speed_set(5,+0x40) @0x01332, For 16 `0d 00 04 00 10 00` @0x01336 = 16 Bilder, 64 je Bild = 1024 = 90 Grad. Die Original-RDTs haben keinen Schrank-Fluegel als Modell;
   der Fluegel selbst ist Port-Modell im Format des Aushangs.
-* Das Original-Einsetzen in ROOM2060 hat einen Cursor-Schritt (obj 4, sub14..17 +-200, Member_cmp @0x01324 == 7, SQUARE @0x0132E -> sub19). Nicht gebaut: laut Auftrag aendert N nur Bild und Aufklappen, siehe Frage unten.
+* Das Original-Einsetzen in ROOM2060 hat einen Cursor-Schritt (obj 4, sub14..17 +-200, Member_cmp @0x01324 == 7, SQUARE @0x0132E -> sub19). Gebaut mit Nachbesserung 1 (Abschnitt M1).
 
 **Umsetzung:** `engine/src/schrank2010_r41.c`, `include/re15_schrank2010_r41.h`, `gen/schrank2010_r41.inc` (Generator `tools/r41_nachtrag30/schrank_bild.py`: Innenflaeche = Schrank aus BG06 auf die Rueckwand entzerrt, Viereck Q_INNEN; Tuer-Innenseite = Tuer aus
 BG06, Viereck Q_TUER; Tuer-Aussenseite = BG03 auf die Tuerebene zurueckprojiziert, darum deckt sie sich geschlossen mit dem Hintergrund). Lage gemessen in Cut 3 @0xC0, Projektion H 208: Ostwand x 5400, z -3300..-2000, y -3650..-50, Angel (5400,-2000). Drei Port-Props obj 5/6/7,
-Band 2, Licht neutral (`re15_schrank2010_r41_licht`: Textur 1:1, sonst schluckt das Raumlicht die Innenseite). Programme `2010_kasten_*` bekommen den Vorspann "Aufklappen" (Marker (5,0x1E), Sperre an/aus), der Ja-Zweig davor die Nahansichten (Marker (5,0x1D), je 30 Bilder = PORT-WAHL:
-Sleep 20 aus ROOM2080 sub02 @0x00CD8 + 10 zum Lesen). Einsetz-Logik der Spur C (Fragen, Bit 125, Standbild, Ton) laeuft unveraendert dahinter. Der offene Zustand ist Raum-Scratch: beim naechsten Betreten geht die Tuer wieder auf (Original zeigt in 2060 den Schrank offen, die Tuer in 2010 ist Port-Form).
+Band 2, Licht neutral (`re15_schrank2010_r41_licht`: Textur 1:1, sonst schluckt das Raumlicht die Innenseite). Programme `2010_kasten_*` bekommen den Vorspann "Aufklappen" (Marker (5,0x1E), Sperre an/aus), der Ja-Zweig den Cursor-Schritt (Marker (5,0x1D), Abschnitt M1).
+Fragen, Bit 125, Standbild und Ton der Spur C bleiben. Der offene Zustand ist Raum-Scratch: beim naechsten Betreten geht die Tuer wieder auf (Original zeigt in 2060 den Schrank offen, die Tuer in 2010 ist Port-Form).
 
-**Messung nachher (Leon + Elza, Riegel `integration_r41_nachtrag30_schrank_*`, `_laden_*`):** Klick F330 -> Text erst nach `[schrank2010] Tuer auf (rot_y 1024)`; Flaeche x 224..258 aendert sich um 25,7 Graustufen, Gegenprobe links 0,0. Ja-Zweig: F635 == ROOM2060 BG08, F665 == BG09 (100 % gleich), danach Bit 125, Standbild.
+**Messung nachher (Leon + Elza, Riegel `integration_r41_nachtrag30_schrank_*`, `_laden_*`):** Klick F330 -> Text erst nach `[schrank2010] Tuer auf (rot_y 1024)`; Flaeche x 224..258 aendert sich um 25,7 Graustufen, Gegenprobe links 0,0. Ja-Zweig: Abschnitt M1.
 Zu Fuss quer durch den Raum schaltet die Kamera selbst auf Cut 3, dann klappt die Tuer auf (Lauf sw im Riegel `_laden_*`, Leon + Elza). Bilder: `N_belege/schrank_cut3_zu.png`, `schrank_cut3_offen.png`, Gegenueberstellung mit fuse_box.bmp `schrank_vergleich_fuse_box.png` (beschleunigter Renderer).
 
 ## 2. Panel-Raetsel 2030 (Nachtrag 37, Entwurf A) — Umsetzung
@@ -227,13 +227,13 @@ Flut-Beginns. Elza-Korrelation mit dem reinen SUB_25-Signal sinkt durch die Sire
 **Messung vorher:** ROOM2010/2011 ist das Buero (Schreibmaschine, Computer, BG00..BG05): nur die Tuer Slot 0 @0x00746 nach 2000, keine Band-Stufe, kein Kletter-Platz, kein Sce_espr_on, kein Wasser-Objekt. Der Wortlaut "die Leiter runter ... ueber den Weg bis zum Wasser Pool in der Mitte" trifft Wort fuer Wort ROOM2000/2001, die Nachbartuer: Leiter nach 2050 (Slot 4 @0x0169E, Holme (-26748,-1800,9034)/(-26715,-1800,9945)),
 Weg = West-Steg Band 1, y -1800, x -27000..-25200, Pool in der Mitte = Kanal x -25200..-21650, Wasser-Objekte obj 0..2 @0x016E6/@0x01708/@0x0172A Typ 3, y -900. Gebaut wurde dort; Rueckfrage unten.
 
-**RE-Belege Form:** Leiterstrom = derselbe Effekt wie die drei Strahlen am Gitter derselben Wand, ROOM2000 main00 @0x0174C/@0x0175C/@0x0176C `3a 00 0b 00 00 00 00 19 x y z 00 04` = Sce_espr_on Effekt 0x0B, Sub 0, Skala 0x1900, Parameter 0x400 (FUN_80041864 -> FUN_80019700), absolut, dauerhaft; die Teilchen fallen in Welt-y. Spritzen = Wasser-Effekt 6:
-`lui a0,0x605` / `ori a0,a0,0xd00` @0x800456b8/bc = Effekt 6, Sub 5, Skala 0x0D00 (Wasserboden FUN_80045630). Nasse Spur = Wasserflaeche des Moduls Ventilkette (ROOM2080 Prop 0).
+**RE-Belege Form:** Leiterstrom = derselbe Effekt wie die drei Strahlen am Gitter derselben Wand, ROOM2000 main00 @0x0174C/@0x0175C/@0x0176C `3a 00 0b 00 00 00 00 19 x y z 00 04` = Sce_espr_on Effekt 0x0B, Sub 0, Skala 0x1900, Parameter 0x400 (FUN_80041864 -> FUN_80019700), absolut, dauerhaft; die Teilchen fallen in Welt-y. Einschlag im Kanal = Wasser-Effekt 6:
+`lui a0,0x605` / `ori a0,a0,0xd00` @0x800456b8/bc = Effekt 6, Sub 5, Skala 0x0D00 (Wasserboden FUN_80045630). Der Lauf ueber den Weg: Abschnitt M2 (die nasse Spur der ersten Fassung ist entfallen).
 
-**Umsetzung:** `engine/src/wasserlauf_r41.c`, `include/re15_wasserlauf_r41.h`, `gen/ventilkette_r41_wasser.inc` (`re15_r41c_wasserlauf_md1`, Rechteck x -26750..-25200, z 9050..9950). 6 Dauer-Strahlen Skala 0x0C00, Spritzer Effekt 6 Sub 5/Sub 3 auf dem Weg und im Kanal, Takt 11/7 (PORT-WAHLEN: Skala, Takt, Punkte; gemessen Laenge 3300 je Strahl, deshalb Anker y -6900/-6000/-5100).
-Ende = dieselbe Bedingung wie die Sperre der Leiter: Bit (9,100) oder (9,103) gesetzt. `re15_wasserlauf_r41_soll` haengt nur an Raum und Bits (der Prop-Lader fragt unabhaengig vom Install).
+**Umsetzung:** `engine/src/wasserlauf_r41.c`, `include/re15_wasserlauf_r41.h`. 6 Dauer-Strahlen Skala 0x0C00, Einschlag Effekt 6 Sub 5 im Kanal, Takt 11 (PORT-WAHLEN: Skala, Takt, Punkte; gemessen Laenge 3300 je Strahl, deshalb Anker y -6900/-6000/-5100).
+Ende = dieselbe Bedingung wie die Sperre der Leiter: Bit (9,100) oder (9,103) gesetzt.
 
-**Messung nachher (Leon + Elza, `integration_r41_nachtrag30_wasser_*`, `_laden_*`):** Cut 10 gegen den Lauf mit Bit 100: Leiter 20,7, Weg 8,0, Gegenprobe rechte Bildhaelfte 0,0 Graustufen; auch nach der echten Tuer 2010 -> 2000 und nach CONTINUE (Leiter 17,3, Weg 8,5). Leiter bleibt gesperrt (Text 40). Bilder: `N_belege/wasser_2000_cut10.png`, `wasser_2000_cut9.png`.
+**Messung nachher (erste Fassung, siehe M2):** Cut 10 gegen den Lauf mit Bit 100: Leiter 20,7, Weg 8,0, Gegenprobe rechte Bildhaelfte 0,0 Graustufen; auch nach der echten Tuer 2010 -> 2000 und nach CONTINUE. Leiter bleibt gesperrt (Text 40). Bilder: `N_belege/wasser_2000_cut10.png`, `wasser_2000_cut9.png` (erste Fassung).
 
 ## Tests
 
@@ -252,10 +252,10 @@ ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_b$" --timeout 
 
 ## OFFEN
 
-1. **Querbezug Spur O (r41_keyitems):** O ersetzt die Fragen am Kasten durch das Inventar. Der Vorspann "Aufklappen" (Marker (5,0x1E)) und die Nahansichten (Marker (5,0x1D)) stehen in den Programmen `2010_kasten_*` (`tools/r41_ventilkette/programme.py`, Praefixe AUF und NAH) und muessen in Os Fassung erhalten bleiben; `integration_r41_ventilkette_weg` k1 traegt die Takte + 18 und + 60 Bilder.
+1. **Querbezug Spur O (r41_keyitems), Merge von `test_r41_ventilkette_weg.cmake` k1:** O ersetzt die Fragen am Kasten durch das Inventar. Der Vorspann "Aufklappen" (Cut_chg 3, Marker (5,0x1E)), der Cursor-Schritt (Marker (5,0x1D)) und Cut_old stehen in den Programmen `2010_kasten_*` (`tools/r41_ventilkette/programme.py`, Praefixe AUF und NAH) und muessen in Os Fassung erhalten bleiben; Os USE laeuft in denselben Ja-Zweig. Fuer k1 gilt nach dem Merge: nach dem USE (Takt des alten Ja) `right` +22 Bilder, `square` +32 (Zone 7), +112 Text 42 zu, +192 Standbild zu; Reihenfolge im Log Cursor -> Bit 125 -> Text 42 -> Standbild. Text 42 steht jetzt VOR dem Standbild.
 2. Die offene Schranktuer hat keine Kollision (Port-Prop, die Figur kann durch den Fluegel gehen).
-3. Die Schrank-Innenseite zeigt nach dem Einsetzen weiter Cut 6, nicht Cut 10: 89 von 12480 Bildpunkten der Schrankwand (Sicherung und Lampe). Die Nahansichten Cut 8 -> Cut 9 zeigen den Wechsel.
-4. Das Original-Einsetzen in 2060 hat einen Cursor-Schritt im Sicherungsfeld, in 2010 gibt es ihn nicht (Frage unten).
+3. Die Schrank-Innenseite zeigt nach dem Einsetzen weiter Cut 6, nicht Cut 10: 89 von 12480 Bildpunkten der Schrankwand (Sicherung und Lampe). Die Einsetz-Ansicht zeigt den Wechsel Cut 8 -> Cut 9.
+4. Die Schranktuer ist nur unter Cut 3 zu sehen (M4). Der Fluegel stuende in Cut 4 im Bild, dafuer gibt es keine brauchbare Textur; der Hintergrund dort zeigt den Schrank geschlossen.
 5. `audio_pc.c` traegt 23 Zeilen statt eines Haken-Einzeilers: die Sirene braucht die statischen `ss_*`-Funktionen, Muster `re15_audio_r41_alarm` der Spur C.
 
 ## Fuer den Nutzer
@@ -266,9 +266,8 @@ ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_b$" --timeout 
 **Notiz, Rechenweg:** §3.
 **Lautstaerke:** vorhandene `re15_options.cfg` behaelt ihren Wert; der wirkt jetzt quadratisch (20 -> 0,04). Ohne Datei gilt 50.
 
-**Entscheidungsfragen:**
-1. ROOM2010/2011 ist das Buero ohne Leiter und ohne Wasser. Die Beschreibung passt Wort fuer Wort auf ROOM2000/2001 (dort steht "I cannot climb up the ladder because of the water pressure."), der Wasserlauf ist dort gebaut, auch fuer Elza in 2001. Ist das der gemeinte Raum (2001 statt 2010)?
-2. Soll das Einsetzen der Sicherung in 2010 den Cursor-Schritt aus 2060 bekommen (Sicherung mit dem Steuerkreuz ins Feld fuehren), oder bleibt es bei den zwei Nahansichten?
+**Bedienung Sicherung 2010:** nach "Yes" wie in 2060: Cursor mit dem Steuerkreuz auf die Luecke in der dritten Reihe (ein Schritt nach rechts reicht), Aktionstaste. Einen Abbruch gibt es dort wie im Original nicht.
+**Entscheidungsfrage:** ROOM2010/2011 ist das Buero ohne Leiter und ohne Wasser. Die Beschreibung passt Wort fuer Wort auf ROOM2000/2001 (dort steht "I cannot climb up the ladder because of the water pressure."), der Wasserlauf ist dort gebaut, auch fuer Elza in 2001. Ist das der gemeinte Raum (2001 statt 2010)?
 
 ## Nachbesserung 1 (nach Abnahme 0, N_abnahme_0.md; fortlaufend)
 
@@ -283,3 +282,55 @@ Laeufe c_fein / c_lauf / c_klemme (Original-Skript ROOM2060 im Port, Cut 8, 2060
 * Zone 7: Aot_set Slot 7 @0x0100C rect (19700,-24300,2050,2050) sce 5 flags 0x44 = Mitte (20725,-23275), halb 1025 (op_aot_set). Bestaetigung: sub01 @0x01314 Ck(5,11) -> @0x01324 Member_cmp(15 == 7) -> @0x0132E Sce_key_ck 0x40 (GEHALTEN, op_sce_key_ck) -> @0x01332 sub19.
 * sub18 @0x0168C `29 08`, @0x0168E (5,10)=1, @0x01692 (5,11)=1, @0x01696 (5,5)=1 -> sub01 @0x01288/@0x0128C setzt je Bild (2,0)=1, (2,2)=1 (keine Pad-Sperre (2,7)). sub19 @0x0169E Set(3,144), @0x016A2 Cut 9, @0x016C8 Message_on 5, @0x016CE Cut 10, @0x016D0 Cut_auto 1. Ohne Abbruch: sub01/sub18 kennen CROSS hier nicht.
 * START im Cursor-Schritt 2060 (Lauf c_start): F600 `Inventar-Ton Satz 6`, das Inventar geht auf und ist sichtbar (kein Vollbild ueber dem Spiel), die Sperre (2,7) fehlt auch im Original. In 2010 liegt die Vollbild-Ebene ueber dem Inventar, also wie Mangel 3.
+
+### M1 Cursor-Schritt: Umsetzung und Messung nachher
+
+**Ursache:** der Ja-Zweig zeigte zwei Standbilder je 30 Bilder ohne Eingabe (Lauf s_ja der Abnahme); die Zeitangabe war eine PORT-WAHL und ist entfallen.
+
+**Aenderung:** `engine/src/schrank2010_r41.c` (Zustand NAH_CURSOR / NAH_DRIN, Konstanten mit Adressen im Kopf `include/re15_schrank2010_r41.h`), Programm `2010_kasten_frage` (`tools/r41_ventilkette/programme.py`): (2,0)/(2,2) wie sub01 @0x01288/@0x0128C, Marker (5,0x1D), While; der C-Takt fuehrt den Cursor in Weltkoordinaten wie die Skripte von 2060 (Start, +-200 je Bild, Rahmen des Originals, Zone 7) und zeichnet den Stempel in die Vollbild-Ebene. SQUARE gehalten auf Zone 7 -> Cut 9, Marker fort, Programm: Set(9,125), Text 42 auf Cut 9 (Reihenfolge sub19 @0x0169E/@0x016A2/@0x016C8), danach Standbild der Ventile + Aufschliess-Ton (Nachtrag 16). Stempel: `gen/schrank2010_cursor_r41.inc`, Generator `tools/r41_nachtrag30/schrank_cursor.py` (Spielbild F500 gegen BG08: genau 150 Bildpunkte weichen ab), Beleg `N_belege/schrank_cursor_2060_cut8.png`. Text 42 steht damit vor dem Standbild (bei Spur C dahinter, weil die Vollbild-Ebene den Text verdeckte; `re15_render_pc_fmv_text` laesst ihn jetzt durch).
+
+**Messung nachher:** Lauf s_cur (2010): F640 gegen Lauf c_lauf F500 (2060, gleiche Startlage): 0 Bildpunkte verschieden im ganzen Bild. Lauf s_lauf gegen c_fein: dieselbe Bahn, 15 Bilder oben = 40 Bildpunkte, 15 Bilder links = 40 Bildpunkte; nach 15 Bildern oben 28 Bildpunkte Abweichung (Rundung des Stempels gegen die Perspektive). F650 SQUARE neben der Zone und F660 START: nichts (Log, Riegel: F640 == F680 in der Stempelflaeche). F700 rechts -> Cursor (19771,-22542), F710 SQUARE -> `[schrank2010] Nahansicht ROOM2060 Cut 9, Cursor (19771,-22542) auf Zone 7` -> `WRITE Set zone=9 idx=125` -> Text 42 auf Cut 9 -> Standbild. Bogen `N_belege/schrank_einsetzen.png`. Riegel `unit_r41_nachtrag30` C: 600 Bilder ohne Taste weiter Cut 8, SQUARE neben der Zone nichts, Schritte, alle vier Rahmen, Zone 7.
+
+### M2 Lauf ueber den Weg
+
+**Ursache:** eine stehende Flaeche laeuft nicht; dazu wenige Punkte. Die Riegel massen nur "dunkler als mit Bit 100".
+
+**Messung vorher (Abnahme, wzan):** Flaeche x 72..104, y 154..170: je 6 Bilder aendern sich 9..91 von 512 Bildpunkten.
+
+**Beleg Form:** laufendes Wasser am Boden gibt es im Original genau einmal, die Flut-Welle ROOM20B0: EM024 setzt Effekt 0x0F (`lui v0,0xf00` @0x801109b8, Dossier A §1.2). ROOM2000 fuehrt denselben Effekt in der eigenen Bank (RDT+0x4C = @0x14608: ids 05 06 07 0b 0c 0d 0f, Zeiger @pe-4*6 -> EFF @0x15D64, 36 Anim-Saetze, 17 Zellen). Sub 3: Zeile 0 A 10 gate 4, Zeile 1 A 0 vel (100,0,0) acc 0; Sub 6: vel (42,-18,0) acc (0,10,0). Anim ab Satz 4 je 1 Bild bis Satz 17 = Ende: 13 Bilder Lebensdauer, die Zellen wachsen von 24 auf 48. Weltlage = Anker + Gier-Matrix * xlat (esp_fx_weltlage), Gier 0 = +x, also von der Leiter zum Kanal.
+
+**Aenderung:** Prop "nasse Spur" und `re15_r41c_wasserlauf_md1` entfernt. `re15_wasserlauf_r41_tick`: drei flache Punkte x -26650 (Sub 3, 13 x 100 = bis x -25350, keiner ueber die Kante), zwei fallende x -25500 (Sub 6, Boden y -900), Skala 0x1000, Hoehe y -1860, Einschlag Effekt 6 Sub 5 im Kanal. Spawn-Abstand je Punkt aus der Folge 3,6,4,8,3,5,7,4 und Versatz quer {0,130,-90,60,-130}: mit festem Takt 4 wiederholte sich das Bild alle 4 Bilder (Korrelation 0,89, gemessen) und die Richtung war nicht messbar. Alles PORT-WAHLEN, Form belegt. Der Takt steht unter einem Text mit dem Effekt-Takt (RE15_PAUSE_ACTION, `re15_esp_fx_tick` @0x80019e28), sonst liefe der Pool unter jeder Nachricht voll.
+
+**Messung nachher (Werkzeug `fluss`, beschleunigter Renderer, Laeufe y10/y9, F430..F461):**
+* Cut 10, Weg x 72..124, y 146..179: `FLUSS 2 42 20 5 29 -1 8 19 -8 AENDERUNG 830 VON 1802`: Verschiebung 2 / 5 / 8 Bildpunkte fuer 1 / 2 / 3 Bilder Abstand (Korrelation dort 0,42 / 0,29 / 0,19 gegen 0,20 / -0,01 / -0,08 ohne Verschiebung), 830 von 1802 Bildpunkten aendern sich je 6 Bilder (46 %, vorher hoechstens 18 %).
+* Cut 9, Weg x 90..149, y 120..149: `FLUSS 2 16 6 4 3 -13 7 -2 -19 AENDERUNG 385 VON 1800`: 2 / 4 / 7 Bildpunkte, 21 %.
+* Gegenlauf Bit 100: AENDERUNG 0 (Riegel). Bilder `N_belege/wasser_lauf_cut10.png`, `wasser_lauf_cut9.png`.
+* Effekt-Pool: hoechstens 80 von 96 Plaetzen (Lauf fx, RE15_WAFFEN_LOG, vorher 69, ohne Wasserlauf 29).
+
+**Raum:** die Rueckfrage 2001 statt 2010 bleibt beim Nutzer (Abschnitt "Fuer den Nutzer").
+
+### M3 START im Panel
+
+**Ursache:** das Panel laeuft ohne Pad-Sperre (2,7), weil sie die SCD-Pad-Woerter maskiert (game_step_common.c); der START-Poll haengt am selben Bit: `g_pauseflags & 0x01000000` @0x8001cd14..@0x8001cd20. Die Vollbild-Ebene liegt ueber dem Inventar. Dieselbe Lage im neuen Cursor-Schritt: in 2060 oeffnet START dort das Inventar sichtbar (Lauf c_start, kein Vollbild).
+
+**Aenderung:** `re15_ventilkette_r41_vollbild_sperrt` (Panel offen, Einsetz-Ansicht), Haken vor dem START-Poll in `game_step_common.c`: dieselbe Sperre fuer den Poll allein. PORT-WAHL.
+
+**Messung nachher:** Lauf p_st (Skript der Abnahme): kein `Inventar-Ton`, kein `[inv]`, X -> `[panel2030] Abbruch`. Riegel `_panel_*` Lauf st: START bei offenem Panel nichts, das Steuerkreuz bleibt im Panel, nach dem Panel oeffnet START wieder. `_schrank_*`: START@660 im Cursor-Schritt nichts.
+
+### M4 Offene Tuer in Cut 4
+
+**Ursache:** die Texturen sind aus BG03/BG06 fuer den Blick von Cut 3 gerechnet (`schrank_bild.py`), der Fluegel steht in Cut 4 direkt vor der Kamera; Cut 4 zeigt seine Aussenseite, von der es kein besseres Bild gibt.
+
+**Aenderung:** `re15_schrank2010_r41_verdeckt` + Haken im Prop-Durchlauf `main.c`: die drei Modelle nur unter Cut 3 @0xC0. Die Hintergruende der anderen Cuts zeigen den Schrank geschlossen. PORT-WAHL.
+
+**Dabei gefunden:** der Platz des Schranks reicht von Norden bis unter Cut 4 (Lauf wk: Klick bei (4946,-3999) Blick +z, Kamera Cut 4): dort waere das Aufklappen gar nicht im Bild. Darum schalten die Programme `2010_kasten_*` vorweg auf Cut 3 (`29 03`, Form ROOM2030 sub02 @0x01E60, der alte Cut wird @0x800402e4 gemerkt) und am Ende mit Cut_old zurueck.
+
+**Messung nachher:** Lauf s_geh3 (Plan der Abnahme s_geh2): F660 Cut 4, Spalten 0..27 gegen BG04 100 % gleich (vorher s_geh2: 29 %, Abweichung 14), Bild `N_belege/schrank_cut4_ohne_tuer.png`; zurueck unter Cut 3 steht die Tuer offen (F1020, F1200). Riegel `_schrank_*` Lauf c4 und Lauf n (Klick von Norden: Cut 4 -> Cut_chg(3) -> Tuer auf -> Cut 4).
+
+### M5 Farben Panel
+
+**Ursache:** 256 gemeinsame Farben (Median-Schnitt ueber beide Tank-Bilder) zogen kleine gruene Flaechen ins Grau.
+
+**Aenderung:** `panel_bild.py` schreibt direkte 15 Bit wie die BSS-Hintergruende (`gen/panel2030_r41.inc`), `farbe()` in `panel2030_r41.c` setzt 5 auf 8 Bit um.
+
+**Messung nachher (Lauf p_a, Stand 50/20/30, Quelle C, gegen panel_entwurf_a.png):** EXIT-Pfeil Entwurf (84,107,93), Spiel (83,107,92), vorher (91,98,96). Fenster Tank A Zeile 95: Entwurf (218,213,171), Spiel (222,214,173).
