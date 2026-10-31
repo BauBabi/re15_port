@@ -1366,7 +1366,8 @@ void re15_game_step(const re15_game_ctx_t *c)
     if (re15_map_hint_pending() >= 0 &&
         re15_menu_request_map_hint(re15_map_hint_pending()))
         re15_map_hint_take();
-    if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PAD) && !panel_sperre) {
+    extern int re15_ventilkette_r41_vollbild_sperrt(void);   /* Runde 41 Spur N: Panel 2030 / Einsetzen 2010, die Vollbild-Ebene liegt ueber dem Inventar */
+    if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PAD) && !panel_sperre && !re15_ventilkette_r41_vollbild_sperrt()) {
         int in_cinematic = (g_scd.player_mode == 2) || (g_scd.letterbox_countdown != 0);
         s_inv_open_allowed = (s_hit_flinch == 0 && s_knockdown == 0 &&
                               !re15_player_is_grabbed() && !re15_player_is_dead() &&

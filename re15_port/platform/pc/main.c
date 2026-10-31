@@ -11108,6 +11108,8 @@ re_title:;
                 if (re15_itemorte_r38_verdeckt((uint16_t)g_current_room_id, active_cut_idx,
                                                (int)g_scd.props[pi].obj_id))
                     continue;   /* Runde 38 Spur K: Port-Gegenstand hinter maskenlosem Vordergrund (re15_itemorte_r38.h) */
+                { extern int re15_schrank2010_r41_verdeckt(uint16_t, int, int);   /* Runde 41 Spur N: Schrank 2010 nur unter Cut 3 (re15_schrank2010_r41.h) */
+                  if (re15_schrank2010_r41_verdeckt((uint16_t)g_current_room_id, active_cut_idx, (int)g_scd.props[pi].obj_id)) continue; }
                 int oid = (int)g_scd.props[pi].obj_id;
 #ifdef RE15_PROP_TRACE
                 { static int pn=0; if((pn++%60)==0)
@@ -11197,6 +11199,8 @@ re_title:;
                     } else {
                         memset(&lctx_prop, 0, sizeof(lctx_prop));
                     }
+                    { extern void re15_schrank2010_r41_licht(uint16_t, int, re15_actor_lightctx_t *);   /* Runde 41 Spur N: Schrank 2010 traegt sein Licht in der Textur */
+                      re15_schrank2010_r41_licht((uint16_t)g_current_room_id, oid, &lctx_prop); }
                     re15_blink_r41_lichtctx((uint16_t)g_current_room_id, oid, (unsigned)g_engine.frame_count, &lctx_prop);   /* Runde 41 Spur D: Helligkeitspuls aufnehmbarer Port-Gegenstaende (include/re15_blink_r41.h) */
 
                     /* ⛔ TIEFEN-KLEMME — PORT-ZUSATZ OHNE ORIGINAL-GEGENSTUECK (Runde 30, E2).

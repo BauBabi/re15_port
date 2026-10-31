@@ -62,18 +62,26 @@ ENDE = ("01 00", "Evt_end")
 def bauen(cd):
     P = []
     # ---- 2030 Pult -------------------------------------------------------------------------------------------
-    P.append(("re15_r41c_prg_2030_pult_ohne",
-              [msg_on(40, "A control panel... gauge reads zero... valve 13 is closed."), EVT_NEXT, ENDE]))
+    # Spur N (Nachtrag 37): das Pult oeffnet das Panel-Raetsel; Frage in der Form ROOM2050 msg 0 @0x2446, Spieler/KI stehen wie am Pult 2050 (sub01 @0x021FA
+    # Set(2,0)=1 Set(2,2)=1: die SCD-Pad-Woerter bleiben offen, Sperre (2,7) wuerde sie maskieren), Marker (5,0x16) -> C-Takt (engine/src/panel2030_r41.c), der beide
+    # Bits am Ende zuruecknimmt.
+    P.append(("re15_r41c_prg_2030_panel_ein",
+              [msg_on(40, "A control panel for the bridge. Will you operate the panel? (Frage, Ja/Nein)"), EVT_NEXT,
+               ("IF", "Ja-Zweig"), JA, ("22 02 00 01", "Set(2,0)=1 Spieler steht (ROOM2050 sub01 @0x021FA)"),
+               ("22 02 02 01", "Set(2,2)=1 KI steht (ROOM2050 sub01 @0x021FA)"),
+               ("22 05 16 01", "Set(5,0x16)=1 Panel oeffnen (Marker fuer den C-Takt, Bank 5 Wort 0)"), ("ENDIF", ""), ENDE]))
     P.append(("re15_r41c_prg_2030_pult_unten", [msg_on(44, "The bridge is down."), EVT_NEXT, ENDE]))
     senken = [msg_on(43, "The pressure gauge reads 80. Lower the bridge? (Frage, Ja/Nein)"), EVT_NEXT,
               ("IF", "Ja-Zweig"), JA, SPERRE_AN, CUT_AUTO_0,
               ("29 04", "Cut_chg 4 Draufsicht (Fahrt-Kamera; Form ROOM2030 sub02 @0x01E60 `29 0a`)"),
               ("2e 03 00 00", "Work_set(3,0) Bruecke + Nop (Form sub03 @0x01ED2 `2e 03 01`)"),
               ("2f 01 " + le16(120), "Speed_set(1,+120) (sub03 @0x01EF2 `2f 01 78 00`)"),
+              ("22 05 14 01", "Set(5,0x14)=1 Bruecken-Ton: Marker fuer den C-Takt statt RE2 Se_on(2,0x0F) ROOM4080 sub13 @0x031F2 (Spur N)"),
               ("0d 00 06 00 " + le16(30), "For 30 (Form sub03 @0x01EDA `0d 00 06 00 2d 00`; 30 x 120 = 3600)"),
               ("30 02 02 00", "Add_speed, Evt_next, Evt_next, Nop (sub03 @0x01EE0..@0x01EE3)"),
               ("0e 00", "Next (sub03 @0x01EE4)"),
               ("34 01 " + le16(-1800), "Member_set(1,-1800) Endlage = Original-Lage @0x01B6C (Form sub03 @0x01EE6)"),
+              ("22 05 15 01", "Set(5,0x15)=1 Halt: Marker statt RE2 Se_on(2,0x10) ROOM4080 sub13 @0x03314 am Ende der Fahrt (Spur N)"),
               ("37 00 0c 00", "Sca_id_set Region 0 Zelle 12 := 00 begehbar (Form ROOM2050 sub04 @0x02398 `37 00 32 00`)"),
               ("37 01 0c 00", "Region 1"), ("37 02 0c 00", "Region 2"), ("37 03 0c 00", "Region 3"),
               ("37 04 0c 00", "Region 4"),
@@ -82,13 +90,6 @@ def bauen(cd):
               CUT_OLD, CUT_AUTO_1, SPERRE_AUS,
               ("ENDIF", ""), ENDE]
     P.append(("re15_r41c_prg_2030_pult_senken", senken))
-    # ---- 2030 Ventil 13 --------------------------------------------------------------------------------------
-    P.append(("re15_r41c_prg_2030_v13_frage",
-              [msg_on(41, "Intake valve 13. Will you open it?"), EVT_NEXT,
-               ("IF", "Ja-Zweig"), JA, ("22 09 65 01", "Set(9,101)=1 Ventil 13 offen (Port-Bit)"),
-               msg_on(42, "You've opened valve 13. The pressure is rising. (Form ROOM2030 sub06 @0x02000 msg 3 nach dem Set)"),
-               EVT_NEXT, ("ENDIF", ""), ENDE]))
-    P.append(("re15_r41c_prg_2030_v13_zustand", [msg_on(47, "Intake valve 13 is open."), EVT_NEXT, ENDE]))
     # ---- 2030 Ventilraetsel (Nachbesserung 4, Nachtrag 13): sechs Ventile (Raeder 01/02/03 Nordwand, 07/08/09 Suedwand) -------
     # Jede Drehung: Frage -> Ja -> Marker (5,0x1B); der C-Takt vermerkt sie in (5,0x10..0x13) (Raum-Scratch wie die Schalter-
     # bits ROOM11F0 (5,13..22) / ROOM2060 (5,6..9)) und prueft nach der VIERTEN (RE2 ROOM2130 sub04: Ergebnis erst am Ende,
@@ -191,28 +192,39 @@ def bauen(cd):
     # Marker (5,0x1F); geschlossen wird es wie die Nahaufnahmen mit der Bestaetigen-/Abbrechen-Flanke (andi 0xc000
     # @0x80028698), danach der Satz (die Vollbild-Ebene liegt ueber dem Text). Warten = While-Form ROOM2000 @0x01AD4
     # `0f 04 08 00` `21 05 00 00` `02 00` `10 00`.
+    # Spur N (Nachtrag 30): jedes Kasten-Programm beginnt mit dem Aufklappen (Pad-Sperre, Marker (5,0x1E), While wie unten; der C-Takt dreht die Tuer 16 Bilder lang,
+    # ROOM11F0 sub06 @0x01332/@0x01336, ist sie schon auf, loescht er den Marker sofort). Im Ja-Zweig das Einsetzen wie ROOM2060: Spieler und KI stehen ((2,0)/(2,2) wie sub01 @0x01288/
+    # @0x0128C, keine Pad-Sperre: sie maskiert die SCD-Pad-Woerter), Marker (5,0x1D) -> C-Takt: Cut 8 + Cursor, wartet ohne Zeitgrenze auf SQUARE in Zone 7 (sub18 @0x0168C, sub01 @0x01324/
+    # @0x0132E), loescht den Marker -> Bit 125 (sub19 @0x0169E), Text 42 auf Cut 9 (@0x016A2/@0x016C8), dann das Standbild der Ventile (Nachtrag 16).
+    # Der Platz reicht von Norden bis unter Cut 4 (Lauf wk: (4946,-3999) Blick +z): der Schrank ist nur unter Cut 3 zu sehen, deshalb Cut_chg 3 vorweg und Cut_old am Ende (Form Pult senken: `29 04` .. Cut_old).
+    AUF = [SPERRE_AN, ("29 03", "Cut_chg 3 Blick auf den Schrank (Form ROOM2030 sub02 @0x01E60; merkt den alten Cut @0x800402e4)"),
+           ("22 05 1e 01", "Set(5,0x1E)=1 Schrank klappt auf (Marker fuer den C-Takt, engine/src/schrank2010_r41.c)"),
+           ("0f 04 08 00", "While (Form ROOM2000 @0x01AD4): solange die Tuer faehrt"), ("21 05 1e 01", "Ck(5,0x1E)=1"), EVT_NEXT, ("10 00", "Ewhile"), SPERRE_AUS]
+    NAH = [("22 05 1d 01", "Set(5,0x1D)=1 Einsetz-Ansicht ROOM2060 Cut 8 + Cursor (Marker fuer den C-Takt, Form sub18 @0x0168C..@0x01696)"),
+           ("0f 04 08 00", "While: bis der Cursor in Zone 7 bestaetigt ist (sub01 @0x01324/@0x0132E)"), ("21 05 1d 01", "Ck(5,0x1D)=1"), EVT_NEXT, ("10 00", "Ewhile")]
     P.append(("re15_r41c_prg_2010_kasten_leer",
-              [msg_on(40, "A fuse box for the valve controls. | One of the fuses is missing... (ROOM2060 msg 3)"), EVT_NEXT, ENDE]))
+              AUF + [msg_on(40, "A fuse box for the valve controls. | One of the fuses is missing... (ROOM2060 msg 3)"), EVT_NEXT, CUT_OLD, ENDE]))
     P.append(("re15_r41c_prg_2010_kasten_frage",
-              [msg_on(40, "A fuse box ... | One of the fuses is missing..."), EVT_NEXT,
+              AUF + [msg_on(40, "A fuse box ... | One of the fuses is missing..."), EVT_NEXT,
                msg_on(41, "Will you use the Fuse? = ROOM2060 msg 4 @0x1855 (Form sub18 @0x0167E)"), EVT_NEXT,
                ("IF", "Ja-Zweig"), JA,
-               SPERRE_AN, ("22 02 02 01", "Set(2,2)=1 KI steht (ROOM2050 sub02 @0x0223C)"),
+               ("22 02 00 01", "Set(2,0)=1 Spieler steht (ROOM2060 sub01 @0x01288)"), ("22 02 02 01", "Set(2,2)=1 KI steht (ROOM2060 sub01 @0x0128C)")] + NAH + [
+               ("22 02 00 00", "Set(2,0)=0 (ROOM2060 sub19 @0x016B0)"), SPERRE_AN,
                ("22 09 7d 01", "Set(9,125)=1 Sicherung im Ventilkasten (Form ROOM2060 sub19 @0x0169E `22 03 90 01`)"),
+               msg_on(42, "You've used the Fuse. = ROOM2060 msg 5 @0x1875 (sub19 @0x016C8, auf Cut 9 @0x016A2)"), EVT_NEXT,
                ("22 05 1f 01", "Set(5,0x1F)=1 Standbild der Ventile + Aufschliess-Ton (Marker fuer den C-Takt; Bank 5 Wort 0, "
                                "ROOM2010 benutzt Bank 5 nicht)"),
                ("0f 04 08 00", "While (Form ROOM2000 @0x01AD4): solange das Standbild offen ist"),
                ("21 05 1f 01", "Ck(5,0x1F)=1"),
                EVT_NEXT, ("10 00", "Ewhile"),
-               msg_on(42, "You've used the Fuse. = ROOM2060 msg 5 @0x1875 (sub19 @0x016C8)"), EVT_NEXT,
-               ("22 02 02 00", "Set(2,2)=0 (ROOM11F0 sub17 @0x016EC)"), SPERRE_AUS,
-               ("ENDIF", ""), ENDE]))
+               ("22 02 02 00", "Set(2,2)=0 (ROOM2060 sub19 @0x016B4)"), SPERRE_AUS,
+               ("ENDIF", ""), CUT_OLD, ENDE]))
     P.append(("re15_r41c_prg_2010_kasten_drin",
-              [msg_on(43, "The fuse is in place. (ROOM2060 msg 6) | Will you take the Fuse? (ROOM2030 msg 2)"), EVT_NEXT,
+              AUF + [msg_on(43, "The fuse is in place. (ROOM2060 msg 6) | Will you take the Fuse? (ROOM2030 msg 2)"), EVT_NEXT,
                ("IF", "Ja-Zweig"), JA,
                ("22 09 7d 00", "Set(9,125)=0 Sicherung wieder genommen (Form ROOM2030 sub06 @0x01FF2 `22 03 6c 01`)"),
                msg_on(44, "You've taken the Fuse. = ROOM2030 msg 3 @0x20AC (sub06 @0x02000)"), EVT_NEXT,
-               ("ENDIF", ""), ENDE]))
+               ("ENDIF", ""), CUT_OLD, ENDE]))
     # ---- 2050 ------------------------------------------------------------------------------------------------
     P.append(("re15_r41c_prg_2050_hebel_sperre",
               [msg_on(40, "The pump has no power. The switchboard must be set first. (Form ROOM2060 sub12 @0x015D0)"),

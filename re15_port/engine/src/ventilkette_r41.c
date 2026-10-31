@@ -25,6 +25,9 @@
 #include "re15_fade.h"       /* re15_fade_config / _kick / _kill */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_rows, re15_esp_room_bank */
 #include "re15_wasser_r38.h" /* RE15_WASSER_R38_CODE_BODEN (Wasser-Schritt-Effekt FUN_80045630) */
+#include "re15_wasserlauf_r41.h" /* Runde 41 Spur N: Wasserlauf an der Leiter ROOM2000/2001 */
+#include "re15_panel2030_r41.h"  /* Runde 41 Spur N: Panel-Raetsel ROOM2030/2031 */
+#include "re15_schrank2010_r41.h" /* Runde 41 Spur N: Schrank ROOM2010/2011 klappt auf */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #include "re15_engine.h"     /* g_engine.frame_count (Protokoll), re15_render_tile (Zeichner) */
@@ -36,9 +39,11 @@
 #ifdef RE15_PLATFORM_PC
 #include "gen/ventilkette_r41_wasser.inc"
 #include "gen/ventilkette_r41_plakat.inc"   /* Nachbesserung 4: Plakat (Nahaufnahme + Aushang) und Dokument-Blatt */
+#include "gen/schrank2010_r41.inc"           /* Spur N: Schrank-Modelle */
 #endif
 
 extern uint16_t g_scd_pad_edge;    /* virtuelle Flanke (SQUARE = 0x40, CROSS = 0x8000; pad_common.c vtbl) */
+extern uint16_t g_scd_pad_held;    /* virtuell gehalten (Cursor Panel-Raetsel, Spur N) */
 extern void re15_scd_show_message(uint8_t index, uint32_t pause_mask);
 
 #ifdef RE15_PLATFORM_PC
@@ -53,7 +58,6 @@ static int      s_timer_gesehen = 0;/* 2030: Marker (5,0x1D) schon verbraucht (e
 static int      s_flut    = 0;      /* 2030: Flut laeuft (Wasser steigt)                                      */
 static int      s_ertrunken = 0;
 static int      s_fade_an = 0;
-static int      s_v13_vorher = -1;  /* Flanke von Bit 101 fuer den Klick                                      */
 static unsigned s_letzter_raum = 0xFFFFu;
 static int      s_wasser_prop[2] = { -1, -1 };
 static int      s_fuesse_nass = 0;  /* 2030: die steigende Flaeche hat die Fuesse erreicht (einmal je Flut)    */
@@ -76,7 +80,7 @@ static int      s_dok_vorher = -1;              /* Flanke von Bit 107 (Protokoll
 /* Nachbesserung 5 */
 static int      s_standbild_offen = 0;          /* 2010: Standbild der Ventile (2030 Cut 7) offen                */
 static int      s_standbild_takte = 0;
-static unsigned s_ton_n[3];                     /* gespielte Toene je RE15_R41C_TON_* (Riegel)                   */
+static unsigned s_ton_n[RE15_R41C_TON_N];       /* gespielte Toene je RE15_R41C_TON_* (Riegel)                   */
 static int      s_kasten_vorher = -1;           /* Flanke von Bit 125 (Protokoll)                                 */
 static int      s_zaehler_takte = 0;            /* Countdown: Takte seit dem Zaehlerstart (Sleep 1800)            */
 static int      s_flut_bilder = 0;              /* Nachbesserung 6: Bilder seit dem Flut-Beginn (0 = Bild des Beginns) */
@@ -102,7 +106,7 @@ static int generator(void) { return re15_game_flag_get(RE15_R41C_SICHERUNG_BANK,
 /* Ton ueber den Plattform-Haken (PC: platform/pc/src/ventilkette_r41_pc.c); gezaehlt wird immer (Riegel). */
 static void ton(int t)
 {
-    if (t >= 1 && t <= 2) s_ton_n[t]++;
+    if (t >= 1 && t < RE15_R41C_TON_N) s_ton_n[t]++;
     if (re15_ventilkette_r41_ton_hook) re15_ventilkette_r41_ton_hook(t);
 }
 
@@ -377,6 +381,7 @@ static void install_2000(uint16_t room_id)
     }
     tueren_umlenken(room_id);
     if (ist(room_id, RE15_R41C_RAUM_20B0)) ring_sperren(room_id, RE15_R41C_SLOT_20B0_RING, RE15_R41C_MSG_RING_20B0);
+    else re15_wasserlauf_r41_install(room_id);          /* Runde 41 Spur N: Nachtrag 30e, gleiche Bedingung wie die Sperre oben */
 }
 
 static void install_2070(uint16_t room_id)
@@ -397,11 +402,10 @@ static void install_2030(uint16_t room_id, const re15_rdt_t *rdt)
         steg_zelle(rdt, 0xFF);
         LOG("[ventilkette41] ROOM%04X: Bruecke obj 0 oben y %d, Zelle 12 gesperrt\n", (unsigned)room_id, RE15_R41C_BRUECKE_Y_OBEN);
     }
-    /* Die Stellen: Pult (Ring) und Ventil 13 (Tank) immer; die Ventile nur vor der Flut — danach liegen sie im
-     * gefluteten unteren Bereich (Nachtrag 9: "das ist gewollt"). */
+    /* Die Stellen: Pult (Ring) immer; die Ventile nur vor der Flut — danach liegen sie im gefluteten unteren Bereich
+     * (Nachtrag 9: "das ist gewollt"). Ventil 13 entfaellt seit Spur N (Nachtrag 37). */
     const int zustand = re15_ventilkette_r41_zustand_2030();
     ereignis_platz(RE15_R41C_SLOT_PULT,     RE15_R41C_PULT_RECT,     RE15_R41C_PULT_BAND,     RE15_R41C_EV_PULT);
-    ereignis_platz(RE15_R41C_SLOT_VENTIL13, RE15_R41C_VENTIL13_RECT, RE15_R41C_VENTIL13_BAND, RE15_R41C_EV_VENTIL13);
     if (zustand == RE15_R41C_2030_TROCKEN) {
         /* Nachbesserung 4 (Nachtrag 13): sechs Ventil-Plaetze an den Raedern (Kopf "Ventil-RAEDER"), das Plakat an der
          * Suedwand und - solange nicht genommen - das Dokument neben der Sicherung. */
@@ -507,8 +511,12 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
     s_standbild_offen = 0; s_standbild_takte = 0; s_zaehler_takte = 0; s_flut_bilder = 0;
     for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
-    if (ist(room_id, RE15_R41C_RAUM_2010))            /* Nachbesserung 5: ROOM2010/2011 benutzen Bank 5 nicht (scd_dump_room.py) */
+    if (ist(room_id, RE15_R41C_RAUM_2010)) {          /* Nachbesserung 5: ROOM2010/2011 benutzen Bank 5 nicht (scd_dump_room.py) */
         re15_game_flag_set(5, RE15_R41C_FLAG_STANDBILD, 0);
+        re15_game_flag_set(5, RE15_R41C_FLAG_SCHRANK, 0);   /* Spur N */
+        re15_game_flag_set(5, RE15_R41C_FLAG_NAHBILD, 0);
+    }
+    re15_schrank2010_r41_reset();
     if (ist(room_id, RE15_R41C_RAUM_2030)) {          /* nur der eigene Raum (Nachbesserung 1, M3): anderswo sind
                                                        * (5,0x1D)/(5,0x1E) Original-Bits, z. B. ROOM1171 sub02 @0x013B2
                                                        * `22 05 1e 01` im Init-Takt (Kraehen DIVE-ARM @0x801155e8) */
@@ -518,8 +526,11 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
         re15_game_flag_set(5, RE15_R41C_FLAG_GEDREHT, 0);  /* Nachbesserung 4: Ventile + Plakat */
         re15_game_flag_set(5, RE15_R41C_FLAG_PLAKAT, 0);
         re15_game_flag_set(5, RE15_R41C_FLAG_TON, 0);      /* Nachbesserung 5: Ventil-Ton */
+        re15_game_flag_set(5, RE15_R41C_FLAG_FAHRT, 0);    /* Spur N: Bruecken-Ton */
+        re15_game_flag_set(5, RE15_R41C_FLAG_HALT, 0);
+        re15_game_flag_set(5, RE15_R41C_FLAG_PANEL, 0);    /* Spur N: Panel-Raetsel */
     }
-    s_v13_vorher = bit(RE15_R41C_BIT_VENTIL13);
+    re15_panel2030_r41_reset();
     s_dok_vorher = bit(RE15_R41C_BIT_DOKUMENT);
     s_kasten_vorher = bit(RE15_R41C_BIT_KASTEN);
     s_letzter_raum = room_id;
@@ -537,13 +548,15 @@ void re15_ventilkette_r41_install(uint16_t room_id, const re15_rdt_t *rdt)
 void re15_ventilkette_r41_reset(void)
 {
     if (s_fade_an) { re15_fade_kill(RE15_R41C_FADE_KANAL); s_fade_an = 0; }
-    s_timer = 0; s_timer_gesehen = 0; s_flut = 0; s_ertrunken = 0; s_fuesse_nass = 0; s_spritzer_n = 0; s_v13_vorher = -1; s_letzter_raum = 0xFFFFu;
+    s_timer = 0; s_timer_gesehen = 0; s_flut = 0; s_ertrunken = 0; s_fuesse_nass = 0; s_spritzer_n = 0; s_letzter_raum = 0xFFFFu;
+    re15_panel2030_r41_reset();
+    re15_schrank2010_r41_reset();
     s_wasser_prop[0] = s_wasser_prop[1] = -1;
     s_panel_aktiv = 0; s_schalter = 0; s_ruhe = 0; s_panel_phase = 0; s_cursor_vorher = -1;
     s_ventil_gewaehlt = -1; s_ventile_geloest = 0; s_falsch_offen = 0; s_plakat_offen = 0; s_plakat_takte = 0;
     s_standbild_offen = 0; s_standbild_takte = 0; s_kasten_vorher = -1; s_zaehler_takte = 0; s_flut_bilder = 0;
     for (int i = 0; i < RE15_R41C_PANEL_N; i++) s_hebel_t[i] = 0;
-    for (int i = 0; i < 3; i++) s_ton_n[i] = 0;
+    for (int i = 0; i < RE15_R41C_TON_N; i++) s_ton_n[i] = 0;
     for (int i = 0; i < RE15_R41C_DREHUNGEN; i++) s_folge[i] = -1;
 }
 
@@ -552,11 +565,9 @@ const uint8_t *re15_ventilkette_r41_ereignis(uint16_t room_id, uint8_t event_id)
 {
     const char *name = NULL;
     if (ist(room_id, RE15_R41C_RAUM_2030)) {
-        if (event_id == RE15_R41C_EV_PULT)
+        if (event_id == RE15_R41C_EV_PULT)                 /* Spur N, Nachtrag 37: Panel-Raetsel statt Ventil 13 */
             name = bit(RE15_R41C_BIT_BRUECKE_UNTEN) ? "2030_pult_unten"
-                 : bit(RE15_R41C_BIT_VENTIL13)      ? "2030_pult_senken" : "2030_pult_ohne";
-        else if (event_id == RE15_R41C_EV_VENTIL13)
-            name = bit(RE15_R41C_BIT_VENTIL13) ? "2030_v13_zustand" : "2030_v13_frage";
+                 : bit(RE15_R41C_BIT_DRUCK80)       ? "2030_pult_senken" : "2030_panel_ein";
         else if (event_id >= RE15_R41C_EV_VENTIL0 && event_id < RE15_R41C_EV_VENTIL0 + RE15_R41C_VENTILE_N &&
                  !bit(RE15_R41C_BIT_FLUT_GELAUFEN)) {
             /* Nachbesserung 4 (Nachtrag 13): ein Ventil. Nachtrag 9: erst mit gesenkter Bruecke (Bit 102); Nachtrag 16
@@ -728,6 +739,29 @@ static void flut_tick(void)
     }
 }
 
+/* ---- 2030 Panel-Raetsel (Spur N, Nachtrag 37): Marker des Programms 2030_panel_ein oeffnet, der Takt fuehrt, die Bits (2,0)/(2,2) des Programms (Pult 2050
+ * sub01 @0x021FA) gibt der Takt am Ende zurueck (sub10 @0x0240C) -------------------------------------------------------------- */
+static void panel30_tick(void)
+{
+    if (re15_game_flag_get(5, RE15_R41C_FLAG_PANEL)) {
+        re15_game_flag_set(5, RE15_R41C_FLAG_PANEL, 0);
+        re15_panel2030_r41_oeffnen();
+        re15_scd_show_message(RE15_R41C_MSG_PANEL_START, (uint32_t)RE15_R41C_PAUSE << 16);
+        return;
+    }
+    if (!re15_panel2030_r41_offen()) return;
+    const int nachricht = g_scd.message_display_frames > 0 || g_scd.message_active;
+    const int erg = re15_panel2030_r41_takt(g_scd_pad_edge, g_scd_pad_held, nachricht);
+    if (erg == RE15_R41N_ERG_NICHTS) return;
+    re15_game_flag_set(2, 0, 0);                                 /* ROOM2050 sub10 @0x0240C */
+    re15_game_flag_set(2, 2, 0);
+    if (erg == RE15_R41N_ERG_GELOEST) {
+        bit_setzen(RE15_R41C_BIT_DRUCK80);
+        LOG("[ventilkette41] Panel 2030 GELOEST: Anzeige 80 -> Bit (9,101), Frage Id 43\n");
+        (void)scd_event_fire(RE15_R41C_EV_PULT);                 /* bei 80 folgt Text 43 (Nachtrag 37) */
+    }
+}
+
 /* ---- 2030 Ventilraetsel (Nachbesserung 4): Drehung vermerken, nach der vierten pruefen -------------------------------- */
 int re15_ventilkette_r41_drehungen(void)
 {
@@ -820,6 +854,7 @@ static void kasten_tick(void)
     if (s_kasten_vorher >= 0 && k != s_kasten_vorher)
         LOG("[ventilkette41] Ventil-Sicherungskasten 2010: Sicherung %s -> Bit (9,125) = %d\n", k ? "eingesetzt" : "genommen", k);
     s_kasten_vorher = k;
+    re15_schrank2010_r41_tick();                                     /* Spur N: aufklappen, Einsetzen mit Cursor */
     if (!s_standbild_offen) {
         if (!re15_game_flag_get(5, RE15_R41C_FLAG_STANDBILD)) return;
         s_standbild_offen = 1; s_standbild_takte = 0;
@@ -837,12 +872,28 @@ static void kasten_tick(void)
 
 int re15_ventilkette_r41_standbild(unsigned *raum, int *cut)
 {
+    int nah = 0;
+    if (ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2010) && re15_schrank2010_r41_nahbild(&nah)) {   /* Spur N: Einsetz-Ansicht 2060 */
+        if (raum) *raum = RE15_R41N_NAH_RAUM;
+        if (cut) *cut = nah;
+        return 1;
+    }
     if (!s_standbild_offen || !ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2010)) return 0;
     if (raum) *raum = RE15_R41C_STANDBILD_RAUM;
     if (cut) *cut = RE15_R41C_STANDBILD_CUT;
     return 1;
 }
-unsigned re15_ventilkette_r41_ton_zaehler(int t) { return (t >= 1 && t <= 2) ? s_ton_n[t] : 0u; }
+/* Spur N, Nachbesserung 1 Mangel 3: die Vollbild-Ebene liegt ueber dem Inventar. Der Original-Riegel des START-Polls ist g_pauseflags & 0x01000000 (@0x8001cd14..@0x8001cd20, gesetzt von
+ * der Sperre (2,7)); Panel 2030 und Einsetzen 2010 laufen ohne (2,7), weil die Sperre die SCD-Pad-Woerter maskiert (game_step_common.c). Hier gilt sie fuer den Poll allein. PORT-WAHL. */
+int re15_ventilkette_r41_vollbild_sperrt(void)
+{
+    const uint16_t room = (uint16_t)g_current_room_id;
+    if (ist(room, RE15_R41C_RAUM_2030)) return re15_panel2030_r41_offen();
+    if (ist(room, RE15_R41C_RAUM_2010)) return re15_schrank2010_r41_nahbild(NULL);
+    return 0;
+}
+
+unsigned re15_ventilkette_r41_ton_zaehler(int t) { return (t >= 1 && t < RE15_R41C_TON_N) ? s_ton_n[t] : 0u; }
 int re15_ventilkette_r41_ventil_rbj(unsigned room_id) { return ist((uint16_t)room_id, RE15_R41C_RAUM_2030); }
 
 /* Countdown (Nachbesserung 5 Nachtrag 18 Punkt 4; Form seit Nachbesserung 6 die RE2-Anzeige, Kopf "Countdown"): sichtbar
@@ -890,6 +941,13 @@ int re15_ventilkette_r41_alarm(void)
            g_actors[RE15_ACTOR_SLOT_PLAYER].hp >= 0;
 }
 
+/* Spur N, Nachtrag 36: Kopf "re15_ventilkette_r41_sirene". */
+int re15_ventilkette_r41_sirene(void)
+{
+    return ist((uint16_t)g_current_room_id, RE15_R41C_RAUM_2030) && s_timer && !s_flut && !s_ertrunken &&
+           g_actors[RE15_ACTOR_SLOT_PLAYER].hp >= 0;
+}
+
 int re15_ventilkette_r41_timer_laeuft(void) { return s_timer; }
 int re15_ventilkette_r41_flut_laeuft(void)  { return s_flut; }
 int re15_ventilkette_r41_ertrunken(void)    { return s_ertrunken; }
@@ -902,10 +960,7 @@ void re15_ventilkette_r41_tick(void)
         re15_ventilkette_r41_install(room, NULL);
     }
     if (ist(room, RE15_R41C_RAUM_2030)) {
-        /* Klick beim Oeffnen von Ventil 13 (RE2-Panelklick wie lift2030_r37 / hebetisch) */
-        const int v13 = bit(RE15_R41C_BIT_VENTIL13);
-        if (s_v13_vorher == 0 && v13) re15_audio_re2_panel_se(RE15_PANEL_SE_KLICK);
-        s_v13_vorher = v13;
+        panel30_tick();                                  /* Spur N, Nachtrag 37 */
         /* Zaehler gestartet (Programm 2030_ventile Set(5,0x1D), genau einmal je Raumstart): Ost-Tuer -> 20B0,
          * Wasser parken. s_timer_gesehen bleibt stehen, auch wenn der Tod s_timer loescht. */
         if (!s_timer_gesehen && re15_game_flag_get(5, RE15_R41C_FLAG_TIMER)) {
@@ -921,6 +976,14 @@ void re15_ventilkette_r41_tick(void)
         if (re15_game_flag_get(5, RE15_R41C_FLAG_TON)) {   /* Nachbesserung 5: Ventil-Ton (RE2 ROOM1080 se_on(2,5)) */
             re15_game_flag_set(5, RE15_R41C_FLAG_TON, 0);
             ton(RE15_R41C_TON_VENTIL);
+        }
+        if (re15_game_flag_get(5, RE15_R41C_FLAG_FAHRT)) {  /* Spur N: Bruecke, RE2 ROOM4080 sub13 @0x031F2 */
+            re15_game_flag_set(5, RE15_R41C_FLAG_FAHRT, 0);
+            ton(RE15_R41C_TON_BRUECKE_FAHRT);
+        }
+        if (re15_game_flag_get(5, RE15_R41C_FLAG_HALT)) {   /* Spur N: Bruecke, RE2 ROOM4080 sub13 @0x03314 */
+            re15_game_flag_set(5, RE15_R41C_FLAG_HALT, 0);
+            ton(RE15_R41C_TON_BRUECKE_HALT);
         }
         ventile_tick();                                  /* Nachbesserung 4: Drehungen vermerken / pruefen */
         plakat_tick();
@@ -940,6 +1003,8 @@ void re15_ventilkette_r41_tick(void)
         panel_tick();
     } else if (ist(room, RE15_R41C_RAUM_2010)) {
         kasten_tick();                                   /* Nachbesserung 5 */
+    } else if (ist(room, RE15_R41C_RAUM_2000)) {
+        re15_wasserlauf_r41_tick();                      /* Runde 41 Spur N */
     }
 }
 
@@ -952,6 +1017,7 @@ static int reling_jetzt(void)
 
 int re15_ventilkette_r41_obj_id(uint16_t room_id, int k)
 {
+    if (k >= 5 && k <= 7) return ist(room_id, RE15_R41C_RAUM_2010) ? RE15_R41N_SCHRANK_OBJ_INNEN + (k - 5) : -1;       /* Spur N */
     if (!ist(room_id, RE15_R41C_RAUM_2030)) return -1;
     if (k == 1 && reling_jetzt()) return -1;
     if (k == 2) return RE15_R41C_DOK_OBJ;        /* Nachbesserung 4: Dokument-Blatt */
@@ -964,6 +1030,9 @@ const uint8_t *re15_ventilkette_r41_md1_bytes_k(int k, int *out_size)
 #ifdef RE15_PLATFORM_PC
     if (k == 2) { if (out_size) *out_size = (int)sizeof re15_r41c_blatt_md1;   return re15_r41c_blatt_md1; }
     if (k == 3) { if (out_size) *out_size = (int)sizeof re15_r41c_aushang_md1; return re15_r41c_aushang_md1; }
+    if (k == 5) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_innen_md1;  return re15_r41n_schrank_innen_md1; }
+    if (k == 6) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_aussen_md1; return re15_r41n_schrank_aussen_md1; }
+    if (k == 7) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_tuer_md1;   return re15_r41n_schrank_tuer_md1; }
 #endif
     if (k == 0 || k == 1) return re15_ventilkette_r41_md1_bytes(out_size);
     if (out_size) *out_size = 0;
@@ -975,6 +1044,9 @@ const uint8_t *re15_ventilkette_r41_tim_bytes_k(int k, int *out_size)
 #ifdef RE15_PLATFORM_PC
     if (k == 2) { if (out_size) *out_size = (int)sizeof re15_r41c_blatt_tim;   return re15_r41c_blatt_tim; }
     if (k == 3) { if (out_size) *out_size = (int)sizeof re15_r41c_aushang_tim; return re15_r41c_aushang_tim; }
+    if (k == 5) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_innen_tim;  return re15_r41n_schrank_innen_tim; }
+    if (k == 6) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_aussen_tim; return re15_r41n_schrank_aussen_tim; }
+    if (k == 7) { if (out_size) *out_size = (int)sizeof re15_r41n_schrank_tuer_tim;   return re15_r41n_schrank_tuer_tim; }
 #endif
     if (k == 0 || k == 1) return re15_ventilkette_r41_tim_bytes(out_size);
     if (out_size) *out_size = 0;

@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Vor dem ersten laden() (Unit-Proben ohne main.c) unveraendert 100 %; der Programmstart ruft laden() vor dem ersten Ton
+ * (main.c re15_lautstaerke_r41_pc_start). */
 static int s_arbeit      = RE15_LAUT_R41_MAX;   /* S[7]-Analog: Arbeitskopie, sofort angewendet   */
 static int s_gespeichert = RE15_LAUT_R41_MAX;   /* DAT_800b0fce-Analog: gespeicherter Stand       */
 static int s_stereo      = 1;                   /* gespeicherter Sound-Modus (1 = Stereo)          */
@@ -15,6 +17,17 @@ static int klemmen(int p)
     if (p < 0) return 0;
     if (p > RE15_LAUT_R41_MAX) return RE15_LAUT_R41_MAX;
     return p;
+}
+
+/* Voreinstellung ohne Datei: 50 (Spur N, N-E2). MESSHAKEN: ein Mitschnitt (RE15_AUDIO_CAP / RE15_AUDIO_CAP_SYNC) OHNE
+ * RE15_OPTIONS_FILE behaelt 100 %, damit die Pegel-Riegel der Suite die volle Mischung messen; wer die Endstufe messen will,
+ * setzt RE15_OPTIONS_FILE (auch auf eine fehlende Datei -> 50). Kein Spielweg setzt diese Variablen. */
+int re15_lautstaerke_r41_voreinstellung(void)
+{
+    const char *o = getenv(RE15_LAUT_R41_ENV);
+    const char *c1 = getenv("RE15_AUDIO_CAP"), *c2 = getenv("RE15_AUDIO_CAP_SYNC");
+    if (!(o && *o) && ((c1 && *c1) || (c2 && *c2))) return RE15_LAUT_R41_MAX;
+    return RE15_LAUT_R41_STANDARD;
 }
 
 const char *re15_lautstaerke_r41_pfad(void)
@@ -54,7 +67,7 @@ int re15_lautstaerke_r41_format(char *buf, size_t n, int prozent, int stereo)
 
 void re15_lautstaerke_r41_reset(void)
 {
-    s_arbeit = s_gespeichert = RE15_LAUT_R41_MAX;
+    s_arbeit = s_gespeichert = re15_lautstaerke_r41_voreinstellung();
     s_stereo = 1;
 }
 
@@ -64,14 +77,14 @@ void re15_lautstaerke_r41_laden(void)
     const char *pfad = re15_lautstaerke_r41_pfad();
     FILE *f = fopen(pfad, "rb");
     if (!f) {
-        fprintf(stderr, "[lautstaerke] %s fehlt -> 100 %%, Stereo\n", pfad);
+        fprintf(stderr, "[lautstaerke] %s fehlt -> %d %%, Stereo\n", pfad, s_arbeit);
         return;
     }
     char text[1024];
     size_t got = fread(text, 1, sizeof text - 1, f);
     fclose(f);
     text[got] = 0;
-    int p = RE15_LAUT_R41_MAX, st = 1;
+    int p = re15_lautstaerke_r41_voreinstellung(), st = 1;
     int n = re15_lautstaerke_r41_parse(text, &p, &st);
     s_gespeichert = s_arbeit = klemmen(p);
     s_stereo = st ? 1 : 0;
@@ -96,7 +109,8 @@ int re15_lautstaerke_r41_speichern(void)
 }
 
 int  re15_lautstaerke_r41_prozent(void)      { return s_arbeit; }
-int  re15_lautstaerke_r41_q15(void)          { return s_arbeit * RE15_LAUT_R41_Q15_VOLL / RE15_LAUT_R41_MAX; }
+/* N-E2: (Wert/100)^2 in Q15 = doppelte Absenkung in dB bei gleicher Reglerstellung. Hoechstwert 100 * 100 * 0x8000 passt in 32 Bit. */
+int  re15_lautstaerke_r41_q15(void)          { return s_arbeit * s_arbeit * RE15_LAUT_R41_Q15_VOLL / (RE15_LAUT_R41_MAX * RE15_LAUT_R41_MAX); }
 int  re15_lautstaerke_r41_gespeichert(void)  { return s_gespeichert; }
 int  re15_lautstaerke_r41_stereo(void)       { return s_stereo; }
 void re15_lautstaerke_r41_setzen(int prozent){ s_arbeit = klemmen(prozent); }

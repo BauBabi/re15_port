@@ -172,6 +172,7 @@ static int           s_pselect_groupa = 1;    /* apply the Group-A half-screen d
 static int           s_select_pulse = 0x80;   /* highlight ramp counter scene+0x32e (0..0x80) */
 static SDL_Texture  *s_fmv_tex = NULL;        /* STR movie frame (FE-3, updated per frame) */
 static int           s_fmv_show = 0;
+static int           s_fmv_text = 0;          /* Runde 41 Spur N: Text-Ebene ueber dem Vollbild (Panel 2030) */
 static int           s_fmv_w = 0, s_fmv_h = 0;
 static SDL_Texture  *s_card_tex = NULL;       /* FE-4 memory-card BG (DATA/TYPE00.TIM 320x240) */
 static int           s_card_show = 0;
@@ -1486,6 +1487,8 @@ void re15_render_end_frame(void)
     if (s_fmv_show && s_fmv_tex) {
         SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
         SDL_RenderCopy(s_renderer, s_fmv_tex, NULL, &full);
+        if (s_fmv_text && s_text_overlay_used && s_text_overlay_tex)   /* Runde 41 Spur N: Nachrichten im Panel 2030 */
+            SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
     }
 
     /* FE-4 MEMORY-CARD screen: full-screen BG (DATA/TYPE00.TIM), the byte-true dim panel behind
@@ -2235,6 +2238,7 @@ void re15_render_pc_show_fmv(const uint32_t *rgba, int w, int h)
 }
 
 void re15_render_pc_hide_fmv(void) { s_fmv_show = 0; }
+void re15_render_pc_fmv_text(int an) { s_fmv_text = an; }   /* Runde 41 Spur N */
 
 /* FE-4 MEMORY-CARD screen background (DATA/TYPE00.TIM, 320x240 16bpp RGB555 — the byte-true
  * "MEMORY CARD BG", CD file 0x23). Cached once (static art), drawn full-screen while shown. */

@@ -372,6 +372,7 @@ static ss_seq_t s_ss_sub2;          /* SUB_<nn> SECOND sequence (SEQ1) — a rea
                                      * SEQ1 at seq_base + *(file_end-8); the SCD 0x54 slot 2
                                      * addresses it. Shares the SUB VAB via tone_src.
                                      * [audit wf_1db9c802 BGM-SUB-SECOND-SEQ] */
+static ss_seq_t s_ss_r41_sirene;    /* Runde 41 Spur N (Nachtrag 36): RE2 SUB_34 neben MAIN und SUB (re15_audio_r41_sirene unten) */
 static int      s_ss_rate = 44100;
 /* BGM LAYER BASE MASTER — the SAME value for all three SsSeq slots, byte-true.
  * FUN_80044774 gives each opened sequence its own SsSeqSetVol from the slot's vol halfword
@@ -2845,6 +2846,7 @@ static void re15_ss_render_bgm(int16_t *out, int frames) {
     ss_mix(&s_ss_main, bgm, frames);
     ss_mix(&s_ss_sub,  bgm, frames);
     ss_mix(&s_ss_sub2, bgm, frames);   /* the SUB bank's SECOND sequence (SCD slot 2) */
+    ss_mix(&s_ss_r41_sirene, bgm, frames);   /* Runde 41 Spur N, Nachtrag 36 */
     const int fade = s_bgm_fade_vol;   /* Stimmen-Volume-Rampe der Ausblendung */
     static int s_rev_held_l = 0, s_rev_held_r = 0, s_rev_phase = 0;
     for (int f = 0; f < frames; f++) {
@@ -4293,4 +4295,25 @@ int re15_audio_r41_alarm(int an)
     SDL_UnlockAudioDevice(s_audio_dev);
     if (an && s_r41_alarm) ss_seq_ctl_ex(1, 0, 1, 0x64, 0x40);   /* ROOM6040 sub23 @0x038BA `51 01 00 01 64 40` */
     return s_r41_alarm;
+}
+
+/* Runde 41 Spur N, Nachtrag 36 (include/re15_ventilkette_r41.h "Sirene", Dossier N_nachtrag30.md §5): die Alarm-Sirene aus ROOM6000 neben MAIN und
+ * SUB_25. Quelle shared_assets/RE2/SOUND/SUB_34.BGM (bytegleich info/re2leon/COMMON/SOUND/SUB_34.BGM): dieselbe Welle wie MAIN25 = RE2 MAIN11 Kanal 2
+ * (VAG 2), aber ohne die Musik; SEQ0 laeuft in Dauerschleife (`b0 63 14` .. `b0 63 1e`), Lautstaerke unveraendert wie im Container. */
+int re15_audio_r41_sirene(int an)
+{
+    if (!g_audio.initialized) return 0;
+    int ok = 0;
+    SDL_LockAudioDevice(s_audio_dev);
+    ss_all_voices_off(&s_ss_r41_sirene);
+    ss_free_bank(&s_ss_r41_sirene);
+    if (an) {
+        s_r41_alarm_re2 = 1;
+        const int rc = re15_bgm_load_track(&s_ss_r41_sirene, "SUB_", 0x34);
+        s_r41_alarm_re2 = 0;
+        free(s_sub_seq2); s_sub_seq2 = NULL; s_sub_seq2_len = 0;     /* SEQ#2 des Containers ist leer (2 Ereignisse) */
+        if (rc == 0) { s_ss_r41_sirene.vab_id = 6; ss_start(&s_ss_r41_sirene, 1); ok = 1; }
+    }
+    SDL_UnlockAudioDevice(s_audio_dev);
+    return ok;
 }

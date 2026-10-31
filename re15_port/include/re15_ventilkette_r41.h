@@ -33,6 +33,9 @@
  *   Nachtrag 18: Plakat im Stil des Spiels; 2050-Hebel gehen beim Umlegen runter; Ventil-Dreh-Animation aus RE2;
  *                Timer der 60 s + Alarm + Sprachausgabe beim Warntext.
  *   Nachtrag 19: Text 46 = "WARNING: The water will rise in one minute. Please leave the room immediately!"
+ *   Nachtrag 30/30b/30d (Runde 41 Spur N, Dossier N_nachtrag30.md): Notiz "nur gruen und rot verwechselt ... ausserdem die
+ *                Nummern verwechselt von "Schwarz" und "Gruen""; Plakat NEU "1. GREEN 01 - 2. RED 02 - 3. BLACK 09 - 4. RED 08",
+ *                Loesung 09 -> 02 -> 01 -> 08 (Nutzer-Wahl 30d).
  *
  * Dossier: analysis/befunde_runde41/C_ventilkette.md (RE-Belege §1, Umsetzung §3). Kein Asset-Patch: die RDTs
  * bleiben byte-true; alles hier wird nach dem Init-Lauf des Raums angelegt (scd_room_setup.c / main.c Boot-Weg).
@@ -67,7 +70,7 @@
  * ROOM2030 Stelle Pult: Nordwand z -10350 (SCA Zelle 24 Band 3 z -12350..-10350), Rueckprojektion des roten
  *   Markers in schaltschrank.png (Cut 2, Bild (45,128)) auf z = -10350 -> Welt (-89,-7079); Pultkanten Bild
  *   (30,60)/(20,180) -> x 125..706, y -8506..-6242. Nordstreifen des Rings z -10350..-9000 (Gelaender Zelle 20).
- * ROOM2030 Stelle Ventil 13: der Tank rechts der Treppe (schaltschrank.png) = SCA Zelle 2 Band 1 (-3050,-6900,
+ * ROOM2030 Stelle Ventil 13 (bis Spur N, seit Nachtrag 37 ohne Platz): der Tank rechts der Treppe (schaltschrank.png) = SCA Zelle 2 Band 1 (-3050,-6900,
  *   1000,500) am Fuss der Treppe (Zone Slot 8 sce 12 @0x01B8E (-6050,-8400,3700,1400)); Landeplatz Band 1
  *   x -2550..-50, z -8500..-6900 (Zellen 1/6/11 ringsum).
  * ROOM2030 Stelle Ventile (Nachbesserung 3, Nachtrag 9): die nummerierten Ventile liegen ALLE im unteren Bereich
@@ -141,14 +144,14 @@
  * PORT-WAHLEN (benannt; Form jeweils belegt)
  * ============================================================================================================
  * - Bruecke OBEN = Ringebene y -5400 (die naechste Ebene ueber Band 1 in diesem Raum; Fahrt 30 x 120 = 3600 in der
- *   Lift-Form sub03). Solange oben: Steg-Zelle 12 gesperrt (Sca_id_set-Form), Pult meldet msg 40 (Druck null,
- *   Ventil 13 zu); Ventil 13 (am Tank) oeffnen -> Pult fragt "Lower the bridge?" -> Fahrt unter Cut 4.
+ *   Lift-Form sub03). Solange oben: Steg-Zelle 12 gesperrt (Sca_id_set-Form). Seit Spur N (Nachtrag 37) oeffnet das Pult das Panel-Raetsel
+ *   (engine/src/panel2030_r41.c, Frage Id 40); Anzeige 80 -> Bit 101 -> Pult fragt "Lower the bridge?" (Id 43) -> Fahrt unter Cut 4. Ventil 13 entfaellt.
  * - Ventilraetsel (Nachbesserung 4, Nachtrag 13; ersetzt den Platzhalter): sechs Ventil-Plaetze an den Raedern, erst mit
  *   Bit 102 (Bruecke unten, Nachtrag 9) UND Bit (9,125) (Sicherung im Ventil-Sicherungskasten 2010, Nachtrag 16 - ersetzt
  *   die Bedingung (3,108) aus Nachtrag 10); sonst Satz 49 = Original "It's locked." (ROOM20A0 msg 1 @0x203C, Nachtrag 16
  *   Folge 4; der fruehere Satz "I should look around here first." ist entfallen); je Platz Frage 50..55
- *   (Nummer + Farbe) -> Ja -> Drehung in (5,0x10..0x13) + Klick 0x0A; nach der VIERTEN: richtige Folge 09, 07, 02, 01
- *   (PORT-WAHL, Ableitung im Dossier §7) -> Ereignis 26 = Warnung -> Sleep 1800 (= 60 s bei 30 Takten) im selben Faden (Form ROOM2000 sub07 @0x01B36: For/Evt_next-Schleife eines
+ *   (Nummer + Farbe) -> Ja -> Drehung in (5,0x10..0x13) + Klick 0x0A; nach der VIERTEN: richtige Folge 09, 02, 01, 08
+ *   (NUTZER-VORGABE Nachtrag 30d, Ableitung Dossier N_nachtrag30.md §3; bis Spur N 09, 07, 02, 01) -> Ereignis 26 = Warnung -> Sleep 1800 (= 60 s bei 30 Takten) im selben Faden (Form ROOM2000 sub07 @0x01B36: For/Evt_next-Schleife eines
  *   Hintergrundfadens) -> Pad-Sperre, Cut 4, Wasser steigt 324 x 50 (Rate des Rechners @0x00CC8) vom Beckengrund
  *   y 0 bis zur Tuerebene y -16200; der C-Takt ertraenkt den Spieler, sobald die Flaeche 900 ueber seinen Fuessen
  *   steht (hp := -1 wie RE15_KILL_AT, main.c; blaue Blende Kanal 0 in der Form ROOM11F0 @0x174a `56 00 02 07 00 00`
@@ -198,7 +201,7 @@
 /* ---- Bank-9-Bits (VERTRAG §1.1: C = 100-103, 106, 107; Zensus unit_r36_kartenbits) ------------------------- */
 #define RE15_R41C_BANK               9
 #define RE15_R41C_BIT_LEITER_FREI    100   /* 2000/20B0: Leiter nach 2050 frei (nach der Flut)              */
-#define RE15_R41C_BIT_VENTIL13       101   /* 2030: Zulaufventil 13 geoeffnet                               */
+#define RE15_R41C_BIT_DRUCK80        101   /* 2030: Panel-Raetsel geloest, Anzeige 80 (Spur N, Nachtrag 37; bis dahin "Ventil 13 offen") */
 #define RE15_R41C_BIT_BRUECKE_UNTEN  102   /* 2030: Bruecke gesenkt (y -1800, Zelle 12 offen)               */
 #define RE15_R41C_BIT_FLUT_GELAUFEN  103   /* 2030: Ventile geoeffnet und Raum verlassen -> 2000 wird 20B0  */
 #define RE15_R41C_BIT_PULT2050       106   /* 2050: Schaltpult auf 80 V                                     */
@@ -231,14 +234,14 @@
 
 /* ---- Text-Ids (VERTRAG §1.2) ---------------------------------------------------------------------------------- */
 #define RE15_R41C_MSG_LEITER          40   /* 2000/20B0 */
-#define RE15_R41C_MSG_PULT_OHNE       40   /* 2030 */
-#define RE15_R41C_MSG_V13_FRAGE       41
-#define RE15_R41C_MSG_V13_OFFEN       42
+#define RE15_R41C_MSG_PANEL_FRAGE     40   /* 2030 "A control panel for the bridge. / Will you operate the panel?" (Spur N)   */
+#define RE15_R41C_MSG_PANEL_START     41   /* 2030 "The pressure gauge reads 100. | Pick a tank to drain, / then a tank to fill." */
+#define RE15_R41C_MSG_PANEL_LEER      42   /* 2030 "The tank is empty."                                                     */
 #define RE15_R41C_MSG_BRUECKE_FRAGE   43
 #define RE15_R41C_MSG_BRUECKE_UNTEN   44
 #define RE15_R41C_MSG_VENTILE_ZURUECK 45   /* Nachbesserung 4: falsche Folge -> zurueckgesetzt (frueher Platzhalter-Frage) */
 #define RE15_R41C_MSG_WARNUNG         46
-#define RE15_R41C_MSG_V13_ZUSTAND     47
+#define RE15_R41C_MSG_PANEL_VOLL      47   /* 2030 "The tank is full."                                                      */
 /* Nachbesserung 3: Id 48 (frueher "valves are open ... flooded") und 49 (frueher "... drained", Bit 107) neu belegt —
  * nach der Flut liegen die Ventile unter Wasser (Nachtrag 9), den Zustand waehrend des Zaehlers zeigt die Warnung 46. */
 #define RE15_R41C_MSG_TREPPE_FLUT     48   /* Treppe Slot 8 bei "auf Relinghoehe" (Nachtrag 8) */
@@ -266,7 +269,6 @@
 
 /* ---- Ereignisse (Port-Ids < RE15_RDT_MAX_SUB_SCD, ausserhalb der Raum-Subs: 2030 hat sub00..06) ------------- */
 #define RE15_R41C_EV_PULT      24
-#define RE15_R41C_EV_VENTIL13  25
 #define RE15_R41C_EV_FLUT      26   /* vom C-Takt nach der richtigen Folge gefeuert: Warnung 46 -> Zaehler -> Flut        */
 #define RE15_R41C_EV_FALSCH    27   /* vom C-Takt nach vier Drehungen in falscher Folge: zuruecksetzen + Text 45          */
 #define RE15_R41C_EV_VENTIL0   17   /* 17..22 = Ventil 01/02/03/07/08/09 (Nachbesserung 4)                              */
@@ -286,7 +288,6 @@
 
 /* ---- Plaetze 2030 (frei: 0-3 Tueren, 4-7 Lifte, 8 Treppe, 9 Sicherung, 10/11 Items, 51-63 RVD) --------------- */
 #define RE15_R41C_SLOT_PULT      12
-#define RE15_R41C_SLOT_VENTIL13  13
 #define RE15_R41C_SLOT_VENTIL0   14   /* 14..19 = Ventil 01/02/03/07/08/09 (Nachbesserung 4)          */
 #define RE15_R41C_SLOT_DOKUMENT  20   /* Item-Zone "Technician's Note"                                 */
 #define RE15_R41C_SLOT_PLAKAT    21   /* Untersuchen des Plakats                                       */
@@ -321,8 +322,6 @@
 /* Rechtecke (x, z, Breite, Tiefe) + Band — Herleitung im Kopf. */
 #define RE15_R41C_PULT_RECT      -300, -10850, 1300, 1000
 #define RE15_R41C_PULT_BAND      3
-#define RE15_R41C_VENTIL13_RECT  -3050, -6900, 1300, 1000
-#define RE15_R41C_VENTIL13_BAND  1
 /* Ventile (Nachbesserung 4, Kopf "Ventil-RAEDER"): Nummer, Radmitte x (auf 50 gerundet), Wandflaeche z, Farbe 0 rot / 1 gruen /
  * 2 schwarz; Platz = x +- 500, Wand +- 500, Band 1. Reihenfolge = Ereignis 17.. / Slot 14.. / Text 50... */
 #define RE15_R41C_VENTILE_N       6
@@ -331,10 +330,15 @@
 #define RE15_R41C_VENTIL_WAND_Z   { -8500, -8500, -8500, 7900, 7900, 7900 }
 #define RE15_R41C_VENTIL_FARBE    { 2, 1, 0, 2, 1, 0 }
 #define RE15_R41C_VENTILE_BAND    1                          /* Nord-Landeplatz Zelle 13 / Sued-Landeplatz Zelle 16 */
-/* Richtige Folge (PORT-WAHL, Vorschlag zur Freigabe; Plakat druckt sie falsch, Dossier §7): 09 rot, 07 schwarz, 02 gruen,
- * 01 schwarz = Indizes in RE15_R41C_VENTIL_NUMMERN. */
+/* Richtige Folge = NUTZER-VORGABE AUFTRAG.md Nachtrag 30d (2026-10-25 17:23, Auswahl des Nutzers; ersetzt Nachtrag 15 "09, 07,
+ * 02, 01" und Nachtrag 30c "02, 01, 09, 07"): 09 rot, 02 gruen, 01 schwarz, 08 gruen = Indizes in RE15_R41C_VENTIL_NUMMERN
+ * {1,2,3,7,8,9} -> {5, 1, 0, 4}. Ableitung aus Plakat + Notiz (Spur N, Dossier N_nachtrag30.md §3): Plakat "1. GREEN 01 -
+ * 2. RED 02 - 3. BLACK 09 - 4. RED 08" (gen/ventilkette_r41_plakat.inc, tools/r41_ventilkette/plakat.py), Notiz "They mixed up
+ * green and red, and on top of that they swapped the numbers of "black" and "green"!" (Nachtrag 30b) -> Gruen/Rot tauschen,
+ * Nummern der Zeilen GREEN/BLACK tauschen -> 09 rot / 02 gruen / 01 schwarz / 08 gruen = die echten Raeder (Kopf
+ * "Ventil-RAEDER": 09 rot, 02 gruen, 01 schwarz, 08 gruen). */
 #define RE15_R41C_DREHUNGEN       4
-#define RE15_R41C_LOESUNG         { 5, 3, 1, 0 }
+#define RE15_R41C_LOESUNG         { 5, 1, 0, 4 }
 /* Bank 5 (Raum-Scratch) der Ventile/des Plakats (2030 benutzt Bank 5 sonst nicht; 0x1D/0x1E s. u.). */
 #define RE15_R41C_FLAG_DREHUNG0   0x10   /* 0x10..0x13 = Drehung 1..4 (Form ROOM11F0 Schalterbits (5,13..22)) */
 #define RE15_R41C_FLAG_GEDREHT    0x1B   /* Handshake Programm -> C-Takt (Ja auf die Ventil-Frage)              */
@@ -342,6 +346,8 @@
 #define RE15_R41C_SE_FEHLER       0x0B   /* RE2 ROOM2130 sub04 @0x01800 `36 02 0b 01` (Bank PANEL2130, Satz 0x0B) */
 #define RE15_R41C_FLAG_TON        0x1A   /* 2030: Ventil-Ton jetzt (Programm statt RE2 se_on(2,5) @0x02168..)    */
 #define RE15_R41C_FLAG_STANDBILD  0x1F   /* 2010: Standbild der Ventile offen (2010/2011 benutzen Bank 5 nicht)   */
+#define RE15_R41C_FLAG_SCHRANK    0x1E   /* 2010: Schrank klappt auf (Spur N, Programm -> C-Takt, While im Programm)  */
+#define RE15_R41C_FLAG_NAHBILD    0x1D   /* 2010: Einsetz-Ansicht ROOM2060 Cut 8 + Cursor im Ja-Zweig (Spur N), faellt mit Zone 7 + SQUARE */
 /* Ventil-Dreh-Animation (Nachbesserung 5, Nachtrag 18 Punkt 3, Dossier §0f B5-3): RE2 ROOM1080 (Hubschrauber-Landeplatz,
  * msg 0 @0x267A "A water pressure valve") sub08 @0x0210A..@0x0221E, Clips 15/16/17 aus dem RBJ @0x39AC derselben RDT
  * (13128 B, 1 Record, EMR 15 Knochen x 80 B, EDD 19 Clips: 15 = 30, 16 = 50, 17 = 40 Bilder) = shared_assets/RE2/
@@ -355,6 +361,23 @@
 /* Toene, die der C-Takt ueber den Plattform-Haken spielt (PC: platform/pc/src/ventilkette_r41_pc.c). */
 #define RE15_R41C_TON_VENTIL      1        /* RE2 ROOM1080 Satz 5 (Bank VENTIL1080)                                */
 #define RE15_R41C_TON_AUF         2        /* RE2 "You unlocked it." Satz 0x26 (EXE @0x800515f8; KARTSE AUF_HIER)  */
+/* Spur N, Nachtrag 30 "wenn die Plattform runter faehrt, fehlt mir noch der Original Sound von Resident Evil 2" (Dossier N_nachtrag30.md §4). RE2s zentrale
+ * Bruecke = ROOM4080 (msg 31 "Insert the valve handle and rotate it to move the central bridge up or down", ROOM4090 msg 37 "I can't cross unless the bridge
+ * is up"; Nutzer-Liste ROOM400.SAP "Center Bridge Moving sounds", ROOM408.SAP "Center bridge room sounds"). sub13 @0x031EE senkt sie: @0x031F2 `36 02 0f 00 ...`
+ * Se_on Raumbank Satz 0x0F = Motor vor der Fahrt, @0x03314 `36 02 10 01 ...` Se_on Satz 0x10 am Ende der Fahrt. EDT @0xA3C0 + 4*0x0F `00 01 53 16` -> Prog 1 Ton 5
+ * VAG 13 (12656 B, Flags 2 .. 3 = Dauerschleife), + 4*0x10 `00 01 64 16` -> Prog 1 Ton 6 VAG 14 (24448 B, einmal); beide Stimme 6 (Byte 3 = 0x16), der Halt
+ * schneidet also den Motor (Key-On auf dieselbe Stimme, se_voice_pump). Op 0x8C in sub13 ist Vibration (FUN_800395b8 -> FUN_80038bbc), kein Ton.
+ * Bank = shared_assets/RE2/BRUECKE4080.EDT/.VH/.VB (tools/r41_nachtrag30/re2_toene_export.py, bytegleich mit der RDT). Die lift2030-Anker (sub02/sub04 der
+ * zwei Lifte) greifen hier nicht: die Bruecke faehrt im Port-Programm 2030_pult_senken. */
+#define RE15_R41C_TON_BRUECKE_FAHRT 3      /* Satz 0x0F */
+#define RE15_R41C_TON_BRUECKE_HALT  4      /* Satz 0x10 */
+#define RE15_R41C_TON_N             5
+#define RE15_R41C_BRUECKE_SE_MOTOR  0x0F   /* @0x031F2 */
+#define RE15_R41C_BRUECKE_SE_HALT   0x10   /* @0x03314 */
+#define RE15_R41C_BRUECKE_MOTOR_VAG 13     /* BRUECKE4080.VH Programm 1 Ton 5 (Taste 64): VAG-Nummer 13 (zaehlt ab 1, Log vag=12); Halt = Ton 6, VAG-Nummer 14 */
+#define RE15_R41C_FLAG_FAHRT        0x14   /* 2030: Marker Motor an (Port-Programm -> C-Takt, Bank 5 Wort 0)        */
+#define RE15_R41C_FLAG_HALT         0x15   /* 2030: Marker Halt                                                    */
+#define RE15_R41C_FLAG_PANEL        0x16   /* 2030: Programm 2030_panel_ein -> C-Takt: Panel-Raetsel oeffnen (Spur N) */
 /* Standbild beim Einsetzen (Nachtrag 16 Folge 2 "Kamera auf die Ventile"): die Ventil-Kamera der Suedwand ROOM2030 Cut 7
  * (Raeder 09/08/07 + Plakat, Dossier §0e B4-2), BSS/ROOM2030/BG07.BSS (= ROOM2031/BG07.BSS bytegleich). */
 #define RE15_R41C_STANDBILD_RAUM  0x2030u
@@ -512,7 +535,7 @@ void re15_ventilkette_r41_tick(void);
 void re15_ventilkette_r41_reset(void);
 /* Eingebackene Port-Props fuer main.c (PC): k = 0/1 Wasserflaechen obj 4/5, k = 2 Dokument-Blatt obj 6, k = 3 Plakat-Aushang
  * obj 7 (Nachbesserung 4); obj_id im Raum oder -1, MD1/TIM-Bytes je k. */
-#define RE15_R41C_PROPS_N 4
+#define RE15_R41C_PROPS_N 8   /* k = 4: frei; k = 5..7: Schrank ROOM2010/2011 (Spur N, include/re15_schrank2010_r41.h) */
 int re15_ventilkette_r41_obj_id(uint16_t room_id, int k);
 const uint8_t *re15_ventilkette_r41_md1_bytes(int *out_size);
 const uint8_t *re15_ventilkette_r41_tim_bytes(int *out_size);
@@ -547,6 +570,7 @@ int      re15_ventilkette_r41_folge(int i);                       /* Ventil-Inde
 int      re15_ventilkette_r41_plakat_offen(void);                 /* 1 = Nahaufnahme offen                            */
 int      re15_ventilkette_r41_ventil_nummer(int i);               /* 1, 2, 3, 7, 8, 9                                 */
 /* Nachbesserung 5 */
+int      re15_ventilkette_r41_vollbild_sperrt(void);                /* Spur N: 1 = Panel 2030 / Einsetzen 2010 offen, START-Poll aus (game_step_common.c) */
 int      re15_ventilkette_r41_standbild(unsigned *raum, int *cut);  /* 1 = Standbild der Ventile offen (2010), Quelle   */
 unsigned re15_ventilkette_r41_ton_zaehler(int ton);               /* gespielte Toene je RE15_R41C_TON_* (Riegel)      */
 int      re15_ventilkette_r41_ventil_rbj(unsigned room_id);       /* 1 = Raum bindet das RE2-RBJ VENTIL1080 (2030/2031) */
@@ -561,6 +585,13 @@ int      re15_ventilkette_r41_countdown_re2(int bild, int sekunden, char *out);
  * (richtige Folge, Ereignis 26) bis zum Flut-Beginn oder zum Tod; mit dem Raumwechsel endet er (install setzt den Zustand zurueck,
  * den SUB-Platz uebernimmt der Raum-BGM-Lader). Die PC-Seite (ventilkette_r41_pc.c) schaltet damit re15_audio_r41_alarm. */
 int      re15_ventilkette_r41_alarm(void);
+/* Spur N, Nachtrag 36 "bei der Minute bis zum Wasser voll laufen ... ebenfalls die Alarm Sirene mit einbauen nach der Ansage. Die findest du zum Beispiel auch bei
+ * room6000" (Dossier N_nachtrag30.md §5). RE1.5 ROOM6000: Tabelle UNK_80074828[0x62 + 0] = 0xFF65 -> MAIN25 (Sce_bgm_control @0x00D52 `54 00 01 00 46 40`); MAIN25.BGM
+ * ist BYTEGLEICH RE2 MAIN11.BGM, und RE2 setzt ROOM6000 selbst darauf: ROOM6040 @0x02360 `57 00 00 06 11 ff 00 00` (mit allen Labor-Raeumen, @0x022E0..@0x02388). Die
+ * Sirene darin = Kanal 2, Programm 1, VAG 2 (4384 B), Note 60: 0,804 s an, 0,142 s aus, Periode 0,946 s. shared_assets/RE2/SOUND/SUB_34.BGM = RE2 SUB_34 traegt
+ * dieselbe Welle (VAG 2 bytegleich) und die Stimme (VAG 1 bytegleich) ohne die Musik. 1 = die Sirene soll laufen: vom Zaehlerstart (= nach der Ansage, Set(5,0x1D) hinter
+ * dem Warntext 46) bis zum Flut-Beginn, zum Tod oder zum Verlassen des Raums (install setzt s_timer zurueck). SUB_25 laeuft unveraendert daneben. */
+int      re15_ventilkette_r41_sirene(void);
 /* Plattform-Haken fuer die Toene (PC setzt ihn; ohne Haken nur gezaehlt). */
 extern void (*re15_ventilkette_r41_ton_hook)(int ton);
 

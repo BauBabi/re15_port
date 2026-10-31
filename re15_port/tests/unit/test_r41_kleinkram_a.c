@@ -58,11 +58,18 @@ static void teil_a(void)
     int w = re15_lautstaerke_r41_format(buf, sizeof buf, 40, 0);
     CHECK(w > 0 && !strcmp(buf, "volume=40\nsound=mono\n"), "Formatierer: '%s'", buf);
 
+    /* Spur N, N-E2 (AUFTRAG.md Nachtrag 34): Verstaerkung (Wert/100)^2, Standard 50 ohne Options-Datei. Der Test laeuft ohne
+     * RE15_AUDIO_CAP*, also ohne den Messhaken. */
     re15_lautstaerke_r41_reset();
-    CHECK(re15_lautstaerke_r41_prozent() == 100 && re15_lautstaerke_r41_q15() == 0x8000,
-          "Voreinstellung 100 %% -> Q15 0x8000 (unveraendert)");
-    re15_lautstaerke_r41_setzen(50);
-    CHECK(re15_lautstaerke_r41_q15() == 0x4000, "50 %% -> Q15 0x4000 (halbe Amplitude): 0x%04X", re15_lautstaerke_r41_q15());
+    CHECK(re15_lautstaerke_r41_prozent() == RE15_LAUT_R41_STANDARD && RE15_LAUT_R41_STANDARD == 50 &&
+          re15_lautstaerke_r41_q15() == 0x2000, "Voreinstellung 50 %% -> Q15 0x2000 (0,25): %d %%, 0x%04X",
+          re15_lautstaerke_r41_prozent(), re15_lautstaerke_r41_q15());
+    re15_lautstaerke_r41_setzen(100);
+    CHECK(re15_lautstaerke_r41_q15() == 0x8000, "100 %% -> Q15 0x8000 (unveraendert): 0x%04X", re15_lautstaerke_r41_q15());
+    re15_lautstaerke_r41_setzen(30);
+    CHECK(re15_lautstaerke_r41_q15() == 30 * 30 * 0x8000 / 10000, "30 %% -> 0,09 = das alte 10 %%: %d", re15_lautstaerke_r41_q15());
+    re15_lautstaerke_r41_setzen(10);
+    CHECK(re15_lautstaerke_r41_q15() == 327, "10 %% -> 0,01: %d", re15_lautstaerke_r41_q15());
     re15_lautstaerke_r41_setzen(0);
     CHECK(re15_lautstaerke_r41_q15() == 0, "0 %% -> Q15 0");
     re15_lautstaerke_r41_setzen(100);
@@ -79,14 +86,14 @@ static void teil_a(void)
     env_setzen(RE15_LAUT_R41_ENV, pfad);
     remove(pfad);
     re15_lautstaerke_r41_laden();
-    CHECK(re15_lautstaerke_r41_prozent() == 100 && re15_lautstaerke_r41_stereo() == 1,
-          "Laden ohne Datei: 100 %%, Stereo");
-    re15_lautstaerke_r41_schritt(-1); re15_lautstaerke_r41_schritt(-1);          /* 80, nur Arbeitskopie */
-    CHECK(re15_lautstaerke_r41_prozent() == 80 && re15_lautstaerke_r41_gespeichert() == 100,
-          "LEFT LEFT: Arbeitskopie 80, gespeichert 100");
+    CHECK(re15_lautstaerke_r41_prozent() == 50 && re15_lautstaerke_r41_stereo() == 1,
+          "Laden ohne Datei: 50 %%, Stereo");
+    re15_lautstaerke_r41_schritt(-1); re15_lautstaerke_r41_schritt(-1);          /* 30, nur Arbeitskopie */
+    CHECK(re15_lautstaerke_r41_prozent() == 30 && re15_lautstaerke_r41_gespeichert() == 50,
+          "LEFT LEFT: Arbeitskopie 30, gespeichert 50");
     re15_lautstaerke_r41_verwerfen();                                              /* Cross @0x8002f27c */
-    CHECK(re15_lautstaerke_r41_prozent() == 100, "Cross: Arbeitskopie zurueck auf 100");
-    re15_lautstaerke_r41_schritt(-1); re15_lautstaerke_r41_schritt(-1); re15_lautstaerke_r41_schritt(-1);
+    CHECK(re15_lautstaerke_r41_prozent() == 50, "Cross: Arbeitskopie zurueck auf 50");
+    re15_lautstaerke_r41_schritt(+1); re15_lautstaerke_r41_schritt(+1);            /* 70 */
     int r = re15_lautstaerke_r41_bestaetigen(0);                                   /* Kreis @0x8002f2c0, Mono */
     CHECK(r == 0 && re15_lautstaerke_r41_gespeichert() == 70 && re15_lautstaerke_r41_stereo() == 0,
           "Bestaetigen: gespeichert 70 %%, Mono, Datei geschrieben (r=%d)", r);
@@ -96,9 +103,18 @@ static void teil_a(void)
     re15_lautstaerke_r41_reset();
     re15_lautstaerke_r41_laden();
     CHECK(re15_lautstaerke_r41_prozent() == 70 && re15_lautstaerke_r41_stereo() == 0 &&
-          re15_lautstaerke_r41_q15() == 70 * 0x8000 / 100, "Rundreise Datei: 70 %%, Mono, Q15 %d", re15_lautstaerke_r41_q15());
+          re15_lautstaerke_r41_q15() == 70 * 70 * 0x8000 / 10000, "Rundreise Datei: 70 %%, Mono, Q15 %d", re15_lautstaerke_r41_q15());
     remove(pfad);
     env_setzen(RE15_LAUT_R41_ENV, "");
+    /* Messhaken: Mitschnitt ohne RE15_OPTIONS_FILE behaelt 100 %, mit gesetzter Datei-Angabe gilt wieder der Standard. */
+    env_setzen("RE15_AUDIO_CAP_SYNC", "x.raw");
+    re15_lautstaerke_r41_reset();
+    CHECK(re15_lautstaerke_r41_prozent() == 100, "Messhaken: CAP_SYNC ohne RE15_OPTIONS_FILE -> 100 %% (%d)", re15_lautstaerke_r41_prozent());
+    env_setzen(RE15_LAUT_R41_ENV, pfad);
+    re15_lautstaerke_r41_reset();
+    CHECK(re15_lautstaerke_r41_prozent() == 50, "CAP_SYNC mit RE15_OPTIONS_FILE (fehlt) -> Standard 50 %% (%d)", re15_lautstaerke_r41_prozent());
+    env_setzen(RE15_LAUT_R41_ENV, "");
+    env_setzen("RE15_AUDIO_CAP_SYNC", "");
     re15_lautstaerke_r41_reset();
 }
 
