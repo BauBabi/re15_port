@@ -10050,6 +10050,8 @@ re_title:;
                             }
                         }
                     }
+                    /* Runde 41 Spur R: Bahnsteig-Form, Schatten-Halbmasse wie G4 (+0x16c +4/+6 = 2300/1300 am Boden, @0x801002cc / @0x80100300). */
+                    if (re15_bb_bank_da(npc)) { nhx = 2300; nhz = 1300; }
                     /* Runde 36 Spur F: GORILLA 0x27 — Record +0xBC/+0xBE (1700/1800 @0x801171e8/f0) und
                      * Lache der Leiche (0x00ffff38 + 8/Takt @0x8011bed0-bf14); vorher 500x600-Standard. */
                     re15_r36_affen_lache_render(npc, &nhx, &nhz, &corpse_pool, &sh_r, &sh_g, &sh_b);

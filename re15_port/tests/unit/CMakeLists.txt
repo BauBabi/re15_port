@@ -4077,7 +4077,7 @@ add_executable(test_birkin_bahnsteig test_birkin_bahnsteig.c)
 target_link_libraries(test_birkin_bahnsteig PRIVATE re15_engine re15_test_support m)
 target_include_directories(test_birkin_bahnsteig PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_birkin_bahnsteig PRIVATE
-    RE15_ASSET_PSX_DIR="${RE15_ASSETS_PATH}")
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_birkin_bahnsteig COMMAND test_birkin_bahnsteig)
 set_tests_properties(unit_birkin_bahnsteig PROPERTIES TIMEOUT 60)
 
@@ -4115,11 +4115,12 @@ target_include_directories(test_raumlicht PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_raumlicht COMMAND test_raumlicht)
 set_tests_properties(unit_raumlicht PROPERTIES TIMEOUT 30)
 
-# --- G5-SOFORT-PFAD weiter gepinnt (2026-10-30): seit "Vierbein, dann G5" spawnt ROOM5090/5091 zuerst den
+# --- G5-SOFORT-PFAD weiter gepinnt (2026-10-30): seit "Bahnsteig-Form, dann G5" spawnt ROOM5090/5091 zuerst den
 #     0x30 (birkin_formen.c). Diese Tests pinnen das G5-Modul selbst bzw. den alten Spawn 0x30 -> 0x36 und
 #     laufen deshalb mit RE15_ENDKAMPF_NUR_G5=1; den neuen Ablauf deckt unit_birkin_szenen ab.
 foreach(_g5alt probe_p2_birkin_g5 probe_p3_birkin_rest unit_r30_birkin_frost
-               unit_r35_zgirl_wiedereintritt unit_r37_elzaems_raeume)
+               unit_r35_zgirl_wiedereintritt unit_r37_elzaems_raeume
+               unit_r17_birkin_1zu1_pin unit_r18_birkin_restluecken_pin unit_r20_birkin_push_pin)
     if(TEST ${_g5alt})
         set_property(TEST ${_g5alt} APPEND PROPERTY ENVIRONMENT "RE15_ENDKAMPF_NUR_G5=1")
     endif()
