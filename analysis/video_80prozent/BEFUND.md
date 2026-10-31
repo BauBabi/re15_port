@@ -171,6 +171,8 @@ V2 (Auswahl sicherer Treffer, Cut korrekt zerlegt): 1170 Cut 2 (0:12), 1020 Cut 
 
 ## 5. Video 3 `Resident_Evil_1.5_All_Footage.mp4` (14:19, 320x240, bioflames/survivhor)
 
+⛔ **Korrektur 2026-10-31 (Vollpruefung, `analysis/story_begegnungen/pruefung/video_b.md`):** 2:14-2:32 ist Leon, nicht Elza. 2:40-2:48 ist Leon. 9:12-9:31 ist Elza, nicht Leon. 11:30-12:20 ist nur Leon. In 13:10-13:56 fehlt Marvin. V2 ist keine Filmaufnahme, sondern eine Diashow aus 174 Fotos (`pruefung/video_a.md`).
+
 Sammelschnitt mehrerer Quellen (u.a. die Complete-Disc-Clips aus V1 und der Final-Build aus V2), dazu
 Szenen, die in V1/V2 nicht vorkommen, und am Ende (9:34-10:06) Tafeln des BIOHAZARD-2-Trailers.
 Zuordnung wie §1 (Score >= 0.80, 120 sichere Segmente), Schluesselstellen in 640x480 angesehen.

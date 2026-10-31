@@ -23,7 +23,7 @@ for s in range(1,7):
                     op=d[pc]; sz=op_size(d,pc)
                     if sz is None or pc+sz>end: break
                     if op==0x2B: used.setdefault((n,d[pc+1]),set()).add(f'{tag}{idx:02d}')
-                    if op==0x2C and d[pc+2]==1: used.setdefault((n,u16(d,pc+14)),set()).add('AOT')
+                    if op==0x2C and d[pc+2]==1: used.setdefault((n,u16(d,pc+(22 if d[pc+3]&0x80 else 14))),set()).add('AOT')   # lange AOT: Nutzlast ab pc+22
                     if op==0x46 and d[pc+2]==1: used.setdefault((n,u16(d,pc+4)),set()).add('AOT')
                     pc+=sz
 json.dump({f'{k[0]}:{k[1]}':sorted(v) for k,v in used.items()},open(sp+r'\used.json','w'))

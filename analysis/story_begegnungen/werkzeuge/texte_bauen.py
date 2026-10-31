@@ -124,7 +124,52 @@ D = {
 '512': {0:('Schild','„Links: P-4-Labor“, „Rechts: Computerraum“'),1:('System','Durch das Feuer verriegelt!')},
 '514': {0:('Frauenstimme, nicht zugeordnet','Es ist offen. Da hinten.')},
 }
+# Korrekturen aus der Pruefung (pruefung/kritik.md T-06, T-07)
+for b, i, w, de in [
+ ('109', 4, 'Ada', 'Gerettet… Danke, ich danke dir. [Lesart, Lücke 礼]'),
+ ('10B', 2, 'Elza', 'Sie war in der Tiefgarage eingesperrt. Ich kann sie nicht zurücklassen. [Lesart, Lücken 駐車場, 閉, 込]'),
+ ('10B', 3, 'John', 'Die Tiefgarage… dann ist es hier entlang kürzer. Komm schnell. [Lesart]'),
+ ('11B', 12, 'Marvin', 'Und der Chef? [Lesart, Lücke 署]'),
+ ('11B', 17, 'Marvin', 'Einen Versuch ist es wert. Gut, schieben wir das Ding weg. [Lesart, Lücke 価値]'),
+ ('11B', 19, 'Wohl Marvin, keine Regie', 'Los, schnell!'),
+ ('306', 9, 'Erzähltext, Leons Sicht', 'Irgendwann ist das Schloss aufgemacht worden…'),
+ ('307', 2, 'Ada', 'Vermutlich: In die Hölle… vielleicht wäre es besser, sich hier von denen fressen zu lassen… [Lesart, Disc 地仲さ]'),
+ ('307', 4, 'Marvin oder Ada, keine Regie', 'Schnell, sie kommen! [Lesart 奴等]'),
+ ('307', 5, 'Elza', 'Leise! Es ist bestimmt irgendwo hier…! [Lesart 静かにね]'),
+ ('308', 0, 'Marvin oder Leon', '…hartnäckiger Kerl…'),
+ ('308', 1, 'Eher Ada, nicht bewiesen', '…das ist… also doch…'),
+ ('309', 8, 'Sherry-Abschnitt, auf der Disc bleibt die Figur Elza', 'Ich muss Elza und die anderen schnell retten…'),
+ ('30E', 3, 'Leon', '…Ä-äh, Marvin ist in der Halle. Die Bestien draußen haben ihn wohl am Bein erwischt, er kann nicht laufen… …Ada, …was hast du die ganze Zeit gemacht!? Was ist in dieser Fabrik passiert? Und die toten Polizisten draußen!? [Lesart]'),
+ ('30E', 7, 'Leon', 'Diese Wunde… haben die dich erwischt? …ziemlich schlimm… [Lesart, 相当深い oder 相当酷い]'),
+ ('30E', 10, 'Marvin', 'Es sammeln sich mehr, als ich erwartet hatte! Bis hier draußen am Stadtrand… Oben ist es vorbei… [Lesart 予想以上の数が集まって]'),
+ ('30E', 12, 'John', 'Elza, hier bist du! Schlecht… die Bestien haben uns umstellt! …Verdammt, nirgends ein Versteck… Elza, wie sieht es bei dir aus… gab es hinten im Lager was Leckeres zu essen? [Lesart 隠れられそう, 倉庫?]'),
+ ('401', 18, 'Spielfigur, Raumtext in 401 und 501', 'Ich muss den Impfstoff schnell holen!'),
+ ('501', 19, 'John', 'Schnell! Sie stöhnt schon lange im Schlaf.'),
+ ('501', 43, 'Spielfigur, Raumtext in 401 und 501', 'Ich muss den Impfstoff schnell holen!'),
+ ('506', 0, 'System', 'Ein Spind mit Arbeitsanzügen. Offenbar kaputt, er geht nicht auf. [Lesart 作業用]'),
+ ('514', 0, 'Frauenstimme, vom Ton her nicht Ada, Sherry denkbar, offen', 'Es ist offen. Da hinten.'),
+]:
+    D[b][i] = (w, de)
+for b, l in {'10B': [0], '11B': [1, 18], '300': [4, 7, 16], '307': [0, 7, 8, 12, 13, 14, 15], '309': [9, 11, 13, 17, 19, 21, 22],
+             '30E': [5, 8, 19, 21, 22, 23], '403': [4], '506': [2, 5, 8]}.items():
+    for i in l:
+        w, de = D[b][i]
+        if '[Lesart' not in de:
+            D[b][i] = (w, de + ' [Lesart]')
+AUSL = {}
+for i in range(10, 22): AUSL[('11B', i)] = 'Leon, tot (11C0 `@0x180A` fragt Bank 8 ab)'
+for i in range(7, 10): AUSL[('11C', i)] = 'Leon, tot (wie 11B #10)'
+AUSL[('207', 0)] = 'Leon, Raum ohne Tür zu ihm, nur per JUMP'
+AUSL[('300', 1)] = 'tot (`ROOM3000 @0x161A`, Spielfigur 13 kommt nicht vor)'
+for i in range(5, 9): AUSL[('400', i)] = 'Leon, tot (`ROOM4000 sub16 @0x18D8` ohne Aufrufer)'
+for i in range(19, 23): AUSL[('401', i)] = 'Leon, tot (`ROOM4010 sub06 @0x908` ohne Aufrufer)'
+for i in range(5, 9): AUSL[('403', i)] = 'Elza. In 4030 tot (`@0x52C`)'
+for i in range(0, 6): AUSL[('501', i)] = 'Elza, tot (`ROOM5011 sub02 @0x4A0` ohne Aufrufer)'
+for i in range(17, 38): AUSL[('501', i)] = 'Elza, tot (`ROOM5011 sub06 @0x57A` ohne Aufrufer)'
+
 def wo(b, i):
+    if (b, i) in AUSL:
+        return AUSL[(b, i)]
     l, e = f'{b}0:{i}', f'{b}1:{i}'
     a = []
     if l in used: a.append('Leon')
@@ -132,9 +177,9 @@ def wo(b, i):
     return ' + '.join(a) if a else 'nicht ausgelöst'
 out = ['# Alle Texte der 40%-Disc (Capcom, 6. November 1996)', '',
  'Japanisch direkt aus den RDT-Dateien dekodiert, deutsche Übersetzung und Sprecher von mir aus dem Zusammenhang. Sprecher stehen im japanischen Text nicht dabei.',
- 'Spalte „Auslöser“: welches Skript die Zeile wirklich aufruft (`Message_on` oder Untersuchen-AOT). Xxx0 ist Leon, Xxx1 ist Elza. Beide Dateien eines Raums tragen oft denselben Textblock, das sagt nichts über den Spielablauf.',
- 'Leerstellen oder falsche Zeichen im Japanischen sind echt: Dort fehlte der Glyph im Font der Disc (`00`-Bytes oder Ersatzzeichen wie 東, 度). In der Übersetzung sind sie aus dem Zusammenhang ergänzt.',
- 'Räume ohne Eintrag haben keinen Text; siehe BERICHT.md Abschnitt 8.', '']
+ 'Spalte „Auslöser“: welche Datei die Zeile aufruft (`Message_on` oder Untersuchen-AOT). Xxx0 ist Leon, Xxx1 ist Elza. Das heißt nur, dass ein Aufruf im Skript steht. „tot“ heißt: Der Aufruf liegt in einem Sub ohne Aufrufer oder hinter einer Bedingung, die auf der Disc nie wahr wird. Die Zeile läuft dann nicht. Höchstens 217 der 291 Zeilen können auf der Disc laufen. Beide Dateien eines Raums tragen immer denselben Text (alle 25 Paare, nur 1021 und 2070 sind Einzeldateien), das sagt nichts über den Spielablauf.',
+ 'Leerstellen im Japanischen sind echt: Dort fehlte der Glyph im Font der Disc (`00`-Bytes). Echt sind auch Ersatzzeichen, also vorhandene Zeichen für fehlende: 東 für viele Kanji (46-mal, nur in 307 und 30E), 度 für 場, 西 für 命, 社 für 近, 根 für 伝, 女 für 顔, 階 für 運, 怖 für 姿. Warum das so ist, ist unklar. In der Übersetzung sind sie aus dem Zusammenhang ergänzt, solche Zeilen tragen den Vermerk [Lesart].',
+ 'Räume ohne Eintrag haben keinen Text.', '']
 n = 0
 for b in sorted(D):
     keys = sorted({i for (r, i) in T if r[:3] == b})
