@@ -304,6 +304,7 @@ Laeufe c_fein / c_lauf / c_klemme (Original-Skript ROOM2060 im Port, Cut 8, 2060
 **Messung nachher (Werkzeug `fluss`, beschleunigter Renderer, Laeufe y10/y9, F430..F461):**
 * Cut 10, Weg x 72..124, y 146..179: `FLUSS 2 42 20 5 29 -1 8 19 -8 AENDERUNG 830 VON 1802`: Verschiebung 2 / 5 / 8 Bildpunkte fuer 1 / 2 / 3 Bilder Abstand (Korrelation dort 0,42 / 0,29 / 0,19 gegen 0,20 / -0,01 / -0,08 ohne Verschiebung), 830 von 1802 Bildpunkten aendern sich je 6 Bilder (46 %, vorher hoechstens 18 %).
 * Cut 9, Weg x 90..149, y 120..149: `FLUSS 2 16 6 4 3 -13 7 -2 -19 AENDERUNG 385 VON 1800`: 2 / 4 / 7 Bildpunkte, 21 %.
+* Cut 13, x 85..124, y 165..189: 182 von 1000 Bildpunkten, Cut 8, x 60..99, y 85..104: 52 von 800, Verschiebung je 1 Bildpunkt; dort ist der Weg nur wenige Bildpunkte gross, aber sichtbar (vorher nichts).
 * Gegenlauf Bit 100: AENDERUNG 0 (Riegel). Bilder `N_belege/wasser_lauf_cut10.png`, `wasser_lauf_cut9.png`.
 * Effekt-Pool: hoechstens 80 von 96 Plaetzen (Lauf fx, RE15_WAFFEN_LOG, vorher 69, ohne Wasserlauf 29).
 
@@ -334,3 +335,20 @@ Laeufe c_fein / c_lauf / c_klemme (Original-Skript ROOM2060 im Port, Cut 8, 2060
 **Aenderung:** `panel_bild.py` schreibt direkte 15 Bit wie die BSS-Hintergruende (`gen/panel2030_r41.inc`), `farbe()` in `panel2030_r41.c` setzt 5 auf 8 Bit um.
 
 **Messung nachher (Lauf p_a, Stand 50/20/30, Quelle C, gegen panel_entwurf_a.png):** EXIT-Pfeil Entwurf (84,107,93), Spiel (83,107,92), vorher (91,98,96). Fenster Tank A Zeile 95: Entwurf (218,213,171), Spiel (222,214,173).
+
+### Tests Nachbesserung 1
+
+Neu/nachgezogen: `unit_r41_nachtrag30` (Cursor-Schritt, Rahmen, Zone 7, nur Cut 3, Lauf 100 je Bild bis vor die Kante, faellt dahinter, steht unter einem Text, START-Sperre), `unit_r41_ventilkette`, `integration_r41_nachtrag30_panel_*` (Lauf st), `_schrank_*` (Cursor, START, Cut 4, Klick von Norden), `_wasser_*` (Werkzeug `fluss` Cut 10 + Cut 9, Gegenlauf), `_laden_*`, `integration_r41_ventilkette_weg{,_elza}` k1 (Tasten wie im Kopf, Text 42 vor dem Standbild, Kopfkommentar v2c berichtigt).
+
+Gezielter Lauf (keine volle Suite), Bau 2026-10-31 07:24:
+
+```
+ctest --test-dir re15_port/build -R "r41_nachtrag30|r41_ventilkette|r41_wasser20b0|r41_zombiefresser|unit_r36_kartenbits|r36_g2|unit_r39_toene_schrank|r41_kleinkram_a|r38_wasser|r35_granate|r36_dachkiste|r36_granate|r36_elza|r39_parkplatz11c0" -j4 --timeout 1800
+98% tests passed, 2 tests failed out of 94
+     529 - integration_r35_granate (Failed)      <- Teil birkin: dem Zweig fehlt master 31745dd08 (RE15_ENDKAMPF_NUR_G5=1 im Riegel, "Vierbein, dann G5"), kein Bezug zu Spur N. Mit der Variable gefahren: 100% tests passed, 0 tests failed out of 1
+    1279 - integration_r41_ventilkette (Failed)  <- Lauf c brach im Bild 1010 mit SDL `Assertion failure at WIN_AddDisplay` ab (Anzeige-Ereignis von Windows, Lauf ohne SDL_ASSERT), kein Bezug zu Spur N
+ctest --test-dir re15_port/build -R "^integration_r41_ventilkette$" --timeout 900
+100% tests passed, 0 tests failed out of 1
+ctest --test-dir re15_port/build -R "^unit_r41_nachtrag30$" --timeout 90     (nach dem letzten Bau, zwei Pruefungen START-Sperre im Panel dazu)
+100% tests passed, 0 tests failed out of 1
+```

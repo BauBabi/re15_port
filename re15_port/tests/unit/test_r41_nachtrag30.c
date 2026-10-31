@@ -261,6 +261,7 @@ static void fall_b(uint16_t r)
     PRUEFE(!re15_panel2030_r41_offen() && re15_game_flag_get(2, 0) == 0 && re15_game_flag_get(2, 2) == 0 && bit(RE15_R41C_BIT_DRUCK80) == 0, "ROOM%04X: EXIT verlaesst, Bit 101 = 0", r);
     L = druecken(350, -9500, 1024, 0, 400);
     PRUEFE(re15_panel2030_r41_offen() && re15_panel2030_r41_stand(0) == 100 && re15_panel2030_r41_stand(1) == 0, "ROOM%04X: neu offen = Start", r);
+    PRUEFE(re15_ventilkette_r41_vollbild_sperrt(), "ROOM%04X: START bei offenem Panel gesperrt (Abnahme 0, Mangel 3)", r);
     nachricht_weg();
     /* volle Aufgabe: leere Quelle -> Text 42 + Fehlerton, volles Ziel -> Text 47; CROSS verlaesst */
     cursor_fahren(X_B, 90); g_scd_pad_edge = 0x40; takt(); g_scd_pad_edge = 0; takt();
@@ -268,6 +269,7 @@ static void fall_b(uint16_t r)
     nachricht_weg();
     g_scd_pad_edge = 0x8000; takt(); g_scd_pad_edge = 0;
     PRUEFE(!re15_panel2030_r41_offen() && re15_game_flag_get(2, 0) == 0, "ROOM%04X: CROSS verlaesst", r);
+    PRUEFE(!re15_ventilkette_r41_vollbild_sperrt(), "ROOM%04X: nach dem Panel keine START-Sperre", r);
     /* Loesung */
     L = druecken(350, -9500, 1024, 0, 400);
     nachricht_weg();
