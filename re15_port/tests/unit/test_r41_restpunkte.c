@@ -5,6 +5,7 @@
  *          Sperrbit = (9,111) "Alligator tot" (Zeitpunkt = RE2-Tot-Bit (5,0x1E) @0x80102660). Bit 110 allein (Kampf begonnen) sperrt NICHT: der Alligator traegt
  *          den Water Key. Der Spinnen-Filter gilt ohne Schalter weiter.
  * original Punkt 5, Prozess mit RE15_GATOR_ORIGINAL=1 (der Schalter wird einmal je Prozess gelesen): der Filter verwirft nichts, das Tor sperrt nicht.
+ * gpu      Punkt 3: Groessengrenze der PSX-GPU (re15_gpu_grenze_r41.h), Ursache der stillen Enden des Ketten-Riegels.
  */
 #include <stdio.h>
 #include <string.h>
@@ -12,6 +13,7 @@
 #include "re15_boss_gator.h"
 #include "re15_engine.h"
 #include "re15_gatorszene_r41.h"
+#include "re15_gpu_grenze_r41.h"
 #include "re15_scd.h"
 
 static int g_fail = 0;
@@ -43,11 +45,30 @@ static void teil_original(void)
     PRUEF(re15_gatorszene_r41_gator_kommt() == 1, "das Tor gehoert zum Bosskampf-Design");
 }
 
+/* Punkt 3: Groessengrenze der PSX-GPU (psx-spx "Size Restriction": 1023 horizontal, 511 vertikal). Dazu die Rechnung des SDL-CPU-Rasterers (SDL_triangle.c:618
+ * `s2_x_area.x = s2->x * area`, 32 Bit, FP_BITS 1): an der Grenze laeuft sie nicht ueber, die gemessene Flaeche aus ROOM20B0 F767 (1 130 976 900) schon. */
+static void teil_gpu(void)
+{
+    printf("== gpu ==\n");
+    PRUEF(!re15_gpu_dreieck_zu_gross(0, 0, 1023, 0, 0, 511), "1023 x 511 wird gezeichnet");
+    PRUEF(re15_gpu_dreieck_zu_gross(0, 0, 1024, 0, 0, 10), "1024 breit: weg");
+    PRUEF(re15_gpu_dreieck_zu_gross(0, 0, 10, 0, 0, 512), "512 hoch: weg");
+    PRUEF(!re15_gpu_dreieck_zu_gross(-300, -100, 300, 100, 0, 400), "Abstand zaehlt, nicht die Lage (psx-spx: Y1 -100, Y2 +400 wird gezeichnet)");
+    PRUEF(re15_gpu_dreieck_zu_gross(0, -300, 0, 300, 10, 0), "psx-spx: Y1 -300, Y2 +300 nicht");
+    PRUEF(re15_gpu_dreieck_zu_gross(100, 100, 10250, 100, 100, 8000), "Quader F767 aus ROOM20B0 weg");
+    {
+        const long long flaeche_max = 4LL * 2 * RE15_GPU_MAX_DX * RE15_GPU_MAX_DY / 2;   /* cross_product von Koordinaten << FP_BITS (1) */
+        PRUEF(767 * flaeche_max < 2147483648LL, "groesste zugelassene Flaeche %lld x hoechste Texturzeile 767 bleibt unter 2^31", flaeche_max);
+        PRUEF(255 * 1130976900LL >= 2147483648LL, "gemessene Flaeche laeuft ueber");
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "";
     if (!strcmp(t, "gator")) teil_gator();
     else if (!strcmp(t, "original")) teil_original();
+    else if (!strcmp(t, "gpu")) teil_gpu();
     else { printf("Teil?\n"); return 2; }
     printf("%s\n", g_fail ? "FAIL" : "OK");
     return g_fail;

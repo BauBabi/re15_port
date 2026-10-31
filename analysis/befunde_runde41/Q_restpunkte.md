@@ -95,3 +95,24 @@ Abnahme M 5 Mangel 2/3: `M_bilder/NB5/teile_nb5.txt` aus pl_a2 (266/278), MASKS 
 - 4040 C12: das Teil ist der schmale Streifen am Torrahmen (Rechtecke 105..125, Bild X 75..106, 723 Punkte). Reale Stellensuche (`Q41/tools/stellen_q.py` ueber alle 1062 erreichbaren Plaetze von `test_r37_masken36 plaetze 4040 12`): HINTER-Kandidaten nur (-4000,4678), (-3900,4578), (-3800,4478). An der exe je 4 Laeufe: Figur X 45..70, Figur auf dem Teil 0/0/0. Jenseits des Tors gibt es keinen Stehplatz. Damit gibt es dort KEINE HINTER-Stelle: Szenen t4040_12/t4040_12e entfernt, Dossier M Tabelle und OFFEN 21 berichtigt.
 - Laeufer test_r41_masken36_stage2.cmake: Art M mit A0 zaehlt nur die Spielfigur (S = |B - D|, dritter Lauf). Alle 38 verbliebenen M-Szenen der Gruppen a1..d2 tragen A0 aus der Liste der Abnahme (`M41abn5/aussen_alle.txt`), 6010 C5 hat keinen erreichbaren Platz draussen: A0=20000,20000 wie Lauf o6010_05. So faellt ein 3D-Objekt im Fenster ab jetzt auf ("Leon im Figurfenster nicht zu sehen").
 - Szenenzahl: 106 laut Dateien (Dossier/Commit nannten 108), jetzt 104.
+
+## Punkt 3 - Elza-Kette und die stillen Enden des Ketten-Riegels
+
+### Messung vorher
+Serie mit dem Rezept des Riegels (Software-Renderer, RE15_NOAUDIO, `Q41/tools/kette_gdb.sh`, Ergebnis `Q41/kette_serie.txt`), parallel zu anderen Agenten:
+| Serie | Laeufe | rv=139 (Absturz) | Bild |
+|---|---|---|---|
+| ohne gdb, Leon (kn1, kb1, kb2, ku1, ku2) | 19 | 6 | immer letzte Zeile `[walk] F750 cut=10`, also wie die Laeufe 2-5 aus INT_belege/riegel_kette_laeufe.txt |
+| unter gdb, Leon 5, Elza 5 | 10 | 0 | gdb legt die Windows-Debug-Halde an, die Lage der Bloecke aendert sich |
+rv=139 = Zugriffsfehler. Der Riegel hat `_rv` nie ausgegeben, und ein Absturz der exe hinterlaesst auf dieser Maschine keinen WER-Eintrag (auch Abnahme P H1); daher kam "still" und "kein Absturz" in INT_belege.
+
+### Ursache (gemessen)
+Ausnahme-Haken in main.c, viermal gleich: `[flow] AUSNAHME 0xC0000005 ... Adresse +0x21f406 Ziel 00000146632a22d8`, Stapel `SDL_BlitTriangle_Slow+1394 <- SDL_SW_BlitTriangle+2757 <- SW_RunCommandQueue+3758 <- FlushRenderCommands <- SDL_RenderPresent <- re15_render_end_frame <- main`.
+Der CPU-Rasterer von SDL 2.28.5 liest ausserhalb der Textur. Ursache dort: `SDL_triangle.c:618 s2_x_area.x = s2->x * area;` rechnet in `int` (SDL_Point), `area` kommt aus `cross_product` von Koordinaten `<< FP_BITS`; ab area > 2^31/255 = 8 421 504 laeuft das ueber, und `TRIANGLE_GET_TEXTCOORD` (Z. 171/172) liefert Muell ohne Klemme.
+Messhaken nur in Messkopien (Lauf ku2, nicht im Code): in 20B0 gibt es solche Dreiecke nur in F755..F767, Slot 42 (ESP-Effekt 0x0f, Textur 256x192), Flaeche bis 1 130 976 900, Koordinate bis 10 250: Effekt-Quader des Wassers kurz vor der Kamera. Das ist genau das Fenster F751..F779 der roten Laeufe. Ob der falsche Zugriff eine unbelegte Seite trifft, haengt an der Lage der Halde: daher zufaellig, daher dieselbe Stelle, daher bis zur letzten Zeile gleiche Logs. Fremdlast war nicht die Ursache.
+Der Spieler sieht diesen Absturz nicht: der beschleunigte Renderer hat die Rechnung nicht. Er zeichnet diese Quader aber, die Hardware nicht: psx-spx graphicsprocessingunitgpu.md "Size Restriction": "The maximum distance between two vertices is 1023 horizontally, and 511 vertically. Polygons and lines that are exceeding that dimensions are NOT rendered."
+
+### Umsetzung
+- include/re15_gpu_grenze_r41.h `re15_gpu_dreieck_zu_gross` (1023 / 511 aus psx-spx), platform/pc/src/render_pc.c: beide Dreiecks-Eingaenge verwerfen solche Dreiecke, die ersten 16 je Prozess stehen als `[gpu-grenze]` im Log. Grenzfall: die GTE-Saettigung auf -1024..1023 bildet der Port nicht nach, er misst ungesaettigt (im Header genannt).
+- render_pc.c SDL_QUIT schreibt jetzt `[flow] SDL_QUIT (Fenster geschlossen) -> exit`; main.c Ausnahme-Haken (nur Log, EXCEPTION_CONTINUE_SEARCH): kein Ende der exe ist mehr still.
+- test_r41_ventilkette_kette.cmake: -DFIGUR=elza, Fehlermeldung mit exit-Code und letzter Log-Zeile, SDL_ASSERT=always_ignore (Lauf 1 der INT-Liste endete an der Assertion WIN_AddDisplay). Riegel integration_r41_ventilkette_kette_elza in probes/r41_restpunkte.cmake.

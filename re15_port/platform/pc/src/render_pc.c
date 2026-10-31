@@ -18,6 +18,7 @@
 #include <string.h>
 #include <SDL.h>
 #include "re15_engine.h"
+#include "re15_gpu_grenze_r41.h"   /* Runde 41 Spur Q: Groessengrenze der PSX-GPU */
 #include "re15_pri.h"
 #include "re15_actor.h"           /* shared sprite.pri depth model (re15_pri_mask_camera_z) */
 #include "re15_msg.h"           /* shared .msg text layout walk (re15_msg_layout) */
@@ -2737,6 +2738,15 @@ static void re15_trilog(const char *fn, int slot,
     fflush(s_trilog_fp);
 }
 
+/* Runde 41 Spur Q (re15_gpu_grenze_r41.h): Dreiecke ueber der Groessengrenze der PSX-GPU zeichnet die Hardware nicht; die ersten 16 je Prozess stehen im Log. */
+static int gpu_dreieck_verwerfen(int x0, int y0, int x1, int y1, int x2, int y2)
+{
+    static int s_n = 0;
+    if (!re15_gpu_dreieck_zu_gross(x0, y0, x1, y1, x2, y2)) return 0;
+    if (s_n < 16) { s_n++; fprintf(stderr, "[gpu-grenze] F%u Slot %d Dreieck (%d,%d) (%d,%d) (%d,%d) verworfen\n", (unsigned)g_engine.frame_count, s_active_slot, x0, y0, x1, y1, x2, y2); }
+    return 1;
+}
+
 void re15_render_textured_tri(int x0, int y0, int u0, int v0,
                               int x1, int y1, int u1, int v1,
                               int x2, int y2, int u2, int v2,
@@ -2746,6 +2756,7 @@ void re15_render_textured_tri(int x0, int y0, int u0, int v0,
     (void) tpage;
     if (!s_tim_texture || s_textri_count >= TEXTRI_QUEUE_MAX) return;
     if (s_tim_w == 0 || s_tim_h == 0) return;
+    if (gpu_dreieck_verwerfen(x0, y0, x1, y1, x2, y2)) return;   /* Runde 41 Spur Q: GPU-Grenze 1023 x 511 */
 
     /* Phase 4.5.7.7: `z` is the sort key for back-to-front rendering.
      * Higher z = farther from camera = drawn first (painted UNDER closer
@@ -2848,6 +2859,7 @@ void re15_render_textured_tri_lit(int x0, int y0, int u0, int v0,
     (void) tpage;
     if (!s_tim_texture || s_textri_count >= TEXTRI_QUEUE_MAX) return;
     if (s_tim_w == 0 || s_tim_h == 0) return;
+    if (gpu_dreieck_verwerfen(x0, y0, x1, y1, x2, y2)) return;   /* Runde 41 Spur Q: GPU-Grenze 1023 x 511 */
 
     /* MESSHAKEN: die ECHTE Tiefenspanne der gezeichneten Dreiecke.
      * Die F9-Marke gab bisher nur Fuss/Huefte/Kopf aus der AKTORPOSITION aus - damit war
