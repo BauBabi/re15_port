@@ -88,5 +88,6 @@ unsigned re15_keyitems_r41_verschluckt(int ja);    /* Zaehler: entfallene Fragen
 #define RE15_R41O_SOFORT   0x02   /* Kurbel: kein Sleep vor Plc_motion, keine Blende (RE2 ROOM1110 sub13/sub15)               */
 #define RE15_R41O_WAFFE    0x04   /* Kurbel: Waffe ablegen (RE2 @0x80068cfc-@0x80068d40)                                       */
 #define RE15_R41O_FLAGITEM 0x08   /* Gegenstand gibt es in RE1.5 nur als Flag: ohne Eintrag (volles Inventar im Altstand) bleibt die Frage */
+#define RE15_R41O_KASTEN   0x10   /* Kasten 2010: Stelle gilt nur im Zustand "Frage" (re15_ventilkette_r41_kasten_fragt, ROOM2060 sub00 @0x0109E..@0x010DE), sonst RE2 Text 7 @0x8006b248 */
 
 #endif /* RE15_KEYITEMS_R41_H */

@@ -7,7 +7,7 @@
  *   C  Schrank 2010/2011: erster Klick klappt auf (16 Bilder, rot_y 1024), danach Text; zweiter Klick ohne Fahrt; nur unter Cut 3 gezeichnet; Ja-Zweig wie ROOM2060: Cut 8 + Cursor ohne Zeitgrenze,
  *      SQUARE neben der Zone nichts, Steuerkreuz +-200 je Bild mit Rahmen, Zone 7 + SQUARE -> Cut 9 + Bit 125 + Text 42, dann Standbild; START bleibt gesperrt; Raumwechsel schliesst
  *   C2 USE der Sicherung am geschlossenen Schrank (Integration N x O, N_abnahme_1.md Mangel 1): der USE-Lauf haelt ueber die 16 Bilder Aufklappen, kein Text, direkt der Cursor-Schritt ->
- *      Bit 125 -> Text 42 -> Standbild; zweite Sicherung aus ROOM1150 bei steckender Sicherung / bestuecktem Generator: Text 43 / 40 mit Bit 125 unberuehrt (kein stummes Ja)
+ *      Bit 125 -> Text 42 -> Standbild; zweite Sicherung aus ROOM1150 bei steckender Sicherung / bestuecktem Generator: USE gilt nicht ("You can't use it here.", RE2 @0x8006b248), Tuer zu und offen, Bit 125 unberuehrt (Z1, Dossier N OFFEN 6); die Aktionstaste zeigt Text 43 / 40
  *   D  Wasserlauf ROOM2000/2001: Strahlen + Lauf ueber den Weg (Effekt 0x0F wandert 100 je Bild +x bis vor die Kante, faellt dahinter) + Einschlaege, unter einem Text steht der Lauf,
  *      Leiter bleibt gesperrt; mit Bit 100 oder 103 nichts; 20B0 nichts; ROOM2010 hat keine Leiter
  *   E  Sirene: an mit dem Zaehler (nach der Ansage), aus mit der Flut, dem Tod und dem Verlassen des Raums
@@ -482,7 +482,9 @@ static void fall_c_use(uint16_t r)
     PRUEFE(bit(RE15_R41C_BIT_KASTEN) == 1 && text42 && standbild, "ROOM%04X USE: Bit 125 -> Text 42 -> Standbild", r);
     PRUEFE(re15_inv_find_item(SICHERUNG) < 0, "ROOM%04X USE: Sicherung verlaesst das Inventar", r);
 
-    /* Gegenprobe: zweite Sicherung (Eintrag aus ROOM1150), Stelle offen, aber kein 2010_kasten_frage. Der Lauf darf die Texte hinter der Tuer nicht verschlucken (gemessen Lauf r_drin_fix) */
+    /* Z1 (Dossier N OFFEN 6, Entscheid des Orchestrators): zweite Sicherung (Eintrag aus ROOM1150), der Kasten fragt nicht: Sicherung steckt (Fall 0) oder sitzt im Generator (Fall 1). USE gilt
+     * dann nicht, RE2 @0x8006b228 -> Text 7 @0x8006b248: kein Lauf, kein Programm, Bit 125 unberuehrt, bei geschlossener UND bei offener Tuer (offen nahm der Lauf die Sicherung stumm heraus,
+     * gemessen Laeufe z1/a3, z1/a3e; geschlossen zeigte er Text 43 / 40 hinter der Tuer). Die Aktionstaste bleibt: Tuer auf, Text 43 / 40. */
     for (int fall = 0; fall < 2; fall++) {
         bits_leeren();
         vorflag(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT);
@@ -492,13 +494,29 @@ static void fall_c_use(uint16_t r)
         g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = 0; band_aus_y(0);
         PRUEFE(!re15_ventilkette_r41_kasten_fragt(), "ROOM%04X Fall %d: Kasten fragt nicht", r, fall);
         (void)re15_inv_grant(SICHERUNG, 1);
-        PRUEFE(re15_keyitems_r41_use(SICHERUNG) == 1 && re15_keyitems_r41_schliessen() == 1, "ROOM%04X Fall %d: Stelle offen (Tor (3,108))", r, fall);
         const int soll = fall == 0 ? RE15_R41C_MSG_KASTEN_DRIN : RE15_R41C_MSG_KASTEN_LEER;
-        int gesehen = 0;
-        for (int i = 0; i < 60 && !gesehen; i++) { takt_use(); if (g_scd.message_active && g_scd.message_id == soll) gesehen = 1; }
-        PRUEFE(gesehen && re15_schrank2010_r41_offen(), "ROOM%04X Fall %d: Text %d hinter der Tuer", r, fall, soll);
-        PRUEFE(bit(RE15_R41C_BIT_KASTEN) == (fall == 0), "ROOM%04X Fall %d: Bit 125 unberuehrt", r, fall);
-        for (int i = 0; i < 300 && g_scd.message_active; i++) { g_scd_pad_edge = (i & 7) == 7 ? 0x4000 : 0; takt_use(); g_scd_pad_edge = 0; }
+        for (int offen = 0; offen < 2; offen++) {
+            PRUEFE(re15_schrank2010_r41_offen() == offen, "ROOM%04X Fall %d: Tuer %s", r, fall, offen ? "offen" : "zu");
+            PRUEFE(re15_keyitems_r41_use(SICHERUNG) == 0 && re15_keyitems_r41_schliessen() == 0 && !re15_keyitems_r41_lauf_aktiv(),
+                   "ROOM%04X Fall %d Tuer %d: USE gilt nicht (You can't use it here.)", r, fall, offen);
+            int text = 0;
+            for (int i = 0; i < 40; i++) { takt_use(); if (g_scd.message_active) text = 1; }
+            PRUEFE(!text && re15_schrank2010_r41_offen() == offen, "ROOM%04X Fall %d Tuer %d: kein Text, Tuer unveraendert", r, fall, offen);
+            PRUEFE(bit(RE15_R41C_BIT_KASTEN) == (fall == 0), "ROOM%04X Fall %d Tuer %d: Bit 125 unberuehrt", r, fall, offen);
+            PRUEFE(re15_inv_find_item(SICHERUNG) >= 0, "ROOM%04X Fall %d Tuer %d: die zweite Sicherung bleibt im Inventar", r, fall, offen);
+            if (offen) break;
+            /* Aktionstaste: klappt auf, Text 43 / 40 wie vorher; Nein, damit Bit 125 stehen bleibt */
+            g_aot.fired_event_id_this_frame = 0;
+            g_aot_action_pressed = 1; re15_aot_scan(KX, KZ, 0xFF); g_aot_action_pressed = 0;
+            (void)scd_event_fire(g_aot.fired_event_id_this_frame);
+            int gesehen = 0;
+            for (int i = 0; i < 60 && !gesehen; i++) { takt_use(); if (g_scd.message_active && g_scd.message_id == soll) gesehen = 1; }
+            PRUEFE(gesehen && re15_schrank2010_r41_offen(), "ROOM%04X Fall %d: Aktionstaste: Text %d hinter der Tuer", r, fall, soll);
+            for (int i = 0; i < 300 && (g_scd.message_active || re15_game_flag_get(2, 7)); i++) {
+                g_scd.message_choice = 1;
+                g_scd_pad_edge = (i & 7) == 7 ? 0x4000 : 0; takt_use(); g_scd_pad_edge = 0;
+            }
+        }
     }
 }
 

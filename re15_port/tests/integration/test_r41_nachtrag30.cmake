@@ -231,6 +231,20 @@ if("${TEIL}" STREQUAL "schrank")
     _darf_nicht("${_dbg}" "[msgtext] room=201${S} id=40" "USE ohne Text 40")
     _darf_nicht("${_dbg}" "id=41 \"Will you use the Fuse?\"" "USE ohne Frage")
     _darf_nicht("${_dbg}" "Frage 41 entfaellt: Nein" "USE gibt Ja")
+    # Z1 (Dossier N OFFEN 6, Entscheid des Orchestrators): zweite Sicherung aus ROOM1150, die erste steckt, Tuer offen. USE gilt nicht, "You can't use it here." (RE2 @0x8006b228 -> Text 7 @0x8006b248), Inventar bleibt offen, Bit 125 unberuehrt.
+    # Vor dem Fix (Laeufe z1/a3, z1/a3e): `USE-Lauf ROOM201x Ereignis 20 Frage 41`, `Ck zone=12 idx=31 exp=0 got=0`, `Set zone=9 idx=125 op=0` ohne Text. Takte gemessen: F255 Aktion, F340 Seite, F400 rechts = Nein, F425 Bestaetigen, ab F600 START/ITEM/USE.
+    if("${FIGUR}" STREQUAL "elza")
+        set(_tasten "square@255,square@340,right@400,square@425,start@600,square@625,square@650,square@665")
+    else()
+        set(_tasten "square@255,square@340,right@400,square@425,start@600,square@625,down@640,square@650,square@665")
+    endif()
+    _lauf(z1 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_FLAG_CENSUS=1 RE15_KEYITEMS_LOG=1 RE15_DEBUG_JUMP=2010@240 "RE15_PLAYER_POS=4950,-2770,0,0" "RE15_SET_FLAG=3:108,9:125,9:53" RE15_GIVE=0x40:1 ${_waffe}
+          "RE15_PRESS=${_tasten}" "RE15_EXIT_AT=800#201${S}")
+    _danach("${_dbg}" "[schrank2010] Tuer auf (rot_y 1024)" "[msgtext] room=201${S} id=43 \"The fuse is in place." "Z1: Aktionstaste klappt auf, Text 43")
+    _danach("${_dbg}" "id=43 \"The fuse is in place." "READ  Ck   zone=12 idx=31 exp=0 got=1" "Z1: Nein, die Sicherung bleibt stecken")
+    _danach("${_dbg}" "zone=12 idx=31 exp=0 got=1" "[keyitems] USE 0x40 ROOM201${S}: keine Stelle (You can't use it here.)" "Z1: USE bei offener Tuer gilt nicht")
+    _darf_nicht("${_dbg}" "[keyitems] USE-Lauf ROOM201" "Z1: kein USE-Lauf")
+    _darf_nicht("${_dbg}" "zone=9 idx=125 op=0" "Z1: Bit 125 unberuehrt")
     # Abnahme 0, Mangel 4: zu Fuss nach Cut 4 steht die offene Tuer nicht im Bild (Plan wie Lauf s_geh2); Spalten 0..27 = Hintergrund BG04 (Lauf s_geh3 100 %, mit Tuer s_geh2 29 %), Figur steht weiter rechts
     file(WRITE "${_basis}_plan_c4.txt" "RAUM 201${S}
 WARTE 30
