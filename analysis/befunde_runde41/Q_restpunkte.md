@@ -161,13 +161,13 @@ Die Masken-Gruppen a1..c3 liefen auf dem Stand vor der letzten Aenderung am Rend
 
 ## Nachbesserung 1 (Abnahme 0, Mangel M1, Weg (a): Teil 8 auf die Ebene der Wange)
 
-### Beleg: wo die Wange liegt (Triangulation, Schritt 1, UNGEBAUT)
+### Beleg: wo die Wange liegt (Triangulation)
 Die Zelle @0x0092C (Westflaeche x -19919) ist eine Kollisionszelle, keine Wange. Kameras 4 (-24312,-10127,-6937) und 5 (-23912,-9927,-23336) sehen die Aussenflaeche der Westwange, Basislinie rund 16 000. Bildkanten je Zeile aus dem Hintergrund (Helligkeitsprofil, Sprung olive/schwarz), Sehebene je Kamera, Schnitt der zwei Ebenen:
 | Kante | Bildkante Cut 5 | Bildkante Cut 4 | x bei z -20000 | y bei z -20000 | dx/dz | dy/dz |
 |---|---|---|---|---|---|---|
-| Unterkante der Aussenflaeche | (147.5,204)..(165.7,236) | (259.5,110)..(271.6,134) | -20630 (Sigma 7) | -4044 | 0,013 | -0,834 |
-| Oberkante der Aussenflaeche | (158.5,204)..(177.6,236) | (265.5,110)..(277.6,134) | -20552 (Sigma 6) | -4717 | 0,008 | -0,815 |
-dx/dz ~ 0: beide Linien laufen parallel zur Treppe (achsparallel), die Paarung der Kanten stimmt. dy/dz passt zur Zellenlaenge (5400/6445 = 0,838), nicht zum Stair-Record (5400/6895 = 0,783, das ist der Laufbereich). Die Stufenlinie der Zelle (y = -1800 - 0,838 (z + 24100)) liegt bei z -20000 auf -5236, die Unterkante also 1192 darunter: das ist der Abstand, den die Abnahme an der Ostwange in Cut 6/11 mass (1125..1225).
+| Unterkante der Aussenflaeche | (147.5,204)..(165.7,236) | (259.5,110)..(271.6,134) | -20626 (Sigma 7) | -4023 | 0,011 | -0,835 |
+| Oberkante der Aussenflaeche | (158.5,204)..(177.6,236) | (265.5,110)..(277.6,134) | -20548 (Sigma 6) | -4698 | 0,006 | -0,815 |
+dx/dz ~ 0: beide Linien laufen parallel zur Treppe (achsparallel), die Paarung der Kanten stimmt. dy/dz passt zur Zellenlaenge (5400/6445 = 0,838), nicht zum Stair-Record (5400/6895 = 0,783, das ist der Laufbereich). Die Stufenlinie der Zelle (y = -1800 - 0,838 (z + 24100)) liegt bei z -20000 auf -5236, die Unterkante also 1213 darunter: das ist der Abstand, den die Abnahme an der Ostwange in Cut 6/11 mass (1125..1225).
 
 ### Ursache des Mangels
 Tiefe von Teil 8 kam aus dem Koerper der Modell-Zeile, und der war die Kollisionszelle @0x0092C (Westflaeche x -19919). Diese Flaeche liegt mitten unter den Stufen, die Wange 672 Einheiten westlich davon. Die Stufen 112..126 waren je Punkt 19..22 Stufen zu fern; eine Figur zwischen Wange und Zellflaeche lag vor der Tiefe und blieb sichtbar. Der Erststand hat nur die Spaltentiefe behoben, und seine Begruendung mass gegen dasselbe Modell. Die Abnahme hat das richtig bewertet.
@@ -177,7 +177,7 @@ Liegt aus Abnahme 0 vor, nicht wiederholt: (-19912,-19720) 63 von 96 sichtbar, (
 
 ### Beleg
 - Kameras 4 und 5 aus dem RDT (@RDT+0x24 Kamerasatz, `re15_camera_build_view`). `tools/maske/wange_r41.py`, Proben je Bildzeile im Helligkeitsprofil des Hintergrunds, `--ppm` prueft jede Probe am Bild: 0 neben dem Sprung, Spruenge 16..83.
-- Ergebnis mit der exakten Inverse der gerundeten Kamera-Matrix: Unterkante z -20500 (-20631,-3606), dx/dz 0,011, dy/dz -0,835; Oberkante (-20551,-4291), dx/dz 0,006, dy/dz -0,815. Ebene x -20591. Die Tabelle oben entstand noch mit der Transponierten (-20630 / -20552); der Riegel in C fiel darauf auf, das Werkzeug rechnet jetzt wie `koerper_r41.ansicht`.
+- Ergebnis mit der exakten Inverse der gerundeten Kamera-Matrix: Unterkante z -20500 (-20631,-3606), dx/dz 0,011, dy/dz -0,835; Oberkante (-20551,-4291), dx/dz 0,006, dy/dz -0,815. Ebene x -20591. Die erste Rechnung nahm die Transponierte der gerundeten Matrix (Ebene -20596); der Riegel in C fiel darauf auf, das Werkzeug rechnet jetzt wie `koerper_r41.ansicht`.
 - Gegenprobe der Paarung: die Kanten mit Cut 11 geschnitten ergeben keine Treppenlinie (x -19688, Oberkante dx/dz 0,075): Cut 11 zeigt die Ostwange, wie die Abnahme schrieb.
 - Stair-Record slot 9/10 `corner=-24300 extent=6895` ist der Laufbereich: mit ihm rechnete die Abnahme 5400/6895 = 0,783, die Treppe im Bild steigt wie die Zelle @0x0092C (5400/6445 = 0,838). Der echte Aufstieg bestaetigt das: (-19704,-4384,-21134), (-19701,-6184,-19025), Steigung 0,853.
 
