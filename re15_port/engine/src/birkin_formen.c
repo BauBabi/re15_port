@@ -87,6 +87,7 @@ void re15_bf_morph_zu_g5(int slot)
     e->grid_id = 0x13u;
     e->state = 0; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
     e->motion = 0; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;
+    e->anim_blend_rate = 0; e->anim_flags &= (uint16_t)~0x80u;   /* Rate und Richtung der Form gehoeren nicht dem G5 */
     e->hp = 600;                                         /* Ctor @0x801003fc, ueberschreibt er ohnehin */
     re15_enemy_apply_hitbox(e, 0x36u);
     re15_g5_boss_spawn(slot);
@@ -131,6 +132,8 @@ static int s_szene_gespielt = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_kam_g5 = 0;       /* G5-Auftritt: Kamera aufs Zugende halten (Slot+1, 0 = aus) */
 static void bf_kamera(int cut);
+static void bf_kamera_setzen(int cut);
+static void bf_kamera_frei(void);
 static void bf_zucken(re15_actor_t *e);
 
 void re15_bf_reset(void)
@@ -199,7 +202,7 @@ void re15_bf_raumtick(void)
           if (raum != g_current_room_id) {
               const char *c = getenv("RE15_BIRKIN_CUT");
               raum = g_current_room_id; t = 0;
-              if (c) bf_kamera(atoi(c));
+              if (c) bf_kamera_setzen(atoi(c));          /* Zonen bleiben an wie nach dem echten Kampfstart */
           }
           if (++t == at || (t == 2 * at && s_bf_mutiert))
               for (int i = 1; i < RE15_ACTOR_MAX; i++)
@@ -208,13 +211,18 @@ void re15_bf_raumtick(void)
       } }
     bf_rueckstoss_tick();
     /* G5-AUFTRITT (wie RE2): die Kamera bleibt aufs Zugende gerichtet, waehrend zuerst die vier Tentakel
-     * hereingreifen ([T1] @0x80101214-2e0) und dann den Koerper nachziehen ([T2] Root-Spur +7014); mit dem
-     * Ende des Intros (Sub 2 verlassen) zurueck auf die Kampfkamera. */
+     * hereingreifen ([T1] @0x80101214-2e0) und dann den Koerper nachziehen ([T2] Root-Spur +7014).
+     * GESTALTUNG (Abnahme 2): die Szenenkamera endet mit [T2], nicht mit Sub 2. Sub 2 dauert ohne Treffer 1126 Bilder
+     * (37,5 s), der Spieler hat dabei volle Kontrolle und sah sich oft nicht, ab [T6] (+3946) fuellte der Koerper Cut 11
+     * ganz. Ab [T3] laufen die Zonen wieder, der Schnitt kommt aus der Spielerlage (bf_schnitt_aus_lage). */
     if (s_kam_g5) {
-        int sub = -1;
-        if (re15_g5_boss_zustand(&sub, NULL, NULL) && sub != 2) { bf_kamera(0x0C); s_kam_g5 = 0; }
+        int sub = -1, ph = 0;
+        if (!re15_bf_bahnsteig_aktiv()) { bf_kamera_frei(); s_kam_g5 = 0; }
+        else if (re15_g5_boss_zustand(&sub, &ph, NULL) && (sub != 2 || ph >= 3)) {
+            bf_kamera_setzen(re15_bf_schnitt_aus_lage(g_actors[RE15_ACTOR_SLOT_PLAYER].x));
+            bf_kamera_frei(); s_kam_g5 = 0;
+        }
         else bf_kamera(0x0B);
-        if (!re15_bf_bahnsteig_aktiv()) s_kam_g5 = 0;
     }
     if (!re15_bf_hangar_aktiv()) { if (s_h.raum) re15_bf_reset(); return; }
     if (s_h.raum != g_current_room_id) {
@@ -329,13 +337,41 @@ void re15_bf_raumtick(void)
 static void bf_zucken(re15_actor_t *e)
 {
     e->anim_flags &= (uint16_t)~0x80u;                   /* Form kann gerade rueckwaerts gelaufen sein */
-    if (re15_bb_bank_da(e)) { e->motion = 8; e->anim_frame = 5; e->anim_frac = 7; }
+    if (re15_bb_bank_da(e)) { e->motion = 8; e->anim_frame = 5; e->anim_frac = 7; e->anim_blend_rate = 0x200; }   /* a3 @0x80107244 */
     else { bf_clip(e, 7); e->anim_frac = 0xf; }
 }
 
-static void bf_kamera(int cut)
+static void bf_kamera_setzen(int cut)
 {
     if ((int)g_scd.work_vars[0x0A] != cut || g_scd.cam_id != cut) { g_scd.cam_id = (uint8_t)cut; g_scd.cam_change_pending = 1; }
+}
+
+/* Szenen-Kamera. ⛔ Abnahme 1 M9: ROOM5090 sub04 laesst die Zonen an (Cut_auto 01 @0x134C). Stand der Spieler in einer Zone,
+ * deren Wechsel aus dem Szenen-Cut fuehrt (RVD @0x490 Cut 11 -> 12, x 2800..4200; @0x4b8 Cut 12 -> 11, x 1203..2703; @0x4cc
+ * Cut 12 -> 13, x 14000..15400), setzte der Scan cam_id zurueck und die Szene wieder hin, je Bild: jedes Bild ein Apply,
+ * Kamerahalt samt 6 Bilddauern, 4 Bilder je Sekunde, bis zu zwei Minuten Standbild. Wie Cut_chg schaltet die Szene die
+ * Zonen ab (Bit 0x100 @0x800402d4, Scan-Gate @0x8001cce0-e4, Port cut_auto_enabled = 0, cut_chg_zwilling in
+ * gatorszene_r41.c) und gibt sie am Ende wieder frei (FUN_8004032c @0x8004032c). */
+static void bf_kamera(int cut)
+{
+    g_scd.cut_auto_enabled = 0;
+    bf_kamera_setzen(cut);
+}
+
+static void bf_kamera_frei(void) { g_scd.cut_auto_enabled = 1; }
+
+/* Schnitt zur Spielerlage ROOM5090/5091, Abnahme 2. Die RVD-Zonen sind Streifen, sie loesen nur aus dem passenden Schnitt aus:
+ * @0x490 11->12 x 2800..4200, @0x4b8 12->11 x 1203..2703, @0x4cc 12->13 x 14000..15400, @0x4f4 13->12 x 12249..13873, @0x508
+ * 13->14 x 20250..21750, @0x530 14->13 x 18502..20252. Ein fester Cut 12 am Szenenende liess Leon oestlich von x 15400 ohne Zone
+ * und ohne Bild (Lauf z_ende F2102). Cut_old (`lbu a0,0x3f7b(a0)` @0x8004033c, `sh a0,0xfe4(at)` @0x80040364) hilft hier
+ * nicht: der Spieler bewegt sich waehrend der Szene frei, der gemerkte Schnitt passt dann nicht mehr. Die Grenzen liegen so, dass kein
+ * Streifen des gewaehlten Schnitts sofort zurueckschaltet. */
+int re15_bf_schnitt_aus_lage(int32_t x)
+{
+    if (x < 2750)  return 0x0B;
+    if (x < 14000) return 0x0C;
+    if (x < 20250) return 0x0D;
+    return 0x0E;
 }
 
 int re15_bf_rueckstoss_phase(void) { return s_rs.slot >= 0 ? s_rs.phase : 0; }
@@ -364,7 +400,7 @@ static void bf_rueckstoss_tick(void)
 {
     if (s_rs.slot < 0) return;
     re15_actor_t *e = &g_actors[s_rs.slot];
-    if (!e->active || !re15_bf_bahnsteig_aktiv()) { s_rs.slot = -1; return; }
+    if (!e->active || !re15_bf_bahnsteig_aktiv()) { s_rs.slot = -1; bf_kamera_frei(); return; }
     s_rs.t++;
     e->state = 2; e->hp = 1;                             /* Treffer aendern nichts mehr am Ablauf */
     switch (s_rs.phase) {

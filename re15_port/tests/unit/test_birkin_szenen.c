@@ -25,6 +25,8 @@
 #include "re15_birkin_formen.h"
 #include "re2_ems.h"
 
+extern int re15_g5_boss_zustand(int *sub, int *ph, int *timer);
+
 static int fails = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { fprintf(stderr, "FAIL: " __VA_ARGS__); \
     fprintf(stderr, "\n"); fails++; } } while (0)
@@ -190,11 +192,15 @@ static void test_bahnsteig(void)
     b->x = 1200; b->z = -23350; b->grid_id = 0x13;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->x = 300; pl->z = -23400; pl->hp = 100;
+    re15_enemy_ai_run_all(0);                            /* erster Formen-Tick: Ctor-Teil, eigene HP 150 */
+    CHECK(b->hp == 150, "Form kommt mit HP %d statt 150", b->hp);
     b->state = 3; b->sub_state_3 = 0; b->hp = 0; b->birkin_flags = 0;
-    int f, gefeuert = 0, versteckt = 0;
+    int f, gefeuert = 0, versteckt = 0, zonen_an = 0;
     int32_t x_min = b->x;
+    g_scd.cut_auto_enabled = 1;                          /* ROOM5090 sub04 Cut_auto 01 @0x134C */
     for (f = 0; f < 900 && b->type == 0x30u; f++) {
         re15_enemy_ai_run_all(0);
+        if (re15_bf_rueckstoss_phase() != 0 && g_scd.cut_auto_enabled) zonen_an++;
         if (re15_bf_rueckstoss_phase() == 1) {
             uint16_t pr = 0, pad = re15_bf_pad(0, &pr);
             if ((pad & 0x0800u) && (pad & 0x8000u)) gefeuert = 1;
@@ -202,6 +208,7 @@ static void test_bahnsteig(void)
         if (b->no_draw) versteckt = 1;
         if (b->x < x_min) x_min = b->x;
     }
+    CHECK(zonen_an == 0, "M9: Kamerazonen in %d Szenen-Bildern an", zonen_an);
     CHECK(gefeuert, "Spieler zielt/feuert in der Rueckstoss-Szene nicht");
     CHECK(x_min < -5683, "Birkin verlaesst den Zug nicht nach Westen (min x %d)", x_min);
     CHECK(versteckt, "Birkin verschwindet hinter dem Zugende nicht");
@@ -210,6 +217,22 @@ static void test_bahnsteig(void)
     CHECK(!b->no_draw, "G5 bleibt unsichtbar");
     CHECK(g_scd.cam_id == 0x0B, "G5-Auftritt nicht auf Cut 11 (Zugende), cam %d", g_scd.cam_id);
     CHECK(re15_game_flag_get(5, 0x1c) == 0, "Birkin-Schalter z5:0x1C schon beim Tod der Form gesetzt");
+    /* M9 + Abnahme 2: bis zum Ende von [T2] haelt die Szene Cut 11 mit Zonen aus, danach Zonen an, Schnitt aus der Spielerlage.
+     * Leon steht weit im Osten: ein fester Cut 12 liesse ihn ausser Bild und ohne Zone. */
+    {
+        int zonen_im_auftritt = 0, frei = -1, sub = 2, ph = 0, n, sub_bei_frei = -1;
+        for (n = 0; n < 1500 && frei < 0; n++) {
+            pl->x = 20748; pl->z = -26416; pl->hp = 100; pl->hit_react = 0;
+            re15_enemy_ai_run_all(0);
+            if (re15_g5_boss_zustand(&sub, &ph, NULL) && sub == 2 && ph < 3 && g_scd.cut_auto_enabled) zonen_im_auftritt++;
+            if (g_scd.cut_auto_enabled) { frei = n; sub_bei_frei = sub; }
+        }
+        CHECK(zonen_im_auftritt == 0, "M9: Kamerazonen in %d Auftritts-Bildern an", zonen_im_auftritt);
+        CHECK(frei >= 0, "M9: Kamerazonen nach dem Hereinziehen nicht wieder an (%d Ticks, Sub %d Ph %d)", n, sub, ph);
+        CHECK(sub_bei_frei == 2, "Szenenkamera endet erst mit Sub 2 (Freigabe in Sub %d), sperrt 37,5 s", sub_bei_frei);
+        CHECK(g_scd.cam_id == 0x0E, "Leon bei x 20748: Cut %d statt 14 nach dem Szenenende", g_scd.cam_id);
+        fprintf(stderr, "Bahnsteig: Kamerazonen %d Ticks nach dem Morph wieder an, Cut %d\n", frei, g_scd.cam_id);
+    }
     fprintf(stderr, "Bahnsteig: Rueckstoss + Morph nach %d Ticks (min x %d)\n", f, x_min);
     free(buf);
 }
@@ -227,11 +250,129 @@ static void test_modellwahl(void)
     CHECK(!re15_bf_bahnsteig_aktiv() && !re15_bf_hangar_aktiv(), "3070: Formen aktiv");
 }
 
+/* Abnahme 2: Schnitt aus der Spielerlage gegen die RVD-Zonen des Raums (Datei @0x490, 20 Byte je Zone, Ende 0xFFFF): kein Streifen des
+ * gewaehlten Schnitts darf an dieser Lage sofort weiterschalten, sonst pendelt die Kamera, und aus jeder Lage fuehrt der Schnitt zu Bild. */
+static void test_schnitt_aus_lage(const char *rdt)
+{
+    size_t n = 0;
+    char p[512]; snprintf(p, sizeof p, RE15_ASSET_PSX_DIR "/%s", rdt);
+    uint8_t *b = slurp(p, &n);
+    CHECK(b != NULL, "%s nicht ladbar", rdt);
+    if (!b) return;
+    static const struct { int32_t x; int cut; } soll[] = {
+        { -400, 11 }, { 2749, 11 }, { 2750, 12 }, { 13999, 12 }, { 14000, 13 }, { 20249, 13 }, { 20250, 14 }, { 25000, 14 },
+    };
+    for (unsigned i = 0; i < sizeof soll / sizeof soll[0]; i++)
+        CHECK(re15_bf_schnitt_aus_lage(soll[i].x) == soll[i].cut, "x %d: Cut %d statt %d", soll[i].x, re15_bf_schnitt_aus_lage(soll[i].x), soll[i].cut);
+    for (int32_t x = -400; x <= 25000; x += 50)
+        for (int32_t z = -26400; z <= -22168; z += 400) {
+            int c = re15_bf_schnitt_aus_lage(x), treffer = 0;
+            for (size_t o = 0x490; o + 20 <= n && !(b[o] == 0xff && b[o + 1] == 0xff); o += 20) {
+                int16_t q[8];
+                memcpy(q, b + o + 4, sizeof q);
+                if (b[o + 2] != c || b[o + 3] == 0) continue;        /* Zone dieses Schnitts, Ziel 0 = Ankerzone ohne Wechsel */
+                /* konvexes Viereck: alle Kanten auf derselben Seite */
+                {
+                    int pos = 0, neg = 0;
+                    for (int k = 0; k < 4; k++) {
+                        int64_t ax = q[k * 2], az = q[k * 2 + 1], bx = q[(k * 2 + 2) & 7], bz = q[(k * 2 + 3) & 7];
+                        int64_t kreuz = (bx - ax) * ((int64_t)z - az) - (bz - az) * ((int64_t)x - ax);
+                        if (kreuz > 0) pos++; else if (kreuz < 0) neg++;
+                    }
+                    if (!(pos && neg)) treffer++;
+                }
+            }
+            CHECK(treffer == 0, "%s: Lage (%d,%d) Cut %d liegt in einem Wechselstreifen", rdt, x, z, c);
+        }
+    free(b);
+}
+
+/* Abnahme 2, G5-Biss: FUN_800401d4(40, 1) @0x80104118 / @0x80104170 toetet nie, klemmt auf HP 0 @0x800402b0. Devour verlangt HP <= 0
+ * (`bgtz` @0x801008e0, @0x80103e80). Der Todes-Latch @0x800402d8 startet die Game-Over-FSM mitten im Fressen; der Kau-Zyklus
+ * @0x80104b0c-6c senkt das Gewicht, sonst bleibt das Ende-Gate @0x80101d14 zu. */
+extern void re15_g5_boss_tick(int slot);
+extern int  re15_g5_fress_todeslatch(void);
+extern int  re15_death_presentation_active(void);
+extern int  re15_g5_blob_zustand(int *blob, int *ph, int32_t *gewicht0);
+static void test_g5_fressen(void)
+{
+    size_t n = 0;
+    uint8_t *ems = slurp(RE15_ASSET_PSX_DIR "/../RE2/CDEMD0.EMS", &n);
+    CHECK(ems != NULL, "RE2/CDEMD0.EMS fehlt");
+    if (!ems) return;
+    re15_enemy_reset();
+    re15_actor_init();
+    g_current_room_id = 0x5090u;
+    re15_enemy_bank_t *eb = re15_enemy_alloc(0x36);
+    CHECK(eb && re2_ems_load_bank(ems, n, 0x36, eb, NULL) == 0, "EM036 laedt nicht");
+    if (!eb) { free(ems); return; }
+    eb->buf = NULL; eb->ok = 1;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0; pl->x = 24000; pl->z = -23400; pl->y = 0;
+    re15_actor_t *e = &g_actors[2];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = 0x36; e->flags = 1; e->hp = 600; e->grid_id = 0x13;
+    {   /* Auftritt bis zum Kampf */
+        int sub = 2, t;
+        for (t = 0; t < 1400 && (sub == 2 || t == 0); t++) { re15_g5_boss_tick(2); (void)re15_g5_boss_zustand(&sub, NULL, NULL); }
+        CHECK(sub != 2, "G5-Auftritt endet nicht");
+    }
+    {   /* Spieler stirbt nicht am Biss, nie bei HP > 0 gefressen, HP faellt ueber 0 */
+        int biss = 0, null_gesehen = 0, frass_bei = 999, sub = 0, ph = 0, reaktion = 0;
+        for (int t = 0; t < 12000 && !re15_g5_fress_todeslatch(); t++) {
+            int vor = pl->hp;
+            e->x = 10000; e->z = -23400;                      /* u >= 9001 @0x801008a0 */
+            pl->x = e->x + 4500; pl->z = e->z;
+            if (reaktion > 0) reaktion--; else pl->hit_react = 0;   /* Treffer-Reaktion des Spielers, je Biss ein Treffer */
+            e->hp = 600;
+            re15_g5_boss_tick(2);
+            if (vor - pl->hp == 40) biss++;                   /* 40 @0x80104118; Tentakel 15 @0x801016d0 zaehlt nicht */
+            if (pl->hp < vor) reaktion = 30;
+            if (pl->hp == 0) null_gesehen = 1;
+            if (pl->hp < 0) { frass_bei = vor; break; }
+        }
+        (void)re15_g5_boss_zustand(&sub, &ph, NULL);
+        CHECK(biss >= 2, "nur %d Bisse vor dem Fressen, Sperre +0x229 laeuft nicht ab (@0x80100188-98)", biss);
+        CHECK(null_gesehen, "HP faellt nicht auf 0 (Biss a1 = 1 @0x80104170 klemmt auf 0 @0x800402b0)");
+        CHECK(frass_bei == 0, "gefressen bei HP %d statt 0 (`bgtz` @0x801008e0 / @0x80103e80)", frass_bei);
+        CHECK(sub == 4, "kein Devour (Sub %d)", sub);
+    }
+    CHECK(re15_g5_fress_todeslatch(), "Todes-Latch nicht gesetzt (@0x800402d8)");
+    CHECK(re15_death_presentation_active(), "Game-Over-FSM startet nicht im Fressen (@0x80015014-30)");
+    CHECK(!re15_player_is_dead(), "Opfer-Modus 4 besitzt den Spieler, is_dead muss 0 bleiben");
+    {   /* Kauen: Gewicht pendelt, nach 150 Bildern Clip 2 faellt das Ende-Gate */
+        int blob = 4, ph = 0, p2 = 0, p3 = 0, ende = -1;
+        int32_t g0 = 0, g_max = -99999, g_min = 99999;
+        for (int t = 0; t < 2400 && ende < 0; t++) {
+            re15_g5_boss_tick(2);
+            (void)re15_g5_blob_zustand(&blob, &ph, &g0);
+            if (blob == 4 && ph == 2) p2++;
+            if (blob == 4 && ph == 3) {
+                p3++;
+                if (g0 > g_max) g_max = g0;
+                if (g0 < g_min) g_min = g0;
+            }
+            if (blob != 4) ende = t;
+        }
+        CHECK(p2 > 0 && p3 > 0, "Kau-Zyklus laeuft nicht (Phase 2 %d, Phase 3 %d)", p2, p3);
+        CHECK(g_min < 6000 && g_max >= 10001, "Kauen: Gewicht %d..%d, Ende-Gate 6000 @0x80101d14 kann nicht fallen", g_min, g_max);
+        CHECK(ende >= 0, "Ende-Gate faellt nie, Fressen laeuft endlos");
+        fprintf(stderr, "G5: Fressen Blob zurueck nach %d Ticks, Kauen %d..%d\n", ende, g_min, g_max);
+    }
+    CHECK(re15_g5_fress_todeslatch(), "Latch faellt mit dem Blob, FSM wuerde zurueckgesetzt (kein Routine-Exit @0x80101d20-24)");
+    pl->hp = 100;                                             /* Neues Spiel ueber den Titel: s_g5 steht noch */
+    CHECK(!re15_g5_fress_todeslatch(), "Latch ueberlebt den Spielerzustand");
+    free(ems);
+}
+
 int main(void)
 {
     test_modellwahl();
     test_hangar();
     test_bahnsteig();
+    test_schnitt_aus_lage("STAGE5/ROOM5090.RDT");
+    test_schnitt_aus_lage("STAGE5/ROOM5091.RDT");
+    test_g5_fressen();
     if (fails) { fprintf(stderr, "test_birkin_szenen: %d Fehler\n", fails); return 1; }
     fprintf(stderr, "test_birkin_szenen: OK\n");
     return 0;

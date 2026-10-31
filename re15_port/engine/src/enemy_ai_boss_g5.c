@@ -378,11 +378,32 @@ static void g5_root_motion(re15_actor_t *e, int neu_verankert, int32_t skala_q12
     }
 }
 
+static void g5_fressen_beginn(re15_actor_t *e, re15_actor_t *pl);
+
+/* Kau-Blut, FUN_8001bf10 (Packung s. Block BLUT-SPAWNS unten): Teil 4 (a2 = +0x198 + 760 = Teil 4 + 0x48 @0x80104a60),
+ * Versatz (0, 256 - (rng & 0xff) * 2, 256 - (rng & 0xff) * 2) @0x80104a1c-48, Skala 8096 + (rng & 0xff) * 4 @0x80104a4c-54,
+ * Winkel = Boss-Gier @0x80104a5c. */
+static void g5_kau_blut(const re15_actor_t *e, uint8_t sub)
+{
+    int32_t ofs[3] = { 0, 0, 0 }, w[3];
+    ofs[1] = 256 - (int32_t)((re15_engine_rand8() & 0xFFu) * 2u);
+    ofs[2] = 256 - (int32_t)((re15_engine_rand8() & 0xFFu) * 2u);
+    {
+        uint16_t skala = (uint16_t)(8096u + (re15_engine_rand8() & 0xFFu) * 4u);
+        (void)re15_enemy_part_point(e, 4, ofs, w);
+        re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0u, sub, skala, w[0], w[1], w[2], e->rot_y);
+    }
+}
+
 /* ---- BLOB-MASCHINE (+0x218, Tabelle @0x80105ABC) --------------------------------------- */
 static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
 {
     g5_state_t *g = &s_g5;
     int32_t dist = re15_enemy_player_dist(e, pl);
+    /* +0x229 -1 je Bild im Kopf, hinter dem Zustands-`jalr` @0x80100180 (`lbu v0,553(s3)` / `sb` @0x80100188-98), an keinen
+     * Blob-Zustand gebunden. ⛔ HIER STAND am Funktionsende `g->blob == 0 && g->blob_ph == 0`: Blob 0 setzt Phase 1 im selben
+     * Bild, die Sperre 5 (@0x801042ac) lief nie ab, nach dem ERSTEN Biss gab es keinen zweiten. */
+    if (g->biss_cd > 0) g->biss_cd--;
     switch (g->blob) {
     case 0: {   /* KAMPF-PULS + Trigger (0x80103C18): die Masse ATMET dauerhaft. */
         /* KORRIGIERT (Runde 7, g5-morph.md 3.3 Punkte 1-4 - erst mit dem gebauten
@@ -416,22 +437,25 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
             if (g->blob_speed <= 0) { g->blob_ph = 1; g->blob_speed = 6; }
         }
         /* Trigger jeden Frame (@0x80103e00-54): dist < 6000 (`sltiu 0x1770` @0x80103e08),
-         * +0x229 == 0 (@0x80103e1c), Spieler IM 128er-Bogen und Griff-Latch frei.
+         * +0x229 == 0 (@0x80103e1c), Spieler IM 128er-Bogen, Griff-Latch frei (`lbu v0,-565(v0)` =
+         * 0x800CFDCB / `bne v0,zero` @0x80103e48-50) und +0x226 & 4 == 0 (@0x80103e60-64).
          * ⛔ ARC-POLARITAET (Phase 2, selbst nachdisassembliert): das Original springt bei
          * `bne v0,zero,0x80103ee4` (@0x80103e3c) WEG - der Trigger verlangt also
          * arc_test == 0, und 0x80015614 liefert 0 genau dann, wenn der Spieler INNERHALB
          * des Bogens steht (`slt v1,cone*2` @0x80015668 -> v0=0). Der Port pruefte hier
          * auf != 0, biss also nur, wenn der Spieler NICHT vor ihm stand. */
         if (dist < 6000 && g->biss_cd == 0 &&
-            re15_ai_arc_test(e, pl->x, pl->z, 128) == 0 && !(g->busy & 4u)) {
-            if (pl->hp >= 0 && g5_u(e) >= 9001) {
-                /* DEVOUR-Pfad 2 (@0x80103ea0-ec4): 500 Schaden = sicherer Kill. */
-                pl->hp = -1; pl->hit_react |= 1;
-                g->sub = 4; g->ph = 0; g->routine = 1;
-                g->blob = 4; g->blob_ph = 0;
+            re15_ai_arc_test(e, pl->x, pl->z, 128) == 0 &&
+            pl->hit_react == 0 && !(pl->re2z_self1d3 & 0x80u) && !(g->busy & 4u)) {
+            g->blob = 1; g->blob_ph = 0;               /* BISS @0x80103e6c-70, steht schon vor dem Devour-Test */
+            /* DEVOUR-Pfad 2 (@0x80103e78-ec4): nur der Spieler OHNE HP wird gefressen: `lh v0,-690(v0)` Spieler-HP,
+             * `bgtz v0,0x80103ee4` @0x80103e80 springt bei HP > 0 weg, `lh v0,342(s0)` / `bltz` @0x80103e88-90 bei totem
+             * Boss. ⛔ HIER STAND `pl->hp >= 0 && g5_u(e) >= 9001`: Polaritaet umgekehrt und die X-Schwelle gehoert nur zu
+             * Pfad 1 (@0x801008a0). Folge (Abnahme 2): gesunder Spieler bei HP 60 sofort tot (Lauf g_frei2 F2351). */
+            if (pl->hp <= 0 && e->hp >= 0) {
+                g5_fressen_beginn(e, pl);
                 return;
             }
-            g->blob = 1; g->blob_ph = 0;               /* BISS @0x80103e6c */
         }
         break;
     }
@@ -461,18 +485,24 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
             {   int32_t s3 = (int32_t)((int16_t)g->blob_speed) >> 3;
                 if (g5_u(e) + s3 < 12001) g5_schiebe(e, s3, 0);
             }
-            if (g->hitbox_b < 3700) g->hitbox_b += 500;   /* @0x801040b8-e0: +0xB4 = X-VERSATZ
-                                                            * des Kollisionssegments 1 (FUN_80035408
-                                                            * liest +0x94/+0xB4 als lokales x),
-                                                            * 2200 -> 3700 */
+            g->hitbox_b += 500;                        /* @0x801040b8-c4: +0xB4 = X-VERSATZ
+                                                        * des Kollisionssegments 1 (FUN_80035408
+                                                        * liest +0x94/+0xB4 als lokales x),
+                                                        * 2200 -> 3700 */
+            if (g->hitbox_b >= 3701) g->hitbox_b = 3700;   /* `slti v0,v0,3701` @0x801040d0, Klemme @0x801040dc-e0. Seit
+                                                            * die Bisssperre ablaeuft, beginnt der naechste Biss, bevor das
+                                                            * Segment wieder bei 2200 ist. */
             /* Treffer (@0x801040ec-f8): Segment-1-Welt-X (+0xA4 = X + R(yaw)*Versatz) + 900,
              * Radius 1500 gegen die Spielerposition (FUN_800157d4 a2=1500). RE2 Yaw 0 = +X;
              * im Port die eingefrorene Vorwaertsachse `vor`. */
             {   int32_t px = e->x + (int32_t)g5_vor(e) * (g->hitbox_b + 900);
                 int64_t dx = (int64_t)pl->x - px, dz = (int64_t)pl->z - e->z;
                 if (dx*dx + dz*dz < (int64_t)1500*1500 && pl->hit_react == 0) {
-                    pl->hp = (int16_t)(pl->hp - 40);   /* 40 @0x8010416c-70 */
-                    if (pl->hp < 0) pl->hp = -1;
+                    /* FUN_800401d4(40, 1): a0 = 40 @0x80104118, a1 = 1 @0x80104170. Mit a1 = 1 toetet der Biss NIE:
+                     * `bne a1,v0,0x80040274` @0x80040258, `bltz v0,0x800402a8` @0x80040264, dort `sh zero,342(a2)` HP = 0
+                     * @0x800402b0. Getoetet wird erst der Spieler mit HP 0, ueber Devour Pfad 1/2 (500, a1 = 0). */
+                    pl->hp = (int16_t)(pl->hp - 40);
+                    if (pl->hp < 0) pl->hp = 0;
                     g5_se(14);
                     pl->hit_react |= 1;
                     g->blut_serie = 10;                /* +0x21B @0x801041a8 */
@@ -490,7 +520,8 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
             break;
         default:                                       /* Rueckzug der Masse */
             g->gewicht[3] -= 64;
-            if (g->hitbox_b > 2200) g->hitbox_b -= 15;
+            g->hitbox_b -= 15;                         /* @0x801042b8 */
+            if (g->hitbox_b < 2200) g->hitbox_b = 2200;   /* `slti v0,v0,2200` @0x801042c8, @0x801042d0-d4 */
             if (g->gewicht[3] < 0) {
                 g->blob = 0; g->blob_ph = 0;
                 g->biss_cd = 5;                        /* +0x229=5 @0x801042a0-ac */
@@ -516,16 +547,23 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
         /* KORRIGIERT (g5-morph.md 3.3 Punkt 7): Rampe += 32 (nicht 256), ph2
          * addiert die LAUFENDE Geschwindigkeit (nicht konstant 512), Schwelle
          * 10001. */
-        if (g->blob_ph == 0) {
-            g->blob_speed = 1024; g->blob_ph = 1;
+        if (g->blob_ph == 0) {                         /* @0x801048b0-d8, faellt in Phase 1 */
+            g->blob_ph = 1;                            /* `sb v0,537(s4)` @0x801048b8 */
+            g->blob_speed = 0; g->blob_timer = 0;      /* +0x21c/+0x21e = 0 @0x801048bc-c0 */
+            g->blut_serie = 0;                         /* +0x21b = 0 @0x801048c8 */
             /* RUMBLE-KASKADE 4a (Runde 18) — einmalig beim Zuschnappen, Sub-Zustand
              * +0x219 == 0 (`beq v1,zero,0x801048b0` @0x80104884). */
             re15_rumble_small(30, 0);                  /* @0x801048c4 (a0 @0x80104888) */
             re15_rumble_large(35, 250, 15);            /* @0x801048d4 */
         }
-        else if (g->blob_ph == 1) {
-            g->gewicht[0] -= g->blob_speed; g->blob_speed += 32;
-            if (g->gewicht[0] < -4048) g->blob_ph = 2;
+        if (g->blob_ph == 1) {                         /* @0x801048dc-4c */
+            if (g->gewicht[3] != 0) {                  /* `beq v0,zero,0x80104904` @0x801048f0 */
+                g->gewicht[3] = g->gewicht[3] >> 1;    /* `sra v0,v0,17` @0x801048f4 */
+                g->blob_speed = 1024;                  /* @0x801048fc-900 */
+            }
+            g->gewicht[0] -= g->blob_speed;
+            if (g->gewicht[0] < -4048) g->blob_ph = 2; /* @0x8010492c-38 */
+            g->blob_speed += 32;                       /* @0x80104944 */
         } else if (g->blob_ph == 2) {
             g->gewicht[0] += g->blob_speed;
             /* KORREKTUR (Runde 18): das Original klemmt mit `slti v0,v0,10001`
@@ -533,12 +571,21 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
              * stand auf `> 10001` und war damit ein Bild zu spaet, wenn das Gewicht den
              * Wert exakt trifft. */
             if (g->gewicht[0] >= 10001) {              /* @0x80104978 */
-                g->blob_ph = 3; g->blob_timer = 0;     /* +0x219=3 @0x80104988 */
+                unsigned s = 0;
+                g->blob_ph = 3;                        /* +0x219=3 @0x80104988 */
                 /* Blut-Serie des Verschlingens: +0x21B = (rng & 0x3f) + 64
                  * (`andi v0,v0,0x3f` @0x8010498c, `addiu v0,v0,64` @0x80104990,
                  * `sb v0,539(s4)` @0x80104994) — deutlich laenger als die 10 des
                  * Biss-Treffers (@0x801041a8). */
                 g->blut_serie = (int32_t)((re15_engine_rand8() & 0x3Fu) + 64u);
+                g->blob_speed = 0;                     /* +0x21c = 0 @0x8010499c */
+                /* Schwelle des naechsten Kau-Zyklus: fuenf Wuerfel @0x80104998-b8, Summe r * 1/2/4/8/16 @0x801049c0-f0,
+                 * `sh s0,542(s4)` +0x21e @0x801049f8 */
+                for (int i = 0; i < 5; i++) s += (re15_engine_rand8() & 0xFFu) << i;
+                g->blob_timer = (int32_t)s;
+                g5_se((re15_engine_rand8() & 1u) ? 6 : 14);   /* `andi v0,v0,0x1` / a0 14, sonst 6 @0x801049fc-a08 */
+                g5_kau_blut(e, 0u);                    /* FUN_8001bf10 @0x80104a64 */
+                g5_kau_blut(e, 1u);                    /* `lui a0,0x1` @0x80104aa8, jal @0x80104ab8 */
                 /* RUMBLE-KASKADE 4b: zufaellige Kurzstoesse beim Zubeissen. Die
                  * Wuerfel-Reihenfolge ist die des Originals (vier `jal 0x80015fe8`). */
                 {   unsigned d0 = (re15_engine_rand8() & 3u) + 2u;   /* @0x80104ac8/d0 */
@@ -550,7 +597,16 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
                 }
             }
         } else {
-            if ((g->blob_timer++ & 15) == 0) g5_se((re15_engine_rand8() & 1) ? 14 : 6);
+            /* KAUEN @0x80104b0c-6c. ⛔ HIER STAND nur der Ton je 16 Bilder, das Gewicht blieb bei 10001 stehen, und das
+             * Ende-Gate gewicht[0] < 6000 @0x80101d14 fiel nie (Abnahme 2, Lauf g_frei2). Original: Gewicht sinkt um die
+             * Rate (`subu v0,v0,v1` @0x80104b1c), bei Gewicht < +0x21e zurueck nach Phase 2 mit Rate 2048 + (rng & 0xff) * 4
+             * (`sb v0,537(s4)` @0x80104b44, @0x80104b48-54); je Bild Rate += (s8) +0x21b (@0x80104b58-6c). */
+            g->gewicht[0] -= g->blob_speed;
+            if (g->gewicht[0] < g->blob_timer) {
+                g->blob_ph = 2;
+                g->blob_speed = 2048 + (int32_t)((re15_engine_rand8() & 0xFFu) * 4u);
+            }
+            g->blob_speed += (int32_t)(int8_t)g->blut_serie;
         }
         break;
     }
@@ -579,7 +635,6 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
     }
     default: break;
     }
-    if (g->biss_cd > 0 && g->blob == 0 && g->blob_ph == 0) g->biss_cd--;
 }
 
 /* ---- INTRO-Choreo (sub2, [T0..T14], Dossier §3) ---------------------------------------- */
@@ -1006,10 +1061,18 @@ void re15_g5_devour_opfer_start(re15_actor_t *pl, const re15_actor_t *e)
     s_devour_ph = 0;
 }
 
-static void g5_devour_opfer_ende(re15_actor_t *pl)
+/* TODES-LATCH des Fressens, Gegenstueck zu re15_gator_fress_todeslatch. FUN_800401d4(500, 0) @0x80100904 / @0x80103ea0 nimmt
+ * den Todeszweig (@0x800402c0-e4) und setzt `0x800CFB74 |= 0x04000000` (`lui a0,0x400` @0x800402d8), der Flow-Manager
+ * @0x800266c8-34 startet daraufhin das DIE-Overlay (`jal 0x80031e80` @0x8002671c) MITTEN im Fressen. RE1.5 dieselbe
+ * Kopplung: Game-Over-FSM FUN_8001500c laeuft fuer Kommando 3, 6, 7 (@0x80015014-30), 6 ist der Gefressen-Zustand. Der Port
+ * fuehrt den Spieler dabei in Opfer-Modus 4, re15_player_is_dead() bleibt 0 (re15_damage.c), die Praesentation haengt
+ * deshalb an diesem Latch. Spieler-HP < 0 als Wache: s_g5 ueberlebt den Weg ueber den Titel. */
+int re15_g5_fress_todeslatch(void)
 {
-    s_devour_ph = -1;
-    re15_player_victim_force_end();
+    const re15_actor_t *e;
+    if (s_g5_slot < 0 || s_g5_slot >= RE15_ACTOR_MAX || !s_g5.aktiv || s_g5.sub != 4u) return 0;
+    e = &g_actors[s_g5_slot];
+    return e->active && e->type == 0x36u && g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0;
 }
 
 static void g5_devour_opfer_tick(re15_actor_t *pl)
@@ -1410,6 +1473,15 @@ int re15_g5_boss_zustand(int *sub, int *ph, int *timer)
     return s_g5.aktiv ? 1 : 0;
 }
 
+/* Testhaken (test_birkin_szenen): Blob-Maschine +0x218/+0x219, Gewicht[0]. Nur Messung, kein Verhalten. */
+int re15_g5_blob_zustand(int *blob, int *ph, int32_t *gewicht0)
+{
+    if (blob)     *blob     = (int)s_g5.blob;
+    if (ph)       *ph       = (int)s_g5.blob_ph;
+    if (gewicht0) *gewicht0 = s_g5.gewicht[0];
+    return s_g5.aktiv ? 1 : 0;
+}
+
 int16_t re15_g5_head_delta(void) { return s_g5.head_delta; }
 int     re15_g5_track_akku(void) { return (int)s_g5.track.akku; }
 unsigned re15_g5_track_flags(void) { return s_g5.track_flags; }
@@ -1438,6 +1510,48 @@ void re15_g5_boss_spawn(int slot)
 {
     (void)slot;
     s_g5.aktiv = 0;                                    /* +0x4 = 0 @0x800421e0 -> Ctor faellig */
+}
+
+/* DEVOUR, Boss-Seite: Sub 4 @0x80101ad0. */
+static void g5_fressen_tick(re15_actor_t *e, re15_actor_t *pl)
+{
+    g5_state_t *g = &s_g5;
+    if (g->ph == 0) {
+        g5_clip(e, 9, 1);                              /* Clip-Wort 0x70009 (weich) */
+        g5_se(6);
+        /* Grab-Latch + OPFERMASCHINE (Runde 18). Das Original setzt NICHT den Yaw des
+         * Spielers, sondern sein ZIEL PL+0x15A = Boss-Yaw + 2048 (@0x80101bac-b4);
+         * gedreht wird erst in Phase 1 der Maschine mit 256/Bild, und der Schnapp auf
+         * den Zielwert faellt auf den Uebergang 1->2 (@0x80103a24). */
+        re15_g5_devour_opfer_start(pl, e);
+        if (re15_g5_devour_opfer_phase() < 0) {        /* keine Opferbank -> alter Latch */
+            pl->rot_y = (int16_t)((e->rot_y + 2048) & 0xfff);
+            pl->hit_react |= 1;
+        }
+        g->ph = 1;
+    } else if (g->ph == 1) {
+        if (e->anim_frame == 10) g5_se(7);
+        if (g5_anim(e)) { g5_clip(e, 2, 1); g5_se(10); g->ph = 2; g->timer = 150; }
+    } else {
+        g5_anim(e);
+        /* Ende-Gate Gewicht[0] < 6000 @0x80101d04-14 nach den 150 Bildern @0x80101cdc-fc. Das Original schaltet hier NUR den
+         * Blob zurueck (`sb zero,536(s2)` / `sb zero,537(s2)` @0x80101d20-24) und schreibt PL+0x04 nicht: Sub 4 und
+         * Spieler-Routine 6 bleiben bis zum Ende des DIE-Overlays stehen. */
+        if (g->timer > 0) g->timer--;
+        if (g->timer == 0 && g->gewicht[0] < 6000) { g->blob = 0; g->blob_ph = 0; }
+    }
+}
+
+/* Eintritt Devour, beide Pfade (@0x80100904-44, @0x80103ea0-ee0): FUN_800401d4(500, 0), Port-Spieler HP -1 (s. bb_schaden), PL+0x1D3
+ * |= 0x80, Boss-Wort 0x401, Blob 4. Pfad 1 laeuft im selben Bild in Sub 4, Pfad 2 im naechsten; der Port nimmt fuer beide Sub 4
+ * Phase 0 sofort, damit der Tod (hp < 0) den Spieler nicht ein Bild lang in cmd 3 schickt (Detektor game_step). */
+static void g5_fressen_beginn(re15_actor_t *e, re15_actor_t *pl)
+{
+    g5_state_t *g = &s_g5;
+    pl->hp = -1; pl->hit_react |= 1;
+    g->sub = 4; g->ph = 0; g->routine = 1;
+    g->blob = 4; g->blob_ph = 0;
+    g5_fressen_tick(e, pl);
 }
 
 void re15_g5_boss_tick(int slot)
@@ -1557,8 +1671,9 @@ void re15_g5_boss_tick(int slot)
         }
     }
 
-    /* Blut-Serie des Biss-Treffers (+0x21B). */
-    if (g->blut_serie > 0) g->blut_serie--;
+    /* Blut-Serie des Biss-Treffers (+0x21B): -1 je Bild nur im Biss-Schwanz (`sb v0,539(s2)` @0x801042f0). Im Kauen ist
+     * dasselbe Byte die feste Beschleunigung der Rate (@0x80104b58-6c) und darf hier nicht ablaufen. */
+    if (g->blob == 1 && g->blut_serie > 0) g->blut_serie--;
 
     /* TOD-Trigger ((+0x226&6)==4-Analogon): HP <= 0 und nicht busy. */
     if (e->hp <= 0 && g->routine != 3) {
@@ -1642,6 +1757,7 @@ void re15_g5_boss_tick(int slot)
         g5_morph_bauen(g);
         g5_augen_und_kopf(e, pl);
         re15_g5_tentakel_tick(e);
+        g5_devour_opfer_tick(pl);                      /* Pfad 2 @0x80103ea0 kann den Flinch abloesen */
         return;
     }
 
@@ -1657,10 +1773,9 @@ void re15_g5_boss_tick(int slot)
          * `sltiu v0,s1,0x1770` @0x801008ac, und `sll v0,a0,16 / bne v0,zero` @0x801008b4-b8
          * = weiter NUR bei arc_test == 0 (Spieler im Bogen). ⛔ Der Port pruefte != 0. */
         if (re15_ai_arc_test(e, pl->x, pl->z, 128) == 0 && u >= 9001 && dist < 6000 &&
-            pl->hit_react == 0 && !(g->busy & 4u) && pl->hp >= 0) {
-            pl->hp = -1; pl->hit_react |= 1;           /* 500 @0x80100904 = Kill */
-            g->sub = 4; g->ph = 0;
-            g->blob = 4; g->blob_ph = 0;
+            pl->hit_react == 0 && !(pl->re2z_self1d3 & 0x80u) && !(g->busy & 4u) &&
+            pl->hp <= 0) {                             /* `lh v0,-690(v0)` / `bgtz v0` @0x801008d8-e0: nur der Spieler OHNE HP */
+            g5_fressen_beginn(e, pl);                  /* 500 @0x80100904 */
             break;
         }
         /* PHASE 2 (selbst nachdisassembliert 0x80100960-0x80100d04): die alte ph0-Weiche
@@ -1791,35 +1906,9 @@ void re15_g5_boss_tick(int slot)
         break;
     }
 
-    case 4: {                                          /* DEVOUR (§2 sub4) */
-        if (g->ph == 0) {
-            g5_clip(e, 9, 1);                          /* Clip-Wort 0x70009 (weich) */
-            g5_se(6);
-            /* Grab-Latch + OPFERMASCHINE (Runde 18). Das Original setzt NICHT den Yaw des
-             * Spielers, sondern sein ZIEL PL+0x15A = Boss-Yaw + 2048 (@0x80101bac-b4);
-             * gedreht wird erst in Phase 1 der Maschine mit 256/Bild, und der Schnapp auf
-             * den Zielwert faellt auf den Uebergang 1->2 (@0x80103a24). */
-            re15_g5_devour_opfer_start(pl, e);
-            if (re15_g5_devour_opfer_phase() < 0) {    /* keine Opferbank -> alter Latch */
-                pl->rot_y = (int16_t)((e->rot_y + 2048) & 0xfff);
-                pl->hit_react |= 1;
-            }
-            g->ph = 1;
-        } else if (g->ph == 1) {
-            if (e->anim_frame == 10) g5_se(7);
-            if (g5_anim(e)) { g5_clip(e, 2, 1); g5_se(10); g->ph = 2; g->timer = 150; }
-        } else {
-            g5_anim(e);
-            /* Devour-Ende-Gate Gewicht[0]<6000 (@0x80101d04-14); die Gewichte laufen
-             * in der Blob-Simulation — der 150er-Timer ist die Ersatzschranke
-             * fuer den (noch) fehlenden Morph-Zeitverlauf (dokumentierte Abweichung). */
-            if (--g->timer <= 0 && g->gewicht[0] < 6000) {
-                g->blob = 0; g->blob_ph = 0;
-                g5_devour_opfer_ende(pl);              /* PL+0x04 zurueck auf 1 */
-            }
-        }
+    case 4:                                            /* DEVOUR (§2 sub4) */
+        if (g->ph != 0) g5_fressen_tick(e, pl);        /* Phase 0 laeuft in g5_fressen_beginn */
         break;
-    }
 
     default:
         g->sub = 0; g->ph = 0;

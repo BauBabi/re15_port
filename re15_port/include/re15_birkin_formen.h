@@ -51,6 +51,9 @@ void     re15_bf_rueckstoss_start(int slot);
 int      re15_bf_rueckstoss_phase(void);   /* 0 = aus, 1 = Beschuss, 2 = hinter dem Zug */
 uint16_t re15_bf_pad(uint16_t pad, uint16_t *pressed);
 
+/* Kameraschnitt zur Spielerlage in ROOM5090/5091 (Baender der RVD-Zonen, s. birkin_formen.c). */
+int      re15_bf_schnitt_aus_lage(int32_t x);
+
 /* Je KI-Tick vor der Gegner-Schleife: setzt im Hangar Birkin + Spider-Man und spielt die Wurfszene. */
 void re15_bf_raumtick(void);
 /* 1 = dieser Slot wird gerade von der Szene gefuehrt (KI-Tick ueberspringen). */
@@ -62,6 +65,9 @@ int  re15_bb_bank_da(const re15_actor_t *e);    /* 1 = dieser 0x30 traegt die G4
 void re15_bb_tick(int slot);                    /* ersetzt re15_birkin_ai_tick fuer die Form */
 void re15_bb_reset(void);
 void re15_bb_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(int bank));
+/* Testhaken, kein Verhalten: Trefferzaehler +0x21d und Zahl der abgesetzten Treffer-Blutspawns der Form. */
+int  re15_bb_zaehler(void);
+int  re15_bb_blut_zaehler(void);
 /* Messhaken RE15_BB_POSE="x,z,gier,clip,bild,schnitt" (Sichtpruefung): der 0x30 steht fest, bild < 0 spielt ab. */
 int  re15_bb_pose_aktiv(void);
 void re15_bb_pose_tick(void);
