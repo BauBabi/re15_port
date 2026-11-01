@@ -1,0 +1,16 @@
+[
+{
+"name": "R_vorher_leon_20B0_c14",
+"exe": "vorher",
+"warte": 17,
+"dauer": 24,
+"ab": "auto",
+"keep": false,
+"env": [
+"RE15_TITLE_CONFIRM_MS=1500",
+"RE15_PSELECT_AUTO=1",
+"RE15_DEBUG_JUMP=20B0@90",
+"RE15_FORCE_CUT=14"
+]
+}
+]
