@@ -120,7 +120,7 @@ foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leo
     foreach(_muster
             "FG-E3: Alligator gesichert Slot [0-9]+ "
             "AUSLOESER geschwaecht .*-> ROOM${_r80}"
-            "ROOM${_r80} SZENE \\(${_npc}, 8 lebende Zombies"
+            "ROOM${_r80} SZENE \\(${_npc}, 3 lebende Zombies"   # Runde 41 Spur G2 (Punkt 4): 3 statt 8
             "Kanister aufgehoben \\(Loco c11 Bild 24, Hinknien ROOM11B0 sub06 @0x01650\\)"
             "Wurf: Start .* -> Landung \\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\) nach [0-9]+ Bildern \\(Wasser 2090 y -1620\\)"
             "FG-E3: ROOM${_r90} derselbe Alligator in Slot [0-9]+ "

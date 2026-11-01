@@ -485,10 +485,10 @@ static void teil_schluessel(void)
     const int ks = prop_von(RE15_GSZ_KEY_OBJ);
     PRUEF(re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT) == 1, "Leiche (Zustand 7) -> (9,%d) = 1", RE15_GSZ_BIT_LIEGT);
     /* Nachbesserung 1 (M2): die Mitte liegt ueber der Wasseroberflaeche (-1620 = ROOM2090 @0x009D6 p0), die tiefste Ecke des
-     * zur Kamera gekippten Quadrats darauf - die Mitte also hoechstens eine halbe Diagonale (sqrt(2) x 90 = 127, Ecken +-90 der
-     * MD1 @0x354C) darueber (Nachbesserung 2: die Kippung zur Kamera mit dem groessten Bild dreht um beide Achsen). */
+     * zur Kamera gekippten Quadrats darauf - die Mitte also hoechstens eine halbe Diagonale (sqrt(2) x 135 = 191, Ecken +-90 der
+     * MD1 @0x354C mal Spur-G2-Skala 3/2 = +-135) darueber (Nachbesserung 2: die Kippung zur Kamera mit dem groessten Bild dreht um beide Achsen). */
     PRUEF(ks >= 0 && g_scd.props[ks].active && g_scd.props[ks].parent_obj == -1 && g_scd.props[ks].y <= -1620 &&
-          g_scd.props[ks].y >= -1620 - 127 && re15_aot_water_at(g_scd.props[ks].x, g_scd.props[ks].z) != 0,
+          g_scd.props[ks].y >= -1620 - 191 && re15_aot_water_at(g_scd.props[ks].x, g_scd.props[ks].z) != 0,
           "Schluessel liegt im Wasser bei der Leiche (%d,%d,%d)", ks >= 0 ? g_scd.props[ks].x : 0, ks >= 0 ? g_scd.props[ks].y : 0,
           ks >= 0 ? g_scd.props[ks].z : 0);
     PRUEF(a->active && a->type == RE15_AOT_TYPE_ITEM, "Zone Slot 15 = Item");

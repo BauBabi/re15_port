@@ -52,6 +52,8 @@ int re15_gatorszene_r41_spawn_weg(uint16_t room_id, uint8_t type, int16_t x, int
 #include "re15_boss_gator.h"
 #include "re15_blink_r41.h"
 #include "re15_math.h"
+#include "re15_md1.h"      /* Runde 41 Spur G2 (Punkt 6): skalierte Kopie des Schluessel-MD1 */
+#include <stdint.h>
 #include "re15_collision.h"   /* Spur P (Nachbesserung 1): key_begehbar */
 #include "re15_camera.h"   /* Nachbesserung 1 (M2): re15_camera_build_view (Schluessel-Lage im Bild der Kamera) */
 #include "re15_light.h"    /* Nachbesserung 1 (M2/M5): NCCT wie der Prop-Zeichner (Neigung unter der Puls-Kappung) */
@@ -425,11 +427,36 @@ int re15_gatorszene_r41_obj_id(uint16_t room_id)
 {
     return ((room_id & 0xFFFEu) == RE15_GSZ_RAUM) ? RE15_GSZ_KEY_OBJ : -1;
 }
+/* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 6 "Der Schluessel am Anfang und Ende der Szene duerfte gerne etwas groesser sein"): das Modell wird
+ * mit RE15_GSZ_KEY_SKALA_Q12 gezeichnet - eine Kopie des RE2-MD1 (ROOM7040 @0x354C, bytegleich in gen/gatorszene_r41_schluessel.inc) mit
+ * skalierten Scheitel-Koordinaten (Normalen unveraendert). Lagewahl, Kippung und Bildgroessen-Schwellen rechnen mit derselben Halbseite
+ * (GSZ_KEY_HALB, GSZ_KEY_BILD_MIN10), die Wahl der Lage bleibt dadurch dieselbe. */
+static uint8_t s_key_md1_gross[sizeof re15_gsz_key_md1];
+static int     s_key_md1_ok = 0;
 const uint8_t *re15_gatorszene_r41_md1_bytes(uint16_t room_id, int *n)
 {
     if (re15_gatorszene_r41_obj_id(room_id) < 0) { if (n) *n = 0; return NULL; }
-    if (n) *n = (int)sizeof re15_gsz_key_md1;
-    return re15_gsz_key_md1;
+    if (!s_key_md1_ok) {
+        memcpy(s_key_md1_gross, re15_gsz_key_md1, sizeof s_key_md1_gross);
+        re15_md1_t m;
+        if (re15_md1_parse(s_key_md1_gross, (int)sizeof s_key_md1_gross, &m) == 0) {
+            for (int k = 0; k < m.mesh_count; k++) {
+                re15_md1_vertex_t *tv = (re15_md1_vertex_t *)(uintptr_t)m.meshes[k].tri_vertices;
+                re15_md1_vertex_t *qv = (re15_md1_vertex_t *)(uintptr_t)m.meshes[k].quad_vertices;
+                for (int i = 0; tv && i < m.meshes[k].tri_vertex_count; i++) {
+                    tv[i].x = (int16_t)(((int32_t)tv[i].x * RE15_GSZ_KEY_SKALA_Q12) >> 12); tv[i].y = (int16_t)(((int32_t)tv[i].y * RE15_GSZ_KEY_SKALA_Q12) >> 12);
+                    tv[i].z = (int16_t)(((int32_t)tv[i].z * RE15_GSZ_KEY_SKALA_Q12) >> 12);
+                }
+                for (int i = 0; qv && i < m.meshes[k].quad_vertex_count; i++) {
+                    qv[i].x = (int16_t)(((int32_t)qv[i].x * RE15_GSZ_KEY_SKALA_Q12) >> 12); qv[i].y = (int16_t)(((int32_t)qv[i].y * RE15_GSZ_KEY_SKALA_Q12) >> 12);
+                    qv[i].z = (int16_t)(((int32_t)qv[i].z * RE15_GSZ_KEY_SKALA_Q12) >> 12);
+                }
+            }
+        }
+        s_key_md1_ok = 1;
+    }
+    if (n) *n = (int)sizeof s_key_md1_gross;
+    return s_key_md1_gross;
 }
 const uint8_t *re15_gatorszene_r41_tim_bytes(uint16_t room_id, int *n)
 {
@@ -1368,7 +1395,8 @@ static int gator_tot(void)
  *    (0,-4096,0) @0x354C+0x60 = 00 00 00 f0);
  *  - Hoehe: die tiefste Ecke des gekippten Quadrats auf der Wasseroberflaeche (p0 der Wasserzone, ROOM2090 @0x009D6 ac f9). */
 #define GSZ_RASTER          100
-#define GSZ_KEY_HALB        90      /* Quadrat-Halbseite: re15_gsz_key_md1 Ecken (-90/90) = ROOM7040 MD1 @0x354C+0x38 */
+#define GSZ_KEY_HALB        (90 * RE15_GSZ_KEY_SKALA_Q12 / 4096)   /* Quadrat-Halbseite: re15_gsz_key_md1 Ecken (-90/90) = ROOM7040 MD1 @0x354C+0x38, mal
+                                                                    * Spur-G2-Skala (Punkt 6) = 135 */
 #define GSZ_BILD_X0         24      /* Bildrand wie leiche_lage.py (x 24..296, y 40..205) */
 #define GSZ_BILD_X1         296
 #define GSZ_BILD_Y0         40
@@ -1383,7 +1411,7 @@ static int gator_tot(void)
  * < 10,4 px liefert". 10,4 = Quadrat des Ankunfts-Schluessels der abgenommenen Fassung 1 (F-E2 Punkt 2, Riegel test_r41_gatorszene.cmake
  * `_quad10 LESS 104`); gemessen vorher: K3-Wandlage 6,3 Bildpunkte (tests:FGM). Die Suche weitet den Naehe-Radius r_nah in Vierteln bis zum
  * Doppelten (PORT-WAHL; die Form "der Leiche am naechsten, darin das groesste Bild" bleibt); reicht das nicht, gilt die beste gefundene Lage. */
-#define GSZ_KEY_BILD_MIN10  104
+#define GSZ_KEY_BILD_MIN10  (104 * RE15_GSZ_KEY_SKALA_Q12 / 4096)   /* Spur G2 (Punkt 6): mit der Skala, damit die Lagewahl dieselbe bleibt (156) */
 #define GSZ_SUCH_STUFEN     4
 /* Runde 41 Spur P (Befund: integration_r41_gatorszene_tod_r1 rot mit 0 Pixeln Schluessel): die Einstellung zeigt den Schluessel nur, wenn die
  * Spielfigur ihn in dieser Kamera nicht verdeckt - Lauf T0: Leon (1325,-25550), Kamera Cut 0 (2754,-26190), Schluessel (1200,-24800) hinter

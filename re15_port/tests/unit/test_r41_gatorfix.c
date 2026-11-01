@@ -13,6 +13,7 @@
 
 #include "re15_md1.h"
 #include "re15_anim_select.h"
+#include "../../engine/src/gen/gatorszene_r41_schluessel.inc"   /* RE2-Modell bytegleich (Gegenprobe Punkt 6) */
 
 /* ---- Geometrie-Helfer ------------------------------------------------------------------------------------------------------- */
 static inline int32_t g2_q12(int32_t a, int32_t b) { return (int32_t)(((int64_t)a * b) >> 12); }
@@ -594,6 +595,83 @@ static int ganglog(const char *pfad, const char *modus)
     return (n == soll && gut == soll) ? 0 : 1;
 }
 
+/* ---- Riegel Punkt 6: Schluessel groesser (Ankunft auf der Leiche + nach dem Tod) ------------------------------------------------- */
+/* Weltmatrix eines Props mit einer Elternstufe (main.c pc_prop_world, Tiefe 1 genuegt: Schluessel -> Leiche) */
+static void g2_prop_welt(int k, int32_t r[9], int32_t t[3])
+{
+    g2_prop_matrix(g_scd.props[k].rot_x, g_scd.props[k].rot_y, g_scd.props[k].rot_z, r);
+    t[0] = g_scd.props[k].x; t[1] = g_scd.props[k].y; t[2] = g_scd.props[k].z;
+    const int pid = g_scd.props[k].parent_obj;
+    const int pk = (pid >= 0) ? prop_von(pid) : -1;
+    if (pk < 0 || pk == k) return;
+    int32_t pr[9], nr[9], nt[3];
+    g2_prop_matrix(g_scd.props[pk].rot_x, g_scd.props[pk].rot_y, g_scd.props[pk].rot_z, pr);
+    for (int a = 0; a < 3; a++) {
+        for (int b = 0; b < 3; b++) nr[a*3+b] = (int32_t)(((int64_t)pr[a*3] * r[b] + (int64_t)pr[a*3+1] * r[3+b] + (int64_t)pr[a*3+2] * r[6+b]) >> 12);
+        nt[a] = g_scd.props[pk].x * (a == 0) + g_scd.props[pk].y * (a == 1) + g_scd.props[pk].z * (a == 2)
+              + (int32_t)(((int64_t)pr[a*3] * t[0] + (int64_t)pr[a*3+1] * t[1] + (int64_t)pr[a*3+2] * t[2]) >> 12);
+    }
+    memcpy(r, nr, sizeof nr); memcpy(t, nt, sizeof nt);
+}
+/* Bildkasten (Breite x Hoehe) des Schluessel-Modells md1 im Bild von Cut cut an der aktuellen Prop-Lage */
+static int g2_key_kasten(const uint8_t *md1, int n, int cut, int *b, int *h)
+{
+    static re15_md1_t m; static int32_t v[64][3];
+    const int k = prop_von(RE15_GSZ_KEY_OBJ);
+    if (k < 0 || !g_scd.props[k].active || re15_md1_parse(md1, n, &m) != 0) return 0;
+    const int nv = g2_scheitel(&m, -1, v, 64);
+    int32_t r[9], t[3]; g2_prop_welt(k, r, t);
+    int x0 = 99999, x1 = -99999, y0 = 99999, y1 = -99999;
+    for (int i = 0; i < nv; i++) {
+        const int32_t w[3] = { t[0] + (int32_t)(((int64_t)r[0] * v[i][0] + (int64_t)r[1] * v[i][1] + (int64_t)r[2] * v[i][2]) >> 12),
+                               t[1] + (int32_t)(((int64_t)r[3] * v[i][0] + (int64_t)r[4] * v[i][1] + (int64_t)r[5] * v[i][2]) >> 12),
+                               t[2] + (int32_t)(((int64_t)r[6] * v[i][0] + (int64_t)r[7] * v[i][1] + (int64_t)r[8] * v[i][2]) >> 12) };
+        int sx = 0, sy = 0;
+        re15_gr2_im_bild_cut(cut, w, &sx, &sy);
+        if (sx < x0) x0 = sx; if (sx > x1) x1 = sx; if (sy < y0) y0 = sy; if (sy > y1) y1 = sy;
+    }
+    *b = x1 - x0; *h = y1 - y0;
+    return 1;
+}
+static void teil_schluessel_g2(int elza)
+{
+    printf("== schluessel%s (Punkt 6) ==\n", elza ? "_elza" : "");
+    int n = 0; const uint8_t *md = re15_gatorszene_r41_md1_bytes((uint16_t)(0x2090 + elza), &n);
+    static re15_md1_t m; static int32_t v[64][3];
+    int32_t lo[3], hi[3], lo0[3], hi0[3];
+    const int nv = (md && re15_md1_parse(md, n, &m) == 0) ? g2_scheitel(&m, -1, v, 64) : 0;
+    g2_bbox(v, nv, lo, hi);
+    static re15_md1_t m0; static int32_t v0[64][3];
+    const int nv0 = (re15_md1_parse(re15_gsz_key_md1, (int)sizeof re15_gsz_key_md1, &m0) == 0) ? g2_scheitel(&m0, -1, v0, 64) : 0;
+    g2_bbox(v0, nv0, lo0, hi0);
+    printf("    gezeichnetes Modell: %d Scheitel x %d..%d z %d..%d; RE2-Modell ROOM7040 @0x354C: x %d..%d z %d..%d\n", nv, lo[0], hi[0], lo[2], hi[2],
+           lo0[0], hi0[0], lo0[2], hi0[2]);
+    PRUEF(nv == 4 && hi[0] - lo[0] == 270 && hi[2] - lo[2] == 270 && hi0[0] - lo0[0] == 180, "Quadrat 270 statt 180 (RE2-Modell bytegleich, Skala 3/2)");
+    /* Ankunft: Leiche + Schluessel in der Leichen-Einstellung Cut 0 (Programm 1, GSZ_CUT_LEICHE) */
+    const uint16_t r2090 = (uint16_t)(0x2090 + elza);
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    if (room_boot(r2090, -8200, 0, -25550, 0, 0) != 0) return;
+    for (int f = 0; f < 10; f++) frame(0, 0);
+    int b = 0, h = 0, b0 = 0, h0 = 0;
+    const int ok1 = g2_key_kasten(md, n, 0, &b, &h), ok0 = g2_key_kasten(re15_gsz_key_md1, (int)sizeof re15_gsz_key_md1, 0, &b0, &h0);
+    printf("    Ankunft Cut 0: Kasten %d x %d Bildpunkte (mit dem RE2-Modell wie vorher %d x %d)\n", b, h, b0, h0);
+    PRUEF(ok1 && ok0 && b * h * 10 >= b0 * h0 * 18, "Ankunft: Schluessel-Flaeche >= 1,8 x (Skala 3/2 = 2,25 x, Rundung ganzer Bildpunkte) (%d x %d gegen %d x %d)", b, h, b0, h0);
+    /* nach dem Tod (Form teil_schluessel der Spur F: Leiche Zustand 7) */
+    re15_game_state_init();
+    re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN, 1);
+    if (room_boot(r2090, -8200, 0, -25550, 0, 0) != 0) return;
+    re15_enemy_ai_set_paused(1);
+    re15_actor_t *g = gator_setzen();
+    if (g) { g->x = -3000; g->z = -22000; g->y = -1200; g->state = 7; }
+    for (int f = 0; f < 5; f++) frame(0, 0);
+    const int cut = re15_gatorszene_r41_key_kamera();
+    const int ok2 = cut >= 0 && g2_key_kasten(md, n, cut, &b, &h), ok3 = cut >= 0 && g2_key_kasten(re15_gsz_key_md1, (int)sizeof re15_gsz_key_md1, cut, &b0, &h0);
+    printf("    nach dem Tod Cut %d: Kasten %d x %d Bildpunkte (RE2-Modell %d x %d)\n", cut, b, h, b0, h0);
+    PRUEF(ok2 && ok3 && b * h * 10 >= b0 * h0 * 18, "nach dem Tod: Schluessel-Flaeche >= 1,8 x (%d x %d gegen %d x %d)", b, h, b0, h0);
+    re15_enemy_ai_set_paused(0);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -612,6 +690,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "montage_elza")) teil_montage(1);
     if (alle || !strcmp(teil, "marvin"))       teil_marvin(0);
     if (alle || !strcmp(teil, "marvin_elza"))  teil_marvin(1);
+    if (alle || !strcmp(teil, "schluessel"))      teil_schluessel_g2(0);
+    if (alle || !strcmp(teil, "schluessel_elza")) teil_schluessel_g2(1);
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

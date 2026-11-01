@@ -71,6 +71,10 @@ int  re15_gatorszene_r41_spinnen_verworfen(void);
                                         * (Bild Cut 0). Nachbesserung 5 (Entscheid F-E2): die Leiche liegt wieder im Suedbecken
                                         * (Ankunftskamera Cut 0, Kampfbeginn in Leons Beckenzone 0); Nachbesserung 4 nahm obj 3
                                         * @0x00A8E im Nordbecken (Cut 5). */
+/* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 6 "Der Schluessel am Anfang und Ende der Szene duerfte gerne etwas groesser sein"): PORT-WAHL der
+ * Gestaltung, Faktor 3/2 (Q12 6144) auf das RE2-Weltmodell (Quadrat 180 -> 270); gemessen am Bild (Dossier G2 §6): Ankunft Cut 0 und
+ * Schluessel-Einstellung nach dem Tod je Kasten vorher/nachher. */
+#define RE15_GSZ_KEY_SKALA_Q12   6144
 #define RE15_GSZ_KEY_OBJ         4     /* Port-Prop (nOmodel = 4, RDT-Kopf Byte 2), Muster dining_r38 obj 6                */
 
 /* Zustaende der Szene (nur RAM; waehrend der Szene kann weder gespeichert noch gekaempft werden). */

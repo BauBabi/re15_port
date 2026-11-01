@@ -89,3 +89,15 @@ integration_r41_gatorfix_gang_szene(_elza) (3 Treffer, letzter <= F90, jeder nae
 FUN_80044210 vergleicht MAIN/SUB mit dem Cache und tut bei Gleichheit nichts (@0x80044278-80 -> @0x800443B0).
 **Messung nachher** (n_marvin_leon): `[bgm] stage=1 room=08 entry=FF3C -> MAIN3C ... [unveraendert, laeuft durch]`, zurueck ebenso. Riegel
 unit_r41_gatorfix_marvin(_elza): Eintrag 0xFF3C beim Ausloesen, in jedem Szenenbild und zurueck; Gegenprobe 2080 ohne Szene = Raumtabelle (-1).
+
+## Punkt 6 - Schluessel groesser
+**Messung vorher** (Bau vor dem Punkt, Laeufe v_ank_leon / v_tod_leon (RE15_GB_TEST=3 Todesrolle), Bilder `G2_belege/p6_vorher_leon_ankunft_crop.jpg`,
+`p6_vorher_leon_tod_crop.jpg`): RE2-Modell Platform Key (ROOM7040 MD1 @0x354C, Quadrat +-90); Kasten im Bild (Projektion wie der Zeichner)
+Ankunft Cut 0 11 x 11, nach dem Tod 21 x 18 Bildpunkte (Lage (-5300,-26200), Einstellung Cut 1 bzw. im Harness Cut 7).
+**Aenderung** (PORT-WAHL Nutzerwunsch "etwas groesser", Faktor 3/2, `RE15_GSZ_KEY_SKALA_Q12` 6144): re15_gatorszene_r41_md1_bytes liefert eine
+Kopie des bytegleichen RE2-MD1 mit skalierten Scheiteln (+-135, Normalen unveraendert); GSZ_KEY_HALB (Wasser-Quadrat, Kippung) und die
+Bildgroessen-Schwelle der Lagewahl GSZ_KEY_BILD_MIN10 mit derselben Skala - die Lage nach dem Tod bleibt dieselbe (Lauf n_tod_leon:
+(-5300,-1701,-26200), vorher (-5300,-1669,-26200); y hoeher, weil das groessere gekippte Quadrat mit der tiefsten Ecke auf dem Wasser liegt).
+**Messung nachher** (n4_ank_leon / n_tod_leon, `p6_nachher_*`): Ankunft 15 x 18, nach dem Tod 32 x 27 (Harness), exe integration_r41_gatorszene_tod:
+Kasten 22 x 19, Quadrat 14,8 Bildpunkte. Riegel unit_r41_gatorfix_schluessel(_elza) (Flaeche >= 1,8 x die mit dem RE2-Modell im selben Lauf).
+Nachgezogen: unit_r41_gatorszene_schluessel (Mitte hoechstens sqrt(2) x 135 = 191 statt 127 ueber dem Wasser).
