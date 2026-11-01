@@ -60,6 +60,7 @@
 #include <stdio.h>    /* RE15_RE2_TRACE */
 #include <string.h>   /* memset (Part-Record-Reset) */
 #include "re15_actor.h"
+#include "re15_spinnenlache_r41.h" /* Runde 41 Spur S, Nachbesserung 2: Flecken toter Babyspinnen (Raumwechsel) */
 #include "re15_math.h"       /* re15_vector_normal — MatrixNormal_0-Zwilling */
 #include "re15_ai_flavor.h"
 #include "re15_gegner_r39.h"   /* Runde 39 Spur E: RE1.5-Kriech-Wecker (@0x80104718-48) als Ausgang des RE2-WAIT */
@@ -373,6 +374,9 @@ void re15_re2z_onesave_reset(void);                           /* Welle B (below)
 void re15_re2z_rng_reset(void) { s_re2_rng = 0xD2706CA4u;     /* room load — keeps runs deterministic */
                                  re15_re2z_onesave_reset();
                                  re15_r37_marken_loeschen();   /* Runde 37 Spur H: Spawn-Marken leben mit dem Aktor-Feld */
+                                 re15_spinnenlache_raum_reset();   /* Runde 41 Spur S NB2: Flecken toter Babys; RE2 gibt den
+                                                                   * Record-Pool nur im Raumwechsel frei (FUN_8001633c,
+                                                                   * einziger Aufrufer @0x80026e0c) */
                                  re15_re2dog_room_reset(); }  /* WELLE C: 0x800CFBF4-Analog (der
                                                                * einzige EXE-Clear FUN_80052f3c ist
                                                                * ein Room-Init) */

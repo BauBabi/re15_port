@@ -10,6 +10,8 @@
 #                          L (Nachbesserung 1): Blutfarbe — das ganze Sub-Byte von FUN_80019700 bis zum Zeichner
 #                          (fx_plattform_pc.c re15_pc_esp_clut, ohne SDL wie probe_r34_plattform), Byte-Pins aus
 #                          info/Re1.5/PSX.EXE und info/re2leon/COMMON/BIN/EMS25.BIN, Paletten aus TEX.TIM (RE1.5 und RE2).
+#                          L8/M (Nachbesserung 2): Babytod-Record (EMS26 @0x80100d10-14, Tabelle @0x801010C7) und die
+#                          Lache der Leiche (RE1.5 CORPSE 0x801153d4, RE2 FUN_80104DE8, Babyfleck), spinnenlache_r41.c.
 add_executable(test_r41_spinnengore
     ${CMAKE_CURRENT_LIST_DIR}/../test_r41_spinnengore.c
     ${CMAKE_SOURCE_DIR}/platform/pc/src/fx_plattform_pc.c)
@@ -27,7 +29,8 @@ set_tests_properties(unit_r41_spinnengore PROPERTIES TIMEOUT 120)
 #   integration_r41_spinnengore   echte exe, Messschiene RE15_SPINNEN_LOG: Leon ROOM2070 Redhawk (RE2-KI = Standard),
 #                                 Elza ROOM2071 Redhawk, Leon ROOM2070 Remington (Bein), Leon ROOM2070 Redhawk mit
 #                                 RE15_KEIN_80PROZENT_GORE=1 (Gegenprobe: kein Platzen). Auswerter
-#                                 `test_r41_spinnengore pruef_log <log> platzt|bein|aus`.
+#                                 `test_r41_spinnengore pruef_log <log> platzt|bein|aus`. Nachbesserung 2: RE15_LACHE_LOG
+#                                 (main.c), `pruef_lache <log> re2|r15` fuer L7 und den RE1.5-Lauf E7R15.
 if(TARGET re15_pc)
     add_test(NAME integration_r41_spinnengore
              COMMAND "${CMAKE_COMMAND}"

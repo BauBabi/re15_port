@@ -20,10 +20,18 @@
  *      steigt um (Sub >> 3) * 0x40 (@0x8001973c/54/84/88). Spinnenblut 0x82000 (@0x80113b10/30/50, @0x8011463c-54)
  *      -> CLUT 0x7991 = TEX.TIM y 486 gruen; Zombie 0x2000 -> 0x7951 = y 485 rot. RE2-Gehirn: die Blut-Records 0/1/3
  *      von FUN_801056DC (@0x80106684, Sub 0x19/0x09, nie die rote Grundzeile y 488) nehmen den Spinnen-Code.
+ *   L8 Babytod (Nachbesserung 2, Abnahme 2 Mangel 2): EMS26 @0x80100d10-14 Record = Tabelle @0x801010C7 & 0x7f
+ *      (@0x80100f50); Record 0 = `00 19 00 00 00 10` -> Spinnenblut gruen, Records 3/4 (Zeilen 10/11/16) bleiben.
+ *   M  Lache (Nachbesserung 2, Abnahme 2 Mangel 1): RE1.5 CORPSE 0x801153d4 (0x00DF809F, +8 je Takt, 91 bzw. 121
+ *      Takte, Eintritt je Todesweg), RE2 FUN_80104DE8 (0x00BF10BF, +8 je Takt, 90 Takte, Wasser sperrt), Babyspinne
+ *      (Tinte beim SPLAT, der Record bleibt nach dem DESPAWN liegen). Byte-Pins aus STAGE2/EMS25/EMS26/RE2-PSX.EXE.
  * Modus 2 `pruef_log <log> <art>` = Auswerter des Integrationslaufs (RE15_SPINNEN_LOG mit {G..}-Klammern):
  *   art "platzt": eine RE2-Spinne (o=1) stirbt (st=3) und traegt danach sh mit Teil 0 und 19 und fl == 0x7fff8.
  *   art "bein":   eine RE2-Spinne im Treffer (st=2) traegt ein geplatztes Beinpaar (sh-Bits in 3..18).
  *   art "aus":    eine RE2-Spinne stirbt, die Teilschicht bleibt aus (ta=0 in jedem Bild).
+ * Modus 3 `pruef_lache <log> <art>` = Auswerter von RE15_LACHE_LOG (main.c, je Schatten einer Spinne):
+ *   art "re2": eine Leiche (st=7) traegt pool=1 rgb=bf10bf und erreicht sichtbar 2020 x 2120 (1300/1400 + 90 x 8).
+ *   art "r15": eine Leiche traegt pool=1 rgb=9f80df und erreicht 2028 x 2128 (+ 91 x 8) oder 2268 x 2368 (+ 121 x 8).
  */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
@@ -32,6 +40,8 @@
 #include "re15_esp.h"
 #include "re15_teile_r15.h"
 #include "re15_spinnengore_r41.h"
+#include "re15_spinnenlache_r41.h"
+#include "re15_aot.h"
 #include "fx_plattform_pc.h"   /* re15_pc_esp_clut / re15_pc_fx_seite_clut_ok: der Zeichner (platform/pc/src) */
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,6 +50,7 @@
 
 void re15_aspider_beine_reset(void);
 int  re15_re2spider_tick(int slot);
+int  re15_re2spider_baby_tick(int slot);
 
 static int fails = 0;
 #define CHECK(c, ...) do { if (!(c)) { printf("FAIL: " __VA_ARGS__); printf("\n"); fails++; } } while (0)
@@ -374,8 +385,267 @@ static void test_blutfarbe(void)
     re15_enemy_ai_run_all(1);
     fx_zaehlen(&g, &r, &a);
     CHECK(g >= 1 && r == 0, "L7: RE1.5-Tod w3: gruen %d rot %d", g, r);
+    /* L8 RE2-Babyspinne, Tod (SPLAT @0x80100C84): FUN_80100F28(self, 0, Tabelle @0x801010C7[+0x5]) @0x80100d10-14 */
+    {
+        size_t n26 = 0;
+        uint8_t *e26 = datei(RE15_REPO_INFO "/re2leon/COMMON/BIN/EMS26.BIN", &n26);
+        CHECK(e26 != NULL && n26 > 0x10f0, "L8: info/re2leon/COMMON/BIN/EMS26.BIN");
+        static const uint8_t tab_soll[22] = { 0x80,0,0,0,0,0,0,0,0,0,3,4,0,0,0,0,3,0,0,0,0,0 };
+        if (e26 && n26 > 0x10f0) {
+            CHECK(rd32(e26, 0x80100d10u) == 0x902610c7u && rd32(e26, 0x80100d14u) == 0x0c0403cau,
+                  "L8: @0x80100d10-14 nicht `lbu a2,4295(at)` / `jal 0x80100f28` (%08x %08x)", rd32(e26, 0x80100d10u), rd32(e26, 0x80100d14u));
+            CHECK(rd32(e26, 0x80100f50u) == 0x30c3007fu, "L8: @0x80100f50 nicht `andi v1,a2,0x7f`");
+            CHECK(memcmp(e26 + 0x10c7, tab_soll, sizeof tab_soll) == 0, "L8: Tabelle @0x801010C7 weicht ab");
+            const uint8_t *r0 = e26 + 0x10dc;
+            CHECK(r0[0] == 0 && r0[1] == 0x19 && w16(r0, 4) == 0x1000, "L8: EMS26 Record 0 nicht Effekt 0 Sub 0x19 (Spinnenblut)");
+        }
+        free(e26);
+        static const struct { uint8_t zeile; int blut; } Z[] = { {0,1},{3,1},{7,1},{8,1},{13,1},{20,1},{10,0},{11,0},{16,0} };
+        for (size_t k = 0; k < sizeof Z / sizeof Z[0]; k++) {
+            frisch(RE15_AI_FLAVOR_RE2);
+            SP->type = 0x26; SP->re2s_baby_spawned = 1; SP->grid_id = 1; SP->state = 0;
+            re15_re2spider_baby_tick(S);                                  /* INIT */
+            re15_esp_fx_reset();
+            SP->hp = -1; SP->state = 3; SP->sub_state_1 = Z[k].zeile; SP->sub_state_2 = 0; SP->sub_state_3 = 0;
+            re15_re2spider_baby_tick(S);
+            fx_zaehlen(&g, &r, &a);
+            if (Z[k].blut)
+                CHECK(g == 1 && r == 0 && a == 0, "L8: Babytod Zeile %d: gruen %d rot %d alt-0x1500 %d (Record 0 = Spinnenblut)",
+                      Z[k].zeile, g, r, a);
+            else
+                CHECK(g == 0 && a == 1, "L8: Babytod Zeile %d: Record %d ist kein Blut, gruen %d alt-0x1500 %d",
+                      Z[k].zeile, tab_soll[Z[k].zeile] & 0x7f, g, a);
+        }
+    }
     re15_esp_set_global_bank(NULL);
     free(core); free(tex); free(core2); free(tex2);
+}
+
+/* ---- M: Lache der Spinnenleiche (Runde 41 Spur S, Nachbesserung 2) --------------------------------------------- */
+static void pin(const uint8_t *b, size_t n, uint32_t basis, uint32_t a, uint32_t soll, const char *was)
+{
+    size_t o = (size_t)(a - basis);
+    uint32_t ist = (b && o + 4 <= n) ? w32(b, o) : 0xdeadbeefu;
+    CHECK(ist == soll, "M1: @0x%08x nicht `%s` (%08x)", a, was, ist);
+}
+extern int g_test_room_se_log[2048], g_test_room_se_n;   /* SE-Spion tests/test_support.c (FUN_800453d0) */
+static int raum_se_zahl(int id)
+{
+    int n = 0;
+    for (int i = 0; i < g_test_room_se_n && i < 2048; i++) if (g_test_room_se_log[i] == id) n++;
+    return n;
+}
+static void lache_rgb(const re15_actor_t *e, int32_t *hx, int32_t *hz, int *pool, uint8_t rgb[3])
+{
+    *hx = 500; *hz = 600; *pool = 0; rgb[0] = rgb[1] = rgb[2] = 0;
+    re15_spinnenlache_render(e, hx, hz, pool, &rgb[0], &rgb[1], &rgb[2]);
+}
+static void test_lache(void)
+{
+    size_t n = 0;
+    /* M1 Byte-Pins (RE1.5 STAGE2 aus shared_assets = Mod-Baum; Mod = Disc fuer 0x80113f40-0x801155e0, Dossier) */
+    uint8_t *st2 = datei(RE15_ASSET_PSX_DIR "/BIN/STAGE2.BIN", &n);
+    CHECK(st2 != NULL, "M1: STAGE2.BIN");
+    if (st2) {
+        const uint32_t B = 0x80100000u;
+        pin(st2, n, B, 0x80118e40u, 0x801153d4u, "Zustandstabelle [7] = CORPSE 0x801153d4");
+        pin(st2, n, B, 0x8011541cu, 0x3402005au, "ori v0,zero,0x5a");
+        pin(st2, n, B, 0x80115420u, 0xa062009eu, "sb v0,158(v1)");
+        pin(st2, n, B, 0x8011546cu, 0x3c0600dfu, "lui a2,0xdf");
+        pin(st2, n, B, 0x80115470u, 0x34c6809fu, "ori a2,a2,0x809f");
+        pin(st2, n, B, 0x801154a8u, 0x24420008u, "addiu v0,v0,8");
+        pin(st2, n, B, 0x801154acu, 0x24630008u, "addiu v1,v1,8");
+        pin(st2, n, B, 0x801154b0u, 0xa48200bcu, "sh v0,188(a0)");
+        pin(st2, n, B, 0x801154b8u, 0xa48300beu, "sh v1,190(a0)");
+        pin(st2, n, B, 0x801154c4u, 0x34020078u, "ori v0,zero,0x78");
+        pin(st2, n, B, 0x801155bcu, 0x34040009u, "ori a0,zero,0x9");
+        pin(st2, n, B, 0x801155ccu, 0x0c0114f4u, "jal 0x800453d0");
+        pin(st2, n, B, 0x80114578u, 0x34020007u, "ori v0,zero,0x7 (Platzweg Phase 2)");
+        pin(st2, n, B, 0x80114580u, 0xac620004u, "sw v0,4(v1)");
+        pin(st2, n, B, 0x80114b1cu, 0x34020007u, "ori v0,zero,0x7 (Krit-Platzer)");
+        pin(st2, n, B, 0x80114b20u, 0xa0620005u, "sb v0,5(v1)");
+        pin(st2, n, B, 0x80114d4cu, 0x3c030300u, "lui v1,0x300");
+        pin(st2, n, B, 0x80114d58u, 0x34630007u, "ori v1,v1,0x7");
+        pin(st2, n, B, 0x80114d60u, 0xac430004u, "sw v1,4(v0)");
+    }
+    free(st2);
+    uint8_t *e25 = datei(RE15_REPO_INFO "/re2leon/COMMON/BIN/EMS25.BIN", &n);
+    CHECK(e25 != NULL, "M1: EMS25.BIN");
+    if (e25) {
+        const uint32_t B = 0x80100000u;
+        pin(e25, n, B, 0x80100180u, 0x0c04137au, "jal 0x80104de8");
+        pin(e25, n, B, 0x80100368u, 0x3c060320u, "lui a2,0x320");
+        pin(e25, n, B, 0x80104d7cu, 0x24020002u, "addiu v0,zero,2");
+        pin(e25, n, B, 0x80104d80u, 0xa2020225u, "sb v0,549(s0)");
+        pin(e25, n, B, 0x80104e7cu, 0x3c0500bfu, "lui a1,0xbf");
+        pin(e25, n, B, 0x80104e80u, 0x34a510bfu, "ori a1,a1,0x10bf");
+        pin(e25, n, B, 0x80104eacu, 0x2402005au, "addiu v0,zero,90");
+        pin(e25, n, B, 0x80104eb4u, 0xa202016bu, "sb v0,363(s0)");
+        pin(e25, n, B, 0x80104ed0u, 0x24420008u, "addiu v0,v0,8");
+        pin(e25, n, B, 0x80104ed8u, 0xa6220004u, "sh v0,4(s1)");
+        pin(e25, n, B, 0x80104edcu, 0xa6230006u, "sh v1,6(s1)");
+    }
+    free(e25);
+    uint8_t *e26 = datei(RE15_REPO_INFO "/re2leon/COMMON/BIN/EMS26.BIN", &n);
+    CHECK(e26 != NULL, "M1: EMS26.BIN");
+    if (e26) {
+        const uint32_t B = 0x80100000u;
+        pin(e26, n, B, 0x8010024cu, 0x3c0600c8u, "lui a2,0xc8");
+        pin(e26, n, B, 0x80100250u, 0x34c600c8u, "ori a2,a2,0xc8");
+        pin(e26, n, B, 0x80100cb4u, 0x3c0500bfu, "lui a1,0xbf");
+        pin(e26, n, B, 0x80100cb8u, 0x34a510bfu, "ori a1,a1,0x10bf");
+        pin(e26, n, B, 0x80100cd8u, 0xacc2001cu, "sw v0,28(a2)");
+        pin(e26, n, B, 0x80100ce0u, 0xacc30044u, "sw v1,68(a2)");
+    }
+    free(e26);
+    uint8_t *x2 = datei(RE15_REPO_INFO "/re2leon/PSX.EXE", &n);
+    CHECK(x2 != NULL && n > 0x800, "M1: info/re2leon/PSX.EXE");
+    if (x2 && n > 0x800) {
+        const uint32_t B = w32(x2, 0x18) - 0x800u;
+        pin(x2, n, B, 0x8001b258u, 0xac800000u, "sw zero,0(a0) (FUN_8001B250 nullt nur word0/word1)");
+        pin(x2, n, B, 0x8001b25cu, 0xac800004u, "sw zero,4(a0)");
+        pin(x2, n, B, 0x800268d8u, 0x0c005a2du, "jal 0x800168b4 (nach dem Handler)");
+        pin(x2, n, B, 0x80016960u, 0x34630004u, "ori v1,v1,0x4");
+        pin(x2, n, B, 0x80016968u, 0xa203000eu, "sb v1,14(s0)");
+        pin(x2, n, B, 0x80026e0cu, 0x0c0058cfu, "jal 0x8001633c (Pool-Init im Raumwechsel)");
+        pin(x2, n, B, 0x8001639cu, 0xa220ffceu, "sb zero,-50(s1)");
+    }
+    free(x2);
+
+    int32_t hx, hz; int pool; uint8_t rgb[3];
+    /* M2 RE1.5, Platzweg: Leiche Phase 0 -> 91 Schritte zu 8, Tinte 0x00DF809F, dann Phase 2 */
+    frisch(RE15_AI_FLAVOR_RE15);
+    SP->state = 7; SP->sub_state_3 = 0; SP->hp = -5;
+    lache_rgb(SP, &hx, &hz, &pool, rgb);
+    CHECK(pool == 0, "M2: Leiche vor dem ersten Takt hat schon Tinte");
+    g_test_room_se_n = 0;
+    for (int t = 0; t < 90; t++) re15_enemy_ai_run_all(1);
+    CHECK(SP->crow_shadow_w == 1300 + 90 * 8 && SP->crow_shadow_h == 1400 + 90 * 8 && SP->sub_state_3 == 1,
+          "M2: RE1.5 nach 90 Takten %u x %u Phase %d (Soll 2020 x 2120, Phase 1)", SP->crow_shadow_w, SP->crow_shadow_h, SP->sub_state_3);
+    CHECK(raum_se_zahl(9) == 0, "M2: Raum-SE 9 schon vor dem Ende der Lache (%d)", raum_se_zahl(9));
+    re15_enemy_ai_run_all(1);
+    CHECK(SP->crow_shadow_w == 2028 && SP->crow_shadow_h == 2128 && SP->sub_state_3 == 2,
+          "M2: RE1.5 nach 91 Takten %u x %u Phase %d (Soll 2028 x 2128, Phase 2)", SP->crow_shadow_w, SP->crow_shadow_h, SP->sub_state_3);
+    CHECK(raum_se_zahl(9) == 1, "M2: Raum-SE 9 am Ende der Lache %d-mal (Soll 1, @0x801155bc-cc)", raum_se_zahl(9));
+    re15_enemy_ai_run_all(1);
+    CHECK(SP->crow_shadow_w == 2028, "M2: Phase 2 waechst weiter (%u)", SP->crow_shadow_w);
+    CHECK(raum_se_zahl(9) == 1, "M2: Raum-SE 9 wiederholt sich in Phase 2 (%d)", raum_se_zahl(9));
+    lache_rgb(SP, &hx, &hz, &pool, rgb);
+    CHECK(pool == 1 && hx == 2028 && hz == 2128 && rgb[0] == 0x9f && rgb[1] == 0x80 && rgb[2] == 0xdf,
+          "M2: Zeichner pool %d %d x %d rgb %02x%02x%02x (Soll 9f80df)", pool, (int)hx, (int)hz, rgb[0], rgb[1], rgb[2]);
+    /* M3 RE1.5, Weg 0x8011461c: Phase 3 -> 121 Schritte */
+    frisch(RE15_AI_FLAVOR_RE15);
+    SP->state = 7; SP->sub_state_3 = 3; SP->hp = -5;
+    for (int t = 0; t < 121; t++) re15_enemy_ai_run_all(1);
+    CHECK(SP->crow_shadow_w == 1300 + 121 * 8 && SP->sub_state_3 == 2,
+          "M3: RE1.5 Weg 0x8011461c %u Phase %d (Soll 2268, Phase 2)", SP->crow_shadow_w, SP->sub_state_3);
+    /* M4 Eintritts-Phase je Todesweg (w7/w9 Platzweg; w3 schwach; w20 mit Krit -> +0x5 = 7 @0x80114b20 -> Platzweg) */
+    static const struct { uint8_t w, bits, phase; } E[] = { {7,0x41,0}, {9,0x01,0}, {3,0x01,3}, {20,0x41,0}, {20,0x01,3} };
+    for (size_t k = 0; k < sizeof E / sizeof E[0]; k++) {
+        frisch(RE15_AI_FLAVOR_RE15);
+        SP->state = 3; SP->sub_state_1 = E[k].w; SP->sub_state_3 = 0; SP->hp = -5; SP->hit_react = E[k].bits;
+        for (int t = 0; t < 400 && SP->state == 3; t++) re15_enemy_ai_run_all(1);
+        CHECK(SP->state == 7, "M4: w%d kommt nicht in die Leiche", E[k].w);
+        /* der Takt, der +0x4 = 7 schreibt, laeuft die Leiche noch nicht; Phase 0/3 wird im naechsten Takt zu 1/4 */
+        re15_enemy_ai_run_all(1);
+        CHECK(SP->sub_state_3 == (uint8_t)(E[k].phase + 1u), "M4: w%d bits %02x Leichen-Phase %d (Soll %d)",
+              E[k].w, E[k].bits, SP->sub_state_3, E[k].phase + 1);
+    }
+    /* M5 RE2: CORPSE +0x225 = 2, FUN_80104DE8 -> 90 Schritte, Tinte 0x00BF10BF, dann +0x225 = 4 */
+    re15_spinnengore_test_schalter(1);
+    re2_spinne(3, 7, 0x41);
+    int t5 = 0;
+    for (; t5 < 800 && SP->re2s_gs225 != 4u; t5++) re2_takt();
+    CHECK(SP->re2s_gs225 == 4u && SP->crow_shadow_w == 1300 + 90 * 8 && SP->crow_shadow_h == 1400 + 90 * 8,
+          "M5: RE2 +0x225 %d, %u x %u nach %d Takten (Soll 4, 2020 x 2120)", SP->re2s_gs225, SP->crow_shadow_w, SP->crow_shadow_h, t5);
+    lache_rgb(SP, &hx, &hz, &pool, rgb);
+    CHECK(pool == 1 && rgb[0] == 0xbf && rgb[1] == 0x10 && rgb[2] == 0xbf, "M5: RE2-Tinte %02x%02x%02x (Soll bf10bf)", rgb[0], rgb[1], rgb[2]);
+    for (int t = 0; t < 5; t++) re2_takt();
+    CHECK(SP->crow_shadow_w == 2020, "M5: [4] waechst weiter (%u)", SP->crow_shadow_w);
+    /* M6 RE2 im Wasser: [2] bleibt stehen (`jal 0x800527b4` / `bne v0,zero` @0x80104e70-78), keine Lache */
+    re2_spinne(3, 7, 0x41);
+    re15_aot_init();
+    g_aot.slots[0].active = 1; g_aot.slots[0].type = RE15_AOT_TYPE_WATER; g_aot.slots[0].has_quad = 0;
+    g_aot.slots[0].x = 0; g_aot.slots[0].z = 0; g_aot.slots[0].half_w = 30000; g_aot.slots[0].half_h = 30000;
+    g_aot.env_params[0].p0 = -1620;
+    for (int t = 0; t < 400 && SP->state != 7; t++) re2_takt();
+    for (int t = 0; t < 120; t++) re2_takt();
+    CHECK(SP->state == 7 && SP->re2s_gs225 == 2u && SP->crow_pool == 0,
+          "M6: RE2-Leiche im Wasser: Zustand %d +0x225 %d pool %d (Soll 7, 2, 0)", SP->state, SP->re2s_gs225, SP->crow_pool);
+    re15_aot_init();
+    /* M7 Babyspinne: SPLAT am Boden faerbt (200 x 200, bf10bf), nach dem DESPAWN bleibt der Fleck bis zum Raumwechsel */
+    re15_spinnenlache_raum_reset();
+    frisch(RE15_AI_FLAVOR_RE2);
+    SP->type = 0x26; SP->re2s_baby_spawned = 1; SP->grid_id = 1; SP->state = 0;
+    re15_re2spider_baby_tick(S);
+    lache_rgb(SP, &hx, &hz, &pool, rgb);
+    CHECK(hx == 200 && hz == 200 && pool == 0, "M7: lebendes Baby %d x %d pool %d (Soll 200 x 200 grau, @0x8010024c-50)", (int)hx, (int)hz, pool);
+    SP->x = 1234; SP->z = -4321; SP->rot_y = 777;
+    SP->hp = -1; SP->state = 3; SP->sub_state_1 = 3; SP->sub_state_2 = 0; SP->sub_state_3 = 0; SP->re2s_mode222 = 0;
+    re15_re2spider_baby_tick(S);
+    lache_rgb(SP, &hx, &hz, &pool, rgb);
+    CHECK(SP->active && pool == 1 && hx == 200 && rgb[0] == 0xbf && rgb[1] == 0x10 && rgb[2] == 0xbf,
+          "M7: SPLAT-Takt: aktiv %d pool %d %d rgb %02x%02x%02x", SP->active, pool, (int)hx, rgb[0], rgb[1], rgb[2]);
+    CHECK(re15_spinnenlache_flecken_zahl() == 0, "M7: Fleck schon vor dem DESPAWN");
+    re15_re2spider_baby_tick(S);
+    CHECK(!SP->active && re15_spinnenlache_flecken_zahl() == 1, "M7: nach dem DESPAWN aktiv %d Flecken %d", SP->active,
+          re15_spinnenlache_flecken_zahl());
+    {
+        int32_t fp[3] = { 0, 0, 0 }, fhx = 0, fhz = 0; int16_t fy = 0; uint8_t frgb[3] = { 0, 0, 0 };
+        re15_spinnenlache_fleck(0, fp, &fy, &fhx, &fhz, frgb);
+        CHECK(fp[0] == 1234 && fp[1] == (int32_t)SP->dog_floor_y && fp[2] == -4321 && fy == 777 && fhx == 200 && fhz == 200
+              && frgb[0] == 0xbf && frgb[1] == 0x10 && frgb[2] == 0xbf,
+              "M7: Fleck (%d,%d,%d) yaw %d %d x %d rgb %02x%02x%02x", (int)fp[0], (int)fp[1], (int)fp[2], fy, (int)fhx, (int)fhz,
+              frgb[0], frgb[1], frgb[2]);
+    }
+    re15_spinnenlache_raum_reset();
+    CHECK(re15_spinnenlache_flecken_zahl() == 0, "M7: Raumwechsel loescht die Flecken nicht");
+    /* M8 Baby stirbt in der Luft (+0x222 != 0): word0 |= 0x400 statt Tinte (@0x80100ce4-f0) -> kein gruener Fleck */
+    frisch(RE15_AI_FLAVOR_RE2);
+    SP->type = 0x26; SP->re2s_baby_spawned = 1; SP->grid_id = 1; SP->state = 0;
+    re15_re2spider_baby_tick(S);
+    SP->hp = -1; SP->state = 3; SP->sub_state_1 = 3; SP->sub_state_2 = 0; SP->sub_state_3 = 0; SP->re2s_mode222 = 1;
+    re15_re2spider_baby_tick(S); re15_re2spider_baby_tick(S);
+    CHECK(SP->crow_pool == 0 && re15_spinnenlache_flecken_zahl() == 0, "M8: Baby in der Luft: pool %d Flecken %d",
+          SP->crow_pool, re15_spinnenlache_flecken_zahl());
+    /* M9 Abgrenzung: RE1.5-Feuer-Emitter 0x26 (nicht vom RE2-Spawner) bekommt kein Spinnenmass */
+    frisch(RE15_AI_FLAVOR_RE2);
+    SP->type = 0x26; SP->re2s_baby_spawned = 0;
+    CHECK(re15_spinnenlache_render(SP, &hx, &hz, &pool, &rgb[0], &rgb[1], &rgb[2]) == 0, "M9: Feuer-Emitter 0x26 bekommt Spinnenschatten");
+    /* M10 lebende Spinne 0x25 ohne Leiche: der Zeichner behaelt das Spur-L-Mass (kein Eingriff) */
+    frisch(RE15_AI_FLAVOR_RE2);
+    CHECK(re15_spinnenlache_render(SP, &hx, &hz, &pool, &rgb[0], &rgb[1], &rgb[2]) == 0, "M10: lebende Spinne bekommt ein Lachenmass");
+}
+
+/* Modus 3: RE15_LACHE_LOG */
+static int pruef_lache(const char *pfad, const char *art)
+{
+    FILE *f = fopen(pfad, "r");
+    if (!f) { printf("FAIL: kein Log %s\n", pfad); return 1; }
+    static char z[1024];
+    const char *soll_rgb = !strcmp(art, "re2") ? "bf10bf" : "9f80df";
+    int zeilen = 0, pool_an = 0, end_sichtbar = 0, end_any = 0, falsche_tinte = 0, basis = 0;
+    while (fgets(z, sizeof z, f)) {
+        unsigned fr, typ; int slot, st, s1, s2, s3, hx, hz, pool, y, wx, wz, sb = 0; char rgb[16];
+        int k = sscanf(z, "F=%u slot=%d typ=%x st=%d/%d/%d/%d hx=%d hz=%d pool=%d rgb=%6s y=%d w(%d,%d) sichtbar=%d",
+                       &fr, &slot, &typ, &st, &s1, &s2, &s3, &hx, &hz, &pool, rgb, &y, &wx, &wz, &sb);
+        if (k < 14 || typ != 0x25u) continue;
+        zeilen++;
+        if (st == 7 && !pool && hx == 1300 && hz == 1400) basis = 1;
+        if (!pool) continue;
+        pool_an = 1;
+        if (strcmp(rgb, soll_rgb)) falsche_tinte++;
+        int fertig = !strcmp(art, "re2") ? (hx == 2020 && hz == 2120)
+                                         : ((hx == 2028 && hz == 2128) || (hx == 2268 && hz == 2368));
+        if (fertig) { end_any = 1; if (sb) end_sichtbar = 1; }
+    }
+    fclose(f);
+    printf("pruef_lache %s: Zeilen %d, Basis 1300x1400 %d, Lache %d, Endmass %d (sichtbar %d), falsche Tinte %d\n",
+           art, zeilen, basis, pool_an, end_any, end_sichtbar, falsche_tinte);
+    if (!strcmp(art, "re2")) return (basis && pool_an && end_sichtbar && !falsche_tinte) ? 0 : 1;
+    if (!strcmp(art, "r15")) return (basis && pool_an && end_any && !falsche_tinte) ? 0 : 1;
+    printf("FAIL: unbekannte Art %s\n", art);
+    return 1;
 }
 
 /* ---- Auswerter ---------------------------------------------------------------------------------------------- */
@@ -416,6 +686,7 @@ static int pruef_log(const char *pfad, const char *art)
 int main(int argc, char **argv)
 {
     if (argc >= 4 && !strcmp(argv[1], "pruef_log")) return pruef_log(argv[2], argv[3]);
+    if (argc >= 4 && !strcmp(argv[1], "pruef_lache")) return pruef_lache(argv[2], argv[3]);
     test_bytes();
     test_re2();
     test_re15();
@@ -423,6 +694,7 @@ int main(int argc, char **argv)
     test_zombie_mc51();
     test_hund();
     test_blutfarbe();
+    test_lache();
     if (fails) { printf("%d Fehler\n", fails); return 1; }
     printf("OK unit_r41_spinnengore\n");
     return 0;

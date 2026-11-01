@@ -354,7 +354,11 @@ int main(void)
     tick();
     SP->state = 7; SP->sub_state_1 = 0; SP->sub_state_2 = 0;
     tick();
-    CHECK(SP->re2s_gs225 == 2, "CORPSE armt +0x225 = 2 @0x80104D80 (ist %u)", SP->re2s_gs225);
+    /* CORPSE armt +0x225 = 2 (@0x80104D80); im SELBEN Wurzel-Takt laeuft danach FUN_80104DE8 (`jal 0x80104de8`
+     * @0x80100180) und schaltet trocken auf 3 weiter (@0x80104e84-8c, erster Lachen-Schritt +0x16B 90 -> 89
+     * @0x80104eac-ec). Runde 41 Spur S Nachbesserung 2 portiert den Automaten; vorher blieb hier die 2 stehen. */
+    CHECK(SP->re2s_gs225 == 3 && SP->re2z_gaitrow == 89,
+          "CORPSE armt +0x225 = 2 @0x80104D80, FUN_80104DE8 @0x80100180 -> 3 (ist %u, +0x16B %u)", SP->re2s_gs225, SP->re2z_gaitrow);
     CHECK(SP->sub_state_1 == 1, "CORPSE: Clip fertig -> +0x5 = 1 @0x80104D2C");
     CHECK(SP->re2z_dir16a >= 30 && SP->re2z_dir16a <= 61,
           "CORPSE-Timer (rand&0x1F)+30 @0x80104D30-3C muss 30..61 sein, ist %u", SP->re2z_dir16a);

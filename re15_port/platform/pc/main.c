@@ -133,6 +133,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
 #include "re15_hundeschatten.h"   /* Runde 35 Spur H: Hunde-Schatten auf die Boden-Referenz */
 #include "re15_spinnenanim_r41.h" /* Runde 41 Spur L: Zeichnen der Adultspinne (Drehung, Bild, Massstab) */
+#include "re15_spinnenlache_r41.h" /* Runde 41 Spur S, Nachbesserung 2: Lache der Spinnenleiche, Flecken toter Babys */
 #include "re15_npckante_r38.h"     /* Runde 38 Spur M: NPC-Schatten auf +0x1ba waehrend Kante/Fall */
 #include "re15_zombieki_r36.h"    /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache (Typ 0x27) */
 #include "re15_trage1200.h"      /* Runde 35 Spur H: ROOM1200 Trage-Zombie (Messschiene) */
@@ -9893,6 +9894,49 @@ re_title:;
              * as a second Leon-shaped character — communicates presence
              * even though wrong model. Bone-by-bone projection mirrors
              * the player loop above. */
+            /* Runde 41 Spur S, Nachbesserung 2: FLECKEN toter RE2-Babyspinnen. Der Schatten-Record bleibt nach dem
+             * DESPAWN (FUN_8001B250 nullt nur word0/word1 @0x8001b258-5c) belegt und wird weiter gezeichnet
+             * (FUN_8001699c, Bit 4 ohne Bit 8 @0x80016a04-18), bis der Raumwechsel den Pool leert (FUN_8001633c
+             * @0x8001639c, Aufruf @0x80026e0c). Lage = letzte Record-Lage (x, +0x1C2, z, +0x76; FUN_800168b4
+             * @0x8001693c-70). Dieselbe Projektion wie der Gegner-Schatten unten. */
+            for (int fi = 0; fi < re15_spinnenlache_flecken_zahl(); fi++) {
+                int32_t fpos[3], fhx = 0, fhz = 0; int16_t fyaw = 0; uint8_t frgb[3];
+                if (!re15_spinnenlache_fleck(fi, fpos, &fyaw, &fhx, &fhz, frgb)) continue;
+                int32_t fym[9], frot[9], ftr[3];
+                re15_camera_yaw_matrix_angle(fyaw, fym);
+                re15_camera_compose_view_bone(&cam_view, fym, fpos, frot, ftr);
+                const int32_t fc[4][3] = { { -fhx, 0, fhz }, { -fhx, 0, -fhz }, { fhx, 0, fhz }, { fhx, 0, -fhz } };
+                int fsx[4], fsy[4], fok = 1; int32_t fvz_summe = 0;
+                for (int v = 0; v < 4; v++) {
+                    int32_t _x = fc[v][0], _y = fc[v][1], _z = fc[v][2];
+                    int32_t _vx = (int32_t)(((int64_t)_x*frot[0] + (int64_t)_y*frot[1] + (int64_t)_z*frot[2]) >> 12) + ftr[0];
+                    int32_t _vy = (int32_t)(((int64_t)_x*frot[3] + (int64_t)_y*frot[4] + (int64_t)_z*frot[5]) >> 12) + ftr[1];
+                    int32_t _vz = (int32_t)(((int64_t)_x*frot[6] + (int64_t)_y*frot[7] + (int64_t)_z*frot[8]) >> 12) + ftr[2];
+                    if (_vz < 64) { fok = 0; break; }
+                    fvz_summe += (_vz > 0xFFFF) ? 0xFFFF : _vz;
+                    int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
+                    int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
+                    uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
+                    uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
+                    fsx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
+                    fsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
+                }
+                {   /* RE15_LACHE_LOG: Messschiene, kein Verhalten */
+                    static FILE *s_fl = NULL; static int s_fl_init = 0;
+                    if (!s_fl_init) { s_fl_init = 1; const char *p = getenv("RE15_LACHE_LOG"); if (p && *p) { char n2[600]; snprintf(n2, sizeof n2, "%s.flecken", p); s_fl = fopen(n2, "w"); } }
+                    if (s_fl) {
+                        fprintf(s_fl, "F=%u fleck=%d hx=%d hz=%d rgb=%02x%02x%02x y=%d w(%d,%d) sichtbar=%d\n",
+                                (unsigned)g_engine.frame_count, fi, (int)fhx, (int)fhz, frgb[0], frgb[1], frgb[2],
+                                (int)fpos[1], (int)fpos[0], (int)fpos[2], fok);
+                        fflush(s_fl);
+                    }
+                }
+                if (!fok) continue;
+                re15_render_pc_shadow_tiefe(fvz_summe, 0);
+                re15_render_shadow_quad_c(fsx[0], fsy[0], fsx[1], fsy[1], fsx[2], fsy[2], fsx[3], fsy[3],
+                                          frgb[0], frgb[1], frgb[2]);
+            }
+
             for (int npc_i = 1; npc_i < RE15_ACTOR_MAX; npc_i++) {
                 const re15_actor_t *npc = &g_actors[npc_i];
                 if (!npc->active) continue;
@@ -10114,6 +10158,10 @@ re_title:;
                         }
                     }
                     re15_spinnenanim_r41_schatten_groesse(npc, &nhx, &nhz);   /* Runde 41 Spur L: Spinne +-1300 x +-1400 (FUN_8001af5c @0x80110d90) */
+                    /* Runde 41 Spur S, Nachbesserung 2: LACHE der Spinnenleiche (RE1.5 0x00DF809F + 8/Takt @0x8011546c-b8,
+                     * RE2 0x00BF10BF + 8/Takt @0x80104e7c-dc) und die RE2-Babyspinne (Record 200 x 200 @0x8010024c-50,
+                     * Tinte beim Tod @0x80100cb4-e0). Mass und Tinte schreibt die KI (spinnenlache_r41.c). */
+                    re15_spinnenlache_render(npc, &nhx, &nhz, &corpse_pool, &sh_r, &sh_g, &sh_b);
                     int32_t nsh_c[4][3] = {
                         { -nhx, 0,  nhz }, { -nhx, 0, -nhz },
                         {  nhx, 0,  nhz }, {  nhx, 0, -nhz },
@@ -10171,6 +10219,20 @@ re_title:;
                         uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
                         nsx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
                         nsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
+                    }
+                    /* RE15_LACHE_LOG (Runde 41 Spur S, Nachbesserung 2): MESSSCHIENE, kein Verhalten. Je
+                     * Schatten einer Spinne 0x25 oder einer RE2-Babyspinne 0x26: Bild, Platz, Zustand, Halbmasse, Lache an,
+                     * Tinte (R,G,B wie re15_render_shadow_quad sie bekommt), Boden-Y, sichtbar = das Viereck geht an den Zeichner (alle vz >= 64). */
+                    if (npc->type == 0x25u || re15_re2spider_baby_owns(npc)) {
+                        static FILE *s_ll = NULL; static int s_ll_init = 0;
+                        if (!s_ll_init) { s_ll_init = 1; const char *p = getenv("RE15_LACHE_LOG"); if (p && *p) s_ll = fopen(p, "w"); }
+                        if (s_ll) {
+                            fprintf(s_ll, "F=%u slot=%d typ=%02x st=%d/%d/%d/%d hx=%d hz=%d pool=%d rgb=%02x%02x%02x y=%d w(%d,%d) sichtbar=%d\n",
+                                    (unsigned)g_engine.frame_count, (int)(npc - g_actors), (unsigned)npc->type, (int)npc->state,
+                                    (int)npc->sub_state_1, (int)npc->sub_state_2, (int)npc->sub_state_3, (int)nhx, (int)nhz,
+                                    corpse_pool, sh_r, sh_g, sh_b, (int)nsh_y, (int)npc->x, (int)npc->z, (nok && !crow_no_record) ? 1 : 0);
+                            fflush(s_ll);
+                        }
                     }
                     if (nok && !crow_no_record) {
                         re15_render_pc_shadow_tiefe(nsh_vz_summe, 0);   /* Runde 36 Spur O */

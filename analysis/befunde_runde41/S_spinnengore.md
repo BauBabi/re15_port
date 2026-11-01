@@ -473,8 +473,14 @@ Im Video ist es grün (S01/S02/S05). Der Port nahm an beiden Stellen die rote Zo
 | `n_e_re15_w8` RE1.5-KI Remington | 143× Sub 8 / 0x7991, kein Rot | Bild 260/261 grünes Treffer-Blut, Bild 296 Krit-Bein mit grünem Blut (`n04`) |
 | `n_c_leon_w7_aus` Schalter aus | Tod F68/F122: ta=0 (kein Platzen), je **2× Sub 8** (`re2s_blut`). 55 rote 0x1500-Zeichnungen in F83, 319, 335, 344/345 und 357: Jedes Mal fällt Leons HP um 1 (80 auf 75), das sind Babybisse | — |
 
-Damit ist jeder Spinnen-Blutsatz beider Gehirne grün (TEX.TIM y 486). Rot bleibt nur Leons und Elzas eigenes Blut beim
-Babybiss (RE2 EMS26 Rec 1, Sub 1 = Grundzeile).
+~~Damit ist jeder Spinnen-Blutsatz beider Gehirne grün (TEX.TIM y 486). Rot bleibt nur Leons und Elzas eigenes Blut beim
+Babybiss (RE2 EMS26 Rec 1, Sub 1 = Grundzeile).~~
+
+**Berichtigt in Nachbesserung 2 (Abnahme 2, Mangel 2):** Der Satz war falsch. Der Tod der RE2-Babyspinne
+(EMS26 @0x80100d10-14, Record 0 = Spinnenblut) lief mit diesem Stand weiter als rotes `0x1500`. Seit Nachbesserung 2 ist er
+grün (Abschnitt NB2.4). Danach gilt: Jeder Spinnen-Blutsatz beider Gehirne ist grün, Adult und Baby. Rot bleibt nur Leons
+und Elzas eigenes Blut beim Babybiss (EMS26 Record 1, Sub 1) und die RE2-Records, die kein Effekt-0-Blut sind
+(Offen 4).
 
 ### N6. Tests (Zielauswahl, Windows)
 
@@ -506,7 +512,8 @@ ging (FUN_80019700: Effekt-Byte `(a0>>16)` @0x80019730, Farbzeile `(Sub>>3)*0x40
 wie im Original RE1.5 (TEX.TIM Zeile 486) und in den 80%-Videos (B 5:18, 5:31, 7:40). Das gilt beim Platzen, bei jedem
 Treffer und bei abgeschossenen Beinen, unter der Standard-KI und unter der RE1.5-KI. Unter der Standard-KI vertritt der
 grüne RE1.5-Spinnencode die RE2-Spinnenpartikel, die der Port nicht zeichnen kann (in RE2 sind sie oliv-gelb bzw. grün,
-nie rot). Rot bleibt nur Ihr eigenes Blut, wenn eine Babyspinne Sie beißt.
+nie rot). ~~Rot bleibt nur Ihr eigenes Blut, wenn eine Babyspinne Sie beißt.~~ *(Berichtigt in Nachbesserung 2: der Satz
+stimmte erst, nachdem auch der Tod der Babyspinne grün spritzt. Gültiger Baustein unten unter NB2.7.)*
 
 **Zombies, MC51 auf die Beine (Folge der Gore-Hebung).** Unter der Standard-KI tötet ein tödlicher MC51-Treffer in die
 Beine (Tief-Zielen) meist nicht mehr. Die Beine platzen, und der Zombie kriecht mit 10 Lebenspunkten weiter (RE2-Weg
@@ -523,8 +530,13 @@ Spinne 0x25:
 1. **Grüne Flecken, die nach dem Platzen gut 1 s auf Boden und Wand liegen bleiben** (S01, B 5:18.3, g09).
    - Die Farbe hat der Port jetzt, aber keine liegenbleibenden Flecken: Die ESP-Partikel laufen ihre Zeilen ab und
      verschwinden.
-   - Einen Flecken-Mechanismus für die Spinne habe ich in RE1.5 und RE2 nicht gesucht, nur die Effekt-0-Partikel.
-   - Gestaltung nach Bild, nicht gebaut.
+   - ~~Einen Flecken-Mechanismus für die Spinne habe ich in RE1.5 und RE2 nicht gesucht, nur die Effekt-0-Partikel.~~
+   - ~~Gestaltung nach Bild, nicht gebaut.~~
+   - **Berichtigt in Nachbesserung 2 (Abnahme 2, Mangel 1):** Die Einordnung "nur Video" war falsch. Die LACHE unter der
+     Spinnenleiche ist in RE1.5 (CORPSE 0x801153d4, Tinte 0x00DF809F @0x8011546c-70, +8 je Takt @0x801154a8-b8) und in
+     RE2 (FUN_80104DE8, Tinte 0x00BF10BF @0x80104e7c-80, +8 je Takt @0x80104ed0-dc) belegt, dazu der Fleck der
+     Babyspinne (EMS26 @0x80100cb4-e0). Alle drei sind seit Nachbesserung 2 gebaut (Abschnitt NB2). Offen bleiben davon
+     nur die Wandflecken aus dem Video (keine Wand-Decals in RE1.5 und RE2, Gestaltung nach Bild, nicht gebaut).
 2. **Grüne Treffer-Spritzer am getroffenen Körper** (S02 B 5:31–5:32.5, S05 B 7:40.4).
    - Die Farbe ist jetzt grün (N5, `n03`).
    - Sie sitzen aber am Aktor-Ursprung (Fußpunkt), nicht an der Teil-Matrix. RE2 FUN_801056DC spawnt an
@@ -570,3 +582,289 @@ Hund 0x20 und Birkin:
 
 Nebenbei, nicht von diesem Bau: Der Kommentar über `re2z_hit_knockdown` nennt Spalte 0 noch „im Spiel unerreichbar“.
 Das ist seit Runde 16 überholt (Tief-Zielen trifft die Beinzone). Nicht angefasst.
+
+## Nachbesserung 2 (nach Abnahme 2, 2026-11-01)
+
+Mängel aus `S_abnahme_2.md`:
+
+1. Die Lache unter der Spinnenleiche ist in RE1.5 und RE2 belegt, im Port nicht gebaut, und Offen 1 ordnete sie falsch als
+   "nur Video" ein.
+2. Der Tod der RE2-Babyspinne spritzte rotes Zombieblut `0x1500` statt Spinnenblut. N5 und der Baustein für die Release
+   Notes waren deshalb falsch.
+
+Beide sind gebaut. Die falschen Sätze sind oben durchgestrichen und berichtigt (N5, Baustein, Offen 1).
+
+Werkzeuge und Rohbilder: `scratchpad/S_nb2/`. `cap.ps1` startet die eigene Messkopie `re15_pc_S41nb2.exe` mit echtem Titel
+und echter Spielerwahl (`RE15_TITLE_CONFIRM_MS=1500`, `RE15_PSELECT_AUTO`), danach `RE15_DEBUG_JUMP`. Gezeichnet wird mit
+dem beschleunigten Renderer, ohne AUTOSHOT und ohne SOFTWARE_RENDER. Aufgenommen wird per gdigrab am Fenster-Handle der
+eigenen PID mit 10 Bildern/s; beendet wird nur die eigene PID. Belege: `S_belege/nb2/l01…l03`.
+
+### NB2.1 Messschiene `RE15_LACHE_LOG` (kein Verhalten)
+
+`platform/pc/main.c` schreibt nach der Projektion je Schatten einer 0x25 oder einer RE2-Babyspinne eine Zeile:
+`F= slot= typ= st=<+4>/<+5>/<+6>/<+7> hx= hz= pool= rgb= y= w(x,z) sichtbar=`. Dabei sind `hx`/`hz` die Halbmaße, die
+der Zeichner bekommt, `rgb` die Tinte für `re15_render_shadow_quad_c`, und `sichtbar=1` heißt: Alle vier Ecken haben
+vz >= 64, das Viereck geht an den Zeichner. Dazu kommt `<log>.flecken` mit einer Zeile je liegengebliebenem Babyfleck.
+
+### NB2.2 Messung VORHER (Stand 7982d54bd + nur die Messschiene)
+
+| Lauf | Log | Bild |
+|---|---|---|
+| `v_a_leon_w7` Leon, ROOM2070, Redhawk, Standard-KI | Tod Slot 2 F38. **772 von 772** Leichenzeilen (st=7) tragen `hx=1300 hz=1400 pool=0 rgb=000000`. Babys stehen auf 500 x 600 (Port-Standard), RE2 hat 200 x 200 (NB2.3) | Bilder 290/350/400: unter der Leiche liegt der graue Schatten, nichts wächst (`l01`, obere Reihe). Grünpixel im Bodenfeld (0,400)-(640,478): 0 bis 125 |
+| `v_g_elza_re15_w7` Elza, ROOM2071, Redhawk, `RE15_AI_FLAVOR=re15` | **104 von 104** Leichenzeilen 1300 x 1400, pool=0 | Der Lauf war im Bild zu kurz, kein Bildbeleg |
+
+### NB2.3 RE
+
+Die RE1.5-Stellen habe ich in Mod und Disc gelesen. Gleich sind STAGE2 0x80113f40-0x801155e0, 0x80118e24-48,
+0x801002a4-b8 und 0x8010025c-78 (eigener Vergleich, Abweichungen 0). RE2 stammt aus `info/re2leon`.
+
+**RE1.5 STAGE2, CORPSE 0x801153d4** (Zustandstabelle @0x80118e24[7]):
+
+```
+801153e4 lbu v1,7(v0)                                  ; +0x7 = Phase; Tabelle @0x801002a4 =
+                                                       ;   {0x80115414, 0x8011546c, 0x801155d4, 0x801154bc, 0x80115534}
+Phase 0  8011541c ori v0,zero,0x5a / 80115420 sb v0,158(v1)     ; +0x9E = 90
+         8011542c ori v0,zero,0x1  / 80115430 sb v0,7(v1)       ; +0x7 = 1
+         80115448 ori v0,v0,0x2 / 80115464 ori v0,v0,0x40       ; word0 |= 2 | 0x40   (faellt in Phase 1)
+Phase 1  8011546c lui a2,0xdf / 80115470 ori a2,a2,0x809f       ; Tinte 0x00DF809F
+         8011547c lui a1,0xff00 / 80115494 sw v0,196(a0) / 801154a0 sw v1,236(a0)   ; +0xC4/+0xEC = (alt & 0xff000000) | Tinte
+         801154a8 addiu v0,v0,8 / 801154ac addiu v1,v1,8
+         801154b0 sh v0,188(a0) / 801154b8 sh v1,190(a0)        ; +0xBC/+0xBE += 8
+         801154b4 j 0x8011559c
+Phase 3  801154c4 ori v0,zero,0x78 / 801154c8 sb v0,158(v1)     ; +0x9E = 120
+         801154d4 ori v0,zero,0x4  / 801154d8 sb v0,7(v1)       ; +0x7 = 4
+         8011551c ori v0,zero,0x5  / 80115520 sb v0,148(v1)     ; Clip 5   (faellt in Phase 4: Tinte @0x80115534-68,
+                                                                ;           +8 @0x80115570-7c, anim_set @0x80115594)
+Zaehler  801155a8 lbu a0,158(v1) / 801155b0 addiu v0,a0,-1 / 801155b4 bne a0,zero,0x801155d4 / 801155b8 sb v0,158(v1)
+         801155bc ori a0,zero,0x9 / 801155c8 ori v0,zero,0x2 / 801155cc jal 0x800453d0 / 801155d0 sb v0,7(v1)
+                                                                ; war +0x9E schon 0: +0x7 = 2, Raum-SE 9
+Eintritt 80114578 ori v0,zero,0x7 / 80114580 sw v0,4(v1)        ; Platzweg 0x80113ff8 Phase 2: Wort = 7 -> +0x7 = 0
+         80114d44 jal 0x800453d0 (a0 = 7) / 80114d4c lui v1,0x300 / 80114d58 ori v1,v1,0x7 / 80114d60 sw v1,4(v0)
+                                                                ; Weg 0x8011461c Phase 4: Wort = 0x03000007 -> +0x7 = 3
+         80114b1c ori v0,zero,0x7 / 80114b20 sb v0,5(v1)        ; Krit-Platzer im Weg 0x8011461c: +0x5 = 7, die Wurzel
+                                                                ; springt danach ueber @0x80118f38[7] in den Platzweg
+```
+
+Daraus ergeben sich die Schritte so:
+
+- Der Zähler prüft den alten Wert. Phase 0/1 läuft deshalb 91 Takte (90 bis 0), also 1300 + 728 = **2028** und
+  1400 + 728 = **2128**.
+- Phase 3/4 läuft 121 Takte, also **2268 x 2368**.
+- Die Tinte `0x00FFFF38` im Platzweg (@0x80114584) und im Weg 0x8011461c Phase 5 (@0x80114d64-ac) ist nicht erreichbar.
+  Die Phase davor schreibt jeweils das Wort mit +0x4 = 7.
+- Die Schattenseite ist subtraktiv. Laut Decompile FUN_8001af5c setzt sie `*(param_5+0x26) = 0x5f`, und die abr-Bits 5-6
+  sind 2 (B-F). So steht es auch in `render_pc.c` ("SUBTRACTIVE blend").
+
+**RE2 EMS25, FUN_80104DE8 "Boden-Automat +0x225":**
+
+```
+80100180 jal 0x80104de8                     ; Wurzel, jeder Takt direkt nach dem Zustands-Handler
+CORPSE   80104d68 lbu v0,6(s0) / 80104d70 bne v0,zero
+         80104d7c addiu v0,zero,2 / 80104d80 sb v0,549(s0)      ; +0x6 == 0: +0x225 = 2
+FUN_80104DE8: 80104dfc lbu v1,549(s0) / 80104e00 lw s1,364(s0)  ; +0x225, Record +0x16C
+         Tabelle @0x801000b4 = {0x80104e28, 0x80104e54, 0x80104e68, 0x80104ec8, 0x80104f00}
+[0]      80104e30 jal 0x800527b4 -> trocken word0 &= ~0x400, Wasser word0 |= 0x400   ; Schatten zeigen / verbergen
+[1]      80104e5c ori v0,v0,0x400                               ; Schatten verbergen
+[2]      80104e70 jal 0x800527b4 / 80104e78 bne v0,zero,0x80104f00   ; im Wasser bleibt es bei 2, keine Lache
+         80104e7c lui a1,0xbf / 80104e80 ori a1,a1,0x10bf       ; Tinte 0x00BF10BF
+         80104e84 addiu v0,zero,3 / 80104e8c sb v0,549(s0)
+         80104ea8 sw v0,28(s1) / 80104eb0 sw v1,68(s1)          ; rec+0x1C/+0x44 = (alt & 0xff000000) | Tinte
+         80104eac addiu v0,zero,90 / 80104eb4 sb v0,363(s0)     ; +0x16B = 90
+         80104ebc addiu v1,zero,-1025 / 80104ec4 sw v0,0(s0)    ; word0 &= ~0x400   (faellt in [3])
+[3]      80104ed0 addiu v0,v0,8 / 80104ed4 addiu v1,v1,8 / 80104ed8 sh v0,4(s1) / 80104edc sh v1,6(s1)
+         80104ee8 addiu v0,v0,-1 / 80104eec sb v0,363(s0) / 80104ef4 bne / 80104efc sb v0(4),549(s0)
+[4]      80104f00 Ruecksprung
+INIT     80100368 lui a2,0x320 / 8010036c ori a2,a2,0x320 -> FUN_80016480 `sw a2,4(t0)` @0x80016530: rec+4/+6 = 800/800
+```
+
+Damit wächst die Lache 90 Takte lang, insgesamt um 720. Zur Farbe:
+
+- Die Zombielache 0x00BFBF10 (@0x8010a4c0-c4) zeichnet der Port als `sh_r 0x10, sh_g 0xBF, sh_b 0xBF` (`main.c`).
+- Bei der Spinne 0x00BF10BF sind Rot- und Grünbyte vertauscht, das gibt `sh_r 0xBF, sh_g 0x10, sh_b 0xBF`. Auf dem
+  subtraktiven Schatten bleibt Grün stehen.
+- RE1.5 0x00DF809F wird zu `sh_r 0x9F, sh_g 0x80, sh_b 0xDF`. Das zieht Grün am wenigsten ab, die Lache ist dunkel und
+  grünstichig.
+- Gemessen sind die Farben an der PSX nicht. Abgeleitet sind sie aus den Bytes und der Konvention, die der Port schon für
+  Zombie, Hund, Krähe und Gorilla benutzt.
+
+**RE2 EMS26, Babyspinne:**
+
+```
+INIT     8010024c lui a2,0xc8 / 80100250 ori a2,a2,0xc8 / 8010025c jal 0x80016480   ; Record 200 x 200, Lage-Zeiger self+0x38
+SPLAT    80100c94 lbu v0,6(s0) / 80100c9c bne v0,zero,0x80100d24 ; zweiter Takt -> FUN_8001B250 (@0x80100d24)
+0x80100C84 80100ca4 sb v0(1),6(s0)
+         80100ca8 lbu v0,546(s0) / 80100cac lw a2,364(s0) / 80100cb0 bne v0,zero,0x80100ce4   ; +0x222 != 0 = in der Luft
+         80100cb4 lui a1,0xbf / 80100cb8 ori a1,a1,0x10bf / 80100cd8 sw v0,28(a2) / 80100ce0 sw v1,68(a2)   ; am Boden: Tinte
+         80100cec ori v0,v0,0x400 / 80100cf0 sw v0,0(s0)        ; in der Luft: Schatten verbergen
+         80100cf8 jal 0x8005bd6c (SE 7)
+         80100d00 lbu v0,5(s0) / 80100d10 lbu a2,4295(at) / 80100d14 jal 0x80100f28   ; Record = Tabelle @0x801010C7[+0x5]
+FUN_80100F28 80100f50 andi v1,a2,0x7f / 80100f74 addiu v1,v1,4316 ; Record @0x801010dc + 6*Index
+Tabelle @0x801010C7 = 80 00 00 00 00 00 00 00 00 00 03 04 00 00 00 00 03 00 00 00 00 00
+Record 0 @0x801010dc = 00 19 00 00 00 10   (Effekt 0, Sub 0x19 = Spinnenblut)
+Record 3 @0x801010ee = 05 04 00 00 00 10   (Effekt 5)    Record 4 @0x801010f4 = 04 0f 00 00 00 0c   (Effekt 4)
+```
+
+Daraus folgt für die Zeilen:
+
+- Index 0 (Zertreten, Wasser-Tod) ist Record 0 mit Bit 0x80: Die Lage wird dann auf die Wasser-Y gesetzt
+  (@0x80100f84-b4).
+- Die Zeilen 1-9, 12-15 und 17-21 sind Record 0.
+- Die Zeilen 10 und 16 sind Record 3, Zeile 11 ist Record 4.
+
+**RE2 PSX.EXE: Der Record des toten Babys bleibt liegen.**
+
+```
+FUN_8001B250  8001b258 sw zero,0(a0) / 8001b25c sw zero,4(a0) / 8001b268-70 (0x800cfbf3)--   ; nur word0/word1, kein Record
+Entity-Schleife 800267cc lw v0,0(s0) / 800267d4 andi v0,v0,0x1 / 800267d8 beq ...           ; word0 & 1 == 0 -> uebersprungen
+              800267e0 lw s1,364(s0)                                  ; Record, VOR dem Handler geladen
+              80026888 jalr v0                                        ; Handler (hier: Despawn)
+              800268c8 lh a1,450(s0) / 800268d0 lh a2,118(s0) / 800268d4 andi a3,a3,0x400 / 800268d8 jal 0x800168b4 / 800268dc srl a3,a3,9
+FUN_800168b4  800168d8 beq s0,zero / 800168e0 lbu v0,14(s0) / 800168e8 beq v0,zero   ; freier Record: nichts
+              8001693c sh s1,16(s0) (Drehung +0x76) / 80016948 sh s2,10(s0) (Y = +0x1C2) / 80016950 sh v0,8(s0) / 80016970 sh v0,12(s0)
+              80016960 ori v1,v1,0x4 / 80016968 sb v1,14(s0) / 80016974 andi v0,v1,0xfb (nur bei a3 != 0)
+FUN_8001699c  50 Records ab 0x800ce698 zu 104 Byte; 80016a04 lbu v1,8(s1) / 80016a0c andi 0x4 / 80016a14 andi 0x8   ; zeichnet Bit 4 ohne Bit 8
+Freigabe      FUN_8001633c 8001639c sb zero,-50(s1) (alle 50 Plaetze); einziger Aufrufer 80026e0c in FUN_80026b7c (Raumwechsel)
+```
+
+Andere Freigaben gibt es nicht:
+
+- `sb zero,14` steht sonst nur in FUN_8005df38 (`lw v0,364(s3)` @0x8005df54, kein `jal`-Aufrufer gefunden) und in den
+  Krähen-Overlays.
+- In EMS25 und EMS26 gibt es 0 Treffer (eigener Vollscan).
+- `lw …,364(…)` steht in EMS26 nur @0x80100cac und in EMS25 nur @0x80104e00.
+
+Folge: Im Despawn-Takt läuft FUN_800168b4 noch einmal mit word0 = 0, also mit gesetztem Bit 4. Danach wird die tote
+Entity übersprungen. Der Record bleibt mit Tinte und letzter Lage (x, +0x1C2, z, +0x76) stehen, bis zum Raumwechsel. Das
+ist statisch belegt. An RE2 selbst habe ich es nicht gemessen, dafür gibt es hier keinen Harnisch.
+
+### NB2.4 Bau
+
+- **Neu:** `engine/src/spinnenlache_r41.c` und `include/re15_spinnenlache_r41.h`. Alle Adressen stehen im Kopf.
+  - Der Kanal ist derselbe wie bei Hund, Krähe und Gorilla: `crow_shadow_w/h` und `crow_pool`.
+  - Die Tinte merkt sich das Modul je Platz.
+  - Beim ersten Einfärben übernimmt der Record das gezeichnete Maß: 1300 x 1400 für 0x25 (Spur L), 200 x 200 für das
+    Baby.
+- **RE1.5-Gehirn** (`enemy_ai_common.c`):
+  - Case 3 setzt beim Übergang +0x7 je Todesweg: Platzweg 0, sonst 3 (@0x80114578-80 / @0x80114d4c-60).
+  - Der Krit-Platzer im schwachen Weg setzt +0x5 = 7 (@0x80114b1c-20).
+  - Case 7 läuft `re15_spinnenlache_r15_leiche`: Phasen 0/1/3/4, +0x9E = `grab_kill_ctr` wie beim Hund, Raum-SE 9 am Ende.
+- **RE2-Gehirn** (`enemy_ai_re2_spider.c`):
+  - Die Wurzel ruft `re15_spinnenlache_re2_boden` an der Stelle von @0x80100180, mit +0x225 = `re2s_gs225` und
+    +0x16B = `re2z_gaitrow`.
+  - Der Wasserzweig läuft über `re15_aot_water_at` (= FUN_800527B4).
+- **Babyspinne:**
+  - Der SPLAT am Boden färbt den Record (`re15_spinnenlache_baby_platsch`).
+  - Der Despawn legt den Fleck ab (`re15_spinnenlache_baby_ende`).
+  - **Der Todesspritzer nimmt den Record aus der Tabelle @0x801010C7.** Record 0 bekommt den grünen Stand-in
+    `re2s_blut`, die Records 3 und 4 bleiben auf `re2s_gore` (Mangel 2).
+- **Raumwechsel:** `re15_re2z_rng_reset` (aus `re15_actor_init` und `scd_room_setup.c`) leert die Flecken, wie
+  FUN_8001633c den Pool leert.
+- **Zeichner** (`main.c`):
+  - `re15_spinnenlache_render` steht hinter dem Spur-L-Maß und setzt Maß, `corpse_pool` und Tinte.
+  - Neu ist eine Schleife, die die liegengebliebenen Flecken vor den Gegnern zeichnet, mit derselben Projektion wie der
+    Gegnerschatten.
+- **Messhaken `RE15_BABYTOD_TEST=<Spielbild>`** (nur Messläufe): Ab diesem Bild löst jedes RE2-Baby am Boden die Wirkung
+  des Zertret-Tors aus, also +0x4 = 3 mit +0x5 = 0 (@0x80100448). Ohne den Haken stirbt im Port kein Baby (NB2.5).
+- **PORT-WAHL:**
+  - Die Basis ist das gezeichnete Spur-L-Maß 1300 x 1400. Der RE2-Record der Adult wäre 800 x 800 (@0x80100368-6c).
+  - Record 0 des Babys nimmt denselben Stand-in wie die Adult (`0x00082000`, Skala 0x2000). Den 16-Bit-Wert des
+    RE2-Records (0x1000) übernehme ich nicht. RE2 legt ihn als `sll v0,a0,16` / `sw v0,56(t0)` @0x8001c00c-10 ab, und
+    dass das dieselbe Skala ist wie RE1.5 +0x72, ist nicht belegt.
+  - Die Lache selbst ist **keine** PORT-WAHL, beide Originale haben sie. Sie hängt deshalb nicht am Schalter
+    `RE15_KEIN_80PROZENT_GORE`, genau wie die Lachen von Hund, Krähe und Gorilla.
+- **Nicht gebaut** (siehe NB2.8): FUN_80104DE8 [0]/[1] (Schatten verbergen), der graue Schattenrest toter Babys aus der
+  Luft oder dem Wasser, das RE1.5-Flagwort |= 2 | 0x40 und das Posieren der RE1.5-Leiche (Port weiter Clip 5).
+
+### NB2.5 Messung NACHHER (dieselben Wege, exe 2026-11-01 ab 21:15)
+
+| Lauf | Log | Bild |
+|---|---|---|
+| `n_a_leon_w7` Leon 2070 Redhawk, Standard-KI | Slot 2: Leiche ab F49, **F50 1308 x 1408** pool=1 `rgb=bf10bf`, F139 **2020 x 2120**, dann fest bis F470. Das sind 90 Schritte zu 8. Slot 1: F122 bis F211 genauso | `l01` untere Reihe: Bilder 290/350/400 zeigen eine grüne Lache unter der Leiche. Grünpixel im Bodenfeld: 2906 (Bild 270), 6293 (290), 7907 (400). Vorher waren es 0 bis 125 |
+| `n_e_leon_re15_w8` Leon 2070 Remington, RE1.5-KI | Slot 2: Leiche ab F157, **F158 1308 x 1408** `rgb=9f80df`, F248 **2028 x 2128**, Phase 2. Das sind 91 Schritte. 314 Zeilen, `sichtbar=1` | `l02`: Bilder 300/310/320/330/400 zeigen, wie die dunkle, grünstichige Lache wächst. Mittelwert im Feld (0,380)-(330,470): (27.4,28.1,20.7) in Bild 300, (20.5,22.0,15.1) ab Bild 330. Grünpixel 205 → 1072. Ab Bild 330 bleibt der Wert stehen, das ist das Ende der 91 Takte |
+| `n_g_elza_re15_w7` Elza 2071 Redhawk, RE1.5-KI | Slot 1/2: 1300 → 2028 x 2128, `rgb=9f80df`, Phase 2 | Die Leichen liegen am unteren Bildrand. In dieser Kamera fällt das Viereck an der Nahebene weg (Integration E7R15: `sichtbar 0`). Kein Bildbeleg aus diesem Lauf |
+| `n_h_babytod` Leon 2070 Redhawk, `RE15_BABYTOD_TEST=200` | F200: 9 Babys sterben. Je Baby ein grüner Satz: 99 Zeichnungen `id=0 sub=8 skala=2000 clut=7991`. Rotes `0x1500` gibt es nur in F61-81. Dort fallen Leons HP in F61, F62 und F71 von 100 auf 97 (Babybisse). 9 Flecken `hx=200 hz=200 rgb=bf10bf`, je 270 Bilder bis zum Ende, 8 davon `sichtbar=1` | `l03`: In Bild 309/312 läuft das Baby noch. Ab Bild 320 liegt an seiner Stelle ein kleiner grüner Fleck, er ist bis Bild 400 unverändert |
+| `n_f_baby1` (gehen) und `n_f_baby2_w8` (Schrot nach unten), beide ohne Haken | Kein Baby stirbt (`st=3` bei Typ 0x26: 0). Leon geht (`pmo=105`) zwischen den Babys, sie beißen ihn (HP 100 → 92). Nach dem Tod der Adults steht die Zielhilfe auf `zh=-1` | — |
+
+Die Wege sind dieselben wie in NB2.2. Die Bildnummern sind vergleichbar, aber nicht bildgenau gleich, weil der Start des
+Laufs schwankt.
+
+### NB2.6 Riegel, Gegenproben, Tests
+
+- **`unit_r41_spinnengore`, neu L8:** Byte-Pins @0x80100d10/14/f50, die Tabelle @0x801010C7 und Record 0. Babytod mit den
+  Zeilen 0/3/7/8/13/20 ergibt genau einen grünen Satz und kein `0x1500`. Die Zeilen 10/11/16 bleiben `0x1500`, weil Records
+  3/4 kein Blut sind.
+- **Neu M1-M10:**
+  - M1: 43 Byte-Pins aus STAGE2, EMS25, EMS26 und RE2-PSX.EXE (alle Zitate aus NB2.3).
+  - M2: Platzweg 90 Takte 2020, 91 Takte 2028 / Phase 2. Raum-SE 9 kommt genau einmal am Ende, der Zeichner gibt
+    `9f80df`.
+  - M3: Weg 0x8011461c gibt 2268.
+  - M4: Eintritts-Phase für w7, w9, w3, w20 mit Krit und w20 ohne Krit.
+  - M5: RE2 kommt auf +0x225 = 4 und 2020 x 2120 mit `bf10bf`.
+  - M6: RE2-Leiche im Wasser bleibt auf 2, keine Lache.
+  - M7: Baby 200 x 200 grau, SPLAT färbt `bf10bf`, nach dem Despawn liegt 1 Fleck an (x, +0x1C2, z, +0x76). Der
+    Raumwechsel löscht ihn.
+  - M8: Baby in der Luft hinterlässt keinen grünen Fleck.
+  - M9: Der Feuer-Emitter 0x26 bekommt kein Spinnenmaß.
+  - M10: Die lebende Spinne behält das Spur-L-Maß.
+- **`integration_r41_spinnengore`:** Lauf L7 zusätzlich `pruef_lache re2`, die Leiche muss sichtbar 2020 x 2120 mit
+  `bf10bf` erreichen. Neuer Lauf E7R15 (Elza, RE1.5-KI) mit `pruef_lache r15` auf 2028 x 2128 mit `9f80df`.
+- **`unit_re2_spider_ai`, geänderte Erwartung:** Nach dem ersten Leichentakt steht +0x225 auf **3** (vorher 2).
+  - FUN_80104DE8 läuft im selben Wurzeltakt (@0x80100180) und schaltet trocken weiter (@0x80104e84-8c, +0x16B 90 → 89).
+  - Die alte Erwartung 2 galt nur, solange der Automat fehlte.
+- **Gegenprobe 1** (`enemy_ai_common.c` und `enemy_ai_re2_spider.c` auf HEAD, Modul und Zeichner bleiben):
+  - unit **22 Fehler**: L8 ×6, M2 ×4, M3, M4 ×5, M5 ×3, M7 ×3.
+  - integration rot: L7 `pruef_lache re2` Lache 0, E7R15 `pruef_lache r15` Lache 0.
+- **Gegenprobe 2** (nur die Zeile `re15_spinnenlache_render` in `main.c` entfernt): integration rot, L7 und E7R15 mit
+  Lache 0. Der Zeichner-Zweig hat damit einen eigenen Riegel.
+- Danach habe ich den Stand wiederhergestellt (`cmp` gegen die gesicherten Dateien gleich) und neu gebaut.
+- **Zielauswahl Unit, 222 Tests.** Muster `spinn|spider|baby|gore|esp_|fx|plattform|re2fx|kanister|affen|birkin|masken36|
+  hit_repeat|hitfilter|1d3|leiche|kill|flag_gate|redhawk|granate|weapon_rows|reaktion|hund|dog|crow|kraehe|re2z|
+  re2_zombie|lache|schatten|corpse|actor`, `-j 6`.
+  - 221 grün, 1 rot (`unit_re2_spider_ai`, die erwartete Änderung oben).
+  - Nach der Anpassung ist der Test grün, und die Spinnen-Tests habe ich noch einmal laufen lassen: 5/5.
+- **Integration, einzeln nacheinander, 4/4 grün:** `integration_r35_redhawk` 16,8 s, `integration_r38_spinnen_echtlauf`
+  114,6 s, `integration_r41_spinnenanim` 120,0 s, `integration_r41_spinnengore` 113,0 s.
+
+### NB2.7 Für die Release Notes (ersetzt den Spinnen-Baustein aus Nachbesserung 1)
+
+**Spinnen: grünes Blut und grüne Lachen.**
+
+- Das Spinnenblut ist jetzt grün, wie im Original RE1.5 (TEX.TIM Zeile 486) und in den 80%-Videos (B 5:18, 5:31, 7:40).
+  Vorher ging die Farbwahl des Original-Effekts verloren (FUN_80019700 @0x80019730, @0x8001973c-88).
+- Das gilt beim Platzen, bei jedem Treffer, bei abgeschossenen Beinen und beim Tod der Babyspinnen. Es gilt unter der
+  Standard-KI und unter der RE1.5-KI.
+- Unter der toten Spinne breitet sich jetzt eine Lache aus, wie in beiden Originalen:
+  - unter der RE1.5-KI dunkelgrün, 91 Bilder lang (Tinte 0x00DF809F @0x8011546c),
+  - unter der Standard-KI grün, 90 Bilder lang (RE2 0x00BF10BF @0x80104e7c).
+- Eine tote Babyspinne lässt einen kleinen grünen Fleck zurück. Er bleibt liegen, bis Sie den Raum verlassen (RE2 gibt
+  den Schatten-Record erst beim Raumwechsel frei).
+- Rot bleibt nur Ihr eigenes Blut, wenn eine Babyspinne Sie beißt.
+
+### NB2.8 Offen (Ergänzung zur Liste "Offen, Stand nach Nachbesserung 1")
+
+Punkt 1 der Liste ist berichtigt, siehe oben. Die Lache ist gebaut, offen sind nur die Wandflecken aus dem Video.
+
+18. **Babyspinnen sterben im Port praktisch nie.** Ohne den Messhaken gab es in `n_f_baby1` und `n_f_baby2_w8` 0 Tode,
+    in der Abnahme 2 in 7 Läufen und in 20 Integrations-Logs ebenfalls 0.
+    - Gemessen: Nach dem Tod der Adults wählt die Zielhilfe nichts (`zh=-1`), und die Schüsse treffen den
+      20-Einheiten-Würfel (@0x80100168-84) nicht.
+    - Das Zertret-Tor (@0x801003D4-460) verlangt Spieler-Zustand 1 mit Substate 1..4. Leon ging zwischen den Babys
+      (`pmo=105`) und wurde gebissen, getreten wurde keines.
+    - Die Ursache am Spieler-Substate ist nicht zu Ende gemessen. Das ist kein Gore, aber ohne Tod gibt es auch keinen
+      Fleck.
+19. **Grauer Schattenrest toter Babys.** Stirbt ein Baby in der Luft (word0 |= 0x400 @0x80100cec) oder sinkt es im
+    Wasser, bleibt nach FUN_8001B250 der ungefärbte Record stehen. Grund: FUN_800168b4 setzt im Despawn-Takt Bit 4
+    (@0x800268d8, a3 = 0). Das ist statisch belegt und kein Gore, deshalb nicht gebaut.
+20. **FUN_80104DE8 [0]/[1] (word0 0x400): Schatten verbergen.** Im Original verbirgt die RE2-Spinne ihren Schatten im
+    Wasser und an der Wand. Im Port zeigt sie ihn, zum Beispiel bei den beiden ROOM2090-Spinnen im Wasser. Der Automat
+    hat dafür keinen Port-Konsumenten, nicht portiert.
+21. **Grundmaß des Records unter der Standard-KI:** 1300 x 1400 (Spur L, RE1.5-INIT) statt RE2 800 x 800
+    (@0x80100368-6c). Die Lache wächst deshalb auf 2020 x 2120 statt 1520 x 1520 (PORT-WAHL, NB2.4).
+22. **RE1.5-Leiche:** Das Flagwort |= 2 | 0x40 (@0x80115448/64, @0x801154f0/0c) hat keinen Port-Kanal. Der Port posiert
+    die Leiche wie bisher mit Clip 5. Im Original hält Phase 0/1 das letzte Todesbild, nur Phase 3 setzt Clip 5
+    @0x80115520.
+23. **Die Skala der RE2-Blut-Records** (Baby Record 0: 0x1000, Adult Record 1/3: 0x2800/0x1000) ist nicht übernommen. Der
+    Stand-in bleibt 0x2000, Begründung in NB2.4.
+24. **Beobachtung, nicht von diesem Bau:** In der Kamera von ROOM2071 (Elza) fällt das Schattenviereck einer Leiche nahe
+    der Kamera ganz weg, sobald eine Ecke vz < 64 hat (`main.c`, `if (_vz < 64) { nok = 0; break; }`). Das betrifft
+    jeden Gegnerschatten. Ob das Original das Polygon ebenso verwirft, ist nicht geprüft.
