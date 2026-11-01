@@ -214,4 +214,7 @@ void re15_gatorszene_r41_g2_alt_setzen(int an);
 /* Runde 41 Spur G2 (Punkte 3/4): Mesh-Gier von (x,z) zur Leiter-Ankunft in ROOM2080/2081 (Montage-Parkplatz, ROOM2090 Tuer 0 @0x00996). */
 int  re15_gatorszene_r41_gier_zur_leiter(int32_t x, int32_t z);
 
+/* Runde 41 Spur G2 NB1 (M2): Zuschlag auf vz je Bone fuer die Kopfhaltung beim Wurf (enemy_ai_boss_gator.c re15_gator_spine_arc_vz) */
+int re15_gatorszene_r41_kopf_vz(const void *aktor, int bone);   /* aktor = re15_actor_t * */
+void re15_gatorszene_r41_nb1_alt_setzen(int an);   /* Pruefhaken: Stand G2 vor der Nachbesserung 1 (Gegenproben der Riegel) */
 #endif /* RE15_GATORSZENE_R41_H */

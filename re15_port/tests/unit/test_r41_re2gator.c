@@ -1340,6 +1340,9 @@ static int teil_schleppen(void)
         int32_t l_anh[3] = {0, 0, 0}, l[3] = {0, 0, 0}; int anh = 0, nach7 = 0;
         for (int f = 0; f < 200 && nach7 < 40; f++) {
             leon_statue(-3000, -19000);
+            pl->hp = 30000;   /* Runde 41 Spur G2 NB1 (M1): mit dem Kanister schwimmt er auch in der Wende weiter (RE2 Stufe 7 ohne Wartezustand,
+                               * @0x80101b58-8c) und erreicht die Statue frueher; ein toedlicher Biss (FRESSEN P0 schaltet den Kanister aus,
+                               * @0x80101008-0c) gehoert nicht zum Mass dieses Falls */
             tick();
             if (!anh && re15_gr2_kanister_lokal(l_anh)) anh = 1;
             if (re15_gr2_kanister_stufe() == 7) nach7++;
@@ -1473,7 +1476,7 @@ static int teil_sitz(void)
     int32_t r6[9], p6[3]; int fx_ok = 0, fx_falsch = 0;
     int f7 = 0, n_auf = 0; int32_t m_auf = 0;
     for (int f = 0; f < 200 && f7 < 40; f++) {
-        leon_statue(-3000, -19000); tick();
+        leon_statue(-3000, -19000); pl->hp = 30000; tick();   /* Runde 41 Spur G2 NB1 (M1): s. schleppen Fall 3 - kein toedlicher Biss im Mass */
         if (!zeichnen_nachbau(r6, p6)) { CHECK(0, "Zeichner-Nachbau ohne Pose"); return 1; }
         int32_t d = sitz_fehler(r6, p6, &fx_ok);
         if (d >= 0) { n_auf++; if (d > m_auf) m_auf = d; if (!fx_ok) fx_falsch++; }
@@ -1507,6 +1510,8 @@ static int teil_sitz(void)
      *     Westen - die Verfolgung will hinaus, push_rect Fall 0 verwirft den Schritt (re15_collision.c) -> Befreiung (Schub). */
     int b0 = re15_gator_boss_befreiungen(), n_schub = 0, gestartet = 0; int32_t m_schub = 0; int gier_fest = 1;
     const int32_t ausgang = -1700 - ((int32_t)e->hit_radius_min + 60) - 120;   /* Slab-Ausgang bx (enemy_ai_boss_gator.c) */
+    for (int f = 0; f < 120 && re15_gator_boss_phase(e) != 2; f++) { leon_statue(-7000, -16000); pl->hp = 30000; tick(); }   /* Runde 41 Spur G2 NB1: einen
+                                     * laufenden Biss aus (b) erst zu Ende gehen lassen (mit dem Kanister erreicht er die Statue frueher) */
     e->x = -1700 - (int32_t)e->hit_radius_min + 600; e->z = -16000; e->rot_y = 0x800;
     for (int f = 0; f < 80; f++) {
         leon_statue(-7000, -16000); pl->hp = 100;

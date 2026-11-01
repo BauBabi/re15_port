@@ -53,6 +53,7 @@ int re15_gatorszene_r41_spawn_weg(uint16_t room_id, uint8_t type, int16_t x, int
 #include "re15_blink_r41.h"
 #include "re15_math.h"
 #include "re15_md1.h"      /* Runde 41 Spur G2 (Punkt 6): skalierte Kopie des Schluessel-MD1 */
+#include "re15_anim_select.h"   /* Runde 41 Spur G2 NB1 (M2): re15_compute_actor_kf (Keyframe-vz der Kopfhaltung) */
 #include <stdint.h>
 #include "re15_collision.h"   /* Spur P (Nachbesserung 1): key_begehbar */
 #include "re15_camera.h"   /* Nachbesserung 1 (M2): re15_camera_build_view (Schluessel-Lage im Bild der Kamera) */
@@ -643,11 +644,18 @@ int re15_gatorszene_r41_gator_phase(void) { return s_ga.phase; }
 #define GSZ_WURF_BILD         57
 #define GSZ_FANG_BILD         75
 #define GSZ_WEG_BILD          77
-#define GSZ_WURF_A            20        /* = RE15_K2080_WURF_AY (RE2 ROOM7020 sub13 Speed_set(7, 20) @0x089E) */
+#define GSZ_WURF_A            40        /* = RE15_K2080_WURF_AY (RE2 ROOM7020 sub13 Speed_set(7, 20) @0x089E) */
 /* Runde 41 Spur G2: Pruefhaken der Riegel (Gegenprobe, kein Spielweg, kein Env-Schalter): 1 = Leiche wie vor Spur G2 (eingefrorene Relation, RE2-
  * Kanister-Maullage, weg mit dem Clip-5-Ende); Flug-Zustand der Leiche (Punkt 2, s. GSZ_WURF_BILD). */
 static int s_g2_alt = 0;
 static struct { int phase; int t; int32_t p0[3]; int32_t q0[4]; int32_t hoehe_min; int fang_abw; int bild_wurf, bild_fang, bild_weg; } s_flug;
+/* Runde 41 Spur G2 Nachbesserung 1 (Hinweis H1 der Abnahme: "im Biss-Moment ~0,3-0,5 s Leiche unter/durch den Kiefer"): VORGRIFF. Gemessen
+ * (test_r41_gatorfix maul, G2_MITTE): Clip 4 Bild 0..12 treibt die Leiche frei, ab Bild 7 liegt sie unter dem sich schliessenden Unterkiefer
+ * (Leichen-Scheitel unter dem Kopf-Band 34 -> 76 -> 186), im Koppelbild 13 noch 163; danach dreht sie 26 Bilder ins Maul. PORT-WAHL: ab Clip 4
+ * Bild GSZ_VORGRIFF_AB zieht das offene Maul die Leiche in GSZ_VORGRIFF_BILDER Bildern in die Halte-Lage (Lage linear, Drehung nlerp), bevor der
+ * Kiefer ueber sie geht - im Koppelbild liegt sie schon quer im Maul, die Drehung danach ist leer. */
+static struct { int an, k; int32_t p0[3], q0[4]; } s_vg;
+static int s_nb1_alt;
 /* Nachbesserung 5 (M1/M3/M4): Messgroessen der Szene (nur RAM, Pruefhaken re15_gatorszene_r41_kampfbeginn/_kontakt/_fress_kamera). */
 static int      s_fress_cut = -1, s_fress_frontal = 0;    /* FINISHER-Schnitt der Spur B und sein Frontalwert (gr2_frontal-Form) */
 static int      s_kb_ok = 0, s_kb_zone_g = -1, s_kb_zone_s = -1, s_kb_takt = 0, s_kontakt = -1;
@@ -947,11 +955,67 @@ static void kontakt_pruefen(const re15_actor_t *e)
 }
 #endif
 
+
+/* ==== Runde 41 Spur G2 Nachbesserung 1 (Mangel M2 der Abnahme: "Die Schnauze ist waehrend des ganzen Wurfs hinter dem oberen Letterbox-Balken; der
+ * Koerper steigt vor dem Hals auf, sinkt und verschwindet auf halber Halshoehe, der Fang ist nie im Bild"): KOPFHALTUNG BEIM WURF.
+ * Gemessen (test_r41_gatorfix kopfwinkel/wurfkamera, Fress-Einstellung Cut 1): Clip 5 Bild 56 -> 60 richtet sich der Alligator auf (Keyframe-vz Bone 0
+ * 23 -> -179, Bone 1 57 -> -240, Bone 5 56 -> -181, Bone 6 56 -> -240; Part-6-Achse Welt-y -346 -> -3918 = ~72 Grad), die Schnauze (Part-6-x 2500) steht
+ * Bild 58..76 bei Bild-y -9..11 = hinter dem oberen Balken (0..24, render_pc.c / FUN_80021a0c).
+ * PORT-WAHL (Gestaltung, Orchestrator "Kamera dieser Einstellung, Wurfhoehe, Zeitpunkt, Kopfhaltung abstimmen"): ab Clip 5 Bild GSZ_KH_AB wird das
+ * Aufrichten der Bones 0/1/5/6 auf (1 - GSZ_KH_Q12/4096) gedaempft (Zuschlag auf vz wie die Spur-B-Part-Zusaetze re15_gator_spine_arc_vz), nach dem
+ * Verschlingen (GSZ_WEG_BILD) in GSZ_KH_AUS Bildern zurueck auf die Keyframes. Die Keyframe-Winkel liest die Szene einmal je Szene aus der Bank
+ * (Abfrage-Pose wie kanister2080_r41.c hals_erfassen). */
+#define GSZ_KH_AB      56
+#define GSZ_KH_DAEMPF  3072    /* Anteil des Aufrichtens, der weggenommen wird (Q12) - Wahl = Messung, s. Dossier NB1 M2 */
+#define GSZ_KH_Q12     GSZ_KH_DAEMPF
+#define GSZ_KH_AUS     12
+#define GSZ_KH_N       128
+static const int k_kh_bone[4] = { 0, 1, 5, 6 };
+static int16_t s_kh_az[GSZ_KH_N][4];
+static int     s_kh_n = 0, s_kh_k = -1;
+static void kh_erfassen(const void *a, int b, int16_t *ay, int16_t *az)
+{
+    (void)a; (void)ay;
+    for (int i = 0; i < 4; i++) if (b == k_kh_bone[i] && s_kh_k >= 0 && s_kh_k < GSZ_KH_N) s_kh_az[s_kh_k][i] = *az;
+}
+static void kh_lesen(re15_actor_t *e, const re15_enemy_bank_t *bk)
+{
+    s_kh_n = 0;
+    if (!e || !bk || bk->anim.clip_count <= 5) return;
+    const int n = bk->anim.clips[5].frame_count < GSZ_KH_N ? bk->anim.clips[5].frame_count : GSZ_KH_N;
+    void (*hv)(const void *, int, int16_t *, int16_t *) = g_anim_bone_angle_hook;
+    void *pa = g_anim_pose_actor, *qa = g_anim_query_actor;
+    g_anim_bone_angle_hook = kh_erfassen; g_anim_pose_actor = NULL; g_anim_query_actor = e;
+    for (int f = 0; f < n; f++) {
+        re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
+        s_kh_k = f;
+        const int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, e, 5, (uint32_t)f);
+        if (kf >= 0) (void)re15_skel_compute_pose(&bk->skel, kf, ps);
+    }
+    s_kh_k = -1;
+    g_anim_bone_angle_hook = hv; g_anim_pose_actor = pa; g_anim_query_actor = qa;
+    s_kh_n = n;
+}
+int re15_gatorszene_r41_kopf_vz(const void *aktor, int bone)
+{
+    const re15_actor_t *e = (const re15_actor_t *)aktor;
+    if (s_g2_alt || s_nb1_alt || !e || s_kh_n <= GSZ_KH_AB || e->motion != 5 || s_ga.phase != GP_SCHUETTELN || e->type != 0x23u) return 0;
+    const int f = (int)e->anim_frame;
+    if (f < GSZ_KH_AB || f >= s_kh_n) return 0;
+    int i = -1;
+    for (int j = 0; j < 4; j++) if (k_kh_bone[j] == bone) i = j;
+    if (i < 0) return 0;
+    int k = GSZ_KH_Q12;
+    if (f > GSZ_WEG_BILD) k = f >= GSZ_WEG_BILD + GSZ_KH_AUS ? 0 : k * (GSZ_WEG_BILD + GSZ_KH_AUS - f) / GSZ_KH_AUS;
+    const int d = (int16_t)(s_kh_az[f][i] - s_kh_az[GSZ_KH_AB - 1][i]);
+    return -(d * k) / 4096;
+}
 static void ga_start(int slot, re15_actor_t *e, const re15_enemy_bank_t *bk)
 {
     memset(&s_ga, 0, sizeof s_ga);
     s_fress_cut = -1; s_fress_frontal = 0; s_kb_ok = 0; s_kb_takt = 0; s_kontakt = -1;   /* Nachbesserung 5 (Messgroessen) */
     memset(&s_flug, 0, sizeof s_flug);                       /* Runde 41 Spur G2: Flug der Leiche neu */
+    memset(&s_vg, 0, sizeof s_vg);                           /* Runde 41 Spur G2 NB1: Vorgriff neu */
     ga_buehne(e, bk);
     e->y = -1200;                                             /* GB_WATER_Y = Wasser-INIT-Y der 0x23-KI @0x8010c65c */
     ga_clip(e, 6, 0, 0);                                      /* Clip 6 (0) @0x801008ac-b8 */
@@ -1001,6 +1065,7 @@ int re15_gatorszene_r41_boss(int slot, void *gator_actor)
             ga_clip(e, 5, 0, 0);                              /* P2 Clip 5 @0x80101180-88 */
             ga_anker_lage(e, bk);
             s_ga.phase = GP_SCHUETTELN; s_ga.t = 0;
+            kh_lesen(e, bk);                                  /* NB1 (M2): Keyframe-vz der Bones 0/1/5/6 fuer die Kopfhaltung beim Wurf */
             folge('G', GP_SCHUETTELN, 0);
         }
         break;
@@ -1116,8 +1181,12 @@ static int     s_sitz_k = 0;     /* Spur G2: Bilder seit dem Koppelbild (Drehung
 #define GSZ_MAUL_Y            (-495)    /* x 2731/4096 = -330 (ueber dem Unterkiefer-Ursprung; Maul-Linie -100 bei geschlossenem Maul) */
 #define GSZ_LEICHE_KIPP       171       /* 15 Grad (4096tel) um die Laengsachse: die Beinseite hoch */
 #define GSZ_SITZ_BILDER       26        /* = gator_re2_r41.c RE15_GR2_KAN_SITZ_BILDER: RE2-Stufen 3-6, 6 @0x80101970 + 6 @0x801019dc + 7 @0x80101a64 + 7 @0x80101aec */
+#define GSZ_VORGRIFF_AB       1         /* NB1 (H1): ab dem ersten Biss-Bild (Clip 4 Bild 0 = Eintritt GP_BISS) */
+#define GSZ_VORGRIFF_BILDER   6         /* NB1 (H1): = RE2-Stufe 3 der Kanister-Aufnahme (6 Bilder @0x80101970) - fertig in Bild 6, vor Bild 7 (Kiefer ueber der Leiche) */
 static int s_sitz_ok = 0;
-void re15_gatorszene_r41_g2_alt_setzen(int an) { s_g2_alt = an; memset(&s_flug, 0, sizeof s_flug); }
+static int s_nb1_alt;   /* Pruefhaken der Gegenprobe (Riegel unit_r41_gatorfix_maul/wurf): 1 = Stand G2 vor der Nachbesserung 1 (kein Vorgriff, keine Kopfhaltung, Wurf a = 20) */
+void re15_gatorszene_r41_nb1_alt_setzen(int an) { s_nb1_alt = an; memset(&s_vg, 0, sizeof s_vg); }
+void re15_gatorszene_r41_g2_alt_setzen(int an) { s_g2_alt = an; memset(&s_flug, 0, sizeof s_flug); memset(&s_vg, 0, sizeof s_vg); }
 /* Messhaken (Riegel unit_r41_gatorfix_wurf): Flug-Zustand 0 haengt / 1 fliegt / 2 gefangen / 3 weg; Bilder (Clip-5-Bild) von Wurf/Fang/weg, hoechster Punkt
  * der Rumpfmitte ueber der Maullage im Flug (Welt-y-Differenz, > 0 = hoeher), Abstand Rumpfmitte <-> Maullage im Fangbild. */
 int re15_gatorszene_r41_leiche_flug(int *bild_wurf, int *bild_fang, int *bild_weg, int32_t *hoehe, int32_t *fang_abw)
@@ -1270,6 +1339,38 @@ void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor)
 #ifdef RE15_PLATFORM_PC   /* Messhaken (je Bild eine Pose je Knochen) - nicht im PSX-Laufzeitbudget, die Spiellogik liest ihn nicht */
     if (e && s_zustand == RE15_GSZ_KAMPF && s_kb_ok && s_kontakt < 0 && s_kb_takt >= 1) kontakt_pruefen(e);   /* Nachbesserung 5 */
 #endif
+    if (!s_g2_alt && !s_nb1_alt && e && s_ga.phase == GP_BISS && !s_ga.leiche_dran && !s_ga.leiche_weg && e->motion == 4
+        && (int)e->anim_frame >= GSZ_VORGRIFF_AB) {                  /* NB1 (H1): Vorgriff, s. s_vg */
+        const int kv = prop_slot(RE15_GSZ_LEICHE_OBJ);
+        int32_t r6v[9], p6v[3];
+        if (kv >= 0 && re15_gr2_part6_gezeichnet(r6v, p6v)) {
+            int32_t ro[9];
+            prop_matrix(g_scd.props[kv].rot_x, g_scd.props[kv].rot_y, g_scd.props[kv].rot_z, ro);
+            if (!s_vg.an) {
+                s_vg.an = 1; s_vg.k = 0;
+                s_vg.p0[0] = g_scd.props[kv].x; s_vg.p0[1] = g_scd.props[kv].y; s_vg.p0[2] = g_scd.props[kv].z;
+                q_aus_matrix(ro, s_vg.q0);
+            }
+            if (s_vg.k < GSZ_VORGRIFF_BILDER) s_vg.k++;
+            int32_t rs[9], rz[9], t[3], qz[4], q[4], rw[9];
+            leiche_rel_soll(rs);
+            mat_mul(r6v, rs, rz);                                     /* Zieldrehung Welt = R6 x Halte-Relation */
+            maul_lokal(ga_scale(e), t);
+            const int32_t m[3] = { GSZ_LEICHE_MITTE_X, GSZ_LEICHE_MITTE_Y, GSZ_LEICHE_MITTE_Z };
+            int32_t lz[3], pz[3];
+            for (int r = 0; r < 3; r++)
+                lz[r] = t[r] - (int32_t)(((int64_t)rs[r*3] * m[0] + (int64_t)rs[r*3+1] * m[1] + (int64_t)rs[r*3+2] * m[2]) >> 12);
+            for (int r = 0; r < 3; r++)
+                pz[r] = p6v[r] + (int32_t)(((int64_t)r6v[r*3] * lz[0] + (int64_t)r6v[r*3+1] * lz[1] + (int64_t)r6v[r*3+2] * lz[2]) >> 12);
+            q_aus_matrix(rz, qz);
+            q_nlerp(s_vg.q0, qz, s_vg.k, GSZ_VORGRIFF_BILDER, q);
+            q_zu_matrix(q, rw);
+            g_scd.props[kv].x = s_vg.p0[0] + (pz[0] - s_vg.p0[0]) * s_vg.k / GSZ_VORGRIFF_BILDER;
+            g_scd.props[kv].y = s_vg.p0[1] + (pz[1] - s_vg.p0[1]) * s_vg.k / GSZ_VORGRIFF_BILDER;
+            g_scd.props[kv].z = s_vg.p0[2] + (pz[2] - s_vg.p0[2]) * s_vg.k / GSZ_VORGRIFF_BILDER;
+            euler_aus_matrix(rw, &g_scd.props[kv].rot_x, &g_scd.props[kv].rot_y, &g_scd.props[kv].rot_z);
+        }
+    }
     if (!e || !s_ga.leiche_dran || s_ga.leiche_weg) return;
     int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
     int32_t r6[9], p6[3];
@@ -1286,6 +1387,16 @@ void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor)
         }
         memcpy(s_rel0, s_rel, sizeof s_rel0);
         s_sitz_k = 0;
+        if (!s_g2_alt && !s_nb1_alt && s_vg.an && s_vg.k >= GSZ_VORGRIFF_BILDER) {   /* NB1 (H1): nach dem Vorgriff liegt sie schon in der Halte-Lage - Relation und
+                                                                 * Lage genau die Halte-Lage (sonst Rest aus dem Part-6-Bild davor), keine Drehung mehr */
+            const int32_t m[3] = { GSZ_LEICHE_MITTE_X, GSZ_LEICHE_MITTE_Y, GSZ_LEICHE_MITTE_Z };
+            int32_t t[3];
+            leiche_rel_soll(s_rel); memcpy(s_rel0, s_rel, sizeof s_rel0);
+            maul_lokal(ga_scale(e), t);
+            for (int r = 0; r < 3; r++)
+                s_lokal[r] = t[r] - (int32_t)(((int64_t)s_rel[r*3] * m[0] + (int64_t)s_rel[r*3+1] * m[1] + (int64_t)s_rel[r*3+2] * m[2]) >> 12);
+            s_sitz_k = GSZ_SITZ_BILDER;
+        }
         memset(&s_flug, 0, sizeof s_flug);
         s_rel_ok = 1;
         folge('H', s_lokal[0], s_lokal[2]);
@@ -1330,7 +1441,7 @@ void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor)
                 folge('F', f, pa[1]);
             } else {
                 const int t = s_flug.t;
-                const int64_t h = (int64_t)GSZ_WURF_A * T * T / 8;                    /* H = a T^2 / 8 */
+                const int64_t h = (int64_t)(s_nb1_alt ? 20 : GSZ_WURF_A) * T * T / 8;                    /* H = a T^2 / 8 */
                 const int32_t heb = (int32_t)(4 * h * t * (T - t) / ((int64_t)T * T));
                 int32_t qa[4], q[4];
                 q_aus_matrix(rw, qa);

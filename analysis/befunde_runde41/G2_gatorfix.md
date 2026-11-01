@@ -144,3 +144,82 @@ tut; in den fuenf Riegeln gesetzt. (2) Gemessen (tragen_elza, F1201): die Wurzel
 Skala VOR der Wurzel, gator_re2_r41.c @0x80100ae4-ec) wurde nie getroffen, weil er den Kanister kreuzt statt laengs auf ihn zuzuschwimmen. Haken:
 fuer den Szenen-Kanister gilt das Fenster ab der Wurzel (laengs >= 0) bis zum RE2-Ende ("erst wenn er beim Kanister ankommt"); mit dem Pruefhaken N3
 das RE2-Fenster wie bisher. Riegel-Nachzug kanister2080_kampf: Tot-Bits 236..238, 3 von 3.
+
+## Nachbesserung 1 (Abnahme 1: analysis/befunde_runde41/G2_abnahme_1.md, M1-M3, H1, H2, E1)
+Messweg wie oben; Laufordner scratchpad `g2nb1/runs/<lauf>` (exe-Kopie `re15_pc_g2nb1_<lauf>.exe`, gdigrab auf das eigene Fenster, kein AUTOSHOT/SOFTWARE_RENDER).
+"Vorher" = die Abnahme-Laeufe auf Bau 867c95480 (gleiche Eingabe, `G2abn1/runs/frei_*`, Bilder `G2_abnahme_1/`). Auswerter neu: `test_r41_gatorfix traglog <lauf>`
+(Masse der Abnahme still_state.py/haenger.py in C: Stillstand = Wurzel 30 Bilder netto < 300, fern = Kopf > 2500 von der Figur und nicht RE2-Dash, dazu ohne
+Biss-Reichweite = Wurzel < 3200 (Spur-B-Bisstor); Wandreiben = Spanne der Kopf-Klemm-Bilder in einer solchen Stillstands-Folge, Luecken <= 26 = ein Paddel-Zyklus).
+
+### M1 (Punkt 7) - Haengen mit Kanister im freien Spiel
+**Messung vorher** (Abnahme-Laeufe, traglog): Leon F7545-F7894 Wurzel (-3952,-10027), Ziel nach der G2-Verschiebung (-4001,-8549) 1300-2000 noerdlich der
+Klemmlinie; Elza F6971-F6981 Ziel auf der Wurzel, Gier pendelt 3285/3381/3477 (= Wende 0x60 hin und her), Takt (0,0). Ursachen: (1) G2 drehte die Kopfpunkte auf
+die Richtung zum UNVERSCHOBENEN Ziel, er schwimmt aber zum verschobenen; (2) Punkte nur aus dem laufenden Bild; (3) kein "angekommen" - am Ziel steht oder drueckt er.
+RE2 hat keinen Wartezustand: Stufe 7 @0x80101b58-8c (`lw v1,56(s2) / addiu v0,zero,1750 / beq / jal 0x8001a1e0 (a2 100)`, `lw v1,60(s2) / addiu v0,zero,-210 /
+... (a2 30)`) fuehrt nur die Lokallage nach, ohne Zaehler; nur das Intro wartet (`lh v0,468(s0) / beq` @0x80100854-5c).
+**Aenderung** (gator_re2_r41.c TRAG-LENKUNG, PORT-WAHL, Herleitung im Kommentar): Kopfpunkte = konvexe Huelle Bones 5/6/7 + Kanister-Enden ueber alle Bilder
+der Clips 0/1 (einmal je Anhaengen); Wurzel-Kasten je Gier = Aussenwaende minus Huelle minus 340 (GR2_KK_SCHRITT); Ziel auf der Strecke Wurzel -> Ziel gekuerzt
+(dieselbe Gier fuer Rechnung und Schwimmen); am gekuerzten Ziel (< 800, Spur-B-Erreicht-Radius) VORBEI-Etappe 4000 (= ein Clip-0-Zyklus 5990 x 2731/4096) laengs
+der Wand, danach Gegenrichtung; erst in Stufe 7. Mit dem Kanister keine Wende auf der Stelle (Bogen mit dem Clip-Wurzelversatz, CHASE und GUARD) - RE2 Stufe 7.
+GUARD: Pendel ohne 90-Bilder-Halt, keine 600er-Ruhezone, Hop des Kanten-Umwegs: am gekuerzten Hop Etappe zum Wegpunkt, den der Umweg vom Hop aus waehlt.
+**Messung nachher** (gleiche Eingabe; traglog, Spalten: Stillstand fern / fern ohne Biss-Reichweite / laengste Folge / Wandreiben / Aufnahme):
+| Lauf | fern | ohne Biss | laengste | Wandreiben | Aufnahme nach Aufschlag |
+|---|---|---|---|---|---|
+| alt_frei_leon (vor G2) | 13 % | 11 % | 307 | 307 | 111 (Anschwimmen) |
+| alt_frei_elza (vor G2) | 6 % | 6 % | 57 | 57 | 100 (Anschwimmen) |
+| frei_leon (G2, Abnahme) | 28 % | 26 % | 350 | 345 | 3619 |
+| frei_elza (G2, Abnahme) | 27 % | 25 % | 192 | 192 | 489 |
+| n2_frei_leon (NB1) | 7 % | 7 % | 39 | 8 | 582 |
+| n2_frei_elza (NB1) | 10 % | 8 % | 40 | 9 | 489 |
+Ehrlich: Elza liegt mit 8-10 % ueber dem Vorher-Lauf derselben Eingabe (6 %), im Band des alten Stands (7-13 %); die Reste sind 31-43 Bilder Clip 0 nach einem
+Biss (Biss-Sperre, RE2-Hysterese) bzw. die Gleit-Bilder von Clip 0 in einer Wende, keine Wand. Beide Laeufe zusammen 8,1 % gegen 9,0 % vor G2.
+Bilder `G2_belege/nb1_m1_nachher_karte_frei_leon.jpg` / `_elza.jpg` gegen `G2_abnahme_1/p7_karte_frei_*.jpg`.
+Riegel: unit_r41_gatorfix_fuzz(_elza) (26 Spielerlagen, je 450 Bilder): neu Stillstand 42 von 11700 (0 %), Wandreiben hoechstens 2; vor G2 2432 (20 %) / 375;
+Gegenprobe G2 vor NB1 Wandreiben 31 > 30 (rot). integration_r41_gatorfix_frei(_elza) (exe, Abnahme-Eingabe 8400 Bilder): Wandreiben <= 30, laengste Folge <= 60,
+Anteil <= 13 %, Aufnahme <= 900 Bilder; Gegenprobe = die Abnahme-Laeufe (traglog oben, rot).
+Nachgezogen (Spur B): unit_r41_re2gator_schleppen Fall 3 / _sitz (a)+(c): die Statue bekommt volle Lebensenergie bzw. (c) wartet einen laufenden Biss ab - mit dem
+Kanister schwimmt er in der Wende weiter und erreicht die Statue frueher, der toedliche Biss (FRESSEN P0 schaltet den Kanister aus @0x80101008-0c) gehoert nicht zum
+Mass dieser Faelle (Kanister-Sitz).
+
+### M3 (Punkt 7, Plattform) - patrouilliert weiter, auch mit Kanister
+**Wie man im Port hinaufkommt** (gemessen, `test_r41_gatorfix kletterkarte 2090`): Kletterzellen (Bodentypwort Bit 0, climb_common.c @0x8002d530-50) gibt es in
+ROOM2090 Band 0 nur auf der RAMPE (468 Zellen, Typwort 0x0101, x 2000..6800, z -18000..-14600), die Plattform selbst hat keine - hinauf geht es ueber die Rampe
+(aus dem Wasser an ihrer Nord- oder Suedkante, Blick zur Rampe, Aktion), von dort zu Fuss auf die Plattform. Die Abnahme versuchte die Westkante der Plattform.
+Lauf n4_plat_* (Messhaken RE15_K2080_RUECK_LAGE=3000,-18800,3072 = Rueckkehr an die Suedkante der Rampe, Blick Nord; danach `A` -> climb.log sub=9, Figur oben):
+| Lauf | Kletterzellen | Trag-Bilder Belagerung | Stillstand fern | laengste Folge | Wandreiben |
+|---|---|---|---|---|---|
+| n2_plat_leon (NB1 ohne Hop-Regel) | sub=9 | 2696 | 1 % | 37 | 6 - aber Schleife im Westkanal, 7000 von der Figur (Hop (-4300,-22600) nie erreicht) |
+| n3_plat_leon (Hop-Regel, mit 600er-Ruhezone) | sub=9 | 2696 | 74 % | 2165 | 0 - stand 591 vor dem Etappenziel |
+| n4_plat_leon (NB1) | sub=9 (52 Bilder) | 2696 | 0 % | 0 | 0 |
+| n4_plat_elza (NB1) | sub=9 (52 Bilder) | 2696 | 1 % | 16 | 0 |
+Er schwimmt mit dem Kanister um die Suedwestecke der Plattform und patrouilliert unter Plattform/Rampe hin und her (Karte `G2_belege/nb1_m3_nachher_karte_rampe_leon.jpg`,
+`_elza.jpg`, Fensterbilder alle 10 s `nb1_m3_nachher_rampe_leon_10s.jpg`). Vorher (Nutzer-Sitzung 2026-11-01 Marke 1): 19 s am Rampen-Hop; Fuzz-Gegenprobe G2 v1
+Lage Rampe 41 Bilder Stillstand am Stueck.
+Riegel: integration_r41_gatorfix_rampe(_elza) (climb sub=9, >= 600 Trag-Bilder Belagerung, laengste Stillstands-Folge <= 60, Wandreiben <= 30); Fuzz-Lagen P-*/Rampe.
+
+### M2 (Punkt 2) - Wurf, Fang, Verschwinden lesbar
+**Messung vorher** (`test_r41_gatorfix kopfwinkel`, Fress-Einstellung Cut 1): Clip 5 Bild 56 -> 60 Aufrichten (Keyframe-vz Bone 0 23 -> -179, Bone 1 57 -> -240,
+Bone 5 56 -> -181, Bone 6 56 -> -240; Part-6-Achse Welt-y -346 -> -3918), Schnauze (Part-6-x 2500) Bild 58..76 bei Bild-y -9..11 = hinter dem Balken 0..24.
+Riegel-Gegenprobe (Stand vor NB1): Schnauze in 19 von 20 Flug-/Fangbildern hinter dem Balken, Leiche oben angeschnitten in 13, Leiche nie ueber der Schnauze (-54).
+**Aenderung** (gatorszene_r41.c KOPFHALTUNG BEIM WURF, PORT-WAHL "Kopfhaltung/Wurfhoehe abstimmen"): Aufrichten der Bones 0/1/5/6 ab Clip 5 Bild 56 um 3/4 gedaempft
+(Zuschlag auf vz wie die Spur-B-Part-Zusaetze, Keyframes je Szene aus der Bank), nach Bild 77 in 12 Bildern zurueck; Wurf-Beschleunigung 40 statt 20 (Wahl =
+Messung: Leichen-Unterkante 17 Bildpunkte ueber der Schnauze, Oberkante unter dem Balken).
+**Messung nachher**: Riegel unit_r41_gatorfix_wurf(_elza): in keinem der 20 Flug-/Fangbilder Schnauze oder Leiche hinter dem Balken, Leiche ganz ueber der
+Schnauze (17), Fang Bild 75 (4 vom Maul), weg Bild 77. Im Fenster (n4_ank_*): `G2_belege/nb1_m2_nachher_leon_wurf_fang_15fps.jpg` / `_elza` - Leiche fliegt
+ueber das offene Maul, faellt hinein, mit dem Zuschnappen weg (vorher `G2_abnahme_1/p2_leon_wurf_fang_t32.97-33.67_30fps.jpg`).
+
+### H1 - Biss: ganz im Maul
+**Messung vorher** (`G2_MITTE`): Clip 4 Bild 7..12 liegt die freie Leiche unter dem Kiefer (Scheitel unter dem Kopf-Band 76 -> 186), Koppelbild 163, danach 26 Bilder
+Drehung (bis 24 aussen). **Aenderung** (VORGRIFF, PORT-WAHL): ab Clip 4 Bild 1 zieht das offene Maul die Leiche in 6 Bildern (= RE2-Stufe 3 @0x80101970) in die
+Halte-Lage, im Koppelbild Relation/Lage genau die Halte-Lage. **Nachher**: unit_r41_gatorfix_maul(_elza) jetzt ab Clip 4 Bild 7 bis zum Wurf (66 Bilder): 0 Scheitel
+ausserhalb; Gegenprobe ohne Vorgriff 186 (rot). Bild `G2_belege/nb1_h1_nachher_leon_biss.jpg`.
+
+### H2 - Marvin/John: jeder laeuft sichtbar
+Vorher (Abnahme): Zombie 1 nach 19 Bildern / 104 Einheiten. **Aenderung**: Sleep RE15_K2080_LAUF_BILDER 20 vor dem Anlegen (PORT-WAHL: + Anlegen 10 = 30 Bilder
+= "rund 1 s"). **Nachher** (exe n2_frei_leon): Schuesse F39/F56/F73, gelaufen 33/50/67 Bilder (Bahn 448/1345/1195), Rest zur Leiter >= 9272. Riegel
+unit_r41_gatorfix_marvin(_elza) erster Tod >= 30 (Harness 32; Gegenprobe ohne Laufzeit 12, rot), integration_r41_gatorfix_gang_szene(_elza) je >= 30 Bilder gelaufen.
+
+### E1 (Punkt 8) - nach einer Weile am Kanister vorbei
+**Aenderung** (kanister2080_r41.c, PORT-WAHL): liegt der Kanister 450 Bilder (15 s) frei, wird er Wegpunkt seiner Runde, sobald er VOR ihm liegt (er dreht nicht
+dafuer um), spaetestens nach 600 Bildern; geschwommen im Bogen (Slew 0x30, keine Wende auf der Stelle) bis zur Aufnahme; Zeile `RUNDE zum Kanister an`.
+**Nachher**: Aufnahme 582 (Leon, vorher 3619) / 489 (Elza) Bilder nach dem Aufschlag = 19,4 / 16,3 s; Rampen-Lauf 637 Bilder.

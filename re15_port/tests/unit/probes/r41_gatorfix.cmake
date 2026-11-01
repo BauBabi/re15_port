@@ -25,13 +25,15 @@ endforeach()
 #   unit_r41_gatorfix_klemm(_elza)   Punkt 7: mit dem Kanister im Maul greift die Kopf-Klemme am Steuerziel nicht (Lage der Nutzer-Marke 1 + drei Waende);
 #                                     Gegenprobe Ziel wie vor G2 (Pruefhaken re15_gr2_kk_ziel_alt_setzen): Ueberstand 340 = Festdruecken
 #   integration_r41_gatorfix_gang_*   exe: Gang zur Leiter (Montage: alle fuenf >= 1000 naeher; Szene: naeher beim Tod, >= 2000 Rest, letzter Schuss <= F90)
-foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza)
+#   unit_r41_gatorfix_fuzz(_elza)   NB1 (M1/M3): Fuzz ueber 26 Spielerlagen (Waende, Ecken, Plattform, Rampe, Leiter) mit dem Kanister im Maul -
+#                                     Wandreiben <= 30 Bilder, Stillstand hoechstens wie vor G2; Gegenprobe G2 vor NB1 (Pruefhaken): Wandreiben > 30
+foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix.cmake)
-    foreach(_teil gang_montage gang_montage_elza gang_szene gang_szene_elza)
+    foreach(_teil gang_montage gang_montage_elza gang_szene gang_szene_elza frei frei_elza rampe rampe_elza)   # NB1: frei/rampe (M1/M3/E1)
         add_test(NAME integration_r41_gatorfix_${_teil}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

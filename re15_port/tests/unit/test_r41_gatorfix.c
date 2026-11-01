@@ -8,6 +8,7 @@
  *   maulgeo [elza]        Geometrie der Leiche im Maul je Bild (Leichen-Scheitel im Rahmen von Part 6 / Part 7)
  */
 #define main gsz_haupt
+#include <math.h>
 #include "test_r41_gatorszene.c"
 #undef main
 
@@ -260,7 +261,27 @@ static void teil_maul(int elza, int alt, int *aus_max, int *aus_bilder)
         frame(0, 0);
         int32_t a = -1;
         if (re15_gatorszene_r41_leiche_sitz(&a) && f_kopp < 0) f_kopp = f;            /* Koppelbild: ab hier dreht sie GSZ_SITZ_BILDER = 26 Bilder ins Maul */
-        if (!re15_gatorszene_r41_leiche_sitz(&a) || a > 40) continue;      /* angehaengt, nicht im Flug, angekommen (Spur-P-Mass 40) */
+        if (getenv("G2_MITTE") && g->motion == 4) {   /* NB1 H1: Rumpfmitte im Part-6-Rahmen und Kopf-Band an ihrem x je Biss-Bild */
+            const int kk = prop_von(RE15_GSZ_LEICHE_OBJ);
+            re15_skel_pose_t q[RE15_EMD_MAX_BONES];
+            if (kk >= 0 && g2_pose(g, q)) {
+                int32_t r6[9], p6[3]; g2_part_welt(g, &q[6], r6, p6);
+                g2_band_t b; g2_band(g, q, r6, p6, &b);
+                int32_t ro[9]; g2_prop_matrix(g_scd.props[kk].rot_x, g_scd.props[kk].rot_y, g_scd.props[kk].rot_z, ro);
+                const int32_t m[3] = { 1090, -170, -100 };
+                const int32_t w[3] = { g_scd.props[kk].x + g2_q12(ro[0], m[0]) + g2_q12(ro[1], m[1]) + g2_q12(ro[2], m[2]),
+                                       g_scd.props[kk].y + g2_q12(ro[3], m[0]) + g2_q12(ro[4], m[1]) + g2_q12(ro[5], m[2]),
+                                       g_scd.props[kk].z + g2_q12(ro[6], m[0]) + g2_q12(ro[7], m[1]) + g2_q12(ro[8], m[2]) };
+                int32_t l[3]; g2_lokal(r6, p6, w, l);
+                int32_t ob = 0, un = 0; g2_band_bei(&b, l[0], &ob, &un);
+                int unten = 0; int32_t mg = 0; const int nd = g2_draussen(r6, p6, &b, &unten, &mg);
+                printf("      MITTE F%d Clip 4 Bild %d: Rumpfmitte Part6 (%d,%d,%d) Band [%d,%d] Leichen-Scheitel draussen %d (unten %d) %s\n", f, (int)g->anim_frame,
+                       l[0], l[1], l[2], ob, un, nd, unten, f_kopp >= 0 ? "angehaengt" : "frei");
+            }
+        }
+        /* NB1 (H1 "auch beim Biss ganz im Maul"): auch die Biss-Bilder vor dem Koppelbild ab Clip 4 Bild 7 (dort geht der Kiefer ueber die Leiche) */
+        const int biss = f_kopp < 0 && g->motion == 4 && g->anim_frame >= 7 && !re15_gatorszene_r41_leiche_sitz(&a);
+        if (!biss && (!re15_gatorszene_r41_leiche_sitz(&a) || a > 40)) continue;      /* angehaengt, nicht im Flug, angekommen (Spur-P-Mass 40) */
         re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
         if (!g2_pose(g, ps)) continue;
         int32_t r6[9], p6[3]; g2_part_welt(g, &ps[6], r6, p6);
@@ -268,7 +289,8 @@ static void teil_maul(int elza, int alt, int *aus_max, int *aus_bilder)
         int unten = 0; int32_t marge = 0;
         const int n = g2_draussen(r6, p6, &b, &unten, &marge);
         if (n < 0) continue;
-        if (f_kopp >= 0 && f < f_kopp + 26) { ein_bilder++; if (n > ein_max) ein_max = n; continue; }   /* Einschwenken (26 Bilder ab dem Koppelbild): nur berichtet */
+        if (biss || (f_kopp >= 0 && f < f_kopp + 26)) { ein_bilder++; if (n > ein_max) ein_max = n; if (getenv("G2_ZEIGE")) printf("      EIN F%d Clip %d Bild %d: %d draussen (unten %d)\n", f, (int)g->motion, (int)g->anim_frame, n, unten);
+            if (alt) continue; }   /* NB1: Biss + frueheres Einschwenken zaehlen mit (vor NB1 nur berichtet; Gegenprobe wie bisher) */   /* Einschwenken (26 Bilder ab dem Koppelbild): nur berichtet */
         gemessen++;
         if (n > 0) { bilder_draussen++; if (getenv("G2_ZEIGE")) printf("      F%d Clip %d Bild %d: %d draussen (unten %d), Rand %d\n", f, (int)g->motion, (int)g->anim_frame, n, unten, (int)marge); }
         if (n > max_n) { max_n = n; max_u = unten; max_f = f; }
@@ -287,23 +309,61 @@ static void teil_maul_riegel(int elza)
     int n = -1, b = 0, n_alt = -1, b_alt = 0;
     teil_maul(elza, 0, &n, &b);
     teil_maul(elza, 1, &n_alt, &b_alt);
-    PRUEF(b >= 34 && n == 0, "Leiche im Maul: %d Haltebilder (Clip 5 Bild 25..56 + 75..76 = 34), kein Scheitel ueber dem Schaedel oder unter dem Unterkiefer (%d)", b, n);
+    int n_nb1 = -1, b_nb1 = 0;
+    re15_gatorszene_r41_nb1_alt_setzen(1);   /* NB1 (H1): Gegenprobe ohne den Vorgriff - der Kiefer geht im Biss ueber die Leiche */
+    teil_maul(elza, 0, &n_nb1, &b_nb1);
+    re15_gatorszene_r41_nb1_alt_setzen(0);
+    PRUEF(b >= 34 + 26 + 6 && n == 0, "Leiche im Maul: %d Bilder (Biss Clip 4 Bild 7..12, Koppelbild, Clip 5 Bild 0..56 + 75..76), kein Scheitel ueber dem Schaedel oder unter dem Unterkiefer (%d)", b, n);
     PRUEF(b_alt >= 40 && n_alt >= 50, "Gegenprobe Leiche wie vor G2: %d Scheitel ausserhalb (rot ohne den Bau)", n_alt);
+    PRUEF(n_nb1 > 0, "Gegenprobe Stand vor NB1 (ohne Vorgriff): %d Scheitel ausserhalb im Biss (rot ohne den Bau)", n_nb1);
 }
 
+/* NB1 (M2): im Bild der laufenden Einstellung (Kino-Balken 0..24 / 216..240, render_pc.c): Schnauzenspitze (Part-6-x 2500) und Bildkasten der Leiche */
+static int g2_wurf_bild(re15_actor_t *g, int *schnauze_y, int *oben, int *unten)
+{
+    re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
+    if (!g2_pose(g, ps)) return 0;
+    int32_t r6[9], p6[3]; g2_part_welt(g, &ps[6], r6, p6);
+    const int32_t q[3] = { p6[0] + g2_q12(r6[0], 2500), p6[1] + g2_q12(r6[3], 2500), p6[2] + g2_q12(r6[6], 2500) };
+    int sx = -1, sy = -1; re15_gr2_im_bild_cut((int)g_scd.cam_id, q, &sx, &sy);
+    *schnauze_y = sy; *oben = 999; *unten = -999;
+    const int k = prop_von(RE15_GSZ_LEICHE_OBJ);
+    if (k < 0 || !g_scd.props[k].active) return 1;
+    const __typeof__(g_scd.props[0]) *pr = &g_scd.props[k];
+    int32_t ro[9]; g2_prop_matrix(pr->rot_x, pr->rot_y, pr->rot_z, ro);
+    for (int i = 0; i < s_ln; i++) {
+        const int32_t w[3] = { pr->x + g2_q12(ro[0], s_lv[i][0]) + g2_q12(ro[1], s_lv[i][1]) + g2_q12(ro[2], s_lv[i][2]),
+                               pr->y + g2_q12(ro[3], s_lv[i][0]) + g2_q12(ro[4], s_lv[i][1]) + g2_q12(ro[5], s_lv[i][2]),
+                               pr->z + g2_q12(ro[6], s_lv[i][0]) + g2_q12(ro[7], s_lv[i][1]) + g2_q12(ro[8], s_lv[i][2]) };
+        int x = 0, y = 0;
+        if (re15_gr2_im_bild_cut((int)g_scd.cam_id, w, &x, &y)) { if (y < *oben) *oben = y; if (y > *unten) *unten = y; }
+    }
+    return 1;
+}
 /* ---- Riegel Punkt 2: hochwerfen, im Maul fangen, dann weg -------------------------------------------------------------------- */
 static void teil_wurf(int elza)
 {
     printf("== wurf%s (Punkt 2) ==\n", elza ? "_elza" : "");
-    for (int alt = 0; alt <= 1; alt++) {
-        re15_gatorszene_r41_g2_alt_setzen(alt);
+    for (int alt = 0; alt <= 2; alt++) {
+        re15_gatorszene_r41_g2_alt_setzen(alt == 1);
+        re15_gatorszene_r41_nb1_alt_setzen(alt == 2);
         re15_actor_t *g = g2_szene_start(elza);
         int32_t y_vor = 0; int steigt = 0, faellt = 0, sicht_nach_weg = 0, key_nach_weg = 0, weg_f = -1;
+        int schnauze_weg = 0, leiche_weg_oben = 0, flug_bilder = 0, abstand_max = -999;   /* NB1 (M2): Bildmasse vom Wurf bis zum Verschlingen */
         for (int f = 0; g && f < 2000 && re15_gatorszene_r41_zustand() != RE15_GSZ_KAMPF; f++) {
             frame(0, 0);
             int bw = -1, bf = -1, bweg = -1; int32_t h = 0, fa = -1;
             const int ph = re15_gatorszene_r41_leiche_flug(&bw, &bf, &bweg, &h, &fa);
             const int k = prop_von(RE15_GSZ_LEICHE_OBJ), kk = prop_von(RE15_GSZ_KEY_OBJ);
+            if (ph == 1 || ph == 2) {   /* Flug und Fang bis zum Verschlingen */
+                int zy = 0, lo = 0, lu = 0;
+                if (g2_wurf_bild(g, &zy, &lo, &lu)) {
+                    flug_bilder++;
+                    if (zy < 24) schnauze_weg++;
+                    if (lo < 24) leiche_weg_oben++;
+                    if (lu > -999 && zy - lu > abstand_max) abstand_max = zy - lu;
+                }
+            }
             if (ph == 1 && k >= 0) {
                 if (g_scd.props[k].y < y_vor) steigt++; else if (g_scd.props[k].y > y_vor) faellt++;
                 y_vor = g_scd.props[k].y;
@@ -313,7 +373,13 @@ static void teil_wurf(int elza)
         }
         int bw = -1, bf = -1, bweg = -1; int32_t h = 0, fa = -1;
         const int ph = re15_gatorszene_r41_leiche_flug(&bw, &bf, &bweg, &h, &fa);
-        re15_gatorszene_r41_g2_alt_setzen(0);
+        re15_gatorszene_r41_g2_alt_setzen(0); re15_gatorszene_r41_nb1_alt_setzen(0);
+        printf("    Bild (Cut %d): %d Bilder Flug/Fang, Schnauze hinter dem oberen Balken in %d, Leiche oben angeschnitten in %d, groesster Abstand Leichen-Unterkante ueber der Schnauze %d\n",
+               (int)g_scd.cam_id, flug_bilder, schnauze_weg, leiche_weg_oben, abstand_max);
+        if (alt == 2) {
+            PRUEF(schnauze_weg > 0, "Gegenprobe Stand vor NB1: Schnauze in %d Flugbildern hinter dem Balken (rot ohne den Bau)", schnauze_weg);
+            continue;
+        }
         printf("    %s%s: Zustand %d, Wurf Clip-5-Bild %d, Fang %d, weg %d; hoechster Punkt der Rumpfmitte %d ueber der Maullage; im Fangbild %d vom Maul; "
                "Flugbilder steigend %d / fallend %d; nach dem Verschlingen sichtbar: Leiche %d, Schluessel %d Bilder\n", elza ? "Elza" : "Leon",
                alt ? " [Gegenprobe Leiche wie vor G2]" : "", ph, bw, bf, bweg, (int)h, (int)fa, steigt, faellt, sicht_nach_weg, key_nach_weg);
@@ -322,6 +388,8 @@ static void teil_wurf(int elza)
             PRUEF(h >= 405 && steigt >= 3 && faellt >= 3, "hochgeworfen: Rumpfmitte %d ueber der Maullage (>= H/2 = a T^2 / 16 = 405), %d Bilder steigend, %d fallend", (int)h, steigt, faellt);
             PRUEF(fa >= 0 && fa <= 40, "im Maul gefangen: Rumpfmitte %d von der Maullage", (int)fa);
             PRUEF(weg_f >= 0 && sicht_nach_weg == 0 && key_nach_weg == 0, "danach verschwunden (Leiche %d, Schluessel %d Bilder sichtbar)", sicht_nach_weg, key_nach_weg);
+            PRUEF(flug_bilder >= 18 && schnauze_weg == 0 && leiche_weg_oben == 0, "NB1 (M2) lesbar im Bild: Schnauze (%d) und Leiche (%d) in keinem der %d Flug-/Fangbilder hinter dem oberen Balken", schnauze_weg, leiche_weg_oben, flug_bilder);
+            PRUEF(abstand_max > 0, "NB1 (M2): die Leiche fliegt ganz ueber die Schnauze (Unterkante %d Bildpunkte darueber)", abstand_max);
         } else {
             PRUEF(ph == 0, "Gegenprobe Leiche wie vor G2: kein Wurf (Zustand %d) - rot ohne den Bau", ph);
         }
@@ -392,8 +460,25 @@ static void wurfkamera(int elza)
             int sx = -1, sy = -1, kx = -1, ky = -1; int32_t p[3] = { 0, 0, 0 };
             if (k >= 0) { p[0] = g_scd.props[k].x; p[1] = g_scd.props[k].y; p[2] = g_scd.props[k].z; }
             re15_gr2_im_bild_cut((int)g_scd.cam_id, p, &sx, &sy); re15_gr2_im_bild_cut((int)g_scd.cam_id, k6, &kx, &ky);
-            printf("      F%d Bild %d Cut %d: Leiche-Ursprung Bild (%d,%d) aktiv %d, Kopf Bild (%d,%d)\n", f, (int)g->anim_frame, (int)g_scd.cam_id, sx, sy,
-                   k >= 0 ? g_scd.props[k].active : -1, kx, ky);
+            int ly0 = 999, ly1 = -999, lx0 = 999, lx1 = -999, zy = -1, zx = -1;
+            if (k >= 0 && g_scd.props[k].active) {   /* NB1 (M2): Bildkasten der Leiche */
+                const __typeof__(g_scd.props[0]) *pr = &g_scd.props[k];
+                int32_t ro[9]; g2_prop_matrix(pr->rot_x, pr->rot_y, pr->rot_z, ro);
+                for (int i = 0; i < s_ln; i++) {
+                    const int32_t w[3] = { pr->x + g2_q12(ro[0], s_lv[i][0]) + g2_q12(ro[1], s_lv[i][1]) + g2_q12(ro[2], s_lv[i][2]),
+                                           pr->y + g2_q12(ro[3], s_lv[i][0]) + g2_q12(ro[4], s_lv[i][1]) + g2_q12(ro[5], s_lv[i][2]),
+                                           pr->z + g2_q12(ro[6], s_lv[i][0]) + g2_q12(ro[7], s_lv[i][1]) + g2_q12(ro[8], s_lv[i][2]) };
+                    int qx = 0, qy = 0;
+                    if (re15_gr2_im_bild_cut((int)g_scd.cam_id, w, &qx, &qy)) { if (qy < ly0) ly0 = qy; if (qy > ly1) ly1 = qy; if (qx < lx0) lx0 = qx; if (qx > lx1) lx1 = qx; }
+                }
+            }
+            if (hp) {   /* Schnauzenspitze Part-6-x 2500 */
+                int32_t r6[9], p6[3]; g2_part_welt(g, &ps[6], r6, p6);
+                const int32_t q[3] = { p6[0] + g2_q12(r6[0], 2500), p6[1] + g2_q12(r6[3], 2500), p6[2] + g2_q12(r6[6], 2500) };
+                re15_gr2_im_bild_cut((int)g_scd.cam_id, q, &zx, &zy);
+            }
+            printf("      F%d Bild %d Cut %d: Leiche-Ursprung Bild (%d,%d) aktiv %d, Kopf Bild (%d,%d), Leiche Kasten x %d..%d y %d..%d, Schnauze (%d,%d)\n", f, (int)g->anim_frame,
+                   (int)g_scd.cam_id, sx, sy, k >= 0 ? g_scd.props[k].active : -1, kx, ky, lx0, lx1, ly0, ly1, zx, zy);
         }
     }
     printf("wurfkamera %s: %d Bilder (Clip 5 Bild 55..77), laufender Cut %d\n", elza ? "Elza" : "Leon", bilder, (int)g_scd.cam_id);
@@ -403,6 +488,136 @@ static void wurfkamera(int elza)
                s_bx0[c], s_by0[c], s_bx1[c], s_by1[c]);
 }
 
+
+/* ---- Werkzeug kopfwinkel: Keyframe-Winkel (ay/az) der Bones 0..7 in Clip 5 und Neigung der Part-6-Achse (Welt) je Bild ---- */
+static int16_t s_kw_ay[16], s_kw_az[16];
+static void kw_haken(const void *a, int b, int16_t *ay, int16_t *az) { (void)a; if (b >= 0 && b < 16) { s_kw_ay[b] = *ay; s_kw_az[b] = *az; } }
+static void kopfwinkel(int elza)
+{
+    re15_actor_t *g = g2_szene_start(elza);
+    for (int f = 0; g && f < 2000 && re15_gatorszene_r41_zustand() != RE15_GSZ_KAMPF; f++) {
+        frame(0, 0);
+        if (!(g->motion == 5 && g->anim_frame >= 50 && g->anim_frame <= 130)) continue;
+        void (*alt)(const void *, int, int16_t *, int16_t *) = g_anim_bone_angle_hook;
+        g_anim_bone_angle_hook = kw_haken;
+        re15_skel_pose_t ps[RE15_EMD_MAX_BONES]; const int hp = g2_pose(g, ps);
+        g_anim_bone_angle_hook = alt;
+        if (!hp) continue;
+        int32_t r6[9], p6[3]; g2_part_welt(g, &ps[6], r6, p6);
+        int sx = -1, sy = -1; const int32_t q[3] = { p6[0] + g2_q12(r6[0], 2500), p6[1] + g2_q12(r6[3], 2500), p6[2] + g2_q12(r6[6], 2500) };
+        re15_gr2_im_bild_cut((int)g_scd.cam_id, q, &sx, &sy);
+        printf("    F%d Bild %d Cut %d: az", f, (int)g->anim_frame, (int)g_scd.cam_id);
+        for (int b = 0; b < 8; b++) printf(" %d", (int)s_kw_az[b]);
+        printf(" | ay"); for (int b = 0; b < 8; b++) printf(" %d", (int)s_kw_ay[b]);
+        printf(" | Part6-x welt (%d,%d,%d) Schnauze Bild (%d,%d)\n", r6[0], r6[3], r6[6], sx, sy);
+    }
+}
+
+/* ---- Werkzeug kletterkarte <raum hex>: Zellen mit Kletter-Attribut (Bodentypwort Bit 0, climb_common.c @0x8002d530-50) je Band ---- */
+#include "re15_collision.h"
+static int kletterkarte(const char *raum_s)
+{
+    const uint16_t raum = (uint16_t)strtoul(raum_s, NULL, 16);
+    if (rdt_laden(raum) != 0) { printf("ROOM%04X nicht ladbar\n", raum); return 1; }
+    g_room_rdt_ok = 1;
+    for (int band = 0; band < 4; band++) {
+        int n = 0;
+        for (int32_t z = -27000; z <= -5400; z += 200)
+            for (int32_t x = -9000; x <= 7200; x += 200) {
+                const uint16_t tw = re15_collision_floor_typeword(&g_room_rdt, x, z, band, 0);
+                if (tw & 1u) { if (n < 60) printf("  Band %d Zelle (%d,%d) Typwort 0x%04X\n", band, x, z, tw); n++; }
+            }
+        printf("ROOM%04X Band %d: %d Zellen mit Bit 0\n", raum, band, n);
+    }
+    return 0;
+}
+
+/* ---- Auswerter traglog <laufordner> (exe-Riegel integration_r41_gatorfix_frei*, Punkt 7 / NB1 M1+M3, E1): freies Spiel mit dem Kanister im Maul.
+ * Masse wie die Abnahme 1 (still_state.py): je Bild der letzten 2090-Folge in state.log Wurzel/Gier/Clip des Alligators (Slot 35) und die Figur;
+ * STILLSTAND = Wurzel kommt in 30 Bildern netto < 300 voran; FERN = Kopf (Wurzel + 4200 voraus) > 2500 von der Figur und nicht RE2-Dash (Clip 2/3);
+ * dazu ohne Biss-Reichweite (Wurzel < 3200 = Spur-B-Bisstor `dist < 3200`, enemy_ai_boss_gator.c CHASE). WANDREIBEN = Stillstand, waehrend die Kopf-Klemme
+ * greift (gator_boss.log "KOPF-KLEMME an/aus"), fern und ausserhalb der Biss-Reichweite; Spanne der Klemm-Bilder je Stillstands-Folge. E1: Bilder vom Aufschlag (debug.log "Kanister im Becken") bis "KANISTER angehaengt". */
+typedef struct { int f; int32_t px, pz, gx, gz; int rot, mo; } g2_tl_t;
+static g2_tl_t s_tl[20000];
+static uint8_t s_tl_kk[40000];
+static int traglog(const char *dir)
+{
+    char pf[1024]; static char z[16384];
+    int auf = -1, land = -1, n = 0;
+    snprintf(pf, sizeof pf, "%s/gator_boss.log", dir);
+    FILE *f = fopen(pf, "r");
+    if (!f) { printf("traglog: %s fehlt\n", pf); return 1; }
+    memset(s_tl_kk, 0, sizeof s_tl_kk);
+    while (fgets(z, sizeof z, f)) {
+        const char *k = strstr(z, "KANISTER angehaengt");
+        if (k && auf < 0) { const char *q = strrchr(z, 'F'); if (q) auf = atoi(q + 1); }
+        unsigned a = 0, b0 = 0; int nb = 0;
+        const char *kk = strstr(z, "KOPF-KLEMME aus F");
+        if (kk && sscanf(kk, "KOPF-KLEMME aus F%u: %d Bilder ab F%u", &a, &nb, &b0) == 3)
+            for (unsigned x = b0; x < a && x < sizeof s_tl_kk; x++) s_tl_kk[x] = 1;
+    }
+    fclose(f);
+    snprintf(pf, sizeof pf, "%s/debug.log", dir);
+    if ((f = fopen(pf, "r")) != NULL) {
+        while (fgets(z, sizeof z, f)) {
+            const char *k = strstr(z, "Kanister im Becken");
+            const char *q = strstr(z, "[k2080] F");
+            if (k && q) land = atoi(q + 9);                              /* letzte Zeile = Rueckkehr-Besuch */
+        }
+        fclose(f);
+    }
+    snprintf(pf, sizeof pf, "%s/state.log", dir);
+    if (!(f = fopen(pf, "r"))) { printf("traglog: %s fehlt\n", pf); return 1; }
+    while (fgets(z, sizeof z, f)) {
+        int fr = -1;
+        if (sscanf(z, "F%d ", &fr) != 1) continue;
+        if (n > 0 && fr < s_tl[n-1].f) n = 0;                            /* neue Folge (Raumwechsel): nur die letzte zaehlt */
+        const char *pl = strstr(z, " PL("), *g = strstr(z, "[35 t=23 ");
+        if (!pl || !g || n >= (int)(sizeof s_tl / sizeof s_tl[0])) continue;
+        g2_tl_t r; r.f = fr;
+        if (sscanf(pl, " PL(%d,%d,", &r.px, &r.pz) != 2) continue;
+        const char *m = strstr(g, " mo="), *at = strstr(g, "@(");
+        const char *ende = strchr(g, ']');
+        if (!m || !at || !ende || m > ende || at > ende || sscanf(m, " mo=%d", &r.mo) != 1 || sscanf(at, "@(%d,%d,r%d", &r.gx, &r.gz, &r.rot) != 3) continue;
+        s_tl[n++] = r;
+    }
+    fclose(f);
+    int trag = 0, still = 0, fern = 0, fern_b = 0, ep = 0, ep_max = 0, rub = -1, rub_letzt = -1, rub_max = 0, ep_f = -1, rub_f = -1;
+    static uint8_t st[20000];
+    memset(st, 0, sizeof st);
+    for (int i = 0; i + 30 < n; i++) {
+        if (s_tl[i+30].f - s_tl[i].f != 30) continue;
+        const int64_t dx = (int64_t)s_tl[i+30].gx - s_tl[i].gx, dz = (int64_t)s_tl[i+30].gz - s_tl[i].gz;
+        if (dx * dx + dz * dz < 300LL * 300) for (int k = i; k <= i + 30; k++) st[k] = 1;
+    }
+    for (int i = 0; i < n; i++) {
+        const g2_tl_t *r = &s_tl[i];
+        if (auf < 0 || r->f < auf) continue;
+        trag++;
+        const double th = r->rot * 2.0 * 3.14159265358979 / 4096.0;
+        const double hx = r->gx + 4200.0 * cos(th) - r->px, hz = r->gz - 4200.0 * sin(th) - r->pz;
+        const double wx = (double)r->gx - r->px, wz = (double)r->gz - r->pz;
+        const int ist_fern = st[i] && sqrt(hx * hx + hz * hz) > 2500.0 && r->mo != 2 && r->mo != 3;
+        const int ist_fb = ist_fern && sqrt(wx * wx + wz * wz) >= 3200.0;
+        if (st[i]) still++;
+        if (ist_fern) fern++;
+        if (ist_fb) { fern_b++; if (++ep > ep_max) { ep_max = ep; ep_f = r->f; } } else ep = 0;
+        /* Wandreiben: innerhalb einer Stillstands-Folge (fern, ohne Biss-Reichweite) die Spanne der Bilder mit greifender Kopf-Klemme; Luecken bis 26 Bilder
+         * (= ein Paddel-Zyklus Clip 1, die Klemme meldet sich je Zyklus neu an) gehoeren dazu */
+        const int kk = r->f >= 0 && r->f < (int)sizeof s_tl_kk && s_tl_kk[r->f];
+        if (!ist_fb) rub = -1;
+        else if (kk) {
+            if (rub < 0 || r->f - rub_letzt > 26) rub = r->f;
+            rub_letzt = r->f;
+            if (rub_letzt - rub + 1 > rub_max) { rub_max = rub_letzt - rub + 1; rub_f = r->f; }
+        }
+    }
+    const int auf_bilder = (land >= 0 && auf >= 0) ? auf - land : -1;
+    printf("traglog: %d Bilder 2090, Aufschlag F%d, angehaengt F%d (%d Bilder = %.1f s), %d Trag-Bilder: Stillstand %d (%d %%), fern %d (%d %%), fern ohne Biss-Reichweite %d (%d %%), "
+           "laengster fern ohne Biss-Reichweite %d Bilder (bis F%d), laengstes Wandreiben %d Bilder (bis F%d)\n", n, land, auf, auf_bilder, auf_bilder / 30.0, trag,
+           still, trag ? 100 * still / trag : 0, fern, trag ? 100 * fern / trag : 0, fern_b, trag ? 100 * fern_b / trag : 0, ep_max, ep_f, rub_max, rub_f);
+    return trag > 0 ? 0 : 1;
+}
 /* ---- Werkzeug projektion <raum hex> <cut> x,y,z ... : Bildpunkte (320x240) wie der Zeichner (gr2_im_bild) ---- */
 static int projektion(int argc, char **argv)
 {
@@ -483,13 +698,13 @@ static void teil_montage(int elza)
 }
 
 /* ---- Riegel Punkte 4 und 5: Marvin-/John-Szene - drei Zombies laufen zur Leiter, schnell erschossen; Kampfmusik bleibt ---------- */
-static void teil_marvin(int elza)
+static int teil_marvin_lauf(int elza, int alt)   /* Rueckgabe: Bild des ersten Todes (NB1 H2) */
 {
-    printf("== marvin%s (Punkte 4 + 5) ==\n", elza ? "_elza" : "");
+    re15_k2080_lauf_alt_setzen(alt);
     const uint16_t r2090 = (uint16_t)(0x2090 + elza), r2080 = (uint16_t)(0x2080 + elza);
     re15_k2080_reset();
     re15_actor_t *g = szene_bis_kampf(elza);
-    if (!g) { PRUEF(0, "Szene bis zum Kampf"); return; }
+    if (!g) { PRUEF(0, "Szene bis zum Kampf"); re15_k2080_lauf_alt_setzen(0); return -1; }
     const int gslot = (int)(g - g_actors);
     int bgm_kampf = -2;
     int ausgeloest = 0;
@@ -501,9 +716,9 @@ static void teil_marvin(int elza)
         }
         frame(0, 0);
     }
-    if (!g_room_change.pending || (g_room_change.room_id & 0xFFFEu) != 0x2080u) { PRUEF(0, "Ausloeser -> Raumwechsel nach 2080 (Phase %d)", re15_k2080_phase()); return; }
-    if (!g2_zombie_bank()) { PRUEF(0, "Zombie-Bank 0x16 (RE2 CDEMD0.EMS)"); return; }
-    if (room_boot(r2080, g_room_change.x, g_room_change.y, g_room_change.z, g_room_change.yaw_4096, g_room_change.target_cut) != 0) return;
+    if (!g_room_change.pending || (g_room_change.room_id & 0xFFFEu) != 0x2080u) { PRUEF(0, "Ausloeser -> Raumwechsel nach 2080 (Phase %d)", re15_k2080_phase()); re15_k2080_lauf_alt_setzen(0); return -1; }
+    if (!g2_zombie_bank()) { PRUEF(0, "Zombie-Bank 0x16 (RE2 CDEMD0.EMS)"); re15_k2080_lauf_alt_setzen(0); return -1; }
+    if (room_boot(r2080, g_room_change.x, g_room_change.y, g_room_change.z, g_room_change.yaw_4096, g_room_change.target_cut) != 0) { re15_k2080_lauf_alt_setzen(0); return -1; }
     const int bgm_szene = re15_gatorszene_r41_bgm_eintrag(1, 8);
     frame(0, 0);                                            /* erster VM-Lauf: Sce_em_set der Szene (Abschnitt 1) */
     int n = 0; int32_t ab0[RE15_ACTOR_MAX] = { 0 }, ab_tod[RE15_ACTOR_MAX] = { 0 }; int blick_max = 0, tod_bild[RE15_ACTOR_MAX];
@@ -541,12 +756,26 @@ static void teil_marvin(int elza)
     printf("    %d Zombies, Start-Blick hoechstens %d von der Leiter, %d tot, letzter Tod Bild %d der Szene, %d naeher an der Leiter (kleinster Weg %d), kleinster Rest %d; "
            "Musik-Eintrag Kampf 0x%04X / 2080 in der Szene 0x%04X (%d Bilder anders) / zurueck 0x%04X / 2080 ohne Szene %d\n", n, blick_max, tot, letzter, naeher,
            (int)weg_min, (int)rest_min, bgm_kampf & 0xffff, bgm_szene & 0xffff, bgm_max_abw, bgm_rueck & 0xffff, bgm_frei);
+    int erster = -1;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) if (ab0[i] && tod_bild[i] >= 0 && (erster < 0 || tod_bild[i] < erster)) erster = tod_bild[i];
+    re15_k2080_lauf_alt_setzen(0);
+    printf("    %s: erster Tod Bild %d der Szene\n", alt ? "Gegenprobe ohne Laufzeit (Stand vor NB1)" : "NB1", erster);
+    if (alt) return erster;
+    PRUEF(erster >= 30, "jeder Zombie laeuft >= 30 Bilder (rund 1 s), bevor er erschossen wird (erster Tod Bild %d; Abnahme 1 H2: 19)", erster);
     PRUEF(n == 3 && tot == 3, "drei Zombies in der Szene, alle erschossen (%d / %d; vorher 8)", n, tot);
     PRUEF(blick_max <= 2, "Blick zur Leiter statt zu Marvin/John (Abweichung hoechstens %d/4096)", blick_max);
     PRUEF(rest_min >= 2000, "beim Tod noch >= 2000 von der Leiter (%d) - den Gang misst integration_r41_gatorfix_gang an der exe", (int)rest_min);
-    PRUEF(letzter >= 0 && letzter <= 90, "alle erschossen nach %d Bildern (<= 90 = Anlegen 10 + 3 x Feuern 16 + Nachdrehen; vorher 351 mit 8 Zombies)", letzter);
+    PRUEF(letzter >= 0 && letzter <= 90, "alle erschossen nach %d Bildern (<= 90 = Laufen 20 + Anlegen 10 + 3 x Feuern 16 + Nachdrehen; vorher 351 mit 8 Zombies)", letzter);
     PRUEF(bgm_kampf == 0xFF3C && bgm_szene == 0xFF3C && bgm_max_abw == 0 && bgm_rueck == 0xFF3C, "Kampfmusik (Eintrag 0xFF3C) durch die ganze Szene und zurueck");
     PRUEF(bgm_frei < 0, "Gegenprobe: 2080 ohne Szene spielt seine Raum-Musik (Eintrag %d = Tabelle)", bgm_frei);
+    return erster;
+}
+static void teil_marvin(int elza)
+{
+    printf("== marvin%s (Punkte 4 + 5, NB1 H2) ==\n", elza ? "_elza" : "");
+    (void)teil_marvin_lauf(elza, 0);
+    const int e_alt = teil_marvin_lauf(elza, 1);
+    PRUEF(e_alt >= 0 && e_alt < 30, "Gegenprobe ohne die Laufzeit: erster Tod Bild %d < 30 (rot ohne den Bau)", e_alt);
 }
 
 /* ---- Auswerter ganglog <state.log> <montage|szene> (exe-Riegel integration_r41_gatorfix_gang): Zombies (Typ 0x16) in den Bildern, in denen der
@@ -559,8 +788,8 @@ static int ganglog(const char *pfad, const char *modus)
     FILE *f = fopen(pfad, "r");
     if (!f) { printf("ganglog: %s fehlt\n", pfad); return 1; }
     static char z[16384];
-    int32_t ab0[64], ab1[64]; int da[64], tot[64], n_bilder = 0;
-    for (int i = 0; i < 64; i++) { ab0[i] = ab1[i] = -1; da[i] = 0; tot[i] = 0; }
+    int32_t ab0[64], ab1[64], lx[64], lz[64]; int da[64], tot[64], b0[64], b1[64], n_bilder = 0; int64_t weg[64];
+    for (int i = 0; i < 64; i++) { ab0[i] = ab1[i] = -1; da[i] = 0; tot[i] = 0; b0[i] = b1[i] = -1; weg[i] = 0; lx[i] = lz[i] = 0; }
     const int szene = !strcmp(modus, "szene");
     while (fgets(z, sizeof z, f)) {
         if (!strstr(z, "PL(-9950,-25700,")) continue;
@@ -572,9 +801,10 @@ static int ganglog(const char *pfad, const char *modus)
             if (!at || !h || sscanf(at, "@(%d,%d", &x, &zz) != 2 || sscanf(h, "] hp=%d", &hp) != 1) continue;
             const int64_t dx = (int64_t)x - G2_LEITER_X, dz = (int64_t)zz - G2_LEITER_Z;
             const int32_t ab = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
-            if (ab0[slot] < 0) ab0[slot] = ab;
+            if (ab0[slot] < 0) { ab0[slot] = ab; b0[slot] = n_bilder; lx[slot] = x; lz[slot] = zz; }
             da[slot] = 1;
-            if (szene && !tot[slot] && (st == 3 || hp < 0)) { tot[slot] = 1; ab1[slot] = ab; }
+            if (!tot[slot]) { const int64_t wx = (int64_t)x - lx[slot], wz = (int64_t)zz - lz[slot]; weg[slot] += re15_squareroot0((uint32_t)(wx * wx + wz * wz)); lx[slot] = x; lz[slot] = zz; }
+            if (szene && !tot[slot] && (st == 3 || hp < 0)) { tot[slot] = 1; ab1[slot] = ab; b1[slot] = n_bilder; }
             if (!szene) ab1[slot] = ab;
         }
     }
@@ -586,9 +816,11 @@ static int ganglog(const char *pfad, const char *modus)
         const int32_t w = (ab1[i] >= 0) ? ab0[i] - ab1[i] : -1;
         if (w < weg_min) weg_min = w;
         if (ab1[i] >= 0 && ab1[i] < rest_min) rest_min = ab1[i];
-        const int ok = szene ? (tot[i] && w > 0 && ab1[i] >= 2000) : (w >= 1000);
+        /* NB1 (H2): in der Szene laeuft jeder >= 30 Bilder (rund 1 s), bevor er stirbt */
+        const int ok = szene ? (tot[i] && w > 0 && ab1[i] >= 2000 && b1[i] - b0[i] >= 30) : (w >= 1000);
         if (ok) gut++;
-        printf("ganglog %s: Slot %d Abstand zur Leiter %d -> %d (%s), Weg %d\n", modus, i, (int)ab0[i], (int)ab1[i], szene ? (tot[i] ? "beim Tod" : "nicht tot") : "Ende", (int)w);
+        printf("ganglog %s: Slot %d Abstand zur Leiter %d -> %d (%s), Weg %d, %d Bilder gelaufen (Bahn %d)\n", modus, i, (int)ab0[i], (int)ab1[i], szene ? (tot[i] ? "beim Tod" : "nicht tot") : "Ende", (int)w,
+               szene ? b1[i] - b0[i] : n_bilder - b0[i], (int)weg[i]);
     }
     printf("ganglog %s: %d Bilder an der Leiter, %d Zombies, %d gut, kleinster Weg %d, kleinster Rest %d\n", modus, n_bilder, n, gut, (int)weg_min, (int)rest_min);
     const int soll = szene ? 3 : 5;
@@ -828,15 +1060,119 @@ static void teil_klemm(int elza)
     PRUEF(gegen, "Gegenprobe Ziel wie vor G2: Kopf-Klemme greift am Ziel (Festdruecken der Nutzer-Marke)");
 }
 
+
+/* ---- Riegel Punkt 7 (Nachbesserung 1, Abnahme 1 M1/M3): Fuzz ueber Spielerlagen mit dem Kanister im Maul ------------------------
+ * Je Lage steht die Figur still (Wand, Ecke, Plattform oben, Rampe, Leiter); der Alligator traegt den Kanister und startet an der von ihr
+ * fernsten von fuenf Beckenlagen, echter Boss-Takt G2_FZ_BILDER Bilder. Masse wie die Abnahme (haenger.py/still_state.py): STILLSTAND = Wurzel
+ * kommt in 30 Bildern netto < 300 voran, Kopf (Wurzel + 4200 voraus) > 2500 von der Figur, Phase Verfolgung/Belagerung; WANDREIBEN = Stillstand
+ * und die Kopf-Klemme griff in den letzten 30 Bildern (re15_gr2_kk_aktiv). Gegenproben ueber re15_gr2_kk_ziel_alt_setzen: 1 = vor G2, 2 = G2 vor NB1. */
+#define G2_FZ_BILDER 450
+typedef struct { const char *name; int32_t x, y, z; } g2_lage_t;
+static const g2_lage_t k_fuzz[] = {
+    { "W1", -8400, 0, -25000 }, { "W2", -8400, 0, -20000 }, { "W3", -8400, 0, -15000 }, { "W4", -8400, 0, -10000 },
+    { "N1", -6000, 0, -5900 }, { "N2", -3000, 0, -5900 }, { "N3", 0, 0, -5900 }, { "N4", 3000, 0, -5900 },
+    { "O1", 6700, 0, -8000 }, { "O2", 6700, 0, -12000 }, { "O3", 6700, 0, -21000 }, { "O4", 6700, 0, -25000 },
+    { "S1", -6000, 0, -26500 }, { "S2", -3000, 0, -26500 }, { "S3", 0, 0, -26500 }, { "S4", 3000, 0, -26500 },
+    { "NW", -8400, 0, -5900 }, { "NO", 6700, 0, -5900 }, { "SO", 6700, 0, -26500 }, { "SW", -8400, 0, -26500 },
+    { "P-mitte", 0, -1800, -16000 }, { "P-west", -1400, -1800, -16000 }, { "P-nord", 0, -1800, -12800 }, { "P-sued", 0, -1800, -19700 },
+    { "Rampe", 4500, -1800, -16300 }, { "Leiter", -8200, 0, -25550 },
+};
+static const int32_t k_fz_start[5][2] = { { -5000, -23000 }, { -5000, -9000 }, { 4000, -9000 }, { 4000, -23000 }, { -5500, -16000 } };
+typedef struct { int bilder, still, rub_max, still_max, vorbei; } g2_fz_t;
+static int g2_kanister_ins_maul(re15_actor_t *g, re15_actor_t *pl)
+{
+    const int32_t sk = g->render_scale_q12 ? g->render_scale_q12 : 4096;
+    const int gier = g->rot_y & 0xfff;
+    int32_t vx = (int32_t)(((int64_t)re15_cos_q12(gier) * 8800 * sk) >> 24), vz = (int32_t)(((int64_t)-re15_sin_q12(gier) * 8800 * sk) >> 24);
+    if (!re15_aot_water_at(g->x + vx, g->z + vz)) { vx = vz = 0; }
+    re15_gr2_kanister_setzen(g->x + vx, -1200, g->z + vz);
+    const int32_t x0 = g->x, z0 = g->z;
+    for (int f = 0; f < 300 && !re15_gr2_traegt(); f++) { g->x = x0; g->z = z0; g->rot_y = (int16_t)gier; pl->x = -8200; pl->z = -25550; pl->hp = 100; frame(0, 0); }
+    return re15_gr2_traegt();
+}
+static void g2_fuzz_lage(re15_actor_t *g, re15_actor_t *pl, const g2_lage_t *L, g2_fz_t *m, int zeige)
+{
+    memset(m, 0, sizeof *m);
+    int bi = 0; int64_t bd = -1;
+    for (int i = 0; i < 5; i++) {
+        const int64_t dx = k_fz_start[i][0] - L->x, dz = k_fz_start[i][1] - L->z;
+        if (dx * dx + dz * dz > bd) { bd = dx * dx + dz * dz; bi = i; }
+    }
+    g->x = k_fz_start[bi][0]; g->z = k_fz_start[bi][1];
+    int32_t hist[30][2]; uint8_t kk[30]; int hn = 0, still_lauf = 0, rub_lauf = 0;
+    for (int t = 0; t < G2_FZ_BILDER && re15_gr2_traegt(); t++) {
+        pl->x = L->x; pl->y = L->y; pl->z = L->z; pl->hp = 100; pl->hit_react = 0;
+        frame(0, 0);
+        m->bilder++;
+        hist[hn % 30][0] = g->x; hist[hn % 30][1] = g->z; kk[hn % 30] = (uint8_t)re15_gr2_kk_aktiv(); hn++;
+        const int ph = re15_gator_boss_phase(g);
+        const int th = g->rot_y & 0xfff;
+        const int64_t hx = (int64_t)g->x + ((4200LL * re15_cos_q12(th)) >> 12) - L->x, hz = (int64_t)g->z - ((4200LL * re15_sin_q12(th)) >> 12) - L->z;
+        const int32_t kopf = (int32_t)re15_squareroot0((uint32_t)(hx * hx + hz * hz > 0xffffffffLL ? 0xffffffffLL : hx * hx + hz * hz));
+        int still = 0, rub = 0;
+        if (hn >= 30 && (ph == 2 || ph == 5) && kopf > 2500) {
+            const int32_t *a = hist[hn % 30];
+            const int64_t wx = (int64_t)g->x - a[0], wz = (int64_t)g->z - a[1];
+            if (wx * wx + wz * wz < 300LL * 300) {
+                still = 1;
+                for (int k = 0; k < 30; k++) if (kk[k]) rub = 1;
+            }
+        }
+        if (still) { m->still++; still_lauf++; if (still_lauf > m->still_max) m->still_max = still_lauf; } else still_lauf = 0;
+        if (rub) { rub_lauf++; if (rub_lauf > m->rub_max) m->rub_max = rub_lauf; } else rub_lauf = 0;
+        if (zeige && still && (still_lauf == 1 || still_lauf % 60 == 0))
+            printf("        %s t%d STILL Gator (%d,%d) Gier %d Clip %d Phase %d Klemme %d Kopf-Abstand %d\n", L->name, t, g->x, g->z, th, (int)g->motion, ph,
+                   re15_gr2_kk_aktiv(), (int)kopf);
+    }
+}
+static void teil_fuzz(int elza)
+{
+    printf("== fuzz%s (Punkt 7, Nachbesserung 1) ==\n", elza ? "_elza" : "");
+    const int zeige = getenv("G2_ZEIGE") != NULL;
+    const char *nur = getenv("G2_FZ_NUR");
+    int still[3] = { 0, 0, 0 }, bilder[3] = { 0, 0, 0 }, rub[3] = { 0, 0, 0 }, smax[3] = { 0, 0, 0 };
+    const char *rub_wo[3] = { "-", "-", "-" };
+    const int nl = (int)(sizeof k_fuzz / sizeof k_fuzz[0]);
+    for (int alt = 0; alt <= 2; alt++) {
+        if (getenv("G2_FZ_NEU") && alt) break;
+        re15_gr2_kk_ziel_alt_setzen(alt);
+        re15_actor_t *g = szene_bis_kampf(elza);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        if (!g || !g2_kanister_ins_maul(g, pl)) { printf("    alt %d: kein Tragen\n", alt); re15_gr2_kk_ziel_alt_setzen(0); continue; }
+        for (int i = 0; i < nl; i++) {
+            if (nur && strcmp(nur, k_fuzz[i].name)) continue;
+            g2_fz_t m; g2_fuzz_lage(g, pl, &k_fuzz[i], &m, zeige);
+            still[alt] += m.still; bilder[alt] += m.bilder;
+            if (m.rub_max > rub[alt]) { rub[alt] = m.rub_max; rub_wo[alt] = k_fuzz[i].name; }
+            if (m.still_max > smax[alt]) smax[alt] = m.still_max;
+            printf("    %s %-7s: %3d Bilder, Stillstand %3d (laengster %3d), Wandreiben laengstes %3d%s\n", alt == 0 ? "neu  " : alt == 1 ? "vorG2" : "G2v1 ",
+                   k_fuzz[i].name, m.bilder, m.still, m.still_max, m.rub_max, re15_gr2_traegt() ? "" : " [Kanister weg]");
+        }
+        re15_gr2_kk_ziel_alt_setzen(0);
+    }
+    for (int alt = 0; alt <= 2; alt++)
+        printf("    %s: %d Bilder, Stillstand %d (%d %%), laengster Stillstand %d, laengstes Wandreiben %d (%s)\n", alt == 0 ? "neu  " : alt == 1 ? "vor G2" : "G2 v1",
+               bilder[alt], still[alt], bilder[alt] ? 100 * still[alt] / bilder[alt] : 0, smax[alt], rub[alt], rub_wo[alt]);
+    PRUEF(bilder[0] >= nl * G2_FZ_BILDER * 9 / 10, "Fuzz gelaufen (%d Bilder mit Kanister)", bilder[0]);
+    PRUEF(rub[0] <= 30, "kein Wandreiben > 1 s mit dem Kanister (laengstes %d Bilder bei %s)", rub[0], rub_wo[0]);
+    if (!getenv("G2_FZ_NEU")) {
+        PRUEF((int64_t)still[0] * bilder[1] <= (int64_t)still[1] * bilder[0], "Stillstand mit Kanister hoechstens wie vor G2 (%d / %d gegen %d / %d)", still[0], bilder[0], still[1], bilder[1]);
+        PRUEF(rub[2] > 30, "Gegenprobe G2 vor NB1: Wandreiben %d Bilder (rot ohne den Bau)", rub[2]);
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     re15_door_seq_setze_laeufer(fang);
     if (!strcmp(teil, "projektion") && argc >= 5) return projektion(argc, argv);
+    if (!strcmp(teil, "traglog") && argc >= 3) return traglog(argv[2]);
+    if (!strcmp(teil, "kletterkarte") && argc >= 3) return kletterkarte(argv[2]);
     if (!strcmp(teil, "ganglog") && argc >= 4) return ganglog(argv[2], argv[3]);
     if (!strcmp(teil, "beckenkarte") && argc >= 4) return beckenkarte(argv[2], argv[3]);
     if (!strcmp(teil, "maulgeo")) { if (!gator_bank()) return 1; maulgeo(argc > 2); return 0; }
     if (!strcmp(teil, "wurfkamera")) { if (!gator_bank()) return 1; wurfkamera(argc > 2); return 0; }
+    if (!strcmp(teil, "kopfwinkel")) { if (!gator_bank()) return 1; kopfwinkel(argc > 2); return 0; }
     if (!gator_bank()) { printf("RE2-EM23-Bank fehlt\n"); return 1; }
     const int alle = !strcmp(teil, "alle");
     if (alle || !strcmp(teil, "maul"))      teil_maul_riegel(0);
@@ -853,6 +1189,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "haenger_elza")) teil_haenger(1);
     if (alle || !strcmp(teil, "klemm"))      teil_klemm(0);
     if (alle || !strcmp(teil, "klemm_elza")) teil_klemm(1);
+    if (alle || !strcmp(teil, "fuzz"))      teil_fuzz(0);
+    if (alle || !strcmp(teil, "fuzz_elza")) teil_fuzz(1);
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

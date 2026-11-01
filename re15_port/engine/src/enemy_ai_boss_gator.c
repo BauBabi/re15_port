@@ -1839,7 +1839,8 @@ static void gb_takt(int slot)
         if (tx >  7200 - 1600)  tx =  7200 - 1600;
         if (tz < -27000 + 1600) tz = -27000 + 1600;
         if (tz >  -5400 - 1600) tz =  -5400 - 1600;
-        (void)re15_gr2_kk_ziel(e, &tx, &tz);   /* Runde 41 Spur G2 (Punkt 7): mit dem Kanister im Maul das Ziel, an dem die Kopf-Klemme nicht greift */
+        (void)re15_gr2_trag_ziel(slot, e, pl, &tx, &tz, tx, tz);   /* Verfolgung: Hop-Regel aus (Routenwahl/CROSS-Anlauf der Spur B; Fuzz NB1: am Hop-Wegpunkt stand er vor der Rampe) */   /* Runde 41 Spur G2 (Punkt 7, Nachbesserung 1 M1): mit dem Kanister im Maul das Ziel, an dem
+                                                         * die Kopf-Klemme nicht greift, und am Ende kein Stehen - Vorbei-Etappe (gator_re2_r41.c) */
         g->dbg_tx = tx; g->dbg_tz = tz;
         {   /* Dreh-Telemetrie (Nutzer 2026-09-11: "dreht fast immer erst in
              * die entgegengesetzte Richtung bevor er Richtung Platform
@@ -1903,6 +1904,15 @@ static void gb_takt(int slot)
                     e->z += (int32_t)(((int64_t)bs * 44) >> 12);
                 }
                 e->y = GB_WATER_Y;
+                if (re15_gr2_traegt() && !re15_gr2_kk_ziel_alt()) {
+                    /* Runde 41 Spur G2 (Nachbesserung 1, M1 "RE2 hat keinen Wartezustand, der Alligator schwimmt immer weiter, auch mit Kanister"):
+                     * mit dem Kanister keine Wende auf der Stelle, sondern im Bogen mit dem Wurzelversatz des Clips weiter - RE2 Stufe 7 ohne Zaehler
+                     * @0x80101b58-8c, der Koerper schwimmt in Sub 1/2 (FUN_8001a330 je Bild). Gemessen (Lauf n1_frei_elza): die Wenden auf der Stelle
+                     * waren 31-45 Bilder lange Stillstaende zwischen den Vorbei-Etappen. */
+                    int32_t vw = 0;
+                    re15_gr2_chase_clip(slot, e, dist, &vw);
+                    re15_ai_advance(e, vw);
+                } else
                 re15_gr2_chase_clip(slot, e, dist, NULL);   /* Runde 41 Spur B: Clip nach RE2-Hysterese (Wende ohne Vortrieb) */
                 break;
             }
@@ -2219,7 +2229,9 @@ static void gb_takt(int slot)
                     }
                     bdx = e->x - gx; bdz = e->z - gz;
                     if (bdx * bdx + bdz * bdz < (int64_t)800 * 800)
-                        if (++g->pend_t >= 90) { g->pend_t = 0; g->pend_dir = (int8_t)-g->pend_dir; }
+                        /* Runde 41 Spur G2 (Nachbesserung 1, M3 "patrouilliert weiter, auch mit Kanister"): mit dem Kanister im Maul kein Halt am
+                         * Pendelpunkt - RE2 Stufe 7 hat keinen Zaehler (@0x80101b58-8c, s. gator_re2_r41.c TRAG-LENKUNG); Gegenprobe-Haken alt = 90 */
+                        if (++g->pend_t >= ((re15_gr2_traegt() && !re15_gr2_kk_ziel_alt()) ? 1 : 90)) { g->pend_t = 0; g->pend_dir = (int8_t)-g->pend_dir; }
                 }
             }
             /* v0.7.64: der WEG zum Belagerungsziel laeuft ueber DIESELBE
@@ -2227,8 +2239,9 @@ static void gb_takt(int slot)
              * (ring_target) widersprach ihr dreimal (Kreiseln, SO-Sackgasse,
              * Grenz-Schwanken). */
             {
+                const int32_t tr_nx = gx, tr_nz = gz;   /* Runde 41 Spur G2 NB1: Endziel vor dem Kanten-Umweg */
                 int uh = gb_kanten_umweg(e, &gx, &gz);
-                (void)re15_gr2_kk_ziel(e, &gx, &gz);   /* Runde 41 Spur G2 (Punkt 7): s. CHASE - auch der Belagerungs-Hop */
+                (void)re15_gr2_trag_ziel(slot, e, pl, &gx, &gz, uh >= 0 ? tr_nx : gx, uh >= 0 ? tr_nz : gz);   /* Runde 41 Spur G2 (Punkt 7, NB1 M1/M3): s. CHASE - auch der Belagerungs-Hop */
                 if (!s_gb_stumm) {
                     static FILE *s_gwl2 = NULL; static int s_gwc2 = 0;
                     if (!s_gwl2) s_gwl2 = fopen("gator_boss.log", "a");
@@ -2288,8 +2301,11 @@ static void gb_takt(int slot)
             {   /* Wende statt Bogen auch hier (s. CHASE-Steer-Notiz) */
                 int gsoll = ((int)re15_atan2_q12(gz - e->z, gx - e->x) - 0x400) & 0x0fff;
                 int gdlt  = ((gsoll - (int)e->rot_y + 0x800) & 0x0fff) - 0x800;
-                if ((gdlt <= 0x300 && gdlt >= -0x300)
-                    && gdx * gdx + gdz * gdz > (int64_t)600 * 600)
+                if ((gdlt <= 0x300 && gdlt >= -0x300
+                     || (re15_gr2_traegt() && !re15_gr2_kk_ziel_alt()))   /* Runde 41 Spur G2 NB1 (M3): mit Kanister im Bogen weiter, s. CHASE */
+                    && (gdx * gdx + gdz * gdz > (int64_t)600 * 600
+                        || (re15_gr2_traegt() && !re15_gr2_kk_ziel_alt())))   /* NB1 (M3): mit Kanister keine 600er-Ruhezone (Lauf n3_plat_leon: 2165
+                                                                                * Bilder Stand 591 vor dem Etappenziel) - RE2 Stufe 7 ohne Wartezustand */
                     re15_ai_advance(e, GB_SWIM_SPEED);
             }
             {   /* Feindiagnose Haenger (temporaer aussagekraeftig, billig) */
@@ -2872,7 +2888,13 @@ int re15_gator_fress_todeslatch(void)
     return 0;
 }
 
+static int gb_spine_arc_vz(const re15_actor_t *e, int bone);
 int re15_gator_spine_arc_vz(const re15_actor_t *e, int bone)
+{
+    /* Runde 41 Spur G2 Nachbesserung 1 (M2): Kopfhaltung beim Wurf der Fress-Szene (gatorszene_r41.c, Zuschlag wie die Part-Zusaetze unten) */
+    return gb_spine_arc_vz(e, bone) + re15_gatorszene_r41_kopf_vz(e, bone);
+}
+static int gb_spine_arc_vz(const re15_actor_t *e, int bone)
 {
     if (!re15_gator_boss_active(e)) return 0;
     const gb_state_t *g = &s_gb[(int)(e - g_actors)];

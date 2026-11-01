@@ -170,6 +170,12 @@ int  re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz);
  * Wurzel -> Ziel) messen wuerde; 1 = verschoben. Pruefhaken der Gegenprobe: _alt_setzen(1) = Ziel wie vor Spur G2. */
 int  re15_gr2_kk_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz);
 void re15_gr2_kk_ziel_alt_setzen(int an);
+int  re15_gr2_kk_ziel_alt(void);
+int  re15_gr2_trag_modus(int slot);   /* NB1: letzte Rueckgabe von re15_gr2_trag_ziel (0/1/2) */
+int  re15_gr2_kk_aktiv(void);         /* Messhaken: Kopf-Klemme griff im letzten Takt */
+/* Runde 41 Spur G2 Nachbesserung 1 (M1/M3): Steuerziel mit dem Kanister im Maul - gekuerztes Ziel, am Ende VORBEI-Etappen (gator_re2_r41.c).
+ * Rueckgabe 0 = unveraendert, 1 = gekuerzt, 2 = Vorbei-Etappe. */
+int  re15_gr2_trag_ziel(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz);   /* nx/nz = Endziel vor dem Kanten-Umweg */
 /* Runde 41 Spur P (Abnahme G 4 O1): Bildschritt (ox,oz) -> (nx,nz) auf hoechstens 340 kuerzen (groesster authored Wurzelschritt, gator_re2_r41.c GR2_KK_SCHRITT). */
 void re15_gr2_kk_schritt(int32_t ox, int32_t oz, int32_t *nx, int32_t *nz);
 void re15_gr2_kk_hart_setzen(int an);   /* Pruefhaken (Gegenprobe der Riegel, kein Spielweg, kein Env-Schalter): 1 = Klemme wie bis Spur P */

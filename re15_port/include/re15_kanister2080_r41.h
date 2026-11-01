@@ -227,6 +227,14 @@
  * die ueber den Kanister fuehrt, ist hier das Steuerziel: solange der Kanister liegt (Stufe 0) und >= 8880 x Zeichen-Skala
  * entfernt ist, schwimmt der Alligator ihn an (Kanten-Umweg/Klemme/Wende wie die Verfolgung) und beisst nicht. */
 #define RE15_K2080_ANSCHWIMM_AB    (9000 - 120)
+/* Runde 41 Spur G2 NB1 (E1, PORT-WAHL): Runde ueber den Kanister nach 15 s frei im Becken, wenn er voraus liegt (450 Bilder), spaetestens nach 20 s
+ * (600) - Weg ueber das Becken im Bogen ~ 300 Bilder (Clip-0/1-Vortrieb), Summe <= 30 s (Nutzer-/Orchestrator-Mass "spaetestens rund 30 s"). */
+#define RE15_K2080_RUNDE_AB        450
+/* Runde 41 Spur G2 NB1 (H2, PORT-WAHL): Laufzeit vor dem Anlegen. Orchestrator-Richtwert "jeder laeuft mindestens rund 1 s" = 30 Bilder bis zum ersten
+ * Schuss: 20 + Anlegen RE15_K2080_ZIELEN_BILDER 10 = 30 (die beiden anderen laufen je 16 Bilder Feuern laenger). */
+#define RE15_K2080_LAUF_BILDER     20
+void re15_k2080_lauf_alt_setzen(int an);
+#define RE15_K2080_RUNDE_SPAET     600
 /* Nachtrag 26 (Nutzer-Auswahl "Ja, RE2-Lenkung": "im Kanister-Bereich lenkt er Hals und Schwimmweg zum Kanister") + FG-E5: die
  * RE2-HALSFUEHRUNG im Zielmodus = FUN_800177c0 (RE2_Quellcode_V2/FUN_800177c0.c, Zweig +0x1C0 & 4): Ziel (+0x170/+0x172/+0x174),
  * Gier-Residual zum Koerper auf +-Klemme begrenzt, Akku-Ziel = Ziel - Keyframe-Winkel des Parts, Akku slewt mit festem Schritt

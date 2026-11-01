@@ -140,6 +140,9 @@ static uint64_t s_kopf_ab;            /* Aktor-Bits: Kopf-ab gemeldet */
 static int      s_wurf_gier = -1;     /* Nachbesserung 2 (N3): gewaehlte Wurfrichtung dieser Szene (-1 = aus Bit 117) */
 static int      s_z42_an = -1, s_z42_aus = -1;   /* Nachbesserung 2 (N1): Messzeile Standzeit der Zeile 42 (Bildnummern) */
 static int      s_anschw;             /* Nachbesserung 2 (N3): Messzeile Anschwimmen (0 aus, 1 an) */
+static int      s_frei_bilder;        /* Runde 41 Spur G2 NB1 (E1): Bilder seit der Kanister frei im Becken liegt (B-Stufe 0) */
+static int      s_runde;              /* Runde 41 Spur G2 NB1 (E1): 1 = seine Runde fuehrt jetzt ueber den Kanister (bis zur Aufnahme) */
+static void     runde_zaehlen(void);
 static int      s_blick7_log;         /* Nachbesserung 3 (M2): Messzeile Blick des Werfers im ersten Cut-7-Bild (0 = noch nicht) */
 /* Nachtrag 26: RE2-Halsfuehrung (Part 5 Akku +0x98 Gier / +0x9a Neigung) und Kippen beim Greifen */
 static int16_t  s_hals_y, s_hals_p;
@@ -189,7 +192,7 @@ int re15_k2080_landepunkt(int32_t *x, int32_t *z)
 void re15_k2080_reset(void)
 {
     s_phase = RE15_K2080_AUS; s_kan_zustand = 0; s_ziel_slot = -1; s_ziel_n = 0; s_lande_ok = 0; s_set_2090 = 0;
-    s_wurf_gier = -1; s_z42_an = s_z42_aus = -1; s_anschw = 0; s_gator_slot = -1; s_blick7_log = 0;
+    s_wurf_gier = -1; s_z42_an = s_z42_aus = -1; s_anschw = 0; s_frei_bilder = 0; s_runde = 0; s_gator_slot = -1; s_blick7_log = 0;
     s_hals_y = s_hals_p = 0; s_hals_slot = -1; s_hals_an = -1; s_kipp_k = 0;
     memset(s_zaehler, 0, sizeof s_zaehler);
 }
@@ -248,6 +251,8 @@ static void baue_spawn(void)
 }
 
 /* SZENE 2080 (Leon: Marvin, Elza: John). Ablauf je Zeile im Dossier §3.3. */
+static int s_lauf_alt = 0;   /* Pruefhaken der Gegenprobe (Riegel unit_r41_gatorfix_marvin): 1 = ohne die Laufzeit vor dem Anlegen (Stand vor NB1) */
+void re15_k2080_lauf_alt_setzen(int an) { s_lauf_alt = an; }
 static void baue_szene(void)
 {
     uint8_t *b = s_prog_szene; int n = 0; const int cap = (int)sizeof s_prog_szene;
@@ -268,6 +273,9 @@ static void baue_szene(void)
      * Sleep 110 @0x020CA); der Ton laeuft in diesen 110 Bildern. Das fruehere Sleep 30 war der RE2-Wert @0x076A aus einem anderen
      * Zusammenhang (dort nach Message_on). */
     PUT(s_prog_szene, n, OP_WORK(2, RE15_K2080_NPC_SLOT));
+    /* Runde 41 Spur G2 Nachbesserung 1 (Hinweis H2 der Abnahme: "Zombie 1 wird nach 19 Bildern / 104 Einheiten erschossen"; Nutzer Punkt 4 "mit noch ein
+     * bisschen Weg dahin, bevor sie erschossen werden"): erst laufen lassen - RE15_K2080_LAUF_BILDER vor dem Anlegen (PORT-WAHL, Herleitung am Header). */
+    if (!s_lauf_alt) PUT(s_prog_szene, n, OP_SLEEP(RE15_K2080_LAUF_BILDER));
     if (schuesse > 0) {
         PUT(s_prog_szene, n, OP_SET(RE15_K2080_SIG_BANK, RE15_K2080_SIG_AUSGERICHTET, 0));
         PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_ZIEL));               /* erstes Ziel waehrend des Anlegens */
@@ -356,6 +364,16 @@ static void baue_szene(void)
             K_LOG("MESSHAKEN RE15_K2080_RUECK_KANISTER: Rueckkehr hinter den Kanister (%d,%d) statt (%d,%d) - Nennlandung (%d,%d)", (int)px, (int)pz,
                   (int)s_leon[0], (int)s_leon[2], (int)l[0], (int)l[1]);
             s_leon[0] = px; s_leon[2] = pz;
+        }
+    }
+    {   /* MESSHAKEN RE15_K2080_RUECK_LAGE=x,z,gier (env-gegatet, KEIN Spielverhalten): Runde 41 Spur G2 Nachbesserung 1 (M3) - die Rueckkehr an eine feste
+         * Lage im Wasser (Riegel: an die Suedkante der Rampe, Blick nach Norden), von der die Figur ueber die Kletterzellen der Rampe (Bodentypwort Bit 0,
+         * climb_common.c @0x8002d530-50; ROOM2090 nur die Rampe, test_r41_gatorfix kletterkarte) auf Rampe und Plattform steigt. */
+        const char *rl = getenv("RE15_K2080_RUECK_LAGE");
+        int lx = 0, lz = 0, lg = 0;
+        if (rl && sscanf(rl, "%d,%d,%d", &lx, &lz, &lg) == 3) {
+            K_LOG("MESSHAKEN RE15_K2080_RUECK_LAGE: Rueckkehr nach (%d,%d) Gier %d statt (%d,%d) Gier %d", lx, lz, lg, (int)s_leon[0], (int)s_leon[2], (int)s_leon[3]);
+            s_leon[0] = lx; s_leon[1] = 0; s_leon[2] = lz; s_leon[3] = lg & 0xfff;
         }
     }
 #endif
@@ -804,6 +822,7 @@ void re15_kanister2080_r41_tick(void)
             re15_gr2_geschwaecht() && gator_frei(&gslot))
             ausloesen(gslot);
         if (s_kan_zustand == 2) fall_takt(wasser_2090());   /* FG-E4: der Fall laeuft in 2090 (Cut 12) zu Ende */
+        runde_zaehlen();                                  /* Runde 41 Spur G2 NB1 (E1): Bilder, die der Kanister frei im Becken liegt */
         if (bit(RE15_K2080_BIT_KANISTER) || s_hals_y || s_hals_p) hals_takt();   /* Nachtrag 26: nur mit DIESEM Kanister */
         return;
     }
@@ -954,9 +973,31 @@ void re15_k2080_anschwimmen_alt_setzen(int an) { s_anschw_alt = an; }
 int  re15_k2080_anschwimmen_alt(void) { return s_anschw_alt; }
 /* Runde 41 Spur G2: der Kanister im Becken ist der dieser Szene (Bit 116, in 2090/2091 gesetzt) - Spur-B-Fenster ab dem Kopf (gator_re2_r41.c) */
 static int kanister_der_szene(void) { return raum_2090((unsigned)g_current_room_id & 0xFFFFu) && s_set_2090 && bit(RE15_K2080_BIT_KANISTER); }
+/* Runde 41 Spur G2, Nachbesserung 1 (Entscheid E1 des Orchestrators zu Punkt 8: "Damit der Kampf nicht stockt, wenn der Spieler den Alligator nie zum
+ * Kanister fuehrt, fuehrt seine Runde ihn nach einer Weile auch am Kanister vorbei (PORT-WAHL, Wartezeit so, dass er im freien Spiel spaetestens nach rund
+ * 30 s dort ist), weiterhin ohne direkt hinzuschwimmen"). Befund Abnahme 1: Leon-Lauf Aufnahme erst F3650 (122 s), weil die Figur ihn nie hinfuehrte.
+ * PORT-WAHL: liegt der Kanister RE15_K2080_RUNDE_AB Bilder frei im Becken, wird er Wegpunkt seiner Runde, sobald er VOR ihm liegt (Winkel zur Schwimm-
+ * richtung <= 90 Grad - er dreht nicht dafuer um); spaetestens nach RE15_K2080_RUNDE_SPAET Bildern auch sonst. Geschwommen wird im Bogen (Slew 0x30 der
+ * Verfolgung, keine Wende auf der Stelle), gehalten bis zur Aufnahme. Gemessen im freien Spiel (Dossier NB1): Aufnahme <= 30 s nach dem Aufschlag. */
+static void runde_zaehlen(void)
+{
+    int32_t pos[3], rot[9];
+    if (kanister_der_szene() && re15_gr2_kanister_stufe() == 0 && re15_gr2_kanister_welt(pos, rot)) s_frei_bilder++;
+    else { s_frei_bilder = 0; s_runde = 0; }
+}
 static int anschwimm_lage(const re15_actor_t *e, int32_t c[2], int64_t *d2, int64_t *ab2)
 {
-    if (!s_anschw_alt) return 0;
+    if (!s_anschw_alt && !s_runde) {
+        if (s_frei_bilder < RE15_K2080_RUNDE_AB || !e) return 0;
+        int32_t pos[3], rot[9];
+        if (!re15_gr2_kanister_welt(pos, rot)) return 0;
+        const int th = e->rot_y & 0xfff;
+        const int64_t vor = (int64_t)re15_cos_q12(th) * (pos[0] - e->x) - (int64_t)re15_sin_q12(th) * (pos[2] - e->z);   /* Schwimmrichtung (cos, -sin) */
+        if (vor < 0 && s_frei_bilder < RE15_K2080_RUNDE_SPAET) return 0;
+        s_runde = 1;
+        K_LOG("RUNDE zum Kanister an: Gator (%d,%d) Gier %d, Kanister (%d,%d), %d Bilder frei im Becken, %s", (int)e->x, (int)e->z, th, (int)pos[0],
+              (int)pos[2], s_frei_bilder, vor >= 0 ? "liegt voraus" : "spaet (liegt hinten)");
+    }
     if (!e || !raum_2090((unsigned)g_current_room_id & 0xFFFFu) || !s_set_2090 || !bit(RE15_K2080_BIT_KANISTER)) return 0;
     if (re15_gr2_kanister_stufe() != 0) return 0;
     int32_t pos[3], rot[9];
@@ -971,16 +1012,18 @@ static int anschwimm_lage(const re15_actor_t *e, int32_t c[2], int64_t *d2, int6
 int re15_k2080_r41_anschwimmen_aktiv(const re15_actor_t *e)
 {
     int32_t c[2]; int64_t d2 = 0, ab2 = 0;
-    return anschwimm_lage(e, c, &d2, &ab2) && d2 >= ab2;
+    return anschwimm_lage(e, c, &d2, &ab2) && (d2 >= ab2 || (s_runde && !s_anschw_alt));   /* E1: Runde bis zur Aufnahme */
 }
 int re15_k2080_r41_anschwimmen(int slot, re15_actor_t *e, int32_t dist)
 {
     int32_t c[2] = { 0, 0 }; int64_t d2 = 0, ab2 = 0;
     const int lage = anschwimm_lage(e, c, &d2, &ab2);
-    const int an = lage && d2 >= ab2;
+    const int runde = s_runde && !s_anschw_alt;
+    const int an = lage && (d2 >= ab2 || runde);
     if (an != s_anschw) {
         s_anschw = an;
-        if (lage)
+        if (runde) K_LOG("RUNDE zum Kanister %s F%u", an ? "Ziel" : "aus", (unsigned)g_engine.frame_count);
+        else if (lage)
             K_LOG("ANSCHWIMMEN %s: Gator Slot %d (%d,%d) Gier %d, Kanister (%d,%d) Abstand %d, Grenze %d (RE2-Zielmodus 8880 @0x80100a88-8c)",
                   an ? "an" : "aus", slot, (int)e->x, (int)e->z, (int)e->rot_y & 0xfff, (int)c[0], (int)c[1], (int)isqrt64(d2),
                   (int)isqrt64(ab2));
@@ -993,7 +1036,7 @@ int re15_k2080_r41_anschwimmen(int slot, re15_actor_t *e, int32_t dist)
     re15_gator_boss_steuerziel(e, &tx, &tz);              /* Spur B: Kanten-Umweg um Plattform/Rampe + Klemmflaeche */
     const int soll = ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 0x400) & 0xfff;   /* Mesh-Gier zum Ziel (re15_actor.h:1196) */
     const int dlt = ((soll - (int)e->rot_y + 0x800) & 0xfff) - 0x800;
-    if (dlt > 0x300 || dlt < -0x300) {
+    if (!runde && (dlt > 0x300 || dlt < -0x300)) {
         /* Wende auf der Stelle wie die Verfolgung (Spur B, enemy_ai_boss_gator.c "WENDE STATT BOGEN": ab 0x300 Fehlwinkel Slew 0x60,
          * Clip ohne Vortrieb) - RE2 hat keine Lenkung, sein Gator schwimmt die Bahn, auf der der Kanister liegt */
         re15_enemy_steer_point(e, tx, tz, 0x60);

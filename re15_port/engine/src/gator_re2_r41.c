@@ -2270,11 +2270,12 @@ static int gr2_kk_rechnen(const re15_actor_t *e, const re15_skel_pose_t *poses, 
  * Kiefer + beide Kanister-Enden) und dieselben Aussenwaende GR2_KK_*, die Punkte als Versatz zur Wurzel aus der Pose ohne Ueberblendung, gedreht auf die
  * Ankunftsrichtung (Wurzel -> Ziel). Am verschobenen Ziel greift die Klemme nicht: der Gator kommt an, statt gegen die Wand zu druecken.
  * Rueckgabe 1 = verschoben. */
-static int s_kk_ziel_alt = 0;                                 /* Pruefhaken der Riegel (Gegenprobe, kein Spielweg): 1 = Ziel wie vor Spur G2 */
+static int s_kk_ziel_alt = 0;                                 /* Pruefhaken der Riegel (Gegenprobe, kein Spielweg): 1 = Ziel wie vor Spur G2, 2 = wie G2 vor der Nachbesserung 1 */
 void re15_gr2_kk_ziel_alt_setzen(int an) { s_kk_ziel_alt = an; }
-int re15_gr2_kk_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+int  re15_gr2_kk_ziel_alt(void) { return s_kk_ziel_alt; }
+static int gr2_kk_ziel_v1(const re15_actor_t *e, int32_t *tx, int32_t *tz)   /* Stand G2 vor der Nachbesserung 1 (Gegenprobe 2) */
 {
-    if (s_kk_ziel_alt || !e || !s_kan.aktiv || !s_kan.angehaengt) return 0;
+    if (!e || !s_kan.aktiv || !s_kan.angehaengt) return 0;
     re15_enemy_bank_t *bk = gr2_bank(e);
     if (!bk || bk->skel.bone_count <= 7) return 0;
     int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, e, -1, (uint32_t)e->anim_frame);
@@ -2315,6 +2316,226 @@ int re15_gr2_kk_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz)
     }
     return verschoben;
 }
+/* ==== Runde 41 Spur G2, Nachbesserung 1 (Abnahme 1 M1/M3): TRAG-LENKUNG =======================================================
+ * Befund Abnahme 1 (freies Spiel, gator_trag.log/gator_boss.log): Leon F7545-F7896 Wurzel (-3952,-10027), Ziel nach der G2-Verschiebung (-4001,-8549)
+ * = 1300-2000 noerdlich der Linie, an der die Kopf-Klemme haelt (Ueberstand (0,-185) je Paddel-Zyklus, Clip 1 Bild 0); Elza F6971-F6981 Wurzel
+ * (-636,-22565) steht (Takt (0,0)), Gier pendelt 3285/3381/3477 = Wende 0x60 hin und her um ein Ziel, das auf der Wurzel liegt.
+ * Ursachen: (1) die G2-Verschiebung drehte die Kopfpunkte auf die Richtung Wurzel -> UNVERSCHOBENES Ziel, geschwommen wird aber auf das verschobene
+ * (Leon: Ziel NW, verschoben nach N - Kopf in die Nordwand); (2) die Punkte kamen aus dem laufenden Bild, Clip 1 Bild 0 ragt weiter vor;
+ * (3) es gibt keinen Zustand "angekommen": am verschobenen Ziel steht er (Elza) oder drueckt weiter (Leon).
+ * RE2 hat keinen Wartezustand: Stufe 7 (Tragen) @0x80101b58-8c fuehrt nur die Kanister-Lokallage nach (`lw v1,56(s2) / addiu v0,zero,1750 /
+ * beq v1,v0 / ... jal 0x8001a1e0 (a2 = 100)`, `lw v1,60(s2) / addiu v0,zero,-210 / ... jal 0x8001a1e0 (a2 = 30)`), kein Zaehler; der Koerper schwimmt
+ * in Sub 1/2 weiter (Wurzelversatz Clip 0/1). Nur das Intro wartet (`lh v0,468(s0) / beq v0,zero` @0x80100854-5c).
+ * PORT-WAHL (Form):
+ *  - Kopfpunkte = konvexe Huelle von Hals/Kopf/Kiefer (Bones 5/6/7) und beiden Kanister-Enden ueber ALLE Bilder der Schwimm-Clips 0 und 1 (dieselben
+ *    Punkte wie die Kopf-Klemme gr2_kk_rechnen), im Gator-Rahmen; einmal je Anhaengen gerechnet.
+ *  - Wurzel-Kasten je Gier: Aussenwaende GR2_KK_* minus die Huelle, minus GR2_TR_RAND = GR2_KK_SCHRITT 340 (groesster Wurzelschritt je Bild: er kommt
+ *    hoechstens einen Schritt ueber das Ziel, bevor die Lenkung greift).
+ *  - Ziel auf der Strecke Wurzel -> Ziel abschneiden (gleiche Gier fuer die Rechnung und fuer das Schwimmen); liegt die Wurzel selbst ausserhalb des
+ *    Kastens ihrer Zielrichtung, das Ziel in den Kasten legen und die Richtung neu rechnen (3 Durchgaenge).
+ *  - Ist das abgeschnittene Ziel erreicht (< 800 = Spur-B-Erreicht-Radius, ETAPPEN-LATCH/Kanten-Pendel enemy_ai_boss_gator.c), schwimmt er weiter:
+ *    VORBEI-Etappe laengs der Wand, die das Ziel kuerzte, GR2_TR_ETAPPE = 4000 (= ein Schwimmzyklus Clip 0: 5990 x 2731/4096 = 3994), danach die naechste
+ *    in Gegenrichtung (Pendel vor dem Spieler); ist laengs kein Platz (< 1500), die andere Richtung, sonst von der Wand weg. Etappe gehalten, bis
+ *    erreicht (< 800) oder 150 Bilder um (= 5 s, Haltezeit wie die Spur-B-Etappen 120 + Wende).
+ * Gegenproben (Pruefhaken re15_gr2_kk_ziel_alt_setzen): 1 = Ziel wie vor Spur G2, 2 = Verschiebung wie G2 vor dieser Nachbesserung. */
+#define GR2_TR_RAND    340      /* = GR2_KK_SCHRITT */
+#define GR2_TR_ERREICHT 800
+#define GR2_TR_ETAPPE  4000
+#define GR2_TR_PLATZ   1500
+#define GR2_TR_HALTEN  150
+#define GR2_TR_PN      1024
+static struct { int ok; int32_t lokal[3]; int32_t rel[9]; int32_t sk; int n; int32_t h[96][2]; } s_th;   /* Huelle (Gator-Rahmen) */
+static int64_t gr2_kreuz(const int32_t o[2], const int32_t a[2], const int32_t b[2])
+{
+    return (int64_t)(a[0] - o[0]) * (b[1] - o[1]) - (int64_t)(a[1] - o[1]) * (b[0] - o[0]);
+}
+static int gr2_pkt_cmp(const void *x, const void *y)
+{
+    const int32_t *a = (const int32_t *)x, *b = (const int32_t *)y;
+    return a[0] != b[0] ? (a[0] < b[0] ? -1 : 1) : (a[1] < b[1] ? -1 : a[1] > b[1]);
+}
+static int gr2_tr_huelle(const re15_actor_t *e)
+{
+    const int32_t sk = gr2_scale(e);
+    if (s_th.ok && s_th.sk == sk && !memcmp(s_th.lokal, s_kan.lokal, sizeof s_th.lokal) && !memcmp(s_th.rel, s_kan.rel, sizeof s_th.rel)) return s_th.n > 2;
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    if (!bk || bk->skel.bone_count <= 7) return 0;
+    static int32_t pk[GR2_TR_PN][2];
+    int n = 0;
+    re15_actor_t t = *e;
+    t.x = 0; t.y = 0; t.z = 0; t.rot_y = 0;
+    for (int c = 0; c <= 1 && c < bk->anim.clip_count; c++) {
+        for (int f = 0; f < bk->anim.clips[c].frame_count && n + 5 <= GR2_TR_PN; f++) {
+            t.motion = (int16_t)c; t.anim_frame = f;
+            const int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, &t, c, (uint32_t)f);
+            re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+            void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+            const int rv = re15_skel_compute_pose(&bk->skel, kf, poses);
+            g_anim_pose_actor = save;
+            if (rv != 0) continue;
+            int32_t r[9], p[3];
+            for (int k = 0; k < 3; k++) { gr2_part_welt(&t, &poses[k_kk_bone[k]], r, p); pk[n][0] = p[0]; pk[n][1] = p[2]; n++; }
+            gr2_part_welt(&t, &poses[6], r, p);
+            const int32_t l[3] = { q12mul(s_kan.lokal[0], sk), q12mul(s_kan.lokal[1], sk), q12mul(s_kan.lokal[2], sk) };
+            int32_t kp[3], kf2[3];
+            for (int i = 0; i < 3; i++) {
+                kp[i] = p[i] + (int32_t)(((int64_t)r[i*3] * l[0] + (int64_t)r[i*3+1] * l[1] + (int64_t)r[i*3+2] * l[2]) >> 12);
+                const int64_t ry = (int64_t)r[i*3] * s_kan.rel[1] + (int64_t)r[i*3+1] * s_kan.rel[4] + (int64_t)r[i*3+2] * s_kan.rel[7];
+                kf2[i] = kp[i] + (int32_t)(((ry >> 12) * -2784) >> 12);   /* Kanister-Modellhoehe 2784 wie gr2_kk_rechnen */
+            }
+            pk[n][0] = kp[0]; pk[n][1] = kp[2]; n++;
+            pk[n][0] = kf2[0]; pk[n][1] = kf2[2]; n++;
+        }
+    }
+    qsort(pk, (size_t)n, sizeof pk[0], gr2_pkt_cmp);   /* Andrew monotone chain */
+    int m = 0;
+    static int32_t hl[2 * GR2_TR_PN][2];
+    for (int i = 0; i < n; i++) {
+        while (m >= 2 && gr2_kreuz(hl[m-2], hl[m-1], pk[i]) <= 0) m--;
+        hl[m][0] = pk[i][0]; hl[m][1] = pk[i][1]; m++;
+    }
+    for (int i = n - 2, u = m + 1; i >= 0; i--) {
+        while (m >= u && gr2_kreuz(hl[m-2], hl[m-1], pk[i]) <= 0) m--;
+        hl[m][0] = pk[i][0]; hl[m][1] = pk[i][1]; m++;
+    }
+    if (m > 1) m--;
+    if (m > 96) m = 96;
+    memcpy(s_th.h, hl, (size_t)m * sizeof hl[0]);
+    s_th.n = m; s_th.ok = 1; s_th.sk = sk;
+    memcpy(s_th.lokal, s_kan.lokal, sizeof s_th.lokal); memcpy(s_th.rel, s_kan.rel, sizeof s_th.rel);
+    re15_gr2_log("TRAG-HUELLE F%u: %d Punkte aus %d (Clips 0/1, Bones 5/6/7 + Kanister-Enden)", (unsigned)g_engine.frame_count, m, n);
+    return m > 2;
+}
+/* Wurzel-Kasten fuer die Gier: x in [k0,k1], z in [k2,k3] (Lokal -> Welt wie re15_gr2_kk_ziel v1: dx = c l0 + s l1, dz = -s l0 + c l1) */
+static void gr2_tr_kasten(int gier, int32_t k[4])
+{
+    const int64_t c = re15_cos_q12(gier), sn = re15_sin_q12(gier);
+    int32_t x0 = 0, x1 = 0, z0 = 0, z1 = 0;
+    for (int i = 0; i < s_th.n; i++) {
+        const int32_t ox = (int32_t)((c * s_th.h[i][0] + sn * s_th.h[i][1]) >> 12), oz = (int32_t)((-sn * s_th.h[i][0] + c * s_th.h[i][1]) >> 12);
+        if (!i || ox < x0) x0 = ox;
+        if (!i || ox > x1) x1 = ox;
+        if (!i || oz < z0) z0 = oz;
+        if (!i || oz > z1) z1 = oz;
+    }
+    k[0] = GR2_KK_X0 - x0 + GR2_TR_RAND; k[1] = GR2_KK_X1 - x1 - GR2_TR_RAND;
+    k[2] = GR2_KK_Z0 - z0 + GR2_TR_RAND; k[3] = GR2_KK_Z1 - z1 - GR2_TR_RAND;
+    if (k[0] > k[1]) k[0] = k[1] = (k[0] + k[1]) / 2;
+    if (k[2] > k[3]) k[2] = k[3] = (k[2] + k[3]) / 2;
+}
+static int gr2_tr_gier(const re15_actor_t *e, int32_t tx, int32_t tz)
+{
+    if (tx == e->x && tz == e->z) return (int)(e->rot_y & 0xfff);
+    return ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 1024) & 0xfff;
+}
+/* Ziel auf die Strecke kuerzen; Rueckgabe = Seiten, die gekuerzt haben (1 West, 2 Ost, 4 Sued, 8 Nord), 0 = Ziel passt */
+static int gr2_tr_fit(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+{
+    int seiten = 0;
+    for (int it = 0; it < 3; it++) {
+        int32_t k[4]; gr2_tr_kasten(gr2_tr_gier(e, *tx, *tz), k);
+        const int64_t dx = (int64_t)*tx - e->x, dz = (int64_t)*tz - e->z;
+        if (e->x >= k[0] && e->x <= k[1] && e->z >= k[2] && e->z <= k[3]) {
+            int64_t t = 4096; int s = 0;                       /* Liang-Barsky, t in Q12 */
+            if (dx > 0 && e->x + dx > k[1]) { const int64_t u = ((int64_t)(k[1] - e->x) << 12) / dx; if (u < t) { t = u; s = 2; } }
+            if (dx < 0 && e->x + dx < k[0]) { const int64_t u = ((int64_t)(k[0] - e->x) << 12) / dx; if (u < t) { t = u; s = 1; } }
+            if (dz > 0 && e->z + dz > k[3]) { const int64_t u = ((int64_t)(k[3] - e->z) << 12) / dz; if (u < t) { t = u; s = 8; } }
+            if (dz < 0 && e->z + dz < k[2]) { const int64_t u = ((int64_t)(k[2] - e->z) << 12) / dz; if (u < t) { t = u; s = 4; } }
+            if (s) { *tx = e->x + (int32_t)((dx * t) >> 12); *tz = e->z + (int32_t)((dz * t) >> 12); seiten |= s; }
+            return seiten;
+        }
+        const int32_t nx = *tx < k[0] ? k[0] : *tx > k[1] ? k[1] : *tx, nz = *tz < k[2] ? k[2] : *tz > k[3] ? k[3] : *tz;
+        if (nx != *tx) seiten |= nx > *tx ? 1 : 2;
+        if (nz != *tz) seiten |= nz > *tz ? 4 : 8;
+        if (nx == *tx && nz == *tz) return seiten;
+        *tx = nx; *tz = nz;
+    }
+    return seiten;
+}
+int re15_gr2_kk_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+{
+    if (s_kk_ziel_alt == 1 || !e || !s_kan.aktiv || !s_kan.angehaengt) return 0;
+    if (s_kk_ziel_alt == 2) return gr2_kk_ziel_v1(e, tx, tz);
+    if (s_kan.stufe != 7 || !gr2_tr_huelle(e)) return 0;   /* erst getragen (Stufe 7): in Stufe 3-6 wandert die Lokallage noch vom Fenster ins Maul */
+    return gr2_tr_fit(e, tx, tz) != 0;
+}
+static struct { int8_t an, dir; int16_t t; int32_t qx, qz; } s_tr[RE15_ACTOR_MAX];
+extern void re15_gator_boss_steuerziel(const re15_actor_t *e, int32_t *tx, int32_t *tz);   /* Spur B: Kanten-Umweg + Klemmflaeche 1600 */
+static int32_t gr2_tr_ab(const re15_actor_t *e, int32_t x, int32_t z)
+{
+    const int64_t dx = (int64_t)x - e->x, dz = (int64_t)z - e->z, d2 = dx * dx + dz * dz;
+    return (int32_t)re15_squareroot0((uint32_t)(d2 > 0xffffffffLL ? 0xffffffffLL : d2));
+}
+static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz);
+static int8_t s_tr_modus[RE15_ACTOR_MAX];   /* letzte Rueckgabe je Slot: 0 Ziel unveraendert, 1 gekuerzt, 2 Vorbei-Etappe */
+int re15_gr2_trag_modus(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_tr_modus[slot] : 0; }
+int re15_gr2_trag_ziel(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz)
+{
+    const int r = gr2_trag_ziel_innen(slot, e, pl, tx, tz, nx, nz);
+    if (slot >= 0 && slot < RE15_ACTOR_MAX) s_tr_modus[slot] = (int8_t)r;
+    return r;
+}
+static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return 0;
+    if (s_kk_ziel_alt) return re15_gr2_kk_ziel(e, tx, tz);
+    if (!s_kan.aktiv || !s_kan.angehaengt || s_kan.stufe != 7) { s_tr[slot].an = 0; s_tr[slot].dir = 0; return 0; }   /* Stufe 7 = getragen (s. re15_gr2_kk_ziel) */
+    if (!gr2_tr_huelle(e)) return 0;
+    const int32_t ox = *tx, oz = *tz;
+    const int hop = (nx != *tx || nz != *tz);
+    const int seiten = gr2_tr_fit(e, tx, tz);
+    if (s_tr[slot].an) {
+        if (gr2_tr_ab(e, s_tr[slot].qx, s_tr[slot].qz) < GR2_TR_ERREICHT || ++s_tr[slot].t > GR2_TR_HALTEN) {
+            s_tr[slot].an = 0; s_tr[slot].dir = (int8_t)-s_tr[slot].dir;
+        } else { *tx = s_tr[slot].qx; *tz = s_tr[slot].qz; return 2; }
+    }
+    if (!seiten || gr2_tr_ab(e, *tx, *tz) >= GR2_TR_ERREICHT) return seiten != 0;
+    if (hop) {
+        /* Umlauf-Hop des Kanten-Umwegs (Spur B gb_kanten_umweg, zustandslos: solange die Luftlinie im Plattform-Schatten liegt, wieder der Hop). Gemessen
+         * (Lauf n2_plat_leon F1264/F1466): der Hop (-4300,-22600) war mit der Anfahrt nach Sueden gekuerzt, er erreichte ihn nie und pendelte im Westkanal.
+         * Am gekuerzten Hop gilt der Hop als erreicht: Etappe zum Wegpunkt, den der Umweg vom Hop aus waehlt. */
+        re15_actor_t am_hop = *e;                          /* naechster Wegpunkt, wie ihn der Kanten-Umweg AM Hop waehlt (freie Luftlinie -> Endziel, sonst die naechste Ecke) */
+        am_hop.x = ox; am_hop.z = oz;
+        int32_t qx = nx, qz = nz;
+        re15_gator_boss_steuerziel(&am_hop, &qx, &qz);
+        (void)gr2_tr_fit(e, &qx, &qz);
+        if (gr2_tr_ab(e, qx, qz) >= GR2_TR_PLATZ) {
+            s_tr[slot].an = 1; s_tr[slot].t = 0; s_tr[slot].qx = qx; s_tr[slot].qz = qz;
+            re15_gr2_log("TRAG VORBEI F%u: Wurzel (%d,%d) Gier %d, Hop (%d,%d) gekuerzt auf (%d,%d) Seiten %d -> Etappe zum Wegpunkt nach dem Hop (%d,%d), Endziel (%d,%d)",
+                         (unsigned)g_engine.frame_count, e->x, e->z, (int)(e->rot_y & 0xfff), (int)ox, (int)oz, (int)*tx, (int)*tz, seiten, (int)qx, (int)qz,
+                         (int)nx, (int)nz);
+            *tx = qx; *tz = qz;
+            return 2;
+        }
+    }
+    /* VORBEI-Etappe laengs der kuerzenden Wand (Ost/West kuerzt -> laengs z, Nord/Sued -> laengs x) */
+    const int laengs_z = (seiten & 3) != 0;
+    if (!s_tr[slot].dir) {
+        const int32_t kom = laengs_z ? (pl ? pl->z - e->z : 0) : (pl ? pl->x - e->x : 0);
+        s_tr[slot].dir = (int8_t)(kom >= 0 ? 1 : -1);
+    }
+    for (int v = 0; v < 3; v++) {
+        int32_t qx = e->x, qz = e->z;
+        if (v < 2) {
+            const int sg = v == 0 ? s_tr[slot].dir : -s_tr[slot].dir;
+            if (laengs_z) qz += sg * GR2_TR_ETAPPE; else qx += sg * GR2_TR_ETAPPE;
+        } else {                                               /* von der Wand weg */
+            if (seiten & 1) qx += GR2_TR_ETAPPE; else if (seiten & 2) qx -= GR2_TR_ETAPPE;
+            if (seiten & 4) qz += GR2_TR_ETAPPE; else if (seiten & 8) qz -= GR2_TR_ETAPPE;
+        }
+        re15_gator_boss_steuerziel(e, &qx, &qz);
+        (void)gr2_tr_fit(e, &qx, &qz);
+        if (gr2_tr_ab(e, qx, qz) < GR2_TR_PLATZ) continue;
+        if (v == 1) s_tr[slot].dir = (int8_t)-s_tr[slot].dir;
+        s_tr[slot].an = 1; s_tr[slot].t = 0; s_tr[slot].qx = qx; s_tr[slot].qz = qz;
+        re15_gr2_log("TRAG VORBEI F%u: Wurzel (%d,%d) Gier %d, Ziel (%d,%d) gekuerzt auf (%d,%d) Seiten %d -> Etappe %s nach (%d,%d)", (unsigned)g_engine.frame_count,
+                     e->x, e->z, (int)(e->rot_y & 0xfff), (int)ox, (int)oz, (int)*tx, (int)*tz, seiten,
+                     v == 2 ? "von der Wand weg" : (laengs_z ? "laengs z" : "laengs x"), (int)qx, (int)qz);
+        *tx = qx; *tz = qz;
+        return 2;
+    }
+    return 1;
+}
 /* Pose ohne Ueberblendung (wie gr2_bone_welt) - fuer die R1-Vorausschau gr2_r1_pfad. */
 static int gr2_kk_takt(const re15_actor_t *e, int mit_kanister, int32_t *dx, int32_t *dz)
 {
@@ -2329,6 +2550,7 @@ static int gr2_kk_takt(const re15_actor_t *e, int mit_kanister, int32_t *dx, int
     return rv == 0 && gr2_kk_rechnen(e, poses, mit_kanister, dx, dz);
 }
 static struct { uint8_t an; uint32_t f0; int n; int32_t max; } s_kk;   /* Messzeile KOPF-KLEMME (gator_boss.log) */
+int re15_gr2_kk_aktiv(void) { return s_kk.an; }   /* Runde 41 Spur G2 NB1: Messhaken der Riegel (Klemme greift in diesem Bild) */
 /* Runde 41 Spur P (Abnahme G 4 O1, Nutzer-Punkt "Lagespruenge mit dem Kanister im Maul ... ohne sichtbaren Sprung"): beim Tragen baut die Klemme den
  * Ueberstand ueber mehrere Bilder ab - hoechstens GR2_KK_SCHRITT je Bild = groesster authored Wurzelschritt der Clips 6/3/0/1 x Skala 2731 (Clip 6: 340,
  * unit_r41_re2gator_lauer; Massstab des Riegels integration_r41_re2gator "sichtbarer Lagesprung"). Vorher der ganze Ueberstand in EINEM Bild: bis 1517 je
