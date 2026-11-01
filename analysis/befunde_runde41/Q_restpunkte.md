@@ -277,7 +277,7 @@ Bilder `Q_belege/int_vorher.png`, `int_nachher.png`.
 2. Genau die drei Szenen hatten im Baum der Spur Q ein gemischtes Paar: d4040_07 Lauf 21e5e819 (A direct3d, B direct3d11, 18:30), d6000_05a bbdde5e1, d5020_06 c1e83636. Der Riegel-Vergleich auf den aufbewahrten Bildern ergibt dieselben Zahlen wie die roten Laeufe: S=1952 H=7, S=2648 H=2, S=1790 H=2. Paare aus einer Phase derselben Szene: H=0 (e0f8ab10, c8b18258).
 3. In allen drei roten Laeufen meldet der Laeufer davor `[<Szene> b] Versuch 1: Lauf ungueltig`. Das passt zu einem Wechsel mitten im Paar, gemessen ist nur das Zusammenfallen.
 4. Gegen den Stand ohne Spur Q (exe des Hauptbaums, master 1350e67d3): je Szene und exe 16 Laeufe, 8 gleichzeitig, halb mit, halb ohne Masken, dazu 12 Laeufe d4040_07 mit Spur Q: mit und ohne Spur Q je Szene dieselben zwei Bildhashes, keine Abweichung ueber 24 im Fenster.
-5. Nicht beantwortet: was die Phase ausloest. `SDL_RENDER_DRIVER=direct3d11` in der jetzigen Phase erzeugt das direct3d-Bild bytegleich und H=0 in allen Paarungen, der Unterschied liegt also nicht in der Schnittstelle allein, sondern im Zustand der Maschine dahinter (die Logs melden eine Remotedesktop-Sitzung; gemessen ist der Zusammenhang nicht).
+5. Beantwortet im Abschnitt "Test-Integration Q+R" am Ende: die Phase ist der Zustand der Sitzung. Hier stand: Nicht beantwortet: was die Phase ausloest. `SDL_RENDER_DRIVER=direct3d11` in der jetzigen Phase erzeugt das direct3d-Bild bytegleich und H=0 in allen Paarungen, der Unterschied liegt also nicht in der Schnittstelle allein, sondern im Zustand der Maschine dahinter (die Logs melden eine Remotedesktop-Sitzung; gemessen ist der Zusammenhang nicht).
 
 Vorschlag, nicht gebaut: der Laeufer vergleicht die Zeile `[render] SDL-Renderer` von A und B und wiederholt das Paar bei Ungleichheit.
 
@@ -293,3 +293,71 @@ ctest -j 3 -R '^integration_.*(birkin|g5|tentakel|kollision|collision|nclip|5090
 ```
 
 Darin integration_r41_ventilkette_kette(_elza) mit Spur N, Folge 09/02/01/08, und integration_r41_masken36_zelle/_zellen3d: gruen, die ganze Zeit eine Phase direct3d. Die vier Skripttests unit_r35_android_bash_mutanten, unit_r38_releaseskript_bausteine, unit_r38_releaseskript_trocken und unit_r39_titelversion_huelle liefen nicht zu Ende, sie gehoeren in den vollen Lauf vor dem Release.
+
+## Test-Integration Q+R (2026-11-01, Stand 2bcf4d0f1)
+
+Messordner scratchpad `int_qr_test` (`phase.py`, `paare.py`, `fl2.py`, je Gruppe ein Log). Kein Code geaendert, kein Riegel rot.
+
+### Was die Phasen ausloest: der Zustand der Sitzung
+
+Beantwortet Punkt 5 oben. Sitzungsprotokoll `Microsoft-Windows-TerminalServices-LocalSessionManager/Operational` (Ereignis 24 getrennt, 25 verbunden, reicht bis 2026-10-31 08:42 zurueck) gegen die debug.log derselben Ordner wie `rzeit.py`, dazu die Laeufe dieser Test-Integration: 5631 Laeufe mit GPU-Renderer. Gezaehlt sind Laeufe, die ganz in einem Sitzungszustand liegen (Beginn = Erstellzeit der Datei, Ende = Schreibzeit), Zustand bekannt:
+
+| Sitzung 1 | direct3d | direct3d11 |
+|---|---|---|
+| getrennt | 0 | 2615 |
+| verbunden | 2498 | 13 |
+
+Die 13: zwoelf Laeufe `int_qr/repro/*_direct3d11` mit gesetztem `SDL_RENDER_DRIVER=direct3d11` und ein Lauf 1 s nach der Wiederverbindung 14:36:36. Weitere 60 Laeufe ueberspannen einen Wechsel. 24 davon beginnen verbunden und melden direct3d11, alle 1 bis 18 s vor der naechsten Trennung. Bei 22 dieser 24 traegt die Trennung im Ereignis 40 den Code 0x80070079 oder 0x80070040 (Win32-Fehler 121 und 64), das sind Verbindungsabbrueche, kein Abmelden.
+
+Die drei roten Paare liegen genau auf solchen Trennungen:
+
+| Szene | Lauf A direct3d | Lauf B direct3d11 | Sitzung getrennt |
+|---|---|---|---|
+| d5020_06 (c1e83636) | 18:28:12-18:28:25 | 18:28:25-18:28:52 | 18:28:29 |
+| d4040_07 (21e5e819) | 18:30:18-18:30:31 | 18:30:31-18:30:58 | 18:30:40 |
+| d6000_05a (bbdde5e1) | 18:52:19-18:52:32 | 18:52:32-18:52:59 | 18:52:44 |
+
+Lauf B dauert 27 statt 13 s, und der Laeufer meldet davor `Versuch 1: Lauf ungueltig`. Daraus folgt der Ablauf: die Trennung trifft Versuch 1, Versuch 2 startet in der getrennten Sitzung und bekommt von `SDL_CreateRenderer(win, -1, ...)` direct3d11. Gemessen sind Zeiten, Renderer und die Meldung des Laeufers. Die Reihenfolge innerhalb von Lauf B ist daraus geschlossen, die Datei traegt nur einen Zeitstempel je Lauf.
+
+Seit 20:43:35 gibt es kein Ereignis 24 mehr, die Sitzung haengt an der Konsole (`query session`). In den Laeufen dieser Test-Integration: 957 direct3d, 130 software, 0 direct3d11. Ein Wechsel liess sich deshalb nicht vorfuehren, die Zuordnung stammt aus den Laeufen vom 31.10.
+
+Nicht gemessen: warum direct3d in der getrennten Sitzung nicht angeht, und warum das direct3d11-Bild der getrennten Sitzung vom Bild der verbundenen abweicht. In der verbundenen Sitzung sind beide bytegleich (Punkt 5). Belegt ist die Abhaengigkeit, nicht der Treiberweg.
+
+Die Assertion WIN_AddDisplay aus 1350e67d3 haengt an denselben Sitzungs-Ereignissen. `re15_start_spiel` setzt `SDL_ASSERT` nicht, 119 von 154 Skripten mit diesem Makro setzen es auch selbst nicht, darunter `test_r41_birkin_pistole`, `test_r41_g5_tod`, `test_r41_g5_westen`, `test_r41_masken36_stage2`. In diesem Lauf kam keine Neuverbindung, nichts wurde rot, nichts wurde geaendert.
+
+Gegen den Stand ohne Spur Q, neu gemessen (`fl2.py`, nacheinander, je Szene und exe 3 x A und 3 x B; exe des Hauptbaums ohne die Zeichenkette `gpu-grenze`): je Art ein Hash, beide exe dieselben Hashes, d4040_07 S=1943 H=0, d5020_06 S=1790 H=0, d6000_05a S=2648 H=0.
+
+### Tests (Stand 2bcf4d0f1, keine volle Suite)
+
+Bau: `ninja: no work to do`. Integrationsriegel `-j 2 --timeout 1800`, keine parallelen Agenten.
+
+```
+ctest -j 6 --timeout 600 -R "^(unit_|prop_|probe_)" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)"
+100% tests passed, 0 tests failed out of 1044
+ctest -j 6 --timeout 600 -R "^(unit_r41_masken36|unit_r37_masken36|unit_pri_|unit_r36_pri|unit_r37_pri1100|unit_sld_atlas|unit_bss_room_source|prop_bss_chunk|unit_r38_itemorte|unit_r39_optik|unit_stage6_hintergrund|unit_r41_restpunkte|unit_r36_kartenbits|unit_r41_gatorszene|unit_r41_alligator2|unit_r41_kanister2080|unit_r41_re2gator)"
+100% tests passed, 0 tests failed out of 104
+ctest -R "(birkin|g5|tentakel|kollision|collision|nclip|5090|r20|r21|knock|griff|wand|push|schub)"
+100% tests passed, 0 tests failed out of 117
+ctest -R "^integration_(r34_plattform|r34_granaten|r35_granate|r36_granate|fx_region_cull|r37_feuerloescher|r41_kleinkram_a_blink|r35_werfer|r38_kleinkram_flammenwerfer)"
+100% tests passed, 0 tests failed out of 13
+ctest -R "^integration_r41_(keyitems|nachtrag30|ventilkette)"
+100% tests passed, 0 tests failed out of 31
+ctest -R "^integration_r41_(gatorszene|alligator2|kanister2080|re2gator|restpunkte|ventilkette_kette|wasser20b0)|^integration_r41_masken36_teile_d[12]|^integration_r38_wasser"
+100% tests passed, 0 tests failed out of 44
+ctest -R "^integration_r41_masken36|^integration_pri_masken"
+100% tests passed, 0 tests failed out of 15
+ctest -R "^integration_(r36_schuss|r36_tueren|r36_kartenitems_bild|r36_szenenleon|r37_itemband|r39_inventar)"
+100% tests passed, 0 tests failed out of 10
+ctest -R "^integration_(r37_elzaems|r37_masken36|r36_gegnerzahl|r35_zgirl|r37_kiste)"
+100% tests passed, 0 tests failed out of 23
+ctest -j 4 -R "^(re15_tests|r19_marke1_10d0_c1|eintritt_pose_einmal|test_r26_kaefig_release0c|m93r_nachladen|r28_messer_dauerschlag|r29_1d3_doppelabzug|r30_titel_blinken|r30_hund_hitbox_stauchung|r30b_muendungshoehe|r31_trefferboxen|r31_trefferboxen_versteckt|r33_aufrufstelle)$"
+100% tests passed, 0 tests failed out of 13
+ctest -R "^integration_r41_masken36_(zelle|zellen3d)$"
+100% tests passed, 0 tests failed out of 2
+ctest -R "^integration_r41_masken36_zelle$"
+100% tests passed, 0 tests failed out of 1
+ctest -R "^integration_r41_masken36_zellen3d$"
+100% tests passed, 0 tests failed out of 1
+```
+
+`unit_r39_titelversion_huelle` lief im ersten Lauf gruen durch (10 s), der Punkt aus "Tests der Integration Q+R" ist damit erledigt. Die Release- und Android-Skripttests der -E-Liste liefen nach Auftrag nicht.
