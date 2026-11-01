@@ -23,8 +23,10 @@ int re15_spinnengore_an(void)
     return getenv("RE15_KEIN_80PROZENT_GORE") ? 0 : 1;
 }
 
-/* Tabelle @0x80118f38 (24 Worte, `addiu at,at,-28872` @0x80113fd0, Index `lbu v0,5(v0)` @0x80113fc0):
- * Eintrag == 0x80113ff8 fuer 7,8,9,10,11,13,16,17,18,21, sonst 0x8011461c. */
+/* Tabelle @0x80118f38 (22 Eintraege fuer die Waffen-Ids 0..21, `addiu at,at,-28872` @0x80113fd0, Index `lbu v0,5(v0)`
+ * @0x80113fc0): Eintrag == 0x80113ff8 fuer 7,8,9,10,11,13,16,17,18,21, sonst 0x8011461c. Wort 22 (@0x80118f90 =
+ * 0x80114e60) ist schon Eintrag 0 der NAECHSTEN Waffentabelle (`addiu at,at,-28784` @0x80114e38, Index `lbu v0,5(v0)`
+ * @0x80114e28); Mod = Disc. */
 int re15_spinnengore_platzwaffe(int w)
 {
     switch (w) {

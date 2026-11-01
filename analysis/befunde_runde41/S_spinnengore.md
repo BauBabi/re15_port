@@ -346,3 +346,227 @@ Bein-Abtrennen von RE2 und bei Krit. Belegt mit Bildern aus dem Fenster (Leon, E
     ist nicht angeglichen.
 11. Nicht gemessen in dieser Spur: Birkin-Wurf-Teile (c1469a3ab) und Blut an Teil 0 bei 0x29 im Echtlauf. Belegt
     ist nur der Besitz (kein RE2-Gehirn).
+
+## Nachbesserung 1 (nach Abnahme 1, 2026-11-01)
+
+Mängel aus `S_abnahme_1.md`: (1) Spinnenblut rot statt grün, (2) Offen-Liste deckt `S_video_gore.md` §4 nicht ab,
+(3) Kommentar „24 Worte“ und die MC51-Folge für die Release Notes. Werkzeuge und Rohbilder: `scratchpad/S_nb1/`
+(`cap.ps1` = eigene Messkopie `re15_pc_S41nb1.exe`, echter Titel und echte Spielerwahl über `RE15_TITLE_CONFIRM_MS=1500`
+und `RE15_PSELECT_AUTO`, dann `RE15_DEBUG_JUMP`; beschleunigter Renderer, kein AUTOSHOT, kein SOFTWARE_RENDER, gdigrab
+am Fenster-Handle der eigenen PID, 10 Bilder/s, `RE15_WINDOW_SCALE=2`). Belege: `S_belege/nb1/n01…n05`.
+
+### N1. Neue Messschiene `RE15_FX_CLUT_LOG` (kein Verhalten)
+
+`platform/pc/main.c`, Zeichenschleife der Effekte: je gezeichnetem Platz eine Zeile
+`F=<Bild> id= sub= skala= clut= cw= slot= w(x,y,z)`. `sub` ist Platz +0x71, `skala` +0x72, `clut` +0x32 so, wie der
+Zeichner es rechnet (`re15_pc_esp_clut`), `cw` ist das Wort, das er wirklich bindet. Eigene Datei, weil die Auswerter
+von `RE15_FX_LOG` ` F=<n>` am Zeilenende verankern (`r34_plattform.cmake:142`, `test_r36_granate.cmake:100`,
+`test_r41_restpunkte_effektquader.cmake:181`). Ein erster Versuch, die Felder an `RE15_FX_LOG` anzuhängen, ist deshalb
+verworfen.
+
+### N2. Messung VORHER (Stand 4e7eb80cd + nur die Messschiene)
+
+Lauf `v_a_leon_w7`: Leon, ROOM2070, Standard-KI, Redhawk, derselbe Weg wie Integration L7.
+- Spinnen-Log wie in der Abnahme: F68 Slot 2 Zeile 5, +0x93 = 0x41, ta=1, sh=80001, fl=7fff8; F122 Slot 1 ebenso.
+- CLUT-Log am Tod, je Bild F68–78 und F122–132: **3× `id=0 sub=0 skala=2000 clut=7951`** (die drei Blutsätze
+  `0x82000` der Hebung an Teil 0, 0 und 19, das Sub-Byte 8 ist weg) und **2× `id=0 sub=0 skala=1500 clut=7951`** (der
+  Stand-in `re2s_gore` des RE2-Gehirns, Zeile 5 @0x80104580 und FUN_80104890 @0x80104588). Alle fünf auf CLUT 0x7951 =
+  TEX.TIM y 485 = **rot**.
+- Bild: Aufnahmebilder 321–324, rote Wolke am platzenden Rumpf (`n01`, obere Reihe). Im Wolkenfeld (Box 150,300–240,390)
+  bis 943 rote und 0 grüne Pixel.
+
+Daraus folgt: Das `& 7` zu beheben, reicht nicht. Zwei der fünf Partikel am Tod und **jeder gewöhnliche Treffer** unter
+der Standard-KI (@0x80102DD0) kommen aus dem RE2-Stand-in mit dem Zombie-Code `0x1500`.
+
+### N3. RE (alle RE1.5-Stellen in Mod und Disc gelesen, `scratchpad/S_nb1/dis2.py`, Abweichungen 0)
+
+**FUN_80019700, PSX.EXE**: Das ganze Sub-Byte geht in den Platz, nur die Strom-Wahl maskiert.
+```
+8001970c srl  v0,a0,16
+80019730 andi t7,v0,0xff        ; Sub = ganzes Byte
+80019734 andi v0,t7,0x7         ; Strom-Index (Zeilentabelle (sub&7)*2)
+8001973c srl  v1,t7,3
+80019754 sll  s0,v1,6           ; (Sub >> 3) * 0x40
+800197d8 sb   t7,113(t0)        ; Platz +0x71 = GANZES Byte
+800197dc sh   s1,114(t0)        ; +0x72 = Skala
+8001987c lhu  v0,4(t5)          ; EFF-Kopf +4 = CLUT-Wort
+80019884 addu v0,v0,s0
+80019888 sh   v0,50(t0)         ; +0x32 = CLUT
+```
+**Spinnenblut-Code RE1.5, STAGE2.BIN:**
+- HURT, jeder Treffer: `lui a0,0x8` @0x80113b10, `ori a0,a0,0x2000` @0x80113b30, `jal 0x80019700` @0x80113b50.
+- Tod der schwachen Waffen: `lui a0,0x8` / `ori a0,a0,0x2000` @0x8011463c-40, `jal` @0x80114654.
+- a0 = 0x00082000 = Effekt 0, Sub 8, Skala 0x2000.
+
+**Paletten** (`n05`): RE1.5 CORE00.ESP Effekt 0 hat CLUT-Wort 0x7951 (x 272, y 485). TEX.TIM y 485 = `601010 580808 …`
+(rot), y 486 = `185008 184808 …` (grün). Also ist die Spinne y 486 und der Zombie y 485.
+
+**RE2 Retail, was das RE2-Gehirn eigentlich zeichnen würde:**
+- FUN_801056DC (EMS25.BIN) baut a0 = `(rec[0]&0x7f)<<24 | rec[1]<<16 | u16 rec[4]` (@0x80105860-878) und ruft
+  FUN_8001bf10 @0x80105874. Die Records @0x80106684 (je 6 Byte):
+  - Rec 0 `00 19 00 00 00 20`, Rec 1 `00 19 .. 00 28`, Rec 3 `00 09 .. 00 10`: Effekt 0 (Blut).
+  - Rec 2 `09 0a ..` (Effekt 9), Rec 4/5 `85 ..`, Rec 6/7/10 `84 ..`, Rec 8 `1a ..`, Rec 9 `86 ..`: kein Effekt 0.
+- FUN_8001bf10 (RE2 PSX.EXE) zerlegt wie RE1.5: `andi v0,t5,0x7` @0x8001bf24, `srl v0,t5,3` / `sll v0,v0,6`
+  @0x8001c01c-20, `addu v1,v1,v0` / `sh v1,50(t0)` @0x8001c034-38.
+- RE2 CORE00.ESP Effekt 0 hat CLUT 0x7a11 = y 488 = `880000 780000 …` (rot, Grundzeile).
+  - Spinne Rec 0/1 (Sub 0x19) = y 491 = `888840 808038 …` (oliv-gelb).
+  - Spinne Rec 3 (Sub 0x09) = y 489 = `386030 305028 …` (grün).
+  - `shared_assets/RE2/CORE00.ESP` und `TEX.TIM` sind byte-gleich mit `info/re2leon/COMMON/DATA/`.
+- Record je Aufruf, aus den Bytes (`scratchpad/S_nb1/scan_jal.py`, `a2` vor dem Aufruf bzw. im Delay-Slot):
+
+| Record | Aufrufstellen |
+|---|---|
+| Rec 0 | @0x80102DD0, @0x80103DE4, @0x80103F60, @0x80104488; dazu @0x80102EE0/F5C und @0x801042A0 (Modus 1–3, im Port nicht portiert) |
+| Rec 1 | @0x80104580, @0x80104694, @0x801047BC, @0x80104840, @0x801048FC, @0x80105D00, @0x80105D18 |
+| Rec 2 | 4× @0x8010490C (in FUN_80104890 nach Rec 1) |
+| Rec 3 | @0x80103754, @0x80103784 |
+| Rec 4/5 | @0x80103890, @0x8010395C, @0x80103C04, @0x801049A0-A0C, @0x80104AC0-B2C |
+| Rec 6 | @0x80104C10/C20 |
+| Rec 7 | @0x80103AA0, @0x80103E70, @0x80104058, @0x8010441C, @0x80104618, @0x80104C00 |
+| Rec 10 | @0x80103B3C, @0x80104CA4/CB4 |
+
+- **Babyspinne, EMS26.BIN** FUN_80100F28. Records @0x801010dc: Rec 0 `00 19 .. 10`, Rec 1 `00 01 00 08 00 08`,
+  Rec 2 `1a 00 ..`, Rec 3 `05 04 ..`.
+  - Biss @0x80100EDC = Rec 1 (`addiu a2,zero,1` @0x80100ee0), Sub 1, also die rote Grundzeile. Das ist **Leons Blut**
+    und bleibt rot.
+  - Der „Platscher“ @0x80100AD0 ist Rec 2 (`addiu a2,zero,130` = 0x80|2), Effekt 0x1a, kein Blut.
+
+Schluss: In RE1.5 ist das Spinnenblut grün (y 486). In RE2 ist es nie die rote Grundzeile (y 491 oliv-gelb, y 489 grün).
+Im Video ist es grün (S01/S02/S05). Der Port nahm an beiden Stellen die rote Zombie-Zeile.
+
+### N4. Bau
+
+- `engine/src/re15_damage.c re15_enemy_fx19700`: `(a0 >> 16) & 0xff` statt `& 7` (@0x80019730, @0x800197d8).
+  - Der Zeichner (`re15_pc_esp_clut`, `(sub & 0xff) >> 3`) und die Strom-Suche (`re15_esp_row_stream`, `sub & 7`)
+    zerlegen das Byte selbst.
+  - Die Zombie-Codes 0x1500/0x2000/0x2500 haben Sub 0 und bleiben unverändert.
+- `engine/src/zombiegore_r15.c fx()`: dieselbe Zeile. Das ist ohne Wirkung (alle Codes dort haben Sub 0), nur byte-true.
+- `engine/src/enemy_ai_re2_spider.c`: neuer Stand-in `re2s_blut` mit dem RE1.5-Spinnencode `0x00082000`
+  (@0x80113b50/@0x80114654).
+  - Er gilt für die RE2-Blut-Records 0, 1 und 3, an 14 Stellen (Liste N3). FUN_80104890 = Rec 1 + 4× Rec 2 bleibt ein
+    Aufruf; Rec 2 ist wie bisher nicht portiert.
+  - Alle anderen Records und die Babyspinne behalten `re2s_gore` (`0x1500`).
+  - **PORT-WAHL (Stand-in):** welcher RE1.5-Code die RE2-Records vertritt. Belegt ist die Richtung.
+  - Der Anker bleibt der Aktor-Ursprung (Offen 4).
+  - Hängt nicht am Schalter `RE15_KEIN_80PROZENT_GORE`. Das ist keine 80%-Sache, sondern die Farbe des vorhandenen
+    Stand-ins.
+- Riegel `unit_r41_spinnengore` Teil L (bindet `platform/pc/src/fx_plattform_pc.c` ein wie `probe_r34_plattform`):
+  - L1 Byte-Pins: PSX.EXE @0x80019730/34/3c/54/d8/84/88, STAGE2 @0x80113b10/30/50 und @0x8011463c/40/54, EMS25 Rec 0/1/3
+    und `jal 0x801056dc` / `addu a2,zero,zero` @0x80102dd0-d4.
+  - L2 Paletten: RE1.5 0x7951, y 485 rot, y 486 grün; RE2 0x7a11, y 488 rot, y 489/491 nicht rot.
+  - L3 Helfer: 0x82000 ergibt Sub 8 und Zeichner-CLUT 0x7991, 0x2000 ergibt 0x7951.
+  - L4 RE2-Treffer w3 ist grün, kein 0x1500.
+  - L5 RE2-Tod w7: 5 grüne Partikel.
+  - L6 Schalter aus: 2 grüne Partikel.
+  - L7 RE1.5-Tod w3 ist grün.
+- **Gegenprobe:** `re15_damage.c` und `enemy_ai_re2_spider.c` auf HEAD zurückgesetzt und gebaut: **5 Fehler**.
+  - L3 „gruen 0 rot 1“, L4 „rot 1 alt-0x1500 1“, L5 „gruen 0 rot 5 alt-0x1500 2“, dazu L6 und L7.
+  - Danach wiederhergestellt und gebaut: `OK unit_r41_spinnengore`.
+
+### N5. Messung NACHHER (exe 2026-11-01 19:56, dieselben Wege)
+
+| Lauf | CLUT-Log | Bild |
+|---|---|---|
+| `n_a_leon_w7` Leon 2070 Redhawk | F68–78 und F122–132 je **5× `id=0 sub=8 skala=2000 clut=7991`**, kein 0x1500. Ein einzelner `sub=0 skala=1500 clut=7951` in F83–93 an w(4929,-1280,-6337): In F83 fällt Leons HP von 80 auf 79 (Babybiss, Leons Blut, richtig rot) | Bilder 381–384: grüne Wolke am Rumpf (`n01`, untere Reihe). Im Wolkenfeld höchstens 18 rote und bis 254 grüne Pixel |
+| `n_b_elza_w7` Elza 2071 Redhawk | F95 / F176 Tod wie bei Leon, 110× Sub 8 / 0x7991. Einziger 0x1500 in F118 an Elza, ihre HP fallen von 80 auf 79 (Babybiss) | Bilder 397–400: grüne Wolke hinter der Spinne (`n02`). Das Rot im Feld sind Elzas Hosen |
+| `n_d_leon_w3` Leon 2070 Browning | Treffer F70/95/122/149/176 (Zeile 3, @0x80102DD0) je **1× Sub 8 / 0x7991**, kein 0x1500 im ganzen Lauf | Bilder 393, 405, 443: grüner Spritzer am Fußpunkt der Spinne (`n03`; Anker = Ursprung, Offen 4) |
+| `n_e_re15_w8` RE1.5-KI Remington | 143× Sub 8 / 0x7991, kein Rot | Bild 260/261 grünes Treffer-Blut, Bild 296 Krit-Bein mit grünem Blut (`n04`) |
+| `n_c_leon_w7_aus` Schalter aus | Tod F68/F122: ta=0 (kein Platzen), je **2× Sub 8** (`re2s_blut`). 55 rote 0x1500-Zeichnungen in F83, 319, 335, 344/345 und 357: Jedes Mal fällt Leons HP um 1 (80 auf 75), das sind Babybisse | — |
+
+Damit ist jeder Spinnen-Blutsatz beider Gehirne grün (TEX.TIM y 486). Rot bleibt nur Leons und Elzas eigenes Blut beim
+Babybiss (RE2 EMS26 Rec 1, Sub 1 = Grundzeile).
+
+### N6. Tests (Zielauswahl, Windows)
+
+- Unit, 58/58 grün:
+  - die 41 Tests der Abnahme (Spinne, Babys, Zombie-Gore, Trefferfilter, Hund, Krähe, Teile);
+  - dazu `unit_r34_plattform`, `unit_esp_*`, `unit_r38_heliport1171`, `unit_r35_granate`, `unit_birkin_opfer` und
+    `unit_r38_affen*` (Nutzer von `re15_enemy_fx19700` und von Effekt 0).
+- Integration, einzeln nacheinander, 6/6 grün:
+  - `integration_r35_redhawk` 16,7 s, `integration_r38_spinnen_echtlauf` 116,2 s, `integration_r41_spinnengore`
+    122,8 s, `integration_r41_spinnenanim` 111,2 s;
+  - `integration_r34_plattform_takt` 22,8 s und `integration_r34_plattform_esp_eintritt` 9,5 s, beide wegen der
+    Änderung in der Zeichenschleife von `main.c`.
+
+### N7. Mangel 3
+
+- Kommentar `re15_spinnengore_platzwaffe`: Die Tabelle hat 22 Einträge (Waffen-Ids 0..21). Wort 22 @0x80118f90 =
+  0x80114e60 ist schon Eintrag 0 der nächsten Waffentabelle: `lbu v0,5(v0)` @0x80114e28, `lui at,0x8012` /
+  `addiu at,at,-28784` @0x80114e34-38, `jalr` @0x80114e48 (Mod = Disc).
+- MC51-Folge nachgelesen (RE2 EMZ0.BIN, Weg 7438 mit `death=1`, Phase 2):
+  - `andi v0,v0,0x3` / `bne` @0x80107794-98.
+  - Nur bei `rand & 3 == 0` **und** `lb v0,363(s2)` != 0 (@0x801077a0-a8) wird er zur Leiche.
+  - Sonst `addiu v0,zero,10` @0x8010779c / `sh v0,342(s2)` @0x801077b0: HP 10 und Kriecher.
+  - RE1.5 0x80108abc: `ori v0,zero,0x1e` / `sh v0,154(v1)` @0x80108ccc-d0 = HP 30 (STAGE1, Mod = Disc).
+
+### Für die Release Notes (Baustein für den Release-Schritt)
+
+**Spinnen: Das Blut ist jetzt grün.** Im Port war das Spinnenblut rot, weil die Farbwahl des Original-Effekts verloren
+ging (FUN_80019700: Effekt-Byte `(a0>>16)` @0x80019730, Farbzeile `(Sub>>3)*0x40` @0x8001973c-88). Jetzt ist es grün
+wie im Original RE1.5 (TEX.TIM Zeile 486) und in den 80%-Videos (B 5:18, 5:31, 7:40). Das gilt beim Platzen, bei jedem
+Treffer und bei abgeschossenen Beinen, unter der Standard-KI und unter der RE1.5-KI. Unter der Standard-KI vertritt der
+grüne RE1.5-Spinnencode die RE2-Spinnenpartikel, die der Port nicht zeichnen kann (in RE2 sind sie oliv-gelb bzw. grün,
+nie rot). Rot bleibt nur Ihr eigenes Blut, wenn eine Babyspinne Sie beißt.
+
+**Zombies, MC51 auf die Beine (Folge der Gore-Hebung).** Unter der Standard-KI tötet ein tödlicher MC51-Treffer in die
+Beine (Tief-Zielen) meist nicht mehr. Die Beine platzen, und der Zombie kriecht mit 10 Lebenspunkten weiter (RE2-Weg
+7438, `sh 10` @0x801077b0). Liegen bleibt er nur mit 1:4, und nur, wenn RE2s Byte +0x16B gesetzt ist (@0x80107794-a8).
+Das deckt sich mit RE1.5, dort kriecht er mit 30 Lebenspunkten weiter (@0x80108ccc-d0). Mit `RE15_KEIN_80PROZENT_GORE=1`
+gilt der alte Sturz.
+
+### Offen, Stand nach Nachbesserung 1 (ersetzt die Liste „Offen“ oben)
+
+Nach dem Auftrag gilt je Typ das Maximum aus RE1.5, RE2 und den Videos. Ob ein Merkmal, das nur die Videos zeigen,
+gebaut wird, ist PORT-WAHL. Hier steht alles, was `S_video_gore.md` §4 zeigt und der Port nicht hat.
+
+Spinne 0x25:
+1. **Grüne Flecken, die nach dem Platzen gut 1 s auf Boden und Wand liegen bleiben** (S01, B 5:18.3, g09).
+   - Die Farbe hat der Port jetzt, aber keine liegenbleibenden Flecken: Die ESP-Partikel laufen ihre Zeilen ab und
+     verschwinden.
+   - Einen Flecken-Mechanismus für die Spinne habe ich in RE1.5 und RE2 nicht gesucht, nur die Effekt-0-Partikel.
+   - Gestaltung nach Bild, nicht gebaut.
+2. **Grüne Treffer-Spritzer am getroffenen Körper** (S02 B 5:31–5:32.5, S05 B 7:40.4).
+   - Die Farbe ist jetzt grün (N5, `n03`).
+   - Sie sitzen aber am Aktor-Ursprung (Fußpunkt), nicht an der Teil-Matrix. RE2 FUN_801056DC spawnt an
+     `self+0x198 + 172*Teil` (@0x80105758-760), RE1.5 an Teil 0 (`lw v1,392(v0)` @0x80113b48, `addiu a2,v1,64` @0x80113b54). Siehe Punkt 4.
+3. Waffe in S01: Pistole oder Magnum ist nicht zu erkennen (wie bisher Offen 3).
+4. RE2-Partikel sitzen am Ursprung statt an der Teil-Matrix, an allen `re2s_gore`- und `re2s_blut`-Stellen (wie bisher
+   Offen 4). Die RE2-Records 2/4/5/6/7/10 (Effekte 9, 5, 4, 6, 0x1a) werden weiter als rotes `0x1500`-Blut vertreten,
+   obwohl sie in RE2 kein Effekt-0-Blut sind. Nicht angefasst, weil ihr Aussehen nicht belegt ist.
+5. RE1.5-Spinnentod der schwachen Waffen nimmt Clip 1 statt Clip 4 (wie bisher Offen 7).
+6. Beta-Eigenheit: Oberschenkel verschwinden nach der Landung (wie bisher Offen 8).
+7. Nutzerentscheidung 5b: Klettern unter der Standard-KI (wie bisher Offen 9).
+8. Colt Python (w20) in der RE2-Zeilenkarte der Spinne (wie bisher Offen 10).
+
+Zombie-Familie 0x10–0x13/0x16/0x18:
+
+9. **Ganzes Zerplatzen durch Granaten** (Z08 B 3:31.4, Z11 B 3:36.0, Z14, Z24 B 8:42.2). Im Port bleibt der Rumpf
+   (8BEC). Gestaltung nach Bild, nicht gebaut (wie bisher Offen 2).
+10. **Kopf weg und kopflos weiter mit einer Nicht-Magnum-Waffe** (Z05 B 2:28.4, Z06 B 2:34.9, beide wahrscheinlich;
+    die Waffe ist wahrscheinlich Schrot, nicht sicher).
+    - Im Port läuft der Zombie kopflos nur nach der Magnum-Zeile 5 (92C4 P4, `re2z_death_magnum`).
+    - Mit Schrot verliert er den Kopf nur im 80%-Zerfetzen (Zeile 7 Spalte 1, Krit und rand&1), läuft dann aber nicht
+      weiter.
+    - Erst die Waffe sichern, dann PORT-WAHL.
+11. **Wandspritzer, die an der Wand bleiben** (Z28, Trailer B 10:00.8–10:01.5, Schrot-Nahschuss, wahrscheinlich). Der
+    Port hat keine Wand-Decals, nur die Wund-Decals des Spielers (`re15_damage.c:115`). Gestaltung nach Bild.
+12. **Große Blutlache unter einem noch lebenden, liegenden Zombie** nach Granatentreffern (Z23 B 8:10.3–8:25). Im Port
+    wächst die Lache nur an der Leiche (`re2z_corpse_pool_grow`). Gestaltung nach Bild.
+13. **Brennende Leiche brennt weiter** (Z19 B 12:59–13:01, CD4 0:48.5–0:51). Am Port nicht geprüft.
+    - Der Brand-Tod (`re15_brand_tod`, 0x80108d74) setzt die acht Flammen auf Routine 22 und geht in die Leiche
+      (`sh 7,4` @0x8010915c-60).
+    - Ob die Flammen dort weiterlaufen, zeigt erst ein Fensterlauf. Nicht als fehlend gezählt.
+14. Würgearm 0x1A, die Hand fliegt ab: in keinem Flavor erreichbar (wie bisher Offen 1, Nutzerfrage).
+
+Krähe 0x21:
+
+15. **Schwarze Fetzen und Federn, die liegen bleiben** (K01 B 1:11.8–1:15.8). Der Mechanismus fehlt in beiden Quellen
+    (wie bisher Offen 6).
+
+Hund 0x20 und Birkin:
+
+16. Hund: RE2-Slots 7/10 haben kein RE1.5-Mesh (wie bisher Offen 5; das Bild hat die Abnahme 1 geliefert, `abn1/a04`).
+17. Birkin-Wurf-Teile und Blut an Teil 0 bei 0x29 sind im Echtlauf nicht gemessen (wie bisher Offen 11).
+
+Nebenbei, nicht von diesem Bau: Der Kommentar über `re2z_hit_knockdown` nennt Spalte 0 noch „im Spiel unerreichbar“.
+Das ist seit Runde 16 überholt (Tief-Zielen trifft die Beinzone). Nicht angefasst.

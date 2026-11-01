@@ -7,11 +7,17 @@
 #
 #   unit_r41_spinnengore   Byte-Pins STAGE2.BIN (@0x80118f38, @0x80114220, @0x80113c98, @0x80113b74) und die Mechanik
 #                          beider Gehirne im Spielschritt (Platzen, Beine, Schalter RE15_KEIN_80PROZENT_GORE, Platz leeren).
-add_executable(test_r41_spinnengore ${CMAKE_CURRENT_LIST_DIR}/../test_r41_spinnengore.c)
+#                          L (Nachbesserung 1): Blutfarbe — das ganze Sub-Byte von FUN_80019700 bis zum Zeichner
+#                          (fx_plattform_pc.c re15_pc_esp_clut, ohne SDL wie probe_r34_plattform), Byte-Pins aus
+#                          info/Re1.5/PSX.EXE und info/re2leon/COMMON/BIN/EMS25.BIN, Paletten aus TEX.TIM (RE1.5 und RE2).
+add_executable(test_r41_spinnengore
+    ${CMAKE_CURRENT_LIST_DIR}/../test_r41_spinnengore.c
+    ${CMAKE_SOURCE_DIR}/platform/pc/src/fx_plattform_pc.c)
 target_link_libraries(test_r41_spinnengore PRIVATE re15_engine re15_test_support)
-target_include_directories(test_r41_spinnengore PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(test_r41_spinnengore PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/platform/pc/src)
 target_compile_definitions(test_r41_spinnengore PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_REPO_INFO="${CMAKE_SOURCE_DIR}/../info")
 if(NOT WIN32)
     target_link_libraries(test_r41_spinnengore PRIVATE m)
 endif()

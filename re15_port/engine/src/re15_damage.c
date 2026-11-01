@@ -3372,14 +3372,24 @@ void re15_enemy_hurt_blood(re15_actor_t *e)
 }
 
 /* FUN_80019700(a0, +0x6a, Teil+0x40, a3) mit dem Teil-lokalen Versatz a3 (ApplyMatrix mit der Anker-R,
- * @0x8001a248): a0 = Effekt<<24 | Sub<<16 | Skala. */
+ * @0x8001a248): a0 = Effekt<<24 | Sub<<16 | Skala.
+ * Das Sub-BYTE geht GANZ in den Platz (Runde 41 Spur S, Nachbesserung 1; PSX.EXE, Mod = Disc):
+ *   8001970c srl v0,a0,16 / 80019730 andi t7,v0,0xff     Sub = das ganze Byte
+ *   800197d8 sb t7,113(t0)                               Platz +0x71 = das ganze Byte
+ *   80019734 andi v0,t7,0x7                              nur die STROM-Wahl nimmt die unteren 3 Bit
+ *   8001973c srl v1,t7,3 / 80019754 sll s0,v1,6          (Sub >> 3) * 0x40 ...
+ *   8001987c lhu v0,4(t5) / 80019884 addu / 80019888 sh v0,50(t0)   ... auf das CLUT-Wort des EFF-Kopfs (+0x32)
+ * Vorher stand hier `(a0 >> 16) & 7`: das loeschte die CLUT-Zeile. Fuer das Spinnenblut 0x00082000 (Sub 8) zeichnete
+ * der Port so TEX.TIM y 485 (rot, `601010 580808 ...`) statt y 486 (gruen, `185008 184808 ...`); Effekt 0 = CORE00.ESP,
+ * CLUT-Wort 0x7951. Die Strom-Suche (re15_esp_row_stream `sub & 7`) und der Zeichner (re15_pc_esp_clut `sub >> 3`)
+ * zerlegen das Byte selbst. Zombie-Codes 0x1500/0x2000/0x2500 haben Sub 0 und bleiben gleich. */
 void re15_enemy_fx19700(re15_actor_t *e, uint32_t a0, int part, const int32_t ofs[3])
 {
     if (!e || !e->active) return;
     static const int32_t null3[3] = { 0, 0, 0 };
     int32_t p[3];
     re15_enemy_part_point(e, part, ofs ? ofs : null3, p);
-    re15_esp_fx_spawn_ex(re15_esp_room_bank(), (uint8_t)(a0 >> 24), (uint8_t)((a0 >> 16) & 7), (uint16_t)(a0 & 0xffff),
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), (uint8_t)(a0 >> 24), (uint8_t)((a0 >> 16) & 0xffu), (uint16_t)(a0 & 0xffff),
                          p[0], p[1], p[2], (int16_t)e->rot_y);
 }
 

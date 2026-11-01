@@ -439,6 +439,20 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
                 fflush(fl);
             }
         }
+        /* RE15_FX_CLUT_LOG (Runde 41 Spur S, Nachbesserung 1): MESSSCHIENE, kein Verhalten. Eigene Datei, weil die
+         * Auswerter von RE15_FX_LOG ` F=<n>` am Zeilenende verankern. Je GEZEICHNETEM Platz: Spielbild, Id, Sub
+         * (Platz +0x71, `sb t7,113(t0)` @0x800197d8), Skala (+0x72, `sh s1,114(t0)` @0x800197dc), CLUT (+0x32,
+         * `sh v0,50(t0)` @0x80019888), das Wort, das der Zeichner wirklich nimmt (cw, 0 = Altweg erste Palette), Lage. */
+        {
+            static FILE *s_cl = NULL; static int s_cl_init = 0;
+            if (!s_cl_init) { s_cl_init = 1; const char *p = getenv("RE15_FX_CLUT_LOG"); if (p && *p) s_cl = fopen(p, "w"); }
+            if (s_cl) {
+                fprintf(s_cl, "F=%u id=%d sub=%d skala=%04x clut=%04x cw=%04x slot=%d w(%d,%d,%d)\n",
+                        (unsigned)g_engine.frame_count, f->effect_id, f->sub_index, (unsigned)f->scale16,
+                        (unsigned)re15_pc_esp_clut(f), (unsigned)clut_wort, slot, (int)wl[0], (int)wl[1], (int)wl[2]);
+                fflush(s_cl);
+            }
+        }
         /* Near-Gate byte-true: das Original verwirft das Sprite, wenn SZ3>>2 == 0, also SZ3 < 4
          * (FUN_800534c4, eigene Disasm: @0x80053570 `lw a0,4(sp)` = SZ3, @0x80053578
          * `sra v0,a0,2`, @0x8005357c `beq v0,zero,0x800537b4` = Epilog). SZ3 ist der von der GTE

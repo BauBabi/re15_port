@@ -16,6 +16,10 @@
  *   G  RE2-Treffer mit Krit, RE2 verweigert (+0x221 < 3 @0x80105c20): das RE1.5-Krit-Bein (@0x80113b74).
  *   H  RE1.5-Gehirn: Tod mit Handgranate (w9, kein Krit) platzt (Tabelle @0x80118f38 -> 0x80113ff8); w3 nicht.
  *   I  re15_actor_alloc leert die Teilschicht des Platzes (Babys erben keine geplatzten Teile).
+ *   L  Blutfarbe (Nachbesserung 1): FUN_80019700 legt das GANZE Sub-Byte ab (@0x80019730/@0x800197d8), die CLUT
+ *      steigt um (Sub >> 3) * 0x40 (@0x8001973c/54/84/88). Spinnenblut 0x82000 (@0x80113b10/30/50, @0x8011463c-54)
+ *      -> CLUT 0x7991 = TEX.TIM y 486 gruen; Zombie 0x2000 -> 0x7951 = y 485 rot. RE2-Gehirn: die Blut-Records 0/1/3
+ *      von FUN_801056DC (@0x80106684, Sub 0x19/0x09, nie die rote Grundzeile y 488) nehmen den Spinnen-Code.
  * Modus 2 `pruef_log <log> <art>` = Auswerter des Integrationslaufs (RE15_SPINNEN_LOG mit {G..}-Klammern):
  *   art "platzt": eine RE2-Spinne (o=1) stirbt (st=3) und traegt danach sh mit Teil 0 und 19 und fl == 0x7fff8.
  *   art "bein":   eine RE2-Spinne im Treffer (st=2) traegt ein geplatztes Beinpaar (sh-Bits in 3..18).
@@ -28,6 +32,7 @@
 #include "re15_esp.h"
 #include "re15_teile_r15.h"
 #include "re15_spinnengore_r41.h"
+#include "fx_plattform_pc.h"   /* re15_pc_esp_clut / re15_pc_fx_seite_clut_ok: der Zeichner (platform/pc/src) */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -217,6 +222,162 @@ static void test_hund(void)
           e->re2z_part_flags[0], e->re2z_part_tint[0]);
 }
 
+/* ---- L: Blutfarbe (Runde 41 Spur S, Nachbesserung 1) ------------------------------------------------------- */
+/* Platzhalter fuer die Zusatzbank (die echte Funktion steht in audio_pc.c; fx_plattform_pc.c ruft sie, L nicht). */
+void re15_audio_arms_zusatz_se(int arms_id, int satz) { (void)arms_id; (void)satz; }
+static uint8_t *datei(const char *pfad, size_t *n)
+{
+    FILE *f = fopen(pfad, "rb");
+    if (!f) return NULL;
+    fseek(f, 0, SEEK_END); long l = ftell(f); fseek(f, 0, SEEK_SET);
+    uint8_t *b = (uint8_t *)malloc((size_t)l);
+    if (b && fread(b, 1, (size_t)l, f) != (size_t)l) { free(b); b = NULL; }
+    fclose(f);
+    if (b && n) *n = (size_t)l;
+    return b;
+}
+static uint32_t w32(const uint8_t *b, size_t o) { return (uint32_t)b[o] | ((uint32_t)b[o+1] << 8) | ((uint32_t)b[o+2] << 16) | ((uint32_t)b[o+3] << 24); }
+static uint16_t w16(const uint8_t *b, size_t o) { return (uint16_t)(b[o] | (b[o+1] << 8)); }
+/* EXE-Wort: Datei 0x800 + (addr - t_addr @0x18). */
+static uint32_t exe_wort(const uint8_t *b, size_t n, uint32_t a)
+{
+    size_t o = 0x800u + (size_t)(a - w32(b, 0x18));
+    return (o + 4 <= n) ? w32(b, o) : 0xdeadbeefu;
+}
+/* CLUT-Wort des Effekts 0 im Kopf einer CORE00.ESP (Id-Kopf ab 0, Zeigertabelle abwaerts ab round_up4(n)-4). */
+static int core_clut0(const uint8_t *b, size_t n)
+{
+    size_t pe = ((n + 3u) & ~(size_t)3u) - 4u;
+    for (int i = 0; i < 8 && b[i] != 0xFF; i++)
+        if (b[i] == 0) { size_t s = (size_t)(int32_t)w32(b, pe - 4u * (size_t)i); return (s + 6 <= n) ? w16(b, s + 4) : -1; }
+    return -1;
+}
+/* TIM-CLUT-Eintrag (x, y) als 15-Bit-Farbe; -1, wenn ausserhalb des CLUT-Blocks. */
+static int tim_clut(const uint8_t *b, size_t n, int x, int y)
+{
+    int cx = w16(b, 12), cy = w16(b, 14), cw = w16(b, 16), ch = w16(b, 18);
+    if (x < cx || x >= cx + cw || y < cy || y >= cy + ch) return -1;
+    size_t o = 20u + ((size_t)(y - cy) * (size_t)cw + (size_t)(x - cx)) * 2u;
+    return (o + 2 <= n) ? w16(b, o) : -1;
+}
+#define C5R(c) (((c) & 31) << 3)
+#define C5G(c) ((((c) >> 5) & 31) << 3)
+#define C5B(c) ((((c) >> 10) & 31) << 3)
+static int ist_rot(int c)   { return c >= 0 && C5R(c) > 2 * C5G(c) && C5R(c) > 2 * C5B(c); }
+static int ist_gruen(int c) { return c >= 0 && C5G(c) > 2 * C5R(c) && C5G(c) > 2 * C5B(c); }
+
+/* Zaehlt die aktiven Effekt-0-Plaetze: gruen = Sub-Byte 8 + Zeichner-CLUT 0x7991, rot = Zeichner-CLUT 0x7951. */
+static void fx_zaehlen(int *gruen, int *rot, int *alt1500)
+{
+    *gruen = *rot = *alt1500 = 0;
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        const re15_esp_fx_t *f = re15_esp_fx_get(i);
+        if (!f || f->effect_id != 0) continue;
+        uint16_t c = re15_pc_esp_clut(f);
+        if (f->sub_index == 8 && c == 0x7991) (*gruen)++;
+        if (c == 0x7951) (*rot)++;
+        if (f->scale16 == 0x1500) (*alt1500)++;
+    }
+}
+
+static void test_blutfarbe(void)
+{
+    size_t n = 0;
+    /* L1 Byte-Pins RE1.5 PSX.EXE FUN_80019700 (Mod = Disc, Dossier S Nachbesserung 1) */
+    uint8_t *exe = datei(RE15_REPO_INFO "/Re1.5/PSX.EXE", &n);
+    CHECK(exe != NULL, "L1: info/Re1.5/PSX.EXE fehlt");
+    if (exe) {
+        static const struct { uint32_t a, w; const char *t; } P[] = {
+            { 0x80019730u, 0x304f00ffu, "andi t7,v0,0xff" },  { 0x80019734u, 0x31e20007u, "andi v0,t7,0x7" },
+            { 0x8001973cu, 0x000f18c2u, "srl v1,t7,3" },      { 0x80019754u, 0x00038180u, "sll s0,v1,6" },
+            { 0x800197d8u, 0xa10f0071u, "sb t7,113(t0)" },    { 0x80019884u, 0x00501021u, "addu v0,v0,s0" },
+            { 0x80019888u, 0xa5020032u, "sh v0,50(t0)" } };
+        for (size_t i = 0; i < sizeof P / sizeof P[0]; i++)
+            CHECK(exe_wort(exe, n, P[i].a) == P[i].w, "L1: @0x%08x nicht `%s` (%08x)", P[i].a, P[i].t, exe_wort(exe, n, P[i].a));
+        free(exe);
+    }
+    /* L1 STAGE2: Spinnenblut a0 = 0x00082000 (HURT @0x80113b50, Tod der schwachen Waffen @0x80114654) */
+    uint8_t *st2 = datei(RE15_ASSET_PSX_DIR "/BIN/STAGE2.BIN", &n);
+    CHECK(st2 != NULL && n > 0x14700, "L1: STAGE2.BIN");
+    if (st2 && n > 0x14700) {
+        CHECK(rd32(st2, 0x80113b10u) == 0x3c040008u && rd32(st2, 0x80113b30u) == 0x34842000u
+              && rd32(st2, 0x80113b50u) == 0x0c0065c0u, "L1: HURT-Blut @0x80113b10/30/50 nicht lui 8 / ori 0x2000 / jal 0x80019700");
+        CHECK(rd32(st2, 0x8011463cu) == 0x3c040008u && rd32(st2, 0x80114640u) == 0x34842000u
+              && rd32(st2, 0x80114654u) == 0x0c0065c0u, "L1: Todesblut @0x8011463c/40/54 nicht lui 8 / ori 0x2000 / jal");
+    }
+    free(st2);
+    /* L1 RE2 EMS25.BIN: Records @0x80106684 (0, 1, 3 = Effekt 0, Sub 0x19/0x19/0x09), generischer Treffer Record 0 */
+    uint8_t *ems = datei(RE15_REPO_INFO "/re2leon/COMMON/BIN/EMS25.BIN", &n);
+    CHECK(ems != NULL && n > 0x66a0, "L1: info/re2leon/COMMON/BIN/EMS25.BIN");
+    if (ems && n > 0x66a0) {
+        const uint8_t *r = ems + 0x6684;
+        CHECK(r[0] == 0 && r[1] == 0x19 && w16(r, 4) == 0x2000, "L1: RE2 Record 0 nicht Effekt 0 Sub 0x19 Skala 0x2000");
+        CHECK(r[6] == 0 && r[7] == 0x19 && w16(r, 10) == 0x2800, "L1: RE2 Record 1 nicht Effekt 0 Sub 0x19 Skala 0x2800");
+        CHECK(r[18] == 0 && r[19] == 0x09 && w16(r, 22) == 0x1000, "L1: RE2 Record 3 nicht Effekt 0 Sub 0x09 Skala 0x1000");
+        CHECK(rd32(ems, 0x80102dd0u) == 0x0c0415b7u && rd32(ems, 0x80102dd4u) == 0x00003021u,
+              "L1: RE2 @0x80102dd0 nicht `jal 0x801056dc` / `addu a2,zero,zero` (%08x %08x)",
+              rd32(ems, 0x80102dd0u), rd32(ems, 0x80102dd4u));
+    }
+    free(ems);
+    /* L2 Daten: Effekt-0-CLUT und Paletten in RE1.5 und RE2 */
+    size_t nc = 0, nt = 0, nc2 = 0, nt2 = 0;
+    uint8_t *core = datei(RE15_ASSET_PSX_DIR "/DATA/CORE00.ESP", &nc);
+    uint8_t *tex  = datei(RE15_ASSET_PSX_DIR "/DATA/TEX.TIM", &nt);
+    uint8_t *core2 = datei(RE15_ASSET_PSX_DIR "/../RE2/CORE00.ESP", &nc2);
+    uint8_t *tex2  = datei(RE15_ASSET_PSX_DIR "/../RE2/TEX.TIM", &nt2);
+    CHECK(core && tex && core2 && tex2, "L2: CORE00.ESP / TEX.TIM (RE1.5 und RE2) fehlen");
+    if (core && tex && core2 && tex2) {
+        CHECK(core_clut0(core, nc) == 0x7951, "L2: RE1.5 Effekt 0 CLUT %04x statt 0x7951 (x 272 y 485)", core_clut0(core, nc));
+        CHECK(ist_rot(tim_clut(tex, nt, 273, 485)), "L2: RE1.5 TEX.TIM y 485 nicht rot (%04x)", tim_clut(tex, nt, 273, 485));
+        CHECK(ist_gruen(tim_clut(tex, nt, 273, 486)), "L2: RE1.5 TEX.TIM y 486 nicht gruen (%04x)", tim_clut(tex, nt, 273, 486));
+        CHECK(core_clut0(core2, nc2) == 0x7a11, "L2: RE2 Effekt 0 CLUT %04x statt 0x7a11 (y 488)", core_clut0(core2, nc2));
+        CHECK(ist_rot(tim_clut(tex2, nt2, 273, 488)), "L2: RE2 TEX.TIM y 488 nicht rot");
+        CHECK(!ist_rot(tim_clut(tex2, nt2, 273, 488 + (0x19 >> 3))) && !ist_rot(tim_clut(tex2, nt2, 273, 488 + (0x09 >> 3))),
+              "L2: RE2-Spinnenblut (y 491 / y 489) ist rot");
+    }
+    /* Global-Bank = CORE00.ESP wie im Spiel (Effekt 0 liegt nicht in der Raumbank) */
+    static re15_esp_t bank;
+    int bank_ok = core && re15_esp_parse_global(core, nc, &bank) == 0;
+    CHECK(bank_ok, "L2: CORE00.ESP nicht parsebar");
+    if (!bank_ok) { free(core); free(tex); free(core2); free(tex2); return; }
+    re15_esp_set_global_bank(&bank);
+    re15_esp_set_room_bank(NULL);
+    int g, r, a;
+    /* L3 Helfer: Spinnenblut gruen, Zombieblut rot */
+    frisch(RE15_AI_FLAVOR_RE2);
+    re15_enemy_fx19700(SP, 0x00082000u, 0, NULL);
+    fx_zaehlen(&g, &r, &a);
+    CHECK(g == 1 && r == 0, "L3: re15_enemy_fx19700(0x82000): gruen %d rot %d (Sub-Byte geht verloren)", g, r);
+    CHECK(re15_pc_fx_seite_clut_ok(0x7991), "L3: CLUT 0x7991 liegt nicht in der hochgeladenen Effektseite");
+    frisch(RE15_AI_FLAVOR_RE2);
+    re15_enemy_fx19700(SP, 0x00002000u, 0, NULL);
+    fx_zaehlen(&g, &r, &a);
+    CHECK(g == 0 && r == 1, "L3: Zombie 0x2000: gruen %d rot %d (muss rot bleiben)", g, r);
+    /* L4 RE2-Gehirn, generischer Treffer w3 (Zeile 3 -> @0x80102DD0 Record 0) */
+    re15_spinnengore_test_schalter(1);
+    re2_spinne(2, 3, 0x01); re2_takt();
+    fx_zaehlen(&g, &r, &a);
+    CHECK(g >= 1 && r == 0 && a == 0, "L4: RE2-Treffer w3: gruen %d rot %d alt-0x1500 %d", g, r, a);
+    /* L5 RE2-Tod w7 (Zeile 5): Hebung (3x 0x82000) + Record 1 @0x80104580 + FUN_80104890 @0x80104588 */
+    re2_spinne(3, 7, 0x41); re2_takt();
+    fx_zaehlen(&g, &r, &a);
+    CHECK(g == 5 && r == 0 && a == 0, "L5: RE2-Tod w7: gruen %d (Soll 5) rot %d alt-0x1500 %d", g, r, a);
+    /* L6 derselbe Tod mit RE15_KEIN_80PROZENT_GORE: die Hebung fehlt, das RE2-Blut bleibt gruen (keine 80%-Sache) */
+    re15_spinnengore_test_schalter(0);
+    re2_spinne(3, 7, 0x41); re2_takt();
+    fx_zaehlen(&g, &r, &a);
+    CHECK(g == 2 && r == 0, "L6: Schalter aus: gruen %d (Soll 2) rot %d", g, r);
+    re15_spinnengore_test_schalter(1);
+    /* L7 RE1.5-Gehirn: Tod w3 (0x8011461c, Todesblut an Teil 0 @0x80114654) */
+    frisch(RE15_AI_FLAVOR_RE15);
+    SP->state = 3; SP->sub_state_1 = 3; SP->sub_state_3 = 0; SP->hp = -5; SP->hit_react = 0x01;
+    re15_enemy_ai_run_all(1);
+    fx_zaehlen(&g, &r, &a);
+    CHECK(g >= 1 && r == 0, "L7: RE1.5-Tod w3: gruen %d rot %d", g, r);
+    re15_esp_set_global_bank(NULL);
+    free(core); free(tex); free(core2); free(tex2);
+}
+
 /* ---- Auswerter ---------------------------------------------------------------------------------------------- */
 static int pruef_log(const char *pfad, const char *art)
 {
@@ -261,6 +422,7 @@ int main(int argc, char **argv)
     test_alloc();
     test_zombie_mc51();
     test_hund();
+    test_blutfarbe();
     if (fails) { printf("%d Fehler\n", fails); return 1; }
     printf("OK unit_r41_spinnengore\n");
     return 0;

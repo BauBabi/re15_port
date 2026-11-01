@@ -56,7 +56,8 @@ static void fx(re15_actor_t *e, uint32_t a0, int teil, const int32_t ofs[3])
 {
     int32_t p[3];
     re15_enemy_part_point(e, teil, ofs, p);
-    re15_esp_fx_spawn_ex(re15_esp_room_bank(), (uint8_t)(a0 >> 24), (uint8_t)((a0 >> 16) & 7), (uint16_t)(a0 & 0xffff),
+    /* Sub = das ganze Byte (`andi t7,v0,0xff` @0x80019730, `sb t7,113(t0)` @0x800197d8); alle Codes hier haben Sub 0. */
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), (uint8_t)(a0 >> 24), (uint8_t)((a0 >> 16) & 0xffu), (uint16_t)(a0 & 0xffff),
                          p[0], p[1], p[2], (int16_t)e->rot_y);
 }
 static re15_teil_t *teil(re15_actor_t *e, int k)

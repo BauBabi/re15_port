@@ -1758,6 +1758,32 @@ static void re2s_gore(re15_actor_t *e)
                          e->x, e->y, e->z, (int16_t)e->rot_y);
 }
 
+/* ---- Die BLUT-Records 0, 1 und 3 von FUN_801056DC (Runde 41 Spur S, Nachbesserung 1) -------------------------------
+ * FUN_801056DC baut a0 = (rec[0] & 0x7f) << 24 | rec[1] << 16 | u16 rec[4] (@0x80105860-878) und ruft FUN_8001bf10
+ * (@0x80105874). Die Records @0x80106684 (6 Byte, EMS25.BIN selbst gelesen):
+ *   Record 0 = 00 19 00 00 00 20 -> Effekt 0, Sub 0x19, Skala 0x2000
+ *   Record 1 = 00 19 00 00 00 28 -> Effekt 0, Sub 0x19, Skala 0x2800
+ *   Record 3 = 00 09 00 00 00 10 -> Effekt 0, Sub 0x09, Skala 0x1000
+ * FUN_8001bf10 (RE2 PSX.EXE) zerlegt das Sub-Byte wie RE1.5 FUN_80019700: `andi v0,t5,0x7` @0x8001bf24 waehlt den
+ * Strom, `srl v0,t5,3` / `sll v0,v0,6` @0x8001c01c-20 und `addu v1,v1,v0` / `sh v1,50(t0)` @0x8001c034-38 schieben die
+ * CLUT. RE2 Effekt 0 hat CLUT 0x7a11 (CORE00.ESP, TEX.TIM y 488 = `880000 780000 ...` rot, die Zombie-Zeile); die
+ * Spinne nimmt Zeile +3 (y 491, `888840 808038 ...` oliv-gelb) bzw. +1 (y 489, `386030 305028 ...` gruen). Das
+ * Spinnenblut ist also in RE2 NICHT die rote Grundzeile.
+ * Der Port hat den RE2-Effektraum nicht und stand hier bisher mit dem ZOMBIE-Code 0x1500 (Sub 0 -> RE1.5 y 485, rot).
+ * Stand-in jetzt: das RE1.5-SPINNENBLUT 0x00082000 (Sub 8 -> RE1.5 y 486 gruen), genau der Code, den RE1.5 an jedem
+ * Spinnentreffer (`jal 0x80019700` @0x80113b50, STAGE2.BIN) und am Tod der schwachen Waffen (@0x80114654) setzt.
+ * PORT-WAHL (Stand-in): welcher RE1.5-Code die RE2-Records vertritt. Belegt ist die Richtung (RE1.5 gruen, RE2 nicht
+ * rot, Video S02/S05 gruen). Anker bleibt der Aktor-Ursprung wie bei re2s_gore (Teil-Matrix offen, Dossier S Offen 4).
+ * NICHT hierher: Babyspinne @0x80100EDC Record 1 von EMS26 = 00 01 .. (Sub 1 -> RE2-Grundzeile rot) ist Leons
+ * Blut beim Biss, und die Records 2/4/5/6/7/10 sind keine Effekt-0-Partikel. */
+#define RE2SPIDER_BLUT_A0 0x00082000u   /* RE1.5 STAGE2 @0x80113b50 / @0x80114654: Effekt 0, Sub 8, Skala 0x2000 */
+static void re2s_blut(re15_actor_t *e)
+{
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), (uint8_t)(RE2SPIDER_BLUT_A0 >> 24),
+                         (uint8_t)((RE2SPIDER_BLUT_A0 >> 16) & 0xffu), (uint16_t)(RE2SPIDER_BLUT_A0 & 0xffffu),
+                         e->x, e->y, e->z, (int16_t)e->rot_y);
+}
+
 /* ---- FUN_80105BF0 @0x80105BF0-D34 — EIN zufaelliges BEIN abtrennen ------------------------
  *   +0x23C == 14 -> sofort 1 (@0x80105C00-04: die Spark-Shot-Zeile trennt nie ab)
  *   k = rand & 7 (@0x80105C10-28)
@@ -1772,12 +1798,12 @@ static int re2s_sever_leg(re15_actor_t *e)
     if (e->re2s_row23c == 14u) return 1;                   /* @0x80105C00-04 */
     uint32_t k = re2s_rand() & 7u;                         /* @0x80105C10-28 */
     if (e->re2s_legn221 < 3u || ((e->re2s_legs220 >> k) & 1u)) {   /* @0x80105C20/@0x80105C34 */
-        re2s_gore(e);                                      /* FUN_801056DC(self,19,1) @0x80105D18 */
+        re2s_blut(e);                                      /* FUN_801056DC(self,19,1) @0x80105D18 */
         return 1;
     }
     e->re2s_legs220 = (uint8_t)(e->re2s_legs220 | (1u << k));      /* @0x80105C64 */
     e->re2s_legn221--;                                             /* @0x80105C74 */
-    re2s_gore(e);                                          /* FUN_801056DC(self,2k+3,1) @0x80105D00 */
+    re2s_blut(e);                                          /* FUN_801056DC(self,2k+3,1) @0x80105D00 */
     return 0;
 }
 
@@ -1954,10 +1980,10 @@ static void re2s_hurt_row_gore(re15_actor_t *e)
 {
     if (e->sub_state_2 == 0u) {                            /* @0x80103728 */
         (void)re2s_rand();                                 /* Bone-Wahl @0x80103738 */
-        re2s_gore(e);                                      /* FUN_801056DC(...,3) @0x80103754 */
+        re2s_blut(e);                                      /* FUN_801056DC(...,3) @0x80103754 */
         uint32_t k = re2s_rand() & 7u;                     /* @0x8010375C-68 */
         if (((e->re2s_legs220 >> k) & 1u) == 0u)           /* @0x8010376C-70 */
-            re2s_gore(e);                                  /* FUN_801056DC(self,2k+3,3) @0x80103784 */
+            re2s_blut(e);                                  /* FUN_801056DC(self,2k+3,3) @0x80103784 */
         if (e->re2z_pool151 < 0 || e->re2z_pool152 < 0 || e->re2z_pool153 < 0) {
             (void)re2s_sever_leg(e);                       /* @0x801037BC */
             e->re2z_pool151 = 6; e->re2z_pool152 = 6; e->re2z_pool153 = 6;  /* @0x801037C4-D0 */
@@ -2089,8 +2115,7 @@ static void re2s_hurt_row_generic(re15_actor_t *e)
         re2s_clip(e, 0x00030001u);                         /* @0x80102D90/B0/C4 */
         e->sub_state_2 = 1;                                /* @0x80102DBC */
         if (e->re2s_row23c != 1)                           /* +0x23C != 1 @0x80102DC0 */
-            re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
-                                 e->x, e->y, e->z, (int16_t)e->rot_y);   /* @0x80102DD0 */
+            re2s_blut(e);                                  /* FUN_801056DC(self,0,0) @0x80102DD0, Record 0 */
         /* fallthrough */
     case 1: {                                              /* @0x80102DD8 */
         int wrapped = re2s_advance(e, 1024);               /* @0x80102DE4 */
@@ -2151,7 +2176,7 @@ static void re2s_death_done_generic(re15_actor_t *e)
     (void)re2s_advance(e, 512);                            /* @0x80104450 */
     re2s_clip(e, 0x0007000du);                             /* Clip 13, Rate 7 @0x80104460 */
     (void)re2s_spawn_babies(e, 0x2002u, (re2s_rand() & 3u) + 1u);   /* @0x80104470-78 */
-    re2s_gore(e);                                          /* FUN_801056DC(self,0,0) @0x80104488 */
+    re2s_blut(e);                                          /* FUN_801056DC(self,0,0) @0x80104488 */
     re2s_word(e, 7u);                                      /* CORPSE @0x8010449C */
     if (e->re2s_c23a < 0)                                  /* @0x801044B0 */
         e->y = (int32_t)e->re2s_water10c + 70;             /* @0x801044C0 */
@@ -2193,8 +2218,8 @@ static void re2s_death_done_special(re15_actor_t *e)
     (void)re2s_advance(e, 512);                            /* @0x80104814 */
     re2s_clip(e, 0x0007000du);                             /* @0x80104818 */
     (void)re2s_spawn_babies(e, 0x2002u, (re2s_rand() & 3u) + 6u);   /* @0x80104828-30 */
-    re2s_gore(e);                                          /* @0x80104840 */
-    re2s_gore(e);                                          /* FUN_80104890 @0x80104848 (Hinterleib, s. @0x80104588) */
+    re2s_blut(e);                                          /* @0x80104840 */
+    re2s_blut(e);                                          /* FUN_80104890 @0x80104848 (Hinterleib, s. @0x80104588) */
     re2s_word(e, 7u);                                      /* @0x80104854 */
     if (e->re2s_c23a < 0)                                  /* @0x80104864 */
         e->y = (int32_t)e->re2s_water10c + 70;             /* @0x80104878 */
@@ -2220,8 +2245,8 @@ static void re2s_death_row_special(re15_actor_t *e)
         /* MODUS 1 @0x80104664 / MODUS 2+3 @0x801046EC — im Port nur der Spawn + der
          * Zustandsfluss; die Sturzbewegung braucht FUN_80015350/FUN_80105360 (OPEN, s.o.). */
         if (e->sub_state_2 == 0u) {
-            re2s_gore(e);                                  /* @0x80104694 / @0x801047BC */
-            re2s_gore(e);                                  /* FUN_80104890 @0x8010469C/@0x801047AC */
+            re2s_blut(e);                                  /* @0x80104694 / @0x801047BC */
+            re2s_blut(e);                                  /* FUN_80104890 @0x8010469C/@0x801047AC */
             (void)re2s_spawn_babies(e, 0x2004u, (re2s_rand() & 3u) + 6u);   /* @0x801046B8 /
                                                                             * @0x801047D8 */
             e->sub_state_2 = 1;
@@ -2239,8 +2264,8 @@ static void re2s_death_row_special(re15_actor_t *e)
         e->sub_state_2 = 1;                                /* @0x80104570 */
         e->re2s_c23a   = 1;                                /* +0x23A = 1 @0x80104574 */
         re2s_clip(e, 0x0007000cu);                         /* Clip 12, Rate 7 @0x80104578 */
-        re2s_gore(e);                                      /* FUN_801056DC(self,19,1) @0x80104580 */
-        re2s_gore(e);                                      /* FUN_80104890(self) @0x80104588 = Hinterleib Teil 19
+        re2s_blut(e);                                      /* FUN_801056DC(self,19,1) @0x80104580 */
+        re2s_blut(e);                                      /* FUN_80104890(self) @0x80104588 = Hinterleib Teil 19
                                                             * |= 0x4a, +0x9a -240, +0x9e 15, Farbe 0x2f2f2f
                                                             * (@0x801048c4-900) + 5x FUN_801056DC an Teil 19;
                                                             * gezeichnet ueber re15_spinnengore_re2_tod */
@@ -2472,7 +2497,7 @@ static void re2s_death_row_generic(re15_actor_t *e)
             re2s_clip(e, 0x0000090cu);                     /* @0x80103F38 */
             e->speed_h = 0; e->re2s_z148 = 0; e->rot_z = 0;/* @0x80103F40-48 */
             e->y += 800;                                   /* @0x80103F50 */
-            if (e->re2s_row23c != 1) re2s_gore(e);         /* @0x80103F58-60 */
+            if (e->re2s_row23c != 1) re2s_blut(e);         /* @0x80103F58-60 */
             e->sub_state_2 = 1;                            /* @0x80103F24 */
             return;
         }
@@ -2500,7 +2525,7 @@ static void re2s_death_row_generic(re15_actor_t *e)
         re2s_clip(e, 0x0007000cu);                         /* Clip 12 @0x80103DC0-C8 */
         e->sub_state_2 = 1;                                /* @0x80103DD4 */
         if (e->re2s_row23c != 1)                           /* +0x23C != 1 @0x80103DDC */
-            re2s_gore(e);                                  /* @0x80103DE4 */
+            re2s_blut(e);                                  /* @0x80103DE4 */
     }
     int fw_wrapped = re2s_advance(e, 512);                 /* @0x80103E08 */
     /* ⛔ DER DOPPELTE TOD SASS HIER (Nutzer 2026-09-12: "die Todesanimation der
