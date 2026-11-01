@@ -3,7 +3,10 @@
 #
 # Dossier analysis/befunde_runde41/W_wasserblink.md. Nutzer 2026-11-01: "Das blinken im Wasser ist auf jeden Fall
 # fehlerhaft und quatsch" (Marke ROOM2000 Cut 2, F444). Ursache: engine/src/raumlicht.c Fall 0x2000 (Commit 4100d2aed),
-# ausgedachte Glanzpunkte im 4-Bild-Takt; das Original setzt keinen Effekt auf das Kanalwasser. Der Fall ist entfernt.
+# ausgedachte Glanzpunkte im 4-Bild-Takt. Die Raumdaten setzen im Kanal kein Licht. Der Deckentropfen Effekt 6 Sub 0
+# (Routine 13 @0x80017990; Start nur im Repo-Baum, main00 @0x0177C `04 ff 18 07`) ist ein ESP-Effekt und haengt im
+# Port bei y -10000 (raumlicht.c, Dossier OFFEN 4), ausserhalb des Kanal-Fensters unten. Laesst der Port die Tropfen
+# fallen, faellt Punkt 5 (-14476,-23171) bei x 118..125 in dieses Fenster, und der Riegel ist anzupassen. Fall 0x2000 entfernt.
 #
 #   TEIL=leon / elza   Debug-Sprung 2000 (Elza -> 2001), Spawn (-7000,-25659) Band 1: die RVD-Zonen 0->1 (@0x0028C) und
 #                      1->2 (@0x002C8) bringen die Kamera auf Cut 2 = Blick der Marke. Bildserie F300..F419:

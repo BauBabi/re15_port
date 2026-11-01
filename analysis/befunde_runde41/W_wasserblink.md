@@ -64,6 +64,10 @@ Auf dem Nutzerbild F444 leuchtet gerade keine (Ausschnitt 4-fach geprueft) — d
 also ueber dem Bildrand); `RE15_TRILOG@115,130,195,165` (Wasserflaechen aus): im Fenster nur Leons Dreiecke. Die
 Ellipsen sind also weder ESP noch Modell, sondern die Lichtvierecke des Raumlicht-Pfads (`re15_render_light_quad`,
 ins 2D-Bild eingerechnet).
+*Nachtrag Nachbesserung 1 (Abschnitt 5):* Dieser FX_LOG-Lauf reichte nur 313 Bilder weit und sah deshalb nur die
+Tropfpunkte 3 und 5. Punkt 7 kommt ab F545 dazu. Der Port zeichnet ihn als 1 bis 2 Bildpunkte grossen, pulsierenden Fleck
+am oberen Bildrand bei (83,0..1). Effekt 6 Sub 0 ist ausserdem kein ruhendes Teilchen, sondern ein Deckentropfen, der im
+Port haengen bleibt (Abschnitt 2.1).
 
 **Ursache:** `engine/src/raumlicht.c`, Fall `0x2000` (gilt fuer 2000 und 2001: `room & 0xFFFE`), Commit 4100d2aed
 (2026-10-30, direkt auf master, nach dem Release v0.8.29 — `git merge-base --is-ancestor 4100d2aed v0.8.29` = nein; vor dem
@@ -95,8 +99,76 @@ Blitze; die einzigen Aenderungen sind die Ab- und Aufblende der Ankunftsszene (B
   Schleife Effekt 6 Sub 0 y -10000 in sub03 @0x015B6..@0x01644 (andere x/z).
 * Wasserflaechen: Obj_model_set obj 0/1/2 Typ 3 Attribut 0x001A (Bit 0x2 halbtransparent) @0x016E6/@0x01708/@0x0172A
   (40%: @0x01502/@0x01524/@0x01546, Bytes gleich bis auf pc[4]).
-Kein Skript setzt einen Effekt auf das Kanalwasser in Cut 2; die Effekt-6-Teilchen bei y -10000 projiziert der Port
-in Cut 2 auf sy -128..-78 (ueber dem Bild, `RE15_FX_LOG`).
+
+~~Kein Skript setzt einen Effekt auf das Kanalwasser in Cut 2; die Effekt-6-Teilchen bei y -10000 projiziert der Port
+in Cut 2 auf sy -128..-78 (ueber dem Bild, `RE15_FX_LOG`).~~ **Falsch, berichtigt in Nachbesserung 1 (Mangel M1 aus
+`W_abnahme_1.md`).** "Ueber dem Bildrand" beschreibt nur das, was der Port tut, nicht das Original. Richtig ist:
+
+**(a) Effekt 6 Sub 0 ist ein fallender Deckentropfen mit Aufschlag-Spritzer.** Die Bytes stehen in der Raum-ESP, gelesen
+mit `W_werkzeug/abnahme1/wa_esp.py` und als Hexdump gegengeprueft. Repo-Bank @0x14608, Effekt 6 @0x147E0, ein Strom mit 4 Zeilen @0x14A08:
+
+| Zeile | Bytes ab | Routine A | Wirkung (selbst disassembliert, Tabelle @0x80071d40) |
+|---|---|---|---|
+| 0 | @0x14A0C `0a 00 00 00 00 10 00 10` | 10 → @0x800176b0 | Flags := +0x0e (3), +0x30 \|= +0x16 (0x60), +0x6e := +0x26 (Repo 0x1C, 40% 0), sofort weiter (`jal 0x800174e4` @0x80017700) |
+| 1 | @0x14A34 `03 00 …` | 3 → @0x80017334 | zaehlt +0x16 = **9** Bilder herunter (@0x8001735c), dann weiter, weil +0x26 = 1 (@0x80017390) |
+| 2 | @0x14A5C `0d 00 00 00 00 10 00 10 00 00 0a 00` | 13 → @0x80017990 | **accel (0,10,0)** @0x14A64 fuer den Takt; Routine 13 liest die Weltlage +0x28/+0x2a/+0x2c, `jal 0x8001c6e8` (room_coll) @0x800179c4; liegt y unter dem Boden (`slt` @0x800179d8): Flags := +0x0e (@0x800179f8), +0x38 -= (y - Boden) (@0x80017a0c), +0x6e := +0x16 = **0x26** (@0x80017a28), weiter (`jal 0x800174e4` @0x80017a48) |
+| 3 | @0x14A84 | 0 | leer |
+
+* Version_40%: Bank @0x267C, Strom @0x2758, dieselben Zeilen. Zeile 2 @0x27AC mit accel (0,10,0) @0x27B4, die Aufschlag-Anim
+  ist dort 0x0A statt 0x26.
+* Routine 13 ist in beiden EXE gleich: `info/Re1.5/PSX.EXE` und `Version_40%/PSX.EXE` stimmen @0x80017990..@0x80017a5c
+  Byte fuer Byte ueberein, die Tabelleneintraege [3], [10] und [13] @0x80071d40 ebenso.
+* ROOM2001 im Repo: main00 @0x0177C `04 ff 18 08` startet sub08 @0x01D32. Die Bytes der Schleife sind gleich (0xAE Bytes),
+  Zeile 2 steht @0x14E74. ROOM2001 der 40%-Disc ist Byte fuer Byte gleich ROOM2000 der 40%-Disc (`cmp`: 0 Unterschiede).
+
+**(b) Wer die Schleife startet.** Ein Umlauf dauert 3·180 + 45 = 585 Bilder (19,5 s). Punkte 0-2 fallen bei t=0,
+Punkte 3-4 bei t=180, Punkte 5-6 bei t=360, Punkt 7 bei t=540.
+
+| | Start der Schleife | Beleg |
+|---|---|---|
+| Repo-Baum (Mod) | **ja, unbedingt** | main00 @0x0177C `04 ff 18 07` (Evt_exec sub07), direkt nach den drei 0x0B |
+| Version_40% (echte Disc) | **nein** | main00 endet @0x01598 mit `01 00`. Ein linearer Durchlauf von main00 und sub00..03 (Laengentabelle `scd_vm.c`) findet kein Evt_exec (0x04) und kein Gosub (0x18), die Bytesuche `04 ?? 18 ??` in 0x1424..0x1664 findet nichts. sub00 @0x015A4 und sub01 @0x015A6 sind `01 00`. Die drei Aot_set @0x014C6/@0x014DA/@0x014EE sind sce 8, also Wasserzonen mit p0 0xFC7C = -900, kein Ereignis. Von sich aus startet die EXE nur sub00 (Raum-Init, `jal 0x8003ee3c` @0x8003efd4 mit a1 = 0) und jedes Bild sub01 (@0x8003f080 mit a1 = 1). Beides ist in beiden EXE gleich. |
+
+Fuer die echte Disc stimmt "kein Effekt auf dem Kanalwasser" also nur deshalb, weil die vorhandene Schleife sub03 nie
+gestartet wird.
+
+**(c) Was im Bild von Cut 2 faellt (Repo-Baum).** Kamera RID Cut 2 @0x000A0: Lage (1926,-4590,-25164), Ziel (-13392,234,-20556), H = 0x683C>>7 = 208.
+Die Gegenprobe der Rechnung mit Leon (-10552,-1800,-26043) ergibt (83,108), `befund.log` sagt (84,108). Fuer Effekte gilt der
+Regions-Test des Originals (`jal 0x80014368` @0x80053334, Viereck = erster RVD-Satz mit rec[2] = Cut, FUN_80014324).
+Fuer Cut 2 ist das der Satz @0x00318 `01 ff 02 00`, x -28298..4001, z -28000..-18500. Masken: Cut 2 hat 10 (pri @0x0093C),
+alle bei x 130..184.
+
+| Punkt | Lage (x,z), Skript | Regions-Test | Bildlage y -10000 → y -1800 → y 0 | Ergebnis |
+|---|---|---|---|---|
+| 3 | (-5540,-21205) @0x01B40 | innen | (214,-127) → (199,127) → (197,165) | faellt durch die rechte Bildhaelfte auf den Sims bzw. die Kanalkante |
+| 5 | (-14476,-23171) @0x01B6A | innen | (118,-26) → (124,94) → (125,116) | **faellt in den Kanal**, hinten |
+| 7 | (-23020,-25755) @0x01B94 | innen | (84,2) → (91,83) → (93,99) | faellt hinten am linken Steg, vor der Stirnwand (Steg-Projektion: x -27000 auf y 80 = Fuss der Stirnwand), durch Leons Stelle der Marke |
+| 0, 2, 4, 6 | z > -18500 | aussen | — | vom Regions-Test verworfen |
+| 1 | (3635,-24307) | aussen | hinter der Kamera | — |
+
+Keine der 10 Masken deckt die Fallwege von 3, 5 und 7. Die Bodenhoehe liefert room_coll, sie ist hier nicht nachgerechnet.
+Die Tabelle nennt deshalb y -1800 (Steg) und y 0 (Kanalgrund). Bild: `W_belege/wb1_tropfen_cut2.png`. Gelb ist Punkt 5,
+tuerkis Punkt 3, rot Punkt 7, Ringe bei y -1800, -900 und 0.
+*Abweichung von `W_abnahme_1.md` §3.2 Punkt 3:* Dort steht, zwei Punkte fielen ins Bild und die uebrigen sechs laegen
+hinter Kamera oder Stirnwand. Mit dem Regions-Test und dem FX_LOG des Ports sind es **drei**. Der Port verwendet denselben
+Regions-Test und zeichnet in Cut 2 genau die Punkte 3, 5 und 7 (Abschnitt 5.1).
+
+**(d) Was der Port tut.** Die Tropfen haengen bei y -10018..-10000 und fallen nie (Abschnitt 5.1). Zwei Port-Stellen sind die Ursache:
+* `re15_esp.c` `esp_fx_spawn_rows_one` setzt `f->floor_y = y`, also die Spawnhoehe. Diese Sammelklemme setzt den Tropfen im
+  ersten Bild von Zeile 2 auf den "Boden" -10000 zurueck, danach zittert er mit halber Rueckgabe, siehe Log
+  `xlat=(0,-5,0) drift=(0,5,0)`. Das Original hat im Takt keinen Boden (@0x8001a2fc-388). Den Boden kennt nur Routine 13.
+  Fuer Effekt 0x0B kennt `re15_esp.c` dasselbe Muster schon (Routine 41, `ESP_KEIN_BODEN`).
+* `esp_fx_dispatch` hat fuer Routine 13 keinen Fall und landet im `default: break;`. Es gibt also keinen Bodentest und keine
+  Aufschlag-Anim 0x26.
+
+**(e) Nebenbefund `RE15_ESP_ROWMACHINE.md`.** In den Korrekturen, Punkt 6, steht "Routine 13 = NUR Room-Drips
+(11A0/1260)". Die Raumliste ist unvollstaendig. Zensus ueber alle ESP-Zeilen mit A = 13 (`W_werkzeug/nb1/r13_zensus.py`):
+
+* Repo-Baum: 28 RDTs, jeweils Effekt 6 Sub 0, Zeile 2, accel (0,10,0). Das sind 11A0/11A1, 1260/1261 und alle STAGE2-Raeume
+  2000..20B1.
+* Version_40%: 6 RDTs, naemlich 2000, 2001, 2030, 2070, 20B0 und 20B1.
+
+Ob ein Skript den Effekt dort startet, sagt der Zensus nicht. Die Zeile ist dort berichtigt.
 
 ### 2.2 Hintergrund und Wasserflaeche
 
@@ -119,13 +191,16 @@ Wasserflaechen), `W_belege/w_80prozent_2000cut2_spritzer.jpg` (Videobilder 110..
 watenden Figur), `W_belege/w_v0829_gegen_master_cut2.jpg` (Flecken in v0.8.29 und master gleich, Blinken nur master).
 
 DuckStation-Lauf: nicht gemacht. Fuer die Frage "blinkt im Original etwas ortsfest auf dem Kanalwasser" reichen das
-Skript beider Discs (2.1, kein Effekt aufs Wasser) und das 80%-Video (2.3, nur Schritt-Spritzer).
+Skript beider Discs und das 80%-Video (2.3, nur Schritt-Spritzer). Zum Skript (2.1, berichtigt): Ortsfest blinkt nichts.
+Der Repo-Baum laesst aber alle 19,5 s Deckentropfen fallen, und die 40%-Disc startet sie nicht.
+Im 80%-Videoabschnitt Bild 432..516 (2,8 s ohne Figur im Wasser) faellt kein Tropfen. Das ist kein Gegenbeleg, denn dafuer
+ist der Abschnitt kuerzer als ein Umlauf von 19,5 s (`W_abnahme_1.md` §3.1).
 
 ## 3. Behebung
 
 `engine/src/raumlicht.c`: Fall `0x2000` (Tabelle `s_glanz`, `rl_hash`, 4-Bild-Fenster) entfernt; der Kopfkommentar an der
 Stelle nennt Grund und Belege (SCD @0x0174C/@0x0175C/@0x0176C, sub07 @0x01B06..@0x01B94, 40% @0x01568.., sub03
-@0x015B6..; Video). `frame` bleibt im Aufruf (Signatur unveraendert, `(void)frame`). `include/re15_raumlicht.h`: Kopf
+@0x015B6..; Video). In Nachbesserung 1 ist der Kommentar zum Deckentropfen berichtigt (Abschnitt 2.1, 5). `frame` bleibt im Aufruf (Signatur unveraendert, `(void)frame`). `include/re15_raumlicht.h`: Kopf
 angepasst. Unveraendert: der 50B0-Schein (eigene Port-Ergaenzung, nicht Teil dieses Befunds, siehe OFFEN), die
 Wasserflaechen (Obj_model_set Typ 3), der Wasserlauf der Spur N (`wasserlauf_r41.c`), der ESP-Pfad.
 Die Mess-Haken (`RE15_W_OHNE_PROP`, `RE15_W_OHNE` in main.c) waren nur im Messbau und sind zurueckgenommen.
@@ -164,14 +239,71 @@ Cut-Uebersicht nachher (`w_cuts.sh`, Messkopie Fix): Leon Cut 2/6/7/15 und Elza 
   integration_r38_wasserzombie). Neue Riegel: unit_raumlicht, unit_r41_wasserblink_werkzeug,
   integration_r41_wasserblink_leon/_elza/_gegen: 5/5 gruen.
 
+## 5. Nachbesserung 1 (Maengel M1 und M2 aus `W_abnahme_1.md`)
+
+Auftrag: Code bleibt. Berichtigt werden die Aussage zum Original in Kommentaren und Dossier (M1) sowie OFFEN 4 (M2).
+Alle Belege habe ich selbst nachgemessen, Abschnitt 2.1 enthaelt die Einzelheiten.
+
+### 5.1 Messung vorher und nachher
+
+Werkzeuge liegen unter `W_werkzeug/nb1/`:
+* `wb1_tropfen.py` gibt Schleife, Kamera, Region, Masken und Projektion aus und zeichnet das Bild.
+* `wb1_fxlog.py` wertet FX_LOG aus.
+* `r13_zensus.py` ist der Zensus der Routine-13-Zeilen.
+
+Fenster-Laeufe mit `W_werkzeug/abnahme1/wa_lauf.py` (eigene PID, gdigrab `hwnd=`, 30 Bilder/s, direct3d, kein AUTOSHOT,
+kein SOFTWARE_RENDER). Messkopien `re15_wb1_vorher.exe` und `re15_wb1_nachher.exe`, nach den Laeufen geloescht. Einstellungen:
+`RE15_DEBUG_JUMP=2000@90 RE15_FORCE_CUT=2 RE15_FX_LOG=fx.log`, Wartezeit 17 s, Aufnahme 26 s.
+
+| Messung | vorher (HEAD 80826d68e, exe md5 5e4a0526…) | nachher (Kommentare und Doku, exe md5 87c33be9…) |
+|---|---|---|
+| FX_LOG Effekt 6 Sub 0 in Cut 2, nach dem Regions-Test | genau 3 Punkte: (-5540,-21205) ab F185, (-14476,-23171) ab F365, (-23020,-25755) ab F545 | dieselben 3, dieselben Startbilder |
+| Weltlage y der drei, bis F715 / F714 | -10018..-10000, A 3→13, Flags 03, xlat.y -18..0, drift.y -14..19 | gleich |
+| Fleck am Bildrand (83,1), Aufnahme 10 Bilder/s | ab Aufnahmebild 207 (64,72,56), danach pulsierend (112,120,104)/(64,72,56); vorher Hintergrund (40,34,27) | ab Aufnahmebild 207 (64,72,56) |
+| `.text` von `raumlicht.c.obj` und `test_raumlicht.c.obj` (objdump -d) | — | **gleich** |
+| exe `.text` `.data` `.pdata` `.xdata` `.idata` `.bss` | — | **gleich**. 9 Bytes weichen ab: PE-Zeitstempel und Pruefsumme sowie die `__TIME__`-Zeichenkette in `.rdata` (18:00:09 → 20:28:39) |
+| ctest `-R "unit_raumlicht\|r41_wasserblink"`, `-j 3`, PowerShell mit `C:\msys64\mingw64\bin` vorn | **5/5 gruen** (88 s) | **5/5 gruen** (89 s) |
+
+Die Code-Aenderung ist null, nur Kommentare haben sich geaendert. Die Messung zeigt das Port-Verhalten, auf das sich die
+berichtigten Kommentare beziehen. Bilder:
+* `W_belege/wb1_tropfen_cut2.png`: die drei Fallwege auf dem Bild der Marke.
+* `W_belege/wb1_port_tropfen7_bildrand.png`: der Fleck des haengenden Punkts 7 im Port.
+* `W_belege/wb1_80prozent_tropfenwege.jpg`: die Fallwege im 80%-Video, Ausschnitte.
+
+### 5.2 Was berichtigt ist
+
+* `engine/src/raumlicht.c`, Block ueber `re15_raumlicht_liste` (M1):
+  * Effekt 6 Sub 0 ist als Deckentropfen beschrieben, mit Routinen und Adressen.
+  * Repo-Baum startet die Schleife (@0x0177C), Version_40% nicht (@0x01598, kein Evt_exec).
+  * In Cut 2 fallen die Punkte 3, 5 und 7.
+  * Port: Klemme plus fehlende Routine 13, Entscheidung beim Nutzer.
+* `include/re15_raumlicht.h:9-12`, `tests/unit/test_raumlicht.c:3-6`, `tests/integration/test_r41_wasserblink.cmake:6-8`:
+  * Statt "das Original setzt keinen Effekt aufs Kanalwasser" steht dort jetzt "die Raumdaten setzen kein Licht".
+  * Dazu der Verweis auf den Tropfen.
+  * Im cmake-Riegel steht zusaetzlich, dass er bei Bau der Tropfen anzupassen ist.
+* Dieses Dossier: §1.2 Nachtrag, §2.1 neu (a)..(e), §2.3, §3, "Fuer den Nutzer" und OFFEN 4 (M2).
+* `RE15_ESP_ROWMACHINE.md`, Korrekturen Punkt 6: Die Raumliste fuer Routine 13 ist aus dem Zensus ergaenzt (Nebenbefund aus M2).
+* Commit 3f565627f bleibt, wie er ist. Seine Aussage "das Original setzt keinen Effekt auf das Kanalwasser" berichtigt dieser Folge-Commit.
+* Abweichungen von `W_abnahme_1.md`:
+  * Es fallen drei Punkte ins Bild, nicht zwei (§2.1 (c)).
+  * Der Port haelt die Tropfen auch durch die Sammelklemme `floor_y = y` fest, nicht nur, weil Routine 13 fehlt (§2.1 (d)).
+  * Das 80%-Video werte ich als schwachen Gegenbeleg, nicht als "kein Gegenbeleg" (OFFEN 4).
+
 ## Fuer den Nutzer
 
 Das Blinken im Kanal war ein ausgedachter Effekt des Ports: weisse Glanzpunkte, die an sechs festen Stellen des Kanals
 fuer je vier Bilder aufleuchteten. Er stammte aus einer falschen Deutung des 80%-Videos; die weissen Wolken dort sind
-Spritzer an den Fuessen von Zombies, die durch das Wasser waten. Das Original legt keinen Effekt auf das Kanalwasser.
+Spritzer an den Fuessen von Zombies, die durch das Wasser waten. Im Kanal gibt es in den Raumdaten kein Licht.
 Der Effekt ist entfernt (Leon und Elza, ROOM2000/2001, alle Kameras). Die hellen Flecken auf deinem Bild bleiben: das ist
 der Kanalboden mit den Lampenflecken, der durch die halbdurchsichtige Wasserflaeche scheint, genau so im 80%-Video zu
 sehen und unveraendert seit v0.8.29. Der Wasserlauf an der Leiter bleibt.
+
+Berichtigung (Nachbesserung 1): Dass "das Original keinen Effekt auf das Kanalwasser legt", stimmt nur fuer die echte
+40%-Disc. In den Raumdaten, die der Port laedt (Repo-Baum, Mod), faellt alle 19,5 s eine Runde Wassertropfen von der
+Decke und spritzt am Boden auf. In der Kamera deiner Marke sind es drei Tropfen: einer in den Kanal, einer auf den rechten
+Sims, einer hinten auf den linken Steg. Auf der 40%-Disc steht dieselbe Tropfen-Schleife im Skript, wird aber nie gestartet.
+Der Port laesst die Tropfen derzeit nicht fallen, sie haengen an der Decke. Einer davon ist als winziger Punkt am oberen
+Bildrand zu sehen. Ob die Tropfen kommen sollen, entscheidest du (OFFEN 4).
 
 ## OFFEN
 
@@ -183,5 +315,37 @@ sehen und unveraendert seit v0.8.29. Der Wasserlauf an der Leiter bleibt.
    NPC-Weg Spur A Punkt 2), ist hier nicht gemessen — in der Marke steht "Gegner im Raum: keine".
 3. **BEFUND.md G4** (`analysis/video_80prozent/BEFUND.md` Zeile 43) nennt fuer 2000 noch "zu pruefen"; Ergebnis dieser Spur:
    Schritt-Spritzer der Zombies (Abschnitt 2.3). Die Datei ist nicht angefasst (gemeinsame Datei).
-4. Effekt 6 Sub 0 bei y -10000 (sub07 @0x01B06..): der Port haelt die Teilchen an der Decke (wpos.y -10018..-10000 ueber
-   313 Bilder, `RE15_FX_LOG`). Ob das Original sie fallen laesst, ist nicht geprueft; in Cut 2 liegen sie ausserhalb des Bilds.
+4. **Deckentropfen Effekt 6 Sub 0, ENTSCHEIDUNG BEIM NUTZER** (ersetzt "ob das Original sie fallen laesst, ist nicht
+   geprueft"; Befund `W_abnahme_1.md` §3.2, hier nachgemessen in Abschnitt 2.1 und 5):
+   * **Was es ist:** Ein fallender Deckentropfen mit Aufschlag-Spritzer, Routine 13 @0x80017990, accel (0,10,0) @0x14A64,
+     Bodentest room_coll `jal 0x8001c6e8` @0x800179c4, Aufschlag-Anim 0x26 @0x80017a28.
+     Acht Punkte bei y -10000, ein Umlauf dauert 585 Bilder (19,5 s).
+   * **Wer ihn startet:** nur der Repo-Baum, also der Mod (main00 @0x0177C `04 ff 18 07`, ROOM2001 `04 ff 18 08`).
+     Auf Version_40% steht die Schleife in sub03 @0x015B6, wird aber nicht gestartet (main00 endet @0x01598 `01 00`,
+     kein Evt_exec, kein Gosub).
+   * **Im Bild von Cut 2 (Mod-Daten):** Punkt 3 fiele auf den rechten Sims, Punkt 5 in den Kanal bei (125,116) und Punkt 7
+     hinten auf den linken Steg bei (91,83). Keine Maske deckt die drei.
+   * **80%-Video:** Im Abschnitt Bild 232..~496 (ROOM2000 Cut 2, etwa 9 s) ist kein fallender Tropfen zu sehen
+     (`W_abnahme_1.md` §3.1). Eigene Sichtung der Fallwege, je 4 bzw. 5 Bilder: `W_belege/wb1_80prozent_tropfenwege.jpg`,
+     ebenfalls nichts.
+     *Abweichung von der Abnahme:* Ich halte das nicht fuer "kein Gegenbeleg wegen 19,5 s Takt". Die in Cut 2 sichtbaren
+     Punkte starten bei t = 180, 360 und 540. Die groesste Luecke zwischen zwei sichtbaren Tropfen ist also 225 Bilder
+     (7,5 s), und ein Fall dauert etwa 9 + 45 Bilder. Liefe dieselbe Schleife mit denselben Daten, haette in einem
+     9-s-Abschnitt mindestens ein Tropfen zu fallen begonnen. Einzige Ausnahme waeren die ersten 180 Bilder nach dem
+     Raumeintritt, und der liegt vor dem Schnitt des Videos. Der Gegenbeleg ist aber schwach: Das Video ist ein
+     DivX-Mitschnitt, und wie gross der Tropfen im Bild ist, ist nicht gemessen. Der Port zeigt ihn am Bildrand nur
+     1 bis 2 Bildpunkte gross, allerdings angeschnitten.
+   * **Regel:** "Mod-Inhalt nur mit 80%-Beleg". Ein 80%-Beleg fehlt. Ohne Entscheidung des Nutzers baut der Port die Tropfen nicht.
+   * **Was der Port heute tut** (Port-Fehler, unabhaengig von der Entscheidung): Die drei Tropfen in Cut 2 haengen bei
+     y -10018..-10000 (Abschnitt 5.1). Ursache sind die Sammelklemme `floor_y = y` in `re15_esp.c`
+     `esp_fx_spawn_rows_one` und das Fehlen von Routine 13 in `esp_fx_dispatch`. Punkt 7 zeichnet der Port ab F545 als
+     1 bis 2 Bildpunkte grossen, pulsierenden Fleck bei (83,0..1) am oberen Bildrand
+     (`W_belege/wb1_port_tropfen7_bildrand.png`). Punkte 3 und 5 liegen bei y -10000 ueber dem Bild.
+   * **Zur Wahl:**
+     * (A) Tropfen bauen wie im Repo-Baum. Dafuer braucht es Routine 13 mit room_coll statt der Sammelklemme fuer
+       Effekt 6 und die Aufschlag-Anim 0x26. Der Riegel `integration_r41_wasserblink_leon/_elza` ist dann anzupassen,
+       weil Punkt 5 in sein Kanal-Fenster faellt.
+     * (B) Wie die 40%-Disc: Die Schleife sub07/sub08 in 2000/2001 laeuft nicht. Damit verschwindet auch der Fleck am Bildrand.
+     * (C) Bleibt wie jetzt: Die Tropfen haengen, und der Fleck am Bildrand bleibt. Das ist kein Originalverhalten.
+     Dieser Befund gilt auch fuer andere Raeume. Zeilen mit Routine 13 stehen in 28 Repo-RDTs (Abschnitt 2.1 (e)).
+     Ob deren Skripte sie starten, ist nicht geprueft.

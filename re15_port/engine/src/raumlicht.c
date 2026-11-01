@@ -18,11 +18,25 @@ static const re15_raumlicht_t s_container[] = {
 /* ROOM2000/2001: KEIN Eintrag (Runde 41 Spur W, Dossier analysis/befunde_runde41/W_wasserblink.md).
  * Der Fall 0x2000 aus Commit 4100d2aed liess an sechs festen Kanalpunkten Glanzpunkte in 4-Bild-Fenstern per Hash
  * aufblitzen; Takt, Zahl, Groesse und Farbe hatten keine Adresse. Nutzer 2026-11-01: "Das blinken im Wasser ist auf
- * jeden Fall fehlerhaft und quatsch". Das Original setzt keinen Effekt auf das Kanalwasser: ROOM2000 main00
- * @0x0174C/@0x0175C/@0x0176C = Effekt 0x0B an den Gitterstrahlen, sub07 @0x01B06..@0x01B94 = Effekt 6 Sub 0 bei
- * y -10000 (Version_40%: @0x01568/@0x01578/@0x01588, sub03 @0x015B6..@0x01644). Die weissen Wolken im 80%-Video
- * (V1 2:06-2:15 = Complete Disc Video 2, 5..21 s) sind Spritzer an den Fuessen watender Zombies, keine ortsfesten
- * Lichter. Die Wasserflaechen (Obj_model_set Typ 3 @0x016E6/@0x01708/@0x0172A) und der Wasserlauf der Spur N bleiben. */
+ * jeden Fall fehlerhaft und quatsch". Die weissen Wolken im 80%-Video (V1 2:06-2:15 = Complete Disc Video 2,
+ * 5..21 s) sind Spritzer an den Fuessen watender Zombies, keine ortsfesten Lichter.
+ * Was die Raumdaten im Kanal setzen (berichtigt in Nachbesserung 1, Dossier Abschnitt 2.1):
+ *   - Effekt 0x0B an den Gitterstrahlen: main00 @0x0174C/@0x0175C/@0x0176C (Version_40%: @0x01568/@0x01578/@0x01588).
+ *   - Effekt 6 Sub 0 ist ein FALLENDER DECKENTROPFEN mit Aufschlag-Spritzer, kein Licht. ESP-Zeilen (Repo @0x14A0C):
+ *     Zeile 0 Routine 10 @0x800176b0, Zeile 1 Routine 3 @0x80017334 (9 Bilder), Zeile 2 Routine 13 @0x80017990 mit
+ *     accel (0,10,0) @0x14A64 (Version_40%: @0x027B4); Routine 13 prueft den Boden (`jal 0x8001c6e8` @0x800179c4)
+ *     und setzt dann die Aufschlag-Anim +0x6e @0x80017a28 (Repo 0x26, Version_40% 0x0A). Acht Punkte bei y -10000,
+ *     585 Bilder je Umlauf: Repo sub07 @0x01B06..@0x01BAE (ROOM2001 sub08 @0x01D32).
+ *   - Repo-Baum (Mod): main00 startet die Schleife unbedingt, @0x0177C `04 ff 18 07` (ROOM2001 `04 ff 18 08`). In Cut 2
+ *     bestehen Punkt 3, 5 und 7 den Regions-Test @0x80053334 (RVD-Satz @0x00318); Punkt 5 (-14476,-23171) faellt in
+ *     den Kanal, Bildlage bei y 0: (125,116).
+ *   - Version_40% (echte Disc): dieselbe Schleife steht in sub03 @0x015B6..@0x0165E, wird aber NICHT gestartet.
+ *     main00 endet @0x01598 mit `01 00`, im ganzen SCD steht kein Evt_exec und kein Gosub (kein `04 ?? 18 ??`), die
+ *     drei Aot_set @0x014C6/@0x014DA/@0x014EE sind sce 8. Nur dort stimmt "kein Effekt auf dem Kanalwasser".
+ *   - Port: die Tropfen haengen bei y -10018..-10000 (RE15_FX_LOG). Grund: Die Sammelklemme floor_y = Spawn-y in
+ *     re15_esp.c esp_fx_spawn_rows_one haelt sie fest, und Routine 13 hat in esp_fx_dispatch keinen Fall (default).
+ *   Ob der Port die Tropfen bauen soll, entscheidet der Nutzer (Dossier OFFEN 4). Mit dem Raumlicht haben sie nichts zu tun.
+ * Die Wasserflaechen (Obj_model_set Typ 3 @0x016E6/@0x01708/@0x0172A) und der Wasserlauf der Spur N bleiben. */
 
 int re15_raumlicht_liste(unsigned room, uint32_t frame, re15_raumlicht_t *out, int max)
 {
