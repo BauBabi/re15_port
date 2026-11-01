@@ -18,6 +18,13 @@ cmake_minimum_required(VERSION 3.16)
 #              (FUN_80104DE8: 0x00BF10BF @0x80104e7c-80, 90 x 8 @0x80104eac-dc)
 #   Lauf E7R15 Elza, Redhawk, RE15_AI_FLAVOR=re15 -> pruef_lache "r15": rgb=9f80df, 2028 x 2128
 #              (CORPSE 0x801153d4: 0x00DF809F @0x8011546c-70, 91 x 8 @0x8011541c / @0x801154a8-b8)
+#   Nachbesserung 3 (Abnahme 3):
+#   Lauf BT    Leon, Redhawk, Messhaken RE15_BABYTOD_TEST=200 -> pruef_flecken: Fleck toter Babys 200 x 200 bf10bf
+#              sichtbar=1 gezeichnet=1 (main.c meldet, ob der Renderer das Viereck eingereiht hat; Mangel 2)
+#   Lauf K     Leon ROOM10C0, Kraehe Platz 3 (Leon bei 4300/5000, Kraehe greift an, Redhawk-Treffer im Flug), RE15_FEDER_LOG
+#              -> pruef_federn gib: 8..11 RE2-Federn (EMOVL21_S0 @0x80102eb8-bc, FUN_80104678), je gespawnt +-512 um die
+#              Kraehe, gezeichnete Feder-Quads (glas1120_pc.c, GLAS1090_0C.TIM; Mangel 1)
+#   Lauf KE    Elza ROOM10C1, derselbe Weg
 #
 # Eigener exe-Name je Lauf (Muster test_r41_spinnenanim.cmake), SDL_ASSERT=always_ignore ueber spiel_lauf.cmake.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_TOOL=<test_r41_spinnengore> -DWORKDIR=<dir> -P <diese Datei>
@@ -93,8 +100,45 @@ r41s_lauf(L8 2070 8 bein -)
 r41s_lauf(L7AUS 2070 7 aus - RE15_KEIN_80PROZENT_GORE=1)
 r41s_lauf(E7R15 2071 7 - r15 RE15_TITLE_SHOT_CHAR=1 RE15_AI_FLAVOR=re15)
 
+# Nachbesserung 3, Mangel 2: Babyflecken im Echtlauf (Messhaken RE15_BABYTOD_TEST, nur Messlaeufe)
+r41s_lauf(BT 2070 7 - - RE15_BABYTOD_TEST=200)
+if(EXISTS "${_basis}_BT/lache.log.flecken")
+    execute_process(COMMAND "${RE15_TOOL}" pruef_flecken "${_basis}_BT/lache.log.flecken"
+                    WORKING_DIRECTORY "${_basis}_BT" TIMEOUT 120 RESULT_VARIABLE _rb OUTPUT_VARIABLE _ob)
+    message(STATUS "r41_spinnengore[BT] Flecken\n${_ob}")
+    if(NOT _rb EQUAL 0)
+        set(_fehler "${_fehler}\n[BT] pruef_flecken exit=${_rb}\n${_ob}")
+    endif()
+else()
+    set(_fehler "${_fehler}\n[BT] keine lache.log.flecken (kein Babyfleck gezeichnet)")
+endif()
+
+# Nachbesserung 3, Mangel 1: RE2-Kraehenfedern (Leon ROOM10C0, Elza ROOM10C1)
+function(r41s_kraehe _name _raum)
+    set(WORKDIR "${_basis}_${_name}")
+    file(MAKE_DIRECTORY "${WORKDIR}")
+    re15_start_spiel(_rv 300
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
+        RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${ARGN}
+        RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=4300,5000,581" RE15_FORCE_CUT=1
+        RE15_GIVE=7:12 RE15_EQUIP=7
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1
+        "RE15_INPUT_SCRIPT=W3,M0.4,MA0.1,M0.9,MA0.1,M0.9,MA0.1,M0.9,MA0.1,M0.9,MA0.1,M0.9,W4"
+        RE15_FEDER_LOG=feder.log RE15_STATE_LOG=state.log
+        "RE15_EXIT_AT=320#${_raum}"
+        "${_exe}")
+    execute_process(COMMAND "${RE15_TOOL}" pruef_federn "${WORKDIR}/feder.log" gib
+                    WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 120 RESULT_VARIABLE _rk OUTPUT_VARIABLE _ok)
+    message(STATUS "r41_spinnengore[${_name}] exe exit=${_rv} Federn\n${_ok}")
+    if(NOT _rk EQUAL 0)
+        set(_fehler "${_fehler}\n[${_name}] pruef_federn gib exit=${_rk}\n${_ok}" PARENT_SCOPE)
+    endif()
+endfunction()
+r41s_kraehe(K 10C0)
+r41s_kraehe(KE 10C1 RE15_TITLE_SHOT_CHAR=1)
+
 file(REMOVE "${_exe}")
 if(NOT _fehler STREQUAL "")
     message(FATAL_ERROR "r41_spinnengore: ${_fehler}")
 endif()
-message(STATUS "r41_spinnengore: L7 (Leon, Lache RE2), E7 (Elza), L8 (Bein), L7AUS (Gegenprobe) und E7R15 (Lache RE1.5) bestanden")
+message(STATUS "r41_spinnengore: L7 (Leon, Lache RE2), E7 (Elza), L8 (Bein), L7AUS (Gegenprobe), E7R15 (Lache RE1.5), BT (Babyflecken) und K/KE (Kraehenfedern) bestanden")

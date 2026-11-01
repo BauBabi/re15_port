@@ -24,5 +24,8 @@ int re15_pc_glas1120_esp_rc(void);
 int re15_pc_glas1120_tex_ok(void);
 int re15_pc_glas1120_letzte_quads(void);
 int re15_pc_glas1120_schaden_ops(void);
+/* Runde 41 Spur S NB3: Federbild GLAS1090_0C.TIM geladen; gezeichnete Feder-Quads des letzten Bildes. */
+int re15_pc_glas1120_feder_ok(void);
+int re15_pc_glas1120_letzte_federn(void);
 
 #endif /* GLAS1120_PC_H */

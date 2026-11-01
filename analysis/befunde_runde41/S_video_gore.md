@@ -170,6 +170,9 @@ Port-Spalte: Geprüft ist der Code unter der Standard-KI (RE2-Flavor, `re15_ai_r
 
 1. **Schwarze Fetzen und Federn, die am Boden verstreut liegen bleiben** (K01, g12). Port: nur rotes Blut.
    Feder-Sprite und RE1.5-Teile-Streuung (13 Knochen @0x80114a50-aa4) sind OPEN.
+   *Stand Spur S, Nachbesserung 3:* Die RE2-Federn (EMOVL21_S0 FUN_80104678, Raumbank 0x0C) sind gebaut
+   (`S_spinnengore.md`, Abschnitt NB3). Liegen bleiben sie in RE2 nicht (Op 35 @0x80020504-0c). Das Liegenbleiben ist
+   nur im Video zu sehen.
 
 ### Hund (0x20), Affen (0x27/0x29), Birkin (0x30), Spielerfigur
 

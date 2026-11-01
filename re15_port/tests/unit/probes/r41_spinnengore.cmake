@@ -12,6 +12,8 @@
 #                          info/Re1.5/PSX.EXE und info/re2leon/COMMON/BIN/EMS25.BIN, Paletten aus TEX.TIM (RE1.5 und RE2).
 #                          L8/M (Nachbesserung 2): Babytod-Record (EMS26 @0x80100d10-14, Tabelle @0x801010C7) und die
 #                          Lache der Leiche (RE1.5 CORPSE 0x801153d4, RE2 FUN_80104DE8, Babyfleck), spinnenlache_r41.c.
+#                          M7b/M7c/N (Nachbesserung 3): Raumwechsel ueber re15_re2z_rng_reset / re15_actor_init; die RE2-
+#                          Kraehenfeder (EMOVL21_S0 FUN_80104678, Raumbank 0x0C, RE2-FX-Ops 34/16/5/35/36).
 add_executable(test_r41_spinnengore
     ${CMAKE_CURRENT_LIST_DIR}/../test_r41_spinnengore.c
     ${CMAKE_SOURCE_DIR}/platform/pc/src/fx_plattform_pc.c)
@@ -19,6 +21,7 @@ target_link_libraries(test_r41_spinnengore PRIVATE re15_engine re15_test_support
 target_include_directories(test_r41_spinnengore PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/platform/pc/src)
 target_compile_definitions(test_r41_spinnengore PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2"
     RE15_REPO_INFO="${CMAKE_SOURCE_DIR}/../info")
 if(NOT WIN32)
     target_link_libraries(test_r41_spinnengore PRIVATE m)
@@ -31,6 +34,8 @@ set_tests_properties(unit_r41_spinnengore PROPERTIES TIMEOUT 120)
 #                                 RE15_KEIN_80PROZENT_GORE=1 (Gegenprobe: kein Platzen). Auswerter
 #                                 `test_r41_spinnengore pruef_log <log> platzt|bein|aus`. Nachbesserung 2: RE15_LACHE_LOG
 #                                 (main.c), `pruef_lache <log> re2|r15` fuer L7 und den RE1.5-Lauf E7R15.
+#                                 Nachbesserung 3: BT (RE15_BABYTOD_TEST, `pruef_flecken`) und K/KE (Kraehenfedern Leon
+#                                 ROOM10C0 / Elza ROOM10C1, RE15_FEDER_LOG, `pruef_federn <log> gib`).
 if(TARGET re15_pc)
     add_test(NAME integration_r41_spinnengore
              COMMAND "${CMAKE_COMMAND}"

@@ -335,7 +335,7 @@ void re15_pc_gator_fx_draw(const re15_camera_view_t *cam, int cx, int cy, int ca
              * fehlerhaften ESP (FUN_8001bd38 legt jede Zelle in ihre TIM) - gezaehlt, nicht gezeichnet. */
             if (e->v0 > s_raum_h || e->v1 > s_raum_h) { aus_fenster++; continue; }
             slot = G41FX_RAUM_SLOT; uo = (seite == 0x0F) ? 256 : 0; vo = (zeile - G41FX_RAUM_CLUT_Y) * s_raum_h;
-        } else if (bank >= 0x10 && bank <= 0x14) { gl++; continue; }                 /* re15_pc_glas1120_draw */
+        } else if ((bank >= 0x10 && bank <= 0x14) || bank == 0x0C) { gl++; continue; }   /* re15_pc_glas1120_draw (0x0C = Feder, R41 S) */
         if (slot < 0) { rest++; continue; }
         if ((slot == G41FX_KERN_SLOT && !s_kern_ok) || (slot == G41FX_RAUM_SLOT && !s_raum_ok)) continue;
         if (gebunden != slot) { re15_render_pc_bind_tim_slot(slot); gebunden = slot; }

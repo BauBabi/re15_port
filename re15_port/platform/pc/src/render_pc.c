@@ -91,6 +91,8 @@ static int32_t       s_shadow_next_vz = -1;
 static shadow_quad_t s_light_quads[LIGHT_QUAD_MAX];
 static int           s_light_quad_count = 0;
 static int           s_shadow_next_spieler = 0;
+/* Runde 41 Spur S NB3 (Messschiene RE15_LACHE_LOG der Babyflecken): Laenge der Schatten-Warteschlange dieses Bildes. */
+int re15_render_pc_shadow_quads_eingereiht(void);
 void re15_render_pc_shadow_tiefe(int32_t vz_summe4, int ist_spieler)
 {
     s_shadow_next_vz = vz_summe4;
@@ -3382,3 +3384,5 @@ void re15_debug_text(int x, int y, int z, const char *text)
     if (!text) return;
     re15_render_pc_game_text(x, y, text, 0);
 }
+
+int re15_render_pc_shadow_quads_eingereiht(void) { return s_shadow_quad_count; }   /* Runde 41 Spur S NB3, Messschiene */

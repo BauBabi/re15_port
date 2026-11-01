@@ -886,6 +886,10 @@ static void op_21(void);
  * definiert am Dateiende; Belege G_kanister2080.md 10.1. */
 static void op_4(void);  static void op_6(void);  static void op_37(void); static void op_38(void);
 static void op_41(void); static void op_42(void); static void op_69(void); static void op_78(void);
+/* Runde 41 Spur S (Nachbesserung 3, Abnahme 3 Mangel 1): die Ops der RE2-Kraehenfeder Raumbank 0x0C (room1090 effect.esp
+ * = GLAS1090.ESP, Bank-Kopf @0x994, Skript Sub 0 @0xAD4: Op A 34, Op B 16, step[2] 35, step[3] 36, +0x0B 0x22),
+ * definiert am Dateiende. */
+static void op_34(void); static void op_35(void); static void op_36(void);
 
 static void op_rufen(unsigned op)
 {
@@ -931,6 +935,9 @@ static void op_rufen(unsigned op)
     case 42: op_42(); break;    /* 0x800208b8 (Runde 41 Spur G, Nachtrag 28) */
     case 69: op_69(); break;    /* 0x80022ebc (Runde 41 Spur G, Nachtrag 28) */
     case 78: op_78(); break;    /* 0x800241c8 (Runde 41 Spur G, Nachtrag 28) */
+    case 34: op_34(); break;    /* 0x80020364 (Runde 41 Spur S NB3, Tafel @0x8009d8f0) */
+    case 35: op_35(); break;    /* 0x800204f8 (Runde 41 Spur S NB3, Tafel @0x8009d8f4) */
+    case 36: op_36(); break;    /* 0x80020510 (Runde 41 Spur S NB3, Tafel @0x8009d8f8) */
     default: s_op_unbekannt++; break;   /* von keinem Aufschlag-Skript erreicht (bau_d.md §3) */
     }
 }
@@ -1743,4 +1750,81 @@ static void op_78(void)
         b[o] = (uint8_t)(int8_t)(((int32_t)(int8_t)b[o] * s) / 3000);
     for (int o = 0x0C; o <= 0x10; o += 2)
         wr16(b, o, (uint16_t)(int16_t)(((int32_t)rds16(b, o) * s) / 3000));
+}
+
+/* ============================================================================================
+ * RUNDE 41 SPUR S (Nachbesserung 3, Abnahme 3 Mangel 1) - die RE2-KRAEHENFEDER, Raumbank 0x0C.
+ * Gespawnt von EMOVL21_S0 FUN_80104678 (`lui a0,0xc00 / ori a0,a0,0x800` @0x801046ec-f0 -> Bank 0x0C, Sub 0, Skala 0x800,
+ * `jal 0x8001bf10` @0x80104700). Skript (room1090 effect.esp = GLAS1090.ESP, Bank-Kopf @0x994, Sub 0 @0xAD4, 1 Teil, 1 Step):
+ *   `22 10 23 24 00 10 00 10 00 fe 00 22 00 00 00 00 00 00 01 00 01 00 01 00`
+ *   Op A 34, Op B 16 (FUN_8001f128: Boden nach +0x14, Op A := +0x0B = 0x22, Op B := 5), Beschl. y -2 (+0x09 = 0xfe),
+ *   +0x12 = 1, Op 5 (FUN_8001df90) waehlt am Boden step[2] = 35 (unter dem Boden) bzw. step[3] = 36 (Kontakt gleicher Hoehe).
+ * Die Divisionen durch 70/50/20/10 sind die Compiler-Idiome (mult + mfhi, sra, Vorzeichen); fuer rng() 0..255 und die
+ * kleinen Produkte gleich der C-Division mit Abschneiden (Konvention wie oben, Op 19/58).
+ * ========================================================================================== */
+
+/* Der Pendel-Wurf von Op 34 und Op 36: neue Geschwindigkeit, Schwung-Richtung +0x42 kippt. */
+static int16_t feder_wurf(void)
+{
+    uint8_t *b = cur();
+    int32_t r = (int32_t)rng();                                    /* `jal 0x80015fe8` @0x8002039c / @0x80020518 */
+    wr16(b, 0x0C, (uint16_t)(int16_t)((int32_t)(int8_t)b[0x42] * (r % 70 + 50)));
+                                                                   /* /70 `lui v1,0xea0e / ori 0xa0eb` + `sra 6` @0x800203a4-c0,
+                                                                    * +50 @0x800203e8, `lb v1,66` / `mult` / `sh a2,12` @0x800203e4-f8 */
+    r = (int32_t)rng();                                            /* @0x800203f4 / @0x80020570 */
+    b = cur();
+    wr16(b, 0x10, (uint16_t)(int16_t)((int32_t)(int8_t)b[0x42] * (r % 50)));
+                                                                   /* /50 `lui v1,0x51eb / ori 0x851f` + `sra 4` @0x800203fc-1c,
+                                                                    * `lb a0,66` / `mult` / `sh a2,16` @0x80020434-48 */
+    r = (int32_t)rng();                                            /* @0x80020444 / @0x800205c0 */
+    int16_t v = (int16_t)(r % 20 + 40);                            /* /20 `lui a1,0x6666 / ori 0x6667` + `sra 3` @0x8002044c-64,
+                                                                    * +40 @0x80020478 */
+    return v;
+}
+static void feder_wurf_ende(int16_t v)
+{
+    uint8_t *b = cur();
+    wr16(b, 0x0E, (uint16_t)v);                                    /* `sh v0,14` @0x800204ac / @0x80020628 */
+    wr16(b, 0x42, (uint16_t)(int16_t)(int8_t)(-(int32_t)(int8_t)b[0x42]));
+                                                                   /* `subu v1,zero,v1 / sll 24 / sra 24 / sh v1,66` @0x800204b0-bc
+                                                                    * bzw. @0x8002062c-38 (Halbwort-Store) */
+    wr16(b, 0x4A, (uint16_t)(int16_t)((-3 * (int32_t)v) / 10));   /* -(3v) `sll 1 / addu / subu` @0x80020484-8c, /10 ueber
+                                                                    * 0x66666667 + `sra 2` - (x>>31) @0x80020490/c0-c8, `sh v0,74` @0x800204d0 */
+}
+
+/* Op 34 = FUN_80020364 (Update-Pass): Feder pendelt. +0x12 == 0 (faellt): bei vy <= 0 +0x12 := 1 (`bgtz` / `sh 1,18`
+ * @0x800204d4-e4). +0x12 != 0: erst wenn vy < +0x4A (`lh 14 / lh 74 / slt / beq` @0x80020384-94) der Wurf, +0x12 := 0
+ * (`sh zero,18` @0x800204a8). */
+static void op_34(void)
+{
+    uint8_t *b = cur();
+    if (rd16(b, 0x12) == 0) {                                      /* `lhu v0,18 / beq` @0x80020374-7c */
+        if (rds16(b, 0x0E) <= 0) wr16(b, 0x12, 1);
+        return;
+    }
+    if (!(rds16(b, 0x0E) < rds16(b, 0x4A))) return;
+    int16_t v = feder_wurf();
+    wr16(cur(), 0x12, 0);                                          /* @0x800204a8 */
+    feder_wurf_ende(v);
+}
+
+/* Op 35 = FUN_800204f8: Feder unter dem Boden -> Platz frei (`sb zero,0` @0x80020504, `sh zero,24` @0x8002050c). Op B bleibt. */
+static void op_35(void)
+{
+    uint8_t *b = cur();
+    b[0x00] = 0;
+    wr16(b, 0x18, 0);
+}
+
+/* Op 36 = FUN_80020510: Kontakt auf gleicher Bodenhoehe -> derselbe Wurf ohne +0x12, Weltlage := Vorbild-Lage
+ * (`lw a2,60 / lhu a3,64` @0x8002061c-20, `sw a2,52 / sh a3,56` @0x8002063c-40). */
+static void op_36(void)
+{
+    int16_t v = feder_wurf();
+    uint8_t *b = cur();
+    const uint32_t vor = rd32(b, 0x3C);
+    const uint16_t vz = rd16(b, 0x40);
+    feder_wurf_ende(v);
+    wr32(b, 0x34, vor);
+    wr16(b, 0x38, vz);
 }

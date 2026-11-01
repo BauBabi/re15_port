@@ -25,6 +25,15 @@
  *   M  Lache (Nachbesserung 2, Abnahme 2 Mangel 1): RE1.5 CORPSE 0x801153d4 (0x00DF809F, +8 je Takt, 91 bzw. 121
  *      Takte, Eintritt je Todesweg), RE2 FUN_80104DE8 (0x00BF10BF, +8 je Takt, 90 Takte, Wasser sperrt), Babyspinne
  *      (Tinte beim SPLAT, der Record bleibt nach dem DESPAWN liegen). Byte-Pins aus STAGE2/EMS25/EMS26/RE2-PSX.EXE.
+ *   M7b/M7c Raumwechsel (Nachbesserung 3, Abnahme 3 Mangel 2): der Fleck faellt ueber die RAUM-LADEKETTE
+ *      (re15_re2z_rng_reset bzw. re15_actor_init), nicht ueber den Modul-Aufruf direkt (FUN_8001633c `sb zero,-50(s1)`
+ *      @0x8001639c, einziger Aufrufer @0x80026e0c).
+ *   N  Kraehenfedern (Nachbesserung 3, Abnahme 3 Mangel 1): RE2 EMOVL21_S0 FUN_80104678 (Bank 0x0C, Sub 0, Skala 0x800
+ *      @0x801046ec-f0, Einheitsmatrix @0x801046f8-fc, SVECTOR = Aktor-Lage +-512 @0x801046a4-e8, Gier rand<<4 @0x801046f4,
+ *      `jal 0x8001bf10` @0x80104700), Skript room1090 effect.esp (GLAS1090.ESP) Bank 0x0C, Ops 34/16/5/35/36 (RE2 PSX.EXE
+ *      Tafel @0x8009d868). GIB w7 8..11 (@0x80102eb8-bc), Flug-Treffer w3 2..3 (@0x80102a18-1c), Launch w8 5..8
+ *      (@0x801032f8-30c); die Feder pendelt, faellt und verschwindet unter dem Boden (Op 5 @0x8001e070 -> Op 35).
+ *      PORT-WAHL: an den reinen Flug-Stellen (Abheben @0x80100CA8-C4 u.a.) wird keine Feder gezeichnet.
  * Modus 2 `pruef_log <log> <art>` = Auswerter des Integrationslaufs (RE15_SPINNEN_LOG mit {G..}-Klammern):
  *   art "platzt": eine RE2-Spinne (o=1) stirbt (st=3) und traegt danach sh mit Teil 0 und 19 und fl == 0x7fff8.
  *   art "bein":   eine RE2-Spinne im Treffer (st=2) traegt ein geplatztes Beinpaar (sh-Bits in 3..18).
@@ -32,6 +41,12 @@
  * Modus 3 `pruef_lache <log> <art>` = Auswerter von RE15_LACHE_LOG (main.c, je Schatten einer Spinne):
  *   art "re2": eine Leiche (st=7) traegt pool=1 rgb=bf10bf und erreicht sichtbar 2020 x 2120 (1300/1400 + 90 x 8).
  *   art "r15": eine Leiche traegt pool=1 rgb=9f80df und erreicht 2028 x 2128 (+ 91 x 8) oder 2268 x 2368 (+ 121 x 8).
+ * Modus 4 `pruef_flecken <log.flecken>` = Auswerter der Babyflecken (main.c, Nachbesserung 3): mindestens ein Fleck
+ *   hx=200 hz=200 rgb=bf10bf sichtbar=1 gezeichnet=1 (der Renderer hat das Viereck eingereiht), kein Fleck mit anderer
+ *   Tinte oder anderem Mass.
+ * Modus 5 `pruef_federn <log>` = Auswerter von RE15_FEDER_LOG (glas1120_pc.c + <log>.spawn aus enemy_ai_re2_crow.c):
+ *   ein GIB-Satz mit 8..11 Federn (anlass=gib, i=n/n), jede Feder gespawnt (platz 0..95) innerhalb +-512 um die Kraehe,
+ *   und Bilder mit gezeichneten Feder-Quads (gezeichnet > 0, tex=1).
  */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
@@ -43,6 +58,8 @@
 #include "re15_spinnenlache_r41.h"
 #include "re15_aot.h"
 #include "fx_plattform_pc.h"   /* re15_pc_esp_clut / re15_pc_fx_seite_clut_ok: der Zeichner (platform/pc/src) */
+#include "re2_fx.h"            /* Nachbesserung 3: RE2-FX-Maschine (Kraehenfeder Raumbank 0x0C) */
+#include "re15_schuss_r36.h"   /* re15_schuss_r36_kraehe_parts_seed */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -440,6 +457,19 @@ static void lache_rgb(const re15_actor_t *e, int32_t *hx, int32_t *hz, int *pool
     *hx = 500; *hz = 600; *pool = 0; rgb[0] = rgb[1] = rgb[2] = 0;
     re15_spinnenlache_render(e, hx, hz, pool, &rgb[0], &rgb[1], &rgb[2]);
 }
+/* Nachbesserung 3: ein Baby stirbt am Boden und legt seinen Fleck ab (wie M7). Rueckgabe = Zahl der Flecken. */
+void re15_re2z_rng_reset(void);
+static int baby_fleck_legen(void)
+{
+    frisch(RE15_AI_FLAVOR_RE2);
+    SP->type = 0x26; SP->re2s_baby_spawned = 1; SP->grid_id = 1; SP->state = 0;
+    re15_re2spider_baby_tick(S);
+    SP->x = 2222; SP->z = -1111; SP->rot_y = 100;
+    SP->hp = -1; SP->state = 3; SP->sub_state_1 = 3; SP->sub_state_2 = 0; SP->sub_state_3 = 0; SP->re2s_mode222 = 0;
+    re15_re2spider_baby_tick(S);
+    re15_re2spider_baby_tick(S);
+    return re15_spinnenlache_flecken_zahl();
+}
 static void test_lache(void)
 {
     size_t n = 0;
@@ -598,8 +628,21 @@ static void test_lache(void)
               "M7: Fleck (%d,%d,%d) yaw %d %d x %d rgb %02x%02x%02x", (int)fp[0], (int)fp[1], (int)fp[2], fy, (int)fhx, (int)fhz,
               frgb[0], frgb[1], frgb[2]);
     }
-    re15_spinnenlache_raum_reset();
-    CHECK(re15_spinnenlache_flecken_zahl() == 0, "M7: Raumwechsel loescht die Flecken nicht");
+    /* M7b (Nachbesserung 3, Abnahme 3 Mangel 2): der Raumwechsel ueber die Ladekette re15_re2z_rng_reset (Aufrufer
+     * re15_actor_init und scd_room_setup.c), NICHT ueber re15_spinnenlache_raum_reset direkt. */
+    re15_re2z_rng_reset();
+    CHECK(re15_spinnenlache_flecken_zahl() == 0, "M7b: Raumwechsel (re15_re2z_rng_reset) loescht die Flecken nicht (%d)",
+          re15_spinnenlache_flecken_zahl());
+    /* M7c: noch einmal mit re15_actor_init (Raumwechsel: actor_common.c ruft re15_re2z_rng_reset) */
+    CHECK(baby_fleck_legen() == 1, "M7c: kein Fleck nach dem DESPAWN (%d)", re15_spinnenlache_flecken_zahl());
+    re15_actor_init();
+    CHECK(re15_spinnenlache_flecken_zahl() == 0, "M7c: Raumwechsel (re15_actor_init) loescht die Flecken nicht (%d)",
+          re15_spinnenlache_flecken_zahl());
+    /* M7d Gegenrichtung: Spielschritte ohne Raumwechsel lassen den Fleck liegen (der tote Platz wird nicht mehr getickt) */
+    CHECK(baby_fleck_legen() == 1, "M7d: kein Fleck nach dem DESPAWN");
+    for (int t = 0; t < 30; t++) re15_enemy_ai_run_all(1);
+    CHECK(re15_spinnenlache_flecken_zahl() == 1, "M7d: Fleck ohne Raumwechsel weg (%d)", re15_spinnenlache_flecken_zahl());
+    re15_re2z_rng_reset();
     /* M8 Baby stirbt in der Luft (+0x222 != 0): word0 |= 0x400 statt Tinte (@0x80100ce4-f0) -> kein gruener Fleck */
     frisch(RE15_AI_FLAVOR_RE2);
     SP->type = 0x26; SP->re2s_baby_spawned = 1; SP->grid_id = 1; SP->state = 0;
@@ -615,6 +658,217 @@ static void test_lache(void)
     /* M10 lebende Spinne 0x25 ohne Leiche: der Zeichner behaelt das Spur-L-Mass (kein Eingriff) */
     frisch(RE15_AI_FLAVOR_RE2);
     CHECK(re15_spinnenlache_render(SP, &hx, &hz, &pool, &rgb[0], &rgb[1], &rgb[2]) == 0, "M10: lebende Spinne bekommt ein Lachenmass");
+}
+
+/* ---- N: Kraehenfedern (Runde 41 Spur S, Nachbesserung 3, Abnahme 3 Mangel 1) ----------------------------------- */
+int  re15_re2crow_hurt_test(re15_actor_t *e, re15_actor_t *pl);
+int  re15_re2crow_tick(int slot);
+void re15_re2crow_feder_zaehler(unsigned *flug, unsigned *gezeichnet, unsigned *gespawnt);
+static uint8_t *s_core, *s_raum;
+static int federn_bereit(void)
+{
+    static int ok = -1;
+    if (ok >= 0) return ok;
+    size_t nc = 0, nr = 0;
+    s_core = datei(RE15_ASSET_RE2_DIR "/CORE00.ESP", &nc);
+    s_raum = datei(RE15_ASSET_RE2_DIR "/GLAS1090.ESP", &nr);
+    ok = (s_core && s_raum && re2fx_register_core(s_core, nc) == 0 && re2fx_register_raum(s_raum, nr) == 0);
+    return ok;
+}
+static int federn_zaehlen(void)
+{
+    int n = 0;
+    for (int i = 0; i < RE2FX_PLAETZE; i++) {
+        const uint8_t *b = re2fx_platz(i);
+        if (b && b[0x1C] == 0x0C && w16(b, 0x18) != 0) n++;
+    }
+    return n;
+}
+static re15_actor_t *kraehe_neu(int32_t y)
+{
+    re15_actor_init();
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    PL = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    memset(PL, 0, sizeof *PL);
+    PL->active = 1; PL->hp = 100; PL->x = 0; PL->z = -3000;
+    re15_actor_t *e = &g_actors[1];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = 0x21; e->state = 1; e->hp = 10;
+    e->x = 1000; e->y = y; e->z = 2000; e->dog_floor_y = 0;
+    re15_schuss_r36_kraehe_parts_seed(e);
+    re2fx_reset();
+    return e;
+}
+/* Prueft jede lebende Feder gegen FUN_80104678 / FUN_8001bf10 und gibt die Zahl zurueck. k = Kraehen-Lage im Spawn-Takt
+ * (der Flug-Treffer und der Launch bewegen die Kraehe im selben Aufruf NACH den Federn weiter, @0x80102A98-C4 / @0x80103358-64). */
+static int federn_pruefen(const int32_t k[3], const char *was)
+{
+    int n = 0;
+    for (int i = 0; i < RE2FX_PLAETZE; i++) {
+        const uint8_t *b = re2fx_platz(i);
+        if (!b || b[0x1C] != 0x0C || w16(b, 0x18) == 0) continue;
+        n++;
+        const int dx = (int16_t)w16(b, 0x2C) - (int)k[0], dy = (int16_t)w16(b, 0x2E) - (int)k[1], dz = (int16_t)w16(b, 0x30) - (int)k[2];
+        CHECK(w16(b, 0x18) == 0xA003u && b[0x00] == 34 && b[0x01] == 16 && b[0x1E] == 0 && w16(b, 0x3A) == 0x800,
+              "%s: Platz %d Status %04x Op %d/%d Sub %d Skala %04x (Soll A003, 34/16, 0, 0800: @0x8001bfa8, Skript @0xAD8, @0x801046ec-f0)",
+              was, i, w16(b, 0x18), b[0], b[1], b[0x1E], w16(b, 0x3A));
+        CHECK(dx >= -512 && dx <= 508 && dy >= -512 && dy <= 508 && dz >= -512 && dz <= 508 && (dx & 3) == 0 && (dy & 3) == 0 && (dz & 3) == 0,
+              "%s: Platz %d Versatz (%d,%d,%d) nicht s8*4 um die Kraehe (@0x801046a4-e8)", was, i, dx, dy, dz);
+        CHECK((w16(b, 0x22) & 0xFu) == 0 && w16(b, 0x22) <= 4080u, "%s: Gier %u nicht rand<<4 (@0x801046f4)", was, w16(b, 0x22));
+        CHECK(!memcmp(b + 0x4C, re2fx_einheitsmatrix, 32), "%s: Matrix nicht 0x8009DB44 (@0x801046f8-fc)", was);
+    }
+    return n;
+}
+static void test_federn(void)
+{
+    size_t n = 0;
+    /* N1 Byte-Pins */
+    uint8_t *ov = datei(RE15_REPO_INFO "/re2leon/COMMON/BIN/EMOVL21_S0.BIN", &n);
+    CHECK(ov != NULL, "N1: EMOVL21_S0.BIN fehlt");
+    if (ov) {
+        const uint32_t O = 0x80100000u;
+        pin(ov, n, O, 0x801046a4u, 0x00021600u, "sll v0,v0,24");
+        pin(ov, n, O, 0x801046a8u, 0x8e230038u, "lw v1,56(s1)");
+        pin(ov, n, O, 0x801046acu, 0x00021583u, "sra v0,v0,22");
+        pin(ov, n, O, 0x801046c0u, 0x8e23003cu, "lw v1,60(s1)");
+        pin(ov, n, O, 0x801046d8u, 0x8e230040u, "lw v1,64(s1)");
+        pin(ov, n, O, 0x801046ecu, 0x3c040c00u, "lui a0,0xc00");
+        pin(ov, n, O, 0x801046f0u, 0x34840800u, "ori a0,a0,0x800");
+        pin(ov, n, O, 0x801046f4u, 0x00022900u, "sll a1,v0,4");
+        pin(ov, n, O, 0x801046f8u, 0x3c06800au, "lui a2,0x800a");
+        pin(ov, n, O, 0x801046fcu, 0x24c6db44u, "addiu a2,a2,-9404");
+        pin(ov, n, O, 0x80104700u, 0x0c006fc4u, "jal 0x8001bf10");
+        pin(ov, n, O, 0x80104704u, 0x27a70010u, "addiu a3,sp,16");
+        pin(ov, n, O, 0x80102eb8u, 0x0c04119eu, "jal 0x80104678 (GIB)");
+        pin(ov, n, O, 0x80102ebcu, 0x34450008u, "ori a1,v0,0x8");
+        pin(ov, n, O, 0x80102a18u, 0x0c04119eu, "jal 0x80104678 (Treffer)");
+        pin(ov, n, O, 0x80102a1cu, 0x34450002u, "ori a1,v0,0x2");
+        pin(ov, n, O, 0x80102b3cu, 0x8e02003cu, "lw v0,60(s0) (+0x3C = y)");
+        free(ov);
+    }
+    uint8_t *exe = datei(RE15_REPO_INFO "/re2leon/PSX.EXE", &n);
+    CHECK(exe != NULL, "N1: re2leon/PSX.EXE fehlt");
+    if (exe) {
+        CHECK(exe_wort(exe, n, 0x8009d8a8u) == 0x8001f128u, "N1: Op-Tafel [16] != 0x8001f128");
+        CHECK(exe_wort(exe, n, 0x8009d8f0u) == 0x80020364u, "N1: Op-Tafel [34] != 0x80020364");
+        CHECK(exe_wort(exe, n, 0x8009d8f4u) == 0x800204f8u, "N1: Op-Tafel [35] != 0x800204f8");
+        CHECK(exe_wort(exe, n, 0x8009d8f8u) == 0x80020510u, "N1: Op-Tafel [36] != 0x80020510");
+        CHECK(exe_wort(exe, n, 0x80020504u) == 0xa0400000u, "N1: @0x80020504 nicht `sb zero,0(v0)`");
+        CHECK(exe_wort(exe, n, 0x8002050cu) == 0xa4400018u, "N1: @0x8002050c nicht `sh zero,24(v0)`");
+        CHECK(exe_wort(exe, n, 0x8001e070u) == 0x0083182au, "N1: @0x8001e070 nicht `slt v1,a0,v1`");
+        CHECK(exe_wort(exe, n, 0x8001bfa8u) == 0x3402a003u, "N1: @0x8001bfa8 nicht `ori v0,zero,0xa003`");
+        CHECK(exe_wort(exe, n, 0x800204bcu) == 0xa4a30042u, "N1: @0x800204bc nicht `sh v1,66(a1)`");
+        free(exe);
+    }
+    uint8_t *esp = datei(RE15_ASSET_RE2_DIR "/GLAS1090.ESP", &n);
+    CHECK(esp != NULL && n == 3092, "N1: GLAS1090.ESP");
+    if (esp && n == 3092) {
+        static const uint8_t step[24] = { 0x22, 0x10, 0x23, 0x24, 0x00, 0x10, 0x00, 0x10, 0x00, 0xfe, 0x00, 0x22,
+                                          0, 0, 0, 0, 0, 0, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00 };
+        CHECK(esp[6] == 0x0C && w32(esp, 3088u - 4u * 6u) == 0x994u, "N1: Raumbank 0x0C nicht an Id-Platz 6 / Kopf 0x994");
+        CHECK(w16(esp, 0x994 + 4) == 0x7840 && !memcmp(esp + 0xAD8 + 4, step, sizeof step),
+              "N1: Bank 0x0C CLUT-Kopf %04x / Step @0xADC != 22 10 23 24 ..", w16(esp, 0x994 + 4));
+        free(esp);
+    }
+    size_t na = 0, nb = 0;
+    uint8_t *ta = datei(RE15_ASSET_RE2_DIR "/GLAS1090_0C.TIM", &na);
+    uint8_t *tb = datei(RE15_REPO_INFO "/re2leon/PL0/RDT/room1090/esp0C.tim", &nb);
+    CHECK(ta && tb && na == nb && na == 15424 && !memcmp(ta, tb, na), "N1: GLAS1090_0C.TIM != room1090/esp0C.tim");
+    if (ta && na == 15424) CHECK(w16(ta, 0x2c + 8 + 8) == 0x40 && w16(ta, 0x2c + 8 + 10) == 0x78, "N1: esp0C.tim nicht 256 x 120");
+    free(ta); free(tb);
+
+    CHECK(federn_bereit(), "N: CORE00.ESP / GLAS1090.ESP nicht registriert");
+    if (!federn_bereit()) return;
+
+    /* N2 GIB: Redhawk w7 -> RE2-Zeile 5 -> 0x80102CA0, 8..11 Federn */
+    unsigned f0 = 0, g0 = 0, s0 = 0, f1 = 0, g1 = 0, s1 = 0;
+    re15_actor_t *e = kraehe_neu(-1500);
+    re15_re2crow_feder_zaehler(&f0, &g0, &s0);
+    e->state = 2; e->sub_state_1 = 7; e->sub_state_2 = 0;
+    int32_t kl[3] = { e->x, e->y, e->z };
+    re15_re2crow_hurt_test(e, PL);
+    re15_re2crow_feder_zaehler(&f1, &g1, &s1);
+    int nf = federn_pruefen(kl, "N2 GIB");
+    CHECK(nf >= 8 && nf <= 11 && (int)(s1 - s0) == nf && (int)(g1 - g0) == nf,
+          "N2: GIB %d Federn, gespawnt %u, gezeichnet %u (Soll 8..11 @0x80102ea8-bc)", nf, s1 - s0, g1 - g0);
+    CHECK(e->state == 7 && e->sub_state_1 == 1, "N2: nach dem GIB Zustand %d/%d (Soll 7/1)", e->state, e->sub_state_1);
+    /* N3 Fall: Pendel (Op 34), Boden (Op 16/5), unter dem Boden frei (Op 35); Quads aus dem Bild 256 x 120 */
+    {
+        re15_camera_view_t cam;
+        memset(&cam, 0, sizeof cam);
+        cam.rot[0] = cam.rot[4] = cam.rot[8] = 4096;
+        cam.trans[0] = -1000; cam.trans[1] = 0; cam.trans[2] = 4000;
+        cam.fov_screen_dist = 600;
+        static re2fx_quad_t q[128];
+        int quads = 0, uv_aus = 0, kipp = 0, bild = 0, max_dx = 0;
+        int32_t y_start = 0;
+        for (int i = 0; i < RE2FX_PLAETZE; i++) { const uint8_t *b = re2fx_platz(i); if (b && b[0x1C] == 0x0C && w16(b, 0x18)) { y_start = (int16_t)w16(b, 0x2E); break; } }
+        uint16_t r42[RE2FX_PLAETZE];
+        for (int i = 0; i < RE2FX_PLAETZE; i++) { const uint8_t *b = re2fx_platz(i); r42[i] = b ? w16(b, 0x42) : 0; }
+        for (bild = 0; bild < 900 && federn_zaehlen() > 0; bild++) {
+            re2fx_tick();
+            for (int i = 0; i < RE2FX_PLAETZE; i++) {
+                const uint8_t *b = re2fx_platz(i);
+                if (!b || b[0x1C] != 0x0C || !w16(b, 0x18)) continue;
+                if (w16(b, 0x42) != r42[i]) { kipp++; r42[i] = w16(b, 0x42); }
+                int dx = (int16_t)w16(b, 0x34) - (int16_t)w16(b, 0x2C); if (dx < 0) dx = -dx;
+                if (dx > max_dx) max_dx = dx;
+            }
+            int nq = re2fx_quads(&cam, 160, 120, 512, 0, NULL, NULL, q, 128);
+            for (int k = 0; k < nq; k++) {
+                const uint8_t *b = re2fx_platz(q[k].platz);
+                if (!b || b[0x1C] != 0x0C) continue;
+                quads++;
+                if (q[k].u1 > 256 || q[k].v1 > 120 || q[k].code != 0x2C) uv_aus++;
+            }
+        }
+        CHECK(federn_zaehlen() == 0, "N3: nach %d Bildern leben noch %d Federn (Op 5 @0x8001e070 -> Op 35 @0x80020504-0c)", bild, federn_zaehlen());
+        CHECK(bild > 30, "N3: Federn schon nach %d Bildern weg (Start y %d, Boden 0)", bild, (int)y_start);
+        CHECK(re2fx_op_zaehler(34) > 0 && re2fx_op_zaehler(16) >= (unsigned)nf && re2fx_op_zaehler(5) > 0 && re2fx_op_zaehler(35) >= (unsigned)nf,
+              "N3: Ops 34 %u / 16 %u / 5 %u / 35 %u", re2fx_op_zaehler(34), re2fx_op_zaehler(16), re2fx_op_zaehler(5), re2fx_op_zaehler(35));
+        CHECK(re2fx_op_unbekannt() == 0, "N3: %u unbekannte Ops", re2fx_op_unbekannt());
+        CHECK(kipp >= nf && max_dx > 200, "N3: Pendel: %d Richtungswechsel (+0x42 @0x800204b0-bc), groesster Schwung %d", kipp, max_dx);
+        CHECK(quads > 0 && uv_aus == 0, "N3: %d Feder-Quads, %d ausserhalb 256 x 120 / nicht Code 0x2C", quads, uv_aus);
+        printf("N-Messung: GIB %d Federn ab y %d, weg nach %d Bildern, Ops 34/16/5/35/36 = %u/%u/%u/%u/%u, Richtungswechsel %d, "
+               "groesster Schwung %d, Quads %d\n", nf, (int)y_start, bild, re2fx_op_zaehler(34), re2fx_op_zaehler(16),
+               re2fx_op_zaehler(5), re2fx_op_zaehler(35), re2fx_op_zaehler(36), kipp, max_dx, quads);
+    }
+    /* N4 Flug-Treffer: Browning w3 -> Zeile 3 -> 0x80102934 P0, 2..3 Federn (@0x80102a08-1c) */
+    e = kraehe_neu(-1500);
+    re15_re2crow_feder_zaehler(&f0, &g0, &s0);
+    e->state = 2; e->sub_state_1 = 3; e->sub_state_2 = 0; e->hp = 5;
+    kl[0] = e->x; kl[1] = e->y; kl[2] = e->z;
+    re15_re2crow_hurt_test(e, PL);
+    nf = federn_pruefen(kl, "N4 Treffer");
+    CHECK(nf >= 2 && nf <= 3, "N4: Flug-Treffer %d Federn (Soll 2..3 @0x80102a08-1c)", nf);
+    /* N4b Sturz: je Zaehler eine Feder (@0x80102a68-70, @0x80102a88-90) */
+    for (int t = 0; t < 6; t++) re15_re2crow_hurt_test(e, PL);
+    CHECK(federn_zaehlen() == nf + 2, "N4b: Sturz %d Federn (Soll %d + 2)", federn_zaehlen(), nf);
+    printf("N-Messung: Flug-Treffer %d Federn, mit Sturz %d\n", nf, federn_zaehlen());
+    /* N5 Launch: Remington w8 -> Zeile 7 -> 0x8010327C, 5..8 Federn (@0x801032f8-30c) */
+    e = kraehe_neu(-1500);
+    e->state = 2; e->sub_state_1 = 8; e->sub_state_2 = 0;
+    kl[0] = e->x; kl[1] = e->y; kl[2] = e->z;
+    re15_re2crow_hurt_test(e, PL);
+    nf = federn_pruefen(kl, "N5 Launch");
+    CHECK(nf >= 5 && nf <= 8, "N5: Launch %d Federn (Soll 5..8 @0x801032f8-30c)", nf);
+    printf("N-Messung: Launch %d Federn\n", nf);
+    /* N6 PORT-WAHL: Abheben P0 (@0x80100CA8-C4, 1/8) zieht die 4 Draws je Feder, zeichnet aber nicht */
+    e = kraehe_neu(0);
+    e->state = 0;
+    PL->x = 2500; PL->z = 2000;
+    e->ai_dist = 1500; re15_re2crow_tick(1);
+    re15_re2crow_feder_zaehler(&f0, &g0, &s0);
+    for (int k = 0; k < 400; k++) {
+        e->state = 1; e->sub_state_1 = 2; e->sub_state_2 = 0; e->sub_state_3 = 0; e->y = 0;
+        e->ai_dist = 1500;
+        re15_re2crow_tick(1);
+    }
+    re15_re2crow_feder_zaehler(&f1, &g1, &s1);
+    printf("N-Messung: Abheben 400 x: %u Flug-Federn gezogen, %u gezeichnet\n", f1 - f0, g1 - g0);
+    CHECK(f1 - f0 > 10 && g1 == g0 && federn_zaehlen() == 0,
+          "N6: Abheben: %u Flug-Federn gezogen, %u gezeichnet, %d lebend (Soll >10 / 0 / 0, PORT-WAHL)", f1 - f0, g1 - g0, federn_zaehlen());
+    re2fx_reset();
 }
 
 /* Modus 3: RE15_LACHE_LOG */
@@ -646,6 +900,68 @@ static int pruef_lache(const char *pfad, const char *art)
     if (!strcmp(art, "r15")) return (basis && pool_an && end_any && !falsche_tinte) ? 0 : 1;
     printf("FAIL: unbekannte Art %s\n", art);
     return 1;
+}
+
+/* Modus 4: <RE15_LACHE_LOG>.flecken (Nachbesserung 3, Abnahme 3 Mangel 2) */
+static int pruef_flecken(const char *pfad)
+{
+    FILE *f = fopen(pfad, "r");
+    if (!f) { printf("FAIL: kein Log %s\n", pfad); return 1; }
+    static char z[512];
+    int zeilen = 0, gut = 0, sichtbar = 0, fremd = 0, ohne_zeichnung = 0;
+    while (fgets(z, sizeof z, f)) {
+        unsigned fr, raum = 0; int fi, hx, hz, y, wx, wz, sb, gz = -1; char rgb[16];
+        int k = sscanf(z, "F=%u fleck=%d hx=%d hz=%d rgb=%6s y=%d w(%d,%d) sichtbar=%d gezeichnet=%d raum=%x",
+                       &fr, &fi, &hx, &hz, rgb, &y, &wx, &wz, &sb, &gz, &raum);
+        if (k < 9) continue;
+        zeilen++;
+        if (hx != 200 || hz != 200 || strcmp(rgb, "bf10bf")) { fremd++; continue; }
+        if (sb) sichtbar++;
+        if (sb && gz != 1) ohne_zeichnung++;
+        if (sb && gz == 1) gut++;
+    }
+    fclose(f);
+    printf("pruef_flecken: Zeilen %d, sichtbar %d, gezeichnet %d, sichtbar ohne Zeichnung %d, fremd %d\n",
+           zeilen, sichtbar, gut, ohne_zeichnung, fremd);
+    return (gut > 0 && !fremd && !ohne_zeichnung) ? 0 : 1;
+}
+
+/* Modus 5: RE15_FEDER_LOG (Nachbesserung 3, Abnahme 3 Mangel 1) */
+static int pruef_federn(const char *pfad, const char *anlass)
+{
+    char sp[600];
+    snprintf(sp, sizeof sp, "%s.spawn", pfad);
+    FILE *f = fopen(sp, "r");
+    if (!f) { printf("FAIL: kein Log %s\n", sp); return 1; }
+    static char z[512];
+    int saetze = 0, federn = 0, fern = 0, voll = 0, fuell = 0;
+    while (fgets(z, sizeof z, f)) {
+        unsigned fr; int slot, i, n, platz, ox, oy, oz, gier, kx, ky, kz, boden; char an[32];
+        if (sscanf(z, "F=%u slot=%d anlass=%31s i=%d/%d platz=%d ofs=(%d,%d,%d) gier=%d kraehe=(%d,%d,%d) boden=%d",
+                   &fr, &slot, an, &i, &n, &platz, &ox, &oy, &oz, &gier, &kx, &ky, &kz, &boden) != 14) continue;
+        if (strcmp(an, anlass)) continue;
+        federn++;
+        if (platz < 0 || platz >= RE2FX_PLAETZE) voll++;
+        if (ox - kx < -512 || ox - kx > 508 || oy - ky < -512 || oy - ky > 508 || oz - kz < -512 || oz - kz > 508) fern++;
+        if (i == n) { saetze++; if (!strcmp(anlass, "gib") && (n < 8 || n > 11)) fuell++; }
+    }
+    fclose(f);
+    f = fopen(pfad, "r");
+    int bilder = 0, gezeichnet = 0, tex = 1;
+    if (f) {
+        while (fgets(z, sizeof z, f)) {
+            unsigned fr; int leb, qu, gz, tx;
+            if (sscanf(z, "F=%u federn=%d quads=%d gezeichnet=%d tex=%d", &fr, &leb, &qu, &gz, &tx) != 5) continue;
+            bilder++;
+            if (gz > 0) gezeichnet++;
+            if (!tx) tex = 0;
+        }
+        fclose(f);
+    }
+    printf("pruef_federn %s: Saetze %d, Federn %d (nicht gespawnt %d, ausserhalb +-512 %d, Satzgroesse falsch %d), "
+           "Bilder mit Feder %d, davon gezeichnet %d, Bild geladen %d\n",
+           anlass, saetze, federn, voll, fern, fuell, bilder, gezeichnet, tex);
+    return (saetze > 0 && federn > 0 && !voll && !fern && !fuell && gezeichnet > 0 && tex) ? 0 : 1;
 }
 
 /* ---- Auswerter ---------------------------------------------------------------------------------------------- */
@@ -687,6 +1003,8 @@ int main(int argc, char **argv)
 {
     if (argc >= 4 && !strcmp(argv[1], "pruef_log")) return pruef_log(argv[2], argv[3]);
     if (argc >= 4 && !strcmp(argv[1], "pruef_lache")) return pruef_lache(argv[2], argv[3]);
+    if (argc >= 3 && !strcmp(argv[1], "pruef_flecken")) return pruef_flecken(argv[2]);
+    if (argc >= 4 && !strcmp(argv[1], "pruef_federn")) return pruef_federn(argv[2], argv[3]);
     test_bytes();
     test_re2();
     test_re15();
@@ -695,6 +1013,7 @@ int main(int argc, char **argv)
     test_hund();
     test_blutfarbe();
     test_lache();
+    test_federn();
     if (fails) { printf("%d Fehler\n", fails); return 1; }
     printf("OK unit_r41_spinnengore\n");
     return 0;

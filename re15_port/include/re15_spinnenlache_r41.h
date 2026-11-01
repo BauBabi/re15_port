@@ -53,7 +53,10 @@
 #define RE15_SPINNENLACHE_R15_TAKTE_3 0x78          /* @0x801154c4 */
 #define RE15_SPINNENLACHE_RE2_TAKTE   90            /* @0x80104eac */
 #define RE15_SPINNENLACHE_BABY_HALB   200           /* EMS26 @0x8010024c-50 */
-#define RE15_SPINNENLACHE_FLECKEN_MAX 50            /* RE2-Record-Pool: 50 Plaetze @0x800164a4 (`addiu v1,zero,50`) */
+#define RE15_SPINNENLACHE_FLECKEN_MAX 50            /* RE2-Record-Pool: 50 Plaetze. Belegen FUN_80016480 `addiu v1,zero,0x32`
+                                                     * @0x8001649c, Leeren FUN_8001633c `addiu s3,zero,0x32` @0x80016350,
+                                                     * Zeichnen FUN_8001699c `addiu s5,zero,0x32` @0x800169a4 (Nachbesserung 3,
+                                                     * Abnahme 3 Mangel 3: vorher falsch @0x800164a4 = `beqz v1`) */
 
 /* RE1.5-Gehirn. Eintritts-Phase (+0x7) der Leiche: Platzweg (Tabelle @0x80118f38 -> 0x80113ff8) 0, sonst 3. */
 uint8_t re15_spinnenlache_r15_eintritt(int platzweg);

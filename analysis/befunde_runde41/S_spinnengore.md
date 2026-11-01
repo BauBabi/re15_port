@@ -255,7 +255,7 @@ Gorilla 0x27 / 0x29          beide Flavors owner=RE1.5, kein Teil-Gore
 |---|---|---|---|---|---|
 | Zombie-Familie 0x10-0x13/0x16/0x18 | Kopf, kopflos, Zerfetzen, Oberkoerper, Beine (w7/8/19 nach unten), Spawn-Varianten | 92C4, 66FC, 7438, 8BEC, 9610, Arm-Abwurf, Brand/Saeure | alles ausser MC51-Beine | **MC51 nach unten -> 7438** (`re2z_death_zelle`, Zeile 18, Spalte % 3 == 0, Schalter RE15_KEIN_80PROZENT_GORE); Riegel J | Ganz-Zerplatzen durch Granate (Video Z08/Z11/Z24) hat weder RE1.5 noch RE2 als Mechanismus -> Gestaltung nach Bild, nicht gebaut (offen) |
 | Hund 0x20 | Blut/Lache (keine Teile; Sonde RE15 teile=0) | **Teile-Wurf 0x80104440**: 7 Parts {2,3,4,7,8,9,10} @0x80105680 driften dunkel weg (Zeilen 5,6,9,17,19) | Felder gesetzt, **nicht gezeichnet** (Bruecke kannte 0x20 nicht; Sonde bridge=0) | **Bruecke fuer 0x20**, beim Wurf geseedet (`re15_gore_r41_hund_bruecke`); Riegel K | RE2-Slots 7/10 haben kein RE1.5-Mesh (k_perm_dog -1): diese zwei Teile zeichnen nichts. Bild aus dem Fenster nicht gelungen (die Kamera zeigt den Tod nicht) -> offen |
-| Kraehe 0x21 | GIB 13 Knochen @0x80114a50 (versteckt nur) | GIB 0x80102CA0, 13 Parts fliegen (Bruecke seit R36) | ja (Sonde p40 0x01fff) | — | Feder-Sprite (Video K01) ohne Mechanismus in beiden -> offen |
+| Kraehe 0x21 | GIB 13 Knochen @0x80114a50 (versteckt nur) | GIB 0x80102CA0, 13 Parts fliegen (Bruecke seit R36) | ja (Sonde p40 0x01fff) | — | ~~Feder-Sprite (Video K01) ohne Mechanismus in beiden -> offen~~ **Berichtigt in Nachbesserung 3:** RE2 hat die Federn (EMOVL21_S0 FUN_80104678, GIB 8..11 `ori a1,v0,8` @0x80102ebc, Treffer 2..3 @0x80102a18-1c, Raumbank 0x0C `lui a0,0xc00 / ori a0,a0,0x800` @0x801046ec-f0). Seit Nachbesserung 3 gebaut (Abschnitt NB3) |
 | Spinne 0x25 | Krit-Bein, Platzen (Waffentabelle), Beine fliegen | Bein ab (FUN_80105BF0), Hinterleib (FUN_80104890), Babys | nur Babys + ESP | **alles gehoben** (Teil-Schritt 4) | RE2-Partikel FUN_801056DC an Teil-Matrizen: der Port spawnt am Ursprung (`re2s_gore`) -> offen |
 | Babyspinne 0x26 (nur RE2-Spawns) | — (RE1.5-0x26 = Feuer-Emitter) | kein Teil-Gore im Modul | — | — | — |
 | Zellenarm 0x1A | Hand ab (0x8010D5D0) | keiner | nein | — | Hand-ab gibt es nur im RE1.5-Writher; der laeuft nie (Entscheidung R35 H M1) -> offen, Nutzerfrage |
@@ -334,7 +334,9 @@ Bein-Abtrennen von RE2 und bei Krit. Belegt mit Bildern aus dem Fenster (Leon, E
    Teil-Matrix (+0x198 + 172*Teil). Die RE1.5-Blutsaetze der Hebung sitzen am Teil (`re15_enemy_fx19700`).
 5. **Hund-Teile-Wurf**: Bild aus dem echten Fenster fehlt (Kamera auf dem r35-Weg zeigt den Tod nicht). Unit K und
    Sonde belegen den Mechanismus. RE2-Slots 7/10 haben kein RE1.5-Mesh (k_perm_dog -1).
-6. **Kraehe, Feder-Sprite** (Video K01): Mechanismus fehlt in beiden Quellen, offen wie in S_video_gore.md.
+6. ~~**Kraehe, Feder-Sprite** (Video K01): Mechanismus fehlt in beiden Quellen, offen wie in S_video_gore.md.~~
+   **Berichtigt in Nachbesserung 3 (Abnahme 3, Mangel 1):** Die Einordnung war falsch. RE2 hat die Federn (EMOVL21_S0
+   FUN_80104678, `jal 0x8001bf10` @0x80104700), seit Nachbesserung 3 gebaut (Abschnitt NB3).
 7. **RE1.5-Spinnentod der schwachen Waffen** (0x8011461c, Clip 4, Phasen @0x80114b78-e04): Der Port nimmt weiter
    Clip 1. Das ist eine vorbestehende Verkuerzung, kein Gore.
 8. **Beta-Eigenheit, nicht geaendert**: Fliegende Teile, die mit vy 160..167 auf y = 0 aufschlagen, verschwinden
@@ -572,8 +574,14 @@ Zombie-Familie 0x10–0x13/0x16/0x18:
 
 Krähe 0x21:
 
-15. **Schwarze Fetzen und Federn, die liegen bleiben** (K01 B 1:11.8–1:15.8). Der Mechanismus fehlt in beiden Quellen
-    (wie bisher Offen 6).
+15. ~~**Schwarze Fetzen und Federn, die liegen bleiben** (K01 B 1:11.8–1:15.8). Der Mechanismus fehlt in beiden Quellen
+    (wie bisher Offen 6).~~
+    **Berichtigt in Nachbesserung 3 (Abnahme 3, Mangel 1):** Die Federn sind in RE2 belegt (FUN_80104678: GIB 8..11
+    @0x80102eb8-bc, Treffer 2..3 @0x80102a18-1c, Raumbank 0x0C) und seit Nachbesserung 3 gebaut (Abschnitt NB3). Offen bleibt
+    nur das **Liegenbleiben**: RE2 gibt die Feder frei, sobald sie unter den Boden faellt (Op 5 `slt v1,a0,v1` @0x8001e070 ->
+    step[2] = Op 35, `sb zero,0` / `sh zero,24` @0x80020504-0c). Die 13 GIB-Teile (die schwarzen Fetzen) verschwinden nach 29
+    Bildern bzw. beim zweiten Bodenkontakt (Runde 36, `test_r36_schuss_kraehe` C). Liegende Federn und Fetzen gibt es nur im
+    Video. Gestaltung nach Bild, nicht gebaut.
 
 Hund 0x20 und Birkin:
 
@@ -868,3 +876,259 @@ Punkt 1 der Liste ist berichtigt, siehe oben. Die Lache ist gebaut, offen sind n
 24. **Beobachtung, nicht von diesem Bau:** In der Kamera von ROOM2071 (Elza) fällt das Schattenviereck einer Leiche nahe
     der Kamera ganz weg, sobald eine Ecke vz < 64 hat (`main.c`, `if (_vz < 64) { nok = 0; break; }`). Das betrifft
     jeden Gegnerschatten. Ob das Original das Polygon ebenso verwirft, ist nicht geprüft.
+
+## Nachbesserung 3 (nach Abnahme 3, 2026-11-01)
+
+Mängel aus `S_abnahme_3.md`:
+
+1. Die Federn der Krähe 0x21 beim Tod und beim Treffer sind in RE2 belegt. Der Port zeichnete sie nicht, und das Dossier
+   ordnete sie dreimal als „Mechanismus fehlt in beiden Quellen“ ein (:258, :337, :575).
+2. Zwei Teile des Babyflecks hatten keinen Riegel: der Zeichner in `main.c` und das Leeren beim Raumwechsel.
+3. `RE15_SPINNENLACHE_FLECKEN_MAX 50` zitierte @0x800164a4 (`beqz v1`) statt @0x8001649c.
+
+Alle drei sind behoben. Die drei falschen Einordnungen sind oben durchgestrichen und berichtigt (Tabelle 5, Offen 6,
+Offen 15).
+
+Werkzeuge und Rohbilder liegen in `scratchpad/S_nb3/`:
+
+- `lauf.ps1`: Messlauf ohne Aufnahme, Messkopie `re15_pc_S41nb3m.exe`, nur die eigene PID.
+- `cap.ps1`: Aufnahme mit der Messkopie `re15_pc_S41nb3.exe`. Titel und Spielerwahl laufen über die echten Menüs
+  (`RE15_TITLE_CONFIRM_MS=1500`, `RE15_PSELECT_AUTO`, für Elza `_SWITCH`), danach `RE15_DEBUG_JUMP`. Der Renderer ist
+  beschleunigt, ohne AUTOSHOT und ohne SOFTWARE_RENDER. Aufgenommen wird per gdigrab am Fenster-Handle der eigenen PID mit
+  10 Bildern/s, beendet wird nur die eigene PID.
+- `esp0c.py`: Zerleger der Raum-ESP. `gegen.py`: die Gegenproben.
+
+Belege: `S_belege/nb3/k01…k05`.
+
+### NB3.1 RE der Krähenfeder
+
+Alle Stellen habe ich selbst disassembliert (`re2_disasm.py`, RE2 aus `info/re2leon`).
+
+**EMOVL21_S0 FUN_80104678(self, n), je Feder:**
+
+```
+8010469c jal 0x80015fe8 / 801046a4 sll v0,v0,24 / 801046a8 lw v1,56(s1) / 801046ac sra v0,v0,22 / 801046b8 sh v1,16(sp)   ; x
+801046b4 jal 0x80015fe8 / 801046bc sll 24 / 801046c0 lw v1,60(s1) / 801046c4 sra 22 / 801046d0 sh v1,18(sp)              ; y
+801046cc jal 0x80015fe8 / 801046d4 sll 24 / 801046d8 lw v1,64(s1) / 801046dc sra 22 / 801046e8 sh v1,20(sp)              ; z
+801046e4 jal 0x80015fe8 / 801046f4 sll a1,v0,4                                                                             ; Gier
+801046ec lui a0,0xc00 / 801046f0 ori a0,a0,0x800           ; Raumbank 0x0C, Sub 0, Skala 0x800
+801046f8 lui a2,0x800a / 801046fc addiu a2,a2,-9404        ; Matrix 0x8009DB44 = Einheitsmatrix
+80104700 jal 0x8001bf10 / 80104704 addiu a3,sp,16          ; SVECTOR = Lage + (s8 * 4)
+```
+
+**Ort:** self+0x38/+0x3C/+0x40 ist die Lage der Krähe. Das +0x3C ist ihre Höhe: `lw v0,60(s0)` gegen Boden - 250
+@0x80102b3c-44, `sw s1,60(s0)` @0x80102b60. Die Federn entstehen also um den Körper der Krähe (±512), mit der
+Einheitsmatrix. Eine Teil-Matrix ist nicht beteiligt, der Fußpunkt auch nicht. Der Auftrag nannte „Teil-Matrix“; die Bytes
+sagen Aktor-Lage, und so ist es gebaut.
+
+**Aufrufer mit Federzahl:**
+
+- GIB: `jal 0x80104678` / `ori a1,v0,8` @0x80102eb8-bc, das sind 8..11 Federn.
+- Flug-Treffer: `jal 0x80104678` / `ori a1,v0,2` @0x80102a18-1c, das sind 2..3 Federn.
+- Sturz nach dem Treffer: je eine @0x80102a68-70 und @0x80102a88-90.
+- Boden-Treffer: 3..6 @0x80103030-44.
+- Launch: 5..8 @0x801032f8-30c.
+- Picken am Spieler: 1/4 @0x80102630-4c.
+- Abheben @0x80100ca8-c4 und @0x80100d9c-b0, Kreisen @0x80101220-34, Trudeln @0x801019a4-c0 und Vorbeiflug
+  @0x80102690-ac, je 1/8.
+
+**RE2 PSX.EXE FUN_8001bf10:** Der Status ist 0xA003 (`ori v0,zero,0xa003` / `sh v0,24(t0)` @0x8001bfa8-ac), a3 liefert zwei
+Worte nach +0x2C/+0x30 (@0x8001bfe8-f8). Bis zum `jr ra` @0x8001c21c steht kein `jal`, der Spawner zieht also keine
+Zufallszahl. Das ist im Port `re2fx_spawn_sofort`.
+
+**Raumbank 0x0C** steht in `info/re2leon/PL0/RDT/room1090/effect.esp`. Das ist bytegleich mit `shared_assets/RE2/GLAS1090.ESP`,
+das der Port seit Runde 35 in jedem Raum registriert. Die Id-Liste lautet `29 10 11 12 13 14 0C 19`, der Bankkopf steht bei
+@0x994: `1d 00 10 00 40 78 00 00`, also 29 Anim-Einträge, 16 Zellen und CLUT 0x7840. Skript Sub 0 @0xAD4, 1 Teil, 1 Step:
+
+```
+22 10 23 24 00 10 00 10 00 fe 00 22 00 00 00 00 00 00 01 00 01 00 01 00
+Op A 34, Op B 16, step[2] 35, step[3] 36, Aspekt 0x1000/0x1000, Beschl. y -2, +0x0B 0x22, +0x12 = 1
+```
+
+- Die Anim-Einträge 0..13 sind die Zellen 0..13, je 3 Bilder. Die Einträge 14..27 sind ein Flattern, Eintrag 28 springt
+  mit `ff` auf Eintrag 0.
+- Die Zellen sind 40 x 40, Zelle 13 ist 48 x 48 (UV-Tafel @0xA84).
+- Bild: `room1090/esp0C.tim`, bytegleich mit `room2110/esp0C.tim` und in ROOM1090.RDT @0x336C8. Es ist 4 bpp, 256 x 120,
+  mit der CLUT `0000 39ad 316b 2929 20e7 …` (schwarzgrau).
+- 0x0C steht in den Raum-ESPs von room1090 und room2110, den Krähenräumen nach dem RDT-Zensus (kind 0x21: ROOM1090 ×28,
+  ROOM2110 ×9, `test_re2_crow_ai.c`). Dazu kommen A070, A1B0, B0F0, B120, B160 und E010.
+
+**Die Ops (Tafel @0x8009d868):** [16] 0x8001f128, [34] 0x80020364, [35] 0x800204f8, [36] 0x80020510, [5] 0x8001df90.
+
+- **Op 16** (im Port schon vorhanden): `jal 0x8004fba0` @0x8001f15c, Boden nach +0x14, Op A := +0x0B (`lbu a0,11` /
+  `sb a0,0` @0x8001f170/78), Op B := 5 (@0x8001f184/8c).
+- **Op 34**, das Pendel im Update-Pass:
+  - Bei +0x12 == 0 und vy <= 0 setzt es +0x12 := 1 (`bgtz` / `sh 1,18` @0x800204d4-e4).
+  - Bei +0x12 != 0 und vy < +0x4A (`slt` @0x80020390) kommt der Wurf. vx = (s8)+0x42 · (r % 70 + 50) (Magic 0xea0ea0eb
+    @0x800203a4-c0, `sh a2,12` @0x800203f8). vz = (s8)+0x42 · (r % 50) (0x51eb851f, `sh a2,16` @0x80020448). vy = r % 20
+    + 40 (0x66666667, @0x8002044c-78). Danach +0x12 := 0 (@0x800204a8), +0x42 := -(s8)+0x42 als Halbwort
+    (@0x800204b0-bc) und +0x4A := (-3·vy)/10 (@0x80020484-d0).
+- **Op 5**, Boden und Wasser (im Port schon vorhanden):
+  - Liegt die Feder unter dem Boden (`slt v1,a0,v1` @0x8001e070), kommt step[2] = Op 35.
+  - Bei Kontakt auf gleicher Höhe kommt step[3] = Op 36.
+- **Op 35**: `sb zero,0(v0)` @0x80020504 und `sh zero,24(v0)` @0x8002050c, der Platz ist frei. **Die Feder bleibt in RE2
+  also nicht liegen.**
+- **Op 36**: derselbe Wurf ohne +0x12, dazu Weltlage := Vorbild-Lage (`lw a2,60` / `lhu a3,64` @0x8002061c-20,
+  `sw a2,52` / `sh a3,56` @0x8002063c-40).
+- **Physik** (@0x8001d70c-798): lokal += v, danach v += Beschleunigung, ohne Skalierung. Die Feder schwingt deshalb weit
+  (50..119 Einheiten je Bild quer, Richtung kippt bei jedem Wurf) und fällt dabei langsam.
+
+### NB3.2 Bau
+
+- `engine/src/re2_fx.c`: Op 34, 35 und 36 nach den Bytes oben (Block „RUNDE 41 SPUR S“). Die Ops 16 und 5 gab es schon.
+- `engine/src/enemy_ai_re2_crow.c re2c_feather(e, n, zeichnen, anlass)`:
+  - Die vier Zufallszahlen je Feder werden jetzt benutzt: Versatz `(s8)r · 4` auf x/y/z, Gier `r << 4`. Danach kommt
+    `re2fx_spawn_sofort(0x0C000800, Gier, Einheitsmatrix, SVECTOR)`.
+  - Messschiene `RE15_FEDER_LOG=<datei>`: `<datei>.spawn`, eine Zeile je Feder.
+  - Zähler `re15_re2crow_feder_zaehler` für den Riegel.
+- `platform/pc/src/glas1120_pc.c`:
+  - Der Zeichner der Raum-ESP room1090 bekommt Bank 0x0C als sechsten Streifen (v 200..319, CLUT-Zeile 5) mit
+    `GLAS1090_0C.TIM`. Fehlt die Datei, fehlen nur die Federn, das Glas bleibt.
+  - Messschiene `RE15_FEDER_LOG`: je Bild lebende Federplätze, Weltlage, Quads und gezeichnete Quads.
+- `platform/pc/src/gator_fx_r41_pc.c`: Bank 0x0C zählt dort zum Glas-Zeichner. Das ist nur die Zählung, gezeichnet wird sie
+  dort nicht.
+- `shared_assets/RE2/GLAS1090_0C.TIM` (neu, 15424 B, md5 170131b28e4936781d87122daefec407):
+  - Erzeugt mit `tools/r35_fenster/glas1090_extrakt.py`, der jetzt auch esp0C.tim kopiert und gegen ROOM1090.RDT prüft.
+  - Die übrigen GLAS1090-Dateien schreibt das Werkzeug bytegleich neu, `git status` zeigt sie nicht.
+  - `release/make_package.sh` prüft die Datei im Paket.
+- **PORT-WAHL:**
+  - Gezeichnet wird die Feder nur an den Treffer-, Tod- und Griff-Stellen: Flug-Treffer, Sturz, GIB, Boden, Launch und
+    Picken.
+  - An den fünf reinen Flug-Stellen (Abheben 2×, Kreisen, Trudeln, Vorbeiflug) zeichnet RE2 sie auch, der Port nicht. Dort
+    bleiben nur die vier Zufallszahlen je Feder.
+  - Grund: die Nutzerregel „RE2-KI = Angriffsmuster, Treffer usw.“. Dazu kommt der frühere Nutzerbefund „Bluteffekte ohne
+    Treffer bei den Krähen“ (Fix 2026-08-23).
+  - Die Federn hängen **nicht** am Schalter `RE15_KEIN_80PROZENT_GORE`. Es ist RE2-eigenes Gore (wie der Hund-Teilewurf).
+- **Folge für den RE2-Zufallsstrom:** Op 34 und Op 36 ziehen je Wurf 3 Zahlen aus `re15_re2_rand`, demselben Strom, den die
+  RE2-Gehirne benutzen. Das ist in RE2 genauso (FUN_80015FE8). Nach einem Krähentreffer verschiebt sich also die
+  Zufallsfolge der übrigen RE2-Gegner im Raum gegenüber dem Stand vorher.
+
+### NB3.3 Messung
+
+- **Vorher (Stand 8430ceac7, am Code):** `re2c_feather` zog nur die vier Zufallszahlen und zeichnete nichts. Das bestätigt
+  die Abnahme 3, Abschnitt 5.1. Dasselbe Bild im Fenster liefert die Gegenprobe A (unten, `k03`).
+- **Exe-Messlauf** `m_k_leon` (Weg der Runde 36: ROOM10C0, Leon 3522,5556, sitzende Krähe Platz 3 bei (5100,0,3600),
+  Redhawk tief):
+  - F19 GIB mit 8 Federn auf den Plätzen 95..88, alle ±512 um (5100,0,3600).
+  - Weil die Krähe auf dem Boden sitzt (y 0), fallen 6 der 8 Federn im ersten Bild unter den Boden und werden frei (Op 35).
+  - Die übrigen zwei leben noch 2 bzw. 8 Bilder.
+- **Fliegende Krähe** `m_k_flug` / `m_k_elza`: Leon bzw. Elza bei (4300,5000) in ROOM10C0 bzw. 10C1, die Krähe greift an,
+  Redhawk.
+  - F103 GIB mit 8 Federn um die Krähe bei (5453,-2880,2175), zum Beispiel (5541,-3000,2667) und (5765,-2496,1679).
+  - Danach sind es 159 Bilder mit lebenden Federn. In jedem Bild sind alle Quads gezeichnet (`gezeichnet = quads`,
+    `tex=1`).
+  - Leon und Elza laufen bitgleich (gleiche Saat).
+- **Fenster** (`cap.ps1`, `w_leon_flug` / `w_elza_flug`, derselbe Weg):
+  - `k01` (Leon) und `k02` (Elza), Aufnahmebilder 282–308: In Bild 282 zerfällt die Krähe in die dunkelroten Teile mit
+    rotem Blut. Ab Bild 284 fliegen schwarze Federn um die Stelle, an der sie platzte.
+  - Bild 290–296: Die Federn schwingen quer durch den Gang (rechts am Fenster eine große Feder).
+  - Bild 298–308: Sie sinken zum Boden und verschwinden dort.
+  - `k04` ist der Ausschnitt aus Bild 298 in voller Auflösung: eine schwarze Feder mit Kiel, das Bild aus esp0C.tim.
+  - `k05` ist der Auszug aus `feder.log` und `feder.log.spawn` desselben Laufs.
+- **Gegenprobe im Fenster** (`k03`): derselbe Weg und Takt mit dem Bau ohne Spawn (Gegenprobe A). Die Krähe platzt in
+  Bild 282 genauso, aber es fliegen keine Federn. `feder.log` ist leer, und in `.spawn` steht `platz=-1`.
+
+### NB3.4 Mangel 2: Riegel für den Babyfleck
+
+- **Zeichner** `main.c`, Flecken-Schleife: Die Messzeile in `<RE15_LACHE_LOG>.flecken` steht jetzt **hinter** dem
+  Einreihen.
+  - Sie meldet `gezeichnet=`, das ist der Zuwachs der Schatten-Warteschlange um den Aufruf `re15_render_shadow_quad_c`.
+    Dafür gibt es den neuen Getter `re15_render_pc_shadow_quads_eingereiht` in `render_pc.c`.
+  - Dazu kommt `raum=`.
+  - Fehlt der Zeichenaufruf, steht `gezeichnet=0`. Fehlt die Schleife, fehlt die Datei.
+- **Integration** `integration_r41_spinnengore`, neuer Lauf **BT**: Leon, ROOM2070, Redhawk, `RE15_BABYTOD_TEST=200`.
+  - `pruef_flecken` verlangt mindestens eine Zeile `hx=200 hz=200 rgb=bf10bf sichtbar=1 gezeichnet=1`.
+  - Keine Zeile darf `sichtbar=1` ohne Zeichnung haben, und keine darf eine fremde Tinte oder ein fremdes Maß haben.
+  - Gemessen: 3000 Zeilen, 1200 sichtbar, 1200 gezeichnet, 0 ohne Zeichnung, 0 fremd.
+- **Unit** `unit_r41_spinnengore`:
+  - **M7b**: Der Raumwechsel läuft über `re15_re2z_rng_reset()`, nicht mehr über `re15_spinnenlache_raum_reset()` direkt.
+  - **M7c**: Ein neuer Fleck, dann `re15_actor_init()`. Der Fleck muss weg sein.
+  - **M7d**: Gegenrichtung. 30 Spieltakte `re15_enemy_ai_run_all(1)` ohne Raumwechsel lassen den Fleck liegen.
+
+### NB3.5 Mangel 3
+
+`include/re15_spinnenlache_r41.h:56` zitiert jetzt die drei Stellen, alle selbst gelesen:
+
+- FUN_80016480 `addiu v1,zero,50` @0x8001649c (Belegen);
+- FUN_8001633c `addiu s3,zero,50` @0x80016350 (Leeren);
+- FUN_8001699c `addiu s5,zero,50` @0x800169a4 (Zeichnen).
+
+Die alte Adresse @0x800164a4 (`beq v1,zero`) steht nur noch als „vorher falsch“ im Kommentar. Im Unit-Test gab es keinen Pin
+auf @0x800164a4 (`grep`).
+
+### NB3.6 Riegel, Gegenproben, Tests
+
+**Unit `unit_r41_spinnengore`, neuer Teil N:**
+
+- **N1, Byte-Pins:**
+  - EMOVL21_S0: @0x801046a4/a8/ac/c0/d8/ec/f0/f4/f8/fc, @0x80104700/04, @0x80102eb8/bc, @0x80102a18/1c, @0x80102b3c.
+  - RE2 PSX.EXE: Op-Tafel [16]/[34]/[35]/[36], @0x80020504, @0x8002050c, @0x8001e070, @0x8001bfa8, @0x800204bc.
+  - GLAS1090.ESP: Bank 0x0C an Id-Platz 6, Kopf 0x994, CLUT 0x7840, die 24 Step-Bytes.
+  - GLAS1090_0C.TIM ist bytegleich mit room1090/esp0C.tim und hat 256 x 120.
+- **N2, GIB w7:** 8..11 Federplätze. Je Platz gilt: Status A003, Op 34/16, Sub 0, Skala 0x800, Versatz s8·4 um die Lage im
+  Spawn-Takt, Gier rand<<4, Einheitsmatrix.
+- **N3, Fall:** Ops 34/16/5/35, keine unbekannte Op. Die Richtung kippt. Alle Federn sind frei, sobald sie unter dem Boden
+  sind, und die Quads liegen im Bild 256 x 120.
+  - Gemessen: 11 Federn ab y -1620, nach 106 Bildern weg, Ops 34/16/5/35 = 868/11/857/11, 34 Richtungswechsel, größter
+    Schwung 3573, 857 Quads.
+- **N4, Flug-Treffer w3:** 3 Federn, mit Sturz 5.
+- **N5, Launch w8:** 7 Federn.
+- **N6, PORT-WAHL:** 400 × Abheben ziehen 45 Flug-Federn, davon ist keine gezeichnet.
+
+**Gegenprobe A+C** (`gegen.py ac`; A: `re2fx_spawn_sofort` in `re2c_feather` entfernt; C(e): `re15_render_shadow_quad_c`
+in der Flecken-Schleife entfernt; C(f): `re15_spinnenlache_raum_reset()` in `re15_re2z_rng_reset` entfernt):
+
+- Unit **14 Fehler**: M7b, M7c ×2, M7d ×2, M8 (die nicht geleerten Flecken laufen in die Folgeprüfungen weiter), N2, N3 ×4,
+  N4, N4b, N5.
+- Integration **rot**:
+  - BT: `pruef_flecken: Zeilen 3000, sichtbar 1200, gezeichnet 0, sichtbar ohne Zeichnung 1200`.
+  - K und KE: `Federn 8 (nicht gespawnt 8 …), Bilder mit Feder 0`.
+  - Die übrigen fünf Läufe bleiben grün, sie hängen nicht an diesen Stellen.
+
+**Gegenprobe B** (`gegen.py b`; Ops 34/35/36 aus der Tafel entfernt, Abheben @0x80100CA8-C4 zeichnet): Unit **4 Fehler**.
+
+- N3: nach 900 Bildern leben noch 11 Federn, 14097 unbekannte Ops, 0 Richtungswechsel.
+- N6: 45 Flug-Federn gezeichnet.
+
+Danach habe ich die Dateien mit `gegen.py restore` zurückgeholt (`filecmp` gleich, kein `GEGENPROBE` im Baum) und neu gebaut.
+
+**Tests auf dem wiederhergestellten Stand** (neu gebaut mit `local_build.sh build`, ctest aus PowerShell mit
+`C:\msys64\mingw64\bin` vorn im PATH):
+
+- **Unit-Zielauswahl, 236/236 grün** (`-j 6`, 323 s). Muster `^(unit|probe)_.*(spinn|spider|baby|crow|kraehe|gore|lache|
+  schatten|corpse|re2z|esp|fx|plattform|glas|fenster|gator|werfer|granate|redhawk|schuss|hund1121|r41_)`. Darin sind:
+  - Spinne: `unit_r41_spinnengore`, `unit_re2_spider_ai`, `unit_re2_baby_spider_dmg`.
+  - Krähe: `unit_re2_crow_ai`, `unit_re2_crow_kill_cmd3`, `unit_re2_crow_se_bank`, `unit_re2_crow_shadow_release`,
+    `unit_crow_ai`, `unit_crow_death_corpse`, `unit_crow_fixes`, `unit_r36_schuss_kraehe`, `unit_r36_kleidung_kraehe`,
+    `unit_r39_heliport1171_kraehen`, `unit_re2_hit_repeat_crow_spider`.
+  - Glas und Fenster: `unit_r35_fenster_*`, `unit_r36_elza_fenster`, `unit_r39_dining1141_fenster`.
+  - RE2-FX: `unit_r34_re2fx*`, `unit_esp_parse`.
+  - Schatten: `unit_r36_pri_schatten`.
+  - Alle `unit_r41_*`.
+- **Integration einzeln nacheinander, 6/6 grün** (371 s):
+  - `integration_r35_fenster` 26,5 s (Glas und Fensterkrähe, gleicher Zeichner);
+  - `integration_r35_entladen_j` 56,9 s (Krähentod ROOM10C0);
+  - `integration_r36_pri_schatten` 28,6 s (Schatten-Warteschlange);
+  - `integration_r37_elzaems_elza10c1kraehe` 42,3 s und `integration_r37_elzaems_leon10c0kraehe` 42,5 s;
+  - `integration_r41_spinnengore` 174,5 s (mit BT, K, KE).
+
+### NB3.7 Für die Release Notes
+
+**Krähen: Federn wie in Resident Evil 2.** Unter der Standard-KI fliegen beim Tod einer Krähe 8 bis 11 schwarze Federn und
+sinken pendelnd zu Boden, bei einem Treffer im Flug 2 bis 3, beim Absturz zwei weitere. Effekt, Bild und Flugbahn stammen
+aus RE2 (room1090, Effekt 0x0C, FUN_80104678 @0x801046ec). Am Boden verschwinden die Federn wie in RE2. Beim reinen
+Fliegen verliert die Krähe im Port keine Federn (in RE2 schon).
+
+### NB3.8 Offen (Ergänzung)
+
+25. **Federn an den Flug-Stellen** (Abheben, Kreisen, Trudeln, Vorbeiflug, je 1/8 in RE2): PORT-WAHL nicht gezeichnet
+    (NB3.2). Ob der Port sie zeigen soll, ist eine Nutzerentscheidung.
+26. **Liegende Federn und Fetzen** (Video K01): In RE2 nicht vorhanden (Op 35 @0x80020504-0c, GIB-Teile nach 29 Bildern
+    weg). Gestaltung nach Bild, nicht gebaut (Offen 15, berichtigt).
+27. **Die Krähe auf dem Boden** (Weg der Runde 36, y 0): Die Federn entstehen ±512 um y 0. Die Hälfte liegt sofort unter dem
+    Boden und wird im ersten Bild frei. Das ist byte-true (Lage +0x3C, Op 5/35), sieht aber dünner aus als bei der
+    fliegenden Krähe.
+28. **Wasser:** Op 5 spawnt im Wasser die Raumbank 0x1A (`lui a0,0x1a01` @0x8001dfec). Die gibt es in GLAS1090.ESP nicht.
+    Die Feder verschwindet dort ohne Spritzer. In den Krähenräumen des Ports gibt es kein Wasser.
+29. **ROOM2090/2091:** Dort ist die Raum-ESP ROOM40A0 statt GLAS1090 registriert (Spur G). Bank 0x0C fehlt, deshalb gibt es
+    dort keine Federn. In diesen Räumen gibt es keine Krähen.

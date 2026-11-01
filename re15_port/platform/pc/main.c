@@ -9921,20 +9921,28 @@ re_title:;
                     fsx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
                     fsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
                 }
+                /* Nachbesserung 3 (Abnahme 3 Mangel 2): die Messzeile steht HINTER dem Einreihen und meldet als
+                 * `gezeichnet=`, ob der Renderer das Viereck angenommen hat (Zaehler der Schatten-Warteschlange vorher/
+                 * nachher). So faellt der Riegel integration_r41_spinnengore (Lauf BT) auch, wenn nur der Zeichenaufruf fehlt. */
+                int fgez = 0;
+                if (fok) {
+                    extern int re15_render_pc_shadow_quads_eingereiht(void);
+                    const int vor = re15_render_pc_shadow_quads_eingereiht();
+                    re15_render_pc_shadow_tiefe(fvz_summe, 0);
+                    re15_render_shadow_quad_c(fsx[0], fsy[0], fsx[1], fsy[1], fsx[2], fsy[2], fsx[3], fsy[3],
+                                              frgb[0], frgb[1], frgb[2]);
+                    fgez = re15_render_pc_shadow_quads_eingereiht() - vor;
+                }
                 {   /* RE15_LACHE_LOG: Messschiene, kein Verhalten */
                     static FILE *s_fl = NULL; static int s_fl_init = 0;
                     if (!s_fl_init) { s_fl_init = 1; const char *p = getenv("RE15_LACHE_LOG"); if (p && *p) { char n2[600]; snprintf(n2, sizeof n2, "%s.flecken", p); s_fl = fopen(n2, "w"); } }
                     if (s_fl) {
-                        fprintf(s_fl, "F=%u fleck=%d hx=%d hz=%d rgb=%02x%02x%02x y=%d w(%d,%d) sichtbar=%d\n",
+                        fprintf(s_fl, "F=%u fleck=%d hx=%d hz=%d rgb=%02x%02x%02x y=%d w(%d,%d) sichtbar=%d gezeichnet=%d raum=%04X\n",
                                 (unsigned)g_engine.frame_count, fi, (int)fhx, (int)fhz, frgb[0], frgb[1], frgb[2],
-                                (int)fpos[1], (int)fpos[0], (int)fpos[2], fok);
+                                (int)fpos[1], (int)fpos[0], (int)fpos[2], fok, fgez, (unsigned)g_current_room_id & 0xFFFFu);
                         fflush(s_fl);
                     }
                 }
-                if (!fok) continue;
-                re15_render_pc_shadow_tiefe(fvz_summe, 0);
-                re15_render_shadow_quad_c(fsx[0], fsy[0], fsx[1], fsy[1], fsx[2], fsy[2], fsx[3], fsy[3],
-                                          frgb[0], frgb[1], frgb[2]);
             }
 
             for (int npc_i = 1; npc_i < RE15_ACTOR_MAX; npc_i++) {
