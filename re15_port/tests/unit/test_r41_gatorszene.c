@@ -327,7 +327,8 @@ static void teil_programme(void)
             }
             pc += sz;
         }
-        PRUEF(em == 8 && oben == 8, "P2: %d Sce_em_set, davon %d Typ 0x16 grid 0x0d Band 8 y -14400 oestlich der Absatzwand x -16650",
+        /* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 3 "nur 5"): 5 statt 8 Saetze (gatorszene_r41.c GSZ_2080_N_ZOMBIES) */
+        PRUEF(em == 5 && oben == 5, "P2: %d Sce_em_set, davon %d Typ 0x16 grid 0x0d Band 8 y -14400 oestlich der Absatzwand x -16650",
               em, oben);
         static const uint8_t cut2[2] = { 0x29, 0x02 };
         PRUEF(hat(p2, n2, cut2, 2) >= 0, "P2: Cut 2 (ROOM2080 RID @0x0A0)");
@@ -863,7 +864,7 @@ static void teil_szene(int elza)
         n16++;
         if (abs(a->x - x0[i]) + abs(a->z - z0[i]) > 300) bewegt++;
     }
-    PRUEF(n16 == 8, "8 Zombies Typ 0x16 in der Einstellung (ist %d)", n16);
+    PRUEF(n16 == 5, "5 Zombies Typ 0x16 in der Einstellung (ist %d; Runde 41 Spur G2 Punkt 3, vorher 8)", n16);
     PRUEF(oben && westlich == 0, "alle Bilder: Zombies auf y -14400 (Band 8), keiner westlich der Absatzwand x -16650 (%d)", westlich);
     /* Gehen braucht die Zombie-Bank (Clips + Wurzelbahn), die nur der Lader der Plattform haengt - das Laufen misst
      * integration_r41_gatorszene_* am state.log der exe (Lauf lad4: 8 von 8 bewegt, z.B. (-9900,-14700) -> (-10732,-18661)). */
@@ -885,10 +886,11 @@ static void teil_szene(int elza)
         if (re15_gatorszene_r41_zustand() == RE15_GSZ_RUECKKEHR && g && re15_gator_boss_untergetaucht(g)) unter_vor++;
     }
     PRUEF(unter_vor > 0, "vor dem Signal untergetaucht (%d Bilder)", unter_vor);
-    static const char arten[] = "SGGKGGVGGG";
-    static const int  werte[] = { -1, 1, 2, 13, 3, 4, -1, 5, 6, 7 };
+    /* Runde 41 Spur G2 (Punkt 2): Wurf W (Clip 5 Bild 57), Fang F (75), verschlungen V (77) liegen vor dem Kauen G4 - vorher V mit dem Clip-5-Ende */
+    static const char arten[] = "SGGKGWFVGGGG";
+    static const int  werte[] = { -1, 1, 2, 13, 3, 57, 75, 77, 4, 5, 6, 7 };
     int vor = -1, reihe = 1;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 12; i++) {
         int j = -1;
         for (int k = vor + 1; k < re15_gatorszene_r41_folge_n(); k++) {
             const re15_gsz_folge_t *q = re15_gatorszene_r41_folge(k);
@@ -897,7 +899,7 @@ static void teil_szene(int elza)
         if (j < 0) { reihe = 0; printf("    fehlt: %c %d\n", arten[i], werte[i]); break; }
         vor = j;
     }
-    PRUEF(reihe, "Ablauf S, G1 Durchbruch, G2 Biss, K13 Koppelbild, G3 Schuetteln, G4 Kauen, V verschlungen, G5 Wende, G6 Schrei, G7 Ende");
+    PRUEF(reihe, "Ablauf S, G1 Durchbruch, G2 Biss, K13 Koppelbild, G3 Schuetteln, W57 Wurf, F75 Fang, V77 verschlungen, G4 Kauen, G5 Wende, G6 Schrei, G7 Ende");
     PRUEF(re15_gatorszene_r41_zustand() == RE15_GSZ_KAMPF, "Zustand KAMPF nach %d Bildern", f);
     for (int k = 0; k < 120; k++) frame(0, 0);
     PRUEF(re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN) == 1, "(9,110) = 1 (Szene gesehen)");
