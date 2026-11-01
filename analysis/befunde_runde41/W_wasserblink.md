@@ -142,7 +142,7 @@ alle bei x 130..184.
 |---|---|---|---|---|
 | 3 | (-5540,-21205) @0x01B40 | innen | (214,-127) → (199,127) → (197,165) | faellt durch die rechte Bildhaelfte auf den Sims bzw. die Kanalkante |
 | 5 | (-14476,-23171) @0x01B6A | innen | (118,-26) → (124,94) → (125,116) | **faellt in den Kanal**, hinten |
-| 7 | (-23020,-25755) @0x01B94 | innen | (84,2) → (91,83) → (93,99) | faellt hinten am linken Steg, vor der Stirnwand (Steg-Projektion: x -27000 auf y 80 = Fuss der Stirnwand), durch Leons Stelle der Marke |
+| 7 | (-23020,-25755) @0x01B94 | innen | (84,2) → (91,83) → (93,99) | faellt hinten am linken Steg, vor der Stirnwand. Der Steg bei x -27000 projiziert auf y 80, dort liegt im Bild etwa der Fuss der Stirnwand (abgelesen). In der Marke faellt er genau hinter Leon |
 | 0, 2, 4, 6 | z > -18500 | aussen | — | vom Regions-Test verworfen |
 | 1 | (3635,-24307) | aussen | hinter der Kamera | — |
 
@@ -156,7 +156,9 @@ Regions-Test und zeichnet in Cut 2 genau die Punkte 3, 5 und 7 (Abschnitt 5.1).
 **(d) Was der Port tut.** Die Tropfen haengen bei y -10018..-10000 und fallen nie (Abschnitt 5.1). Zwei Port-Stellen sind die Ursache:
 * `re15_esp.c` `esp_fx_spawn_rows_one` setzt `f->floor_y = y`, also die Spawnhoehe. Diese Sammelklemme setzt den Tropfen im
   ersten Bild von Zeile 2 auf den "Boden" -10000 zurueck, danach zittert er mit halber Rueckgabe, siehe Log
-  `xlat=(0,-5,0) drift=(0,5,0)`. Das Original hat im Takt keinen Boden (@0x8001a2fc-388). Den Boden kennt nur Routine 13.
+  `xlat=(0,-5,0) drift=(0,5,0)`. Das Original hat im Takt keinen Boden. Selbst disassembliert: @0x8001a2e8-388 prueft
+  Flags-Bit 5 (`andi v0,v0,0x20` @0x8001a2f0), rechnet xlat += vel (@0x8001a324-360) und vel += accel (@0x8001a354-388),
+  ohne jeden Vergleich. Den Boden kennt nur Routine 13.
   Fuer Effekt 0x0B kennt `re15_esp.c` dasselbe Muster schon (Routine 41, `ESP_KEIN_BODEN`).
 * `esp_fx_dispatch` hat fuer Routine 13 keinen Fall und landet im `default: break;`. Es gibt also keinen Bodentest und keine
   Aufschlag-Anim 0x26.
@@ -263,6 +265,7 @@ kein SOFTWARE_RENDER). Messkopien `re15_wb1_vorher.exe` und `re15_wb1_nachher.ex
 | `.text` von `raumlicht.c.obj` und `test_raumlicht.c.obj` (objdump -d) | — | **gleich** |
 | exe `.text` `.data` `.pdata` `.xdata` `.idata` `.bss` | — | **gleich**. 9 Bytes weichen ab: PE-Zeitstempel und Pruefsumme sowie die `__TIME__`-Zeichenkette in `.rdata` (18:00:09 → 20:28:39) |
 | ctest `-R "unit_raumlicht\|r41_wasserblink"`, `-j 3`, PowerShell mit `C:\msys64\mingw64\bin` vorn | **5/5 gruen** (88 s) | **5/5 gruen** (89 s) |
+| Endstand nach Feinschliff der Kommentare (exe md5 2c451435…) | — | `.text` und `.data` wieder gleich, `.rdata` nur `__TIME__`; ctest 5/5 gruen (89 s) |
 
 Die Code-Aenderung ist null, nur Kommentare haben sich geaendert. Die Messung zeigt das Port-Verhalten, auf das sich die
 berichtigten Kommentare beziehen. Bilder:
@@ -277,7 +280,7 @@ berichtigten Kommentare beziehen. Bilder:
   * Repo-Baum startet die Schleife (@0x0177C), Version_40% nicht (@0x01598, kein Evt_exec).
   * In Cut 2 fallen die Punkte 3, 5 und 7.
   * Port: Klemme plus fehlende Routine 13, Entscheidung beim Nutzer.
-* `include/re15_raumlicht.h:9-12`, `tests/unit/test_raumlicht.c:3-6`, `tests/integration/test_r41_wasserblink.cmake:6-8`:
+* `include/re15_raumlicht.h:9-12`, `tests/unit/test_raumlicht.c:3-6`, `tests/integration/test_r41_wasserblink.cmake:6-9`:
   * Statt "das Original setzt keinen Effekt aufs Kanalwasser" steht dort jetzt "die Raumdaten setzen kein Licht".
   * Dazu der Verweis auf den Tropfen.
   * Im cmake-Riegel steht zusaetzlich, dass er bei Bau der Tropfen anzupassen ist.
